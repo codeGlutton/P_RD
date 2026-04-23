@@ -6,12 +6,19 @@ import subprocess
 def main():
     # ini 파일 읽기
     config = configparser.ConfigParser()
-    config.read(unreal.Paths.project_config_dir() + "DefualtLink.ini")
-    src_folder = unreal.Paths.project_dir() + config.get('SharedSVNContent.SharedSVNContent', 'Path')
+    ini_path = unreal.Paths.project_config_dir() + "DefualtLink.ini"
 
-    if not src_folder:
-        unreal.log_error("SharedSVNContent 값이 ini에 없음")
-        raise Exception("Config Missing")
+    # 기본값
+    src_folder = unreal.Paths.project_dir() + "../SVN/"
+    if os.path.exists(ini_path):
+        config.read(ini_path)
+        path = config.get(
+            'SharedSVNContent.SharedSVNContent',
+            'Path',
+            fallback=None
+        )
+        if path:  # 값이 있을 때만 덮어쓰기
+            src_folder = unreal.Paths.project_dir() + path
 
     # 심볼릭 링크 생성
     desc_folder = unreal.Paths.project_content_dir()
