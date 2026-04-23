@@ -29,7 +29,7 @@ jobs:
     - name: Run Doxygen
       run: |
         cd Doxygen/GitAction
-        doxygen DoxyFile
+        doxygen Doxyfile
 
     - name: Add .nojekyll
       run: |
