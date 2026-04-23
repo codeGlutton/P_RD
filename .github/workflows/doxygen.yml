@@ -1,0 +1,43 @@
+name: Generate Doxygen Docs
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout main repository
+      uses: actions/checkout@v4
+
+    - name: Install Doxygen
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y doxygen graphviz
+
+    - name: Run Doxygen
+      run: |
+        cd Doxygen/GitAction
+        doxygen DoxyFile
+
+    - name: Add .nojekyll
+      run: |
+        sudo touch ./Doxygen/GitAction/Output/html/.nojekyll
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: Doxygen/GitAction/Output/html
+        publish_branch: gh-pages
