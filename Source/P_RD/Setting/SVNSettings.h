@@ -1,8 +1,6 @@
 ﻿/*****************************************************************//**
  * @file   SVNSettings.h
- * @brief  
- * SVN과 연결하기 위한 개인 설정 세팅 창 코드 구성
- * 
+ * @brief  SVN과 연결하기 위한 개인 설정 세팅 창 연관 헤더
  * @author 모호재
  * @date   2026-04-23
  *********************************************************************/
@@ -14,7 +12,10 @@
 #include "SVNSettings.generated.h"
 
 /**
- * @brief  SVN 연결 세팅 옵션. Save폴더에 저장되는 개인별 세팅 항목
+ * @brief  SVN 연결 세팅 옵션
+ * @details 
+ * SVN 코드를 설정하기 위해, 에디터의 개인 에디터 세팅 창에 뜰 정보 구성 객체입니다. \n
+ * Ignore폴더인 Save폴더 내부에 설정이 저장되어 형상 관리 대상으로 지정되지 않습니다.
  */
 UCLASS(Config = EditorPerProjectUserSettings, meta = (DisplayName = "SVN Link Option Editing"))
 class P_RD_API USVNSettings : public UDeveloperSettings
@@ -24,7 +25,7 @@ class P_RD_API USVNSettings : public UDeveloperSettings
 public:
 	USVNSettings(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
-	// Developer Setting 상속
+	/* Developer Setting 상속 */
 public:
 	virtual FName GetCategoryName() const override;
 
@@ -35,7 +36,9 @@ public:
 
 public:
 	/**
-	 * @brief SVN Content 폴더를 Content 내부에 연결하기 위한 경로 (Junction 생성)
+	 * @brief SVN Content 폴더를 Content 내부에 연결하기 위한 경로
+	 * @details
+	 * SVN Content를 가져오기 위해 Content 폴더에 Junction 생성합니다.
 	 */
 	UPROPERTY(config, EditAnywhere, Category = SVNContent, meta = (DisplayName = "SVNContentDir", ToolTip = "SVN Content 폴더를 연결하기 위한 경로", ConfigRestartRequired = true))
 	FDirectoryPath mSVNContentDir;
