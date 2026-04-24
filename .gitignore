@@ -76,5 +76,5 @@ DerivedDataCache/*
 # SVN
 /Content/SVN/
 
-# Doxygen Preiview
-/Doxygen/Preview/
+# Doxygen Preiview Output
+/Doxygen/Preview/Output
