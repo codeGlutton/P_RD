@@ -1,6 +1,7 @@
 ﻿/*****************************************************************//**
  * @file   SVNSettings.h
- * @brief  SVN과 연결하기 위한 개인 설정 세팅 창 코드 구성
+ * @brief  
+ * SVN과 연결하기 위한 개인 설정 세팅 창 코드 구성
  * 
  * @author 모호재
  * @date   2026-04-23
@@ -23,7 +24,7 @@ class P_RD_API USVNSettings : public UDeveloperSettings
 public:
 	USVNSettings(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
-	// Delveloper Setting 상속
+	// Developer Setting 상속
 public:
 	virtual FName GetCategoryName() const override;
 
@@ -34,7 +35,7 @@ public:
 
 public:
 	/**
-	 * @brief SVN Content 폴더를 연결하기 위한 경로
+	 * @brief SVN Content 폴더를 Content 내부에 연결하기 위한 경로 (Junction 생성)
 	 */
 	UPROPERTY(config, EditAnywhere, Category = SVNContent, meta = (DisplayName = "SVNContentDir", ToolTip = "SVN Content 폴더를 연결하기 위한 경로", ConfigRestartRequired = true))
 	FDirectoryPath mSVNContentDir;
