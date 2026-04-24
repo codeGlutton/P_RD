@@ -5,7 +5,6 @@
 import re
 import sys
 
-
 # This is from https://stackoverflow.com/questions/5454322/python-how-to-match-nested-parentheses-with-regex
 def paren_matcher (n):
     # poor man's matched paren scanning, gives up
@@ -13,6 +12,8 @@ def paren_matcher (n):
     # parens inside; add the outer parens yourself if needed.
     # Nongreedy.
     return r"[^()]*?(?:\("*n+r"[^()]*?"+r"\)[^()]*?)*?"*n
+
+sys.stdout.reconfigure(encoding='utf-8')
 
 # Check we have the right number of args
 if len(sys.argv) != 2:
