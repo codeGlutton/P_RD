@@ -1,30 +1,36 @@
 var indexSectionsWithContent =
 {
-  0: "gimpsu",
+  0: "acegimpsu매사생시태프필",
   1: "u",
-  2: "gps",
-  3: "giu",
-  4: "m",
-  5: "p"
+  2: "acei",
+  3: "gps",
+  4: "giu",
+  5: "m",
+  6: "a",
+  7: "gp매사태프"
 };
 
 var indexSectionNames =
 {
   0: "all",
   1: "classes",
-  2: "files",
-  3: "functions",
-  4: "variables",
-  5: "pages"
+  2: "namespaces",
+  3: "files",
+  4: "functions",
+  5: "variables",
+  6: "defines",
+  7: "pages"
 };
 
 var indexSectionLabels =
 {
   0: "모두",
   1: "클래스",
-  2: "파일들",
-  3: "함수",
-  4: "변수",
-  5: "페이지들"
+  2: "네임스페이스들",
+  3: "파일들",
+  4: "함수",
+  5: "변수",
+  6: "매크로",
+  7: "페이지들"
 };
 

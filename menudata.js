@@ -24,6 +24,9 @@
 */
 var menudata={children:[
 {text:"메인 페이지",url:"index.html"},
+{text:"관련된 페이지",url:"pages.html"},
+{text:"네임스페이스",url:"namespaces.html",children:[
+{text:"네임스페이스 목록",url:"namespaces.html"}]},
 {text:"클래스",url:"annotated.html",children:[
 {text:"클래스 목록",url:"annotated.html"},
 {text:"클래스 색인",url:"classes.html"},
@@ -36,4 +39,5 @@ var menudata={children:[
 {text:"파일 목록",url:"files.html"},
 {text:"파일 멤버",url:"globals.html",children:[
 {text:"모두",url:"globals.html"},
-{text:"함수",url:"globals_func.html"}]}]}]}
+{text:"함수",url:"globals_func.html"},
+{text:"매크로",url:"globals_defs.html"}]}]}]}

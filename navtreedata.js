@@ -25,7 +25,16 @@
 var NAVTREE =
 [
   [ "P_RD", "index.html", [
-    [ "P_RD란?", "index.html", null ],
+    [ "P_RD 프로젝트", "index.html", null ],
+    [ "GAS 태그 매크로 사용법", "gas_tag_page.html", [
+      [ "태그 매크로란?", "gas_tag_page.html#tag_macro_section", null ],
+      [ "필요성", "gas_tag_page.html#tag_need_section", null ],
+      [ "태그 생성 시", "gas_tag_page.html#create_tag_section", null ],
+      [ "태그 사용 시", "gas_tag_page.html#use_tag_section", null ]
+    ] ],
+    [ "네임스페이스", "namespaces.html", [
+      [ "네임스페이스 목록", "namespaces.html", "namespaces_dup" ]
+    ] ],
     [ "클래스", "annotated.html", [
       [ "클래스 목록", "annotated.html", "annotated_dup" ],
       [ "클래스 색인", "classes.html", null ],
@@ -40,7 +49,8 @@ var NAVTREE =
       [ "파일 목록", "files.html", "files_dup" ],
       [ "파일 멤버", "globals.html", [
         [ "모두", "globals.html", null ],
-        [ "함수", "globals_func.html", null ]
+        [ "함수", "globals_func.html", null ],
+        [ "매크로", "globals_defs.html", null ]
       ] ]
     ] ]
   ] ]
@@ -48,7 +58,7 @@ var NAVTREE =
 
 var NAVTREEINDEX =
 [
-"GlobalInclude_8cpp.html"
+"GASInclude_8cpp.html"
 ];
 
 var SYNCONMSG = '패널 동기화를 비활성화하기 위해 클릭하십시오';

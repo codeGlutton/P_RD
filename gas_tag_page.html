@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/GlobalInclude.h 파일 참조</title>
+<title>P_RD: GAS 태그 매크로 사용법</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -64,7 +64,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('GlobalInclude_8h.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('gas_tag_page.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -89,29 +89,44 @@ $(document).ready(function(){initNavTree('GlobalInclude_8h.html',''); initResiza
 </div>
 </div>
 
-<div class="header">
-  <div class="headertitle"><div class="title">GlobalInclude.h 파일 참조</div></div>
+<div><div class="header">
+  <div class="headertitle"><div class="title">GAS 태그 매크로 사용법</div></div>
 </div><!--header-->
 <div class="contents">
-
-<p><br  />
- 전 영역에서 사용되는 포함 헤더  
-<a href="#details">더 자세히 ...</a></p>
-
-<p><a href="GlobalInclude_8h_source.html">이 파일의 소스 코드 페이지로 가기</a></p>
-<a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
-<div class="textblock"><p><br  />
- 전 영역에서 사용되는 포함 헤더 </p>
-<dl class="section author"><dt>작성자</dt><dd>모호재 </dd></dl>
-<dl class="section date"><dt>날짜</dt><dd>2026-04-23 </dd></dl>
-
-<p class="definition"><a class="el" href="GlobalInclude_8h_source.html">GlobalInclude.h</a> 파일에서 정의되었습니다.</p>
+<div class="toc"><h3>목차</h3>
+<ul><li class="level1"><a href="#tag_macro_section">태그 매크로란?</a></li>
+<li class="level1"><a href="#tag_need_section">필요성</a></li>
+<li class="level1"><a href="#create_tag_section">태그 생성 시</a></li>
+<li class="level1"><a href="#use_tag_section">태그 사용 시</a></li>
+</ul>
+</div>
+<div class="textblock"><h1><a class="anchor" id="tag_macro_section"></a>
+태그 매크로란?</h1>
+<p>Unreal Editor에서 설정할 수 있는 Gameplay Tag를 코드 상에서 정의하는 매크로를 의미합니다.</p>
+<h1><a class="anchor" id="tag_need_section"></a>
+필요성</h1>
+<ol type="1">
+<li>태그는 문자열 기반으로 입력되기 때문에, IDE의 자동화 기능이 무의미합니다. 휴먼 에러 방지를 위해 매크로를 선언합니다.</li>
+<li>해당 매크로를 선언하면, 에디터에서 자동으로 태그가 추가됩니다. 따라서 에디터에서 태그 편집하는 것보다 형상 관리 측면에서도 편합니다.</li>
+</ol>
+<h1><a class="anchor" id="create_tag_section"></a>
+태그 생성 시</h1>
+<div class="fragment"><div class="line">UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player_Combat_Roll);</div>
+</div><!-- fragment --><p> 기본적으로 <a class="el" href="GASInclude_8h.html">GASInclude.h</a> 에 작성합니다. <br  />
+적절한 namespace 내부에 UE_DECLARE_GAMEPLAY_TAG_EXTERN([Tag이름]_[Tag이름]_[Tag이름]) 선언합니다.</p>
+<div class="fragment"><div class="line">UE_DEFINE_GAMEPLAY_TAG(Player_Combat_Roll, <span class="stringliteral">&quot;Player.Combat.Roll&quot;</span>);</div>
+</div><!-- fragment --><p> 기본적으로 <a class="el" href="GASInclude_8cpp.html">GASInclude.cpp</a> 에 작성합니다. <br  />
+적절한 namespace 내부에 UE_DEFINE_GAMEPLAY_TAG([Tag이름]_[Tag이름]_[Tag이름], "[Tag이름].[Tag이름].[Tag이름]") 선언합니다.</p>
+<h1><a class="anchor" id="use_tag_section"></a>
+태그 사용 시</h1>
+<div class="fragment"><div class="line">ActivationBlockedTags.AddTag(PlayerCombatTags::Player_State_Rolling);</div>
+</div><!-- fragment --><p> [namespace 명]::[Tag이름]_[Tag이름]_[Tag이름] 로 태그를 지정합니다. </p>
 </div></div><!-- contents -->
+</div><!-- PageDoc -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="GlobalInclude_8h.html">GlobalInclude.h</a></li>
     <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
   </ul>
 </div>

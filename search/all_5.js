@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['usvnsettings_0',['usvnsettings',['../classUSVNSettings.html',1,'USVNSettings'],['../classUSVNSettings.html#ab58653e739980a3c805ed358f1ee4c85',1,'USVNSettings::USVNSettings()']]]
+  ['msvncontentdir_0',['mSVNContentDir',['../classUSVNSettings.html#ac8795b4e7569277ef8b86e6b833713fe',1,'USVNSettings']]]
 ];
