@@ -1,4 +1,4 @@
-[*.{cpp,h,txt}]
+[*.{cpp,h,txt,cs}]
 charset = utf-8-bom
 
 

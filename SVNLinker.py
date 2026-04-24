@@ -5,20 +5,23 @@ import subprocess
 
 def main():
     # ini 파일 읽기
-    config = configparser.ConfigParser()
-    ini_path = unreal.Paths.project_config_dir() + "DefualtLink.ini"
+    config = configparser.ConfigParser(strict=False)
+    ini_path = unreal.Paths.generated_config_dir() + unreal.GameplayStatics.get_platform_name() + "Editor/EditorPerProjectUserSettings.ini"
+    unreal.log(f"INI 탐색 중: {ini_path}")
 
     # 기본값
     src_folder = unreal.Paths.project_dir() + "../SVN/"
     if os.path.exists(ini_path):
         config.read(ini_path)
         path = config.get(
-            'SharedSVNContent.SharedSVNContent',
-            'Path',
+            '/Script/P_RD.SVNSettings',
+            'mSVNContentDir',
             fallback=None
         )
-        if path:  # 값이 있을 때만 덮어쓰기
-            src_folder = unreal.Paths.project_dir() + path
+        # 값이 있을 때만 덮어쓰기
+        if path: 
+            src_folder = path.strip("()").split("=")[1].strip('"')
+            unreal.log(f"INI 내 SVN Link 주소 발견!")
 
     # 심볼릭 링크 생성
     desc_folder = unreal.Paths.project_content_dir()
@@ -27,10 +30,10 @@ def main():
     dest_path = os.path.join(desc_folder, link_name)
 
     if os.path.exists(dest_path):
-        unreal.log(f"이미 존재 확인: {dest_path}")
+        unreal.log(f"Junction 이미 존재 확인: {dest_path}")
     else:
         if not os.path.exists(src_folder):
-            unreal.log_error(f'소스 폴더 없음: {src_folder}')
+            unreal.log_error(f'SVN 소스 폴더 없음: {src_folder}')
         else:
             try:
                 cmd = f'mklink /J "{dest_path}" "{src_folder}"'

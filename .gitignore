@@ -78,6 +78,3 @@ DerivedDataCache/*
 
 # Doxygen Preiview
 /Doxygen/Preview/
-
-# 개인 환경 파일
-/Config/DefaultLink.ini
