@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "GlobalInclude.h"
+#include "RDMinimal.h"
 #include "Engine/DeveloperSettings.h"
 #include "SVNSettings.generated.h"
 

@@ -3,3 +3,13 @@
  * <Rogue the dice> 프로젝트 명으로, 로그라이트 방식으로 진행하는 SRPG 게임입니다. \n
  * 게임의 컨텐츠는 주로 다수의 주사위를 통해서 결정되어 유저가 원하는 행동을 배치하는 방식입니다.
  */
+
+ /**
+ * @page srpg_framework_page SRPG 전투 프레임워크 흐름
+ * @tableofcontents
+ *
+ * @section srpg_framework_Image_section 순서도
+ * @image html framework_flow.png "Player의 1턴 흐름" width=200%
+ * \n
+ * 
+ */
