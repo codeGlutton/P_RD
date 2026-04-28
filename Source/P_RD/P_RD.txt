@@ -12,4 +12,12 @@
  * @image html framework_flow.png "Player의 1턴 흐름" width=200%
  * \n
  * 
+ * @section srpg_passive_framework_section 패시브 적용 규칙
+ * 1. 스킬 + 버프 -> 원형 포인트 A
+ * 2. 원형 포인트 A + 타격/가드/이동카운트 습득 전 패시브 -> 누적 포인트 B
+ * 3. 누적 포인트 B - 방어력 -> 결과 데미지 C
+ * 4. Max(최종 데미지 D, 결과 데미지 C + 타격 추가 패시브) -> 최종 데미지 D
+ * 5. Min(최종 데미지 D, 결과 데미지 C + 피격 감소 패시브) -> 최종 데미지 D
+ * 6. 최종 데미지 D 적용
+ * \n
  */
