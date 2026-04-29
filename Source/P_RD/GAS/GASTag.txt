@@ -3,30 +3,31 @@
  * @tableofcontents
  *
  * @section tag_macro_section 태그 매크로란?
- * Unreal Editor에서 설정할 수 있는 Gameplay Tag를 코드 상에서 정의하는 매크로를 의미합니다.
+ * Unreal Editor에서 설정할 수 있는 Gameplay Tag를 코드 상에서 정의하는 매크로를 의미합니다.\n
  *
  * @section tag_need_section 필요성
  * 1. 태그는 문자열 기반으로 입력되기 때문에, IDE의 자동화 기능이 무의미합니다. 휴먼 에러 방지를 위해 매크로를 선언합니다.
  * 2. 해당 매크로를 선언하면, 에디터에서 자동으로 태그가 추가됩니다. 따라서 에디터에서 태그 편집하는 것보다 형상 관리 측면에서도 편합니다.
+ * \n
  * 
  * @section create_tag_section 태그 생성 시
  * @code{.h}
  * UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player_Combat_Roll);
  * @endcode
- * 기본적으로 @ref GASInclude.h 에 작성합니다. \n
- * 적절한 namespace 내부에 UE_DECLARE_GAMEPLAY_TAG_EXTERN([Tag이름]_[Tag이름]_[Tag이름]) 선언합니다.
+ * 기본적으로 @ref GASInclude.h 에 작성합니다.\n
+ * 적절한 namespace 내부에 UE_DECLARE_GAMEPLAY_TAG_EXTERN([Tag이름]_[Tag이름]_[Tag이름]) 선언합니다.\n
  * 
  * @code{.cpp}
  * UE_DEFINE_GAMEPLAY_TAG(Player_Combat_Roll, "Player.Combat.Roll");
  * @endcode
- * 기본적으로 @ref GASInclude.cpp 에 작성합니다. \n
- * 적절한 namespace 내부에 UE_DEFINE_GAMEPLAY_TAG([Tag이름]_[Tag이름]_[Tag이름], "[Tag이름].[Tag이름].[Tag이름]") 선언합니다.
+ * 기본적으로 @ref GASInclude.cpp 에 작성합니다.\n
+ * 적절한 namespace 내부에 UE_DEFINE_GAMEPLAY_TAG([Tag이름]_[Tag이름]_[Tag이름], "[Tag이름].[Tag이름].[Tag이름]") 선언합니다.\n
  * 
  * @section use_tag_section 태그 사용 시
  * @code{.h}
  * ActivationBlockedTags.AddTag(PlayerCombatTags::Player_State_Rolling);
  * @endcode
- * [namespace 명]::[Tag이름]_[Tag이름]_[Tag이름] 로 태그를 지정합니다.
+ * [namespace 명]::[Tag이름]_[Tag이름]_[Tag이름] 로 태그를 지정합니다.\n
  * 
  */
 
