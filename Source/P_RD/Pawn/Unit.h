@@ -25,7 +25,7 @@ struct FUnitSnapshotTargetData : public FGameplayAbilityTargetData
 	GENERATED_BODY()
 
 public:
-	virtual UScriptStruct* GetScriptStruct() const override;
+	UScriptStruct* GetScriptStruct() const override;
 	bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& OutSuccess);
 
 public:
@@ -61,17 +61,17 @@ public:
 
 	/* Pawn 상속 */
 public:	
-	virtual void PostInitializeComponents() override;
-	virtual void OnConstruction(const FTransform& transform) override;
+	void PostInitializeComponents() override;
+	void OnConstruction(const FTransform& transform) override;
 
 	/* GenericTeamAgentInterface 상속 */
 public:
-	virtual void SetGenericTeamId(const FGenericTeamId& TeamID) override;
-	virtual FGenericTeamId GetGenericTeamId() const override;
+	void SetGenericTeamId(const FGenericTeamId& TeamID) override;
+	FGenericTeamId GetGenericTeamId() const override;
 
 	/* AbilitySystemInterface 상속 */
 public:
-	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 public:
 	virtual void OnBeginStage();

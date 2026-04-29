@@ -45,11 +45,11 @@ public:
 
     /* UDeveloperSettings 상속 */
 public:
-    virtual FName GetCategoryName() const override;
+    FName GetCategoryName() const override;
 
 #if WITH_EDITOR
-    virtual FText GetSectionText() const override;
-    virtual FText GetSectionDescription() const override;
+    FText GetSectionText() const override;
+    FText GetSectionDescription() const override;
 #endif
 
 public:

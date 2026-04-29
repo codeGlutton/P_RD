@@ -25,8 +25,8 @@ public:
 
 	/* UAttributeSet 상속 */
 public:
-	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
-	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
+	void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
+	void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
 
 public:
 	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, MaxHP)
@@ -80,8 +80,8 @@ public:
 
 	/* UAttributeSet 상속 */
 public:
-	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
-	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
+	void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
+	void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
 
 public:
 	ATTRIBUTE_ACCESSORS(UPlayerUnitAttributeSet, Level)
