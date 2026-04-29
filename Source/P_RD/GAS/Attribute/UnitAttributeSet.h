@@ -13,39 +13,10 @@
 #include "UnitAttributeSet.generated.h"
 
 /**
- * @brief  스킬 결과에 대한 Attribute Set 정의
+ * @brief  SRPG Unit에 대한 Attribute Set 정의
  */
 UCLASS()
-class P_RD_API USkillResultAttributeSet : public UAttributeSet
-{
-	GENERATED_BODY()
-
-public:
-	ATTRIBUTE_ACCESSORS(USkillResultAttributeSet, SkillPoint)
-	ATTRIBUTE_ACCESSORS(USkillResultAttributeSet, PreDefenseSkillPoint)
-	ATTRIBUTE_ACCESSORS(USkillResultAttributeSet, PostDefenseSkillPoint)
-	ATTRIBUTE_ACCESSORS(USkillResultAttributeSet, FinalSkillPoint)
-
-protected:
-	// @brief 버프 + 할당된 기본 스킬 포인트 값. 유저의 Skill 선택에 따라 할당됨
-	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FGameplayAttributeData SkillPoint;
-	// @brief 타격 스킬 포인트 값. 타격 전 패시브 Skill에 의한 효과를 모두 합연산 누적
-	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FGameplayAttributeData PreDefenseSkillPoint;
-	// @brief 실제 피격 스킬 포인트 값. 피격자의 방어력 만큼 감소
-	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FGameplayAttributeData PostDefenseSkillPoint;
-	// @brief 최종 적용 스킬 포인트 값. 타격, 피격 후 패시브 Skill에 의한 효과를 Max, Min으로 적용
-	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FGameplayAttributeData FinalSkillPoint;
-};
-
-/**
- * @brief  SRPGUnit에 대한 Attribute Set 정의
- */
-UCLASS()
-class P_RD_API UUnitAttributeSet : public USkillResultAttributeSet
+class P_RD_API UUnitAttributeSet : public UAttributeSet
 {
 	GENERATED_BODY()
 	
@@ -60,6 +31,8 @@ public:
 public:
 	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, MaxHP)
 	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, HP)
+	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, SkillPoint)
+	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, DamagePoint)
 	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, DefensePoint)
 	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, MovementPoint)
 
@@ -69,10 +42,61 @@ protected:
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FGameplayAttributeData HP;
 
+	/**
+	 * @brief 스킬 시전 동안만 유지되는 스킬 포인트
+	 * @details
+	 * 공격 스킬 사용 시에는 최종 추가 공격력, 
+	 * 방어 스킬 사용 시에는 최종 추가 방어력, 
+	 * 이동 스킬 사용 시에는 최종 추가 이동력으로 활용
+	 */
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FGameplayAttributeData SkillPoint;
+	/**
+	 * @brief 피격 동안만 유지되는 피격 포인트
+	 * @details
+	 * 피격 시 실질적으로 들어오는 데미지로 활용
+	 */
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FGameplayAttributeData DamagePoint;
+
 	// @brief 턴 동안만 유지되는 방어 포인트
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FGameplayAttributeData DefensePoint;
 	// @brief 턴 동안만 유지되는 움직임 포인트
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FGameplayAttributeData MovementPoint;
+};
+
+/**
+ * @brief  Player가 조작하는 SRPG Unit에 대한 Attribute Set 정의
+ */
+UCLASS()
+class P_RD_API UPlayerUnitAttributeSet : public UUnitAttributeSet
+{
+	GENERATED_BODY()
+	
+public:
+	UPlayerUnitAttributeSet();
+
+	/* UAttributeSet 상속 */
+public:
+	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
+	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
+
+public:
+	ATTRIBUTE_ACCESSORS(UPlayerUnitAttributeSet, Level)
+	ATTRIBUTE_ACCESSORS(UPlayerUnitAttributeSet, MaxExp)
+	ATTRIBUTE_ACCESSORS(UPlayerUnitAttributeSet, Exp)
+	ATTRIBUTE_ACCESSORS(UPlayerUnitAttributeSet, Money)
+
+protected:
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FGameplayAttributeData Level;
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FGameplayAttributeData MaxExp;
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FGameplayAttributeData Exp;
+	
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FGameplayAttributeData Money;
 };

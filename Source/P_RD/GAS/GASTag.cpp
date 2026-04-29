@@ -10,18 +10,26 @@ namespace EventTags
 
 namespace AbilityTags
 {
-	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_StartBattle,			"GameplayAbility.Passive.StartBattle");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_EndBattle,			"GameplayAbility.Passive.EndBattle");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_StartTurn,			"GameplayAbility.Passive.StartTurn");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_EndTurn,				"GameplayAbility.Passive.EndTurn");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_StartRollingDice,	"GameplayAbility.Passive.StartRollingDice");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_EndRollingDice,		"GameplayAbility.Passive.EndRollingDice");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_StartAttacking,		"GameplayAbility.Passive.StartAttacking");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_EndAttacking,		"GameplayAbility.Passive.EndAttacking");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_StartHitting,		"GameplayAbility.Passive.StartHitting");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_EndHitting,			"GameplayAbility.Passive.EndHitting");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_GetMoveCount,		"GameplayAbility.Passive.GetMoveCount");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_ChangeHP,			"GameplayAbility.Passive.ChangeHP");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_LevelUp,						"GameplayAbility.LevelUp");
+
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartStage,		"GameplayAbility.Passive.OnStartStage");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnEndStage,			"GameplayAbility.Passive.OnEndStage");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartTurn,			"GameplayAbility.Passive.OnStartTurn");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnEndTurn,			"GameplayAbility.Passive.OnEndTurn");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartRollingDice,	"GameplayAbility.Passive.OnStartRollingDice");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnEndRollingDice,	"GameplayAbility.Passive.OnEndRollingDice");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnUseAttackSkill,	"GameplayAbility.Passive.OnUseAttackSkill");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnUseDefenseSkill,	"GameplayAbility.Passive.OnUseDefenseSkill");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnUseMoveSkill,		"GameplayAbility.Passive.OnUseMoveSkill");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnUseBuffSkill,		"GameplayAbility.Passive.OnUseBuffSkill");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartAttacking,	"GameplayAbility.Passive.OnStartAttacking");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnEndAttacking,		"GameplayAbility.Passive.OnEndAttacking");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartHitting,		"GameplayAbility.Passive.OnStartHitting");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnEndHitting,		"GameplayAbility.Passive.OnEndHitting");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnGetDefensePoint,	"GameplayAbility.Passive.OnGetDefensePoint");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnGetMovePoint,		"GameplayAbility.Passive.OnGetMovePoint");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnGetPower,			"GameplayAbility.Passive.OnGetPower");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnChangeHP,			"GameplayAbility.Passive.OnChangeHP");
 }
 
 namespace EffectTags

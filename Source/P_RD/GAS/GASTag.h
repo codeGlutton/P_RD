@@ -32,26 +32,37 @@ namespace EventTags
  */
 namespace AbilityTags
 {
+	/* 플레이어 핵심 능력 태그들 */
+
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_LevelUp);
+
 	/* 패시브 능력 태그들 */
 
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_StartBattle);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_EndBattle);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartStage);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnEndStage);
 
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_StartTurn);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_EndTurn);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartTurn);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnEndTurn);
 
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_StartRollingDice);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_EndRollingDice);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartRollingDice);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnEndRollingDice);
 
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_StartAttacking);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_EndAttacking);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnUseAttackSkill);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnUseDefenseSkill);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnUseMoveSkill);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnUseBuffSkill);
 
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_StartHitting);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_EndHitting);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartAttacking);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnEndAttacking);
 
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_GetMoveCount);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartHitting);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnEndHitting);
 
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_ChangeHP);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnGetDefensePoint);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnGetMovePoint);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnGetPower);
+
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnChangeHP);
 }
 
 /**
