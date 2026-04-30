@@ -1,12 +1,37 @@
 ﻿ /**
- * @page srpg_framework_page SRPG 전투 프레임워크 흐름
+ * @page srpg_framework_page SRPG SRPG 프레임워크 흐름
  * @tableofcontents
  *
- * @section srpg_framework_Image_section 순서도
- * @image html framework_flow.png "Player의 1턴 흐름" width=200%
- * \n
+ * @section srpg_framework_subsystem_image_section SRPG 싱글톤 객체
+ * <hr>
+ * @image html framework_subsystem.png "SRPG 전투를 담당하는 Instance Subsystem 파생 클래스" width=100%
+ *
+ * SRPG의 전체적인 흐름을 담당하는 @ref SRPGFrameworkSubsystem.h 객체입니다. 원형 리스트를 돌며 턴을 진행하고, 각 턴마다 Turn Context 객체를 생성합니다. \n
+ * Context는 외부에서 Action 큐를 넣어주어서 진행되는데, 주사위 굴리기 행위, 이동, 스킬 사용과 같은 행위들이 이에 해당합니다. \n
  * 
- * @section srpg_passive_framework_section 스킬 시전 시 로직 순서
+ * @subsection srpg_framework_subsystem_step1 Q 초기 턴 순서 배치는 어떻게 처리하는가?
+ * 초기에는 맵에 등록된 몬스터 객체를 우선 흩어서 Unit에 붙은 우선 순위에 따라 원형 리스트를 채워 넣습니다. 같은 우선 순위는 랜덤으로 처리합니다.\n
+ * 단 맵에서 우선 순위 기본값을 Override할 수 있게 하여, 전투 순서 변주를 줄 수 있도록 고려중입니다.
+ * \n
+ *
+ * @subsection srpg_framework_subsystem_step2 Q 턴 추가 및 삭제 확장성이 있는가?
+ * 원형 리스트의 자료구조 특성 상 어렵지 않게 가능하다 생각합니다. 자료구조의 데이터를 이루는 턴 구성 정보 구조체는 Owner와 삭제 필요성 bool 데이터로 이루어집니다.\n
+ * 삭제 필요성 여부에 따라 턴 종료 시에 해당 구조체를 리스트에서 삭제합니다.
+ * \n
+ *
+ * @subsection srpg_framework_subsystem_step3 Q 액션 큐는 항상 수동 추가인가?
+ * 턴 시작 시에 반드시 거쳐가는 주사위 굴리기 액션같은 경우, Context 생성과 함께 추가합니다.
+ * \n
+ *
+ * @subsection srpg_framework_subsystem_step4 Q 턴 종료는 어디서 검사하는가?
+ * 각 Action의 흐름이 종료되는 시점에서 확인합니다. 예를 들어 공격 스킬 중간에 턴이 끝나면, 스킬 처리 완료 이후에 턴을 종료합니다.
+ * \n
+ *
+ * @section srpg_framework_turn_image_section 단일 턴에 대한 순서도
+ * <hr>
+ * @image html framework_flow.png "Player의 1턴 흐름" width=200%
+ *
+ * @subsection srpg_framework_turn_step1 공격 스킬 순서 상세 예시
  * 1. 스킬 + 스탯형 버프 -> 공격자 스킬 포인트 Modifier AddBase
  * 2. 공격자 스탯 스냅샷 찍고 Event에 저장
  * 3. 공격자 스냅샷 스탯을 참고해 타격/가드/이동 스킬 포인트 습득 패시브 Ability 적용 -> 공격자 스킬 포인트 Modifier AddBase
