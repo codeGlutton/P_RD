@@ -32,8 +32,18 @@ var NAVTREE =
       [ "태그 생성 시", "gas_tag_page.html#create_tag_section", null ],
       [ "태그 사용 시", "gas_tag_page.html#use_tag_section", null ]
     ] ],
+    [ "SRPG 전투 프레임워크 흐름", "srpg_framework_page.html", [
+      [ "순서도", "srpg_framework_page.html#srpg_framework_Image_section", null ],
+      [ "스킬 시전 시 로직 순서", "srpg_framework_page.html#srpg_passive_framework_section", null ]
+    ] ],
     [ "네임스페이스", "namespaces.html", [
-      [ "네임스페이스 목록", "namespaces.html", "namespaces_dup" ]
+      [ "네임스페이스 목록", "namespaces.html", "namespaces_dup" ],
+      [ "네임스페이스 멤버", "namespacemembers.html", [
+        [ "모두", "namespacemembers.html", null ],
+        [ "함수", "namespacemembers_func.html", null ],
+        [ "열거형 타입", "namespacemembers_enum.html", null ],
+        [ "열거형 멤버", "namespacemembers_eval.html", null ]
+      ] ]
     ] ],
     [ "클래스", "annotated.html", [
       [ "클래스 목록", "annotated.html", "annotated_dup" ],
@@ -58,7 +68,8 @@ var NAVTREE =
 
 var NAVTREEINDEX =
 [
-"GASInclude_8cpp.html"
+"GASMinimal_8cpp.html",
+"srpg_framework_page.html#srpg_passive_framework_section"
 ];
 
 var SYNCONMSG = '패널 동기화를 비활성화하기 위해 클릭하십시오';

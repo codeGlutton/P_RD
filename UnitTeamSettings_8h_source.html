@@ -1,0 +1,171 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/Setting/UnitTeamSettings.h 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('UnitTeamSettings_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">UnitTeamSettings.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="UnitTeamSettings_8h.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*****************************************************************/</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;<a class="code" href="RDMinimal_8h.html">RDMinimal.h</a>&quot;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;Engine/DeveloperSettings.h&quot;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &quot;GenericTeamAgentInterface.h&quot;</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor">#include &quot;<a class="code" href="UnitTeamType_8h.html">Setting/UnitTeamType.h</a>&quot;</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="preprocessor">#include &quot;UnitTeamSettings.generated.h&quot;</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span> </div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>USTRUCT(BlueprintType)</div>
+<div class="foldopen" id="foldopen00022" data-start="{" data-end="};">
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno"><a class="line" href="structFUnitTeamRelation.html">   22</a></span>struct <a class="code hl_struct" href="structFUnitTeamRelation.html">FUnitTeamRelation</a></div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>{</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    GENERATED_BODY()</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span> </div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    <a class="code hl_struct" href="structFUnitTeamRelation.html">FUnitTeamRelation</a>();</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno"><a class="line" href="structFUnitTeamRelation.html#af1a17b763c674f7dba6a4a4014192bf2">   28</a></span>    <a class="code hl_function" href="structFUnitTeamRelation.html#af1a17b763c674f7dba6a4a4014192bf2">FUnitTeamRelation</a>(std::initializer_list&lt;TPairInitializer&lt;<span class="keyword">const</span> TEnumAsByte&lt;EUnitTeamType::Type&gt;&amp;, <span class="keyword">const</span> TEnumAsByte&lt;ETeamAttitude::Type&gt;&amp;&gt;&gt; Attitudes) : mAttitudes(MoveTemp(Attitudes)) {}</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> </div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    UPROPERTY(Category = Team, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = <span class="stringliteral">&quot;Attitudes&quot;</span>))</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno"><a class="line" href="structFUnitTeamRelation.html#a9a577ed9f5ef463f203d9d8d0b7e810f">   32</a></span>    TMap&lt;TEnumAsByte&lt;<a class="code hl_namespace" href="namespaceEUnitTeamType.html">EUnitTeamType</a>::Type&gt;, TEnumAsByte&lt;ETeamAttitude::Type&gt;&gt; mAttitudes;</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>};</div>
+</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>UCLASS(Config = Game, DefaultConfig, meta = (DisplayName = &quot;Unit Team Setting&quot;))</div>
+<div class="foldopen" id="foldopen00039" data-start="{" data-end="};">
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno"><a class="line" href="classUUnitTeamSettings.html">   39</a></span>class P_RD_API <a class="code hl_class" href="classUUnitTeamSettings.html">UUnitTeamSettings</a> : public UDeveloperSettings</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>{</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    GENERATED_BODY()</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    </div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    <a class="code hl_class" href="classUUnitTeamSettings.html">UUnitTeamSettings</a>(<span class="keyword">const</span> FObjectInitializer&amp; ObjectInitializer = FObjectInitializer::Get());</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span> </div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    <span class="comment">/* UDeveloperSettings 상속 */</span></div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>    <span class="keyword">virtual</span> FName GetCategoryName() <span class="keyword">const override</span>;</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span> </div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="preprocessor">#if WITH_EDITOR</span></div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    <span class="keyword">virtual</span> FText GetSectionText() <span class="keyword">const override</span>;</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    <span class="keyword">virtual</span> FText GetSectionDescription() <span class="keyword">const override</span>;</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span> </div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>    UFUNCTION(Category = Team, BlueprintPure)</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>    <span class="keyword">static</span> ETeamAttitude::Type GetAttitude(FGenericTeamId OwnId, FGenericTeamId OtherId);</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span> </div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = Team, meta = (DisplayName = <span class="stringliteral">&quot;TeamRelations&quot;</span>))</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno"><a class="line" href="classUUnitTeamSettings.html#a4242e59053f2658db11819e78c061ae7">   68</a></span>    TMap&lt;TEnumAsByte&lt;<a class="code hl_namespace" href="namespaceEUnitTeamType.html">EUnitTeamType</a>::Type&gt;, <a class="code hl_struct" href="structFUnitTeamRelation.html">FUnitTeamRelation</a>&gt; mTeamRelations;</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>};</div>
+</div>
+<div class="ttc" id="aRDMinimal_8h_html"><div class="ttname"><a href="RDMinimal_8h.html">RDMinimal.h</a></div><div class="ttdoc">RD 프로젝트 전 영역에서 사용되는 최소한의 포함 헤더</div></div>
+<div class="ttc" id="aUnitTeamType_8h_html"><div class="ttname"><a href="UnitTeamType_8h.html">UnitTeamType.h</a></div><div class="ttdoc">유닛 팀 타입 대한 헤더</div></div>
+<div class="ttc" id="aclassUUnitTeamSettings_html"><div class="ttname"><a href="classUUnitTeamSettings.html">UUnitTeamSettings</a></div><div class="ttdoc">팀 관계도 설정</div><div class="ttdef"><b>Definition</b> <a href="UnitTeamSettings_8h_source.html#l00039">UnitTeamSettings.h:40</a></div></div>
+<div class="ttc" id="anamespaceEUnitTeamType_html"><div class="ttname"><a href="namespaceEUnitTeamType.html">EUnitTeamType</a></div><div class="ttdoc">SRPG Unit에 대한 팀 타입</div><div class="ttdef"><b>Definition</b> <a href="UnitTeamType_8h_source.html#l00017">UnitTeamType.h:18</a></div></div>
+<div class="ttc" id="astructFUnitTeamRelation_html"><div class="ttname"><a href="structFUnitTeamRelation.html">FUnitTeamRelation</a></div><div class="ttdoc">한 팀에서 다른 팀들을 대하는 관계 정보 구조체</div><div class="ttdef"><b>Definition</b> <a href="UnitTeamSettings_8h_source.html#l00022">UnitTeamSettings.h:23</a></div></div>
+<div class="ttc" id="astructFUnitTeamRelation_html_af1a17b763c674f7dba6a4a4014192bf2"><div class="ttname"><a href="structFUnitTeamRelation.html#af1a17b763c674f7dba6a4a4014192bf2">FUnitTeamRelation::FUnitTeamRelation</a></div><div class="ttdeci">FUnitTeamRelation(std::initializer_list&lt; TPairInitializer&lt; const TEnumAsByte&lt; EUnitTeamType::Type &gt; &amp;, const TEnumAsByte&lt; ETeamAttitude::Type &gt; &amp; &gt; &gt; Attitudes)</div><div class="ttdef"><b>Definition</b> <a href="UnitTeamSettings_8h_source.html#l00028">UnitTeamSettings.h:28</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_f6ad2a272e5af527f6870f24a0ebb404.html">Setting</a></li><li class="navelem"><a class="el" href="UnitTeamSettings_8h.html">UnitTeamSettings.h</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

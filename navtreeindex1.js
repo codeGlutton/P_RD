@@ -1,0 +1,19 @@
+var NAVTREEINDEX1 =
+{
+"srpg_framework_page.html#srpg_passive_framework_section":[2,1],
+"structFUnitSnapshotTargetData.html":[4,0,1],
+"structFUnitSnapshotTargetData.html#a045926fbf3d44a14e7b3a8ce5427a729":[4,0,1,1],
+"structFUnitSnapshotTargetData.html#a05f7512e361702b17584e7ea3b7ff21a":[4,0,1,6],
+"structFUnitSnapshotTargetData.html#a272a4c5c0a395614160da6a8b148d6c4":[4,0,1,5],
+"structFUnitSnapshotTargetData.html#a3fce7454fa614e305e6bfaf7517e0993":[4,0,1,4],
+"structFUnitSnapshotTargetData.html#a825429c4fef7ad3c72c6007657bcbd9b":[4,0,1,2],
+"structFUnitSnapshotTargetData.html#aacccf741803f0ce037354689e5759ba0":[4,0,1,3],
+"structFUnitSnapshotTargetData.html#ab0103365461361b9e19a71d809eb183a":[4,0,1,7],
+"structFUnitSnapshotTargetData.html#ab16638993a36abbc268ee100147f7a7b":[4,0,1,8],
+"structFUnitSnapshotTargetData.html#ac77b043076312891e9131ace1bb3d631":[4,0,1,9],
+"structFUnitSnapshotTargetData.html#af3ea212c3ca2930061dabf425859c04a":[4,0,1,0],
+"structFUnitTeamRelation.html":[4,0,2],
+"structFUnitTeamRelation.html#a8a21b9698d2567a62601cc28079fc45e":[4,0,2,0],
+"structFUnitTeamRelation.html#a9a577ed9f5ef463f203d9d8d0b7e810f":[4,0,2,2],
+"structFUnitTeamRelation.html#af1a17b763c674f7dba6a4a4014192bf2":[4,0,2,1]
+};

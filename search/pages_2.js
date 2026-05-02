@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['매크로_20사용법_0',['GAS 태그 매크로 사용법',['../gas_tag_page.html',1,'']]]
+  ['srpg_20전투_20프레임워크_20흐름_0',['SRPG 전투 프레임워크 흐름',['../srpg_framework_page.html',1,'']]]
 ];

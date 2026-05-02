@@ -1,0 +1,23 @@
+var searchData=
+[
+  ['mattitudes_0',['mAttitudes',['../structFUnitTeamRelation.html#a9a577ed9f5ef463f203d9d8d0b7e810f',1,'FUnitTeamRelation']]],
+  ['maxexp_1',['MaxExp',['../classUPlayerUnitAttributeSet.html#a7093d688f92697f557ebdb4e7c1f7e38',1,'UPlayerUnitAttributeSet']]],
+  ['maxhp_2',['MaxHP',['../classUUnitAttributeSet.html#a251f288bb945b292a04da22fe47f2c98',1,'UUnitAttributeSet']]],
+  ['mbuffstate_3',['mBuffState',['../structFUnitSnapshotTargetData.html#a825429c4fef7ad3c72c6007657bcbd9b',1,'FUnitSnapshotTargetData']]],
+  ['mdamagepoint_4',['mDamagePoint',['../structFUnitSnapshotTargetData.html#aacccf741803f0ce037354689e5759ba0',1,'FUnitSnapshotTargetData']]],
+  ['mdebuffstate_5',['mDebuffState',['../structFUnitSnapshotTargetData.html#a3fce7454fa614e305e6bfaf7517e0993',1,'FUnitSnapshotTargetData']]],
+  ['mdefensepoint_6',['mDefensePoint',['../structFUnitSnapshotTargetData.html#a272a4c5c0a395614160da6a8b148d6c4',1,'FUnitSnapshotTargetData']]],
+  ['mdifficulty_7',['mDifficulty',['../classAUnit.html#a0922706adbd4e0b63700d604e487dc20',1,'AUnit']]],
+  ['mexp_8',['mExp',['../classUPlayerUnitSaveGame.html#a083bd743c14bb09c29ae729af197b927',1,'UPlayerUnitSaveGame']]],
+  ['mhp_9',['mhp',['../structFUnitSnapshotTargetData.html#a05f7512e361702b17584e7ea3b7ff21a',1,'FUnitSnapshotTargetData::mHP'],['../classUUnitSaveGame.html#a48a4202f8115763e5785597a46d83e2e',1,'UUnitSaveGame::mHP']]],
+  ['mlevel_10',['mLevel',['../classUPlayerUnitSaveGame.html#a7954d0a304835324fc67546b30cad2ab',1,'UPlayerUnitSaveGame']]],
+  ['mmaxhp_11',['mmaxhp',['../structFUnitSnapshotTargetData.html#ab0103365461361b9e19a71d809eb183a',1,'FUnitSnapshotTargetData::mMaxHP'],['../classUUnitSaveGame.html#a2a5d0e12366e4b206bdf9fcbdcfd0238',1,'UUnitSaveGame::mMaxHP']]],
+  ['mmoney_12',['mMoney',['../classUPlayerUnitSaveGame.html#ae86f57e043dd8d9aff2ab1f3b94bca38',1,'UPlayerUnitSaveGame']]],
+  ['mmovementpoint_13',['mMovementPoint',['../structFUnitSnapshotTargetData.html#ab16638993a36abbc268ee100147f7a7b',1,'FUnitSnapshotTargetData']]],
+  ['mname_14',['mName',['../classAUnit.html#a74aed6f5efcd8f4162df0bfb85833f0c',1,'AUnit']]],
+  ['money_15',['Money',['../classUPlayerUnitAttributeSet.html#a6bb146cc7a3fc3b0fdafb683c7ed3709',1,'UPlayerUnitAttributeSet']]],
+  ['movementpoint_16',['MovementPoint',['../classUUnitAttributeSet.html#adb1c70092961d827172867ed1b953f4c',1,'UUnitAttributeSet']]],
+  ['mskillpoint_17',['mSkillPoint',['../structFUnitSnapshotTargetData.html#ac77b043076312891e9131ace1bb3d631',1,'FUnitSnapshotTargetData']]],
+  ['msvncontentdir_18',['mSVNContentDir',['../classUSVNSettings.html#ac8795b4e7569277ef8b86e6b833713fe',1,'USVNSettings']]],
+  ['mteamrelations_19',['mTeamRelations',['../classUUnitTeamSettings.html#a4242e59053f2658db11819e78c061ae7',1,'UUnitTeamSettings']]]
+];

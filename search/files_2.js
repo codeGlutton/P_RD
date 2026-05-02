@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['svnsettings_2ecpp_0',['SVNSettings.cpp',['../SVNSettings_8cpp.html',1,'']]],
-  ['svnsettings_2eh_1',['SVNSettings.h',['../SVNSettings_8h.html',1,'']]]
+  ['rdminimal_2ecpp_0',['RDMinimal.cpp',['../RDMinimal_8cpp.html',1,'']]],
+  ['rdminimal_2eh_1',['RDMinimal.h',['../RDMinimal_8h.html',1,'']]]
 ];
