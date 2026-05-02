@@ -1,0 +1,25 @@
+﻿ /**
+ * @page srpg_framework_page SRPG 전투 프레임워크 흐름
+ * @tableofcontents
+ *
+ * @section srpg_framework_Image_section 순서도
+ * @image html framework_flow.png "Player의 1턴 흐름" width=200%
+ * \n
+ * 
+ * @section srpg_passive_framework_section 스킬 시전 시 로직 순서
+ * 1. 스킬 + 스탯형 버프 -> 공격자 스킬 포인트 Modifier AddBase
+ * 2. 공격자 스탯 스냅샷 찍고 Event에 저장
+ * 3. 공격자 스냅샷 스탯을 참고해 타격/가드/이동 스킬 포인트 습득 패시브 Ability 적용 -> 공격자 스킬 포인트 Modifier AddBase
+ * 4. 공격자 스탯 스냅샷 찍고 Event에 저장
+ * 5. (공격자 스킬 포인트 - 피격자 방어력 포인트) * 퍼센트형 버프/디버프 -> 피격자 데미지 포인트 Modifier AddBase
+ * 6. 피격자 스탯 스냅샷 찍고 Event에 저장
+ * 7. 두 스냅샷 스탯을 참고해 타격 전 패시브 Ability 적용 -> 피격자 데미지 포인트 Modifier AddBase
+ * 8. 공격자 스탯 스냅샷 찍고 Event에 저장
+ * 9. 피격자 스탯 스냅샷 찍고 Event에 저장
+ * 10. 두 스냅샷 스탯을 참고해 피격 전 패시브 Ability 적용 -> 피격자 데미지 포인트 Modifier AddBase
+ * 11. 피격자에게 최종 데미지를 HP에 적용
+ * 12. 피격자 데미지 포인트에 대한 Effect 모두 제거
+ * 13. 피격 대상마다 5번 ~ 12번 반복
+ * 14. 타격자 스킬 포인트에 대한 Effect 모두 제거
+ * \n
+ */

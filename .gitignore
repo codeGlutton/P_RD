@@ -1,6 +1,13 @@
 # Visual Studio 2015 user specific files
 .vs/
 
+# IDE / Editor tools
+.idea/
+.claude/
+.vsconfig
+CLAUDE.md
+GEMINI.md
+
 # Compiled Object files
 *.slo
 *.lo
@@ -76,5 +83,5 @@ DerivedDataCache/*
 # SVN
 /Content/SVN/
 
-# Doxygen Preiview
-/Doxygen/Preview/
+# Doxygen Preiview Output
+/Doxygen/Preview/Output

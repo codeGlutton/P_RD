@@ -9,8 +9,16 @@
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
-				"DeveloperSettings"
+				"DeveloperSettings",
+				"Engine",
+				"CoreUObject",
+				"GameplayAbilities"
 			]
+		},
+		{
+			"Name": "P_RDTests",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
@@ -27,6 +35,10 @@
 		},
 		{
 			"Name": "GameplayStateTree",
+			"Enabled": true
+		},
+		{
+			"Name": "StateTree",
 			"Enabled": true
 		}
 	]
