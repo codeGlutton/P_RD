@@ -48,7 +48,7 @@ class P_RD_API UStaticCombatRoomSpawnData : public UStaticRoomSpawnData
 public:
 	FPrimaryAssetId GetPrimaryAssetId() const override
 	{
-		const FString TypeString = FString(TEXT("CombatRoom")) + FString::FromInt(mLevel);
+		const FString TypeString = FString(TEXT("CombatRoom")) + FString::FromInt(mStageLevel);
 		return FPrimaryAssetId(*TypeString, GetFName());
 	}
 

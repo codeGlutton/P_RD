@@ -22,7 +22,7 @@ class P_RD_API UStaticShopRoomSpawnData : public UStaticRoomSpawnData
 public:
 	FPrimaryAssetId GetPrimaryAssetId() const override
 	{
-		const FString TypeString = FString(TEXT("ShopRoom")) + FString::FromInt(mLevel);
+		const FString TypeString = FString(TEXT("ShopRoom")) + FString::FromInt(mStageLevel);
 		return FPrimaryAssetId(*TypeString, GetFName());
 	}
 
