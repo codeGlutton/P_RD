@@ -1,0 +1,2 @@
+﻿#include "DataAsset/StaticRoomSpawnData.h"
+

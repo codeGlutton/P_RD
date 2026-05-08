@@ -40,6 +40,6 @@ public:
 	 * @details
 	 * SVN Content를 가져오기 위해 Content 폴더에 Junction 생성합니다.
 	 */
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = SVNContent, meta = (DisplayName = "SVNContentDir", ToolTip = "SVN Content 폴더를 연결하기 위한 경로", ConfigRestartRequired = true))
+	UPROPERTY(Config, Category = SVNContent, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SVNContentDir", ToolTip = "SVN Content 폴더를 연결하기 위한 경로", ConfigRestartRequired = true))
 	FDirectoryPath mSVNContentDir;
 };

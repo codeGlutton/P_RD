@@ -64,6 +64,6 @@ public:
     static ETeamAttitude::Type GetAttitude(FGenericTeamId OwnId, FGenericTeamId OtherId);
 
 public:
-    UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = Team, meta = (DisplayName = "TeamRelations"))
+    UPROPERTY(Config, Category = Team, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TeamRelations"))
     TMap<TEnumAsByte<EUnitTeamType::Type>, FUnitTeamRelation> mTeamRelations;
 };
