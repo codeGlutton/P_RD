@@ -59,10 +59,10 @@ class P_RD_API AUnit : public APawn, public IGenericTeamAgentInterface, public I
 public:
 	AUnit();
 
-	/* Pawn 상속 */
+	/* APawn 상속 */
 public:	
 	void PostInitializeComponents() override;
-	void OnConstruction(const FTransform& transform) override;
+	void OnConstruction(const FTransform& Transform) override;
 
 	/* GenericTeamAgentInterface 상속 */
 public:
@@ -78,16 +78,13 @@ public:
 	virtual void OnEndStage();
 
 public:
-	virtual void SaveInfo(UUnitSaveGame* SaveGame) const;
-	virtual void LoadInfo(const UUnitSaveGame* SaveGame);
-
-public:
 	/**
 	 * 유닛의 현재 스탯 스냅샷을 찍어 타겟 정보로 반환하는 함수
 	 */
 	virtual FUnitSnapshotTargetData* MakeSnapshotTargetData() const;
 
 public:
+	UUnitAttributeSet* GetUnitAttributeSet() const;
 	const FText& GetDisplayName() const;
 	FName GetRowKey() const;
 	int32 GetDifficulty() const;
@@ -96,11 +93,11 @@ private:
 	UPROPERTY(Category = GAS, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "AbilitySystemComp"))
 	TObjectPtr<UAbilitySystemComponent>	mAbilitySystemComp;
 	UPROPERTY(Category = GAS, VisibleAnywhere, meta = (DisplayName = "UnitAttributeSet"))
-	TObjectPtr<UAttributeSet> mUnitAttributeSet;
+	TObjectPtr<UUnitAttributeSet> mUnitAttributeSet;
 
 protected:
-	UPROPERTY(Category = Unit, EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "Name"))
-	FText mName;
+	UPROPERTY(Category = Unit, EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "DisplayName"))
+	FText mDisplayName;
 	// @brief 초기 스텟에 반영되는 난이도 수치
 	UPROPERTY(Category = Unit, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "Difficulty"))
 	int32 mDifficulty;
