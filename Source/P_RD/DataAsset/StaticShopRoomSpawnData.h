@@ -27,6 +27,6 @@ public:
 	}
 
 public:
-	UPROPERTY(Category = "Unit", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ShopOwnerSpawnData", AssetBundles = "ShopOwnerSpawnData"))
-	FActorSpawnData mShopOwnerSpawnData;
+	UPROPERTY(Category = "Unit", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ShopOwnerClass", AssetBundles = "Actor"))
+	TSoftClassPtr<AActor> mShopOwnerClass;
 };

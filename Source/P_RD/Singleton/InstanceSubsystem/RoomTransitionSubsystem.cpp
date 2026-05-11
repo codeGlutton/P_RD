@@ -1,25 +1,25 @@
-﻿#include "Singleton/InstanceSubsystem/SRPGRoomTransitionSubsystem.h"
+﻿#include "Singleton/InstanceSubsystem/RoomTransitionSubsystem.h"
 
 #include "Engine/AssetManager.h"
 #include "DataAsset/StaticRoomSpawnData.h"
 
-DEFINE_LOG_CATEGORY(LogSRPGTransition)
+DEFINE_LOG_CATEGORY(LogTransition)
 
-void USRPGRoomTransitionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+void URoomTransitionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
 }
 
-void USRPGRoomTransitionSubsystem::PreloadRoomAsync(const FPrimaryAssetId& RoomId, bool IsAutoTransition)
+void URoomTransitionSubsystem::PreloadRoomAsync(const FPrimaryAssetId& RoomId, bool IsAutoTransition)
 {
     PreloadRoomAsync(RoomId, TArray<FPrimaryAssetId>(), IsAutoTransition);
 }
 
-void USRPGRoomTransitionSubsystem::PreloadRoomAsync(const FPrimaryAssetId& RoomId, TArray<FPrimaryAssetId>&& AdditionalAssetIds, bool IsAutoTransition)
+void URoomTransitionSubsystem::PreloadRoomAsync(const FPrimaryAssetId& RoomId, TArray<FPrimaryAssetId>&& AdditionalAssetIds, bool IsAutoTransition)
 {
     if (mTransitionState != ESRPGRoomTransitionState::None)
     {
-        UE_LOG(LogSRPGTransition, Log, TEXT("Can't load. Other room data is being loaded"));
+        UE_LOG(LogTransition, Log, TEXT("다른 룸 데이터 처리 중으로 Preload 불가"));
         return;
     }
     mTransitionState = ESRPGRoomTransitionState::Loading;
@@ -27,21 +27,21 @@ void USRPGRoomTransitionSubsystem::PreloadRoomAsync(const FPrimaryAssetId& RoomI
     mNextRoomId = RoomId;
 
     UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
-    checkf(AssetManager != nullptr, TEXT("None Asset Manager"));
+    checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
 
     TArray<FName> Bundles = { "World", "Actor" };
     FAssetManagerLoadParams LoadParams;
-    LoadParams.OnComplete.BindUObject(this, &USRPGRoomTransitionSubsystem::OnLoadNextRoom);
+    LoadParams.OnComplete.BindUObject(this, &URoomTransitionSubsystem::OnLoadNextRoom);
 
     AdditionalAssetIds.Add(RoomId);
     mPreloadHandle = AssetManager->PreloadPrimaryAssets(AdditionalAssetIds, Bundles, true, MoveTemp(LoadParams));
 }
 
-void USRPGRoomTransitionSubsystem::TransitLoadedRoomAsync()
+void URoomTransitionSubsystem::TransitLoadedRoomAsync()
 {
     if (mTransitionState == ESRPGRoomTransitionState::None)
     {
-        UE_LOG(LogSRPGTransition, Log, TEXT("Can't transit. Room data must be loaded first"));
+        UE_LOG(LogTransition, Log, TEXT("전환 불가. 방 데이터 로드 필요"));
         return;
     }
 
@@ -57,7 +57,7 @@ void USRPGRoomTransitionSubsystem::TransitLoadedRoomAsync()
     OnTransitNextRoom();
 }
 
-void USRPGRoomTransitionSubsystem::OnLoadNextRoom(TSharedPtr<FStreamableHandle> AssetHandle)
+void URoomTransitionSubsystem::OnLoadNextRoom(TSharedPtr<FStreamableHandle> AssetHandle)
 {
     mTransitionState = ESRPGRoomTransitionState::Loaded;
 
@@ -70,16 +70,16 @@ void USRPGRoomTransitionSubsystem::OnLoadNextRoom(TSharedPtr<FStreamableHandle> 
     OnTransitNextRoom();
 }
 
-void USRPGRoomTransitionSubsystem::OnTransitNextRoom()
+void URoomTransitionSubsystem::OnTransitNextRoom()
 {
     UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
-    checkf(AssetManager != nullptr, TEXT("None Asset Manager"));
+    checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
 
-    UStaticRoomSpawnData* StaticSpawnData = AssetManager->GetPrimaryAssetObject<UStaticRoomSpawnData>(mNextRoomId);
-    checkf(StaticSpawnData != nullptr, TEXT("None Asset"));
+    UStaticRoomSpawnData* StaticRoomData = AssetManager->GetPrimaryAssetObject<UStaticRoomSpawnData>(mNextRoomId);
+    checkf(StaticRoomData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
 
     mTransitionState = ESRPGRoomTransitionState::None;
     mIsAutoTransition = false;
 
-    UGameplayStatics::OpenLevelBySoftObjectPtr(GetWorld(), StaticSpawnData->mBackgroundMap);
+    UGameplayStatics::OpenLevelBySoftObjectPtr(GetWorld(), StaticRoomData->mBackgroundMap);
 }

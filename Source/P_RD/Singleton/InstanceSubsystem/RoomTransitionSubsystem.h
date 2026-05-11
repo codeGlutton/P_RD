@@ -1,6 +1,6 @@
 ﻿/*****************************************************************//**
- * @file   SRPGRoomTransitionSubsystem.h
- * @brief  SRPG 방 전환 처리를 돕는 Subsystem 구현 헤더
+ * @file   RoomTransitionSubsystem.h
+ * @brief  방 전환 처리를 돕는 Subsystem 구현 헤더
  * @author 모호재
  * @date   2026-04-28
  *********************************************************************/
@@ -10,12 +10,12 @@
 #include "RDMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 
-#include "SRPGFramework/SRPGFrameworkType.h"
+#include "RoomTransitionSubsystem.generated.h"
 
-#include "SRPGRoomTransitionSubsystem.generated.h"
+// Transition 신규 로그 카테고리 등록
+DECLARE_LOG_CATEGORY_EXTERN(LogTransition, Log, All)
 
-// RD 신규 로그 카테고리 등록
-DECLARE_LOG_CATEGORY_EXTERN(LogSRPGTransition, Log, All)
+struct FRoom;
 
 /**
  * @brief  SRPG 방 전환 상태 열거형
@@ -31,7 +31,7 @@ enum class ESRPGRoomTransitionState : uint8
  * @brief  SRPG 방 전환 처리를 돕는 Subsystem
  */
 UCLASS()
-class P_RD_API USRPGRoomTransitionSubsystem : public UGameInstanceSubsystem
+class P_RD_API URoomTransitionSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 
@@ -53,7 +53,7 @@ protected:
 	/* 유지 데이터 */
 private:
 	ESRPGRoomTransitionState mTransitionState = ESRPGRoomTransitionState::None;
-	TSharedPtr<FStreamableHandle> mPreloadHandle;
+	TSharedPtr<FStreamableHandle> mPreloadHandle = nullptr;
 
 	/* 일시 데이터 */
 private:
