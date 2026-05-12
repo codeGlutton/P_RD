@@ -28,12 +28,16 @@ class P_RD_API USaveGameSubsystem : public UGameInstanceSubsystem
 
 public:
 	void SaveUser() const;
+	void SaveUserAsync(FAsyncSaveGameToSlotDelegate Callback) const;
 	void LoadUser();
+	void LoadUserAsync(FAsyncLoadGameFromSlotDelegate Callback) const;
 	void ClearUser() const;
 
 public:
 	void SaveRun() const;
+	void SaveRunAsync(FAsyncSaveGameToSlotDelegate Callback) const;
 	void LoadRun();
+	void LoadRunAsync(FAsyncLoadGameFromSlotDelegate Callback) const;
 	void ClearRun() const;
 
 protected:
