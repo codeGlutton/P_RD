@@ -54,4 +54,8 @@ protected:
 
 	UPROPERTY()
 	mutable TObjectPtr<URunSaveGame> mRunSaveGame;
+
+protected:
+	static constexpr auto USER_SLOT_NAME = TEXT("User");
+	static constexpr auto RUN_SLOT_NAME = TEXT("Run");
 };
