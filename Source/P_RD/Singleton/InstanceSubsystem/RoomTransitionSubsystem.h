@@ -18,14 +18,20 @@ DECLARE_LOG_CATEGORY_EXTERN(LogTransition, Log, All)
 struct FRoom;
 
 /**
- * @brief  SRPG 방 전환 상태 열거형
+ * @brief  방 전환 상태 플래그
  */
-enum class ESRPGRoomTransitionState : uint8
+enum class ERoomTransitionStateFlag : uint8
 {
-	None,
-	Loading,
-	Loaded,
+	None = 0,
+
+	PreLoadRequested = 1 << 0,
+	AutoTransition = 1 << 1,
+	StageLoaded = 1 << 2,
+	RoomLoaded = 1 << 3,
+
+	ReadyToTransition = PreLoadRequested | StageLoaded | RoomLoaded,
 };
+ENUM_CLASS_FLAGS(ERoomTransitionStateFlag);
 
 /**
  * @brief  SRPG 방 전환 처리를 돕는 Subsystem
@@ -40,11 +46,12 @@ public:
 	void Initialize(FSubsystemCollectionBase& Collection) override;
 
 public:
-	void PreloadRoomAsync(const FPrimaryAssetId& RoomId, bool IsAutoTransition = false);
-	void PreloadRoomAsync(const FPrimaryAssetId& RoomId, TArray<FPrimaryAssetId>&& AdditionalAssetIds, bool IsAutoTransition = false);
+	void PreloadRoomAsync(const FPrimaryAssetId& StageId, const FPrimaryAssetId& RoomId, bool IsAutoTransition = false);
+	void PreloadRoomAsync(const FPrimaryAssetId& StageId, const FPrimaryAssetId& RoomId, TArray<FPrimaryAssetId>&& AdditionalAssetIds, bool IsAutoTransition = false);
 	void TransitLoadedRoomAsync();
 
 protected:
+	void OnLoadNextStage(TSharedPtr<FStreamableHandle> AssetHandle);
 	void OnLoadNextRoom(TSharedPtr<FStreamableHandle> AssetHandle);
 
 protected:
@@ -52,12 +59,12 @@ protected:
 
 	/* 유지 데이터 */
 private:
-	ESRPGRoomTransitionState mTransitionState = ESRPGRoomTransitionState::None;
-	TSharedPtr<FStreamableHandle> mPreloadHandle = nullptr;
+	ERoomTransitionStateFlag mTransitionState = ERoomTransitionStateFlag::None;
+	TSharedPtr<FStreamableHandle> mStagePreloadHandle = nullptr;
+	TSharedPtr<FStreamableHandle> mRoomPreloadHandle = nullptr;
 
 	/* 일시 데이터 */
 private:
-	bool mIsAutoTransition = false;
 	FPrimaryAssetId mNextRoomId;
 };
 
