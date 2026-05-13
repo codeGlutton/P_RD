@@ -8,31 +8,34 @@
 #pragma once
 
 #include "RDMinimal.h"
+#include "PCGStage/Room.h"
 
 #include "Stage.generated.h"
 
-struct FRoom;
-
 /**
- * @brief  방 객체
+ * @brief  방 열 객체
  */
-USTRUCT()
-struct FStageColumn
+USTRUCT(BlueprintType)
+struct FStageRow
 {
 	GENERATED_BODY()
 
 public:
-	TArray<TSharedPtr<FRoom>> mRooms;
+	UPROPERTY(SaveGame)
+	TArray<TInstancedStruct<FRoom>> mRooms;
 };
 
 /**
  * @brief  스테이지 객체
  */
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FStage
 {
 	GENERATED_BODY()
 
-protected:
-	TArray<FStageColumn> mRoomColumns;
+public:
+	UPROPERTY(SaveGame)
+	int32 mStartColumn = 0;
+	UPROPERTY(SaveGame)
+	TArray<FStageRow> mRoomRows;
 };

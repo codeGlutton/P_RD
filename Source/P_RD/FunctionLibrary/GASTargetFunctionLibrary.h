@@ -17,6 +17,7 @@ struct FUnitSnapshotTargetData;
  */
 class P_RD_API UGASTargetFunctionLibrary
 {
+public:
 	/**
 	 * Gameplay Event에 유닛의 스냅샷을 담아 전달하기 위해 Target Data를 만들어 인코딩하는 함수
 	 * @param Source Ability를 실행한 유닛

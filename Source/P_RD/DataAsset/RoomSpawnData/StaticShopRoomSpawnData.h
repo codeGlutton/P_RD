@@ -7,8 +7,7 @@
 
 #pragma once
 
-#include "RDMinimal.h"
-#include "DataAsset/StaticRoomSpawnData.h"
+#include "DataAsset/RoomSpawnData/StaticRoomSpawnData.h"
 #include "StaticShopRoomSpawnData.generated.h"
 
 /**
@@ -22,8 +21,7 @@ class P_RD_API UStaticShopRoomSpawnData : public UStaticRoomSpawnData
 public:
 	FPrimaryAssetId GetPrimaryAssetId() const override
 	{
-		const FString TypeString = FString(TEXT("ShopRoom")) + FString::FromInt(mStageLevel);
-		return FPrimaryAssetId(*TypeString, GetFName());
+		return FPrimaryAssetId(RoomPrimaryAssetTypes::GetShopRoomType(mStageLevel), GetFName());
 	}
 
 public:

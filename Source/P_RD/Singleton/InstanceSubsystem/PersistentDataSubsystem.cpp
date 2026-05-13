@@ -3,6 +3,16 @@
 
 #include "Pawn/Player/PlayerUnit.h"
 
+const FName& UUserPersistData::GetUserName() const
+{
+	return mUserName;
+}
+
+int32 UUserPersistData::GetRunCount() const
+{
+	return mRunCount;
+}
+
 void UPlayerUnitPersistData::RegisterUnit(APlayerUnit* PlayerUnit)
 {
 	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
@@ -57,7 +67,6 @@ void UPlayerUnitPersistData::BindUnitEvent(APlayerUnit* PlayerUnit)
 	ASC->GetGameplayAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMoneyAttribute()).AddLambda([this](const FOnAttributeChangeData& Data) {
 		mMoney = Data.NewValue;
 		});
-
 	ASC->RegisterGameplayTagEvent(EffectTags::GameplayEffect_Cost_PassiveStack, EGameplayTagEventType::AnyCountChange).AddLambda([this](const FGameplayTag Tag, int32 Count) {
 		mTagCountMap[Tag] = Count;
 		if (Count == 0)
@@ -65,6 +74,21 @@ void UPlayerUnitPersistData::BindUnitEvent(APlayerUnit* PlayerUnit)
 			mTagCountMap.Remove(Tag);
 		}
 		});
+}
+
+const FRandomStream& URunPersistData::GetStageBuildStream() const
+{
+	return mStageBuildStream;
+}
+
+const FRandomStream& URunPersistData::GetEventStream() const
+{
+	return mEventStream;
+}
+
+const FRandomStream& URunPersistData::GetCombatStream() const
+{
+	return mCombatStream;
 }
 
 void UPersistentDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)

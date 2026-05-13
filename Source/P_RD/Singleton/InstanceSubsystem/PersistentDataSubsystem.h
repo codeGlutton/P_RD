@@ -9,7 +9,7 @@
 
 #include "GAS/GASMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
-#include "RoguelikeStage/Stage.h"
+#include "PCGStage/Stage.h"
 
 #include "PersistentDataSubsystem.generated.h"
 
@@ -22,6 +22,10 @@ UCLASS()
 class P_RD_API UUserPersistData : public UObject
 {
 	GENERATED_BODY()
+
+public:
+	const FName& GetUserName() const;
+	int32 GetRunCount() const;
 
 protected:
 	UPROPERTY(Category = User, SaveGame, VisibleAnywhere, meta = (DisplayName = "UserName"))
@@ -44,9 +48,6 @@ public:
 protected:
 	void ApplyPersistData(APlayerUnit* PlayerUnit);
 	void BindUnitEvent(APlayerUnit* PlayerUnit);
-
-public:
-
 
 protected:
 	UPROPERTY(SaveGame)
@@ -71,8 +72,8 @@ protected:
 	TMap<FGameplayTag, int32> mTagCountMap;
 
 protected:
-	UPROPERTY(Category = Armor, SaveGame, VisibleAnywhere, meta = (DisplayName = "ArmorIds"))
-	TArray<FPrimaryAssetId> mArmorIds;
+	UPROPERTY(Category = Equipment, SaveGame, VisibleAnywhere, meta = (DisplayName = "EquipmentIds"))
+	TArray<FPrimaryAssetId> mEquipmentIds;
 };
 
 /**
@@ -82,6 +83,11 @@ UCLASS()
 class P_RD_API URunPersistData : public UPlayerUnitPersistData
 {
 	GENERATED_BODY()
+
+public:
+	const FRandomStream& GetStageBuildStream() const;
+	const FRandomStream& GetEventStream() const;
+	const FRandomStream& GetCombatStream() const;
 
 protected:
 	UPROPERTY(Category = Stream, SaveGame, VisibleAnywhere, meta = (DisplayName = "StageBuildStream"))

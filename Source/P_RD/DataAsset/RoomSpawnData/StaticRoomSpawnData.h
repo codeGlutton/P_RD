@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
+#include "DataAsset/PrimaryAssetType.h"
 #include "StaticRoomSpawnData.generated.h"
 
 /**
@@ -41,7 +42,7 @@ public:
      * Primary Asset을 방 타입과 레벨 별로 분류해두었기 때문에, 해당 값은 Primary Asset Type에 영향을 줌
      */
 	UPROPERTY(Category = "Stage", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StageLevel"))
-	int32 mStageLevel;
+	EStageLevelType mStageLevel;
 
 public:
 	UPROPERTY(Category = "Background", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BackgroundMap", AssetBundles = "World"))

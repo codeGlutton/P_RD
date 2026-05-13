@@ -7,8 +7,7 @@
 
 #pragma once
 
-#include "RDMinimal.h"
-#include "DataAsset/StaticRoomSpawnData.h"
+#include "DataAsset/RoomSpawnData/StaticRoomSpawnData.h"
 #include "StaticCombatRoomSpawnData.generated.h"
 
 /**
@@ -40,17 +39,10 @@ public:
 /**
  * @brief  전투 방 생성 시 사용되는 정적 Primary Data Asset
  */
-UCLASS()
+UCLASS(abstract)
 class P_RD_API UStaticCombatRoomSpawnData : public UStaticRoomSpawnData
 {
 	GENERATED_BODY()
-
-public:
-	FPrimaryAssetId GetPrimaryAssetId() const override
-	{
-		const FString TypeString = FString(TEXT("CombatRoom")) + FString::FromInt(mStageLevel);
-		return FPrimaryAssetId(*TypeString, GetFName());
-	}
 
 public:
 	UPROPERTY(Category = "Unit", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PlayerTransform"))
@@ -63,3 +55,40 @@ public:
 	UPROPERTY(Category = "TileMap", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TileMapSpawnData"))
 	FTileMapSpawnData mTileMapSpawnData;
 };
+
+UCLASS()
+class P_RD_API UStaticMonsterRoomSpawnData : public UStaticCombatRoomSpawnData
+{
+	GENERATED_BODY()
+
+public:
+	FPrimaryAssetId GetPrimaryAssetId() const override
+	{
+		return FPrimaryAssetId(RoomPrimaryAssetTypes::GetMonsterRoomType(mStageLevel), GetFName());
+	}
+};
+
+UCLASS()
+class P_RD_API UStaticEliteMonsterRoomSpawnData : public UStaticCombatRoomSpawnData
+{
+	GENERATED_BODY()
+
+public:
+	FPrimaryAssetId GetPrimaryAssetId() const override
+	{
+		return FPrimaryAssetId(RoomPrimaryAssetTypes::GetEliteMonsterRoomType(mStageLevel), GetFName());
+	}
+};
+
+UCLASS()
+class P_RD_API UStaticBossMonsterRoomSpawnData : public UStaticCombatRoomSpawnData
+{
+	GENERATED_BODY()
+
+public:
+	FPrimaryAssetId GetPrimaryAssetId() const override
+	{
+		return FPrimaryAssetId(RoomPrimaryAssetTypes::GetBossMonsterRoomType(mStageLevel), GetFName());
+	}
+};
+
