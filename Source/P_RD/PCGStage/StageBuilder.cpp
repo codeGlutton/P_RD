@@ -1,55 +1,43 @@
 ﻿#include "PCGStage/StageBuilder.h"
-#include "FunctionLibrary/RandomStreamFunctionLibrary.h"
 
 #include "PCGStage/Room.h"
 
 #include "Engine/AssetManager.h"
 #include "DataAsset/PrimaryAssetType.h"
 
-FStageBuilder FStageBuilder::Make(const UObject* WorldContextObject)
-{
-	FStageBuilder Builder;
-	Builder.mWorld = WorldContextObject->GetWorld();
+DEFINE_LOG_CATEGORY(LogStageBuilder)
 
-	Builder.LoadAllAssetIds();
+FStageBuilder::FStageBuilder(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting) :
+	mBuildStream(BuildStream),
+	mGlobalSetting(GlobalSetting)
+{
+}
+
+FStageBuilder FStageBuilder::Make(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting)
+{
+	FStageBuilder Builder(BuildStream, GlobalSetting);
 
 	return Builder;
 }
 
-FStageBuilder FStageBuilder::Make(const UObject* WorldContextObject, const FStageBuilderParams& Params)
+FStageBuilder FStageBuilder::Make(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting, const FStageBuilderParams& Params)
 {
-	FStageBuilder Builder;
-	Builder.mWorld = WorldContextObject->GetWorld();
+	FStageBuilder Builder(BuildStream, GlobalSetting);
 	Builder.mParams = Params;
-
 	Builder.LoadAllAssetIds();
 
 	return Builder;
 }
 
-FStageBuilder& FStageBuilder::SetStageLevel(EStageLevelType StageLevel)
+FStageBuilder& FStageBuilder::SetParams(const FStageBuilderParams& Params)
 {
-	mParams.mStageLevel = StageLevel;
+	bool IsStageChanged = mParams.mStageLevel != Params.mStageLevel;
 
-	return *this;
-}
-
-FStageBuilder& FStageBuilder::SetStageShape(int32 RowCount, int32 ColumnCount, int32 MaxPathCount, int32 MinStartPointCount, int32 MaxStartPointCount)
-{
-	mParams.mRowCount = RowCount;
-	mParams.mColumnCount = ColumnCount;
-	mParams.mMaxPathCount = MaxPathCount;
-	mParams.mMinStartPointCount = MinStartPointCount;
-	mParams.mMaxStartPointCount = MaxStartPointCount;
-
-	return *this;
-}
-
-FStageBuilder& FStageBuilder::SetRoomWeights(float MonsterRoomWeight, float EliteRoomWeight, float ShopRoomWeight)
-{
-	mParams.mMonsterRoomWeight = MonsterRoomWeight;
-	mParams.mEliteRoomWeight = EliteRoomWeight;
-	mParams.mShopRoomWeight = ShopRoomWeight;
+	mParams = Params;
+	if (mIsLoadedIds == false || IsStageChanged == true)
+	{
+		LoadAllAssetIds();
+	}
 
 	return *this;
 }
@@ -57,11 +45,49 @@ FStageBuilder& FStageBuilder::SetRoomWeights(float MonsterRoomWeight, float Elit
 FStage FStageBuilder::Build() const
 {
 	FStage NewStage;
-	MakeEmptyRooms(NewStage);
-	MakeStartingPoints(NewStage);
-	MakeRoutes(NewStage);
-
+	Build(OUT NewStage);
 	return MoveTemp(NewStage);
+}
+
+void FStageBuilder::Build(OUT FStage& NewStage) const
+{
+	InitStage(OUT NewStage);
+
+	TArray<FRoomEdge> Edges;
+	CreateStartRoom(OUT NewStage);
+	Edges = MakeStartRoutes(OUT NewStage);
+
+	const int32 RowCount = mParams.mRowCount;
+	for (int32 RowIndex = 1; RowIndex < RowCount - 1; ++RowIndex)
+	{
+		CreateRooms(OUT NewStage, RowIndex, Edges);
+		Edges = MakeNextRoutes(OUT NewStage, RowIndex, Edges);
+	}
+
+	CreateRooms(OUT NewStage, RowCount - 1, Edges);
+
+	/* 디버깅 */
+#if UE_BUILD_DEVELOPMENT || UE_BUILD_DEBUG
+	for (auto Iter = NewStage.mRoomRows.rbegin(); Iter != NewStage.mRoomRows.rend(); ++Iter)
+	{
+		FString RowStr = TEXT("");
+		for (const TInstancedStruct<FRoom>& RoomInst : Iter->mRooms)
+		{
+			ERoomType Type = ERoomType::None;
+			FString LinkRoomStr = TEXT("");
+			if (const FRoom* Room = RoomInst.GetPtr<FRoom>())
+			{
+				Type = Room->mType;
+				for (int32 NextColumn : Room->mNextRoomColumns)
+				{
+					LinkRoomStr += FString::FromInt(NextColumn) + TEXT(",");
+				}
+			}
+			RowStr.Append(FString::Printf(TEXT(" [%-12s](%-7s) "), *EnumToString(Type), *LinkRoomStr));
+		}
+		UE_LOG(LogStageBuilder, Log, TEXT("(%s)"), *RowStr);
+	}
+#endif
 }
 
 void FStageBuilder::LoadAllAssetIds()
@@ -69,90 +95,248 @@ void FStageBuilder::LoadAllAssetIds()
 	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
 	checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
 
-	AssetManager->GetPrimaryAssetIdList(RoomPrimaryAssetTypes::GetTreasureRoomType(mParams.mStageLevel), mTreasureRoomAssetIds);
-	AssetManager->GetPrimaryAssetIdList(RoomPrimaryAssetTypes::GetShopRoomType(mParams.mStageLevel), mShopRoomAssetIds);
-	AssetManager->GetPrimaryAssetIdList(RoomPrimaryAssetTypes::GetMonsterRoomType(mParams.mStageLevel), mMonsterRoomAssetIds);
-	AssetManager->GetPrimaryAssetIdList(RoomPrimaryAssetTypes::GetEliteMonsterRoomType(mParams.mStageLevel), mEliteMonsterRoomAssetIds);
-	AssetManager->GetPrimaryAssetIdList(RoomPrimaryAssetTypes::GetBossMonsterRoomType(mParams.mStageLevel), mBossMonsterRoomAssetIds);
+	AssetManager->GetPrimaryAssetIdList(RoomPrimaryAssetTypes::GetTreasureRoomType(mParams.mStageLevel), mRoomAssetIds[static_cast<uint8>(ERoomType::Treasure)]);
+	AssetManager->GetPrimaryAssetIdList(RoomPrimaryAssetTypes::GetShopRoomType(mParams.mStageLevel), mRoomAssetIds[static_cast<uint8>(ERoomType::Shop)]);
+	AssetManager->GetPrimaryAssetIdList(RoomPrimaryAssetTypes::GetMonsterRoomType(mParams.mStageLevel), mRoomAssetIds[static_cast<uint8>(ERoomType::Monster)]);
+	AssetManager->GetPrimaryAssetIdList(RoomPrimaryAssetTypes::GetEliteMonsterRoomType(mParams.mStageLevel), mRoomAssetIds[static_cast<uint8>(ERoomType::EliteMonster)]);
+	AssetManager->GetPrimaryAssetIdList(RoomPrimaryAssetTypes::GetBossMonsterRoomType(mParams.mStageLevel), mRoomAssetIds[static_cast<uint8>(ERoomType::BossMonster)]);
 
-	AssetManager->GetPrimaryAssetIdList(EquipmentPrimaryAssetTypes::GetWeaponType(ERarityType::Common), mCommonWeaponAssetIds);
-	AssetManager->GetPrimaryAssetIdList(EquipmentPrimaryAssetTypes::GetWeaponType(ERarityType::Rare), mRareWeaponAssetIds);
-	AssetManager->GetPrimaryAssetIdList(EquipmentPrimaryAssetTypes::GetWeaponType(ERarityType::Epic), mEpicWeaponAssetIds);
+	const uint8 RarityTypeCount = StaticCast<uint8>(ERarityType::Count);
+	for (uint8 i = 0; i < RarityTypeCount; ++i)
+	{
+		AssetManager->GetPrimaryAssetIdList(EquipmentPrimaryAssetTypes::GetWeaponType(StaticCast<ERarityType>(i)), mEquipmentAssetIds[StaticCast<uint8>(EEquipmentType::Weapon)][i]);
+		AssetManager->GetPrimaryAssetIdList(EquipmentPrimaryAssetTypes::GetGlovesType(StaticCast<ERarityType>(i)), mEquipmentAssetIds[StaticCast<uint8>(EEquipmentType::Gloves)][i]);
+		AssetManager->GetPrimaryAssetIdList(EquipmentPrimaryAssetTypes::GetBootsType(StaticCast<ERarityType>(i)), mEquipmentAssetIds[StaticCast<uint8>(EEquipmentType::Boots)][i]);
+		AssetManager->GetPrimaryAssetIdList(SkillPrimaryAssetTypes::GetAttackType(StaticCast<ERarityType>(i)), mSkillAssetIds[StaticCast<uint8>(ESkillType::Attack)][i]);
+		AssetManager->GetPrimaryAssetIdList(SkillPrimaryAssetTypes::GetSpellType(StaticCast<ERarityType>(i)), mSkillAssetIds[StaticCast<uint8>(ESkillType::Spell)][i]);
+		AssetManager->GetPrimaryAssetIdList(DicePrimaryAssetTypes::GetDiceType(StaticCast<ERarityType>(i)), mDiceAssetIds[i]);
+	}
 
-	AssetManager->GetPrimaryAssetIdList(EquipmentPrimaryAssetTypes::GetGlovesType(ERarityType::Common), mCommonGlovesAssetIds);
-	AssetManager->GetPrimaryAssetIdList(EquipmentPrimaryAssetTypes::GetGlovesType(ERarityType::Rare), mRareGlovesAssetIds);
-	AssetManager->GetPrimaryAssetIdList(EquipmentPrimaryAssetTypes::GetGlovesType(ERarityType::Epic), mEpicGlovesAssetIds);
-
-	AssetManager->GetPrimaryAssetIdList(EquipmentPrimaryAssetTypes::GetBootsType(ERarityType::Common), mCommonBootsAssetIds);
-	AssetManager->GetPrimaryAssetIdList(EquipmentPrimaryAssetTypes::GetBootsType(ERarityType::Rare), mRareBootsAssetIds);
-	AssetManager->GetPrimaryAssetIdList(EquipmentPrimaryAssetTypes::GetBootsType(ERarityType::Epic), mEpicBootsAssetIds);
-
-	AssetManager->GetPrimaryAssetIdList(SkillPrimaryAssetTypes::GetAttackType(ERarityType::Common), mCommonAttackSkillAssetIds);
-	AssetManager->GetPrimaryAssetIdList(SkillPrimaryAssetTypes::GetAttackType(ERarityType::Rare), mRareAttackSkillAssetIds);
-	AssetManager->GetPrimaryAssetIdList(SkillPrimaryAssetTypes::GetAttackType(ERarityType::Epic), mEpicAttackSkillAssetIds);
-
-	AssetManager->GetPrimaryAssetIdList(SkillPrimaryAssetTypes::GetSpellType(ERarityType::Common), mCommonSpellSkillAssetIds);
-	AssetManager->GetPrimaryAssetIdList(SkillPrimaryAssetTypes::GetSpellType(ERarityType::Rare), mRareSpellSkillAssetIds);
-	AssetManager->GetPrimaryAssetIdList(SkillPrimaryAssetTypes::GetSpellType(ERarityType::Epic), mEpicSpellSkillAssetIds);
-
-	AssetManager->GetPrimaryAssetIdList(DicePrimaryAssetTypes::GetDiceType(ERarityType::Common), mCommonDiceAssetIds);
-	AssetManager->GetPrimaryAssetIdList(DicePrimaryAssetTypes::GetDiceType(ERarityType::Rare), mRareDiceAssetIds);
-	AssetManager->GetPrimaryAssetIdList(DicePrimaryAssetTypes::GetDiceType(ERarityType::Epic), mEpicDiceAssetIds);
+	mIsLoadedIds = true;
 }
 
-void FStageBuilder::MakeEmptyRooms(OUT FStage& Stage) const
+void FStageBuilder::InitStage(OUT FStage& Stage) const
 {
 	const int32 RowCount = mParams.mRowCount;
 	const int32 ColumnCount = mParams.mColumnCount;
 
-	FStageRow Row;
-	Row.mRooms.Init(TInstancedStruct<FRoom>(nullptr), ColumnCount);
+	Stage.mStageLevel = mParams.mStageLevel;
+	Stage.mStaticStageSpawnDataId = mParams.mStaticStageSpawnDataId;
+
+	FRoomRow Row;
+	Row.mRooms.Init(TInstancedStruct<FRoom>(), ColumnCount);
 	Stage.mRoomRows.Init(Row, RowCount);
 }
 
-void FStageBuilder::MakeStartingPoints(OUT FStage& Stage) const
+TArray<FRoomEdge> FStageBuilder::MakeStartRoutes(OUT FStage& Stage) const
 {
-	const FRandomStream& BuildStream = URandomStreamFunctionLibrary::GetStageBuildStream(mWorld);
-	const int32 StartPointCount = BuildStream.RandRange(mParams.mMinStartPointCount, mParams.mMaxStartPointCount);
+	const int32 StartPointCount = mBuildStream.RandRange(mParams.mMinStartPointCount, mParams.mMaxStartPointCount);
 	const int32 MaxPathCount = mParams.mMaxPathCount;
 	const int32 ColumnCount = mParams.mColumnCount;
 
 	checkf(StartPointCount < ColumnCount, TEXT("시작점이 최대 가로 점보다 많아질 수 없습니다"));
 	checkf(StartPointCount < MaxPathCount, TEXT("시작점이 최대 경로보다 많아질 수 없습니다"));
 
-	const int32 StartColumn = Stage.mStartColumn = ColumnCount / 2;
-	FRoom& StartRoom = CreateRoom(ERoomType::Monster, 0, StartColumn, Stage.mRoomRows[0].mRooms[StartColumn]);
-
-	TArray<int32>& StartPoints = StartRoom.mNextRoomColumns;
+	TArray<int32> StartPoints;
 	StartPoints.Reserve(FMath::Max(ColumnCount, MaxPathCount));
-
-	// 칼럼 인덱스 채우기
-	for (int32 i = 0; i < ColumnCount; ++i)
+	
+	/* 칼럼 인덱스 채우기 */
+	for (int32 ColumnIndex = 0; ColumnIndex < ColumnCount; ++ColumnIndex)
 	{
-		StartPoints.Push(i);
+		StartPoints.Push(ColumnIndex);
 	}
-	// 하나씩 빼가면서 모든 시작점 결정
+	/* 하나씩 빼가면서 모든 시작방에서 도달할 수 있는 일반 방 결정 */
 	for (int32 i = StartPointCount; i < ColumnCount; ++i)
 	{
-		const int32 RemoveIndex = BuildStream.RandRange(0, StartPoints.Num() - 1);
+		const int32 RemoveIndex = mBuildStream.RandRange(0, StartPoints.Num() - 1);
 		StartPoints.RemoveAtSwap(RemoveIndex, EAllowShrinking::No);
 	}
-	// 각 경로의 시작점 결정
+
+	FRoom& StartRoom = Stage.mRoomRows[0].mRooms[Stage.mStartColumn].GetMutable<FRoom>();
+	StartRoom.mNextRoomColumns = StartPoints;
+
+	/* 시작 방 -> 일반 방의 모든 경로 결정 */
 	for (int32 i = StartPointCount; i < MaxPathCount; ++i)
 	{
-		const int32 PathStartPoint = StartPoints[BuildStream.RandRange(0, StartPointCount - 1)];
+		const int32 PathStartPoint = StartPoints[mBuildStream.RandRange(0, StartPointCount - 1)];
 		StartPoints.Push(PathStartPoint);
 	}
+
+	/* 방 생성 데이터로 사용될 Edge 반환 데이터 채우기 */
+	TArray<FRoomEdge> NewEdges;
+	NewEdges.Init(FRoomEdge(), ColumnCount);
+	for (int32 i = 0; i < MaxPathCount; ++i)
+	{
+		NewEdges[StartPoints[i]].mPreRoomColumns.Push(Stage.mStartColumn);
+	}
+	return NewEdges;
 }
 
-void FStageBuilder::MakeRoutes(OUT FStage& Stage) const
+TArray<FRoomEdge> FStageBuilder::MakeNextRoutes(OUT FStage& Stage, int32 CurRowIndex, const TArray<FRoomEdge>& CurEdges) const
 {
+	const int32 ColumnCount = mParams.mColumnCount;
+	const int32 RowCount = mParams.mRowCount;
+
+	TArray<FRoomEdge> NewEdges;
+	NewEdges.Init(FRoomEdge(), ColumnCount);
+
+	if (CurRowIndex == RowCount - 2)
+	{
+		/* 상점 방 -> 보스 방 연결 */
+
+		for (int32 CurColumnIndex = 0; CurColumnIndex < ColumnCount; ++CurColumnIndex)
+		{
+			const TArray<int32>& PreRoomColumns = CurEdges[CurColumnIndex].mPreRoomColumns;
+			if (PreRoomColumns.IsEmpty() == true)
+			{
+				continue;
+			}
+
+			TInstancedStruct<FRoom>& CurRoomInst = Stage.mRoomRows[CurRowIndex].mRooms[CurColumnIndex];
+			FRoom* CurRoomPtr = CurRoomInst.GetMutablePtr<FRoom>();
+			CurRoomPtr->mNextRoomColumns.Push(Stage.mStartColumn);
+
+			for (int32 PreRoomColumnIndex : PreRoomColumns)
+			{
+				NewEdges[Stage.mStartColumn].mPreRoomColumns.Init(PreRoomColumnIndex, PreRoomColumns.Num());
+			}
+		}
+		return NewEdges;
+	}
+
+	/* 일반 방 -> 일반 방 연결 */
+
+	int32 MinNewColumnIndex = -1;
+	int32 MaxNewColumnIndex = -1;
+
+	for (int32 CurColumnIndex = 0; CurColumnIndex < ColumnCount; ++CurColumnIndex)
+	{
+		const TArray<int32>& PreRoomColumns = CurEdges[CurColumnIndex].mPreRoomColumns;
+		if (PreRoomColumns.IsEmpty() == true)
+		{
+			continue;
+		}
+
+		MinNewColumnIndex = FMath::Max(MinNewColumnIndex + 1, CurColumnIndex - 1);
+		MaxNewColumnIndex = FMath::Min(CurColumnIndex + 1, ColumnCount - 1);
+
+		TInstancedStruct<FRoom>& CurRoomInst = Stage.mRoomRows[CurRowIndex].mRooms[CurColumnIndex];
+		FRoom* CurRoomPtr = CurRoomInst.GetMutablePtr<FRoom>();
+		TSet<int32> NextRoomColumns;
+
+		for (int32 PreRoomColumnIndex : PreRoomColumns)
+		{
+			int32 NewColumnIndex = mBuildStream.RandRange(MinNewColumnIndex, MaxNewColumnIndex);
+			NewEdges[NewColumnIndex].mPreRoomColumns.Push(CurColumnIndex);
+			NextRoomColumns.Add(NewColumnIndex);
+		}
+
+		CurRoomPtr->mNextRoomColumns = NextRoomColumns.Array();
+	}
+
+	return NewEdges;
+}
+
+void FStageBuilder::CreateStartRoom(OUT FStage& Stage) const
+{
+	const int32 ColumnCount = mParams.mColumnCount;
+	const int32 StartColumn = Stage.mStartColumn = ColumnCount / 2;
+	FRoom& StartRoom = CreateRoom(ERoomType::Monster, 0, StartColumn, Stage.mRoomRows[0].mRooms[StartColumn]);
+}
+
+void FStageBuilder::CreateRooms(OUT FStage& Stage, int32 CurRowIndex, const TArray<FRoomEdge>& CurEdges) const
+{
+	const int32 ColumnCount = mParams.mColumnCount;
+	const int32 RowCount = mParams.mRowCount;
+
+	/* 특정 타입의 행 검사 */
+
+	ERoomType NewRoomType = ERoomType::None;
+	if (CurRowIndex == RowCount - 1)
+	{
+		NewRoomType = ERoomType::BossMonster;
+	}
+	else if (CurRowIndex == RowCount - 2)
+	{
+		NewRoomType = ERoomType::Shop;
+	}
+	else if (CurRowIndex % mGlobalSetting.mTreasureColumnInterval == 0)
+	{
+		NewRoomType = ERoomType::Treasure;
+	}
+
+	if (NewRoomType == ERoomType::None)
+	{
+		/* 특정 타입의 행이 아닌 경우, 각 방의 루트를 검사해서 적절한 방 타입 도입 */
+
+		const bool IsRowInShopRange = CurRowIndex > mGlobalSetting.mBottomShopColumnOffset && CurRowIndex < (RowCount - mGlobalSetting.mTopShopColumnOffset);
+		for (int32 CurColumnIndex = 0; CurColumnIndex < ColumnCount; ++CurColumnIndex)
+		{
+			const TArray<int32>& PreRoomColumns = CurEdges[CurColumnIndex].mPreRoomColumns;
+			if (PreRoomColumns.IsEmpty() == true)
+			{
+				continue;
+			}
+
+			bool IsPreRoomShop = false;
+			bool IsPreRoomElite = false;
+			for (int32 PreRoomColumnIndex : PreRoomColumns)
+			{
+				TInstancedStruct<FRoom>& PreRoomInst = Stage.mRoomRows[CurRowIndex - 1].mRooms[PreRoomColumnIndex];
+				FRoom* PreRoomPtr = PreRoomInst.GetMutablePtr<FRoom>();
+				if (PreRoomPtr == nullptr)
+				{
+					continue;
+				}
+
+				if (PreRoomPtr->mType == ERoomType::Shop)
+				{
+					IsPreRoomShop = true;
+				}
+				if (PreRoomPtr->mType == ERoomType::EliteMonster)
+				{
+					IsPreRoomElite = true;
+				}
+			}
+
+			TArray<ERoomBuildType> CandidateRoomTypes;
+			CandidateRoomTypes.Push(ERoomBuildType::Monster);
+			if (IsRowInShopRange == true && IsPreRoomShop == false)
+			{
+				CandidateRoomTypes.Push(ERoomBuildType::Shop);
+			}
+			if (IsPreRoomElite == false)
+			{
+				CandidateRoomTypes.Push(ERoomBuildType::EliteMonster);
+			}
+
+			// 후보들 중에 랜덤 배정
+			NewRoomType = mParams.mRoomBuildRate.GetType(mBuildStream.FRand(), CandidateRoomTypes);
+			
+			TInstancedStruct<FRoom>& NewRoomInst = Stage.mRoomRows[CurRowIndex].mRooms[CurColumnIndex];
+			FRoom& NewRoom = CreateRoom(NewRoomType, CurRowIndex, CurColumnIndex, NewRoomInst);
+		}
+	}
+	else
+	{
+		/* 정해진 타입의 행인 경우 */
+
+		for (int32 CurColumnIndex = 0; CurColumnIndex < ColumnCount; ++CurColumnIndex)
+		{
+			const TArray<int32>& PreRoomColumns = CurEdges[CurColumnIndex].mPreRoomColumns;
+			if (PreRoomColumns.IsEmpty() == true)
+			{
+				continue;
+			}
+
+			TInstancedStruct<FRoom>& NewRoomInst = Stage.mRoomRows[CurRowIndex].mRooms[CurColumnIndex];
+			FRoom& NewRoom = CreateRoom(NewRoomType, CurRowIndex, CurColumnIndex, NewRoomInst);
+		}
+	}
 }
 
 FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInstancedStruct<FRoom>& Room) const
 {
-	const FRandomStream& BuildStream = URandomStreamFunctionLibrary::GetStageBuildStream(mWorld);
-
 	FRoom* NewRoomPtr = nullptr;
 	switch (Type)
 	{
@@ -160,6 +344,12 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 	{
 		Room.InitializeAs<FTreasureRoom>();
 		auto& NewRoom = Room.GetMutable<FTreasureRoom>();
+
+		const uint8 EquipmentTypeIndex = GetRandomEquipmentIndex();
+		const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mEquipmentRarityRate);
+		const TArray<FPrimaryAssetId>& EquipmentIdArray = mEquipmentAssetIds[EquipmentTypeIndex][RarityTypeIndex];
+		NewRoom.mRewardEquipmentDataId = GetRandomId(EquipmentIdArray);
+		
 		NewRoomPtr = &NewRoom;
 		break;
 	}
@@ -167,6 +357,23 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 	{
 		Room.InitializeAs<FShopRoom>();
 		auto& NewRoom = Room.GetMutable<FShopRoom>();
+
+		for (int32 i = 0; i < 3; ++i)
+		{
+			const uint8 SkillTypeIndex = GetRandomSkillIndex();
+			const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mSkillRarityRate);
+			const TArray<FPrimaryAssetId>& SkillIdArray = mSkillAssetIds[SkillTypeIndex][RarityTypeIndex];
+			NewRoom.mSaleSkillDataIds.Push(GetRandomId(SkillIdArray));
+		}
+
+		for (int32 i = 0; i < 3; ++i)
+		{
+			const uint8 EquipmentTypeIndex = GetRandomEquipmentIndex();
+			const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mEquipmentRarityRate);
+			const TArray<FPrimaryAssetId>& EquipmentIdArray = mEquipmentAssetIds[EquipmentTypeIndex][RarityTypeIndex];
+			NewRoom.mSaleEquipmentDataIds.Push(GetRandomId(EquipmentIdArray));
+		}
+
 		NewRoomPtr = &NewRoom;
 		break;
 	}
@@ -174,6 +381,10 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 	{
 		Room.InitializeAs<FMonsterRoom>();
 		auto& NewRoom = Room.GetMutable<FMonsterRoom>();
+
+		NewRoom.mRewardMoney = GetRandomFromInterval(mGlobalSetting.mMonsterRewardMoney);
+		NewRoom.mRewardExp = mGlobalSetting.mMonsterRewardExp;
+
 		NewRoomPtr = &NewRoom;
 		break;
 	}
@@ -181,6 +392,15 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 	{
 		Room.InitializeAs<FEliteMonsterRoom>();
 		auto& NewRoom = Room.GetMutable<FEliteMonsterRoom>();
+
+		NewRoom.mRewardMoney = GetRandomFromInterval(mGlobalSetting.mEliteRewardMoney);
+		NewRoom.mRewardExp = mGlobalSetting.mEliteRewardExp;
+
+		const uint8 EquipmentTypeIndex = GetRandomEquipmentIndex();
+		const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mEquipmentRarityRate);
+		const TArray<FPrimaryAssetId>& EquipmentIdArray = mEquipmentAssetIds[EquipmentTypeIndex][RarityTypeIndex];
+		NewRoom.mRewardEquipmentDataId = GetRandomId(EquipmentIdArray);
+
 		NewRoomPtr = &NewRoom;
 		break;
 	}
@@ -188,15 +408,67 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 	{
 		Room.InitializeAs<FBossMonsterRoom>();
 		auto& NewRoom = Room.GetMutable<FBossMonsterRoom>();
+
+		NewRoom.mRewardMoney = GetRandomFromInterval(mGlobalSetting.mBossRewardMoney);
+		NewRoom.mRewardExp = mGlobalSetting.mBossRewardExp;
+
+		const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mEquipmentRarityRate);
+		const TArray<FPrimaryAssetId>& DiceIdArray = mDiceAssetIds[RarityTypeIndex];
+		NewRoom.mRewardDiceDataId = GetRandomId(DiceIdArray);
+
 		NewRoomPtr = &NewRoom;
 		break;
 	}
 	}
 	checkf(NewRoomPtr != nullptr, TEXT("알 수 없는 방 타입 오류"));
 
+	const TArray<FPrimaryAssetId>& RoomIdArray = mRoomAssetIds[static_cast<uint8>(Type)];
 	NewRoomPtr->mRow = Row;
 	NewRoomPtr->mColumn = Column;
-	NewRoomPtr->mPositionOffsetRate = FVector2D(BuildStream.FRandRange(-1., 1.), BuildStream.FRandRange(-1., 1.));
+	NewRoomPtr->mPositionOffsetRate = FVector2D(mBuildStream.FRandRange(-1., 1.), mBuildStream.FRandRange(-1., 1.));
+	NewRoomPtr->mStaticRoomSpawnDataId = GetRandomId(RoomIdArray);
 
 	return *NewRoomPtr;
 }
+
+const FPrimaryAssetId& FStageBuilder::GetRandomId(const TArray<FPrimaryAssetId>& IdArray) const
+{
+	checkf(IdArray.IsEmpty() == false, TEXT("Random Array is empty"));
+	return IdArray[mBuildStream.RandRange(0, IdArray.Num() - 1)];
+}
+
+uint8 FStageBuilder::GetRandomEquipmentIndex() const
+{
+	return mBuildStream.RandRange(0, StaticCast<uint8>(EEquipmentType::Count) - 1);
+}
+
+EEquipmentType FStageBuilder::GetRandomEquipment() const
+{
+	return StaticCast<EEquipmentType>(GetRandomEquipmentIndex());
+}
+
+uint8 FStageBuilder::GetRandomSkillIndex() const
+{
+	return mBuildStream.RandRange(0, StaticCast<uint8>(ESkillType::Count) - 1);
+}
+
+ESkillType FStageBuilder::GetRandomSkill() const
+{
+	return StaticCast<ESkillType>(GetRandomSkillIndex());
+}
+
+uint8 FStageBuilder::GetRandomRarityIndex(const FRarityRate& RarityRate) const
+{
+	return StaticCast<uint8>(RarityRate.GetType(mBuildStream.FRand()));
+}
+
+ERarityType FStageBuilder::GetRandomRarity(const FRarityRate& RarityRate) const
+{
+	return RarityRate.GetType(mBuildStream.FRand());
+}
+
+int32 FStageBuilder::GetRandomFromInterval(const FInt32Interval& Interval) const
+{
+	return mBuildStream.RandRange(Interval.Min, Interval.Max);
+}
+

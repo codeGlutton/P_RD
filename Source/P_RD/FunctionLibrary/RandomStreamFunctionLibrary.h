@@ -17,5 +17,4 @@ class P_RD_API URandomStreamFunctionLibrary
 public:
 	static const FRandomStream& GetStageBuildStream(const UObject* WorldContextObject);
 	static const FRandomStream& GetEventStream(const UObject* WorldContextObject);
-	static const FRandomStream& GetCombatStream(const UObject* WorldContextObject);
 };

@@ -1,6 +1,6 @@
 ﻿#include "PCGStage/Room.h"
 
-void FRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds)
+void FRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const
 {
 	RoomId = mStaticRoomSpawnDataId;
 }
@@ -10,7 +10,7 @@ FTreasureRoom::FTreasureRoom()
 	mType = ERoomType::Treasure;
 }
 
-void FTreasureRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds)
+void FTreasureRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const
 {
 	Super::CollectAssetIds(RoomId, AdditionalAssetIds);
 
@@ -22,7 +22,7 @@ FShopRoom::FShopRoom()
 	mType = ERoomType::Shop;
 }
 
-void FShopRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds)
+void FShopRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const
 {
 	Super::CollectAssetIds(RoomId, AdditionalAssetIds);
 
@@ -40,7 +40,7 @@ FEliteMonsterRoom::FEliteMonsterRoom()
 	mType = ERoomType::EliteMonster;
 }
 
-void FEliteMonsterRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds)
+void FEliteMonsterRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const
 {
 	Super::CollectAssetIds(RoomId, AdditionalAssetIds);
 
@@ -52,7 +52,7 @@ FBossMonsterRoom::FBossMonsterRoom()
 	mType = ERoomType::BossMonster;
 }
 
-void FBossMonsterRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds)
+void FBossMonsterRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const
 {
 	Super::CollectAssetIds(RoomId, AdditionalAssetIds);
 

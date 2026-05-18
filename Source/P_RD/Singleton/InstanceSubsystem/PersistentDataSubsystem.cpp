@@ -1,7 +1,18 @@
 ﻿#include "Singleton/InstanceSubsystem/PersistentDataSubsystem.h"
 #include "GAS/Attribute/UnitAttributeSet.h"
-
 #include "Pawn/Player/PlayerUnit.h"
+
+#include "Setting/GlobalGameBalanceSettings.h"
+#include "Engine/AssetManager.h"
+#include "PCGStage/StageBuilder.h"
+
+#include "FunctionLibrary/RandomStreamFunctionLibrary.h"
+
+void UUserPersistData::MakeNewUser(FName Name)
+{
+	mUserName = Name;
+	mRunCount = 0;
+}
 
 const FName& UUserPersistData::GetUserName() const
 {
@@ -23,6 +34,16 @@ void UPlayerUnitPersistData::RegisterUnit(APlayerUnit* PlayerUnit)
 	BindUnitEvent(PlayerUnit);
 }
 
+int32 UPlayerUnitPersistData::GetPlayerLevel() const
+{
+	return mPlayerLevel;
+}
+
+int32 UPlayerUnitPersistData::GetDifficulty() const
+{
+	return mDifficulty;
+}
+
 void UPlayerUnitPersistData::ApplyPersistData(APlayerUnit* PlayerUnit)
 {
 	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
@@ -37,7 +58,6 @@ void UPlayerUnitPersistData::ApplyPersistData(APlayerUnit* PlayerUnit)
 
 	ASC->ApplyModToAttribute(UPlayerUnitAttributeSet::GetMaxHPAttribute(), EGameplayModOp::Override, mMaxHP);
 	ASC->ApplyModToAttribute(UPlayerUnitAttributeSet::GetHPAttribute(), EGameplayModOp::Override, mHP);
-	ASC->ApplyModToAttribute(UPlayerUnitAttributeSet::GetLevelAttribute(), EGameplayModOp::Override, mLevel);
 	ASC->ApplyModToAttribute(UPlayerUnitAttributeSet::GetExpAttribute(), EGameplayModOp::Override, mExp);
 	ASC->ApplyModToAttribute(UPlayerUnitAttributeSet::GetMoneyAttribute(), EGameplayModOp::Override, mMoney);
 	for (auto& Pair : mTagCountMap)
@@ -58,9 +78,6 @@ void UPlayerUnitPersistData::BindUnitEvent(APlayerUnit* PlayerUnit)
 	ASC->GetGameplayAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).AddLambda([this](const FOnAttributeChangeData& Data) {
 		mHP = Data.NewValue;
 		});
-	ASC->GetGameplayAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetLevelAttribute()).AddLambda([this](const FOnAttributeChangeData& Data) {
-		mLevel = Data.NewValue;
-		});
 	ASC->GetGameplayAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetExpAttribute()).AddLambda([this](const FOnAttributeChangeData& Data) {
 		mExp = Data.NewValue;
 		});
@@ -76,6 +93,39 @@ void UPlayerUnitPersistData::BindUnitEvent(APlayerUnit* PlayerUnit)
 		});
 }
 
+void URunPersistData::MakeNewRun(int32 Difficulty)
+{
+	ClearRunData();
+
+	mStageBuildStream.Initialize(FMath::Rand32());
+	mEventStream.Initialize(FMath::Rand32());
+
+	mIsNewData = true;
+	mDifficulty = Difficulty;
+}
+
+void URunPersistData::MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCreateStage)
+{
+	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
+	checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
+
+	const UGlobalGameBalanceSettings* GlobalGameBalanceSetting = GetDefault<UGlobalGameBalanceSettings>();
+	checkf(GlobalGameBalanceSetting != nullptr, TEXT("글로벌 밸런스 세팅 객체 nullptr"));
+
+	GlobalGameBalanceSetting->mStageBuildSettingTable.LoadAsync(FLoadSoftObjectPathAsyncDelegate::CreateLambda([this, Type, OnCreateStage = MoveTemp(OnCreateStage), GlobalGameBalanceSetting](const FSoftObjectPath& Path, UObject* Object) {
+		
+		const UDataTable* BalanceSetting = Cast<UDataTable>(Object);
+		checkf(BalanceSetting != nullptr, TEXT("스테이지 빌드 세팅 미존재 nullptr"));
+
+		const FStageBuilderParams& BuilderParams = *BalanceSetting->FindRow<FStageBuilderParams>(*EnumToString(Type), TEXT("밸런스 세팅 테이블 탐색 에러"));
+		const FRandomStream& BuildStream = URandomStreamFunctionLibrary::GetStageBuildStream(this);
+
+		mStage = FStageBuilder::Make(BuildStream, GlobalGameBalanceSetting->mGlobalStageBuildSetting, BuilderParams).Build();
+		OnCreateStage.ExecuteIfBound(mStage);
+
+		}));
+}
+
 const FRandomStream& URunPersistData::GetStageBuildStream() const
 {
 	return mStageBuildStream;
@@ -86,9 +136,9 @@ const FRandomStream& URunPersistData::GetEventStream() const
 	return mEventStream;
 }
 
-const FRandomStream& URunPersistData::GetCombatStream() const
+const FStage& URunPersistData::GetStage() const
 {
-	return mCombatStream;
+	return mStage;
 }
 
 void UPersistentDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -109,3 +159,12 @@ URunPersistData* UPersistentDataSubsystem::GetRunPersistData()
 	return mRunPersistData;
 }
 
+void URunPersistData::ClearRunData()
+{
+	mPlayerLevel = 1;
+	mDifficulty = 1;
+	mIsNewData = true;
+
+	mTagCountMap.Empty();
+	mEquipmentIds.Empty();
+}

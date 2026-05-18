@@ -17,10 +17,3 @@ const FRandomStream& URandomStreamFunctionLibrary::GetEventStream(const UObject*
 	return PersistentSubsystem->GetRunPersistData()->GetEventStream();
 }
 
-const FRandomStream& URandomStreamFunctionLibrary::GetCombatStream(const UObject* WorldContextObject)
-{
-	UPersistentDataSubsystem* PersistentSubsystem = UGameplayStatics::GetGameInstance(WorldContextObject)->GetSubsystem<UPersistentDataSubsystem>();
-	checkf(PersistentSubsystem != nullptr, TEXT("영구 데이터 서브시스템 nullptr"));
-
-	return PersistentSubsystem->GetRunPersistData()->GetCombatStream();
-}

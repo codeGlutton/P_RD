@@ -5,6 +5,8 @@
  * @date   2026-05-10
  *********************************************************************/
 
+#pragma once
+
 #include "RDMinimal.h"
 #include "Serialization/ObjectAndNameAsStringProxyArchive.h" 
 

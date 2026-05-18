@@ -13,6 +13,8 @@
 
 #include "PersistentDataSubsystem.generated.h"
 
+DECLARE_DELEGATE_OneParam(FOnCreateStage, const FStage& /*NewStage*/)
+
 class APlayerUnit;
 
 /**
@@ -22,6 +24,9 @@ UCLASS()
 class P_RD_API UUserPersistData : public UObject
 {
 	GENERATED_BODY()
+
+public:
+	void MakeNewUser(FName Name);
 
 public:
 	const FName& GetUserName() const;
@@ -45,6 +50,10 @@ class P_RD_API UPlayerUnitPersistData : public UObject
 public:
 	void RegisterUnit(APlayerUnit* PlayerUnit);
 
+public:
+	int32 GetPlayerLevel() const;
+	int32 GetDifficulty() const;
+
 protected:
 	void ApplyPersistData(APlayerUnit* PlayerUnit);
 	void BindUnitEvent(APlayerUnit* PlayerUnit);
@@ -54,13 +63,17 @@ protected:
 	bool mIsNewData = true;
 
 protected:
+	UPROPERTY(Category = Player, SaveGame, VisibleAnywhere, meta = (DisplayName = "PlayerLevel"))
+	int32 mPlayerLevel;
+	UPROPERTY(Category = Player, SaveGame, VisibleAnywhere, meta = (DisplayName = "Difficulty"))
+	int32 mDifficulty;
+
+protected:
 	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "MaxHP"))
 	float mMaxHP;
 	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "HP"))
 	float mHP;
 
-	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "Level"))
-	float mLevel;
 	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "Exp"))
 	float mExp;
 
@@ -85,17 +98,24 @@ class P_RD_API URunPersistData : public UPlayerUnitPersistData
 	GENERATED_BODY()
 
 public:
+	void MakeNewRun(int32 Difficulty);
+	void MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCreateStage);
+
+public:
 	const FRandomStream& GetStageBuildStream() const;
 	const FRandomStream& GetEventStream() const;
-	const FRandomStream& GetCombatStream() const;
+
+public:
+	const FStage& GetStage() const;
+
+protected:
+	void ClearRunData();
 
 protected:
 	UPROPERTY(Category = Stream, SaveGame, VisibleAnywhere, meta = (DisplayName = "StageBuildStream"))
 	FRandomStream mStageBuildStream;
 	UPROPERTY(Category = Stream, SaveGame, VisibleAnywhere, meta = (DisplayName = "EventStream"))
 	FRandomStream mEventStream;
-	UPROPERTY(Category = Stream, SaveGame, VisibleAnywhere, meta = (DisplayName = "CombatStream"))
-	FRandomStream mCombatStream;
 
 protected:
 	UPROPERTY(Category = Stage, SaveGame, VisibleAnywhere, meta = (DisplayName = "Stage"))

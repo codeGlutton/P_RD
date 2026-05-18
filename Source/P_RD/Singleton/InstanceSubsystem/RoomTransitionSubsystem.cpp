@@ -1,4 +1,5 @@
 ﻿#include "Singleton/InstanceSubsystem/RoomTransitionSubsystem.h"
+#include "Singleton/InstanceSubsystem/PersistentDataSubsystem.h"
 
 #include "Engine/AssetManager.h"
 #include "DataAsset/RoomSpawnData/StaticRoomSpawnData.h"
@@ -10,14 +11,14 @@ void URoomTransitionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     Super::Initialize(Collection);
 }
 
-void URoomTransitionSubsystem::PreloadRoomAsync(const FPrimaryAssetId& StageId, const FPrimaryAssetId& RoomId, bool IsAutoTransition)
+void URoomTransitionSubsystem::PreloadRoomAsync(const FPrimaryAssetId& StageId, const FPrimaryAssetId& RoomId, FOnPreTransitNextRoom Callback, bool IsAutoTransition)
 {
-    PreloadRoomAsync(StageId, RoomId, TArray<FPrimaryAssetId>(), IsAutoTransition);
+    PreloadRoomAsync(StageId, RoomId, TArray<FPrimaryAssetId>(), MoveTemp(Callback), IsAutoTransition);
 }
 
-void URoomTransitionSubsystem::PreloadRoomAsync(const FPrimaryAssetId& StageId, const FPrimaryAssetId& RoomId, TArray<FPrimaryAssetId>&& AdditionalAssetIds, bool IsAutoTransition)
+void URoomTransitionSubsystem::PreloadRoomAsync(const FPrimaryAssetId& StageId, const FPrimaryAssetId& RoomId, TArray<FPrimaryAssetId>&& AdditionalAssetIds, FOnPreTransitNextRoom Callback, bool IsAutoTransition)
 {
-    if (EnumHasAllFlags(mTransitionState, ERoomTransitionStateFlag::PreLoadRequested) == true)
+    if (EnumHasAnyFlags(mTransitionState, ERoomTransitionStateFlag::AllTaskRequested) == true)
     {
         UE_LOG(LogTransition, Log, TEXT("다른 룸 데이터 처리 중으로 Preload 불가"));
         return;
@@ -29,6 +30,9 @@ void URoomTransitionSubsystem::PreloadRoomAsync(const FPrimaryAssetId& StageId, 
         EnumAddFlags(mTransitionState, ERoomTransitionStateFlag::AutoTransition);
     }
     mNextRoomId = RoomId;
+    OnPreTransitNextRoom_Internal.AddLambda([SId = StageId, RId = RoomId, Callback]() {
+        Callback.ExecuteIfBound(SId, RId);
+        });
 
     UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
     checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
@@ -53,9 +57,33 @@ void URoomTransitionSubsystem::PreloadRoomAsync(const FPrimaryAssetId& StageId, 
     }
 }
 
+void URoomTransitionSubsystem::MakeStageAndPreloadRoomAsync(EStageLevelType StageLevel, FOnPreTransitNextRoom Callback, bool IsAutoTransition)
+{
+    if (EnumHasAnyFlags(mTransitionState, ERoomTransitionStateFlag::AllTaskRequested) == true)
+    {
+        UE_LOG(LogTransition, Log, TEXT("다른 룸 데이터 처리 중으로 Preload 불가"));
+        return;
+    }
+    EnumAddFlags(mTransitionState, ERoomTransitionStateFlag::NewStageRequested);
+
+    UPersistentDataSubsystem* PersistentDataSubsystem = GetGameInstance()->GetSubsystem<UPersistentDataSubsystem>();
+    checkf(PersistentDataSubsystem != nullptr, TEXT("에셋 매니저 nullptr"));
+
+    // 스테이지 먼저 생성
+    PersistentDataSubsystem->GetRunPersistData()->MakeStageAsync(StageLevel, FOnCreateStage::CreateLambda([this, Callback, IsAutoTransition](const FStage& NewStage) {
+        EnumRemoveFlags(mTransitionState, ERoomTransitionStateFlag::NewStageRequested);
+
+        // 이후 스테이지의 배정된 첫 방으로 Preload 시작
+        FPrimaryAssetId RoomId;
+        TArray<FPrimaryAssetId> AdditionalIds;
+        NewStage.GetStartRoom().CollectAssetIds(OUT RoomId, OUT AdditionalIds);
+        PreloadRoomAsync(NewStage.mStaticStageSpawnDataId, RoomId, MoveTemp(AdditionalIds), Callback, IsAutoTransition);
+        }));
+}
+
 void URoomTransitionSubsystem::TransitLoadedRoomAsync()
 {
-    if (EnumHasAllFlags(mTransitionState, ERoomTransitionStateFlag::PreLoadRequested) == false)
+    if (EnumHasAnyFlags(mTransitionState, ERoomTransitionStateFlag::AllTaskRequested) == false)
     {
         UE_LOG(LogTransition, Log, TEXT("전환 불가. 먼저 방 데이터 로드 요청 필요"));
         return;
@@ -119,6 +147,8 @@ void URoomTransitionSubsystem::OnTransitNextRoom()
     UStaticRoomSpawnData* StaticRoomData = AssetManager->GetPrimaryAssetObject<UStaticRoomSpawnData>(mNextRoomId);
     checkf(StaticRoomData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
 
+    OnPreTransitNextRoom_Internal.Broadcast();
+    OnPreTransitNextRoom_Internal.Clear();
     mTransitionState = ERoomTransitionStateFlag::None;
 
     UGameplayStatics::OpenLevelBySoftObjectPtr(GetWorld(), StaticRoomData->mBackgroundMap);

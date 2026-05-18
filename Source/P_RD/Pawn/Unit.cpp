@@ -22,7 +22,6 @@ bool FUnitSnapshotTargetData::NetSerialize(FArchive& Ar, UPackageMap* Map, bool&
 }
 
 AUnit::AUnit() :
-	mDifficulty(1),
 	mTeamId(EUnitTeamType::AllNeutral)
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -50,7 +49,7 @@ void AUnit::OnConstruction(const FTransform& Transform)
 
 #ifdef WITH_EDITOR
 	// Difficulty값에 따라 ASC Attribute 초기화 (에디터 환경 내 Difficulty 변경 테스트를 위해 Construction 위치)
-	IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->InitAttributeSetDefaults(mAbilitySystemComp, GetRowKey(), mDifficulty, true);
+	IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->InitAttributeSetDefaults(mAbilitySystemComp, GetUnitName(), GetDifficulty(), true);
 #endif
 }
 
@@ -103,19 +102,14 @@ UUnitAttributeSet* AUnit::GetUnitAttributeSet() const
 	return mUnitAttributeSet;
 }
 
-const FText& AUnit::GetDisplayName() const
+FName AUnit::GetUnitName() const
 {
-	return mDisplayName;
-}
-
-FName AUnit::GetRowKey() const
-{
-	FString Key = mDisplayName.ToString();
+	FString Key = mUnitDisplayName.ToString();
 	Key.RemoveSpacesInline();
 	return *Key;
 }
 
-int32 AUnit::GetDifficulty() const
+const FText& AUnit::GetUnitDisplayName() const
 {
-	return mDifficulty;
+	return mUnitDisplayName;
 }

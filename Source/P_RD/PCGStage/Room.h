@@ -8,19 +8,8 @@
 #pragma once
 
 #include "RDMinimal.h"
-
+#include "PCGStage/RoomType.h"
 #include "Room.generated.h"
-
-UENUM(BlueprintType)
-enum class ERoomType : uint8
-{
-	None = 0 UMETA(Hidden),
-	Treasure,
-	Shop,
-	Monster,
-	EliteMonster,
-	BossMonster,
-};
 
 /**
  * @brief  방 데이터
@@ -35,26 +24,26 @@ public:
 	virtual ~FRoom() = default;
 
 public:
-	virtual void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds);
+	virtual void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const;
 
 public:
-	UPROPERTY()
+	UPROPERTY(Category = Room, SaveGame, VisibleAnywhere, meta = (DisplayName = "Type"))
 	ERoomType mType = ERoomType::None;
-	UPROPERTY()
+	UPROPERTY(Category = Room, SaveGame, VisibleAnywhere, meta = (DisplayName = "Row"))
 	int32 mRow = 0;
-	UPROPERTY()
+	UPROPERTY(Category = Room, SaveGame, VisibleAnywhere, meta = (DisplayName = "Column"))
 	int32 mColumn = 0;
-	UPROPERTY()
+	UPROPERTY(Category = Room, SaveGame, VisibleAnywhere, meta = (DisplayName = "NextRoomColumns"))
 	TArray<int32> mNextRoomColumns;
 
 public:
-	UPROPERTY()
+	UPROPERTY(Category = UI, SaveGame, VisibleAnywhere, meta = (DisplayName = "IsSelected"))
 	bool mIsSelected = false;
-	UPROPERTY()
+	UPROPERTY(Category = UI, SaveGame, VisibleAnywhere, meta = (DisplayName = "PositionOffsetRate"))
 	FVector2D mPositionOffsetRate;
 
 public:
-	UPROPERTY()
+	UPROPERTY(Category = Data, SaveGame, VisibleAnywhere, meta = (DisplayName = "PositionOffsetRate"))
 	FPrimaryAssetId mStaticRoomSpawnDataId;
 };
 
@@ -70,10 +59,10 @@ public:
 	FTreasureRoom();
 
 public:
-	void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) override;
+	void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const override;
 
 public:
-	UPROPERTY()
+	UPROPERTY(Category = Data, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentDataId"))
 	FPrimaryAssetId mRewardEquipmentDataId;
 };
 
@@ -89,12 +78,12 @@ public:
 	FShopRoom();
 
 public:
-	void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) override;
+	void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const override;
 
 public:
-	UPROPERTY()
+	UPROPERTY(Category = Data, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleSkillDataIds"))
 	TArray<FPrimaryAssetId> mSaleSkillDataIds;
-	UPROPERTY()
+	UPROPERTY(Category = Data, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleEquipmentDataIds"))
 	TArray<FPrimaryAssetId> mSaleEquipmentDataIds;
 };
 
@@ -110,9 +99,9 @@ public:
 	FMonsterRoom();
 
 public:
-	UPROPERTY()
+	UPROPERTY(Category = Data, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardMoney"))
 	int32 mRewardMoney;
-	UPROPERTY()
+	UPROPERTY(Category = Data, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardExp"))
 	int32 mRewardExp;
 };
 
@@ -128,10 +117,10 @@ public:
 	FEliteMonsterRoom();
 
 public:
-	void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) override;
+	void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const override;
 
 public:
-	UPROPERTY()
+	UPROPERTY(Category = Data, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentDataId"))
 	FPrimaryAssetId mRewardEquipmentDataId;
 };
 
@@ -147,9 +136,9 @@ public:
 	FBossMonsterRoom();
 
 public:
-	void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) override;
+	void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const override;
 
 public:
-	UPROPERTY()
+	UPROPERTY(Category = Data, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardDiceDataId"))
 	FPrimaryAssetId mRewardDiceDataId;
 };

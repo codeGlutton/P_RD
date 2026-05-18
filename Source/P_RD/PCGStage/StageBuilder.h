@@ -9,37 +9,17 @@
 
 #include "RDMinimal.h"
 #include "PCGStage/Stage.h"
-#include "PCGStage/StageLevelType.h"
-#include "StageBuilder.generated.h"
+#include "Setting/GlobalGameBalanceType.h"
+#include "DataAsset/EquipmentData/EquipmentType.h"
+#include "DataAsset/SkillData/SkillType.h"
+#include "DataTable/StageBuilderParams.h"
 
-USTRUCT(BlueprintType)
-struct FStageBuilderParams
+// Stage Builder 신규 로그 카테고리 등록
+DECLARE_LOG_CATEGORY_EXTERN(LogStageBuilder, Log, All)
+
+struct FRoomEdge
 {
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(Category = "Level", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StageLevel"))
-	EStageLevelType mStageLevel;
-
-public:
-	UPROPERTY(Category = "Shape", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RowCount", ClampMin = 3, UIMin = 3, SliderExponent = 1))
-	int32 mRowCount = 15;
-	UPROPERTY(Category = "Shape", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ColumnCount", ClampMin = 1, UIMin = 1, SliderExponent = 2))
-	int32 mColumnCount = 7;
-	UPROPERTY(Category = "Shape", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MaxPathCount", ClampMin = 1, UIMin = 1, SliderExponent = 1))
-	int32 mMaxPathCount = 5;
-	UPROPERTY(Category = "Shape", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MinStartPointCount", ClampMin = 1, UIMin = 1, SliderExponent = 1))
-	int32 mMinStartPointCount = 2;
-	UPROPERTY(Category = "Shape", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MaxStartPointCount", ClampMin = 1, UIMin = 1, SliderExponent = 1))
-	int32 mMaxStartPointCount = 4;
-
-public:
-	UPROPERTY(Category = "Weight", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MonsterRoomWeight"))
-	float mMonsterRoomWeight = 10.f;
-	UPROPERTY(Category = "Weight", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EliteRoomWeight"))
-	float mEliteRoomWeight = 2.f;
-	UPROPERTY(Category = "Weight", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ShopRoomWeight"))
-	float mShopRoomWeight = 4.5f;
+	TArray<int32> mPreRoomColumns;
 };
 
 /**
@@ -48,15 +28,14 @@ public:
 struct FStageBuilder
 {
 private:
-	FStageBuilder() = default;
+	FStageBuilder(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting);
 
 public:
-	static FStageBuilder Make(const UObject* WorldContextObject);
-	static FStageBuilder Make(const UObject* WorldContextObject, const FStageBuilderParams& Params);
-	FStageBuilder& SetStageLevel(EStageLevelType StageLevel);
-	FStageBuilder& SetStageShape(int32 RowCount, int32 ColumnCount, int32 MaxPathCount, int32 MinStartPointCount, int32 MaxStartPointCount);
-	FStageBuilder& SetRoomWeights(float MonsterRoomWeight, float EliteRoomWeight, float ShopRoomWeight);
+	static FStageBuilder Make(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting);
+	static FStageBuilder Make(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting, const FStageBuilderParams& Params);
+	FStageBuilder& SetParams(const FStageBuilderParams& Params);
 	FStage Build() const;
+	void Build(OUT FStage& NewStage) const;
 
 protected:
 	/**
@@ -65,42 +44,40 @@ protected:
 	void LoadAllAssetIds();
 
 protected:
-	void MakeEmptyRooms(OUT FStage& Stage) const;
-	void MakeStartingPoints(OUT FStage& Stage) const;
-	void MakeRoutes(OUT FStage& Stage) const;
+	void InitStage(OUT FStage& Stage) const;
+	
+	TArray<FRoomEdge> MakeStartRoutes(OUT FStage& Stage) const;
+	TArray<FRoomEdge> MakeNextRoutes(OUT FStage& Stage, int32 CurRowIndex, const TArray<FRoomEdge>& CurEdges) const;
+
+	void CreateStartRoom(OUT FStage& Stage) const;
+	void CreateRooms(OUT FStage& Stage, int32 CurRowIndex, const TArray<FRoomEdge>& CurEdges) const;
 
 protected:
 	FRoom& CreateRoom(ERoomType Type, int32 Row, int32 Column, TInstancedStruct<FRoom>& Room) const;
 
 protected:
-	const UWorld* mWorld;
+	const FPrimaryAssetId& GetRandomId(const TArray<FPrimaryAssetId>& IdArray) const;
+
+	uint8 GetRandomEquipmentIndex() const;
+	EEquipmentType GetRandomEquipment() const;
+
+	uint8 GetRandomSkillIndex() const;
+	ESkillType GetRandomSkill() const;
+
+	uint8 GetRandomRarityIndex(const FRarityRate& RarityRate) const;
+	ERarityType GetRandomRarity(const FRarityRate& RarityRate) const;
+
+	int32 GetRandomFromInterval(const FInt32Interval& Interval) const;
+
+protected:
+	const FRandomStream& mBuildStream;
+	const FGlobalStageBuildSetting& mGlobalSetting;
 	FStageBuilderParams mParams;
 
 protected:
-	TArray<FPrimaryAssetId> mTreasureRoomAssetIds;
-	TArray<FPrimaryAssetId> mShopRoomAssetIds;
-	TArray<FPrimaryAssetId> mMonsterRoomAssetIds;
-	TArray<FPrimaryAssetId> mEliteMonsterRoomAssetIds;
-	TArray<FPrimaryAssetId> mBossMonsterRoomAssetIds;
-
-	TArray<FPrimaryAssetId> mCommonWeaponAssetIds;
-	TArray<FPrimaryAssetId> mRareWeaponAssetIds;
-	TArray<FPrimaryAssetId> mEpicWeaponAssetIds;
-	TArray<FPrimaryAssetId> mCommonGlovesAssetIds;
-	TArray<FPrimaryAssetId> mRareGlovesAssetIds;
-	TArray<FPrimaryAssetId> mEpicGlovesAssetIds;
-	TArray<FPrimaryAssetId> mCommonBootsAssetIds;
-	TArray<FPrimaryAssetId> mRareBootsAssetIds;
-	TArray<FPrimaryAssetId> mEpicBootsAssetIds;
-
-	TArray<FPrimaryAssetId> mCommonAttackSkillAssetIds;
-	TArray<FPrimaryAssetId> mRareAttackSkillAssetIds;
-	TArray<FPrimaryAssetId> mEpicAttackSkillAssetIds;
-	TArray<FPrimaryAssetId> mCommonSpellSkillAssetIds;
-	TArray<FPrimaryAssetId> mRareSpellSkillAssetIds;
-	TArray<FPrimaryAssetId> mEpicSpellSkillAssetIds;
-
-	TArray<FPrimaryAssetId> mCommonDiceAssetIds;
-	TArray<FPrimaryAssetId> mRareDiceAssetIds;
-	TArray<FPrimaryAssetId> mEpicDiceAssetIds;
+	bool mIsLoadedIds = false;
+	TArray<FPrimaryAssetId> mRoomAssetIds[static_cast<uint8>(ERoomType::Count)];
+	TArray<FPrimaryAssetId> mEquipmentAssetIds[static_cast<uint8>(EEquipmentType::Count)][static_cast<uint8>(ERarityType::Count)];
+	TArray<FPrimaryAssetId> mSkillAssetIds[static_cast<uint8>(ESkillType::Count)][static_cast<uint8>(ERarityType::Count)];
+	TArray<FPrimaryAssetId> mDiceAssetIds[static_cast<uint8>(ERarityType::Count)];
 };

@@ -8,7 +8,7 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "PCGStage/StageLevelType.h"
+#include "DataAsset/StageSpawnData/StageLevelType.h"
 #include "DataAsset/RarityType.h"
 
 #define DECLARE_PRIMARY_ASSET_TYPE(TypeName)													\

@@ -51,7 +51,7 @@ public:
 /**
  * @brief  SRPG에서 사용되는 베이스 폰 클래스
  */
-UCLASS()
+UCLASS(abstract)
 class P_RD_API AUnit : public APawn, public IGenericTeamAgentInterface, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
@@ -85,9 +85,11 @@ public:
 
 public:
 	UUnitAttributeSet* GetUnitAttributeSet() const;
-	const FText& GetDisplayName() const;
-	FName GetRowKey() const;
-	int32 GetDifficulty() const;
+
+	FName GetUnitName() const;
+	const FText& GetUnitDisplayName() const;
+
+	virtual int32 GetDifficulty() const PURE_VIRTUAL(FUnitSnapshotTargetData::GetDifficulty, return 0;)
 
 private:
 	UPROPERTY(Category = GAS, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "AbilitySystemComp"))
@@ -96,12 +98,11 @@ private:
 	TObjectPtr<UUnitAttributeSet> mUnitAttributeSet;
 
 protected:
-	UPROPERTY(Category = Unit, EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "DisplayName"))
-	FText mDisplayName;
-	// @brief 초기 스텟에 반영되는 난이도 수치
-	UPROPERTY(Category = Unit, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "Difficulty"))
-	int32 mDifficulty;
+	// @brief UI 표기 이름
+	UPROPERTY(Category = Unit, EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "UnitDisplayName"))
+	FText mUnitDisplayName;
 
 private:
+	// @brief 팀 ID
 	FGenericTeamId mTeamId;
 };

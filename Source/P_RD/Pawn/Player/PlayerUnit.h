@@ -1,8 +1,8 @@
 ﻿/*****************************************************************//**
  * @file   PlayerUnit.h
- * @brief  플레이어 유닛 정의 헤더
+ * @brief  플레이어 베이스 유닛 정의 헤더
  * @author 모호재
- * @date   2026-05-11
+ * @date   2026-05-15
  *********************************************************************/
 
 #pragma once
@@ -13,11 +13,29 @@
 
 #include "PlayerUnit.generated.h"
 
+class ULevelAttributeSet;
+
 /**
- * @brief  SRPG에서 사용되는 베이스 폰 클래스
+ * @brief  플레이어 베이스 유닛
  */
-UCLASS()
+UCLASS(abstract)
 class P_RD_API APlayerUnit : public AUnit
 {
 	GENERATED_BODY()
+
+public:
+	APlayerUnit();
+
+	/* APawn 상속 */
+public:
+	void PostInitializeComponents() override;
+	void OnConstruction(const FTransform& Transform) override;
+
+public:
+	int32 GetPlayerLevel() const;
+	int32 GetDifficulty() const override;
+
+private:
+	UPROPERTY(Category = GAS, VisibleAnywhere, meta = (DisplayName = "LevelAttributeSet"))
+	TObjectPtr<ULevelAttributeSet> mLevelAttributeSet;
 };

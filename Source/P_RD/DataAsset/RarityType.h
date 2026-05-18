@@ -19,5 +19,5 @@ enum class ERarityType : uint8
 	Common,
 	Rare,
 	Epic,
+	Count		UMETA(Hidden)
 };
-
