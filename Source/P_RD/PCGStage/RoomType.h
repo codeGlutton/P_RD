@@ -16,12 +16,12 @@
 UENUM(BlueprintType)
 enum class ERoomType : uint8
 {
-	None = 255		UMETA(Hidden),
 	Treasure = 0,
 	Shop,
 	Monster,
 	EliteMonster,
 	BossMonster,
 	Count			UMETA(Hidden),
+	None = 255		UMETA(Hidden),
 };
 

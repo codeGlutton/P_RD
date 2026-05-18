@@ -52,7 +52,7 @@ void URoomTransitionSubsystem::PreloadRoomAsync(const FPrimaryAssetId& StageId, 
         LoadParams.OnComplete.BindUObject(this, &URoomTransitionSubsystem::OnLoadNextRoom);
 
         AdditionalAssetIds.Add(RoomId);
-        TSharedPtr<FStreamableHandle> NewPreloadHandle = mRoomPreloadHandle = AssetManager->PreloadPrimaryAssets(AdditionalAssetIds, Bundles, true, MoveTemp(LoadParams));
+        TSharedPtr<FStreamableHandle> NewPreloadHandle = AssetManager->PreloadPrimaryAssets(AdditionalAssetIds, Bundles, true, MoveTemp(LoadParams));
         mRoomPreloadHandle = NewPreloadHandle;
     }
 }

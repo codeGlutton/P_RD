@@ -107,6 +107,7 @@ public:
 
 public:
 	const FStage& GetStage() const;
+	const FRoom& GetCurRoom() const;
 
 protected:
 	void ClearRunData();

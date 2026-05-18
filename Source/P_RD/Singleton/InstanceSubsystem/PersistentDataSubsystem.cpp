@@ -141,6 +141,11 @@ const FStage& URunPersistData::GetStage() const
 	return mStage;
 }
 
+const FRoom& URunPersistData::GetCurRoom() const
+{
+	return mStage.mRoomRows[mStage.mCurRow].mRooms[mStage.mCurColumn].Get();
+}
+
 void UPersistentDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);

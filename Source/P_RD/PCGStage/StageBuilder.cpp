@@ -46,7 +46,7 @@ FStage FStageBuilder::Build() const
 {
 	FStage NewStage;
 	Build(OUT NewStage);
-	return MoveTemp(NewStage);
+	return NewStage;
 }
 
 void FStageBuilder::Build(OUT FStage& NewStage) const
@@ -198,7 +198,7 @@ TArray<FRoomEdge> FStageBuilder::MakeNextRoutes(OUT FStage& Stage, int32 CurRowI
 
 			for (int32 PreRoomColumnIndex : PreRoomColumns)
 			{
-				NewEdges[Stage.mStartColumn].mPreRoomColumns.Init(PreRoomColumnIndex, PreRoomColumns.Num());
+				NewEdges[Stage.mStartColumn].mPreRoomColumns.Push(CurColumnIndex);
 			}
 		}
 		return NewEdges;
@@ -206,8 +206,7 @@ TArray<FRoomEdge> FStageBuilder::MakeNextRoutes(OUT FStage& Stage, int32 CurRowI
 
 	/* 일반 방 -> 일반 방 연결 */
 
-	int32 MinNewColumnIndex = -1;
-	int32 MaxNewColumnIndex = -1;
+	int32 MaxAllocatedColumnIndex = 0;
 
 	for (int32 CurColumnIndex = 0; CurColumnIndex < ColumnCount; ++CurColumnIndex)
 	{
@@ -217,8 +216,8 @@ TArray<FRoomEdge> FStageBuilder::MakeNextRoutes(OUT FStage& Stage, int32 CurRowI
 			continue;
 		}
 
-		MinNewColumnIndex = FMath::Max(MinNewColumnIndex + 1, CurColumnIndex - 1);
-		MaxNewColumnIndex = FMath::Min(CurColumnIndex + 1, ColumnCount - 1);
+		const int32 MinNewColumnIndex = FMath::Max(MaxAllocatedColumnIndex, CurColumnIndex - 1);
+		const int32 MaxNewColumnIndex = FMath::Min(CurColumnIndex + 1, ColumnCount - 1);
 
 		TInstancedStruct<FRoom>& CurRoomInst = Stage.mRoomRows[CurRowIndex].mRooms[CurColumnIndex];
 		FRoom* CurRoomPtr = CurRoomInst.GetMutablePtr<FRoom>();
@@ -229,6 +228,11 @@ TArray<FRoomEdge> FStageBuilder::MakeNextRoutes(OUT FStage& Stage, int32 CurRowI
 			int32 NewColumnIndex = mBuildStream.RandRange(MinNewColumnIndex, MaxNewColumnIndex);
 			NewEdges[NewColumnIndex].mPreRoomColumns.Push(CurColumnIndex);
 			NextRoomColumns.Add(NewColumnIndex);
+
+			if (MaxAllocatedColumnIndex < NewColumnIndex)
+			{
+				MaxAllocatedColumnIndex = NewColumnIndex;
+			}
 		}
 
 		CurRoomPtr->mNextRoomColumns = NextRoomColumns.Array();
@@ -242,6 +246,9 @@ void FStageBuilder::CreateStartRoom(OUT FStage& Stage) const
 	const int32 ColumnCount = mParams.mColumnCount;
 	const int32 StartColumn = Stage.mStartColumn = ColumnCount / 2;
 	FRoom& StartRoom = CreateRoom(ERoomType::Monster, 0, StartColumn, Stage.mRoomRows[0].mRooms[StartColumn]);
+
+	Stage.mCurRow = 0;
+	Stage.mCurColumn = StartColumn;
 }
 
 void FStageBuilder::CreateRooms(OUT FStage& Stage, int32 CurRowIndex, const TArray<FRoomEdge>& CurEdges) const

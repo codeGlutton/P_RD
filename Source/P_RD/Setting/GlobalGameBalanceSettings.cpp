@@ -8,11 +8,11 @@ FName UGlobalGameBalanceSettings::GetCategoryName() const
 #if WITH_EDITOR
 FText UGlobalGameBalanceSettings::GetSectionText() const
 {
-    return FText::FromString(TEXT("Global Game Valance Settings"));
+    return FText::FromString(TEXT("Global Game Balance Settings"));
 }
 
 FText UGlobalGameBalanceSettings::GetSectionDescription() const
 {
-    return FText::FromString(TEXT("Set up settings for the RD global game valance"));
+    return FText::FromString(TEXT("Set up settings for the RD global game balance"));
 }
 #endif

@@ -61,20 +61,6 @@ const FAssetNamingRule* UEditorValidator_NamingConvention::GetExpectedNamingRule
 
     for (auto Iter = Settings->mNamingRuleSets.rbegin(); Iter != Settings->mNamingRuleSets.rend(); ++Iter)
     {
-        /*for (auto& Pair : Iter->mClassRules)
-        {
-            const TSubclassOf<UObject>& TargetClass = Pair.Key;
-            if (TargetClass == nullptr)
-            {
-                continue;
-            }
-
-            if (InAsset->GetClass()->IsChildOf(TargetClass) == true)
-            {
-                return &Pair.Value;
-            }
-        }*/
-
         for (auto& Pair : Iter->mRules)
         {
             const TSubclassOf<UObject>& TargetClass = Cast<UClass>(Pair.Key.LoadSynchronous());

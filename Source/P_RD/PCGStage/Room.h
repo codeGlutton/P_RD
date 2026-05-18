@@ -43,7 +43,7 @@ public:
 	FVector2D mPositionOffsetRate;
 
 public:
-	UPROPERTY(Category = Data, SaveGame, VisibleAnywhere, meta = (DisplayName = "PositionOffsetRate"))
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "PositionOffsetRate"))
 	FPrimaryAssetId mStaticRoomSpawnDataId;
 };
 
@@ -62,7 +62,7 @@ public:
 	void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const override;
 
 public:
-	UPROPERTY(Category = Data, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentDataId"))
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentDataId"))
 	FPrimaryAssetId mRewardEquipmentDataId;
 };
 
@@ -81,9 +81,9 @@ public:
 	void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const override;
 
 public:
-	UPROPERTY(Category = Data, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleSkillDataIds"))
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleSkillDataIds"))
 	TArray<FPrimaryAssetId> mSaleSkillDataIds;
-	UPROPERTY(Category = Data, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleEquipmentDataIds"))
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleEquipmentDataIds"))
 	TArray<FPrimaryAssetId> mSaleEquipmentDataIds;
 };
 
@@ -99,9 +99,9 @@ public:
 	FMonsterRoom();
 
 public:
-	UPROPERTY(Category = Data, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardMoney"))
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardMoney"))
 	int32 mRewardMoney;
-	UPROPERTY(Category = Data, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardExp"))
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardExp"))
 	int32 mRewardExp;
 };
 
@@ -120,7 +120,7 @@ public:
 	void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const override;
 
 public:
-	UPROPERTY(Category = Data, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentDataId"))
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentDataId"))
 	FPrimaryAssetId mRewardEquipmentDataId;
 };
 
@@ -139,6 +139,6 @@ public:
 	void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const override;
 
 public:
-	UPROPERTY(Category = Data, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardDiceDataId"))
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardDiceDataId"))
 	FPrimaryAssetId mRewardDiceDataId;
 };

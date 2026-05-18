@@ -38,14 +38,24 @@ public:
 	const FRoom& GetStartRoom() const;
 
 public:
+	UPROPERTY(Category = Stage, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StageName"))
+	FText mStageName;
+
 	UPROPERTY(Category = Stage, SaveGame, VisibleAnywhere, meta = (DisplayName = "StageLevel"))
 	EStageLevelType mStageLevel = EStageLevelType::None;
-	UPROPERTY(Category = Stage, SaveGame, VisibleAnywhere, meta = (DisplayName = "StartColumn"))
-	int32 mStartColumn = 0;
+	
 	UPROPERTY(Category = Stage, SaveGame, VisibleAnywhere, meta = (DisplayName = "RoomRows"))
 	TArray<FRoomRow> mRoomRows;
+	UPROPERTY(Category = Stage, SaveGame, VisibleAnywhere, meta = (DisplayName = "StartColumn"))
+	int32 mStartColumn = 0;
 
 public:
-	UPROPERTY(Category = Data, SaveGame, VisibleAnywhere, meta = (DisplayName = "StaticStageSpawnDataId"))
+	UPROPERTY(Category = Play, SaveGame, VisibleAnywhere, meta = (DisplayName = "CurColumn"))
+	int32 mCurColumn = 0;
+	UPROPERTY(Category = Play, SaveGame, VisibleAnywhere, meta = (DisplayName = "CurRow"))
+	int32 mCurRow = 0;
+
+public:
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "StaticStageSpawnDataId"))
 	FPrimaryAssetId mStaticStageSpawnDataId;
 };

@@ -55,10 +55,13 @@ struct FStageBuilderParams : public FTableRowBase
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(Category = "Level", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StageLevel"))
+	UPROPERTY(Category = "Data", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StageName"))
+	FText mStageName;
+
+	UPROPERTY(Category = "Data", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StageLevel"))
 	EStageLevelType mStageLevel = EStageLevelType::None;
 
-	UPROPERTY(Category = "Level", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StaticStageSpawnDataId"))
+	UPROPERTY(Category = "Data", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StaticStageSpawnDataId"))
 	FPrimaryAssetId mStaticStageSpawnDataId;
 
 public:

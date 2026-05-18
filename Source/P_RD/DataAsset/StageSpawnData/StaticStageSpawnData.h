@@ -10,6 +10,7 @@
 #include "RDMinimal.h"
 #include "DataAsset/PrimaryAssetType.h"
 #include "DataAsset/StageSpawnData/StageLevelType.h"
+#include "PCGStage/RoomType.h"
 #include "StaticStageSpawnData.generated.h"
 
 /**
@@ -25,4 +26,10 @@ public:
 	{
 		return FPrimaryAssetId(StagePrimaryAssetTypes::GetStageType(), GetFName());
 	}
+
+public:
+	UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BackgroundPanel", AssetBundles = "UI"))
+	TSoftObjectPtr<UTexture2D> mBackgroundPanel;
+	UPROPERTY(Category = "UI", EditAnywhere, meta = (DisplayName = "RoomIcons", ArraySizeEnum = "ERoomType", AssetBundles = "UI"))
+	TSoftObjectPtr<UTexture2D> mRoomIcons[static_cast<uint8>(ERoomType::Count)];
 };
