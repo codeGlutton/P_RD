@@ -1,12 +1,13 @@
 ﻿using UnrealBuildTool;
 
-public class P_RD : ModuleRules
+public class P_RDEditor : ModuleRules
 {
-	public P_RD(ReadOnlyTargetRules Target) : base(Target)
+	public P_RDEditor(ReadOnlyTargetRules Target) : base(Target)
 	{
-		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-
         PrivateDependencyModuleNames.AddRange(new string[] {
+            /* Game Modules */
+            "P_RD",
+
             /* Engine Core Modules */
             "Core",
             "CoreUObject",
@@ -14,21 +15,18 @@ public class P_RD : ModuleRules
             "InputCore",
             "EnhancedInput",
 
-            /* Gameplay Tag Modules */
-            "GameplayTags",				// 게임플레이 태그 시스템
+            /* Editor Core Modules */
+            "UnrealEd",
+            "EditorFramework", 
+            "AssetRegistry",
 
-            /* GAS Plugin Modules */
-			"GameplayTasks",			// GAS에서 비동기적인 작업을 생성하고 관리하는 모듈
-			"GameplayAbilities",		// GAS 프레임워크
-
-            /* AI Plugin Modules */
-            "AIModule",                 // 기본 AI 연관 도구 사용
-            "StateTreeModule",          // StateTree 사용
-            "GameplayStateTreeModule",  // StateTree AI Comp 사용
+            /* Asset Validator Modules */
+            "DataValidation",
         });
 
         PrivateIncludePaths.AddRange(new string[] {
             "P_RD",
+            "P_RDEditor",
         });
 
         // Uncomment if you are using Slate UI
