@@ -22,9 +22,8 @@ FStageBuilder FStageBuilder::Make(const FRandomStream& BuildStream, const FGloba
 
 FStageBuilder FStageBuilder::Make(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting, const FStageBuilderParams& Params)
 {
-	FStageBuilder Builder(BuildStream, GlobalSetting);
-	Builder.mParams = Params;
-	Builder.LoadAllAssetIds();
+	FStageBuilder Builder = FStageBuilder::Make(BuildStream, GlobalSetting);
+	Builder.SetParams(Params);
 
 	return Builder;
 }

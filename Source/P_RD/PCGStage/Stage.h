@@ -34,8 +34,14 @@ struct FStage
 	GENERATED_BODY()
 
 public:
+	FRoom& GetRoom(int32 RowIndex, int32 ColumnIndex);
+	const FRoom& GetRoom(int32 RowIndex, int32 ColumnIndex) const;
+
 	FRoom& GetStartRoom();
 	const FRoom& GetStartRoom() const;
+
+	FRoom& GetCurrentRoom();
+	const FRoom& GetCurrentRoom() const;
 
 public:
 	UPROPERTY(Category = Stage, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StageName"))
