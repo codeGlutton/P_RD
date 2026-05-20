@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "Singleton/InstanceSubsystem/PersistentDataWriter.h"
 #include "DataAsset/StageSpawnData/StageLevelType.h"
 
 #include "RoomTransitionSubsystem.generated.h"
@@ -16,8 +17,7 @@
 // Transition 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogTransition, Log, All)
 
-DECLARE_DELEGATE_TwoParams(FOnPreTransitNextRoom, const FPrimaryAssetId& /*StageId*/, const FPrimaryAssetId& /*RoomId*/)
-DECLARE_EVENT(URoomTransitionSubsystem, FOnPreTransitNextRoom_Internal)
+DECLARE_DELEGATE_TwoParams(FOnPreTransitNextRoom, int32 /*RoomRowIndex*/, int32 /*RoomColumnIndex*/)
 
 struct FRoom;
 
@@ -41,11 +41,24 @@ enum class ERoomTransitionStateFlag : uint8
 };
 ENUM_CLASS_FLAGS(ERoomTransitionStateFlag);
 
+USTRUCT()
+struct FRoomTransitionRequest
+{
+	GENERATED_BODY()
+
+public:
+	bool mChangePersistentData = true;
+	int32 mRoomRowIndex = -1;
+	int32 mRoomColumnIndex = -1;
+
+	FOnPreTransitNextRoom OnPreTransitNextRoom;
+};
+
 /**
  * @brief  SRPG 방 전환 처리를 돕는 Subsystem
  */
 UCLASS()
-class P_RD_API URoomTransitionSubsystem : public UGameInstanceSubsystem
+class P_RD_API URoomTransitionSubsystem : public UGameInstanceSubsystem, public IRunDataWriter
 {
 	GENERATED_BODY()
 
@@ -55,14 +68,20 @@ public:
 
 public:
 	/**
+	 * 타이틀 방에 등장할 에셋들을 Preload 해두는 함수
+	 * @param IsAutoTransition	Preload 완료 시 자동 Transition 여부
+	 */
+	void PreloadTitleRoomAsync(bool IsAutoTransition = false);
+
+	/**
 	 * 다음 방에 등장할 에셋들을 Preload 해두는 함수
-	 * @param StageId			스테이지에 대한 정적 에셋 및 데이터
-	 * @param RoomId			방에 대한 정적 에셋 및 데이터
+	 * @param RoomRowIndex		다음 방 행 인덱스
+	 * @param RoomColumnIndex	다음 방 열 인덱스
 	 * @param Callback			Transition 전에 호출될 대리자
 	 * @param IsAutoTransition	Preload 완료 시 자동 Transition 여부
 	 */
-	void PreloadRoomAsync(const FPrimaryAssetId& StageId, const FPrimaryAssetId& RoomId, FOnPreTransitNextRoom Callback = FOnPreTransitNextRoom(), bool IsAutoTransition = false);
-	void PreloadRoomAsync(const FPrimaryAssetId& StageId, const FPrimaryAssetId& RoomId, TArray<FPrimaryAssetId>&& AdditionalAssetIds, FOnPreTransitNextRoom Callback = FOnPreTransitNextRoom(), bool IsAutoTransition = false);
+	void PreloadRoomAsync(int32 RoomRowIndex, int32 RoomColumnIndex, FOnPreTransitNextRoom Callback = FOnPreTransitNextRoom(), bool IsAutoTransition = false);
+	void PreloadRoomAsync(FRoomTransitionRequest Request, bool IsAutoTransition = false);
 	
 	/**
 	 * 비동기로 새로운 Stage를 만든 다음, 자동으로 Stage의 첫 방에 대하여 Preload 해두는 함수
@@ -92,7 +111,6 @@ private:
 
 	/* 일시 데이터 */
 private:
-	FPrimaryAssetId mNextRoomId;
-	FOnPreTransitNextRoom_Internal OnPreTransitNextRoom_Internal;
+	FRoomTransitionRequest mRequest;
 };
 

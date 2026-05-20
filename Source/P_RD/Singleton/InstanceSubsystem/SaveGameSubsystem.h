@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "Singleton/InstanceSubsystem/PersistentDataWriter.h"
 
 #include "SaveGameSubsystem.generated.h"
 
@@ -22,7 +23,7 @@ class URunSaveGame;
  * @brief  게임 저장을 위한 Subsystem
  */
 UCLASS()
-class P_RD_API USaveGameSubsystem : public UGameInstanceSubsystem
+class P_RD_API USaveGameSubsystem : public UGameInstanceSubsystem, public IUserDataWriter, public IRunDataWriter
 {
 	GENERATED_BODY()
 
