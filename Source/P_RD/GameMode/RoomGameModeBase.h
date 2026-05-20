@@ -8,7 +8,7 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "GameFramework/GameModeBase.h"
+#include "GameMode/RDGameModeBase.h"
 #include "RoomGameModeBase.generated.h"
 
 class AUnit;
@@ -17,7 +17,7 @@ class AUnit;
  * @brief  방에 대한 베이스 GameMode
  */
 UCLASS(abstract)
-class P_RD_API ARoomGameModeBase : public AGameModeBase
+class P_RD_API ARoomGameModeBase : public ARDGameModeBase
 {
 	GENERATED_BODY()
 	
@@ -25,7 +25,11 @@ protected:
 	void BeginPlay() override;
 
 public:
-	AUnit* GetPlayerUnit();
+	AUnit* GetPlayerUnit() const;
+
+protected:
+	void SpawnPlayerUnit();
+	void RegisterPlayerUnit();
 
 protected:
 	UPROPERTY()

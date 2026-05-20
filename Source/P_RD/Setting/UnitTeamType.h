@@ -8,6 +8,7 @@
 #pragma once
 
 #include "RDMinimal.h"
+#include "GenericTeamAgentInterface.h"
 #include "UnitTeamType.generated.h"
 
 /**
@@ -26,3 +27,20 @@ namespace EUnitTeamType
         Count               UMETA(Hidden)
     };
 }
+
+/**
+ * @brief  한 팀에서 다른 팀들을 대하는 관계 정보 구조체
+ */
+USTRUCT(BlueprintType)
+struct FUnitTeamRelation
+{
+    GENERATED_BODY()
+
+public:
+    FUnitTeamRelation();
+    FUnitTeamRelation(std::initializer_list<TPairInitializer<const TEnumAsByte<EUnitTeamType::Type>&, const TEnumAsByte<ETeamAttitude::Type>&>> Attitudes) : mAttitudes(MoveTemp(Attitudes)) {}
+
+public:
+    UPROPERTY(Category = Team, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "Attitudes"))
+    TMap<TEnumAsByte<EUnitTeamType::Type>, TEnumAsByte<ETeamAttitude::Type>> mAttitudes;
+};

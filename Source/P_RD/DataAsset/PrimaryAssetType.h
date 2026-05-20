@@ -43,6 +43,8 @@ namespace StagePrimaryAssetTypes
  */
 namespace RoomPrimaryAssetTypes
 {
+	DECLARE_PRIMARY_ASSET_TYPE(TitleRoom);
+
 	DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX(MonsterRoom, EStageLevelType, StageLevel);
 	DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX(EliteMonsterRoom, EStageLevelType, StageLevel);
 	DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX(BossMonsterRoom, EStageLevelType, StageLevel);

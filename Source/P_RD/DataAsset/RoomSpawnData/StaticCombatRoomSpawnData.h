@@ -19,6 +19,10 @@ struct FUnitSpawnData : public FActorSpawnData
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Difficulty", ToolTip = "유닛 난이도"))
+	int32 mDifficulty = 0;
+
+public:
 	UPROPERTY(Category = "Turn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TurnPriority", ToolTip = "턴 초기 배치 우선 순위"))
 	int32 mTurnPriority = 0;
 };
@@ -43,6 +47,18 @@ UCLASS(abstract)
 class P_RD_API UStaticCombatRoomSpawnData : public UStaticRoomSpawnData
 {
 	GENERATED_BODY()
+
+public:
+	void PostInitProperties() override;
+
+public:
+	/**
+	 * @brief 현재 방이 등장할 수 있는 스테이지 레벨
+	 * @details
+	 * Primary Asset을 방 타입과 레벨 별로 분류해두었기 때문에, 해당 값은 Primary Asset Type에 영향을 줌
+	 */
+	UPROPERTY(Category = "Stage", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StageLevel"))
+	EStageLevelType mStageLevel;
 
 public:
 	UPROPERTY(Category = "Unit", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PlayerTransform"))

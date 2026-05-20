@@ -19,10 +19,22 @@ class P_RD_API UStaticShopRoomSpawnData : public UStaticRoomSpawnData
 	GENERATED_BODY()
 
 public:
+	void PostInitProperties() override;
+
+public:
 	FPrimaryAssetId GetPrimaryAssetId() const override
 	{
 		return FPrimaryAssetId(RoomPrimaryAssetTypes::GetShopRoomType(mStageLevel), GetFName());
 	}
+
+public:
+	/**
+	 * @brief 현재 방이 등장할 수 있는 스테이지 레벨
+	 * @details
+	 * Primary Asset을 방 타입과 레벨 별로 분류해두었기 때문에, 해당 값은 Primary Asset Type에 영향을 줌
+	 */
+	UPROPERTY(Category = "Stage", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StageLevel"))
+	EStageLevelType mStageLevel;
 
 public:
 	UPROPERTY(Category = "Unit", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ShopOwnerClass", AssetBundles = "Actor"))
