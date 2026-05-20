@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 #include "DataAsset/PrimaryAssetType.h"
+#include "DataAsset/BundleType.h"
 #include "StaticEquipmentData.generated.h"
 
 /**

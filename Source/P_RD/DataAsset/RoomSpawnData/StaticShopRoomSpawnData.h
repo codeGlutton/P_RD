@@ -37,6 +37,6 @@ public:
 	EStageLevelType mStageLevel;
 
 public:
-	UPROPERTY(Category = "Unit", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ShopOwnerClass", AssetBundles = "Actor"))
+	UPROPERTY(Category = "Unit", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ShopOwnerClass", BUNDLE_ACTOR))
 	TSoftClassPtr<AActor> mShopOwnerClass;
 };

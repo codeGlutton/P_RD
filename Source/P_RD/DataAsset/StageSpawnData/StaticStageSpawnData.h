@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 #include "DataAsset/PrimaryAssetType.h"
+#include "DataAsset/BundleType.h"
 #include "DataAsset/StageSpawnData/StageLevelType.h"
 #include "PCGStage/RoomType.h"
 #include "StaticStageSpawnData.generated.h"
@@ -28,8 +29,8 @@ public:
 	}
 
 public:
-	UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BackgroundPanel", AssetBundles = "UI"))
+	UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BackgroundPanel", BUNDLE_UI))
 	TSoftObjectPtr<UTexture2D> mBackgroundPanel;
-	UPROPERTY(Category = "UI", EditAnywhere, meta = (DisplayName = "RoomIcons", ArraySizeEnum = "ERoomType", AssetBundles = "UI"))
+	UPROPERTY(Category = "UI", EditAnywhere, meta = (DisplayName = "RoomIcons", ArraySizeEnum = "ERoomType", BUNDLE_UI))
 	TSoftObjectPtr<UTexture2D> mRoomIcons[static_cast<uint8>(ERoomType::Count)];
 };

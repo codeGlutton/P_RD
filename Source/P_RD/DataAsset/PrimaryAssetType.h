@@ -53,6 +53,17 @@ namespace RoomPrimaryAssetTypes
 }
 
 /**
+ * @brief 유닛 Primary Asset Type들을 정의한 namespace 영역
+ * @details
+ * 유닛 타입별로 등장하는 방을 나누어 설계
+ */
+namespace UnitPrimaryAssetTypes
+{
+	DECLARE_PRIMARY_ASSET_TYPE(PlayerUnit);
+	DECLARE_PRIMARY_ASSET_TYPE(EnemyUnit);
+}
+
+/**
  * @brief 장비 Primary Asset Type들을 정의한 namespace 영역
  * @details
  * 장비 타입과 희귀도 별로 등장하는 방을 나누어 설계

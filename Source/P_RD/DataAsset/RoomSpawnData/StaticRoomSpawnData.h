@@ -10,6 +10,7 @@
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "DataAsset/PrimaryAssetType.h"
+#include "DataAsset/BundleType.h"
 #include "StaticRoomSpawnData.generated.h"
 
 /**
@@ -36,10 +37,10 @@ public:
     }
 
 public:
-	UPROPERTY(Category = "Background", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BackgroundMap", AssetBundles = "World"))
+	UPROPERTY(Category = "Background", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BackgroundMap", BUNDLE_WORLD))
 	TSoftObjectPtr<UWorld> mBackgroundMap;
 
 public:
-    UPROPERTY(Category = "Logic", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "GameModeBase", AssetBundles = "World"))
+    UPROPERTY(Category = "Logic", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "GameModeBase", BUNDLE_WORLD))
     TSoftClassPtr<AGameModeBase> mGameModeBase;
 };

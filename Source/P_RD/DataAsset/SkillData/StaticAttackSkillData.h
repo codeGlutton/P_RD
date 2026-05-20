@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "RDMinimal.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
 #include "StaticAttackSkillData.generated.h"
 

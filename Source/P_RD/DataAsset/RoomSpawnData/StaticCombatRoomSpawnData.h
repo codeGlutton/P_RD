@@ -10,34 +10,43 @@
 #include "DataAsset/RoomSpawnData/StaticRoomSpawnData.h"
 #include "StaticCombatRoomSpawnData.generated.h"
 
+class UStaticObstacleSpawnData;
+class UStaticEnemyUnitSpawnData;
+
 /**
- * @brief 맵 상에 유닛의 스폰 정보 구조체
+ * @brief 타일 맵 상에 장애물의 배치 정보 구조체
  */
 USTRUCT(BlueprintType)
-struct FUnitSpawnData : public FActorSpawnData
+struct FObstaclePlacementData
+{
+    GENERATED_BODY()
+
+public:
+	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SpawnData", BUNDLE_PAD))
+	TSoftObjectPtr<UStaticObstacleSpawnData> mSpawnData;
+    UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Transform"))
+    FTileTransform mTransform;
+};
+
+/**
+ * @brief 타일 맵 상에 유닛의 배치 정보 구조체
+ */
+USTRUCT(BlueprintType)
+struct FEnemyUnitPlacementData
 {
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Difficulty", ToolTip = "유닛 난이도"))
+	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SpawnData", BUNDLE_PAD))
+	TSoftObjectPtr<UStaticEnemyUnitSpawnData> mSpawnData;
+	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Difficulty"))
 	int32 mDifficulty = 0;
+	UPROPERTY(Category = "Transform", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Transform"))
+	FTileTransform mTransform;
 
 public:
 	UPROPERTY(Category = "Turn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TurnPriority", ToolTip = "턴 초기 배치 우선 순위"))
 	int32 mTurnPriority = 0;
-};
-
-/**
- * @brief 타일 맵의 스폰 정보 구조체
- */
-USTRUCT(BlueprintType)
-struct FTileMapSpawnData
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(Category = "Obstacle", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ObstacleSpawnDatas"))
-	TArray<FActorSpawnData> mObstacleSpawnDatas;
 };
 
 /**
@@ -61,15 +70,15 @@ public:
 	EStageLevelType mStageLevel;
 
 public:
-	UPROPERTY(Category = "Unit", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PlayerTransform"))
+	UPROPERTY(Category = "Transform", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PlayerTransform"))
 	FTileTransform mPlayerTransform;
 	
-	UPROPERTY(Category = "Unit", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EnemySpawnDatas"))
-	TArray<FUnitSpawnData> mEnemySpawnDatas;
-
 public:
-	UPROPERTY(Category = "TileMap", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TileMapSpawnData"))
-	FTileMapSpawnData mTileMapSpawnData;
+	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EnemyUnitPlacementDatas"))
+	TArray<FEnemyUnitPlacementData> mEnemyUnitPlacementDatas;
+
+	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ObstaclePlacementDatas"))
+	TArray<FObstaclePlacementData> mObstaclePlacementDatas;
 };
 
 UCLASS()
