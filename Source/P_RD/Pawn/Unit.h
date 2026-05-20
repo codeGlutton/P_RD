@@ -10,7 +10,9 @@
 #include "GAS/GASMinimal.h"
 
 #include "GameFramework/Pawn.h"
-#include "AbilitySystemInterface.h"
+#include "SRPGFramework/TileActor.h"
+#include "SRPGFramework/TileTargetable.h"
+#include "SRPGFramework/TileSelectable.h"
 #include "GenericTeamAgentInterface.h"
 
 #include "Unit.generated.h"
@@ -52,7 +54,7 @@ public:
  * @brief  SRPG에서 사용되는 베이스 폰 클래스
  */
 UCLASS(abstract)
-class P_RD_API AUnit : public APawn, public IGenericTeamAgentInterface, public IAbilitySystemInterface
+class P_RD_API AUnit : public APawn, public IGenericTeamAgentInterface, public ITileActor, public ITileTargetable, public ITileSelectable
 {
 	GENERATED_BODY()
 
@@ -69,7 +71,7 @@ public:
 	void SetGenericTeamId(const FGenericTeamId& TeamID) override;
 	FGenericTeamId GetGenericTeamId() const override;
 
-	/* AbilitySystemInterface 상속 */
+	/* ITileActor 상속 */
 public:
 	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 

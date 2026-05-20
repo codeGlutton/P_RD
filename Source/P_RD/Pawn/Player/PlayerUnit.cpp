@@ -1,7 +1,8 @@
 ﻿#include "Pawn/Player/PlayerUnit.h"
 #include "GAS/Attribute/LevelAttributeSet.h"
+#include "Singleton/InstanceSubsystem/PersistentData.h"
 
-#include "Singleton/InstanceSubsystem/PersistentDataSubsystem.h"
+#include "GameMode/RDGameModeBase.h"
 
 APlayerUnit::APlayerUnit()
 {
@@ -28,18 +29,23 @@ void APlayerUnit::OnConstruction(const FTransform& Transform)
 #endif
 }
 
+UUserWidget* APlayerUnit::GetInfoPanel() const
+{
+    return nullptr;
+}
+
 int32 APlayerUnit::GetPlayerLevel() const
 {
-    UPersistentDataSubsystem* PersistentDataSubsystem = GetGameInstance()->GetSubsystem<UPersistentDataSubsystem>();
-    checkf(PersistentDataSubsystem != nullptr, TEXT("영구 데이터 서브시스템 nullptr"));
+    ARDGameModeBase* RDGameMode = GetWorld()->GetAuthGameMode<ARDGameModeBase>();
+    checkf(RDGameMode != nullptr, TEXT("게임 모드 nullptr"));
 
-    return PersistentDataSubsystem->GetRunPersistData()->GetPlayerLevel();
+    return RDGameMode->GetRunPersistData()->GetPlayerLevel();
 }
 
 int32 APlayerUnit::GetDifficulty() const
 {
-    UPersistentDataSubsystem* PersistentDataSubsystem = GetGameInstance()->GetSubsystem<UPersistentDataSubsystem>();
-    checkf(PersistentDataSubsystem != nullptr, TEXT("영구 데이터 서브시스템 nullptr"));
+    ARDGameModeBase* RDGameMode = GetWorld()->GetAuthGameMode<ARDGameModeBase>();
+    checkf(RDGameMode != nullptr, TEXT("게임 모드 nullptr"));
 
-    return PersistentDataSubsystem->GetRunPersistData()->GetDifficulty();
+    return RDGameMode->GetRunPersistData()->GetDifficulty();
 }

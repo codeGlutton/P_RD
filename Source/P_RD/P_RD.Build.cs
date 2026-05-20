@@ -13,6 +13,7 @@ public class P_RD : ModuleRules
             "Engine",
             "InputCore",
             "EnhancedInput",
+            "UMG",
 
             /* Gameplay Tag Modules */
             "GameplayTags",				// 게임플레이 태그 시스템

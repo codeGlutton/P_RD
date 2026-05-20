@@ -31,6 +31,10 @@ public:
 	void PostInitializeComponents() override;
 	void OnConstruction(const FTransform& Transform) override;
 
+	/* AUnit 상속 */
+protected:
+	UUserWidget* GetInfoPanel() const override;
+
 public:
 	int32 GetPlayerLevel() const;
 	int32 GetDifficulty() const override;

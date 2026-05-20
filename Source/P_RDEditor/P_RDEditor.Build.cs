@@ -14,6 +14,7 @@ public class P_RDEditor : ModuleRules
             "Engine",
             "InputCore",
             "EnhancedInput",
+            "UMG",
 
             /* Editor Core Modules */
             "UnrealEd",
