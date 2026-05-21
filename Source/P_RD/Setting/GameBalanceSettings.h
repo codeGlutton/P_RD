@@ -1,6 +1,6 @@
 ﻿/*****************************************************************//**
- * @file   GlobalGameBalanceSettings.h
- * @brief  글로벌 게임 밸런스 설정 클래스 정의 헤더
+ * @file   GameBalanceSettings.h
+ * @brief  게임 밸런스 설정 클래스 정의 헤더
  * @author 모호재
  * @date   2026-05-06
  *********************************************************************/
@@ -9,14 +9,14 @@
 
 #include "RDMinimal.h"
 #include "Engine/DeveloperSettings.h"
-#include "Setting/GlobalGameBalanceType.h"
-#include "GlobalGameBalanceSettings.generated.h"
+#include "Setting/GameBalanceType.h"
+#include "GameBalanceSettings.generated.h"
 
 /**
- * @brief  글로벌 게임 밸런스 설정 클래스
+ * @brief  게임 밸런스 설정 클래스
  */
-UCLASS(Config = Game, DefaultConfig, meta = (DisplayName = "Global Game Balance Setting"))
-class P_RD_API UGlobalGameBalanceSettings : public UDeveloperSettings
+UCLASS(Config = Game, DefaultConfig, meta = (DisplayName = "Game Balance Setting"))
+class P_RD_API UGameBalanceSettings : public UDeveloperSettings
 {
 	GENERATED_BODY()
 

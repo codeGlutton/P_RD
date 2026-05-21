@@ -1,2 +1,0 @@
-﻿#include "Setting/GlobalGameBalanceType.h"
-

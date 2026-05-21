@@ -1,6 +1,6 @@
 ﻿/*****************************************************************//**
- * @file   GlobalGameBalanceType.h
- * @brief  전역 게임 밸런스 타입 대한 헤더
+ * @file   GameBalanceType.h
+ * @brief  게임 밸런스 타입 대한 헤더
  * @author 모호재
  * @date   2026-05-13
  *********************************************************************/
@@ -8,7 +8,7 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "GlobalGameBalanceType.generated.h"
+#include "GameBalanceType.generated.h"
 
 /**
  * @brief 전역 스테이지 설정 값 객체
