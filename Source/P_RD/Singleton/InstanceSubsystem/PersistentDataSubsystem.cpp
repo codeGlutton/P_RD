@@ -18,3 +18,12 @@ const URunPersistData* UPersistentDataSubsystem::GetRunPersistData() const
 {
 	return mRunPersistData;
 }
+
+void UPersistentDataSubsystem::DoStageBuildTest(bool UpdateBuildStream)
+{
+	if (UpdateBuildStream == true)
+	{
+		mRunPersistData->StartRun(FPrimaryAssetId(), 1);
+	}
+	mRunPersistData->MakeStageAsync(EStageLevelType::Stage1, FOnCreateStage());
+}
