@@ -16,8 +16,7 @@
 // USaveGameSubsystem 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogSave, Log, All)
 
-class UUserSaveGame;
-class URunSaveGame;
+class UBinarySaveGame;
 
 /**
  * @brief  게임 저장을 위한 Subsystem
@@ -51,10 +50,10 @@ protected:
 
 protected:
 	UPROPERTY()
-	mutable TObjectPtr<UUserSaveGame> mUserSaveGame;
+	mutable TObjectPtr<UBinarySaveGame> mUserSaveGame;
 
 	UPROPERTY()
-	mutable TObjectPtr<URunSaveGame> mRunSaveGame;
+	mutable TObjectPtr<UBinarySaveGame> mRunSaveGame;
 
 protected:
 	static constexpr auto USER_SLOT_NAME = TEXT("User");

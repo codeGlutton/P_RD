@@ -1,8 +1,8 @@
 ﻿/*****************************************************************//**
- * @file   UserSaveGame.h
- * @brief  유저 데이터를 저장하는 객체 정의 헤더
+ * @file   BinarySaveGame.h
+ * @brief  바이트 데이터를 저장하는 객체 정의 헤더
  * @author 모호재
- * @date   2026-04-29
+ * @date   2026-05-21
  *********************************************************************/
 
 #pragma once
@@ -10,13 +10,13 @@
 #include "RDMinimal.h"
 #include "GameFramework/SaveGame.h"
 
-#include "UserSaveGame.generated.h"
+#include "BinarySaveGame.generated.h"
 
 /**
- * @brief  유저 데이터를 저장하는 객체
+ * @brief  바이트 데이터를 저장하는 객체
  */
 UCLASS()
-class P_RD_API UUserSaveGame : public USaveGame
+class P_RD_API UBinarySaveGame : public USaveGame
 {
 	GENERATED_BODY()
 	
