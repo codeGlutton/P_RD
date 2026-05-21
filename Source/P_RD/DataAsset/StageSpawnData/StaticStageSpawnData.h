@@ -29,6 +29,8 @@ public:
 	}
 
 public:
+	UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StageName"))
+	FText mStageName;
 	UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BackgroundPanel", BUNDLE_UI))
 	TSoftObjectPtr<UTexture2D> mBackgroundPanel;
 	UPROPERTY(Category = "UI", EditAnywhere, meta = (DisplayName = "RoomIcons", ArraySizeEnum = "ERoomType", BUNDLE_UI))

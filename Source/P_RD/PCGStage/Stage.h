@@ -44,9 +44,6 @@ public:
 	const FRoom& GetCurrentRoom() const;
 
 public:
-	UPROPERTY(Category = Stage, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StageName"))
-	FText mStageName;
-
 	UPROPERTY(Category = Stage, SaveGame, VisibleAnywhere, meta = (DisplayName = "StageLevel"))
 	EStageLevelType mStageLevel = EStageLevelType::None;
 	

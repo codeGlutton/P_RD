@@ -55,9 +55,6 @@ struct FStageBuilderParams : public FTableRowBase
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(Category = "Data", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StageName"))
-	FText mStageName;
-
 	UPROPERTY(Category = "Data", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StageLevel"))
 	EStageLevelType mStageLevel = EStageLevelType::None;
 

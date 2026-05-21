@@ -5,6 +5,8 @@
 #include "Engine/AssetManager.h"
 #include "DataAsset/PrimaryAssetType.h"
 
+#include "FunctionLibrary/RandomStreamFunctionLibrary.h"
+
 DEFINE_LOG_CATEGORY(LogStageBuilder)
 
 FStageBuilder::FStageBuilder(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting) :
@@ -354,7 +356,7 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 		const uint8 EquipmentTypeIndex = GetRandomEquipmentIndex();
 		const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mEquipmentRarityRate);
 		const TArray<FPrimaryAssetId>& EquipmentIdArray = mEquipmentAssetIds[EquipmentTypeIndex][RarityTypeIndex];
-		NewRoom.mRewardEquipmentDataId = GetRandomId(EquipmentIdArray);
+		NewRoom.mRewardEquipmentDataId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, EquipmentIdArray);
 		
 		NewRoomPtr = &NewRoom;
 		break;
@@ -369,7 +371,7 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 			const uint8 SkillTypeIndex = GetRandomSkillIndex();
 			const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mSkillRarityRate);
 			const TArray<FPrimaryAssetId>& SkillIdArray = mSkillAssetIds[SkillTypeIndex][RarityTypeIndex];
-			NewRoom.mSaleSkillDataIds.Push(GetRandomId(SkillIdArray));
+			NewRoom.mSaleSkillDataIds.Push(URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, SkillIdArray));
 		}
 
 		for (int32 i = 0; i < 3; ++i)
@@ -377,7 +379,7 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 			const uint8 EquipmentTypeIndex = GetRandomEquipmentIndex();
 			const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mEquipmentRarityRate);
 			const TArray<FPrimaryAssetId>& EquipmentIdArray = mEquipmentAssetIds[EquipmentTypeIndex][RarityTypeIndex];
-			NewRoom.mSaleEquipmentDataIds.Push(GetRandomId(EquipmentIdArray));
+			NewRoom.mSaleEquipmentDataIds.Push(URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, EquipmentIdArray));
 		}
 
 		NewRoomPtr = &NewRoom;
@@ -388,7 +390,7 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 		Room.InitializeAs<FMonsterRoom>();
 		auto& NewRoom = Room.GetMutable<FMonsterRoom>();
 
-		NewRoom.mRewardMoney = GetRandomFromInterval(mGlobalSetting.mMonsterRewardMoney);
+		NewRoom.mRewardMoney = URandomStreamFunctionLibrary::GetRandomFromInterval(mBuildStream, mGlobalSetting.mMonsterRewardMoney);
 		NewRoom.mRewardExp = mGlobalSetting.mMonsterRewardExp;
 
 		NewRoomPtr = &NewRoom;
@@ -399,13 +401,13 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 		Room.InitializeAs<FEliteMonsterRoom>();
 		auto& NewRoom = Room.GetMutable<FEliteMonsterRoom>();
 
-		NewRoom.mRewardMoney = GetRandomFromInterval(mGlobalSetting.mEliteRewardMoney);
+		NewRoom.mRewardMoney = URandomStreamFunctionLibrary::GetRandomFromInterval(mBuildStream, mGlobalSetting.mEliteRewardMoney);
 		NewRoom.mRewardExp = mGlobalSetting.mEliteRewardExp;
 
 		const uint8 EquipmentTypeIndex = GetRandomEquipmentIndex();
 		const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mEquipmentRarityRate);
 		const TArray<FPrimaryAssetId>& EquipmentIdArray = mEquipmentAssetIds[EquipmentTypeIndex][RarityTypeIndex];
-		NewRoom.mRewardEquipmentDataId = GetRandomId(EquipmentIdArray);
+		NewRoom.mRewardEquipmentDataId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, EquipmentIdArray);
 
 		NewRoomPtr = &NewRoom;
 		break;
@@ -415,12 +417,12 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 		Room.InitializeAs<FBossMonsterRoom>();
 		auto& NewRoom = Room.GetMutable<FBossMonsterRoom>();
 
-		NewRoom.mRewardMoney = GetRandomFromInterval(mGlobalSetting.mBossRewardMoney);
+		NewRoom.mRewardMoney = URandomStreamFunctionLibrary::GetRandomFromInterval(mBuildStream, mGlobalSetting.mBossRewardMoney);
 		NewRoom.mRewardExp = mGlobalSetting.mBossRewardExp;
 
 		const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mEquipmentRarityRate);
 		const TArray<FPrimaryAssetId>& DiceIdArray = mDiceAssetIds[RarityTypeIndex];
-		NewRoom.mRewardDiceDataId = GetRandomId(DiceIdArray);
+		NewRoom.mRewardDiceDataId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, DiceIdArray);
 
 		NewRoomPtr = &NewRoom;
 		break;
@@ -432,15 +434,9 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 	NewRoomPtr->mRow = Row;
 	NewRoomPtr->mColumn = Column;
 	NewRoomPtr->mPositionOffsetRate = FVector2D(mBuildStream.FRandRange(-1., 1.), mBuildStream.FRandRange(-1., 1.));
-	NewRoomPtr->mStaticRoomSpawnDataId = GetRandomId(RoomIdArray);
+	NewRoomPtr->mStaticRoomSpawnDataId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, RoomIdArray);
 
 	return *NewRoomPtr;
-}
-
-const FPrimaryAssetId& FStageBuilder::GetRandomId(const TArray<FPrimaryAssetId>& IdArray) const
-{
-	checkf(IdArray.IsEmpty() == false, TEXT("Random Array is empty"));
-	return IdArray[mBuildStream.RandRange(0, IdArray.Num() - 1)];
 }
 
 uint8 FStageBuilder::GetRandomEquipmentIndex() const
@@ -473,8 +469,4 @@ ERarityType FStageBuilder::GetRandomRarity(const FRarityRate& RarityRate) const
 	return RarityRate.GetType(mBuildStream.FRand());
 }
 
-int32 FStageBuilder::GetRandomFromInterval(const FInt32Interval& Interval) const
-{
-	return mBuildStream.RandRange(Interval.Min, Interval.Max);
-}
 

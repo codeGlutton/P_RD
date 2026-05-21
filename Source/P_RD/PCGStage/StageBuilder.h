@@ -9,7 +9,7 @@
 
 #include "RDMinimal.h"
 #include "PCGStage/Stage.h"
-#include "Setting/GlobalGameBalanceType.h"
+#include "Setting/GameBalanceType.h"
 #include "DataAsset/EquipmentData/EquipmentType.h"
 #include "DataAsset/SkillData/SkillType.h"
 #include "DataTable/StageBuilderParams.h"
@@ -56,8 +56,6 @@ protected:
 	FRoom& CreateRoom(ERoomType Type, int32 Row, int32 Column, TInstancedStruct<FRoom>& Room) const;
 
 protected:
-	const FPrimaryAssetId& GetRandomId(const TArray<FPrimaryAssetId>& IdArray) const;
-
 	uint8 GetRandomEquipmentIndex() const;
 	EEquipmentType GetRandomEquipment() const;
 
@@ -66,8 +64,6 @@ protected:
 
 	uint8 GetRandomRarityIndex(const FRarityRate& RarityRate) const;
 	ERarityType GetRandomRarity(const FRarityRate& RarityRate) const;
-
-	int32 GetRandomFromInterval(const FInt32Interval& Interval) const;
 
 protected:
 	const FRandomStream& mBuildStream;

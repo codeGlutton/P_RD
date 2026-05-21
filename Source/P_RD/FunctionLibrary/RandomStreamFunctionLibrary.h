@@ -17,4 +17,23 @@ class P_RD_API URandomStreamFunctionLibrary
 public:
 	static const FRandomStream& GetStageBuildStream(const UObject* WorldContextObject);
 	static const FRandomStream& GetEventStream(const UObject* WorldContextObject);
+
+public:
+	template<typename T>
+	static const T& GetRandomItem(const FRandomStream& Stream, const TArray<T>& Array)
+	{
+		checkf(Array.IsEmpty() == false, TEXT("Random Array is empty"));
+		return Array[Stream.RandRange(0, Array.Num() - 1)];
+	}
+
+	template<typename T>
+	static T& GetRandomItem(const FRandomStream& Stream, TArray<T>& Array)
+	{
+		checkf(Array.IsEmpty() == false, TEXT("Random Array is empty"));
+		return Array[Stream.RandRange(0, Array.Num() - 1)];
+	}
+
+public:
+	static int32 GetRandomFromInterval(const FRandomStream& Stream, const FInt32Interval& Interval);
+	static float GetRandomFromInterval(const FRandomStream& Stream, const FFloatInterval& Interval);
 };
