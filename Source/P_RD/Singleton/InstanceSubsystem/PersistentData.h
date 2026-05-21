@@ -77,16 +77,21 @@ class P_RD_API UPlayerUnitPersistData : public UObject
 	GENERATED_BODY()
 
 public:
-	void RegisterUnit(APlayerUnit* PlayerUnit);
+	void RegisterPlayerUnit(APlayerUnit* PlayerUnit);
 
 public:
 	const FPrimaryAssetId& GetPlayerUnitId() const;
 	int32 GetPlayerLevel() const;
 	int32 GetDifficulty() const;
 
+public:
+	const TArray<FPrimaryAssetId>& GetSkillIds() const;
+	const TArray<FPrimaryAssetId>& GetEquipmentIds() const;
+	const TArray<FPrimaryAssetId>& GetDiceIds() const;
+
 protected:
-	void ApplyPersistData(APlayerUnit* PlayerUnit);
-	void BindUnitEvent(APlayerUnit* PlayerUnit);
+	void ApplyPlayerPersistData(APlayerUnit* PlayerUnit);
+	void BindPlayerUnitEvent(APlayerUnit* PlayerUnit);
 
 protected:
 	UPROPERTY(SaveGame)
@@ -117,8 +122,14 @@ protected:
 	TMap<FGameplayTag, int32> mTagCountMap;
 
 protected:
+	UPROPERTY(Category = Skill, SaveGame, VisibleAnywhere, meta = (DisplayName = "SkillIds"))
+	TArray<FPrimaryAssetId> mSkillIds;
+
 	UPROPERTY(Category = Equipment, SaveGame, VisibleAnywhere, meta = (DisplayName = "EquipmentIds"))
 	TArray<FPrimaryAssetId> mEquipmentIds;
+
+	UPROPERTY(Category = Dice, SaveGame, VisibleAnywhere, meta = (DisplayName = "DiceIds"))
+	TArray<FPrimaryAssetId> mDiceIds;
 };
 
 /**
@@ -130,11 +141,14 @@ class P_RD_API URunPersistData : public UPlayerUnitPersistData
 	GENERATED_BODY()
 
 public:
-	void StartRun(int32 Difficulty);
+	void StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty);
 	void ClearRun();
 
 	void MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCreateStage);
 	void SetCurrentRoomIndex(int32 RowIndex, int32 ColumnIndex);
+
+public:
+	void CollectAssetIds(int32 RowIndex, int32 ColumnIndex, OUT TArray<FPrimaryAssetId>& PlayerIds, OUT FPrimaryAssetId& StageId, OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const;
 
 public:
 	const FRandomStream& GetStageBuildStream() const;

@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 #include "GameMode/RDGameModeBase.h"
+#include "DataAsset/StageSpawnData/StageLevelType.h"
 #include "RoomGameModeBase.generated.h"
 
 class AUnit;
@@ -25,11 +26,22 @@ protected:
 	void BeginPlay() override;
 
 public:
-	AUnit* GetPlayerUnit() const;
+	void EndRun() const;
+
+public:
+	void PreloadTitleRoomAsync() const;
+	void PreloadRoomAsync(int32 RoomRowIndex, int32 RoomColumnIndex) const;
+	void PreloadRoomAsync(EStageLevelType StageLevel) const;
+	void TransitionLoadedRoomAsync() const;
 
 protected:
-	void SpawnPlayerUnit();
-	void RegisterPlayerUnit();
+	void SaveRunAsync(FAsyncSaveGameToSlotDelegate Callback) const;
+
+protected:
+	void RestorePlayerUnit();
+
+public:
+	AUnit* GetPlayerUnit() const;
 
 protected:
 	UPROPERTY()

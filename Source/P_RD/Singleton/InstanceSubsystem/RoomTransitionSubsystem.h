@@ -33,11 +33,12 @@ enum class ERoomTransitionStateFlag : uint8
 
 	AutoTransition = 1 << 2,
 
-	StageLoaded = 1 << 3,
-	RoomLoaded = 1 << 4,
+	PlayerLoaded = 1 << 3,
+	StageLoaded = 1 << 4,
+	RoomLoaded = 1 << 5,
 
 	AllTaskRequested = NewStageRequested | PreLoadRequested,
-	ReadyToTransition = PreLoadRequested | StageLoaded | RoomLoaded,
+	ReadyToTransition = PreLoadRequested | PlayerLoaded | StageLoaded | RoomLoaded,
 };
 ENUM_CLASS_FLAGS(ERoomTransitionStateFlag);
 
@@ -97,6 +98,7 @@ public:
 	void TransitLoadedRoomAsync();
 
 protected:
+	void OnLoadNextPlayer(TSharedPtr<FStreamableHandle> AssetHandle);
 	void OnLoadNextStage(TSharedPtr<FStreamableHandle> AssetHandle);
 	void OnLoadNextRoom(TSharedPtr<FStreamableHandle> AssetHandle);
 
@@ -106,6 +108,7 @@ protected:
 	/* 유지 데이터 */
 private:
 	ERoomTransitionStateFlag mTransitionState = ERoomTransitionStateFlag::None;
+	TSharedPtr<FStreamableHandle> mPlayerPreloadHandle = nullptr;
 	TSharedPtr<FStreamableHandle> mStagePreloadHandle = nullptr;
 	TSharedPtr<FStreamableHandle> mRoomPreloadHandle = nullptr;
 

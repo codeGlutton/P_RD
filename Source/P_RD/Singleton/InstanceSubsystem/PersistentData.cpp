@@ -2,7 +2,7 @@
 #include "GAS/Attribute/UnitAttributeSet.h"
 #include "Pawn/Player/PlayerUnit.h"
 
-#include "Setting/GlobalGameBalanceSettings.h"
+#include "Setting/GameBalanceSettings.h"
 #include "Engine/AssetManager.h"
 #include "PCGStage/StageBuilder.h"
 
@@ -26,14 +26,14 @@ void FUserLog::Clear()
 	mKnownDiceIds.Empty();
 }
 
-void UPlayerUnitPersistData::RegisterUnit(APlayerUnit* PlayerUnit)
+void UPlayerUnitPersistData::RegisterPlayerUnit(APlayerUnit* PlayerUnit)
 {
 	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
 	UAbilitySystemComponent* ASC = PlayerUnit->GetAbilitySystemComponent();
 	checkf(ASC != nullptr, TEXT("어빌리티 시스템 컴포넌트 nullptr"));
 
-	ApplyPersistData(PlayerUnit);
-	BindUnitEvent(PlayerUnit);
+	ApplyPlayerPersistData(PlayerUnit);
+	BindPlayerUnitEvent(PlayerUnit);
 }
 
 const FPrimaryAssetId& UPlayerUnitPersistData::GetPlayerUnitId() const
@@ -51,7 +51,22 @@ int32 UPlayerUnitPersistData::GetDifficulty() const
 	return mDifficulty;
 }
 
-void UPlayerUnitPersistData::ApplyPersistData(APlayerUnit* PlayerUnit)
+const TArray<FPrimaryAssetId>& UPlayerUnitPersistData::GetSkillIds() const
+{
+	return mSkillIds;
+}
+
+const TArray<FPrimaryAssetId>& UPlayerUnitPersistData::GetEquipmentIds() const
+{
+	return mEquipmentIds;
+}
+
+const TArray<FPrimaryAssetId>& UPlayerUnitPersistData::GetDiceIds() const
+{
+	return mDiceIds;
+}
+
+void UPlayerUnitPersistData::ApplyPlayerPersistData(APlayerUnit* PlayerUnit)
 {
 	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
 	UAbilitySystemComponent* ASC = PlayerUnit->GetAbilitySystemComponent();
@@ -73,7 +88,7 @@ void UPlayerUnitPersistData::ApplyPersistData(APlayerUnit* PlayerUnit)
 	}
 }
 
-void UPlayerUnitPersistData::BindUnitEvent(APlayerUnit* PlayerUnit)
+void UPlayerUnitPersistData::BindPlayerUnitEvent(APlayerUnit* PlayerUnit)
 {
 	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
 	UAbilitySystemComponent* ASC = PlayerUnit->GetAbilitySystemComponent();
@@ -100,7 +115,7 @@ void UPlayerUnitPersistData::BindUnitEvent(APlayerUnit* PlayerUnit)
 		});
 }
 
-void URunPersistData::StartRun(int32 Difficulty)
+void URunPersistData::StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty)
 {
 	ClearRun();
 
@@ -108,6 +123,7 @@ void URunPersistData::StartRun(int32 Difficulty)
 	mEventStream.Initialize(FMath::Rand32());
 
 	mIsNewData = true;
+	mPlayerUnitId = PlayerUnitId;
 	mDifficulty = Difficulty;
 }
 
@@ -118,7 +134,9 @@ void URunPersistData::ClearRun()
 	mIsNewData = true;
 
 	mTagCountMap.Empty();
+	mSkillIds.Empty();
 	mEquipmentIds.Empty();
+	mDiceIds.Empty();
 
 	mStage.Reset();
 
@@ -130,10 +148,10 @@ void URunPersistData::MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCrea
 	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
 	checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
 
-	const UGlobalGameBalanceSettings* GlobalGameBalanceSetting = GetDefault<UGlobalGameBalanceSettings>();
-	checkf(GlobalGameBalanceSetting != nullptr, TEXT("글로벌 밸런스 세팅 객체 nullptr"));
+	const UGameBalanceSettings* GameBalanceSetting = GetDefault<UGameBalanceSettings>();
+	checkf(GameBalanceSetting != nullptr, TEXT("밸런스 세팅 객체 nullptr"));
 
-	GlobalGameBalanceSetting->mStageBuildSettingTable.LoadAsync(FLoadSoftObjectPathAsyncDelegate::CreateLambda([this, Type, OnCreateStage = MoveTemp(OnCreateStage), GlobalGameBalanceSetting](const FSoftObjectPath& Path, UObject* Object) {
+	GameBalanceSetting->mStageBuildSettingTable.LoadAsync(FLoadSoftObjectPathAsyncDelegate::CreateLambda([this, Type, OnCreateStage = MoveTemp(OnCreateStage), GameBalanceSetting](const FSoftObjectPath& Path, UObject* Object) {
 		
 		const UDataTable* BalanceSetting = Cast<UDataTable>(Object);
 		checkf(BalanceSetting != nullptr, TEXT("스테이지 빌드 세팅 미존재 nullptr"));
@@ -141,7 +159,7 @@ void URunPersistData::MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCrea
 		const FStageBuilderParams& BuilderParams = *BalanceSetting->FindRow<FStageBuilderParams>(*EnumToString(Type), TEXT("밸런스 세팅 테이블 탐색 에러"));
 		const FRandomStream& BuildStream = URandomStreamFunctionLibrary::GetStageBuildStream(this);
 
-		mStage.InitializeAs<FStage>(FStageBuilder::Make(BuildStream, GlobalGameBalanceSetting->mGlobalStageBuildSetting, BuilderParams).Build());
+		mStage.InitializeAs<FStage>(FStageBuilder::Make(BuildStream, GameBalanceSetting->mGlobalStageBuildSetting, BuilderParams).Build());
 		OnCreateStage.ExecuteIfBound(mStage.Get());
 
 		}));
@@ -151,6 +169,17 @@ void URunPersistData::SetCurrentRoomIndex(int32 RowIndex, int32 ColumnIndex)
 {
 	mStage.GetMutable().mCurRow = RowIndex;
 	mStage.GetMutable().mCurColumn = ColumnIndex;
+}
+
+void URunPersistData::CollectAssetIds(int32 RowIndex, int32 ColumnIndex, OUT TArray<FPrimaryAssetId>& PlayerIds, OUT FPrimaryAssetId& StageId, OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const
+{
+	PlayerIds.Add(mPlayerUnitId);
+	PlayerIds.Append(mSkillIds);
+	PlayerIds.Append(mEquipmentIds);
+	PlayerIds.Append(mDiceIds);
+
+	StageId = GetStage().mStaticStageSpawnDataId;
+	GetRoom(RowIndex, ColumnIndex).CollectAssetIds(RoomId, AdditionalAssetIds);
 }
 
 const FRandomStream& URunPersistData::GetStageBuildStream() const

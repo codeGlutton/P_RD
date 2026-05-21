@@ -26,6 +26,6 @@ class P_RD_API UGameProfileSubsystem : public UGameInstanceSubsystem, public IUs
 
 public:
 	void MakeUser(const FText& Name) const;
-	void StartRun(int32 Difficulty) const;
+	void StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty) const;
 	void EndRun() const;
 };

@@ -11,11 +11,11 @@ void UGameProfileSubsystem::MakeUser(const FText& Name) const
 	UE_LOG(LogGameProfile, Log, TEXT("새로운 유저 데이터 생성"));
 }
 
-void UGameProfileSubsystem::StartRun(int32 Difficulty) const
+void UGameProfileSubsystem::StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty) const
 {
 	checkf(GetUserMutableData()->IsActive() == true, TEXT("유저 미존재 상태에서 새로운 런 생성 불가"));
 
-	GetRunMutableData()->StartRun(Difficulty);
+	GetRunMutableData()->StartRun(PlayerUnitId, Difficulty);
 
 	UE_LOG(LogGameProfile, Log, TEXT("새로운 런 데이터 생성"));
 }

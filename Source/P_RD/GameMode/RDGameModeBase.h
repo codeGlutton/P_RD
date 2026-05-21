@@ -26,7 +26,7 @@ public:
 	const UUserPersistData* GetUserPersistData() const;
 	const URunPersistData* GetRunPersistData() const;
 
-public:
+protected:
 	UPROPERTY(Category = "UI", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "MainUI"))
 	TSubclassOf<UUserWidget> mMainUI;
 };

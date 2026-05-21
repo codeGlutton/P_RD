@@ -33,6 +33,11 @@ void URoomTransitionSubsystem::PreloadTitleRoomAsync(bool IsAutoTransition)
     checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
 
     {
+        OnLoadNextPlayer(nullptr);
+        mPlayerPreloadHandle = nullptr;
+    }
+
+    {
         OnLoadNextStage(nullptr);
         mStagePreloadHandle = nullptr;
     }
@@ -50,7 +55,13 @@ void URoomTransitionSubsystem::PreloadTitleRoomAsync(bool IsAutoTransition)
 
 void URoomTransitionSubsystem::PreloadRoomAsync(int32 RoomRowIndex, int32 RoomColumnIndex, FOnPreTransitNextRoom Callback, bool IsAutoTransition)
 {
-    PreloadRoomAsync(FRoomTransitionRequest{true, RoomRowIndex, RoomColumnIndex, Callback}, IsAutoTransition);
+    FRoomTransitionRequest Request;
+    Request.mChangePersistentData = true;
+    Request.mRoomRowIndex = RoomRowIndex;
+    Request.mRoomColumnIndex = RoomColumnIndex;
+    Request.OnPreTransitNextRoom = Callback;
+
+    PreloadRoomAsync(MoveTemp(Request), IsAutoTransition);
 }
 
 void URoomTransitionSubsystem::PreloadRoomAsync(FRoomTransitionRequest Request, bool IsAutoTransition)
@@ -69,15 +80,23 @@ void URoomTransitionSubsystem::PreloadRoomAsync(FRoomTransitionRequest Request, 
 
     mRequest = Request;
 
-    const FRoom& NextRoom = GetRunMutableData()->GetRoom(mRequest.mRoomRowIndex, mRequest.mRoomColumnIndex);
-
-    FPrimaryAssetId StageId = GetRunMutableData()->GetStage().mStaticStageSpawnDataId;
+    TArray<FPrimaryAssetId> PlayerIds;
+    FPrimaryAssetId StageId;
     FPrimaryAssetId RoomId;
     TArray<FPrimaryAssetId> AdditionalIds;
-    NextRoom.CollectAssetIds(OUT RoomId, OUT AdditionalIds);
+    GetRunMutableData()->CollectAssetIds(mRequest.mRoomRowIndex, mRequest.mRoomColumnIndex, OUT PlayerIds, OUT StageId, OUT RoomId, OUT AdditionalIds);
 
     UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
     checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
+
+    {
+        TArray<FName> Bundles = { BULDLE_ALL };
+        FAssetManagerLoadParams LoadParams;
+        LoadParams.OnComplete.BindUObject(this, &URoomTransitionSubsystem::OnLoadNextPlayer);
+
+        TSharedPtr<FStreamableHandle> NewPreloadHandle = AssetManager->PreloadPrimaryAssets(PlayerIds, Bundles, true, MoveTemp(LoadParams));
+        mPlayerPreloadHandle = NewPreloadHandle;
+    }
 
     {
         TArray<FName> Bundles = { BUNDLE_PAD, BUNDLE_UI };
@@ -138,6 +157,26 @@ void URoomTransitionSubsystem::TransitLoadedRoomAsync()
     OnTransitNextRoom();
 }
 
+void URoomTransitionSubsystem::OnLoadNextPlayer(TSharedPtr<FStreamableHandle> AssetHandle)
+{
+    EnumAddFlags(mTransitionState, ERoomTransitionStateFlag::PlayerLoaded);
+
+    // 에셋 로드가 아직 완료되지 않은 경우
+    if (EnumHasAllFlags(mTransitionState, ERoomTransitionStateFlag::ReadyToTransition) == false)
+    {
+        return;
+    }
+
+    // 자동 맵 전환 비활성화 시
+    if (EnumHasAllFlags(mTransitionState, ERoomTransitionStateFlag::AutoTransition) == false)
+    {
+        return;
+    }
+
+    // 에셋 로드가 완료된 경우
+    OnTransitNextRoom();
+}
+
 void URoomTransitionSubsystem::OnLoadNextStage(TSharedPtr<FStreamableHandle> AssetHandle)
 {
     EnumAddFlags(mTransitionState, ERoomTransitionStateFlag::StageLoaded);
@@ -154,6 +193,7 @@ void URoomTransitionSubsystem::OnLoadNextStage(TSharedPtr<FStreamableHandle> Ass
         return;
     }
 
+    // 에셋 로드가 완료된 경우
     OnTransitNextRoom();
 }
 
