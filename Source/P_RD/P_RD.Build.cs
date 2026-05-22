@@ -1,6 +1,4 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
-
-using UnrealBuildTool;
+﻿using UnrealBuildTool;
 
 public class P_RD : ModuleRules
 {
@@ -8,13 +6,14 @@ public class P_RD : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        PublicDependencyModuleNames.AddRange(new string[] {
+        PrivateDependencyModuleNames.AddRange(new string[] {
             /* Engine Core Modules */
             "Core",
             "CoreUObject",
             "Engine",
             "InputCore",
             "EnhancedInput",
+            "UMG",
 
             /* Gameplay Tag Modules */
             "GameplayTags",				// 게임플레이 태그 시스템
@@ -28,8 +27,6 @@ public class P_RD : ModuleRules
             "StateTreeModule",          // StateTree 사용
             "GameplayStateTreeModule",  // StateTree AI Comp 사용
         });
-
-        PrivateDependencyModuleNames.AddRange(new string[] {  });
 
         PrivateIncludePaths.AddRange(new string[] {
             "P_RD",

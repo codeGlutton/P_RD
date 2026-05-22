@@ -25,8 +25,8 @@ public:
 
 	/* UAttributeSet 상속 */
 public:
-	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
-	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
+	void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
+	void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
 
 public:
 	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, MaxHP)
@@ -80,18 +80,15 @@ public:
 
 	/* UAttributeSet 상속 */
 public:
-	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
-	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
+	void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
+	void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
 
 public:
-	ATTRIBUTE_ACCESSORS(UPlayerUnitAttributeSet, Level)
 	ATTRIBUTE_ACCESSORS(UPlayerUnitAttributeSet, MaxExp)
 	ATTRIBUTE_ACCESSORS(UPlayerUnitAttributeSet, Exp)
 	ATTRIBUTE_ACCESSORS(UPlayerUnitAttributeSet, Money)
 
 protected:
-	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FGameplayAttributeData Level;
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FGameplayAttributeData MaxExp;
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)

@@ -1,0 +1,37 @@
+﻿/**
+ * @page priamry_asset_type_page Primary Asset Type 매크로
+ * @tableofcontents
+ *
+ * @section primary_asset_type_macro_section Primary Asset Type 매크로란?
+ * <hr>
+ * 하드 코딩으로 값을 입력해야하는 Primary Asset Type 값을 대신하기 위해 만들어진 매크로입니다.
+ * \n
+ *
+ * @section primary_asset_type_need_section 필요성
+ * <hr>
+ * 1. Primary Asset ID 내 Type은 문자열 기반으로 입력되기 때문에, IDE의 자동화 기능이 무의미합니다. 휴먼 에러 방지를 위해 매크로를 선언합니다.
+ * 2. Type 정의에 변경 사항이 있을 경우, 일괄 수정하기 용이합니다.
+ * \n
+ * 
+ * @section primary_asset_type_use_section 사용법
+ * <hr>
+ * @subsection create_primary_asset_type_step1 생성 시
+ * @code{.h}
+ * DECLARE_PRIMARY_ASSET_TYPE(Stage);
+ * DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX(MonsterRoom, EStageLevelType, StageLevel);
+ * @endcode
+ * 기본적으로 @ref PrimaryAssetType.h 에 작성합니다.\n
+ * 적절한 namespace 내부에 DECLARE_PRIMARY_ASSET_TYPE([Type이름]) 선언합니다.
+ * Suffix가 Type이름에 추가된 경우 DECLARE_PRIMARY_ASSET_TYPE([Type이름], [Suffix 열거 타입], [Suffix 매개변수명])으로 선언합니다.
+ * \n
+ * 
+ * @subsection use_primary_asset_type_step2 사용 시
+ * @code{.h}
+ * AssetManager->GetPrimaryAssetIdList(RoomPrimaryAssetTypes::GetTreasureRoomType(mParams.mStageLevel), mRoomAssetIds[static_cast<uint8>(ERoomType::Treasure)]);
+ * @endcode
+ * [namespace 명]::Get[Tag이름]Type() 으로 Primary Asset Type을 지정합니다.
+ * Suffix가 Type이름에 추가된 경우 [namespace 명]::Get[Tag이름]Type([Suffix 열거형 변수])로 지정합니다.
+ * \n
+ */
+
+ 

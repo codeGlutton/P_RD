@@ -1,0 +1,2 @@
+﻿#include "SRPGFramework/SRPGFrameworkType.h"
+
