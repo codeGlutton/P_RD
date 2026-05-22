@@ -12,7 +12,16 @@
 				"DeveloperSettings",
 				"Engine",
 				"CoreUObject",
-				"GameplayAbilities"
+				"GameplayAbilities",
+				"DataValidation"
+			]
+		},
+		{
+			"Name": "P_RDEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"DeveloperSettings"
 			]
 		},
 		{

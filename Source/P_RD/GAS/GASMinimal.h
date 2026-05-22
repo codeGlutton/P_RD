@@ -24,7 +24,7 @@
 #include "NativeGameplayTags.h"
 #include "GameplayTagContainer.h" 
 
-#include "GASTag.h"
+#include "GAS/GASTag.h"
 
 /**
  * @brief Gameplay Attribute의 Get/Set 등의 접근 함수 자동 정의 매크로

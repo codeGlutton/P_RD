@@ -10,7 +10,9 @@
 #include "GAS/GASMinimal.h"
 
 #include "GameFramework/Pawn.h"
-#include "AbilitySystemInterface.h"
+#include "SRPGFramework/TileActor.h"
+#include "SRPGFramework/TileTargetable.h"
+#include "SRPGFramework/TileSelectable.h"
 #include "GenericTeamAgentInterface.h"
 
 #include "Unit.generated.h"
@@ -25,7 +27,7 @@ struct FUnitSnapshotTargetData : public FGameplayAbilityTargetData
 	GENERATED_BODY()
 
 public:
-	virtual UScriptStruct* GetScriptStruct() const override;
+	UScriptStruct* GetScriptStruct() const override;
 	bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& OutSuccess);
 
 public:
@@ -51,35 +53,31 @@ public:
 /**
  * @brief  SRPG에서 사용되는 베이스 폰 클래스
  */
-UCLASS()
-class P_RD_API AUnit : public APawn, public IGenericTeamAgentInterface, public IAbilitySystemInterface
+UCLASS(abstract)
+class P_RD_API AUnit : public APawn, public IGenericTeamAgentInterface, public ITileActor, public ITileTargetable, public ITileSelectable
 {
 	GENERATED_BODY()
 
 public:
 	AUnit();
 
-	/* Pawn 상속 */
+	/* APawn 상속 */
 public:	
-	virtual void PostInitializeComponents() override;
-	virtual void OnConstruction(const FTransform& transform) override;
+	void PostInitializeComponents() override;
+	void OnConstruction(const FTransform& Transform) override;
 
 	/* GenericTeamAgentInterface 상속 */
 public:
-	virtual void SetGenericTeamId(const FGenericTeamId& TeamID) override;
-	virtual FGenericTeamId GetGenericTeamId() const override;
+	void SetGenericTeamId(const FGenericTeamId& TeamID) override;
+	FGenericTeamId GetGenericTeamId() const override;
 
-	/* AbilitySystemInterface 상속 */
+	/* ITileActor 상속 */
 public:
-	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 public:
 	virtual void OnBeginStage();
 	virtual void OnEndStage();
-
-public:
-	virtual void SaveInfo(UUnitSaveGame* SaveGame) const;
-	virtual void LoadInfo(const UUnitSaveGame* SaveGame);
 
 public:
 	/**
@@ -88,23 +86,25 @@ public:
 	virtual FUnitSnapshotTargetData* MakeSnapshotTargetData() const;
 
 public:
-	const FText& GetDisplayName() const;
-	FName GetRowKey() const;
-	int32 GetDifficulty() const;
+	UUnitAttributeSet* GetUnitAttributeSet() const;
+
+	FName GetUnitName() const;
+	const FText& GetUnitDisplayName() const;
+
+	virtual int32 GetDifficulty() const PURE_VIRTUAL(FUnitSnapshotTargetData::GetDifficulty, return 0;)
 
 private:
 	UPROPERTY(Category = GAS, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "AbilitySystemComp"))
 	TObjectPtr<UAbilitySystemComponent>	mAbilitySystemComp;
 	UPROPERTY(Category = GAS, VisibleAnywhere, meta = (DisplayName = "UnitAttributeSet"))
-	TObjectPtr<UAttributeSet> mUnitAttributeSet;
+	TObjectPtr<UUnitAttributeSet> mUnitAttributeSet;
 
 protected:
-	UPROPERTY(Category = Unit, EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "Name"))
-	FText mName;
-	// @brief 초기 스텟에 반영되는 난이도 수치
-	UPROPERTY(Category = Unit, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "Difficulty"))
-	int32 mDifficulty;
+	// @brief UI 표기 이름
+	UPROPERTY(Category = Unit, EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "UnitDisplayName"))
+	FText mUnitDisplayName;
 
 private:
+	// @brief 팀 ID
 	FGenericTeamId mTeamId;
 };

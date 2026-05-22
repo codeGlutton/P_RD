@@ -66,13 +66,14 @@ namespace AbilityTags
 }
 
 /**
- * @brief Effect에 의해 추가되는 태그를 정의하는 namespace 영역
+ * @brief Effect와 연관된 결과값 태그를 정의하는 namespace 영역
  */
 namespace EffectTags
 {
 	/* 코스트 태그들 */
 
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_Cost);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_Cost_PassiveStack);
 
 	/* 쿨다운 태그들 */
 

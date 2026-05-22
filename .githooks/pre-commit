@@ -1,0 +1,23 @@
+#!/bin/sh
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+SVN_PATH="$REPO_ROOT/Content/SVN"
+
+if [ ! -d "$SVN_PATH" ]; then
+  echo "SVN 폴더 없음: $SVN_PATH"
+  exit 1
+fi
+
+REV=$(svn info --show-item revision "$SVN_PATH" 2>/dev/null)
+
+if [ -z "$REV" ]; then
+  echo "SVN revision 읽기 실패: $SVN_PATH"
+  exit 1
+fi
+
+echo $REV > "$REPO_ROOT/.svnrev"
+git add "$REPO_ROOT/.svnrev"
+
+echo "SVN revision 기록됨: $REV"
+
+exit 0

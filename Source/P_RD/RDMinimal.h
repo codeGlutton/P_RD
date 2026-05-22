@@ -10,7 +10,7 @@
 
 #pragma once
 
- /* RD 프로젝트 연관 기본 선언 포함 헤더 */
+/* RD 프로젝트 연관 기본 선언 포함 헤더 */
 
 #include "P_RD.h"
 
@@ -23,4 +23,18 @@
 /* 기본 수학 라이브러리 */
 
 #include "Kismet/KismetMathLibrary.h"
+#include "Algo/RandomShuffle.h"
 
+template<typename T>
+FString EnumToString(T Value)
+{
+    static_assert(TIsEnum<T>::Value);
+    return StaticEnum<T>()->GetNameStringByValue((int64)Value);
+}
+
+template<typename T>
+FString EnumToFullString(T Value)
+{
+    static_assert(TIsEnum<T>::Value);
+    return UEnum::GetValueAsString(Value);
+}
