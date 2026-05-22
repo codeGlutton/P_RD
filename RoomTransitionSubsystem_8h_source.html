@@ -1,0 +1,225 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/Singleton/InstanceSubsystem/RoomTransitionSubsystem.h 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('RoomTransitionSubsystem_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">RoomTransitionSubsystem.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="RoomTransitionSubsystem_8h.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*****************************************************************/</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;<a class="code" href="RDMinimal_8h.html">RDMinimal.h</a>&quot;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;Subsystems/GameInstanceSubsystem.h&quot;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &quot;<a class="code" href="PersistentDataWriter_8h.html">Singleton/InstanceSubsystem/PersistentDataWriter.h</a>&quot;</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &quot;<a class="code" href="StageLevelType_8h.html">DataAsset/StageSpawnData/StageLevelType.h</a>&quot;</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="preprocessor">#include &quot;RoomTransitionSubsystem.generated.h&quot;</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span> </div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="comment">// Transition 신규 로그 카테고리 등록</span></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>DECLARE_LOG_CATEGORY_EXTERN(LogTransition, Log, All)</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span> </div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno"><a class="line" href="RoomTransitionSubsystem_8h.html#af4df2d5ec1fbed5fe7e406432a66c418">   20</a></span><a class="code hl_function" href="RoomTransitionSubsystem_8h.html#af4df2d5ec1fbed5fe7e406432a66c418">DECLARE_DELEGATE_TwoParams</a>(FOnPreTransitNextRoom, int32 <span class="comment">/*RoomRowIndex*/</span>, int32 <span class="comment">/*RoomColumnIndex*/</span>)</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span> </div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>struct <a class="code hl_struct" href="structFRoom.html">FRoom</a>;</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span> </div>
+<div class="foldopen" id="foldopen00027" data-start="{" data-end="};">
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno"><a class="line" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39b">   27</a></span>enum class <a class="code hl_enumeration" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39b">ERoomTransitionStateFlag</a> : uint8</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>{</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    <a class="code hl_enumvalue" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39ba6adf97f83acf6453d4a6a4b1070f3754">None</a> = 0,</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span> </div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    <a class="code hl_enumvalue" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39ba3d05668eb6ef7a9ab22494c69b1fcd7e">NewStageRequested</a> = 1 &lt;&lt; 0,</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    <a class="code hl_enumvalue" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39bae523bdeb8c569d920898985919abe0a9">PreLoadRequested</a> = 1 &lt;&lt; 1,</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span> </div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <a class="code hl_enumvalue" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39baa4e49976972d7769b116cbb12bd4eda7">AutoTransition</a> = 1 &lt;&lt; 2,</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span> </div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    <a class="code hl_enumvalue" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39ba6e45c01abe23fde043509a2911d24312">PlayerLoaded</a> = 1 &lt;&lt; 3,</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    <a class="code hl_enumvalue" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39ba2fa773f4921c85f7f8dd21e72286d30b">StageLoaded</a> = 1 &lt;&lt; 4,</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    <a class="code hl_enumvalue" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39bac03ee266c93e7961e6b70c20a9bf6e70">RoomLoaded</a> = 1 &lt;&lt; 5,</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span> </div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>    <a class="code hl_enumvalue" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39bacf995f52045e013bef20db690c0bf584">AllTaskRequested</a> = <a class="code hl_enumvalue" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39ba3d05668eb6ef7a9ab22494c69b1fcd7e">NewStageRequested</a> | <a class="code hl_enumvalue" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39bae523bdeb8c569d920898985919abe0a9">PreLoadRequested</a>,</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    <a class="code hl_enumvalue" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39bafd88a37abccd0e208531091a001e8e49">ReadyToTransition</a> = <a class="code hl_enumvalue" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39bae523bdeb8c569d920898985919abe0a9">PreLoadRequested</a> | <a class="code hl_enumvalue" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39ba6e45c01abe23fde043509a2911d24312">PlayerLoaded</a> | <a class="code hl_enumvalue" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39ba2fa773f4921c85f7f8dd21e72286d30b">StageLoaded</a> | <a class="code hl_enumvalue" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39bac03ee266c93e7961e6b70c20a9bf6e70">RoomLoaded</a>,</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>};</div>
+</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno"><a class="line" href="RoomTransitionSubsystem_8h.html#a726f48ae7dee87533f00f5e6b49c6ca7">   43</a></span><a class="code hl_function" href="RoomTransitionSubsystem_8h.html#a726f48ae7dee87533f00f5e6b49c6ca7">ENUM_CLASS_FLAGS</a>(<a class="code hl_enumeration" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39b">ERoomTransitionStateFlag</a>);</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>USTRUCT()</div>
+<div class="foldopen" id="foldopen00046" data-start="{" data-end="};">
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno"><a class="line" href="structFRoomTransitionRequest.html">   46</a></span>struct <a class="code hl_struct" href="structFRoomTransitionRequest.html">FRoomTransitionRequest</a></div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>{</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>    GENERATED_BODY()</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span> </div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno"><a class="line" href="structFRoomTransitionRequest.html#acf5da38d4261e30f96629c014fbf90d2">   51</a></span>    <span class="keywordtype">bool</span> mChangePersistentData = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno"><a class="line" href="structFRoomTransitionRequest.html#a7b8e70c4395f47442355557ffabc9d2b">   52</a></span>    int32 mRoomRowIndex = -1;</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno"><a class="line" href="structFRoomTransitionRequest.html#a6dce4b7a57398467d89eb81d78b4ca0b">   53</a></span>    int32 mRoomColumnIndex = -1;</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span> </div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno"><a class="line" href="structFRoomTransitionRequest.html#ab72673ec437cb15c3b3101785a189783">   55</a></span>    FOnPreTransitNextRoom <a class="code hl_variable" href="structFRoomTransitionRequest.html#ab72673ec437cb15c3b3101785a189783">OnPreTransitNextRoom</a>;</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>};</div>
+</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span> </div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>UCLASS()</div>
+<div class="foldopen" id="foldopen00062" data-start="{" data-end="};">
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno"><a class="line" href="classURoomTransitionSubsystem.html">   62</a></span>class P_RD_API <a class="code hl_class" href="classURoomTransitionSubsystem.html">URoomTransitionSubsystem</a> : public UGameInstanceSubsystem, public <a class="code hl_class" href="classIRunDataWriter.html">IRunDataWriter</a></div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>{</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>    GENERATED_BODY()</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span> </div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>    <span class="comment">/* UGameInstanceSubsystem 상속 */</span></div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>    <span class="keywordtype">void</span> Initialize(FSubsystemCollectionBase&amp; Collection) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span> </div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>    <span class="keywordtype">void</span> PreloadTitleRoomAsync(<span class="keywordtype">bool</span> IsAutoTransition = <span class="keyword">false</span>);</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span> </div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    <span class="keywordtype">void</span> PreloadRoomAsync(int32 RoomRowIndex, int32 RoomColumnIndex, FOnPreTransitNextRoom Callback = FOnPreTransitNextRoom(), <span class="keywordtype">bool</span> IsAutoTransition = <span class="keyword">false</span>);</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>    <span class="keywordtype">void</span> PreloadRoomAsync(<a class="code hl_struct" href="structFRoomTransitionRequest.html">FRoomTransitionRequest</a> Request, <span class="keywordtype">bool</span> IsAutoTransition = <span class="keyword">false</span>);</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>    </div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>    <span class="keywordtype">void</span> MakeStageAndPreloadRoomAsync(<a class="code hl_enumeration" href="StageLevelType_8h.html#ae0b1317897a714ca0969cdc80dfd5d95">EStageLevelType</a> StageLevel, FOnPreTransitNextRoom Callback = FOnPreTransitNextRoom(), <span class="keywordtype">bool</span> IsAutoTransition = <span class="keyword">false</span>);</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>    </div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>    <span class="keywordtype">void</span> TransitLoadedRoomAsync();</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span> </div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>    <span class="keywordtype">void</span> OnLoadNextPlayer(TSharedPtr&lt;FStreamableHandle&gt; AssetHandle);</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>    <span class="keywordtype">void</span> OnLoadNextStage(TSharedPtr&lt;FStreamableHandle&gt; AssetHandle);</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>    <span class="keywordtype">void</span> OnLoadNextRoom(TSharedPtr&lt;FStreamableHandle&gt; AssetHandle);</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span> </div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>    <span class="keywordtype">void</span> OnTransitNextRoom();</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span> </div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>    <span class="comment">/* 유지 데이터 */</span></div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>    <a class="code hl_enumeration" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39b">ERoomTransitionStateFlag</a> mTransitionState = <a class="code hl_enumvalue" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39ba6adf97f83acf6453d4a6a4b1070f3754">ERoomTransitionStateFlag::None</a>;</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>    TSharedPtr&lt;FStreamableHandle&gt; mPlayerPreloadHandle = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    TSharedPtr&lt;FStreamableHandle&gt; mStagePreloadHandle = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>    TSharedPtr&lt;FStreamableHandle&gt; mRoomPreloadHandle = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span> </div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>    <span class="comment">/* 일시 데이터 */</span></div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>    <a class="code hl_struct" href="structFRoomTransitionRequest.html">FRoomTransitionRequest</a> mRequest;</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>};</div>
+</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span> </div>
+<div class="ttc" id="aPersistentDataWriter_8h_html"><div class="ttname"><a href="PersistentDataWriter_8h.html">PersistentDataWriter.h</a></div><div class="ttdoc">영구 데이터를 수정할 수 있도록 해주는 인터페이스 정의 헤더</div></div>
+<div class="ttc" id="aRDMinimal_8h_html"><div class="ttname"><a href="RDMinimal_8h.html">RDMinimal.h</a></div><div class="ttdoc">RD 프로젝트 전 영역에서 사용되는 최소한의 포함 헤더</div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_a64d6978e5d1e2c7778d4a74c4d21b39b"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39b">ERoomTransitionStateFlag</a></div><div class="ttdeci">ERoomTransitionStateFlag</div><div class="ttdoc">방 전환 상태 플래그</div><div class="ttdef"><b>Definition</b> <a href="RoomTransitionSubsystem_8h_source.html#l00027">RoomTransitionSubsystem.h:28</a></div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_a64d6978e5d1e2c7778d4a74c4d21b39ba2fa773f4921c85f7f8dd21e72286d30b"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39ba2fa773f4921c85f7f8dd21e72286d30b">ERoomTransitionStateFlag::StageLoaded</a></div><div class="ttdeci">@ StageLoaded</div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_a64d6978e5d1e2c7778d4a74c4d21b39ba3d05668eb6ef7a9ab22494c69b1fcd7e"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39ba3d05668eb6ef7a9ab22494c69b1fcd7e">ERoomTransitionStateFlag::NewStageRequested</a></div><div class="ttdeci">@ NewStageRequested</div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_a64d6978e5d1e2c7778d4a74c4d21b39ba6adf97f83acf6453d4a6a4b1070f3754"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39ba6adf97f83acf6453d4a6a4b1070f3754">ERoomTransitionStateFlag::None</a></div><div class="ttdeci">@ None</div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_a64d6978e5d1e2c7778d4a74c4d21b39ba6e45c01abe23fde043509a2911d24312"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39ba6e45c01abe23fde043509a2911d24312">ERoomTransitionStateFlag::PlayerLoaded</a></div><div class="ttdeci">@ PlayerLoaded</div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_a64d6978e5d1e2c7778d4a74c4d21b39baa4e49976972d7769b116cbb12bd4eda7"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39baa4e49976972d7769b116cbb12bd4eda7">ERoomTransitionStateFlag::AutoTransition</a></div><div class="ttdeci">@ AutoTransition</div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_a64d6978e5d1e2c7778d4a74c4d21b39bac03ee266c93e7961e6b70c20a9bf6e70"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39bac03ee266c93e7961e6b70c20a9bf6e70">ERoomTransitionStateFlag::RoomLoaded</a></div><div class="ttdeci">@ RoomLoaded</div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_a64d6978e5d1e2c7778d4a74c4d21b39bacf995f52045e013bef20db690c0bf584"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39bacf995f52045e013bef20db690c0bf584">ERoomTransitionStateFlag::AllTaskRequested</a></div><div class="ttdeci">@ AllTaskRequested</div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_a64d6978e5d1e2c7778d4a74c4d21b39bae523bdeb8c569d920898985919abe0a9"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39bae523bdeb8c569d920898985919abe0a9">ERoomTransitionStateFlag::PreLoadRequested</a></div><div class="ttdeci">@ PreLoadRequested</div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_a64d6978e5d1e2c7778d4a74c4d21b39bafd88a37abccd0e208531091a001e8e49"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39bafd88a37abccd0e208531091a001e8e49">ERoomTransitionStateFlag::ReadyToTransition</a></div><div class="ttdeci">@ ReadyToTransition</div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_a726f48ae7dee87533f00f5e6b49c6ca7"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#a726f48ae7dee87533f00f5e6b49c6ca7">ENUM_CLASS_FLAGS</a></div><div class="ttdeci">ENUM_CLASS_FLAGS(ERoomTransitionStateFlag)</div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_af4df2d5ec1fbed5fe7e406432a66c418"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#af4df2d5ec1fbed5fe7e406432a66c418">DECLARE_DELEGATE_TwoParams</a></div><div class="ttdeci">DECLARE_DELEGATE_TwoParams(FOnPreTransitNextRoom, int32, int32) struct FRoom</div></div>
+<div class="ttc" id="aStageLevelType_8h_html"><div class="ttname"><a href="StageLevelType_8h.html">StageLevelType.h</a></div><div class="ttdoc">스테이지 레벨 타입 구현 헤더</div></div>
+<div class="ttc" id="aStageLevelType_8h_html_ae0b1317897a714ca0969cdc80dfd5d95"><div class="ttname"><a href="StageLevelType_8h.html#ae0b1317897a714ca0969cdc80dfd5d95">EStageLevelType</a></div><div class="ttdeci">EStageLevelType</div><div class="ttdoc">스테이지 레벨 타입 (실수 방지)</div><div class="ttdef"><b>Definition</b> <a href="StageLevelType_8h_source.html#l00018">StageLevelType.h:19</a></div></div>
+<div class="ttc" id="aclassIRunDataWriter_html"><div class="ttname"><a href="classIRunDataWriter.html">IRunDataWriter</a></div><div class="ttdoc">영구 런 데이터를 수정할 수 있도록 해주는 인터페이스</div><div class="ttdef"><b>Definition</b> <a href="PersistentDataWriter_8h_source.html#l00043">PersistentDataWriter.h:44</a></div></div>
+<div class="ttc" id="aclassURoomTransitionSubsystem_html"><div class="ttname"><a href="classURoomTransitionSubsystem.html">URoomTransitionSubsystem</a></div><div class="ttdoc">SRPG 방 전환 처리를 돕는 Subsystem</div><div class="ttdef"><b>Definition</b> <a href="RoomTransitionSubsystem_8h_source.html#l00062">RoomTransitionSubsystem.h:63</a></div></div>
+<div class="ttc" id="astructFRoomTransitionRequest_html"><div class="ttname"><a href="structFRoomTransitionRequest.html">FRoomTransitionRequest</a></div><div class="ttdef"><b>Definition</b> <a href="RoomTransitionSubsystem_8h_source.html#l00046">RoomTransitionSubsystem.h:47</a></div></div>
+<div class="ttc" id="astructFRoomTransitionRequest_html_ab72673ec437cb15c3b3101785a189783"><div class="ttname"><a href="structFRoomTransitionRequest.html#ab72673ec437cb15c3b3101785a189783">FRoomTransitionRequest::OnPreTransitNextRoom</a></div><div class="ttdeci">FOnPreTransitNextRoom OnPreTransitNextRoom</div><div class="ttdef"><b>Definition</b> <a href="RoomTransitionSubsystem_8h_source.html#l00055">RoomTransitionSubsystem.h:55</a></div></div>
+<div class="ttc" id="astructFRoom_html"><div class="ttname"><a href="structFRoom.html">FRoom</a></div><div class="ttdoc">방 데이터</div><div class="ttdef"><b>Definition</b> <a href="Room_8h_source.html#l00018">Room.h:19</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_36741995dc55b5b43265b1773ea4ad65.html">Singleton</a></li><li class="navelem"><a class="el" href="dir_b1781bf60d5273ee279ba5c41ae38a22.html">InstanceSubsystem</a></li><li class="navelem"><a class="el" href="RoomTransitionSubsystem_8h.html">RoomTransitionSubsystem.h</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

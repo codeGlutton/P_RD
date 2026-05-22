@@ -41,11 +41,21 @@ var namespaces_dup =
       [ "UE_DEFINE_GAMEPLAY_TAG", "namespaceAbilityTags.html#a063494b40e8f0cc5ccc3dc74218b6111", null ]
     ] ],
     [ "CueTags", "namespaceCueTags.html", null ],
+    [ "DicePrimaryAssetTypes", "namespaceDicePrimaryAssetTypes.html", [
+      [ "DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX", "namespaceDicePrimaryAssetTypes.html#a01c16f667ad4599fd20e4b120ea04c68", null ]
+    ] ],
     [ "EffectTags", "namespaceEffectTags.html", [
       [ "UE_DECLARE_GAMEPLAY_TAG_EXTERN", "namespaceEffectTags.html#a10f3c741f154723a6b9b24addb0f4420", null ],
       [ "UE_DECLARE_GAMEPLAY_TAG_EXTERN", "namespaceEffectTags.html#a12951499565f533ff4c105efd0134b16", null ],
+      [ "UE_DECLARE_GAMEPLAY_TAG_EXTERN", "namespaceEffectTags.html#aac2c5faf35438fe8e60464c13236fd5e", null ],
       [ "UE_DEFINE_GAMEPLAY_TAG", "namespaceEffectTags.html#ac1e75dc82ec9b5cb679c35e4405610b0", null ],
-      [ "UE_DEFINE_GAMEPLAY_TAG", "namespaceEffectTags.html#a121192208cfe86bc31b915b0e90082db", null ]
+      [ "UE_DEFINE_GAMEPLAY_TAG", "namespaceEffectTags.html#a121192208cfe86bc31b915b0e90082db", null ],
+      [ "UE_DEFINE_GAMEPLAY_TAG", "namespaceEffectTags.html#a094379579385eca2f4827877c21d4093", null ]
+    ] ],
+    [ "EquipmentPrimaryAssetTypes", "namespaceEquipmentPrimaryAssetTypes.html", [
+      [ "DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX", "namespaceEquipmentPrimaryAssetTypes.html#abaa3398f708dd093911e4fb985e0aa18", null ],
+      [ "DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX", "namespaceEquipmentPrimaryAssetTypes.html#ab84654a67be6b89be530dc1c99f71c20", null ],
+      [ "DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX", "namespaceEquipmentPrimaryAssetTypes.html#ad0872cf08be3760091a68b9e2d63a8e3", null ]
     ] ],
     [ "EUnitTeamType", "namespaceEUnitTeamType.html", [
       [ "Type", "namespaceEUnitTeamType.html#a1665d843028d81dc89fbd0eb927c2450", [
@@ -58,5 +68,24 @@ var namespaces_dup =
       ] ]
     ] ],
     [ "EventTags", "namespaceEventTags.html", null ],
-    [ "InputTags", "namespaceInputTags.html", null ]
+    [ "InputTags", "namespaceInputTags.html", null ],
+    [ "RoomPrimaryAssetTypes", "namespaceRoomPrimaryAssetTypes.html", [
+      [ "DECLARE_PRIMARY_ASSET_TYPE", "namespaceRoomPrimaryAssetTypes.html#a1102a38244d39b73368afff37769975b", null ],
+      [ "DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX", "namespaceRoomPrimaryAssetTypes.html#adda46e704dc8bccfb50a5e0763fbfbc9", null ],
+      [ "DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX", "namespaceRoomPrimaryAssetTypes.html#ad31b453e485cd7fd213453104d838b94", null ],
+      [ "DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX", "namespaceRoomPrimaryAssetTypes.html#ad6d3bceafbd8705dfa7a8d34f1c37168", null ],
+      [ "DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX", "namespaceRoomPrimaryAssetTypes.html#a9c62c33f5a7f20cf461c90660213baac", null ],
+      [ "DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX", "namespaceRoomPrimaryAssetTypes.html#ae5688a0fba926b8dc6271b6c8a3630a7", null ]
+    ] ],
+    [ "SkillPrimaryAssetTypes", "namespaceSkillPrimaryAssetTypes.html", [
+      [ "DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX", "namespaceSkillPrimaryAssetTypes.html#a3de8be89c0625af75537b8901cd495ac", null ],
+      [ "DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX", "namespaceSkillPrimaryAssetTypes.html#a5ebb42f9d913dcdbec3f35611b4eaf1c", null ]
+    ] ],
+    [ "StagePrimaryAssetTypes", "namespaceStagePrimaryAssetTypes.html", [
+      [ "DECLARE_PRIMARY_ASSET_TYPE", "namespaceStagePrimaryAssetTypes.html#af940916e1fad5b691aba385e12d7848a", null ]
+    ] ],
+    [ "UnitPrimaryAssetTypes", "namespaceUnitPrimaryAssetTypes.html", [
+      [ "DECLARE_PRIMARY_ASSET_TYPE", "namespaceUnitPrimaryAssetTypes.html#a4eb65e49a6475295623f081ec38901cf", null ],
+      [ "DECLARE_PRIMARY_ASSET_TYPE", "namespaceUnitPrimaryAssetTypes.html#a8798cbfc59955abad3182b30a17f2dc5", null ]
+    ] ]
 ];

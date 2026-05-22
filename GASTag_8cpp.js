@@ -20,5 +20,6 @@ var GASTag_8cpp =
     [ "UE_DEFINE_GAMEPLAY_TAG", "GASTag_8cpp.html#a6da4fcaa57c06382daff02af608b548f", null ],
     [ "UE_DEFINE_GAMEPLAY_TAG", "GASTag_8cpp.html#a063494b40e8f0cc5ccc3dc74218b6111", null ],
     [ "UE_DEFINE_GAMEPLAY_TAG", "GASTag_8cpp.html#ac1e75dc82ec9b5cb679c35e4405610b0", null ],
-    [ "UE_DEFINE_GAMEPLAY_TAG", "GASTag_8cpp.html#a121192208cfe86bc31b915b0e90082db", null ]
+    [ "UE_DEFINE_GAMEPLAY_TAG", "GASTag_8cpp.html#a121192208cfe86bc31b915b0e90082db", null ],
+    [ "UE_DEFINE_GAMEPLAY_TAG", "GASTag_8cpp.html#a094379579385eca2f4827877c21d4093", null ]
 ];

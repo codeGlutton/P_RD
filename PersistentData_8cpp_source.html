@@ -1,0 +1,535 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/Singleton/InstanceSubsystem/PersistentData.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('PersistentData_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">PersistentData.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="PersistentData_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="PersistentData_8h.html">Singleton/InstanceSubsystem/PersistentData.h</a>&quot;</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#include &quot;<a class="code" href="UnitAttributeSet_8h.html">GAS/Attribute/UnitAttributeSet.h</a>&quot;</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &quot;<a class="code" href="PlayerUnit_8h.html">Pawn/Player/PlayerUnit.h</a>&quot;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span> </div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &quot;<a class="code" href="GameBalanceSettings_8h.html">Setting/GameBalanceSettings.h</a>&quot;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &quot;Engine/AssetManager.h&quot;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &quot;<a class="code" href="StageBuilder_8h.html">PCGStage/StageBuilder.h</a>&quot;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &quot;<a class="code" href="RandomStreamFunctionLibrary_8h.html">FunctionLibrary/RandomStreamFunctionLibrary.h</a>&quot;</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
+<div class="foldopen" id="foldopen00011" data-start="{" data-end="}">
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno"><a class="line" href="structFRunLog.html#a3abcfc82fcb4dca0dd3192d2163326c3">   11</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="structFRunLog.html#a3abcfc82fcb4dca0dd3192d2163326c3">FRunLog::Clear</a>()</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>{</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>    <a class="code hl_variable" href="structFRunLog.html#aa3d771ef05af9a7926def88e8ca3957e">mKilledEnemyUnits</a>.Empty();</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    <a class="code hl_variable" href="structFRunLog.html#ac3b32225f6561afb4621ebfab969b31d">mAcquiredSkills</a>.Empty();</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>    <a class="code hl_variable" href="structFRunLog.html#abb5246749dfc814d27e0f93e9d81f19e">mAcquiredEquipment</a>.Empty();</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>    <a class="code hl_variable" href="structFRunLog.html#a1b886b2af8312372b6177b1b51856bc3">mAcquiredDices</a>.Empty();</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>}</div>
+</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span> </div>
+<div class="foldopen" id="foldopen00019" data-start="{" data-end="}">
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno"><a class="line" href="structFUserLog.html#a66899c8ef20e8f0c56e2115837ae9717">   19</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="structFUserLog.html#a66899c8ef20e8f0c56e2115837ae9717">FUserLog::Clear</a>()</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>{</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    <a class="code hl_variable" href="structFUserLog.html#a9b3fe4ec11cf4a95f3dbcfb9b97b38e0">mRunCount</a> = 0;</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    <a class="code hl_variable" href="structFUserLog.html#a7a376f62bcd9bf972f4e27db663ddbd6">mRunCountPerUnit</a>.Empty();</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    <a class="code hl_variable" href="structFUserLog.html#a7825c719b29056a1102073ae5e79cb19">mKnownEnemyUnitIds</a>.Empty();</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    <a class="code hl_variable" href="structFUserLog.html#a8c0305d682a8679451511f3023e9f3e2">mKnownSkillIds</a>.Empty();</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    <a class="code hl_variable" href="structFUserLog.html#ad202dedeb7059d77dc4462c75c99f3b0">mKnownEquipmentIds</a>.Empty();</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    <a class="code hl_variable" href="structFUserLog.html#af92a9fcae8aaa8ff080e447d903f49df">mKnownDiceIds</a>.Empty();</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>}</div>
+</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
+<div class="foldopen" id="foldopen00029" data-start="{" data-end="}">
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno"><a class="line" href="classUPlayerUnitPersistData.html#a4ecfac35d5f9098e7ec5c8c49748153e">   29</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUPlayerUnitPersistData.html#a4ecfac35d5f9098e7ec5c8c49748153e">UPlayerUnitPersistData::RegisterPlayerUnit</a>(<a class="code hl_class" href="classAPlayerUnit.html">APlayerUnit</a>* PlayerUnit)</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>{</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    checkf(PlayerUnit != <span class="keyword">nullptr</span>, TEXT(<span class="stringliteral">&quot;플레이어 유닛 nullptr&quot;</span>));</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    UAbilitySystemComponent* ASC = PlayerUnit-&gt;<a class="code hl_function" href="classAUnit.html#aabf191425d87ad59487903ca48f51663">GetAbilitySystemComponent</a>();</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    checkf(ASC != <span class="keyword">nullptr</span>, TEXT(<span class="stringliteral">&quot;어빌리티 시스템 컴포넌트 nullptr&quot;</span>));</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    <a class="code hl_function" href="classUPlayerUnitPersistData.html#a20153e3e651156c46f7b01ca3d5e1363">ApplyPlayerPersistData</a>(PlayerUnit);</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    <a class="code hl_function" href="classUPlayerUnitPersistData.html#a89f3631616153539b626cc22f29b4b14">BindPlayerUnitEvent</a>(PlayerUnit);</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>}</div>
+</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span> </div>
+<div class="foldopen" id="foldopen00039" data-start="{" data-end="}">
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno"><a class="line" href="classUPlayerUnitPersistData.html#a21adb042512cd50b6efd9c2f7642ca51">   39</a></span><span class="keyword">const</span> FPrimaryAssetId&amp; <a class="code hl_function" href="classUPlayerUnitPersistData.html#a21adb042512cd50b6efd9c2f7642ca51">UPlayerUnitPersistData::GetPlayerUnitId</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classUPlayerUnitPersistData.html#a0b0c0cee179d17ed691e196ce72c55e4">mPlayerUnitId</a>;</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>}</div>
+</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
+<div class="foldopen" id="foldopen00044" data-start="{" data-end="}">
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno"><a class="line" href="classUPlayerUnitPersistData.html#aae34d9536507706e59861eabfd06040e">   44</a></span>int32 <a class="code hl_function" href="classUPlayerUnitPersistData.html#aae34d9536507706e59861eabfd06040e">UPlayerUnitPersistData::GetPlayerLevel</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classUPlayerUnitPersistData.html#aa0bfab95d87ee18274066dcd7b37389e">mPlayerLevel</a>;</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>}</div>
+</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span> </div>
+<div class="foldopen" id="foldopen00049" data-start="{" data-end="}">
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno"><a class="line" href="classUPlayerUnitPersistData.html#a928b7a3bdb9f6f7a6a2a6978ab62092f">   49</a></span>int32 <a class="code hl_function" href="classUPlayerUnitPersistData.html#a928b7a3bdb9f6f7a6a2a6978ab62092f">UPlayerUnitPersistData::GetDifficulty</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classUPlayerUnitPersistData.html#ae83912fceadd0765d2416ea9b16b5d27">mDifficulty</a>;</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>}</div>
+</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span> </div>
+<div class="foldopen" id="foldopen00054" data-start="{" data-end="}">
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno"><a class="line" href="classUPlayerUnitPersistData.html#acf132f27b7aa119a53f15f256c56d5a1">   54</a></span><span class="keyword">const</span> TArray&lt;FPrimaryAssetId&gt;&amp; <a class="code hl_function" href="classUPlayerUnitPersistData.html#acf132f27b7aa119a53f15f256c56d5a1">UPlayerUnitPersistData::GetSkillIds</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classUPlayerUnitPersistData.html#a57f1d07f0c63ed6e1e1b034257b459d4">mSkillIds</a>;</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>}</div>
+</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span> </div>
+<div class="foldopen" id="foldopen00059" data-start="{" data-end="}">
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno"><a class="line" href="classUPlayerUnitPersistData.html#a4baaff7f5a70e707496d69c8e1e50ab9">   59</a></span><span class="keyword">const</span> TArray&lt;FPrimaryAssetId&gt;&amp; <a class="code hl_function" href="classUPlayerUnitPersistData.html#a4baaff7f5a70e707496d69c8e1e50ab9">UPlayerUnitPersistData::GetEquipmentIds</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classUPlayerUnitPersistData.html#abd458210b1e9e372141d9bb80e061d24">mEquipmentIds</a>;</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>}</div>
+</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span> </div>
+<div class="foldopen" id="foldopen00064" data-start="{" data-end="}">
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno"><a class="line" href="classUPlayerUnitPersistData.html#a4da37890ca8e399297851a390ab01e20">   64</a></span><span class="keyword">const</span> TArray&lt;FPrimaryAssetId&gt;&amp; <a class="code hl_function" href="classUPlayerUnitPersistData.html#a4da37890ca8e399297851a390ab01e20">UPlayerUnitPersistData::GetDiceIds</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classUPlayerUnitPersistData.html#a474056e23a89eb7a93405cdc6ea90a7b">mDiceIds</a>;</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>}</div>
+</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span> </div>
+<div class="foldopen" id="foldopen00069" data-start="{" data-end="}">
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno"><a class="line" href="classUPlayerUnitPersistData.html#a20153e3e651156c46f7b01ca3d5e1363">   69</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUPlayerUnitPersistData.html#a20153e3e651156c46f7b01ca3d5e1363">UPlayerUnitPersistData::ApplyPlayerPersistData</a>(<a class="code hl_class" href="classAPlayerUnit.html">APlayerUnit</a>* PlayerUnit)</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>{</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>    checkf(PlayerUnit != <span class="keyword">nullptr</span>, TEXT(<span class="stringliteral">&quot;플레이어 유닛 nullptr&quot;</span>));</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    UAbilitySystemComponent* ASC = PlayerUnit-&gt;<a class="code hl_function" href="classAUnit.html#aabf191425d87ad59487903ca48f51663">GetAbilitySystemComponent</a>();</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>    checkf(ASC != <span class="keyword">nullptr</span>, TEXT(<span class="stringliteral">&quot;어빌리티 시스템 컴포넌트 nullptr&quot;</span>));</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span> </div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classUPlayerUnitPersistData.html#ae67f4c3010bdd5989d1ced6de674e7a8">mIsNewData</a> == <span class="keyword">true</span>)</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>    {</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>        <a class="code hl_variable" href="classUPlayerUnitPersistData.html#ae67f4c3010bdd5989d1ced6de674e7a8">mIsNewData</a> = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>        <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    }</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span> </div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>    ASC-&gt;ApplyModToAttribute(UPlayerUnitAttributeSet::GetMaxHPAttribute(), EGameplayModOp::Override, <a class="code hl_variable" href="classUPlayerUnitPersistData.html#aa21483cf2124fc6a9a9a9bc7a561a906">mMaxHP</a>);</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    ASC-&gt;ApplyModToAttribute(UPlayerUnitAttributeSet::GetHPAttribute(), EGameplayModOp::Override, <a class="code hl_variable" href="classUPlayerUnitPersistData.html#afbcebcaead2219df1646d346e076bb82">mHP</a>);</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>    ASC-&gt;ApplyModToAttribute(UPlayerUnitAttributeSet::GetExpAttribute(), EGameplayModOp::Override, <a class="code hl_variable" href="classUPlayerUnitPersistData.html#a29fdc5ee7d3cdea50753f93345900284">mExp</a>);</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    ASC-&gt;ApplyModToAttribute(UPlayerUnitAttributeSet::GetMoneyAttribute(), EGameplayModOp::Override, <a class="code hl_variable" href="classUPlayerUnitPersistData.html#a91eb95502543b56740deb930347b1414">mMoney</a>);</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>    <span class="keywordflow">for</span> (<span class="keyword">auto</span>&amp; Pair : <a class="code hl_variable" href="classUPlayerUnitPersistData.html#a3bb2733e0987ffaf945e9ed72a5b499f">mTagCountMap</a>)</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>    {</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>        ASC-&gt;AddLooseGameplayTag(Pair.Key, Pair.Value);</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>    }</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>}</div>
+</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span> </div>
+<div class="foldopen" id="foldopen00091" data-start="{" data-end="}">
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno"><a class="line" href="classUPlayerUnitPersistData.html#a89f3631616153539b626cc22f29b4b14">   91</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUPlayerUnitPersistData.html#a89f3631616153539b626cc22f29b4b14">UPlayerUnitPersistData::BindPlayerUnitEvent</a>(<a class="code hl_class" href="classAPlayerUnit.html">APlayerUnit</a>* PlayerUnit)</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>{</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>    checkf(PlayerUnit != <span class="keyword">nullptr</span>, TEXT(<span class="stringliteral">&quot;플레이어 유닛 nullptr&quot;</span>));</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>    UAbilitySystemComponent* ASC = PlayerUnit-&gt;<a class="code hl_function" href="classAUnit.html#aabf191425d87ad59487903ca48f51663">GetAbilitySystemComponent</a>();</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>    checkf(ASC != <span class="keyword">nullptr</span>, TEXT(<span class="stringliteral">&quot;어빌리티 시스템 컴포넌트 nullptr&quot;</span>));</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span> </div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>    ASC-&gt;GetGameplayAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).AddLambda([<span class="keyword">this</span>](<span class="keyword">const</span> FOnAttributeChangeData&amp; Data) {</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>        <a class="code hl_variable" href="classUPlayerUnitPersistData.html#aa21483cf2124fc6a9a9a9bc7a561a906">mMaxHP</a> = Data.NewValue;</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>        });</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>    ASC-&gt;GetGameplayAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).AddLambda([<span class="keyword">this</span>](<span class="keyword">const</span> FOnAttributeChangeData&amp; Data) {</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>        <a class="code hl_variable" href="classUPlayerUnitPersistData.html#afbcebcaead2219df1646d346e076bb82">mHP</a> = Data.NewValue;</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>        });</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>    ASC-&gt;GetGameplayAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetExpAttribute()).AddLambda([<span class="keyword">this</span>](<span class="keyword">const</span> FOnAttributeChangeData&amp; Data) {</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>        <a class="code hl_variable" href="classUPlayerUnitPersistData.html#a29fdc5ee7d3cdea50753f93345900284">mExp</a> = Data.NewValue;</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>        });</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>    ASC-&gt;GetGameplayAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMoneyAttribute()).AddLambda([<span class="keyword">this</span>](<span class="keyword">const</span> FOnAttributeChangeData&amp; Data) {</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>        <a class="code hl_variable" href="classUPlayerUnitPersistData.html#a91eb95502543b56740deb930347b1414">mMoney</a> = Data.NewValue;</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>        });</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>    ASC-&gt;RegisterGameplayTagEvent(EffectTags::GameplayEffect_Cost_PassiveStack, EGameplayTagEventType::AnyCountChange).AddLambda([<span class="keyword">this</span>](<span class="keyword">const</span> FGameplayTag Tag, int32 Count) {</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>        <a class="code hl_variable" href="classUPlayerUnitPersistData.html#a3bb2733e0987ffaf945e9ed72a5b499f">mTagCountMap</a>[Tag] = Count;</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>        <span class="keywordflow">if</span> (Count == 0)</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>        {</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>            <a class="code hl_variable" href="classUPlayerUnitPersistData.html#a3bb2733e0987ffaf945e9ed72a5b499f">mTagCountMap</a>.Remove(Tag);</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>        }</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>        });</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>}</div>
+</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span> </div>
+<div class="foldopen" id="foldopen00118" data-start="{" data-end="}">
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno"><a class="line" href="classURunPersistData.html#a0353c4ad706297d0e67c0de5d992b9e2">  118</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classURunPersistData.html#a0353c4ad706297d0e67c0de5d992b9e2">URunPersistData::StartRun</a>(<span class="keyword">const</span> FPrimaryAssetId&amp; PlayerUnitId, int32 Difficulty)</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>{</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    <a class="code hl_function" href="classURunPersistData.html#a8caedfbe19b3a57967af27c2cb225e23">ClearRun</a>();</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span> </div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>    <a class="code hl_variable" href="classURunPersistData.html#a152ab025ffa90042005e0d7abc121e88">mStageBuildStream</a>.Initialize(FMath::Rand32());</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>    <a class="code hl_variable" href="classURunPersistData.html#afa276439bc0b3abc99092a698bef5267">mEventStream</a>.Initialize(FMath::Rand32());</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span> </div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>    <a class="code hl_variable" href="classUPlayerUnitPersistData.html#ae67f4c3010bdd5989d1ced6de674e7a8">mIsNewData</a> = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>    <a class="code hl_variable" href="classUPlayerUnitPersistData.html#a0b0c0cee179d17ed691e196ce72c55e4">mPlayerUnitId</a> = PlayerUnitId;</div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>    <a class="code hl_variable" href="classUPlayerUnitPersistData.html#ae83912fceadd0765d2416ea9b16b5d27">mDifficulty</a> = Difficulty;</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>}</div>
+</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span> </div>
+<div class="foldopen" id="foldopen00130" data-start="{" data-end="}">
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno"><a class="line" href="classURunPersistData.html#a8caedfbe19b3a57967af27c2cb225e23">  130</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classURunPersistData.html#a8caedfbe19b3a57967af27c2cb225e23">URunPersistData::ClearRun</a>()</div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>{</div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>    <a class="code hl_variable" href="classUPlayerUnitPersistData.html#aa0bfab95d87ee18274066dcd7b37389e">mPlayerLevel</a> = 1;</div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>    <a class="code hl_variable" href="classUPlayerUnitPersistData.html#ae83912fceadd0765d2416ea9b16b5d27">mDifficulty</a> = 1;</div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>    <a class="code hl_variable" href="classUPlayerUnitPersistData.html#ae67f4c3010bdd5989d1ced6de674e7a8">mIsNewData</a> = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span> </div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>    <a class="code hl_variable" href="classUPlayerUnitPersistData.html#a3bb2733e0987ffaf945e9ed72a5b499f">mTagCountMap</a>.Empty();</div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>    <a class="code hl_variable" href="classUPlayerUnitPersistData.html#a57f1d07f0c63ed6e1e1b034257b459d4">mSkillIds</a>.Empty();</div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>    <a class="code hl_variable" href="classUPlayerUnitPersistData.html#abd458210b1e9e372141d9bb80e061d24">mEquipmentIds</a>.Empty();</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>    <a class="code hl_variable" href="classUPlayerUnitPersistData.html#a474056e23a89eb7a93405cdc6ea90a7b">mDiceIds</a>.Empty();</div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span> </div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>    <a class="code hl_variable" href="classURunPersistData.html#a9a235c762b7b8ee314b442930c746957">mStage</a>.Reset();</div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span> </div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>    <a class="code hl_variable" href="classURunPersistData.html#a64e41cbe38cd98340dc1ad0ce71fb83e">mRunLog</a>.<a class="code hl_function" href="structFRunLog.html#a3abcfc82fcb4dca0dd3192d2163326c3">Clear</a>();</div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>}</div>
+</div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span> </div>
+<div class="foldopen" id="foldopen00146" data-start="{" data-end="}">
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno"><a class="line" href="classURunPersistData.html#a0963ca32bdfe465010e54eeb40afaba3">  146</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classURunPersistData.html#a0963ca32bdfe465010e54eeb40afaba3">URunPersistData::MakeStageAsync</a>(<a class="code hl_enumeration" href="StageLevelType_8h.html#ae0b1317897a714ca0969cdc80dfd5d95">EStageLevelType</a> Type, FOnCreateStage OnCreateStage)</div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>{</div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>    UAssetManager* AssetManager = UAssetManager::GetIfInitialized();</div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>    checkf(AssetManager != <span class="keyword">nullptr</span>, TEXT(<span class="stringliteral">&quot;에셋 매니저 nullptr&quot;</span>));</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span> </div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>    <span class="keyword">const</span> <a class="code hl_class" href="classUGameBalanceSettings.html">UGameBalanceSettings</a>* GameBalanceSetting = GetDefault&lt;UGameBalanceSettings&gt;();</div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>    checkf(GameBalanceSetting != <span class="keyword">nullptr</span>, TEXT(<span class="stringliteral">&quot;밸런스 세팅 객체 nullptr&quot;</span>));</div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span> </div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>    GameBalanceSetting-&gt;<a class="code hl_variable" href="classUGameBalanceSettings.html#a0b0ea92f22f8c8bb738e2f933a8aef54">mStageBuildSettingTable</a>.LoadAsync(FLoadSoftObjectPathAsyncDelegate::CreateLambda([<span class="keyword">this</span>, Type, OnCreateStage = MoveTemp(OnCreateStage), GameBalanceSetting](<span class="keyword">const</span> FSoftObjectPath&amp; Path, UObject* Object) {</div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>        </div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>        <span class="keyword">const</span> UDataTable* BalanceSetting = Cast&lt;UDataTable&gt;(Object);</div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>        checkf(BalanceSetting != <span class="keyword">nullptr</span>, TEXT(<span class="stringliteral">&quot;스테이지 빌드 세팅 미존재 nullptr&quot;</span>));</div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span> </div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>        <span class="keyword">const</span> <a class="code hl_struct" href="structFStageBuilderParams.html">FStageBuilderParams</a>&amp; BuilderParams = *BalanceSetting-&gt;FindRow&lt;<a class="code hl_struct" href="structFStageBuilderParams.html">FStageBuilderParams</a>&gt;(*<a class="code hl_function" href="RDMinimal_8h.html#aa3a7aed186515ed7eab08dffbba62805">EnumToString</a>(Type), TEXT(<span class="stringliteral">&quot;밸런스 세팅 테이블 탐색 에러&quot;</span>));</div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>        <span class="keyword">const</span> FRandomStream&amp; BuildStream = <a class="code hl_function" href="classURandomStreamFunctionLibrary.html#a743af939daac632fab249ed3702fad33">URandomStreamFunctionLibrary::GetStageBuildStream</a>(<span class="keyword">this</span>);</div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span> </div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>        <a class="code hl_variable" href="classURunPersistData.html#a9a235c762b7b8ee314b442930c746957">mStage</a>.InitializeAs&lt;<a class="code hl_struct" href="structFStage.html">FStage</a>&gt;(<a class="code hl_function" href="structFStageBuilder.html#a3147b462af0e7a436113d3149d1060b0">FStageBuilder::Make</a>(BuildStream, GameBalanceSetting-&gt;<a class="code hl_variable" href="classUGameBalanceSettings.html#a9d050005f0430acf97e275ab23845e11">mGlobalStageBuildSetting</a>, BuilderParams).<a class="code hl_function" href="structFStageBuilder.html#a96ccc826f33f5331e24e9d719383b0e4">Build</a>());</div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>        OnCreateStage.ExecuteIfBound(<a class="code hl_variable" href="classURunPersistData.html#a9a235c762b7b8ee314b442930c746957">mStage</a>.Get());</div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span> </div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>        }));</div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>}</div>
+</div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span> </div>
+<div class="foldopen" id="foldopen00168" data-start="{" data-end="}">
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno"><a class="line" href="classURunPersistData.html#ae239526ad4dea556014ff56b99cd3716">  168</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classURunPersistData.html#ae239526ad4dea556014ff56b99cd3716">URunPersistData::SetCurrentRoomIndex</a>(int32 RowIndex, int32 ColumnIndex)</div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>{</div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>    <a class="code hl_variable" href="classURunPersistData.html#a9a235c762b7b8ee314b442930c746957">mStage</a>.GetMutable().mCurRow = RowIndex;</div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>    <a class="code hl_variable" href="classURunPersistData.html#a9a235c762b7b8ee314b442930c746957">mStage</a>.GetMutable().mCurColumn = ColumnIndex;</div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>}</div>
+</div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span> </div>
+<div class="foldopen" id="foldopen00174" data-start="{" data-end="}">
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno"><a class="line" href="classURunPersistData.html#ae03ade7d30a947f203d0f94789a35271">  174</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classURunPersistData.html#ae03ade7d30a947f203d0f94789a35271">URunPersistData::CollectAssetIds</a>(int32 RowIndex, int32 ColumnIndex, OUT TArray&lt;FPrimaryAssetId&gt;&amp; PlayerIds, OUT FPrimaryAssetId&amp; StageId, OUT FPrimaryAssetId&amp; RoomId, OUT TArray&lt;FPrimaryAssetId&gt;&amp; AdditionalAssetIds)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>    PlayerIds.Add(<a class="code hl_variable" href="classUPlayerUnitPersistData.html#a0b0c0cee179d17ed691e196ce72c55e4">mPlayerUnitId</a>);</div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>    PlayerIds.Append(<a class="code hl_variable" href="classUPlayerUnitPersistData.html#a57f1d07f0c63ed6e1e1b034257b459d4">mSkillIds</a>);</div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>    PlayerIds.Append(<a class="code hl_variable" href="classUPlayerUnitPersistData.html#abd458210b1e9e372141d9bb80e061d24">mEquipmentIds</a>);</div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>    PlayerIds.Append(<a class="code hl_variable" href="classUPlayerUnitPersistData.html#a474056e23a89eb7a93405cdc6ea90a7b">mDiceIds</a>);</div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span> </div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>    StageId = <a class="code hl_function" href="classURunPersistData.html#a47ad9617ae8e0ea005f21a0ea0be6fd5">GetStage</a>().<a class="code hl_variable" href="structFStage.html#a87352cfaceaaec5b8f7edebe4a387d9d">mStaticStageSpawnDataId</a>;</div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>    <a class="code hl_function" href="classURunPersistData.html#a82171525aef1dc00a58490be8c8c3d20">GetRoom</a>(RowIndex, ColumnIndex).<a class="code hl_function" href="structFRoom.html#a29f234f47221ceee0a2e20dacc0dd8d7">CollectAssetIds</a>(RoomId, AdditionalAssetIds);</div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>}</div>
+</div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span> </div>
+<div class="foldopen" id="foldopen00185" data-start="{" data-end="}">
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno"><a class="line" href="classURunPersistData.html#a7e10a9d5c290e11eb2135b0f79134fce">  185</a></span><span class="keyword">const</span> FRandomStream&amp; <a class="code hl_function" href="classURunPersistData.html#a7e10a9d5c290e11eb2135b0f79134fce">URunPersistData::GetStageBuildStream</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classURunPersistData.html#a152ab025ffa90042005e0d7abc121e88">mStageBuildStream</a>;</div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>}</div>
+</div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span> </div>
+<div class="foldopen" id="foldopen00190" data-start="{" data-end="}">
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno"><a class="line" href="classURunPersistData.html#a7e90088757e57fceb26ec4828a8cd6c0">  190</a></span><span class="keyword">const</span> FRandomStream&amp; <a class="code hl_function" href="classURunPersistData.html#a7e90088757e57fceb26ec4828a8cd6c0">URunPersistData::GetEventStream</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classURunPersistData.html#afa276439bc0b3abc99092a698bef5267">mEventStream</a>;</div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>}</div>
+</div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span> </div>
+<div class="foldopen" id="foldopen00195" data-start="{" data-end="}">
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno"><a class="line" href="classURunPersistData.html#a47ad9617ae8e0ea005f21a0ea0be6fd5">  195</a></span><span class="keyword">const</span> <a class="code hl_struct" href="structFStage.html">FStage</a>&amp; <a class="code hl_function" href="classURunPersistData.html#a47ad9617ae8e0ea005f21a0ea0be6fd5">URunPersistData::GetStage</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classURunPersistData.html#a9a235c762b7b8ee314b442930c746957">mStage</a>.Get();</div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>}</div>
+</div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span> </div>
+<div class="foldopen" id="foldopen00200" data-start="{" data-end="}">
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno"><a class="line" href="classURunPersistData.html#a82171525aef1dc00a58490be8c8c3d20">  200</a></span><span class="keyword">const</span> <a class="code hl_struct" href="structFRoom.html">FRoom</a>&amp; <a class="code hl_function" href="classURunPersistData.html#a82171525aef1dc00a58490be8c8c3d20">URunPersistData::GetRoom</a>(int32 RowIndex, int32 ColumnIndex)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classURunPersistData.html#a9a235c762b7b8ee314b442930c746957">mStage</a>.Get().GetRoom(RowIndex, ColumnIndex);</div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>}</div>
+</div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span> </div>
+<div class="foldopen" id="foldopen00205" data-start="{" data-end="}">
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno"><a class="line" href="classURunPersistData.html#a1c8ff8ab98ca85a1f4e6682f20c136df">  205</a></span><span class="keyword">const</span> <a class="code hl_struct" href="structFRoom.html">FRoom</a>&amp; <a class="code hl_function" href="classURunPersistData.html#a1c8ff8ab98ca85a1f4e6682f20c136df">URunPersistData::GetStartRoom</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classURunPersistData.html#a9a235c762b7b8ee314b442930c746957">mStage</a>.Get().GetStartRoom();</div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>}</div>
+</div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span> </div>
+<div class="foldopen" id="foldopen00210" data-start="{" data-end="}">
+<div class="line"><a id="l00210" name="l00210"></a><span class="lineno"><a class="line" href="classURunPersistData.html#a6f73d43dbb224184fadb13ae85ed79cd">  210</a></span><span class="keyword">const</span> <a class="code hl_struct" href="structFRoom.html">FRoom</a>&amp; <a class="code hl_function" href="classURunPersistData.html#a6f73d43dbb224184fadb13ae85ed79cd">URunPersistData::GetCurrentRoom</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classURunPersistData.html#a9a235c762b7b8ee314b442930c746957">mStage</a>.Get().GetCurrentRoom();</div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>}</div>
+</div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span> </div>
+<div class="foldopen" id="foldopen00215" data-start="{" data-end="}">
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno"><a class="line" href="classURunPersistData.html#adda222009d47b7e850b8d697ddef1895">  215</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classURunPersistData.html#adda222009d47b7e850b8d697ddef1895">URunPersistData::GetCurrentRoomIndex</a>(OUT int32&amp; RowIndex, OUT int32&amp; ColumnIndex)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>    RowIndex = <a class="code hl_variable" href="classURunPersistData.html#a9a235c762b7b8ee314b442930c746957">mStage</a>.Get().mCurRow;</div>
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>    ColumnIndex = <a class="code hl_variable" href="classURunPersistData.html#a9a235c762b7b8ee314b442930c746957">mStage</a>.Get().mCurColumn;</div>
+<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>}</div>
+</div>
+<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span> </div>
+<div class="foldopen" id="foldopen00221" data-start="{" data-end="}">
+<div class="line"><a id="l00221" name="l00221"></a><span class="lineno"><a class="line" href="classURunPersistData.html#ae091bb9a010c0aa791a238ba528b108d">  221</a></span><span class="keyword">const</span> <a class="code hl_struct" href="structFRunLog.html">FRunLog</a>&amp; <a class="code hl_function" href="classURunPersistData.html#ae091bb9a010c0aa791a238ba528b108d">URunPersistData::GetRunLog</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classURunPersistData.html#a64e41cbe38cd98340dc1ad0ce71fb83e">mRunLog</a>;</div>
+<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span>}</div>
+</div>
+<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span> </div>
+<div class="foldopen" id="foldopen00226" data-start="{" data-end="}">
+<div class="line"><a id="l00226" name="l00226"></a><span class="lineno"><a class="line" href="classURunPersistData.html#a6043e07ae2c230fce051bfc2bc9e313d">  226</a></span><span class="keywordtype">bool</span> <a class="code hl_function" href="classURunPersistData.html#a6043e07ae2c230fce051bfc2bc9e313d">URunPersistData::IsActive</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classURunPersistData.html#a9a235c762b7b8ee314b442930c746957">mStage</a>.IsValid();</div>
+<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>}</div>
+</div>
+<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span> </div>
+<div class="foldopen" id="foldopen00231" data-start="{" data-end="}">
+<div class="line"><a id="l00231" name="l00231"></a><span class="lineno"><a class="line" href="classUUserPersistData.html#aab45efb12accf4ac389d36301d593046">  231</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUUserPersistData.html#aab45efb12accf4ac389d36301d593046">UUserPersistData::MakeUser</a>(<span class="keyword">const</span> FText&amp; Name)</div>
+<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>{</div>
+<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>    <a class="code hl_function" href="classUUserPersistData.html#ae4c98bf67db0ff22e848d88e3101e296">ClearUser</a>();</div>
+<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span> </div>
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>    <a class="code hl_variable" href="classUUserPersistData.html#a62a0af66e9447d2a8336bc65c396f76d">mUserName</a> = Name;</div>
+<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span>}</div>
+</div>
+<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span> </div>
+<div class="foldopen" id="foldopen00238" data-start="{" data-end="}">
+<div class="line"><a id="l00238" name="l00238"></a><span class="lineno"><a class="line" href="classUUserPersistData.html#ae4c98bf67db0ff22e848d88e3101e296">  238</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUUserPersistData.html#ae4c98bf67db0ff22e848d88e3101e296">UUserPersistData::ClearUser</a>()</div>
+<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>{</div>
+<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span>    <a class="code hl_variable" href="classUUserPersistData.html#a62a0af66e9447d2a8336bc65c396f76d">mUserName</a> = FText();</div>
+<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span>    <a class="code hl_variable" href="classUUserPersistData.html#a498fe458681926a27f8ee4ab1c77122e">mUserLog</a>.<a class="code hl_function" href="structFUserLog.html#a66899c8ef20e8f0c56e2115837ae9717">Clear</a>();</div>
+<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span>}</div>
+</div>
+<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span> </div>
+<div class="foldopen" id="foldopen00244" data-start="{" data-end="}">
+<div class="line"><a id="l00244" name="l00244"></a><span class="lineno"><a class="line" href="classUUserPersistData.html#a52b71e44a001d5fac1ffdbabd03d34f7">  244</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUUserPersistData.html#a52b71e44a001d5fac1ffdbabd03d34f7">UUserPersistData::UpdateLog</a>(<span class="keyword">const</span> FPrimaryAssetId&amp; PlayerUnitId, <span class="keyword">const</span> <a class="code hl_struct" href="structFRunLog.html">FRunLog</a>&amp; RunLog)</div>
+<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span>{</div>
+<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span>    ++<a class="code hl_variable" href="classUUserPersistData.html#a498fe458681926a27f8ee4ab1c77122e">mUserLog</a>.<a class="code hl_variable" href="structFUserLog.html#a9b3fe4ec11cf4a95f3dbcfb9b97b38e0">mRunCount</a>;</div>
+<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span>    ++<a class="code hl_variable" href="classUUserPersistData.html#a498fe458681926a27f8ee4ab1c77122e">mUserLog</a>.<a class="code hl_variable" href="structFUserLog.html#a7a376f62bcd9bf972f4e27db663ddbd6">mRunCountPerUnit</a>[PlayerUnitId];</div>
+<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span> </div>
+<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>    <span class="keywordflow">for</span> (<span class="keyword">auto</span>&amp; UnitPair : RunLog.<a class="code hl_variable" href="structFRunLog.html#aa3d771ef05af9a7926def88e8ca3957e">mKilledEnemyUnits</a>)</div>
+<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>    {</div>
+<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span>        <a class="code hl_variable" href="classUUserPersistData.html#a498fe458681926a27f8ee4ab1c77122e">mUserLog</a>.<a class="code hl_variable" href="structFUserLog.html#a7825c719b29056a1102073ae5e79cb19">mKnownEnemyUnitIds</a>.Add(UnitPair.Key);</div>
+<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span>    }</div>
+<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>    <span class="keywordflow">for</span> (<span class="keyword">auto</span>&amp; SkillPair : RunLog.<a class="code hl_variable" href="structFRunLog.html#ac3b32225f6561afb4621ebfab969b31d">mAcquiredSkills</a>)</div>
+<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span>    {</div>
+<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span>        <a class="code hl_variable" href="classUUserPersistData.html#a498fe458681926a27f8ee4ab1c77122e">mUserLog</a>.<a class="code hl_variable" href="structFUserLog.html#a8c0305d682a8679451511f3023e9f3e2">mKnownSkillIds</a>.Add(SkillPair.Key);</div>
+<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>    }</div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>    <span class="keywordflow">for</span> (<span class="keyword">auto</span>&amp; EquipmentPair : RunLog.<a class="code hl_variable" href="structFRunLog.html#abb5246749dfc814d27e0f93e9d81f19e">mAcquiredEquipment</a>)</div>
+<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span>    {</div>
+<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span>        <a class="code hl_variable" href="classUUserPersistData.html#a498fe458681926a27f8ee4ab1c77122e">mUserLog</a>.<a class="code hl_variable" href="structFUserLog.html#ad202dedeb7059d77dc4462c75c99f3b0">mKnownEquipmentIds</a>.Add(EquipmentPair.Key);</div>
+<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span>    }</div>
+<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span>    <span class="keywordflow">for</span> (<span class="keyword">auto</span>&amp; DicePair : RunLog.<a class="code hl_variable" href="structFRunLog.html#a1b886b2af8312372b6177b1b51856bc3">mAcquiredDices</a>)</div>
+<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span>    {</div>
+<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>        <a class="code hl_variable" href="classUUserPersistData.html#a498fe458681926a27f8ee4ab1c77122e">mUserLog</a>.<a class="code hl_variable" href="structFUserLog.html#af92a9fcae8aaa8ff080e447d903f49df">mKnownDiceIds</a>.Add(DicePair.Key);</div>
+<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>    }</div>
+<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>}</div>
+</div>
+<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span> </div>
+<div class="foldopen" id="foldopen00267" data-start="{" data-end="}">
+<div class="line"><a id="l00267" name="l00267"></a><span class="lineno"><a class="line" href="classUUserPersistData.html#ad5790c6039103c5afa74762ec8f37657">  267</a></span><span class="keyword">const</span> FText&amp; <a class="code hl_function" href="classUUserPersistData.html#ad5790c6039103c5afa74762ec8f37657">UUserPersistData::GetUserName</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classUUserPersistData.html#a62a0af66e9447d2a8336bc65c396f76d">mUserName</a>;</div>
+<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span>}</div>
+</div>
+<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span> </div>
+<div class="foldopen" id="foldopen00272" data-start="{" data-end="}">
+<div class="line"><a id="l00272" name="l00272"></a><span class="lineno"><a class="line" href="classUUserPersistData.html#a65b69f2d78d44a368bbd83076d02b8e3">  272</a></span><span class="keywordtype">bool</span> <a class="code hl_function" href="classUUserPersistData.html#a65b69f2d78d44a368bbd83076d02b8e3">UUserPersistData::IsActive</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classUUserPersistData.html#a62a0af66e9447d2a8336bc65c396f76d">mUserName</a>.IsEmpty() == <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>}</div>
+</div>
+<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span> </div>
+<div class="foldopen" id="foldopen00277" data-start="{" data-end="}">
+<div class="line"><a id="l00277" name="l00277"></a><span class="lineno"><a class="line" href="classUUserPersistData.html#a05ba9c4ea1e55f1a9744de7698fc20f3">  277</a></span><span class="keyword">const</span> <a class="code hl_struct" href="structFUserLog.html">FUserLog</a>&amp; <a class="code hl_function" href="classUUserPersistData.html#a05ba9c4ea1e55f1a9744de7698fc20f3">UUserPersistData::GetUserLog</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classUUserPersistData.html#a498fe458681926a27f8ee4ab1c77122e">mUserLog</a>;</div>
+<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span>}</div>
+</div>
+<div class="ttc" id="aGameBalanceSettings_8h_html"><div class="ttname"><a href="GameBalanceSettings_8h.html">GameBalanceSettings.h</a></div><div class="ttdoc">게임 밸런스 설정 클래스 정의 헤더</div></div>
+<div class="ttc" id="aPersistentData_8h_html"><div class="ttname"><a href="PersistentData_8h.html">PersistentData.h</a></div><div class="ttdoc">영구적 플레이 데이터 구현 헤더</div></div>
+<div class="ttc" id="aPlayerUnit_8h_html"><div class="ttname"><a href="PlayerUnit_8h.html">PlayerUnit.h</a></div><div class="ttdoc">플레이어 베이스 유닛 정의 헤더</div></div>
+<div class="ttc" id="aRDMinimal_8h_html_aa3a7aed186515ed7eab08dffbba62805"><div class="ttname"><a href="RDMinimal_8h.html#aa3a7aed186515ed7eab08dffbba62805">EnumToString</a></div><div class="ttdeci">FString EnumToString(T Value)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8h_source.html#l00029">RDMinimal.h:29</a></div></div>
+<div class="ttc" id="aRandomStreamFunctionLibrary_8h_html"><div class="ttname"><a href="RandomStreamFunctionLibrary_8h.html">RandomStreamFunctionLibrary.h</a></div><div class="ttdoc">랜덤 스트림 연관 헬퍼 함수 라이브러리 헤더</div></div>
+<div class="ttc" id="aStageBuilder_8h_html"><div class="ttname"><a href="StageBuilder_8h.html">StageBuilder.h</a></div><div class="ttdoc">스테이지 내 방들을 생성해주는 빌더 객체 구현 헤더</div></div>
+<div class="ttc" id="aStageLevelType_8h_html_ae0b1317897a714ca0969cdc80dfd5d95"><div class="ttname"><a href="StageLevelType_8h.html#ae0b1317897a714ca0969cdc80dfd5d95">EStageLevelType</a></div><div class="ttdeci">EStageLevelType</div><div class="ttdoc">스테이지 레벨 타입 (실수 방지)</div><div class="ttdef"><b>Definition</b> <a href="StageLevelType_8h_source.html#l00018">StageLevelType.h:19</a></div></div>
+<div class="ttc" id="aUnitAttributeSet_8h_html"><div class="ttname"><a href="UnitAttributeSet_8h.html">UnitAttributeSet.h</a></div><div class="ttdoc">SRPGUnit에 대한 Attribute Set 정의 헤더</div></div>
+<div class="ttc" id="aclassAPlayerUnit_html"><div class="ttname"><a href="classAPlayerUnit.html">APlayerUnit</a></div><div class="ttdoc">플레이어 베이스 유닛</div><div class="ttdef"><b>Definition</b> <a href="PlayerUnit_8h_source.html#l00022">PlayerUnit.h:23</a></div></div>
+<div class="ttc" id="aclassAUnit_html_aabf191425d87ad59487903ca48f51663"><div class="ttname"><a href="classAUnit.html#aabf191425d87ad59487903ca48f51663">AUnit::GetAbilitySystemComponent</a></div><div class="ttdeci">UAbilitySystemComponent * GetAbilitySystemComponent() const override</div><div class="ttdef"><b>Definition</b> <a href="Unit_8cpp_source.html#l00066">Unit.cpp:66</a></div></div>
+<div class="ttc" id="aclassUGameBalanceSettings_html"><div class="ttname"><a href="classUGameBalanceSettings.html">UGameBalanceSettings</a></div><div class="ttdoc">게임 밸런스 설정 클래스</div><div class="ttdef"><b>Definition</b> <a href="GameBalanceSettings_8h_source.html#l00019">GameBalanceSettings.h:20</a></div></div>
+<div class="ttc" id="aclassUGameBalanceSettings_html_a0b0ea92f22f8c8bb738e2f933a8aef54"><div class="ttname"><a href="classUGameBalanceSettings.html#a0b0ea92f22f8c8bb738e2f933a8aef54">UGameBalanceSettings::mStageBuildSettingTable</a></div><div class="ttdeci">TSoftObjectPtr&lt; UDataTable &gt; mStageBuildSettingTable</div><div class="ttdef"><b>Definition</b> <a href="GameBalanceSettings_8h_source.html#l00037">GameBalanceSettings.h:37</a></div></div>
+<div class="ttc" id="aclassUGameBalanceSettings_html_a9d050005f0430acf97e275ab23845e11"><div class="ttname"><a href="classUGameBalanceSettings.html#a9d050005f0430acf97e275ab23845e11">UGameBalanceSettings::mGlobalStageBuildSetting</a></div><div class="ttdeci">FGlobalStageBuildSetting mGlobalStageBuildSetting</div><div class="ttdef"><b>Definition</b> <a href="GameBalanceSettings_8h_source.html#l00034">GameBalanceSettings.h:34</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitPersistData_html_a0b0c0cee179d17ed691e196ce72c55e4"><div class="ttname"><a href="classUPlayerUnitPersistData.html#a0b0c0cee179d17ed691e196ce72c55e4">UPlayerUnitPersistData::mPlayerUnitId</a></div><div class="ttdeci">FPrimaryAssetId mPlayerUnitId</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00102">PersistentData.h:102</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitPersistData_html_a20153e3e651156c46f7b01ca3d5e1363"><div class="ttname"><a href="classUPlayerUnitPersistData.html#a20153e3e651156c46f7b01ca3d5e1363">UPlayerUnitPersistData::ApplyPlayerPersistData</a></div><div class="ttdeci">void ApplyPlayerPersistData(APlayerUnit *PlayerUnit)</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00069">PersistentData.cpp:69</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitPersistData_html_a21adb042512cd50b6efd9c2f7642ca51"><div class="ttname"><a href="classUPlayerUnitPersistData.html#a21adb042512cd50b6efd9c2f7642ca51">UPlayerUnitPersistData::GetPlayerUnitId</a></div><div class="ttdeci">const FPrimaryAssetId &amp; GetPlayerUnitId() const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00039">PersistentData.cpp:39</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitPersistData_html_a29fdc5ee7d3cdea50753f93345900284"><div class="ttname"><a href="classUPlayerUnitPersistData.html#a29fdc5ee7d3cdea50753f93345900284">UPlayerUnitPersistData::mExp</a></div><div class="ttdeci">float mExp</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00115">PersistentData.h:115</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitPersistData_html_a3bb2733e0987ffaf945e9ed72a5b499f"><div class="ttname"><a href="classUPlayerUnitPersistData.html#a3bb2733e0987ffaf945e9ed72a5b499f">UPlayerUnitPersistData::mTagCountMap</a></div><div class="ttdeci">TMap&lt; FGameplayTag, int32 &gt; mTagCountMap</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00122">PersistentData.h:122</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitPersistData_html_a474056e23a89eb7a93405cdc6ea90a7b"><div class="ttname"><a href="classUPlayerUnitPersistData.html#a474056e23a89eb7a93405cdc6ea90a7b">UPlayerUnitPersistData::mDiceIds</a></div><div class="ttdeci">TArray&lt; FPrimaryAssetId &gt; mDiceIds</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00132">PersistentData.h:132</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitPersistData_html_a4baaff7f5a70e707496d69c8e1e50ab9"><div class="ttname"><a href="classUPlayerUnitPersistData.html#a4baaff7f5a70e707496d69c8e1e50ab9">UPlayerUnitPersistData::GetEquipmentIds</a></div><div class="ttdeci">const TArray&lt; FPrimaryAssetId &gt; &amp; GetEquipmentIds() const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00059">PersistentData.cpp:59</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitPersistData_html_a4da37890ca8e399297851a390ab01e20"><div class="ttname"><a href="classUPlayerUnitPersistData.html#a4da37890ca8e399297851a390ab01e20">UPlayerUnitPersistData::GetDiceIds</a></div><div class="ttdeci">const TArray&lt; FPrimaryAssetId &gt; &amp; GetDiceIds() const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00064">PersistentData.cpp:64</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitPersistData_html_a4ecfac35d5f9098e7ec5c8c49748153e"><div class="ttname"><a href="classUPlayerUnitPersistData.html#a4ecfac35d5f9098e7ec5c8c49748153e">UPlayerUnitPersistData::RegisterPlayerUnit</a></div><div class="ttdeci">void RegisterPlayerUnit(APlayerUnit *PlayerUnit)</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00029">PersistentData.cpp:29</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitPersistData_html_a57f1d07f0c63ed6e1e1b034257b459d4"><div class="ttname"><a href="classUPlayerUnitPersistData.html#a57f1d07f0c63ed6e1e1b034257b459d4">UPlayerUnitPersistData::mSkillIds</a></div><div class="ttdeci">TArray&lt; FPrimaryAssetId &gt; mSkillIds</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00126">PersistentData.h:126</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitPersistData_html_a89f3631616153539b626cc22f29b4b14"><div class="ttname"><a href="classUPlayerUnitPersistData.html#a89f3631616153539b626cc22f29b4b14">UPlayerUnitPersistData::BindPlayerUnitEvent</a></div><div class="ttdeci">void BindPlayerUnitEvent(APlayerUnit *PlayerUnit)</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00091">PersistentData.cpp:91</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitPersistData_html_a91eb95502543b56740deb930347b1414"><div class="ttname"><a href="classUPlayerUnitPersistData.html#a91eb95502543b56740deb930347b1414">UPlayerUnitPersistData::mMoney</a></div><div class="ttdeci">float mMoney</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00118">PersistentData.h:118</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitPersistData_html_a928b7a3bdb9f6f7a6a2a6978ab62092f"><div class="ttname"><a href="classUPlayerUnitPersistData.html#a928b7a3bdb9f6f7a6a2a6978ab62092f">UPlayerUnitPersistData::GetDifficulty</a></div><div class="ttdeci">int32 GetDifficulty() const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00049">PersistentData.cpp:49</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitPersistData_html_aa0bfab95d87ee18274066dcd7b37389e"><div class="ttname"><a href="classUPlayerUnitPersistData.html#aa0bfab95d87ee18274066dcd7b37389e">UPlayerUnitPersistData::mPlayerLevel</a></div><div class="ttdeci">int32 mPlayerLevel</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00104">PersistentData.h:104</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitPersistData_html_aa21483cf2124fc6a9a9a9bc7a561a906"><div class="ttname"><a href="classUPlayerUnitPersistData.html#aa21483cf2124fc6a9a9a9bc7a561a906">UPlayerUnitPersistData::mMaxHP</a></div><div class="ttdeci">float mMaxHP</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00110">PersistentData.h:110</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitPersistData_html_aae34d9536507706e59861eabfd06040e"><div class="ttname"><a href="classUPlayerUnitPersistData.html#aae34d9536507706e59861eabfd06040e">UPlayerUnitPersistData::GetPlayerLevel</a></div><div class="ttdeci">int32 GetPlayerLevel() const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00044">PersistentData.cpp:44</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitPersistData_html_abd458210b1e9e372141d9bb80e061d24"><div class="ttname"><a href="classUPlayerUnitPersistData.html#abd458210b1e9e372141d9bb80e061d24">UPlayerUnitPersistData::mEquipmentIds</a></div><div class="ttdeci">TArray&lt; FPrimaryAssetId &gt; mEquipmentIds</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00129">PersistentData.h:129</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitPersistData_html_acf132f27b7aa119a53f15f256c56d5a1"><div class="ttname"><a href="classUPlayerUnitPersistData.html#acf132f27b7aa119a53f15f256c56d5a1">UPlayerUnitPersistData::GetSkillIds</a></div><div class="ttdeci">const TArray&lt; FPrimaryAssetId &gt; &amp; GetSkillIds() const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00054">PersistentData.cpp:54</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitPersistData_html_ae67f4c3010bdd5989d1ced6de674e7a8"><div class="ttname"><a href="classUPlayerUnitPersistData.html#ae67f4c3010bdd5989d1ced6de674e7a8">UPlayerUnitPersistData::mIsNewData</a></div><div class="ttdeci">bool mIsNewData</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00098">PersistentData.h:98</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitPersistData_html_ae83912fceadd0765d2416ea9b16b5d27"><div class="ttname"><a href="classUPlayerUnitPersistData.html#ae83912fceadd0765d2416ea9b16b5d27">UPlayerUnitPersistData::mDifficulty</a></div><div class="ttdeci">int32 mDifficulty</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00106">PersistentData.h:106</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitPersistData_html_afbcebcaead2219df1646d346e076bb82"><div class="ttname"><a href="classUPlayerUnitPersistData.html#afbcebcaead2219df1646d346e076bb82">UPlayerUnitPersistData::mHP</a></div><div class="ttdeci">float mHP</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00112">PersistentData.h:112</a></div></div>
+<div class="ttc" id="aclassURandomStreamFunctionLibrary_html_a743af939daac632fab249ed3702fad33"><div class="ttname"><a href="classURandomStreamFunctionLibrary.html#a743af939daac632fab249ed3702fad33">URandomStreamFunctionLibrary::GetStageBuildStream</a></div><div class="ttdeci">static const FRandomStream &amp; GetStageBuildStream(const UObject *WorldContextObject)</div><div class="ttdef"><b>Definition</b> <a href="RandomStreamFunctionLibrary_8cpp_source.html#l00005">RandomStreamFunctionLibrary.cpp:5</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html_a0353c4ad706297d0e67c0de5d992b9e2"><div class="ttname"><a href="classURunPersistData.html#a0353c4ad706297d0e67c0de5d992b9e2">URunPersistData::StartRun</a></div><div class="ttdeci">void StartRun(const FPrimaryAssetId &amp;PlayerUnitId, int32 Difficulty)</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00118">PersistentData.cpp:118</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html_a0963ca32bdfe465010e54eeb40afaba3"><div class="ttname"><a href="classURunPersistData.html#a0963ca32bdfe465010e54eeb40afaba3">URunPersistData::MakeStageAsync</a></div><div class="ttdeci">void MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCreateStage)</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00146">PersistentData.cpp:146</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html_a152ab025ffa90042005e0d7abc121e88"><div class="ttname"><a href="classURunPersistData.html#a152ab025ffa90042005e0d7abc121e88">URunPersistData::mStageBuildStream</a></div><div class="ttdeci">FRandomStream mStageBuildStream</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00172">PersistentData.h:172</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html_a1c8ff8ab98ca85a1f4e6682f20c136df"><div class="ttname"><a href="classURunPersistData.html#a1c8ff8ab98ca85a1f4e6682f20c136df">URunPersistData::GetStartRoom</a></div><div class="ttdeci">const FRoom &amp; GetStartRoom() const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00205">PersistentData.cpp:205</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html_a47ad9617ae8e0ea005f21a0ea0be6fd5"><div class="ttname"><a href="classURunPersistData.html#a47ad9617ae8e0ea005f21a0ea0be6fd5">URunPersistData::GetStage</a></div><div class="ttdeci">const FStage &amp; GetStage() const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00195">PersistentData.cpp:195</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html_a6043e07ae2c230fce051bfc2bc9e313d"><div class="ttname"><a href="classURunPersistData.html#a6043e07ae2c230fce051bfc2bc9e313d">URunPersistData::IsActive</a></div><div class="ttdeci">bool IsActive() const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00226">PersistentData.cpp:226</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html_a64e41cbe38cd98340dc1ad0ce71fb83e"><div class="ttname"><a href="classURunPersistData.html#a64e41cbe38cd98340dc1ad0ce71fb83e">URunPersistData::mRunLog</a></div><div class="ttdeci">FRunLog mRunLog</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00182">PersistentData.h:182</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html_a6f73d43dbb224184fadb13ae85ed79cd"><div class="ttname"><a href="classURunPersistData.html#a6f73d43dbb224184fadb13ae85ed79cd">URunPersistData::GetCurrentRoom</a></div><div class="ttdeci">const FRoom &amp; GetCurrentRoom() const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00210">PersistentData.cpp:210</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html_a7e10a9d5c290e11eb2135b0f79134fce"><div class="ttname"><a href="classURunPersistData.html#a7e10a9d5c290e11eb2135b0f79134fce">URunPersistData::GetStageBuildStream</a></div><div class="ttdeci">const FRandomStream &amp; GetStageBuildStream() const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00185">PersistentData.cpp:185</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html_a7e90088757e57fceb26ec4828a8cd6c0"><div class="ttname"><a href="classURunPersistData.html#a7e90088757e57fceb26ec4828a8cd6c0">URunPersistData::GetEventStream</a></div><div class="ttdeci">const FRandomStream &amp; GetEventStream() const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00190">PersistentData.cpp:190</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html_a82171525aef1dc00a58490be8c8c3d20"><div class="ttname"><a href="classURunPersistData.html#a82171525aef1dc00a58490be8c8c3d20">URunPersistData::GetRoom</a></div><div class="ttdeci">const FRoom &amp; GetRoom(int32 RowIndex, int32 ColumnIndex) const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00200">PersistentData.cpp:200</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html_a8caedfbe19b3a57967af27c2cb225e23"><div class="ttname"><a href="classURunPersistData.html#a8caedfbe19b3a57967af27c2cb225e23">URunPersistData::ClearRun</a></div><div class="ttdeci">void ClearRun()</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00130">PersistentData.cpp:130</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html_a9a235c762b7b8ee314b442930c746957"><div class="ttname"><a href="classURunPersistData.html#a9a235c762b7b8ee314b442930c746957">URunPersistData::mStage</a></div><div class="ttdeci">TInstancedStruct&lt; FStage &gt; mStage</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00178">PersistentData.h:178</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html_adda222009d47b7e850b8d697ddef1895"><div class="ttname"><a href="classURunPersistData.html#adda222009d47b7e850b8d697ddef1895">URunPersistData::GetCurrentRoomIndex</a></div><div class="ttdeci">void GetCurrentRoomIndex(OUT int32 &amp;RowIndex, OUT int32 &amp;ColumnIndex) const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00215">PersistentData.cpp:215</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html_ae03ade7d30a947f203d0f94789a35271"><div class="ttname"><a href="classURunPersistData.html#ae03ade7d30a947f203d0f94789a35271">URunPersistData::CollectAssetIds</a></div><div class="ttdeci">void CollectAssetIds(int32 RowIndex, int32 ColumnIndex, OUT TArray&lt; FPrimaryAssetId &gt; &amp;PlayerIds, OUT FPrimaryAssetId &amp;StageId, OUT FPrimaryAssetId &amp;RoomId, OUT TArray&lt; FPrimaryAssetId &gt; &amp;AdditionalAssetIds) const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00174">PersistentData.cpp:174</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html_ae091bb9a010c0aa791a238ba528b108d"><div class="ttname"><a href="classURunPersistData.html#ae091bb9a010c0aa791a238ba528b108d">URunPersistData::GetRunLog</a></div><div class="ttdeci">const FRunLog &amp; GetRunLog() const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00221">PersistentData.cpp:221</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html_ae239526ad4dea556014ff56b99cd3716"><div class="ttname"><a href="classURunPersistData.html#ae239526ad4dea556014ff56b99cd3716">URunPersistData::SetCurrentRoomIndex</a></div><div class="ttdeci">void SetCurrentRoomIndex(int32 RowIndex, int32 ColumnIndex)</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00168">PersistentData.cpp:168</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html_afa276439bc0b3abc99092a698bef5267"><div class="ttname"><a href="classURunPersistData.html#afa276439bc0b3abc99092a698bef5267">URunPersistData::mEventStream</a></div><div class="ttdeci">FRandomStream mEventStream</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00174">PersistentData.h:174</a></div></div>
+<div class="ttc" id="aclassUUserPersistData_html_a05ba9c4ea1e55f1a9744de7698fc20f3"><div class="ttname"><a href="classUUserPersistData.html#a05ba9c4ea1e55f1a9744de7698fc20f3">UUserPersistData::GetUserLog</a></div><div class="ttdeci">const FUserLog &amp; GetUserLog() const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00277">PersistentData.cpp:277</a></div></div>
+<div class="ttc" id="aclassUUserPersistData_html_a498fe458681926a27f8ee4ab1c77122e"><div class="ttname"><a href="classUUserPersistData.html#a498fe458681926a27f8ee4ab1c77122e">UUserPersistData::mUserLog</a></div><div class="ttdeci">FUserLog mUserLog</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00212">PersistentData.h:212</a></div></div>
+<div class="ttc" id="aclassUUserPersistData_html_a52b71e44a001d5fac1ffdbabd03d34f7"><div class="ttname"><a href="classUUserPersistData.html#a52b71e44a001d5fac1ffdbabd03d34f7">UUserPersistData::UpdateLog</a></div><div class="ttdeci">void UpdateLog(const FPrimaryAssetId &amp;PlayerUnitId, const FRunLog &amp;RunLog)</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00244">PersistentData.cpp:244</a></div></div>
+<div class="ttc" id="aclassUUserPersistData_html_a62a0af66e9447d2a8336bc65c396f76d"><div class="ttname"><a href="classUUserPersistData.html#a62a0af66e9447d2a8336bc65c396f76d">UUserPersistData::mUserName</a></div><div class="ttdeci">FText mUserName</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00209">PersistentData.h:209</a></div></div>
+<div class="ttc" id="aclassUUserPersistData_html_a65b69f2d78d44a368bbd83076d02b8e3"><div class="ttname"><a href="classUUserPersistData.html#a65b69f2d78d44a368bbd83076d02b8e3">UUserPersistData::IsActive</a></div><div class="ttdeci">bool IsActive() const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00272">PersistentData.cpp:272</a></div></div>
+<div class="ttc" id="aclassUUserPersistData_html_aab45efb12accf4ac389d36301d593046"><div class="ttname"><a href="classUUserPersistData.html#aab45efb12accf4ac389d36301d593046">UUserPersistData::MakeUser</a></div><div class="ttdeci">void MakeUser(const FText &amp;Name)</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00231">PersistentData.cpp:231</a></div></div>
+<div class="ttc" id="aclassUUserPersistData_html_ad5790c6039103c5afa74762ec8f37657"><div class="ttname"><a href="classUUserPersistData.html#ad5790c6039103c5afa74762ec8f37657">UUserPersistData::GetUserName</a></div><div class="ttdeci">const FText &amp; GetUserName() const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00267">PersistentData.cpp:267</a></div></div>
+<div class="ttc" id="aclassUUserPersistData_html_ae4c98bf67db0ff22e848d88e3101e296"><div class="ttname"><a href="classUUserPersistData.html#ae4c98bf67db0ff22e848d88e3101e296">UUserPersistData::ClearUser</a></div><div class="ttdeci">void ClearUser()</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00238">PersistentData.cpp:238</a></div></div>
+<div class="ttc" id="astructFRoom_html"><div class="ttname"><a href="structFRoom.html">FRoom</a></div><div class="ttdoc">방 데이터</div><div class="ttdef"><b>Definition</b> <a href="Room_8h_source.html#l00018">Room.h:19</a></div></div>
+<div class="ttc" id="astructFRoom_html_a29f234f47221ceee0a2e20dacc0dd8d7"><div class="ttname"><a href="structFRoom.html#a29f234f47221ceee0a2e20dacc0dd8d7">FRoom::CollectAssetIds</a></div><div class="ttdeci">virtual void CollectAssetIds(OUT FPrimaryAssetId &amp;RoomId, OUT TArray&lt; FPrimaryAssetId &gt; &amp;AdditionalAssetIds) const</div><div class="ttdef"><b>Definition</b> <a href="Room_8cpp_source.html#l00003">Room.cpp:3</a></div></div>
+<div class="ttc" id="astructFRunLog_html"><div class="ttname"><a href="structFRunLog.html">FRunLog</a></div><div class="ttdoc">한번의 런 동안 기록된 로그 데이터</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00023">PersistentData.h:24</a></div></div>
+<div class="ttc" id="astructFRunLog_html_a1b886b2af8312372b6177b1b51856bc3"><div class="ttname"><a href="structFRunLog.html#a1b886b2af8312372b6177b1b51856bc3">FRunLog::mAcquiredDices</a></div><div class="ttdeci">TMap&lt; FPrimaryAssetId, int32 &gt; mAcquiredDices</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00038">PersistentData.h:38</a></div></div>
+<div class="ttc" id="astructFRunLog_html_a3abcfc82fcb4dca0dd3192d2163326c3"><div class="ttname"><a href="structFRunLog.html#a3abcfc82fcb4dca0dd3192d2163326c3">FRunLog::Clear</a></div><div class="ttdeci">void Clear()</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00011">PersistentData.cpp:11</a></div></div>
+<div class="ttc" id="astructFRunLog_html_aa3d771ef05af9a7926def88e8ca3957e"><div class="ttname"><a href="structFRunLog.html#aa3d771ef05af9a7926def88e8ca3957e">FRunLog::mKilledEnemyUnits</a></div><div class="ttdeci">TMap&lt; FPrimaryAssetId, int32 &gt; mKilledEnemyUnits</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00032">PersistentData.h:32</a></div></div>
+<div class="ttc" id="astructFRunLog_html_abb5246749dfc814d27e0f93e9d81f19e"><div class="ttname"><a href="structFRunLog.html#abb5246749dfc814d27e0f93e9d81f19e">FRunLog::mAcquiredEquipment</a></div><div class="ttdeci">TMap&lt; FPrimaryAssetId, int32 &gt; mAcquiredEquipment</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00036">PersistentData.h:36</a></div></div>
+<div class="ttc" id="astructFRunLog_html_ac3b32225f6561afb4621ebfab969b31d"><div class="ttname"><a href="structFRunLog.html#ac3b32225f6561afb4621ebfab969b31d">FRunLog::mAcquiredSkills</a></div><div class="ttdeci">TMap&lt; FPrimaryAssetId, int32 &gt; mAcquiredSkills</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00034">PersistentData.h:34</a></div></div>
+<div class="ttc" id="astructFStageBuilderParams_html"><div class="ttname"><a href="structFStageBuilderParams.html">FStageBuilderParams</a></div><div class="ttdoc">스테이지 내 방들을 생성해주는 설정 값 TableRow</div><div class="ttdef"><b>Definition</b> <a href="StageBuilderParams_8h_source.html#l00053">StageBuilderParams.h:54</a></div></div>
+<div class="ttc" id="astructFStageBuilder_html_a3147b462af0e7a436113d3149d1060b0"><div class="ttname"><a href="structFStageBuilder.html#a3147b462af0e7a436113d3149d1060b0">FStageBuilder::Make</a></div><div class="ttdeci">static FStageBuilder Make(const FRandomStream &amp;BuildStream, const FGlobalStageBuildSetting &amp;GlobalSetting)</div><div class="ttdef"><b>Definition</b> <a href="StageBuilder_8cpp_source.html#l00018">StageBuilder.cpp:18</a></div></div>
+<div class="ttc" id="astructFStageBuilder_html_a96ccc826f33f5331e24e9d719383b0e4"><div class="ttname"><a href="structFStageBuilder.html#a96ccc826f33f5331e24e9d719383b0e4">FStageBuilder::Build</a></div><div class="ttdeci">FStage Build() const</div><div class="ttdef"><b>Definition</b> <a href="StageBuilder_8cpp_source.html#l00046">StageBuilder.cpp:46</a></div></div>
+<div class="ttc" id="astructFStage_html"><div class="ttname"><a href="structFStage.html">FStage</a></div><div class="ttdoc">스테이지 객체</div><div class="ttdef"><b>Definition</b> <a href="Stage_8h_source.html#l00032">Stage.h:33</a></div></div>
+<div class="ttc" id="astructFStage_html_a87352cfaceaaec5b8f7edebe4a387d9d"><div class="ttname"><a href="structFStage.html#a87352cfaceaaec5b8f7edebe4a387d9d">FStage::mStaticStageSpawnDataId</a></div><div class="ttdeci">FPrimaryAssetId mStaticStageSpawnDataId</div><div class="ttdef"><b>Definition</b> <a href="Stage_8h_source.html#l00063">Stage.h:63</a></div></div>
+<div class="ttc" id="astructFUserLog_html"><div class="ttname"><a href="structFUserLog.html">FUserLog</a></div><div class="ttdoc">유저의 모든 로그 데이터</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00045">PersistentData.h:46</a></div></div>
+<div class="ttc" id="astructFUserLog_html_a66899c8ef20e8f0c56e2115837ae9717"><div class="ttname"><a href="structFUserLog.html#a66899c8ef20e8f0c56e2115837ae9717">FUserLog::Clear</a></div><div class="ttdeci">void Clear()</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00019">PersistentData.cpp:19</a></div></div>
+<div class="ttc" id="astructFUserLog_html_a7825c719b29056a1102073ae5e79cb19"><div class="ttname"><a href="structFUserLog.html#a7825c719b29056a1102073ae5e79cb19">FUserLog::mKnownEnemyUnitIds</a></div><div class="ttdeci">TSet&lt; FPrimaryAssetId &gt; mKnownEnemyUnitIds</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00062">PersistentData.h:62</a></div></div>
+<div class="ttc" id="astructFUserLog_html_a7a376f62bcd9bf972f4e27db663ddbd6"><div class="ttname"><a href="structFUserLog.html#a7a376f62bcd9bf972f4e27db663ddbd6">FUserLog::mRunCountPerUnit</a></div><div class="ttdeci">TMap&lt; FPrimaryAssetId, int32 &gt; mRunCountPerUnit</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00058">PersistentData.h:58</a></div></div>
+<div class="ttc" id="astructFUserLog_html_a8c0305d682a8679451511f3023e9f3e2"><div class="ttname"><a href="structFUserLog.html#a8c0305d682a8679451511f3023e9f3e2">FUserLog::mKnownSkillIds</a></div><div class="ttdeci">TSet&lt; FPrimaryAssetId &gt; mKnownSkillIds</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00064">PersistentData.h:64</a></div></div>
+<div class="ttc" id="astructFUserLog_html_a9b3fe4ec11cf4a95f3dbcfb9b97b38e0"><div class="ttname"><a href="structFUserLog.html#a9b3fe4ec11cf4a95f3dbcfb9b97b38e0">FUserLog::mRunCount</a></div><div class="ttdeci">int32 mRunCount</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00054">PersistentData.h:54</a></div></div>
+<div class="ttc" id="astructFUserLog_html_ad202dedeb7059d77dc4462c75c99f3b0"><div class="ttname"><a href="structFUserLog.html#ad202dedeb7059d77dc4462c75c99f3b0">FUserLog::mKnownEquipmentIds</a></div><div class="ttdeci">TSet&lt; FPrimaryAssetId &gt; mKnownEquipmentIds</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00066">PersistentData.h:66</a></div></div>
+<div class="ttc" id="astructFUserLog_html_af92a9fcae8aaa8ff080e447d903f49df"><div class="ttname"><a href="structFUserLog.html#af92a9fcae8aaa8ff080e447d903f49df">FUserLog::mKnownDiceIds</a></div><div class="ttdeci">TSet&lt; FPrimaryAssetId &gt; mKnownDiceIds</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00068">PersistentData.h:68</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_36741995dc55b5b43265b1773ea4ad65.html">Singleton</a></li><li class="navelem"><a class="el" href="dir_b1781bf60d5273ee279ba5c41ae38a22.html">InstanceSubsystem</a></li><li class="navelem"><a class="el" href="PersistentData_8cpp.html">PersistentData.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

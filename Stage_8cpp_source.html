@@ -1,0 +1,163 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/PCGStage/Stage.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('Stage_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">Stage.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="Stage_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="Stage_8h.html">PCGStage/Stage.h</a>&quot;</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
+<div class="foldopen" id="foldopen00003" data-start="{" data-end="}">
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno"><a class="line" href="structFStage.html#a99badd54b0ad7829314cc19de2d78189">    3</a></span><a class="code hl_struct" href="structFRoom.html">FRoom</a>&amp; <a class="code hl_function" href="structFStage.html#a99badd54b0ad7829314cc19de2d78189">FStage::GetRoom</a>(int32 RowIndex, int32 ColumnIndex)</div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span>{</div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="structFStage.html#ac2736b2368baaed56af8634422b70d7f">mRoomRows</a>[RowIndex].mRooms[ColumnIndex].GetMutable&lt;<a class="code hl_struct" href="structFRoom.html">FRoom</a>&gt;();</div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span>}</div>
+</div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
+<div class="foldopen" id="foldopen00008" data-start="{" data-end="}">
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno"><a class="line" href="structFStage.html#ab4a9ee35ba8401fd4964c944731b3b96">    8</a></span><span class="keyword">const</span> <a class="code hl_struct" href="structFRoom.html">FRoom</a>&amp; <a class="code hl_function" href="structFStage.html#a99badd54b0ad7829314cc19de2d78189">FStage::GetRoom</a>(int32 RowIndex, int32 ColumnIndex)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="structFStage.html#ac2736b2368baaed56af8634422b70d7f">mRoomRows</a>[RowIndex].mRooms[ColumnIndex].Get&lt;<a class="code hl_struct" href="structFRoom.html">FRoom</a>&gt;();</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span>}</div>
+</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
+<div class="foldopen" id="foldopen00013" data-start="{" data-end="}">
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno"><a class="line" href="structFStage.html#ac65b8275a360735c7d5f00da0cdbe04c">   13</a></span><a class="code hl_struct" href="structFRoom.html">FRoom</a>&amp; <a class="code hl_function" href="structFStage.html#ac65b8275a360735c7d5f00da0cdbe04c">FStage::GetStartRoom</a>()</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>{</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="structFStage.html#ac2736b2368baaed56af8634422b70d7f">mRoomRows</a>[0].mRooms[<a class="code hl_variable" href="structFStage.html#a611559a460b93c7a9527c7b01588857b">mStartColumn</a>].GetMutable&lt;<a class="code hl_struct" href="structFRoom.html">FRoom</a>&gt;();</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>}</div>
+</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span> </div>
+<div class="foldopen" id="foldopen00018" data-start="{" data-end="}">
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno"><a class="line" href="structFStage.html#a323f09e2cd32b78eb7592a29eabebcee">   18</a></span><span class="keyword">const</span> <a class="code hl_struct" href="structFRoom.html">FRoom</a>&amp; <a class="code hl_function" href="structFStage.html#ac65b8275a360735c7d5f00da0cdbe04c">FStage::GetStartRoom</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="structFStage.html#ac2736b2368baaed56af8634422b70d7f">mRoomRows</a>[0].mRooms[<a class="code hl_variable" href="structFStage.html#a611559a460b93c7a9527c7b01588857b">mStartColumn</a>].Get&lt;<a class="code hl_struct" href="structFRoom.html">FRoom</a>&gt;();</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>}</div>
+</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span> </div>
+<div class="foldopen" id="foldopen00023" data-start="{" data-end="}">
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno"><a class="line" href="structFStage.html#a0659787574665e8d81f3045a2a3c013a">   23</a></span><a class="code hl_struct" href="structFRoom.html">FRoom</a>&amp; <a class="code hl_function" href="structFStage.html#a0659787574665e8d81f3045a2a3c013a">FStage::GetCurrentRoom</a>()</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>{</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="structFStage.html#ac2736b2368baaed56af8634422b70d7f">mRoomRows</a>[<a class="code hl_variable" href="structFStage.html#ab83fe223734e7ac4b0bbd464215dce65">mCurRow</a>].mRooms[<a class="code hl_variable" href="structFStage.html#af1507e43f23bcaa36f93382999fddfb6">mCurColumn</a>].GetMutable&lt;<a class="code hl_struct" href="structFRoom.html">FRoom</a>&gt;();</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>}</div>
+</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span> </div>
+<div class="foldopen" id="foldopen00028" data-start="{" data-end="}">
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno"><a class="line" href="structFStage.html#a2569cb396d568b769c4a59691594034e">   28</a></span><span class="keyword">const</span> <a class="code hl_struct" href="structFRoom.html">FRoom</a>&amp; <a class="code hl_function" href="structFStage.html#a0659787574665e8d81f3045a2a3c013a">FStage::GetCurrentRoom</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="structFStage.html#ac2736b2368baaed56af8634422b70d7f">mRoomRows</a>[<a class="code hl_variable" href="structFStage.html#ab83fe223734e7ac4b0bbd464215dce65">mCurRow</a>].mRooms[<a class="code hl_variable" href="structFStage.html#af1507e43f23bcaa36f93382999fddfb6">mCurColumn</a>].Get&lt;<a class="code hl_struct" href="structFRoom.html">FRoom</a>&gt;();</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>}</div>
+</div>
+<div class="ttc" id="aStage_8h_html"><div class="ttname"><a href="Stage_8h.html">Stage.h</a></div><div class="ttdoc">스테이지 객체 구현 헤더</div></div>
+<div class="ttc" id="astructFRoom_html"><div class="ttname"><a href="structFRoom.html">FRoom</a></div><div class="ttdoc">방 데이터</div><div class="ttdef"><b>Definition</b> <a href="Room_8h_source.html#l00018">Room.h:19</a></div></div>
+<div class="ttc" id="astructFStage_html_a0659787574665e8d81f3045a2a3c013a"><div class="ttname"><a href="structFStage.html#a0659787574665e8d81f3045a2a3c013a">FStage::GetCurrentRoom</a></div><div class="ttdeci">FRoom &amp; GetCurrentRoom()</div><div class="ttdef"><b>Definition</b> <a href="Stage_8cpp_source.html#l00023">Stage.cpp:23</a></div></div>
+<div class="ttc" id="astructFStage_html_a611559a460b93c7a9527c7b01588857b"><div class="ttname"><a href="structFStage.html#a611559a460b93c7a9527c7b01588857b">FStage::mStartColumn</a></div><div class="ttdeci">int32 mStartColumn</div><div class="ttdef"><b>Definition</b> <a href="Stage_8h_source.html#l00053">Stage.h:53</a></div></div>
+<div class="ttc" id="astructFStage_html_a99badd54b0ad7829314cc19de2d78189"><div class="ttname"><a href="structFStage.html#a99badd54b0ad7829314cc19de2d78189">FStage::GetRoom</a></div><div class="ttdeci">FRoom &amp; GetRoom(int32 RowIndex, int32 ColumnIndex)</div><div class="ttdef"><b>Definition</b> <a href="Stage_8cpp_source.html#l00003">Stage.cpp:3</a></div></div>
+<div class="ttc" id="astructFStage_html_ab83fe223734e7ac4b0bbd464215dce65"><div class="ttname"><a href="structFStage.html#ab83fe223734e7ac4b0bbd464215dce65">FStage::mCurRow</a></div><div class="ttdeci">int32 mCurRow</div><div class="ttdef"><b>Definition</b> <a href="Stage_8h_source.html#l00059">Stage.h:59</a></div></div>
+<div class="ttc" id="astructFStage_html_ac2736b2368baaed56af8634422b70d7f"><div class="ttname"><a href="structFStage.html#ac2736b2368baaed56af8634422b70d7f">FStage::mRoomRows</a></div><div class="ttdeci">TArray&lt; FRoomRow &gt; mRoomRows</div><div class="ttdef"><b>Definition</b> <a href="Stage_8h_source.html#l00051">Stage.h:51</a></div></div>
+<div class="ttc" id="astructFStage_html_ac65b8275a360735c7d5f00da0cdbe04c"><div class="ttname"><a href="structFStage.html#ac65b8275a360735c7d5f00da0cdbe04c">FStage::GetStartRoom</a></div><div class="ttdeci">FRoom &amp; GetStartRoom()</div><div class="ttdef"><b>Definition</b> <a href="Stage_8cpp_source.html#l00013">Stage.cpp:13</a></div></div>
+<div class="ttc" id="astructFStage_html_af1507e43f23bcaa36f93382999fddfb6"><div class="ttname"><a href="structFStage.html#af1507e43f23bcaa36f93382999fddfb6">FStage::mCurColumn</a></div><div class="ttdeci">int32 mCurColumn</div><div class="ttdef"><b>Definition</b> <a href="Stage_8h_source.html#l00057">Stage.h:57</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_0997732d24b2bef1af70acd0a5418f69.html">PCGStage</a></li><li class="navelem"><a class="el" href="Stage_8cpp.html">Stage.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

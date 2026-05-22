@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['전투_20프레임워크_20흐름_0',['SRPG 전투 프레임워크 흐름',['../srpg_framework_page.html',1,'']]]
+  ['매크로_0',['매크로',['../gas_tag_page.html',1,'GAS 태그 매크로'],['../priamry_asset_type_page.html',1,'Primary Asset Type 매크로']]]
 ];

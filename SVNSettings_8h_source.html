@@ -116,15 +116,15 @@ $(document).ready(function(){initNavTree('SVNSettings_8h_source.html',''); initR
 <div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span> </div>
 <div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    <span class="comment">/* UDeveloperSettings 상속 */</span></div>
 <div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    <span class="keyword">virtual</span> FName GetCategoryName() <span class="keyword">const override</span>;</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    FName GetCategoryName() <span class="keyword">const override</span>;</div>
 <div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span> </div>
 <div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="preprocessor">#if WITH_EDITOR</span></div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    <span class="keyword">virtual</span> FText GetSectionText() <span class="keyword">const override</span>;</div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <span class="keyword">virtual</span> FText GetSectionDescription() <span class="keyword">const override</span>;</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    FText GetSectionText() <span class="keyword">const override</span>;</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    FText GetSectionDescription() <span class="keyword">const override</span>;</div>
 <div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="preprocessor">#endif</span></div>
 <div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span> </div>
 <div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>    UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = SVNContent, meta = (DisplayName = <span class="stringliteral">&quot;SVNContentDir&quot;</span>, ToolTip = <span class="stringliteral">&quot;SVN Content 폴더를 연결하기 위한 경로&quot;</span>, ConfigRestartRequired = <span class="keyword">true</span>))</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>    UPROPERTY(Config, Category = SVNContent, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = <span class="stringliteral">&quot;SVNContentDir&quot;</span>, ToolTip = <span class="stringliteral">&quot;SVN Content 폴더를 연결하기 위한 경로&quot;</span>, ConfigRestartRequired = <span class="keyword">true</span>))</div>
 <div class="line"><a id="l00044" name="l00044"></a><span class="lineno"><a class="line" href="classUSVNSettings.html#ac8795b4e7569277ef8b86e6b833713fe">   44</a></span>    FDirectoryPath mSVNContentDir;</div>
 <div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>};</div>
 </div>

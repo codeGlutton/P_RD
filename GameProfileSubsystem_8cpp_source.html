@@ -1,0 +1,169 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/Singleton/InstanceSubsystem/GameProfileSubsystem.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('GameProfileSubsystem_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">GameProfileSubsystem.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="GameProfileSubsystem_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="GameProfileSubsystem_8h.html">Singleton/InstanceSubsystem/GameProfileSubsystem.h</a>&quot;</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#include &quot;<a class="code" href="PersistentData_8h.html">Singleton/InstanceSubsystem/PersistentData.h</a>&quot;</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span>DEFINE_LOG_CATEGORY(LogGameProfile)</div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span> </div>
+<div class="foldopen" id="foldopen00006" data-start="{" data-end="}">
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno"><a class="line" href="classUGameProfileSubsystem.html#a3a4c583b1d61636dbcb423c68d68febc">    6</a></span>void <a class="code hl_class" href="classUGameProfileSubsystem.html">UGameProfileSubsystem</a>::MakeUser(const FText&amp; Name)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span>    GetRunMutableData()-&gt;ClearRun();</div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span>    GetUserMutableData()-&gt;<a class="code hl_function" href="classUGameProfileSubsystem.html#a3a4c583b1d61636dbcb423c68d68febc">MakeUser</a>(Name);</div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span>    UE_LOG(LogGameProfile, Log, TEXT(<span class="stringliteral">&quot;새로운 유저 데이터 생성&quot;</span>));</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>}</div>
+</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
+<div class="foldopen" id="foldopen00014" data-start="{" data-end="}">
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno"><a class="line" href="classUGameProfileSubsystem.html#a9a0d31074dada388d56325ff4de27a5e">   14</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUGameProfileSubsystem.html#a9a0d31074dada388d56325ff4de27a5e">UGameProfileSubsystem::StartRun</a>(<span class="keyword">const</span> FPrimaryAssetId&amp; PlayerUnitId, int32 Difficulty)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>    checkf(<a class="code hl_function" href="classIUserDataWriter.html#a7154d9485d8ad9fadee2a15ee7af2b8a">GetUserMutableData</a>()-&gt;IsActive() == <span class="keyword">true</span>, TEXT(<span class="stringliteral">&quot;유저 미존재 상태에서 새로운 런 생성 불가&quot;</span>));</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span> </div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    <a class="code hl_function" href="classIRunDataWriter.html#a2f2156dd35782ff0db6145855c73ec34">GetRunMutableData</a>()-&gt;<a class="code hl_function" href="classURunPersistData.html#a0353c4ad706297d0e67c0de5d992b9e2">StartRun</a>(PlayerUnitId, Difficulty);</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span> </div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    UE_LOG(LogGameProfile, Log, TEXT(<span class="stringliteral">&quot;새로운 런 데이터 생성&quot;</span>));</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>}</div>
+</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span> </div>
+<div class="foldopen" id="foldopen00023" data-start="{" data-end="}">
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno"><a class="line" href="classUGameProfileSubsystem.html#a703f7470fcfc079052b311c1f8b3c2ee">   23</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUGameProfileSubsystem.html#a703f7470fcfc079052b311c1f8b3c2ee">UGameProfileSubsystem::EndRun</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    <a class="code hl_class" href="classUUserPersistData.html">UUserPersistData</a>* UserMutableData = <a class="code hl_function" href="classIUserDataWriter.html#a7154d9485d8ad9fadee2a15ee7af2b8a">GetUserMutableData</a>();</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    <a class="code hl_class" href="classURunPersistData.html">URunPersistData</a>* RunMutableData = <a class="code hl_function" href="classIRunDataWriter.html#a2f2156dd35782ff0db6145855c73ec34">GetRunMutableData</a>();</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span> </div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    checkf(UserMutableData-&gt;<a class="code hl_function" href="classUUserPersistData.html#a65b69f2d78d44a368bbd83076d02b8e3">IsActive</a>() == <span class="keyword">true</span>, TEXT(<span class="stringliteral">&quot;유저 미존재 상태에서 런 종료 불가&quot;</span>));</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    checkf(RunMutableData-&gt;<a class="code hl_function" href="classURunPersistData.html#a6043e07ae2c230fce051bfc2bc9e313d">IsActive</a>() == <span class="keyword">true</span>, TEXT(<span class="stringliteral">&quot;런 미존재 상태에서 런 종료 불가&quot;</span>));</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span> </div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    UserMutableData-&gt;<a class="code hl_function" href="classUUserPersistData.html#a52b71e44a001d5fac1ffdbabd03d34f7">UpdateLog</a>(RunMutableData-&gt;<a class="code hl_function" href="classUPlayerUnitPersistData.html#a21adb042512cd50b6efd9c2f7642ca51">GetPlayerUnitId</a>(), RunMutableData-&gt;<a class="code hl_function" href="classURunPersistData.html#ae091bb9a010c0aa791a238ba528b108d">GetRunLog</a>());</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    RunMutableData-&gt;<a class="code hl_function" href="classURunPersistData.html#a8caedfbe19b3a57967af27c2cb225e23">ClearRun</a>();</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span> </div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    UE_LOG(LogGameProfile, Log, TEXT(<span class="stringliteral">&quot;런 데이터 기록 후 삭제&quot;</span>));</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>}</div>
+</div>
+<div class="ttc" id="aGameProfileSubsystem_8h_html"><div class="ttname"><a href="GameProfileSubsystem_8h.html">GameProfileSubsystem.h</a></div><div class="ttdoc">게임 프로파일 관리를 위한 Subsystem 구현 헤더</div></div>
+<div class="ttc" id="aPersistentData_8h_html"><div class="ttname"><a href="PersistentData_8h.html">PersistentData.h</a></div><div class="ttdoc">영구적 플레이 데이터 구현 헤더</div></div>
+<div class="ttc" id="aclassIRunDataWriter_html_a2f2156dd35782ff0db6145855c73ec34"><div class="ttname"><a href="classIRunDataWriter.html#a2f2156dd35782ff0db6145855c73ec34">IRunDataWriter::GetRunMutableData</a></div><div class="ttdeci">URunPersistData * GetRunMutableData() const</div><div class="ttdef"><b>Definition</b> <a href="PersistentDataWriter_8cpp_source.html#l00016">PersistentDataWriter.cpp:16</a></div></div>
+<div class="ttc" id="aclassIUserDataWriter_html_a7154d9485d8ad9fadee2a15ee7af2b8a"><div class="ttname"><a href="classIUserDataWriter.html#a7154d9485d8ad9fadee2a15ee7af2b8a">IUserDataWriter::GetUserMutableData</a></div><div class="ttdeci">UUserPersistData * GetUserMutableData() const</div><div class="ttdef"><b>Definition</b> <a href="PersistentDataWriter_8cpp_source.html#l00005">PersistentDataWriter.cpp:5</a></div></div>
+<div class="ttc" id="aclassUGameProfileSubsystem_html"><div class="ttname"><a href="classUGameProfileSubsystem.html">UGameProfileSubsystem</a></div><div class="ttdoc">게임 프로파일 관리를 위한 Subsystem</div><div class="ttdef"><b>Definition</b> <a href="GameProfileSubsystem_8h_source.html#l00023">GameProfileSubsystem.h:24</a></div></div>
+<div class="ttc" id="aclassUGameProfileSubsystem_html_a3a4c583b1d61636dbcb423c68d68febc"><div class="ttname"><a href="classUGameProfileSubsystem.html#a3a4c583b1d61636dbcb423c68d68febc">UGameProfileSubsystem::MakeUser</a></div><div class="ttdeci">void MakeUser(const FText &amp;Name) const</div><div class="ttdef"><b>Definition</b> <a href="GameProfileSubsystem_8cpp_source.html#l00006">GameProfileSubsystem.cpp:6</a></div></div>
+<div class="ttc" id="aclassUGameProfileSubsystem_html_a703f7470fcfc079052b311c1f8b3c2ee"><div class="ttname"><a href="classUGameProfileSubsystem.html#a703f7470fcfc079052b311c1f8b3c2ee">UGameProfileSubsystem::EndRun</a></div><div class="ttdeci">void EndRun() const</div><div class="ttdef"><b>Definition</b> <a href="GameProfileSubsystem_8cpp_source.html#l00023">GameProfileSubsystem.cpp:23</a></div></div>
+<div class="ttc" id="aclassUGameProfileSubsystem_html_a9a0d31074dada388d56325ff4de27a5e"><div class="ttname"><a href="classUGameProfileSubsystem.html#a9a0d31074dada388d56325ff4de27a5e">UGameProfileSubsystem::StartRun</a></div><div class="ttdeci">void StartRun(const FPrimaryAssetId &amp;PlayerUnitId, int32 Difficulty) const</div><div class="ttdef"><b>Definition</b> <a href="GameProfileSubsystem_8cpp_source.html#l00014">GameProfileSubsystem.cpp:14</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitPersistData_html_a21adb042512cd50b6efd9c2f7642ca51"><div class="ttname"><a href="classUPlayerUnitPersistData.html#a21adb042512cd50b6efd9c2f7642ca51">UPlayerUnitPersistData::GetPlayerUnitId</a></div><div class="ttdeci">const FPrimaryAssetId &amp; GetPlayerUnitId() const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00039">PersistentData.cpp:39</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html"><div class="ttname"><a href="classURunPersistData.html">URunPersistData</a></div><div class="ttdoc">이번 런의 영구적 데이터</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00139">PersistentData.h:140</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html_a0353c4ad706297d0e67c0de5d992b9e2"><div class="ttname"><a href="classURunPersistData.html#a0353c4ad706297d0e67c0de5d992b9e2">URunPersistData::StartRun</a></div><div class="ttdeci">void StartRun(const FPrimaryAssetId &amp;PlayerUnitId, int32 Difficulty)</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00118">PersistentData.cpp:118</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html_a6043e07ae2c230fce051bfc2bc9e313d"><div class="ttname"><a href="classURunPersistData.html#a6043e07ae2c230fce051bfc2bc9e313d">URunPersistData::IsActive</a></div><div class="ttdeci">bool IsActive() const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00226">PersistentData.cpp:226</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html_a8caedfbe19b3a57967af27c2cb225e23"><div class="ttname"><a href="classURunPersistData.html#a8caedfbe19b3a57967af27c2cb225e23">URunPersistData::ClearRun</a></div><div class="ttdeci">void ClearRun()</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00130">PersistentData.cpp:130</a></div></div>
+<div class="ttc" id="aclassURunPersistData_html_ae091bb9a010c0aa791a238ba528b108d"><div class="ttname"><a href="classURunPersistData.html#ae091bb9a010c0aa791a238ba528b108d">URunPersistData::GetRunLog</a></div><div class="ttdeci">const FRunLog &amp; GetRunLog() const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00221">PersistentData.cpp:221</a></div></div>
+<div class="ttc" id="aclassUUserPersistData_html"><div class="ttname"><a href="classUUserPersistData.html">UUserPersistData</a></div><div class="ttdoc">유저의 영구적 데이터</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00189">PersistentData.h:190</a></div></div>
+<div class="ttc" id="aclassUUserPersistData_html_a52b71e44a001d5fac1ffdbabd03d34f7"><div class="ttname"><a href="classUUserPersistData.html#a52b71e44a001d5fac1ffdbabd03d34f7">UUserPersistData::UpdateLog</a></div><div class="ttdeci">void UpdateLog(const FPrimaryAssetId &amp;PlayerUnitId, const FRunLog &amp;RunLog)</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00244">PersistentData.cpp:244</a></div></div>
+<div class="ttc" id="aclassUUserPersistData_html_a65b69f2d78d44a368bbd83076d02b8e3"><div class="ttname"><a href="classUUserPersistData.html#a65b69f2d78d44a368bbd83076d02b8e3">UUserPersistData::IsActive</a></div><div class="ttdeci">bool IsActive() const</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8cpp_source.html#l00272">PersistentData.cpp:272</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_36741995dc55b5b43265b1773ea4ad65.html">Singleton</a></li><li class="navelem"><a class="el" href="dir_b1781bf60d5273ee279ba5c41ae38a22.html">InstanceSubsystem</a></li><li class="navelem"><a class="el" href="GameProfileSubsystem_8cpp.html">GameProfileSubsystem.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

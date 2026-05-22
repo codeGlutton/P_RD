@@ -101,7 +101,7 @@ $(document).ready(function(){initNavTree('RDMinimal_8h_source.html',''); initRes
 <a href="RDMinimal_8h.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*****************************************************************/</span></div>
 <div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#pragma once</span></div>
 <div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> <span class="comment">/* RD 프로젝트 연관 기본 선언 포함 헤더 */</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="comment">/* RD 프로젝트 연관 기본 선언 포함 헤더 */</span></div>
 <div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
 <div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="preprocessor">#include &quot;<a class="code" href="P__RD_8h.html">P_RD.h</a>&quot;</span></div>
 <div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span> </div>
@@ -114,8 +114,28 @@ $(document).ready(function(){initNavTree('RDMinimal_8h_source.html',''); initRes
 <div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="comment">/* 기본 수학 라이브러리 */</span></div>
 <div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="preprocessor">#include &quot;Kismet/KismetMathLibrary.h&quot;</span></div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span> </div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="preprocessor">#include &quot;Algo/RandomShuffle.h&quot;</span></div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span> </div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="foldopen" id="foldopen00029" data-start="{" data-end="}">
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno"><a class="line" href="RDMinimal_8h.html#aa3a7aed186515ed7eab08dffbba62805">   29</a></span>FString <a class="code hl_function" href="RDMinimal_8h.html#aa3a7aed186515ed7eab08dffbba62805">EnumToString</a>(T Value)</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>{</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    <span class="keyword">static_assert</span>(TIsEnum&lt;T&gt;::Value);</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    <span class="keywordflow">return</span> StaticEnum&lt;T&gt;()-&gt;GetNameStringByValue((int64)Value);</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>}</div>
+</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="foldopen" id="foldopen00036" data-start="{" data-end="}">
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno"><a class="line" href="RDMinimal_8h.html#ae737190b385f96c30a3de0e4f9fd8dd6">   36</a></span>FString <a class="code hl_function" href="RDMinimal_8h.html#ae737190b385f96c30a3de0e4f9fd8dd6">EnumToFullString</a>(T Value)</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>{</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    <span class="keyword">static_assert</span>(TIsEnum&lt;T&gt;::Value);</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    <span class="keywordflow">return</span> UEnum::GetValueAsString(Value);</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>}</div>
+</div>
 <div class="ttc" id="aP__RD_8h_html"><div class="ttname"><a href="P__RD_8h.html">P_RD.h</a></div><div class="ttdoc">프로젝트 생성 시 생성되는 기본 헤더 파일</div></div>
+<div class="ttc" id="aRDMinimal_8h_html_aa3a7aed186515ed7eab08dffbba62805"><div class="ttname"><a href="RDMinimal_8h.html#aa3a7aed186515ed7eab08dffbba62805">EnumToString</a></div><div class="ttdeci">FString EnumToString(T Value)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8h_source.html#l00029">RDMinimal.h:29</a></div></div>
+<div class="ttc" id="aRDMinimal_8h_html_ae737190b385f96c30a3de0e4f9fd8dd6"><div class="ttname"><a href="RDMinimal_8h.html#ae737190b385f96c30a3de0e4f9fd8dd6">EnumToFullString</a></div><div class="ttdeci">FString EnumToFullString(T Value)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8h_source.html#l00036">RDMinimal.h:36</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

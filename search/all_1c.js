@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['흐름_0',['SRPG 전투 프레임워크 흐름',['../srpg_framework_page.html',1,'']]]
+  ['매크로란_0',['매크로란',['../gas_tag_page.html#tag_macro_section',1,'태그 매크로란?'],['../priamry_asset_type_page.html#primary_asset_type_macro_section',1,'Primary Asset Type 매크로란?']]],
+  ['매크로_1',['매크로',['../gas_tag_page.html',1,'GAS 태그 매크로'],['../priamry_asset_type_page.html',1,'Primary Asset Type 매크로']]]
 ];
