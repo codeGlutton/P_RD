@@ -8,7 +8,7 @@ if [ ! -d "$SVN_PATH" ]; then
   exit 1
 fi
 
-REV=$(svn info --show-item revision "$SVN_PATH" 2>/dev/null)
+REV=$(svnversion "$SVN_PATH" 2>/dev/null)
 
 if [ -z "$REV" ]; then
   echo "SVN revision 읽기 실패: $SVN_PATH"
