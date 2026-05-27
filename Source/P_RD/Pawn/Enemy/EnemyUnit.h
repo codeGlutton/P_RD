@@ -21,6 +21,9 @@ class P_RD_API AEnemyUnit : public AUnit
 {
 	GENERATED_BODY()
 
+public:
+	AEnemyUnit();
+
 	/* AUnit 상속 */
 public:
 	int32 GetDifficulty() const override;
