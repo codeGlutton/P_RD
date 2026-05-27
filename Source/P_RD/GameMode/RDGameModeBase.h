@@ -9,6 +9,8 @@
 
 #include "RDMinimal.h"
 #include "GameFramework/GameModeBase.h"
+#include "Blueprint/UserWidget.h"
+#include "Singleton/WorldSubsystem/WorldWidgetType.h"
 #include "RDGameModeBase.generated.h"
 
 class UUserPersistData;
@@ -21,12 +23,26 @@ UCLASS(abstract)
 class P_RD_API ARDGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
+
+public:
+	ARDGameModeBase();
+
+	/* AGameModeBase 상속 */
+protected:
+	void BeginPlay() override;
+
+protected:
+	virtual void InitializeCommonRoom();
+	virtual void InitializeRoom();
+	virtual void BeginRoom();
+
 public:
 	const UUserPersistData* GetUserPersistData() const;
 	const URunPersistData* GetRunPersistData() const;
 
 protected:
-	UPROPERTY(Category = "UI", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "MainUI"))
-	TSubclassOf<UUserWidget> mMainUI;
+	UPROPERTY(Category = "UI", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "HUDClass"))
+	TSubclassOf<UUserWidget> mHUDClass;
+	UPROPERTY(Category = "UI", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "WorldWidgets"))
+	TSet<EWorldWidgetType> mWorldWidgets;
 };
