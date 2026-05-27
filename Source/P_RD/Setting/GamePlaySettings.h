@@ -11,6 +11,7 @@
 #include "Engine/DeveloperSettings.h"
 
 #include "Setting/UnitTeamType.h"
+#include "Singleton/WorldSubsystem/WorldWidgetType.h"
 
 #include "GamePlaySettings.generated.h"
 
@@ -44,6 +45,10 @@ public:
      */
     UFUNCTION(Category = Team, BlueprintPure)
     static ETeamAttitude::Type GetAttitude(FGenericTeamId OwnId, FGenericTeamId OtherId);
+
+public:
+    UPROPERTY(Config, Category = UI, EditAnywhere, meta = (DisplayName = "WorldWidgetClasses", ArraySizeEnum = "EWorldWidgetType"))
+    TSubclassOf<UUserWidget> mWorldWidgetClasses[static_cast<uint8>(EWorldWidgetType::Count)];
 
 public:
     UPROPERTY(Config, Category = Title, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TitleRoomId"))
