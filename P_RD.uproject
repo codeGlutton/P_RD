@@ -13,7 +13,8 @@
 				"Engine",
 				"CoreUObject",
 				"GameplayAbilities",
-				"DataValidation"
+				"DataValidation",
+				"AIModule"
 			]
 		},
 		{

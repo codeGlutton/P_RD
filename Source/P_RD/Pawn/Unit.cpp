@@ -63,6 +63,16 @@ FGenericTeamId AUnit::GetGenericTeamId() const
 	return mTeamId;
 }
 
+ETileLayerFlag AUnit::GetTileLayer() const
+{
+	return ETileLayerFlag::Unit;
+}
+
+ETileLayerFlag AUnit::GetBlockFlags() const
+{
+	return ETileLayerFlag::Unit;
+}
+
 UAbilitySystemComponent* AUnit::GetAbilitySystemComponent() const
 {
 	return mAbilitySystemComp;
