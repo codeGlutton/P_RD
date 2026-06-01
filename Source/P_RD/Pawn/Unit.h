@@ -71,8 +71,10 @@ public:
 	void SetGenericTeamId(const FGenericTeamId& TeamID) override;
 	FGenericTeamId GetGenericTeamId() const override;
 
-	/* ITileActor 상속 */
+	/* ITileActor, ITileTargetable 상속 */
 public:
+	ETileLayerFlag GetTileLayer() const override;
+	ETileLayerFlag GetBlockFlags() const override;
 	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 public:
