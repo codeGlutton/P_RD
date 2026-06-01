@@ -17,4 +17,11 @@ UCLASS()
 class P_RD_API ATitleGameMode : public ARoomGameModeBase
 {
 	GENERATED_BODY()
+
+public:
+	ATitleGameMode();
+
+protected:
+	void InitializeCommonRoom() override;
+	void BeginRoom() override;
 };

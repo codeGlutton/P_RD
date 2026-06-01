@@ -1,9 +1,31 @@
 ﻿#include "Setting/GamePlaySettings.h"
 
+#include "UI/MsgNotifyWidget.h"
+#include "UI/SaveNotifyWidget.h"
+#include "UI/TopMenuBarWidget.h"
+
 UGamePlaySettings::UGamePlaySettings(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     // 기본 팀 파악용 Solver로 등록
     FGenericTeamId::SetAttitudeSolver(&UGamePlaySettings::GetAttitude);
+
+    mWorldWidgetClasses[StaticCast<uint8>(EWorldWidgetType::TopMenuBar)] = LoadClass<UUserWidget>(nullptr, TEXT("/Game/UI/WBP_TopMenuBar.WBP_TopMenuBar_C"));
+    if (mWorldWidgetClasses[StaticCast<uint8>(EWorldWidgetType::TopMenuBar)] == nullptr)
+    {
+        mWorldWidgetClasses[StaticCast<uint8>(EWorldWidgetType::TopMenuBar)] = UTopMenuBarWidget::StaticClass();
+    }
+
+    mWorldWidgetClasses[StaticCast<uint8>(EWorldWidgetType::MsgNotify)] = LoadClass<UUserWidget>(nullptr, TEXT("/Game/UI/WBP_MsgNotify.WBP_MsgNotify_C"));
+    if (mWorldWidgetClasses[StaticCast<uint8>(EWorldWidgetType::MsgNotify)] == nullptr)
+    {
+        mWorldWidgetClasses[StaticCast<uint8>(EWorldWidgetType::MsgNotify)] = UMsgNotifyWidget::StaticClass();
+    }
+
+    mWorldWidgetClasses[StaticCast<uint8>(EWorldWidgetType::SaveNotify)] = LoadClass<UUserWidget>(nullptr, TEXT("/Game/UI/WBP_SaveNotify.WBP_SaveNotify_C"));
+    if (mWorldWidgetClasses[StaticCast<uint8>(EWorldWidgetType::SaveNotify)] == nullptr)
+    {
+        mWorldWidgetClasses[StaticCast<uint8>(EWorldWidgetType::SaveNotify)] = USaveNotifyWidget::StaticClass();
+    }
 }
 
 FName UGamePlaySettings::GetCategoryName() const

@@ -17,6 +17,18 @@ UENUM(BlueprintType)
 enum class EViewportZOrderType : uint8
 {
 	None = 0,
+	Base = 1,
+	HUD = 2,
+	Notification = 3,
 	PopUp = 10,
+	Modal = 20,
+};
+
+/**
+ * @brief  뷰포트 Z 순서 타입을 실제 ZOrder 값으로 변환
+ */
+struct P_RD_API FViewportZOrder
+{
+	static int32 ToZOrder(EViewportZOrderType Type);
 };
 
