@@ -1,5 +1,5 @@
 ﻿ /**
- * @page srpg_framework_page SRPG SRPG 프레임워크 흐름
+ * @page srpg_framework_page SRPG 프레임워크 흐름
  * @tableofcontents
  *
  * @section srpg_framework_subsystem_image_section SRPG 싱글톤 객체

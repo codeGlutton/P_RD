@@ -17,10 +17,13 @@ APlayerUnit* UPlayerUnitRestorationSubsystem::SpawnPlayerUnit(UWorld* World) con
 	const UStaticPlayerUnitSpawnData* StaticPlayerUnitSpawnData = AssetManager->GetPrimaryAssetObject<UStaticPlayerUnitSpawnData>(GetRunMutableData()->GetPlayerUnitId());
 	AUnit* Unit = World->SpawnActor<AUnit>(StaticPlayerUnitSpawnData->mClass.Get());
 
+	UE_LOG(LogPlayerUnitRestoration, Log, TEXT("플레이어 유닛 스폰"));
+
 	return Cast<APlayerUnit>(Unit);
 }
 
 void UPlayerUnitRestorationSubsystem::RegisterPlayerUnit(APlayerUnit* PlayerUnit) const
 {
 	GetRunMutableData()->RegisterPlayerUnit(PlayerUnit);
+	UE_LOG(LogPlayerUnitRestoration, Log, TEXT("플레이어 유닛 초기화"));
 }

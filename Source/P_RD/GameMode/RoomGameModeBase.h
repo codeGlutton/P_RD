@@ -21,9 +21,14 @@ UCLASS(abstract)
 class P_RD_API ARoomGameModeBase : public ARDGameModeBase
 {
 	GENERATED_BODY()
+
+public:
+	ARoomGameModeBase();
 	
+	/* ARDGameModeBase 상속 */
 protected:
-	void BeginPlay() override;
+	void InitializeCommonRoom() override;
+	void BeginRoom() override;
 
 public:
 	void EndRun() const;
@@ -35,9 +40,7 @@ public:
 	void TransitionLoadedRoomAsync() const;
 
 protected:
-	void SaveRunAsync(FAsyncSaveGameToSlotDelegate Callback) const;
-
-protected:
+	void SaveRunWithUIAsync() const;
 	void RestorePlayerUnit();
 
 public:

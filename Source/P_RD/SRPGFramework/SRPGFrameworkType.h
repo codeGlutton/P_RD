@@ -34,18 +34,37 @@ public:
     int32 mIndexX = 0;
     UPROPERTY(Category = "TileTransform", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IndexY"))
     int32 mIndexY = 0;
+    
+public:
+    static const FTileTransform Zero;
 };
+
+inline const FTileTransform FTileTransform::Zero = FTileTransform();
 
 /**
  * @brief 방 종료 이유를 나타내는 열거형
  */
 UENUM(BlueprintType)
-enum class ESRPGRoomEndReason : uint8
+enum class ERoomEndReason : uint8
 {
     PlayerWin          UMETA(ToolTip = "플레이어 승리로 종료"),
     PlayerLose         UMETA(ToolTip = "플레이어 죽음으로 종료"),
 
     // @TODO 긴급 탈출 및 적 도망과 같은 로직을 추가할 경우, 항목 추가 필요
+};
+
+/**
+ * @brief 방 내 진행 단계 열거형
+ * @details
+ * 설정한 단계에 따라서 프레임워크의 다음 로직이 결정
+ */
+UENUM(BlueprintType)
+enum class ERoomPhase : uint8
+{
+    RoomInit           UMETA(ToolTip = "방 초기화"),
+    RoomStart          UMETA(ToolTip = "방 시작"),
+    RoomPlay           UMETA(ToolTip = "방 진행 중"),
+    RoomEnd            UMETA(ToolTip = "방 종료")
 };
 
 /**
@@ -58,19 +77,6 @@ enum class ESRPGTurnEndReason : uint8
     TurnAbort           UMETA(ToolTip = "강제적으로 능력에 의해 종료"),
     OwnerDeath          UMETA(ToolTip = "턴의 소유권을 가진 유닛 죽음으로 인한 종료"),
     TeamDeath           UMETA(ToolTip = "특정 팀 소멸으로 인한 종료"),
-};
-
-/**
- * @brief 방 내 진행 단계 열거형
- * @details
- * 설정한 단계에 따라서 프레임워크의 다음 로직이 결정
- */
-UENUM(BlueprintType)
-enum class ESRPGRoomPhase : uint8
-{
-    RoomStart          UMETA(ToolTip = "방 시작"),
-    RoomPlay           UMETA(ToolTip = "방 진행 중"),
-    RoomEnd            UMETA(ToolTip = "방 종료")
 };
 
 /**

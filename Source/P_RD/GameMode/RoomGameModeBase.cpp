@@ -5,27 +5,28 @@
 #include "Singleton/InstanceSubsystem/RoomTransitionSubsystem.h"
 #include "Singleton/InstanceSubsystem/PlayerUnitRestorationSubsystem.h"
 
-void ARoomGameModeBase::BeginPlay()
+#include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
+#include "Blueprint/UserWidget.h"
+
+ARoomGameModeBase::ARoomGameModeBase()
 {
-	Super::BeginPlay();
+	mWorldWidgets = { EWorldWidgetType::MsgNotify, EWorldWidgetType::SaveNotify, EWorldWidgetType::TopMenuBar };
+}
 
-	/* 1. 방 전환 즉시 저장 */
+void ARoomGameModeBase::InitializeCommonRoom()
+{
+	Super::InitializeCommonRoom();
 
-	// TODO : Save 중임을 표기하는 UI 생성
-	SaveRunAsync(FAsyncSaveGameToSlotDelegate::CreateLambda([](const FString& SlotName, int32 UserIndex, bool IsSuccussed) {
-		checkf(IsSuccussed == true, TEXT("방 전환 시점 저장 실패"));
-		// TODO : Save 중임을 표기하는 UI 제거
-		}));
-
-	// 2. 플레이어 복원 및 바인딩 (스킬, 인벤토리, 주사위 등등)
+	// 플레이어 복원
 	RestorePlayerUnit();
+}
 
-	// 3. 방 무관계 UI 생성
-	
-	// 4. 각 Room에 맞는 World Subsystem Init 타이밍
-	// + 메인 유닛 등록 및 배치
-	// + 방 타입 연관 유닛 생성
-	// + 방 타입 연관 UI 생성
+void ARoomGameModeBase::BeginRoom()
+{
+	Super::BeginRoom();
+
+	// 방 전환 즉시 저장
+	SaveRunWithUIAsync();
 }
 
 void ARoomGameModeBase::EndRun() const
@@ -53,9 +54,17 @@ void ARoomGameModeBase::TransitionLoadedRoomAsync() const
 	GetGameInstance()->GetSubsystem<URoomTransitionSubsystem>()->TransitLoadedRoomAsync();
 }
 
-void ARoomGameModeBase::SaveRunAsync(FAsyncSaveGameToSlotDelegate Callback) const
+void ARoomGameModeBase::SaveRunWithUIAsync() const
 {
-	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->SaveRunAsync(MoveTemp(Callback));
+	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
+	UUserWidget* SaveNotifyWidget = WorldWidgetSubsystem->GetWorldWidget(EWorldWidgetType::SaveNotify);
+	//SaveNotifyWidget->PlayAnimation();
+	// 시작 애니메이션
+	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->SaveRunAsync(FAsyncSaveGameToSlotDelegate::CreateLambda([SaveNotifyWidget](const FString& SlotName, int32 UserIndex, bool IsSuccussed) {
+		checkf(IsSuccussed == true, TEXT("방 전환 시점 저장 실패"));
+		//SaveNotifyWidget->PlayAnimation();
+		// 종료 애니메이션
+		}));
 }
 
 void ARoomGameModeBase::RestorePlayerUnit()
