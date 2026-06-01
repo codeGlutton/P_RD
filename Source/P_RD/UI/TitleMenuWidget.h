@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "PCGStage/RoomType.h"
 
 #include "TitleMenuWidget.generated.h"
 
@@ -23,6 +24,20 @@ class UWidgetSwitcher;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FTitleMenuEvent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTitleMenuCharacterEvent, int32, CharacterIndex);
+
+struct FTitleMapRoomView
+{
+	int32 mRow = INDEX_NONE;
+	int32 mColumn = INDEX_NONE;
+	ERoomType mType = ERoomType::None;
+	FText mTitle;
+	FText mDescription;
+	TArray<int32> mNextRoomColumns;
+	FVector2D mPositionOffsetRate = FVector2D::ZeroVector;
+	bool bSelectable = false;
+	bool bSelected = false;
+	bool bVisited = false;
+};
 
 /**
  * @brief Title HUD shell. It owns visual state and exposes events for game flow wiring.
@@ -43,6 +58,9 @@ public:
 
 	UFUNCTION(Category = UI, BlueprintCallable)
 	void OpenSettingsFromTopBar();
+
+	void SetRunControlsVisible(bool bVisible);
+	void SetMapRoomViews(const TArray<FTitleMapRoomView>& RoomViews, bool bHasActiveRun);
 
 public:
 	UPROPERTY(Category = UI, BlueprintAssignable)
@@ -87,7 +105,11 @@ private:
 	void RefreshSettingsText();
 	void RefreshMapText();
 	void RefreshLanguageText();
+	void RefreshMapGraph();
+	void RefreshMapRoomList();
+	void SetLanguage(bool bInUseKoreanLanguage);
 	void SelectCharacter(int32 CharacterIndex);
+	void SetWidgetVisible(UWidget* Widget, bool bVisible) const;
 	void SetText(UTextBlock* TextBlock, const FText& Text) const;
 	FText LocalizedText(const TCHAR* English, const TCHAR* Korean) const;
 
@@ -146,6 +168,8 @@ private:
 	ETitleScreen mCurrentScreen = ETitleScreen::Main;
 	ETitleScreen mPreviousScreenBeforeSettings = ETitleScreen::Main;
 	bool bUseKoreanLanguage = false;
+	bool bHasActiveRun = false;
+	TArray<FTitleMapRoomView> mMapRoomViews;
 
 private:
 	UPROPERTY(meta = (BindWidgetOptional))
