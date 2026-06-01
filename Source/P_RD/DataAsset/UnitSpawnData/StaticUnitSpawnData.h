@@ -26,7 +26,7 @@ class P_RD_API UStaticUnitSpawnData : public UPrimaryDataAsset
 
 #if WITH_EDITOR
 public:
-    void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+    EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
 #endif
 
 public:
@@ -36,13 +36,13 @@ public:
 public:
 	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillDatas", AssetBundles = BUNDLE_PAD))
 	TArray<TSoftObjectPtr<UStaticSkillData>> mSkillDatas;
-    UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "EquipmentDatas", AssetBundles = BUNDLE_PAD))
+    UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EquipmentDatas", AssetBundles = BUNDLE_PAD))
 	TArray<TSoftObjectPtr<UStaticEquipmentData>> mEquipmentDatas;
 
 public:
     UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Icon", AssetBundles = BUNDLE_UI))
     TSoftObjectPtr<UTexture2D> mIcon;
-    UPROPERTY(Category = "UI", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "Name"))
+    UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Name"))
     FText mName;
     UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Description", MultiLine = true))
     FText mDescription;

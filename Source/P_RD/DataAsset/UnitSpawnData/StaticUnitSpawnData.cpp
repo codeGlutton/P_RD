@@ -1,15 +1,17 @@
 ﻿#include "DataAsset/UnitSpawnData/StaticUnitSpawnData.h"
 
-#include "Pawn/Unit.h"
+#include "Misc/DataValidation.h"
 
 #if WITH_EDITOR
-void UStaticUnitSpawnData::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+EDataValidationResult UStaticUnitSpawnData::IsDataValid(FDataValidationContext& Context) const
 {
-	Super::PostEditChangeProperty(PropertyChangedEvent);
+	Super::IsDataValid(Context);
 
-	if (PropertyChangedEvent.Property && PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(UStaticUnitSpawnData, mClass))
+	if (mClass == nullptr || mName.IsEmpty() == true)
 	{
-		mName = GetDefault<AUnit>(mClass.Get())->GetUnitDisplayName();
+		Context.AddError(FText::FromString(TEXT("액터 클래스 혹은 이름 미지정")));
+		return EDataValidationResult::Invalid;
 	}
+	return EDataValidationResult::Valid;
 }
 #endif

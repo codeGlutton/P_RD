@@ -2,6 +2,8 @@
 #include "GAS/Attribute/UnitAttributeSet.h"
 #include "Setting/UnitTeamType.h"
 
+#include "DataAsset/UnitSpawnData/StaticUnitSpawnData.h"
+
 UScriptStruct* FUnitSnapshotTargetData::GetScriptStruct() const
 {
 	return FUnitSnapshotTargetData::StaticStruct();
@@ -78,11 +80,11 @@ UAbilitySystemComponent* AUnit::GetAbilitySystemComponent() const
 	return mAbilitySystemComp;
 }
 
-void AUnit::OnBeginStage()
+void AUnit::OnBeginPlayRoom()
 {
 }
 
-void AUnit::OnEndStage()
+void AUnit::OnEndPlayRoom()
 {
 }
 
@@ -107,6 +109,11 @@ FUnitSnapshotTargetData* AUnit::MakeSnapshotTargetData() const
 	return TargetData;
 }
 
+void AUnit::SetStaticSpawnData(const UStaticUnitSpawnData* StaticUnitSpawnData)
+{
+	mStaticUnitSpawnData = StaticUnitSpawnData;
+}
+
 UUnitAttributeSet* AUnit::GetUnitAttributeSet() const
 {
 	return mUnitAttributeSet;
@@ -114,12 +121,16 @@ UUnitAttributeSet* AUnit::GetUnitAttributeSet() const
 
 FName AUnit::GetUnitName() const
 {
-	FString Key = mUnitDisplayName.ToString();
+	checkf(mStaticUnitSpawnData != nullptr, TEXT("유닛 스폰 데이터 nullptr"));
+
+	FString Key = mStaticUnitSpawnData->mName.ToString();
 	Key.RemoveSpacesInline();
 	return *Key;
 }
 
 const FText& AUnit::GetUnitDisplayName() const
 {
-	return mUnitDisplayName;
+	checkf(mStaticUnitSpawnData != nullptr, TEXT("유닛 스폰 데이터 nullptr"));
+
+	return mStaticUnitSpawnData->mName;
 }

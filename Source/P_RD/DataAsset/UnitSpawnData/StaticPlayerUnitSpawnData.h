@@ -30,6 +30,7 @@ public:
 #if WITH_EDITOR
 public:
 	void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+	EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
 #endif
 
 public:
@@ -38,7 +39,7 @@ public:
 
 public:
 	UPROPERTY(Category = "Spawn", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "JobType"))
-	EPlayerJobType mJobType;
+	EPlayerJobType mJobType = EPlayerJobType::None;
 
 public:
 	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceDatas", AssetBundles = BUNDLE_PAD))

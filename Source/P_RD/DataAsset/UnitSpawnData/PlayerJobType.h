@@ -18,7 +18,7 @@ enum class EPlayerJobType : uint8
 {
 	/* 확정 직업 */ 
 
-	Knight,
+	Knight = 0,
 
 	/* 아래는 수정될 수 있는 임시 직업 */
 
@@ -26,4 +26,5 @@ enum class EPlayerJobType : uint8
 	Mage,
 
 	Count			UMETA(Hidden),
+	None = 0xFF		UMETA(Hidden),
 };

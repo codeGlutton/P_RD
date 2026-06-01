@@ -18,8 +18,8 @@
 #include "Unit.generated.h"
 
 class UUnitAttributeSet;
-class UUnitSaveGame;
 class UPackageMap;
+class UStaticUnitSpawnData;
 
 USTRUCT(Blueprintable)
 struct FUnitSnapshotTargetData : public FGameplayAbilityTargetData
@@ -78,14 +78,17 @@ public:
 	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 public:
-	virtual void OnBeginStage();
-	virtual void OnEndStage();
+	virtual void OnBeginPlayRoom();
+	virtual void OnEndPlayRoom();
 
 public:
 	/**
 	 * 유닛의 현재 스탯 스냅샷을 찍어 타겟 정보로 반환하는 함수
 	 */
 	virtual FUnitSnapshotTargetData* MakeSnapshotTargetData() const;
+
+public:
+	void SetStaticSpawnData(const UStaticUnitSpawnData* StaticUnitSpawnData);
 
 public:
 	UUnitAttributeSet* GetUnitAttributeSet() const;
@@ -103,9 +106,8 @@ private:
 	TObjectPtr<UUnitAttributeSet> mUnitAttributeSet;
 
 protected:
-	// @brief UI 표기 이름
-	UPROPERTY(Category = Unit, EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "UnitDisplayName"))
-	FText mUnitDisplayName;
+	UPROPERTY(Category = Spawn, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "StaticUnitSpawnData"))
+	TObjectPtr<const UStaticUnitSpawnData> mStaticUnitSpawnData;
 
 private:
 	// @brief 팀 ID
