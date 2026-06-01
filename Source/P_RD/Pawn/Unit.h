@@ -93,7 +93,8 @@ public:
 	FName GetUnitName() const;
 	const FText& GetUnitDisplayName() const;
 
-	virtual int32 GetDifficulty() const PURE_VIRTUAL(FUnitSnapshotTargetData::GetDifficulty, return 0;)
+	virtual int32 GetDifficulty() const PURE_VIRTUAL(AUnit::GetDifficulty, return 0;)
+	virtual bool IsPlayerUnit() const PURE_VIRTUAL(AUnit::IsPlayerUnit, return false;)
 
 private:
 	UPROPERTY(Category = GAS, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "AbilitySystemComp"))

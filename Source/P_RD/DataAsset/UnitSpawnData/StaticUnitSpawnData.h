@@ -24,6 +24,11 @@ class P_RD_API UStaticUnitSpawnData : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 
+#if WITH_EDITOR
+public:
+    void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+
 public:
 	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Class", AssetBundles = BUNDLE_ACTOR))
 	TSoftClassPtr<AUnit> mClass;
@@ -35,9 +40,9 @@ public:
 	TArray<TSoftObjectPtr<UStaticEquipmentData>> mEquipmentDatas;
 
 public:
-    UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Portrait", AssetBundles = BUNDLE_UI))
-    TSoftObjectPtr<UTexture2D> mPortrait;
-    UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Name"))
+    UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Icon", AssetBundles = BUNDLE_UI))
+    TSoftObjectPtr<UTexture2D> mIcon;
+    UPROPERTY(Category = "UI", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "Name"))
     FText mName;
     UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Description", MultiLine = true))
     FText mDescription;

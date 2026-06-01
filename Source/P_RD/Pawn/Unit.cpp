@@ -39,7 +39,7 @@ void AUnit::PostInitializeComponents()
 
 #ifndef WITH_EDITOR
 	// Difficulty값에 따라 ASC Attribute 초기화
-	IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->InitAttributeSetDefaults(mAbilitySystemComp, GetRowKey(), mLevel, true);
+	IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->InitAttributeSetDefaults(mAbilitySystemComp, GetUnitName(), GetDifficulty(), true);
 #endif
 }
 
