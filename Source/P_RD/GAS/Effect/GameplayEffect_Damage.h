@@ -1,0 +1,18 @@
+﻿// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "GameplayEffect_Base.h"
+#include "GameplayEffect_Damage.generated.h"
+
+/**
+ * 
+ */
+UCLASS()
+class P_RD_API UGameplayEffect_Damage : public UGameplayEffect_Base
+{
+	GENERATED_BODY()
+
+public:
+	UGameplayEffect_Damage();
+};
