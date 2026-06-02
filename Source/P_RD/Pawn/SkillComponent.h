@@ -38,10 +38,10 @@ protected:
 
 	/**
 	* @brief 액터의 ASC
-	* 편하게 사용하기 위해 SoftPtr로 참조
+	* 편하게 사용하기 위해 WeakPtr로 참조
 	*/
 	UPROPERTY()
-	TSoftObjectPtr<UAbilitySystemComponent> mAbilitySystemComp;
+	TWeakObjectPtr<UAbilitySystemComponent> mAbilitySystemComp;
 
 protected:
 	// Called when the game starts
