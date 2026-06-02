@@ -41,7 +41,7 @@ void AUnit::PostInitializeComponents()
 
 #ifndef WITH_EDITOR
 	// Difficulty값에 따라 ASC Attribute 초기화
-	IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->InitAttributeSetDefaults(mAbilitySystemComp, GetUnitName(), GetDifficulty(), true);
+	IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->InitAttributeSetDefaults(mAbilitySystemComp, GetUnitKeyName(), GetDifficulty(), true);
 #endif
 }
 
@@ -117,6 +117,11 @@ void AUnit::SetStaticSpawnData(const UStaticUnitSpawnData* StaticUnitSpawnData)
 UUnitAttributeSet* AUnit::GetUnitAttributeSet() const
 {
 	return mUnitAttributeSet;
+}
+
+bool AUnit::IsDead() const
+{
+	return mAbilitySystemComp->HasMatchingGameplayTag(EffectTags::GameplayEffect_ActorState_Dead);
 }
 
 FName AUnit::GetUnitKeyName() const
