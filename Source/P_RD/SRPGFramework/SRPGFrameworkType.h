@@ -10,13 +10,33 @@
 #include "RDMinimal.h"
 #include "SRPGFrameworkType.generated.h"
 
+/**
+ * @brief 타일에 배치된 액터가 바라보는 방향
+ */
 UENUM(BlueprintType)
-enum class ETileRotation : uint8
+enum class ETileActorDirection : uint8
 {
     Forward = 0,
     Right,
     Backward,
     Left
+};
+
+/**
+ * @brief 타일 맵 상 인덱스 좌표
+ */
+USTRUCT(BlueprintType)
+struct FTileIndex
+{
+    GENERATED_BODY()
+
+public:
+    // @brief 가로(X) 방향 인덱스
+    UPROPERTY(Category = "TileIndex", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "X"))
+    int32 mX = 0;
+    // @brief 세로(Y) 방향 인덱스
+    UPROPERTY(Category = "TileIndex", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Y"))
+    int32 mY = 0;
 };
 
 /**
@@ -28,18 +48,43 @@ struct FTileTransform
     GENERATED_BODY()
 
 public:
+    // @brief 타일 인덱스 좌표
+    UPROPERTY(Category = "TileTransform", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Index"))
+    FTileIndex mIndex;
+    // @brief 액터가 바라보는 방향
     UPROPERTY(Category = "TileTransform", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Direction"))
-    ETileRotation mDirection = ETileRotation::Forward;
-    UPROPERTY(Category = "TileTransform", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IndexX"))
-    int32 mIndexX = 0;
-    UPROPERTY(Category = "TileTransform", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IndexY"))
-    int32 mIndexY = 0;
-    
+    ETileActorDirection mDirection = ETileActorDirection::Forward;
+
 public:
     static const FTileTransform Zero;
 };
 
 inline const FTileTransform FTileTransform::Zero = FTileTransform();
+
+/**
+ * @brief 조준 범위 패턴
+ */
+UENUM(BlueprintType)
+enum class EAimPattern : uint8
+{
+    Single      UMETA(ToolTip = "기준 타일 한 칸"),
+    Cross       UMETA(ToolTip = "기준에서 4방향 직선"),
+    Star        UMETA(ToolTip = "기준에서 8방향 직선"),
+    Square      UMETA(ToolTip = "기준 중심 사각형 범위 전체"),
+};
+
+/**
+ * @brief 영향 범위 패턴
+ */
+UENUM(BlueprintType)
+enum class EEffectPattern : uint8
+{
+    Single      UMETA(ToolTip = "타겟 타일 한 칸"),
+    Cross       UMETA(ToolTip = "타겟에서 4방향 직선"),
+    Star        UMETA(ToolTip = "타겟에서 8방향 직선"),
+    Square      UMETA(ToolTip = "타겟 중심 사각형 범위 전체"),
+    Beam        UMETA(ToolTip = "시전자에서 타겟 방향으로 뻗는 직선"),
+};
 
 /**
  * @brief 방 종료 이유를 나타내는 열거형

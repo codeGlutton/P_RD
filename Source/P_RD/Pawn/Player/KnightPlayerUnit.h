@@ -20,4 +20,7 @@ UCLASS()
 class P_RD_API AKnightPlayerUnit : public APlayerUnit
 {
 	GENERATED_BODY()
+
+public:
+	AKnightPlayerUnit();
 };
