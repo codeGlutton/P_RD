@@ -10,6 +10,7 @@
 #include "GAS/GASMinimal.h"
 
 #include "Pawn/Unit.h"
+#include "DataAsset/UnitSpawnData/PlayerJobType.h"
 
 #include "PlayerUnit.generated.h"
 
@@ -36,10 +37,16 @@ protected:
 	UUserWidget* GetInfoPanel() const override;
 
 public:
+	EPlayerJobType GetPlayerJobType() const;
 	int32 GetPlayerLevel() const;
 	int32 GetDifficulty() const override;
+	bool IsPlayerUnit() const override;
 
 private:
 	UPROPERTY(Category = GAS, VisibleAnywhere, meta = (DisplayName = "LevelAttributeSet"))
 	TObjectPtr<ULevelAttributeSet> mLevelAttributeSet;
+
+protected:
+	UPROPERTY(Category = Unit, EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "JobType"))
+	EPlayerJobType mJobType;
 };

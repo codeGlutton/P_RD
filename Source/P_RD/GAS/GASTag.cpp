@@ -12,8 +12,8 @@ namespace AbilityTags
 {
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_LevelUp,						"GameplayAbility.LevelUp");
 
-	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartStage,		"GameplayAbility.Passive.OnStartStage");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnEndStage,			"GameplayAbility.Passive.OnEndStage");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartRoom,			"GameplayAbility.Passive.OnStartRoom");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnEndRoom,			"GameplayAbility.Passive.OnEndRoom");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartTurn,			"GameplayAbility.Passive.OnStartTurn");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnEndTurn,			"GameplayAbility.Passive.OnEndTurn");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartRollingDice,	"GameplayAbility.Passive.OnStartRollingDice");
