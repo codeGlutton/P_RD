@@ -55,8 +55,8 @@ public:
     FPrimaryAssetId mTitleRoomId;
 
 public:
-    UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TitleGameMode", ConfigRestartRequired = true))
-    TSoftClassPtr<AGameModeBase> mTitleGameMode;
+    UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "FrontendGameMode", ConfigRestartRequired = true))
+    TSoftClassPtr<AGameModeBase> mFrontendGameMode;
     UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatGameMode", ConfigRestartRequired = true))
     TSoftClassPtr<AGameModeBase> mCombatGameMode;
     UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "ShopGameMode", ConfigRestartRequired = true))
