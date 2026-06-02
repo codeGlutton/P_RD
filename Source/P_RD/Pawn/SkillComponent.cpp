@@ -35,12 +35,22 @@ void USkillComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 
 bool USkillComponent::GetSkillData(int In_SkillIndex, TSoftObjectPtr<UStaticSkillData>& Out_SkillData)
 {
-	return false;
+	if (!mSkillData.IsValidIndex(In_SkillIndex))
+		return false;
+
+	Out_SkillData = mSkillData[In_SkillIndex];
+
+	return true;
 }
 
 bool USkillComponent::SetSkillData(int SkillIndex, TSoftObjectPtr<UStaticSkillData> SkillData)
 {
-	return false;
+	if (!mSkillData.IsValidIndex(SkillIndex))
+		return false;
+
+	mSkillData[SkillIndex] = SkillData;
+
+	return true;
 }
 
 bool USkillComponent::CalculatePredictedSales(int32 In_SkillIndex, TArray<TPair<FString, float>>& Out_TagValue)

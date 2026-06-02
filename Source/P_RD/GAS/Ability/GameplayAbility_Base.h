@@ -23,16 +23,30 @@ public:
 	UGameplayAbility_Base();
 	
 protected:
+	/**
+	* @brief 주사위 소모값
+	* @details
+	* 
+	*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ability", meta = (AllowPrivateAccess = "true"))
 	float		mDiceCost;
 
 	TSubclassOf<UGameplayEffect>	mDiceCostClass;
 
+	/**
+	* @brief 주사위 눈금
+	* @details
+	*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ability", meta = (AllowPrivateAccess = "true"))
 	float		mDiceDots;
 
 	TSubclassOf<UGameplayEffect>	mDiceDotsClass;
 
+	/**
+	* @brief 어빌리티 사용하고 있는지 여부
+	* @details
+	* 현재 뚜렷한 사용처는 없음
+	*/
 	bool mAbilityActive = false;
 
 protected:

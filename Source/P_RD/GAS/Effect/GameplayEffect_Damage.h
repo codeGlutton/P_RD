@@ -1,4 +1,9 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿/*****************************************************************//**
+ * @file   GameplayAbility_Base.h
+ * @brief  스킬 데미지 헤더
+ * @author 김준형
+ * @date   2026-06-01
+ *********************************************************************/
 
 #pragma once
 

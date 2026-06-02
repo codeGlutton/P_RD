@@ -87,7 +87,7 @@ public:
 	/**
 	* @details 스킬의 인덱스와 타일을 입력받으면 스킬 사용
 	* @ SkillIndex : 사용할 스킬의 인덱스
-	* @ Tiles : 스킬 효과를 적용할 타일들
+	* @ UnitArray : 사용할 대상
 	* @return bool : 실패 시 false 반환
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Skill")
