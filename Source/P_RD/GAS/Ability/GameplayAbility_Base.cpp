@@ -64,14 +64,17 @@ void UGameplayAbility_Base::ActivateAbility(const FGameplayAbilitySpecHandle Han
 	{
 		AActor* TargetActor = TargetActorPtr.Get();
 		
-		UE_LOG(LogTemp, Warning, TEXT("Actor %s"), *TargetActor->GetActorLabel());
-
 		// 유효하지 않은 액터 시 종료
-		if (!TargetActor)
+		if (!IsValid(TargetActor))
 		{
+			UE_LOG(LogTemp, Warning, TEXT("TargetActor is not Valid"));
+
 			EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 			return;
 		}
+
+		UE_LOG(LogTemp, Warning, TEXT("Actor %s"), *TargetActor->GetActorLabel());
+
 
 		// 피해 주기 테스트 ===========================================
 #pragma region Damage Test
