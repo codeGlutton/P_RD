@@ -51,7 +51,7 @@ void AUnit::OnConstruction(const FTransform& Transform)
 
 #ifdef WITH_EDITOR
 	// Difficulty값에 따라 ASC Attribute 초기화 (에디터 환경 내 Difficulty 변경 테스트를 위해 Construction 위치)
-	IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->InitAttributeSetDefaults(mAbilitySystemComp, GetUnitName(), GetDifficulty(), true);
+	IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->InitAttributeSetDefaults(mAbilitySystemComp, GetUnitKeyName(), GetDifficulty(), true);
 #endif
 }
 
@@ -119,18 +119,16 @@ UUnitAttributeSet* AUnit::GetUnitAttributeSet() const
 	return mUnitAttributeSet;
 }
 
-FName AUnit::GetUnitName() const
+FName AUnit::GetUnitKeyName() const
 {
 	checkf(mStaticUnitSpawnData != nullptr, TEXT("유닛 스폰 데이터 nullptr"));
 
-	FString Key = mStaticUnitSpawnData->mName.ToString();
-	Key.RemoveSpacesInline();
-	return *Key;
+	return mStaticUnitSpawnData->GetKeyName();
 }
 
 const FText& AUnit::GetUnitDisplayName() const
 {
 	checkf(mStaticUnitSpawnData != nullptr, TEXT("유닛 스폰 데이터 nullptr"));
 
-	return mStaticUnitSpawnData->mName;
+	return mStaticUnitSpawnData->mDisplayName;
 }

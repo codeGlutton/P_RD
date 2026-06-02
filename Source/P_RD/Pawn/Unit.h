@@ -93,7 +93,7 @@ public:
 public:
 	UUnitAttributeSet* GetUnitAttributeSet() const;
 
-	FName GetUnitName() const;
+	FName GetUnitKeyName() const;
 	const FText& GetUnitDisplayName() const;
 
 	virtual int32 GetDifficulty() const PURE_VIRTUAL(AUnit::GetDifficulty, return 0;)

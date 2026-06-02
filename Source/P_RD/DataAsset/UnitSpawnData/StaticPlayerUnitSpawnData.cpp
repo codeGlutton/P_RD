@@ -15,7 +15,7 @@ void UStaticPlayerUnitSpawnData::PostEditChangeProperty(FPropertyChangedEvent& P
 
     if (PropertyChangedEvent.Property && PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(UStaticUnitSpawnData, mClass))
     {
-        if (mClass == nullptr)
+        if (mClass.IsNull() == true)
         {
             mJobType = EPlayerJobType::None;
         }
@@ -28,14 +28,16 @@ void UStaticPlayerUnitSpawnData::PostEditChangeProperty(FPropertyChangedEvent& P
 
 EDataValidationResult UStaticPlayerUnitSpawnData::IsDataValid(FDataValidationContext& Context) const
 {
-    Super::IsDataValid(Context);
+    EDataValidationResult SuperResult = Super::IsDataValid(Context);
+    EDataValidationResult ThisResult = EDataValidationResult::Valid;
 
     if (mJobType >= EPlayerJobType::Count)
     {
         Context.AddError(FText::FromString(TEXT("잘못된 직업 타입")));
-        return EDataValidationResult::Invalid;
+        ThisResult = EDataValidationResult::Invalid;
     }
-    return EDataValidationResult::Valid;
+
+    return CombineDataValidationResults(SuperResult, ThisResult);
 }
 #endif
 
@@ -44,7 +46,7 @@ float UStaticPlayerUnitSpawnData::GetDefaultMaxHP(int32 Difficulty) const
     auto MaxHPArray = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->GetAttributeSetValues(
         UPlayerUnitAttributeSet::StaticClass(), 
         UPlayerUnitAttributeSet::GetMaxHPAttribute().GetUProperty(), 
-        GetDefault<AUnit>(mClass.Get())->GetUnitName()
+        GetKeyName()
     );
 
     if (MaxHPArray.IsValidIndex(Difficulty) == false)
@@ -59,7 +61,7 @@ float UStaticPlayerUnitSpawnData::GetDefaultMoney(int32 Difficulty) const
     auto MoneyArray = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->GetAttributeSetValues(
         UPlayerUnitAttributeSet::StaticClass(),
         UPlayerUnitAttributeSet::GetMoneyAttribute().GetUProperty(),
-        GetDefault<AUnit>(mClass.Get())->GetUnitName()
+        GetKeyName()
     );
 
     if (MoneyArray.IsValidIndex(Difficulty) == false)

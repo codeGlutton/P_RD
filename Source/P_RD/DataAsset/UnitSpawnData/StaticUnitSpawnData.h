@@ -30,6 +30,9 @@ public:
 #endif
 
 public:
+    FName GetKeyName() const;
+
+public:
 	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Class", AssetBundles = BUNDLE_ACTOR))
 	TSoftClassPtr<AUnit> mClass;
 
@@ -42,8 +45,8 @@ public:
 public:
     UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Icon", AssetBundles = BUNDLE_UI))
     TSoftObjectPtr<UTexture2D> mIcon;
-    UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Name"))
-    FText mName;
+    UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DisplayName"))
+    FText mDisplayName;
     UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Description", MultiLine = true))
     FText mDescription;
 };
