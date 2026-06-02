@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <asset>
+    <contributor>
+      <author>Blender User</author>
+      <authoring_tool>Blender 2.83.0 commit date:2020-06-03, commit time:14:38, hash:211b6c29f771</authoring_tool>
+    </contributor>
+    <created>2020-06-19T00:08:08</created>
+    <modified>2020-06-19T00:08:08</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>
+  <library_images/>
+  <library_geometries>
+    <geometry id="Solid_006-mesh" name="Solid.006">
+      <mesh>
+        <source id="Solid_006-mesh-positions">
+          <float_array id="Solid_006-mesh-positions-array" count="36">0.616783 0.5773503 0.5135532 0.616783 -0.5773503 0.5135532 0.601777 0 -0.9737035 -0.6167805 0.5773503 -0.5135517 -0.6017768 0 0.9737035 -0.6167805 -0.5773503 -0.5135517 0.3173919 0.9341723 0.06379854 -0.3173894 0.9341723 -0.06379699 0.3173919 -0.9341723 0.06379854 -0.3173894 -0.9341723 -0.06379699 0.8947421 0 0.4206207 -0.8947396 0 -0.4206191</float_array>
+          <technique_common>
+            <accessor source="#Solid_006-mesh-positions-array" count="12" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Solid_006-mesh-normals">
+          <float_array id="Solid_006-mesh-normals-array" count="60">-0.8652535 0.4516069 0.2176871 0.8652534 0.451607 -0.2176873 -0.3170861 0 -0.9483968 0.3532698 0 0.9355215 -0.1345317 0.7307223 0.6692879 -0.8652535 -0.4516069 0.2176871 0.112457 -0.7535622 -0.6476863 0.112457 0.7535622 -0.6476862 -0.1124573 -0.7535619 0.6476866 0.8652534 -0.451607 -0.2176873 -0.8660191 0.4657266 0.1819603 0.8660193 0.4657261 -0.1819615 -0.3532715 0 -0.935521 0.3170861 0 0.9483968 -0.1124573 0.7535619 0.6476866 -0.8660193 -0.4657266 0.1819603 0.1345317 -0.7307222 -0.6692879 0.1345317 0.7307222 -0.6692879 -0.1345317 -0.7307223 0.6692879 0.8660193 -0.4657261 -0.1819615</float_array>
+          <technique_common>
+            <accessor source="#Solid_006-mesh-normals-array" count="20" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Solid_006-mesh-map">
+          <float_array id="Solid_006-mesh-map-array" count="120">0.2512462 0.4545455 0.2512474 0.6363638 0.2050974 0.5454546 0.2051005 0.9090909 0.2050994 0.7272728 0.2512493 0.8181819 0.2050974 0.5454546 0.2050977 0.3636363 0.2512462 0.4545455 0.2512491 1 0.2512493 0.8181819 0.4563469 0.9090913 0.2512474 0.6363638 0.2512493 0.8181819 0.2050994 0.7272728 0.2512479 0.2727273 0.2512462 0.4545455 0.2050977 0.3636363 0.2051001 0.1818181 0.2050977 0.3636363 1.06611e-6 0.2727251 0.2050974 0.5454546 0.2050994 0.7272728 5.57285e-7 0.6363654 0.2512479 0.2727273 0.2512503 0.09090906 0.4563469 0.1818208 0.2051001 0.1818181 0.2051017 0 0.2512503 0.09090906 0.2512462 0.4545455 0.4563449 0.5454534 0.2512474 0.6363638 0.2051005 0.9090909 1.86569e-6 0.8181828 0.2050994 0.7272728 0.2050974 0.5454546 0 0.4545452 0.2050977 0.3636363 0.2512491 1 0.2051005 0.9090909 0.2512493 0.8181819 0.2512474 0.6363638 0.4563462 0.7272708 0.2512493 0.8181819 0.2512479 0.2727273 0.456345 0.3636382 0.2512462 0.4545455 0.2051001 0.1818181 0.2512479 0.2727273 0.2050977 0.3636363 0.2050974 0.5454546 0.2512474 0.6363638 0.2050994 0.7272728 0.2512479 0.2727273 0.2051001 0.1818181 0.2512503 0.09090906 0.2051001 0.1818181 2.78643e-6 0.09090757 0.2051017 0</float_array>
+          <technique_common>
+            <accessor source="#Solid_006-mesh-map-array" count="60" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="Solid_006-mesh-vertices">
+          <input semantic="POSITION" source="#Solid_006-mesh-positions"/>
+        </vertices>
+        <triangles count="20">
+          <input semantic="VERTEX" source="#Solid_006-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#Solid_006-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#Solid_006-mesh-map" offset="2" set="0"/>
+          <p>11 0 0 7 0 1 3 0 2 10 1 3 6 1 4 0 1 5 3 2 6 5 2 7 11 2 8 1 3 9 0 3 10 4 3 11 7 4 12 0 4 13 6 4 14 9 5 15 11 5 16 5 5 17 8 6 18 5 6 19 2 6 20 3 7 21 6 7 22 2 7 23 9 8 24 1 8 25 4 8 26 8 9 27 10 9 28 1 9 29 11 10 30 4 10 31 7 10 32 10 11 33 2 11 34 6 11 35 3 12 36 2 12 37 5 12 38 1 13 39 10 13 40 0 13 41 7 14 42 4 14 43 0 14 44 9 15 45 4 15 46 11 15 47 8 16 48 9 16 49 5 16 50 3 17 51 7 17 52 6 17 53 9 18 54 8 18 55 1 18 56 8 19 57 2 19 58 10 19 59</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="Scene" name="Scene">
+      <node id="d10" name="d10" type="NODE">
+        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <instance_geometry url="#Solid_006-mesh" name="d10"/>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#Scene"/>
+  </scene>
+</COLLADA>
