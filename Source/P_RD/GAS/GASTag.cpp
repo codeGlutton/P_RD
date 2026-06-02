@@ -37,6 +37,7 @@ namespace EffectTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_Cost,							"GameplayEffect.Cost");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_Cost_PassiveStack,			"GameplayEffect.Cost.PassiveStack");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_Cooldown,						"GameplayEffect.Cooldown");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_ActorState_Dead,				"GameplayEffect.ActorState.Dead");
 }
 
 namespace CueTags

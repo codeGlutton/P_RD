@@ -6,9 +6,9 @@
 
 #include "Pawn/Player/PlayerUnit.h"
 
+#if WITH_EDITOR
 #include "Misc/DataValidation.h"
 
-#if WITH_EDITOR
 void UStaticPlayerUnitSpawnData::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
     Super::PostEditChangeProperty(PropertyChangedEvent);
