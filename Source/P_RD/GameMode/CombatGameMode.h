@@ -17,4 +17,8 @@ UCLASS()
 class P_RD_API ACombatGameMode : public ARoomGameModeBase
 {
 	GENERATED_BODY()
+
+protected:
+	void InitializeRoom() override;
+	void BeginRoom() override;
 };

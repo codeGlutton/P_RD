@@ -42,10 +42,10 @@ public:
 inline const FTileTransform FTileTransform::Zero = FTileTransform();
 
 /**
- * @brief 방 종료 이유를 나타내는 열거형
+ * @brief 전투 결과를 나타내는 열거형
  */
 UENUM(BlueprintType)
-enum class ERoomEndReason : uint8
+enum class ECombatResult : uint8
 {
     PlayerWin          UMETA(ToolTip = "플레이어 승리로 종료"),
     PlayerLose         UMETA(ToolTip = "플레이어 죽음으로 종료"),
@@ -54,50 +54,61 @@ enum class ERoomEndReason : uint8
 };
 
 /**
- * @brief 방 내 진행 단계 열거형
- * @details
- * 설정한 단계에 따라서 프레임워크의 다음 로직이 결정
+ * @brief 전투 방 내 진행 단계 열거형
  */
 UENUM(BlueprintType)
-enum class ERoomPhase : uint8
+enum class ECombatRoomPhase : uint8
 {
-    RoomInit           UMETA(ToolTip = "방 초기화"),
-    RoomStart          UMETA(ToolTip = "방 시작"),
-    RoomPlay           UMETA(ToolTip = "방 진행 중"),
-    RoomEnd            UMETA(ToolTip = "방 종료")
+    None               UMETA(Hidden),
+    CombatInit         UMETA(ToolTip = "전투 초기화"),
+    CombatStart        UMETA(ToolTip = "전투 시작"),
+    CombatPlay         UMETA(ToolTip = "전투 진행 중"),
+    CombatAbort        UMETA(ToolTip = "전투 진행 중단"),
+    CombatEnd          UMETA(ToolTip = "전투 종료"),
 };
 
 /**
- * @brief 턴 종료 이유를 나타내는 열거형
+ * @brief 턴 결과를 나타내는 열거형
  */
 UENUM(BlueprintType)
-enum class ESRPGTurnEndReason : uint8
+enum class ESRPGTurnResult : uint8
 {
-    TurnFinish          UMETA(ToolTip = "가능한 모든 행동 수행 이후, 정상 종료"),
-    TurnAbort           UMETA(ToolTip = "강제적으로 능력에 의해 종료"),
-    OwnerDeath          UMETA(ToolTip = "턴의 소유권을 가진 유닛 죽음으로 인한 종료"),
-    TeamDeath           UMETA(ToolTip = "특정 팀 소멸으로 인한 종료"),
+    Succeeded          UMETA(ToolTip = "정상 종료"),
+    Cancelled          UMETA(ToolTip = "중단"),
 };
 
 /**
  * @brief 턴 내 진행 단계 열거형
- * @details
- * 설정한 단계에 따라서 턴의 다음 로직이 결정
  */
 UENUM(BlueprintType)
 enum class ESRPGTurnPhase : uint8
 {
+    None                UMETA(Hidden),
+    TurnInit            UMETA(ToolTip = "턴 초기화"),
     TurnStart           UMETA(ToolTip = "턴 시작"),
     ActionSelect        UMETA(ToolTip = "액션 선택 중"),
     ActionPlay          UMETA(ToolTip = "액션 진행 중"),
+    TurnAbort           UMETA(ToolTip = "턴 진행 중단"),
     TurnEnd             UMETA(ToolTip = "턴 종료"),
 };
 
 UENUM(BlueprintType)
 enum class ESRPGActionResult : uint8
 {
-    Finish              UMETA(ToolTip = "액션 정상 종료"),
-    Abort               UMETA(ToolTip = "액션 중지"),
-    Ongoing             UMETA(ToolTip = "액션 진행 중"),
+    Succeeded           UMETA(ToolTip = "액션 정상 종료"),
+    Cancelled           UMETA(ToolTip = "액션 중지"),
 };
 
+/**
+ * @brief 액션 내 진행 단계 열거형
+ */
+UENUM(BlueprintType)
+enum class ESRPGActionPhase : uint8
+{
+    None                UMETA(Hidden),
+    ActionInit          UMETA(ToolTip = "액션 초기화"),
+    ActionStart         UMETA(ToolTip = "액션 시작"),
+    ActionPlay          UMETA(ToolTip = "액션 진행 중"),
+    ActionAbort         UMETA(ToolTip = "액션 진행 중단"),
+    ActionEnd           UMETA(ToolTip = "액션 종료"),
+};
