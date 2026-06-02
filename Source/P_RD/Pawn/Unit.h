@@ -17,6 +17,10 @@
 
 #include "Unit.generated.h"
 
+class AUnit;
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnitDied, AUnit* /* Unit */);
+
 class UUnitAttributeSet;
 class UPackageMap;
 class UStaticUnitSpawnData;
@@ -92,12 +96,16 @@ public:
 
 public:
 	UUnitAttributeSet* GetUnitAttributeSet() const;
+	bool IsDead() const;
 
 	FName GetUnitKeyName() const;
 	const FText& GetUnitDisplayName() const;
 
 	virtual int32 GetDifficulty() const PURE_VIRTUAL(AUnit::GetDifficulty, return 0;)
 	virtual bool IsPlayerUnit() const PURE_VIRTUAL(AUnit::IsPlayerUnit, return false;)
+
+public:
+	FOnUnitDied OnUnitDied;
 
 private:
 	UPROPERTY(Category = GAS, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "AbilitySystemComp"))
