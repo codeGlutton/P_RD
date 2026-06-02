@@ -65,8 +65,22 @@ bool USkillComponent::TestActivateSkill(int32 SkillIndex, TArray<TSoftObjectPtr<
 
 	EventData.EventTag = FGameplayTag::RequestGameplayTag(TEXT("Test.GameplayAbility.Skill"));
 
-	FGameplayAbilityTargetData_ActorArray* ArrayTargetData = new FGameplayAbilityTargetData_ActorArray(UnitArray);
+	// 2. 빈 타겟 데이터 구조체를 동적 할당합니다.
+	FGameplayAbilityTargetData_ActorArray* ArrayTargetData = new FGameplayAbilityTargetData_ActorArray();
 
+	// 3. 소프트 포인터 배열을 순회하며 실제 액터 포인터를 추출해 채워 넣습니다.
+	for (const TSoftObjectPtr<AUnit>& UnitSoftPtr : UnitArray)
+	{
+		// 소프트 포인터가 가리키는 대상이 현재 메모리에 로드되어 있고 유효한지 확인
+		if (UnitSoftPtr.IsValid())
+		{
+			// TargetActorArray는 TWeakObjectPtr<AActor> 배열이지만, 
+			// 일반 포인터(AActor*)를 넣으면 자동으로 변환되어 들어갑니다.
+			ArrayTargetData->TargetActorArray.Add(UnitSoftPtr.Get());
+		}
+	}
+
+	// 4. 포장된 데이터를 EventData에 추가
 	EventData.TargetData.Add(ArrayTargetData);
 
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), EventData.EventTag, EventData);

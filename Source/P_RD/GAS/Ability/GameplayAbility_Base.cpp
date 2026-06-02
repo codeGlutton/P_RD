@@ -13,11 +13,11 @@ void UGameplayAbility_Base::ActivateAbility(const FGameplayAbilitySpecHandle Han
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	UE_LOG(UELOG, Warning, TEXT("UGameplayAbility_Base::ActivateAbility Start"));
+	UE_LOG(LogTemp, Warning, TEXT("UGameplayAbility_Base::ActivateAbility Start"));
 
 	if (!ActorInfo || !ActorInfo->AvatarActor.IsValid())
 	{
-		UE_LOG(UELOG, Warning, TEXT("ActorInfo Failed"));
+		UE_LOG(LogTemp, Warning, TEXT("ActorInfo Failed"));
 
 		mAbilityActive = false;
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
@@ -26,7 +26,7 @@ void UGameplayAbility_Base::ActivateAbility(const FGameplayAbilitySpecHandle Han
 
 	mAbilityActive = true;
 
-	UE_LOG(UELOG, Warning, TEXT("Ability Attack"));
+	UE_LOG(LogTemp, Warning, TEXT("Ability Attack"));
 
 	if (!mAbilityActive || !TriggerEventData || !TriggerEventData->Target)
 	{
