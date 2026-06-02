@@ -18,8 +18,8 @@
 #include "Unit.generated.h"
 
 class UUnitAttributeSet;
-class UUnitSaveGame;
 class UPackageMap;
+class UStaticUnitSpawnData;
 
 USTRUCT(Blueprintable)
 struct FUnitSnapshotTargetData : public FGameplayAbilityTargetData
@@ -78,8 +78,8 @@ public:
 	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 public:
-	virtual void OnBeginStage();
-	virtual void OnEndStage();
+	virtual void OnBeginPlayRoom();
+	virtual void OnEndPlayRoom();
 
 public:
 	/**
@@ -88,12 +88,16 @@ public:
 	virtual FUnitSnapshotTargetData* MakeSnapshotTargetData() const;
 
 public:
+	void SetStaticSpawnData(const UStaticUnitSpawnData* StaticUnitSpawnData);
+
+public:
 	UUnitAttributeSet* GetUnitAttributeSet() const;
 
-	FName GetUnitName() const;
+	FName GetUnitKeyName() const;
 	const FText& GetUnitDisplayName() const;
 
-	virtual int32 GetDifficulty() const PURE_VIRTUAL(FUnitSnapshotTargetData::GetDifficulty, return 0;)
+	virtual int32 GetDifficulty() const PURE_VIRTUAL(AUnit::GetDifficulty, return 0;)
+	virtual bool IsPlayerUnit() const PURE_VIRTUAL(AUnit::IsPlayerUnit, return false;)
 
 private:
 	UPROPERTY(Category = GAS, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "AbilitySystemComp"))
@@ -102,9 +106,8 @@ private:
 	TObjectPtr<UUnitAttributeSet> mUnitAttributeSet;
 
 protected:
-	// @brief UI 표기 이름
-	UPROPERTY(Category = Unit, EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "UnitDisplayName"))
-	FText mUnitDisplayName;
+	UPROPERTY(Category = Spawn, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "StaticUnitSpawnData"))
+	TObjectPtr<const UStaticUnitSpawnData> mStaticUnitSpawnData;
 
 private:
 	// @brief 팀 ID

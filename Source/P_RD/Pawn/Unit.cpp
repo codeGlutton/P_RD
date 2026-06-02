@@ -2,6 +2,8 @@
 #include "GAS/Attribute/UnitAttributeSet.h"
 #include "Setting/UnitTeamType.h"
 
+#include "DataAsset/UnitSpawnData/StaticUnitSpawnData.h"
+
 UScriptStruct* FUnitSnapshotTargetData::GetScriptStruct() const
 {
 	return FUnitSnapshotTargetData::StaticStruct();
@@ -39,7 +41,7 @@ void AUnit::PostInitializeComponents()
 
 #ifndef WITH_EDITOR
 	// Difficulty값에 따라 ASC Attribute 초기화
-	IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->InitAttributeSetDefaults(mAbilitySystemComp, GetRowKey(), mLevel, true);
+	IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->InitAttributeSetDefaults(mAbilitySystemComp, GetUnitName(), GetDifficulty(), true);
 #endif
 }
 
@@ -49,7 +51,7 @@ void AUnit::OnConstruction(const FTransform& Transform)
 
 #ifdef WITH_EDITOR
 	// Difficulty값에 따라 ASC Attribute 초기화 (에디터 환경 내 Difficulty 변경 테스트를 위해 Construction 위치)
-	IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->InitAttributeSetDefaults(mAbilitySystemComp, GetUnitName(), GetDifficulty(), true);
+	IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->InitAttributeSetDefaults(mAbilitySystemComp, GetUnitKeyName(), GetDifficulty(), true);
 #endif
 }
 
@@ -78,11 +80,11 @@ UAbilitySystemComponent* AUnit::GetAbilitySystemComponent() const
 	return mAbilitySystemComp;
 }
 
-void AUnit::OnBeginStage()
+void AUnit::OnBeginPlayRoom()
 {
 }
 
-void AUnit::OnEndStage()
+void AUnit::OnEndPlayRoom()
 {
 }
 
@@ -107,19 +109,26 @@ FUnitSnapshotTargetData* AUnit::MakeSnapshotTargetData() const
 	return TargetData;
 }
 
+void AUnit::SetStaticSpawnData(const UStaticUnitSpawnData* StaticUnitSpawnData)
+{
+	mStaticUnitSpawnData = StaticUnitSpawnData;
+}
+
 UUnitAttributeSet* AUnit::GetUnitAttributeSet() const
 {
 	return mUnitAttributeSet;
 }
 
-FName AUnit::GetUnitName() const
+FName AUnit::GetUnitKeyName() const
 {
-	FString Key = mUnitDisplayName.ToString();
-	Key.RemoveSpacesInline();
-	return *Key;
+	checkf(mStaticUnitSpawnData != nullptr, TEXT("유닛 스폰 데이터 nullptr"));
+
+	return mStaticUnitSpawnData->GetKeyName();
 }
 
 const FText& AUnit::GetUnitDisplayName() const
 {
-	return mUnitDisplayName;
+	checkf(mStaticUnitSpawnData != nullptr, TEXT("유닛 스폰 데이터 nullptr"));
+
+	return mStaticUnitSpawnData->mDisplayName;
 }
