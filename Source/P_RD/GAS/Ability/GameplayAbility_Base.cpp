@@ -70,7 +70,7 @@ void UGameplayAbility_Base::ActivateAbility(const FGameplayAbilitySpecHandle Han
 			UE_LOG(LogTemp, Warning, TEXT("TargetActor is not Valid"));
 
 			EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
-			return;
+			continue;
 		}
 
 		UE_LOG(LogTemp, Warning, TEXT("Actor %s"), *TargetActor->GetActorLabel());
