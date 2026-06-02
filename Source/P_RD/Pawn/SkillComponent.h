@@ -90,6 +90,7 @@ public:
 	* @ Tiles : 스킬 효과를 적용할 타일들
 	* @return bool : 실패 시 false 반환
 	*/
-	bool TestActivateSkill(int32 SkillIndex, TArray<TSoftObjectPtr<class AUnit>> UnitArray);
+	UFUNCTION(BlueprintCallable, Category = "Skill")
+	bool TestActivateSkill(int32 SkillIndex, TArray<class AUnit*> UnitArray);
 
 };

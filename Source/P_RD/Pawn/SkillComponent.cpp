@@ -53,7 +53,7 @@ bool USkillComponent::ActivateSkill(int32 SkillIndex, TArray<TPair<int32, int32>
 	return false;
 }
 
-bool USkillComponent::TestActivateSkill(int32 SkillIndex, TArray<TSoftObjectPtr<AUnit>> UnitArray)
+bool USkillComponent::TestActivateSkill(int32 SkillIndex, TArray<AUnit*> UnitArray)
 {
 	if (!GetOwner())
 		return false;
@@ -67,6 +67,7 @@ bool USkillComponent::TestActivateSkill(int32 SkillIndex, TArray<TSoftObjectPtr<
 
 	// 2. 빈 타겟 데이터 구조체를 동적 할당합니다.
 	FGameplayAbilityTargetData_ActorArray* ArrayTargetData = new FGameplayAbilityTargetData_ActorArray();
+
 
 	// 3. 소프트 포인터 배열을 순회하며 실제 액터 포인터를 추출해 채워 넣습니다.
 	for (const TSoftObjectPtr<AUnit>& UnitSoftPtr : UnitArray)
@@ -85,6 +86,6 @@ bool USkillComponent::TestActivateSkill(int32 SkillIndex, TArray<TSoftObjectPtr<
 
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), EventData.EventTag, EventData);
 
-	return false;
+	return true;
 }
 
