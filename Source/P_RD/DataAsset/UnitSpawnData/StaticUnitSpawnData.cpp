@@ -1,8 +1,8 @@
 ﻿#include "DataAsset/UnitSpawnData/StaticUnitSpawnData.h"
 
+#if WITH_EDITOR
 #include "Misc/DataValidation.h"
 
-#if WITH_EDITOR
 EDataValidationResult UStaticUnitSpawnData::IsDataValid(FDataValidationContext& Context) const
 {
 	EDataValidationResult SuperResult = Super::IsDataValid(Context);

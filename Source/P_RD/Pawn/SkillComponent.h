@@ -38,10 +38,10 @@ protected:
 
 	/**
 	* @brief 액터의 ASC
-	* 편하게 사용하기 위해 SoftPtr로 참조
+	* 편하게 사용하기 위해 WeakPtr로 참조
 	*/
 	UPROPERTY()
-	TSoftObjectPtr<UAbilitySystemComponent> mAbilitySystemComp;
+	TWeakObjectPtr<UAbilitySystemComponent> mAbilitySystemComp;
 
 protected:
 	// Called when the game starts
@@ -84,5 +84,13 @@ public:
 	*/
 	bool ActivateSkill(int32 SkillIndex, TArray<TPair<int32,int32>> Tiles);
 
+	/**
+	* @details 스킬의 인덱스와 타일을 입력받으면 스킬 사용
+	* @ SkillIndex : 사용할 스킬의 인덱스
+	* @ UnitArray : 사용할 대상
+	* @return bool : 실패 시 false 반환
+	*/
+	UFUNCTION(BlueprintCallable, Category = "Skill")
+	bool TestActivateSkill(int32 SkillIndex, TArray<class AUnit*> UnitArray);
 
 };
