@@ -50,8 +50,23 @@ bool USkillComponent::SetSkillData(int SkillIndex, TSoftObjectPtr<UStaticSkillDa
 
 	mSkillData[SkillIndex] = SkillData;
 
+	if(mOnSkillChange.IsBound())
+		mOnSkillChange.Broadcast(SkillIndex, SkillData);
+
 	return true;
 }
+
+/*
+bool USkillComponent::AddSkillData(TSoftObjectPtr<UStaticSkillData> SkillData)
+{
+	mSkillData.Add(SkillData);
+
+	if (mOnSkillChange.IsBound())
+		mOnSkillChange.Broadcast(mSkillData.Num() - 1, SkillData);
+
+	return true;
+}
+*/
 
 bool USkillComponent::CalculatePredictedSales(int32 In_SkillIndex, TArray<TPair<FString, float>>& Out_TagValue)
 {
@@ -63,7 +78,7 @@ bool USkillComponent::ActivateSkill(int32 SkillIndex, TArray<TPair<int32, int32>
 	return false;
 }
 
-bool USkillComponent::TestActivateSkill(int32 SkillIndex, TArray<AUnit*> UnitArray)
+bool USkillComponent::TestActivateSkill(int32 SkillIndex, TArray<TWeakObjectPtr<AUnit>> UnitArray)
 {
 	if (!GetOwner())
 		return false;
@@ -80,14 +95,14 @@ bool USkillComponent::TestActivateSkill(int32 SkillIndex, TArray<AUnit*> UnitArr
 
 
 	// 3. 소프트 포인터 배열을 순회하며 실제 액터 포인터를 추출해 채워 넣습니다.
-	for (const TSoftObjectPtr<AUnit>& UnitSoftPtr : UnitArray)
+	for (const TWeakObjectPtr<AUnit>& UnitPtr : UnitArray)
 	{
 		// 소프트 포인터가 가리키는 대상이 현재 메모리에 로드되어 있고 유효한지 확인
-		if (UnitSoftPtr.IsValid())
+		if (UnitPtr.IsValid())
 		{
 			// TargetActorArray는 TWeakObjectPtr<AActor> 배열이지만, 
 			// 일반 포인터(AActor*)를 넣으면 자동으로 변환되어 들어갑니다.
-			ArrayTargetData->TargetActorArray.Add(UnitSoftPtr.Get());
+			ArrayTargetData->TargetActorArray.Add(UnitPtr.Get());
 		}
 	}
 

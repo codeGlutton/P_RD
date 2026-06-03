@@ -28,17 +28,14 @@ void UGameplayAbility_Base::ActivateAbility(const FGameplayAbilitySpecHandle Han
 	{
 		UE_LOG(LogTemp, Warning, TEXT("ActorInfo Failed"));
 
-		mAbilityActive = false;
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 		return;
 	}
 
-	mAbilityActive = true;
-
 	UE_LOG(LogTemp, Warning, TEXT("Ability Attack"));
 	
 	// Event 데이터가 유효한지 검사한다.
-	if (!mAbilityActive || !TriggerEventData || !TriggerEventData->TargetData.Num())
+	if (!TriggerEventData || !TriggerEventData->TargetData.Num())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("TriggerEventData False"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
