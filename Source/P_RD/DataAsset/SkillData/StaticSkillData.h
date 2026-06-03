@@ -10,69 +10,82 @@
 #include "GAS/GASMinimal.h"
 #include "DataAsset/PrimaryAssetType.h"
 #include "DataAsset/BundleType.h"
+#include "../../SRPGFramework/SRPGFrameworkType.h"
+#include "SkillType.h"
 #include "StaticSkillData.generated.h"
 
+ /**
+ * @brief 필터 유형
+ * @details
+ * 추후 위치 변경 예정
+ */
+UENUM(BlueprintType)
+enum class EEffectFilter : uint8
+{
+    Caster = 0,
+    Others,
+    All,
+    Count		UMETA(Hidden)
+};
+
 USTRUCT(BlueprintType)
-struct FEffectLayer
+struct FGameplayEffectData
 {
     GENERATED_BODY()
 
     /**
     * @brief 필터 유형
     * @details
-    * 추후 enum 또는 태그로 변경할 예정
-    * (Caster: 시전자, Target: 타겟 타일 전체, Others: 시전자 제외 모든 타일)
+    * (Caster: 시전자만, All: 영향 범위 전체, Others: 시전자 제외 모든 타일)
     */
-    UPROPERTY(Category = "EffectLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectTarget"))
-    int32 mEffectTarget;
+    UPROPERTY(Category = "GameplayEffectData", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectTarget"))
+    EEffectFilter mGameplayEffectFilter;
 
     /**
-    * @brief 효과 태그
+    * @brief 효과
     * @details
-    * 추후 GameplayTag로 변경할 예정
-    * (ex: Effect.Damage.Fire, Effect.Buff.Shield)
+	* GameplayEffect_Base를 상속받은 Blueprint Class를 참조하는 SoftClassPtr
     */
-    UPROPERTY(Category = "EffectLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectTag"))
-    FString mEffectTag;
+    UPROPERTY(Category = "GameplayEffectData", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "GameplayEffect"))
+    TSoftClassPtr<class UGameplayEffect_Base> mGameplayEffect;
 
     /**
     * @brief 효과 기본 값
     * @details
-    * 결과값 = DefaultValue + 눈금 * Ratio
+    * 결과값 = Default + 눈금 * Ratio
     */
-    UPROPERTY(Category = "EffectLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DefaultValue"))
-    int32 mDefaultValue;
+    UPROPERTY(Category = "GameplayEffectData", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DefaultValue"))
+    int32 mGameplayEffectDefaultValue;
 
     /**
     * @brief 효과 비율 값
     * @details
-    * 결과값 = DefaultValue + 눈금 * Ratio
+    * 결과값 = Default + 눈금 * Ratio
     */
-    UPROPERTY(Category = "EffectLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RatioValue"))
-    int32 mRatioValue;
+    UPROPERTY(Category = "GameplayEffectData", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RatioValue"))
+    float mGameplayEffectRatioValue;
 };
 
 USTRUCT(BlueprintType)
-struct FSkillLayer
+struct FSkillAction
 {
     GENERATED_BODY()
 
     /**
     * @brief 보여줄 애니메이션
     * @details
-    * 추후 enum 또는 태그로 변경할 예정
     * (ex: Anim.Attack, Anim.Spell)
     */
-    UPROPERTY(Category = "SkillLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Animation"))
-    int32 mAnimationTag;
+    UPROPERTY(Category = "SkillAction", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Animation"))
+    FGameplayTag mAnimationTag;
 
     /**
     * @brief 효과 레이어
     * @details
     * 
     */
-    UPROPERTY(Category = "SkillLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectLayers"))
-    TArray<FEffectLayer> mEffects;
+    UPROPERTY(Category = "SkillAction", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "GameplayEffectDatas"))
+    TArray<FGameplayEffectData> mGameplayEffectDatas;
 };
 
 
@@ -106,10 +119,9 @@ public:
     * @brief 스킬 유형
     * @details
     * 공격, 주문
-    * 추후 enum으로 바꿀 것
     */
     UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillType"))
-    int32 mSkillType;
+    ESkillType mSkillType;
     
     /**
     * @brief 스킬 희귀도
@@ -128,17 +140,16 @@ public:
 
 #pragma endregion Default
 
-#pragma region SelectRange
+#pragma region AimRange
 
-    /* 사정거리 */
+    /* 조준 범위 */
 
     /**
-    * @brief 사정 거리 유형
+    * @brief 조준 범위 유형
     * @details
-    * 추후 enum으로 변경 예정
     */
-    UPROPERTY(Category = "SelectRange", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectType"))
-    int32 mSelectType;
+    UPROPERTY(Category = "AimRange", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "AimType"))
+    EAimPattern mAimPattern;
 
     /**
     * @brief 곡사 여부
@@ -146,60 +157,59 @@ public:
     * true면 적 넘어도 선택 가능
     * false면 적 넘어는 선택 불가
     */
-    UPROPERTY(Category = "SelectRange", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsIndirect"))
+    UPROPERTY(Category = "AimRange", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsIndirect"))
     bool mIsIndirect;
 
     /**
-    * @brief 장애물(유닛) 선택 가능 여부
+    * @brief 장애물(유닛) 조준 가능 여부
     * @details 
     * true면 장애물(유닛)이 있는 타일 선택 가능
     * false면 장애물(유닛)이 있는 타일 선택 불가
     */
-    UPROPERTY(Category = "SelectRange", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "CanSelectObstacle"))
-    bool mCanSelectObstacle;
+    UPROPERTY(Category = "AimRange", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "CanAimObstacle"))
+    bool mCanAimObstacle = true;
 
     /**
-    * @brief 기본 사정 거리
+    * @brief 기본 조준 거리
     * @details 
     * 고정값
     */
-    UPROPERTY(Category = "SelectRange", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectDefaultRange"))
-    int32 mSelectDefaultRange;
+    UPROPERTY(Category = "AimRange", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "AimDefaultRange"))
+    int32 mAimDefaultRange;
 
     /**
-    * @brief 비율 사정 거리
+    * @brief 비율 조준 거리
     * @details
-    * 주사위값에 따라 변하는 사정거리양
+    * 주사위값에 따라 변하는 조준 범위 
     * 사정거리는 항상 DefaultRange + RatioRange
     */
-    UPROPERTY(Category = "SelectRange", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectRatioRange"))
-    float mSelectRatioRange;
+    UPROPERTY(Category = "AimRange", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "AimRatioRange"))
+    float mAimRatioRange;
 
-#pragma endregion SelectRange
+#pragma endregion AimRange
 
 #pragma region EffectArea
 
-    /* 타격 범위 */
+    /* 영향 범위 */
 
     /**
-    * @brief 효과 범위 유형
+    * @brief 영향 범위 유형
     * @details
-    * 추후 enum으로 변경 예정
     */
     UPROPERTY(Category = "EffectArea", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectAreaType"))
-    int32 mEffectAreaType;
+    EEffectPattern mEffectPattern;
 
     /**
     * @brief 관통 여부
     * @details
-    * true면 적 넘어도 효과 대상
-    * false면 적 넘어는 효과 대상이 아님
+    * true면 유닛 넘어도 영향 대상
+    * false면 유닛 넘어는 영향 대상이 아님
     */
     UPROPERTY(Category = "EffectArea", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsPenetration"))
     bool mIsPenetration;
 
     /**
-    * @brief 기본 효과 범위
+    * @brief 기본 영향 범위
     * @details
     * 고정값
     */
@@ -207,9 +217,9 @@ public:
     int32 mEffectDefaultArea;
 
     /**
-    * @brief 비율 효과 범위
+    * @brief 비율 영향 범위
     * @details
-    * 주사위값에 따라 변하는 효과 범위양
+    * 주사위값에 따라 변하는 영향 범위 비율
     * 사정거리는 항상 DefaultArea + RatioArea
     */
     UPROPERTY(Category = "EffectArea", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectRatioArea"))
@@ -222,7 +232,7 @@ public:
     * @details
     * 
     */
-    UPROPERTY(Category = "Effect", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillLayers"))
-    TArray<FSkillLayer> mSkillLayers;
+    UPROPERTY(Category = "SkillAction", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillActions"))
+    TArray<FSkillAction> mSkillActions;
 
 };
