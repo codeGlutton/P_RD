@@ -14,6 +14,9 @@
 #include "TileMap.generated.h"
 
 class ITileActor;
+class UInstancedStaticMeshComponent;
+class UStaticMesh;
+class UMaterialInterface;
 
 /**
  * @brief  타일맵 액터
@@ -22,9 +25,12 @@ UCLASS()
 class P_RD_API ATileMap : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	ATileMap();
+
+	// @brief 에디터 배치/스폰 시 타일 그리드 인스턴스 재생성
+	virtual void OnConstruction(const FTransform& Transform) override;
 
 	/* 타일 → 월드 변환 */
 	/**
@@ -146,6 +152,13 @@ public:
 	 */
 	float GetTileSize() const;
 
+	/**
+	 * @brief 타일 인덱스가 이 맵 범위 안의 유효한 좌표인지 검사
+	 * @param[in] TileIndex : 검사할 타일 좌표
+	 * @return bool : 0 <= X < Width && 0 <= Y < Height 이면 true
+	 */
+	bool IsValidIndex(const FTileIndex& TileIndex) const;
+
 protected:
 	// @brief 타일맵 가로 길이 (X 방향 타일 개수)
 	UPROPERTY(EditAnywhere, Category = "TileMap", meta = (DisplayName = "Width", ClampMin = "1"))
@@ -158,4 +171,27 @@ protected:
 	// @brief 타일 한 칸의 월드 크기 (cm)
 	UPROPERTY(EditAnywhere, Category = "TileMap", meta = (DisplayName = "Tile Size", ClampMin = "1.0"))
 	float mTileSize = 100.0f;
+
+	/* 시각화 */
+	// @brief 타일 그리드를 그리는 인스턴스드 메시 컴포넌트
+	UPROPERTY(VisibleAnywhere, Category = "TileMap|Visual", meta = (DisplayName = "Tile Mesh Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mTileMeshComponent;
+
+	// @brief 타일 한 칸에 사용할 메시 (기본: 엔진 Plane)
+	UPROPERTY(EditAnywhere, Category = "TileMap|Visual", meta = (DisplayName = "Tile Mesh"))
+	TObjectPtr<UStaticMesh> mTileMesh;
+
+	// @brief 타일 메시에 덮어쓸 머티리얼 (null이면 메시 기본 머티리얼)
+	UPROPERTY(EditAnywhere, Category = "TileMap|Visual", meta = (DisplayName = "Tile Material"))
+	TObjectPtr<UMaterialInterface> mTileMaterial;
+
+	// @brief 타일 시각 크기 비율 (1.0 미만이면 타일 사이에 틈이 생겨 격자선처럼 보임)
+	UPROPERTY(EditAnywhere, Category = "TileMap|Visual", meta = (DisplayName = "Tile Visual Scale", ClampMin = "0.1", ClampMax = "1.0"))
+	float mTileVisualScale = 0.95f;
+
+private:
+	/**
+	 * @brief 현재 Width/Height/TileSize에 맞춰 타일 인스턴스를 모두 재생성
+	 */
+	void RebuildTileInstances();
 };

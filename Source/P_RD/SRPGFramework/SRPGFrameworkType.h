@@ -31,13 +31,22 @@ struct FTileIndex
     GENERATED_BODY()
 
 public:
+    FTileIndex() = default;
+    FTileIndex(int32 InX, int32 InY) : mX(InX), mY(InY) {}
+
     // @brief 가로(X) 방향 인덱스
     UPROPERTY(Category = "TileIndex", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "X"))
     int32 mX = 0;
     // @brief 세로(Y) 방향 인덱스
     UPROPERTY(Category = "TileIndex", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Y"))
     int32 mY = 0;
+
+    // @brief 유효하지 않은(미배치) 타일을 나타내는 초기/해제값
+    static const FTileIndex Invalid;
 };
+
+// @brief 무효 좌표 정의: (-1, -1)
+inline const FTileIndex FTileIndex::Invalid = FTileIndex(-1, -1);
 
 /**
  * @brief 타일 맵 상 위치
@@ -48,6 +57,10 @@ struct FTileTransform
     GENERATED_BODY()
 
 public:
+    FTileTransform() = default;
+    FTileTransform(const FTileIndex& InIndex, ETileActorDirection InDirection = ETileActorDirection::Forward)
+        : mIndex(InIndex), mDirection(InDirection) {}
+
     // @brief 타일 인덱스 좌표
     UPROPERTY(Category = "TileTransform", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Index"))
     FTileIndex mIndex;
@@ -55,11 +68,12 @@ public:
     UPROPERTY(Category = "TileTransform", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Direction"))
     ETileActorDirection mDirection = ETileActorDirection::Forward;
 
-public:
-    static const FTileTransform Zero;
+    // @brief 유효하지 않은(미배치) 트랜스폼을 나타내는 초기/해제값
+    static const FTileTransform Invalid;
 };
 
-inline const FTileTransform FTileTransform::Zero = FTileTransform();
+// @brief 무효 트랜스폼 정의: 인덱스가 무효
+inline const FTileTransform FTileTransform::Invalid = FTileTransform(FTileIndex::Invalid);
 
 /**
  * @brief 조준 범위 패턴
