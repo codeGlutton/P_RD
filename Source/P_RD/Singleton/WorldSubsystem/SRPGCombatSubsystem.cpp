@@ -24,6 +24,11 @@ void USRPGCombatSubsystem::Tick(float DeltaTime)
 	}
 }
 
+TStatId USRPGCombatSubsystem::GetStatId() const
+{
+	RETURN_QUICK_DECLARE_CYCLE_STAT(USRPGCombatSubsystem, STATGROUP_Tickables);
+}
+
 void USRPGCombatSubsystem::InitCombat(const UStaticCombatRoomSpawnData* RoomSpawnData, AUnit* PlayerUnit)
 {
 	checkf(RoomSpawnData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
@@ -175,13 +180,13 @@ bool USRPGCombatSubsystem::UnregisterTurnImmediately(TSharedRef<FSRPGTurnContext
 
 int32 USRPGCombatSubsystem::UnregisterTurnsImmediately(const AUnit* Owner)
 {
-	auto CurNode = mTurnContexts.GetHead();
+	auto* CurNode = mTurnContexts.GetHead();
 
 	int32 UnregisterCount = 0;
 	const int32 TotalContextNum = mTurnContexts.Num();
 	for (int32 i = 0; i < TotalContextNum; ++i)
 	{
-		auto NextNode = CurNode->GetNextNode();
+		auto* NextNode = CurNode->GetNextNode();
 
 		TSharedPtr<FSRPGTurnContext> CurTurnContext = CurNode->GetValue();
 		if (CurTurnContext->GetOwner() == Owner)
@@ -189,7 +194,7 @@ int32 USRPGCombatSubsystem::UnregisterTurnsImmediately(const AUnit* Owner)
 			// 현재 진행 중인 턴을 삭제하게 되어 노드 전환이 필요한지 여부
 			const bool NeedToChangeTurnContext = mCurTurnContextNode->GetValue() == CurTurnContext;
 
-			auto* NextNode = mTurnContexts.RemoveNode(CurNode);
+			NextNode = mTurnContexts.RemoveNode(CurNode);
 			if (NeedToChangeTurnContext == true)
 			{
 				mCurTurnContextNode = NextNode;
