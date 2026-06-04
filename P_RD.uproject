@@ -13,7 +13,6 @@
 				"Engine",
 				"CoreUObject",
 				"GameplayAbilities",
-				"DataValidation",
 				"AIModule"
 			]
 		},
@@ -24,6 +23,11 @@
 			"AdditionalDependencies": [
 				"DeveloperSettings"
 			]
+		},
+		{
+			"Name": "P_RDTests",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [

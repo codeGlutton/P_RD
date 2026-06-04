@@ -4,6 +4,9 @@
 # IDE / Editor tools
 .idea/
 .claude/
+.vsconfig
+CLAUDE.md
+GEMINI.md
 
 # Compiled Object files
 *.slo

@@ -79,7 +79,7 @@ namespace EffectTags
 
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_Cooldown);
 
-	/* 상태 표기 태그들 */
+	/* 액터 상태 태그들 */
 
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_ActorState_Dead);
 }
