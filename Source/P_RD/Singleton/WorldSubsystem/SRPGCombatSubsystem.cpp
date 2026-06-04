@@ -176,8 +176,8 @@ int32 USRPGCombatSubsystem::UnregisterTurnsImmediately(const AUnit* Owner)
 	{
 		auto NextNode = CurNode->GetNextNode();
 
-		TSharedPtr<FSRPGTurnContext> TurnContext = mTurnContexts.GetHead()->GetValue();
-		if (TurnContext->GetOwner() == Owner)
+		TSharedPtr<FSRPGTurnContext> CurTurnContext = CurNode->GetValue();
+		if (CurTurnContext->GetOwner() == Owner)
 		{
 			mCurTurnContextNode = mTurnContexts.RemoveNode(CurNode);
 			++UnregisterCount;
