@@ -36,8 +36,6 @@ public:
 public:
 	void SaveRun() const;
 	void SaveRunAsync(FAsyncSaveGameToSlotDelegate Callback) const;
-	UFUNCTION(Category = Save, BlueprintPure)
-	bool HasRunSave() const;
 	void LoadRun();
 	void LoadRunAsync(FAsyncLoadGameFromSlotDelegate Callback) const;
 	void ClearRun() const;

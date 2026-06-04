@@ -51,10 +51,6 @@ public:
     TSubclassOf<UUserWidget> mWorldWidgetClasses[static_cast<uint8>(EWorldWidgetType::Count)];
 
 public:
-    UPROPERTY(Config, Category = Room, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "DefaultRoomMap"))
-    TSoftObjectPtr<UWorld> mDefaultRoomMap;
-
-public:
     UPROPERTY(Config, Category = Title, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TitleRoomId"))
     FPrimaryAssetId mTitleRoomId;
 

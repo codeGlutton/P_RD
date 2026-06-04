@@ -229,9 +229,7 @@ void UTitleMenuWidget::SyncMainText() const
 
 void UTitleMenuWidget::RefreshMainMenuState() const
 {
-	const UGameInstance* GameInstance = GetGameInstance();
-	const USaveGameSubsystem* SaveGameSubsystem = GameInstance != nullptr ? GameInstance->GetSubsystem<USaveGameSubsystem>() : nullptr;
-	const bool bHasRunSave = SaveGameSubsystem != nullptr && SaveGameSubsystem->HasRunSave();
+	const bool bCanContinueRun = TryLoadRunForMapScreen();
 
 	if (StartButton != nullptr)
 	{
@@ -241,13 +239,13 @@ void UTitleMenuWidget::RefreshMainMenuState() const
 
 	if (StartButtonText != nullptr)
 	{
-		StartButtonText->SetText(bHasRunSave ? mNewStartButtonText : mStartButtonText);
+		StartButtonText->SetText(bCanContinueRun ? mNewStartButtonText : mStartButtonText);
 	}
 
 	if (ContinueButton != nullptr)
 	{
-		ContinueButton->SetVisibility(bHasRunSave ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-		ContinueButton->SetIsEnabled(bHasRunSave);
+		ContinueButton->SetVisibility(bCanContinueRun ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+		ContinueButton->SetIsEnabled(bCanContinueRun);
 	}
 
 	if (ContinueButtonText != nullptr)
@@ -260,6 +258,24 @@ void UTitleMenuWidget::RefreshMainMenuState() const
 		SettingsButton->SetVisibility(ESlateVisibility::Visible);
 		SettingsButton->SetIsEnabled(true);
 	}
+}
+
+bool UTitleMenuWidget::TryLoadRunForMapScreen() const
+{
+	if (UGameInstance* GameInstance = GetGameInstance())
+	{
+		if (USaveGameSubsystem* SaveGameSubsystem = GameInstance->GetSubsystem<USaveGameSubsystem>())
+		{
+			SaveGameSubsystem->LoadRun();
+		}
+	}
+
+	TArray<FFrontendMapRoomView> Rooms;
+	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
+	{
+		return FrontendGameMode->GetMapRoomViews(OUT Rooms);
+	}
+	return false;
 }
 
 void UTitleMenuWidget::SetStatusText(const FText& /*InText*/) const
@@ -356,24 +372,10 @@ void UTitleMenuWidget::HandleStartButtonClicked()
 
 void UTitleMenuWidget::HandleContinueButtonClicked()
 {
-	if (UGameInstance* GameInstance = GetGameInstance())
+	if (TryLoadRunForMapScreen())
 	{
-		if (USaveGameSubsystem* SaveGameSubsystem = GameInstance->GetSubsystem<USaveGameSubsystem>())
-		{
-			if (SaveGameSubsystem->HasRunSave() == true)
-			{
-				SaveGameSubsystem->LoadRun();
-				TArray<FFrontendMapRoomView> Rooms;
-				if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
-				{
-					if (FrontendGameMode->GetMapRoomViews(OUT Rooms))
-					{
-						ShowMapScreen();
-						return;
-					}
-				}
-			}
-		}
+		ShowMapScreen();
+		return;
 	}
 
 	ShowMainScreen();

@@ -38,8 +38,8 @@ class UWidgetSwitcher;
  *
  * 캐릭터 목록을 만들거나, 캐릭터 카드를 갱신하거나, Confirm을 막는 일은
  * UCharacterSelectWidget 쪽 책임이다.
- * 실제 런 시작과 방 전환은 이번 UI-only 브랜치에서 다루지 않는다.
- * TitleMenuWidget 안에 그 로직을 다시 넣으면 캐릭터 수가 늘어날 때마다
+ * 실제 런 데이터 생성, 저장 로드, 방 전환은 GameMode/Subsystem API로 위임한다.
+ * TitleMenuWidget 안에 그 로직을 직접 넣으면 캐릭터 수나 룸 규칙이 바뀔 때마다
  * 타이틀 메뉴 코드까지 같이 고쳐야 해서 구조가 다시 꼬인다.
  *
  * @note
@@ -160,9 +160,22 @@ private:
 	 * @details
 	 * 저장된 런이 없으면 START / SETTING만 보이고,
 	 * 저장된 런이 있으면 CONTINUE / NEW START / SETTING 구성을 보여준다.
-	 * 버튼 배치는 WBP_TitleMenu가 맡고, C++은 저장 상태에 따른 표시 상태만 바꾼다.
+	 * 버튼 배치는 WBP_TitleMenu가 맡고, C++은 기존 SaveGameSubsystem::LoadRun() 결과와
+	 * 지도 View 생성 가능 여부만 보고 표시 상태를 바꾼다.
 	 */
 	void RefreshMainMenuState() const;
+
+	/**
+	 * @brief 기존 저장 런을 로드한 뒤 지도 화면으로 보여줄 수 있는지 확인함
+	 *
+	 * @details
+	 * Subsystem은 UI 파트 책임이 아니므로 저장 존재 여부 확인 API를 새로 추가하지 않는다.
+	 * PM 브랜치에 이미 있는 SaveGameSubsystem::LoadRun()을 사용하고,
+	 * 로드 후 FrontendGameMode가 지도 View를 만들 수 있으면 이어가기 가능한 상태로 본다.
+	 *
+	 * @return 지도 화면으로 이어갈 수 있는 Run 상태가 있으면 true
+	 */
+	bool TryLoadRunForMapScreen() const;
 
 	/**
 	 * @brief 오래된 타이틀 WBP에 남아 있는 하단 상태 문구를 숨김
@@ -259,7 +272,7 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> StartButton;
 
-	/** @brief 이어하기 버튼. 현재는 실제 이어하기 기능이 없어 비활성/안내 상태로 둔다. */
+	/** @brief 저장된 런이 있을 때 지도 화면으로 이어가는 버튼 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> ContinueButton;
 
