@@ -8,7 +8,7 @@
 
 TSharedPtr<FSRPGAction> FSRPGTurnContext::BuildAction(TSharedPtr<FSRPGActionBuilder> Builder)
 {
-	checkf(Builder->mIsExpired == true, TEXT("만기된 빌더. 재사용 불가"));
+	checkf(Builder->mIsExpired == false, TEXT("만기된 빌더. 재사용 불가"));
 
 	checkf(mPhase == ESRPGTurnPhase::ActionBuild, TEXT("액션 빌드 절차 오류"));
 	mPhase = ESRPGTurnPhase::ActionSelect;
@@ -21,13 +21,13 @@ TSharedPtr<FSRPGAction> FSRPGTurnContext::BuildAction(TSharedPtr<FSRPGActionBuil
 
 void FSRPGTurnContext::UnbuildAction(TSharedPtr<FSRPGActionBuilder> Builder)
 {
-	checkf(Builder->mIsExpired == true, TEXT("만기된 빌더. 재사용 불가"));
+	checkf(Builder->mIsExpired == false, TEXT("만기된 빌더. 재사용 불가"));
 
 	checkf(mPhase == ESRPGTurnPhase::ActionBuild, TEXT("액션 빌드 절차 오류"));
 	mPhase = ESRPGTurnPhase::ActionSelect;
 
 	Builder->UnbuildAction();
-	Builder->mIsExpired = false;
+	Builder->mIsExpired = true;
 }
 
 void FSRPGTurnContext::PushAction(TSharedPtr<FSRPGAction> NewAction)
