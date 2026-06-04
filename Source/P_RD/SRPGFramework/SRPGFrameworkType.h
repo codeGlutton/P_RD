@@ -87,6 +87,7 @@ enum class ESRPGTurnPhase : uint8
     TurnInit            UMETA(ToolTip = "턴 초기화"),
     TurnStart           UMETA(ToolTip = "턴 시작"),
     ActionSelect        UMETA(ToolTip = "액션 선택 중"),
+    ActionBuild         UMETA(ToolTip = "액션 제작 중"),
     ActionPlay          UMETA(ToolTip = "액션 진행 중"),
     TurnAbort           UMETA(ToolTip = "턴 진행 중단"),
     TurnEnd             UMETA(ToolTip = "턴 종료"),

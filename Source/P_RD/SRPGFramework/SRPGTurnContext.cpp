@@ -6,6 +6,41 @@
 
 #include "FunctionLibrary/GASTargetFunctionLibrary.h"
 
+TSharedPtr<FSRPGAction> FSRPGTurnContext::BuildAction(TSharedPtr<FSRPGActionBuilder> Builder)
+{
+	checkf(Builder->mIsExpired == true, TEXT("만기된 빌더. 재사용 불가"));
+
+	checkf(mPhase == ESRPGTurnPhase::ActionBuild, TEXT("액션 빌드 절차 오류"));
+	mPhase = ESRPGTurnPhase::ActionSelect;
+
+	TSharedPtr<FSRPGAction> NewAction = Builder->BuildAction();
+	Builder->mIsExpired = true;
+
+	return NewAction;
+}
+
+void FSRPGTurnContext::UnbuildAction(TSharedPtr<FSRPGActionBuilder> Builder)
+{
+	checkf(Builder->mIsExpired == true, TEXT("만기된 빌더. 재사용 불가"));
+
+	checkf(mPhase == ESRPGTurnPhase::ActionBuild, TEXT("액션 빌드 절차 오류"));
+	mPhase = ESRPGTurnPhase::ActionSelect;
+
+	Builder->UnbuildAction();
+	Builder->mIsExpired = false;
+}
+
+void FSRPGTurnContext::PushAction(TSharedPtr<FSRPGAction> NewAction)
+{
+	mActions.Enqueue(NewAction);
+
+	// 액션 대기 중 경우, 새로운 액션 즉시 진행
+	if (mPhase == ESRPGTurnPhase::ActionSelect)
+	{
+		StartNextAction();
+	}
+}
+
 void FSRPGTurnContext::InitTurn(AUnit* Owner, int32 LifeCount)
 {
 	checkf(mPhase == ESRPGTurnPhase::None, TEXT("중복 초기화"));
@@ -120,8 +155,10 @@ void FSRPGTurnContext::EvaluateTurnStates(bool ForceAbort)
 
 void FSRPGTurnContext::OnEndCurrentAction(TSharedRef<FSRPGAction> Action, ESRPGActionResult ActionResult)
 {
+	mActions.Pop();
+
 	// 턴 소모 액션 처리
-	bool IsBlockTurnSuccessfully = Action->IsBlockTurnProgression() == true && ActionResult == ESRPGActionResult::Succeeded;
+	bool IsBlockTurnSuccessfully = Action->IsTurnEndingAction() == true && ActionResult == ESRPGActionResult::Succeeded;
 	if (IsBlockTurnSuccessfully == true)
 	{
 		mPhase = ESRPGTurnPhase::TurnAbort;
@@ -138,7 +175,6 @@ void FSRPGTurnContext::OnEndCurrentAction(TSharedRef<FSRPGAction> Action, ESRPGA
 	checkf(mPhase == ESRPGTurnPhase::ActionPlay, TEXT("액션 종료 절차 오류"));
 	mPhase = ESRPGTurnPhase::ActionSelect;
 
-	mActions.Pop();
 	StartNextAction();
 }
 

@@ -6,14 +6,19 @@
 
 #include "FunctionLibrary/GASTargetFunctionLibrary.h"
 
-void FSRPGAction::InitAction(TSharedRef<FSRPGTurnContext> Owner, AUnit* Instigator, TArray<AUnit*>& Targets)
+void FSRPGActionBuilder::InitBuilder(TSharedRef<FSRPGTurnContext> Owner, AUnit* Instigator)
+{
+	mOwner = Owner;
+	mInstigator = Instigator;
+}
+
+void FSRPGAction::InitAction(TSharedRef<FSRPGTurnContext> Owner, AUnit* Instigator)
 {
 	checkf(mPhase == ESRPGActionPhase::None, TEXT("중복 초기화"));
 	mPhase = ESRPGActionPhase::ActionInit;
 
 	mOwner = Owner;
 	mInstigator = Instigator;
-	mTargets = Targets;
 }
 
 void FSRPGAction::BeginAction()
@@ -31,10 +36,12 @@ void FSRPGAction::EndAction()
 	checkf(mPhase == ESRPGActionPhase::ActionAbort, TEXT("액션 종료 절차 오류"));
 	mPhase = ESRPGActionPhase::ActionEnd;
 
-	mOwner.Pin()->OnEndCurrentAction(AsShared(), mResult);
+	TSharedPtr<FSRPGTurnContext> TurnContext = mOwner.Pin();
+	checkf(TurnContext != nullptr, TEXT("이미 제거된 턴에서 Action 종료 명령 오류"));
+	TurnContext->OnEndCurrentAction(AsShared(), mResult);
 }
 
-bool FSRPGAction::IsBlockTurnProgression() const
+bool FSRPGAction::IsTurnEndingAction() const
 {
 	return false;
 }
@@ -72,3 +79,4 @@ AUnit* FSRPGAction::GetInstigator() const
 {
 	return mInstigator;
 }
+

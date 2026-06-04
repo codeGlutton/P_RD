@@ -98,12 +98,14 @@ void USRPGCombatSubsystem::EndCombat()
 
 		UE_LOG(LogSRPGCombat, Log, TEXT("SRPG 전투 종료"))
 		}));
-	OnBeginCombatUI.Broadcast(PresentationBarrier);
+	OnEndCombatUI.Broadcast(PresentationBarrier);
 }
 
-void USRPGCombatSubsystem::RegisterTurn(AUnit* Owner, int32 LifeCount)
+TWeakPtr<FSRPGTurnContext> USRPGCombatSubsystem::RegisterTurn(AUnit* Owner, int32 LifeCount)
 {
-	TSharedPtr<FSRPGTurnContext> TurnContext = MakeShared<FSRPGTurnContext>();
+	TSharedPtr<FSRPGTurnContext> TurnContext = TSharedPtr<FSRPGTurnContext>(new FSRPGTurnContext(), [](FSRPGTurnContext* TurnContext) {
+		delete TurnContext;
+		});
 	TurnContext->InitTurn(Owner, LifeCount);
 	TurnContext->OnBeginTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const FSRPGTurnContext& TurnContext) {
 		OnBeginAnyTurnUI.Broadcast(Barrier, TurnContext);
@@ -121,6 +123,8 @@ void USRPGCombatSubsystem::RegisterTurn(AUnit* Owner, int32 LifeCount)
 	{
 		mTurnContexts.InsertNode(TurnContext, mCurTurnContextNode->GetPrevNode());
 	}
+
+	return TurnContext;
 }
 
 void USRPGCombatSubsystem::UnregisterTurn(TSharedRef<FSRPGTurnContext> TurnContext)
@@ -385,7 +389,7 @@ void USRPGCombatSubsystem::EvaluateCombatEndState()
 	}
 }
 
-TSharedRef<FSRPGTurnContext> USRPGCombatSubsystem::GetTurnContext(const AUnit* Owner)
+TWeakPtr<FSRPGTurnContext> USRPGCombatSubsystem::GetTurnContext(const AUnit* Owner)
 {
 	auto* HeadNode = mTurnContexts.GetHead();
 	const int32 TurnCount = mTurnContexts.Num();
@@ -393,17 +397,17 @@ TSharedRef<FSRPGTurnContext> USRPGCombatSubsystem::GetTurnContext(const AUnit* O
 	{
 		if (HeadNode->GetValue()->GetOwner() == Owner)
 		{
-			return HeadNode->GetValue()->AsShared();
+			return HeadNode->GetValue();
 		}
 	}
 
 	checkNoEntry();
-	return TSharedRef<FSRPGTurnContext>();
+	return nullptr;
 }
 
-TArray<TSharedRef<FSRPGTurnContext>> USRPGCombatSubsystem::GetTurnContexts(const AUnit* Owner)
+TArray<TWeakPtr<FSRPGTurnContext>> USRPGCombatSubsystem::GetTurnContexts(const AUnit* Owner)
 {
-	TArray<TSharedRef<FSRPGTurnContext>> Contexts;
+	TArray<TWeakPtr<FSRPGTurnContext>> Contexts;
 
 	auto* HeadNode = mTurnContexts.GetHead();
 	const int32 TurnCount = mTurnContexts.Num();
@@ -411,7 +415,7 @@ TArray<TSharedRef<FSRPGTurnContext>> USRPGCombatSubsystem::GetTurnContexts(const
 	{
 		if (HeadNode->GetValue()->GetOwner() == Owner)
 		{
-			Contexts.Push(HeadNode->GetValue()->AsShared());
+			Contexts.Push(HeadNode->GetValue());
 		}
 	}
 

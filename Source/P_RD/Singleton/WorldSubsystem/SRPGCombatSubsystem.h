@@ -22,6 +22,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogSRPGCombat, Log, All)
 struct FPresentationBarrier;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnBeginCombatUI, TSharedPtr<FPresentationBarrier> /*Barrier*/)
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnEndCombatUI, TSharedPtr<FPresentationBarrier> /*Barrier*/)
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBeginAnyTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGTurnContext& /*TurnContext*/)
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnEndAnyTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGTurnContext& /*TurnContext*/, ESRPGTurnResult /*Result*/)
 
@@ -65,8 +66,9 @@ public:
 	 * 존재하는 유닛의 새로운 턴 등록 함수. 새로운 턴은 항상 최후방에 등록
 	 * @param Owner 유닛 객체
 	 * @param LifeCount 턴의 생명 주기. 해당 턴에 대해서 남은 실행 횟수를 의미
+	 * @return 생성된 턴 컨텍스트
 	 */
-	void RegisterTurn(AUnit* Owner, int32 LifeCount = FSRPGTurnContext::PERMENENT_TURN);
+	TWeakPtr<FSRPGTurnContext> RegisterTurn(AUnit* Owner, int32 LifeCount = FSRPGTurnContext::PERMENENT_TURN);
 
 protected:
 	/**
@@ -124,8 +126,8 @@ protected:
 	void EvaluateCombatEndState();
 
 public:
-	TSharedRef<FSRPGTurnContext> GetTurnContext(const AUnit* Owner);
-	TArray<TSharedRef<FSRPGTurnContext>> GetTurnContexts(const AUnit* Owner);
+	TWeakPtr<FSRPGTurnContext> GetTurnContext(const AUnit* Owner);
+	TArray<TWeakPtr<FSRPGTurnContext>> GetTurnContexts(const AUnit* Owner);
 	ATileMap* GetTileMap() const;
 	const TArray<TObjectPtr<AUnit>>& GetUnits() const;
 
@@ -136,6 +138,12 @@ public:
 	 * Broadcast시 전달될 Barrier 스마트 포인터 카운팅이 0이 되기 전까지, 로직은 일시정지
 	 */
 	FOnBeginCombatUI OnBeginCombatUI;
+	/**
+	 * @brief 전투 종료 시 뜰 UI
+	 * @details
+	 * Broadcast시 전달될 Barrier 스마트 포인터 카운팅이 0이 되기 전까지, 로직은 일시정지
+	 */
+	FOnEndCombatUI OnEndCombatUI;
 	/**
 	 * @brief 턴 시작 시 뜰 UI
 	 * @details
