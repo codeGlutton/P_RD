@@ -160,7 +160,14 @@ bool USRPGCombatSubsystem::UnregisterTurnImmediately(TSharedRef<FSRPGTurnContext
 	auto* CurNode = mTurnContexts.FindNode(TurnContext);
 	if (CurNode != nullptr)
 	{
-		mCurTurnContextNode = mTurnContexts.RemoveNode(CurNode);
+		// 현재 진행 중인 턴을 삭제하게 되어 노드 전환이 필요한지 여부
+		const bool NeedToChangeTurnContext = mCurTurnContextNode->GetValue() == TurnContext;
+
+		auto* NextNode = mTurnContexts.RemoveNode(CurNode);
+		if (NeedToChangeTurnContext == true)
+		{
+			mCurTurnContextNode = NextNode;
+		}
 		return true;
 	}
 	return false;
@@ -179,7 +186,14 @@ int32 USRPGCombatSubsystem::UnregisterTurnsImmediately(const AUnit* Owner)
 		TSharedPtr<FSRPGTurnContext> CurTurnContext = CurNode->GetValue();
 		if (CurTurnContext->GetOwner() == Owner)
 		{
-			mCurTurnContextNode = mTurnContexts.RemoveNode(CurNode);
+			// 현재 진행 중인 턴을 삭제하게 되어 노드 전환이 필요한지 여부
+			const bool NeedToChangeTurnContext = mCurTurnContextNode->GetValue() == CurTurnContext;
+
+			auto* NextNode = mTurnContexts.RemoveNode(CurNode);
+			if (NeedToChangeTurnContext == true)
+			{
+				mCurTurnContextNode = NextNode;
+			}
 			++UnregisterCount;
 		}
 
