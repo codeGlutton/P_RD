@@ -344,7 +344,7 @@ public:
 		{
 			if (Node->GetValue() == InElement)
 			{
-				break;
+				return Node;
 			}
 
 			Node = Node->NextNode;
