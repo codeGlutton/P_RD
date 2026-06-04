@@ -9,7 +9,7 @@
 
 #include "RDMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Frontend/FrontendViewTypes.h"
+#include "Frontend/CharacterSelectTypes.h"
 #include "TimerManager.h"
 #include "UObject/SoftObjectPath.h"
 

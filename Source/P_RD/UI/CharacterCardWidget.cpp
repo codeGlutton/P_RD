@@ -8,7 +8,7 @@
 
 namespace
 {
-	FLinearColor GetFallbackIconColor(int32 CharacterIndex, bool bEnabled, bool bSelected)
+	FLinearColor GetFallbackIconColor(int32 CharacterIndex, bool bSelectable, bool bSelected)
 	{
 		static const FLinearColor BaseColors[] =
 		{
@@ -20,7 +20,7 @@ namespace
 		};
 
 		const int32 ColorIndex = FMath::Abs(CharacterIndex) % UE_ARRAY_COUNT(BaseColors);
-		const float Brightness = bEnabled ? (bSelected ? 1.0f : 0.55f) : (bSelected ? 0.38f : 0.22f);
+		const float Brightness = bSelectable ? (bSelected ? 1.0f : 0.55f) : (bSelected ? 0.38f : 0.22f);
 		const FLinearColor BaseColor = BaseColors[ColorIndex];
 		return FLinearColor(BaseColor.R * Brightness, BaseColor.G * Brightness, BaseColor.B * Brightness, 1.0f);
 	}
@@ -94,7 +94,7 @@ void UCharacterCardWidget::SyncCard() const
 
 	if (IconBackground != nullptr)
 	{
-		IconBackground->SetBrushColor(GetFallbackIconColor(mCharacterOption.mIndex, mCharacterOption.bEnabled, bIsSelected));
+		IconBackground->SetBrushColor(GetFallbackIconColor(mCharacterOption.mIndex, mCharacterOption.bSelectable, bIsSelected));
 	}
 
 	if (IconImage == nullptr)
@@ -108,7 +108,7 @@ void UCharacterCardWidget::SyncCard() const
 	if (LoadedIcon != nullptr)
 	{
 		IconImage->SetBrushFromTexture(LoadedIcon, true);
-		IconImage->SetColorAndOpacity(mCharacterOption.bEnabled ? FLinearColor::White : FLinearColor(0.35f, 0.35f, 0.35f, 0.82f));
+		IconImage->SetColorAndOpacity(mCharacterOption.bSelectable ? FLinearColor::White : FLinearColor(0.35f, 0.35f, 0.35f, 0.82f));
 		IconImage->SetVisibility(ESlateVisibility::Visible);
 	}
 	else

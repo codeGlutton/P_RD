@@ -7,6 +7,7 @@
 #include "Engine/AssetManager.h"
 #include "Engine/StreamableManager.h"
 #include "Engine/Texture2D.h"
+#include "Frontend/FrontendViewTypes.h"
 #include "GameMode/FrontendGameMode.h"
 #include "TimerManager.h"
 #include "UI/CharacterCardWidget.h"
@@ -174,7 +175,7 @@ void UCharacterSelectWidget::RefreshCharacterOptions()
 	const FFrontendCharacterOption* FirstOption = mCharacterOptions.IsEmpty() ? nullptr : &mCharacterOptions[0];
 	const FFrontendCharacterOption* FirstEnabledOption = mCharacterOptions.FindByPredicate([](const FFrontendCharacterOption& Option)
 	{
-		return Option.bEnabled;
+		return Option.bSelectable;
 	});
 	const FFrontendCharacterOption* SelectedOption = PreservedOption != nullptr
 		? PreservedOption
@@ -183,7 +184,7 @@ void UCharacterSelectWidget::RefreshCharacterOptions()
 	if (SelectedOption != nullptr)
 	{
 		mSelectedCharacterIndex = SelectedOption->mIndex;
-		mSelectedPlayerUnitId = SelectedOption->bEnabled ? SelectedOption->mPlayerUnitId : FPrimaryAssetId();
+		mSelectedPlayerUnitId = SelectedOption->bSelectable ? SelectedOption->mPlayerUnitId : FPrimaryAssetId();
 	}
 
 	SetConfirmButtonText(mConfirmText);
@@ -250,7 +251,7 @@ void UCharacterSelectWidget::SelectCharacter(int32 CharacterIndex)
 	}
 
 	mSelectedCharacterIndex = Option->mIndex;
-	mSelectedPlayerUnitId = Option->bEnabled ? Option->mPlayerUnitId : FPrimaryAssetId();
+	mSelectedPlayerUnitId = Option->bSelectable ? Option->mPlayerUnitId : FPrimaryAssetId();
 	SyncCharacterCards();
 	SyncSelectedCharacter();
 }
@@ -266,11 +267,11 @@ void UCharacterSelectWidget::SyncSelectedCharacter()
 
 	if (SelectedCharacterNameText != nullptr)
 	{
-		SelectedCharacterNameText->SetText(SelectedOption->mName);
+		SelectedCharacterNameText->SetText(SelectedOption->mDisplayName);
 	}
 	if (SelectedCharacterRoleText != nullptr)
 	{
-		SelectedCharacterRoleText->SetText(SelectedOption->mRole);
+		SelectedCharacterRoleText->SetText(SelectedOption->mRoleText);
 	}
 	if (SelectedCharacterStatText != nullptr)
 	{
@@ -284,19 +285,19 @@ void UCharacterSelectWidget::SyncSelectedCharacter()
 	{
 		const bool bHasPortrait = !SelectedOption->mPortrait.IsNull();
 		SelectedCharacterPortraitFallbackText->SetVisibility(bHasPortrait ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
-		SelectedCharacterPortraitFallbackText->SetText(SelectedOption->mName);
+		SelectedCharacterPortraitFallbackText->SetText(SelectedOption->mDisplayName);
 	}
 
 	SetPortraitImage(SelectedOption->mPortrait);
 
 	if (ConfirmButton != nullptr)
 	{
-		ConfirmButton->SetIsEnabled(SelectedOption->bEnabled && !bStartRequested);
+		ConfirmButton->SetIsEnabled(SelectedOption->bSelectable && !bStartRequested);
 	}
 
-	SetStatusText(SelectedOption->bEnabled
-		? FText::Format(TitleMenuText(TEXT("SelectedCharacterFormat")), SelectedOption->mName)
-		: TitleMenuText(TEXT("CharacterLockedStatus")));
+	SetStatusText(SelectedOption->bSelectable
+		? FText::Format(TitleMenuText(TEXT("SelectedCharacterFormat")), SelectedOption->mDisplayName)
+		: (SelectedOption->mDisabledReason.IsEmpty() ? TitleMenuText(TEXT("CharacterLockedStatus")) : SelectedOption->mDisabledReason));
 }
 
 void UCharacterSelectWidget::ClearSelectedCharacter()
@@ -514,6 +515,11 @@ const FFrontendCharacterOption* UCharacterSelectWidget::GetSelectedCharacterOpti
 
 FText UCharacterSelectWidget::BuildCharacterStatText(const FFrontendCharacterOption& Option) const
 {
+	if (!Option.mStatSummary.IsEmpty())
+	{
+		return Option.mStatSummary;
+	}
+
 	return FText::Format(
 		TitleMenuText(TEXT("CharacterStatFormat")),
 		FText::AsNumber(Option.mMaxHP),
@@ -554,9 +560,11 @@ void UCharacterSelectWidget::HandleConfirmButtonClicked()
 	}
 
 	const FFrontendCharacterOption* SelectedOption = GetSelectedCharacterOption();
-	if (SelectedOption == nullptr || !SelectedOption->bEnabled || !mSelectedPlayerUnitId.IsValid())
+	if (SelectedOption == nullptr || !SelectedOption->bSelectable || !mSelectedPlayerUnitId.IsValid())
 	{
-		SetStatusText(TitleMenuText(TEXT("CharacterLockedStatus")));
+		SetStatusText(SelectedOption != nullptr && !SelectedOption->mDisabledReason.IsEmpty()
+			? SelectedOption->mDisabledReason
+			: TitleMenuText(TEXT("CharacterLockedStatus")));
 		return;
 	}
 

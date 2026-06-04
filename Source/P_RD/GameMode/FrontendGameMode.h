@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "Frontend/CharacterSelectTypes.h"
 #include "Frontend/FrontendViewTypes.h"
 #include "GameMode/RoomGameModeBase.h"
 #include "Kismet/GameplayStatics.h"

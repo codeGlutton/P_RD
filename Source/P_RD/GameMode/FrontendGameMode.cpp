@@ -12,7 +12,6 @@
 #include "PCGStage/Stage.h"
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
-#include "Singleton/InstanceSubsystem/RoomTransitionSubsystem.h"
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/TitleMenuWidget.h"
@@ -160,7 +159,7 @@ namespace
 		const FText JobText = GetPlayerJobText(JobType);
 		return Options.ContainsByPredicate([&JobText](const FFrontendCharacterOption& Option)
 		{
-			return Option.mRole.EqualTo(JobText);
+			return Option.mRoleText.EqualTo(JobText);
 		});
 	}
 
@@ -168,10 +167,11 @@ namespace
 	{
 		FFrontendCharacterOption NewOption;
 		NewOption.mIndex = Options.Num();
-		NewOption.mName = GetPlayerJobName(JobType);
-		NewOption.mRole = GetPlayerJobText(JobType);
+		NewOption.mDisplayName = GetPlayerJobName(JobType);
+		NewOption.mRoleText = GetPlayerJobText(JobType);
 		NewOption.mDescription = NSLOCTEXT("FrontendGameMode", "LockedCharacterDescription", "Character data is not ready");
-		NewOption.bEnabled = false;
+		NewOption.mDisabledReason = NewOption.mDescription;
+		NewOption.bSelectable = false;
 		Options.Add(MoveTemp(NewOption));
 	}
 }
@@ -188,8 +188,7 @@ bool AFrontendGameMode::StartNewRunFromTitle()
 
 bool AFrontendGameMode::StartRunWithPlayerUnit(FPrimaryAssetId PlayerUnitId)
 {
-	(void)PlayerUnitId;
-	return OpenTitleCharacterSelect();
+	return PrepareRunMapWithPlayerUnit(PlayerUnitId);
 }
 
 bool AFrontendGameMode::GetPlayerUnitIds(TArray<FPrimaryAssetId>& OutPlayerUnitIds) const
@@ -232,18 +231,23 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 
 		FFrontendCharacterOption NewOption;
 		NewOption.mIndex = OutOptions.Num();
-		NewOption.mName = PlayerUnitData->mDisplayName.IsEmpty()
+		NewOption.mDisplayName = PlayerUnitData->mDisplayName.IsEmpty()
 			? FText::FromName(PlayerUnitId.PrimaryAssetName)
 			: PlayerUnitData->mDisplayName;
-		NewOption.mRole = GetPlayerJobText(PlayerUnitData->mJobType);
+		NewOption.mRoleText = GetPlayerJobText(PlayerUnitData->mJobType);
 		NewOption.mDescription = PlayerUnitData->mDescription;
 		NewOption.mMaxHP = FMath::RoundToInt(PlayerUnitData->GetDefaultMaxHP(DefaultDifficulty));
 		NewOption.mDice = PlayerUnitData->mDiceDatas.Num();
 		NewOption.mGold = FMath::RoundToInt(PlayerUnitData->GetDefaultMoney(DefaultDifficulty));
+		NewOption.mStatSummary = FText::Format(
+			NSLOCTEXT("FrontendGameMode", "CharacterStatSummary", "HP {0} / Dice {1} / Gold {2}"),
+			FText::AsNumber(NewOption.mMaxHP),
+			FText::AsNumber(NewOption.mDice),
+			FText::AsNumber(NewOption.mGold));
 		NewOption.mPortrait = PlayerUnitData->mPortrait;
 		NewOption.mIcon = PlayerUnitData->mIcon;
 		NewOption.mPlayerUnitId = PlayerUnitId;
-		NewOption.bEnabled = PlayerUnitId.IsValid() && !PlayerUnitData->mClass.IsNull();
+		NewOption.bSelectable = PlayerUnitId.IsValid() && !PlayerUnitData->mClass.IsNull();
 		OutOptions.Add(MoveTemp(NewOption));
 	}
 
@@ -473,15 +477,9 @@ bool AFrontendGameMode::EnterSelectedMapRoom()
 	int32 ColumnIndex = 0;
 	RunPersistData->GetCurrentRoomIndex(OUT RowIndex, OUT ColumnIndex);
 
-	URoomTransitionSubsystem* RoomTransitionSubsystem = GetGameInstance()->GetSubsystem<URoomTransitionSubsystem>();
-	if (RoomTransitionSubsystem == nullptr)
-	{
-		ShowTitleMessage(FrontendText(TEXT("MissingStage"), TEXT("Map is not ready")));
-		return false;
-	}
-
 	ShowTitleMessage(FrontendText(TEXT("LoadingSelectedRoom"), TEXT("Loading selected room")));
-	RoomTransitionSubsystem->PreloadRoomAsync(RowIndex, ColumnIndex, FOnPreTransitNextRoom(), true);
+	PreloadRoomAsync(RowIndex, ColumnIndex);
+	TransitionLoadedRoomAsync();
 	return true;
 }
 
@@ -604,6 +602,11 @@ bool AFrontendGameMode::StartRunPreviewWithPlayerUnit(FPrimaryAssetId PlayerUnit
 		return false;
 	}
 
+	// 지도 미리보기는 "새 Stage를 만들되 아직 방 레벨로 전환하지 않는" 흐름이다.
+	// PM 브랜치의 MakeStageAndPreloadRoomAsync()는 방 전환 준비용 API라 여기서 쓰면
+	// 첫 방 preload/transition 상태까지 섞인다. 그래서 Stage 생성 공식 API인
+	// URunPersistData::MakeStageAsync()만 호출하고, 지도 입장은 EnterSelectedMapRoom()에서
+	// RoomGameModeBase의 PreloadRoomAsync()/TransitionLoadedRoomAsync() 흐름으로 넘긴다.
 	RunPersistData->MakeStageAsync(EStageLevelType::Stage1, FOnCreateStage::CreateUObject(this, &AFrontendGameMode::HandleStageCreated));
 	return true;
 }

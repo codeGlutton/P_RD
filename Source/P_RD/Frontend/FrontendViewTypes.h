@@ -12,8 +12,6 @@
 
 #include "FrontendViewTypes.generated.h"
 
-class UTexture2D;
-
 /**
  * @brief 프론트엔드 월드맵 노드가 UI에 표시될 때 사용하는 상태
  */
@@ -31,69 +29,16 @@ enum class EFrontendMapRoomState : uint8
 };
 
 /**
- * @brief 캐릭터 선택 화면이 표시할 플레이어 유닛 카드 데이터
- *
- * @details
- * UI는 Primary Data Asset을 직접 순회하지 않고, 프론트엔드 계층이 만든 표시용 데이터만 사용한다.
- * 즉, Widget은 "어떤 캐릭터가 있는지/해금됐는지/초기 스탯이 무엇인지"를 판단하지 않는다.
- * GameMode가 이 구조체로 변환해 내려준 값을 화면에 그린 뒤, 확정 시 mPlayerUnitId만 다시 넘긴다.
- */
-USTRUCT(BlueprintType)
-struct P_RD_API FFrontendCharacterOption
-{
-	GENERATED_BODY()
-
-	// 화면 카드의 안정적인 선택 키. 배열 위치가 아니라 GameMode가 정렬 후 부여한 View index다.
-	UPROPERTY(Category = Frontend, BlueprintReadOnly)
-	int32 mIndex = INDEX_NONE;
-
-	// 카드와 상세 패널에 표시할 이름. 비어 있으면 GameMode가 PrimaryAsset 이름으로 fallback한다.
-	UPROPERTY(Category = Frontend, BlueprintReadOnly)
-	FText mName;
-
-	// 직업/역할 표시 문자열. 실제 직업 enum은 UI가 직접 해석하지 않는다.
-	UPROPERTY(Category = Frontend, BlueprintReadOnly)
-	FText mRole;
-
-	// 카드/상세 패널용 설명 문구.
-	UPROPERTY(Category = Frontend, BlueprintReadOnly)
-	FText mDescription;
-
-	// 시작 최대 체력. UI는 표시만 하고 계산하지 않는다.
-	UPROPERTY(Category = Frontend, BlueprintReadOnly)
-	int32 mMaxHP = 0;
-
-	// 시작 주사위 수. UI는 표시만 하고 계산하지 않는다.
-	UPROPERTY(Category = Frontend, BlueprintReadOnly)
-	int32 mDice = 0;
-
-	// 시작 골드. UI는 표시만 하고 계산하지 않는다.
-	UPROPERTY(Category = Frontend, BlueprintReadOnly)
-	int32 mGold = 0;
-
-	// 상세 패널에 크게 보여줄 초상화. SoftObject라 필요할 때 비동기로 로드한다.
-	UPROPERTY(Category = Frontend, BlueprintReadOnly)
-	TSoftObjectPtr<UTexture2D> mPortrait;
-
-	// 카드에 작게 보여줄 아이콘. 없으면 Widget에서 초상화를 fallback으로 사용한다.
-	UPROPERTY(Category = Frontend, BlueprintReadOnly)
-	TSoftObjectPtr<UTexture2D> mIcon;
-
-	// 런 생성 때 GameMode/Subsystem으로 넘길 실제 캐릭터 식별자.
-	UPROPERTY(Category = Frontend, BlueprintReadOnly)
-	FPrimaryAssetId mPlayerUnitId;
-
-	// 선택 가능 여부. 해금/잠금 판단은 GameMode가 끝내고, UI는 이 값만 신뢰한다.
-	UPROPERTY(Category = Frontend, BlueprintReadOnly)
-	bool bEnabled = false;
-};
-
-/**
  * @brief 월드맵 화면이 표시할 룸 노드 데이터
  *
  * @details
- * Stage/Room 원본 구조를 UI가 직접 해석하지 않도록, 좌표/상태/문구를 합친 View 데이터로 전달한다.
- * Widget은 이 값을 기준으로 노드를 그리고 클릭 이벤트를 GameMode로 다시 전달한다.
+ * feature/create-srpg-framework-base에는 FStage/FRoom, URunPersistData::GetStage(),
+ * URoomTransitionSubsystem::PreloadRoomAsync() 같은 "공식 게임 데이터/API"는 있지만,
+ * 지도 위젯이 바로 그릴 수 있는 View DTO는 없다. 이 구조체는 그래서 새로 유지한다.
+ *
+ * 역할은 원본 Stage를 대체하는 것이 아니라, 원본을 UI 친화적인 값으로 옮긴 읽기 전용 스냅샷이다.
+ * Widget은 이 값을 보고 노드/선을 배치하고, 클릭 시 mRow/mColumn만 GameMode에 돌려준다.
+ * 방 잠금/선택 가능 여부 같은 규칙 판단도 Widget이 직접 하지 않고, GameMode가 이 값으로 내려준다.
  */
 USTRUCT(BlueprintType)
 struct P_RD_API FFrontendMapRoomView
@@ -108,7 +53,7 @@ struct P_RD_API FFrontendMapRoomView
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	int32 mColumn = INDEX_NONE;
 
-	// 룸 종류. 시작 지점은 실제 전투 방이 아니므로 None으로 내려간다.
+	// 룸 종류. 나중에 UStaticStageSpawnData::mRoomIcons 같은 공식 데이터로 아이콘을 고를 때 사용한다.
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	ERoomType mType = ERoomType::None;
 
@@ -154,7 +99,12 @@ struct P_RD_API FFrontendMapRoomView
  * @brief 세팅/런 컨트롤 화면이 표시할 현재 런 상태
  *
  * @details
- * 세팅 오버레이가 런 데이터 객체를 직접 만지지 않도록 현재 상태와 사용 가능한 명령만 묶어 전달한다.
+ * PM 브랜치의 URunPersistData는 현재 런/스테이지/플레이어 값을 제공하지만,
+ * 타이틀 또는 설정 UI가 그 객체를 직접 만지면 저장/포기/지도 표시 가능 여부 판단이 위젯으로 새기 쉽다.
+ * 이 구조체는 그 경계를 막기 위한 View DTO다.
+ *
+ * Widget은 이 값을 보고 버튼 활성화, 시작 위치 스크롤 같은 표시만 결정한다.
+ * 실제 저장/포기/전환 명령은 FrontendGameMode 또는 RoomGameModeBase/Subsystem API를 통해 수행한다.
  */
 USTRUCT(BlueprintType)
 struct P_RD_API FFrontendRunControlView
