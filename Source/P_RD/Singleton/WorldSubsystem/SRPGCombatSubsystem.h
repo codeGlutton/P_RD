@@ -55,7 +55,8 @@ class P_RD_API USRPGCombatSubsystem : public UTickableWorldSubsystem
 	/* UTickableWorldSubsystem 상속 */
 public:
 	void Tick(float DeltaTime) override;
-	
+	TStatId GetStatId() const override;
+
 public:
 	void InitCombat(const UStaticCombatRoomSpawnData* RoomSpawnData, AUnit* PlayerUnit);
 	void BeginCombat();

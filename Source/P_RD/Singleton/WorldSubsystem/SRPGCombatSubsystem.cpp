@@ -24,6 +24,11 @@ void USRPGCombatSubsystem::Tick(float DeltaTime)
 	}
 }
 
+TStatId USRPGCombatSubsystem::GetStatId() const
+{
+	RETURN_QUICK_DECLARE_CYCLE_STAT(USRPGCombatSubsystem, STATGROUP_Tickables);
+}
+
 void USRPGCombatSubsystem::InitCombat(const UStaticCombatRoomSpawnData* RoomSpawnData, AUnit* PlayerUnit)
 {
 	checkf(RoomSpawnData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
