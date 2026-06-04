@@ -1,26 +1,26 @@
 ﻿/*****************************************************************//**
- * @file   GameplayAbility_Base.h
- * @brief  스킬 어빌리티기본 베이스
+ * @file   GameplayAbility_SkillBase.h
+ * @brief  스킬 어빌리티 기본 베이스
  * @author 김준형
  * @date   2026-06-01
  *********************************************************************/
 
 #pragma once
 
-#include "../GASMinimal.h"
+#include "../../GASMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "GameplayAbility_Base.generated.h"
+#include "GameplayAbility_SkillBase.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class P_RD_API UGameplayAbility_Base : public UGameplayAbility
+class P_RD_API UGameplayAbility_SkillBase : public UGameplayAbility
 {
 	GENERATED_BODY()
 
 public:
-	UGameplayAbility_Base();
+	UGameplayAbility_SkillBase();
 	
 protected:
 	/**

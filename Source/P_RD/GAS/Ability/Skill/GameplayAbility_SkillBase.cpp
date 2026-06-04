@@ -1,11 +1,11 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GameplayAbility_Base.h"
+#include "GameplayAbility_SkillBase.h"
 
-#include "../Effect/GameplayEffect_Damage.h"
+#include "../../Effect/GameplayEffect_Damage.h"
 
-UGameplayAbility_Base::UGameplayAbility_Base()
+UGameplayAbility_SkillBase::UGameplayAbility_SkillBase()
 {	
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 
@@ -17,11 +17,11 @@ UGameplayAbility_Base::UGameplayAbility_Base()
 	AbilityTriggers.Add(TriggerData);
 }
 
-void UGameplayAbility_Base::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+void UGameplayAbility_SkillBase::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	UE_LOG(LogTemp, Warning, TEXT("UGameplayAbility_Base::ActivateAbility Start"));
+	UE_LOG(LogTemp, Warning, TEXT("UGameplayAbility_SkillBase::ActivateAbility Start"));
 
 	// 유효한 액터인지 검사한다.
 	if (!ActorInfo || !ActorInfo->AvatarActor.IsValid())

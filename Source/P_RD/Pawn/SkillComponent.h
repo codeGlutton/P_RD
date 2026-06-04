@@ -58,7 +58,7 @@ protected:
 
 public:
 	/* 델리게이트 변수*/
-	FOnSkillChange mOnSkillChange;
+	FOnSkillChange OnSkillChange;
 
 protected:
 	// Called when the game starts
