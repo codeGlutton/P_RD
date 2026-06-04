@@ -109,6 +109,13 @@ float ATileMap::GetTileSize() const
 	return mTileSize;
 }
 
+bool ATileMap::IsValidIndex(const FTileIndex& TileIndex) const
+{
+	// 0 <= X < Width && 0 <= Y < Height 범위 검사
+	return TileIndex.mX >= 0 && TileIndex.mX < mWidth
+		&& TileIndex.mY >= 0 && TileIndex.mY < mHeight;
+}
+
 FTransform ATileMap::TileToWorldTransform(const FTileTransform& TileTransform) const
 {
 	// TODO: 인덱스+방향 → 월드 트랜스폼 변환
@@ -183,6 +190,6 @@ void ATileMap::RemoveActor(ITileActor* Actor)
 	// TODO: 이전 타일에 겹치는 객체마다 OnEndTileOverlap 이벤트
 	
 	// TODO: 이전 타일에서 해제
-	Actor->SetTileTransform(FTileTransform::Zero);
+	Actor->SetTileTransform(FTileTransform::Invalid);
 }
 
