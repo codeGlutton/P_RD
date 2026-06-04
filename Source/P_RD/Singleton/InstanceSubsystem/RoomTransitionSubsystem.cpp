@@ -4,10 +4,70 @@
 #include "Engine/AssetManager.h"
 #include "DataAsset/BundleType.h"
 #include "DataAsset/RoomSpawnData/StaticRoomSpawnData.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "Setting/GamePlaySettings.h"
 
 DEFINE_LOG_CATEGORY(LogTransition)
+
+namespace
+{
+    bool IsUsableGameModeClass(const TSoftClassPtr<AGameModeBase>& GameModeClass)
+    {
+        const FString GameModePath = GameModeClass.ToSoftObjectPath().GetAssetPathString();
+        return GameModeClass.IsNull() == false && GameModePath.IsEmpty() == false && GameModePath != TEXT("None");
+    }
+
+    bool IsUsableWorldAsset(const TSoftObjectPtr<UWorld>& WorldAsset)
+    {
+        const FString WorldPath = WorldAsset.ToSoftObjectPath().GetAssetPathString();
+        return WorldAsset.IsNull() == false && WorldPath.IsEmpty() == false && WorldPath != TEXT("None");
+    }
+
+    TSoftClassPtr<AGameModeBase> GetFallbackGameModeClass(ERoomType RoomType, const UGamePlaySettings* GamePlaySettings)
+    {
+        checkf(GamePlaySettings != nullptr, TEXT("게임플레이 세팅 nullptr"));
+
+        switch (RoomType)
+        {
+        case ERoomType::Monster:
+        case ERoomType::EliteMonster:
+        case ERoomType::BossMonster:
+            return GamePlaySettings->mCombatGameMode;
+        case ERoomType::Shop:
+            return GamePlaySettings->mShopGameMode;
+        case ERoomType::Treasure:
+            return GamePlaySettings->mTreasureGameMode;
+        default:
+            return TSoftClassPtr<AGameModeBase>();
+        }
+    }
+
+    TSoftClassPtr<AGameModeBase> ResolveRoomGameModeClass(const UStaticRoomSpawnData* StaticRoomData, ERoomType RoomType, const UGamePlaySettings* GamePlaySettings)
+    {
+        checkf(StaticRoomData != nullptr, TEXT("정적 룸 데이터 nullptr"));
+
+        if (IsUsableGameModeClass(StaticRoomData->mGameModeBase))
+        {
+            return StaticRoomData->mGameModeBase;
+        }
+
+        return GetFallbackGameModeClass(RoomType, GamePlaySettings);
+    }
+
+    TSoftObjectPtr<UWorld> ResolveRoomBackgroundMap(const UStaticRoomSpawnData* StaticRoomData, const UGamePlaySettings* GamePlaySettings)
+    {
+        checkf(StaticRoomData != nullptr, TEXT("정적 룸 데이터 nullptr"));
+        checkf(GamePlaySettings != nullptr, TEXT("게임플레이 세팅 nullptr"));
+
+        if (IsUsableWorldAsset(StaticRoomData->mBackgroundMap))
+        {
+            return StaticRoomData->mBackgroundMap;
+        }
+
+        return GamePlaySettings->mDefaultRoomMap;
+    }
+}
 
 void URoomTransitionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -241,8 +301,38 @@ void URoomTransitionSubsystem::OnTransitNextRoom()
 
     const FRoom& NextRoom = GetRunMutableData()->GetRoom(mRequest.mRoomRowIndex, mRequest.mRoomColumnIndex);
     UStaticRoomSpawnData* StaticRoomData = AssetManager->GetPrimaryAssetObject<UStaticRoomSpawnData>(NextRoom.mStaticRoomSpawnDataId);
-    checkf(StaticRoomData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
+    if (StaticRoomData == nullptr && NextRoom.mStaticRoomSpawnDataId.IsValid())
+    {
+        const FSoftObjectPath RoomDataPath = AssetManager->GetPrimaryAssetPath(NextRoom.mStaticRoomSpawnDataId);
+        StaticRoomData = Cast<UStaticRoomSpawnData>(RoomDataPath.TryLoad());
+    }
+    if (StaticRoomData == nullptr)
+    {
+        UE_LOG(LogTransition, Error, TEXT("방 이동 실패. 룸 정보를 찾을 수 없습니다. RoomType: %d, RoomData: %s"),
+            StaticCast<uint8>(NextRoom.mType),
+            *NextRoom.mStaticRoomSpawnDataId.ToString());
+        return;
+    }
 
-    FString Option = FString::Printf(TEXT("?game=%s"), *StaticRoomData->mGameModeBase.ToSoftObjectPath().GetAssetPathString());
-    UGameplayStatics::OpenLevelBySoftObjectPtr(GetWorld(), StaticRoomData->mBackgroundMap, true, Option);
+    const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
+    const TSoftClassPtr<AGameModeBase> GameModeClass = ResolveRoomGameModeClass(StaticRoomData, NextRoom.mType, GamePlaySettings);
+    const TSoftObjectPtr<UWorld> BackgroundMap = ResolveRoomBackgroundMap(StaticRoomData, GamePlaySettings);
+    const FString Option = IsUsableGameModeClass(GameModeClass) ? FString::Printf(TEXT("game=%s"), *GameModeClass.ToSoftObjectPath().GetAssetPathString()) : FString();
+    if (IsUsableWorldAsset(BackgroundMap) == false)
+    {
+        UE_LOG(LogTransition, Error, TEXT("방 이동 실패. 사용할 배경 맵이 없습니다. RoomType: %d, RoomData: %s"),
+            StaticCast<uint8>(NextRoom.mType),
+            *NextRoom.mStaticRoomSpawnDataId.ToString());
+        return;
+    }
+
+    const FSoftObjectPath BackgroundMapPath = BackgroundMap.ToSoftObjectPath();
+    const FString BackgroundMapPackageName = BackgroundMapPath.GetLongPackageName();
+    UE_LOG(LogTransition, Display, TEXT("방 이동. RoomType: %d, RoomData: %s, Map: %s, GameMode: %s, Option: %s"),
+        StaticCast<uint8>(NextRoom.mType),
+        *NextRoom.mStaticRoomSpawnDataId.ToString(),
+        *BackgroundMapPath.GetAssetPathString(),
+        *GameModeClass.ToSoftObjectPath().GetAssetPathString(),
+        *Option);
+    UGameplayStatics::OpenLevel(GetWorld(), FName(*BackgroundMapPackageName), true, Option);
 }

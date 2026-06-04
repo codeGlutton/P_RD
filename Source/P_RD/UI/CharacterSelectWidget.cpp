@@ -1,175 +1,194 @@
 #include "UI/CharacterSelectWidget.h"
 
 #include "Components/Button.h"
-#include "Components/HorizontalBoxSlot.h"
 #include "Components/Image.h"
 #include "Components/PanelWidget.h"
 #include "Components/TextBlock.h"
 #include "Engine/AssetManager.h"
 #include "Engine/StreamableManager.h"
 #include "Engine/Texture2D.h"
+#include "GameMode/FrontendGameMode.h"
+#include "TimerManager.h"
 #include "UI/CharacterCardWidget.h"
 
 namespace
 {
-	const FText CharacterSelectTemporaryStats = NSLOCTEXT("CharacterSelectWidget", "TemporaryStats", "HP 100 / Dice 1 / Money 0");
-	const FText CharacterSelectLockedReason = NSLOCTEXT("CharacterSelectWidget", "TemporaryLockedReason", "Locked");
-
-	/**
-	 * @brief UI 확인용 임시 캐릭터 표시 값을 만듦
-	 *
-	 * @details
-	 * 이번 브랜치는 타이틀/캐릭터 선택 UI 구조만 다룬다.
-	 * 실제 캐릭터 목록 API, 플레이어 유닛 확정, 런 시작, 방 전환은 담당 파트의 책임이라 여기서 호출하지 않는다.
-	 *
-	 * 그래서 현재는 WBP 배치와 카드 동작을 확인할 수 있도록 표시용 값만 만든다.
-	 * 실제 캐릭터 데이터 제공자가 준비되면 RefreshCharacterOptions()에서 이 임시 목록 생성부를 교체하면 된다.
-	 *
-	 * @param DisplayName 상세 영역과 카드가 참조할 캐릭터 이름
-	 * @param RoleText FRONT, RANGE, SPELL 같은 역할 표시 문구
-	 * @param Description 상세 영역에 보여줄 간단한 설명
-	 * @param bSelectable Confirm 버튼을 켤 수 있는 캐릭터면 true
-	 * @param DisabledReason 잠긴 캐릭터일 때 상세 영역에 보여줄 사유
-	 * @return 캐릭터 선택 UI가 화면 표시용으로 사용할 값
-	 */
-	FFrontendCharacterOption MakeTemporaryCharacterOption(
-		const FText& DisplayName,
-		const FText& RoleText,
-		const FText& Description,
-		bool bSelectable,
-		const FText& DisabledReason = FText::GetEmpty()
-	)
+	FText TitleMenuText(const TCHAR* Key)
 	{
-		FFrontendCharacterOption Option;
-		Option.mDisplayName = DisplayName;
-		Option.mRoleText = RoleText;
-		Option.mDescription = Description;
-		Option.mStatSummary = CharacterSelectTemporaryStats;
-		Option.bSelectable = bSelectable;
-		Option.mDisabledReason = DisabledReason;
-		return Option;
+		if (FCString::Strcmp(Key, TEXT("ConfirmText")) == 0)
+		{
+			return NSLOCTEXT("TitleMenuWidget", "ConfirmText", "CONFIRM");
+		}
+		if (FCString::Strcmp(Key, TEXT("BackText")) == 0)
+		{
+			return NSLOCTEXT("TitleMenuWidget", "BackText", "BACK");
+		}
+		if (FCString::Strcmp(Key, TEXT("ReadyStatusText")) == 0)
+		{
+			return FText::GetEmpty();
+		}
+		if (FCString::Strcmp(Key, TEXT("LoadingStatusText")) == 0)
+		{
+			return NSLOCTEXT("TitleMenuWidget", "LoadingStatusText", "Loading");
+		}
+		if (FCString::Strcmp(Key, TEXT("FailedStatusText")) == 0)
+		{
+			return NSLOCTEXT("TitleMenuWidget", "FailedStatusText", "Failed");
+		}
+		if (FCString::Strcmp(Key, TEXT("NoCharacterStatusText")) == 0)
+		{
+			return NSLOCTEXT("TitleMenuWidget", "NoCharacterStatusText", "No character data");
+		}
+		if (FCString::Strcmp(Key, TEXT("CharacterSelectText")) == 0)
+		{
+			return NSLOCTEXT("TitleMenuWidget", "CharacterSelectText", "Character Select");
+		}
+		if (FCString::Strcmp(Key, TEXT("SelectedCharacterFormat")) == 0)
+		{
+			return NSLOCTEXT("TitleMenuWidget", "SelectedCharacterFormat", "{0} selected");
+		}
+		if (FCString::Strcmp(Key, TEXT("CharacterLockedStatus")) == 0)
+		{
+			return NSLOCTEXT("TitleMenuWidget", "CharacterLockedStatus", "This character is not available");
+		}
+		if (FCString::Strcmp(Key, TEXT("PortraitFallbackText")) == 0)
+		{
+			return NSLOCTEXT("TitleMenuWidget", "PortraitFallbackText", "No portrait");
+		}
+		if (FCString::Strcmp(Key, TEXT("CharacterStatFormat")) == 0)
+		{
+			return NSLOCTEXT("TitleMenuWidget", "CharacterStatFormat", "HP {0} / Dice {1} / Gold {2}");
+		}
+		return FText::FromString(Key);
 	}
 }
 
 UCharacterSelectWidget::UCharacterSelectWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
-	, CharacterCardWidgetClass(nullptr)
-	, mCharacterSelectStatusText(FText::GetEmpty())
-	, mCharacterTransitionBlockedStatusText(NSLOCTEXT("CharacterSelectWidget", "CharacterTransitionBlockedStatusText", "Next screen is not connected yet"))
-	, mCharacterUnavailableStatusText(NSLOCTEXT("CharacterSelectWidget", "CharacterUnavailableStatusText", "This character is not available yet"))
-	, mCharacterDataMissingStatusText(NSLOCTEXT("CharacterSelectWidget", "CharacterDataMissingStatusText", "Character data is not ready"))
-	, mConfirmButtonText(NSLOCTEXT("CharacterSelectWidget", "ConfirmText", "CONFIRM"))
-	, mBackButtonText(NSLOCTEXT("CharacterSelectWidget", "BackText", "BACK"))
 {
+	RefreshLocalizedTextCache();
 	SetVisibility(ESlateVisibility::Visible);
 }
 
 void UCharacterSelectWidget::OpenCharacterSelect()
 {
+	bStartRequested = false;
+	RefreshLocalizedTextCache();
 	RefreshCharacterOptions();
-	SyncSelectedCharacter();
-	SetStatusText(mCharacterSelectStatusText);
+	SetStatusText(mReadyStatusText);
+	SetConfirmButtonText(mConfirmText);
+}
+
+void UCharacterSelectWidget::RefreshCharacterOptionsFromGameMode()
+{
+	RefreshCharacterOptions();
 }
 
 void UCharacterSelectWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-
 	ValidateDesignerBindings();
+	BindEvents();
+	RefreshLocalizedTextCache();
+	RefreshCharacterOptions();
+	SetStatusText(mReadyStatusText);
+}
 
+void UCharacterSelectWidget::NativeDestruct()
+{
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(mStageReadyPollTimerHandle);
+	}
+
+	CancelPortraitLoad();
+	UnbindEvents();
+	Super::NativeDestruct();
+}
+
+void UCharacterSelectWidget::RefreshLocalizedTextCache()
+{
+	mConfirmText = TitleMenuText(TEXT("ConfirmText"));
+	mBackText = TitleMenuText(TEXT("BackText"));
+	mReadyStatusText = TitleMenuText(TEXT("ReadyStatusText"));
+	mLoadingStatusText = TitleMenuText(TEXT("LoadingStatusText"));
+	mFailedStatusText = TitleMenuText(TEXT("FailedStatusText"));
+	mNoCharacterStatusText = TitleMenuText(TEXT("NoCharacterStatusText"));
+	mCharacterSelectText = TitleMenuText(TEXT("CharacterSelectText"));
+}
+
+void UCharacterSelectWidget::BindEvents()
+{
 	if (ConfirmButton != nullptr)
 	{
 		ConfirmButton->OnClicked.AddUniqueDynamic(this, &UCharacterSelectWidget::HandleConfirmButtonClicked);
 	}
-
 	if (BackToMainButton != nullptr)
 	{
 		BackToMainButton->OnClicked.AddUniqueDynamic(this, &UCharacterSelectWidget::HandleBackToMainButtonClicked);
 	}
-
-	RefreshCharacterOptions();
-	SyncCharacterText();
-	SetStatusText(mCharacterSelectStatusText);
 }
 
-void UCharacterSelectWidget::NativeDestruct()
+void UCharacterSelectWidget::UnbindEvents()
 {
 	if (ConfirmButton != nullptr)
 	{
 		ConfirmButton->OnClicked.RemoveDynamic(this, &UCharacterSelectWidget::HandleConfirmButtonClicked);
 	}
-
 	if (BackToMainButton != nullptr)
 	{
 		BackToMainButton->OnClicked.RemoveDynamic(this, &UCharacterSelectWidget::HandleBackToMainButtonClicked);
 	}
 
-	for (UCharacterCardWidget* CharacterCardWidget : mCharacterCardWidgets)
+	for (UCharacterCardWidget* CardWidget : CharacterCardWidgets)
 	{
-		if (CharacterCardWidget != nullptr)
+		if (CardWidget != nullptr)
 		{
-			CharacterCardWidget->OnCharacterCardClicked.RemoveDynamic(this, &UCharacterSelectWidget::HandleCharacterCardClicked);
+			CardWidget->OnCharacterCardClicked.RemoveDynamic(this, &UCharacterSelectWidget::HandleCharacterCardClicked);
 		}
 	}
-
-	CancelPortraitLoad();
-
-	Super::NativeDestruct();
 }
 
 void UCharacterSelectWidget::RefreshCharacterOptions()
 {
+	const int32 PreviousSelectedCharacterIndex = mSelectedCharacterIndex;
 	mCharacterOptions.Reset();
+	mSelectedPlayerUnitId = FPrimaryAssetId();
+	mSelectedCharacterIndex = INDEX_NONE;
 
-	mCharacterOptions.Add(MakeTemporaryCharacterOption(
-		NSLOCTEXT("CharacterSelectWidget", "TemporaryWarriorName", "Warrior"),
-		NSLOCTEXT("CharacterSelectWidget", "TemporaryWarriorRole", "FRONT"),
-		NSLOCTEXT("CharacterSelectWidget", "TemporaryWarriorDescription", "Temporary selectable slot for checking the character select UI."),
-		true
-	));
-
-	mCharacterOptions.Add(MakeTemporaryCharacterOption(
-		NSLOCTEXT("CharacterSelectWidget", "TemporaryArcherName", "Archer"),
-		NSLOCTEXT("CharacterSelectWidget", "TemporaryArcherRole", "RANGE"),
-		NSLOCTEXT("CharacterSelectWidget", "TemporaryArcherDescription", "Temporary locked slot. Real character data will be connected later."),
-		false,
-		CharacterSelectLockedReason
-	));
-
-	mCharacterOptions.Add(MakeTemporaryCharacterOption(
-		NSLOCTEXT("CharacterSelectWidget", "TemporaryMagicianName", "Magician"),
-		NSLOCTEXT("CharacterSelectWidget", "TemporaryMagicianRole", "SPELL"),
-		NSLOCTEXT("CharacterSelectWidget", "TemporaryMagicianDescription", "Temporary locked slot. Real character data will be connected later."),
-		false,
-		CharacterSelectLockedReason
-	));
-
-	if (mCharacterOptions.IsValidIndex(mSelectedCharacterIndex) == false)
+	AFrontendGameMode* FrontendGameMode = GetFrontendGameMode();
+	if (FrontendGameMode == nullptr || !FrontendGameMode->GetCharacterOptions(OUT mCharacterOptions))
 	{
-		mSelectedCharacterIndex = 0;
+		RebuildCharacterCards();
+		ClearSelectedCharacter();
+		const bool bIsLoading = FrontendGameMode != nullptr && FrontendGameMode->IsCharacterOptionsLoading();
+		SetStatusText(bIsLoading ? mLoadingStatusText : mNoCharacterStatusText);
+		SetConfirmButtonText(bIsLoading ? mLoadingStatusText : mConfirmText);
+		return;
 	}
 
-	SyncCharacterText();
+	const FFrontendCharacterOption* PreservedOption = mCharacterOptions.FindByPredicate([PreviousSelectedCharacterIndex](const FFrontendCharacterOption& Option)
+	{
+		return Option.mIndex == PreviousSelectedCharacterIndex;
+	});
+	const FFrontendCharacterOption* FirstOption = mCharacterOptions.IsEmpty() ? nullptr : &mCharacterOptions[0];
+	const FFrontendCharacterOption* FirstEnabledOption = mCharacterOptions.FindByPredicate([](const FFrontendCharacterOption& Option)
+	{
+		return Option.bEnabled;
+	});
+	const FFrontendCharacterOption* SelectedOption = PreservedOption != nullptr
+		? PreservedOption
+		: (FirstEnabledOption != nullptr ? FirstEnabledOption : FirstOption);
+
+	if (SelectedOption != nullptr)
+	{
+		mSelectedCharacterIndex = SelectedOption->mIndex;
+		mSelectedPlayerUnitId = SelectedOption->bEnabled ? SelectedOption->mPlayerUnitId : FPrimaryAssetId();
+	}
+
+	SetConfirmButtonText(mConfirmText);
 	RebuildCharacterCards();
-}
-
-void UCharacterSelectWidget::SyncCharacterText() const
-{
-	if (ConfirmButtonText != nullptr)
-	{
-		ConfirmButtonText->SetText(mConfirmButtonText);
-	}
-
-	if (BackToMainButtonText != nullptr)
-	{
-		BackToMainButtonText->SetText(mBackButtonText);
-	}
-
-	if (BackToMainButton != nullptr)
-	{
-		BackToMainButton->SetVisibility(ESlateVisibility::Visible);
-		BackToMainButton->SetIsEnabled(true);
-	}
+	SyncSelectedCharacter();
 }
 
 void UCharacterSelectWidget::RebuildCharacterCards()
@@ -179,80 +198,67 @@ void UCharacterSelectWidget::RebuildCharacterCards()
 		return;
 	}
 
-	while (mCharacterCardWidgets.Num() > mCharacterOptions.Num())
+	for (UCharacterCardWidget* CardWidget : CharacterCardWidgets)
 	{
-		UCharacterCardWidget* RemovedCharacterCardWidget = mCharacterCardWidgets.Pop(EAllowShrinking::No);
-		if (RemovedCharacterCardWidget != nullptr)
+		if (CardWidget != nullptr)
 		{
-			RemovedCharacterCardWidget->OnCharacterCardClicked.RemoveDynamic(this, &UCharacterSelectWidget::HandleCharacterCardClicked);
-			CharacterCardContainer->RemoveChild(RemovedCharacterCardWidget);
+			CardWidget->OnCharacterCardClicked.RemoveDynamic(this, &UCharacterSelectWidget::HandleCharacterCardClicked);
 		}
 	}
+	CharacterCardWidgets.Reset();
+	CharacterCardContainer->ClearChildren();
 
-	while (mCharacterCardWidgets.Num() < mCharacterOptions.Num())
+	for (const FFrontendCharacterOption& Option : mCharacterOptions)
 	{
-		UCharacterCardWidget* NewCharacterCardWidget = CreateWidget<UCharacterCardWidget>(this, CharacterCardWidgetClass);
-		if (NewCharacterCardWidget == nullptr)
-		{
-			return;
-		}
-
-		NewCharacterCardWidget->OnCharacterCardClicked.AddUniqueDynamic(this, &UCharacterSelectWidget::HandleCharacterCardClicked);
-		UPanelSlot* NewCardSlot = CharacterCardContainer->AddChild(NewCharacterCardWidget);
-		if (UHorizontalBoxSlot* HorizontalCardSlot = Cast<UHorizontalBoxSlot>(NewCardSlot))
-		{
-			HorizontalCardSlot->SetPadding(FMargin(8.0f));
-			HorizontalCardSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-			HorizontalCardSlot->SetHorizontalAlignment(HAlign_Center);
-			HorizontalCardSlot->SetVerticalAlignment(VAlign_Center);
-		}
-		mCharacterCardWidgets.Add(NewCharacterCardWidget);
-	}
-
-	for (int32 CharacterIndex = 0; CharacterIndex < mCharacterOptions.Num(); ++CharacterIndex)
-	{
-		UCharacterCardWidget* CharacterCardWidget = mCharacterCardWidgets[CharacterIndex];
-		if (CharacterCardWidget == nullptr)
+		UCharacterCardWidget* NewWidget = CreateWidget<UCharacterCardWidget>(this, CharacterCardWidgetClass);
+		if (NewWidget == nullptr)
 		{
 			continue;
 		}
 
-		CharacterCardWidget->SetCharacterOption(mCharacterOptions[CharacterIndex], CharacterIndex);
-		CharacterCardWidget->SetSelected(CharacterIndex == mSelectedCharacterIndex);
+		NewWidget->OnCharacterCardClicked.AddUniqueDynamic(this, &UCharacterSelectWidget::HandleCharacterCardClicked);
+		CharacterCardContainer->AddChild(NewWidget);
+		NewWidget->SetCharacterOption(Option, Option.mIndex == mSelectedCharacterIndex);
+		CharacterCardWidgets.Add(NewWidget);
 	}
 }
 
 void UCharacterSelectWidget::SyncCharacterCards() const
 {
-	for (int32 CharacterIndex = 0; CharacterIndex < mCharacterCardWidgets.Num(); ++CharacterIndex)
+	for (UCharacterCardWidget* CardWidget : CharacterCardWidgets)
 	{
-		UCharacterCardWidget* CharacterCardWidget = mCharacterCardWidgets[CharacterIndex];
-		if (CharacterCardWidget != nullptr)
+		if (CardWidget != nullptr)
 		{
-			CharacterCardWidget->SetSelected(CharacterIndex == mSelectedCharacterIndex);
+			const int32 CardIndex = CharacterCardWidgets.IndexOfByKey(CardWidget);
+			CardWidget->SetSelected(CardIndex == mSelectedCharacterIndex);
 		}
 	}
 }
 
 void UCharacterSelectWidget::SelectCharacter(int32 CharacterIndex)
 {
-	const FFrontendCharacterOption* CharacterOption = GetCharacterOption(CharacterIndex);
-	if (CharacterOption == nullptr)
+	if (bStartRequested)
 	{
-		SetStatusText(mCharacterDataMissingStatusText);
 		return;
 	}
 
-	mSelectedCharacterIndex = CharacterIndex;
-	SyncSelectedCharacter();
+	const FFrontendCharacterOption* Option = GetCharacterOption(CharacterIndex);
+	if (Option == nullptr)
+	{
+		SetStatusText(mNoCharacterStatusText);
+		return;
+	}
+
+	mSelectedCharacterIndex = Option->mIndex;
+	mSelectedPlayerUnitId = Option->bEnabled ? Option->mPlayerUnitId : FPrimaryAssetId();
 	SyncCharacterCards();
-	SetStatusText(CharacterOption->bSelectable == true ? mCharacterSelectStatusText : mCharacterUnavailableStatusText);
+	SyncSelectedCharacter();
 }
 
 void UCharacterSelectWidget::SyncSelectedCharacter()
 {
-	const FFrontendCharacterOption* SelectedCharacter = GetCharacterOption(mSelectedCharacterIndex);
-	if (SelectedCharacter == nullptr)
+	const FFrontendCharacterOption* SelectedOption = GetSelectedCharacterOption();
+	if (SelectedOption == nullptr)
 	{
 		ClearSelectedCharacter();
 		return;
@@ -260,72 +266,92 @@ void UCharacterSelectWidget::SyncSelectedCharacter()
 
 	if (SelectedCharacterNameText != nullptr)
 	{
-		SelectedCharacterNameText->SetText(SelectedCharacter->mDisplayName);
+		SelectedCharacterNameText->SetText(SelectedOption->mName);
 	}
-
 	if (SelectedCharacterRoleText != nullptr)
 	{
-		SelectedCharacterRoleText->SetText(SelectedCharacter->mRoleText);
+		SelectedCharacterRoleText->SetText(SelectedOption->mRole);
 	}
-
-	if (SelectedCharacterDescriptionText != nullptr)
-	{
-		SelectedCharacterDescriptionText->SetText(SelectedCharacter->mDescription);
-	}
-
 	if (SelectedCharacterStatText != nullptr)
 	{
-		SelectedCharacterStatText->SetText(SelectedCharacter->mStatSummary);
+		SelectedCharacterStatText->SetText(BuildCharacterStatText(*SelectedOption));
 	}
-
-	if (SelectedCharacterDisabledReasonText != nullptr)
+	if (SelectedCharacterDescriptionText != nullptr)
 	{
-		SelectedCharacterDisabledReasonText->SetText(SelectedCharacter->mDisabledReason);
-		SelectedCharacterDisabledReasonText->SetVisibility(SelectedCharacter->mDisabledReason.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
+		SelectedCharacterDescriptionText->SetText(SelectedOption->mDescription);
+	}
+	if (SelectedCharacterPortraitFallbackText != nullptr)
+	{
+		const bool bHasPortrait = !SelectedOption->mPortrait.IsNull();
+		SelectedCharacterPortraitFallbackText->SetVisibility(bHasPortrait ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
+		SelectedCharacterPortraitFallbackText->SetText(SelectedOption->mName);
 	}
 
-	SetPortraitImage(SelectedCharacter->mPortrait);
+	SetPortraitImage(SelectedOption->mPortrait);
 
 	if (ConfirmButton != nullptr)
 	{
-		ConfirmButton->SetIsEnabled(SelectedCharacter->bSelectable);
+		ConfirmButton->SetIsEnabled(SelectedOption->bEnabled && !bStartRequested);
 	}
+
+	SetStatusText(SelectedOption->bEnabled
+		? FText::Format(TitleMenuText(TEXT("SelectedCharacterFormat")), SelectedOption->mName)
+		: TitleMenuText(TEXT("CharacterLockedStatus")));
 }
 
 void UCharacterSelectWidget::ClearSelectedCharacter()
 {
 	CancelPortraitLoad();
-	ClearPortraitImage();
+	ApplyPortraitImage(nullptr);
 
 	if (SelectedCharacterNameText != nullptr)
 	{
-		SelectedCharacterNameText->SetText(FText::GetEmpty());
+		SelectedCharacterNameText->SetText(mCharacterSelectText);
 	}
-
 	if (SelectedCharacterRoleText != nullptr)
 	{
 		SelectedCharacterRoleText->SetText(FText::GetEmpty());
 	}
-
-	if (SelectedCharacterDescriptionText != nullptr)
-	{
-		SelectedCharacterDescriptionText->SetText(FText::GetEmpty());
-	}
-
 	if (SelectedCharacterStatText != nullptr)
 	{
 		SelectedCharacterStatText->SetText(FText::GetEmpty());
 	}
-
-	if (SelectedCharacterDisabledReasonText != nullptr)
+	if (SelectedCharacterDescriptionText != nullptr)
 	{
-		SelectedCharacterDisabledReasonText->SetText(FText::GetEmpty());
-		SelectedCharacterDisabledReasonText->SetVisibility(ESlateVisibility::Collapsed);
+		SelectedCharacterDescriptionText->SetText(mNoCharacterStatusText);
 	}
-
+	if (SelectedCharacterPortraitFallbackText != nullptr)
+	{
+		SelectedCharacterPortraitFallbackText->SetText(TitleMenuText(TEXT("PortraitFallbackText")));
+		SelectedCharacterPortraitFallbackText->SetVisibility(ESlateVisibility::HitTestInvisible);
+	}
 	if (ConfirmButton != nullptr)
 	{
 		ConfirmButton->SetIsEnabled(false);
+	}
+}
+
+void UCharacterSelectWidget::SetStatusText(const FText& InText)
+{
+	if (CharacterStatusText != nullptr)
+	{
+		const bool bHideDefaultStatus = InText.IsEmptyOrWhitespace() || InText.EqualTo(mReadyStatusText);
+		CharacterStatusText->SetVisibility(bHideDefaultStatus ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
+		CharacterStatusText->SetText(InText);
+	}
+
+	OnStatusTextChanged.Broadcast(InText);
+}
+
+void UCharacterSelectWidget::SetConfirmButtonText(const FText& InText) const
+{
+	if (ConfirmButtonText != nullptr)
+	{
+		ConfirmButtonText->SetText(InText);
+	}
+	if (BackToMainButtonText != nullptr)
+	{
+		BackToMainButtonText->SetText(mBackText);
 	}
 }
 
@@ -337,47 +363,62 @@ void UCharacterSelectWidget::SetPortraitImage(const TSoftObjectPtr<UTexture2D>& 
 		return;
 	}
 
-	if (Portrait.IsNull() == true)
+	if (Portrait.IsNull())
 	{
 		CancelPortraitLoad();
-		ClearPortraitImage();
+		ApplyPortraitImage(nullptr);
+		return;
+	}
+
+	if (UTexture2D* LoadedTexture = Portrait.Get())
+	{
+		CancelPortraitLoad();
+		ApplyPortraitImage(LoadedTexture);
 		return;
 	}
 
 	const FSoftObjectPath PortraitPath = Portrait.ToSoftObjectPath();
-	if (Portrait.IsValid() == true)
+	if (!PortraitPath.IsValid())
 	{
 		CancelPortraitLoad();
-		SelectedCharacterPortraitImage->SetBrushFromTexture(Portrait.Get());
-		SelectedCharacterPortraitImage->SetVisibility(ESlateVisibility::Visible);
+		ApplyPortraitImage(nullptr);
 		return;
 	}
 
-	if (mPortraitLoadHandle.IsValid() == true && mPendingPortraitPath == PortraitPath)
+	if (mPortraitLoadHandle.IsValid() && mPendingPortraitPath == PortraitPath)
 	{
-		ClearPortraitImage();
 		return;
 	}
 
 	CancelPortraitLoad();
-	ClearPortraitImage();
+	ApplyPortraitImage(nullptr);
 
-	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
-	if (AssetManager == nullptr)
+	if (UAssetManager* AssetManager = UAssetManager::GetIfInitialized())
 	{
-		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: AssetManager is not ready."));
+		mPendingPortraitPath = PortraitPath;
+		mPortraitLoadHandle = AssetManager->GetStreamableManager().RequestAsyncLoad(
+			PortraitPath,
+			FStreamableDelegate::CreateUObject(this, &UCharacterSelectWidget::HandlePortraitLoaded, PortraitPath));
+	}
+}
+
+void UCharacterSelectWidget::ApplyPortraitImage(UTexture2D* Texture) const
+{
+	if (SelectedCharacterPortraitImage == nullptr)
+	{
 		return;
 	}
 
-	mPendingPortraitPath = PortraitPath;
-	mPortraitLoadHandle = AssetManager->GetStreamableManager().RequestAsyncLoad(
-		PortraitPath,
-		FStreamableDelegate::CreateUObject(this, &UCharacterSelectWidget::HandlePortraitLoaded, PortraitPath),
-		FStreamableManager::DefaultAsyncLoadPriority,
-		false,
-		false,
-		TEXT("CharacterSelectPortrait")
-	);
+	if (Texture != nullptr)
+	{
+		SelectedCharacterPortraitImage->SetBrushFromTexture(Texture, true);
+		SelectedCharacterPortraitImage->SetColorAndOpacity(FLinearColor::White);
+	}
+	else
+	{
+		SelectedCharacterPortraitImage->SetBrushFromTexture(nullptr);
+		SelectedCharacterPortraitImage->SetColorAndOpacity(FLinearColor(0.080f, 0.095f, 0.095f, 1.f));
+	}
 }
 
 void UCharacterSelectWidget::HandlePortraitLoaded(FSoftObjectPath PortraitPath)
@@ -387,32 +428,14 @@ void UCharacterSelectWidget::HandlePortraitLoaded(FSoftObjectPath PortraitPath)
 		return;
 	}
 
-	UTexture2D* PortraitTexture = Cast<UTexture2D>(PortraitPath.ResolveObject());
-	if (SelectedCharacterPortraitImage != nullptr && PortraitTexture != nullptr)
-	{
-		SelectedCharacterPortraitImage->SetBrushFromTexture(PortraitTexture);
-		SelectedCharacterPortraitImage->SetVisibility(ESlateVisibility::Visible);
-	}
-	else
-	{
-		ClearPortraitImage();
-	}
-
+	ApplyPortraitImage(Cast<UTexture2D>(PortraitPath.ResolveObject()));
 	mPortraitLoadHandle.Reset();
 	mPendingPortraitPath.Reset();
 }
 
-void UCharacterSelectWidget::ClearPortraitImage() const
-{
-	if (SelectedCharacterPortraitImage != nullptr)
-	{
-		SelectedCharacterPortraitImage->SetVisibility(ESlateVisibility::Collapsed);
-	}
-}
-
 void UCharacterSelectWidget::CancelPortraitLoad()
 {
-	if (mPortraitLoadHandle.IsValid() == true)
+	if (mPortraitLoadHandle.IsValid())
 	{
 		mPortraitLoadHandle->CancelHandle();
 		mPortraitLoadHandle.Reset();
@@ -421,88 +444,100 @@ void UCharacterSelectWidget::CancelPortraitLoad()
 	mPendingPortraitPath.Reset();
 }
 
-void UCharacterSelectWidget::SetStatusText(const FText& InText)
+bool UCharacterSelectWidget::BeginRunPreviewWithSelectedCharacter()
 {
-	if (StatusText != nullptr)
+	AFrontendGameMode* FrontendGameMode = GetFrontendGameMode();
+	if (FrontendGameMode == nullptr || !mSelectedPlayerUnitId.IsValid())
 	{
-		StatusText->SetText(FText::GetEmpty());
-		StatusText->SetVisibility(ESlateVisibility::Collapsed);
+		return false;
 	}
 
-	OnStatusTextChanged.Broadcast(InText);
+	if (!FrontendGameMode->PrepareRunMapWithPlayerUnit(mSelectedPlayerUnitId))
+	{
+		return false;
+	}
+
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(mStageReadyPollTimerHandle, this, &UCharacterSelectWidget::HandleRunPreviewReady, 0.1f, true);
+	}
+	return true;
+}
+
+void UCharacterSelectWidget::HandleRunPreviewReady()
+{
+	if (!IsRunMapPreviewReady())
+	{
+		return;
+	}
+
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(mStageReadyPollTimerHandle);
+	}
+
+	bStartRequested = false;
+	SetConfirmButtonText(mConfirmText);
+	SetStatusText(mReadyStatusText);
+	OnRunPreviewReady.Broadcast();
+}
+
+bool UCharacterSelectWidget::IsRunMapPreviewReady() const
+{
+	TArray<FFrontendMapRoomView> Rooms;
+	AFrontendGameMode* FrontendGameMode = GetFrontendGameMode();
+	return FrontendGameMode != nullptr && FrontendGameMode->GetMapRoomViews(OUT Rooms);
+}
+
+AFrontendGameMode* UCharacterSelectWidget::GetFrontendGameMode() const
+{
+	if (UWorld* World = GetWorld())
+	{
+		return World->GetAuthGameMode<AFrontendGameMode>();
+	}
+
+	return nullptr;
 }
 
 const FFrontendCharacterOption* UCharacterSelectWidget::GetCharacterOption(int32 CharacterIndex) const
 {
-	return mCharacterOptions.IsValidIndex(CharacterIndex) ? &mCharacterOptions[CharacterIndex] : nullptr;
+	return mCharacterOptions.FindByPredicate([CharacterIndex](const FFrontendCharacterOption& Option)
+	{
+		return Option.mIndex == CharacterIndex;
+	});
+}
+
+const FFrontendCharacterOption* UCharacterSelectWidget::GetSelectedCharacterOption() const
+{
+	return GetCharacterOption(mSelectedCharacterIndex);
+}
+
+FText UCharacterSelectWidget::BuildCharacterStatText(const FFrontendCharacterOption& Option) const
+{
+	return FText::Format(
+		TitleMenuText(TEXT("CharacterStatFormat")),
+		FText::AsNumber(Option.mMaxHP),
+		FText::AsNumber(Option.mDice),
+		FText::AsNumber(Option.mGold));
 }
 
 void UCharacterSelectWidget::ValidateDesignerBindings() const
 {
 	if (CharacterCardContainer == nullptr)
 	{
-		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: CharacterCardContainer is not connected."));
+		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: WBP_CharacterSelect requires CharacterCardContainer."));
 	}
-
 	if (CharacterCardWidgetClass == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: CharacterCardWidgetClass is not set."));
 	}
-
-	if (SelectedCharacterNameText == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: SelectedCharacterNameText is not connected."));
-	}
-
-	if (SelectedCharacterDescriptionText == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: SelectedCharacterDescriptionText is not connected."));
-	}
-
-	if (SelectedCharacterRoleText == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: SelectedCharacterRoleText is not connected."));
-	}
-
-	if (SelectedCharacterStatText == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: SelectedCharacterStatText is not connected."));
-	}
-
-	if (SelectedCharacterDisabledReasonText == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: SelectedCharacterDisabledReasonText is not connected."));
-	}
-
-	if (SelectedCharacterPortraitImage == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: SelectedCharacterPortraitImage is not connected."));
-	}
-
 	if (ConfirmButton == nullptr)
 	{
-		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: ConfirmButton is not connected."));
+		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: WBP_CharacterSelect requires ConfirmButton."));
 	}
-
-	if (ConfirmButtonText == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: ConfirmButtonText is not connected."));
-	}
-
 	if (BackToMainButton == nullptr)
 	{
-		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: BackToMainButton is not connected."));
-	}
-
-	if (BackToMainButtonText == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: BackToMainButtonText is not connected."));
-	}
-
-	if (StatusText != nullptr)
-	{
-		StatusText->SetText(FText::GetEmpty());
-		StatusText->SetVisibility(ESlateVisibility::Collapsed);
+		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: WBP_CharacterSelect requires BackToMainButton."));
 	}
 }
 
@@ -513,24 +548,42 @@ void UCharacterSelectWidget::HandleCharacterCardClicked(int32 CharacterIndex)
 
 void UCharacterSelectWidget::HandleConfirmButtonClicked()
 {
-	const FFrontendCharacterOption* SelectedCharacter = GetCharacterOption(mSelectedCharacterIndex);
-	if (SelectedCharacter == nullptr)
+	if (bStartRequested)
 	{
-		SetStatusText(mCharacterDataMissingStatusText);
 		return;
 	}
 
-	if (SelectedCharacter->bSelectable == false)
+	const FFrontendCharacterOption* SelectedOption = GetSelectedCharacterOption();
+	if (SelectedOption == nullptr || !SelectedOption->bEnabled || !mSelectedPlayerUnitId.IsValid())
 	{
-		SetStatusText(mCharacterUnavailableStatusText);
+		SetStatusText(TitleMenuText(TEXT("CharacterLockedStatus")));
 		return;
 	}
 
-	UE_LOG(LogRD, Log, TEXT("CharacterSelectWidget: Confirm is blocked in the UI-only branch. Next screen flow is not connected."));
-	SetStatusText(mCharacterTransitionBlockedStatusText);
+	bStartRequested = true;
+	SetConfirmButtonText(mLoadingStatusText);
+	SetStatusText(mLoadingStatusText);
+	if (ConfirmButton != nullptr)
+	{
+		ConfirmButton->SetIsEnabled(false);
+	}
+
+	if (!BeginRunPreviewWithSelectedCharacter())
+	{
+		bStartRequested = false;
+		SetConfirmButtonText(mConfirmText);
+		SetStatusText(mFailedStatusText);
+		if (ConfirmButton != nullptr)
+		{
+			ConfirmButton->SetIsEnabled(true);
+		}
+	}
 }
 
 void UCharacterSelectWidget::HandleBackToMainButtonClicked()
 {
-	OnBackToMainRequested.Broadcast();
+	if (!bStartRequested)
+	{
+		OnBackToMainRequested.Broadcast();
+	}
 }

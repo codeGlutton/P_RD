@@ -43,7 +43,9 @@ EDataValidationResult UStaticPlayerUnitSpawnData::IsDataValid(FDataValidationCon
 
 float UStaticPlayerUnitSpawnData::GetDefaultMaxHP(int32 Difficulty) const
 {
-    auto MaxHPArray = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->GetAttributeSetValues(
+    UAbilitySystemGlobals* AbilitySystemGlobals = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals();
+    AbilitySystemGlobals->InitGlobalData();
+    auto MaxHPArray = AbilitySystemGlobals->GetAttributeSetInitter()->GetAttributeSetValues(
         UPlayerUnitAttributeSet::StaticClass(), 
         UPlayerUnitAttributeSet::GetMaxHPAttribute().GetUProperty(), 
         GetKeyName()
@@ -58,7 +60,9 @@ float UStaticPlayerUnitSpawnData::GetDefaultMaxHP(int32 Difficulty) const
 
 float UStaticPlayerUnitSpawnData::GetDefaultMoney(int32 Difficulty) const
 {
-    auto MoneyArray = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->GetAttributeSetValues(
+    UAbilitySystemGlobals* AbilitySystemGlobals = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals();
+    AbilitySystemGlobals->InitGlobalData();
+    auto MoneyArray = AbilitySystemGlobals->GetAttributeSetInitter()->GetAttributeSetValues(
         UPlayerUnitAttributeSet::StaticClass(),
         UPlayerUnitAttributeSet::GetMoneyAttribute().GetUProperty(),
         GetKeyName()

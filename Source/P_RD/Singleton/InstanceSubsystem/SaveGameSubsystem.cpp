@@ -1,11 +1,45 @@
 ﻿#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 
+#include "Containers/StringConv.h"
 #include "SaveGame/SaveGameArchive.h"
 
 #include "SaveGame/BinarySaveGame.h"
 
 DEFINE_LOG_CATEGORY(LogSave)
+
+namespace
+{
+	bool HasSaveGameFileTag(const TArray<uint8>& SaveData)
+	{
+		return SaveData.Num() >= 4
+			&& SaveData[0] == static_cast<uint8>('G')
+			&& SaveData[1] == static_cast<uint8>('V')
+			&& SaveData[2] == static_cast<uint8>('A')
+			&& SaveData[3] == static_cast<uint8>('S');
+	}
+
+	bool ContainsAsciiText(const TArray<uint8>& SaveData, const FString& Text)
+	{
+		const FTCHARToUTF8 ConvertedText(*Text);
+		const int32 TextLength = ConvertedText.Length();
+		if (TextLength <= 0 || SaveData.Num() < TextLength)
+		{
+			return false;
+		}
+
+		const uint8* TextBytes = reinterpret_cast<const uint8*>(ConvertedText.Get());
+		for (int32 Index = 0; Index <= SaveData.Num() - TextLength; ++Index)
+		{
+			if (FMemory::Memcmp(SaveData.GetData() + Index, TextBytes, TextLength) == 0)
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+}
 
 void USaveGameSubsystem::SaveUser() const
 {
@@ -99,7 +133,7 @@ void USaveGameSubsystem::SaveRun() const
 
 void USaveGameSubsystem::SaveRunAsync(FAsyncSaveGameToSlotDelegate Callback) const
 {
-	if (mUserSaveGame == nullptr)
+	if (mRunSaveGame == nullptr)
 	{
 		CreateRun();
 	}
@@ -109,18 +143,48 @@ void USaveGameSubsystem::SaveRunAsync(FAsyncSaveGameToSlotDelegate Callback) con
 	UGameplayStatics::AsyncSaveGameToSlot(mRunSaveGame, RUN_SLOT_NAME, 0, FAsyncSaveGameToSlotDelegate::CreateLambda([MovedCallback = MoveTemp(Callback)](const FString& SlotName, const int32 UserIndex, bool IsSuccess) {
 		UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 비동기 저장 완료"));
 		MovedCallback.ExecuteIfBound(SlotName, UserIndex, IsSuccess);
-		}));
+	}));
 	ClearRun();
+}
+
+bool USaveGameSubsystem::HasRunSave() const
+{
+	TArray<uint8> SaveData;
+	if (UGameplayStatics::LoadDataFromSlot(OUT SaveData, RUN_SLOT_NAME, 0) == false)
+	{
+		return false;
+	}
+
+	if (HasSaveGameFileTag(SaveData) == false)
+	{
+		UE_LOG(LogSave, Warning, TEXT("런 데이터 세이브 파일 로드 건너뜀: 유효하지 않은 세이브 헤더"));
+		return false;
+	}
+
+	if (ContainsAsciiText(SaveData, UBinarySaveGame::StaticClass()->GetPathName()) == false)
+	{
+		UE_LOG(LogSave, Warning, TEXT("런 데이터 세이브 파일 로드 건너뜀: 저장 클래스 불일치"));
+		return false;
+	}
+
+	return true;
 }
 
 void USaveGameSubsystem::LoadRun()
 {
-	if (UGameplayStatics::DoesSaveGameExist(RUN_SLOT_NAME, 0) == false)
+	if (HasRunSave() == false)
 	{
 		return;
 	}
 
 	mRunSaveGame = Cast<UBinarySaveGame>(UGameplayStatics::LoadGameFromSlot(RUN_SLOT_NAME, 0));
+	if (mRunSaveGame == nullptr || mRunSaveGame->mData.Num() <= 0)
+	{
+		mRunSaveGame = nullptr;
+		UE_LOG(LogSave, Warning, TEXT("런 데이터 세이브 파일 로드 실패: 유효하지 않은 저장 데이터"));
+		return;
+	}
+
 	DeserializeObject(mRunSaveGame->mData, OUT GetRunMutableData());
 	ClearRun();
 
@@ -129,6 +193,12 @@ void USaveGameSubsystem::LoadRun()
 
 void USaveGameSubsystem::LoadRunAsync(FAsyncLoadGameFromSlotDelegate Callback) const
 {
+	if (HasRunSave() == false)
+	{
+		UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 미발견으로 비동기 로드 실패"));
+		return;
+	}
+
 	UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 비동기 로드 시도"));
 	UGameplayStatics::AsyncLoadGameFromSlot(RUN_SLOT_NAME, 0, FAsyncLoadGameFromSlotDelegate::CreateLambda([this, MovedCallback = MoveTemp(Callback)](const FString& SlotName, const int32 UserIndex, USaveGame* LoadedSaveGame) {
 
@@ -139,6 +209,13 @@ void USaveGameSubsystem::LoadRunAsync(FAsyncLoadGameFromSlotDelegate Callback) c
 		}
 
 		mRunSaveGame = Cast<UBinarySaveGame>(LoadedSaveGame);
+		if (mRunSaveGame == nullptr || mRunSaveGame->mData.Num() <= 0)
+		{
+			mRunSaveGame = nullptr;
+			UE_LOG(LogSave, Warning, TEXT("런 데이터 세이브 파일 비동기 로드 실패: 유효하지 않은 저장 데이터"));
+			return;
+		}
+
 		DeserializeObject(mRunSaveGame->mData, OUT GetRunMutableData());
 		ClearRun();
 

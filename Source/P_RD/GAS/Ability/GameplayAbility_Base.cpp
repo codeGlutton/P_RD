@@ -73,7 +73,7 @@ void UGameplayAbility_Base::ActivateAbility(const FGameplayAbilitySpecHandle Han
 			continue;
 		}
 
-		UE_LOG(LogTemp, Warning, TEXT("Actor %s"), *TargetActor->GetActorLabel());
+		UE_LOG(LogTemp, Warning, TEXT("Actor %s"), *GetNameSafe(TargetActor));
 
 
 		// 피해 주기 테스트 ===========================================

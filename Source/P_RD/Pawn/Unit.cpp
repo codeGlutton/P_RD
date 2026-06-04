@@ -41,7 +41,9 @@ void AUnit::PostInitializeComponents()
 
 #ifndef WITH_EDITOR
 	// Difficulty값에 따라 ASC Attribute 초기화
-	IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->InitAttributeSetDefaults(mAbilitySystemComp, GetUnitKeyName(), GetDifficulty(), true);
+	auto* AbilitySystemGlobals = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals();
+	AbilitySystemGlobals->InitGlobalData();
+	AbilitySystemGlobals->GetAttributeSetInitter()->InitAttributeSetDefaults(mAbilitySystemComp, GetUnitKeyName(), GetDifficulty(), true);
 #endif
 }
 
@@ -51,7 +53,9 @@ void AUnit::OnConstruction(const FTransform& Transform)
 
 #ifdef WITH_EDITOR
 	// Difficulty값에 따라 ASC Attribute 초기화 (에디터 환경 내 Difficulty 변경 테스트를 위해 Construction 위치)
-	IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->InitAttributeSetDefaults(mAbilitySystemComp, GetUnitKeyName(), GetDifficulty(), true);
+	auto* AbilitySystemGlobals = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals();
+	AbilitySystemGlobals->InitGlobalData();
+	AbilitySystemGlobals->GetAttributeSetInitter()->InitAttributeSetDefaults(mAbilitySystemComp, GetUnitKeyName(), GetDifficulty(), true);
 #endif
 }
 
