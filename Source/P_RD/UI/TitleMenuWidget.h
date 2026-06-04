@@ -43,7 +43,7 @@ class UWidgetSwitcher;
  *
  * @note
  * 이제 C++ fallback 화면은 만들지 않는다.
- * GamePlaySettings의 mFrontendHUDClass는 /Game/UI/WBP_TitleMenu.WBP_TitleMenu_C를 가리켜야 한다.
+ * BP_FrontendGameMode의 HUDClass는 WBP_TitleMenu를 가리켜야 한다.
  * WBP에서 필수 BindWidget 이름이 바뀌면 화면은 뜨더라도 버튼 연결이 되지 않으므로
  * ValidateDesignerBindings() 로그를 먼저 확인하면 된다.
  */

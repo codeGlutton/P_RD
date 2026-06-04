@@ -30,13 +30,11 @@ class P_RD_API AFrontendGameMode : public ARoomGameModeBase
 
 public:
 	/**
-	 * @brief 프론트엔드 HUD 클래스를 설정하고 방 위젯 목록을 비움
+	 * @brief 프론트엔드 방 위젯 목록을 비움
 	 *
 	 * @details
-	 * GamePlaySettings의 mFrontendHUDClass가 있으면 그 클래스를 사용한다.
-	 * 설정이 비어 있으면 UTitleMenuWidget 네이티브 클래스를 fallback으로 사용한다.
-	 *
-	 * 타이틀 화면은 전투 HUD나 월드 위젯이 필요 없으므로 mWorldWidgets를 비운다.
+	 * HUD 클래스 선택은 BP_FrontendGameMode의 mHUDClass 기본값이 담당한다.
+	 * C++ GameMode는 에셋을 직접 고르지 않고, 선택된 HUD를 실행 단계에서 화면에 올린다.
 	 */
 	AFrontendGameMode();
 
@@ -55,8 +53,8 @@ protected:
 	 *
 	 * @details
 	 * WorldWidgetSubsystem이 만든 HUD를 Viewport에 추가하고 보이게 한다.
-	 * 타이틀 맵에 TitleCamera 태그가 붙은 카메라가 있으면 그 카메라를 화면 기준으로 사용한다.
-	 * 그 뒤 PlayerController를 UIOnly 입력 모드로 바꿔 마우스/터치로 버튼을 누를 수 있게 한다.
+	 * PlayerController를 UIOnly 입력 모드로 바꿔 마우스/터치로 버튼을 누를 수 있게 한다.
+	 * 카메라/폰 흐름은 맵과 기존 액터 설정을 따른다.
 	 */
 	void BeginRoom() override;
 };

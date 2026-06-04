@@ -53,8 +53,6 @@ public:
 public:
     UPROPERTY(Config, Category = Title, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TitleRoomId"))
     FPrimaryAssetId mTitleRoomId;
-    UPROPERTY(Config, Category = Title, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "FrontendHUDClass"))
-    TSoftClassPtr<UUserWidget> mFrontendHUDClass;
 
 public:
     UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "FrontendGameMode", ConfigRestartRequired = true))
