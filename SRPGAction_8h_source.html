@@ -1,0 +1,219 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/SRPGFramework/SRPGAction.h 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('SRPGAction_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">SRPGAction.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="SRPGAction_8h.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*****************************************************************/</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;<a class="code" href="RDMinimal_8h.html">RDMinimal.h</a>&quot;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;<a class="code" href="SRPGFrameworkType_8h.html">SRPGFramework/SRPGFrameworkType.h</a>&quot;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="keyword">class </span><a class="code hl_class" href="classAUnit.html">AUnit</a>;</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="keyword">struct </span><a class="code hl_struct" href="structFSRPGAction.html">FSRPGAction</a>;</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
+<div class="foldopen" id="foldopen00023" data-start="{" data-end="};">
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno"><a class="line" href="structFSRPGActionBuilder.html">   23</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structFSRPGActionBuilder.html">FSRPGActionBuilder</a></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>{</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno"><a class="line" href="structFSRPGActionBuilder.html#afc93c5f683d3da8a29735f457ed91a56">   25</a></span>    <span class="keyword">friend</span> <span class="keyword">struct </span><a class="code hl_struct" href="structFSRPGTurnContext.html">FSRPGTurnContext</a>;</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno"><a class="line" href="structFSRPGActionBuilder.html#a637e14489de9220ed12a4f7346546084">   26</a></span>    <span class="keyword">using </span><a class="code hl_struct" href="structFSRPGAction.html">ActionType</a> = <a class="code hl_struct" href="structFSRPGAction.html">FSRPGAction</a>;</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span> </div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno"><a class="line" href="structFSRPGActionBuilder.html#aecd93f8c0fbcd4be184bd1cfb3a652dd">   29</a></span>    <a class="code hl_function" href="structFSRPGActionBuilder.html#aecd93f8c0fbcd4be184bd1cfb3a652dd">FSRPGActionBuilder</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno"><a class="line" href="structFSRPGActionBuilder.html#a409e7a731e8ad920430314d86385c413">   30</a></span>    <span class="keyword">virtual</span> <a class="code hl_function" href="structFSRPGActionBuilder.html#a409e7a731e8ad920430314d86385c413">~FSRPGActionBuilder</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span> </div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structFSRPGActionBuilder.html#a38a1beda9918b48b20627ba39f07222c">InitBuilder</a>(TSharedRef&lt;FSRPGTurnContext&gt; Owner, <a class="code hl_class" href="classAUnit.html">AUnit</a>* Instigator);</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno"><a class="line" href="structFSRPGActionBuilder.html#aa2f1adef5bfe165ab8a72e35ad0e0646">   35</a></span>    <span class="keyword">virtual</span> TSharedPtr&lt;FSRPGAction&gt; <a class="code hl_function" href="structFSRPGActionBuilder.html#aa2f1adef5bfe165ab8a72e35ad0e0646">BuildAction</a>() = 0;</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno"><a class="line" href="structFSRPGActionBuilder.html#aa67e66717ecf1e19e87052c0568016af">   36</a></span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code hl_function" href="structFSRPGActionBuilder.html#aa67e66717ecf1e19e87052c0568016af">UnbuildAction</a>() = 0;</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span> </div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno"><a class="line" href="structFSRPGActionBuilder.html#a818380936e37253968c8fe22f2a5c877">   39</a></span>    TWeakPtr&lt;FSRPGTurnContext&gt; <a class="code hl_variable" href="structFSRPGActionBuilder.html#a818380936e37253968c8fe22f2a5c877">mOwner</a>;</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno"><a class="line" href="structFSRPGActionBuilder.html#adaa7c10f9351c994b3dd03158518f6e8">   40</a></span>    TObjectPtr&lt;AUnit&gt; <a class="code hl_variable" href="structFSRPGActionBuilder.html#adaa7c10f9351c994b3dd03158518f6e8">mInstigator</a>;</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span> </div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno"><a class="line" href="structFSRPGActionBuilder.html#ac5579fdb8c2ce9744951e35f044e96b6">   43</a></span>    <span class="keywordtype">bool</span> <a class="code hl_variable" href="structFSRPGActionBuilder.html#ac5579fdb8c2ce9744951e35f044e96b6">mIsExpired</a> = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>};</div>
+</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span> </div>
+<div class="foldopen" id="foldopen00049" data-start="{" data-end="};">
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno"><a class="line" href="structFSRPGAction.html">   49</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structFSRPGAction.html">FSRPGAction</a> : <span class="keyword">public</span> TSharedFromThis&lt;FSRPGAction&gt;</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>{</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno"><a class="line" href="structFSRPGAction.html#afc93c5f683d3da8a29735f457ed91a56">   51</a></span>    <span class="keyword">friend</span> <span class="keyword">struct </span><a class="code hl_struct" href="structFSRPGTurnContext.html">FSRPGTurnContext</a>;</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno"><a class="line" href="structFSRPGAction.html#a9bfc776bc5e25753746bdde32c68d7fe">   52</a></span>    <span class="keyword">friend</span> <span class="keyword">struct </span><a class="code hl_struct" href="structFSRPGActionBuilder.html">FSRPGActionBuilder</a>;</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span> </div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno"><a class="line" href="structFSRPGAction.html#add97e88febaccc20cd0e4d133fa9ab91">   55</a></span>    <a class="code hl_function" href="structFSRPGAction.html#add97e88febaccc20cd0e4d133fa9ab91">FSRPGAction</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno"><a class="line" href="structFSRPGAction.html#a0e3dcc733c50132dca2759a94064b84e">   56</a></span>    <span class="keyword">virtual</span> <a class="code hl_function" href="structFSRPGAction.html#a0e3dcc733c50132dca2759a94064b84e">~FSRPGAction</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span> </div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structFSRPGAction.html#a26c80c4d41e7128a2733d1af93058b42">InitAction</a>(TSharedRef&lt;FSRPGTurnContext&gt; Owner, <a class="code hl_class" href="classAUnit.html">AUnit</a>* Instigator);</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code hl_function" href="structFSRPGAction.html#a82f68f8de5e67b5a832df3fdec984c11">BeginAction</a>();</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code hl_function" href="structFSRPGAction.html#ab1d9e829bb9f6236e34199d4152e5fe9">TickAction</a>(<span class="keywordtype">float</span> DeltaTime);</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code hl_function" href="structFSRPGAction.html#a4936431adb24d9510e2f9ad3ef002cd3">EndAction</a>();</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span> </div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>    <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code hl_function" href="structFSRPGAction.html#a320eabddf74a5572bd10641e142b24ae">IsTurnEndingAction</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span> </div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structFSRPGAction.html#a65e62deb3ab439e6fab2ad1f3c8e7446">EvaluateActionEndState</a>(<span class="keywordtype">bool</span> ForceAbort = <span class="keyword">false</span>);</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span> </div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>    UWorld* <a class="code hl_function" href="structFSRPGAction.html#af27fbb3a54ddaf4d80cd3e44356140a4">GetWorld</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>    TWeakPtr&lt;FSRPGTurnContext&gt; <a class="code hl_function" href="structFSRPGAction.html#a1e44acc9df4dc7468272eec5312c2def">GetOwner</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    <a class="code hl_class" href="classAUnit.html">AUnit</a>* <a class="code hl_function" href="structFSRPGAction.html#af45a8df50042c293aa188c9cf632b8fb">GetInstigator</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span> </div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno"><a class="line" href="structFSRPGAction.html#a294c0676cf9a3989eddcea13ff2bfd43">   80</a></span>    TWeakPtr&lt;FSRPGTurnContext&gt; <a class="code hl_variable" href="structFSRPGAction.html#a294c0676cf9a3989eddcea13ff2bfd43">mOwner</a>;</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno"><a class="line" href="structFSRPGAction.html#a15d1e909b520d0caeef1d0b913fc5a45">   81</a></span>    TObjectPtr&lt;AUnit&gt; <a class="code hl_variable" href="structFSRPGAction.html#a15d1e909b520d0caeef1d0b913fc5a45">mInstigator</a>;</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span> </div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>    <span class="comment">// @brief 현재 액션 상태</span></div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno"><a class="line" href="structFSRPGAction.html#a1241c8273bc93977b17ad8676e8a839d">   84</a></span>    <a class="code hl_enumeration" href="SRPGFrameworkType_8h.html#aa7a8b2ba03697d5e0c47954dad30b2c4">ESRPGActionPhase</a> <a class="code hl_variable" href="structFSRPGAction.html#a1241c8273bc93977b17ad8676e8a839d">mPhase</a> = ESRPGActionPhase::None;</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>    <span class="comment">// @brief 액션 종료 결과</span></div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno"><a class="line" href="structFSRPGAction.html#a84dcd099e87ca24da49116b9d6e1f508">   86</a></span>    <a class="code hl_enumeration" href="SRPGFrameworkType_8h.html#a3893ef0b7368d435ebbf5aa7d97073e7">ESRPGActionResult</a> <a class="code hl_variable" href="structFSRPGAction.html#a84dcd099e87ca24da49116b9d6e1f508">mResult</a> = ESRPGActionResult::Succeeded;</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>};</div>
+</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span> </div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span> </div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span> </div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span> </div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span> </div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span> </div>
+<div class="ttc" id="aRDMinimal_8h_html"><div class="ttname"><a href="RDMinimal_8h.html">RDMinimal.h</a></div><div class="ttdoc">RD 프로젝트 전 영역에서 사용되는 최소한의 포함 헤더</div></div>
+<div class="ttc" id="aSRPGFrameworkType_8h_html"><div class="ttname"><a href="SRPGFrameworkType_8h.html">SRPGFrameworkType.h</a></div><div class="ttdoc">SRPG 프레임워크에서 사용되는 타입 정의 헤더</div></div>
+<div class="ttc" id="aSRPGFrameworkType_8h_html_a3893ef0b7368d435ebbf5aa7d97073e7"><div class="ttname"><a href="SRPGFrameworkType_8h.html#a3893ef0b7368d435ebbf5aa7d97073e7">ESRPGActionResult</a></div><div class="ttdeci">ESRPGActionResult</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00202">SRPGFrameworkType.h:203</a></div></div>
+<div class="ttc" id="aSRPGFrameworkType_8h_html_aa7a8b2ba03697d5e0c47954dad30b2c4"><div class="ttname"><a href="SRPGFrameworkType_8h.html#aa7a8b2ba03697d5e0c47954dad30b2c4">ESRPGActionPhase</a></div><div class="ttdeci">ESRPGActionPhase</div><div class="ttdoc">액션 내 진행 단계 열거형</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00212">SRPGFrameworkType.h:213</a></div></div>
+<div class="ttc" id="aclassAUnit_html"><div class="ttname"><a href="classAUnit.html">AUnit</a></div><div class="ttdoc">SRPG에서 사용되는 베이스 폰 클래스</div><div class="ttdef"><b>Definition</b> <a href="Unit_8h_source.html#l00061">Unit.h:62</a></div></div>
+<div class="ttc" id="astructFSRPGActionBuilder_html"><div class="ttname"><a href="structFSRPGActionBuilder.html">FSRPGActionBuilder</a></div><div class="ttdoc">SRPG 행동을 제작하기 위해 요구되는 절차 처리 일회성 객체</div><div class="ttdef"><b>Definition</b> <a href="SRPGAction_8h_source.html#l00023">SRPGAction.h:24</a></div></div>
+<div class="ttc" id="astructFSRPGActionBuilder_html_a38a1beda9918b48b20627ba39f07222c"><div class="ttname"><a href="structFSRPGActionBuilder.html#a38a1beda9918b48b20627ba39f07222c">FSRPGActionBuilder::InitBuilder</a></div><div class="ttdeci">void InitBuilder(TSharedRef&lt; FSRPGTurnContext &gt; Owner, AUnit *Instigator)</div><div class="ttdef"><b>Definition</b> <a href="SRPGAction_8cpp_source.html#l00009">SRPGAction.cpp:9</a></div></div>
+<div class="ttc" id="astructFSRPGActionBuilder_html_a409e7a731e8ad920430314d86385c413"><div class="ttname"><a href="structFSRPGActionBuilder.html#a409e7a731e8ad920430314d86385c413">FSRPGActionBuilder::~FSRPGActionBuilder</a></div><div class="ttdeci">virtual ~FSRPGActionBuilder()=default</div></div>
+<div class="ttc" id="astructFSRPGActionBuilder_html_a818380936e37253968c8fe22f2a5c877"><div class="ttname"><a href="structFSRPGActionBuilder.html#a818380936e37253968c8fe22f2a5c877">FSRPGActionBuilder::mOwner</a></div><div class="ttdeci">TWeakPtr&lt; FSRPGTurnContext &gt; mOwner</div><div class="ttdef"><b>Definition</b> <a href="SRPGAction_8h_source.html#l00039">SRPGAction.h:39</a></div></div>
+<div class="ttc" id="astructFSRPGActionBuilder_html_aa2f1adef5bfe165ab8a72e35ad0e0646"><div class="ttname"><a href="structFSRPGActionBuilder.html#aa2f1adef5bfe165ab8a72e35ad0e0646">FSRPGActionBuilder::BuildAction</a></div><div class="ttdeci">virtual TSharedPtr&lt; FSRPGAction &gt; BuildAction()=0</div></div>
+<div class="ttc" id="astructFSRPGActionBuilder_html_aa67e66717ecf1e19e87052c0568016af"><div class="ttname"><a href="structFSRPGActionBuilder.html#aa67e66717ecf1e19e87052c0568016af">FSRPGActionBuilder::UnbuildAction</a></div><div class="ttdeci">virtual void UnbuildAction()=0</div></div>
+<div class="ttc" id="astructFSRPGActionBuilder_html_ac5579fdb8c2ce9744951e35f044e96b6"><div class="ttname"><a href="structFSRPGActionBuilder.html#ac5579fdb8c2ce9744951e35f044e96b6">FSRPGActionBuilder::mIsExpired</a></div><div class="ttdeci">bool mIsExpired</div><div class="ttdef"><b>Definition</b> <a href="SRPGAction_8h_source.html#l00043">SRPGAction.h:43</a></div></div>
+<div class="ttc" id="astructFSRPGActionBuilder_html_adaa7c10f9351c994b3dd03158518f6e8"><div class="ttname"><a href="structFSRPGActionBuilder.html#adaa7c10f9351c994b3dd03158518f6e8">FSRPGActionBuilder::mInstigator</a></div><div class="ttdeci">TObjectPtr&lt; AUnit &gt; mInstigator</div><div class="ttdef"><b>Definition</b> <a href="SRPGAction_8h_source.html#l00040">SRPGAction.h:40</a></div></div>
+<div class="ttc" id="astructFSRPGActionBuilder_html_aecd93f8c0fbcd4be184bd1cfb3a652dd"><div class="ttname"><a href="structFSRPGActionBuilder.html#aecd93f8c0fbcd4be184bd1cfb3a652dd">FSRPGActionBuilder::FSRPGActionBuilder</a></div><div class="ttdeci">FSRPGActionBuilder()=default</div></div>
+<div class="ttc" id="astructFSRPGAction_html"><div class="ttname"><a href="structFSRPGAction.html">FSRPGAction</a></div><div class="ttdoc">사용자 입력에 따른 정해진 SRPG 행동 객체</div><div class="ttdef"><b>Definition</b> <a href="SRPGAction_8h_source.html#l00049">SRPGAction.h:50</a></div></div>
+<div class="ttc" id="astructFSRPGAction_html_a0e3dcc733c50132dca2759a94064b84e"><div class="ttname"><a href="structFSRPGAction.html#a0e3dcc733c50132dca2759a94064b84e">FSRPGAction::~FSRPGAction</a></div><div class="ttdeci">virtual ~FSRPGAction()=default</div></div>
+<div class="ttc" id="astructFSRPGAction_html_a1241c8273bc93977b17ad8676e8a839d"><div class="ttname"><a href="structFSRPGAction.html#a1241c8273bc93977b17ad8676e8a839d">FSRPGAction::mPhase</a></div><div class="ttdeci">ESRPGActionPhase mPhase</div><div class="ttdef"><b>Definition</b> <a href="SRPGAction_8h_source.html#l00084">SRPGAction.h:84</a></div></div>
+<div class="ttc" id="astructFSRPGAction_html_a15d1e909b520d0caeef1d0b913fc5a45"><div class="ttname"><a href="structFSRPGAction.html#a15d1e909b520d0caeef1d0b913fc5a45">FSRPGAction::mInstigator</a></div><div class="ttdeci">TObjectPtr&lt; AUnit &gt; mInstigator</div><div class="ttdef"><b>Definition</b> <a href="SRPGAction_8h_source.html#l00081">SRPGAction.h:81</a></div></div>
+<div class="ttc" id="astructFSRPGAction_html_a1e44acc9df4dc7468272eec5312c2def"><div class="ttname"><a href="structFSRPGAction.html#a1e44acc9df4dc7468272eec5312c2def">FSRPGAction::GetOwner</a></div><div class="ttdeci">TWeakPtr&lt; FSRPGTurnContext &gt; GetOwner() const</div><div class="ttdef"><b>Definition</b> <a href="SRPGAction_8cpp_source.html#l00073">SRPGAction.cpp:73</a></div></div>
+<div class="ttc" id="astructFSRPGAction_html_a26c80c4d41e7128a2733d1af93058b42"><div class="ttname"><a href="structFSRPGAction.html#a26c80c4d41e7128a2733d1af93058b42">FSRPGAction::InitAction</a></div><div class="ttdeci">void InitAction(TSharedRef&lt; FSRPGTurnContext &gt; Owner, AUnit *Instigator)</div><div class="ttdef"><b>Definition</b> <a href="SRPGAction_8cpp_source.html#l00015">SRPGAction.cpp:15</a></div></div>
+<div class="ttc" id="astructFSRPGAction_html_a294c0676cf9a3989eddcea13ff2bfd43"><div class="ttname"><a href="structFSRPGAction.html#a294c0676cf9a3989eddcea13ff2bfd43">FSRPGAction::mOwner</a></div><div class="ttdeci">TWeakPtr&lt; FSRPGTurnContext &gt; mOwner</div><div class="ttdef"><b>Definition</b> <a href="SRPGAction_8h_source.html#l00080">SRPGAction.h:80</a></div></div>
+<div class="ttc" id="astructFSRPGAction_html_a320eabddf74a5572bd10641e142b24ae"><div class="ttname"><a href="structFSRPGAction.html#a320eabddf74a5572bd10641e142b24ae">FSRPGAction::IsTurnEndingAction</a></div><div class="ttdeci">virtual bool IsTurnEndingAction() const</div><div class="ttdef"><b>Definition</b> <a href="SRPGAction_8cpp_source.html#l00044">SRPGAction.cpp:44</a></div></div>
+<div class="ttc" id="astructFSRPGAction_html_a4936431adb24d9510e2f9ad3ef002cd3"><div class="ttname"><a href="structFSRPGAction.html#a4936431adb24d9510e2f9ad3ef002cd3">FSRPGAction::EndAction</a></div><div class="ttdeci">virtual void EndAction()</div><div class="ttdef"><b>Definition</b> <a href="SRPGAction_8cpp_source.html#l00034">SRPGAction.cpp:34</a></div></div>
+<div class="ttc" id="astructFSRPGAction_html_a65e62deb3ab439e6fab2ad1f3c8e7446"><div class="ttname"><a href="structFSRPGAction.html#a65e62deb3ab439e6fab2ad1f3c8e7446">FSRPGAction::EvaluateActionEndState</a></div><div class="ttdeci">void EvaluateActionEndState(bool ForceAbort=false)</div><div class="ttdef"><b>Definition</b> <a href="SRPGAction_8cpp_source.html#l00049">SRPGAction.cpp:49</a></div></div>
+<div class="ttc" id="astructFSRPGAction_html_a82f68f8de5e67b5a832df3fdec984c11"><div class="ttname"><a href="structFSRPGAction.html#a82f68f8de5e67b5a832df3fdec984c11">FSRPGAction::BeginAction</a></div><div class="ttdeci">virtual void BeginAction()</div><div class="ttdef"><b>Definition</b> <a href="SRPGAction_8cpp_source.html#l00024">SRPGAction.cpp:24</a></div></div>
+<div class="ttc" id="astructFSRPGAction_html_a84dcd099e87ca24da49116b9d6e1f508"><div class="ttname"><a href="structFSRPGAction.html#a84dcd099e87ca24da49116b9d6e1f508">FSRPGAction::mResult</a></div><div class="ttdeci">ESRPGActionResult mResult</div><div class="ttdef"><b>Definition</b> <a href="SRPGAction_8h_source.html#l00086">SRPGAction.h:86</a></div></div>
+<div class="ttc" id="astructFSRPGAction_html_ab1d9e829bb9f6236e34199d4152e5fe9"><div class="ttname"><a href="structFSRPGAction.html#ab1d9e829bb9f6236e34199d4152e5fe9">FSRPGAction::TickAction</a></div><div class="ttdeci">virtual void TickAction(float DeltaTime)</div><div class="ttdef"><b>Definition</b> <a href="SRPGAction_8cpp_source.html#l00030">SRPGAction.cpp:30</a></div></div>
+<div class="ttc" id="astructFSRPGAction_html_add97e88febaccc20cd0e4d133fa9ab91"><div class="ttname"><a href="structFSRPGAction.html#add97e88febaccc20cd0e4d133fa9ab91">FSRPGAction::FSRPGAction</a></div><div class="ttdeci">FSRPGAction()=default</div></div>
+<div class="ttc" id="astructFSRPGAction_html_af27fbb3a54ddaf4d80cd3e44356140a4"><div class="ttname"><a href="structFSRPGAction.html#af27fbb3a54ddaf4d80cd3e44356140a4">FSRPGAction::GetWorld</a></div><div class="ttdeci">UWorld * GetWorld() const</div><div class="ttdef"><b>Definition</b> <a href="SRPGAction_8cpp_source.html#l00068">SRPGAction.cpp:68</a></div></div>
+<div class="ttc" id="astructFSRPGAction_html_af45a8df50042c293aa188c9cf632b8fb"><div class="ttname"><a href="structFSRPGAction.html#af45a8df50042c293aa188c9cf632b8fb">FSRPGAction::GetInstigator</a></div><div class="ttdeci">AUnit * GetInstigator() const</div><div class="ttdef"><b>Definition</b> <a href="SRPGAction_8cpp_source.html#l00078">SRPGAction.cpp:78</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html"><div class="ttname"><a href="structFSRPGTurnContext.html">FSRPGTurnContext</a></div><div class="ttdoc">스킬 사용 시 임시 정보를 들고 있는 Context 객체</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8h_source.html#l00026">SRPGTurnContext.h:27</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_83c0b7202b8dac4a09e6c9f600234e9d.html">SRPGFramework</a></li><li class="navelem"><a class="el" href="SRPGAction_8h.html">SRPGAction.h</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

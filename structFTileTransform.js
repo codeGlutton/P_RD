@@ -1,6 +1,7 @@
 var structFTileTransform =
 [
-    [ "mDirection", "structFTileTransform.html#a6897eb6b5f5a4ea81d27feb64f4e5a33", null ],
-    [ "mIndexX", "structFTileTransform.html#a695ed4a7365b61235b344734dc03e33e", null ],
-    [ "mIndexY", "structFTileTransform.html#a3ef8633410b1920309e653f014d820f2", null ]
+    [ "FTileTransform", "structFTileTransform.html#adbc22bf7fa57baafdbcb39ef12efcc3d", null ],
+    [ "FTileTransform", "structFTileTransform.html#abaf7d07e05b68d8813af5ea474332752", null ],
+    [ "mDirection", "structFTileTransform.html#a756e710c792ea973e121d03c74809959", null ],
+    [ "mIndex", "structFTileTransform.html#a03d9bfdf9a62b9f63cf92abcb390b850", null ]
 ];

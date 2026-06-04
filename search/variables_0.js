@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['commonskillweight_0',['CommonSkillWeight',['../classULevelAttributeSet.html#aeb805bf19d787c6808d887bbe6f7d523',1,'ULevelAttributeSet']]]
+  ['bselectable_0',['bSelectable',['../structFFrontendCharacterOption.html#ac7bcc7517905234ccbe3e7171d76455b',1,'FFrontendCharacterOption']]]
 ];

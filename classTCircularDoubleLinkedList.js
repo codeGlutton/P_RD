@@ -22,7 +22,7 @@ var classTCircularDoubleLinkedList =
     [ "Num", "classTCircularDoubleLinkedList.html#a28b8020825f3c99160cd201e33f76b50", null ],
     [ "operator=", "classTCircularDoubleLinkedList.html#ad5fbb1d9c22f5400718a76a71ead0d60", null ],
     [ "operator=", "classTCircularDoubleLinkedList.html#a696e7aad1ef01a2241670d4d08c952a4", null ],
-    [ "RemoveNode", "classTCircularDoubleLinkedList.html#ac3ad323c7ec8dad72749f2d8db39d8b5", null ],
-    [ "RemoveNode", "classTCircularDoubleLinkedList.html#ae8d9bb151a82e951c7d1a2b8e53a3e34", null ],
+    [ "RemoveNode", "classTCircularDoubleLinkedList.html#ad5ce1ab737d2ead5e134a8fcc2530d4a", null ],
+    [ "RemoveNode", "classTCircularDoubleLinkedList.html#a3df22ba6a915effbc53fecc85153c078", null ],
     [ "SetListSize", "classTCircularDoubleLinkedList.html#a728b9e7d642db8183c43da36c1d611b6", null ]
 ];

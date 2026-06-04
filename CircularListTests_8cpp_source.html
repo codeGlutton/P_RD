@@ -1,0 +1,173 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RDTests/Tool/CircularListTests.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('CircularListTests_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">CircularListTests.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="CircularListTests_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*****************************************************************/</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;<a class="code" href="P__RDTests_8h.html">P_RDTests.h</a>&quot;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;Misc/AutomationTest.h&quot;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &quot;<a class="code" href="CircularList_8h.html">Tool/CircularList.h</a>&quot;</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="comment">// Int32 테스트</span></div>
+<div class="foldopen" id="foldopen00015" data-start="{" data-end="}">
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno"><a class="line" href="CircularListTests_8cpp.html#a0e07c29506e3279ebe822c9b116a05be">   15</a></span><a class="code hl_function" href="CircularListTests_8cpp.html#a0e07c29506e3279ebe822c9b116a05be">IMPLEMENT_SIMPLE_AUTOMATION_TEST</a>(</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>    FCircularListInt32Tests,</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    <span class="stringliteral">&quot;P_RD.Tool.CircularList.Int32&quot;</span>,</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>)</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span> </div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="keywordtype">bool</span> FCircularListInt32Tests::RunTest(<span class="keyword">const</span> FString&amp; Parameters)</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>{</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    <a class="code hl_class" href="classTCircularDoubleLinkedList.html">TCircularDoubleLinkedList&lt;int32&gt;</a> TestObj;</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    <span class="comment">// 객체 생성 검증</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    TestNotNull(TEXT(<span class="stringliteral">&quot;TCircularDoubleLinkedList&lt;int32&gt; 반드시 생성&quot;</span>), &amp;TestObj);</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span> </div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    <span class="comment">// 초기화 검증</span></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    TestEqual(TEXT(<span class="stringliteral">&quot;TCircularDoubleLinkedList&lt;int32&gt; 초기 노드 0개&quot;</span>), TestObj.<a class="code hl_function" href="classTCircularDoubleLinkedList.html#adf3e785464229b4de2632c049f77bffd">IsEmpty</a>(), <span class="keyword">true</span>);</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    TestEqual(TEXT(<span class="stringliteral">&quot;TCircularDoubleLinkedList&lt;int32&gt; 초기 헤드 노드 nullptr&quot;</span>), TestObj.<a class="code hl_function" href="classTCircularDoubleLinkedList.html#af4dcfb524f8c7fe4bbc2386dd02c13e0">GetHead</a>() == <span class="keyword">nullptr</span>, <span class="keyword">true</span>);</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    TestEqual(TEXT(<span class="stringliteral">&quot;TCircularDoubleLinkedList&lt;int32&gt; 초기 테일 노드 nullptr&quot;</span>), TestObj.<a class="code hl_function" href="classTCircularDoubleLinkedList.html#a51bdcb8cb89d79e421d060f0bad589e4">GetTail</a>() == <span class="keyword">nullptr</span>, <span class="keyword">true</span>);</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span> </div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <span class="comment">// 빈 경우 Add Head 검증</span></div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    <span class="keyword">const</span> int32 HeadFirstNumber = 0;</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    TestObj.<a class="code hl_function" href="classTCircularDoubleLinkedList.html#adf1d37fbfd6f288e0b55e5ff4d3e8146">AddHead</a>(HeadFirstNumber);</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span> </div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    AddInfo(TEXT(<span class="stringliteral">&quot;0 초기 AddHead 진행 후 검사&quot;</span>));</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    TestEqual(TEXT(<span class="stringliteral">&quot;TCircularDoubleLinkedList&lt;int32&gt; 헤더 노드 값 0&quot;</span>), TestObj.<a class="code hl_function" href="classTCircularDoubleLinkedList.html#af4dcfb524f8c7fe4bbc2386dd02c13e0">GetHead</a>()-&gt;<a class="code hl_function" href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#a2508aba11a3cfe1676f84e5c78de1dd8">GetValue</a>(), HeadFirstNumber);</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>    TestEqual(TEXT(<span class="stringliteral">&quot;TCircularDoubleLinkedList&lt;int32&gt; 테일 노드 값 0&quot;</span>), TestObj.<a class="code hl_function" href="classTCircularDoubleLinkedList.html#a51bdcb8cb89d79e421d060f0bad589e4">GetTail</a>()-&gt;<a class="code hl_function" href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#a2508aba11a3cfe1676f84e5c78de1dd8">GetValue</a>(), HeadFirstNumber);</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    TestEqual(TEXT(<span class="stringliteral">&quot;TCircularDoubleLinkedList&lt;int32&gt; 헤더 다음 노드 값 0&quot;</span>), TestObj.<a class="code hl_function" href="classTCircularDoubleLinkedList.html#af4dcfb524f8c7fe4bbc2386dd02c13e0">GetHead</a>()-&gt;<a class="code hl_function" href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#ade3ef5971bba1881ad09d84c34fb7e7c">GetNextNode</a>()-&gt;<a class="code hl_function" href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#a2508aba11a3cfe1676f84e5c78de1dd8">GetValue</a>(), HeadFirstNumber);</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    TestEqual(TEXT(<span class="stringliteral">&quot;TCircularDoubleLinkedList&lt;int32&gt; 헤더 이전 노드 값 0&quot;</span>), TestObj.<a class="code hl_function" href="classTCircularDoubleLinkedList.html#af4dcfb524f8c7fe4bbc2386dd02c13e0">GetHead</a>()-&gt;<a class="code hl_function" href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#ae0a376de343f6d11cfe1f1bb4c0cb09d">GetPrevNode</a>()-&gt;<a class="code hl_function" href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#a2508aba11a3cfe1676f84e5c78de1dd8">GetValue</a>(), HeadFirstNumber);</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>    TestEqual(TEXT(<span class="stringliteral">&quot;TCircularDoubleLinkedList&lt;int32&gt; 테일 다음 노드 값 0&quot;</span>), TestObj.<a class="code hl_function" href="classTCircularDoubleLinkedList.html#a51bdcb8cb89d79e421d060f0bad589e4">GetTail</a>()-&gt;<a class="code hl_function" href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#ade3ef5971bba1881ad09d84c34fb7e7c">GetNextNode</a>()-&gt;<a class="code hl_function" href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#a2508aba11a3cfe1676f84e5c78de1dd8">GetValue</a>(), HeadFirstNumber);</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    TestEqual(TEXT(<span class="stringliteral">&quot;TCircularDoubleLinkedList&lt;int32&gt; 테일 이전 노드 값 0&quot;</span>), TestObj.<a class="code hl_function" href="classTCircularDoubleLinkedList.html#a51bdcb8cb89d79e421d060f0bad589e4">GetTail</a>()-&gt;<a class="code hl_function" href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#ae0a376de343f6d11cfe1f1bb4c0cb09d">GetPrevNode</a>()-&gt;<a class="code hl_function" href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#a2508aba11a3cfe1676f84e5c78de1dd8">GetValue</a>(), HeadFirstNumber);</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span> </div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    <span class="comment">// 하나라도 채워진 경우 Add Head 검증</span></div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>    AddInfo(TEXT(<span class="stringliteral">&quot;1부터 30 삽입 AddHead 진행 후 검사&quot;</span>));</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>    <span class="keywordflow">for</span> (int32 i = 1; i &lt;= 30; ++i)</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    {</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>        TestObj.<a class="code hl_function" href="classTCircularDoubleLinkedList.html#adf1d37fbfd6f288e0b55e5ff4d3e8146">AddHead</a>(i);</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>        TestEqual(FString::Printf(TEXT(<span class="stringliteral">&quot;TCircularDoubleLinkedList&lt;int32&gt; 헤더에 삽입 값 %d&quot;</span>), i), TestObj.<a class="code hl_function" href="classTCircularDoubleLinkedList.html#af4dcfb524f8c7fe4bbc2386dd02c13e0">GetHead</a>()-&gt;<a class="code hl_function" href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#a2508aba11a3cfe1676f84e5c78de1dd8">GetValue</a>(), i);</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>        TestEqual(FString::Printf(TEXT(<span class="stringliteral">&quot;TCircularDoubleLinkedList&lt;int32&gt; 헤더 다음 값 %d&quot;</span>), i - 1), TestObj.<a class="code hl_function" href="classTCircularDoubleLinkedList.html#af4dcfb524f8c7fe4bbc2386dd02c13e0">GetHead</a>()-&gt;<a class="code hl_function" href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#ade3ef5971bba1881ad09d84c34fb7e7c">GetNextNode</a>()-&gt;<a class="code hl_function" href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#a2508aba11a3cfe1676f84e5c78de1dd8">GetValue</a>(), i - 1);</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>        TestEqual(FString::Printf(TEXT(<span class="stringliteral">&quot;TCircularDoubleLinkedList&lt;int32&gt; 헤더 이전 값 %d&quot;</span>), HeadFirstNumber), TestObj.<a class="code hl_function" href="classTCircularDoubleLinkedList.html#af4dcfb524f8c7fe4bbc2386dd02c13e0">GetHead</a>()-&gt;<a class="code hl_function" href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#ae0a376de343f6d11cfe1f1bb4c0cb09d">GetPrevNode</a>()-&gt;<a class="code hl_function" href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#a2508aba11a3cfe1676f84e5c78de1dd8">GetValue</a>(), HeadFirstNumber);</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    }</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>}</div>
+</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span> </div>
+<div class="ttc" id="aCircularListTests_8cpp_html_a0e07c29506e3279ebe822c9b116a05be"><div class="ttname"><a href="CircularListTests_8cpp.html#a0e07c29506e3279ebe822c9b116a05be">IMPLEMENT_SIMPLE_AUTOMATION_TEST</a></div><div class="ttdeci">IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCircularListInt32Tests, &quot;P_RD.Tool.CircularList.Int32&quot;, EAutomationTestFlags::EditorContext|EAutomationTestFlags::ProductFilter) bool FCircularListInt32Tests</div><div class="ttdef"><b>Definition</b> <a href="CircularListTests_8cpp_source.html#l00015">CircularListTests.cpp:15</a></div></div>
+<div class="ttc" id="aCircularList_8h_html"><div class="ttname"><a href="CircularList_8h.html">CircularList.h</a></div><div class="ttdoc">순환 리스트 구현 헤더</div></div>
+<div class="ttc" id="aP__RDTests_8h_html"><div class="ttname"><a href="P__RDTests_8h.html">P_RDTests.h</a></div><div class="ttdoc">P_RD 자동화 테스트 모듈 헤더</div></div>
+<div class="ttc" id="aclassTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode_html_a2508aba11a3cfe1676f84e5c78de1dd8"><div class="ttname"><a href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#a2508aba11a3cfe1676f84e5c78de1dd8">TCircularDoubleLinkedList::TCircularDoubleLinkedListNode::GetValue</a></div><div class="ttdeci">const ElementType &amp; GetValue() const</div><div class="ttdef"><b>Definition</b> <a href="CircularList_8h_source.html#l00105">CircularList.h:105</a></div></div>
+<div class="ttc" id="aclassTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode_html_ade3ef5971bba1881ad09d84c34fb7e7c"><div class="ttname"><a href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#ade3ef5971bba1881ad09d84c34fb7e7c">TCircularDoubleLinkedList::TCircularDoubleLinkedListNode::GetNextNode</a></div><div class="ttdeci">TCircularDoubleLinkedListNode * GetNextNode()</div><div class="ttdef"><b>Definition</b> <a href="CircularList_8h_source.html#l00115">CircularList.h:115</a></div></div>
+<div class="ttc" id="aclassTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode_html_ae0a376de343f6d11cfe1f1bb4c0cb09d"><div class="ttname"><a href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#ae0a376de343f6d11cfe1f1bb4c0cb09d">TCircularDoubleLinkedList::TCircularDoubleLinkedListNode::GetPrevNode</a></div><div class="ttdeci">TCircularDoubleLinkedListNode * GetPrevNode()</div><div class="ttdef"><b>Definition</b> <a href="CircularList_8h_source.html#l00125">CircularList.h:125</a></div></div>
+<div class="ttc" id="aclassTCircularDoubleLinkedList_html"><div class="ttname"><a href="classTCircularDoubleLinkedList.html">TCircularDoubleLinkedList</a></div><div class="ttdoc">순환 더블 링크드 리스트</div><div class="ttdef"><b>Definition</b> <a href="CircularList_8h_source.html#l00092">CircularList.h:93</a></div></div>
+<div class="ttc" id="aclassTCircularDoubleLinkedList_html_a51bdcb8cb89d79e421d060f0bad589e4"><div class="ttname"><a href="classTCircularDoubleLinkedList.html#a51bdcb8cb89d79e421d060f0bad589e4">TCircularDoubleLinkedList::GetTail</a></div><div class="ttdeci">TCircularDoubleLinkedListNode * GetTail() const</div><div class="ttdef"><b>Definition</b> <a href="CircularList_8h_source.html#l00331">CircularList.h:331</a></div></div>
+<div class="ttc" id="aclassTCircularDoubleLinkedList_html_adf1d37fbfd6f288e0b55e5ff4d3e8146"><div class="ttname"><a href="classTCircularDoubleLinkedList.html#adf1d37fbfd6f288e0b55e5ff4d3e8146">TCircularDoubleLinkedList::AddHead</a></div><div class="ttdeci">bool AddHead(const ElementType &amp;InElement)</div><div class="ttdef"><b>Definition</b> <a href="CircularList_8h_source.html#l00172">CircularList.h:172</a></div></div>
+<div class="ttc" id="aclassTCircularDoubleLinkedList_html_adf3e785464229b4de2632c049f77bffd"><div class="ttname"><a href="classTCircularDoubleLinkedList.html#adf3e785464229b4de2632c049f77bffd">TCircularDoubleLinkedList::IsEmpty</a></div><div class="ttdeci">bool IsEmpty() const</div><div class="ttdef"><b>Definition</b> <a href="CircularList_8h_source.html#l00361">CircularList.h:361</a></div></div>
+<div class="ttc" id="aclassTCircularDoubleLinkedList_html_af4dcfb524f8c7fe4bbc2386dd02c13e0"><div class="ttname"><a href="classTCircularDoubleLinkedList.html#af4dcfb524f8c7fe4bbc2386dd02c13e0">TCircularDoubleLinkedList::GetHead</a></div><div class="ttdeci">TCircularDoubleLinkedListNode * GetHead() const</div><div class="ttdef"><b>Definition</b> <a href="CircularList_8h_source.html#l00326">CircularList.h:326</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_b774e7ec51d4a1271b160947af725bd0.html">P_RDTests</a></li><li class="navelem"><a class="el" href="dir_a77aad225f89d25b18935499ef4b06ff.html">Tool</a></li><li class="navelem"><a class="el" href="CircularListTests_8cpp.html">CircularListTests.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

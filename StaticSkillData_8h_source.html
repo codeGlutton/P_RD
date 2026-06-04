@@ -104,38 +104,147 @@ $(document).ready(function(){initNavTree('StaticSkillData_8h_source.html',''); i
 <div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;<a class="code" href="GASMinimal_8h.html">GAS/GASMinimal.h</a>&quot;</span></div>
 <div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;<a class="code" href="PrimaryAssetType_8h.html">DataAsset/PrimaryAssetType.h</a>&quot;</span></div>
 <div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &quot;<a class="code" href="BundleType_8h.html">DataAsset/BundleType.h</a>&quot;</span></div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &quot;StaticSkillData.generated.h&quot;</span></div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>UCLASS(abstract)</div>
-<div class="foldopen" id="foldopen00019" data-start="{" data-end="};">
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno"><a class="line" href="classUStaticSkillData.html">   19</a></span>class P_RD_API <a class="code hl_class" href="classUStaticSkillData.html">UStaticSkillData</a> : public UPrimaryDataAsset</div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>{</div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    GENERATED_BODY()</div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span> </div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    UPROPERTY(Category = <span class="stringliteral">&quot;Rarity&quot;</span>, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = <span class="stringliteral">&quot;RarityType&quot;</span>))</div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno"><a class="line" href="classUStaticSkillData.html#aacaf8f595aacf5e1af7d7d210fd90d06">   30</a></span>    <a class="code hl_enumeration" href="RarityType_8h.html#ab2e8d7497b37330ecca2121db047bfb3">ERarityType</a> mRarityType;</div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span> </div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    <span class="comment">/* 필요하다고 생각하는 것들 */</span></div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span> </div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <span class="comment">//UPROPERTY(Category = &quot;Ability&quot;, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = &quot;Ability&quot;, BUNDLE_ACTOR))</span></div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    <span class="comment">//TSoftClassPtr&lt;UGameplayAbility&gt; mAbility;</span></div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    <span class="comment">//</span></div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    <span class="comment">//UPROPERTY(Category = &quot;UI&quot;, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = &quot;Icon&quot;, BUNDLE_UI))</span></div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    <span class="comment">//TSoftObjectPtr&lt;UTexture2D&gt; mIcon;</span></div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    <span class="comment">//</span></div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>    <span class="comment">//UPROPERTY(Category = &quot;UI&quot;, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = &quot;Name&quot;))</span></div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    <span class="comment">//FText mName;</span></div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    <span class="comment">// </span></div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>    <span class="comment">//UPROPERTY(Category = &quot;UI&quot;, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = &quot;Description&quot;))</span></div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    <span class="comment">//FText mDescription;</span></div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>};</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &quot;../../SRPGFramework/SRPGFrameworkType.h&quot;</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor">#include &quot;<a class="code" href="SkillType_8h.html">SkillType.h</a>&quot;</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="preprocessor">#include &quot;StaticSkillData.generated.h&quot;</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span> </div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span> </div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>USTRUCT(BlueprintType)</div>
+<div class="foldopen" id="foldopen00025" data-start="{" data-end="};">
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno"><a class="line" href="structFGameplayEffectData.html">   25</a></span>struct <a class="code hl_struct" href="structFGameplayEffectData.html">FGameplayEffectData</a></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>{</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    GENERATED_BODY()</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    </div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    UPROPERTY(Category = <span class="stringliteral">&quot;GameplayEffectData&quot;</span>, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = <span class="stringliteral">&quot;TargetScope&quot;</span>))</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno"><a class="line" href="structFGameplayEffectData.html#add0bd05717e0993e76a0670d918972d9">   36</a></span>    <a class="code hl_enumeration" href="SRPGFrameworkType_8h.html#ab5ed4194fb49213b8e86d44d2d777bb9">ETargetScope</a> mTargetScope;</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span> </div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    UPROPERTY(Category = &quot;GameplayEffectData&quot;, EditAnywhere, BlueprintReadWrite, meta = (Bitmask, BitmaskEnum = &quot;/Script/P_RD.<a class="code hl_enumeration" href="SRPGFrameworkType_8h.html#a15d6b86adbb4cf3a6d81ccf0119bd138">ETargetFilter</a>&quot;, DisplayName = &quot;TargetFilter&quot;))</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno"><a class="line" href="structFGameplayEffectData.html#aa13c9df0146c243bccf0d5fe0da86c7f">   45</a></span>    uint8 mTargetFilter = 3;</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span> </div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    UPROPERTY(Category = &quot;GameplayEffectData&quot;, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = &quot;GameplayEffect&quot;, AssetBundles = <a class="code hl_define" href="BundleType_8h.html#a56babe6bdbacc052d4654fc4f5255b12">BUNDLE_ACTOR</a>))</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno"><a class="line" href="structFGameplayEffectData.html#a66a4dc7cbfd73a90a653ab4907520d0f">   57</a></span>    TSoftClassPtr&lt;class <a class="code hl_class" href="classUGameplayEffect__Base.html">UGameplayEffect_Base</a>&gt; mGameplayEffect;</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span> </div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>    UPROPERTY(Category = &quot;GameplayEffectData&quot;, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = &quot;DefaultValue&quot;))</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno"><a class="line" href="structFGameplayEffectData.html#a2cbdcc7f1646b37b2b5da238894f2c16">   65</a></span>    int32 mGameplayEffectDefaultValue;</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span> </div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    UPROPERTY(Category = &quot;GameplayEffectData&quot;, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = &quot;RatioValue&quot;))</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno"><a class="line" href="structFGameplayEffectData.html#a6b81509941643fc3c49d674890fa687a">   73</a></span>    <span class="keywordtype">float</span> mGameplayEffectRatioValue;</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>};</div>
+</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span> </div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>USTRUCT(BlueprintType)</div>
+<div class="foldopen" id="foldopen00083" data-start="{" data-end="};">
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno"><a class="line" href="structFSkillAction.html">   83</a></span>struct <a class="code hl_struct" href="structFSkillAction.html">FSkillAction</a></div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>{</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>    GENERATED_BODY()</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span> </div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>    </div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>    UPROPERTY(Category = <span class="stringliteral">&quot;SkillAction&quot;</span>, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = <span class="stringliteral">&quot;Animation&quot;</span>))</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno"><a class="line" href="structFSkillAction.html#a859b185460ec2b93af567c6e5ebdcf53">   97</a></span>    FGameplayTag mAnimationTag;</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span> </div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>    UPROPERTY(Category = &quot;SkillAction&quot;, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = &quot;GameplayEffectDatas&quot;))</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno"><a class="line" href="structFSkillAction.html#aad4201ce5e40089ad572181534f6500c">  106</a></span>    TArray&lt;<a class="code hl_struct" href="structFGameplayEffectData.html">FGameplayEffectData</a>&gt; mGameplayEffectDatas;</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>};</div>
+</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span> </div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span> </div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>UCLASS(abstract)</div>
+<div class="foldopen" id="foldopen00115" data-start="{" data-end="};">
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno"><a class="line" href="classUStaticSkillData.html">  115</a></span>class P_RD_API <a class="code hl_class" href="classUStaticSkillData.html">UStaticSkillData</a> : public UPrimaryDataAsset</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>{</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>    GENERATED_BODY()</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span> </div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span> </div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span> </div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span><span class="preprocessor">#pragma region Default</span></div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span> </div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    UPROPERTY(Category = <span class="stringliteral">&quot;Default&quot;</span>, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = <span class="stringliteral">&quot;Name&quot;</span>))</div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno"><a class="line" href="classUStaticSkillData.html#aa5dd1e4f823533a6081e4d027e1f483a">  125</a></span>    FText mName;</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span> </div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>    UPROPERTY(Category = &quot;Default&quot;, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = &quot;Description&quot;))</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno"><a class="line" href="classUStaticSkillData.html#aed2561d30472380b218fe71d89fe6dea">  128</a></span>    FText mDescription;</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span> </div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>    UPROPERTY(Category = &quot;Default&quot;, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = &quot;Icon&quot;, AssetBundles = <a class="code hl_define" href="BundleType_8h.html#accf1564c75622c6171e7ae7e1908154a">BUNDLE_UI</a>))</div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno"><a class="line" href="classUStaticSkillData.html#af76c5559cab1d07119aefffa399d7a8d">  131</a></span>    TSoftObjectPtr&lt;UTexture2D&gt; mIcon;</div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span> </div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>    UPROPERTY(Category = &quot;Default&quot;, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = &quot;Price&quot;))</div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno"><a class="line" href="classUStaticSkillData.html#aa3febf7dbaa2157148e57ea7b7dadc9b">  134</a></span>    int32 mPrice;</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span> </div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>    UPROPERTY(Category = &quot;Default&quot;, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = &quot;SkillType&quot;))</div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno"><a class="line" href="classUStaticSkillData.html#aacbd9c00746ff524c894f83fff17989e">  146</a></span>    <a class="code hl_enumeration" href="SkillType_8h.html#a16a964ae795aa7244a7e59a33d3489a6">ESkillType</a> mSkillType;</div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>    </div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>    UPROPERTY(Category = &quot;Default&quot;, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = &quot;RarityType&quot;))</div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno"><a class="line" href="classUStaticSkillData.html#aacaf8f595aacf5e1af7d7d210fd90d06">  155</a></span>    <a class="code hl_enumeration" href="RarityType_8h.html#ab2e8d7497b37330ecca2121db047bfb3">ERarityType</a> mRarityType;</div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span> </div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>    UPROPERTY(Category = &quot;Default&quot;, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = &quot;DiceCount&quot;))</div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno"><a class="line" href="classUStaticSkillData.html#a6c1df6b2afca3150d69c11e0cf709c31">  161</a></span>    int32 mDiceCount;</div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span> </div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span> </div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span><span class="preprocessor">#pragma endregion Default</span></div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span> </div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span><span class="preprocessor">#pragma region AimRange</span></div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span> </div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>    <span class="comment">/* 조준 범위 */</span></div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span> </div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>    UPROPERTY(Category = <span class="stringliteral">&quot;AimRange&quot;</span>, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = <span class="stringliteral">&quot;AimType&quot;</span>))</div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno"><a class="line" href="classUStaticSkillData.html#af99429a043e4f32ddb5dea7fe70551b0">  174</a></span>    <a class="code hl_enumeration" href="SRPGFrameworkType_8h.html#ae26b1418bce20a6ba6577d4671b7d706">EAimPattern</a> mAimPattern;</div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span> </div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>    UPROPERTY(Category = &quot;AimRange&quot;, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = &quot;IsIndirect&quot;))</div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno"><a class="line" href="classUStaticSkillData.html#a1205ddc5660812c133b7847019960591">  184</a></span>    <span class="keywordtype">bool</span> mIsIndirect;</div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span> </div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>    UPROPERTY(Category = &quot;AimRange&quot;, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = &quot;CanAimObstacle&quot;))</div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno"><a class="line" href="classUStaticSkillData.html#a33d10376d2a43eccba286bbd6ce9ef17">  194</a></span>    <span class="keywordtype">bool</span> mCanAimObstacle = true;</div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span> </div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>    UPROPERTY(Category = &quot;AimRange&quot;, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = &quot;AimDefaultRange&quot;))</div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno"><a class="line" href="classUStaticSkillData.html#a94640bf44fe9c29ac6e8ccc06ceeade2">  204</a></span>    int32 mAimDefaultRange;</div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span> </div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>    UPROPERTY(Category = &quot;AimRange&quot;, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = &quot;AimRatioRange&quot;))</div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno"><a class="line" href="classUStaticSkillData.html#a2ef626d923f70bc8990dfb747e726cfb">  214</a></span>    <span class="keywordtype">float</span> mAimRatioRange;</div>
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span> </div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span><span class="preprocessor">#pragma endregion AimRange</span></div>
+<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span> </div>
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span><span class="preprocessor">#pragma region EffectArea</span></div>
+<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span> </div>
+<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>    <span class="comment">/* 영향 범위 */</span></div>
+<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span> </div>
+<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>    UPROPERTY(Category = <span class="stringliteral">&quot;EffectArea&quot;</span>, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = <span class="stringliteral">&quot;EffectAreaType&quot;</span>))</div>
+<div class="line"><a id="l00228" name="l00228"></a><span class="lineno"><a class="line" href="classUStaticSkillData.html#aad031a08af5c13beb045fdaa7bc11f26">  228</a></span>    <a class="code hl_enumeration" href="SRPGFrameworkType_8h.html#a5649b259c42cfc63c1190663e66cce26">EEffectPattern</a> mEffectPattern;</div>
+<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span> </div>
+<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span>    UPROPERTY(Category = &quot;EffectArea&quot;, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = &quot;IsPenetration&quot;))</div>
+<div class="line"><a id="l00238" name="l00238"></a><span class="lineno"><a class="line" href="classUStaticSkillData.html#a763669cb2984be78219093d52c258bae">  238</a></span>    <span class="keywordtype">bool</span> mIsPenetration;</div>
+<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span> </div>
+<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span>    UPROPERTY(Category = &quot;EffectArea&quot;, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = &quot;EffectDefaultArea&quot;))</div>
+<div class="line"><a id="l00248" name="l00248"></a><span class="lineno"><a class="line" href="classUStaticSkillData.html#a00b19351143ac882363b0b6e406fc7f1">  248</a></span>    int32 mEffectDefaultArea;</div>
+<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span> </div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>    UPROPERTY(Category = &quot;EffectArea&quot;, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = &quot;EffectRatioArea&quot;))</div>
+<div class="line"><a id="l00258" name="l00258"></a><span class="lineno"><a class="line" href="classUStaticSkillData.html#adb233c85052ef39f58cfbc63386b13ca">  258</a></span>    <span class="keywordtype">float</span> mEffectRatioArea;</div>
+<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span> </div>
+<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span><span class="preprocessor">#pragma endregion EffectArea</span></div>
+<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span> </div>
+<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>    UPROPERTY(Category = <span class="stringliteral">&quot;SkillAction&quot;</span>, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = <span class="stringliteral">&quot;SkillActions&quot;</span>))</div>
+<div class="line"><a id="l00269" name="l00269"></a><span class="lineno"><a class="line" href="classUStaticSkillData.html#a430ff388e440992ee22f2eda6b31675b">  269</a></span>    TArray&lt;<a class="code hl_struct" href="structFSkillAction.html">FSkillAction</a>&gt; mSkillActions;</div>
+<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span> </div>
+<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span>};</div>
 </div>
 <div class="ttc" id="aBundleType_8h_html"><div class="ttname"><a href="BundleType_8h.html">BundleType.h</a></div><div class="ttdoc">사용되는 Bundle Type 매크로를 모아둔 파일</div></div>
+<div class="ttc" id="aBundleType_8h_html_a56babe6bdbacc052d4654fc4f5255b12"><div class="ttname"><a href="BundleType_8h.html#a56babe6bdbacc052d4654fc4f5255b12">BUNDLE_ACTOR</a></div><div class="ttdeci">#define BUNDLE_ACTOR</div><div class="ttdef"><b>Definition</b> <a href="BundleType_8h_source.html#l00014">BundleType.h:14</a></div></div>
+<div class="ttc" id="aBundleType_8h_html_accf1564c75622c6171e7ae7e1908154a"><div class="ttname"><a href="BundleType_8h.html#accf1564c75622c6171e7ae7e1908154a">BUNDLE_UI</a></div><div class="ttdeci">#define BUNDLE_UI</div><div class="ttdef"><b>Definition</b> <a href="BundleType_8h_source.html#l00015">BundleType.h:15</a></div></div>
 <div class="ttc" id="aGASMinimal_8h_html"><div class="ttname"><a href="GASMinimal_8h.html">GASMinimal.h</a></div><div class="ttdoc">GAS 활용 영역에서 사용되는 포함 헤더</div></div>
 <div class="ttc" id="aPrimaryAssetType_8h_html"><div class="ttname"><a href="PrimaryAssetType_8h.html">PrimaryAssetType.h</a></div><div class="ttdoc">사용되는 Primary Asset Type 매크로를 모아둔 파일</div></div>
 <div class="ttc" id="aRarityType_8h_html_ab2e8d7497b37330ecca2121db047bfb3"><div class="ttname"><a href="RarityType_8h.html#ab2e8d7497b37330ecca2121db047bfb3">ERarityType</a></div><div class="ttdeci">ERarityType</div><div class="ttdoc">희귀도 열거형</div><div class="ttdef"><b>Definition</b> <a href="RarityType_8h_source.html#l00017">RarityType.h:18</a></div></div>
-<div class="ttc" id="aclassUStaticSkillData_html"><div class="ttname"><a href="classUStaticSkillData.html">UStaticSkillData</a></div><div class="ttdoc">스킬 생성 시 사용되는 정적 Primary Data Asset</div><div class="ttdef"><b>Definition</b> <a href="StaticSkillData_8h_source.html#l00019">StaticSkillData.h:20</a></div></div>
+<div class="ttc" id="aSRPGFrameworkType_8h_html_a15d6b86adbb4cf3a6d81ccf0119bd138"><div class="ttname"><a href="SRPGFrameworkType_8h.html#a15d6b86adbb4cf3a6d81ccf0119bd138">ETargetFilter</a></div><div class="ttdeci">ETargetFilter</div><div class="ttdoc">대상 선정 시 특정 객체를 제외하기 위한 필터(Bitmask)입니다.</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00132">SRPGFrameworkType.h:133</a></div></div>
+<div class="ttc" id="aSRPGFrameworkType_8h_html_a5649b259c42cfc63c1190663e66cce26"><div class="ttname"><a href="SRPGFrameworkType_8h.html#a5649b259c42cfc63c1190663e66cce26">EEffectPattern</a></div><div class="ttdeci">EEffectPattern</div><div class="ttdoc">영향 범위 패턴</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00094">SRPGFrameworkType.h:95</a></div></div>
+<div class="ttc" id="aSRPGFrameworkType_8h_html_ab5ed4194fb49213b8e86d44d2d777bb9"><div class="ttname"><a href="SRPGFrameworkType_8h.html#ab5ed4194fb49213b8e86d44d2d777bb9">ETargetScope</a></div><div class="ttdeci">ETargetScope</div><div class="ttdoc">스킬 대상 선정의 대상을 결정</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00110">SRPGFrameworkType.h:111</a></div></div>
+<div class="ttc" id="aSRPGFrameworkType_8h_html_ae26b1418bce20a6ba6577d4671b7d706"><div class="ttname"><a href="SRPGFrameworkType_8h.html#ae26b1418bce20a6ba6577d4671b7d706">EAimPattern</a></div><div class="ttdeci">EAimPattern</div><div class="ttdoc">조준 범위 패턴</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00082">SRPGFrameworkType.h:83</a></div></div>
+<div class="ttc" id="aSkillType_8h_html"><div class="ttname"><a href="SkillType_8h.html">SkillType.h</a></div><div class="ttdoc">스킬 타입 정의 헤더</div></div>
+<div class="ttc" id="aSkillType_8h_html_a16a964ae795aa7244a7e59a33d3489a6"><div class="ttname"><a href="SkillType_8h.html#a16a964ae795aa7244a7e59a33d3489a6">ESkillType</a></div><div class="ttdeci">ESkillType</div><div class="ttdoc">스킬 타입</div><div class="ttdef"><b>Definition</b> <a href="SkillType_8h_source.html#l00017">SkillType.h:18</a></div></div>
+<div class="ttc" id="aclassUGameplayEffect__Base_html"><div class="ttname"><a href="classUGameplayEffect__Base.html">UGameplayEffect_Base</a></div><div class="ttdef"><b>Definition</b> <a href="GameplayEffect__Base_8h_source.html#l00018">GameplayEffect_Base.h:19</a></div></div>
+<div class="ttc" id="aclassUStaticSkillData_html"><div class="ttname"><a href="classUStaticSkillData.html">UStaticSkillData</a></div><div class="ttdoc">스킬 생성 시 사용되는 정적 Primary Data Asset</div><div class="ttdef"><b>Definition</b> <a href="StaticSkillData_8h_source.html#l00115">StaticSkillData.h:116</a></div></div>
+<div class="ttc" id="astructFGameplayEffectData_html"><div class="ttname"><a href="structFGameplayEffectData.html">FGameplayEffectData</a></div><div class="ttdoc">효과 발동 구조체</div><div class="ttdef"><b>Definition</b> <a href="StaticSkillData_8h_source.html#l00025">StaticSkillData.h:26</a></div></div>
+<div class="ttc" id="astructFSkillAction_html"><div class="ttname"><a href="structFSkillAction.html">FSkillAction</a></div><div class="ttdoc">액션과 여러 효과들을 묶은 구조체</div><div class="ttdef"><b>Definition</b> <a href="StaticSkillData_8h_source.html#l00083">StaticSkillData.h:84</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

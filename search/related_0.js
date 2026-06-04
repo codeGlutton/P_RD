@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['irundatawriter_0',['IRunDataWriter',['../classUPersistentDataSubsystem.html#abbbe28149c1bdf3c889a77f28bd5d8ff',1,'UPersistentDataSubsystem']]],
-  ['iuserdatawriter_1',['IUserDataWriter',['../classUPersistentDataSubsystem.html#ae6715077e4e83de298669b92c0cb638e',1,'UPersistentDataSubsystem']]]
+  ['atilemap_0',['ATileMap',['../classITileActor.html#ab34036198989c6349ca369e027238a21',1,'ITileActor']]]
 ];

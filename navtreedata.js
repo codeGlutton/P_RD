@@ -42,7 +42,7 @@ var NAVTREE =
         [ "사용 시", "gas_tag_page.html#use_tag_step2", null ]
       ] ]
     ] ],
-    [ "SRPG SRPG 프레임워크 흐름", "srpg_framework_page.html", [
+    [ "SRPG 프레임워크 흐름", "srpg_framework_page.html", [
       [ "SRPG 싱글톤 객체", "srpg_framework_page.html#srpg_framework_subsystem_image_section", [
         [ "Q 초기 턴 순서 배치는 어떻게 처리하는가?", "srpg_framework_page.html#srpg_framework_subsystem_step1", null ],
         [ "Q 턴 추가 및 삭제 확장성이 있는가?", "srpg_framework_page.html#srpg_framework_subsystem_step2", null ],
@@ -69,7 +69,7 @@ var NAVTREE =
       [ "클래스 멤버", "functions.html", [
         [ "모두", "functions.html", "functions_dup" ],
         [ "함수", "functions_func.html", "functions_func" ],
-        [ "변수", "functions_vars.html", null ],
+        [ "변수", "functions_vars.html", "functions_vars" ],
         [ "타입정의", "functions_type.html", null ],
         [ "관련된 함수들", "functions_rela.html", null ]
       ] ]
@@ -79,6 +79,7 @@ var NAVTREE =
       [ "파일 멤버", "globals.html", [
         [ "모두", "globals.html", null ],
         [ "함수", "globals_func.html", null ],
+        [ "변수", "globals_vars.html", null ],
         [ "열거형 타입", "globals_enum.html", null ],
         [ "매크로", "globals_defs.html", null ]
       ] ]
@@ -89,10 +90,12 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "AssetNamingConventionSettings_8cpp.html",
-"SRPGFrameworkType_8cpp.html",
-"classITileActor.html#a730b2c000c4899e772d8ea19cf455e05",
-"classUStaticUnitSpawnData.html#afd69af32ecac08f1143ef8aca17fb5e1",
-"structFObstaclePlacementData.html#ad11567b16081b0635cb82b9051fae7dd"
+"RDMinimal_8h.html",
+"StaticStageSpawnData_8cpp.html",
+"classTCircularDoubleLinkedListIterator.html#a4da1406c0e47a28d7669ce325ff510ca",
+"classUStaticMonsterRoomSpawnData.html#a331e8a545b84ee9e0ec0c31d882c996c",
+"namespaceAbilityTags.html#ad20392519aca64aead20f3f9812f214f",
+"structFStageBuilder.html"
 ];
 
 var SYNCONMSG = '패널 동기화를 비활성화하기 위해 클릭하십시오';

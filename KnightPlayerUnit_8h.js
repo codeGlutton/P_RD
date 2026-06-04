@@ -1,4 +1,4 @@
 var KnightPlayerUnit_8h =
 [
-    [ "AKnightPlayerUnit", "classAKnightPlayerUnit.html", null ]
+    [ "AKnightPlayerUnit", "classAKnightPlayerUnit.html", "classAKnightPlayerUnit" ]
 ];

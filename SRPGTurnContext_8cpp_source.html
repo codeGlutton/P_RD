@@ -1,0 +1,398 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/SRPGFramework/SRPGTurnContext.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('SRPGTurnContext_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">SRPGTurnContext.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="SRPGTurnContext_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="SRPGTurnContext_8h.html">SRPGFramework/SRPGTurnContext.h</a>&quot;</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#include &quot;<a class="code" href="SRPGCombatSubsystem_8h.html">Singleton/WorldSubsystem/SRPGCombatSubsystem.h</a>&quot;</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &quot;<a class="code" href="PresentationSyncSubsystem_8h.html">Singleton/WorldSubsystem/PresentationSyncSubsystem.h</a>&quot;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span> </div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &quot;<a class="code" href="Unit_8h.html">Pawn/Unit.h</a>&quot;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &quot;<a class="code" href="GASTargetFunctionLibrary_8h.html">FunctionLibrary/GASTargetFunctionLibrary.h</a>&quot;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
+<div class="foldopen" id="foldopen00009" data-start="{" data-end="}">
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno"><a class="line" href="structFSRPGTurnContext.html#abda68790c6f3f26420408abcc6cff1e1">    9</a></span>TSharedPtr&lt;FSRPGAction&gt; <a class="code hl_function" href="structFSRPGTurnContext.html#a8582e4b90759ec156a95ea490ed8f667">FSRPGTurnContext::BuildAction</a>(TSharedPtr&lt;FSRPGActionBuilder&gt; Builder)</div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>{</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span>    checkf(Builder-&gt;mIsExpired == <span class="keyword">false</span>, TEXT(<span class="stringliteral">&quot;만기된 빌더. 재사용 불가&quot;</span>));</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>    checkf(<a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> == ESRPGTurnPhase::ActionBuild, TEXT(<span class="stringliteral">&quot;액션 빌드 절차 오류&quot;</span>));</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    <a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> = ESRPGTurnPhase::ActionSelect;</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>    TSharedPtr&lt;FSRPGAction&gt; NewAction = Builder-&gt;BuildAction();</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    Builder-&gt;mIsExpired = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span> </div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    <span class="keywordflow">return</span> NewAction;</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>}</div>
+</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span> </div>
+<div class="foldopen" id="foldopen00022" data-start="{" data-end="}">
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno"><a class="line" href="structFSRPGTurnContext.html#a883f76397b979063779fd00703d47a93">   22</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="structFSRPGTurnContext.html#a883f76397b979063779fd00703d47a93">FSRPGTurnContext::UnbuildAction</a>(TSharedPtr&lt;FSRPGActionBuilder&gt; Builder)</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>{</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    checkf(Builder-&gt;mIsExpired == <span class="keyword">false</span>, TEXT(<span class="stringliteral">&quot;만기된 빌더. 재사용 불가&quot;</span>));</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span> </div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    checkf(<a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> == ESRPGTurnPhase::ActionBuild, TEXT(<span class="stringliteral">&quot;액션 빌드 절차 오류&quot;</span>));</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    <a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> = ESRPGTurnPhase::ActionSelect;</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    Builder-&gt;UnbuildAction();</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    Builder-&gt;mIsExpired = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>}</div>
+</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
+<div class="foldopen" id="foldopen00033" data-start="{" data-end="}">
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno"><a class="line" href="structFSRPGTurnContext.html#a80db493c684cbf9ad30df36847d6f8bb">   33</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="structFSRPGTurnContext.html#a80db493c684cbf9ad30df36847d6f8bb">FSRPGTurnContext::PushAction</a>(TSharedPtr&lt;FSRPGAction&gt; NewAction)</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>{</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    <a class="code hl_variable" href="structFSRPGTurnContext.html#aa1dadced925adb8f06e08b826f9e0ec6">mActions</a>.Enqueue(NewAction);</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span> </div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    <span class="comment">// 액션 대기 중 경우, 새로운 액션 즉시 진행</span></div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> == ESRPGTurnPhase::ActionSelect)</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    {</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>        <a class="code hl_function" href="structFSRPGTurnContext.html#a854f2dc00b01d9542480d584e0ac687c">StartNextAction</a>();</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    }</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>}</div>
+</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
+<div class="foldopen" id="foldopen00044" data-start="{" data-end="}">
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno"><a class="line" href="structFSRPGTurnContext.html#a2d17fd1c7c5d2751cbe180aec40babf7">   44</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="structFSRPGTurnContext.html#a2d17fd1c7c5d2751cbe180aec40babf7">FSRPGTurnContext::InitTurn</a>(<a class="code hl_class" href="classAUnit.html">AUnit</a>* Owner, int32 LifeCount)</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>{</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    checkf(<a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> == ESRPGTurnPhase::None, TEXT(<span class="stringliteral">&quot;중복 초기화&quot;</span>));</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>    <a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> = ESRPGTurnPhase::TurnInit;</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span> </div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    <a class="code hl_variable" href="structFSRPGTurnContext.html#ae12dae34e6e52a0de4b099046256050c">mOwner</a> = Owner;</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    <a class="code hl_variable" href="structFSRPGTurnContext.html#aa6ca42f345f18dee6f7d3569a69261f7">mLifeCount</a> = LifeCount;</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>}</div>
+</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span> </div>
+<div class="foldopen" id="foldopen00053" data-start="{" data-end="}">
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno"><a class="line" href="structFSRPGTurnContext.html#ac4b089036be3aa6a591d1352fdc0f1b6">   53</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="structFSRPGTurnContext.html#ac4b089036be3aa6a591d1352fdc0f1b6">FSRPGTurnContext::BeginTurn</a>()</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>{</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    checkf(<a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> == ESRPGTurnPhase::TurnInit, TEXT(<span class="stringliteral">&quot;이미 턴 진행 중에 재실행 오류&quot;</span>));</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    <a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> = ESRPGTurnPhase::TurnStart;</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span> </div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>    UE_LOG(LogSRPGCombat, Log, TEXT(<span class="stringliteral">&quot;턴 시작&quot;</span>));</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    </div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>    <a class="code hl_class" href="classUPresentationSyncSubsystem.html">UPresentationSyncSubsystem</a>* PresentationSyncSubsystem = <a class="code hl_function" href="structFSRPGTurnContext.html#a81810544a8c771ab54cba38bec2c5043">GetWorld</a>()-&gt;GetSubsystem&lt;<a class="code hl_class" href="classUPresentationSyncSubsystem.html">UPresentationSyncSubsystem</a>&gt;();</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>    checkf(PresentationSyncSubsystem != <span class="keyword">nullptr</span>, TEXT(<span class="stringliteral">&quot;연출 동기화 서브시스템 nullptr&quot;</span>));</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span> </div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>    <span class="keyword">auto</span> PresentationBarrier = PresentationSyncSubsystem-&gt;<a class="code hl_function" href="classUPresentationSyncSubsystem.html#a4bc7677b22380883994bfb68a56338ff">MakePresentationBarrier</a>(FOnFinishPresentation::CreateSPLambda(AsShared(), [<span class="keyword">this</span>]() {</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>        <span class="comment">// 현 스텟을 캡처</span></div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>        FGameplayEventData EventData;</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>        EventData.TargetData = <a class="code hl_function" href="classUGASTargetFunctionLibrary.html#aa36459c67137e579068b2653e6cf6bd7">UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle</a>(<a class="code hl_variable" href="structFSRPGTurnContext.html#ae12dae34e6e52a0de4b099046256050c">mOwner</a>);</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>        EventData.Instigator = <a class="code hl_variable" href="structFSRPGTurnContext.html#ae12dae34e6e52a0de4b099046256050c">mOwner</a>;</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>        EventData.Target = <a class="code hl_variable" href="structFSRPGTurnContext.html#ae12dae34e6e52a0de4b099046256050c">mOwner</a>;</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span> </div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>        <span class="comment">// On Start Turn 패시브 실행</span></div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>        UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(<a class="code hl_variable" href="structFSRPGTurnContext.html#ae12dae34e6e52a0de4b099046256050c">mOwner</a>, AbilityTags::GameplayAbility_Passive_OnStartTurn, MoveTemp(EventData));</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>        <span class="comment">// 턴 실행</span></div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>        checkf(<a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> == ESRPGTurnPhase::TurnStart, TEXT(<span class="stringliteral">&quot;턴 진입 절차 오류&quot;</span>));</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>        <a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> = ESRPGTurnPhase::ActionSelect;</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>        </div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>        <span class="comment">// 플레이어의 경우 주사위 굴리기 액션 추가</span></div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>        <span class="keywordflow">if</span> (<a class="code hl_variable" href="structFSRPGTurnContext.html#ae12dae34e6e52a0de4b099046256050c">mOwner</a>-&gt;IsPlayerUnit() == <span class="keyword">true</span>)</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>        {</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>            <span class="comment">// 액션 추가</span></div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>        }</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>        <span class="comment">// AI의 경우 움직임 판단 로직 시작</span></div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>        <span class="keywordflow">else</span></div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>        {</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>            <span class="comment">// AI의 경우 움직임 판단 로직 시작</span></div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>        }</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>        }));</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>    <a class="code hl_variable" href="structFSRPGTurnContext.html#a891a6440d9c69531800e6e4b87e5f6cd">OnBeginTurnUI</a>.Broadcast(PresentationBarrier, *<span class="keyword">this</span>);</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>}</div>
+</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span> </div>
+<div class="foldopen" id="foldopen00090" data-start="{" data-end="}">
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno"><a class="line" href="structFSRPGTurnContext.html#ad9acc28a7629c74283dd6918162d1b15">   90</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="structFSRPGTurnContext.html#ad9acc28a7629c74283dd6918162d1b15">FSRPGTurnContext::TickTurn</a>(<span class="keywordtype">float</span> DeltaTime)</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>{</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> == ESRPGTurnPhase::ActionPlay &amp;&amp; <a class="code hl_variable" href="structFSRPGTurnContext.html#aa1dadced925adb8f06e08b826f9e0ec6">mActions</a>.IsEmpty() == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>    {</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>        (*<a class="code hl_variable" href="structFSRPGTurnContext.html#aa1dadced925adb8f06e08b826f9e0ec6">mActions</a>.Peek())-&gt;TickAction(DeltaTime);</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>    }</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>}</div>
+</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span> </div>
+<div class="foldopen" id="foldopen00098" data-start="{" data-end="}">
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno"><a class="line" href="structFSRPGTurnContext.html#a133a660d2260110c7452848cf58f02ba">   98</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="structFSRPGTurnContext.html#a133a660d2260110c7452848cf58f02ba">FSRPGTurnContext::EndTurn</a>()</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>{</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>    checkf(<a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> == ESRPGTurnPhase::TurnAbort, TEXT(<span class="stringliteral">&quot;턴 종료 절차 오류&quot;</span>));</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>    <a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> = ESRPGTurnPhase::TurnEnd;</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span> </div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>    <a class="code hl_class" href="classUPresentationSyncSubsystem.html">UPresentationSyncSubsystem</a>* PresentationSyncSubsystem = <a class="code hl_function" href="structFSRPGTurnContext.html#a81810544a8c771ab54cba38bec2c5043">GetWorld</a>()-&gt;GetSubsystem&lt;<a class="code hl_class" href="classUPresentationSyncSubsystem.html">UPresentationSyncSubsystem</a>&gt;();</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    checkf(PresentationSyncSubsystem != <span class="keyword">nullptr</span>, TEXT(<span class="stringliteral">&quot;연출 동기화 서브시스템 nullptr&quot;</span>));</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span> </div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>    <span class="comment">// 현 스텟을 캡처</span></div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    FGameplayEventData EventData;</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>    EventData.TargetData = <a class="code hl_function" href="classUGASTargetFunctionLibrary.html#aa36459c67137e579068b2653e6cf6bd7">UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle</a>(<a class="code hl_variable" href="structFSRPGTurnContext.html#ae12dae34e6e52a0de4b099046256050c">mOwner</a>);</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>    EventData.Instigator = <a class="code hl_variable" href="structFSRPGTurnContext.html#ae12dae34e6e52a0de4b099046256050c">mOwner</a>;</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>    EventData.Target = <a class="code hl_variable" href="structFSRPGTurnContext.html#ae12dae34e6e52a0de4b099046256050c">mOwner</a>;</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span> </div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    <span class="comment">// On End Turn 패시브 실행</span></div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>    UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(<a class="code hl_variable" href="structFSRPGTurnContext.html#ae12dae34e6e52a0de4b099046256050c">mOwner</a>, AbilityTags::GameplayAbility_Passive_OnEndTurn, MoveTemp(EventData));</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span> </div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>    <span class="keyword">auto</span> PresentationBarrier = PresentationSyncSubsystem-&gt;<a class="code hl_function" href="classUPresentationSyncSubsystem.html#a4bc7677b22380883994bfb68a56338ff">MakePresentationBarrier</a>(FOnFinishPresentation::CreateSPLambda(AsShared(), [<span class="keyword">this</span>]() {</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>        <span class="keywordflow">if</span> (<a class="code hl_function" href="structFSRPGTurnContext.html#a1ab995872a6b90fc1e6f0b04c15f684a">IsPermanent</a>() == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>        {</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>            --<a class="code hl_variable" href="structFSRPGTurnContext.html#aa6ca42f345f18dee6f7d3569a69261f7">mLifeCount</a>;</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>        }</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>        <a class="code hl_class" href="classUSRPGCombatSubsystem.html">USRPGCombatSubsystem</a>* CombatSubsystem = <a class="code hl_function" href="structFSRPGTurnContext.html#a81810544a8c771ab54cba38bec2c5043">GetWorld</a>()-&gt;GetSubsystem&lt;<a class="code hl_class" href="classUSRPGCombatSubsystem.html">USRPGCombatSubsystem</a>&gt;();</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>        CombatSubsystem-&gt;<a class="code hl_function" href="classUSRPGCombatSubsystem.html#ab6e68ee26acd69c747f59ef05348d2f5">OnEndCurrentTurn</a>(AsShared(), <a class="code hl_variable" href="structFSRPGTurnContext.html#a9af32a16156cd782e74fc5f48debd429">mResult</a>);</div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span> </div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>        checkf(<a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> == ESRPGTurnPhase::TurnEnd, TEXT(<span class="stringliteral">&quot;턴 종료 절차 오류&quot;</span>));</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>        <a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> = ESRPGTurnPhase::TurnInit;</div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>        <a class="code hl_variable" href="structFSRPGTurnContext.html#aa1dadced925adb8f06e08b826f9e0ec6">mActions</a>.Empty();</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span> </div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>        UE_LOG(LogSRPGCombat, Log, TEXT(<span class="stringliteral">&quot;턴 종료&quot;</span>));</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>        }));</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>    <a class="code hl_variable" href="structFSRPGTurnContext.html#a4a45f0f7dc75ee081c27969f5b566b47">OnEndTurnUI</a>.Broadcast(PresentationBarrier, *<span class="keyword">this</span>, <a class="code hl_variable" href="structFSRPGTurnContext.html#a9af32a16156cd782e74fc5f48debd429">mResult</a>);</div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>}</div>
+</div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span> </div>
+<div class="foldopen" id="foldopen00132" data-start="{" data-end="}">
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno"><a class="line" href="structFSRPGTurnContext.html#a854f2dc00b01d9542480d584e0ac687c">  132</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="structFSRPGTurnContext.html#a854f2dc00b01d9542480d584e0ac687c">FSRPGTurnContext::StartNextAction</a>()</div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>{</div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>    checkf(<a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> == ESRPGTurnPhase::ActionSelect, TEXT(<span class="stringliteral">&quot;선택 가능 상태에서만 다음 액션으로 통과 가능&quot;</span>));</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span> </div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="structFSRPGTurnContext.html#aa1dadced925adb8f06e08b826f9e0ec6">mActions</a>.IsEmpty() == <span class="keyword">true</span>)</div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>    {</div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>        <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>    }</div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span> </div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>    <a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> = ESRPGTurnPhase::ActionPlay;</div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>    (*<a class="code hl_variable" href="structFSRPGTurnContext.html#aa1dadced925adb8f06e08b826f9e0ec6">mActions</a>.Peek())-&gt;BeginAction();</div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>}</div>
+</div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span> </div>
+<div class="foldopen" id="foldopen00145" data-start="{" data-end="}">
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno"><a class="line" href="structFSRPGTurnContext.html#a0b781c6ba691a26af6ce81b768c6661e">  145</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="structFSRPGTurnContext.html#a0b781c6ba691a26af6ce81b768c6661e">FSRPGTurnContext::EvaluateTurnStates</a>(<span class="keywordtype">bool</span> ForceAbort)</div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>{</div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>    <a class="code hl_function" href="structFSRPGTurnContext.html#a0cc88bda0dbf80a69a894fa45bc52cd6">EvaluateTurnEndState</a>(ForceAbort);</div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span> </div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="structFSRPGTurnContext.html#aa1dadced925adb8f06e08b826f9e0ec6">mActions</a>.IsEmpty() == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>    {</div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>        <span class="keyword">const</span> <span class="keywordtype">bool</span> ForceAbortAction = ForceAbort &amp;&amp; <a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> == ESRPGTurnPhase::TurnAbort;</div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>        (*<a class="code hl_variable" href="structFSRPGTurnContext.html#aa1dadced925adb8f06e08b826f9e0ec6">mActions</a>.Peek())-&gt;EvaluateActionEndState(ForceAbortAction);</div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>    }</div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>}</div>
+</div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span> </div>
+<div class="foldopen" id="foldopen00156" data-start="{" data-end="}">
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno"><a class="line" href="structFSRPGTurnContext.html#ae34b0f638f4223a95c48a953209d8dfa">  156</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="structFSRPGTurnContext.html#ae34b0f638f4223a95c48a953209d8dfa">FSRPGTurnContext::OnEndCurrentAction</a>(TSharedRef&lt;FSRPGAction&gt; Action, <a class="code hl_enumeration" href="SRPGFrameworkType_8h.html#a3893ef0b7368d435ebbf5aa7d97073e7">ESRPGActionResult</a> ActionResult)</div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>{</div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>    <a class="code hl_variable" href="structFSRPGTurnContext.html#aa1dadced925adb8f06e08b826f9e0ec6">mActions</a>.Pop();</div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span> </div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>    <span class="comment">// 턴 소모 액션 처리</span></div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>    <span class="keywordtype">bool</span> IsBlockTurnSuccessfully = Action-&gt;IsTurnEndingAction() == <span class="keyword">true</span> &amp;&amp; ActionResult == ESRPGActionResult::Succeeded;</div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>    <span class="keywordflow">if</span> (IsBlockTurnSuccessfully == <span class="keyword">true</span>)</div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>    {</div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>        <a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> = ESRPGTurnPhase::TurnAbort;</div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>        <a class="code hl_variable" href="structFSRPGTurnContext.html#a9af32a16156cd782e74fc5f48debd429">mResult</a> = ESRPGTurnResult::Succeeded;</div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>    }</div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span> </div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>    <span class="comment">// 턴 종료 여부 체크</span></div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> == ESRPGTurnPhase::TurnAbort)</div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>    {</div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>        <a class="code hl_function" href="structFSRPGTurnContext.html#a133a660d2260110c7452848cf58f02ba">EndTurn</a>();</div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>        <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>    }</div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span> </div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>    checkf(<a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> == ESRPGTurnPhase::ActionPlay, TEXT(<span class="stringliteral">&quot;액션 종료 절차 오류&quot;</span>));</div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>    <a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> = ESRPGTurnPhase::ActionSelect;</div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span> </div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>    <a class="code hl_function" href="structFSRPGTurnContext.html#a854f2dc00b01d9542480d584e0ac687c">StartNextAction</a>();</div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>}</div>
+</div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span> </div>
+<div class="foldopen" id="foldopen00181" data-start="{" data-end="}">
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno"><a class="line" href="structFSRPGTurnContext.html#a0cc88bda0dbf80a69a894fa45bc52cd6">  181</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="structFSRPGTurnContext.html#a0cc88bda0dbf80a69a894fa45bc52cd6">FSRPGTurnContext::EvaluateTurnEndState</a>(<span class="keywordtype">bool</span> ForceAbort)</div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>{</div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>    checkf(<a class="code hl_variable" href="structFSRPGTurnContext.html#ae12dae34e6e52a0de4b099046256050c">mOwner</a> != <span class="keyword">nullptr</span>, TEXT(<span class="stringliteral">&quot;턴 주인 미존재&quot;</span>));</div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span> </div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>    <span class="comment">/* 이미 중단 */</span></div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span> </div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> == ESRPGTurnPhase::TurnAbort)</div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>    {</div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>        <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>    }</div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span> </div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>    <span class="comment">/* 외부에서 강제 종료되는가? */</span></div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>    <span class="comment">/* 플레이어가 죽어서 턴이 종료되는가? */</span></div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span> </div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>    <span class="keywordflow">if</span> (ForceAbort == <span class="keyword">true</span> || <a class="code hl_variable" href="structFSRPGTurnContext.html#ae12dae34e6e52a0de4b099046256050c">mOwner</a>-&gt;IsDead() == <span class="keyword">true</span>)</div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>    {</div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>        <a class="code hl_variable" href="structFSRPGTurnContext.html#a9af32a16156cd782e74fc5f48debd429">mResult</a> = ESRPGTurnResult::Cancelled;</div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>        <a class="code hl_variable" href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">mPhase</a> = ESRPGTurnPhase::TurnAbort;</div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>        <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>    }</div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>}</div>
+</div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span> </div>
+<div class="foldopen" id="foldopen00203" data-start="{" data-end="}">
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno"><a class="line" href="structFSRPGTurnContext.html#a81810544a8c771ab54cba38bec2c5043">  203</a></span>UWorld* <a class="code hl_function" href="structFSRPGTurnContext.html#a81810544a8c771ab54cba38bec2c5043">FSRPGTurnContext::GetWorld</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="structFSRPGTurnContext.html#ae12dae34e6e52a0de4b099046256050c">mOwner</a>-&gt;GetWorld();</div>
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span>}</div>
+</div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span> </div>
+<div class="foldopen" id="foldopen00208" data-start="{" data-end="}">
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno"><a class="line" href="structFSRPGTurnContext.html#a4a018fa3afdf2f14172e14eb3bd7bd50">  208</a></span><a class="code hl_class" href="classAUnit.html">AUnit</a>* <a class="code hl_function" href="structFSRPGTurnContext.html#a4a018fa3afdf2f14172e14eb3bd7bd50">FSRPGTurnContext::GetOwner</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="structFSRPGTurnContext.html#ae12dae34e6e52a0de4b099046256050c">mOwner</a>;</div>
+<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>}</div>
+</div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span> </div>
+<div class="foldopen" id="foldopen00213" data-start="{" data-end="}">
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno"><a class="line" href="structFSRPGTurnContext.html#a1ab995872a6b90fc1e6f0b04c15f684a">  213</a></span><span class="keywordtype">bool</span> <a class="code hl_function" href="structFSRPGTurnContext.html#a1ab995872a6b90fc1e6f0b04c15f684a">FSRPGTurnContext::IsPermanent</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="structFSRPGTurnContext.html#aa6ca42f345f18dee6f7d3569a69261f7">mLifeCount</a> == <a class="code hl_variable" href="structFSRPGTurnContext.html#ace9298ac5b20cb3cac13ce5ed4513dab">PERMENENT_TURN</a>;</div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>}</div>
+</div>
+<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span> </div>
+<div class="foldopen" id="foldopen00218" data-start="{" data-end="}">
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno"><a class="line" href="structFSRPGTurnContext.html#ad81d58f3d48aa0d62018a38d8d07d7fd">  218</a></span>int32 <a class="code hl_function" href="structFSRPGTurnContext.html#ad81d58f3d48aa0d62018a38d8d07d7fd">FSRPGTurnContext::GetLifeCount</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="structFSRPGTurnContext.html#aa6ca42f345f18dee6f7d3569a69261f7">mLifeCount</a>;</div>
+<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>}</div>
+</div>
+<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span> </div>
+<div class="ttc" id="aGASTargetFunctionLibrary_8h_html"><div class="ttname"><a href="GASTargetFunctionLibrary_8h.html">GASTargetFunctionLibrary.h</a></div><div class="ttdoc">GAS에 Target Data에 대한 확장 함수 라이브러리 헤더</div></div>
+<div class="ttc" id="aPresentationSyncSubsystem_8h_html"><div class="ttname"><a href="PresentationSyncSubsystem_8h.html">PresentationSyncSubsystem.h</a></div><div class="ttdoc">연출 동기화 서브시스템 구현 헤더</div></div>
+<div class="ttc" id="aSRPGCombatSubsystem_8h_html"><div class="ttname"><a href="SRPGCombatSubsystem_8h.html">SRPGCombatSubsystem.h</a></div><div class="ttdoc">SRPG 턴제 전투를 제어하기 위한 서브 시스템 구현 헤더</div></div>
+<div class="ttc" id="aSRPGFrameworkType_8h_html_a3893ef0b7368d435ebbf5aa7d97073e7"><div class="ttname"><a href="SRPGFrameworkType_8h.html#a3893ef0b7368d435ebbf5aa7d97073e7">ESRPGActionResult</a></div><div class="ttdeci">ESRPGActionResult</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00202">SRPGFrameworkType.h:203</a></div></div>
+<div class="ttc" id="aSRPGTurnContext_8h_html"><div class="ttname"><a href="SRPGTurnContext_8h.html">SRPGTurnContext.h</a></div><div class="ttdoc">턴 런타임 정보를 담은 Context 객체 구현 헤더</div></div>
+<div class="ttc" id="aUnit_8h_html"><div class="ttname"><a href="Unit_8h.html">Unit.h</a></div></div>
+<div class="ttc" id="aclassAUnit_html"><div class="ttname"><a href="classAUnit.html">AUnit</a></div><div class="ttdoc">SRPG에서 사용되는 베이스 폰 클래스</div><div class="ttdef"><b>Definition</b> <a href="Unit_8h_source.html#l00061">Unit.h:62</a></div></div>
+<div class="ttc" id="aclassUGASTargetFunctionLibrary_html_aa36459c67137e579068b2653e6cf6bd7"><div class="ttname"><a href="classUGASTargetFunctionLibrary.html#aa36459c67137e579068b2653e6cf6bd7">UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle</a></div><div class="ttdeci">static FGameplayAbilityTargetDataHandle MakeSnapshotTargetDataHandle(const AUnit *Source)</div><div class="ttdef"><b>Definition</b> <a href="GASTargetFunctionLibrary_8cpp_source.html#l00004">GASTargetFunctionLibrary.cpp:4</a></div></div>
+<div class="ttc" id="aclassUPresentationSyncSubsystem_html"><div class="ttname"><a href="classUPresentationSyncSubsystem.html">UPresentationSyncSubsystem</a></div><div class="ttdoc">연출 동기화 서브시스템</div><div class="ttdef"><b>Definition</b> <a href="PresentationSyncSubsystem_8h_source.html#l00019">PresentationSyncSubsystem.h:20</a></div></div>
+<div class="ttc" id="aclassUPresentationSyncSubsystem_html_a4bc7677b22380883994bfb68a56338ff"><div class="ttname"><a href="classUPresentationSyncSubsystem.html#a4bc7677b22380883994bfb68a56338ff">UPresentationSyncSubsystem::MakePresentationBarrier</a></div><div class="ttdeci">TSharedPtr&lt; FPresentationBarrier &gt; MakePresentationBarrier(FOnFinishPresentation OnFinishPresentation)</div><div class="ttdef"><b>Definition</b> <a href="PresentationSyncSubsystem_8cpp_source.html#l00003">PresentationSyncSubsystem.cpp:3</a></div></div>
+<div class="ttc" id="aclassUSRPGCombatSubsystem_html"><div class="ttname"><a href="classUSRPGCombatSubsystem.html">USRPGCombatSubsystem</a></div><div class="ttdoc">SRPG 턴제 전투를 제어하기 위한 서브 시스템</div><div class="ttdef"><b>Definition</b> <a href="SRPGCombatSubsystem_8h_source.html#l00051">SRPGCombatSubsystem.h:52</a></div></div>
+<div class="ttc" id="aclassUSRPGCombatSubsystem_html_ab6e68ee26acd69c747f59ef05348d2f5"><div class="ttname"><a href="classUSRPGCombatSubsystem.html#ab6e68ee26acd69c747f59ef05348d2f5">USRPGCombatSubsystem::OnEndCurrentTurn</a></div><div class="ttdeci">void OnEndCurrentTurn(TSharedRef&lt; FSRPGTurnContext &gt; TurnContext, ESRPGTurnResult TurnResult)</div><div class="ttdef"><b>Definition</b> <a href="SRPGCombatSubsystem_8cpp_source.html#l00350">SRPGCombatSubsystem.cpp:350</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_a0b781c6ba691a26af6ce81b768c6661e"><div class="ttname"><a href="structFSRPGTurnContext.html#a0b781c6ba691a26af6ce81b768c6661e">FSRPGTurnContext::EvaluateTurnStates</a></div><div class="ttdeci">void EvaluateTurnStates(bool ForceAbort=false)</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8cpp_source.html#l00145">SRPGTurnContext.cpp:145</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_a0cc88bda0dbf80a69a894fa45bc52cd6"><div class="ttname"><a href="structFSRPGTurnContext.html#a0cc88bda0dbf80a69a894fa45bc52cd6">FSRPGTurnContext::EvaluateTurnEndState</a></div><div class="ttdeci">void EvaluateTurnEndState(bool ForceAbort)</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8cpp_source.html#l00181">SRPGTurnContext.cpp:181</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_a133a660d2260110c7452848cf58f02ba"><div class="ttname"><a href="structFSRPGTurnContext.html#a133a660d2260110c7452848cf58f02ba">FSRPGTurnContext::EndTurn</a></div><div class="ttdeci">void EndTurn()</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8cpp_source.html#l00098">SRPGTurnContext.cpp:98</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_a1ab995872a6b90fc1e6f0b04c15f684a"><div class="ttname"><a href="structFSRPGTurnContext.html#a1ab995872a6b90fc1e6f0b04c15f684a">FSRPGTurnContext::IsPermanent</a></div><div class="ttdeci">bool IsPermanent() const</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8cpp_source.html#l00213">SRPGTurnContext.cpp:213</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_a2d17fd1c7c5d2751cbe180aec40babf7"><div class="ttname"><a href="structFSRPGTurnContext.html#a2d17fd1c7c5d2751cbe180aec40babf7">FSRPGTurnContext::InitTurn</a></div><div class="ttdeci">void InitTurn(AUnit *Owner, int32 LifeCount)</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8cpp_source.html#l00044">SRPGTurnContext.cpp:44</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_a4a018fa3afdf2f14172e14eb3bd7bd50"><div class="ttname"><a href="structFSRPGTurnContext.html#a4a018fa3afdf2f14172e14eb3bd7bd50">FSRPGTurnContext::GetOwner</a></div><div class="ttdeci">AUnit * GetOwner() const</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8cpp_source.html#l00208">SRPGTurnContext.cpp:208</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_a4a45f0f7dc75ee081c27969f5b566b47"><div class="ttname"><a href="structFSRPGTurnContext.html#a4a45f0f7dc75ee081c27969f5b566b47">FSRPGTurnContext::OnEndTurnUI</a></div><div class="ttdeci">FOnEndTurnUI OnEndTurnUI</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8h_source.html#l00110">SRPGTurnContext.h:110</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_a80db493c684cbf9ad30df36847d6f8bb"><div class="ttname"><a href="structFSRPGTurnContext.html#a80db493c684cbf9ad30df36847d6f8bb">FSRPGTurnContext::PushAction</a></div><div class="ttdeci">void PushAction(TSharedPtr&lt; FSRPGAction &gt; NewAction)</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8cpp_source.html#l00033">SRPGTurnContext.cpp:33</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_a81810544a8c771ab54cba38bec2c5043"><div class="ttname"><a href="structFSRPGTurnContext.html#a81810544a8c771ab54cba38bec2c5043">FSRPGTurnContext::GetWorld</a></div><div class="ttdeci">UWorld * GetWorld() const</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8cpp_source.html#l00203">SRPGTurnContext.cpp:203</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_a854f2dc00b01d9542480d584e0ac687c"><div class="ttname"><a href="structFSRPGTurnContext.html#a854f2dc00b01d9542480d584e0ac687c">FSRPGTurnContext::StartNextAction</a></div><div class="ttdeci">void StartNextAction()</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8cpp_source.html#l00132">SRPGTurnContext.cpp:132</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_a8582e4b90759ec156a95ea490ed8f667"><div class="ttname"><a href="structFSRPGTurnContext.html#a8582e4b90759ec156a95ea490ed8f667">FSRPGTurnContext::BuildAction</a></div><div class="ttdeci">TSharedPtr&lt; ActionType &gt; BuildAction(TSharedPtr&lt; FSRPGActionBuilder &gt; Builder)</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8h_source.html#l00070">SRPGTurnContext.h:70</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_a883f76397b979063779fd00703d47a93"><div class="ttname"><a href="structFSRPGTurnContext.html#a883f76397b979063779fd00703d47a93">FSRPGTurnContext::UnbuildAction</a></div><div class="ttdeci">void UnbuildAction(TSharedPtr&lt; FSRPGActionBuilder &gt; Builder)</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8cpp_source.html#l00022">SRPGTurnContext.cpp:22</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_a891a6440d9c69531800e6e4b87e5f6cd"><div class="ttname"><a href="structFSRPGTurnContext.html#a891a6440d9c69531800e6e4b87e5f6cd">FSRPGTurnContext::OnBeginTurnUI</a></div><div class="ttdeci">FOnBeginTurnUI OnBeginTurnUI</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8h_source.html#l00109">SRPGTurnContext.h:109</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_a9af32a16156cd782e74fc5f48debd429"><div class="ttname"><a href="structFSRPGTurnContext.html#a9af32a16156cd782e74fc5f48debd429">FSRPGTurnContext::mResult</a></div><div class="ttdeci">ESRPGTurnResult mResult</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8h_source.html#l00118">SRPGTurnContext.h:118</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_aa1dadced925adb8f06e08b826f9e0ec6"><div class="ttname"><a href="structFSRPGTurnContext.html#aa1dadced925adb8f06e08b826f9e0ec6">FSRPGTurnContext::mActions</a></div><div class="ttdeci">TQueue&lt; TSharedPtr&lt; FSRPGAction &gt; &gt; mActions</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8h_source.html#l00120">SRPGTurnContext.h:120</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_aa6ca42f345f18dee6f7d3569a69261f7"><div class="ttname"><a href="structFSRPGTurnContext.html#aa6ca42f345f18dee6f7d3569a69261f7">FSRPGTurnContext::mLifeCount</a></div><div class="ttdeci">int32 mLifeCount</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8h_source.html#l00124">SRPGTurnContext.h:124</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_abf9ba922d48283591f0cf3b4392277f8"><div class="ttname"><a href="structFSRPGTurnContext.html#abf9ba922d48283591f0cf3b4392277f8">FSRPGTurnContext::mPhase</a></div><div class="ttdeci">ESRPGTurnPhase mPhase</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8h_source.html#l00116">SRPGTurnContext.h:116</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_ac4b089036be3aa6a591d1352fdc0f1b6"><div class="ttname"><a href="structFSRPGTurnContext.html#ac4b089036be3aa6a591d1352fdc0f1b6">FSRPGTurnContext::BeginTurn</a></div><div class="ttdeci">void BeginTurn()</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8cpp_source.html#l00053">SRPGTurnContext.cpp:53</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_ace9298ac5b20cb3cac13ce5ed4513dab"><div class="ttname"><a href="structFSRPGTurnContext.html#ace9298ac5b20cb3cac13ce5ed4513dab">FSRPGTurnContext::PERMENENT_TURN</a></div><div class="ttdeci">static constexpr int32 PERMENENT_TURN</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8h_source.html#l00123">SRPGTurnContext.h:123</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_ad81d58f3d48aa0d62018a38d8d07d7fd"><div class="ttname"><a href="structFSRPGTurnContext.html#ad81d58f3d48aa0d62018a38d8d07d7fd">FSRPGTurnContext::GetLifeCount</a></div><div class="ttdeci">int32 GetLifeCount() const</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8cpp_source.html#l00218">SRPGTurnContext.cpp:218</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_ad9acc28a7629c74283dd6918162d1b15"><div class="ttname"><a href="structFSRPGTurnContext.html#ad9acc28a7629c74283dd6918162d1b15">FSRPGTurnContext::TickTurn</a></div><div class="ttdeci">void TickTurn(float DeltaTime)</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8cpp_source.html#l00090">SRPGTurnContext.cpp:90</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_ae12dae34e6e52a0de4b099046256050c"><div class="ttname"><a href="structFSRPGTurnContext.html#ae12dae34e6e52a0de4b099046256050c">FSRPGTurnContext::mOwner</a></div><div class="ttdeci">TObjectPtr&lt; AUnit &gt; mOwner</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8h_source.html#l00113">SRPGTurnContext.h:113</a></div></div>
+<div class="ttc" id="astructFSRPGTurnContext_html_ae34b0f638f4223a95c48a953209d8dfa"><div class="ttname"><a href="structFSRPGTurnContext.html#ae34b0f638f4223a95c48a953209d8dfa">FSRPGTurnContext::OnEndCurrentAction</a></div><div class="ttdeci">void OnEndCurrentAction(TSharedRef&lt; FSRPGAction &gt; Action, ESRPGActionResult ActionResult)</div><div class="ttdef"><b>Definition</b> <a href="SRPGTurnContext_8cpp_source.html#l00156">SRPGTurnContext.cpp:156</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_83c0b7202b8dac4a09e6c9f600234e9d.html">SRPGFramework</a></li><li class="navelem"><a class="el" href="SRPGTurnContext_8cpp.html">SRPGTurnContext.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

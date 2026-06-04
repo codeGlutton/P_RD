@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['nextnode_0',['NextNode',['../classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#af014ab45399d851289a414ad68bacc05',1,'TCircularDoubleLinkedList::TCircularDoubleLinkedListNode']]]
+  ['invalid_0',['invalid',['../structFTileIndex.html#a34e1e14cbc47d78d2c5a867e7e19b0e4',1,'FTileIndex::Invalid'],['../structFTileTransform.html#a46787a0ee98c28e8a17e82e77a6cd218',1,'FTileTransform::Invalid']]]
 ];

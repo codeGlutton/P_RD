@@ -1,0 +1,381 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/Actor/TileMap/TileMap.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('TileMap_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">TileMap.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="TileMap_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="TileMap_8h.html">Actor/TileMap/TileMap.h</a>&quot;</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#include &quot;<a class="code" href="TileActor_8h.html">SRPGFramework/TileActor.h</a>&quot;</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &quot;Components/SceneComponent.h&quot;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &quot;Components/InstancedStaticMeshComponent.h&quot;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &quot;Engine/StaticMesh.h&quot;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &quot;Materials/MaterialInterface.h&quot;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &quot;UObject/ConstructorHelpers.h&quot;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="keyword">namespace</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>{</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span>    <span class="comment">// @brief 타일 액터 방향을 yaw(도)로 변환 (Forward 0 / Right 90 / Backward 180 / Left 270)</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>    <span class="keywordtype">float</span> DirectionToYaw(<a class="code hl_enumeration" href="SRPGFrameworkType_8h.html#a65d7d650fd31653784aa4047aef8db1f">ETileActorDirection</a> Direction)</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>    {</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>        <span class="keywordflow">switch</span> (Direction)</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>        {</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>        <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="SRPGFrameworkType_8h.html#a65d7d650fd31653784aa4047aef8db1fa67d2f6740a8eaebf4d5c6f79be8da481">ETileActorDirection::Forward</a>:  <span class="keywordflow">return</span> 0.0f;</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>        <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="SRPGFrameworkType_8h.html#a65d7d650fd31653784aa4047aef8db1fa92b09c7c48c520c3c55e497875da437c">ETileActorDirection::Right</a>:    <span class="keywordflow">return</span> 90.0f;</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>        <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="SRPGFrameworkType_8h.html#a65d7d650fd31653784aa4047aef8db1fab3263eb38f8903efc271cc7a760da510">ETileActorDirection::Backward</a>: <span class="keywordflow">return</span> 180.0f;</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>        <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="SRPGFrameworkType_8h.html#a65d7d650fd31653784aa4047aef8db1fa945d5e233cf7d6240f6b783b36a374ff">ETileActorDirection::Left</a>:     <span class="keywordflow">return</span> 270.0f;</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>        <span class="keywordflow">default</span>:                            <span class="keywordflow">return</span> 0.0f;</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>        }</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    }</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>}</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
+<div class="foldopen" id="foldopen00025" data-start="{" data-end="}">
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno"><a class="line" href="classATileMap.html#a24f9b89617bc9616633c976e8a9f6925">   25</a></span><a class="code hl_function" href="classATileMap.html#a24f9b89617bc9616633c976e8a9f6925">ATileMap::ATileMap</a>()</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>{</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    <span class="comment">// 그리드는 OnConstruction에서 재생성되므로 틱 불필요</span></div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    PrimaryActorTick.bCanEverTick = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> </div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    <span class="comment">// 루트 컴포넌트 생성 및 지정</span></div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    RootComponent = CreateDefaultSubobject&lt;USceneComponent&gt;(TEXT(<span class="stringliteral">&quot;Root&quot;</span>));</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    <span class="comment">// 타일 그리드용 인스턴스드 메시 컴포넌트 생성 및 루트에 부착</span></div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <a class="code hl_variable" href="classATileMap.html#acb40f4e6eae1d8e41d101fb79204b913">mTileMeshComponent</a> = CreateDefaultSubobject&lt;UInstancedStaticMeshComponent&gt;(TEXT(<span class="stringliteral">&quot;TileMesh&quot;</span>));</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    <a class="code hl_variable" href="classATileMap.html#acb40f4e6eae1d8e41d101fb79204b913">mTileMeshComponent</a>-&gt;SetupAttachment(RootComponent);</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    <span class="comment">// 시각화 전용이므로 충돌 비활성화</span></div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    <a class="code hl_variable" href="classATileMap.html#acb40f4e6eae1d8e41d101fb79204b913">mTileMeshComponent</a>-&gt;SetCollisionEnabled(ECollisionEnabled::NoCollision);</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span> </div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    <span class="comment">// 기본 타일 메시로 엔진 기본 Plane(100x100cm, +Z 향) 지정</span></div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>    <span class="keyword">static</span> ConstructorHelpers::FObjectFinder&lt;UStaticMesh&gt; PlaneMeshFinder(TEXT(<span class="stringliteral">&quot;/Engine/BasicShapes/Plane.Plane&quot;</span>));</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    <span class="keywordflow">if</span> (PlaneMeshFinder.Succeeded())</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    {</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>        <a class="code hl_variable" href="classATileMap.html#a3ce380ac5a2fce334555e09b7ca7753e">mTileMesh</a> = PlaneMeshFinder.Object;</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>        <a class="code hl_variable" href="classATileMap.html#acb40f4e6eae1d8e41d101fb79204b913">mTileMeshComponent</a>-&gt;SetStaticMesh(<a class="code hl_variable" href="classATileMap.html#a3ce380ac5a2fce334555e09b7ca7753e">mTileMesh</a>);</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>    }</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>}</div>
+</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
+<div class="foldopen" id="foldopen00048" data-start="{" data-end="}">
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno"><a class="line" href="classATileMap.html#a8b60b57b0ee93a0b5b9e1fc851f15f36">   48</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classATileMap.html#a8b60b57b0ee93a0b5b9e1fc851f15f36">ATileMap::OnConstruction</a>(<span class="keyword">const</span> FTransform&amp; Transform)</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>{</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    Super::OnConstruction(Transform);</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span> </div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    <span class="comment">// 배치/스폰/프로퍼티 변경 시점에 그리드 인스턴스 재생성</span></div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    RebuildTileInstances();</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>}</div>
+</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span> </div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span><span class="keywordtype">void</span> ATileMap::RebuildTileInstances()</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>{</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>    <span class="comment">// 컴포넌트가 없으면 처리 불가</span></div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classATileMap.html#acb40f4e6eae1d8e41d101fb79204b913">mTileMeshComponent</a> == <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>    {</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>        <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    }</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span> </div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>    <span class="comment">// 에디터에서 교체된 메시/머티리얼 반영</span></div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    <a class="code hl_variable" href="classATileMap.html#acb40f4e6eae1d8e41d101fb79204b913">mTileMeshComponent</a>-&gt;SetStaticMesh(<a class="code hl_variable" href="classATileMap.html#a3ce380ac5a2fce334555e09b7ca7753e">mTileMesh</a>);</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classATileMap.html#acf40130a4f009f6ed34e6403c06662ff">mTileMaterial</a> != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    {</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>        <a class="code hl_variable" href="classATileMap.html#acb40f4e6eae1d8e41d101fb79204b913">mTileMeshComponent</a>-&gt;SetMaterial(0, <a class="code hl_variable" href="classATileMap.html#acf40130a4f009f6ed34e6403c06662ff">mTileMaterial</a>);</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>    }</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span> </div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>    <span class="comment">// 기존 인스턴스 모두 제거 후 재생성</span></div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    <a class="code hl_variable" href="classATileMap.html#acb40f4e6eae1d8e41d101fb79204b913">mTileMeshComponent</a>-&gt;ClearInstances();</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span> </div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>    <span class="comment">// 메시가 없거나 크기가 비정상이면 빈 그리드로 둠</span></div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classATileMap.html#a3ce380ac5a2fce334555e09b7ca7753e">mTileMesh</a> == <span class="keyword">nullptr</span> || <a class="code hl_variable" href="classATileMap.html#a83e09d2fa0b282497800e4867362c435">mWidth</a> &lt;= 0 || <a class="code hl_variable" href="classATileMap.html#a22d4041acc9c8e7d894ba79934bfd7f5">mHeight</a> &lt;= 0 || <a class="code hl_variable" href="classATileMap.html#a9ca2d5e153f0564f4de1ff50fce2843a">mTileSize</a> &lt;= 0.0f)</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>    {</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>        <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    }</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span> </div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    <span class="comment">// 엔진 Plane은 100cm 기준 → 타일 크기에 맞춰 스케일 환산, 시각 비율로 칸 사이 틈 생성</span></div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>    <span class="keyword">const</span> <span class="keywordtype">float</span> PlaneBaseSize = 100.0f;</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    <span class="keyword">const</span> <span class="keywordtype">float</span> InstanceScaleXY = (<a class="code hl_variable" href="classATileMap.html#a9ca2d5e153f0564f4de1ff50fce2843a">mTileSize</a> / PlaneBaseSize) * <a class="code hl_variable" href="classATileMap.html#a652e79e7a6f50b1e70d91841d87161d7">mTileVisualScale</a>;</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span> </div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    <span class="comment">// Width x Height 만큼 타일 인스턴스를 로컬 공간에 배치</span></div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>    <span class="keywordflow">for</span> (int32 y = 0; y &lt; <a class="code hl_variable" href="classATileMap.html#a22d4041acc9c8e7d894ba79934bfd7f5">mHeight</a>; ++y)</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>    {</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>        <span class="keywordflow">for</span> (int32 x = 0; x &lt; <a class="code hl_variable" href="classATileMap.html#a83e09d2fa0b282497800e4867362c435">mWidth</a>; ++x)</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>        {</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>            <span class="comment">// 타일 (x,y) 중심의 로컬 위치</span></div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>            <span class="keyword">const</span> FVector LocalLocation(x * <a class="code hl_variable" href="classATileMap.html#a9ca2d5e153f0564f4de1ff50fce2843a">mTileSize</a>, y * <a class="code hl_variable" href="classATileMap.html#a9ca2d5e153f0564f4de1ff50fce2843a">mTileSize</a>, 0.0f);</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>            <span class="keyword">const</span> FTransform InstanceTransform(FRotator::ZeroRotator, LocalLocation, FVector(InstanceScaleXY, InstanceScaleXY, 1.0f));</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>            <a class="code hl_variable" href="classATileMap.html#acb40f4e6eae1d8e41d101fb79204b913">mTileMeshComponent</a>-&gt;AddInstance(InstanceTransform, <span class="comment">/*bWorldSpace=*/</span><span class="keyword">false</span>);</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>        }</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>    }</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>}</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span> </div>
+<div class="foldopen" id="foldopen00097" data-start="{" data-end="}">
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno"><a class="line" href="classATileMap.html#a2f7d065f6a92db308414aa60fbcf60e2">   97</a></span>int32 <a class="code hl_function" href="classATileMap.html#a2f7d065f6a92db308414aa60fbcf60e2">ATileMap::GetWidth</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classATileMap.html#a83e09d2fa0b282497800e4867362c435">mWidth</a>;</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>}</div>
+</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span> </div>
+<div class="foldopen" id="foldopen00102" data-start="{" data-end="}">
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno"><a class="line" href="classATileMap.html#afa5d038f64f7e764be576528271e84be">  102</a></span>int32 <a class="code hl_function" href="classATileMap.html#afa5d038f64f7e764be576528271e84be">ATileMap::GetHeight</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classATileMap.html#a22d4041acc9c8e7d894ba79934bfd7f5">mHeight</a>;</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>}</div>
+</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span> </div>
+<div class="foldopen" id="foldopen00107" data-start="{" data-end="}">
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno"><a class="line" href="classATileMap.html#abf121def7b1e09110c3d5ec75723ee1c">  107</a></span><span class="keywordtype">float</span> <a class="code hl_function" href="classATileMap.html#abf121def7b1e09110c3d5ec75723ee1c">ATileMap::GetTileSize</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classATileMap.html#a9ca2d5e153f0564f4de1ff50fce2843a">mTileSize</a>;</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>}</div>
+</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span> </div>
+<div class="foldopen" id="foldopen00112" data-start="{" data-end="}">
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno"><a class="line" href="classATileMap.html#a864cb72c7520939a6a6ec6b848f962b1">  112</a></span><span class="keywordtype">bool</span> <a class="code hl_function" href="classATileMap.html#a864cb72c7520939a6a6ec6b848f962b1">ATileMap::IsValidIndex</a>(<span class="keyword">const</span> <a class="code hl_struct" href="structFTileIndex.html">FTileIndex</a>&amp; TileIndex)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>    <span class="comment">// 0 &lt;= X &lt; Width &amp;&amp; 0 &lt;= Y &lt; Height 범위 검사</span></div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>    <span class="keywordflow">return</span> TileIndex.<a class="code hl_variable" href="structFTileIndex.html#a4c88e6810e0e88b9b25aa1e25944caa9">mX</a> &gt;= 0 &amp;&amp; TileIndex.<a class="code hl_variable" href="structFTileIndex.html#a4c88e6810e0e88b9b25aa1e25944caa9">mX</a> &lt; <a class="code hl_variable" href="classATileMap.html#a83e09d2fa0b282497800e4867362c435">mWidth</a></div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>        &amp;&amp; TileIndex.<a class="code hl_variable" href="structFTileIndex.html#a93b045617bfb164a8a081881292e39ff">mY</a> &gt;= 0 &amp;&amp; TileIndex.<a class="code hl_variable" href="structFTileIndex.html#a93b045617bfb164a8a081881292e39ff">mY</a> &lt; <a class="code hl_variable" href="classATileMap.html#a22d4041acc9c8e7d894ba79934bfd7f5">mHeight</a>;</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>}</div>
+</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span> </div>
+<div class="foldopen" id="foldopen00119" data-start="{" data-end="}">
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno"><a class="line" href="classATileMap.html#a55e84cd6dbfeaa405942e107b8559419">  119</a></span>FTransform <a class="code hl_function" href="classATileMap.html#a55e84cd6dbfeaa405942e107b8559419">ATileMap::TileToWorldTransform</a>(<span class="keyword">const</span> <a class="code hl_struct" href="structFTileTransform.html">FTileTransform</a>&amp; TileTransform)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>    <span class="comment">// TODO: 인덱스+방향 → 월드 트랜스폼 변환</span></div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>    <span class="keywordflow">return</span> FTransform::Identity;</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>}</div>
+</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span> </div>
+<div class="foldopen" id="foldopen00125" data-start="{" data-end="}">
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno"><a class="line" href="classATileMap.html#a3e6ce46f257a4d2cb43b10b34a7800f5">  125</a></span>FVector <a class="code hl_function" href="classATileMap.html#a3e6ce46f257a4d2cb43b10b34a7800f5">ATileMap::TileToWorldLocation</a>(<span class="keyword">const</span> <a class="code hl_struct" href="structFTileIndex.html">FTileIndex</a>&amp; TileIndex)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>    <span class="comment">// TODO: 인덱스 → 월드 위치 변환</span></div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>    <span class="keywordflow">return</span> FVector::ZeroVector;</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>}</div>
+</div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span> </div>
+<div class="foldopen" id="foldopen00131" data-start="{" data-end="}">
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno"><a class="line" href="classATileMap.html#a65f8825776aa024cbf94d3198613f966">  131</a></span><a class="code hl_struct" href="structFTileIndex.html">FTileIndex</a> <a class="code hl_function" href="classATileMap.html#a65f8825776aa024cbf94d3198613f966">ATileMap::WorldToTileIndex</a>(<span class="keyword">const</span> FVector&amp; WorldLocation)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>    <span class="comment">// TODO: 월드 위치 → 타일 인덱스 변환</span></div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>    <span class="keywordflow">return</span> <a class="code hl_struct" href="structFTileIndex.html">FTileIndex</a>();</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>}</div>
+</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span> </div>
+<div class="foldopen" id="foldopen00137" data-start="{" data-end="}">
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno"><a class="line" href="classATileMap.html#aed930e57001a4ba3c50102a2c2c5db8c">  137</a></span>TArray&lt;FTileIndex&gt; <a class="code hl_function" href="classATileMap.html#aed930e57001a4ba3c50102a2c2c5db8c">ATileMap::GetReachableTiles</a>(<span class="keyword">const</span> <a class="code hl_struct" href="structFTileIndex.html">FTileIndex</a>&amp; Origin, int32 MoveDistance)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>    <span class="comment">// TODO: 경로 기반 도달 가능 타일 계산</span></div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>    <span class="keywordflow">return</span> TArray&lt;FTileIndex&gt;();</div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>}</div>
+</div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span> </div>
+<div class="foldopen" id="foldopen00143" data-start="{" data-end="}">
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno"><a class="line" href="classATileMap.html#a55432b193efe6d3f7df433fe5feffd77">  143</a></span>TArray&lt;FTileIndex&gt; <a class="code hl_function" href="classATileMap.html#a55432b193efe6d3f7df433fe5feffd77">ATileMap::GetAimableTiles</a>(<span class="keyword">const</span> <a class="code hl_struct" href="structFTileIndex.html">FTileIndex</a>&amp; Origin, int32 Range, <a class="code hl_enumeration" href="SRPGFrameworkType_8h.html#ae26b1418bce20a6ba6577d4671b7d706">EAimPattern</a> Pattern, <span class="keywordtype">bool</span> bIncludeOccupied, <span class="keywordtype">bool</span> bIndirect)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>    <span class="comment">// TODO: 조준 패턴별 조준 가능 타일 계산</span></div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>    <span class="keywordflow">return</span> TArray&lt;FTileIndex&gt;();</div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>}</div>
+</div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span> </div>
+<div class="foldopen" id="foldopen00149" data-start="{" data-end="}">
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno"><a class="line" href="classATileMap.html#a382e37ba1b03037762317b7782f6fce7">  149</a></span>TArray&lt;FTileIndex&gt; <a class="code hl_function" href="classATileMap.html#a382e37ba1b03037762317b7782f6fce7">ATileMap::GetEffectTiles</a>(<span class="keyword">const</span> <a class="code hl_struct" href="structFTileIndex.html">FTileIndex</a>&amp; Caster, <span class="keyword">const</span> <a class="code hl_struct" href="structFTileIndex.html">FTileIndex</a>&amp; Target, <a class="code hl_enumeration" href="SRPGFrameworkType_8h.html#a5649b259c42cfc63c1190663e66cce26">EEffectPattern</a> Pattern, int32 Size, <span class="keywordtype">bool</span> bPenetrate)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>    <span class="comment">// TODO: 영향 패턴별 영향 타일 계산</span></div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>    <span class="keywordflow">return</span> TArray&lt;FTileIndex&gt;();</div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>}</div>
+</div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span> </div>
+<div class="foldopen" id="foldopen00155" data-start="{" data-end="}">
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno"><a class="line" href="classATileMap.html#a4249d3bab8575efe80854d1cc16408c9">  155</a></span><span class="keywordtype">bool</span> <a class="code hl_function" href="classATileMap.html#a4249d3bab8575efe80854d1cc16408c9">ATileMap::IsBlocking</a>(<span class="keyword">const</span> <a class="code hl_struct" href="structFTileIndex.html">FTileIndex</a>&amp; TileIndex, <a class="code hl_enumeration" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3">ETileLayerFlag</a> LayerFlag)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>    <span class="comment">// TODO: 해당 타일의 특정 레이어 블로킹 여부 검사</span></div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>}</div>
+</div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span> </div>
+<div class="foldopen" id="foldopen00161" data-start="{" data-end="}">
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno"><a class="line" href="classATileMap.html#ab4ccd4d53e9e2a6caf572f3c4619d5bd">  161</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classATileMap.html#ab4ccd4d53e9e2a6caf572f3c4619d5bd">ATileMap::StartActorMovement</a>(<span class="keyword">const</span> <a class="code hl_struct" href="structFTileTransform.html">FTileTransform</a>&amp; NextTransform, <a class="code hl_class" href="classITileActor.html">ITileActor</a>* Actor)</div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>{</div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>    checkf(<a class="code hl_function" href="classATileMap.html#a4249d3bab8575efe80854d1cc16408c9">IsBlocking</a>(NextTransform.<a class="code hl_variable" href="structFTileTransform.html#a03d9bfdf9a62b9f63cf92abcb390b850">mIndex</a>, Actor-&gt;GetTileLayer()) == <span class="keyword">false</span>, TEXT(<span class="stringliteral">&quot;배치할 수 없는 타일&quot;</span>));</div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span> </div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>    <span class="comment">// TODO: 이전 타일에 겹치는 객체마다 OnEndTileOverlap 이벤트</span></div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span> </div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>    <span class="comment">// TODO: 이전 타일에서 해제</span></div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>    </div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>    <span class="comment">// TODO: 다음 타일에 등록</span></div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>    Actor-&gt;SetTileTransform(NextTransform);</div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>}</div>
+</div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span> </div>
+<div class="foldopen" id="foldopen00173" data-start="{" data-end="}">
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno"><a class="line" href="classATileMap.html#a7b0c5e405abc32bb23c78dbf28945c55">  173</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classATileMap.html#a7b0c5e405abc32bb23c78dbf28945c55">ATileMap::CompleteActorMovement</a>(<a class="code hl_class" href="classITileActor.html">ITileActor</a>* Actor)</div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>{</div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>    <span class="comment">// TODO: 다음 타일에 겹치는 객체마다 OnBeginTileOverlap 이벤트</span></div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>}</div>
+</div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span> </div>
+<div class="foldopen" id="foldopen00178" data-start="{" data-end="}">
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno"><a class="line" href="classATileMap.html#a48f6bdd631029d48d32b6fdb49c8a0f9">  178</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classATileMap.html#a48f6bdd631029d48d32b6fdb49c8a0f9">ATileMap::PlaceActor</a>(<span class="keyword">const</span> <a class="code hl_struct" href="structFTileTransform.html">FTileTransform</a>&amp; NextTransform, <a class="code hl_class" href="classITileActor.html">ITileActor</a>* Actor)</div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>{</div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>    checkf(<a class="code hl_function" href="classATileMap.html#a4249d3bab8575efe80854d1cc16408c9">IsBlocking</a>(NextTransform.<a class="code hl_variable" href="structFTileTransform.html#a03d9bfdf9a62b9f63cf92abcb390b850">mIndex</a>, Actor-&gt;GetTileLayer()) == <span class="keyword">false</span>, TEXT(<span class="stringliteral">&quot;배치할 수 없는 타일&quot;</span>));</div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span> </div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>    <span class="comment">// TODO: 다음 타일에 등록</span></div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>    Actor-&gt;SetTileTransform(NextTransform);</div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>    </div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>    <span class="comment">// TODO: 다음 타일에 겹치는 객체마다 OnBeginTileOverlap 이벤트</span></div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>}</div>
+</div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span> </div>
+<div class="foldopen" id="foldopen00188" data-start="{" data-end="}">
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno"><a class="line" href="classATileMap.html#a19b63cdd0d14e44b0c895c1de4272a83">  188</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classATileMap.html#a19b63cdd0d14e44b0c895c1de4272a83">ATileMap::RemoveActor</a>(<a class="code hl_class" href="classITileActor.html">ITileActor</a>* Actor)</div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>{</div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>    <span class="comment">// TODO: 이전 타일에 겹치는 객체마다 OnEndTileOverlap 이벤트</span></div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>    </div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>    <span class="comment">// TODO: 이전 타일에서 해제</span></div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>    Actor-&gt;SetTileTransform(<a class="code hl_variable" href="structFTileTransform.html#a46787a0ee98c28e8a17e82e77a6cd218">FTileTransform::Invalid</a>);</div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>}</div>
+</div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span> </div>
+<div class="ttc" id="aSRPGFrameworkType_8h_html_a5649b259c42cfc63c1190663e66cce26"><div class="ttname"><a href="SRPGFrameworkType_8h.html#a5649b259c42cfc63c1190663e66cce26">EEffectPattern</a></div><div class="ttdeci">EEffectPattern</div><div class="ttdoc">영향 범위 패턴</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00094">SRPGFrameworkType.h:95</a></div></div>
+<div class="ttc" id="aSRPGFrameworkType_8h_html_a65d7d650fd31653784aa4047aef8db1f"><div class="ttname"><a href="SRPGFrameworkType_8h.html#a65d7d650fd31653784aa4047aef8db1f">ETileActorDirection</a></div><div class="ttdeci">ETileActorDirection</div><div class="ttdoc">타일에 배치된 액터가 바라보는 방향</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00017">SRPGFrameworkType.h:18</a></div></div>
+<div class="ttc" id="aSRPGFrameworkType_8h_html_a65d7d650fd31653784aa4047aef8db1fa67d2f6740a8eaebf4d5c6f79be8da481"><div class="ttname"><a href="SRPGFrameworkType_8h.html#a65d7d650fd31653784aa4047aef8db1fa67d2f6740a8eaebf4d5c6f79be8da481">ETileActorDirection::Forward</a></div><div class="ttdeci">@ Forward</div></div>
+<div class="ttc" id="aSRPGFrameworkType_8h_html_a65d7d650fd31653784aa4047aef8db1fa92b09c7c48c520c3c55e497875da437c"><div class="ttname"><a href="SRPGFrameworkType_8h.html#a65d7d650fd31653784aa4047aef8db1fa92b09c7c48c520c3c55e497875da437c">ETileActorDirection::Right</a></div><div class="ttdeci">@ Right</div></div>
+<div class="ttc" id="aSRPGFrameworkType_8h_html_a65d7d650fd31653784aa4047aef8db1fa945d5e233cf7d6240f6b783b36a374ff"><div class="ttname"><a href="SRPGFrameworkType_8h.html#a65d7d650fd31653784aa4047aef8db1fa945d5e233cf7d6240f6b783b36a374ff">ETileActorDirection::Left</a></div><div class="ttdeci">@ Left</div></div>
+<div class="ttc" id="aSRPGFrameworkType_8h_html_a65d7d650fd31653784aa4047aef8db1fab3263eb38f8903efc271cc7a760da510"><div class="ttname"><a href="SRPGFrameworkType_8h.html#a65d7d650fd31653784aa4047aef8db1fab3263eb38f8903efc271cc7a760da510">ETileActorDirection::Backward</a></div><div class="ttdeci">@ Backward</div></div>
+<div class="ttc" id="aSRPGFrameworkType_8h_html_ae26b1418bce20a6ba6577d4671b7d706"><div class="ttname"><a href="SRPGFrameworkType_8h.html#ae26b1418bce20a6ba6577d4671b7d706">EAimPattern</a></div><div class="ttdeci">EAimPattern</div><div class="ttdoc">조준 범위 패턴</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00082">SRPGFrameworkType.h:83</a></div></div>
+<div class="ttc" id="aTileActor_8h_html"><div class="ttname"><a href="TileActor_8h.html">TileActor.h</a></div><div class="ttdoc">SRPG 타일에 배치 가능한 객체 인터페이스 정의 헤더</div></div>
+<div class="ttc" id="aTileLayer_8h_html_a61ff5e934720f6e71d4d011bf7d5e6c3"><div class="ttname"><a href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3">ETileLayerFlag</a></div><div class="ttdeci">ETileLayerFlag</div><div class="ttdoc">SRPG의 타일 레이어</div><div class="ttdef"><b>Definition</b> <a href="TileLayer_8h_source.html#l00018">TileLayer.h:19</a></div></div>
+<div class="ttc" id="aTileMap_8h_html"><div class="ttname"><a href="TileMap_8h.html">TileMap.h</a></div><div class="ttdoc">타일맵 액터 정의 헤더</div></div>
+<div class="ttc" id="aclassATileMap_html_a19b63cdd0d14e44b0c895c1de4272a83"><div class="ttname"><a href="classATileMap.html#a19b63cdd0d14e44b0c895c1de4272a83">ATileMap::RemoveActor</a></div><div class="ttdeci">void RemoveActor(ITileActor *Actor)</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8cpp_source.html#l00188">TileMap.cpp:188</a></div></div>
+<div class="ttc" id="aclassATileMap_html_a22d4041acc9c8e7d894ba79934bfd7f5"><div class="ttname"><a href="classATileMap.html#a22d4041acc9c8e7d894ba79934bfd7f5">ATileMap::mHeight</a></div><div class="ttdeci">int32 mHeight</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8h_source.html#l00169">TileMap.h:169</a></div></div>
+<div class="ttc" id="aclassATileMap_html_a24f9b89617bc9616633c976e8a9f6925"><div class="ttname"><a href="classATileMap.html#a24f9b89617bc9616633c976e8a9f6925">ATileMap::ATileMap</a></div><div class="ttdeci">ATileMap()</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8cpp_source.html#l00025">TileMap.cpp:25</a></div></div>
+<div class="ttc" id="aclassATileMap_html_a2f7d065f6a92db308414aa60fbcf60e2"><div class="ttname"><a href="classATileMap.html#a2f7d065f6a92db308414aa60fbcf60e2">ATileMap::GetWidth</a></div><div class="ttdeci">int32 GetWidth() const</div><div class="ttdoc">타일맵의 가로 길이 (X 방향 타일 개수)</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8cpp_source.html#l00097">TileMap.cpp:97</a></div></div>
+<div class="ttc" id="aclassATileMap_html_a382e37ba1b03037762317b7782f6fce7"><div class="ttname"><a href="classATileMap.html#a382e37ba1b03037762317b7782f6fce7">ATileMap::GetEffectTiles</a></div><div class="ttdeci">TArray&lt; FTileIndex &gt; GetEffectTiles(const FTileIndex &amp;Caster, const FTileIndex &amp;Target, EEffectPattern Pattern, int32 Size, bool bPenetrate) const</div><div class="ttdoc">스킬 발동 시 영향받는 타일 목록 반환</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8cpp_source.html#l00149">TileMap.cpp:149</a></div></div>
+<div class="ttc" id="aclassATileMap_html_a3ce380ac5a2fce334555e09b7ca7753e"><div class="ttname"><a href="classATileMap.html#a3ce380ac5a2fce334555e09b7ca7753e">ATileMap::mTileMesh</a></div><div class="ttdeci">TObjectPtr&lt; UStaticMesh &gt; mTileMesh</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8h_source.html#l00182">TileMap.h:182</a></div></div>
+<div class="ttc" id="aclassATileMap_html_a3e6ce46f257a4d2cb43b10b34a7800f5"><div class="ttname"><a href="classATileMap.html#a3e6ce46f257a4d2cb43b10b34a7800f5">ATileMap::TileToWorldLocation</a></div><div class="ttdeci">FVector TileToWorldLocation(const FTileIndex &amp;TileIndex) const</div><div class="ttdoc">타일 인덱스를 월드 위치로 변환</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8cpp_source.html#l00125">TileMap.cpp:125</a></div></div>
+<div class="ttc" id="aclassATileMap_html_a4249d3bab8575efe80854d1cc16408c9"><div class="ttname"><a href="classATileMap.html#a4249d3bab8575efe80854d1cc16408c9">ATileMap::IsBlocking</a></div><div class="ttdeci">bool IsBlocking(const FTileIndex &amp;TileIndex, ETileLayerFlag LayerFlag) const</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8cpp_source.html#l00155">TileMap.cpp:155</a></div></div>
+<div class="ttc" id="aclassATileMap_html_a48f6bdd631029d48d32b6fdb49c8a0f9"><div class="ttname"><a href="classATileMap.html#a48f6bdd631029d48d32b6fdb49c8a0f9">ATileMap::PlaceActor</a></div><div class="ttdeci">void PlaceActor(const FTileTransform &amp;NextTransform, ITileActor *Actor)</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8cpp_source.html#l00178">TileMap.cpp:178</a></div></div>
+<div class="ttc" id="aclassATileMap_html_a55432b193efe6d3f7df433fe5feffd77"><div class="ttname"><a href="classATileMap.html#a55432b193efe6d3f7df433fe5feffd77">ATileMap::GetAimableTiles</a></div><div class="ttdeci">TArray&lt; FTileIndex &gt; GetAimableTiles(const FTileIndex &amp;Origin, int32 Range, EAimPattern Pattern, bool bIncludeOccupied, bool bIndirect) const</div><div class="ttdoc">기준 좌표에서 조준 가능한 타일 목록 반환</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8cpp_source.html#l00143">TileMap.cpp:143</a></div></div>
+<div class="ttc" id="aclassATileMap_html_a55e84cd6dbfeaa405942e107b8559419"><div class="ttname"><a href="classATileMap.html#a55e84cd6dbfeaa405942e107b8559419">ATileMap::TileToWorldTransform</a></div><div class="ttdeci">FTransform TileToWorldTransform(const FTileTransform &amp;TileTransform) const</div><div class="ttdoc">타일 트랜스폼(인덱스+방향)을 월드 트랜스폼으로 변환</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8cpp_source.html#l00119">TileMap.cpp:119</a></div></div>
+<div class="ttc" id="aclassATileMap_html_a652e79e7a6f50b1e70d91841d87161d7"><div class="ttname"><a href="classATileMap.html#a652e79e7a6f50b1e70d91841d87161d7">ATileMap::mTileVisualScale</a></div><div class="ttdeci">float mTileVisualScale</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8h_source.html#l00190">TileMap.h:190</a></div></div>
+<div class="ttc" id="aclassATileMap_html_a65f8825776aa024cbf94d3198613f966"><div class="ttname"><a href="classATileMap.html#a65f8825776aa024cbf94d3198613f966">ATileMap::WorldToTileIndex</a></div><div class="ttdeci">FTileIndex WorldToTileIndex(const FVector &amp;WorldLocation) const</div><div class="ttdoc">월드 위치를 타일 인덱스로 변환</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8cpp_source.html#l00131">TileMap.cpp:131</a></div></div>
+<div class="ttc" id="aclassATileMap_html_a7b0c5e405abc32bb23c78dbf28945c55"><div class="ttname"><a href="classATileMap.html#a7b0c5e405abc32bb23c78dbf28945c55">ATileMap::CompleteActorMovement</a></div><div class="ttdeci">void CompleteActorMovement(ITileActor *Actor)</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8cpp_source.html#l00173">TileMap.cpp:173</a></div></div>
+<div class="ttc" id="aclassATileMap_html_a83e09d2fa0b282497800e4867362c435"><div class="ttname"><a href="classATileMap.html#a83e09d2fa0b282497800e4867362c435">ATileMap::mWidth</a></div><div class="ttdeci">int32 mWidth</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8h_source.html#l00165">TileMap.h:165</a></div></div>
+<div class="ttc" id="aclassATileMap_html_a864cb72c7520939a6a6ec6b848f962b1"><div class="ttname"><a href="classATileMap.html#a864cb72c7520939a6a6ec6b848f962b1">ATileMap::IsValidIndex</a></div><div class="ttdeci">bool IsValidIndex(const FTileIndex &amp;TileIndex) const</div><div class="ttdoc">타일 인덱스가 이 맵 범위 안의 유효한 좌표인지 검사</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8cpp_source.html#l00112">TileMap.cpp:112</a></div></div>
+<div class="ttc" id="aclassATileMap_html_a8b60b57b0ee93a0b5b9e1fc851f15f36"><div class="ttname"><a href="classATileMap.html#a8b60b57b0ee93a0b5b9e1fc851f15f36">ATileMap::OnConstruction</a></div><div class="ttdeci">virtual void OnConstruction(const FTransform &amp;Transform) override</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8cpp_source.html#l00048">TileMap.cpp:48</a></div></div>
+<div class="ttc" id="aclassATileMap_html_a9ca2d5e153f0564f4de1ff50fce2843a"><div class="ttname"><a href="classATileMap.html#a9ca2d5e153f0564f4de1ff50fce2843a">ATileMap::mTileSize</a></div><div class="ttdeci">float mTileSize</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8h_source.html#l00173">TileMap.h:173</a></div></div>
+<div class="ttc" id="aclassATileMap_html_ab4ccd4d53e9e2a6caf572f3c4619d5bd"><div class="ttname"><a href="classATileMap.html#ab4ccd4d53e9e2a6caf572f3c4619d5bd">ATileMap::StartActorMovement</a></div><div class="ttdeci">void StartActorMovement(const FTileTransform &amp;NextTransform, ITileActor *Actor)</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8cpp_source.html#l00161">TileMap.cpp:161</a></div></div>
+<div class="ttc" id="aclassATileMap_html_abf121def7b1e09110c3d5ec75723ee1c"><div class="ttname"><a href="classATileMap.html#abf121def7b1e09110c3d5ec75723ee1c">ATileMap::GetTileSize</a></div><div class="ttdeci">float GetTileSize() const</div><div class="ttdoc">타일 한 칸의 월드 크기 (cm): 기본값은 100cm</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8cpp_source.html#l00107">TileMap.cpp:107</a></div></div>
+<div class="ttc" id="aclassATileMap_html_acb40f4e6eae1d8e41d101fb79204b913"><div class="ttname"><a href="classATileMap.html#acb40f4e6eae1d8e41d101fb79204b913">ATileMap::mTileMeshComponent</a></div><div class="ttdeci">TObjectPtr&lt; UInstancedStaticMeshComponent &gt; mTileMeshComponent</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8h_source.html#l00178">TileMap.h:178</a></div></div>
+<div class="ttc" id="aclassATileMap_html_acf40130a4f009f6ed34e6403c06662ff"><div class="ttname"><a href="classATileMap.html#acf40130a4f009f6ed34e6403c06662ff">ATileMap::mTileMaterial</a></div><div class="ttdeci">TObjectPtr&lt; UMaterialInterface &gt; mTileMaterial</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8h_source.html#l00186">TileMap.h:186</a></div></div>
+<div class="ttc" id="aclassATileMap_html_aed930e57001a4ba3c50102a2c2c5db8c"><div class="ttname"><a href="classATileMap.html#aed930e57001a4ba3c50102a2c2c5db8c">ATileMap::GetReachableTiles</a></div><div class="ttdeci">TArray&lt; FTileIndex &gt; GetReachableTiles(const FTileIndex &amp;Origin, int32 MoveDistance) const</div><div class="ttdoc">기준 좌표에서 이동 가능한 타일 목록 반환</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8cpp_source.html#l00137">TileMap.cpp:137</a></div></div>
+<div class="ttc" id="aclassATileMap_html_afa5d038f64f7e764be576528271e84be"><div class="ttname"><a href="classATileMap.html#afa5d038f64f7e764be576528271e84be">ATileMap::GetHeight</a></div><div class="ttdeci">int32 GetHeight() const</div><div class="ttdoc">타일맵의 세로 길이 (Y 방향 타일 개수)</div><div class="ttdef"><b>Definition</b> <a href="TileMap_8cpp_source.html#l00102">TileMap.cpp:102</a></div></div>
+<div class="ttc" id="aclassITileActor_html"><div class="ttname"><a href="classITileActor.html">ITileActor</a></div><div class="ttdoc">SRPG 타일에 배치 가능한 객체 인터페이스</div><div class="ttdef"><b>Definition</b> <a href="TileActor_8h_source.html#l00025">TileActor.h:26</a></div></div>
+<div class="ttc" id="astructFTileIndex_html"><div class="ttname"><a href="structFTileIndex.html">FTileIndex</a></div><div class="ttdoc">타일 맵 상 인덱스 좌표</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00029">SRPGFrameworkType.h:30</a></div></div>
+<div class="ttc" id="astructFTileIndex_html_a4c88e6810e0e88b9b25aa1e25944caa9"><div class="ttname"><a href="structFTileIndex.html#a4c88e6810e0e88b9b25aa1e25944caa9">FTileIndex::mX</a></div><div class="ttdeci">int32 mX</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00039">SRPGFrameworkType.h:39</a></div></div>
+<div class="ttc" id="astructFTileIndex_html_a93b045617bfb164a8a081881292e39ff"><div class="ttname"><a href="structFTileIndex.html#a93b045617bfb164a8a081881292e39ff">FTileIndex::mY</a></div><div class="ttdeci">int32 mY</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00042">SRPGFrameworkType.h:42</a></div></div>
+<div class="ttc" id="astructFTileTransform_html"><div class="ttname"><a href="structFTileTransform.html">FTileTransform</a></div><div class="ttdoc">타일 맵 상 위치</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00055">SRPGFrameworkType.h:56</a></div></div>
+<div class="ttc" id="astructFTileTransform_html_a03d9bfdf9a62b9f63cf92abcb390b850"><div class="ttname"><a href="structFTileTransform.html#a03d9bfdf9a62b9f63cf92abcb390b850">FTileTransform::mIndex</a></div><div class="ttdeci">FTileIndex mIndex</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00066">SRPGFrameworkType.h:66</a></div></div>
+<div class="ttc" id="astructFTileTransform_html_a46787a0ee98c28e8a17e82e77a6cd218"><div class="ttname"><a href="structFTileTransform.html#a46787a0ee98c28e8a17e82e77a6cd218">FTileTransform::Invalid</a></div><div class="ttdeci">static const FTileTransform Invalid</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00072">SRPGFrameworkType.h:72</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_b0f6477e5460f689b7d3a9cfbd931fdd.html">Actor</a></li><li class="navelem"><a class="el" href="dir_80081228010cd5afecd40b14e5cdb74c.html">TileMap</a></li><li class="navelem"><a class="el" href="TileMap_8cpp.html">TileMap.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

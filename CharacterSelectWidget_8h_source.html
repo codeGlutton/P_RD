@@ -1,0 +1,272 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/UI/CharacterSelectWidget.h 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('CharacterSelectWidget_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">CharacterSelectWidget.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="CharacterSelectWidget_8h.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*****************************************************************/</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;<a class="code" href="RDMinimal_8h.html">RDMinimal.h</a>&quot;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;Blueprint/UserWidget.h&quot;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &quot;<a class="code" href="CharacterSelectTypes_8h.html">Frontend/CharacterSelectTypes.h</a>&quot;</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &quot;UObject/SoftObjectPath.h&quot;</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="preprocessor">#include &quot;CharacterSelectWidget.generated.h&quot;</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span> </div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="keyword">struct </span>FStreamableHandle;</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span> </div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="keyword">class </span>UButton;</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="keyword">class </span><a class="code hl_class" href="classUCharacterCardWidget.html">UCharacterCardWidget</a>;</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="keyword">class </span>UImage;</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="keyword">class </span>UPanelWidget;</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="keyword">class </span>UTextBlock;</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="keyword">class </span>UTexture2D;</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span> </div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno"><a class="line" href="CharacterSelectWidget_8h.html#a3591861c2e55810f08f2cf4ba387a45a">   26</a></span><a class="code hl_function" href="CharacterSelectWidget_8h.html#a3591861c2e55810f08f2cf4ba387a45a">DECLARE_DYNAMIC_MULTICAST_DELEGATE</a>(FCharacterSelectBackRequestedDelegate);</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno"><a class="line" href="CharacterSelectWidget_8h.html#a503f52d9be3edd22fa071234c9520cf5">   27</a></span><a class="code hl_function" href="CharacterSelectWidget_8h.html#a503f52d9be3edd22fa071234c9520cf5">DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam</a>(FCharacterSelectStatusChangedDelegate, FText, InStatusText);</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>UCLASS(BlueprintType, Blueprintable)</div>
+<div class="foldopen" id="foldopen00067" data-start="{" data-end="};">
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno"><a class="line" href="classUCharacterSelectWidget.html">   67</a></span>class P_RD_API <a class="code hl_class" href="classUCharacterSelectWidget.html">UCharacterSelectWidget</a> : public UUserWidget</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>{</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>    GENERATED_BODY()</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span> </div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    <a class="code hl_class" href="classUCharacterSelectWidget.html">UCharacterSelectWidget</a>(<span class="keyword">const</span> FObjectInitializer&amp; ObjectInitializer = FObjectInitializer::Get());</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span> </div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>    <span class="keywordtype">void</span> OpenCharacterSelect();</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span> </div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>    UPROPERTY(Category = <span class="stringliteral">&quot;Character Select&quot;</span>, BlueprintAssignable)</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno"><a class="line" href="classUCharacterSelectWidget.html#a96237a572c394970fb34450693ef5f01">  103</a></span>    FCharacterSelectBackRequestedDelegate OnBackToMainRequested;</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span> </div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>    UPROPERTY(Category = &quot;Character Select&quot;, BlueprintAssignable)</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno"><a class="line" href="classUCharacterSelectWidget.html#abc0a9dacfc6426b196a8af4913e83b7e">  114</a></span>    FCharacterSelectStatusChangedDelegate OnStatusTextChanged;</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span> </div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>protected:</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    <span class="keywordtype">void</span> NativeConstruct() override;</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span> </div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>    <span class="keywordtype">void</span> NativeDestruct() override;</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span> </div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>private:</div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>    <span class="keywordtype">void</span> RefreshCharacterOptions();</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span> </div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>    <span class="keywordtype">void</span> SyncCharacterText() const;</div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span> </div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>    <span class="keywordtype">void</span> RebuildCharacterCards();</div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span> </div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>    <span class="keywordtype">void</span> SyncCharacterCards() const;</div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span> </div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>    <span class="keywordtype">void</span> SelectCharacter(int32 CharacterIndex);</div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span> </div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>    <span class="keywordtype">void</span> SyncSelectedCharacter();</div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span> </div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>    <span class="keywordtype">void</span> ClearSelectedCharacter();</div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span> </div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>    <span class="keywordtype">void</span> SetPortraitImage(const TSoftObjectPtr&lt;UTexture2D&gt;&amp; Portrait);</div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span> </div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>    <span class="keywordtype">void</span> HandlePortraitLoaded(FSoftObjectPath PortraitPath);</div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span> </div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>    <span class="keywordtype">void</span> ClearPortraitImage() const;</div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span> </div>
+<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>    <span class="keywordtype">void</span> CancelPortraitLoad();</div>
+<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span> </div>
+<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>    <span class="keywordtype">void</span> SetStatusText(const FText&amp; InText);</div>
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span> </div>
+<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span>    const <a class="code hl_struct" href="structFFrontendCharacterOption.html">FFrontendCharacterOption</a>* GetCharacterOption(int32 CharacterIndex) const;</div>
+<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span> </div>
+<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span>    <span class="keywordtype">void</span> ValidateDesignerBindings() const;</div>
+<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span> </div>
+<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span>    UFUNCTION()</div>
+<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span>    <span class="keywordtype">void</span> HandleCharacterCardClicked(int32 CharacterIndex);</div>
+<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span> </div>
+<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>    UFUNCTION()</div>
+<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>    <span class="keywordtype">void</span> HandleConfirmButtonClicked();</div>
+<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span> </div>
+<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span>    UFUNCTION()</div>
+<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>    <span class="keywordtype">void</span> HandleBackToMainButtonClicked();</div>
+<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span> </div>
+<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span>private:</div>
+<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span>    UPROPERTY(meta = (BindWidget))</div>
+<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span>    TObjectPtr&lt;UPanelWidget&gt; CharacterCardContainer;</div>
+<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span> </div>
+<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span>    UPROPERTY(Category = &quot;Character Select&quot;, EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))</div>
+<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span>    TSubclassOf&lt;<a class="code hl_class" href="classUCharacterCardWidget.html">UCharacterCardWidget</a>&gt; CharacterCardWidgetClass;</div>
+<div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span> </div>
+<div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span>    UPROPERTY(meta = (BindWidget))</div>
+<div class="line"><a id="l00297" name="l00297"></a><span class="lineno">  297</span>    TObjectPtr&lt;UTextBlock&gt; SelectedCharacterNameText;</div>
+<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span> </div>
+<div class="line"><a id="l00300" name="l00300"></a><span class="lineno">  300</span>    UPROPERTY(meta = (BindWidget))</div>
+<div class="line"><a id="l00301" name="l00301"></a><span class="lineno">  301</span>    TObjectPtr&lt;UTextBlock&gt; SelectedCharacterRoleText;</div>
+<div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span> </div>
+<div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span>    UPROPERTY(meta = (BindWidget))</div>
+<div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span>    TObjectPtr&lt;UTextBlock&gt; SelectedCharacterDescriptionText;</div>
+<div class="line"><a id="l00306" name="l00306"></a><span class="lineno">  306</span> </div>
+<div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span>    UPROPERTY(meta = (BindWidget))</div>
+<div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span>    TObjectPtr&lt;UTextBlock&gt; SelectedCharacterStatText;</div>
+<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span> </div>
+<div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span>    UPROPERTY(meta = (BindWidget))</div>
+<div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span>    TObjectPtr&lt;UTextBlock&gt; SelectedCharacterDisabledReasonText;</div>
+<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span> </div>
+<div class="line"><a id="l00316" name="l00316"></a><span class="lineno">  316</span>    UPROPERTY(meta = (BindWidget))</div>
+<div class="line"><a id="l00317" name="l00317"></a><span class="lineno">  317</span>    TObjectPtr&lt;UImage&gt; SelectedCharacterPortraitImage;</div>
+<div class="line"><a id="l00318" name="l00318"></a><span class="lineno">  318</span> </div>
+<div class="line"><a id="l00320" name="l00320"></a><span class="lineno">  320</span>    UPROPERTY(meta = (BindWidget))</div>
+<div class="line"><a id="l00321" name="l00321"></a><span class="lineno">  321</span>    TObjectPtr&lt;UButton&gt; ConfirmButton;</div>
+<div class="line"><a id="l00322" name="l00322"></a><span class="lineno">  322</span> </div>
+<div class="line"><a id="l00324" name="l00324"></a><span class="lineno">  324</span>    UPROPERTY(meta = (BindWidget))</div>
+<div class="line"><a id="l00325" name="l00325"></a><span class="lineno">  325</span>    TObjectPtr&lt;UTextBlock&gt; ConfirmButtonText;</div>
+<div class="line"><a id="l00326" name="l00326"></a><span class="lineno">  326</span> </div>
+<div class="line"><a id="l00328" name="l00328"></a><span class="lineno">  328</span>    UPROPERTY(meta = (BindWidget))</div>
+<div class="line"><a id="l00329" name="l00329"></a><span class="lineno">  329</span>    TObjectPtr&lt;UButton&gt; BackToMainButton;</div>
+<div class="line"><a id="l00330" name="l00330"></a><span class="lineno">  330</span> </div>
+<div class="line"><a id="l00332" name="l00332"></a><span class="lineno">  332</span>    UPROPERTY(meta = (BindWidget))</div>
+<div class="line"><a id="l00333" name="l00333"></a><span class="lineno">  333</span>    TObjectPtr&lt;UTextBlock&gt; BackToMainButtonText;</div>
+<div class="line"><a id="l00334" name="l00334"></a><span class="lineno">  334</span> </div>
+<div class="line"><a id="l00342" name="l00342"></a><span class="lineno">  342</span>    UPROPERTY(meta = (BindWidgetOptional))</div>
+<div class="line"><a id="l00343" name="l00343"></a><span class="lineno">  343</span>    TObjectPtr&lt;UTextBlock&gt; StatusText;</div>
+<div class="line"><a id="l00344" name="l00344"></a><span class="lineno">  344</span> </div>
+<div class="line"><a id="l00346" name="l00346"></a><span class="lineno">  346</span>    UPROPERTY(Category = &quot;Character Select|Text&quot;, EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))</div>
+<div class="line"><a id="l00347" name="l00347"></a><span class="lineno">  347</span>    FText mCharacterSelectStatusText;</div>
+<div class="line"><a id="l00348" name="l00348"></a><span class="lineno">  348</span> </div>
+<div class="line"><a id="l00350" name="l00350"></a><span class="lineno">  350</span>    UPROPERTY(Category = &quot;Character Select|Text&quot;, EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))</div>
+<div class="line"><a id="l00351" name="l00351"></a><span class="lineno">  351</span>    FText mCharacterTransitionBlockedStatusText;</div>
+<div class="line"><a id="l00352" name="l00352"></a><span class="lineno">  352</span> </div>
+<div class="line"><a id="l00354" name="l00354"></a><span class="lineno">  354</span>    UPROPERTY(Category = &quot;Character Select|Text&quot;, EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))</div>
+<div class="line"><a id="l00355" name="l00355"></a><span class="lineno">  355</span>    FText mCharacterUnavailableStatusText;</div>
+<div class="line"><a id="l00356" name="l00356"></a><span class="lineno">  356</span> </div>
+<div class="line"><a id="l00358" name="l00358"></a><span class="lineno">  358</span>    UPROPERTY(Category = &quot;Character Select|Text&quot;, EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))</div>
+<div class="line"><a id="l00359" name="l00359"></a><span class="lineno">  359</span>    FText mCharacterDataMissingStatusText;</div>
+<div class="line"><a id="l00360" name="l00360"></a><span class="lineno">  360</span> </div>
+<div class="line"><a id="l00362" name="l00362"></a><span class="lineno">  362</span>    UPROPERTY(Category = &quot;Character Select|Text&quot;, EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))</div>
+<div class="line"><a id="l00363" name="l00363"></a><span class="lineno">  363</span>    FText mConfirmButtonText;</div>
+<div class="line"><a id="l00364" name="l00364"></a><span class="lineno">  364</span> </div>
+<div class="line"><a id="l00366" name="l00366"></a><span class="lineno">  366</span>    UPROPERTY(Category = &quot;Character Select|Text&quot;, EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))</div>
+<div class="line"><a id="l00367" name="l00367"></a><span class="lineno">  367</span>    FText mBackButtonText;</div>
+<div class="line"><a id="l00368" name="l00368"></a><span class="lineno">  368</span> </div>
+<div class="line"><a id="l00369" name="l00369"></a><span class="lineno">  369</span>private:</div>
+<div class="line"><a id="l00377" name="l00377"></a><span class="lineno">  377</span>    int32 mSelectedCharacterIndex = 0;</div>
+<div class="line"><a id="l00378" name="l00378"></a><span class="lineno">  378</span> </div>
+<div class="line"><a id="l00387" name="l00387"></a><span class="lineno">  387</span>    TArray&lt;<a class="code hl_struct" href="structFFrontendCharacterOption.html">FFrontendCharacterOption</a>&gt; mCharacterOptions;</div>
+<div class="line"><a id="l00388" name="l00388"></a><span class="lineno">  388</span> </div>
+<div class="line"><a id="l00395" name="l00395"></a><span class="lineno">  395</span>    UPROPERTY()</div>
+<div class="line"><a id="l00396" name="l00396"></a><span class="lineno">  396</span>    TArray&lt;TObjectPtr&lt;<a class="code hl_class" href="classUCharacterCardWidget.html">UCharacterCardWidget</a>&gt;&gt; mCharacterCardWidgets;</div>
+<div class="line"><a id="l00397" name="l00397"></a><span class="lineno">  397</span> </div>
+<div class="line"><a id="l00401" name="l00401"></a><span class="lineno">  401</span>    TSharedPtr&lt;FStreamableHandle&gt; mPortraitLoadHandle = <span class="keywordtype">nullptr</span>;</div>
+<div class="line"><a id="l00402" name="l00402"></a><span class="lineno">  402</span> </div>
+<div class="line"><a id="l00409" name="l00409"></a><span class="lineno">  409</span>    FSoftObjectPath mPendingPortraitPath;</div>
+<div class="line"><a id="l00410" name="l00410"></a><span class="lineno">  410</span>};</div>
+</div>
+<div class="ttc" id="aCharacterSelectTypes_8h_html"><div class="ttname"><a href="CharacterSelectTypes_8h.html">CharacterSelectTypes.h</a></div><div class="ttdoc">캐릭터 선택 화면에서 쓰는 데이터 타입 정의 헤더</div></div>
+<div class="ttc" id="aCharacterSelectWidget_8h_html_a3591861c2e55810f08f2cf4ba387a45a"><div class="ttname"><a href="CharacterSelectWidget_8h.html#a3591861c2e55810f08f2cf4ba387a45a">DECLARE_DYNAMIC_MULTICAST_DELEGATE</a></div><div class="ttdeci">DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCharacterSelectBackRequestedDelegate)</div></div>
+<div class="ttc" id="aCharacterSelectWidget_8h_html_a503f52d9be3edd22fa071234c9520cf5"><div class="ttname"><a href="CharacterSelectWidget_8h.html#a503f52d9be3edd22fa071234c9520cf5">DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam</a></div><div class="ttdeci">DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCharacterSelectStatusChangedDelegate, FText, InStatusText)</div></div>
+<div class="ttc" id="aRDMinimal_8h_html"><div class="ttname"><a href="RDMinimal_8h.html">RDMinimal.h</a></div><div class="ttdoc">RD 프로젝트 전 영역에서 사용되는 최소한의 포함 헤더</div></div>
+<div class="ttc" id="aclassUCharacterCardWidget_html"><div class="ttname"><a href="classUCharacterCardWidget.html">UCharacterCardWidget</a></div><div class="ttdoc">캐릭터 선택 화면 아래에 보이는 캐릭터 아이콘 버튼 하나를 담당하는 위젯</div><div class="ttdef"><b>Definition</b> <a href="CharacterCardWidget_8h_source.html#l00052">CharacterCardWidget.h:53</a></div></div>
+<div class="ttc" id="aclassUCharacterSelectWidget_html"><div class="ttname"><a href="classUCharacterSelectWidget.html">UCharacterSelectWidget</a></div><div class="ttdoc">캐릭터 선택 화면 전체를 담당하는 위젯</div><div class="ttdef"><b>Definition</b> <a href="CharacterSelectWidget_8h_source.html#l00067">CharacterSelectWidget.h:68</a></div></div>
+<div class="ttc" id="astructFFrontendCharacterOption_html"><div class="ttname"><a href="structFFrontendCharacterOption.html">FFrontendCharacterOption</a></div><div class="ttdoc">캐릭터 선택 UI가 캐릭터 하나를 표시할 때 사용하는 값</div><div class="ttdef"><b>Definition</b> <a href="CharacterSelectTypes_8h_source.html#l00037">CharacterSelectTypes.h:38</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_18e329638b0f3372047d81882ea0cdaf.html">UI</a></li><li class="navelem"><a class="el" href="CharacterSelectWidget_8h.html">CharacterSelectWidget.h</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

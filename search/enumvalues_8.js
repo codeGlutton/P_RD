@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['newstagerequested_0',['NewStageRequested',['../RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39ba3d05668eb6ef7a9ab22494c69b1fcd7e',1,'RoomTransitionSubsystem.h']]],
-  ['none_1',['none',['../StageLevelType_8h.html#ae0b1317897a714ca0969cdc80dfd5d95a6adf97f83acf6453d4a6a4b1070f3754',1,'None:&#160;StageLevelType.h'],['../RoomType_8h.html#a02de9c27299a4c9e162c61f57978b1afa6adf97f83acf6453d4a6a4b1070f3754',1,'None:&#160;RoomType.h'],['../RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39ba6adf97f83acf6453d4a6a4b1070f3754',1,'None:&#160;RoomTransitionSubsystem.h']]]
+  ['mage_0',['Mage',['../PlayerJobType_8h.html#a11db6eae2577258d153e9122c9bba255a8eb9bca606e30006ccd71ab236760ce8',1,'PlayerJobType.h']]],
+  ['monster_1',['monster',['../StageBuilderParams_8h.html#a16867073ac4eac2b8900b2002b0dda22a243a3afa44aed85d504dbd53fd9804e9',1,'Monster:&#160;StageBuilderParams.h'],['../RoomType_8h.html#a02de9c27299a4c9e162c61f57978b1afa243a3afa44aed85d504dbd53fd9804e9',1,'Monster:&#160;RoomType.h']]],
+  ['msgnotify_2',['MsgNotify',['../WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069fa290b790c57894ba4251d68f48accf887',1,'WorldWidgetType.h']]]
 ];

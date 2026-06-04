@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['left_0',['Left',['../SRPGFrameworkType_8h.html#a4713d2568a3b3d33616c1bcdaeac26a4a945d5e233cf7d6240f6b783b36a374ff',1,'SRPGFrameworkType.h']]]
+  ['knight_0',['Knight',['../PlayerJobType_8h.html#a11db6eae2577258d153e9122c9bba255a8c23b2b86573edf2a5ea482c2ccc1497',1,'PlayerJobType.h']]]
 ];

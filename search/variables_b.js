@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['value_0',['Value',['../classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#a275d7aa3bf8cc2ff4f33d3caa144c63f',1,'TCircularDoubleLinkedList::TCircularDoubleLinkedListNode']]]
+  ['skillpoint_0',['SkillPoint',['../classUUnitAttributeSet.html#a5722cc3c9d4b962552d0f4ff36f95898',1,'UUnitAttributeSet']]]
 ];

@@ -92,6 +92,7 @@ $(document).ready(function(){initNavTree('classARDGameModeBase.html',''); initRe
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public 멤버 함수</a> &#124;
+<a href="#pro-methods">Protected 멤버 함수</a> &#124;
 <a href="#pro-attribs">Protected 속성</a> &#124;
 <a href="classARDGameModeBase-members.html">모든 멤버 목록</a>  </div>
   <div class="headertitle"><div class="title">ARDGameModeBase 클래스 참조</div></div>
@@ -108,28 +109,119 @@ ARDGameModeBase에 대한 상속 다이어그램 : </div>
   <map id="ARDGameModeBase_map" name="ARDGameModeBase_map">
 <area href="classARoomGameModeBase.html" title="방에 대한 베이스 GameMode" alt="ARoomGameModeBase" shape="rect" coords="231,112,375,136"/>
 <area href="classACombatGameMode.html" title="전투 방에 대한 GameMode" alt="ACombatGameMode" shape="rect" coords="0,168,144,192"/>
-<area href="classAShopGameMode.html" title="상점 방에 대한 GameMode" alt="AShopGameMode" shape="rect" coords="154,168,298,192"/>
-<area href="classATitleGameMode.html" title="타이틀 방에 대한 GameMode" alt="ATitleGameMode" shape="rect" coords="308,168,452,192"/>
+<area href="classAFrontendGameMode.html" title="게임 시작 전 타이틀/캐릭터 선택 UI를 띄우는 프론트엔드 GameMode" alt="AFrontendGameMode" shape="rect" coords="154,168,298,192"/>
+<area href="classAShopGameMode.html" title="상점 방에 대한 GameMode" alt="AShopGameMode" shape="rect" coords="308,168,452,192"/>
 <area href="classATreasureGameMode.html" title="보상 방에 대한 GameMode" alt="ATreasureGameMode" shape="rect" coords="462,168,606,192"/>
   </map>
 </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public 멤버 함수</h2></td></tr>
+<tr class="memitem:ab42cb8889551ebca44d00d171b066586" id="r_ab42cb8889551ebca44d00d171b066586"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#ab42cb8889551ebca44d00d171b066586">ARDGameModeBase</a> ()</td></tr>
+<tr class="separator:ab42cb8889551ebca44d00d171b066586"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7bfd4b2b4958c15dab9229965ba7674c" id="r_a7bfd4b2b4958c15dab9229965ba7674c"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classUUserPersistData.html">UUserPersistData</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a7bfd4b2b4958c15dab9229965ba7674c">GetUserPersistData</a> () const</td></tr>
 <tr class="separator:a7bfd4b2b4958c15dab9229965ba7674c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6112a51a712c90489ef3c46670ee6023" id="r_a6112a51a712c90489ef3c46670ee6023"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classURunPersistData.html">URunPersistData</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a6112a51a712c90489ef3c46670ee6023">GetRunPersistData</a> () const</td></tr>
 <tr class="separator:a6112a51a712c90489ef3c46670ee6023"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
+Protected 멤버 함수</h2></td></tr>
+<tr class="memitem:a81011e7ab4430d338ec2b0510a1233d4" id="r_a81011e7ab4430d338ec2b0510a1233d4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a81011e7ab4430d338ec2b0510a1233d4">BeginPlay</a> () override</td></tr>
+<tr class="separator:a81011e7ab4430d338ec2b0510a1233d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af3ad428cb336d7deb51d3bb4230945ec" id="r_af3ad428cb336d7deb51d3bb4230945ec"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#af3ad428cb336d7deb51d3bb4230945ec">InitializeCommonRoom</a> ()</td></tr>
+<tr class="separator:af3ad428cb336d7deb51d3bb4230945ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaeb116585c236121e090fc2422cbb54c" id="r_aaeb116585c236121e090fc2422cbb54c"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#aaeb116585c236121e090fc2422cbb54c">InitializeRoom</a> ()</td></tr>
+<tr class="separator:aaeb116585c236121e090fc2422cbb54c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96b3dafa3ed99f23fa798f8ba1c8bd39" id="r_a96b3dafa3ed99f23fa798f8ba1c8bd39"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a96b3dafa3ed99f23fa798f8ba1c8bd39">BeginRoom</a> ()</td></tr>
+<tr class="separator:a96b3dafa3ed99f23fa798f8ba1c8bd39"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
 Protected 속성</h2></td></tr>
-<tr class="memitem:a2b4e73ae2be696ba3576e7583b603562" id="r_a2b4e73ae2be696ba3576e7583b603562"><td class="memItemLeft" align="right" valign="top">TSubclassOf&lt; UUserWidget &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a2b4e73ae2be696ba3576e7583b603562">mMainUI</a></td></tr>
-<tr class="separator:a2b4e73ae2be696ba3576e7583b603562"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5bdfcee8ef2e7e2d26b584919b3cd5dc" id="r_a5bdfcee8ef2e7e2d26b584919b3cd5dc"><td class="memItemLeft" align="right" valign="top">TSubclassOf&lt; UUserWidget &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a5bdfcee8ef2e7e2d26b584919b3cd5dc">mHUDClass</a></td></tr>
+<tr class="separator:a5bdfcee8ef2e7e2d26b584919b3cd5dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae71d0190b0be104ddbd8df1c970c3009" id="r_ae71d0190b0be104ddbd8df1c970c3009"><td class="memItemLeft" align="right" valign="top">TSet&lt; <a class="el" href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#ae71d0190b0be104ddbd8df1c970c3009">mWorldWidgets</a></td></tr>
+<tr class="separator:ae71d0190b0be104ddbd8df1c970c3009"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock">
-<p class="definition"><a class="el" href="RDGameModeBase_8h_source.html">RDGameModeBase.h</a> 파일의 <a class="el" href="RDGameModeBase_8h_source.html#l00021">21</a> 번째 라인에서 정의되었습니다.</p>
-</div><h2 class="groupheader">멤버 함수 문서화</h2>
+<p class="definition"><a class="el" href="RDGameModeBase_8h_source.html">RDGameModeBase.h</a> 파일의 <a class="el" href="RDGameModeBase_8h_source.html#l00023">23</a> 번째 라인에서 정의되었습니다.</p>
+</div><h2 class="groupheader">생성자 &amp; 소멸자 문서화</h2>
+<a id="ab42cb8889551ebca44d00d171b066586" name="ab42cb8889551ebca44d00d171b066586"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab42cb8889551ebca44d00d171b066586">&#9670;&#160;</a></span>ARDGameModeBase()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">ARDGameModeBase::ARDGameModeBase </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00006">6</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<h2 class="groupheader">멤버 함수 문서화</h2>
+<a id="a81011e7ab4430d338ec2b0510a1233d4" name="a81011e7ab4430d338ec2b0510a1233d4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a81011e7ab4430d338ec2b0510a1233d4">&#9670;&#160;</a></span>BeginPlay()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ARDGameModeBase::BeginPlay </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00011">11</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a96b3dafa3ed99f23fa798f8ba1c8bd39" name="a96b3dafa3ed99f23fa798f8ba1c8bd39"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a96b3dafa3ed99f23fa798f8ba1c8bd39">&#9670;&#160;</a></span>BeginRoom()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ARDGameModeBase::BeginRoom </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p><a class="el" href="classACombatGameMode.html#abcaa666c5428158b5604599aed5a44eb">ACombatGameMode</a>, <a class="el" href="classAFrontendGameMode.html#ab5cd5e9dbf8760e85f6fda80ccf04e50">AFrontendGameMode</a>, <a class="el" href="classARoomGameModeBase.html#ac7adcd281d6129ae7563d0c97db37ded">ARoomGameModeBase</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00041">41</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
 <a id="a6112a51a712c90489ef3c46670ee6023" name="a6112a51a712c90489ef3c46670ee6023"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a6112a51a712c90489ef3c46670ee6023">&#9670;&#160;</a></span>GetRunPersistData()</h2>
 
@@ -145,7 +237,7 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00012">12</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00053">53</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -164,13 +256,12 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00004">4</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00045">45</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<h2 class="groupheader">멤버 데이터 문서화</h2>
-<a id="a2b4e73ae2be696ba3576e7583b603562" name="a2b4e73ae2be696ba3576e7583b603562"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2b4e73ae2be696ba3576e7583b603562">&#9670;&#160;</a></span>mMainUI</h2>
+<a id="af3ad428cb336d7deb51d3bb4230945ec" name="af3ad428cb336d7deb51d3bb4230945ec"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af3ad428cb336d7deb51d3bb4230945ec">&#9670;&#160;</a></span>InitializeCommonRoom()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -179,7 +270,66 @@ Protected 속성</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">TSubclassOf&lt;UUserWidget&gt; ARDGameModeBase::mMainUI</td>
+          <td class="memname">void ARDGameModeBase::InitializeCommonRoom </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p><a class="el" href="classAFrontendGameMode.html#a639eef7fc9f842a2446e55135b5544ac">AFrontendGameMode</a>, <a class="el" href="classARoomGameModeBase.html#a154155929006382854ebddca760f9565">ARoomGameModeBase</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00033">33</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="aaeb116585c236121e090fc2422cbb54c" name="aaeb116585c236121e090fc2422cbb54c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaeb116585c236121e090fc2422cbb54c">&#9670;&#160;</a></span>InitializeRoom()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ARDGameModeBase::InitializeRoom </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p><a class="el" href="classACombatGameMode.html#a1fa1cf8c139e1556c624dd95d5d52a48">ACombatGameMode</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00037">37</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<h2 class="groupheader">멤버 데이터 문서화</h2>
+<a id="a5bdfcee8ef2e7e2d26b584919b3cd5dc" name="a5bdfcee8ef2e7e2d26b584919b3cd5dc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5bdfcee8ef2e7e2d26b584919b3cd5dc">&#9670;&#160;</a></span>mHUDClass</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">TSubclassOf&lt;UUserWidget&gt; ARDGameModeBase::mHUDClass</td>
         </tr>
       </table>
   </td>
@@ -189,7 +339,31 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="RDGameModeBase_8h_source.html">RDGameModeBase.h</a> 파일의 <a class="el" href="RDGameModeBase_8h_source.html#l00031">31</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RDGameModeBase_8h_source.html">RDGameModeBase.h</a> 파일의 <a class="el" href="RDGameModeBase_8h_source.html#l00045">45</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ae71d0190b0be104ddbd8df1c970c3009" name="ae71d0190b0be104ddbd8df1c970c3009"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae71d0190b0be104ddbd8df1c970c3009">&#9670;&#160;</a></span>mWorldWidgets</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">TSet&lt;<a class="el" href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a>&gt; ARDGameModeBase::mWorldWidgets</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="RDGameModeBase_8h_source.html">RDGameModeBase.h</a> 파일의 <a class="el" href="RDGameModeBase_8h_source.html#l00047">47</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

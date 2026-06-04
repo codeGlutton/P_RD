@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['prevnode_0',['PrevNode',['../classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#a1d03fb649cbfa5d79b39bc24f8c62c21',1,'TCircularDoubleLinkedList::TCircularDoubleLinkedListNode']]]
+  ['nextnode_0',['NextNode',['../classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#af014ab45399d851289a414ad68bacc05',1,'TCircularDoubleLinkedList::TCircularDoubleLinkedListNode']]]
 ];
