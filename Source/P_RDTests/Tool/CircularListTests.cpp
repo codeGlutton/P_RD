@@ -49,8 +49,8 @@ bool FCircularListInt32Tests::RunTest(const FString& Parameters)
     {
         TestObj.AddHead(i);
         TestEqual(FString::Printf(TEXT("TCircularDoubleLinkedList<int32> 헤더에 삽입 값 %d"), i), TestObj.GetHead()->GetValue(), i);
-        TestEqual(FString::Printf(TEXT("TCircularDoubleLinkedList<int32> 헤더 다음 값"), i), TestObj.GetHead()->GetNextNode()->GetValue(), i - 1);
-        TestEqual(FString::Printf(TEXT("TCircularDoubleLinkedList<int32> 헤더 이전 값"), i), TestObj.GetHead()->GetPrevNode()->GetValue(), HeadFirstNumber);
+        TestEqual(FString::Printf(TEXT("TCircularDoubleLinkedList<int32> 헤더 다음 값 %d"), i - 1), TestObj.GetHead()->GetNextNode()->GetValue(), i - 1);
+        TestEqual(FString::Printf(TEXT("TCircularDoubleLinkedList<int32> 헤더 이전 값 %d"), HeadFirstNumber), TestObj.GetHead()->GetPrevNode()->GetValue(), HeadFirstNumber);
     }
     return true;
 }
