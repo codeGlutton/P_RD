@@ -203,12 +203,11 @@ public:
 	 * @return 선택 가능한 룸이면 true
 	 *
 	 * @note UI 파트 추가 command API
-	 * PM 브랜치에는 지도 노드 클릭용 View API가 없어서 추가했다. 현재 선택 가능 여부는 프론트엔드에서
-	 * 임시로 제한하고 있으며, 실제 룸 진행 규칙 API가 확정되면 내부 판정을 그쪽으로 위임해야 한다.
+	 * PM 브랜치에는 지도 노드 클릭용 View API가 없어서 추가했다. 선택 가능 여부는 PM Stage 데이터의
+	 * FRoom::mNextRoomColumns를 읽어 판단하되, 현재 방 위치는 바꾸지 않는다.
 	 *
-	 * 지금 구현은 월드맵 화면과 ENTER 버튼 연결을 검증하기 위한 1차 단계라 현재 룸만 선택 가능하게 둔다.
-	 * "현재 룸의 다음 후보 중 하나를 고른다"는 최종 규칙은 PM 쪽 Run/Room 진행 API가 확정된 뒤 이 함수
-	 * 내부에서 교체해야 한다.
+	 * 공식 Run 진행 API가 별도로 생기면 이 함수의 연결 검증은 그 API로 위임해야 한다. 지금은
+	 * Stage 생성기가 만든 "현재 룸 -> 다음 룸 column" 연결을 사용하는 최소 adapter다.
 	 */
 	UFUNCTION(Category = Title, BlueprintCallable)
 	bool SelectMapRoom(int32 RowIndex, int32 ColumnIndex);
@@ -221,9 +220,9 @@ public:
 	 * 함수 이름은 UI 파트가 지도 ENTER 버튼용으로 추가한 facade다. 실제 방 preload/transition은
 	 * PM 브랜치의 ARoomGameModeBase::PreloadRoomAsync()와 TransitionLoadedRoomAsync()를 호출한다.
 	 *
-	 * 현재는 SelectMapRoom()과 같은 이유로 "선택된 다음 방"이 아니라 RunPersistData의 현재 룸을 입장 대상으로
-	 * 사용한다. 그래서 이 함수는 최종 룸 선택 규칙을 새로 구현한 API가 아니라, UI가 기존 PM 전환 흐름을
-	 * 호출할 수 있게 만든 임시 연결 지점이다.
+	 * 선택 좌표는 FrontendGameMode가 임시로 보관하지만, 실제 현재 룸 변경은 PM 브랜치의
+	 * RoomTransitionSubsystem::OnTransitNextRoom()에서 수행한다. UI wrapper가 RunPersistData의 현재 룸을
+	 * 미리 바꾸지 않는 이유도 이 경계를 지키기 위해서다.
 	 */
 	UFUNCTION(Category = Title, BlueprintCallable)
 	bool EnterSelectedMapRoom();
@@ -236,6 +235,8 @@ private:
 	void RequestPlayerUnitSpawnDataPreload();
 	void HandlePlayerUnitSpawnDataPreloaded(TSharedPtr<FStreamableHandle> AssetHandle);
 	bool OpenTitleCharacterSelect();
+	void ClearSelectedMapRoom();
+	bool HasSelectedMapRoom() const;
 	/**
 	 * @brief 선택 캐릭터로 RunPersistData와 Stage preview 생성을 시작한다.
 	 * @param PlayerUnitId 선택한 플레이어 유닛 PrimaryAssetId
@@ -264,4 +265,6 @@ private:
 	bool bStartRunRequested = false;
 	bool bPlayerUnitSpawnDataPreloadRequested = false;
 	TSharedPtr<FStreamableHandle> mPlayerUnitSpawnDataPreloadHandle = nullptr;
+	int32 mSelectedMapRoomRow = INDEX_NONE;
+	int32 mSelectedMapRoomColumn = INDEX_NONE;
 };

@@ -588,7 +588,7 @@ bool UFrontendMapWidget::RefreshMap()
 		}
 
 		UFrontendMapNodeWidget* NodeWidget = NodeEntry->NodeWidget;
-		NodeWidget->SetNodeEnabled(true);
+		NodeWidget->SetNodeEnabled(Room.bSelectable && IsFrontendMapNavigationEnabled() && !bEnterRequested);
 		NodeWidget->SetNodeVisual(
 			Room.mRow,
 			Room.mColumn,

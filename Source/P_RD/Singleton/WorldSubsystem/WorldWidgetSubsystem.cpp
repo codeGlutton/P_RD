@@ -16,7 +16,11 @@ void UWorldWidgetSubsystem::InitWidgets(UClass* HUDClass, const TArray<EWorldWid
 
 void UWorldWidgetSubsystem::InitHUD(UClass* HUDClass)
 {
-	checkf(HUDClass != nullptr, TEXT("HUD 위젯 nullptr"));
+	if (HUDClass == nullptr)
+	{
+		UE_LOG(LogWorldWidget, Warning, TEXT("HUD widget class is not configured."));
+		return;
+	}
 
 	mHUD = CreateWidget(GetWorld()->GetFirstPlayerController(), HUDClass);
 }
@@ -27,6 +31,12 @@ void UWorldWidgetSubsystem::InitWorldWidget(EWorldWidgetType WorldWidgetType)
 	if (mWorldWidgets[Index] == nullptr)
 	{
 		const TSubclassOf<UUserWidget> WorldWidgetClass = GetDefault<UGamePlaySettings>()->mWorldWidgetClasses[Index];
+		if (WorldWidgetClass == nullptr)
+		{
+			UE_LOG(LogWorldWidget, Warning, TEXT("World widget class is not configured. Type: %d"), Index);
+			return;
+		}
+
 		mWorldWidgets[Index] = CreateWidget(GetWorld()->GetFirstPlayerController(), WorldWidgetClass);
 	}
 }

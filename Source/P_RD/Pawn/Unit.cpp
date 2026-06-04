@@ -69,6 +69,11 @@ FGenericTeamId AUnit::GetGenericTeamId() const
 	return mTeamId;
 }
 
+const FTileTransform& AUnit::GetTileTransform() const
+{
+	return mTileTransform;
+}
+
 ETileLayerFlag AUnit::GetTileLayer() const
 {
 	return ETileLayerFlag::Unit;
@@ -77,6 +82,11 @@ ETileLayerFlag AUnit::GetTileLayer() const
 ETileLayerFlag AUnit::GetBlockFlags() const
 {
 	return ETileLayerFlag::Unit;
+}
+
+void AUnit::SetTileTransform(const FTileTransform& Transform)
+{
+	mTileTransform = Transform;
 }
 
 UAbilitySystemComponent* AUnit::GetAbilitySystemComponent() const

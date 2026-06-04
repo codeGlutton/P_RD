@@ -114,14 +114,18 @@ namespace
 		const FStage& Stage,
 		const FRoom& Room,
 		int32 CurrentRowIndex,
-		int32 CurrentColumnIndex)
+		int32 CurrentColumnIndex,
+		int32 SelectedRowIndex,
+		int32 SelectedColumnIndex)
 	{
-		if (Room.mRow == CurrentRowIndex && Room.mColumn == CurrentColumnIndex)
+		if (Room.mRow == SelectedRowIndex
+			&& Room.mColumn == SelectedColumnIndex
+			&& IsNextRoomFromCurrentPath(Stage, CurrentRowIndex, CurrentColumnIndex, Room.mRow, Room.mColumn))
 		{
 			return EFrontendMapRoomState::Selected;
 		}
 
-		if (Room.mRow < CurrentRowIndex)
+		if ((Room.mRow == CurrentRowIndex && Room.mColumn == CurrentColumnIndex) || Room.mRow < CurrentRowIndex)
 		{
 			return EFrontendMapRoomState::Cleared;
 		}
@@ -321,12 +325,13 @@ bool AFrontendGameMode::GetMapRoomViews(TArray<FFrontendMapRoomView>& OutRooms) 
 			}
 
 			const bool bIsStartPoint = IsStageStartPoint(Stage, RowIndex, ColumnIndex);
-			const bool bIsCurrentRoom = RowIndex == CurrentRowIndex && ColumnIndex == CurrentColumnIndex;
 			const EFrontendMapRoomState RoomState = ResolveMapRoomState(
 				Stage,
 				Room,
 				CurrentRowIndex,
-				CurrentColumnIndex);
+				CurrentColumnIndex,
+				mSelectedMapRoomRow,
+				mSelectedMapRoomColumn);
 
 			FFrontendMapRoomView NewView;
 			NewView.mRow = RowIndex;
@@ -337,10 +342,10 @@ bool AFrontendGameMode::GetMapRoomViews(TArray<FFrontendMapRoomView>& OutRooms) 
 			NewView.mDescription = bIsStartPoint ? GetStartPointDescription(Room) : GetRoomDescription(Room);
 			NewView.mNextRoomColumns = Room.mNextRoomColumns;
 			NewView.mPositionOffsetRate = Room.mPositionOffsetRate;
-			NewView.bSelectable = bIsCurrentRoom;
-			NewView.bSelected = bIsCurrentRoom;
+			NewView.bSelectable = RoomState == EFrontendMapRoomState::Ready;
+			NewView.bSelected = RoomState == EFrontendMapRoomState::Selected;
 			NewView.bVisited = RoomState == EFrontendMapRoomState::Cleared;
-			NewView.bCanEnter = bIsCurrentRoom;
+			NewView.bCanEnter = RoomState == EFrontendMapRoomState::Selected;
 			NewView.bIsStartPoint = bIsStartPoint;
 			OutRooms.Add(MoveTemp(NewView));
 		}
@@ -442,13 +447,14 @@ bool AFrontendGameMode::AbandonRunFromTitle()
 		SaveGameSubsystem->ClearRun();
 	}
 
+	ClearSelectedMapRoom();
 	bStartRunRequested = false;
 	return true;
 }
 
 bool AFrontendGameMode::SelectMapRoom(int32 RowIndex, int32 ColumnIndex)
 {
-	URunPersistData* RunPersistData = GetRunMutableData();
+	const URunPersistData* RunPersistData = GetRunPersistData();
 	if (RunPersistData == nullptr || !RunPersistData->IsActive())
 	{
 		ShowTitleMessage(FrontendText(TEXT("MissingStage"), TEXT("Map is not ready")));
@@ -465,13 +471,14 @@ bool AFrontendGameMode::SelectMapRoom(int32 RowIndex, int32 ColumnIndex)
 	int32 CurrentRowIndex = 0;
 	int32 CurrentColumnIndex = 0;
 	RunPersistData->GetCurrentRoomIndex(OUT CurrentRowIndex, OUT CurrentColumnIndex);
-	if (RowIndex != CurrentRowIndex || ColumnIndex != CurrentColumnIndex)
+	if (!IsNextRoomFromCurrentPath(Stage, CurrentRowIndex, CurrentColumnIndex, RowIndex, ColumnIndex))
 	{
 		ShowTitleMessage(FrontendText(TEXT("LockedMapRoom"), TEXT("This room is locked")));
 		return false;
 	}
 
-	RunPersistData->SetCurrentRoomIndex(RowIndex, ColumnIndex);
+	mSelectedMapRoomRow = RowIndex;
+	mSelectedMapRoomColumn = ColumnIndex;
 	return true;
 }
 
@@ -484,12 +491,32 @@ bool AFrontendGameMode::EnterSelectedMapRoom()
 		return false;
 	}
 
-	int32 RowIndex = 0;
-	int32 ColumnIndex = 0;
-	RunPersistData->GetCurrentRoomIndex(OUT RowIndex, OUT ColumnIndex);
+	if (!HasSelectedMapRoom())
+	{
+		ShowTitleMessage(FrontendText(TEXT("NoMapRoomSelected"), TEXT("Select a room")));
+		return false;
+	}
+
+	const FStage& Stage = RunPersistData->GetStage();
+	if (!IsValidStageRoom(Stage, mSelectedMapRoomRow, mSelectedMapRoomColumn))
+	{
+		ClearSelectedMapRoom();
+		ShowTitleMessage(FrontendText(TEXT("MissingStage"), TEXT("Map is not ready")));
+		return false;
+	}
+
+	int32 CurrentRowIndex = 0;
+	int32 CurrentColumnIndex = 0;
+	RunPersistData->GetCurrentRoomIndex(OUT CurrentRowIndex, OUT CurrentColumnIndex);
+	if (!IsNextRoomFromCurrentPath(Stage, CurrentRowIndex, CurrentColumnIndex, mSelectedMapRoomRow, mSelectedMapRoomColumn))
+	{
+		ClearSelectedMapRoom();
+		ShowTitleMessage(FrontendText(TEXT("LockedMapRoom"), TEXT("This room is locked")));
+		return false;
+	}
 
 	ShowTitleMessage(FrontendText(TEXT("LoadingSelectedRoom"), TEXT("Loading selected room")));
-	PreloadRoomAsync(RowIndex, ColumnIndex);
+	PreloadRoomAsync(mSelectedMapRoomRow, mSelectedMapRoomColumn);
 	TransitionLoadedRoomAsync();
 	return true;
 }
@@ -574,6 +601,17 @@ bool AFrontendGameMode::OpenTitleCharacterSelect()
 	return false;
 }
 
+void AFrontendGameMode::ClearSelectedMapRoom()
+{
+	mSelectedMapRoomRow = INDEX_NONE;
+	mSelectedMapRoomColumn = INDEX_NONE;
+}
+
+bool AFrontendGameMode::HasSelectedMapRoom() const
+{
+	return mSelectedMapRoomRow != INDEX_NONE && mSelectedMapRoomColumn != INDEX_NONE;
+}
+
 bool AFrontendGameMode::StartRunPreviewWithPlayerUnit(FPrimaryAssetId PlayerUnitId)
 {
 	if (bStartRunRequested)
@@ -602,6 +640,7 @@ bool AFrontendGameMode::StartRunPreviewWithPlayerUnit(FPrimaryAssetId PlayerUnit
 	}
 
 	bStartRunRequested = true;
+	ClearSelectedMapRoom();
 
 	GameProfileSubsystem->MakeUser(NSLOCTEXT("FrontendGameMode", "DefaultUserName", "Player"));
 	GameProfileSubsystem->StartRun(PlayerUnitId, DefaultDifficulty);
@@ -630,6 +669,7 @@ void AFrontendGameMode::HandleStageCreated(const FStage& NewStage)
 	{
 		const FRoom& StartRoom = NewStage.GetStartRoom();
 		RunPersistData->SetCurrentRoomIndex(StartRoom.mRow, StartRoom.mColumn);
+		ClearSelectedMapRoom();
 	}
 }
 

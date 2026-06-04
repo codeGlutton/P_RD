@@ -12,6 +12,9 @@
 
 #include "FunctionLibrary/GASTargetFunctionLibrary.h"
 
+#include "GameFramework/PlayerStart.h"
+#include "Kismet/GameplayStatics.h"
+
 DEFINE_LOG_CATEGORY(LogSRPGCombat)
 
 void USRPGCombatSubsystem::Tick(float DeltaTime)
@@ -276,12 +279,42 @@ void USRPGCombatSubsystem::SpawnTileMap()
 	checkf(mTileMap == nullptr, TEXT("이미 타일 존재"));
 
 	ARDWorldSettings* WorldSettings = Cast<ARDWorldSettings>(GetWorld()->GetWorldSettings());
-	checkf(WorldSettings != nullptr, TEXT("월드 세팅 nullptr"));
-	AActor* RoomStartPoint = WorldSettings->GetRoomStartPoint();
-	checkf(RoomStartPoint != nullptr, TEXT("방 시작 위치를 가리키는 액터 nullptr"));
+	FTransform RoomStartTransform = FTransform::Identity;
+	bool bHasRoomStartTransform = false;
+
+	if (WorldSettings != nullptr)
+	{
+		if (AActor* RoomStartPoint = WorldSettings->GetRoomStartPoint())
+		{
+			RoomStartTransform = RoomStartPoint->GetTransform();
+			bHasRoomStartTransform = true;
+		}
+		else
+		{
+			UE_LOG(LogSRPGCombat, Warning, TEXT("RDWorldSettings has no room start point. Falling back to PlayerStart."));
+		}
+	}
+	else
+	{
+		UE_LOG(LogSRPGCombat, Warning, TEXT("RDWorldSettings is not configured. Falling back to PlayerStart."));
+	}
+
+	if (!bHasRoomStartTransform)
+	{
+		if (AActor* PlayerStart = UGameplayStatics::GetActorOfClass(GetWorld(), APlayerStart::StaticClass()))
+		{
+			RoomStartTransform = PlayerStart->GetTransform();
+			bHasRoomStartTransform = true;
+		}
+	}
+
+	if (!bHasRoomStartTransform)
+	{
+		UE_LOG(LogSRPGCombat, Warning, TEXT("No PlayerStart found. Spawning tile map at identity transform."));
+	}
 
 	// 타일맵 스폰
-	mTileMap = GetWorld()->SpawnActor<ATileMap>(ATileMap::StaticClass(), RoomStartPoint->GetTransform());
+	mTileMap = GetWorld()->SpawnActor<ATileMap>(ATileMap::StaticClass(), RoomStartTransform);
 }
 
 void USRPGCombatSubsystem::RegisterPlayerUnit(AUnit* PlayerUnit, const FTileTransform& Transform)
