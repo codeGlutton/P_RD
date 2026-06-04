@@ -45,7 +45,15 @@ struct FFrontendMapNodePoolEntry
 
 /**
  * @brief 월드맵 화면 본체
- * @details 모달 표시/닫기 책임은 바깥 오버레이가 갖고, 이 클래스는 맵 그래프/선택/입장 UI만 관리한다.
+ *
+ * @details
+ * 모달 표시/닫기 책임은 바깥 오버레이가 갖고, 이 클래스는 맵 그래프/선택/입장 UI만 관리한다.
+ * 지도 데이터는 직접 생성하지 않고 AFrontendGameMode::GetMapRoomViews()가 내려준 View DTO를 그린다.
+ *
+ * @note UI 파트 추가 위젯
+ * feature/create-srpg-framework-base 브랜치에는 FStage/FRoom과 방 전환 API가 있지만,
+ * 이를 타이틀 화면에서 읽기 전용 월드맵으로 그리는 UMG 위젯은 없어서 UI/map 브랜치에서 추가했다.
+ * 방 선택/입장 판단은 GameMode API로 돌려보내며, 실제 전환은 PM 브랜치의 RoomGameModeBase 흐름을 탄다.
  */
 UCLASS(BlueprintType, Blueprintable)
 class P_RD_API UFrontendMapWidget : public UUserWidget
@@ -55,6 +63,14 @@ class P_RD_API UFrontendMapWidget : public UUserWidget
 public:
 	UFrontendMapWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+	/**
+	 * @brief 현재 RunPersistData 기반 지도 View를 다시 가져와 노드/선을 갱신한다.
+	 * @return 지도 데이터가 있어 갱신에 성공하면 true
+	 *
+	 * @note UI 파트 추가 API
+	 * PM 브랜치의 FStage/FRoom을 직접 만드는 함수가 아니라, FrontendGameMode가 변환해준
+	 * FFrontendMapRoomView 배열을 화면에 배치하는 표시 전용 함수다.
+	 */
 	UFUNCTION(Category = UI, BlueprintCallable)
 	bool RefreshMap();
 

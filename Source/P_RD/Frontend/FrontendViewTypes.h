@@ -14,6 +14,10 @@
 
 /**
  * @brief 프론트엔드 월드맵 노드가 UI에 표시될 때 사용하는 상태
+ *
+ * @note UI 파트 추가 타입
+ * feature/create-srpg-framework-base 브랜치의 FRoom에는 UI 표시 상태 enum이 없어서,
+ * WBP_FrontendMap이 잠김/선택 가능/선택됨/방문 완료를 구분해 그릴 수 있도록 추가했다.
  */
 UENUM(BlueprintType)
 enum class EFrontendMapRoomState : uint8
@@ -39,6 +43,11 @@ enum class EFrontendMapRoomState : uint8
  * 역할은 원본 Stage를 대체하는 것이 아니라, 원본을 UI 친화적인 값으로 옮긴 읽기 전용 스냅샷이다.
  * Widget은 이 값을 보고 노드/선을 배치하고, 클릭 시 mRow/mColumn만 GameMode에 돌려준다.
  * 방 잠금/선택 가능 여부 같은 규칙 판단도 Widget이 직접 하지 않고, GameMode가 이 값으로 내려준다.
+ *
+ * @note UI 파트 추가 DTO
+ * PM 브랜치에서 가져온 것은 FStage/FRoom과 URunPersistData::GetStage() 같은 원본 데이터 API다.
+ * FFrontendMapRoomView 자체는 UI/map 브랜치에서 새로 만든 표시 전용 구조체이며,
+ * 원본 Stage 생성/룸 전환 책임을 대체하지 않는다.
  */
 USTRUCT(BlueprintType)
 struct P_RD_API FFrontendMapRoomView
@@ -105,6 +114,10 @@ struct P_RD_API FFrontendMapRoomView
  *
  * Widget은 이 값을 보고 버튼 활성화, 시작 위치 스크롤 같은 표시만 결정한다.
  * 실제 저장/포기/전환 명령은 FrontendGameMode 또는 RoomGameModeBase/Subsystem API를 통해 수행한다.
+ *
+ * @note UI 파트 추가 DTO
+ * PM 브랜치의 URunPersistData/GameProfileSubsystem/SaveGameSubsystem 상태를 타이틀 UI가 직접 들여다보지
+ * 않도록 만든 View 전용 스냅샷이다.
  */
 USTRUCT(BlueprintType)
 struct P_RD_API FFrontendRunControlView

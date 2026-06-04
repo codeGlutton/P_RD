@@ -26,6 +26,11 @@ class UTexture2D;
  * PlayerUnit PrimaryAssetId와 안정적인 선택 index가 추가로 필요하다. 그래서 PM 브랜치의
  * 공개 필드명은 유지하고, 런 생성과 현재 상세 UI에 필요한 값만 뒤에 보강한다.
  *
+ * @note API 출처
+ * feature/create-srpg-framework-base 브랜치에 이미 존재하던 FFrontendCharacterOption을 가져와
+ * UI/map 흐름에 필요한 mIndex, mMaxHP, mDice, mGold, mPlayerUnitId 등을 보강한 타입이다.
+ * 즉 새로 만든 완전 신규 API가 아니라 PM 브랜치 타입을 UI 파트가 확장한 것이다.
+ *
  * 중요한 경계는 이렇다.
  * - UI는 이 배열의 개수만큼 WBP_CharacterCard를 만들고 값만 표시한다.
  * - UI는 직업 enum, DataAsset 로드 상태, 시작 HP/골드 계산 방식을 판단하지 않는다.
