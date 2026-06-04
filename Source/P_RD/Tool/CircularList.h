@@ -285,7 +285,7 @@ public:
 			}
 
 			TCircularDoubleLinkedListNode* NextNode = NodeToRemove->NextNode;
-			TCircularDoubleLinkedListNode* PreNode = NodeToRemove->NextNode;
+			TCircularDoubleLinkedListNode* PreNode = NodeToRemove->PrevNode;
 			if (NodeToRemove == HeadNode)
 			{
 				HeadNode = NextNode;
