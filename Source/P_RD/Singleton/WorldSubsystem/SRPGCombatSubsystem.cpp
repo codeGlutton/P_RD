@@ -399,6 +399,7 @@ TWeakPtr<FSRPGTurnContext> USRPGCombatSubsystem::GetTurnContext(const AUnit* Own
 		{
 			return HeadNode->GetValue();
 		}
+		HeadNode = HeadNode->GetNextNode();
 	}
 
 	checkNoEntry();
@@ -417,6 +418,7 @@ TArray<TWeakPtr<FSRPGTurnContext>> USRPGCombatSubsystem::GetTurnContexts(const A
 		{
 			Contexts.Push(HeadNode->GetValue());
 		}
+		HeadNode = HeadNode->GetNextNode();
 	}
 
 	return Contexts;
