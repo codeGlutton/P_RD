@@ -9,6 +9,7 @@
 #include "../GAS/GASMinimal.h"
 #include "Components/ActorComponent.h"
 #include "../DataAsset/SkillData/StaticSkillData.h"
+#include "SRPGFramework/SRPGFrameworkType.h"
 #include "SkillComponent.generated.h"
 
  /**
@@ -108,7 +109,7 @@ public:
 	* @param Tiles : 스킬 효과를 적용할 타일들
 	* @return bool : 실패 시 false 반환
 	*/
-	bool ActivateSkill(int32 SkillIndex, TArray<TPair<int32,int32>> Tiles);
+	bool ActivateSkill(int32 SkillIndex, const TArray<FTileIndex>& Tiles);
 
 	/**
 	* @brief 테스트용 스킬 사용 함수

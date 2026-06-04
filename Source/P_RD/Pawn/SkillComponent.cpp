@@ -73,7 +73,7 @@ bool USkillComponent::CalculatePredictedSales(int32 In_SkillIndex, TArray<TPair<
 	return false;
 }
 
-bool USkillComponent::ActivateSkill(int32 SkillIndex, TArray<TPair<int32, int32>> Tiles)
+bool USkillComponent::ActivateSkill(int32 SkillIndex, const TArray<FTileIndex>& Tiles)
 {
 	return false;
 }

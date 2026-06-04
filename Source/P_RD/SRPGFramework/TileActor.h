@@ -29,7 +29,7 @@ class P_RD_API ITileActor
 	friend class ATileMap;
 
 public:
-	virtual const FTileTransform& GetTileTransform() const PURE_VIRTUAL(ITileActor::GetTileTransform, return FTileTransform::Zero;)
+	virtual const FTileTransform& GetTileTransform() const PURE_VIRTUAL(ITileActor::GetTileTransform, return FTileTransform::Invalid;)
 
 protected:
 	virtual void SetTileTransform(const FTileTransform & Transform) PURE_VIRTUAL(ITileActor::SetTileTransform, return;)

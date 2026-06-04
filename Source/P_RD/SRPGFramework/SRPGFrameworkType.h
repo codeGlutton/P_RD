@@ -31,13 +31,22 @@ struct FTileIndex
     GENERATED_BODY()
 
 public:
+    FTileIndex() = default;
+    FTileIndex(int32 InX, int32 InY) : mX(InX), mY(InY) {}
+
     // @brief 가로(X) 방향 인덱스
     UPROPERTY(Category = "TileIndex", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "X"))
     int32 mX = 0;
     // @brief 세로(Y) 방향 인덱스
     UPROPERTY(Category = "TileIndex", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Y"))
     int32 mY = 0;
+
+    // @brief 유효하지 않은(미배치) 타일을 나타내는 초기/해제값
+    static const FTileIndex Invalid;
 };
+
+// @brief 무효 좌표 정의: (-1, -1)
+inline const FTileIndex FTileIndex::Invalid = FTileIndex(-1, -1);
 
 /**
  * @brief 타일 맵 상 위치
@@ -48,6 +57,10 @@ struct FTileTransform
     GENERATED_BODY()
 
 public:
+    FTileTransform() = default;
+    FTileTransform(const FTileIndex& InIndex, ETileActorDirection InDirection = ETileActorDirection::Forward)
+        : mIndex(InIndex), mDirection(InDirection) {}
+
     // @brief 타일 인덱스 좌표
     UPROPERTY(Category = "TileTransform", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Index"))
     FTileIndex mIndex;
@@ -55,11 +68,12 @@ public:
     UPROPERTY(Category = "TileTransform", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Direction"))
     ETileActorDirection mDirection = ETileActorDirection::Forward;
 
-public:
-    static const FTileTransform Zero;
+    // @brief 유효하지 않은(미배치) 트랜스폼을 나타내는 초기/해제값
+    static const FTileTransform Invalid;
 };
 
-inline const FTileTransform FTileTransform::Zero = FTileTransform();
+// @brief 무효 트랜스폼 정의: 인덱스가 무효
+inline const FTileTransform FTileTransform::Invalid = FTileTransform(FTileIndex::Invalid);
 
 /**
  * @brief 조준 범위 패턴
@@ -85,6 +99,52 @@ enum class EEffectPattern : uint8
     Square      UMETA(ToolTip = "타겟 중심 사각형 범위 전체"),
     Beam        UMETA(ToolTip = "시전자에서 타겟 방향으로 뻗는 직선"),
 };
+
+/**
+ * @brief 스킬 대상 선정의 대상을 결정
+ * 
+ * @details
+ * 영향 범위 외에 자신에게 영향 주는 스킬들이 있을 때 효과를 구분하기 위해 만든 열거형
+ */
+UENUM(BlueprintType)
+enum class ETargetScope : uint8
+{
+    /** 대상 선정 기준: 시전자 본인 */
+    Caster UMETA(DisplayName = "Caster"),
+
+    /** 대상 선정 기준: 선택된 타일/대상 */
+    Target UMETA(DisplayName = "Target"),
+
+    /** 대상 선정 기준: 시전자와 타겟 모두 포함 */
+    Both   UMETA(DisplayName = "Both")
+};
+
+/**
+ * @brief 대상 선정 시 특정 객체를 제외하기 위한 필터(Bitmask)입니다.
+ * 
+ * @details
+ * 영향 범위 안에 특정 유닛들은 제외하고 싶을 때 사용하는 열거형
+ * 
+ * @note 
+ * 여러 옵션을 조합하여 사용 가능합니다. 예: ExcludeSelf | ExcludeAlly
+ */
+UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
+enum class ETargetFilter : uint8
+{
+    /** 필터링을 적용하지 않습니다. */
+    None = 0 UMETA(DisplayName = "None"),
+
+    /** 시전자 본인을 대상에서 제외합니다. */
+    ExcludeSelf = 1 << 0 UMETA(DisplayName = "Exclude Self"),
+
+    /** 아군을 대상에서 제외합니다. */
+    ExcludeAlly = 1 << 1 UMETA(DisplayName = "Exclude Ally"),
+
+    /** 적군을 대상에서 제외합니다. */
+    ExcludeEnemy = 1 << 2 UMETA(DisplayName = "Exclude Enemy")
+};
+ENUM_CLASS_FLAGS(ETargetFilter);
+
 
 /**
  * @brief 방 종료 이유를 나타내는 열거형
