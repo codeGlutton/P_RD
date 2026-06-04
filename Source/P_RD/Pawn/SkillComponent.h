@@ -118,6 +118,6 @@ public:
 	* @return bool : 실패 시 false 반환
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Skill")
-	bool TestActivateSkill(int32 SkillIndex, TArray<TWeakObjectPtr<class AUnit>> UnitArray);
+	bool TestActivateSkill(int32 SkillIndex, TArray<AUnit*> UnitArray);
 
 };

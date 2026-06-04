@@ -78,7 +78,7 @@ bool USkillComponent::ActivateSkill(int32 SkillIndex, TArray<TPair<int32, int32>
 	return false;
 }
 
-bool USkillComponent::TestActivateSkill(int32 SkillIndex, TArray<TWeakObjectPtr<AUnit>> UnitArray)
+bool USkillComponent::TestActivateSkill(int32 SkillIndex, TArray<AUnit*> UnitArray)
 {
 	if (!GetOwner())
 		return false;
@@ -95,14 +95,14 @@ bool USkillComponent::TestActivateSkill(int32 SkillIndex, TArray<TWeakObjectPtr<
 
 
 	// 3. 소프트 포인터 배열을 순회하며 실제 액터 포인터를 추출해 채워 넣습니다.
-	for (const TWeakObjectPtr<AUnit>& UnitPtr : UnitArray)
+	for (AUnit* UnitPtr : UnitArray)
 	{
 		// 소프트 포인터가 가리키는 대상이 현재 메모리에 로드되어 있고 유효한지 확인
-		if (UnitPtr.IsValid())
+		if (IsValid(UnitPtr))
 		{
 			// TargetActorArray는 TWeakObjectPtr<AActor> 배열이지만, 
 			// 일반 포인터(AActor*)를 넣으면 자동으로 변환되어 들어갑니다.
-			ArrayTargetData->TargetActorArray.Add(UnitPtr.Get());
+			ArrayTargetData->TargetActorArray.Add(UnitPtr);
 		}
 	}
 
