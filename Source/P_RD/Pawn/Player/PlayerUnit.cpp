@@ -4,8 +4,11 @@
 
 #include "GameMode/RDGameModeBase.h"
 
+#include "Setting/UnitTeamType.h"
+
 APlayerUnit::APlayerUnit()
 {
+    SetGenericTeamId(EUnitTeamType::Adventurer);
     mLevelAttributeSet = CreateDefaultSubobject<ULevelAttributeSet>(TEXT("LevelAttributeSet"));
 }
 
@@ -34,6 +37,11 @@ UUserWidget* APlayerUnit::GetInfoPanel() const
     return nullptr;
 }
 
+EPlayerJobType APlayerUnit::GetPlayerJobType() const
+{
+    return mJobType;
+}
+
 int32 APlayerUnit::GetPlayerLevel() const
 {
     ARDGameModeBase* RDGameMode = GetWorld()->GetAuthGameMode<ARDGameModeBase>();
@@ -48,4 +56,9 @@ int32 APlayerUnit::GetDifficulty() const
     checkf(RDGameMode != nullptr, TEXT("게임 모드 nullptr"));
 
     return RDGameMode->GetRunPersistData()->GetDifficulty();
+}
+
+bool APlayerUnit::IsPlayerUnit() const
+{
+    return true;
 }

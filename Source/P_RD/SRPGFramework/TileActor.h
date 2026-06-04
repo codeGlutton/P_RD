@@ -9,6 +9,8 @@
 
 #include "RDMinimal.h"
 #include "UObject/Interface.h"
+#include "Actor/TileMap/Tile.h"
+#include "Actor/TileMap/TileLayer.h"
 #include "TileActor.generated.h"
 
 UINTERFACE(MinimalAPI)
@@ -24,10 +26,40 @@ class P_RD_API ITileActor
 {
 	GENERATED_BODY()
 
+	friend class ATileMap;
+
 public:
-	virtual bool IsBlocking() const;
+	virtual const FTileTransform& GetTileTransform() const PURE_VIRTUAL(ITileActor::GetTileTransform, return FTileTransform::Invalid;)
 
 protected:
-	virtual void OnBeginTileOverlap(ITileActor* Other) const;
-	virtual void OnEndTileOverlap(ITileActor* Other) const;
+	virtual void SetTileTransform(const FTileTransform & Transform) PURE_VIRTUAL(ITileActor::SetTileTransform, return;)
+
+public:
+	/**
+	 * 액터의 레이어 타입을 반환
+	 * @return 레이어 타입
+	 */
+	virtual ETileLayerFlag GetTileLayer() const PURE_VIRTUAL(ITileActor::GetTileLayer, return ETileLayerFlag::None;)
+	/**
+	 * 타일 배치 시에 블로킹할 타입들 반환
+	 * @return 블로킹할 레이어 타입들
+	 */
+	virtual ETileLayerFlag GetBlockFlags() const;
+
+protected:
+	/**
+	 * 오버랩 시작 시 실행될 함수
+	 * @param Other 반대 대상
+	 * @param CurTile 현재 위치한 타일 객체
+	 */
+	virtual void OnBeginTileOverlap(ITileActor* Other, FTile* CurTile);
+	/**
+	 * 오버랩 종료 시 실행될 함수
+	 * @param Other 반대 대상
+	 * @param CurTile 현재 위치한 타일 객체
+	 */
+	virtual void OnEndTileOverlap(ITileActor* Other, FTile* CurTile);
 };
+
+
+

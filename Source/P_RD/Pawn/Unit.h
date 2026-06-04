@@ -17,9 +17,13 @@
 
 #include "Unit.generated.h"
 
+class AUnit;
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnitDied, AUnit* /* Unit */);
+
 class UUnitAttributeSet;
-class UUnitSaveGame;
 class UPackageMap;
+class UStaticUnitSpawnData;
 
 USTRUCT(Blueprintable)
 struct FUnitSnapshotTargetData : public FGameplayAbilityTargetData
@@ -71,13 +75,15 @@ public:
 	void SetGenericTeamId(const FGenericTeamId& TeamID) override;
 	FGenericTeamId GetGenericTeamId() const override;
 
-	/* ITileActor 상속 */
+	/* ITileActor, ITileTargetable 상속 */
 public:
+	ETileLayerFlag GetTileLayer() const override;
+	ETileLayerFlag GetBlockFlags() const override;
 	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 public:
-	virtual void OnBeginStage();
-	virtual void OnEndStage();
+	virtual void OnBeginPlayRoom();
+	virtual void OnEndPlayRoom();
 
 public:
 	/**
@@ -86,12 +92,20 @@ public:
 	virtual FUnitSnapshotTargetData* MakeSnapshotTargetData() const;
 
 public:
-	UUnitAttributeSet* GetUnitAttributeSet() const;
+	void SetStaticSpawnData(const UStaticUnitSpawnData* StaticUnitSpawnData);
 
-	FName GetUnitName() const;
+public:
+	UUnitAttributeSet* GetUnitAttributeSet() const;
+	bool IsDead() const;
+
+	FName GetUnitKeyName() const;
 	const FText& GetUnitDisplayName() const;
 
-	virtual int32 GetDifficulty() const PURE_VIRTUAL(FUnitSnapshotTargetData::GetDifficulty, return 0;)
+	virtual int32 GetDifficulty() const PURE_VIRTUAL(AUnit::GetDifficulty, return 0;)
+	virtual bool IsPlayerUnit() const PURE_VIRTUAL(AUnit::IsPlayerUnit, return false;)
+
+public:
+	FOnUnitDied OnUnitDied;
 
 private:
 	UPROPERTY(Category = GAS, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "AbilitySystemComp"))
@@ -100,9 +114,8 @@ private:
 	TObjectPtr<UUnitAttributeSet> mUnitAttributeSet;
 
 protected:
-	// @brief UI 표기 이름
-	UPROPERTY(Category = Unit, EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "UnitDisplayName"))
-	FText mUnitDisplayName;
+	UPROPERTY(Category = Spawn, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "StaticUnitSpawnData"))
+	TObjectPtr<const UStaticUnitSpawnData> mStaticUnitSpawnData;
 
 private:
 	// @brief 팀 ID

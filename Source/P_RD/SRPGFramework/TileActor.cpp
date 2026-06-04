@@ -1,14 +1,14 @@
 ﻿#include "SRPGFramework/TileActor.h"
 
-bool ITileActor::IsBlocking() const
+ETileLayerFlag ITileActor::GetBlockFlags() const
 {
-	return true;
+	return ETileLayerFlag::None;
 }
 
-void ITileActor::OnBeginTileOverlap(ITileActor* Other) const
+void ITileActor::OnBeginTileOverlap(ITileActor* Other, FTile* CurTile)
 {
 }
 
-void ITileActor::OnEndTileOverlap(ITileActor* Other) const
+void ITileActor::OnEndTileOverlap(ITileActor* Other, FTile* CurTile)
 {
 }

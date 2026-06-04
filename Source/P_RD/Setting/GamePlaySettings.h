@@ -11,6 +11,7 @@
 #include "Engine/DeveloperSettings.h"
 
 #include "Setting/UnitTeamType.h"
+#include "Singleton/WorldSubsystem/WorldWidgetType.h"
 
 #include "GamePlaySettings.generated.h"
 
@@ -46,12 +47,16 @@ public:
     static ETeamAttitude::Type GetAttitude(FGenericTeamId OwnId, FGenericTeamId OtherId);
 
 public:
+    UPROPERTY(Config, Category = UI, EditAnywhere, meta = (DisplayName = "WorldWidgetClasses", ArraySizeEnum = "EWorldWidgetType"))
+    TSubclassOf<UUserWidget> mWorldWidgetClasses[static_cast<uint8>(EWorldWidgetType::Count)];
+
+public:
     UPROPERTY(Config, Category = Title, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TitleRoomId"))
     FPrimaryAssetId mTitleRoomId;
 
 public:
-    UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TitleGameMode", ConfigRestartRequired = true))
-    TSoftClassPtr<AGameModeBase> mTitleGameMode;
+    UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "FrontendGameMode", ConfigRestartRequired = true))
+    TSoftClassPtr<AGameModeBase> mFrontendGameMode;
     UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatGameMode", ConfigRestartRequired = true))
     TSoftClassPtr<AGameModeBase> mCombatGameMode;
     UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "ShopGameMode", ConfigRestartRequired = true))
