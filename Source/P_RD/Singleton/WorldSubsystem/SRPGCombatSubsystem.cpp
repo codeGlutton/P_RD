@@ -216,15 +216,15 @@ void USRPGCombatSubsystem::RegisterEnemyUnit(const FEnemyUnitPlacementData& Enem
 
 	// 적 유닛 스폰 & 초기 위치 등록
 	const UStaticEnemyUnitSpawnData* EnemyUnitSpawnData = EnemyPlacementData.mSpawnData.Get();
-	AUnit* EnemyUnit = GetWorld()->SpawnActorDeferred<AUnit>(EnemyUnitSpawnData->mClass.Get(), mTileMap->GetTileTransform(EnemyPlacementData.mTransform));
+	AUnit* EnemyUnit = GetWorld()->SpawnActorDeferred<AUnit>(EnemyUnitSpawnData->mClass.Get(), mTileMap->TileToWorldTransform(EnemyPlacementData.mTransform));
 	EnemyUnit->SetStaticSpawnData(EnemyUnitSpawnData);
-	EnemyUnit->FinishSpawning(mTileMap->GetTileTransform(EnemyPlacementData.mTransform));
+	EnemyUnit->FinishSpawning(mTileMap->TileToWorldTransform(EnemyPlacementData.mTransform));
 	EnemyUnit->OnUnitDied.AddWeakLambda(this, [this](AUnit* Unit) {
 		UnregisterTurns(Unit);
 		EvaluateCombatStates();
 		});
 
-	checkf(mTileMap->IsBlocking(EnemyPlacementData.mTransform, EnemyUnit->GetBlockFlags()) == false, TEXT("타일 간 충돌"));
+	checkf(mTileMap->IsBlocking(EnemyPlacementData.mTransform.mIndex, EnemyUnit->GetBlockFlags()) == false, TEXT("타일 간 충돌"));
 	
 	// 타일 위에 배치
 	mTileMap->PlaceActor(EnemyPlacementData.mTransform, EnemyUnit);
@@ -244,9 +244,9 @@ void USRPGCombatSubsystem::RegisterObstacle(const FObstaclePlacementData& Obstac
 
 	// 적 유닛 스폰 & 초기 위치 등록
 	const UStaticObstacleSpawnData* ObstacleSpawnData = ObstaclePlacementData.mSpawnData.Get();
-	ITileActor* Obstacle = GetWorld()->SpawnActor<ITileActor>(ObstacleSpawnData->mClass.Get(), mTileMap->GetTileTransform(ObstaclePlacementData.mTransform));
+	ITileActor* Obstacle = GetWorld()->SpawnActor<ITileActor>(ObstacleSpawnData->mClass.Get(), mTileMap->TileToWorldTransform(ObstaclePlacementData.mTransform));
 
-	checkf(mTileMap->IsBlocking(ObstaclePlacementData.mTransform, Obstacle->GetBlockFlags()) == false, TEXT("타일 간 충돌"));
+	checkf(mTileMap->IsBlocking(ObstaclePlacementData.mTransform.mIndex, Obstacle->GetBlockFlags()) == false, TEXT("타일 간 충돌"));
 
 	// 타일 위에 배치
 	mTileMap->PlaceActor(ObstaclePlacementData.mTransform, Obstacle);
@@ -271,7 +271,7 @@ void USRPGCombatSubsystem::RegisterPlayerUnit(AUnit* PlayerUnit, const FTileTran
 	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
 
 	// 초기 위치 등록
-	PlayerUnit->SetActorTransform(mTileMap->GetTileTransform(Transform));
+	PlayerUnit->SetActorTransform(mTileMap->TileToWorldTransform(Transform));
 	PlayerUnit->OnUnitDied.AddWeakLambda(this, [this](AUnit* Unit) {
 		UnregisterTurns(Unit);
 		EvaluateCombatStates();
