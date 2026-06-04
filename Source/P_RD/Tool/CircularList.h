@@ -258,13 +258,13 @@ public:
 		return true;
 	}
 
-	void RemoveNode(const ElementType& InElement)
+	TCircularDoubleLinkedListNode* RemoveNode(const ElementType& InElement)
 	{
 		TCircularDoubleLinkedListNode* ExistingNode = FindNode(InElement);
-		RemoveNode(ExistingNode);
+		return RemoveNode(ExistingNode);
 	}
 
-	void RemoveNode(TCircularDoubleLinkedListNode* NodeToRemove, bool bDeleteNode = true)
+	TCircularDoubleLinkedListNode* RemoveNode(TCircularDoubleLinkedListNode* NodeToRemove, bool bDeleteNode = true)
 	{
 		if (NodeToRemove != nullptr)
 		{
@@ -281,15 +281,17 @@ public:
 					HeadNode = nullptr;
 					SetListSize(0);
 				}
-				return;
+				return nullptr;
 			}
 
+			TCircularDoubleLinkedListNode* NextNode = NodeToRemove->NextNode;
+			TCircularDoubleLinkedListNode* PreNode = NodeToRemove->PrevNode;
 			if (NodeToRemove == HeadNode)
 			{
-				HeadNode = HeadNode->NextNode;
+				HeadNode = NextNode;
 			}
-			NodeToRemove->NextNode->PrevNode = NodeToRemove->PrevNode;
-			NodeToRemove->PrevNode->NextNode = NodeToRemove->NextNode;
+			NodeToRemove->NextNode->PrevNode = PreNode;
+			NodeToRemove->PrevNode->NextNode = NextNode;
 
 			if (bDeleteNode)
 			{
@@ -300,7 +302,11 @@ public:
 				NodeToRemove->NextNode = NodeToRemove->PrevNode = NodeToRemove;
 			}
 			SetListSize(ListSize - 1);
+
+			return NextNode;
 		}
+
+		return nullptr;
 	}
 
 	void Empty()
@@ -338,13 +344,13 @@ public:
 		{
 			if (Node->GetValue() == InElement)
 			{
-				break;
+				return Node;
 			}
 
 			Node = Node->NextNode;
 		}
 
-		return Node;
+		return nullptr;
 	}
 
 	[[nodiscard]] bool Contains(const ElementType& InElement)
