@@ -103,6 +103,10 @@ public:
 	 * @note UI 파트 추가 API
 	 * 지도 화면을 먼저 보여주기 위해 만든 프론트엔드용 단계다. 실제 Stage 생성은 PM 브랜치의
 	 * URunPersistData::MakeStageAsync()를 사용하고, 여기서는 방 레벨 전환까지 진행하지 않는다.
+	 *
+	 * 현재 난이도와 StageLevel은 타이틀 -> 캐릭터 선택 -> 지도 연결 검증을 위한 임시 기본값을 사용한다.
+	 * 최종적으로 난이도 선택, 프로필 선택, 스테이지 선택 정책이 확정되면 이 함수는 그 값을 받아 PM Run/Stage
+	 * API에 전달하는 adapter 역할만 유지해야 한다.
 	 */
 	UFUNCTION(Category = Title, BlueprintCallable)
 	bool PrepareRunMapWithPlayerUnit(FPrimaryAssetId PlayerUnitId);
@@ -201,6 +205,10 @@ public:
 	 * @note UI 파트 추가 command API
 	 * PM 브랜치에는 지도 노드 클릭용 View API가 없어서 추가했다. 현재 선택 가능 여부는 프론트엔드에서
 	 * 임시로 제한하고 있으며, 실제 룸 진행 규칙 API가 확정되면 내부 판정을 그쪽으로 위임해야 한다.
+	 *
+	 * 지금 구현은 월드맵 화면과 ENTER 버튼 연결을 검증하기 위한 1차 단계라 현재 룸만 선택 가능하게 둔다.
+	 * "현재 룸의 다음 후보 중 하나를 고른다"는 최종 규칙은 PM 쪽 Run/Room 진행 API가 확정된 뒤 이 함수
+	 * 내부에서 교체해야 한다.
 	 */
 	UFUNCTION(Category = Title, BlueprintCallable)
 	bool SelectMapRoom(int32 RowIndex, int32 ColumnIndex);
@@ -212,6 +220,10 @@ public:
 	 * @note UI wrapper + PM 전환 API 사용
 	 * 함수 이름은 UI 파트가 지도 ENTER 버튼용으로 추가한 facade다. 실제 방 preload/transition은
 	 * PM 브랜치의 ARoomGameModeBase::PreloadRoomAsync()와 TransitionLoadedRoomAsync()를 호출한다.
+	 *
+	 * 현재는 SelectMapRoom()과 같은 이유로 "선택된 다음 방"이 아니라 RunPersistData의 현재 룸을 입장 대상으로
+	 * 사용한다. 그래서 이 함수는 최종 룸 선택 규칙을 새로 구현한 API가 아니라, UI가 기존 PM 전환 흐름을
+	 * 호출할 수 있게 만든 임시 연결 지점이다.
 	 */
 	UFUNCTION(Category = Title, BlueprintCallable)
 	bool EnterSelectedMapRoom();
@@ -232,6 +244,10 @@ private:
 	 * @note UI 파트 추가 내부 함수
 	 * PM 브랜치의 MakeStageAndPreloadRoomAsync()는 곧바로 방 preload까지 이어지는 API라 지도 preview에는
 	 * 맞지 않는다. 그래서 PM 브랜치의 URunPersistData::MakeStageAsync()만 사용한다.
+	 *
+	 * DefaultDifficulty, 기본 사용자명, EStageLevelType::Stage1은 현재 UI 흐름 테스트를 위한 임시 기본값이다.
+	 * 이 함수가 게임 규칙을 소유한다는 뜻이 아니며, 관련 선택 API가 생기면 그 결과를 PM API에 넘기는 쪽으로
+	 * 줄여야 한다.
 	 */
 	bool StartRunPreviewWithPlayerUnit(FPrimaryAssetId PlayerUnitId);
 	/**

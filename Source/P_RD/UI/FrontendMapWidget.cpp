@@ -228,6 +228,13 @@ namespace
 		}
 	}
 
+	/**
+	 * @brief 현재 지도 노드에 임시로 표시할 디버그 라벨을 만든다.
+	 *
+	 * @details
+	 * 최종 룸 노드는 RoomType별 아이콘/이미지를 표시해야 한다. 지금은 아이콘 리소스와 최종 룸 표시 규칙이
+	 * 확정되기 전이라, APK에서 Stage 행/열과 RoomType 매핑이 맞는지만 확인할 수 있도록 텍스트를 남긴다.
+	 */
 	FText GetMapRoomDebugNodeLabel(const FFrontendMapRoomView& Room)
 	{
 		return FText::Format(

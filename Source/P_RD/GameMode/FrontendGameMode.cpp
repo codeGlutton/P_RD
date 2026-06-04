@@ -18,6 +18,17 @@
 
 namespace
 {
+	/**
+	 * @brief 프론트엔드 런 preview에서 사용하는 임시 난이도
+	 *
+	 * @details
+	 * 현재 UI/map 브랜치는 타이틀 -> 캐릭터 선택 -> 지도 -> 룸 입장 흐름을 먼저 검증하는 단계라
+	 * 난이도 선택 화면이 아직 없다. 그래서 캐릭터 시작 스탯 표시와 GameProfileSubsystem::StartRun()
+	 * 호출에 같은 기본 난이도를 사용한다.
+	 *
+	 * 이 값은 게임 규칙을 UI 파트가 결정한다는 뜻이 아니며, 난이도/프로필 선택 API가 생기면
+	 * 그 결과를 받아 PM Run API에 전달하는 방식으로 교체해야 한다.
+	 */
 	constexpr int32 DefaultDifficulty = 1;
 
 	FText FrontendText(const TCHAR* Key, const TCHAR* Fallback)
