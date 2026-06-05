@@ -12,6 +12,7 @@
 #include "PCGStage/Stage.h"
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
+#include "Singleton/InstanceSubsystem/RoomTransitionSubsystem.h"
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/TitleMenuWidget.h"
@@ -516,13 +517,15 @@ bool AFrontendGameMode::EnterSelectedMapRoom()
 	}
 
 	ShowTitleMessage(FrontendText(TEXT("LoadingSelectedRoom"), TEXT("Loading selected room")));
-	PreloadRoomAsync(mSelectedMapRoomRow, mSelectedMapRoomColumn);
-	TransitionLoadedRoomAsync();
-	return true;
-}
+	URoomTransitionSubsystem* RoomTransitionSubsystem = GetGameInstance()->GetSubsystem<URoomTransitionSubsystem>();
+	if (RoomTransitionSubsystem == nullptr)
+	{
+		return false;
+	}
 
-void AFrontendGameMode::InitializeCommonRoom()
-{
+	RoomTransitionSubsystem->PreloadRoomAsync(mSelectedMapRoomRow, mSelectedMapRoomColumn);
+	RoomTransitionSubsystem->TransitLoadedRoomAsync();
+	return true;
 }
 
 void AFrontendGameMode::BeginRoom()
@@ -639,10 +642,16 @@ bool AFrontendGameMode::StartRunPreviewWithPlayerUnit(FPrimaryAssetId PlayerUnit
 		return false;
 	}
 
+	const UUserPersistData* UserPersistData = GetUserPersistData();
+	if (UserPersistData == nullptr || !UserPersistData->IsActive())
+	{
+		ShowTitleMessage(FrontendText(TEXT("MissingUserData"), TEXT("User data is not ready")));
+		return false;
+	}
+
 	bStartRunRequested = true;
 	ClearSelectedMapRoom();
 
-	GameProfileSubsystem->MakeUser(NSLOCTEXT("FrontendGameMode", "DefaultUserName", "Player"));
 	GameProfileSubsystem->StartRun(PlayerUnitId, DefaultDifficulty);
 
 	URunPersistData* RunPersistData = GetRunMutableData();
@@ -656,7 +665,7 @@ bool AFrontendGameMode::StartRunPreviewWithPlayerUnit(FPrimaryAssetId PlayerUnit
 	// PM 브랜치의 MakeStageAndPreloadRoomAsync()는 방 전환 준비용 API라 여기서 쓰면
 	// 첫 방 preload/transition 상태까지 섞인다. 그래서 Stage 생성 공식 API인
 	// URunPersistData::MakeStageAsync()만 호출하고, 지도 입장은 EnterSelectedMapRoom()에서
-	// RoomGameModeBase의 PreloadRoomAsync()/TransitionLoadedRoomAsync() 흐름으로 넘긴다.
+	// URoomTransitionSubsystem의 PreloadRoomAsync()/TransitLoadedRoomAsync() 흐름으로 넘긴다.
 	RunPersistData->MakeStageAsync(EStageLevelType::Stage1, FOnCreateStage::CreateUObject(this, &AFrontendGameMode::HandleStageCreated));
 	return true;
 }
