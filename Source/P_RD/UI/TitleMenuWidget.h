@@ -215,9 +215,6 @@ private:
 	void HandleCharacterBackToMainRequested();
 
 	UFUNCTION()
-	void HandleCharacterRunPreviewReady();
-
-	UFUNCTION()
 	void HandleMapBackRequested();
 
 private:

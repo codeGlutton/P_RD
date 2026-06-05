@@ -11,11 +11,9 @@
 #include "Frontend/FrontendViewTypes.h"
 #include "GameMode/RDGameModeBase.h"
 #include "Kismet/GameplayStatics.h"
-#include "Singleton/InstanceSubsystem/PersistentDataWriter.h"
 
 #include "FrontendGameMode.generated.h"
 
-struct FStage;
 struct FStreamableHandle;
 
 /**
@@ -28,10 +26,11 @@ struct FStreamableHandle;
  * 프론트엔드는 실제 방이 아니므로 ARoomGameModeBase를 상속하지 않는다. ARoomGameModeBase는 방 진입 시
  * 플레이어 유닛 복원과 Run 저장을 수행하는데, 타이틀/지도 팝업 단계에서 그 흐름이 실행되면
  * "Front -> Room"과 "Room -> Room"의 책임이 섞인다. 따라서 이 클래스는 ARDGameModeBase를 상속하고,
- * 방 preload/transition이 필요할 때만 PM 구조의 URoomTransitionSubsystem 공식 API를 호출한다.
+ * 새 Run 시작 후 첫 방 입장은 PM 구조의 URoomTransitionSubsystem::MakeStageAndPreloadRoomAsync() 흐름에 맡긴다.
+ * 지도 UI는 Run 시작 전 preview가 아니라, 활성 Run/Room 사이 이동 화면을 표시하는 adapter로 남긴다.
  *
  * @note API 출처
- * 이 클래스의 public 함수 대부분은 UI 파트가 타이틀 -> 캐릭터 선택 -> 지도 팝업을 붙이기 위해 만든
+ * 이 클래스의 public 함수 대부분은 UI 파트가 타이틀 -> 캐릭터 선택 -> 첫 방 입장/지도 팝업을 붙이기 위해 만든
  * 임시 프론트엔드 facade/API다. 공식 게임 데이터는 PM 브랜치에서 들어온 URunPersistData,
  * GameProfileSubsystem, URoomTransitionSubsystem에 있고, 여기서는 그 결과를 UI DTO로 바꾸거나
  * 버튼 입력을 공식 API 호출로 연결하는 역할만 맡는다.
@@ -40,7 +39,7 @@ struct FStreamableHandle;
  * API로 분리되어야 한다. 현재 함수들은 그 API가 생기기 전까지 WBP 연결을 유지하기 위한 adapter다.
  */
 UCLASS()
-class P_RD_API AFrontendGameMode : public ARDGameModeBase, public IRunDataWriter
+class P_RD_API AFrontendGameMode : public ARDGameModeBase
 {
 	GENERATED_BODY()
 
@@ -64,8 +63,8 @@ public:
 	 * @return 런/지도 준비 요청에 성공하면 true
 	 *
 	 * @note UI 파트 추가 API
-	 * 현재는 PrepareRunMapWithPlayerUnit()으로 위임하는 호환용 wrapper다. 실제 플레이어 런 시작은
-	 * PM 브랜치의 GameProfileSubsystem::StartRun() 데이터를 사용한다.
+	 * 현재는 PrepareRunMapWithPlayerUnit()으로 위임하는 호환용 wrapper다. 실제 새 Stage 생성과 첫 방
+	 * preload/transition은 PM 브랜치의 RoomTransitionSubsystem::MakeStageAndPreloadRoomAsync()를 사용한다.
 	 */
 	UFUNCTION(Category = Title, BlueprintCallable)
 	bool StartRunWithPlayerUnit(FPrimaryAssetId PlayerUnitId);
@@ -109,15 +108,16 @@ public:
 	bool IsCharacterOptionsLoading() const;
 
 	/**
-	 * @brief 선택한 플레이어 유닛으로 런을 만들고 지도 preview 생성을 시작한다.
+	 * @brief 선택한 플레이어 유닛으로 런을 만들고 첫 방 입장을 준비한다.
 	 * @param PlayerUnitId 선택한 플레이어 유닛 PrimaryAssetId
-	 * @return 지도 preview 생성 요청에 성공하면 true
+	 * @return 첫 방 입장 준비 요청에 성공하면 true
 	 *
 	 * @note UI 파트 추가 API
-	 * 지도 화면을 먼저 보여주기 위해 만든 프론트엔드용 단계다. 실제 Stage 생성은 PM 브랜치의
-	 * URunPersistData::MakeStageAsync()를 사용하고, 여기서는 방 레벨 전환까지 진행하지 않는다.
+	 * PM 구조에서는 새 Stage의 StartRoom이 첫 방이며, RoomTransitionSubsystem::MakeStageAndPreloadRoomAsync()
+	 * 가 Stage 생성 후 StartRoom preload까지 처리한다. 따라서 캐릭터 선택 직후 지도 preview를 먼저 열지 않고,
+	 * 첫 방 진입을 PM 전환 흐름에 맡긴다.
 	 *
-	 * 현재 난이도와 StageLevel은 타이틀 -> 캐릭터 선택 -> 지도 연결 검증을 위한 임시 기본값을 사용한다.
+	 * 현재 난이도와 StageLevel은 타이틀 -> 캐릭터 선택 -> 첫 방 입장 연결 검증을 위한 임시 기본값을 사용한다.
 	 * 최종적으로 난이도 선택, 프로필 선택, 스테이지 선택 정책이 확정되면 이 함수는 그 값을 받아 PM Run/Stage
 	 * API에 전달하는 adapter 역할만 유지해야 한다.
 	 */
@@ -229,6 +229,14 @@ protected:
 
 private:
 	/**
+	 * @brief 타이틀 진입 시 저장된 유저를 로드하고, 아직 프로필 화면이 없으면 임시 기본 유저를 만든다.
+	 *
+	 * @note 임시 프론트엔드 부트스트랩
+	 * Run 시작 함수에서 UserData를 만들지 않기 위한 분리 지점이다. 최종 프로필/계정 생성 화면이 들어오면
+	 * 이 fallback은 그 흐름으로 대체되어야 한다.
+	 */
+	void LoadOrCreateFrontendUserProfile();
+	/**
 	 * @brief 캐릭터 선택에 필요한 PlayerUnit UI DataAsset을 임시로 preload한다.
 	 *
 	 * @details
@@ -253,14 +261,13 @@ private:
 	bool HasSelectedMapRoom() const;
 	bool PreloadSelectedMapRoom();
 	/**
-	 * @brief 선택 캐릭터로 RunPersistData와 Stage preview 생성을 시작한다.
+	 * @brief 선택 캐릭터로 새 Run을 만들고 PM 전환 API로 첫 방 입장을 시작한다.
 	 * @param PlayerUnitId 선택한 플레이어 유닛 PrimaryAssetId
-	 * @return Stage preview 생성 요청에 성공하면 true
+	 * @return 첫 방 preload/transition 요청을 시작했으면 true
 	 *
 	 * @note UI 파트 추가 내부 함수
-	 * PM 브랜치의 URoomTransitionSubsystem::MakeStageAndPreloadRoomAsync()는 곧바로 방 preload까지
-	 * 이어지는 API라 지도 preview에는 맞지 않는다. 그래서 PM 브랜치의 URunPersistData::MakeStageAsync()만
-	 * 사용한다.
+	 * PM 브랜치의 URoomTransitionSubsystem::MakeStageAndPreloadRoomAsync()는 Stage 생성 뒤 StartRoom을
+	 * preload하는 API다. StartRoom이 첫 방이라는 PM 구조를 따르기 위해 캐릭터 선택 직후 이 API를 사용한다.
 	 *
 	 * 유저 생성은 게임 최초 프로필 생성 단계의 책임이므로 여기서 GameProfileSubsystem::MakeUser()를
 	 * 호출하지 않는다. 이 함수는 이미 활성화된 UserPersistData가 있다는 전제에서 새 RunPersistData만 만든다.
@@ -268,15 +275,7 @@ private:
 	 * DefaultDifficulty, EStageLevelType::Stage1은 현재 UI 흐름 테스트를 위한 임시 기본값이다. 이 함수가
 	 * 게임 규칙을 소유한다는 뜻이 아니며, 관련 선택 API가 생기면 그 결과를 PM API에 넘기는 쪽으로 줄여야 한다.
 	 */
-	bool StartRunPreviewWithPlayerUnit(FPrimaryAssetId PlayerUnitId);
-	/**
-	 * @brief Stage 생성 완료 후 시작 룸을 현재 룸으로 맞춘다.
-	 * @param NewStage 생성된 Stage 데이터
-	 *
-	 * @note UI 파트 추가 callback
-	 * Stage 생성 자체는 PM 브랜치의 URunPersistData::MakeStageAsync() 결과다.
-	 */
-	void HandleStageCreated(const FStage& NewStage);
+	bool StartRunAndEnterFirstRoomWithPlayerUnit(FPrimaryAssetId PlayerUnitId);
 	void ShowTitleMessage(const FText& Message) const;
 
 private:

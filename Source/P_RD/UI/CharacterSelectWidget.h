@@ -10,7 +10,6 @@
 #include "RDMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Frontend/CharacterSelectTypes.h"
-#include "TimerManager.h"
 #include "UObject/SoftObjectPath.h"
 
 #include "CharacterSelectWidget.generated.h"
@@ -61,10 +60,6 @@ public:
 	UPROPERTY(Category = "Character Select", BlueprintAssignable)
 	FCharacterSelectSimpleEvent OnBackToMainRequested;
 
-	/** @brief 월드맵 preview가 준비됐을 때 TitleMenuWidget에 Map 화면 전환을 요청함 */
-	UPROPERTY(Category = "Character Select", BlueprintAssignable)
-	FCharacterSelectSimpleEvent OnRunPreviewReady;
-
 	/** @brief 상태 문구가 바뀌었음을 외부 디버그 UI 등에 알려주는 호환용 이벤트 */
 	UPROPERTY(Category = "Character Select", BlueprintAssignable)
 	FCharacterSelectStatusChangedDelegate OnStatusTextChanged;
@@ -89,9 +84,7 @@ private:
 	void ApplyPortraitImage(UTexture2D* Texture) const;
 	void HandlePortraitLoaded(FSoftObjectPath PortraitPath);
 	void CancelPortraitLoad();
-	bool BeginRunPreviewWithSelectedCharacter();
-	void HandleRunPreviewReady();
-	bool IsRunMapPreviewReady() const;
+	bool BeginFirstRoomEntryWithSelectedCharacter();
 	AFrontendGameMode* GetFrontendGameMode() const;
 	const FFrontendCharacterOption* GetCharacterOption(int32 CharacterIndex) const;
 	const FFrontendCharacterOption* GetSelectedCharacterOption() const;
@@ -155,7 +148,6 @@ private:
 	int32 mSelectedCharacterIndex = INDEX_NONE;
 	TSharedPtr<FStreamableHandle> mPortraitLoadHandle = nullptr;
 	FSoftObjectPath mPendingPortraitPath;
-	FTimerHandle mStageReadyPollTimerHandle;
 	bool bStartRequested = false;
 
 	FText mConfirmText;

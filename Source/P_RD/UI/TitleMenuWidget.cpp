@@ -70,7 +70,6 @@ void UTitleMenuWidget::NativeConstruct()
 	if (CharacterSelectWidget != nullptr)
 	{
 		CharacterSelectWidget->OnBackToMainRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleCharacterBackToMainRequested);
-		CharacterSelectWidget->OnRunPreviewReady.AddUniqueDynamic(this, &UTitleMenuWidget::HandleCharacterRunPreviewReady);
 	}
 
 	if (FrontendMapWidget != nullptr)
@@ -109,7 +108,6 @@ void UTitleMenuWidget::NativeDestruct()
 	if (CharacterSelectWidget != nullptr)
 	{
 		CharacterSelectWidget->OnBackToMainRequested.RemoveDynamic(this, &UTitleMenuWidget::HandleCharacterBackToMainRequested);
-		CharacterSelectWidget->OnRunPreviewReady.RemoveDynamic(this, &UTitleMenuWidget::HandleCharacterRunPreviewReady);
 	}
 
 	if (FrontendMapWidget != nullptr)
@@ -387,11 +385,6 @@ void UTitleMenuWidget::HandleCharacterBackToMainRequested()
 {
 	ShowMainScreen();
 	SetStatusText(FText::GetEmpty());
-}
-
-void UTitleMenuWidget::HandleCharacterRunPreviewReady()
-{
-	ShowMapScreen();
 }
 
 void UTitleMenuWidget::HandleMapBackRequested()

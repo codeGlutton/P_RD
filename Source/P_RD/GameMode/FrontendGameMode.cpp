@@ -291,7 +291,7 @@ bool AFrontendGameMode::IsCharacterOptionsLoading() const
 
 bool AFrontendGameMode::PrepareRunMapWithPlayerUnit(FPrimaryAssetId PlayerUnitId)
 {
-	return StartRunPreviewWithPlayerUnit(PlayerUnitId);
+	return StartRunAndEnterFirstRoomWithPlayerUnit(PlayerUnitId);
 }
 
 bool AFrontendGameMode::GetMapRoomViews(TArray<FFrontendMapRoomView>& OutRooms) const
@@ -513,6 +513,8 @@ bool AFrontendGameMode::EnterSelectedMapRoom()
 
 void AFrontendGameMode::BeginRoom()
 {
+	LoadOrCreateFrontendUserProfile();
+
 	if (UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())
 	{
 		if (UUserWidget* TitleHUD = WorldWidgetSubsystem->GetHUD())
@@ -529,6 +531,35 @@ void AFrontendGameMode::BeginRoom()
 
 		FInputModeUIOnly InputMode;
 		PlayerController->SetInputMode(InputMode);
+	}
+}
+
+void AFrontendGameMode::LoadOrCreateFrontendUserProfile()
+{
+	USaveGameSubsystem* SaveGameSubsystem = GetGameInstance()->GetSubsystem<USaveGameSubsystem>();
+	if (SaveGameSubsystem != nullptr)
+	{
+		SaveGameSubsystem->LoadUser();
+	}
+
+	const UUserPersistData* UserPersistData = GetUserPersistData();
+	if (UserPersistData != nullptr && UserPersistData->IsActive())
+	{
+		return;
+	}
+
+	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+	if (GameProfileSubsystem == nullptr)
+	{
+		return;
+	}
+
+	// 프로필 생성 UI가 들어오기 전까지만 쓰는 기본 유저다. Run 시작 책임과 섞이지 않도록
+	// 타이틀 부트스트랩 단계에서 PM Profile API를 통해 만든다.
+	GameProfileSubsystem->MakeUser(FrontendText(TEXT("DefaultUserName"), TEXT("Guest")));
+	if (SaveGameSubsystem != nullptr)
+	{
+		SaveGameSubsystem->SaveUser();
 	}
 }
 
@@ -618,7 +649,7 @@ bool AFrontendGameMode::PreloadSelectedMapRoom()
 	return true;
 }
 
-bool AFrontendGameMode::StartRunPreviewWithPlayerUnit(FPrimaryAssetId PlayerUnitId)
+bool AFrontendGameMode::StartRunAndEnterFirstRoomWithPlayerUnit(FPrimaryAssetId PlayerUnitId)
 {
 	if (bStartRunRequested)
 	{
@@ -652,37 +683,21 @@ bool AFrontendGameMode::StartRunPreviewWithPlayerUnit(FPrimaryAssetId PlayerUnit
 		return false;
 	}
 
+	URoomTransitionSubsystem* RoomTransitionSubsystem = GetGameInstance()->GetSubsystem<URoomTransitionSubsystem>();
+	if (RoomTransitionSubsystem == nullptr)
+	{
+		return false;
+	}
+
 	bStartRunRequested = true;
 	ClearSelectedMapRoom();
 
 	GameProfileSubsystem->StartRun(PlayerUnitId, DefaultDifficulty);
 
-	URunPersistData* RunPersistData = GetRunMutableData();
-	if (RunPersistData == nullptr)
-	{
-		bStartRunRequested = false;
-		return false;
-	}
-
-	// 지도 미리보기는 "새 Stage를 만들되 아직 방 레벨로 전환하지 않는" 흐름이다.
-	// PM 브랜치의 MakeStageAndPreloadRoomAsync()는 방 전환 준비용 API라 여기서 쓰면
-	// 첫 방 preload/transition 상태까지 섞인다. 그래서 Stage 생성 공식 API인
-	// URunPersistData::MakeStageAsync()만 호출하고, 지도 입장은 EnterSelectedMapRoom()에서
-	// URoomTransitionSubsystem의 PreloadRoomAsync()/TransitLoadedRoomAsync() 흐름으로 넘긴다.
-	RunPersistData->MakeStageAsync(EStageLevelType::Stage1, FOnCreateStage::CreateUObject(this, &AFrontendGameMode::HandleStageCreated));
+	// PM 구조에서 새 Stage의 row 0 중앙 StartRoom이 첫 방이다. 전환 Subsystem이 Stage 생성,
+	// StartRoom preload, 로드 완료 후 transition까지 한 요청으로 소유하게 둔다.
+	RoomTransitionSubsystem->MakeStageAndPreloadRoomAsync(EStageLevelType::Stage1, FOnPreTransitNextRoom(), true);
 	return true;
-}
-
-void AFrontendGameMode::HandleStageCreated(const FStage& NewStage)
-{
-	bStartRunRequested = false;
-
-	if (URunPersistData* RunPersistData = GetRunMutableData())
-	{
-		const FRoom& StartRoom = NewStage.GetStartRoom();
-		RunPersistData->SetCurrentRoomIndex(StartRoom.mRow, StartRoom.mColumn);
-		ClearSelectedMapRoom();
-	}
 }
 
 void AFrontendGameMode::ShowTitleMessage(const FText& Message) const

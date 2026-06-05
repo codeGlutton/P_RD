@@ -7,9 +7,7 @@
 #include "Engine/AssetManager.h"
 #include "Engine/StreamableManager.h"
 #include "Engine/Texture2D.h"
-#include "Frontend/FrontendViewTypes.h"
 #include "GameMode/FrontendGameMode.h"
-#include "TimerManager.h"
 #include "UI/CharacterCardWidget.h"
 
 namespace
@@ -97,11 +95,6 @@ void UCharacterSelectWidget::NativeConstruct()
 
 void UCharacterSelectWidget::NativeDestruct()
 {
-	if (UWorld* World = GetWorld())
-	{
-		World->GetTimerManager().ClearTimer(mStageReadyPollTimerHandle);
-	}
-
 	CancelPortraitLoad();
 	UnbindEvents();
 	Super::NativeDestruct();
@@ -445,7 +438,7 @@ void UCharacterSelectWidget::CancelPortraitLoad()
 	mPendingPortraitPath.Reset();
 }
 
-bool UCharacterSelectWidget::BeginRunPreviewWithSelectedCharacter()
+bool UCharacterSelectWidget::BeginFirstRoomEntryWithSelectedCharacter()
 {
 	AFrontendGameMode* FrontendGameMode = GetFrontendGameMode();
 	if (FrontendGameMode == nullptr || !mSelectedPlayerUnitId.IsValid())
@@ -458,36 +451,7 @@ bool UCharacterSelectWidget::BeginRunPreviewWithSelectedCharacter()
 		return false;
 	}
 
-	if (UWorld* World = GetWorld())
-	{
-		World->GetTimerManager().SetTimer(mStageReadyPollTimerHandle, this, &UCharacterSelectWidget::HandleRunPreviewReady, 0.1f, true);
-	}
 	return true;
-}
-
-void UCharacterSelectWidget::HandleRunPreviewReady()
-{
-	if (!IsRunMapPreviewReady())
-	{
-		return;
-	}
-
-	if (UWorld* World = GetWorld())
-	{
-		World->GetTimerManager().ClearTimer(mStageReadyPollTimerHandle);
-	}
-
-	bStartRequested = false;
-	SetConfirmButtonText(mConfirmText);
-	SetStatusText(mReadyStatusText);
-	OnRunPreviewReady.Broadcast();
-}
-
-bool UCharacterSelectWidget::IsRunMapPreviewReady() const
-{
-	TArray<FFrontendMapRoomView> Rooms;
-	AFrontendGameMode* FrontendGameMode = GetFrontendGameMode();
-	return FrontendGameMode != nullptr && FrontendGameMode->GetMapRoomViews(OUT Rooms);
 }
 
 AFrontendGameMode* UCharacterSelectWidget::GetFrontendGameMode() const
@@ -576,7 +540,7 @@ void UCharacterSelectWidget::HandleConfirmButtonClicked()
 		ConfirmButton->SetIsEnabled(false);
 	}
 
-	if (!BeginRunPreviewWithSelectedCharacter())
+	if (!BeginFirstRoomEntryWithSelectedCharacter())
 	{
 		bStartRequested = false;
 		SetConfirmButtonText(mConfirmText);
