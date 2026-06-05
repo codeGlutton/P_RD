@@ -21,6 +21,9 @@ struct FTile
 {
 	GENERATED_BODY()
 
+	// @brief ATileMap이 타일 내부 액터 목록/블로킹 정보에 접근
+	friend class ATileMap;
+
 protected:
 	// @brief 제한된 레이어
 	UPROPERTY(meta = (Bitmask, BitmaskEnum = "/Script/P_RD.ETileLayerFlag"))
