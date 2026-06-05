@@ -53,7 +53,7 @@ struct FFrontendMapNodePoolEntry
  * @note UI 파트 추가 위젯
  * feature/create-srpg-framework-base 브랜치에는 FStage/FRoom과 방 전환 API가 있지만,
  * 이를 타이틀 화면에서 읽기 전용 월드맵으로 그리는 UMG 위젯은 없어서 UI/map 브랜치에서 추가했다.
- * 방 선택/입장 판단은 GameMode API로 돌려보내며, 실제 전환은 PM 브랜치의 RoomGameModeBase 흐름을 탄다.
+ * 방 선택/입장 판단은 GameMode API로 돌려보내며, 실제 전환은 PM 브랜치의 RoomTransitionSubsystem 흐름을 탄다.
  *
  * 현재 노드 안에 보이는 "행-열 + 룸 종류" 텍스트는 지도 데이터 배치와 RoomType 매핑을 확인하기 위한
  * 디버깅용 표시다. 최종 UI에서는 RoomType별 아이콘/이미지를 WBP 또는 공식 Stage/Room 표시 데이터에서
