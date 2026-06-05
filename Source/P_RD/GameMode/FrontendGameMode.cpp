@@ -3,19 +3,9 @@
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/PlayerController.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
-#include "UI/TitleMenuWidget.h"
 
 AFrontendGameMode::AFrontendGameMode()
 {
-	if (TSubclassOf<UUserWidget> TitleWidgetClass = LoadClass<UUserWidget>(nullptr, TEXT("/Game/UI/WBP_TitleMenu.WBP_TitleMenu_C")))
-	{
-		mHUDClass = TitleWidgetClass;
-	}
-	else
-	{
-		mHUDClass = UTitleMenuWidget::StaticClass();
-	}
-
 	mWorldWidgets.Empty();
 }
 
@@ -36,6 +26,7 @@ void AFrontendGameMode::BeginRoom()
 
 	if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
 	{
+		PlayerController->ActivateTouchInterface(nullptr);
 		PlayerController->SetShowMouseCursor(true);
 
 		FInputModeUIOnly InputMode;

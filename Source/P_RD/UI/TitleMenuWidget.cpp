@@ -3,21 +3,23 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
+#include "UI/CharacterSelectWidget.h"
 
 namespace
 {
 	constexpr int32 TitleMainScreenIndex = 0;
-
-	const FText TitleTextValue = NSLOCTEXT("TitleMenuWidget", "TitleText", "Rogue The Dice");
-	const FText StartTextValue = NSLOCTEXT("TitleMenuWidget", "StartText", "START");
-	const FText ContinueTextValue = NSLOCTEXT("TitleMenuWidget", "ContinueText", "CONTINUE");
-	const FText SettingsTextValue = NSLOCTEXT("TitleMenuWidget", "SettingsText", "SETTING");
-	const FText ReadyStatusText = NSLOCTEXT("TitleMenuWidget", "ReadyStatusText", "Ready");
-	const FText MainOnlyStatusText = NSLOCTEXT("TitleMenuWidget", "MainOnlyStatusText", "Title main screen only");
 }
 
 UTitleMenuWidget::UTitleMenuWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
+	, mTitleText(NSLOCTEXT("TitleMenuWidget", "TitleText", "Rogue The Dice"))
+	, mStartButtonText(NSLOCTEXT("TitleMenuWidget", "StartText", "START"))
+	, mContinueButtonText(NSLOCTEXT("TitleMenuWidget", "ContinueText", "CONTINUE"))
+	, mSettingsButtonText(NSLOCTEXT("TitleMenuWidget", "SettingsText", "SETTING"))
+	, mSettingsStatusText(NSLOCTEXT("TitleMenuWidget", "SettingsStatusText", "Settings"))
+	, mMainOnlyStatusText(NSLOCTEXT("TitleMenuWidget", "MainOnlyStatusText", "Title main screen only"))
+	, mCharacterSelectUnavailableText(NSLOCTEXT("TitleMenuWidget", "CharacterSelectUnavailableText", "Character select widget is not ready"))
+	, mBackButtonText(NSLOCTEXT("TitleMenuWidget", "BackText", "BACK"))
 {
 	SetVisibility(ESlateVisibility::Visible);
 }
@@ -25,6 +27,8 @@ UTitleMenuWidget::UTitleMenuWidget(const FObjectInitializer& ObjectInitializer)
 void UTitleMenuWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+
+	ValidateDesignerBindings();
 
 	if (StartButton != nullptr)
 	{
@@ -41,9 +45,19 @@ void UTitleMenuWidget::NativeConstruct()
 		SettingsButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
 	}
 
+	if (SettingsBackButton != nullptr)
+	{
+		SettingsBackButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsBackButtonClicked);
+	}
+
+	if (CharacterSelectWidget != nullptr)
+	{
+		CharacterSelectWidget->OnBackToMainRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleCharacterBackToMainRequested);
+	}
+
 	SyncMainText();
 	ShowMainScreen();
-	SetStatusText(ReadyStatusText);
+	SetStatusText(FText::GetEmpty());
 }
 
 void UTitleMenuWidget::NativeDestruct()
@@ -63,62 +77,185 @@ void UTitleMenuWidget::NativeDestruct()
 		SettingsButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
 	}
 
+	if (SettingsBackButton != nullptr)
+	{
+		SettingsBackButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsBackButtonClicked);
+	}
+
+	if (CharacterSelectWidget != nullptr)
+	{
+		CharacterSelectWidget->OnBackToMainRequested.RemoveDynamic(this, &UTitleMenuWidget::HandleCharacterBackToMainRequested);
+	}
+
 	Super::NativeDestruct();
+}
+
+void UTitleMenuWidget::ShowScreen(UWidget* Screen) const
+{
+	if (ScreenSwitcher == nullptr || Screen == nullptr)
+	{
+		if (ScreenSwitcher != nullptr && Screen == nullptr)
+		{
+			ScreenSwitcher->SetActiveWidgetIndex(TitleMainScreenIndex);
+		}
+		return;
+	}
+
+	ScreenSwitcher->SetActiveWidget(Screen);
 }
 
 void UTitleMenuWidget::ShowMainScreen() const
 {
-	if (ScreenSwitcher != nullptr)
+	ShowScreen(StartScreen);
+}
+
+void UTitleMenuWidget::ShowCharacterScreen()
+{
+	if (CharacterSelectWidget == nullptr)
 	{
-		ScreenSwitcher->SetActiveWidgetIndex(TitleMainScreenIndex);
+		SetStatusText(mCharacterSelectUnavailableText);
+		ShowScreen(CharacterScreen);
+		return;
 	}
+
+	CharacterSelectWidget->OpenCharacterSelect();
+	ShowScreen(CharacterScreen);
+}
+
+void UTitleMenuWidget::ShowSettingsScreen()
+{
+	if (SettingsScreen == nullptr)
+	{
+		ShowMainScreen();
+		SetStatusText(mMainOnlyStatusText);
+		return;
+	}
+
+	ShowScreen(SettingsScreen);
+	SetStatusText(mSettingsStatusText);
 }
 
 void UTitleMenuWidget::SyncMainText() const
 {
 	if (TitleText != nullptr)
 	{
-		TitleText->SetText(TitleTextValue);
+		TitleText->SetText(mTitleText);
 	}
 
 	if (StartButtonText != nullptr)
 	{
-		StartButtonText->SetText(StartTextValue);
+		StartButtonText->SetText(mStartButtonText);
 	}
 
 	if (ContinueButtonText != nullptr)
 	{
-		ContinueButtonText->SetText(ContinueTextValue);
+		ContinueButtonText->SetText(mContinueButtonText);
 	}
 
 	if (SettingsButtonText != nullptr)
 	{
-		SettingsButtonText->SetText(SettingsTextValue);
+		SettingsButtonText->SetText(mSettingsButtonText);
+	}
+
+	if (SettingsBackButtonText != nullptr)
+	{
+		SettingsBackButtonText->SetText(mBackButtonText);
 	}
 }
 
-void UTitleMenuWidget::SetStatusText(const FText& InText) const
+void UTitleMenuWidget::SetStatusText(const FText& /*InText*/) const
 {
 	if (StatusText != nullptr)
 	{
-		StatusText->SetText(InText);
+		StatusText->SetText(FText::GetEmpty());
+		StatusText->SetVisibility(ESlateVisibility::Collapsed);
 	}
+}
+
+void UTitleMenuWidget::ValidateDesignerBindings() const
+{
+	if (ScreenSwitcher == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: ScreenSwitcher is not connected."));
+	}
+
+	if (StartScreen == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: StartScreen is not connected."));
+	}
+
+	if (CharacterScreen == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: CharacterScreen is not connected."));
+	}
+
+	if (CharacterSelectWidget == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: CharacterSelectWidget is not connected. Place WBP_CharacterSelect inside WBP_TitleMenu."));
+	}
+
+	if (StartButton == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: StartButton is not connected."));
+	}
+
+	if (ContinueButton == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: ContinueButton is not connected."));
+	}
+
+	if (SettingsButton == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: SettingsButton is not connected."));
+	}
+
+	if (TitleText == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: TitleText is not connected."));
+	}
+
+	if (StartButtonText == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: StartButtonText is not connected."));
+	}
+
+	if (ContinueButtonText == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: ContinueButtonText is not connected."));
+	}
+
+	if (SettingsButtonText == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: SettingsButtonText is not connected."));
+	}
+
+	SetStatusText(FText::GetEmpty());
 }
 
 void UTitleMenuWidget::HandleStartButtonClicked()
 {
-	ShowMainScreen();
-	SetStatusText(MainOnlyStatusText);
+	ShowCharacterScreen();
 }
 
 void UTitleMenuWidget::HandleContinueButtonClicked()
 {
 	ShowMainScreen();
-	SetStatusText(MainOnlyStatusText);
+	SetStatusText(mMainOnlyStatusText);
 }
 
 void UTitleMenuWidget::HandleSettingsButtonClicked()
 {
+	ShowSettingsScreen();
+}
+
+void UTitleMenuWidget::HandleSettingsBackButtonClicked()
+{
 	ShowMainScreen();
-	SetStatusText(MainOnlyStatusText);
+	SetStatusText(FText::GetEmpty());
+}
+
+void UTitleMenuWidget::HandleCharacterBackToMainRequested()
+{
+	ShowMainScreen();
+	SetStatusText(FText::GetEmpty());
 }
