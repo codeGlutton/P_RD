@@ -1,0 +1,22 @@
+name: Auto Enable Auto-merge
+
+# PR이 열리거나 다시 열릴 때(또는 Draft 해제 시) auto-merge(머지 커밋)를 자동 활성화
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  enable-auto-merge:
+    runs-on: ubuntu-latest
+    # Draft PR은 제외
+    if: ${{ !github.event.pull_request.draft }}
+    steps:
+      - name: Enable auto-merge
+        run: gh pr merge "$PR_URL" --auto --merge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
