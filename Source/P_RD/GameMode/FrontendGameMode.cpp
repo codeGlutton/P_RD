@@ -361,11 +361,6 @@ bool AFrontendGameMode::HasActiveRun() const
 	return RunPersistData != nullptr && RunPersistData->IsActive();
 }
 
-bool AFrontendGameMode::CanSaveRun() const
-{
-	return HasActiveRun() && !bStartRunRequested;
-}
-
 bool AFrontendGameMode::CanAbandonRun() const
 {
 	return HasActiveRun() && !bStartRunRequested;
@@ -375,7 +370,7 @@ bool AFrontendGameMode::GetRunControlView(FFrontendRunControlView& OutView) cons
 {
 	OutView = FFrontendRunControlView();
 	OutView.bHasActiveRun = HasActiveRun();
-	OutView.bCanSaveRun = CanSaveRun();
+	OutView.bCanSaveRun = false;
 	OutView.bCanAbandonRun = CanAbandonRun();
 
 	const URunPersistData* RunPersistData = GetRunPersistData();
@@ -407,24 +402,6 @@ bool AFrontendGameMode::GetRunControlState(OUT int32& RowIndex, OUT int32& Colum
 	ColumnIndex = RunView.mColumn;
 	PlayerLevel = RunView.mPlayerLevel;
 	Difficulty = RunView.mDifficulty;
-	return true;
-}
-
-bool AFrontendGameMode::SaveRunFromTitleAsync(FAsyncSaveGameToSlotDelegate Callback) const
-{
-	if (!CanSaveRun())
-	{
-		ShowTitleMessage(FrontendText(TEXT("MissingStage"), TEXT("Map is not ready")));
-		return false;
-	}
-
-	USaveGameSubsystem* SaveGameSubsystem = GetGameInstance()->GetSubsystem<USaveGameSubsystem>();
-	if (SaveGameSubsystem == nullptr)
-	{
-		return false;
-	}
-
-	SaveGameSubsystem->SaveRunAsync(MoveTemp(Callback));
 	return true;
 }
 
@@ -480,7 +457,8 @@ bool AFrontendGameMode::SelectMapRoom(int32 RowIndex, int32 ColumnIndex)
 
 	mSelectedMapRoomRow = RowIndex;
 	mSelectedMapRoomColumn = ColumnIndex;
-	return true;
+	bSelectedMapRoomPreloadRequested = false;
+	return PreloadSelectedMapRoom();
 }
 
 bool AFrontendGameMode::EnterSelectedMapRoom()
@@ -516,14 +494,19 @@ bool AFrontendGameMode::EnterSelectedMapRoom()
 		return false;
 	}
 
-	ShowTitleMessage(FrontendText(TEXT("LoadingSelectedRoom"), TEXT("Loading selected room")));
+	if (!bSelectedMapRoomPreloadRequested)
+	{
+		ShowTitleMessage(FrontendText(TEXT("SelectedRoomNotPreloaded"), TEXT("Selected room is not preloaded")));
+		return false;
+	}
+
 	URoomTransitionSubsystem* RoomTransitionSubsystem = GetGameInstance()->GetSubsystem<URoomTransitionSubsystem>();
 	if (RoomTransitionSubsystem == nullptr)
 	{
 		return false;
 	}
 
-	RoomTransitionSubsystem->PreloadRoomAsync(mSelectedMapRoomRow, mSelectedMapRoomColumn);
+	ShowTitleMessage(FrontendText(TEXT("EnteringSelectedRoom"), TEXT("Entering selected room")));
 	RoomTransitionSubsystem->TransitLoadedRoomAsync();
 	return true;
 }
@@ -608,11 +591,31 @@ void AFrontendGameMode::ClearSelectedMapRoom()
 {
 	mSelectedMapRoomRow = INDEX_NONE;
 	mSelectedMapRoomColumn = INDEX_NONE;
+	bSelectedMapRoomPreloadRequested = false;
 }
 
 bool AFrontendGameMode::HasSelectedMapRoom() const
 {
 	return mSelectedMapRoomRow != INDEX_NONE && mSelectedMapRoomColumn != INDEX_NONE;
+}
+
+bool AFrontendGameMode::PreloadSelectedMapRoom()
+{
+	if (!HasSelectedMapRoom())
+	{
+		return false;
+	}
+
+	URoomTransitionSubsystem* RoomTransitionSubsystem = GetGameInstance()->GetSubsystem<URoomTransitionSubsystem>();
+	if (RoomTransitionSubsystem == nullptr)
+	{
+		return false;
+	}
+
+	ShowTitleMessage(FrontendText(TEXT("PreloadingSelectedRoom"), TEXT("Preloading selected room")));
+	RoomTransitionSubsystem->PreloadRoomAsync(mSelectedMapRoomRow, mSelectedMapRoomColumn);
+	bSelectedMapRoomPreloadRequested = true;
+	return true;
 }
 
 bool AFrontendGameMode::StartRunPreviewWithPlayerUnit(FPrimaryAssetId PlayerUnitId)

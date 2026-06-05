@@ -143,6 +143,9 @@ struct P_RD_API FFrontendMapRoomView
  *
  * Widget은 이 값을 보고 버튼 활성화, 시작 위치 스크롤 같은 표시만 결정한다.
  * 실제 저장/포기/전환 명령은 FrontendGameMode 또는 RoomGameModeBase/Subsystem API를 통해 수행한다.
+ * PM 피드백 기준으로 Run 저장은 방 진입 시 RoomGameModeBase에서 자동 처리하므로,
+ * 타이틀/지도 화면에서는 Run 저장 버튼을 활성화하지 않는다. 옵션 저장처럼 UserPersistData에 속하는
+ * 설정 저장 API가 생기면 그때 별도 View 값으로 분리한다.
  *
  * @note UI 파트 추가 DTO
  * PM 브랜치의 URunPersistData/GameProfileSubsystem/SaveGameSubsystem 상태를 타이틀 UI가 직접 들여다보지
@@ -156,6 +159,7 @@ struct P_RD_API FFrontendRunControlView
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	bool bHasActiveRun = false;
 
+	// 타이틀/지도에서는 Run 저장을 제공하지 않으므로 현재 false로 유지한다.
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	bool bCanSaveRun = false;
 

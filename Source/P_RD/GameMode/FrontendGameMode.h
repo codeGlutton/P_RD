@@ -147,15 +147,6 @@ public:
 	bool HasActiveRun() const;
 
 	/**
-	 * @brief 타이틀/세팅 UI에서 지금 런 저장 버튼을 사용할 수 있는지 조회한다.
-	 * @return 저장 버튼을 활성화할 수 있으면 true
-	 *
-	 * @note UI 파트 추가 조회 API
-	 */
-	UFUNCTION(Category = Title, BlueprintPure)
-	bool CanSaveRun() const;
-
-	/**
 	 * @brief 타이틀/세팅 UI에서 지금 런 포기 버튼을 사용할 수 있는지 조회한다.
 	 * @return 런 포기 버튼을 활성화할 수 있으면 true
 	 *
@@ -190,16 +181,6 @@ public:
 	bool GetRunControlState(OUT int32& RowIndex, OUT int32& ColumnIndex, OUT int32& PlayerLevel, OUT int32& Difficulty) const;
 
 	/**
-	 * @brief 타이틀/세팅 UI에서 런 저장을 요청한다.
-	 * @param Callback 비동기 저장 완료 콜백
-	 * @return 저장 요청을 보낼 수 있으면 true
-	 *
-	 * @note UI 파트 추가 command API
-	 * 실제 저장은 PM 브랜치의 SaveGameSubsystem 흐름을 사용한다.
-	 */
-	bool SaveRunFromTitleAsync(FAsyncSaveGameToSlotDelegate Callback) const;
-
-	/**
 	 * @brief 타이틀/세팅 UI에서 현재 런 포기를 요청한다.
 	 * @return 런 포기 처리가 가능하면 true
 	 *
@@ -221,6 +202,9 @@ public:
 	 *
 	 * 공식 Run 진행 API가 별도로 생기면 이 함수의 연결 검증은 그 API로 위임해야 한다. 지금은
 	 * Stage 생성기가 만든 "현재 룸 -> 다음 룸 column" 연결을 사용하는 최소 adapter다.
+	 *
+	 * 선택이 성공하면 RoomTransitionSubsystem::PreloadRoomAsync()만 요청한다.
+	 * 실제 전환은 EnterSelectedMapRoom()에서 TransitLoadedRoomAsync()로 분리해 호출한다.
 	 */
 	UFUNCTION(Category = Title, BlueprintCallable)
 	bool SelectMapRoom(int32 RowIndex, int32 ColumnIndex);
@@ -230,8 +214,8 @@ public:
 	 * @return 입장 요청을 시작했으면 true
 	 *
 	 * @note UI wrapper + PM 전환 API 사용
-	 * 함수 이름은 UI 파트가 지도 ENTER 버튼용으로 추가한 임시 facade다. 실제 방 preload/transition은
-	 * PM 브랜치의 URoomTransitionSubsystem::PreloadRoomAsync()와 TransitLoadedRoomAsync()를 호출한다.
+	 * 함수 이름은 UI 파트가 지도 ENTER 버튼용으로 추가한 임시 facade다. 방 preload는 SelectMapRoom()에서
+	 * 먼저 요청하고, 이 함수는 PM 브랜치의 URoomTransitionSubsystem::TransitLoadedRoomAsync()만 호출한다.
 	 *
 	 * 선택 좌표는 FrontendGameMode가 임시로 보관하지만, 실제 현재 룸 변경은 PM 브랜치의
 	 * RoomTransitionSubsystem::OnTransitNextRoom()에서 수행한다. UI wrapper가 RunPersistData의 현재 룸을
@@ -267,6 +251,7 @@ private:
 	bool OpenTitleCharacterSelect();
 	void ClearSelectedMapRoom();
 	bool HasSelectedMapRoom() const;
+	bool PreloadSelectedMapRoom();
 	/**
 	 * @brief 선택 캐릭터로 RunPersistData와 Stage preview 생성을 시작한다.
 	 * @param PlayerUnitId 선택한 플레이어 유닛 PrimaryAssetId
@@ -300,4 +285,5 @@ private:
 	TSharedPtr<FStreamableHandle> mPlayerUnitSpawnDataPreloadHandle = nullptr;
 	int32 mSelectedMapRoomRow = INDEX_NONE;
 	int32 mSelectedMapRoomColumn = INDEX_NONE;
+	bool bSelectedMapRoomPreloadRequested = false;
 };

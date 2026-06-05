@@ -160,18 +160,18 @@ private:
 	 * @details
 	 * 저장된 런이 없으면 START / SETTING만 보이고,
 	 * 저장된 런이 있으면 CONTINUE / NEW START / SETTING 구성을 보여준다.
-	 * 버튼 배치는 WBP_TitleMenu가 맡고, C++은 기존 SaveGameSubsystem::LoadRun() 결과와
+	 * 버튼 배치는 WBP_TitleMenu가 맡고, C++은 이미 복구된 PersistentData에서
 	 * 지도 View 생성 가능 여부만 보고 표시 상태를 바꾼다.
 	 */
 	void RefreshMainMenuState() const;
 
 	/**
-	 * @brief 기존 저장 런을 로드한 뒤 지도 화면으로 보여줄 수 있는지 확인함
+	 * @brief 현재 복구된 Run 상태를 지도 화면으로 보여줄 수 있는지 확인함
 	 *
 	 * @details
-	 * Subsystem은 UI 파트 책임이 아니므로 저장 존재 여부 확인 API를 새로 추가하지 않는다.
-	 * PM 브랜치에 이미 있는 SaveGameSubsystem::LoadRun()을 사용하고,
-	 * 로드 후 FrontendGameMode가 지도 View를 만들 수 있으면 이어가기 가능한 상태로 본다.
+	 * 저장 파일 Load는 시네마틱 월드나 초기 부트스트랩 단계에서 한 번 처리되어야 한다.
+	 * 타이틀 UI는 파일을 직접 Load하지 않고, FrontendGameMode가 현재 PersistentData로 지도 View를
+	 * 만들 수 있으면 이어가기 가능한 상태로 본다.
 	 *
 	 * @return 지도 화면으로 이어갈 수 있는 Run 상태가 있으면 true
 	 */

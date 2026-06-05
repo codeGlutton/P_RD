@@ -3,10 +3,8 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
-#include "Engine/GameInstance.h"
 #include "Frontend/FrontendViewTypes.h"
 #include "GameMode/FrontendGameMode.h"
-#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "UI/CharacterSelectWidget.h"
 #include "UI/FrontendMapWidget.h"
 
@@ -262,14 +260,6 @@ void UTitleMenuWidget::RefreshMainMenuState() const
 
 bool UTitleMenuWidget::TryLoadRunForMapScreen() const
 {
-	if (UGameInstance* GameInstance = GetGameInstance())
-	{
-		if (USaveGameSubsystem* SaveGameSubsystem = GameInstance->GetSubsystem<USaveGameSubsystem>())
-		{
-			SaveGameSubsystem->LoadRun();
-		}
-	}
-
 	TArray<FFrontendMapRoomView> Rooms;
 	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
 	{
