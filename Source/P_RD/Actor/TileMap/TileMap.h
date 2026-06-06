@@ -10,6 +10,7 @@
 #include "RDMinimal.h"
 #include "GameFramework/Actor.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
+#include "Actor/TileMap/Tile.h"
 #include "Actor/TileMap/TileLayer.h"
 #include "TileMap.generated.h"
 
@@ -159,6 +160,58 @@ public:
 	 */
 	bool IsValidIndex(const FTileIndex& TileIndex) const;
 
+	/* 타일 액터 조회 */
+	/**
+	 * @brief 타일에 있는 액터들을 레이어로 필터해 반환 (코어)
+	 * @param[in] TileIndex   : 조회할 타일
+	 * @param[in] LayerFilter : 포함할 레이어 (All이면 전체)
+	 * @return TArray<TScriptInterface<ITileActor>> : 해당 타일의 액터 목록 (범위 밖이면 빈 배열)
+	 */
+	TArray<TScriptInterface<ITileActor>> GetActorsOnTile(const FTileIndex& TileIndex, ETileLayerFlag LayerFilter) const;
+
+	/**
+	 * @brief 코어의 타입 지정 버전 — T로 캐스트되는 액터만 배열로 반환
+	 * @details T가 반환 타입에만 등장해 추론 불가 → 호출 시 <T> 명시해야 이 버전이 선택됨
+	 * @param[in] TileIndex   : 조회할 타일
+	 * @param[in] LayerFilter : 포함할 레이어 (기본 All — 타입 캐스트가 1차 필터라 보통 생략)
+	 * @return TArray<T*> : T로 캐스트된 액터 목록
+	 */
+	template<typename T>
+	TArray<T*> GetActorsOnTile(const FTileIndex& TileIndex, ETileLayerFlag LayerFilter = ETileLayerFlag::All) const
+	{
+		TArray<T*> Result;
+		// 코어(비템플릿) 결과를 타입캐스트해 수집
+		for (const TScriptInterface<ITileActor>& Actor : GetActorsOnTile(TileIndex, LayerFilter))
+		{
+			if (T* Typed = Cast<T>(Actor.GetObject()))
+			{
+				Result.Add(Typed);
+			}
+		}
+		return Result;
+	}
+
+	/**
+	 * @brief 타일 위 T 타입 액터 하나 반환 (없으면 nullptr)
+	 * @details 타일당 1개 보장되는 액터(예: 유닛)용. 여러 개 가능하면 배열 버전 사용.
+	 * @param[in] TileIndex   : 조회할 타일
+	 * @param[in] LayerFilter : 포함할 레이어 (기본 All)
+	 * @return T* : T로 캐스트된 첫 액터 또는 nullptr
+	 */
+	template<typename T>
+	T* GetActorOnTile(const FTileIndex& TileIndex, ETileLayerFlag LayerFilter = ETileLayerFlag::All) const
+	{
+		// 코어 결과 중 T로 캐스트되는 첫 액터 반환
+		for (const TScriptInterface<ITileActor>& Actor : GetActorsOnTile(TileIndex, LayerFilter))
+		{
+			if (T* Typed = Cast<T>(Actor.GetObject()))
+			{
+				return Typed;
+			}
+		}
+		return nullptr;
+	}
+
 protected:
 	// @brief 타일맵 가로 길이 (X 방향 타일 개수)
 	UPROPERTY(EditAnywhere, Category = "TileMap", meta = (DisplayName = "Width", ClampMin = "1"))
@@ -194,4 +247,21 @@ private:
 	 * @brief 현재 Width/Height/TileSize에 맞춰 타일 인스턴스를 모두 재생성
 	 */
 	void RebuildTileInstances();
+
+	/**
+	 * @brief 타일 2차원 인덱스를 저장소/인스턴스의 1차원 인덱스로 변환 (y*Width + x)
+	 * @return int32 : 유효 좌표면 1차원 인덱스, 범위 밖이면 INDEX_NONE
+	 */
+	int32 TileIndexToLinearIndex(const FTileIndex& TileIndex) const;
+
+	/**
+	 * @brief 인덱스로 타일 조회
+	 * @return const FTile* : 범위 밖이면 nullptr
+	 */
+	const FTile* GetTile(const FTileIndex& TileIndex) const;
+
+	// @brief 타일 저장소 (크기 Width*Height, 인덱스 = y*Width + x)
+	// FTile이 TScriptInterface<ITileActor>(UObject 참조)를 들고 있어 GC 추적용 UPROPERTY() 필수 (제거 금지)
+	UPROPERTY()
+	TArray<FTile> mTiles;
 };
