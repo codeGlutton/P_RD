@@ -1,12 +1,10 @@
 #include "GameMode/FrontendGameMode.h"
 
 #include "Blueprint/UserWidget.h"
-#include "DataAsset/BundleType.h"
 #include "DataAsset/PrimaryAssetType.h"
 #include "DataAsset/StageSpawnData/StageLevelType.h"
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
 #include "Engine/AssetManager.h"
-#include "Engine/StreamableManager.h"
 #include "GameFramework/PlayerController.h"
 #include "PCGStage/Room.h"
 #include "PCGStage/Stage.h"
@@ -235,13 +233,11 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 		return false;
 	}
 
-	bool bHasUnloadedData = false;
 	for (const FPrimaryAssetId& PlayerUnitId : PlayerUnitIds)
 	{
 		const UStaticPlayerUnitSpawnData* PlayerUnitData = GetLoadedPlayerUnitSpawnData(PlayerUnitId);
 		if (PlayerUnitData == nullptr)
 		{
-			bHasUnloadedData = true;
 			continue;
 		}
 
@@ -267,11 +263,6 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 		OutOptions.Add(MoveTemp(NewOption));
 	}
 
-	if (bHasUnloadedData)
-	{
-		const_cast<AFrontendGameMode*>(this)->RequestPlayerUnitSpawnDataPreload();
-	}
-
 	if (!HasCharacterOptionForJob(OutOptions, EPlayerJobType::Archer))
 	{
 		AppendLockedCharacterOption(OutOptions, EPlayerJobType::Archer);
@@ -282,11 +273,6 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 	}
 
 	return !OutOptions.IsEmpty();
-}
-
-bool AFrontendGameMode::IsCharacterOptionsLoading() const
-{
-	return mPlayerUnitSpawnDataPreloadHandle.IsValid() && !mPlayerUnitSpawnDataPreloadHandle->HasLoadCompleted();
 }
 
 bool AFrontendGameMode::PrepareRunMapWithPlayerUnit(FPrimaryAssetId PlayerUnitId)
@@ -560,46 +546,6 @@ void AFrontendGameMode::LoadOrCreateFrontendUserProfile()
 	if (SaveGameSubsystem != nullptr)
 	{
 		SaveGameSubsystem->SaveUser();
-	}
-}
-
-void AFrontendGameMode::RequestPlayerUnitSpawnDataPreload()
-{
-	if (bPlayerUnitSpawnDataPreloadRequested || IsCharacterOptionsLoading())
-	{
-		return;
-	}
-
-	TArray<FPrimaryAssetId> PlayerUnitIds;
-	if (!GetPlayerUnitIds(OUT PlayerUnitIds))
-	{
-		return;
-	}
-
-	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
-	if (AssetManager == nullptr)
-	{
-		return;
-	}
-
-	bPlayerUnitSpawnDataPreloadRequested = true;
-	TArray<FName> Bundles = { BUNDLE_UI };
-	FAssetManagerLoadParams LoadParams;
-	LoadParams.OnComplete.BindUObject(this, &AFrontendGameMode::HandlePlayerUnitSpawnDataPreloaded);
-	mPlayerUnitSpawnDataPreloadHandle = AssetManager->PreloadPrimaryAssets(PlayerUnitIds, Bundles, true, MoveTemp(LoadParams));
-}
-
-void AFrontendGameMode::HandlePlayerUnitSpawnDataPreloaded(TSharedPtr<FStreamableHandle> AssetHandle)
-{
-	bPlayerUnitSpawnDataPreloadRequested = false;
-	mPlayerUnitSpawnDataPreloadHandle = AssetHandle;
-
-	if (UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())
-	{
-		if (UTitleMenuWidget* TitleMenuWidget = WorldWidgetSubsystem->GetHUD<UTitleMenuWidget>())
-		{
-			TitleMenuWidget->RefreshCharacterOptionsFromGameMode();
-		}
 	}
 }
 

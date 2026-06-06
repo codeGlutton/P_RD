@@ -52,7 +52,7 @@ public:
 	/** @brief START로 캐릭터 선택 화면에 들어올 때 목록/선택/상태를 새로 맞춤 */
 	void OpenCharacterSelect();
 
-	/** @brief GameMode의 캐릭터 DataAsset preload 완료 후 목록을 다시 그림 */
+	/** @brief GameMode 기준 캐릭터 후보 목록을 다시 그림 */
 	void RefreshCharacterOptionsFromGameMode();
 
 public:

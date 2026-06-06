@@ -155,9 +155,8 @@ void UCharacterSelectWidget::RefreshCharacterOptions()
 	{
 		RebuildCharacterCards();
 		ClearSelectedCharacter();
-		const bool bIsLoading = FrontendGameMode != nullptr && FrontendGameMode->IsCharacterOptionsLoading();
-		SetStatusText(bIsLoading ? mLoadingStatusText : mNoCharacterStatusText);
-		SetConfirmButtonText(bIsLoading ? mLoadingStatusText : mConfirmText);
+		SetStatusText(mNoCharacterStatusText);
+		SetConfirmButtonText(mConfirmText);
 		return;
 	}
 

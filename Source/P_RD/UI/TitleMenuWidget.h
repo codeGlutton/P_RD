@@ -65,7 +65,7 @@ public:
 	 */
 	UTitleMenuWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
-	/** @brief GameMode의 캐릭터 DataAsset preload 완료 후 캐릭터 선택 화면을 다시 그림 */
+	/** @brief GameMode 기준 캐릭터 후보 목록을 캐릭터 선택 화면에 다시 반영 */
 	void RefreshCharacterOptionsFromGameMode();
 
 	/** @brief GameMode의 타이틀 START API가 요청한 캐릭터 선택 화면 전환을 수행 */

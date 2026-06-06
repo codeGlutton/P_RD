@@ -14,8 +14,6 @@
 
 #include "FrontendGameMode.generated.h"
 
-struct FStreamableHandle;
-
 /**
  * @brief 타이틀/캐릭터 선택/지도 팝업을 처리하는 프론트엔드 GameMode
  *
@@ -90,22 +88,6 @@ public:
 	 */
 	UFUNCTION(Category = Title, BlueprintCallable)
 	bool GetCharacterOptions(TArray<FFrontendCharacterOption>& OutOptions) const;
-
-	/**
-	 * @brief 캐릭터 선택용 DataAsset preload가 진행 중인지 확인한다.
-	 * @return preload 진행 중이면 true
-	 *
-	 * @note UI 파트 추가 API
-	 * 캐릭터 선택 화면이 로딩/빈 상태를 표시하기 위한 조회용 함수다.
-	 *
-	 * 현재 PlayerUnit UI DataAsset preload는 FrontendGameMode 안에 남아 있는 임시 연결이다.
-	 * PM 피드백 기준의 최종 구조는 시네마틱 월드에서 타이틀 월드로 넘어갈 때
-	 * StaticTitleRoomSpawnData에 적힌 프론트 필요 에셋을 RoomTransitionSubsystem이 preload하는 흐름이다.
-	 * 그 구조가 들어오면 이 조회 함수와 RequestPlayerUnitSpawnDataPreload()는 제거하거나
-	 * PM preload 완료 상태를 읽는 adapter로 축소해야 한다.
-	 */
-	UFUNCTION(Category = Title, BlueprintPure)
-	bool IsCharacterOptionsLoading() const;
 
 	/**
 	 * @brief 선택한 플레이어 유닛으로 런을 만들고 첫 방 입장을 준비한다.
@@ -236,26 +218,6 @@ private:
 	 * 이 fallback은 그 흐름으로 대체되어야 한다.
 	 */
 	void LoadOrCreateFrontendUserProfile();
-	/**
-	 * @brief 캐릭터 선택에 필요한 PlayerUnit UI DataAsset을 임시로 preload한다.
-	 *
-	 * @details
-	 * 이 함수는 최종 소유 구조가 아니라, 아직 시네마틱 -> 타이틀 진입 preload와
-	 * StaticTitleRoomSpawnData의 프론트 에셋 목록이 준비되기 전까지 캐릭터 선택 화면을 검증하기 위한
-	 * 임시 보강이다.
-	 *
-	 * PM 구조가 완성되면 FrontendGameMode가 AssetManager에서 PlayerUnit 목록을 직접 고르고 preload하는
-	 * 책임을 내려놓고, TitleRoom DataAsset/전환 시스템이 이미 준비한 결과만 읽어 UI에 전달해야 한다.
-	 */
-	void RequestPlayerUnitSpawnDataPreload();
-	/**
-	 * @brief 임시 PlayerUnit UI preload 완료 후 캐릭터 선택 화면을 다시 그리게 한다.
-	 *
-	 * @note 임시 preload callback
-	 * 최종적으로는 StaticTitleRoomSpawnData 기반 preload 완료 시점이 프론트 진입 전에 보장되어야 하므로,
-	 * FrontendGameMode가 직접 로드 완료 callback을 들고 UI를 갱신하는 구조는 제거 대상이다.
-	 */
-	void HandlePlayerUnitSpawnDataPreloaded(TSharedPtr<FStreamableHandle> AssetHandle);
 	bool OpenTitleCharacterSelect();
 	void ClearSelectedMapRoom();
 	bool HasSelectedMapRoom() const;
@@ -280,8 +242,6 @@ private:
 
 private:
 	bool bStartRunRequested = false;
-	bool bPlayerUnitSpawnDataPreloadRequested = false;
-	TSharedPtr<FStreamableHandle> mPlayerUnitSpawnDataPreloadHandle = nullptr;
 	int32 mSelectedMapRoomRow = INDEX_NONE;
 	int32 mSelectedMapRoomColumn = INDEX_NONE;
 	bool bSelectedMapRoomPreloadRequested = false;
