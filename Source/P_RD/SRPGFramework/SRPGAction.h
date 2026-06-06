@@ -1,6 +1,6 @@
 ﻿/*****************************************************************//**
  * @file   SRPGAction.h
- * @brief  전투 상황마다 활용되는 Context 객체 구현 헤더 
+ * @brief  사용자 입력에 따른 정해진 SRPG 행동 객체 구현 헤더
  * @author 모호재
  * @date   2026-04-28
  *********************************************************************/
@@ -12,6 +12,7 @@
 
 class AUnit;
 struct FSRPGAction;
+struct FSRPGActionLock;
 
 /**
  * @brief  SRPG 행동을 제작하기 위해 요구되는 절차 처리 일회성 객체
@@ -23,24 +24,30 @@ struct FSRPGAction;
 struct FSRPGActionBuilder
 {
 	friend struct FSRPGTurnContext;
-	using ActionType = FSRPGAction;
 
-protected:
-	FSRPGActionBuilder() = default;
+public:
 	virtual ~FSRPGActionBuilder() = default;
 
 protected:
 	void InitBuilder(TSharedRef<FSRPGTurnContext> Owner, AUnit* Instigator);
 
-	virtual TSharedPtr<FSRPGAction> BuildAction() = 0;
-	virtual void UnbuildAction() = 0;
+	virtual void BuildAction(OUT TSharedPtr<FSRPGAction>& Action) = 0;
+	virtual void CancelAction() = 0;
+
+protected:
+	virtual ESRPGActionBuildMode GetBuildMode() const = 0;
+
+public:
+	UWorld* GetWorld() const;
+	TWeakPtr<FSRPGTurnContext> GetOwner() const;
+	AUnit* GetInstigator() const;
 
 protected:
 	TWeakPtr<FSRPGTurnContext> mOwner;
 	TObjectPtr<AUnit> mInstigator;
 
-protected:
-	bool mIsExpired = false;
+private:
+	TUniquePtr<FSRPGActionLock> mLock;
 };
 
 /**
@@ -53,7 +60,7 @@ struct FSRPGAction : public TSharedFromThis<FSRPGAction>
 
 protected:
 	FSRPGAction() = default;
-	virtual ~FSRPGAction() = default;
+	virtual ~FSRPGAction()= default;
 
 protected:
 	void InitAction(TSharedRef<FSRPGTurnContext> Owner, AUnit* Instigator);
@@ -66,7 +73,7 @@ protected:
 	 * 액션 종료와 함께 턴 종료를 강제하는 액션인지 여부
 	 * @return 턴 종료를 강제하는 액션 여부
 	 */
-	virtual bool IsTurnEndingAction() const;
+	virtual bool IsTurnEndingAction() const = 0;
 
 protected:
 	void EvaluateActionEndState(bool ForceAbort = false);

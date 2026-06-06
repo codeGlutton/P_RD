@@ -6,28 +6,48 @@
 
 #include "FunctionLibrary/GASTargetFunctionLibrary.h"
 
-TSharedPtr<FSRPGAction> FSRPGTurnContext::BuildAction(TSharedPtr<FSRPGActionBuilder> Builder)
+FSRPGActionLock::FSRPGActionLock(TSharedPtr<FSRPGTurnContext> TurnContext) : mTurnContext(TurnContext)
 {
-	checkf(Builder->mIsExpired == false, TEXT("만기된 빌더. 재사용 불가"));
-
-	checkf(mPhase == ESRPGTurnPhase::ActionBuild, TEXT("액션 빌드 절차 오류"));
-	mPhase = ESRPGTurnPhase::ActionSelect;
-
-	TSharedPtr<FSRPGAction> NewAction = Builder->BuildAction();
-	Builder->mIsExpired = true;
-
-	return NewAction;
+	if (TurnContext != nullptr)
+	{
+		checkf(TurnContext->mPhase == ESRPGTurnPhase::ActionSelect, TEXT("액션 선택 대기 중에만 락 가능"));
+		TurnContext->mPhase = ESRPGTurnPhase::ActionLock;
+	}
 }
 
-void FSRPGTurnContext::UnbuildAction(TSharedPtr<FSRPGActionBuilder> Builder)
+FSRPGActionLock::~FSRPGActionLock()
 {
-	checkf(Builder->mIsExpired == false, TEXT("만기된 빌더. 재사용 불가"));
+	TSharedPtr<FSRPGTurnContext> TurnContext = mTurnContext.Pin();
+	if (TurnContext != nullptr)
+	{
+		checkf(TurnContext->mPhase == ESRPGTurnPhase::ActionLock, TEXT("액션 락 중에만 언락 가능"));
+		TurnContext->mPhase = ESRPGTurnPhase::ActionSelect;
+	}
+}
 
-	checkf(mPhase == ESRPGTurnPhase::ActionBuild, TEXT("액션 빌드 절차 오류"));
-	mPhase = ESRPGTurnPhase::ActionSelect;
+void FSRPGTurnContext::CompleteActionBuild(TUniquePtr<FSRPGActionBuilder>&& Builder)
+{
+	if (Builder == nullptr)
+	{
+		UE_LOG(LogSRPGCombat, Log, TEXT("등록할 Action 객체 nullptr"));
+		return;
+	}
 
-	Builder->UnbuildAction();
-	Builder->mIsExpired = true;
+	TSharedPtr<FSRPGAction> NewAction;
+	Builder->BuildAction(NewAction);
+
+	PushAction(NewAction);
+}
+
+void FSRPGTurnContext::CancelActionBuild(TUniquePtr<FSRPGActionBuilder>&& Builder)
+{
+	if (Builder == nullptr)
+	{
+		UE_LOG(LogSRPGCombat, Log, TEXT("취소할 Action 객체 nullptr"));
+		return;
+	}
+
+	Builder->CancelAction();
 }
 
 void FSRPGTurnContext::PushAction(TSharedPtr<FSRPGAction> NewAction)

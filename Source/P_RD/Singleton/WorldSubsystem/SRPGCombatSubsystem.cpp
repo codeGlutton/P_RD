@@ -189,7 +189,7 @@ int32 USRPGCombatSubsystem::UnregisterTurnsImmediately(const AUnit* Owner)
 			// 현재 진행 중인 턴을 삭제하게 되어 노드 전환이 필요한지 여부
 			const bool NeedToChangeTurnContext = mCurTurnContextNode->GetValue() == CurTurnContext;
 
-			auto* NextNode = mTurnContexts.RemoveNode(CurNode);
+			NextNode = mTurnContexts.RemoveNode(CurNode);
 			if (NeedToChangeTurnContext == true)
 			{
 				mCurTurnContextNode = NextNode;
