@@ -12,9 +12,6 @@
 
 #include "FunctionLibrary/GASTargetFunctionLibrary.h"
 
-#include "GameFramework/PlayerStart.h"
-#include "Kismet/GameplayStatics.h"
-
 DEFINE_LOG_CATEGORY(LogSRPGCombat)
 
 void USRPGCombatSubsystem::Tick(float DeltaTime)
@@ -278,43 +275,17 @@ void USRPGCombatSubsystem::SpawnTileMap()
 {
 	checkf(mTileMap == nullptr, TEXT("이미 타일 존재"));
 
-	ARDWorldSettings* WorldSettings = Cast<ARDWorldSettings>(GetWorld()->GetWorldSettings());
-	FTransform RoomStartTransform = FTransform::Identity;
-	bool bHasRoomStartTransform = false;
+	UWorld* World = GetWorld();
+	checkf(World != nullptr, TEXT("월드 nullptr"));
 
-	if (WorldSettings != nullptr)
-	{
-		if (AActor* RoomStartPoint = WorldSettings->GetRoomStartPoint())
-		{
-			RoomStartTransform = RoomStartPoint->GetTransform();
-			bHasRoomStartTransform = true;
-		}
-		else
-		{
-			UE_LOG(LogSRPGCombat, Warning, TEXT("RDWorldSettings has no room start point. Falling back to PlayerStart."));
-		}
-	}
-	else
-	{
-		UE_LOG(LogSRPGCombat, Warning, TEXT("RDWorldSettings is not configured. Falling back to PlayerStart."));
-	}
+	const ARDWorldSettings* WorldSettings = Cast<ARDWorldSettings>(World->GetWorldSettings());
+	checkf(WorldSettings != nullptr, TEXT("RDWorldSettings nullptr"));
 
-	if (!bHasRoomStartTransform)
-	{
-		if (AActor* PlayerStart = UGameplayStatics::GetActorOfClass(GetWorld(), APlayerStart::StaticClass()))
-		{
-			RoomStartTransform = PlayerStart->GetTransform();
-			bHasRoomStartTransform = true;
-		}
-	}
-
-	if (!bHasRoomStartTransform)
-	{
-		UE_LOG(LogSRPGCombat, Warning, TEXT("No PlayerStart found. Spawning tile map at identity transform."));
-	}
+	AActor* RoomStartPoint = WorldSettings->GetRoomStartPoint();
+	checkf(RoomStartPoint != nullptr, TEXT("RoomStartPoint nullptr"));
 
 	// 타일맵 스폰
-	mTileMap = GetWorld()->SpawnActor<ATileMap>(ATileMap::StaticClass(), RoomStartTransform);
+	mTileMap = World->SpawnActor<ATileMap>(ATileMap::StaticClass(), RoomStartPoint->GetTransform());
 }
 
 void USRPGCombatSubsystem::RegisterPlayerUnit(AUnit* PlayerUnit, const FTileTransform& Transform)
