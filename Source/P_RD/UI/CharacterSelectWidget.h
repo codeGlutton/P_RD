@@ -35,7 +35,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCharacterSelectStatusChangedDelegat
  * 이 클래스는 GameMode에서 캐릭터 후보를 받아 카드 WBP를 만들고 선택/Confirm 처리만 한다.
  *
  * 실제 배치는 WBP_CharacterSelect에 있다.
- * C++은 CharacterCardContainer, ConfirmButton, SelectedCharacterNameText 같은 이름의 위젯을 받아서
+ * C++은 mCharacterCardContainer, mConfirmButton, mSelectedCharacterNameText 같은 이름의 위젯을 받아서
  * 값과 이벤트만 연결한다.
  *
  * @note 캐릭터 수가 3명에서 5명으로 늘어나도 numbered 함수는 추가하지 않는다.
@@ -102,43 +102,43 @@ private:
 
 private:
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UPanelWidget> CharacterCardContainer;
+	TObjectPtr<UPanelWidget> mCharacterCardContainer;
 
 	UPROPERTY(Category = "Character Select", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	TSubclassOf<UCharacterCardWidget> CharacterCardWidgetClass;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> ConfirmButton;
+	TObjectPtr<UButton> mConfirmButton;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UTextBlock> ConfirmButtonText;
+	TObjectPtr<UTextBlock> mConfirmButtonText;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> BackToMainButton;
+	TObjectPtr<UButton> mBackToMainButton;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UTextBlock> BackToMainButtonText;
+	TObjectPtr<UTextBlock> mBackToMainButtonText;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UTextBlock> SelectedCharacterNameText;
+	TObjectPtr<UTextBlock> mSelectedCharacterNameText;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UTextBlock> SelectedCharacterRoleText;
+	TObjectPtr<UTextBlock> mSelectedCharacterRoleText;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UTextBlock> SelectedCharacterStatText;
+	TObjectPtr<UTextBlock> mSelectedCharacterStatText;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UTextBlock> SelectedCharacterDescriptionText;
+	TObjectPtr<UTextBlock> mSelectedCharacterDescriptionText;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UImage> SelectedCharacterPortraitImage;
+	TObjectPtr<UImage> mSelectedCharacterPortraitImage;
 
 	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> SelectedCharacterPortraitFallbackText;
+	TObjectPtr<UTextBlock> mSelectedCharacterPortraitFallbackText;
 
 	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> CharacterStatusText;
+	TObjectPtr<UTextBlock> mCharacterStatusText;
 
 	UPROPERTY()
 	TArray<TObjectPtr<UCharacterCardWidget>> CharacterCardWidgets;

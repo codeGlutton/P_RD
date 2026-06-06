@@ -113,25 +113,25 @@ void UCharacterSelectWidget::RefreshLocalizedTextCache()
 
 void UCharacterSelectWidget::BindEvents()
 {
-	if (ConfirmButton != nullptr)
+	if (mConfirmButton != nullptr)
 	{
-		ConfirmButton->OnClicked.AddUniqueDynamic(this, &UCharacterSelectWidget::HandleConfirmButtonClicked);
+		mConfirmButton->OnClicked.AddUniqueDynamic(this, &UCharacterSelectWidget::HandleConfirmButtonClicked);
 	}
-	if (BackToMainButton != nullptr)
+	if (mBackToMainButton != nullptr)
 	{
-		BackToMainButton->OnClicked.AddUniqueDynamic(this, &UCharacterSelectWidget::HandleBackToMainButtonClicked);
+		mBackToMainButton->OnClicked.AddUniqueDynamic(this, &UCharacterSelectWidget::HandleBackToMainButtonClicked);
 	}
 }
 
 void UCharacterSelectWidget::UnbindEvents()
 {
-	if (ConfirmButton != nullptr)
+	if (mConfirmButton != nullptr)
 	{
-		ConfirmButton->OnClicked.RemoveDynamic(this, &UCharacterSelectWidget::HandleConfirmButtonClicked);
+		mConfirmButton->OnClicked.RemoveDynamic(this, &UCharacterSelectWidget::HandleConfirmButtonClicked);
 	}
-	if (BackToMainButton != nullptr)
+	if (mBackToMainButton != nullptr)
 	{
-		BackToMainButton->OnClicked.RemoveDynamic(this, &UCharacterSelectWidget::HandleBackToMainButtonClicked);
+		mBackToMainButton->OnClicked.RemoveDynamic(this, &UCharacterSelectWidget::HandleBackToMainButtonClicked);
 	}
 
 	for (UCharacterCardWidget* CardWidget : CharacterCardWidgets)
@@ -187,7 +187,7 @@ void UCharacterSelectWidget::RefreshCharacterOptions()
 
 void UCharacterSelectWidget::RebuildCharacterCards()
 {
-	if (CharacterCardContainer == nullptr || CharacterCardWidgetClass == nullptr)
+	if (mCharacterCardContainer == nullptr || CharacterCardWidgetClass == nullptr)
 	{
 		return;
 	}
@@ -200,7 +200,7 @@ void UCharacterSelectWidget::RebuildCharacterCards()
 		}
 	}
 	CharacterCardWidgets.Reset();
-	CharacterCardContainer->ClearChildren();
+	mCharacterCardContainer->ClearChildren();
 
 	for (const FFrontendCharacterOption& Option : mCharacterOptions)
 	{
@@ -211,7 +211,7 @@ void UCharacterSelectWidget::RebuildCharacterCards()
 		}
 
 		NewWidget->OnCharacterCardClicked.AddUniqueDynamic(this, &UCharacterSelectWidget::HandleCharacterCardClicked);
-		CharacterCardContainer->AddChild(NewWidget);
+		mCharacterCardContainer->AddChild(NewWidget);
 		NewWidget->SetCharacterOption(Option, Option.mIndex == mSelectedCharacterIndex);
 		CharacterCardWidgets.Add(NewWidget);
 	}
@@ -258,34 +258,34 @@ void UCharacterSelectWidget::SyncSelectedCharacter()
 		return;
 	}
 
-	if (SelectedCharacterNameText != nullptr)
+	if (mSelectedCharacterNameText != nullptr)
 	{
-		SelectedCharacterNameText->SetText(SelectedOption->mDisplayName);
+		mSelectedCharacterNameText->SetText(SelectedOption->mDisplayName);
 	}
-	if (SelectedCharacterRoleText != nullptr)
+	if (mSelectedCharacterRoleText != nullptr)
 	{
-		SelectedCharacterRoleText->SetText(SelectedOption->mRoleText);
+		mSelectedCharacterRoleText->SetText(SelectedOption->mRoleText);
 	}
-	if (SelectedCharacterStatText != nullptr)
+	if (mSelectedCharacterStatText != nullptr)
 	{
-		SelectedCharacterStatText->SetText(BuildCharacterStatText(*SelectedOption));
+		mSelectedCharacterStatText->SetText(BuildCharacterStatText(*SelectedOption));
 	}
-	if (SelectedCharacterDescriptionText != nullptr)
+	if (mSelectedCharacterDescriptionText != nullptr)
 	{
-		SelectedCharacterDescriptionText->SetText(SelectedOption->mDescription);
+		mSelectedCharacterDescriptionText->SetText(SelectedOption->mDescription);
 	}
-	if (SelectedCharacterPortraitFallbackText != nullptr)
+	if (mSelectedCharacterPortraitFallbackText != nullptr)
 	{
 		const bool bHasPortrait = !SelectedOption->mPortrait.IsNull();
-		SelectedCharacterPortraitFallbackText->SetVisibility(bHasPortrait ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
-		SelectedCharacterPortraitFallbackText->SetText(SelectedOption->mDisplayName);
+		mSelectedCharacterPortraitFallbackText->SetVisibility(bHasPortrait ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
+		mSelectedCharacterPortraitFallbackText->SetText(SelectedOption->mDisplayName);
 	}
 
 	SetPortraitImage(SelectedOption->mPortrait);
 
-	if (ConfirmButton != nullptr)
+	if (mConfirmButton != nullptr)
 	{
-		ConfirmButton->SetIsEnabled(SelectedOption->bSelectable && !bStartRequested);
+		mConfirmButton->SetIsEnabled(SelectedOption->bSelectable && !bStartRequested);
 	}
 
 	SetStatusText(SelectedOption->bSelectable
@@ -298,40 +298,40 @@ void UCharacterSelectWidget::ClearSelectedCharacter()
 	CancelPortraitLoad();
 	ApplyPortraitImage(nullptr);
 
-	if (SelectedCharacterNameText != nullptr)
+	if (mSelectedCharacterNameText != nullptr)
 	{
-		SelectedCharacterNameText->SetText(mCharacterSelectText);
+		mSelectedCharacterNameText->SetText(mCharacterSelectText);
 	}
-	if (SelectedCharacterRoleText != nullptr)
+	if (mSelectedCharacterRoleText != nullptr)
 	{
-		SelectedCharacterRoleText->SetText(FText::GetEmpty());
+		mSelectedCharacterRoleText->SetText(FText::GetEmpty());
 	}
-	if (SelectedCharacterStatText != nullptr)
+	if (mSelectedCharacterStatText != nullptr)
 	{
-		SelectedCharacterStatText->SetText(FText::GetEmpty());
+		mSelectedCharacterStatText->SetText(FText::GetEmpty());
 	}
-	if (SelectedCharacterDescriptionText != nullptr)
+	if (mSelectedCharacterDescriptionText != nullptr)
 	{
-		SelectedCharacterDescriptionText->SetText(mNoCharacterStatusText);
+		mSelectedCharacterDescriptionText->SetText(mNoCharacterStatusText);
 	}
-	if (SelectedCharacterPortraitFallbackText != nullptr)
+	if (mSelectedCharacterPortraitFallbackText != nullptr)
 	{
-		SelectedCharacterPortraitFallbackText->SetText(TitleMenuText(TEXT("PortraitFallbackText")));
-		SelectedCharacterPortraitFallbackText->SetVisibility(ESlateVisibility::HitTestInvisible);
+		mSelectedCharacterPortraitFallbackText->SetText(TitleMenuText(TEXT("PortraitFallbackText")));
+		mSelectedCharacterPortraitFallbackText->SetVisibility(ESlateVisibility::HitTestInvisible);
 	}
-	if (ConfirmButton != nullptr)
+	if (mConfirmButton != nullptr)
 	{
-		ConfirmButton->SetIsEnabled(false);
+		mConfirmButton->SetIsEnabled(false);
 	}
 }
 
 void UCharacterSelectWidget::SetStatusText(const FText& InText)
 {
-	if (CharacterStatusText != nullptr)
+	if (mCharacterStatusText != nullptr)
 	{
 		const bool bHideDefaultStatus = InText.IsEmptyOrWhitespace() || InText.EqualTo(mReadyStatusText);
-		CharacterStatusText->SetVisibility(bHideDefaultStatus ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
-		CharacterStatusText->SetText(InText);
+		mCharacterStatusText->SetVisibility(bHideDefaultStatus ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
+		mCharacterStatusText->SetText(InText);
 	}
 
 	OnStatusTextChanged.Broadcast(InText);
@@ -339,19 +339,19 @@ void UCharacterSelectWidget::SetStatusText(const FText& InText)
 
 void UCharacterSelectWidget::SetConfirmButtonText(const FText& InText) const
 {
-	if (ConfirmButtonText != nullptr)
+	if (mConfirmButtonText != nullptr)
 	{
-		ConfirmButtonText->SetText(InText);
+		mConfirmButtonText->SetText(InText);
 	}
-	if (BackToMainButtonText != nullptr)
+	if (mBackToMainButtonText != nullptr)
 	{
-		BackToMainButtonText->SetText(mBackText);
+		mBackToMainButtonText->SetText(mBackText);
 	}
 }
 
 void UCharacterSelectWidget::SetPortraitImage(const TSoftObjectPtr<UTexture2D>& Portrait)
 {
-	if (SelectedCharacterPortraitImage == nullptr)
+	if (mSelectedCharacterPortraitImage == nullptr)
 	{
 		CancelPortraitLoad();
 		return;
@@ -398,20 +398,20 @@ void UCharacterSelectWidget::SetPortraitImage(const TSoftObjectPtr<UTexture2D>& 
 
 void UCharacterSelectWidget::ApplyPortraitImage(UTexture2D* Texture) const
 {
-	if (SelectedCharacterPortraitImage == nullptr)
+	if (mSelectedCharacterPortraitImage == nullptr)
 	{
 		return;
 	}
 
 	if (Texture != nullptr)
 	{
-		SelectedCharacterPortraitImage->SetBrushFromTexture(Texture, true);
-		SelectedCharacterPortraitImage->SetColorAndOpacity(FLinearColor::White);
+		mSelectedCharacterPortraitImage->SetBrushFromTexture(Texture, true);
+		mSelectedCharacterPortraitImage->SetColorAndOpacity(FLinearColor::White);
 	}
 	else
 	{
-		SelectedCharacterPortraitImage->SetBrushFromTexture(nullptr);
-		SelectedCharacterPortraitImage->SetColorAndOpacity(FLinearColor(0.080f, 0.095f, 0.095f, 1.f));
+		mSelectedCharacterPortraitImage->SetBrushFromTexture(nullptr);
+		mSelectedCharacterPortraitImage->SetColorAndOpacity(FLinearColor(0.080f, 0.095f, 0.095f, 1.f));
 	}
 }
 
@@ -493,21 +493,21 @@ FText UCharacterSelectWidget::BuildCharacterStatText(const FFrontendCharacterOpt
 
 void UCharacterSelectWidget::ValidateDesignerBindings() const
 {
-	if (CharacterCardContainer == nullptr)
+	if (mCharacterCardContainer == nullptr)
 	{
-		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: WBP_CharacterSelect requires CharacterCardContainer."));
+		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: WBP_CharacterSelect requires mCharacterCardContainer."));
 	}
 	if (CharacterCardWidgetClass == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: CharacterCardWidgetClass is not set."));
 	}
-	if (ConfirmButton == nullptr)
+	if (mConfirmButton == nullptr)
 	{
-		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: WBP_CharacterSelect requires ConfirmButton."));
+		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: WBP_CharacterSelect requires mConfirmButton."));
 	}
-	if (BackToMainButton == nullptr)
+	if (mBackToMainButton == nullptr)
 	{
-		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: WBP_CharacterSelect requires BackToMainButton."));
+		UE_LOG(LogRD, Warning, TEXT("CharacterSelectWidget: WBP_CharacterSelect requires mBackToMainButton."));
 	}
 }
 
@@ -535,9 +535,9 @@ void UCharacterSelectWidget::HandleConfirmButtonClicked()
 	bStartRequested = true;
 	SetConfirmButtonText(mLoadingStatusText);
 	SetStatusText(mLoadingStatusText);
-	if (ConfirmButton != nullptr)
+	if (mConfirmButton != nullptr)
 	{
-		ConfirmButton->SetIsEnabled(false);
+		mConfirmButton->SetIsEnabled(false);
 	}
 
 	if (!BeginFirstRoomEntryWithSelectedCharacter())
@@ -545,9 +545,9 @@ void UCharacterSelectWidget::HandleConfirmButtonClicked()
 		bStartRequested = false;
 		SetConfirmButtonText(mConfirmText);
 		SetStatusText(mFailedStatusText);
-		if (ConfirmButton != nullptr)
+		if (mConfirmButton != nullptr)
 		{
-			ConfirmButton->SetIsEnabled(true);
+			mConfirmButton->SetIsEnabled(true);
 		}
 	}
 }
