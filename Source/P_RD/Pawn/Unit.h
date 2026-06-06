@@ -77,9 +77,13 @@ public:
 
 	/* ITileActor, ITileTargetable 상속 */
 public:
+	const FTileTransform& GetTileTransform() const override;
 	ETileLayerFlag GetTileLayer() const override;
 	ETileLayerFlag GetBlockFlags() const override;
 	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+protected:
+	void SetTileTransform(const FTileTransform& Transform) override;
 
 public:
 	virtual void OnBeginPlayRoom();
@@ -120,4 +124,5 @@ protected:
 private:
 	// @brief 팀 ID
 	FGenericTeamId mTeamId;
+	FTileTransform mTileTransform = FTileTransform::Invalid;
 };

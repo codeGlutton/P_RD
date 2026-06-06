@@ -54,6 +54,9 @@ public:
     UPROPERTY(Config, Category = Title, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TitleRoomId"))
     FPrimaryAssetId mTitleRoomId;
 
+    UPROPERTY(Config, Category = Room, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "DefaultRoomMap", ConfigRestartRequired = true))
+    TSoftObjectPtr<UWorld> mDefaultRoomMap;
+
 public:
     UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "FrontendGameMode", ConfigRestartRequired = true))
     TSoftClassPtr<AGameModeBase> mFrontendGameMode;

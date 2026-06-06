@@ -4,6 +4,7 @@
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/InstanceSubsystem/RoomTransitionSubsystem.h"
 #include "Singleton/InstanceSubsystem/PlayerUnitRestorationSubsystem.h"
+#include "Pawn/Player/PlayerUnit.h"
 
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Blueprint/UserWidget.h"
@@ -72,6 +73,7 @@ void ARoomGameModeBase::RestorePlayerUnit()
 	UPlayerUnitRestorationSubsystem* PlayerUnitRestorationSubsystem = GetGameInstance()->GetSubsystem<UPlayerUnitRestorationSubsystem>();
 	APlayerUnit* PlayerUnit = PlayerUnitRestorationSubsystem->SpawnPlayerUnit(GetWorld());
 	PlayerUnitRestorationSubsystem->RegisterPlayerUnit(PlayerUnit);
+	mPlayerUnit = PlayerUnit;
 }
 
 AUnit* ARoomGameModeBase::GetPlayerUnit() const

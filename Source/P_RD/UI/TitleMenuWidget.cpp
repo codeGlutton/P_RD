@@ -3,7 +3,10 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
+#include "Frontend/FrontendViewTypes.h"
+#include "GameMode/FrontendGameMode.h"
 #include "UI/CharacterSelectWidget.h"
+#include "UI/FrontendMapWidget.h"
 
 namespace
 {
@@ -14,6 +17,7 @@ UTitleMenuWidget::UTitleMenuWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 	, mTitleText(NSLOCTEXT("TitleMenuWidget", "TitleText", "Rogue The Dice"))
 	, mStartButtonText(NSLOCTEXT("TitleMenuWidget", "StartText", "START"))
+	, mNewStartButtonText(NSLOCTEXT("TitleMenuWidget", "NewStartText", "NEW START"))
 	, mContinueButtonText(NSLOCTEXT("TitleMenuWidget", "ContinueText", "CONTINUE"))
 	, mSettingsButtonText(NSLOCTEXT("TitleMenuWidget", "SettingsText", "SETTING"))
 	, mSettingsStatusText(NSLOCTEXT("TitleMenuWidget", "SettingsStatusText", "Settings"))
@@ -22,6 +26,19 @@ UTitleMenuWidget::UTitleMenuWidget(const FObjectInitializer& ObjectInitializer)
 	, mBackButtonText(NSLOCTEXT("TitleMenuWidget", "BackText", "BACK"))
 {
 	SetVisibility(ESlateVisibility::Visible);
+}
+
+void UTitleMenuWidget::RefreshCharacterOptionsFromGameMode()
+{
+	if (CharacterSelectWidget != nullptr)
+	{
+		CharacterSelectWidget->RefreshCharacterOptionsFromGameMode();
+	}
+}
+
+void UTitleMenuWidget::OpenCharacterSelectFromTitle()
+{
+	ShowCharacterScreen();
 }
 
 void UTitleMenuWidget::NativeConstruct()
@@ -55,7 +72,13 @@ void UTitleMenuWidget::NativeConstruct()
 		CharacterSelectWidget->OnBackToMainRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleCharacterBackToMainRequested);
 	}
 
+	if (FrontendMapWidget != nullptr)
+	{
+		FrontendMapWidget->OnCloseRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleMapBackRequested);
+	}
+
 	SyncMainText();
+	RefreshMainMenuState();
 	ShowMainScreen();
 	SetStatusText(FText::GetEmpty());
 }
@@ -85,6 +108,11 @@ void UTitleMenuWidget::NativeDestruct()
 	if (CharacterSelectWidget != nullptr)
 	{
 		CharacterSelectWidget->OnBackToMainRequested.RemoveDynamic(this, &UTitleMenuWidget::HandleCharacterBackToMainRequested);
+	}
+
+	if (FrontendMapWidget != nullptr)
+	{
+		FrontendMapWidget->OnCloseRequested.RemoveDynamic(this, &UTitleMenuWidget::HandleMapBackRequested);
 	}
 
 	Super::NativeDestruct();
@@ -135,6 +163,38 @@ void UTitleMenuWidget::ShowSettingsScreen()
 	SetStatusText(mSettingsStatusText);
 }
 
+bool UTitleMenuWidget::EnsureMapScreen()
+{
+	if (MapScreen == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: MapScreen is not connected. Place the map screen inside WBP_TitleMenu."));
+		return false;
+	}
+
+	if (FrontendMapWidget == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: FrontendMapWidget is not connected. Place WBP_FrontendMap inside WBP_TitleMenu."));
+		return false;
+	}
+
+	FrontendMapWidget->OnCloseRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleMapBackRequested);
+	return true;
+}
+
+void UTitleMenuWidget::ShowMapScreen()
+{
+	if (!EnsureMapScreen())
+	{
+		ShowMainScreen();
+		SetStatusText(mMainOnlyStatusText);
+		return;
+	}
+
+	ShowScreen(MapScreen);
+	FrontendMapWidget->RefreshMap();
+	SetStatusText(FText::GetEmpty());
+}
+
 void UTitleMenuWidget::SyncMainText() const
 {
 	if (TitleText != nullptr)
@@ -161,6 +221,49 @@ void UTitleMenuWidget::SyncMainText() const
 	{
 		SettingsBackButtonText->SetText(mBackButtonText);
 	}
+}
+
+void UTitleMenuWidget::RefreshMainMenuState() const
+{
+	const bool bCanContinueRun = TryLoadRunForMapScreen();
+
+	if (StartButton != nullptr)
+	{
+		StartButton->SetVisibility(ESlateVisibility::Visible);
+		StartButton->SetIsEnabled(true);
+	}
+
+	if (StartButtonText != nullptr)
+	{
+		StartButtonText->SetText(bCanContinueRun ? mNewStartButtonText : mStartButtonText);
+	}
+
+	if (ContinueButton != nullptr)
+	{
+		ContinueButton->SetVisibility(bCanContinueRun ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+		ContinueButton->SetIsEnabled(bCanContinueRun);
+	}
+
+	if (ContinueButtonText != nullptr)
+	{
+		ContinueButtonText->SetText(mContinueButtonText);
+	}
+
+	if (SettingsButton != nullptr)
+	{
+		SettingsButton->SetVisibility(ESlateVisibility::Visible);
+		SettingsButton->SetIsEnabled(true);
+	}
+}
+
+bool UTitleMenuWidget::TryLoadRunForMapScreen() const
+{
+	TArray<FFrontendMapRoomView> Rooms;
+	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
+	{
+		return FrontendGameMode->GetMapRoomViews(OUT Rooms);
+	}
+	return false;
 }
 
 void UTitleMenuWidget::SetStatusText(const FText& /*InText*/) const
@@ -192,6 +295,16 @@ void UTitleMenuWidget::ValidateDesignerBindings() const
 	if (CharacterSelectWidget == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: CharacterSelectWidget is not connected. Place WBP_CharacterSelect inside WBP_TitleMenu."));
+	}
+
+	if (MapScreen == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: MapScreen is not connected. Place the map screen in WBP_TitleMenu."));
+	}
+
+	if (FrontendMapWidget == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: FrontendMapWidget is not connected. Place WBP_FrontendMap in the map screen."));
 	}
 
 	if (StartButton == nullptr)
@@ -234,11 +347,25 @@ void UTitleMenuWidget::ValidateDesignerBindings() const
 
 void UTitleMenuWidget::HandleStartButtonClicked()
 {
+	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
+	{
+		if (FrontendGameMode->StartNewRunFromTitle())
+		{
+			return;
+		}
+	}
+
 	ShowCharacterScreen();
 }
 
 void UTitleMenuWidget::HandleContinueButtonClicked()
 {
+	if (TryLoadRunForMapScreen())
+	{
+		ShowMapScreen();
+		return;
+	}
+
 	ShowMainScreen();
 	SetStatusText(mMainOnlyStatusText);
 }
@@ -256,6 +383,13 @@ void UTitleMenuWidget::HandleSettingsBackButtonClicked()
 
 void UTitleMenuWidget::HandleCharacterBackToMainRequested()
 {
+	ShowMainScreen();
+	SetStatusText(FText::GetEmpty());
+}
+
+void UTitleMenuWidget::HandleMapBackRequested()
+{
+	RefreshMainMenuState();
 	ShowMainScreen();
 	SetStatusText(FText::GetEmpty());
 }

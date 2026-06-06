@@ -275,13 +275,17 @@ void USRPGCombatSubsystem::SpawnTileMap()
 {
 	checkf(mTileMap == nullptr, TEXT("이미 타일 존재"));
 
-	ARDWorldSettings* WorldSettings = Cast<ARDWorldSettings>(GetWorld()->GetWorldSettings());
-	checkf(WorldSettings != nullptr, TEXT("월드 세팅 nullptr"));
+	UWorld* World = GetWorld();
+	checkf(World != nullptr, TEXT("월드 nullptr"));
+
+	const ARDWorldSettings* WorldSettings = Cast<ARDWorldSettings>(World->GetWorldSettings());
+	checkf(WorldSettings != nullptr, TEXT("RDWorldSettings nullptr"));
+
 	AActor* RoomStartPoint = WorldSettings->GetRoomStartPoint();
-	checkf(RoomStartPoint != nullptr, TEXT("방 시작 위치를 가리키는 액터 nullptr"));
+	checkf(RoomStartPoint != nullptr, TEXT("RoomStartPoint nullptr"));
 
 	// 타일맵 스폰
-	mTileMap = GetWorld()->SpawnActor<ATileMap>(ATileMap::StaticClass(), RoomStartPoint->GetTransform());
+	mTileMap = World->SpawnActor<ATileMap>(ATileMap::StaticClass(), RoomStartPoint->GetTransform());
 }
 
 void USRPGCombatSubsystem::RegisterPlayerUnit(AUnit* PlayerUnit, const FTileTransform& Transform)

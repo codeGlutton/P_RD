@@ -21,11 +21,11 @@ class P_RD_API UStaticObstacleSpawnData : public UDataAsset
 	GENERATED_BODY()
 
 public:
-    UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Class", MustImplement = "/Script/P_RD.TileActor", BUNDLE_ACTOR))
+    UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Class", MustImplement = "/Script/P_RD.TileActor", AssetBundles = BUNDLE_ACTOR))
     TSoftClassPtr<AActor> mClass;
 
 public:
-    UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Portrait", BUNDLE_UI))
+    UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Portrait", AssetBundles = BUNDLE_UI))
     TSoftObjectPtr<UTexture2D> mPortrait;
     UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Name"))
     FText mName;
