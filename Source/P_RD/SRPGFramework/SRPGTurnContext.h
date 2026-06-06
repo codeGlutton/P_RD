@@ -10,6 +10,7 @@
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "SRPGFramework/SRPGAction.h"
+#include "SRPGFramework/SRPGActionLock.h"
 
 struct FSRPGTurnContext;
 struct FPresentationBarrier;
@@ -19,20 +20,6 @@ DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnEndTurnUI, TSharedPtr<FPresentationBar
 
 class AUnit;
 struct FSRPGAction;
-struct FSRPGTurnContext;
-
-/**
- * @brief  턴 진행을 막는 RAII 방식의 Lock 객체
- */
-struct FSRPGActionLock
-{
-public:
-	FSRPGActionLock(TSharedPtr<FSRPGTurnContext> TurnContext);
-	~FSRPGActionLock();
-
-private:
-	TWeakPtr<FSRPGTurnContext> mTurnContext;
-};
 
 /**
  * @brief  스킬 사용 시 임시 정보를 들고 있는 Context 객체
