@@ -6,40 +6,30 @@
 
 #include "FunctionLibrary/GASTargetFunctionLibrary.h"
 
-void FSRPGTurnContext::CompleteActionBuild(TUniquePtr<FSRPGActionBuilder>&& Builder)
+void FSRPGTurnContext::CompleteActionBuild(TUniquePtr<FSRPGActionDraft>&& Draft)
 {
-	if (Builder == nullptr)
+	if (Draft == nullptr)
 	{
 		UE_LOG(LogSRPGCombat, Log, TEXT("등록할 Action 객체 nullptr"));
 		return;
 	}
 
-	TSharedPtr<FSRPGAction> NewAction;
-	Builder->BuildAction(NewAction);
-
-	PushAction(NewAction);
+	TSharedPtr<FSRPGAction> NewAction = Draft->FinalizeDraft();
+	Draft->OnFinalizeDraft();
+	
+	NewAction->InitAction(AsShared(), mOwner);
+	EnqueueAction(NewAction);
 }
 
-void FSRPGTurnContext::CancelActionBuild(TUniquePtr<FSRPGActionBuilder>&& Builder)
+void FSRPGTurnContext::CancelActionBuild(TUniquePtr<FSRPGActionDraft>&& Draft)
 {
-	if (Builder == nullptr)
+	if (Draft == nullptr)
 	{
 		UE_LOG(LogSRPGCombat, Log, TEXT("취소할 Action 객체 nullptr"));
 		return;
 	}
 
-	Builder->CancelAction();
-}
-
-void FSRPGTurnContext::PushAction(TSharedPtr<FSRPGAction> NewAction)
-{
-	mActions.Enqueue(NewAction);
-
-	// 액션 대기 중 경우, 새로운 액션 즉시 진행
-	if (mPhase == ESRPGTurnPhase::ActionSelect)
-	{
-		StartNextAction();
-	}
+	Draft->OnDiscardDraft();
 }
 
 void FSRPGTurnContext::InitTurn(AUnit* Owner, int32 LifeCount)
@@ -130,7 +120,18 @@ void FSRPGTurnContext::EndTurn()
 	OnEndTurnUI.Broadcast(PresentationBarrier, *this, mResult);
 }
 
-void FSRPGTurnContext::StartNextAction()
+void FSRPGTurnContext::EnqueueAction(TSharedPtr<FSRPGAction> NewAction)
+{
+	mActions.Enqueue(NewAction);
+
+	// 액션 대기 중 경우, 새로운 액션 즉시 진행
+	if (mPhase == ESRPGTurnPhase::ActionSelect)
+	{
+		DequeueAction();
+	}
+}
+
+void FSRPGTurnContext::DequeueAction()
 {
 	checkf(mPhase == ESRPGTurnPhase::ActionSelect, TEXT("선택 가능 상태에서만 다음 액션으로 통과 가능"));
 
@@ -176,7 +177,7 @@ void FSRPGTurnContext::OnEndCurrentAction(TSharedRef<FSRPGAction> Action, ESRPGA
 	checkf(mPhase == ESRPGTurnPhase::ActionPlay, TEXT("액션 종료 절차 오류"));
 	mPhase = ESRPGTurnPhase::ActionSelect;
 
-	StartNextAction();
+	DequeueAction();
 }
 
 void FSRPGTurnContext::EvaluateTurnEndState(bool ForceAbort)

@@ -6,29 +6,29 @@
 
 #include "FunctionLibrary/GASTargetFunctionLibrary.h"
 
-void FSRPGActionBuilder::InitBuilder(TSharedRef<FSRPGTurnContext> Owner, AUnit* Instigator)
+void FSRPGActionDraft::InitDraft(TSharedRef<FSRPGTurnContext> Owner, AUnit* Instigator)
 {
 	mOwner = Owner;
 	mInstigator = Instigator;
 
-	if (GetBuildMode() == ESRPGActionBuildMode::Interactive)
+	if (GetDraftType() == ESRPGActionDraftType::Interactive)
 	{
 		// 상호 작용이 필요한 액션의 경우, 턴의 진행을 Lock할 필요가 있다
 		mLock = MakeUnique<FSRPGActionLock>(Owner);
 	}
 }
 
-UWorld* FSRPGActionBuilder::GetWorld() const
+UWorld* FSRPGActionDraft::GetWorld() const
 {
 	return mOwner.Pin()->GetWorld();
 }
 
-TWeakPtr<FSRPGTurnContext> FSRPGActionBuilder::GetOwner() const
+TWeakPtr<FSRPGTurnContext> FSRPGActionDraft::GetOwner() const
 {
 	return mOwner;
 }
 
-AUnit* FSRPGActionBuilder::GetInstigator() const
+AUnit* FSRPGActionDraft::GetInstigator() const
 {
 	return mInstigator;
 }

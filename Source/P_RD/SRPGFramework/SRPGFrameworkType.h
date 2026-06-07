@@ -220,14 +220,14 @@ enum class ESRPGActionPhase : uint8
 };
 
 UENUM(BlueprintType)
-enum class ESRPGActionBuildMode : uint8
+enum class ESRPGActionDraftType : uint8
 {
     Immediate           UMETA(ToolTip = "즉시 빌드"),
     Interactive         UMETA(ToolTip = "유저 인터렉션이 포함"),
 };
 
 UENUM(BlueprintType)
-enum class ESRPGSkillActionBuildPhase : uint8
+enum class ESRPGSkillActionDraftPhase : uint8
 {
     None                UMETA(Hidden),
     TargetSelection     UMETA(ToolTip = "대상 영역 선택"),

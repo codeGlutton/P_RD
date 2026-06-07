@@ -4,6 +4,8 @@
 
 #include "DataAsset/UnitSpawnData/StaticUnitSpawnData.h"
 
+#include "Pawn/SkillComponent.h"
+
 UScriptStruct* FUnitSnapshotTargetData::GetScriptStruct() const
 {
 	return FUnitSnapshotTargetData::StaticStruct();
@@ -30,6 +32,8 @@ AUnit::AUnit() :
 
 	mAbilitySystemComp = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
 	mUnitAttributeSet = CreateDefaultSubobject<UUnitAttributeSet>(TEXT("UnitAttributeSet"));
+
+	mSkillComp = CreateDefaultSubobject<USkillComponent>(TEXT("SkillComp"));
 }
 
 void AUnit::PostInitializeComponents()
@@ -78,6 +82,11 @@ ETileLayerFlag AUnit::GetBlockFlags() const
 UAbilitySystemComponent* AUnit::GetAbilitySystemComponent() const
 {
 	return mAbilitySystemComp;
+}
+
+USkillComponent* AUnit::GetSkillComponent() const
+{
+	return mSkillComp;
 }
 
 void AUnit::OnBeginPlayRoom()

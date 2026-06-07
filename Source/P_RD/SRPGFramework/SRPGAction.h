@@ -21,21 +21,25 @@ struct FSRPGActionLock;
  * 선택 과정이 지나야 로직이 최종적으로 결정된다. 이 일련의 제작 과정을 도와주는 객체
  * 해당 객체의 생성 시에는 추가적인 Action 실행이 일시적으로 중단된다.
  */
-struct FSRPGActionBuilder
+struct FSRPGActionDraft
 {
 	friend struct FSRPGTurnContext;
 
+protected:
+	FSRPGActionDraft() = default;
+
 public:
-	virtual ~FSRPGActionBuilder() = default;
+	virtual ~FSRPGActionDraft() = default;
 
 protected:
-	void InitBuilder(TSharedRef<FSRPGTurnContext> Owner, AUnit* Instigator);
+	void InitDraft(TSharedRef<FSRPGTurnContext> Owner, AUnit* Instigator);
+	virtual TSharedPtr<FSRPGAction> FinalizeDraft() const = 0;
 
-	virtual void BuildAction(OUT TSharedPtr<FSRPGAction>& Action) = 0;
-	virtual void CancelAction() = 0;
+	virtual void OnFinalizeDraft() = 0;
+	virtual void OnDiscardDraft() = 0;
 
 protected:
-	virtual ESRPGActionBuildMode GetBuildMode() const = 0;
+	virtual ESRPGActionDraftType GetDraftType() const = 0;
 
 public:
 	UWorld* GetWorld() const;
@@ -45,6 +49,7 @@ public:
 protected:
 	TWeakPtr<FSRPGTurnContext> mOwner;
 	TObjectPtr<AUnit> mInstigator;
+	TSharedPtr<FSRPGAction> mAction;
 
 private:
 	TUniquePtr<FSRPGActionLock> mLock;
@@ -56,7 +61,7 @@ private:
 struct FSRPGAction : public TSharedFromThis<FSRPGAction>
 {
 	friend struct FSRPGTurnContext;
-	friend struct FSRPGActionBuilder;
+	friend struct FSRPGActionDraft;
 
 protected:
 	FSRPGAction() = default;

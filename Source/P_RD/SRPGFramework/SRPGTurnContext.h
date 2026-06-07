@@ -34,29 +34,23 @@ protected:
 
 public:
 	/**
-	 * 액션 빌더 생성 함수
-	 * @tparam BuilderType 빌더 종류
+	 * 액션 빌드 함수
+	 * @tparam DraftType 초안 종류
+	 * @return 액션을 만들기 위한 초안 구성 객체
 	 */
-	template<typename BuilderType>
-	TUniquePtr<BuilderType> StartActionBuild()
+	template<typename DraftType>
+	TUniquePtr<DraftType> StartActionBuild()
 	{
-		static_assert(TIsDerivedFrom<BuilderType, FSRPGActionBuilder>::Value, TEXT("BuilderType 는 반드시 FSRPGActionBuilder 파생 객체"));
+		static_assert(TIsDerivedFrom<DraftType, FSRPGActionDraft>::Value, TEXT("BuilderType 는 반드시 FSRPGActionBuilder 파생 객체"));
 
-		TUniquePtr<BuilderType> ActionBuilder = MakeUnique<BuilderType>();
-		ActionBuilder->InitBuilder(AsShared(), mOwner);
+		TUniquePtr<DraftType> ActionDraft = MakeUnique<DraftType>();
+		ActionDraft->InitDraft(AsShared(), mOwner);
 
-		return ActionBuilder;
+		return ActionDraft;
 	}
 
-	void CompleteActionBuild(TUniquePtr<FSRPGActionBuilder>&& Builder);
-	void CancelActionBuild(TUniquePtr<FSRPGActionBuilder>&& Builder);
-
-protected:
-	/**
-	 * 액션을 액션 큐에 삽입. 여기서 ActionSelect 상태의 경우, 액션 큐를 진행해도 무방하다고 판단하고 즉시 실행
-	 * @param NewAction 새로운 액션
-	 */
-	void PushAction(TSharedPtr<FSRPGAction> NewAction);
+	void CompleteActionBuild(TUniquePtr<FSRPGActionDraft>&& Draft);
+	void CancelActionBuild(TUniquePtr<FSRPGActionDraft>&& Draft);
 
 protected:
 	void InitTurn(AUnit* Owner, int32 LifeCount);
@@ -65,7 +59,8 @@ protected:
 	void EndTurn();
 
 protected:
-	void StartNextAction();
+	void EnqueueAction(TSharedPtr<FSRPGAction> NewAction);
+	void DequeueAction();
 
 public:
 	void EvaluateTurnStates(bool ForceAbort = false);
