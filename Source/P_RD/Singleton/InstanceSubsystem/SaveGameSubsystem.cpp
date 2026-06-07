@@ -99,7 +99,7 @@ void USaveGameSubsystem::SaveRun() const
 
 void USaveGameSubsystem::SaveRunAsync(FAsyncSaveGameToSlotDelegate Callback) const
 {
-	if (mUserSaveGame == nullptr)
+	if (mRunSaveGame == nullptr)
 	{
 		CreateRun();
 	}

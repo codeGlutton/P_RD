@@ -1,4 +1,5 @@
 ﻿#include "SRPGFramework/SRPGAction.h"
+#include "SRPGFramework/SRPGTurnContext.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
 #include "Singleton/WorldSubsystem/PresentationSyncSubsystem.h"
 

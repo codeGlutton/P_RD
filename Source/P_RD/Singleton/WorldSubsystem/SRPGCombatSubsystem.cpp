@@ -24,6 +24,11 @@ void USRPGCombatSubsystem::Tick(float DeltaTime)
 	}
 }
 
+TStatId USRPGCombatSubsystem::GetStatId() const
+{
+	RETURN_QUICK_DECLARE_CYCLE_STAT(USRPGCombatSubsystem, STATGROUP_Tickables);
+}
+
 void USRPGCombatSubsystem::InitCombat(const UStaticCombatRoomSpawnData* RoomSpawnData, AUnit* PlayerUnit)
 {
 	checkf(RoomSpawnData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
@@ -175,13 +180,13 @@ bool USRPGCombatSubsystem::UnregisterTurnImmediately(TSharedRef<FSRPGTurnContext
 
 int32 USRPGCombatSubsystem::UnregisterTurnsImmediately(const AUnit* Owner)
 {
-	auto CurNode = mTurnContexts.GetHead();
+	auto* CurNode = mTurnContexts.GetHead();
 
 	int32 UnregisterCount = 0;
 	const int32 TotalContextNum = mTurnContexts.Num();
 	for (int32 i = 0; i < TotalContextNum; ++i)
 	{
-		auto NextNode = CurNode->GetNextNode();
+		auto* NextNode = CurNode->GetNextNode();
 
 		TSharedPtr<FSRPGTurnContext> CurTurnContext = CurNode->GetValue();
 		if (CurTurnContext->GetOwner() == Owner)
@@ -270,13 +275,17 @@ void USRPGCombatSubsystem::SpawnTileMap()
 {
 	checkf(mTileMap == nullptr, TEXT("이미 타일 존재"));
 
-	ARDWorldSettings* WorldSettings = Cast<ARDWorldSettings>(GetWorld()->GetWorldSettings());
-	checkf(WorldSettings != nullptr, TEXT("월드 세팅 nullptr"));
+	UWorld* World = GetWorld();
+	checkf(World != nullptr, TEXT("월드 nullptr"));
+
+	const ARDWorldSettings* WorldSettings = Cast<ARDWorldSettings>(World->GetWorldSettings());
+	checkf(WorldSettings != nullptr, TEXT("RDWorldSettings nullptr"));
+
 	AActor* RoomStartPoint = WorldSettings->GetRoomStartPoint();
-	checkf(RoomStartPoint != nullptr, TEXT("방 시작 위치를 가리키는 액터 nullptr"));
+	checkf(RoomStartPoint != nullptr, TEXT("RoomStartPoint nullptr"));
 
 	// 타일맵 스폰
-	mTileMap = GetWorld()->SpawnActor<ATileMap>(ATileMap::StaticClass(), RoomStartPoint->GetTransform());
+	mTileMap = World->SpawnActor<ATileMap>(ATileMap::StaticClass(), RoomStartPoint->GetTransform());
 }
 
 void USRPGCombatSubsystem::RegisterPlayerUnit(AUnit* PlayerUnit, const FTileTransform& Transform)

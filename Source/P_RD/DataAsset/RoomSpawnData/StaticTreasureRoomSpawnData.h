@@ -37,6 +37,6 @@ public:
 	EStageLevelType mStageLevel;
 
 public:
-	UPROPERTY(Category = "Actor", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TreasureBoxClass", BUNDLE_ACTOR))
+	UPROPERTY(Category = "Actor", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TreasureBoxClass", AssetBundles = BUNDLE_ACTOR))
 	TSoftClassPtr<AActor> mTreasureBoxClass;
 };

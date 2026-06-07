@@ -37,10 +37,10 @@ public:
     }
 
 public:
-	UPROPERTY(Category = "Background", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BackgroundMap", BUNDLE_WORLD))
+	UPROPERTY(Category = "Background", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BackgroundMap", AssetBundles = BUNDLE_WORLD))
 	TSoftObjectPtr<UWorld> mBackgroundMap;
 
 public:
-    UPROPERTY(Category = "Logic", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "GameModeBase", BUNDLE_WORLD))
+    UPROPERTY(Category = "Logic", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "GameModeBase", AssetBundles = BUNDLE_WORLD))
     TSoftClassPtr<AGameModeBase> mGameModeBase;
 };

@@ -242,7 +242,23 @@ void URoomTransitionSubsystem::OnTransitNextRoom()
     const FRoom& NextRoom = GetRunMutableData()->GetRoom(mRequest.mRoomRowIndex, mRequest.mRoomColumnIndex);
     UStaticRoomSpawnData* StaticRoomData = AssetManager->GetPrimaryAssetObject<UStaticRoomSpawnData>(NextRoom.mStaticRoomSpawnDataId);
     checkf(StaticRoomData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
-    
+
+    TSoftObjectPtr<UWorld> BackgroundMap = StaticRoomData->mBackgroundMap;
+    if (BackgroundMap.IsNull())
+    {
+        BackgroundMap = GetDefault<UGamePlaySettings>()->mDefaultRoomMap;
+        UE_LOG(LogTransition, Warning, TEXT("Room background map is empty for %s. Using default room map: %s"),
+            *NextRoom.mStaticRoomSpawnDataId.ToString(),
+            *BackgroundMap.ToSoftObjectPath().ToString());
+    }
+
+    if (BackgroundMap.IsNull())
+    {
+        UE_LOG(LogTransition, Error, TEXT("Room transition failed. No background map configured for %s"),
+            *NextRoom.mStaticRoomSpawnDataId.ToString());
+        return;
+    }
+
     FString Option = FString::Printf(TEXT("?game=%s"), *StaticRoomData->mGameModeBase.ToSoftObjectPath().GetAssetPathString());
-    UGameplayStatics::OpenLevelBySoftObjectPtr(GetWorld(), StaticRoomData->mBackgroundMap, true, Option);
+    UGameplayStatics::OpenLevelBySoftObjectPtr(GetWorld(), BackgroundMap, true, Option);
 }

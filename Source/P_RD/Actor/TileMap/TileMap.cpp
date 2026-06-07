@@ -55,6 +55,9 @@ void ATileMap::OnConstruction(const FTransform& Transform)
 
 void ATileMap::RebuildTileInstances()
 {
+	// 타일 저장소를 현재 크기에 맞춰 기본 타일로 새로 채움
+	mTiles.Init(FTile(), FMath::Max(0, mWidth * mHeight));
+
 	// 컴포넌트가 없으면 처리 불가
 	if (mTileMeshComponent == nullptr)
 	{
@@ -114,6 +117,50 @@ bool ATileMap::IsValidIndex(const FTileIndex& TileIndex) const
 	// 0 <= X < Width && 0 <= Y < Height 범위 검사
 	return TileIndex.mX >= 0 && TileIndex.mX < mWidth
 		&& TileIndex.mY >= 0 && TileIndex.mY < mHeight;
+}
+
+int32 ATileMap::TileIndexToLinearIndex(const FTileIndex& TileIndex) const
+{
+	// 범위 밖이면 무효
+	if (!IsValidIndex(TileIndex))
+	{
+		return INDEX_NONE;
+	}
+	// 행 우선(y*Width + x)으로 1차원 인덱스 계산
+	return TileIndex.mY * mWidth + TileIndex.mX;
+}
+
+const FTile* ATileMap::GetTile(const FTileIndex& TileIndex) const
+{
+	const int32 LinearIndex = TileIndexToLinearIndex(TileIndex);
+	// 맵 범위(INDEX_NONE) + mTiles 미초기화/크기 불일치(IsValidIndex)를 모두 방어
+	if (LinearIndex == INDEX_NONE || !mTiles.IsValidIndex(LinearIndex))
+	{
+		return nullptr;
+	}
+	return &mTiles[LinearIndex];
+}
+
+TArray<TScriptInterface<ITileActor>> ATileMap::GetActorsOnTile(const FTileIndex& TileIndex, ETileLayerFlag LayerFilter) const
+{
+	TArray<TScriptInterface<ITileActor>> Result;
+
+	// 타일 조회 (범위 밖이면 빈 배열)
+	const FTile* Tile = GetTile(TileIndex);
+	if (Tile == nullptr)
+	{
+		return Result;
+	}
+
+	// 레이어 필터에 걸리는 액터만 수집
+	for (const TScriptInterface<ITileActor>& Actor : Tile->mActors)
+	{
+		if (Actor && EnumHasAnyFlags(Actor->GetTileLayer(), LayerFilter))
+		{
+			Result.Add(Actor);
+		}
+	}
+	return Result;
 }
 
 FTransform ATileMap::TileToWorldTransform(const FTileTransform& TileTransform) const

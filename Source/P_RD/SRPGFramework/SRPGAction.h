@@ -11,6 +11,7 @@
 #include "SRPGFramework/SRPGFrameworkType.h"
 
 class AUnit;
+struct FSRPGTurnContext;
 struct FSRPGAction;
 struct FSRPGActionLock;
 

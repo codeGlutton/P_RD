@@ -14,6 +14,7 @@
 
 class UButton;
 class UCharacterSelectWidget;
+class UFrontendMapWidget;
 class UTextBlock;
 class UWidget;
 class UWidgetSwitcher;
@@ -37,8 +38,8 @@ class UWidgetSwitcher;
  *
  * 캐릭터 목록을 만들거나, 캐릭터 카드를 갱신하거나, Confirm을 막는 일은
  * UCharacterSelectWidget 쪽 책임이다.
- * 실제 런 시작과 방 전환은 이번 UI-only 브랜치에서 다루지 않는다.
- * TitleMenuWidget 안에 그 로직을 다시 넣으면 캐릭터 수가 늘어날 때마다
+ * 실제 런 데이터 생성, 저장 로드, 방 전환은 GameMode/Subsystem API로 위임한다.
+ * TitleMenuWidget 안에 그 로직을 직접 넣으면 캐릭터 수나 룸 규칙이 바뀔 때마다
  * 타이틀 메뉴 코드까지 같이 고쳐야 해서 구조가 다시 꼬인다.
  *
  * @note
@@ -63,6 +64,12 @@ public:
 	 * @param ObjectInitializer Unreal 객체 생성에 사용하는 기본 초기화 값
 	 */
 	UTitleMenuWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+	/** @brief GameMode 기준 캐릭터 후보 목록을 캐릭터 선택 화면에 다시 반영 */
+	void RefreshCharacterOptionsFromGameMode();
+
+	/** @brief GameMode의 타이틀 START API가 요청한 캐릭터 선택 화면 전환을 수행 */
+	void OpenCharacterSelectFromTitle();
 
 protected:
 	/**
@@ -125,6 +132,20 @@ private:
 	void ShowSettingsScreen();
 
 	/**
+	 * @brief WBP_TitleMenu에 직접 배치된 지도 화면 연결을 확인함
+	 *
+	 * @details
+	 * 지도 화면은 WBP_TitleMenu 안의 MapScreen과 FrontendMapWidget 바인딩으로 제공되어야 한다.
+	 * C++은 빠진 화면을 임시로 만들지 않고, 연결이 깨졌으면 로그를 남기고 메인 화면으로 돌아간다.
+	 */
+	bool EnsureMapScreen();
+
+	/**
+	 * @brief 지도 화면을 보여주고 지도 내용을 갱신함
+	 */
+	void ShowMapScreen();
+
+	/**
 	 * @brief 타이틀 메인 화면의 텍스트를 현재 설정값으로 채움
 	 *
 	 * @details
@@ -132,6 +153,29 @@ private:
 	 * 텍스트 적용을 한 곳에 모아 두면 나중에 로컬라이징이나 옵션 설정을 붙일 때 바꾸는 위치가 줄어든다.
 	 */
 	void SyncMainText() const;
+
+	/**
+	 * @brief 저장된 런 여부에 맞춰 타이틀 메인 메뉴 버튼 구성을 바꿈
+	 *
+	 * @details
+	 * 저장된 런이 없으면 START / SETTING만 보이고,
+	 * 저장된 런이 있으면 CONTINUE / NEW START / SETTING 구성을 보여준다.
+	 * 버튼 배치는 WBP_TitleMenu가 맡고, C++은 이미 복구된 PersistentData에서
+	 * 지도 View 생성 가능 여부만 보고 표시 상태를 바꾼다.
+	 */
+	void RefreshMainMenuState() const;
+
+	/**
+	 * @brief 현재 복구된 Run 상태를 지도 화면으로 보여줄 수 있는지 확인함
+	 *
+	 * @details
+	 * 저장 파일 Load는 시네마틱 월드나 초기 부트스트랩 단계에서 한 번 처리되어야 한다.
+	 * 타이틀 UI는 파일을 직접 Load하지 않고, FrontendGameMode가 현재 PersistentData로 지도 View를
+	 * 만들 수 있으면 이어가기 가능한 상태로 본다.
+	 *
+	 * @return 지도 화면으로 이어갈 수 있는 Run 상태가 있으면 true
+	 */
+	bool TryLoadRunForMapScreen() const;
 
 	/**
 	 * @brief 오래된 타이틀 WBP에 남아 있는 하단 상태 문구를 숨김
@@ -170,6 +214,9 @@ private:
 	UFUNCTION()
 	void HandleCharacterBackToMainRequested();
 
+	UFUNCTION()
+	void HandleMapBackRequested();
+
 private:
 	/**
 	 * @brief 타이틀 메인/캐릭터 선택/설정 화면을 전환하는 위젯
@@ -199,6 +246,10 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UWidget> SettingsScreen;
 
+	/** @brief 지도 화면 자리. 이번 단계에서는 WBP_TitleMenu 안의 ScreenSwitcher 자식으로 둔다. */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UWidget> MapScreen;
+
 	/**
 	 * @brief WBP에 직접 배치한 캐릭터 선택 위젯
 	 *
@@ -210,11 +261,15 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UCharacterSelectWidget> CharacterSelectWidget;
 
+	/** @brief MapScreen 안에 직접 배치한 지도 위젯 */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UFrontendMapWidget> FrontendMapWidget;
+
 	/** @brief 캐릭터 선택 화면으로 넘어가는 START 버튼 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> StartButton;
 
-	/** @brief 이어하기 버튼. 현재는 실제 이어하기 기능이 없어 비활성/안내 상태로 둔다. */
+	/** @brief 저장된 런이 있을 때 지도 화면으로 이어가는 버튼 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> ContinueButton;
 
@@ -263,6 +318,10 @@ private:
 	/** @brief START 버튼 기본 문구 */
 	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	FText mStartButtonText;
+
+	/** @brief 저장된 런이 있을 때 새로 시작 버튼에 표시할 문구 */
+	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	FText mNewStartButtonText;
 
 	/** @brief CONTINUE 버튼 기본 문구 */
 	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
