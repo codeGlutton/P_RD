@@ -19,6 +19,7 @@ enum class EWorldWidgetType : uint8
 	TopMenuBar = 0,
 	MsgNotify,
 	SaveNotify,
+	IntroCinematic,
 
 	// 추가 가능
 

@@ -13,7 +13,9 @@
 #include "Singleton/InstanceSubsystem/RoomTransitionSubsystem.h"
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
+#include "UI/CinematicIntroWidget.h"
 #include "UI/TitleMenuWidget.h"
+#include "UI/ViewportZOrderType.h"
 
 namespace
 {
@@ -501,15 +503,6 @@ void AFrontendGameMode::BeginRoom()
 {
 	LoadOrCreateFrontendUserProfile();
 
-	if (UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())
-	{
-		if (UUserWidget* TitleHUD = WorldWidgetSubsystem->GetHUD())
-		{
-			TitleHUD->AddToViewport();
-			TitleHUD->SetVisibility(ESlateVisibility::Visible);
-		}
-	}
-
 	if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
 	{
 		PlayerController->ActivateTouchInterface(nullptr);
@@ -518,6 +511,8 @@ void AFrontendGameMode::BeginRoom()
 		FInputModeUIOnly InputMode;
 		PlayerController->SetInputMode(InputMode);
 	}
+
+	StartIntroCinematicOrShowTitle();
 }
 
 void AFrontendGameMode::LoadOrCreateFrontendUserProfile()
@@ -547,6 +542,60 @@ void AFrontendGameMode::LoadOrCreateFrontendUserProfile()
 	{
 		SaveGameSubsystem->SaveUser();
 	}
+}
+
+void AFrontendGameMode::StartIntroCinematicOrShowTitle()
+{
+	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld() != nullptr
+		? GetWorld()->GetSubsystem<UWorldWidgetSubsystem>()
+		: nullptr;
+	if (WorldWidgetSubsystem == nullptr)
+	{
+		ShowTitleHUD();
+		return;
+	}
+
+	WorldWidgetSubsystem->InitWorldWidget(EWorldWidgetType::IntroCinematic);
+	UCinematicIntroWidget* IntroWidget = Cast<UCinematicIntroWidget>(WorldWidgetSubsystem->GetWorldWidget(EWorldWidgetType::IntroCinematic));
+	if (IntroWidget == nullptr)
+	{
+		ShowTitleHUD();
+		return;
+	}
+
+	IntroWidget->OnIntroFinished.RemoveDynamic(this, &AFrontendGameMode::HandleIntroCinematicFinished);
+	IntroWidget->OnIntroFinished.AddUniqueDynamic(this, &AFrontendGameMode::HandleIntroCinematicFinished);
+	WorldWidgetSubsystem->OpenWorldWidget(EWorldWidgetType::IntroCinematic, static_cast<int32>(EViewportZOrderType::PopUp));
+}
+
+void AFrontendGameMode::ShowTitleHUD()
+{
+	if (bTitleHUDShown)
+	{
+		return;
+	}
+
+	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld() != nullptr
+		? GetWorld()->GetSubsystem<UWorldWidgetSubsystem>()
+		: nullptr;
+	if (WorldWidgetSubsystem == nullptr)
+	{
+		return;
+	}
+
+	UUserWidget* TitleHUD = WorldWidgetSubsystem->GetHUD();
+	if (TitleHUD == nullptr)
+	{
+		return;
+	}
+
+	if (!TitleHUD->IsInViewport())
+	{
+		TitleHUD->AddToViewport();
+	}
+
+	TitleHUD->SetVisibility(ESlateVisibility::Visible);
+	bTitleHUDShown = true;
 }
 
 bool AFrontendGameMode::OpenTitleCharacterSelect()
@@ -652,4 +701,22 @@ void AFrontendGameMode::ShowTitleMessage(const FText& Message) const
 	{
 		UE_LOG(LogRD, Display, TEXT("FrontendGameMode: %s"), *Message.ToString());
 	}
+}
+
+void AFrontendGameMode::HandleIntroCinematicFinished()
+{
+	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld() != nullptr
+		? GetWorld()->GetSubsystem<UWorldWidgetSubsystem>()
+		: nullptr;
+	if (WorldWidgetSubsystem != nullptr)
+	{
+		if (UCinematicIntroWidget* IntroWidget = Cast<UCinematicIntroWidget>(WorldWidgetSubsystem->GetWorldWidget(EWorldWidgetType::IntroCinematic)))
+		{
+			IntroWidget->OnIntroFinished.RemoveDynamic(this, &AFrontendGameMode::HandleIntroCinematicFinished);
+		}
+
+		WorldWidgetSubsystem->CloseWorldWidget(EWorldWidgetType::IntroCinematic);
+	}
+
+	ShowTitleHUD();
 }

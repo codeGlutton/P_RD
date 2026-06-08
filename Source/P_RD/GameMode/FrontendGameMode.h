@@ -218,6 +218,8 @@ private:
 	 * 이 fallback은 그 흐름으로 대체되어야 한다.
 	 */
 	void LoadOrCreateFrontendUserProfile();
+	void StartIntroCinematicOrShowTitle();
+	void ShowTitleHUD();
 	bool OpenTitleCharacterSelect();
 	void ClearSelectedMapRoom();
 	bool HasSelectedMapRoom() const;
@@ -240,8 +242,12 @@ private:
 	bool StartRunAndEnterFirstRoomWithPlayerUnit(FPrimaryAssetId PlayerUnitId);
 	void ShowTitleMessage(const FText& Message) const;
 
+	UFUNCTION()
+	void HandleIntroCinematicFinished();
+
 private:
 	bool bStartRunRequested = false;
+	bool bTitleHUDShown = false;
 	int32 mSelectedMapRoomRow = INDEX_NONE;
 	int32 mSelectedMapRoomColumn = INDEX_NONE;
 	bool bSelectedMapRoomPreloadRequested = false;
