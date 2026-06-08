@@ -30,6 +30,21 @@ public:
 	void InitHUD(UClass* HUDClass);
 	void InitWorldWidget(EWorldWidgetType WorldWidgetType);
 
+	UFUNCTION(BlueprintCallable, Category = "UI|World Widget")
+	void OpenWorldWidget(EWorldWidgetType WorldWidgetType, int32 ZOrder = 0);
+
+	UFUNCTION(BlueprintCallable, Category = "UI|World Widget")
+	void CloseWorldWidget(EWorldWidgetType WorldWidgetType);
+
+	UFUNCTION(BlueprintCallable, Category = "UI|World Widget")
+	void CompleteCloseWorldWidget(EWorldWidgetType WorldWidgetType);
+
+	UFUNCTION(BlueprintPure, Category = "UI|World Widget")
+	bool IsWorldWidgetOpen(EWorldWidgetType WorldWidgetType) const;
+
+	void ShowWorldWidget(EWorldWidgetType WorldWidgetType, int32 ZOrder = 0);
+	void HideWorldWidget(EWorldWidgetType WorldWidgetType);
+
 public:
 	template<typename T = UUserWidget>
 	T* GetHUD() const
