@@ -30,6 +30,21 @@ public:
 	void InitHUD(UClass* HUDClass);
 	void InitWorldWidget(EWorldWidgetType WorldWidgetType);
 
+	UFUNCTION(BlueprintCallable, Category = "UI|World Widget")
+	void OpenWorldWidget(EWorldWidgetType WorldWidgetType, int32 ZOrder = 0);
+
+	UFUNCTION(BlueprintCallable, Category = "UI|World Widget")
+	void CloseWorldWidget(EWorldWidgetType WorldWidgetType);
+
+	UFUNCTION(BlueprintCallable, Category = "UI|World Widget")
+	void CompleteCloseWorldWidget(EWorldWidgetType WorldWidgetType);
+
+	UFUNCTION(BlueprintPure, Category = "UI|World Widget")
+	bool IsWorldWidgetOpen(EWorldWidgetType WorldWidgetType) const;
+
+	void ShowWorldWidget(EWorldWidgetType WorldWidgetType, int32 ZOrder = 0);
+	void HideWorldWidget(EWorldWidgetType WorldWidgetType);
+
 public:
 	template<typename T = UUserWidget>
 	T* GetHUD() const
@@ -47,4 +62,14 @@ protected:
 
 	UPROPERTY(Category = UI, VisibleAnywhere, meta = (DisplayName = "WorldWidgets", ArraySizeEnum = "EWorldWidgetType"))
 	TObjectPtr<UUserWidget> mWorldWidgets[static_cast<uint8>(EWorldWidgetType::Count)];
+
+private:
+	enum class EWorldWidgetLifecycleState : uint8
+	{
+		Closed,
+		Open,
+		Closing,
+	};
+
+	EWorldWidgetLifecycleState mWorldWidgetStates[static_cast<uint8>(EWorldWidgetType::Count)]{};
 };
