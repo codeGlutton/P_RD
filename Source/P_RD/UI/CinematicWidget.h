@@ -55,10 +55,20 @@ protected:
 	virtual void PlayCinematicAnimation_Implementation();
 
 private:
+	enum class ECinematicWidgetLifecycleState : uint8
+	{
+		Closed,
+		Opening,
+		Open,
+		Playing,
+		Closing,
+	};
+
 	FOnEndUIOpenAnimation OnEndUIOpenAnimation;
 	FOnEndUICloseAnimation OnEndUICloseAnimation;
 	FOnEndCinematicAnimation OnEndCinematicAnimation;
 
+	ECinematicWidgetLifecycleState LifecycleState = ECinematicWidgetLifecycleState::Closed;
 	bool bOpenUIFinished = false;
 	bool bCloseUIFinished = false;
 	bool bCinematicFinished = false;

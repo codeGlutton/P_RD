@@ -1,36 +1,9 @@
 #include "GameMode/IntroGameMode.h"
 
-#include <type_traits>
-
 #include "Blueprint/UserWidget.h"
 #include "Singleton/InstanceSubsystem/RoomTransitionSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/CinematicWidget.h"
-
-namespace
-{
-	template<typename T>
-	auto TryPreloadFrontendRoomAsync(T* RoomTransitionSubsystem, int)
-		-> decltype(RoomTransitionSubsystem->PreloadFrontendRoomAsync(), bool())
-	{
-		using TResult = decltype(RoomTransitionSubsystem->PreloadFrontendRoomAsync());
-		if constexpr (std::is_same_v<TResult, bool>)
-		{
-			return RoomTransitionSubsystem->PreloadFrontendRoomAsync();
-		}
-		else
-		{
-			RoomTransitionSubsystem->PreloadFrontendRoomAsync();
-			return true;
-		}
-	}
-
-	bool TryPreloadFrontendRoomAsync(URoomTransitionSubsystem* RoomTransitionSubsystem, ...)
-	{
-		RoomTransitionSubsystem->PreloadTitleRoomAsync();
-		return true;
-	}
-}
 
 void AIntroGameMode::BeginRoom()
 {
@@ -38,7 +11,7 @@ void AIntroGameMode::BeginRoom()
 
 	URoomTransitionSubsystem* RoomTransitionSubsystem = GetGameInstance()->GetSubsystem<URoomTransitionSubsystem>();
 	checkf(RoomTransitionSubsystem != nullptr, TEXT("룸 전환 서브시스템 nullptr"));
-	checkf(TryPreloadFrontendRoomAsync(RoomTransitionSubsystem, 0), TEXT("Intro -> Frontend preload 실패"));
+	checkf(RoomTransitionSubsystem->PreloadFrontendRoomAsync(), TEXT("Intro -> Frontend preload 실패"));
 
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
 	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr"));
@@ -52,14 +25,9 @@ void AIntroGameMode::BeginRoom()
 		OpenedCinematicWidget->PlayCinematic(FOnEndCinematicAnimation::CreateWeakLambda(this, [this](UCinematicWidget* CinematicWidget)
 		{
 			(void)CinematicWidget;
-			TransitionLoadedFrontendRoomAsync();
+			URoomTransitionSubsystem* TransitionSubsystem = GetGameInstance()->GetSubsystem<URoomTransitionSubsystem>();
+			checkf(TransitionSubsystem != nullptr, TEXT("룸 전환 서브시스템 nullptr"));
+			TransitionSubsystem->TransitLoadedRoomAsync();
 		}));
 	}));
-}
-
-void AIntroGameMode::TransitionLoadedFrontendRoomAsync() const
-{
-	URoomTransitionSubsystem* RoomTransitionSubsystem = GetGameInstance()->GetSubsystem<URoomTransitionSubsystem>();
-	checkf(RoomTransitionSubsystem != nullptr, TEXT("룸 전환 서브시스템 nullptr"));
-	RoomTransitionSubsystem->TransitLoadedRoomAsync();
 }

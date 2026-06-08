@@ -22,7 +22,4 @@ class P_RD_API AIntroGameMode : public ARDGameModeBase
 
 protected:
 	void BeginRoom() override;
-
-private:
-	void TransitionLoadedFrontendRoomAsync() const;
 };

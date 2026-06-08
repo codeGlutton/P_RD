@@ -10,32 +10,46 @@ void UCinematicWidget::OpenUI(FOnEndUIOpenAnimation Callback)
 {
 	OnEndUIOpenAnimation = MoveTemp(Callback);
 	bOpenUIFinished = false;
+	LifecycleState = ECinematicWidgetLifecycleState::Opening;
 	SetVisibility(ESlateVisibility::Visible);
 	PlayOpenUIAnimation();
 }
 
 void UCinematicWidget::CloseUI(FOnEndUICloseAnimation Callback)
 {
+	if (LifecycleState == ECinematicWidgetLifecycleState::Closed || LifecycleState == ECinematicWidgetLifecycleState::Closing)
+	{
+		return;
+	}
+
 	OnEndUICloseAnimation = MoveTemp(Callback);
 	bCloseUIFinished = false;
+	LifecycleState = ECinematicWidgetLifecycleState::Closing;
 	PlayCloseUIAnimation();
 }
 
 void UCinematicWidget::PlayCinematic(FOnEndCinematicAnimation Callback)
 {
+	if (LifecycleState == ECinematicWidgetLifecycleState::Closed || LifecycleState == ECinematicWidgetLifecycleState::Closing)
+	{
+		return;
+	}
+
 	OnEndCinematicAnimation = MoveTemp(Callback);
 	bCinematicFinished = false;
+	LifecycleState = ECinematicWidgetLifecycleState::Playing;
 	PlayCinematicAnimation();
 }
 
 void UCinematicWidget::FinishOpenUI()
 {
-	if (bOpenUIFinished)
+	if (bOpenUIFinished || LifecycleState != ECinematicWidgetLifecycleState::Opening)
 	{
 		return;
 	}
 
 	bOpenUIFinished = true;
+	LifecycleState = ECinematicWidgetLifecycleState::Open;
 	if (OnEndUIOpenAnimation.IsBound())
 	{
 		OnEndUIOpenAnimation.Execute(this);
@@ -45,13 +59,14 @@ void UCinematicWidget::FinishOpenUI()
 
 void UCinematicWidget::FinishCloseUI()
 {
-	if (bCloseUIFinished)
+	if (bCloseUIFinished || LifecycleState != ECinematicWidgetLifecycleState::Closing)
 	{
 		return;
 	}
 
 	bCloseUIFinished = true;
 	SetVisibility(ESlateVisibility::Collapsed);
+	LifecycleState = ECinematicWidgetLifecycleState::Closed;
 	if (OnEndUICloseAnimation.IsBound())
 	{
 		OnEndUICloseAnimation.Execute(this);
@@ -61,12 +76,13 @@ void UCinematicWidget::FinishCloseUI()
 
 void UCinematicWidget::FinishCinematic()
 {
-	if (bCinematicFinished)
+	if (bCinematicFinished || LifecycleState != ECinematicWidgetLifecycleState::Playing)
 	{
 		return;
 	}
 
 	bCinematicFinished = true;
+	LifecycleState = ECinematicWidgetLifecycleState::Open;
 	if (OnEndCinematicAnimation.IsBound())
 	{
 		OnEndCinematicAnimation.Execute(this);
