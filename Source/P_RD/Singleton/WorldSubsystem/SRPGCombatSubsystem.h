@@ -22,7 +22,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogSRPGCombat, Log, All)
 struct FPresentationBarrier;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnBeginCombatUI, TSharedPtr<FPresentationBarrier> /*Barrier*/)
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnEndCombatUI, TSharedPtr<FPresentationBarrier> /*Barrier*/)
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndCombatUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, ESRPGCombatResult /*Result*/)
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBeginAnyTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGTurnContext& /*TurnContext*/)
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnEndAnyTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGTurnContext& /*TurnContext*/, ESRPGTurnResult /*Result*/)
 
@@ -160,9 +160,9 @@ public:
 
 protected:
 	// @brief 현재 전투 방 상태
-	ECombatRoomPhase mPhase = ECombatRoomPhase::None;
+	ESRPGCombatRoomPhase mPhase = ESRPGCombatRoomPhase::None;
 	// @brief 전투 방 결과
-	ECombatResult mResult;
+	ESRPGCombatResult mResult;
 
 	TCircularDoubleLinkedList<TSharedPtr<FSRPGTurnContext>> mTurnContexts;
 	TCircularDoubleLinkedList<TSharedPtr<FSRPGTurnContext>>::TCircularDoubleLinkedListNode* mCurTurnContextNode = nullptr;

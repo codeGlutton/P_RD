@@ -1,7 +1,7 @@
 ﻿#include "FunctionLibrary/GASTargetFunctionLibrary.h"
 #include "Pawn/Unit.h"
 
-FGameplayAbilityTargetDataHandle UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle(const AUnit* Source)
+FGameplayAbilityTargetDataHandle UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle(const ITileTargetable* Source)
 {
 	FGameplayAbilityTargetDataHandle Handle;
 	Handle.Add(Source->MakeSnapshotTargetData());
@@ -9,7 +9,7 @@ FGameplayAbilityTargetDataHandle UGASTargetFunctionLibrary::MakeSnapshotTargetDa
 	return Handle;
 }
 
-FGameplayAbilityTargetDataHandle UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle(const AUnit* Source, const AUnit* Target)
+FGameplayAbilityTargetDataHandle UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle(const ITileTargetable* Source, const ITileTargetable* Target)
 {
 	FGameplayAbilityTargetDataHandle Handle;
 	Handle.Add(Source->MakeSnapshotTargetData());
@@ -18,7 +18,7 @@ FGameplayAbilityTargetDataHandle UGASTargetFunctionLibrary::MakeSnapshotTargetDa
 	return Handle;
 }
 
-const FUnitSnapshotTargetData* UGASTargetFunctionLibrary::GetSnapshotTargetData(const FGameplayAbilityTargetDataHandle& Handle, int32 Index)
+const FTileTargetSnapshotTargetData* UGASTargetFunctionLibrary::GetSnapshotTargetData(const FGameplayAbilityTargetDataHandle& Handle, int32 Index)
 {
 	const FGameplayAbilityTargetData* TargetData = Handle.Get(Index);
 	if (TargetData == nullptr)
@@ -26,11 +26,11 @@ const FUnitSnapshotTargetData* UGASTargetFunctionLibrary::GetSnapshotTargetData(
 		return nullptr;
 	}
 
-	if (TargetData->GetScriptStruct()->IsChildOf(FUnitSnapshotTargetData::StaticStruct()) == false)
+	if (TargetData->GetScriptStruct()->IsChildOf(FTileTargetSnapshotTargetData::StaticStruct()) == false)
 	{
 		return nullptr;
 	}
 	
-	const FUnitSnapshotTargetData* SnapshotTargetData = StaticCast<const FUnitSnapshotTargetData*>(TargetData);
+	const FTileTargetSnapshotTargetData* SnapshotTargetData = StaticCast<const FTileTargetSnapshotTargetData*>(TargetData);
 	return SnapshotTargetData;
 }
