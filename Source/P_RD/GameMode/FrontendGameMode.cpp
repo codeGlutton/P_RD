@@ -501,15 +501,6 @@ void AFrontendGameMode::BeginRoom()
 {
 	LoadOrCreateFrontendUserProfile();
 
-	if (UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())
-	{
-		if (UUserWidget* TitleHUD = WorldWidgetSubsystem->GetHUD())
-		{
-			TitleHUD->AddToViewport();
-			TitleHUD->SetVisibility(ESlateVisibility::Visible);
-		}
-	}
-
 	if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
 	{
 		PlayerController->ActivateTouchInterface(nullptr);
@@ -518,6 +509,8 @@ void AFrontendGameMode::BeginRoom()
 		FInputModeUIOnly InputMode;
 		PlayerController->SetInputMode(InputMode);
 	}
+
+	ShowTitleHUD();
 }
 
 void AFrontendGameMode::LoadOrCreateFrontendUserProfile()
@@ -547,6 +540,36 @@ void AFrontendGameMode::LoadOrCreateFrontendUserProfile()
 	{
 		SaveGameSubsystem->SaveUser();
 	}
+}
+
+void AFrontendGameMode::ShowTitleHUD()
+{
+	if (mTitleHUDShown)
+	{
+		return;
+	}
+
+	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld() != nullptr
+		? GetWorld()->GetSubsystem<UWorldWidgetSubsystem>()
+		: nullptr;
+	if (WorldWidgetSubsystem == nullptr)
+	{
+		return;
+	}
+
+	UUserWidget* TitleHUD = WorldWidgetSubsystem->GetHUD();
+	if (TitleHUD == nullptr)
+	{
+		return;
+	}
+
+	if (!TitleHUD->IsInViewport())
+	{
+		TitleHUD->AddToViewport();
+	}
+
+	TitleHUD->SetVisibility(ESlateVisibility::Visible);
+	mTitleHUDShown = true;
 }
 
 bool AFrontendGameMode::OpenTitleCharacterSelect()

@@ -192,7 +192,7 @@ enum class ESRPGTurnPhase : uint8
     TurnInit            UMETA(ToolTip = "턴 초기화"),
     TurnStart           UMETA(ToolTip = "턴 시작"),
     ActionSelect        UMETA(ToolTip = "액션 선택 중"),
-    ActionBuild         UMETA(ToolTip = "액션 제작 중"),
+    ActionLock         UMETA(ToolTip = "액션 제작 중"),
     ActionPlay          UMETA(ToolTip = "액션 진행 중"),
     TurnAbort           UMETA(ToolTip = "턴 진행 중단"),
     TurnEnd             UMETA(ToolTip = "턴 종료"),
@@ -218,3 +218,19 @@ enum class ESRPGActionPhase : uint8
     ActionAbort         UMETA(ToolTip = "액션 진행 중단"),
     ActionEnd           UMETA(ToolTip = "액션 종료"),
 };
+
+UENUM(BlueprintType)
+enum class ESRPGActionDraftType : uint8
+{
+    Immediate           UMETA(ToolTip = "즉시 빌드"),
+    Interactive         UMETA(ToolTip = "유저 인터렉션이 포함"),
+};
+
+UENUM(BlueprintType)
+enum class ESRPGSkillActionDraftPhase : uint8
+{
+    None                UMETA(Hidden),
+    TargetSelection     UMETA(ToolTip = "대상 영역 선택"),
+    Preview             UMETA(ToolTip = "프리뷰 표기"),
+};
+

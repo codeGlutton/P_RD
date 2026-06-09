@@ -7,10 +7,31 @@
 
 #include "FunctionLibrary/GASTargetFunctionLibrary.h"
 
-void FSRPGActionBuilder::InitBuilder(TSharedRef<FSRPGTurnContext> Owner, AUnit* Instigator)
+void FSRPGActionDraft::InitDraft(TSharedRef<FSRPGTurnContext> Owner, AUnit* Instigator)
 {
 	mOwner = Owner;
 	mInstigator = Instigator;
+
+	if (GetDraftType() == ESRPGActionDraftType::Interactive)
+	{
+		// 상호 작용이 필요한 액션의 경우, 턴의 진행을 Lock할 필요가 있다
+		mLock = MakeUnique<FSRPGActionLock>(Owner);
+	}
+}
+
+UWorld* FSRPGActionDraft::GetWorld() const
+{
+	return mOwner.Pin()->GetWorld();
+}
+
+TWeakPtr<FSRPGTurnContext> FSRPGActionDraft::GetOwner() const
+{
+	return mOwner;
+}
+
+AUnit* FSRPGActionDraft::GetInstigator() const
+{
+	return mInstigator;
 }
 
 void FSRPGAction::InitAction(TSharedRef<FSRPGTurnContext> Owner, AUnit* Instigator)
@@ -40,11 +61,6 @@ void FSRPGAction::EndAction()
 	TSharedPtr<FSRPGTurnContext> TurnContext = mOwner.Pin();
 	checkf(TurnContext != nullptr, TEXT("이미 제거된 턴에서 Action 종료 명령 오류"));
 	TurnContext->OnEndCurrentAction(AsShared(), mResult);
-}
-
-bool FSRPGAction::IsTurnEndingAction() const
-{
-	return false;
 }
 
 void FSRPGAction::EvaluateActionEndState(bool ForceAbort)

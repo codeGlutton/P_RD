@@ -48,7 +48,7 @@ void URoomTransitionSubsystem::PreloadTitleRoomAsync(bool IsAutoTransition)
         LoadParams.OnComplete.BindUObject(this, &URoomTransitionSubsystem::OnLoadNextRoom);
 
         const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
-        TSharedPtr<FStreamableHandle> NewPreloadHandle = AssetManager->PreloadPrimaryAssets({ GamePlaySettings->mTitleRoomId }, Bundles, true, MoveTemp(LoadParams));
+        TSharedPtr<FStreamableHandle> NewPreloadHandle = AssetManager->PreloadPrimaryAssets({ GamePlaySettings->mFrontendRoomId }, Bundles, true, MoveTemp(LoadParams));
         mRoomPreloadHandle = NewPreloadHandle;
     }
 }
@@ -246,7 +246,7 @@ void URoomTransitionSubsystem::OnTransitNextRoom()
     TSoftObjectPtr<UWorld> BackgroundMap = StaticRoomData->mBackgroundMap;
     if (BackgroundMap.IsNull())
     {
-        BackgroundMap = GetDefault<UGamePlaySettings>()->mDefaultRoomMap;
+        BackgroundMap = GetDefault<UGamePlaySettings>()->mDefaultBackgroundMap;
         UE_LOG(LogTransition, Warning, TEXT("Room background map is empty for %s. Using default room map: %s"),
             *NextRoom.mStaticRoomSpawnDataId.ToString(),
             *BackgroundMap.ToSoftObjectPath().ToString());
