@@ -43,6 +43,22 @@ ATileMap::ATileMap()
 		mTileMesh = PlaneMeshFinder.Object;
 		mTileMeshComponent->SetStaticMesh(mTileMesh);
 	}
+
+	// 강조 스타일 기본값 (우선순위 Aim < Select < Effect)
+	// 조준 범위: 회색 반투명, 바닥에 깔림
+	mAimStyle.mColor = FLinearColor(0.5f, 0.5f, 0.5f, 0.5f);
+	mAimStyle.mBlendMode = ETileHighlightBlend::Mix;
+	mAimStyle.mPriority = 0;
+
+	// 선택 타일: 노란색, Aim 위에 덮어씀
+	mSelectStyle.mColor = FLinearColor(1.0f, 0.9f, 0.1f, 1.0f);
+	mSelectStyle.mBlendMode = ETileHighlightBlend::Overwrite;
+	mSelectStyle.mPriority = 1;
+
+	// 영향 범위: 빨간색, 최상위에서 펄스로 섞임
+	mEffectStyle.mColor = FLinearColor(1.0f, 0.1f, 0.1f, 0.6f);
+	mEffectStyle.mBlendMode = ETileHighlightBlend::Mix;
+	mEffectStyle.mPriority = 2;
 }
 
 void ATileMap::OnConstruction(const FTransform& Transform)
@@ -197,6 +213,16 @@ TArray<FTileIndex> ATileMap::GetEffectTiles(const FTileIndex& Caster, const FTil
 {
 	// TODO: 영향 패턴별 영향 타일 계산
 	return TArray<FTileIndex>();
+}
+
+void ATileMap::SetTileHighlight(ETileHighlightFlag Flag, const TArray<FTileIndex>& Tiles)
+{
+	// TODO: Flag 비트를 가진 기존 타일에서 끄고, Tiles에 켠 뒤 custom data 갱신
+}
+
+void ATileMap::ClearTileHighlight(ETileHighlightFlag Flag)
+{
+	// TODO: 모든 타일에서 Flag 비트를 끄고 custom data 갱신
 }
 
 bool ATileMap::IsBlocking(const FTileIndex& TileIndex, ETileLayerFlag LayerFlag) const
