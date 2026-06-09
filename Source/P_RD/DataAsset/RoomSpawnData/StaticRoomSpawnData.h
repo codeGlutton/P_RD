@@ -21,6 +21,11 @@ class P_RD_API UStaticRoomSpawnData : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 
+#if WITH_EDITOR
+public:
+    EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
+#endif
+
 public:
     void PostLoad() override
     {
