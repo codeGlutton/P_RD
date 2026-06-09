@@ -6,25 +6,6 @@
 
 #include "Pawn/SkillComponent.h"
 
-UScriptStruct* FUnitSnapshotTargetData::GetScriptStruct() const
-{
-	return FUnitSnapshotTargetData::StaticStruct();
-}
-
-bool FUnitSnapshotTargetData::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& OutSuccess)
-{
-	Ar << mMaxHP;
-	Ar << mHP;
-	Ar << mSkillPoint;
-	Ar << mDamagePoint;
-	Ar << mDefensePoint;
-	Ar << mMovementPoint;
-	Ar << mBuffState;
-	Ar << mDebuffState;
-
-	return true;
-}
-
 AUnit::AUnit() :
 	mTeamId(EUnitTeamType::AllNeutral)
 {
@@ -98,22 +79,9 @@ UAbilitySystemComponent* AUnit::GetAbilitySystemComponent() const
 	return mAbilitySystemComp;
 }
 
-USkillComponent* AUnit::GetSkillComponent() const
+FTileTargetSnapshotTargetData* AUnit::MakeSnapshotTargetData() const
 {
-	return mSkillComp;
-}
-
-void AUnit::OnBeginPlayRoom()
-{
-}
-
-void AUnit::OnEndPlayRoom()
-{
-}
-
-FUnitSnapshotTargetData* AUnit::MakeSnapshotTargetData() const
-{
-	FUnitSnapshotTargetData* TargetData = new FUnitSnapshotTargetData();
+	FTileTargetSnapshotTargetData* TargetData = new FTileTargetSnapshotTargetData();
 
 	bool IsFoundAttribute = false;
 	TargetData->mMaxHP = mAbilitySystemComp->GetGameplayAttributeValue(UUnitAttributeSet::GetMaxHPAttribute(), IsFoundAttribute);
@@ -132,6 +100,19 @@ FUnitSnapshotTargetData* AUnit::MakeSnapshotTargetData() const
 	return TargetData;
 }
 
+USkillComponent* AUnit::GetSkillComponent() const
+{
+	return mSkillComp;
+}
+
+void AUnit::OnBeginPlayRoom()
+{
+}
+
+void AUnit::OnEndPlayRoom()
+{
+}
+
 void AUnit::SetStaticSpawnData(const UStaticUnitSpawnData* StaticUnitSpawnData)
 {
 	mStaticUnitSpawnData = StaticUnitSpawnData;
@@ -140,11 +121,6 @@ void AUnit::SetStaticSpawnData(const UStaticUnitSpawnData* StaticUnitSpawnData)
 UUnitAttributeSet* AUnit::GetUnitAttributeSet() const
 {
 	return mUnitAttributeSet;
-}
-
-bool AUnit::IsDead() const
-{
-	return mAbilitySystemComp->HasMatchingGameplayTag(EffectTags::GameplayEffect_ActorState_Dead);
 }
 
 FName AUnit::GetUnitKeyName() const
