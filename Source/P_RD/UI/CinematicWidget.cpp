@@ -11,6 +11,11 @@ void UCinematicWidget::OpenUI(FOnEndUIOpenAnimation Callback)
 	OnEndUIOpenAnimation = MoveTemp(Callback);
 	bOpenUIFinished = false;
 	LifecycleState = ECinematicWidgetLifecycleState::Opening;
+	if (IsInViewport() == false)
+	{
+		AddToViewport();
+	}
+
 	SetVisibility(ESlateVisibility::Visible);
 	PlayOpenUIAnimation();
 }
@@ -19,6 +24,10 @@ void UCinematicWidget::CloseUI(FOnEndUICloseAnimation Callback)
 {
 	if (LifecycleState == ECinematicWidgetLifecycleState::Closed || LifecycleState == ECinematicWidgetLifecycleState::Closing)
 	{
+		if (Callback.IsBound())
+		{
+			Callback.Execute(this);
+		}
 		return;
 	}
 
@@ -26,6 +35,13 @@ void UCinematicWidget::CloseUI(FOnEndUICloseAnimation Callback)
 	bCloseUIFinished = false;
 	LifecycleState = ECinematicWidgetLifecycleState::Closing;
 	PlayCloseUIAnimation();
+}
+
+bool UCinematicWidget::IsOpened() const
+{
+	return LifecycleState == ECinematicWidgetLifecycleState::Opening
+		|| LifecycleState == ECinematicWidgetLifecycleState::Open
+		|| LifecycleState == ECinematicWidgetLifecycleState::Playing;
 }
 
 void UCinematicWidget::PlayCinematic(FOnEndCinematicAnimation Callback)
@@ -66,6 +82,7 @@ void UCinematicWidget::FinishCloseUI()
 
 	bCloseUIFinished = true;
 	SetVisibility(ESlateVisibility::Collapsed);
+	RemoveFromParent();
 	LifecycleState = ECinematicWidgetLifecycleState::Closed;
 	if (OnEndUICloseAnimation.IsBound())
 	{

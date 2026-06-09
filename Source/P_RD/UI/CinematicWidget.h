@@ -8,28 +8,29 @@
 
 #include "RDMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "UI/ToggleableWidgetInterface.h"
 
 #include "CinematicWidget.generated.h"
 
 class UCinematicWidget;
 
-DECLARE_DELEGATE_OneParam(FOnEndUIOpenAnimation, UUserWidget*)
-DECLARE_DELEGATE_OneParam(FOnEndUICloseAnimation, UUserWidget*)
 DECLARE_DELEGATE_OneParam(FOnEndCinematicAnimation, UCinematicWidget*)
 
 /**
  * @brief 시네마틱 표시, UI 열림/닫힘, 재생 완료 알림을 제공하는 위젯 베이스
  */
 UCLASS(BlueprintType, Blueprintable)
-class P_RD_API UCinematicWidget : public UUserWidget
+class P_RD_API UCinematicWidget : public UUserWidget, public IToggleableWidgetInterface
 {
 	GENERATED_BODY()
 
 public:
 	UCinematicWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
-	void OpenUI(FOnEndUIOpenAnimation Callback = FOnEndUIOpenAnimation());
-	void CloseUI(FOnEndUICloseAnimation Callback = FOnEndUICloseAnimation());
+	void OpenUI(FOnEndUIOpenAnimation Callback = FOnEndUIOpenAnimation()) override;
+	void CloseUI(FOnEndUICloseAnimation Callback = FOnEndUICloseAnimation()) override;
+	bool IsOpened() const override;
+
 	void PlayCinematic(FOnEndCinematicAnimation Callback = FOnEndCinematicAnimation());
 
 	UFUNCTION(BlueprintCallable, Category = "UI|Cinematic")

@@ -2,7 +2,6 @@
 #include "Blueprint/UserWidget.h"
 
 #include "Setting/GamePlaySettings.h"
-#include "Singleton/WorldSubsystem/WorldWidgetTransitionInterface.h"
 
 DEFINE_LOG_CATEGORY(LogWorldWidget)
 
@@ -42,7 +41,7 @@ void UWorldWidgetSubsystem::InitWorldWidget(EWorldWidgetType WorldWidgetType)
 	}
 }
 
-void UWorldWidgetSubsystem::OpenWorldWidget(EWorldWidgetType WorldWidgetType, int32 ZOrder)
+void UWorldWidgetSubsystem::OpenWorldWidget(EWorldWidgetType WorldWidgetType, FOnEndUIOpenAnimation Callback)
 {
 	InitWorldWidget(WorldWidgetType);
 
@@ -53,28 +52,17 @@ void UWorldWidgetSubsystem::OpenWorldWidget(EWorldWidgetType WorldWidgetType, in
 		return;
 	}
 
-	const uint8 Index = StaticCast<uint8>(WorldWidgetType);
-	EWorldWidgetLifecycleState& WidgetState = mWorldWidgetStates[Index];
-	if (WidgetState == EWorldWidgetLifecycleState::Open && WorldWidget->IsInViewport() && WorldWidget->IsVisible())
+	IToggleableWidgetInterface* ToggleableWidget = Cast<IToggleableWidgetInterface>(WorldWidget);
+	if (ToggleableWidget == nullptr)
 	{
+		UE_LOG(LogWorldWidget, Warning, TEXT("World widget does not implement ToggleableWidgetInterface. Type: %d"), StaticCast<uint8>(WorldWidgetType));
 		return;
 	}
 
-	if (WorldWidget->IsInViewport() == false)
-	{
-		WorldWidget->AddToViewport(ZOrder);
-	}
-
-	WidgetState = EWorldWidgetLifecycleState::Open;
-	WorldWidget->SetVisibility(ESlateVisibility::Visible);
-
-	if (WorldWidget->GetClass()->ImplementsInterface(UWorldWidgetTransitionInterface::StaticClass()))
-	{
-		IWorldWidgetTransitionInterface::Execute_HandleWorldWidgetOpened(WorldWidget, WorldWidgetType);
-	}
+	ToggleableWidget->OpenUI(MoveTemp(Callback));
 }
 
-void UWorldWidgetSubsystem::CloseWorldWidget(EWorldWidgetType WorldWidgetType)
+void UWorldWidgetSubsystem::CloseWorldWidget(EWorldWidgetType WorldWidgetType, FOnEndUICloseAnimation Callback)
 {
 	UUserWidget* WorldWidget = GetWorldWidget(WorldWidgetType);
 	if (WorldWidget == nullptr)
@@ -82,59 +70,27 @@ void UWorldWidgetSubsystem::CloseWorldWidget(EWorldWidgetType WorldWidgetType)
 		return;
 	}
 
-	EWorldWidgetLifecycleState& WidgetState = mWorldWidgetStates[StaticCast<uint8>(WorldWidgetType)];
-	if (WidgetState == EWorldWidgetLifecycleState::Closed || WidgetState == EWorldWidgetLifecycleState::Closing)
+	IToggleableWidgetInterface* ToggleableWidget = Cast<IToggleableWidgetInterface>(WorldWidget);
+	if (ToggleableWidget == nullptr)
 	{
+		UE_LOG(LogWorldWidget, Warning, TEXT("World widget does not implement ToggleableWidgetInterface. Type: %d"), StaticCast<uint8>(WorldWidgetType));
 		return;
 	}
 
-	WidgetState = EWorldWidgetLifecycleState::Closing;
-
-	if (WorldWidget->GetClass()->ImplementsInterface(UWorldWidgetTransitionInterface::StaticClass())
-		&& IWorldWidgetTransitionInterface::Execute_HandleWorldWidgetCloseRequested(WorldWidget, WorldWidgetType))
-	{
-		return;
-	}
-
-	CompleteCloseWorldWidget(WorldWidgetType);
-}
-
-void UWorldWidgetSubsystem::CompleteCloseWorldWidget(EWorldWidgetType WorldWidgetType)
-{
-	UUserWidget* WorldWidget = GetWorldWidget(WorldWidgetType);
-	if (WorldWidget == nullptr)
-	{
-		return;
-	}
-
-	EWorldWidgetLifecycleState& WidgetState = mWorldWidgetStates[StaticCast<uint8>(WorldWidgetType)];
-	if (WidgetState != EWorldWidgetLifecycleState::Closing)
-	{
-		return;
-	}
-
-	WorldWidget->SetVisibility(ESlateVisibility::Collapsed);
-	WidgetState = EWorldWidgetLifecycleState::Closed;
-
-	if (WorldWidget->GetClass()->ImplementsInterface(UWorldWidgetTransitionInterface::StaticClass()))
-	{
-		IWorldWidgetTransitionInterface::Execute_HandleWorldWidgetClosed(WorldWidget, WorldWidgetType);
-	}
+	ToggleableWidget->CloseUI(MoveTemp(Callback));
 }
 
 bool UWorldWidgetSubsystem::IsWorldWidgetOpen(EWorldWidgetType WorldWidgetType) const
 {
 	const UUserWidget* WorldWidget = GetWorldWidget(WorldWidgetType);
-	const EWorldWidgetLifecycleState WidgetState = mWorldWidgetStates[StaticCast<uint8>(WorldWidgetType)];
-	return WidgetState == EWorldWidgetLifecycleState::Open
-		&& WorldWidget != nullptr
-		&& WorldWidget->IsInViewport()
-		&& WorldWidget->IsVisible();
+	const IToggleableWidgetInterface* ToggleableWidget = Cast<IToggleableWidgetInterface>(WorldWidget);
+	return ToggleableWidget != nullptr && ToggleableWidget->IsOpened();
 }
 
 void UWorldWidgetSubsystem::ShowWorldWidget(EWorldWidgetType WorldWidgetType, int32 ZOrder)
 {
-	OpenWorldWidget(WorldWidgetType, ZOrder);
+	(void)ZOrder;
+	OpenWorldWidget(WorldWidgetType);
 }
 
 void UWorldWidgetSubsystem::HideWorldWidget(EWorldWidgetType WorldWidgetType)
