@@ -25,6 +25,8 @@ class UUnitAttributeSet;
 class UPackageMap;
 class UStaticUnitSpawnData;
 
+class USkillComponent;
+
 USTRUCT(Blueprintable)
 struct FUnitSnapshotTargetData : public FGameplayAbilityTargetData
 {
@@ -86,6 +88,9 @@ protected:
 	void SetTileTransform(const FTileTransform& Transform) override;
 
 public:
+	USkillComponent* GetSkillComponent() const;
+
+public:
 	virtual void OnBeginPlayRoom();
 	virtual void OnEndPlayRoom();
 
@@ -116,6 +121,10 @@ private:
 	TObjectPtr<UAbilitySystemComponent>	mAbilitySystemComp;
 	UPROPERTY(Category = GAS, VisibleAnywhere, meta = (DisplayName = "UnitAttributeSet"))
 	TObjectPtr<UUnitAttributeSet> mUnitAttributeSet;
+
+private:
+	UPROPERTY(Category = Skill, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "SkillComp"))
+	TObjectPtr<USkillComponent>	mSkillComp;
 
 protected:
 	UPROPERTY(Category = Spawn, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "StaticUnitSpawnData"))

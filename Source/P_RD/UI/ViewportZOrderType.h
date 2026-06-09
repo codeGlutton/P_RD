@@ -16,7 +16,9 @@
 UENUM(BlueprintType)
 enum class EViewportZOrderType : uint8
 {
-	None = 0,
-	PopUp = 10,
+	None = 0			UMETA(ToolTip = "단순 위젯"),
+	PopUp = 10			UMETA(ToolTip = "단순 팝업"),
+	FadeInOut = 20		UMETA(ToolTip = "페이드 인, 페이드 아웃"),
+	LoadingNotify = 30	UMETA(ToolTip = "페이드 인, 페이드 아웃 위에 뜰 로딩 메세지"),
 };
 

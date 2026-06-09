@@ -167,8 +167,7 @@ void URunPersistData::MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCrea
 
 void URunPersistData::SetCurrentRoomIndex(int32 RowIndex, int32 ColumnIndex)
 {
-	mStage.GetMutable().mCurRow = RowIndex;
-	mStage.GetMutable().mCurColumn = ColumnIndex;
+	mStage.GetMutable().SetCurrentRoom(RowIndex, ColumnIndex);
 }
 
 void URunPersistData::CollectAssetIds(int32 RowIndex, int32 ColumnIndex, OUT TArray<FPrimaryAssetId>& PlayerIds, OUT FPrimaryAssetId& StageId, OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const

@@ -6,39 +6,30 @@
 
 #include "FunctionLibrary/GASTargetFunctionLibrary.h"
 
-TSharedPtr<FSRPGAction> FSRPGTurnContext::BuildAction(TSharedPtr<FSRPGActionBuilder> Builder)
+void FSRPGTurnContext::CompleteActionBuild(TUniquePtr<FSRPGActionDraft>&& Draft)
 {
-	checkf(Builder->mIsExpired == false, TEXT("만기된 빌더. 재사용 불가"));
-
-	checkf(mPhase == ESRPGTurnPhase::ActionBuild, TEXT("액션 빌드 절차 오류"));
-	mPhase = ESRPGTurnPhase::ActionSelect;
-
-	TSharedPtr<FSRPGAction> NewAction = Builder->BuildAction();
-	Builder->mIsExpired = true;
-
-	return NewAction;
-}
-
-void FSRPGTurnContext::UnbuildAction(TSharedPtr<FSRPGActionBuilder> Builder)
-{
-	checkf(Builder->mIsExpired == false, TEXT("만기된 빌더. 재사용 불가"));
-
-	checkf(mPhase == ESRPGTurnPhase::ActionBuild, TEXT("액션 빌드 절차 오류"));
-	mPhase = ESRPGTurnPhase::ActionSelect;
-
-	Builder->UnbuildAction();
-	Builder->mIsExpired = true;
-}
-
-void FSRPGTurnContext::PushAction(TSharedPtr<FSRPGAction> NewAction)
-{
-	mActions.Enqueue(NewAction);
-
-	// 액션 대기 중 경우, 새로운 액션 즉시 진행
-	if (mPhase == ESRPGTurnPhase::ActionSelect)
+	if (Draft == nullptr)
 	{
-		StartNextAction();
+		UE_LOG(LogSRPGCombat, Log, TEXT("등록할 Action 객체 nullptr"));
+		return;
 	}
+
+	TSharedPtr<FSRPGAction> NewAction = Draft->FinalizeDraft();
+	Draft->OnFinalizeDraft();
+	
+	NewAction->InitAction(AsShared(), mOwner);
+	EnqueueAction(NewAction);
+}
+
+void FSRPGTurnContext::CancelActionBuild(TUniquePtr<FSRPGActionDraft>&& Draft)
+{
+	if (Draft == nullptr)
+	{
+		UE_LOG(LogSRPGCombat, Log, TEXT("취소할 Action 객체 nullptr"));
+		return;
+	}
+
+	Draft->OnDiscardDraft();
 }
 
 void FSRPGTurnContext::InitTurn(AUnit* Owner, int32 LifeCount)
@@ -129,7 +120,18 @@ void FSRPGTurnContext::EndTurn()
 	OnEndTurnUI.Broadcast(PresentationBarrier, *this, mResult);
 }
 
-void FSRPGTurnContext::StartNextAction()
+void FSRPGTurnContext::EnqueueAction(TSharedPtr<FSRPGAction> NewAction)
+{
+	mActions.Enqueue(NewAction);
+
+	// 액션 대기 중 경우, 새로운 액션 즉시 진행
+	if (mPhase == ESRPGTurnPhase::ActionSelect)
+	{
+		DequeueAction();
+	}
+}
+
+void FSRPGTurnContext::DequeueAction()
 {
 	checkf(mPhase == ESRPGTurnPhase::ActionSelect, TEXT("선택 가능 상태에서만 다음 액션으로 통과 가능"));
 
@@ -175,7 +177,7 @@ void FSRPGTurnContext::OnEndCurrentAction(TSharedRef<FSRPGAction> Action, ESRPGA
 	checkf(mPhase == ESRPGTurnPhase::ActionPlay, TEXT("액션 종료 절차 오류"));
 	mPhase = ESRPGTurnPhase::ActionSelect;
 
-	StartNextAction();
+	DequeueAction();
 }
 
 void FSRPGTurnContext::EvaluateTurnEndState(bool ForceAbort)
