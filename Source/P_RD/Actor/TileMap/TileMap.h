@@ -12,6 +12,7 @@
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "Actor/TileMap/Tile.h"
 #include "Actor/TileMap/TileLayer.h"
+#include "Actor/TileMap/TileHighlight.h"
 #include "TileMap.generated.h"
 
 class ITileActor;
@@ -111,6 +112,25 @@ public:
 		int32 Size,
 		bool bPenetrate
 	) const;
+
+	/* 강조 표시 */
+	/**
+	 * @brief 지정한 타일들에 강조 상태를 설정 (해당 플래그 비트에 한해 치환)
+	 * @details
+	 * Flag의 각 비트에 대해, 그 비트를 가진 기존 타일에서 끄고 Tiles에만 켠다.
+	 * 다른 플래그 비트는 보존하므로, Aim 위에 Select를 칠해도 Aim은 유지된다.
+	 *
+	 * @param[in] Flag  : 설정할 강조 상태
+	 * @param[in] Tiles : 강조할 타일 목록 (맵 밖 좌표는 무시)
+	 */
+	void SetTileHighlight(ETileHighlightFlag Flag, const TArray<FTileIndex>& Tiles);
+
+	/**
+	 * @brief 지정한 강조 상태를 모든 타일에서 해제
+	 * @details OR로 조합한 여러 비트를 한 번에 끌 수 있다 (예: Select | Effect).
+	 * @param[in] Flag : 해제할 강조 상태 (비트 조합 가능)
+	 */
+	void ClearTileHighlight(ETileHighlightFlag Flag);
 
 	/**
 	 * 배치 가능한지 체크하는 함수
@@ -241,6 +261,27 @@ protected:
 	// @brief 타일 시각 크기 비율 (1.0 미만이면 타일 사이에 틈이 생겨 격자선처럼 보임)
 	UPROPERTY(EditAnywhere, Category = "TileMap|Visual", meta = (DisplayName = "Tile Visual Scale", ClampMin = "0.1", ClampMax = "1.0"))
 	float mTileVisualScale = 0.95f;
+
+	/* 강조 표시 */
+	// @brief 조준 범위 스타일 (우선순위 최하, 바닥에 깔림)
+	UPROPERTY(EditAnywhere, Category = "TileMap|Highlight", meta = (DisplayName = "Aim Style"))
+	FTileHighlightStyle mAimStyle;
+
+	// @brief 선택 타일 스타일 (Aim 위에 덮어씀)
+	UPROPERTY(EditAnywhere, Category = "TileMap|Highlight", meta = (DisplayName = "Select Style"))
+	FTileHighlightStyle mSelectStyle;
+
+	// @brief 영향 범위 스타일 (우선순위 최상, 펄스로 알파 변조)
+	UPROPERTY(EditAnywhere, Category = "TileMap|Highlight", meta = (DisplayName = "Effect Style"))
+	FTileHighlightStyle mEffectStyle;
+
+	// @brief 펄스 강도 (Effect 알파에 곱하는 진동의 진폭, 0~1)
+	UPROPERTY(EditAnywhere, Category = "TileMap|Highlight", meta = (DisplayName = "Pulse Intensity", ClampMin = "0.0", ClampMax = "1.0"))
+	float mPulseIntensity = 0.5f;
+
+	// @brief 펄스 주기 (초)
+	UPROPERTY(EditAnywhere, Category = "TileMap|Highlight", meta = (DisplayName = "Pulse Period", ClampMin = "0.01"))
+	float mPulsePeriod = 1.0f;
 
 private:
 	/**

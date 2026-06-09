@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
+#include "Actor/TileMap/TileHighlight.h"
 #include "Tile.generated.h"
 
 class ITileActor;
@@ -31,4 +32,7 @@ protected:
 
 	// @brief 배치된 액터
 	TArray<TScriptInterface<ITileActor>> mActors;
+
+	// @brief 강조 표시 상태 (Aim/Select/Effect 비트 조합)
+	ETileHighlightFlag mHighlight = ETileHighlightFlag::None;
 };
