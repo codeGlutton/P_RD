@@ -297,6 +297,26 @@ private:
 	static TScriptInterface<ITileActor> ToTileActorInterface(ITileActor* Actor);
 
 	/**
+	 * @brief 타일에 액터 등록 (mActors에 추가)
+	 */
+	void RegisterActorToTile(FTile* Tile, ITileActor* Actor);
+
+	/**
+	 * @brief 타일에서 액터 해제 (mActors에서 제거)
+	 */
+	void UnregisterActorFromTile(FTile* Tile, ITileActor* Actor);
+
+	/**
+	 * @brief 같은 타일의 다른 액터들과 양방향 OnBeginTileOverlap 통지 (자기 제외)
+	 */
+	void NotifyBeginOverlap(FTile* Tile, ITileActor* Actor);
+
+	/**
+	 * @brief 같은 타일의 다른 액터들과 양방향 OnEndTileOverlap 통지 (자기 제외)
+	 */
+	void NotifyEndOverlap(FTile* Tile, ITileActor* Actor);
+
+	/**
 	 * @brief 현재 Width/Height/TileSize에 맞춰 타일 인스턴스를 모두 재생성
 	 */
 	void RebuildTileInstances();
