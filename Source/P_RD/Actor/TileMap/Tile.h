@@ -26,11 +26,12 @@ struct FTile
 	friend class ATileMap;
 
 protected:
-	// @brief 제한된 레이어
-	UPROPERTY(meta = (Bitmask, BitmaskEnum = "/Script/P_RD.ETileLayerFlag"))
-	int32 mBlockLayerFlags;
+	// @brief 진입 액터가 이 타일에 막히는지 판정 (타일 위 액터들과 비교)
+	bool IsBlocked(const ITileActor* Incoming) const;
 
 	// @brief 배치된 액터
+	// @warning UObject 참조라 GC 추적용 UPROPERTY 필수이므로 삭제 금지
+	UPROPERTY()
 	TArray<TScriptInterface<ITileActor>> mActors;
 
 	// @brief 강조 표시 상태 (Aim/Select/Effect 비트 조합)
