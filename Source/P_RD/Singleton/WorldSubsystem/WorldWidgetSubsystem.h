@@ -11,7 +11,6 @@
 #include "Subsystems/WorldSubsystem.h"
 
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
-#include "UI/ToggleableWidgetInterface.h"
 
 #include "WorldWidgetSubsystem.generated.h"
 
@@ -30,16 +29,6 @@ public:
 	void InitWidgets(UClass* HUDClass, const TArray<EWorldWidgetType>& WorldWidgetTypes);
 	void InitHUD(UClass* HUDClass);
 	void InitWorldWidget(EWorldWidgetType WorldWidgetType);
-
-	void OpenWorldWidget(EWorldWidgetType WorldWidgetType, FOnEndUIOpenAnimation Callback = FOnEndUIOpenAnimation());
-
-	void CloseWorldWidget(EWorldWidgetType WorldWidgetType, FOnEndUICloseAnimation Callback = FOnEndUICloseAnimation());
-
-	UFUNCTION(BlueprintPure, Category = "UI|World Widget")
-	bool IsWorldWidgetOpen(EWorldWidgetType WorldWidgetType) const;
-
-	void ShowWorldWidget(EWorldWidgetType WorldWidgetType, int32 ZOrder = 0);
-	void HideWorldWidget(EWorldWidgetType WorldWidgetType);
 
 public:
 	template<typename T = UUserWidget>

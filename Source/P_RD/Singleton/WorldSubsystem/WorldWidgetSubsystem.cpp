@@ -41,63 +41,6 @@ void UWorldWidgetSubsystem::InitWorldWidget(EWorldWidgetType WorldWidgetType)
 	}
 }
 
-void UWorldWidgetSubsystem::OpenWorldWidget(EWorldWidgetType WorldWidgetType, FOnEndUIOpenAnimation Callback)
-{
-	InitWorldWidget(WorldWidgetType);
-
-	UUserWidget* WorldWidget = GetWorldWidget(WorldWidgetType);
-	if (WorldWidget == nullptr)
-	{
-		UE_LOG(LogWorldWidget, Warning, TEXT("World widget is not available. Type: %d"), StaticCast<uint8>(WorldWidgetType));
-		return;
-	}
-
-	IToggleableWidgetInterface* ToggleableWidget = Cast<IToggleableWidgetInterface>(WorldWidget);
-	if (ToggleableWidget == nullptr)
-	{
-		UE_LOG(LogWorldWidget, Warning, TEXT("World widget does not implement ToggleableWidgetInterface. Type: %d"), StaticCast<uint8>(WorldWidgetType));
-		return;
-	}
-
-	ToggleableWidget->OpenUI(MoveTemp(Callback));
-}
-
-void UWorldWidgetSubsystem::CloseWorldWidget(EWorldWidgetType WorldWidgetType, FOnEndUICloseAnimation Callback)
-{
-	UUserWidget* WorldWidget = GetWorldWidget(WorldWidgetType);
-	if (WorldWidget == nullptr)
-	{
-		return;
-	}
-
-	IToggleableWidgetInterface* ToggleableWidget = Cast<IToggleableWidgetInterface>(WorldWidget);
-	if (ToggleableWidget == nullptr)
-	{
-		UE_LOG(LogWorldWidget, Warning, TEXT("World widget does not implement ToggleableWidgetInterface. Type: %d"), StaticCast<uint8>(WorldWidgetType));
-		return;
-	}
-
-	ToggleableWidget->CloseUI(MoveTemp(Callback));
-}
-
-bool UWorldWidgetSubsystem::IsWorldWidgetOpen(EWorldWidgetType WorldWidgetType) const
-{
-	const UUserWidget* WorldWidget = GetWorldWidget(WorldWidgetType);
-	const IToggleableWidgetInterface* ToggleableWidget = Cast<IToggleableWidgetInterface>(WorldWidget);
-	return ToggleableWidget != nullptr && ToggleableWidget->IsOpened();
-}
-
-void UWorldWidgetSubsystem::ShowWorldWidget(EWorldWidgetType WorldWidgetType, int32 ZOrder)
-{
-	(void)ZOrder;
-	OpenWorldWidget(WorldWidgetType);
-}
-
-void UWorldWidgetSubsystem::HideWorldWidget(EWorldWidgetType WorldWidgetType)
-{
-	CloseWorldWidget(WorldWidgetType);
-}
-
 UUserWidget* UWorldWidgetSubsystem::GetWorldWidget(EWorldWidgetType Type) const
 {
 	return mWorldWidgets[StaticCast<uint8>(Type)];
