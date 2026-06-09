@@ -18,7 +18,7 @@ void USRPGCombatSubsystem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (mPhase == ECombatRoomPhase::CombatPlay && mCurTurnContextNode != nullptr)
+	if (mPhase == ESRPGCombatRoomPhase::CombatPlay && mCurTurnContextNode != nullptr)
 	{
 		mCurTurnContextNode->GetValue()->TickTurn(DeltaTime);
 	}
@@ -34,8 +34,8 @@ void USRPGCombatSubsystem::InitCombat(const UStaticCombatRoomSpawnData* RoomSpaw
 	checkf(RoomSpawnData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
 	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
 
-	checkf(mPhase == ECombatRoomPhase::None, TEXT("중복 초기화"));
-	mPhase = ECombatRoomPhase::CombatInit;
+	checkf(mPhase == ESRPGCombatRoomPhase::None, TEXT("중복 초기화"));
+	mPhase = ESRPGCombatRoomPhase::CombatInit;
 
 	SpawnTileMap();
 	RegisterPlayerUnit(PlayerUnit, RoomSpawnData->mPlayerTransform);
@@ -47,8 +47,8 @@ void USRPGCombatSubsystem::InitCombat(const UStaticCombatRoomSpawnData* RoomSpaw
 
 void USRPGCombatSubsystem::BeginCombat()
 {
-	checkf(mPhase == ECombatRoomPhase::CombatInit, TEXT("전투 시작 전 초기화 우선 필요"));
-	mPhase = ECombatRoomPhase::CombatStart;
+	checkf(mPhase == ESRPGCombatRoomPhase::CombatInit, TEXT("전투 시작 전 초기화 우선 필요"));
+	mPhase = ESRPGCombatRoomPhase::CombatStart;
 
 	UE_LOG(LogSRPGCombat, Log, TEXT("SRPG 전투 시작"))
 
@@ -69,8 +69,8 @@ void USRPGCombatSubsystem::BeginCombat()
 			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Unit, AbilityTags::GameplayAbility_Passive_OnStartRoom, MoveTemp(EventData));
 		}
 		// 턴 실행
-		checkf(mPhase == ECombatRoomPhase::CombatStart, TEXT("전투 진입 절차 오류"));
-		mPhase = ECombatRoomPhase::CombatPlay;
+		checkf(mPhase == ESRPGCombatRoomPhase::CombatStart, TEXT("전투 진입 절차 오류"));
+		mPhase = ESRPGCombatRoomPhase::CombatPlay;
 		mCurTurnContextNode->GetValue()->BeginTurn();
 		}));
 	OnBeginCombatUI.Broadcast(PresentationBarrier);
@@ -78,8 +78,8 @@ void USRPGCombatSubsystem::BeginCombat()
 
 void USRPGCombatSubsystem::EndCombat()
 {
-	checkf(mPhase == ECombatRoomPhase::CombatAbort, TEXT("전투 종료 절차 오류"));
-	mPhase = ECombatRoomPhase::CombatEnd;
+	checkf(mPhase == ESRPGCombatRoomPhase::CombatAbort, TEXT("전투 종료 절차 오류"));
+	mPhase = ESRPGCombatRoomPhase::CombatEnd;
 
 	for (TObjectPtr<AUnit>& Unit : mUnits)
 	{
@@ -103,7 +103,7 @@ void USRPGCombatSubsystem::EndCombat()
 
 		UE_LOG(LogSRPGCombat, Log, TEXT("SRPG 전투 종료"))
 		}));
-	OnEndCombatUI.Broadcast(PresentationBarrier);
+	OnEndCombatUI.Broadcast(PresentationBarrier, mResult);
 }
 
 TWeakPtr<FSRPGTurnContext> USRPGCombatSubsystem::RegisterTurn(AUnit* Owner, int32 LifeCount)
@@ -346,7 +346,7 @@ void USRPGCombatSubsystem::EvaluateCombatStates()
 	EvaluateCombatEndState();
 	if (mCurTurnContextNode != nullptr)
 	{
-		const bool ForceAbort = mPhase == ECombatRoomPhase::CombatAbort;
+		const bool ForceAbort = mPhase == ESRPGCombatRoomPhase::CombatAbort;
 		mCurTurnContextNode->GetValue()->EvaluateTurnEndState(ForceAbort);
 	}
 }
@@ -354,7 +354,7 @@ void USRPGCombatSubsystem::EvaluateCombatStates()
 void USRPGCombatSubsystem::OnEndCurrentTurn(TSharedRef<FSRPGTurnContext> TurnContext, ESRPGTurnResult TurnResult)
 {
 	// 전투 종료 여부 체크
-	if (mPhase == ECombatRoomPhase::CombatAbort)
+	if (mPhase == ESRPGCombatRoomPhase::CombatAbort)
 	{
 		EndCombat();
 		return;
@@ -380,7 +380,7 @@ void USRPGCombatSubsystem::EvaluateCombatEndState()
 
 	/* 이미 중단 */
 
-	if (mPhase == ECombatRoomPhase::CombatAbort)
+	if (mPhase == ESRPGCombatRoomPhase::CombatAbort)
 	{
 		return;
 	}
@@ -389,8 +389,8 @@ void USRPGCombatSubsystem::EvaluateCombatEndState()
 
 	if (mPlayerUnit->IsDead() == true)
 	{
-		mResult = ECombatResult::PlayerLose;
-		mPhase = ECombatRoomPhase::CombatAbort;
+		mResult = ESRPGCombatResult::PlayerLose;
+		mPhase = ESRPGCombatRoomPhase::CombatAbort;
 		return;
 	}
 
@@ -406,8 +406,8 @@ void USRPGCombatSubsystem::EvaluateCombatEndState()
 	}
 	if (AnyEnemyAlive == false)
 	{
-		mResult = ECombatResult::PlayerWin;
-		mPhase = ECombatRoomPhase::CombatAbort;
+		mResult = ESRPGCombatResult::PlayerWin;
+		mPhase = ESRPGCombatRoomPhase::CombatAbort;
 		return;
 	}
 }
