@@ -31,18 +31,15 @@ public:
 	void InitWorldWidget(EWorldWidgetType WorldWidgetType);
 
 	UFUNCTION(BlueprintCallable, Category = "UI|World Widget")
-	void OpenWorldWidget(EWorldWidgetType WorldWidgetType, int32 ZOrder = 0);
+	void OpenWorldWidget(EWorldWidgetType WorldWidgetType);
 
 	UFUNCTION(BlueprintCallable, Category = "UI|World Widget")
 	void CloseWorldWidget(EWorldWidgetType WorldWidgetType);
 
-	UFUNCTION(BlueprintCallable, Category = "UI|World Widget")
-	void CompleteCloseWorldWidget(EWorldWidgetType WorldWidgetType);
-
 	UFUNCTION(BlueprintPure, Category = "UI|World Widget")
 	bool IsWorldWidgetOpen(EWorldWidgetType WorldWidgetType) const;
 
-	void ShowWorldWidget(EWorldWidgetType WorldWidgetType, int32 ZOrder = 0);
+	void ShowWorldWidget(EWorldWidgetType WorldWidgetType);
 	void HideWorldWidget(EWorldWidgetType WorldWidgetType);
 
 public:
@@ -62,14 +59,4 @@ protected:
 
 	UPROPERTY(Category = UI, VisibleAnywhere, meta = (DisplayName = "WorldWidgets", ArraySizeEnum = "EWorldWidgetType"))
 	TObjectPtr<UUserWidget> mWorldWidgets[static_cast<uint8>(EWorldWidgetType::Count)];
-
-private:
-	enum class EWorldWidgetLifecycleState : uint8
-	{
-		Closed,
-		Open,
-		Closing,
-	};
-
-	EWorldWidgetLifecycleState mWorldWidgetStates[static_cast<uint8>(EWorldWidgetType::Count)]{};
 };
