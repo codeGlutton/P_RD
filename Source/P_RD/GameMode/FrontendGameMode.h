@@ -242,7 +242,7 @@ private:
 
 private:
 	bool bStartRunRequested = false;
-	bool bTitleHUDShown = false;
+	bool mTitleHUDShown = false;
 	int32 mSelectedMapRoomRow = INDEX_NONE;
 	int32 mSelectedMapRoomColumn = INDEX_NONE;
 	bool bSelectedMapRoomPreloadRequested = false;

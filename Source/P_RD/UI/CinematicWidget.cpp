@@ -3,7 +3,7 @@
 UCinematicWidget::UCinematicWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	bRemoveFromParentOnClose = true;
+	mRemoveFromParentOnClose = true;
 }
 
 void UCinematicWidget::PlayCinematic(FOnEndCinematicAnimation Callback)
@@ -14,18 +14,18 @@ void UCinematicWidget::PlayCinematic(FOnEndCinematicAnimation Callback)
 	}
 
 	OnEndCinematicAnimation = MoveTemp(Callback);
-	bCinematicFinished = false;
+	mCinematicFinished = false;
 	PlayCinematicAnimation();
 }
 
 void UCinematicWidget::FinishCinematic()
 {
-	if (bCinematicFinished)
+	if (mCinematicFinished)
 	{
 		return;
 	}
 
-	bCinematicFinished = true;
+	mCinematicFinished = true;
 	if (OnEndCinematicAnimation.IsBound())
 	{
 		OnEndCinematicAnimation.Execute(this);

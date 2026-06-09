@@ -47,7 +47,7 @@ protected:
 	int32 mViewportZOrder = 0;
 
 	UPROPERTY(Category = UI, EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "RemoveFromParentOnClose"))
-	bool bRemoveFromParentOnClose = false;
+	bool mRemoveFromParentOnClose = false;
 
 private:
 	enum class EToggleableWidgetLifecycleState : uint8
@@ -60,5 +60,5 @@ private:
 
 	FOnEndUIOpenAnimation OnEndUIOpenAnimation;
 	FOnEndUICloseAnimation OnEndUICloseAnimation;
-	EToggleableWidgetLifecycleState LifecycleState = EToggleableWidgetLifecycleState::Closed;
+	EToggleableWidgetLifecycleState mLifecycleState = EToggleableWidgetLifecycleState::Closed;
 };

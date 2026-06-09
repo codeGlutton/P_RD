@@ -38,5 +38,5 @@ protected:
 
 private:
 	FOnEndCinematicAnimation OnEndCinematicAnimation;
-	bool bCinematicFinished = false;
+	bool mCinematicFinished = false;
 };

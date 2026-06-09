@@ -18,14 +18,14 @@ void UToggleableWidget::OpenUI(FOnEndUIOpenAnimation Callback)
 	}
 
 	OnEndUIOpenAnimation = MoveTemp(Callback);
-	LifecycleState = EToggleableWidgetLifecycleState::Opening;
+	mLifecycleState = EToggleableWidgetLifecycleState::Opening;
 	ApplyOpenUI();
 	PlayOpenUIAnimation();
 }
 
 void UToggleableWidget::CloseUI(FOnEndUICloseAnimation Callback)
 {
-	if (LifecycleState == EToggleableWidgetLifecycleState::Closed)
+	if (mLifecycleState == EToggleableWidgetLifecycleState::Closed)
 	{
 		if (Callback.IsBound())
 		{
@@ -34,32 +34,32 @@ void UToggleableWidget::CloseUI(FOnEndUICloseAnimation Callback)
 		return;
 	}
 
-	if (LifecycleState == EToggleableWidgetLifecycleState::Closing)
+	if (mLifecycleState == EToggleableWidgetLifecycleState::Closing)
 	{
 		return;
 	}
 
 	OnEndUICloseAnimation = MoveTemp(Callback);
-	LifecycleState = EToggleableWidgetLifecycleState::Closing;
+	mLifecycleState = EToggleableWidgetLifecycleState::Closing;
 	PlayCloseUIAnimation();
 }
 
 bool UToggleableWidget::IsOpened() const
 {
-	return (LifecycleState == EToggleableWidgetLifecycleState::Opening
-			|| LifecycleState == EToggleableWidgetLifecycleState::Open)
+	return (mLifecycleState == EToggleableWidgetLifecycleState::Opening
+			|| mLifecycleState == EToggleableWidgetLifecycleState::Open)
 		&& IsInViewport()
 		&& IsVisible();
 }
 
 void UToggleableWidget::FinishOpenUI()
 {
-	if (LifecycleState != EToggleableWidgetLifecycleState::Opening)
+	if (mLifecycleState != EToggleableWidgetLifecycleState::Opening)
 	{
 		return;
 	}
 
-	LifecycleState = EToggleableWidgetLifecycleState::Open;
+	mLifecycleState = EToggleableWidgetLifecycleState::Open;
 	if (OnEndUIOpenAnimation.IsBound())
 	{
 		OnEndUIOpenAnimation.Execute(this);
@@ -69,13 +69,13 @@ void UToggleableWidget::FinishOpenUI()
 
 void UToggleableWidget::FinishCloseUI()
 {
-	if (LifecycleState != EToggleableWidgetLifecycleState::Closing)
+	if (mLifecycleState != EToggleableWidgetLifecycleState::Closing)
 	{
 		return;
 	}
 
 	ApplyCloseUI();
-	LifecycleState = EToggleableWidgetLifecycleState::Closed;
+	mLifecycleState = EToggleableWidgetLifecycleState::Closed;
 	if (OnEndUICloseAnimation.IsBound())
 	{
 		OnEndUICloseAnimation.Execute(this);
@@ -121,5 +121,5 @@ int32 UToggleableWidget::GetViewportZOrder() const
 
 bool UToggleableWidget::ShouldRemoveFromParentOnClose() const
 {
-	return bRemoveFromParentOnClose;
+	return mRemoveFromParentOnClose;
 }

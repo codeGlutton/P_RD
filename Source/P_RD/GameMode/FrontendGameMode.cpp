@@ -544,7 +544,7 @@ void AFrontendGameMode::LoadOrCreateFrontendUserProfile()
 
 void AFrontendGameMode::ShowTitleHUD()
 {
-	if (bTitleHUDShown)
+	if (mTitleHUDShown)
 	{
 		return;
 	}
@@ -569,7 +569,7 @@ void AFrontendGameMode::ShowTitleHUD()
 	}
 
 	TitleHUD->SetVisibility(ESlateVisibility::Visible);
-	bTitleHUDShown = true;
+	mTitleHUDShown = true;
 }
 
 bool AFrontendGameMode::OpenTitleCharacterSelect()
