@@ -1,4 +1,4 @@
-#include "GameMode/IntroGameMode.h"
+﻿#include "GameMode/IntroGameMode.h"
 
 #include "Blueprint/UserWidget.h"
 #include "Singleton/InstanceSubsystem/RoomTransitionSubsystem.h"
@@ -11,7 +11,7 @@ void AIntroGameMode::BeginRoom()
 
 	URoomTransitionSubsystem* RoomTransitionSubsystem = GetGameInstance()->GetSubsystem<URoomTransitionSubsystem>();
 	checkf(RoomTransitionSubsystem != nullptr, TEXT("룸 전환 서브시스템 nullptr"));
-	checkf(RoomTransitionSubsystem->PreloadFrontendRoomAsync(), TEXT("Intro -> Frontend preload 실패"));
+	//checkf(RoomTransitionSubsystem->PreloadFrontendRoomAsync(), TEXT("Intro -> Frontend preload 실패"));
 
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
 	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr"));
