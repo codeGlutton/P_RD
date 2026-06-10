@@ -12,6 +12,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
 #include "DataAsset/StageSpawnData/StageLevelType.h"
+#include "UI/RDUserWidget.h"
 #include "RDGameModeBase.generated.h"
 
 class UUserPersistData;
@@ -59,10 +60,10 @@ public:
 	bool CanAbandonRun() const;
 
 protected:
-	void StartFadeInUI(/* FOnEndFadeInAnimation OnEndUIOpenAnimation = FOnEndFadeInAnimation() */) const;
-	void StartFadeOutUI(/* FOnEndFadeOutAnimation OnEndFadeOutAnimation = FOnEndFadeOutAnimation() */) const;
-	void OpenLoadingNotifyUI(/* FOnOpenUIAnimation OnOpenUIAnimation = FOnOpenUIAnimation() */) const;
-	void CloseLoadingNotifyUI(/* FOnEndUICloseAnimation OnEndUICloseAnimation = FOnEndUICloseAnimation() */) const;
+	void StartFadeInUI() const;
+	void StartFadeOutUI();
+	void OpenLoadingNotifyUI(FOnEndUIOpenAnimation OnEndUIOpenAnimation = FOnEndUIOpenAnimation()) const;
+	void CloseLoadingNotifyUI(FOnEndUICloseAnimation OnEndUICloseAnimation = FOnEndUICloseAnimation()) const;
 
 protected:
 	/**

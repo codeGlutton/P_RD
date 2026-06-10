@@ -67,29 +67,39 @@ bool ARDGameModeBase::CanAbandonRun() const
 	return HasActiveRun() == true;
 }
 
-void ARDGameModeBase::StartFadeInUI(/* FOnEndFadeInAnimation OnEndUIOpenAnimation*/) const
+void ARDGameModeBase::StartFadeInUI() const
 {
 	checkf(mWorldWidgets.Contains(EWorldWidgetType::FadeInOut) == true, TEXT("FadeInOut이 준비되지 않음"));
 
-	/*UFadeInOutWidget* FadeInOutWidget = WorldWidgetSubsystem->GetWorldWidget<UFadeInOutWidget>(EWorldWidgetType::FadeInOut);
+	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
+	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr 오류"));
+
+	URDUserWidget* FadeInOutWidget = WorldWidgetSubsystem->GetWorldWidget<URDUserWidget>(EWorldWidgetType::FadeInOut);
 	checkf(FadeInOutWidget != nullptr, TEXT("페이드 인 앤 아웃 위젯 nullptr 오류"));
 
-	FadeInOutWidget->OpenUI();
-	FadeInOutWidget->StartFadeIn(MoveTemp(OnEndUIOpenAnimation));*/
+	FadeInOutWidget->OpenUI(FOnEndUIOpenAnimation::CreateWeakLambda(this, [FadeInOutWidget](UUserWidget*)
+	{
+		FadeInOutWidget->CloseUI();
+	}));
 }
 
-void ARDGameModeBase::StartFadeOutUI(/* FOnEndFadeOutAnimation OnEndFadeOutAnimation*/) const
+void ARDGameModeBase::StartFadeOutUI()
 {
 	checkf(mWorldWidgets.Contains(EWorldWidgetType::FadeInOut) == true, TEXT("FadeInOut이 준비되지 않음"));
 
-	/*UFadeInOutWidget* FadeInOutWidget = WorldWidgetSubsystem->GetWorldWidget<UFadeInOutWidget>(EWorldWidgetType::FadeInOut);
+	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
+	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr 오류"));
+
+	URDUserWidget* FadeInOutWidget = WorldWidgetSubsystem->GetWorldWidget<URDUserWidget>(EWorldWidgetType::FadeInOut);
 	checkf(FadeInOutWidget != nullptr, TEXT("페이드 인 앤 아웃 위젯 nullptr 오류"));
 
-	FadeInOutWidget->OpenUI();
-	FadeInOutWidget->StartFadeOut(MoveTemp(OnEndFadeOutAnimation));*/
+	FadeInOutWidget->OpenUI(FOnEndUIOpenAnimation::CreateWeakLambda(this, [this](UUserWidget*)
+	{
+		checkf(MarkExternalReadyForTransition() == true, TEXT("외부 준비 상태 전달 오류"));
+	}));
 }
 
-void ARDGameModeBase::OpenLoadingNotifyUI(/* FOnOpenUIAnimation OnOpenUIAnimation = FOnOpenUIAnimation() */) const
+void ARDGameModeBase::OpenLoadingNotifyUI(FOnEndUIOpenAnimation OnEndUIOpenAnimation) const
 {
 	checkf(mWorldWidgets.Contains(EWorldWidgetType::LoadingNotify) == true, TEXT("LoadingNotify가 준비되지 않음"));
 
@@ -101,10 +111,10 @@ void ARDGameModeBase::OpenLoadingNotifyUI(/* FOnOpenUIAnimation OnOpenUIAnimatio
 	URDUserWidget* LoadingNotifyWidget = WorldWidgetSubsystem->GetWorldWidget<URDUserWidget>(EWorldWidgetType::LoadingNotify);
 	checkf(LoadingNotifyWidget != nullptr, TEXT("로딩 위젯 nullptr 오류"));
 
-	LoadingNotifyWidget->OpenUI(/*MoveTemp(OnOpenUIAnimation)*/);
+	LoadingNotifyWidget->OpenUI(MoveTemp(OnEndUIOpenAnimation));
 }
 
-void ARDGameModeBase::CloseLoadingNotifyUI(/* FOnEndUICloseAnimation OnEndUICloseAnimation = FOnEndUICloseAnimation() */) const
+void ARDGameModeBase::CloseLoadingNotifyUI(FOnEndUICloseAnimation OnEndUICloseAnimation) const
 {
 	checkf(mWorldWidgets.Contains(EWorldWidgetType::LoadingNotify) == true, TEXT("LoadingNotify가 준비되지 않음"));
 
@@ -116,7 +126,7 @@ void ARDGameModeBase::CloseLoadingNotifyUI(/* FOnEndUICloseAnimation OnEndUIClos
 	URDUserWidget* LoadingNotifyWidget = WorldWidgetSubsystem->GetWorldWidget<URDUserWidget>(EWorldWidgetType::LoadingNotify);
 	checkf(LoadingNotifyWidget != nullptr, TEXT("로딩 위젯 nullptr 오류"));
 
-	LoadingNotifyWidget->CloseUI(/*MoveTemp(OnEndUICloseAnimation)*/);
+	LoadingNotifyWidget->CloseUI(MoveTemp(OnEndUICloseAnimation));
 }
 
 bool ARDGameModeBase::PreloadAndTransitionRoomAsync(int32 RoomRowIndex, int32 RoomColumnIndex)
@@ -153,9 +163,7 @@ bool ARDGameModeBase::PreloadAndTransitionRoomAsync(int32 RoomRowIndex, int32 Ro
 		{
 			/* 페이드 아웃 애니메이션 실행 */
 
-			StartFadeOutUI(/*FOnEndFadeOutAnimation::CreateWeakLambda(this, [this](UFadeInOutWidget* FadeInOutWidget) {
-				checkf(MarkExternalReadyForTransition() == true, TEXT("외부 준비 상태 전달 오류"));*/
-			);
+			StartFadeOutUI();
 		}
 	}
 	else if (mShowLoadingNotifyUIOnTransition == true)
@@ -198,9 +206,7 @@ bool ARDGameModeBase::PreloadAndTransitionRoomAsync(EStageLevelType StageLevel)
 		{
 			/* 페이드 아웃 애니메이션 실행 */
 
-			StartFadeOutUI(/*FOnEndFadeOutAnimation::CreateWeakLambda(this, [this](UFadeInOutWidget* FadeInOutWidget) {
-				checkf(MarkExternalReadyForTransition() == true, TEXT("외부 준비 상태 전달 오류"));*/
-			);
+			StartFadeOutUI();
 		}
 	}
 	else if (mShowLoadingNotifyUIOnTransition == true)
@@ -242,9 +248,7 @@ bool ARDGameModeBase::PreloadAndTransitionFrontendRoomAsync()
 		{
 			/* 페이드 아웃 애니메이션 실행 */
 
-			StartFadeOutUI(/*FOnEndFadeOutAnimation::CreateWeakLambda(this, [this](UFadeInOutWidget* FadeInOutWidget) {
-				checkf(MarkExternalReadyForTransition() == true, TEXT("외부 준비 상태 전달 오류"));*/
-			);
+			StartFadeOutUI();
 		}
 	}
 	else if (mShowLoadingNotifyUIOnTransition == true)
@@ -289,15 +293,13 @@ void ARDGameModeBase::OnReadyToTransition(int32 RoomRowIndex, int32 RoomColumnIn
 		return;
 	}
 
-	CloseLoadingNotifyUI(/* FOnEndUICloseAnimation::CreateWeakLambda(this, [this]() {
-
+	CloseLoadingNotifyUI(FOnEndUICloseAnimation::CreateWeakLambda(this, [this](UUserWidget*)
+	{
 		URoomTransitionSubsystem* RoomTransitionSubsystem = GetGameInstance()->GetSubsystem<URoomTransitionSubsystem>();
 		checkf(RoomTransitionSubsystem != nullptr, TEXT("방 전환 서브시스템 nullptr 오류"));
 
-		// 로딩 위젯이 닫힐 때 Transition 전환 시작
 		checkf(RoomTransitionSubsystem->TransitLoadedRoom(), TEXT("방 전환 시작 오류"));
-
-		}) */);
+	}));
 }
 
 void ARDGameModeBase::OnPreTransition(int32 RoomRowIndex, int32 RoomColumnIndex)

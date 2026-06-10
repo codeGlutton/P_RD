@@ -184,7 +184,7 @@ bool URoomTransitionSubsystem::MarkExternalReady()
 
 bool URoomTransitionSubsystem::TransitLoadedRoom()
 {
-    if (EnumHasAllFlags(mTransitionState, ERoomTransitionStateFlag::ReadyToTransition) == true)
+    if (EnumHasAllFlags(mTransitionState, ERoomTransitionStateFlag::ReadyToTransition) == false)
     {
         UE_LOG(LogTransition, Log, TEXT("전환 불가. 먼저 전환 준비 필요"));
         return false;
