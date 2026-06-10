@@ -69,6 +69,52 @@ void ATileMap::OnConstruction(const FTransform& Transform)
 	RebuildTileInstances();
 }
 
+TScriptInterface<ITileActor> ATileMap::ToTileActorInterface(ITileActor* Actor)
+{
+	// TScriptInterface는 UObject 핸들이 필요하므로 _getUObject로 변환
+	return TScriptInterface<ITileActor>(Actor->_getUObject());
+}
+
+void ATileMap::RegisterActorToTile(FTile* Tile, ITileActor* Actor)
+{
+	// 타일 액터 목록에 추가
+	Tile->mActors.Add(ToTileActorInterface(Actor));
+}
+
+void ATileMap::UnregisterActorFromTile(FTile* Tile, ITileActor* Actor)
+{
+	// 타일 액터 목록에서 제거
+	Tile->mActors.Remove(ToTileActorInterface(Actor));
+}
+
+void ATileMap::NotifyBeginOverlap(FTile* Tile, ITileActor* Actor)
+{
+	// 같은 타일의 다른 액터들과 양방향 OnBegin 통지 (자기 제외)
+	for (const auto& Other : Tile->mActors)
+	{
+		if (Other.GetInterface() == Actor)
+		{
+			continue;
+		}
+		Actor->OnBeginTileOverlap(Other.GetInterface(), Tile);
+		Other->OnBeginTileOverlap(Actor, Tile);
+	}
+}
+
+void ATileMap::NotifyEndOverlap(FTile* Tile, ITileActor* Actor)
+{
+	// 같은 타일의 다른 액터들과 양방향 OnEnd 통지 (자기 제외)
+	for (const auto& Other : Tile->mActors)
+	{
+		if (Other.GetInterface() == Actor)
+		{
+			continue;
+		}
+		Actor->OnEndTileOverlap(Other.GetInterface(), Tile);
+		Other->OnEndTileOverlap(Actor, Tile);
+	}
+}
+
 void ATileMap::RebuildTileInstances()
 {
 	// 타일 저장소를 현재 크기에 맞춰 기본 타일로 새로 채움
@@ -157,6 +203,12 @@ const FTile* ATileMap::GetTile(const FTileIndex& TileIndex) const
 	return &mTiles[LinearIndex];
 }
 
+FTile* ATileMap::GetTile(const FTileIndex& TileIndex)
+{
+	// 로직 중복을 피하려 const 버전에 위임 후 반환값의 const만 제거
+	return const_cast<FTile*>(AsConst(*this).GetTile(TileIndex));
+}
+
 TArray<TScriptInterface<ITileActor>> ATileMap::GetActorsOnTile(const FTileIndex& TileIndex, ETileLayerFlag LayerFilter) const
 {
 	TArray<TScriptInterface<ITileActor>> Result;
@@ -171,7 +223,7 @@ TArray<TScriptInterface<ITileActor>> ATileMap::GetActorsOnTile(const FTileIndex&
 	// 레이어 필터에 걸리는 액터만 수집
 	for (const TScriptInterface<ITileActor>& Actor : Tile->mActors)
 	{
-		if (Actor && EnumHasAnyFlags(Actor->GetTileLayer(), LayerFilter))
+		if (Actor && EnumHasAnyFlags(Actor->GetTileLayerFlags(), LayerFilter))
 		{
 			Result.Add(Actor);
 		}
@@ -240,7 +292,7 @@ TArray<FTileIndex> ATileMap::GetEffectTiles(const FTileIndex& Caster, const FTil
 	return TArray<FTileIndex>();
 }
 
-void ATileMap::SetTileHighlight(ETileHighlightFlag Flag, const TArray<FTileIndex>& Tiles)
+void ATileMap::SetTileHighlight(const TArray<FTileIndex>& Tiles, ETileHighlightFlag Flag)
 {
 	// TODO: Flag 비트를 가진 기존 타일에서 끄고, Tiles에 켠 뒤 custom data 갱신
 }
@@ -250,44 +302,76 @@ void ATileMap::ClearTileHighlight(ETileHighlightFlag Flag)
 	// TODO: 모든 타일에서 Flag 비트를 끄고 custom data 갱신
 }
 
-bool ATileMap::IsBlocking(const FTileIndex& TileIndex, ETileLayerFlag LayerFlag) const
+bool ATileMap::IsBlocked(const FTileIndex& TileIndex, const ITileActor* Incoming) const
 {
-	// TODO: 해당 타일의 특정 레이어 블로킹 여부 검사
-	return false;
+	auto* Tile = GetTile(TileIndex);
+	// 맵 범위 밖은 블록된 것으로 간주
+	if (Tile == nullptr)
+	{
+		return true;
+	}
+
+	// 타일에 블록 당하는 지 체크
+	return Tile->IsBlocked(Incoming);
 }
 
 void ATileMap::StartActorMovement(const FTileTransform& NextTransform, ITileActor* Actor)
 {
-	checkf(IsBlocking(NextTransform.mIndex, Actor->GetTileLayer()) == false, TEXT("배치할 수 없는 타일"));
+	checkf(Actor != nullptr, TEXT("Actor가 nullptr"));
+	checkf(IsBlocked(NextTransform.mIndex, Actor) == false, TEXT("배치할 수 없는 타일"));
 
-	// TODO: 이전 타일에 겹치는 객체마다 OnEndTileOverlap 이벤트
+	// 이전 타일에서 이탈 오버랩 통지 후 해제 (좌표 전환 전에 현재 위치를 읽음)
+	FTile* PrevTile = GetTile(Actor->GetTileTransform().mIndex);
+	if (PrevTile != nullptr)
+	{
+		NotifyEndOverlap(PrevTile, Actor);
+		UnregisterActorFromTile(PrevTile, Actor);
+	}
 
-	// TODO: 이전 타일에서 해제
-	
-	// TODO: 다음 타일에 등록
+	// 논리 좌표 전환 (점유는 즉시, 진입 오버랩 통지는 이동 연출 완료 후 CompleteActorMovement에서)
 	Actor->SetTileTransform(NextTransform);
+	FTile* NextTile = GetTile(NextTransform.mIndex);
+	RegisterActorToTile(NextTile, Actor);
 }
 
 void ATileMap::CompleteActorMovement(ITileActor* Actor)
 {
-	// TODO: 다음 타일에 겹치는 객체마다 OnBeginTileOverlap 이벤트
+	checkf(Actor != nullptr, TEXT("Actor가 nullptr"));
+
+	// 이동 연출 완료 후 도착 타일에서 진입 오버랩 통지 (Start에서 좌표는 이미 전환됨)
+	FTile* Tile = GetTile(Actor->GetTileTransform().mIndex);
+	if (Tile != nullptr)
+	{
+		NotifyBeginOverlap(Tile, Actor);
+	}
 }
 
 void ATileMap::PlaceActor(const FTileTransform& NextTransform, ITileActor* Actor)
 {
-	checkf(IsBlocking(NextTransform.mIndex, Actor->GetTileLayer()) == false, TEXT("배치할 수 없는 타일"));
+	checkf(Actor != nullptr, TEXT("Actor가 nullptr"));
+	checkf(IsBlocked(NextTransform.mIndex, Actor) == false, TEXT("배치할 수 없는 타일"));
 
-	// TODO: 다음 타일에 등록
+	// 논리 좌표 갱신
 	Actor->SetTileTransform(NextTransform);
-	
-	// TODO: 다음 타일에 겹치는 객체마다 OnBeginTileOverlap 이벤트
+
+	// 다음 타일에 등록 후 진입 오버랩 통지 (등록 → Begin 순서)
+	FTile* Tile = GetTile(NextTransform.mIndex);
+	RegisterActorToTile(Tile, Actor);
+	NotifyBeginOverlap(Tile, Actor);
 }
 
 void ATileMap::RemoveActor(ITileActor* Actor)
 {
-	// TODO: 이전 타일에 겹치는 객체마다 OnEndTileOverlap 이벤트
-	
-	// TODO: 이전 타일에서 해제
+	checkf(Actor != nullptr, TEXT("Actor가 nullptr"));
+
+	// 현재 타일에서 이탈 오버랩 통지 후 해제 (End → 해제 순서)
+	if (FTile* Tile = GetTile(Actor->GetTileTransform().mIndex))
+	{
+		NotifyEndOverlap(Tile, Actor);
+		UnregisterActorFromTile(Tile, Actor);
+	}
+
+	// 논리 좌표 무효화
 	Actor->SetTileTransform(FTileTransform::Invalid);
 }
 

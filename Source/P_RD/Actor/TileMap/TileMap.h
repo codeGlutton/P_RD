@@ -120,10 +120,10 @@ public:
 	 * Flag의 각 비트에 대해, 그 비트를 가진 기존 타일에서 끄고 Tiles에만 켠다.
 	 * 다른 플래그 비트는 보존하므로, Aim 위에 Select를 칠해도 Aim은 유지된다.
 	 *
-	 * @param[in] Flag  : 설정할 강조 상태
 	 * @param[in] Tiles : 강조할 타일 목록 (맵 밖 좌표는 무시)
+	 * @param[in] Flag  : 설정할 강조 상태
 	 */
-	void SetTileHighlight(ETileHighlightFlag Flag, const TArray<FTileIndex>& Tiles);
+	void SetTileHighlight(const TArray<FTileIndex>& Tiles, ETileHighlightFlag Flag);
 
 	/**
 	 * @brief 지정한 강조 상태를 모든 타일에서 해제
@@ -133,18 +133,21 @@ public:
 	void ClearTileHighlight(ETileHighlightFlag Flag);
 
 	/**
-	 * 배치 가능한지 체크하는 함수
-	 * @param TileIndex 배치할 지점 인덱스
-	 * @param LayerFlag 배치 액터 Layer
-	 * @return 가능 여부
+	 * 진입 액터가 해당 타일에 막히는지 검사하는 함수
+	 * @param TileIndex 검사할 타일 인덱스
+	 * @param Incoming 진입하려는 액터
+	 * @return 막힘 여부 (맵 범위 밖은 막힘으로 간주)
 	 */
-	bool IsBlocking(const FTileIndex& TileIndex, ETileLayerFlag LayerFlag) const;
+	bool IsBlocked(const FTileIndex& TileIndex, const ITileActor* Incoming) const;
 
 	/**
 	 * 액터 움직임 시작 함수
 	 * 일반 배치 함수와 달리, 움직임 애니메이션 처리 완료 타이밍에 따라서 CompleteActorMovement를 호출해줄 필요가 있음
 	 * @param NextTransform 다음 타일 트랜스폼
 	 * @param Actor 움직일 액터
+	 * @pre NextTransform.mIndex가 맵 범위 안의 유효한 좌표여야 한다
+	 * @pre 해당 타일이 Actor 레이어에 대해 막혀있지 않아야 한다 (호출 전 IsBlocked으로 확인)
+	 * @warning 사전조건 위반 시 checkf로 중단됨
 	 */
 	void StartActorMovement(const FTileTransform& NextTransform, ITileActor* Actor);
 	void CompleteActorMovement(ITileActor* Actor);
@@ -153,6 +156,9 @@ public:
 	 * 액터 초기 배치 함수
 	 * @param NextTransform 다음 타일 트랜스폼
 	 * @param Actor 배치할 액터
+	 * @pre NextTransform.mIndex가 맵 범위 안의 유효한 좌표여야 한다
+	 * @pre 해당 타일이 Actor 레이어에 대해 막혀있지 않아야 한다 (호출 전 IsBlocked으로 확인)
+	 * @warning 사전조건 위반 시 checkf로 중단됨
 	 */
 	void PlaceActor(const FTileTransform& NextTransform, ITileActor* Actor);
 	void RemoveActor(ITileActor* Actor);
@@ -285,6 +291,32 @@ protected:
 
 private:
 	/**
+	 * @brief ITileActor 포인터를 GC 추적용 TScriptInterface로 변환
+	 * @note TScriptInterface는 UObject 핸들이 필요하므로 _getUObject로 변환한다
+	 */
+	static TScriptInterface<ITileActor> ToTileActorInterface(ITileActor* Actor);
+
+	/**
+	 * @brief 타일에 액터 등록 (mActors에 추가)
+	 */
+	void RegisterActorToTile(FTile* Tile, ITileActor* Actor);
+
+	/**
+	 * @brief 타일에서 액터 해제 (mActors에서 제거)
+	 */
+	void UnregisterActorFromTile(FTile* Tile, ITileActor* Actor);
+
+	/**
+	 * @brief 같은 타일의 다른 액터들과 양방향 OnBeginTileOverlap 통지 (자기 제외)
+	 */
+	void NotifyBeginOverlap(FTile* Tile, ITileActor* Actor);
+
+	/**
+	 * @brief 같은 타일의 다른 액터들과 양방향 OnEndTileOverlap 통지 (자기 제외)
+	 */
+	void NotifyEndOverlap(FTile* Tile, ITileActor* Actor);
+
+	/**
 	 * @brief 현재 Width/Height/TileSize에 맞춰 타일 인스턴스를 모두 재생성
 	 */
 	void RebuildTileInstances();
@@ -300,6 +332,12 @@ private:
 	 * @return const FTile* : 범위 밖이면 nullptr
 	 */
 	const FTile* GetTile(const FTileIndex& TileIndex) const;
+
+	/**
+	 * @brief 인덱스로 타일 조회 (쓰기용 non-const 버전)
+	 * @return FTile* : 범위 밖이면 nullptr
+	 */
+	FTile* GetTile(const FTileIndex& TileIndex);
 
 	// @brief 타일 저장소 (크기 Width*Height, 인덱스 = y*Width + x)
 	// FTile이 TScriptInterface<ITileActor>(UObject 참조)를 들고 있어 GC 추적용 UPROPERTY() 필수 (제거 금지)

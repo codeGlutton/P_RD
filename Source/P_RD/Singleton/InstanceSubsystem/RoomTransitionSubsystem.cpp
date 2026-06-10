@@ -14,7 +14,7 @@ void URoomTransitionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     Super::Initialize(Collection);
 }
 
-bool URoomTransitionSubsystem::PreloadFrontendRoomAsync(FOnReadyToTransition ReadyToTransitionCallback = FOnReadyToTransition(), FOnPreTransitNextRoom PreTransitionCallback = FOnPreTransitNextRoom(), bool RequireExternalReady, bool IsAutoTransition)
+bool URoomTransitionSubsystem::PreloadFrontendRoomAsync(FOnReadyToTransition ReadyToTransitionCallback, FOnPreTransitNextRoom PreTransitionCallback, bool RequireExternalReady, bool IsAutoTransition)
 {
     if (EnumHasAnyFlags(mTransitionState, ERoomTransitionStateFlag::AllTaskRequested) == true)
     {

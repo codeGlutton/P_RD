@@ -150,7 +150,7 @@ ENUM_CLASS_FLAGS(ETargetFilter);
  * @brief 전투 결과를 나타내는 열거형
  */
 UENUM(BlueprintType)
-enum class ECombatResult : uint8
+enum class ESRPGCombatResult : uint8
 {
     PlayerWin          UMETA(ToolTip = "플레이어 승리로 종료"),
     PlayerLose         UMETA(ToolTip = "플레이어 죽음으로 종료"),
@@ -162,7 +162,7 @@ enum class ECombatResult : uint8
  * @brief 전투 방 내 진행 단계 열거형
  */
 UENUM(BlueprintType)
-enum class ECombatRoomPhase : uint8
+enum class ESRPGCombatRoomPhase : uint8
 {
     None               UMETA(Hidden),
     CombatInit         UMETA(ToolTip = "전투 초기화"),

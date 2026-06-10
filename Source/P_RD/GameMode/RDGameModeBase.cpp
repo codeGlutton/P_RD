@@ -139,7 +139,7 @@ bool ARDGameModeBase::PreloadAndTransitionRoomAsync(int32 RoomRowIndex, int32 Ro
 		RoomTransitionSubsystem->PreloadRoomAsync(
 			RoomRowIndex, 
 			RoomColumnIndex,
-			FOnReadyToTransition::CreateLambda(this, &ARDGameModeBase::OnReadyToTransition),
+			FOnReadyToTransition::CreateUObject(this, &ARDGameModeBase::OnReadyToTransition),
 			FOnPreTransitNextRoom::CreateUObject(this, &ARDGameModeBase::OnPreTransition),
 			RequireExternalReady, 
 			AutoTransition
@@ -184,7 +184,7 @@ bool ARDGameModeBase::PreloadAndTransitionRoomAsync(EStageLevelType StageLevel)
 	checkf(
 		RoomTransitionSubsystem->MakeStageAndPreloadRoomAsync(
 			StageLevel,
-			FOnReadyToTransition::CreateLambda(this, &ARDGameModeBase::OnReadyToTransition),
+			FOnReadyToTransition::CreateUObject(this, &ARDGameModeBase::OnReadyToTransition),
 			FOnPreTransitNextRoom::CreateUObject(this, &ARDGameModeBase::OnPreTransition),
 			RequireExternalReady,
 			AutoTransition
@@ -228,7 +228,7 @@ bool ARDGameModeBase::PreloadAndTransitionFrontendRoomAsync()
 	const bool AutoTransition = mShowLoadingNotifyUIOnTransition == false;
 	checkf(
 		RoomTransitionSubsystem->PreloadFrontendRoomAsync(
-			FOnReadyToTransition::CreateLambda(this, &ARDGameModeBase::OnReadyToTransition),
+			FOnReadyToTransition::CreateUObject(this, &ARDGameModeBase::OnReadyToTransition),
 			FOnPreTransitNextRoom::CreateUObject(this, &ARDGameModeBase::OnPreTransition),
 			RequireExternalReady,
 			AutoTransition

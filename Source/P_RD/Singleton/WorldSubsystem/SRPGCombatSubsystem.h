@@ -22,7 +22,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogSRPGCombat, Log, All)
 struct FPresentationBarrier;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnBeginCombatUI, TSharedPtr<FPresentationBarrier> /*Barrier*/)
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnEndCombatUI, TSharedPtr<FPresentationBarrier> /*Barrier*/)
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndCombatUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, ESRPGCombatResult /*Result*/)
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBeginAnyTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGTurnContext& /*TurnContext*/)
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnEndAnyTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGTurnContext& /*TurnContext*/, ESRPGTurnResult /*Result*/)
 
@@ -64,7 +64,7 @@ public:
 
 public:
 	/**
-	 * 존재하는 유닛의 새로운 턴 등록 함수. 새로운 턴은 항상 최후방에 등록
+	 * 존재하는 유닛의 새로운 턴 등록 함수. 새로운 턴은 항상 라운드 최후방에 등록
 	 * @param Owner 유닛 객체
 	 * @param LifeCount 턴의 생명 주기. 해당 턴에 대해서 남은 실행 횟수를 의미
 	 * @return 생성된 턴 컨텍스트
@@ -160,9 +160,9 @@ public:
 
 protected:
 	// @brief 현재 전투 방 상태
-	ECombatRoomPhase mPhase = ECombatRoomPhase::None;
+	ESRPGCombatRoomPhase mPhase = ESRPGCombatRoomPhase::None;
 	// @brief 전투 방 결과
-	ECombatResult mResult;
+	ESRPGCombatResult mResult;
 
 	TCircularDoubleLinkedList<TSharedPtr<FSRPGTurnContext>> mTurnContexts;
 	TCircularDoubleLinkedList<TSharedPtr<FSRPGTurnContext>>::TCircularDoubleLinkedListNode* mCurTurnContextNode = nullptr;
