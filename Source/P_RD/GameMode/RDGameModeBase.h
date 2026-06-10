@@ -66,6 +66,10 @@ protected:
 	 * @details
 	 * FadeInOut 월드 위젯의 OpenUI() 완료 콜백에서 CloseUI()를 호출한다.
 	 * GameMode는 페이드 구현 방식을 모르고, 위젯의 OpenUI/CloseUI 생명주기 완료 시점만 따른다.
+	 *
+	 * 역할 구분:
+	 * GameMode는 "방에 들어왔으니 전환 덮개를 걷어야 한다"는 타이밍만 결정한다.
+	 * 실제 페이드 표현, 알파 변화, 완료 콜백 호출은 FadeInOut 위젯이 담당한다.
 	 */
 	void StartFadeInUI() const;
 
@@ -75,6 +79,10 @@ protected:
 	 * @details
 	 * 방 전환 시스템이 ExternalReady를 기다리는 경우, 화면이 완전히 페이드아웃된 뒤
 	 * MarkExternalReadyForTransition()을 호출해야 새 레벨 전환이 검은 화면 뒤에서 진행된다.
+	 *
+	 * 역할 구분:
+	 * GameMode는 "전환을 시작하기 전에 화면을 먼저 가려야 한다"는 순서를 결정한다.
+	 * 실제로 화면을 검게 덮는 방법은 FadeInOut 위젯의 OpenUI() 구현이 담당한다.
 	 */
 	void StartFadeOutUI();
 

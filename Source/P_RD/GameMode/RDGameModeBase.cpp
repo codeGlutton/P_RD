@@ -77,6 +77,10 @@ bool ARDGameModeBase::CanAbandonRun() const
  * 왜 이렇게 하는가:
  * 이전 방에서 이미 검은 화면까지 덮은 뒤 새 방으로 들어오므로, 새 방이 준비된 다음에는 그 덮개를 걷어야 한다.
  * GameMode가 직접 Visibility를 만지지 않고 CloseUI()로 맡기면 페이드 연출과 닫힘 완료 처리가 같은 규칙을 따른다.
+ *
+ * 역할 구분:
+ * ARDGameModeBase는 방 생명주기와 전환 타이밍을 알고 있으므로 "지금 페이드 덮개를 닫아야 한다"는 결정을 내린다.
+ * UFadeInOutWidget은 그 결정을 받아 실제 화면을 어떻게 드러낼지와 애니메이션 완료 시점을 처리한다.
  */
 void ARDGameModeBase::StartFadeInUI() const
 {
@@ -104,6 +108,10 @@ void ARDGameModeBase::StartFadeInUI() const
  * 왜 화면을 먼저 덮는가:
  * 레벨 전환이 먼저 시작되면 이전 방의 마지막 프레임이나 아직 덜 준비된 새 방이 잠깐 보일 수 있다.
  * 그래서 검은 화면이 완전히 올라온 뒤에만 외부 준비 완료를 알려, 사용자가 보는 화면과 실제 전환 순서를 맞춘다.
+ *
+ * 역할 구분:
+ * ARDGameModeBase는 로드/전환 시스템과 연결되어 있으므로 페이드 완료 후 MarkExternalReadyForTransition()을 호출한다.
+ * UFadeInOutWidget은 GameMode의 전환 규칙을 모르고, OpenUI()가 요청된 페이드아웃 연출과 완료 콜백만 책임진다.
  */
 void ARDGameModeBase::StartFadeOutUI()
 {
