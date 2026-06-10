@@ -65,15 +65,16 @@ namespace
 }
 
 /**
- * @brief 프론트엔드 방에서 선로딩할 공용 월드 위젯만 등록한다.
+ * @brief 프론트엔드 방에서 선로딩할 공용 월드 위젯을 등록한다.
  *
  * @details
  * 타이틀 HUD 자체는 mHUDClass를 통해 InitHUD()가 생성하고, BeginRoom()에서 OpenUI()로 표시한다.
- * 이 배열에는 HUD가 아닌 전환/로딩 계열 월드 위젯만 남겨 두어 HUD 생성 책임과 공용 위젯 생성 책임을 분리한다.
+ * 이 배열에는 HUD가 아닌 알림/전환/로딩 계열 월드 위젯을 두어 HUD 생성 책임과 공용 위젯 생성 책임을 분리한다.
  */
 AFrontendGameMode::AFrontendGameMode()
 {
 	mWorldWidgets = {
+		EWorldWidgetType::MsgNotify,
 		EWorldWidgetType::FadeInOut,
 		EWorldWidgetType::LoadingNotify,
 	};
