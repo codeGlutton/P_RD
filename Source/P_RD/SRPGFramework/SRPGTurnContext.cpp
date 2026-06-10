@@ -58,6 +58,8 @@ void FSRPGTurnContext::BeginTurn()
 		EventData.Instigator = mOwner;
 		EventData.Target = mOwner;
 
+
+
 		// On Start Turn 패시브 실행
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(mOwner, AbilityTags::GameplayAbility_Passive_OnStartTurn, MoveTemp(EventData));
 		// 턴 실행
@@ -72,7 +74,7 @@ void FSRPGTurnContext::BeginTurn()
 		// AI의 경우 움직임 판단 로직 시작
 		else
 		{
-			// AI의 경우 움직임 판단 로직 시작
+			// 액션 추가
 		}
 		}));
 	OnBeginTurnUI.Broadcast(PresentationBarrier, *this);

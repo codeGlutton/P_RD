@@ -39,12 +39,17 @@ public:
 	 * 액터의 레이어 타입을 반환
 	 * @return 레이어 타입
 	 */
-	virtual ETileLayerFlag GetTileLayer() const PURE_VIRTUAL(ITileActor::GetTileLayer, return ETileLayerFlag::None;)
+	virtual ETileLayerFlag GetTileLayerFlag() const PURE_VIRTUAL(ITileActor::GetTileLayer, return ETileLayerFlag::None;)
 	/**
 	 * 타일 배치 시에 블로킹할 타입들 반환
 	 * @return 블로킹할 레이어 타입들
 	 */
-	virtual ETileLayerFlag GetBlockFlags() const;
+	virtual ETileLayerFlag GetBlockLayerFlags() const;
+	/**
+	 * 타일 배치 시에 교체할 타입들 반환
+	 * @return 교체할 레이어 타입들
+	 */
+	virtual ETileLayerFlag GetReplaceLayerFlags() const;
 
 protected:
 	/**
@@ -59,6 +64,23 @@ protected:
 	 * @param CurTile 현재 위치한 타일 객체
 	 */
 	virtual void OnEndTileOverlap(ITileActor* Other, FTile* CurTile);
+
+protected:
+	/**
+	 * 라운드 시작마다 실행될 함수. (라운드 : 고정된 턴 기준으로 한바퀴)
+	 * @param CurTile 현재 위치한 타일 객체
+	 */
+	virtual void OnBeginRound();
+	/**
+	 * 사이클 시작마다 실행될 함수. (사이클 : 해당 턴 기준으로 한바퀴)
+	 * @param CurTile 현재 위치한 타일 객체
+	 */
+	virtual void OnBeginCycle();
+	/**
+	 * 자신의 턴 시작마다 실행될 함수.
+	 * @param CurTile 현재 위치한 타일 객체
+	 */
+	virtual void OnBeginTurn();
 };
 
 
