@@ -39,7 +39,7 @@ public:
 	 * 액터의 레이어 타입을 반환
 	 * @return 레이어 타입
 	 */
-	virtual ETileLayerFlag GetTileLayerFlag() const PURE_VIRTUAL(ITileActor::GetTileLayer, return ETileLayerFlag::None;)
+	virtual ETileLayerFlag GetTileLayerFlags() const PURE_VIRTUAL(ITileActor::GetTileLayer, return ETileLayerFlag::None;)
 	/**
 	 * 타일 배치 시에 블로킹할 타입들 반환
 	 * @return 블로킹할 레이어 타입들

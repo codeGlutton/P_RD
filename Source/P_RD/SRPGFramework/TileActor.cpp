@@ -18,14 +18,14 @@ void ITileActor::OnEndTileOverlap(ITileActor* Other, FTile* CurTile)
 {
 }
 
-void OnBeginRound()
+void ITileActor::OnBeginRound()
 {
 }
 
-void OnBeginCycle()
+void ITileActor::OnBeginCycle()
 {
 }
 
-void OnBeginTurn()
+void ITileActor::OnBeginTurn()
 {
 }

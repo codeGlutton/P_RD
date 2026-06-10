@@ -59,12 +59,12 @@ const FTileTransform& AUnit::GetTileTransform() const
 	return mTileTransform;
 }
 
-ETileLayerFlag AUnit::GetTileLayer() const
+ETileLayerFlag AUnit::GetTileLayerFlags() const
 {
 	return ETileLayerFlag::Unit;
 }
 
-ETileLayerFlag AUnit::GetBlockFlags() const
+ETileLayerFlag AUnit::GetBlockLayerFlags() const
 {
 	return ETileLayerFlag::Unit;
 }

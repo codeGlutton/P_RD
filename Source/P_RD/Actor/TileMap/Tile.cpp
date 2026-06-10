@@ -1,4 +1,4 @@
-#include "Actor/TileMap/Tile.h"
+﻿#include "Actor/TileMap/Tile.h"
 #include "SRPGFramework/TileActor.h"
 
 /**
@@ -16,7 +16,7 @@ bool FTile::IsBlocked(const ITileActor* Incoming) const
 	// 진입 액터가 블록하는 레이어와 기존 액터의 레이어가 일치하면 블록
 	for (const TScriptInterface<ITileActor>& Actor : mActors)
 	{
-		if (Actor && EnumHasAnyFlags(Incoming->GetBlockFlags(), Actor->GetTileLayer()))
+		if (Actor && EnumHasAnyFlags(Incoming->GetBlockLayerFlags(), Actor->GetTileLayerFlags()))
 		{
 			return true;
 		}
