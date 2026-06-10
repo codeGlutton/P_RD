@@ -29,6 +29,10 @@ class URDUserWidget;
  * 탑바는 전투 결과를 계산하지 않고 SRPGCombatSubsystem의 종료 이벤트를 구독한다. 플레이어 승리 후에는
  * 지도 위젯을 열어 다음 방 선택을 안내하고, 사용자가 SET을 열었다 닫아도 승리 후 지도 표시 상태가
  * 유지되도록 복원만 담당한다.
+ *
+ * 왜 탑바를 공통 진입점으로 두는가:
+ * 방 HUD마다 MAP/SET 버튼을 따로 만들면 방 종류가 늘 때마다 열기 규칙과 닫기 규칙이 갈라진다.
+ * 탑바가 WorldWidgetSubsystem의 공용 위젯만 열고 닫으면 전투/상점/보물 방 모두 같은 OpenUI 경로를 쓴다.
  */
 UCLASS(BlueprintType, Blueprintable)
 class P_RD_API UTopMenuBarWidget : public URDUserWidget
@@ -131,6 +135,9 @@ private:
 	 * @details
 	 * 일반 클릭으로 연 월드맵은 조회용이므로 방 선택을 비활성화한다.
 	 * 승리 후 강제 지도 상태에서는 사용자가 맵을 닫아도 다시 복원되어 다음 방 선택 흐름이 유지된다.
+	 *
+	 * 왜 조회용 지도에서는 선택을 끄는가:
+	 * MAP 버튼은 진행 상황 확인용이다. 여기서 노드 선택이 가능하면 사용자가 정보를 보려다 실수로 다음 방 전환을 시작할 수 있다.
 	 */
 	void ToggleWorldMap();
 
@@ -139,6 +146,10 @@ private:
 	 *
 	 * @details
 	 * 설정 패널을 열 때 월드맵은 잠시 닫고, 승리 후 지도 잠금 상태라면 설정을 닫은 뒤 월드맵을 복원한다.
+	 *
+	 * 왜 월드맵과 동시에 열지 않는가:
+	 * 두 팝업이 동시에 떠 있으면 Back/Close 입력의 대상이 불명확해진다.
+	 * 한 번에 하나만 열어야 사용자가 현재 조작 중인 화면을 명확히 알 수 있다.
 	 */
 	void ToggleSettingsPanel();
 
@@ -154,6 +165,10 @@ private:
 	 * @brief 승리 후 다음 방 선택이 가능한 월드맵을 연다.
 	 *
 	 * @param Barrier 월드맵이 표시된 뒤 해제할 presentation barrier
+	 *
+	 * 왜 barrier를 월드맵 OpenUI 뒤에 푸는가:
+	 * 전투 종료 연출이 끝났는데 다음 방 선택 UI가 아직 안 뜨면 흐름이 끊겨 보인다.
+	 * 월드맵이 실제로 열린 뒤 barrier를 해제해야 승리 연출에서 선택 화면까지 자연스럽게 이어진다.
 	 */
 	void OpenWorldMapAfterPlayerWin(TSharedPtr<FPresentationBarrier> Barrier);
 
@@ -232,6 +247,10 @@ private:
 	 * @details
 	 * 플레이어가 승리 후 SET을 열거나 MAP을 닫아도 다음 방 선택 흐름이 사라지면 안 되므로,
 	 * 이 플래그가 켜진 동안에는 월드맵을 닫는 대신 다시 복원한다.
+	 *
+	 * 왜 잠금이 필요한가:
+	 * 승리 후 다음 방을 고르지 않으면 런 진행이 멈춘다. 사용자가 설정을 잠깐 열 수는 있어도,
+	 * 선택해야 하는 월드맵 자체가 사라지면 다음 행동을 잃어버리기 쉽다.
 	 */
 	bool mVictoryWorldMapLocked = false;
 };

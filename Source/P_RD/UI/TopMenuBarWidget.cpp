@@ -37,6 +37,12 @@ UTopMenuBarWidget::UTopMenuBarWidget(const FObjectInitializer& ObjectInitializer
 
 /**
  * @brief 위젯 구성 직후 버튼/전투 이벤트를 연결하고 입력 통과 상태를 적용한다.
+ *
+ * @details
+ * 탑바는 직접 화면을 소유하지 않고, 버튼 입력과 전투 종료 신호를 받아 공용 월드 위젯을 여는 허브 역할을 한다.
+ *
+ * 왜 Construct에서 이벤트를 묶는가:
+ * WBP 버튼과 전투 서브시스템이 모두 준비된 뒤에만 구독할 수 있다. 여기서 한 번 연결해 두면 방마다 별도 버튼 연결을 만들지 않아도 된다.
  */
 void UTopMenuBarWidget::NativeConstruct()
 {
@@ -90,6 +96,10 @@ void UTopMenuBarWidget::ApplyOpenUI()
  * @details
  * 인게임 탑바가 전체 화면 위젯으로 올라와도 맵 클릭, 전투 입력, 하위 팝업 입력을 막지 않게 하기 위한 설정이다.
  * 버튼은 Visible로 유지해 클릭 가능하게 두고, 나머지 표시 위젯은 SelfHitTestInvisible로 바꾼다.
+ *
+ * 왜 입력을 통과시키는가:
+ * 탑바 WBP가 화면 전체 크기로 배치되면 보이지 않는 배경이 아래 UI의 터치를 먹을 수 있다.
+ * 장식 영역은 통과시키고 버튼만 입력을 받게 해야 게임 조작과 팝업 조작이 막히지 않는다.
  */
 void UTopMenuBarWidget::ApplyInputPassThrough()
 {
@@ -368,6 +378,10 @@ void UTopMenuBarWidget::CloseWorldWidget(EWorldWidgetType WorldWidgetType) const
  * @details
  * 사용자가 MAP 버튼으로 연 지도는 조회용이므로 방 선택을 막는다.
  * 승리 후 지도 잠금 상태에서는 다음 방 선택을 유지해야 하므로 닫기 대신 복원 흐름으로 보낸다.
+ *
+ * 왜 탑바가 지도 모드를 정하는가:
+ * 같은 WorldMap 위젯이라도 MAP 버튼에서 열렸는지, 전투 승리 후 열렸는지에 따라 선택 가능 여부가 달라진다.
+ * 열린 경로를 알고 있는 탑바가 SetRoomSelectionEnabled()를 정해야 위젯 내부가 게임 흐름을 추측하지 않는다.
  */
 void UTopMenuBarWidget::ToggleWorldMap()
 {
@@ -406,6 +420,10 @@ void UTopMenuBarWidget::ToggleWorldMap()
  *
  * @details
  * 설정 패널은 월드맵과 동시에 열지 않는다. 승리 후 지도 선택이 잠겨 있으면 설정을 닫은 뒤 월드맵을 다시 띄운다.
+ *
+ * 왜 설정 패널 상태를 여기서 초기화하는가:
+ * 인게임 SET 버튼에서 열린 설정은 항상 런 액션 영역을 기준으로 시작해야 한다.
+ * TopMenuBar가 모드와 상태 문구를 정리해주면 SettingsPanelWidget은 어느 화면에서 열렸는지 직접 추측하지 않아도 된다.
  */
 void UTopMenuBarWidget::ToggleSettingsPanel()
 {
@@ -491,6 +509,10 @@ void UTopMenuBarWidget::HandleEndCombatUI(TSharedPtr<FPresentationBarrier> Barri
  *
  * @details
  * OpenUI 완료 후 barrier를 해제해 전투 종료 연출과 다음 방 선택 UI의 경계가 끊기지 않게 한다.
+ *
+ * 왜 즉시 RefreshMap()도 호출하는가:
+ * OpenUI 애니메이션이 있는 경우에도 위젯 내용은 먼저 채워져 있어야 한다.
+ * 콜백에서도 한 번 더 갱신해, 열리는 중 선택 상태가 바뀌어도 표시가 최신 상태가 된다.
  */
 void UTopMenuBarWidget::OpenWorldMapAfterPlayerWin(TSharedPtr<FPresentationBarrier> Barrier)
 {

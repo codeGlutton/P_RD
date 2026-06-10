@@ -148,6 +148,10 @@ void ARoomGameModeBase::BeginRoom()
 	 * TopMenuBar는 월드맵/설정 패널을 여는 인게임 공통 진입점이다.
 	 * 각 방 GameMode가 별도 HUD를 직접 만들지 않고 WorldWidgetSubsystem에 등록된 위젯을 열어
 	 * 전투/상점/보물 방에서 같은 UI 경로를 공유하게 한다.
+	 *
+	 * 왜 BeginRoom()에서 여는가:
+	 * InitWorldWidget()은 위젯을 준비만 하고, 실제 표시 여부는 방 시작 흐름이 결정해야 한다.
+	 * 방 전용 초기화가 끝난 뒤 OpenUI()를 호출해야 탑바가 현재 방 정보를 읽고 올바른 상태로 보인다.
 	 */
 	if (UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())
 	{
