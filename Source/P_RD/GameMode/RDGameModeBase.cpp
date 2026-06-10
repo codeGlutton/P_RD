@@ -191,6 +191,7 @@ bool ARDGameModeBase::PreloadAndTransitionRoomAsync(int32 RoomRowIndex, int32 Ro
 		{
 			/* 페이드 아웃 애니메이션 실행 */
 
+			/* FadeOut 완료 콜백은 StartFadeOutUI() 내부에서 MarkExternalReadyForTransition()까지 이어준다. */
 			StartFadeOutUI();
 		}
 	}
@@ -234,6 +235,7 @@ bool ARDGameModeBase::PreloadAndTransitionRoomAsync(EStageLevelType StageLevel)
 		{
 			/* 페이드 아웃 애니메이션 실행 */
 
+			/* FadeOut 완료 콜백은 StartFadeOutUI() 내부에서 MarkExternalReadyForTransition()까지 이어준다. */
 			StartFadeOutUI();
 		}
 	}
@@ -276,6 +278,7 @@ bool ARDGameModeBase::PreloadAndTransitionFrontendRoomAsync()
 		{
 			/* 페이드 아웃 애니메이션 실행 */
 
+			/* FadeOut 완료 콜백은 StartFadeOutUI() 내부에서 MarkExternalReadyForTransition()까지 이어준다. */
 			StartFadeOutUI();
 		}
 	}
