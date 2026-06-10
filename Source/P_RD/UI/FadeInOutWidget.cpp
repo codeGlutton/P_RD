@@ -7,10 +7,10 @@
 #include "UI/ViewportZOrderType.h"
 
 /**
- * Fade widget owns the transition overlay layer.
+ * 페이드 위젯은 방 전환용 오버레이 레이어를 소유한다.
  *
- * Callers should only request OpenUI/CloseUI. They should not need to know
- * where a full-screen fade effect belongs in the viewport stack.
+ * 호출자는 OpenUI/CloseUI만 요청하면 된다.
+ * 전체 화면 페이드 효과가 뷰포트 스택의 어느 위치에 있어야 하는지는 이 위젯이 결정한다.
  */
 UFadeInOutWidget::UFadeInOutWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -19,10 +19,10 @@ UFadeInOutWidget::UFadeInOutWidget(const FObjectInitializer& ObjectInitializer)
 }
 
 /**
- * Builds the native minimum visual when no WBP root exists.
+ * WBP 루트가 없을 때 네이티브 최소 화면을 만든다.
  *
- * The native path keeps transition timing testable before designer-authored WBP
- * content is ready. If a WBP provides its own root, that root remains in charge.
+ * 디자이너가 만든 WBP 콘텐츠가 준비되기 전에도 전환 타이밍을 검증할 수 있게 하기 위한 대체 경로다.
+ * WBP가 자체 루트를 제공하면 그 루트가 최종 화면 구성을 담당한다.
  */
 bool UFadeInOutWidget::Initialize()
 {
@@ -32,7 +32,7 @@ bool UFadeInOutWidget::Initialize()
 }
 
 /**
- * Keeps the default visual available in editor preview as well as runtime.
+ * 런타임뿐 아니라 에디터 미리보기에서도 기본 화면을 사용할 수 있게 한다.
  */
 void UFadeInOutWidget::NativePreConstruct()
 {
@@ -41,10 +41,10 @@ void UFadeInOutWidget::NativePreConstruct()
 }
 
 /**
- * Advances the native fade and resolves the OpenUI/CloseUI callback.
+ * 네이티브 페이드를 진행시키고 OpenUI/CloseUI 완료 콜백을 확정한다.
  *
- * GameMode and transition subsystems wait for the callback only. The concrete
- * presentation can be this native opacity tick or a future WBP animation.
+ * GameMode와 전환 서브시스템은 콜백 완료만 기다린다.
+ * 실제 표현은 현재의 네이티브 투명도 틱일 수도 있고, 이후 WBP 애니메이션으로 교체될 수도 있다.
  */
 void UFadeInOutWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
@@ -78,7 +78,7 @@ void UFadeInOutWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime
 }
 
 /**
- * Fades to black before the room transition continues.
+ * 방 전환이 이어지기 전에 화면을 검게 덮는다.
  */
 void UFadeInOutWidget::PlayOpenUIAnimation_Implementation()
 {
@@ -86,7 +86,7 @@ void UFadeInOutWidget::PlayOpenUIAnimation_Implementation()
 }
 
 /**
- * Fades from black back to gameplay before the close callback is released.
+ * 닫힘 콜백을 내보내기 전에 검은 화면에서 게임 화면으로 다시 드러낸다.
  */
 void UFadeInOutWidget::PlayCloseUIAnimation_Implementation()
 {
@@ -94,7 +94,7 @@ void UFadeInOutWidget::PlayCloseUIAnimation_Implementation()
 }
 
 /**
- * Creates a plain full-screen black overlay only when no WBP root is present.
+ * WBP 루트가 없을 때만 단순한 전체 화면 검은 오버레이를 만든다.
  */
 void UFadeInOutWidget::EnsureDefaultVisual()
 {
@@ -121,10 +121,10 @@ void UFadeInOutWidget::EnsureDefaultVisual()
 }
 
 /**
- * Starts a fade request through one completion path.
+ * 하나의 완료 경로로 페이드 요청을 시작한다.
  *
- * Zero-duration fades and tick-driven fades both end through FinishOpenUI or
- * FinishCloseUI so callers observe the same lifecycle contract.
+ * 지속 시간이 0인 페이드와 틱으로 진행되는 페이드 모두 FinishOpenUI 또는 FinishCloseUI로 끝난다.
+ * 호출자는 페이드 구현 방식과 무관하게 같은 생명주기 계약만 관찰하면 된다.
  */
 void UFadeInOutWidget::StartFade(float StartAlpha, float EndAlpha, float Duration, bool bFinishOpen)
 {
@@ -152,7 +152,7 @@ void UFadeInOutWidget::StartFade(float StartAlpha, float EndAlpha, float Duratio
 }
 
 /**
- * Applies the current fade opacity to the whole widget.
+ * 현재 페이드 투명도를 위젯 전체에 적용한다.
  */
 void UFadeInOutWidget::ApplyFadeAlpha(float Alpha)
 {
