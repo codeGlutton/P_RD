@@ -64,6 +64,13 @@ namespace
 	}
 }
 
+/**
+ * @brief 프론트엔드 방에서 선로딩할 공용 월드 위젯만 등록한다.
+ *
+ * @details
+ * 타이틀 HUD 자체는 mHUDClass를 통해 InitHUD()가 생성하고, BeginRoom()에서 OpenUI()로 표시한다.
+ * 이 배열에는 HUD가 아닌 전환/로딩 계열 월드 위젯만 남겨 두어 HUD 생성 책임과 공용 위젯 생성 책임을 분리한다.
+ */
 AFrontendGameMode::AFrontendGameMode()
 {
 	mWorldWidgets = {
@@ -77,6 +84,17 @@ AFrontendGameMode::AFrontendGameMode()
 	mWaitExternalWorkOnTransition = false;
 }
 
+/**
+ * @brief 프론트엔드 방 진입 후 타이틀 HUD를 공통 UI 생명주기로 연다.
+ *
+ * @details
+ * RDUserWidget 기반 HUD는 InitHUD()에서 생성되더라도 자동으로 화면에 표시되지 않는다.
+ * 실제 표시 시점은 GameMode가 방 진입 준비를 끝낸 뒤 OpenUI()로 명시한다.
+ *
+ * 여기서 UTitleMenuWidget으로 구체 타입을 확인하는 이유는 프론트엔드 시작 화면이 단순한 HUD 베이스가 아니라
+ * 캐릭터 선택, 설정, 이어하기/새 런 시작 흐름을 가진 타이틀 메뉴여야 하기 때문이다.
+ * 공통 베이스 포인터만 받아 열면 잘못된 HUD 클래스가 들어와도 늦게 발견되므로, 방 시작 시점에 바로 검증한다.
+ */
 void AFrontendGameMode::BeginRoom()
 {
 	Super::BeginRoom();
