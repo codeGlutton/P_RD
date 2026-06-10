@@ -1,6 +1,10 @@
 /**
  * @file SettingsPanelWidget.h
  * @brief 타이틀과 인게임에서 함께 쓰는 설정 패널 위젯.
+ *
+ * @details
+ * 같은 설정 화면을 타이틀 메뉴와 인게임 팝업에서 재사용하기 위해, 이 파일은 화면 입력과 표시 상태만 담당한다.
+ * 실제 저장, 런 포기, 타이틀 이동은 이 위젯을 여는 쪽이 처리한다.
  */
 
 #pragma once
@@ -37,6 +41,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSettingsPanelIntEvent, int32, Value
  *
  * 이 위젯은 설정값 저장, 런 종료, 타이틀 이동을 직접 수행하지 않는다. 버튼 입력을 On... 이벤트로
  * 올려 보내면 TitleMenuWidget, TopMenuBarWidget, GameMode가 각 화면의 권한에 맞게 처리한다.
+ *
+ * 왜 이벤트만 내보내는가:
+ * 설정 패널 안에 저장/전환 로직을 넣으면 타이틀에서 열린 패널도 인게임 런 상태를 알아야 한다.
+ * 반대로 입력만 이벤트로 올리면 같은 WBP를 두 화면에서 공유하면서도, 실제 처리는 각 화면의 책임으로 남길 수 있다.
  */
 UCLASS(BlueprintType, Blueprintable)
 class P_RD_API USettingsPanelWidget : public URDUserWidget
@@ -137,6 +145,14 @@ public:
 protected:
 	/**
 	 * @brief WBP 바인딩 검증, 입력 이벤트 연결, 초기 표시 상태 동기화를 수행한다.
+	 *
+	 * @details
+	 * 여기서 하는 일은 버튼/슬라이더를 이 클래스의 Handle... 함수에 연결하고, 현재 모드에 맞게 보일 영역을 정리하는 것이다.
+	 * Handle... 함수들은 실제 저장이나 런 종료를 하지 않고 On... 이벤트를 Broadcast해 바깥 흐름에 요청만 전달한다.
+	 *
+	 * 왜 Construct 시점에 연결하는가:
+	 * WBP가 실제로 생성된 뒤에야 버튼과 슬라이더 포인터가 유효하다. 이 시점에 연결해 두면 타이틀/인게임 어디서 열리든
+	 * 같은 입력 경로를 쓰고, 없는 Optional 위젯은 건너뛰어 오래된 WBP와도 같이 동작할 수 있다.
 	 */
 	void NativeConstruct() override;
 
@@ -153,6 +169,12 @@ private:
 
 	/**
 	 * @brief 타이틀/인게임 모드에 따라 런 액션 영역 표시를 전환한다.
+	 *
+	 * @details
+	 * 같은 WBP 안에 인게임 전용 버튼까지 같이 두되, 타이틀 모드에서는 숨겨서 잘못된 런 액션을 누를 수 없게 한다.
+	 *
+	 * 왜 WBP를 둘로 나누지 않는가:
+	 * 볼륨, 품질, 뒤로가기 같은 공통 설정은 두 화면에서 같아야 한다. 모드로 차이만 숨기면 공통 UI 수정이 한 곳에 모인다.
 	 */
 	void ApplyModeVisibility() const;
 

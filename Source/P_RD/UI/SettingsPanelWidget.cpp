@@ -17,11 +17,15 @@ USettingsPanelWidget::USettingsPanelWidget(const FObjectInitializer& ObjectIniti
 }
 
 /**
- * @brief WBP 입력을 이벤트 발신용 핸들러에 연결하고 초기 표시 상태를 동기화한다.
+ * @brief WBP 버튼/슬라이더를 이 위젯의 입력 처리 함수에 연결하고 처음 표시 상태를 맞춘다.
  *
  * @details
- * 이 위젯은 설정 적용이나 런 종료를 직접 수행하지 않는다.
- * 버튼/슬라이더 입력을 외부 이벤트로 올리기 위해 Construct 시점에 WBP 컨트롤만 연결한다.
+ * SettingsPanelWidget은 설정 화면의 입력만 받는다. 저장, 런 포기, 타이틀 이동 같은 실제 게임 처리는
+ * 직접 하지 않고 OnSaveAndExitRequested, OnAbandonRunConfirmed 같은 이벤트로 바깥에 알려준다.
+ *
+ * 왜 이렇게 나누는가:
+ * 같은 설정 패널을 타이틀과 인게임에서 함께 쓰기 때문이다. 패널 안에 GameMode/저장/전환 로직을 넣으면
+ * 타이틀용 설정과 인게임용 설정이 서로의 흐름을 알아야 하므로 재사용하기 어렵다.
  */
 void USettingsPanelWidget::NativeConstruct()
 {
@@ -180,6 +184,10 @@ ESettingsPanelMode USettingsPanelWidget::GetPanelMode() const
  * @details
  * 저장 가능 여부와 포기 가능 여부는 GameMode/저장 시스템이 판단한다.
  * 패널은 전달받은 결과만 표시해 UI와 런 정책을 분리한다.
+ *
+ * 왜 bool만 받는가:
+ * 패널은 "이 버튼을 지금 눌러도 되는가"만 알면 된다. 실제 저장 가능 조건을 직접 검사하면
+ * 설정 UI가 런 데이터 구조와 저장 정책에 묶여 타이틀 화면에서 재사용하기 어려워진다.
  */
 void USettingsPanelWidget::RefreshPanelState(bool bCanSaveRun, bool bCanAbandonRun)
 {
@@ -367,6 +375,13 @@ void USettingsPanelWidget::SyncText() const
 
 /**
  * @brief 현재 브랜치에서 사용하지 않는 언어 설정 영역을 숨긴다.
+ *
+ * @details
+ * WBP에 남아 있는 이전 기획의 언어 설정 영역을 코드에서 접어 현재 기능 범위를 명확히 한다.
+ *
+ * 왜 삭제하지 않고 숨기는가:
+ * 이 단계의 목적은 공통 설정 패널 연결이고, WBP 구조를 크게 갈아엎으면 리뷰 범위가 넓어진다.
+ * 우선 사용하지 않는 영역만 접어 두면 이후 실제 언어 설정을 붙일 때 다시 살릴 수 있다.
  */
 void USettingsPanelWidget::HideDeprecatedLanguageControls() const
 {
@@ -382,6 +397,13 @@ void USettingsPanelWidget::HideDeprecatedLanguageControls() const
 
 /**
  * @brief 패널 모드에 따라 런 액션 영역 표시를 전환한다.
+ *
+ * @details
+ * InGame 모드에서는 저장 후 종료/런 포기 같은 런 액션을 보여주고, Title 모드에서는 숨긴다.
+ *
+ * 왜 표시만 전환하는가:
+ * 버튼 자체를 별도 WBP로 분리하면 타이틀과 인게임 설정 화면이 금방 갈라진다.
+ * 같은 패널 안에서 모드별 차이만 접으면 공통 설정 UI의 모양과 입력 연결을 한 곳에서 유지할 수 있다.
  */
 void USettingsPanelWidget::ApplyModeVisibility() const
 {
