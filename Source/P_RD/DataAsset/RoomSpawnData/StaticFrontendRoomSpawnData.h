@@ -20,6 +20,9 @@ class P_RD_API UStaticFrontendRoomSpawnData : public UStaticRoomSpawnData
 {
 	GENERATED_BODY()
 
+public:
+	void PostInitProperties() override;
+
 #if WITH_EDITOR
 public:
 	EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;

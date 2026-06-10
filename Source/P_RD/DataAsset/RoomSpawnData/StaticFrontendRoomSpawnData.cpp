@@ -1,8 +1,21 @@
 ﻿#include "DataAsset/RoomSpawnData/StaticFrontendRoomSpawnData.h"
+#include "GameMode/FrontendGameMode.h"
+
+#include "Setting/GamePlaySettings.h"
 
 #if WITH_EDITOR
 #include "Misc/DataValidation.h"
 #endif
+
+void UStaticFrontendRoomSpawnData::PostInitProperties()
+{
+	Super::PostInitProperties();
+
+	if (HasAnyFlags(RF_ClassDefaultObject) == false)
+	{
+		mGameModeBase = GetDefault<UGamePlaySettings>()->mFrontendGameMode;
+	}
+}
 
 #if WITH_EDITOR
 EDataValidationResult UStaticFrontendRoomSpawnData::IsDataValid(FDataValidationContext& Context) const
