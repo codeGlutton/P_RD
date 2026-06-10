@@ -23,6 +23,22 @@ enum class EWorldWidgetType : uint8
 	FadeInOut,
 	LoadingNotify,
 
+	/**
+	 * @brief 인게임에서 현재 런의 월드맵을 표시하는 공용 위젯
+	 *
+	 * @details
+	 * MAP 버튼으로 열면 조회용, 전투 승리 후 열면 다음 방 선택용으로 사용한다.
+	 */
+	WorldMap,
+
+	/**
+	 * @brief 인게임 설정 패널 공용 위젯
+	 *
+	 * @details
+	 * 타이틀 설정과 같은 WBP 구조를 공유하되, 런 저장/포기 같은 인게임 전용 액션 영역을 표시한다.
+	 */
+	InGameSettings,
+
 	Count UMETA(Hidden),
 };
 

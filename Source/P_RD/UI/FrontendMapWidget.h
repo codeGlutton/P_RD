@@ -78,6 +78,24 @@ public:
 	UFUNCTION(Category = UI, BlueprintCallable)
 	bool RefreshMap();
 
+	/** @brief 승리 후 지도처럼 다음 방 선택이 허용되는 상황에서만 true로 둔다. */
+	void SetRoomSelectionEnabled(bool bEnabled);
+
+	/**
+	 * @brief 현재 월드맵이 방 선택 입력을 허용하는지 확인한다.
+	 *
+	 * @return 방 선택/입장 입력을 받을 수 있으면 true
+	 */
+	bool IsRoomSelectionEnabled() const;
+
+	/** @brief 탑바/전환 흐름이 일시적으로 표시할 상태 문구를 지정한다. */
+	void SetMapStatusOverride(const FText& InText);
+
+	/**
+	 * @brief 외부에서 지정한 상태 문구를 해제하고 지도 기본 상태 문구로 되돌린다.
+	 */
+	void ClearMapStatusOverride();
+
 	UPROPERTY(Category = UI, BlueprintAssignable)
 	FFrontendMapWidgetSimpleEvent OnCloseRequested;
 
@@ -118,6 +136,11 @@ private:
 	FText mLoadingStatusText;
 	FText mMapReadyStatusText;
 	FText mMapUnavailableStatusText;
+
+	/**
+	 * @brief 탑바/전투 결과 흐름이 지도 기본 상태 문구 대신 임시로 보여줄 문구
+	 */
+	FText mStatusOverrideText;
 
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UButton> CloseButton;
@@ -184,5 +207,16 @@ private:
 	UPROPERTY(Transient)
 	TArray<FFrontendMapNodePoolEntry> MapNodePool;
 
+	/**
+	 * @brief 방 입장 요청 이후 중복 입력을 막기 위한 상태
+	 */
 	bool bEnterRequested = false;
+
+	/**
+	 * @brief 이 지도 화면에서 다음 방 선택을 허용할지 여부
+	 *
+	 * @details
+	 * MAP 버튼으로 연 지도는 조회 전용이고, 전투 승리 후 열린 지도만 다음 방 선택과 입장을 허용한다.
+	 */
+	bool bRoomSelectionEnabled = false;
 };

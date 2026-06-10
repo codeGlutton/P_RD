@@ -94,6 +94,8 @@ ARoomGameModeBase::ARoomGameModeBase()
 		EWorldWidgetType::SaveNotify,  
 		EWorldWidgetType::FadeInOut,  
 		EWorldWidgetType::LoadingNotify,  
+		EWorldWidgetType::WorldMap,
+		EWorldWidgetType::InGameSettings,
 	};
 
 	mShowFadeInUIOnTransition = true;
@@ -302,7 +304,6 @@ void ARoomGameModeBase::SaveRunWithUIAsync() const
 	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr 오류"));
 
 	UUserWidget* SaveNotifyWidget = WorldWidgetSubsystem->GetWorldWidget(EWorldWidgetType::SaveNotify);
-	checkf(SaveNotifyWidget != nullptr, TEXT("세이브 알림 위젯 nullptr 오류"));
 
 	//SaveNotifyWidget->OpenUI();
 	// 시작 애니메이션
