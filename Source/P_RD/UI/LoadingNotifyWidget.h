@@ -5,6 +5,10 @@
  * @details
  * Preload가 매우 빨리 끝나면 사용자는 화면 전환이 눌렸는지 알기 어렵다. 이 위젯은 로딩중 상태를
  * 최소 표시 시간 동안 유지한 뒤, CloseUI에서 로딩완료 상태와 닫힘 애니메이션을 끝내고 콜백을 실행한다.
+ *
+ * 왜 최소 표시 시간이 필요한가:
+ * 로딩이 너무 빨리 끝나면 버튼을 눌렀는데 아무 반응 없이 화면만 바뀐 것처럼 보일 수 있다.
+ * 짧게라도 로딩중/완료 상태를 보여주면 입력이 처리됐고 다음 흐름으로 넘어간다는 신호가 생긴다.
  */
 
 #pragma once
@@ -22,6 +26,10 @@ class UWidget;
  *
  * 전환 흐름의 실제 완료 여부는 GameMode/RoomTransitionSubsystem이 결정하고, 이 위젯은 사용자가 볼
  * 로딩 표현과 닫힘 완료 콜백만 담당한다.
+ *
+ * 왜 전환 완료 판단을 하지 않는가:
+ * 위젯이 로드 상태까지 판단하면 UI가 RoomTransitionSubsystem의 내부 규칙을 알아야 한다.
+ * 여기서는 "보여주고 닫힌다"까지만 책임져야 같은 알림을 다른 전환에서도 재사용할 수 있다.
  */
 UCLASS(BlueprintType, Blueprintable)
 class P_RD_API ULoadingNotifyWidget : public URDUserWidget

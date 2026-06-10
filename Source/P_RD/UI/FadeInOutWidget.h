@@ -6,6 +6,10 @@
  * RoomTransitionSubsystem은 레벨 전환 준비 상태만 알고, 화면을 언제 검게 덮고 언제 다시 보여줄지는
  * UI가 결정해야 한다. 이 위젯은 OpenUI에서 페이드아웃을 완료한 뒤 전환 실행 콜백을 넘기고,
  * CloseUI에서 새 방 입장 후 페이드인을 수행하도록 분리한다.
+ *
+ * 왜 OpenUI가 fade out이고 CloseUI가 fade in인가:
+ * 전환 직전에는 화면을 덮는 일이 "페이드 UI를 여는 것"이고, 새 방에 들어온 뒤에는 그 덮개를 닫으며
+ * 게임 화면을 다시 보여준다. 이렇게 맞추면 GameMode는 모든 위젯을 OpenUI/CloseUI 규칙으로만 다룰 수 있다.
  */
 
 #pragma once
@@ -20,6 +24,9 @@
  *
  * WBP_FadeInOut이 없거나 애니메이션이 아직 비어 있어도 기본 검은 패널로 동작하게 하여
  * 전환 API 검증과 모바일 빌드 확인을 먼저 진행할 수 있게 한다.
+ *
+ * 왜 native fallback을 두는가:
+ * WBP 작업이 늦어지거나 패키징에서 위젯 바인딩이 비어 있어도 전환 순서 자체는 검증할 수 있어야 한다.
  */
 UCLASS(BlueprintType, Blueprintable)
 class P_RD_API UFadeInOutWidget : public URDUserWidget
