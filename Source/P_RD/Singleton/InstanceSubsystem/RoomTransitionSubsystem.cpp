@@ -190,7 +190,7 @@ bool URoomTransitionSubsystem::TransitLoadedRoom()
         return false;
     }
 
-    if (EnumHasAnyFlags(mTransitionState, ERoomTransitionStateFlag::AutoTransition) == false)
+    if (EnumHasAnyFlags(mTransitionState, ERoomTransitionStateFlag::AutoTransition) == true)
     {
         UE_LOG(LogTransition, Log, TEXT("이미 전환 중"));
         return false;

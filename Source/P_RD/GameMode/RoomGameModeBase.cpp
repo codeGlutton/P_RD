@@ -286,7 +286,7 @@ bool ARoomGameModeBase::PreloadAndTransitionSelectedRoomAsync()
 		return false;
 	}
 
-	if (IsRoomSelectable(mSelectedRoomRow, mSelectedRoomColumn) == true)
+	if (IsRoomSelectable(mSelectedRoomRow, mSelectedRoomColumn) == false)
 	{
 		UE_LOG(LogRDGameMode, Log, TEXT("전환 불가능한 방 선택"));
 		return false;
