@@ -182,6 +182,13 @@ bool URoomTransitionSubsystem::MarkExternalReady()
     return true;
 }
 
+/**
+ * @brief 자동 전환이 아닌 흐름에서 준비된 방으로 실제 이동을 시작한다.
+ *
+ * @details
+ * 로딩 UI를 닫은 뒤 수동으로 호출되는 진입점이다.
+ * 따라서 에셋 로드와 외부 준비가 모두 끝난 ReadyToTransition 상태에서만 전환을 시작해야 한다.
+ */
 bool URoomTransitionSubsystem::TransitLoadedRoom()
 {
     if (EnumHasAllFlags(mTransitionState, ERoomTransitionStateFlag::ReadyToTransition) == false)

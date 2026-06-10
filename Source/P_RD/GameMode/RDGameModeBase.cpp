@@ -67,6 +67,13 @@ bool ARDGameModeBase::CanAbandonRun() const
 	return HasActiveRun() == true;
 }
 
+/**
+ * @brief 방 진입 직후 페이드아웃 상태의 전환 레이어를 다시 닫는다.
+ *
+ * @details
+ * 페이드 위젯은 OpenUI()에서 검은 화면으로 덮고, CloseUI()에서 다시 화면을 보여준다.
+ * 현재 방에 들어온 뒤에는 전환을 기다릴 필요가 없으므로 OpenUI 완료 콜백에서 바로 CloseUI()를 호출한다.
+ */
 void ARDGameModeBase::StartFadeInUI() const
 {
 	checkf(mWorldWidgets.Contains(EWorldWidgetType::FadeInOut) == true, TEXT("FadeInOut이 준비되지 않음"));
@@ -83,6 +90,13 @@ void ARDGameModeBase::StartFadeInUI() const
 	}));
 }
 
+/**
+ * @brief 다음 방으로 넘어가기 전 화면을 먼저 검게 덮는다.
+ *
+ * @details
+ * RequireExternalReady 전환에서는 에셋 로드가 끝나도 외부 준비 신호가 오기 전까지 실제 전환을 시작하지 않는다.
+ * 이 함수는 페이드아웃이 끝난 시점에 MarkExternalReadyForTransition()을 호출해 전환 시작 조건을 해제한다.
+ */
 void ARDGameModeBase::StartFadeOutUI()
 {
 	checkf(mWorldWidgets.Contains(EWorldWidgetType::FadeInOut) == true, TEXT("FadeInOut이 준비되지 않음"));
@@ -99,6 +113,13 @@ void ARDGameModeBase::StartFadeOutUI()
 	}));
 }
 
+/**
+ * @brief 로딩 알림을 표시하고 OpenUI 완료 콜백을 전달한다.
+ *
+ * @details
+ * 로딩 알림의 최소 표시 시간이나 문구 연출은 위젯이 관리한다.
+ * GameMode는 표시 요청과 완료 콜백만 연결해 방 전환 로직이 UI 구현에 의존하지 않게 한다.
+ */
 void ARDGameModeBase::OpenLoadingNotifyUI(FOnEndUIOpenAnimation OnEndUIOpenAnimation) const
 {
 	checkf(mWorldWidgets.Contains(EWorldWidgetType::LoadingNotify) == true, TEXT("LoadingNotify가 준비되지 않음"));
@@ -114,6 +135,13 @@ void ARDGameModeBase::OpenLoadingNotifyUI(FOnEndUIOpenAnimation OnEndUIOpenAnima
 	LoadingNotifyWidget->OpenUI(MoveTemp(OnEndUIOpenAnimation));
 }
 
+/**
+ * @brief 로딩 알림을 닫고 CloseUI 완료 콜백을 전달한다.
+ *
+ * @details
+ * CloseUI()는 즉시 닫힐 수도 있고, 위젯 내부의 완료 표시/닫힘 연출 이후 끝날 수도 있다.
+ * 전환 시작 같은 후속 작업은 이 콜백 뒤에 두어 사용자에게 보이는 로딩 흐름과 실제 레벨 전환 순서를 맞춘다.
+ */
 void ARDGameModeBase::CloseLoadingNotifyUI(FOnEndUICloseAnimation OnEndUICloseAnimation) const
 {
 	checkf(mWorldWidgets.Contains(EWorldWidgetType::LoadingNotify) == true, TEXT("LoadingNotify가 준비되지 않음"));
@@ -286,6 +314,14 @@ bool ARDGameModeBase::MarkExternalReadyForTransition()
 	return true;
 }
 
+/**
+ * @brief 프리로드 완료 알림을 받은 뒤 로딩 UI의 닫힘 완료를 기다린다.
+ *
+ * @details
+ * 자동 전환을 쓰지 않는 경우 RoomTransitionSubsystem은 준비 완료 콜백까지만 호출한다.
+ * 로딩 UI가 켜져 있다면 CloseUI() 완료 콜백에서 TransitLoadedRoom()을 호출해, 화면 표시가 먼저 정리된 뒤
+ * 실제 레벨 이동이 시작되도록 한다.
+ */
 void ARDGameModeBase::OnReadyToTransition(int32 RoomRowIndex, int32 RoomColumnIndex)
 {
 	if (mShowLoadingNotifyUIOnTransition == false)

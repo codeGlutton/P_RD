@@ -60,9 +60,36 @@ public:
 	bool CanAbandonRun() const;
 
 protected:
+	/**
+	 * @brief 현재 방 진입 시 페이드 레이어를 걷어내는 UI 흐름을 시작한다.
+	 *
+	 * @details
+	 * FadeInOut 월드 위젯의 OpenUI() 완료 콜백에서 CloseUI()를 호출한다.
+	 * GameMode는 페이드 구현 방식을 모르고, 위젯의 OpenUI/CloseUI 생명주기 완료 시점만 따른다.
+	 */
 	void StartFadeInUI() const;
+
+	/**
+	 * @brief 다음 방 전환 전에 화면을 덮고 외부 준비 완료를 알린다.
+	 *
+	 * @details
+	 * 방 전환 시스템이 ExternalReady를 기다리는 경우, 화면이 완전히 페이드아웃된 뒤
+	 * MarkExternalReadyForTransition()을 호출해야 새 레벨 전환이 검은 화면 뒤에서 진행된다.
+	 */
 	void StartFadeOutUI();
+
+	/**
+	 * @brief 로딩 알림 위젯을 공통 OpenUI 생명주기로 연다.
+	 *
+	 * @param OnEndUIOpenAnimation 로딩 알림이 열린 뒤 실행할 선택 콜백
+	 */
 	void OpenLoadingNotifyUI(FOnEndUIOpenAnimation OnEndUIOpenAnimation = FOnEndUIOpenAnimation()) const;
+
+	/**
+	 * @brief 로딩 알림 위젯을 공통 CloseUI 생명주기로 닫는다.
+	 *
+	 * @param OnEndUICloseAnimation 로딩 알림이 닫힌 뒤 실행할 선택 콜백
+	 */
 	void CloseLoadingNotifyUI(FOnEndUICloseAnimation OnEndUICloseAnimation = FOnEndUICloseAnimation()) const;
 
 protected:
@@ -85,6 +112,12 @@ protected:
 	bool MarkExternalReadyForTransition();
 
 private:
+	/**
+	 * @brief 방 전환 준비 완료 시 UI 닫힘 타이밍에 맞춰 실제 전환을 이어간다.
+	 *
+	 * @param RoomRowIndex 준비된 방의 행 인덱스
+	 * @param RoomColumnIndex 준비된 방의 열 인덱스
+	 */
 	void OnReadyToTransition(int32 RoomRowIndex, int32 RoomColumnIndex);
 	void OnPreTransition(int32 RoomRowIndex, int32 RoomColumnIndex);
 
