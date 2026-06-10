@@ -173,6 +173,16 @@ bool AFrontendGameMode::AbandonRunFromTitle()
 	return true;
 }
 
+/**
+ * @brief 타이틀 캐릭터 선택 화면에 표시할 플레이어 유닛 선택지를 만든다.
+ *
+ * @details
+ * GetPlayerUnitDatas()가 돌려준 SoftObject 목록을 실제 DataAsset으로 로드한 뒤, UI가 바로 그릴 수 있는 View 데이터로 변환한다.
+ *
+ * 왜 여기서 LoadSynchronous()를 허용하는가:
+ * 프론트엔드 진입 직후에는 AssetManager가 SoftObject 경로만 알고 실제 PlayerUnit DataAsset은 아직 메모리에 없을 수 있다.
+ * 캐릭터 선택 화면은 즉시 이름/직업/스탯을 보여줘야 하므로, 캐시된 포인터가 비어 있으면 이 시점에서 한 번 동기 로드한다.
+ */
 bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& OutOptions) const
 {
 	OutOptions.Reset();
@@ -225,6 +235,19 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 	return OutOptions.IsEmpty() == false;
 }
 
+/**
+ * @brief 프론트엔드 룸 설정이 허용한 플레이어 유닛 목록을 캐시해 반환한다.
+ *
+ * @details
+ * 기본 경로는 GamePlaySettings의 mFrontendRoomId로 UStaticFrontendRoomSpawnData를 찾아 mPlayableUnits를 읽는 것이다.
+ * 아직 PrimaryAsset 객체가 메모리에 없으면 설정된 PrimaryAsset 경로를 TryLoad()로 직접 로드하고,
+ * 그마저 실패하면 PlayerUnit PrimaryAsset 전체 목록을 임시 fallback으로 사용한다.
+ *
+ * 왜 fallback이 필요한가:
+ * 에디터에서는 이전 작업이나 에셋 브라우저 때문에 DataAsset이 이미 로드되어 있어 GetPrimaryAssetObject()가 성공할 수 있다.
+ * 하지만 패키징 빌드의 초기 진입에서는 같은 에셋이 아직 메모리에 없을 수 있으므로 nullptr을 그대로 역참조하면 바로 튕긴다.
+ * 설정된 FrontendRoomId를 먼저 동기 로드하고, 실패 시 전체 PlayerUnit 목록으로라도 화면을 구성해 크래시 대신 진단 가능한 상태를 만든다.
+ */
 const TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>>& AFrontendGameMode::GetPlayerUnitDatas() const
 {
 	if (mPlayerUnitDataCache.IsEmpty() == true)
@@ -238,6 +261,7 @@ const TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>>& AFrontendGameMode::Get
 				const UStaticFrontendRoomSpawnData* FrontendRoomSpawnData = AssetManager->GetPrimaryAssetObject<UStaticFrontendRoomSpawnData>(GamePlaySettings->mFrontendRoomId);
 				if (FrontendRoomSpawnData == nullptr)
 				{
+					/* PrimaryAsset이 등록되어 있어도 아직 메모리에 없을 수 있어, 설정된 FrontendRoomId 경로를 한 번 직접 로드한다. */
 					FrontendRoomSpawnData = Cast<UStaticFrontendRoomSpawnData>(AssetManager->GetPrimaryAssetPath(GamePlaySettings->mFrontendRoomId).TryLoad());
 				}
 
@@ -249,6 +273,7 @@ const TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>>& AFrontendGameMode::Get
 				{
 					UE_LOG(LogFrontendGameMode, Warning, TEXT("Frontend room data is not loaded. Falling back to PlayerUnit asset list: %s"), *GamePlaySettings->mFrontendRoomId.ToString());
 
+					/* FrontendRoom 설정이 잘못되어도 캐릭터 선택 화면을 빈 상태로 두지 않고, 등록된 PlayerUnit 목록으로 진단 가능한 fallback을 만든다. */
 					TArray<FPrimaryAssetId> PlayerUnitIds;
 					AssetManager->GetPrimaryAssetIdList(UnitPrimaryAssetTypes::GetPlayerUnitType(), OUT PlayerUnitIds);
 					for (const FPrimaryAssetId& PlayerUnitId : PlayerUnitIds)
@@ -266,6 +291,16 @@ const TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>>& AFrontendGameMode::Get
 	return mPlayerUnitDataCache;
 }
 
+/**
+ * @brief 선택된 플레이어 유닛 ID가 프론트엔드에서 허용한 목록에 포함되는지 확인한다.
+ *
+ * @details
+ * 캐릭터 선택 UI를 만들 때 사용한 GetPlayerUnitDatas() 캐시를 다시 기준으로 삼는다.
+ *
+ * 왜 같은 캐시를 쓰는가:
+ * 화면에 보여준 후보와 실제 StartNewRun()에서 허용하는 후보가 달라지면 사용자는 선택 가능한 카드를 눌렀는데
+ * 런 시작이 거절되는 상황을 겪는다. 표시와 검증이 같은 목록을 보게 해야 프론트엔드 선택 흐름이 일관된다.
+ */
 bool AFrontendGameMode::IsPlayerUnitIdValid(const FPrimaryAssetId& PlayerUnitId) const
 {
 	if (PlayerUnitId.IsValid() == false)
