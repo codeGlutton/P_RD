@@ -19,8 +19,6 @@
 #include "DataAsset/RoomSpawnData/StaticFrontendRoomSpawnData.h"
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
 
-#include "UI/RDUserWidget.h"
-
 DEFINE_LOG_CATEGORY(LogFrontendGameMode);
 
 namespace
@@ -185,6 +183,10 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 		const UStaticPlayerUnitSpawnData* LoadedPlayerUnitData = PlayerUnitData.Get();
 		if (LoadedPlayerUnitData == nullptr)
 		{
+			LoadedPlayerUnitData = PlayerUnitData.LoadSynchronous();
+		}
+		if (LoadedPlayerUnitData == nullptr)
+		{
 			UE_LOG(LogRD, Warning, TEXT("선택 가능한 Player Unit 로드 실패"));
 			continue;
 		}
@@ -233,8 +235,31 @@ const TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>>& AFrontendGameMode::Get
 			const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
 			if (GamePlaySettings != nullptr)
 			{
-				TObjectPtr<UStaticFrontendRoomSpawnData> FrontendRoomSpawnData = AssetManager->GetPrimaryAssetObject<UStaticFrontendRoomSpawnData>(GamePlaySettings->mFrontendRoomId);
-				mPlayerUnitDataCache = FrontendRoomSpawnData->mPlayableUnits;
+				const UStaticFrontendRoomSpawnData* FrontendRoomSpawnData = AssetManager->GetPrimaryAssetObject<UStaticFrontendRoomSpawnData>(GamePlaySettings->mFrontendRoomId);
+				if (FrontendRoomSpawnData == nullptr)
+				{
+					FrontendRoomSpawnData = Cast<UStaticFrontendRoomSpawnData>(AssetManager->GetPrimaryAssetPath(GamePlaySettings->mFrontendRoomId).TryLoad());
+				}
+
+				if (FrontendRoomSpawnData != nullptr)
+				{
+					mPlayerUnitDataCache = FrontendRoomSpawnData->mPlayableUnits;
+				}
+				else
+				{
+					UE_LOG(LogFrontendGameMode, Warning, TEXT("Frontend room data is not loaded. Falling back to PlayerUnit asset list: %s"), *GamePlaySettings->mFrontendRoomId.ToString());
+
+					TArray<FPrimaryAssetId> PlayerUnitIds;
+					AssetManager->GetPrimaryAssetIdList(UnitPrimaryAssetTypes::GetPlayerUnitType(), OUT PlayerUnitIds);
+					for (const FPrimaryAssetId& PlayerUnitId : PlayerUnitIds)
+					{
+						const FSoftObjectPath PlayerUnitPath = AssetManager->GetPrimaryAssetPath(PlayerUnitId);
+						if (PlayerUnitPath.IsValid())
+						{
+							mPlayerUnitDataCache.Add(TSoftObjectPtr<UStaticPlayerUnitSpawnData>(PlayerUnitPath));
+						}
+					}
+				}
 			}
 		}
 	}
