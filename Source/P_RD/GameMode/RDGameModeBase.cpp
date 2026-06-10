@@ -215,7 +215,11 @@ bool ARDGameModeBase::PreloadAndTransitionRoomAsync(int32 RoomRowIndex, int32 Ro
 		{
 			/* 페이드 아웃 애니메이션 실행 */
 
-			/* FadeOut 완료 콜백은 StartFadeOutUI() 내부에서 MarkExternalReadyForTransition()까지 이어준다. */
+			/*
+			 * 예전에는 호출부에서 "페이드아웃이 끝나면 MarkExternalReadyForTransition()" 콜백을 넘기려 했다.
+			 * 하지만 모든 방 전환 경로가 같은 후속 작업을 하므로, 그 콜백은 StartFadeOutUI() 내부에 묶었다.
+			 * 여기서는 "페이드아웃을 시작한다"는 요청만 남긴다.
+			 */
 			StartFadeOutUI();
 		}
 	}
@@ -259,7 +263,11 @@ bool ARDGameModeBase::PreloadAndTransitionRoomAsync(EStageLevelType StageLevel)
 		{
 			/* 페이드 아웃 애니메이션 실행 */
 
-			/* FadeOut 완료 콜백은 StartFadeOutUI() 내부에서 MarkExternalReadyForTransition()까지 이어준다. */
+			/*
+			 * 예전에는 호출부에서 "페이드아웃이 끝나면 MarkExternalReadyForTransition()" 콜백을 넘기려 했다.
+			 * 하지만 모든 방 전환 경로가 같은 후속 작업을 하므로, 그 콜백은 StartFadeOutUI() 내부에 묶었다.
+			 * 여기서는 "페이드아웃을 시작한다"는 요청만 남긴다.
+			 */
 			StartFadeOutUI();
 		}
 	}
@@ -302,7 +310,11 @@ bool ARDGameModeBase::PreloadAndTransitionFrontendRoomAsync()
 		{
 			/* 페이드 아웃 애니메이션 실행 */
 
-			/* FadeOut 완료 콜백은 StartFadeOutUI() 내부에서 MarkExternalReadyForTransition()까지 이어준다. */
+			/*
+			 * 예전에는 호출부에서 "페이드아웃이 끝나면 MarkExternalReadyForTransition()" 콜백을 넘기려 했다.
+			 * 하지만 모든 방 전환 경로가 같은 후속 작업을 하므로, 그 콜백은 StartFadeOutUI() 내부에 묶었다.
+			 * 여기서는 "페이드아웃을 시작한다"는 요청만 남긴다.
+			 */
 			StartFadeOutUI();
 		}
 	}
