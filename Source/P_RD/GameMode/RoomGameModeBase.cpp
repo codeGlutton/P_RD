@@ -136,7 +136,7 @@ bool ARoomGameModeBase::SelectNextRoom(int32 RoomRow, int32 RoomColumn)
 		return false;
 	}
 
-	if (IsRoomSelectable(RoomRow, RoomColumn) == true)
+	if (IsRoomSelectable(RoomRow, RoomColumn) == false)
 	{
 		UE_LOG(LogRDGameMode, Log, TEXT("전환 불가능한 방 선택"));
 		return false;
@@ -156,7 +156,7 @@ bool ARoomGameModeBase::EnterSelectedRoom()
 	}
 
 	checkf(PreloadAndTransitionSelectedRoomAsync() == true, TEXT("다음 방으로 전환 실패"));
-	return false;
+	return true;
 }
 
 bool ARoomGameModeBase::AbandonRunFromRoom()
@@ -280,6 +280,12 @@ bool ARoomGameModeBase::PreloadAndTransitionSelectedRoomAsync()
 		return false;
 	}
 
+	if (HasSelectedRoom() == false)
+	{
+		UE_LOG(LogRDGameMode, Log, TEXT("방 인덱스 미선택"));
+		return false;
+	}
+
 	if (IsRoomSelectable(mSelectedRoomRow, mSelectedRoomColumn) == true)
 	{
 		UE_LOG(LogRDGameMode, Log, TEXT("전환 불가능한 방 선택"));
@@ -332,12 +338,6 @@ bool ARoomGameModeBase::HasSelectedRoom() const
 
 bool ARoomGameModeBase::IsRoomSelectable(int32 RoomRow, int32 RoomColumn) const
 {
-	if (HasSelectedRoom() == false)
-	{
-		UE_LOG(LogRDGameMode, Log, TEXT("방 인덱스 미선택"));
-		return false;
-	}
-
 	const URunPersistData* RunPersistData = GetRunPersistData();
 	const FStage& Stage = RunPersistData->GetStage();
 	if (Stage.HasRoom(RoomRow, RoomColumn) == false)

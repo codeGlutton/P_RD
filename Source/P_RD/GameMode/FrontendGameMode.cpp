@@ -75,7 +75,7 @@ AFrontendGameMode::AFrontendGameMode()
 
 void AFrontendGameMode::BeginRoom()
 {
-	Super::BeginPlay();
+	Super::BeginRoom();
 
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
 	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr"));

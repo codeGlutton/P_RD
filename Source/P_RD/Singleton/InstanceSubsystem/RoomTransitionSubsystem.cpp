@@ -190,7 +190,7 @@ bool URoomTransitionSubsystem::TransitLoadedRoom()
         return false;
     }
 
-    if (EnumHasAnyFlags(mTransitionState, ERoomTransitionStateFlag::AutoTransition) == true)
+    if (EnumHasAnyFlags(mTransitionState, ERoomTransitionStateFlag::AutoTransition) == false)
     {
         UE_LOG(LogTransition, Log, TEXT("이미 전환 중"));
         return false;
@@ -212,12 +212,6 @@ void URoomTransitionSubsystem::OnLoadNextPlayer(TSharedPtr<FStreamableHandle> As
         return;
     }
 
-    // 외부에서 준비가 되지 않을 경우
-    if (EnumHasAllFlags(mTransitionState, ERoomTransitionStateFlag::ExternalReady) == false)
-    {
-        return;
-    }
-
     // 모든 준비가 완료된 경우
     OnReadyToTransition();
 }
@@ -232,12 +226,6 @@ void URoomTransitionSubsystem::OnLoadNextStage(TSharedPtr<FStreamableHandle> Ass
         return;
     }
 
-    // 외부에서 준비가 되지 않을 경우
-    if (EnumHasAllFlags(mTransitionState, ERoomTransitionStateFlag::ExternalReady) == false)
-    {
-        return;
-    }
-
     // 모든 준비가 완료된 경우
     OnReadyToTransition();
 }
@@ -248,12 +236,6 @@ void URoomTransitionSubsystem::OnLoadNextRoom(TSharedPtr<FStreamableHandle> Asse
 
     // 에셋 로드가 아직 완료되지 않은 경우
     if (EnumHasAllFlags(mTransitionState, ERoomTransitionStateFlag::ReadyToTransition) == false)
-    {
-        return;
-    }
-
-    // 외부에서 준비가 되지 않을 경우
-    if (EnumHasAllFlags(mTransitionState, ERoomTransitionStateFlag::ExternalReady) == false)
     {
         return;
     }
