@@ -14,20 +14,28 @@ void URoomTransitionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     Super::Initialize(Collection);
 }
 
-void URoomTransitionSubsystem::PreloadTitleRoomAsync(bool IsAutoTransition)
+bool URoomTransitionSubsystem::PreloadFrontendRoomAsync(FOnReadyToTransition ReadyToTransitionCallback = FOnReadyToTransition(), FOnPreTransitNextRoom PreTransitionCallback = FOnPreTransitNextRoom(), bool RequireExternalReady, bool IsAutoTransition)
 {
     if (EnumHasAnyFlags(mTransitionState, ERoomTransitionStateFlag::AllTaskRequested) == true)
     {
         UE_LOG(LogTransition, Log, TEXT("다른 룸 데이터 처리 중으로 Preload 불가"));
-        return;
+        return false;
     }
 
     EnumAddFlags(mTransitionState, ERoomTransitionStateFlag::PreLoadRequested);
+    if (RequireExternalReady == false)
+    {
+        EnumAddFlags(mTransitionState, ERoomTransitionStateFlag::ExternalReady);
+    }
     if (IsAutoTransition == true)
     {
         EnumAddFlags(mTransitionState, ERoomTransitionStateFlag::AutoTransition);
     }
     mRequest.mChangePersistentData = false;
+    mRequest.mRoomRowIndex = INDEX_NONE;
+    mRequest.mRoomColumnIndex = INDEX_NONE;
+    mRequest.OnReadyToTransition = ReadyToTransitionCallback;
+    mRequest.OnPreTransitNextRoom = PreTransitionCallback;
 
     UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
     checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
@@ -48,31 +56,38 @@ void URoomTransitionSubsystem::PreloadTitleRoomAsync(bool IsAutoTransition)
         LoadParams.OnComplete.BindUObject(this, &URoomTransitionSubsystem::OnLoadNextRoom);
 
         const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
-        TSharedPtr<FStreamableHandle> NewPreloadHandle = AssetManager->PreloadPrimaryAssets({ GamePlaySettings->mTitleRoomId }, Bundles, true, MoveTemp(LoadParams));
+        TSharedPtr<FStreamableHandle> NewPreloadHandle = AssetManager->PreloadPrimaryAssets({ GamePlaySettings->mFrontendRoomId }, Bundles, true, MoveTemp(LoadParams));
         mRoomPreloadHandle = NewPreloadHandle;
     }
+
+    return true;
 }
 
-void URoomTransitionSubsystem::PreloadRoomAsync(int32 RoomRowIndex, int32 RoomColumnIndex, FOnPreTransitNextRoom Callback, bool IsAutoTransition)
+bool URoomTransitionSubsystem::PreloadRoomAsync(int32 RoomRowIndex, int32 RoomColumnIndex, FOnReadyToTransition ReadyToTransitionCallback, FOnPreTransitNextRoom PreTransitionCallback, bool RequireExternalReady, bool IsAutoTransition)
 {
     FRoomTransitionRequest Request;
     Request.mChangePersistentData = true;
     Request.mRoomRowIndex = RoomRowIndex;
     Request.mRoomColumnIndex = RoomColumnIndex;
-    Request.OnPreTransitNextRoom = Callback;
+    Request.OnReadyToTransition = ReadyToTransitionCallback;
+    Request.OnPreTransitNextRoom = PreTransitionCallback;
 
-    PreloadRoomAsync(MoveTemp(Request), IsAutoTransition);
+    return PreloadRoomAsync(MoveTemp(Request), IsAutoTransition);
 }
 
-void URoomTransitionSubsystem::PreloadRoomAsync(FRoomTransitionRequest Request, bool IsAutoTransition)
+bool URoomTransitionSubsystem::PreloadRoomAsync(FRoomTransitionRequest Request, bool RequireExternalReady, bool IsAutoTransition)
 {
     if (EnumHasAnyFlags(mTransitionState, ERoomTransitionStateFlag::AllTaskRequested) == true)
     {
         UE_LOG(LogTransition, Log, TEXT("다른 룸 데이터 처리 중으로 Preload 불가"));
-        return;
+        return false;
     }
 
     EnumAddFlags(mTransitionState, ERoomTransitionStateFlag::PreLoadRequested);
+    if (RequireExternalReady == false)
+    {
+        EnumAddFlags(mTransitionState, ERoomTransitionStateFlag::ExternalReady);
+    }
     if (IsAutoTransition == true)
     {
         EnumAddFlags(mTransitionState, ERoomTransitionStateFlag::AutoTransition);
@@ -116,45 +131,75 @@ void URoomTransitionSubsystem::PreloadRoomAsync(FRoomTransitionRequest Request, 
         TSharedPtr<FStreamableHandle> NewPreloadHandle = AssetManager->PreloadPrimaryAssets(AdditionalIds, Bundles, true, MoveTemp(LoadParams));
         mRoomPreloadHandle = NewPreloadHandle;
     }
+
+    return true;
 }
 
-void URoomTransitionSubsystem::MakeStageAndPreloadRoomAsync(EStageLevelType StageLevel, FOnPreTransitNextRoom Callback, bool IsAutoTransition)
+bool URoomTransitionSubsystem::MakeStageAndPreloadRoomAsync(EStageLevelType StageLevel, FOnReadyToTransition ReadyToTransitionCallback, FOnPreTransitNextRoom PreTransitionCallback, bool RequireExternalReady, bool IsAutoTransition)
 {
     if (EnumHasAnyFlags(mTransitionState, ERoomTransitionStateFlag::AllTaskRequested) == true)
     {
         UE_LOG(LogTransition, Log, TEXT("다른 룸 데이터 처리 중으로 Preload 불가"));
-        return;
+        return false;
     }
     EnumAddFlags(mTransitionState, ERoomTransitionStateFlag::NewStageRequested);
 
     // 스테이지 먼저 생성
-    GetRunMutableData()->MakeStageAsync(StageLevel, FOnCreateStage::CreateLambda([this, Callback, IsAutoTransition](const FStage& NewStage) {
+    GetRunMutableData()->MakeStageAsync(StageLevel, FOnCreateStage::CreateLambda([this, ReadyToTransitionCallback, PreTransitionCallback, RequireExternalReady, IsAutoTransition](const FStage& NewStage) {
         EnumRemoveFlags(mTransitionState, ERoomTransitionStateFlag::NewStageRequested);
 
         // 이후 스테이지의 배정된 첫 방으로 Preload 시작
         const FRoom& StartRoom = NewStage.GetStartRoom();
-        PreloadRoomAsync(StartRoom.mRow, StartRoom.mColumn, Callback, IsAutoTransition);
+        checkf(PreloadRoomAsync(StartRoom.mRow, StartRoom.mColumn, ReadyToTransitionCallback, PreTransitionCallback, RequireExternalReady, IsAutoTransition), TEXT("만들어진 Stage로 Preload 시도 실패"));
         }));
+
+    return true;
 }
 
-void URoomTransitionSubsystem::TransitLoadedRoomAsync()
+bool URoomTransitionSubsystem::MarkExternalReady()
 {
     if (EnumHasAnyFlags(mTransitionState, ERoomTransitionStateFlag::AllTaskRequested) == false)
     {
         UE_LOG(LogTransition, Log, TEXT("전환 불가. 먼저 방 데이터 로드 요청 필요"));
-        return;
+        return false;
     }
+
+    if (EnumHasAnyFlags(mTransitionState, ERoomTransitionStateFlag::ExternalReady) == true)
+    {
+        UE_LOG(LogTransition, Log, TEXT("이미 마크 완료"));
+        return false;
+    }
+    EnumAddFlags(mTransitionState, ERoomTransitionStateFlag::ExternalReady);
 
     // 에셋 로드가 아직 완료되지 않은 경우
     if (EnumHasAllFlags(mTransitionState, ERoomTransitionStateFlag::ReadyToTransition) == false)
     {
-        // 자동 맵 전환 예약
-        EnumAddFlags(mTransitionState, ERoomTransitionStateFlag::AutoTransition);
-        return;
+        return true;
     }
 
-    // 에셋 로드가 완료된 경우
+    // 모든 준비가 완료된 경우
+    OnReadyToTransition();
+    return true;
+}
+
+bool URoomTransitionSubsystem::TransitLoadedRoom()
+{
+    if (EnumHasAllFlags(mTransitionState, ERoomTransitionStateFlag::ReadyToTransition) == true)
+    {
+        UE_LOG(LogTransition, Log, TEXT("전환 불가. 먼저 전환 준비 필요"));
+        return false;
+    }
+
+    if (EnumHasAnyFlags(mTransitionState, ERoomTransitionStateFlag::AutoTransition) == true)
+    {
+        UE_LOG(LogTransition, Log, TEXT("이미 전환 중"));
+        return false;
+    }
+    EnumAddFlags(mTransitionState, ERoomTransitionStateFlag::AutoTransition);
+
+    // 전환 시작
     OnTransitNextRoom();
+    return true;
 }
 
 void URoomTransitionSubsystem::OnLoadNextPlayer(TSharedPtr<FStreamableHandle> AssetHandle)
@@ -167,14 +212,14 @@ void URoomTransitionSubsystem::OnLoadNextPlayer(TSharedPtr<FStreamableHandle> As
         return;
     }
 
-    // 자동 맵 전환 비활성화 시
-    if (EnumHasAllFlags(mTransitionState, ERoomTransitionStateFlag::AutoTransition) == false)
+    // 외부에서 준비가 되지 않을 경우
+    if (EnumHasAllFlags(mTransitionState, ERoomTransitionStateFlag::ExternalReady) == false)
     {
         return;
     }
 
-    // 에셋 로드가 완료된 경우
-    OnTransitNextRoom();
+    // 모든 준비가 완료된 경우
+    OnReadyToTransition();
 }
 
 void URoomTransitionSubsystem::OnLoadNextStage(TSharedPtr<FStreamableHandle> AssetHandle)
@@ -187,14 +232,14 @@ void URoomTransitionSubsystem::OnLoadNextStage(TSharedPtr<FStreamableHandle> Ass
         return;
     }
 
-    // 자동 맵 전환 비활성화 시
-    if (EnumHasAllFlags(mTransitionState, ERoomTransitionStateFlag::AutoTransition) == false)
+    // 외부에서 준비가 되지 않을 경우
+    if (EnumHasAllFlags(mTransitionState, ERoomTransitionStateFlag::ExternalReady) == false)
     {
         return;
     }
 
-    // 에셋 로드가 완료된 경우
-    OnTransitNextRoom();
+    // 모든 준비가 완료된 경우
+    OnReadyToTransition();
 }
 
 void URoomTransitionSubsystem::OnLoadNextRoom(TSharedPtr<FStreamableHandle> AssetHandle)
@@ -207,24 +252,43 @@ void URoomTransitionSubsystem::OnLoadNextRoom(TSharedPtr<FStreamableHandle> Asse
         return;
     }
 
-    // 자동 맵 전환 비활성화 시
-    if (EnumHasAllFlags(mTransitionState, ERoomTransitionStateFlag::AutoTransition) == false)
+    // 외부에서 준비가 되지 않을 경우
+    if (EnumHasAllFlags(mTransitionState, ERoomTransitionStateFlag::ExternalReady) == false)
     {
         return;
     }
 
+    // 모든 준비가 완료된 경우
+    OnReadyToTransition();
+}
+
+void URoomTransitionSubsystem::OnReadyToTransition()
+{
+    // 준비 완료 콜백
+    if (mRequest.OnReadyToTransition.IsBound() == true)
+    {
+        mRequest.OnReadyToTransition.Execute(mRequest.mRoomRowIndex, mRequest.mRoomColumnIndex);
+        mRequest.OnReadyToTransition.Unbind();
+    }
+
+    if (EnumHasAllFlags(mTransitionState, ERoomTransitionStateFlag::InTransition) == false)
+    {
+        return;
+    }
+
+    // 전환 시작
     OnTransitNextRoom();
 }
 
 void URoomTransitionSubsystem::OnTransitNextRoom()
 {
-    /* 방 이동 전 대리자 */
-
+    // 전환 전 콜백
     if (mRequest.OnPreTransitNextRoom.IsBound() == true)
     {
         mRequest.OnPreTransitNextRoom.Execute(mRequest.mRoomRowIndex, mRequest.mRoomColumnIndex);
         mRequest.OnPreTransitNextRoom.Unbind();
     }
+
     mTransitionState = ERoomTransitionStateFlag::None;
 
     /* 현재 방 기록 */
@@ -244,20 +308,14 @@ void URoomTransitionSubsystem::OnTransitNextRoom()
     checkf(StaticRoomData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
 
     TSoftObjectPtr<UWorld> BackgroundMap = StaticRoomData->mBackgroundMap;
-    if (BackgroundMap.IsNull())
+    if (BackgroundMap.IsNull() == true)
     {
-        BackgroundMap = GetDefault<UGamePlaySettings>()->mDefaultRoomMap;
+        BackgroundMap = GetDefault<UGamePlaySettings>()->mDefaultBackgroundMap;
         UE_LOG(LogTransition, Warning, TEXT("Room background map is empty for %s. Using default room map: %s"),
             *NextRoom.mStaticRoomSpawnDataId.ToString(),
             *BackgroundMap.ToSoftObjectPath().ToString());
     }
-
-    if (BackgroundMap.IsNull())
-    {
-        UE_LOG(LogTransition, Error, TEXT("Room transition failed. No background map configured for %s"),
-            *NextRoom.mStaticRoomSpawnDataId.ToString());
-        return;
-    }
+    checkf(BackgroundMap.IsNull() == false, TEXT("방 전환 실패. %s의 배경 맵 설정이 존재하지 않음"), *NextRoom.mStaticRoomSpawnDataId.ToString());
 
     FString Option = FString::Printf(TEXT("?game=%s"), *StaticRoomData->mGameModeBase.ToSoftObjectPath().GetAssetPathString());
     UGameplayStatics::OpenLevelBySoftObjectPtr(GetWorld(), BackgroundMap, true, Option);

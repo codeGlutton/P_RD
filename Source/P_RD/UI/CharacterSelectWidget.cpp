@@ -1,4 +1,4 @@
-#include "UI/CharacterSelectWidget.h"
+﻿#include "UI/CharacterSelectWidget.h"
 
 #include "Components/Button.h"
 #include "Components/Image.h"
@@ -445,7 +445,7 @@ bool UCharacterSelectWidget::BeginFirstRoomEntryWithSelectedCharacter()
 		return false;
 	}
 
-	if (!FrontendGameMode->PrepareRunMapWithPlayerUnit(mSelectedPlayerUnitId))
+	if (!FrontendGameMode->StartNewRun(mSelectedPlayerUnitId, 1))
 	{
 		return false;
 	}

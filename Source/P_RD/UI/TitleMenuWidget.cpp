@@ -1,4 +1,4 @@
-#include "UI/TitleMenuWidget.h"
+﻿#include "UI/TitleMenuWidget.h"
 
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
@@ -349,7 +349,7 @@ void UTitleMenuWidget::HandleStartButtonClicked()
 {
 	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
 	{
-		if (FrontendGameMode->StartNewRunFromTitle())
+		if (FrontendGameMode->CreateNewRunFromTitle())
 		{
 			return;
 		}

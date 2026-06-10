@@ -1,157 +1,31 @@
-#include "GameMode/FrontendGameMode.h"
+﻿#include "GameMode/FrontendGameMode.h"
 
+#include "GameFramework/PlayerController.h"
+
+#include "Engine/AssetManager.h"
 #include "Blueprint/UserWidget.h"
 #include "DataAsset/PrimaryAssetType.h"
+
 #include "DataAsset/StageSpawnData/StageLevelType.h"
-#include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
-#include "Engine/AssetManager.h"
-#include "GameFramework/PlayerController.h"
+
 #include "PCGStage/Room.h"
 #include "PCGStage/Stage.h"
+
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
-#include "Singleton/InstanceSubsystem/PersistentData.h"
-#include "Singleton/InstanceSubsystem/RoomTransitionSubsystem.h"
-#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/TitleMenuWidget.h"
 
+#include "Setting/GamePlaySettings.h"
+#include "DataAsset/RoomSpawnData/StaticFrontendRoomSpawnData.h"
+#include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
+
+#include "UI/ToggleableWidget.h"
+
+DEFINE_LOG_CATEGORY(LogFrontendGameMode);
+
 namespace
 {
-	/**
-	 * @brief 프론트엔드 런 preview에서 사용하는 임시 난이도
-	 *
-	 * @details
-	 * 현재 UI/map 브랜치는 타이틀 -> 캐릭터 선택 -> 지도 -> 룸 입장 흐름을 먼저 검증하는 단계라
-	 * 난이도 선택 화면이 아직 없다. 그래서 캐릭터 시작 스탯 표시와 GameProfileSubsystem::StartRun()
-	 * 호출에 같은 기본 난이도를 사용한다.
-	 *
-	 * 이 값은 게임 규칙을 UI 파트가 결정한다는 뜻이 아니며, 난이도/프로필 선택 API가 생기면
-	 * 그 결과를 받아 PM Run API에 전달하는 방식으로 교체해야 한다.
-	 */
 	constexpr int32 DefaultDifficulty = 1;
-
-	FText FrontendText(const TCHAR* Key, const TCHAR* Fallback)
-	{
-		return FText::FromString(Fallback != nullptr ? Fallback : Key);
-	}
-
-	FText GetRoomTitle(ERoomType RoomType)
-	{
-		switch (RoomType)
-		{
-		case ERoomType::Monster:
-			return NSLOCTEXT("FrontendGameMode", "MonsterRoomTitle", "Monster");
-		case ERoomType::EliteMonster:
-			return NSLOCTEXT("FrontendGameMode", "EliteRoomTitle", "Elite");
-		case ERoomType::BossMonster:
-			return NSLOCTEXT("FrontendGameMode", "BossRoomTitle", "Boss");
-		case ERoomType::Shop:
-			return NSLOCTEXT("FrontendGameMode", "ShopRoomTitle", "Shop");
-		case ERoomType::Treasure:
-			return NSLOCTEXT("FrontendGameMode", "TreasureRoomTitle", "Treasure");
-		default:
-			return NSLOCTEXT("FrontendGameMode", "UnknownRoomTitle", "Unknown");
-		}
-	}
-
-	FText GetRoomDescription(const FRoom& Room)
-	{
-		return FText::Format(
-			NSLOCTEXT("FrontendGameMode", "MapRoomDescription", "Row {0}, Column {1}. Next routes: {2}"),
-			FText::AsNumber(Room.mRow + 1),
-			FText::AsNumber(Room.mColumn + 1),
-			FText::AsNumber(Room.mNextRoomColumns.Num()));
-	}
-
-	FText GetStartPointDescription(const FRoom& Room)
-	{
-		return FText::Format(
-			NSLOCTEXT("FrontendGameMode", "StartPointDescription", "Routes: {0}"),
-			FText::AsNumber(Room.mNextRoomColumns.Num()));
-	}
-
-	FText GetPlayerJobText(EPlayerJobType JobType)
-	{
-		switch (JobType)
-		{
-		case EPlayerJobType::Knight:
-			return NSLOCTEXT("FrontendGameMode", "KnightJobText", "KNIGHT");
-		case EPlayerJobType::Archer:
-			return NSLOCTEXT("FrontendGameMode", "ArcherJobText", "ARCHER");
-		case EPlayerJobType::Mage:
-			return NSLOCTEXT("FrontendGameMode", "MageJobText", "MAGE");
-		default:
-			return NSLOCTEXT("FrontendGameMode", "UnknownJobText", "UNKNOWN");
-		}
-	}
-
-	bool IsValidStageRoom(const FStage& Stage, int32 RowIndex, int32 ColumnIndex)
-	{
-		return Stage.mRoomRows.IsValidIndex(RowIndex)
-			&& Stage.mRoomRows[RowIndex].mRooms.IsValidIndex(ColumnIndex)
-			&& Stage.mRoomRows[RowIndex].mRooms[ColumnIndex].IsValid()
-			&& Stage.mRoomRows[RowIndex].mRooms[ColumnIndex].Get<FRoom>().mType != ERoomType::None;
-	}
-
-	bool IsStageStartPoint(const FStage& Stage, int32 RowIndex, int32 ColumnIndex)
-	{
-		return RowIndex == 0 && ColumnIndex == Stage.mStartColumn;
-	}
-
-	bool IsNextRoomFromCurrentPath(const FStage& Stage, int32 CurrentRowIndex, int32 CurrentColumnIndex, int32 RowIndex, int32 ColumnIndex)
-	{
-		if (!IsValidStageRoom(Stage, CurrentRowIndex, CurrentColumnIndex))
-		{
-			return false;
-		}
-
-		const FRoom& CurrentRoom = Stage.mRoomRows[CurrentRowIndex].mRooms[CurrentColumnIndex].Get<FRoom>();
-		return RowIndex == CurrentRowIndex + 1 && CurrentRoom.mNextRoomColumns.Contains(ColumnIndex);
-	}
-
-	EFrontendMapRoomState ResolveMapRoomState(
-		const FStage& Stage,
-		const FRoom& Room,
-		int32 CurrentRowIndex,
-		int32 CurrentColumnIndex,
-		int32 SelectedRowIndex,
-		int32 SelectedColumnIndex)
-	{
-		if (Room.mRow == SelectedRowIndex
-			&& Room.mColumn == SelectedColumnIndex
-			&& IsNextRoomFromCurrentPath(Stage, CurrentRowIndex, CurrentColumnIndex, Room.mRow, Room.mColumn))
-		{
-			return EFrontendMapRoomState::Selected;
-		}
-
-		if ((Room.mRow == CurrentRowIndex && Room.mColumn == CurrentColumnIndex) || Room.mRow < CurrentRowIndex)
-		{
-			return EFrontendMapRoomState::Cleared;
-		}
-
-		if (IsNextRoomFromCurrentPath(Stage, CurrentRowIndex, CurrentColumnIndex, Room.mRow, Room.mColumn))
-		{
-			return EFrontendMapRoomState::Ready;
-		}
-
-		return EFrontendMapRoomState::Locked;
-	}
-
-	const UStaticPlayerUnitSpawnData* GetLoadedPlayerUnitSpawnData(const FPrimaryAssetId& PlayerUnitId)
-	{
-		UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
-		if (AssetManager == nullptr || !PlayerUnitId.IsValid())
-		{
-			return nullptr;
-		}
-
-		if (const UStaticPlayerUnitSpawnData* PlayerUnitData = AssetManager->GetPrimaryAssetObject<UStaticPlayerUnitSpawnData>(PlayerUnitId))
-		{
-			return PlayerUnitData;
-		}
-
-		return Cast<UStaticPlayerUnitSpawnData>(AssetManager->GetPrimaryAssetPath(PlayerUnitId).TryLoad());
-	}
 
 	FText GetPlayerJobName(EPlayerJobType JobType)
 	{
@@ -170,7 +44,7 @@ namespace
 
 	bool HasCharacterOptionForJob(const TArray<FFrontendCharacterOption>& Options, EPlayerJobType JobType)
 	{
-		const FText JobText = GetPlayerJobText(JobType);
+		const FText JobText = GetPlayerJobName(JobType);
 		return Options.ContainsByPredicate([&JobText](const FFrontendCharacterOption& Option)
 		{
 			return Option.mRoleText.EqualTo(JobText);
@@ -182,7 +56,7 @@ namespace
 		FFrontendCharacterOption NewOption;
 		NewOption.mIndex = Options.Num();
 		NewOption.mDisplayName = GetPlayerJobName(JobType);
-		NewOption.mRoleText = GetPlayerJobText(JobType);
+		NewOption.mRoleText = GetPlayerJobName(JobType);
 		NewOption.mDescription = NSLOCTEXT("FrontendGameMode", "LockedCharacterDescription", "Character data is not ready");
 		NewOption.mDisabledReason = NewOption.mDescription;
 		NewOption.bSelectable = false;
@@ -192,74 +66,112 @@ namespace
 
 AFrontendGameMode::AFrontendGameMode()
 {
-	mWorldWidgets.Empty();
+	mWorldWidgets = {
+		EWorldWidgetType::MsgNotify,
+		EWorldWidgetType::FadeInOut,
+		EWorldWidgetType::LoadingNotify,
+	};
 }
 
-bool AFrontendGameMode::StartNewRunFromTitle()
+void AFrontendGameMode::BeginRoom()
 {
-	return OpenTitleCharacterSelect();
+	Super::BeginPlay();
+
+	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
+	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr"));
+
+	UToggleableWidget* TitleHUD = WorldWidgetSubsystem->GetHUD<UToggleableWidget>();
+	checkf(TitleHUD != nullptr, TEXT("타이틀 HUD 위젯 nullptr"));
+	TitleHUD->OpenUI();
+
+	/* 터치 세팅 */
+
+	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+	checkf(PlayerController != nullptr, TEXT(""));
+
+	PlayerController->ActivateTouchInterface(nullptr);
+
+	FInputModeGameAndUI InputMode;
+	PlayerController->SetInputMode(InputMode);
 }
 
-bool AFrontendGameMode::StartRunWithPlayerUnit(FPrimaryAssetId PlayerUnitId)
+bool AFrontendGameMode::CreateNewRunFromTitle()
 {
-	return PrepareRunMapWithPlayerUnit(PlayerUnitId);
-}
-
-bool AFrontendGameMode::GetPlayerUnitIds(TArray<FPrimaryAssetId>& OutPlayerUnitIds) const
-{
-	OutPlayerUnitIds.Reset();
-
-	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
-	if (AssetManager == nullptr)
+	if (mWasNextRoomPreloadRequested == true)
 	{
+		UE_LOG(LogRDGameMode, Log, TEXT("방 전환 시 추가 로직 요청 불가"));
 		return false;
 	}
 
-	AssetManager->GetPrimaryAssetIdList(UnitPrimaryAssetTypes::GetPlayerUnitType(), OutPlayerUnitIds);
-	OutPlayerUnitIds.Sort([](const FPrimaryAssetId& Lhs, const FPrimaryAssetId& Rhs)
+	checkf(OpenTitleCharacterSelect() == true, TEXT("캐릭터 선택창 열기 오류"));
+
+	return true;
+}
+
+bool AFrontendGameMode::StartNewRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty)
+{
+	if (mWasNextRoomPreloadRequested == true)
 	{
-		return Lhs.ToString() < Rhs.ToString();
-	});
-	return !OutPlayerUnitIds.IsEmpty();
+		UE_LOG(LogFrontendGameMode, Log, TEXT("방 전환 시 추가 로직 요청 불가"));
+		return false;
+	}
+
+	checkf(CreateRunData(PlayerUnitId, Difficulty) == true, TEXT("런 데이터 생성 오류"));
+	checkf(PreloadAndTransitionRoomAsync(EStageLevelType::Stage1) == true, TEXT("스테이지 1 처음 방으로 전환 실패"));
+	return true;
+}
+
+bool AFrontendGameMode::AbandonRunFromTitle()
+{
+	if (mWasNextRoomPreloadRequested == true)
+	{
+		UE_LOG(LogFrontendGameMode, Log, TEXT("방 전환 시 추가 로직 요청 불가"));
+		return false;
+	}
+
+	if (CanAbandonRun() == false)
+	{
+		UE_LOG(LogFrontendGameMode, Log, TEXT("맵 준비가 되지 않음"));
+		return false;
+	}
+
+	ClearRunPersistData();
+	return true;
 }
 
 bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& OutOptions) const
 {
 	OutOptions.Reset();
 
-	TArray<FPrimaryAssetId> PlayerUnitIds;
-	if (!GetPlayerUnitIds(OUT PlayerUnitIds))
+	const TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>>& PlayerUnitDatas = GetPlayerUnitDatas();
+	for (const TSoftObjectPtr<UStaticPlayerUnitSpawnData>& PlayerUnitData : PlayerUnitDatas)
 	{
-		return false;
-	}
-
-	for (const FPrimaryAssetId& PlayerUnitId : PlayerUnitIds)
-	{
-		const UStaticPlayerUnitSpawnData* PlayerUnitData = GetLoadedPlayerUnitSpawnData(PlayerUnitId);
-		if (PlayerUnitData == nullptr)
+		const UStaticPlayerUnitSpawnData* LoadedPlayerUnitData = PlayerUnitData.Get();
+		if (LoadedPlayerUnitData == nullptr)
 		{
+			UE_LOG(LogRD, Warning, TEXT("선택 가능한 Player Unit 로드 실패"));
 			continue;
 		}
 
 		FFrontendCharacterOption NewOption;
 		NewOption.mIndex = OutOptions.Num();
-		NewOption.mDisplayName = PlayerUnitData->mDisplayName.IsEmpty()
-			? FText::FromName(PlayerUnitId.PrimaryAssetName)
-			: PlayerUnitData->mDisplayName;
-		NewOption.mRoleText = GetPlayerJobText(PlayerUnitData->mJobType);
-		NewOption.mDescription = PlayerUnitData->mDescription;
-		NewOption.mMaxHP = FMath::RoundToInt(PlayerUnitData->GetDefaultMaxHP(DefaultDifficulty));
-		NewOption.mDice = PlayerUnitData->mDiceDatas.Num();
-		NewOption.mGold = FMath::RoundToInt(PlayerUnitData->GetDefaultMoney(DefaultDifficulty));
+		NewOption.mDisplayName = LoadedPlayerUnitData->mDisplayName.IsEmpty()
+			? FText::FromName(LoadedPlayerUnitData->GetPrimaryAssetId().PrimaryAssetName)
+			: LoadedPlayerUnitData->mDisplayName;
+		NewOption.mRoleText = GetPlayerJobName(LoadedPlayerUnitData->mJobType);
+		NewOption.mDescription = LoadedPlayerUnitData->mDescription;
+		NewOption.mMaxHP = FMath::RoundToInt(LoadedPlayerUnitData->GetDefaultMaxHP(DefaultDifficulty));
+		NewOption.mDice = LoadedPlayerUnitData->mDiceDatas.Num();
+		NewOption.mGold = FMath::RoundToInt(LoadedPlayerUnitData->GetDefaultMoney(DefaultDifficulty));
 		NewOption.mStatSummary = FText::Format(
 			NSLOCTEXT("FrontendGameMode", "CharacterStatSummary", "HP {0} / Dice {1} / Gold {2}"),
 			FText::AsNumber(NewOption.mMaxHP),
 			FText::AsNumber(NewOption.mDice),
 			FText::AsNumber(NewOption.mGold));
-		NewOption.mPortrait = PlayerUnitData->mPortrait;
-		NewOption.mIcon = PlayerUnitData->mIcon;
-		NewOption.mPlayerUnitId = PlayerUnitId;
-		NewOption.bSelectable = PlayerUnitId.IsValid() && !PlayerUnitData->mClass.IsNull();
+		NewOption.mPortrait = LoadedPlayerUnitData->mPortrait;
+		NewOption.mIcon = LoadedPlayerUnitData->mIcon;
+		NewOption.mPlayerUnitId = LoadedPlayerUnitData->GetPrimaryAssetId();
+		NewOption.bSelectable = PlayerUnitData.IsValid() && !LoadedPlayerUnitData->mClass.IsNull();
 		OutOptions.Add(MoveTemp(NewOption));
 	}
 
@@ -272,407 +184,83 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 		AppendLockedCharacterOption(OutOptions, EPlayerJobType::Mage);
 	}
 
-	return !OutOptions.IsEmpty();
+	return OutOptions.IsEmpty() == false;
 }
 
-bool AFrontendGameMode::PrepareRunMapWithPlayerUnit(FPrimaryAssetId PlayerUnitId)
+const TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>>& AFrontendGameMode::GetPlayerUnitDatas() const
 {
-	return StartRunAndEnterFirstRoomWithPlayerUnit(PlayerUnitId);
-}
-
-bool AFrontendGameMode::GetMapRoomViews(TArray<FFrontendMapRoomView>& OutRooms) const
-{
-	OutRooms.Reset();
-
-	const URunPersistData* RunPersistData = GetRunPersistData();
-	if (RunPersistData == nullptr || !RunPersistData->IsActive())
+	if (mPlayerUnitDataCache.IsEmpty() == true)
 	{
-		return false;
-	}
-
-	int32 CurrentRowIndex = 0;
-	int32 CurrentColumnIndex = 0;
-	RunPersistData->GetCurrentRoomIndex(OUT CurrentRowIndex, OUT CurrentColumnIndex);
-
-	const FStage& Stage = RunPersistData->GetStage();
-	for (int32 RowIndex = 0; RowIndex < Stage.mRoomRows.Num(); ++RowIndex)
-	{
-		const FRoomRow& RoomRow = Stage.mRoomRows[RowIndex];
-		for (int32 ColumnIndex = 0; ColumnIndex < RoomRow.mRooms.Num(); ++ColumnIndex)
+		UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
+		if (AssetManager != nullptr)
 		{
-			if (!RoomRow.mRooms[ColumnIndex].IsValid())
+			const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
+			if (GamePlaySettings != nullptr)
 			{
-				continue;
+				TObjectPtr<UStaticFrontendRoomSpawnData> FrontendRoomSpawnData = AssetManager->GetPrimaryAssetObject<UStaticFrontendRoomSpawnData>(GamePlaySettings->mFrontendRoomId);
+				mPlayerUnitDataCache = FrontendRoomSpawnData->mPlayableUnits;
 			}
-
-			const FRoom& Room = RoomRow.mRooms[ColumnIndex].Get<FRoom>();
-			if (Room.mType == ERoomType::None)
-			{
-				continue;
-			}
-
-			const bool bIsStartPoint = IsStageStartPoint(Stage, RowIndex, ColumnIndex);
-			const EFrontendMapRoomState RoomState = ResolveMapRoomState(
-				Stage,
-				Room,
-				CurrentRowIndex,
-				CurrentColumnIndex,
-				mSelectedMapRoomRow,
-				mSelectedMapRoomColumn);
-
-			FFrontendMapRoomView NewView;
-			NewView.mRow = RowIndex;
-			NewView.mColumn = ColumnIndex;
-			NewView.mType = Room.mType;
-			NewView.mState = RoomState;
-			NewView.mTitle = bIsStartPoint ? NSLOCTEXT("FrontendGameMode", "StartPointTitle", "Start") : GetRoomTitle(Room.mType);
-			NewView.mDescription = bIsStartPoint ? GetStartPointDescription(Room) : GetRoomDescription(Room);
-			NewView.mNextRoomColumns = Room.mNextRoomColumns;
-			NewView.mPositionOffsetRate = Room.mPositionOffsetRate;
-			NewView.bSelectable = RoomState == EFrontendMapRoomState::Ready;
-			NewView.bSelected = RoomState == EFrontendMapRoomState::Selected;
-			NewView.bVisited = RoomState == EFrontendMapRoomState::Cleared;
-			NewView.bCanEnter = RoomState == EFrontendMapRoomState::Selected;
-			NewView.bIsStartPoint = bIsStartPoint;
-			OutRooms.Add(MoveTemp(NewView));
 		}
 	}
-
-	return !OutRooms.IsEmpty();
+	return mPlayerUnitDataCache;
 }
 
-bool AFrontendGameMode::HasActiveRun() const
+bool AFrontendGameMode::IsPlayerUnitIdValid(const FPrimaryAssetId& PlayerUnitId) const
 {
-	const URunPersistData* RunPersistData = GetRunPersistData();
-	return RunPersistData != nullptr && RunPersistData->IsActive();
-}
-
-bool AFrontendGameMode::CanAbandonRun() const
-{
-	return HasActiveRun() && !bStartRunRequested;
-}
-
-bool AFrontendGameMode::GetRunControlView(FFrontendRunControlView& OutView) const
-{
-	OutView = FFrontendRunControlView();
-	OutView.bHasActiveRun = HasActiveRun();
-	OutView.bCanSaveRun = false;
-	OutView.bCanAbandonRun = CanAbandonRun();
-
-	const URunPersistData* RunPersistData = GetRunPersistData();
-	if (RunPersistData == nullptr || !RunPersistData->IsActive())
+	if (PlayerUnitId.IsValid() == false)
 	{
 		return false;
 	}
 
-	RunPersistData->GetCurrentRoomIndex(OUT OutView.mRow, OUT OutView.mColumn);
-	OutView.bIsAtStageStart = IsStageStartPoint(RunPersistData->GetStage(), OutView.mRow, OutView.mColumn);
-	OutView.mPlayerLevel = RunPersistData->GetPlayerLevel();
-	OutView.mDifficulty = RunPersistData->GetDifficulty();
+	const TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>>& PlayerUnitDatas = GetPlayerUnitDatas();
+	bool IsFound = PlayerUnitDatas.ContainsByPredicate([&PlayerUnitId](const TSoftObjectPtr<UStaticPlayerUnitSpawnData>& PlayerUnitData) {
+		const UStaticPlayerUnitSpawnData* LoadedPlayerUnitData = PlayerUnitData.Get();
+		if (LoadedPlayerUnitData == nullptr)
+		{
+			return false;
+		}
+		return LoadedPlayerUnitData->GetPrimaryAssetId() == PlayerUnitId;
+		});
+
+	return IsFound;
+}
+
+bool AFrontendGameMode::IsDifficultyValid(int32 Difficulty) const
+{
+	// TODO : 유효성 검사
+
 	return true;
-}
-
-bool AFrontendGameMode::GetRunControlState(OUT int32& RowIndex, OUT int32& ColumnIndex, OUT int32& PlayerLevel, OUT int32& Difficulty) const
-{
-	FFrontendRunControlView RunView;
-	if (!GetRunControlView(OUT RunView))
-	{
-		RowIndex = 0;
-		ColumnIndex = 0;
-		PlayerLevel = 0;
-		Difficulty = 0;
-		return false;
-	}
-
-	RowIndex = RunView.mRow;
-	ColumnIndex = RunView.mColumn;
-	PlayerLevel = RunView.mPlayerLevel;
-	Difficulty = RunView.mDifficulty;
-	return true;
-}
-
-bool AFrontendGameMode::AbandonRunFromTitle()
-{
-	if (!CanAbandonRun())
-	{
-		ShowTitleMessage(FrontendText(TEXT("MissingStage"), TEXT("Map is not ready")));
-		return false;
-	}
-
-	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
-	if (GameProfileSubsystem == nullptr)
-	{
-		return false;
-	}
-
-	GameProfileSubsystem->EndRun();
-	if (USaveGameSubsystem* SaveGameSubsystem = GetGameInstance()->GetSubsystem<USaveGameSubsystem>())
-	{
-		SaveGameSubsystem->ClearRun();
-	}
-
-	ClearSelectedMapRoom();
-	bStartRunRequested = false;
-	return true;
-}
-
-bool AFrontendGameMode::SelectMapRoom(int32 RowIndex, int32 ColumnIndex)
-{
-	const URunPersistData* RunPersistData = GetRunPersistData();
-	if (RunPersistData == nullptr || !RunPersistData->IsActive())
-	{
-		ShowTitleMessage(FrontendText(TEXT("MissingStage"), TEXT("Map is not ready")));
-		return false;
-	}
-
-	const FStage& Stage = RunPersistData->GetStage();
-	if (!IsValidStageRoom(Stage, RowIndex, ColumnIndex))
-	{
-		ShowTitleMessage(FrontendText(TEXT("MissingStage"), TEXT("Map is not ready")));
-		return false;
-	}
-
-	int32 CurrentRowIndex = 0;
-	int32 CurrentColumnIndex = 0;
-	RunPersistData->GetCurrentRoomIndex(OUT CurrentRowIndex, OUT CurrentColumnIndex);
-	if (!IsNextRoomFromCurrentPath(Stage, CurrentRowIndex, CurrentColumnIndex, RowIndex, ColumnIndex))
-	{
-		ShowTitleMessage(FrontendText(TEXT("LockedMapRoom"), TEXT("This room is locked")));
-		return false;
-	}
-
-	mSelectedMapRoomRow = RowIndex;
-	mSelectedMapRoomColumn = ColumnIndex;
-	bSelectedMapRoomPreloadRequested = false;
-	return PreloadSelectedMapRoom();
-}
-
-bool AFrontendGameMode::EnterSelectedMapRoom()
-{
-	const URunPersistData* RunPersistData = GetRunPersistData();
-	if (RunPersistData == nullptr || !RunPersistData->IsActive())
-	{
-		ShowTitleMessage(FrontendText(TEXT("MissingStage"), TEXT("Map is not ready")));
-		return false;
-	}
-
-	if (!HasSelectedMapRoom())
-	{
-		ShowTitleMessage(FrontendText(TEXT("NoMapRoomSelected"), TEXT("Select a room")));
-		return false;
-	}
-
-	const FStage& Stage = RunPersistData->GetStage();
-	if (!IsValidStageRoom(Stage, mSelectedMapRoomRow, mSelectedMapRoomColumn))
-	{
-		ClearSelectedMapRoom();
-		ShowTitleMessage(FrontendText(TEXT("MissingStage"), TEXT("Map is not ready")));
-		return false;
-	}
-
-	int32 CurrentRowIndex = 0;
-	int32 CurrentColumnIndex = 0;
-	RunPersistData->GetCurrentRoomIndex(OUT CurrentRowIndex, OUT CurrentColumnIndex);
-	if (!IsNextRoomFromCurrentPath(Stage, CurrentRowIndex, CurrentColumnIndex, mSelectedMapRoomRow, mSelectedMapRoomColumn))
-	{
-		ClearSelectedMapRoom();
-		ShowTitleMessage(FrontendText(TEXT("LockedMapRoom"), TEXT("This room is locked")));
-		return false;
-	}
-
-	if (!bSelectedMapRoomPreloadRequested)
-	{
-		ShowTitleMessage(FrontendText(TEXT("SelectedRoomNotPreloaded"), TEXT("Selected room is not preloaded")));
-		return false;
-	}
-
-	URoomTransitionSubsystem* RoomTransitionSubsystem = GetGameInstance()->GetSubsystem<URoomTransitionSubsystem>();
-	if (RoomTransitionSubsystem == nullptr)
-	{
-		return false;
-	}
-
-	ShowTitleMessage(FrontendText(TEXT("EnteringSelectedRoom"), TEXT("Entering selected room")));
-	RoomTransitionSubsystem->TransitLoadedRoomAsync();
-	return true;
-}
-
-void AFrontendGameMode::BeginRoom()
-{
-	LoadOrCreateFrontendUserProfile();
-
-	if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
-	{
-		PlayerController->ActivateTouchInterface(nullptr);
-		PlayerController->SetShowMouseCursor(true);
-
-		FInputModeUIOnly InputMode;
-		PlayerController->SetInputMode(InputMode);
-	}
-
-	ShowTitleHUD();
-}
-
-void AFrontendGameMode::LoadOrCreateFrontendUserProfile()
-{
-	USaveGameSubsystem* SaveGameSubsystem = GetGameInstance()->GetSubsystem<USaveGameSubsystem>();
-	if (SaveGameSubsystem != nullptr)
-	{
-		SaveGameSubsystem->LoadUser();
-	}
-
-	const UUserPersistData* UserPersistData = GetUserPersistData();
-	if (UserPersistData != nullptr && UserPersistData->IsActive())
-	{
-		return;
-	}
-
-	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
-	if (GameProfileSubsystem == nullptr)
-	{
-		return;
-	}
-
-	// 프로필 생성 UI가 들어오기 전까지만 쓰는 기본 유저다. Run 시작 책임과 섞이지 않도록
-	// 타이틀 부트스트랩 단계에서 PM Profile API를 통해 만든다.
-	GameProfileSubsystem->MakeUser(FrontendText(TEXT("DefaultUserName"), TEXT("Guest")));
-	if (SaveGameSubsystem != nullptr)
-	{
-		SaveGameSubsystem->SaveUser();
-	}
-}
-
-void AFrontendGameMode::ShowTitleHUD()
-{
-	if (mTitleHUDShown)
-	{
-		return;
-	}
-
-	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld() != nullptr
-		? GetWorld()->GetSubsystem<UWorldWidgetSubsystem>()
-		: nullptr;
-	if (WorldWidgetSubsystem == nullptr)
-	{
-		return;
-	}
-
-	UUserWidget* TitleHUD = WorldWidgetSubsystem->GetHUD();
-	if (TitleHUD == nullptr)
-	{
-		return;
-	}
-
-	if (!TitleHUD->IsInViewport())
-	{
-		TitleHUD->AddToViewport();
-	}
-
-	TitleHUD->SetVisibility(ESlateVisibility::Visible);
-	mTitleHUDShown = true;
 }
 
 bool AFrontendGameMode::OpenTitleCharacterSelect()
 {
-	if (UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())
-	{
-		if (UTitleMenuWidget* TitleMenuWidget = WorldWidgetSubsystem->GetHUD<UTitleMenuWidget>())
-		{
-			TitleMenuWidget->OpenCharacterSelectFromTitle();
-			return true;
-		}
-	}
+	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
+	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr"));
 
-	ShowTitleMessage(FrontendText(TEXT("MissingTitleMenu"), TEXT("Title menu is not ready")));
-	return false;
-}
+	UTitleMenuWidget* TitleMenuWidget = WorldWidgetSubsystem->GetHUD<UTitleMenuWidget>();
+	checkf(TitleMenuWidget != nullptr, TEXT("타이틀 HUD가 준비가 안됨"));
 
-void AFrontendGameMode::ClearSelectedMapRoom()
-{
-	mSelectedMapRoomRow = INDEX_NONE;
-	mSelectedMapRoomColumn = INDEX_NONE;
-	bSelectedMapRoomPreloadRequested = false;
-}
-
-bool AFrontendGameMode::HasSelectedMapRoom() const
-{
-	return mSelectedMapRoomRow != INDEX_NONE && mSelectedMapRoomColumn != INDEX_NONE;
-}
-
-bool AFrontendGameMode::PreloadSelectedMapRoom()
-{
-	if (!HasSelectedMapRoom())
-	{
-		return false;
-	}
-
-	URoomTransitionSubsystem* RoomTransitionSubsystem = GetGameInstance()->GetSubsystem<URoomTransitionSubsystem>();
-	if (RoomTransitionSubsystem == nullptr)
-	{
-		return false;
-	}
-
-	ShowTitleMessage(FrontendText(TEXT("PreloadingSelectedRoom"), TEXT("Preloading selected room")));
-	RoomTransitionSubsystem->PreloadRoomAsync(mSelectedMapRoomRow, mSelectedMapRoomColumn);
-	bSelectedMapRoomPreloadRequested = true;
+	TitleMenuWidget->OpenCharacterSelectFromTitle();
 	return true;
 }
 
-bool AFrontendGameMode::StartRunAndEnterFirstRoomWithPlayerUnit(FPrimaryAssetId PlayerUnitId)
+bool AFrontendGameMode::CreateRunData(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty)
 {
-	if (bStartRunRequested)
+	if (IsPlayerUnitIdValid(PlayerUnitId) == false)
 	{
-		ShowTitleMessage(FrontendText(TEXT("StartRunBlocked"), TEXT("Run is already preparing")));
+		UE_LOG(LogFrontendGameMode, Log, TEXT("플레이어 유닛 데이터를 찾을 수 없음"));
 		return false;
 	}
-
-	if (!PlayerUnitId.IsValid())
+	if (IsDifficultyValid(Difficulty) == false)
 	{
-		ShowTitleMessage(FrontendText(TEXT("MissingPlayerUnit"), TEXT("Character data is missing")));
-		return false;
-	}
-
-	TArray<FPrimaryAssetId> PlayerUnitIds;
-	if (!GetPlayerUnitIds(OUT PlayerUnitIds) || !PlayerUnitIds.Contains(PlayerUnitId))
-	{
-		ShowTitleMessage(FrontendText(TEXT("MissingPlayerUnit"), TEXT("Character data is missing")));
+		UE_LOG(LogFrontendGameMode, Log, TEXT("불가능한 난이도 선택"));
 		return false;
 	}
 
 	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
-	if (GameProfileSubsystem == nullptr)
-	{
-		return false;
-	}
+	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로파일 서브시스템 nullptr 오류"));
 
-	const UUserPersistData* UserPersistData = GetUserPersistData();
-	if (UserPersistData == nullptr || !UserPersistData->IsActive())
-	{
-		ShowTitleMessage(FrontendText(TEXT("MissingUserData"), TEXT("User data is not ready")));
-		return false;
-	}
-
-	URoomTransitionSubsystem* RoomTransitionSubsystem = GetGameInstance()->GetSubsystem<URoomTransitionSubsystem>();
-	if (RoomTransitionSubsystem == nullptr)
-	{
-		return false;
-	}
-
-	bStartRunRequested = true;
-	ClearSelectedMapRoom();
-
-	GameProfileSubsystem->StartRun(PlayerUnitId, DefaultDifficulty);
-
-	// PM 구조에서 새 Stage의 row 0 중앙 StartRoom이 첫 방이다. 전환 Subsystem이 Stage 생성,
-	// StartRoom preload, 로드 완료 후 transition까지 한 요청으로 소유하게 둔다.
-	RoomTransitionSubsystem->MakeStageAndPreloadRoomAsync(EStageLevelType::Stage1, FOnPreTransitNextRoom(), true);
+	GameProfileSubsystem->StartRun(PlayerUnitId, Difficulty);
 	return true;
 }
 
-void AFrontendGameMode::ShowTitleMessage(const FText& Message) const
-{
-	if (!Message.IsEmpty())
-	{
-		UE_LOG(LogRD, Display, TEXT("FrontendGameMode: %s"), *Message.ToString());
-	}
-}
