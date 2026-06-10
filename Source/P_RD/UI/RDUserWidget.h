@@ -38,6 +38,11 @@ DECLARE_DELEGATE_OneParam(FOnEndUICloseAnimation, UUserWidget*)
  * 파생 WBP는 PlayOpenUIAnimation()/PlayCloseUIAnimation()을 Blueprint에서 구현하고,
  * 애니메이션 마지막에 FinishOpenUI()/FinishCloseUI()를 호출하면 된다. 애니메이션을 구현하지 않으면
  * 기본 구현이 즉시 Finish 함수를 호출한다.
+ *
+ * 왜 이렇게 하는가:
+ * 각 WBP가 AddToViewport(), Visibility, 애니메이션 완료 콜백을 제각각 처리하면 어떤 화면은 보이는데
+ * GameMode는 아직 닫혔다고 판단하거나, 반대로 이미 열린 위젯을 또 열어 입력이 꼬일 수 있다.
+ * 그래서 프로젝트 UI는 먼저 이 베이스를 통과하게 해서 "열림/닫힘/완료"의 의미를 하나로 맞춘다.
  */
 UCLASS(BlueprintType, Blueprintable)
 class P_RD_API URDUserWidget : public UUserWidget
@@ -64,6 +69,8 @@ public:
 	 * 뷰포트 등록, 표시 상태 변경, 열기 애니메이션 시작, 완료 콜백 저장을 한 번에 처리한다.
 	 * 이미 열린 위젯에 다시 요청이 들어오면 화면 상태를 건드리지 않고 콜백만 즉시 실행한다.
 	 * 호출부가 위젯의 현재 상태를 별도로 분기하지 않아도 되게 하기 위한 정책이다.
+	 * 호출부를 단순하게 두는 이유는 UI를 여는 쪽이 "이 위젯이 이미 AddToViewport 됐는지"까지 알기 시작하면
+	 * 같은 화면이라도 GameMode, TopBar, Subsystem마다 서로 다른 열기 규칙이 생기기 때문이다.
 	 *
 	 * @param Callback 열기 애니메이션 완료 후 실행할 선택 콜백
 	 */
