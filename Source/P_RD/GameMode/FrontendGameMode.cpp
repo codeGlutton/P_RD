@@ -71,6 +71,11 @@ AFrontendGameMode::AFrontendGameMode()
 		EWorldWidgetType::FadeInOut,
 		EWorldWidgetType::LoadingNotify,
 	};
+
+	mShowFadeInUIOnTransition = true;
+	mShowFadeOutUIOnTransition = true;
+	mShowLoadingNotifyUIOnTransition = true;
+	mWaitExternalWorkOnTransition = false;
 }
 
 void AFrontendGameMode::BeginRoom()
