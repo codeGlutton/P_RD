@@ -50,6 +50,10 @@ struct FFrontendMapNodePoolEntry
  * 모달 표시/닫기 책임은 바깥 오버레이가 갖고, 이 클래스는 맵 그래프/선택/입장 UI만 관리한다.
  * 지도 데이터는 직접 생성하지 않고 AFrontendGameMode::GetMapRoomViews()가 내려준 View DTO를 그린다.
  *
+ * 왜 조회용/선택용을 같은 위젯으로 처리하는가:
+ * MAP 버튼으로 열 때는 현재 런 경로를 보기만 해야 하고, 전투 승리 후에는 다음 방을 실제로 선택해야 한다.
+ * 화면 구조는 같지만 허용 입력만 다르므로 bRoomSelectionEnabled로 모드를 나누어 같은 WBP를 재사용한다.
+ *
  * @note UI 파트 추가 위젯
  * feature/create-srpg-framework-base 브랜치에는 FStage/FRoom과 방 전환 API가 있지만,
  * 이를 타이틀 화면에서 읽기 전용 월드맵으로 그리는 UMG 위젯은 없어서 UI/map 브랜치에서 추가했다.
@@ -78,7 +82,12 @@ public:
 	UFUNCTION(Category = UI, BlueprintCallable)
 	bool RefreshMap();
 
-	/** @brief 승리 후 지도처럼 다음 방 선택이 허용되는 상황에서만 true로 둔다. */
+	/**
+	 * @brief 승리 후 지도처럼 다음 방 선택이 허용되는 상황에서만 true로 둔다.
+	 *
+	 * @details
+	 * 같은 월드맵을 단순 조회와 다음 방 선택에 함께 쓰기 때문에, 열린 경로에 따라 노드/입장 버튼 입력을 분리한다.
+	 */
 	void SetRoomSelectionEnabled(bool bEnabled);
 
 	/**
@@ -217,6 +226,10 @@ private:
 	 *
 	 * @details
 	 * MAP 버튼으로 연 지도는 조회 전용이고, 전투 승리 후 열린 지도만 다음 방 선택과 입장을 허용한다.
+	 *
+	 * 왜 별도 플래그가 필요한가:
+	 * 노드가 Ready 상태라고 해서 사용자가 항상 선택할 수 있으면, 단순히 경로를 확인하려고 연 MAP 화면에서도
+	 * 방 전환 API가 호출될 수 있다. 표시 상태와 입력 허용 상태를 분리해 그런 실수를 막는다.
 	 */
 	bool bRoomSelectionEnabled = false;
 };
