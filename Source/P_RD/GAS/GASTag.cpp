@@ -27,7 +27,7 @@ namespace AbilityTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartAttacking_Final,		"GameplayAbility.Passive.OnStartAttacking.Final");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnEndAttacking,				"GameplayAbility.Passive.OnEndAttacking");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartHitting_Add,			"GameplayAbility.Passive.OnStartHitting.Add");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartHitting_Multiply,		"GameplayAbility.Passive.OnStartHitting,Multiply");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartHitting_Multiply,		"GameplayAbility.Passive.OnStartHitting.Multiply");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartHitting_Final,		"GameplayAbility.Passive.OnStartHitting.Final");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnEndHitting,				"GameplayAbility.Passive.OnEndHitting");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartOneMove,				"GameplayAbility.Passive.OnStartOneMove");
