@@ -51,8 +51,8 @@ public:
 	/* ITileActor 상속 */
 public:
 	const FTileTransform& GetTileTransform() const override;
-	ETileLayerFlag GetTileLayer() const override;
-	ETileLayerFlag GetBlockFlags() const override;
+	ETileLayerFlag GetTileLayerFlags() const override;
+	ETileLayerFlag GetBlockLayerFlags() const override;
 
 	/* ITileTargetable 상속 */
 public:

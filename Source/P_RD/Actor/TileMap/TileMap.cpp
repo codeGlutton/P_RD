@@ -223,7 +223,7 @@ TArray<TScriptInterface<ITileActor>> ATileMap::GetActorsOnTile(const FTileIndex&
 	// 레이어 필터에 걸리는 액터만 수집
 	for (const TScriptInterface<ITileActor>& Actor : Tile->mActors)
 	{
-		if (Actor && EnumHasAnyFlags(Actor->GetTileLayer(), LayerFilter))
+		if (Actor && EnumHasAnyFlags(Actor->GetTileLayerFlags(), LayerFilter))
 		{
 			Result.Add(Actor);
 		}
