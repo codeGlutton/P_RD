@@ -65,11 +65,20 @@ namespace
 }
 
 /**
- * @brief 프론트엔드 방에서 선로딩할 공용 월드 위젯을 등록한다.
+ * @brief 프론트엔드 방에서 생성해둘 공용 월드 위젯 타입을 등록한다.
  *
  * @details
- * 타이틀 HUD 자체는 mHUDClass를 통해 InitHUD()가 생성하고, BeginRoom()에서 OpenUI()로 표시한다.
- * 이 배열에는 HUD가 아닌 알림/전환/로딩 계열 월드 위젯을 두어 HUD 생성 책임과 공용 위젯 생성 책임을 분리한다.
+ * 여기서 등록한다는 말은 화면에 바로 띄운다는 뜻이 아니라,
+ * BeginPlay()에서 WorldWidgetSubsystem::InitWorldWidget()이 해당 타입의 위젯 인스턴스를 미리 만들어 보관하게 한다는 뜻이다.
+ * 실제로 화면에 보일 때는 HUD든 WorldWidget이든 모두 URDUserWidget::OpenUI()를 통한다.
+ *
+ * 타이틀 HUD는 프론트엔드 방의 메인 화면이라 mHUDClass와 InitHUD() 경로로 한 개만 생성하고,
+ * BeginRoom()에서 OpenUI()로 표시한다. 반면 MsgNotify, FadeInOut, LoadingNotify는 여러 GameMode가 공유하는
+ * 보조 UI라 mWorldWidgets에 넣어 WorldWidgetSubsystem이 생성/보관하게 한다.
+ *
+ * 왜 생성 경로를 나누는가:
+ * "누가 만들고 보관할지"와 "어떻게 화면에 열지"는 다른 문제다. 생성 책임은 HUD/WorldWidget으로 나누되,
+ * 표시 책임은 OpenUI() 하나로 맞춰야 AddToViewport, Visibility, 애니메이션 완료 콜백 규칙이 통일된다.
  */
 AFrontendGameMode::AFrontendGameMode()
 {
