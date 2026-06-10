@@ -17,6 +17,7 @@
 // Transition 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogTransition, Log, All)
 
+DECLARE_DELEGATE_TwoParams(FOnReadyToTransition, int32 /*RoomRowIndex*/, int32 /*RoomColumnIndex*/)
 DECLARE_DELEGATE_TwoParams(FOnPreTransitNextRoom, int32 /*RoomRowIndex*/, int32 /*RoomColumnIndex*/)
 
 struct FRoom;
@@ -31,14 +32,17 @@ enum class ERoomTransitionStateFlag : uint8
 	NewStageRequested = 1 << 0,
 	PreLoadRequested = 1 << 1,
 
-	AutoTransition = 1 << 2,
+	ExternalReady = 1 << 2,
 
 	PlayerLoaded = 1 << 3,
 	StageLoaded = 1 << 4,
 	RoomLoaded = 1 << 5,
 
+	AutoTransition = 1 << 6,
+
 	AllTaskRequested = NewStageRequested | PreLoadRequested,
-	ReadyToTransition = PreLoadRequested | PlayerLoaded | StageLoaded | RoomLoaded,
+	ReadyToTransition = PreLoadRequested | PlayerLoaded | StageLoaded | RoomLoaded | ExternalReady,
+	InTransition = ReadyToTransition | AutoTransition,
 };
 ENUM_CLASS_FLAGS(ERoomTransitionStateFlag);
 
@@ -52,6 +56,7 @@ public:
 	int32 mRoomRowIndex = -1;
 	int32 mRoomColumnIndex = -1;
 
+	FOnReadyToTransition OnReadyToTransition;
 	FOnPreTransitNextRoom OnPreTransitNextRoom;
 };
 
@@ -70,32 +75,44 @@ public:
 public:
 	/**
 	 * 타이틀 방에 등장할 에셋들을 Preload 해두는 함수
-	 * @param IsAutoTransition	Preload 완료 시 자동 Transition 여부
+	 * @param ReadyToTransitionCallback	Transition 준비 완료 시 호출될 대리자
+	 * @param PreTransitionCallback		Transition 전에 호출될 대리자
+	 * @param RequireExternalReady		외부의 준비 상태를 대기할 필요가 있는지 여부
+	 * @param IsAutoTransition			모든 준비 완료 시 자동 Transition 여부
 	 */
-	void PreloadTitleRoomAsync(bool IsAutoTransition = false);
+	bool PreloadFrontendRoomAsync(FOnReadyToTransition ReadyToTransitionCallback = FOnReadyToTransition(), FOnPreTransitNextRoom PreTransitionCallback = FOnPreTransitNextRoom(), bool RequireExternalReady = true, bool IsAutoTransition = false);
 
 	/**
 	 * 다음 방에 등장할 에셋들을 Preload 해두는 함수
-	 * @param RoomRowIndex		다음 방 행 인덱스
-	 * @param RoomColumnIndex	다음 방 열 인덱스
-	 * @param Callback			Transition 전에 호출될 대리자
-	 * @param IsAutoTransition	Preload 완료 시 자동 Transition 여부
+	 * @param RoomRowIndex				다음 방 행 인덱스
+	 * @param RoomColumnIndex			다음 방 열 인덱스
+	 * @param ReadyToTransitionCallback	Transition 준비 완료 시 호출될 대리자
+	 * @param PreTransitionCallback		Transition 전에 호출될 대리자
+	 * @param RequireExternalReady		외부의 준비 상태를 대기할 필요가 있는지 여부
+	 * @param IsAutoTransition			모든 준비 완료 시 자동 Transition 여부
 	 */
-	void PreloadRoomAsync(int32 RoomRowIndex, int32 RoomColumnIndex, FOnPreTransitNextRoom Callback = FOnPreTransitNextRoom(), bool IsAutoTransition = false);
-	void PreloadRoomAsync(FRoomTransitionRequest Request, bool IsAutoTransition = false);
+	bool PreloadRoomAsync(int32 RoomRowIndex, int32 RoomColumnIndex, FOnReadyToTransition ReadyToTransitionCallback = FOnReadyToTransition(), FOnPreTransitNextRoom PreTransitionCallback = FOnPreTransitNextRoom(), bool RequireExternalReady = true, bool IsAutoTransition = false);
+	bool PreloadRoomAsync(FRoomTransitionRequest Request, bool RequireExternalReady = true, bool IsAutoTransition = false);
 	
 	/**
 	 * 비동기로 새로운 Stage를 만든 다음, 자동으로 Stage의 첫 방에 대하여 Preload 해두는 함수
-	 * @param StageLevel		대상 스테이지 레벨
-	 * @param Callback			Transition 전에 호출될 대리자
-	 * @param IsAutoTransition	Preload 완료 시 자동 Transition 여부
+	 * @param StageLevel				대상 스테이지 레벨
+	 * @param ReadyToTransitionCallback	Transition 준비 완료 시 호출될 대리자
+	 * @param PreTransitionCallback		Transition 전에 호출될 대리자
+	 * @param RequireExternalReady		외부의 준비 상태를 대기할 필요가 있는지 여부
+	 * @param IsAutoTransition			모든 준비 완료 시 자동 Transition 여부
 	 */
-	void MakeStageAndPreloadRoomAsync(EStageLevelType StageLevel, FOnPreTransitNextRoom Callback = FOnPreTransitNextRoom(), bool IsAutoTransition = false);
+	bool MakeStageAndPreloadRoomAsync(EStageLevelType StageLevel, FOnReadyToTransition ReadyToTransitionCallback = FOnReadyToTransition(), FOnPreTransitNextRoom PreTransitionCallback = FOnPreTransitNextRoom(), bool RequireExternalReady = true, bool IsAutoTransition = false);
 	
 	/**
-	 * Preload된 데이터들이 있을 경우, Transition 시작. 아직 Preload 중이라면 비동기 대기 후 전환
+	 * 외부에서도 준비가 완료됨을 알림
 	 */
-	void TransitLoadedRoomAsync();
+	bool MarkExternalReady();
+
+	/**
+	 * 모두 준비가 완료 된 경우, Transition 시작
+	 */
+	bool TransitLoadedRoom();
 
 protected:
 	void OnLoadNextPlayer(TSharedPtr<FStreamableHandle> AssetHandle);
@@ -103,6 +120,7 @@ protected:
 	void OnLoadNextRoom(TSharedPtr<FStreamableHandle> AssetHandle);
 
 protected:
+	void OnReadyToTransition();
 	void OnTransitNextRoom();
 
 	/* 유지 데이터 */

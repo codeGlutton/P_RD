@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   TitleMenuWidget.h
  * @brief  타이틀 화면 위젯 정의 헤더
  * @author Codex
@@ -164,18 +164,6 @@ private:
 	 * 지도 View 생성 가능 여부만 보고 표시 상태를 바꾼다.
 	 */
 	void RefreshMainMenuState() const;
-
-	/**
-	 * @brief 현재 복구된 Run 상태를 지도 화면으로 보여줄 수 있는지 확인함
-	 *
-	 * @details
-	 * 저장 파일 Load는 시네마틱 월드나 초기 부트스트랩 단계에서 한 번 처리되어야 한다.
-	 * 타이틀 UI는 파일을 직접 Load하지 않고, FrontendGameMode가 현재 PersistentData로 지도 View를
-	 * 만들 수 있으면 이어가기 가능한 상태로 본다.
-	 *
-	 * @return 지도 화면으로 이어갈 수 있는 Run 상태가 있으면 true
-	 */
-	bool TryLoadRunForMapScreen() const;
 
 	/**
 	 * @brief 오래된 타이틀 WBP에 남아 있는 하단 상태 문구를 숨김

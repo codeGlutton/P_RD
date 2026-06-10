@@ -1,4 +1,4 @@
-#include "UI/FrontendMapWidget.h"
+﻿#include "UI/FrontendMapWidget.h"
 
 #include "Components/Border.h"
 #include "Components/Button.h"
@@ -7,7 +7,7 @@
 #include "Components/ScrollBox.h"
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
-#include "GameMode/FrontendGameMode.h"
+#include "GameMode/RoomGameModeBase.h"
 #include "UI/FrontendMapGraphWidgets.h"
 
 namespace
@@ -477,16 +477,16 @@ bool UFrontendMapWidget::RefreshMap()
 	TArray<FFrontendMapRoomView> Rooms;
 	bool bHasRooms = false;
 	bool bShouldScrollToStart = false;
-	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
+	if (ARoomGameModeBase* RoomGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ARoomGameModeBase>() : nullptr)
 	{
-		bHasRooms = FrontendGameMode->GetMapRoomViews(Rooms);
+		bHasRooms = RoomGameMode->GetMapRoomViews(Rooms);
 
 		FFrontendRunControlView RunControlView;
-		bShouldScrollToStart = FrontendGameMode->GetRunControlView(OUT RunControlView) && RunControlView.bIsAtStageStart;
+		bShouldScrollToStart = RoomGameMode->GetRunControlView(OUT RunControlView) && RunControlView.bIsAtStageStart;
 	}
 	else
 	{
-		UE_LOG(LogRD, Warning, TEXT("FrontendMapWidget: FrontendGameMode is not available. Map view data must be provided by FrontendGameMode."));
+		UE_LOG(LogRD, Warning, TEXT("FrontendMapWidget: RoomGameMode is not available. Map view data must be provided by RoomGameMode."));
 	}
 
 	if (!bHasRooms)
@@ -648,9 +648,9 @@ void UFrontendMapWidget::HandleMapRoomClicked(int32 RowIndex, int32 ColumnIndex)
 		return;
 	}
 
-	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
+	if (ARoomGameModeBase* RoomGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ARoomGameModeBase>() : nullptr)
 	{
-		if (FrontendGameMode->SelectMapRoom(RowIndex, ColumnIndex))
+		if (RoomGameMode->SelectNextRoom(RowIndex, ColumnIndex))
 		{
 			RefreshMap();
 			SetMapStatusText(mMapReadyStatusText);
@@ -679,9 +679,9 @@ void UFrontendMapWidget::HandleEnterRoomButtonClicked()
 	SetEnterButtonText(mLoadingStatusText);
 	SetMapStatusText(mLoadingStatusText);
 
-	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
+	if (ARoomGameModeBase* RoomGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ARoomGameModeBase>() : nullptr)
 	{
-		if (FrontendGameMode->EnterSelectedMapRoom())
+		if (RoomGameMode->EnterSelectedRoom())
 		{
 			return;
 		}
@@ -752,7 +752,7 @@ void UFrontendMapWidget::HideUnusedMapTextSurfaces() const
 
 bool UFrontendMapWidget::IsFrontendMapNavigationEnabled() const
 {
-	return GetWorld() != nullptr && GetWorld()->GetAuthGameMode<AFrontendGameMode>() != nullptr;
+	return GetWorld() != nullptr && GetWorld()->GetAuthGameMode<ARoomGameModeBase>() != nullptr;
 }
 
 void UFrontendMapWidget::ConfigureMapGraphLayout() const

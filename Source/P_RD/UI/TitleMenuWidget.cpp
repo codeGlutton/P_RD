@@ -1,4 +1,4 @@
-#include "UI/TitleMenuWidget.h"
+﻿#include "UI/TitleMenuWidget.h"
 
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
@@ -225,7 +225,10 @@ void UTitleMenuWidget::SyncMainText() const
 
 void UTitleMenuWidget::RefreshMainMenuState() const
 {
-	const bool bCanContinueRun = TryLoadRunForMapScreen();
+	AFrontendGameMode* FrontendGameMode = GetWorld()->GetAuthGameMode<AFrontendGameMode>();
+	checkf(FrontendGameMode != nullptr, TEXT("None GameMode"));
+
+	const bool bCanContinueRun = FrontendGameMode->HasActiveRun();
 
 	if (StartButton != nullptr)
 	{
@@ -254,16 +257,6 @@ void UTitleMenuWidget::RefreshMainMenuState() const
 		SettingsButton->SetVisibility(ESlateVisibility::Visible);
 		SettingsButton->SetIsEnabled(true);
 	}
-}
-
-bool UTitleMenuWidget::TryLoadRunForMapScreen() const
-{
-	TArray<FFrontendMapRoomView> Rooms;
-	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
-	{
-		return FrontendGameMode->GetMapRoomViews(OUT Rooms);
-	}
-	return false;
 }
 
 void UTitleMenuWidget::SetStatusText(const FText& /*InText*/) const
@@ -349,7 +342,7 @@ void UTitleMenuWidget::HandleStartButtonClicked()
 {
 	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
 	{
-		if (FrontendGameMode->StartNewRunFromTitle())
+		if (FrontendGameMode->CreateNewRunFromTitle())
 		{
 			return;
 		}
@@ -360,14 +353,14 @@ void UTitleMenuWidget::HandleStartButtonClicked()
 
 void UTitleMenuWidget::HandleContinueButtonClicked()
 {
-	if (TryLoadRunForMapScreen())
+	/*if (TryLoadRunForMapScreen())
 	{
 		ShowMapScreen();
 		return;
 	}
 
 	ShowMainScreen();
-	SetStatusText(mMainOnlyStatusText);
+	SetStatusText(mMainOnlyStatusText);*/
 }
 
 void UTitleMenuWidget::HandleSettingsButtonClicked()

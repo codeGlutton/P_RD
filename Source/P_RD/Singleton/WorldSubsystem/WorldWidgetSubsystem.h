@@ -39,6 +39,13 @@ public:
 		return Cast<T>(mHUD);
 	}
 
+	template<typename T>
+	T* GetWorldWidget(EWorldWidgetType Type) const
+	{
+		static_assert(TIsDerivedFrom<T, UUserWidget>::IsDerived);
+
+		return Cast<T>(GetWorldWidget(Type));
+	}
 	UUserWidget* GetWorldWidget(EWorldWidgetType Type) const;
 
 protected:
