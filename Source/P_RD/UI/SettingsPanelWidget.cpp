@@ -9,6 +9,10 @@
 
 /**
  * @brief 설정 패널을 팝업 레이어에 표시되도록 초기화한다.
+ *
+ * @details
+ * 설정 패널은 타이틀 메뉴 위나 인게임 상단 메뉴 위에 뜨는 보조 화면이다.
+ * 기본 ZOrder를 PopUp으로 두면 OpenUI()로 열릴 때 HUD/월드 위젯보다 앞에 배치되어 입력 우선순위가 자연스럽다.
  */
 USettingsPanelWidget::USettingsPanelWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -98,6 +102,10 @@ void USettingsPanelWidget::NativeConstruct()
 
 /**
  * @brief NativeConstruct()에서 연결한 WBP 입력 이벤트를 해제한다.
+ *
+ * @details
+ * UMG 위젯은 화면에서 빠졌다가 다시 붙거나, 에디터에서 재생을 반복하면서 Construct/Destruct를 여러 번 거칠 수 있다.
+ * Construct에서 AddUniqueDynamic을 사용해 중복 연결을 줄이고, Destruct에서 RemoveDynamic으로 정리해 생명주기 끝에 입력 연결이 남지 않게 한다.
  */
 void USettingsPanelWidget::NativeDestruct()
 {
@@ -163,6 +171,11 @@ void USettingsPanelWidget::NativeDestruct()
 
 /**
  * @brief 타이틀/인게임 모드를 바꾸고 모드별 영역 표시를 다시 적용한다.
+ *
+ * @details
+ * 모드 변경은 이 위젯 안의 UI 표시 상태만 바꾼다.
+ * 타이틀 모드가 됐다고 타이틀로 이동하거나, 인게임 모드가 됐다고 런 상태를 조회하지 않는다.
+ * 그런 흐름은 이 패널을 여는 TitleMenuWidget 또는 TopMenuBarWidget 쪽의 책임이다.
  */
 void USettingsPanelWidget::SetPanelMode(ESettingsPanelMode NewPanelMode)
 {
@@ -172,6 +185,9 @@ void USettingsPanelWidget::SetPanelMode(ESettingsPanelMode NewPanelMode)
 
 /**
  * @brief 현재 패널 모드를 반환한다.
+ *
+ * @details
+ * 외부 코드가 같은 SettingsPanelWidget 인스턴스를 받았을 때 현재 어떤 화면 정책으로 표시 중인지 확인할 수 있게 한다.
  */
 ESettingsPanelMode USettingsPanelWidget::GetPanelMode() const
 {
@@ -198,6 +214,10 @@ void USettingsPanelWidget::RefreshPanelState(bool bCanSaveRun, bool bCanAbandonR
 
 /**
  * @brief 외부 처리 흐름이 결정한 상태 문구를 표시한다.
+ *
+ * @details
+ * 저장 중, 저장 완료, 저장 실패처럼 실제 결과를 아는 쪽은 설정 패널이 아니라 이벤트 수신자다.
+ * 따라서 이 함수는 들어온 문구를 그대로 보여주는 표시 함수이며, 빈 문구는 상태 영역을 접어 평상시 레이아웃을 깔끔하게 유지한다.
  */
 void USettingsPanelWidget::SetStatusText(const FText& Text) const
 {
@@ -210,6 +230,10 @@ void USettingsPanelWidget::SetStatusText(const FText& Text) const
 
 /**
  * @brief 저장/포기 같은 런 액션 버튼의 중복 입력을 제어한다.
+ *
+ * @details
+ * 런 저장이나 포기 처리 중에는 같은 요청이 두 번 들어오면 전환 상태와 저장 상태가 어긋날 수 있다.
+ * 볼륨/품질 같은 일반 설정은 계속 조작 가능하게 두고, 런 흐름을 바꾸는 버튼만 잠그는 용도다.
  */
 void USettingsPanelWidget::SetRunActionsEnabled(bool bEnabled) const
 {
@@ -219,6 +243,10 @@ void USettingsPanelWidget::SetRunActionsEnabled(bool bEnabled) const
 
 /**
  * @brief 런 포기 확정 패널을 표시한다.
+ *
+ * @details
+ * "런 포기" 버튼은 위험한 액션의 1차 진입점이므로 이 함수에서는 확인 UI만 연다.
+ * 실제 포기 실행은 Confirm 버튼을 눌러 OnAbandonRunConfirmed가 Broadcast된 뒤 외부 흐름에서 처리한다.
  */
 void USettingsPanelWidget::ShowAbandonConfirm() const
 {
@@ -230,6 +258,10 @@ void USettingsPanelWidget::ShowAbandonConfirm() const
 
 /**
  * @brief 런 포기 확정 패널을 숨긴다.
+ *
+ * @details
+ * 취소하거나 패널을 초기 상태로 되돌릴 때 확인 UI만 접는다.
+ * 이 함수는 확인 패널의 가시성만 바꾸며, 런 데이터나 저장 상태에는 손대지 않는다.
  */
 void USettingsPanelWidget::HideAbandonConfirm() const
 {
@@ -244,6 +276,8 @@ void USettingsPanelWidget::HideAbandonConfirm() const
  *
  * @details
  * 최종 설정 저장 로직이 붙기 전에도 화면이 비어 보이지 않게 하기 위한 기본 표시값이다.
+ * 각 TextBlock이 Optional인 이유는 WBP 구조가 단계적으로 정리되는 중에도 C++ 위젯 생성이 실패하지 않게 하기 위해서다.
+ * 연결된 위젯이 있을 때만 텍스트를 채워, 같은 C++ 클래스를 여러 WBP 변형에서 안전하게 쓸 수 있다.
  */
 void USettingsPanelWidget::SyncText() const
 {
@@ -415,6 +449,14 @@ void USettingsPanelWidget::ApplyModeVisibility() const
 
 /**
  * @brief WBP_SettingsPanel의 최소 필수 바인딩 상태를 로그로 확인한다.
+ *
+ * @details
+ * 이 브랜치에서는 WBP를 한 번에 완성된 설정 시스템으로 고정하지 않고, 공통 패널로 재사용할 수 있는 뼈대를 먼저 연결한다.
+ * 그래서 대부분의 BindWidget은 Optional로 두지만, BackButton처럼 패널을 닫는 최소 동선은 빠지면 사용자가 갇히므로 경고를 남긴다.
+ *
+ * 왜 check가 아니라 Warning인가:
+ * UI 이관 중에는 일부 디자이너 위젯이 아직 없거나 이름이 바뀌는 중일 수 있다.
+ * 패키징/플레이 자체를 중단하기보다는 로그로 빠진 바인딩을 드러내고, 가능한 입력만 동작하게 하는 편이 단계별 리뷰에 맞다.
  */
 void USettingsPanelWidget::ValidateDesignerBindings() const
 {
@@ -426,6 +468,10 @@ void USettingsPanelWidget::ValidateDesignerBindings() const
 
 /**
  * @brief 버튼 포인터가 있을 때만 활성 상태를 바꾼다.
+ *
+ * @details
+ * WBP 바인딩이 Optional이므로 버튼이 없는 WBP 변형에서도 호출자가 매번 nullptr 검사를 반복하지 않게 하는 작은 방어 함수다.
+ * 이 함수가 없으면 RefreshPanelState(), SetRunActionsEnabled() 같은 외부 API가 WBP 내부 구성에 너무 민감해진다.
  */
 void USettingsPanelWidget::SetButtonEnabled(UButton* Button, bool bEnabled) const
 {
@@ -437,6 +483,10 @@ void USettingsPanelWidget::SetButtonEnabled(UButton* Button, bool bEnabled) cons
 
 /**
  * @brief Back 버튼 입력을 외부 복귀 요청 이벤트로 전달한다.
+ *
+ * @details
+ * 이 함수는 화면을 닫지 않고 OnBackRequested만 Broadcast한다.
+ * 타이틀에서는 타이틀 메뉴로 돌아가고, 인게임에서는 상단 메뉴 흐름으로 돌아가는 식으로 수신자마다 복귀 방식이 다르기 때문이다.
  */
 void USettingsPanelWidget::HandleBackButtonClicked()
 {
@@ -445,6 +495,10 @@ void USettingsPanelWidget::HandleBackButtonClicked()
 
 /**
  * @brief 저장 후 나가기 버튼 입력을 외부 이벤트로 전달한다.
+ *
+ * @details
+ * 저장 가능 여부, 저장 실행, 저장 후 타이틀 이동은 모두 런 상태를 알고 있는 쪽에서 처리해야 한다.
+ * 패널은 클릭이 발생했다는 사실만 OnSaveAndExitRequested로 알린다.
  */
 void USettingsPanelWidget::HandleSaveAndExitButtonClicked()
 {
@@ -453,6 +507,10 @@ void USettingsPanelWidget::HandleSaveAndExitButtonClicked()
 
 /**
  * @brief 런 포기 버튼 입력을 즉시 실행하지 않고 확인 패널 표시로 연결한다.
+ *
+ * @details
+ * 런 포기는 현재 진행을 폐기하는 위험한 액션이다.
+ * 첫 클릭에서는 ShowAbandonConfirm()만 호출해 사용자가 한 번 더 확인하도록 하고, 실제 포기 이벤트는 Confirm 버튼에서만 발생시킨다.
  */
 void USettingsPanelWidget::HandleAbandonRunButtonClicked()
 {
@@ -461,6 +519,10 @@ void USettingsPanelWidget::HandleAbandonRunButtonClicked()
 
 /**
  * @brief 런 포기 확정 입력을 외부 이벤트로 전달한다.
+ *
+ * @details
+ * 이 시점은 확인 패널에서 사용자가 최종 승인한 뒤다.
+ * 그래도 위젯이 직접 런을 폐기하지는 않고, OnAbandonRunConfirmed를 받은 인게임 흐름이 저장/전환 순서를 책임진다.
  */
 void USettingsPanelWidget::HandleConfirmAbandonButtonClicked()
 {
@@ -469,6 +531,9 @@ void USettingsPanelWidget::HandleConfirmAbandonButtonClicked()
 
 /**
  * @brief 런 포기 확인 취소 입력을 패널 닫기로 처리한다.
+ *
+ * @details
+ * 취소는 순수 UI 액션이다. 외부 시스템에 알릴 필요 없이 확인 패널만 접고 기존 설정 패널 상태를 유지한다.
  */
 void USettingsPanelWidget::HandleCancelAbandonButtonClicked()
 {
@@ -477,6 +542,10 @@ void USettingsPanelWidget::HandleCancelAbandonButtonClicked()
 
 /**
  * @brief 설정 초기화 입력을 외부 이벤트로 전달한다.
+ *
+ * @details
+ * 어떤 항목을 초기화할지, 초기화 직후 저장할지, 사용자에게 확인을 받을지는 설정 시스템 정책이다.
+ * 이 위젯은 Reset 버튼 클릭을 OnResetRequested 요청으로만 변환한다.
  */
 void USettingsPanelWidget::HandleResetButtonClicked()
 {
@@ -485,6 +554,10 @@ void USettingsPanelWidget::HandleResetButtonClicked()
 
 /**
  * @brief 낮음 품질 선택 요청을 외부 이벤트로 전달한다.
+ *
+ * @details
+ * 현재 패널의 임시 품질 매핑은 낮음=0, 중간=1, 높음=2다.
+ * 숫자를 실제 Scalability 품질이나 프로젝트 옵션으로 해석하는 일은 이벤트 수신자가 담당한다.
  */
 void USettingsPanelWidget::HandleLowQualityButtonClicked()
 {
@@ -493,6 +566,10 @@ void USettingsPanelWidget::HandleLowQualityButtonClicked()
 
 /**
  * @brief 중간 품질 선택 요청을 외부 이벤트로 전달한다.
+ *
+ * @details
+ * 현재 패널의 임시 품질 매핑은 낮음=0, 중간=1, 높음=2다.
+ * 이 함수는 중간 품질을 뜻하는 1만 전달하고, 실제 적용 정책은 바깥에 둔다.
  */
 void USettingsPanelWidget::HandleMediumQualityButtonClicked()
 {
@@ -501,6 +578,10 @@ void USettingsPanelWidget::HandleMediumQualityButtonClicked()
 
 /**
  * @brief 높음 품질 선택 요청을 외부 이벤트로 전달한다.
+ *
+ * @details
+ * 현재 패널의 임시 품질 매핑은 낮음=0, 중간=1, 높음=2다.
+ * 이 함수는 높음 품질을 뜻하는 2만 전달하고, 플랫폼별 품질 제한은 바깥 정책에서 처리한다.
  */
 void USettingsPanelWidget::HandleHighQualityButtonClicked()
 {
@@ -509,6 +590,10 @@ void USettingsPanelWidget::HandleHighQualityButtonClicked()
 
 /**
  * @brief BGM 볼륨 변경 값을 외부 이벤트로 전달한다.
+ *
+ * @details
+ * Slider 값은 UI 입력 값 그대로 전달한다.
+ * 실제 사운드 믹스, 저장값 변환, 음소거 정책은 OnBgmVolumeChanged를 받은 시스템에서 처리한다.
  */
 void USettingsPanelWidget::HandleBgmVolumeChanged(float Value)
 {
@@ -517,6 +602,10 @@ void USettingsPanelWidget::HandleBgmVolumeChanged(float Value)
 
 /**
  * @brief 효과음 볼륨 변경 값을 외부 이벤트로 전달한다.
+ *
+ * @details
+ * Slider 값은 UI 입력 값 그대로 전달한다.
+ * 효과음 버스나 저장 설정에 어떤 방식으로 반영할지는 외부 설정/오디오 시스템의 책임이다.
  */
 void USettingsPanelWidget::HandleSfxVolumeChanged(float Value)
 {
@@ -525,6 +614,10 @@ void USettingsPanelWidget::HandleSfxVolumeChanged(float Value)
 
 /**
  * @brief UI 볼륨 변경 값을 외부 이벤트로 전달한다.
+ *
+ * @details
+ * 버튼 클릭음, 알림음 같은 UI 사운드가 어떤 그룹에 묶이는지는 오디오 정책이 결정한다.
+ * 이 위젯은 UiVolumeSlider 입력만 OnUiVolumeChanged로 올린다.
  */
 void USettingsPanelWidget::HandleUiVolumeChanged(float Value)
 {
@@ -533,6 +626,10 @@ void USettingsPanelWidget::HandleUiVolumeChanged(float Value)
 
 /**
  * @brief 화면 흔들림 체크 상태를 외부 이벤트로 전달한다.
+ *
+ * @details
+ * 체크박스 값은 사용자의 선호 입력일 뿐이다.
+ * 실제 카메라 흔들림을 끄거나 저장하는 처리는 OnScreenShakeChanged 수신자가 담당한다.
  */
 void USettingsPanelWidget::HandleScreenShakeChanged(bool bChecked)
 {
@@ -541,6 +638,10 @@ void USettingsPanelWidget::HandleScreenShakeChanged(bool bChecked)
 
 /**
  * @brief 진동 체크 상태를 외부 이벤트로 전달한다.
+ *
+ * @details
+ * 진동 지원 여부는 플랫폼과 입력 장치에 따라 다를 수 있다.
+ * 패널은 사용자가 요청한 체크 상태만 전달하고, 지원 여부 판단과 적용은 외부 시스템에 맡긴다.
  */
 void USettingsPanelWidget::HandleVibrationChanged(bool bChecked)
 {
