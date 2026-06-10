@@ -8,8 +8,8 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "Blueprint/UserWidget.h"
 #include "Frontend/FrontendViewTypes.h"
+#include "UI/RDUserWidget.h"
 
 #include "FrontendMapWidget.generated.h"
 
@@ -60,7 +60,7 @@ struct FFrontendMapNodePoolEntry
  * 받아 노드 위젯에 넣고, 이 디버그 텍스트는 제거하는 방향이다.
  */
 UCLASS(BlueprintType, Blueprintable)
-class P_RD_API UFrontendMapWidget : public UUserWidget
+class P_RD_API UFrontendMapWidget : public URDUserWidget
 {
 	GENERATED_BODY()
 

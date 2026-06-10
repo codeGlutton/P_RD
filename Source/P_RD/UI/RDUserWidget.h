@@ -3,18 +3,18 @@
 #include "RDMinimal.h"
 #include "Blueprint/UserWidget.h"
 
-#include "ToggleableWidget.generated.h"
+#include "RDUserWidget.generated.h"
 
 DECLARE_DELEGATE_OneParam(FOnEndUIOpenAnimation, UUserWidget*)
 DECLARE_DELEGATE_OneParam(FOnEndUICloseAnimation, UUserWidget*)
 
 UCLASS(BlueprintType, Blueprintable)
-class P_RD_API UToggleableWidget : public UUserWidget
+class P_RD_API URDUserWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
 public:
-	UToggleableWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	URDUserWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	virtual void OpenUI(FOnEndUIOpenAnimation Callback = FOnEndUIOpenAnimation());
 	virtual void CloseUI(FOnEndUICloseAnimation Callback = FOnEndUICloseAnimation());
@@ -50,7 +50,7 @@ protected:
 	bool mRemoveFromParentOnClose = false;
 
 private:
-	enum class EToggleableWidgetLifecycleState : uint8
+	enum class ERDUserWidgetLifecycleState : uint8
 	{
 		Closed,
 		Opening,
@@ -60,5 +60,5 @@ private:
 
 	FOnEndUIOpenAnimation OnEndUIOpenAnimation;
 	FOnEndUICloseAnimation OnEndUICloseAnimation;
-	EToggleableWidgetLifecycleState mLifecycleState = EToggleableWidgetLifecycleState::Closed;
+	ERDUserWidgetLifecycleState mLifecycleState = ERDUserWidgetLifecycleState::Closed;
 };

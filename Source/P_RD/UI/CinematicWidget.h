@@ -7,7 +7,7 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "UI/ToggleableWidget.h"
+#include "UI/RDUserWidget.h"
 
 #include "CinematicWidget.generated.h"
 
@@ -19,7 +19,7 @@ DECLARE_DELEGATE_OneParam(FOnEndCinematicAnimation, UCinematicWidget*)
  * @brief 시네마틱 표시, UI 열림/닫힘, 재생 완료 알림을 제공하는 위젯 베이스
  */
 UCLASS(BlueprintType, Blueprintable)
-class P_RD_API UCinematicWidget : public UToggleableWidget
+class P_RD_API UCinematicWidget : public URDUserWidget
 {
 	GENERATED_BODY()
 

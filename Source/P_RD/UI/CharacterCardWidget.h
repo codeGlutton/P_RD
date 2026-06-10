@@ -8,8 +8,8 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "Blueprint/UserWidget.h"
 #include "Frontend/CharacterSelectTypes.h"
+#include "UI/RDUserWidget.h"
 
 #include "CharacterCardWidget.generated.h"
 
@@ -38,7 +38,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCharacterCardClickedDelegate, int32
  * 실제 시작 가능 여부는 부모 캐릭터 선택 위젯의 Confirm 버튼에서 막는다.
  */
 UCLASS(BlueprintType, Blueprintable)
-class P_RD_API UCharacterCardWidget : public UUserWidget
+class P_RD_API UCharacterCardWidget : public URDUserWidget
 {
 	GENERATED_BODY()
 

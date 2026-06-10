@@ -1,4 +1,4 @@
-﻿#include "GameMode/FrontendGameMode.h"
+#include "GameMode/FrontendGameMode.h"
 
 #include "GameFramework/PlayerController.h"
 
@@ -19,7 +19,7 @@
 #include "DataAsset/RoomSpawnData/StaticFrontendRoomSpawnData.h"
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
 
-#include "UI/ToggleableWidget.h"
+#include "UI/RDUserWidget.h"
 
 DEFINE_LOG_CATEGORY(LogFrontendGameMode);
 
@@ -67,7 +67,6 @@ namespace
 AFrontendGameMode::AFrontendGameMode()
 {
 	mWorldWidgets = {
-		EWorldWidgetType::MsgNotify,
 		EWorldWidgetType::FadeInOut,
 		EWorldWidgetType::LoadingNotify,
 	};
@@ -85,7 +84,7 @@ void AFrontendGameMode::BeginRoom()
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
 	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr"));
 
-	UToggleableWidget* TitleHUD = WorldWidgetSubsystem->GetHUD<UToggleableWidget>();
+	UTitleMenuWidget* TitleHUD = WorldWidgetSubsystem->GetHUD<UTitleMenuWidget>();
 	checkf(TitleHUD != nullptr, TEXT("타이틀 HUD 위젯 nullptr"));
 	TitleHUD->OpenUI();
 

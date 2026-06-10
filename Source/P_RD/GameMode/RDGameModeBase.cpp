@@ -1,4 +1,4 @@
-﻿#include "GameMode/RDGameModeBase.h"
+#include "GameMode/RDGameModeBase.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/InstanceSubsystem/PersistentDataSubsystem.h"
 #include "Singleton/InstanceSubsystem/RoomTransitionSubsystem.h"
@@ -6,7 +6,7 @@
 
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 
-#include "UI/ToggleableWidget.h"
+#include "UI/RDUserWidget.h"
 
 DEFINE_LOG_CATEGORY(LogRDGameMode);
 
@@ -98,7 +98,7 @@ void ARDGameModeBase::OpenLoadingNotifyUI(/* FOnOpenUIAnimation OnOpenUIAnimatio
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
 	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr 오류"));
 
-	UToggleableWidget* LoadingNotifyWidget = WorldWidgetSubsystem->GetWorldWidget<UToggleableWidget>(EWorldWidgetType::LoadingNotify);
+	URDUserWidget* LoadingNotifyWidget = WorldWidgetSubsystem->GetWorldWidget<URDUserWidget>(EWorldWidgetType::LoadingNotify);
 	checkf(LoadingNotifyWidget != nullptr, TEXT("로딩 위젯 nullptr 오류"));
 
 	LoadingNotifyWidget->OpenUI(/*MoveTemp(OnOpenUIAnimation)*/);
@@ -113,7 +113,7 @@ void ARDGameModeBase::CloseLoadingNotifyUI(/* FOnEndUICloseAnimation OnEndUIClos
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
 	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr 오류"));
 
-	UToggleableWidget* LoadingNotifyWidget = WorldWidgetSubsystem->GetWorldWidget<UToggleableWidget>(EWorldWidgetType::LoadingNotify);
+	URDUserWidget* LoadingNotifyWidget = WorldWidgetSubsystem->GetWorldWidget<URDUserWidget>(EWorldWidgetType::LoadingNotify);
 	checkf(LoadingNotifyWidget != nullptr, TEXT("로딩 위젯 nullptr 오류"));
 
 	LoadingNotifyWidget->CloseUI(/*MoveTemp(OnEndUICloseAnimation)*/);
