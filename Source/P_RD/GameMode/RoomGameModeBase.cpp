@@ -359,6 +359,11 @@ void ARoomGameModeBase::SaveRunWithUIAsync() const
 
 	UUserWidget* SaveNotifyWidget = WorldWidgetSubsystem->GetWorldWidget(EWorldWidgetType::SaveNotify);
 
+	/*
+	 * SaveNotify는 저장 성공/실패 자체의 필수 조건이 아니라, 저장 진행을 보여주는 보조 UI다.
+	 * 현재 알림 표시 애니메이션 호출이 비활성화되어 있으므로 위젯 설정이 빠져도 방 전환 저장은 계속 진행한다.
+	 * 알림 UI를 실제로 다시 열고 닫는 시점에는 OpenUI()/CloseUI() 흐름과 함께 필수 바인딩 검사를 되살린다.
+	 */
 	//SaveNotifyWidget->OpenUI();
 	// 시작 애니메이션
 	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->SaveRunAsync(FAsyncSaveGameToSlotDelegate::CreateLambda([SaveNotifyWidget](const FString& SlotName, int32 UserIndex, bool IsSuccussed) {
