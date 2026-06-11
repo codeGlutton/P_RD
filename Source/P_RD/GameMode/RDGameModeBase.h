@@ -78,6 +78,8 @@ protected:
 	 * @details
 	 * OpenUI()는 페이드 레이어를 뷰포트에 올리는 공통 생명주기만 처리한다.
 	 * 실제 페이드 방향과 완료 시점은 FadeInOut 위젯의 StartFadeOut()이 관리한다.
+	 * 이 함수는 방 전환 여부를 판단하지 않고, 페이드아웃 완료 뒤 해야 할 일만 대리자로 받는다.
+	 * 따라서 파생 GameMode는 단순 페이드아웃이나 별도 후속 작업을 같은 진입점으로 요청할 수 있다.
 	 *
 	 * @param OnEndFadeOutAnimation 페이드아웃이 끝난 뒤 실행할 선택 콜백
 	 */
@@ -124,6 +126,11 @@ private:
 
 	/**
 	 * @brief 방 전환 전 페이드아웃 완료 시 외부 준비 완료 신호를 전달한다.
+	 *
+	 * @details
+	 * StartFadeOutUI()는 범용 페이드아웃 도구로 남기고, 방 전환에서만 필요한
+	 * MarkExternalReadyForTransition() 연결은 이 private 함수에 모은다.
+	 * 같은 콜백을 일반 방, 새 스테이지 첫 방, 프론트엔드 방 전환 호출부마다 반복하지 않기 위한 진입점이다.
 	 */
 	void StartFadeOutUIForRoomTransition();
 

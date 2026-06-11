@@ -99,6 +99,7 @@ void ARDGameModeBase::StartFadeInUI(FOnEndFadeInAnimation OnEndFadeInAnimation) 
  * @details
  * OpenUI()는 페이드 전환 레이어를 뷰포트에 올리는 공통 UI 생명주기만 처리한다.
  * 실제로 화면을 검게 덮는 일은 UFadeInOutWidget의 StartFadeOut()이 담당한다.
+ * 이 함수는 방 전환 정책을 직접 알지 않으며, 페이드아웃 완료 뒤 이어질 작업은 대리자로 받는다.
  *
  * 역할 구분:
  * ARDGameModeBase는 페이드 위젯을 찾아 열고, 어떤 방향의 페이드를 시작할지만 요청한다.
@@ -136,6 +137,9 @@ void ARDGameModeBase::StartFadeInUIForRoomTransition() const
  * @details
  * RequireExternalReady 전환에서는 에셋 로드가 끝나도 외부 준비 신호가 오기 전까지 실제 전환을 시작하지 않는다.
  * 페이드아웃이 끝난 시점에 MarkExternalReadyForTransition()을 호출해 전환 시작 조건을 해제한다.
+ * StartFadeOutUI()에 직접 이 처리를 넣지 않는 이유는, 그 함수가 파생 GameMode에서도 사용할 수 있는
+ * 범용 페이드아웃 진입점이기 때문이다.
+ * 방 전환 호출부 세 곳에서 같은 대리자를 반복하지 않도록 이 private 함수가 전환 전용 콜백을 한 번만 구성한다.
  */
 void ARDGameModeBase::StartFadeOutUIForRoomTransition()
 {
