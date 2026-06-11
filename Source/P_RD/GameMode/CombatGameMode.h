@@ -24,14 +24,12 @@ protected:
 
 private:
 	/**
-	 * @brief 전투맵 WorldSettings에 지정된 카메라 기준점으로 플레이어 시점을 맞춘다.
+	 * @brief 전투맵 WorldSettings에 지정된 카메라 액터로 플레이어 시점을 맞춘다.
 	 *
 	 * @details
-	 * MainCameraPoint는 에디터에서 방마다 배치하는 TargetPoint다.
-	 * 이 값은 카메라 액터 자체가 아니라 "전투를 볼 위치와 방향"을 표시하는 기준점이므로,
-	 * 전투방이 시작될 때 같은 Transform으로 CameraActor를 만들고 ViewTarget으로 지정한다.
-	 * 런타임으로 생성한 CameraActor는 기본적으로 고정 화면 비율을 유지하려 하므로,
-	 * 모바일 기기 비율에 맞게 3D 화면이 꽉 차도록 Aspect Ratio 고정은 끈다.
+	 * 카메라 위치, 회전, 투영 옵션은 코드에서 새로 만들거나 보정하지 않고,
+	 * 에디터에 배치한 카메라 액터에서 직접 확인하면서 조정한다.
+	 * GameMode는 WorldSettings에 지정된 액터를 ViewTarget으로 넘겨 전투 시점만 전환한다.
 	 */
 	void ApplyMainCameraPoint() const;
 };

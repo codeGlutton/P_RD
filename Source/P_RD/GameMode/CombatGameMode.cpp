@@ -1,8 +1,6 @@
 ﻿#include "GameMode/CombatGameMode.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
 
-#include "Camera/CameraActor.h"
-#include "Camera/CameraComponent.h"
 #include "Engine/AssetManager.h"
 #include "GameFramework/PlayerController.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
@@ -50,17 +48,11 @@ void ACombatGameMode::ApplyMainCameraPoint() const
 	const ARDWorldSettings* WorldSettings = Cast<ARDWorldSettings>(World->GetWorldSettings());
 	checkf(WorldSettings != nullptr, TEXT("RDWorldSettings nullptr"));
 
-	AActor* MainCameraPoint = WorldSettings->GetMainCameraPoint();
-	checkf(MainCameraPoint != nullptr, TEXT("MainCameraPoint nullptr"));
+	AActor* MainCamera = WorldSettings->GetMainCameraPoint();
+	checkf(MainCamera != nullptr, TEXT("MainCameraPoint nullptr"));
 
 	APlayerController* PlayerController = World->GetFirstPlayerController();
 	checkf(PlayerController != nullptr, TEXT("플레이어 컨트롤러 nullptr"));
 
-	const FTransform CameraTransform = MainCameraPoint->GetActorTransform();
-	ACameraActor* CombatCamera = World->SpawnActor<ACameraActor>(ACameraActor::StaticClass(), CameraTransform);
-	checkf(CombatCamera != nullptr, TEXT("전투 카메라 nullptr"));
-	CombatCamera->GetCameraComponent()->SetConstraintAspectRatio(false);
-
-	PlayerController->SetViewTarget(CombatCamera);
-	PlayerController->SetControlRotation(CameraTransform.GetRotation().Rotator());
+	PlayerController->SetViewTarget(MainCamera);
 }
