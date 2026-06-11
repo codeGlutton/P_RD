@@ -12,6 +12,7 @@
 #include "PCGStage/Stage.h"
 
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
+#include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/TitleMenuWidget.h"
 
@@ -295,6 +296,15 @@ bool AFrontendGameMode::CreateRunData(const FPrimaryAssetId& PlayerUnitId, int32
 
 	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
 	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로파일 서브시스템 nullptr 오류"));
+
+	if (GetUserPersistData()->IsActive() == false)
+	{
+		/*
+		 * 세이브가 없는 첫 실행은 Intro에서 유저 데이터 로드 실패 후 빈 UserData로 프론트엔드에 들어온다.
+		 * 새 런 생성은 유저 프로필을 전제로 하므로, 첫 런 시작 시점에 기본 유저를 먼저 만든다.
+		 */
+		GameProfileSubsystem->MakeUser(NSLOCTEXT("FrontendGameMode", "DefaultUserName", "Player"));
+	}
 
 	GameProfileSubsystem->StartRun(PlayerUnitId, Difficulty);
 	return true;
