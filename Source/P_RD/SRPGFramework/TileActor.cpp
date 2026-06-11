@@ -10,11 +10,20 @@ ETileLayerFlag ITileActor::GetReplaceLayerFlags() const
 	return ETileLayerFlag::None;
 }
 
-void ITileActor::OnBeginTileOverlap(ITileActor* Other, FTile* CurTile)
+int32 ITileActor::GetOverlayLayerPriority() const
+{
+	return 0;
+}
+
+void ITileActor::OnBeginTileOverlap(FTile* CurTile, ITileActor* Other)
 {
 }
 
-void ITileActor::OnEndTileOverlap(ITileActor* Other, FTile* CurTile)
+void ITileActor::OnEndTileOverlap(FTile* CurTile, ITileActor* Other)
+{
+}
+
+void ITileActor::OnReplaced(FTile* CurTile, ITileActor* Other)
 {
 }
 

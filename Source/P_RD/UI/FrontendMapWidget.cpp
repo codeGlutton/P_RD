@@ -9,6 +9,7 @@
 #include "Components/TextBlock.h"
 #include "GameMode/RoomGameModeBase.h"
 #include "UI/FrontendMapGraphWidgets.h"
+#include "UI/ViewportZOrderType.h"
 
 namespace
 {
@@ -278,12 +279,24 @@ namespace
 	}
 }
 
+/**
+ * @brief 월드맵 팝업 ZOrder와 기본 문구 캐시를 초기화한다.
+ *
+ * @details
+ * 선/노드 WBP 클래스는 WBP_FrontendMap Class Defaults에서 지정한다.
+ * C++은 특정 WBP 경로를 직접 알지 않고, 런타임에는 지정된 클래스가 없을 때 경고만 남긴다.
+ * 월드맵은 탑바에서 OpenUI()로 열리는 팝업이므로 일반 HUD보다 위에 표시한다.
+ */
 UFrontendMapWidget::UFrontendMapWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+	mViewportZOrder = StaticCast<int32>(EViewportZOrderType::PopUp);
 	RefreshLocalizedTextCache();
 }
 
+/**
+ * @brief 디자이너 바인딩과 버튼 이벤트를 준비하고 현재 지도 데이터를 그린다.
+ */
 void UFrontendMapWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -295,6 +308,9 @@ void UFrontendMapWidget::NativeConstruct()
 	RefreshMap();
 }
 
+/**
+ * @brief 버튼/노드 이벤트 연결과 동적 생성한 그래프 풀을 정리한다.
+ */
 void UFrontendMapWidget::NativeDestruct()
 {
 	UnbindEvents();
@@ -310,6 +326,9 @@ void UFrontendMapWidget::NativeDestruct()
 	Super::NativeDestruct();
 }
 
+/**
+ * @brief 지도 화면에서 사용하는 기본 문구 캐시를 갱신한다.
+ */
 void UFrontendMapWidget::RefreshLocalizedTextCache()
 {
 	mMapText = FrontendMapText(TEXT("MapText"));
@@ -318,6 +337,43 @@ void UFrontendMapWidget::RefreshLocalizedTextCache()
 	mLoadingStatusText = FrontendMapText(TEXT("LoadingStatusText"));
 	mMapReadyStatusText = FText::GetEmpty();
 	mMapUnavailableStatusText = FrontendMapText(TEXT("MapUnavailableStatusText"));
+}
+
+/**
+ * @brief 현재 지도에서 방 선택 입력을 허용할지 지정한다.
+ *
+ * @details
+ * 같은 월드맵 위젯을 조회용과 전투 승리 후 선택용으로 공유하기 위해 입력 가능 여부를 외부에서 제어한다.
+ */
+void UFrontendMapWidget::SetRoomSelectionEnabled(bool bEnabled)
+{
+	bRoomSelectionEnabled = bEnabled;
+}
+
+/**
+ * @brief 현재 지도 입력 허용 상태를 반환한다.
+ */
+bool UFrontendMapWidget::IsRoomSelectionEnabled() const
+{
+	return bRoomSelectionEnabled;
+}
+
+/**
+ * @brief 지도 기본 상태 문구 대신 외부 흐름의 안내 문구를 표시한다.
+ */
+void UFrontendMapWidget::SetMapStatusOverride(const FText& InText)
+{
+	mStatusOverrideText = InText;
+	SetMapStatusText(mStatusOverrideText);
+}
+
+/**
+ * @brief 외부 상태 문구를 해제하고 현재 캐시된 기본 상태 문구를 즉시 표시한다.
+ */
+void UFrontendMapWidget::ClearMapStatusOverride()
+{
+	mStatusOverrideText = FText::GetEmpty();
+	SetMapStatusText(mMapReadyStatusText);
 }
 
 void UFrontendMapWidget::ValidateDesignerBindings() const
@@ -462,6 +518,17 @@ void UFrontendMapWidget::HideUnusedMapGraphWidgets(int32 UsedLineCount, int32 Us
 	}
 }
 
+/**
+ * @brief 현재 RunPersistData 기반 지도 노드/선을 다시 그리고 버튼 상태를 갱신한다.
+ *
+ * @details
+ * 같은 월드맵이 조회용과 다음 방 선택용으로 쓰이므로, bRoomSelectionEnabled와 bEnterRequested를 함께 보고
+ * 노드/입장 버튼의 입력 가능 여부를 결정한다. 상태 문구는 전투 승리 같은 외부 흐름의 오버라이드가 있으면 그것을 우선한다.
+ *
+ * 왜 매번 View DTO를 다시 가져오는가:
+ * 지도 노드를 클릭하면 선택 상태가 GameMode의 런 데이터에 반영되고, 그 결과로 Ready/Selected/Locked 표시가 바뀐다.
+ * UI가 자체 캐시만 믿지 않고 다시 그리면 실제 런 상태와 화면 표시가 어긋나지 않는다.
+ */
 bool UFrontendMapWidget::RefreshMap()
 {
 	RefreshLocalizedTextCache();
@@ -625,11 +692,11 @@ bool UFrontendMapWidget::RefreshMap()
 
 	if (EnterRoomButton != nullptr)
 	{
-		EnterRoomButton->SetIsEnabled(bHasSelectedRoom && IsFrontendMapNavigationEnabled());
+		EnterRoomButton->SetIsEnabled(bHasSelectedRoom && IsFrontendMapNavigationEnabled() && !bEnterRequested);
 	}
 
 	SetEnterButtonText(mEnterText);
-	SetMapStatusText(mMapReadyStatusText);
+	SetMapStatusText(mStatusOverrideText.IsEmpty() ? mMapReadyStatusText : mStatusOverrideText);
 	if (bShouldScrollToStart && MapScrollBox != nullptr)
 	{
 		MapScrollBox->ScrollToEnd();
@@ -641,6 +708,16 @@ bool UFrontendMapWidget::RefreshMap()
 	return true;
 }
 
+/**
+ * @brief 지도 노드 클릭을 방 선택 GameMode API로 전달한다.
+ *
+ * @details
+ * 지도는 선택 가능 여부를 UI에서 한 번 막고, 최종 유효성은 RoomGameMode의 SelectNextRoom()에 맡긴다.
+ *
+ * 왜 최종 검증을 GameMode에 맡기는가:
+ * UI는 표시된 노드를 보고 입력을 막을 수 있지만, 런 진행 중 전환 요청이나 저장 상태 같은 게임 규칙은 알 수 없다.
+ * GameMode가 마지막으로 검사해야 잘못된 노드 클릭이 실제 방 선택으로 이어지지 않는다.
+ */
 void UFrontendMapWidget::HandleMapRoomClicked(int32 RowIndex, int32 ColumnIndex)
 {
 	if (bEnterRequested)
@@ -653,21 +730,38 @@ void UFrontendMapWidget::HandleMapRoomClicked(int32 RowIndex, int32 ColumnIndex)
 		if (RoomGameMode->SelectNextRoom(RowIndex, ColumnIndex))
 		{
 			RefreshMap();
-			SetMapStatusText(mMapReadyStatusText);
+			SetMapStatusText(mStatusOverrideText.IsEmpty() ? mMapReadyStatusText : mStatusOverrideText);
 		}
 	}
 }
 
+/**
+ * @brief 노드 위젯의 클릭 이벤트를 지도 선택 처리로 연결한다.
+ */
 void UFrontendMapWidget::HandleMapNodeClicked(int32 RowIndex, int32 ColumnIndex)
 {
 	HandleMapRoomClicked(RowIndex, ColumnIndex);
 }
 
+/**
+ * @brief 닫기 버튼 입력을 외부 닫기 요청 이벤트로 전달한다.
+ */
 void UFrontendMapWidget::HandleCloseButtonClicked()
 {
 	OnCloseRequested.Broadcast();
 }
 
+/**
+ * @brief 선택된 방 입장을 요청하고 중복 입력을 막는다.
+ *
+ * @details
+ * 실제 프리로드와 전환은 RoomGameMode가 수행한다.
+ * UI는 요청 중 상태 문구와 버튼 라벨만 바꾸고, 실패하면 다시 입력 가능한 상태로 되돌린다.
+ *
+ * 왜 UI에서 직접 전환하지 않는가:
+ * 방 전환은 프리로드, 페이드, 로딩 알림, 저장 상태와 함께 움직이는 게임 흐름이다.
+ * 지도는 "입장하고 싶다"는 요청만 보내야 전환 정책이 한 곳에 남는다.
+ */
 void UFrontendMapWidget::HandleEnterRoomButtonClicked()
 {
 	if (bEnterRequested)
@@ -750,9 +844,19 @@ void UFrontendMapWidget::HideUnusedMapTextSurfaces() const
 	}
 }
 
+/**
+ * @brief 현재 지도 화면에서 실제 방 선택/입장 API를 호출해도 되는지 확인한다.
+ *
+ * @details
+ * 선택 모드가 켜져 있고, 현재 월드의 GameMode가 방 선택 API를 제공할 때만 true를 반환한다.
+ *
+ * 왜 GameMode 존재까지 확인하는가:
+ * 같은 위젯은 타이틀/프론트 화면에서도 배치될 수 있다. 방 GameMode가 없는 곳에서 노드 입력을 열면
+ * 사용자는 선택 가능한 것처럼 보지만 실제로는 처리할 대상이 없다.
+ */
 bool UFrontendMapWidget::IsFrontendMapNavigationEnabled() const
 {
-	return GetWorld() != nullptr && GetWorld()->GetAuthGameMode<ARoomGameModeBase>() != nullptr;
+	return bRoomSelectionEnabled && GetWorld() != nullptr && GetWorld()->GetAuthGameMode<ARoomGameModeBase>() != nullptr;
 }
 
 void UFrontendMapWidget::ConfigureMapGraphLayout() const

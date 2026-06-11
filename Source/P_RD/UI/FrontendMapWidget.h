@@ -50,6 +50,10 @@ struct FFrontendMapNodePoolEntry
  * 모달 표시/닫기 책임은 바깥 오버레이가 갖고, 이 클래스는 맵 그래프/선택/입장 UI만 관리한다.
  * 지도 데이터는 직접 생성하지 않고 AFrontendGameMode::GetMapRoomViews()가 내려준 View DTO를 그린다.
  *
+ * 왜 조회용/선택용을 같은 위젯으로 처리하는가:
+ * MAP 버튼으로 열 때는 현재 런 경로를 보기만 해야 하고, 전투 승리 후에는 다음 방을 실제로 선택해야 한다.
+ * 화면 구조는 같지만 허용 입력만 다르므로 bRoomSelectionEnabled로 모드를 나누어 같은 WBP를 재사용한다.
+ *
  * @note UI 파트 추가 위젯
  * feature/create-srpg-framework-base 브랜치에는 FStage/FRoom과 방 전환 API가 있지만,
  * 이를 타이틀 화면에서 읽기 전용 월드맵으로 그리는 UMG 위젯은 없어서 UI/map 브랜치에서 추가했다.
@@ -77,6 +81,29 @@ public:
 	 */
 	UFUNCTION(Category = UI, BlueprintCallable)
 	bool RefreshMap();
+
+	/**
+	 * @brief 승리 후 지도처럼 다음 방 선택이 허용되는 상황에서만 true로 둔다.
+	 *
+	 * @details
+	 * 같은 월드맵을 단순 조회와 다음 방 선택에 함께 쓰기 때문에, 열린 경로에 따라 노드/입장 버튼 입력을 분리한다.
+	 */
+	void SetRoomSelectionEnabled(bool bEnabled);
+
+	/**
+	 * @brief 현재 월드맵이 방 선택 입력을 허용하는지 확인한다.
+	 *
+	 * @return 방 선택/입장 입력을 받을 수 있으면 true
+	 */
+	bool IsRoomSelectionEnabled() const;
+
+	/** @brief 탑바/전환 흐름이 일시적으로 표시할 상태 문구를 지정한다. */
+	void SetMapStatusOverride(const FText& InText);
+
+	/**
+	 * @brief 외부에서 지정한 상태 문구를 해제하고 현재 캐시된 지도 기본 상태 문구로 되돌린다.
+	 */
+	void ClearMapStatusOverride();
 
 	UPROPERTY(Category = UI, BlueprintAssignable)
 	FFrontendMapWidgetSimpleEvent OnCloseRequested;
@@ -118,6 +145,11 @@ private:
 	FText mLoadingStatusText;
 	FText mMapReadyStatusText;
 	FText mMapUnavailableStatusText;
+
+	/**
+	 * @brief 탑바/전투 결과 흐름이 지도 기본 상태 문구 대신 임시로 보여줄 문구
+	 */
+	FText mStatusOverrideText;
 
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UButton> CloseButton;
@@ -164,6 +196,9 @@ private:
 	 * @details
 	 * WBP_FrontendMap Class Defaults에서 WBP_FrontendMapLine으로 지정한다.
 	 * 부모 맵은 위치/길이/각도만 계산하고, 선 모양은 이 WBP가 가진다.
+	 *
+	 * 왜 C++ 기본 경로를 두지 않는가:
+	 * 선 모양은 WBP 자산의 책임이다. C++이 특정 WBP 경로를 직접 들고 있으면 자산 이름/위치 변경이 코드 수정으로 번진다.
 	 */
 	UPROPERTY(Category = "Frontend Map", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	TSubclassOf<UFrontendMapLineWidget> MapLineWidgetClass;
@@ -174,6 +209,9 @@ private:
 	 * @details
 	 * WBP_FrontendMap Class Defaults에서 WBP_FrontendMapNode로 지정한다.
 	 * 방 개수가 늘어나도 C++에서 Button/TextBlock을 직접 만들지 않고 이 WBP를 재사용한다.
+	 *
+	 * 왜 C++ 기본 경로를 두지 않는가:
+	 * 노드의 실제 위젯 구성은 WBP에서 바꿀 수 있어야 한다. C++은 선택/배치 데이터만 넘기고 자산 경로는 WBP 설정에 맡긴다.
 	 */
 	UPROPERTY(Category = "Frontend Map", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	TSubclassOf<UFrontendMapNodeWidget> MapNodeWidgetClass;
@@ -184,5 +222,20 @@ private:
 	UPROPERTY(Transient)
 	TArray<FFrontendMapNodePoolEntry> MapNodePool;
 
+	/**
+	 * @brief 방 입장 요청 이후 중복 입력을 막기 위한 상태
+	 */
 	bool bEnterRequested = false;
+
+	/**
+	 * @brief 이 지도 화면에서 다음 방 선택을 허용할지 여부
+	 *
+	 * @details
+	 * MAP 버튼으로 연 지도는 조회 전용이고, 전투 승리 후 열린 지도만 다음 방 선택과 입장을 허용한다.
+	 *
+	 * 왜 별도 플래그가 필요한가:
+	 * 노드가 Ready 상태라고 해서 사용자가 항상 선택할 수 있으면, 단순히 경로를 확인하려고 연 MAP 화면에서도
+	 * 방 전환 API가 호출될 수 있다. 표시 상태와 입력 허용 상태를 분리해 그런 실수를 막는다.
+	 */
+	bool bRoomSelectionEnabled = false;
 };

@@ -133,12 +133,13 @@ public:
 	void ClearTileHighlight(ETileHighlightFlag Flag);
 
 	/**
-	 * 진입 액터가 해당 타일에 막히는지 검사하는 함수
+	 * 진입 액터를 해당 타일에 배치할 수 있는지 검사하는 함수
+	 * @details 막히지 않았거나, 막혔어도 기존 액터를 교체할 수 있으면 배치 가능
 	 * @param TileIndex 검사할 타일 인덱스
 	 * @param Incoming 진입하려는 액터
-	 * @return 막힘 여부 (맵 범위 밖은 막힘으로 간주)
+	 * @return 배치 가능 여부 (맵 범위 밖은 불가)
 	 */
-	bool IsBlocked(const FTileIndex& TileIndex, const ITileActor* Incoming) const;
+	bool CanPlace(const FTileIndex& TileIndex, const ITileActor* Incoming) const;
 
 	/**
 	 * 액터 움직임 시작 함수
@@ -239,57 +240,122 @@ public:
 	}
 
 protected:
-	// @brief 타일맵 가로 길이 (X 방향 타일 개수)
+	/**
+	 * @brief 타일맵 가로 길이 (X 방향 타일 개수)
+	 */
 	UPROPERTY(EditAnywhere, Category = "TileMap", meta = (DisplayName = "Width", ClampMin = "1"))
 	int32 mWidth = 9;
 
-	// @brief 타일맵 세로 길이 (Y 방향 타일 개수)
+	/** 
+	 * @brief 타일맵 세로 길이 (Y 방향 타일 개수)
+	 */
 	UPROPERTY(EditAnywhere, Category = "TileMap", meta = (DisplayName = "Height", ClampMin = "1"))
 	int32 mHeight = 9;
 
-	// @brief 타일 한 칸의 월드 크기 (cm)
+	/**
+	 * @brief 타일 한 칸의 월드 크기 (cm)
+	 */
 	UPROPERTY(EditAnywhere, Category = "TileMap", meta = (DisplayName = "Tile Size", ClampMin = "1.0"))
 	float mTileSize = 100.0f;
 
 	/* 시각화 */
-	// @brief 타일 그리드를 그리는 인스턴스드 메시 컴포넌트
+	
+	/**
+	 * @brief 타일 그리드를 그리는 인스턴스드 메시 컴포넌트
+	 */
 	UPROPERTY(VisibleAnywhere, Category = "TileMap|Visual", meta = (DisplayName = "Tile Mesh Component"))
 	TObjectPtr<UInstancedStaticMeshComponent> mTileMeshComponent;
 
-	// @brief 타일 한 칸에 사용할 메시 (기본: 엔진 Plane)
+	/**
+	 * @brief 타일 한 칸에 사용할 메시 (기본: 엔진 Plane)
+	 */
 	UPROPERTY(EditAnywhere, Category = "TileMap|Visual", meta = (DisplayName = "Tile Mesh"))
 	TObjectPtr<UStaticMesh> mTileMesh;
 
-	// @brief 타일 메시에 덮어쓸 머티리얼 (null이면 메시 기본 머티리얼)
+	/**
+	 * @brief 타일 메시에 덮어쓸 머티리얼 (null이면 메시 기본 머티리얼)
+	 */
 	UPROPERTY(EditAnywhere, Category = "TileMap|Visual", meta = (DisplayName = "Tile Material"))
 	TObjectPtr<UMaterialInterface> mTileMaterial;
 
-	// @brief 타일 시각 크기 비율 (1.0 미만이면 타일 사이에 틈이 생겨 격자선처럼 보임)
+	/**
+	 * @brief 타일 시각 크기 비율 (1.0 미만이면 타일 사이에 틈이 생겨 격자선처럼 보임)
+	 */
 	UPROPERTY(EditAnywhere, Category = "TileMap|Visual", meta = (DisplayName = "Tile Visual Scale", ClampMin = "0.1", ClampMax = "1.0"))
 	float mTileVisualScale = 0.95f;
 
 	/* 강조 표시 */
-	// @brief 조준 범위 스타일 (우선순위 최하, 바닥에 깔림)
+	
+	/**
+	 * @brief 조준 범위 스타일 (우선순위 최하, 바닥에 깔림)
+	 */
 	UPROPERTY(EditAnywhere, Category = "TileMap|Highlight", meta = (DisplayName = "Aim Style"))
 	FTileHighlightStyle mAimStyle;
 
-	// @brief 선택 타일 스타일 (Aim 위에 덮어씀)
+	/**
+	 * @brief 선택 타일 스타일 (Aim 위에 덮어씀)
+	 */
 	UPROPERTY(EditAnywhere, Category = "TileMap|Highlight", meta = (DisplayName = "Select Style"))
 	FTileHighlightStyle mSelectStyle;
 
-	// @brief 영향 범위 스타일 (우선순위 최상, 펄스로 알파 변조)
+	/**
+	 * @brief 영향 범위 스타일 (우선순위 최상, 펄스로 알파 변조)
+	 */
 	UPROPERTY(EditAnywhere, Category = "TileMap|Highlight", meta = (DisplayName = "Effect Style"))
 	FTileHighlightStyle mEffectStyle;
 
-	// @brief 펄스 강도 (Effect 알파에 곱하는 진동의 진폭, 0~1)
+	/**
+	 * @brief 펄스 강도 (Effect 알파에 곱하는 진동의 진폭, 0~1)
+	 */
 	UPROPERTY(EditAnywhere, Category = "TileMap|Highlight", meta = (DisplayName = "Pulse Intensity", ClampMin = "0.0", ClampMax = "1.0"))
 	float mPulseIntensity = 0.5f;
 
-	// @brief 펄스 주기 (초)
+	/**
+	 * @brief 펄스 주기 (초)
+	 */
 	UPROPERTY(EditAnywhere, Category = "TileMap|Highlight", meta = (DisplayName = "Pulse Period", ClampMin = "0.01"))
 	float mPulsePeriod = 1.0f;
 
 private:
+	/**
+	 * 진입 액터가 해당 타일에 막히는지 검사하는 함수
+	 * @param TileIndex 검사할 타일 인덱스
+	 * @param Incoming 진입하려는 액터
+	 * @return 막힘 여부 (맵 범위 밖은 막힘으로 간주)
+	 */
+	bool IsBlocked(const FTileIndex& TileIndex, const ITileActor* Incoming) const;
+
+	/**
+	 * 진입 액터가 덮어쓸(교체할) 기존 액터들을 반환하는 함수
+	 * @details 기존 액터가 ReplaceLayerFlags로 진입자 레이어를 교체 허용하고, 진입자의 Overlay 우선순위가 같거나 더 높은 경우만 수집한다.
+	 * @param TileIndex 검사할 타일 인덱스
+	 * @param Incoming 진입하려는 액터
+	 * @return 교체 대상 액터 목록 (빈 배열이면 교체 대상 없음)
+	 */
+	TArray<TScriptInterface<ITileActor>> GetReplaceableActors(const FTileIndex& TileIndex, const ITileActor* Incoming) const;
+
+	/**
+	 * @brief 코어의 타입 지정 버전 — T로 캐스트되는 교체 대상만 배열로 반환
+	 * @details T가 반환 타입에만 등장해 추론 불가 → 호출 시 <T> 명시해야 이 버전이 선택됨
+	 * @param[in] TileIndex 검사할 타일 인덱스
+	 * @param[in] Incoming  진입하려는 액터
+	 * @return TArray<T*> : T로 캐스트된 교체 대상 목록
+	 */
+	template<typename T>
+	TArray<T*> GetReplaceableActors(const FTileIndex& TileIndex, const ITileActor* Incoming) const
+	{
+		TArray<T*> Result;
+		// 코어(비템플릿) 결과를 타입캐스트해 수집
+		for (const TScriptInterface<ITileActor>& Actor : GetReplaceableActors(TileIndex, Incoming))
+		{
+			if (T* Typed = Cast<T>(Actor.GetObject()))
+			{
+				Result.Add(Typed);
+			}
+		}
+		return Result;
+	}
+
 	/**
 	 * @brief ITileActor 포인터를 GC 추적용 TScriptInterface로 변환
 	 * @note TScriptInterface는 UObject 핸들이 필요하므로 _getUObject로 변환한다
@@ -339,8 +405,10 @@ private:
 	 */
 	FTile* GetTile(const FTileIndex& TileIndex);
 
-	// @brief 타일 저장소 (크기 Width*Height, 인덱스 = y*Width + x)
-	// FTile이 TScriptInterface<ITileActor>(UObject 참조)를 들고 있어 GC 추적용 UPROPERTY() 필수 (제거 금지)
+	/**
+	 * @brief 타일 저장소 (크기 Width*Height, 인덱스 = y*Width + x)
+	 * @warning FTile이 TScriptInterface<ITileActor>(UObject 참조)를 들고 있어 GC 추적용 UPROPERTY() 필수 (제거 금지)
+	 */
 	UPROPERTY()
 	TArray<FTile> mTiles;
 };

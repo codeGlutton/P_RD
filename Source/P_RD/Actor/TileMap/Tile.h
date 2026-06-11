@@ -22,18 +22,29 @@ struct FTile
 {
 	GENERATED_BODY()
 
-	// @brief ATileMap이 타일 내부 액터 목록/블로킹 정보에 접근
+	/**
+	 * @brief ATileMap이 타일 내부 액터 목록/블로킹 정보에 접근
+	 */
 	friend class ATileMap;
 
 protected:
-	// @brief 진입 액터가 이 타일에 막히는지 판정 (타일 위 액터들과 비교)
+	/**
+	 * @brief 진입 액터가 이 타일에 막히는지 판정 (타일 위 액터들과 비교)
+	 * @details
+	 * - 기존 액터가 블록하는 레이어가 있음
+	 * - 진입 액터의 레이어가 이에 해당하면 블록
+	 */
 	bool IsBlocked(const ITileActor* Incoming) const;
 
-	// @brief 배치된 액터
-	// @warning UObject 참조라 GC 추적용 UPROPERTY 필수이므로 삭제 금지
+	/**
+	 * @brief 배치된 액터
+	 * @warning UObject 참조라 GC 추적용 UPROPERTY 필수이므로 삭제 금지
+	 */
 	UPROPERTY()
 	TArray<TScriptInterface<ITileActor>> mActors;
 
-	// @brief 강조 표시 상태 (Aim/Select/Effect 비트 조합)
+	/**
+	 * @brief 강조 표시 상태 (Aim/Select/Effect 비트 조합)
+	 */
 	ETileHighlightFlag mHighlight = ETileHighlightFlag::None;
 };
