@@ -68,14 +68,7 @@ bool USkillComponent::AddSkillData(TSoftObjectPtr<UStaticSkillData> SkillData)
 	return true;
 }
 
-
-bool USkillComponent::GetPreviewEffectIconData(const FPreviewEffectIconData& Out_Data)
-{
-
-	return false;
-}
-
-bool USkillComponent::ActivateSkill()
+bool USkillComponent::ActivateSkill(const FSkillCommitResult& SkillResult)
 {
 	checkf(GetOwner(), TEXT("주인 Actor가 없습니다."))
 
@@ -93,7 +86,7 @@ bool USkillComponent::ActivateSkill()
 	USkillCommitResultHolder* ResultHolder = NewObject<USkillCommitResultHolder>();
 
 	// 2. 결과 데이터 복사
-	ResultHolder->CommitResult = mSkillCommitResult;
+	ResultHolder->CommitResult = SkillResult;
 
 	// 3. 이벤트 데이터의 OptionalObject에 래퍼 오브젝트 바인딩
 	EventData.OptionalObject = ResultHolder;
@@ -105,12 +98,12 @@ bool USkillComponent::ActivateSkill()
 	return true;
 }
 
-bool USkillComponent::CalculateSkillResult(int32 SkillIndex, const TArray<TScriptInterface<ITileActor>>& TileActors)
+bool USkillComponent::CalculateSkillResult(int32 SkillIndex, const TArray<TScriptInterface<ITileActor>>& TileActors, FSkillCommitResult& Out_Result)
 {
 	checkf(mSkillData.IsValidIndex(SkillIndex), TEXT("스킬 인덱스가 유효하지 않습니다."));
 
 	const AUnit* Unit = Cast<AUnit>(GetOwner());
 	TScriptInterface<const ITileActor> Caster = Unit;
-	return UCombatCalculatorFunctionLibrary::CalculateSkillResult(Caster, mSkillData[SkillIndex].Get(), TileActors, mSkillCommitResult);
+	return UCombatCalculatorFunctionLibrary::CalculateSkillResult(Caster, mSkillData[SkillIndex].Get(), TileActors, Out_Result);
 }
 

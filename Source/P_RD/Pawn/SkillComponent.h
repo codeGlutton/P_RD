@@ -59,9 +59,6 @@ protected:
 	UPROPERTY()
 	TWeakObjectPtr<UAbilitySystemComponent> mAbilitySystemComp;
 
-	UPROPERTY()
-	FSkillCommitResult mSkillCommitResult;
-
 public:
 	/* 델리게이트 변수*/
 	FOnSkillChange OnSkillChange;
@@ -98,16 +95,6 @@ public:
 	virtual bool AddSkillData(TSoftObjectPtr<UStaticSkillData> SkillData);
 
 public:
-	/*UI 전달용 API*/
-
-	/**
-	* @brief UI에서 쓸 해당 스킬 결과 값 반환
-	* @details UI에서 쓸 해당 스킬 결과 값 반환
-	* @param[out] Out_Data : 구조체를 넣고 있는다면 데이터를 반환한다.
-	* @return bool : 실패 시 false 반환
-	*/
-	bool GetPreviewEffectIconData(const class FPreviewEffectIconData& Out_Data);
-public:
 	/* 스킬 사용 */
 	/**
 	* @brief 스킬의 인덱스와 타일을 입력받으면 스킬 사용
@@ -116,7 +103,7 @@ public:
 	* @return bool : 실패 시 false 반환
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Skill")
-	bool ActivateSkill();
+	bool ActivateSkill(const FSkillCommitResult& SkillResult);
 
 	/**
 	* @brief 스킬 결과 값 계산
@@ -124,8 +111,9 @@ public:
 	* 스킬 인덱스와 타일이 들어오면 스킬 결과 값을 계산한다.
 	* @param[in] SkillIndex : 선택한 스킬의 인덱스
 	* @param[in] TileActors : 스킬로 선택된 타일들
+	* @param[out] Out_Result: 스킬로 선택된 타일들
 	* @return bool : 실패 시 false 반환
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Skill")
-	bool CalculateSkillResult(int32 SkillIndex, const TArray<TScriptInterface<ITileActor>>& TileActors);
+	bool CalculateSkillResult(int32 SkillIndex, const TArray<TScriptInterface<ITileActor>>& TileActors, FSkillCommitResult& Out_Result);
 };
