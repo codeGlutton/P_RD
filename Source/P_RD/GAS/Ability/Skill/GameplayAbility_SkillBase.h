@@ -55,4 +55,7 @@ protected:
 		const FGameplayAbilityActivationInfo ActivationInfo,
 		const FGameplayEventData* TriggerEventData) override;
 
+
+	bool CommitActorToEffect(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+		class AUnit* Unit, const struct FUnitCommitResult& CommitResult);
 };

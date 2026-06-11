@@ -2,7 +2,9 @@
 
 
 #include "SkillComponent.h"
-#include "Unit.h"
+#include "SkillComponent/SkillCommitResultHolder.h"
+#include "../FunctionLibrary/CombatCalculator/CombatCalculatorFunctionLibrary.h"
+#include "Pawn/Unit.h"
 
 // Sets default values for this component's properties
 USkillComponent::USkillComponent()
@@ -56,29 +58,25 @@ bool USkillComponent::SetSkillData(int SkillIndex, TSoftObjectPtr<UStaticSkillDa
 	return true;
 }
 
-/*
+
 bool USkillComponent::AddSkillData(TSoftObjectPtr<UStaticSkillData> SkillData)
 {
 	mSkillData.Add(SkillData);
 
-	if (mOnSkillChange.IsBound())
-		mOnSkillChange.Broadcast(mSkillData.Num() - 1, SkillData);
+	if (OnSkillChange.IsBound())
+		OnSkillChange.Broadcast(mSkillData.Num() - 1, SkillData);
 
 	return true;
 }
-*/
 
-bool USkillComponent::CalculatePredictedSales(int32 In_SkillIndex, TArray<TPair<FString, float>>& Out_TagValue)
+
+bool USkillComponent::GetPreviewEffectIconData(const FPreviewEffectIconData& Out_Data)
 {
+
 	return false;
 }
 
-bool USkillComponent::ActivateSkill(int32 SkillIndex, const TArray<FTileIndex>& Tiles)
-{
-	return false;
-}
-
-bool USkillComponent::TestActivateSkill(int32 SkillIndex, TArray<AUnit*> UnitArray)
+bool USkillComponent::ActivateSkill()
 {
 	if (!GetOwner())
 		return false;
@@ -90,27 +88,22 @@ bool USkillComponent::TestActivateSkill(int32 SkillIndex, TArray<AUnit*> UnitArr
 
 	EventData.EventTag = FGameplayTag::RequestGameplayTag(TEXT("Test.GameplayAbility.Skill"));
 
-	// 2. 빈 타겟 데이터 구조체를 동적 할당합니다.
-	FGameplayAbilityTargetData_ActorArray* ArrayTargetData = new FGameplayAbilityTargetData_ActorArray();
+	// 1. 구조체를 담을 UObject 홀더 생성
+	USkillCommitResultHolder* ResultHolder = NewObject<USkillCommitResultHolder>();
 
+	// 2. 결과 데이터 복사
+	ResultHolder->CommitResult = mSkillCommitResult;
 
-	// 3. 소프트 포인터 배열을 순회하며 실제 액터 포인터를 추출해 채워 넣습니다.
-	for (AUnit* UnitPtr : UnitArray)
-	{
-		// 소프트 포인터가 가리키는 대상이 현재 메모리에 로드되어 있고 유효한지 확인
-		if (IsValid(UnitPtr))
-		{
-			// TargetActorArray는 TWeakObjectPtr<AActor> 배열이지만, 
-			// 일반 포인터(AActor*)를 넣으면 자동으로 변환되어 들어갑니다.
-			ArrayTargetData->TargetActorArray.Add(UnitPtr);
-		}
-	}
-
-	// 4. 포장된 데이터를 EventData에 추가
-	EventData.TargetData.Add(ArrayTargetData);
+	// 3. 이벤트 데이터의 OptionalObject에 래퍼 오브젝트 바인딩
+	EventData.OptionalObject = ResultHolder;
 
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), EventData.EventTag, EventData);
 
 	return true;
+}
+
+bool USkillComponent::CalculateSkillResult(int32 SkillIndex, const TArray<FTileIndex>& Tiles)
+{
+	return UCombatCalculatorFunctionLibrary::CalculateSkillResult(mSkillData[SkillIndex].Get(), Tiles, mSkillCommitResult);
 }
 

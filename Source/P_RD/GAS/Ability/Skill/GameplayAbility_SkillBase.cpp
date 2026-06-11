@@ -2,7 +2,9 @@
 
 
 #include "GameplayAbility_SkillBase.h"
-
+#include "Pawn/SkillComponent.h"
+#include "Pawn/Unit.h"
+#include "Pawn/SkillComponent/SkillResultHolder.h"
 #include "../../Effect/GameplayEffect_Damage.h"
 
 UGameplayAbility_SkillBase::UGameplayAbility_SkillBase()
@@ -33,6 +35,8 @@ void UGameplayAbility_SkillBase::ActivateAbility(const FGameplayAbilitySpecHandl
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("Ability Attack"));
+
+	/*
 	
 	// Event 데이터가 유효한지 검사한다.
 	if (!TriggerEventData || !TriggerEventData->TargetData.Num())
@@ -54,53 +58,82 @@ void UGameplayAbility_SkillBase::ActivateAbility(const FGameplayAbilitySpecHandl
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("ActorArrayData"));
+	*/
 
-
-	// 데이터 안에 들어있는 액터 배열을 반복문으로 순회한다.
-	for (TWeakObjectPtr<AActor> TargetActorPtr : ActorArrayData->TargetActorArray)
+	if (const USkillResultHolder* ResultHolder = Cast<USkillResultHolder>(TriggerEventData->OptionalObject))
 	{
-		AActor* TargetActor = TargetActorPtr.Get();
-		
-		// 유효하지 않은 액터 시 종료
-		if (!IsValid(TargetActor))
+		UE_LOG(LogTemp, Warning, TEXT("전달된 데이터 있음"));
+
+		// 전달된 FSkillCommitResult 데이터 활용
+		FSkillCommitResult RecievedResult = ResultHolder->CommitResult;
+
+		// TODO: 갱신기(Updater)에 RecievedResult 전달
+		// 
+		for (int i = 0; i < RecievedResult.mEffectCommitResult.Num(); ++i)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("TargetActor is not Valid"));
+			UE_LOG(LogTemp, Warning, TEXT("EffectCommit 있음"));
 
-			EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
-			continue;
+			const FEffectCommitResult& EffectResult = RecievedResult.mEffectCommitResult[i];
+
+			// 효과 적용 시 모든 대상에게 한꺼번에 적용
+			for (int j = 0; j < EffectResult.mTileCommitResult.Num(); ++j)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("TileCommit 있음"));
+
+				const FTileCommitResult& TileResult = EffectResult.mTileCommitResult[j];
+
+				// 타일 인덱스에서 유닛을 가져온다.
+				TWeakObjectPtr<AUnit> TileUnit;
+
+				AUnit* TargetActor = TileUnit.Get(); // 예시: TileUnit이 실제 AUnit 포인터를 담고 있다고 가정
+
+				CommitActorToEffect(Handle, ActorInfo, TargetActor, TileResult.mUnitCommitResult);
+			}
 		}
-
-		UE_LOG(LogTemp, Warning, TEXT("Actor %s"), *GetNameSafe(TargetActor));
-
-
-		// 피해 주기 테스트 ===========================================
-#pragma region Damage Test
-
-		FGameplayEffectContextHandle	Context = MakeEffectContext(Handle, ActorInfo);
-
-		FGameplayEffectSpecHandle	DamageSpec = MakeOutgoingGameplayEffectSpec(
-			UGameplayEffect_Damage::StaticClass(), GetAbilityLevel());
-
-		DamageSpec.Data->SetContext(Context);
-
-		float Damage = 10;	// 추후 넘겨받은 값으로 변경해야 함
-
-		// GameplayEffect에 지정된 SetByCaller의 값을 지정한다.
-		DamageSpec.Data->SetSetByCallerMagnitude(
-			FGameplayTag::RequestGameplayTag(TEXT("Test.GameplayEffect.Data.Battle.Damage")), Damage);
-
-		// 3. 🎯 [핵심] 이 타겟 한 명에게만 즉시 이펙트를 적용합니다.
-			// TargetActor로부터 AbilitySystemComponent를 찾아서 직접 적용하는 방식입니다.
-		if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor))
-		{
-
-			// 💡 가장 깔끔한 C++ 직접 적용 방식:
-			TargetASC->ApplyGameplayEffectSpecToSelf(*DamageSpec.Data.Get());
-		}
-
-#pragma endregion Damage Test
-		// 피해 주기 테스트 ===========================================
 	}
 
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+}
+
+bool UGameplayAbility_SkillBase::CommitActorToEffect(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+	class AUnit* Unit, const struct FUnitCommitResult& CommitResult)
+{
+	UE_LOG(LogTemp, Warning, TEXT("UnitCommit %d"), CommitResult.mEffect.Num());
+
+	for (const TPair<FGameplayTag, float>& EffectPair : CommitResult.mEffect)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UnitCommit 있음"));
+
+
+		FGameplayTag EffectTag = EffectPair.Key;
+		float EffectValue = EffectPair.Value;
+
+		// 예시: 데미지 관련 태그인지 확인 (프로젝트에서 사용하는 데미지 태그명으로 변경)
+		FGameplayTag DamageTag = FGameplayTag::RequestGameplayTag(TEXT("GameplayEffect.Battle.Damage"));
+
+		if (EffectTag == DamageTag)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Damage : %f"), EffectValue);
+
+			/*
+			FGameplayEffectContextHandle Context = MakeEffectContext(Handle, ActorInfo);
+
+			FGameplayEffectSpecHandle DamageSpec = MakeOutgoingGameplayEffectSpec(
+				UGameplayEffect_Damage::StaticClass(), GetAbilityLevel());
+
+
+			DamageSpec.Data->SetContext(Context);
+
+			DamageSpec.Data->SetSetByCallerMagnitude(DamageTag, EffectValue);
+
+			// 4. 타겟 ASC를 찾아 이펙트를 적용합니다.
+			if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Unit))
+			{
+				TargetASC->ApplyGameplayEffectSpecToSelf(*DamageSpec.Data.Get());
+			}
+			*/
+		}
+	}
+
+	return true;
 }
