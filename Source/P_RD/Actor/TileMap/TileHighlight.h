@@ -46,15 +46,21 @@ struct FTileHighlightStyle
 {
 	GENERATED_BODY()
 
-	// @brief 강조 색 (알파 포함)
+	/**
+	 * @brief 강조 색 (알파 포함)
+	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TileHighlight", meta = (DisplayName = "Color"))
 	FLinearColor mColor = FLinearColor::White;
 
-	// @brief 아래 누적색과의 합성 방식
+	/**
+	 * @brief 아래 누적색과의 합성 방식
+	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TileHighlight", meta = (DisplayName = "Blend Mode"))
 	ETileHighlightBlend mBlendMode = ETileHighlightBlend::Mix;
 
-	// @brief 합성 순서 (낮을수록 먼저 깔리고, 높을수록 위에 얹혀 최종을 지배)
+	/**
+	 * @brief 합성 순서 (낮을수록 먼저 깔리고, 높을수록 위에 얹혀 최종을 지배)
+	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TileHighlight", meta = (DisplayName = "Priority"))
 	int32 mPriority = 0;
 };

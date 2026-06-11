@@ -96,8 +96,8 @@ void ATileMap::NotifyBeginOverlap(FTile* Tile, ITileActor* Actor)
 		{
 			continue;
 		}
-		Actor->OnBeginTileOverlap(Other.GetInterface(), Tile);
-		Other->OnBeginTileOverlap(Actor, Tile);
+		Actor->OnBeginTileOverlap(Tile, Other.GetInterface());
+		Other->OnBeginTileOverlap(Tile, Actor);
 	}
 }
 
@@ -110,8 +110,8 @@ void ATileMap::NotifyEndOverlap(FTile* Tile, ITileActor* Actor)
 		{
 			continue;
 		}
-		Actor->OnEndTileOverlap(Other.GetInterface(), Tile);
-		Other->OnEndTileOverlap(Actor, Tile);
+		Actor->OnEndTileOverlap(Tile, Other.GetInterface());
+		Other->OnEndTileOverlap(Tile, Actor);
 	}
 }
 
@@ -302,6 +302,16 @@ void ATileMap::ClearTileHighlight(ETileHighlightFlag Flag)
 	// TODO: 모든 타일에서 Flag 비트를 끄고 custom data 갱신
 }
 
+bool ATileMap::CanPlace(const FTileIndex& TileIndex, const ITileActor* Incoming) const
+{
+	// 막히지 않으면 즉시 배치 가능
+	if (IsBlocked(TileIndex, Incoming) == false)
+		return true;
+
+	// 막혔어도 막는 액터를 교체할 수 있으면 배치 가능
+	return GetReplaceableActors(TileIndex, Incoming).Num() > 0;
+}
+
 bool ATileMap::IsBlocked(const FTileIndex& TileIndex, const ITileActor* Incoming) const
 {
 	auto* Tile = GetTile(TileIndex);
@@ -313,6 +323,38 @@ bool ATileMap::IsBlocked(const FTileIndex& TileIndex, const ITileActor* Incoming
 
 	// 타일에 블록 당하는 지 체크
 	return Tile->IsBlocked(Incoming);
+}
+
+TArray<TScriptInterface<ITileActor>> ATileMap::GetReplaceableActors(const FTileIndex& TileIndex, const ITileActor* Incoming) const
+{
+	TArray<TScriptInterface<ITileActor>> Result;
+
+	// 진입 액터가 없으면 교체 대상 없음
+	if (Incoming == nullptr)
+		return Result;
+
+	// 타일 위 모든 액터를 받아서 교체 조건으로 거름
+	for (const TScriptInterface<ITileActor>& Actor : GetActorsOnTile(TileIndex, ETileLayerFlag::All))
+	{
+		if (Actor == nullptr)
+			continue;
+
+		// 기존 액터의 레이어가 진입 액터의 레이어와 다르면 제외
+		if (!EnumHasAnyFlags(Actor->GetTileLayerFlags(), Incoming->GetTileLayerFlags()))
+			continue;
+
+		// 기존 액터가 진입 액터의 교체를 허용하지 않으면 제외
+		if (!EnumHasAnyFlags(Actor->GetReplaceLayerFlags(), Incoming->GetTileLayerFlags()))
+			continue;
+
+		// 진입 액터의 우선순위가 낮으면 제외
+		if (Incoming->GetOverlayLayerPriority() < Actor->GetOverlayLayerPriority())
+			continue;
+
+		// 모든 조건을 충족하면 교체대상
+		Result.Add(Actor);
+	}
+	return Result;
 }
 
 void ATileMap::StartActorMovement(const FTileTransform& NextTransform, ITileActor* Actor)
@@ -349,13 +391,21 @@ void ATileMap::CompleteActorMovement(ITileActor* Actor)
 void ATileMap::PlaceActor(const FTileTransform& NextTransform, ITileActor* Actor)
 {
 	checkf(Actor != nullptr, TEXT("Actor가 nullptr"));
-	checkf(IsBlocked(NextTransform.mIndex, Actor) == false, TEXT("배치할 수 없는 타일"));
+	checkf(CanPlace(NextTransform.mIndex, Actor), TEXT("배치할 수 없는 타일"));
+
+	FTile* Tile = GetTile(NextTransform.mIndex);
+
+	// 교체 대상을 타일에서 밀어냄 (등록 해제 → 교체 통지 순서)
+	for (const TScriptInterface<ITileActor>& Victim : GetReplaceableActors(NextTransform.mIndex, Actor))
+	{
+		RemoveActor(Victim.GetInterface());
+		Victim->OnReplaced(Tile, Actor);
+	}
 
 	// 논리 좌표 갱신
 	Actor->SetTileTransform(NextTransform);
 
 	// 다음 타일에 등록 후 진입 오버랩 통지 (등록 → Begin 순서)
-	FTile* Tile = GetTile(NextTransform.mIndex);
 	RegisterActorToTile(Tile, Actor);
 	NotifyBeginOverlap(Tile, Actor);
 }
