@@ -52,16 +52,13 @@ void ACombatGameMode::ApplyMainCameraPoint() const
 	AActor* MainCameraPoint = WorldSettings->GetMainCameraPoint();
 	checkf(MainCameraPoint != nullptr, TEXT("MainCameraPoint nullptr"));
 
-	AActor* RoomStartPoint = WorldSettings->GetRoomStartPoint();
-	checkf(RoomStartPoint != nullptr, TEXT("RoomStartPoint nullptr"));
-
 	APlayerController* PlayerController = World->GetFirstPlayerController();
 	checkf(PlayerController != nullptr, TEXT("플레이어 컨트롤러 nullptr"));
 
-	const FRotator CameraRotation = (RoomStartPoint->GetActorLocation() - MainCameraPoint->GetActorLocation()).Rotation();
-	ACameraActor* CombatCamera = World->SpawnActor<ACameraActor>(ACameraActor::StaticClass(), MainCameraPoint->GetActorLocation(), CameraRotation);
+	const FTransform CameraTransform = MainCameraPoint->GetActorTransform();
+	ACameraActor* CombatCamera = World->SpawnActor<ACameraActor>(ACameraActor::StaticClass(), CameraTransform);
 	checkf(CombatCamera != nullptr, TEXT("전투 카메라 nullptr"));
 
 	PlayerController->SetViewTarget(CombatCamera);
-	PlayerController->SetControlRotation(CameraRotation);
+	PlayerController->SetControlRotation(CameraTransform.GetRotation().Rotator());
 }
