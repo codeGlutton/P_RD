@@ -34,7 +34,10 @@ class UWidget;
 UENUM(BlueprintType)
 enum class ESettingsPanelMode : uint8
 {
+	/** @brief 타이틀 메뉴에서 열린 설정 패널. 런 저장/포기 같은 인게임 전용 액션은 숨긴다. */
 	Title,
+
+	/** @brief 런이 진행 중인 방에서 열린 설정 패널. 저장 후 종료와 런 포기 흐름을 노출할 수 있다. */
 	InGame,
 };
 
@@ -56,6 +59,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSettingsPanelFloatEvent, float, Val
 
 /**
  * @brief 체크박스처럼 켜짐/꺼짐 값을 함께 전달하는 설정 이벤트.
+ *
+ * @details
+ * 이 위젯은 체크 상태만 전달하고, 실제 카메라 흔들림/진동 옵션 적용과 저장은 이벤트 수신자가 처리한다.
  */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSettingsPanelBoolEvent, bool, bValue);
 
@@ -79,6 +85,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSettingsPanelIntEvent, int32, Value
  * 왜 이벤트만 내보내는가:
  * 설정 패널 안에 저장/전환 로직을 넣으면 타이틀에서 열린 패널도 인게임 런 상태를 알아야 한다.
  * 반대로 입력만 이벤트로 올리면 같은 WBP를 두 화면에서 공유하면서도, 실제 처리는 각 화면의 책임으로 남길 수 있다.
+ *
+ * 기능 범위:
+ * 이 클래스는 WBP 바인딩, 입력 이벤트 변환, 모드별 영역 표시, 확인 패널 표시만 맡는다.
+ * 설정 값 적용, 세이브 파일 작성, 현재 런 폐기, 타이틀 이동은 이 위젯의 책임이 아니다.
  */
 UCLASS(BlueprintType, Blueprintable)
 class P_RD_API USettingsPanelWidget : public URDUserWidget
@@ -99,6 +109,7 @@ public:
 	 * @details
 	 * 같은 설정 패널을 타이틀과 인게임에서 모두 쓰기 때문에, 호출한 쪽이 자신에게 맞는 모드를 지정한다.
 	 * 모드가 바뀌면 런 액션 패널처럼 화면별로 달라지는 영역의 표시 상태만 갱신한다.
+	 * 모드 변경은 UI 표시 정책일 뿐이며, 실제 타이틀 이동이나 런 상태 조회를 수행하지 않는다.
 	 *
 	 * @param NewPanelMode 새 설정 패널 표시 모드
 	 */
@@ -136,6 +147,7 @@ public:
 	 * @details
 	 * 저장 중, 저장 실패, 런 포기 불가 같은 문구는 실제 처리를 수행한 쪽에서 가장 정확히 알 수 있다.
 	 * 그래서 패널은 문구를 만들지 않고 전달받은 텍스트를 보여주며, 빈 텍스트가 들어오면 상태 영역을 숨긴다.
+	 * 이 함수는 입력 잠금이나 화면 전환을 동반하지 않는 순수 표시 API다.
 	 *
 	 * @param Text 상태 영역에 표시할 문구
 	 */
