@@ -378,6 +378,11 @@ void UTopMenuBarWidget::CloseWorldWidget(EWorldWidgetType WorldWidgetType) const
  */
 void UTopMenuBarWidget::CloseFloatingPanels(EWorldWidgetType ExceptWorldWidgetType) const
 {
+	/*
+	 * 탑바에서 여는 네 패널은 모두 같은 "현재 조작 중인 팝업" 자리를 공유한다.
+	 * 예를 들어 MAP 위에 DICE가 겹치면 아래 지도 버튼이 눌리는지, 위 주사위가 눌리는지 애매해진다.
+	 * 그래서 새 패널을 열기 전에 나머지 패널을 명시적으로 닫는다.
+	 */
 	constexpr EWorldWidgetType FloatingPanels[] = {
 		EWorldWidgetType::WorldMap,
 		EWorldWidgetType::InGameSettings,
@@ -489,6 +494,11 @@ void UTopMenuBarWidget::ToggleSettingsPanel()
  */
 void UTopMenuBarWidget::ToggleFloatingPanel(EWorldWidgetType WorldWidgetType, const TCHAR* DebugName)
 {
+	/*
+	 * DICE/SKILL은 지금 단계에서 "버튼을 누르면 해당 WBP 패널이 열린다"까지만 담당한다.
+	 * 실제 주사위 굴림이나 스킬 발동은 아직 연결하지 않는다.
+	 * 이 함수가 하는 일은 월드 위젯 등록 누락을 검사하고, 다른 팝업을 닫은 뒤 OpenUI/CloseUI 생명주기를 태우는 것이다.
+	 */
 	RefreshRoomInfo();
 
 	URDUserWidget* FloatingPanel = GetToggleableWorldWidget(WorldWidgetType);
@@ -527,11 +537,19 @@ void UTopMenuBarWidget::HandleSettingsButtonClicked()
 
 void UTopMenuBarWidget::HandleDiceButtonClicked()
 {
+	/*
+	 * 주사위 버튼은 WBP_DicePanel 표시만 담당한다.
+	 * 주사위 수량/사용 가능 여부가 붙으면 이 버튼은 패널을 여는 역할을 유지하고, 실제 검증은 DicePanel 또는 별도 주사위 시스템으로 위임한다.
+	 */
 	ToggleFloatingPanel(EWorldWidgetType::DicePanel, TEXT("DicePanel"));
 }
 
 void UTopMenuBarWidget::HandleSkillButtonClicked()
 {
+	/*
+	 * 스킬 버튼은 WBP_SkillPanel 표시만 담당한다.
+	 * 아직 "스킬 사용"이 아니라 "스킬 패널 UI를 열 수 있는지"를 검증하는 단계라서 버튼 라벨도 SKILL 0으로 고정한다.
+	 */
 	ToggleFloatingPanel(EWorldWidgetType::SkillPanel, TEXT("SkillPanel"));
 }
 
@@ -594,6 +612,10 @@ void UTopMenuBarWidget::OpenWorldMapAfterPlayerWin(TSharedPtr<FPresentationBarri
  */
 void UTopMenuBarWidget::RestoreVictoryWorldMap()
 {
+	/*
+	 * 승리 후 다음 방을 고르기 전까지 월드맵은 흐름상 필수 UI다.
+	 * 사용자가 설정을 잠깐 열 수는 있지만, 닫힌 뒤에는 다시 다음 방 선택 지도 상태로 복원한다.
+	 */
 	if (!mVictoryWorldMapLocked)
 	{
 		return;
@@ -607,6 +629,10 @@ void UTopMenuBarWidget::RestoreVictoryWorldMap()
  */
 void UTopMenuBarWidget::CloseSettingsPanelAndRestoreVictoryWorldMap()
 {
+	/*
+	 * 설정 패널 닫기 애니메이션이 있다면, 그 애니메이션이 끝난 뒤 월드맵을 복원한다.
+	 * 동시에 두 팝업이 열리는 순간을 줄여 사용자가 보는 화면 전환이 자연스럽게 이어지게 한다.
+	 */
 	if (URDUserWidget* SettingsPanelWidget = GetToggleableWorldWidget(EWorldWidgetType::InGameSettings);
 		SettingsPanelWidget != nullptr && SettingsPanelWidget->IsOpened())
 	{
@@ -625,6 +651,10 @@ void UTopMenuBarWidget::CloseSettingsPanelAndRestoreVictoryWorldMap()
  */
 void UTopMenuBarWidget::HandleWorldMapCloseRequested()
 {
+	/*
+	 * 일반 MAP 버튼으로 연 지도는 Close 요청을 그대로 닫는다.
+	 * 승리 후 지도는 다음 방 선택을 끝내기 전까지 닫히면 안 되므로 RestoreVictoryWorldMap()으로 되돌린다.
+	 */
 	if (mVictoryWorldMapLocked)
 	{
 		RestoreVictoryWorldMap();
@@ -639,6 +669,10 @@ void UTopMenuBarWidget::HandleWorldMapCloseRequested()
  */
 void UTopMenuBarWidget::HandleSettingsBackRequested()
 {
+	/*
+	 * 설정 패널 Back도 현재 흐름에 따라 처리한다.
+	 * 일반 방 상태에서는 설정만 닫고, 승리 후 지도 잠금 상태에서는 설정을 닫은 뒤 다음 방 선택 지도를 다시 보여준다.
+	 */
 	if (mVictoryWorldMapLocked)
 	{
 		CloseSettingsPanelAndRestoreVictoryWorldMap();

@@ -212,18 +212,37 @@ private:
 	UFUNCTION()
 	void HandleStartButtonClicked();
 
+	/**
+	 * @brief CONTINUE 버튼 클릭을 타이틀 내부 지도 화면으로 연결한다.
+	 *
+	 * @details
+	 * 실제 세이브 파일 로드는 여기서 하지 않는다.
+	 * Intro에서 복구된 RunPersistData를 FrontendGameMode가 지도 View로 만들 수 있을 때만 지도 화면을 연다.
+	 */
 	UFUNCTION()
 	void HandleContinueButtonClicked();
 
+	/**
+	 * @brief SETTING 버튼 클릭을 공용 SettingsPanelWidget 표시로 연결한다.
+	 */
 	UFUNCTION()
 	void HandleSettingsButtonClicked();
 
+	/**
+	 * @brief 설정 패널의 Back 요청을 타이틀 메인 화면 복귀로 처리한다.
+	 */
 	UFUNCTION()
 	void HandleSettingsBackButtonClicked();
 
+	/**
+	 * @brief 캐릭터 선택 화면의 Back 요청을 타이틀 메인 화면 복귀로 처리한다.
+	 */
 	UFUNCTION()
 	void HandleCharacterBackToMainRequested();
 
+	/**
+	 * @brief Continue 지도 화면의 Close 요청을 타이틀 메인 화면 복귀로 처리한다.
+	 */
 	UFUNCTION()
 	void HandleMapBackRequested();
 

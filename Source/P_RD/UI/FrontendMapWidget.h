@@ -1,7 +1,6 @@
 /*****************************************************************//**
  * @file   FrontendMapWidget.h
  * @brief  프론트/런 공용 월드맵 화면 위젯 정의 헤더
- * @author Codex
  * @date   2026-06-02
  *********************************************************************/
 
@@ -30,6 +29,12 @@ struct FFrontendMapLinePoolEntry
 {
 	GENERATED_BODY()
 
+	/**
+	 * @brief 지도 연결선 WBP 인스턴스
+	 *
+	 * @details
+	 * RefreshMap()마다 새로 만들지 않고 풀에 보관해 재사용한다.
+	 */
 	UPROPERTY(Transient)
 	TObjectPtr<UFrontendMapLineWidget> LineWidget;
 };
@@ -39,6 +44,12 @@ struct FFrontendMapNodePoolEntry
 {
 	GENERATED_BODY()
 
+	/**
+	 * @brief 지도 방 노드 WBP 인스턴스
+	 *
+	 * @details
+	 * 방 개수가 바뀌어도 기존 노드를 재사용하고, 이번 갱신에서 쓰지 않는 노드는 숨긴다.
+	 */
 	UPROPERTY(Transient)
 	TObjectPtr<UFrontendMapNodeWidget> NodeWidget;
 };
@@ -69,6 +80,9 @@ class P_RD_API UFrontendMapWidget : public URDUserWidget
 	GENERATED_BODY()
 
 public:
+	/**
+	 * @brief 지도 팝업의 기본 ZOrder와 기본 문구 캐시를 준비한다.
+	 */
 	UFrontendMapWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	/**
@@ -110,40 +124,88 @@ public:
 
 	/* UUserWidget 상속 */
 protected:
+	/**
+	 * @brief WBP 바인딩과 버튼 이벤트를 연결한 뒤 현재 지도 데이터를 그린다.
+	 */
 	void NativeConstruct() override;
+
+	/**
+	 * @brief 버튼/노드 이벤트와 동적 노드/선 풀을 정리한다.
+	 */
 	void NativeDestruct() override;
 
 private:
+	/** @brief 지도 위젯에서 사용하는 기본 문구 캐시를 갱신한다. */
 	void RefreshLocalizedTextCache();
+
+	/** @brief WBP_FrontendMap이 필수 바인딩과 노드/선 클래스를 제공하는지 로그로 확인한다. */
 	void ValidateDesignerBindings() const;
+
+	/** @brief 닫기/입장 버튼 이벤트를 연결한다. */
 	void BindEvents();
+
+	/** @brief 닫기/입장 버튼 이벤트를 해제한다. */
 	void UnbindEvents();
+
+	/** @brief 지도 노드 클릭을 GameMode의 방 선택 요청으로 전달한다. */
 	void HandleMapRoomClicked(int32 RowIndex, int32 ColumnIndex);
+
+	/** @brief 지도 상태 문구 TextBlock을 갱신한다. */
 	void SetMapStatusText(const FText& InText) const;
+
+	/** @brief ENTER 버튼 라벨을 요청 상태에 맞게 갱신한다. */
 	void SetEnterButtonText(const FText& InText) const;
+
+	/** @brief 선택 방 프리뷰 텍스트를 갱신한다. 현재 WBP에서는 숨김 처리만 유지한다. */
 	void SetMapPreviewText(const FText& Title, const FText& Description, const FText& State, const FSlateColor& StateColor) const;
+
+	/** @brief 현재 WBP에서 사용하지 않는 예전 지도 텍스트 영역을 숨긴다. */
 	void HideUnusedMapTextSurfaces() const;
+
+	/** @brief 현재 월드에서 실제 방 선택/입장 요청을 처리할 수 있는지 확인한다. */
 	bool IsFrontendMapNavigationEnabled() const;
+
+	/** @brief 지도 캔버스와 스크롤 영역의 고정 레이아웃 값을 적용한다. */
 	void ConfigureMapGraphLayout() const;
+
+	/** @brief 지정 인덱스의 연결선 위젯을 풀에서 가져오거나 새로 만든다. */
 	FFrontendMapLinePoolEntry* AcquireMapLineWidget(int32 LineIndex);
+
+	/** @brief 지정 인덱스의 방 노드 위젯을 풀에서 가져오거나 새로 만든다. */
 	FFrontendMapNodePoolEntry* AcquireMapNodeWidget(int32 NodeIndex);
+
+	/** @brief 이번 RefreshMap()에서 쓰지 않은 노드/선을 숨겨 다음 갱신 때 재사용한다. */
 	void HideUnusedMapGraphWidgets(int32 UsedLineCount, int32 UsedNodeCount);
 
+	/** @brief 닫기 버튼 입력을 외부 닫기 요청 이벤트로 전달한다. */
 	UFUNCTION()
 	void HandleCloseButtonClicked();
 
+	/** @brief 선택된 방 입장을 GameMode에 요청한다. */
 	UFUNCTION()
 	void HandleEnterRoomButtonClicked();
 
+	/** @brief 노드 위젯 클릭 이벤트를 지도 선택 처리로 연결한다. */
 	UFUNCTION()
 	void HandleMapNodeClicked(int32 RowIndex, int32 ColumnIndex);
 
 private:
+	/** @brief MAP 제목 문구 캐시 */
 	FText mMapText;
+
+	/** @brief 닫기 버튼 문구 캐시 */
 	FText mCloseText;
+
+	/** @brief 입장 버튼 기본 문구 캐시 */
 	FText mEnterText;
+
+	/** @brief 입장 요청 중 표시할 문구 캐시 */
 	FText mLoadingStatusText;
+
+	/** @brief 지도 데이터가 준비되었을 때 표시할 기본 상태 문구 */
 	FText mMapReadyStatusText;
+
+	/** @brief 지도 데이터를 가져올 수 없을 때 표시할 상태 문구 */
 	FText mMapUnavailableStatusText;
 
 	/**

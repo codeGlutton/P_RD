@@ -14,6 +14,12 @@ public class P_RD : ModuleRules
             "InputCore",
             "EnhancedInput",
             "UMG",
+
+            /*
+             * WBP 자체는 UMG 모듈만으로 다루지만, 이번 UI 패널은 런타임에서 버튼 입력 방식,
+             * Slate Visibility, FReply, Widget Transform 같은 Slate 타입을 직접 사용한다.
+             * 그래서 Carousel/Dice/TopMenuBar 쪽 C++ 위젯 컴파일을 위해 Slate/SlateCore 의존성을 명시한다.
+             */
             "Slate",
             "SlateCore",
 
@@ -34,12 +40,9 @@ public class P_RD : ModuleRules
             "P_RD",
         });
 
-        // Uncomment if you are using Slate UI
-        // PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
-
-        // Uncomment if you are using online features
+        // 온라인 기능을 사용할 때만 OnlineSubsystem을 추가한다.
         // PrivateDependencyModuleNames.Add("OnlineSubsystem");
 
-        // To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
+        // OnlineSubsystemSteam을 쓸 경우 uproject의 plugins 항목에서도 Enabled=true로 켜야 한다.
     }
 }

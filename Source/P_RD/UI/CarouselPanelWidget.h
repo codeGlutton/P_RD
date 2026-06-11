@@ -32,22 +32,62 @@ class P_RD_API UCarouselPanelWidget : public URDUserWidget
 	GENERATED_BODY()
 
 public:
+	/**
+	 * @brief 공통 캐러셀 패널의 표시 계층과 기본 상태를 준비한다.
+	 *
+	 * @details
+	 * 실제 카드 위젯은 WBP에서 만들고, 생성자는 패널이 탑바 팝업 계층에서 보이도록 기본 ZOrder만 잡는다.
+	 */
 	UCarouselPanelWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 protected:
+	/** @brief WBP 카드 슬롯을 캐시하고 버튼 입력을 연결한다. */
 	void NativeConstruct() override;
+
+	/** @brief Construct에서 연결한 버튼 입력을 해제한다. */
 	void NativeDestruct() override;
+
+	/** @brief 패널이 열릴 때 이전 선택/드래그 상태를 초기화한다. */
 	void ApplyOpenUI() override;
+
+	/** @brief PC/에디터 마우스 누름을 카드 탭 후보로 기록한다. */
 	FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+
+	/** @brief PC/에디터 마우스 뗌을 카드 탭 확정으로 처리한다. */
 	FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+
+	/** @brief 모바일 터치 시작을 카드 탭 후보로 기록한다. */
 	FReply NativeOnTouchStarted(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent) override;
+
+	/** @brief 모바일 터치 종료를 카드 탭 확정으로 처리한다. */
 	FReply NativeOnTouchEnded(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent) override;
 
+	/** @brief 사용자가 카드를 선택해 원형 캐러셀 배치로 전환된 상태인지 확인한다. */
 	bool IsCarouselActivated() const;
+
+	/** @brief 현재 선택된 카드 인덱스를 반환한다. */
 	int32 GetSelectedCarouselIndex() const;
+
+	/** @brief 현재 선택된 카드 위젯을 반환한다. */
 	UWidget* GetSelectedCarouselItem() const;
+
+	/** @brief 지정 화면 좌표가 현재 선택된 카드 위인지 확인한다. */
 	bool IsPointerOverSelectedCarouselItem(const FVector2D& ScreenPosition) const;
+
+	/**
+	 * @brief 카드별 추가 회전 각도를 반환한다.
+	 *
+	 * @details
+	 * 기본값은 0도다. DicePanel처럼 선택된 카드에 임시 회전을 주는 파생 위젯만 override한다.
+	 */
 	virtual float GetCarouselItemAngle(int32 ItemIndex) const;
+
+	/**
+	 * @brief 선택 카드가 바뀌었거나 첫 선택으로 활성화되었을 때 호출되는 확장 지점이다.
+	 *
+	 * @details
+	 * DicePanel은 여기서 이전 카드의 회전 상태를 초기화한다.
+	 */
 	virtual void HandleCarouselSelectionChanged(int32 PreviousIndex, int32 NewIndex);
 
 private:
@@ -78,18 +118,43 @@ private:
 	UFUNCTION()
 	void HandleCarouselButton7Clicked();
 
+	/** @brief WBP 이름 규칙으로 CarouselItem_N과 CarouselButton_N을 찾아 배열에 저장한다. */
 	void CacheCarouselWidgets();
+
+	/** @brief 캐시된 CarouselButton_N 버튼을 인덱스별 선택 핸들러에 연결한다. */
 	void BindCarouselEvents();
+
+	/** @brief 캐시된 CarouselButton_N 버튼에서 선택 핸들러를 해제한다. */
 	void UnbindCarouselEvents();
+
+	/** @brief 지정 인덱스의 카드를 선택하고 캐러셀 배치를 다시 계산한다. */
 	void SelectCarouselItem(int32 ItemIndex);
+
+	/** @brief 활성화된 캐러셀 상태에서 선택 카드를 기준으로 원형 배치를 적용한다. */
 	void ApplyCarouselLayout();
+
+	/** @brief 첫 선택 전 카드들을 가로 목록으로 펼쳐 보여준다. */
 	void ApplyLinearListLayout();
+
+	/** @brief 패널 열림 시 선택/눌림/터치 위치 상태를 초기값으로 되돌린다. */
 	void ResetCarouselState();
+
+	/** @brief 화면 좌표 기준으로 눌린 카드 인덱스를 기록한다. */
 	bool BeginCarouselPress(const FVector2D& ScreenPosition);
+
+	/** @brief 눌렀던 카드와 뗀 카드가 같으면 선택을 확정한다. */
 	bool FinishCarouselPress(const FVector2D& ScreenPosition);
+
+	/** @brief 화면 좌표 아래에 있는 카드 중 가장 앞에 있는 카드 인덱스를 찾는다. */
 	int32 FindCarouselItemIndexAtPosition(const FVector2D& ScreenPosition) const;
+
+	/** @brief 카드의 CanvasPanel ZOrder를 가져와 겹친 카드 선택 우선순위에 사용한다. */
 	int32 GetCarouselItemZOrder(int32 ItemIndex) const;
+
+	/** @brief 인덱스별 UFUNCTION 선택 핸들러를 버튼에 연결한다. */
 	void BindCarouselButton(UButton* Button, int32 ItemIndex);
+
+	/** @brief 인덱스별 UFUNCTION 선택 핸들러를 버튼에서 해제한다. */
 	void UnbindCarouselButton(UButton* Button, int32 ItemIndex);
 
 private:
@@ -101,16 +166,34 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> CloseButtonText;
 
-	/** @brief 이름 규칙으로 찾은 캐러셀 항목들 */
+	/**
+	 * @brief 이름 규칙으로 찾은 캐러셀 항목들
+	 *
+	 * @details
+	 * WBP에 CarouselItem_0, CarouselItem_1처럼 배치된 실제 카드 위젯이다.
+	 * C++은 이 배열만 움직이고, 카드 내부 디자인은 WBP가 전부 담당한다.
+	 */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UWidget>> mCarouselItems;
 
-	/** @brief 항목 안에 별도 버튼을 둔 WBP를 위한 선택 입력 버튼들 */
+	/**
+	 * @brief 항목 안에 별도 버튼을 둔 WBP를 위한 선택 입력 버튼들
+	 *
+	 * @details
+	 * 카드 전체 터치 판정과 별개로, WBP가 CarouselButton_N 버튼을 제공하면 버튼 클릭도 같은 SelectCarouselItem()으로 연결한다.
+	 */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UButton>> mCarouselButtons;
 
+	/** @brief 현재 선택된 카드 인덱스. 선택할 카드가 없으면 INDEX_NONE이다. */
 	int32 mSelectedCarouselIndex = 0;
+
+	/** @brief 현재 누르고 있는 카드 인덱스. 탭 확정 전까지 임시로 보관한다. */
 	int32 mPressedCarouselIndex = INDEX_NONE;
+
+	/** @brief 첫 카드 선택 이후 원형 캐러셀 배치가 활성화되었는지 여부 */
 	bool mCarouselActivated = false;
+
+	/** @brief 탭과 드래그를 구분하기 위해 처음 누른 화면 좌표를 저장한다. */
 	FVector2D mCarouselPressPosition = FVector2D::ZeroVector;
 };

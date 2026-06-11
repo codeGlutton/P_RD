@@ -208,18 +208,39 @@ private:
 	UFUNCTION()
 	void HandleMapButtonClicked();
 
+	/**
+	 * @brief SET 버튼 클릭을 설정 패널 토글로 연결한다.
+	 */
 	UFUNCTION()
 	void HandleSettingsButtonClicked();
 
+	/**
+	 * @brief DICE 버튼 클릭을 주사위 패널 토글로 연결한다.
+	 *
+	 * @details
+	 * 현재 단계에서는 실제 주사위 사용이 아니라 WBP_DicePanel 표시와 터치 반응 확인만 담당한다.
+	 */
 	UFUNCTION()
 	void HandleDiceButtonClicked();
 
+	/**
+	 * @brief SKILL 버튼 클릭을 스킬 패널 토글로 연결한다.
+	 *
+	 * @details
+	 * 현재 단계에서는 실제 스킬 발동이 아니라 WBP_SkillPanel 표시와 카드 선택 흐름 확인만 담당한다.
+	 */
 	UFUNCTION()
 	void HandleSkillButtonClicked();
 
+	/**
+	 * @brief 월드맵 위젯의 닫기 요청을 현재 흐름에 맞게 처리한다.
+	 */
 	UFUNCTION()
 	void HandleWorldMapCloseRequested();
 
+	/**
+	 * @brief 설정 패널 Back 요청을 현재 흐름에 맞게 처리한다.
+	 */
 	UFUNCTION()
 	void HandleSettingsBackRequested();
 
@@ -248,11 +269,21 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> SettingsButtonText;
 
-	/** @brief DICE 버튼 라벨 */
+	/**
+	 * @brief DICE 버튼 라벨
+	 *
+	 * @details
+	 * 아직 실제 주사위 보유 수와 연결하지 않았으므로 기본 문구는 DICE 0으로 둔다.
+	 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> DiceButtonText;
 
-	/** @brief SKILL 버튼 라벨 */
+	/**
+	 * @brief SKILL 버튼 라벨
+	 *
+	 * @details
+	 * 아직 실제 사용 가능 스킬 수와 연결하지 않았으므로 기본 문구는 SKILL 0으로 둔다.
+	 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> SkillButtonText;
 
