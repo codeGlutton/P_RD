@@ -21,7 +21,7 @@ UFadeInOutWidget::UFadeInOutWidget(const FObjectInitializer& ObjectInitializer)
 /**
  * 검은 덮개를 걷어 새 방 화면을 보여준다.
  *
- * 페이드인이 끝나면 전환 레이어는 더 이상 입력과 화면을 가릴 필요가 없으므로 CloseUI()로 닫는다.
+ * 페이드인이 끝난 뒤 위젯을 닫을지는 호출자가 전달한 완료 콜백에서 결정한다.
  */
 void UFadeInOutWidget::StartFadeIn(FOnEndFadeInAnimation InOnEndFadeInAnimation)
 {
@@ -168,7 +168,6 @@ void UFadeInOutWidget::FinishFade()
 	switch (FinishedFadeAnimationType)
 	{
 	case EFadeInOutAnimationType::FadeIn:
-		CloseUI();
 		if (OnEndFadeInAnimation.IsBound())
 		{
 			OnEndFadeInAnimation.Execute(this);

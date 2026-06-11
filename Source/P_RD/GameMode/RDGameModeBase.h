@@ -122,7 +122,7 @@ private:
 	/**
 	 * @brief 방 진입 직후 검은 전환 레이어를 걷는 페이드인을 시작한다.
 	 */
-	void StartFadeInUIForRoomTransition() const;
+	void StartFadeInUIForRoomTransition();
 
 	/**
 	 * @brief 방 전환 전 페이드아웃 완료 시 외부 준비 완료 신호를 전달한다.

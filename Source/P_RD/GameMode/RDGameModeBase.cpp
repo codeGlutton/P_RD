@@ -125,10 +125,15 @@ void ARDGameModeBase::StartFadeOutUI(FOnEndFadeOutAnimation OnEndFadeOutAnimatio
  * @details
  * 이전 방에서 이미 화면을 검게 덮은 뒤 새 방으로 들어오므로, 새 방 BeginPlay에서는 페이드인을 시작해
  * 게임 화면을 다시 보여준다.
+ * 이 흐름은 방 전환 완료 후의 특수 정리 단계이므로, 페이드인이 끝나면 전환 레이어를 CloseUI()로 닫는다.
  */
-void ARDGameModeBase::StartFadeInUIForRoomTransition() const
+void ARDGameModeBase::StartFadeInUIForRoomTransition()
 {
-	StartFadeInUI();
+	StartFadeInUI(FOnEndFadeInAnimation::CreateWeakLambda(this, [](UFadeInOutWidget* FadeInOutWidget)
+	{
+		checkf(FadeInOutWidget != nullptr, TEXT("페이드 인 앤 아웃 위젯 nullptr 오류"));
+		FadeInOutWidget->CloseUI();
+	}));
 }
 
 /**
