@@ -4,7 +4,7 @@
 #include "GameplayAbility_SkillBase.h"
 #include "Pawn/SkillComponent.h"
 #include "Pawn/Unit.h"
-#include "Pawn/SkillComponent/SkillResultHolder.h"
+#include "Pawn/SkillComponent/SkillCommitResultHolder.h"
 #include "../../Effect/GameplayEffect_Damage.h"
 
 UGameplayAbility_SkillBase::UGameplayAbility_SkillBase()
@@ -13,7 +13,7 @@ UGameplayAbility_SkillBase::UGameplayAbility_SkillBase()
 
 	FAbilityTriggerData	TriggerData;
 
-	TriggerData.TriggerTag = FGameplayTag::RequestGameplayTag(TEXT("Test.GameplayAbility.Skill"));
+	TriggerData.TriggerTag = AbilityTags::GameplayAbility_Skill;
 	TriggerData.TriggerSource = EGameplayAbilityTriggerSource::GameplayEvent;
 
 	AbilityTriggers.Add(TriggerData);
@@ -60,7 +60,7 @@ void UGameplayAbility_SkillBase::ActivateAbility(const FGameplayAbilitySpecHandl
 	UE_LOG(LogTemp, Warning, TEXT("ActorArrayData"));
 	*/
 
-	if (const USkillResultHolder* ResultHolder = Cast<USkillResultHolder>(TriggerEventData->OptionalObject))
+	if (const USkillCommitResultHolder* ResultHolder = Cast<USkillCommitResultHolder>(TriggerEventData->OptionalObject))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("전달된 데이터 있음"));
 

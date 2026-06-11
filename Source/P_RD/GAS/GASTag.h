@@ -36,6 +36,10 @@ namespace AbilityTags
 
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_LevelUp);
 
+	/* 스킬 */
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Skill);
+
+
 	/* 패시브 능력 태그들 */
 
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartRoom);

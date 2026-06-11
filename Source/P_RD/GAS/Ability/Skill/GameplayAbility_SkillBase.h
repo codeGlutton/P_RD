@@ -55,7 +55,11 @@ protected:
 		const FGameplayAbilityActivationInfo ActivationInfo,
 		const FGameplayEventData* TriggerEventData) override;
 
-
+	/**
+	* @brief 유닛에게 효과를 적용한다.
+	* @details
+	* 유니에게 기록된 결과를 적용한다.
+	*/
 	bool CommitActorToEffect(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 		class AUnit* Unit, const struct FUnitCommitResult& CommitResult);
 };

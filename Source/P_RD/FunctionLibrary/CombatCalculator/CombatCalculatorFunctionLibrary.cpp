@@ -4,7 +4,7 @@
 #include "CombatCalculatorFunctionLibrary.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
 
-bool UCombatCalculatorFunctionLibrary::CalculateSkillResult(const UStaticSkillData* SkillData, TArray<FTileIndex> Tiles, FSkillCommitResult& Out_Result)
+bool UCombatCalculatorFunctionLibrary::CalculateSkillResult(FTileIndex Caster, const UStaticSkillData* SkillData, TArray<FTileIndex> Tiles, FSkillCommitResult& Out_Result)
 {
     FSkillCommitResult SkillCommitResult;
 

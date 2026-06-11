@@ -111,6 +111,7 @@ public:
 	/**
 	* @brief 스킬의 인덱스와 타일을 입력받으면 스킬 사용
 	* @details 
+	* 이미 가지고 있는 결과값을 토대로 스킬을 진행
 	* @return bool : 실패 시 false 반환
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Skill")

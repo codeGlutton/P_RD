@@ -1,5 +1,9 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+﻿/*****************************************************************//**
+ * @file   CombatResult.h
+ * @brief  전투 결과 기록을 위한 구조체 헤더
+ * @author 김준형
+ * @date   2026-06-11
+ *********************************************************************/
 #pragma once
 
 #include "GAS/GASMinimal.h"
@@ -35,7 +39,7 @@ public:
 	FUnitCommitResult mUnitCommitResult;
 
 	// 타일에 이것을 적용했다. 소환 등
-	//???
+	// ???
 };
 
 // @brief 이펙트 적용 결과

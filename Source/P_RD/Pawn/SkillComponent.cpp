@@ -78,15 +78,17 @@ bool USkillComponent::GetPreviewEffectIconData(const FPreviewEffectIconData& Out
 
 bool USkillComponent::ActivateSkill()
 {
-	if (!GetOwner())
-		return false;
+	checkf(GetOwner(), TEXT("주인 Actor가 없습니다."))
+
+	// 추후 mSkillCommitResult가 유효하지 않다면 취소시키도록 한다.
+	// checkf(IsValid(mSkillCommitResult))
 
 	// 어빌리티를 발동시킨다.
 	FGameplayEventData EventData;
 
 	EventData.Instigator = GetOwner();	// 사용자
 
-	EventData.EventTag = FGameplayTag::RequestGameplayTag(TEXT("Test.GameplayAbility.Skill"));
+	EventData.EventTag = AbilityTags::GameplayAbility_Skill;
 
 	// 1. 구조체를 담을 UObject 홀더 생성
 	USkillCommitResultHolder* ResultHolder = NewObject<USkillCommitResultHolder>();
@@ -104,6 +106,8 @@ bool USkillComponent::ActivateSkill()
 
 bool USkillComponent::CalculateSkillResult(int32 SkillIndex, const TArray<FTileIndex>& Tiles)
 {
+	checkf(mSkillData.IsValidIndex(SkillIndex), TEXT("스킬 인덱스가 유효하지 않습니다."));
+
 	return UCombatCalculatorFunctionLibrary::CalculateSkillResult(mSkillData[SkillIndex].Get(), Tiles, mSkillCommitResult);
 }
 
