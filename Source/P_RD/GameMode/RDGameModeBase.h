@@ -130,7 +130,10 @@ private:
 	 * @details
 	 * StartFadeOutUI()는 범용 페이드아웃 도구로 남기고, 방 전환에서만 필요한
 	 * MarkExternalReadyForTransition() 연결은 이 private 함수에 모은다.
-	 * 같은 콜백을 일반 방, 새 스테이지 첫 방, 프론트엔드 방 전환 호출부마다 반복하지 않기 위한 진입점이다.
+	 * 일반 방 이동, 새 스테이지 첫 방 이동, 프론트엔드 방 이동은 모두 페이드아웃이 끝난 뒤
+	 * 같은 방식으로 ExternalReady를 전달해야 한다.
+	 * 각 호출부가 같은 대리자 생성과 checkf 처리를 반복하면 전환 후속 작업이 바뀔 때 세 곳을 함께 고쳐야 하므로,
+	 * 이 함수가 전환 전용 콜백을 한 번만 구성한다.
 	 */
 	void StartFadeOutUIForRoomTransition();
 
