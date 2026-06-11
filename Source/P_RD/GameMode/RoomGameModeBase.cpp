@@ -51,7 +51,7 @@ namespace
 	 *
 	 * 왜 여기서 변환하는가:
 	 * UI가 FStage/FRoom의 진행 규칙을 직접 해석하면 지도 표시가 런 로직에 강하게 묶인다.
-	 * GameMode가 View 상태로 바꿔주면 위젯은 Ready/Selected/Locked를 그리는 일만 맡는다.
+	 * GameMode가 화면 표시 상태로 바꿔주면 위젯은 준비/선택/잠김 상태를 그리는 일만 맡는다.
 	 */
 	EFrontendMapRoomState ResolveRoomState(const FStage& Stage, const FRoom& Room, int32 CurrentRowIndex, int32 CurrentColumnIndex, int32 SelectedRowIndex, int32 SelectedColumnIndex)
 	{
@@ -179,7 +179,7 @@ void ARoomGameModeBase::BeginRoom()
  * @brief 월드맵에서 다음 방 후보를 선택한다.
  *
  * @details
- * 선택 가능한 방인지 GameMode 기준으로 다시 검사한 뒤, ENTER 버튼이 사용할 선택 좌표만 저장한다.
+ * 선택 가능한 방인지 GameMode 기준으로 다시 검사한 뒤, 입장 버튼이 사용할 선택 좌표만 저장한다.
  *
  * 왜 UI 클릭만 믿지 않는가:
  * 지도 UI가 버튼 비활성화를 해도 런 상태는 전환 중이거나 이미 다른 방을 선택한 뒤일 수 있다.
@@ -211,7 +211,7 @@ bool ARoomGameModeBase::SelectNextRoom(int32 RoomRow, int32 RoomColumn)
  * 선택 자체는 SelectNextRoom()에서 처리하고, 이 함수는 이미 선택된 방에 대한 프리로드/전환만 시작한다.
  *
  * 왜 선택과 입장을 나누는가:
- * 지도에서 노드를 눌러 미리 선택해보고, ENTER 버튼으로 확정하는 UX를 만들기 위해서다.
+ * 지도에서 노드를 눌러 미리 선택해보고, 입장 버튼으로 확정하는 사용자 경험을 만들기 위해서다.
  * 두 단계를 나누면 잘못 눌렀을 때 바로 전환되지 않고, UI가 선택 상태를 먼저 보여줄 수 있다.
  */
 bool ARoomGameModeBase::EnterSelectedRoom()
@@ -241,12 +241,12 @@ bool ARoomGameModeBase::AbandonRunFromRoom()
 }
 
 /**
- * @brief 현재 런의 스테이지 정보를 월드맵 표시용 View 배열로 변환한다.
+ * @brief 현재 런의 스테이지 정보를 월드맵 표시용 배열로 변환한다.
  *
  * @details
  * FStage/FRoom의 진행 상태를 UI가 바로 읽지 않도록, 화면에 필요한 좌표/상태/설명만 FFrontendMapRoomView로 내려준다.
  *
- * 왜 View DTO로 내보내는가:
+ * 왜 화면 표시용 DTO로 내보내는가:
  * UI가 런 데이터 구조를 직접 알면 Stage 생성 규칙이 바뀔 때마다 위젯 코드도 같이 흔들린다.
  * GameMode가 표시용 데이터로 변환하면 월드맵은 그래프를 그리는 역할에 집중할 수 있다.
  */
@@ -385,12 +385,12 @@ void ARoomGameModeBase::SaveRunWithUIAsync() const
 	 * 현재 알림 표시 애니메이션 호출이 비활성화되어 있으므로 위젯 설정이 빠져도 방 전환 저장은 계속 진행한다.
 	 * 알림 UI를 실제로 다시 열고 닫는 시점에는 OpenUI()/CloseUI() 흐름과 함께 필수 바인딩 검사를 되살린다.
 	 */
-    // TODO: 구현되면 주석 풀기
+    // 할 일: 구현되면 주석 풀기
 	// if (SaveNotifyWidget) SaveNotifyWidget->OpenUI();
 	// 시작 애니메이션
 	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->SaveRunAsync(FAsyncSaveGameToSlotDelegate::CreateLambda([SaveNotifyWidget](const FString& SlotName, int32 UserIndex, bool IsSuccussed) {
 		checkf(IsSuccussed == true, TEXT("방 전환 시점 저장 실패"));
-		// TODO: 구현되면 주석 풀기
+		// 할 일: 구현되면 주석 풀기
 		// if (SaveNotifyWidget) SaveNotifyWidget->CloseUI();
 		// 종료 애니메이션
 		}));
