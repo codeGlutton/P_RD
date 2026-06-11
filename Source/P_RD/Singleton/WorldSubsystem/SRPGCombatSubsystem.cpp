@@ -12,6 +12,9 @@
 
 #include "FunctionLibrary/GASTargetFunctionLibrary.h"
 
+#include "GameFramework/PlayerStart.h"
+#include "Kismet/GameplayStatics.h"
+
 DEFINE_LOG_CATEGORY(LogSRPGCombat)
 
 void USRPGCombatSubsystem::Tick(float DeltaTime)
@@ -282,6 +285,16 @@ void USRPGCombatSubsystem::SpawnTileMap()
 	checkf(WorldSettings != nullptr, TEXT("RDWorldSettings nullptr"));
 
 	AActor* RoomStartPoint = WorldSettings->GetRoomStartPoint();
+	if (RoomStartPoint == nullptr)
+	{
+		/*
+		 * 기존 테스트 맵은 PlayerStart만 두고 RoomStartPoint를 따로 저장하지 않은 경우가 있다.
+		 * 전투 타일맵 시작 위치가 필요하므로, 명시된 RoomStartPoint가 없을 때는 맵의 PlayerStart를 같은 시작점으로 사용한다.
+		 * 전용 RoomStartPoint를 배치한 맵은 그 값을 우선 사용한다.
+		 */
+		RoomStartPoint = UGameplayStatics::GetActorOfClass(World, APlayerStart::StaticClass());
+		UE_LOG(LogSRPGCombat, Warning, TEXT("RoomStartPoint 미지정. PlayerStart를 RoomStartPoint로 사용"));
+	}
 	checkf(RoomStartPoint != nullptr, TEXT("RoomStartPoint nullptr"));
 
 	// 타일맵 스폰
