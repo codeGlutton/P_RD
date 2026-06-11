@@ -26,6 +26,6 @@ public:
 	}
 
 public:
-	UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StateTree", AssetBundles = BUNDLE_ACTOR))
+	UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StateTree", AssetBundles = "Actor"))
 	TSoftObjectPtr<UStateTree> mStateTree;
 };

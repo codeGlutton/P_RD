@@ -31,8 +31,8 @@ public:
 public:
 	UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StageName"))
 	FText mStageName;
-	UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BackgroundPanel", AssetBundles = BUNDLE_UI))
+	UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BackgroundPanel", AssetBundles = "UI"))
 	TSoftObjectPtr<UTexture2D> mBackgroundPanel;
-	UPROPERTY(Category = "UI", EditAnywhere, meta = (DisplayName = "RoomIcons", ArraySizeEnum = "ERoomType", AssetBundles = BUNDLE_UI))
+	UPROPERTY(Category = "UI", EditAnywhere, meta = (DisplayName = "RoomIcons", ArraySizeEnum = "ERoomType", AssetBundles = "UI"))
 	TSoftObjectPtr<UTexture2D> mRoomIcons[static_cast<uint8>(ERoomType::Count)];
 };

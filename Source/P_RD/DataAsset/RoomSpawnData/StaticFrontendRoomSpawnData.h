@@ -36,6 +36,6 @@ public:
 	}
 
 public:
-	UPROPERTY(Category = "PlayerUnit", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectablePlayerUnits", AssetBundles = BUNDLE_PAD))
+	UPROPERTY(Category = "PlayerUnit", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectablePlayerUnits", AssetBundles = "PAD"))
 	TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>> mPlayableUnits;
 };
