@@ -41,11 +41,11 @@ class P_RD_API UTopMenuBarWidget : public URDUserWidget
 
 public:
 	/**
-	 * @brief 탑바의 표시 순서와 기본 표시 정책을 초기화한다.
+	 * @brief 탑바의 ZOrder와 기본 표시 정책을 초기화한다.
 	 *
 	 * @details
 	 * 탑바는 일반 팝업보다 위에 있어야 하지만, 배경 전체가 입력을 막으면 게임 조작과 월드맵 입력을 방해한다.
-	 * 생성자에서는 표시 순서만 정하고 실제 입력 통과 처리는 생성/열림 시점에 다시 적용한다.
+	 * 생성자에서는 표시 순서만 정하고 실제 입력 통과 처리는 Construct/Open 시점에 다시 적용한다.
 	 *
 	 * @param ObjectInitializer Unreal 객체 생성에 사용하는 기본 초기화 값
 	 */
@@ -148,7 +148,7 @@ private:
 	 * 설정 패널을 열 때 월드맵은 잠시 닫고, 승리 후 지도 잠금 상태라면 설정을 닫은 뒤 월드맵을 복원한다.
 	 *
 	 * 왜 월드맵과 동시에 열지 않는가:
-	 * 두 팝업이 동시에 떠 있으면 뒤로가기/닫기 입력의 대상이 불명확해진다.
+	 * 두 팝업이 동시에 떠 있으면 Back/Close 입력의 대상이 불명확해진다.
 	 * 한 번에 하나만 열어야 사용자가 현재 조작 중인 화면을 명확히 알 수 있다.
 	 */
 	void ToggleSettingsPanel();
@@ -156,7 +156,7 @@ private:
 	/**
 	 * @brief 전투 종료 결과를 받아 플레이어 승리일 때 다음 방 선택 지도를 연다.
 	 *
-	 * @param Barrier 전투 종료 연출이 끝나기 전까지 흐름을 붙잡는 프레젠테이션 배리어
+	 * @param Barrier 전투 종료 연출이 끝나기 전까지 흐름을 붙잡는 presentation barrier
 	 * @param Result 전투 결과
 	 */
 	void HandleEndCombatUI(TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result);
@@ -164,11 +164,11 @@ private:
 	/**
 	 * @brief 승리 후 다음 방 선택이 가능한 월드맵을 연다.
 	 *
-	 * @param Barrier 월드맵이 표시된 뒤 해제할 프레젠테이션 배리어
+	 * @param Barrier 월드맵이 표시된 뒤 해제할 presentation barrier
 	 *
-	 * 왜 프레젠테이션 배리어를 월드맵 OpenUI 뒤에 푸는가:
+	 * 왜 barrier를 월드맵 OpenUI 뒤에 푸는가:
 	 * 전투 종료 연출이 끝났는데 다음 방 선택 UI가 아직 안 뜨면 흐름이 끊겨 보인다.
-	 * 월드맵이 실제로 열린 뒤 프레젠테이션 배리어를 해제해야 승리 연출에서 선택 화면까지 자연스럽게 이어진다.
+	 * 월드맵이 실제로 열린 뒤 barrier를 해제해야 승리 연출에서 선택 화면까지 자연스럽게 이어진다.
 	 */
 	void OpenWorldMapAfterPlayerWin(TSharedPtr<FPresentationBarrier> Barrier);
 
