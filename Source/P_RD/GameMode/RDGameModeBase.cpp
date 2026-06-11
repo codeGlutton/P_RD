@@ -218,6 +218,9 @@ bool ARDGameModeBase::PreloadAndTransitionRoomAsync(int32 RoomRowIndex, int32 Ro
 			/*
 			 * 예전에는 호출부에서 "페이드아웃이 끝나면 MarkExternalReadyForTransition()" 콜백을 넘기려 했다.
 			 * 하지만 모든 방 전환 경로가 같은 후속 작업을 하므로, 그 콜백은 StartFadeOutUI() 내부에 묶었다.
+			 * 여기서 말하는 같은 후속 작업은 "페이드아웃 완료 -> 로딩 알림 표시 -> ExternalReady 전달 ->
+			 * 준비 완료 콜백에서 로딩 알림 종료 -> TransitLoadedRoom()" 순서다.
+			 * 일반 방, 새 스테이지 첫 방, 프론트엔드 방 전환 모두 이 순서를 공유한다.
 			 * 여기서는 "페이드아웃을 시작한다"는 요청만 남긴다.
 			 */
 			StartFadeOutUI();
