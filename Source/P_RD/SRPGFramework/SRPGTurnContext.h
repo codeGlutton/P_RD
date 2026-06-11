@@ -69,6 +69,10 @@ public:
 protected:
 	void EvaluateTurnEndState(bool ForceAbort);
 
+protected:
+	void NotifyTurnStartIfNeeded();
+	void NotifyTurnEndIfNeeded();
+
 public:
 	UWorld* GetWorld() const;
 	AUnit* GetOwner() const;

@@ -28,6 +28,9 @@ class P_RD_API ITileActor
 
 	friend class ATileMap;
 
+	friend class USRPGCombatSubsystem;
+	friend struct FSRPGTurnContext;
+
 public:
 	virtual const FTileTransform& GetTileTransform() const PURE_VIRTUAL(ITileActor::GetTileTransform, return FTileTransform::Invalid;)
 
@@ -68,19 +71,15 @@ protected:
 protected:
 	/**
 	 * 라운드 시작마다 실행될 함수. (라운드 : 고정된 턴 기준으로 한바퀴)
-	 * @param CurTile 현재 위치한 타일 객체
 	 */
 	virtual void OnBeginRound();
-	/**
-	 * 사이클 시작마다 실행될 함수. (사이클 : 해당 턴 기준으로 한바퀴)
-	 * @param CurTile 현재 위치한 타일 객체
-	 */
-	virtual void OnBeginCycle();
+	virtual void OnEndRound();
+
 	/**
 	 * 자신의 턴 시작마다 실행될 함수.
-	 * @param CurTile 현재 위치한 타일 객체
 	 */
 	virtual void OnBeginTurn();
+	virtual void OnEndTurn();
 };
 
 

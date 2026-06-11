@@ -52,13 +52,13 @@ void FSRPGTurnContext::BeginTurn()
 	checkf(PresentationSyncSubsystem != nullptr, TEXT("연출 동기화 서브시스템 nullptr"));
 
 	auto PresentationBarrier = PresentationSyncSubsystem->MakePresentationBarrier(FOnFinishPresentation::CreateSPLambda(AsShared(), [this]() {
+		mOwner->OnBeginTurn();
+		
 		// 현 스텟을 캡처
 		FGameplayEventData EventData;
 		EventData.TargetData = UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle(mOwner);
 		EventData.Instigator = mOwner;
 		EventData.Target = mOwner;
-
-
 
 		// On Start Turn 패시브 실행
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(mOwner, AbilityTags::GameplayAbility_Passive_OnStartTurn, MoveTemp(EventData));
@@ -104,6 +104,8 @@ void FSRPGTurnContext::EndTurn()
 
 	// On End Turn 패시브 실행
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(mOwner, AbilityTags::GameplayAbility_Passive_OnEndTurn, MoveTemp(EventData));
+
+	mOwner->OnEndTurn();
 
 	auto PresentationBarrier = PresentationSyncSubsystem->MakePresentationBarrier(FOnFinishPresentation::CreateSPLambda(AsShared(), [this]() {
 		if (IsPermanent() == false)
@@ -202,6 +204,14 @@ void FSRPGTurnContext::EvaluateTurnEndState(bool ForceAbort)
 		mPhase = ESRPGTurnPhase::TurnAbort;
 		return;
 	}
+}
+
+void FSRPGTurnContext::NotifyTurnStartIfNeeded()
+{
+}
+
+void FSRPGTurnContext::NotifyTurnEndIfNeeded()
+{
 }
 
 UWorld* FSRPGTurnContext::GetWorld() const

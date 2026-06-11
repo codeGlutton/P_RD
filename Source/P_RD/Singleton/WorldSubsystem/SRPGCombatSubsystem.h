@@ -126,11 +126,17 @@ public:
 protected:
 	void EvaluateCombatEndState();
 
+protected:
+	void AdvanceTurn(bool IsInitialRound = false);
+	void NotifyRoundStartIfNeeded();
+	void NotifyRoundEndIfNeeded();
+
 public:
+	TWeakPtr<FSRPGTurnContext> GetCurrentTurnContext();
 	TWeakPtr<FSRPGTurnContext> GetTurnContext(const AUnit* Owner);
 	TArray<TWeakPtr<FSRPGTurnContext>> GetTurnContexts(const AUnit* Owner);
-	ATileMap* GetTileMap() const;
-	const TArray<TObjectPtr<AUnit>>& GetUnits() const;
+	ATileMap* GetTileMap();
+	TArray<TObjectPtr<AUnit>>& GetUnits();
 
 public:
 	/**
@@ -169,9 +175,13 @@ protected:
 	TQueue<FSRPGTurnUnregisterRequest> mPendingTurnRequests;
 
 protected:
+	// @brief 배치된 타일맵
 	TObjectPtr<ATileMap> mTileMap;
 
+	// @brief 등록된 Player 유닛
 	TObjectPtr<AUnit> mPlayerUnit;
+	// @brief 모든 등록 유닛 (플레이어 포함)
 	TArray<TObjectPtr<AUnit>> mUnits;
+	// @brief 모든 등록 장애물
 	TArray<TScriptInterface<ITileActor>> mObstacles;
 };

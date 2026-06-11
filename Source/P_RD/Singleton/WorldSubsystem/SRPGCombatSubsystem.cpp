@@ -71,7 +71,7 @@ void USRPGCombatSubsystem::BeginCombat()
 		// 턴 실행
 		checkf(mPhase == ESRPGCombatRoomPhase::CombatStart, TEXT("전투 진입 절차 오류"));
 		mPhase = ESRPGCombatRoomPhase::CombatPlay;
-		mCurTurnContextNode->GetValue()->BeginTurn();
+		AdvanceTurn(true);
 		}));
 	OnBeginCombatUI.Broadcast(PresentationBarrier);
 }
@@ -366,12 +366,7 @@ void USRPGCombatSubsystem::OnEndCurrentTurn(TSharedRef<FSRPGTurnContext> TurnCon
 		UnregisterTurn(TurnContext);
 	}
 
-	// 다음 턴 진행
-	mCurTurnContextNode = mCurTurnContextNode->GetNextNode();
-	// 밀려있던 턴 구성 변경 요청안들 처리
-	FlushPendingTurnRequests();
-
-	mCurTurnContextNode->GetValue()->BeginTurn();
+	AdvanceTurn(true);
 }
 
 void USRPGCombatSubsystem::EvaluateCombatEndState()
@@ -412,6 +407,64 @@ void USRPGCombatSubsystem::EvaluateCombatEndState()
 	}
 }
 
+void USRPGCombatSubsystem::AdvanceTurn(bool IsInitialRound)
+{
+	if (IsInitialRound == false)
+	{
+		// 라운드 종료 시 이벤트 처리
+		NotifyRoundEndIfNeeded();
+
+		// 다음 턴 진행
+		mCurTurnContextNode = mCurTurnContextNode->GetNextNode();
+		// 밀려있던 턴 구성 변경 요청안들 처리
+		FlushPendingTurnRequests();
+	}
+
+	// 라운드 시작 시 이벤트 처리
+	NotifyRoundStartIfNeeded();
+
+	mCurTurnContextNode->GetValue()->BeginTurn();
+}
+
+void USRPGCombatSubsystem::NotifyRoundStartIfNeeded()
+{
+	if (mTurnContexts.IsEmpty() == false && mCurTurnContextNode == mTurnContexts.GetHead())
+	{
+		for (const TObjectPtr<AUnit>& Unit : mUnits)
+		{
+			Unit->OnBeginRound();
+		}
+		for (const TScriptInterface<ITileActor>& Obstacle : mObstacles)
+		{
+			Obstacle->OnBeginRound();
+		}
+	}
+}
+
+void USRPGCombatSubsystem::NotifyRoundEndIfNeeded()
+{
+	if (mTurnContexts.IsEmpty() == false && mCurTurnContextNode == mTurnContexts.GetTail())
+	{
+		for (const TObjectPtr<AUnit>& Unit : mUnits)
+		{
+			Unit->OnEndRound();
+		}
+		for (const TScriptInterface<ITileActor>& Obstacle : mObstacles)
+		{
+			Obstacle->OnEndRound();
+		}
+	}
+}
+
+TWeakPtr<FSRPGTurnContext> USRPGCombatSubsystem::GetCurrentTurnContext()
+{
+	if (mCurTurnContextNode == nullptr)
+	{
+		return nullptr;
+	}
+	return mCurTurnContextNode->GetValue();
+}
+
 TWeakPtr<FSRPGTurnContext> USRPGCombatSubsystem::GetTurnContext(const AUnit* Owner)
 {
 	auto* HeadNode = mTurnContexts.GetHead();
@@ -447,12 +500,12 @@ TArray<TWeakPtr<FSRPGTurnContext>> USRPGCombatSubsystem::GetTurnContexts(const A
 	return Contexts;
 }
 
-ATileMap* USRPGCombatSubsystem::GetTileMap() const
+ATileMap* USRPGCombatSubsystem::GetTileMap()
 {
 	return mTileMap;
 }
 
-const TArray<TObjectPtr<AUnit>>& USRPGCombatSubsystem::GetUnits() const
+TArray<TObjectPtr<AUnit>>& USRPGCombatSubsystem::GetUnits()
 {
 	return mUnits;
 }
