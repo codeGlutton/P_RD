@@ -9,13 +9,33 @@
 /**
  * 페이드 위젯은 방 전환용 오버레이 레이어를 소유한다.
  *
- * 호출자는 OpenUI/CloseUI만 요청하면 된다.
+ * 호출자는 OpenUI로 레이어를 올린 뒤 필요한 페이드 방향을 명시한다.
  * 전체 화면 페이드 효과가 뷰포트 스택의 어느 위치에 있어야 하는지는 이 위젯이 결정한다.
  */
 UFadeInOutWidget::UFadeInOutWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	mViewportZOrder = StaticCast<int32>(EViewportZOrderType::FadeInOut);
+}
+
+/**
+ * 검은 덮개를 걷어 새 방 화면을 보여준다.
+ *
+ * 페이드인이 끝나면 전환 레이어는 더 이상 입력과 화면을 가릴 필요가 없으므로 CloseUI()로 닫는다.
+ */
+void UFadeInOutWidget::StartFadeIn(FOnEndFadeInAnimation InOnEndFadeInAnimation)
+{
+	OnEndFadeInAnimation = MoveTemp(InOnEndFadeInAnimation);
+	StartFade(GetRenderOpacity(), 0.0f, mFadeInSeconds, EFadeInOutAnimationType::FadeIn);
+}
+
+/**
+ * 실제 레벨 전환이 시작되기 전에 화면을 검게 덮는다.
+ */
+void UFadeInOutWidget::StartFadeOut(FOnEndFadeOutAnimation InOnEndFadeOutAnimation)
+{
+	OnEndFadeOutAnimation = MoveTemp(InOnEndFadeOutAnimation);
+	StartFade(0.0f, 1.0f, mFadeOutSeconds, EFadeInOutAnimationType::FadeOut);
 }
 
 /**
@@ -41,7 +61,7 @@ void UFadeInOutWidget::NativePreConstruct()
 }
 
 /**
- * 네이티브 페이드를 진행시키고 OpenUI/CloseUI 완료 콜백을 확정한다.
+ * 네이티브 페이드를 진행시키고 페이드 방향에 맞는 완료 콜백을 확정한다.
  *
  * GameMode와 전환 서브시스템은 콜백 완료만 기다린다.
  * 실제 표현은 현재의 네이티브 투명도 틱일 수도 있고, 이후 WBP 애니메이션으로 교체될 수도 있다.
@@ -67,30 +87,23 @@ void UFadeInOutWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime
 	}
 
 	mFadeAnimationPlaying = false;
-	if (mFinishOpenWhenFadeEnds)
-	{
-		FinishOpenUI();
-	}
-	else
-	{
-		FinishCloseUI();
-	}
+	FinishFade();
 }
 
 /**
- * 방 전환이 이어지기 전에 화면을 검게 덮는다.
+ * 공통 OpenUI는 전환 레이어를 표시 가능한 상태로 만드는 일만 맡는다.
  */
 void UFadeInOutWidget::PlayOpenUIAnimation_Implementation()
 {
-	StartFade(0.0f, 1.0f, mFadeOutSeconds, true);
+	FinishOpenUI();
 }
 
 /**
- * 닫힘 콜백을 내보내기 전에 검은 화면에서 게임 화면으로 다시 드러낸다.
+ * 공통 CloseUI는 페이드가 끝난 전환 레이어를 정리하는 일만 맡는다.
  */
 void UFadeInOutWidget::PlayCloseUIAnimation_Implementation()
 {
-	StartFade(GetRenderOpacity(), 0.0f, mFadeInSeconds, false);
+	FinishCloseUI();
 }
 
 /**
@@ -123,16 +136,16 @@ void UFadeInOutWidget::EnsureDefaultVisual()
 /**
  * 하나의 완료 경로로 페이드 요청을 시작한다.
  *
- * 지속 시간이 0인 페이드와 틱으로 진행되는 페이드 모두 FinishOpenUI 또는 FinishCloseUI로 끝난다.
- * 호출자는 페이드 구현 방식과 무관하게 같은 생명주기 계약만 관찰하면 된다.
+ * 지속 시간이 0인 페이드와 틱으로 진행되는 페이드 모두 FinishFade()로 끝난다.
+ * 호출자는 페이드 구현 방식과 무관하게 같은 완료 콜백만 관찰하면 된다.
  */
-void UFadeInOutWidget::StartFade(float StartAlpha, float EndAlpha, float Duration, bool bFinishOpen)
+void UFadeInOutWidget::StartFade(float StartAlpha, float EndAlpha, float Duration, EFadeInOutAnimationType FadeAnimationType)
 {
 	mFadeStartAlpha = StartAlpha;
 	mFadeEndAlpha = EndAlpha;
 	mFadeElapsedSeconds = 0.0f;
 	mFadeDurationSeconds = FMath::Max(0.0f, Duration);
-	mFinishOpenWhenFadeEnds = bFinishOpen;
+	mFadeAnimationType = FadeAnimationType;
 	mFadeAnimationPlaying = true;
 
 	ApplyFadeAlpha(StartAlpha);
@@ -140,14 +153,37 @@ void UFadeInOutWidget::StartFade(float StartAlpha, float EndAlpha, float Duratio
 	{
 		ApplyFadeAlpha(EndAlpha);
 		mFadeAnimationPlaying = false;
-		if (mFinishOpenWhenFadeEnds)
+		FinishFade();
+	}
+}
+
+/**
+ * 페이드 완료 후 방향별 후속 처리를 실행한다.
+ */
+void UFadeInOutWidget::FinishFade()
+{
+	const EFadeInOutAnimationType FinishedFadeAnimationType = mFadeAnimationType;
+	mFadeAnimationType = EFadeInOutAnimationType::None;
+
+	switch (FinishedFadeAnimationType)
+	{
+	case EFadeInOutAnimationType::FadeIn:
+		CloseUI();
+		if (OnEndFadeInAnimation.IsBound())
 		{
-			FinishOpenUI();
+			OnEndFadeInAnimation.Execute(this);
+			OnEndFadeInAnimation.Unbind();
 		}
-		else
+		break;
+	case EFadeInOutAnimationType::FadeOut:
+		if (OnEndFadeOutAnimation.IsBound())
 		{
-			FinishCloseUI();
+			OnEndFadeOutAnimation.Execute(this);
+			OnEndFadeOutAnimation.Unbind();
 		}
+		break;
+	default:
+		break;
 	}
 }
 

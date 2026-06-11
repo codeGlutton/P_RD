@@ -6,6 +6,7 @@
 
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 
+#include "UI/FadeInOutWidget.h"
 #include "UI/RDUserWidget.h"
 
 DEFINE_LOG_CATEGORY(LogRDGameMode);
@@ -71,16 +72,16 @@ bool ARDGameModeBase::CanAbandonRun() const
  * @brief 방 진입 직후 페이드아웃 상태의 전환 레이어를 다시 닫는다.
  *
  * @details
- * 페이드 위젯은 OpenUI()에서 검은 화면으로 덮고, CloseUI()에서 다시 화면을 보여준다.
- * 현재 방에 들어온 뒤에는 전환을 기다릴 필요가 없으므로 OpenUI 완료 콜백에서 바로 CloseUI()를 호출한다.
+ * OpenUI()는 페이드 전환 레이어를 뷰포트에 올리는 공통 UI 생명주기만 처리한다.
+ * 실제로 검은 화면을 걷어 게임 화면을 보여주는 일은 UFadeInOutWidget의 StartFadeIn()이 담당한다.
  *
  * 왜 이렇게 하는가:
  * 이전 방에서 이미 검은 화면까지 덮은 뒤 새 방으로 들어오므로, 새 방이 준비된 다음에는 그 덮개를 걷어야 한다.
- * GameMode가 직접 Visibility를 만지지 않고 CloseUI()로 맡기면 페이드 연출과 닫힘 완료 처리가 같은 규칙을 따른다.
+ * GameMode가 직접 Visibility나 투명도를 만지지 않고 페이드 위젯에 방향만 요청하면 전환 연출 규칙이 한곳에 모인다.
  *
  * 역할 구분:
- * ARDGameModeBase는 방 생명주기와 전환 타이밍을 알고 있으므로 "지금 페이드 덮개를 닫아야 한다"는 결정을 내린다.
- * UFadeInOutWidget은 그 결정을 받아 실제 화면을 어떻게 드러낼지와 애니메이션 완료 시점을 처리한다.
+ * ARDGameModeBase는 방 생명주기와 전환 타이밍을 알고 있으므로 "지금 페이드인을 시작한다"는 결정을 내린다.
+ * UFadeInOutWidget은 그 결정을 받아 실제 화면을 어떻게 드러낼지와 완료 시점을 처리한다.
  */
 void ARDGameModeBase::StartFadeInUI() const
 {
@@ -89,13 +90,11 @@ void ARDGameModeBase::StartFadeInUI() const
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
 	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr 오류"));
 
-	URDUserWidget* FadeInOutWidget = WorldWidgetSubsystem->GetWorldWidget<URDUserWidget>(EWorldWidgetType::FadeInOut);
+	UFadeInOutWidget* FadeInOutWidget = WorldWidgetSubsystem->GetWorldWidget<UFadeInOutWidget>(EWorldWidgetType::FadeInOut);
 	checkf(FadeInOutWidget != nullptr, TEXT("페이드 인 앤 아웃 위젯 nullptr 오류"));
 
-	FadeInOutWidget->OpenUI(FOnEndUIOpenAnimation::CreateWeakLambda(this, [FadeInOutWidget](UUserWidget*)
-	{
-		FadeInOutWidget->CloseUI();
-	}));
+	FadeInOutWidget->OpenUI();
+	FadeInOutWidget->StartFadeIn();
 }
 
 /**
@@ -111,7 +110,7 @@ void ARDGameModeBase::StartFadeInUI() const
  *
  * 역할 구분:
  * ARDGameModeBase는 로드/전환 시스템과 연결되어 있으므로 페이드 완료 후 MarkExternalReadyForTransition()을 호출한다.
- * UFadeInOutWidget은 GameMode의 전환 규칙을 모르고, OpenUI()가 요청된 페이드아웃 연출과 완료 콜백만 책임진다.
+ * UFadeInOutWidget은 GameMode의 전환 규칙을 모르고, StartFadeOut()이 요청된 페이드아웃 연출과 완료 콜백만 책임진다.
  */
 void ARDGameModeBase::StartFadeOutUI()
 {
@@ -120,10 +119,11 @@ void ARDGameModeBase::StartFadeOutUI()
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
 	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr 오류"));
 
-	URDUserWidget* FadeInOutWidget = WorldWidgetSubsystem->GetWorldWidget<URDUserWidget>(EWorldWidgetType::FadeInOut);
+	UFadeInOutWidget* FadeInOutWidget = WorldWidgetSubsystem->GetWorldWidget<UFadeInOutWidget>(EWorldWidgetType::FadeInOut);
 	checkf(FadeInOutWidget != nullptr, TEXT("페이드 인 앤 아웃 위젯 nullptr 오류"));
 
-	FadeInOutWidget->OpenUI(FOnEndUIOpenAnimation::CreateWeakLambda(this, [this](UUserWidget*)
+	FadeInOutWidget->OpenUI();
+	FadeInOutWidget->StartFadeOut(FOnEndFadeOutAnimation::CreateWeakLambda(this, [this](UFadeInOutWidget*)
 	{
 		checkf(MarkExternalReadyForTransition() == true, TEXT("외부 준비 상태 전달 오류"));
 	}));

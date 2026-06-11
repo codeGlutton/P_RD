@@ -4,12 +4,12 @@
  *
  * @details
  * RoomTransitionSubsystem은 레벨 전환 준비 상태만 알고, 화면을 언제 검게 덮고 언제 다시 보여줄지는
- * UI가 결정해야 한다. 이 위젯은 OpenUI에서 페이드아웃을 완료한 뒤 전환 실행 콜백을 넘기고,
- * CloseUI에서 새 방 입장 후 페이드인을 수행하도록 분리한다.
+ * UI가 결정해야 한다. 이 위젯은 OpenUI로 전환 레이어를 뷰포트에 올린 뒤,
+ * StartFadeOut/StartFadeIn으로 실제 페이드 방향을 분리해서 실행한다.
  *
- * 왜 OpenUI가 fade out이고 CloseUI가 fade in인가:
- * 전환 직전에는 화면을 덮는 일이 "페이드 UI를 여는 것"이고, 새 방에 들어온 뒤에는 그 덮개를 닫으며
- * 게임 화면을 다시 보여준다. 이렇게 맞추면 GameMode는 모든 위젯을 OpenUI/CloseUI 규칙으로만 다룰 수 있다.
+ * 왜 OpenUI와 페이드 함수를 나누는가:
+ * OpenUI는 모든 UI가 공유하는 표시 생명주기이고, 페이드인/페이드아웃은 이 위젯만 가진 연출이다.
+ * 두 책임을 나누면 GameMode는 위젯을 여는 일과 전환 화면을 덮거나 걷는 일을 순서대로 명시할 수 있다.
  */
 
 #pragma once
@@ -19,8 +19,20 @@
 
 #include "FadeInOutWidget.generated.h"
 
+class UFadeInOutWidget;
+
+DECLARE_DELEGATE_OneParam(FOnEndFadeInAnimation, UFadeInOutWidget*)
+DECLARE_DELEGATE_OneParam(FOnEndFadeOutAnimation, UFadeInOutWidget*)
+
+enum class EFadeInOutAnimationType : uint8
+{
+	None,
+	FadeIn,
+	FadeOut,
+};
+
 /**
- * @brief OpenUI는 검은 화면으로 페이드아웃하고 CloseUI는 다시 페이드인한다.
+ * @brief 전환 레이어 표시와 실제 페이드 방향을 분리해서 처리한다.
  *
  * WBP_FadeInOut이 없거나 애니메이션이 아직 비어 있어도 기본 검은 패널로 동작하게 하여
  * 전환 API 검증과 모바일 빌드 확인을 먼저 진행할 수 있게 한다.
@@ -40,6 +52,20 @@ public:
 	 * @param ObjectInitializer Unreal 객체 생성에 사용하는 기본 초기화 값
 	 */
 	UFadeInOutWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+	/**
+	 * @brief 검은 화면에서 게임 화면으로 다시 드러내는 페이드인을 시작한다.
+	 *
+	 * @param OnEndFadeInAnimation 페이드인이 끝난 뒤 실행할 콜백
+	 */
+	void StartFadeIn(FOnEndFadeInAnimation OnEndFadeInAnimation = FOnEndFadeInAnimation());
+
+	/**
+	 * @brief 전환이 이어지기 전 화면을 검게 덮는 페이드아웃을 시작한다.
+	 *
+	 * @param OnEndFadeOutAnimation 페이드아웃이 끝난 뒤 실행할 콜백
+	 */
+	void StartFadeOut(FOnEndFadeOutAnimation OnEndFadeOutAnimation = FOnEndFadeOutAnimation());
 
 protected:
 	/**
@@ -63,12 +89,12 @@ protected:
 	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 	/**
-	 * @brief OpenUI() 요청을 검은 화면으로 덮는 페이드아웃으로 해석한다.
+	 * @brief 공통 OpenUI 생명주기를 즉시 완료한다.
 	 */
 	void PlayOpenUIAnimation_Implementation() override;
 
 	/**
-	 * @brief CloseUI() 요청을 화면을 다시 드러내는 페이드인으로 해석한다.
+	 * @brief 공통 CloseUI 생명주기를 즉시 완료한다.
 	 */
 	void PlayCloseUIAnimation_Implementation() override;
 
@@ -84,9 +110,14 @@ private:
 	 * @param StartAlpha 시작 투명도
 	 * @param EndAlpha 목표 투명도
 	 * @param Duration 페이드에 사용할 시간
-	 * @param bFinishOpen 완료 시 FinishOpenUI()를 호출해야 하면 true, FinishCloseUI()를 호출해야 하면 false
+	 * @param FadeAnimationType 완료 시 실행할 페이드 콜백 종류
 	 */
-	void StartFade(float StartAlpha, float EndAlpha, float Duration, bool bFinishOpen);
+	void StartFade(float StartAlpha, float EndAlpha, float Duration, EFadeInOutAnimationType FadeAnimationType);
+
+	/**
+	 * @brief 현재 페이드 요청을 완료하고 방향에 맞는 콜백을 실행한다.
+	 */
+	void FinishFade();
 
 	/**
 	 * @brief 계산된 페이드 투명도를 위젯 전체에 반영한다.
@@ -97,13 +128,13 @@ private:
 
 private:
 	/**
-	 * @brief OpenUI()에서 검은 화면까지 덮는 데 걸리는 시간
+	 * @brief StartFadeOut()에서 검은 화면까지 덮는 데 걸리는 시간
 	 */
 	UPROPERTY(Category = UI, EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "FadeOutSeconds", AllowPrivateAccess = true))
 	float mFadeOutSeconds = 0.22f;
 
 	/**
-	 * @brief CloseUI()에서 다시 게임 화면을 보여주는 데 걸리는 시간
+	 * @brief StartFadeIn()에서 다시 게임 화면을 보여주는 데 걸리는 시간
 	 */
 	UPROPERTY(Category = UI, EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "FadeInSeconds", AllowPrivateAccess = true))
 	float mFadeInSeconds = 0.45f;
@@ -123,6 +154,12 @@ private:
 	/** @brief tick에서 페이드를 갱신해야 하는지 여부 */
 	bool mFadeAnimationPlaying = false;
 
-	/** @brief 페이드 완료 시 OpenUI 완료로 끝낼지 CloseUI 완료로 끝낼지 결정하는 플래그 */
-	bool mFinishOpenWhenFadeEnds = false;
+	/** @brief 현재 실행 중인 페이드 방향 */
+	EFadeInOutAnimationType mFadeAnimationType = EFadeInOutAnimationType::None;
+
+	/** @brief 페이드인 완료 시 실행할 콜백 */
+	FOnEndFadeInAnimation OnEndFadeInAnimation;
+
+	/** @brief 페이드아웃 완료 시 실행할 콜백 */
+	FOnEndFadeOutAnimation OnEndFadeOutAnimation;
 };
