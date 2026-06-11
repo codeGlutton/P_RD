@@ -19,16 +19,16 @@ class UTextBlock;
 /**
  * @brief 지도 노드 클릭 시 행/열 좌표만 부모 위젯으로 전달하는 UI delegate
  *
- * @note UI 파트 추가 delegate
- * PM 브랜치의 룸 데이터나 전환 API가 아니라, UMG 노드 버튼이 선택 요청 좌표를 넘기기 위해 추가한 표시 계층 이벤트다.
+ * 이 이벤트는 룸 데이터나 전환 API를 직접 실행하지 않는다.
+ * UMG 노드 버튼이 사용자가 누른 행/열 좌표를 부모 지도 위젯으로 넘기기 위한 표시 계층 이벤트다.
  */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFrontendMapNodeClickedDelegate, int32, RowIndex, int32, ColumnIndex);
 
 /**
  * @brief 지도 노드 좌표를 함께 보관하는 전용 Button
  *
- * @note UI 파트 추가 위젯
- * PM 브랜치에는 없는 UMG 편의 클래스다. 클릭 시 게임 로직을 실행하지 않고 행/열 좌표만 broadcast한다.
+ * UButton 자체는 어떤 방 좌표를 의미하는지 모르므로, 지도 노드용 버튼이 행/열 값을 함께 보관한다.
+ * 클릭 시 게임 로직을 실행하지 않고 행/열 좌표만 broadcast한다.
  */
 UCLASS()
 class P_RD_API UFrontendMapNodeButton : public UButton
@@ -45,9 +45,9 @@ private:
 	UFUNCTION()
 	void HandleClicked();
 
-	int32 RowIndex = INDEX_NONE;
-	int32 ColumnIndex = INDEX_NONE;
-	bool bClickBound = false;
+	int32 mRowIndex = INDEX_NONE;
+	int32 mColumnIndex = INDEX_NONE;
+	bool mClickBound = false;
 };
 
 /**
@@ -58,8 +58,7 @@ private:
  * 그래서 부모 UFrontendMapWidget이 CanvasPanelSlot 값은 계산하지만,
  * 선의 실제 모양은 WBP_FrontendMapLine 안에 둔다.
  *
- * @note UI 파트 추가 위젯
- * PM 브랜치의 Stage 연결 정보를 화면 선으로 표현하기 위해 만든 표시 전용 WBP 베이스다.
+ * Stage 연결 정보를 화면 선으로 표현하기 위한 표시 전용 WBP 베이스다.
  */
 UCLASS(BlueprintType, Blueprintable)
 class P_RD_API UFrontendMapLineWidget : public URDUserWidget
@@ -86,8 +85,7 @@ private:
  * 이 위젯은 방 하나의 버튼/색/문구만 담당한다.
  * 어떤 방으로 이동 가능한지, 선택하면 어떤 런 데이터가 바뀌는지는 부모 UFrontendMapWidget과 GameMode가 처리한다.
  *
- * @note UI 파트 추가 위젯
- * PM 브랜치의 FRoom을 대체하지 않는다. FFrontendMapRoomView 한 개를 화면 노드 하나로 보여주는 UMG 베이스다.
+ * FRoom을 대체하지 않는다. FFrontendMapRoomView 한 개를 화면 노드 하나로 보여주는 UMG 베이스다.
  */
 UCLASS(BlueprintType, Blueprintable)
 class P_RD_API UFrontendMapNodeWidget : public URDUserWidget
@@ -137,6 +135,6 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> NodeBadgeText;
 
-	int32 RowIndex = INDEX_NONE;
-	int32 ColumnIndex = INDEX_NONE;
+	int32 mRowIndex = INDEX_NONE;
+	int32 mColumnIndex = INDEX_NONE;
 };

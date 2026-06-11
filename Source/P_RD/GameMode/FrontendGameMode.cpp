@@ -1,4 +1,4 @@
-﻿#include "GameMode/FrontendGameMode.h"
+#include "GameMode/FrontendGameMode.h"
 
 #include "GameFramework/PlayerController.h"
 
@@ -70,7 +70,7 @@ namespace
 		NewOption.mRoleText = GetPlayerJobName(JobType);
 		NewOption.mDescription = NSLOCTEXT("FrontendGameMode", "LockedCharacterDescription", "Character data is not ready");
 		NewOption.mDisabledReason = NewOption.mDescription;
-		NewOption.bSelectable = false;
+		NewOption.mSelectable = false;
 		Options.Add(MoveTemp(NewOption));
 	}
 
@@ -195,7 +195,7 @@ namespace
  *
  * InGameSettings를 프론트엔드에도 준비하는 이유:
  * 타이틀 설정과 인게임 설정은 같은 WBP_SettingsPanel을 사용해야 하고, 차이는 PanelMode로 저장 후 종료/포기하기 영역만 숨기는 것이다.
- * 새 타이틀 WBP 안에 예전 자체 SettingsScreen이 남아 있더라도 실제 설정 화면은 이 공용 월드 위젯을 OpenUI()로 연다.
+ * 타이틀 WBP 안에 자체 설정 영역이 있더라도 실제 설정 화면은 이 공용 월드 위젯을 OpenUI()로 연다.
  *
  * 왜 생성 경로를 나누는가:
  * "누가 만들고 보관할지"와 "어떻게 화면에 열지"는 다른 문제다. 생성 책임은 HUD/WorldWidget으로 나누되,
@@ -347,7 +347,7 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 		NewOption.mPortrait = LoadedPlayerUnitData->mPortrait;
 		NewOption.mIcon = LoadedPlayerUnitData->mIcon;
 		NewOption.mPlayerUnitId = LoadedPlayerUnitData->GetPrimaryAssetId();
-		NewOption.bSelectable = PlayerUnitData.IsValid() && !LoadedPlayerUnitData->mClass.IsNull();
+		NewOption.mSelectable = PlayerUnitData.IsValid() && !LoadedPlayerUnitData->mClass.IsNull();
 		OutOptions.Add(MoveTemp(NewOption));
 	}
 
@@ -414,11 +414,11 @@ bool AFrontendGameMode::GetMapRoomViews(TArray<FFrontendMapRoomView>& OutRooms) 
 			NewView.mDescription = bIsStartPoint ? GetFrontendStartPointDescription(Room) : GetFrontendRoomDescription(Room);
 			NewView.mNextRoomColumns = Room.mNextRoomColumns;
 			NewView.mPositionOffsetRate = Room.mPositionOffsetRate;
-			NewView.bSelectable = false;
-			NewView.bSelected = false;
-			NewView.bVisited = RoomState == EFrontendMapRoomState::Cleared;
-			NewView.bCanEnter = false;
-			NewView.bIsStartPoint = bIsStartPoint;
+			NewView.mSelectable = false;
+			NewView.mSelected = false;
+			NewView.mVisited = RoomState == EFrontendMapRoomState::Cleared;
+			NewView.mCanEnter = false;
+			NewView.mIsStartPoint = bIsStartPoint;
 			OutRooms.Add(MoveTemp(NewView));
 		}
 	}
@@ -434,9 +434,9 @@ bool AFrontendGameMode::GetRunControlView(FFrontendRunControlView& OutView) cons
 	 * UI에는 "활성 런이 있는가, 현재 위치가 Stage 시작점인가, 난이도/레벨은 무엇인가"만 전달한다.
 	 */
 	OutView = FFrontendRunControlView();
-	OutView.bHasActiveRun = HasActiveRun();
-	OutView.bCanSaveRun = false;
-	OutView.bCanAbandonRun = CanAbandonRun();
+	OutView.mHasActiveRun = HasActiveRun();
+	OutView.mCanSaveRun = false;
+	OutView.mCanAbandonRun = CanAbandonRun();
 
 	const URunPersistData* RunPersistData = GetRunPersistData();
 	if (RunPersistData == nullptr || RunPersistData->IsActive() == false)
@@ -445,7 +445,7 @@ bool AFrontendGameMode::GetRunControlView(FFrontendRunControlView& OutView) cons
 	}
 
 	RunPersistData->GetCurrentRoomIndex(OUT OutView.mRow, OUT OutView.mColumn);
-	OutView.bIsAtStageStart = IsFrontendStageStartPoint(RunPersistData->GetStage(), OutView.mRow, OutView.mColumn);
+	OutView.mIsAtStageStart = IsFrontendStageStartPoint(RunPersistData->GetStage(), OutView.mRow, OutView.mColumn);
 	OutView.mPlayerLevel = RunPersistData->GetPlayerLevel();
 	OutView.mDifficulty = RunPersistData->GetDifficulty();
 	return true;

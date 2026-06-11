@@ -91,7 +91,7 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UImage> IconImage;
 
-	/** @brief 예전 카드형 디자인이 남아 있을 때 숨기기 위한 선택 필드 */
+	/** @brief 텍스트형 카드 레이아웃이 함께 남아 있을 때 숨기기 위한 선택 필드 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> NameText;
 
@@ -109,5 +109,5 @@ private:
 
 private:
 	FFrontendCharacterOption mCharacterOption;
-	bool bIsSelected = false;
+	bool mIsSelected = false;
 };

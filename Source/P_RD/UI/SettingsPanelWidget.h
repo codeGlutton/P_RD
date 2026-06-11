@@ -294,11 +294,11 @@ private:
 	void ApplyModeVisibility() const;
 
 	/**
-	 * @brief 현재 브랜치에서 사용하지 않는 언어 설정 영역을 숨긴다.
+	 * @brief 현재 설정 패널에서 사용하지 않는 언어 설정 영역을 숨긴다.
 	 *
 	 * @details
-	 * WBP에는 이전 UI 기획에서 남은 언어 영역이 있을 수 있지만, 현재 설정 패널 기능 범위에는 포함하지 않는다.
-	 * 삭제 대신 숨김 처리하면 WBP 구조 변경 없이 현재 브랜치의 기능 범위를 분명히 할 수 있다.
+	 * WBP에는 언어 영역이 남아 있을 수 있지만, 현재 설정 패널 기능 범위에는 포함하지 않는다.
+	 * 삭제 대신 숨김 처리하면 WBP 구조 변경 없이 사용 가능한 기능 범위를 분명히 할 수 있다.
 	 */
 	void HideDeprecatedLanguageControls() const;
 
@@ -492,11 +492,11 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> LicenseOpenButtonText;
 
-	/** @brief 이전 기획에서 남아 있는 언어 섹션 제목. 현재 브랜치에서는 숨긴다. */
+	/** @brief 현재 설정 패널에서 사용하지 않는 언어 섹션 제목 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UWidget> LanguageSectionHeader;
 
-	/** @brief 이전 기획에서 남아 있는 언어 설정 행. 현재 브랜치에서는 숨긴다. */
+	/** @brief 현재 설정 패널에서 사용하지 않는 언어 설정 행 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UWidget> LanguageRow;
 

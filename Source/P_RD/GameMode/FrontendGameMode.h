@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   FrontendGameMode.h
  * @brief  프론트엔드 GameMode 정의 헤더
  * @author 박용수, 모호재
@@ -29,17 +29,16 @@ DECLARE_LOG_CATEGORY_EXTERN(LogFrontendGameMode, Log, All)
  * 프론트엔드는 실제 방이 아니므로 ARoomGameModeBase를 상속하지 않는다. ARoomGameModeBase는 방 진입 시
  * 플레이어 유닛 복원과 Run 저장을 수행하는데, 타이틀/지도 팝업 단계에서 그 흐름이 실행되면
  * "Front -> Room"과 "Room -> Room"의 책임이 섞인다. 따라서 이 클래스는 ARDGameModeBase를 상속하고,
- * 새 Run 시작 후 첫 방 입장은 PM 구조의 URoomTransitionSubsystem::MakeStageAndPreloadRoomAsync() 흐름에 맡긴다.
+ * 새 Run 시작 후 첫 방 입장은 URoomTransitionSubsystem::MakeStageAndPreloadRoomAsync() 흐름에 맡긴다.
  * 지도 UI는 Run 시작 전 preview가 아니라, 활성 Run/Room 사이 이동 화면을 표시하는 adapter로 남긴다.
  *
- * @note API 출처
- * 이 클래스의 public 함수 대부분은 UI 파트가 타이틀 -> 캐릭터 선택 -> 첫 방 입장/지도 팝업을 붙이기 위해 만든
- * 임시 프론트엔드 facade/API다. 공식 게임 데이터는 PM 브랜치에서 들어온 URunPersistData,
- * GameProfileSubsystem, URoomTransitionSubsystem에 있고, 여기서는 그 결과를 UI DTO로 바꾸거나
- * 버튼 입력을 공식 API 호출로 연결하는 역할만 맡는다.
+ * 이 클래스의 public 함수는 타이틀 -> 캐릭터 선택 -> 첫 방 입장/지도 팝업을 연결하는
+ * 프론트엔드 진입점이다. 실제 게임 데이터는 URunPersistData, GameProfileSubsystem,
+ * URoomTransitionSubsystem에 있고, 여기서는 그 결과를 UI DTO로 바꾸거나 버튼 입력을
+ * 게임 API 호출로 연결하는 역할만 맡는다.
  *
- * 선택 가능한 다음 방 조회, 지도 노드 선택 검증, 선택된 방 입장 같은 정책 API는 최종적으로 PM 쪽 공식
- * API로 분리되어야 한다. 현재 함수들은 그 API가 생기기 전까지 WBP 연결을 유지하기 위한 adapter다.
+ * 선택 가능한 다음 방 조회, 지도 노드 선택 검증, 선택된 방 입장 같은 정책은 GameMode/Subsystem이 판단하고,
+ * WBP는 이 클래스가 내려준 View 데이터와 호출 함수만 사용한다.
  */
 UCLASS(abstract)
 class P_RD_API AFrontendGameMode : public ARDGameModeBase
@@ -117,7 +116,7 @@ public:
 	 *
 	 * 여기서 만들어지는 지도 View는 타이틀 Continue 미리보기용이다.
 	 * 방 선택/입장 가능 여부는 전투 방의 RoomGameMode 지도에서만 열리므로,
-	 * 프론트엔드 지도는 bSelectable/bCanEnter를 false로 내려 표시와 진행 요청을 분리한다.
+	 * 프론트엔드 지도는 mSelectable/mCanEnter를 false로 내려 표시와 진행 요청을 분리한다.
 	 *
 	 * @param OutRooms 지도 노드/선 표시용 View 데이터
 	 * @return 표시 가능한 활성 Run 지도 데이터가 있으면 true

@@ -36,7 +36,7 @@ struct FFrontendMapLinePoolEntry
 	 * RefreshMap()마다 새로 만들지 않고 풀에 보관해 재사용한다.
 	 */
 	UPROPERTY(Transient)
-	TObjectPtr<UFrontendMapLineWidget> LineWidget;
+	TObjectPtr<UFrontendMapLineWidget> mLineWidget;
 };
 
 USTRUCT()
@@ -51,7 +51,7 @@ struct FFrontendMapNodePoolEntry
 	 * 방 개수가 바뀌어도 기존 노드를 재사용하고, 이번 갱신에서 쓰지 않는 노드는 숨긴다.
 	 */
 	UPROPERTY(Transient)
-	TObjectPtr<UFrontendMapNodeWidget> NodeWidget;
+	TObjectPtr<UFrontendMapNodeWidget> mNodeWidget;
 };
 
 /**
@@ -63,12 +63,8 @@ struct FFrontendMapNodePoolEntry
  *
  * 왜 조회용/선택용을 같은 위젯으로 처리하는가:
  * MAP 버튼으로 열 때는 현재 런 경로를 보기만 해야 하고, 전투 승리 후에는 다음 방을 실제로 선택해야 한다.
- * 화면 구조는 같지만 허용 입력만 다르므로 bRoomSelectionEnabled로 모드를 나누어 같은 WBP를 재사용한다.
- *
- * @note UI 파트 추가 위젯
- * feature/create-srpg-framework-base 브랜치에는 FStage/FRoom과 방 전환 API가 있지만,
- * 이를 타이틀 화면에서 읽기 전용 월드맵으로 그리는 UMG 위젯은 없어서 UI/map 브랜치에서 추가했다.
- * 방 선택/입장 판단은 GameMode API로 돌려보내며, 실제 전환은 PM 브랜치의 RoomTransitionSubsystem 흐름을 탄다.
+ * 화면 구조는 같지만 허용 입력만 다르므로 mRoomSelectionEnabled로 모드를 나누어 같은 WBP를 재사용한다.
+ * 방 선택/입장 판단은 GameMode API로 돌려보내며, 실제 전환은 RoomTransitionSubsystem 흐름을 탄다.
  *
  * 현재 노드 안에 보이는 "행-열 + 룸 종류" 텍스트는 지도 데이터 배치와 RoomType 매핑을 확인하기 위한
  * 디버깅용 표시다. 최종 UI에서는 RoomType별 아이콘/이미지를 WBP 또는 공식 Stage/Room 표시 데이터에서
@@ -89,8 +85,7 @@ public:
 	 * @brief 현재 RunPersistData 기반 지도 View를 다시 가져와 노드/선을 갱신한다.
 	 * @return 지도 데이터가 있어 갱신에 성공하면 true
 	 *
-	 * @note UI 파트 추가 API
-	 * PM 브랜치의 FStage/FRoom을 직접 만드는 함수가 아니라, FrontendGameMode가 변환해준
+	 * FStage/FRoom을 직접 만드는 함수가 아니라, FrontendGameMode가 변환해준
 	 * FFrontendMapRoomView 배열을 화면에 배치하는 표시 전용 함수다.
 	 */
 	UFUNCTION(Category = UI, BlueprintCallable)
@@ -159,7 +154,7 @@ private:
 	/** @brief 선택 방 프리뷰 텍스트를 갱신한다. 현재 WBP에서는 숨김 처리만 유지한다. */
 	void SetMapPreviewText(const FText& Title, const FText& Description, const FText& State, const FSlateColor& StateColor) const;
 
-	/** @brief 현재 WBP에서 사용하지 않는 예전 지도 텍스트 영역을 숨긴다. */
+	/** @brief 노드형 지도 WBP에서는 쓰지 않는 텍스트형 지도 영역을 숨긴다. */
 	void HideUnusedMapTextSurfaces() const;
 
 	/** @brief 현재 월드에서 실제 방 선택/입장 요청을 처리할 수 있는지 확인한다. */
@@ -279,15 +274,15 @@ private:
 	TSubclassOf<UFrontendMapNodeWidget> MapNodeWidgetClass;
 
 	UPROPERTY(Transient)
-	TArray<FFrontendMapLinePoolEntry> MapLinePool;
+	TArray<FFrontendMapLinePoolEntry> mMapLinePool;
 
 	UPROPERTY(Transient)
-	TArray<FFrontendMapNodePoolEntry> MapNodePool;
+	TArray<FFrontendMapNodePoolEntry> mMapNodePool;
 
 	/**
 	 * @brief 방 입장 요청 이후 중복 입력을 막기 위한 상태
 	 */
-	bool bEnterRequested = false;
+	bool mEnterRequested = false;
 
 	/**
 	 * @brief 이 지도 화면에서 다음 방 선택을 허용할지 여부
@@ -299,5 +294,5 @@ private:
 	 * 노드가 Ready 상태라고 해서 사용자가 항상 선택할 수 있으면, 단순히 경로를 확인하려고 연 MAP 화면에서도
 	 * 방 전환 API가 호출될 수 있다. 표시 상태와 입력 허용 상태를 분리해 그런 실수를 막는다.
 	 */
-	bool bRoomSelectionEnabled = false;
+	bool mRoomSelectionEnabled = false;
 };

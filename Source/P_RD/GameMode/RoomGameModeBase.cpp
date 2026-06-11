@@ -1,4 +1,4 @@
-﻿#include "GameMode/RoomGameModeBase.h"
+#include "GameMode/RoomGameModeBase.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
@@ -320,11 +320,11 @@ bool ARoomGameModeBase::GetMapRoomViews(TArray<FFrontendMapRoomView>& OutRooms) 
 			NewView.mDescription = bIsStartPoint ? GetStartPointDescription(Room) : GetRoomDescription(Room);
 			NewView.mNextRoomColumns = Room.mNextRoomColumns;
 			NewView.mPositionOffsetRate = Room.mPositionOffsetRate;
-			NewView.bSelectable = RoomState == EFrontendMapRoomState::Ready;
-			NewView.bSelected = RoomState == EFrontendMapRoomState::Selected;
-			NewView.bVisited = RoomState == EFrontendMapRoomState::Cleared;
-			NewView.bCanEnter = RoomState == EFrontendMapRoomState::Selected;
-			NewView.bIsStartPoint = bIsStartPoint;
+			NewView.mSelectable = RoomState == EFrontendMapRoomState::Ready;
+			NewView.mSelected = RoomState == EFrontendMapRoomState::Selected;
+			NewView.mVisited = RoomState == EFrontendMapRoomState::Cleared;
+			NewView.mCanEnter = RoomState == EFrontendMapRoomState::Selected;
+			NewView.mIsStartPoint = bIsStartPoint;
 			OutRooms.Add(MoveTemp(NewView));
 		}
 	}
@@ -339,18 +339,18 @@ bool ARoomGameModeBase::GetRunControlView(FFrontendRunControlView& OutView) cons
 	 * 위젯이 URunPersistData를 직접 읽지 않게 하고, GameMode가 "화면에 보여줄 값"만 골라 내려준다.
 	 */
 	OutView = FFrontendRunControlView();
-	OutView.bHasActiveRun = HasActiveRun();
-	OutView.bCanSaveRun = false;
-	OutView.bCanAbandonRun = CanAbandonRun();
+	OutView.mHasActiveRun = HasActiveRun();
+	OutView.mCanSaveRun = false;
+	OutView.mCanAbandonRun = CanAbandonRun();
 
-	if (OutView.bHasActiveRun == false)
+	if (OutView.mHasActiveRun == false)
 	{
 		return false;
 	}
 
 	const URunPersistData* RunPersistData = GetRunPersistData();
 	RunPersistData->GetCurrentRoomIndex(OUT OutView.mRow, OUT OutView.mColumn);
-	OutView.bIsAtStageStart = IsStageStartPoint(RunPersistData->GetStage(), OutView.mRow, OutView.mColumn);
+	OutView.mIsAtStageStart = IsStageStartPoint(RunPersistData->GetStage(), OutView.mRow, OutView.mColumn);
 	OutView.mPlayerLevel = RunPersistData->GetPlayerLevel();
 	OutView.mDifficulty = RunPersistData->GetDifficulty();
 	return true;

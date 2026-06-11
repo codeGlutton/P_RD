@@ -1,4 +1,4 @@
-﻿#include "UI/FrontendMapWidget.h"
+#include "UI/FrontendMapWidget.h"
 
 #include "Components/Border.h"
 #include "Components/Button.h"
@@ -149,7 +149,7 @@ namespace
 		 * UI 위젯은 Ready/Selected/Cleared/Locked 같은 View 상태만 보고 색을 고르며,
 		 * 실제 선택 가능 여부 판단은 GameMode에서 끝난 뒤 DTO로 내려온다.
 		 */
-		if (Room.bIsStartPoint)
+		if (Room.mIsStartPoint)
 		{
 			return FLinearColor(0.245f, 0.300f, 0.315f, 1.f);
 		}
@@ -176,10 +176,10 @@ namespace
 	FText GetMapRoomBadgeText(const FFrontendMapRoomView& Room)
 	{
 		/*
-		 * 예전 카드형 지도 UI에서 쓰던 상태 배지 문구다.
+		 * 텍스트형 지도 UI에서 쓰던 상태 배지 문구다.
 		 * 현재 WBP에서는 일부 텍스트 표면을 숨기지만, 지도 노드/프리뷰 표현이 다시 필요해질 때 같은 상태 문구를 재사용한다.
 		 */
-		if (Room.bIsStartPoint)
+		if (Room.mIsStartPoint)
 		{
 			return FrontendMapText(TEXT("MapStartBadge"));
 		}
@@ -203,7 +203,7 @@ namespace
 		 * 최종 아이콘이 없을 때 노드 안에 표시할 최소 라벨이다.
 		 * 시작점은 START, 일반 방은 행-열 형식으로 표시해 생성된 Stage 구조를 확인한다.
 		 */
-		if (Room.bIsStartPoint)
+		if (Room.mIsStartPoint)
 		{
 			return FrontendMapText(TEXT("MapStartNodeLabel"));
 		}
@@ -220,7 +220,7 @@ namespace
 		 * 프리뷰 영역이나 접근성 텍스트에서 사용할 상태 문구다.
 		 * 노드 클릭 가능 여부와 별개로, 사용자가 현재 방이 왜 어둡거나 밝은지 읽을 수 있게 한다.
 		 */
-		if (Room.bIsStartPoint)
+		if (Room.mIsStartPoint)
 		{
 			return FrontendMapText(TEXT("MapStartState"));
 		}
@@ -357,15 +357,15 @@ void UFrontendMapWidget::NativeConstruct()
 void UFrontendMapWidget::NativeDestruct()
 {
 	UnbindEvents();
-	for (FFrontendMapNodePoolEntry& NodeEntry : MapNodePool)
+	for (FFrontendMapNodePoolEntry& NodeEntry : mMapNodePool)
 	{
-		if (NodeEntry.NodeWidget != nullptr)
+		if (NodeEntry.mNodeWidget != nullptr)
 		{
-			NodeEntry.NodeWidget->OnMapNodeClicked.RemoveDynamic(this, &UFrontendMapWidget::HandleMapNodeClicked);
+			NodeEntry.mNodeWidget->OnMapNodeClicked.RemoveDynamic(this, &UFrontendMapWidget::HandleMapNodeClicked);
 		}
 	}
-	MapLinePool.Reset();
-	MapNodePool.Reset();
+	mMapLinePool.Reset();
+	mMapNodePool.Reset();
 	Super::NativeDestruct();
 }
 
@@ -390,7 +390,7 @@ void UFrontendMapWidget::RefreshLocalizedTextCache()
  */
 void UFrontendMapWidget::SetRoomSelectionEnabled(bool bEnabled)
 {
-	bRoomSelectionEnabled = bEnabled;
+	mRoomSelectionEnabled = bEnabled;
 }
 
 /**
@@ -398,7 +398,7 @@ void UFrontendMapWidget::SetRoomSelectionEnabled(bool bEnabled)
  */
 bool UFrontendMapWidget::IsRoomSelectionEnabled() const
 {
-	return bRoomSelectionEnabled;
+	return mRoomSelectionEnabled;
 }
 
 /**
@@ -495,27 +495,27 @@ FFrontendMapLinePoolEntry* UFrontendMapWidget::AcquireMapLineWidget(int32 LineIn
 		return nullptr;
 	}
 
-	while (MapLinePool.Num() <= LineIndex)
+	while (mMapLinePool.Num() <= LineIndex)
 	{
 		FFrontendMapLinePoolEntry NewEntry;
-		NewEntry.LineWidget = CreateWidget<UFrontendMapLineWidget>(this, MapLineWidgetClass);
-		if (NewEntry.LineWidget != nullptr)
+		NewEntry.mLineWidget = CreateWidget<UFrontendMapLineWidget>(this, MapLineWidgetClass);
+		if (NewEntry.mLineWidget != nullptr)
 		{
-			NewEntry.LineWidget->SetRenderTransformPivot(FVector2D(0.f, 0.5f));
-			NewEntry.LineWidget->SetVisibility(ESlateVisibility::Collapsed);
-			if (UCanvasPanelSlot* LineSlot = MapGraphCanvas->AddChildToCanvas(NewEntry.LineWidget))
+			NewEntry.mLineWidget->SetRenderTransformPivot(FVector2D(0.f, 0.5f));
+			NewEntry.mLineWidget->SetVisibility(ESlateVisibility::Collapsed);
+			if (UCanvasPanelSlot* LineSlot = MapGraphCanvas->AddChildToCanvas(NewEntry.mLineWidget))
 			{
 				LineSlot->SetAutoSize(false);
 				LineSlot->SetZOrder(0);
 			}
 		}
-		MapLinePool.Add(MoveTemp(NewEntry));
+		mMapLinePool.Add(MoveTemp(NewEntry));
 	}
 
-	FFrontendMapLinePoolEntry& Entry = MapLinePool[LineIndex];
-	if (Entry.LineWidget != nullptr)
+	FFrontendMapLinePoolEntry& Entry = mMapLinePool[LineIndex];
+	if (Entry.mLineWidget != nullptr)
 	{
-		Entry.LineWidget->SetVisibility(ESlateVisibility::HitTestInvisible);
+		Entry.mLineWidget->SetVisibility(ESlateVisibility::HitTestInvisible);
 	}
 	return &Entry;
 }
@@ -531,29 +531,29 @@ FFrontendMapNodePoolEntry* UFrontendMapWidget::AcquireMapNodeWidget(int32 NodeIn
 		return nullptr;
 	}
 
-	while (MapNodePool.Num() <= NodeIndex)
+	while (mMapNodePool.Num() <= NodeIndex)
 	{
 		FFrontendMapNodePoolEntry NewEntry;
-		NewEntry.NodeWidget = CreateWidget<UFrontendMapNodeWidget>(this, MapNodeWidgetClass);
-		if (NewEntry.NodeWidget != nullptr)
+		NewEntry.mNodeWidget = CreateWidget<UFrontendMapNodeWidget>(this, MapNodeWidgetClass);
+		if (NewEntry.mNodeWidget != nullptr)
 		{
-			NewEntry.NodeWidget->SetVisibility(ESlateVisibility::Collapsed);
-			NewEntry.NodeWidget->OnMapNodeClicked.AddUniqueDynamic(this, &UFrontendMapWidget::HandleMapNodeClicked);
+			NewEntry.mNodeWidget->SetVisibility(ESlateVisibility::Collapsed);
+			NewEntry.mNodeWidget->OnMapNodeClicked.AddUniqueDynamic(this, &UFrontendMapWidget::HandleMapNodeClicked);
 
-			if (UCanvasPanelSlot* NodeSlot = MapGraphCanvas->AddChildToCanvas(NewEntry.NodeWidget))
+			if (UCanvasPanelSlot* NodeSlot = MapGraphCanvas->AddChildToCanvas(NewEntry.mNodeWidget))
 			{
 				NodeSlot->SetAutoSize(false);
 				NodeSlot->SetSize(FVector2D(MapNodeWidth, MapNodeHeight));
 				NodeSlot->SetZOrder(1);
 			}
 		}
-		MapNodePool.Add(MoveTemp(NewEntry));
+		mMapNodePool.Add(MoveTemp(NewEntry));
 	}
 
-	FFrontendMapNodePoolEntry& Entry = MapNodePool[NodeIndex];
-	if (Entry.NodeWidget != nullptr)
+	FFrontendMapNodePoolEntry& Entry = mMapNodePool[NodeIndex];
+	if (Entry.mNodeWidget != nullptr)
 	{
-		Entry.NodeWidget->SetVisibility(ESlateVisibility::Visible);
+		Entry.mNodeWidget->SetVisibility(ESlateVisibility::Visible);
 	}
 	return &Entry;
 }
@@ -564,17 +564,17 @@ void UFrontendMapWidget::HideUnusedMapGraphWidgets(int32 UsedLineCount, int32 Us
 	 * 이전 지도 갱신에서 더 많은 노드/선이 필요했다면 풀 안에 남은 위젯이 있을 수 있다.
 	 * 이번 갱신에서 사용하지 않는 나머지는 제거하지 않고 숨겨 다음 갱신 때 재사용한다.
 	 */
-	for (int32 LineIndex = UsedLineCount; LineIndex < MapLinePool.Num(); ++LineIndex)
+	for (int32 LineIndex = UsedLineCount; LineIndex < mMapLinePool.Num(); ++LineIndex)
 	{
-		if (UFrontendMapLineWidget* LineWidget = MapLinePool[LineIndex].LineWidget)
+		if (UFrontendMapLineWidget* LineWidget = mMapLinePool[LineIndex].mLineWidget)
 		{
 			LineWidget->SetVisibility(ESlateVisibility::Collapsed);
 		}
 	}
 
-	for (int32 NodeIndex = UsedNodeCount; NodeIndex < MapNodePool.Num(); ++NodeIndex)
+	for (int32 NodeIndex = UsedNodeCount; NodeIndex < mMapNodePool.Num(); ++NodeIndex)
 	{
-		if (UFrontendMapNodeWidget* NodeWidget = MapNodePool[NodeIndex].NodeWidget)
+		if (UFrontendMapNodeWidget* NodeWidget = mMapNodePool[NodeIndex].mNodeWidget)
 		{
 			NodeWidget->SetNodeEnabled(false);
 			NodeWidget->SetVisibility(ESlateVisibility::Collapsed);
@@ -586,7 +586,7 @@ void UFrontendMapWidget::HideUnusedMapGraphWidgets(int32 UsedLineCount, int32 Us
  * @brief 현재 RunPersistData 기반 지도 노드/선을 다시 그리고 버튼 상태를 갱신한다.
  *
  * @details
- * 같은 월드맵이 조회용과 다음 방 선택용으로 쓰이므로, bRoomSelectionEnabled와 bEnterRequested를 함께 보고
+ * 같은 월드맵이 조회용과 다음 방 선택용으로 쓰이므로, mRoomSelectionEnabled와 mEnterRequested를 함께 보고
  * 노드/입장 버튼의 입력 가능 여부를 결정한다. 상태 문구는 전투 승리 같은 외부 흐름의 오버라이드가 있으면 그것을 우선한다.
  *
  * 왜 매번 View DTO를 다시 가져오는가:
@@ -598,7 +598,7 @@ bool UFrontendMapWidget::RefreshMap()
 	RefreshLocalizedTextCache();
 	ConfigureMapGraphLayout();
 	HideUnusedMapTextSurfaces();
-	bEnterRequested = false;
+	mEnterRequested = false;
 
 	if (MapGraphCanvas == nullptr)
 	{
@@ -613,14 +613,14 @@ bool UFrontendMapWidget::RefreshMap()
 		bHasRooms = RoomGameMode->GetMapRoomViews(Rooms);
 
 		FFrontendRunControlView RunControlView;
-		bShouldScrollToStart = RoomGameMode->GetRunControlView(OUT RunControlView) && RunControlView.bIsAtStageStart;
+		bShouldScrollToStart = RoomGameMode->GetRunControlView(OUT RunControlView) && RunControlView.mIsAtStageStart;
 	}
 	else if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
 	{
 		bHasRooms = FrontendGameMode->GetMapRoomViews(Rooms);
 
 		FFrontendRunControlView RunControlView;
-		bShouldScrollToStart = FrontendGameMode->GetRunControlView(OUT RunControlView) && RunControlView.bIsAtStageStart;
+		bShouldScrollToStart = FrontendGameMode->GetRunControlView(OUT RunControlView) && RunControlView.mIsAtStageStart;
 	}
 	else
 	{
@@ -678,12 +678,12 @@ bool UFrontendMapWidget::RefreshMap()
 			}
 
 			FFrontendMapLinePoolEntry* LineEntry = AcquireMapLineWidget(UsedLineCount++);
-			if (LineEntry == nullptr || LineEntry->LineWidget == nullptr)
+			if (LineEntry == nullptr || LineEntry->mLineWidget == nullptr)
 			{
 				continue;
 			}
 
-			UFrontendMapLineWidget* ConnectionLine = LineEntry->LineWidget;
+			UFrontendMapLineWidget* ConnectionLine = LineEntry->mLineWidget;
 			ConnectionLine->SetLineColor(Room.mState != EFrontendMapRoomState::Locked
 				? FLinearColor(0.445f, 0.760f, 0.780f, 0.92f)
 				: FLinearColor(0.250f, 0.300f, 0.320f, 0.58f));
@@ -709,7 +709,7 @@ bool UFrontendMapWidget::RefreshMap()
 			? LockedColor
 			: (Room.mState == EFrontendMapRoomState::Selected ? TitleColor : ReadyColor);
 
-		const bool bShouldFocusRoom = Room.bCanEnter || Room.bSelected;
+		const bool bShouldFocusRoom = Room.mCanEnter || Room.mSelected;
 		if (bShouldFocusRoom)
 		{
 			bHasSelectedRoom = true;
@@ -720,13 +720,13 @@ bool UFrontendMapWidget::RefreshMap()
 		}
 
 		FFrontendMapNodePoolEntry* NodeEntry = AcquireMapNodeWidget(UsedNodeCount++);
-		if (NodeEntry == nullptr || NodeEntry->NodeWidget == nullptr)
+		if (NodeEntry == nullptr || NodeEntry->mNodeWidget == nullptr)
 		{
 			continue;
 		}
 
-		UFrontendMapNodeWidget* NodeWidget = NodeEntry->NodeWidget;
-		NodeWidget->SetNodeEnabled(Room.bSelectable && IsFrontendMapNavigationEnabled() && !bEnterRequested);
+		UFrontendMapNodeWidget* NodeWidget = NodeEntry->mNodeWidget;
+		NodeWidget->SetNodeEnabled(Room.mSelectable && IsFrontendMapNavigationEnabled() && !mEnterRequested);
 		NodeWidget->SetNodeVisual(
 			Room.mRow,
 			Room.mColumn,
@@ -763,7 +763,7 @@ bool UFrontendMapWidget::RefreshMap()
 
 	if (EnterRoomButton != nullptr)
 	{
-		EnterRoomButton->SetIsEnabled(bHasSelectedRoom && IsFrontendMapNavigationEnabled() && !bEnterRequested);
+		EnterRoomButton->SetIsEnabled(bHasSelectedRoom && IsFrontendMapNavigationEnabled() && !mEnterRequested);
 	}
 
 	SetEnterButtonText(mEnterText);
@@ -791,7 +791,7 @@ bool UFrontendMapWidget::RefreshMap()
  */
 void UFrontendMapWidget::HandleMapRoomClicked(int32 RowIndex, int32 ColumnIndex)
 {
-	if (bEnterRequested)
+	if (mEnterRequested)
 	{
 		return;
 	}
@@ -835,12 +835,12 @@ void UFrontendMapWidget::HandleCloseButtonClicked()
  */
 void UFrontendMapWidget::HandleEnterRoomButtonClicked()
 {
-	if (bEnterRequested)
+	if (mEnterRequested)
 	{
 		return;
 	}
 
-	bEnterRequested = true;
+	mEnterRequested = true;
 	SetEnterButtonText(mLoadingStatusText);
 	SetMapStatusText(mLoadingStatusText);
 
@@ -852,7 +852,7 @@ void UFrontendMapWidget::HandleEnterRoomButtonClicked()
 		}
 	}
 
-	bEnterRequested = false;
+	mEnterRequested = false;
 	SetEnterButtonText(mEnterText);
 	SetMapStatusText(mMapUnavailableStatusText);
 }
@@ -881,7 +881,7 @@ void UFrontendMapWidget::SetEnterButtonText(const FText& InText) const
 void UFrontendMapWidget::SetMapPreviewText(const FText& Title, const FText& Description, const FText& State, const FSlateColor& StateColor) const
 {
 	/*
-	 * 새 WBP에서는 노드 자체 표현을 우선하고, 예전 미리보기 패널 텍스트는 숨긴다.
+	 * 노드형 WBP에서는 노드 자체 표현을 우선하고, 미리보기 패널 텍스트는 숨긴다.
 	 * 함수 시그니처를 유지하는 이유는 이후 프리뷰 디자인이 다시 살아나도 RefreshMap() 호출 구조를 바꾸지 않기 위해서다.
 	 */
 	(void)Title;
@@ -940,7 +940,7 @@ void UFrontendMapWidget::HideUnusedMapTextSurfaces() const
  */
 bool UFrontendMapWidget::IsFrontendMapNavigationEnabled() const
 {
-	return bRoomSelectionEnabled && GetWorld() != nullptr && GetWorld()->GetAuthGameMode<ARoomGameModeBase>() != nullptr;
+	return mRoomSelectionEnabled && GetWorld() != nullptr && GetWorld()->GetAuthGameMode<ARoomGameModeBase>() != nullptr;
 }
 
 void UFrontendMapWidget::ConfigureMapGraphLayout() const

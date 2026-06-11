@@ -180,7 +180,7 @@ private:
 	 * @brief 타이틀에서 열 공용 설정 패널을 얻음
 	 *
 	 * @details
-	 * 새 타이틀 WBP는 예전 자체 SettingsScreen을 아직 갖고 있지만,
+	 * 타이틀 WBP가 자체 SettingsScreen 영역을 갖고 있더라도,
 	 * 실제 설정 UI는 인게임과 같은 WBP_SettingsPanel을 써야 한다.
 	 * WBP 안에 SettingsPanelWidget을 직접 넣어둔 경우에는 그 인스턴스를 쓰고,
 	 * 그렇지 않으면 FrontendGameMode가 준비한 InGameSettings 월드 위젯을 Title 모드로 열어 같은 설정 화면을 공유한다.
@@ -188,14 +188,13 @@ private:
 	USettingsPanelWidget* GetTitleSettingsPanel() const;
 
 	/**
-	 * @brief 오래된 타이틀 WBP에 남아 있는 하단 상태 문구를 숨김
+	 * @brief 타이틀 WBP에 남아 있는 하단 상태 문구를 숨김
 	 *
 	 * @details
-	 * 예전 구조에서는 타이틀 메뉴 아래에 Ready, Settings 같은 상태 문구를 표시했다.
-	 * 현재 타이틀 화면에서는 이 줄을 완전히 사용하지 않으므로,
+	 * 현재 타이틀 화면에서는 Ready, Settings 같은 하단 상태 문구를 사용하지 않으므로,
 	 * WBP에 StatusText가 아직 남아 있어도 비워 두고 Collapsed 상태로 만든다.
 	 *
-	 * @param InText 예전 호출부와의 호환을 위해 받지만 화면에는 표시하지 않는다.
+	 * @param InText 기존 호출부와의 호환을 위해 받지만 화면에는 표시하지 않는다.
 	 */
 	void SetStatusText(const FText& InText) const;
 
@@ -323,7 +322,7 @@ private:
 	TObjectPtr<UTextBlock> SettingsButtonText;
 
 	/**
-	 * @brief 예전 타이틀 화면 아래에 있던 상태 문구
+	 * @brief 현재 타이틀 화면에서는 숨기는 하단 상태 문구
 	 *
 	 * @details
 	 * 지금 UI에서는 READY 같은 하단 문구를 표시하지 않는다.

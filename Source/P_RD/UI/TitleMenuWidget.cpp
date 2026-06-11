@@ -424,7 +424,7 @@ USettingsPanelWidget* UTitleMenuWidget::GetTitleSettingsPanel() const
 }
 
 /**
- * @brief 예전 상태 문구 영역을 항상 숨긴다.
+ * @brief 현재 타이틀 화면에서 사용하지 않는 상태 문구 영역을 항상 숨긴다.
  *
  * @details
  * 새 타이틀 WBP는 별도 상태 텍스트를 사용하지 않는다.
