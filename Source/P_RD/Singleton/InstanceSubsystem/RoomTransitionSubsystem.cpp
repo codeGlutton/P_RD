@@ -182,9 +182,22 @@ bool URoomTransitionSubsystem::MarkExternalReady()
     return true;
 }
 
+/**
+ * @brief 준비가 끝났지만 자동으로 이동하지 않은 방 전환을 실제로 시작한다.
+ *
+ * @details
+ * PreloadRoomAsync()를 AutoTransition=false로 호출하면 에셋 로드와 외부 준비가 끝나도 바로 OpenLevel 하지 않는다.
+ * 대신 OnReadyToTransition 콜백으로 GameMode에 "이제 전환할 준비가 됐다"만 알려준다.
+ * GameMode는 그 사이에 로딩 UI 완료 문구나 닫힘 애니메이션을 먼저 끝내고, 마지막에 이 함수를 호출한다.
+ *
+ * 왜 ReadyToTransition을 다시 확인하는가:
+ * 이 함수가 호출됐다는 사실만으로 에셋 로드, 스테이지 생성, 외부 준비가 모두 끝났다고 믿으면 안 된다.
+ * ReadyToTransition 플래그가 없으면 아직 이동할 방 정보가 완성되지 않은 상태이므로 실제 레벨 이동을 시작하지 않는다.
+ */
 bool URoomTransitionSubsystem::TransitLoadedRoom()
 {
-    if (EnumHasAllFlags(mTransitionState, ERoomTransitionStateFlag::ReadyToTransition) == true)
+    // ReadyToTransition이 false면 아직 "이동해도 되는 상태"가 아니다. 이때는 OpenLevel을 시작하면 안 된다.
+    if (EnumHasAllFlags(mTransitionState, ERoomTransitionStateFlag::ReadyToTransition) == false)
     {
         UE_LOG(LogTransition, Log, TEXT("전환 불가. 먼저 전환 준비 필요"));
         return false;
