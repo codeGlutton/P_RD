@@ -21,7 +21,7 @@ UGameplayEffect_Damage::UGameplayEffect_Damage()
 	// 소모값이 바뀔 경우 아래 기능을 이용해서 처리하고 고정이라면 고정값을 지정한다.
 	FSetByCallerFloat	Caller;
 
-	Caller.DataTag = FGameplayTag::RequestGameplayTag(TEXT("Test.GameplayEffect.Data.Battle.Damage"));
+	Caller.DataTag = FGameplayTag::RequestGameplayTag(TEXT("GameplayEffect.Skill.Damage"));
 
 	Modifier.ModifierMagnitude = FGameplayEffectModifierMagnitude(Caller);
 

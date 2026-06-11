@@ -12,6 +12,7 @@
 #include "SRPGFramework/SRPGFrameworkType.h"
 //#include "Pawn/SkillComponent/PreviewEffectIconData.h"
 #include "../FunctionLibrary/CombatCalculator/CombatResult.h"
+#include "SRPGFramework/TileActor.h"
 #include "SkillComponent.generated.h"
 
 /**
@@ -41,7 +42,7 @@ protected:
 	 * 플레이어 4개 + 공격
 	 * 적 가변적
 	 */
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TArray<TSoftObjectPtr<UStaticSkillData>> mSkillData;
 
 	/**
@@ -121,9 +122,10 @@ public:
 	* @brief 스킬 결과 값 계산
 	* @details 
 	* 스킬 인덱스와 타일이 들어오면 스킬 결과 값을 계산한다.
-	* @param[in] In_SkillIndex : 선택한 스킬의 인덱스
+	* @param[in] SkillIndex : 선택한 스킬의 인덱스
+	* @param[in] TileActors : 스킬로 선택된 타일들
 	* @return bool : 실패 시 false 반환
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Skill")
-	bool CalculateSkillResult(int32 SkillIndex, const TArray<FTileIndex>& Tiles);
+	bool CalculateSkillResult(int32 SkillIndex, const TArray<TScriptInterface<ITileActor>>& TileActors);
 };

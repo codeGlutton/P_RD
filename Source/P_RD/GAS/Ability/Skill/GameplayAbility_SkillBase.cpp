@@ -13,7 +13,7 @@ UGameplayAbility_SkillBase::UGameplayAbility_SkillBase()
 
 	FAbilityTriggerData	TriggerData;
 
-	TriggerData.TriggerTag = AbilityTags::GameplayAbility_Skill;
+	TriggerData.TriggerTag = FGameplayTag::RequestGameplayTag(TEXT("GameplayAbility.Skill"));
 	TriggerData.TriggerSource = EGameplayAbilityTriggerSource::GameplayEvent;
 
 	AbilityTriggers.Add(TriggerData);
@@ -80,12 +80,12 @@ void UGameplayAbility_SkillBase::ActivateAbility(const FGameplayAbilitySpecHandl
 			{
 				UE_LOG(LogTemp, Warning, TEXT("TileCommit 있음"));
 
-				const FTileCommitResult& TileResult = EffectResult.mTileCommitResult[j];
+				const FTileActorCommitResult& TileResult = EffectResult.mTileCommitResult[j];
 
 				// 타일 인덱스에서 유닛을 가져온다.
-				TWeakObjectPtr<AUnit> TileUnit;
+				TScriptInterface<const ITileActor> TileActor = TileResult.mTileActor;
 
-				AUnit* TargetActor = TileUnit.Get(); // 예시: TileUnit이 실제 AUnit 포인터를 담고 있다고 가정
+				const AUnit* TargetActor = Cast<AUnit>(TileActor.GetObject()); // 예시: TileUnit이 실제 AUnit 포인터를 담고 있다고 가정
 
 				CommitActorToEffect(Handle, ActorInfo, TargetActor, TileResult.mUnitCommitResult);
 			}
@@ -96,7 +96,7 @@ void UGameplayAbility_SkillBase::ActivateAbility(const FGameplayAbilitySpecHandl
 }
 
 bool UGameplayAbility_SkillBase::CommitActorToEffect(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-	class AUnit* Unit, const struct FUnitCommitResult& CommitResult)
+	const AUnit* CUnit, const struct FUnitCommitResult& CommitResult)
 {
 	UE_LOG(LogTemp, Warning, TEXT("UnitCommit %d"), CommitResult.mEffect.Num());
 
@@ -104,18 +104,17 @@ bool UGameplayAbility_SkillBase::CommitActorToEffect(const FGameplayAbilitySpecH
 	{
 		UE_LOG(LogTemp, Warning, TEXT("UnitCommit 있음"));
 
-
 		FGameplayTag EffectTag = EffectPair.Key;
 		float EffectValue = EffectPair.Value;
 
 		// 예시: 데미지 관련 태그인지 확인 (프로젝트에서 사용하는 데미지 태그명으로 변경)
-		FGameplayTag DamageTag = FGameplayTag::RequestGameplayTag(TEXT("GameplayEffect.Battle.Damage"));
+		FGameplayTag DamageTag = FGameplayTag::RequestGameplayTag(TEXT("GameplayEffect.Skill.Damage"));
 
 		if (EffectTag == DamageTag)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Damage : %f"), EffectValue);
 
-			/*
+			
 			FGameplayEffectContextHandle Context = MakeEffectContext(Handle, ActorInfo);
 
 			FGameplayEffectSpecHandle DamageSpec = MakeOutgoingGameplayEffectSpec(
@@ -126,12 +125,15 @@ bool UGameplayAbility_SkillBase::CommitActorToEffect(const FGameplayAbilitySpecH
 
 			DamageSpec.Data->SetSetByCallerMagnitude(DamageTag, EffectValue);
 
+			// const를 강제로 푼다.
+			AUnit* Unit = const_cast<AUnit*>(CUnit);
+
 			// 4. 타겟 ASC를 찾아 이펙트를 적용합니다.
 			if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Unit))
 			{
 				TargetASC->ApplyGameplayEffectSpecToSelf(*DamageSpec.Data.Get());
 			}
-			*/
+			
 		}
 	}
 

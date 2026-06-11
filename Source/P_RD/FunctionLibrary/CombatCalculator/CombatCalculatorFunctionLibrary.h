@@ -11,6 +11,9 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "CombatCalculatorFunctionLibrary.generated.h"
 
+class ITileActor;
+class UStaticSkillData;
+
 /**
  * 
  */
@@ -29,5 +32,5 @@ public:
 	* @param[out] Out_Result : 스킬 사용 결과
 	* @return bool : 실패 시 false 반환
 	*/
-	static bool CalculateSkillResult(FTileIndex CasterTile, const class UStaticSkillData* SkillData, TArray<FTileIndex> Tiles, FSkillCommitResult& Out_Result);
+	static bool CalculateSkillResult(TScriptInterface<const ITileActor> CasterTile, const UStaticSkillData* SkillData, const TArray<TScriptInterface<ITileActor>>& Tiles, FSkillCommitResult& Out_Result);
 };

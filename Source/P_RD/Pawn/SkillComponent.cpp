@@ -4,6 +4,7 @@
 #include "SkillComponent.h"
 #include "SkillComponent/SkillCommitResultHolder.h"
 #include "../FunctionLibrary/CombatCalculator/CombatCalculatorFunctionLibrary.h"
+#include "SRPGFramework/TileActor.h"
 #include "Pawn/Unit.h"
 
 // Sets default values for this component's properties
@@ -37,8 +38,7 @@ void USkillComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 
 bool USkillComponent::GetSkillData(int In_SkillIndex, TSoftObjectPtr<UStaticSkillData>& Out_SkillData)
 {
-	if (!mSkillData.IsValidIndex(In_SkillIndex))
-		return false;
+	checkf(mSkillData.IsValidIndex(In_SkillIndex), TEXT("잘못된 배열 범위"))
 
 	Out_SkillData = mSkillData[In_SkillIndex];
 
@@ -47,8 +47,7 @@ bool USkillComponent::GetSkillData(int In_SkillIndex, TSoftObjectPtr<UStaticSkil
 
 bool USkillComponent::SetSkillData(int SkillIndex, TSoftObjectPtr<UStaticSkillData> SkillData)
 {
-	if (!mSkillData.IsValidIndex(SkillIndex))
-		return false;
+	checkf(mSkillData.IsValidIndex(SkillIndex), TEXT("잘못된 배열 범위"))
 
 	mSkillData[SkillIndex] = SkillData;
 
@@ -88,7 +87,7 @@ bool USkillComponent::ActivateSkill()
 
 	EventData.Instigator = GetOwner();	// 사용자
 
-	EventData.EventTag = AbilityTags::GameplayAbility_Skill;
+	EventData.EventTag = FGameplayTag::RequestGameplayTag(TEXT("GameplayAbility.Skill"));
 
 	// 1. 구조체를 담을 UObject 홀더 생성
 	USkillCommitResultHolder* ResultHolder = NewObject<USkillCommitResultHolder>();
@@ -101,13 +100,17 @@ bool USkillComponent::ActivateSkill()
 
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), EventData.EventTag, EventData);
 
+	UE_LOG(LogTemp, Warning, TEXT("GA에게 전달 Start"));
+
 	return true;
 }
 
-bool USkillComponent::CalculateSkillResult(int32 SkillIndex, const TArray<FTileIndex>& Tiles)
+bool USkillComponent::CalculateSkillResult(int32 SkillIndex, const TArray<TScriptInterface<ITileActor>>& TileActors)
 {
 	checkf(mSkillData.IsValidIndex(SkillIndex), TEXT("스킬 인덱스가 유효하지 않습니다."));
 
-	return UCombatCalculatorFunctionLibrary::CalculateSkillResult(mSkillData[SkillIndex].Get(), Tiles, mSkillCommitResult);
+	const AUnit* Unit = Cast<AUnit>(GetOwner());
+	TScriptInterface<const ITileActor> Caster = Unit;
+	return UCombatCalculatorFunctionLibrary::CalculateSkillResult(Caster, mSkillData[SkillIndex].Get(), TileActors, mSkillCommitResult);
 }
 

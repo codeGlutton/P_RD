@@ -9,6 +9,7 @@
 #include "GAS/GASMinimal.h"
 #include "UObject/Object.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
+#include "SRPGFramework/TileActor.h"
 #include "CombatResult.generated.h"
 
 // @brief 유닛 적용 결과
@@ -27,13 +28,13 @@ public:
 
 // @brief 타일 적용 결과
 USTRUCT(BlueprintType)
-struct FTileCommitResult
+struct FTileActorCommitResult
 {
 	GENERATED_BODY()
 
 public:
 
-	FTileIndex mTileIndex;
+	TScriptInterface<const ITileActor> mTileActor;
 
 	// 유닛에게 이걸 적용했다.
 	FUnitCommitResult mUnitCommitResult;
@@ -49,7 +50,7 @@ struct FEffectCommitResult
 	GENERATED_BODY()
 
 public:
-	TArray<FTileCommitResult> mTileCommitResult;
+	TArray<FTileActorCommitResult> mTileCommitResult;
 
 };
 
