@@ -10,7 +10,6 @@
 #include "GameMode/RoomGameModeBase.h"
 #include "UI/FrontendMapGraphWidgets.h"
 #include "UI/ViewportZOrderType.h"
-#include "UObject/ConstructorHelpers.h"
 
 namespace
 {
@@ -281,28 +280,17 @@ namespace
 }
 
 /**
- * @brief 월드맵 기본 WBP 클래스와 팝업 ZOrder를 초기화한다.
+ * @brief 월드맵 팝업 ZOrder와 기본 문구 캐시를 초기화한다.
  *
  * @details
- * WBP_FrontendMap의 클래스 기본값이 비어 있어도 선/노드 WBP를 찾을 수 있도록 C++ fallback을 둔다.
- * 이 위젯은 탑바에서 OpenUI()로 열리는 팝업이므로 일반 HUD보다 위에 표시한다.
+ * 선/노드 WBP 클래스는 WBP_FrontendMap Class Defaults에서 지정한다.
+ * C++은 특정 WBP 경로를 직접 알지 않고, 런타임에는 지정된 클래스가 없을 때 경고만 남긴다.
+ * 월드맵은 탑바에서 OpenUI()로 열리는 팝업이므로 일반 HUD보다 위에 표시한다.
  */
 UFrontendMapWidget::UFrontendMapWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	static ConstructorHelpers::FClassFinder<UFrontendMapLineWidget> MapLineWidgetFinder(TEXT("/Game/BP/UI/WBP_FrontendMapLine"));
-	if (MapLineWidgetFinder.Succeeded())
-	{
-		MapLineWidgetClass = MapLineWidgetFinder.Class;
-	}
-
-	static ConstructorHelpers::FClassFinder<UFrontendMapNodeWidget> MapNodeWidgetFinder(TEXT("/Game/BP/UI/WBP_FrontendMapNode"));
-	if (MapNodeWidgetFinder.Succeeded())
-	{
-		MapNodeWidgetClass = MapNodeWidgetFinder.Class;
-	}
-
-	mViewportZOrder = static_cast<int32>(EViewportZOrderType::PopUp);
+	mViewportZOrder = StaticCast<int32>(EViewportZOrderType::PopUp);
 	RefreshLocalizedTextCache();
 }
 
@@ -380,11 +368,12 @@ void UFrontendMapWidget::SetMapStatusOverride(const FText& InText)
 }
 
 /**
- * @brief 외부 상태 문구를 해제한다.
+ * @brief 외부 상태 문구를 해제하고 현재 캐시된 기본 상태 문구를 즉시 표시한다.
  */
 void UFrontendMapWidget::ClearMapStatusOverride()
 {
 	mStatusOverrideText = FText::GetEmpty();
+	SetMapStatusText(mMapReadyStatusText);
 }
 
 void UFrontendMapWidget::ValidateDesignerBindings() const

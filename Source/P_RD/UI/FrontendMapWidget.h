@@ -101,7 +101,7 @@ public:
 	void SetMapStatusOverride(const FText& InText);
 
 	/**
-	 * @brief 외부에서 지정한 상태 문구를 해제하고 지도 기본 상태 문구로 되돌린다.
+	 * @brief 외부에서 지정한 상태 문구를 해제하고 현재 캐시된 지도 기본 상태 문구로 되돌린다.
 	 */
 	void ClearMapStatusOverride();
 
@@ -196,6 +196,9 @@ private:
 	 * @details
 	 * WBP_FrontendMap Class Defaults에서 WBP_FrontendMapLine으로 지정한다.
 	 * 부모 맵은 위치/길이/각도만 계산하고, 선 모양은 이 WBP가 가진다.
+	 *
+	 * 왜 C++ 기본 경로를 두지 않는가:
+	 * 선 모양은 WBP 자산의 책임이다. C++이 특정 WBP 경로를 직접 들고 있으면 자산 이름/위치 변경이 코드 수정으로 번진다.
 	 */
 	UPROPERTY(Category = "Frontend Map", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	TSubclassOf<UFrontendMapLineWidget> MapLineWidgetClass;
@@ -206,6 +209,9 @@ private:
 	 * @details
 	 * WBP_FrontendMap Class Defaults에서 WBP_FrontendMapNode로 지정한다.
 	 * 방 개수가 늘어나도 C++에서 Button/TextBlock을 직접 만들지 않고 이 WBP를 재사용한다.
+	 *
+	 * 왜 C++ 기본 경로를 두지 않는가:
+	 * 노드의 실제 위젯 구성은 WBP에서 바꿀 수 있어야 한다. C++은 선택/배치 데이터만 넘기고 자산 경로는 WBP 설정에 맡긴다.
 	 */
 	UPROPERTY(Category = "Frontend Map", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	TSubclassOf<UFrontendMapNodeWidget> MapNodeWidgetClass;

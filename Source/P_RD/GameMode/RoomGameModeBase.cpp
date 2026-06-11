@@ -18,9 +18,25 @@ namespace
 		return RowIndex == 0 && ColumnIndex == Stage.mStartColumn;
 	}
 
+	/**
+	 * @brief 현재 방에서 바로 다음 행의 지정 방으로 이동할 수 있는지 확인한다.
+	 *
+	 * 왜 행까지 검사하는가:
+	 * mNextRoomColumns는 "다음 행에서 갈 수 있는 열"만 저장한다.
+	 * 열만 비교하면 더 먼 행에 같은 열 번호를 가진 방도 선택 가능하다고 오해할 수 있으므로,
+	 * 현재 행의 바로 다음 행인지 먼저 확인한 뒤 열 연결을 검사한다.
+	 */
 	bool IsNextRoomFromCurrentPath(const FStage& Stage, int32 CurrentRowIndex, int32 CurrentColumnIndex, int32 RowIndex, int32 ColumnIndex)
 	{
 		if (Stage.HasRoom(CurrentRowIndex, CurrentColumnIndex) == false)
+		{
+			return false;
+		}
+		if (RowIndex != CurrentRowIndex + 1)
+		{
+			return false;
+		}
+		if (Stage.HasRoom(RowIndex, ColumnIndex) == false)
 		{
 			return false;
 		}
