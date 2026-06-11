@@ -1,7 +1,6 @@
 ﻿/*****************************************************************//**
  * @file   TitleMenuWidget.h
  * @brief  타이틀 화면 위젯 정의 헤더
- * @author Codex
  * @date   2026-06-02
  *********************************************************************/
 
@@ -15,6 +14,7 @@
 class UButton;
 class UCharacterSelectWidget;
 class UFrontendMapWidget;
+class USettingsPanelWidget;
 class UTextBlock;
 class UWidget;
 class UWidgetSwitcher;
@@ -126,8 +126,8 @@ private:
 	 * @brief 설정 화면을 보여줌
 	 *
 	 * @details
-	 * SettingsScreen이 있는 경우 해당 화면으로 전환한다.
-	 * WBP에서 설정 화면을 아직 만들지 않은 경우에는 메인 화면에 머무르고 상태 문구만 바꾼다.
+	 * 타이틀에서도 인게임과 같은 SettingsPanelWidget을 사용한다.
+	 * 다만 타이틀에는 현재 런 액션이 없으므로 Title 모드로 맞춰 저장 후 종료/포기하기 영역만 숨긴다.
 	 */
 	void ShowSettingsScreen();
 
@@ -164,6 +164,28 @@ private:
 	 * 지도 View 생성 가능 여부만 보고 표시 상태를 바꾼다.
 	 */
 	void RefreshMainMenuState() const;
+
+	/**
+	 * @brief 현재 복구된 Run 상태를 지도 화면으로 보여줄 수 있는지 확인함
+	 *
+	 * @details
+	 * 세이브 파일 로드는 Intro 단계에서 끝나 있어야 한다.
+	 * 타이틀 UI는 파일을 직접 읽지 않고, FrontendGameMode가 현재 PersistentData로 지도 View를 만들 수 있는지만 확인한다.
+	 *
+	 * @return 지도 화면으로 이어갈 수 있는 활성 런 데이터가 있으면 true
+	 */
+	bool TryLoadRunForMapScreen() const;
+
+	/**
+	 * @brief 타이틀에서 열 공용 설정 패널을 얻음
+	 *
+	 * @details
+	 * 새 타이틀 WBP는 예전 자체 SettingsScreen을 아직 갖고 있지만,
+	 * 실제 설정 UI는 인게임과 같은 WBP_SettingsPanel을 써야 한다.
+	 * WBP 안에 SettingsPanelWidget을 직접 넣어둔 경우에는 그 인스턴스를 쓰고,
+	 * 그렇지 않으면 FrontendGameMode가 준비한 InGameSettings 월드 위젯을 Title 모드로 열어 같은 설정 화면을 공유한다.
+	 */
+	USettingsPanelWidget* GetTitleSettingsPanel() const;
 
 	/**
 	 * @brief 오래된 타이틀 WBP에 남아 있는 하단 상태 문구를 숨김
@@ -298,6 +320,16 @@ private:
 	/** @brief 설정 화면 뒤로 가기 버튼 안에 표시할 라벨 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> SettingsBackButtonText;
+
+	/**
+	 * @brief 타이틀 설정 화면 안에 직접 배치한 공용 설정 패널
+	 *
+	 * @details
+	 * WBP_TitleMenu의 SettingsScreen 안에 WBP_SettingsPanel을 SettingsPanelWidget이라는 이름으로 배치하면 바인딩된다.
+	 * 타이틀과 인게임 설정의 차이는 이 패널 내부를 갈라 만드는 것이 아니라 PanelMode로 RunActions만 숨기는 방식으로 처리한다.
+	 */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<USettingsPanelWidget> SettingsPanelWidget;
 
 	/** @brief 게임 타이틀명 기본 문구 */
 	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))

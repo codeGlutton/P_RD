@@ -3,7 +3,6 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
-#include "GameMode/CombatGameMode.h"
 #include "GameMode/RoomGameModeBase.h"
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
@@ -246,9 +245,6 @@ void UTopMenuBarWidget::ValidateDesignerBindings() const
 
 /**
  * @brief 기본 라벨과 현재 방 요약 문구를 채운다.
- *
- * @details
- * SKILL 버튼은 전투방에서 임시 승리 트리거로 쓰일 수 있으므로 전투방일 때만 WIN 문구를 보여준다.
  */
 void UTopMenuBarWidget::SyncDefaultText() const
 {
@@ -269,10 +265,7 @@ void UTopMenuBarWidget::SyncDefaultText() const
 
 	if (SkillButtonText != nullptr)
 	{
-		const bool bIsCombatRoom = GetWorld() != nullptr && GetWorld()->GetAuthGameMode<ACombatGameMode>() != nullptr;
-		SkillButtonText->SetText(bIsCombatRoom
-			? NSLOCTEXT("TopMenuBarWidget", "DebugVictoryButtonText", "WIN")
-			: NSLOCTEXT("TopMenuBarWidget", "SkillButtonText", "SKILL 0"));
+		SkillButtonText->SetText(NSLOCTEXT("TopMenuBarWidget", "SkillButtonText", "SKILL 0"));
 	}
 
 	if (TitleTextBlock != nullptr)
@@ -377,6 +370,31 @@ void UTopMenuBarWidget::CloseWorldWidget(EWorldWidgetType WorldWidgetType) const
 }
 
 /**
+ * @brief 탑바 플로팅 패널을 하나만 남기고 닫는다.
+ *
+ * @details
+ * 월드맵, 설정, 주사위, 스킬 패널은 서로 겹쳐 열리는 화면이 아니다.
+ * 새 패널을 열기 전에 나머지를 닫아야 Back/Close 입력과 터치 대상이 명확하다.
+ */
+void UTopMenuBarWidget::CloseFloatingPanels(EWorldWidgetType ExceptWorldWidgetType) const
+{
+	constexpr EWorldWidgetType FloatingPanels[] = {
+		EWorldWidgetType::WorldMap,
+		EWorldWidgetType::InGameSettings,
+		EWorldWidgetType::DicePanel,
+		EWorldWidgetType::SkillPanel
+	};
+
+	for (const EWorldWidgetType FloatingPanel : FloatingPanels)
+	{
+		if (FloatingPanel != ExceptWorldWidgetType)
+		{
+			CloseWorldWidget(FloatingPanel);
+		}
+	}
+}
+
+/**
  * @brief 일반 맵 조회와 승리 후 다음 방 선택 맵을 구분해 월드맵을 토글한다.
  *
  * @details
@@ -410,7 +428,7 @@ void UTopMenuBarWidget::ToggleWorldMap()
 		return;
 	}
 
-	CloseWorldWidget(EWorldWidgetType::InGameSettings);
+	CloseFloatingPanels(EWorldWidgetType::WorldMap);
 	WorldMapWidget->OnCloseRequested.AddUniqueDynamic(this, &UTopMenuBarWidget::HandleWorldMapCloseRequested);
 	WorldMapWidget->SetRoomSelectionEnabled(false);
 	WorldMapWidget->ClearMapStatusOverride();
@@ -452,13 +470,42 @@ void UTopMenuBarWidget::ToggleSettingsPanel()
 		return;
 	}
 
-	CloseWorldWidget(EWorldWidgetType::WorldMap);
+	CloseFloatingPanels(EWorldWidgetType::InGameSettings);
 	SettingsPanelWidget->OnBackRequested.AddUniqueDynamic(this, &UTopMenuBarWidget::HandleSettingsBackRequested);
 	SettingsPanelWidget->OpenUI();
 	SettingsPanelWidget->SetPanelMode(ESettingsPanelMode::InGame);
 	SettingsPanelWidget->RefreshPanelState(false, false);
 	SettingsPanelWidget->HideAbandonConfirm();
 	SettingsPanelWidget->SetStatusText(FText::GetEmpty());
+	ApplyInputPassThrough();
+}
+
+/**
+ * @brief 단순 플로팅 패널을 토글한다.
+ *
+ * @details
+ * DicePanel/SkillPanel은 현재 단계에서 별도 게임 로직을 실행하지 않는다.
+ * 하지만 WBP가 존재하므로 버튼을 누르면 실제 패널이 OpenUI/CloseUI 흐름으로 열리고 닫혀야 한다.
+ */
+void UTopMenuBarWidget::ToggleFloatingPanel(EWorldWidgetType WorldWidgetType, const TCHAR* DebugName)
+{
+	RefreshRoomInfo();
+
+	URDUserWidget* FloatingPanel = GetToggleableWorldWidget(WorldWidgetType);
+	if (FloatingPanel == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TopMenuBarWidget: %s widget is not configured."), DebugName);
+		return;
+	}
+
+	if (FloatingPanel->IsOpened())
+	{
+		FloatingPanel->CloseUI();
+		return;
+	}
+
+	CloseFloatingPanels(WorldWidgetType);
+	FloatingPanel->OpenUI();
 	ApplyInputPassThrough();
 }
 
@@ -478,20 +525,14 @@ void UTopMenuBarWidget::HandleSettingsButtonClicked()
 	ToggleSettingsPanel();
 }
 
-/**
- * @brief 아직 연결되지 않은 DICE 팝업 입력을 로그로 남긴다.
- */
 void UTopMenuBarWidget::HandleDiceButtonClicked()
 {
-	UE_LOG(LogRD, Log, TEXT("TopMenuBarWidget: DICE button clicked. Dice popup is not configured on this branch."));
+	ToggleFloatingPanel(EWorldWidgetType::DicePanel, TEXT("DicePanel"));
 }
 
-/**
- * @brief 아직 연결되지 않은 SKILL 팝업 또는 임시 승리 입력을 로그로 남긴다.
- */
 void UTopMenuBarWidget::HandleSkillButtonClicked()
 {
-	UE_LOG(LogRD, Log, TEXT("TopMenuBarWidget: SKILL button clicked. Skill popup is not configured on this branch."));
+	ToggleFloatingPanel(EWorldWidgetType::SkillPanel, TEXT("SkillPanel"));
 }
 
 /**
@@ -531,6 +572,8 @@ void UTopMenuBarWidget::OpenWorldMapAfterPlayerWin(TSharedPtr<FPresentationBarri
 	}
 
 	CloseWorldWidget(EWorldWidgetType::InGameSettings);
+	CloseWorldWidget(EWorldWidgetType::DicePanel);
+	CloseWorldWidget(EWorldWidgetType::SkillPanel);
 	WorldMapWidget->OnCloseRequested.AddUniqueDynamic(this, &UTopMenuBarWidget::HandleWorldMapCloseRequested);
 	WorldMapWidget->SetRoomSelectionEnabled(true);
 	WorldMapWidget->SetMapStatusOverride(NSLOCTEXT("TopMenuBarWidget", "VictoryMapStatus", "승리했습니다!"));

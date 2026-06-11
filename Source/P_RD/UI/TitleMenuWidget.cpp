@@ -5,8 +5,10 @@
 #include "Components/WidgetSwitcher.h"
 #include "Frontend/FrontendViewTypes.h"
 #include "GameMode/FrontendGameMode.h"
+#include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/CharacterSelectWidget.h"
 #include "UI/FrontendMapWidget.h"
+#include "UI/SettingsPanelWidget.h"
 
 namespace
 {
@@ -67,6 +69,11 @@ void UTitleMenuWidget::NativeConstruct()
 		SettingsBackButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsBackButtonClicked);
 	}
 
+	if (USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel())
+	{
+		TitleSettingsPanel->OnBackRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsBackButtonClicked);
+	}
+
 	if (CharacterSelectWidget != nullptr)
 	{
 		CharacterSelectWidget->OnBackToMainRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleCharacterBackToMainRequested);
@@ -103,6 +110,11 @@ void UTitleMenuWidget::NativeDestruct()
 	if (SettingsBackButton != nullptr)
 	{
 		SettingsBackButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsBackButtonClicked);
+	}
+
+	if (USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel())
+	{
+		TitleSettingsPanel->OnBackRequested.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsBackButtonClicked);
 	}
 
 	if (CharacterSelectWidget != nullptr)
@@ -152,14 +164,30 @@ void UTitleMenuWidget::ShowCharacterScreen()
 
 void UTitleMenuWidget::ShowSettingsScreen()
 {
-	if (SettingsScreen == nullptr)
+	USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel();
+	if (TitleSettingsPanel == nullptr)
 	{
 		ShowMainScreen();
 		SetStatusText(mMainOnlyStatusText);
 		return;
 	}
 
-	ShowScreen(SettingsScreen);
+	TitleSettingsPanel->OnBackRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsBackButtonClicked);
+	TitleSettingsPanel->SetPanelMode(ESettingsPanelMode::Title);
+	TitleSettingsPanel->RefreshPanelState(false, false);
+	TitleSettingsPanel->HideAbandonConfirm();
+	TitleSettingsPanel->SetStatusText(FText::GetEmpty());
+
+	if (SettingsPanelWidget != nullptr && SettingsScreen != nullptr)
+	{
+		TitleSettingsPanel->SetVisibility(ESlateVisibility::Visible);
+		ShowScreen(SettingsScreen);
+	}
+	else
+	{
+		ShowMainScreen();
+		TitleSettingsPanel->OpenUI();
+	}
 	SetStatusText(mSettingsStatusText);
 }
 
@@ -225,10 +253,7 @@ void UTitleMenuWidget::SyncMainText() const
 
 void UTitleMenuWidget::RefreshMainMenuState() const
 {
-	AFrontendGameMode* FrontendGameMode = GetWorld()->GetAuthGameMode<AFrontendGameMode>();
-	checkf(FrontendGameMode != nullptr, TEXT("None GameMode"));
-
-	const bool bCanContinueRun = FrontendGameMode->HasActiveRun();
+	const bool bCanContinueRun = TryLoadRunForMapScreen();
 
 	if (StartButton != nullptr)
 	{
@@ -257,6 +282,31 @@ void UTitleMenuWidget::RefreshMainMenuState() const
 		SettingsButton->SetVisibility(ESlateVisibility::Visible);
 		SettingsButton->SetIsEnabled(true);
 	}
+}
+
+bool UTitleMenuWidget::TryLoadRunForMapScreen() const
+{
+	TArray<FFrontendMapRoomView> Rooms;
+	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
+	{
+		return FrontendGameMode->GetMapRoomViews(OUT Rooms);
+	}
+
+	return false;
+}
+
+USettingsPanelWidget* UTitleMenuWidget::GetTitleSettingsPanel() const
+{
+	if (SettingsPanelWidget != nullptr)
+	{
+		return SettingsPanelWidget;
+	}
+
+	UWorld* World = GetWorld();
+	UWorldWidgetSubsystem* WorldWidgetSubsystem = World != nullptr ? World->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
+	return WorldWidgetSubsystem != nullptr
+		? WorldWidgetSubsystem->GetWorldWidget<USettingsPanelWidget>(EWorldWidgetType::InGameSettings)
+		: nullptr;
 }
 
 void UTitleMenuWidget::SetStatusText(const FText& /*InText*/) const
@@ -335,6 +385,11 @@ void UTitleMenuWidget::ValidateDesignerBindings() const
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: SettingsButtonText is not connected."));
 	}
 
+	if (GetTitleSettingsPanel() == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: SettingsPanelWidget is not available. Place WBP_SettingsPanel in the title WBP or configure InGameSettings world widget."));
+	}
+
 	SetStatusText(FText::GetEmpty());
 }
 
@@ -353,14 +408,14 @@ void UTitleMenuWidget::HandleStartButtonClicked()
 
 void UTitleMenuWidget::HandleContinueButtonClicked()
 {
-	/*if (TryLoadRunForMapScreen())
+	if (TryLoadRunForMapScreen())
 	{
 		ShowMapScreen();
 		return;
 	}
 
 	ShowMainScreen();
-	SetStatusText(mMainOnlyStatusText);*/
+	SetStatusText(mMainOnlyStatusText);
 }
 
 void UTitleMenuWidget::HandleSettingsButtonClicked()
@@ -370,6 +425,14 @@ void UTitleMenuWidget::HandleSettingsButtonClicked()
 
 void UTitleMenuWidget::HandleSettingsBackButtonClicked()
 {
+	if (SettingsPanelWidget == nullptr)
+	{
+		if (USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel())
+		{
+			TitleSettingsPanel->CloseUI();
+		}
+	}
+
 	ShowMainScreen();
 	SetStatusText(FText::GetEmpty());
 }

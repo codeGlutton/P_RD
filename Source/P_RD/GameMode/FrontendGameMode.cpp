@@ -63,6 +63,82 @@ namespace
 		NewOption.bSelectable = false;
 		Options.Add(MoveTemp(NewOption));
 	}
+
+	bool IsFrontendStageStartPoint(const FStage& Stage, int32 RowIndex, int32 ColumnIndex)
+	{
+		return RowIndex == 0 && ColumnIndex == Stage.mStartColumn;
+	}
+
+	bool IsNextFrontendRoomFromCurrentPath(const FStage& Stage, int32 CurrentRowIndex, int32 CurrentColumnIndex, int32 RowIndex, int32 ColumnIndex)
+	{
+		if (Stage.HasRoom(CurrentRowIndex, CurrentColumnIndex) == false)
+		{
+			return false;
+		}
+		if (RowIndex != CurrentRowIndex + 1)
+		{
+			return false;
+		}
+		if (Stage.HasRoom(RowIndex, ColumnIndex) == false)
+		{
+			return false;
+		}
+
+		const FRoom& CurrentRoom = Stage.mRoomRows[CurrentRowIndex].mRooms[CurrentColumnIndex].Get<FRoom>();
+		return CurrentRoom.mNextRoomColumns.Contains(ColumnIndex);
+	}
+
+	EFrontendMapRoomState ResolveFrontendRoomState(const FStage& Stage, const FRoom& Room, int32 CurrentRowIndex, int32 CurrentColumnIndex)
+	{
+		if (Room.mWasSelected == true)
+		{
+			return EFrontendMapRoomState::Cleared;
+		}
+
+		if (IsNextFrontendRoomFromCurrentPath(Stage, CurrentRowIndex, CurrentColumnIndex, Room.mRow, Room.mColumn) == true)
+		{
+			return EFrontendMapRoomState::Ready;
+		}
+
+		return EFrontendMapRoomState::Locked;
+	}
+
+	FText GetFrontendRoomTitle(ERoomType RoomType)
+	{
+		switch (RoomType)
+		{
+		case ERoomType::Monster:
+			return NSLOCTEXT("FrontendGameMode", "MonsterRoomTitle", "Monster");
+		case ERoomType::EliteMonster:
+			return NSLOCTEXT("FrontendGameMode", "EliteRoomTitle", "Elite");
+		case ERoomType::BossMonster:
+			return NSLOCTEXT("FrontendGameMode", "BossRoomTitle", "Boss");
+		case ERoomType::Shop:
+			return NSLOCTEXT("FrontendGameMode", "ShopRoomTitle", "Shop");
+		case ERoomType::Treasure:
+			return NSLOCTEXT("FrontendGameMode", "TreasureRoomTitle", "Treasure");
+		default:
+			return NSLOCTEXT("FrontendGameMode", "UnknownRoomTitle", "Unknown");
+		}
+	}
+
+	FText GetFrontendRoomDescription(const FRoom& Room)
+	{
+		return FText::Format(
+			NSLOCTEXT("FrontendGameMode", "MapRoomDescription", "Row {0}, Column {1}. Next routes: {2}"),
+			FText::AsNumber(Room.mRow + 1),
+			FText::AsNumber(Room.mColumn + 1),
+			FText::AsNumber(Room.mNextRoomColumns.Num())
+		);
+	}
+
+	FText GetFrontendStartPointDescription(const FRoom& Room)
+	{
+		return FText::Format(
+			NSLOCTEXT("FrontendGameMode", "StartPointDescription", "Routes: {0}"),
+			FText::AsNumber(Room.mNextRoomColumns.Num())
+		);
+	}
 }
 
 /**
@@ -74,8 +150,12 @@ namespace
  * 실제로 화면에 보일 때는 HUD든 WorldWidget이든 모두 URDUserWidget::OpenUI()를 통한다.
  *
  * 타이틀 HUD는 프론트엔드 방의 메인 화면이라 mHUDClass와 InitHUD() 경로로 한 개만 생성하고,
- * BeginRoom()에서 OpenUI()로 표시한다. 반면 MsgNotify, FadeInOut, LoadingNotify는 여러 GameMode가 공유하는
- * 보조 UI라 mWorldWidgets에 넣어 WorldWidgetSubsystem이 생성/보관하게 한다.
+ * BeginRoom()에서 OpenUI()로 표시한다. 반면 MsgNotify, FadeInOut, LoadingNotify, InGameSettings는
+ * 여러 GameMode가 공유하거나 HUD 밖에서 뜨는 보조 UI라 mWorldWidgets에 넣어 WorldWidgetSubsystem이 생성/보관하게 한다.
+ *
+ * InGameSettings를 프론트엔드에도 준비하는 이유:
+ * 타이틀 설정과 인게임 설정은 같은 WBP_SettingsPanel을 사용해야 하고, 차이는 PanelMode로 저장 후 종료/포기하기 영역만 숨기는 것이다.
+ * 새 타이틀 WBP 안에 예전 자체 SettingsScreen이 남아 있더라도 실제 설정 화면은 이 공용 월드 위젯을 OpenUI()로 연다.
  *
  * 왜 생성 경로를 나누는가:
  * "누가 만들고 보관할지"와 "어떻게 화면에 열지"는 다른 문제다. 생성 책임은 HUD/WorldWidget으로 나누되,
@@ -87,6 +167,7 @@ AFrontendGameMode::AFrontendGameMode()
 		EWorldWidgetType::MsgNotify,
 		EWorldWidgetType::FadeInOut,
 		EWorldWidgetType::LoadingNotify,
+		EWorldWidgetType::InGameSettings,
 	};
 
 	mShowFadeInUIOnTransition = true;
@@ -222,6 +303,81 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 	}
 
 	return OutOptions.IsEmpty() == false;
+}
+
+bool AFrontendGameMode::GetMapRoomViews(TArray<FFrontendMapRoomView>& OutRooms) const
+{
+	OutRooms.Reset();
+
+	const URunPersistData* RunPersistData = GetRunPersistData();
+	if (RunPersistData == nullptr || RunPersistData->IsActive() == false)
+	{
+		return false;
+	}
+
+	int32 CurrentRowIndex = 0;
+	int32 CurrentColumnIndex = 0;
+	RunPersistData->GetCurrentRoomIndex(OUT CurrentRowIndex, OUT CurrentColumnIndex);
+
+	const FStage& Stage = RunPersistData->GetStage();
+	for (int32 RowIndex = 0; RowIndex < Stage.mRoomRows.Num(); ++RowIndex)
+	{
+		const FRoomRow& RoomRow = Stage.mRoomRows[RowIndex];
+		for (int32 ColumnIndex = 0; ColumnIndex < RoomRow.mRooms.Num(); ++ColumnIndex)
+		{
+			if (RoomRow.mRooms[ColumnIndex].IsValid() == false)
+			{
+				continue;
+			}
+
+			const FRoom& Room = RoomRow.mRooms[ColumnIndex].Get<FRoom>();
+			if (Room.mType == ERoomType::None)
+			{
+				continue;
+			}
+
+			const bool bIsStartPoint = IsFrontendStageStartPoint(Stage, RowIndex, ColumnIndex);
+			const EFrontendMapRoomState RoomState = ResolveFrontendRoomState(Stage, Room, CurrentRowIndex, CurrentColumnIndex);
+
+			FFrontendMapRoomView NewView;
+			NewView.mRow = RowIndex;
+			NewView.mColumn = ColumnIndex;
+			NewView.mType = Room.mType;
+			NewView.mState = RoomState;
+			NewView.mTitle = bIsStartPoint ? NSLOCTEXT("FrontendGameMode", "StartPointTitle", "Start") : GetFrontendRoomTitle(Room.mType);
+			NewView.mDescription = bIsStartPoint ? GetFrontendStartPointDescription(Room) : GetFrontendRoomDescription(Room);
+			NewView.mNextRoomColumns = Room.mNextRoomColumns;
+			NewView.mPositionOffsetRate = Room.mPositionOffsetRate;
+			NewView.bSelectable = false;
+			NewView.bSelected = false;
+			NewView.bVisited = RoomState == EFrontendMapRoomState::Cleared;
+			NewView.bCanEnter = false;
+			NewView.bIsStartPoint = bIsStartPoint;
+			OutRooms.Add(MoveTemp(NewView));
+		}
+	}
+
+	return OutRooms.IsEmpty() == false;
+}
+
+bool AFrontendGameMode::GetRunControlView(FFrontendRunControlView& OutView) const
+{
+	OutView = FFrontendRunControlView();
+	OutView.bHasActiveRun = HasActiveRun();
+	OutView.bCanSaveRun = false;
+	OutView.bCanAbandonRun = CanAbandonRun();
+
+	const URunPersistData* RunPersistData = GetRunPersistData();
+	if (RunPersistData == nullptr || RunPersistData->IsActive() == false)
+	{
+		return false;
+	}
+
+	RunPersistData->GetCurrentRoomIndex(OUT OutView.mRow, OUT OutView.mColumn);
+	OutView.bIsAtStageStart = IsFrontendStageStartPoint(RunPersistData->GetStage(), OutView.mRow, OutView.mColumn);
+	OutView.mPlayerLevel = RunPersistData->GetPlayerLevel();
+	OutView.mDifficulty = RunPersistData->GetDifficulty();
+	return true;
 }
 
 const TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>>& AFrontendGameMode::GetPlayerUnitDatas() const

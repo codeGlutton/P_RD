@@ -84,6 +84,28 @@ public:
 	UFUNCTION(Category = Title, BlueprintCallable)
 	bool GetCharacterOptions(TArray<FFrontendCharacterOption>& OutOptions) const;
 
+	/**
+	 * @brief 타이틀 Continue 지도 화면에 보여줄 방 노드 View 데이터를 가져온다.
+	 *
+	 * @details
+	 * 프론트엔드 방은 실제 전투 방은 아니지만, Intro에서 복구된 RunPersistData를 읽어 기존 런의 월드맵을 보여줄 수 있어야 한다.
+	 * 세이브가 없거나 활성 Run이 없으면 false를 반환하고, 타이틀 메뉴는 Continue 버튼을 숨긴다.
+	 *
+	 * @param OutRooms 지도 노드/선 표시용 View 데이터
+	 * @return 표시 가능한 활성 Run 지도 데이터가 있으면 true
+	 */
+	UFUNCTION(Category = Title, BlueprintCallable)
+	bool GetMapRoomViews(TArray<FFrontendMapRoomView>& OutRooms) const;
+
+	/**
+	 * @brief 타이틀 지도 첫 표시 위치와 요약 정보에 사용할 현재 Run 상태를 가져온다.
+	 *
+	 * @param OutView 현재 Run 표시용 View 데이터
+	 * @return 활성 Run 상태가 있으면 true
+	 */
+	UFUNCTION(Category = Title, BlueprintCallable)
+	bool GetRunControlView(FFrontendRunControlView& OutView) const;
+
 protected:
 	/**
 	 * @brief StaticFrontendSpawnData에 등록된 플레이어 유닛 PrimaryAsset 목록을 가져온다.

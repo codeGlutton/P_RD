@@ -47,6 +47,22 @@ enum class EWorldWidgetType : uint8
 	 */
 	InGameSettings,
 
+	/**
+	 * @brief 인게임 탑바의 주사위 버튼으로 여는 공용 주사위 패널
+	 *
+	 * @details
+	 * 전투 HUD가 직접 소유하지 않고 WorldWidget으로 준비해 두면, 탑바는 다른 팝업과 같은 OpenUI/CloseUI 규칙으로 열 수 있다.
+	 */
+	DicePanel,
+
+	/**
+	 * @brief 인게임 탑바의 스킬 버튼으로 여는 공용 스킬 패널
+	 *
+	 * @details
+	 * 주사위 패널과 같은 플로팅 팝업 계층에 두어 MAP/SET/DICE/SKILL 중 하나만 열리는 규칙을 공유한다.
+	 */
+	SkillPanel,
+
 	Count UMETA(Hidden),
 };
 
