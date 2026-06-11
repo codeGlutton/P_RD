@@ -59,6 +59,7 @@ class P_RD_API UStaticCombatRoomSpawnData : public UStaticRoomSpawnData
 
 public:
 	void PostInitProperties() override;
+	void PostLoad() override;
 
 public:
 	/**

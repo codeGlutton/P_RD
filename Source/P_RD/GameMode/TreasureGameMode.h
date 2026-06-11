@@ -13,7 +13,7 @@
 /**
  * @brief  보상 방에 대한 GameMode
  */
-UCLASS()
+UCLASS(abstract)
 class P_RD_API ATreasureGameMode : public ARoomGameModeBase
 {
 	GENERATED_BODY()

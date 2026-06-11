@@ -41,7 +41,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogFrontendGameMode, Log, All)
  * 선택 가능한 다음 방 조회, 지도 노드 선택 검증, 선택된 방 입장 같은 정책 API는 최종적으로 PM 쪽 공식
  * API로 분리되어야 한다. 현재 함수들은 그 API가 생기기 전까지 WBP 연결을 유지하기 위한 adapter다.
  */
-UCLASS()
+UCLASS(abstract)
 class P_RD_API AFrontendGameMode : public ARDGameModeBase
 {
 	GENERATED_BODY()
