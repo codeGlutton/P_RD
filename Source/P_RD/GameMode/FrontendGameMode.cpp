@@ -183,6 +183,7 @@ bool AFrontendGameMode::AbandonRunFromTitle()
  *
  * 이 함수는 그 게임 데이터를 UI 카드용 데이터로 바꾸는 중간 다리다.
  * CharacterSelectWidget은 GameMode 내부의 방 데이터 구조를 몰라도 되고, GameMode는 UI가 필요한 값만 정리해서 넘긴다.
+ * 즉 UI는 "받은 카드 목록을 그리는 일"만 맡고, 어떤 DataAsset을 열어 캐릭터 후보로 인정할지는 GameMode가 결정한다.
  *
  * 왜 여기서 LoadSynchronous()를 허용하는가:
  * 타이틀에 막 들어온 시점에는 "어떤 유닛 파일을 봐야 하는지" 경로만 있고, 실제 유닛 파일 내용은 아직 안 열린 상태일 수 있다.
@@ -259,6 +260,11 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
  *
  * 그래서 먼저 시작 방 정보 파일을 직접 한 번 열어 보고, 그래도 실패하면 등록된 모든 PlayerUnit 목록으로 임시 카드를 만든다.
  * fallback은 최종 게임 규칙이라기보다 "앱을 바로 죽이지 않고, 타이틀 화면과 로그에서 설정 문제를 확인하게 하는 안전망"이다.
+ * 정상 정책은 mFrontendRoomId가 가리키는 프론트엔드 방의 mPlayableUnits만 캐릭터 선택 후보로 쓰는 것이다.
+ *
+ * 왜 GameMode에서 처리하는가:
+ * CharacterSelectWidget이 AssetManager나 FrontendRoom DataAsset을 직접 알기 시작하면 UI가 게임 데이터 구조에 묶인다.
+ * GameMode가 후보 목록을 확정하고 UI용 View로 바꿔줘야, UI는 표시만 맡고 런 시작 검증도 같은 기준을 사용할 수 있다.
  */
 const TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>>& AFrontendGameMode::GetPlayerUnitDatas() const
 {
@@ -285,7 +291,10 @@ const TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>>& AFrontendGameMode::Get
 				{
 					UE_LOG(LogFrontendGameMode, Warning, TEXT("Frontend room data is not loaded. Falling back to PlayerUnit asset list: %s"), *GamePlaySettings->mFrontendRoomId.ToString());
 
-					/* 시작 방 설정이 잘못되어도 캐릭터 선택 화면을 빈 상태로 두지 않고, 등록된 PlayerUnit 전체 목록으로 임시 카드를 만든다. */
+					/*
+					 * 이 분기는 최종 선택 정책이 아니라 설정 문제를 확인하기 위한 안전망이다.
+					 * 정상 상태에서는 프론트엔드 방 데이터의 mPlayableUnits만 캐릭터 후보가 된다.
+					 */
 					TArray<FPrimaryAssetId> PlayerUnitIds;
 					AssetManager->GetPrimaryAssetIdList(UnitPrimaryAssetTypes::GetPlayerUnitType(), OUT PlayerUnitIds);
 					for (const FPrimaryAssetId& PlayerUnitId : PlayerUnitIds)
