@@ -27,16 +27,16 @@ class P_RD_API USaveGameSubsystem : public UGameInstanceSubsystem, public IUserD
 	GENERATED_BODY()
 
 public:
-	void SaveUser() const;
+	bool SaveUser() const;
 	void SaveUserAsync(FAsyncSaveGameToSlotDelegate Callback) const;
-	void LoadUser();
+	bool LoadUser() const;
 	void LoadUserAsync(FAsyncLoadGameFromSlotDelegate Callback) const;
 	void ClearUser() const;
 
 public:
-	void SaveRun() const;
+	bool SaveRun() const;
 	void SaveRunAsync(FAsyncSaveGameToSlotDelegate Callback) const;
-	void LoadRun();
+	bool LoadRun() const;
 	void LoadRunAsync(FAsyncLoadGameFromSlotDelegate Callback) const;
 	void ClearRun() const;
 
