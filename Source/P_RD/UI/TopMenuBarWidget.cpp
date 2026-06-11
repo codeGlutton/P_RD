@@ -28,11 +28,15 @@ namespace
 
 /**
  * @brief 탑바가 다른 팝업 위에서 보이도록 ZOrder를 설정한다.
+ *
+ * @details
+ * 월드맵/설정 패널도 팝업 ZOrder를 사용하므로, 탑바는 PopUp보다 한 단계 위에 둔다.
+ * 대신 입력은 ApplyInputPassThrough()에서 버튼만 받게 처리해, 위에 보이더라도 아래 팝업 조작을 막지 않는다.
  */
 UTopMenuBarWidget::UTopMenuBarWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	mViewportZOrder = static_cast<int32>(EViewportZOrderType::PopUp) + 1;
+	mViewportZOrder = StaticCast<int32>(EViewportZOrderType::PopUp) + 1;
 }
 
 /**
@@ -513,6 +517,10 @@ void UTopMenuBarWidget::HandleEndCombatUI(TSharedPtr<FPresentationBarrier> Barri
  * 왜 즉시 RefreshMap()도 호출하는가:
  * OpenUI 애니메이션이 있는 경우에도 위젯 내용은 먼저 채워져 있어야 한다.
  * 콜백에서도 한 번 더 갱신해, 열리는 중 선택 상태가 바뀌어도 표시가 최신 상태가 된다.
+ *
+ * 왜 WeakLambda 대상을 WorldMapWidget으로 두는가:
+ * 완료 콜백에서 실제로 다시 접근하는 UObject는 탑바가 아니라 월드맵 위젯이다.
+ * 따라서 월드맵 위젯이 사라진 뒤 콜백이 실행되지 않도록 OpenUI 대상 위젯을 약한 참조 검사 대상으로 둔다.
  */
 void UTopMenuBarWidget::OpenWorldMapAfterPlayerWin(TSharedPtr<FPresentationBarrier> Barrier)
 {
@@ -526,9 +534,12 @@ void UTopMenuBarWidget::OpenWorldMapAfterPlayerWin(TSharedPtr<FPresentationBarri
 	WorldMapWidget->OnCloseRequested.AddUniqueDynamic(this, &UTopMenuBarWidget::HandleWorldMapCloseRequested);
 	WorldMapWidget->SetRoomSelectionEnabled(true);
 	WorldMapWidget->SetMapStatusOverride(NSLOCTEXT("TopMenuBarWidget", "VictoryMapStatus", "승리했습니다!"));
-	WorldMapWidget->OpenUI(FOnEndUIOpenAnimation::CreateWeakLambda(this, [WorldMapWidget, Barrier](UUserWidget*) mutable
+	WorldMapWidget->OpenUI(FOnEndUIOpenAnimation::CreateWeakLambda(WorldMapWidget, [Barrier](UUserWidget* OpenedWidget) mutable
 	{
-		WorldMapWidget->RefreshMap();
+		if (UFrontendMapWidget* OpenedWorldMapWidget = Cast<UFrontendMapWidget>(OpenedWidget))
+		{
+			OpenedWorldMapWidget->RefreshMap();
+		}
 		Barrier.Reset();
 	}));
 	WorldMapWidget->RefreshMap();
