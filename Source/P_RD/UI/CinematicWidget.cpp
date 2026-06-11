@@ -1,5 +1,8 @@
 #include "UI/CinematicWidget.h"
 
+#include "Engine/World.h"
+#include "TimerManager.h"
+
 UCinematicWidget::UCinematicWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
@@ -35,5 +38,21 @@ void UCinematicWidget::FinishCinematic()
 
 void UCinematicWidget::PlayCinematicAnimation_Implementation()
 {
-	FinishCinematic();
+	if (mDefaultCinematicDuration <= 0.0f)
+	{
+		FinishCinematic();
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	if (World == nullptr)
+	{
+		FinishCinematic();
+		return;
+	}
+
+	FTimerHandle TimerHandle;
+	World->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateWeakLambda(this, [this]() {
+		FinishCinematic();
+		}), mDefaultCinematicDuration, false);
 }

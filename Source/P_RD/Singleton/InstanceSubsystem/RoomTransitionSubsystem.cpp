@@ -286,32 +286,48 @@ void URoomTransitionSubsystem::OnTransitNextRoom()
 
     mTransitionState = ERoomTransitionStateFlag::None;
 
-    /* 현재 방 기록 */
-
-    if (mRequest.mChangePersistentData == true)
-    {
-        GetRunMutableData()->SetCurrentRoomIndex(mRequest.mRoomRowIndex, mRequest.mRoomColumnIndex);
-    }
-
-    /* 방 이동 */
-
     UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
     checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
 
-    const FRoom& NextRoom = GetRunMutableData()->GetRoom(mRequest.mRoomRowIndex, mRequest.mRoomColumnIndex);
-    UStaticRoomSpawnData* StaticRoomData = AssetManager->GetPrimaryAssetObject<UStaticRoomSpawnData>(NextRoom.mStaticRoomSpawnDataId);
+    UStaticRoomSpawnData* StaticRoomData = nullptr;
+    if (mRequest.mChangePersistentData == true)
+    {
+        /* 현재 방 기록 */
+        GetRunMutableData()->SetCurrentRoomIndex(mRequest.mRoomRowIndex, mRequest.mRoomColumnIndex);
+
+        const FRoom& NextRoom = GetRunMutableData()->GetRoom(mRequest.mRoomRowIndex, mRequest.mRoomColumnIndex);
+        StaticRoomData = AssetManager->GetPrimaryAssetObject<UStaticRoomSpawnData>(NextRoom.mStaticRoomSpawnDataId);
+    }
+    else
+    {
+        const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
+        StaticRoomData = AssetManager->GetPrimaryAssetObject<UStaticRoomSpawnData>(GamePlaySettings->mFrontendRoomId);
+        if (StaticRoomData == nullptr)
+        {
+            StaticRoomData = Cast<UStaticRoomSpawnData>(AssetManager->GetPrimaryAssetPath(GamePlaySettings->mFrontendRoomId).TryLoad());
+        }
+    }
     checkf(StaticRoomData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
+
+    /* 방 이동 */
 
     TSoftObjectPtr<UWorld> BackgroundMap = StaticRoomData->mBackgroundMap;
     if (BackgroundMap.IsNull() == true)
     {
         BackgroundMap = GetDefault<UGamePlaySettings>()->mDefaultBackgroundMap;
         UE_LOG(LogTransition, Warning, TEXT("Room background map is empty for %s. Using default room map: %s"),
-            *NextRoom.mStaticRoomSpawnDataId.ToString(),
+            *StaticRoomData->GetPrimaryAssetId().ToString(),
             *BackgroundMap.ToSoftObjectPath().ToString());
     }
-    checkf(BackgroundMap.IsNull() == false, TEXT("방 전환 실패. %s의 배경 맵 설정이 존재하지 않음"), *NextRoom.mStaticRoomSpawnDataId.ToString());
+    checkf(BackgroundMap.IsNull() == false, TEXT("방 전환 실패. %s의 배경 맵 설정이 존재하지 않음"), *StaticRoomData->GetPrimaryAssetId().ToString());
 
-    FString Option = FString::Printf(TEXT("?game=%s"), *StaticRoomData->mGameModeBase.ToSoftObjectPath().GetAssetPathString());
+    TSoftClassPtr<AGameModeBase> GameModeClass = StaticRoomData->mGameModeBase;
+    if (GameModeClass.IsNull() == true && mRequest.mChangePersistentData == false)
+    {
+        GameModeClass = GetDefault<UGamePlaySettings>()->mFrontendGameMode;
+    }
+    checkf(GameModeClass.IsNull() == false, TEXT("방 전환 실패. %s의 게임모드 설정이 존재하지 않음"), *StaticRoomData->GetPrimaryAssetId().ToString());
+
+    FString Option = FString::Printf(TEXT("?game=%s"), *GameModeClass.ToSoftObjectPath().GetAssetPathString());
     UGameplayStatics::OpenLevelBySoftObjectPtr(GetWorld(), BackgroundMap, true, Option);
 }

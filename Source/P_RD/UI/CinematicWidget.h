@@ -36,6 +36,13 @@ protected:
 	void PlayCinematicAnimation();
 	virtual void PlayCinematicAnimation_Implementation();
 
+protected:
+	/**
+	 * @brief WBP가 별도 애니메이션을 구현하지 않았을 때 시네마틱을 유지할 최소 시간
+	 */
+	UPROPERTY(Category = "UI|Cinematic", EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "0.0", DisplayName = "Default Cinematic Duration"))
+	float mDefaultCinematicDuration = 1.5f;
+
 private:
 	FOnEndCinematicAnimation OnEndCinematicAnimation;
 	bool mCinematicFinished = false;
