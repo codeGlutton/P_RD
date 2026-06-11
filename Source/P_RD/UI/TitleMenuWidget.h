@@ -8,7 +8,7 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/RDUserWidget.h"
 
 #include "TitleMenuWidget.generated.h"
 
@@ -49,7 +49,7 @@ class UWidgetSwitcher;
  * ValidateDesignerBindings() 로그를 먼저 확인하면 된다.
  */
 UCLASS(BlueprintType, Blueprintable)
-class P_RD_API UTitleMenuWidget : public UUserWidget
+class P_RD_API UTitleMenuWidget : public URDUserWidget
 {
 	GENERATED_BODY()
 

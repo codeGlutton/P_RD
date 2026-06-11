@@ -8,8 +8,8 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "Blueprint/UserWidget.h"
 #include "Frontend/CharacterSelectTypes.h"
+#include "UI/RDUserWidget.h"
 #include "UObject/SoftObjectPath.h"
 
 #include "CharacterSelectWidget.generated.h"
@@ -42,7 +42,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCharacterSelectStatusChangedDelegat
  * mCharacterOptions 개수만큼 WBP_CharacterCard를 만들고, 카드가 보내준 mIndex로 선택 대상을 찾는다.
  */
 UCLASS(BlueprintType, Blueprintable)
-class P_RD_API UCharacterSelectWidget : public UUserWidget
+class P_RD_API UCharacterSelectWidget : public URDUserWidget
 {
 	GENERATED_BODY()
 

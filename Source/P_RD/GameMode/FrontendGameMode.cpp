@@ -1,4 +1,4 @@
-﻿#include "GameMode/FrontendGameMode.h"
+#include "GameMode/FrontendGameMode.h"
 
 #include "GameFramework/PlayerController.h"
 
@@ -19,7 +19,7 @@
 #include "DataAsset/RoomSpawnData/StaticFrontendRoomSpawnData.h"
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
 
-#include "UI/ToggleableWidget.h"
+#include "UI/RDUserWidget.h"
 
 DEFINE_LOG_CATEGORY(LogFrontendGameMode);
 
@@ -64,6 +64,22 @@ namespace
 	}
 }
 
+/**
+ * @brief 프론트엔드 방에서 생성해둘 공용 월드 위젯 타입을 등록한다.
+ *
+ * @details
+ * 여기서 등록한다는 말은 화면에 바로 띄운다는 뜻이 아니라,
+ * BeginPlay()에서 WorldWidgetSubsystem::InitWorldWidget()이 해당 타입의 위젯 인스턴스를 미리 만들어 보관하게 한다는 뜻이다.
+ * 실제로 화면에 보일 때는 HUD든 WorldWidget이든 모두 URDUserWidget::OpenUI()를 통한다.
+ *
+ * 타이틀 HUD는 프론트엔드 방의 메인 화면이라 mHUDClass와 InitHUD() 경로로 한 개만 생성하고,
+ * BeginRoom()에서 OpenUI()로 표시한다. 반면 MsgNotify, FadeInOut, LoadingNotify는 여러 GameMode가 공유하는
+ * 보조 UI라 mWorldWidgets에 넣어 WorldWidgetSubsystem이 생성/보관하게 한다.
+ *
+ * 왜 생성 경로를 나누는가:
+ * "누가 만들고 보관할지"와 "어떻게 화면에 열지"는 다른 문제다. 생성 책임은 HUD/WorldWidget으로 나누되,
+ * 표시 책임은 OpenUI() 하나로 맞춰야 AddToViewport, Visibility, 애니메이션 완료 콜백 규칙이 통일된다.
+ */
 AFrontendGameMode::AFrontendGameMode()
 {
 	mWorldWidgets = {
@@ -78,6 +94,21 @@ AFrontendGameMode::AFrontendGameMode()
 	mWaitExternalWorkOnTransition = false;
 }
 
+/**
+ * @brief 프론트엔드 방 진입 후 타이틀 HUD를 공통 UI 생명주기로 연다.
+ *
+ * @details
+ * RDUserWidget 기반 HUD는 InitHUD()에서 생성되더라도 자동으로 화면에 표시되지 않는다.
+ * 실제 표시 시점은 GameMode가 방 진입 준비를 끝낸 뒤 OpenUI()로 명시한다.
+ *
+ * 여기서 UTitleMenuWidget으로 구체 타입을 확인하는 이유는 프론트엔드 시작 화면이 단순한 HUD 베이스가 아니라
+ * 캐릭터 선택, 설정, 이어하기/새 런 시작 흐름을 가진 타이틀 메뉴여야 하기 때문이다.
+ * 공통 베이스 포인터만 받아 열면 잘못된 HUD 클래스가 들어와도 늦게 발견되므로, 방 시작 시점에 바로 검증한다.
+ *
+ * 왜 InitHUD()에서 바로 AddToViewport 하지 않는가:
+ * HUD 생성은 "준비"이고 OpenUI()는 "보여주기"다. 두 단계를 분리해야 타이틀 HUD도 다른 위젯처럼
+ * 열기 애니메이션과 완료 콜백 규칙을 공유하고, 잘못된 HUD 클래스도 OpenUI 호출 전에 확인할 수 있다.
+ */
 void AFrontendGameMode::BeginRoom()
 {
 	Super::BeginRoom();
@@ -85,7 +116,7 @@ void AFrontendGameMode::BeginRoom()
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
 	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr"));
 
-	UToggleableWidget* TitleHUD = WorldWidgetSubsystem->GetHUD<UToggleableWidget>();
+	UTitleMenuWidget* TitleHUD = WorldWidgetSubsystem->GetHUD<UTitleMenuWidget>();
 	checkf(TitleHUD != nullptr, TEXT("타이틀 HUD 위젯 nullptr"));
 	TitleHUD->OpenUI();
 

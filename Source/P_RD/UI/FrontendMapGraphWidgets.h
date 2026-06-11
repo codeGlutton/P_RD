@@ -8,8 +8,8 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "Blueprint/UserWidget.h"
 #include "Components/Button.h"
+#include "UI/RDUserWidget.h"
 
 #include "FrontendMapGraphWidgets.generated.h"
 
@@ -63,7 +63,7 @@ private:
  * PM 브랜치의 Stage 연결 정보를 화면 선으로 표현하기 위해 만든 표시 전용 WBP 베이스다.
  */
 UCLASS(BlueprintType, Blueprintable)
-class P_RD_API UFrontendMapLineWidget : public UUserWidget
+class P_RD_API UFrontendMapLineWidget : public URDUserWidget
 {
 	GENERATED_BODY()
 
@@ -91,7 +91,7 @@ private:
  * PM 브랜치의 FRoom을 대체하지 않는다. FFrontendMapRoomView 한 개를 화면 노드 하나로 보여주는 UMG 베이스다.
  */
 UCLASS(BlueprintType, Blueprintable)
-class P_RD_API UFrontendMapNodeWidget : public UUserWidget
+class P_RD_API UFrontendMapNodeWidget : public URDUserWidget
 {
 	GENERATED_BODY()
 
