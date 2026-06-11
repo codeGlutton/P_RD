@@ -2,6 +2,7 @@
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
 
 #include "Camera/CameraActor.h"
+#include "Camera/CameraComponent.h"
 #include "Engine/AssetManager.h"
 #include "GameFramework/PlayerController.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
@@ -58,6 +59,7 @@ void ACombatGameMode::ApplyMainCameraPoint() const
 	const FTransform CameraTransform = MainCameraPoint->GetActorTransform();
 	ACameraActor* CombatCamera = World->SpawnActor<ACameraActor>(ACameraActor::StaticClass(), CameraTransform);
 	checkf(CombatCamera != nullptr, TEXT("전투 카메라 nullptr"));
+	CombatCamera->GetCameraComponent()->SetConstraintAspectRatio(false);
 
 	PlayerController->SetViewTarget(CombatCamera);
 	PlayerController->SetControlRotation(CameraTransform.GetRotation().Rotator());

@@ -30,6 +30,8 @@ private:
 	 * MainCameraPoint는 에디터에서 방마다 배치하는 TargetPoint다.
 	 * 이 값은 카메라 액터 자체가 아니라 "전투를 볼 위치와 방향"을 표시하는 기준점이므로,
 	 * 전투방이 시작될 때 같은 Transform으로 CameraActor를 만들고 ViewTarget으로 지정한다.
+	 * 런타임으로 생성한 CameraActor는 기본적으로 고정 화면 비율을 유지하려 하므로,
+	 * 모바일 기기 비율에 맞게 3D 화면이 꽉 차도록 Aspect Ratio 고정은 끈다.
 	 */
 	void ApplyMainCameraPoint() const;
 };
