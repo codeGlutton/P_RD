@@ -10,10 +10,9 @@
 #include "UI/ViewportZOrderType.h"
 
 /**
- * Loading notice owns its transition notification layer.
+ * 로딩 알림 위젯은 전환 알림 레이어를 소유한다.
  *
- * Callers should open and close the widget through the common UI lifecycle
- * without passing presentation-specific z-order values.
+ * 호출자는 표현 전용 ZOrder 값을 넘기지 않고 공통 UI 생명주기를 통해 이 위젯을 열고 닫는다.
  */
 ULoadingNotifyWidget::ULoadingNotifyWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -22,10 +21,10 @@ ULoadingNotifyWidget::ULoadingNotifyWidget(const FObjectInitializer& ObjectIniti
 }
 
 /**
- * Builds the native minimum visual when no WBP root exists.
+ * WBP 루트가 없을 때 네이티브 최소 화면을 만든다.
  *
- * This keeps preload and transition flow testable before final WBP art is
- * available. A WBP-provided root remains the owner of the final layout.
+ * 최종 WBP 아트가 준비되기 전에도 프리로드와 전환 흐름을 검증할 수 있게 한다.
+ * WBP가 자체 루트를 제공하면 최종 레이아웃의 책임은 WBP가 가진다.
  */
 bool ULoadingNotifyWidget::Initialize()
 {
@@ -35,7 +34,7 @@ bool ULoadingNotifyWidget::Initialize()
 }
 
 /**
- * Keeps the default visual available in editor preview as well as runtime.
+ * 에디터 미리보기와 런타임 모두에서 기본 화면을 사용할 수 있게 한다.
  */
 void ULoadingNotifyWidget::NativePreConstruct()
 {
@@ -44,10 +43,10 @@ void ULoadingNotifyWidget::NativePreConstruct()
 }
 
 /**
- * Drives the lightweight loading indicator animation while loading is active.
+ * 로딩 중 가벼운 로딩 인디케이터 애니메이션을 진행한다.
  *
- * The widget owns the animation rhythm. GameMode and transition subsystems only
- * wait for OpenUI/CloseUI completion and do not inspect this presentation detail.
+ * 애니메이션 리듬은 이 위젯이 소유한다.
+ * GameMode와 전환 서브시스템은 OpenUI/CloseUI 완료만 기다리고 표현 세부 사항은 들여다보지 않는다.
  */
 void ULoadingNotifyWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
@@ -65,10 +64,10 @@ void ULoadingNotifyWidget::NativeTick(const FGeometry& MyGeometry, float InDelta
 }
 
 /**
- * Opens the loading notice and clears stale close timers.
+ * 로딩 알림을 열고 이전 닫힘 타이머를 정리한다.
  *
- * A rapid transition can reopen the widget while a previous completed-state
- * timer is still pending, so every open starts from a clean timer state.
+ * 빠른 전환에서는 이전 완료 상태 타이머가 남아 있는 동안 위젯을 다시 열 수 있다.
+ * 따라서 매번 열 때마다 깨끗한 타이머 상태에서 시작한다.
  */
 void ULoadingNotifyWidget::PlayOpenUIAnimation_Implementation()
 {
@@ -90,10 +89,10 @@ void ULoadingNotifyWidget::PlayOpenUIAnimation_Implementation()
 }
 
 /**
- * Requests the close sequence after the minimum visible time is satisfied.
+ * 최소 표시 시간이 지난 뒤 닫힘 흐름을 요청한다.
  *
- * Even when preload completes quickly, the player should still see that a
- * transition occurred. The close callback is therefore delayed as needed.
+ * 프리로드가 빠르게 끝나더라도 플레이어는 전환이 있었다는 것을 볼 수 있어야 한다.
+ * 그래서 필요한 경우 닫힘 콜백을 지연한다.
  */
 void ULoadingNotifyWidget::PlayCloseUIAnimation_Implementation()
 {
@@ -121,7 +120,7 @@ void ULoadingNotifyWidget::PlayCloseUIAnimation_Implementation()
 }
 
 /**
- * Creates a plain lower-right loading indicator only when no WBP root exists.
+ * WBP 루트가 없을 때만 우하단의 단순 로딩 인디케이터를 만든다.
  */
 void ULoadingNotifyWidget::EnsureDefaultVisual()
 {
@@ -170,7 +169,7 @@ void ULoadingNotifyWidget::EnsureDefaultVisual()
 }
 
 /**
- * Updates the local visual phase without exposing text or indicator details.
+ * 텍스트나 인디케이터 세부 사항을 밖으로 드러내지 않고 로컬 표시 단계를 갱신한다.
  */
 void ULoadingNotifyWidget::SetLoadingState(ELoadingNotifyState NewState)
 {
@@ -200,7 +199,7 @@ void ULoadingNotifyWidget::SetLoadingState(ELoadingNotifyState NewState)
 }
 
 /**
- * Applies opacity to the native loading indicator when present.
+ * 네이티브 로딩 인디케이터가 있을 때 투명도를 적용한다.
  */
 void ULoadingNotifyWidget::ApplyIndicatorAlpha(float Alpha) const
 {
@@ -211,10 +210,9 @@ void ULoadingNotifyWidget::ApplyIndicatorAlpha(float Alpha) const
 }
 
 /**
- * Shows the completed state before the close lifecycle finishes.
+ * 닫힘 생명주기가 끝나기 전에 완료 상태를 보여준다.
  *
- * This lets transition code wait for CloseUI while the widget decides how long
- * to display the "completed" phase.
+ * 전환 코드는 CloseUI를 기다리고, 완료 단계를 얼마나 보여줄지는 위젯이 결정한다.
  */
 void ULoadingNotifyWidget::ShowCompletedState()
 {
@@ -237,8 +235,7 @@ void ULoadingNotifyWidget::ShowCompletedState()
 }
 
 /**
- * Completes the close lifecycle after the loading notice has finished its local
- * presentation sequence.
+ * 로딩 알림의 로컬 표시 흐름이 끝난 뒤 닫힘 생명주기를 완료한다.
  */
 void ULoadingNotifyWidget::FinishCompletedState()
 {
