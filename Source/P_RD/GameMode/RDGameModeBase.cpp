@@ -34,7 +34,7 @@ void ARDGameModeBase::BeginPlay()
 
 	if (mShowFadeInUIOnTransition == true)
 	{
-		StartFadeInUI();
+		StartFadeInUIForRoomTransition();
 	}
 
 	/* 전용 방 로직 */
@@ -69,21 +69,17 @@ bool ARDGameModeBase::CanAbandonRun() const
 }
 
 /**
- * @brief 방 진입 직후 페이드아웃 상태의 전환 레이어를 다시 닫는다.
+ * @brief 페이드 레이어를 열고 검은 화면에서 게임 화면으로 드러내는 페이드인을 시작한다.
  *
  * @details
  * OpenUI()는 페이드 전환 레이어를 뷰포트에 올리는 공통 UI 생명주기만 처리한다.
  * 실제로 검은 화면을 걷어 게임 화면을 보여주는 일은 UFadeInOutWidget의 StartFadeIn()이 담당한다.
  *
- * 왜 이렇게 하는가:
- * 이전 방에서 이미 검은 화면까지 덮은 뒤 새 방으로 들어오므로, 새 방이 준비된 다음에는 그 덮개를 걷어야 한다.
- * GameMode가 직접 Visibility나 투명도를 만지지 않고 페이드 위젯에 방향만 요청하면 전환 연출 규칙이 한곳에 모인다.
- *
  * 역할 구분:
- * ARDGameModeBase는 방 생명주기와 전환 타이밍을 알고 있으므로 "지금 페이드인을 시작한다"는 결정을 내린다.
+ * ARDGameModeBase는 페이드 위젯을 찾아 열고, 어떤 방향의 페이드를 시작할지만 요청한다.
  * UFadeInOutWidget은 그 결정을 받아 실제 화면을 어떻게 드러낼지와 완료 시점을 처리한다.
  */
-void ARDGameModeBase::StartFadeInUI() const
+void ARDGameModeBase::StartFadeInUI(FOnEndFadeInAnimation OnEndFadeInAnimation) const
 {
 	checkf(mWorldWidgets.Contains(EWorldWidgetType::FadeInOut) == true, TEXT("FadeInOut이 준비되지 않음"));
 
@@ -94,25 +90,21 @@ void ARDGameModeBase::StartFadeInUI() const
 	checkf(FadeInOutWidget != nullptr, TEXT("페이드 인 앤 아웃 위젯 nullptr 오류"));
 
 	FadeInOutWidget->OpenUI();
-	FadeInOutWidget->StartFadeIn();
+	FadeInOutWidget->StartFadeIn(MoveTemp(OnEndFadeInAnimation));
 }
 
 /**
- * @brief 다음 방으로 넘어가기 전 화면을 먼저 검게 덮는다.
+ * @brief 페이드 레이어를 열고 다음 화면 전환 전에 화면을 검게 덮는 페이드아웃을 시작한다.
  *
  * @details
- * RequireExternalReady 전환에서는 에셋 로드가 끝나도 외부 준비 신호가 오기 전까지 실제 전환을 시작하지 않는다.
- * 이 함수는 페이드아웃이 끝난 시점에 MarkExternalReadyForTransition()을 호출해 전환 시작 조건을 해제한다.
- *
- * 왜 화면을 먼저 덮는가:
- * 레벨 전환이 먼저 시작되면 이전 방의 마지막 프레임이나 아직 덜 준비된 새 방이 잠깐 보일 수 있다.
- * 그래서 검은 화면이 완전히 올라온 뒤에만 외부 준비 완료를 알려, 사용자가 보는 화면과 실제 전환 순서를 맞춘다.
+ * OpenUI()는 페이드 전환 레이어를 뷰포트에 올리는 공통 UI 생명주기만 처리한다.
+ * 실제로 화면을 검게 덮는 일은 UFadeInOutWidget의 StartFadeOut()이 담당한다.
  *
  * 역할 구분:
- * ARDGameModeBase는 로드/전환 시스템과 연결되어 있으므로 페이드 완료 후 MarkExternalReadyForTransition()을 호출한다.
- * UFadeInOutWidget은 GameMode의 전환 규칙을 모르고, StartFadeOut()이 요청된 페이드아웃 연출과 완료 콜백만 책임진다.
+ * ARDGameModeBase는 페이드 위젯을 찾아 열고, 어떤 방향의 페이드를 시작할지만 요청한다.
+ * UFadeInOutWidget은 그 결정을 받아 실제 화면을 어떻게 덮을지와 완료 시점을 처리한다.
  */
-void ARDGameModeBase::StartFadeOutUI()
+void ARDGameModeBase::StartFadeOutUI(FOnEndFadeOutAnimation OnEndFadeOutAnimation) const
 {
 	checkf(mWorldWidgets.Contains(EWorldWidgetType::FadeInOut) == true, TEXT("FadeInOut이 준비되지 않음"));
 
@@ -123,7 +115,31 @@ void ARDGameModeBase::StartFadeOutUI()
 	checkf(FadeInOutWidget != nullptr, TEXT("페이드 인 앤 아웃 위젯 nullptr 오류"));
 
 	FadeInOutWidget->OpenUI();
-	FadeInOutWidget->StartFadeOut(FOnEndFadeOutAnimation::CreateWeakLambda(this, [this](UFadeInOutWidget*)
+	FadeInOutWidget->StartFadeOut(MoveTemp(OnEndFadeOutAnimation));
+}
+
+/**
+ * @brief 방 진입 직후 검은 전환 레이어를 걷는다.
+ *
+ * @details
+ * 이전 방에서 이미 화면을 검게 덮은 뒤 새 방으로 들어오므로, 새 방 BeginPlay에서는 페이드인을 시작해
+ * 게임 화면을 다시 보여준다.
+ */
+void ARDGameModeBase::StartFadeInUIForRoomTransition() const
+{
+	StartFadeInUI();
+}
+
+/**
+ * @brief 방 전환 전 화면을 검게 덮고 전환 시스템에 외부 준비 완료를 알린다.
+ *
+ * @details
+ * RequireExternalReady 전환에서는 에셋 로드가 끝나도 외부 준비 신호가 오기 전까지 실제 전환을 시작하지 않는다.
+ * 페이드아웃이 끝난 시점에 MarkExternalReadyForTransition()을 호출해 전환 시작 조건을 해제한다.
+ */
+void ARDGameModeBase::StartFadeOutUIForRoomTransition()
+{
+	StartFadeOutUI(FOnEndFadeOutAnimation::CreateWeakLambda(this, [this](UFadeInOutWidget*)
 	{
 		checkf(MarkExternalReadyForTransition() == true, TEXT("외부 준비 상태 전달 오류"));
 	}));
@@ -217,13 +233,13 @@ bool ARDGameModeBase::PreloadAndTransitionRoomAsync(int32 RoomRowIndex, int32 Ro
 
 			/*
 			 * 예전에는 호출부에서 "페이드아웃이 끝나면 MarkExternalReadyForTransition()" 콜백을 넘기려 했다.
-			 * 하지만 모든 방 전환 경로가 같은 후속 작업을 하므로, 그 콜백은 StartFadeOutUI() 내부에 묶었다.
+			 * 하지만 모든 방 전환 경로가 같은 후속 작업을 하므로, 그 콜백은 전환 전용 함수에 묶었다.
 			 * 여기서 말하는 같은 후속 작업은 "페이드아웃 완료 -> 로딩 알림 표시 -> ExternalReady 전달 ->
 			 * 준비 완료 콜백에서 로딩 알림 종료 -> TransitLoadedRoom()" 순서다.
 			 * 일반 방, 새 스테이지 첫 방, 프론트엔드 방 전환 모두 이 순서를 공유한다.
-			 * 여기서는 "페이드아웃을 시작한다"는 요청만 남긴다.
+			 * 여기서는 "방 전환용 페이드아웃을 시작한다"는 요청만 남긴다.
 			 */
-			StartFadeOutUI();
+			StartFadeOutUIForRoomTransition();
 		}
 	}
 	else if (mShowLoadingNotifyUIOnTransition == true)
@@ -268,10 +284,10 @@ bool ARDGameModeBase::PreloadAndTransitionRoomAsync(EStageLevelType StageLevel)
 
 			/*
 			 * 예전에는 호출부에서 "페이드아웃이 끝나면 MarkExternalReadyForTransition()" 콜백을 넘기려 했다.
-			 * 하지만 모든 방 전환 경로가 같은 후속 작업을 하므로, 그 콜백은 StartFadeOutUI() 내부에 묶었다.
-			 * 여기서는 "페이드아웃을 시작한다"는 요청만 남긴다.
+			 * 하지만 모든 방 전환 경로가 같은 후속 작업을 하므로, 그 콜백은 전환 전용 함수에 묶었다.
+			 * 여기서는 "방 전환용 페이드아웃을 시작한다"는 요청만 남긴다.
 			 */
-			StartFadeOutUI();
+			StartFadeOutUIForRoomTransition();
 		}
 	}
 	else if (mShowLoadingNotifyUIOnTransition == true)
@@ -315,10 +331,10 @@ bool ARDGameModeBase::PreloadAndTransitionFrontendRoomAsync()
 
 			/*
 			 * 예전에는 호출부에서 "페이드아웃이 끝나면 MarkExternalReadyForTransition()" 콜백을 넘기려 했다.
-			 * 하지만 모든 방 전환 경로가 같은 후속 작업을 하므로, 그 콜백은 StartFadeOutUI() 내부에 묶었다.
-			 * 여기서는 "페이드아웃을 시작한다"는 요청만 남긴다.
+			 * 하지만 모든 방 전환 경로가 같은 후속 작업을 하므로, 그 콜백은 전환 전용 함수에 묶었다.
+			 * 여기서는 "방 전환용 페이드아웃을 시작한다"는 요청만 남긴다.
 			 */
-			StartFadeOutUI();
+			StartFadeOutUIForRoomTransition();
 		}
 	}
 	else if (mShowLoadingNotifyUIOnTransition == true)

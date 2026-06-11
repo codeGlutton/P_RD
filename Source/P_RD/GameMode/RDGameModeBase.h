@@ -12,6 +12,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
 #include "DataAsset/StageSpawnData/StageLevelType.h"
+#include "UI/FadeInOutWidget.h"
 #include "UI/RDUserWidget.h"
 #include "RDGameModeBase.generated.h"
 
@@ -61,30 +62,26 @@ public:
 
 protected:
 	/**
-	 * @brief 현재 방 진입 시 페이드 레이어를 걷어내는 UI 흐름을 시작한다.
+	 * @brief 페이드 레이어를 열고 검은 화면에서 게임 화면으로 드러내는 페이드인을 시작한다.
 	 *
 	 * @details
-	 * FadeInOut 월드 위젯의 OpenUI() 완료 콜백에서 CloseUI()를 호출한다.
-	 * GameMode는 페이드 구현 방식을 모르고, 위젯의 OpenUI/CloseUI 생명주기 완료 시점만 따른다.
+	 * OpenUI()는 페이드 레이어를 뷰포트에 올리는 공통 생명주기만 처리한다.
+	 * 실제 페이드 방향과 완료 시점은 FadeInOut 위젯의 StartFadeIn()이 관리한다.
 	 *
-	 * 역할 구분:
-	 * GameMode는 "방에 들어왔으니 전환 덮개를 걷어야 한다"는 타이밍만 결정한다.
-	 * 실제 페이드 표현, 알파 변화, 완료 콜백 호출은 FadeInOut 위젯이 담당한다.
+	 * @param OnEndFadeInAnimation 페이드인이 끝난 뒤 실행할 선택 콜백
 	 */
-	void StartFadeInUI() const;
+	void StartFadeInUI(FOnEndFadeInAnimation OnEndFadeInAnimation = FOnEndFadeInAnimation()) const;
 
 	/**
-	 * @brief 다음 방 전환 전에 화면을 덮고 외부 준비 완료를 알린다.
+	 * @brief 페이드 레이어를 열고 다음 화면 전환 전에 화면을 검게 덮는 페이드아웃을 시작한다.
 	 *
 	 * @details
-	 * 방 전환 시스템이 ExternalReady를 기다리는 경우, 화면이 완전히 페이드아웃된 뒤
-	 * MarkExternalReadyForTransition()을 호출해야 새 레벨 전환이 검은 화면 뒤에서 진행된다.
+	 * OpenUI()는 페이드 레이어를 뷰포트에 올리는 공통 생명주기만 처리한다.
+	 * 실제 페이드 방향과 완료 시점은 FadeInOut 위젯의 StartFadeOut()이 관리한다.
 	 *
-	 * 역할 구분:
-	 * GameMode는 "전환을 시작하기 전에 화면을 먼저 가려야 한다"는 순서를 결정한다.
-	 * 실제로 화면을 검게 덮는 방법은 FadeInOut 위젯의 OpenUI() 구현이 담당한다.
+	 * @param OnEndFadeOutAnimation 페이드아웃이 끝난 뒤 실행할 선택 콜백
 	 */
-	void StartFadeOutUI();
+	void StartFadeOutUI(FOnEndFadeOutAnimation OnEndFadeOutAnimation = FOnEndFadeOutAnimation()) const;
 
 	/**
 	 * @brief 로딩 알림 위젯을 공통 OpenUI 생명주기로 연다.
@@ -118,6 +115,17 @@ protected:
 
 protected:
 	bool MarkExternalReadyForTransition();
+
+private:
+	/**
+	 * @brief 방 진입 직후 검은 전환 레이어를 걷는 페이드인을 시작한다.
+	 */
+	void StartFadeInUIForRoomTransition() const;
+
+	/**
+	 * @brief 방 전환 전 페이드아웃 완료 시 외부 준비 완료 신호를 전달한다.
+	 */
+	void StartFadeOutUIForRoomTransition();
 
 private:
 	/**
