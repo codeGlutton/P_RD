@@ -104,7 +104,7 @@ void ULoadingNotifyWidget::PlayCloseUIAnimation_Implementation()
 	}
 
 	const double ElapsedSeconds = FMath::Max(0.0, World->GetTimeSeconds() - mOpenedTimeSeconds);
-	const float RemainingSeconds = FMath::Max(0.0f, mMinimumVisibleSeconds - static_cast<float>(ElapsedSeconds));
+	const float RemainingSeconds = FMath::Max(0.0f, mMinimumVisibleSeconds - StaticCast<float>(ElapsedSeconds));
 	if (RemainingSeconds > 0.0f)
 	{
 		World->GetTimerManager().SetTimer(

@@ -130,6 +130,17 @@ private:
 	void CloseWorldWidget(EWorldWidgetType WorldWidgetType) const;
 
 	/**
+	 * @brief 탑바에서 여는 플로팅 패널 중 지정한 패널을 제외하고 모두 닫는다.
+	 *
+	 * @details
+	 * MAP/SET/DICE/SKILL은 같은 화면 위에 떠 있는 팝업이다.
+	 * 한 번에 여러 개가 열리면 입력 대상이 헷갈리므로 새 패널을 열기 전 기존 패널을 정리한다.
+	 *
+	 * @param ExceptWorldWidgetType 닫지 않고 유지할 패널 타입
+	 */
+	void CloseFloatingPanels(EWorldWidgetType ExceptWorldWidgetType) const;
+
+	/**
 	 * @brief MAP 버튼 입력에 따라 월드맵을 열거나 닫는다.
 	 *
 	 * @details
@@ -152,6 +163,18 @@ private:
 	 * 한 번에 하나만 열어야 사용자가 현재 조작 중인 화면을 명확히 알 수 있다.
 	 */
 	void ToggleSettingsPanel();
+
+	/**
+	 * @brief DICE/SKILL처럼 단순히 열고 닫는 플로팅 패널을 토글한다.
+	 *
+	 * @details
+	 * 아직 실제 주사위/스킬 사용 로직은 각 패널에 붙지 않았지만, WBP가 있는 패널은 공통 OpenUI 경로로 동작해야 한다.
+	 * 이 함수는 탑바 버튼과 월드 위젯 연결만 책임진다.
+	 *
+	 * @param WorldWidgetType 열고 닫을 패널 타입
+	 * @param DebugName 설정 누락 로그에 표시할 이름
+	 */
+	void ToggleFloatingPanel(EWorldWidgetType WorldWidgetType, const TCHAR* DebugName);
 
 	/**
 	 * @brief 전투 종료 결과를 받아 플레이어 승리일 때 다음 방 선택 지도를 연다.
@@ -185,18 +208,39 @@ private:
 	UFUNCTION()
 	void HandleMapButtonClicked();
 
+	/**
+	 * @brief SET 버튼 클릭을 설정 패널 토글로 연결한다.
+	 */
 	UFUNCTION()
 	void HandleSettingsButtonClicked();
 
+	/**
+	 * @brief DICE 버튼 클릭을 주사위 패널 토글로 연결한다.
+	 *
+	 * @details
+	 * 현재 단계에서는 실제 주사위 사용이 아니라 WBP_DicePanel 표시와 터치 반응 확인만 담당한다.
+	 */
 	UFUNCTION()
 	void HandleDiceButtonClicked();
 
+	/**
+	 * @brief SKILL 버튼 클릭을 스킬 패널 토글로 연결한다.
+	 *
+	 * @details
+	 * 현재 단계에서는 실제 스킬 발동이 아니라 WBP_SkillPanel 표시와 카드 선택 흐름 확인만 담당한다.
+	 */
 	UFUNCTION()
 	void HandleSkillButtonClicked();
 
+	/**
+	 * @brief 월드맵 위젯의 닫기 요청을 현재 흐름에 맞게 처리한다.
+	 */
 	UFUNCTION()
 	void HandleWorldMapCloseRequested();
 
+	/**
+	 * @brief 설정 패널 Back 요청을 현재 흐름에 맞게 처리한다.
+	 */
 	UFUNCTION()
 	void HandleSettingsBackRequested();
 
@@ -209,11 +253,11 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UButton> SettingsButton;
 
-	/** @brief 주사위 팝업용 자리. 이 브랜치에서는 아직 기능 연결 전이다. */
+	/** @brief 주사위 패널을 여는 버튼 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UButton> DiceButton;
 
-	/** @brief 스킬 팝업 또는 디버그 승리 버튼용 자리 */
+	/** @brief 스킬 패널을 여는 버튼 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UButton> SkillButton;
 
@@ -225,11 +269,21 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> SettingsButtonText;
 
-	/** @brief DICE 버튼 라벨 */
+	/**
+	 * @brief DICE 버튼 라벨
+	 *
+	 * @details
+	 * 아직 실제 주사위 보유 수와 연결하지 않았으므로 기본 문구는 DICE 0으로 둔다.
+	 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> DiceButtonText;
 
-	/** @brief SKILL 버튼 또는 디버그 WIN 버튼 라벨 */
+	/**
+	 * @brief SKILL 버튼 라벨
+	 *
+	 * @details
+	 * 아직 실제 사용 가능 스킬 수와 연결하지 않았으므로 기본 문구는 SKILL 0으로 둔다.
+	 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> SkillButtonText;
 

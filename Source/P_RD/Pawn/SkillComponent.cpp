@@ -56,18 +56,6 @@ bool USkillComponent::SetSkillData(int SkillIndex, TSoftObjectPtr<UStaticSkillDa
 	return true;
 }
 
-/*
-bool USkillComponent::AddSkillData(TSoftObjectPtr<UStaticSkillData> SkillData)
-{
-	mSkillData.Add(SkillData);
-
-	if (mOnSkillChange.IsBound())
-		mOnSkillChange.Broadcast(mSkillData.Num() - 1, SkillData);
-
-	return true;
-}
-*/
-
 bool USkillComponent::CalculatePredictedSales(int32 In_SkillIndex, TArray<TPair<FString, float>>& Out_TagValue)
 {
 	return false;

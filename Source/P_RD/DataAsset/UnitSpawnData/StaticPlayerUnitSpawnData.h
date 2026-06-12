@@ -42,10 +42,10 @@ public:
 	EPlayerJobType mJobType = EPlayerJobType::None;
 
 public:
-	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceDatas", AssetBundles = BUNDLE_PAD))
+	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceDatas", AssetBundles = "PAD"))
 	TArray<TSoftObjectPtr<UStaticDiceData>> mDiceDatas;
 
 public:
-	UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Portrait", AssetBundles = BUNDLE_UI))
+	UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Portrait", AssetBundles = "UI"))
 	TSoftObjectPtr<UTexture2D> mPortrait;
 };

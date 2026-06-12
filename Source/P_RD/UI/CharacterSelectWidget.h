@@ -1,7 +1,6 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   CharacterSelectWidget.h
  * @brief  캐릭터 선택 화면 위젯 정의 헤더
- * @author Codex
  * @date   2026-06-04
  *********************************************************************/
 
@@ -141,14 +140,14 @@ private:
 	TObjectPtr<UTextBlock> mCharacterStatusText;
 
 	UPROPERTY()
-	TArray<TObjectPtr<UCharacterCardWidget>> CharacterCardWidgets;
+	TArray<TObjectPtr<UCharacterCardWidget>> mCharacterCardWidgets;
 
 	TArray<FFrontendCharacterOption> mCharacterOptions;
 	FPrimaryAssetId mSelectedPlayerUnitId;
 	int32 mSelectedCharacterIndex = INDEX_NONE;
 	TSharedPtr<FStreamableHandle> mPortraitLoadHandle = nullptr;
 	FSoftObjectPath mPendingPortraitPath;
-	bool bStartRequested = false;
+	bool mStartRequested = false;
 
 	FText mConfirmText;
 	FText mBackText;

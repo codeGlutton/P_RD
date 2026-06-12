@@ -6,19 +6,19 @@
 
 void UFrontendMapNodeButton::SetNodeCoordinates(int32 InRowIndex, int32 InColumnIndex)
 {
-	RowIndex = InRowIndex;
-	ColumnIndex = InColumnIndex;
+	mRowIndex = InRowIndex;
+	mColumnIndex = InColumnIndex;
 
-	if (!bClickBound)
+	if (!mClickBound)
 	{
 		OnClicked.AddUniqueDynamic(this, &UFrontendMapNodeButton::HandleClicked);
-		bClickBound = true;
+		mClickBound = true;
 	}
 }
 
 void UFrontendMapNodeButton::HandleClicked()
 {
-	OnMapNodeClicked.Broadcast(RowIndex, ColumnIndex);
+	OnMapNodeClicked.Broadcast(mRowIndex, mColumnIndex);
 }
 
 void UFrontendMapLineWidget::NativeConstruct()
@@ -48,8 +48,8 @@ void UFrontendMapNodeWidget::SetNodeVisual(
 	const FSlateColor& LabelColor,
 	const FSlateColor& BadgeColor)
 {
-	RowIndex = InRowIndex;
-	ColumnIndex = InColumnIndex;
+	mRowIndex = InRowIndex;
+	mColumnIndex = InColumnIndex;
 
 	if (NodePanel != nullptr)
 	{
@@ -105,5 +105,5 @@ void UFrontendMapNodeWidget::NativeDestruct()
 
 void UFrontendMapNodeWidget::HandleNodeButtonClicked()
 {
-	OnMapNodeClicked.Broadcast(RowIndex, ColumnIndex);
+	OnMapNodeClicked.Broadcast(mRowIndex, mColumnIndex);
 }
