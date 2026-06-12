@@ -147,6 +147,14 @@ void AFrontendGameMode::BeginRoom()
 	PlayerController->SetInputMode(InputMode);
 }
 
+/**
+ * @brief 타이틀 START 입력을 캐릭터 선택 화면 진입 요청으로 처리한다.
+ *
+ * @details
+ * 프론트엔드의 START는 아직 새 Run 생성 단계가 아니다.
+ * 캐릭터와 난이도가 확정되기 전이므로, 여기서는 TitleMenuWidget의 캐릭터 선택 화면만 열고
+ * 실제 RunPersistData 생성은 CharacterSelectWidget의 Confirm 이후 StartNewRun()에서 처리한다.
+ */
 bool AFrontendGameMode::RequestCharacterSelectFromTitle()
 {
 	/*
@@ -164,6 +172,14 @@ bool AFrontendGameMode::RequestCharacterSelectFromTitle()
 	return true;
 }
 
+/**
+ * @brief 캐릭터 선택 Confirm 이후 새 Run을 만들고 Stage1 첫 방 입장을 시작한다.
+ *
+ * @details
+ * UI는 선택된 PlayerUnitId와 Difficulty만 전달하고,
+ * GameMode가 "선택값 검증 -> RunPersistData 생성 -> Stage1 첫 방 프리로드/전환" 순서를 고정한다.
+ * 이렇게 해야 캐릭터 선택 WBP가 저장 데이터 생성이나 방 전환 시스템을 직접 호출하지 않는다.
+ */
 bool AFrontendGameMode::StartNewRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty)
 {
 	/*
@@ -182,6 +198,14 @@ bool AFrontendGameMode::StartNewRun(const FPrimaryAssetId& PlayerUnitId, int32 D
 	return true;
 }
 
+/**
+ * @brief 타이틀 CONTINUE 입력으로 저장된 활성 Run의 현재 방 입장을 시작한다.
+ *
+ * @details
+ * Continue는 세이브 파일을 여기서 새로 불러오는 기능이 아니라,
+ * 이미 활성화되어 있는 RunPersistData의 현재 row/column으로 방 전환을 요청하는 기능이다.
+ * 타이틀에서는 월드맵이나 다음 방 선택을 열지 않고, 방 입장 이후의 UI/선택/저장 흐름은 RoomGameModeBase가 맡는다.
+ */
 bool AFrontendGameMode::ContinueRunFromTitle()
 {
 	/*
@@ -234,6 +258,13 @@ bool AFrontendGameMode::ContinueRunFromTitle()
 	return true;
 }
 
+/**
+ * @brief 타이틀/설정 화면에서 기존 활성 Run 포기를 처리한다.
+ *
+ * @details
+ * 프론트엔드는 아직 실제 전투 방 안이 아니므로 전투 정리나 방 퇴장 처리를 하지 않는다.
+ * RunPersistData만 비우고, 이후 TitleMenuWidget이 메뉴 상태를 다시 읽어 Continue 버튼 표시 여부를 갱신한다.
+ */
 bool AFrontendGameMode::AbandonRunFromTitle()
 {
 	/*
@@ -257,6 +288,14 @@ bool AFrontendGameMode::AbandonRunFromTitle()
 	return true;
 }
 
+/**
+ * @brief 캐릭터 선택 카드에 표시할 FFrontendCharacterOption 목록을 만든다.
+ *
+ * @details
+ * DA_TestFrontend의 mPlayableUnits에서 로드된 PlayerUnit DataAsset을 읽어
+ * 이름, 직업, 스탯, 초상화, 선택 가능 여부만 담은 UI 전용 DTO로 변환한다.
+ * CharacterSelectWidget은 이 View 데이터만 보고 카드를 그리며, PlayerUnit DataAsset 내부 구조를 직접 해석하지 않는다.
+ */
 bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& OutOptions) const
 {
 	/*
@@ -309,6 +348,14 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 	return OutOptions.IsEmpty() == false;
 }
 
+/**
+ * @brief 프론트엔드 방 DataAsset에 등록된 선택 가능 캐릭터 목록을 가져온다.
+ *
+ * @details
+ * 선택 가능한 캐릭터의 기준은 DA_TestFrontend.mPlayableUnits다.
+ * 이 함수는 별도 임시 목록이나 CSV를 만들지 않고, 프론트엔드 방 정보에 저장된 PlayerUnit SoftObjectPtr 목록만 캐시한다.
+ * 실제 캐릭터 카드 View 변환은 GetCharacterOptions()에서 수행한다.
+ */
 const TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>>& AFrontendGameMode::GetPlayerUnitDatas() const
 {
 	/*
@@ -336,6 +383,14 @@ const TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>>& AFrontendGameMode::Get
 	return mPlayerUnitDataCache;
 }
 
+/**
+ * @brief 선택된 캐릭터 ID가 실제 선택 후보에 포함되어 있는지 검증한다.
+ *
+ * @details
+ * UI에서 비활성 카드 선택을 막더라도, 런 생성 직전 GameMode가 다시 검증한다.
+ * 잘못된 PlayerUnitId가 StartRun()으로 들어가면 잘못된 RunPersistData가 만들어질 수 있으므로
+ * DA_TestFrontend.mPlayableUnits 기준으로 한 번 더 확인한다.
+ */
 bool AFrontendGameMode::IsPlayerUnitIdValid(const FPrimaryAssetId& PlayerUnitId) const
 {
 	/*
@@ -360,6 +415,13 @@ bool AFrontendGameMode::IsPlayerUnitIdValid(const FPrimaryAssetId& PlayerUnitId)
 	return IsFound;
 }
 
+/**
+ * @brief 선택된 난이도가 새 Run 생성에 사용할 수 있는 값인지 검증한다.
+ *
+ * @details
+ * 현재는 난이도 선택 기능이 아직 없어서 모든 값을 통과시킨다.
+ * 추후 난이도 테이블이나 해금 조건이 들어오면 StartNewRun() 직전에 이 함수에서 검증한다.
+ */
 bool AFrontendGameMode::IsDifficultyValid(int32 Difficulty) const
 {
 	// TODO : 유효성 검사
@@ -367,6 +429,14 @@ bool AFrontendGameMode::IsDifficultyValid(int32 Difficulty) const
 	return true;
 }
 
+/**
+ * @brief TitleMenuWidget에 캐릭터 선택 화면을 열라고 전달한다.
+ *
+ * @details
+ * GameMode는 타이틀 HUD 내부의 ScreenSwitcher나 WBP 위젯 트리를 직접 조작하지 않는다.
+ * 타이틀 화면 안에서 어떤 패널을 보여줄지는 TitleMenuWidget이 맡고,
+ * GameMode는 "캐릭터 선택으로 넘어가라"는 흐름 요청만 보낸다.
+ */
 bool AFrontendGameMode::OpenTitleCharacterSelect()
 {
 	/*
@@ -383,6 +453,14 @@ bool AFrontendGameMode::OpenTitleCharacterSelect()
 	return true;
 }
 
+/**
+ * @brief 선택된 캐릭터/난이도로 RunPersistData 생성을 GameProfileSubsystem에 위임한다.
+ *
+ * @details
+ * CreateRunData()는 WBP 상태를 읽거나 화면을 전환하지 않고,
+ * 캐릭터/난이도 검증 후 GameProfileSubsystem->StartRun()을 호출하는 데 집중한다.
+ * 현재는 슬롯/닉네임 UI가 아직 없어서 유저 데이터가 없으면 기본 유저를 임시 생성한 뒤 Run을 만든다.
+ */
 bool AFrontendGameMode::CreateRunData(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty)
 {
 	/*
