@@ -21,15 +21,17 @@ void UStaticFrontendRoomSpawnData::PostLoad()
 {
 	Super::PostLoad();
 
-#if WITH_EDITOR
 	const TSoftClassPtr<AGameModeBase> UpdatedGameMode = GetDefault<UGamePlaySettings>()->mFrontendGameMode;
 	if (mGameModeBase != UpdatedGameMode)
 	{
+#if WITH_EDITOR
 		Modify();
-		mGameModeBase = UpdatedGameMode;
-		MarkPackageDirty();
-	}
 #endif
+		mGameModeBase = UpdatedGameMode;
+#if WITH_EDITOR
+		MarkPackageDirty();
+#endif
+	}
 }
 
 #if WITH_EDITOR

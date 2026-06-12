@@ -17,13 +17,15 @@ void UStaticTreasureRoomSpawnData::PostLoad()
 {
 	Super::PostLoad();
 
-#if WITH_EDITOR
 	const TSoftClassPtr<AGameModeBase> UpdatedGameMode = GetDefault<UGamePlaySettings>()->mTreasureGameMode;
 	if (mGameModeBase != UpdatedGameMode)
 	{
+#if WITH_EDITOR
 		Modify();
-		mGameModeBase = UpdatedGameMode;
-		MarkPackageDirty();
-	}
 #endif
+		mGameModeBase = UpdatedGameMode;
+#if WITH_EDITOR
+		MarkPackageDirty();
+#endif
+	}
 }
