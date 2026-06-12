@@ -75,7 +75,7 @@ protected:
 	 * @brief 위젯이 화면에 올라올 때 버튼 이벤트와 하위 화면 이벤트를 연결함
 	 *
 	 * @details
-	 * START, CONTINUE, SETTING, SETTINGS BACK 버튼을 이 위젯의 핸들러에 연결한다.
+	 * START, CONTINUE, SETTING 버튼을 이 위젯의 핸들러에 연결한다.
 	 * 캐릭터 선택 위젯이 보내는 BACK 요청도 여기서 받는다.
 	 * AddUniqueDynamic을 사용하므로 같은 위젯이 다시 Construct 되어도 같은 델리게이트가 중복으로 붙지 않는다.
 	 */
@@ -122,11 +122,12 @@ private:
 	void ShowCharacterScreen();
 
 	/**
-	 * @brief 설정 화면을 보여줌
+	 * @brief 공용 설정 패널 월드 위젯을 타이틀 모드로 열어 보여줌
 	 *
 	 * @details
-	 * 타이틀에서도 인게임과 같은 SettingsPanelWidget을 사용한다.
-	 * 다만 타이틀에는 현재 런 액션이 없으므로 Title 모드로 맞춰 저장 후 종료/포기하기 영역만 숨긴다.
+	 * 설정 화면은 타이틀 HUD 안에 직접 끼워 넣지 않고 InGameSettings 월드 위젯을 OpenUI()로 연다.
+	 * 타이틀과 인게임이 같은 WBP_SettingsPanel 생명주기를 공유해야 Back/Close, 입력, 팝업 ZOrder 규칙이 갈라지지 않는다.
+	 * 타이틀에는 현재 런 액션이 없으므로 Title 모드로 맞춰 저장 후 종료/포기하기 영역만 숨긴다.
 	 */
 	void ShowSettingsScreen();
 
@@ -165,10 +166,9 @@ private:
 	 * @brief 타이틀에서 열 공용 설정 패널을 얻음
 	 *
 	 * @details
-	 * 타이틀 WBP가 자체 SettingsScreen 영역을 갖고 있더라도,
-	 * 실제 설정 UI는 인게임과 같은 WBP_SettingsPanel을 써야 한다.
-	 * WBP 안에 SettingsPanelWidget을 직접 넣어둔 경우에는 그 인스턴스를 쓰고,
-	 * 그렇지 않으면 FrontendGameMode가 준비한 InGameSettings 월드 위젯을 Title 모드로 열어 같은 설정 화면을 공유한다.
+	 * 타이틀 설정도 인게임과 같은 WBP_SettingsPanel을 써야 한다.
+	 * 이 함수는 WBP_TitleMenu 안의 하위 위젯을 찾지 않고, FrontendGameMode가 준비한 InGameSettings 월드 위젯만 돌려준다.
+	 * 그래야 모든 설정 패널이 OpenUI()/CloseUI() 흐름을 타고 AddToViewport, ZOrder, 닫기 이벤트 규칙을 공유한다.
 	 */
 	USettingsPanelWidget* GetTitleSettingsPanel() const;
 
@@ -249,10 +249,6 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UWidget> CharacterScreen;
 
-	/** @brief 설정 화면 자리. WBP에서 아직 만들지 않았을 수도 있어서 Optional이다. */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> SettingsScreen;
-
 	/**
 	 * @brief WBP에 직접 배치한 캐릭터 선택 위젯
 	 *
@@ -268,7 +264,7 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> StartButton;
 
-	/** @brief 저장된 런이 있을 때 지도 화면으로 이어가는 버튼 */
+	/** @brief 저장된 런이 있을 때 현재 저장된 방으로 이어가는 버튼 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> ContinueButton;
 
@@ -301,24 +297,6 @@ private:
 	 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> StatusText;
-
-	/** @brief 설정 화면에서 타이틀 메인으로 돌아가는 버튼 */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UButton> SettingsBackButton;
-
-	/** @brief 설정 화면 뒤로 가기 버튼 안에 표시할 라벨 */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> SettingsBackButtonText;
-
-	/**
-	 * @brief 타이틀 설정 화면 안에 직접 배치한 공용 설정 패널
-	 *
-	 * @details
-	 * WBP_TitleMenu의 SettingsScreen 안에 WBP_SettingsPanel을 SettingsPanelWidget이라는 이름으로 배치하면 바인딩된다.
-	 * 타이틀과 인게임 설정의 차이는 이 패널 내부를 갈라 만드는 것이 아니라 PanelMode로 RunActions만 숨기는 방식으로 처리한다.
-	 */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<USettingsPanelWidget> SettingsPanelWidget;
 
 	/** @brief 게임 타이틀명 기본 문구 */
 	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))

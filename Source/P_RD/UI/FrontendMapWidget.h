@@ -85,7 +85,7 @@ public:
 	 * @brief 현재 RunPersistData 기반 지도 View를 다시 가져와 노드/선을 갱신한다.
 	 * @return 지도 데이터가 있어 갱신에 성공하면 true
 	 *
-	 * FStage/FRoom을 직접 만드는 함수가 아니라, FrontendGameMode가 변환해준
+	 * FStage/FRoom을 직접 만드는 함수가 아니라, ARoomGameModeBase가 변환해준
 	 * FFrontendMapRoomView 배열을 화면에 배치하는 표시 전용 함수다.
 	 */
 	UFUNCTION(Category = UI, BlueprintCallable)

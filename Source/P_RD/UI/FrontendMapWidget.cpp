@@ -297,10 +297,10 @@ namespace
 		const float GraphBottom = MapGraphHeight - MapGraphTopPadding;
 		const float X = MaxColumn <= 0
 			? MapGraphWidth * 0.5f
-			: MapGraphSidePadding + (static_cast<float>(Room.mColumn) / static_cast<float>(MaxColumn)) * (GraphRight - MapGraphSidePadding);
+			: MapGraphSidePadding + (StaticCast<float>(Room.mColumn) / StaticCast<float>(MaxColumn)) * (GraphRight - MapGraphSidePadding);
 		const float Y = MaxRow <= 0
 			? MapGraphHeight * 0.5f
-			: MapGraphTopPadding + (static_cast<float>(MaxRow - Room.mRow) / static_cast<float>(MaxRow)) * (GraphBottom - MapGraphTopPadding);
+			: MapGraphTopPadding + (StaticCast<float>(MaxRow - Room.mRow) / StaticCast<float>(MaxRow)) * (GraphBottom - MapGraphTopPadding);
 
 		const FVector2D Offset(Room.mPositionOffsetRate.X * 18.f, Room.mPositionOffsetRate.Y * 18.f);
 		return FVector2D(

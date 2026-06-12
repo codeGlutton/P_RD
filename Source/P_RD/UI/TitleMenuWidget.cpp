@@ -63,10 +63,10 @@ void UTitleMenuWidget::OpenCharacterSelectFromTitle()
  * @brief WBP 바인딩을 검증하고 타이틀 화면에서 필요한 버튼/하위 위젯 이벤트를 연결한다.
  *
  * @details
- * WBP_TitleMenu는 StartScreen, CharacterScreen, SettingsScreen을 ScreenSwitcher 안에 직접 배치한다.
+ * WBP_TitleMenu는 StartScreen과 CharacterScreen을 ScreenSwitcher 안에 직접 배치한다.
  * C++은 해당 화면을 새로 만들지 않고, BindWidget으로 들어온 인스턴스를 연결만 한다.
  *
- * 왜 여기서 설정 패널/캐릭터 선택 이벤트까지 연결하는가:
+ * 왜 여기서 공용 설정 패널/캐릭터 선택 이벤트까지 연결하는가:
  * 각 하위 위젯은 "뒤로 가기"나 "닫기 요청"만 외부로 알린다.
  * 실제로 타이틀 메인 화면으로 돌아갈지는 바깥 화면 전환을 알고 있는 TitleMenuWidget이 결정한다.
  */
@@ -89,11 +89,6 @@ void UTitleMenuWidget::NativeConstruct()
 	if (SettingsButton != nullptr)
 	{
 		SettingsButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
-	}
-
-	if (SettingsBackButton != nullptr)
-	{
-		SettingsBackButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsBackButtonClicked);
 	}
 
 	if (USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel())
@@ -136,11 +131,6 @@ void UTitleMenuWidget::NativeDestruct()
 		SettingsButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
 	}
 
-	if (SettingsBackButton != nullptr)
-	{
-		SettingsBackButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsBackButtonClicked);
-	}
-
 	if (USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel())
 	{
 		TitleSettingsPanel->OnBackRequested.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsBackButtonClicked);
@@ -179,7 +169,7 @@ void UTitleMenuWidget::ShowScreen(UWidget* Screen) const
  * @brief 타이틀 메인 화면으로 복귀한다.
  *
  * @details
- * 캐릭터 선택, 설정, 지도 화면의 Back/Close 요청은 모두 이 함수로 모인다.
+ * 캐릭터 선택이나 공용 설정 패널의 Back/Close 요청은 모두 이 함수로 모인다.
  * 타이틀의 "현재 화면" 정책을 한 곳에서 관리하기 위한 래퍼다.
  */
 void UTitleMenuWidget::ShowMainScreen() const
@@ -211,11 +201,12 @@ void UTitleMenuWidget::ShowCharacterScreen()
  * @brief 타이틀에서 공용 설정 패널을 Title 모드로 열어 보여준다.
  *
  * @details
- * 설정 기능은 타이틀과 인게임에서 같은 WBP_SettingsPanel을 공유한다.
+ * 설정 기능은 타이틀과 인게임에서 같은 WBP_SettingsPanel 월드 위젯을 공유한다.
  * 타이틀에서는 저장 후 종료/포기하기 같은 런 액션이 보이면 안 되므로 PanelMode를 Title로 바꾸고 Run 액션 상태를 비활성화한다.
  *
- * WBP_TitleMenu 안에 SettingsPanelWidget이 직접 있으면 ScreenSwitcher의 SettingsScreen으로 보여주고,
- * 없으면 FrontendGameMode가 월드 위젯으로 준비한 InGameSettings를 OpenUI()로 띄운다.
+ * 왜 타이틀 내부 ScreenSwitcher로 보여주지 않는가:
+ * 설정 패널은 HUD 하위 화면이 아니라 공용 팝업이다. InGameSettings 월드 위젯을 OpenUI()로 열어야
+ * 타이틀/인게임 모두 AddToViewport, ZOrder, Back/Close 처리 규칙을 같은 경로로 검증할 수 있다.
  */
 void UTitleMenuWidget::ShowSettingsScreen()
 {
@@ -233,16 +224,8 @@ void UTitleMenuWidget::ShowSettingsScreen()
 	TitleSettingsPanel->HideAbandonConfirm();
 	TitleSettingsPanel->SetStatusText(FText::GetEmpty());
 
-	if (SettingsPanelWidget != nullptr && SettingsScreen != nullptr)
-	{
-		TitleSettingsPanel->SetVisibility(ESlateVisibility::Visible);
-		ShowScreen(SettingsScreen);
-	}
-	else
-	{
-		ShowMainScreen();
-		TitleSettingsPanel->OpenUI();
-	}
+	ShowMainScreen();
+	TitleSettingsPanel->OpenUI();
 	SetStatusText(mSettingsStatusText);
 }
 
@@ -275,10 +258,6 @@ void UTitleMenuWidget::SyncMainText() const
 		SettingsButtonText->SetText(mSettingsButtonText);
 	}
 
-	if (SettingsBackButtonText != nullptr)
-	{
-		SettingsBackButtonText->SetText(mBackButtonText);
-	}
 }
 
 /**
@@ -343,20 +322,14 @@ bool UTitleMenuWidget::CanContinueRun() const
 }
 
 /**
- * @brief 타이틀 설정에 사용할 SettingsPanelWidget 인스턴스를 찾는다.
+ * @brief 타이틀 설정에 사용할 공용 SettingsPanelWidget 월드 위젯을 찾는다.
  *
  * @details
- * 우선 WBP_TitleMenu 안에 직접 배치된 패널을 사용한다.
- * 아직 WBP가 완전히 정리되지 않은 경우에는 FrontendGameMode가 미리 만든 InGameSettings 월드 위젯을 대신 사용한다.
- * 두 경로 모두 같은 WBP_SettingsPanel 클래스를 바라보게 해 타이틀/인게임 설정 디자인이 갈라지지 않게 한다.
+ * WBP_TitleMenu 내부의 SettingsScreen이나 SettingsPanelWidget은 사용하지 않는다.
+ * FrontendGameMode가 미리 만든 InGameSettings 월드 위젯만 받아와 OpenUI()/CloseUI() 생명주기를 통일한다.
  */
 USettingsPanelWidget* UTitleMenuWidget::GetTitleSettingsPanel() const
 {
-	if (SettingsPanelWidget != nullptr)
-	{
-		return SettingsPanelWidget;
-	}
-
 	UWorld* World = GetWorld();
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = World != nullptr ? World->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
 	return WorldWidgetSubsystem != nullptr
@@ -446,7 +419,7 @@ void UTitleMenuWidget::ValidateDesignerBindings() const
 
 	if (GetTitleSettingsPanel() == nullptr)
 	{
-		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: SettingsPanelWidget is not available. Place WBP_SettingsPanel in the title WBP or configure InGameSettings world widget."));
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: InGameSettings world widget is not configured."));
 	}
 
 	SetStatusText(FText::GetEmpty());
@@ -506,17 +479,13 @@ void UTitleMenuWidget::HandleSettingsButtonClicked()
  * @brief 설정 화면 Back 요청을 타이틀 메인 복귀로 처리한다.
  *
  * @details
- * 설정 패널이 WBP_TitleMenu 내부에 있으면 ScreenSwitcher만 메인으로 돌린다.
- * 월드 위젯 fallback으로 열었다면 CloseUI()까지 호출해 팝업 상태를 정리한다.
+ * 타이틀 설정도 공용 InGameSettings 월드 위젯으로 열리므로 CloseUI()까지 호출해 팝업 상태를 정리한다.
  */
 void UTitleMenuWidget::HandleSettingsBackButtonClicked()
 {
-	if (SettingsPanelWidget == nullptr)
+	if (USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel())
 	{
-		if (USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel())
-		{
-			TitleSettingsPanel->CloseUI();
-		}
+		TitleSettingsPanel->CloseUI();
 	}
 
 	ShowMainScreen();
