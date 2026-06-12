@@ -34,7 +34,7 @@ USettingsPanelWidget::USettingsPanelWidget(const FObjectInitializer& ObjectIniti
  *
  * 구성 순서:
  * 먼저 WBP 바인딩 누락을 로그로 확인하고, 버튼/슬라이더/체크박스 입력을 C++ 핸들러에 연결한다.
- * 그 뒤 기본 문구, 모드별 표시 상태, 현재 브랜치에서 쓰지 않는 언어 영역, 런 포기 확인 패널의 초기 상태를 맞춘다.
+ * 그 뒤 기본 문구, 모드별 표시 상태, 현재 설정 패널에서 쓰지 않는 언어 영역, 런 포기 확인 패널의 초기 상태를 맞춘다.
  */
 void USettingsPanelWidget::NativeConstruct()
 {
@@ -432,7 +432,7 @@ void USettingsPanelWidget::SyncText() const
 }
 
 /**
- * @brief 현재 브랜치에서 사용하지 않는 언어 설정 영역을 숨긴다.
+ * @brief 현재 설정 패널에서 사용하지 않는 언어 설정 영역을 숨긴다.
  *
  * @details
  * WBP에 남아 있는 이전 기획의 언어 설정 영역을 코드에서 접어 현재 기능 범위를 명확히 한다.

@@ -1,7 +1,6 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   CharacterSelectTypes.h
  * @brief  캐릭터 선택 화면에서 쓰는 View 타입 정의
- * @author Codex
  * @date   2026-06-04
  *********************************************************************/
 
@@ -17,19 +16,13 @@ class UTexture2D;
  * @brief 캐릭터 선택 UI가 표시할 플레이어 유닛 카드 데이터
  *
  * @details
- * 이 타입은 feature/create-srpg-framework-base 브랜치에서 이미 마련된 캐릭터 선택 View 타입의
- * 책임을 이어받는다. Widget은 PlayerUnit DataAsset, 해금 규칙, 시작 스탯 계산 방식을 직접 알지 않고
+ * 이 타입은 캐릭터 선택 화면에 필요한 표시 데이터를 한 곳에 모은다.
+ * Widget은 PlayerUnit DataAsset, 해금 규칙, 시작 스탯 계산 방식을 직접 알지 않고
  * FrontendGameMode가 변환해서 내려준 이 값만 화면에 그린다.
  *
- * PM 브랜치의 기본 타입은 이름/역할/설명/스탯 요약/아이콘/선택 가능 여부를 담는 표시 전용 구조다.
  * 현재 타이틀 -> 캐릭터 선택 -> 지도 흐름에서는 확정 시 실제 런 생성 API에 넘길
- * PlayerUnit PrimaryAssetId와 안정적인 선택 index가 추가로 필요하다. 그래서 PM 브랜치의
- * 공개 필드명은 유지하고, 런 생성과 현재 상세 UI에 필요한 값만 뒤에 보강한다.
- *
- * @note API 출처
- * feature/create-srpg-framework-base 브랜치에 이미 존재하던 FFrontendCharacterOption을 가져와
- * UI/map 흐름에 필요한 mIndex, mMaxHP, mDice, mGold, mPlayerUnitId 등을 보강한 타입이다.
- * 즉 새로 만든 완전 신규 API가 아니라 PM 브랜치 타입을 UI 파트가 확장한 것이다.
+ * PlayerUnit PrimaryAssetId와 안정적인 선택 index가 필요하다. 그래서 이름/역할/설명 같은
+ * 표시 값과 런 생성에 필요한 식별자를 같은 View 값으로 내려준다.
  *
  * 중요한 경계는 이렇다.
  * - UI는 이 배열의 개수만큼 WBP_CharacterCard를 만들고 값만 표시한다.
@@ -57,7 +50,7 @@ struct P_RD_API FFrontendCharacterOption
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	FText mDescription;
 
-	// PM 브랜치 타입과 호환되는 표시용 스탯 요약. 상세 UI는 당분간 아래 숫자 필드로 다시 포맷한다.
+	// 카드에 한 줄로 보여줄 표시용 스탯 요약. 상세 UI는 아래 숫자 필드로 다시 포맷한다.
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	FText mStatSummary;
 
@@ -87,7 +80,7 @@ struct P_RD_API FFrontendCharacterOption
 
 	// 선택 가능 여부. 해금/잠금 판단은 GameMode가 끝내고, UI는 이 값만 신뢰한다.
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
-	bool bSelectable = false;
+	bool mSelectable = false;
 
 	// 선택 불가일 때 상세 영역/상태 문구에서 사용할 사유.
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)

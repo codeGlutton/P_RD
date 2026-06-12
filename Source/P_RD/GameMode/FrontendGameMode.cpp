@@ -1,4 +1,4 @@
-﻿#include "GameMode/FrontendGameMode.h"
+#include "GameMode/FrontendGameMode.h"
 
 #include "GameFramework/PlayerController.h"
 
@@ -12,6 +12,7 @@
 #include "PCGStage/Stage.h"
 
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
+#include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/TitleMenuWidget.h"
 
@@ -44,6 +45,11 @@ namespace
 
 	bool HasCharacterOptionForJob(const TArray<FFrontendCharacterOption>& Options, EPlayerJobType JobType)
 	{
+		/*
+		 * 실제 PlayerUnit DataAsset에서 특정 직업 카드가 내려왔는지 확인한다.
+		 * 현재 Archer/Mage는 아직 실제 데이터가 준비되지 않은 경우가 있어, 없는 직업만 잠김 카드로 보강한다.
+		 * 이렇게 해야 "데이터가 없어서 빈 칸"과 "잠긴 캐릭터로 보여주려는 의도"가 UI에서 구분된다.
+		 */
 		const FText JobText = GetPlayerJobName(JobType);
 		return Options.ContainsByPredicate([&JobText](const FFrontendCharacterOption& Option)
 		{
@@ -53,14 +59,125 @@ namespace
 
 	void AppendLockedCharacterOption(TArray<FFrontendCharacterOption>& Options, EPlayerJobType JobType)
 	{
+		/*
+		 * 아직 DataAsset이 준비되지 않은 캐릭터도 화면 슬롯은 유지한다.
+		 * WBP 레이아웃 확인과 기획상 "추후 열릴 캐릭터" 표현을 위해 더미가 아니라 비활성 View 데이터로 추가한다.
+		 * bSelectable=false와 DisabledReason을 같이 내려, CharacterSelectWidget이 Confirm을 막고 이유 문구를 표시할 수 있게 한다.
+		 */
 		FFrontendCharacterOption NewOption;
 		NewOption.mIndex = Options.Num();
 		NewOption.mDisplayName = GetPlayerJobName(JobType);
 		NewOption.mRoleText = GetPlayerJobName(JobType);
 		NewOption.mDescription = NSLOCTEXT("FrontendGameMode", "LockedCharacterDescription", "Character data is not ready");
 		NewOption.mDisabledReason = NewOption.mDescription;
-		NewOption.bSelectable = false;
+		NewOption.mSelectable = false;
 		Options.Add(MoveTemp(NewOption));
+	}
+
+	bool IsFrontendStageStartPoint(const FStage& Stage, int32 RowIndex, int32 ColumnIndex)
+	{
+		/*
+		 * Continue 지도에서 시작 지점은 실제 전투 방이 아니라 "런이 이 Stage의 입구에 있다"는 표시용 노드다.
+		 * Stage의 시작 열은 생성 규칙에 따라 달라질 수 있으므로, 0열 고정으로 판단하지 않고 Stage.mStartColumn을 사용한다.
+		 */
+		return RowIndex == 0 && ColumnIndex == Stage.mStartColumn;
+	}
+
+	bool IsNextFrontendRoomFromCurrentPath(const FStage& Stage, int32 CurrentRowIndex, int32 CurrentColumnIndex, int32 RowIndex, int32 ColumnIndex)
+	{
+		/*
+		 * 프론트엔드 지도는 Continue 화면에서 진행 상황을 보여주는 용도지만,
+		 * Ready/Locked 표시는 실제 인게임 월드맵과 같은 기준으로 계산해야 사용자가 이어하기 후 볼 지도와 어긋나지 않는다.
+		 *
+		 * mNextRoomColumns는 "현재 방의 다음 행에서 갈 수 있는 열"만 들고 있다.
+		 * 그래서 RowIndex가 CurrentRowIndex + 1인지 먼저 확인하지 않으면,
+		 * 같은 열 번호를 가진 더 먼 행의 방까지 Ready처럼 보이는 문제가 생긴다.
+		 */
+		if (Stage.HasRoom(CurrentRowIndex, CurrentColumnIndex) == false)
+		{
+			return false;
+		}
+		if (RowIndex != CurrentRowIndex + 1)
+		{
+			return false;
+		}
+		if (Stage.HasRoom(RowIndex, ColumnIndex) == false)
+		{
+			return false;
+		}
+
+		const FRoom& CurrentRoom = Stage.mRoomRows[CurrentRowIndex].mRooms[CurrentColumnIndex].Get<FRoom>();
+		return CurrentRoom.mNextRoomColumns.Contains(ColumnIndex);
+	}
+
+	EFrontendMapRoomState ResolveFrontendRoomState(const FStage& Stage, const FRoom& Room, int32 CurrentRowIndex, int32 CurrentColumnIndex)
+	{
+		/*
+		 * 타이틀 Continue 지도는 "현재 런이 어디까지 왔는지"를 보여주는 화면이다.
+		 * 여기서는 방을 새로 선택하지 않으므로 Selected/CanEnter 상태를 만들지 않고,
+		 * 이미 지난 방은 Cleared, 바로 다음 후보는 Ready, 나머지는 Locked로만 내려준다.
+		 */
+		if (Room.mWasSelected == true)
+		{
+			return EFrontendMapRoomState::Cleared;
+		}
+
+		if (IsNextFrontendRoomFromCurrentPath(Stage, CurrentRowIndex, CurrentColumnIndex, Room.mRow, Room.mColumn) == true)
+		{
+			return EFrontendMapRoomState::Ready;
+		}
+
+		return EFrontendMapRoomState::Locked;
+	}
+
+	FText GetFrontendRoomTitle(ERoomType RoomType)
+	{
+		/*
+		 * RoomType을 WBP가 바로 해석하게 만들지 않고, GameMode에서 표시용 문구로 바꿔 내려준다.
+		 * 나중에 룸 타입 이름이나 로컬라이징 키가 바뀌어도 지도 위젯은 "받은 텍스트를 그리는 일"만 유지한다.
+		 */
+		switch (RoomType)
+		{
+		case ERoomType::Monster:
+			return NSLOCTEXT("FrontendGameMode", "MonsterRoomTitle", "Monster");
+		case ERoomType::EliteMonster:
+			return NSLOCTEXT("FrontendGameMode", "EliteRoomTitle", "Elite");
+		case ERoomType::BossMonster:
+			return NSLOCTEXT("FrontendGameMode", "BossRoomTitle", "Boss");
+		case ERoomType::Shop:
+			return NSLOCTEXT("FrontendGameMode", "ShopRoomTitle", "Shop");
+		case ERoomType::Treasure:
+			return NSLOCTEXT("FrontendGameMode", "TreasureRoomTitle", "Treasure");
+		default:
+			return NSLOCTEXT("FrontendGameMode", "UnknownRoomTitle", "Unknown");
+		}
+	}
+
+	FText GetFrontendRoomDescription(const FRoom& Room)
+	{
+		/*
+		 * 현재는 임시 설명 문구로 행/열과 다음 경로 수를 보여준다.
+		 * 최종 룸 설명 문구가 DataAsset으로 분리되면 이 함수만 그 데이터를 읽도록 바꾸고,
+		 * FrontendMapWidget은 계속 FFrontendMapRoomView.mDescription만 표시하면 된다.
+		 */
+		return FText::Format(
+			NSLOCTEXT("FrontendGameMode", "MapRoomDescription", "Row {0}, Column {1}. Next routes: {2}"),
+			FText::AsNumber(Room.mRow + 1),
+			FText::AsNumber(Room.mColumn + 1),
+			FText::AsNumber(Room.mNextRoomColumns.Num())
+		);
+	}
+
+	FText GetFrontendStartPointDescription(const FRoom& Room)
+	{
+		/*
+		 * 시작 노드는 전투/상점/보물 방이 아니므로 RoomType 설명을 붙이지 않는다.
+		 * 대신 시작 지점에서 몇 갈래로 진행되는지만 보여, Continue 지도에서 현재 위치를 빠르게 확인하게 한다.
+		 */
+		return FText::Format(
+			NSLOCTEXT("FrontendGameMode", "StartPointDescription", "Routes: {0}"),
+			FText::AsNumber(Room.mNextRoomColumns.Num())
+		);
 	}
 }
 
@@ -73,8 +190,12 @@ namespace
  * 실제로 화면에 보일 때는 HUD든 WorldWidget이든 모두 URDUserWidget::OpenUI()를 통한다.
  *
  * 타이틀 HUD는 프론트엔드 방의 메인 화면이라 mHUDClass와 InitHUD() 경로로 한 개만 생성하고,
- * BeginRoom()에서 OpenUI()로 표시한다. 반면 MsgNotify, FadeInOut, LoadingNotify는 여러 GameMode가 공유하는
- * 보조 UI라 mWorldWidgets에 넣어 WorldWidgetSubsystem이 생성/보관하게 한다.
+ * BeginRoom()에서 OpenUI()로 표시한다. 반면 MsgNotify, FadeInOut, LoadingNotify, InGameSettings는
+ * 여러 GameMode가 공유하거나 HUD 밖에서 뜨는 보조 UI라 mWorldWidgets에 넣어 WorldWidgetSubsystem이 생성/보관하게 한다.
+ *
+ * InGameSettings를 프론트엔드에도 준비하는 이유:
+ * 타이틀 설정과 인게임 설정은 같은 WBP_SettingsPanel을 사용해야 하고, 차이는 PanelMode로 저장 후 종료/포기하기 영역만 숨기는 것이다.
+ * 타이틀 WBP 안에 자체 설정 영역이 있더라도 실제 설정 화면은 이 공용 월드 위젯을 OpenUI()로 연다.
  *
  * 왜 생성 경로를 나누는가:
  * "누가 만들고 보관할지"와 "어떻게 화면에 열지"는 다른 문제다. 생성 책임은 HUD/WorldWidget으로 나누되,
@@ -86,6 +207,7 @@ AFrontendGameMode::AFrontendGameMode()
 		EWorldWidgetType::MsgNotify,
 		EWorldWidgetType::FadeInOut,
 		EWorldWidgetType::LoadingNotify,
+		EWorldWidgetType::InGameSettings,
 	};
 
 	mShowFadeInUIOnTransition = true;
@@ -133,6 +255,10 @@ void AFrontendGameMode::BeginRoom()
 
 bool AFrontendGameMode::CreateNewRunFromTitle()
 {
+	/*
+	 * 타이틀 START는 아직 런을 만들지 않는다.
+	 * 캐릭터 선택이 끝나야 PlayerUnitId와 난이도가 확정되므로, 여기서는 캐릭터 선택 화면으로 넘기는 것만 담당한다.
+	 */
 	if (mWasNextRoomPreloadRequested == true)
 	{
 		UE_LOG(LogRDGameMode, Log, TEXT("방 전환 시 추가 로직 요청 불가"));
@@ -146,6 +272,11 @@ bool AFrontendGameMode::CreateNewRunFromTitle()
 
 bool AFrontendGameMode::StartNewRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty)
 {
+	/*
+	 * 캐릭터 선택 화면에서 Confirm이 눌린 뒤의 실제 시작 지점이다.
+	 * 먼저 선택된 캐릭터로 RunPersistData를 만들고, 그 다음 Stage1 첫 방을 프리로드/전환한다.
+	 * UI는 "시작 요청"만 하고, 저장 데이터 생성과 방 전환 순서는 GameMode가 고정한다.
+	 */
 	if (mWasNextRoomPreloadRequested == true)
 	{
 		UE_LOG(LogFrontendGameMode, Log, TEXT("방 전환 시 추가 로직 요청 불가"));
@@ -159,6 +290,11 @@ bool AFrontendGameMode::StartNewRun(const FPrimaryAssetId& PlayerUnitId, int32 D
 
 bool AFrontendGameMode::AbandonRunFromTitle()
 {
+	/*
+	 * 타이틀 설정 화면에서 기존 런을 포기할 때 호출된다.
+	 * 여기서는 전투 방이 아니므로 방 전환을 일으키지 않고 RunPersistData만 비운다.
+	 * 이후 타이틀 메뉴가 RefreshMainMenuState()를 호출하면 Continue 버튼이 사라진다.
+	 */
 	if (mWasNextRoomPreloadRequested == true)
 	{
 		UE_LOG(LogFrontendGameMode, Log, TEXT("방 전환 시 추가 로직 요청 불가"));
@@ -177,6 +313,10 @@ bool AFrontendGameMode::AbandonRunFromTitle()
 
 bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& OutOptions) const
 {
+	/*
+	 * CharacterSelectWidget은 PlayerUnit DataAsset 구조를 직접 알지 않는다.
+	 * 이 함수가 DataAsset을 UI 전용 DTO로 바꿔주면, WBP 쪽은 이름/직업/스탯/초상화/선택 가능 여부만 보고 카드를 그릴 수 있다.
+	 */
 	OutOptions.Reset();
 
 	const TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>>& PlayerUnitDatas = GetPlayerUnitDatas();
@@ -207,7 +347,7 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 		NewOption.mPortrait = LoadedPlayerUnitData->mPortrait;
 		NewOption.mIcon = LoadedPlayerUnitData->mIcon;
 		NewOption.mPlayerUnitId = LoadedPlayerUnitData->GetPrimaryAssetId();
-		NewOption.bSelectable = PlayerUnitData.IsValid() && !LoadedPlayerUnitData->mClass.IsNull();
+		NewOption.mSelectable = PlayerUnitData.IsValid() && !LoadedPlayerUnitData->mClass.IsNull();
 		OutOptions.Add(MoveTemp(NewOption));
 	}
 
@@ -223,8 +363,105 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 	return OutOptions.IsEmpty() == false;
 }
 
+bool AFrontendGameMode::GetMapRoomViews(TArray<FFrontendMapRoomView>& OutRooms) const
+{
+	/*
+	 * 타이틀 Continue 지도는 RoomGameMode가 없는 프론트엔드 월드에서 열린다.
+	 * 그래서 FrontendGameMode가 현재 RunPersistData를 읽어 RoomGameMode와 같은 FFrontendMapRoomView 형식으로 변환해준다.
+	 *
+	 * 중요한 점:
+	 * 여기서 내려주는 지도는 "보기용"이다. 타이틀에서 다음 방을 선택/입장하는 기능은 열지 않는다.
+	 * 이어하기를 누른 뒤 실제 방으로 들어가면 RoomGameMode가 선택 가능한 월드맵을 다시 제공한다.
+	 */
+	OutRooms.Reset();
+
+	const URunPersistData* RunPersistData = GetRunPersistData();
+	if (RunPersistData == nullptr || RunPersistData->IsActive() == false)
+	{
+		return false;
+	}
+
+	int32 CurrentRowIndex = 0;
+	int32 CurrentColumnIndex = 0;
+	RunPersistData->GetCurrentRoomIndex(OUT CurrentRowIndex, OUT CurrentColumnIndex);
+
+	const FStage& Stage = RunPersistData->GetStage();
+	for (int32 RowIndex = 0; RowIndex < Stage.mRoomRows.Num(); ++RowIndex)
+	{
+		const FRoomRow& RoomRow = Stage.mRoomRows[RowIndex];
+		for (int32 ColumnIndex = 0; ColumnIndex < RoomRow.mRooms.Num(); ++ColumnIndex)
+		{
+			if (RoomRow.mRooms[ColumnIndex].IsValid() == false)
+			{
+				continue;
+			}
+
+			const FRoom& Room = RoomRow.mRooms[ColumnIndex].Get<FRoom>();
+			if (Room.mType == ERoomType::None)
+			{
+				continue;
+			}
+
+			const bool bIsStartPoint = IsFrontendStageStartPoint(Stage, RowIndex, ColumnIndex);
+			const EFrontendMapRoomState RoomState = ResolveFrontendRoomState(Stage, Room, CurrentRowIndex, CurrentColumnIndex);
+
+			FFrontendMapRoomView NewView;
+			NewView.mRow = RowIndex;
+			NewView.mColumn = ColumnIndex;
+			NewView.mType = Room.mType;
+			NewView.mState = RoomState;
+			NewView.mTitle = bIsStartPoint ? NSLOCTEXT("FrontendGameMode", "StartPointTitle", "Start") : GetFrontendRoomTitle(Room.mType);
+			NewView.mDescription = bIsStartPoint ? GetFrontendStartPointDescription(Room) : GetFrontendRoomDescription(Room);
+			NewView.mNextRoomColumns = Room.mNextRoomColumns;
+			NewView.mPositionOffsetRate = Room.mPositionOffsetRate;
+			NewView.mSelectable = false;
+			NewView.mSelected = false;
+			NewView.mVisited = RoomState == EFrontendMapRoomState::Cleared;
+			NewView.mCanEnter = false;
+			NewView.mIsStartPoint = bIsStartPoint;
+			OutRooms.Add(MoveTemp(NewView));
+		}
+	}
+
+	return OutRooms.IsEmpty() == false;
+}
+
+bool AFrontendGameMode::GetRunControlView(FFrontendRunControlView& OutView) const
+{
+	/*
+	 * 타이틀 메뉴가 Continue 버튼 표시 여부와 지도 스크롤 위치를 판단할 때 쓰는 요약 데이터다.
+	 * 세이브/런 데이터의 내부 구조를 TitleMenuWidget이 직접 읽지 않게 하고,
+	 * UI에는 "활성 런이 있는가, 현재 위치가 Stage 시작점인가, 난이도/레벨은 무엇인가"만 전달한다.
+	 */
+	OutView = FFrontendRunControlView();
+	OutView.mHasActiveRun = HasActiveRun();
+	OutView.mCanSaveRun = false;
+	OutView.mCanAbandonRun = CanAbandonRun();
+
+	const URunPersistData* RunPersistData = GetRunPersistData();
+	if (RunPersistData == nullptr || RunPersistData->IsActive() == false)
+	{
+		return false;
+	}
+
+	RunPersistData->GetCurrentRoomIndex(OUT OutView.mRow, OUT OutView.mColumn);
+	OutView.mIsAtStageStart = IsFrontendStageStartPoint(RunPersistData->GetStage(), OutView.mRow, OutView.mColumn);
+	OutView.mPlayerLevel = RunPersistData->GetPlayerLevel();
+	OutView.mDifficulty = RunPersistData->GetDifficulty();
+	return true;
+}
+
 const TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>>& AFrontendGameMode::GetPlayerUnitDatas() const
 {
+	/*
+	 * 선택 가능한 캐릭터 목록은 FrontendRoom DataAsset(DA_TestFrontend)의 mPlayableUnits가 기준이다.
+	 * Intro/FrontendRoom 프리로드 단계에서 FrontendRoom과 같은 번들의 PlayerUnit들이 메모리에 올라와 있어야 하고,
+	 * 여기서는 이미 로드된 PrimaryAsset 객체에서 SoftObjectPtr 목록만 꺼내 캐시한다.
+	 *
+	 * 왜 CSV나 별도 임시 목록을 쓰지 않는가:
+	 * 프론트엔드 방 정보 안에 "이 화면에서 선택 가능한 캐릭터"가 이미 들어 있으므로,
+	 * UI 쪽에서 새 데이터 소스를 만들면 에셋 설정과 화면 표시가 갈라진다.
+	 */
 	if (mPlayerUnitDataCache.IsEmpty() == true)
 	{
 		UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
@@ -243,6 +480,10 @@ const TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>>& AFrontendGameMode::Get
 
 bool AFrontendGameMode::IsPlayerUnitIdValid(const FPrimaryAssetId& PlayerUnitId) const
 {
+	/*
+	 * Confirm 버튼이 보낸 PlayerUnitId가 실제 프론트엔드 방의 선택 후보 안에 있는지 마지막으로 확인한다.
+	 * UI에서 비활성 카드를 막아도, 런 생성 직전 GameMode가 다시 검증해야 잘못된 ID로 StartRun()이 호출되지 않는다.
+	 */
 	if (PlayerUnitId.IsValid() == false)
 	{
 		return false;
@@ -270,6 +511,10 @@ bool AFrontendGameMode::IsDifficultyValid(int32 Difficulty) const
 
 bool AFrontendGameMode::OpenTitleCharacterSelect()
 {
+	/*
+	 * 타이틀 HUD 내부 화면 전환은 TitleMenuWidget이 맡는다.
+	 * GameMode가 ScreenSwitcher를 직접 만지지 않고, 타이틀 위젯에 "캐릭터 선택 화면을 열어 달라"고 요청하는 구조다.
+	 */
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
 	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr"));
 
@@ -282,6 +527,10 @@ bool AFrontendGameMode::OpenTitleCharacterSelect()
 
 bool AFrontendGameMode::CreateRunData(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty)
 {
+	/*
+	 * RunPersistData 생성은 캐릭터/난이도 검증이 끝난 뒤 GameProfileSubsystem에 위임한다.
+	 * 이 함수가 UI DTO나 WBP 상태를 읽지 않는 이유는, 런 생성 규칙을 화면 구조와 분리하기 위해서다.
+	 */
 	if (IsPlayerUnitIdValid(PlayerUnitId) == false)
 	{
 		UE_LOG(LogFrontendGameMode, Log, TEXT("플레이어 유닛 데이터를 찾을 수 없음"));
@@ -295,6 +544,15 @@ bool AFrontendGameMode::CreateRunData(const FPrimaryAssetId& PlayerUnitId, int32
 
 	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
 	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로파일 서브시스템 nullptr 오류"));
+
+	if (GetUserPersistData()->IsActive() == false)
+	{
+		/*
+		 * 세이브가 없는 첫 실행은 Intro에서 유저 데이터 로드 실패 후 빈 UserData로 프론트엔드에 들어온다.
+		 * 새 런 생성은 유저 프로필을 전제로 하므로, 첫 런 시작 시점에 기본 유저를 먼저 만든다.
+		 */
+		GameProfileSubsystem->MakeUser(NSLOCTEXT("FrontendGameMode", "DefaultUserName", "Player"));
+	}
 
 	GameProfileSubsystem->StartRun(PlayerUnitId, Difficulty);
 	return true;

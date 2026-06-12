@@ -1,4 +1,4 @@
-﻿#include "GameMode/RoomGameModeBase.h"
+#include "GameMode/RoomGameModeBase.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
@@ -16,6 +16,10 @@ namespace
 {
 	bool IsStageStartPoint(const FStage& Stage, int32 RowIndex, int32 ColumnIndex)
 	{
+		/*
+		 * Stage 시작점은 "첫 번째 행의 시작 열"로 정의된다.
+		 * 월드맵 UI에서는 이 노드를 일반 방과 다르게 START 표시로 그려 현재 런의 출발점을 알 수 있게 한다.
+		 */
 		return RowIndex == 0 && ColumnIndex == Stage.mStartColumn;
 	}
 
@@ -74,6 +78,10 @@ namespace
 
 	FText GetRoomTitle(ERoomType RoomType)
 	{
+		/*
+		 * 지도 위젯이 ERoomType을 직접 해석하지 않도록 GameMode가 표시 문구로 변환한다.
+		 * 최종 룸 이름/로컬라이징 규칙이 바뀌면 이 함수만 수정하면 된다.
+		 */
 		switch (RoomType)
 		{
 		case ERoomType::Monster:
@@ -93,6 +101,10 @@ namespace
 
 	FText GetRoomDescription(const FRoom& Room)
 	{
+		/*
+		 * 현재는 임시 설명으로 행/열과 다음 경로 수를 보여준다.
+		 * 최종 룸 설명 DataAsset이 생기면 여기서 설명 텍스트만 교체하고, 지도 DTO 구조는 유지한다.
+		 */
 		return FText::Format(
 			NSLOCTEXT("RoomGameModeBase", "MapRoomDescription", "Row {0}, Column {1}. Next routes: {2}"),
 			FText::AsNumber(Room.mRow + 1),
@@ -103,6 +115,9 @@ namespace
 
 	FText GetStartPointDescription(const FRoom& Room)
 	{
+		/*
+		 * 시작점은 전투 방이 아니므로 룸 타입 설명 대신 앞으로 갈 수 있는 경로 수만 표시한다.
+		 */
 		return FText::Format(
 			NSLOCTEXT("RoomGameModeBase", "StartPointDescription", "Routes: {0}"),
 			FText::AsNumber(Room.mNextRoomColumns.Num())
@@ -112,6 +127,11 @@ namespace
 
 ARoomGameModeBase::ARoomGameModeBase()
 {
+	/*
+	 * 실제 방에서는 TopMenuBar가 월드맵/설정/주사위/스킬 패널을 여는 공통 진입점이다.
+	 * 각 방 HUD에 팝업을 직접 넣지 않고 WorldWidgetSubsystem에 등록해두면,
+	 * 전투/상점/보물 방이 모두 같은 OpenUI/CloseUI 규칙을 공유한다.
+	 */
 	mWorldWidgets = { 
 		EWorldWidgetType::TopMenuBar, 
 		EWorldWidgetType::MsgNotify, 
@@ -120,9 +140,11 @@ ARoomGameModeBase::ARoomGameModeBase()
 		EWorldWidgetType::LoadingNotify,  
 		EWorldWidgetType::WorldMap,
 		EWorldWidgetType::InGameSettings,
+		EWorldWidgetType::DicePanel,
+		EWorldWidgetType::SkillPanel,
 	};
 
-	/* 월드맵/설정은 모든 방에서 같은 팝업으로 쓰이므로 HUD 자식이 아니라 WorldWidgetSubsystem이 준비한다. */
+	/* 월드맵/설정/주사위/스킬 패널은 모든 방에서 같은 팝업으로 쓰이므로 HUD 자식이 아니라 WorldWidgetSubsystem이 준비한다. */
 	mShowFadeInUIOnTransition = true;
 	mShowFadeOutUIOnTransition = true;
 	mShowLoadingNotifyUIOnTransition = true;
@@ -298,11 +320,11 @@ bool ARoomGameModeBase::GetMapRoomViews(TArray<FFrontendMapRoomView>& OutRooms) 
 			NewView.mDescription = bIsStartPoint ? GetStartPointDescription(Room) : GetRoomDescription(Room);
 			NewView.mNextRoomColumns = Room.mNextRoomColumns;
 			NewView.mPositionOffsetRate = Room.mPositionOffsetRate;
-			NewView.bSelectable = RoomState == EFrontendMapRoomState::Ready;
-			NewView.bSelected = RoomState == EFrontendMapRoomState::Selected;
-			NewView.bVisited = RoomState == EFrontendMapRoomState::Cleared;
-			NewView.bCanEnter = RoomState == EFrontendMapRoomState::Selected;
-			NewView.bIsStartPoint = bIsStartPoint;
+			NewView.mSelectable = RoomState == EFrontendMapRoomState::Ready;
+			NewView.mSelected = RoomState == EFrontendMapRoomState::Selected;
+			NewView.mVisited = RoomState == EFrontendMapRoomState::Cleared;
+			NewView.mCanEnter = RoomState == EFrontendMapRoomState::Selected;
+			NewView.mIsStartPoint = bIsStartPoint;
 			OutRooms.Add(MoveTemp(NewView));
 		}
 	}
@@ -312,19 +334,23 @@ bool ARoomGameModeBase::GetMapRoomViews(TArray<FFrontendMapRoomView>& OutRooms) 
 
 bool ARoomGameModeBase::GetRunControlView(FFrontendRunControlView& OutView) const
 {
+	/*
+	 * TopMenuBar와 FrontendMapWidget이 현재 런 요약을 표시할 때 쓰는 UI DTO다.
+	 * 위젯이 URunPersistData를 직접 읽지 않게 하고, GameMode가 "화면에 보여줄 값"만 골라 내려준다.
+	 */
 	OutView = FFrontendRunControlView();
-	OutView.bHasActiveRun = HasActiveRun();
-	OutView.bCanSaveRun = false;
-	OutView.bCanAbandonRun = CanAbandonRun();
+	OutView.mHasActiveRun = HasActiveRun();
+	OutView.mCanSaveRun = false;
+	OutView.mCanAbandonRun = CanAbandonRun();
 
-	if (OutView.bHasActiveRun == false)
+	if (OutView.mHasActiveRun == false)
 	{
 		return false;
 	}
 
 	const URunPersistData* RunPersistData = GetRunPersistData();
 	RunPersistData->GetCurrentRoomIndex(OUT OutView.mRow, OUT OutView.mColumn);
-	OutView.bIsAtStageStart = IsStageStartPoint(RunPersistData->GetStage(), OutView.mRow, OutView.mColumn);
+	OutView.mIsAtStageStart = IsStageStartPoint(RunPersistData->GetStage(), OutView.mRow, OutView.mColumn);
 	OutView.mPlayerLevel = RunPersistData->GetPlayerLevel();
 	OutView.mDifficulty = RunPersistData->GetDifficulty();
 	return true;
@@ -332,6 +358,10 @@ bool ARoomGameModeBase::GetRunControlView(FFrontendRunControlView& OutView) cons
 
 bool ARoomGameModeBase::GetRunControlState(OUT int32& RowIndex, OUT int32& ColumnIndex, OUT int32& PlayerLevel, OUT int32& Difficulty) const
 {
+	/*
+	 * BP/WBP나 기존 호출부가 구조체 대신 개별 값으로 현재 런 상태를 받아야 할 때 쓰는 호환 API다.
+	 * 내부 기준은 GetRunControlView() 하나로 유지해, 표시 데이터 계산이 두 군데로 갈라지지 않게 한다.
+	 */
 	FFrontendRunControlView RunView;
 	if (!GetRunControlView(OUT RunView))
 	{
@@ -351,6 +381,11 @@ bool ARoomGameModeBase::GetRunControlState(OUT int32& RowIndex, OUT int32& Colum
 
 bool ARoomGameModeBase::PreloadAndTransitionSelectedRoomAsync()
 {
+	/*
+	 * 월드맵에서 선택한 방을 실제 전환 요청으로 바꾸는 마지막 단계다.
+	 * SelectNextRoom()으로 저장된 좌표가 여전히 유효한지 다시 확인한 뒤,
+	 * 기존 방 전환 시스템의 PreloadAndTransitionRoomAsync(row, column) 흐름으로 넘긴다.
+	 */
 	if (mWasNextRoomPreloadRequested == true)
 	{
 		UE_LOG(LogRDGameMode, Log, TEXT("방 전환 시 추가 로직 요청 불가"));

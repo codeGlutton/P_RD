@@ -53,7 +53,7 @@ struct FSkillEffectLayer
     * @note
     * Damage, Heal 기타 등등
     */
-    UPROPERTY(Category = "SkillEffectLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "GameplayEffect", AssetBundles = BUNDLE_ACTOR))
+    UPROPERTY(Category = "SkillEffectLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "GameplayEffect", AssetBundles = "Actor"))
     TSoftClassPtr<class UGameplayEffect_Base> mGameplayEffect;
 
     /**
@@ -127,7 +127,7 @@ public:
     UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Description"))
     FText mDescription;
 
-    UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Icon", AssetBundles = BUNDLE_UI))
+    UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Icon", AssetBundles = "UI"))
     TSoftObjectPtr<UTexture2D> mIcon;
 
     UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Price"))
