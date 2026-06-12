@@ -80,7 +80,8 @@ public:
 	 * @param[in] Range : 사거리 (1=인접 칸, Single은 무시)
 	 * @param[in] Pattern : 조준 패턴
 	 * @param[in] bIncludeOccupied : 점유된 타일(장애물/유닛)을 조준 가능으로 포함할지
-	 * @param[in] bIndirect : 곡사 여부 (장애물 너머 조준 가능한지)
+	 * @param[in] bIndirect : 곡사 여부 (장애물/유닛 너머 조준 가능한지)
+	 * @param[in] Incoming : 교체할 액터. 교체가 없을 경우는 nullptr
 	 * @return TArray<FTileIndex> : 조준 가능한 타일 좌표 목록 (맵 밖 좌표 제외)
 	 */
 	TArray<FTileIndex> GetAimableTiles(
@@ -88,7 +89,8 @@ public:
 		int32 Range,
 		EAimPattern Pattern,
 		bool bIncludeOccupied,
-		bool bIndirect
+		bool bIndirect,
+		const ITileActor* Incoming = nullptr
 	) const;
 
 	/**
@@ -355,6 +357,52 @@ private:
 		}
 		return Result;
 	}
+
+	/* 범위 계산 헬퍼 */
+	/**
+	 * @brief 원점에서 특정 방향으로 Range만큼 뻗는 직선에 포함되는 타일을 수집
+	 * @details
+	 * 한 칸씩 전진하며 Out에 누적하고, 맵 밖으로 나가면 그 방향을 종료한다. 원점 자신은 포함하지 않는다.
+	 * Cross(4방향)·Star(8방향)처럼 여러 방향을 각각 호출해 같은 배열에 누적하는 방식이다.
+	 * @param[in] Origin 시작 좌표
+	 * @param[in] Step   한 칸 전진 방향 (예: (1,0)=오른쪽, (-1,1)=좌하단 대각)
+	 * @param[in] Range  뻗을 칸 수 (0 이하이면 아무것도 추가하지 않음)
+	 * @param[in,out] Out 결과를 누적할 배열
+	 */
+	void AppendRayTiles(const FTileIndex& Origin, const FTileIndex& Step, int32 Range, TArray<FTileIndex>& Out) const;
+
+	/**
+	 * @brief Bresenham 알고리즘으로 두 칸 사이 직선이 지나는 타일을 수집
+	 * @details
+	 * 양 끝(From, To)을 모두 포함하며, From을 첫 원소·To를 마지막 원소로 채운다.
+	 * 내부에서 정규화된 한 방향으로만 그리므로 From/To를 바꿔 호출해도 같은 칸 집합이 나온다 (순서만 반대).
+	 * @param[in] From 시작 좌표
+	 * @param[in] To   끝 좌표
+	 * @param[in,out] Out 결과를 누적할 배열
+	 */
+	void BresenhamLine(const FTileIndex& From, const FTileIndex& To, TArray<FTileIndex>& Out) const;
+
+	/**
+	 * @brief 두 칸 사이 직선을 래스터화해 지나는 타일을 수집 (래스터화 방식의 교체 지점)
+	 * @details
+	 * 현재는 Bresenham을 사용한다. Supercover 등 다른 방식으로 바꾸려면 이 함수의 내부 호출만 교체하면 된다.
+	 * 호출자가 양 끝을 인덱스로 구분하므로, From을 첫 원소·To를 마지막 원소로 채우는 계약을 지켜야 한다.
+	 * @param[in] From 시작 좌표
+	 * @param[in] To   끝 좌표
+	 * @param[in,out] Out 결과를 누적할 배열
+	 */
+	void RasterizeLine(const FTileIndex& From, const FTileIndex& To, TArray<FTileIndex>& Out) const;
+
+	/**
+	 * @brief From에서 To까지 시야(직선)가 막히지 않는지 판정
+	 * @details
+	 * RasterizeLine으로 경로 칸을 구한 뒤, 양 끝(From, To)을 제외한 중간 칸에
+	 * 시야를 막는 액터(Obstacle 또는 Unit)가 하나라도 있으면 막힌 것으로 본다.
+	 * @param[in] From 시작 좌표
+	 * @param[in] To   목표 좌표
+	 * @return 시야가 확보되면 true, 중간이 막히면 false
+	 */
+	bool HasLineOfSight(const FTileIndex& From, const FTileIndex& To) const;
 
 	/**
 	 * @brief ITileActor 포인터를 GC 추적용 TScriptInterface로 변환
