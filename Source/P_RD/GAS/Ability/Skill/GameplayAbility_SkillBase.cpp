@@ -23,6 +23,8 @@ void UGameplayAbility_SkillBase::ActivateAbility(const FGameplayAbilitySpecHandl
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
+	// 리팩토링 중 주석처리...
+	/*
 	UE_LOG(LogTemp, Warning, TEXT("UGameplayAbility_SkillBase::ActivateAbility Start"));
 
 	// 유효한 액터인지 검사한다.
@@ -35,30 +37,6 @@ void UGameplayAbility_SkillBase::ActivateAbility(const FGameplayAbilitySpecHandl
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("Ability Attack"));
-
-	/*
-	
-	// Event 데이터가 유효한지 검사한다.
-	if (!TriggerEventData || !TriggerEventData->TargetData.Num())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("TriggerEventData False"));
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
-		return;
-	}
-
-	// 트리거 이벤트에 있는 액터들을 가져온다.
-	FGameplayAbilityTargetData_ActorArray* ActorArrayData =
-		(FGameplayAbilityTargetData_ActorArray*)(TriggerEventData->TargetData.Data[0].Get());
-
-	if (!ActorArrayData)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ActorArrayData False"));
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
-		return;
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("ActorArrayData"));
-	*/
 
 	if (const USkillCommitResultHolder* ResultHolder = Cast<USkillCommitResultHolder>(TriggerEventData->OptionalObject))
 	{
@@ -91,13 +69,15 @@ void UGameplayAbility_SkillBase::ActivateAbility(const FGameplayAbilitySpecHandl
 			}
 		}
 	}
-
+	*/
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
 
 bool UGameplayAbility_SkillBase::CommitActorToEffect(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const AUnit* CUnit, const struct FUnitCommitResult& CommitResult)
 {
+	// 리팩토링 중 주석처리... ==============================================================================================================================
+	/*
 	UE_LOG(LogTemp, Warning, TEXT("UnitCommit %d"), CommitResult.mEffect.Num());
 
 	for (const TPair<FGameplayTag, float>& EffectPair : CommitResult.mEffect)
@@ -136,6 +116,7 @@ bool UGameplayAbility_SkillBase::CommitActorToEffect(const FGameplayAbilitySpecH
 			
 		}
 	}
+	*/
 
 	return true;
 }

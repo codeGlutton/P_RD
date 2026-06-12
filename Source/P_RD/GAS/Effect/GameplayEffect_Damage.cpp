@@ -9,6 +9,9 @@ UGameplayEffect_Damage::UGameplayEffect_Damage()
 	// Instant : 즉시 동작.
 	// HasDuration : 일정시간 동작.
 	// Infinite : 무한하게 동작.
+
+	// 리팩토링 중 주석처리... ==============================================================================================================================
+	/*
 	DurationPolicy = EGameplayEffectDurationType::Instant;
 
 	// Attribute를 어떻게 바꿀지 방법을 적용한다.
@@ -27,7 +30,7 @@ UGameplayEffect_Damage::UGameplayEffect_Damage()
 
 	// Modifier 배열에 추가한다.
 	Modifiers.Add(Modifier);
-
+	*/
 	// Cue
 	//FGameplayEffectCue	Cue;
 	//Cue.GameplayCueTags.AddTag(FGameplayTag::RequestGameplayTag(TEXT("GameplayCue.Battle.Attack")));

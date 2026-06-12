@@ -75,6 +75,9 @@ bool USkillComponent::ActivateSkill(const FSkillCommitResult& SkillResult)
 	// 추후 mSkillCommitResult가 유효하지 않다면 취소시키도록 한다.
 	// checkf(IsValid(mSkillCommitResult))
 
+	// 리팩토링 중 주석처리... ==============================================================================================================================
+	/*
+
 	// 어빌리티를 발동시킨다.
 	FGameplayEventData EventData;
 
@@ -94,6 +97,7 @@ bool USkillComponent::ActivateSkill(const FSkillCommitResult& SkillResult)
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), EventData.EventTag, EventData);
 
 	UE_LOG(LogTemp, Warning, TEXT("GA에게 전달 Start"));
+	*/
 
 	return true;
 }
