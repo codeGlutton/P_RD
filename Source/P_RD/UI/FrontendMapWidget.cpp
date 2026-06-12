@@ -141,7 +141,7 @@ namespace
 		}
 	}
 
-	FLinearColor GetMapRoomPanelColor(const FFrontendMapRoomView& Room)
+	FLinearColor GetMapRoomPanelColor(const FMapRoomView& Room)
 	{
 		/*
 		 * 방의 게임 상태를 지도 노드의 배경색으로 바꾼다.
@@ -155,24 +155,24 @@ namespace
 
 		switch (Room.mState)
 		{
-		case EFrontendMapRoomState::Selected:
+		case EMapRoomState::Selected:
 			return SelectFillColor;
-		case EFrontendMapRoomState::Ready:
+		case EMapRoomState::Ready:
 			return AccentFillColor;
-		case EFrontendMapRoomState::Cleared:
+		case EMapRoomState::Cleared:
 			return FLinearColor(0.180f, 0.260f, 0.210f, 1.f);
 		default:
 			return PanelDarkColor;
 		}
 	}
 
-	FSlateColor GetMapRoomTextColor(const FFrontendMapRoomView& Room)
+	FSlateColor GetMapRoomTextColor(const FMapRoomView& Room)
 	{
 		/* 잠긴 노드는 텍스트도 흐리게 보여 "보이지만 아직 갈 수 없음"을 명확히 한다. */
-		return Room.mState == EFrontendMapRoomState::Locked ? LockedColor : TitleColor;
+		return Room.mState == EMapRoomState::Locked ? LockedColor : TitleColor;
 	}
 
-	FText GetMapRoomBadgeText(const FFrontendMapRoomView& Room)
+	FText GetMapRoomBadgeText(const FMapRoomView& Room)
 	{
 		/*
 		 * 텍스트형 지도 UI에서 쓰던 상태 배지 문구다.
@@ -185,18 +185,18 @@ namespace
 
 		switch (Room.mState)
 		{
-		case EFrontendMapRoomState::Selected:
+		case EMapRoomState::Selected:
 			return FrontendMapText(TEXT("MapRoomSelectedBadge"));
-		case EFrontendMapRoomState::Ready:
+		case EMapRoomState::Ready:
 			return FrontendMapText(TEXT("MapRoomReadyBadge"));
-		case EFrontendMapRoomState::Cleared:
+		case EMapRoomState::Cleared:
 			return FrontendMapText(TEXT("MapRoomVisitedBadge"));
 		default:
 			return FrontendMapText(TEXT("MapRoomLockedBadge"));
 		}
 	}
 
-	FText GetMapRoomNodeLabel(const FFrontendMapRoomView& Room)
+	FText GetMapRoomNodeLabel(const FMapRoomView& Room)
 	{
 		/*
 		 * 최종 아이콘이 없을 때 노드 안에 표시할 최소 라벨이다.
@@ -213,7 +213,7 @@ namespace
 			FText::AsNumber(Room.mColumn + 1));
 	}
 
-	FText GetMapRoomStateText(const FFrontendMapRoomView& Room)
+	FText GetMapRoomStateText(const FMapRoomView& Room)
 	{
 		/*
 		 * 프리뷰 영역이나 접근성 텍스트에서 사용할 상태 문구다.
@@ -226,11 +226,11 @@ namespace
 
 		switch (Room.mState)
 		{
-		case EFrontendMapRoomState::Selected:
+		case EMapRoomState::Selected:
 			return FrontendMapText(TEXT("MapRoomSelected"));
-		case EFrontendMapRoomState::Ready:
+		case EMapRoomState::Ready:
 			return FrontendMapText(TEXT("MapRoomReady"));
-		case EFrontendMapRoomState::Cleared:
+		case EMapRoomState::Cleared:
 			return FrontendMapText(TEXT("MapRoomVisited"));
 		default:
 			return FrontendMapText(TEXT("MapRoomLocked"));
@@ -267,7 +267,7 @@ namespace
 	 * 최종 룸 노드는 RoomType별 아이콘/이미지를 표시해야 한다. 지금은 아이콘 리소스와 최종 룸 표시 규칙이
 	 * 확정되기 전이라, APK에서 Stage 행/열과 RoomType 매핑이 맞는지만 확인할 수 있도록 텍스트를 남긴다.
 	 */
-	FText GetMapRoomDebugNodeLabel(const FFrontendMapRoomView& Room)
+	FText GetMapRoomDebugNodeLabel(const FMapRoomView& Room)
 	{
 		return FText::Format(
 			FrontendMapText(TEXT("MapRoomDebugNodeLabelFormat")),
@@ -276,7 +276,7 @@ namespace
 			GetRoomDebugTypeText(Room.mType));
 	}
 
-	FVector2D GetMapRoomNodeCenter(const TArray<FFrontendMapRoomView>& Rooms, const FFrontendMapRoomView& Room)
+	FVector2D GetMapRoomNodeCenter(const TArray<FMapRoomView>& Rooms, const FMapRoomView& Room)
 	{
 		/*
 		 * Stage의 row/column을 고정 크기 지도 캔버스 좌표로 변환한다.
@@ -287,7 +287,7 @@ namespace
 		 */
 		int32 MaxRow = 0;
 		int32 MaxColumn = 0;
-		for (const FFrontendMapRoomView& Candidate : Rooms)
+		for (const FMapRoomView& Candidate : Rooms)
 		{
 			MaxRow = FMath::Max(MaxRow, Candidate.mRow);
 			MaxColumn = FMath::Max(MaxColumn, Candidate.mColumn);
@@ -308,13 +308,13 @@ namespace
 			FMath::Clamp(Y + Offset.Y, MapNodeHeight * 0.5f, MapGraphHeight - MapNodeHeight * 0.5f));
 	}
 
-	const FFrontendMapRoomView* FindMapRoom(const TArray<FFrontendMapRoomView>& Rooms, int32 RowIndex, int32 ColumnIndex)
+	const FMapRoomView* FindMapRoom(const TArray<FMapRoomView>& Rooms, int32 RowIndex, int32 ColumnIndex)
 	{
 		/*
 		 * 선을 그릴 때 "현재 방의 다음 열"이 실제 방 View 배열 안에 있는지 찾는다.
 		 * FStage 내부 구조를 지도 위젯이 직접 들고 있지 않기 때문에, DTO 배열 안에서 row/column으로만 연결한다.
 		 */
-		return Rooms.FindByPredicate([RowIndex, ColumnIndex](const FFrontendMapRoomView& Room)
+		return Rooms.FindByPredicate([RowIndex, ColumnIndex](const FMapRoomView& Room)
 		{
 			return Room.mRow == RowIndex && Room.mColumn == ColumnIndex;
 		});
@@ -604,14 +604,14 @@ bool UFrontendMapWidget::RefreshMap()
 		return false;
 	}
 
-	TArray<FFrontendMapRoomView> Rooms;
+	TArray<FMapRoomView> Rooms;
 	bool bHasRooms = false;
 	bool bShouldScrollToStart = false;
 	if (ARoomGameModeBase* RoomGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ARoomGameModeBase>() : nullptr)
 	{
 		bHasRooms = RoomGameMode->GetMapRoomViews(Rooms);
 
-		FFrontendRunControlView RunControlView;
+		FRunControlView RunControlView;
 		bShouldScrollToStart = RoomGameMode->GetRunControlView(OUT RunControlView) && RunControlView.mIsAtStageStart;
 	}
 	else
@@ -639,13 +639,13 @@ bool UFrontendMapWidget::RefreshMap()
 	UWidget* FocusMapNodeWidget = nullptr;
 
 	TMap<FIntPoint, FVector2D> NodeCenters;
-	for (const FFrontendMapRoomView& Room : Rooms)
+	for (const FMapRoomView& Room : Rooms)
 	{
 		NodeCenters.Add(FIntPoint(Room.mRow, Room.mColumn), GetMapRoomNodeCenter(Rooms, Room));
 	}
 
 	int32 UsedLineCount = 0;
-	for (const FFrontendMapRoomView& Room : Rooms)
+	for (const FMapRoomView& Room : Rooms)
 	{
 		const FVector2D* FromCenter = NodeCenters.Find(FIntPoint(Room.mRow, Room.mColumn));
 		if (FromCenter == nullptr)
@@ -655,7 +655,7 @@ bool UFrontendMapWidget::RefreshMap()
 
 		for (int32 NextColumn : Room.mNextRoomColumns)
 		{
-			const FFrontendMapRoomView* NextRoom = FindMapRoom(Rooms, Room.mRow + 1, NextColumn);
+			const FMapRoomView* NextRoom = FindMapRoom(Rooms, Room.mRow + 1, NextColumn);
 			const FVector2D* ToCenter = NodeCenters.Find(FIntPoint(Room.mRow + 1, NextColumn));
 			if (NextRoom == nullptr || ToCenter == nullptr)
 			{
@@ -676,7 +676,7 @@ bool UFrontendMapWidget::RefreshMap()
 			}
 
 			UFrontendMapLineWidget* ConnectionLine = LineEntry->mLineWidget;
-			ConnectionLine->SetLineColor(Room.mState != EFrontendMapRoomState::Locked
+			ConnectionLine->SetLineColor(Room.mState != EMapRoomState::Locked
 				? FLinearColor(0.445f, 0.760f, 0.780f, 0.92f)
 				: FLinearColor(0.250f, 0.300f, 0.320f, 0.58f));
 
@@ -694,12 +694,12 @@ bool UFrontendMapWidget::RefreshMap()
 	}
 
 	int32 UsedNodeCount = 0;
-	for (const FFrontendMapRoomView& Room : Rooms)
+	for (const FMapRoomView& Room : Rooms)
 	{
 		const FText StateText = GetMapRoomStateText(Room);
-		const FSlateColor StateColor = Room.mState == EFrontendMapRoomState::Locked
+		const FSlateColor StateColor = Room.mState == EMapRoomState::Locked
 			? LockedColor
-			: (Room.mState == EFrontendMapRoomState::Selected ? TitleColor : ReadyColor);
+			: (Room.mState == EMapRoomState::Selected ? TitleColor : ReadyColor);
 
 		const bool bShouldFocusRoom = Room.mCanEnter || Room.mSelected;
 		if (bShouldFocusRoom)

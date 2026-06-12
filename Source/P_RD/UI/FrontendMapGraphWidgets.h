@@ -85,7 +85,7 @@ private:
  * 이 위젯은 방 하나의 버튼/색/문구만 담당한다.
  * 어떤 방으로 이동 가능한지, 선택하면 어떤 런 데이터가 바뀌는지는 부모 UFrontendMapWidget과 GameMode가 처리한다.
  *
- * FRoom을 대체하지 않는다. FFrontendMapRoomView 한 개를 화면 노드 하나로 보여주는 UMG 베이스다.
+ * FRoom을 대체하지 않는다. FMapRoomView 한 개를 화면 노드 하나로 보여주는 UMG 베이스다.
  */
 UCLASS(BlueprintType, Blueprintable)
 class P_RD_API UFrontendMapNodeWidget : public URDUserWidget

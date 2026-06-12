@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   TitleMenuWidget.h
  * @brief  타이틀 화면 위젯 정의 헤더
  * @date   2026-06-02
@@ -24,7 +24,7 @@ class UWidgetSwitcher;
  * @details
  * 이 위젯은 게임을 시작하기 전의 큰 메뉴 흐름만 관리한다.
  * START를 누르면 캐릭터 선택 화면으로 넘기고,
- * SETTING을 누르면 설정 화면으로 넘기고,
+ * SETTING을 누르면 공용 설정 패널을 OpenUI()로 열고,
  * 각 하위 화면에서 BACK 요청이 오면 메인 화면으로 돌아온다.
  *
  * 실제 화면 배치는 WBP_TitleMenu에서 만든다.
@@ -129,7 +129,7 @@ private:
 	 * 타이틀과 인게임이 같은 WBP_SettingsPanel 생명주기를 공유해야 Back/Close, 입력, 팝업 ZOrder 규칙이 갈라지지 않는다.
 	 * 타이틀에는 현재 런 액션이 없으므로 Title 모드로 맞춰 저장 후 종료/포기하기 영역만 숨긴다.
 	 */
-	void ShowSettingsScreen();
+	void OpenSettingsPanel();
 
 	/**
 	 * @brief 타이틀 메인 화면의 텍스트를 현재 설정값으로 채움
@@ -216,7 +216,7 @@ private:
 	 * @brief 설정 패널의 Back 요청을 타이틀 메인 화면 복귀로 처리한다.
 	 */
 	UFUNCTION()
-	void HandleSettingsBackButtonClicked();
+	void HandleSettingsPanelBackRequested();
 
 	/**
 	 * @brief 캐릭터 선택 화면의 Back 요청을 타이틀 메인 화면 복귀로 처리한다.
@@ -226,7 +226,7 @@ private:
 
 private:
 	/**
-	 * @brief 타이틀 메인/캐릭터 선택/설정 화면을 전환하는 위젯
+	 * @brief 타이틀 메인/캐릭터 선택 화면을 전환하는 위젯
 	 *
 	 * @details
 	 * TitleMenuWidget은 직접 위젯을 숨기고 보이기보다 이 ScreenSwitcher의 ActiveWidget을 바꾼다.
@@ -318,10 +318,6 @@ private:
 	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	FText mSettingsButtonText;
 
-	/** @brief 설정 화면에 들어갔을 때 보여줄 상태/제목 문구 */
-	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	FText mSettingsStatusText;
-
 	/** @brief 아직 실제 기능이 연결되지 않은 메뉴를 눌렀을 때 보여줄 문구 */
 	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	FText mMainOnlyStatusText;
@@ -330,7 +326,4 @@ private:
 	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	FText mCharacterSelectUnavailableText;
 
-	/** @brief BACK 버튼 공통 기본 문구 */
-	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	FText mBackButtonText;
 };

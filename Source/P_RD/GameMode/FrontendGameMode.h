@@ -131,7 +131,7 @@ public:
 	 * @return 활성 Run 상태가 있으면 true
 	 */
 	UFUNCTION(Category = Title, BlueprintCallable)
-	bool GetRunControlView(FFrontendRunControlView& OutView) const;
+	bool GetRunControlView(FRunControlView& OutView) const;
 
 protected:
 	/**

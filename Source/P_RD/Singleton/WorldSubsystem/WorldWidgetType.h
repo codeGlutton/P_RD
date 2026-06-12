@@ -36,14 +36,15 @@ enum class EWorldWidgetType : uint8
 	WorldMap,
 
 	/**
-	 * @brief 인게임 설정 패널 공용 위젯
+	 * @brief 타이틀과 인게임에서 함께 여는 공용 설정 패널
 	 *
 	 * @details
-	 * 타이틀 설정과 같은 WBP 구조를 공유하되, 런 저장/포기 같은 인게임 전용 액션 영역을 표시한다.
+	 * 같은 WBP_SettingsPanel을 타이틀 SETTING 버튼과 인게임 SET 버튼이 함께 사용한다.
+	 * 타이틀에서는 Title 모드로 런 저장/포기 영역을 숨기고, 인게임에서는 InGame 모드로 현재 런 액션을 표시한다.
 	 *
 	 * 왜 WorldWidget인가:
-	 * 설정은 어느 방에서든 동일한 팝업으로 열려야 하고, 방별 HUD가 직접 소유하면 닫기/복귀 규칙이 갈라질 수 있다.
-	 * 공용 월드 위젯으로 두면 TopMenuBar가 항상 같은 OpenUI 경로로 열 수 있다.
+	 * 설정은 화면마다 따로 만든 슬롯이 아니라 같은 팝업 생명주기로 열려야 한다.
+	 * WorldWidgetSubsystem에 두면 타이틀과 TopMenuBar가 모두 같은 OpenUI/CloseUI 경로를 공유할 수 있다.
 	 */
 	InGameSettings,
 

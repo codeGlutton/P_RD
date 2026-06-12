@@ -59,7 +59,7 @@ struct FFrontendMapNodePoolEntry
  *
  * @details
  * 모달 표시/닫기 책임은 바깥 오버레이가 갖고, 이 클래스는 맵 그래프/선택/입장 UI만 관리한다.
- * 지도 데이터는 직접 생성하지 않고 ARoomGameModeBase::GetMapRoomViews()가 내려준 View DTO를 그린다.
+ * 지도 데이터는 직접 생성하지 않고 GameMode::GetMapRoomViews()가 내려준 View DTO를 그린다.
  *
  * 왜 조회용/선택용을 같은 위젯으로 처리하는가:
  * MAP 버튼으로 열 때는 현재 런 경로를 보기만 해야 하고, 전투 승리 후에는 다음 방을 실제로 선택해야 한다.
@@ -85,8 +85,8 @@ public:
 	 * @brief 현재 RunPersistData 기반 지도 View를 다시 가져와 노드/선을 갱신한다.
 	 * @return 지도 데이터가 있어 갱신에 성공하면 true
 	 *
-	 * FStage/FRoom을 직접 만드는 함수가 아니라, ARoomGameModeBase가 변환해준
-	 * FFrontendMapRoomView 배열을 화면에 배치하는 표시 전용 함수다.
+	 * FStage/FRoom을 직접 만드는 함수가 아니라, GameMode가 변환해준
+	 * FMapRoomView 배열을 화면에 배치하는 표시 전용 함수다.
 	 */
 	UFUNCTION(Category = UI, BlueprintCallable)
 	bool RefreshMap();

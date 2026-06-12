@@ -1,4 +1,4 @@
-﻿#include "UI/TitleMenuWidget.h"
+#include "UI/TitleMenuWidget.h"
 
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
@@ -20,10 +20,8 @@ UTitleMenuWidget::UTitleMenuWidget(const FObjectInitializer& ObjectInitializer)
 	, mNewStartButtonText(NSLOCTEXT("TitleMenuWidget", "NewStartText", "NEW START"))
 	, mContinueButtonText(NSLOCTEXT("TitleMenuWidget", "ContinueText", "CONTINUE"))
 	, mSettingsButtonText(NSLOCTEXT("TitleMenuWidget", "SettingsText", "SETTING"))
-	, mSettingsStatusText(NSLOCTEXT("TitleMenuWidget", "SettingsStatusText", "Settings"))
 	, mMainOnlyStatusText(NSLOCTEXT("TitleMenuWidget", "MainOnlyStatusText", "Title main screen only"))
 	, mCharacterSelectUnavailableText(NSLOCTEXT("TitleMenuWidget", "CharacterSelectUnavailableText", "Character select widget is not ready"))
-	, mBackButtonText(NSLOCTEXT("TitleMenuWidget", "BackText", "BACK"))
 {
 	/*
 	 * 타이틀 HUD는 방 진입 직후 바로 보이는 메인 UI다.
@@ -93,7 +91,7 @@ void UTitleMenuWidget::NativeConstruct()
 
 	if (USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel())
 	{
-		TitleSettingsPanel->OnBackRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsBackButtonClicked);
+		TitleSettingsPanel->OnBackRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsPanelBackRequested);
 	}
 
 	if (CharacterSelectWidget != nullptr)
@@ -133,7 +131,7 @@ void UTitleMenuWidget::NativeDestruct()
 
 	if (USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel())
 	{
-		TitleSettingsPanel->OnBackRequested.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsBackButtonClicked);
+		TitleSettingsPanel->OnBackRequested.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsPanelBackRequested);
 	}
 
 	if (CharacterSelectWidget != nullptr)
@@ -208,7 +206,7 @@ void UTitleMenuWidget::ShowCharacterScreen()
  * 설정 패널은 HUD 하위 화면이 아니라 공용 팝업이다. InGameSettings 월드 위젯을 OpenUI()로 열어야
  * 타이틀/인게임 모두 AddToViewport, ZOrder, Back/Close 처리 규칙을 같은 경로로 검증할 수 있다.
  */
-void UTitleMenuWidget::ShowSettingsScreen()
+void UTitleMenuWidget::OpenSettingsPanel()
 {
 	USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel();
 	if (TitleSettingsPanel == nullptr)
@@ -218,7 +216,7 @@ void UTitleMenuWidget::ShowSettingsScreen()
 		return;
 	}
 
-	TitleSettingsPanel->OnBackRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsBackButtonClicked);
+	TitleSettingsPanel->OnBackRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsPanelBackRequested);
 	TitleSettingsPanel->SetPanelMode(ESettingsPanelMode::Title);
 	TitleSettingsPanel->RefreshPanelState(false, false);
 	TitleSettingsPanel->HideAbandonConfirm();
@@ -226,7 +224,7 @@ void UTitleMenuWidget::ShowSettingsScreen()
 
 	ShowMainScreen();
 	TitleSettingsPanel->OpenUI();
-	SetStatusText(mSettingsStatusText);
+	SetStatusText(FText::GetEmpty());
 }
 
 /**
@@ -314,7 +312,7 @@ bool UTitleMenuWidget::CanContinueRun() const
 {
 	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
 	{
-		FFrontendRunControlView RunControlView;
+		FRunControlView RunControlView;
 		return FrontendGameMode->GetRunControlView(OUT RunControlView) && RunControlView.mHasActiveRun;
 	}
 
@@ -325,8 +323,8 @@ bool UTitleMenuWidget::CanContinueRun() const
  * @brief 타이틀 설정에 사용할 공용 SettingsPanelWidget 월드 위젯을 찾는다.
  *
  * @details
- * WBP_TitleMenu 내부의 SettingsScreen이나 SettingsPanelWidget은 사용하지 않는다.
- * FrontendGameMode가 미리 만든 InGameSettings 월드 위젯만 받아와 OpenUI()/CloseUI() 생명주기를 통일한다.
+ * 타이틀 WBP 안에 설정 패널을 직접 소유하지 않는다.
+ * WorldWidgetSubsystem이 준비한 InGameSettings 월드 위젯만 받아와 OpenUI()/CloseUI() 생명주기를 통일한다.
  */
 USettingsPanelWidget* UTitleMenuWidget::GetTitleSettingsPanel() const
 {
@@ -468,11 +466,11 @@ void UTitleMenuWidget::HandleContinueButtonClicked()
 }
 
 /**
- * @brief SETTING 버튼 입력으로 타이틀 설정 화면을 연다.
+ * @brief SETTING 버튼 입력으로 공용 설정 패널을 연다.
  */
 void UTitleMenuWidget::HandleSettingsButtonClicked()
 {
-	ShowSettingsScreen();
+	OpenSettingsPanel();
 }
 
 /**
@@ -481,7 +479,7 @@ void UTitleMenuWidget::HandleSettingsButtonClicked()
  * @details
  * 타이틀 설정도 공용 InGameSettings 월드 위젯으로 열리므로 CloseUI()까지 호출해 팝업 상태를 정리한다.
  */
-void UTitleMenuWidget::HandleSettingsBackButtonClicked()
+void UTitleMenuWidget::HandleSettingsPanelBackRequested()
 {
 	if (USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel())
 	{

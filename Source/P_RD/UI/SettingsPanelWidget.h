@@ -294,15 +294,6 @@ private:
 	void ApplyModeVisibility() const;
 
 	/**
-	 * @brief 현재 설정 패널에서 사용하지 않는 언어 설정 영역을 숨긴다.
-	 *
-	 * @details
-	 * WBP에는 언어 영역이 남아 있을 수 있지만, 현재 설정 패널 기능 범위에는 포함하지 않는다.
-	 * 삭제 대신 숨김 처리하면 WBP 구조 변경 없이 사용 가능한 기능 범위를 분명히 할 수 있다.
-	 */
-	void HideDeprecatedLanguageControls() const;
-
-	/**
 	 * @brief WBP_SettingsPanel에 필수 바인딩이 연결되어 있는지 로그로 확인한다.
 	 *
 	 * @details
@@ -491,14 +482,6 @@ private:
 	/** @brief 라이선스 열기 버튼 라벨 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> LicenseOpenButtonText;
-
-	/** @brief 현재 설정 패널에서 사용하지 않는 언어 섹션 제목 */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> LanguageSectionHeader;
-
-	/** @brief 현재 설정 패널에서 사용하지 않는 언어 설정 행 */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> LanguageRow;
 
 	/** @brief 낮음 품질 선택 버튼. 클릭 시 OnQualityRequested(0)을 발생시킨다. */
 	UPROPERTY(meta = (BindWidgetOptional))

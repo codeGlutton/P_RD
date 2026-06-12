@@ -287,7 +287,7 @@ void UTopMenuBarWidget::SyncDefaultText() const
 void UTopMenuBarWidget::RefreshRoomInfo() const
 {
 	ARoomGameModeBase* GameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ARoomGameModeBase>() : nullptr;
-	FFrontendRunControlView RunControlView;
+	FRunControlView RunControlView;
 	if (GameMode == nullptr || !GameMode->GetRunControlView(OUT RunControlView))
 	{
 		if (TitleTextBlock != nullptr)

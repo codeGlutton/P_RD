@@ -34,7 +34,7 @@ USettingsPanelWidget::USettingsPanelWidget(const FObjectInitializer& ObjectIniti
  *
  * 구성 순서:
  * 먼저 WBP 바인딩 누락을 로그로 확인하고, 버튼/슬라이더/체크박스 입력을 C++ 핸들러에 연결한다.
- * 그 뒤 기본 문구, 모드별 표시 상태, 현재 설정 패널에서 쓰지 않는 언어 영역, 런 포기 확인 패널의 초기 상태를 맞춘다.
+ * 그 뒤 기본 문구, 모드별 표시 상태, 런 포기 확인 패널의 초기 상태를 맞춘다.
  */
 void USettingsPanelWidget::NativeConstruct()
 {
@@ -111,7 +111,6 @@ void USettingsPanelWidget::NativeConstruct()
 
 	SyncText();
 	ApplyModeVisibility();
-	HideDeprecatedLanguageControls();
 	HideAbandonConfirm();
 }
 
@@ -428,28 +427,6 @@ void USettingsPanelWidget::SyncText() const
 	if (CancelAbandonButtonText != nullptr)
 	{
 		CancelAbandonButtonText->SetText(NSLOCTEXT("SettingsPanelWidget", "CancelText", "Cancel"));
-	}
-}
-
-/**
- * @brief 현재 설정 패널에서 사용하지 않는 언어 설정 영역을 숨긴다.
- *
- * @details
- * WBP에 남아 있는 이전 기획의 언어 설정 영역을 코드에서 접어 현재 기능 범위를 명확히 한다.
- *
- * 왜 삭제하지 않고 숨기는가:
- * 이 단계의 목적은 공통 설정 패널 연결이고, WBP 구조를 크게 갈아엎으면 변경 범위가 넓어진다.
- * 우선 사용하지 않는 영역만 접어 두면 이후 실제 언어 설정을 붙일 때 다시 살릴 수 있다.
- */
-void USettingsPanelWidget::HideDeprecatedLanguageControls() const
-{
-	if (LanguageSectionHeader != nullptr)
-	{
-		LanguageSectionHeader->SetVisibility(ESlateVisibility::Collapsed);
-	}
-	if (LanguageRow != nullptr)
-	{
-		LanguageRow->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
 

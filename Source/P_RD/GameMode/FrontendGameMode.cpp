@@ -300,14 +300,14 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 	return OutOptions.IsEmpty() == false;
 }
 
-bool AFrontendGameMode::GetRunControlView(FFrontendRunControlView& OutView) const
+bool AFrontendGameMode::GetRunControlView(FRunControlView& OutView) const
 {
 	/*
 	 * 타이틀 메뉴가 Continue 버튼 표시 여부와 설정 패널의 Run 액션 상태를 판단할 때 쓰는 요약 데이터다.
 	 * 세이브/런 데이터의 내부 구조를 TitleMenuWidget이 직접 읽지 않게 하고,
 	 * UI에는 "활성 런이 있는가, 현재 위치가 Stage 시작점인가, 난이도/레벨은 무엇인가"만 전달한다.
 	 */
-	OutView = FFrontendRunControlView();
+	OutView = FRunControlView();
 	OutView.mHasActiveRun = HasActiveRun();
 	OutView.mCanSaveRun = false;
 	OutView.mCanAbandonRun = CanAbandonRun();

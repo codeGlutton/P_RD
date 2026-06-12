@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   RoomGameModeBase.h
  * @brief  방에 대한 베이스 GameMode 정의 헤더
  * @author 모호재, 박용수
@@ -65,7 +65,7 @@ public:
 	 * @return 표시 가능한 Stage 룸 데이터가 있으면 true
 	 */
 	UFUNCTION(Category = Room, BlueprintCallable)
-	bool GetMapRoomViews(TArray<FFrontendMapRoomView>& OutRooms) const;
+	bool GetMapRoomViews(TArray<FMapRoomView>& OutRooms) const;
 
 	/**
 	 * @brief 지도 첫 표시 위치 계산용 런 상태 View를 가져온다.
@@ -73,7 +73,7 @@ public:
 	 * @return 활성 런 상태를 만들 수 있으면 true
 	 */
 	UFUNCTION(Category = Room, BlueprintCallable)
-	bool GetRunControlView(FFrontendRunControlView& OutView) const;
+	bool GetRunControlView(FRunControlView& OutView) const;
 
 	/**
 	 * @brief 세팅 화면용 현재 런 상태를 조회한다.

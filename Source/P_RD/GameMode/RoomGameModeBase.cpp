@@ -57,23 +57,23 @@ namespace
 	 * UI가 FStage/FRoom의 진행 규칙을 직접 해석하면 지도 표시가 런 로직에 강하게 묶인다.
 	 * GameMode가 View 상태로 바꿔주면 위젯은 Ready/Selected/Locked를 그리는 일만 맡는다.
 	 */
-	EFrontendMapRoomState ResolveRoomState(const FStage& Stage, const FRoom& Room, int32 CurrentRowIndex, int32 CurrentColumnIndex, int32 SelectedRowIndex, int32 SelectedColumnIndex)
+	EMapRoomState ResolveRoomState(const FStage& Stage, const FRoom& Room, int32 CurrentRowIndex, int32 CurrentColumnIndex, int32 SelectedRowIndex, int32 SelectedColumnIndex)
 	{
 		if (Room.mWasSelected == true)
 		{
-			return EFrontendMapRoomState::Cleared;
+			return EMapRoomState::Cleared;
 		}
 
 		if (IsNextRoomFromCurrentPath(Stage, CurrentRowIndex, CurrentColumnIndex, Room.mRow, Room.mColumn) == true)
 		{
 			if (Room.mRow == SelectedRowIndex && Room.mColumn == SelectedColumnIndex)
 			{
-				return EFrontendMapRoomState::Selected;
+				return EMapRoomState::Selected;
 			}
-			return EFrontendMapRoomState::Ready;
+			return EMapRoomState::Ready;
 		}
 
-		return EFrontendMapRoomState::Locked;
+		return EMapRoomState::Locked;
 	}
 
 	FText GetRoomTitle(ERoomType RoomType)
@@ -266,13 +266,13 @@ bool ARoomGameModeBase::AbandonRunFromRoom()
  * @brief 현재 런의 스테이지 정보를 월드맵 표시용 View 배열로 변환한다.
  *
  * @details
- * FStage/FRoom의 진행 상태를 UI가 바로 읽지 않도록, 화면에 필요한 좌표/상태/설명만 FFrontendMapRoomView로 내려준다.
+ * FStage/FRoom의 진행 상태를 UI가 바로 읽지 않도록, 화면에 필요한 좌표/상태/설명만 FMapRoomView로 내려준다.
  *
  * 왜 View DTO로 내보내는가:
  * UI가 런 데이터 구조를 직접 알면 Stage 생성 규칙이 바뀔 때마다 위젯 코드도 같이 흔들린다.
  * GameMode가 표시용 데이터로 변환하면 월드맵은 그래프를 그리는 역할에 집중할 수 있다.
  */
-bool ARoomGameModeBase::GetMapRoomViews(TArray<FFrontendMapRoomView>& OutRooms) const
+bool ARoomGameModeBase::GetMapRoomViews(TArray<FMapRoomView>& OutRooms) const
 {
 	OutRooms.Reset();
 
@@ -302,7 +302,7 @@ bool ARoomGameModeBase::GetMapRoomViews(TArray<FFrontendMapRoomView>& OutRooms) 
 			const FRoom& Room = RoomRow.mRooms[ColumnIndex].Get<FRoom>();
 
 			const bool bIsStartPoint = IsStageStartPoint(Stage, RowIndex, ColumnIndex);
-			const EFrontendMapRoomState RoomState = ResolveRoomState(
+			const EMapRoomState RoomState = ResolveRoomState(
 				Stage,
 				Room,
 				CurrentRowIndex,
@@ -311,7 +311,7 @@ bool ARoomGameModeBase::GetMapRoomViews(TArray<FFrontendMapRoomView>& OutRooms) 
 				mSelectedRoomColumn
 			);
 
-			FFrontendMapRoomView NewView;
+			FMapRoomView NewView;
 			NewView.mRow = RowIndex;
 			NewView.mColumn = ColumnIndex;
 			NewView.mType = Room.mType;
@@ -320,10 +320,10 @@ bool ARoomGameModeBase::GetMapRoomViews(TArray<FFrontendMapRoomView>& OutRooms) 
 			NewView.mDescription = bIsStartPoint ? GetStartPointDescription(Room) : GetRoomDescription(Room);
 			NewView.mNextRoomColumns = Room.mNextRoomColumns;
 			NewView.mPositionOffsetRate = Room.mPositionOffsetRate;
-			NewView.mSelectable = RoomState == EFrontendMapRoomState::Ready;
-			NewView.mSelected = RoomState == EFrontendMapRoomState::Selected;
-			NewView.mVisited = RoomState == EFrontendMapRoomState::Cleared;
-			NewView.mCanEnter = RoomState == EFrontendMapRoomState::Selected;
+			NewView.mSelectable = RoomState == EMapRoomState::Ready;
+			NewView.mSelected = RoomState == EMapRoomState::Selected;
+			NewView.mVisited = RoomState == EMapRoomState::Cleared;
+			NewView.mCanEnter = RoomState == EMapRoomState::Selected;
 			NewView.mIsStartPoint = bIsStartPoint;
 			OutRooms.Add(MoveTemp(NewView));
 		}
@@ -332,13 +332,13 @@ bool ARoomGameModeBase::GetMapRoomViews(TArray<FFrontendMapRoomView>& OutRooms) 
 	return OutRooms.IsEmpty() == false;
 }
 
-bool ARoomGameModeBase::GetRunControlView(FFrontendRunControlView& OutView) const
+bool ARoomGameModeBase::GetRunControlView(FRunControlView& OutView) const
 {
 	/*
 	 * TopMenuBar와 FrontendMapWidget이 현재 런 요약을 표시할 때 쓰는 UI DTO다.
 	 * 위젯이 URunPersistData를 직접 읽지 않게 하고, GameMode가 "화면에 보여줄 값"만 골라 내려준다.
 	 */
-	OutView = FFrontendRunControlView();
+	OutView = FRunControlView();
 	OutView.mHasActiveRun = HasActiveRun();
 	OutView.mCanSaveRun = false;
 	OutView.mCanAbandonRun = CanAbandonRun();
@@ -362,7 +362,7 @@ bool ARoomGameModeBase::GetRunControlState(OUT int32& RowIndex, OUT int32& Colum
 	 * BP/WBP나 기존 호출부가 구조체 대신 개별 값으로 현재 런 상태를 받아야 할 때 쓰는 호환 API다.
 	 * 내부 기준은 GetRunControlView() 하나로 유지해, 표시 데이터 계산이 두 군데로 갈라지지 않게 한다.
 	 */
-	FFrontendRunControlView RunView;
+	FRunControlView RunView;
 	if (!GetRunControlView(OUT RunView))
 	{
 		RowIndex = 0;
