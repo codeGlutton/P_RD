@@ -69,8 +69,8 @@ float UStaticPlayerUnitSpawnData::GetDefaultMaxHP(int32 Difficulty) const
     UAbilitySystemGlobals* AbilitySystemGlobals = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals();
     AbilitySystemGlobals->InitGlobalData();
     auto MaxHPArray = AbilitySystemGlobals->GetAttributeSetInitter()->GetAttributeSetValues(
-        UPlayerUnitAttributeSet::StaticClass(), 
-        UPlayerUnitAttributeSet::GetMaxHPAttribute().GetUProperty(), 
+        UUnitAttributeSet::StaticClass(),
+        UUnitAttributeSet::GetMaxHPAttribute().GetUProperty(),
         GetKeyName()
     );
 
