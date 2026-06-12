@@ -10,7 +10,6 @@
 #include "RDMinimal.h"
 #include "GameMode/RDGameModeBase.h"
 #include "Frontend/CharacterSelectTypes.h"
-#include "Frontend/FrontendViewTypes.h"
 
 #include "FrontendGameMode.generated.h"
 
@@ -118,20 +117,6 @@ public:
 	 */
 	UFUNCTION(Category = Title, BlueprintCallable)
 	bool GetCharacterOptions(TArray<FFrontendCharacterOption>& OutOptions) const;
-
-	/**
-	 * @brief 타이틀 메뉴 상태와 설정 패널에 사용할 현재 Run 상태를 가져온다.
-	 *
-	 * @details
-	 * TitleMenuWidget과 SettingsPanelWidget이 PersistentData 내부 구조를 직접 알지 않도록,
-	 * 활성 Run 여부, 현재 행/열, 레벨, 난이도만 묶어 내려준다.
-	 * 같은 DTO를 RoomGameMode에서도 쓰기 때문에 타이틀과 인게임 설정 패널이 같은 표시 규칙을 공유할 수 있다.
-	 *
-	 * @param OutView 현재 Run 표시용 View 데이터
-	 * @return 활성 Run 상태가 있으면 true
-	 */
-	UFUNCTION(Category = Title, BlueprintCallable)
-	bool GetRunControlView(FRunControlView& OutView) const;
 
 protected:
 	/**

@@ -306,14 +306,14 @@ void UTitleMenuWidget::RefreshMainMenuState() const
  *
  * @details
  * 여기서 SaveGame 파일을 직접 읽지는 않는다.
- * 이미 복구된 PersistentData를 Run 요약 View로 만들 수 있는지만 확인하는 얇은 검사다.
+ * Intro에서 복구된 PersistentData에 활성 Run이 있는지만 확인해 CONTINUE 버튼 표시 여부를 정한다.
+ * 현재 방 위치, 난이도, 레벨 같은 방 안 UI 표시는 실제 방에 들어간 뒤 RoomGameMode가 처리한다.
  */
 bool UTitleMenuWidget::CanContinueRun() const
 {
 	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
 	{
-		FRunControlView RunControlView;
-		return FrontendGameMode->GetRunControlView(OUT RunControlView) && RunControlView.mHasActiveRun;
+		return FrontendGameMode->HasActiveRun();
 	}
 
 	return false;
