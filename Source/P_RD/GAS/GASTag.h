@@ -87,6 +87,16 @@ namespace EffectTags
 	/* 액터 상태 태그들 */
 
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_ActorState_Dead);
+
+	/* 스킬 이펙트 태그들*/
+
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_Skill_Effect_Damage);
+
+	/* 스킬 이펙트 Data 전달 태그들*/
+
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_Skill_Data_Damage);
+
+
 }
 
 /**

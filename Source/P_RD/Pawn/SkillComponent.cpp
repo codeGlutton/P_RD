@@ -80,7 +80,7 @@ bool USkillComponent::ActivateSkill(const FSkillCommitResult& SkillResult)
 
 	EventData.Instigator = GetOwner();	// 사용자
 
-	EventData.EventTag = FGameplayTag::RequestGameplayTag(TEXT("GameplayAbility.Skill"));
+	EventData.EventTag = AbilityTags::GameplayAbility_Skill;
 
 	// 1. 구조체를 담을 UObject 홀더 생성
 	USkillCommitResultHolder* ResultHolder = NewObject<USkillCommitResultHolder>();

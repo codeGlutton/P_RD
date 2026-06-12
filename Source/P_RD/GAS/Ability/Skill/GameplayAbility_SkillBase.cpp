@@ -13,7 +13,7 @@ UGameplayAbility_SkillBase::UGameplayAbility_SkillBase()
 
 	FAbilityTriggerData	TriggerData;
 
-	TriggerData.TriggerTag = FGameplayTag::RequestGameplayTag(TEXT("GameplayAbility.Skill"));
+	TriggerData.TriggerTag = AbilityTags::GameplayAbility_Skill;
 	TriggerData.TriggerSource = EGameplayAbilityTriggerSource::GameplayEvent;
 
 	AbilityTriggers.Add(TriggerData);
