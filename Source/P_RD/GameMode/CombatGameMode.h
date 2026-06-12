@@ -13,7 +13,7 @@
 /**
  * @brief  전투 방에 대한 GameMode
  */
-UCLASS()
+UCLASS(abstract)
 class P_RD_API ACombatGameMode : public ARoomGameModeBase
 {
 	GENERATED_BODY()

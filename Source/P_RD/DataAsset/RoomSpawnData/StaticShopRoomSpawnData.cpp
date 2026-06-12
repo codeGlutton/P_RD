@@ -12,3 +12,20 @@ void UStaticShopRoomSpawnData::PostInitProperties()
 		mGameModeBase = GetDefault<UGamePlaySettings>()->mShopGameMode;
 	}
 }
+
+void UStaticShopRoomSpawnData::PostLoad()
+{
+	Super::PostLoad();
+
+	const TSoftClassPtr<AGameModeBase> UpdatedGameMode = GetDefault<UGamePlaySettings>()->mShopGameMode;
+	if (mGameModeBase != UpdatedGameMode)
+	{
+#if WITH_EDITOR
+		Modify();
+#endif
+		mGameModeBase = UpdatedGameMode;
+#if WITH_EDITOR
+		MarkPackageDirty();
+#endif
+	}
+}

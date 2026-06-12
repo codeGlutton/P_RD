@@ -20,6 +20,7 @@ class P_RD_API UStaticShopRoomSpawnData : public UStaticRoomSpawnData
 
 public:
 	void PostInitProperties() override;
+	void PostLoad() override;
 
 public:
 	FPrimaryAssetId GetPrimaryAssetId() const override
@@ -37,6 +38,6 @@ public:
 	EStageLevelType mStageLevel;
 
 public:
-	UPROPERTY(Category = "Unit", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ShopOwnerClass", AssetBundles = BUNDLE_ACTOR))
+	UPROPERTY(Category = "Unit", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ShopOwnerClass", AssetBundles = "Actor"))
 	TSoftClassPtr<AActor> mShopOwnerClass;
 };

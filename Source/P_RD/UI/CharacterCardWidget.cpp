@@ -46,13 +46,13 @@ UCharacterCardWidget::UCharacterCardWidget(const FObjectInitializer& ObjectIniti
 void UCharacterCardWidget::SetCharacterOption(const FFrontendCharacterOption& InOption, bool bSelected)
 {
 	mCharacterOption = InOption;
-	bIsSelected = bSelected;
+	mIsSelected = bSelected;
 	SyncCard();
 }
 
 void UCharacterCardWidget::SetSelected(bool bSelected)
 {
-	bIsSelected = bSelected;
+	mIsSelected = bSelected;
 	SyncCard();
 }
 
@@ -94,7 +94,7 @@ void UCharacterCardWidget::SyncCard() const
 
 	if (IconBackground != nullptr)
 	{
-		IconBackground->SetBrushColor(GetFallbackIconColor(mCharacterOption.mIndex, mCharacterOption.bSelectable, bIsSelected));
+		IconBackground->SetBrushColor(GetFallbackIconColor(mCharacterOption.mIndex, mCharacterOption.mSelectable, mIsSelected));
 	}
 
 	if (IconImage == nullptr)
@@ -108,7 +108,7 @@ void UCharacterCardWidget::SyncCard() const
 	if (LoadedIcon != nullptr)
 	{
 		IconImage->SetBrushFromTexture(LoadedIcon, true);
-		IconImage->SetColorAndOpacity(mCharacterOption.bSelectable ? FLinearColor::White : FLinearColor(0.35f, 0.35f, 0.35f, 0.82f));
+		IconImage->SetColorAndOpacity(mCharacterOption.mSelectable ? FLinearColor::White : FLinearColor(0.35f, 0.35f, 0.35f, 0.82f));
 		IconImage->SetVisibility(ESlateVisibility::Visible);
 	}
 	else

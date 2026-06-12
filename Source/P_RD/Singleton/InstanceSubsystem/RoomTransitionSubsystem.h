@@ -52,7 +52,7 @@ struct FRoomTransitionRequest
 	GENERATED_BODY()
 
 public:
-	bool mChangePersistentData = true;
+	bool mNeedInGameRoom = true;
 	int32 mRoomRowIndex = -1;
 	int32 mRoomColumnIndex = -1;
 

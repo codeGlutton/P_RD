@@ -31,7 +31,7 @@ ENUM_CLASS_FLAGS(EIntroGameModeStateFlag);
 /**
  * @brief  인트로 용 게임 모드
  */
-UCLASS()
+UCLASS(abstract)
 class P_RD_API AIntroGameMode : public ARDGameModeBase
 {
 	GENERATED_BODY()

@@ -1,7 +1,6 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   TitleMenuWidget.h
  * @brief  타이틀 화면 위젯 정의 헤더
- * @author Codex
  * @date   2026-06-02
  *********************************************************************/
 
@@ -14,7 +13,7 @@
 
 class UButton;
 class UCharacterSelectWidget;
-class UFrontendMapWidget;
+class USettingsPanelWidget;
 class UTextBlock;
 class UWidget;
 class UWidgetSwitcher;
@@ -25,7 +24,7 @@ class UWidgetSwitcher;
  * @details
  * 이 위젯은 게임을 시작하기 전의 큰 메뉴 흐름만 관리한다.
  * START를 누르면 캐릭터 선택 화면으로 넘기고,
- * SETTING을 누르면 설정 화면으로 넘기고,
+ * SETTING을 누르면 공용 설정 패널을 OpenUI()로 열고,
  * 각 하위 화면에서 BACK 요청이 오면 메인 화면으로 돌아온다.
  *
  * 실제 화면 배치는 WBP_TitleMenu에서 만든다.
@@ -76,7 +75,7 @@ protected:
 	 * @brief 위젯이 화면에 올라올 때 버튼 이벤트와 하위 화면 이벤트를 연결함
 	 *
 	 * @details
-	 * START, CONTINUE, SETTING, SETTINGS BACK 버튼을 이 위젯의 핸들러에 연결한다.
+	 * START, CONTINUE, SETTING 버튼을 이 위젯의 핸들러에 연결한다.
 	 * 캐릭터 선택 위젯이 보내는 BACK 요청도 여기서 받는다.
 	 * AddUniqueDynamic을 사용하므로 같은 위젯이 다시 Construct 되어도 같은 델리게이트가 중복으로 붙지 않는다.
 	 */
@@ -123,27 +122,14 @@ private:
 	void ShowCharacterScreen();
 
 	/**
-	 * @brief 설정 화면을 보여줌
+	 * @brief 공용 설정 패널 월드 위젯을 타이틀 모드로 열어 보여줌
 	 *
 	 * @details
-	 * SettingsScreen이 있는 경우 해당 화면으로 전환한다.
-	 * WBP에서 설정 화면을 아직 만들지 않은 경우에는 메인 화면에 머무르고 상태 문구만 바꾼다.
+	 * 설정 화면은 타이틀 HUD 안에 직접 끼워 넣지 않고 InGameSettings 월드 위젯을 OpenUI()로 연다.
+	 * 타이틀과 인게임이 같은 WBP_SettingsPanel 생명주기를 공유해야 Back/Close, 입력, 팝업 ZOrder 규칙이 갈라지지 않는다.
+	 * 타이틀에는 현재 런 액션이 없으므로 Title 모드로 맞춰 저장 후 종료/포기하기 영역만 숨긴다.
 	 */
-	void ShowSettingsScreen();
-
-	/**
-	 * @brief WBP_TitleMenu에 직접 배치된 지도 화면 연결을 확인함
-	 *
-	 * @details
-	 * 지도 화면은 WBP_TitleMenu 안의 MapScreen과 FrontendMapWidget 바인딩으로 제공되어야 한다.
-	 * C++은 빠진 화면을 임시로 만들지 않고, 연결이 깨졌으면 로그를 남기고 메인 화면으로 돌아간다.
-	 */
-	bool EnsureMapScreen();
-
-	/**
-	 * @brief 지도 화면을 보여주고 지도 내용을 갱신함
-	 */
-	void ShowMapScreen();
+	void OpenSettingsPanel();
 
 	/**
 	 * @brief 타이틀 메인 화면의 텍스트를 현재 설정값으로 채움
@@ -160,20 +146,40 @@ private:
 	 * @details
 	 * 저장된 런이 없으면 START / SETTING만 보이고,
 	 * 저장된 런이 있으면 CONTINUE / NEW START / SETTING 구성을 보여준다.
-	 * 버튼 배치는 WBP_TitleMenu가 맡고, C++은 이미 복구된 PersistentData에서
-	 * 지도 View 생성 가능 여부만 보고 표시 상태를 바꾼다.
+	 * 버튼 배치는 WBP_TitleMenu가 맡고, C++은 이미 복구된 PersistentData에
+	 * 이어갈 Run이 있는지만 보고 표시 상태를 바꾼다.
 	 */
 	void RefreshMainMenuState() const;
 
 	/**
-	 * @brief 오래된 타이틀 WBP에 남아 있는 하단 상태 문구를 숨김
+	 * @brief 현재 복구된 Run을 이어갈 수 있는지 확인함
 	 *
 	 * @details
-	 * 예전 구조에서는 타이틀 메뉴 아래에 Ready, Settings 같은 상태 문구를 표시했다.
-	 * 현재 타이틀 화면에서는 이 줄을 완전히 사용하지 않으므로,
+	 * 세이브 파일 로드는 Intro 단계에서 끝나 있어야 한다.
+	 * 타이틀 UI는 파일을 직접 읽지 않고, FrontendGameMode가 현재 PersistentData 요약을 만들 수 있는지만 확인한다.
+	 *
+	 * @return 현재 방으로 이어갈 수 있는 활성 Run 데이터가 있으면 true
+	 */
+	bool CanContinueRun() const;
+
+	/**
+	 * @brief 타이틀에서 열 공용 설정 패널을 얻음
+	 *
+	 * @details
+	 * 타이틀 설정도 인게임과 같은 WBP_SettingsPanel을 써야 한다.
+	 * 이 함수는 WBP_TitleMenu 안의 하위 위젯을 찾지 않고, FrontendGameMode가 준비한 InGameSettings 월드 위젯만 돌려준다.
+	 * 그래야 모든 설정 패널이 OpenUI()/CloseUI() 흐름을 타고 AddToViewport, ZOrder, 닫기 이벤트 규칙을 공유한다.
+	 */
+	USettingsPanelWidget* GetTitleSettingsPanel() const;
+
+	/**
+	 * @brief 타이틀 WBP에 남아 있는 하단 상태 문구를 숨김
+	 *
+	 * @details
+	 * 현재 타이틀 화면에서는 Ready, Settings 같은 하단 상태 문구를 사용하지 않으므로,
 	 * WBP에 StatusText가 아직 남아 있어도 비워 두고 Collapsed 상태로 만든다.
 	 *
-	 * @param InText 예전 호출부와의 호환을 위해 받지만 화면에는 표시하지 않는다.
+	 * @param InText 기존 호출부와의 호환을 위해 받지만 화면에는 표시하지 않는다.
 	 */
 	void SetStatusText(const FText& InText) const;
 
@@ -190,24 +196,37 @@ private:
 	UFUNCTION()
 	void HandleStartButtonClicked();
 
+	/**
+	 * @brief CONTINUE 버튼 클릭을 활성 Run의 현재 방 입장으로 연결한다.
+	 *
+	 * @details
+	 * 실제 세이브 파일 로드는 여기서 하지 않는다.
+	 * Intro에서 복구된 RunPersistData가 있을 때 FrontendGameMode에 현재 방 전환을 요청한다.
+	 */
 	UFUNCTION()
 	void HandleContinueButtonClicked();
 
+	/**
+	 * @brief SETTING 버튼 클릭을 공용 SettingsPanelWidget 표시로 연결한다.
+	 */
 	UFUNCTION()
 	void HandleSettingsButtonClicked();
 
+	/**
+	 * @brief 설정 패널의 Back 요청을 타이틀 메인 화면 복귀로 처리한다.
+	 */
 	UFUNCTION()
-	void HandleSettingsBackButtonClicked();
+	void HandleSettingsPanelBackRequested();
 
+	/**
+	 * @brief 캐릭터 선택 화면의 Back 요청을 타이틀 메인 화면 복귀로 처리한다.
+	 */
 	UFUNCTION()
 	void HandleCharacterBackToMainRequested();
 
-	UFUNCTION()
-	void HandleMapBackRequested();
-
 private:
 	/**
-	 * @brief 타이틀 메인/캐릭터 선택/설정 화면을 전환하는 위젯
+	 * @brief 타이틀 메인/캐릭터 선택 화면을 전환하는 위젯
 	 *
 	 * @details
 	 * TitleMenuWidget은 직접 위젯을 숨기고 보이기보다 이 ScreenSwitcher의 ActiveWidget을 바꾼다.
@@ -230,14 +249,6 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UWidget> CharacterScreen;
 
-	/** @brief 설정 화면 자리. WBP에서 아직 만들지 않았을 수도 있어서 Optional이다. */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> SettingsScreen;
-
-	/** @brief 지도 화면 자리. 이번 단계에서는 WBP_TitleMenu 안의 ScreenSwitcher 자식으로 둔다. */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> MapScreen;
-
 	/**
 	 * @brief WBP에 직접 배치한 캐릭터 선택 위젯
 	 *
@@ -249,15 +260,11 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UCharacterSelectWidget> CharacterSelectWidget;
 
-	/** @brief MapScreen 안에 직접 배치한 지도 위젯 */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UFrontendMapWidget> FrontendMapWidget;
-
 	/** @brief 캐릭터 선택 화면으로 넘어가는 START 버튼 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> StartButton;
 
-	/** @brief 저장된 런이 있을 때 지도 화면으로 이어가는 버튼 */
+	/** @brief 저장된 런이 있을 때 현재 저장된 방으로 이어가는 버튼 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> ContinueButton;
 
@@ -282,7 +289,7 @@ private:
 	TObjectPtr<UTextBlock> SettingsButtonText;
 
 	/**
-	 * @brief 예전 타이틀 화면 아래에 있던 상태 문구
+	 * @brief 현재 타이틀 화면에서는 숨기는 하단 상태 문구
 	 *
 	 * @details
 	 * 지금 UI에서는 READY 같은 하단 문구를 표시하지 않는다.
@@ -290,14 +297,6 @@ private:
 	 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> StatusText;
-
-	/** @brief 설정 화면에서 타이틀 메인으로 돌아가는 버튼 */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UButton> SettingsBackButton;
-
-	/** @brief 설정 화면 뒤로 가기 버튼 안에 표시할 라벨 */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> SettingsBackButtonText;
 
 	/** @brief 게임 타이틀명 기본 문구 */
 	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
@@ -319,10 +318,6 @@ private:
 	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	FText mSettingsButtonText;
 
-	/** @brief 설정 화면에 들어갔을 때 보여줄 상태/제목 문구 */
-	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	FText mSettingsStatusText;
-
 	/** @brief 아직 실제 기능이 연결되지 않은 메뉴를 눌렀을 때 보여줄 문구 */
 	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	FText mMainOnlyStatusText;
@@ -331,7 +326,4 @@ private:
 	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	FText mCharacterSelectUnavailableText;
 
-	/** @brief BACK 버튼 공통 기본 문구 */
-	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	FText mBackButtonText;
 };
