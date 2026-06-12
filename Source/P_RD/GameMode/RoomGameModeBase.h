@@ -9,7 +9,7 @@
 
 #include "RDMinimal.h"
 #include "GameMode/RDGameModeBase.h"
-#include "Frontend/FrontendViewTypes.h"
+#include "UI/RoomViewTypes.h"
 #include "RoomGameModeBase.generated.h"
 
  // Room Game Mode 신규 로그 카테고리 등록

@@ -7,7 +7,7 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "Frontend/FrontendViewTypes.h"
+#include "UI/RoomViewTypes.h"
 #include "UI/RDUserWidget.h"
 
 #include "FrontendMapWidget.generated.h"

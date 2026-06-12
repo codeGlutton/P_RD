@@ -1,5 +1,5 @@
 /*****************************************************************//**
- * @file   FrontendViewTypes.h
+ * @file   RoomViewTypes.h
  * @brief  UI 표시용 View 데이터 정의
  *
  * @details
@@ -21,7 +21,7 @@
 #include "RDMinimal.h"
 #include "PCGStage/RoomType.h"
 
-#include "FrontendViewTypes.generated.h"
+#include "RoomViewTypes.generated.h"
 
 /**
  * @brief 월드맵 노드가 UI에 표시될 때 사용하는 상태
