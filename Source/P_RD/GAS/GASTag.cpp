@@ -12,6 +12,8 @@ namespace AbilityTags
 {
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_LevelUp,								"GameplayAbility.LevelUp");
 
+	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Skill,								"GameplayAbility.Skill");
+
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartRoom,					"GameplayAbility.Passive.OnStartRoom");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnEndRoom,					"GameplayAbility.Passive.OnEndRoom");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartTurn,					"GameplayAbility.Passive.OnStartTurn");
@@ -40,6 +42,11 @@ namespace EffectTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_Cost_PassiveStack,					"GameplayEffect.Cost.PassiveStack");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_Cooldown,								"GameplayEffect.Cooldown");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_ActorState_Dead,						"GameplayEffect.ActorState.Dead");
+
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_Skill_Effect_Damage,					"GameplayEffect.Skill.Effect.Damage");
+
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_Skill_Data_Damage,					"GameplayEffect.Skill.Data.Damage");
+
 }
 
 namespace CueTags

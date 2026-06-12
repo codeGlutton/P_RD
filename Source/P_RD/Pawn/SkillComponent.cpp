@@ -2,7 +2,10 @@
 
 
 #include "SkillComponent.h"
-#include "Unit.h"
+#include "SkillComponent/SkillCommitResultHolder.h"
+#include "../FunctionLibrary/CombatCalculator/CombatCalculatorFunctionLibrary.h"
+#include "SRPGFramework/TileActor.h"
+#include "Pawn/Unit.h"
 
 // Sets default values for this component's properties
 USkillComponent::USkillComponent()
@@ -35,8 +38,7 @@ void USkillComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 
 bool USkillComponent::GetSkillData(int In_SkillIndex, TSoftObjectPtr<UStaticSkillData>& Out_SkillData)
 {
-	if (!mSkillData.IsValidIndex(In_SkillIndex))
-		return false;
+	checkf(mSkillData.IsValidIndex(In_SkillIndex), TEXT("잘못된 배열 범위"))
 
 	Out_SkillData = mSkillData[In_SkillIndex];
 
@@ -45,8 +47,7 @@ bool USkillComponent::GetSkillData(int In_SkillIndex, TSoftObjectPtr<UStaticSkil
 
 bool USkillComponent::SetSkillData(int SkillIndex, TSoftObjectPtr<UStaticSkillData> SkillData)
 {
-	if (!mSkillData.IsValidIndex(SkillIndex))
-		return false;
+	checkf(mSkillData.IsValidIndex(SkillIndex), TEXT("잘못된 배열 범위"))
 
 	mSkillData[SkillIndex] = SkillData;
 
@@ -56,49 +57,57 @@ bool USkillComponent::SetSkillData(int SkillIndex, TSoftObjectPtr<UStaticSkillDa
 	return true;
 }
 
-bool USkillComponent::CalculatePredictedSales(int32 In_SkillIndex, TArray<TPair<FString, float>>& Out_TagValue)
+
+bool USkillComponent::AddSkillData(TSoftObjectPtr<UStaticSkillData> SkillData)
 {
-	return false;
+	mSkillData.Add(SkillData);
+
+	if (OnSkillChange.IsBound())
+		OnSkillChange.Broadcast(mSkillData.Num() - 1, SkillData);
+
+	return true;
 }
 
-bool USkillComponent::ActivateSkill(int32 SkillIndex, const TArray<FTileIndex>& Tiles)
+bool USkillComponent::ActivateSkill(const FSkillCommitResult& SkillResult)
 {
-	return false;
-}
+	checkf(GetOwner(), TEXT("주인 Actor가 없습니다."))
 
-bool USkillComponent::TestActivateSkill(int32 SkillIndex, TArray<AUnit*> UnitArray)
-{
-	if (!GetOwner())
-		return false;
+	// 추후 mSkillCommitResult가 유효하지 않다면 취소시키도록 한다.
+	// checkf(IsValid(mSkillCommitResult))
+
+	// 리팩토링 중 주석처리... ==============================================================================================================================
+	/*
 
 	// 어빌리티를 발동시킨다.
 	FGameplayEventData EventData;
 
 	EventData.Instigator = GetOwner();	// 사용자
 
-	EventData.EventTag = FGameplayTag::RequestGameplayTag(TEXT("Test.GameplayAbility.Skill"));
+	EventData.EventTag = AbilityTags::GameplayAbility_Skill;
 
-	// 2. 빈 타겟 데이터 구조체를 동적 할당합니다.
-	FGameplayAbilityTargetData_ActorArray* ArrayTargetData = new FGameplayAbilityTargetData_ActorArray();
+	// 1. 구조체를 담을 UObject 홀더 생성
+	USkillCommitResultHolder* ResultHolder = NewObject<USkillCommitResultHolder>();
 
+	// 2. 결과 데이터 복사
+	ResultHolder->CommitResult = SkillResult;
 
-	// 3. 소프트 포인터 배열을 순회하며 실제 액터 포인터를 추출해 채워 넣습니다.
-	for (AUnit* UnitPtr : UnitArray)
-	{
-		// 소프트 포인터가 가리키는 대상이 현재 메모리에 로드되어 있고 유효한지 확인
-		if (IsValid(UnitPtr))
-		{
-			// TargetActorArray는 TWeakObjectPtr<AActor> 배열이지만, 
-			// 일반 포인터(AActor*)를 넣으면 자동으로 변환되어 들어갑니다.
-			ArrayTargetData->TargetActorArray.Add(UnitPtr);
-		}
-	}
-
-	// 4. 포장된 데이터를 EventData에 추가
-	EventData.TargetData.Add(ArrayTargetData);
+	// 3. 이벤트 데이터의 OptionalObject에 래퍼 오브젝트 바인딩
+	EventData.OptionalObject = ResultHolder;
 
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), EventData.EventTag, EventData);
 
+	UE_LOG(LogTemp, Warning, TEXT("GA에게 전달 Start"));
+	*/
+
 	return true;
+}
+
+bool USkillComponent::CalculateSkillResult(int32 SkillIndex, const TArray<TScriptInterface<ITileActor>>& TileActors, FSkillCommitResult& Out_Result)
+{
+	checkf(mSkillData.IsValidIndex(SkillIndex), TEXT("스킬 인덱스가 유효하지 않습니다."));
+
+	const AUnit* Unit = Cast<AUnit>(GetOwner());
+	TScriptInterface<const ITileActor> Caster = Unit;
+	return UCombatCalculatorFunctionLibrary::CalculateSkillResult(Caster, mSkillData[SkillIndex].Get(), TileActors, Out_Result);
 }
 
