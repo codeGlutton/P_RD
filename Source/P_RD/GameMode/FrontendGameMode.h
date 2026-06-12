@@ -55,14 +55,14 @@ public:
 	 * @brief 타이틀 START 입력을 처리해 캐릭터 선택 화면을 열도록 요청한다.
 	 *
 	 * @details
-	 * 이 함수 이름은 기존 타이틀 흐름과 맞추기 위해 남아 있지만, 실제 RunPersistData를 즉시 만들지는 않는다.
-	 * START 시점에는 아직 캐릭터가 정해지지 않았으므로, 여기서는 TitleMenuWidget에게 캐릭터 선택 화면을 열게 하는 것이 전부다.
+	 * START 시점에는 아직 캐릭터가 정해지지 않았으므로 RunPersistData를 즉시 만들지 않는다.
+	 * 여기서는 TitleMenuWidget에게 캐릭터 선택 화면을 열게 하는 것이 전부다.
 	 * Run 생성은 캐릭터 선택 Confirm 이후 StartNewRun()에서만 진행한다.
 	 *
 	 * @return 캐릭터 선택 화면 전환 요청에 성공하면 true
 	 */
 	UFUNCTION(Category = Title, BlueprintCallable)
-	bool CreateNewRunFromTitle();
+	bool RequestCharacterSelectFromTitle();
 
 	/**
 	 * @brief 선택한 플레이어 유닛과 난이도로 새 런을 시작한다.

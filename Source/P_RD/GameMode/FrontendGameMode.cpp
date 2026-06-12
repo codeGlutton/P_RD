@@ -147,7 +147,7 @@ void AFrontendGameMode::BeginRoom()
 	PlayerController->SetInputMode(InputMode);
 }
 
-bool AFrontendGameMode::CreateNewRunFromTitle()
+bool AFrontendGameMode::RequestCharacterSelectFromTitle()
 {
 	/*
 	 * 타이틀 START는 아직 런을 만들지 않는다.
@@ -231,7 +231,7 @@ bool AFrontendGameMode::AbandonRunFromTitle()
 
 	if (CanAbandonRun() == false)
 	{
-		UE_LOG(LogFrontendGameMode, Log, TEXT("맵 준비가 되지 않음"));
+		UE_LOG(LogFrontendGameMode, Log, TEXT("포기할 활성 런 데이터가 없음"));
 		return false;
 	}
 

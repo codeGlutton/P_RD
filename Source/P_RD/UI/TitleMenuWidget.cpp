@@ -49,7 +49,7 @@ void UTitleMenuWidget::RefreshCharacterOptionsFromGameMode()
  * @brief GameMode가 요청한 타이틀 내부 화면 전환을 실제 WBP 화면 전환으로 수행한다.
  *
  * @details
- * AFrontendGameMode::CreateNewRunFromTitle()은 런 생성 대신 이 함수를 통해 캐릭터 선택 화면만 연다.
+ * AFrontendGameMode::RequestCharacterSelectFromTitle()은 런 생성 대신 이 함수를 통해 캐릭터 선택 화면만 연다.
  * 이렇게 하면 START 버튼 입력 경로와 GameMode API 경로가 모두 ShowCharacterScreen()으로 합쳐진다.
  */
 void UTitleMenuWidget::OpenCharacterSelectFromTitle()
@@ -427,14 +427,14 @@ void UTitleMenuWidget::ValidateDesignerBindings() const
  * @brief START 버튼 입력을 GameMode의 새 런 시작 흐름으로 전달한다.
  *
  * @details
- * GameMode가 준비되어 있으면 CreateNewRunFromTitle()을 통해 캐릭터 선택 화면을 열고,
+ * GameMode가 준비되어 있으면 RequestCharacterSelectFromTitle()을 통해 캐릭터 선택 화면을 열고,
  * 테스트/프리뷰처럼 GameMode가 없는 경우에는 WBP 화면 전환만 수행한다.
  */
 void UTitleMenuWidget::HandleStartButtonClicked()
 {
 	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
 	{
-		if (FrontendGameMode->CreateNewRunFromTitle())
+		if (FrontendGameMode->RequestCharacterSelectFromTitle())
 		{
 			return;
 		}
