@@ -17,10 +17,11 @@
 UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
 enum class ETileLayerFlag : uint8
 {
-	None = 0				UMETA(Hidden),
-	Overlay = 1 << 0		UMETA(ToolTip = "유닛 아래 레이어"),
-	Unit = 1 << 1			UMETA(ToolTip = "유닛과 충돌 가능한 레이어"),
-	All = Overlay | Unit	UMETA(Hidden),
+	None = 0							UMETA(Hidden),
+	Overlay = 1 << 0					UMETA(ToolTip = "유닛 아래 레이어"),
+	Unit = 1 << 1						UMETA(ToolTip = "유닛과 충돌 가능한 레이어"),
+	Obstacle = 1 << 2					UMETA(ToolTip = "장애물 레이어"),
+	All = Overlay | Unit | Obstacle		UMETA(Hidden),
 };
 ENUM_CLASS_FLAGS(ETileLayerFlag)
 
