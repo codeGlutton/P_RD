@@ -13,7 +13,6 @@
 
 class UButton;
 class UCharacterSelectWidget;
-class UFrontendMapWidget;
 class USettingsPanelWidget;
 class UTextBlock;
 class UWidget;
@@ -132,20 +131,6 @@ private:
 	void ShowSettingsScreen();
 
 	/**
-	 * @brief WBP_TitleMenu에 직접 배치된 지도 화면 연결을 확인함
-	 *
-	 * @details
-	 * 지도 화면은 WBP_TitleMenu 안의 MapScreen과 FrontendMapWidget 바인딩으로 제공되어야 한다.
-	 * C++은 빠진 화면을 임시로 만들지 않고, 연결이 깨졌으면 로그를 남기고 메인 화면으로 돌아간다.
-	 */
-	bool EnsureMapScreen();
-
-	/**
-	 * @brief 지도 화면을 보여주고 지도 내용을 갱신함
-	 */
-	void ShowMapScreen();
-
-	/**
 	 * @brief 타이틀 메인 화면의 텍스트를 현재 설정값으로 채움
 	 *
 	 * @details
@@ -160,21 +145,21 @@ private:
 	 * @details
 	 * 저장된 런이 없으면 START / SETTING만 보이고,
 	 * 저장된 런이 있으면 CONTINUE / NEW START / SETTING 구성을 보여준다.
-	 * 버튼 배치는 WBP_TitleMenu가 맡고, C++은 이미 복구된 PersistentData에서
-	 * 지도 View 생성 가능 여부만 보고 표시 상태를 바꾼다.
+	 * 버튼 배치는 WBP_TitleMenu가 맡고, C++은 이미 복구된 PersistentData에
+	 * 이어갈 Run이 있는지만 보고 표시 상태를 바꾼다.
 	 */
 	void RefreshMainMenuState() const;
 
 	/**
-	 * @brief 현재 복구된 Run 상태를 지도 화면으로 보여줄 수 있는지 확인함
+	 * @brief 현재 복구된 Run을 이어갈 수 있는지 확인함
 	 *
 	 * @details
 	 * 세이브 파일 로드는 Intro 단계에서 끝나 있어야 한다.
-	 * 타이틀 UI는 파일을 직접 읽지 않고, FrontendGameMode가 현재 PersistentData로 지도 View를 만들 수 있는지만 확인한다.
+	 * 타이틀 UI는 파일을 직접 읽지 않고, FrontendGameMode가 현재 PersistentData 요약을 만들 수 있는지만 확인한다.
 	 *
-	 * @return 지도 화면으로 이어갈 수 있는 활성 런 데이터가 있으면 true
+	 * @return 현재 방으로 이어갈 수 있는 활성 Run 데이터가 있으면 true
 	 */
-	bool TryLoadRunForMapScreen() const;
+	bool CanContinueRun() const;
 
 	/**
 	 * @brief 타이틀에서 열 공용 설정 패널을 얻음
@@ -212,11 +197,11 @@ private:
 	void HandleStartButtonClicked();
 
 	/**
-	 * @brief CONTINUE 버튼 클릭을 타이틀 내부 지도 화면으로 연결한다.
+	 * @brief CONTINUE 버튼 클릭을 활성 Run의 현재 방 입장으로 연결한다.
 	 *
 	 * @details
 	 * 실제 세이브 파일 로드는 여기서 하지 않는다.
-	 * Intro에서 복구된 RunPersistData를 FrontendGameMode가 지도 View로 만들 수 있을 때만 지도 화면을 연다.
+	 * Intro에서 복구된 RunPersistData가 있을 때 FrontendGameMode에 현재 방 전환을 요청한다.
 	 */
 	UFUNCTION()
 	void HandleContinueButtonClicked();
@@ -238,12 +223,6 @@ private:
 	 */
 	UFUNCTION()
 	void HandleCharacterBackToMainRequested();
-
-	/**
-	 * @brief Continue 지도 화면의 Close 요청을 타이틀 메인 화면 복귀로 처리한다.
-	 */
-	UFUNCTION()
-	void HandleMapBackRequested();
 
 private:
 	/**
@@ -274,10 +253,6 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UWidget> SettingsScreen;
 
-	/** @brief 지도 화면 자리. 이번 단계에서는 WBP_TitleMenu 안의 ScreenSwitcher 자식으로 둔다. */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> MapScreen;
-
 	/**
 	 * @brief WBP에 직접 배치한 캐릭터 선택 위젯
 	 *
@@ -288,10 +263,6 @@ private:
 	 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UCharacterSelectWidget> CharacterSelectWidget;
-
-	/** @brief MapScreen 안에 직접 배치한 지도 위젯 */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UFrontendMapWidget> FrontendMapWidget;
 
 	/** @brief 캐릭터 선택 화면으로 넘어가는 START 버튼 */
 	UPROPERTY(meta = (BindWidget))

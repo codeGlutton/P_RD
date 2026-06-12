@@ -7,7 +7,6 @@
 #include "Components/ScrollBox.h"
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
-#include "GameMode/FrontendGameMode.h"
 #include "GameMode/RoomGameModeBase.h"
 #include "UI/FrontendMapGraphWidgets.h"
 #include "UI/ViewportZOrderType.h"
@@ -615,16 +614,9 @@ bool UFrontendMapWidget::RefreshMap()
 		FFrontendRunControlView RunControlView;
 		bShouldScrollToStart = RoomGameMode->GetRunControlView(OUT RunControlView) && RunControlView.mIsAtStageStart;
 	}
-	else if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
-	{
-		bHasRooms = FrontendGameMode->GetMapRoomViews(Rooms);
-
-		FFrontendRunControlView RunControlView;
-		bShouldScrollToStart = FrontendGameMode->GetRunControlView(OUT RunControlView) && RunControlView.mIsAtStageStart;
-	}
 	else
 	{
-		UE_LOG(LogRD, Warning, TEXT("FrontendMapWidget: GameMode is not available. Map view data must be provided by FrontendGameMode or RoomGameMode."));
+		UE_LOG(LogRD, Warning, TEXT("FrontendMapWidget: RoomGameMode is not available. WorldMap data must be provided by RoomGameMode."));
 	}
 
 	if (!bHasRooms)

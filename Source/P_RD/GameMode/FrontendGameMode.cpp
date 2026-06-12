@@ -77,107 +77,10 @@ namespace
 	bool IsFrontendStageStartPoint(const FStage& Stage, int32 RowIndex, int32 ColumnIndex)
 	{
 		/*
-		 * Continue 지도에서 시작 지점은 실제 전투 방이 아니라 "런이 이 Stage의 입구에 있다"는 표시용 노드다.
 		 * Stage의 시작 열은 생성 규칙에 따라 달라질 수 있으므로, 0열 고정으로 판단하지 않고 Stage.mStartColumn을 사용한다.
+		 * 프론트엔드에서는 타이틀 메뉴/설정 패널이 현재 Run 요약을 표시할 때만 이 값을 사용한다.
 		 */
 		return RowIndex == 0 && ColumnIndex == Stage.mStartColumn;
-	}
-
-	bool IsNextFrontendRoomFromCurrentPath(const FStage& Stage, int32 CurrentRowIndex, int32 CurrentColumnIndex, int32 RowIndex, int32 ColumnIndex)
-	{
-		/*
-		 * 프론트엔드 지도는 Continue 화면에서 진행 상황을 보여주는 용도지만,
-		 * Ready/Locked 표시는 실제 인게임 월드맵과 같은 기준으로 계산해야 사용자가 이어하기 후 볼 지도와 어긋나지 않는다.
-		 *
-		 * mNextRoomColumns는 "현재 방의 다음 행에서 갈 수 있는 열"만 들고 있다.
-		 * 그래서 RowIndex가 CurrentRowIndex + 1인지 먼저 확인하지 않으면,
-		 * 같은 열 번호를 가진 더 먼 행의 방까지 Ready처럼 보이는 문제가 생긴다.
-		 */
-		if (Stage.HasRoom(CurrentRowIndex, CurrentColumnIndex) == false)
-		{
-			return false;
-		}
-		if (RowIndex != CurrentRowIndex + 1)
-		{
-			return false;
-		}
-		if (Stage.HasRoom(RowIndex, ColumnIndex) == false)
-		{
-			return false;
-		}
-
-		const FRoom& CurrentRoom = Stage.mRoomRows[CurrentRowIndex].mRooms[CurrentColumnIndex].Get<FRoom>();
-		return CurrentRoom.mNextRoomColumns.Contains(ColumnIndex);
-	}
-
-	EFrontendMapRoomState ResolveFrontendRoomState(const FStage& Stage, const FRoom& Room, int32 CurrentRowIndex, int32 CurrentColumnIndex)
-	{
-		/*
-		 * 타이틀 Continue 지도는 "현재 런이 어디까지 왔는지"를 보여주는 화면이다.
-		 * 여기서는 방을 새로 선택하지 않으므로 Selected/CanEnter 상태를 만들지 않고,
-		 * 이미 지난 방은 Cleared, 바로 다음 후보는 Ready, 나머지는 Locked로만 내려준다.
-		 */
-		if (Room.mWasSelected == true)
-		{
-			return EFrontendMapRoomState::Cleared;
-		}
-
-		if (IsNextFrontendRoomFromCurrentPath(Stage, CurrentRowIndex, CurrentColumnIndex, Room.mRow, Room.mColumn) == true)
-		{
-			return EFrontendMapRoomState::Ready;
-		}
-
-		return EFrontendMapRoomState::Locked;
-	}
-
-	FText GetFrontendRoomTitle(ERoomType RoomType)
-	{
-		/*
-		 * RoomType을 WBP가 바로 해석하게 만들지 않고, GameMode에서 표시용 문구로 바꿔 내려준다.
-		 * 나중에 룸 타입 이름이나 로컬라이징 키가 바뀌어도 지도 위젯은 "받은 텍스트를 그리는 일"만 유지한다.
-		 */
-		switch (RoomType)
-		{
-		case ERoomType::Monster:
-			return NSLOCTEXT("FrontendGameMode", "MonsterRoomTitle", "Monster");
-		case ERoomType::EliteMonster:
-			return NSLOCTEXT("FrontendGameMode", "EliteRoomTitle", "Elite");
-		case ERoomType::BossMonster:
-			return NSLOCTEXT("FrontendGameMode", "BossRoomTitle", "Boss");
-		case ERoomType::Shop:
-			return NSLOCTEXT("FrontendGameMode", "ShopRoomTitle", "Shop");
-		case ERoomType::Treasure:
-			return NSLOCTEXT("FrontendGameMode", "TreasureRoomTitle", "Treasure");
-		default:
-			return NSLOCTEXT("FrontendGameMode", "UnknownRoomTitle", "Unknown");
-		}
-	}
-
-	FText GetFrontendRoomDescription(const FRoom& Room)
-	{
-		/*
-		 * 현재는 임시 설명 문구로 행/열과 다음 경로 수를 보여준다.
-		 * 최종 룸 설명 문구가 DataAsset으로 분리되면 이 함수만 그 데이터를 읽도록 바꾸고,
-		 * FrontendMapWidget은 계속 FFrontendMapRoomView.mDescription만 표시하면 된다.
-		 */
-		return FText::Format(
-			NSLOCTEXT("FrontendGameMode", "MapRoomDescription", "Row {0}, Column {1}. Next routes: {2}"),
-			FText::AsNumber(Room.mRow + 1),
-			FText::AsNumber(Room.mColumn + 1),
-			FText::AsNumber(Room.mNextRoomColumns.Num())
-		);
-	}
-
-	FText GetFrontendStartPointDescription(const FRoom& Room)
-	{
-		/*
-		 * 시작 노드는 전투/상점/보물 방이 아니므로 RoomType 설명을 붙이지 않는다.
-		 * 대신 시작 지점에서 몇 갈래로 진행되는지만 보여, Continue 지도에서 현재 위치를 빠르게 확인하게 한다.
-		 */
-		return FText::Format(
-			NSLOCTEXT("FrontendGameMode", "StartPointDescription", "Routes: {0}"),
-			FText::AsNumber(Room.mNextRoomColumns.Num())
-		);
 	}
 }
 
@@ -288,6 +191,40 @@ bool AFrontendGameMode::StartNewRun(const FPrimaryAssetId& PlayerUnitId, int32 D
 	return true;
 }
 
+bool AFrontendGameMode::ContinueRunFromTitle()
+{
+	/*
+	 * 타이틀에서는 더 이상 지도 미리보기를 열지 않는다.
+	 * 활성 Run이 있으면 현재 저장된 방 위치로 바로 전환하고, 월드맵 조회/다음 방 선택은 방 입장 후 RoomGameMode가 맡는다.
+	 */
+	if (mWasNextRoomPreloadRequested == true)
+	{
+		UE_LOG(LogFrontendGameMode, Log, TEXT("방 전환 시 추가 로직 요청 불가"));
+		return false;
+	}
+
+	const URunPersistData* RunPersistData = GetRunPersistData();
+	if (RunPersistData == nullptr || RunPersistData->IsActive() == false)
+	{
+		UE_LOG(LogFrontendGameMode, Log, TEXT("이어갈 런 데이터가 없음"));
+		return false;
+	}
+
+	int32 CurrentRowIndex = INDEX_NONE;
+	int32 CurrentColumnIndex = INDEX_NONE;
+	RunPersistData->GetCurrentRoomIndex(OUT CurrentRowIndex, OUT CurrentColumnIndex);
+
+	const FStage& Stage = RunPersistData->GetStage();
+	if (Stage.HasRoom(CurrentRowIndex, CurrentColumnIndex) == false)
+	{
+		UE_LOG(LogFrontendGameMode, Log, TEXT("현재 런의 방 위치가 Stage에 없음"));
+		return false;
+	}
+
+	checkf(PreloadAndTransitionRoomAsync(CurrentRowIndex, CurrentColumnIndex) == true, TEXT("이어하기 방 전환 실패"));
+	return true;
+}
+
 bool AFrontendGameMode::AbandonRunFromTitle()
 {
 	/*
@@ -363,73 +300,10 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 	return OutOptions.IsEmpty() == false;
 }
 
-bool AFrontendGameMode::GetMapRoomViews(TArray<FFrontendMapRoomView>& OutRooms) const
-{
-	/*
-	 * 타이틀 Continue 지도는 RoomGameMode가 없는 프론트엔드 월드에서 열린다.
-	 * 그래서 FrontendGameMode가 현재 RunPersistData를 읽어 RoomGameMode와 같은 FFrontendMapRoomView 형식으로 변환해준다.
-	 *
-	 * 중요한 점:
-	 * 여기서 내려주는 지도는 "보기용"이다. 타이틀에서 다음 방을 선택/입장하는 기능은 열지 않는다.
-	 * 이어하기를 누른 뒤 실제 방으로 들어가면 RoomGameMode가 선택 가능한 월드맵을 다시 제공한다.
-	 */
-	OutRooms.Reset();
-
-	const URunPersistData* RunPersistData = GetRunPersistData();
-	if (RunPersistData == nullptr || RunPersistData->IsActive() == false)
-	{
-		return false;
-	}
-
-	int32 CurrentRowIndex = 0;
-	int32 CurrentColumnIndex = 0;
-	RunPersistData->GetCurrentRoomIndex(OUT CurrentRowIndex, OUT CurrentColumnIndex);
-
-	const FStage& Stage = RunPersistData->GetStage();
-	for (int32 RowIndex = 0; RowIndex < Stage.mRoomRows.Num(); ++RowIndex)
-	{
-		const FRoomRow& RoomRow = Stage.mRoomRows[RowIndex];
-		for (int32 ColumnIndex = 0; ColumnIndex < RoomRow.mRooms.Num(); ++ColumnIndex)
-		{
-			if (RoomRow.mRooms[ColumnIndex].IsValid() == false)
-			{
-				continue;
-			}
-
-			const FRoom& Room = RoomRow.mRooms[ColumnIndex].Get<FRoom>();
-			if (Room.mType == ERoomType::None)
-			{
-				continue;
-			}
-
-			const bool bIsStartPoint = IsFrontendStageStartPoint(Stage, RowIndex, ColumnIndex);
-			const EFrontendMapRoomState RoomState = ResolveFrontendRoomState(Stage, Room, CurrentRowIndex, CurrentColumnIndex);
-
-			FFrontendMapRoomView NewView;
-			NewView.mRow = RowIndex;
-			NewView.mColumn = ColumnIndex;
-			NewView.mType = Room.mType;
-			NewView.mState = RoomState;
-			NewView.mTitle = bIsStartPoint ? NSLOCTEXT("FrontendGameMode", "StartPointTitle", "Start") : GetFrontendRoomTitle(Room.mType);
-			NewView.mDescription = bIsStartPoint ? GetFrontendStartPointDescription(Room) : GetFrontendRoomDescription(Room);
-			NewView.mNextRoomColumns = Room.mNextRoomColumns;
-			NewView.mPositionOffsetRate = Room.mPositionOffsetRate;
-			NewView.mSelectable = false;
-			NewView.mSelected = false;
-			NewView.mVisited = RoomState == EFrontendMapRoomState::Cleared;
-			NewView.mCanEnter = false;
-			NewView.mIsStartPoint = bIsStartPoint;
-			OutRooms.Add(MoveTemp(NewView));
-		}
-	}
-
-	return OutRooms.IsEmpty() == false;
-}
-
 bool AFrontendGameMode::GetRunControlView(FFrontendRunControlView& OutView) const
 {
 	/*
-	 * 타이틀 메뉴가 Continue 버튼 표시 여부와 지도 스크롤 위치를 판단할 때 쓰는 요약 데이터다.
+	 * 타이틀 메뉴가 Continue 버튼 표시 여부와 설정 패널의 Run 액션 상태를 판단할 때 쓰는 요약 데이터다.
 	 * 세이브/런 데이터의 내부 구조를 TitleMenuWidget이 직접 읽지 않게 하고,
 	 * UI에는 "활성 런이 있는가, 현재 위치가 Stage 시작점인가, 난이도/레벨은 무엇인가"만 전달한다.
 	 */

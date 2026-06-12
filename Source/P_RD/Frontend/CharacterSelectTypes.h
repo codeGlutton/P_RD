@@ -20,7 +20,7 @@ class UTexture2D;
  * Widget은 PlayerUnit DataAsset, 해금 규칙, 시작 스탯 계산 방식을 직접 알지 않고
  * FrontendGameMode가 변환해서 내려준 이 값만 화면에 그린다.
  *
- * 현재 타이틀 -> 캐릭터 선택 -> 지도 흐름에서는 확정 시 실제 런 생성 API에 넘길
+ * 현재 타이틀 -> 캐릭터 선택 -> 첫 방 입장 흐름에서는 확정 시 실제 런 생성 API에 넘길
  * PlayerUnit PrimaryAssetId와 안정적인 선택 index가 필요하다. 그래서 이름/역할/설명 같은
  * 표시 값과 런 생성에 필요한 식별자를 같은 View 값으로 내려준다.
  *

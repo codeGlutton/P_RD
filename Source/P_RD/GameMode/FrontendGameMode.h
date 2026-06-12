@@ -20,25 +20,24 @@ class UStaticPlayerUnitSpawnData;
 DECLARE_LOG_CATEGORY_EXTERN(LogFrontendGameMode, Log, All)
 
 /**
- * @brief 타이틀/캐릭터 선택/지도 팝업을 처리하는 프론트엔드 GameMode
+ * @brief 타이틀/캐릭터 선택을 처리하는 프론트엔드 GameMode
  *
  * @details
  * HUD 클래스 선택은 BP_FrontendGameMode의 mHUDClass 기본값이 담당한다.
- * C++은 BP가 고른 HUD를 실행하고, UI가 기존 런/스테이지 데이터를 표시할 수 있도록 얇은 adapter만 제공한다.
+ * C++은 BP가 고른 HUD를 실행하고, UI가 캐릭터 선택과 이어하기 상태를 표시할 수 있도록 얇은 adapter만 제공한다.
  *
  * 프론트엔드는 실제 방이 아니므로 ARoomGameModeBase를 상속하지 않는다. ARoomGameModeBase는 방 진입 시
- * 플레이어 유닛 복원과 Run 저장을 수행하는데, 타이틀/지도 팝업 단계에서 그 흐름이 실행되면
+ * 플레이어 유닛 복원과 Run 저장을 수행하는데, 타이틀 단계에서 그 흐름이 실행되면
  * "Front -> Room"과 "Room -> Room"의 책임이 섞인다. 따라서 이 클래스는 ARDGameModeBase를 상속하고,
  * 새 Run 시작 후 첫 방 입장은 URoomTransitionSubsystem::MakeStageAndPreloadRoomAsync() 흐름에 맡긴다.
- * 지도 UI는 Run 시작 전 preview가 아니라, 활성 Run/Room 사이 이동 화면을 표시하는 adapter로 남긴다.
  *
- * 이 클래스의 public 함수는 타이틀 -> 캐릭터 선택 -> 첫 방 입장/지도 팝업을 연결하는
+ * 이 클래스의 public 함수는 타이틀 -> 캐릭터 선택 -> 첫 방 입장을 연결하는
  * 프론트엔드 진입점이다. 실제 게임 데이터는 URunPersistData, GameProfileSubsystem,
  * URoomTransitionSubsystem에 있고, 여기서는 그 결과를 UI DTO로 바꾸거나 버튼 입력을
  * 게임 API 호출로 연결하는 역할만 맡는다.
  *
- * 선택 가능한 다음 방 조회, 지도 노드 선택 검증, 선택된 방 입장 같은 정책은 GameMode/Subsystem이 판단하고,
- * WBP는 이 클래스가 내려준 View 데이터와 호출 함수만 사용한다.
+ * 선택 가능한 다음 방 조회, 지도 노드 선택 검증, 선택된 방 입장 같은 정책은
+ * 실제 방에 들어간 뒤 ARoomGameModeBase와 월드맵 위젯이 판단한다.
  */
 UCLASS(abstract)
 class P_RD_API AFrontendGameMode : public ARDGameModeBase
@@ -75,10 +74,23 @@ public:
 	 * UI가 직접 Subsystem을 호출하지 않고 이 함수로 들어오게 한 이유는
 	 * "캐릭터 선택 완료 -> 런 생성 -> 첫 방 전환" 순서를 GameMode 한 곳에서 고정하기 위해서다.
 	 *
-	 * @return 런/지도 준비 요청에 성공하면 true
+	 * @return 런 생성과 첫 방 준비 요청에 성공하면 true
 	 */
 	UFUNCTION(Category = Title, BlueprintCallable)
 	bool StartNewRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty);
+
+	/**
+	 * @brief 저장된 활성 Run의 현재 방으로 이어서 입장한다.
+	 *
+	 * @details
+	 * 프론트엔드 타이틀에서는 지도 미리보기를 열지 않는다.
+	 * 이미 복구된 RunPersistData의 현재 행/열을 기준으로 방 전환만 요청하고,
+	 * 지도 조회와 다음 방 선택은 방 입장 후 RoomGameMode의 WorldMap에서 처리한다.
+	 *
+	 * @return 현재 방 전환 요청을 시작했으면 true
+	 */
+	UFUNCTION(Category = Title, BlueprintCallable)
+	bool ContinueRunFromTitle();
 
 	/**
 	 * @brief 타이틀/세팅 UI에서 기존 런 포기를 요청한다.
@@ -108,29 +120,12 @@ public:
 	bool GetCharacterOptions(TArray<FFrontendCharacterOption>& OutOptions) const;
 
 	/**
-	 * @brief 타이틀 Continue 지도 화면에 보여줄 방 노드 View 데이터를 가져온다.
+	 * @brief 타이틀 메뉴 상태와 설정 패널에 사용할 현재 Run 상태를 가져온다.
 	 *
 	 * @details
-	 * 프론트엔드 방은 실제 전투 방은 아니지만, Intro에서 복구된 RunPersistData를 읽어 기존 런의 월드맵을 보여줄 수 있어야 한다.
-	 * 세이브가 없거나 활성 Run이 없으면 false를 반환하고, 타이틀 메뉴는 Continue 버튼을 숨긴다.
-	 *
-	 * 여기서 만들어지는 지도 View는 타이틀 Continue 미리보기용이다.
-	 * 방 선택/입장 가능 여부는 전투 방의 RoomGameMode 지도에서만 열리므로,
-	 * 프론트엔드 지도는 mSelectable/mCanEnter를 false로 내려 표시와 진행 요청을 분리한다.
-	 *
-	 * @param OutRooms 지도 노드/선 표시용 View 데이터
-	 * @return 표시 가능한 활성 Run 지도 데이터가 있으면 true
-	 */
-	UFUNCTION(Category = Title, BlueprintCallable)
-	bool GetMapRoomViews(TArray<FFrontendMapRoomView>& OutRooms) const;
-
-	/**
-	 * @brief 타이틀 지도 첫 표시 위치와 요약 정보에 사용할 현재 Run 상태를 가져온다.
-	 *
-	 * @details
-	 * TitleMenuWidget과 FrontendMapWidget이 PersistentData 내부 구조를 직접 알지 않도록,
-	 * 현재 행/열, Stage 시작점 여부, 레벨, 난이도만 묶어 내려준다.
-	 * 같은 DTO를 RoomGameMode에서도 쓰기 때문에 타이틀 지도와 인게임 지도가 동일한 표시 규칙을 공유할 수 있다.
+	 * TitleMenuWidget과 SettingsPanelWidget이 PersistentData 내부 구조를 직접 알지 않도록,
+	 * 활성 Run 여부, 현재 행/열, 레벨, 난이도만 묶어 내려준다.
+	 * 같은 DTO를 RoomGameMode에서도 쓰기 때문에 타이틀과 인게임 설정 패널이 같은 표시 규칙을 공유할 수 있다.
 	 *
 	 * @param OutView 현재 Run 표시용 View 데이터
 	 * @return 활성 Run 상태가 있으면 true

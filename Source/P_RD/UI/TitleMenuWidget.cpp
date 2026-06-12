@@ -3,11 +3,9 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
-#include "Frontend/FrontendViewTypes.h"
 #include "GameMode/FrontendGameMode.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/CharacterSelectWidget.h"
-#include "UI/FrontendMapWidget.h"
 #include "UI/SettingsPanelWidget.h"
 
 namespace
@@ -65,12 +63,12 @@ void UTitleMenuWidget::OpenCharacterSelectFromTitle()
  * @brief WBP 바인딩을 검증하고 타이틀 화면에서 필요한 버튼/하위 위젯 이벤트를 연결한다.
  *
  * @details
- * WBP_TitleMenu는 StartScreen, CharacterScreen, MapScreen, SettingsScreen을 ScreenSwitcher 안에 직접 배치한다.
+ * WBP_TitleMenu는 StartScreen, CharacterScreen, SettingsScreen을 ScreenSwitcher 안에 직접 배치한다.
  * C++은 해당 화면을 새로 만들지 않고, BindWidget으로 들어온 인스턴스를 연결만 한다.
  *
- * 왜 여기서 설정 패널/지도/캐릭터 선택 이벤트까지 연결하는가:
+ * 왜 여기서 설정 패널/캐릭터 선택 이벤트까지 연결하는가:
  * 각 하위 위젯은 "뒤로 가기"나 "닫기 요청"만 외부로 알린다.
- * 실제로 타이틀 메인 화면으로 돌아갈지, 지도 화면을 갱신할지는 바깥 화면 전환을 알고 있는 TitleMenuWidget이 결정한다.
+ * 실제로 타이틀 메인 화면으로 돌아갈지는 바깥 화면 전환을 알고 있는 TitleMenuWidget이 결정한다.
  */
 void UTitleMenuWidget::NativeConstruct()
 {
@@ -106,11 +104,6 @@ void UTitleMenuWidget::NativeConstruct()
 	if (CharacterSelectWidget != nullptr)
 	{
 		CharacterSelectWidget->OnBackToMainRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleCharacterBackToMainRequested);
-	}
-
-	if (FrontendMapWidget != nullptr)
-	{
-		FrontendMapWidget->OnCloseRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleMapBackRequested);
 	}
 
 	SyncMainText();
@@ -156,11 +149,6 @@ void UTitleMenuWidget::NativeDestruct()
 	if (CharacterSelectWidget != nullptr)
 	{
 		CharacterSelectWidget->OnBackToMainRequested.RemoveDynamic(this, &UTitleMenuWidget::HandleCharacterBackToMainRequested);
-	}
-
-	if (FrontendMapWidget != nullptr)
-	{
-		FrontendMapWidget->OnCloseRequested.RemoveDynamic(this, &UTitleMenuWidget::HandleMapBackRequested);
 	}
 
 	Super::NativeDestruct();
@@ -259,53 +247,6 @@ void UTitleMenuWidget::ShowSettingsScreen()
 }
 
 /**
- * @brief 타이틀 내부 지도 화면을 사용할 수 있는지 확인한다.
- *
- * @details
- * Continue 지도는 WBP_TitleMenu 안에 MapScreen과 WBP_FrontendMap이 직접 배치되어야 한다.
- * C++ fallback으로 임시 지도를 만들지 않는 이유는 WBP 디자인과 런타임 화면이 갈라지는 문제를 막기 위해서다.
- */
-bool UTitleMenuWidget::EnsureMapScreen()
-{
-	if (MapScreen == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: MapScreen is not connected. Place the map screen inside WBP_TitleMenu."));
-		return false;
-	}
-
-	if (FrontendMapWidget == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: FrontendMapWidget is not connected. Place WBP_FrontendMap inside WBP_TitleMenu."));
-		return false;
-	}
-
-	FrontendMapWidget->OnCloseRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleMapBackRequested);
-	return true;
-}
-
-/**
- * @brief Continue 지도 화면을 열고 현재 Run 기준으로 지도를 다시 그린다.
- *
- * @details
- * 지도 화면은 열릴 때마다 RefreshMap()을 호출한다.
- * 타이틀 메인에서 Continue 버튼 상태를 확인한 뒤 실제 지도 화면에 들어오기까지 Run 상태가 바뀔 수 있으므로,
- * 화면 진입 시점에 한 번 더 최신 View DTO를 받아온다.
- */
-void UTitleMenuWidget::ShowMapScreen()
-{
-	if (!EnsureMapScreen())
-	{
-		ShowMainScreen();
-		SetStatusText(mMainOnlyStatusText);
-		return;
-	}
-
-	ShowScreen(MapScreen);
-	FrontendMapWidget->RefreshMap();
-	SetStatusText(FText::GetEmpty());
-}
-
-/**
  * @brief 생성자/에디터 기본값으로 준비된 문구를 실제 WBP TextBlock에 반영한다.
  *
  * @details
@@ -345,14 +286,14 @@ void UTitleMenuWidget::SyncMainText() const
  *
  * @details
  * 세이브 데이터 로드는 Intro 단계에서 끝난다는 전제를 사용한다.
- * 타이틀은 디스크를 다시 읽지 않고, FrontendGameMode가 현재 RunPersistData로 지도 View를 만들 수 있는지만 본다.
+ * 타이틀은 디스크를 다시 읽지 않고, FrontendGameMode가 현재 RunPersistData 요약을 만들 수 있는지만 본다.
  *
  * 활성 Run이 없으면 Continue는 숨기고 START 문구를 보여준다.
  * 활성 Run이 있으면 Continue를 보여주고, 새로 시작은 NEW START 문구로 바꿔 기존 런과 별도 행동임을 드러낸다.
  */
 void UTitleMenuWidget::RefreshMainMenuState() const
 {
-	const bool bCanContinueRun = TryLoadRunForMapScreen();
+	const bool bCanContinueRun = CanContinueRun();
 
 	if (StartButton != nullptr)
 	{
@@ -384,18 +325,18 @@ void UTitleMenuWidget::RefreshMainMenuState() const
 }
 
 /**
- * @brief 현재 프론트엔드 GameMode가 Continue 지도 데이터를 제공할 수 있는지 확인한다.
+ * @brief 현재 프론트엔드 GameMode가 이어가기 가능한 활성 Run을 갖는지 확인한다.
  *
  * @details
- * 함수 이름은 "Load"지만 여기서 SaveGame 파일을 직접 읽지는 않는다.
- * 이미 복구된 PersistentData를 지도 View로 만들 수 있는지만 확인하는 얇은 검사다.
+ * 여기서 SaveGame 파일을 직접 읽지는 않는다.
+ * 이미 복구된 PersistentData를 Run 요약 View로 만들 수 있는지만 확인하는 얇은 검사다.
  */
-bool UTitleMenuWidget::TryLoadRunForMapScreen() const
+bool UTitleMenuWidget::CanContinueRun() const
 {
-	TArray<FFrontendMapRoomView> Rooms;
 	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
 	{
-		return FrontendGameMode->GetMapRoomViews(OUT Rooms);
+		FFrontendRunControlView RunControlView;
+		return FrontendGameMode->GetRunControlView(OUT RunControlView) && RunControlView.mHasActiveRun;
 	}
 
 	return false;
@@ -468,16 +409,6 @@ void UTitleMenuWidget::ValidateDesignerBindings() const
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: CharacterSelectWidget is not connected. Place WBP_CharacterSelect inside WBP_TitleMenu."));
 	}
 
-	if (MapScreen == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: MapScreen is not connected. Place the map screen in WBP_TitleMenu."));
-	}
-
-	if (FrontendMapWidget == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: FrontendMapWidget is not connected. Place WBP_FrontendMap in the map screen."));
-	}
-
 	if (StartButton == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: StartButton is not connected."));
@@ -542,18 +473,21 @@ void UTitleMenuWidget::HandleStartButtonClicked()
 }
 
 /**
- * @brief CONTINUE 버튼 입력으로 현재 활성 Run의 지도 화면을 연다.
+ * @brief CONTINUE 버튼 입력으로 현재 활성 Run의 방에 바로 들어간다.
  *
  * @details
  * 버튼은 RefreshMainMenuState()에서 활성 Run이 있을 때만 보이지만,
- * 클릭 순간에도 다시 검사해 Run 데이터가 비었거나 지도 View를 만들 수 없으면 메인 화면으로 되돌린다.
+ * 클릭 순간에도 다시 검사해 Run 데이터가 비었거나 방 전환을 시작할 수 없으면 메인 화면으로 되돌린다.
+ * 지도 조회/다음 방 선택은 방에 들어간 뒤 RoomGameMode가 준비한 WorldMap 위젯에서만 처리한다.
  */
 void UTitleMenuWidget::HandleContinueButtonClicked()
 {
-	if (TryLoadRunForMapScreen())
+	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
 	{
-		ShowMapScreen();
-		return;
+		if (FrontendGameMode->ContinueRunFromTitle())
+		{
+			return;
+		}
 	}
 
 	ShowMainScreen();
@@ -594,20 +528,6 @@ void UTitleMenuWidget::HandleSettingsBackButtonClicked()
  */
 void UTitleMenuWidget::HandleCharacterBackToMainRequested()
 {
-	ShowMainScreen();
-	SetStatusText(FText::GetEmpty());
-}
-
-/**
- * @brief 지도 화면의 Close 요청을 타이틀 메인 복귀로 처리한다.
- *
- * @details
- * 지도 화면을 닫은 뒤에는 Continue 버튼 표시 여부를 다시 계산한다.
- * 지도 안에서 런 포기나 상태 변경이 들어올 수 있으므로 메인으로 돌아가기 전 메뉴 상태를 갱신한다.
- */
-void UTitleMenuWidget::HandleMapBackRequested()
-{
-	RefreshMainMenuState();
 	ShowMainScreen();
 	SetStatusText(FText::GetEmpty());
 }

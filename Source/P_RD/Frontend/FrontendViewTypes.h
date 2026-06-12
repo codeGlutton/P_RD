@@ -11,7 +11,7 @@
  * - GameMode/Subsystem: Stage/Room 생성, 현재 룸 위치, 룸 전환, 저장/런 상태 같은 실제 게임 데이터와 규칙을 담당한다.
  * - FrontendViewTypes: 그 결과를 UI가 노드/선/버튼 상태로 그릴 수 있게 변환한 읽기 전용 표시 데이터를 담는다.
  *
- * UI 위젯은 FStage/FRoom을 직접 해석하지 않고, AFrontendGameMode가 만들어준 이 View 타입만 보고 화면을 그린다.
+ * UI 위젯은 FStage/FRoom을 직접 해석하지 않고, ARoomGameModeBase가 만들어준 이 View 타입만 보고 화면을 그린다.
  * 반대로 이 View 타입도 Stage 생성이나 Room 전환을 직접 수행하지 않는다.
  * @date   2026-06-02
  *********************************************************************/
@@ -27,7 +27,7 @@
  * @brief 프론트엔드 월드맵 노드가 UI에 표시될 때 사용하는 상태
  *
  * 이 enum은 게임 진행 상태의 원본이 아니라, FStage/FRoom과 현재 룸 위치를 해석한 뒤 나온
- * UI 표시 결과다. 실제로 방에 갈 수 있는지, 어느 방으로 전환할지는 FrontendGameMode와
+ * UI 표시 결과다. 실제로 방에 갈 수 있는지, 어느 방으로 전환할지는 RoomGameMode와
  * Run/Room API가 판단한다.
  */
 UENUM(BlueprintType)
@@ -58,7 +58,7 @@ enum class EFrontendMapRoomState : uint8
  *
  * 예를 들어 FRoom::mType과 FRoom::mNextRoomColumns는 Stage 데이터에서 오지만,
  * "이 노드를 Ready 색으로 보여줄지", "ENTER 버튼을 켜도 되는지", "시작 지점인지" 같은 값은
- * AFrontendGameMode::GetMapRoomViews()가 현재 Run 상태를 보고 계산해서 이 구조체에 담는다.
+ * ARoomGameModeBase::GetMapRoomViews()가 현재 Run 상태를 보고 계산해서 이 구조체에 담는다.
  *
  * Widget은 이 값을 보고 노드/선을 배치하고, 클릭 시 mRow/mColumn만 GameMode에 돌려준다.
  * 방 잠금/선택 가능 여부 같은 규칙 판단도 Widget이 직접 하지 않고, GameMode가 이 값으로 내려준다.
@@ -123,18 +123,18 @@ struct P_RD_API FFrontendMapRoomView
  *
  * @details
  * URunPersistData는 현재 런/스테이지/플레이어 값을 제공하지만,
- * 타이틀 또는 설정 UI가 그 객체를 직접 만지면 저장/포기/지도 표시 가능 여부 판단이 위젯으로 새기 쉽다.
+ * 타이틀, 설정, 월드맵 UI가 그 객체를 직접 만지면 저장/포기/지도 표시 가능 여부 판단이 위젯으로 새기 쉽다.
  * 이 구조체는 그 경계를 막기 위한 View DTO다.
  *
  * 예를 들어 "현재 Run이 있는지", "저장 버튼을 켤 수 있는지", "지도 처음 표시 시 시작 지점으로
  * 스크롤해야 하는지"는 UI에 필요한 값이지만, UI가 URunPersistData를 직접 수정하면서 판단하면
- * 게임 상태 변경 책임이 화면 코드로 넘어간다. 그래서 FrontendGameMode가 실제 상태를 읽고,
+ * 게임 상태 변경 책임이 화면 코드로 넘어간다. 그래서 GameMode가 실제 상태를 읽고,
  * 위젯에는 이 구조체로 필요한 표시 상태만 전달한다.
  *
  * Widget은 이 값을 보고 버튼 활성화, 시작 위치 스크롤 같은 표시만 결정한다.
  * 실제 저장/포기/전환 명령은 FrontendGameMode 또는 RoomGameModeBase/Subsystem API를 통해 수행한다.
  * Run 저장은 방 진입 시 RoomGameModeBase에서 자동 처리하므로,
- * 타이틀/지도 화면에서는 Run 저장 버튼을 활성화하지 않는다. 옵션 저장처럼 UserPersistData에 속하는
+ * 타이틀과 월드맵 화면에서는 Run 저장 버튼을 활성화하지 않는다. 옵션 저장처럼 UserPersistData에 속하는
  * 설정 저장 API가 생기면 그때 별도 View 값으로 분리한다.
  */
 USTRUCT(BlueprintType)
@@ -145,7 +145,7 @@ struct P_RD_API FFrontendRunControlView
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	bool mHasActiveRun = false;
 
-	// 타이틀/지도에서는 Run 저장을 제공하지 않으므로 현재 false로 유지한다.
+	// 타이틀과 월드맵에서는 Run 저장을 제공하지 않으므로 현재 false로 유지한다.
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	bool mCanSaveRun = false;
 
