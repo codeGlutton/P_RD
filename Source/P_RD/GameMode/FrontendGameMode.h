@@ -82,11 +82,17 @@ public:
 	 * @brief 저장된 활성 Run의 현재 방으로 이어서 입장한다.
 	 *
 	 * @details
-	 * 프론트엔드 타이틀에서는 지도 미리보기를 열지 않는다.
-	 * 이미 복구된 RunPersistData의 현재 행/열을 기준으로 방 전환만 요청하고,
-	 * 지도 조회와 다음 방 선택은 방 입장 후 RoomGameMode의 WorldMap에서 처리한다.
+	 * 이 함수는 세이브 파일을 직접 불러오는 함수가 아니라,
+	 * 프론트엔드에 들어오기 전에 이미 복구된 RunPersistData를 기준으로 현재 방 이동을 요청하는 함수다.
 	 *
-	 * @return 현재 방 전환 요청을 시작했으면 true
+	 * 타이틀 화면의 Continue 버튼은 "진행 중인 Run으로 돌아가기"만 담당한다.
+	 * 따라서 프론트엔드 타이틀에서 월드맵 미리보기나 다음 방 선택을 열지 않고,
+	 * RunPersistData에 저장된 현재 행/열을 검증한 뒤 해당 방으로 바로 전환한다.
+	 *
+	 * 방에 들어간 뒤의 현재 방 UI, 월드맵 표시, 다음 방 선택, 저장 후 전환은
+	 * RoomGameModeBase 쪽 책임으로 분리되어 있다.
+	 *
+	 * @return 활성 Run의 현재 방 전환 요청을 시작했으면 true
 	 */
 	UFUNCTION(Category = Title, BlueprintCallable)
 	bool ContinueRunFromTitle();

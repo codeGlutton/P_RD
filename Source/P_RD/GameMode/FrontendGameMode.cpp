@@ -185,8 +185,13 @@ bool AFrontendGameMode::StartNewRun(const FPrimaryAssetId& PlayerUnitId, int32 D
 bool AFrontendGameMode::ContinueRunFromTitle()
 {
 	/*
-	 * 타이틀에서는 더 이상 지도 미리보기를 열지 않는다.
-	 * 활성 Run이 있으면 현재 저장된 방 위치로 바로 전환하고, 월드맵 조회/다음 방 선택은 방 입장 후 RoomGameMode가 맡는다.
+	 * Continue는 "세이브 파일을 불러온다"가 아니라 "이미 활성화된 Run의 현재 방으로 돌아간다"는 의미다.
+	 * 세이브 슬롯 선택/로드는 프론트엔드에 진입하기 전 또는 별도 UI 흐름에서 끝나 있어야 하고,
+	 * 이 함수는 RunPersistData가 이미 준비되어 있다는 전제에서 방 전환만 시작한다.
+	 *
+	 * 타이틀에서는 더 이상 지도 미리보기나 다음 방 선택을 열지 않는다.
+	 * 타이틀은 시작/이어하기 같은 프론트엔드 선택만 담당하고,
+	 * 현재 방 UI, 월드맵 표시, 다음 방 선택, 저장 후 전환은 실제 방에 들어간 뒤 RoomGameMode가 맡는다.
 	 */
 	if (mWasNextRoomPreloadRequested == true)
 	{
@@ -194,6 +199,10 @@ bool AFrontendGameMode::ContinueRunFromTitle()
 		return false;
 	}
 
+	/*
+	 * Continue 버튼은 TitleMenuWidget에서 활성 Run이 있을 때만 보이지만,
+	 * UI 상태가 갱신되기 전 클릭되거나 외부 흐름에서 직접 호출될 수 있으므로 GameMode에서도 다시 확인한다.
+	 */
 	const URunPersistData* RunPersistData = GetRunPersistData();
 	if (RunPersistData == nullptr || RunPersistData->IsActive() == false)
 	{
@@ -205,6 +214,11 @@ bool AFrontendGameMode::ContinueRunFromTitle()
 	int32 CurrentColumnIndex = INDEX_NONE;
 	RunPersistData->GetCurrentRoomIndex(OUT CurrentRowIndex, OUT CurrentColumnIndex);
 
+	/*
+	 * RunPersistData에는 "현재 방 좌표"만 저장되어 있으므로,
+	 * 전환 요청 전에 해당 좌표가 현재 Stage에 실제로 존재하는 방인지 확인한다.
+	 * 좌표가 깨진 상태로 PreloadAndTransitionRoomAsync()에 넘기면 잘못된 방 전환 요청이 되기 때문이다.
+	 */
 	const FStage& Stage = RunPersistData->GetStage();
 	if (Stage.HasRoom(CurrentRowIndex, CurrentColumnIndex) == false)
 	{
@@ -212,6 +226,10 @@ bool AFrontendGameMode::ContinueRunFromTitle()
 		return false;
 	}
 
+	/*
+	 * 여기서부터는 기존 방 전환 공통 흐름을 사용한다.
+	 * 플레이어/스테이지/방 에셋 프리로드, 페이드/로딩 UI, 실제 레벨 전환 순서는 RDGameModeBase와 RoomTransitionSubsystem이 처리한다.
+	 */
 	checkf(PreloadAndTransitionRoomAsync(CurrentRowIndex, CurrentColumnIndex) == true, TEXT("이어하기 방 전환 실패"));
 	return true;
 }
