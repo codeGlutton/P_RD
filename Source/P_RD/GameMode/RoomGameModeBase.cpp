@@ -12,6 +12,33 @@
 
 DEFINE_LOG_CATEGORY(LogRoomGameMode);
 
+/**
+ * @brief 실제 방 GameMode 역할 요약
+ *
+ * @details
+ * ARoomGameModeBase는 "현재 방 UI -> WorldMap -> 다음 방 선택 -> 저장/전환" 흐름을 담당한다.
+ * 타이틀 START, 캐릭터 선택, 새 Run 생성, Continue 시작은 AFrontendGameMode 쪽 책임이다.
+ *
+ * 주요 흐름:
+ * - InitializeCommonRoom(): 실제 방에 들어올 때 플레이어 유닛을 복원한다.
+ * - RestorePlayerUnit(): PlayerUnitRestorationSubsystem으로 플레이어 유닛을 스폰/등록한다.
+ * - BeginRoom(): 방에 들어오면 TopMenuBar를 OpenUI()로 열고 현재 Run 저장을 시작한다.
+ * - SaveRunWithUIAsync(): 방 전환 직후 현재 Run을 저장한다. SaveNotify는 아직 보조 UI 연결 지점으로만 남아 있다.
+ * - GetRunControlView(): TopMenuBar와 WorldMap이 표시할 현재 Run 상태 DTO를 만든다.
+ * - GetRunControlState(): 구조체 대신 개별 값으로 Run 상태를 받아야 하는 호출부용 호환 API다.
+ * - GetMapRoomViews(): 현재 Run의 Stage/Room 데이터를 월드맵 노드 표시용 FMapRoomView 배열로 변환한다.
+ * - ResolveRoomState(): 각 방의 Locked/Ready/Selected/Cleared UI 상태를 계산한다.
+ * - IsNextRoomFromCurrentPath(): 현재 방에서 지정 방으로 이동 가능한지 row와 column을 모두 검사한다.
+ * - IsStageStartPoint(): 지정 좌표가 Stage 시작 지점인지 계산한다.
+ * - SelectNextRoom(): 월드맵에서 클릭한 다음 방 후보를 검증하고 선택 좌표로 저장한다.
+ * - IsRoomSelectable(): 선택하려는 방이 실제 현재 방의 다음 경로인지 검증한다.
+ * - HasSelectedRoom(): 현재 저장된 다음 방 선택 좌표가 있는지 확인한다.
+ * - ClearSelectedRoom(): 저장된 다음 방 선택 좌표를 초기화한다.
+ * - EnterSelectedRoom(): 이미 선택된 다음 방으로 입장 요청을 시작한다.
+ * - PreloadAndTransitionSelectedRoomAsync(): 선택된 방 좌표를 최종 검증하고 프리로드/전환을 요청한다.
+ * - AbandonRunFromRoom(): 방 안에서 Run을 포기하고 프론트엔드 방으로 돌아간다.
+ * - GetPlayerUnit(): 방 안에서 복원된 플레이어 유닛 포인터를 제공한다.
+ */
 namespace
 {
 	/**

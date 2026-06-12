@@ -23,6 +23,26 @@
 
 DEFINE_LOG_CATEGORY(LogFrontendGameMode);
 
+/**
+ * @brief 프론트엔드 방 GameMode 역할 요약
+ *
+ * @details
+ * AFrontendGameMode는 "타이틀 -> 캐릭터 선택 -> 새 Run 생성/이어하기 시작" 흐름만 담당한다.
+ * 실제 방 안에서의 TopMenuBar, WorldMap, 다음 방 선택, 저장 후 전환은 ARoomGameModeBase 쪽 책임이다.
+ *
+ * 주요 흐름:
+ * - BeginRoom(): 프론트엔드 방에 들어오면 TitleMenuWidget HUD를 OpenUI()로 열고 입력 모드를 설정한다.
+ * - RequestCharacterSelectFromTitle(): 타이틀 START 입력을 받아 캐릭터 선택 화면 진입만 요청한다.
+ * - OpenTitleCharacterSelect(): TitleMenuWidget에 캐릭터 선택 화면을 열라고 전달한다.
+ * - GetCharacterOptions(): 캐릭터 선택 카드에 표시할 FFrontendCharacterOption 목록을 만든다.
+ * - GetPlayerUnitDatas(): DA_TestFrontend.mPlayableUnits에서 선택 가능한 캐릭터 DataAsset 목록을 가져온다.
+ * - IsPlayerUnitIdValid(): 선택된 캐릭터가 실제 선택 후보 안에 있는지 검증한다.
+ * - IsDifficultyValid(): 난이도 검증 자리다. 현재는 난이도 기능이 없어 항상 true를 반환한다.
+ * - StartNewRun(): 캐릭터 선택 Confirm 이후 새 Run을 만들고 Stage1 첫 방 전환을 요청한다.
+ * - CreateRunData(): GameProfileSubsystem->StartRun()으로 RunPersistData 생성을 위임한다.
+ * - ContinueRunFromTitle(): 타이틀 CONTINUE 입력을 받아 저장된 Run의 현재 방 row/column으로 입장을 요청한다.
+ * - AbandonRunFromTitle(): 타이틀/설정 화면에서 기존 Run 포기를 처리하고 RunPersistData만 비운다.
+ */
 namespace
 {
 	constexpr int32 DefaultDifficulty = 1;
