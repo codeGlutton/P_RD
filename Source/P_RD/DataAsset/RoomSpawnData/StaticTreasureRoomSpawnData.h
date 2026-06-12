@@ -20,6 +20,7 @@ class P_RD_API UStaticTreasureRoomSpawnData : public UStaticRoomSpawnData
 
 public:
 	void PostInitProperties() override;
+	void PostLoad() override;
 
 public:
 	FPrimaryAssetId GetPrimaryAssetId() const override

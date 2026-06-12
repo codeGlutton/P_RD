@@ -22,6 +22,7 @@ class P_RD_API UStaticFrontendRoomSpawnData : public UStaticRoomSpawnData
 
 public:
 	void PostInitProperties() override;
+	void PostLoad() override;
 
 #if WITH_EDITOR
 public:

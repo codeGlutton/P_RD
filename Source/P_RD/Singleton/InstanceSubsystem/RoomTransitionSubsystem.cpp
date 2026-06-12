@@ -31,7 +31,7 @@ bool URoomTransitionSubsystem::PreloadFrontendRoomAsync(FOnReadyToTransition Rea
     {
         EnumAddFlags(mTransitionState, ERoomTransitionStateFlag::AutoTransition);
     }
-    mRequest.mChangePersistentData = false;
+    mRequest.mNeedInGameRoom = false;
     mRequest.mRoomRowIndex = INDEX_NONE;
     mRequest.mRoomColumnIndex = INDEX_NONE;
     mRequest.OnReadyToTransition = ReadyToTransitionCallback;
@@ -66,7 +66,7 @@ bool URoomTransitionSubsystem::PreloadFrontendRoomAsync(FOnReadyToTransition Rea
 bool URoomTransitionSubsystem::PreloadRoomAsync(int32 RoomRowIndex, int32 RoomColumnIndex, FOnReadyToTransition ReadyToTransitionCallback, FOnPreTransitNextRoom PreTransitionCallback, bool RequireExternalReady, bool IsAutoTransition)
 {
     FRoomTransitionRequest Request;
-    Request.mChangePersistentData = true;
+    Request.mNeedInGameRoom = true;
     Request.mRoomRowIndex = RoomRowIndex;
     Request.mRoomColumnIndex = RoomColumnIndex;
     Request.OnReadyToTransition = ReadyToTransitionCallback;
@@ -286,31 +286,39 @@ void URoomTransitionSubsystem::OnTransitNextRoom()
 
     mTransitionState = ERoomTransitionStateFlag::None;
 
-    /* 현재 방 기록 */
-
-    if (mRequest.mChangePersistentData == true)
-    {
-        GetRunMutableData()->SetCurrentRoomIndex(mRequest.mRoomRowIndex, mRequest.mRoomColumnIndex);
-    }
-
-    /* 방 이동 */
-
     UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
     checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
 
-    const FRoom& NextRoom = GetRunMutableData()->GetRoom(mRequest.mRoomRowIndex, mRequest.mRoomColumnIndex);
-    UStaticRoomSpawnData* StaticRoomData = AssetManager->GetPrimaryAssetObject<UStaticRoomSpawnData>(NextRoom.mStaticRoomSpawnDataId);
+    UStaticRoomSpawnData* StaticRoomData = nullptr;
+    if (mRequest.mNeedInGameRoom == true)
+    {
+        /* 현재 방 기록 */
+
+        GetRunMutableData()->SetCurrentRoomIndex(mRequest.mRoomRowIndex, mRequest.mRoomColumnIndex);
+
+        const FRoom& NextRoom = GetRunMutableData()->GetRoom(mRequest.mRoomRowIndex, mRequest.mRoomColumnIndex);
+        StaticRoomData = AssetManager->GetPrimaryAssetObject<UStaticRoomSpawnData>(NextRoom.mStaticRoomSpawnDataId);
+    }
+    else
+    {
+        const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
+        StaticRoomData = AssetManager->GetPrimaryAssetObject<UStaticRoomSpawnData>(GamePlaySettings->mFrontendRoomId);
+    }
     checkf(StaticRoomData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
+
+    /* 방 이동 */
 
     TSoftObjectPtr<UWorld> BackgroundMap = StaticRoomData->mBackgroundMap;
     if (BackgroundMap.IsNull() == true)
     {
         BackgroundMap = GetDefault<UGamePlaySettings>()->mDefaultBackgroundMap;
-        UE_LOG(LogTransition, Warning, TEXT("Room background map is empty for %s. Using default room map: %s"),
-            *NextRoom.mStaticRoomSpawnDataId.ToString(),
-            *BackgroundMap.ToSoftObjectPath().ToString());
+        UE_LOG(
+            LogTransition, Warning, TEXT("%s 방 에셋 내 배경 레벨이 비어있음. 기본 레벨로 이동: %s"),
+            *StaticRoomData->GetPrimaryAssetId().ToString(),
+            *BackgroundMap.ToSoftObjectPath().ToString()
+        );
     }
-    checkf(BackgroundMap.IsNull() == false, TEXT("방 전환 실패. %s의 배경 맵 설정이 존재하지 않음"), *NextRoom.mStaticRoomSpawnDataId.ToString());
+    checkf(BackgroundMap.IsNull() == false, TEXT("방 전환 실패. %s의 배경 맵 설정이 존재하지 않음"), *StaticRoomData->GetPrimaryAssetId().ToString());
 
     FString Option = FString::Printf(TEXT("?game=%s"), *StaticRoomData->mGameModeBase.ToSoftObjectPath().GetAssetPathString());
     UGameplayStatics::OpenLevelBySoftObjectPtr(GetWorld(), BackgroundMap, true, Option);

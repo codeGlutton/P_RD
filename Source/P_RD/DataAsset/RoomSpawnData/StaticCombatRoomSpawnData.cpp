@@ -12,3 +12,18 @@ void UStaticCombatRoomSpawnData::PostInitProperties()
 		mGameModeBase = GetDefault<UGamePlaySettings>()->mCombatGameMode;
 	}
 }
+
+void UStaticCombatRoomSpawnData::PostLoad()
+{
+	Super::PostLoad();
+
+#if WITH_EDITOR
+	const TSoftClassPtr<AGameModeBase> UpdatedGameMode = GetDefault<UGamePlaySettings>()->mCombatGameMode;
+	if (mGameModeBase != UpdatedGameMode)
+	{
+		Modify();
+		mGameModeBase = UpdatedGameMode;
+		MarkPackageDirty();
+	}
+#endif
+}
