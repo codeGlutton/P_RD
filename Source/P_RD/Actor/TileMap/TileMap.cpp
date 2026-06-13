@@ -1,4 +1,5 @@
 ﻿#include "Actor/TileMap/TileMap.h"
+#include "RDCollision.h"
 #include "SRPGFramework/TileActor.h"
 #include "Components/SceneComponent.h"
 #include "Components/InstancedStaticMeshComponent.h"
@@ -34,8 +35,8 @@ ATileMap::ATileMap()
 	// 타일 그리드용 인스턴스드 메시 컴포넌트 생성 및 루트에 부착
 	mTileMeshComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("TileMesh"));
 	mTileMeshComponent->SetupAttachment(RootComponent);
-	// 시각화 전용이므로 충돌 비활성화
-	mTileMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	// 터치 판정(타일 선택/정보 확인 트레이스)을 받기 위해 타일맵 프로파일 적용 (QueryOnly)
+	mTileMeshComponent->SetCollisionProfileName(RDCollisionProfiles::TileMap);
 
 	// 기본 타일 메시로 엔진 기본 Plane(100x100cm, +Z 향) 지정
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> PlaneMeshFinder(TEXT("/Engine/BasicShapes/Plane.Plane"));
