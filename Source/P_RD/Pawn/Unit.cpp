@@ -105,11 +105,7 @@ USkillComponent* AUnit::GetSkillComponent() const
 	return mSkillComp;
 }
 
-void AUnit::OnBeginPlayRoom()
-{
-}
-
-void AUnit::OnEndPlayRoom()
+void AUnit::OnBeginRoom()
 {
 }
 

@@ -66,8 +66,7 @@ public:
 	USkillComponent* GetSkillComponent() const;
 
 public:
-	virtual void OnBeginPlayRoom();
-	virtual void OnEndPlayRoom();
+	virtual void OnBeginRoom();
 
 public:
 	void SetStaticSpawnData(const UStaticUnitSpawnData* StaticUnitSpawnData);
