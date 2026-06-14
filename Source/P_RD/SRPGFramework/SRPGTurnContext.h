@@ -10,13 +10,14 @@
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "SRPGFramework/SRPGAction.h"
-#include "SRPGFramework/SRPGActionLock.h"
 
 struct FSRPGTurnContext;
 struct FPresentationBarrier;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBeginTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGTurnContext& /*TurnContext*/)
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnEndTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGTurnContext& /*TurnContext*/, ESRPGTurnResult /*Result*/)
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnBeginAnyActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGTurnContext& /*TurnContext*/, const FSRPGAction& /*Action*/)
+DECLARE_MULTICAST_DELEGATE_FourParams(FOnEndAnyActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGTurnContext& /*TurnContext*/, const FSRPGAction& /*Action*/, ESRPGActionResult /*Result*/)
 
 class AUnit;
 struct FSRPGAction;
@@ -32,33 +33,20 @@ struct FSRPGTurnContext : public TSharedFromThis<FSRPGTurnContext>
 protected:
 	FSRPGTurnContext() = default;
 
-public:
-	/**
-	 * 액션 빌드 함수
-	 * @tparam DraftType 초안 종류
-	 * @return 액션을 만들기 위한 초안 구성 객체
-	 */
-	template<typename DraftType>
-	TUniquePtr<DraftType> StartActionBuild()
-	{
-		static_assert(TIsDerivedFrom<DraftType, FSRPGActionDraft>::Value, TEXT("BuilderType 는 반드시 FSRPGActionBuilder 파생 객체"));
-
-		TUniquePtr<DraftType> ActionDraft = MakeUnique<DraftType>();
-		ActionDraft->InitDraft(AsShared(), mOwner);
-
-		return ActionDraft;
-	}
-
-	void CompleteActionBuild(TUniquePtr<FSRPGActionDraft>&& Draft);
-	void CancelActionBuild(TUniquePtr<FSRPGActionDraft>&& Draft);
-
+	/* 생명 주기 함수 */
 protected:
-	void InitTurn(AUnit* Owner, int32 LifeCount);
+	void InitTurn(USRPGCombatSubsystem* Parent, AUnit* Owner, int32 LifeCount);
 	void BeginTurn();
 	void TickTurn(float DeltaTime);
 	void EndTurn();
 
+	/* 액션 커맨드 처리 함수 */
 protected:
+	ESRPGActionCommandResult RouteCommand(TSharedPtr<const FSRPGActionCommand> Command);
+	ESRPGActionCommandResult HandleActionCreationCommand(TSharedPtr<const FSRPGActionCommand> Command);
+	ESRPGActionCommandResult HandleFallbackCommand(TSharedPtr<const FSRPGActionCommand> Command);
+
+private:
 	void EnqueueAction(TSharedPtr<FSRPGAction> NewAction);
 	void DequeueAction();
 
@@ -69,12 +57,10 @@ public:
 protected:
 	void EvaluateTurnEndState(bool ForceAbort);
 
-protected:
-	void NotifyTurnStartIfNeeded();
-	void NotifyTurnEndIfNeeded();
-
+	/* 외부 API */
 public:
 	UWorld* GetWorld() const;
+	USRPGCombatSubsystem* GetParent() const;
 	AUnit* GetOwner() const;
 
 	bool IsPermanent() const;
@@ -83,14 +69,17 @@ public:
 public:
 	FOnBeginTurnUI OnBeginTurnUI;
 	FOnEndTurnUI OnEndTurnUI;
+	FOnBeginAnyActionUI OnBeginAnyActionUI;
+	FOnEndAnyActionUI OnEndAnyActionUI;
 
 protected:
+	TObjectPtr<USRPGCombatSubsystem> mParent;
 	TObjectPtr<AUnit> mOwner;
 	
 	// @brief 현재 턴 상태
-	ESRPGTurnPhase mPhase = ESRPGTurnPhase::None;
+	ESRPGTurnPhase mTurnPhase = ESRPGTurnPhase::None;
 	// @brief 턴 종료 결과
-	ESRPGTurnResult mResult = ESRPGTurnResult::Succeeded;
+	ESRPGTurnResult mTurnResult = ESRPGTurnResult::Succeeded;
 
 	TQueue<TSharedPtr<FSRPGAction>> mActions;
 

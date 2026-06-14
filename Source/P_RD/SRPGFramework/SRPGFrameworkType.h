@@ -34,6 +34,17 @@ public:
     FTileIndex() = default;
     FTileIndex(int32 InX, int32 InY) : mX(InX), mY(InY) {}
 
+public:
+    bool operator==(const FTileIndex& Other) const
+    {
+        return mX == Other.mX && mY == Other.mY;
+    }
+
+    bool operator!=(const FTileIndex& Other) const
+    {
+        return (*this == Other) == false;
+    }
+
     // @brief 가로(X) 방향 인덱스
     UPROPERTY(Category = "TileIndex", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "X"))
     int32 mX = 0;
@@ -145,7 +156,6 @@ enum class ETargetFilter : uint8
 };
 ENUM_CLASS_FLAGS(ETargetFilter);
 
-
 /**
  * @brief 전투 결과를 나타내는 열거형
  */
@@ -191,9 +201,7 @@ enum class ESRPGTurnPhase : uint8
     None                UMETA(Hidden),
     TurnInit            UMETA(ToolTip = "턴 초기화"),
     TurnStart           UMETA(ToolTip = "턴 시작"),
-    ActionSelect        UMETA(ToolTip = "액션 선택 중"),
-    ActionLock         UMETA(ToolTip = "액션 제작 중"),
-    ActionPlay          UMETA(ToolTip = "액션 진행 중"),
+    TurnPlay            UMETA(ToolTip = "턴 진행 중"),
     TurnAbort           UMETA(ToolTip = "턴 진행 중단"),
     TurnEnd             UMETA(ToolTip = "턴 종료"),
 };
@@ -203,6 +211,16 @@ enum class ESRPGActionResult : uint8
 {
     Succeeded           UMETA(ToolTip = "액션 정상 종료"),
     Cancelled           UMETA(ToolTip = "액션 중지"),
+};
+
+/**
+ * @brief 액션 내 진행 단계 열거형
+ */
+UENUM(BlueprintType)
+enum class ESRPGActionType : uint8
+{
+    BuildAction         UMETA(ToolTip = "타 액션을 제작하는 액션"),
+    InPlayAction        UMETA(ToolTip = "실제 게임 적용 액션"),
 };
 
 /**
@@ -220,17 +238,33 @@ enum class ESRPGActionPhase : uint8
 };
 
 UENUM(BlueprintType)
-enum class ESRPGActionDraftType : uint8
+enum class ESRPGSkillBuildPhase : uint8
 {
-    Immediate           UMETA(ToolTip = "즉시 빌드"),
-    Interactive         UMETA(ToolTip = "유저 인터렉션이 포함"),
+    None                UMETA(Hidden),
+    AimSelection        UMETA(ToolTip = "대상 영역 선택"),
+    Preview             UMETA(ToolTip = "프리뷰 표기"),
 };
 
 UENUM(BlueprintType)
-enum class ESRPGSkillActionDraftPhase : uint8
+enum class ESRPGActionCommandType : uint8
 {
     None                UMETA(Hidden),
-    TargetSelection     UMETA(ToolTip = "대상 영역 선택"),
-    Preview             UMETA(ToolTip = "프리뷰 표기"),
+
+    WorldTrace          UMETA(ToolTip = "월드 공간 선택"),
+
+    SkillSelect         UMETA(ToolTip = "사용 스킬 결정"),
+    SkillCast           UMETA(ToolTip = "스킬 사용"),
+    MoveSelect          UMETA(ToolTip = "이동 시작"),
+    TurnEnd             UMETA(ToolTip = "턴 종료"),
+};
+
+/**
+ * @brief 명령 처리 여부를 나타내는 열거형
+ */
+UENUM(BlueprintType)
+enum class ESRPGActionCommandResult : uint8
+{
+    Handle             UMETA(ToolTip = "처리됨"),
+    Unhandle           UMETA(ToolTip = "처리하지 않음"),
 };
 

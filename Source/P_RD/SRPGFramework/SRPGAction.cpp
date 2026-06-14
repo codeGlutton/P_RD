@@ -4,70 +4,110 @@
 #include "Singleton/WorldSubsystem/PresentationSyncSubsystem.h"
 
 #include "Pawn/Unit.h"
+#include "Actor/TileMap/TileMap.h"
 
 #include "FunctionLibrary/GASTargetFunctionLibrary.h"
 
-void FSRPGActionDraft::InitDraft(TSharedRef<FSRPGTurnContext> Owner, AUnit* Instigator)
+ESRPGActionCommandType FSRPGActionCommand::GetActionCommandType() const
 {
-	mOwner = Owner;
-	mInstigator = Instigator;
-
-	if (GetDraftType() == ESRPGActionDraftType::Interactive)
-	{
-		// 상호 작용이 필요한 액션의 경우, 턴의 진행을 Lock할 필요가 있다
-		mLock = MakeUnique<FSRPGActionLock>(Owner);
-	}
+	return mActionCommandType;
 }
 
-UWorld* FSRPGActionDraft::GetWorld() const
+bool FSRPGActionCommand::CanCreateAction() const
 {
-	return mOwner.Pin()->GetWorld();
+	return mCanCreateAction;
 }
 
-TWeakPtr<FSRPGTurnContext> FSRPGActionDraft::GetOwner() const
+FSRPGWorldTraceCommand::FSRPGWorldTraceCommand()
 {
-	return mOwner;
+	mActionCommandType = ESRPGActionCommandType::WorldTrace;
 }
 
-AUnit* FSRPGActionDraft::GetInstigator() const
+FSRPGActionCreationCommandBase::FSRPGActionCreationCommandBase()
 {
-	return mInstigator;
+	mCanCreateAction = true;
 }
 
-void FSRPGAction::InitAction(TSharedRef<FSRPGTurnContext> Owner, AUnit* Instigator)
+void FSRPGAction::InitAction(TSharedRef<FSRPGTurnContext> Parent, AUnit* Instigator)
 {
-	checkf(mPhase == ESRPGActionPhase::None, TEXT("중복 초기화"));
-	mPhase = ESRPGActionPhase::ActionInit;
+	checkf(Instigator != nullptr, TEXT("유발자 유닛 nullptr"));
 
-	mOwner = Owner;
+	checkf(mActionPhase == ESRPGActionPhase::None, TEXT("중복 초기화"));
+	mActionPhase = ESRPGActionPhase::ActionInit;
+
+	mParent = Parent;
 	mInstigator = Instigator;
 }
 
 void FSRPGAction::BeginAction()
 {
-	checkf(mPhase == ESRPGActionPhase::ActionInit, TEXT("이미 액션 진행 중에 재실행 오류"));
-	mPhase = ESRPGActionPhase::ActionStart;
+	checkf(mActionPhase == ESRPGActionPhase::ActionInit, TEXT("이미 액션 진행 중에 재실행 오류"));
+	mActionPhase = ESRPGActionPhase::ActionStart;
+
+	UPresentationSyncSubsystem* PresentationSyncSubsystem = GetWorld()->GetSubsystem<UPresentationSyncSubsystem>();
+	checkf(PresentationSyncSubsystem != nullptr, TEXT("연출 동기화 서브시스템 nullptr"));
+
+	auto PresentationBarrier = PresentationSyncSubsystem->MakePresentationBarrier(FOnFinishPresentation::CreateSPLambda(AsShared(), [this]() {
+		checkf(mActionPhase == ESRPGActionPhase::ActionStart, TEXT("액션 실행 절차 오류"));
+		mActionPhase = ESRPGActionPhase::ActionPlay;
+		FlushCommands();
+		OnBeginAction();
+		}));
+	OnBeginActionUI.Broadcast(PresentationBarrier, *this);
 }
 
 void FSRPGAction::TickAction(float DeltaTime)
 {
+	OnTickAction(DeltaTime);
 }
 
 void FSRPGAction::EndAction()
 {
-	checkf(mPhase == ESRPGActionPhase::ActionAbort, TEXT("액션 종료 절차 오류"));
-	mPhase = ESRPGActionPhase::ActionEnd;
+	if (mActionPhase == ESRPGActionPhase::ActionPlay)
+	{
+		mActionPhase = ESRPGActionPhase::ActionAbort;
+		mActionResult = ESRPGActionResult::Succeeded;
+	}
 
-	TSharedPtr<FSRPGTurnContext> TurnContext = mOwner.Pin();
-	checkf(TurnContext != nullptr, TEXT("이미 제거된 턴에서 Action 종료 명령 오류"));
-	TurnContext->OnEndCurrentAction(AsShared(), mResult);
+	checkf(mActionPhase == ESRPGActionPhase::ActionAbort, TEXT("액션 종료 절차 오류"));
+	mActionPhase = ESRPGActionPhase::ActionEnd;
+
+	OnEndAction();
+
+	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
+	checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
+
+	// 전투 상태 평가
+	CombatSubsystem->EvaluateCombatStates();
+
+	UPresentationSyncSubsystem* PresentationSyncSubsystem = GetWorld()->GetSubsystem<UPresentationSyncSubsystem>();
+	checkf(PresentationSyncSubsystem != nullptr, TEXT("연출 동기화 서브시스템 nullptr"));
+
+	auto PresentationBarrier = PresentationSyncSubsystem->MakePresentationBarrier(FOnFinishPresentation::CreateSPLambda(AsShared(), [this]() {
+		TSharedPtr<FSRPGTurnContext> TurnContext = mParent.Pin();
+		checkf(TurnContext != nullptr, TEXT("이미 제거된 턴에서 Action 종료 명령 오류"));
+		TurnContext->OnEndCurrentAction(AsShared(), mActionResult);
+		}));
+	OnEndActionUI.Broadcast(PresentationBarrier, *this, mActionResult);
+}
+
+void FSRPGAction::OnBeginAction()
+{
+}
+
+void FSRPGAction::OnTickAction(float DeltaTime)
+{
+}
+
+void FSRPGAction::OnEndAction()
+{
 }
 
 void FSRPGAction::EvaluateActionEndState(bool ForceAbort)
 {
 	/* 이미 중단 */
 
-	if (mPhase == ESRPGActionPhase::ActionAbort)
+	if (mActionPhase == ESRPGActionPhase::ActionAbort)
 	{
 		return;
 	}
@@ -76,24 +116,100 @@ void FSRPGAction::EvaluateActionEndState(bool ForceAbort)
 
 	if (ForceAbort == true)
 	{
-		mResult = ESRPGActionResult::Cancelled;
-		mPhase = ESRPGActionPhase::ActionAbort;
+		mActionResult = ESRPGActionResult::Cancelled;
+		mActionPhase = ESRPGActionPhase::ActionAbort;
 		return;
+	}
+}
+
+ESRPGActionCommandResult FSRPGAction::HandleCommand(TSharedPtr<const FSRPGActionCommand> Command)
+{
+	ESRPGActionCommandResult IsHandled = CanHandleCommand(Command);
+
+	if (IsHandled == ESRPGActionCommandResult::Handle)
+	{
+		mReservedCommands.Enqueue(Command);
+		FlushCommands();
+	}
+
+	return IsHandled;
+}
+
+ESRPGActionCommandResult FSRPGAction::CanHandleCommand(TSharedPtr<const FSRPGActionCommand> Command) const
+{
+	return ESRPGActionCommandResult::Unhandle;
+}
+
+void FSRPGAction::ApplyCommand(TSharedPtr<const FSRPGActionCommand> Command)
+{
+}
+
+void FSRPGAction::FlushCommands()
+{
+	while (mActionPhase == ESRPGActionPhase::ActionPlay && mReservedCommands.IsEmpty() == false)
+	{
+		TSharedPtr<const FSRPGActionCommand> Command;
+		mReservedCommands.Dequeue(Command);
+		ApplyCommand(Command);
+	}
+}
+
+void FSRPGAction::GetTileActorUnderCursor(ECollisionChannel Channel, OUT AActor* Actor, OUT FTileIndex& TileIndex) const
+{
+	Actor = nullptr;
+	TileIndex = FTileIndex::Invalid;
+
+	/* 마우스 포인트 지점 아래로 Raycast 검사 */
+
+	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
+	checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
+
+	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+	if (PlayerController != nullptr)
+	{
+		FHitResult HitResult;
+		if (PlayerController->GetHitResultUnderCursor(Channel, false, HitResult) == true)
+		{
+			Actor = HitResult.GetActor();
+			if (Actor == CombatSubsystem->GetTileMap())
+			{
+				TileIndex = CombatSubsystem->GetTileMap()->WorldToTileIndex(HitResult.ImpactPoint);
+			}
+			else
+			{
+				ITileActor* TileActor = Cast<ITileActor>(HitResult.GetActor());
+				if (TileActor != nullptr)
+				{
+					TileIndex = TileActor->GetTileTransform().mIndex;
+				}
+			}
+		}
 	}
 }
 
 UWorld* FSRPGAction::GetWorld() const
 {
-	return mOwner.Pin()->GetWorld();
+	return mParent.Pin()->GetWorld();
 }
 
-TWeakPtr<FSRPGTurnContext> FSRPGAction::GetOwner() const
+TWeakPtr<FSRPGTurnContext> FSRPGAction::GetParent() const
 {
-	return mOwner;
+	return mParent;
 }
 
 AUnit* FSRPGAction::GetInstigator() const
 {
 	return mInstigator;
 }
+
+ESRPGActionType FSRPGAction::GetActionType() const
+{
+	return mActionType;
+}
+
+bool FSRPGAction::ConsumesTurn() const
+{
+	return mConsumesTurn;
+}
+
 

@@ -10,6 +10,9 @@
 #include "GameMode/RoomGameModeBase.h"
 #include "CombatGameMode.generated.h"
 
+// RD Game Mode 신규 로그 카테고리 등록
+DECLARE_LOG_CATEGORY_EXTERN(LogCombatGameMode, Log, All)
+
 /**
  * @brief  전투 방에 대한 GameMode
  */
@@ -21,4 +24,23 @@ class P_RD_API ACombatGameMode : public ARoomGameModeBase
 protected:
 	void InitializeRoom() override;
 	void BeginRoom() override;
+
+	/* UI 진입점 */
+public:
+	UFUNCTION(Category = UI, BlueprintCallable)
+	bool SelectSkill(int32 SkillIndex);
+
+	/**
+	 * @brief 터치 입력 아래의 월드 액터를 검사하여 이벤트를 실행한다.
+	 * @return 이벤트 성공 여부
+	 */
+	UFUNCTION(Category = UI, BlueprintCallable)
+	bool ResolveWorldTouchEvent();
+
+	/**
+	 * @brief 긴 터치 입력 아래의 월드 액터를 검사하여 이벤트를 실행한다.
+	 * @return 이벤트 성공 여부
+	 */
+	UFUNCTION(Category = UI, BlueprintCallable)
+	bool ResolveWorldLongPressEvent();
 };
