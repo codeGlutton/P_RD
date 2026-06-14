@@ -193,7 +193,7 @@ public:
 	 * @param[in] LayerFilter : 포함할 레이어 (All이면 전체)
 	 * @return TArray<TScriptInterface<ITileActor>> : 해당 타일의 액터 목록 (범위 밖이면 빈 배열)
 	 */
-	TArray<TScriptInterface<ITileActor>> GetActorsOnTile(const FTileIndex& TileIndex, ETileLayerFlag LayerFilter) const;
+	TArray<TScriptInterface<ITileActor>> GetActorsOnTile(const FTileIndex& TileIndex, ETileLayerFlag LayerFilter = ETileLayerFlag::All) const;
 
 	/**
 	 * @brief 코어의 타입 지정 버전 — T로 캐스트되는 액터만 배열로 반환
