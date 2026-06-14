@@ -1,4 +1,5 @@
 ﻿#include "Actor/TileMap/TileMap.h"
+#include "RDCollision.h"
 #include "SRPGFramework/TileActor.h"
 #include "Components/SceneComponent.h"
 #include "Components/InstancedStaticMeshComponent.h"
@@ -9,7 +10,9 @@
 
 namespace
 {
-	// @brief 타일 액터 방향을 yaw(도)로 변환 (Forward 0 / Right 90 / Backward 180 / Left 270)
+	/**
+	 * @brief 타일 액터 방향을 yaw(도)로 변환 (Forward 0 / Right 90 / Backward 180 / Left 270)
+	 */
 	float DirectionToYaw(ETileActorDirection Direction)
 	{
 		switch (Direction)
@@ -21,6 +24,22 @@ namespace
 		default:							return 0.0f;
 		}
 	}
+
+	/**
+	 * @brief 직교 4방향 단위 스텝 (오른쪽/왼쪽/아래/위)
+	 */
+	const FTileIndex Orthogonal4[] =
+	{
+		FTileIndex(1, 0), FTileIndex(-1, 0), FTileIndex(0, 1), FTileIndex(0, -1)
+	};
+
+	/**
+	 * @brief 대각 4방향 단위 스텝 (우하/우상/좌하/좌상)
+	 */
+	const FTileIndex Diagonal4[] =
+	{
+		FTileIndex(1, 1), FTileIndex(1, -1), FTileIndex(-1, 1), FTileIndex(-1, -1)
+	};
 }
 
 ATileMap::ATileMap()
@@ -34,8 +53,8 @@ ATileMap::ATileMap()
 	// 타일 그리드용 인스턴스드 메시 컴포넌트 생성 및 루트에 부착
 	mTileMeshComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("TileMesh"));
 	mTileMeshComponent->SetupAttachment(RootComponent);
-	// 시각화 전용이므로 충돌 비활성화
-	mTileMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	// 터치 판정(타일 선택/정보 확인 트레이스)을 받기 위해 타일맵 프로파일 적용 (QueryOnly)
+	mTileMeshComponent->SetCollisionProfileName(RDCollisionProfiles::TileMap);
 
 	// 기본 타일 메시로 엔진 기본 Plane(100x100cm, +Z 향) 지정
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> PlaneMeshFinder(TEXT("/Engine/BasicShapes/Plane.Plane"));
@@ -294,10 +313,67 @@ FTileIndex ATileMap::WorldToTileIndex(const FVector& WorldLocation) const
 	return IsValidIndex(TileIndex) ? TileIndex : FTileIndex::Invalid;
 }
 
+/**
+ * @details
+ * - 이동범위는 맨해튼 이동방식 사용 (대각선 이동 없음)
+ * - 시작점에서부터 4방향으로 이동할 수 있는 타일을 조사한 후 배열에 추가
+ * - 배열에 있는 타일을 기준으로 이동할 수 있는 옆 타일을 조사
+ * - 이미 선택된 타일의 인덱스를 Distance[] 배열에서 관리해서 중복 선택 방지
+ * - 최대이동거리만큼 반복
+ */
 TArray<FTileIndex> ATileMap::GetReachableTiles(const FTileIndex& Origin, int32 MoveDistance) const
 {
-	// TODO: 경로 기반 도달 가능 타일 계산
-	return TArray<FTileIndex>();
+	TArray<FTileIndex> Result;
+
+	// 시작점이 맵 밖이거나 이동력이 없으면 도달 가능 타일 없음
+	if (!IsValidIndex(Origin) || MoveDistance <= 0)
+		return Result;
+
+	// 칸별 최단 도달 거리 기록 (-1=미방문), 1차원 인덱스로 접근
+	TArray<int32> Distance;
+	Distance.Init(-1, mWidth * mHeight);
+	Distance[TileIndexToLinearIndex(Origin)] = 0;
+
+	// BFS 큐: 가까운 칸부터 한 겹씩 확장 (인덱스로 순회해 pop 비용 회피)
+	TArray<FTileIndex> Frontier;
+	Frontier.Add(Origin);
+
+	for (int32 Head = 0; Head < Frontier.Num(); ++Head)
+	{
+		const FTileIndex Current = Frontier[Head];
+		const int32 CurrentDistance = Distance[TileIndexToLinearIndex(Current)];
+
+		// 이동력을 모두 쓴 칸에서는 더 뻗지 않음
+		if (CurrentDistance >= MoveDistance)
+			continue;
+
+		// 직교 4방향 이웃 검사
+		for (const FTileIndex& Step : Orthogonal4)
+		{
+			const FTileIndex Next(Current.mX + Step.mX, Current.mY + Step.mY);
+
+			// 맵 밖이면 제외 (INDEX_NONE)
+			const int32 LinearIndex = TileIndexToLinearIndex(Next);
+			if (LinearIndex == INDEX_NONE)
+				continue;
+
+			// 이미 방문한 칸은 건너뜀 (BFS라 먼저 방문한 경로가 최단)
+			if (Distance[LinearIndex] != -1)
+				continue;
+
+			// 장애물·유닛이 점유한 칸은 통과·도착 불가
+			// (확장 지점: 투명화 등 통과 규칙이 생기면 이 한 줄만 교체)
+			if (IsOccupied(Next))
+				continue;
+
+			// 거리 확정 후 결과·큐에 추가
+			Distance[LinearIndex] = CurrentDistance + 1;
+			Result.Add(Next);
+			Frontier.Add(Next);
+		}
+	}
+
+	return Result;
 }
 
 void ATileMap::AppendRayTiles(const FTileIndex& Origin, const FTileIndex& Step, int32 Range, TArray<FTileIndex>& Out) const
@@ -316,6 +392,56 @@ void ATileMap::AppendRayTiles(const FTileIndex& Origin, const FTileIndex& Step, 
 
 		// 맵 안의 칸만 후보로 누적
 		Out.Add(Current);
+	}
+}
+
+void ATileMap::AppendBlockableRay(const FTileIndex& Origin, const FTileIndex& Step, int32 Range, bool bPenetrate, TArray<FTileIndex>& Out) const
+{
+	// 원점에서 Step 방향으로 한 칸씩 전진하며 수집 (원점 자신은 제외)
+	FTileIndex Current = Origin;
+	for (int32 Distance = 0; Distance < Range; ++Distance)
+	{
+		// 다음 칸으로 전진
+		Current.mX += Step.mX;
+		Current.mY += Step.mY;
+
+		// 맵 밖으로 나가면 이 방향은 더 진행하지 않고 종료
+		if (!IsValidIndex(Current))
+			break;
+
+		// 이 칸은 영향에 포함 (점유 칸이면 "맞고 멈춤"이라 포함 후 종료)
+		Out.Add(Current);
+
+		// 관통하지 않는데 점유 칸이면 그 너머로는 진행하지 않음
+		if (!bPenetrate && IsOccupied(Current))
+			break;
+	}
+}
+
+bool ATileMap::IsOccupied(const FTileIndex& TileIndex) const
+{
+	// 장애물 또는 유닛이 있으면 점유로 판정
+	return GetActorsOnTile(TileIndex, ETileLayerFlag::Obstacle | ETileLayerFlag::Unit).Num() > 0;
+}
+
+void ATileMap::AppendSquareTiles(const FTileIndex& Center, const int32 Radius, TArray<FTileIndex>& Out) const
+{
+	// 중심 기준 [-Radius, Radius] 정사각형 격자를 순회한다.
+	for (int32 OffsetY = -Radius; OffsetY <= Radius; ++OffsetY)
+	{
+		for (int32 OffsetX = -Radius; OffsetX <= Radius; ++OffsetX)
+		{
+			// 중심 자신은 본체가 별도 처리하므로 제외 (중복 방지)
+			if (OffsetX == 0 && OffsetY == 0)
+				continue;
+
+            // ReSharper disable once CppTooWideScopeInitStatement
+            const FTileIndex Candidate(Center.mX + OffsetX, Center.mY + OffsetY);
+
+			// 맵 안의 칸만 누적 (장애물/시야는 보지 않음 — 하늘 낙하 개념)
+			if (IsValidIndex(Candidate))
+				Out.Add(Candidate);
+		}
 	}
 }
 
@@ -410,16 +536,148 @@ bool ATileMap::HasLineOfSight(const FTileIndex& From, const FTileIndex& To) cons
 	return true;
 }
 
+/**
+ * @brief
+ * - 1단계에서는 패턴에 따라 후보타일을 수집하고
+ * - 2단계에서는 각각의 후보타일에 대해서 장애물 막힘, 타겟 가능, 교체 가능 여부 검사해서 최종 판단
+ */
 TArray<FTileIndex> ATileMap::GetAimableTiles(const FTileIndex& Origin, int32 Range, EAimPattern Pattern, bool bIncludeOccupied, bool bIndirect, const ITileActor* Incoming) const
 {
-	// TODO: 조준 패턴별 조준 가능 타일 계산
-	return TArray<FTileIndex>();
+	TArray<FTileIndex> Result;
+
+	// 시작점이 맵 밖이면 조준 불가
+	if (!IsValidIndex(Origin))
+		return Result;
+
+    /*
+     * 페이즈1: 패턴에 따라 후보타일 수집
+     */
+
+	// Single은 기준 타일 한 칸만 (Range 무시). 그 외 패턴은 기준 타일 제외
+	if (Pattern == EAimPattern::Single)
+	{
+		Result.Add(Origin);
+	}
+	else
+	{
+		// Single 제외한 다른 패턴은 사거리가 없으면 후보타일도 없음
+		if (Range <= 0)
+			return Result;
+
+		// 패턴별 후보 타일 수집 (최종 필터링은 페이즈2에서 수행)
+		switch (Pattern)
+		{
+		case EAimPattern::Cross:
+			// 직교 4방향 직선
+			for (const FTileIndex& Step : Orthogonal4)
+				AppendRayTiles(Origin, Step, Range, Result);
+			break;
+
+		case EAimPattern::Star:
+			// 직교 + 대각 8방향 직선
+			for (const FTileIndex& Step : Orthogonal4)
+				AppendRayTiles(Origin, Step, Range, Result);
+			for (const FTileIndex& Step : Diagonal4)
+				AppendRayTiles(Origin, Step, Range, Result);
+			break;
+
+		case EAimPattern::Square:
+			// 중심 기준 사각형 범위 (하늘 낙하 개념 — 시야 무시)
+			AppendSquareTiles(Origin, Range, Result);
+			break;
+
+		default:
+			break;
+		}
+	}
+
+    /**
+     * 페이즈2: 각각의 타이레 대해서 장애물 막힘, 포함 여부, 교체 여부 판단해서 필터링
+     */
+
+	// 장애물 막힘 검사 여부: 직선패턴 AND 직사공격 (Square 공격은 하늘에서 내리는 공격이니까 장애물 무시)
+	const bool bApplyLineOfSight = !bIndirect && (Pattern == EAimPattern::Cross || Pattern == EAimPattern::Star);
+
+	// 후보를 시야/점유 조건으로 거름
+    // @note 인덱스를 뒤에서 앞으로 오면서 제거하면 배열 재할당 이슈 없음
+	for (int32 Index = Result.Num() - 1; Index >= 0; --Index)
+	{
+		const FTileIndex& Candidate = Result[Index];
+
+		// 직사인데 시야가 막히면 조준 불가
+		if (bApplyLineOfSight && !HasLineOfSight(Origin, Candidate))
+		{
+			Result.RemoveAt(Index);
+			continue;
+		}
+
+		// 점유 타일을 포함하지 않으면 조준 불가
+		if (!bIncludeOccupied && IsOccupied(Candidate))
+		    // Incoming으로 교체 불가능하면 조준 불가
+			if (!((Incoming != nullptr) && GetReplaceableActors(Candidate, Incoming).Num() > 0))
+				Result.RemoveAt(Index);
+	}
+
+	return Result;
 }
 
 TArray<FTileIndex> ATileMap::GetEffectTiles(const FTileIndex& Caster, const FTileIndex& Target, EEffectPattern Pattern, int32 Size, bool bPenetrate) const
 {
-	// TODO: 영향 패턴별 영향 타일 계산
-	return TArray<FTileIndex>();
+	TArray<FTileIndex> Result;
+
+	// 영향 중심(Target)이 맵 밖이면 영향 없음
+	if (!IsValidIndex(Target))
+		return Result;
+
+	// 영향 중심은 모든 패턴에서 항상 포함 (광역도 중심은 맞음)
+	Result.Add(Target);
+
+	// Single이거나 범위가 없으면 중심 한 칸만 영향
+	if (Pattern == EEffectPattern::Single || Size <= 0)
+		return Result;
+
+	// 패턴별 영향 타일을 중심 둘레에 덧붙임 (직선은 관통 아니면 점유 칸에서 멈춤)
+	switch (Pattern)
+	{
+	case EEffectPattern::Cross:
+		// 중심에서 직교 4방향
+		for (const FTileIndex& Step : Orthogonal4)
+			AppendBlockableRay(Target, Step, Size, bPenetrate, Result);
+		break;
+
+	case EEffectPattern::Star:
+		// 중심에서 직교 + 대각 8방향
+		for (const FTileIndex& Step : Orthogonal4)
+			AppendBlockableRay(Target, Step, Size, bPenetrate, Result);
+		for (const FTileIndex& Step : Diagonal4)
+			AppendBlockableRay(Target, Step, Size, bPenetrate, Result);
+		break;
+
+	case EEffectPattern::Square:
+		// 중심 기준 사각형 범위 (하늘 낙하 개념 — 관통 무관)
+		AppendSquareTiles(Target, Size, Result);
+		break;
+
+	case EEffectPattern::Beam:
+		{
+			// 시전자→타겟 방향을 부호로 단위 스텝화 (8방향 중에 하나로 강제 매핑)
+			const FTileIndex Step(
+				FMath::Sign(Target.mX - Caster.mX),
+				FMath::Sign(Target.mY - Caster.mY)
+			);
+
+			// Target(클릭 지점)을 시작으로 그 방향으로 뻗음 — 빔 길이는 Target 포함 총 Size칸
+			// (Target은 상단에서 이미 추가했으므로 너머로 Size-1칸만 더 뻗음)
+			if (Step.mX != 0 || Step.mY != 0)
+				AppendBlockableRay(Target, Step, Size - 1, bPenetrate, Result);
+		}
+		break;
+
+	default:
+		break;
+	}
+
+	return Result;
 }
 
 /**
