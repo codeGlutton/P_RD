@@ -248,7 +248,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "TileMap", meta = (DisplayName = "Width", ClampMin = "1"))
 	int32 mWidth = 9;
 
-	/** 
+	/**
 	 * @brief 타일맵 세로 길이 (Y 방향 타일 개수)
 	 */
 	UPROPERTY(EditAnywhere, Category = "TileMap", meta = (DisplayName = "Height", ClampMin = "1"))
@@ -261,7 +261,7 @@ protected:
 	float mTileSize = 100.0f;
 
 	/* 시각화 */
-	
+
 	/**
 	 * @brief 타일 그리드를 그리는 인스턴스드 메시 컴포넌트
 	 */
@@ -287,7 +287,7 @@ protected:
 	float mTileVisualScale = 0.95f;
 
 	/* 강조 표시 */
-	
+
 	/**
 	 * @brief 조준 범위 스타일 (우선순위 최하, 바닥에 깔림)
 	 */
@@ -370,6 +370,41 @@ private:
 	 * @param[in,out] Out 결과를 누적할 배열
 	 */
 	void AppendRayTiles(const FTileIndex& Origin, const FTileIndex& Step, int32 Range, TArray<FTileIndex>& Out) const;
+
+	/**
+	 * @brief 원점에서 특정 방향으로 Range만큼 뻗되, 관통하지 않으면 점유 칸에서 멈추는 직선을 수집
+	 * @details
+	 * AppendRayTiles와 달리, bPenetrate가 false면 장애물/유닛(IsOccupied) 칸을 만났을 때
+	 * 그 칸까지 포함한 뒤 더 진행하지 않는다(맞고 멈춤). true면 점유와 무관하게 Range 한도까지 진행한다.
+	 * 영향범위 Cross/Star/Beam 패턴용. 원점 자신은 포함하지 않는다.
+	 * @param[in] Origin 시작 좌표
+	 * @param[in] Step   한 칸 전진 방향 (예: (1,0)=오른쪽, (-1,1)=좌하단 대각)
+	 * @param[in] Range  뻗을 칸 수 (0 이하이면 아무것도 추가하지 않음)
+	 * @param[in] bPenetrate 관통 여부 (false면 점유 칸에서 멈춤)
+	 * @param[in,out] Out 결과를 누적할 배열
+	 */
+	void AppendBlockableRay(const FTileIndex& Origin, const FTileIndex& Step, int32 Range, bool bPenetrate, TArray<FTileIndex>& Out) const;
+
+	/**
+	 * @brief 타일에 장애물 또는 유닛이 있는 지 검사
+	 * @details
+	 * 이동범위(통과·도착 차단)와 영향범위(직선 차단) 계산에 쓰인다.
+	 * CanPlace()와 달리 비교하는 액터가 없으므로 교체가 없으며 단순 물리적인 방해만 판정한다.
+	 * @param[in] TileIndex 검사할 좌표
+	 * @return 장애물/유닛이 있으면 true, 없거나 맵 밖이면 false
+	 */
+	bool IsOccupied(const FTileIndex& TileIndex) const;
+
+	/**
+	 * @brief 중심 기준 반지름 이내의 모든 타일 수집
+	 * @details
+	 * 체비셰프 방식으로 계산
+	 * 중심 포함 여부는 호출하는쪽에서 처리하므로(조준:제외, 영향:포함) 헬퍼는 중심을 제외하고 계산
+	 * @param[in] Center 중심 좌표
+	 * @param[in] Radius 반경 (체비셰프 거리, 0 이하이면 아무것도 추가하지 않음)
+	 * @param[in,out] Out 결과를 누적할 배열
+	 */
+	void AppendSquareTiles(const FTileIndex& Center, int32 Radius, TArray<FTileIndex>& Out) const;
 
 	/**
 	 * @brief Bresenham 알고리즘으로 두 칸 사이 직선이 지나는 타일을 수집
