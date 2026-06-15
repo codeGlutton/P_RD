@@ -5,6 +5,8 @@
 #include "Setting/GameBalanceSettings.h"
 #include "Engine/AssetManager.h"
 #include "PCGStage/StageBuilder.h"
+#include "DataAsset/DiceData/StaticDiceData.h"
+#include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
 
 #include "FunctionLibrary/RandomStreamFunctionLibrary.h"
 
@@ -125,6 +127,34 @@ void URunPersistData::StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Diffic
 	mIsNewData = true;
 	mPlayerUnitId = PlayerUnitId;
 	mDifficulty = Difficulty;
+
+	if (PlayerUnitId.IsValid() == false)
+	{
+		return;
+	}
+
+	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
+	if (AssetManager == nullptr)
+	{
+		return;
+	}
+
+	const UStaticPlayerUnitSpawnData* StaticPlayerUnitData = AssetManager->GetPrimaryAssetObject<UStaticPlayerUnitSpawnData>(PlayerUnitId);
+	if (StaticPlayerUnitData == nullptr)
+	{
+		return;
+	}
+
+	for (const TSoftObjectPtr<UStaticDiceData>& DiceData : StaticPlayerUnitData->mDiceDatas)
+	{
+		const UStaticDiceData* LoadedDiceData = DiceData.LoadSynchronous();
+		if (LoadedDiceData == nullptr)
+		{
+			continue;
+		}
+
+		mDiceIds.Add(LoadedDiceData->GetPrimaryAssetId());
+	}
 }
 
 void URunPersistData::ClearRun()

@@ -4,6 +4,7 @@
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/InstanceSubsystem/RoomTransitionSubsystem.h"
 #include "Singleton/InstanceSubsystem/PlayerUnitRestorationSubsystem.h"
+#include "Setting/RDWorldSettings.h"
 #include "Pawn/Player/PlayerUnit.h"
 
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
@@ -184,6 +185,33 @@ ARoomGameModeBase::ARoomGameModeBase()
 	mShowFadeOutUIOnTransition = true;
 	mShowLoadingNotifyUIOnTransition = true;
 	mWaitExternalWorkOnTransition = false;
+}
+
+void ARoomGameModeBase::RestartPlayerAtPlayerStart(AController* NewPlayer, AActor* StartSpot)
+{
+	const UWorld* World = GetWorld();
+	const ARDWorldSettings* WorldSettings = World != nullptr ? Cast<ARDWorldSettings>(World->GetWorldSettings()) : nullptr;
+	AActor* MainCameraPoint = WorldSettings != nullptr ? WorldSettings->GetMainCameraPoint() : nullptr;
+	if (MainCameraPoint != nullptr)
+	{
+		RestartPlayerAtTransform(NewPlayer, MainCameraPoint->GetActorTransform());
+		return;
+	}
+
+	Super::RestartPlayerAtPlayerStart(NewPlayer, StartSpot);
+}
+
+APawn* ARoomGameModeBase::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)
+{
+	const UWorld* World = GetWorld();
+	const ARDWorldSettings* WorldSettings = World != nullptr ? Cast<ARDWorldSettings>(World->GetWorldSettings()) : nullptr;
+	AActor* MainCameraPoint = WorldSettings != nullptr ? WorldSettings->GetMainCameraPoint() : nullptr;
+	if (MainCameraPoint != nullptr)
+	{
+		return SpawnDefaultPawnAtTransform(NewPlayer, MainCameraPoint->GetActorTransform());
+	}
+
+	return Super::SpawnDefaultPawnFor_Implementation(NewPlayer, StartSpot);
 }
 
 /**

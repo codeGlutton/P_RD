@@ -16,6 +16,8 @@
 DECLARE_LOG_CATEGORY_EXTERN(LogRoomGameMode, Log, All)
 
 class AUnit;
+class AController;
+class APawn;
 
 /**
  * @brief  방에 대한 베이스 GameMode
@@ -30,6 +32,8 @@ public:
 	
 	/* ARDGameModeBase 상속 */
 protected:
+	void RestartPlayerAtPlayerStart(AController* NewPlayer, AActor* StartSpot) override;
+	APawn* SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot) override;
 	void InitializeCommonRoom() override;
 	void BeginRoom() override;
 
