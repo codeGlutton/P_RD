@@ -253,6 +253,7 @@ enum class ESRPGActionCommandType : uint8
     WorldTrace          UMETA(ToolTip = "월드 공간 선택"),
 
     SkillSelect         UMETA(ToolTip = "사용 스킬 결정"),
+    DiceSelect         UMETA(ToolTip = "사용 스킬 결정"),
     SkillCast           UMETA(ToolTip = "스킬 사용"),
     MoveSelect          UMETA(ToolTip = "이동 시작"),
     TurnEnd             UMETA(ToolTip = "턴 종료"),

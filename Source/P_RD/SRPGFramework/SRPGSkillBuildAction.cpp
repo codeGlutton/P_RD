@@ -13,6 +13,11 @@ FSRPGSkillSelectCommand::FSRPGSkillSelectCommand()
     mActionCommandType = ESRPGActionCommandType::SkillSelect;
 }
 
+FSRPGCDiceSelectCommand::FSRPGCDiceSelectCommand()
+{
+    mActionCommandType = ESRPGActionCommandType::DiceSelect;
+}
+
 FSRPGSkillBuildAction::FSRPGSkillBuildAction()
 {
     mActionType = ESRPGActionType::BuildAction;
@@ -22,38 +27,11 @@ FSRPGSkillBuildAction::FSRPGSkillBuildAction()
 void FSRPGSkillBuildAction::OnBeginAction()
 {
     Super::OnBeginAction();
-    SetSkill(mSelectedSkillIndex);
-
-    // 플레이어 주사위 등록 대리자에 바인딩
 }
 
 void FSRPGSkillBuildAction::OnEndAction()
 {
-    mAimTileIndexes.Empty();
-    mSelectedSkill = nullptr;
-    mSelectedSkillIndex = INDEX_NONE;
-
-    mEffectTileIndexes.Empty();
-    mTargetIndex = FTileIndex::Invalid;
-    // mCalculateDatas.Empty();
-
-    USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-    checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
-    ATileMap* TileMap = CombatSubsystem->GetTileMap();
-    checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
-
-    /* 맵 클리어 */
-
-    {
-        TileMap->SetTileHighlight(mAimTileIndexes, ETileHighlightFlag::None);
-    }
-
-    /* 상태 변경되면서 외부에서 바인딩된 UI 변경 */
-
-    SetBuildPhase(ESRPGSkillBuildPhase::None);
-
-    // 플레이어 주사위 등록 대리자에 언바인딩
-
+    ResetSkill();
     Super::OnEndAction();
 }
 
@@ -66,8 +44,12 @@ ESRPGActionCommandResult FSRPGSkillBuildAction::CanHandleCommand(TSharedPtr<cons
 
     switch (Command->GetActionCommandType())
     {
-    case ESRPGActionCommandType::WorldTrace:
     case ESRPGActionCommandType::SkillSelect:
+    case ESRPGActionCommandType::DiceSelect:
+    {
+        return ESRPGActionCommandResult::Handle;
+    }
+    case ESRPGActionCommandType::WorldTrace:
     {
         TSharedPtr<const FSRPGWorldTraceCommand> WorldTraceCommand = StaticCastSharedPtr<const FSRPGWorldTraceCommand>(Command);
         return WorldTraceCommand->mIsLongPress == true ? ESRPGActionCommandResult::Unhandle : ESRPGActionCommandResult::Handle;
@@ -83,15 +65,28 @@ void FSRPGSkillBuildAction::ApplyCommand(TSharedPtr<const FSRPGActionCommand> Co
 
     switch (Command->GetActionCommandType())
     {
-    case ESRPGActionCommandType::WorldTrace:
-    {
-        ApplyWorldTraceCommand(Command);
-    }
     case ESRPGActionCommandType::SkillSelect:
     {
         TSharedPtr<const FSRPGSkillSelectCommand> SkillSelectCommand = StaticCastSharedPtr<const FSRPGSkillSelectCommand>(Command);
         OnChangeSkillBuildPhase = SkillSelectCommand->OnChangeSkillBuildPhase;
+
+        ResetSkill();
         SetSkill(SkillSelectCommand->mSkillIndex);
+        break;
+    }
+    case ESRPGActionCommandType::DiceSelect:
+    {
+        TSharedPtr<const FSRPGCDiceSelectCommand> DiceSelectCommand = StaticCastSharedPtr<const FSRPGCDiceSelectCommand>(Command);
+        
+        ResetSkill();
+        ChangeDices(DiceSelectCommand->mDiceIndex);
+        SetSkill(mSelectedSkillIndex);
+        break;
+    }
+    case ESRPGActionCommandType::WorldTrace:
+    {
+        ApplyWorldTraceCommand(Command);
+        break;
     }
     }
 }
@@ -115,16 +110,16 @@ void FSRPGSkillBuildAction::ApplyWorldTraceCommand(TSharedPtr<const FSRPGActionC
 
             switch (mSkillBuildPhase)
             {
+            case ESRPGSkillBuildPhase::Preview:
+            {
+                // 조준 대상 취소 처리
+                ResetTargetTile();
+                return;
+            }
             case ESRPGSkillBuildPhase::AimSelection:
             {
                 // 빌드 취소 처리
                 EndAction();
-                return;
-            }
-            case ESRPGSkillBuildPhase::Preview:
-            {
-                // 조준 대상 취소 처리
-                SetSkill(mSelectedSkillIndex);
                 return;
             }
             }
@@ -150,6 +145,7 @@ void FSRPGSkillBuildAction::ApplyWorldTraceCommand(TSharedPtr<const FSRPGActionC
                 // 조준 가능한 칸 클릭 시
                 if (mAimTileIndexes.Contains(TargetTileIndex) == true)
                 {
+                    ResetTargetTile();
                     SetTargetTile(TargetTileIndex);
                     return;
                 }
@@ -159,11 +155,26 @@ void FSRPGSkillBuildAction::ApplyWorldTraceCommand(TSharedPtr<const FSRPGActionC
     }
 }
 
+void FSRPGSkillBuildAction::ChangeDices(int32 RequestedDiceIndex)
+{
+    if (mSelectedDices.Contains(RequestedDiceIndex) == true)
+    {
+        // 이전 주사위 제거
+        // mSelectedDiceSum -= GetDiceValue(RequestedDiceIndex);
+        mSelectedDices.Remove(RequestedDiceIndex);
+    }
+    else if (mSelectedDices.Num() < mSelectedSkill->mDiceCount)
+    {
+        // 새로운 주사위 추가 할당
+        // mSelectedDiceSum += GetDiceValue(RequestedDiceIndex);
+        mSelectedDices.Add(RequestedDiceIndex);
+    }
+}
+
+
 void FSRPGSkillBuildAction::SetSkill(int32 SkillIndex)
 {
-    mEffectTileIndexes.Empty();
-    mTargetIndex = FTileIndex::Invalid;
-    // mCalculateDatas.Empty();
+    checkf(mSkillBuildPhase == ESRPGSkillBuildPhase::None, TEXT("스킬 빌드 순서 오류"));
 
     USkillComponent* SkillComp = mInstigator->GetSkillComponent();
     checkf(SkillComp != nullptr, TEXT("스킬 컴포넌트 nullptr"));
@@ -192,11 +203,11 @@ void FSRPGSkillBuildAction::SetSkill(int32 SkillIndex)
     /* 맵 변경 */
 
     {
-        const int32 Range = mSelectedSkill->mAimDefaultRange;
+        const float AimRange = mSelectedSkill->mAimDefaultRange + mSelectedDiceSum * mSelectedSkill->mAimRatioRange;
         const EAimPattern Pattern = mSelectedSkill->mAimPattern;
         const bool CanAimObstacle = mSelectedSkill->mCanAimObstacle;
         const bool IsIndirect = mSelectedSkill->mIsIndirect;
-        mAimTileIndexes = TileMap->GetAimableTiles(mInstigator->GetTileTransform().mIndex, Range, Pattern, CanAimObstacle, IsIndirect);
+        mAimTileIndexes = TileMap->GetAimableTiles(mInstigator->GetTileTransform().mIndex, AimRange, Pattern, CanAimObstacle, IsIndirect);
         TileMap->SetTileHighlight(mAimTileIndexes, ETileHighlightFlag::Aim);
     }
 
@@ -205,8 +216,32 @@ void FSRPGSkillBuildAction::SetSkill(int32 SkillIndex)
     SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
 }
 
+void FSRPGSkillBuildAction::ResetSkill()
+{
+    mAimTileIndexes.Empty();
+    mSelectedSkill = nullptr;
+    mSelectedSkillIndex = INDEX_NONE;
+
+    mSelectedDices.Empty();
+    mSelectedDiceSum = 0;
+
+    mEffectTileIndexes.Empty();
+    mTargetIndex = FTileIndex::Invalid;
+    // mCalculateDatas.Empty();
+
+    USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
+    checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
+    ATileMap* TileMap = CombatSubsystem->GetTileMap();
+    checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
+
+    TileMap->ClearTileHighlight(ETileHighlightFlag::Aim | ETileHighlightFlag::Effect | ETileHighlightFlag::Select);
+    SetBuildPhase(ESRPGSkillBuildPhase::None);
+}
+
 void FSRPGSkillBuildAction::SetTargetTile(const FTileIndex& TileIndex)
 {
+    checkf(mSkillBuildPhase == ESRPGSkillBuildPhase::AimSelection, TEXT("스킬 빌드 순서 오류"));
+
     USkillComponent* SkillComp = mInstigator->GetSkillComponent();
     checkf(SkillComp != nullptr, TEXT("스킬 컴포넌트 nullptr"));
 
@@ -218,12 +253,10 @@ void FSRPGSkillBuildAction::SetTargetTile(const FTileIndex& TileIndex)
     /* 맵 변경 */
 
     {
-        const int32 DiceSum = 1; // TODO : 플레이어의 주사위 스텟 확인
-
         const EEffectPattern Pattern = mSelectedSkill->mEffectPattern;
-        const float EffectSize = mSelectedSkill->mEffectDefaultArea + DiceSum * mSelectedSkill->mEffectRatioArea;
+        const int32 EffectRange = mSelectedSkill->mEffectDefaultArea + mSelectedDiceSum * mSelectedSkill->mEffectRatioArea;
         const bool IsInDirect = mSelectedSkill->mIsIndirect;
-        mEffectTileIndexes = TileMap->GetEffectTiles(mInstigator->GetTileTransform().mIndex, TileIndex, Pattern, EffectSize, IsInDirect);
+        mEffectTileIndexes = TileMap->GetEffectTiles(mInstigator->GetTileTransform().mIndex, TileIndex, Pattern, EffectRange, IsInDirect);
         TileMap->SetTileHighlight(mEffectTileIndexes, ETileHighlightFlag::Effect);
     }
 
@@ -245,8 +278,25 @@ void FSRPGSkillBuildAction::SetTargetTile(const FTileIndex& TileIndex)
     SetBuildPhase(ESRPGSkillBuildPhase::Preview);
 }
 
+void FSRPGSkillBuildAction::ResetTargetTile()
+{
+    mEffectTileIndexes.Empty();
+    mTargetIndex = FTileIndex::Invalid;
+    // mCalculateDatas.Empty();
+
+    USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
+    checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
+    ATileMap* TileMap = CombatSubsystem->GetTileMap();
+    checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
+
+    TileMap->ClearTileHighlight(ETileHighlightFlag::Effect | ETileHighlightFlag::Select);
+    SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
+}
+
 void FSRPGSkillBuildAction::BuildSkill()
 {
+    checkf(mSkillBuildPhase == ESRPGSkillBuildPhase::Preview, TEXT("스킬 빌드 순서 오류"));
+
     USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
     checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
 
