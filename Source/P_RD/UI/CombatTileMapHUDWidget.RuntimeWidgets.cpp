@@ -110,6 +110,17 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		}
 	}
 
+	if (mCombatStatusBarText == nullptr)
+	{
+		mCombatStatusBarText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("CombatStatusBarText"));
+		if (mCombatStatusBarText != nullptr)
+		{
+			mCombatStatusBarText->SetJustification(ETextJustify::Left);
+			mCombatStatusBarText->SetColorAndOpacity(FSlateColor(FLinearColor(0.96f, 1.0f, 0.92f, 1.0f)));
+			TargetRootCanvas->AddChildToCanvas(mCombatStatusBarText);
+		}
+	}
+
 	if (EndTurnButton == nullptr)
 	{
 		EndTurnButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("EndTurnButton"));

@@ -178,6 +178,13 @@ private:
 	UFUNCTION()
 	void HandleCombatQueueNodeResolved(FCombatQueueNode Node);
 
+	/** @brief 뷰모델 도메인 갱신 알림. 메타/유닛/턴이 바뀌면 상단 상태바를 다시 그린다. */
+	UFUNCTION()
+	void HandleCombatViewChanged(ECombatViewDomain Domain);
+
+	/** @brief 뷰모델의 플레이어 메타(HP/Gold/Lv)와 턴 정보를 상단 상태바 텍스트로 반영한다. */
+	void RefreshCombatStatusBar() const;
+
 	UFUNCTION()
 	void HandleSkillButtonReleased();
 
@@ -287,6 +294,10 @@ private:
 	/** @brief 해소된 행동 큐 노드(데미지/힐/상태)를 잠깐 보여주는 런타임 전투 피드 텍스트 */
 	UPROPERTY(Transient)
 	TObjectPtr<UTextBlock> mCombatFeedText;
+
+	/** @brief 상단 상태바(플레이어 HP/Gold/Lv·라운드) 런타임 텍스트 */
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mCombatStatusBarText;
 
 	/** @brief 보유 주사위를 그리는 투명 RenderTarget Image 위젯 */
 	UPROPERTY(Transient)

@@ -98,6 +98,7 @@ void UCombatTileMapHUDWidget::ApplyOpenUI()
 	EnsureRuntimeWidgets();
 	RefreshDiceViewsFromRunData();
 	RebuildOwnedDiceCards();
+	RefreshCombatStatusBar();   // 위젯 생성 이후에 뷰모델 값(HP/Gold/Lv/Round)을 상단 상태바에 채운다.
 	mSelectedDiceIndex = INDEX_NONE;
 	mSelectedSkillIndex = INDEX_NONE;
 	HideSkillDetail();

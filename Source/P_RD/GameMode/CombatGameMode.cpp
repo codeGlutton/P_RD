@@ -13,6 +13,7 @@
 #include "UI/CombatTileMapHUDWidget.h"
 #include "UI/Combat/CombatViewModel.h"
 #include "Dice/DiceAdapter.h"
+#include "Combat/CombatViewAdapter.h"
 
 #include "SRPGFramework/SRPGSkillAction.h"
 #include "SRPGFramework/SRPGSkillBuildAction.h"
@@ -58,12 +59,22 @@ void ACombatGameMode::BeginRoom()
 	 * 이제 HUD의 RequestRollDice() → 어댑터가 데이터로 굴림 → SetDiceViews → HUD가 실제 값을 읽는다.
 	 * (UI의 FMath::RandRange fallback은 뷰모델 미연결 때만 동작하므로 자연히 비활성화)
 	 */
+	const URunPersistData* RunPersistData = GetRunPersistData();
+
 	mDiceAdapter = NewObject<UDiceAdapter>(this);
-	if (const URunPersistData* RunPersistData = GetRunPersistData())
+	if (RunPersistData != nullptr)
 	{
 		mDiceAdapter->BuildFromDiceIds(RunPersistData->GetDiceIds());
 	}
 	mDiceAdapter->BindViewModel(CombatViewModel);
+
+	/*
+	 * 유닛/메타/턴 표시 어댑터(비GAS). 스폰된 유닛·런 데이터로 표시값을 만들어 같은 뷰모델에 push.
+	 * → 전투 HUD 상단 상태바(HP/Gold/Lv/Round)와 이후 유닛 HP바가 이 값을 읽는다.
+	 */
+	mCombatViewAdapter = NewObject<UCombatViewAdapter>(this);
+	mCombatViewAdapter->Build(CombatSubsystem, RunPersistData);
+	mCombatViewAdapter->BindViewModel(CombatViewModel);
 
 	if (UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())
 	{

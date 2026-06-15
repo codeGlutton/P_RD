@@ -24,6 +24,7 @@ void UCombatTileMapHUDWidget::BindCombatViewModel(UCombatViewModel* InViewModel)
 	if (mCombatViewModel != nullptr)
 	{
 		mCombatViewModel->OnQueueNodeResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
+		mCombatViewModel->OnViewChanged.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatViewChanged);
 	}
 
 	mCombatViewModel = InViewModel;
@@ -32,6 +33,10 @@ void UCombatTileMapHUDWidget::BindCombatViewModel(UCombatViewModel* InViewModel)
 	{
 		// 행동 큐 노드가 한 단위 해소될 때마다 전투 피드를 갱신한다.
 		mCombatViewModel->OnQueueNodeResolved.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
+		// 메타/유닛/턴 갱신 시 상단 상태바를 다시 그린다.
+		mCombatViewModel->OnViewChanged.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatViewChanged);
+		// 이미 어댑터가 push해 둔 현재 값을 즉시 반영(구독 전 발생분 보강).
+		RefreshCombatStatusBar();
 	}
 }
 
