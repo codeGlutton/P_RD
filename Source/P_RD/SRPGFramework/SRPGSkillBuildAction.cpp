@@ -78,9 +78,8 @@ void FSRPGSkillBuildAction::ApplyCommand(TSharedPtr<const FSRPGActionCommand> Co
     {
         TSharedPtr<const FSRPGCDiceSelectCommand> DiceSelectCommand = StaticCastSharedPtr<const FSRPGCDiceSelectCommand>(Command);
         
-        ResetSkill();
+        ResetTargetTile();
         ChangeDices(DiceSelectCommand->mDiceIndex);
-        SetSkill(mSelectedSkillIndex);
         break;
     }
     case ESRPGActionCommandType::WorldTrace:
@@ -157,6 +156,8 @@ void FSRPGSkillBuildAction::ApplyWorldTraceCommand(TSharedPtr<const FSRPGActionC
 
 void FSRPGSkillBuildAction::ChangeDices(int32 RequestedDiceIndex)
 {
+    checkf(mSkillBuildPhase == ESRPGSkillBuildPhase::AimSelection, TEXT("스킬 빌드 순서 오류"));
+
     if (mSelectedDices.Contains(RequestedDiceIndex) == true)
     {
         // 이전 주사위 제거
@@ -169,6 +170,9 @@ void FSRPGSkillBuildAction::ChangeDices(int32 RequestedDiceIndex)
         // mSelectedDiceSum += GetDiceValue(RequestedDiceIndex);
         mSelectedDices.Add(RequestedDiceIndex);
     }
+
+    ResetSkill();
+    SetSkill(mSelectedSkillIndex);
 }
 
 

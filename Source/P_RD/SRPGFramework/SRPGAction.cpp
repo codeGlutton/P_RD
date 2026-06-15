@@ -105,9 +105,7 @@ void FSRPGAction::OnEndAction()
 
 void FSRPGAction::EvaluateActionEndState(bool ForceAbort)
 {
-	/* 이미 중단 */
-
-	if (mActionPhase == ESRPGActionPhase::ActionAbort)
+	if (mActionPhase != ESRPGActionPhase::ActionPlay)
 	{
 		return;
 	}

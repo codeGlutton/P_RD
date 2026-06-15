@@ -134,7 +134,7 @@ void USRPGCombatSubsystem::OnEndCurrentTurn(TSharedRef<FSRPGTurnContext> TurnCon
 		UnregisterTurn(TurnContext);
 	}
 
-	AdvanceTurn(true);
+	AdvanceTurn();
 }
 
 void USRPGCombatSubsystem::EvaluateCombatEndState()

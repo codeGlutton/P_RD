@@ -198,8 +198,11 @@ protected:
 	// @brief 전투 방 결과
 	ESRPGCombatResult mCombatResult;
 
+	// @brief 등록된 턴 객체들
 	TCircularDoubleLinkedList<TSharedPtr<FSRPGTurnContext>> mTurnContexts;
 	TCircularDoubleLinkedList<TSharedPtr<FSRPGTurnContext>>::TCircularDoubleLinkedListNode* mCurTurnContextNode = nullptr;
+	
+	// @brief 미뤄진 턴 제거 요청
 	TQueue<FSRPGTurnUnregisterRequest> mPendingTurnRequests;
 
 protected:

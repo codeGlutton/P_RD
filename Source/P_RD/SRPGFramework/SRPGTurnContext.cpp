@@ -104,15 +104,16 @@ void FSRPGTurnContext::EndTurn()
 		{
 			--mLifeCount;
 		}
-		USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-		checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
-		CombatSubsystem->OnEndCurrentTurn(AsShared(), mTurnResult);
 
 		checkf(mTurnPhase == ESRPGTurnPhase::TurnEnd, TEXT("턴 종료 절차 오류"));
 		mTurnPhase = ESRPGTurnPhase::TurnInit;
 		mActions.Empty();
 
 		UE_LOG(LogSRPGCombat, Log, TEXT("턴 종료"));
+
+		USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
+		checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
+		CombatSubsystem->OnEndCurrentTurn(AsShared(), mTurnResult);
 		}));
 	OnEndTurnUI.Broadcast(PresentationBarrier, *this, mTurnResult);
 }
@@ -251,9 +252,7 @@ void FSRPGTurnContext::EvaluateTurnEndState(bool ForceAbort)
 {
 	checkf(mOwner != nullptr, TEXT("턴 주인 미존재"));
 
-	/* 이미 중단 */
-
-	if (mTurnPhase == ESRPGTurnPhase::TurnAbort)
+	if (mTurnPhase != ESRPGTurnPhase::TurnPlay)
 	{
 		return;
 	}
