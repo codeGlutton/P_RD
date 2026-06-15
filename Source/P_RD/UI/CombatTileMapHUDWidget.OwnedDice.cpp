@@ -15,7 +15,24 @@ using namespace RDCombatHUD;
 
 void UCombatTileMapHUDWidget::BindCombatViewModel(UCombatViewModel* InViewModel)
 {
+	if (mCombatViewModel == InViewModel)
+	{
+		return;
+	}
+
+	// 이전 뷰모델 구독 해제 후 교체.
+	if (mCombatViewModel != nullptr)
+	{
+		mCombatViewModel->OnQueueNodeResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
+	}
+
 	mCombatViewModel = InViewModel;
+
+	if (mCombatViewModel != nullptr)
+	{
+		// 행동 큐 노드가 한 단위 해소될 때마다 전투 피드를 갱신한다.
+		mCombatViewModel->OnQueueNodeResolved.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
+	}
 }
 
 void UCombatTileMapHUDWidget::RefreshDiceViewsFromRunData()

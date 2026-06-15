@@ -1,6 +1,7 @@
 #include "UI/CombatTileMapHUDWidget.h"
 
 #include "Components/Button.h"
+#include "UI/Combat/CombatViewModel.h"
 
 UCombatTileMapHUDWidget::UCombatTileMapHUDWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -62,6 +63,11 @@ void UCombatTileMapHUDWidget::NativeDestruct()
 	if (mSkillDetailDismissButton != nullptr)
 	{
 		mSkillDetailDismissButton->OnClicked.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleSkillDetailDismissButtonClicked);
+	}
+
+	if (mCombatViewModel != nullptr)
+	{
+		mCombatViewModel->OnQueueNodeResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
 	}
 
 	DestroyDiceCaptureActors(mDicePreviewActors);

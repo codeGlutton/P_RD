@@ -69,4 +69,5 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 		);
 	}
 	RDUILayout::ApplyAnchoredSlot(EndTurnButton, FAnchors(0.795f, 0.845f, 0.925f, 0.940f), 18);
+	RDUILayout::ApplyAnchoredSlot(mCombatFeedText, FAnchors(0.350f, 0.430f, 0.650f, 0.500f), 200);
 }

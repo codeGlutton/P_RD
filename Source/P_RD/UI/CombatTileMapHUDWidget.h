@@ -2,6 +2,7 @@
 
 #include "RDMinimal.h"
 #include "UI/DiceViewData.h"
+#include "UI/Combat/CombatViewTypes.h"
 #include "UI/RDUserWidget.h"
 
 #include "CombatTileMapHUDWidget.generated.h"
@@ -173,6 +174,10 @@ private:
 	UFUNCTION()
 	void HandleOwnedDiceCardClicked(int32 DiceIndex);
 
+	/** @brief 행동 큐 노드 하나가 해소될 때 호출. 전투 피드에 수치/라벨을 표시한다(머리 위 위치는 게임플레이 follow-up). */
+	UFUNCTION()
+	void HandleCombatQueueNodeResolved(FCombatQueueNode Node);
+
 	UFUNCTION()
 	void HandleSkillButtonReleased();
 
@@ -278,6 +283,10 @@ private:
 	/** @brief 연결되면 주사위 굴림 결과의 출처가 되는 전투 뷰모델(미연결 시 기존 단독 동작) */
 	UPROPERTY(Transient)
 	TObjectPtr<UCombatViewModel> mCombatViewModel;
+
+	/** @brief 해소된 행동 큐 노드(데미지/힐/상태)를 잠깐 보여주는 런타임 전투 피드 텍스트 */
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mCombatFeedText;
 
 	/** @brief 보유 주사위를 그리는 투명 RenderTarget Image 위젯 */
 	UPROPERTY(Transient)
