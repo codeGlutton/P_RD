@@ -30,6 +30,14 @@ public:
 #endif
 
 public:
+	/**
+	 * @brief AttributeSet 초기화 테이블과 저장/복원 로직에서 사용할 유닛 식별 key를 만든다.
+	 *
+	 * @details
+	 * 화면에 보이는 이름은 번역이나 UI 문구 수정으로 바뀔 수 있으므로 GAS row key로 쓰기에는 불안정하다.
+	 * 실제 스폰 클래스 이름을 기준으로 key를 만들면 DataAsset 표시 이름을 고쳐도 CurveTable row와 연결이 끊기지 않는다.
+	 * Blueprint 클래스는 런타임 경로에 _C가 붙을 수 있어 row 이름과 맞추기 위해 suffix를 제거한다.
+	 */
     FName GetKeyName() const;
 
 public:

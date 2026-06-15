@@ -58,6 +58,9 @@ EDataValidationResult UStaticPlayerUnitSpawnData::IsDataValid(FDataValidationCon
  * 직접 알면 안 된다. 그래서 PlayerUnit DataAsset이 자신의 기본 스탯 조회 책임을 갖고, UI는
  * FrontendGameMode가 만들어준 FFrontendCharacterOption 값만 표시한다.
  *
+ * HP/MaxHP는 플레이어 전용 자원이 아니라 모든 유닛이 공유하는 전투 스탯이다.
+ * 따라서 PlayerUnitAttributeSet이 아니라 실제 유닛이 보유한 UnitAttributeSet 기준으로 CurveTable 값을 조회한다.
+ *
  * 패키징된 APK에서는 AttributeSet initter가 아직 준비되지 않은 시점에 UI가 이 값을 요청할 수 있으므로
  * 조회 전에 AbilitySystemGlobals::InitGlobalData()를 호출해 PM/GAS 쪽 공식 초기화 데이터를 사용할 수 있게 한다.
  *
@@ -69,8 +72,8 @@ float UStaticPlayerUnitSpawnData::GetDefaultMaxHP(int32 Difficulty) const
     UAbilitySystemGlobals* AbilitySystemGlobals = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals();
     AbilitySystemGlobals->InitGlobalData();
     auto MaxHPArray = AbilitySystemGlobals->GetAttributeSetInitter()->GetAttributeSetValues(
-        UPlayerUnitAttributeSet::StaticClass(), 
-        UPlayerUnitAttributeSet::GetMaxHPAttribute().GetUProperty(), 
+        UUnitAttributeSet::StaticClass(),
+        UUnitAttributeSet::GetMaxHPAttribute().GetUProperty(),
         GetKeyName()
     );
 
@@ -82,32 +85,20 @@ float UStaticPlayerUnitSpawnData::GetDefaultMaxHP(int32 Difficulty) const
 }
 
 /**
- * @brief 지정 난이도에서 이 플레이어 유닛의 기본 보유 골드를 조회한다.
+ * @brief 이 플레이어 유닛으로 새 런을 시작할 때의 초기 골드를 조회한다.
  *
  * @details
- * 이 함수는 캐릭터 선택 UI가 골드 계산식을 직접 복제하지 않게 하기 위한 DataAsset 쪽 조회 API다.
- * 실제 값은 GAS AttributeSet 기본값 테이블에서 오며, UI 브랜치는 그 값을 화면에 전달할 뿐 시작 자원 규칙을
- * 새로 정의하지 않는다.
+ * 골드는 HP처럼 전투 유닛이 공통으로 갖는 기본 전투 스탯이 아니라, 새 런을 시작할 때 플레이어에게
+ * 지급할 초기 자원에 가깝다. 그래서 Character Select 미리보기에서는 GAS CurveTable을 읽지 않고,
+ * DA_TestPlayerUnit 같은 PlayerUnit DataAsset에 저장된 시작 골드 값을 그대로 보여준다.
  *
- * GetDefaultMaxHP()와 마찬가지로 APK 런타임에서 AttributeSet 기본값 테이블을 안정적으로 읽기 위해
- * AbilitySystemGlobals::InitGlobalData() 이후에 값을 조회한다.
+ * Difficulty 파라미터는 기존 호출부와 API 형태를 맞추기 위해 유지한다. 난이도별 시작 골드가 필요해지면
+ * 이 함수 안에서 DataAsset 값을 난이도별 구조로 확장하면 된다.
  *
- * @param Difficulty 조회할 난이도 index
- * @return AttributeSet 초기화 테이블에 정의된 보유 골드. 유효하지 않은 난이도면 0 반환
+ * @param Difficulty 현재는 사용하지 않는 난이도 index
+ * @return PlayerUnit DataAsset에 정의된 새 런 시작 골드
  */
-float UStaticPlayerUnitSpawnData::GetDefaultMoney(int32 Difficulty) const
+float UStaticPlayerUnitSpawnData::GetDefaultMoney(int32 /*Difficulty*/) const
 {
-    UAbilitySystemGlobals* AbilitySystemGlobals = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals();
-    AbilitySystemGlobals->InitGlobalData();
-    auto MoneyArray = AbilitySystemGlobals->GetAttributeSetInitter()->GetAttributeSetValues(
-        UPlayerUnitAttributeSet::StaticClass(),
-        UPlayerUnitAttributeSet::GetMoneyAttribute().GetUProperty(),
-        GetKeyName()
-    );
-
-    if (MoneyArray.IsValidIndex(Difficulty) == false)
-    {
-        return 0.f;
-    }
-    return MoneyArray[Difficulty];
+    return StaticCast<float>(mStartingGold);
 }

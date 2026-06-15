@@ -22,7 +22,18 @@ EDataValidationResult UStaticUnitSpawnData::IsDataValid(FDataValidationContext& 
 
 FName UStaticUnitSpawnData::GetKeyName() const
 {
-	FString Key = mDisplayName.ToString();
+	FString Key;
+	if (mClass.IsNull() == false)
+	{
+		Key = mClass.ToSoftObjectPath().GetAssetName();
+		Key.RemoveFromEnd(TEXT("_C"));
+	}
+
+	if (Key.IsEmpty() == true)
+	{
+		Key = mDisplayName.ToString();
+	}
+
 	Key.RemoveSpacesInline();
 	return *Key;
 }
