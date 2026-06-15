@@ -44,8 +44,8 @@ namespace
 
 ATileMap::ATileMap()
 {
-	// 그리드는 OnConstruction에서 재생성되므로 틱 불필요
-	PrimaryActorTick.bCanEverTick = false;
+	// Effect 하이라이트 펄스를 매 프레임 갱신하기 위해 틱 사용
+	PrimaryActorTick.bCanEverTick = true;
 
 	// 루트 컴포넌트 생성 및 지정
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
@@ -87,6 +87,19 @@ void ATileMap::OnConstruction(const FTransform& Transform)
 
 	// 배치/스폰/프로퍼티 변경 시점에 그리드 인스턴스 재생성
 	RebuildTileInstances();
+}
+
+void ATileMap::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	// Effect 하이라이트는 알파가 시간에 따라 진동(펄스)하므로, 매 프레임 재합성
+	// Effect 플래그를 가진 타일만 갱신 (나머지는 정적이라 Set/Clear 때만 갱신됨)
+	for (int32 Index = 0; Index < mHighlights.Num(); ++Index)
+	{
+		if (EnumHasAnyFlags(mHighlights[Index], ETileHighlightFlag::Effect))
+			RefreshTileCustomData(Index);
+	}
 }
 
 TScriptInterface<ITileActor> ATileMap::ToTileActorInterface(ITileActor* Actor)
@@ -140,6 +153,9 @@ void ATileMap::RebuildTileInstances()
 	// 타일 저장소를 현재 크기에 맞춰 기본 타일로 새로 채움
 	mTiles.Init(FTile(), FMath::Max(0, mWidth * mHeight));
 
+	// 강조 표시 상태도 같은 크기로 초기화 (전부 None)
+	mHighlights.Init(ETileHighlightFlag::None, FMath::Max(0, mWidth * mHeight));
+
 	// 컴포넌트가 없으면 처리 불가
 	if (mTileMeshComponent == nullptr)
 	{
@@ -152,6 +168,9 @@ void ATileMap::RebuildTileInstances()
 	{
 		mTileMeshComponent->SetMaterial(0, mTileMaterial);
 	}
+
+	// 타일별 하이라이트 RGBA를 담을 custom data 슬롯 4개 (0=R,1=G,2=B,3=A)
+	mTileMeshComponent->SetNumCustomDataFloats(4);
 
 	// 기존 인스턴스 모두 제거 후 재생성
 	mTileMeshComponent->ClearInstances();
@@ -661,14 +680,132 @@ TArray<FTileIndex> ATileMap::GetEffectTiles(const FTileIndex& Caster, const FTil
 	return Result;
 }
 
+/**
+ * @details
+ * - 우선순위 낮은 것부터 높은 것 순서로 타일에 칠할 색을 블랜딩
+ * - 각각의 플래그의 속성에 따라 합성 또는 덮어쓰기 가능
+ * - 알파까지 계산에 포함시켜서, 출력단에서 알파 합성을 따로 안해도 되게끔 최적화
+ */
+void ATileMap::RefreshTileCustomData(int32 LinearIndex)
+{
+	// 컴포넌트/인덱스 유효성 (인스턴스 인덱스 = 타일 1D 인덱스)
+	if (mTileMeshComponent == nullptr || !mHighlights.IsValidIndex(LinearIndex))
+		return;
+
+	const ETileHighlightFlag Flags = mHighlights[LinearIndex];
+
+	// 활성 레이어 수집 (스타일 + 펄스 여부)
+	struct FLayer { const FTileHighlightStyle* Style; bool bPulse; };
+	TArray<FLayer, TInlineAllocator<3>> ActiveLayers;
+	if (EnumHasAnyFlags(Flags, ETileHighlightFlag::Aim))    ActiveLayers.Add({ &mAimStyle, false });
+	if (EnumHasAnyFlags(Flags, ETileHighlightFlag::Select)) ActiveLayers.Add({ &mSelectStyle, false });
+	if (EnumHasAnyFlags(Flags, ETileHighlightFlag::Effect)) ActiveLayers.Add({ &mEffectStyle, true });
+
+	// 우선순위 오름차순 (낮음=바닥부터 깔림)
+	ActiveLayers.Sort([](const FLayer& A, const FLayer& B) { return A.Style->mPriority < B.Style->mPriority; });
+
+	// 펄스 계수: [1-Intensity, 1] 범위로 진동 (Effect 알파에 곱함)
+	const float Time = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
+	const float PulseWave = 0.5f - 0.5f * FMath::Cos(2.0f * PI * Time / mPulsePeriod);
+	const float PulseFactor = 1.0f - mPulseIntensity * PulseWave;
+
+	// 바닥부터 프리멀티플라이드(알파 곱해진) 색으로 합성
+	FLinearColor Accum(0.0f, 0.0f, 0.0f, 0.0f);
+	for (const FLayer& Layer : ActiveLayers)
+	{
+		FLinearColor C = Layer.Style->mColor;
+		if (Layer.bPulse)
+			C.A *= PulseFactor;   // Effect만 펄스로 알파 변조
+
+		if (Layer.Style->mBlendMode == ETileHighlightBlend::Overwrite)
+		{
+			// 아래를 무시하고 덮어씀 (알파 곱한 값으로)
+			Accum.R = C.R * C.A;
+			Accum.G = C.G * C.A;
+			Accum.B = C.B * C.A;
+			Accum.A = C.A;
+		}
+		else
+		{
+			// Mix: 프리멀티플라이드 over 합성 (나눗셈 없이 덧셈만)
+			Accum.R = C.R * C.A + Accum.R * (1.0f - C.A);
+			Accum.G = C.G * C.A + Accum.G * (1.0f - C.A);
+			Accum.B = C.B * C.A + Accum.B * (1.0f - C.A);
+			Accum.A = C.A + Accum.A * (1.0f - C.A);
+		}
+	}
+
+	// custom data 슬롯에 기록 (마지막 슬롯에서 렌더 상태 갱신)
+	mTileMeshComponent->SetCustomDataValue(LinearIndex, 0, Accum.R);
+	mTileMeshComponent->SetCustomDataValue(LinearIndex, 1, Accum.G);
+	mTileMeshComponent->SetCustomDataValue(LinearIndex, 2, Accum.B);
+	mTileMeshComponent->SetCustomDataValue(LinearIndex, 3, Accum.A, /*bMarkRenderStateDirty=*/true);
+}
+
 void ATileMap::SetTileHighlight(const TArray<FTileIndex>& Tiles, ETileHighlightFlag Flag)
 {
-	// TODO: Flag 비트를 가진 기존 타일에서 끄고, Tiles에 켠 뒤 custom data 갱신
+	if (Flag == ETileHighlightFlag::None)
+		return;
+
+	// 이 레이어를 새로 칠하면 무효가 되는 하위(더 구체적) 의존 레이어
+	// 드릴다운: Aim → Select → Effect (상위를 새로 하면 하위는 무효, 상위는 맥락으로 보존)
+	ETileHighlightFlag Dependents = ETileHighlightFlag::None;
+	if (EnumHasAnyFlags(Flag, ETileHighlightFlag::Aim))
+		Dependents |= ETileHighlightFlag::Select | ETileHighlightFlag::Effect;
+	if (EnumHasAnyFlags(Flag, ETileHighlightFlag::Select))
+		Dependents |= ETileHighlightFlag::Effect;
+
+	// 모든 타일에서 끌 비트 = Flag 자신 + 하위 의존 레이어
+	const ETileHighlightFlag ClearBits = Flag | Dependents;
+
+	// 새로 켤 타일 집합 (맵 밖 좌표는 무시)
+	TSet<int32> NewOn;
+	for (const FTileIndex& Tile : Tiles)
+	{
+		const int32 Index = TileIndexToLinearIndex(Tile);
+		if (Index != INDEX_NONE)
+			NewOn.Add(Index);
+	}
+
+	// 전체 타일 순회: ClearBits 끄고, 지정 타일이면 Flag 켜기
+	for (int32 Index = 0; Index < mHighlights.Num(); ++Index)
+	{
+		const ETileHighlightFlag Before = mHighlights[Index];
+
+		// 이 Flag와 하위 의존 레이어 비트를 끔 (상위/무관 비트는 보존)
+		ETileHighlightFlag After = Before & ~ClearBits;
+
+		// 지정된 타일이면 Flag 비트를 켬
+		if (NewOn.Contains(Index))
+			After |= Flag;
+
+		// 바뀐 타일만 custom data 갱신
+		if (After != Before)
+		{
+			mHighlights[Index] = After;
+			RefreshTileCustomData(Index);
+		}
+	}
 }
 
 void ATileMap::ClearTileHighlight(ETileHighlightFlag Flag)
 {
-	// TODO: 모든 타일에서 Flag 비트를 끄고 custom data 갱신
+	if (Flag == ETileHighlightFlag::None)
+		return;
+
+	// 전체 타일에서 지정 비트만 끔 (캐스케이드 없음, 무관 비트는 보존)
+	for (int32 Index = 0; Index < mHighlights.Num(); ++Index)
+	{
+		const ETileHighlightFlag Before = mHighlights[Index];
+		const ETileHighlightFlag After = Before & ~Flag;
+
+		// 바뀐 타일만 custom data 갱신
+		if (After != Before)
+		{
+			mHighlights[Index] = After;
+			RefreshTileCustomData(Index);
+		}
+	}
 }
 
 bool ATileMap::CanPlace(const FTileIndex& TileIndex, const ITileActor* Incoming) const
@@ -793,4 +930,21 @@ void ATileMap::RemoveActor(ITileActor* Actor)
 	// 논리 좌표 무효화
 	Actor->SetTileTransform(FTileTransform::Invalid);
 }
+
+#if WITH_EDITOR
+void ATileMap::DebugPaintTest()
+{
+	// 기존 하이라이트 초기화
+	ClearTileHighlight(ETileHighlightFlag::Aim | ETileHighlightFlag::Select | ETileHighlightFlag::Effect);
+
+	// 조준 범위 (가로 한 줄)
+	SetTileHighlight({ FTileIndex(1, 1), FTileIndex(2, 1), FTileIndex(3, 1), FTileIndex(4, 1) }, ETileHighlightFlag::Aim);
+
+	// 선택 타일 (Aim 위에 겹침)
+	SetTileHighlight({ FTileIndex(3, 1) }, ETileHighlightFlag::Select);
+
+	// 영향 범위 (일부는 Aim/Select와 겹침, (3,2)는 Effect 단독)
+	SetTileHighlight({ FTileIndex(3, 1), FTileIndex(3, 2), FTileIndex(4, 1) }, ETileHighlightFlag::Effect);
+}
+#endif
 

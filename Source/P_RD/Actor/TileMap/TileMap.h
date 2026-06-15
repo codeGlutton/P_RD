@@ -34,6 +34,9 @@ public:
 	// @brief 에디터 배치/스폰 시 타일 그리드 인스턴스 재생성
 	virtual void OnConstruction(const FTransform& Transform) override;
 
+	// @brief 매 프레임 Effect 하이라이트 펄스 갱신
+	virtual void Tick(float DeltaSeconds) override;
+
 	/* 타일 → 월드 변환 */
 	/**
 	 * @brief 타일 트랜스폼(인덱스+방향)을 월드 트랜스폼으로 변환
@@ -117,10 +120,16 @@ public:
 
 	/* 강조 표시 */
 	/**
-	 * @brief 지정한 타일들에 강조 상태를 설정 (해당 플래그 비트에 한해 치환)
+	 * @brief 지정한 타일들에 강조 상태를 설정 (해당 플래그 비트에 한해 치환 + 하위 의존 레이어 클리어)
 	 * @details
-	 * Flag의 각 비트에 대해, 그 비트를 가진 기존 타일에서 끄고 Tiles에만 켠다.
-	 * 다른 플래그 비트는 보존하므로, Aim 위에 Select를 칠해도 Aim은 유지된다.
+	 * Flag 비트를 가진 기존 타일에서 끄고 Tiles에만 켠다. 상위/무관 플래그 비트는 보존하므로,
+	 * Aim 위에 Select를 칠해도 Aim은 유지된다.
+	 *
+	 * 드릴다운 의존성(Aim → Select → Effect): 상위 레이어를 새로 설정하면 하위(더 구체적)
+	 * 레이어는 무효가 되어 모든 타일에서 자동 클리어된다.
+	 * - Aim 설정    → Select, Effect 클리어
+	 * - Select 설정 → Effect 클리어 (Aim은 맥락으로 유지)
+	 * - Effect 설정 → 클리어 없음
 	 *
 	 * @param[in] Tiles : 강조할 타일 목록 (맵 밖 좌표는 무시)
 	 * @param[in] Flag  : 설정할 강조 상태
@@ -129,10 +138,23 @@ public:
 
 	/**
 	 * @brief 지정한 강조 상태를 모든 타일에서 해제
-	 * @details OR로 조합한 여러 비트를 한 번에 끌 수 있다 (예: Select | Effect).
+	 * @details
+	 * OR로 조합한 여러 비트를 한 번에 끌 수 있다 (예: Select | Effect).
+	 * Set과 달리 하위 의존 레이어 캐스케이드는 하지 않는다 — 지정한 비트만 끈다.
+	 * (캐스케이드 무효화가 필요하면 해당 상위 레이어를 다시 Set하면 된다.)
 	 * @param[in] Flag : 해제할 강조 상태 (비트 조합 가능)
 	 */
 	void ClearTileHighlight(ETileHighlightFlag Flag);
+
+#if WITH_EDITOR
+	/**
+	 * @brief [에디터 전용] 하이라이트 테스트 패턴을 칠해 시각 확인 (단독/겹침)
+	 * @details 디테일 패널 버튼으로 호출. Aim 한 줄 + Select 한 칸 + Effect 몇 칸을 칠하되,
+	 *          일부 칸은 겹치게 해서 단독/겹침 합성을 한 번에 확인한다.
+	 */
+	UFUNCTION(CallInEditor, Category = "SRPG")
+	void DebugPaintTest();
+#endif
 
 	/**
 	 * 진입 액터를 해당 타일에 배치할 수 있는지 검사하는 함수
@@ -291,31 +313,31 @@ protected:
 	/**
 	 * @brief 조준 범위 스타일 (우선순위 최하, 바닥에 깔림)
 	 */
-	UPROPERTY(EditAnywhere, Category = "TileMap|Highlight", meta = (DisplayName = "Aim Style"))
+	UPROPERTY(EditAnywhere, Category = "SRPG|Highlight", meta = (DisplayName = "Aim Style"))
 	FTileHighlightStyle mAimStyle;
 
 	/**
 	 * @brief 선택 타일 스타일 (Aim 위에 덮어씀)
 	 */
-	UPROPERTY(EditAnywhere, Category = "TileMap|Highlight", meta = (DisplayName = "Select Style"))
+	UPROPERTY(EditAnywhere, Category = "SRPG|Highlight", meta = (DisplayName = "Select Style"))
 	FTileHighlightStyle mSelectStyle;
 
 	/**
 	 * @brief 영향 범위 스타일 (우선순위 최상, 펄스로 알파 변조)
 	 */
-	UPROPERTY(EditAnywhere, Category = "TileMap|Highlight", meta = (DisplayName = "Effect Style"))
+	UPROPERTY(EditAnywhere, Category = "SRPG|Highlight", meta = (DisplayName = "Effect Style"))
 	FTileHighlightStyle mEffectStyle;
 
 	/**
 	 * @brief 펄스 강도 (Effect 알파에 곱하는 진동의 진폭, 0~1)
 	 */
-	UPROPERTY(EditAnywhere, Category = "TileMap|Highlight", meta = (DisplayName = "Pulse Intensity", ClampMin = "0.0", ClampMax = "1.0"))
-	float mPulseIntensity = 0.5f;
+	UPROPERTY(EditAnywhere, Category = "SRPG|Highlight", meta = (DisplayName = "Pulse Intensity", ClampMin = "0.0", ClampMax = "1.0"))
+	float mPulseIntensity = 0.8f;
 
 	/**
 	 * @brief 펄스 주기 (초)
 	 */
-	UPROPERTY(EditAnywhere, Category = "TileMap|Highlight", meta = (DisplayName = "Pulse Period", ClampMin = "0.01"))
+	UPROPERTY(EditAnywhere, Category = "SRPG|Highlight", meta = (DisplayName = "Pulse Period", ClampMin = "0.01"))
 	float mPulsePeriod = 1.0f;
 
 private:
@@ -489,9 +511,25 @@ private:
 	FTile* GetTile(const FTileIndex& TileIndex);
 
 	/**
+	 * @brief 한 타일의 강조 상태(mHighlights)를 스타일로 합성해 ISM custom data에 기록
+	 * @details
+	 * 활성 레이어를 priority 오름차순으로 blend(Mix=알파 over, Overwrite=덮어쓰기)하고,
+	 * Effect는 알파에 펄스 계수를 곱한다. 슬롯 0~2=알파 곱해진(프리멀티) RGB, 3=커버리지 알파.
+	 * @param[in] LinearIndex 타일/인스턴스 1차원 인덱스
+	 */
+	void RefreshTileCustomData(int32 LinearIndex);
+
+	/**
 	 * @brief 타일 저장소 (크기 Width*Height, 인덱스 = y*Width + x)
 	 * @warning FTile이 TScriptInterface<ITileActor>(UObject 참조)를 들고 있어 GC 추적용 UPROPERTY() 필수 (제거 금지)
 	 */
 	UPROPERTY()
 	TArray<FTile> mTiles;
+
+	/**
+	 * @brief 타일별 강조 표시 상태 (시각 전용 — 전투/시뮬레이션과 무관, FTile과 분리)
+	 * @details mTiles와 같은 1차원 인덱싱(y*Width+x), 크기 Width*Height. ISM custom data로 화면에 반영된다.
+	 */
+	UPROPERTY()
+	TArray<ETileHighlightFlag> mHighlights;
 };
