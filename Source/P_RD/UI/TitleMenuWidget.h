@@ -8,13 +8,17 @@
 
 #include "RDMinimal.h"
 #include "UI/RDUserWidget.h"
+#include "UI/TitleMenuRuntimeAssets.h"
 
 #include "TitleMenuWidget.generated.h"
 
 class UButton;
+class UCanvasPanel;
 class UCharacterSelectWidget;
+class UImage;
 class USettingsPanelWidget;
 class UTextBlock;
+class UTexture2D;
 class UWidget;
 class UWidgetSwitcher;
 
@@ -184,6 +188,90 @@ private:
 	void SetStatusText(const FText& InText) const;
 
 	/**
+	 * @brief 타이틀 메인 화면 뒤에 반복 재생할 배경 영상을 붙인다.
+	 *
+	 * @details
+	 * WBP_TitleMenu에 별도 MediaTexture 레이어가 없어도 런타임에 StartScreen 쪽 배경 Image를 추가한다.
+	 * 기존 WBP의 검은 배경 Image/Border 위, 버튼/텍스트 아래에 놓는 것을 우선한다.
+	 */
+	void EnsureTitleBackgroundVideo();
+
+	/** @brief 타이틀 배경 영상용 MediaPlayer/MediaTexture/FileMediaSource를 준비한다. */
+	void EnsureTitleBackgroundMediaObjects();
+
+	/** @brief 준비한 배경 Image를 WBP 패널에 붙인다. */
+	bool AttachTitleBackgroundVideoImage();
+
+	/** @brief CanvasPanel에 배경 Image를 추가하고 기존 메뉴 컨트롤을 앞으로 올린다. */
+	bool AttachTitleBackgroundVideoImageToCanvas(UCanvasPanel* TargetCanvas);
+
+	/** @brief MediaTexture를 배경 Image Brush에 반영한다. */
+	void ApplyTitleBackgroundVideoBrush();
+
+	/** @brief 타이틀 배경 영상을 반복 재생한다. */
+	void PlayTitleBackgroundVideo();
+
+	/** @brief 타이틀 배경 영상 재생을 정리한다. */
+	void StopTitleBackgroundVideo();
+
+	/** @brief Content 기준 상대 경로를 실제 파일 경로로 바꾼다. */
+	FString ResolveTitleBackgroundVideoPath() const;
+
+	/** @brief 기존 WBP 텍스트 타이틀/서브타이틀 장식을 숨기고 PNG 타이틀 로고를 올린다. */
+	void EnsureTitleLogoOverlay();
+
+	/** @brief PNG 타이틀 로고용 Image와 Texture를 준비한다. */
+	void EnsureTitleLogoObjects();
+
+	/** @brief 준비한 타이틀 로고 Image를 WBP 패널에 붙인다. */
+	bool AttachTitleLogoImage();
+
+	/** @brief CanvasPanel에 타이틀 로고 Image를 추가한다. */
+	bool AttachTitleLogoImageToCanvas(UCanvasPanel* TargetCanvas);
+
+	/** @brief 타이틀 로고 Texture를 Image Brush에 반영한다. */
+	void ApplyTitleLogoBrush();
+
+	/** @brief WBP에 남아 있는 기존 텍스트 타이틀/서브타이틀 위젯을 숨긴다. */
+	void HideLegacyTitleWidgets() const;
+
+	/** @brief 타이틀 메뉴 버튼에 생성한 PNG 버튼 베이스를 입힌다. */
+	void ApplyTitleButtonStyles();
+
+	/** @brief 현재 메인 메뉴 상태에 맞춰 런타임 버튼 배경 Image 표시를 맞춘다. */
+	void RefreshTitleButtonBackgroundVisibility(bool bCanContinueRun) const;
+
+	/** @brief 버튼 뒤에 표시할 PNG 배경 Image 위젯을 준비한다. */
+	void EnsureTitleButtonBackgroundImages();
+
+	/** @brief 생성한 버튼 이미지 비율이 눌리지 않도록 타이틀 버튼 크기를 맞춘다. */
+	void ApplyTitleButtonLayouts();
+
+	/** @brief 특정 버튼에 PNG Texture 기반 Slate 스타일을 적용한다. */
+	void ApplyTextureButtonStyle(UButton* TargetButton, UTexture2D* Texture, FSlateBrush& InOutBrush) const;
+
+	/** @brief 특정 버튼 배경 Image에 PNG Texture를 적용한다. */
+	void ApplyTitleButtonImageBrush(UImage* TargetImage, UTexture2D* Texture) const;
+
+	/** @brief 버튼 배경 Image를 타이틀 Canvas에 붙이고 위치를 맞춘다. */
+	bool AttachTitleButtonBackgroundImage(UImage* TargetImage, const FVector2D& Position, const FVector2D& DesiredSize, int32 ZOrder);
+
+	/** @brief 특정 버튼의 레이아웃 크기를 조정한다. */
+	void ApplyTitleButtonLayout(UButton* TargetButton, const FVector2D& DesiredSize) const;
+
+	/** @brief 버튼 자체 배경은 숨기고, 뒤에 깔린 PNG Image만 보이게 한다. */
+	void ApplyTransparentButtonStyle(UButton* TargetButton) const;
+
+	/** @brief 버튼 텍스트가 어두운 버튼 위에서도 읽히도록 색을 맞춘다. */
+	void ApplyTitleButtonTextStyle() const;
+
+	UFUNCTION()
+	void HandleTitleBackgroundMediaOpened(FString OpenedUrl);
+
+	UFUNCTION()
+	void HandleTitleBackgroundMediaOpenFailed(FString FailedUrl);
+
+	/**
 	 * @brief 화면에 필요한 위젯 연결 상태를 로그로 확인함
 	 *
 	 * @details
@@ -325,5 +413,34 @@ private:
 	/** @brief 캐릭터 선택 위젯을 만들거나 붙일 수 없을 때 보여줄 문구 */
 	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	FText mCharacterSelectUnavailableText;
+
+	/**
+	 * @brief 타이틀 메인 화면에서 반복 재생할 MP4 파일의 Content 기준 상대 경로
+	 */
+	UPROPERTY(Category = "Title Menu|Background", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true, DisplayName = "Title Background Video Path"))
+	FString mTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/MS_TitleLoop_01.mp4");
+
+	/**
+	 * @brief 타이틀 메인 화면에 올릴 PNG 로고의 Content 기준 상대 경로
+	 */
+	UPROPERTY(Category = "Title Menu|Background", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true, DisplayName = "Title Logo Image Path"))
+	FString mTitleLogoImagePath = TEXT("SourceArt/UI/Title/UI_Title_RogueTheDice_DarkFantasy.png");
+
+	/** @brief START/CONTINUE 계열 버튼 배경 PNG의 Content 기준 상대 경로 */
+	UPROPERTY(Category = "Title Menu|Background", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true, DisplayName = "Main Button Image Path"))
+	FString mMainButtonImagePath = TEXT("SourceArt/UI/Title/UI_Button_Start_DarkFantasy_Base.png");
+
+	/** @brief SETTINGS 버튼 배경 PNG의 Content 기준 상대 경로 */
+	UPROPERTY(Category = "Title Menu|Background", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true, DisplayName = "Settings Button Image Path"))
+	FString mSettingsButtonImagePath = TEXT("SourceArt/UI/Title/UI_Button_Settings_DarkFantasy_Base.png");
+
+	UPROPERTY(Transient)
+	FTitleMenuBackgroundRuntimeAssets mBackgroundRuntime;
+
+	UPROPERTY(Transient)
+	FTitleMenuLogoRuntimeAssets mLogoRuntime;
+
+	UPROPERTY(Transient)
+	FTitleMenuButtonRuntimeAssets mButtonRuntime;
 
 };
