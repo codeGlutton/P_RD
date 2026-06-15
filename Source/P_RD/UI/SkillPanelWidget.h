@@ -10,6 +10,10 @@
 
 #include "SkillPanelWidget.generated.h"
 
+class UButton;
+class UCanvasPanel;
+class UTextBlock;
+
 /**
  * @brief 스킬 카드형 목록을 보여주는 플로팅 패널
  *
@@ -39,4 +43,141 @@ public:
 	 * 카드 슬롯 캐싱, 선택, 닫기 처리는 부모 클래스가 담당한다.
 	 */
 	USkillPanelWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+protected:
+	/** @brief WBP 목록과 런타임 상세보기 버튼을 준비한다. */
+	void NativeConstruct() override;
+
+	/** @brief 런타임 상세보기 버튼 이벤트를 해제한다. */
+	void NativeDestruct() override;
+
+	/** @brief 패널을 열 때 항상 전체 스킬 목록부터 보여준다. */
+	void ApplyOpenUI() override;
+
+	/** @brief 상세보기 상태에서 PC/에디터 마우스 스와이프를 시작한다. */
+	FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+
+	/** @brief 상세보기 상태에서 PC/에디터 마우스 스와이프를 확정한다. */
+	FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+
+	/** @brief 상세보기 상태에서 모바일 터치 스와이프를 시작한다. */
+	FReply NativeOnTouchStarted(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent) override;
+
+	/** @brief 상세보기 상태에서 모바일 터치 스와이프를 확정한다. */
+	FReply NativeOnTouchEnded(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent) override;
+
+	/** @brief 상세보기 상태에서도 부모 캐러셀 목록을 유지한다. */
+	int32 GetCarouselItemDisplayCount() const override;
+
+	/** @brief 스킬 카드를 선택하면 상세보기로 들어간다. */
+	void HandleCarouselSelectionChanged(int32 PreviousIndex, int32 NewIndex) override;
+
+private:
+	/** @brief 상세보기 런타임 위젯을 만든다. */
+	void EnsureSkillDetailWidgets();
+
+	/** @brief WBP 카드 위에 얹을 목록 선택용 투명 버튼을 만든다. */
+	void EnsureSkillSelectButtons();
+
+	/** @brief 상세보기 런타임 위젯 위치를 맞춘다. */
+	void ApplySkillDetailLayout() const;
+
+	/** @brief 목록 선택용 투명 버튼 위치를 WBP 카드 목록 위치와 맞춘다. */
+	void ApplySkillSelectButtonLayout() const;
+
+	/** @brief 지정 스킬을 상세보기로 연다. */
+	void ShowSkillDetail(int32 SkillIndex);
+
+	/** @brief 상세보기에서 전체 목록으로 돌아간다. */
+	void ShowSkillList();
+
+	/** @brief 상세보기 텍스트/버튼 표시 상태를 갱신한다. */
+	void RefreshSkillDetailWidgets();
+
+	/** @brief 상세보기 여부에 따라 목록 선택용 투명 버튼 표시를 갱신한다. */
+	void RefreshSkillSelectButtons();
+
+	/** @brief 목록 상태에서 지정 스킬 카드를 선택한다. */
+	void SelectSkillFromList(int32 SkillIndex);
+
+	/** @brief 상세보기에서 지정 방향으로 스킬과 캐러셀 선택을 함께 넘긴다. */
+	void MoveSkillDetail(int32 Direction);
+
+	/** @brief 상세보기 스와이프 입력 후보를 기록한다. */
+	bool BeginSkillDetailSwipe(const FVector2D& ScreenPosition);
+
+	/** @brief 스와이프 이동량이 충분하면 이전/다음 스킬로 넘긴다. */
+	bool FinishSkillDetailSwipe(const FVector2D& ScreenPosition);
+
+	/** @brief 좌우/뒤로가기 버튼 위에서는 스와이프 캡처를 시작하지 않는다. */
+	bool IsPointerOverSkillDetailControl(const FVector2D& ScreenPosition) const;
+
+	/** @brief 목록 선택 버튼을 해당 스킬 index 핸들러에 연결한다. */
+	void BindSkillSelectButton(UButton* SelectButton, int32 SkillIndex);
+
+	/** @brief 목록 선택 버튼의 해당 스킬 index 핸들러 연결을 해제한다. */
+	void UnbindSkillSelectButton(UButton* SelectButton, int32 SkillIndex);
+
+	/** @brief 생성된 모든 목록 선택 버튼 이벤트를 해제한다. */
+	void UnbindSkillSelectButtons();
+
+	/** @brief 목록 선택 버튼 공통 처리. */
+	void HandleSkillSelectButtonClicked(int32 SkillIndex);
+
+	UFUNCTION()
+	void HandleSkillDetailBackButtonClicked();
+
+	UFUNCTION()
+	void HandleSkillDetailPreviousButtonClicked();
+
+	UFUNCTION()
+	void HandleSkillDetailNextButtonClicked();
+
+	UFUNCTION()
+	void HandleSkillSelectButton0Clicked();
+
+	UFUNCTION()
+	void HandleSkillSelectButton1Clicked();
+
+	UFUNCTION()
+	void HandleSkillSelectButton2Clicked();
+
+	UFUNCTION()
+	void HandleSkillSelectButton3Clicked();
+
+	UFUNCTION()
+	void HandleSkillSelectButton4Clicked();
+
+	UFUNCTION()
+	void HandleSkillSelectButton5Clicked();
+
+private:
+	UPROPERTY(Transient)
+	TObjectPtr<UCanvasPanel> mRootCanvas;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mSkillDetailTitleText;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mSkillDetailBodyText;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mSkillDetailPreviousButton;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mSkillDetailNextButton;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mSkillDetailBackButton;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UButton>> mSkillSelectButtons;
+
+	bool mShowingSkillDetail = false;
+
+	int32 mDetailSkillIndex = INDEX_NONE;
+
+	bool mTrackingSkillDetailSwipe = false;
+
+	FVector2D mSkillDetailSwipeStartPosition = FVector2D::ZeroVector;
 };
