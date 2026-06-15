@@ -172,6 +172,19 @@ private:
 	/** @brief 이번 RefreshMap()에서 쓰지 않은 노드/선을 숨겨 다음 갱신 때 재사용한다. */
 	void HideUnusedMapGraphWidgets(int32 UsedLineCount, int32 UsedNodeCount);
 
+	/** @brief 지도 방 연결선을 현재 방 View와 계산된 노드 중심점 기준으로 갱신한다. */
+	int32 RefreshMapConnectionLines(const TArray<FMapRoomView>& Rooms, const TMap<FIntPoint, FVector2D>& NodeCenters);
+
+	/** @brief 지도 방 노드를 갱신하고 선택/포커스 상태를 반환한다. */
+	int32 RefreshMapRoomNodes(
+		const TArray<FMapRoomView>& Rooms,
+		bool& bOutHasSelectedRoom,
+		FText& OutSelectedRoomTitle,
+		FText& OutSelectedRoomDescription,
+		FText& OutSelectedRoomState,
+		FSlateColor& OutSelectedRoomStateColor,
+		UWidget*& OutFocusMapNodeWidget);
+
 	/** @brief 닫기 버튼 입력을 외부 닫기 요청 이벤트로 전달한다. */
 	UFUNCTION()
 	void HandleCloseButtonClicked();
