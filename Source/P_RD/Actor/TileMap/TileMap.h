@@ -267,19 +267,19 @@ protected:
 	/**
 	 * @brief 타일맵 가로 길이 (X 방향 타일 개수)
 	 */
-	UPROPERTY(EditAnywhere, Category = "TileMap", meta = (DisplayName = "Width", ClampMin = "1"))
+	UPROPERTY(EditAnywhere, Category = "SRPG", meta = (DisplayName = "Width", ClampMin = "1"))
 	int32 mWidth = 9;
 
 	/**
 	 * @brief 타일맵 세로 길이 (Y 방향 타일 개수)
 	 */
-	UPROPERTY(EditAnywhere, Category = "TileMap", meta = (DisplayName = "Height", ClampMin = "1"))
+	UPROPERTY(EditAnywhere, Category = "SRPG", meta = (DisplayName = "Height", ClampMin = "1"))
 	int32 mHeight = 9;
 
 	/**
 	 * @brief 타일 한 칸의 월드 크기 (cm)
 	 */
-	UPROPERTY(EditAnywhere, Category = "TileMap", meta = (DisplayName = "Tile Size", ClampMin = "1.0"))
+	UPROPERTY(EditAnywhere, Category = "SRPG", meta = (DisplayName = "Tile Size", ClampMin = "1.0"))
 	float mTileSize = 100.0f;
 
 	/* 시각화 */
@@ -287,25 +287,25 @@ protected:
 	/**
 	 * @brief 타일 그리드를 그리는 인스턴스드 메시 컴포넌트
 	 */
-	UPROPERTY(VisibleAnywhere, Category = "TileMap|Visual", meta = (DisplayName = "Tile Mesh Component"))
+	UPROPERTY(VisibleAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Tile Mesh Component"))
 	TObjectPtr<UInstancedStaticMeshComponent> mTileMeshComponent;
 
 	/**
 	 * @brief 타일 한 칸에 사용할 메시 (기본: 엔진 Plane)
 	 */
-	UPROPERTY(EditAnywhere, Category = "TileMap|Visual", meta = (DisplayName = "Tile Mesh"))
+	UPROPERTY(EditAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Tile Mesh"))
 	TObjectPtr<UStaticMesh> mTileMesh;
 
 	/**
 	 * @brief 타일 메시에 덮어쓸 머티리얼 (null이면 메시 기본 머티리얼)
 	 */
-	UPROPERTY(EditAnywhere, Category = "TileMap|Visual", meta = (DisplayName = "Tile Material"))
+	UPROPERTY(EditAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Tile Material"))
 	TObjectPtr<UMaterialInterface> mTileMaterial;
 
 	/**
 	 * @brief 타일 시각 크기 비율 (1.0 미만이면 타일 사이에 틈이 생겨 격자선처럼 보임)
 	 */
-	UPROPERTY(EditAnywhere, Category = "TileMap|Visual", meta = (DisplayName = "Tile Visual Scale", ClampMin = "0.1", ClampMax = "1.0"))
+	UPROPERTY(EditAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Tile Visual Scale", ClampMin = "0.1", ClampMax = "1.0"))
 	float mTileVisualScale = 0.95f;
 
 	/* 강조 표시 */
