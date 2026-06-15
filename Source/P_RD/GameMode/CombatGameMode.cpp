@@ -10,6 +10,9 @@
 
 #include "Pawn/Unit.h"
 #include "UI/RDUserWidget.h"
+#include "UI/CombatTileMapHUDWidget.h"
+#include "UI/Combat/CombatViewModel.h"
+#include "Dice/DiceAdapter.h"
 
 #include "SRPGFramework/SRPGSkillAction.h"
 #include "SRPGFramework/SRPGSkillBuildAction.h"
@@ -40,16 +43,36 @@ void ACombatGameMode::BeginRoom()
 	 * 전투 타일맵 HUD는 전투방에만 필요한 화면이므로 CombatGameMode의 HUDClass로 분리해서 여기서 연다.
 	 * 이렇게 해야 MAP/SET/DICE/SKILL 탑바 흐름과 전투 전용 액션 패널이 같은 WorldWidget 슬롯을 덮어쓰지 않는다.
 	 */
+	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
+	checkf(CombatSubsystem != nullptr, TEXT("전투 시스템 서브시스템 nullptr"));
+
+	/*
+	 * 전투↔UI 경계 뷰모델은 전투를 굴리는 서브시스템이 소유한다.
+	 * 여기서는 그 뷰모델을 꺼내 HUD와 주사위 어댑터에 "꽂기만" 한다(소유/배관은 한곳에서).
+	 */
+	UCombatViewModel* CombatViewModel = CombatSubsystem->GetCombatViewModel();
+
+	/*
+	 * 주사위 어댑터: 런 보유 주사위(mDiceIds)로 UDiceData를 만들고 뷰모델에 바인딩한다.
+	 * HUD가 열릴 때 뷰모델에 주사위 뷰가 이미 있어야 하므로 HUD 열기 "전"에 꽂는다.
+	 * 이제 HUD의 RequestRollDice() → 어댑터가 데이터로 굴림 → SetDiceViews → HUD가 실제 값을 읽는다.
+	 * (UI의 FMath::RandRange fallback은 뷰모델 미연결 때만 동작하므로 자연히 비활성화)
+	 */
+	mDiceAdapter = NewObject<UDiceAdapter>(this);
+	if (const URunPersistData* RunPersistData = GetRunPersistData())
+	{
+		mDiceAdapter->BuildFromDiceIds(RunPersistData->GetDiceIds());
+	}
+	mDiceAdapter->BindViewModel(CombatViewModel);
+
 	if (UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())
 	{
-		if (URDUserWidget* CombatHUD = WorldWidgetSubsystem->GetHUD<URDUserWidget>())
+		if (UCombatTileMapHUDWidget* CombatHUD = WorldWidgetSubsystem->GetHUD<UCombatTileMapHUDWidget>())
 		{
+			CombatHUD->BindCombatViewModel(CombatViewModel);
 			CombatHUD->OpenUI();
 		}
 	}
-
-	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-	checkf(CombatSubsystem != nullptr, TEXT("전투 시스템 서브시스템 nullptr"));
 
 	for (const TObjectPtr<AUnit>& Unit : CombatSubsystem->GetUnits())
 	{

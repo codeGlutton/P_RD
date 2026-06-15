@@ -14,6 +14,7 @@
 // RD Game Mode 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogCombatGameMode, Log, All)
 
+class UDiceAdapter;
 struct FSRPGSkillBuildAction;
 
 /**
@@ -49,4 +50,14 @@ public:
 
 protected:
 	void OnChangeSkillBuildPhase(const FSRPGSkillBuildAction& Action, ESRPGSkillBuildPhase Phase);
+
+private:
+	/**
+	 * @brief 보유 주사위를 굴려 전투 뷰모델의 주사위 도메인을 구동하는 임시 어댑터.
+	 *
+	 * @details
+	 * UUnitData 데이터 계층이 생기기 전까지의 게임플레이 대역. 전투방 수명 동안 GameMode가 소유한다.
+	 */
+	UPROPERTY()
+	TObjectPtr<UDiceAdapter> mDiceAdapter;
 };

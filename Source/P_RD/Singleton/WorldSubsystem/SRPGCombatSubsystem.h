@@ -36,6 +36,7 @@ class AUnit;
 class ATileMap;
 
 class UStaticCombatRoomSpawnData;
+class UCombatViewModel;
 struct FEnemyUnitPlacementData;
 struct FObstaclePlacementData;
 
@@ -154,6 +155,15 @@ public:
 	ATileMap* GetTileMap();
 	TArray<TObjectPtr<AUnit>>& GetUnits();
 
+	/**
+	 * @brief 전투↔UI 경계 뷰모델을 돌려준다(없으면 생성).
+	 *
+	 * @details
+	 * 전투를 실제로 굴리는 이 서브시스템이 뷰모델을 소유한다(수명 = 전투 월드).
+	 * HUD/주사위 어댑터는 이걸 가져가 BindViewModel/BindCombatViewModel로 꽂기만 한다.
+	 */
+	UCombatViewModel* GetCombatViewModel();
+
 public:
 	/**
 	 * @brief 전투 시작 시 뜰 UI
@@ -215,4 +225,8 @@ protected:
 	TArray<TObjectPtr<AUnit>> mUnits;
 	// @brief 모든 등록 장애물
 	TArray<TScriptInterface<ITileActor>> mObstacles;
+
+	// @brief 전투↔UI 경계 뷰모델. 이 서브시스템이 소유(GC 루트).
+	UPROPERTY()
+	TObjectPtr<UCombatViewModel> mCombatViewModel;
 };
