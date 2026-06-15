@@ -18,7 +18,7 @@ fi
 MSG_FILE="$1"
 
 # 기존 SVN-REV 제거
-sed -i.bak '/^[SVN-REV]:/d' "$MSG_FILE"
+sed -i.bak '/^\[SVN-REV\]:/d' "$MSG_FILE"
 rm -f "${MSG_FILE}.bak"
 
 # 마지막에 추가
