@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <title>Knight face symbol</title>
+  <defs>
+    <mask id="cutouts">
+      <rect width="1024" height="1024" fill="white"/>
+      <rect x="286" y="414" width="92" height="178" rx="32" fill="black"/>
+      <rect x="466" y="382" width="92" height="214" rx="32" fill="black"/>
+      <rect x="646" y="414" width="92" height="178" rx="32" fill="black"/>
+      <path d="M328 722Q512 800 696 722" fill="none" stroke="black" stroke-width="42" stroke-linecap="round"/>
+    </mask>
+  </defs>
+  <path mask="url(#cutouts)" fill="#F7FAFC" d="M512 100 780 252 846 596 676 852H348L178 596 244 252 512 100Z"/>
+  <path fill="#F7FAFC" d="M210 302 140 428 190 524 244 252Z"/>
+  <path fill="#F7FAFC" d="M814 302 884 428 834 524 780 252Z"/>
+</svg>
