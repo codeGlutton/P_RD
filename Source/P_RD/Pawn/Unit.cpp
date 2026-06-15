@@ -12,8 +12,6 @@ AUnit::AUnit() :
 	PrimaryActorTick.bCanEverTick = true;
 
 	mAbilitySystemComp = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
-	mUnitAttributeSet = CreateDefaultSubobject<UUnitAttributeSet>(TEXT("UnitAttributeSet"));
-
 	mSkillComp = CreateDefaultSubobject<USkillComponent>(TEXT("SkillComp"));
 }
 

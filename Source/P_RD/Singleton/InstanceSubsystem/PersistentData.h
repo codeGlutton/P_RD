@@ -90,7 +90,7 @@ public:
 	const TArray<FPrimaryAssetId>& GetDiceIds() const;
 
 protected:
-	void ApplyPlayerPersistData(APlayerUnit* PlayerUnit);
+	void SyncPlayerPersistData(APlayerUnit* PlayerUnit);
 	void BindPlayerUnitEvent(APlayerUnit* PlayerUnit);
 
 protected:

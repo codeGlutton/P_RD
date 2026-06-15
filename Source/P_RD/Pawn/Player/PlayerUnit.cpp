@@ -1,4 +1,5 @@
 ﻿#include "Pawn/Player/PlayerUnit.h"
+#include "GAS/Attribute/UnitAttributeSet.h"
 #include "GAS/Attribute/LevelAttributeSet.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 
@@ -9,6 +10,7 @@
 APlayerUnit::APlayerUnit()
 {
     SetGenericTeamId(EUnitTeamType::Adventurer);
+    mUnitAttributeSet = CreateDefaultSubobject<UPlayerUnitAttributeSet>(TEXT("PlayerUnitAttributeSet"));
     mLevelAttributeSet = CreateDefaultSubobject<ULevelAttributeSet>(TEXT("LevelAttributeSet"));
 }
 
