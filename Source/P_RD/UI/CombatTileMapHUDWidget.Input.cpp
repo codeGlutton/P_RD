@@ -1,0 +1,82 @@
+#include "UI/CombatTileMapHUDWidget.h"
+
+#include "InputCoreTypes.h"
+
+FReply UCombatTileMapHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton)
+	{
+		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+	}
+
+	const FVector2D ScreenPosition = InMouseEvent.GetScreenSpacePosition();
+	const bool bClosedSkillDetail = HideSkillDetailIfClickedOutside(ScreenPosition);
+	const int32 SkillIndex = FindSkillRailIndexAtScreenPosition(ScreenPosition);
+	if (SkillIndex == INDEX_NONE)
+	{
+		if (bClosedSkillDetail == true)
+		{
+			return FReply::Handled();
+		}
+		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+	}
+
+	BeginSkillPress(SkillIndex);
+	return FReply::Handled().CaptureMouse(TakeWidget());
+}
+
+FReply UCombatTileMapHUDWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton || mSkillPressing == false)
+	{
+		return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+	}
+
+	if (mSkillDetailOpenedFromPress == false)
+	{
+		SelectSkillForAssignment(mPressedSkillIndex);
+	}
+
+	mSkillPressing = false;
+	mPressedSkillIndex = INDEX_NONE;
+	mSkillPressElapsed = 0.0f;
+	mSkillDetailOpenedFromPress = false;
+	return FReply::Handled().ReleaseMouseCapture();
+}
+
+FReply UCombatTileMapHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent)
+{
+	const FVector2D ScreenPosition = InGestureEvent.GetScreenSpacePosition();
+	const bool bClosedSkillDetail = HideSkillDetailIfClickedOutside(ScreenPosition);
+	const int32 SkillIndex = FindSkillRailIndexAtScreenPosition(ScreenPosition);
+	if (SkillIndex == INDEX_NONE)
+	{
+		if (bClosedSkillDetail == true)
+		{
+			return FReply::Handled();
+		}
+		return Super::NativeOnTouchStarted(InGeometry, InGestureEvent);
+	}
+
+	BeginSkillPress(SkillIndex);
+	return FReply::Handled();
+}
+
+FReply UCombatTileMapHUDWidget::NativeOnTouchEnded(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent)
+{
+	if (mSkillPressing == false)
+	{
+		return Super::NativeOnTouchEnded(InGeometry, InGestureEvent);
+	}
+
+	if (mSkillDetailOpenedFromPress == false)
+	{
+		SelectSkillForAssignment(mPressedSkillIndex);
+	}
+
+	mSkillPressing = false;
+	mPressedSkillIndex = INDEX_NONE;
+	mSkillPressElapsed = 0.0f;
+	mSkillDetailOpenedFromPress = false;
+	return FReply::Handled();
+}
