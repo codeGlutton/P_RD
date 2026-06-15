@@ -13,8 +13,10 @@
 
 class UButton;
 class UCharacterSelectWidget;
+class UImage;
 class USettingsPanelWidget;
 class UTextBlock;
+class UTexture2D;
 class UWidget;
 class UWidgetSwitcher;
 
@@ -92,6 +94,14 @@ protected:
 	void NativeDestruct() override;
 
 private:
+	/**
+	 * @brief WBP에 배치된 타이틀 로고/버튼 Image에 SVN raw PNG를 런타임 로드해 채운다.
+	 *
+	 * @details
+	 * 아트는 uasset이 아니라 SVN raw PNG라, 배치(위치·크기)는 WBP가 맡고 C++은 이미지를 채우기만 한다.
+	 * 대상 Image가 WBP에 없으면(BindWidgetOptional → nullptr) 조용히 건너뛴다.
+	 */
+	void ApplyTitleImages();
 	/**
 	 * @brief 원하는 화면을 ScreenSwitcher의 현재 화면으로 바꿈
 	 *
@@ -297,6 +307,34 @@ private:
 	 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> StatusText;
+
+	/**
+	 * @brief 타이틀 로고/시작·설정 버튼 이미지. WBP_TitleMenu에 같은 이름으로 배치하면 채워진다.
+	 *
+	 * @details
+	 * BindWidgetOptional이라 WBP에 없어도 안전하다(없으면 그 이미지만 비는 것). 배치는 WBP가 맡는다.
+	 */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UImage> TitleLogoImage;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UImage> StartButtonImage;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UImage> SettingsButtonImage;
+
+	/** @brief 위 이미지에 쓰는 SVN raw PNG 경로(Content 기준). 파일은 패키징 스테이징으로 APK에 포함됨. */
+	FString mTitleLogoImagePath = TEXT("SVN/OutSideAsset/AICreation/Title/UI_Title_RogueTheDice_DarkFantasy.png");
+	FString mStartButtonImagePath = TEXT("SVN/OutSideAsset/AICreation/Title/UI_Button_Start_DarkFantasy_Base.png");
+	FString mSettingsButtonImagePath = TEXT("SVN/OutSideAsset/AICreation/Title/UI_Button_Settings_DarkFantasy_Base.png");
+
+	/** @brief 런타임 로드한 텍스처를 살려두는 참조(GC 방지). */
+	UPROPERTY(Transient)
+	TObjectPtr<UTexture2D> mTitleLogoTexture;
+	UPROPERTY(Transient)
+	TObjectPtr<UTexture2D> mStartButtonTexture;
+	UPROPERTY(Transient)
+	TObjectPtr<UTexture2D> mSettingsButtonTexture;
 
 	/** @brief 게임 타이틀명 기본 문구 */
 	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))

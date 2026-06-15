@@ -1,12 +1,15 @@
 #include "UI/TitleMenuWidget.h"
 
 #include "Components/Button.h"
+#include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
+#include "Engine/Texture2D.h"
 #include "GameMode/FrontendGameMode.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/CharacterSelectWidget.h"
 #include "UI/SettingsPanelWidget.h"
+#include "UI/UITextureLoader.h"
 
 namespace
 {
@@ -99,10 +102,48 @@ void UTitleMenuWidget::NativeConstruct()
 		CharacterSelectWidget->OnBackToMainRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleCharacterBackToMainRequested);
 	}
 
+	ApplyTitleImages();
+
 	SyncMainText();
 	RefreshMainMenuState();
 	ShowMainScreen();
 	SetStatusText(FText::GetEmpty());
+}
+
+void UTitleMenuWidget::ApplyTitleImages()
+{
+	// 아트는 SVN raw PNG(uasset 아님)라 런타임 로드해 WBP가 배치한 Image에 채우기만 한다.
+	// 대상 Image가 WBP에 없으면(BindWidgetOptional → nullptr) 그 항목만 건너뛴다.
+	struct FTitleImageBinding
+	{
+		UImage* Image;
+		const FString& Path;
+		TObjectPtr<UTexture2D>& TextureHolder;
+	};
+
+	const FTitleImageBinding Bindings[] = {
+		{ TitleLogoImage,      mTitleLogoImagePath,      mTitleLogoTexture },
+		{ StartButtonImage,    mStartButtonImagePath,    mStartButtonTexture },
+		{ SettingsButtonImage, mSettingsButtonImagePath, mSettingsButtonTexture },
+	};
+
+	for (const FTitleImageBinding& Binding : Bindings)
+	{
+		if (Binding.Image == nullptr)
+		{
+			continue;
+		}
+
+		if (Binding.TextureHolder == nullptr)
+		{
+			Binding.TextureHolder = RDUITexture::LoadTextureFromContentPng(Binding.Path, TEXT("TitleMenuWidget"));
+		}
+
+		if (Binding.TextureHolder != nullptr)
+		{
+			Binding.Image->SetBrushFromTexture(Binding.TextureHolder, true);
+		}
+	}
 }
 
 /**
