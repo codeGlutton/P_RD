@@ -27,5 +27,6 @@ void UIndexedButtonWidget::HandleClicked()
 
 void UIndexedButtonWidget::HandlePressed()
 {
+	// Press 단계에서도 같은 index payload를 유지해, 사운드/강조 같은 즉시 피드백 코드가 클릭 확정을 기다리지 않게 한다.
 	OnIndexedPressed.Broadcast(mButtonIndex);
 }

@@ -63,6 +63,23 @@ bool URoomTransitionSubsystem::PreloadFrontendRoomAsync(FOnReadyToTransition Rea
     return true;
 }
 
+/**
+ * @brief 방 좌표만 넘기는 호출부를 FRoomTransitionRequest 기반 preload 흐름으로 연결한다.
+ *
+ * @details
+ * 이 overload는 호출자가 FRoomTransitionRequest를 직접 만들지 않아도 되게 하는 편의 진입점이다.
+ * 핵심 의도는 RequireExternalReady와 IsAutoTransition을 내부 overload까지 그대로 보존하는 것이다.
+ * 특히 RequireExternalReady를 빠뜨리면 IsAutoTransition 값이 그 자리로 밀려 들어가 전환 조건이
+ * 잘못 해석되므로, 두 제어 플래그를 명시적으로 전달한다.
+ *
+ * @param RoomRowIndex 전환할 방의 행 index.
+ * @param RoomColumnIndex 전환할 방의 열 index.
+ * @param ReadyToTransitionCallback 전환 준비 완료 시 호출할 콜백.
+ * @param PreTransitionCallback 실제 전환 직전 호출할 콜백.
+ * @param RequireExternalReady 에셋 로드 후 외부 준비 신호까지 기다릴지 여부.
+ * @param IsAutoTransition 준비 완료 후 자동으로 전환을 시작할지 여부.
+ * @return preload 요청을 정상 접수했으면 true, 이미 다른 전환 작업 중이면 false.
+ */
 bool URoomTransitionSubsystem::PreloadRoomAsync(int32 RoomRowIndex, int32 RoomColumnIndex, FOnReadyToTransition ReadyToTransitionCallback, FOnPreTransitNextRoom PreTransitionCallback, bool RequireExternalReady, bool IsAutoTransition)
 {
     FRoomTransitionRequest Request;
@@ -72,6 +89,7 @@ bool URoomTransitionSubsystem::PreloadRoomAsync(int32 RoomRowIndex, int32 RoomCo
     Request.OnReadyToTransition = ReadyToTransitionCallback;
     Request.OnPreTransitNextRoom = PreTransitionCallback;
 
+    // RequireExternalReady와 IsAutoTransition을 둘 다 넘겨야 호출부가 의도한 전환 조건이 유지된다.
     return PreloadRoomAsync(MoveTemp(Request), RequireExternalReady, IsAutoTransition);
 }
 
@@ -193,6 +211,8 @@ bool URoomTransitionSubsystem::MarkExternalReady()
  * 왜 ReadyToTransition을 다시 확인하는가:
  * 이 함수가 호출됐다는 사실만으로 에셋 로드, 스테이지 생성, 외부 준비가 모두 끝났다고 믿으면 안 된다.
  * ReadyToTransition 플래그가 없으면 아직 이동할 방 정보가 완성되지 않은 상태이므로 실제 레벨 이동을 시작하지 않는다.
+ *
+ * @return 전환 시작 요청을 정상적으로 걸었으면 true, 아직 준비되지 않았거나 이미 자동 전환 중이면 false.
  */
 bool URoomTransitionSubsystem::TransitLoadedRoom()
 {

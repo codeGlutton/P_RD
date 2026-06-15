@@ -3,6 +3,17 @@
 using UnrealBuildTool;
 using System.Collections.Generic;
 
+/**
+ * @brief P_RD 게임 타깃의 빌드 규칙입니다.
+ *
+ * @details
+ * 이번 UI 작업은 에디터에서 WBP와 C++ 위젯을 반복 수정하는 흐름이 많습니다. Win64 개발 환경에서
+ * Hot Reload가 꺼진 상태면 작은 UI helper 수정도 에디터 재시작 비용으로 이어져, Win64 타깃에만
+ * WITH_HOT_RELOAD를 명시적으로 켭니다.
+ *
+ * Android/패키징 타깃까지 이 override를 넓히지 않는 것이 의도입니다. 모바일 빌드 검증은 기본 UBT
+ * 환경을 유지하고, 에디터 반복 작업 편의만 좁게 보완합니다.
+ */
 public class P_RDTarget : TargetRules
 {
 	public P_RDTarget(TargetInfo Target) : base(Target)

@@ -1,5 +1,16 @@
 ﻿using UnrealBuildTool;
 
+/**
+ * @brief P_RD 런타임 모듈의 빌드 의존성을 선언합니다.
+ *
+ * @details
+ * 이번 UI foundation PR은 WBP를 단순히 참조하는 수준을 넘어, C++에서 버튼 입력, Slate 타입,
+ * 런타임 PNG 디코딩, 인트로 미디어 재생을 직접 다룹니다. 그래서 관련 모듈 의존성을 Build.cs에
+ * 명시해 "어떤 UI 기능 때문에 어떤 모듈이 필요한지"를 리뷰 시 바로 추적할 수 있게 합니다.
+ *
+ * 에디터 전용 WBP 생성/편집 의존성은 Target.bBuildEditor 안에만 둡니다. 런타임 APK/패키지에
+ * UnrealEd 계열 모듈이 끌려가지 않게 분리하는 것이 이 파일에서 가장 중요한 경계입니다.
+ */
 public class P_RD : ModuleRules
 {
 	public P_RD(ReadOnlyTargetRules Target) : base(Target)
@@ -38,8 +49,10 @@ public class P_RD : ModuleRules
             "GameplayStateTreeModule",  // StateTree AI Comp 사용
         });
 
-        // 캐릭터 선택 WBP를 코드로 생성·구성하는 에디터 커맨드렛(ClassSelectWBPSetupCommandlet) 전용 의존성.
-        // 에디터 빌드에서만 필요하므로 런타임 패키지에 끌려들어가지 않게 bBuildEditor로 감싼다.
+        /*
+         * 캐릭터 선택 WBP를 코드로 생성·구성하는 에디터 커맨드렛(ClassSelectWBPSetupCommandlet) 전용 의존성.
+         * 에디터 빌드에서만 필요하므로 런타임 패키지에 끌려들어가지 않게 bBuildEditor로 감싼다.
+         */
         if (Target.bBuildEditor)
         {
             PrivateDependencyModuleNames.AddRange(new string[] {
