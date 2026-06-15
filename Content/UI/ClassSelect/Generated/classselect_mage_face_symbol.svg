@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <title>Mage face symbol</title>
+  <defs>
+    <mask id="cutouts">
+      <rect width="1024" height="1024" fill="white"/>
+      <ellipse cx="410" cy="610" rx="48" ry="62" fill="black"/>
+      <ellipse cx="614" cy="610" rx="48" ry="62" fill="black"/>
+      <path d="M398 738Q512 790 626 738" fill="none" stroke="black" stroke-width="36" stroke-linecap="round"/>
+    </mask>
+  </defs>
+  <path fill="#F7FAFC" d="M512 84 756 386H268Z"/>
+  <path fill="#F7FAFC" d="M184 394H840L792 506H232Z"/>
+  <path mask="url(#cutouts)" fill="#F7FAFC" d="M256 500h512v146c0 142-114 258-256 258S256 788 256 646Z"/>
+</svg>

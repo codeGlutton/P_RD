@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <title>Mage face square button</title>
+  <defs>
+    <mask id="buttonMask">
+      <rect x="88" y="88" width="848" height="848" rx="154" fill="white"/>
+    </mask>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="24" stdDeviation="24" flood-color="#000000" flood-opacity=".35"/>
+    </filter>
+    <mask id="faceCutouts">
+      <rect width="1024" height="1024" fill="white"/>
+      <ellipse cx="440" cy="588" rx="36" ry="48" fill="black"/>
+      <ellipse cx="584" cy="588" rx="36" ry="48" fill="black"/>
+      <path d="M430 690Q512 726 594 690" fill="none" stroke="black" stroke-width="28" stroke-linecap="round"/>
+    </mask>
+  </defs>
+  <g filter="url(#softShadow)">
+    <rect x="88" y="88" width="848" height="848" rx="154" fill="#4C1D95"/>
+    <g mask="url(#buttonMask)">
+      <path d="M88 88H936V248H88Z" fill="#7C3AED"/>
+      <path d="M88 776H936V936H88Z" fill="#2E1065"/>
+      <path d="M88 88H248V936H88Z" fill="#6D28D9"/>
+      <path d="M776 88H936V936H776Z" fill="#3B166E"/>
+    </g>
+    <rect x="124" y="124" width="776" height="776" rx="124" fill="none" stroke="#F7FAFC" stroke-width="34" opacity=".88"/>
+    <path fill="#F7FAFC" d="M512 176 690 396H334Z"/>
+    <path fill="#F7FAFC" d="M286 402H738L704 482H320Z"/>
+    <path mask="url(#faceCutouts)" fill="#F7FAFC" d="M338 476h348v100c0 98-78 178-174 178S338 674 338 576Z"/>
+  </g>
+</svg>
