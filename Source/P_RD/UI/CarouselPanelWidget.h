@@ -6,6 +6,7 @@
 #pragma once
 
 #include "RDMinimal.h"
+#include "UI/CarouselLayoutPolicy.h"
 #include "UI/RDUserWidget.h"
 
 #include "CarouselPanelWidget.generated.h"
@@ -47,6 +48,9 @@ protected:
 	/** @brief Construct에서 연결한 버튼 입력을 해제한다. */
 	void NativeDestruct() override;
 
+	/** @brief 캐러셀 선택 이동을 부드럽게 보간한다. */
+	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+
 	/** @brief 패널이 열릴 때 이전 선택/드래그 상태를 초기화한다. */
 	void ApplyOpenUI() override;
 
@@ -75,6 +79,16 @@ protected:
 	bool IsPointerOverSelectedCarouselItem(const FVector2D& ScreenPosition) const;
 
 	/**
+	 * @brief 현재 패널에서 실제로 표시할 카드 개수를 반환한다.
+	 *
+	 * @details
+	 * SkillPanel처럼 WBP에 있는 모든 카드를 그대로 쓰는 패널은 기본값을 사용한다.
+	 * DicePanel처럼 런 데이터의 보유 주사위 수에 따라 카드 수가 달라지는 패널은 이 값을 override해
+	 * 남는 WBP 목업 카드를 숨긴다.
+	 */
+	virtual int32 GetCarouselItemDisplayCount() const;
+
+	/**
 	 * @brief 카드별 추가 회전 각도를 반환한다.
 	 *
 	 * @details
@@ -89,6 +103,9 @@ protected:
 	 * DicePanel은 여기서 이전 카드의 회전 상태를 초기화한다.
 	 */
 	virtual void HandleCarouselSelectionChanged(int32 PreviousIndex, int32 NewIndex);
+
+	/** @brief 지정 인덱스의 카드를 선택하고 캐러셀 배치를 다시 계산한다. */
+	void SelectCarouselItem(int32 ItemIndex);
 
 private:
 	UFUNCTION()
@@ -127,14 +144,23 @@ private:
 	/** @brief 캐시된 CarouselButton_N 버튼에서 선택 핸들러를 해제한다. */
 	void UnbindCarouselEvents();
 
-	/** @brief 지정 인덱스의 카드를 선택하고 캐러셀 배치를 다시 계산한다. */
-	void SelectCarouselItem(int32 ItemIndex);
+	/** @brief WBP 카드 수와 파생 위젯의 표시 카드 수 제한을 함께 반영한 실제 배치 대상 개수 */
+	int32 GetClampedCarouselItemDisplayCount() const;
 
 	/** @brief 활성화된 캐러셀 상태에서 선택 카드를 기준으로 원형 배치를 적용한다. */
-	void ApplyCarouselLayout();
+	void ApplyCarouselLayout(bool bAnimate = false);
 
-	/** @brief 첫 선택 전 카드들을 가로 목록으로 펼쳐 보여준다. */
-	void ApplyLinearListLayout();
+	/** @brief 현재 선택/활성 상태 기준으로 각 카드의 목표 배치를 계산한다. */
+	void BuildCarouselLayouts(TArray<FCarouselItemLayout>& OutLayouts) const;
+
+	/** @brief 현재 화면에 적용된 카드 배치를 읽어 애니메이션 시작점으로 사용한다. */
+	void CaptureCurrentCarouselLayouts(TArray<FCarouselItemLayout>& OutLayouts) const;
+
+	/** @brief 계산된 배치를 실제 카드 위젯에 적용한다. */
+	void ApplyCarouselLayouts(const TArray<FCarouselItemLayout>& Layouts);
+
+	/** @brief 현재 배치에서 목표 배치까지 캐러셀 전환 애니메이션을 시작한다. */
+	void StartCarouselLayoutTransition(const TArray<FCarouselItemLayout>& TargetLayouts);
 
 	/** @brief 패널 열림 시 선택/눌림/터치 위치 상태를 초기값으로 되돌린다. */
 	void ResetCarouselState();
@@ -196,4 +222,19 @@ private:
 
 	/** @brief 탭과 드래그를 구분하기 위해 처음 누른 화면 좌표를 저장한다. */
 	FVector2D mCarouselPressPosition = FVector2D::ZeroVector;
+
+	/** @brief 캐러셀 전환 애니메이션의 시작 배치 */
+	TArray<FCarouselItemLayout> mCarouselStartLayouts;
+
+	/** @brief 캐러셀 전환 애니메이션의 목표 배치 */
+	TArray<FCarouselItemLayout> mCarouselTargetLayouts;
+
+	/** @brief 선택 카드 이동 애니메이션이 진행 중인지 여부 */
+	bool mCarouselTransitionActive = false;
+
+	/** @brief 선택 카드 이동 애니메이션 누적 시간 */
+	float mCarouselTransitionElapsed = 0.0f;
+
+	/** @brief 선택 카드 이동 애니메이션 길이 */
+	float mCarouselTransitionDuration = 0.26f;
 };
