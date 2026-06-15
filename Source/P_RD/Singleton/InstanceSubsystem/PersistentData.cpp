@@ -6,6 +6,9 @@
 #include "Engine/AssetManager.h"
 #include "PCGStage/StageBuilder.h"
 
+#include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
+#include "DataAsset/DiceData/StaticDiceData.h"
+
 #include "FunctionLibrary/RandomStreamFunctionLibrary.h"
 
 void FRunLog::Clear()
@@ -144,6 +147,26 @@ void URunPersistData::StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Diffic
 	mIsNewData = true;
 	mPlayerUnitId = PlayerUnitId;
 	mDifficulty = Difficulty;
+
+	/*
+	 * 시작 보유 주사위 배선: 선택한 플레이어 유닛 DataAsset의 mDiceDatas를 런의 보유 다이스 id로 옮긴다.
+	 * 이 한 줄이 빠져 있어 탑바 DICE·전투 HUD 보유 다이스·다이스 패널이 모두 0으로 보였다.
+	 * (UDiceData 런타임/예측 구조로 이전되면 이 복사도 그쪽 초기화로 흡수된다.)
+	 */
+	if (UAssetManager* AssetManager = UAssetManager::GetIfInitialized())
+	{
+		if (const UStaticPlayerUnitSpawnData* PlayerUnitData =
+				Cast<UStaticPlayerUnitSpawnData>(AssetManager->GetPrimaryAssetObject(PlayerUnitId)))
+		{
+			for (const TSoftObjectPtr<UStaticDiceData>& DicePtr : PlayerUnitData->mDiceDatas)
+			{
+				if (const UStaticDiceData* DiceData = DicePtr.LoadSynchronous())
+				{
+					mDiceIds.Add(DiceData->GetPrimaryAssetId());
+				}
+			}
+		}
+	}
 }
 
 void URunPersistData::ClearRun()
