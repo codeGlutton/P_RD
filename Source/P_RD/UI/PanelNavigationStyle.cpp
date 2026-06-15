@@ -1,7 +1,6 @@
 #include "UI/PanelNavigationStyle.h"
 
-// 색 값은 의도적으로 이 한 파일에만 둔다. 디자인 톤을 조정할 때 여기 상수만 바꾸면
-// 모든 네비게이션 패널에 똑같이 적용되도록 하기 위함이다. (헤더의 의미별 함수 이름과 1:1 대응)
+// 메뉴 색을 바꿀 때 여러 위젯을 찾아다니지 않도록 색 값을 여기 한곳에 둔다.
 
 FLinearColor RDPanelNavigationStyle::GetButtonTextColor()
 {

@@ -2,16 +2,16 @@
 
 /**
  * @file DiceViewData.h
- * @brief 주사위 하나를 UI에 그릴 때 필요한 표시용 데이터와 희귀도 색/문구 헬퍼입니다.
+ * @brief 주사위 UI에 필요한 표시값을 모아 둔 파일입니다.
  *
- * 전투 HUD와 주사위 패널이 같은 주사위를 각자 다르게 그리지 않도록, 희귀도 판별·색·문구를
- * 한곳에 모았습니다. 위젯은 게임 데이터(StaticDiceData)를 직접 들추지 않고 이 헬퍼만 부르면 됩니다.
+ * 전투 HUD와 주사위 패널이 같은 색과 문구를 쓰도록, 주사위 희귀도 관련 처리를 한곳에 모았습니다.
+ * 위젯 쪽에서는 이 함수들만 쓰면 됩니다.
  */
 
 #include "RDMinimal.h"
 #include "DataAsset/RarityType.h"
 
-/** @brief 주사위 한 칸을 그리는 데 필요한 최소 표시 상태(런타임 갱신용 뷰 데이터). */
+/** @brief 주사위 한 칸을 화면에 그릴 때 필요한 값입니다. */
 struct P_RD_API FDiceViewData
 {
 	FPrimaryAssetId mDiceId;
@@ -23,9 +23,9 @@ struct P_RD_API FDiceViewData
 namespace RDUIDice
 {
 	/**
-	 * @brief 같은 희귀도라도 패널 배경이 달라 색을 약간 다르게 줘야 하는 두 곳을 구분합니다.
+	 * @brief 주사위 색을 어디에 그릴지 구분합니다.
 	 *
-	 * 어두운 전투 HUD와 밝은 주사위 패널에서 같은 색을 쓰면 한쪽이 묻히므로, 톤만 살짝 나눕니다.
+	 * 전투 HUD와 주사위 패널은 배경이 달라서 같은 희귀도라도 색 밝기를 조금 다르게 씁니다.
 	 */
 	enum class EDiceRarityColorTone : uint8
 	{
@@ -34,14 +34,13 @@ namespace RDUIDice
 	};
 
 	/**
-	 * @brief 주사위 에셋 id로 희귀도를 알아냅니다.
+	 * @brief 주사위 id로 희귀도를 찾습니다.
 	 *
-	 * StaticDiceData가 로드돼 있으면 그 값을 쓰고, 아직 없으면 에셋 타입 이름(Epic/Rare)으로 추정합니다.
-	 * 로딩 타이밍과 무관하게 색/문구를 바로 정할 수 있게 한 폴백입니다.
+	 * 주사위 데이터가 이미 로드돼 있으면 그 값을 쓰고, 없으면 id 이름에 들어간 Rare/Epic으로 판단합니다.
 	 */
 	P_RD_API ERarityType ResolveDiceRarity(const FPrimaryAssetId& DiceId);
 
-	/** @brief 희귀도에 맞는 색을 돌려줍니다. 그리는 곳(전투 HUD/주사위 패널)에 따라 톤만 다릅니다. */
+	/** @brief 희귀도에 맞는 색을 돌려줍니다. */
 	P_RD_API FLinearColor GetDiceRarityColor(ERarityType RarityType, EDiceRarityColorTone ColorTone = EDiceRarityColorTone::CombatHUD);
 
 	/** @brief 희귀도 표시 문구(Common/Rare/Epic)를 돌려줍니다. */

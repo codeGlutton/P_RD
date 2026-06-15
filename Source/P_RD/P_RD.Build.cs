@@ -1,15 +1,14 @@
 ﻿using UnrealBuildTool;
 
 /**
- * @brief P_RD 런타임 모듈의 빌드 의존성을 선언합니다.
+ * @brief P_RD 모듈이 사용하는 엔진 모듈 목록입니다.
  *
  * @details
- * 이 파일은 모듈 전체가 쓰는 의존성을 한곳에 모은 것이라, 뒤따르는 UI 작업이 쓰는 모듈(미디어 재생,
- * Slate 타입, PNG 디코딩 등)도 여기서 미리 선언됩니다. 각 의존성에 "무엇 때문에 필요한지"를 적어,
- * 리뷰 시 모듈이 왜 그 의존성을 끌어오는지 바로 알 수 있게 했습니다.
+ * UI 코드에서 영상 재생, PNG 읽기, Slate 타입을 쓰기 때문에 관련 모듈을 여기에 추가합니다.
+ * 새 모듈을 넣을 때는 옆에 이유를 짧게 적어 두면 나중에 지워도 되는 의존성인지 판단하기 쉽습니다.
  *
- * 이 파일에서 가장 중요한 경계는 마지막의 bBuildEditor 블록입니다. 에디터 전용 모듈(UnrealEd 계열)을
- * 그 안에만 두어, 런타임 패키지/APK에 에디터 모듈이 끌려 들어가지 않게 분리합니다.
+ * UnrealEd 같은 에디터 전용 모듈은 bBuildEditor 안에만 둡니다.
+ * 그래야 APK 같은 실제 실행 빌드에 에디터 모듈이 섞이지 않습니다.
  */
 public class P_RD : ModuleRules
 {
@@ -26,11 +25,11 @@ public class P_RD : ModuleRules
             "EnhancedInput",
             "UMG",
             "MediaAssets",              // 인트로 시네마틱 MP4 재생(MediaPlayer/MediaSource)에 필요
-            "ImageWrapper",             // 런타임 PNG 디코딩(UITextureLoader)에 필요
+            "ImageWrapper",             // 실행 중 PNG 파일을 읽는 UITextureLoader에 필요
 
             /*
-             * WBP 표시 자체는 UMG만으로 되지만, UI 위젯을 C++에서 다루면 SlateVisibility, FReply,
-             * Widget Transform 같은 Slate 타입을 직접 쓰게 된다. 그 위젯들의 컴파일을 위해 Slate/SlateCore를 명시한다.
+             * UI 위젯을 C++에서 다룰 때 SlateVisibility, FReply 같은 Slate 타입을 쓴다.
+             * 그래서 UMG와 함께 Slate/SlateCore도 필요하다.
              */
             "Slate",
             "SlateCore",
@@ -49,8 +48,8 @@ public class P_RD : ModuleRules
         });
 
         /*
-         * WBP/텍스처를 코드로 생성·편집하는 에디터 전용 도구(커맨드렛 등)가 쓰는 의존성.
-         * 에디터 빌드에서만 필요하므로 런타임 패키지에 끌려들어가지 않게 bBuildEditor로 감싼다.
+         * WBP나 텍스처를 코드로 만들고 고치는 에디터 전용 도구가 쓰는 모듈.
+         * 게임 실행에는 필요 없으니 에디터 빌드에서만 추가한다.
          */
         if (Target.bBuildEditor)
         {
