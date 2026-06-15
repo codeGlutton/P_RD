@@ -14,6 +14,7 @@ class UCanvasPanel;
 class UCombatViewModel;
 class UIndexedButtonWidget;
 class UImage;
+class UProgressBar;
 class UTextBlock;
 class UViewport;
 class UWidget;
@@ -185,6 +186,12 @@ private:
 	/** @brief 뷰모델의 플레이어 메타(HP/Gold/Lv)와 턴 정보를 상단 상태바 텍스트로 반영한다. */
 	void RefreshCombatStatusBar() const;
 
+	/** @brief 뷰모델의 유닛 수에 맞춰 머리 위 HP바 위젯을 다시 만든다. */
+	void RebuildUnitHpBars();
+
+	/** @brief 각 유닛의 월드 위치를 화면에 투영해 HP바 위치/비율/색을 매 프레임 갱신한다. */
+	void UpdateUnitHpBars();
+
 	UFUNCTION()
 	void HandleSkillButtonReleased();
 
@@ -298,6 +305,10 @@ private:
 	/** @brief 상단 상태바(플레이어 HP/Gold/Lv·라운드) 런타임 텍스트 */
 	UPROPERTY(Transient)
 	TObjectPtr<UTextBlock> mCombatStatusBarText;
+
+	/** @brief 유닛 머리 위에 월드→스크린 투영으로 띄우는 HP바(유닛 뷰 순서와 1:1) */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UProgressBar>> mUnitHpBars;
 
 	/** @brief 보유 주사위를 그리는 투명 RenderTarget Image 위젯 */
 	UPROPERTY(Transient)

@@ -88,6 +88,9 @@ struct FUnitView
 	UPROPERTY(BlueprintReadOnly) float mSkillPoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) FTileIndex mTile;
 
+	// 머리 위 HP바를 월드→스크린 투영으로 띄우기 위한 유닛 월드 위치. 어댑터가 채우고 UI는 투영만 한다.
+	UPROPERTY(BlueprintReadOnly) FVector mWorldLocation = FVector::ZeroVector;
+
 	// 머리 위 버프/디버프 아이콘용. enum 대신 태그로 받아 UI가 게임플레이 상태 enum에 의존하지 않게 한다.
 	UPROPERTY(BlueprintReadOnly) FGameplayTagContainer mStatusTags;
 };

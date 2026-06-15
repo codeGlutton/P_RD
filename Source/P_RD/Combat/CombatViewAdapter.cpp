@@ -48,6 +48,7 @@ void UCombatViewAdapter::PushAll()
 			View.mMaxHP = View.mIsPlayer ? 100.f : 30.f;
 			View.mHP = View.mMaxHP;
 			View.mTile = Unit->GetTileTransform().mIndex;
+			View.mWorldLocation = Unit->GetActorLocation();   // 머리 위 HP바 투영용(비GAS).
 
 			if (View.mIsPlayer)
 			{

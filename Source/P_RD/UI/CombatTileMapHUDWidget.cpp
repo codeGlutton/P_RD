@@ -82,6 +82,7 @@ void UCombatTileMapHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 
 	RefreshDicePreviewActors();
 	RefreshOwnedDiceCards();
+	UpdateUnitHpBars();   // 유닛 머리 위 HP바를 월드→스크린 투영으로 매 프레임 따라가게 한다.
 
 	if (mIntroDiceRollActive)
 	{
@@ -99,6 +100,7 @@ void UCombatTileMapHUDWidget::ApplyOpenUI()
 	RefreshDiceViewsFromRunData();
 	RebuildOwnedDiceCards();
 	RefreshCombatStatusBar();   // 위젯 생성 이후에 뷰모델 값(HP/Gold/Lv/Round)을 상단 상태바에 채운다.
+	RebuildUnitHpBars();        // 유닛 수에 맞춰 머리 위 HP바를 만든다.
 	mSelectedDiceIndex = INDEX_NONE;
 	mSelectedSkillIndex = INDEX_NONE;
 	HideSkillDetail();

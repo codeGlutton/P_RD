@@ -13,6 +13,12 @@ void UCombatTileMapHUDWidget::HandleCombatViewChanged(ECombatViewDomain Domain)
 	{
 		RefreshCombatStatusBar();
 	}
+
+	// 유닛 수가 바뀌면 머리 위 HP바도 다시 만든다.
+	if (Domain == ECombatViewDomain::Unit || Domain == ECombatViewDomain::All)
+	{
+		RebuildUnitHpBars();
+	}
 }
 
 void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const
