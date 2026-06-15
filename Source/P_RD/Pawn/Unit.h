@@ -66,8 +66,7 @@ public:
 	USkillComponent* GetSkillComponent() const;
 
 public:
-	virtual void OnBeginPlayRoom();
-	virtual void OnEndPlayRoom();
+	virtual void OnBeginRoom();
 
 public:
 	void SetStaticSpawnData(const UStaticUnitSpawnData* StaticUnitSpawnData);
@@ -87,6 +86,8 @@ public:
 private:
 	UPROPERTY(Category = GAS, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "AbilitySystemComp"))
 	TObjectPtr<UAbilitySystemComponent>	mAbilitySystemComp;
+
+protected:
 	UPROPERTY(Category = GAS, VisibleAnywhere, meta = (DisplayName = "UnitAttributeSet"))
 	TObjectPtr<UUnitAttributeSet> mUnitAttributeSet;
 

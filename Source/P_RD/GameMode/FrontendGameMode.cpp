@@ -1,4 +1,4 @@
-#include "GameMode/FrontendGameMode.h"
+﻿#include "GameMode/FrontendGameMode.h"
 
 #include "GameFramework/PlayerController.h"
 
@@ -161,7 +161,12 @@ void AFrontendGameMode::BeginRoom()
 	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
 	checkf(PlayerController != nullptr, TEXT(""));
 
+#if PLATFORM_DESKTOP
+	PlayerController->SetShowMouseCursor(true);
+#endif
+#if PLATFORM_ANDROID
 	PlayerController->ActivateTouchInterface(nullptr);
+#endif
 
 	FInputModeGameAndUI InputMode;
 	PlayerController->SetInputMode(InputMode);
@@ -356,6 +361,8 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 		OutOptions.Add(MoveTemp(NewOption));
 	}
 
+	// TODO : 아쳐와 메이지가 추가된 뒤에 삭제할 부분
+
 	if (!HasCharacterOptionForJob(OutOptions, EPlayerJobType::Archer))
 	{
 		AppendLockedCharacterOption(OutOptions, EPlayerJobType::Archer);
@@ -364,6 +371,8 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 	{
 		AppendLockedCharacterOption(OutOptions, EPlayerJobType::Mage);
 	}
+
+	// TODO : 아쳐와 메이지가 추가된 뒤에 삭제할 부분
 
 	return OutOptions.IsEmpty() == false;
 }

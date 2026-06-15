@@ -12,8 +12,6 @@ AUnit::AUnit() :
 	PrimaryActorTick.bCanEverTick = true;
 
 	mAbilitySystemComp = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
-	mUnitAttributeSet = CreateDefaultSubobject<UUnitAttributeSet>(TEXT("UnitAttributeSet"));
-
 	mSkillComp = CreateDefaultSubobject<USkillComponent>(TEXT("SkillComp"));
 }
 
@@ -105,11 +103,7 @@ USkillComponent* AUnit::GetSkillComponent() const
 	return mSkillComp;
 }
 
-void AUnit::OnBeginPlayRoom()
-{
-}
-
-void AUnit::OnEndPlayRoom()
+void AUnit::OnBeginRoom()
 {
 }
 

@@ -9,6 +9,11 @@
 
 #include "Pawn/Unit.h"
 
+#include "SRPGFramework/SRPGSkillAction.h"
+#include "SRPGFramework/SRPGSkillBuildAction.h"
+
+DEFINE_LOG_CATEGORY(LogCombatGameMode);
+
 void ACombatGameMode::InitializeRoom()
 {
 	Super::InitializeRoom();
@@ -29,9 +34,49 @@ void ACombatGameMode::BeginRoom()
 	Super::BeginRoom();
 
 	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
+	checkf(CombatSubsystem != nullptr, TEXT("전투 시스템 서브시스템 nullptr"));
+
 	for (const TObjectPtr<AUnit>& Unit : CombatSubsystem->GetUnits())
 	{
-		Unit->OnBeginPlayRoom();
+		Unit->OnBeginRoom();
 	}
 	CombatSubsystem->BeginCombat();
+}
+
+bool ACombatGameMode::SelectSkill(int32 SkillIndex)
+{
+	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
+	checkf(CombatSubsystem != nullptr, TEXT("전투 시스템 서브시스템 nullptr"));
+
+	TSharedPtr<FSRPGSkillSelectCommand> SkillSelectCommand = MakeShared<FSRPGSkillSelectCommand>();
+	SkillSelectCommand->mSkillIndex = SkillIndex;
+	SkillSelectCommand->OnChangeSkillBuildPhase.AddUObject(this, &ACombatGameMode::OnChangeSkillBuildPhase);
+
+	return CombatSubsystem->SummitCommand(SkillSelectCommand);
+}
+
+bool ACombatGameMode::ResolveWorldTouchEvent()
+{
+	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
+	checkf(CombatSubsystem != nullptr, TEXT("전투 시스템 서브시스템 nullptr"));
+
+	TSharedPtr<FSRPGWorldTraceCommand> WorldTraceActionCommand = MakeShared<FSRPGWorldTraceCommand>();
+	WorldTraceActionCommand->mIsLongPress = false;
+
+	return CombatSubsystem->SummitCommand(WorldTraceActionCommand);
+}
+
+bool ACombatGameMode::ResolveWorldLongPressEvent()
+{
+	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
+	checkf(CombatSubsystem != nullptr, TEXT("전투 시스템 서브시스템 nullptr"));
+
+	TSharedPtr<FSRPGWorldTraceCommand> WorldTraceActionCommand = MakeShared<FSRPGWorldTraceCommand>();
+	WorldTraceActionCommand->mIsLongPress = true;
+
+	return CombatSubsystem->SummitCommand(WorldTraceActionCommand);
+}
+
+void ACombatGameMode::OnChangeSkillBuildPhase(const FSRPGSkillBuildAction& Action, ESRPGSkillBuildPhase Phase)
+{
 }

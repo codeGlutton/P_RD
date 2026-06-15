@@ -31,10 +31,14 @@ void ITileActor::OnBeginRound()
 {
 }
 
-void ITileActor::OnBeginCycle()
+void ITileActor::OnEndRound()
 {
 }
 
 void ITileActor::OnBeginTurn()
+{
+}
+
+void ITileActor::OnEndTurn()
 {
 }

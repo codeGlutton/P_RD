@@ -9,47 +9,17 @@
 
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGAction.h"
+#include "FunctionLibrary/CombatCalculator/CombatResult.h"
 
-struct FPresentationBarrier;
 struct FSRPGSkillAction;
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBeginSkillUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGSkillAction& /*Action*/);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndSkillUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGSkillAction& /*Action*/);
-
-class UStaticSkillData;
-
-/**
- * @brief  스킬 사용 SRPG 행동을 제작하기 위해 요구되는 절차 처리 일회성 객체
- */
-struct FSRPGSkillActionDraft : public FSRPGActionDraft
+struct FSRPGSkillCastCommand : public FSRPGActionCreationCommand<FSRPGSkillAction>
 {
-	friend struct FSRPGTurnContext;
-	using Super = FSRPGActionDraft;
-
-protected:
-	TSharedPtr<FSRPGAction> FinalizeDraft() const override;
-
-	void OnFinalizeDraft() override;
-	void OnDiscardDraft() override;
-
-protected:
-	ESRPGActionDraftType GetDraftType() const override;
+public:
+	FSRPGSkillCastCommand();
 
 public:
-	void SetSkill(int32 SkillIndex);
-	void SetTargetTile(const FTileIndex& TileIndex);
-	FTileIndex FindTargetTileUnderCursor() const;
-
-public:
-	FOnBeginSkillUI OnBeginSkillUI;
-	FOnEndSkillUI OnEndSkillUI;
-
-protected:
-	// @brief 현재 스킬 액션 초안 상태
-	ESRPGSkillActionDraftPhase mPhase = ESRPGSkillActionDraftPhase::None;
-
-protected:
-	TObjectPtr<UStaticSkillData> mSelectedSkill;
+	FSkillCommitResult mCalculationResult;
 };
 
 /**
@@ -57,20 +27,19 @@ protected:
  */
 struct FSRPGSkillAction : public FSRPGAction
 {
-	friend struct FSRPGTurnContext;
-	friend struct FSRPGSkillActionDraft;
+	template<typename ActionType>
+	friend struct FSRPGActionCreationCommand;
 	using Super = FSRPGAction;
 
 protected:
-	FSRPGSkillAction() = default;
-	virtual ~FSRPGSkillAction() = default;
+	FSRPGSkillAction();
 
 protected:
-	void BeginAction() override;
-	void TickAction(float DeltaTime) override;
-	void EndAction() override;
+	void OnBeginAction() override;
+	void OnTickAction(float DeltaTime) override;
+	void OnEndAction() override;
 
 protected:
-	bool IsTurnEndingAction() const override;
+	// TArray<FSRPGCalculatedData> mCalculateDatas;
 };
 

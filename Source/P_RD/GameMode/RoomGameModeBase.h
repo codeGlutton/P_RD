@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   RoomGameModeBase.h
  * @brief  방에 대한 베이스 GameMode 정의 헤더
  * @author 모호재, 박용수
@@ -29,6 +29,9 @@ public:
 	ARoomGameModeBase();
 	
 	/* ARDGameModeBase 상속 */
+public:
+	AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+
 protected:
 	void InitializeCommonRoom() override;
 	void BeginRoom() override;

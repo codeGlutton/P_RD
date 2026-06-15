@@ -1,4 +1,4 @@
-#include "GameMode/RoomGameModeBase.h"
+﻿#include "GameMode/RoomGameModeBase.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
@@ -9,6 +9,8 @@
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Blueprint/UserWidget.h"
 #include "UI/RDUserWidget.h"
+
+#include "Setting/RDWorldSettings.h"
 
 DEFINE_LOG_CATEGORY(LogRoomGameMode);
 
@@ -186,6 +188,23 @@ ARoomGameModeBase::ARoomGameModeBase()
 	mWaitExternalWorkOnTransition = false;
 }
 
+AActor* ARoomGameModeBase::ChoosePlayerStart_Implementation(AController* Player)
+{
+	AActor* PlayerStartActor = Super::ChoosePlayerStart_Implementation(Player);
+
+	ARDWorldSettings* WorldSettings = Cast<ARDWorldSettings>(GetWorld()->GetWorldSettings());
+	if (WorldSettings != nullptr)
+	{
+		AActor* SettingPointActor = WorldSettings->GetMainCameraPoint();
+		if (SettingPointActor != nullptr)
+		{
+			PlayerStartActor = SettingPointActor;
+		}
+	}
+
+	return PlayerStartActor;
+}
+
 /**
  * @brief 실제 방 공통 초기화에서 플레이어 유닛을 복원한다.
  *
@@ -233,7 +252,12 @@ void ARoomGameModeBase::BeginRoom()
 	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
 	checkf(PlayerController != nullptr, TEXT(""));
 
+#if PLATFORM_DESKTOP
+	PlayerController->SetShowMouseCursor(true);
+#endif
+#if PLATFORM_ANDROID
 	PlayerController->ActivateTouchInterface(nullptr);
+#endif
 
 	FInputModeGameAndUI InputMode;
 	PlayerController->SetInputMode(InputMode);
