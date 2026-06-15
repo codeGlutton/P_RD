@@ -15,6 +15,7 @@
 struct FPresentationBarrier;
 
 class UButton;
+class UCanvasPanel;
 class UFrontendMapWidget;
 class USettingsPanelWidget;
 class UTextBlock;
@@ -102,6 +103,23 @@ private:
 	void SyncDefaultText() const;
 
 	/**
+	 * @brief 모바일에서 최상단 버튼을 안정적으로 누를 수 있도록 투명 터치 영역을 덧댄다.
+	 *
+	 * @details
+	 * WBP_TopMenuBar의 DICE/SKILL 버튼은 화면 최상단에 가까워, 기기 상태바/제스처 영역과 겹치기 쉽다.
+	 * 시각 배치는 그대로 두고 살짝 아래쪽까지 입력 영역만 확장해 실제 터치가 같은 토글 핸들러로 들어오게 한다.
+	 */
+	void EnsureRuntimeTopBarHitAreas();
+
+	/**
+	 * @brief 런타임 투명 터치 버튼 하나의 배치와 입력 방식을 설정한다.
+	 *
+	 * @param Button 설정할 투명 터치 버튼
+	 * @param Anchors 화면 비율 기준 터치 영역
+	 */
+	void ConfigureRuntimeHitArea(UButton* Button, const FAnchors& Anchors) const;
+
+	/**
 	 * @brief 현재 방/런 상태를 상단 요약 텍스트에 반영한다.
 	 */
 	void RefreshRoomInfo() const;
@@ -115,12 +133,22 @@ private:
 	void BindCombatEvents();
 
 	/**
+	 * @brief 전투 종료 UI 이벤트 구독을 해제한다.
+	 */
+	void UnbindCombatEvents();
+
+	/**
 	 * @brief WorldWidgetSubsystem에서 RDUserWidget 기반 월드 위젯을 가져온다.
 	 *
 	 * @param WorldWidgetType 가져올 월드 위젯 타입
 	 * @return 요청한 위젯이 URDUserWidget이면 해당 포인터, 아니면 nullptr
 	 */
 	URDUserWidget* GetToggleableWorldWidget(EWorldWidgetType WorldWidgetType) const;
+
+	/**
+	 * @brief 월드맵/설정 패널에서 탑바로 들어오는 요청 이벤트를 해제한다.
+	 */
+	void UnbindPanelEvents();
 
 	/**
 	 * @brief 월드 위젯이 준비되어 있으면 공통 CloseUI() 흐름으로 닫는다.
@@ -294,6 +322,14 @@ private:
 	/** @brief 현재 런 요약 정보를 표시하는 텍스트 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> SummaryTextBlock;
+
+	/** @brief DICE 버튼 아래쪽까지 입력을 넓히는 런타임 투명 터치 영역 */
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mRuntimeDiceHitButton;
+
+	/** @brief SKILL 버튼 아래쪽까지 입력을 넓히는 런타임 투명 터치 영역 */
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mRuntimeSkillHitButton;
 
 	/**
 	 * @brief 승리 후 다음 방 선택을 완료할 때까지 월드맵 복원을 강제할지 여부
