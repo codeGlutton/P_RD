@@ -1,6 +1,7 @@
 #include "UI/CombatTileMapHUDWidget.h"
 
 #include "InputCoreTypes.h"
+#include "UI/Combat/CombatViewModel.h"
 
 FReply UCombatTileMapHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
@@ -16,6 +17,12 @@ FReply UCombatTileMapHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeome
 	{
 		if (bClosedSkillDetail == true)
 		{
+			return FReply::Handled();
+		}
+		// 스킬 레일 밖 = 월드(타일/유닛) 영역. 뷰모델 연결 시 좌표만 넘기고 타일/유닛 판정은 게임플레이가.
+		if (mCombatViewModel != nullptr)
+		{
+			mCombatViewModel->RequestWorldTouch(ScreenPosition, false);
 			return FReply::Handled();
 		}
 		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
@@ -53,6 +60,12 @@ FReply UCombatTileMapHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry
 	{
 		if (bClosedSkillDetail == true)
 		{
+			return FReply::Handled();
+		}
+		// 스킬 레일 밖 = 월드(타일/유닛) 영역. 뷰모델 연결 시 좌표만 넘기고 타일/유닛 판정은 게임플레이가.
+		if (mCombatViewModel != nullptr)
+		{
+			mCombatViewModel->RequestWorldTouch(ScreenPosition, false);
 			return FReply::Handled();
 		}
 		return Super::NativeOnTouchStarted(InGeometry, InGestureEvent);
