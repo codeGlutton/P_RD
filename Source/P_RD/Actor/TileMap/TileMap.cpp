@@ -5,6 +5,7 @@
 #include "Engine/StaticMesh.h"
 #include "Materials/MaterialInterface.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Algo/Reverse.h"
 
 namespace
 {
@@ -96,8 +97,8 @@ void ATileMap::NotifyBeginOverlap(FTile* Tile, ITileActor* Actor)
 		{
 			continue;
 		}
-		Actor->OnBeginTileOverlap(Other.GetInterface(), Tile);
-		Other->OnBeginTileOverlap(Actor, Tile);
+		Actor->OnBeginTileOverlap(Tile, Other.GetInterface());
+		Other->OnBeginTileOverlap(Tile, Actor);
 	}
 }
 
@@ -110,8 +111,8 @@ void ATileMap::NotifyEndOverlap(FTile* Tile, ITileActor* Actor)
 		{
 			continue;
 		}
-		Actor->OnEndTileOverlap(Other.GetInterface(), Tile);
-		Other->OnEndTileOverlap(Actor, Tile);
+		Actor->OnEndTileOverlap(Tile, Other.GetInterface());
+		Other->OnEndTileOverlap(Tile, Actor);
 	}
 }
 
@@ -280,7 +281,117 @@ TArray<FTileIndex> ATileMap::GetReachableTiles(const FTileIndex& Origin, int32 M
 	return TArray<FTileIndex>();
 }
 
-TArray<FTileIndex> ATileMap::GetAimableTiles(const FTileIndex& Origin, int32 Range, EAimPattern Pattern, bool bIncludeOccupied, bool bIndirect) const
+void ATileMap::AppendRayTiles(const FTileIndex& Origin, const FTileIndex& Step, int32 Range, TArray<FTileIndex>& Out) const
+{
+	// 원점에서 Step 방향으로 한 칸씩 전진하며 수집 (원점 자신은 제외)
+	FTileIndex Current = Origin;
+	for (int32 Distance = 0; Distance < Range; ++Distance)
+	{
+		// 다음 칸으로 전진
+		Current.mX += Step.mX;
+		Current.mY += Step.mY;
+
+		// 맵 밖으로 나가면 이 방향은 더 진행하지 않고 종료
+		if (!IsValidIndex(Current))
+			break;
+
+		// 맵 안의 칸만 후보로 누적
+		Out.Add(Current);
+	}
+}
+
+void ATileMap::BresenhamLine(const FTileIndex& From, const FTileIndex& To, TArray<FTileIndex>& Out) const
+{
+	// 동점(2*Error == ±Delta) 처리가 진행 방향에 따라 다른 칸을 고르지 않도록,
+	// 항상 사전순(X 우선, 같으면 Y)으로 작은 쪽에서 큰 쪽으로만 그린다
+	const bool bSwapped = (To.mX < From.mX) || (To.mX == From.mX && To.mY < From.mY);
+	const FTileIndex& Start = bSwapped ? To : From;
+	const FTileIndex& End = bSwapped ? From : To;
+
+	// 이번 호출이 추가하는 구간의 시작 위치 (Out은 누적 배열이므로 이 구간만 뒤집어야 함)
+	const int32 FirstIndex = Out.Num();
+
+	// 시작점에서 끝점까지의 정수 좌표 (Start부터 한 칸씩 전진)
+	int32 X = Start.mX;
+	int32 Y = Start.mY;
+	const int32 X1 = End.mX;
+	const int32 Y1 = End.mY;
+
+	// 각 축별로 전체이동량과 전진방향 결정
+	const int32 DeltaX = FMath::Abs(X1 - X);
+	const int32 DeltaY = FMath::Abs(Y1 - Y);
+	const int32 StepX = (X < X1) ? 1 : -1;
+	const int32 StepY = (Y < Y1) ? 1 : -1;
+
+	// 직선에서 타일이 얼마나 멀리 있는 지 나타내는 오차 누적값 (dx - dy 기준)
+	// 이 오차를 줄이는 방향, 즉 직선과 가까운 방향으로 움직이는 게 기본 아이디어
+	// 단, dx - dy 이므로 x축으로 편향된 오차이므로, 오차가 클 수록 x축으로, 오차가 작을수록 y축으로 이동하는 압력이 세진다.
+	int32 Error = DeltaX - DeltaY;
+
+	while (true)
+	{
+		// 현재 칸 수집 (정규화된 방향이므로 Start가 첫 원소, End가 마지막 원소)
+		Out.Add(FTileIndex(X, Y));
+
+		// 끝점에 도달하면 종료
+		if (X == X1 && Y == Y1)
+			break;
+
+		// 오차에 따라 x축/y축 전진 결정
+		// 양쪽 동시에 넘으면 대각선 이동
+		// @note 나눗셈 계산을 생략하기 위해 x2 값과 비교
+		const int32 DoubleError = 2 * Error;
+		
+		// x축으로 이동하는 게 이동하지 않는 것보다 오차를 줄여주는 경우 -> x축으로 이동
+		// @note 원래는 DeltaY의 절반을 기준으로 판단해야 하는데, 나눗셈을 피하기 위해 오차를 두 배 해서 비교한다.
+		if (DoubleError > -DeltaY)
+		{
+			// x축으로 이동하는 게 y축 오차를 줄여주니까 dy만큼 오차 감소
+			Error -= DeltaY;
+			X += StepX;
+		}
+		// y축으로 이동하는 게 이동하지 않는 것보다 오차를 줄여주는 경우 -> y축으로 이동
+		// @note 원래는 DeltaX의 절반을 기준으로 판단해야 하는데, 나눗셈을 피하기 위해 오차를 두 배 해서 비교한다.
+		if (DoubleError < DeltaX)
+		{
+			// y축으로 이동하면 그 다음부터는 x축 이동 압력이 커질 수 있도록 Error 수치 조정
+			Error += DeltaX;
+			Y += StepY;
+		}
+	}
+
+	// 뒤집어 그린 경우 이번에 추가한 구간만 반전해 "From이 첫 원소, To가 마지막 원소" 되도록 변경
+	if (bSwapped)
+		Algo::Reverse(MakeArrayView(Out.GetData() + FirstIndex, Out.Num() - FirstIndex));
+}
+
+void ATileMap::RasterizeLine(const FTileIndex& From, const FTileIndex& To, TArray<FTileIndex>& Out) const
+{
+	// 현재 래스터화 방식: Bresenham (Supercover 등으로 바꾸려면 이 호출만 교체)
+	BresenhamLine(From, To, Out);
+}
+
+bool ATileMap::HasLineOfSight(const FTileIndex& From, const FTileIndex& To) const
+{
+	// From→To 직선이 지나는 칸들을 래스터화 (첫 원소=From, 마지막 원소=To 보장)
+	TArray<FTileIndex> LineTiles;
+	RasterizeLine(From, To, LineTiles);
+
+	// 양 끝(From, To)을 제외한 중간 칸만 검사
+	for (int32 Index = 1; Index < LineTiles.Num() - 1; ++Index)
+	{
+		// 중간 칸에 시야를 막는 액터(Obstacle 또는 Unit)가 있으면 시야가 막힘(=LoS:false)
+		if (GetActorsOnTile(LineTiles[Index], ETileLayerFlag::Obstacle | ETileLayerFlag::Unit).Num() > 0)
+		{
+			return false;
+		}
+	}
+
+	// 시야를 막는 액터가 없음 (=LoS:true)
+	return true;
+}
+
+TArray<FTileIndex> ATileMap::GetAimableTiles(const FTileIndex& Origin, int32 Range, EAimPattern Pattern, bool bIncludeOccupied, bool bIndirect, const ITileActor* Incoming) const
 {
 	// TODO: 조준 패턴별 조준 가능 타일 계산
 	return TArray<FTileIndex>();
@@ -302,6 +413,16 @@ void ATileMap::ClearTileHighlight(ETileHighlightFlag Flag)
 	// TODO: 모든 타일에서 Flag 비트를 끄고 custom data 갱신
 }
 
+bool ATileMap::CanPlace(const FTileIndex& TileIndex, const ITileActor* Incoming) const
+{
+	// 막히지 않으면 즉시 배치 가능
+	if (IsBlocked(TileIndex, Incoming) == false)
+		return true;
+
+	// 막혔어도 막는 액터를 교체할 수 있으면 배치 가능
+	return GetReplaceableActors(TileIndex, Incoming).Num() > 0;
+}
+
 bool ATileMap::IsBlocked(const FTileIndex& TileIndex, const ITileActor* Incoming) const
 {
 	auto* Tile = GetTile(TileIndex);
@@ -313,6 +434,38 @@ bool ATileMap::IsBlocked(const FTileIndex& TileIndex, const ITileActor* Incoming
 
 	// 타일에 블록 당하는 지 체크
 	return Tile->IsBlocked(Incoming);
+}
+
+TArray<TScriptInterface<ITileActor>> ATileMap::GetReplaceableActors(const FTileIndex& TileIndex, const ITileActor* Incoming) const
+{
+	TArray<TScriptInterface<ITileActor>> Result;
+
+	// 진입 액터가 없으면 교체 대상 없음
+	if (Incoming == nullptr)
+		return Result;
+
+	// 타일 위 모든 액터를 받아서 교체 조건으로 거름
+	for (const TScriptInterface<ITileActor>& Actor : GetActorsOnTile(TileIndex, ETileLayerFlag::All))
+	{
+		if (Actor == nullptr)
+			continue;
+
+		// 기존 액터의 레이어가 진입 액터의 레이어와 다르면 제외
+		if (!EnumHasAnyFlags(Actor->GetTileLayerFlags(), Incoming->GetTileLayerFlags()))
+			continue;
+
+		// 기존 액터가 진입 액터의 교체를 허용하지 않으면 제외
+		if (!EnumHasAnyFlags(Actor->GetReplaceLayerFlags(), Incoming->GetTileLayerFlags()))
+			continue;
+
+		// 진입 액터의 우선순위가 낮으면 제외
+		if (Incoming->GetOverlayLayerPriority() < Actor->GetOverlayLayerPriority())
+			continue;
+
+		// 모든 조건을 충족하면 교체대상
+		Result.Add(Actor);
+	}
+	return Result;
 }
 
 void ATileMap::StartActorMovement(const FTileTransform& NextTransform, ITileActor* Actor)
@@ -349,13 +502,21 @@ void ATileMap::CompleteActorMovement(ITileActor* Actor)
 void ATileMap::PlaceActor(const FTileTransform& NextTransform, ITileActor* Actor)
 {
 	checkf(Actor != nullptr, TEXT("Actor가 nullptr"));
-	checkf(IsBlocked(NextTransform.mIndex, Actor) == false, TEXT("배치할 수 없는 타일"));
+	checkf(CanPlace(NextTransform.mIndex, Actor), TEXT("배치할 수 없는 타일"));
+
+	FTile* Tile = GetTile(NextTransform.mIndex);
+
+	// 교체 대상을 타일에서 밀어냄 (등록 해제 → 교체 통지 순서)
+	for (const TScriptInterface<ITileActor>& Victim : GetReplaceableActors(NextTransform.mIndex, Actor))
+	{
+		RemoveActor(Victim.GetInterface());
+		Victim->OnReplaced(Tile, Actor);
+	}
 
 	// 논리 좌표 갱신
 	Actor->SetTileTransform(NextTransform);
 
 	// 다음 타일에 등록 후 진입 오버랩 통지 (등록 → Begin 순서)
-	FTile* Tile = GetTile(NextTransform.mIndex);
 	RegisterActorToTile(Tile, Actor);
 	NotifyBeginOverlap(Tile, Actor);
 }

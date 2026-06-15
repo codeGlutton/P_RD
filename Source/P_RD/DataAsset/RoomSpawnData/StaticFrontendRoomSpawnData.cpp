@@ -17,6 +17,23 @@ void UStaticFrontendRoomSpawnData::PostInitProperties()
 	}
 }
 
+void UStaticFrontendRoomSpawnData::PostLoad()
+{
+	Super::PostLoad();
+
+	const TSoftClassPtr<AGameModeBase> UpdatedGameMode = GetDefault<UGamePlaySettings>()->mFrontendGameMode;
+	if (mGameModeBase != UpdatedGameMode)
+	{
+#if WITH_EDITOR
+		Modify();
+#endif
+		mGameModeBase = UpdatedGameMode;
+#if WITH_EDITOR
+		MarkPackageDirty();
+#endif
+	}
+}
+
 #if WITH_EDITOR
 EDataValidationResult UStaticFrontendRoomSpawnData::IsDataValid(FDataValidationContext& Context) const
 {

@@ -318,7 +318,7 @@ void USRPGCombatSubsystem::RegisterEnemyUnit(const FEnemyUnitPlacementData& Enem
 		EvaluateCombatStates();
 		});
 
-	checkf(mTileMap->IsBlocked(EnemyPlacementData.mTransform.mIndex, EnemyUnit) == false, TEXT("타일 간 충돌"));
+	checkf(mTileMap->CanPlace(EnemyPlacementData.mTransform.mIndex, EnemyUnit), TEXT("액터 배치 불가능"));
 	
 	// 타일 위에 배치
 	mTileMap->PlaceActor(EnemyPlacementData.mTransform, EnemyUnit);
@@ -340,7 +340,7 @@ void USRPGCombatSubsystem::RegisterObstacle(const FObstaclePlacementData& Obstac
 	const UStaticObstacleSpawnData* ObstacleSpawnData = ObstaclePlacementData.mSpawnData.Get();
 	ITileActor* Obstacle = GetWorld()->SpawnActor<ITileActor>(ObstacleSpawnData->mClass.Get(), mTileMap->TileToWorldTransform(ObstaclePlacementData.mTransform));
 
-	checkf(mTileMap->IsBlocked(ObstaclePlacementData.mTransform.mIndex, Obstacle) == false, TEXT("타일 간 충돌"));
+	checkf(mTileMap->CanPlace(ObstaclePlacementData.mTransform.mIndex, Obstacle), TEXT("액터 배치 불가능"));
 
 	// 타일 위에 배치
 	mTileMap->PlaceActor(ObstaclePlacementData.mTransform, Obstacle);

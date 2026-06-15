@@ -22,6 +22,7 @@ class P_RD_API UStaticFrontendRoomSpawnData : public UStaticRoomSpawnData
 
 public:
 	void PostInitProperties() override;
+	void PostLoad() override;
 
 #if WITH_EDITOR
 public:
@@ -35,6 +36,6 @@ public:
 	}
 
 public:
-	UPROPERTY(Category = "PlayerUnit", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectablePlayerUnits", AssetBundles = BUNDLE_PAD))
+	UPROPERTY(Category = "PlayerUnit", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectablePlayerUnits", AssetBundles = "PAD"))
 	TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>> mPlayableUnits;
 };

@@ -52,7 +52,7 @@ struct FRoomTransitionRequest
 	GENERATED_BODY()
 
 public:
-	bool mChangePersistentData = true;
+	bool mNeedInGameRoom = true;
 	int32 mRoomRowIndex = -1;
 	int32 mRoomColumnIndex = -1;
 
@@ -110,7 +110,11 @@ public:
 	bool MarkExternalReady();
 
 	/**
-	 * 모두 준비가 완료 된 경우, Transition 시작
+	 * @brief AutoTransition=false로 대기 중인 전환을 실제로 시작한다.
+	 *
+	 * @details
+	 * ReadyToTransition 상태가 된 뒤 GameMode가 로딩 UI를 닫고 호출하는 수동 전환 진입점이다.
+	 * 준비가 끝나지 않았다면 false를 반환하고 레벨 이동을 시작하지 않는다.
 	 */
 	bool TransitLoadedRoom();
 

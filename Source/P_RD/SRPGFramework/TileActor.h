@@ -39,7 +39,7 @@ protected:
 
 public:
 	/**
-	 * 액터의 레이어 타입을 반환
+	 * @brief 액터의 레이어 타입을 반환
 	 * @return 레이어 타입
 	 */
 	virtual ETileLayerFlag GetTileLayerFlags() const PURE_VIRTUAL(ITileActor::GetTileLayer, return ETileLayerFlag::None;)
@@ -53,22 +53,34 @@ public:
 	 * @return 교체할 레이어 타입들
 	 */
 	virtual ETileLayerFlag GetReplaceLayerFlags() const;
+	/**
+	 * Overlay 레이어 내 교체 우선순위 반환
+	 * @details 같은 교체 대상끼리 우열을 가린다. 진입자 우선순위가 같거나 더 높을 때만 기존 액터를 덮어쓴다.
+	 * @return 우선순위 (높을수록 우선)
+	 */
+	virtual int32 GetOverlayLayerPriority() const;
 
 protected:
 	/**
-	 * 오버랩 시작 시 실행될 함수
-	 * @param Other 반대 대상
+	 * @brief 오버랩 시작 시 실행될 함수
 	 * @param CurTile 현재 위치한 타일 객체
+	 * @param Other 반대 대상
 	 */
-	virtual void OnBeginTileOverlap(ITileActor* Other, FTile* CurTile);
+	virtual void OnBeginTileOverlap(FTile* CurTile, ITileActor* Other);
 	/**
-	 * 오버랩 종료 시 실행될 함수
-	 * @param Other 반대 대상
+	 * @brief 오버랩 종료 시 실행될 함수
 	 * @param CurTile 현재 위치한 타일 객체
+	 * @param Other 반대 대상
 	 */
-	virtual void OnEndTileOverlap(ITileActor* Other, FTile* CurTile);
+	virtual void OnEndTileOverlap(FTile* CurTile, ITileActor* Other);
 
-protected:
+	/**
+	 * @brief 다른 액터에게 교체되어 타일에서 밀려날 때 실행될 함수
+	 * @param CurTile 현재 위치한 타일 객체
+	 * @param Other 자신을 교체하고 들어오는 액터
+	 */
+	virtual void OnReplaced(FTile* CurTile, ITileActor* Other);
+
 	/**
 	 * 라운드 시작마다 실행될 함수. (라운드 : 고정된 턴 기준으로 한바퀴)
 	 */

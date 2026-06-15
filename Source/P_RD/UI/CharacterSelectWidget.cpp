@@ -1,4 +1,4 @@
-﻿#include "UI/CharacterSelectWidget.h"
+#include "UI/CharacterSelectWidget.h"
 
 #include "Components/Button.h"
 #include "Components/Image.h"
@@ -71,7 +71,7 @@ UCharacterSelectWidget::UCharacterSelectWidget(const FObjectInitializer& ObjectI
 
 void UCharacterSelectWidget::OpenCharacterSelect()
 {
-	bStartRequested = false;
+	mStartRequested = false;
 	RefreshLocalizedTextCache();
 	RefreshCharacterOptions();
 	SetStatusText(mReadyStatusText);
@@ -134,7 +134,7 @@ void UCharacterSelectWidget::UnbindEvents()
 		mBackToMainButton->OnClicked.RemoveDynamic(this, &UCharacterSelectWidget::HandleBackToMainButtonClicked);
 	}
 
-	for (UCharacterCardWidget* CardWidget : CharacterCardWidgets)
+	for (UCharacterCardWidget* CardWidget : mCharacterCardWidgets)
 	{
 		if (CardWidget != nullptr)
 		{
@@ -167,7 +167,7 @@ void UCharacterSelectWidget::RefreshCharacterOptions()
 	const FFrontendCharacterOption* FirstOption = mCharacterOptions.IsEmpty() ? nullptr : &mCharacterOptions[0];
 	const FFrontendCharacterOption* FirstEnabledOption = mCharacterOptions.FindByPredicate([](const FFrontendCharacterOption& Option)
 	{
-		return Option.bSelectable;
+		return Option.mSelectable;
 	});
 	const FFrontendCharacterOption* SelectedOption = PreservedOption != nullptr
 		? PreservedOption
@@ -176,7 +176,7 @@ void UCharacterSelectWidget::RefreshCharacterOptions()
 	if (SelectedOption != nullptr)
 	{
 		mSelectedCharacterIndex = SelectedOption->mIndex;
-		mSelectedPlayerUnitId = SelectedOption->bSelectable ? SelectedOption->mPlayerUnitId : FPrimaryAssetId();
+		mSelectedPlayerUnitId = SelectedOption->mSelectable ? SelectedOption->mPlayerUnitId : FPrimaryAssetId();
 	}
 
 	SetConfirmButtonText(mConfirmText);
@@ -191,14 +191,14 @@ void UCharacterSelectWidget::RebuildCharacterCards()
 		return;
 	}
 
-	for (UCharacterCardWidget* CardWidget : CharacterCardWidgets)
+	for (UCharacterCardWidget* CardWidget : mCharacterCardWidgets)
 	{
 		if (CardWidget != nullptr)
 		{
 			CardWidget->OnCharacterCardClicked.RemoveDynamic(this, &UCharacterSelectWidget::HandleCharacterCardClicked);
 		}
 	}
-	CharacterCardWidgets.Reset();
+	mCharacterCardWidgets.Reset();
 	mCharacterCardContainer->ClearChildren();
 
 	for (const FFrontendCharacterOption& Option : mCharacterOptions)
@@ -212,17 +212,17 @@ void UCharacterSelectWidget::RebuildCharacterCards()
 		NewWidget->OnCharacterCardClicked.AddUniqueDynamic(this, &UCharacterSelectWidget::HandleCharacterCardClicked);
 		mCharacterCardContainer->AddChild(NewWidget);
 		NewWidget->SetCharacterOption(Option, Option.mIndex == mSelectedCharacterIndex);
-		CharacterCardWidgets.Add(NewWidget);
+		mCharacterCardWidgets.Add(NewWidget);
 	}
 }
 
 void UCharacterSelectWidget::SyncCharacterCards() const
 {
-	for (UCharacterCardWidget* CardWidget : CharacterCardWidgets)
+	for (UCharacterCardWidget* CardWidget : mCharacterCardWidgets)
 	{
 		if (CardWidget != nullptr)
 		{
-			const int32 CardIndex = CharacterCardWidgets.IndexOfByKey(CardWidget);
+			const int32 CardIndex = mCharacterCardWidgets.IndexOfByKey(CardWidget);
 			CardWidget->SetSelected(CardIndex == mSelectedCharacterIndex);
 		}
 	}
@@ -230,7 +230,7 @@ void UCharacterSelectWidget::SyncCharacterCards() const
 
 void UCharacterSelectWidget::SelectCharacter(int32 CharacterIndex)
 {
-	if (bStartRequested)
+	if (mStartRequested)
 	{
 		return;
 	}
@@ -243,7 +243,7 @@ void UCharacterSelectWidget::SelectCharacter(int32 CharacterIndex)
 	}
 
 	mSelectedCharacterIndex = Option->mIndex;
-	mSelectedPlayerUnitId = Option->bSelectable ? Option->mPlayerUnitId : FPrimaryAssetId();
+	mSelectedPlayerUnitId = Option->mSelectable ? Option->mPlayerUnitId : FPrimaryAssetId();
 	SyncCharacterCards();
 	SyncSelectedCharacter();
 }
@@ -284,10 +284,10 @@ void UCharacterSelectWidget::SyncSelectedCharacter()
 
 	if (mConfirmButton != nullptr)
 	{
-		mConfirmButton->SetIsEnabled(SelectedOption->bSelectable && !bStartRequested);
+		mConfirmButton->SetIsEnabled(SelectedOption->mSelectable && !mStartRequested);
 	}
 
-	SetStatusText(SelectedOption->bSelectable
+	SetStatusText(SelectedOption->mSelectable
 		? FText::Format(TitleMenuText(TEXT("SelectedCharacterFormat")), SelectedOption->mDisplayName)
 		: (SelectedOption->mDisabledReason.IsEmpty() ? TitleMenuText(TEXT("CharacterLockedStatus")) : SelectedOption->mDisabledReason));
 }
@@ -517,13 +517,13 @@ void UCharacterSelectWidget::HandleCharacterCardClicked(int32 CharacterIndex)
 
 void UCharacterSelectWidget::HandleConfirmButtonClicked()
 {
-	if (bStartRequested)
+	if (mStartRequested)
 	{
 		return;
 	}
 
 	const FFrontendCharacterOption* SelectedOption = GetSelectedCharacterOption();
-	if (SelectedOption == nullptr || !SelectedOption->bSelectable || !mSelectedPlayerUnitId.IsValid())
+	if (SelectedOption == nullptr || !SelectedOption->mSelectable || !mSelectedPlayerUnitId.IsValid())
 	{
 		SetStatusText(SelectedOption != nullptr && !SelectedOption->mDisabledReason.IsEmpty()
 			? SelectedOption->mDisabledReason
@@ -531,7 +531,7 @@ void UCharacterSelectWidget::HandleConfirmButtonClicked()
 		return;
 	}
 
-	bStartRequested = true;
+	mStartRequested = true;
 	SetConfirmButtonText(mLoadingStatusText);
 	SetStatusText(mLoadingStatusText);
 	if (mConfirmButton != nullptr)
@@ -541,7 +541,7 @@ void UCharacterSelectWidget::HandleConfirmButtonClicked()
 
 	if (!BeginFirstRoomEntryWithSelectedCharacter())
 	{
-		bStartRequested = false;
+		mStartRequested = false;
 		SetConfirmButtonText(mConfirmText);
 		SetStatusText(mFailedStatusText);
 		if (mConfirmButton != nullptr)
@@ -553,7 +553,7 @@ void UCharacterSelectWidget::HandleConfirmButtonClicked()
 
 void UCharacterSelectWidget::HandleBackToMainButtonClicked()
 {
-	if (!bStartRequested)
+	if (!mStartRequested)
 	{
 		OnBackToMainRequested.Broadcast();
 	}
