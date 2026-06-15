@@ -120,10 +120,12 @@ void FSRPGTurnContext::EndTurn()
 
 ESRPGActionCommandResult FSRPGTurnContext::RouteCommand(TSharedPtr<const FSRPGActionCommand> Command)
 {
+	ESRPGActionCommandResult Result = ESRPGActionCommandResult::Ignored;
+
 	if (mTurnPhase != ESRPGTurnPhase::TurnPlay)
 	{
 		// 턴 실행 외 상황에서 진입한 명령은 무시 처리
-		return ESRPGActionCommandResult::Unhandle;
+		return Result;
 	}
 
 	TSharedPtr<FSRPGAction> CurAction = nullptr;
@@ -132,46 +134,52 @@ ESRPGActionCommandResult FSRPGTurnContext::RouteCommand(TSharedPtr<const FSRPGAc
 	{
 		/* 실행 중인 액션 객체에 커맨드 처리 요청 */
 
-		if (CurAction->HandleCommand(Command) == ESRPGActionCommandResult::Handle)
+		Result = CombineSRPGActionCommandResult(CurAction->HandleCommand(Command), Result);
+		if (Result == ESRPGActionCommandResult::Handled)
 		{
-			return ESRPGActionCommandResult::Handle;
+			return Result;
 		}
 	}
 
 	/* 액션 대기 중인 경우 직접 처리 */
 
-	if (HandleActionCreationCommand(Command) == ESRPGActionCommandResult::Handle)
+	Result = CombineSRPGActionCommandResult(HandleActionCreationCommand(Command), Result);
+	if (Result == ESRPGActionCommandResult::Handled)
 	{
-		return ESRPGActionCommandResult::Handle;
+		return Result;
 	}
 
 	/* 커맨드 처리 실패 시 Fallback 처리 */
 
-	return HandleFallbackCommand(Command);
+	return CombineSRPGActionCommandResult(HandleFallbackCommand(Command), Result);
 }
 
 ESRPGActionCommandResult FSRPGTurnContext::HandleActionCreationCommand(TSharedPtr<const FSRPGActionCommand> Command)
 {
-	if (Command->CanCreateAction() == false)
+	TSharedPtr<FSRPGAction> NewAction = Command->CreateAction();
+	if (NewAction == nullptr)
 	{
-		// 생성 명령 외는 처리 않함
-		return ESRPGActionCommandResult::Unhandle;
+		/* 생성 명령 외는 처리 않함 */
+
+		return ESRPGActionCommandResult::Ignored;
 	}
 
-	TSharedPtr<const FSRPGActionCreationCommandBase> ActionCreationCommand = StaticCastSharedPtr<const FSRPGActionCreationCommandBase>(Command);
-	TSharedPtr<FSRPGAction> NewAction = ActionCreationCommand->CreateAction();
+	/* 새로운 Action 생성 후, 예약 걸어두기 */
+
+	NewAction->ReserveCommand(Command);
 	EnqueueAction(NewAction);
-	return NewAction->HandleCommand(ActionCreationCommand);
+	
+	return ESRPGActionCommandResult::Handled;
 }
 
 ESRPGActionCommandResult FSRPGTurnContext::HandleFallbackCommand(TSharedPtr<const FSRPGActionCommand> Command)
 {
 	if (Command->GetActionCommandType() == ESRPGActionCommandType::WorldTrace)
 	{
-		// TODO : 정보 처리 부분
+		// TODO : 꾹 눌렀을 때 정보 처리 부분
 	}
 
-	return ESRPGActionCommandResult::Unhandle;
+	return ESRPGActionCommandResult::Ignored;
 }
 
 void FSRPGTurnContext::EnqueueAction(TSharedPtr<FSRPGAction> NewAction)

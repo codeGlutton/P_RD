@@ -52,7 +52,7 @@ bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 	SkillSelectCommand->mSkillIndex = SkillIndex;
 	SkillSelectCommand->OnChangeSkillBuildPhase.AddUObject(this, &ACombatGameMode::OnChangeSkillBuildPhase);
 
-	return CombatSubsystem->SummitCommand(SkillSelectCommand) == ESRPGActionCommandResult::Handle;
+	return CombatSubsystem->SummitCommand(SkillSelectCommand);
 }
 
 bool ACombatGameMode::ResolveWorldTouchEvent()
@@ -63,7 +63,7 @@ bool ACombatGameMode::ResolveWorldTouchEvent()
 	TSharedPtr<FSRPGWorldTraceCommand> WorldTraceActionCommand = MakeShared<FSRPGWorldTraceCommand>();
 	WorldTraceActionCommand->mIsLongPress = false;
 
-	return CombatSubsystem->SummitCommand(WorldTraceActionCommand) == ESRPGActionCommandResult::Handle;
+	return CombatSubsystem->SummitCommand(WorldTraceActionCommand);
 }
 
 bool ACombatGameMode::ResolveWorldLongPressEvent()
@@ -74,10 +74,9 @@ bool ACombatGameMode::ResolveWorldLongPressEvent()
 	TSharedPtr<FSRPGWorldTraceCommand> WorldTraceActionCommand = MakeShared<FSRPGWorldTraceCommand>();
 	WorldTraceActionCommand->mIsLongPress = true;
 
-	return CombatSubsystem->SummitCommand(WorldTraceActionCommand) == ESRPGActionCommandResult::Handle;
+	return CombatSubsystem->SummitCommand(WorldTraceActionCommand);
 }
 
 void ACombatGameMode::OnChangeSkillBuildPhase(const FSRPGSkillBuildAction& Action, ESRPGSkillBuildPhase Phase)
 {
-
 }

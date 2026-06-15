@@ -465,7 +465,7 @@ void USRPGCombatSubsystem::NotifyRoundEndIfNeeded()
 	}
 }
 
-ESRPGActionCommandResult USRPGCombatSubsystem::SummitCommand(TSharedPtr<const FSRPGActionCommand> Command)
+bool USRPGCombatSubsystem::SummitCommand(TSharedPtr<const FSRPGActionCommand> Command)
 {
 	checkf(Command != nullptr, TEXT("유효하지 않은 액션 커맨드"));
 	checkf(Command->GetActionCommandType() != ESRPGActionCommandType::None, TEXT("유효하지 않은 액션 커맨드"));
@@ -473,11 +473,14 @@ ESRPGActionCommandResult USRPGCombatSubsystem::SummitCommand(TSharedPtr<const FS
 	if (mCurTurnContextNode == nullptr || mCurTurnContextNode->GetValue() == nullptr)
 	{
 		UE_LOG(LogSRPGCombat, Log, TEXT("현재 등록된 턴 객체가 존재하지 않음"));
-		return ESRPGActionCommandResult::Unhandle;
+		return false;
 	}
 
 	// 입력 라우팅 시작
-	return mCurTurnContextNode->GetValue()->RouteCommand(Command);
+	const ESRPGActionCommandResult Result = mCurTurnContextNode->GetValue()->RouteCommand(Command);
+	const bool IsCommandUsed = Result != ESRPGActionCommandResult::Ignored;
+	
+	return IsCommandUsed;
 }
 
 TWeakPtr<FSRPGTurnContext> USRPGCombatSubsystem::GetCurrentTurnContext()

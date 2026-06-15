@@ -13,19 +13,14 @@ ESRPGActionCommandType FSRPGActionCommand::GetActionCommandType() const
 	return mActionCommandType;
 }
 
-bool FSRPGActionCommand::CanCreateAction() const
+TSharedPtr<FSRPGAction> FSRPGActionCommand::CreateAction() const
 {
-	return mCanCreateAction;
+	return nullptr;
 }
 
 FSRPGWorldTraceCommand::FSRPGWorldTraceCommand()
 {
 	mActionCommandType = ESRPGActionCommandType::WorldTrace;
-}
-
-FSRPGActionCreationCommandBase::FSRPGActionCreationCommandBase()
-{
-	mCanCreateAction = true;
 }
 
 void FSRPGAction::InitAction(TSharedRef<FSRPGTurnContext> Parent, AUnit* Instigator)
@@ -61,12 +56,14 @@ void FSRPGAction::TickAction(float DeltaTime)
 	OnTickAction(DeltaTime);
 }
 
-void FSRPGAction::EndAction()
+void FSRPGAction::EndAction(ESRPGActionResult Result)
 {
 	if (mActionPhase == ESRPGActionPhase::ActionPlay)
 	{
+		/* 정상 종료 시, 원하는 결과로 반영 */
+
 		mActionPhase = ESRPGActionPhase::ActionAbort;
-		mActionResult = ESRPGActionResult::Succeeded;
+		mActionResult = Result;
 	}
 
 	checkf(mActionPhase == ESRPGActionPhase::ActionAbort, TEXT("액션 종료 절차 오류"));
@@ -122,24 +119,12 @@ void FSRPGAction::EvaluateActionEndState(bool ForceAbort)
 
 ESRPGActionCommandResult FSRPGAction::HandleCommand(TSharedPtr<const FSRPGActionCommand> Command)
 {
-	ESRPGActionCommandResult IsHandled = CanHandleCommand(Command);
-
-	if (IsHandled == ESRPGActionCommandResult::Handle)
-	{
-		mReservedCommands.Enqueue(Command);
-		FlushCommands();
-	}
-
-	return IsHandled;
+	return ESRPGActionCommandResult::Ignored;
 }
 
-ESRPGActionCommandResult FSRPGAction::CanHandleCommand(TSharedPtr<const FSRPGActionCommand> Command) const
+void FSRPGAction::ReserveCommand(TSharedPtr<const FSRPGActionCommand> Command)
 {
-	return ESRPGActionCommandResult::Unhandle;
-}
-
-void FSRPGAction::ApplyCommand(TSharedPtr<const FSRPGActionCommand> Command)
-{
+	mReservedCommands.Dequeue(Command);
 }
 
 void FSRPGAction::FlushCommands()
@@ -148,7 +133,7 @@ void FSRPGAction::FlushCommands()
 	{
 		TSharedPtr<const FSRPGActionCommand> Command;
 		mReservedCommands.Dequeue(Command);
-		ApplyCommand(Command);
+		HandleCommand(Command);
 	}
 }
 

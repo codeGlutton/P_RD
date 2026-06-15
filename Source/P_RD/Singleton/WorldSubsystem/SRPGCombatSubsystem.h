@@ -145,7 +145,7 @@ public:
 	 * @param Command 처리할 명령 객체
 	 * @return 명령 처리 여부
 	 */
-	ESRPGActionCommandResult SummitCommand(TSharedPtr<const FSRPGActionCommand> Command);
+	bool SummitCommand(TSharedPtr<const FSRPGActionCommand> Command);
 
 public:
 	TWeakPtr<FSRPGTurnContext> GetCurrentTurnContext();

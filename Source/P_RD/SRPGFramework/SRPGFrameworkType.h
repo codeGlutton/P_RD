@@ -174,12 +174,12 @@ enum class ESRPGCombatResult : uint8
 UENUM(BlueprintType)
 enum class ESRPGCombatRoomPhase : uint8
 {
-    None               UMETA(Hidden),
-    CombatInit         UMETA(ToolTip = "전투 초기화"),
-    CombatStart        UMETA(ToolTip = "전투 시작"),
-    CombatPlay         UMETA(ToolTip = "전투 진행 중"),
-    CombatAbort        UMETA(ToolTip = "전투 진행 중단"),
-    CombatEnd          UMETA(ToolTip = "전투 종료"),
+    None                UMETA(Hidden),
+    CombatInit          UMETA(ToolTip = "전투 초기화"),
+    CombatStart         UMETA(ToolTip = "전투 시작"),
+    CombatPlay          UMETA(ToolTip = "전투 진행 중"),
+    CombatAbort         UMETA(ToolTip = "전투 진행 중단"),
+    CombatEnd           UMETA(ToolTip = "전투 종료"),
 };
 
 /**
@@ -188,8 +188,8 @@ enum class ESRPGCombatRoomPhase : uint8
 UENUM(BlueprintType)
 enum class ESRPGTurnResult : uint8
 {
-    Succeeded          UMETA(ToolTip = "정상 종료"),
-    Cancelled          UMETA(ToolTip = "중단"),
+    Succeeded           UMETA(ToolTip = "정상 종료"),
+    Cancelled           UMETA(ToolTip = "중단"),
 };
 
 /**
@@ -253,7 +253,7 @@ enum class ESRPGActionCommandType : uint8
     WorldTrace          UMETA(ToolTip = "월드 공간 선택"),
 
     SkillSelect         UMETA(ToolTip = "사용 스킬 결정"),
-    DiceSelect         UMETA(ToolTip = "사용 스킬 결정"),
+    DiceSelect          UMETA(ToolTip = "사용 주사위 결정"),
     SkillCast           UMETA(ToolTip = "스킬 사용"),
     MoveSelect          UMETA(ToolTip = "이동 시작"),
     TurnEnd             UMETA(ToolTip = "턴 종료"),
@@ -265,7 +265,24 @@ enum class ESRPGActionCommandType : uint8
 UENUM(BlueprintType)
 enum class ESRPGActionCommandResult : uint8
 {
-    Handle             UMETA(ToolTip = "처리됨"),
-    Unhandle           UMETA(ToolTip = "처리하지 않음"),
+    Handled             UMETA(ToolTip = "처리되어 커맨드가 소비됨"),
+    Continue            UMETA(ToolTip = "처리했으나 계속됨"),
+    Ignored             UMETA(ToolTip = "전혀 처리하지 않음"),
 };
+
+/**
+ * 액션 커맨드 결과를 결합하여, 반환해주는 함수.
+ * 두 결과는 Handle > Continue > Ignore 순으로 한쪽으로 덮어 씌워짐
+ * @param Lhs 계산 결과 A
+ * @param Rhs 계산 결과 B
+ * @return 최종 결과
+ */
+inline ESRPGActionCommandResult CombineSRPGActionCommandResult(ESRPGActionCommandResult Lhs, ESRPGActionCommandResult Rhs)
+{
+    if (static_cast<uint8>(Lhs) < static_cast<uint8>(Lhs))
+    {
+        return Lhs;
+    }
+    return Rhs;
+}
 

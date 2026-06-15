@@ -29,11 +29,10 @@ public:
 
 public:
 	ESRPGActionCommandType GetActionCommandType() const;
-	bool CanCreateAction() const;
+	virtual TSharedPtr<FSRPGAction> CreateAction() const;
 
 protected:
 	ESRPGActionCommandType mActionCommandType = ESRPGActionCommandType::None;
-	bool mCanCreateAction = false;
 };
 
 /**
@@ -49,24 +48,10 @@ public:
 };
 
 /**
- * @brief  액션 생성 명령 베이스 객체
- */
-struct FSRPGActionCreationCommandBase : public FSRPGActionCommand
-{
-	friend struct FSRPGTurnContext;
-
-public:
-	FSRPGActionCreationCommandBase();
-
-protected:
-	virtual TSharedPtr<FSRPGAction> CreateAction() const = 0;
-};
-
-/**
  * @brief  액션 생성 명령 객체
  */
 template<typename ActionType>
-struct FSRPGActionCreationCommand : public FSRPGActionCreationCommandBase
+struct FSRPGActionCreationCommand : public FSRPGActionCommand
 {
 protected:
 	TSharedPtr<FSRPGAction> CreateAction() const override
@@ -94,7 +79,7 @@ protected:
 	void InitAction(TSharedRef<FSRPGTurnContext> Parent, AUnit* Instigator);
 	void BeginAction();
 	void TickAction(float DeltaTime);
-	void EndAction();
+	void EndAction(ESRPGActionResult Result);
 
 protected:
 	virtual void OnBeginAction();
@@ -106,12 +91,10 @@ protected:
 
 	/* 액션 커맨드 처리 함수 */
 protected:
-	ESRPGActionCommandResult HandleCommand(TSharedPtr<const FSRPGActionCommand> Command);
-
-	virtual ESRPGActionCommandResult CanHandleCommand(TSharedPtr<const FSRPGActionCommand> Command) const;
-	virtual void ApplyCommand(TSharedPtr<const FSRPGActionCommand> Command);
+	virtual ESRPGActionCommandResult HandleCommand(TSharedPtr<const FSRPGActionCommand> Command);
 
 private:
+	void ReserveCommand(TSharedPtr<const FSRPGActionCommand> Command);
 	void FlushCommands();
 
 	/* 헬퍼 함수 */

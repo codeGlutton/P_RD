@@ -56,11 +56,10 @@ protected:
 	void OnEndAction() override;
 
 protected:
-	ESRPGActionCommandResult CanHandleCommand(TSharedPtr<const FSRPGActionCommand> Command) const override;
-	void ApplyCommand(TSharedPtr<const FSRPGActionCommand> Command) override;
+	ESRPGActionCommandResult HandleCommand(TSharedPtr<const FSRPGActionCommand> Command) override;
 
 protected:
-	void ApplyWorldTraceCommand(TSharedPtr<const FSRPGActionCommand> Command);
+	ESRPGActionCommandResult HandleWorldTraceCommand(TSharedPtr<const FSRPGWorldTraceCommand> Command);
 
 	/* 빌드 로직 처리 */
 private:
@@ -74,9 +73,6 @@ private:
 
 private:
 	void SetBuildPhase(ESRPGSkillBuildPhase BuildPhase);
-
-public:
-	// const TArray<FSRPGCalculatedData>& GetCalculateDatas() const;
 
 protected:
 	FOnChangeSkillBuildPhase OnChangeSkillBuildPhase;

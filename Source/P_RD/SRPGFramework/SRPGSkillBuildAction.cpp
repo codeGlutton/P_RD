@@ -35,123 +35,125 @@ void FSRPGSkillBuildAction::OnEndAction()
     Super::OnEndAction();
 }
 
-ESRPGActionCommandResult FSRPGSkillBuildAction::CanHandleCommand(TSharedPtr<const FSRPGActionCommand> Command) const
+ESRPGActionCommandResult FSRPGSkillBuildAction::HandleCommand(TSharedPtr<const FSRPGActionCommand> Command)
 {
-    if (Super::CanHandleCommand(Command) == ESRPGActionCommandResult::Handle)
+    ESRPGActionCommandResult Result = Super::HandleCommand(Command);
+    if (Result == ESRPGActionCommandResult::Handled)
     {
-        return ESRPGActionCommandResult::Handle;
+        return Result;
     }
 
     switch (Command->GetActionCommandType())
     {
     case ESRPGActionCommandType::SkillSelect:
-    case ESRPGActionCommandType::DiceSelect:
     {
-        return ESRPGActionCommandResult::Handle;
-    }
-    case ESRPGActionCommandType::WorldTrace:
-    {
-        TSharedPtr<const FSRPGWorldTraceCommand> WorldTraceCommand = StaticCastSharedPtr<const FSRPGWorldTraceCommand>(Command);
-        return WorldTraceCommand->mIsLongPress == true ? ESRPGActionCommandResult::Unhandle : ESRPGActionCommandResult::Handle;
-    }
-    }
-
-    return ESRPGActionCommandResult::Unhandle;
-}
-
-void FSRPGSkillBuildAction::ApplyCommand(TSharedPtr<const FSRPGActionCommand> Command)
-{
-    Super::ApplyCommand(Command);
-
-    switch (Command->GetActionCommandType())
-    {
-    case ESRPGActionCommandType::SkillSelect:
-    {
-        TSharedPtr<const FSRPGSkillSelectCommand> SkillSelectCommand = StaticCastSharedPtr<const FSRPGSkillSelectCommand>(Command);
-        OnChangeSkillBuildPhase = SkillSelectCommand->OnChangeSkillBuildPhase;
+        /* 새롭게 스킬 선택 시 제거 */
 
         ResetSkill();
-        SetSkill(SkillSelectCommand->mSkillIndex);
-        break;
+        SetSkill(mSelectedSkillIndex);
+        return CombineSRPGActionCommandResult(ESRPGActionCommandResult::Handled, Result);
     }
     case ESRPGActionCommandType::DiceSelect:
     {
+        /* 주사위 변경 시 타겟부터 재설정 */
+
         TSharedPtr<const FSRPGCDiceSelectCommand> DiceSelectCommand = StaticCastSharedPtr<const FSRPGCDiceSelectCommand>(Command);
-        
+
         ResetTargetTile();
         ChangeDices(DiceSelectCommand->mDiceIndex);
-        break;
+        return CombineSRPGActionCommandResult(ESRPGActionCommandResult::Handled, Result);
     }
     case ESRPGActionCommandType::WorldTrace:
     {
-        ApplyWorldTraceCommand(Command);
-        break;
+        /* 월드 공간 터치 시 선택 위치에 따라서 결정 */
+
+        TSharedPtr<const FSRPGWorldTraceCommand> WorldTraceCommand = StaticCastSharedPtr<const FSRPGWorldTraceCommand>(Command);
+        return CombineSRPGActionCommandResult(HandleWorldTraceCommand(WorldTraceCommand), Result);
     }
     }
+
+    return ESRPGActionCommandResult::Ignored;
 }
 
-void FSRPGSkillBuildAction::ApplyWorldTraceCommand(TSharedPtr<const FSRPGActionCommand> Command)
+ESRPGActionCommandResult FSRPGSkillBuildAction::HandleWorldTraceCommand(TSharedPtr<const FSRPGWorldTraceCommand> Command)
 {
-    USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-    checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
-    ATileMap* TileMap = CombatSubsystem->GetTileMap();
-    checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"))
+    ESRPGActionCommandResult Result = ESRPGActionCommandResult::Ignored;
 
-    AActor* TargetActor = nullptr;
-    FTileIndex TargetTileIndex = FTileIndex::Invalid;
-    GetTileActorUnderCursor(ECC_GameTraceChannel1 /* TODO : 임시 */, OUT TargetActor, OUT TargetTileIndex);
-
-    if (TargetActor == TileMap)
+    if (Command->mIsLongPress == false)
     {
-        if (TargetTileIndex == FTileIndex::Invalid)
-        {
-            /* 한단계 취소작업 */
+        USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
+        checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
+        ATileMap* TileMap = CombatSubsystem->GetTileMap();
+        checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"))
 
-            switch (mSkillBuildPhase)
-            {
-            case ESRPGSkillBuildPhase::Preview:
-            {
-                // 조준 대상 취소 처리
-                ResetTargetTile();
-                return;
-            }
-            case ESRPGSkillBuildPhase::AimSelection:
-            {
-                // 빌드 취소 처리
-                EndAction();
-                return;
-            }
-            }
-        }
-        else
-        {
-            /* 한단계 처리작업 */
+        AActor* TargetActor = nullptr;
+        FTileIndex TargetTileIndex = FTileIndex::Invalid;
+        GetTileActorUnderCursor(ECC_GameTraceChannel1 /* TODO : 임시 */, OUT TargetActor, OUT TargetTileIndex);
 
-            switch (mSkillBuildPhase)
+        if (TargetActor == TileMap)
+        {
+            if (TargetTileIndex == FTileIndex::Invalid)
             {
-            case ESRPGSkillBuildPhase::Preview:
-            {
-                // 타겟 지정 확정 칸 클릭 시
-                if (mTargetIndex == TargetTileIndex)
+                /* 한단계 취소작업 */
+
+                switch (mSkillBuildPhase)
                 {
-                    BuildSkill();
-                    EndAction();
-                    return;
-                }
-            }
-            case ESRPGSkillBuildPhase::AimSelection:
-            {
-                // 조준 가능한 칸 클릭 시
-                if (mAimTileIndexes.Contains(TargetTileIndex) == true)
+                case ESRPGSkillBuildPhase::Preview:
                 {
+                    /* 프리뷰 단계에서 한단계 취소 시, 조준 대상 취소 처리 */
+
                     ResetTargetTile();
-                    SetTargetTile(TargetTileIndex);
-                    return;
+                    Result = ESRPGActionCommandResult::Handled;
+                    break;
+                }
+                case ESRPGSkillBuildPhase::AimSelection:
+                {
+                    /* 조준 대상 설정 단계에서 한단계 취소 시, 빌드 자체 종료 */
+
+                    EndAction(ESRPGActionResult::Cancelled);
+                    Result = ESRPGActionCommandResult::Handled;
+                    break;
+                }
                 }
             }
+            else
+            {
+                /* 한단계 처리작업 */
+
+                switch (mSkillBuildPhase)
+                {
+                case ESRPGSkillBuildPhase::Preview:
+                {
+                    /* 확정 칸 클릭 시, 스킬 캐스팅 */
+
+                    if (mTargetIndex == TargetTileIndex)
+                    {
+                        BuildSkill();
+                        EndAction(ESRPGActionResult::Succeeded);
+                        Result = ESRPGActionCommandResult::Handled;
+                        break;
+                    }
+                    [[fallthrough]];
+                }
+                case ESRPGSkillBuildPhase::AimSelection:
+                {
+                    /* 조준 가능한 칸 클릭 시, 프리뷰 단계까지 보여주기 */
+
+                    if (mAimTileIndexes.Contains(TargetTileIndex) == true)
+                    {
+                        ResetTargetTile();
+                        SetTargetTile(TargetTileIndex);
+                        Result = ESRPGActionCommandResult::Handled;
+                        break;
+                    }
+                    break;
+                }
+                }
             }
         }
     }
+
+    return Result;
 }
 
 void FSRPGSkillBuildAction::ChangeDices(int32 RequestedDiceIndex)
