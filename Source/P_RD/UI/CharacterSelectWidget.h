@@ -18,6 +18,7 @@ class UCharacterCardWidget;
 class UImage;
 class UPanelWidget;
 class UTextBlock;
+class UTexture2D;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCharacterSelectSimpleEvent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCharacterSelectStatusChangedDelegate, FText, InStatusText);
@@ -83,7 +84,10 @@ private:
 	void ClearSelectedCharacter();
 	void SetStatusText(const FText& InText);
 	void SetConfirmButtonText(const FText& InText) const;
-	void SyncSelectedCharacterArt(EPlayerJobType JobType) const;
+	void SyncSelectedCharacterArt(EPlayerJobType JobType);
+
+	/** @brief 직업별 SVN 일러스트 PNG를 런타임 로드한다. 한 번 로드한 텍스처는 캐시해 재사용한다. */
+	UTexture2D* GetOrLoadJobIllustration(EPlayerJobType JobType);
 	bool BeginFirstRoomEntryWithSelectedCharacter();
 	AFrontendGameMode* GetFrontendGameMode() const;
 	const FFrontendCharacterOption* GetCharacterOption(int32 CharacterIndex) const;
@@ -148,6 +152,10 @@ private:
 
 	UPROPERTY()
 	TArray<TObjectPtr<UCharacterCardWidget>> mCharacterCardWidgets;
+
+	/** @brief 직업별 런타임 일러스트 텍스처 캐시. GC 방지를 위해 UPROPERTY로 들고 있는다. */
+	UPROPERTY(Transient)
+	TMap<EPlayerJobType, TObjectPtr<UTexture2D>> mJobIllustrationCache;
 
 	TArray<FFrontendCharacterOption> mCharacterOptions;
 	FPrimaryAssetId mSelectedPlayerUnitId;

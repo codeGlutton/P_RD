@@ -3,8 +3,36 @@
 #include "Components/Button.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Engine/Texture2D.h"
 #include "GameMode/FrontendGameMode.h"
 #include "UI/CharacterSelectWidgetPrivate.h"
+#include "UI/UITextureLoader.h"
+
+namespace
+{
+	/**
+	 * @brief 직업별 캐릭터 일러스트 PNG의 Content 상대 경로를 돌려준다.
+	 *
+	 * @details
+	 * 아트 원본은 팀 정책상 SVN(Content/SVN) 아래에 있고, 직업 enum 이름(Archer)과
+	 * 아트 파일 이름(rogue)이 다를 수 있어 여기서 한 번만 매핑한다.
+	 * 경로가 없는 직업(None 등)은 nullptr을 돌려 호출부에서 포트레이트를 숨기게 한다.
+	 */
+	const TCHAR* GetJobIllustrationContentPath(EPlayerJobType JobType)
+	{
+		switch (JobType)
+		{
+		case EPlayerJobType::Knight:
+			return TEXT("SVN/OutSideAsset/AICreation/ClassSelect/classselect_knight_action_illustration_1920x1080.png");
+		case EPlayerJobType::Archer:
+			return TEXT("SVN/OutSideAsset/AICreation/ClassSelect/classselect_rogue_action_illustration_1920x1080.png");
+		case EPlayerJobType::Mage:
+			return TEXT("SVN/OutSideAsset/AICreation/ClassSelect/classselect_mage_action_illustration_1920x1080.png");
+		default:
+			return nullptr;
+		}
+	}
+}
 
 void UCharacterSelectWidget::RefreshCharacterOptions()
 {
@@ -143,27 +171,108 @@ void UCharacterSelectWidget::ClearSelectedCharacter()
 	}
 }
 
-void UCharacterSelectWidget::SyncSelectedCharacterArt(EPlayerJobType JobType) const
+void UCharacterSelectWidget::SyncSelectedCharacterArt(EPlayerJobType JobType)
 {
-	const auto SetActionImageVisibility = [](UImage* Image, bool bVisible)
+	/*
+	 * 직업별 액션 이미지는 WBP에 이미 배치돼 있지만 브러시가 비어 있다.
+	 * 아트 원본은 팀 정책상 git이 아니라 SVN(Content/SVN)에만 있으므로, 타이틀 로고와 동일하게
+	 * 런타임에 PNG를 로드해 각 이미지에 채우고(캐시), 선택된 직업의 이미지만 표시한다.
+	 */
+	const auto ApplyJobImage = [this](UImage* Image, EPlayerJobType ImageJob, EPlayerJobType SelectedJob)
 	{
-		if (Image != nullptr)
+		if (Image == nullptr)
 		{
-			Image->SetVisibility(bVisible ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+			return;
+		}
+
+		if (ImageJob != SelectedJob)
+		{
+			Image->SetVisibility(ESlateVisibility::Collapsed);
+			return;
+		}
+
+		if (UTexture2D* Illustration = GetOrLoadJobIllustration(ImageJob))
+		{
+			FSlateBrush Brush;
+			Brush.DrawAs = ESlateBrushDrawType::Image;
+			Brush.ImageSize = FVector2D(
+				static_cast<float>(Illustration->GetSizeX()),
+				static_cast<float>(Illustration->GetSizeY()));
+			Brush.SetResourceObject(Illustration);
+			Image->SetBrush(Brush);
+			Image->SetVisibility(ESlateVisibility::HitTestInvisible);
+		}
+		else
+		{
+			Image->SetVisibility(ESlateVisibility::Collapsed);
 		}
 	};
 
-	const bool bHasClassActionImages = mKnightActionImage != nullptr || mRogueActionImage != nullptr || mMageActionImage != nullptr;
-	SetActionImageVisibility(mKnightActionImage, JobType == EPlayerJobType::Knight);
-	SetActionImageVisibility(mRogueActionImage, JobType == EPlayerJobType::Archer);
-	SetActionImageVisibility(mMageActionImage, JobType == EPlayerJobType::Mage);
+	ApplyJobImage(mKnightActionImage, EPlayerJobType::Knight, JobType);
+	ApplyJobImage(mRogueActionImage, EPlayerJobType::Archer, JobType);
+	ApplyJobImage(mMageActionImage, EPlayerJobType::Mage, JobType);
 
-	if (mSelectedCharacterPortraitImage != nullptr)
+	const bool bHasClassActionImages = mKnightActionImage != nullptr || mRogueActionImage != nullptr || mMageActionImage != nullptr;
+	if (mSelectedCharacterPortraitImage == nullptr)
 	{
-		mSelectedCharacterPortraitImage->SetVisibility(bHasClassActionImages
-			? ESlateVisibility::Collapsed
-			: (JobType == EPlayerJobType::None ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible));
+		return;
 	}
+
+	// 직업별 액션 이미지를 쓰는 경우 포트레이트 이미지는 숨긴다. 액션 이미지가 하나도 없을 때만 포트레이트에 직접 채운다.
+	if (bHasClassActionImages)
+	{
+		mSelectedCharacterPortraitImage->SetVisibility(ESlateVisibility::Collapsed);
+		return;
+	}
+
+	if (UTexture2D* Illustration = GetOrLoadJobIllustration(JobType))
+	{
+		FSlateBrush PortraitBrush;
+		PortraitBrush.DrawAs = ESlateBrushDrawType::Image;
+		PortraitBrush.ImageSize = FVector2D(
+			static_cast<float>(Illustration->GetSizeX()),
+			static_cast<float>(Illustration->GetSizeY()));
+		PortraitBrush.SetResourceObject(Illustration);
+		mSelectedCharacterPortraitImage->SetBrush(PortraitBrush);
+		mSelectedCharacterPortraitImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+
+		if (mSelectedCharacterPortraitFallbackText != nullptr)
+		{
+			mSelectedCharacterPortraitFallbackText->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+	else
+	{
+		mSelectedCharacterPortraitImage->SetVisibility(ESlateVisibility::Collapsed);
+		if (mSelectedCharacterPortraitFallbackText != nullptr)
+		{
+			mSelectedCharacterPortraitFallbackText->SetVisibility(ESlateVisibility::HitTestInvisible);
+		}
+	}
+}
+
+UTexture2D* UCharacterSelectWidget::GetOrLoadJobIllustration(EPlayerJobType JobType)
+{
+	if (const TObjectPtr<UTexture2D>* Cached = mJobIllustrationCache.Find(JobType))
+	{
+		if (*Cached != nullptr)
+		{
+			return *Cached;
+		}
+	}
+
+	const TCHAR* ContentPath = GetJobIllustrationContentPath(JobType);
+	if (ContentPath == nullptr)
+	{
+		return nullptr;
+	}
+
+	UTexture2D* Loaded = RDUITexture::LoadTextureFromContentPng(ContentPath, TEXT("CharacterSelectWidget"));
+	if (Loaded != nullptr)
+	{
+		mJobIllustrationCache.Add(JobType, Loaded);
+	}
+	return Loaded;
 }
 
 const FFrontendCharacterOption* UCharacterSelectWidget::GetCharacterOption(int32 CharacterIndex) const
