@@ -72,7 +72,7 @@ bool URoomTransitionSubsystem::PreloadRoomAsync(int32 RoomRowIndex, int32 RoomCo
     Request.OnReadyToTransition = ReadyToTransitionCallback;
     Request.OnPreTransitNextRoom = PreTransitionCallback;
 
-    return PreloadRoomAsync(MoveTemp(Request), IsAutoTransition);
+    return PreloadRoomAsync(MoveTemp(Request), RequireExternalReady, IsAutoTransition);
 }
 
 bool URoomTransitionSubsystem::PreloadRoomAsync(FRoomTransitionRequest Request, bool RequireExternalReady, bool IsAutoTransition)
