@@ -38,6 +38,7 @@ void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const
 	// 플레이어 유닛 HP는 유닛 뷰에서, 골드/레벨은 메타에서, 라운드는 턴에서 읽는다(전부 뷰모델 경유).
 	float PlayerHP = 0.f;
 	float PlayerMaxHP = 0.f;
+	int32 PlayerMove = 0;
 	int32 EnemyCount = 0;
 	for (const FUnitView& Unit : mCombatViewModel->GetUnitViews())
 	{
@@ -45,6 +46,7 @@ void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const
 		{
 			PlayerHP = Unit.mHP;
 			PlayerMaxHP = Unit.mMaxHP;
+			PlayerMove = FMath::RoundToInt(Unit.mMovementPoint);
 		}
 		else
 		{
@@ -56,9 +58,10 @@ void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const
 	const FTurnView& Turn = mCombatViewModel->GetTurnView();
 
 	const FText StatusText = FText::Format(
-		NSLOCTEXT("CombatTileMapHUDWidget", "CombatStatusBarFormat", "HP {0}/{1}   GOLD {2}   Lv {3}   ROUND {4}   ENEMY x{5}"),
+		NSLOCTEXT("CombatTileMapHUDWidget", "CombatStatusBarFormat", "HP {0}/{1}   MOVE {2}   GOLD {3}   Lv {4}   ROUND {5}   ENEMY x{6}"),
 		FText::AsNumber(FMath::RoundToInt(PlayerHP)),
 		FText::AsNumber(FMath::RoundToInt(PlayerMaxHP)),
+		FText::AsNumber(PlayerMove),
 		FText::AsNumber(Meta.mGold),
 		FText::AsNumber(Meta.mLevel),
 		FText::AsNumber(Turn.mRound),
