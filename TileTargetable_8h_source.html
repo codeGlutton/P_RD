@@ -105,26 +105,63 @@ $(document).ready(function(){initNavTree('TileTargetable_8h_source.html',''); in
 <div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;UObject/Interface.h&quot;</span></div>
 <div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &quot;TileTargetable.generated.h&quot;</span></div>
 <div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>UINTERFACE(MinimalAPI)</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>USTRUCT(Blueprintable)</div>
 <div class="foldopen" id="foldopen00015" data-start="{" data-end="};">
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno"><a class="line" href="classUTileTargetable.html">   15</a></span>class <a class="code hl_class" href="classUTileTargetable.html">UTileTargetable</a> : public UAbilitySystemInterface</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno"><a class="line" href="structFTileTargetSnapshotTargetData.html">   15</a></span>struct <a class="code hl_struct" href="structFTileTargetSnapshotTargetData.html">FTileTargetSnapshotTargetData</a> : public FGameplayAbilityTargetData</div>
 <div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>{</div>
 <div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    GENERATED_BODY()</div>
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>};</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span> </div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    UScriptStruct* GetScriptStruct() <span class="keyword">const override</span>;</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    <span class="keywordtype">bool</span> NetSerialize(FArchive&amp; Ar, UPackageMap* Map, <span class="keywordtype">bool</span>&amp; OutSuccess);</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span> </div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno"><a class="line" href="structFTileTargetSnapshotTargetData.html#aea434ce073e65c754d655fda3a745be4">   25</a></span>    float mMaxHP;</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno"><a class="line" href="structFTileTargetSnapshotTargetData.html#a0518ebd40e40381e861bc03705d85fcc">   27</a></span>    <span class="keywordtype">float</span> mHP;</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno"><a class="line" href="structFTileTargetSnapshotTargetData.html#a49a77ee297cdef9e57837f84110c042f">   29</a></span>    <span class="keywordtype">float</span> mSkillPoint;</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno"><a class="line" href="structFTileTargetSnapshotTargetData.html#ad7050dd1245eae51edd8eb75a8503d07">   31</a></span>    <span class="keywordtype">float</span> mDamagePoint;</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno"><a class="line" href="structFTileTargetSnapshotTargetData.html#ad9df204aa792843432996b21a298ed73">   33</a></span>    <span class="keywordtype">float</span> mDefensePoint;</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno"><a class="line" href="structFTileTargetSnapshotTargetData.html#abb0be6bd74d4913716628ef3e3464105">   35</a></span>    <span class="keywordtype">float</span> mMovementPoint;</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span> </div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno"><a class="line" href="structFTileTargetSnapshotTargetData.html#aea1aa90bdbe4f2ebd165e3171b3613f7">   38</a></span>    uint8 mBuffState;</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno"><a class="line" href="structFTileTargetSnapshotTargetData.html#a50aad3872ffa29e1e1f94be6ffbc4c19">   40</a></span>    uint8 mDebuffState;</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>};</div>
 </div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span> </div>
-<div class="foldopen" id="foldopen00023" data-start="{" data-end="};">
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno"><a class="line" href="classITileTargetable.html">   23</a></span><span class="keyword">class </span>P_RD_API <a class="code hl_class" href="classITileTargetable.html">ITileTargetable</a> : <span class="keyword">public</span> IAbilitySystemInterface</div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>{</div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    GENERATED_BODY()</div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span> </div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    <span class="keyword">virtual</span> <span class="keywordtype">bool</span> IsTargetable() <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>};</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span> </div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>UINTERFACE(MinimalAPI)</div>
+<div class="foldopen" id="foldopen00044" data-start="{" data-end="};">
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno"><a class="line" href="classUTileTargetable.html">   44</a></span>class <a class="code hl_class" href="classUTileTargetable.html">UTileTargetable</a> : public UAbilitySystemInterface</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>{</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    GENERATED_BODY()</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>};</div>
+</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span> </div>
+<div class="foldopen" id="foldopen00052" data-start="{" data-end="};">
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno"><a class="line" href="classITileTargetable.html">   52</a></span><span class="keyword">class </span>P_RD_API <a class="code hl_class" href="classITileTargetable.html">ITileTargetable</a> : <span class="keyword">public</span> IAbilitySystemInterface</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>{</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    GENERATED_BODY()</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span> </div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>    <span class="keyword">virtual</span> <span class="keywordtype">bool</span> IsTargetable() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    <span class="keywordtype">bool</span> IsDead() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span> </div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno"><a class="line" href="classITileTargetable.html#ae744c256a9c2ea2e46cb0cea3d1ba31e">   68</a></span>    <span class="keyword">virtual</span> <a class="code hl_struct" href="structFTileTargetSnapshotTargetData.html">FTileTargetSnapshotTargetData</a>* <a class="code hl_function" href="classITileTargetable.html#ae744c256a9c2ea2e46cb0cea3d1ba31e">MakeSnapshotTargetData</a>() <span class="keyword">const</span> = 0;</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>};</div>
 </div>
 <div class="ttc" id="aGASMinimal_8h_html"><div class="ttname"><a href="GASMinimal_8h.html">GASMinimal.h</a></div><div class="ttdoc">GAS 활용 영역에서 사용되는 포함 헤더</div></div>
-<div class="ttc" id="aclassITileTargetable_html"><div class="ttname"><a href="classITileTargetable.html">ITileTargetable</a></div><div class="ttdoc">SRPG 타일에 타격 가능한 객체</div><div class="ttdef"><b>Definition</b> <a href="TileTargetable_8h_source.html#l00023">TileTargetable.h:24</a></div></div>
-<div class="ttc" id="aclassUTileTargetable_html"><div class="ttname"><a href="classUTileTargetable.html">UTileTargetable</a></div><div class="ttdef"><b>Definition</b> <a href="TileTargetable_8h_source.html#l00015">TileTargetable.h:16</a></div></div>
+<div class="ttc" id="aclassITileTargetable_html"><div class="ttname"><a href="classITileTargetable.html">ITileTargetable</a></div><div class="ttdoc">SRPG 타일에 타격 가능한 객체</div><div class="ttdef"><b>Definition</b> <a href="TileTargetable_8h_source.html#l00052">TileTargetable.h:53</a></div></div>
+<div class="ttc" id="aclassITileTargetable_html_ae744c256a9c2ea2e46cb0cea3d1ba31e"><div class="ttname"><a href="classITileTargetable.html#ae744c256a9c2ea2e46cb0cea3d1ba31e">ITileTargetable::MakeSnapshotTargetData</a></div><div class="ttdeci">virtual FTileTargetSnapshotTargetData * MakeSnapshotTargetData() const =0</div></div>
+<div class="ttc" id="aclassUTileTargetable_html"><div class="ttname"><a href="classUTileTargetable.html">UTileTargetable</a></div><div class="ttdef"><b>Definition</b> <a href="TileTargetable_8h_source.html#l00044">TileTargetable.h:45</a></div></div>
+<div class="ttc" id="astructFTileTargetSnapshotTargetData_html"><div class="ttname"><a href="structFTileTargetSnapshotTargetData.html">FTileTargetSnapshotTargetData</a></div><div class="ttdef"><b>Definition</b> <a href="TileTargetable_8h_source.html#l00015">TileTargetable.h:16</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

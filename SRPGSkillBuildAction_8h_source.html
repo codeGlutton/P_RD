@@ -1,0 +1,241 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/SRPGFramework/SRPGSkillBuildAction.h 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('SRPGSkillBuildAction_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">SRPGSkillBuildAction.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="SRPGSkillBuildAction_8h.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*****************************************************************/</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;<a class="code" href="RDMinimal_8h.html">RDMinimal.h</a>&quot;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;<a class="code" href="SRPGAction_8h.html">SRPGFramework/SRPGAction.h</a>&quot;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &quot;<a class="code" href="CombatResult_8h.html">FunctionLibrary/CombatCalculator/CombatResult.h</a>&quot;</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="keyword">struct </span><a class="code hl_struct" href="structFSRPGSkillBuildAction.html">FSRPGSkillBuildAction</a>;</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno"><a class="line" href="SRPGSkillBuildAction_8h.html#ae247dffeb07dbc9e833797aa1ded4d82">   16</a></span><a class="code hl_function" href="SRPGSkillBuildAction_8h.html#ae247dffeb07dbc9e833797aa1ded4d82">DECLARE_MULTICAST_DELEGATE_TwoParams</a>(FOnChangeSkillBuildPhase, <span class="keyword">const</span> <a class="code hl_struct" href="structFSRPGSkillBuildAction.html">FSRPGSkillBuildAction</a>&amp; <span class="comment">/*Action*/</span>, <a class="code hl_enumeration" href="SRPGFrameworkType_8h.html#a7a25848def872c63a744016efb0b665c">ESRPGSkillBuildPhase</a> <span class="comment">/*Phase*/</span>);</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span> </div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="keyword">class </span><a class="code hl_class" href="classUStaticSkillData.html">UStaticSkillData</a>;</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span> </div>
+<div class="foldopen" id="foldopen00020" data-start="{" data-end="};">
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno"><a class="line" href="structFSRPGSkillSelectCommand.html">   20</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structFSRPGSkillSelectCommand.html">FSRPGSkillSelectCommand</a> : <span class="keyword">public</span> <a class="code hl_struct" href="structFSRPGActionCreationCommand.html">FSRPGActionCreationCommand</a>&lt;FSRPGSkillBuildAction&gt;</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>{</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    <a class="code hl_function" href="structFSRPGSkillSelectCommand.html#ab0306bb7708b6a7ee0dea6537c330fb6">FSRPGSkillSelectCommand</a>();</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno"><a class="line" href="structFSRPGSkillSelectCommand.html#afdd30243f7699ed346c4ea203b528dde">   26</a></span>    FOnChangeSkillBuildPhase <a class="code hl_variable" href="structFSRPGSkillSelectCommand.html#afdd30243f7699ed346c4ea203b528dde">OnChangeSkillBuildPhase</a>;</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span> </div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno"><a class="line" href="structFSRPGSkillSelectCommand.html#a7474ea65015ebe8fbdc8747ed7072ae0">   29</a></span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_variable" href="structFSRPGSkillSelectCommand.html#a7474ea65015ebe8fbdc8747ed7072ae0">mSkillIndex</a> = 0;</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>};</div>
+</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span> </div>
+<div class="foldopen" id="foldopen00032" data-start="{" data-end="};">
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno"><a class="line" href="structFSRPGCDiceSelectCommand.html">   32</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structFSRPGCDiceSelectCommand.html">FSRPGCDiceSelectCommand</a> : <span class="keyword">public</span> <a class="code hl_struct" href="structFSRPGActionCommand.html">FSRPGActionCommand</a></div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>{</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    <a class="code hl_function" href="structFSRPGCDiceSelectCommand.html#a6e0531b4a9031844e1f20fa0c728dc02">FSRPGCDiceSelectCommand</a>();</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span> </div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno"><a class="line" href="structFSRPGCDiceSelectCommand.html#a83c62f781ae8a21f5fdb94cec91a8d1d">   38</a></span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_variable" href="structFSRPGCDiceSelectCommand.html#a83c62f781ae8a21f5fdb94cec91a8d1d">mDiceIndex</a> = 0;</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>};</div>
+</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span> </div>
+<div class="foldopen" id="foldopen00044" data-start="{" data-end="};">
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno"><a class="line" href="structFSRPGSkillBuildAction.html">   44</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structFSRPGSkillBuildAction.html">FSRPGSkillBuildAction</a> : <span class="keyword">public</span> <a class="code hl_struct" href="structFSRPGAction.html">FSRPGAction</a></div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>{</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> ActionType&gt;</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno"><a class="line" href="structFSRPGSkillBuildAction.html#a05f54bd09b8a89d9399e038a873e2edc">   47</a></span>    <span class="keyword">friend</span> <span class="keyword">struct </span><a class="code hl_struct" href="structFSRPGActionCreationCommand.html">FSRPGActionCreationCommand</a>;</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno"><a class="line" href="structFSRPGSkillBuildAction.html#a9af1113936d31723d183d67905558766">   48</a></span>    <span class="keyword">using </span><a class="code hl_struct" href="structFSRPGAction.html">Super</a> = <a class="code hl_function" href="structFSRPGAction.html#add97e88febaccc20cd0e4d133fa9ab91">FSRPGAction</a>;</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span> </div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    <a class="code hl_function" href="structFSRPGSkillBuildAction.html#afa5ef2000fd644bd72857d6bccdddeee">FSRPGSkillBuildAction</a>();</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span> </div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    <span class="comment">/* FSRPGAction 상속 */</span></div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structFSRPGSkillBuildAction.html#afce6c764730d3aa2dc21000da5245456">OnBeginAction</a>() <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structFSRPGSkillBuildAction.html#a43e808ce41677801ae05a8d75be1b4cc">OnEndAction</a>() <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span> </div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    <a class="code hl_enumeration" href="SRPGFrameworkType_8h.html#ad143685bd9567ea223c1f07624507f99">ESRPGActionCommandResult</a> <a class="code hl_function" href="structFSRPGSkillBuildAction.html#ac8e7e21b5451da1dc4755562822a3d01">HandleCommand</a>(TSharedPtr&lt;const FSRPGActionCommand&gt; Command) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span> </div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    <a class="code hl_enumeration" href="SRPGFrameworkType_8h.html#ad143685bd9567ea223c1f07624507f99">ESRPGActionCommandResult</a> <a class="code hl_function" href="structFSRPGSkillBuildAction.html#a8c1eed1237024f8330d6fe85cdafe5e1">HandleWorldTraceCommand</a>(TSharedPtr&lt;const FSRPGWorldTraceCommand&gt; Command);</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span> </div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>    <span class="comment">/* 빌드 로직 처리 */</span></div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>    <span class="keywordtype">void</span> ChangeDices(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> RequestedDiceIndex);</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span> </div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>    <span class="keywordtype">void</span> SetSkill(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> SkillIndex);</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>    <span class="keywordtype">void</span> ResetSkill();</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>    <span class="keywordtype">void</span> SetTargetTile(<span class="keyword">const</span> <a class="code hl_struct" href="structFTileIndex.html">FTileIndex</a>&amp; TileIndex);</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>    <span class="keywordtype">void</span> ResetTargetTile();</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    <span class="keywordtype">void</span> BuildSkill();</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span> </div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>    <span class="keywordtype">void</span> SetBuildPhase(<a class="code hl_enumeration" href="SRPGFrameworkType_8h.html#a7a25848def872c63a744016efb0b665c">ESRPGSkillBuildPhase</a> BuildPhase);</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span> </div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno"><a class="line" href="structFSRPGSkillBuildAction.html#a28210135413b9bafc4e80aecce9dd1ed">   78</a></span>    FOnChangeSkillBuildPhase <a class="code hl_variable" href="structFSRPGSkillBuildAction.html#a28210135413b9bafc4e80aecce9dd1ed">OnChangeSkillBuildPhase</a>;</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span> </div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno"><a class="line" href="structFSRPGSkillBuildAction.html#ae2d7123b134e8881b5159dd9e8a5434f">   81</a></span>    <a class="code hl_enumeration" href="SRPGFrameworkType_8h.html#a7a25848def872c63a744016efb0b665c">ESRPGSkillBuildPhase</a> <a class="code hl_variable" href="structFSRPGSkillBuildAction.html#ae2d7123b134e8881b5159dd9e8a5434f">mSkillBuildPhase</a> = ESRPGSkillBuildPhase::None;</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span> </div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno"><a class="line" href="structFSRPGSkillBuildAction.html#ad2e52c9ab3ea21af79e3c942219e8e26">   84</a></span>    TArray&lt;FTileIndex&gt; <a class="code hl_variable" href="structFSRPGSkillBuildAction.html#ad2e52c9ab3ea21af79e3c942219e8e26">mAimTileIndexes</a>;</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno"><a class="line" href="structFSRPGSkillBuildAction.html#a0f16fdc5d9500d76e2bed280b750bd66">   85</a></span>    TObjectPtr&lt;UStaticSkillData&gt; <a class="code hl_variable" href="structFSRPGSkillBuildAction.html#a0f16fdc5d9500d76e2bed280b750bd66">mSelectedSkill</a>;</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno"><a class="line" href="structFSRPGSkillBuildAction.html#ae914ad2b0c38e4a0ab8f2f7baf20a672">   86</a></span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_variable" href="structFSRPGSkillBuildAction.html#ae914ad2b0c38e4a0ab8f2f7baf20a672">mSelectedSkillIndex</a> = INDEX_NONE;</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span> </div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno"><a class="line" href="structFSRPGSkillBuildAction.html#af543fe8b525f58f004d073e5d5e3e3e8">   88</a></span>    TArray&lt;int32&gt; <a class="code hl_variable" href="structFSRPGSkillBuildAction.html#af543fe8b525f58f004d073e5d5e3e3e8">mSelectedDices</a>;</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno"><a class="line" href="structFSRPGSkillBuildAction.html#a8917b6027678d5289213eb7151c81c2c">   89</a></span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_variable" href="structFSRPGSkillBuildAction.html#a8917b6027678d5289213eb7151c81c2c">mSelectedDiceSum</a> = 0;</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span> </div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno"><a class="line" href="structFSRPGSkillBuildAction.html#a003262abce20b09fafeb9a82bc5c1526">   91</a></span>    TArray&lt;FTileIndex&gt; <a class="code hl_variable" href="structFSRPGSkillBuildAction.html#a003262abce20b09fafeb9a82bc5c1526">mEffectTileIndexes</a>;</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno"><a class="line" href="structFSRPGSkillBuildAction.html#adc04f40615802114d7253fbc6f20ca1e">   92</a></span>    <a class="code hl_struct" href="structFTileIndex.html">FTileIndex</a> <a class="code hl_variable" href="structFSRPGSkillBuildAction.html#adc04f40615802114d7253fbc6f20ca1e">mTargetIndex</a> = <a class="code hl_variable" href="structFTileIndex.html#a34e1e14cbc47d78d2c5a867e7e19b0e4">FTileIndex::Invalid</a>;</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno"><a class="line" href="structFSRPGSkillBuildAction.html#aa1917f0e2e3d5efd4bf917af32fd15aa">   93</a></span>    <a class="code hl_struct" href="structFSkillCommitResult.html">FSkillCommitResult</a> <a class="code hl_variable" href="structFSRPGSkillBuildAction.html#aa1917f0e2e3d5efd4bf917af32fd15aa">mCalculationResult</a>;</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>};</div>
+</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span> </div>
+<div class="ttc" id="aCombatResult_8h_html"><div class="ttname"><a href="CombatResult_8h.html">CombatResult.h</a></div><div class="ttdoc">전투 결과 기록을 위한 구조체 헤더</div></div>
+<div class="ttc" id="aRDMinimal_8h_html"><div class="ttname"><a href="RDMinimal_8h.html">RDMinimal.h</a></div><div class="ttdoc">RD 프로젝트 전 영역에서 사용되는 최소한의 포함 헤더</div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_ada104807b93ac7cd59dac80d98ba857b"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a></div><div class="ttdeci">int32</div><div class="ttdef"><b>Definition</b> <a href="RoomTransitionSubsystem_8h_source.html#l00021">RoomTransitionSubsystem.h:21</a></div></div>
+<div class="ttc" id="aSRPGAction_8h_html"><div class="ttname"><a href="SRPGAction_8h.html">SRPGAction.h</a></div><div class="ttdoc">사용자 입력에 따른 정해진 SRPG 행동 객체 구현 헤더</div></div>
+<div class="ttc" id="aSRPGFrameworkType_8h_html_a7a25848def872c63a744016efb0b665c"><div class="ttname"><a href="SRPGFrameworkType_8h.html#a7a25848def872c63a744016efb0b665c">ESRPGSkillBuildPhase</a></div><div class="ttdeci">ESRPGSkillBuildPhase</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00241">SRPGFrameworkType.h:242</a></div></div>
+<div class="ttc" id="aSRPGFrameworkType_8h_html_ad143685bd9567ea223c1f07624507f99"><div class="ttname"><a href="SRPGFrameworkType_8h.html#ad143685bd9567ea223c1f07624507f99">ESRPGActionCommandResult</a></div><div class="ttdeci">ESRPGActionCommandResult</div><div class="ttdoc">명령 처리 여부를 나타내는 열거형</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00266">SRPGFrameworkType.h:267</a></div></div>
+<div class="ttc" id="aSRPGSkillBuildAction_8h_html_ae247dffeb07dbc9e833797aa1ded4d82"><div class="ttname"><a href="SRPGSkillBuildAction_8h.html#ae247dffeb07dbc9e833797aa1ded4d82">DECLARE_MULTICAST_DELEGATE_TwoParams</a></div><div class="ttdeci">DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangeSkillBuildPhase, const FSRPGSkillBuildAction &amp;, ESRPGSkillBuildPhase)</div></div>
+<div class="ttc" id="aclassUStaticSkillData_html"><div class="ttname"><a href="classUStaticSkillData.html">UStaticSkillData</a></div><div class="ttdoc">스킬 생성 시 사용되는 정적 Primary Data Asset</div><div class="ttdef"><b>Definition</b> <a href="StaticSkillData_8h_source.html#l00115">StaticSkillData.h:116</a></div></div>
+<div class="ttc" id="astructFSRPGActionCommand_html"><div class="ttname"><a href="structFSRPGActionCommand.html">FSRPGActionCommand</a></div><div class="ttdoc">사용자 입력 명령 객체</div><div class="ttdef"><b>Definition</b> <a href="SRPGAction_8h_source.html#l00025">SRPGAction.h:26</a></div></div>
+<div class="ttc" id="astructFSRPGActionCreationCommand_html"><div class="ttname"><a href="structFSRPGActionCreationCommand.html">FSRPGActionCreationCommand</a></div><div class="ttdoc">액션 생성 명령 객체</div><div class="ttdef"><b>Definition</b> <a href="SRPGAction_8h_source.html#l00054">SRPGAction.h:55</a></div></div>
+<div class="ttc" id="astructFSRPGAction_html"><div class="ttname"><a href="structFSRPGAction.html">FSRPGAction</a></div><div class="ttdoc">사용자 입력에 따른 정해진 SRPG 행동 객체</div><div class="ttdef"><b>Definition</b> <a href="SRPGAction_8h_source.html#l00068">SRPGAction.h:69</a></div></div>
+<div class="ttc" id="astructFSRPGAction_html_add97e88febaccc20cd0e4d133fa9ab91"><div class="ttname"><a href="structFSRPGAction.html#add97e88febaccc20cd0e4d133fa9ab91">FSRPGAction::FSRPGAction</a></div><div class="ttdeci">FSRPGAction()=default</div></div>
+<div class="ttc" id="astructFSRPGCDiceSelectCommand_html"><div class="ttname"><a href="structFSRPGCDiceSelectCommand.html">FSRPGCDiceSelectCommand</a></div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8h_source.html#l00032">SRPGSkillBuildAction.h:33</a></div></div>
+<div class="ttc" id="astructFSRPGCDiceSelectCommand_html_a6e0531b4a9031844e1f20fa0c728dc02"><div class="ttname"><a href="structFSRPGCDiceSelectCommand.html#a6e0531b4a9031844e1f20fa0c728dc02">FSRPGCDiceSelectCommand::FSRPGCDiceSelectCommand</a></div><div class="ttdeci">FSRPGCDiceSelectCommand()</div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8cpp_source.html#l00016">SRPGSkillBuildAction.cpp:16</a></div></div>
+<div class="ttc" id="astructFSRPGCDiceSelectCommand_html_a83c62f781ae8a21f5fdb94cec91a8d1d"><div class="ttname"><a href="structFSRPGCDiceSelectCommand.html#a83c62f781ae8a21f5fdb94cec91a8d1d">FSRPGCDiceSelectCommand::mDiceIndex</a></div><div class="ttdeci">int32 mDiceIndex</div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8h_source.html#l00038">SRPGSkillBuildAction.h:38</a></div></div>
+<div class="ttc" id="astructFSRPGSkillBuildAction_html"><div class="ttname"><a href="structFSRPGSkillBuildAction.html">FSRPGSkillBuildAction</a></div><div class="ttdoc">스킬 생성 액션 객체</div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8h_source.html#l00044">SRPGSkillBuildAction.h:45</a></div></div>
+<div class="ttc" id="astructFSRPGSkillBuildAction_html_a003262abce20b09fafeb9a82bc5c1526"><div class="ttname"><a href="structFSRPGSkillBuildAction.html#a003262abce20b09fafeb9a82bc5c1526">FSRPGSkillBuildAction::mEffectTileIndexes</a></div><div class="ttdeci">TArray&lt; FTileIndex &gt; mEffectTileIndexes</div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8h_source.html#l00091">SRPGSkillBuildAction.h:91</a></div></div>
+<div class="ttc" id="astructFSRPGSkillBuildAction_html_a0f16fdc5d9500d76e2bed280b750bd66"><div class="ttname"><a href="structFSRPGSkillBuildAction.html#a0f16fdc5d9500d76e2bed280b750bd66">FSRPGSkillBuildAction::mSelectedSkill</a></div><div class="ttdeci">TObjectPtr&lt; UStaticSkillData &gt; mSelectedSkill</div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8h_source.html#l00085">SRPGSkillBuildAction.h:85</a></div></div>
+<div class="ttc" id="astructFSRPGSkillBuildAction_html_a28210135413b9bafc4e80aecce9dd1ed"><div class="ttname"><a href="structFSRPGSkillBuildAction.html#a28210135413b9bafc4e80aecce9dd1ed">FSRPGSkillBuildAction::OnChangeSkillBuildPhase</a></div><div class="ttdeci">FOnChangeSkillBuildPhase OnChangeSkillBuildPhase</div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8h_source.html#l00078">SRPGSkillBuildAction.h:78</a></div></div>
+<div class="ttc" id="astructFSRPGSkillBuildAction_html_a43e808ce41677801ae05a8d75be1b4cc"><div class="ttname"><a href="structFSRPGSkillBuildAction.html#a43e808ce41677801ae05a8d75be1b4cc">FSRPGSkillBuildAction::OnEndAction</a></div><div class="ttdeci">void OnEndAction() override</div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8cpp_source.html#l00032">SRPGSkillBuildAction.cpp:32</a></div></div>
+<div class="ttc" id="astructFSRPGSkillBuildAction_html_a8917b6027678d5289213eb7151c81c2c"><div class="ttname"><a href="structFSRPGSkillBuildAction.html#a8917b6027678d5289213eb7151c81c2c">FSRPGSkillBuildAction::mSelectedDiceSum</a></div><div class="ttdeci">int32 mSelectedDiceSum</div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8h_source.html#l00089">SRPGSkillBuildAction.h:89</a></div></div>
+<div class="ttc" id="astructFSRPGSkillBuildAction_html_a8c1eed1237024f8330d6fe85cdafe5e1"><div class="ttname"><a href="structFSRPGSkillBuildAction.html#a8c1eed1237024f8330d6fe85cdafe5e1">FSRPGSkillBuildAction::HandleWorldTraceCommand</a></div><div class="ttdeci">ESRPGActionCommandResult HandleWorldTraceCommand(TSharedPtr&lt; const FSRPGWorldTraceCommand &gt; Command)</div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8cpp_source.html#l00078">SRPGSkillBuildAction.cpp:78</a></div></div>
+<div class="ttc" id="astructFSRPGSkillBuildAction_html_aa1917f0e2e3d5efd4bf917af32fd15aa"><div class="ttname"><a href="structFSRPGSkillBuildAction.html#aa1917f0e2e3d5efd4bf917af32fd15aa">FSRPGSkillBuildAction::mCalculationResult</a></div><div class="ttdeci">FSkillCommitResult mCalculationResult</div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8h_source.html#l00093">SRPGSkillBuildAction.h:93</a></div></div>
+<div class="ttc" id="astructFSRPGSkillBuildAction_html_ac8e7e21b5451da1dc4755562822a3d01"><div class="ttname"><a href="structFSRPGSkillBuildAction.html#ac8e7e21b5451da1dc4755562822a3d01">FSRPGSkillBuildAction::HandleCommand</a></div><div class="ttdeci">ESRPGActionCommandResult HandleCommand(TSharedPtr&lt; const FSRPGActionCommand &gt; Command) override</div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8cpp_source.html#l00038">SRPGSkillBuildAction.cpp:38</a></div></div>
+<div class="ttc" id="astructFSRPGSkillBuildAction_html_ad2e52c9ab3ea21af79e3c942219e8e26"><div class="ttname"><a href="structFSRPGSkillBuildAction.html#ad2e52c9ab3ea21af79e3c942219e8e26">FSRPGSkillBuildAction::mAimTileIndexes</a></div><div class="ttdeci">TArray&lt; FTileIndex &gt; mAimTileIndexes</div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8h_source.html#l00084">SRPGSkillBuildAction.h:84</a></div></div>
+<div class="ttc" id="astructFSRPGSkillBuildAction_html_adc04f40615802114d7253fbc6f20ca1e"><div class="ttname"><a href="structFSRPGSkillBuildAction.html#adc04f40615802114d7253fbc6f20ca1e">FSRPGSkillBuildAction::mTargetIndex</a></div><div class="ttdeci">FTileIndex mTargetIndex</div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8h_source.html#l00092">SRPGSkillBuildAction.h:92</a></div></div>
+<div class="ttc" id="astructFSRPGSkillBuildAction_html_ae2d7123b134e8881b5159dd9e8a5434f"><div class="ttname"><a href="structFSRPGSkillBuildAction.html#ae2d7123b134e8881b5159dd9e8a5434f">FSRPGSkillBuildAction::mSkillBuildPhase</a></div><div class="ttdeci">ESRPGSkillBuildPhase mSkillBuildPhase</div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8h_source.html#l00081">SRPGSkillBuildAction.h:81</a></div></div>
+<div class="ttc" id="astructFSRPGSkillBuildAction_html_ae914ad2b0c38e4a0ab8f2f7baf20a672"><div class="ttname"><a href="structFSRPGSkillBuildAction.html#ae914ad2b0c38e4a0ab8f2f7baf20a672">FSRPGSkillBuildAction::mSelectedSkillIndex</a></div><div class="ttdeci">int32 mSelectedSkillIndex</div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8h_source.html#l00086">SRPGSkillBuildAction.h:86</a></div></div>
+<div class="ttc" id="astructFSRPGSkillBuildAction_html_af543fe8b525f58f004d073e5d5e3e3e8"><div class="ttname"><a href="structFSRPGSkillBuildAction.html#af543fe8b525f58f004d073e5d5e3e3e8">FSRPGSkillBuildAction::mSelectedDices</a></div><div class="ttdeci">TArray&lt; int32 &gt; mSelectedDices</div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8h_source.html#l00088">SRPGSkillBuildAction.h:88</a></div></div>
+<div class="ttc" id="astructFSRPGSkillBuildAction_html_afa5ef2000fd644bd72857d6bccdddeee"><div class="ttname"><a href="structFSRPGSkillBuildAction.html#afa5ef2000fd644bd72857d6bccdddeee">FSRPGSkillBuildAction::FSRPGSkillBuildAction</a></div><div class="ttdeci">FSRPGSkillBuildAction()</div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8cpp_source.html#l00021">SRPGSkillBuildAction.cpp:21</a></div></div>
+<div class="ttc" id="astructFSRPGSkillBuildAction_html_afce6c764730d3aa2dc21000da5245456"><div class="ttname"><a href="structFSRPGSkillBuildAction.html#afce6c764730d3aa2dc21000da5245456">FSRPGSkillBuildAction::OnBeginAction</a></div><div class="ttdeci">void OnBeginAction() override</div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8cpp_source.html#l00027">SRPGSkillBuildAction.cpp:27</a></div></div>
+<div class="ttc" id="astructFSRPGSkillSelectCommand_html"><div class="ttname"><a href="structFSRPGSkillSelectCommand.html">FSRPGSkillSelectCommand</a></div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8h_source.html#l00020">SRPGSkillBuildAction.h:21</a></div></div>
+<div class="ttc" id="astructFSRPGSkillSelectCommand_html_a7474ea65015ebe8fbdc8747ed7072ae0"><div class="ttname"><a href="structFSRPGSkillSelectCommand.html#a7474ea65015ebe8fbdc8747ed7072ae0">FSRPGSkillSelectCommand::mSkillIndex</a></div><div class="ttdeci">int32 mSkillIndex</div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8h_source.html#l00029">SRPGSkillBuildAction.h:29</a></div></div>
+<div class="ttc" id="astructFSRPGSkillSelectCommand_html_ab0306bb7708b6a7ee0dea6537c330fb6"><div class="ttname"><a href="structFSRPGSkillSelectCommand.html#ab0306bb7708b6a7ee0dea6537c330fb6">FSRPGSkillSelectCommand::FSRPGSkillSelectCommand</a></div><div class="ttdeci">FSRPGSkillSelectCommand()</div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8cpp_source.html#l00011">SRPGSkillBuildAction.cpp:11</a></div></div>
+<div class="ttc" id="astructFSRPGSkillSelectCommand_html_afdd30243f7699ed346c4ea203b528dde"><div class="ttname"><a href="structFSRPGSkillSelectCommand.html#afdd30243f7699ed346c4ea203b528dde">FSRPGSkillSelectCommand::OnChangeSkillBuildPhase</a></div><div class="ttdeci">FOnChangeSkillBuildPhase OnChangeSkillBuildPhase</div><div class="ttdef"><b>Definition</b> <a href="SRPGSkillBuildAction_8h_source.html#l00026">SRPGSkillBuildAction.h:26</a></div></div>
+<div class="ttc" id="astructFSkillCommitResult_html"><div class="ttname"><a href="structFSkillCommitResult.html">FSkillCommitResult</a></div><div class="ttdef"><b>Definition</b> <a href="CombatResult_8h_source.html#l00059">CombatResult.h:60</a></div></div>
+<div class="ttc" id="astructFTileIndex_html"><div class="ttname"><a href="structFTileIndex.html">FTileIndex</a></div><div class="ttdoc">타일 맵 상 인덱스 좌표</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00029">SRPGFrameworkType.h:30</a></div></div>
+<div class="ttc" id="astructFTileIndex_html_a34e1e14cbc47d78d2c5a867e7e19b0e4"><div class="ttname"><a href="structFTileIndex.html#a34e1e14cbc47d78d2c5a867e7e19b0e4">FTileIndex::Invalid</a></div><div class="ttdeci">static const FTileIndex Invalid</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00056">SRPGFrameworkType.h:56</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_83c0b7202b8dac4a09e6c9f600234e9d.html">SRPGFramework</a></li><li class="navelem"><a class="el" href="SRPGSkillBuildAction_8h.html">SRPGSkillBuildAction.h</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['knight_0',['Knight',['../PlayerJobType_8h.html#a11db6eae2577258d153e9122c9bba255a8c23b2b86573edf2a5ea482c2ccc1497',1,'PlayerJobType.h']]]
+  ['gloves_0',['Gloves',['../EquipmentType_8h.html#a70899f415d345fbaf3bd81b9ff18cc2ba643fdaf1fef54e8def751f54b706cd60',1,'EquipmentType.h']]]
 ];

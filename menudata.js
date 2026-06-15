@@ -35,7 +35,9 @@ var menudata={children:[
 {text:"u",url:"namespacemembers.html#index_u"}]},
 {text:"함수",url:"namespacemembers_func.html",children:[
 {text:"d",url:"namespacemembers_func.html#index_d"},
+{text:"t",url:"namespacemembers_func.html#index_t"},
 {text:"u",url:"namespacemembers_func.html#index_u"}]},
+{text:"변수",url:"namespacemembers_vars.html"},
 {text:"열거형 타입",url:"namespacemembers_enum.html"},
 {text:"열거형 멤버",url:"namespacemembers_eval.html"}]}]},
 {text:"클래스",url:"annotated.html",children:[
@@ -73,6 +75,7 @@ var menudata={children:[
 {text:"e",url:"functions_func_e.html#index_e"},
 {text:"f",url:"functions_func_f.html#index_f"},
 {text:"g",url:"functions_func_g.html#index_g"},
+{text:"h",url:"functions_func_h.html#index_h"},
 {text:"i",url:"functions_func_i.html#index_i"},
 {text:"l",url:"functions_func_l.html#index_l"},
 {text:"m",url:"functions_func_m.html#index_m"},
@@ -87,8 +90,7 @@ var menudata={children:[
 {text:"w",url:"functions_func_w.html#index_w"},
 {text:"~",url:"functions_func_~.html#index__7E"}]},
 {text:"변수",url:"functions_vars.html",children:[
-{text:"b",url:"functions_vars.html#index_b"},
-{text:"c",url:"functions_vars_c.html#index_c"},
+{text:"c",url:"functions_vars.html#index_c"},
 {text:"d",url:"functions_vars_d.html#index_d"},
 {text:"e",url:"functions_vars_e.html#index_e"},
 {text:"h",url:"functions_vars_h.html#index_h"},
@@ -109,11 +111,17 @@ var menudata={children:[
 {text:"모두",url:"globals.html",children:[
 {text:"a",url:"globals.html#index_a"},
 {text:"b",url:"globals.html#index_b"},
+{text:"c",url:"globals.html#index_c"},
 {text:"d",url:"globals.html#index_d"},
 {text:"e",url:"globals.html#index_e"},
 {text:"i",url:"globals.html#index_i"},
 {text:"t",url:"globals.html#index_t"}]},
-{text:"함수",url:"globals_func.html"},
+{text:"함수",url:"globals_func.html",children:[
+{text:"c",url:"globals_func.html#index_c"},
+{text:"d",url:"globals_func.html#index_d"},
+{text:"e",url:"globals_func.html#index_e"},
+{text:"i",url:"globals_func.html#index_i"}]},
 {text:"변수",url:"globals_vars.html"},
-{text:"열거형 타입",url:"globals_enum.html"},
+{text:"열거형 타입",url:"globals_enum.html",children:[
+{text:"e",url:"globals_enum.html#index_e"}]},
 {text:"매크로",url:"globals_defs.html"}]}]}]}

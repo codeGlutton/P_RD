@@ -1,6 +1,6 @@
 var StaticSkillData_8h =
 [
-    [ "FGameplayEffectData", "structFGameplayEffectData.html", "structFGameplayEffectData" ],
-    [ "FSkillAction", "structFSkillAction.html", "structFSkillAction" ],
+    [ "FSkillEffectLayer", "structFSkillEffectLayer.html", "structFSkillEffectLayer" ],
+    [ "FSkillAnimLayer", "structFSkillAnimLayer.html", "structFSkillAnimLayer" ],
     [ "UStaticSkillData", "classUStaticSkillData.html", "classUStaticSkillData" ]
 ];

@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['bselectable_0',['bSelectable',['../structFFrontendCharacterOption.html#ac7bcc7517905234ccbe3e7171d76455b',1,'FFrontendCharacterOption']]]
+  ['commitresult_0',['CommitResult',['../classUSkillCommitResultHolder.html#a16d96ba1968271f0efde41c2c7272655',1,'USkillCommitResultHolder']]],
+  ['commonskillweight_1',['CommonSkillWeight',['../classULevelAttributeSet.html#aeb805bf19d787c6808d887bbe6f7d523',1,'ULevelAttributeSet']]]
 ];

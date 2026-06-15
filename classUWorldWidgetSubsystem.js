@@ -1,6 +1,7 @@
 var classUWorldWidgetSubsystem =
 [
     [ "GetHUD", "classUWorldWidgetSubsystem.html#a4546fbbeace82939756f3f17784a7410", null ],
+    [ "GetWorldWidget", "classUWorldWidgetSubsystem.html#a75fe3ae27db3e096f9d0fac5a258daa5", null ],
     [ "GetWorldWidget", "classUWorldWidgetSubsystem.html#a024655901660cadda26300f40b003126", null ],
     [ "InitHUD", "classUWorldWidgetSubsystem.html#a1a2c8e17e775dba7147f6476109ca2c3", null ],
     [ "InitWidgets", "classUWorldWidgetSubsystem.html#ad28428f8e9035efdfa5ab52639e6d775", null ],

@@ -58,6 +58,7 @@ var NAVTREE =
       [ "네임스페이스 멤버", "namespacemembers.html", [
         [ "모두", "namespacemembers.html", null ],
         [ "함수", "namespacemembers_func.html", null ],
+        [ "변수", "namespacemembers_vars.html", null ],
         [ "열거형 타입", "namespacemembers_enum.html", null ],
         [ "열거형 멤버", "namespacemembers_eval.html", null ]
       ] ]
@@ -90,12 +91,14 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "AssetNamingConventionSettings_8cpp.html",
-"RDMinimal_8h.html",
-"StaticStageSpawnData_8cpp.html",
-"classTCircularDoubleLinkedListIterator.html#a4da1406c0e47a28d7669ce325ff510ca",
-"classUStaticMonsterRoomSpawnData.html#a331e8a545b84ee9e0ec0c31d882c996c",
-"namespaceAbilityTags.html#ad20392519aca64aead20f3f9812f214f",
-"structFStageBuilder.html"
+"PersistentDataWriter_8cpp_source.html",
+"SRPGSkillBuildAction_8h.html",
+"WorldWidgetType_8h.html",
+"classUCarouselPanelWidget.html#a12cf2b9da789091b23e320691045c212",
+"classUSRPGCombatSubsystem.html#acd4873cb8eec4f7ac5cd140fe640d79d",
+"dir_ffeda9ad4be4d39567472e24b1ad8810.html",
+"structFMapRoomView.html#a6f43c665fdc9a82c1e8463de6589432d",
+"structFTile.html#ad5e90662a0bf46f640d6b34cb466e6cf"
 ];
 
 var SYNCONMSG = '패널 동기화를 비활성화하기 위해 클릭하십시오';

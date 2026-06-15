@@ -134,15 +134,24 @@ $(document).ready(function(){initNavTree('WorldWidgetSubsystem_8h_source.html','
 <div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>    }</div>
 </div>
 <div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span> </div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    UUserWidget* GetWorldWidget(<a class="code hl_enumeration" href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a> Type) <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="keyword">protected</span>:</div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>    UPROPERTY(Category = UI, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = <span class="stringliteral">&quot;HUD&quot;</span>))</div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno"><a class="line" href="classUWorldWidgetSubsystem.html#aa66bf836caad56f07cddd41edc95c261">   46</a></span>    TObjectPtr&lt;UUserWidget&gt; mHUD;</div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>    UPROPERTY(Category = UI, VisibleAnywhere, meta = (DisplayName = &quot;WorldWidgets&quot;, ArraySizeEnum = &quot;<a class="code hl_enumeration" href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a>&quot;))</div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno"><a class="line" href="classUWorldWidgetSubsystem.html#a7d0d92e05efefc0cb6381f3310edb4fd">   49</a></span>    TObjectPtr&lt;UUserWidget&gt; mWorldWidgets[static_cast&lt;uint8&gt;(<a class="code hl_enumeration" href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a>::Count)];</div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>};</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="foldopen" id="foldopen00043" data-start="{" data-end="}">
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno"><a class="line" href="classUWorldWidgetSubsystem.html#a75fe3ae27db3e096f9d0fac5a258daa5">   43</a></span>    T* <a class="code hl_function" href="classUWorldWidgetSubsystem.html#a75fe3ae27db3e096f9d0fac5a258daa5">GetWorldWidget</a>(<a class="code hl_enumeration" href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a> Type)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="keyword">    </span>{</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>        <span class="keyword">static_assert</span>(TIsDerivedFrom&lt;T, UUserWidget&gt;::IsDerived);</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span> </div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>        <span class="keywordflow">return</span> Cast&lt;T&gt;(GetWorldWidget(Type));</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>    }</div>
+</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    UUserWidget* GetWorldWidget(<a class="code hl_enumeration" href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a> Type) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span> </div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    UPROPERTY(Category = UI, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = <span class="stringliteral">&quot;HUD&quot;</span>))</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno"><a class="line" href="classUWorldWidgetSubsystem.html#aa66bf836caad56f07cddd41edc95c261">   53</a></span>    TObjectPtr&lt;UUserWidget&gt; mHUD;</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span> </div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    UPROPERTY(Category = UI, VisibleAnywhere, meta = (DisplayName = &quot;WorldWidgets&quot;, ArraySizeEnum = &quot;<a class="code hl_enumeration" href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a>&quot;))</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno"><a class="line" href="classUWorldWidgetSubsystem.html#a7d0d92e05efefc0cb6381f3310edb4fd">   56</a></span>    TObjectPtr&lt;UUserWidget&gt; mWorldWidgets[static_cast&lt;uint8&gt;(<a class="code hl_enumeration" href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a>::Count)];</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>};</div>
 </div>
 <div class="ttc" id="aRDMinimal_8h_html"><div class="ttname"><a href="RDMinimal_8h.html">RDMinimal.h</a></div><div class="ttdoc">RD 프로젝트 전 영역에서 사용되는 최소한의 포함 헤더</div></div>
 <div class="ttc" id="aTileLayer_8h_html_a61ff5e934720f6e71d4d011bf7d5e6c3ab1c94ca2fbc3e78fc30069c8d0f01680"><div class="ttname"><a href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3ab1c94ca2fbc3e78fc30069c8d0f01680">ETileLayerFlag::All</a></div><div class="ttdeci">@ All</div></div>
@@ -150,6 +159,7 @@ $(document).ready(function(){initNavTree('WorldWidgetSubsystem_8h_source.html','
 <div class="ttc" id="aWorldWidgetType_8h_html_a47caf39c2b520cec40c346f17a44069f"><div class="ttname"><a href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a></div><div class="ttdeci">EWorldWidgetType</div><div class="ttdoc">특정한 소유자 없이 월드에 소속된 Widget 타입</div><div class="ttdef"><b>Definition</b> <a href="WorldWidgetType_8h_source.html#l00017">WorldWidgetType.h:18</a></div></div>
 <div class="ttc" id="aclassUWorldWidgetSubsystem_html"><div class="ttname"><a href="classUWorldWidgetSubsystem.html">UWorldWidgetSubsystem</a></div><div class="ttdoc">특정한 소유자 없이 월드에 소속된 Widget 서브시스템</div><div class="ttdef"><b>Definition</b> <a href="WorldWidgetSubsystem_8h_source.html#l00024">WorldWidgetSubsystem.h:25</a></div></div>
 <div class="ttc" id="aclassUWorldWidgetSubsystem_html_a4546fbbeace82939756f3f17784a7410"><div class="ttname"><a href="classUWorldWidgetSubsystem.html#a4546fbbeace82939756f3f17784a7410">UWorldWidgetSubsystem::GetHUD</a></div><div class="ttdeci">T * GetHUD() const</div><div class="ttdef"><b>Definition</b> <a href="WorldWidgetSubsystem_8h_source.html#l00035">WorldWidgetSubsystem.h:35</a></div></div>
+<div class="ttc" id="aclassUWorldWidgetSubsystem_html_a75fe3ae27db3e096f9d0fac5a258daa5"><div class="ttname"><a href="classUWorldWidgetSubsystem.html#a75fe3ae27db3e096f9d0fac5a258daa5">UWorldWidgetSubsystem::GetWorldWidget</a></div><div class="ttdeci">T * GetWorldWidget(EWorldWidgetType Type) const</div><div class="ttdef"><b>Definition</b> <a href="WorldWidgetSubsystem_8h_source.html#l00043">WorldWidgetSubsystem.h:43</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

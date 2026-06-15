@@ -110,31 +110,34 @@ $(document).ready(function(){initNavTree('GameplayEffect__Damage_8cpp_source.htm
 <div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span>    <span class="comment">// Instant : 즉시 동작.</span></div>
 <div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>    <span class="comment">// HasDuration : 일정시간 동작.</span></div>
 <div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span>    <span class="comment">// Infinite : 무한하게 동작.</span></div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>    DurationPolicy = EGameplayEffectDurationType::Instant;</div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    <span class="comment">// Attribute를 어떻게 바꿀지 방법을 적용한다.</span></div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>    FGameplayModifierInfo   Modifier;</div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span> </div>
-<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    <span class="comment">// 바꿀 Attribute를 지정한다.</span></div>
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    Modifier.Attribute = UUnitAttributeSet::GetHPAttribute();</div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    Modifier.ModifierOp = EGameplayModOp::Additive;</div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span> </div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    <span class="comment">// 소모값이 바뀔 경우 아래 기능을 이용해서 처리하고 고정이라면 고정값을 지정한다.</span></div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    FSetByCallerFloat   Caller;</div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span> </div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    Caller.DataTag = FGameplayTag::RequestGameplayTag(TEXT(<span class="stringliteral">&quot;Test.GameplayEffect.Data.Battle.Damage&quot;</span>));</div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span> </div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    Modifier.ModifierMagnitude = FGameplayEffectModifierMagnitude(Caller);</div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span> </div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    <span class="comment">// Modifier 배열에 추가한다.</span></div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    Modifiers.Add(Modifier);</div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span> </div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    <span class="comment">// Cue</span></div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    <span class="comment">//FGameplayEffectCue    Cue;</span></div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    <span class="comment">//Cue.GameplayCueTags.AddTag(FGameplayTag::RequestGameplayTag(TEXT(&quot;GameplayCue.Battle.Attack&quot;)));</span></div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    <span class="comment">//GameplayCues.Add(Cue);</span></div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>}</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>    <span class="comment">// 리팩토링 중 주석처리... ==============================================================================================================================</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    <span class="comment">/*</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="comment">    DurationPolicy = EGameplayEffectDurationType::Instant;</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="comment"></span> </div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="comment">    // Attribute를 어떻게 바꿀지 방법을 적용한다.</span></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="comment">    FGameplayModifierInfo   Modifier;</span></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="comment"></span> </div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="comment">    // 바꿀 Attribute를 지정한다.</span></div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="comment">    Modifier.Attribute = UUnitAttributeSet::GetHPAttribute();</span></div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="comment">    Modifier.ModifierOp = EGameplayModOp::Additive;</span></div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="comment"></span> </div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="comment">    // 소모값이 바뀔 경우 아래 기능을 이용해서 처리하고 고정이라면 고정값을 지정한다.</span></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="comment">    FSetByCallerFloat   Caller;</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="comment"></span> </div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="comment">    Caller.DataTag = EffectTags::GameplayEffect_Skill_Data_Damage;</span></div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="comment"></span> </div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="comment">    Modifier.ModifierMagnitude = FGameplayEffectModifierMagnitude(Caller);</span></div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="comment"></span> </div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="comment">    // Modifier 배열에 추가한다.</span></div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="comment">    Modifiers.Add(Modifier);</span></div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="comment">    */</span></div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <span class="comment">// Cue</span></div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    <span class="comment">//FGameplayEffectCue    Cue;</span></div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    <span class="comment">//Cue.GameplayCueTags.AddTag(FGameplayTag::RequestGameplayTag(TEXT(&quot;GameplayCue.Battle.Attack&quot;)));</span></div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span> </div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    <span class="comment">//GameplayCues.Add(Cue);</span></div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>}</div>
 </div>
 <div class="ttc" id="aGameplayEffect__Damage_8h_html"><div class="ttname"><a href="GameplayEffect__Damage_8h.html">GameplayEffect_Damage.h</a></div></div>
 <div class="ttc" id="aclassUGameplayEffect__Damage_html_ad010dc6009e4655433cc86c410db7a78"><div class="ttname"><a href="classUGameplayEffect__Damage.html#ad010dc6009e4655433cc86c410db7a78">UGameplayEffect_Damage::UGameplayEffect_Damage</a></div><div class="ttdeci">UGameplayEffect_Damage()</div><div class="ttdef"><b>Definition</b> <a href="GameplayEffect__Damage_8cpp_source.html#l00006">GameplayEffect_Damage.cpp:6</a></div></div>

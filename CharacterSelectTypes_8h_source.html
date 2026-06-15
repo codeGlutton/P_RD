@@ -99,48 +99,76 @@ $(document).ready(function(){initNavTree('CharacterSelectTypes_8h_source.html','
 </div><!--header-->
 <div class="contents">
 <a href="CharacterSelectTypes_8h.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*****************************************************************/</span></div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#pragma once</span></div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;<a class="code" href="RDMinimal_8h.html">RDMinimal.h</a>&quot;</span></div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span> </div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &quot;CharacterSelectTypes.generated.h&quot;</span></div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="keyword">class </span>UTexture2D;</div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>USTRUCT(BlueprintType)</div>
-<div class="foldopen" id="foldopen00037" data-start="{" data-end="};">
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html">   37</a></span>struct P_RD_API <a class="code hl_struct" href="structFFrontendCharacterOption.html">FFrontendCharacterOption</a></div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>{</div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    GENERATED_BODY()</div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &quot;<a class="code" href="RDMinimal_8h.html">RDMinimal.h</a>&quot;</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;CharacterSelectTypes.generated.h&quot;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="keyword">class </span>UTexture2D;</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>USTRUCT(BlueprintType)</div>
+<div class="foldopen" id="foldopen00033" data-start="{" data-end="};">
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html">   33</a></span>struct P_RD_API <a class="code hl_struct" href="structFFrontendCharacterOption.html">FFrontendCharacterOption</a></div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>{</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    GENERATED_BODY()</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span> </div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    <span class="comment">// 화면 카드의 안정적인 선택 키. 배열 위치가 아니라 GameMode가 정렬 후 부여한 View index다.</span></div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    UPROPERTY(Category = Frontend, BlueprintReadOnly)</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html#a434dcfafbf2f69dabb30d2892e69de0a">   39</a></span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> mIndex = INDEX_NONE;</div>
 <div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span> </div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>    UPROPERTY(Category = <span class="stringliteral">&quot;Frontend&quot;</span>, BlueprintReadOnly)</div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html#a6a4404c1630692920c67488ed22cf8fb">   44</a></span>    FText mDisplayName;</div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span> </div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>    UPROPERTY(Category = &quot;Frontend&quot;, BlueprintReadOnly)</div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html#a5cc04795c20c206a59f570c6d1ea49c5">   48</a></span>    FText mRoleText;</div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span> </div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    UPROPERTY(Category = &quot;Frontend&quot;, BlueprintReadOnly)</div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html#ad764a4aeaf1046cc6a81dc825b76fae8">   52</a></span>    FText mDescription;</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span> </div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    UPROPERTY(Category = &quot;Frontend&quot;, BlueprintReadOnly)</div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html#a54b44defd1df12dbedc6d4ff52ad6cfa">   60</a></span>    FText mStatSummary;</div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span> </div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>    UPROPERTY(Category = &quot;Frontend&quot;, BlueprintReadOnly)</div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html#aee7fffb89a249f118d2ba0f937c1f8ab">   70</a></span>    TSoftObjectPtr&lt;UTexture2D&gt; mIcon;</div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span> </div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>    UPROPERTY(Category = &quot;Frontend&quot;, BlueprintReadOnly)</div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html#a7866d88be6b9c0fb866d75ad543c0729">   74</a></span>    TSoftObjectPtr&lt;UTexture2D&gt; mPortrait;</div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span> </div>
-<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>    UPROPERTY(Category = &quot;Frontend&quot;, BlueprintReadOnly)</div>
-<div class="line"><a id="l00084" name="l00084"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html#ac7bcc7517905234ccbe3e7171d76455b">   84</a></span>    <span class="keywordtype">bool</span> bSelectable = false;</div>
-<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span> </div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>    UPROPERTY(Category = &quot;Frontend&quot;, BlueprintReadOnly)</div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html#a56102c372a621d2d94313210a28243ab">   88</a></span>    FText mDisabledReason;</div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>};</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    <span class="comment">// 카드와 상세 패널에 표시할 이름. 비어 있으면 GameMode가 PrimaryAsset 이름으로 fallback한다.</span></div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    UPROPERTY(Category = Frontend, BlueprintReadOnly)</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html#a6a4404c1630692920c67488ed22cf8fb">   43</a></span>    FText mDisplayName;</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>    <span class="comment">// 직업/역할 표시 문자열. 실제 직업 enum은 UI가 직접 해석하지 않는다.</span></div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    UPROPERTY(Category = Frontend, BlueprintReadOnly)</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html#a5cc04795c20c206a59f570c6d1ea49c5">   47</a></span>    FText mRoleText;</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span> </div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    <span class="comment">// 카드/상세 패널용 설명 문구.</span></div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    UPROPERTY(Category = Frontend, BlueprintReadOnly)</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html#ad764a4aeaf1046cc6a81dc825b76fae8">   51</a></span>    FText mDescription;</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span> </div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    <span class="comment">// 카드에 한 줄로 보여줄 표시용 스탯 요약. 상세 UI는 아래 숫자 필드로 다시 포맷한다.</span></div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    UPROPERTY(Category = Frontend, BlueprintReadOnly)</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html#a54b44defd1df12dbedc6d4ff52ad6cfa">   55</a></span>    FText mStatSummary;</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span> </div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    <span class="comment">// 시작 최대 체력. UI는 표시만 하고 계산하지 않는다.</span></div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>    UPROPERTY(Category = Frontend, BlueprintReadOnly)</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html#a945a113603931ab2c03ca3ac212b7fdf">   59</a></span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> mMaxHP = 0;</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span> </div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>    <span class="comment">// 시작 주사위 수. UI는 표시만 하고 계산하지 않는다.</span></div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    UPROPERTY(Category = Frontend, BlueprintReadOnly)</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html#a03de2dd703065baa6e9dec7176805974">   63</a></span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> mDice = 0;</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span> </div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    <span class="comment">// 시작 골드. UI는 표시만 하고 계산하지 않는다.</span></div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>    UPROPERTY(Category = Frontend, BlueprintReadOnly)</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html#a6bd9cd018cc4e50c388189fbb17f9d25">   67</a></span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> mGold = 0;</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span> </div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>    <span class="comment">// 상세 패널에 크게 보여줄 초상화. SoftObject라 필요할 때 비동기로 로드한다.</span></div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>    UPROPERTY(Category = Frontend, BlueprintReadOnly)</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html#a7866d88be6b9c0fb866d75ad543c0729">   71</a></span>    TSoftObjectPtr&lt;UTexture2D&gt; mPortrait;</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span> </div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>    <span class="comment">// 카드에 작게 보여줄 아이콘. 없으면 Widget에서 초상화를 fallback으로 사용한다.</span></div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>    UPROPERTY(Category = Frontend, BlueprintReadOnly)</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html#aee7fffb89a249f118d2ba0f937c1f8ab">   75</a></span>    TSoftObjectPtr&lt;UTexture2D&gt; mIcon;</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span> </div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    <span class="comment">// 런 생성 때 GameMode/Subsystem으로 넘길 실제 캐릭터 식별자.</span></div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    UPROPERTY(Category = Frontend, BlueprintReadOnly)</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html#a20a1f3c77cd3620eed77c931671cc7b3">   79</a></span>    FPrimaryAssetId mPlayerUnitId;</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span> </div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>    <span class="comment">// 선택 가능 여부. 해금/잠금 판단은 GameMode가 끝내고, UI는 이 값만 신뢰한다.</span></div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    UPROPERTY(Category = Frontend, BlueprintReadOnly)</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html#ae78b8677b17ef02313a6e176c187e68c">   83</a></span>    <span class="keywordtype">bool</span> mSelectable = false;</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span> </div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>    <span class="comment">// 선택 불가일 때 상세 영역/상태 문구에서 사용할 사유.</span></div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>    UPROPERTY(Category = Frontend, BlueprintReadOnly)</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno"><a class="line" href="structFFrontendCharacterOption.html#a56102c372a621d2d94313210a28243ab">   87</a></span>    FText mDisabledReason;</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>};</div>
 </div>
 <div class="ttc" id="aRDMinimal_8h_html"><div class="ttname"><a href="RDMinimal_8h.html">RDMinimal.h</a></div><div class="ttdoc">RD 프로젝트 전 영역에서 사용되는 최소한의 포함 헤더</div></div>
-<div class="ttc" id="astructFFrontendCharacterOption_html"><div class="ttname"><a href="structFFrontendCharacterOption.html">FFrontendCharacterOption</a></div><div class="ttdoc">캐릭터 선택 UI가 캐릭터 하나를 표시할 때 사용하는 값</div><div class="ttdef"><b>Definition</b> <a href="CharacterSelectTypes_8h_source.html#l00037">CharacterSelectTypes.h:38</a></div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_ada104807b93ac7cd59dac80d98ba857b"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a></div><div class="ttdeci">int32</div><div class="ttdef"><b>Definition</b> <a href="RoomTransitionSubsystem_8h_source.html#l00021">RoomTransitionSubsystem.h:21</a></div></div>
+<div class="ttc" id="astructFFrontendCharacterOption_html"><div class="ttname"><a href="structFFrontendCharacterOption.html">FFrontendCharacterOption</a></div><div class="ttdoc">캐릭터 선택 UI가 표시할 플레이어 유닛 카드 데이터</div><div class="ttdef"><b>Definition</b> <a href="CharacterSelectTypes_8h_source.html#l00033">CharacterSelectTypes.h:34</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

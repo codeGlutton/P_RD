@@ -118,14 +118,15 @@ Public 멤버 함수</h2></td></tr>
 <tr class="memitem:ac51ca8f313986108519cc94d8a7ff985" id="r_ac51ca8f313986108519cc94d8a7ff985"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSkillComponent.html#ac51ca8f313986108519cc94d8a7ff985">SetSkillData</a> (int SkillIndex, TSoftObjectPtr&lt; <a class="el" href="classUStaticSkillData.html">UStaticSkillData</a> &gt; SkillData)</td></tr>
 <tr class="memdesc:ac51ca8f313986108519cc94d8a7ff985"><td class="mdescLeft">&#160;</td><td class="mdescRight">스킬 인덱스에 SkillData를 설정하는 함수  <br /></td></tr>
 <tr class="separator:ac51ca8f313986108519cc94d8a7ff985"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a93adb85f99cb1e0f883c0a2bf502e490" id="r_a93adb85f99cb1e0f883c0a2bf502e490"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSkillComponent.html#a93adb85f99cb1e0f883c0a2bf502e490">CalculatePredictedSales</a> (int32 In_SkillIndex, TArray&lt; TPair&lt; FString, float &gt; &gt; &amp;Out_TagValue)</td></tr>
-<tr class="memdesc:a93adb85f99cb1e0f883c0a2bf502e490"><td class="mdescLeft">&#160;</td><td class="mdescRight">SkillData를 추가하는 함수  <br /></td></tr>
-<tr class="separator:a93adb85f99cb1e0f883c0a2bf502e490"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a90e723a9efff6f7b8f34e9bb42f19755" id="r_a90e723a9efff6f7b8f34e9bb42f19755"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSkillComponent.html#a90e723a9efff6f7b8f34e9bb42f19755">ActivateSkill</a> (int32 SkillIndex, const TArray&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt; &amp;Tiles)</td></tr>
-<tr class="separator:a90e723a9efff6f7b8f34e9bb42f19755"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af4b3fdd6c73933da5883cc1fd3d0f548" id="r_af4b3fdd6c73933da5883cc1fd3d0f548"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSkillComponent.html#af4b3fdd6c73933da5883cc1fd3d0f548">TestActivateSkill</a> (int32 SkillIndex, TArray&lt; <a class="el" href="classAUnit.html">AUnit</a> * &gt; UnitArray)</td></tr>
-<tr class="memdesc:af4b3fdd6c73933da5883cc1fd3d0f548"><td class="mdescLeft">&#160;</td><td class="mdescRight">테스트용 스킬 사용 함수  <br /></td></tr>
-<tr class="separator:af4b3fdd6c73933da5883cc1fd3d0f548"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6e68b35178d47fd0458c5a1ef1bb3d6c" id="r_a6e68b35178d47fd0458c5a1ef1bb3d6c"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSkillComponent.html#a6e68b35178d47fd0458c5a1ef1bb3d6c">AddSkillData</a> (TSoftObjectPtr&lt; <a class="el" href="classUStaticSkillData.html">UStaticSkillData</a> &gt; SkillData)</td></tr>
+<tr class="memdesc:a6e68b35178d47fd0458c5a1ef1bb3d6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">SkillData를 추가하는 함수  <br /></td></tr>
+<tr class="separator:a6e68b35178d47fd0458c5a1ef1bb3d6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa62dea7e29923826356d4e91b44c340f" id="r_aa62dea7e29923826356d4e91b44c340f"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSkillComponent.html#aa62dea7e29923826356d4e91b44c340f">ActivateSkill</a> (const <a class="el" href="structFSkillCommitResult.html">FSkillCommitResult</a> &amp;SkillResult)</td></tr>
+<tr class="memdesc:aa62dea7e29923826356d4e91b44c340f"><td class="mdescLeft">&#160;</td><td class="mdescRight">스킬의 인덱스와 타일을 입력받으면 스킬 사용  <br /></td></tr>
+<tr class="separator:aa62dea7e29923826356d4e91b44c340f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaa481b36fe9e0fd1e7cd58ab5be8a1fe" id="r_aaa481b36fe9e0fd1e7cd58ab5be8a1fe"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSkillComponent.html#aaa481b36fe9e0fd1e7cd58ab5be8a1fe">CalculateSkillResult</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> SkillIndex, const TArray&lt; TScriptInterface&lt; <a class="el" href="classITileActor.html">ITileActor</a> &gt; &gt; &amp;TileActors, <a class="el" href="structFSkillCommitResult.html">FSkillCommitResult</a> &amp;Out_Result)</td></tr>
+<tr class="memdesc:aaa481b36fe9e0fd1e7cd58ab5be8a1fe"><td class="mdescLeft">&#160;</td><td class="mdescRight">스킬 결과 값 계산  <br /></td></tr>
+<tr class="separator:aaa481b36fe9e0fd1e7cd58ab5be8a1fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public 속성</h2></td></tr>
@@ -148,7 +149,7 @@ Protected 속성</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock">
-<p class="definition"><a class="el" href="SkillComponent_8h_source.html">SkillComponent.h</a> 파일의 <a class="el" href="SkillComponent_8h_source.html#l00028">28</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SkillComponent_8h_source.html">SkillComponent.h</a> 파일의 <a class="el" href="SkillComponent_8h_source.html#l00031">31</a> 번째 라인에서 정의되었습니다.</p>
 </div><h2 class="groupheader">생성자 &amp; 소멸자 문서화</h2>
 <a id="ab0cea05332eb00b7a8803b54b2b08674" name="ab0cea05332eb00b7a8803b54b2b08674"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab0cea05332eb00b7a8803b54b2b08674">&#9670;&#160;</a></span>USkillComponent()</h2>
@@ -165,13 +166,13 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SkillComponent_8cpp_source.html">SkillComponent.cpp</a> 파일의 <a class="el" href="SkillComponent_8cpp_source.html#l00008">8</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SkillComponent_8cpp_source.html">SkillComponent.cpp</a> 파일의 <a class="el" href="SkillComponent_8cpp_source.html#l00011">11</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
 <h2 class="groupheader">멤버 함수 문서화</h2>
-<a id="a90e723a9efff6f7b8f34e9bb42f19755" name="a90e723a9efff6f7b8f34e9bb42f19755"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a90e723a9efff6f7b8f34e9bb42f19755">&#9670;&#160;</a></span>ActivateSkill()</h2>
+<a id="aa62dea7e29923826356d4e91b44c340f" name="aa62dea7e29923826356d4e91b44c340f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa62dea7e29923826356d4e91b44c340f">&#9670;&#160;</a></span>ActivateSkill()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -179,32 +180,44 @@ Protected 속성</h2></td></tr>
         <tr>
           <td class="memname">bool USkillComponent::ActivateSkill </td>
           <td>(</td>
-          <td class="paramtype">int32&#160;</td>
-          <td class="paramname"><em>SkillIndex</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramtype">const <a class="el" href="structFSkillCommitResult.html">FSkillCommitResult</a> &amp;&#160;</td>
+          <td class="paramname"><em>SkillResult</em></td><td>)</td>
           <td></td>
-          <td class="paramtype">const TArray&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt; &amp;&#160;</td>
-          <td class="paramname"><em>Tiles</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>스킬의 인덱스와 타일을 입력받으면 스킬 사용 </p><dl class="params"><dt>매개변수</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">SkillIndex</td><td>: 사용할 스킬의 인덱스 </td></tr>
-    <tr><td class="paramname">Tiles</td><td>: 스킬 효과를 적용할 타일들 </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>반환값</dt><dd>bool : 실패 시 false 반환 </dd></dl>
+<p>이미 가지고 있는 결과값을 토대로 스킬을 진행 </p><dl class="section return"><dt>반환값</dt><dd>bool : 실패 시 false 반환 </dd></dl>
 
-<p class="definition"><a class="el" href="SkillComponent_8cpp_source.html">SkillComponent.cpp</a> 파일의 <a class="el" href="SkillComponent_8cpp_source.html#l00076">76</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SkillComponent_8cpp_source.html">SkillComponent.cpp</a> 파일의 <a class="el" href="SkillComponent_8cpp_source.html#l00071">71</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a6e68b35178d47fd0458c5a1ef1bb3d6c" name="a6e68b35178d47fd0458c5a1ef1bb3d6c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6e68b35178d47fd0458c5a1ef1bb3d6c">&#9670;&#160;</a></span>AddSkillData()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool USkillComponent::AddSkillData </td>
+          <td>(</td>
+          <td class="paramtype">TSoftObjectPtr&lt; <a class="el" href="classUStaticSkillData.html">UStaticSkillData</a> &gt;&#160;</td>
+          <td class="paramname"><em>SkillData</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>적들의 스킬을 추가할 때 사용할 것 플레이어는 소지 스킬 개수가 고정되어 있으므로 사용하면 안됨 어차피 적만 필요할 것 같으므로 적에게만 작성해도 될 듯 </p>
+
+<p class="definition"><a class="el" href="SkillComponent_8cpp_source.html">SkillComponent.cpp</a> 파일의 <a class="el" href="SkillComponent_8cpp_source.html#l00061">61</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -231,27 +244,33 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SkillComponent_8cpp_source.html">SkillComponent.cpp</a> 파일의 <a class="el" href="SkillComponent_8cpp_source.html#l00019">19</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SkillComponent_8cpp_source.html">SkillComponent.cpp</a> 파일의 <a class="el" href="SkillComponent_8cpp_source.html#l00022">22</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a93adb85f99cb1e0f883c0a2bf502e490" name="a93adb85f99cb1e0f883c0a2bf502e490"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a93adb85f99cb1e0f883c0a2bf502e490">&#9670;&#160;</a></span>CalculatePredictedSales()</h2>
+<a id="aaa481b36fe9e0fd1e7cd58ab5be8a1fe" name="aaa481b36fe9e0fd1e7cd58ab5be8a1fe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaa481b36fe9e0fd1e7cd58ab5be8a1fe">&#9670;&#160;</a></span>CalculateSkillResult()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">bool USkillComponent::CalculatePredictedSales </td>
+          <td class="memname">bool USkillComponent::CalculateSkillResult </td>
           <td>(</td>
-          <td class="paramtype">int32&#160;</td>
-          <td class="paramname"><em>In_SkillIndex</em>, </td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td>
+          <td class="paramname"><em>SkillIndex</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">TArray&lt; TPair&lt; FString, float &gt; &gt; &amp;&#160;</td>
-          <td class="paramname"><em>Out_TagValue</em>&#160;</td>
+          <td class="paramtype">const TArray&lt; TScriptInterface&lt; <a class="el" href="classITileActor.html">ITileActor</a> &gt; &gt; &amp;&#160;</td>
+          <td class="paramname"><em>TileActors</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structFSkillCommitResult.html">FSkillCommitResult</a> &amp;&#160;</td>
+          <td class="paramname"><em>Out_Result</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -260,17 +279,17 @@ Protected 속성</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>적들의 스킬을 추가할 때 사용할 것 플레이어는 소지 스킬 개수가 고정되어 있으므로 사용하면 안됨 어차피 적만 필요할 것 같으므로 적에게만 작성해도 될 듯</p>
-<p>해당 스킬의 예측값을 반환하는 함수 </p><dl class="params"><dt>매개변수</dt><dd>
+<p>스킬 인덱스와 타일이 들어오면 스킬 결과 값을 계산한다. </p><dl class="params"><dt>매개변수</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">In_SkillIndex</td><td>: 선택한 스킬의 인덱스 </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">Out_TagValue</td><td>: FString은 태그로 변경할 예정, float는 결과값 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">SkillIndex</td><td>: 선택한 스킬의 인덱스 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">TileActors</td><td>: 스킬로 선택된 타일들 </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">Out_Result</td><td>스킬로 선택된 타일들 </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>반환값</dt><dd>bool : 실패 시 false 반환 </dd></dl>
 
-<p class="definition"><a class="el" href="SkillComponent_8cpp_source.html">SkillComponent.cpp</a> 파일의 <a class="el" href="SkillComponent_8cpp_source.html#l00071">71</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SkillComponent_8cpp_source.html">SkillComponent.cpp</a> 파일의 <a class="el" href="SkillComponent_8cpp_source.html#l00105">105</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -301,7 +320,7 @@ Protected 속성</h2></td></tr>
 </div><div class="memdoc">
 <p>범위가 유효하지 않으면 false 반환 </p>
 
-<p class="definition"><a class="el" href="SkillComponent_8cpp_source.html">SkillComponent.cpp</a> 파일의 <a class="el" href="SkillComponent_8cpp_source.html#l00036">36</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SkillComponent_8cpp_source.html">SkillComponent.cpp</a> 파일의 <a class="el" href="SkillComponent_8cpp_source.html#l00039">39</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -332,45 +351,7 @@ Protected 속성</h2></td></tr>
 </div><div class="memdoc">
 <p>범위가 유효하지 않으면 false 반환 </p>
 
-<p class="definition"><a class="el" href="SkillComponent_8cpp_source.html">SkillComponent.cpp</a> 파일의 <a class="el" href="SkillComponent_8cpp_source.html#l00046">46</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="af4b3fdd6c73933da5883cc1fd3d0f548" name="af4b3fdd6c73933da5883cc1fd3d0f548"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af4b3fdd6c73933da5883cc1fd3d0f548">&#9670;&#160;</a></span>TestActivateSkill()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool USkillComponent::TestActivateSkill </td>
-          <td>(</td>
-          <td class="paramtype">int32&#160;</td>
-          <td class="paramname"><em>SkillIndex</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">TArray&lt; <a class="el" href="classAUnit.html">AUnit</a> * &gt;&#160;</td>
-          <td class="paramname"><em>UnitArray</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>테스트용 GA를 사용해서 다른 유닛들 효과를 적용하는 함수 </p><dl class="params"><dt>매개변수</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">SkillIndex</td><td>: 사용할 스킬의 인덱스 </td></tr>
-    <tr><td class="paramname">UnitArray</td><td>: 사용할 대상 </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>반환값</dt><dd>bool : 실패 시 false 반환 </dd></dl>
-
-<p class="definition"><a class="el" href="SkillComponent_8cpp_source.html">SkillComponent.cpp</a> 파일의 <a class="el" href="SkillComponent_8cpp_source.html#l00081">81</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SkillComponent_8cpp_source.html">SkillComponent.cpp</a> 파일의 <a class="el" href="SkillComponent_8cpp_source.html#l00048">48</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -414,7 +395,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SkillComponent_8cpp_source.html">SkillComponent.cpp</a> 파일의 <a class="el" href="SkillComponent_8cpp_source.html#l00029">29</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SkillComponent_8cpp_source.html">SkillComponent.cpp</a> 파일의 <a class="el" href="SkillComponent_8cpp_source.html#l00032">32</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -440,7 +421,7 @@ Protected 속성</h2></td></tr>
 </div><div class="memdoc">
 <p>액터의 ASC 편하게 사용하기 위해 WeakPtr로 참조 </p>
 
-<p class="definition"><a class="el" href="SkillComponent_8h_source.html">SkillComponent.h</a> 파일의 <a class="el" href="SkillComponent_8h_source.html#l00057">57</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SkillComponent_8h_source.html">SkillComponent.h</a> 파일의 <a class="el" href="SkillComponent_8h_source.html#l00060">60</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -464,7 +445,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SkillComponent_8h_source.html">SkillComponent.h</a> 파일의 <a class="el" href="SkillComponent_8h_source.html#l00043">43</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SkillComponent_8h_source.html">SkillComponent.h</a> 파일의 <a class="el" href="SkillComponent_8h_source.html#l00046">46</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -480,7 +461,7 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SkillComponent_8h_source.html">SkillComponent.h</a> 파일의 <a class="el" href="SkillComponent_8h_source.html#l00061">61</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SkillComponent_8h_source.html">SkillComponent.h</a> 파일의 <a class="el" href="SkillComponent_8h_source.html#l00064">64</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

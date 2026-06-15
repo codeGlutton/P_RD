@@ -4,10 +4,10 @@ var structFRoom =
     [ "~FRoom", "structFRoom.html#a775b0eb46c0831fd8d301e0a97184a3e", null ],
     [ "CollectAssetIds", "structFRoom.html#a29f234f47221ceee0a2e20dacc0dd8d7", null ],
     [ "mColumn", "structFRoom.html#aeb84846765cefc35a684c5a75d29271e", null ],
-    [ "mIsSelected", "structFRoom.html#a2544aed5521f71439e6c56f72717c3d4", null ],
     [ "mNextRoomColumns", "structFRoom.html#a3a0efee2f7515c9275039eb3be9eb976", null ],
     [ "mPositionOffsetRate", "structFRoom.html#a47dcdd84e642ef3a1f2a6d3bc3f05260", null ],
     [ "mRow", "structFRoom.html#a91424a5f4bbb82d32929cc2598928eaa", null ],
     [ "mStaticRoomSpawnDataId", "structFRoom.html#ad2099eb8a12d52a0741f47dd9682b887", null ],
-    [ "mType", "structFRoom.html#a0ab8e199a64dba4411a8b540f8fbc7cc", null ]
+    [ "mType", "structFRoom.html#a0ab8e199a64dba4411a8b540f8fbc7cc", null ],
+    [ "mWasSelected", "structFRoom.html#a27406e13b42c987eb3f4fe6e8bc24c78", null ]
 ];

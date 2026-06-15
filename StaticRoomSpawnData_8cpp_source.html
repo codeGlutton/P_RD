@@ -100,7 +100,33 @@ $(document).ready(function(){initNavTree('StaticRoomSpawnData_8cpp_source.html',
 <div class="contents">
 <a href="StaticRoomSpawnData_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="StaticRoomSpawnData_8h.html">DataAsset/RoomSpawnData/StaticRoomSpawnData.h</a>&quot;</span></div>
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#if WITH_EDITOR</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &quot;Misc/DataValidation.h&quot;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#if WITH_EDITOR</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span>EDataValidationResult UStaticRoomSpawnData::IsDataValid(FDataValidationContext&amp; Context)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>    EDataValidationResult SuperResult = Super::IsDataValid(Context);</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span>    EDataValidationResult ThisResult = EDataValidationResult::Valid;</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classUStaticRoomSpawnData.html#a5c6ca027857bebe6da86be5b20116442">mBackgroundMap</a> == <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    {</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>        Context.AddError(FText::FromString(TEXT(<span class="stringliteral">&quot;배경 맵 미지정&quot;</span>)));</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>        ThisResult = EDataValidationResult::Invalid;</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    }</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classUStaticRoomSpawnData.html#a72f142a9c2a7364f235589ff4be24337">mGameModeBase</a> == <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    {</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>        Context.AddError(FText::FromString(TEXT(<span class="stringliteral">&quot;게임 모드 미지정&quot;</span>)));</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>        ThisResult = EDataValidationResult::Invalid;</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    }</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span> </div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    <span class="keywordflow">return</span> CombineDataValidationResults(SuperResult, ThisResult);</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>}</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="preprocessor">#endif</span></div>
 <div class="ttc" id="aStaticRoomSpawnData_8h_html"><div class="ttname"><a href="StaticRoomSpawnData_8h.html">StaticRoomSpawnData.h</a></div><div class="ttdoc">방 생성 시 사용되는 정적 Primary Data Asset 구현 헤더</div></div>
+<div class="ttc" id="aclassUStaticRoomSpawnData_html_a5c6ca027857bebe6da86be5b20116442"><div class="ttname"><a href="classUStaticRoomSpawnData.html#a5c6ca027857bebe6da86be5b20116442">UStaticRoomSpawnData::mBackgroundMap</a></div><div class="ttdeci">TSoftObjectPtr&lt; UWorld &gt; mBackgroundMap</div><div class="ttdef"><b>Definition</b> <a href="StaticRoomSpawnData_8h_source.html#l00046">StaticRoomSpawnData.h:46</a></div></div>
+<div class="ttc" id="aclassUStaticRoomSpawnData_html_a72f142a9c2a7364f235589ff4be24337"><div class="ttname"><a href="classUStaticRoomSpawnData.html#a72f142a9c2a7364f235589ff4be24337">UStaticRoomSpawnData::mGameModeBase</a></div><div class="ttdeci">TSoftClassPtr&lt; AGameModeBase &gt; mGameModeBase</div><div class="ttdef"><b>Definition</b> <a href="StaticRoomSpawnData_8h_source.html#l00050">StaticRoomSpawnData.h:50</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

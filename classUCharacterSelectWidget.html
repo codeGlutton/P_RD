@@ -99,58 +99,105 @@ $(document).ready(function(){initNavTree('classUCharacterSelectWidget.html','');
 </div><!--header-->
 <div class="contents">
 
-<p>캐릭터 선택 화면 전체를 담당하는 위젯  
+<p>타이틀 흐름 안의 캐릭터 선택 화면  
  <a href="classUCharacterSelectWidget.html#details">더 자세히 ...</a></p>
 <div class="dynheader">
 UCharacterSelectWidget에 대한 상속 다이어그램 : </div>
 <div class="dyncontent">
  <div class="center">
-  <img src="classUCharacterSelectWidget.png" alt=""/>
- </div></div>
+  <img src="classUCharacterSelectWidget.png" usemap="#UCharacterSelectWidget_map" alt=""/>
+  <map id="UCharacterSelectWidget_map" name="UCharacterSelectWidget_map">
+<area href="classURDUserWidget.html" title="RD 프로젝트 UMG 위젯의 공통 베이스 클래스" alt="URDUserWidget" shape="rect" coords="0,56,150,80"/>
+  </map>
+</div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public 멤버 함수</h2></td></tr>
 <tr class="memitem:acb4b34d97869fca29e2b9d4d08013cd4" id="r_acb4b34d97869fca29e2b9d4d08013cd4"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCharacterSelectWidget.html#acb4b34d97869fca29e2b9d4d08013cd4">UCharacterSelectWidget</a> (const FObjectInitializer &amp;ObjectInitializer=FObjectInitializer::Get())</td></tr>
-<tr class="memdesc:acb4b34d97869fca29e2b9d4d08013cd4"><td class="mdescLeft">&#160;</td><td class="mdescRight">기본 문구를 준비함  <br /></td></tr>
 <tr class="separator:acb4b34d97869fca29e2b9d4d08013cd4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a88a818b6de593c85ecffef38bbcf16d7" id="r_a88a818b6de593c85ecffef38bbcf16d7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCharacterSelectWidget.html#a88a818b6de593c85ecffef38bbcf16d7">OpenCharacterSelect</a> ()</td></tr>
-<tr class="memdesc:a88a818b6de593c85ecffef38bbcf16d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">캐릭터 선택 화면을 열 때 호출함  <br /></td></tr>
+<tr class="memdesc:a88a818b6de593c85ecffef38bbcf16d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">START로 캐릭터 선택 화면에 들어올 때 목록/선택/상태를 새로 맞춤  <br /></td></tr>
 <tr class="separator:a88a818b6de593c85ecffef38bbcf16d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af7470ec3cd2c546fcf74926998176bf6" id="r_af7470ec3cd2c546fcf74926998176bf6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCharacterSelectWidget.html#af7470ec3cd2c546fcf74926998176bf6">RefreshCharacterOptionsFromGameMode</a> ()</td></tr>
+<tr class="memdesc:af7470ec3cd2c546fcf74926998176bf6"><td class="mdescLeft">&#160;</td><td class="mdescRight">GameMode 기준 캐릭터 후보 목록을 다시 그림  <br /></td></tr>
+<tr class="separator:af7470ec3cd2c546fcf74926998176bf6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_classURDUserWidget"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classURDUserWidget')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classURDUserWidget.html">URDUserWidget</a>(으)로부터 상속된 Public 멤버 함수</td></tr>
+<tr class="memitem:aa7904f7046ebc3aa58f5365bb52b3a1f inherit pub_methods_classURDUserWidget" id="r_aa7904f7046ebc3aa58f5365bb52b3a1f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#aa7904f7046ebc3aa58f5365bb52b3a1f">URDUserWidget</a> (const FObjectInitializer &amp;ObjectInitializer=FObjectInitializer::Get())</td></tr>
+<tr class="memdesc:aa7904f7046ebc3aa58f5365bb52b3a1f inherit pub_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">기본 표시 상태를 닫힘으로 초기화한다.  <br /></td></tr>
+<tr class="separator:aa7904f7046ebc3aa58f5365bb52b3a1f inherit pub_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae32f620cc43ff20e3c329019df0de3ee inherit pub_methods_classURDUserWidget" id="r_ae32f620cc43ff20e3c329019df0de3ee"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#ae32f620cc43ff20e3c329019df0de3ee">OpenUI</a> (FOnEndUIOpenAnimation Callback=FOnEndUIOpenAnimation())</td></tr>
+<tr class="memdesc:ae32f620cc43ff20e3c329019df0de3ee inherit pub_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">위젯을 여는 단일 진입점  <br /></td></tr>
+<tr class="separator:ae32f620cc43ff20e3c329019df0de3ee inherit pub_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a53b2cba03bfba50c140ab7fef60872d1 inherit pub_methods_classURDUserWidget" id="r_a53b2cba03bfba50c140ab7fef60872d1"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a53b2cba03bfba50c140ab7fef60872d1">CloseUI</a> (FOnEndUICloseAnimation Callback=FOnEndUICloseAnimation())</td></tr>
+<tr class="memdesc:a53b2cba03bfba50c140ab7fef60872d1 inherit pub_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">위젯을 닫는 단일 진입점  <br /></td></tr>
+<tr class="separator:a53b2cba03bfba50c140ab7fef60872d1 inherit pub_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8a0ecabf313dbba6fa3a495d73f8dbad inherit pub_methods_classURDUserWidget" id="r_a8a0ecabf313dbba6fa3a495d73f8dbad"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a8a0ecabf313dbba6fa3a495d73f8dbad">IsOpened</a> () const</td></tr>
+<tr class="memdesc:a8a0ecabf313dbba6fa3a495d73f8dbad inherit pub_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">위젯이 열렸거나 열리는 중이며 실제 화면에 보이는지 확인한다.  <br /></td></tr>
+<tr class="separator:a8a0ecabf313dbba6fa3a495d73f8dbad inherit pub_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a027636eb3c9a5f583d2da72e1f08bdff inherit pub_methods_classURDUserWidget" id="r_a027636eb3c9a5f583d2da72e1f08bdff"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a027636eb3c9a5f583d2da72e1f08bdff">FinishOpenUI</a> ()</td></tr>
+<tr class="memdesc:a027636eb3c9a5f583d2da72e1f08bdff inherit pub_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">열기 애니메이션 완료를 C++ 생명주기에 알린다.  <br /></td></tr>
+<tr class="separator:a027636eb3c9a5f583d2da72e1f08bdff inherit pub_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab47bc7509e2d94ec4567748b85e8eaf7 inherit pub_methods_classURDUserWidget" id="r_ab47bc7509e2d94ec4567748b85e8eaf7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#ab47bc7509e2d94ec4567748b85e8eaf7">FinishCloseUI</a> ()</td></tr>
+<tr class="memdesc:ab47bc7509e2d94ec4567748b85e8eaf7 inherit pub_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">닫기 애니메이션 완료를 C++ 생명주기에 알린다.  <br /></td></tr>
+<tr class="separator:ab47bc7509e2d94ec4567748b85e8eaf7 inherit pub_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public 속성</h2></td></tr>
-<tr class="memitem:a96237a572c394970fb34450693ef5f01" id="r_a96237a572c394970fb34450693ef5f01"><td class="memItemLeft" align="right" valign="top">FCharacterSelectBackRequestedDelegate&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCharacterSelectWidget.html#a96237a572c394970fb34450693ef5f01">OnBackToMainRequested</a></td></tr>
-<tr class="memdesc:a96237a572c394970fb34450693ef5f01"><td class="mdescLeft">&#160;</td><td class="mdescRight">BACK 버튼을 눌렀을 때 부모 TitleMenuWidget에 알려주는 이벤트  <br /></td></tr>
-<tr class="separator:a96237a572c394970fb34450693ef5f01"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9530e6ded55233f38fb0b2dcd66b92d5" id="r_a9530e6ded55233f38fb0b2dcd66b92d5"><td class="memItemLeft" align="right" valign="top">FCharacterSelectSimpleEvent&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCharacterSelectWidget.html#a9530e6ded55233f38fb0b2dcd66b92d5">OnBackToMainRequested</a></td></tr>
+<tr class="memdesc:a9530e6ded55233f38fb0b2dcd66b92d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">BACK 버튼을 눌렀을 때 TitleMenuWidget에 메인 화면 복귀를 요청함  <br /></td></tr>
+<tr class="separator:a9530e6ded55233f38fb0b2dcd66b92d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abc0a9dacfc6426b196a8af4913e83b7e" id="r_abc0a9dacfc6426b196a8af4913e83b7e"><td class="memItemLeft" align="right" valign="top">FCharacterSelectStatusChangedDelegate&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCharacterSelectWidget.html#abc0a9dacfc6426b196a8af4913e83b7e">OnStatusTextChanged</a></td></tr>
-<tr class="memdesc:abc0a9dacfc6426b196a8af4913e83b7e"><td class="mdescLeft">&#160;</td><td class="mdescRight">상태 문구가 바뀌었을 때 부모 위젯에도 알려주는 이벤트  <br /></td></tr>
+<tr class="memdesc:abc0a9dacfc6426b196a8af4913e83b7e"><td class="mdescLeft">&#160;</td><td class="mdescRight">상태 문구가 바뀌었음을 외부 디버그 UI 등에 알려주는 호환용 이벤트  <br /></td></tr>
 <tr class="separator:abc0a9dacfc6426b196a8af4913e83b7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
 Protected 멤버 함수</h2></td></tr>
 <tr class="memitem:a1b48b6195f44f6184c610841e24462f1" id="r_a1b48b6195f44f6184c610841e24462f1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCharacterSelectWidget.html#a1b48b6195f44f6184c610841e24462f1">NativeConstruct</a> () override</td></tr>
-<tr class="memdesc:a1b48b6195f44f6184c610841e24462f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">위젯이 화면에 올라올 때 버튼 이벤트를 연결하고 첫 목록을 그림  <br /></td></tr>
 <tr class="separator:a1b48b6195f44f6184c610841e24462f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3911c6fda00c317b43b658778917b16f" id="r_a3911c6fda00c317b43b658778917b16f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCharacterSelectWidget.html#a3911c6fda00c317b43b658778917b16f">NativeDestruct</a> () override</td></tr>
-<tr class="memdesc:a3911c6fda00c317b43b658778917b16f"><td class="mdescLeft">&#160;</td><td class="mdescRight">위젯이 화면에서 내려갈 때 버튼/카드 이벤트와 비동기 로딩을 정리함  <br /></td></tr>
 <tr class="separator:a3911c6fda00c317b43b658778917b16f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_methods_classURDUserWidget"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classURDUserWidget')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classURDUserWidget.html">URDUserWidget</a>(으)로부터 상속된 Protected 멤버 함수</td></tr>
+<tr class="memitem:a84d00481ec98f6d9469a5d722d2191de inherit pro_methods_classURDUserWidget" id="r_a84d00481ec98f6d9469a5d722d2191de"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a84d00481ec98f6d9469a5d722d2191de">PlayOpenUIAnimation</a> ()</td></tr>
+<tr class="memdesc:a84d00481ec98f6d9469a5d722d2191de inherit pro_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">열기 애니메이션을 재생한다.  <br /></td></tr>
+<tr class="separator:a84d00481ec98f6d9469a5d722d2191de inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae6adab8721f688cb1022e91ddec8f069 inherit pro_methods_classURDUserWidget" id="r_ae6adab8721f688cb1022e91ddec8f069"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#ae6adab8721f688cb1022e91ddec8f069">PlayOpenUIAnimation_Implementation</a> ()</td></tr>
+<tr class="memdesc:ae6adab8721f688cb1022e91ddec8f069 inherit pro_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">별도 Blueprint 연출이 없으면 즉시 열린 상태로 완료한다.  <br /></td></tr>
+<tr class="separator:ae6adab8721f688cb1022e91ddec8f069 inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a336edc8b6338610ff466446e33eddae1 inherit pro_methods_classURDUserWidget" id="r_a336edc8b6338610ff466446e33eddae1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a336edc8b6338610ff466446e33eddae1">PlayCloseUIAnimation</a> ()</td></tr>
+<tr class="memdesc:a336edc8b6338610ff466446e33eddae1 inherit pro_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">닫기 애니메이션을 재생한다.  <br /></td></tr>
+<tr class="separator:a336edc8b6338610ff466446e33eddae1 inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8ace2bc7dcd42b5316045f7dfba38604 inherit pro_methods_classURDUserWidget" id="r_a8ace2bc7dcd42b5316045f7dfba38604"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a8ace2bc7dcd42b5316045f7dfba38604">PlayCloseUIAnimation_Implementation</a> ()</td></tr>
+<tr class="memdesc:a8ace2bc7dcd42b5316045f7dfba38604 inherit pro_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">별도 Blueprint 연출이 없으면 즉시 닫힌 상태로 완료한다.  <br /></td></tr>
+<tr class="separator:a8ace2bc7dcd42b5316045f7dfba38604 inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08c6778b31048ca7c2bb2dc8ce3d0c55 inherit pro_methods_classURDUserWidget" id="r_a08c6778b31048ca7c2bb2dc8ce3d0c55"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a08c6778b31048ca7c2bb2dc8ce3d0c55">ApplyOpenUI</a> ()</td></tr>
+<tr class="memdesc:a08c6778b31048ca7c2bb2dc8ce3d0c55 inherit pro_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classURDUserWidget.html#ae32f620cc43ff20e3c329019df0de3ee" title="위젯을 여는 단일 진입점">OpenUI()</a>가 확정한 열기 상태를 실제 UMG 표시 상태에 반영한다.  <br /></td></tr>
+<tr class="separator:a08c6778b31048ca7c2bb2dc8ce3d0c55 inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac694c35e0fa59dfad7c8e11faff0c67b inherit pro_methods_classURDUserWidget" id="r_ac694c35e0fa59dfad7c8e11faff0c67b"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#ac694c35e0fa59dfad7c8e11faff0c67b">ApplyCloseUI</a> ()</td></tr>
+<tr class="memdesc:ac694c35e0fa59dfad7c8e11faff0c67b inherit pro_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classURDUserWidget.html#ab47bc7509e2d94ec4567748b85e8eaf7" title="닫기 애니메이션 완료를 C++ 생명주기에 알린다.">FinishCloseUI()</a> 이후 닫힘 정책을 실제 UMG 표시 상태에 반영한다.  <br /></td></tr>
+<tr class="separator:ac694c35e0fa59dfad7c8e11faff0c67b inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a131ce144666f32f53d2f32e7dc8d2f75 inherit pro_methods_classURDUserWidget" id="r_a131ce144666f32f53d2f32e7dc8d2f75"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a131ce144666f32f53d2f32e7dc8d2f75">GetViewportZOrder</a> () const</td></tr>
+<tr class="memdesc:a131ce144666f32f53d2f32e7dc8d2f75 inherit pro_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">AddToViewport()에 사용할 ZOrder를 반환한다.  <br /></td></tr>
+<tr class="separator:a131ce144666f32f53d2f32e7dc8d2f75 inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3ea7bb344a4def56b4c81e1365c341ca inherit pro_methods_classURDUserWidget" id="r_a3ea7bb344a4def56b4c81e1365c341ca"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a3ea7bb344a4def56b4c81e1365c341ca">ShouldRemoveFromParentOnClose</a> () const</td></tr>
+<tr class="memdesc:a3ea7bb344a4def56b4c81e1365c341ca inherit pro_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">닫을 때 부모에서 제거할지, Collapsed 상태로 유지할지 결정한다.  <br /></td></tr>
+<tr class="separator:a3ea7bb344a4def56b4c81e1365c341ca inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="inherited" name="inherited"></a>
+추가로 상속된 멤버들</h2></td></tr>
+<tr class="inherit_header pro_attribs_classURDUserWidget"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classURDUserWidget')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classURDUserWidget.html">URDUserWidget</a>(으)로부터 상속된 Protected 속성</td></tr>
+<tr class="memitem:ae62d782bb431f6a764b2aae9a0e3d3f8 inherit pro_attribs_classURDUserWidget" id="r_ae62d782bb431f6a764b2aae9a0e3d3f8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#ae62d782bb431f6a764b2aae9a0e3d3f8">mViewportZOrder</a> = 0</td></tr>
+<tr class="memdesc:ae62d782bb431f6a764b2aae9a0e3d3f8 inherit pro_attribs_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">뷰포트에 올라갈 때 사용할 표시 순서  <br /></td></tr>
+<tr class="separator:ae62d782bb431f6a764b2aae9a0e3d3f8 inherit pro_attribs_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aab4c4ee1e763fa6b1807a6febfad8050 inherit pro_attribs_classURDUserWidget" id="r_aab4c4ee1e763fa6b1807a6febfad8050"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#aab4c4ee1e763fa6b1807a6febfad8050">mRemoveFromParentOnClose</a> = false</td></tr>
+<tr class="memdesc:aab4c4ee1e763fa6b1807a6febfad8050 inherit pro_attribs_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classURDUserWidget.html#a53b2cba03bfba50c140ab7fef60872d1" title="위젯을 닫는 단일 진입점">CloseUI()</a> 완료 시 부모에서 제거할지 여부  <br /></td></tr>
+<tr class="separator:aab4c4ee1e763fa6b1807a6febfad8050 inherit pro_attribs_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
-<div class="textblock"><p>이 위젯은 타이틀 메뉴 안에 들어가는 "캐릭터 선택 화면"이다. 이번 UI-only 브랜치에서는 화면 확인용 임시 캐릭터 목록을 직접 만들고, 그 개수만큼 UCharacterCardWidget을 만든다.</p>
-<p>실제 화면 배치는 WBP_CharacterSelect에서 만든다. C++은 CharacterCardContainer, ConfirmButton 같은 이름의 위젯을 BindWidget으로 받아서 캐릭터 데이터와 클릭 이벤트만 처리한다.</p>
-<p>화면 뒤쪽은 현재 WBP에 검은색 기본 배경으로 둔다. 나중에 캐릭터 선택용 이미지, 움짤, MediaTexture, 머티리얼 배경을 넣을 때 디자이너 WBP에서 배경 레이어만 교체하면 선택 로직은 그대로 쓸 수 있다.</p>
-<p>현재 기본 화면에서는 상단 "Character Select" 제목과 하단 "Select a character" 안내 문구를 표시하지 않는다. 캐릭터 후보는 화면 아래쪽의 아이콘 버튼들로만 보여준다.</p>
-<p>중요한 구조는 다음과 같다.</p><ul>
-<li>TitleMenuWidget: START/BACK 같은 큰 화면 전환만 담당</li>
-<li>CharacterSelectWidget: 캐릭터 목록, 선택 상태, Confirm 버튼 담당</li>
-<li>CharacterCardWidget: 카드 한 장의 표시와 클릭 이벤트만 담당</li>
-</ul>
-<p>실제 캐릭터 목록 제공자, 플레이어 유닛 확정, 런 시작, 방 전환은 이번 PR 범위가 아니다. 해당 API가 담당 파트에서 준비되면 RefreshCharacterOptions()의 임시 목록 생성부를 교체한다.</p>
-<dl class="section note"><dt>주의</dt><dd>캐릭터 수가 늘어나도 번호별 클릭 함수를 새로 추가하지 않는다. mCharacterOptions 배열 개수만큼 카드 위젯을 만들고, 카드 클릭 이벤트에 들어온 CharacterIndex로 선택 대상을 찾는다.</dd>
-<dd>
-C++ fallback 화면은 만들지 않는다. WBP_CharacterSelect에는 필수 BindWidget 이름들이 들어 있어야 하며, 카드 하나의 모양은 WBP_CharacterCard가 담당한다. </dd></dl>
+<div class="textblock"><p>이 위젯은 "캐릭터 선택"만 담당한다. 타이틀 메인 버튼, 월드맵 화면 전환, 설정 오버레이는 UTitleMenuWidget이 담당하고, 이 클래스는 GameMode에서 캐릭터 후보를 받아 카드 WBP를 만들고 선택/Confirm 처리만 한다.</p>
+<p>실제 배치는 WBP_CharacterSelect에 있다. C++은 mCharacterCardContainer, mConfirmButton, mSelectedCharacterNameText 같은 이름의 위젯을 받아서 값과 이벤트만 연결한다.</p>
+<dl class="section note"><dt>주의</dt><dd>캐릭터 수가 3명에서 5명으로 늘어나도 numbered 함수는 추가하지 않는다. mCharacterOptions 개수만큼 WBP_CharacterCard를 만들고, 카드가 보내준 mIndex로 선택 대상을 찾는다. </dd></dl>
 
-<p class="definition"><a class="el" href="CharacterSelectWidget_8h_source.html">CharacterSelectWidget.h</a> 파일의 <a class="el" href="CharacterSelectWidget_8h_source.html#l00067">67</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CharacterSelectWidget_8h_source.html">CharacterSelectWidget.h</a> 파일의 <a class="el" href="CharacterSelectWidget_8h_source.html#l00044">44</a> 번째 라인에서 정의되었습니다.</p>
 </div><h2 class="groupheader">생성자 &amp; 소멸자 문서화</h2>
 <a id="acb4b34d97869fca29e2b9d4d08013cd4" name="acb4b34d97869fca29e2b9d4d08013cd4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#acb4b34d97869fca29e2b9d4d08013cd4">&#9670;&#160;</a></span>UCharacterSelectWidget()</h2>
@@ -167,15 +214,8 @@ C++ fallback 화면은 만들지 않는다. WBP_CharacterSelect에는 필수 Bin
         </tr>
       </table>
 </div><div class="memdoc">
-<p>카드 위젯 클래스는 C++ 생성자에서 경로로 찾지 않는다. WBP_CharacterSelect의 Details 패널에서 CharacterCardWidgetClass를 WBP_CharacterCard로 지정한다. 이렇게 두면 카드 모양을 바꾸거나 다른 카드 WBP로 교체할 때 C++을 다시 빌드하지 않아도 된다.</p>
-<dl class="params"><dt>매개변수</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">ObjectInitializer</td><td>Unreal 객체 생성에 사용하는 기본 초기화 값 </td></tr>
-  </table>
-  </dd>
-</dl>
 
-<p class="definition"><a class="el" href="CharacterSelectWidget_8cpp_source.html">CharacterSelectWidget.cpp</a> 파일의 <a class="el" href="CharacterSelectWidget_8cpp_source.html#l00054">54</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CharacterSelectWidget_8cpp_source.html">CharacterSelectWidget.cpp</a> 파일의 <a class="el" href="CharacterSelectWidget_8cpp_source.html#l00065">65</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -203,7 +243,7 @@ C++ fallback 화면은 만들지 않는다. WBP_CharacterSelect에는 필수 Bin
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CharacterSelectWidget_8cpp_source.html">CharacterSelectWidget.cpp</a> 파일의 <a class="el" href="CharacterSelectWidget_8cpp_source.html#l00074">74</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CharacterSelectWidget_8cpp_source.html">CharacterSelectWidget.cpp</a> 파일의 <a class="el" href="CharacterSelectWidget_8cpp_source.html#l00086">86</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -230,7 +270,7 @@ C++ fallback 화면은 만들지 않는다. WBP_CharacterSelect에는 필수 Bin
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CharacterSelectWidget_8cpp_source.html">CharacterSelectWidget.cpp</a> 파일의 <a class="el" href="CharacterSelectWidget_8cpp_source.html#l00095">95</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CharacterSelectWidget_8cpp_source.html">CharacterSelectWidget.cpp</a> 파일의 <a class="el" href="CharacterSelectWidget_8cpp_source.html#l00096">96</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -248,27 +288,44 @@ C++ fallback 화면은 만들지 않는다. WBP_CharacterSelect에는 필수 Bin
         </tr>
       </table>
 </div><div class="memdoc">
-<p>START 버튼을 눌러 이 화면에 들어올 때마다 호출된다. 캐릭터 목록을 다시 받아오고, 선택 상세 정보와 상태 문구를 기본값으로 맞춘다. </p>
 
-<p class="definition"><a class="el" href="CharacterSelectWidget_8cpp_source.html">CharacterSelectWidget.cpp</a> 파일의 <a class="el" href="CharacterSelectWidget_8cpp_source.html#l00067">67</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CharacterSelectWidget_8cpp_source.html">CharacterSelectWidget.cpp</a> 파일의 <a class="el" href="CharacterSelectWidget_8cpp_source.html#l00072">72</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<h2 class="groupheader">멤버 데이터 문서화</h2>
-<a id="a96237a572c394970fb34450693ef5f01" name="a96237a572c394970fb34450693ef5f01"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a96237a572c394970fb34450693ef5f01">&#9670;&#160;</a></span>OnBackToMainRequested</h2>
+<a id="af7470ec3cd2c546fcf74926998176bf6" name="af7470ec3cd2c546fcf74926998176bf6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af7470ec3cd2c546fcf74926998176bf6">&#9670;&#160;</a></span>RefreshCharacterOptionsFromGameMode()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">FCharacterSelectBackRequestedDelegate UCharacterSelectWidget::OnBackToMainRequested</td>
+          <td class="memname">void UCharacterSelectWidget::RefreshCharacterOptionsFromGameMode </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>CharacterSelectWidget은 ScreenSwitcher를 직접 만지지 않는다. 이 이벤트만 보내고, 실제 메인 화면 복귀는 TitleMenuWidget이 처리한다. </p>
 
-<p class="definition"><a class="el" href="CharacterSelectWidget_8h_source.html">CharacterSelectWidget.h</a> 파일의 <a class="el" href="CharacterSelectWidget_8h_source.html#l00103">103</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CharacterSelectWidget_8cpp_source.html">CharacterSelectWidget.cpp</a> 파일의 <a class="el" href="CharacterSelectWidget_8cpp_source.html#l00081">81</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<h2 class="groupheader">멤버 데이터 문서화</h2>
+<a id="a9530e6ded55233f38fb0b2dcd66b92d5" name="a9530e6ded55233f38fb0b2dcd66b92d5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9530e6ded55233f38fb0b2dcd66b92d5">&#9670;&#160;</a></span>OnBackToMainRequested</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FCharacterSelectSimpleEvent UCharacterSelectWidget::OnBackToMainRequested</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="CharacterSelectWidget_8h_source.html">CharacterSelectWidget.h</a> 파일의 <a class="el" href="CharacterSelectWidget_8h_source.html#l00060">60</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -283,9 +340,8 @@ C++ fallback 화면은 만들지 않는다. WBP_CharacterSelect에는 필수 Bin
         </tr>
       </table>
 </div><div class="memdoc">
-<p>지금 기본 UI에서는 상태 문구를 화면에 표시하지 않는다. 그래도 기존 WBP나 디버그용 UI가 이 이벤트를 쓰고 있을 수 있으므로 델리게이트는 남겨 둔다. 즉, 화면 표시용이라기보다 예전 구조와의 호환용 이벤트다. </p>
 
-<p class="definition"><a class="el" href="CharacterSelectWidget_8h_source.html">CharacterSelectWidget.h</a> 파일의 <a class="el" href="CharacterSelectWidget_8h_source.html#l00114">114</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CharacterSelectWidget_8h_source.html">CharacterSelectWidget.h</a> 파일의 <a class="el" href="CharacterSelectWidget_8h_source.html#l00064">64</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

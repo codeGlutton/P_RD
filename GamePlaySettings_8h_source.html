@@ -136,23 +136,26 @@ $(document).ready(function(){initNavTree('GamePlaySettings_8h_source.html',''); 
 <div class="line"><a id="l00051" name="l00051"></a><span class="lineno"><a class="line" href="classUGamePlaySettings.html#a27792886c7229de522cd85b17a959c41">   51</a></span>    TSubclassOf&lt;UUserWidget&gt; mWorldWidgetClasses[static_cast&lt;uint8&gt;(<a class="code hl_enumeration" href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a>::Count)];</div>
 <div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span> </div>
 <div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>public:</div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    UPROPERTY(Config, Category = Title, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = &quot;TitleRoomId&quot;))</div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno"><a class="line" href="classUGamePlaySettings.html#aad1a5c26e46f503149bf54a45defdb8e">   55</a></span>    FPrimaryAssetId mTitleRoomId;</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    UPROPERTY(Config, Category = Room, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = &quot;FrontendRoomId&quot;))</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno"><a class="line" href="classUGamePlaySettings.html#a5a1e39809565329c7cb6d20b4d9e17a1">   55</a></span>    FPrimaryAssetId mFrontendRoomId;</div>
 <div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span> </div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>public:</div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>    UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = &quot;FrontendGameMode&quot;, ConfigRestartRequired = true))</div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno"><a class="line" href="classUGamePlaySettings.html#af3f9113046fa55f1dc2f96fa2aa09ee3">   59</a></span>    TSoftClassPtr&lt;AGameModeBase&gt; mFrontendGameMode;</div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>    UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = &quot;CombatGameMode&quot;, ConfigRestartRequired = true))</div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno"><a class="line" href="classUGamePlaySettings.html#aec8a0e38ed9058d1951cecbf752ae8fa">   61</a></span>    TSoftClassPtr&lt;AGameModeBase&gt; mCombatGameMode;</div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = &quot;ShopGameMode&quot;, ConfigRestartRequired = true))</div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno"><a class="line" href="classUGamePlaySettings.html#aaabc7afc1f2fcd36fb6d7e062d5b403e">   63</a></span>    TSoftClassPtr&lt;AGameModeBase&gt; mShopGameMode;</div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>    UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = &quot;TreasureGameMode&quot;, ConfigRestartRequired = true))</div>
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno"><a class="line" href="classUGamePlaySettings.html#aa85096aa5ee60aea3937f7b3e3e0bd29">   65</a></span>    TSoftClassPtr&lt;AGameModeBase&gt; mTreasureGameMode;</div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span> </div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>public:</div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>    UPROPERTY(Config, Category = Team, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = &quot;TeamRelations&quot;))</div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno"><a class="line" href="classUGamePlaySettings.html#a1cd44eff27b36bc4e137ea3b0f3f2fd5">   69</a></span>    TMap&lt;TEnumAsByte&lt;<a class="code hl_namespace" href="namespaceEUnitTeamType.html">EUnitTeamType</a>::Type&gt;, <a class="code hl_struct" href="structFUnitTeamRelation.html">FUnitTeamRelation</a>&gt; mTeamRelations;</div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>};</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    UPROPERTY(Config, Category = Room, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = &quot;DefaultBackgroundMap&quot;))</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno"><a class="line" href="classUGamePlaySettings.html#a9b8c1436bc45b23f2c4a66dc17c19a43">   58</a></span>    TSoftObjectPtr&lt;UWorld&gt; mDefaultBackgroundMap;</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span> </div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>public:</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>    UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = &quot;FrontendGameMode&quot;, ConfigRestartRequired = true))</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno"><a class="line" href="classUGamePlaySettings.html#af3f9113046fa55f1dc2f96fa2aa09ee3">   62</a></span>    TSoftClassPtr&lt;AGameModeBase&gt; mFrontendGameMode;</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>    UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = &quot;CombatGameMode&quot;, ConfigRestartRequired = true))</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno"><a class="line" href="classUGamePlaySettings.html#aec8a0e38ed9058d1951cecbf752ae8fa">   64</a></span>    TSoftClassPtr&lt;AGameModeBase&gt; mCombatGameMode;</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = &quot;ShopGameMode&quot;, ConfigRestartRequired = true))</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno"><a class="line" href="classUGamePlaySettings.html#aaabc7afc1f2fcd36fb6d7e062d5b403e">   66</a></span>    TSoftClassPtr&lt;AGameModeBase&gt; mShopGameMode;</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = &quot;TreasureGameMode&quot;, ConfigRestartRequired = true))</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno"><a class="line" href="classUGamePlaySettings.html#aa85096aa5ee60aea3937f7b3e3e0bd29">   68</a></span>    TSoftClassPtr&lt;AGameModeBase&gt; mTreasureGameMode;</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span> </div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>public:</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>    UPROPERTY(Config, Category = Team, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = &quot;TeamRelations&quot;))</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno"><a class="line" href="classUGamePlaySettings.html#a1cd44eff27b36bc4e137ea3b0f3f2fd5">   72</a></span>    TMap&lt;TEnumAsByte&lt;<a class="code hl_namespace" href="namespaceEUnitTeamType.html">EUnitTeamType</a>::Type&gt;, <a class="code hl_struct" href="structFUnitTeamRelation.html">FUnitTeamRelation</a>&gt; mTeamRelations;</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>};</div>
 </div>
 <div class="ttc" id="aRDMinimal_8h_html"><div class="ttname"><a href="RDMinimal_8h.html">RDMinimal.h</a></div><div class="ttdoc">RD 프로젝트 전 영역에서 사용되는 최소한의 포함 헤더</div></div>
 <div class="ttc" id="aUnitTeamType_8h_html"><div class="ttname"><a href="UnitTeamType_8h.html">UnitTeamType.h</a></div><div class="ttdoc">유닛 팀 타입 대한 헤더</div></div>

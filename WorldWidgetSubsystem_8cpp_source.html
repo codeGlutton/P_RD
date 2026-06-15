@@ -103,7 +103,7 @@ $(document).ready(function(){initNavTree('WorldWidgetSubsystem_8cpp_source.html'
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &quot;<a class="code" href="GamePlaySettings_8h.html">Setting/GamePlaySettings.h</a>&quot;</span></div>
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span> </div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span>DEFINE_LOG_CATEGORY(LogWorldWidget)</div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><a class="code hl_function" href="CombatGameMode_8cpp.html#a94d60604635d3b762922c188374cb4c4">DEFINE_LOG_CATEGORY</a>(LogWorldWidget)</div>
 <div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
 <div class="foldopen" id="foldopen00008" data-start="{" data-end="}">
 <div class="line"><a id="l00008" name="l00008"></a><span class="lineno"><a class="line" href="classUWorldWidgetSubsystem.html#ad28428f8e9035efdfa5ab52639e6d775">    8</a></span>void <a class="code hl_class" href="classUWorldWidgetSubsystem.html">UWorldWidgetSubsystem</a>::InitWidgets(UClass* HUDClass, const TArray&lt;<a class="code hl_enumeration" href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a>&gt;&amp; WorldWidgetTypes)</div>
@@ -119,39 +119,50 @@ $(document).ready(function(){initNavTree('WorldWidgetSubsystem_8cpp_source.html'
 <div class="foldopen" id="foldopen00017" data-start="{" data-end="}">
 <div class="line"><a id="l00017" name="l00017"></a><span class="lineno"><a class="line" href="classUWorldWidgetSubsystem.html#a1a2c8e17e775dba7147f6476109ca2c3">   17</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUWorldWidgetSubsystem.html#a1a2c8e17e775dba7147f6476109ca2c3">UWorldWidgetSubsystem::InitHUD</a>(UClass* HUDClass)</div>
 <div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>{</div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    checkf(HUDClass != <span class="keyword">nullptr</span>, TEXT(<span class="stringliteral">&quot;HUD 위젯 nullptr&quot;</span>));</div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span> </div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    <a class="code hl_variable" href="classUWorldWidgetSubsystem.html#aa66bf836caad56f07cddd41edc95c261">mHUD</a> = CreateWidget(GetWorld()-&gt;GetFirstPlayerController(), HUDClass);</div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>}</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    <span class="keywordflow">if</span> (HUDClass == <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    {</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>        UE_LOG(LogWorldWidget, Warning, TEXT(<span class="stringliteral">&quot;HUD widget class is not configured.&quot;</span>));</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>        <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    }</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    <a class="code hl_variable" href="classUWorldWidgetSubsystem.html#aa66bf836caad56f07cddd41edc95c261">mHUD</a> = CreateWidget(GetWorld()-&gt;GetFirstPlayerController(), HUDClass);</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>}</div>
 </div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span> </div>
-<div class="foldopen" id="foldopen00024" data-start="{" data-end="}">
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno"><a class="line" href="classUWorldWidgetSubsystem.html#a6e17dcbfa0cf729137e04e5ad83d7abb">   24</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUWorldWidgetSubsystem.html#a6e17dcbfa0cf729137e04e5ad83d7abb">UWorldWidgetSubsystem::InitWorldWidget</a>(<a class="code hl_enumeration" href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a> WorldWidgetType)</div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>{</div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    <span class="keyword">const</span> uint8 Index = StaticCast&lt;uint8&gt;(WorldWidgetType);</div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classUWorldWidgetSubsystem.html#a7d0d92e05efefc0cb6381f3310edb4fd">mWorldWidgets</a>[Index] == <span class="keyword">nullptr</span>)</div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    {</div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>        <span class="keyword">const</span> TSubclassOf&lt;UUserWidget&gt; WorldWidgetClass = GetDefault&lt;UGamePlaySettings&gt;()-&gt;mWorldWidgetClasses[Index];</div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>        <a class="code hl_variable" href="classUWorldWidgetSubsystem.html#a7d0d92e05efefc0cb6381f3310edb4fd">mWorldWidgets</a>[Index] = CreateWidget(GetWorld()-&gt;GetFirstPlayerController(), WorldWidgetClass);</div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    }</div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>}</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span> </div>
+<div class="foldopen" id="foldopen00028" data-start="{" data-end="}">
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno"><a class="line" href="classUWorldWidgetSubsystem.html#a6e17dcbfa0cf729137e04e5ad83d7abb">   28</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUWorldWidgetSubsystem.html#a6e17dcbfa0cf729137e04e5ad83d7abb">UWorldWidgetSubsystem::InitWorldWidget</a>(<a class="code hl_enumeration" href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a> WorldWidgetType)</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>{</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    <span class="keyword">const</span> uint8 Index = StaticCast&lt;uint8&gt;(WorldWidgetType);</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classUWorldWidgetSubsystem.html#a7d0d92e05efefc0cb6381f3310edb4fd">mWorldWidgets</a>[Index] == <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    {</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>        <span class="keyword">const</span> TSubclassOf&lt;UUserWidget&gt; WorldWidgetClass = GetDefault&lt;UGamePlaySettings&gt;()-&gt;mWorldWidgetClasses[Index];</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>        <span class="keywordflow">if</span> (WorldWidgetClass == <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>        {</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>            UE_LOG(LogWorldWidget, Warning, TEXT(<span class="stringliteral">&quot;World widget class is not configured. Type: %d&quot;</span>), Index);</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>            <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>        }</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span> </div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>        <a class="code hl_variable" href="classUWorldWidgetSubsystem.html#a7d0d92e05efefc0cb6381f3310edb4fd">mWorldWidgets</a>[Index] = CreateWidget(GetWorld()-&gt;GetFirstPlayerController(), WorldWidgetClass);</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    }</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>}</div>
 </div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span> </div>
-<div class="foldopen" id="foldopen00034" data-start="{" data-end="}">
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno"><a class="line" href="classUWorldWidgetSubsystem.html#a024655901660cadda26300f40b003126">   34</a></span>UUserWidget* <a class="code hl_function" href="classUWorldWidgetSubsystem.html#a024655901660cadda26300f40b003126">UWorldWidgetSubsystem::GetWorldWidget</a>(<a class="code hl_enumeration" href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a> Type)<span class="keyword"> const</span></div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="keyword"></span>{</div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classUWorldWidgetSubsystem.html#a7d0d92e05efefc0cb6381f3310edb4fd">mWorldWidgets</a>[StaticCast&lt;uint8&gt;(Type)];</div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>}</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
+<div class="foldopen" id="foldopen00044" data-start="{" data-end="}">
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno"><a class="line" href="classUWorldWidgetSubsystem.html#a024655901660cadda26300f40b003126">   44</a></span>UUserWidget* <a class="code hl_function" href="classUWorldWidgetSubsystem.html#a75fe3ae27db3e096f9d0fac5a258daa5">UWorldWidgetSubsystem::GetWorldWidget</a>(<a class="code hl_enumeration" href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a> Type)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classUWorldWidgetSubsystem.html#a7d0d92e05efefc0cb6381f3310edb4fd">mWorldWidgets</a>[StaticCast&lt;uint8&gt;(Type)];</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>}</div>
 </div>
+<div class="ttc" id="aCombatGameMode_8cpp_html_a94d60604635d3b762922c188374cb4c4"><div class="ttname"><a href="CombatGameMode_8cpp.html#a94d60604635d3b762922c188374cb4c4">DEFINE_LOG_CATEGORY</a></div><div class="ttdeci">DEFINE_LOG_CATEGORY(LogCombatGameMode)</div></div>
 <div class="ttc" id="aGamePlaySettings_8h_html"><div class="ttname"><a href="GamePlaySettings_8h.html">GamePlaySettings.h</a></div><div class="ttdoc">게임 플레이 연관 설정 객체 정의 헤더</div></div>
 <div class="ttc" id="aWorldWidgetSubsystem_8h_html"><div class="ttname"><a href="WorldWidgetSubsystem_8h.html">WorldWidgetSubsystem.h</a></div><div class="ttdoc">특정한 소유자 없이 월드에 소속된 Widget 서브시스템 정의 헤더</div></div>
 <div class="ttc" id="aWorldWidgetType_8h_html_a47caf39c2b520cec40c346f17a44069f"><div class="ttname"><a href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a></div><div class="ttdeci">EWorldWidgetType</div><div class="ttdoc">특정한 소유자 없이 월드에 소속된 Widget 타입</div><div class="ttdef"><b>Definition</b> <a href="WorldWidgetType_8h_source.html#l00017">WorldWidgetType.h:18</a></div></div>
 <div class="ttc" id="aclassUWorldWidgetSubsystem_html"><div class="ttname"><a href="classUWorldWidgetSubsystem.html">UWorldWidgetSubsystem</a></div><div class="ttdoc">특정한 소유자 없이 월드에 소속된 Widget 서브시스템</div><div class="ttdef"><b>Definition</b> <a href="WorldWidgetSubsystem_8h_source.html#l00024">WorldWidgetSubsystem.h:25</a></div></div>
-<div class="ttc" id="aclassUWorldWidgetSubsystem_html_a024655901660cadda26300f40b003126"><div class="ttname"><a href="classUWorldWidgetSubsystem.html#a024655901660cadda26300f40b003126">UWorldWidgetSubsystem::GetWorldWidget</a></div><div class="ttdeci">UUserWidget * GetWorldWidget(EWorldWidgetType Type) const</div><div class="ttdef"><b>Definition</b> <a href="WorldWidgetSubsystem_8cpp_source.html#l00034">WorldWidgetSubsystem.cpp:34</a></div></div>
 <div class="ttc" id="aclassUWorldWidgetSubsystem_html_a1a2c8e17e775dba7147f6476109ca2c3"><div class="ttname"><a href="classUWorldWidgetSubsystem.html#a1a2c8e17e775dba7147f6476109ca2c3">UWorldWidgetSubsystem::InitHUD</a></div><div class="ttdeci">void InitHUD(UClass *HUDClass)</div><div class="ttdef"><b>Definition</b> <a href="WorldWidgetSubsystem_8cpp_source.html#l00017">WorldWidgetSubsystem.cpp:17</a></div></div>
-<div class="ttc" id="aclassUWorldWidgetSubsystem_html_a6e17dcbfa0cf729137e04e5ad83d7abb"><div class="ttname"><a href="classUWorldWidgetSubsystem.html#a6e17dcbfa0cf729137e04e5ad83d7abb">UWorldWidgetSubsystem::InitWorldWidget</a></div><div class="ttdeci">void InitWorldWidget(EWorldWidgetType WorldWidgetType)</div><div class="ttdef"><b>Definition</b> <a href="WorldWidgetSubsystem_8cpp_source.html#l00024">WorldWidgetSubsystem.cpp:24</a></div></div>
-<div class="ttc" id="aclassUWorldWidgetSubsystem_html_a7d0d92e05efefc0cb6381f3310edb4fd"><div class="ttname"><a href="classUWorldWidgetSubsystem.html#a7d0d92e05efefc0cb6381f3310edb4fd">UWorldWidgetSubsystem::mWorldWidgets</a></div><div class="ttdeci">TObjectPtr&lt; UUserWidget &gt; mWorldWidgets[static_cast&lt; uint8 &gt;(EWorldWidgetType::Count)]</div><div class="ttdef"><b>Definition</b> <a href="WorldWidgetSubsystem_8h_source.html#l00049">WorldWidgetSubsystem.h:49</a></div></div>
-<div class="ttc" id="aclassUWorldWidgetSubsystem_html_aa66bf836caad56f07cddd41edc95c261"><div class="ttname"><a href="classUWorldWidgetSubsystem.html#aa66bf836caad56f07cddd41edc95c261">UWorldWidgetSubsystem::mHUD</a></div><div class="ttdeci">TObjectPtr&lt; UUserWidget &gt; mHUD</div><div class="ttdef"><b>Definition</b> <a href="WorldWidgetSubsystem_8h_source.html#l00046">WorldWidgetSubsystem.h:46</a></div></div>
+<div class="ttc" id="aclassUWorldWidgetSubsystem_html_a6e17dcbfa0cf729137e04e5ad83d7abb"><div class="ttname"><a href="classUWorldWidgetSubsystem.html#a6e17dcbfa0cf729137e04e5ad83d7abb">UWorldWidgetSubsystem::InitWorldWidget</a></div><div class="ttdeci">void InitWorldWidget(EWorldWidgetType WorldWidgetType)</div><div class="ttdef"><b>Definition</b> <a href="WorldWidgetSubsystem_8cpp_source.html#l00028">WorldWidgetSubsystem.cpp:28</a></div></div>
+<div class="ttc" id="aclassUWorldWidgetSubsystem_html_a75fe3ae27db3e096f9d0fac5a258daa5"><div class="ttname"><a href="classUWorldWidgetSubsystem.html#a75fe3ae27db3e096f9d0fac5a258daa5">UWorldWidgetSubsystem::GetWorldWidget</a></div><div class="ttdeci">T * GetWorldWidget(EWorldWidgetType Type) const</div><div class="ttdef"><b>Definition</b> <a href="WorldWidgetSubsystem_8h_source.html#l00043">WorldWidgetSubsystem.h:43</a></div></div>
+<div class="ttc" id="aclassUWorldWidgetSubsystem_html_a7d0d92e05efefc0cb6381f3310edb4fd"><div class="ttname"><a href="classUWorldWidgetSubsystem.html#a7d0d92e05efefc0cb6381f3310edb4fd">UWorldWidgetSubsystem::mWorldWidgets</a></div><div class="ttdeci">TObjectPtr&lt; UUserWidget &gt; mWorldWidgets[static_cast&lt; uint8 &gt;(EWorldWidgetType::Count)]</div><div class="ttdef"><b>Definition</b> <a href="WorldWidgetSubsystem_8h_source.html#l00056">WorldWidgetSubsystem.h:56</a></div></div>
+<div class="ttc" id="aclassUWorldWidgetSubsystem_html_aa66bf836caad56f07cddd41edc95c261"><div class="ttname"><a href="classUWorldWidgetSubsystem.html#aa66bf836caad56f07cddd41edc95c261">UWorldWidgetSubsystem::mHUD</a></div><div class="ttdeci">TObjectPtr&lt; UUserWidget &gt; mHUD</div><div class="ttdef"><b>Definition</b> <a href="WorldWidgetSubsystem_8h_source.html#l00053">WorldWidgetSubsystem.h:53</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

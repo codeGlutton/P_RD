@@ -113,6 +113,8 @@ Public 멤버 함수</h2></td></tr>
 <tr class="separator:a24f9b89617bc9616633c976e8a9f6925"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8b60b57b0ee93a0b5b9e1fc851f15f36" id="r_a8b60b57b0ee93a0b5b9e1fc851f15f36"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a8b60b57b0ee93a0b5b9e1fc851f15f36">OnConstruction</a> (const FTransform &amp;Transform) override</td></tr>
 <tr class="separator:a8b60b57b0ee93a0b5b9e1fc851f15f36"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1acd6095836c59755f9b2f898a186a3e" id="r_a1acd6095836c59755f9b2f898a186a3e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a1acd6095836c59755f9b2f898a186a3e">Tick</a> (float DeltaSeconds) override</td></tr>
+<tr class="separator:a1acd6095836c59755f9b2f898a186a3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a55e84cd6dbfeaa405942e107b8559419" id="r_a55e84cd6dbfeaa405942e107b8559419"><td class="memItemLeft" align="right" valign="top">FTransform&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a55e84cd6dbfeaa405942e107b8559419">TileToWorldTransform</a> (const <a class="el" href="structFTileTransform.html">FTileTransform</a> &amp;TileTransform) const</td></tr>
 <tr class="memdesc:a55e84cd6dbfeaa405942e107b8559419"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일 트랜스폼(인덱스+방향)을 월드 트랜스폼으로 변환  <br /></td></tr>
 <tr class="separator:a55e84cd6dbfeaa405942e107b8559419"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -122,17 +124,23 @@ Public 멤버 함수</h2></td></tr>
 <tr class="memitem:a65f8825776aa024cbf94d3198613f966" id="r_a65f8825776aa024cbf94d3198613f966"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTileIndex.html">FTileIndex</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a65f8825776aa024cbf94d3198613f966">WorldToTileIndex</a> (const FVector &amp;WorldLocation) const</td></tr>
 <tr class="memdesc:a65f8825776aa024cbf94d3198613f966"><td class="mdescLeft">&#160;</td><td class="mdescRight">월드 위치를 타일 인덱스로 변환  <br /></td></tr>
 <tr class="separator:a65f8825776aa024cbf94d3198613f966"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aed930e57001a4ba3c50102a2c2c5db8c" id="r_aed930e57001a4ba3c50102a2c2c5db8c"><td class="memItemLeft" align="right" valign="top">TArray&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#aed930e57001a4ba3c50102a2c2c5db8c">GetReachableTiles</a> (const <a class="el" href="structFTileIndex.html">FTileIndex</a> &amp;Origin, int32 MoveDistance) const</td></tr>
+<tr class="memitem:aed930e57001a4ba3c50102a2c2c5db8c" id="r_aed930e57001a4ba3c50102a2c2c5db8c"><td class="memItemLeft" align="right" valign="top">TArray&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#aed930e57001a4ba3c50102a2c2c5db8c">GetReachableTiles</a> (const <a class="el" href="structFTileIndex.html">FTileIndex</a> &amp;Origin, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> MoveDistance) const</td></tr>
 <tr class="memdesc:aed930e57001a4ba3c50102a2c2c5db8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">기준 좌표에서 이동 가능한 타일 목록 반환  <br /></td></tr>
 <tr class="separator:aed930e57001a4ba3c50102a2c2c5db8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a55432b193efe6d3f7df433fe5feffd77" id="r_a55432b193efe6d3f7df433fe5feffd77"><td class="memItemLeft" align="right" valign="top">TArray&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a55432b193efe6d3f7df433fe5feffd77">GetAimableTiles</a> (const <a class="el" href="structFTileIndex.html">FTileIndex</a> &amp;Origin, int32 Range, <a class="el" href="SRPGFrameworkType_8h.html#ae26b1418bce20a6ba6577d4671b7d706">EAimPattern</a> Pattern, bool bIncludeOccupied, bool bIndirect) const</td></tr>
-<tr class="memdesc:a55432b193efe6d3f7df433fe5feffd77"><td class="mdescLeft">&#160;</td><td class="mdescRight">기준 좌표에서 조준 가능한 타일 목록 반환  <br /></td></tr>
-<tr class="separator:a55432b193efe6d3f7df433fe5feffd77"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a382e37ba1b03037762317b7782f6fce7" id="r_a382e37ba1b03037762317b7782f6fce7"><td class="memItemLeft" align="right" valign="top">TArray&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a382e37ba1b03037762317b7782f6fce7">GetEffectTiles</a> (const <a class="el" href="structFTileIndex.html">FTileIndex</a> &amp;Caster, const <a class="el" href="structFTileIndex.html">FTileIndex</a> &amp;Target, <a class="el" href="SRPGFrameworkType_8h.html#a5649b259c42cfc63c1190663e66cce26">EEffectPattern</a> Pattern, int32 Size, bool bPenetrate) const</td></tr>
+<tr class="memitem:a43eee8821eeee47995060b897d47887d" id="r_a43eee8821eeee47995060b897d47887d"><td class="memItemLeft" align="right" valign="top">TArray&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a43eee8821eeee47995060b897d47887d">GetAimableTiles</a> (const <a class="el" href="structFTileIndex.html">FTileIndex</a> &amp;Origin, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> Range, <a class="el" href="SRPGFrameworkType_8h.html#ae26b1418bce20a6ba6577d4671b7d706">EAimPattern</a> Pattern, bool bIncludeOccupied, bool bIndirect, const <a class="el" href="classITileActor.html">ITileActor</a> *Incoming=nullptr) const</td></tr>
+<tr class="memdesc:a43eee8821eeee47995060b897d47887d"><td class="mdescLeft">&#160;</td><td class="mdescRight">기준 좌표에서 조준 가능한 타일 목록 반환  <br /></td></tr>
+<tr class="separator:a43eee8821eeee47995060b897d47887d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a382e37ba1b03037762317b7782f6fce7" id="r_a382e37ba1b03037762317b7782f6fce7"><td class="memItemLeft" align="right" valign="top">TArray&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a382e37ba1b03037762317b7782f6fce7">GetEffectTiles</a> (const <a class="el" href="structFTileIndex.html">FTileIndex</a> &amp;Caster, const <a class="el" href="structFTileIndex.html">FTileIndex</a> &amp;Target, <a class="el" href="SRPGFrameworkType_8h.html#a5649b259c42cfc63c1190663e66cce26">EEffectPattern</a> Pattern, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> Size, bool bPenetrate) const</td></tr>
 <tr class="memdesc:a382e37ba1b03037762317b7782f6fce7"><td class="mdescLeft">&#160;</td><td class="mdescRight">스킬 발동 시 영향받는 타일 목록 반환  <br /></td></tr>
 <tr class="separator:a382e37ba1b03037762317b7782f6fce7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4249d3bab8575efe80854d1cc16408c9" id="r_a4249d3bab8575efe80854d1cc16408c9"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a4249d3bab8575efe80854d1cc16408c9">IsBlocking</a> (const <a class="el" href="structFTileIndex.html">FTileIndex</a> &amp;TileIndex, <a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3">ETileLayerFlag</a> LayerFlag) const</td></tr>
-<tr class="separator:a4249d3bab8575efe80854d1cc16408c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab012d4bd0559ff1b7c823abe3e934e5b" id="r_ab012d4bd0559ff1b7c823abe3e934e5b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#ab012d4bd0559ff1b7c823abe3e934e5b">SetTileHighlight</a> (const TArray&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt; &amp;Tiles, <a class="el" href="TileHighlight_8h.html#afa8f0977bfa9d4ffd2ae4ccbfedf2410">ETileHighlightFlag</a> Flag)</td></tr>
+<tr class="memdesc:ab012d4bd0559ff1b7c823abe3e934e5b"><td class="mdescLeft">&#160;</td><td class="mdescRight">지정한 타일들에 강조 상태를 설정 (해당 플래그 비트에 한해 치환 + 하위 의존 레이어 클리어)  <br /></td></tr>
+<tr class="separator:ab012d4bd0559ff1b7c823abe3e934e5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa9631e87b31c75cb8b55e63c9133a045" id="r_aa9631e87b31c75cb8b55e63c9133a045"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#aa9631e87b31c75cb8b55e63c9133a045">ClearTileHighlight</a> (<a class="el" href="TileHighlight_8h.html#afa8f0977bfa9d4ffd2ae4ccbfedf2410">ETileHighlightFlag</a> Flag)</td></tr>
+<tr class="memdesc:aa9631e87b31c75cb8b55e63c9133a045"><td class="mdescLeft">&#160;</td><td class="mdescRight">지정한 강조 상태를 모든 타일에서 해제  <br /></td></tr>
+<tr class="separator:aa9631e87b31c75cb8b55e63c9133a045"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa70199cb7c54edeaf16dd5cda7a003ee" id="r_aa70199cb7c54edeaf16dd5cda7a003ee"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#aa70199cb7c54edeaf16dd5cda7a003ee">CanPlace</a> (const <a class="el" href="structFTileIndex.html">FTileIndex</a> &amp;TileIndex, const <a class="el" href="classITileActor.html">ITileActor</a> *Incoming) const</td></tr>
+<tr class="separator:aa70199cb7c54edeaf16dd5cda7a003ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab4ccd4d53e9e2a6caf572f3c4619d5bd" id="r_ab4ccd4d53e9e2a6caf572f3c4619d5bd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#ab4ccd4d53e9e2a6caf572f3c4619d5bd">StartActorMovement</a> (const <a class="el" href="structFTileTransform.html">FTileTransform</a> &amp;NextTransform, <a class="el" href="classITileActor.html">ITileActor</a> *Actor)</td></tr>
 <tr class="separator:ab4ccd4d53e9e2a6caf572f3c4619d5bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7b0c5e405abc32bb23c78dbf28945c55" id="r_a7b0c5e405abc32bb23c78dbf28945c55"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a7b0c5e405abc32bb23c78dbf28945c55">CompleteActorMovement</a> (<a class="el" href="classITileActor.html">ITileActor</a> *Actor)</td></tr>
@@ -141,10 +149,10 @@ Public 멤버 함수</h2></td></tr>
 <tr class="separator:a48f6bdd631029d48d32b6fdb49c8a0f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a19b63cdd0d14e44b0c895c1de4272a83" id="r_a19b63cdd0d14e44b0c895c1de4272a83"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a19b63cdd0d14e44b0c895c1de4272a83">RemoveActor</a> (<a class="el" href="classITileActor.html">ITileActor</a> *Actor)</td></tr>
 <tr class="separator:a19b63cdd0d14e44b0c895c1de4272a83"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2f7d065f6a92db308414aa60fbcf60e2" id="r_a2f7d065f6a92db308414aa60fbcf60e2"><td class="memItemLeft" align="right" valign="top">int32&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a2f7d065f6a92db308414aa60fbcf60e2">GetWidth</a> () const</td></tr>
+<tr class="memitem:a2f7d065f6a92db308414aa60fbcf60e2" id="r_a2f7d065f6a92db308414aa60fbcf60e2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a2f7d065f6a92db308414aa60fbcf60e2">GetWidth</a> () const</td></tr>
 <tr class="memdesc:a2f7d065f6a92db308414aa60fbcf60e2"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일맵의 가로 길이 (X 방향 타일 개수)  <br /></td></tr>
 <tr class="separator:a2f7d065f6a92db308414aa60fbcf60e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afa5d038f64f7e764be576528271e84be" id="r_afa5d038f64f7e764be576528271e84be"><td class="memItemLeft" align="right" valign="top">int32&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#afa5d038f64f7e764be576528271e84be">GetHeight</a> () const</td></tr>
+<tr class="memitem:afa5d038f64f7e764be576528271e84be" id="r_afa5d038f64f7e764be576528271e84be"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#afa5d038f64f7e764be576528271e84be">GetHeight</a> () const</td></tr>
 <tr class="memdesc:afa5d038f64f7e764be576528271e84be"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일맵의 세로 길이 (Y 방향 타일 개수)  <br /></td></tr>
 <tr class="separator:afa5d038f64f7e764be576528271e84be"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abf121def7b1e09110c3d5ec75723ee1c" id="r_abf121def7b1e09110c3d5ec75723ee1c"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#abf121def7b1e09110c3d5ec75723ee1c">GetTileSize</a> () const</td></tr>
@@ -153,27 +161,60 @@ Public 멤버 함수</h2></td></tr>
 <tr class="memitem:a864cb72c7520939a6a6ec6b848f962b1" id="r_a864cb72c7520939a6a6ec6b848f962b1"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a864cb72c7520939a6a6ec6b848f962b1">IsValidIndex</a> (const <a class="el" href="structFTileIndex.html">FTileIndex</a> &amp;TileIndex) const</td></tr>
 <tr class="memdesc:a864cb72c7520939a6a6ec6b848f962b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일 인덱스가 이 맵 범위 안의 유효한 좌표인지 검사  <br /></td></tr>
 <tr class="separator:a864cb72c7520939a6a6ec6b848f962b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6042a43536c130313584c49626eba5cf" id="r_a6042a43536c130313584c49626eba5cf"><td class="memItemLeft" align="right" valign="top">TArray&lt; TScriptInterface&lt; <a class="el" href="classITileActor.html">ITileActor</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a6042a43536c130313584c49626eba5cf">GetActorsOnTile</a> (const <a class="el" href="structFTileIndex.html">FTileIndex</a> &amp;TileIndex, <a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3">ETileLayerFlag</a> LayerFilter=<a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3ab1c94ca2fbc3e78fc30069c8d0f01680">ETileLayerFlag::All</a>) const</td></tr>
+<tr class="memdesc:a6042a43536c130313584c49626eba5cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일에 있는 액터들을 레이어로 필터해 반환 (코어)  <br /></td></tr>
+<tr class="separator:a6042a43536c130313584c49626eba5cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b6746e2b31fd1f24963020db45af713" id="r_a9b6746e2b31fd1f24963020db45af713"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a9b6746e2b31fd1f24963020db45af713"><td class="memTemplItemLeft" align="right" valign="top">TArray&lt; T * &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classATileMap.html#a9b6746e2b31fd1f24963020db45af713">GetActorsOnTile</a> (const <a class="el" href="structFTileIndex.html">FTileIndex</a> &amp;TileIndex, <a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3">ETileLayerFlag</a> LayerFilter=<a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3ab1c94ca2fbc3e78fc30069c8d0f01680">ETileLayerFlag::All</a>) const</td></tr>
+<tr class="memdesc:a9b6746e2b31fd1f24963020db45af713"><td class="mdescLeft">&#160;</td><td class="mdescRight">코어의 타입 지정 버전 — T로 캐스트되는 액터만 배열로 반환  <br /></td></tr>
+<tr class="separator:a9b6746e2b31fd1f24963020db45af713"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab01fa367f9978e0229d6aaaec0fd2ac4" id="r_ab01fa367f9978e0229d6aaaec0fd2ac4"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:ab01fa367f9978e0229d6aaaec0fd2ac4"><td class="memTemplItemLeft" align="right" valign="top">T *&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classATileMap.html#ab01fa367f9978e0229d6aaaec0fd2ac4">GetActorOnTile</a> (const <a class="el" href="structFTileIndex.html">FTileIndex</a> &amp;TileIndex, <a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3">ETileLayerFlag</a> LayerFilter=<a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3ab1c94ca2fbc3e78fc30069c8d0f01680">ETileLayerFlag::All</a>) const</td></tr>
+<tr class="memdesc:ab01fa367f9978e0229d6aaaec0fd2ac4"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일 위 T 타입 액터 하나 반환 (없으면 nullptr)  <br /></td></tr>
+<tr class="separator:ab01fa367f9978e0229d6aaaec0fd2ac4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
 Protected 속성</h2></td></tr>
-<tr class="memitem:a83e09d2fa0b282497800e4867362c435" id="r_a83e09d2fa0b282497800e4867362c435"><td class="memItemLeft" align="right" valign="top">int32&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a83e09d2fa0b282497800e4867362c435">mWidth</a> = 9</td></tr>
+<tr class="memitem:a83e09d2fa0b282497800e4867362c435" id="r_a83e09d2fa0b282497800e4867362c435"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a83e09d2fa0b282497800e4867362c435">mWidth</a> = 9</td></tr>
+<tr class="memdesc:a83e09d2fa0b282497800e4867362c435"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일맵 가로 길이 (X 방향 타일 개수)  <br /></td></tr>
 <tr class="separator:a83e09d2fa0b282497800e4867362c435"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a22d4041acc9c8e7d894ba79934bfd7f5" id="r_a22d4041acc9c8e7d894ba79934bfd7f5"><td class="memItemLeft" align="right" valign="top">int32&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a22d4041acc9c8e7d894ba79934bfd7f5">mHeight</a> = 9</td></tr>
+<tr class="memitem:a22d4041acc9c8e7d894ba79934bfd7f5" id="r_a22d4041acc9c8e7d894ba79934bfd7f5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a22d4041acc9c8e7d894ba79934bfd7f5">mHeight</a> = 9</td></tr>
+<tr class="memdesc:a22d4041acc9c8e7d894ba79934bfd7f5"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일맵 세로 길이 (Y 방향 타일 개수)  <br /></td></tr>
 <tr class="separator:a22d4041acc9c8e7d894ba79934bfd7f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9ca2d5e153f0564f4de1ff50fce2843a" id="r_a9ca2d5e153f0564f4de1ff50fce2843a"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a9ca2d5e153f0564f4de1ff50fce2843a">mTileSize</a> = 100.0f</td></tr>
+<tr class="memdesc:a9ca2d5e153f0564f4de1ff50fce2843a"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일 한 칸의 월드 크기 (cm)  <br /></td></tr>
 <tr class="separator:a9ca2d5e153f0564f4de1ff50fce2843a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acb40f4e6eae1d8e41d101fb79204b913" id="r_acb40f4e6eae1d8e41d101fb79204b913"><td class="memItemLeft" align="right" valign="top">TObjectPtr&lt; UInstancedStaticMeshComponent &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#acb40f4e6eae1d8e41d101fb79204b913">mTileMeshComponent</a></td></tr>
+<tr class="memdesc:acb40f4e6eae1d8e41d101fb79204b913"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일 그리드를 그리는 인스턴스드 메시 컴포넌트  <br /></td></tr>
 <tr class="separator:acb40f4e6eae1d8e41d101fb79204b913"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ce380ac5a2fce334555e09b7ca7753e" id="r_a3ce380ac5a2fce334555e09b7ca7753e"><td class="memItemLeft" align="right" valign="top">TObjectPtr&lt; UStaticMesh &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a3ce380ac5a2fce334555e09b7ca7753e">mTileMesh</a></td></tr>
+<tr class="memdesc:a3ce380ac5a2fce334555e09b7ca7753e"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일 한 칸에 사용할 메시 (기본: 엔진 Plane)  <br /></td></tr>
 <tr class="separator:a3ce380ac5a2fce334555e09b7ca7753e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acf40130a4f009f6ed34e6403c06662ff" id="r_acf40130a4f009f6ed34e6403c06662ff"><td class="memItemLeft" align="right" valign="top">TObjectPtr&lt; UMaterialInterface &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#acf40130a4f009f6ed34e6403c06662ff">mTileMaterial</a></td></tr>
+<tr class="memdesc:acf40130a4f009f6ed34e6403c06662ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일 메시에 덮어쓸 머티리얼 (null이면 메시 기본 머티리얼)  <br /></td></tr>
 <tr class="separator:acf40130a4f009f6ed34e6403c06662ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a652e79e7a6f50b1e70d91841d87161d7" id="r_a652e79e7a6f50b1e70d91841d87161d7"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a652e79e7a6f50b1e70d91841d87161d7">mTileVisualScale</a> = 0.95f</td></tr>
+<tr class="memdesc:a652e79e7a6f50b1e70d91841d87161d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일 시각 크기 비율 (1.0 미만이면 타일 사이에 틈이 생겨 격자선처럼 보임)  <br /></td></tr>
 <tr class="separator:a652e79e7a6f50b1e70d91841d87161d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3b93f5833d356a010e45c8768fbd744f" id="r_a3b93f5833d356a010e45c8768fbd744f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTileHighlightStyle.html">FTileHighlightStyle</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a3b93f5833d356a010e45c8768fbd744f">mAimStyle</a></td></tr>
+<tr class="memdesc:a3b93f5833d356a010e45c8768fbd744f"><td class="mdescLeft">&#160;</td><td class="mdescRight">조준 범위 스타일 (우선순위 최하, 바닥에 깔림)  <br /></td></tr>
+<tr class="separator:a3b93f5833d356a010e45c8768fbd744f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a22669d808894c15663029f6f9e1240f4" id="r_a22669d808894c15663029f6f9e1240f4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTileHighlightStyle.html">FTileHighlightStyle</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a22669d808894c15663029f6f9e1240f4">mSelectStyle</a></td></tr>
+<tr class="memdesc:a22669d808894c15663029f6f9e1240f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">선택 타일 스타일 (Aim 위에 덮어씀)  <br /></td></tr>
+<tr class="separator:a22669d808894c15663029f6f9e1240f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ec71523161e487911cb7b5e4450d6c3" id="r_a4ec71523161e487911cb7b5e4450d6c3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTileHighlightStyle.html">FTileHighlightStyle</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a4ec71523161e487911cb7b5e4450d6c3">mEffectStyle</a></td></tr>
+<tr class="memdesc:a4ec71523161e487911cb7b5e4450d6c3"><td class="mdescLeft">&#160;</td><td class="mdescRight">영향 범위 스타일 (우선순위 최상, 펄스로 알파 변조)  <br /></td></tr>
+<tr class="separator:a4ec71523161e487911cb7b5e4450d6c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeca6aa6e7c1fa45bf7238770c441ddde" id="r_aeca6aa6e7c1fa45bf7238770c441ddde"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#aeca6aa6e7c1fa45bf7238770c441ddde">mPulseIntensity</a> = 0.8f</td></tr>
+<tr class="memdesc:aeca6aa6e7c1fa45bf7238770c441ddde"><td class="mdescLeft">&#160;</td><td class="mdescRight">펄스 강도 (Effect 알파에 곱하는 진동의 진폭, 0~1)  <br /></td></tr>
+<tr class="separator:aeca6aa6e7c1fa45bf7238770c441ddde"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac8010d54070e164f44a9a8a44784674c" id="r_ac8010d54070e164f44a9a8a44784674c"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#ac8010d54070e164f44a9a8a44784674c">mPulsePeriod</a> = 1.0f</td></tr>
+<tr class="memdesc:ac8010d54070e164f44a9a8a44784674c"><td class="mdescLeft">&#160;</td><td class="mdescRight">펄스 주기 (초)  <br /></td></tr>
+<tr class="separator:ac8010d54070e164f44a9a8a44784674c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock">
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00025">25</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00027">27</a> 번째 라인에서 정의되었습니다.</p>
 </div><h2 class="groupheader">생성자 &amp; 소멸자 문서화</h2>
 <a id="a24f9b89617bc9616633c976e8a9f6925" name="a24f9b89617bc9616633c976e8a9f6925"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a24f9b89617bc9616633c976e8a9f6925">&#9670;&#160;</a></span>ATileMap()</h2>
@@ -190,11 +231,76 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00025">25</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00045">45</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
 <h2 class="groupheader">멤버 함수 문서화</h2>
+<a id="aa70199cb7c54edeaf16dd5cda7a003ee" name="aa70199cb7c54edeaf16dd5cda7a003ee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa70199cb7c54edeaf16dd5cda7a003ee">&#9670;&#160;</a></span>CanPlace()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool ATileMap::CanPlace </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structFTileIndex.html">FTileIndex</a> &amp;&#160;</td>
+          <td class="paramname"><em>TileIndex</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classITileActor.html">ITileActor</a> *&#160;</td>
+          <td class="paramname"><em>Incoming</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>진입 액터를 해당 타일에 배치할 수 있는지 검사하는 함수</p>
+<p>막히지 않았거나, 막혔어도 기존 액터를 교체할 수 있으면 배치 가능 </p><dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">TileIndex</td><td>검사할 타일 인덱스 </td></tr>
+    <tr><td class="paramname">Incoming</td><td>진입하려는 액터 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>반환값</dt><dd>배치 가능 여부 (맵 범위 밖은 불가) </dd></dl>
+
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00811">811</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="aa9631e87b31c75cb8b55e63c9133a045" name="aa9631e87b31c75cb8b55e63c9133a045"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa9631e87b31c75cb8b55e63c9133a045">&#9670;&#160;</a></span>ClearTileHighlight()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ATileMap::ClearTileHighlight </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="TileHighlight_8h.html#afa8f0977bfa9d4ffd2ae4ccbfedf2410">ETileHighlightFlag</a>&#160;</td>
+          <td class="paramname"><em>Flag</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>OR로 조합한 여러 비트를 한 번에 끌 수 있다 (예: Select | Effect). Set과 달리 하위 의존 레이어 캐스케이드는 하지 않는다 — 지정한 비트만 끈다. (캐스케이드 무효화가 필요하면 해당 상위 레이어를 다시 Set하면 된다.) </p><dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">Flag</td><td>: 해제할 강조 상태 (비트 조합 가능) </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00791">791</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
 <a id="a7b0c5e405abc32bb23c78dbf28945c55" name="a7b0c5e405abc32bb23c78dbf28945c55"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7b0c5e405abc32bb23c78dbf28945c55">&#9670;&#160;</a></span>CompleteActorMovement()</h2>
 
@@ -211,12 +317,146 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00173">173</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00885">885</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a55432b193efe6d3f7df433fe5feffd77" name="a55432b193efe6d3f7df433fe5feffd77"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a55432b193efe6d3f7df433fe5feffd77">&#9670;&#160;</a></span>GetAimableTiles()</h2>
+<a id="ab01fa367f9978e0229d6aaaec0fd2ac4" name="ab01fa367f9978e0229d6aaaec0fd2ac4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab01fa367f9978e0229d6aaaec0fd2ac4">&#9670;&#160;</a></span>GetActorOnTile()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">T * ATileMap::GetActorOnTile </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structFTileIndex.html">FTileIndex</a> &amp;&#160;</td>
+          <td class="paramname"><em>TileIndex</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3">ETileLayerFlag</a>&#160;</td>
+          <td class="paramname"><em>LayerFilter</em> = <code><a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3ab1c94ca2fbc3e78fc30069c8d0f01680">ETileLayerFlag::All</a></code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>타일당 1개 보장되는 액터(예: 유닛)용. 여러 개 가능하면 배열 버전 사용. </p><dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">TileIndex</td><td>: 조회할 타일 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">LayerFilter</td><td>: 포함할 레이어 (기본 All) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>반환값</dt><dd>T* : T로 캐스트된 첫 액터 또는 nullptr </dd></dl>
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00253">253</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a6042a43536c130313584c49626eba5cf" name="a6042a43536c130313584c49626eba5cf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6042a43536c130313584c49626eba5cf">&#9670;&#160;</a></span>GetActorsOnTile() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">TArray&lt; TScriptInterface&lt; <a class="el" href="classITileActor.html">ITileActor</a> &gt; &gt; ATileMap::GetActorsOnTile </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structFTileIndex.html">FTileIndex</a> &amp;&#160;</td>
+          <td class="paramname"><em>TileIndex</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3">ETileLayerFlag</a>&#160;</td>
+          <td class="paramname"><em>LayerFilter</em> = <code><a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3ab1c94ca2fbc3e78fc30069c8d0f01680">ETileLayerFlag::All</a></code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">TileIndex</td><td>: 조회할 타일 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">LayerFilter</td><td>: 포함할 레이어 (All이면 전체) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>반환값</dt><dd>TArray&lt;TScriptInterface&lt;ITileActor&gt;&gt; : 해당 타일의 액터 목록 (범위 밖이면 빈 배열) </dd></dl>
+
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00251">251</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a9b6746e2b31fd1f24963020db45af713" name="a9b6746e2b31fd1f24963020db45af713"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9b6746e2b31fd1f24963020db45af713">&#9670;&#160;</a></span>GetActorsOnTile() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">TArray&lt; T * &gt; ATileMap::GetActorsOnTile </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structFTileIndex.html">FTileIndex</a> &amp;&#160;</td>
+          <td class="paramname"><em>TileIndex</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3">ETileLayerFlag</a>&#160;</td>
+          <td class="paramname"><em>LayerFilter</em> = <code><a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3ab1c94ca2fbc3e78fc30069c8d0f01680">ETileLayerFlag::All</a></code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>T가 반환 타입에만 등장해 추론 불가 → 호출 시 &lt;T&gt; 명시해야 이 버전이 선택됨 </p><dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">TileIndex</td><td>: 조회할 타일 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">LayerFilter</td><td>: 포함할 레이어 (기본 All — 타입 캐스트가 1차 필터라 보통 생략) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>반환값</dt><dd>TArray&lt;T*&gt; : T로 캐스트된 액터 목록 </dd></dl>
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00231">231</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a43eee8821eeee47995060b897d47887d" name="a43eee8821eeee47995060b897d47887d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a43eee8821eeee47995060b897d47887d">&#9670;&#160;</a></span>GetAimableTiles()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -230,7 +470,7 @@ Protected 속성</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int32&#160;</td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td>
           <td class="paramname"><em>Range</em>, </td>
         </tr>
         <tr>
@@ -249,7 +489,13 @@ Protected 속성</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>bIndirect</em>&#160;</td>
+          <td class="paramname"><em>bIndirect</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classITileActor.html">ITileActor</a> *&#160;</td>
+          <td class="paramname"><em>Incoming</em> = <code>nullptr</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -265,13 +511,19 @@ Protected 속성</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">Range</td><td>: 사거리 (1=인접 칸, Single은 무시) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">Pattern</td><td>: 조준 패턴 </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">bIncludeOccupied</td><td>: 점유된 타일(장애물/유닛)을 조준 가능으로 포함할지 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">bIndirect</td><td>: 곡사 여부 (장애물 너머 조준 가능한지) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">bIndirect</td><td>: 곡사 여부 (장애물/유닛 너머 조준 가능한지) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">Incoming</td><td>: 교체할 액터. 교체가 없을 경우는 nullptr </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>반환값</dt><dd>TArray&lt;FTileIndex&gt; : 조준 가능한 타일 좌표 목록 (맵 밖 좌표 제외) </dd></dl>
+<dl class="section return"><dt>반환값</dt><dd>TArray&lt;FTileIndex&gt; : 조준 가능한 타일 좌표 목록 (맵 밖 좌표 제외)</dd></dl>
+<ul>
+<li>1단계에서는 패턴에 따라 후보타일을 수집하고</li>
+<li>2단계에서는 각각의 후보타일에 대해서 장애물 막힘, 타겟 가능, 교체 가능 여부 검사해서 최종 판단 </li>
+</ul>
+<p>페이즈2: 각각의 타이레 대해서 장애물 막힘, 포함 여부, 교체 여부 판단해서 필터링</p>
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00143">143</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00544">544</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -302,7 +554,7 @@ Protected 속성</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int32&#160;</td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td>
           <td class="paramname"><em>Size</em>, </td>
         </tr>
         <tr>
@@ -331,7 +583,7 @@ Protected 속성</h2></td></tr>
 </dl>
 <dl class="section return"><dt>반환값</dt><dd>TArray&lt;FTileIndex&gt; : 영향받는 타일 좌표 목록 (맵 밖 좌표 제외) </dd></dl>
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00149">149</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00624">624</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -342,7 +594,7 @@ Protected 속성</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int32 ATileMap::GetHeight </td>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> ATileMap::GetHeight </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -350,7 +602,7 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00102">102</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00206">206</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -369,7 +621,7 @@ Protected 속성</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int32&#160;</td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td>
           <td class="paramname"><em>MoveDistance</em>&#160;</td>
         </tr>
         <tr>
@@ -387,9 +639,16 @@ Protected 속성</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>반환값</dt><dd>TArray&lt;FTileIndex&gt; : 도달 가능한 타일 좌표 목록 (Origin 제외, 맵 밖 제외) </dd></dl>
+<dl class="section return"><dt>반환값</dt><dd>TArray&lt;FTileIndex&gt; : 도달 가능한 타일 좌표 목록 (Origin 제외, 맵 밖 제외)</dd></dl>
+<ul>
+<li>이동범위는 맨해튼 이동방식 사용 (대각선 이동 없음)</li>
+<li>시작점에서부터 4방향으로 이동할 수 있는 타일을 조사한 후 배열에 추가</li>
+<li>배열에 있는 타일을 기준으로 이동할 수 있는 옆 타일을 조사</li>
+<li>이미 선택된 타일의 인덱스를 Distance[] 배열에서 관리해서 중복 선택 방지</li>
+<li>최대이동거리만큼 반복 </li>
+</ul>
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00137">137</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00324">324</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -408,7 +667,7 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00107">107</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00211">211</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -419,7 +678,7 @@ Protected 속성</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int32 ATileMap::GetWidth </td>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> ATileMap::GetWidth </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -427,45 +686,7 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00097">97</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="a4249d3bab8575efe80854d1cc16408c9" name="a4249d3bab8575efe80854d1cc16408c9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4249d3bab8575efe80854d1cc16408c9">&#9670;&#160;</a></span>IsBlocking()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool ATileMap::IsBlocking </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="structFTileIndex.html">FTileIndex</a> &amp;&#160;</td>
-          <td class="paramname"><em>TileIndex</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3">ETileLayerFlag</a>&#160;</td>
-          <td class="paramname"><em>LayerFlag</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td> const</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>배치 가능한지 체크하는 함수 </p><dl class="params"><dt>매개변수</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">TileIndex</td><td>배치할 지점 인덱스 </td></tr>
-    <tr><td class="paramname">LayerFlag</td><td>배치 액터 Layer </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>반환값</dt><dd>가능 여부 </dd></dl>
-
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00155">155</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00201">201</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -492,7 +713,7 @@ Protected 속성</h2></td></tr>
 </dl>
 <dl class="section return"><dt>반환값</dt><dd>bool : 0 &lt;= X &lt; Width &amp;&amp; 0 &lt;= Y &lt; Height 이면 true </dd></dl>
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00112">112</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00216">216</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -520,7 +741,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00048">48</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00084">84</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -556,8 +777,12 @@ Protected 속성</h2></td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section pre"><dt>전제조건</dt><dd>NextTransform.mIndex가 맵 범위 안의 유효한 좌표여야 한다 </dd>
+<dd>
+해당 타일이 Actor 레이어에 대해 막혀있지 않아야 한다 (호출 전 IsBlocked으로 확인) </dd></dl>
+<dl class="section warning"><dt>경고</dt><dd>사전조건 위반 시 checkf로 중단됨 </dd></dl>
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00178">178</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00897">897</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -577,7 +802,50 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00188">188</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00919">919</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ab012d4bd0559ff1b7c823abe3e934e5b" name="ab012d4bd0559ff1b7c823abe3e934e5b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab012d4bd0559ff1b7c823abe3e934e5b">&#9670;&#160;</a></span>SetTileHighlight()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ATileMap::SetTileHighlight </td>
+          <td>(</td>
+          <td class="paramtype">const TArray&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>Tiles</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="TileHighlight_8h.html#afa8f0977bfa9d4ffd2ae4ccbfedf2410">ETileHighlightFlag</a>&#160;</td>
+          <td class="paramname"><em>Flag</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Flag 비트를 가진 기존 타일에서 끄고 Tiles에만 켠다. 상위/무관 플래그 비트는 보존하므로, Aim 위에 Select를 칠해도 Aim은 유지된다.</p>
+<p>드릴다운 의존성(Aim → Select → Effect): 상위 레이어를 새로 설정하면 하위(더 구체적) 레이어는 무효가 되어 모든 타일에서 자동 클리어된다.</p><ul>
+<li>Aim 설정 → Select, Effect 클리어</li>
+<li>Select 설정 → Effect 클리어 (Aim은 맥락으로 유지)</li>
+<li>Effect 설정 → 클리어 없음</li>
+</ul>
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">Tiles</td><td>: 강조할 타일 목록 (맵 밖 좌표는 무시) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">Flag</td><td>: 설정할 강조 상태 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00745">745</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -613,8 +881,40 @@ Protected 속성</h2></td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section pre"><dt>전제조건</dt><dd>NextTransform.mIndex가 맵 범위 안의 유효한 좌표여야 한다 </dd>
+<dd>
+해당 타일이 Actor 레이어에 대해 막혀있지 않아야 한다 (호출 전 IsBlocked으로 확인) </dd></dl>
+<dl class="section warning"><dt>경고</dt><dd>사전조건 위반 시 checkf로 중단됨 </dd></dl>
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00161">161</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00866">866</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a1acd6095836c59755f9b2f898a186a3e" name="a1acd6095836c59755f9b2f898a186a3e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1acd6095836c59755f9b2f898a186a3e">&#9670;&#160;</a></span>Tick()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ATileMap::Tick </td>
+          <td>(</td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>DeltaSeconds</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00092">92</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -641,7 +941,7 @@ Protected 속성</h2></td></tr>
 </dl>
 <dl class="section return"><dt>반환값</dt><dd>FVector : 해당 타일 중심의 월드 위치 </dd></dl>
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00125">125</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00283">283</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -668,7 +968,7 @@ Protected 속성</h2></td></tr>
 </dl>
 <dl class="section return"><dt>반환값</dt><dd>FTransform : 해당 타일 중심의 월드 트랜스폼 (위치+회전+스케일) </dd></dl>
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00119">119</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00273">273</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -695,11 +995,59 @@ Protected 속성</h2></td></tr>
 </dl>
 <dl class="section return"><dt>반환값</dt><dd><a class="el" href="structFTileIndex.html" title="타일 맵 상 인덱스 좌표">FTileIndex</a> : 가장 가까운 타일 인덱스 (범위 밖 처리 정책은 구현 시 결정) </dd></dl>
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00131">131</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00293">293</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
 <h2 class="groupheader">멤버 데이터 문서화</h2>
+<a id="a3b93f5833d356a010e45c8768fbd744f" name="a3b93f5833d356a010e45c8768fbd744f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3b93f5833d356a010e45c8768fbd744f">&#9670;&#160;</a></span>mAimStyle</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structFTileHighlightStyle.html">FTileHighlightStyle</a> ATileMap::mAimStyle</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00317">317</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a4ec71523161e487911cb7b5e4450d6c3" name="a4ec71523161e487911cb7b5e4450d6c3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4ec71523161e487911cb7b5e4450d6c3">&#9670;&#160;</a></span>mEffectStyle</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structFTileHighlightStyle.html">FTileHighlightStyle</a> ATileMap::mEffectStyle</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00329">329</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
 <a id="a22d4041acc9c8e7d894ba79934bfd7f5" name="a22d4041acc9c8e7d894ba79934bfd7f5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a22d4041acc9c8e7d894ba79934bfd7f5">&#9670;&#160;</a></span>mHeight</h2>
 
@@ -710,7 +1058,7 @@ Protected 속성</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int32 ATileMap::mHeight = 9</td>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> ATileMap::mHeight = 9</td>
         </tr>
       </table>
   </td>
@@ -720,7 +1068,79 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00169">169</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00277">277</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="aeca6aa6e7c1fa45bf7238770c441ddde" name="aeca6aa6e7c1fa45bf7238770c441ddde"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeca6aa6e7c1fa45bf7238770c441ddde">&#9670;&#160;</a></span>mPulseIntensity</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">float ATileMap::mPulseIntensity = 0.8f</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00335">335</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ac8010d54070e164f44a9a8a44784674c" name="ac8010d54070e164f44a9a8a44784674c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac8010d54070e164f44a9a8a44784674c">&#9670;&#160;</a></span>mPulsePeriod</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">float ATileMap::mPulsePeriod = 1.0f</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00341">341</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a22669d808894c15663029f6f9e1240f4" name="a22669d808894c15663029f6f9e1240f4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a22669d808894c15663029f6f9e1240f4">&#9670;&#160;</a></span>mSelectStyle</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structFTileHighlightStyle.html">FTileHighlightStyle</a> ATileMap::mSelectStyle</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00323">323</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -744,7 +1164,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00186">186</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00303">303</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -768,7 +1188,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00182">182</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00297">297</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -792,7 +1212,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00178">178</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00291">291</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -816,7 +1236,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00173">173</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00283">283</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -840,7 +1260,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00190">190</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00309">309</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -854,7 +1274,7 @@ Protected 속성</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int32 ATileMap::mWidth = 9</td>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> ATileMap::mWidth = 9</td>
         </tr>
       </table>
   </td>
@@ -864,7 +1284,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00165">165</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00271">271</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

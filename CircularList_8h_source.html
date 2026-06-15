@@ -456,7 +456,7 @@ $(document).ready(function(){initNavTree('CircularList_8h_source.html',''); init
 <div class="line"><a id="l00312" name="l00312"></a><span class="lineno"><a class="line" href="classTCircularDoubleLinkedList.html#a08684ab8e9535a38da1d2df21afeb207">  312</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classTCircularDoubleLinkedList.html#a08684ab8e9535a38da1d2df21afeb207">Empty</a>()</div>
 <div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span>    {</div>
 <div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span>        <a class="code hl_class" href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html">TCircularDoubleLinkedListNode</a>* Node;</div>
-<div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span>        <span class="keywordflow">for</span> (int32 i = 0; i &lt; ListSize; ++i)</div>
+<div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span>        <span class="keywordflow">for</span> (<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> i = 0; i &lt; ListSize; ++i)</div>
 <div class="line"><a id="l00316" name="l00316"></a><span class="lineno">  316</span>        {</div>
 <div class="line"><a id="l00317" name="l00317"></a><span class="lineno">  317</span>            Node = HeadNode-&gt;<a class="code hl_variable" href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#af014ab45399d851289a414ad68bacc05">NextNode</a>;</div>
 <div class="line"><a id="l00318" name="l00318"></a><span class="lineno">  318</span>            <span class="keyword">delete</span> HeadNode;</div>
@@ -490,7 +490,7 @@ $(document).ready(function(){initNavTree('CircularList_8h_source.html',''); init
 <div class="line"><a id="l00340" name="l00340"></a><span class="lineno"><a class="line" href="classTCircularDoubleLinkedList.html#ae170b1b9531cd616e9f88c8a930ffa89">  340</a></span>    [[nodiscard]] <a class="code hl_class" href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html">TCircularDoubleLinkedListNode</a>* <a class="code hl_function" href="classTCircularDoubleLinkedList.html#ae170b1b9531cd616e9f88c8a930ffa89">FindNode</a>(<span class="keyword">const</span> ElementType&amp; InElement)</div>
 <div class="line"><a id="l00341" name="l00341"></a><span class="lineno">  341</span>    {</div>
 <div class="line"><a id="l00342" name="l00342"></a><span class="lineno">  342</span>        <a class="code hl_class" href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html">TCircularDoubleLinkedListNode</a>* Node = HeadNode;</div>
-<div class="line"><a id="l00343" name="l00343"></a><span class="lineno">  343</span>        <span class="keywordflow">for</span> (int32 i = 0; i &lt; ListSize; ++i)</div>
+<div class="line"><a id="l00343" name="l00343"></a><span class="lineno">  343</span>        <span class="keywordflow">for</span> (<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> i = 0; i &lt; ListSize; ++i)</div>
 <div class="line"><a id="l00344" name="l00344"></a><span class="lineno">  344</span>        {</div>
 <div class="line"><a id="l00345" name="l00345"></a><span class="lineno">  345</span>            <span class="keywordflow">if</span> (Node-&gt;<a class="code hl_function" href="classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html#a2508aba11a3cfe1676f84e5c78de1dd8">GetValue</a>() == InElement)</div>
 <div class="line"><a id="l00346" name="l00346"></a><span class="lineno">  346</span>            {</div>
@@ -519,7 +519,7 @@ $(document).ready(function(){initNavTree('CircularList_8h_source.html',''); init
 </div>
 <div class="line"><a id="l00365" name="l00365"></a><span class="lineno">  365</span> </div>
 <div class="foldopen" id="foldopen00366" data-start="{" data-end="}">
-<div class="line"><a id="l00366" name="l00366"></a><span class="lineno"><a class="line" href="classTCircularDoubleLinkedList.html#a28b8020825f3c99160cd201e33f76b50">  366</a></span>    [[nodiscard]] int32 <a class="code hl_function" href="classTCircularDoubleLinkedList.html#a28b8020825f3c99160cd201e33f76b50">Num</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00366" name="l00366"></a><span class="lineno"><a class="line" href="classTCircularDoubleLinkedList.html#a28b8020825f3c99160cd201e33f76b50">  366</a></span>    [[nodiscard]] <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="classTCircularDoubleLinkedList.html#a28b8020825f3c99160cd201e33f76b50">Num</a>()<span class="keyword"> const</span></div>
 <div class="line"><a id="l00367" name="l00367"></a><span class="lineno">  367</span><span class="keyword">    </span>{</div>
 <div class="line"><a id="l00368" name="l00368"></a><span class="lineno">  368</span>        <span class="keywordflow">return</span> ListSize;</div>
 <div class="line"><a id="l00369" name="l00369"></a><span class="lineno">  369</span>    }</div>
@@ -527,7 +527,7 @@ $(document).ready(function(){initNavTree('CircularList_8h_source.html',''); init
 <div class="line"><a id="l00370" name="l00370"></a><span class="lineno">  370</span> </div>
 <div class="line"><a id="l00371" name="l00371"></a><span class="lineno">  371</span><span class="keyword">protected</span>:</div>
 <div class="foldopen" id="foldopen00372" data-start="{" data-end="}">
-<div class="line"><a id="l00372" name="l00372"></a><span class="lineno"><a class="line" href="classTCircularDoubleLinkedList.html#a728b9e7d642db8183c43da36c1d611b6">  372</a></span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classTCircularDoubleLinkedList.html#a728b9e7d642db8183c43da36c1d611b6">SetListSize</a>(int32 NewListSize)</div>
+<div class="line"><a id="l00372" name="l00372"></a><span class="lineno"><a class="line" href="classTCircularDoubleLinkedList.html#a728b9e7d642db8183c43da36c1d611b6">  372</a></span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classTCircularDoubleLinkedList.html#a728b9e7d642db8183c43da36c1d611b6">SetListSize</a>(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> NewListSize)</div>
 <div class="line"><a id="l00373" name="l00373"></a><span class="lineno">  373</span>    {</div>
 <div class="line"><a id="l00374" name="l00374"></a><span class="lineno">  374</span>        ListSize = NewListSize;</div>
 <div class="line"><a id="l00375" name="l00375"></a><span class="lineno">  375</span>    }</div>
@@ -535,11 +535,12 @@ $(document).ready(function(){initNavTree('CircularList_8h_source.html',''); init
 <div class="line"><a id="l00376" name="l00376"></a><span class="lineno">  376</span> </div>
 <div class="line"><a id="l00377" name="l00377"></a><span class="lineno">  377</span><span class="keyword">private</span>:</div>
 <div class="line"><a id="l00378" name="l00378"></a><span class="lineno">  378</span>    TCircularDoubleLinkedListNode* HeadNode;</div>
-<div class="line"><a id="l00379" name="l00379"></a><span class="lineno">  379</span>    int32 ListSize;</div>
+<div class="line"><a id="l00379" name="l00379"></a><span class="lineno">  379</span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> ListSize;</div>
 <div class="line"><a id="l00380" name="l00380"></a><span class="lineno">  380</span>};</div>
 </div>
 <div class="line"><a id="l00381" name="l00381"></a><span class="lineno">  381</span> </div>
 <div class="ttc" id="aRDMinimal_8h_html"><div class="ttname"><a href="RDMinimal_8h.html">RDMinimal.h</a></div><div class="ttdoc">RD 프로젝트 전 영역에서 사용되는 최소한의 포함 헤더</div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_ada104807b93ac7cd59dac80d98ba857b"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a></div><div class="ttdeci">int32</div><div class="ttdef"><b>Definition</b> <a href="RoomTransitionSubsystem_8h_source.html#l00021">RoomTransitionSubsystem.h:21</a></div></div>
 <div class="ttc" id="aclassTCircularDoubleLinkedListIterator_html"><div class="ttname"><a href="classTCircularDoubleLinkedListIterator.html">TCircularDoubleLinkedListIterator</a></div><div class="ttdoc">순환 더블 링크드 리스트의 반복자</div><div class="ttdef"><b>Definition</b> <a href="CircularList_8h_source.html#l00021">CircularList.h:22</a></div></div>
 <div class="ttc" id="aclassTCircularDoubleLinkedListIterator_html_a26bd6ff3acf89bc632182d1b26bfd248"><div class="ttname"><a href="classTCircularDoubleLinkedListIterator.html#a26bd6ff3acf89bc632182d1b26bfd248">TCircularDoubleLinkedListIterator::operator-&gt;</a></div><div class="ttdeci">ElementType &amp; operator-&gt;() const</div><div class="ttdef"><b>Definition</b> <a href="CircularList_8h_source.html#l00062">CircularList.h:62</a></div></div>
 <div class="ttc" id="aclassTCircularDoubleLinkedListIterator_html_a4da1406c0e47a28d7669ce325ff510ca"><div class="ttname"><a href="classTCircularDoubleLinkedListIterator.html#a4da1406c0e47a28d7669ce325ff510ca">TCircularDoubleLinkedListIterator::operator!=</a></div><div class="ttdeci">bool operator!=(const TCircularDoubleLinkedListIterator &amp;Rhs) const</div><div class="ttdef"><b>Definition</b> <a href="CircularList_8h_source.html#l00081">CircularList.h:81</a></div></div>

@@ -1,13 +1,21 @@
 var searchData=
 [
-  ['charactercardwidget_2ecpp_0',['CharacterCardWidget.cpp',['../CharacterCardWidget_8cpp.html',1,'']]],
-  ['charactercardwidget_2eh_1',['CharacterCardWidget.h',['../CharacterCardWidget_8h.html',1,'']]],
-  ['characterselecttypes_2eh_2',['CharacterSelectTypes.h',['../CharacterSelectTypes_8h.html',1,'']]],
-  ['characterselectwidget_2ecpp_3',['CharacterSelectWidget.cpp',['../CharacterSelectWidget_8cpp.html',1,'']]],
-  ['characterselectwidget_2eh_4',['CharacterSelectWidget.h',['../CharacterSelectWidget_8h.html',1,'']]],
-  ['circularlist_2ecpp_5',['CircularList.cpp',['../CircularList_8cpp.html',1,'']]],
-  ['circularlist_2eh_6',['CircularList.h',['../CircularList_8h.html',1,'']]],
-  ['circularlisttests_2ecpp_7',['CircularListTests.cpp',['../CircularListTests_8cpp.html',1,'']]],
-  ['combatgamemode_2ecpp_8',['CombatGameMode.cpp',['../CombatGameMode_8cpp.html',1,'']]],
-  ['combatgamemode_2eh_9',['CombatGameMode.h',['../CombatGameMode_8h.html',1,'']]]
+  ['carouselpanelwidget_2ecpp_0',['CarouselPanelWidget.cpp',['../CarouselPanelWidget_8cpp.html',1,'']]],
+  ['carouselpanelwidget_2eh_1',['CarouselPanelWidget.h',['../CarouselPanelWidget_8h.html',1,'']]],
+  ['charactercardwidget_2ecpp_2',['CharacterCardWidget.cpp',['../CharacterCardWidget_8cpp.html',1,'']]],
+  ['charactercardwidget_2eh_3',['CharacterCardWidget.h',['../CharacterCardWidget_8h.html',1,'']]],
+  ['characterselecttypes_2eh_4',['CharacterSelectTypes.h',['../CharacterSelectTypes_8h.html',1,'']]],
+  ['characterselectwidget_2ecpp_5',['CharacterSelectWidget.cpp',['../CharacterSelectWidget_8cpp.html',1,'']]],
+  ['characterselectwidget_2eh_6',['CharacterSelectWidget.h',['../CharacterSelectWidget_8h.html',1,'']]],
+  ['cinematicwidget_2ecpp_7',['CinematicWidget.cpp',['../CinematicWidget_8cpp.html',1,'']]],
+  ['cinematicwidget_2eh_8',['CinematicWidget.h',['../CinematicWidget_8h.html',1,'']]],
+  ['circularlist_2ecpp_9',['CircularList.cpp',['../CircularList_8cpp.html',1,'']]],
+  ['circularlist_2eh_10',['CircularList.h',['../CircularList_8h.html',1,'']]],
+  ['circularlisttests_2ecpp_11',['CircularListTests.cpp',['../CircularListTests_8cpp.html',1,'']]],
+  ['combatcalculatorfunctionlibrary_2ecpp_12',['CombatCalculatorFunctionLibrary.cpp',['../CombatCalculatorFunctionLibrary_8cpp.html',1,'']]],
+  ['combatcalculatorfunctionlibrary_2eh_13',['CombatCalculatorFunctionLibrary.h',['../CombatCalculatorFunctionLibrary_8h.html',1,'']]],
+  ['combatgamemode_2ecpp_14',['CombatGameMode.cpp',['../CombatGameMode_8cpp.html',1,'']]],
+  ['combatgamemode_2eh_15',['CombatGameMode.h',['../CombatGameMode_8h.html',1,'']]],
+  ['combatresult_2ecpp_16',['CombatResult.cpp',['../CombatResult_8cpp.html',1,'']]],
+  ['combatresult_2eh_17',['CombatResult.h',['../CombatResult_8h.html',1,'']]]
 ];

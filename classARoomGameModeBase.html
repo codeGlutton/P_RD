@@ -107,11 +107,10 @@ ARoomGameModeBase에 대한 상속 다이어그램 : </div>
  <div class="center">
   <img src="classARoomGameModeBase.png" usemap="#ARoomGameModeBase_map" alt=""/>
   <map id="ARoomGameModeBase_map" name="ARoomGameModeBase_map">
-<area href="classARDGameModeBase.html" title="RD 프로젝트 게임 모드 베이스" alt="ARDGameModeBase" shape="rect" coords="231,56,375,80"/>
+<area href="classARDGameModeBase.html" title="RD 프로젝트 게임 모드 베이스" alt="ARDGameModeBase" shape="rect" coords="154,56,298,80"/>
 <area href="classACombatGameMode.html" title="전투 방에 대한 GameMode" alt="ACombatGameMode" shape="rect" coords="0,168,144,192"/>
-<area href="classAFrontendGameMode.html" title="게임 시작 전 타이틀/캐릭터 선택 UI를 띄우는 프론트엔드 GameMode" alt="AFrontendGameMode" shape="rect" coords="154,168,298,192"/>
-<area href="classAShopGameMode.html" title="상점 방에 대한 GameMode" alt="AShopGameMode" shape="rect" coords="308,168,452,192"/>
-<area href="classATreasureGameMode.html" title="보상 방에 대한 GameMode" alt="ATreasureGameMode" shape="rect" coords="462,168,606,192"/>
+<area href="classAShopGameMode.html" title="상점 방에 대한 GameMode" alt="AShopGameMode" shape="rect" coords="154,168,298,192"/>
+<area href="classATreasureGameMode.html" title="보상 방에 대한 GameMode" alt="ATreasureGameMode" shape="rect" coords="308,168,452,192"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -119,21 +118,38 @@ ARoomGameModeBase에 대한 상속 다이어그램 : </div>
 Public 멤버 함수</h2></td></tr>
 <tr class="memitem:a2c426ae2c514d7fbd13c56f9f1f50030" id="r_a2c426ae2c514d7fbd13c56f9f1f50030"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARoomGameModeBase.html#a2c426ae2c514d7fbd13c56f9f1f50030">ARoomGameModeBase</a> ()</td></tr>
 <tr class="separator:a2c426ae2c514d7fbd13c56f9f1f50030"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6382996913b7777f3b31626ecd13dda9" id="r_a6382996913b7777f3b31626ecd13dda9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARoomGameModeBase.html#a6382996913b7777f3b31626ecd13dda9">EndRun</a> () const</td></tr>
-<tr class="separator:a6382996913b7777f3b31626ecd13dda9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa9e2f4e1cb7e0b9275255ed867d4ee1d" id="r_aa9e2f4e1cb7e0b9275255ed867d4ee1d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARoomGameModeBase.html#aa9e2f4e1cb7e0b9275255ed867d4ee1d">PreloadTitleRoomAsync</a> () const</td></tr>
-<tr class="separator:aa9e2f4e1cb7e0b9275255ed867d4ee1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa5a6144ab1b33164887f04708c0b7003" id="r_aa5a6144ab1b33164887f04708c0b7003"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARoomGameModeBase.html#aa5a6144ab1b33164887f04708c0b7003">PreloadRoomAsync</a> (int32 RoomRowIndex, int32 RoomColumnIndex) const</td></tr>
-<tr class="separator:aa5a6144ab1b33164887f04708c0b7003"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a191de3f732e1f4871d79c770b0b43acc" id="r_a191de3f732e1f4871d79c770b0b43acc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARoomGameModeBase.html#a191de3f732e1f4871d79c770b0b43acc">PreloadRoomAsync</a> (<a class="el" href="StageLevelType_8h.html#ae0b1317897a714ca0969cdc80dfd5d95">EStageLevelType</a> StageLevel) const</td></tr>
-<tr class="separator:a191de3f732e1f4871d79c770b0b43acc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac14bdad835847d3c9184e3b1db000b14" id="r_ac14bdad835847d3c9184e3b1db000b14"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARoomGameModeBase.html#ac14bdad835847d3c9184e3b1db000b14">TransitionLoadedRoomAsync</a> () const</td></tr>
-<tr class="separator:ac14bdad835847d3c9184e3b1db000b14"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaefefbf7d3ef8d3c2eeac08bc23dbf68" id="r_aaefefbf7d3ef8d3c2eeac08bc23dbf68"><td class="memItemLeft" align="right" valign="top">AActor *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARoomGameModeBase.html#aaefefbf7d3ef8d3c2eeac08bc23dbf68">ChoosePlayerStart_Implementation</a> (AController *Player) override</td></tr>
+<tr class="separator:aaefefbf7d3ef8d3c2eeac08bc23dbf68"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3876c44d3c3bba883a111de9ed6d2f95" id="r_a3876c44d3c3bba883a111de9ed6d2f95"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARoomGameModeBase.html#a3876c44d3c3bba883a111de9ed6d2f95">SelectNextRoom</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> RoomRow, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> RoomColumn)</td></tr>
+<tr class="memdesc:a3876c44d3c3bba883a111de9ed6d2f95"><td class="mdescLeft">&#160;</td><td class="mdescRight">지도에서 방 노드 선택을 요청한다.  <br /></td></tr>
+<tr class="separator:a3876c44d3c3bba883a111de9ed6d2f95"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08267a1f91a08287b9e175b4732bb414" id="r_a08267a1f91a08287b9e175b4732bb414"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARoomGameModeBase.html#a08267a1f91a08287b9e175b4732bb414">EnterSelectedRoom</a> ()</td></tr>
+<tr class="memdesc:a08267a1f91a08287b9e175b4732bb414"><td class="mdescLeft">&#160;</td><td class="mdescRight">선택된 방으로 실제 입장을 요청한다.  <br /></td></tr>
+<tr class="separator:a08267a1f91a08287b9e175b4732bb414"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a33e7f6f7f72b9bce482b93c56479352d" id="r_a33e7f6f7f72b9bce482b93c56479352d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARoomGameModeBase.html#a33e7f6f7f72b9bce482b93c56479352d">AbandonRunFromRoom</a> ()</td></tr>
+<tr class="memdesc:a33e7f6f7f72b9bce482b93c56479352d"><td class="mdescLeft">&#160;</td><td class="mdescRight">런을 종료하고 Frontend로 돌아간다.  <br /></td></tr>
+<tr class="separator:a33e7f6f7f72b9bce482b93c56479352d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85df90a8c1eddf04d4bc9c7aea415365" id="r_a85df90a8c1eddf04d4bc9c7aea415365"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARoomGameModeBase.html#a85df90a8c1eddf04d4bc9c7aea415365">GetMapRoomViews</a> (TArray&lt; <a class="el" href="structFMapRoomView.html">FMapRoomView</a> &gt; &amp;OutRooms) const</td></tr>
+<tr class="memdesc:a85df90a8c1eddf04d4bc9c7aea415365"><td class="mdescLeft">&#160;</td><td class="mdescRight">지도 UI가 그릴 방 노드 View 데이터를 가져온다.  <br /></td></tr>
+<tr class="separator:a85df90a8c1eddf04d4bc9c7aea415365"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad97bbdb90bd5739a307f6c95ad9f7982" id="r_ad97bbdb90bd5739a307f6c95ad9f7982"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARoomGameModeBase.html#ad97bbdb90bd5739a307f6c95ad9f7982">GetRunControlView</a> (<a class="el" href="structFRunControlView.html">FRunControlView</a> &amp;OutView) const</td></tr>
+<tr class="memdesc:ad97bbdb90bd5739a307f6c95ad9f7982"><td class="mdescLeft">&#160;</td><td class="mdescRight">지도 첫 표시 위치 계산용 런 상태 View를 가져온다.  <br /></td></tr>
+<tr class="separator:ad97bbdb90bd5739a307f6c95ad9f7982"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4f68f342d8c22a016cc0e5a922d1172f" id="r_a4f68f342d8c22a016cc0e5a922d1172f"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARoomGameModeBase.html#a4f68f342d8c22a016cc0e5a922d1172f">GetRunControlState</a> (OUT <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> &amp;RowIndex, OUT <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> &amp;ColumnIndex, OUT <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> &amp;PlayerLevel, OUT <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> &amp;Difficulty) const</td></tr>
+<tr class="memdesc:a4f68f342d8c22a016cc0e5a922d1172f"><td class="mdescLeft">&#160;</td><td class="mdescRight">세팅 화면용 현재 런 상태를 조회한다.  <br /></td></tr>
+<tr class="separator:a4f68f342d8c22a016cc0e5a922d1172f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a70b1867fa1c682dac12a2660c85cdec2" id="r_a70b1867fa1c682dac12a2660c85cdec2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classAUnit.html">AUnit</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARoomGameModeBase.html#a70b1867fa1c682dac12a2660c85cdec2">GetPlayerUnit</a> () const</td></tr>
+<tr class="memdesc:a70b1867fa1c682dac12a2660c85cdec2"><td class="mdescLeft">&#160;</td><td class="mdescRight">방 안에서 복원된 현재 플레이어 유닛 포인터를 제공한다.  <br /></td></tr>
 <tr class="separator:a70b1867fa1c682dac12a2660c85cdec2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classARDGameModeBase"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classARDGameModeBase')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classARDGameModeBase.html">ARDGameModeBase</a>(으)로부터 상속된 Public 멤버 함수</td></tr>
 <tr class="memitem:ab42cb8889551ebca44d00d171b066586 inherit pub_methods_classARDGameModeBase" id="r_ab42cb8889551ebca44d00d171b066586"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#ab42cb8889551ebca44d00d171b066586">ARDGameModeBase</a> ()</td></tr>
 <tr class="separator:ab42cb8889551ebca44d00d171b066586 inherit pub_methods_classARDGameModeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe0da7c859e265aa523ecdbebd455202 inherit pub_methods_classARDGameModeBase" id="r_abe0da7c859e265aa523ecdbebd455202"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#abe0da7c859e265aa523ecdbebd455202">HasActiveRun</a> () const</td></tr>
+<tr class="memdesc:abe0da7c859e265aa523ecdbebd455202 inherit pub_methods_classARDGameModeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">현재 런이 살아 있는지 확인한다.  <br /></td></tr>
+<tr class="separator:abe0da7c859e265aa523ecdbebd455202 inherit pub_methods_classARDGameModeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a429b37f9a6ed65be2e3b386189ca44de inherit pub_methods_classARDGameModeBase" id="r_a429b37f9a6ed65be2e3b386189ca44de"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a429b37f9a6ed65be2e3b386189ca44de">CanAbandonRun</a> () const</td></tr>
+<tr class="memdesc:a429b37f9a6ed65be2e3b386189ca44de inherit pub_methods_classARDGameModeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">지금 런 포기 버튼을 사용할 수 있는지 조회한다.  <br /></td></tr>
+<tr class="separator:a429b37f9a6ed65be2e3b386189ca44de inherit pub_methods_classARDGameModeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7bfd4b2b4958c15dab9229965ba7674c inherit pub_methods_classARDGameModeBase" id="r_a7bfd4b2b4958c15dab9229965ba7674c"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classUUserPersistData.html">UUserPersistData</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a7bfd4b2b4958c15dab9229965ba7674c">GetUserPersistData</a> () const</td></tr>
 <tr class="separator:a7bfd4b2b4958c15dab9229965ba7674c inherit pub_methods_classARDGameModeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6112a51a712c90489ef3c46670ee6023 inherit pub_methods_classARDGameModeBase" id="r_a6112a51a712c90489ef3c46670ee6023"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classURunPersistData.html">URunPersistData</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a6112a51a712c90489ef3c46670ee6023">GetRunPersistData</a> () const</td></tr>
@@ -142,32 +158,69 @@ Public 멤버 함수</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
 Protected 멤버 함수</h2></td></tr>
 <tr class="memitem:a154155929006382854ebddca760f9565" id="r_a154155929006382854ebddca760f9565"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARoomGameModeBase.html#a154155929006382854ebddca760f9565">InitializeCommonRoom</a> () override</td></tr>
+<tr class="memdesc:a154155929006382854ebddca760f9565"><td class="mdescLeft">&#160;</td><td class="mdescRight">실제 방 공통 초기화에서 플레이어 유닛을 복원한다.  <br /></td></tr>
 <tr class="separator:a154155929006382854ebddca760f9565"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac7adcd281d6129ae7563d0c97db37ded" id="r_ac7adcd281d6129ae7563d0c97db37ded"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARoomGameModeBase.html#ac7adcd281d6129ae7563d0c97db37ded">BeginRoom</a> () override</td></tr>
+<tr class="memdesc:ac7adcd281d6129ae7563d0c97db37ded"><td class="mdescLeft">&#160;</td><td class="mdescRight">실제 방에 들어오면 TopMenuBar를 열고 현재 Run 저장을 시작한다.  <br /></td></tr>
 <tr class="separator:ac7adcd281d6129ae7563d0c97db37ded"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a417dfb5450aee1ddc2e23194e9d0c5b9" id="r_a417dfb5450aee1ddc2e23194e9d0c5b9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARoomGameModeBase.html#a417dfb5450aee1ddc2e23194e9d0c5b9">SaveRunWithUIAsync</a> () const</td></tr>
-<tr class="separator:a417dfb5450aee1ddc2e23194e9d0c5b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5b331e27cd77b1c69944dc8bb2dc7e56" id="r_a5b331e27cd77b1c69944dc8bb2dc7e56"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARoomGameModeBase.html#a5b331e27cd77b1c69944dc8bb2dc7e56">RestorePlayerUnit</a> ()</td></tr>
-<tr class="separator:a5b331e27cd77b1c69944dc8bb2dc7e56"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaedf4c26c6cebad8fefcdda60781957a" id="r_aaedf4c26c6cebad8fefcdda60781957a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARoomGameModeBase.html#aaedf4c26c6cebad8fefcdda60781957a">PreloadAndTransitionSelectedRoomAsync</a> ()</td></tr>
+<tr class="memdesc:aaedf4c26c6cebad8fefcdda60781957a"><td class="mdescLeft">&#160;</td><td class="mdescRight">선택된 다음 방 좌표를 실제 프리로드/전환 요청으로 확정한다.  <br /></td></tr>
+<tr class="separator:aaedf4c26c6cebad8fefcdda60781957a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_methods_classARDGameModeBase"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classARDGameModeBase')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classARDGameModeBase.html">ARDGameModeBase</a>(으)로부터 상속된 Protected 멤버 함수</td></tr>
 <tr class="memitem:a81011e7ab4430d338ec2b0510a1233d4 inherit pro_methods_classARDGameModeBase" id="r_a81011e7ab4430d338ec2b0510a1233d4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a81011e7ab4430d338ec2b0510a1233d4">BeginPlay</a> () override</td></tr>
 <tr class="separator:a81011e7ab4430d338ec2b0510a1233d4 inherit pro_methods_classARDGameModeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaeb116585c236121e090fc2422cbb54c inherit pro_methods_classARDGameModeBase" id="r_aaeb116585c236121e090fc2422cbb54c"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#aaeb116585c236121e090fc2422cbb54c">InitializeRoom</a> ()</td></tr>
 <tr class="separator:aaeb116585c236121e090fc2422cbb54c inherit pro_methods_classARDGameModeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab3519623f78df7f923f7e5a5d1e9664d inherit pro_methods_classARDGameModeBase" id="r_ab3519623f78df7f923f7e5a5d1e9664d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#ab3519623f78df7f923f7e5a5d1e9664d">StartFadeInUI</a> (FOnEndFadeInAnimation OnEndFadeInAnimation=FOnEndFadeInAnimation()) const</td></tr>
+<tr class="memdesc:ab3519623f78df7f923f7e5a5d1e9664d inherit pro_methods_classARDGameModeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">페이드 레이어를 열고 검은 화면에서 게임 화면으로 드러내는 페이드인을 시작한다.  <br /></td></tr>
+<tr class="separator:ab3519623f78df7f923f7e5a5d1e9664d inherit pro_methods_classARDGameModeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc237a5033164fd334a87c53f3199720 inherit pro_methods_classARDGameModeBase" id="r_adc237a5033164fd334a87c53f3199720"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#adc237a5033164fd334a87c53f3199720">StartFadeOutUI</a> (FOnEndFadeOutAnimation OnEndFadeOutAnimation=FOnEndFadeOutAnimation()) const</td></tr>
+<tr class="memdesc:adc237a5033164fd334a87c53f3199720 inherit pro_methods_classARDGameModeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">페이드 레이어를 열고 다음 화면 전환 전에 화면을 검게 덮는 페이드아웃을 시작한다.  <br /></td></tr>
+<tr class="separator:adc237a5033164fd334a87c53f3199720 inherit pro_methods_classARDGameModeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae7cc3429340936246a91f2cd4039d1d2 inherit pro_methods_classARDGameModeBase" id="r_ae7cc3429340936246a91f2cd4039d1d2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#ae7cc3429340936246a91f2cd4039d1d2">OpenLoadingNotifyUI</a> (FOnEndUIOpenAnimation OnEndUIOpenAnimation=FOnEndUIOpenAnimation()) const</td></tr>
+<tr class="memdesc:ae7cc3429340936246a91f2cd4039d1d2 inherit pro_methods_classARDGameModeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">로딩 알림 위젯을 공통 OpenUI 생명주기로 연다.  <br /></td></tr>
+<tr class="separator:ae7cc3429340936246a91f2cd4039d1d2 inherit pro_methods_classARDGameModeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8e86a26d1c1fbe0270f4fff57abf6e2a inherit pro_methods_classARDGameModeBase" id="r_a8e86a26d1c1fbe0270f4fff57abf6e2a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a8e86a26d1c1fbe0270f4fff57abf6e2a">CloseLoadingNotifyUI</a> (FOnEndUICloseAnimation OnEndUICloseAnimation=FOnEndUICloseAnimation()) const</td></tr>
+<tr class="memdesc:a8e86a26d1c1fbe0270f4fff57abf6e2a inherit pro_methods_classARDGameModeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">로딩 알림 위젯을 공통 CloseUI 생명주기로 닫는다.  <br /></td></tr>
+<tr class="separator:a8e86a26d1c1fbe0270f4fff57abf6e2a inherit pro_methods_classARDGameModeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad6755483aae62186a5cd6c04954511d7 inherit pro_methods_classARDGameModeBase" id="r_ad6755483aae62186a5cd6c04954511d7"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#ad6755483aae62186a5cd6c04954511d7">PreloadAndTransitionRoomAsync</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> RoomRowIndex, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> RoomColumnIndex)</td></tr>
+<tr class="separator:ad6755483aae62186a5cd6c04954511d7 inherit pro_methods_classARDGameModeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adcf5a289577d0007567e9fb3d15a50c0 inherit pro_methods_classARDGameModeBase" id="r_adcf5a289577d0007567e9fb3d15a50c0"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#adcf5a289577d0007567e9fb3d15a50c0">PreloadAndTransitionRoomAsync</a> (<a class="el" href="StageLevelType_8h.html#ae0b1317897a714ca0969cdc80dfd5d95">EStageLevelType</a> StageLevel)</td></tr>
+<tr class="separator:adcf5a289577d0007567e9fb3d15a50c0 inherit pro_methods_classARDGameModeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaa081916f7a17d0669bc94f138307bee inherit pro_methods_classARDGameModeBase" id="r_aaa081916f7a17d0669bc94f138307bee"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#aaa081916f7a17d0669bc94f138307bee">PreloadAndTransitionFrontendRoomAsync</a> ()</td></tr>
+<tr class="separator:aaa081916f7a17d0669bc94f138307bee inherit pro_methods_classARDGameModeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab9937f02317796f6dbd72140b3b21372 inherit pro_methods_classARDGameModeBase" id="r_ab9937f02317796f6dbd72140b3b21372"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#ab9937f02317796f6dbd72140b3b21372">MarkExternalReadyForTransition</a> ()</td></tr>
+<tr class="separator:ab9937f02317796f6dbd72140b3b21372 inherit pro_methods_classARDGameModeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6ea826dd4993ee4c6615db7688091cc inherit pro_methods_classARDGameModeBase" id="r_ab6ea826dd4993ee4c6615db7688091cc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#ab6ea826dd4993ee4c6615db7688091cc">ClearRunPersistData</a> ()</td></tr>
+<tr class="separator:ab6ea826dd4993ee4c6615db7688091cc inherit pro_methods_classARDGameModeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
 Protected 속성</h2></td></tr>
 <tr class="memitem:a5852c32bd49a4a65a3ff0ccad4d0ba29" id="r_a5852c32bd49a4a65a3ff0ccad4d0ba29"><td class="memItemLeft" align="right" valign="top">TWeakObjectPtr&lt; <a class="el" href="classAUnit.html">AUnit</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARoomGameModeBase.html#a5852c32bd49a4a65a3ff0ccad4d0ba29">mPlayerUnit</a></td></tr>
 <tr class="separator:a5852c32bd49a4a65a3ff0ccad4d0ba29"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a624871fb5255affd6c84d46e63d87425" id="r_a624871fb5255affd6c84d46e63d87425"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARoomGameModeBase.html#a624871fb5255affd6c84d46e63d87425">mSelectedRoomRow</a> = INDEX_NONE</td></tr>
+<tr class="separator:a624871fb5255affd6c84d46e63d87425"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6f150eb36b81f4e365f88b57bf2c3b4a" id="r_a6f150eb36b81f4e365f88b57bf2c3b4a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARoomGameModeBase.html#a6f150eb36b81f4e365f88b57bf2c3b4a">mSelectedRoomColumn</a> = INDEX_NONE</td></tr>
+<tr class="separator:a6f150eb36b81f4e365f88b57bf2c3b4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_attribs_classARDGameModeBase"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classARDGameModeBase')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classARDGameModeBase.html">ARDGameModeBase</a>(으)로부터 상속된 Protected 속성</td></tr>
 <tr class="memitem:a5bdfcee8ef2e7e2d26b584919b3cd5dc inherit pro_attribs_classARDGameModeBase" id="r_a5bdfcee8ef2e7e2d26b584919b3cd5dc"><td class="memItemLeft" align="right" valign="top">TSubclassOf&lt; UUserWidget &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a5bdfcee8ef2e7e2d26b584919b3cd5dc">mHUDClass</a></td></tr>
 <tr class="separator:a5bdfcee8ef2e7e2d26b584919b3cd5dc inherit pro_attribs_classARDGameModeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae71d0190b0be104ddbd8df1c970c3009 inherit pro_attribs_classARDGameModeBase" id="r_ae71d0190b0be104ddbd8df1c970c3009"><td class="memItemLeft" align="right" valign="top">TSet&lt; <a class="el" href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#ae71d0190b0be104ddbd8df1c970c3009">mWorldWidgets</a></td></tr>
 <tr class="separator:ae71d0190b0be104ddbd8df1c970c3009 inherit pro_attribs_classARDGameModeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8d6bf3433470121a19b56b878527f587 inherit pro_attribs_classARDGameModeBase" id="r_a8d6bf3433470121a19b56b878527f587"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a8d6bf3433470121a19b56b878527f587">mWasNextRoomPreloadRequested</a> = false</td></tr>
+<tr class="separator:a8d6bf3433470121a19b56b878527f587 inherit pro_attribs_classARDGameModeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afbfd426dbbd4f49ecc00a6be26c7e13a inherit pro_attribs_classARDGameModeBase" id="r_afbfd426dbbd4f49ecc00a6be26c7e13a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#afbfd426dbbd4f49ecc00a6be26c7e13a">mShowFadeInUIOnTransition</a> = false</td></tr>
+<tr class="separator:afbfd426dbbd4f49ecc00a6be26c7e13a inherit pro_attribs_classARDGameModeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8096b0169868f9a25e73c1e94b940848 inherit pro_attribs_classARDGameModeBase" id="r_a8096b0169868f9a25e73c1e94b940848"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a8096b0169868f9a25e73c1e94b940848">mShowFadeOutUIOnTransition</a> = false</td></tr>
+<tr class="separator:a8096b0169868f9a25e73c1e94b940848 inherit pro_attribs_classARDGameModeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c08ed30d38d88a6a32f8ea80f85c2f3 inherit pro_attribs_classARDGameModeBase" id="r_a8c08ed30d38d88a6a32f8ea80f85c2f3"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a8c08ed30d38d88a6a32f8ea80f85c2f3">mShowLoadingNotifyUIOnTransition</a> = false</td></tr>
+<tr class="separator:a8c08ed30d38d88a6a32f8ea80f85c2f3 inherit pro_attribs_classARDGameModeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a924bd93b7009c5367b5286791cf82801 inherit pro_attribs_classARDGameModeBase" id="r_a924bd93b7009c5367b5286791cf82801"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a924bd93b7009c5367b5286791cf82801">mWaitExternalWorkOnTransition</a> = false</td></tr>
+<tr class="separator:a924bd93b7009c5367b5286791cf82801 inherit pro_attribs_classARDGameModeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock">
-<p class="definition"><a class="el" href="RoomGameModeBase_8h_source.html">RoomGameModeBase.h</a> 파일의 <a class="el" href="RoomGameModeBase_8h_source.html#l00021">21</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RoomGameModeBase_8h_source.html">RoomGameModeBase.h</a> 파일의 <a class="el" href="RoomGameModeBase_8h_source.html#l00024">24</a> 번째 라인에서 정의되었습니다.</p>
 </div><h2 class="groupheader">생성자 &amp; 소멸자 문서화</h2>
 <a id="a2c426ae2c514d7fbd13c56f9f1f50030" name="a2c426ae2c514d7fbd13c56f9f1f50030"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2c426ae2c514d7fbd13c56f9f1f50030">&#9670;&#160;</a></span>ARoomGameModeBase()</h2>
@@ -184,11 +237,33 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00011">11</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00165">165</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
 <h2 class="groupheader">멤버 함수 문서화</h2>
+<a id="a33e7f6f7f72b9bce482b93c56479352d" name="a33e7f6f7f72b9bce482b93c56479352d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a33e7f6f7f72b9bce482b93c56479352d">&#9670;&#160;</a></span>AbandonRunFromRoom()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool ARoomGameModeBase::AbandonRunFromRoom </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>방 안에서 활성 Run을 포기하고 프론트엔드 방으로 돌아간다.</p>
+<dl class="section return"><dt>반환값</dt><dd>전환 시작했으면 true</dd></dl>
+<p>RoomGameModeBase는 실제 방 안에 있는 상태이므로, 런 포기 후에는 RunPersistData를 비우고 <a class="el" href="classARDGameModeBase.html#aaa081916f7a17d0669bc94f138307bee">PreloadAndTransitionFrontendRoomAsync()</a>를 통해 타이틀/캐릭터 선택 흐름이 있는 프론트엔드 방으로 전환한다. </p>
+
+<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00324">324</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
 <a id="ac7adcd281d6129ae7563d0c97db37ded" name="ac7adcd281d6129ae7563d0c97db37ded"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac7adcd281d6129ae7563d0c97db37ded">&#9670;&#160;</a></span>BeginRoom()</h2>
 
@@ -211,29 +286,92 @@ Protected 속성</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+<p>TopMenuBar는 현재 방 UI, WorldMap, Settings, Dice, Skill 패널로 들어가는 인게임 공통 진입점이다. 방에 입장한 직후 WorldWidgetSubsystem이 준비한 TopMenuBar를 OpenUI()로 표시하고, 현재 Run 위치를 저장해 앱 종료나 다음 진입 때 이어하기가 가능하게 한다. </p>
 
 <p><a class="el" href="classARDGameModeBase.html#a96b3dafa3ed99f23fa798f8ba1c8bd39">ARDGameModeBase</a>(으)로부터 재구현되었습니다.</p>
 
-<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00024">24</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00231">231</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a6382996913b7777f3b31626ecd13dda9" name="a6382996913b7777f3b31626ecd13dda9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6382996913b7777f3b31626ecd13dda9">&#9670;&#160;</a></span>EndRun()</h2>
+<a id="aaefefbf7d3ef8d3c2eeac08bc23dbf68" name="aaefefbf7d3ef8d3c2eeac08bc23dbf68"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaefefbf7d3ef8d3c2eeac08bc23dbf68">&#9670;&#160;</a></span>ChoosePlayerStart_Implementation()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">AActor * ARoomGameModeBase::ChoosePlayerStart_Implementation </td>
+          <td>(</td>
+          <td class="paramtype">AController *&#160;</td>
+          <td class="paramname"><em>Player</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00191">191</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a08267a1f91a08287b9e175b4732bb414" name="a08267a1f91a08287b9e175b4732bb414"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a08267a1f91a08287b9e175b4732bb414">&#9670;&#160;</a></span>EnterSelectedRoom()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void ARoomGameModeBase::EndRun </td>
+          <td class="memname">bool ARoomGameModeBase::EnterSelectedRoom </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>현재 선택된 다음 방으로 입장을 요청한다.</p>
+<dl class="section return"><dt>반환값</dt><dd>입장 요청을 시작했으면 true</dd></dl>
+<p>선택 자체는 <a class="el" href="classARoomGameModeBase.html#a3876c44d3c3bba883a111de9ed6d2f95" title="지도에서 방 노드 선택을 요청한다.">SelectNextRoom()</a>에서 처리하고, 이 함수는 이미 선택된 방에 대한 프리로드/전환만 시작한다.</p>
+<p>왜 선택과 입장을 나누는가: 지도에서 노드를 눌러 미리 선택해보고, ENTER 버튼으로 확정하는 UX를 만들기 위해서다. 두 단계를 나누면 잘못 눌렀을 때 바로 전환되지 않고, UI가 선택 상태를 먼저 보여줄 수 있다. </p>
+
+<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00305">305</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a85df90a8c1eddf04d4bc9c7aea415365" name="a85df90a8c1eddf04d4bc9c7aea415365"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a85df90a8c1eddf04d4bc9c7aea415365">&#9670;&#160;</a></span>GetMapRoomViews()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool ARoomGameModeBase::GetMapRoomViews </td>
+          <td>(</td>
+          <td class="paramtype">TArray&lt; <a class="el" href="structFMapRoomView.html">FMapRoomView</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>OutRooms</em></td><td>)</td>
           <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>현재 런의 스테이지 정보를 월드맵 표시용 View 배열로 변환한다.</p>
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">OutRooms</td><td>지도 노드/선 배치에 사용할 View 데이터 배열 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>반환값</dt><dd>표시 가능한 Stage 룸 데이터가 있으면 true</dd></dl>
+<p>FStage/FRoom의 진행 상태를 UI가 바로 읽지 않도록, 화면에 필요한 좌표/상태/설명만 FMapRoomView로 내려준다.</p>
+<p>왜 View DTO로 내보내는가: UI가 런 데이터 구조를 직접 알면 Stage 생성 규칙이 바뀔 때마다 위젯 코드도 같이 흔들린다. GameMode가 표시용 데이터로 변환하면 월드맵은 그래프를 그리는 역할에 집중할 수 있다. </p>
 
-<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00032">32</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00348">348</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -251,8 +389,92 @@ Protected 속성</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p><a class="el" href="classARoomGameModeBase.html#a154155929006382854ebddca760f9565" title="실제 방 공통 초기화에서 플레이어 유닛을 복원한다.">InitializeCommonRoom()</a>에서 RestorePlayerUnit()이 성공하면 mPlayerUnit에 등록된다. 전투/상점/보상 처리처럼 현재 플레이어 유닛이 필요한 시스템은 이 접근자를 통해 GameMode가 보관한 유닛을 조회한다. </p>
 
-<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00077">77</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00615">615</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a4f68f342d8c22a016cc0e5a922d1172f" name="a4f68f342d8c22a016cc0e5a922d1172f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4f68f342d8c22a016cc0e5a922d1172f">&#9670;&#160;</a></span>GetRunControlState()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool ARoomGameModeBase::GetRunControlState </td>
+          <td>(</td>
+          <td class="paramtype">OUT <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> &amp;&#160;</td>
+          <td class="paramname"><em>RowIndex</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">OUT <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> &amp;&#160;</td>
+          <td class="paramname"><em>ColumnIndex</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">OUT <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> &amp;&#160;</td>
+          <td class="paramname"><em>PlayerLevel</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">OUT <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> &amp;&#160;</td>
+          <td class="paramname"><em>Difficulty</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>구조체 대신 개별 값으로 현재 Run 상태를 받아야 하는 호출부용 호환 API다.</p>
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">RowIndex</td><td>현재 룸 행 index </td></tr>
+    <tr><td class="paramname">ColumnIndex</td><td>현재 룸 열 index </td></tr>
+    <tr><td class="paramname">PlayerLevel</td><td>현재 플레이어 레벨 </td></tr>
+    <tr><td class="paramname">Difficulty</td><td>현재 난이도 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>반환값</dt><dd>활성 런 상태가 있으면 true</dd></dl>
+<p>표시 데이터 계산 기준은 <a class="el" href="classARoomGameModeBase.html#ad97bbdb90bd5739a307f6c95ad9f7982" title="지도 첫 표시 위치 계산용 런 상태 View를 가져온다.">GetRunControlView()</a> 하나로 유지한다. 오래된 BP/WBP 또는 구조체를 바로 쓰기 어려운 호출부가 있으면 이 함수가 FRunControlView를 풀어서 전달한다. </p>
+
+<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00447">447</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ad97bbdb90bd5739a307f6c95ad9f7982" name="ad97bbdb90bd5739a307f6c95ad9f7982"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad97bbdb90bd5739a307f6c95ad9f7982">&#9670;&#160;</a></span>GetRunControlView()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool ARoomGameModeBase::GetRunControlView </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structFRunControlView.html">FRunControlView</a> &amp;&#160;</td>
+          <td class="paramname"><em>OutView</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>TopMenuBar와 WorldMap이 표시할 현재 Run 상태 DTO를 만든다.</p>
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">OutView</td><td>TopMenuBar와 WorldMap이 표시만 할 Run 상태 View </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>반환값</dt><dd>활성 런 상태를 만들 수 있으면 true</dd></dl>
+<p>위젯이 URunPersistData를 직접 읽지 않도록, 현재 row/column, 플레이어 레벨, 난이도, Stage 시작 지점 여부, 포기 가능 여부를 FRunControlView로 모아 내려준다. 즉 UI는 이 값만 보고 제목/요약/버튼 상태를 표시하고, 실제 Run 규칙 해석은 GameMode에 남긴다. </p>
+
+<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00416">416</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -278,152 +500,80 @@ Protected 속성</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+<p>RoomGameModeBase 계열 방은 이미 생성된 RunPersistData를 기준으로 실제 플레이 방을 구성한다. 따라서 공통 방 초기화가 끝난 뒤 PlayerUnitRestorationSubsystem을 통해 플레이어 유닛을 스폰/등록한다. </p>
 
 <p><a class="el" href="classARDGameModeBase.html#af3ad428cb336d7deb51d3bb4230945ec">ARDGameModeBase</a>(으)로부터 재구현되었습니다.</p>
 
-<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00016">16</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00215">215</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a191de3f732e1f4871d79c770b0b43acc" name="a191de3f732e1f4871d79c770b0b43acc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a191de3f732e1f4871d79c770b0b43acc">&#9670;&#160;</a></span>PreloadRoomAsync() <span class="overload">[1/2]</span></h2>
+<a id="aaedf4c26c6cebad8fefcdda60781957a" name="aaedf4c26c6cebad8fefcdda60781957a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaedf4c26c6cebad8fefcdda60781957a">&#9670;&#160;</a></span>PreloadAndTransitionSelectedRoomAsync()</h2>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void ARoomGameModeBase::PreloadRoomAsync </td>
+          <td class="memname">bool ARoomGameModeBase::PreloadAndTransitionSelectedRoomAsync </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="StageLevelType_8h.html#ae0b1317897a714ca0969cdc80dfd5d95">EStageLevelType</a>&#160;</td>
-          <td class="paramname"><em>StageLevel</em></td><td>)</td>
-          <td> const</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
+<p>월드맵에서 저장된 선택 좌표가 아직 유효한지 다시 확인한 뒤, 기존 방 전환 공통 흐름인 PreloadAndTransitionRoomAsync(row, column)으로 넘긴다. 선택 시점과 입장 확정 시점 사이에 Run 상태가 바뀔 수 있으므로 여기서 최종 검증을 한 번 더 수행한다. </p>
 
-<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00047">47</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00478">478</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="aa5a6144ab1b33164887f04708c0b7003" name="aa5a6144ab1b33164887f04708c0b7003"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa5a6144ab1b33164887f04708c0b7003">&#9670;&#160;</a></span>PreloadRoomAsync() <span class="overload">[2/2]</span></h2>
+<a id="a3876c44d3c3bba883a111de9ed6d2f95" name="a3876c44d3c3bba883a111de9ed6d2f95"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3876c44d3c3bba883a111de9ed6d2f95">&#9670;&#160;</a></span>SelectNextRoom()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void ARoomGameModeBase::PreloadRoomAsync </td>
+          <td class="memname">bool ARoomGameModeBase::SelectNextRoom </td>
           <td>(</td>
-          <td class="paramtype">int32&#160;</td>
-          <td class="paramname"><em>RoomRowIndex</em>, </td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td>
+          <td class="paramname"><em>RoomRow</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int32&#160;</td>
-          <td class="paramname"><em>RoomColumnIndex</em>&#160;</td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td>
+          <td class="paramname"><em>RoomColumn</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td> const</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>월드맵에서 다음 방 후보를 선택한다.</p>
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">RoomRow</td><td>선택하려는 룸 행 index </td></tr>
+    <tr><td class="paramname">RoomColumn</td><td>선택하려는 룸 열 index </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>반환값</dt><dd>선택 가능한 룸이면 true</dd></dl>
+<p>선택 가능한 방인지 GameMode 기준으로 다시 검사한 뒤, ENTER 버튼이 사용할 선택 좌표만 저장한다.</p>
+<p>왜 UI 클릭만 믿지 않는가: 지도 UI가 버튼 비활성화를 해도 런 상태는 전환 중이거나 이미 다른 방을 선택한 뒤일 수 있다. GameMode가 최종 선택 가능 여부를 확인해야 런 데이터와 화면 입력이 어긋나도 잘못된 전환을 막을 수 있다. </p>
 
-<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00042">42</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="aa9e2f4e1cb7e0b9275255ed867d4ee1d" name="aa9e2f4e1cb7e0b9275255ed867d4ee1d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa9e2f4e1cb7e0b9275255ed867d4ee1d">&#9670;&#160;</a></span>PreloadTitleRoomAsync()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void ARoomGameModeBase::PreloadTitleRoomAsync </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00037">37</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="a5b331e27cd77b1c69944dc8bb2dc7e56" name="a5b331e27cd77b1c69944dc8bb2dc7e56"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5b331e27cd77b1c69944dc8bb2dc7e56">&#9670;&#160;</a></span>RestorePlayerUnit()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void ARoomGameModeBase::RestorePlayerUnit </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00070">70</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="a417dfb5450aee1ddc2e23194e9d0c5b9" name="a417dfb5450aee1ddc2e23194e9d0c5b9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a417dfb5450aee1ddc2e23194e9d0c5b9">&#9670;&#160;</a></span>SaveRunWithUIAsync()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void ARoomGameModeBase::SaveRunWithUIAsync </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00057">57</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="ac14bdad835847d3c9184e3b1db000b14" name="ac14bdad835847d3c9184e3b1db000b14"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac14bdad835847d3c9184e3b1db000b14">&#9670;&#160;</a></span>TransitionLoadedRoomAsync()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void ARoomGameModeBase::TransitionLoadedRoomAsync </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00052">52</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RoomGameModeBase_8cpp_source.html">RoomGameModeBase.cpp</a> 파일의 <a class="el" href="RoomGameModeBase_8cpp_source.html#l00276">276</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -448,7 +598,55 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="RoomGameModeBase_8h_source.html">RoomGameModeBase.h</a> 파일의 <a class="el" href="RoomGameModeBase_8h_source.html#l00051">51</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RoomGameModeBase_8h_source.html">RoomGameModeBase.h</a> 파일의 <a class="el" href="RoomGameModeBase_8h_source.html#l00108">108</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a6f150eb36b81f4e365f88b57bf2c3b4a" name="a6f150eb36b81f4e365f88b57bf2c3b4a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6f150eb36b81f4e365f88b57bf2c3b4a">&#9670;&#160;</a></span>mSelectedRoomColumn</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> ARoomGameModeBase::mSelectedRoomColumn = INDEX_NONE</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="RoomGameModeBase_8h_source.html">RoomGameModeBase.h</a> 파일의 <a class="el" href="RoomGameModeBase_8h_source.html#l00112">112</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a624871fb5255affd6c84d46e63d87425" name="a624871fb5255affd6c84d46e63d87425"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a624871fb5255affd6c84d46e63d87425">&#9670;&#160;</a></span>mSelectedRoomRow</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> ARoomGameModeBase::mSelectedRoomRow = INDEX_NONE</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="RoomGameModeBase_8h_source.html">RoomGameModeBase.h</a> 파일의 <a class="el" href="RoomGameModeBase_8h_source.html#l00111">111</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

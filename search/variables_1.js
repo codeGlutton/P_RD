@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['commonskillweight_0',['CommonSkillWeight',['../classULevelAttributeSet.html#aeb805bf19d787c6808d887bbe6f7d523',1,'ULevelAttributeSet']]]
+  ['damagepoint_0',['DamagePoint',['../classUUnitAttributeSet.html#af9b60f9b987447a559b1eb4c60bf838d',1,'UUnitAttributeSet']]],
+  ['defensepoint_1',['DefensePoint',['../classUUnitAttributeSet.html#af132a4b9c402d0b46f9dfb352e9c3ce4',1,'UUnitAttributeSet']]]
 ];

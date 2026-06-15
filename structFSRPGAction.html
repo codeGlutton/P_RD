@@ -106,17 +106,25 @@ $(document).ready(function(){initNavTree('structFSRPGAction.html',''); initResiz
 FSRPGAction에 대한 상속 다이어그램 : </div>
 <div class="dyncontent">
  <div class="center">
-  <img src="structFSRPGAction.png" alt=""/>
- </div></div>
+  <img src="structFSRPGAction.png" usemap="#FSRPGAction_map" alt=""/>
+  <map id="FSRPGAction_map" name="FSRPGAction_map">
+<area href="structFSRPGSkillAction.html" title="사용자 입력에 따른 정해진 SRPG 행동 객체" alt="FSRPGSkillAction" shape="rect" coords="0,112,213,136"/>
+<area href="structFSRPGSkillBuildAction.html" title="스킬 생성 액션 객체" alt="FSRPGSkillBuildAction" shape="rect" coords="223,112,436,136"/>
+  </map>
+</div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public 멤버 함수</h2></td></tr>
 <tr class="memitem:af27fbb3a54ddaf4d80cd3e44356140a4" id="r_af27fbb3a54ddaf4d80cd3e44356140a4"><td class="memItemLeft" align="right" valign="top">UWorld *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#af27fbb3a54ddaf4d80cd3e44356140a4">GetWorld</a> () const</td></tr>
 <tr class="separator:af27fbb3a54ddaf4d80cd3e44356140a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1e44acc9df4dc7468272eec5312c2def" id="r_a1e44acc9df4dc7468272eec5312c2def"><td class="memItemLeft" align="right" valign="top">TWeakPtr&lt; <a class="el" href="structFSRPGTurnContext.html">FSRPGTurnContext</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#a1e44acc9df4dc7468272eec5312c2def">GetOwner</a> () const</td></tr>
-<tr class="separator:a1e44acc9df4dc7468272eec5312c2def"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d16118d8e488d83e3780e102e6bfc4b" id="r_a4d16118d8e488d83e3780e102e6bfc4b"><td class="memItemLeft" align="right" valign="top">TWeakPtr&lt; <a class="el" href="structFSRPGTurnContext.html">FSRPGTurnContext</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#a4d16118d8e488d83e3780e102e6bfc4b">GetParent</a> () const</td></tr>
+<tr class="separator:a4d16118d8e488d83e3780e102e6bfc4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af45a8df50042c293aa188c9cf632b8fb" id="r_af45a8df50042c293aa188c9cf632b8fb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classAUnit.html">AUnit</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#af45a8df50042c293aa188c9cf632b8fb">GetInstigator</a> () const</td></tr>
 <tr class="separator:af45a8df50042c293aa188c9cf632b8fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae7c37704a686d94159f1d6a7dbd67cee" id="r_ae7c37704a686d94159f1d6a7dbd67cee"><td class="memItemLeft" align="right" valign="top"><a class="el" href="SRPGFrameworkType_8h.html#a5afde86245041b9d0238ea4d01d3ab95">ESRPGActionType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#ae7c37704a686d94159f1d6a7dbd67cee">GetActionType</a> () const</td></tr>
+<tr class="separator:ae7c37704a686d94159f1d6a7dbd67cee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a64496cfd4c7c6b77c2aeeb7b4d53f5e9" id="r_a64496cfd4c7c6b77c2aeeb7b4d53f5e9"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#a64496cfd4c7c6b77c2aeeb7b4d53f5e9">ConsumesTurn</a> () const</td></tr>
+<tr class="separator:a64496cfd4c7c6b77c2aeeb7b4d53f5e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
 Protected 멤버 함수</h2></td></tr>
@@ -124,40 +132,58 @@ Protected 멤버 함수</h2></td></tr>
 <tr class="separator:add97e88febaccc20cd0e4d133fa9ab91"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0e3dcc733c50132dca2759a94064b84e" id="r_a0e3dcc733c50132dca2759a94064b84e"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#a0e3dcc733c50132dca2759a94064b84e">~FSRPGAction</a> ()=default</td></tr>
 <tr class="separator:a0e3dcc733c50132dca2759a94064b84e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a26c80c4d41e7128a2733d1af93058b42" id="r_a26c80c4d41e7128a2733d1af93058b42"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#a26c80c4d41e7128a2733d1af93058b42">InitAction</a> (TSharedRef&lt; <a class="el" href="structFSRPGTurnContext.html">FSRPGTurnContext</a> &gt; Owner, <a class="el" href="classAUnit.html">AUnit</a> *Instigator)</td></tr>
-<tr class="separator:a26c80c4d41e7128a2733d1af93058b42"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a82f68f8de5e67b5a832df3fdec984c11" id="r_a82f68f8de5e67b5a832df3fdec984c11"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#a82f68f8de5e67b5a832df3fdec984c11">BeginAction</a> ()</td></tr>
+<tr class="memitem:a4693dd5feccddcae6e7fad21665bc25e" id="r_a4693dd5feccddcae6e7fad21665bc25e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#a4693dd5feccddcae6e7fad21665bc25e">InitAction</a> (TSharedRef&lt; <a class="el" href="structFSRPGTurnContext.html">FSRPGTurnContext</a> &gt; Parent, <a class="el" href="classAUnit.html">AUnit</a> *Instigator)</td></tr>
+<tr class="separator:a4693dd5feccddcae6e7fad21665bc25e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a82f68f8de5e67b5a832df3fdec984c11" id="r_a82f68f8de5e67b5a832df3fdec984c11"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#a82f68f8de5e67b5a832df3fdec984c11">BeginAction</a> ()</td></tr>
 <tr class="separator:a82f68f8de5e67b5a832df3fdec984c11"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab1d9e829bb9f6236e34199d4152e5fe9" id="r_ab1d9e829bb9f6236e34199d4152e5fe9"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#ab1d9e829bb9f6236e34199d4152e5fe9">TickAction</a> (float DeltaTime)</td></tr>
+<tr class="memitem:ab1d9e829bb9f6236e34199d4152e5fe9" id="r_ab1d9e829bb9f6236e34199d4152e5fe9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#ab1d9e829bb9f6236e34199d4152e5fe9">TickAction</a> (float DeltaTime)</td></tr>
 <tr class="separator:ab1d9e829bb9f6236e34199d4152e5fe9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4936431adb24d9510e2f9ad3ef002cd3" id="r_a4936431adb24d9510e2f9ad3ef002cd3"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#a4936431adb24d9510e2f9ad3ef002cd3">EndAction</a> ()</td></tr>
-<tr class="separator:a4936431adb24d9510e2f9ad3ef002cd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a320eabddf74a5572bd10641e142b24ae" id="r_a320eabddf74a5572bd10641e142b24ae"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#a320eabddf74a5572bd10641e142b24ae">IsTurnEndingAction</a> () const</td></tr>
-<tr class="separator:a320eabddf74a5572bd10641e142b24ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab7e25b98a7cab1c18438508d3ccc5eaf" id="r_ab7e25b98a7cab1c18438508d3ccc5eaf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#ab7e25b98a7cab1c18438508d3ccc5eaf">EndAction</a> (<a class="el" href="SRPGFrameworkType_8h.html#a3893ef0b7368d435ebbf5aa7d97073e7">ESRPGActionResult</a> Result)</td></tr>
+<tr class="separator:ab7e25b98a7cab1c18438508d3ccc5eaf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af24e473173c4c57dec8ef9c8b2780ce5" id="r_af24e473173c4c57dec8ef9c8b2780ce5"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#af24e473173c4c57dec8ef9c8b2780ce5">OnBeginAction</a> ()</td></tr>
+<tr class="separator:af24e473173c4c57dec8ef9c8b2780ce5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaf215b0c31e05206f9abc8693b618ba1" id="r_aaf215b0c31e05206f9abc8693b618ba1"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#aaf215b0c31e05206f9abc8693b618ba1">OnTickAction</a> (float DeltaTime)</td></tr>
+<tr class="separator:aaf215b0c31e05206f9abc8693b618ba1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ee5cbf88ab0cd79062fd38b79cc91a8" id="r_a9ee5cbf88ab0cd79062fd38b79cc91a8"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#a9ee5cbf88ab0cd79062fd38b79cc91a8">OnEndAction</a> ()</td></tr>
+<tr class="separator:a9ee5cbf88ab0cd79062fd38b79cc91a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a65e62deb3ab439e6fab2ad1f3c8e7446" id="r_a65e62deb3ab439e6fab2ad1f3c8e7446"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#a65e62deb3ab439e6fab2ad1f3c8e7446">EvaluateActionEndState</a> (bool ForceAbort=false)</td></tr>
 <tr class="separator:a65e62deb3ab439e6fab2ad1f3c8e7446"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa1f691c47da3e783330da4d6312ebc59" id="r_aa1f691c47da3e783330da4d6312ebc59"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="SRPGFrameworkType_8h.html#ad143685bd9567ea223c1f07624507f99">ESRPGActionCommandResult</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#aa1f691c47da3e783330da4d6312ebc59">HandleCommand</a> (TSharedPtr&lt; const <a class="el" href="structFSRPGActionCommand.html">FSRPGActionCommand</a> &gt; Command)</td></tr>
+<tr class="separator:aa1f691c47da3e783330da4d6312ebc59"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:add3a3446f0fdce5d2c5dae5204ad72f1" id="r_add3a3446f0fdce5d2c5dae5204ad72f1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#add3a3446f0fdce5d2c5dae5204ad72f1">GetTileActorUnderCursor</a> (ECollisionChannel Channel, OUT AActor *Actor, OUT <a class="el" href="structFTileIndex.html">FTileIndex</a> &amp;TileIndex) const</td></tr>
+<tr class="separator:add3a3446f0fdce5d2c5dae5204ad72f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
 Protected 속성</h2></td></tr>
-<tr class="memitem:a294c0676cf9a3989eddcea13ff2bfd43" id="r_a294c0676cf9a3989eddcea13ff2bfd43"><td class="memItemLeft" align="right" valign="top">TWeakPtr&lt; <a class="el" href="structFSRPGTurnContext.html">FSRPGTurnContext</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#a294c0676cf9a3989eddcea13ff2bfd43">mOwner</a></td></tr>
-<tr class="separator:a294c0676cf9a3989eddcea13ff2bfd43"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3efd737de8daec9bc544f0f4a8737c23" id="r_a3efd737de8daec9bc544f0f4a8737c23"><td class="memItemLeft" align="right" valign="top">FOnBeginActionUI&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#a3efd737de8daec9bc544f0f4a8737c23">OnBeginActionUI</a></td></tr>
+<tr class="separator:a3efd737de8daec9bc544f0f4a8737c23"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3a8de4b0051a0b9326de4b4a109ba064" id="r_a3a8de4b0051a0b9326de4b4a109ba064"><td class="memItemLeft" align="right" valign="top">FOnEndActionUI&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#a3a8de4b0051a0b9326de4b4a109ba064">OnEndActionUI</a></td></tr>
+<tr class="separator:a3a8de4b0051a0b9326de4b4a109ba064"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac347d86d630a5b74a34323cb89dcccf3" id="r_ac347d86d630a5b74a34323cb89dcccf3"><td class="memItemLeft" align="right" valign="top">TWeakPtr&lt; <a class="el" href="structFSRPGTurnContext.html">FSRPGTurnContext</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#ac347d86d630a5b74a34323cb89dcccf3">mParent</a></td></tr>
+<tr class="separator:ac347d86d630a5b74a34323cb89dcccf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a15d1e909b520d0caeef1d0b913fc5a45" id="r_a15d1e909b520d0caeef1d0b913fc5a45"><td class="memItemLeft" align="right" valign="top">TObjectPtr&lt; <a class="el" href="classAUnit.html">AUnit</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#a15d1e909b520d0caeef1d0b913fc5a45">mInstigator</a></td></tr>
 <tr class="separator:a15d1e909b520d0caeef1d0b913fc5a45"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1241c8273bc93977b17ad8676e8a839d" id="r_a1241c8273bc93977b17ad8676e8a839d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="SRPGFrameworkType_8h.html#aa7a8b2ba03697d5e0c47954dad30b2c4">ESRPGActionPhase</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#a1241c8273bc93977b17ad8676e8a839d">mPhase</a> = ESRPGActionPhase::None</td></tr>
-<tr class="separator:a1241c8273bc93977b17ad8676e8a839d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a84dcd099e87ca24da49116b9d6e1f508" id="r_a84dcd099e87ca24da49116b9d6e1f508"><td class="memItemLeft" align="right" valign="top"><a class="el" href="SRPGFrameworkType_8h.html#a3893ef0b7368d435ebbf5aa7d97073e7">ESRPGActionResult</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#a84dcd099e87ca24da49116b9d6e1f508">mResult</a> = ESRPGActionResult::Succeeded</td></tr>
-<tr class="separator:a84dcd099e87ca24da49116b9d6e1f508"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa8bff6a0e5d7cf99c445d9185124e197" id="r_aa8bff6a0e5d7cf99c445d9185124e197"><td class="memItemLeft" align="right" valign="top">TQueue&lt; TSharedPtr&lt; const <a class="el" href="structFSRPGActionCommand.html">FSRPGActionCommand</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#aa8bff6a0e5d7cf99c445d9185124e197">mReservedCommands</a></td></tr>
+<tr class="separator:aa8bff6a0e5d7cf99c445d9185124e197"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a780d8c505258fd6a8e9a1795c311ca44" id="r_a780d8c505258fd6a8e9a1795c311ca44"><td class="memItemLeft" align="right" valign="top"><a class="el" href="SRPGFrameworkType_8h.html#aa7a8b2ba03697d5e0c47954dad30b2c4">ESRPGActionPhase</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#a780d8c505258fd6a8e9a1795c311ca44">mActionPhase</a> = ESRPGActionPhase::None</td></tr>
+<tr class="separator:a780d8c505258fd6a8e9a1795c311ca44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff57ac0af9529d488448e23953643492" id="r_aff57ac0af9529d488448e23953643492"><td class="memItemLeft" align="right" valign="top"><a class="el" href="SRPGFrameworkType_8h.html#a3893ef0b7368d435ebbf5aa7d97073e7">ESRPGActionResult</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#aff57ac0af9529d488448e23953643492">mActionResult</a> = ESRPGActionResult::Succeeded</td></tr>
+<tr class="separator:aff57ac0af9529d488448e23953643492"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acd60b8ec46ff251abcb4ddbdcebf8e8d" id="r_acd60b8ec46ff251abcb4ddbdcebf8e8d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="SRPGFrameworkType_8h.html#a5afde86245041b9d0238ea4d01d3ab95">ESRPGActionType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#acd60b8ec46ff251abcb4ddbdcebf8e8d">mActionType</a> = ESRPGActionType::InPlayAction</td></tr>
+<tr class="separator:acd60b8ec46ff251abcb4ddbdcebf8e8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3a75ffd139b5ae0921313c3febffcf24" id="r_a3a75ffd139b5ae0921313c3febffcf24"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#a3a75ffd139b5ae0921313c3febffcf24">mConsumesTurn</a> = false</td></tr>
+<tr class="separator:a3a75ffd139b5ae0921313c3febffcf24"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="friends" name="friends"></a>
 Friends</h2></td></tr>
 <tr class="memitem:afc93c5f683d3da8a29735f457ed91a56" id="r_afc93c5f683d3da8a29735f457ed91a56"><td class="memItemLeft" align="right" valign="top">struct&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#afc93c5f683d3da8a29735f457ed91a56">FSRPGTurnContext</a></td></tr>
 <tr class="separator:afc93c5f683d3da8a29735f457ed91a56"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9bfc776bc5e25753746bdde32c68d7fe" id="r_a9bfc776bc5e25753746bdde32c68d7fe"><td class="memItemLeft" align="right" valign="top">struct&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#a9bfc776bc5e25753746bdde32c68d7fe">FSRPGActionBuilder</a></td></tr>
-<tr class="separator:a9bfc776bc5e25753746bdde32c68d7fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af220fa88723bbec5d436aab0dcf1d8c6" id="r_af220fa88723bbec5d436aab0dcf1d8c6"><td class="memItemLeft" align="right" valign="top">struct&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGAction.html#af220fa88723bbec5d436aab0dcf1d8c6">FSRPGActionCreationCommandBase</a></td></tr>
+<tr class="separator:af220fa88723bbec5d436aab0dcf1d8c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock">
-<p class="definition"><a class="el" href="SRPGAction_8h_source.html">SRPGAction.h</a> 파일의 <a class="el" href="SRPGAction_8h_source.html#l00049">49</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SRPGAction_8h_source.html">SRPGAction.h</a> 파일의 <a class="el" href="SRPGAction_8h_source.html#l00068">68</a> 번째 라인에서 정의되었습니다.</p>
 </div><h2 class="groupheader">생성자 &amp; 소멸자 문서화</h2>
 <a id="add97e88febaccc20cd0e4d133fa9ab91" name="add97e88febaccc20cd0e4d133fa9ab91"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#add97e88febaccc20cd0e4d133fa9ab91">&#9670;&#160;</a></span>FSRPGAction()</h2>
@@ -228,17 +254,36 @@ Friends</h2></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00024">24</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00037">37</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a4936431adb24d9510e2f9ad3ef002cd3" name="a4936431adb24d9510e2f9ad3ef002cd3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4936431adb24d9510e2f9ad3ef002cd3">&#9670;&#160;</a></span>EndAction()</h2>
+<a id="a64496cfd4c7c6b77c2aeeb7b4d53f5e9" name="a64496cfd4c7c6b77c2aeeb7b4d53f5e9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a64496cfd4c7c6b77c2aeeb7b4d53f5e9">&#9670;&#160;</a></span>ConsumesTurn()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool FSRPGAction::ConsumesTurn </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00193">193</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ab7e25b98a7cab1c18438508d3ccc5eaf" name="ab7e25b98a7cab1c18438508d3ccc5eaf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab7e25b98a7cab1c18438508d3ccc5eaf">&#9670;&#160;</a></span>EndAction()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -249,18 +294,19 @@ Friends</h2></td></tr>
         <tr>
           <td class="memname">void FSRPGAction::EndAction </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype"><a class="el" href="SRPGFrameworkType_8h.html#a3893ef0b7368d435ebbf5aa7d97073e7">ESRPGActionResult</a>&#160;</td>
+          <td class="paramname"><em>Result</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00034">34</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00059">59</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -288,7 +334,26 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00049">49</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00103">103</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ae7c37704a686d94159f1d6a7dbd67cee" name="ae7c37704a686d94159f1d6a7dbd67cee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae7c37704a686d94159f1d6a7dbd67cee">&#9670;&#160;</a></span>GetActionType()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="SRPGFrameworkType_8h.html#a5afde86245041b9d0238ea4d01d3ab95">ESRPGActionType</a> FSRPGAction::GetActionType </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00188">188</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -307,18 +372,18 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00078">78</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00183">183</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a1e44acc9df4dc7468272eec5312c2def" name="a1e44acc9df4dc7468272eec5312c2def"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1e44acc9df4dc7468272eec5312c2def">&#9670;&#160;</a></span>GetOwner()</h2>
+<a id="a4d16118d8e488d83e3780e102e6bfc4b" name="a4d16118d8e488d83e3780e102e6bfc4b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4d16118d8e488d83e3780e102e6bfc4b">&#9670;&#160;</a></span>GetParent()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">TWeakPtr&lt; <a class="el" href="structFSRPGTurnContext.html">FSRPGTurnContext</a> &gt; FSRPGAction::GetOwner </td>
+          <td class="memname">TWeakPtr&lt; <a class="el" href="structFSRPGTurnContext.html">FSRPGTurnContext</a> &gt; FSRPGAction::GetParent </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -326,7 +391,59 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00073">73</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00178">178</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="add3a3446f0fdce5d2c5dae5204ad72f1" name="add3a3446f0fdce5d2c5dae5204ad72f1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#add3a3446f0fdce5d2c5dae5204ad72f1">&#9670;&#160;</a></span>GetTileActorUnderCursor()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void FSRPGAction::GetTileActorUnderCursor </td>
+          <td>(</td>
+          <td class="paramtype">ECollisionChannel&#160;</td>
+          <td class="paramname"><em>Channel</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">OUT AActor *&#160;</td>
+          <td class="paramname"><em>Actor</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">OUT <a class="el" href="structFTileIndex.html">FTileIndex</a> &amp;&#160;</td>
+          <td class="paramname"><em>TileIndex</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>커서가 어떤 타일 액터를 가리키는지 알아오는 함수. 대상이 없는 경우 FTileIndex::Invalid를 반환 </p><dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">Channel</td><td>검사할 트래이스 채널명 </td></tr>
+    <tr><td class="paramname">Actor</td><td>측정된 액터 </td></tr>
+    <tr><td class="paramname">TileIndex</td><td>부딧친 대상의 타일의 인덱스 값 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00140">140</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -345,12 +462,42 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00068">68</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00173">173</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a26c80c4d41e7128a2733d1af93058b42" name="a26c80c4d41e7128a2733d1af93058b42"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a26c80c4d41e7128a2733d1af93058b42">&#9670;&#160;</a></span>InitAction()</h2>
+<a id="aa1f691c47da3e783330da4d6312ebc59" name="aa1f691c47da3e783330da4d6312ebc59"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa1f691c47da3e783330da4d6312ebc59">&#9670;&#160;</a></span>HandleCommand()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="SRPGFrameworkType_8h.html#ad143685bd9567ea223c1f07624507f99">ESRPGActionCommandResult</a> FSRPGAction::HandleCommand </td>
+          <td>(</td>
+          <td class="paramtype">TSharedPtr&lt; const <a class="el" href="structFSRPGActionCommand.html">FSRPGActionCommand</a> &gt;&#160;</td>
+          <td class="paramname"><em>Command</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p><a class="el" href="structFSRPGSkillBuildAction.html#ac8e7e21b5451da1dc4755562822a3d01">FSRPGSkillBuildAction</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00120">120</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a4693dd5feccddcae6e7fad21665bc25e" name="a4693dd5feccddcae6e7fad21665bc25e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4693dd5feccddcae6e7fad21665bc25e">&#9670;&#160;</a></span>InitAction()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -362,7 +509,7 @@ Friends</h2></td></tr>
           <td class="memname">void FSRPGAction::InitAction </td>
           <td>(</td>
           <td class="paramtype">TSharedRef&lt; <a class="el" href="structFSRPGTurnContext.html">FSRPGTurnContext</a> &gt;&#160;</td>
-          <td class="paramname"><em>Owner</em>, </td>
+          <td class="paramname"><em>Parent</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -383,12 +530,12 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00015">15</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00026">26</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a320eabddf74a5572bd10641e142b24ae" name="a320eabddf74a5572bd10641e142b24ae"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a320eabddf74a5572bd10641e142b24ae">&#9670;&#160;</a></span>IsTurnEndingAction()</h2>
+<a id="af24e473173c4c57dec8ef9c8b2780ce5" name="af24e473173c4c57dec8ef9c8b2780ce5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af24e473173c4c57dec8ef9c8b2780ce5">&#9670;&#160;</a></span>OnBeginAction()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -397,10 +544,10 @@ Friends</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool FSRPGAction::IsTurnEndingAction </td>
+          <td class="memname">void FSRPGAction::OnBeginAction </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
-          <td> const</td>
+          <td></td>
         </tr>
       </table>
   </td>
@@ -409,9 +556,69 @@ Friends</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>액션 종료와 함께 턴 종료를 강제하는 액션인지 여부 </p><dl class="section return"><dt>반환값</dt><dd>턴 종료를 강제하는 액션 여부 </dd></dl>
 
-<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00044">44</a> 번째 라인에서 정의되었습니다.</p>
+<p><a class="el" href="structFSRPGSkillAction.html#a6b6641b52e38efcb0993c67c624d8bfb">FSRPGSkillAction</a>, <a class="el" href="structFSRPGSkillBuildAction.html#afce6c764730d3aa2dc21000da5245456">FSRPGSkillBuildAction</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00091">91</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a9ee5cbf88ab0cd79062fd38b79cc91a8" name="a9ee5cbf88ab0cd79062fd38b79cc91a8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9ee5cbf88ab0cd79062fd38b79cc91a8">&#9670;&#160;</a></span>OnEndAction()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void FSRPGAction::OnEndAction </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p><a class="el" href="structFSRPGSkillAction.html#abd3962b042c7af711998c7160fb1889a">FSRPGSkillAction</a>, <a class="el" href="structFSRPGSkillBuildAction.html#a43e808ce41677801ae05a8d75be1b4cc">FSRPGSkillBuildAction</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00099">99</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="aaf215b0c31e05206f9abc8693b618ba1" name="aaf215b0c31e05206f9abc8693b618ba1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaf215b0c31e05206f9abc8693b618ba1">&#9670;&#160;</a></span>OnTickAction()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void FSRPGAction::OnTickAction </td>
+          <td>(</td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>DeltaTime</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p><a class="el" href="structFSRPGSkillAction.html#a67a81837c30c06d3bb17f93a300462ff">FSRPGSkillAction</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00095">95</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -434,18 +641,18 @@ Friends</h2></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00030">30</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SRPGAction_8cpp_source.html">SRPGAction.cpp</a> 파일의 <a class="el" href="SRPGAction_8cpp_source.html#l00054">54</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
 <h2 class="groupheader">Friend, 그리고 관련된 함수 문서화</h2>
-<a id="a9bfc776bc5e25753746bdde32c68d7fe" name="a9bfc776bc5e25753746bdde32c68d7fe"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9bfc776bc5e25753746bdde32c68d7fe">&#9670;&#160;</a></span>FSRPGActionBuilder</h2>
+<a id="af220fa88723bbec5d436aab0dcf1d8c6" name="af220fa88723bbec5d436aab0dcf1d8c6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af220fa88723bbec5d436aab0dcf1d8c6">&#9670;&#160;</a></span>FSRPGActionCreationCommandBase</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -454,7 +661,7 @@ Friends</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">friend struct <a class="el" href="structFSRPGActionBuilder.html">FSRPGActionBuilder</a></td>
+          <td class="memname">friend struct FSRPGActionCreationCommandBase</td>
         </tr>
       </table>
   </td>
@@ -464,7 +671,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SRPGAction_8h_source.html">SRPGAction.h</a> 파일의 <a class="el" href="SRPGAction_8h_source.html#l00052">52</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SRPGAction_8h_source.html">SRPGAction.h</a> 파일의 <a class="el" href="SRPGAction_8h_source.html#l00071">71</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -488,11 +695,107 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SRPGAction_8h_source.html">SRPGAction.h</a> 파일의 <a class="el" href="SRPGAction_8h_source.html#l00051">51</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SRPGAction_8h_source.html">SRPGAction.h</a> 파일의 <a class="el" href="SRPGAction_8h_source.html#l00070">70</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
 <h2 class="groupheader">멤버 데이터 문서화</h2>
+<a id="a780d8c505258fd6a8e9a1795c311ca44" name="a780d8c505258fd6a8e9a1795c311ca44"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a780d8c505258fd6a8e9a1795c311ca44">&#9670;&#160;</a></span>mActionPhase</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="SRPGFrameworkType_8h.html#aa7a8b2ba03697d5e0c47954dad30b2c4">ESRPGActionPhase</a> FSRPGAction::mActionPhase = ESRPGActionPhase::None</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGAction_8h_source.html">SRPGAction.h</a> 파일의 <a class="el" href="SRPGAction_8h_source.html#l00132">132</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="aff57ac0af9529d488448e23953643492" name="aff57ac0af9529d488448e23953643492"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff57ac0af9529d488448e23953643492">&#9670;&#160;</a></span>mActionResult</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="SRPGFrameworkType_8h.html#a3893ef0b7368d435ebbf5aa7d97073e7">ESRPGActionResult</a> FSRPGAction::mActionResult = ESRPGActionResult::Succeeded</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGAction_8h_source.html">SRPGAction.h</a> 파일의 <a class="el" href="SRPGAction_8h_source.html#l00134">134</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="acd60b8ec46ff251abcb4ddbdcebf8e8d" name="acd60b8ec46ff251abcb4ddbdcebf8e8d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acd60b8ec46ff251abcb4ddbdcebf8e8d">&#9670;&#160;</a></span>mActionType</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="SRPGFrameworkType_8h.html#a5afde86245041b9d0238ea4d01d3ab95">ESRPGActionType</a> FSRPGAction::mActionType = ESRPGActionType::InPlayAction</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGAction_8h_source.html">SRPGAction.h</a> 파일의 <a class="el" href="SRPGAction_8h_source.html#l00136">136</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a3a75ffd139b5ae0921313c3febffcf24" name="a3a75ffd139b5ae0921313c3febffcf24"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3a75ffd139b5ae0921313c3febffcf24">&#9670;&#160;</a></span>mConsumesTurn</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool FSRPGAction::mConsumesTurn = false</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGAction_8h_source.html">SRPGAction.h</a> 파일의 <a class="el" href="SRPGAction_8h_source.html#l00138">138</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
 <a id="a15d1e909b520d0caeef1d0b913fc5a45" name="a15d1e909b520d0caeef1d0b913fc5a45"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a15d1e909b520d0caeef1d0b913fc5a45">&#9670;&#160;</a></span>mInstigator</h2>
 
@@ -513,12 +816,12 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SRPGAction_8h_source.html">SRPGAction.h</a> 파일의 <a class="el" href="SRPGAction_8h_source.html#l00081">81</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SRPGAction_8h_source.html">SRPGAction.h</a> 파일의 <a class="el" href="SRPGAction_8h_source.html#l00124">124</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a294c0676cf9a3989eddcea13ff2bfd43" name="a294c0676cf9a3989eddcea13ff2bfd43"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a294c0676cf9a3989eddcea13ff2bfd43">&#9670;&#160;</a></span>mOwner</h2>
+<a id="ac347d86d630a5b74a34323cb89dcccf3" name="ac347d86d630a5b74a34323cb89dcccf3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac347d86d630a5b74a34323cb89dcccf3">&#9670;&#160;</a></span>mParent</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -527,7 +830,7 @@ Friends</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">TWeakPtr&lt;<a class="el" href="structFSRPGTurnContext.html">FSRPGTurnContext</a>&gt; FSRPGAction::mOwner</td>
+          <td class="memname">TWeakPtr&lt;<a class="el" href="structFSRPGTurnContext.html">FSRPGTurnContext</a>&gt; FSRPGAction::mParent</td>
         </tr>
       </table>
   </td>
@@ -537,12 +840,12 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SRPGAction_8h_source.html">SRPGAction.h</a> 파일의 <a class="el" href="SRPGAction_8h_source.html#l00080">80</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SRPGAction_8h_source.html">SRPGAction.h</a> 파일의 <a class="el" href="SRPGAction_8h_source.html#l00123">123</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a1241c8273bc93977b17ad8676e8a839d" name="a1241c8273bc93977b17ad8676e8a839d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1241c8273bc93977b17ad8676e8a839d">&#9670;&#160;</a></span>mPhase</h2>
+<a id="aa8bff6a0e5d7cf99c445d9185124e197" name="aa8bff6a0e5d7cf99c445d9185124e197"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa8bff6a0e5d7cf99c445d9185124e197">&#9670;&#160;</a></span>mReservedCommands</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -551,7 +854,7 @@ Friends</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="SRPGFrameworkType_8h.html#aa7a8b2ba03697d5e0c47954dad30b2c4">ESRPGActionPhase</a> FSRPGAction::mPhase = ESRPGActionPhase::None</td>
+          <td class="memname">TQueue&lt;TSharedPtr&lt;const <a class="el" href="structFSRPGActionCommand.html">FSRPGActionCommand</a>&gt; &gt; FSRPGAction::mReservedCommands</td>
         </tr>
       </table>
   </td>
@@ -561,12 +864,12 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SRPGAction_8h_source.html">SRPGAction.h</a> 파일의 <a class="el" href="SRPGAction_8h_source.html#l00084">84</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SRPGAction_8h_source.html">SRPGAction.h</a> 파일의 <a class="el" href="SRPGAction_8h_source.html#l00128">128</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a84dcd099e87ca24da49116b9d6e1f508" name="a84dcd099e87ca24da49116b9d6e1f508"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a84dcd099e87ca24da49116b9d6e1f508">&#9670;&#160;</a></span>mResult</h2>
+<a id="a3efd737de8daec9bc544f0f4a8737c23" name="a3efd737de8daec9bc544f0f4a8737c23"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3efd737de8daec9bc544f0f4a8737c23">&#9670;&#160;</a></span>OnBeginActionUI</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -575,7 +878,7 @@ Friends</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="SRPGFrameworkType_8h.html#a3893ef0b7368d435ebbf5aa7d97073e7">ESRPGActionResult</a> FSRPGAction::mResult = ESRPGActionResult::Succeeded</td>
+          <td class="memname">FOnBeginActionUI FSRPGAction::OnBeginActionUI</td>
         </tr>
       </table>
   </td>
@@ -585,7 +888,31 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SRPGAction_8h_source.html">SRPGAction.h</a> 파일의 <a class="el" href="SRPGAction_8h_source.html#l00086">86</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SRPGAction_8h_source.html">SRPGAction.h</a> 파일의 <a class="el" href="SRPGAction_8h_source.html#l00119">119</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a3a8de4b0051a0b9326de4b4a109ba064" name="a3a8de4b0051a0b9326de4b4a109ba064"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3a8de4b0051a0b9326de4b4a109ba064">&#9670;&#160;</a></span>OnEndActionUI</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">FOnEndActionUI FSRPGAction::OnEndActionUI</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGAction_8h_source.html">SRPGAction.h</a> 파일의 <a class="el" href="SRPGAction_8h_source.html#l00120">120</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

@@ -15,6 +15,6 @@ var classUStaticSkillData =
     [ "mName", "classUStaticSkillData.html#aa5dd1e4f823533a6081e4d027e1f483a", null ],
     [ "mPrice", "classUStaticSkillData.html#aa3febf7dbaa2157148e57ea7b7dadc9b", null ],
     [ "mRarityType", "classUStaticSkillData.html#aacaf8f595aacf5e1af7d7d210fd90d06", null ],
-    [ "mSkillActions", "classUStaticSkillData.html#a430ff388e440992ee22f2eda6b31675b", null ],
+    [ "mSkillAnimLayers", "classUStaticSkillData.html#adf23e6ab364ee983da125d77931423b3", null ],
     [ "mSkillType", "classUStaticSkillData.html#aacbd9c00746ff524c894f83fff17989e", null ]
 ];

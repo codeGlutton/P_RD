@@ -114,11 +114,31 @@ $(document).ready(function(){initNavTree('StaticShopRoomSpawnData_8cpp_source.ht
 <div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>    }</div>
 <div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>}</div>
 </div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
+<div class="foldopen" id="foldopen00016" data-start="{" data-end="}">
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno"><a class="line" href="classUStaticShopRoomSpawnData.html#a8b7a696ddd978e5cc47dd0881aef2641">   16</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUStaticShopRoomSpawnData.html#a8b7a696ddd978e5cc47dd0881aef2641">UStaticShopRoomSpawnData::PostLoad</a>()</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>{</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    Super::PostLoad();</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span> </div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    <span class="keyword">const</span> TSoftClassPtr&lt;AGameModeBase&gt; UpdatedGameMode = GetDefault&lt;UGamePlaySettings&gt;()-&gt;mShopGameMode;</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classUStaticRoomSpawnData.html#a72f142a9c2a7364f235589ff4be24337">mGameModeBase</a> != UpdatedGameMode)</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    {</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="preprocessor">#if WITH_EDITOR</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>        Modify();</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>        <a class="code hl_variable" href="classUStaticRoomSpawnData.html#a72f142a9c2a7364f235589ff4be24337">mGameModeBase</a> = UpdatedGameMode;</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="preprocessor">#if WITH_EDITOR</span></div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>        MarkPackageDirty();</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    }</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>}</div>
+</div>
 <div class="ttc" id="aGamePlaySettings_8h_html"><div class="ttname"><a href="GamePlaySettings_8h.html">GamePlaySettings.h</a></div><div class="ttdoc">게임 플레이 연관 설정 객체 정의 헤더</div></div>
 <div class="ttc" id="aShopGameMode_8h_html"><div class="ttname"><a href="ShopGameMode_8h.html">ShopGameMode.h</a></div><div class="ttdoc">상점 방에 대한 GameMode 정의 헤더</div></div>
 <div class="ttc" id="aStaticShopRoomSpawnData_8h_html"><div class="ttname"><a href="StaticShopRoomSpawnData_8h.html">StaticShopRoomSpawnData.h</a></div><div class="ttdoc">상점 방 생성 시 사용되는 정적 Primary Data Asset 구현 헤더</div></div>
-<div class="ttc" id="aclassUStaticRoomSpawnData_html_a72f142a9c2a7364f235589ff4be24337"><div class="ttname"><a href="classUStaticRoomSpawnData.html#a72f142a9c2a7364f235589ff4be24337">UStaticRoomSpawnData::mGameModeBase</a></div><div class="ttdeci">TSoftClassPtr&lt; AGameModeBase &gt; mGameModeBase</div><div class="ttdef"><b>Definition</b> <a href="StaticRoomSpawnData_8h_source.html#l00045">StaticRoomSpawnData.h:45</a></div></div>
+<div class="ttc" id="aclassUStaticRoomSpawnData_html_a72f142a9c2a7364f235589ff4be24337"><div class="ttname"><a href="classUStaticRoomSpawnData.html#a72f142a9c2a7364f235589ff4be24337">UStaticRoomSpawnData::mGameModeBase</a></div><div class="ttdeci">TSoftClassPtr&lt; AGameModeBase &gt; mGameModeBase</div><div class="ttdef"><b>Definition</b> <a href="StaticRoomSpawnData_8h_source.html#l00050">StaticRoomSpawnData.h:50</a></div></div>
 <div class="ttc" id="aclassUStaticShopRoomSpawnData_html_a8240329c345a7eb441065d9dcb98d4f6"><div class="ttname"><a href="classUStaticShopRoomSpawnData.html#a8240329c345a7eb441065d9dcb98d4f6">UStaticShopRoomSpawnData::PostInitProperties</a></div><div class="ttdeci">void PostInitProperties() override</div><div class="ttdef"><b>Definition</b> <a href="StaticShopRoomSpawnData_8cpp_source.html#l00006">StaticShopRoomSpawnData.cpp:6</a></div></div>
+<div class="ttc" id="aclassUStaticShopRoomSpawnData_html_a8b7a696ddd978e5cc47dd0881aef2641"><div class="ttname"><a href="classUStaticShopRoomSpawnData.html#a8b7a696ddd978e5cc47dd0881aef2641">UStaticShopRoomSpawnData::PostLoad</a></div><div class="ttdeci">void PostLoad() override</div><div class="ttdef"><b>Definition</b> <a href="StaticShopRoomSpawnData_8cpp_source.html#l00016">StaticShopRoomSpawnData.cpp:16</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['epicskillweight_0',['EpicSkillWeight',['../classULevelAttributeSet.html#a4aae75aee787906ee10f510b475fee84',1,'ULevelAttributeSet']]],
-  ['exp_1',['Exp',['../classUPlayerUnitAttributeSet.html#a92e9947a05ac9f7120680f526e5fb455',1,'UPlayerUnitAttributeSet']]]
+  ['hp_0',['HP',['../classUUnitAttributeSet.html#aee768987c07c56dd94cf82f968e3ce2e',1,'UUnitAttributeSet']]]
 ];

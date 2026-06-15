@@ -107,9 +107,10 @@ ARDGameModeBase에 대한 상속 다이어그램 : </div>
  <div class="center">
   <img src="classARDGameModeBase.png" usemap="#ARDGameModeBase_map" alt=""/>
   <map id="ARDGameModeBase_map" name="ARDGameModeBase_map">
-<area href="classARoomGameModeBase.html" title="방에 대한 베이스 GameMode" alt="ARoomGameModeBase" shape="rect" coords="231,112,375,136"/>
-<area href="classACombatGameMode.html" title="전투 방에 대한 GameMode" alt="ACombatGameMode" shape="rect" coords="0,168,144,192"/>
-<area href="classAFrontendGameMode.html" title="게임 시작 전 타이틀/캐릭터 선택 UI를 띄우는 프론트엔드 GameMode" alt="AFrontendGameMode" shape="rect" coords="154,168,298,192"/>
+<area href="classAFrontendGameMode.html" title="타이틀/캐릭터 선택을 처리하는 프론트엔드 GameMode" alt="AFrontendGameMode" shape="rect" coords="0,112,144,136"/>
+<area href="classAIntroGameMode.html" title="인트로 용 게임 모드" alt="AIntroGameMode" shape="rect" coords="154,112,298,136"/>
+<area href="classARoomGameModeBase.html" title="방에 대한 베이스 GameMode" alt="ARoomGameModeBase" shape="rect" coords="308,112,452,136"/>
+<area href="classACombatGameMode.html" title="전투 방에 대한 GameMode" alt="ACombatGameMode" shape="rect" coords="154,168,298,192"/>
 <area href="classAShopGameMode.html" title="상점 방에 대한 GameMode" alt="AShopGameMode" shape="rect" coords="308,168,452,192"/>
 <area href="classATreasureGameMode.html" title="보상 방에 대한 GameMode" alt="ATreasureGameMode" shape="rect" coords="462,168,606,192"/>
   </map>
@@ -119,6 +120,12 @@ ARDGameModeBase에 대한 상속 다이어그램 : </div>
 Public 멤버 함수</h2></td></tr>
 <tr class="memitem:ab42cb8889551ebca44d00d171b066586" id="r_ab42cb8889551ebca44d00d171b066586"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#ab42cb8889551ebca44d00d171b066586">ARDGameModeBase</a> ()</td></tr>
 <tr class="separator:ab42cb8889551ebca44d00d171b066586"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe0da7c859e265aa523ecdbebd455202" id="r_abe0da7c859e265aa523ecdbebd455202"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#abe0da7c859e265aa523ecdbebd455202">HasActiveRun</a> () const</td></tr>
+<tr class="memdesc:abe0da7c859e265aa523ecdbebd455202"><td class="mdescLeft">&#160;</td><td class="mdescRight">현재 런이 살아 있는지 확인한다.  <br /></td></tr>
+<tr class="separator:abe0da7c859e265aa523ecdbebd455202"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a429b37f9a6ed65be2e3b386189ca44de" id="r_a429b37f9a6ed65be2e3b386189ca44de"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a429b37f9a6ed65be2e3b386189ca44de">CanAbandonRun</a> () const</td></tr>
+<tr class="memdesc:a429b37f9a6ed65be2e3b386189ca44de"><td class="mdescLeft">&#160;</td><td class="mdescRight">지금 런 포기 버튼을 사용할 수 있는지 조회한다.  <br /></td></tr>
+<tr class="separator:a429b37f9a6ed65be2e3b386189ca44de"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7bfd4b2b4958c15dab9229965ba7674c" id="r_a7bfd4b2b4958c15dab9229965ba7674c"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classUUserPersistData.html">UUserPersistData</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a7bfd4b2b4958c15dab9229965ba7674c">GetUserPersistData</a> () const</td></tr>
 <tr class="separator:a7bfd4b2b4958c15dab9229965ba7674c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6112a51a712c90489ef3c46670ee6023" id="r_a6112a51a712c90489ef3c46670ee6023"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classURunPersistData.html">URunPersistData</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a6112a51a712c90489ef3c46670ee6023">GetRunPersistData</a> () const</td></tr>
@@ -134,6 +141,28 @@ Protected 멤버 함수</h2></td></tr>
 <tr class="separator:aaeb116585c236121e090fc2422cbb54c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a96b3dafa3ed99f23fa798f8ba1c8bd39" id="r_a96b3dafa3ed99f23fa798f8ba1c8bd39"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a96b3dafa3ed99f23fa798f8ba1c8bd39">BeginRoom</a> ()</td></tr>
 <tr class="separator:a96b3dafa3ed99f23fa798f8ba1c8bd39"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab3519623f78df7f923f7e5a5d1e9664d" id="r_ab3519623f78df7f923f7e5a5d1e9664d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#ab3519623f78df7f923f7e5a5d1e9664d">StartFadeInUI</a> (FOnEndFadeInAnimation OnEndFadeInAnimation=FOnEndFadeInAnimation()) const</td></tr>
+<tr class="memdesc:ab3519623f78df7f923f7e5a5d1e9664d"><td class="mdescLeft">&#160;</td><td class="mdescRight">페이드 레이어를 열고 검은 화면에서 게임 화면으로 드러내는 페이드인을 시작한다.  <br /></td></tr>
+<tr class="separator:ab3519623f78df7f923f7e5a5d1e9664d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc237a5033164fd334a87c53f3199720" id="r_adc237a5033164fd334a87c53f3199720"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#adc237a5033164fd334a87c53f3199720">StartFadeOutUI</a> (FOnEndFadeOutAnimation OnEndFadeOutAnimation=FOnEndFadeOutAnimation()) const</td></tr>
+<tr class="memdesc:adc237a5033164fd334a87c53f3199720"><td class="mdescLeft">&#160;</td><td class="mdescRight">페이드 레이어를 열고 다음 화면 전환 전에 화면을 검게 덮는 페이드아웃을 시작한다.  <br /></td></tr>
+<tr class="separator:adc237a5033164fd334a87c53f3199720"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae7cc3429340936246a91f2cd4039d1d2" id="r_ae7cc3429340936246a91f2cd4039d1d2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#ae7cc3429340936246a91f2cd4039d1d2">OpenLoadingNotifyUI</a> (FOnEndUIOpenAnimation OnEndUIOpenAnimation=FOnEndUIOpenAnimation()) const</td></tr>
+<tr class="memdesc:ae7cc3429340936246a91f2cd4039d1d2"><td class="mdescLeft">&#160;</td><td class="mdescRight">로딩 알림 위젯을 공통 OpenUI 생명주기로 연다.  <br /></td></tr>
+<tr class="separator:ae7cc3429340936246a91f2cd4039d1d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8e86a26d1c1fbe0270f4fff57abf6e2a" id="r_a8e86a26d1c1fbe0270f4fff57abf6e2a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a8e86a26d1c1fbe0270f4fff57abf6e2a">CloseLoadingNotifyUI</a> (FOnEndUICloseAnimation OnEndUICloseAnimation=FOnEndUICloseAnimation()) const</td></tr>
+<tr class="memdesc:a8e86a26d1c1fbe0270f4fff57abf6e2a"><td class="mdescLeft">&#160;</td><td class="mdescRight">로딩 알림 위젯을 공통 CloseUI 생명주기로 닫는다.  <br /></td></tr>
+<tr class="separator:a8e86a26d1c1fbe0270f4fff57abf6e2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad6755483aae62186a5cd6c04954511d7" id="r_ad6755483aae62186a5cd6c04954511d7"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#ad6755483aae62186a5cd6c04954511d7">PreloadAndTransitionRoomAsync</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> RoomRowIndex, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> RoomColumnIndex)</td></tr>
+<tr class="separator:ad6755483aae62186a5cd6c04954511d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adcf5a289577d0007567e9fb3d15a50c0" id="r_adcf5a289577d0007567e9fb3d15a50c0"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#adcf5a289577d0007567e9fb3d15a50c0">PreloadAndTransitionRoomAsync</a> (<a class="el" href="StageLevelType_8h.html#ae0b1317897a714ca0969cdc80dfd5d95">EStageLevelType</a> StageLevel)</td></tr>
+<tr class="separator:adcf5a289577d0007567e9fb3d15a50c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaa081916f7a17d0669bc94f138307bee" id="r_aaa081916f7a17d0669bc94f138307bee"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#aaa081916f7a17d0669bc94f138307bee">PreloadAndTransitionFrontendRoomAsync</a> ()</td></tr>
+<tr class="separator:aaa081916f7a17d0669bc94f138307bee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab9937f02317796f6dbd72140b3b21372" id="r_ab9937f02317796f6dbd72140b3b21372"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#ab9937f02317796f6dbd72140b3b21372">MarkExternalReadyForTransition</a> ()</td></tr>
+<tr class="separator:ab9937f02317796f6dbd72140b3b21372"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6ea826dd4993ee4c6615db7688091cc" id="r_ab6ea826dd4993ee4c6615db7688091cc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#ab6ea826dd4993ee4c6615db7688091cc">ClearRunPersistData</a> ()</td></tr>
+<tr class="separator:ab6ea826dd4993ee4c6615db7688091cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
 Protected 속성</h2></td></tr>
@@ -141,10 +170,20 @@ Protected 속성</h2></td></tr>
 <tr class="separator:a5bdfcee8ef2e7e2d26b584919b3cd5dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae71d0190b0be104ddbd8df1c970c3009" id="r_ae71d0190b0be104ddbd8df1c970c3009"><td class="memItemLeft" align="right" valign="top">TSet&lt; <a class="el" href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#ae71d0190b0be104ddbd8df1c970c3009">mWorldWidgets</a></td></tr>
 <tr class="separator:ae71d0190b0be104ddbd8df1c970c3009"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8d6bf3433470121a19b56b878527f587" id="r_a8d6bf3433470121a19b56b878527f587"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a8d6bf3433470121a19b56b878527f587">mWasNextRoomPreloadRequested</a> = false</td></tr>
+<tr class="separator:a8d6bf3433470121a19b56b878527f587"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afbfd426dbbd4f49ecc00a6be26c7e13a" id="r_afbfd426dbbd4f49ecc00a6be26c7e13a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#afbfd426dbbd4f49ecc00a6be26c7e13a">mShowFadeInUIOnTransition</a> = false</td></tr>
+<tr class="separator:afbfd426dbbd4f49ecc00a6be26c7e13a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8096b0169868f9a25e73c1e94b940848" id="r_a8096b0169868f9a25e73c1e94b940848"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a8096b0169868f9a25e73c1e94b940848">mShowFadeOutUIOnTransition</a> = false</td></tr>
+<tr class="separator:a8096b0169868f9a25e73c1e94b940848"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c08ed30d38d88a6a32f8ea80f85c2f3" id="r_a8c08ed30d38d88a6a32f8ea80f85c2f3"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a8c08ed30d38d88a6a32f8ea80f85c2f3">mShowLoadingNotifyUIOnTransition</a> = false</td></tr>
+<tr class="separator:a8c08ed30d38d88a6a32f8ea80f85c2f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a924bd93b7009c5367b5286791cf82801" id="r_a924bd93b7009c5367b5286791cf82801"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classARDGameModeBase.html#a924bd93b7009c5367b5286791cf82801">mWaitExternalWorkOnTransition</a> = false</td></tr>
+<tr class="separator:a924bd93b7009c5367b5286791cf82801"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock">
-<p class="definition"><a class="el" href="RDGameModeBase_8h_source.html">RDGameModeBase.h</a> 파일의 <a class="el" href="RDGameModeBase_8h_source.html#l00023">23</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RDGameModeBase_8h_source.html">RDGameModeBase.h</a> 파일의 <a class="el" href="RDGameModeBase_8h_source.html#l00031">31</a> 번째 라인에서 정의되었습니다.</p>
 </div><h2 class="groupheader">생성자 &amp; 소멸자 문서화</h2>
 <a id="ab42cb8889551ebca44d00d171b066586" name="ab42cb8889551ebca44d00d171b066586"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab42cb8889551ebca44d00d171b066586">&#9670;&#160;</a></span>ARDGameModeBase()</h2>
@@ -161,7 +200,7 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00006">6</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00014">14</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -189,7 +228,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00011">11</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00018">18</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -216,9 +255,93 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p><a class="el" href="classACombatGameMode.html#abcaa666c5428158b5604599aed5a44eb">ACombatGameMode</a>, <a class="el" href="classAFrontendGameMode.html#ab5cd5e9dbf8760e85f6fda80ccf04e50">AFrontendGameMode</a>, <a class="el" href="classARoomGameModeBase.html#ac7adcd281d6129ae7563d0c97db37ded">ARoomGameModeBase</a>에서 재구현되었습니다.</p>
+<p><a class="el" href="classACombatGameMode.html#abcaa666c5428158b5604599aed5a44eb">ACombatGameMode</a>, <a class="el" href="classAFrontendGameMode.html#ab5cd5e9dbf8760e85f6fda80ccf04e50">AFrontendGameMode</a>, <a class="el" href="classAIntroGameMode.html#a5ab0c5642ace5fb194f6f3e3350b4293">AIntroGameMode</a>, <a class="el" href="classARoomGameModeBase.html#ac7adcd281d6129ae7563d0c97db37ded">ARoomGameModeBase</a>에서 재구현되었습니다.</p>
 
-<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00041">41</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00056">56</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a429b37f9a6ed65be2e3b386189ca44de" name="a429b37f9a6ed65be2e3b386189ca44de"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a429b37f9a6ed65be2e3b386189ca44de">&#9670;&#160;</a></span>CanAbandonRun()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool ARDGameModeBase::CanAbandonRun </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="section return"><dt>반환값</dt><dd>런 포기 버튼을 활성화할 수 있으면 true </dd></dl>
+
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00066">66</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ab6ea826dd4993ee4c6615db7688091cc" name="ab6ea826dd4993ee4c6615db7688091cc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab6ea826dd4993ee4c6615db7688091cc">&#9670;&#160;</a></span>ClearRunPersistData()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ARDGameModeBase::ClearRunPersistData </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00433">433</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a8e86a26d1c1fbe0270f4fff57abf6e2a" name="a8e86a26d1c1fbe0270f4fff57abf6e2a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8e86a26d1c1fbe0270f4fff57abf6e2a">&#9670;&#160;</a></span>CloseLoadingNotifyUI()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ARDGameModeBase::CloseLoadingNotifyUI </td>
+          <td>(</td>
+          <td class="paramtype">FOnEndUICloseAnimation&#160;</td>
+          <td class="paramname"><em>OnEndUICloseAnimation</em> = <code>FOnEndUICloseAnimation()</code></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>로딩 알림을 닫고 CloseUI 완료 콜백을 전달한다.</p>
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">OnEndUICloseAnimation</td><td>로딩 알림이 닫힌 뒤 실행할 선택 콜백</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>CloseUI()는 즉시 닫힐 수도 있고, 위젯 내부의 완료 표시/닫힘 연출 이후 끝날 수도 있다. 전환 시작 같은 후속 작업은 이 콜백 뒤에 두어 사용자에게 보이는 로딩 흐름과 실제 레벨 전환 순서를 맞춘다.</p>
+<p>왜 닫힘 콜백 뒤로 미루는가: 로딩 UI가 아직 "완료"를 보여주는 중인데 레벨 이동을 시작하면 입력과 화면 상태가 끊겨 보인다. CloseUI() 완료 뒤에 후속 작업을 두면 UI가 자기 흐름을 끝낸 다음 전환이 이어진다. </p>
+
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00197">197</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -237,7 +360,7 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00053">53</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00425">425</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -256,7 +379,27 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00045">45</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00417">417</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="abe0da7c859e265aa523ecdbebd455202" name="abe0da7c859e265aa523ecdbebd455202"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abe0da7c859e265aa523ecdbebd455202">&#9670;&#160;</a></span>HasActiveRun()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool ARDGameModeBase::HasActiveRun </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="section return"><dt>반환값</dt><dd>활성 RunPersistData가 있으면 true </dd></dl>
+
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00060">60</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -283,9 +426,9 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p><a class="el" href="classAFrontendGameMode.html#a639eef7fc9f842a2446e55135b5544ac">AFrontendGameMode</a>, <a class="el" href="classARoomGameModeBase.html#a154155929006382854ebddca760f9565">ARoomGameModeBase</a>에서 재구현되었습니다.</p>
+<p><a class="el" href="classARoomGameModeBase.html#a154155929006382854ebddca760f9565">ARoomGameModeBase</a>에서 재구현되었습니다.</p>
 
-<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00033">33</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00048">48</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -314,7 +457,248 @@ Protected 속성</h2></td></tr>
 
 <p><a class="el" href="classACombatGameMode.html#a1fa1cf8c139e1556c624dd95d5d52a48">ACombatGameMode</a>에서 재구현되었습니다.</p>
 
-<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00037">37</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00052">52</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ab9937f02317796f6dbd72140b3b21372" name="ab9937f02317796f6dbd72140b3b21372"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab9937f02317796f6dbd72140b3b21372">&#9670;&#160;</a></span>MarkExternalReadyForTransition()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool ARDGameModeBase::MarkExternalReadyForTransition </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00357">357</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ae7cc3429340936246a91f2cd4039d1d2" name="ae7cc3429340936246a91f2cd4039d1d2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae7cc3429340936246a91f2cd4039d1d2">&#9670;&#160;</a></span>OpenLoadingNotifyUI()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ARDGameModeBase::OpenLoadingNotifyUI </td>
+          <td>(</td>
+          <td class="paramtype">FOnEndUIOpenAnimation&#160;</td>
+          <td class="paramname"><em>OnEndUIOpenAnimation</em> = <code>FOnEndUIOpenAnimation()</code></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>로딩 알림을 표시하고 OpenUI 완료 콜백을 전달한다.</p>
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">OnEndUIOpenAnimation</td><td>로딩 알림이 열린 뒤 실행할 선택 콜백</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>로딩 알림의 최소 표시 시간이나 문구 연출은 위젯이 관리한다. GameMode는 표시 요청과 완료 콜백만 연결해 방 전환 로직이 UI 구현에 의존하지 않게 한다.</p>
+<p>왜 GameMode가 세부 연출을 모르는가: 로딩 문구, 최소 표시 시간, 닫힘 연출은 화면 표현의 책임이고 방 전환은 게임 흐름의 책임이다. 둘을 섞지 않아야 로딩 UI 디자인을 바꿔도 전환 로직을 다시 고치지 않는다. </p>
+
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00171">171</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="aaa081916f7a17d0669bc94f138307bee" name="aaa081916f7a17d0669bc94f138307bee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaa081916f7a17d0669bc94f138307bee">&#9670;&#160;</a></span>PreloadAndTransitionFrontendRoomAsync()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool ARDGameModeBase::PreloadAndTransitionFrontendRoomAsync </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00311">311</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="adcf5a289577d0007567e9fb3d15a50c0" name="adcf5a289577d0007567e9fb3d15a50c0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adcf5a289577d0007567e9fb3d15a50c0">&#9670;&#160;</a></span>PreloadAndTransitionRoomAsync() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool ARDGameModeBase::PreloadAndTransitionRoomAsync </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="StageLevelType_8h.html#ae0b1317897a714ca0969cdc80dfd5d95">EStageLevelType</a>&#160;</td>
+          <td class="paramname"><em>StageLevel</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00264">264</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ad6755483aae62186a5cd6c04954511d7" name="ad6755483aae62186a5cd6c04954511d7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad6755483aae62186a5cd6c04954511d7">&#9670;&#160;</a></span>PreloadAndTransitionRoomAsync() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool ARDGameModeBase::PreloadAndTransitionRoomAsync </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td>
+          <td class="paramname"><em>RoomRowIndex</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td>
+          <td class="paramname"><em>RoomColumnIndex</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>방 로드 및 자동 트랜지션을 시도하는 함수</p>
+<p>mRequireExternalReady 설정 시, 외부 타이밍 알림에 전환 가능성이 종속적 mShowFadeInUIOnAutoTransition 설정 시, 전환 이후에 FadeIn 애님 실행 mShowFadeOutUIOnAutoTransition 설정 시, 전환 이전에 FadeOut 애님 실행</p>
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">RoomRowIndex</td><td>다음 방 행 인덱스 </td></tr>
+    <tr><td class="paramname">RoomColumnIndex</td><td>다음 방 열 인덱스 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>반환값</dt><dd>요청 성공 여부 </dd></dl>
+
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00212">212</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ab3519623f78df7f923f7e5a5d1e9664d" name="ab3519623f78df7f923f7e5a5d1e9664d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab3519623f78df7f923f7e5a5d1e9664d">&#9670;&#160;</a></span>StartFadeInUI()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ARDGameModeBase::StartFadeInUI </td>
+          <td>(</td>
+          <td class="paramtype">FOnEndFadeInAnimation&#160;</td>
+          <td class="paramname"><em>OnEndFadeInAnimation</em> = <code>FOnEndFadeInAnimation()</code></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>OpenUI()는 페이드 레이어를 뷰포트에 올리는 공통 생명주기만 처리한다. 실제 페이드 방향과 완료 시점은 FadeInOut 위젯의 StartFadeIn()이 관리한다.</p>
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">OnEndFadeInAnimation</td><td>페이드인이 끝난 뒤 실행할 선택 콜백</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>OpenUI()는 페이드 전환 레이어를 뷰포트에 올리는 공통 UI 생명주기만 처리한다. 실제로 검은 화면을 걷어 게임 화면을 보여주는 일은 UFadeInOutWidget의 StartFadeIn()이 담당한다.</p>
+<p>역할 구분: ARDGameModeBase는 페이드 위젯을 찾아 열고, 어떤 방향의 페이드를 시작할지만 요청한다. UFadeInOutWidget은 그 결정을 받아 실제 화면을 어떻게 드러낼지와 완료 시점을 처리한다. </p>
+
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00082">82</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="adc237a5033164fd334a87c53f3199720" name="adc237a5033164fd334a87c53f3199720"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adc237a5033164fd334a87c53f3199720">&#9670;&#160;</a></span>StartFadeOutUI()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ARDGameModeBase::StartFadeOutUI </td>
+          <td>(</td>
+          <td class="paramtype">FOnEndFadeOutAnimation&#160;</td>
+          <td class="paramname"><em>OnEndFadeOutAnimation</em> = <code>FOnEndFadeOutAnimation()</code></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>OpenUI()는 페이드 레이어를 뷰포트에 올리는 공통 생명주기만 처리한다. 실제 페이드 방향과 완료 시점은 FadeInOut 위젯의 StartFadeOut()이 관리한다. 이 함수는 방 전환 여부를 판단하지 않고, 페이드아웃 완료 뒤 해야 할 일만 대리자로 받는다. 따라서 파생 GameMode는 단순 페이드아웃이나 별도 후속 작업을 같은 진입점으로 요청할 수 있다.</p>
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">OnEndFadeOutAnimation</td><td>페이드아웃이 끝난 뒤 실행할 선택 콜백</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>OpenUI()는 페이드 전환 레이어를 뷰포트에 올리는 공통 UI 생명주기만 처리한다. 실제로 화면을 검게 덮는 일은 UFadeInOutWidget의 StartFadeOut()이 담당한다. 이 함수는 방 전환 정책을 직접 알지 않으며, 페이드아웃 완료 뒤 이어질 작업은 대리자로 받는다.</p>
+<p>역할 구분: ARDGameModeBase는 페이드 위젯을 찾아 열고, 어떤 방향의 페이드를 시작할지만 요청한다. UFadeInOutWidget은 그 결정을 받아 실제 화면을 어떻게 덮을지와 완료 시점을 처리한다. </p>
+
+<p class="definition"><a class="el" href="RDGameModeBase_8cpp_source.html">RDGameModeBase.cpp</a> 파일의 <a class="el" href="RDGameModeBase_8cpp_source.html#l00108">108</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -339,7 +723,127 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="RDGameModeBase_8h_source.html">RDGameModeBase.h</a> 파일의 <a class="el" href="RDGameModeBase_8h_source.html#l00045">45</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RDGameModeBase_8h_source.html">RDGameModeBase.h</a> 파일의 <a class="el" href="RDGameModeBase_8h_source.html#l00159">159</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="afbfd426dbbd4f49ecc00a6be26c7e13a" name="afbfd426dbbd4f49ecc00a6be26c7e13a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afbfd426dbbd4f49ecc00a6be26c7e13a">&#9670;&#160;</a></span>mShowFadeInUIOnTransition</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool ARDGameModeBase::mShowFadeInUIOnTransition = false</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="RDGameModeBase_8h_source.html">RDGameModeBase.h</a> 파일의 <a class="el" href="RDGameModeBase_8h_source.html#l00169">169</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a8096b0169868f9a25e73c1e94b940848" name="a8096b0169868f9a25e73c1e94b940848"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8096b0169868f9a25e73c1e94b940848">&#9670;&#160;</a></span>mShowFadeOutUIOnTransition</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool ARDGameModeBase::mShowFadeOutUIOnTransition = false</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="RDGameModeBase_8h_source.html">RDGameModeBase.h</a> 파일의 <a class="el" href="RDGameModeBase_8h_source.html#l00171">171</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a8c08ed30d38d88a6a32f8ea80f85c2f3" name="a8c08ed30d38d88a6a32f8ea80f85c2f3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8c08ed30d38d88a6a32f8ea80f85c2f3">&#9670;&#160;</a></span>mShowLoadingNotifyUIOnTransition</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool ARDGameModeBase::mShowLoadingNotifyUIOnTransition = false</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="RDGameModeBase_8h_source.html">RDGameModeBase.h</a> 파일의 <a class="el" href="RDGameModeBase_8h_source.html#l00173">173</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a924bd93b7009c5367b5286791cf82801" name="a924bd93b7009c5367b5286791cf82801"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a924bd93b7009c5367b5286791cf82801">&#9670;&#160;</a></span>mWaitExternalWorkOnTransition</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool ARDGameModeBase::mWaitExternalWorkOnTransition = false</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="RDGameModeBase_8h_source.html">RDGameModeBase.h</a> 파일의 <a class="el" href="RDGameModeBase_8h_source.html#l00175">175</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a8d6bf3433470121a19b56b878527f587" name="a8d6bf3433470121a19b56b878527f587"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8d6bf3433470121a19b56b878527f587">&#9670;&#160;</a></span>mWasNextRoomPreloadRequested</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool ARDGameModeBase::mWasNextRoomPreloadRequested = false</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="RDGameModeBase_8h_source.html">RDGameModeBase.h</a> 파일의 <a class="el" href="RDGameModeBase_8h_source.html#l00165">165</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -363,7 +867,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="RDGameModeBase_8h_source.html">RDGameModeBase.h</a> 파일의 <a class="el" href="RDGameModeBase_8h_source.html#l00047">47</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RDGameModeBase_8h_source.html">RDGameModeBase.h</a> 파일의 <a class="el" href="RDGameModeBase_8h_source.html#l00161">161</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

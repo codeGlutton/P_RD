@@ -93,7 +93,8 @@ $(document).ready(function(){initNavTree('RoomTransitionSubsystem_8h.html',''); 
   <div class="summary">
 <a href="#nested-classes">클래스</a> &#124;
 <a href="#enum-members">열거형 타입</a> &#124;
-<a href="#func-members">함수</a>  </div>
+<a href="#func-members">함수</a> &#124;
+<a href="#var-members">변수</a>  </div>
   <div class="headertitle"><div class="title">RoomTransitionSubsystem.h 파일 참조</div></div>
 </div><!--header-->
 <div class="contents">
@@ -117,14 +118,16 @@ $(document).ready(function(){initNavTree('RoomTransitionSubsystem_8h.html',''); 
 &#160;&#160;<a class="el" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39ba6adf97f83acf6453d4a6a4b1070f3754">None</a> = 0
 , <a class="el" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39ba3d05668eb6ef7a9ab22494c69b1fcd7e">NewStageRequested</a> = 1 &lt;&lt; 0
 , <a class="el" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39bae523bdeb8c569d920898985919abe0a9">PreLoadRequested</a> = 1 &lt;&lt; 1
-, <a class="el" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39baa4e49976972d7769b116cbb12bd4eda7">AutoTransition</a> = 1 &lt;&lt; 2
+, <a class="el" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39bac39b49b0bdb994c958b5b509ed09e275">ExternalReady</a> = 1 &lt;&lt; 2
 , <br />
 &#160;&#160;<a class="el" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39ba6e45c01abe23fde043509a2911d24312">PlayerLoaded</a> = 1 &lt;&lt; 3
 , <a class="el" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39ba2fa773f4921c85f7f8dd21e72286d30b">StageLoaded</a> = 1 &lt;&lt; 4
 , <a class="el" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39bac03ee266c93e7961e6b70c20a9bf6e70">RoomLoaded</a> = 1 &lt;&lt; 5
-, <a class="el" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39bacf995f52045e013bef20db690c0bf584">AllTaskRequested</a> = NewStageRequested | PreLoadRequested
+, <a class="el" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39baa4e49976972d7769b116cbb12bd4eda7">AutoTransition</a> = 1 &lt;&lt; 6
 , <br />
-&#160;&#160;<a class="el" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39bafd88a37abccd0e208531091a001e8e49">ReadyToTransition</a> = PreLoadRequested | PlayerLoaded | StageLoaded | RoomLoaded
+&#160;&#160;<a class="el" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39bacf995f52045e013bef20db690c0bf584">AllTaskRequested</a> = NewStageRequested | PreLoadRequested
+, <a class="el" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39bafd88a37abccd0e208531091a001e8e49">ReadyToTransition</a> = PreLoadRequested | PlayerLoaded | StageLoaded | RoomLoaded | ExternalReady
+, <a class="el" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39ba0b39c2f2b410c97036fe777bc21ffe99">InTransition</a> = ReadyToTransition | AutoTransition
 <br />
  }</td></tr>
 <tr class="memdesc:a64d6978e5d1e2c7778d4a74c4d21b39b"><td class="mdescLeft">&#160;</td><td class="mdescRight">방 전환 상태 플래그  <a href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39b">더 자세히 ...</a><br /></td></tr>
@@ -132,10 +135,15 @@ $(document).ready(function(){initNavTree('RoomTransitionSubsystem_8h.html',''); 
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 함수</h2></td></tr>
-<tr class="memitem:af4df2d5ec1fbed5fe7e406432a66c418" id="r_af4df2d5ec1fbed5fe7e406432a66c418"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="RoomTransitionSubsystem_8h.html#af4df2d5ec1fbed5fe7e406432a66c418">DECLARE_DELEGATE_TwoParams</a> (FOnPreTransitNextRoom, int32, int32) struct <a class="el" href="structFRoom.html">FRoom</a></td></tr>
-<tr class="separator:af4df2d5ec1fbed5fe7e406432a66c418"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a09431212979406f04cd9f6294e27b199" id="r_a09431212979406f04cd9f6294e27b199"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="RoomTransitionSubsystem_8h.html#a09431212979406f04cd9f6294e27b199">DECLARE_DELEGATE_TwoParams</a> (FOnReadyToTransition, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>) DECLARE_DELEGATE_TwoParams(FOnPreTransitNextRoom</td></tr>
+<tr class="separator:a09431212979406f04cd9f6294e27b199"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a726f48ae7dee87533f00f5e6b49c6ca7" id="r_a726f48ae7dee87533f00f5e6b49c6ca7"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="RoomTransitionSubsystem_8h.html#a726f48ae7dee87533f00f5e6b49c6ca7">ENUM_CLASS_FLAGS</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#a64d6978e5d1e2c7778d4a74c4d21b39b">ERoomTransitionStateFlag</a>)</td></tr>
 <tr class="separator:a726f48ae7dee87533f00f5e6b49c6ca7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
+변수</h2></td></tr>
+<tr class="memitem:ada104807b93ac7cd59dac80d98ba857b" id="r_ada104807b93ac7cd59dac80d98ba857b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a></td></tr>
+<tr class="separator:ada104807b93ac7cd59dac80d98ba857b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock"><dl class="section author"><dt>작성자</dt><dd>모호재 </dd></dl>
@@ -166,21 +174,23 @@ $(document).ready(function(){initNavTree('RoomTransitionSubsystem_8h.html',''); 
 <tr><th colspan="2">열거형 멤버</th></tr><tr><td class="fieldname"><a id="a64d6978e5d1e2c7778d4a74c4d21b39ba6adf97f83acf6453d4a6a4b1070f3754" name="a64d6978e5d1e2c7778d4a74c4d21b39ba6adf97f83acf6453d4a6a4b1070f3754"></a>None&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a64d6978e5d1e2c7778d4a74c4d21b39ba3d05668eb6ef7a9ab22494c69b1fcd7e" name="a64d6978e5d1e2c7778d4a74c4d21b39ba3d05668eb6ef7a9ab22494c69b1fcd7e"></a>NewStageRequested&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a64d6978e5d1e2c7778d4a74c4d21b39bae523bdeb8c569d920898985919abe0a9" name="a64d6978e5d1e2c7778d4a74c4d21b39bae523bdeb8c569d920898985919abe0a9"></a>PreLoadRequested&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a64d6978e5d1e2c7778d4a74c4d21b39baa4e49976972d7769b116cbb12bd4eda7" name="a64d6978e5d1e2c7778d4a74c4d21b39baa4e49976972d7769b116cbb12bd4eda7"></a>AutoTransition&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a64d6978e5d1e2c7778d4a74c4d21b39bac39b49b0bdb994c958b5b509ed09e275" name="a64d6978e5d1e2c7778d4a74c4d21b39bac39b49b0bdb994c958b5b509ed09e275"></a>ExternalReady&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a64d6978e5d1e2c7778d4a74c4d21b39ba6e45c01abe23fde043509a2911d24312" name="a64d6978e5d1e2c7778d4a74c4d21b39ba6e45c01abe23fde043509a2911d24312"></a>PlayerLoaded&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a64d6978e5d1e2c7778d4a74c4d21b39ba2fa773f4921c85f7f8dd21e72286d30b" name="a64d6978e5d1e2c7778d4a74c4d21b39ba2fa773f4921c85f7f8dd21e72286d30b"></a>StageLoaded&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a64d6978e5d1e2c7778d4a74c4d21b39bac03ee266c93e7961e6b70c20a9bf6e70" name="a64d6978e5d1e2c7778d4a74c4d21b39bac03ee266c93e7961e6b70c20a9bf6e70"></a>RoomLoaded&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a64d6978e5d1e2c7778d4a74c4d21b39baa4e49976972d7769b116cbb12bd4eda7" name="a64d6978e5d1e2c7778d4a74c4d21b39baa4e49976972d7769b116cbb12bd4eda7"></a>AutoTransition&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a64d6978e5d1e2c7778d4a74c4d21b39bacf995f52045e013bef20db690c0bf584" name="a64d6978e5d1e2c7778d4a74c4d21b39bacf995f52045e013bef20db690c0bf584"></a>AllTaskRequested&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a64d6978e5d1e2c7778d4a74c4d21b39bafd88a37abccd0e208531091a001e8e49" name="a64d6978e5d1e2c7778d4a74c4d21b39bafd88a37abccd0e208531091a001e8e49"></a>ReadyToTransition&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a64d6978e5d1e2c7778d4a74c4d21b39ba0b39c2f2b410c97036fe777bc21ffe99" name="a64d6978e5d1e2c7778d4a74c4d21b39ba0b39c2f2b410c97036fe777bc21ffe99"></a>InTransition&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
-<p class="definition"><a class="el" href="RoomTransitionSubsystem_8h_source.html">RoomTransitionSubsystem.h</a> 파일의 <a class="el" href="RoomTransitionSubsystem_8h_source.html#l00027">27</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="RoomTransitionSubsystem_8h_source.html">RoomTransitionSubsystem.h</a> 파일의 <a class="el" href="RoomTransitionSubsystem_8h_source.html#l00028">28</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
 <h2 class="groupheader">함수 문서화</h2>
-<a id="af4df2d5ec1fbed5fe7e406432a66c418" name="af4df2d5ec1fbed5fe7e406432a66c418"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af4df2d5ec1fbed5fe7e406432a66c418">&#9670;&#160;</a></span>DECLARE_DELEGATE_TwoParams()</h2>
+<a id="a09431212979406f04cd9f6294e27b199" name="a09431212979406f04cd9f6294e27b199"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a09431212979406f04cd9f6294e27b199">&#9670;&#160;</a></span>DECLARE_DELEGATE_TwoParams()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -188,19 +198,19 @@ $(document).ready(function(){initNavTree('RoomTransitionSubsystem_8h.html',''); 
         <tr>
           <td class="memname">DECLARE_DELEGATE_TwoParams </td>
           <td>(</td>
-          <td class="paramtype">FOnPreTransitNextRoom&#160;</td>
+          <td class="paramtype">FOnReadyToTransition&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int32&#160;</td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int32&#160;</td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td>
           <td class="paramname">&#160;</td>
         </tr>
         <tr>
@@ -228,6 +238,23 @@ $(document).ready(function(){initNavTree('RoomTransitionSubsystem_8h.html',''); 
         </tr>
       </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<h2 class="groupheader">변수 문서화</h2>
+<a id="ada104807b93ac7cd59dac80d98ba857b" name="ada104807b93ac7cd59dac80d98ba857b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ada104807b93ac7cd59dac80d98ba857b">&#9670;&#160;</a></span>int32</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int32</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="RoomTransitionSubsystem_8h_source.html">RoomTransitionSubsystem.h</a> 파일의 <a class="el" href="RoomTransitionSubsystem_8h_source.html#l00021">21</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

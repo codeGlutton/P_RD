@@ -116,27 +116,49 @@ ITileActor에 대한 상속 다이어그램 : </div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public 멤버 함수</h2></td></tr>
-<tr class="memitem:a2d65dcd9ce991c8704e412544000b2d4" id="r_a2d65dcd9ce991c8704e412544000b2d4"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3">ETileLayerFlag</a> virtual GetTileLayer() const PURE_VIRTUAL(<a class="el" href="classITileActor.html">ITileActor</a> <a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3">ETileLayerFlag</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#a2d65dcd9ce991c8704e412544000b2d4">GetBlockFlags</a> () const</td></tr>
-<tr class="separator:a2d65dcd9ce991c8704e412544000b2d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af7216153d2711f8f7f44682b5523c51e" id="r_af7216153d2711f8f7f44682b5523c51e"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3">ETileLayerFlag</a> virtual GetTileLayerFlags() const PURE_VIRTUAL(<a class="el" href="classITileActor.html">ITileActor</a> <a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3">ETileLayerFlag</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#af7216153d2711f8f7f44682b5523c51e">GetBlockLayerFlags</a> () const</td></tr>
+<tr class="memdesc:af7216153d2711f8f7f44682b5523c51e"><td class="mdescLeft">&#160;</td><td class="mdescRight">액터의 레이어 타입을 반환  <br /></td></tr>
+<tr class="separator:af7216153d2711f8f7f44682b5523c51e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a99bde397c7d004fd66fb44d5419cab37" id="r_a99bde397c7d004fd66fb44d5419cab37"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3">ETileLayerFlag</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#a99bde397c7d004fd66fb44d5419cab37">GetReplaceLayerFlags</a> () const</td></tr>
+<tr class="separator:a99bde397c7d004fd66fb44d5419cab37"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acbf4fb0ab1dcfad6941db7c536f5665b" id="r_acbf4fb0ab1dcfad6941db7c536f5665b"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#acbf4fb0ab1dcfad6941db7c536f5665b">GetOverlayLayerPriority</a> () const</td></tr>
+<tr class="separator:acbf4fb0ab1dcfad6941db7c536f5665b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
 Protected 멤버 함수</h2></td></tr>
-<tr class="memitem:ae6f9fac0e5dd6c05154741a17cf51a61" id="r_ae6f9fac0e5dd6c05154741a17cf51a61"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#ae6f9fac0e5dd6c05154741a17cf51a61">OnBeginTileOverlap</a> (<a class="el" href="classITileActor.html">ITileActor</a> *Other, <a class="el" href="structFTile.html">FTile</a> *CurTile)</td></tr>
-<tr class="separator:ae6f9fac0e5dd6c05154741a17cf51a61"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a981c87cc8e0495037fa8db40fea728ae" id="r_a981c87cc8e0495037fa8db40fea728ae"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#a981c87cc8e0495037fa8db40fea728ae">OnEndTileOverlap</a> (<a class="el" href="classITileActor.html">ITileActor</a> *Other, <a class="el" href="structFTile.html">FTile</a> *CurTile)</td></tr>
-<tr class="separator:a981c87cc8e0495037fa8db40fea728ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf80b1eb309d0d850e2d1bd8d01c3efb" id="r_acf80b1eb309d0d850e2d1bd8d01c3efb"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#acf80b1eb309d0d850e2d1bd8d01c3efb">OnBeginTileOverlap</a> (<a class="el" href="structFTile.html">FTile</a> *CurTile, <a class="el" href="classITileActor.html">ITileActor</a> *Other)</td></tr>
+<tr class="memdesc:acf80b1eb309d0d850e2d1bd8d01c3efb"><td class="mdescLeft">&#160;</td><td class="mdescRight">오버랩 시작 시 실행될 함수  <br /></td></tr>
+<tr class="separator:acf80b1eb309d0d850e2d1bd8d01c3efb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab75d7b77d0fb7933d829878426da7898" id="r_ab75d7b77d0fb7933d829878426da7898"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#ab75d7b77d0fb7933d829878426da7898">OnEndTileOverlap</a> (<a class="el" href="structFTile.html">FTile</a> *CurTile, <a class="el" href="classITileActor.html">ITileActor</a> *Other)</td></tr>
+<tr class="memdesc:ab75d7b77d0fb7933d829878426da7898"><td class="mdescLeft">&#160;</td><td class="mdescRight">오버랩 종료 시 실행될 함수  <br /></td></tr>
+<tr class="separator:ab75d7b77d0fb7933d829878426da7898"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae02e2c43eefb0c014344d558e7a1763e" id="r_ae02e2c43eefb0c014344d558e7a1763e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#ae02e2c43eefb0c014344d558e7a1763e">OnReplaced</a> (<a class="el" href="structFTile.html">FTile</a> *CurTile, <a class="el" href="classITileActor.html">ITileActor</a> *Other)</td></tr>
+<tr class="memdesc:ae02e2c43eefb0c014344d558e7a1763e"><td class="mdescLeft">&#160;</td><td class="mdescRight">다른 액터에게 교체되어 타일에서 밀려날 때 실행될 함수  <br /></td></tr>
+<tr class="separator:ae02e2c43eefb0c014344d558e7a1763e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9e46607347550a6660034f4a324d9cb" id="r_af9e46607347550a6660034f4a324d9cb"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#af9e46607347550a6660034f4a324d9cb">OnBeginRound</a> ()</td></tr>
+<tr class="separator:af9e46607347550a6660034f4a324d9cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a58e4617c818eac827e1256a6ba56785f" id="r_a58e4617c818eac827e1256a6ba56785f"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#a58e4617c818eac827e1256a6ba56785f">OnEndRound</a> ()</td></tr>
+<tr class="separator:a58e4617c818eac827e1256a6ba56785f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a260c983dbadeb5c9f96459326a2d1c63" id="r_a260c983dbadeb5c9f96459326a2d1c63"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#a260c983dbadeb5c9f96459326a2d1c63">OnBeginTurn</a> ()</td></tr>
+<tr class="separator:a260c983dbadeb5c9f96459326a2d1c63"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afd3632b6724d718746ee4fa532f453bd" id="r_afd3632b6724d718746ee4fa532f453bd"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#afd3632b6724d718746ee4fa532f453bd">OnEndTurn</a> ()</td></tr>
+<tr class="separator:afd3632b6724d718746ee4fa532f453bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="friends" name="friends"></a>
 Friends</h2></td></tr>
 <tr class="memitem:ab34036198989c6349ca369e027238a21" id="r_ab34036198989c6349ca369e027238a21"><td class="memItemLeft" align="right" valign="top">class&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#ab34036198989c6349ca369e027238a21">ATileMap</a></td></tr>
 <tr class="separator:ab34036198989c6349ca369e027238a21"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a24f7768dc98007df13f4a0d33ad12340" id="r_a24f7768dc98007df13f4a0d33ad12340"><td class="memItemLeft" align="right" valign="top">class&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#a24f7768dc98007df13f4a0d33ad12340">USRPGCombatSubsystem</a></td></tr>
+<tr class="separator:a24f7768dc98007df13f4a0d33ad12340"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afc93c5f683d3da8a29735f457ed91a56" id="r_afc93c5f683d3da8a29735f457ed91a56"><td class="memItemLeft" align="right" valign="top">struct&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#afc93c5f683d3da8a29735f457ed91a56">FSRPGTurnContext</a></td></tr>
+<tr class="separator:afc93c5f683d3da8a29735f457ed91a56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock">
 <p class="definition"><a class="el" href="TileActor_8h_source.html">TileActor.h</a> 파일의 <a class="el" href="TileActor_8h_source.html#l00025">25</a> 번째 라인에서 정의되었습니다.</p>
 </div><h2 class="groupheader">멤버 함수 문서화</h2>
-<a id="a2d65dcd9ce991c8704e412544000b2d4" name="a2d65dcd9ce991c8704e412544000b2d4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2d65dcd9ce991c8704e412544000b2d4">&#9670;&#160;</a></span>GetBlockFlags()</h2>
+<a id="af7216153d2711f8f7f44682b5523c51e" name="af7216153d2711f8f7f44682b5523c51e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af7216153d2711f8f7f44682b5523c51e">&#9670;&#160;</a></span>GetBlockLayerFlags()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -145,7 +167,7 @@ Friends</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3">ETileLayerFlag</a> ITileActor::GetBlockFlags </td>
+          <td class="memname"><a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3">ETileLayerFlag</a> ITileActor::GetBlockLayerFlags </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -157,18 +179,103 @@ Friends</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>액터의 레이어 타입을 반환 </p><dl class="section return"><dt>반환값</dt><dd>레이어 타입 타일 배치 시에 블로킹할 타입들 반환 </dd>
+<dl class="section return"><dt>반환값</dt><dd>레이어 타입 타일 배치 시에 블로킹할 타입들 반환 </dd>
 <dd>
 블로킹할 레이어 타입들 </dd></dl>
 
-<p><a class="el" href="classAUnit.html#ac7f250420e4ebbec931b45615f409aff">AUnit</a>에서 재구현되었습니다.</p>
+<p><a class="el" href="classAUnit.html#a4b707a4bdadb00fc315a4e94817117cc">AUnit</a>에서 재구현되었습니다.</p>
 
 <p class="definition"><a class="el" href="TileActor_8cpp_source.html">TileActor.cpp</a> 파일의 <a class="el" href="TileActor_8cpp_source.html#l00003">3</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="ae6f9fac0e5dd6c05154741a17cf51a61" name="ae6f9fac0e5dd6c05154741a17cf51a61"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae6f9fac0e5dd6c05154741a17cf51a61">&#9670;&#160;</a></span>OnBeginTileOverlap()</h2>
+<a id="acbf4fb0ab1dcfad6941db7c536f5665b" name="acbf4fb0ab1dcfad6941db7c536f5665b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acbf4fb0ab1dcfad6941db7c536f5665b">&#9670;&#160;</a></span>GetOverlayLayerPriority()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> ITileActor::GetOverlayLayerPriority </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Overlay 레이어 내 교체 우선순위 반환</p>
+<p>같은 교체 대상끼리 우열을 가린다. 진입자 우선순위가 같거나 더 높을 때만 기존 액터를 덮어쓴다. </p><dl class="section return"><dt>반환값</dt><dd>우선순위 (높을수록 우선) </dd></dl>
+
+<p class="definition"><a class="el" href="TileActor_8cpp_source.html">TileActor.cpp</a> 파일의 <a class="el" href="TileActor_8cpp_source.html#l00013">13</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a99bde397c7d004fd66fb44d5419cab37" name="a99bde397c7d004fd66fb44d5419cab37"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a99bde397c7d004fd66fb44d5419cab37">&#9670;&#160;</a></span>GetReplaceLayerFlags()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3">ETileLayerFlag</a> ITileActor::GetReplaceLayerFlags </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>타일 배치 시에 교체할 타입들 반환 </p><dl class="section return"><dt>반환값</dt><dd>교체할 레이어 타입들 </dd></dl>
+
+<p class="definition"><a class="el" href="TileActor_8cpp_source.html">TileActor.cpp</a> 파일의 <a class="el" href="TileActor_8cpp_source.html#l00008">8</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="af9e46607347550a6660034f4a324d9cb" name="af9e46607347550a6660034f4a324d9cb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af9e46607347550a6660034f4a324d9cb">&#9670;&#160;</a></span>OnBeginRound()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ITileActor::OnBeginRound </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>라운드 시작마다 실행될 함수. (라운드 : 고정된 턴 기준으로 한바퀴) </p>
+
+<p class="definition"><a class="el" href="TileActor_8cpp_source.html">TileActor.cpp</a> 파일의 <a class="el" href="TileActor_8cpp_source.html#l00030">30</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="acf80b1eb309d0d850e2d1bd8d01c3efb" name="acf80b1eb309d0d850e2d1bd8d01c3efb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acf80b1eb309d0d850e2d1bd8d01c3efb">&#9670;&#160;</a></span>OnBeginTileOverlap()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -179,14 +286,14 @@ Friends</h2></td></tr>
         <tr>
           <td class="memname">void ITileActor::OnBeginTileOverlap </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classITileActor.html">ITileActor</a> *&#160;</td>
-          <td class="paramname"><em>Other</em>, </td>
+          <td class="paramtype"><a class="el" href="structFTile.html">FTile</a> *&#160;</td>
+          <td class="paramname"><em>CurTile</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structFTile.html">FTile</a> *&#160;</td>
-          <td class="paramname"><em>CurTile</em>&#160;</td>
+          <td class="paramtype"><a class="el" href="classITileActor.html">ITileActor</a> *&#160;</td>
+          <td class="paramname"><em>Other</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -200,20 +307,75 @@ Friends</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>오버랩 시작 시 실행될 함수 </p><dl class="params"><dt>매개변수</dt><dd>
+<dl class="params"><dt>매개변수</dt><dd>
   <table class="params">
-    <tr><td class="paramname">Other</td><td>반대 대상 </td></tr>
     <tr><td class="paramname">CurTile</td><td>현재 위치한 타일 객체 </td></tr>
+    <tr><td class="paramname">Other</td><td>반대 대상 </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition"><a class="el" href="TileActor_8cpp_source.html">TileActor.cpp</a> 파일의 <a class="el" href="TileActor_8cpp_source.html#l00008">8</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileActor_8cpp_source.html">TileActor.cpp</a> 파일의 <a class="el" href="TileActor_8cpp_source.html#l00018">18</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a981c87cc8e0495037fa8db40fea728ae" name="a981c87cc8e0495037fa8db40fea728ae"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a981c87cc8e0495037fa8db40fea728ae">&#9670;&#160;</a></span>OnEndTileOverlap()</h2>
+<a id="a260c983dbadeb5c9f96459326a2d1c63" name="a260c983dbadeb5c9f96459326a2d1c63"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a260c983dbadeb5c9f96459326a2d1c63">&#9670;&#160;</a></span>OnBeginTurn()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ITileActor::OnBeginTurn </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>자신의 턴 시작마다 실행될 함수. </p>
+
+<p class="definition"><a class="el" href="TileActor_8cpp_source.html">TileActor.cpp</a> 파일의 <a class="el" href="TileActor_8cpp_source.html#l00038">38</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a58e4617c818eac827e1256a6ba56785f" name="a58e4617c818eac827e1256a6ba56785f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a58e4617c818eac827e1256a6ba56785f">&#9670;&#160;</a></span>OnEndRound()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ITileActor::OnEndRound </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileActor_8cpp_source.html">TileActor.cpp</a> 파일의 <a class="el" href="TileActor_8cpp_source.html#l00034">34</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ab75d7b77d0fb7933d829878426da7898" name="ab75d7b77d0fb7933d829878426da7898"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab75d7b77d0fb7933d829878426da7898">&#9670;&#160;</a></span>OnEndTileOverlap()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -224,14 +386,14 @@ Friends</h2></td></tr>
         <tr>
           <td class="memname">void ITileActor::OnEndTileOverlap </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classITileActor.html">ITileActor</a> *&#160;</td>
-          <td class="paramname"><em>Other</em>, </td>
+          <td class="paramtype"><a class="el" href="structFTile.html">FTile</a> *&#160;</td>
+          <td class="paramname"><em>CurTile</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structFTile.html">FTile</a> *&#160;</td>
-          <td class="paramname"><em>CurTile</em>&#160;</td>
+          <td class="paramtype"><a class="el" href="classITileActor.html">ITileActor</a> *&#160;</td>
+          <td class="paramname"><em>Other</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -245,15 +407,87 @@ Friends</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>오버랩 종료 시 실행될 함수 </p><dl class="params"><dt>매개변수</dt><dd>
+<dl class="params"><dt>매개변수</dt><dd>
   <table class="params">
-    <tr><td class="paramname">Other</td><td>반대 대상 </td></tr>
     <tr><td class="paramname">CurTile</td><td>현재 위치한 타일 객체 </td></tr>
+    <tr><td class="paramname">Other</td><td>반대 대상 </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition"><a class="el" href="TileActor_8cpp_source.html">TileActor.cpp</a> 파일의 <a class="el" href="TileActor_8cpp_source.html#l00012">12</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileActor_8cpp_source.html">TileActor.cpp</a> 파일의 <a class="el" href="TileActor_8cpp_source.html#l00022">22</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="afd3632b6724d718746ee4fa532f453bd" name="afd3632b6724d718746ee4fa532f453bd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afd3632b6724d718746ee4fa532f453bd">&#9670;&#160;</a></span>OnEndTurn()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ITileActor::OnEndTurn </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileActor_8cpp_source.html">TileActor.cpp</a> 파일의 <a class="el" href="TileActor_8cpp_source.html#l00042">42</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ae02e2c43eefb0c014344d558e7a1763e" name="ae02e2c43eefb0c014344d558e7a1763e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae02e2c43eefb0c014344d558e7a1763e">&#9670;&#160;</a></span>OnReplaced()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ITileActor::OnReplaced </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structFTile.html">FTile</a> *&#160;</td>
+          <td class="paramname"><em>CurTile</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classITileActor.html">ITileActor</a> *&#160;</td>
+          <td class="paramname"><em>Other</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">CurTile</td><td>현재 위치한 타일 객체 </td></tr>
+    <tr><td class="paramname">Other</td><td>자신을 교체하고 들어오는 액터 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition"><a class="el" href="TileActor_8cpp_source.html">TileActor.cpp</a> 파일의 <a class="el" href="TileActor_8cpp_source.html#l00026">26</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -279,6 +513,54 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 
 <p class="definition"><a class="el" href="TileActor_8h_source.html">TileActor.h</a> 파일의 <a class="el" href="TileActor_8h_source.html#l00029">29</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="afc93c5f683d3da8a29735f457ed91a56" name="afc93c5f683d3da8a29735f457ed91a56"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afc93c5f683d3da8a29735f457ed91a56">&#9670;&#160;</a></span>FSRPGTurnContext</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">friend struct <a class="el" href="structFSRPGTurnContext.html">FSRPGTurnContext</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileActor_8h_source.html">TileActor.h</a> 파일의 <a class="el" href="TileActor_8h_source.html#l00032">32</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a24f7768dc98007df13f4a0d33ad12340" name="a24f7768dc98007df13f4a0d33ad12340"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a24f7768dc98007df13f4a0d33ad12340">&#9670;&#160;</a></span>USRPGCombatSubsystem</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">friend class <a class="el" href="classUSRPGCombatSubsystem.html">USRPGCombatSubsystem</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileActor_8h_source.html">TileActor.h</a> 파일의 <a class="el" href="TileActor_8h_source.html#l00031">31</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

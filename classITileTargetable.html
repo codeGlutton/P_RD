@@ -93,7 +93,7 @@ $(document).ready(function(){initNavTree('classITileTargetable.html',''); initRe
   <div class="summary">
 <a href="#pub-methods">Public 멤버 함수</a> &#124;
 <a href="classITileTargetable-members.html">모든 멤버 목록</a>  </div>
-  <div class="headertitle"><div class="title">ITileTargetable 클래스 참조</div></div>
+  <div class="headertitle"><div class="title">ITileTargetable 클래스 참조<span class="mlabels"><span class="mlabel">abstract</span></span></div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -116,11 +116,34 @@ ITileTargetable에 대한 상속 다이어그램 : </div>
 Public 멤버 함수</h2></td></tr>
 <tr class="memitem:a857c3b201dc13f9c79aeb1e6a4819f91" id="r_a857c3b201dc13f9c79aeb1e6a4819f91"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileTargetable.html#a857c3b201dc13f9c79aeb1e6a4819f91">IsTargetable</a> () const</td></tr>
 <tr class="separator:a857c3b201dc13f9c79aeb1e6a4819f91"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeb95e005bac4352990e7defca6a69f77" id="r_aeb95e005bac4352990e7defca6a69f77"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileTargetable.html#aeb95e005bac4352990e7defca6a69f77">IsDead</a> () const</td></tr>
+<tr class="separator:aeb95e005bac4352990e7defca6a69f77"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae744c256a9c2ea2e46cb0cea3d1ba31e" id="r_ae744c256a9c2ea2e46cb0cea3d1ba31e"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="structFTileTargetSnapshotTargetData.html">FTileTargetSnapshotTargetData</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileTargetable.html#ae744c256a9c2ea2e46cb0cea3d1ba31e">MakeSnapshotTargetData</a> () const =0</td></tr>
+<tr class="separator:ae744c256a9c2ea2e46cb0cea3d1ba31e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock">
-<p class="definition"><a class="el" href="TileTargetable_8h_source.html">TileTargetable.h</a> 파일의 <a class="el" href="TileTargetable_8h_source.html#l00023">23</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileTargetable_8h_source.html">TileTargetable.h</a> 파일의 <a class="el" href="TileTargetable_8h_source.html#l00052">52</a> 번째 라인에서 정의되었습니다.</p>
 </div><h2 class="groupheader">멤버 함수 문서화</h2>
+<a id="aeb95e005bac4352990e7defca6a69f77" name="aeb95e005bac4352990e7defca6a69f77"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeb95e005bac4352990e7defca6a69f77">&#9670;&#160;</a></span>IsDead()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool ITileTargetable::IsDead </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileTargetable_8cpp_source.html">TileTargetable.cpp</a> 파일의 <a class="el" href="TileTargetable_8cpp_source.html#l00022">22</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
 <a id="a857c3b201dc13f9c79aeb1e6a4819f91" name="a857c3b201dc13f9c79aeb1e6a4819f91"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a857c3b201dc13f9c79aeb1e6a4819f91">&#9670;&#160;</a></span>IsTargetable()</h2>
 
@@ -143,8 +166,37 @@ Public 멤버 함수</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+<p>현재 타격 가능한 여부를 반환하는 함수 </p><dl class="section return"><dt>반환값</dt><dd>타격 가능 여부 </dd></dl>
 
-<p class="definition"><a class="el" href="TileTargetable_8cpp_source.html">TileTargetable.cpp</a> 파일의 <a class="el" href="TileTargetable_8cpp_source.html#l00003">3</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileTargetable_8cpp_source.html">TileTargetable.cpp</a> 파일의 <a class="el" href="TileTargetable_8cpp_source.html#l00027">27</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ae744c256a9c2ea2e46cb0cea3d1ba31e" name="ae744c256a9c2ea2e46cb0cea3d1ba31e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae744c256a9c2ea2e46cb0cea3d1ba31e">&#9670;&#160;</a></span>MakeSnapshotTargetData()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual <a class="el" href="structFTileTargetSnapshotTargetData.html">FTileTargetSnapshotTargetData</a> * ITileTargetable::MakeSnapshotTargetData </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>유닛의 현재 스탯 스냅샷을 찍어 타겟 정보로 반환하는 함수 </p>
+
+<p><a class="el" href="classAUnit.html#ab6e84390ef52ff4bfa139a558e005efc">AUnit</a>에서 구현되었습니다.</p>
 
 </div>
 </div>

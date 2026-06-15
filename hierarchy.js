@@ -8,9 +8,10 @@ var hierarchy =
     ] ],
     [ "AGameModeBase", null, [
       [ "ARDGameModeBase", "classARDGameModeBase.html", [
+        [ "AFrontendGameMode", "classAFrontendGameMode.html", null ],
+        [ "AIntroGameMode", "classAIntroGameMode.html", null ],
         [ "ARoomGameModeBase", "classARoomGameModeBase.html", [
           [ "ACombatGameMode", "classACombatGameMode.html", null ],
-          [ "AFrontendGameMode", "classAFrontendGameMode.html", null ],
           [ "AShopGameMode", "classAShopGameMode.html", null ],
           [ "ATreasureGameMode", "classATreasureGameMode.html", null ]
         ] ]
@@ -29,13 +30,16 @@ var hierarchy =
     ] ],
     [ "FAssetNamingRule", "structFAssetNamingRule.html", null ],
     [ "FAssetNamingRuleSet", "structFAssetNamingRuleSet.html", null ],
+    [ "FEffectCommitResult", "structFEffectCommitResult.html", null ],
     [ "FEnemyUnitPlacementData", "structFEnemyUnitPlacementData.html", null ],
     [ "FFrontendCharacterOption", "structFFrontendCharacterOption.html", null ],
+    [ "FFrontendMapLinePoolEntry", "structFFrontendMapLinePoolEntry.html", null ],
+    [ "FFrontendMapNodePoolEntry", "structFFrontendMapNodePoolEntry.html", null ],
     [ "FGameplayAbilityTargetData", null, [
-      [ "FUnitSnapshotTargetData", "structFUnitSnapshotTargetData.html", null ]
+      [ "FTileTargetSnapshotTargetData", "structFTileTargetSnapshotTargetData.html", null ]
     ] ],
-    [ "FGameplayEffectData", "structFGameplayEffectData.html", null ],
     [ "FGlobalStageBuildSetting", "structFGlobalStageBuildSetting.html", null ],
+    [ "FMapRoomView", "structFMapRoomView.html", null ],
     [ "FObjectAndNameAsStringProxyArchive", null, [
       [ "FSaveGameArchive", "structFSaveGameArchive.html", null ]
     ] ],
@@ -54,9 +58,22 @@ var hierarchy =
     [ "FRoomEdge", "structFRoomEdge.html", null ],
     [ "FRoomRow", "structFRoomRow.html", null ],
     [ "FRoomTransitionRequest", "structFRoomTransitionRequest.html", null ],
+    [ "FRunControlView", "structFRunControlView.html", null ],
     [ "FRunLog", "structFRunLog.html", null ],
-    [ "FSkillAction", "structFSkillAction.html", null ],
-    [ "FSRPGActionBuilder", "structFSRPGActionBuilder.html", null ],
+    [ "FSkillAnimLayer", "structFSkillAnimLayer.html", null ],
+    [ "FSkillCommitResult", "structFSkillCommitResult.html", null ],
+    [ "FSkillEffectLayer", "structFSkillEffectLayer.html", null ],
+    [ "FSRPGActionCommand", "structFSRPGActionCommand.html", [
+      [ "FSRPGActionCreationCommand< FSRPGSkillAction >", "structFSRPGActionCreationCommand.html", [
+        [ "FSRPGSkillCastCommand", "structFSRPGSkillCastCommand.html", null ]
+      ] ],
+      [ "FSRPGActionCreationCommand< FSRPGSkillBuildAction >", "structFSRPGActionCreationCommand.html", [
+        [ "FSRPGSkillSelectCommand", "structFSRPGSkillSelectCommand.html", null ]
+      ] ],
+      [ "FSRPGActionCreationCommand< ActionType >", "structFSRPGActionCreationCommand.html", null ],
+      [ "FSRPGCDiceSelectCommand", "structFSRPGCDiceSelectCommand.html", null ],
+      [ "FSRPGWorldTraceCommand", "structFSRPGWorldTraceCommand.html", null ]
+    ] ],
     [ "FSRPGTurnUnregisterRequest", "structFSRPGTurnUnregisterRequest.html", null ],
     [ "FStage", "structFStage.html", null ],
     [ "FStageBuilder", "structFStageBuilder.html", null ],
@@ -64,8 +81,11 @@ var hierarchy =
       [ "FStageBuilderParams", "structFStageBuilderParams.html", null ]
     ] ],
     [ "FTile", "structFTile.html", null ],
+    [ "FTileActorCommitResult", "structFTileActorCommitResult.html", null ],
+    [ "FTileHighlightStyle", "structFTileHighlightStyle.html", null ],
     [ "FTileIndex", "structFTileIndex.html", null ],
     [ "FTileTransform", "structFTileTransform.html", null ],
+    [ "FUnitCommitResult", "structFUnitCommitResult.html", null ],
     [ "FUnitTeamRelation", "structFUnitTeamRelation.html", null ],
     [ "FUserLog", "structFUserLog.html", null ],
     [ "IAbilitySystemInterface", null, [
@@ -100,7 +120,10 @@ var hierarchy =
     [ "TCircularDoubleLinkedListIterator< NodeType, ElementType >", "classTCircularDoubleLinkedListIterator.html", null ],
     [ "TCircularDoubleLinkedList< ElementType >::TCircularDoubleLinkedListNode", "classTCircularDoubleLinkedList_1_1TCircularDoubleLinkedListNode.html", null ],
     [ "TSharedFromThis", null, [
-      [ "FSRPGAction", "structFSRPGAction.html", null ],
+      [ "FSRPGAction", "structFSRPGAction.html", [
+        [ "FSRPGSkillAction", "structFSRPGSkillAction.html", null ],
+        [ "FSRPGSkillBuildAction", "structFSRPGSkillBuildAction.html", null ]
+      ] ],
       [ "FSRPGTurnContext", "structFSRPGTurnContext.html", null ]
     ] ],
     [ "UAbilitySystemInterface", null, [
@@ -114,6 +137,12 @@ var hierarchy =
       [ "UUnitAttributeSet", "classUUnitAttributeSet.html", [
         [ "UPlayerUnitAttributeSet", "classUPlayerUnitAttributeSet.html", null ]
       ] ]
+    ] ],
+    [ "UBlueprintFunctionLibrary", null, [
+      [ "UCombatCalculatorFunctionLibrary", "classUCombatCalculatorFunctionLibrary.html", null ]
+    ] ],
+    [ "UButton", null, [
+      [ "UFrontendMapNodeButton", "classUFrontendMapNodeButton.html", null ]
     ] ],
     [ "UDataAsset", null, [
       [ "UStaticObstacleSpawnData", "classUStaticObstacleSpawnData.html", null ]
@@ -153,6 +182,7 @@ var hierarchy =
       [ "UPlayerUnitPersistData", "classUPlayerUnitPersistData.html", [
         [ "URunPersistData", "classURunPersistData.html", null ]
       ] ],
+      [ "USkillCommitResultHolder", "classUSkillCommitResultHolder.html", null ],
       [ "UUserPersistData", "classUUserPersistData.html", null ]
     ] ],
     [ "UPrimaryDataAsset", null, [
@@ -168,8 +198,8 @@ var hierarchy =
           [ "UStaticEliteMonsterRoomSpawnData", "classUStaticEliteMonsterRoomSpawnData.html", null ],
           [ "UStaticMonsterRoomSpawnData", "classUStaticMonsterRoomSpawnData.html", null ]
         ] ],
+        [ "UStaticFrontendRoomSpawnData", "classUStaticFrontendRoomSpawnData.html", null ],
         [ "UStaticShopRoomSpawnData", "classUStaticShopRoomSpawnData.html", null ],
-        [ "UStaticTitleRoomSpawnData", "classUStaticTitleRoomSpawnData.html", null ],
         [ "UStaticTreasureRoomSpawnData", "classUStaticTreasureRoomSpawnData.html", null ]
       ] ],
       [ "UStaticSkillData", "classUStaticSkillData.html", [
@@ -190,9 +220,22 @@ var hierarchy =
       [ "USRPGCombatSubsystem", "classUSRPGCombatSubsystem.html", null ]
     ] ],
     [ "UUserWidget", null, [
-      [ "UCharacterCardWidget", "classUCharacterCardWidget.html", null ],
-      [ "UCharacterSelectWidget", "classUCharacterSelectWidget.html", null ],
-      [ "UTitleMenuWidget", "classUTitleMenuWidget.html", null ]
+      [ "URDUserWidget", "classURDUserWidget.html", [
+        [ "UCarouselPanelWidget", "classUCarouselPanelWidget.html", [
+          [ "UDicePanelWidget", "classUDicePanelWidget.html", null ],
+          [ "USkillPanelWidget", "classUSkillPanelWidget.html", null ]
+        ] ],
+        [ "UCharacterCardWidget", "classUCharacterCardWidget.html", null ],
+        [ "UCharacterSelectWidget", "classUCharacterSelectWidget.html", null ],
+        [ "UFadeInOutWidget", "classUFadeInOutWidget.html", null ],
+        [ "UFrontendMapLineWidget", "classUFrontendMapLineWidget.html", null ],
+        [ "UFrontendMapNodeWidget", "classUFrontendMapNodeWidget.html", null ],
+        [ "UFrontendMapWidget", "classUFrontendMapWidget.html", null ],
+        [ "ULoadingNotifyWidget", "classULoadingNotifyWidget.html", null ],
+        [ "USettingsPanelWidget", "classUSettingsPanelWidget.html", null ],
+        [ "UTitleMenuWidget", "classUTitleMenuWidget.html", null ],
+        [ "UTopMenuBarWidget", "classUTopMenuBarWidget.html", null ]
+      ] ]
     ] ],
     [ "UWorldSubsystem", null, [
       [ "UPresentationSyncSubsystem", "classUPresentationSyncSubsystem.html", null ],

@@ -99,136 +99,139 @@ $(document).ready(function(){initNavTree('TitleMenuWidget_8h_source.html',''); i
 </div><!--header-->
 <div class="contents">
 <a href="TitleMenuWidget_8h.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*****************************************************************/</span></div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#pragma once</span></div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;<a class="code" href="RDMinimal_8h.html">RDMinimal.h</a>&quot;</span></div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;Blueprint/UserWidget.h&quot;</span></div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &quot;TitleMenuWidget.generated.h&quot;</span></div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="keyword">class </span>UButton;</div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="keyword">class </span><a class="code hl_class" href="classUCharacterSelectWidget.html">UCharacterSelectWidget</a>;</div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &quot;<a class="code" href="RDMinimal_8h.html">RDMinimal.h</a>&quot;</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;<a class="code" href="RDUserWidget_8h.html">UI/RDUserWidget.h</a>&quot;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span> </div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &quot;TitleMenuWidget.generated.h&quot;</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="keyword">class </span>UButton;</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="keyword">class </span><a class="code hl_class" href="classUCharacterSelectWidget.html">UCharacterSelectWidget</a>;</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="keyword">class </span><a class="code hl_class" href="classUSettingsPanelWidget.html">USettingsPanelWidget</a>;</div>
 <div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="keyword">class </span>UTextBlock;</div>
 <div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="keyword">class </span>UWidget;</div>
 <div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="keyword">class </span>UWidgetSwitcher;</div>
 <div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span> </div>
 <div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>UCLASS(BlueprintType, Blueprintable)</div>
 <div class="foldopen" id="foldopen00051" data-start="{" data-end="};">
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno"><a class="line" href="classUTitleMenuWidget.html">   51</a></span>class P_RD_API <a class="code hl_class" href="classUTitleMenuWidget.html">UTitleMenuWidget</a> : public UUserWidget</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno"><a class="line" href="classUTitleMenuWidget.html">   51</a></span>class P_RD_API <a class="code hl_class" href="classUTitleMenuWidget.html">UTitleMenuWidget</a> : public <a class="code hl_class" href="classURDUserWidget.html">URDUserWidget</a></div>
 <div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>{</div>
 <div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    GENERATED_BODY()</div>
 <div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span> </div>
 <div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span><span class="keyword">public</span>:</div>
 <div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    <a class="code hl_class" href="classUTitleMenuWidget.html">UTitleMenuWidget</a>(<span class="keyword">const</span> FObjectInitializer&amp; ObjectInitializer = FObjectInitializer::Get());</div>
 <div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span> </div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span><span class="keyword">protected</span>:</div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>    <span class="keywordtype">void</span> NativeConstruct() <span class="keyword">override</span>;</div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span> </div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>    <span class="keywordtype">void</span> NativeDestruct() <span class="keyword">override</span>;</div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span> </div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span><span class="keyword">private</span>:</div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>    <span class="keywordtype">void</span> ShowScreen(UWidget* Screen) <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span> </div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    <span class="keywordtype">void</span> ShowMainScreen() <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>    <span class="keywordtype">void</span> ShowCharacterScreen();</div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span> </div>
-<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>    <span class="keywordtype">void</span> ShowSettingsScreen();</div>
-<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span> </div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>    <span class="keywordtype">void</span> SyncMainText() <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span> </div>
-<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>    <span class="keywordtype">void</span> SetStatusText(<span class="keyword">const</span> FText&amp; InText) <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span> </div>
-<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>    <span class="keywordtype">void</span> ValidateDesignerBindings() <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span> </div>
-<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>    UFUNCTION()</div>
-<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>    <span class="keywordtype">void</span> HandleStartButtonClicked();</div>
-<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span> </div>
-<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>    UFUNCTION()</div>
-<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>    <span class="keywordtype">void</span> HandleContinueButtonClicked();</div>
-<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span> </div>
-<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>    UFUNCTION()</div>
-<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>    <span class="keywordtype">void</span> HandleSettingsButtonClicked();</div>
-<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span> </div>
-<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>    UFUNCTION()</div>
-<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>    <span class="keywordtype">void</span> HandleSettingsBackButtonClicked();</div>
-<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span> </div>
-<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>    UFUNCTION()</div>
-<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>    <span class="keywordtype">void</span> HandleCharacterBackToMainRequested();</div>
-<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span> </div>
-<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span><span class="keyword">private</span>:</div>
-<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>    UPROPERTY(meta = (BindWidget))</div>
-<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>    TObjectPtr&lt;UWidgetSwitcher&gt; ScreenSwitcher;</div>
-<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span> </div>
-<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>    UPROPERTY(meta = (BindWidget))</div>
-<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>    TObjectPtr&lt;UWidget&gt; StartScreen;</div>
-<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span> </div>
-<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>    UPROPERTY(meta = (BindWidget))</div>
-<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>    TObjectPtr&lt;UWidget&gt; CharacterScreen;</div>
-<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span> </div>
-<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>    UPROPERTY(meta = (BindWidgetOptional))</div>
-<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>    TObjectPtr&lt;UWidget&gt; SettingsScreen;</div>
-<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span> </div>
-<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>    UPROPERTY(meta = (BindWidget))</div>
-<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>    TObjectPtr&lt;UCharacterSelectWidget&gt; CharacterSelectWidget;</div>
-<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span> </div>
-<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span>    UPROPERTY(meta = (BindWidget))</div>
-<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span>    TObjectPtr&lt;UButton&gt; StartButton;</div>
-<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span> </div>
-<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>    UPROPERTY(meta = (BindWidget))</div>
-<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>    TObjectPtr&lt;UButton&gt; ContinueButton;</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>    <span class="keywordtype">void</span> RefreshCharacterOptionsFromGameMode();</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span> </div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>    <span class="keywordtype">void</span> OpenCharacterSelectFromTitle();</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span> </div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    <span class="keywordtype">void</span> NativeConstruct() <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span> </div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>    <span class="keywordtype">void</span> NativeDestruct() <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span> </div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    <span class="keywordtype">void</span> ShowScreen(UWidget* Screen) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span> </div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>    <span class="keywordtype">void</span> ShowMainScreen() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span> </div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>    <span class="keywordtype">void</span> ShowCharacterScreen();</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span> </div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>    <span class="keywordtype">void</span> OpenSettingsPanel();</div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span> </div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>    <span class="keywordtype">void</span> SyncMainText() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span> </div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>    <span class="keywordtype">void</span> RefreshMainMenuState() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span> </div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>    <span class="keywordtype">bool</span> CanContinueRun() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span> </div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>    <a class="code hl_class" href="classUSettingsPanelWidget.html">USettingsPanelWidget</a>* GetTitleSettingsPanel() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span> </div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>    <span class="keywordtype">void</span> SetStatusText(<span class="keyword">const</span> FText&amp; InText) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span> </div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>    <span class="keywordtype">void</span> ValidateDesignerBindings() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span> </div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>    UFUNCTION()</div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>    <span class="keywordtype">void</span> HandleStartButtonClicked();</div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span> </div>
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span>    UFUNCTION()</div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span>    <span class="keywordtype">void</span> HandleContinueButtonClicked();</div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span> </div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>    UFUNCTION()</div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>    <span class="keywordtype">void</span> HandleSettingsButtonClicked();</div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span> </div>
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>    UFUNCTION()</div>
+<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>    <span class="keywordtype">void</span> HandleSettingsPanelBackRequested();</div>
 <div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span> </div>
-<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>    UPROPERTY(meta = (BindWidget))</div>
-<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>    TObjectPtr&lt;UButton&gt; SettingsButton;</div>
-<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span> </div>
-<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>    UPROPERTY(meta = (BindWidget))</div>
-<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>    TObjectPtr&lt;UTextBlock&gt; TitleText;</div>
-<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span> </div>
-<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span>    UPROPERTY(meta = (BindWidget))</div>
-<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span>    TObjectPtr&lt;UTextBlock&gt; StartButtonText;</div>
-<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span> </div>
+<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span>    UFUNCTION()</div>
+<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>    <span class="keywordtype">void</span> HandleCharacterBackToMainRequested();</div>
+<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span> </div>
+<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span><span class="keyword">private</span>:</div>
 <div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>    UPROPERTY(meta = (BindWidget))</div>
-<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>    TObjectPtr&lt;UTextBlock&gt; ContinueButtonText;</div>
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>    TObjectPtr&lt;UWidgetSwitcher&gt; ScreenSwitcher;</div>
 <div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span> </div>
 <div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>    UPROPERTY(meta = (BindWidget))</div>
-<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>    TObjectPtr&lt;UTextBlock&gt; SettingsButtonText;</div>
+<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>    TObjectPtr&lt;UWidget&gt; StartScreen;</div>
 <div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span> </div>
-<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span>    UPROPERTY(meta = (BindWidgetOptional))</div>
-<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>    TObjectPtr&lt;UTextBlock&gt; StatusText;</div>
-<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span> </div>
-<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span>    UPROPERTY(meta = (BindWidgetOptional))</div>
-<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>    TObjectPtr&lt;UButton&gt; SettingsBackButton;</div>
-<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span> </div>
-<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>    UPROPERTY(meta = (BindWidgetOptional))</div>
-<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>    TObjectPtr&lt;UTextBlock&gt; SettingsBackButtonText;</div>
-<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span> </div>
-<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span>    UPROPERTY(Category = <span class="stringliteral">&quot;Title Menu|Text&quot;</span>, EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = <span class="keyword">true</span>))</div>
-<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span>    FText mTitleText;</div>
+<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>    UPROPERTY(meta = (BindWidget))</div>
+<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>    TObjectPtr&lt;UWidget&gt; CharacterScreen;</div>
+<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span> </div>
+<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span>    UPROPERTY(meta = (BindWidget))</div>
+<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span>    TObjectPtr&lt;UCharacterSelectWidget&gt; CharacterSelectWidget;</div>
 <div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span> </div>
-<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>    UPROPERTY(Category = <span class="stringliteral">&quot;Title Menu|Text&quot;</span>, EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = <span class="keyword">true</span>))</div>
-<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>    FText mStartButtonText;</div>
+<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>    UPROPERTY(meta = (BindWidget))</div>
+<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>    TObjectPtr&lt;UButton&gt; StartButton;</div>
 <div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span> </div>
-<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>    UPROPERTY(Category = <span class="stringliteral">&quot;Title Menu|Text&quot;</span>, EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = <span class="keyword">true</span>))</div>
-<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>    FText mContinueButtonText;</div>
+<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>    UPROPERTY(meta = (BindWidget))</div>
+<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>    TObjectPtr&lt;UButton&gt; ContinueButton;</div>
 <div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span> </div>
-<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>    UPROPERTY(Category = <span class="stringliteral">&quot;Title Menu|Text&quot;</span>, EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = <span class="keyword">true</span>))</div>
-<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span>    FText mSettingsButtonText;</div>
+<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>    UPROPERTY(meta = (BindWidget))</div>
+<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span>    TObjectPtr&lt;UButton&gt; SettingsButton;</div>
 <div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span> </div>
-<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span>    UPROPERTY(Category = <span class="stringliteral">&quot;Title Menu|Text&quot;</span>, EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = <span class="keyword">true</span>))</div>
-<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span>    FText mSettingsStatusText;</div>
+<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span>    UPROPERTY(meta = (BindWidget))</div>
+<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span>    TObjectPtr&lt;UTextBlock&gt; TitleText;</div>
 <div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span> </div>
-<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span>    UPROPERTY(Category = <span class="stringliteral">&quot;Title Menu|Text&quot;</span>, EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = <span class="keyword">true</span>))</div>
-<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span>    FText mMainOnlyStatusText;</div>
+<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span>    UPROPERTY(meta = (BindWidget))</div>
+<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span>    TObjectPtr&lt;UTextBlock&gt; StartButtonText;</div>
 <div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span> </div>
-<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span>    UPROPERTY(Category = <span class="stringliteral">&quot;Title Menu|Text&quot;</span>, EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = <span class="keyword">true</span>))</div>
-<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span>    FText mCharacterSelectUnavailableText;</div>
+<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span>    UPROPERTY(meta = (BindWidget))</div>
+<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span>    TObjectPtr&lt;UTextBlock&gt; ContinueButtonText;</div>
 <div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span> </div>
-<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span>    UPROPERTY(Category = <span class="stringliteral">&quot;Title Menu|Text&quot;</span>, EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = <span class="keyword">true</span>))</div>
-<div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span>    FText mBackButtonText;</div>
-<div class="line"><a id="l00290" name="l00290"></a><span class="lineno">  290</span>};</div>
+<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span>    UPROPERTY(meta = (BindWidget))</div>
+<div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span>    TObjectPtr&lt;UTextBlock&gt; SettingsButtonText;</div>
+<div class="line"><a id="l00290" name="l00290"></a><span class="lineno">  290</span> </div>
+<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span>    UPROPERTY(meta = (BindWidgetOptional))</div>
+<div class="line"><a id="l00299" name="l00299"></a><span class="lineno">  299</span>    TObjectPtr&lt;UTextBlock&gt; StatusText;</div>
+<div class="line"><a id="l00300" name="l00300"></a><span class="lineno">  300</span> </div>
+<div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span>    UPROPERTY(Category = <span class="stringliteral">&quot;Title Menu|Text&quot;</span>, EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = <span class="keyword">true</span>))</div>
+<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span>    FText mTitleText;</div>
+<div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span> </div>
+<div class="line"><a id="l00306" name="l00306"></a><span class="lineno">  306</span>    UPROPERTY(Category = <span class="stringliteral">&quot;Title Menu|Text&quot;</span>, EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = <span class="keyword">true</span>))</div>
+<div class="line"><a id="l00307" name="l00307"></a><span class="lineno">  307</span>    FText mStartButtonText;</div>
+<div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span> </div>
+<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span>    UPROPERTY(Category = <span class="stringliteral">&quot;Title Menu|Text&quot;</span>, EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = <span class="keyword">true</span>))</div>
+<div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span>    FText mNewStartButtonText;</div>
+<div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span> </div>
+<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span>    UPROPERTY(Category = <span class="stringliteral">&quot;Title Menu|Text&quot;</span>, EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = <span class="keyword">true</span>))</div>
+<div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span>    FText mContinueButtonText;</div>
+<div class="line"><a id="l00316" name="l00316"></a><span class="lineno">  316</span> </div>
+<div class="line"><a id="l00318" name="l00318"></a><span class="lineno">  318</span>    UPROPERTY(Category = <span class="stringliteral">&quot;Title Menu|Text&quot;</span>, EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = <span class="keyword">true</span>))</div>
+<div class="line"><a id="l00319" name="l00319"></a><span class="lineno">  319</span>    FText mSettingsButtonText;</div>
+<div class="line"><a id="l00320" name="l00320"></a><span class="lineno">  320</span> </div>
+<div class="line"><a id="l00322" name="l00322"></a><span class="lineno">  322</span>    UPROPERTY(Category = <span class="stringliteral">&quot;Title Menu|Text&quot;</span>, EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = <span class="keyword">true</span>))</div>
+<div class="line"><a id="l00323" name="l00323"></a><span class="lineno">  323</span>    FText mMainOnlyStatusText;</div>
+<div class="line"><a id="l00324" name="l00324"></a><span class="lineno">  324</span> </div>
+<div class="line"><a id="l00326" name="l00326"></a><span class="lineno">  326</span>    UPROPERTY(Category = <span class="stringliteral">&quot;Title Menu|Text&quot;</span>, EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = <span class="keyword">true</span>))</div>
+<div class="line"><a id="l00327" name="l00327"></a><span class="lineno">  327</span>    FText mCharacterSelectUnavailableText;</div>
+<div class="line"><a id="l00328" name="l00328"></a><span class="lineno">  328</span> </div>
+<div class="line"><a id="l00329" name="l00329"></a><span class="lineno">  329</span>};</div>
 </div>
 <div class="ttc" id="aRDMinimal_8h_html"><div class="ttname"><a href="RDMinimal_8h.html">RDMinimal.h</a></div><div class="ttdoc">RD 프로젝트 전 영역에서 사용되는 최소한의 포함 헤더</div></div>
-<div class="ttc" id="aclassUCharacterSelectWidget_html"><div class="ttname"><a href="classUCharacterSelectWidget.html">UCharacterSelectWidget</a></div><div class="ttdoc">캐릭터 선택 화면 전체를 담당하는 위젯</div><div class="ttdef"><b>Definition</b> <a href="CharacterSelectWidget_8h_source.html#l00067">CharacterSelectWidget.h:68</a></div></div>
+<div class="ttc" id="aRDUserWidget_8h_html"><div class="ttname"><a href="RDUserWidget_8h.html">RDUserWidget.h</a></div></div>
+<div class="ttc" id="aclassUCharacterSelectWidget_html"><div class="ttname"><a href="classUCharacterSelectWidget.html">UCharacterSelectWidget</a></div><div class="ttdoc">타이틀 흐름 안의 캐릭터 선택 화면</div><div class="ttdef"><b>Definition</b> <a href="CharacterSelectWidget_8h_source.html#l00044">CharacterSelectWidget.h:45</a></div></div>
+<div class="ttc" id="aclassURDUserWidget_html"><div class="ttname"><a href="classURDUserWidget.html">URDUserWidget</a></div><div class="ttdoc">RD 프로젝트 UMG 위젯의 공통 베이스 클래스</div><div class="ttdef"><b>Definition</b> <a href="RDUserWidget_8h_source.html#l00048">RDUserWidget.h:49</a></div></div>
+<div class="ttc" id="aclassUSettingsPanelWidget_html"><div class="ttname"><a href="classUSettingsPanelWidget.html">USettingsPanelWidget</a></div><div class="ttdoc">공통 설정 UI의 표시 상태를 관리하고 버튼/슬라이더 입력을 이벤트로 전달한다.</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelWidget_8h_source.html#l00094">SettingsPanelWidget.h:95</a></div></div>
 <div class="ttc" id="aclassUTitleMenuWidget_html"><div class="ttname"><a href="classUTitleMenuWidget.html">UTitleMenuWidget</a></div><div class="ttdoc">타이틀 UI의 가장 바깥 화면 전환을 담당하는 위젯</div><div class="ttdef"><b>Definition</b> <a href="TitleMenuWidget_8h_source.html#l00051">TitleMenuWidget.h:52</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
