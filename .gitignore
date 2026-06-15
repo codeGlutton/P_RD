@@ -83,5 +83,8 @@ DerivedDataCache/*
 # SVN
 /Content/SVN/
 
+# pre-commit 훅이 자동 생성하는 SVN 리비전 번호. 머신/시점마다 달라 매 PR 충돌을 유발하므로 추적하지 않는다.
+/.svnrev
+
 # Doxygen Preiview Output
 /Doxygen/Preview/Output
