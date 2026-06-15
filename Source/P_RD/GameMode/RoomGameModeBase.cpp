@@ -1,4 +1,4 @@
-#include "GameMode/RoomGameModeBase.h"
+﻿#include "GameMode/RoomGameModeBase.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
@@ -233,7 +233,12 @@ void ARoomGameModeBase::BeginRoom()
 	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
 	checkf(PlayerController != nullptr, TEXT(""));
 
+#if PLATFORM_DESKTOP
+	PlayerController->SetShowMouseCursor(true);
+#endif
+#if PLATFORM_ANDROID
 	PlayerController->ActivateTouchInterface(nullptr);
+#endif
 
 	FInputModeGameAndUI InputMode;
 	PlayerController->SetInputMode(InputMode);
