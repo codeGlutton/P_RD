@@ -1,5 +1,7 @@
 #include "UI/CombatTileMapHUDWidget.h"
 
+#include "UI/Combat/CombatViewModel.h"
+
 void UCombatTileMapHUDWidget::HandleSkillButtonReleased()
 {
 	if (mSkillPressing == false)
@@ -68,6 +70,12 @@ void UCombatTileMapHUDWidget::SelectSkillForAssignment(int32 SkillIndex)
 		mSelectedDiceIndex = INDEX_NONE;
 	}
 	mSelectedSkillIndex = SkillIndex;
+
+	// 뷰모델 연결 시 선택은 의도로만 보낸다(실행/검증은 게임플레이). 시각 강조는 로컬 유지.
+	if (mCombatViewModel != nullptr)
+	{
+		mCombatViewModel->RequestSelectSkill(SkillIndex);
+	}
 
 	RefreshSkillRailWidgets();
 	RefreshOwnedDiceCards();

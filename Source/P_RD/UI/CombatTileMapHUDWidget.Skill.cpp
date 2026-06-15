@@ -1,12 +1,20 @@
 #include "UI/CombatTileMapHUDWidget.h"
 
 #include "Components/TextBlock.h"
+#include "UI/Combat/CombatViewModel.h"
 #include "UI/CombatTileMapHUDWidgetPrivate.h"
 
 using namespace RDCombatHUD;
 
 void UCombatTileMapHUDWidget::HandleEndTurnButtonClicked()
 {
+	// 뷰모델 연결 시 턴 종료는 의도로 보낸다. 미연결 시 기존처럼 로그만.
+	if (mCombatViewModel != nullptr)
+	{
+		mCombatViewModel->RequestEndTurn();
+		return;
+	}
+
 	UE_LOG(LogRD, Log, TEXT("END TURN button clicked. Combat turn API is not connected yet."));
 }
 

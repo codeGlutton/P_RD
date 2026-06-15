@@ -5,10 +5,28 @@
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
 #include "Components/TextBlock.h"
+#include "UI/Combat/CombatViewModel.h"
 #include "UI/CombatTileMapHUDWidgetPrivate.h"
 #include "UI/IndexedButtonWidget.h"
 
 using namespace RDCombatHUD;
+
+namespace
+{
+	/** @brief 뷰모델이 연결돼 있으면 스킬 이름을 거기서, 아니면 정적 시안 라벨을 쓴다. */
+	FText ResolveSkillRailLabel(const UCombatViewModel* ViewModel, int32 SkillIndex)
+	{
+		if (ViewModel != nullptr)
+		{
+			const TArray<FSkillView>& Skills = ViewModel->GetSkillViews();
+			if (Skills.IsValidIndex(SkillIndex) && Skills[SkillIndex].mName.IsEmpty() == false)
+			{
+				return Skills[SkillIndex].mName;
+			}
+		}
+		return RDCombatHUD::GetCombatSkillRailLabel(SkillIndex);
+	}
+}
 
 void UCombatTileMapHUDWidget::RebuildSkillRailWidgets()
 {
@@ -46,7 +64,7 @@ void UCombatTileMapHUDWidget::RebuildSkillRailWidgets()
 		SkillRailPanel->SetPadding(GetCombatSkillRailPadding());
 		SkillRailText->SetJustification(ETextJustify::Center);
 		SkillRailText->SetColorAndOpacity(FSlateColor(GetCombatSkillRailTextColor(false)));
-		SkillRailText->SetText(GetCombatSkillRailLabel(SkillIndex));
+		SkillRailText->SetText(ResolveSkillRailLabel(mCombatViewModel, SkillIndex));
 		SkillRailPanel->AddChild(SkillRailText);
 		RootCanvas->AddChildToCanvas(SkillRailPanel);
 
