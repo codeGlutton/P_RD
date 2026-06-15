@@ -29,6 +29,9 @@ public:
 	ARoomGameModeBase();
 	
 	/* ARDGameModeBase 상속 */
+public:
+	AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+
 protected:
 	void InitializeCommonRoom() override;
 	void BeginRoom() override;
