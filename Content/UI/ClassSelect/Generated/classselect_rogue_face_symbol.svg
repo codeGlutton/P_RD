@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <title>Rogue face symbol</title>
+  <defs>
+    <mask id="cutouts">
+      <rect width="1024" height="1024" fill="white"/>
+      <path d="M292 454Q512 298 732 454L682 520Q512 416 342 520Z" fill="black"/>
+      <ellipse cx="398" cy="516" rx="54" ry="34" fill="black"/>
+      <ellipse cx="626" cy="516" rx="54" ry="34" fill="black"/>
+    </mask>
+  </defs>
+  <path mask="url(#cutouts)" fill="#F7FAFC" d="M512 108C344 108 210 238 210 404v96L122 640l168 60 78 192h288l78-192 168-60-88-140v-96C814 238 680 108 512 108Z"/>
+  <path fill="#F7FAFC" d="M236 688 360 628h304l124 60-82 124H318Z"/>
+</svg>
