@@ -54,7 +54,7 @@ namespace
 		case EPlayerJobType::Knight:
 			return NSLOCTEXT("FrontendGameMode", "KnightNameText", "Knight");
 		case EPlayerJobType::Archer:
-			return NSLOCTEXT("FrontendGameMode", "ArcherNameText", "Archer");
+			return NSLOCTEXT("FrontendGameMode", "RogueNameText", "Rogue");
 		case EPlayerJobType::Mage:
 			return NSLOCTEXT("FrontendGameMode", "MageNameText", "Mage");
 		default:
@@ -66,14 +66,28 @@ namespace
 	{
 		/*
 		 * 실제 PlayerUnit DataAsset에서 특정 직업 카드가 내려왔는지 확인한다.
-		 * 현재 Archer/Mage는 아직 실제 데이터가 준비되지 않은 경우가 있어, 없는 직업만 잠김 카드로 보강한다.
+		 * 현재 Rogue(내부 enum Archer)/Mage는 아직 실제 데이터가 준비되지 않은 경우가 있어, 없는 직업만 잠김 카드로 보강한다.
 		 * 이렇게 해야 "데이터가 없어서 빈 칸"과 "잠긴 캐릭터로 보여주려는 의도"가 UI에서 구분된다.
 		 */
-		const FText JobText = GetPlayerJobName(JobType);
-		return Options.ContainsByPredicate([&JobText](const FFrontendCharacterOption& Option)
+		return Options.ContainsByPredicate([JobType](const FFrontendCharacterOption& Option)
 		{
-			return Option.mRoleText.EqualTo(JobText);
+			return Option.mJobType == JobType;
 		});
+	}
+
+	int32 GetClassSelectJobOrder(EPlayerJobType JobType)
+	{
+		switch (JobType)
+		{
+		case EPlayerJobType::Knight:
+			return 0;
+		case EPlayerJobType::Archer:
+			return 1;
+		case EPlayerJobType::Mage:
+			return 2;
+		default:
+			return 99;
+		}
 	}
 
 	void AppendLockedCharacterOption(TArray<FFrontendCharacterOption>& Options, EPlayerJobType JobType)
@@ -87,6 +101,7 @@ namespace
 		NewOption.mIndex = Options.Num();
 		NewOption.mDisplayName = GetPlayerJobName(JobType);
 		NewOption.mRoleText = GetPlayerJobName(JobType);
+		NewOption.mJobType = JobType;
 		NewOption.mDescription = NSLOCTEXT("FrontendGameMode", "LockedCharacterDescription", "Character data is not ready");
 		NewOption.mDisabledReason = NewOption.mDescription;
 		NewOption.mSelectable = false;
@@ -340,6 +355,7 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 			? FText::FromName(LoadedPlayerUnitData->GetPrimaryAssetId().PrimaryAssetName)
 			: LoadedPlayerUnitData->mDisplayName;
 		NewOption.mRoleText = GetPlayerJobName(LoadedPlayerUnitData->mJobType);
+		NewOption.mJobType = LoadedPlayerUnitData->mJobType;
 		NewOption.mDescription = LoadedPlayerUnitData->mDescription;
 		NewOption.mMaxHP = FMath::RoundToInt(LoadedPlayerUnitData->GetDefaultMaxHP(DefaultDifficulty));
 		NewOption.mDice = LoadedPlayerUnitData->mDiceDatas.Num();
@@ -356,13 +372,30 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 		OutOptions.Add(MoveTemp(NewOption));
 	}
 
+	if (!HasCharacterOptionForJob(OutOptions, EPlayerJobType::Mage))
+	{
+		AppendLockedCharacterOption(OutOptions, EPlayerJobType::Mage);
+	}
 	if (!HasCharacterOptionForJob(OutOptions, EPlayerJobType::Archer))
 	{
 		AppendLockedCharacterOption(OutOptions, EPlayerJobType::Archer);
 	}
-	if (!HasCharacterOptionForJob(OutOptions, EPlayerJobType::Mage))
+
+	OutOptions.Sort([](const FFrontendCharacterOption& Lhs, const FFrontendCharacterOption& Rhs)
 	{
-		AppendLockedCharacterOption(OutOptions, EPlayerJobType::Mage);
+		const int32 LhsOrder = GetClassSelectJobOrder(Lhs.mJobType);
+		const int32 RhsOrder = GetClassSelectJobOrder(Rhs.mJobType);
+		if (LhsOrder != RhsOrder)
+		{
+			return LhsOrder < RhsOrder;
+		}
+
+		return Lhs.mIndex < Rhs.mIndex;
+	});
+
+	for (int32 OptionIndex = 0; OptionIndex < OutOptions.Num(); ++OptionIndex)
+	{
+		OutOptions[OptionIndex].mIndex = OptionIndex;
 	}
 
 	return OutOptions.IsEmpty() == false;

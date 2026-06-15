@@ -7,6 +7,7 @@
 #pragma once
 
 #include "RDMinimal.h"
+#include "DataAsset/UnitSpawnData/PlayerJobType.h"
 
 #include "CharacterSelectTypes.generated.h"
 
@@ -25,7 +26,7 @@ class UTexture2D;
  * 표시 값과 런 생성에 필요한 식별자를 같은 View 값으로 내려준다.
  *
  * 중요한 경계는 이렇다.
- * - UI는 이 배열의 개수만큼 WBP_CharacterCard를 만들고 값만 표시한다.
+ * - UI는 WBP에 배치된 WBP_CharacterCard 순서대로 이 배열의 값을 표시한다.
  * - UI는 직업 enum, DataAsset 로드 상태, 시작 HP/골드 계산 방식을 판단하지 않는다.
  * - Confirm 시에도 UI는 mPlayerUnitId만 FrontendGameMode에 다시 넘긴다.
  */
@@ -45,6 +46,10 @@ struct P_RD_API FFrontendCharacterOption
 	// 직업/역할 표시 문자열. 실제 직업 enum은 UI가 직접 해석하지 않는다.
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	FText mRoleText;
+
+	// 화면 아트 선택용 직업 키. 게임 로직 enum 이름과 표시 이름이 달라도 UI는 이 값으로 이미지를 고른다.
+	UPROPERTY(Category = Frontend, BlueprintReadOnly)
+	EPlayerJobType mJobType = EPlayerJobType::None;
 
 	// 카드/상세 패널용 설명 문구.
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
