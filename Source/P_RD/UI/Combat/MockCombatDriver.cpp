@@ -74,6 +74,25 @@ void UMockCombatDriver::Start(UCombatViewModel* ViewModel)
 	Turn.mPhase = ECombatBuildPhaseView::None;
 	Turn.mTurnOrderUnitIds = { 0, 1, 2 };
 	mViewModel->SetTurnView(Turn);
+
+	// 가짜 장비 3슬롯
+	TArray<FEquipmentView> Equipment;
+	for (int32 i = 0; i < 3; ++i)
+	{
+		FEquipmentView Equip;
+		Equip.mSlotIndex = i;
+		Equip.mName = FText::FromString(FString::Printf(TEXT("Equip %d"), i + 1));
+		Equip.mIsEquipped = (i == 0);
+		Equipment.Add(Equip);
+	}
+	mViewModel->SetEquipmentViews(Equipment);
+
+	// 가짜 플레이어 메타(돈/경험치/레벨)
+	FPlayerMetaView Meta;
+	Meta.mGold = 120;
+	Meta.mLevel = 3;
+	Meta.mExp = 40.f; Meta.mMaxExp = 100.f;
+	mViewModel->SetPlayerMeta(Meta);
 }
 
 void UMockCombatDriver::RebuildDicePush()

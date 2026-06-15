@@ -20,6 +20,7 @@
 #include "CombatViewTypes.generated.h"
 
 class UTexture2D;
+class UTexture;
 
 /** @brief 무엇이 바뀌어 UI를 갱신해야 하는지 도메인 구분(부분 갱신용). */
 UENUM(BlueprintType)
@@ -31,7 +32,9 @@ enum class ECombatViewDomain : uint8
 	Unit,
 	Tile,
 	Turn,
-	Queue
+	Queue,
+	Equipment,
+	Meta       // 돈/경험치 등 플레이어 메타
 };
 
 /** @brief 스킬 빌드 진행 단계. develop의 ESRPGSkillBuildPhase와 의미를 맞춘 UI용 거울값. */
@@ -63,6 +66,10 @@ struct FDiceSlotView
 	UPROPERTY(BlueprintReadOnly) bool mIsSelected = false;   // 스킬 빌드에 선택됨
 	UPROPERTY(BlueprintReadOnly) FLinearColor mRarityColor = FLinearColor::White;
 	UPROPERTY(BlueprintReadOnly) FText mRarityText;
+
+	// 주사위 굴림 면의 3D 프리뷰. CombatDiceCaptureActor가 렌더타깃에 그린 결과를 어댑터가 넣어준다.
+	// UI는 이 텍스처를 브러시로 표시만 한다(직접 캡처/회전하지 않음).
+	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture> mPreviewTexture = nullptr;
 };
 
 /** @brief 유닛 한 기를 HUD에 그릴 때 필요한 표시값(HP바·스탯·위치). */
@@ -80,6 +87,9 @@ struct FUnitView
 	UPROPERTY(BlueprintReadOnly) float mMovementPoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mSkillPoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) FTileIndex mTile;
+
+	// 머리 위 버프/디버프 아이콘용. enum 대신 태그로 받아 UI가 게임플레이 상태 enum에 의존하지 않게 한다.
+	UPROPERTY(BlueprintReadOnly) FGameplayTagContainer mStatusTags;
 };
 
 /** @brief 적/유닛을 길게 눌렀을 때 띄우는 상세 정보(초상화·이름·레벨·패시브 등). */
@@ -153,6 +163,32 @@ struct FCombatQueueNode
 	UPROPERTY(BlueprintReadOnly) int32 mTargetUnitId = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) int32 mAmount = 0;             // 데미지/힐 수치 등
 	UPROPERTY(BlueprintReadOnly) FText mLabel;                  // 머리 위에 띄울 텍스트
+};
+
+/** @brief 장비 슬롯 하나(전투 중 표시·상세). 인벤토리/장착 변경은 의도(Request)로만 보낸다. */
+USTRUCT(BlueprintType)
+struct FEquipmentView
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) int32 mSlotIndex = INDEX_NONE;
+	UPROPERTY(BlueprintReadOnly) FPrimaryAssetId mItemId;
+	UPROPERTY(BlueprintReadOnly) FText mName;
+	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
+	UPROPERTY(BlueprintReadOnly) bool mIsEquipped = false;
+	UPROPERTY(BlueprintReadOnly) FLinearColor mRarityColor = FLinearColor::White;
+};
+
+/** @brief 플레이어 메타 정보(전투 HUD 상단/보상에 쓰는 돈·경험치·레벨). */
+USTRUCT(BlueprintType)
+struct FPlayerMetaView
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) int32 mGold = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mLevel = 0;
+	UPROPERTY(BlueprintReadOnly) float mExp = 0.f;
+	UPROPERTY(BlueprintReadOnly) float mMaxExp = 0.f;
 };
 
 /** @brief 현재 턴/라운드/페이즈 상태. */

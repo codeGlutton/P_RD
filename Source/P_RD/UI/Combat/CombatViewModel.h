@@ -32,7 +32,8 @@ enum class ECombatInputType : uint8
 	LongPressUnit,    // payload = UnitId (적 정보)
 	Move,             // payload 없음(채운 무브포인트 소모)
 	EndTurn,          // payload 없음
-	Cancel            // payload 없음(딴 데 탭 = 초기화)
+	Cancel,           // payload 없음(딴 데 탭 = 초기화)
+	LongPressEquip    // payload = SlotIndex (장비 상세)
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatViewChanged, ECombatViewDomain, Domain);
@@ -76,6 +77,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestMove();
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestEndTurn();
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestCancel();
+	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestLongPressEquip(int32 SlotIndex);
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress);
 
 	/* ───────── gameplay → UI : 표시값을 밀어넣는다 ───────── */
@@ -88,6 +90,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetSkillDetail(const FSkillDetailView& Detail);
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetTileStates(const TArray<FTileViewState>& Tiles);
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetTurnView(const FTurnView& Turn);
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetEquipmentViews(const TArray<FEquipmentView>& Equipment);
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetPlayerMeta(const FPlayerMetaView& Meta);
 
 	/** @brief 행동/예측 결과 큐를 통째로 설정(예측 표시용). */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetActionQueue(const TArray<FCombatQueueNode>& Queue);
@@ -107,6 +111,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FTileViewState>& GetTileStates() const { return mTileStates; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FCombatQueueNode>& GetActionQueue() const { return mActionQueue; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FTurnView& GetTurnView() const { return mTurnView; }
+	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FEquipmentView>& GetEquipmentViews() const { return mEquipmentViews; }
+	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FPlayerMetaView& GetPlayerMeta() const { return mPlayerMeta; }
 
 private:
 	UPROPERTY(Transient) TArray<FUnitView> mUnitViews;
@@ -119,4 +125,6 @@ private:
 	UPROPERTY(Transient) TArray<FTileViewState> mTileStates;
 	UPROPERTY(Transient) TArray<FCombatQueueNode> mActionQueue;
 	UPROPERTY(Transient) FTurnView mTurnView;
+	UPROPERTY(Transient) TArray<FEquipmentView> mEquipmentViews;
+	UPROPERTY(Transient) FPlayerMetaView mPlayerMeta;
 };

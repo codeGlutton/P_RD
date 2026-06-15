@@ -42,6 +42,11 @@ void UCombatViewModel::RequestCancel()
 	OnCombatCommand.Broadcast(ECombatInputType::Cancel, INDEX_NONE);
 }
 
+void UCombatViewModel::RequestLongPressEquip(int32 SlotIndex)
+{
+	OnCombatCommand.Broadcast(ECombatInputType::LongPressEquip, SlotIndex);
+}
+
 void UCombatViewModel::RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress)
 {
 	OnCombatWorldTouch.Broadcast(ScreenPosition, bLongPress);
@@ -96,6 +101,18 @@ void UCombatViewModel::SetTurnView(const FTurnView& Turn)
 {
 	mTurnView = Turn;
 	OnViewChanged.Broadcast(ECombatViewDomain::Turn);
+}
+
+void UCombatViewModel::SetEquipmentViews(const TArray<FEquipmentView>& Equipment)
+{
+	mEquipmentViews = Equipment;
+	OnViewChanged.Broadcast(ECombatViewDomain::Equipment);
+}
+
+void UCombatViewModel::SetPlayerMeta(const FPlayerMetaView& Meta)
+{
+	mPlayerMeta = Meta;
+	OnViewChanged.Broadcast(ECombatViewDomain::Meta);
 }
 
 void UCombatViewModel::SetActionQueue(const TArray<FCombatQueueNode>& Queue)
