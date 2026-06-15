@@ -14,8 +14,8 @@ public class P_RD : ModuleRules
             "InputCore",
             "EnhancedInput",
             "UMG",
-            "MediaAssets",
-            "ImageWrapper",
+            "MediaAssets",              // 인트로 시네마틱 MP4 재생(MediaPlayer/MediaSource)에 필요
+            "ImageWrapper",             // 런타임 PNG 디코딩(UITextureLoader)에 필요
 
             /*
              * WBP 자체는 UMG 모듈만으로 다루지만, 이번 UI 패널은 런타임에서 버튼 입력 방식,
@@ -38,14 +38,16 @@ public class P_RD : ModuleRules
             "GameplayStateTreeModule",  // StateTree AI Comp 사용
         });
 
+        // 캐릭터 선택 WBP를 코드로 생성·구성하는 에디터 커맨드렛(ClassSelectWBPSetupCommandlet) 전용 의존성.
+        // 에디터 빌드에서만 필요하므로 런타임 패키지에 끌려들어가지 않게 bBuildEditor로 감싼다.
         if (Target.bBuildEditor)
         {
             PrivateDependencyModuleNames.AddRange(new string[] {
-                "UnrealEd",
-                "UMGEditor",
-                "AssetTools",
-                "KismetCompiler",
-                "BlueprintGraph",
+                "UnrealEd",          // 커맨드렛/에셋 편집 기반
+                "UMGEditor",         // WBP(WidgetBlueprint) 에디터 조작
+                "AssetTools",        // 텍스처 임포트·에셋 생성
+                "KismetCompiler",    // 블루프린트 컴파일
+                "BlueprintGraph",    // 블루프린트 그래프 노드 구성
             });
         }
 
