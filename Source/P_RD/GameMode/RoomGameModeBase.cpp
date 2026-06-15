@@ -4,6 +4,7 @@
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/InstanceSubsystem/RoomTransitionSubsystem.h"
 #include "Singleton/InstanceSubsystem/PlayerUnitRestorationSubsystem.h"
+#include "Setting/RDWorldSettings.h"
 #include "Pawn/Player/PlayerUnit.h"
 
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
@@ -199,6 +200,29 @@ AActor* ARoomGameModeBase::ChoosePlayerStart_Implementation(AController* Player)
 		if (SettingPointActor != nullptr)
 		{
 			PlayerStartActor = SettingPointActor;
+		}
+	}
+
+	return PlayerStartActor;
+}
+
+/**
+ * @brief 플레이어 스타트(스폰/카메라 위치)를 결정한다.
+ *
+ * @details
+ * 여기서 정한 곳이 StartSpot으로 SpawnDefaultPawnFor_Implementation·RestartPlayerAtPlayerStart에 전달된다.
+ * 타일맵 방은 WorldSettings(ARDWorldSettings)에 배치해 둔 MainCameraPoint를 스타트로 써서
+ * 플레이어 폰(=카메라)이 그 지점에 놓이게 한다. 카메라 포인트가 없으면 기본 PlayerStart로 둔다.
+ */
+AActor* ARoomGameModeBase::ChoosePlayerStart_Implementation(AController* Player)
+{
+	AActor* PlayerStartActor = Super::ChoosePlayerStart_Implementation(Player);
+
+	if (const ARDWorldSettings* WorldSettings = Cast<ARDWorldSettings>(GetWorld()->GetWorldSettings()))
+	{
+		if (AActor* MainCameraPoint = WorldSettings->GetMainCameraPoint())
+		{
+			PlayerStartActor = MainCameraPoint;
 		}
 	}
 

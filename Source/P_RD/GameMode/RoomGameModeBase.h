@@ -15,6 +15,7 @@
  // Room Game Mode 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogRoomGameMode, Log, All)
 
+class AController;
 class AUnit;
 
 /**
@@ -33,6 +34,8 @@ public:
 	AActor* ChoosePlayerStart_Implementation(AController* Player) override;
 
 protected:
+	/** @brief MainCameraPoint(WorldSettings)를 플레이어 스타트로 선택해 카메라/스폰 위치를 맞춘다. */
+	AActor* ChoosePlayerStart_Implementation(AController* Player) override;
 	void InitializeCommonRoom() override;
 	void BeginRoom() override;
 
