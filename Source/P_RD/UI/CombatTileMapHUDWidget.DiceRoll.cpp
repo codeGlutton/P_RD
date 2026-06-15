@@ -4,6 +4,7 @@
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Actor/Dice/CombatDiceCaptureActor.h"
+#include "UI/Combat/CombatViewModel.h"
 #include "UI/CombatTileMapHUDWidgetPrivate.h"
 
 using namespace RDCombatHUD;
@@ -265,6 +266,14 @@ void UCombatTileMapHUDWidget::HandleDiceRollInputButtonClicked()
 	{
 		DismissIntroDiceRoll();
 		return;
+	}
+
+	// 뷰모델이 연결돼 있으면 굴림은 게임플레이가 수행한다(의도만 전달). 결과가 뷰모델에 들어온 뒤
+	// 그 값으로 연출을 시작하도록 mDiceViews를 다시 읽는다. 미연결 시에는 기존 단독 연출.
+	if (mCombatViewModel != nullptr)
+	{
+		mCombatViewModel->RequestRollDice();
+		RefreshDiceViewsFromRunData();
 	}
 
 	StartIntroDiceRoll();

@@ -10,6 +10,7 @@ class ACombatDiceCaptureActor;
 class UBorder;
 class UButton;
 class UCanvasPanel;
+class UCombatViewModel;
 class UIndexedButtonWidget;
 class UImage;
 class UTextBlock;
@@ -46,6 +47,16 @@ public:
 	 * 반환값이 false면 해당 index에 표시할 주사위가 없다는 뜻이다.
 	 */
 	bool GetCombatDiceView(int32 DiceIndex, FPrimaryAssetId& OutDiceId, ERarityType& OutRarityType, int32& OutResultValue, bool& OutIsRolled) const;
+
+	/**
+	 * @brief 전투 뷰모델을 연결한다(데이터/비주얼 분리 경계).
+	 *
+	 * @details
+	 * 연결되면 주사위 굴림 결과는 더 이상 HUD가 정하지 않고 뷰모델(게임플레이/Mock)에서 읽는다.
+	 * 미연결 상태에서는 기존 단독 동작(시안용 임시 굴림)을 그대로 유지해 회귀가 없다.
+	 * 게임플레이 어댑터가 준비되면 여기에 같은 뷰모델을 넘기면 된다(UI 무수정).
+	 */
+	void BindCombatViewModel(UCombatViewModel* InViewModel);
 
 protected:
 	/** @brief WBP 바인딩과 버튼 이벤트를 연결한다. */
@@ -263,6 +274,10 @@ private:
 
 	/** @brief 현재 런에서 읽은 보유 주사위 표시 데이터 */
 	TArray<FDiceViewData> mDiceViews;
+
+	/** @brief 연결되면 주사위 굴림 결과의 출처가 되는 전투 뷰모델(미연결 시 기존 단독 동작) */
+	UPROPERTY(Transient)
+	TObjectPtr<UCombatViewModel> mCombatViewModel;
 
 	/** @brief 보유 주사위를 그리는 투명 RenderTarget Image 위젯 */
 	UPROPERTY(Transient)

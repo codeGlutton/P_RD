@@ -7,10 +7,16 @@
 #include "GameMode/RDGameModeBase.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Actor/Dice/CombatDiceCaptureActor.h"
+#include "UI/Combat/CombatViewModel.h"
 #include "UI/CombatTileMapHUDWidgetPrivate.h"
 #include "UI/IndexedButtonWidget.h"
 
 using namespace RDCombatHUD;
+
+void UCombatTileMapHUDWidget::BindCombatViewModel(UCombatViewModel* InViewModel)
+{
+	mCombatViewModel = InViewModel;
+}
 
 void UCombatTileMapHUDWidget::RefreshDiceViewsFromRunData()
 {
@@ -24,6 +30,12 @@ void UCombatTileMapHUDWidget::RefreshDiceViewsFromRunData()
 		return;
 	}
 
+	// 뷰모델이 연결돼 있으면 굴림 결과의 출처는 뷰모델(게임플레이/Mock). UI는 RNG를 갖지 않는다.
+	// 미연결(시안 단독 실행)일 때만 기존처럼 임시 값을 채워 데모를 유지한다 → 회귀 없음.
+	const TArray<FDiceSlotView>* ViewModelDice =
+		mCombatViewModel != nullptr ? &mCombatViewModel->GetDiceViews() : nullptr;
+
+	int32 DiceIndex = 0;
 	for (const FPrimaryAssetId& DiceId : RunPersistData->GetDiceIds())
 	{
 		if (DiceId.IsValid() == false)
@@ -32,11 +44,21 @@ void UCombatTileMapHUDWidget::RefreshDiceViewsFromRunData()
 		}
 
 		FDiceViewData DiceView;
-		DiceView.mDiceId = DiceId;
+		DiceView.mDiceId = DiceId;                                  // 정체성/희귀도는 런 데이터에서(읽기 전용)
 		DiceView.mRarityType = RDUIDice::ResolveDiceRarity(DiceId);
-		DiceView.mResultValue = FMath::RandRange(1, 6);
+
+		if (ViewModelDice != nullptr && ViewModelDice->IsValidIndex(DiceIndex))
+		{
+			DiceView.mResultValue = (*ViewModelDice)[DiceIndex].mResultValue;   // 굴림 결과는 뷰모델에서
+			DiceView.mIsRolled = (*ViewModelDice)[DiceIndex].mIsRolled;
+		}
+		else
+		{
+			DiceView.mResultValue = FMath::RandRange(1, 6);         // 뷰모델 미연결 시 시안용 임시 값
+		}
 
 		mDiceViews.Add(MoveTemp(DiceView));
+		++DiceIndex;
 	}
 }
 
