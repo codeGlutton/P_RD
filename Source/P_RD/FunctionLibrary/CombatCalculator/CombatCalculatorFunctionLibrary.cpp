@@ -12,7 +12,7 @@ bool UCombatCalculatorFunctionLibrary::CalculateSkillResult(TScriptInterface<con
     // 1. 이펙트 적용 결과 생성
     FEffectCommitResult EffectCommitResult;
 
-    for (TScriptInterface<const ITileActor> TileActor : Tiles)
+    for (const TScriptInterface<ITileActor>& TileActor : Tiles)
     {
         // 2. 타일 적용 결과 생성 (예: X=1, Y=2 타일)
         FTileActorCommitResult TileCommitResult;

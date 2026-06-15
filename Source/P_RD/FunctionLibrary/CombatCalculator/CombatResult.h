@@ -23,6 +23,7 @@ public:
 	// 임시 체력, 보호막
 	// 유닛에게 이걸 적용했다.
 	TMap<FGameplayTag, float> mEffect;
+
 	TMap<FName, float> mPassive;
 };
 
@@ -34,7 +35,7 @@ struct FTileActorCommitResult
 
 public:
 
-	TScriptInterface<const ITileActor> mTileActor;
+	TScriptInterface<ITileActor> mTileActor;
 
 	// 유닛에게 이걸 적용했다.
 	FUnitCommitResult mUnitCommitResult;
@@ -59,7 +60,7 @@ USTRUCT(BlueprintType)
 struct FSkillCommitResult
 {
 	GENERATED_BODY()
-	
+
 public:
 	TArray<FEffectCommitResult> mEffectCommitResult;
 };
