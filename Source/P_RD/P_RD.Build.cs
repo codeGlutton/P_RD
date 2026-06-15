@@ -16,9 +16,20 @@ public class P_RD : ModuleRules
             "UMG",
 
             /*
-             * WBP 자체는 UMG 모듈만으로 다루지만, 이번 UI 패널은 런타임에서 버튼 입력 방식,
-             * Slate Visibility, FReply, Widget Transform 같은 Slate 타입을 직접 사용한다.
-             * 그래서 Carousel/Dice/TopMenuBar 쪽 C++ 위젯 컴파일을 위해 Slate/SlateCore 의존성을 명시한다.
+             * 인트로 UI에서 영상을 직접 재생하고 상태를 확인한다.
+             * 그래서 MediaPlayer 관련 타입을 쓰기 위해 필요하다.
+             */
+            "MediaAssets",
+
+            /*
+             * 런타임에 이미지 파일을 읽어 Texture2D로 바꿀 때 사용한다.
+             * 버튼 이미지, 배경, 프리뷰 이미지를 코드에서 붙이기 위한 모듈이다.
+             */
+            "ImageWrapper",
+
+            /*
+             * C++ UI 위젯에서 버튼 입력, 표시 상태, 위젯 위치 값을 직접 다룬다.
+             * Carousel, DicePanel, TopMenuBar 쪽 코드가 Slate 타입을 쓰기 때문에 필요하다.
              */
             "Slate",
             "SlateCore",
@@ -35,6 +46,21 @@ public class P_RD : ModuleRules
             "StateTreeModule",          // StateTree 사용
             "GameplayStateTreeModule",  // StateTree AI Comp 사용
         });
+
+        /*
+         * WBP를 자동으로 맞추는 commandlet에서 에디터 API를 사용한다.
+         * 게임 실행 빌드에는 필요 없으므로 에디터 빌드에서만 추가한다.
+         */
+        if (Target.bBuildEditor)
+        {
+            PrivateDependencyModuleNames.AddRange(new string[] {
+                "UnrealEd",
+                "UMGEditor",
+                "AssetTools",
+                "KismetCompiler",
+                "BlueprintGraph",
+            });
+        }
 
         PrivateIncludePaths.AddRange(new string[] {
             "P_RD",
