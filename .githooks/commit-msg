@@ -15,8 +15,14 @@ if [ -z "$REV" ]; then
   exit 1
 fi
 
-echo $REV > "$REPO_ROOT/.svnrev"
-git add "$REPO_ROOT/.svnrev"
+MSG_FILE="$1"
+
+# 기존 SVN-REV 제거
+sed -i.bak '/^\[SVN-REV\]:/d' "$MSG_FILE"
+rm -f "${MSG_FILE}.bak"
+
+# 마지막에 추가
+printf "\n[SVN-REV]: %s\n" "$REV" >> "$MSG_FILE"
 
 echo "SVN revision 기록됨: $REV"
 
