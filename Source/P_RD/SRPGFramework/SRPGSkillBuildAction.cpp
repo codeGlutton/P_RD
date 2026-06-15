@@ -231,7 +231,7 @@ void FSRPGSkillBuildAction::ResetSkill()
 
     mEffectTileIndexes.Empty();
     mTargetIndex = FTileIndex::Invalid;
-    // mCalculateDatas.Empty();
+    mCalculationResult.mEffectCommitResult.Empty();
 
     USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
     checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
@@ -274,7 +274,7 @@ void FSRPGSkillBuildAction::SetTargetTile(const FTileIndex& TileIndex)
             AllEffectActors.Append(EffectActors);
         }
 
-        // mCalculateDatas = SkillComp->CalculateDatas(mSelectedSkillIndex, AllEffectActors);
+        SkillComp->CalculateSkillResult(mSelectedSkillIndex, AllEffectActors, OUT mCalculationResult);
     }
 
     /* 상태 변경되면서 외부에서 바인딩된 UI 변경 */
@@ -286,7 +286,7 @@ void FSRPGSkillBuildAction::ResetTargetTile()
 {
     mEffectTileIndexes.Empty();
     mTargetIndex = FTileIndex::Invalid;
-    // mCalculateDatas.Empty();
+    mCalculationResult.mEffectCommitResult.Empty();
 
     USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
     checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
@@ -304,8 +304,8 @@ void FSRPGSkillBuildAction::BuildSkill()
     USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
     checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
 
-    auto SkillCastCommand = MakeShared<FSRPGSkillCastCommand>();
-    // SkillCastCommand.mCalculateDatas = mCalculateDatas;
+    TSharedPtr<FSRPGSkillCastCommand> SkillCastCommand = MakeShared<FSRPGSkillCastCommand>();
+    SkillCastCommand->mCalculationResult = mCalculationResult;
 
     CombatSubsystem->SummitCommand(SkillCastCommand);
 }

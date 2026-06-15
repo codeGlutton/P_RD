@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGAction.h"
+#include "FunctionLibrary/CombatCalculator/CombatResult.h"
 
 struct FSRPGSkillBuildAction;
 
@@ -93,6 +94,6 @@ protected:
 
 	TArray<FTileIndex> mEffectTileIndexes;
 	FTileIndex mTargetIndex = FTileIndex::Invalid;
-	// TArray<FSRPGCalculatedData> mCalculateDatas;
+	FSkillCommitResult mCalculationResult;
 };
 

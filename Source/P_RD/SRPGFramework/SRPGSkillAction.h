@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGAction.h"
+#include "FunctionLibrary/CombatCalculator/CombatResult.h"
 
 struct FSRPGSkillAction;
 
@@ -18,7 +19,7 @@ public:
 	FSRPGSkillCastCommand();
 
 public:
-	// TArray<FSRPGCalculatedData> mCalculateDatas;
+	FSkillCommitResult mCalculationResult;
 };
 
 /**
