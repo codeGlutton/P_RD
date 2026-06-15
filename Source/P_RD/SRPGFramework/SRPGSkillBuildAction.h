@@ -48,7 +48,6 @@ struct FSRPGSkillBuildAction : public FSRPGAction
 
 protected:
 	FSRPGSkillBuildAction();
-	virtual ~FSRPGSkillBuildAction() = default;
 
 	/* FSRPGAction 상속 */
 protected:

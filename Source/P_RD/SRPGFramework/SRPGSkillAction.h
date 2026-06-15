@@ -32,7 +32,6 @@ struct FSRPGSkillAction : public FSRPGAction
 
 protected:
 	FSRPGSkillAction();
-	virtual ~FSRPGSkillAction() = default;
 
 protected:
 	void OnBeginAction() override;
