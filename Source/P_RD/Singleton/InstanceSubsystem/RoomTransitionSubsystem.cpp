@@ -72,7 +72,11 @@ bool URoomTransitionSubsystem::PreloadRoomAsync(int32 RoomRowIndex, int32 RoomCo
     Request.OnReadyToTransition = ReadyToTransitionCallback;
     Request.OnPreTransitNextRoom = PreTransitionCallback;
 
-    return PreloadRoomAsync(MoveTemp(Request), IsAutoTransition);
+    /*
+     * RequireExternalReady는 에셋 로드가 끝난 뒤에도 페이드아웃 같은 외부 준비를 기다릴지 정하는 값이다.
+     * 이 값을 넘기지 않으면 IsAutoTransition 값이 RequireExternalReady 자리로 들어가 전환 조건이 잘못 해석된다.
+     */
+    return PreloadRoomAsync(MoveTemp(Request), RequireExternalReady, IsAutoTransition);
 }
 
 bool URoomTransitionSubsystem::PreloadRoomAsync(FRoomTransitionRequest Request, bool RequireExternalReady, bool IsAutoTransition)
