@@ -34,6 +34,9 @@ struct FStage
 	GENERATED_BODY()
 
 public:
+	void SetCurrentRoom(int32 RowIndex, int32 ColumnIndex);
+
+public:
 	FRoom& GetRoom(int32 RowIndex, int32 ColumnIndex);
 	const FRoom& GetRoom(int32 RowIndex, int32 ColumnIndex) const;
 
@@ -42,6 +45,8 @@ public:
 
 	FRoom& GetCurrentRoom();
 	const FRoom& GetCurrentRoom() const;
+
+	bool HasRoom(int32 RowIndex, int32 ColumnIndex) const;
 
 public:
 	UPROPERTY(Category = Stage, SaveGame, VisibleAnywhere, meta = (DisplayName = "StageLevel"))
@@ -54,9 +59,9 @@ public:
 
 public:
 	UPROPERTY(Category = Play, SaveGame, VisibleAnywhere, meta = (DisplayName = "CurColumn"))
-	int32 mCurColumn = 0;
+	int32 mCurColumn = -1;
 	UPROPERTY(Category = Play, SaveGame, VisibleAnywhere, meta = (DisplayName = "CurRow"))
-	int32 mCurRow = 0;
+	int32 mCurRow = -1;
 
 public:
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "StaticStageSpawnDataId"))

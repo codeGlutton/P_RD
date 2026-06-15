@@ -13,7 +13,7 @@
 /**
  * @brief  상점 방에 대한 GameMode
  */
-UCLASS()
+UCLASS(abstract)
 class P_RD_API AShopGameMode : public ARoomGameModeBase
 {
 	GENERATED_BODY()

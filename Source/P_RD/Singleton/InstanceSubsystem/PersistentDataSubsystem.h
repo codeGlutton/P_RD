@@ -37,7 +37,7 @@ public:
 
 public:
 	// TODO : 삭제
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, CallInEditor)
 	void DoStageBuildTest(bool UpdateBuildStream);
 
 protected:

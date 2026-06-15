@@ -18,7 +18,7 @@ void USRPGCombatSubsystem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (mPhase == ECombatRoomPhase::CombatPlay && mCurTurnContextNode != nullptr)
+	if (mCombatPhase == ESRPGCombatRoomPhase::CombatPlay && mCurTurnContextNode != nullptr)
 	{
 		mCurTurnContextNode->GetValue()->TickTurn(DeltaTime);
 	}
@@ -34,8 +34,8 @@ void USRPGCombatSubsystem::InitCombat(const UStaticCombatRoomSpawnData* RoomSpaw
 	checkf(RoomSpawnData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
 	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
 
-	checkf(mPhase == ECombatRoomPhase::None, TEXT("중복 초기화"));
-	mPhase = ECombatRoomPhase::CombatInit;
+	checkf(mCombatPhase == ESRPGCombatRoomPhase::None, TEXT("중복 초기화"));
+	mCombatPhase = ESRPGCombatRoomPhase::CombatInit;
 
 	SpawnTileMap();
 	RegisterPlayerUnit(PlayerUnit, RoomSpawnData->mPlayerTransform);
@@ -47,8 +47,8 @@ void USRPGCombatSubsystem::InitCombat(const UStaticCombatRoomSpawnData* RoomSpaw
 
 void USRPGCombatSubsystem::BeginCombat()
 {
-	checkf(mPhase == ECombatRoomPhase::CombatInit, TEXT("전투 시작 전 초기화 우선 필요"));
-	mPhase = ECombatRoomPhase::CombatStart;
+	checkf(mCombatPhase == ESRPGCombatRoomPhase::CombatInit, TEXT("전투 시작 전 초기화 우선 필요"));
+	mCombatPhase = ESRPGCombatRoomPhase::CombatStart;
 
 	UE_LOG(LogSRPGCombat, Log, TEXT("SRPG 전투 시작"))
 
@@ -69,17 +69,17 @@ void USRPGCombatSubsystem::BeginCombat()
 			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Unit, AbilityTags::GameplayAbility_Passive_OnStartRoom, MoveTemp(EventData));
 		}
 		// 턴 실행
-		checkf(mPhase == ECombatRoomPhase::CombatStart, TEXT("전투 진입 절차 오류"));
-		mPhase = ECombatRoomPhase::CombatPlay;
-		mCurTurnContextNode->GetValue()->BeginTurn();
+		checkf(mCombatPhase == ESRPGCombatRoomPhase::CombatStart, TEXT("전투 진입 절차 오류"));
+		mCombatPhase = ESRPGCombatRoomPhase::CombatPlay;
+		AdvanceTurn(true);
 		}));
 	OnBeginCombatUI.Broadcast(PresentationBarrier);
 }
 
 void USRPGCombatSubsystem::EndCombat()
 {
-	checkf(mPhase == ECombatRoomPhase::CombatAbort, TEXT("전투 종료 절차 오류"));
-	mPhase = ECombatRoomPhase::CombatEnd;
+	checkf(mCombatPhase == ESRPGCombatRoomPhase::CombatAbort, TEXT("전투 종료 절차 오류"));
+	mCombatPhase = ESRPGCombatRoomPhase::CombatEnd;
 
 	for (TObjectPtr<AUnit>& Unit : mUnits)
 	{
@@ -103,7 +103,76 @@ void USRPGCombatSubsystem::EndCombat()
 
 		UE_LOG(LogSRPGCombat, Log, TEXT("SRPG 전투 종료"))
 		}));
-	OnEndCombatUI.Broadcast(PresentationBarrier);
+	OnEndCombatUI.Broadcast(PresentationBarrier, mCombatResult);
+}
+
+void USRPGCombatSubsystem::EvaluateCombatStates()
+{
+	EvaluateCombatEndState();
+	if (mCurTurnContextNode != nullptr)
+	{
+		const bool ForceAbort = mCombatPhase == ESRPGCombatRoomPhase::CombatAbort;
+		mCurTurnContextNode->GetValue()->EvaluateTurnEndState(ForceAbort);
+	}
+}
+
+void USRPGCombatSubsystem::OnEndCurrentTurn(TSharedRef<FSRPGTurnContext> TurnContext, ESRPGTurnResult TurnResult)
+{
+	// 전투 상태 평가
+	EvaluateCombatStates();
+
+	// 전투 종료 여부 체크
+	if (mCombatPhase == ESRPGCombatRoomPhase::CombatAbort)
+	{
+		EndCombat();
+		return;
+	}
+
+	// 수명이 다 된 Turn Context 제거
+	if (TurnContext->GetLifeCount() == 0)
+	{
+		UnregisterTurn(TurnContext);
+	}
+
+	AdvanceTurn();
+}
+
+void USRPGCombatSubsystem::EvaluateCombatEndState()
+{
+	checkf(mPlayerUnit != nullptr, TEXT("플레이어 미동록 오류"));
+
+	/* 이미 중단 */
+
+	if (mCombatPhase == ESRPGCombatRoomPhase::CombatAbort)
+	{
+		return;
+	}
+
+	/* 플레이어가 죽어서 전투가 종료되는가? */
+
+	if (mPlayerUnit->IsDead() == true)
+	{
+		mCombatResult = ESRPGCombatResult::PlayerLose;
+		mCombatPhase = ESRPGCombatRoomPhase::CombatAbort;
+		return;
+	}
+
+	/* 적군이 모두 죽어 전투가 종료되는가? */
+
+	bool AnyEnemyAlive = false;
+	for (const TObjectPtr<AUnit>& Unit : mUnits)
+	{
+		if (Unit->GetTeamAttitudeTowards(*mPlayerUnit) == ETeamAttitude::Hostile && Unit->IsDead() == false)
+		{
+			AnyEnemyAlive = true;
+		}
+	}
+	if (AnyEnemyAlive == false)
+	{
+		mCombatResult = ESRPGCombatResult::PlayerWin;
+		mCombatPhase = ESRPGCombatRoomPhase::CombatAbort;
+		return;
+	}
 }
 
 TWeakPtr<FSRPGTurnContext> USRPGCombatSubsystem::RegisterTurn(AUnit* Owner, int32 LifeCount)
@@ -111,12 +180,18 @@ TWeakPtr<FSRPGTurnContext> USRPGCombatSubsystem::RegisterTurn(AUnit* Owner, int3
 	TSharedPtr<FSRPGTurnContext> TurnContext = TSharedPtr<FSRPGTurnContext>(new FSRPGTurnContext(), [](FSRPGTurnContext* TurnContext) {
 		delete TurnContext;
 		});
-	TurnContext->InitTurn(Owner, LifeCount);
+	TurnContext->InitTurn(this, Owner, LifeCount);
 	TurnContext->OnBeginTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const FSRPGTurnContext& TurnContext) {
 		OnBeginAnyTurnUI.Broadcast(Barrier, TurnContext);
 		});
 	TurnContext->OnEndTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const FSRPGTurnContext& TurnContext, ESRPGTurnResult Result) {
 		OnEndAnyTurnUI.Broadcast(Barrier, TurnContext, Result);
+		});
+	TurnContext->OnBeginAnyActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const FSRPGTurnContext& TurnContext, const FSRPGAction& Action) {
+		OnBeginAnyTurnActionUI.Broadcast(Barrier, TurnContext, Action);
+		});
+	TurnContext->OnEndAnyActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const FSRPGTurnContext& TurnContext, const FSRPGAction& Action, ESRPGActionResult Result) {
+		OnEndAnyTurnActionUI.Broadcast(Barrier, TurnContext, Action, Result);
 		});
 
 	if (mCurTurnContextNode == nullptr)
@@ -243,7 +318,7 @@ void USRPGCombatSubsystem::RegisterEnemyUnit(const FEnemyUnitPlacementData& Enem
 		EvaluateCombatStates();
 		});
 
-	checkf(mTileMap->IsBlocking(EnemyPlacementData.mTransform.mIndex, EnemyUnit->GetBlockFlags()) == false, TEXT("타일 간 충돌"));
+	checkf(mTileMap->CanPlace(EnemyPlacementData.mTransform.mIndex, EnemyUnit), TEXT("액터 배치 불가능"));
 	
 	// 타일 위에 배치
 	mTileMap->PlaceActor(EnemyPlacementData.mTransform, EnemyUnit);
@@ -265,7 +340,7 @@ void USRPGCombatSubsystem::RegisterObstacle(const FObstaclePlacementData& Obstac
 	const UStaticObstacleSpawnData* ObstacleSpawnData = ObstaclePlacementData.mSpawnData.Get();
 	ITileActor* Obstacle = GetWorld()->SpawnActor<ITileActor>(ObstacleSpawnData->mClass.Get(), mTileMap->TileToWorldTransform(ObstaclePlacementData.mTransform));
 
-	checkf(mTileMap->IsBlocking(ObstaclePlacementData.mTransform.mIndex, Obstacle->GetBlockFlags()) == false, TEXT("타일 간 충돌"));
+	checkf(mTileMap->CanPlace(ObstaclePlacementData.mTransform.mIndex, Obstacle), TEXT("액터 배치 불가능"));
 
 	// 타일 위에 배치
 	mTileMap->PlaceActor(ObstaclePlacementData.mTransform, Obstacle);
@@ -275,13 +350,17 @@ void USRPGCombatSubsystem::SpawnTileMap()
 {
 	checkf(mTileMap == nullptr, TEXT("이미 타일 존재"));
 
-	ARDWorldSettings* WorldSettings = Cast<ARDWorldSettings>(GetWorld()->GetWorldSettings());
-	checkf(WorldSettings != nullptr, TEXT("월드 세팅 nullptr"));
+	UWorld* World = GetWorld();
+	checkf(World != nullptr, TEXT("월드 nullptr"));
+
+	const ARDWorldSettings* WorldSettings = Cast<ARDWorldSettings>(World->GetWorldSettings());
+	checkf(WorldSettings != nullptr, TEXT("RDWorldSettings nullptr"));
+
 	AActor* RoomStartPoint = WorldSettings->GetRoomStartPoint();
-	checkf(RoomStartPoint != nullptr, TEXT("방 시작 위치를 가리키는 액터 nullptr"));
+	checkf(RoomStartPoint != nullptr, TEXT("RoomStartPoint nullptr"));
 
 	// 타일맵 스폰
-	mTileMap = GetWorld()->SpawnActor<ATileMap>(ATileMap::StaticClass(), RoomStartPoint->GetTransform());
+	mTileMap = World->SpawnActor<ATileMap>(ATileMap::StaticClass(), RoomStartPoint->GetTransform());
 }
 
 void USRPGCombatSubsystem::RegisterPlayerUnit(AUnit* PlayerUnit, const FTileTransform& Transform)
@@ -337,75 +416,80 @@ void USRPGCombatSubsystem::RegisterObstacles(const TArray<FObstaclePlacementData
 	}
 }
 
-void USRPGCombatSubsystem::EvaluateCombatStates()
+void USRPGCombatSubsystem::AdvanceTurn(bool IsInitialRound)
 {
-	EvaluateCombatEndState();
-	if (mCurTurnContextNode != nullptr)
+	if (IsInitialRound == false)
 	{
-		const bool ForceAbort = mPhase == ECombatRoomPhase::CombatAbort;
-		mCurTurnContextNode->GetValue()->EvaluateTurnEndState(ForceAbort);
-	}
-}
+		// 라운드 종료 시 이벤트 처리
+		NotifyRoundEndIfNeeded();
 
-void USRPGCombatSubsystem::OnEndCurrentTurn(TSharedRef<FSRPGTurnContext> TurnContext, ESRPGTurnResult TurnResult)
-{
-	// 전투 종료 여부 체크
-	if (mPhase == ECombatRoomPhase::CombatAbort)
-	{
-		EndCombat();
-		return;
+		// 다음 턴 진행
+		mCurTurnContextNode = mCurTurnContextNode->GetNextNode();
+		// 밀려있던 턴 구성 변경 요청안들 처리
+		FlushPendingTurnRequests();
 	}
 
-	// 수명이 다 된 Turn Context 제거
-	if (TurnContext->GetLifeCount() == 0)
-	{
-		UnregisterTurn(TurnContext);
-	}
-
-	// 다음 턴 진행
-	mCurTurnContextNode = mCurTurnContextNode->GetNextNode();
-	// 밀려있던 턴 구성 변경 요청안들 처리
-	FlushPendingTurnRequests();
+	// 라운드 시작 시 이벤트 처리
+	NotifyRoundStartIfNeeded();
 
 	mCurTurnContextNode->GetValue()->BeginTurn();
 }
 
-void USRPGCombatSubsystem::EvaluateCombatEndState()
+void USRPGCombatSubsystem::NotifyRoundStartIfNeeded()
 {
-	checkf(mPlayerUnit != nullptr, TEXT("플레이어 미동록 오류"));
-
-	/* 이미 중단 */
-
-	if (mPhase == ECombatRoomPhase::CombatAbort)
+	if (mTurnContexts.IsEmpty() == false && mCurTurnContextNode == mTurnContexts.GetHead())
 	{
-		return;
-	}
-
-	/* 플레이어가 죽어서 전투가 종료되는가? */
-
-	if (mPlayerUnit->IsDead() == true)
-	{
-		mResult = ECombatResult::PlayerLose;
-		mPhase = ECombatRoomPhase::CombatAbort;
-		return;
-	}
-
-	/* 적군이 모두 죽어 전투가 종료되는가? */
-
-	bool AnyEnemyAlive = false;
-	for (const TObjectPtr<AUnit>& Unit : mUnits)
-	{
-		if (Unit->GetTeamAttitudeTowards(*mPlayerUnit) == ETeamAttitude::Hostile && Unit->IsDead() == false)
+		for (const TObjectPtr<AUnit>& Unit : mUnits)
 		{
-			AnyEnemyAlive = true;
+			Unit->OnBeginRound();
+		}
+		for (const TScriptInterface<ITileActor>& Obstacle : mObstacles)
+		{
+			Obstacle->OnBeginRound();
 		}
 	}
-	if (AnyEnemyAlive == false)
+}
+
+void USRPGCombatSubsystem::NotifyRoundEndIfNeeded()
+{
+	if (mTurnContexts.IsEmpty() == false && mCurTurnContextNode == mTurnContexts.GetTail())
 	{
-		mResult = ECombatResult::PlayerWin;
-		mPhase = ECombatRoomPhase::CombatAbort;
-		return;
+		for (const TObjectPtr<AUnit>& Unit : mUnits)
+		{
+			Unit->OnEndRound();
+		}
+		for (const TScriptInterface<ITileActor>& Obstacle : mObstacles)
+		{
+			Obstacle->OnEndRound();
+		}
 	}
+}
+
+bool USRPGCombatSubsystem::SummitCommand(TSharedPtr<const FSRPGActionCommand> Command)
+{
+	checkf(Command != nullptr, TEXT("유효하지 않은 액션 커맨드"));
+	checkf(Command->GetActionCommandType() != ESRPGActionCommandType::None, TEXT("유효하지 않은 액션 커맨드"));
+
+	if (mCurTurnContextNode == nullptr || mCurTurnContextNode->GetValue() == nullptr)
+	{
+		UE_LOG(LogSRPGCombat, Log, TEXT("현재 등록된 턴 객체가 존재하지 않음"));
+		return false;
+	}
+
+	// 입력 라우팅 시작
+	const ESRPGActionCommandResult Result = mCurTurnContextNode->GetValue()->RouteCommand(Command);
+	const bool IsCommandUsed = Result != ESRPGActionCommandResult::Ignored;
+	
+	return IsCommandUsed;
+}
+
+TWeakPtr<FSRPGTurnContext> USRPGCombatSubsystem::GetCurrentTurnContext()
+{
+	if (mCurTurnContextNode == nullptr)
+	{
+		return nullptr;
+	}
+	return mCurTurnContextNode->GetValue();
 }
 
 TWeakPtr<FSRPGTurnContext> USRPGCombatSubsystem::GetTurnContext(const AUnit* Owner)
@@ -443,12 +527,12 @@ TArray<TWeakPtr<FSRPGTurnContext>> USRPGCombatSubsystem::GetTurnContexts(const A
 	return Contexts;
 }
 
-ATileMap* USRPGCombatSubsystem::GetTileMap() const
+ATileMap* USRPGCombatSubsystem::GetTileMap()
 {
 	return mTileMap;
 }
 
-const TArray<TObjectPtr<AUnit>>& USRPGCombatSubsystem::GetUnits() const
+TArray<TObjectPtr<AUnit>>& USRPGCombatSubsystem::GetUnits()
 {
 	return mUnits;
 }

@@ -22,7 +22,7 @@ struct FObstaclePlacementData
     GENERATED_BODY()
 
 public:
-	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SpawnData", BUNDLE_PAD))
+	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SpawnData", AssetBundles = "PAD"))
 	TSoftObjectPtr<UStaticObstacleSpawnData> mSpawnData;
     UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Transform"))
     FTileTransform mTransform;
@@ -37,7 +37,7 @@ struct FEnemyUnitPlacementData
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SpawnData", BUNDLE_PAD))
+	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SpawnData", AssetBundles = "PAD"))
 	TSoftObjectPtr<UStaticEnemyUnitSpawnData> mSpawnData;
 	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Difficulty"))
 	int32 mDifficulty = 0;
@@ -59,6 +59,7 @@ class P_RD_API UStaticCombatRoomSpawnData : public UStaticRoomSpawnData
 
 public:
 	void PostInitProperties() override;
+	void PostLoad() override;
 
 public:
 	/**

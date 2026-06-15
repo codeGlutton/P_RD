@@ -33,17 +33,17 @@ public:
     FName GetKeyName() const;
 
 public:
-	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Class", AssetBundles = BUNDLE_ACTOR))
+	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Class", AssetBundles = "Actor"))
 	TSoftClassPtr<AUnit> mClass;
 
 public:
-	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillDatas", AssetBundles = BUNDLE_PAD))
+	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillDatas", AssetBundles = "PAD"))
 	TArray<TSoftObjectPtr<UStaticSkillData>> mSkillDatas;
-    UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EquipmentDatas", AssetBundles = BUNDLE_PAD))
+    UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EquipmentDatas", AssetBundles = "PAD"))
 	TArray<TSoftObjectPtr<UStaticEquipmentData>> mEquipmentDatas;
 
 public:
-    UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Icon", AssetBundles = BUNDLE_UI))
+    UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Icon", AssetBundles = "UI"))
     TSoftObjectPtr<UTexture2D> mIcon;
     UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DisplayName"))
     FText mDisplayName;

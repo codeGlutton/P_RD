@@ -7,7 +7,7 @@
 
 DEFINE_LOG_CATEGORY(LogSave)
 
-void USaveGameSubsystem::SaveUser() const
+bool USaveGameSubsystem::SaveUser() const
 {
 	if (mUserSaveGame == nullptr)
 	{
@@ -19,6 +19,8 @@ void USaveGameSubsystem::SaveUser() const
 	ClearUser();
 
 	UE_LOG(LogSave, Log, TEXT("유저 데이터 세이브 파일 저장"));
+
+	return true;
 }
 
 void USaveGameSubsystem::SaveUserAsync(FAsyncSaveGameToSlotDelegate Callback) const
@@ -30,44 +32,49 @@ void USaveGameSubsystem::SaveUserAsync(FAsyncSaveGameToSlotDelegate Callback) co
 
 	SerializeObject(GetUserMutableData(), OUT mUserSaveGame->mData);
 	UE_LOG(LogSave, Log, TEXT("유저 데이터 세이브 파일 비동기 저장 시도"));
-	UGameplayStatics::AsyncSaveGameToSlot(mUserSaveGame, USER_SLOT_NAME, 0, FAsyncSaveGameToSlotDelegate::CreateLambda([MovedCallback = MoveTemp(Callback)](const FString& SlotName, const int32 UserIndex, bool IsSuccess) {
+	UGameplayStatics::AsyncSaveGameToSlot(mUserSaveGame, USER_SLOT_NAME, 0, FAsyncSaveGameToSlotDelegate::CreateWeakLambda(this, [this, MovedCallback = MoveTemp(Callback)](const FString& SlotName, const int32 UserIndex, bool IsSuccess) {
+		ClearUser();
+
 		UE_LOG(LogSave, Log, TEXT("유저 데이터 세이브 파일 비동기 저장 완료"));
 		MovedCallback.ExecuteIfBound(SlotName, UserIndex, IsSuccess);
 		}));
-	ClearUser();
 }
 
-void USaveGameSubsystem::LoadUser()
+bool USaveGameSubsystem::LoadUser() const
 {
 	if (UGameplayStatics::DoesSaveGameExist(USER_SLOT_NAME, 0) == false)
 	{
 		UE_LOG(LogSave, Log, TEXT("유저 데이터 세이브 파일 미발견으로 로드 실패"));
-		return;
+		return false;
 	}
 
 	mUserSaveGame = Cast<UBinarySaveGame>(UGameplayStatics::LoadGameFromSlot(USER_SLOT_NAME, 0));
+	checkf(mUserSaveGame != nullptr, TEXT("잘못된 세이브 파일 캐스팅"));
 	DeserializeObject(mUserSaveGame->mData, OUT GetUserMutableData());
 	ClearUser();
 
 	UE_LOG(LogSave, Log, TEXT("유저 데이터 세이브 파일 로드"));
+
+	return true;
 }
 
 void USaveGameSubsystem::LoadUserAsync(FAsyncLoadGameFromSlotDelegate Callback) const
 {
 	UE_LOG(LogSave, Log, TEXT("유저 데이터 세이브 파일 비동기 로드 시도"));
-	UGameplayStatics::AsyncLoadGameFromSlot(USER_SLOT_NAME, 0, FAsyncLoadGameFromSlotDelegate::CreateLambda([this, MovedCallback = MoveTemp(Callback)](const FString& SlotName, const int32 UserIndex, USaveGame* LoadedSaveGame) {
-		
-		if (LoadedSaveGame == nullptr)
+	UGameplayStatics::AsyncLoadGameFromSlot(USER_SLOT_NAME, 0, FAsyncLoadGameFromSlotDelegate::CreateWeakLambda(this, [this, MovedCallback = MoveTemp(Callback)](const FString& SlotName, const int32 UserIndex, USaveGame* LoadedSaveGame) {
+
+		if (LoadedSaveGame != nullptr)
+		{
+			mUserSaveGame = Cast<UBinarySaveGame>(LoadedSaveGame);
+			checkf(mUserSaveGame != nullptr, TEXT("잘못된 세이브 파일 캐스팅"));
+			DeserializeObject(mUserSaveGame->mData, OUT GetUserMutableData());
+			ClearUser();
+			UE_LOG(LogSave, Log, TEXT("유저 데이터 세이브 파일 비동기 로드 완료"));
+		}
+		else
 		{
 			UE_LOG(LogSave, Log, TEXT("유저 데이터 세이브 파일 미발견으로 로드 실패"));
-			return;
 		}
-
-		mUserSaveGame = Cast<UBinarySaveGame>(LoadedSaveGame);
-		DeserializeObject(mUserSaveGame->mData, OUT GetUserMutableData());
-		ClearUser();
-
-		UE_LOG(LogSave, Log, TEXT("유저 데이터 세이브 파일 비동기 로드 완료"));
 		MovedCallback.ExecuteIfBound(SlotName, UserIndex, LoadedSaveGame);
 		}));
 }
@@ -83,7 +90,7 @@ void USaveGameSubsystem::ClearUser() const
 	UE_LOG(LogSave, Log, TEXT("유저 데이터 초기화"));
 }
 
-void USaveGameSubsystem::SaveRun() const
+bool USaveGameSubsystem::SaveRun() const
 {
 	if (mRunSaveGame == nullptr)
 	{
@@ -95,54 +102,61 @@ void USaveGameSubsystem::SaveRun() const
 	ClearRun();
 
 	UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 저장"));
+
+	return true;
 }
 
 void USaveGameSubsystem::SaveRunAsync(FAsyncSaveGameToSlotDelegate Callback) const
 {
-	if (mUserSaveGame == nullptr)
+	if (mRunSaveGame == nullptr)
 	{
 		CreateRun();
 	}
 
 	SerializeObject(GetRunMutableData(), OUT mRunSaveGame->mData);
 	UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 비동기 저장 시도"));
-	UGameplayStatics::AsyncSaveGameToSlot(mRunSaveGame, RUN_SLOT_NAME, 0, FAsyncSaveGameToSlotDelegate::CreateLambda([MovedCallback = MoveTemp(Callback)](const FString& SlotName, const int32 UserIndex, bool IsSuccess) {
+	UGameplayStatics::AsyncSaveGameToSlot(mRunSaveGame, RUN_SLOT_NAME, 0, FAsyncSaveGameToSlotDelegate::CreateWeakLambda(this, [this, MovedCallback = MoveTemp(Callback)](const FString& SlotName, const int32 UserIndex, bool IsSuccess) {
+		ClearRun();
+
 		UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 비동기 저장 완료"));
 		MovedCallback.ExecuteIfBound(SlotName, UserIndex, IsSuccess);
 		}));
-	ClearRun();
 }
 
-void USaveGameSubsystem::LoadRun()
+bool USaveGameSubsystem::LoadRun() const
 {
 	if (UGameplayStatics::DoesSaveGameExist(RUN_SLOT_NAME, 0) == false)
 	{
-		return;
+		return false;
 	}
 
 	mRunSaveGame = Cast<UBinarySaveGame>(UGameplayStatics::LoadGameFromSlot(RUN_SLOT_NAME, 0));
+	checkf(mRunSaveGame != nullptr, TEXT("잘못된 세이브 파일 캐스팅"));
 	DeserializeObject(mRunSaveGame->mData, OUT GetRunMutableData());
 	ClearRun();
 
 	UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 로드"));
+
+	return true;
 }
 
 void USaveGameSubsystem::LoadRunAsync(FAsyncLoadGameFromSlotDelegate Callback) const
 {
 	UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 비동기 로드 시도"));
-	UGameplayStatics::AsyncLoadGameFromSlot(RUN_SLOT_NAME, 0, FAsyncLoadGameFromSlotDelegate::CreateLambda([this, MovedCallback = MoveTemp(Callback)](const FString& SlotName, const int32 UserIndex, USaveGame* LoadedSaveGame) {
+	UGameplayStatics::AsyncLoadGameFromSlot(RUN_SLOT_NAME, 0, FAsyncLoadGameFromSlotDelegate::CreateWeakLambda(this, [this, MovedCallback = MoveTemp(Callback)](const FString& SlotName, const int32 UserIndex, USaveGame* LoadedSaveGame) {
 
-		if (LoadedSaveGame == nullptr)
+		if (LoadedSaveGame != nullptr)
+		{
+			mRunSaveGame = Cast<UBinarySaveGame>(LoadedSaveGame);
+			checkf(mRunSaveGame != nullptr, TEXT("잘못된 세이브 파일 캐스팅"));
+			DeserializeObject(mRunSaveGame->mData, OUT GetRunMutableData());
+			ClearRun();
+			UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 비동기 로드 완료"));
+		}
+		else
 		{
 			UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 미발견으로 로드 실패"));
-			return;
 		}
-
-		mRunSaveGame = Cast<UBinarySaveGame>(LoadedSaveGame);
-		DeserializeObject(mRunSaveGame->mData, OUT GetRunMutableData());
-		ClearRun();
-
-		UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 비동기 로드 완료"));
 		MovedCallback.ExecuteIfBound(SlotName, UserIndex, LoadedSaveGame);
 		}));
 }
@@ -160,14 +174,14 @@ void USaveGameSubsystem::ClearRun() const
 
 void USaveGameSubsystem::CreateUser() const
 {
-	mUserSaveGame = Cast <UBinarySaveGame>(UGameplayStatics::CreateSaveGameObject(UBinarySaveGame::StaticClass()));
+	mUserSaveGame = Cast<UBinarySaveGame>(UGameplayStatics::CreateSaveGameObject(UBinarySaveGame::StaticClass()));
 	checkf(mUserSaveGame != nullptr, TEXT("유저 데이터 저장 객체 생성 실패"));
 	UE_LOG(LogSave, Log, TEXT("유저 데이터 세이브 파일 생성"));
 }
 
 void USaveGameSubsystem::CreateRun() const
 {
-	mRunSaveGame = Cast <UBinarySaveGame>(UGameplayStatics::CreateSaveGameObject(UBinarySaveGame::StaticClass()));
+	mRunSaveGame = Cast<UBinarySaveGame>(UGameplayStatics::CreateSaveGameObject(UBinarySaveGame::StaticClass()));
 	checkf(mRunSaveGame != nullptr, TEXT("런 데이터 저장 객체 생성 실패"));
 	UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 생성"));
 }

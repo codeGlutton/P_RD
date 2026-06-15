@@ -38,7 +38,7 @@ public:
 
 public:
 	UPROPERTY(Category = UI, SaveGame, VisibleAnywhere, meta = (DisplayName = "IsSelected"))
-	bool mIsSelected = false;
+	bool mWasSelected = false;
 	UPROPERTY(Category = UI, SaveGame, VisibleAnywhere, meta = (DisplayName = "PositionOffsetRate"))
 	FVector2D mPositionOffsetRate;
 

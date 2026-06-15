@@ -1,6 +1,6 @@
 ﻿/*****************************************************************//**
  * @file   SRPGAction.h
- * @brief  전투 상황마다 활용되는 Context 객체 구현 헤더 
+ * @brief  사용자 입력에 따른 정해진 SRPG 행동 객체 구현 헤더
  * @author 모호재
  * @date   2026-04-28
  *********************************************************************/
@@ -10,37 +10,56 @@
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 
-class AUnit;
+struct FPresentationBarrier;
 struct FSRPGAction;
 
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBeginActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGAction& /*Action*/);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnEndActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGAction& /*Action*/, ESRPGActionResult /*Result*/);
+
+class AUnit;
+struct FSRPGTurnContext;
+
 /**
- * @brief  SRPG 행동을 제작하기 위해 요구되는 절차 처리 일회성 객체
- * @details 
- * 예를 들어 스킬 실행 Action은 스킬 선택, 시전 영역 선택, 최종 프리뷰 확인 후 
- * 선택 과정이 지나야 로직이 최종적으로 결정된다. 이 일련의 제작 과정을 도와주는 객체
- * 해당 객체의 생성 시에는 추가적인 Action 실행이 일시적으로 중단된다.
+ * @brief  사용자 입력 명령 객체
  */
-struct FSRPGActionBuilder
+struct FSRPGActionCommand
 {
-	friend struct FSRPGTurnContext;
-	using ActionType = FSRPGAction;
+public:
+	virtual ~FSRPGActionCommand() = default;
+
+public:
+	ESRPGActionCommandType GetActionCommandType() const;
+	virtual TSharedPtr<FSRPGAction> CreateAction() const;
 
 protected:
-	FSRPGActionBuilder() = default;
-	virtual ~FSRPGActionBuilder() = default;
+	ESRPGActionCommandType mActionCommandType = ESRPGActionCommandType::None;
+};
 
+/**
+ * @brief  사용자 월드 입력 명령 객체
+ */
+struct FSRPGWorldTraceCommand : public FSRPGActionCommand
+{
+public:
+	FSRPGWorldTraceCommand();
+
+public:
+	bool mIsLongPress = false;
+};
+
+/**
+ * @brief  액션 생성 명령 객체
+ */
+template<typename ActionType>
+struct FSRPGActionCreationCommand : public FSRPGActionCommand
+{
 protected:
-	void InitBuilder(TSharedRef<FSRPGTurnContext> Owner, AUnit* Instigator);
-
-	virtual TSharedPtr<FSRPGAction> BuildAction() = 0;
-	virtual void UnbuildAction() = 0;
-
-protected:
-	TWeakPtr<FSRPGTurnContext> mOwner;
-	TObjectPtr<AUnit> mInstigator;
-
-protected:
-	bool mIsExpired = false;
+	TSharedPtr<FSRPGAction> CreateAction() const override
+	{
+		return TSharedPtr<ActionType>(new ActionType(), [](ActionType* Action) {
+			delete Action;
+			});
+	}
 };
 
 /**
@@ -49,45 +68,73 @@ protected:
 struct FSRPGAction : public TSharedFromThis<FSRPGAction>
 {
 	friend struct FSRPGTurnContext;
-	friend struct FSRPGActionBuilder;
+	friend struct FSRPGActionCreationCommandBase;
 
 protected:
 	FSRPGAction() = default;
-	virtual ~FSRPGAction() = default;
+	virtual ~FSRPGAction()= default;
+
+	/* 생명 주기 함수 */
+protected:
+	void InitAction(TSharedRef<FSRPGTurnContext> Parent, AUnit* Instigator);
+	void BeginAction();
+	void TickAction(float DeltaTime);
+	void EndAction(ESRPGActionResult Result);
 
 protected:
-	void InitAction(TSharedRef<FSRPGTurnContext> Owner, AUnit* Instigator);
-	virtual void BeginAction();
-	virtual void TickAction(float DeltaTime);
-	virtual void EndAction();
-
-protected:
-	/**
-	 * 액션 종료와 함께 턴 종료를 강제하는 액션인지 여부
-	 * @return 턴 종료를 강제하는 액션 여부
-	 */
-	virtual bool IsTurnEndingAction() const;
+	virtual void OnBeginAction();
+	virtual void OnTickAction(float DeltaTime);
+	virtual void OnEndAction();
 
 protected:
 	void EvaluateActionEndState(bool ForceAbort = false);
 
+	/* 액션 커맨드 처리 함수 */
+protected:
+	virtual ESRPGActionCommandResult HandleCommand(TSharedPtr<const FSRPGActionCommand> Command);
+
+private:
+	void ReserveCommand(TSharedPtr<const FSRPGActionCommand> Command);
+	void FlushCommands();
+
+	/* 헬퍼 함수 */
+protected:
+	/**
+	 * 커서가 어떤 타일 액터를 가리키는지 알아오는 함수. 대상이 없는 경우 FTileIndex::Invalid를 반환
+	 * @param Channel 검사할 트래이스 채널명
+	 * @param Actor 측정된 액터
+	 * @param TileIndex 부딧친 대상의 타일의 인덱스 값
+	 */
+	void GetTileActorUnderCursor(ECollisionChannel Channel, OUT AActor* Actor, OUT FTileIndex& TileIndex) const;
+
+	/* 외부 API */
 public:
 	UWorld* GetWorld() const;
-	TWeakPtr<FSRPGTurnContext> GetOwner() const;
+	TWeakPtr<FSRPGTurnContext> GetParent() const;
 	AUnit* GetInstigator() const;
+	ESRPGActionType GetActionType() const;
+	bool ConsumesTurn() const;
 
 protected:
-	TWeakPtr<FSRPGTurnContext> mOwner;
+	FOnBeginActionUI OnBeginActionUI;
+	FOnEndActionUI OnEndActionUI;
+
+protected:
+	TWeakPtr<FSRPGTurnContext> mParent;
 	TObjectPtr<AUnit> mInstigator;
 
+protected:
+	// @brief 예약된 명령들
+	TQueue<TSharedPtr<const FSRPGActionCommand>> mReservedCommands;
+
+protected:
 	// @brief 현재 액션 상태
-	ESRPGActionPhase mPhase = ESRPGActionPhase::None;
+	ESRPGActionPhase mActionPhase = ESRPGActionPhase::None;
 	// @brief 액션 종료 결과
-	ESRPGActionResult mResult = ESRPGActionResult::Succeeded;
+	ESRPGActionResult mActionResult = ESRPGActionResult::Succeeded;
+	// @brief 액션 타입
+	ESRPGActionType mActionType = ESRPGActionType::InPlayAction;
+	// @brief 해당 액션의 턴 소모 여부
+	bool mConsumesTurn = false;
 };
-
-
-
-
-
 

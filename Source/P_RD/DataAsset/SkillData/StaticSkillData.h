@@ -22,7 +22,7 @@
  * 효과 발동 시 타겟, 수치 등을 모두 개별적으로 관리할 수 있도록 구조체로 구분지었다.
  */
 USTRUCT(BlueprintType)
-struct FGameplayEffectData
+struct FSkillEffectLayer
 {
     GENERATED_BODY()
 
@@ -32,7 +32,7 @@ struct FGameplayEffectData
     * @details
     * (Caster: 시전자만, Target: 선택된 대상, Both: 시전자 + 선택된 대상)
     */
-    UPROPERTY(Category = "GameplayEffectData", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TargetScope"))
+    UPROPERTY(Category = "SkillEffectLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TargetScope"))
     ETargetScope mTargetScope;
 
     /**
@@ -41,7 +41,7 @@ struct FGameplayEffectData
     * @details
     * 없음, 자신, 아군, 적
     */
-    UPROPERTY(Category = "GameplayEffectData", EditAnywhere, BlueprintReadWrite, meta = (Bitmask, BitmaskEnum = "/Script/P_RD.ETargetFilter", DisplayName = "TargetFilter"))
+    UPROPERTY(Category = "SkillEffectLayer", EditAnywhere, BlueprintReadWrite, meta = (Bitmask, BitmaskEnum = "/Script/P_RD.ETargetFilter", DisplayName = "TargetFilter"))
     uint8 mTargetFilter = 3;
 
     /**
@@ -53,7 +53,7 @@ struct FGameplayEffectData
     * @note
     * Damage, Heal 기타 등등
     */
-    UPROPERTY(Category = "GameplayEffectData", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "GameplayEffect", AssetBundles = BUNDLE_ACTOR))
+    UPROPERTY(Category = "SkillEffectLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "GameplayEffect", AssetBundles = "Actor"))
     TSoftClassPtr<class UGameplayEffect_Base> mGameplayEffect;
 
     /**
@@ -61,7 +61,7 @@ struct FGameplayEffectData
     * @details
     * 결과값 = Default + 눈금 * Ratio
     */
-    UPROPERTY(Category = "GameplayEffectData", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DefaultValue"))
+    UPROPERTY(Category = "SkillEffectLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DefaultValue"))
     int32 mGameplayEffectDefaultValue;
 
     /**
@@ -69,7 +69,7 @@ struct FGameplayEffectData
     * @details
     * 결과값 = Default + 눈금 * Ratio
     */
-    UPROPERTY(Category = "GameplayEffectData", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RatioValue"))
+    UPROPERTY(Category = "SkillEffectLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RatioValue"))
     float mGameplayEffectRatioValue;
 };
 
@@ -80,7 +80,7 @@ struct FGameplayEffectData
 * 하나의 애니메이션 발동 시 여러 효과가 발동 할 수 있게 구조체로 묶었다.
 */
 USTRUCT(BlueprintType)
-struct FSkillAction
+struct FSkillAnimLayer
 {
     GENERATED_BODY()
 
@@ -93,7 +93,7 @@ struct FSkillAction
     * @note
     * 애니메이션은 아직 확정된 사항이 없으므로 추후 변경될 것이다.
     */
-    UPROPERTY(Category = "SkillAction", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Animation"))
+    UPROPERTY(Category = "SkillAnimLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Animation"))
     FGameplayTag mAnimationTag;
 
     /**
@@ -102,8 +102,8 @@ struct FSkillAction
     * @details
     * notify 호출 시 모든 효과들이 발동될 것이다.
     */
-    UPROPERTY(Category = "SkillAction", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "GameplayEffectDatas"))
-    TArray<FGameplayEffectData> mGameplayEffectDatas;
+    UPROPERTY(Category = "SkillAnimLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillEffectLayer"))
+    TArray<FSkillEffectLayer> mSkillEffectLayers;
 };
 
 
@@ -127,7 +127,7 @@ public:
     UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Description"))
     FText mDescription;
 
-    UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Icon", AssetBundles = BUNDLE_UI))
+    UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Icon", AssetBundles = "UI"))
     TSoftObjectPtr<UTexture2D> mIcon;
 
     UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Price"))
@@ -260,12 +260,12 @@ public:
 #pragma endregion EffectArea
 
     /**
-    * @brief 액션 
+    * @brief 애니메이션 레이어
     * 
     * @details
     * 하나의 애니메이션 발동 시 여러 효과가 발동 할 수 있게 구조체로 묶었다.
     */
-    UPROPERTY(Category = "SkillAction", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillActions"))
-    TArray<FSkillAction> mSkillActions;
+    UPROPERTY(Category = "SkillAnimLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillAnimLayers"))
+    TArray<FSkillAnimLayer> mSkillAnimLayers;
 
 };

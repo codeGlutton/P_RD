@@ -32,7 +32,7 @@ void UPlayerUnitPersistData::RegisterPlayerUnit(APlayerUnit* PlayerUnit)
 	UAbilitySystemComponent* ASC = PlayerUnit->GetAbilitySystemComponent();
 	checkf(ASC != nullptr, TEXT("어빌리티 시스템 컴포넌트 nullptr"));
 
-	ApplyPlayerPersistData(PlayerUnit);
+	SyncPlayerPersistData(PlayerUnit);
 	BindPlayerUnitEvent(PlayerUnit);
 }
 
@@ -66,7 +66,7 @@ const TArray<FPrimaryAssetId>& UPlayerUnitPersistData::GetDiceIds() const
 	return mDiceIds;
 }
 
-void UPlayerUnitPersistData::ApplyPlayerPersistData(APlayerUnit* PlayerUnit)
+void UPlayerUnitPersistData::SyncPlayerPersistData(APlayerUnit* PlayerUnit)
 {
 	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
 	UAbilitySystemComponent* ASC = PlayerUnit->GetAbilitySystemComponent();
@@ -75,6 +75,25 @@ void UPlayerUnitPersistData::ApplyPlayerPersistData(APlayerUnit* PlayerUnit)
 	if (mIsNewData == true)
 	{
 		mIsNewData = false;
+
+		bool IsFound;
+
+		IsFound = false;
+		mMaxHP = ASC->GetGameplayAttributeValue(UPlayerUnitAttributeSet::GetMaxHPAttribute(), IsFound);
+		checkf(IsFound == true, TEXT("최대 체력 속성 미발견"));
+
+		IsFound = false;
+		mHP = ASC->GetGameplayAttributeValue(UPlayerUnitAttributeSet::GetHPAttribute(), IsFound);
+		checkf(IsFound == true, TEXT("체력 속성 미발견"));
+
+		IsFound = false;
+		mExp = ASC->GetGameplayAttributeValue(UPlayerUnitAttributeSet::GetExpAttribute(), IsFound);
+		checkf(IsFound == true, TEXT("경험치 속성 미발견"));
+
+		IsFound = false;
+		mMoney = ASC->GetGameplayAttributeValue(UPlayerUnitAttributeSet::GetMoneyAttribute(), IsFound);
+		checkf(IsFound == true, TEXT("돈 속성 미발견"));
+
 		return;
 	}
 
@@ -167,8 +186,7 @@ void URunPersistData::MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCrea
 
 void URunPersistData::SetCurrentRoomIndex(int32 RowIndex, int32 ColumnIndex)
 {
-	mStage.GetMutable().mCurRow = RowIndex;
-	mStage.GetMutable().mCurColumn = ColumnIndex;
+	mStage.GetMutable().SetCurrentRoom(RowIndex, ColumnIndex);
 }
 
 void URunPersistData::CollectAssetIds(int32 RowIndex, int32 ColumnIndex, OUT TArray<FPrimaryAssetId>& PlayerIds, OUT FPrimaryAssetId& StageId, OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const

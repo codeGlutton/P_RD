@@ -4,24 +4,7 @@
 
 #include "DataAsset/UnitSpawnData/StaticUnitSpawnData.h"
 
-UScriptStruct* FUnitSnapshotTargetData::GetScriptStruct() const
-{
-	return FUnitSnapshotTargetData::StaticStruct();
-}
-
-bool FUnitSnapshotTargetData::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& OutSuccess)
-{
-	Ar << mMaxHP;
-	Ar << mHP;
-	Ar << mSkillPoint;
-	Ar << mDamagePoint;
-	Ar << mDefensePoint;
-	Ar << mMovementPoint;
-	Ar << mBuffState;
-	Ar << mDebuffState;
-
-	return true;
-}
+#include "Pawn/SkillComponent.h"
 
 AUnit::AUnit() :
 	mTeamId(EUnitTeamType::AllNeutral)
@@ -29,7 +12,7 @@ AUnit::AUnit() :
 	PrimaryActorTick.bCanEverTick = true;
 
 	mAbilitySystemComp = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
-	mUnitAttributeSet = CreateDefaultSubobject<UUnitAttributeSet>(TEXT("UnitAttributeSet"));
+	mSkillComp = CreateDefaultSubobject<USkillComponent>(TEXT("SkillComp"));
 }
 
 void AUnit::PostInitializeComponents()
@@ -41,7 +24,9 @@ void AUnit::PostInitializeComponents()
 
 #ifndef WITH_EDITOR
 	// Difficulty값에 따라 ASC Attribute 초기화
-	IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->InitAttributeSetDefaults(mAbilitySystemComp, GetUnitKeyName(), GetDifficulty(), true);
+	auto* AbilitySystemGlobals = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals();
+	AbilitySystemGlobals->InitGlobalData();
+	AbilitySystemGlobals->GetAttributeSetInitter()->InitAttributeSetDefaults(mAbilitySystemComp, GetUnitKeyName(), GetDifficulty(), true);
 #endif
 }
 
@@ -51,7 +36,9 @@ void AUnit::OnConstruction(const FTransform& Transform)
 
 #ifdef WITH_EDITOR
 	// Difficulty값에 따라 ASC Attribute 초기화 (에디터 환경 내 Difficulty 변경 테스트를 위해 Construction 위치)
-	IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->InitAttributeSetDefaults(mAbilitySystemComp, GetUnitKeyName(), GetDifficulty(), true);
+	auto* AbilitySystemGlobals = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals();
+	AbilitySystemGlobals->InitGlobalData();
+	AbilitySystemGlobals->GetAttributeSetInitter()->InitAttributeSetDefaults(mAbilitySystemComp, GetUnitKeyName(), GetDifficulty(), true);
 #endif
 }
 
@@ -65,14 +52,24 @@ FGenericTeamId AUnit::GetGenericTeamId() const
 	return mTeamId;
 }
 
-ETileLayerFlag AUnit::GetTileLayer() const
+const FTileTransform& AUnit::GetTileTransform() const
+{
+	return mTileTransform;
+}
+
+ETileLayerFlag AUnit::GetTileLayerFlags() const
 {
 	return ETileLayerFlag::Unit;
 }
 
-ETileLayerFlag AUnit::GetBlockFlags() const
+ETileLayerFlag AUnit::GetBlockLayerFlags() const
 {
 	return ETileLayerFlag::Unit;
+}
+
+void AUnit::SetTileTransform(const FTileTransform& Transform)
+{
+	mTileTransform = Transform;
 }
 
 UAbilitySystemComponent* AUnit::GetAbilitySystemComponent() const
@@ -80,17 +77,9 @@ UAbilitySystemComponent* AUnit::GetAbilitySystemComponent() const
 	return mAbilitySystemComp;
 }
 
-void AUnit::OnBeginPlayRoom()
+FTileTargetSnapshotTargetData* AUnit::MakeSnapshotTargetData() const
 {
-}
-
-void AUnit::OnEndPlayRoom()
-{
-}
-
-FUnitSnapshotTargetData* AUnit::MakeSnapshotTargetData() const
-{
-	FUnitSnapshotTargetData* TargetData = new FUnitSnapshotTargetData();
+	FTileTargetSnapshotTargetData* TargetData = new FTileTargetSnapshotTargetData();
 
 	bool IsFoundAttribute = false;
 	TargetData->mMaxHP = mAbilitySystemComp->GetGameplayAttributeValue(UUnitAttributeSet::GetMaxHPAttribute(), IsFoundAttribute);
@@ -109,6 +98,15 @@ FUnitSnapshotTargetData* AUnit::MakeSnapshotTargetData() const
 	return TargetData;
 }
 
+USkillComponent* AUnit::GetSkillComponent() const
+{
+	return mSkillComp;
+}
+
+void AUnit::OnBeginRoom()
+{
+}
+
 void AUnit::SetStaticSpawnData(const UStaticUnitSpawnData* StaticUnitSpawnData)
 {
 	mStaticUnitSpawnData = StaticUnitSpawnData;
@@ -117,11 +115,6 @@ void AUnit::SetStaticSpawnData(const UStaticUnitSpawnData* StaticUnitSpawnData)
 UUnitAttributeSet* AUnit::GetUnitAttributeSet() const
 {
 	return mUnitAttributeSet;
-}
-
-bool AUnit::IsDead() const
-{
-	return mAbilitySystemComp->HasMatchingGameplayTag(EffectTags::GameplayEffect_ActorState_Dead);
 }
 
 FName AUnit::GetUnitKeyName() const

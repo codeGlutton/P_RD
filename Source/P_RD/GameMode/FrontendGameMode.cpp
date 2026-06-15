@@ -1,35 +1,525 @@
-#include "GameMode/FrontendGameMode.h"
+﻿#include "GameMode/FrontendGameMode.h"
 
-#include "Blueprint/UserWidget.h"
 #include "GameFramework/PlayerController.h"
+
+#include "Engine/AssetManager.h"
+#include "Blueprint/UserWidget.h"
+#include "DataAsset/PrimaryAssetType.h"
+
+#include "DataAsset/StageSpawnData/StageLevelType.h"
+
+#include "PCGStage/Stage.h"
+
+#include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
+#include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
+#include "UI/TitleMenuWidget.h"
 
-AFrontendGameMode::AFrontendGameMode()
-{
-	mWorldWidgets.Empty();
-}
+#include "Setting/GamePlaySettings.h"
+#include "DataAsset/RoomSpawnData/StaticFrontendRoomSpawnData.h"
+#include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
 
-void AFrontendGameMode::InitializeCommonRoom()
-{
-}
+#include "UI/RDUserWidget.h"
 
-void AFrontendGameMode::BeginRoom()
+DEFINE_LOG_CATEGORY(LogFrontendGameMode);
+
+/**
+ * @brief 프론트엔드 방 GameMode 역할 요약
+ *
+ * @details
+ * AFrontendGameMode는 "타이틀 -> 캐릭터 선택 -> 새 Run 생성/이어하기 시작" 흐름만 담당한다.
+ * 실제 방 안에서의 TopMenuBar, WorldMap, 다음 방 선택, 저장 후 전환은 ARoomGameModeBase 쪽 책임이다.
+ *
+ * 주요 흐름:
+ * - BeginRoom(): 프론트엔드 방에 들어오면 TitleMenuWidget HUD를 OpenUI()로 열고 입력 모드를 설정한다.
+ * - RequestCharacterSelectFromTitle(): 타이틀 START 입력을 받아 캐릭터 선택 화면 진입만 요청한다.
+ * - OpenTitleCharacterSelect(): TitleMenuWidget에 캐릭터 선택 화면을 열라고 전달한다.
+ * - GetCharacterOptions(): 캐릭터 선택 카드에 표시할 FFrontendCharacterOption 목록을 만든다.
+ * - GetPlayerUnitDatas(): DA_TestFrontend.mPlayableUnits에서 선택 가능한 캐릭터 DataAsset 목록을 가져온다.
+ * - IsPlayerUnitIdValid(): 선택된 캐릭터가 실제 선택 후보 안에 있는지 검증한다.
+ * - IsDifficultyValid(): 난이도 검증 자리다. 현재는 난이도 기능이 없어 항상 true를 반환한다.
+ * - StartNewRun(): 캐릭터 선택 Confirm 이후 새 Run을 만들고 Stage1 첫 방 전환을 요청한다.
+ * - CreateRunData(): GameProfileSubsystem->StartRun()으로 RunPersistData 생성을 위임한다.
+ * - ContinueRunFromTitle(): 타이틀 CONTINUE 입력을 받아 저장된 Run의 현재 방 row/column으로 입장을 요청한다.
+ * - AbandonRunFromTitle(): 타이틀/설정 화면에서 기존 Run 포기를 처리하고 RunPersistData만 비운다.
+ */
+namespace
 {
-	if (UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())
+	constexpr int32 DefaultDifficulty = 1;
+
+	FText GetPlayerJobName(EPlayerJobType JobType)
 	{
-		if (UUserWidget* TitleHUD = WorldWidgetSubsystem->GetHUD())
+		switch (JobType)
 		{
-			TitleHUD->AddToViewport();
-			TitleHUD->SetVisibility(ESlateVisibility::Visible);
+		case EPlayerJobType::Knight:
+			return NSLOCTEXT("FrontendGameMode", "KnightNameText", "Knight");
+		case EPlayerJobType::Archer:
+			return NSLOCTEXT("FrontendGameMode", "ArcherNameText", "Archer");
+		case EPlayerJobType::Mage:
+			return NSLOCTEXT("FrontendGameMode", "MageNameText", "Mage");
+		default:
+			return NSLOCTEXT("FrontendGameMode", "UnknownNameText", "Unknown");
 		}
 	}
 
-	if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
+	bool HasCharacterOptionForJob(const TArray<FFrontendCharacterOption>& Options, EPlayerJobType JobType)
 	{
-		PlayerController->ActivateTouchInterface(nullptr);
-		PlayerController->SetShowMouseCursor(true);
-
-		FInputModeUIOnly InputMode;
-		PlayerController->SetInputMode(InputMode);
+		/*
+		 * 실제 PlayerUnit DataAsset에서 특정 직업 카드가 내려왔는지 확인한다.
+		 * 현재 Archer/Mage는 아직 실제 데이터가 준비되지 않은 경우가 있어, 없는 직업만 잠김 카드로 보강한다.
+		 * 이렇게 해야 "데이터가 없어서 빈 칸"과 "잠긴 캐릭터로 보여주려는 의도"가 UI에서 구분된다.
+		 */
+		const FText JobText = GetPlayerJobName(JobType);
+		return Options.ContainsByPredicate([&JobText](const FFrontendCharacterOption& Option)
+		{
+			return Option.mRoleText.EqualTo(JobText);
+		});
 	}
+
+	void AppendLockedCharacterOption(TArray<FFrontendCharacterOption>& Options, EPlayerJobType JobType)
+	{
+		/*
+		 * 아직 DataAsset이 준비되지 않은 캐릭터도 화면 슬롯은 유지한다.
+		 * WBP 레이아웃 확인과 기획상 "추후 열릴 캐릭터" 표현을 위해 더미가 아니라 비활성 View 데이터로 추가한다.
+		 * bSelectable=false와 DisabledReason을 같이 내려, CharacterSelectWidget이 Confirm을 막고 이유 문구를 표시할 수 있게 한다.
+		 */
+		FFrontendCharacterOption NewOption;
+		NewOption.mIndex = Options.Num();
+		NewOption.mDisplayName = GetPlayerJobName(JobType);
+		NewOption.mRoleText = GetPlayerJobName(JobType);
+		NewOption.mDescription = NSLOCTEXT("FrontendGameMode", "LockedCharacterDescription", "Character data is not ready");
+		NewOption.mDisabledReason = NewOption.mDescription;
+		NewOption.mSelectable = false;
+		Options.Add(MoveTemp(NewOption));
+	}
+
 }
+
+/**
+ * @brief 프론트엔드 방에서 생성해둘 공용 월드 위젯 타입을 등록한다.
+ *
+ * @details
+ * 여기서 등록한다는 말은 화면에 바로 띄운다는 뜻이 아니라,
+ * BeginPlay()에서 WorldWidgetSubsystem::InitWorldWidget()이 해당 타입의 위젯 인스턴스를 미리 만들어 보관하게 한다는 뜻이다.
+ * 실제로 화면에 보일 때는 HUD든 WorldWidget이든 모두 URDUserWidget::OpenUI()를 통한다.
+ *
+ * 타이틀 HUD는 프론트엔드 방의 메인 화면이라 mHUDClass와 InitHUD() 경로로 한 개만 생성하고,
+ * BeginRoom()에서 OpenUI()로 표시한다. 반면 MsgNotify, FadeInOut, LoadingNotify, InGameSettings는
+ * 여러 GameMode가 공유하거나 HUD 밖에서 뜨는 보조 UI라 mWorldWidgets에 넣어 WorldWidgetSubsystem이 생성/보관하게 한다.
+ *
+ * InGameSettings를 프론트엔드에도 준비하는 이유:
+ * 타이틀 설정과 인게임 설정은 같은 WBP_SettingsPanel을 사용해야 하고, 차이는 PanelMode로 저장 후 종료/포기하기 영역만 숨기는 것이다.
+ * 타이틀 WBP 안에 자체 설정 영역이 있더라도 실제 설정 화면은 이 공용 월드 위젯을 OpenUI()로 연다.
+ *
+ * 왜 생성 경로를 나누는가:
+ * "누가 만들고 보관할지"와 "어떻게 화면에 열지"는 다른 문제다. 생성 책임은 HUD/WorldWidget으로 나누되,
+ * 표시 책임은 OpenUI() 하나로 맞춰야 AddToViewport, Visibility, 애니메이션 완료 콜백 규칙이 통일된다.
+ */
+AFrontendGameMode::AFrontendGameMode()
+{
+	mWorldWidgets = {
+		EWorldWidgetType::MsgNotify,
+		EWorldWidgetType::FadeInOut,
+		EWorldWidgetType::LoadingNotify,
+		EWorldWidgetType::InGameSettings,
+	};
+
+	mShowFadeInUIOnTransition = true;
+	mShowFadeOutUIOnTransition = true;
+	mShowLoadingNotifyUIOnTransition = true;
+	mWaitExternalWorkOnTransition = false;
+}
+
+/**
+ * @brief 프론트엔드 방 진입 후 타이틀 HUD를 공통 UI 생명주기로 연다.
+ *
+ * @details
+ * RDUserWidget 기반 HUD는 InitHUD()에서 생성되더라도 자동으로 화면에 표시되지 않는다.
+ * 실제 표시 시점은 GameMode가 방 진입 준비를 끝낸 뒤 OpenUI()로 명시한다.
+ *
+ * 여기서 UTitleMenuWidget으로 구체 타입을 확인하는 이유는 프론트엔드 시작 화면이 단순한 HUD 베이스가 아니라
+ * 캐릭터 선택, 설정, 이어하기/새 런 시작 흐름을 가진 타이틀 메뉴여야 하기 때문이다.
+ * 공통 베이스 포인터만 받아 열면 잘못된 HUD 클래스가 들어와도 늦게 발견되므로, 방 시작 시점에 바로 검증한다.
+ *
+ * 왜 InitHUD()에서 바로 AddToViewport 하지 않는가:
+ * HUD 생성은 "준비"이고 OpenUI()는 "보여주기"다. 두 단계를 분리해야 타이틀 HUD도 다른 위젯처럼
+ * 열기 애니메이션과 완료 콜백 규칙을 공유하고, 잘못된 HUD 클래스도 OpenUI 호출 전에 확인할 수 있다.
+ */
+void AFrontendGameMode::BeginRoom()
+{
+	Super::BeginRoom();
+
+	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
+	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr"));
+
+	UTitleMenuWidget* TitleHUD = WorldWidgetSubsystem->GetHUD<UTitleMenuWidget>();
+	checkf(TitleHUD != nullptr, TEXT("타이틀 HUD 위젯 nullptr"));
+	TitleHUD->OpenUI();
+
+	/* 터치 세팅 */
+
+	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+	checkf(PlayerController != nullptr, TEXT(""));
+
+#if PLATFORM_DESKTOP
+	PlayerController->SetShowMouseCursor(true);
+#endif
+#if PLATFORM_ANDROID
+	PlayerController->ActivateTouchInterface(nullptr);
+#endif
+
+	FInputModeGameAndUI InputMode;
+	PlayerController->SetInputMode(InputMode);
+}
+
+/**
+ * @brief 타이틀 START 입력을 캐릭터 선택 화면 진입 요청으로 처리한다.
+ *
+ * @details
+ * 프론트엔드의 START는 아직 새 Run 생성 단계가 아니다.
+ * 캐릭터와 난이도가 확정되기 전이므로, 여기서는 TitleMenuWidget의 캐릭터 선택 화면만 열고
+ * 실제 RunPersistData 생성은 CharacterSelectWidget의 Confirm 이후 StartNewRun()에서 처리한다.
+ */
+bool AFrontendGameMode::RequestCharacterSelectFromTitle()
+{
+	/*
+	 * 타이틀 START는 아직 런을 만들지 않는다.
+	 * 캐릭터 선택이 끝나야 PlayerUnitId와 난이도가 확정되므로, 여기서는 캐릭터 선택 화면으로 넘기는 것만 담당한다.
+	 */
+	if (mWasNextRoomPreloadRequested == true)
+	{
+		UE_LOG(LogRDGameMode, Log, TEXT("방 전환 시 추가 로직 요청 불가"));
+		return false;
+	}
+
+	checkf(OpenTitleCharacterSelect() == true, TEXT("캐릭터 선택창 열기 오류"));
+
+	return true;
+}
+
+/**
+ * @brief 캐릭터 선택 Confirm 이후 새 Run을 만들고 Stage1 첫 방 입장을 시작한다.
+ *
+ * @details
+ * UI는 선택된 PlayerUnitId와 Difficulty만 전달하고,
+ * GameMode가 "선택값 검증 -> RunPersistData 생성 -> Stage1 첫 방 프리로드/전환" 순서를 고정한다.
+ * 이렇게 해야 캐릭터 선택 WBP가 저장 데이터 생성이나 방 전환 시스템을 직접 호출하지 않는다.
+ */
+bool AFrontendGameMode::StartNewRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty)
+{
+	/*
+	 * 캐릭터 선택 화면에서 Confirm이 눌린 뒤의 실제 시작 지점이다.
+	 * 먼저 선택된 캐릭터로 RunPersistData를 만들고, 그 다음 Stage1 첫 방을 프리로드/전환한다.
+	 * UI는 "시작 요청"만 하고, 저장 데이터 생성과 방 전환 순서는 GameMode가 고정한다.
+	 */
+	if (mWasNextRoomPreloadRequested == true)
+	{
+		UE_LOG(LogFrontendGameMode, Log, TEXT("방 전환 시 추가 로직 요청 불가"));
+		return false;
+	}
+
+	checkf(CreateRunData(PlayerUnitId, Difficulty) == true, TEXT("런 데이터 생성 오류"));
+	checkf(PreloadAndTransitionRoomAsync(EStageLevelType::Stage1) == true, TEXT("스테이지 1 처음 방으로 전환 실패"));
+	return true;
+}
+
+/**
+ * @brief 타이틀 CONTINUE 입력으로 저장된 활성 Run의 현재 방 입장을 시작한다.
+ *
+ * @details
+ * Continue는 세이브 파일을 여기서 새로 불러오는 기능이 아니라,
+ * 이미 활성화되어 있는 RunPersistData의 현재 row/column으로 방 전환을 요청하는 기능이다.
+ * 타이틀에서는 월드맵이나 다음 방 선택을 열지 않고, 방 입장 이후의 UI/선택/저장 흐름은 RoomGameModeBase가 맡는다.
+ */
+bool AFrontendGameMode::ContinueRunFromTitle()
+{
+	/*
+	 * Continue는 "세이브 파일을 불러온다"가 아니라 "이미 활성화된 Run의 현재 방으로 돌아간다"는 의미다.
+	 * 세이브 슬롯 선택/로드는 프론트엔드에 진입하기 전 또는 별도 UI 흐름에서 끝나 있어야 하고,
+	 * 이 함수는 RunPersistData가 이미 준비되어 있다는 전제에서 방 전환만 시작한다.
+	 *
+	 * 타이틀에서는 더 이상 지도 미리보기나 다음 방 선택을 열지 않는다.
+	 * 타이틀은 시작/이어하기 같은 프론트엔드 선택만 담당하고,
+	 * 현재 방 UI, 월드맵 표시, 다음 방 선택, 저장 후 전환은 실제 방에 들어간 뒤 RoomGameMode가 맡는다.
+	 */
+	if (mWasNextRoomPreloadRequested == true)
+	{
+		UE_LOG(LogFrontendGameMode, Log, TEXT("방 전환 시 추가 로직 요청 불가"));
+		return false;
+	}
+
+	/*
+	 * Continue 버튼은 TitleMenuWidget에서 활성 Run이 있을 때만 보이지만,
+	 * UI 상태가 갱신되기 전 클릭되거나 외부 흐름에서 직접 호출될 수 있으므로 GameMode에서도 다시 확인한다.
+	 */
+	const URunPersistData* RunPersistData = GetRunPersistData();
+	if (RunPersistData == nullptr || RunPersistData->IsActive() == false)
+	{
+		UE_LOG(LogFrontendGameMode, Log, TEXT("이어갈 런 데이터가 없음"));
+		return false;
+	}
+
+	int32 CurrentRowIndex = INDEX_NONE;
+	int32 CurrentColumnIndex = INDEX_NONE;
+	RunPersistData->GetCurrentRoomIndex(OUT CurrentRowIndex, OUT CurrentColumnIndex);
+
+	/*
+	 * RunPersistData에는 "현재 방 좌표"만 저장되어 있으므로,
+	 * 전환 요청 전에 해당 좌표가 현재 Stage에 실제로 존재하는 방인지 확인한다.
+	 * 좌표가 깨진 상태로 PreloadAndTransitionRoomAsync()에 넘기면 잘못된 방 전환 요청이 되기 때문이다.
+	 */
+	const FStage& Stage = RunPersistData->GetStage();
+	if (Stage.HasRoom(CurrentRowIndex, CurrentColumnIndex) == false)
+	{
+		UE_LOG(LogFrontendGameMode, Log, TEXT("현재 런의 방 위치가 Stage에 없음"));
+		return false;
+	}
+
+	/*
+	 * 여기서부터는 기존 방 전환 공통 흐름을 사용한다.
+	 * 플레이어/스테이지/방 에셋 프리로드, 페이드/로딩 UI, 실제 레벨 전환 순서는 RDGameModeBase와 RoomTransitionSubsystem이 처리한다.
+	 */
+	checkf(PreloadAndTransitionRoomAsync(CurrentRowIndex, CurrentColumnIndex) == true, TEXT("이어하기 방 전환 실패"));
+	return true;
+}
+
+/**
+ * @brief 타이틀/설정 화면에서 기존 활성 Run 포기를 처리한다.
+ *
+ * @details
+ * 프론트엔드는 아직 실제 전투 방 안이 아니므로 전투 정리나 방 퇴장 처리를 하지 않는다.
+ * RunPersistData만 비우고, 이후 TitleMenuWidget이 메뉴 상태를 다시 읽어 Continue 버튼 표시 여부를 갱신한다.
+ */
+bool AFrontendGameMode::AbandonRunFromTitle()
+{
+	/*
+	 * 타이틀 설정 화면에서 기존 런을 포기할 때 호출된다.
+	 * 여기서는 전투 방이 아니므로 방 전환을 일으키지 않고 RunPersistData만 비운다.
+	 * 이후 타이틀 메뉴가 RefreshMainMenuState()를 호출하면 Continue 버튼이 사라진다.
+	 */
+	if (mWasNextRoomPreloadRequested == true)
+	{
+		UE_LOG(LogFrontendGameMode, Log, TEXT("방 전환 시 추가 로직 요청 불가"));
+		return false;
+	}
+
+	if (CanAbandonRun() == false)
+	{
+		UE_LOG(LogFrontendGameMode, Log, TEXT("포기할 활성 런 데이터가 없음"));
+		return false;
+	}
+
+	ClearRunPersistData();
+	return true;
+}
+
+/**
+ * @brief 캐릭터 선택 카드에 표시할 FFrontendCharacterOption 목록을 만든다.
+ *
+ * @details
+ * DA_TestFrontend의 mPlayableUnits에서 로드된 PlayerUnit DataAsset을 읽어
+ * 이름, 직업, 스탯, 초상화, 선택 가능 여부만 담은 UI 전용 DTO로 변환한다.
+ * CharacterSelectWidget은 이 View 데이터만 보고 카드를 그리며, PlayerUnit DataAsset 내부 구조를 직접 해석하지 않는다.
+ */
+bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& OutOptions) const
+{
+	/*
+	 * CharacterSelectWidget은 PlayerUnit DataAsset 구조를 직접 알지 않는다.
+	 * 이 함수가 DataAsset을 UI 전용 DTO로 바꿔주면, WBP 쪽은 이름/직업/스탯/초상화/선택 가능 여부만 보고 카드를 그릴 수 있다.
+	 */
+	OutOptions.Reset();
+
+	const TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>>& PlayerUnitDatas = GetPlayerUnitDatas();
+	for (const TSoftObjectPtr<UStaticPlayerUnitSpawnData>& PlayerUnitData : PlayerUnitDatas)
+	{
+		const UStaticPlayerUnitSpawnData* LoadedPlayerUnitData = PlayerUnitData.Get();
+		if (LoadedPlayerUnitData == nullptr)
+		{
+			UE_LOG(LogRD, Warning, TEXT("선택 가능한 Player Unit 로드 실패"));
+			continue;
+		}
+
+		FFrontendCharacterOption NewOption;
+		NewOption.mIndex = OutOptions.Num();
+		NewOption.mDisplayName = LoadedPlayerUnitData->mDisplayName.IsEmpty()
+			? FText::FromName(LoadedPlayerUnitData->GetPrimaryAssetId().PrimaryAssetName)
+			: LoadedPlayerUnitData->mDisplayName;
+		NewOption.mRoleText = GetPlayerJobName(LoadedPlayerUnitData->mJobType);
+		NewOption.mDescription = LoadedPlayerUnitData->mDescription;
+		NewOption.mMaxHP = FMath::RoundToInt(LoadedPlayerUnitData->GetDefaultMaxHP(DefaultDifficulty));
+		NewOption.mDice = LoadedPlayerUnitData->mDiceDatas.Num();
+		NewOption.mGold = FMath::RoundToInt(LoadedPlayerUnitData->GetDefaultMoney(DefaultDifficulty));
+		NewOption.mStatSummary = FText::Format(
+			NSLOCTEXT("FrontendGameMode", "CharacterStatSummary", "HP {0} / Dice {1} / Gold {2}"),
+			FText::AsNumber(NewOption.mMaxHP),
+			FText::AsNumber(NewOption.mDice),
+			FText::AsNumber(NewOption.mGold));
+		NewOption.mPortrait = LoadedPlayerUnitData->mPortrait;
+		NewOption.mIcon = LoadedPlayerUnitData->mIcon;
+		NewOption.mPlayerUnitId = LoadedPlayerUnitData->GetPrimaryAssetId();
+		NewOption.mSelectable = PlayerUnitData.IsValid() && !LoadedPlayerUnitData->mClass.IsNull();
+		OutOptions.Add(MoveTemp(NewOption));
+	}
+
+	// TODO : 아쳐와 메이지가 추가된 뒤에 삭제할 부분
+
+	if (!HasCharacterOptionForJob(OutOptions, EPlayerJobType::Archer))
+	{
+		AppendLockedCharacterOption(OutOptions, EPlayerJobType::Archer);
+	}
+	if (!HasCharacterOptionForJob(OutOptions, EPlayerJobType::Mage))
+	{
+		AppendLockedCharacterOption(OutOptions, EPlayerJobType::Mage);
+	}
+
+	// TODO : 아쳐와 메이지가 추가된 뒤에 삭제할 부분
+
+	return OutOptions.IsEmpty() == false;
+}
+
+/**
+ * @brief 프론트엔드 방 DataAsset에 등록된 선택 가능 캐릭터 목록을 가져온다.
+ *
+ * @details
+ * 선택 가능한 캐릭터의 기준은 DA_TestFrontend.mPlayableUnits다.
+ * 이 함수는 별도 임시 목록이나 CSV를 만들지 않고, 프론트엔드 방 정보에 저장된 PlayerUnit SoftObjectPtr 목록만 캐시한다.
+ * 실제 캐릭터 카드 View 변환은 GetCharacterOptions()에서 수행한다.
+ */
+const TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>>& AFrontendGameMode::GetPlayerUnitDatas() const
+{
+	/*
+	 * 선택 가능한 캐릭터 목록은 FrontendRoom DataAsset(DA_TestFrontend)의 mPlayableUnits가 기준이다.
+	 * Intro/FrontendRoom 프리로드 단계에서 FrontendRoom과 같은 번들의 PlayerUnit들이 메모리에 올라와 있어야 하고,
+	 * 여기서는 이미 로드된 PrimaryAsset 객체에서 SoftObjectPtr 목록만 꺼내 캐시한다.
+	 *
+	 * 왜 CSV나 별도 임시 목록을 쓰지 않는가:
+	 * 프론트엔드 방 정보 안에 "이 화면에서 선택 가능한 캐릭터"가 이미 들어 있으므로,
+	 * UI 쪽에서 새 데이터 소스를 만들면 에셋 설정과 화면 표시가 갈라진다.
+	 */
+	if (mPlayerUnitDataCache.IsEmpty() == true)
+	{
+		UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
+		if (AssetManager != nullptr)
+		{
+			const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
+			if (GamePlaySettings != nullptr)
+			{
+				TObjectPtr<UStaticFrontendRoomSpawnData> FrontendRoomSpawnData = AssetManager->GetPrimaryAssetObject<UStaticFrontendRoomSpawnData>(GamePlaySettings->mFrontendRoomId);
+				mPlayerUnitDataCache = FrontendRoomSpawnData->mPlayableUnits;
+			}
+		}
+	}
+	return mPlayerUnitDataCache;
+}
+
+/**
+ * @brief 선택된 캐릭터 ID가 실제 선택 후보에 포함되어 있는지 검증한다.
+ *
+ * @details
+ * UI에서 비활성 카드 선택을 막더라도, 런 생성 직전 GameMode가 다시 검증한다.
+ * 잘못된 PlayerUnitId가 StartRun()으로 들어가면 잘못된 RunPersistData가 만들어질 수 있으므로
+ * DA_TestFrontend.mPlayableUnits 기준으로 한 번 더 확인한다.
+ */
+bool AFrontendGameMode::IsPlayerUnitIdValid(const FPrimaryAssetId& PlayerUnitId) const
+{
+	/*
+	 * Confirm 버튼이 보낸 PlayerUnitId가 실제 프론트엔드 방의 선택 후보 안에 있는지 마지막으로 확인한다.
+	 * UI에서 비활성 카드를 막아도, 런 생성 직전 GameMode가 다시 검증해야 잘못된 ID로 StartRun()이 호출되지 않는다.
+	 */
+	if (PlayerUnitId.IsValid() == false)
+	{
+		return false;
+	}
+
+	const TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>>& PlayerUnitDatas = GetPlayerUnitDatas();
+	bool IsFound = PlayerUnitDatas.ContainsByPredicate([&PlayerUnitId](const TSoftObjectPtr<UStaticPlayerUnitSpawnData>& PlayerUnitData) {
+		const UStaticPlayerUnitSpawnData* LoadedPlayerUnitData = PlayerUnitData.Get();
+		if (LoadedPlayerUnitData == nullptr)
+		{
+			return false;
+		}
+		return LoadedPlayerUnitData->GetPrimaryAssetId() == PlayerUnitId;
+		});
+
+	return IsFound;
+}
+
+/**
+ * @brief 선택된 난이도가 새 Run 생성에 사용할 수 있는 값인지 검증한다.
+ *
+ * @details
+ * 현재는 난이도 선택 기능이 아직 없어서 모든 값을 통과시킨다.
+ * 추후 난이도 테이블이나 해금 조건이 들어오면 StartNewRun() 직전에 이 함수에서 검증한다.
+ */
+bool AFrontendGameMode::IsDifficultyValid(int32 Difficulty) const
+{
+	// TODO : 유효성 검사
+
+	return true;
+}
+
+/**
+ * @brief TitleMenuWidget에 캐릭터 선택 화면을 열라고 전달한다.
+ *
+ * @details
+ * GameMode는 타이틀 HUD 내부의 ScreenSwitcher나 WBP 위젯 트리를 직접 조작하지 않는다.
+ * 타이틀 화면 안에서 어떤 패널을 보여줄지는 TitleMenuWidget이 맡고,
+ * GameMode는 "캐릭터 선택으로 넘어가라"는 흐름 요청만 보낸다.
+ */
+bool AFrontendGameMode::OpenTitleCharacterSelect()
+{
+	/*
+	 * 타이틀 HUD 내부 화면 전환은 TitleMenuWidget이 맡는다.
+	 * GameMode가 ScreenSwitcher를 직접 만지지 않고, 타이틀 위젯에 "캐릭터 선택 화면을 열어 달라"고 요청하는 구조다.
+	 */
+	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
+	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr"));
+
+	UTitleMenuWidget* TitleMenuWidget = WorldWidgetSubsystem->GetHUD<UTitleMenuWidget>();
+	checkf(TitleMenuWidget != nullptr, TEXT("타이틀 HUD가 준비가 안됨"));
+
+	TitleMenuWidget->OpenCharacterSelectFromTitle();
+	return true;
+}
+
+/**
+ * @brief 선택된 캐릭터/난이도로 RunPersistData 생성을 GameProfileSubsystem에 위임한다.
+ *
+ * @details
+ * CreateRunData()는 WBP 상태를 읽거나 화면을 전환하지 않고,
+ * 캐릭터/난이도 검증 후 GameProfileSubsystem->StartRun()을 호출하는 데 집중한다.
+ * 현재는 슬롯/닉네임 UI가 아직 없어서 유저 데이터가 없으면 기본 유저를 임시 생성한 뒤 Run을 만든다.
+ */
+bool AFrontendGameMode::CreateRunData(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty)
+{
+	/*
+	 * RunPersistData 생성은 캐릭터/난이도 검증이 끝난 뒤 GameProfileSubsystem에 위임한다.
+	 * 이 함수가 UI DTO나 WBP 상태를 읽지 않는 이유는, 런 생성 규칙을 화면 구조와 분리하기 위해서다.
+	 */
+	if (IsPlayerUnitIdValid(PlayerUnitId) == false)
+	{
+		UE_LOG(LogFrontendGameMode, Log, TEXT("플레이어 유닛 데이터를 찾을 수 없음"));
+		return false;
+	}
+	if (IsDifficultyValid(Difficulty) == false)
+	{
+		UE_LOG(LogFrontendGameMode, Log, TEXT("불가능한 난이도 선택"));
+		return false;
+	}
+
+	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로파일 서브시스템 nullptr 오류"));
+
+	if (GetUserPersistData()->IsActive() == false)
+	{
+		/*
+		 * 세이브가 없는 첫 실행은 Intro에서 유저 데이터 로드 실패 후 빈 UserData로 프론트엔드에 들어온다.
+		 * 새 런 생성은 유저 프로필을 전제로 하므로, 첫 런 시작 시점에 기본 유저를 먼저 만든다.
+		 */
+		GameProfileSubsystem->MakeUser(NSLOCTEXT("FrontendGameMode", "DefaultUserName", "Player"));
+	}
+
+	GameProfileSubsystem->StartRun(PlayerUnitId, Difficulty);
+	return true;
+}
+

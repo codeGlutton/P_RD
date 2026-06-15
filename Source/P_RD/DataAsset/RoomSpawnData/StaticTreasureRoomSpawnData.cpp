@@ -12,3 +12,20 @@ void UStaticTreasureRoomSpawnData::PostInitProperties()
 		mGameModeBase = GetDefault<UGamePlaySettings>()->mTreasureGameMode;
 	}
 }
+
+void UStaticTreasureRoomSpawnData::PostLoad()
+{
+	Super::PostLoad();
+
+	const TSoftClassPtr<AGameModeBase> UpdatedGameMode = GetDefault<UGamePlaySettings>()->mTreasureGameMode;
+	if (mGameModeBase != UpdatedGameMode)
+	{
+#if WITH_EDITOR
+		Modify();
+#endif
+		mGameModeBase = UpdatedGameMode;
+#if WITH_EDITOR
+		MarkPackageDirty();
+#endif
+	}
+}

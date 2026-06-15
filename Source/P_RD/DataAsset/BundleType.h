@@ -9,6 +9,12 @@
 
 #include "RDMinimal.h"
 
+/**
+ * 주의사항
+ * 
+ * UPROPERTY 내부 AssetBundles 대입 문자열에는 매크로 사용하지 말고 직접 입력해줄 것.
+ */
+
 #define BUNDLE_PAD "PAD"
 #define BUNDLE_WORLD "World"
 #define BUNDLE_ACTOR "Actor"

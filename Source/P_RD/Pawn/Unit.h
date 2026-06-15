@@ -25,34 +25,7 @@ class UUnitAttributeSet;
 class UPackageMap;
 class UStaticUnitSpawnData;
 
-USTRUCT(Blueprintable)
-struct FUnitSnapshotTargetData : public FGameplayAbilityTargetData
-{
-	GENERATED_BODY()
-
-public:
-	UScriptStruct* GetScriptStruct() const override;
-	bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& OutSuccess);
-
-public:
-	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
-	float mMaxHP;
-	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
-	float mHP;
-	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
-	float mSkillPoint;
-	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
-	float mDamagePoint;
-	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
-	float mDefensePoint;
-	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
-	float mMovementPoint;
-
-	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
-	uint8 mBuffState;
-	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
-	uint8 mDebuffState;
-};
+class USkillComponent;
 
 /**
  * @brief  SRPG에서 사용되는 베이스 폰 클래스
@@ -70,33 +43,36 @@ public:
 	void PostInitializeComponents() override;
 	void OnConstruction(const FTransform& Transform) override;
 
-	/* GenericTeamAgentInterface 상속 */
+	/* IGenericTeamAgentInterface 상속 */
 public:
 	void SetGenericTeamId(const FGenericTeamId& TeamID) override;
 	FGenericTeamId GetGenericTeamId() const override;
 
-	/* ITileActor, ITileTargetable 상속 */
+	/* ITileActor 상속 */
 public:
-	ETileLayerFlag GetTileLayer() const override;
-	ETileLayerFlag GetBlockFlags() const override;
+	const FTileTransform& GetTileTransform() const override;
+	ETileLayerFlag GetTileLayerFlags() const override;
+	ETileLayerFlag GetBlockLayerFlags() const override;
+
+	/* ITileTargetable 상속 */
+public:
 	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	FTileTargetSnapshotTargetData* MakeSnapshotTargetData() const override;
+
+protected:
+	void SetTileTransform(const FTileTransform& Transform) override;
 
 public:
-	virtual void OnBeginPlayRoom();
-	virtual void OnEndPlayRoom();
+	USkillComponent* GetSkillComponent() const;
 
 public:
-	/**
-	 * 유닛의 현재 스탯 스냅샷을 찍어 타겟 정보로 반환하는 함수
-	 */
-	virtual FUnitSnapshotTargetData* MakeSnapshotTargetData() const;
+	virtual void OnBeginRoom();
 
 public:
 	void SetStaticSpawnData(const UStaticUnitSpawnData* StaticUnitSpawnData);
 
 public:
 	UUnitAttributeSet* GetUnitAttributeSet() const;
-	bool IsDead() const;
 
 	FName GetUnitKeyName() const;
 	const FText& GetUnitDisplayName() const;
@@ -110,8 +86,14 @@ public:
 private:
 	UPROPERTY(Category = GAS, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "AbilitySystemComp"))
 	TObjectPtr<UAbilitySystemComponent>	mAbilitySystemComp;
+
+protected:
 	UPROPERTY(Category = GAS, VisibleAnywhere, meta = (DisplayName = "UnitAttributeSet"))
 	TObjectPtr<UUnitAttributeSet> mUnitAttributeSet;
+
+private:
+	UPROPERTY(Category = Skill, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "SkillComp"))
+	TObjectPtr<USkillComponent>	mSkillComp;
 
 protected:
 	UPROPERTY(Category = Spawn, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "StaticUnitSpawnData"))
@@ -120,4 +102,5 @@ protected:
 private:
 	// @brief 팀 ID
 	FGenericTeamId mTeamId;
+	FTileTransform mTileTransform = FTileTransform::Invalid;
 };

@@ -20,6 +20,7 @@ class P_RD_API UStaticTreasureRoomSpawnData : public UStaticRoomSpawnData
 
 public:
 	void PostInitProperties() override;
+	void PostLoad() override;
 
 public:
 	FPrimaryAssetId GetPrimaryAssetId() const override
@@ -37,6 +38,6 @@ public:
 	EStageLevelType mStageLevel;
 
 public:
-	UPROPERTY(Category = "Actor", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TreasureBoxClass", BUNDLE_ACTOR))
+	UPROPERTY(Category = "Actor", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TreasureBoxClass", AssetBundles = "Actor"))
 	TSoftClassPtr<AActor> mTreasureBoxClass;
 };

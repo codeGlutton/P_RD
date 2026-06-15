@@ -2,7 +2,9 @@
 
 #if WITH_EDITOR
 #include "Misc/DataValidation.h"
+#endif
 
+#if WITH_EDITOR
 EDataValidationResult UStaticUnitSpawnData::IsDataValid(FDataValidationContext& Context) const
 {
 	EDataValidationResult SuperResult = Super::IsDataValid(Context);

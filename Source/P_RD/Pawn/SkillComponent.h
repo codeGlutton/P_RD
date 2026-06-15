@@ -6,18 +6,21 @@
  *********************************************************************/
 #pragma once
 
-#include "../GAS/GASMinimal.h"
+#include "GAS/GASMinimal.h"
 #include "Components/ActorComponent.h"
-#include "../DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/StaticSkillData.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
+//#include "Pawn/SkillComponent/PreviewEffectIconData.h"
+#include "../FunctionLibrary/CombatCalculator/CombatResult.h"
+#include "SRPGFramework/TileActor.h"
 #include "SkillComponent.generated.h"
 
- /**
- * @brief 스킬 변경 시 사용되는 델리게이트(대리자)
- * @details SkillIndex의 데이터가 SkillData로 변경되었다는 것을 알리는 델리게이트(대리자)
- * @param SkillIndex : 변경된 스킬의 인덱스
- * @param SkillData : 변경된 스킬 데이터
- */
+/**
+* @brief 스킬 변경 시 사용되는 델리게이트(대리자)
+* @details SkillIndex의 데이터가 SkillData로 변경되었다는 것을 알리는 델리게이트(대리자)
+* @param SkillIndex : 변경된 스킬의 인덱스
+* @param SkillData : 변경된 스킬 데이터
+*/
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
 	FOnSkillChange,
 	int32, SkillIndex,
@@ -39,7 +42,7 @@ protected:
 	 * 플레이어 4개 + 공격
 	 * 적 가변적
 	 */
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TArray<TSoftObjectPtr<UStaticSkillData>> mSkillData;
 
 	/**
@@ -89,36 +92,28 @@ public:
 	* 플레이어는 소지 스킬 개수가 고정되어 있으므로 사용하면 안됨
 	* 어차피 적만 필요할 것 같으므로 적에게만 작성해도 될 듯
 	*/
-	//virtual bool AddSkillData(TSoftObjectPtr<UStaticSkillData> SkillData);
-
-public:
-	/* 요청값 반환 */
-	/**
-	* @details 해당 스킬의 예측값을 반환하는 함수
-	* @param[in] In_SkillIndex : 선택한 스킬의 인덱스
-	* @param[out] Out_TagValue : FString은 태그로 변경할 예정, float는 결과값 
-	* @return bool : 실패 시 false 반환
-	*/
-	bool CalculatePredictedSales(int32 In_SkillIndex, TArray<TPair<FString, float>>& Out_TagValue);
+	virtual bool AddSkillData(TSoftObjectPtr<UStaticSkillData> SkillData);
 
 public:
 	/* 스킬 사용 */
 	/**
-	* @details 스킬의 인덱스와 타일을 입력받으면 스킬 사용
-	* @param SkillIndex : 사용할 스킬의 인덱스
-	* @param Tiles : 스킬 효과를 적용할 타일들
-	* @return bool : 실패 시 false 반환
-	*/
-	bool ActivateSkill(int32 SkillIndex, const TArray<FTileIndex>& Tiles);
-
-	/**
-	* @brief 테스트용 스킬 사용 함수
-	* @details 테스트용 GA를 사용해서 다른 유닛들 효과를 적용하는 함수
-	* @param SkillIndex : 사용할 스킬의 인덱스
-	* @param UnitArray : 사용할 대상
+	* @brief 스킬의 인덱스와 타일을 입력받으면 스킬 사용
+	* @details 
+	* 이미 가지고 있는 결과값을 토대로 스킬을 진행
 	* @return bool : 실패 시 false 반환
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Skill")
-	bool TestActivateSkill(int32 SkillIndex, TArray<AUnit*> UnitArray);
+	bool ActivateSkill(const FSkillCommitResult& SkillResult);
 
+	/**
+	* @brief 스킬 결과 값 계산
+	* @details 
+	* 스킬 인덱스와 타일이 들어오면 스킬 결과 값을 계산한다.
+	* @param[in] SkillIndex : 선택한 스킬의 인덱스
+	* @param[in] TileActors : 스킬로 선택된 타일들
+	* @param[out] Out_Result: 스킬로 선택된 타일들
+	* @return bool : 실패 시 false 반환
+	*/
+	UFUNCTION(BlueprintCallable, Category = "Skill")
+	bool CalculateSkillResult(int32 SkillIndex, const TArray<TScriptInterface<ITileActor>>& TileActors, FSkillCommitResult& Out_Result);
 };

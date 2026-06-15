@@ -36,6 +36,10 @@ namespace AbilityTags
 
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_LevelUp);
 
+	/* 스킬 */
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Skill);
+
+
 	/* 패시브 능력 태그들 */
 
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartRoom);
@@ -47,22 +51,23 @@ namespace AbilityTags
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartRollingDice);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnEndRollingDice);
 
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnUseAttackSkill);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnUseDefenseSkill);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnUseMoveSkill);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnUseBuffSkill);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartUseSkill_Add);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartUseSkill_Multiply);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartUseSkill_Final);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnEndUseSkill);
 
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartAttacking);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartAttacking_Add);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartAttacking_Multiply);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartAttacking_Final);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnEndAttacking);
 
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartHitting);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartHitting_Add);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartHitting_Multiply);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartHitting_Final);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnEndHitting);
 
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnGetDefensePoint);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnGetMovePoint);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnGetPower);
-
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnChangeHP);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartOneMove);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnEndOneMove);
 }
 
 /**
@@ -82,6 +87,16 @@ namespace EffectTags
 	/* 액터 상태 태그들 */
 
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_ActorState_Dead);
+
+	/* 스킬 이펙트 태그들*/
+
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_Skill_Effect_Damage);
+
+	/* 스킬 이펙트 Data 전달 태그들*/
+
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_Skill_Data_Damage);
+
+
 }
 
 /**

@@ -21,6 +21,11 @@ class P_RD_API UStaticRoomSpawnData : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 
+#if WITH_EDITOR
+public:
+    EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
+#endif
+
 public:
     void PostLoad() override
     {
@@ -37,10 +42,10 @@ public:
     }
 
 public:
-	UPROPERTY(Category = "Background", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BackgroundMap", BUNDLE_WORLD))
+	UPROPERTY(Category = "Background", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BackgroundMap", AssetBundles = "World"))
 	TSoftObjectPtr<UWorld> mBackgroundMap;
 
 public:
-    UPROPERTY(Category = "Logic", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "GameModeBase", BUNDLE_WORLD))
+    UPROPERTY(Category = "Logic", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "GameModeBase", AssetBundles = "World"))
     TSoftClassPtr<AGameModeBase> mGameModeBase;
 };
