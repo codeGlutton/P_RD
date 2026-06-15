@@ -14,6 +14,8 @@ public class P_RD : ModuleRules
             "InputCore",
             "EnhancedInput",
             "UMG",
+            "MediaAssets",
+            "ImageWrapper",
 
             /*
              * WBP 자체는 UMG 모듈만으로 다루지만, 이번 UI 패널은 런타임에서 버튼 입력 방식,
@@ -35,6 +37,17 @@ public class P_RD : ModuleRules
             "StateTreeModule",          // StateTree 사용
             "GameplayStateTreeModule",  // StateTree AI Comp 사용
         });
+
+        if (Target.bBuildEditor)
+        {
+            PrivateDependencyModuleNames.AddRange(new string[] {
+                "UnrealEd",
+                "UMGEditor",
+                "AssetTools",
+                "KismetCompiler",
+                "BlueprintGraph",
+            });
+        }
 
         PrivateIncludePaths.AddRange(new string[] {
             "P_RD",
