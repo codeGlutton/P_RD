@@ -15,11 +15,18 @@ public class P_RDEditor : ModuleRules
             "InputCore",
             "EnhancedInput",
             "UMG",
+            "Slate",
+            "SlateCore",
 
             /* Editor Core Modules */
             "UnrealEd",
             "EditorFramework", 
             "AssetRegistry",
+            "UMGEditor",
+            "AssetTools",
+            "KismetCompiler",
+            "BlueprintGraph",
+            "ImageWrapper",
 
             /* Asset Validator Modules */
             "DataValidation",
@@ -29,9 +36,6 @@ public class P_RDEditor : ModuleRules
             "P_RD",
             "P_RDEditor",
         });
-
-        // Uncomment if you are using Slate UI
-        // PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 
         // Uncomment if you are using online features
         // PrivateDependencyModuleNames.Add("OnlineSubsystem");
