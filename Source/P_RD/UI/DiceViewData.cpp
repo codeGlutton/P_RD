@@ -13,6 +13,7 @@ ERarityType RDUIDice::ResolveDiceRarity(const FPrimaryAssetId& DiceId)
 		}
 	}
 
+	// 에셋이 아직 로드 전이면 색/문구를 마냥 기다릴 수 없으므로, 타입 이름으로 희귀도를 추정한다(폴백).
 	const FString DiceTypeName = DiceId.PrimaryAssetType.ToString();
 	if (DiceTypeName.Contains(TEXT("Epic")))
 	{

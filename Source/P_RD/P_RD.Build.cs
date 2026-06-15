@@ -4,12 +4,12 @@
  * @brief P_RD 런타임 모듈의 빌드 의존성을 선언합니다.
  *
  * @details
- * 이번 UI foundation PR은 WBP를 단순히 참조하는 수준을 넘어, C++에서 버튼 입력, Slate 타입,
- * 런타임 PNG 디코딩, 인트로 미디어 재생을 직접 다룹니다. 그래서 관련 모듈 의존성을 Build.cs에
- * 명시해 "어떤 UI 기능 때문에 어떤 모듈이 필요한지"를 리뷰 시 바로 추적할 수 있게 합니다.
+ * 이 파일은 모듈 전체가 쓰는 의존성을 한곳에 모은 것이라, 뒤따르는 UI 작업이 쓰는 모듈(미디어 재생,
+ * Slate 타입, PNG 디코딩 등)도 여기서 미리 선언됩니다. 각 의존성에 "무엇 때문에 필요한지"를 적어,
+ * 리뷰 시 모듈이 왜 그 의존성을 끌어오는지 바로 알 수 있게 했습니다.
  *
- * 에디터 전용 WBP 생성/편집 의존성은 Target.bBuildEditor 안에만 둡니다. 런타임 APK/패키지에
- * UnrealEd 계열 모듈이 끌려가지 않게 분리하는 것이 이 파일에서 가장 중요한 경계입니다.
+ * 이 파일에서 가장 중요한 경계는 마지막의 bBuildEditor 블록입니다. 에디터 전용 모듈(UnrealEd 계열)을
+ * 그 안에만 두어, 런타임 패키지/APK에 에디터 모듈이 끌려 들어가지 않게 분리합니다.
  */
 public class P_RD : ModuleRules
 {
@@ -29,9 +29,8 @@ public class P_RD : ModuleRules
             "ImageWrapper",             // 런타임 PNG 디코딩(UITextureLoader)에 필요
 
             /*
-             * WBP 자체는 UMG 모듈만으로 다루지만, 이번 UI 패널은 런타임에서 버튼 입력 방식,
-             * Slate Visibility, FReply, Widget Transform 같은 Slate 타입을 직접 사용한다.
-             * 그래서 Carousel/Dice/TopMenuBar 쪽 C++ 위젯 컴파일을 위해 Slate/SlateCore 의존성을 명시한다.
+             * WBP 표시 자체는 UMG만으로 되지만, UI 위젯을 C++에서 다루면 SlateVisibility, FReply,
+             * Widget Transform 같은 Slate 타입을 직접 쓰게 된다. 그 위젯들의 컴파일을 위해 Slate/SlateCore를 명시한다.
              */
             "Slate",
             "SlateCore",
@@ -50,7 +49,7 @@ public class P_RD : ModuleRules
         });
 
         /*
-         * 캐릭터 선택 WBP를 코드로 생성·구성하는 에디터 커맨드렛(ClassSelectWBPSetupCommandlet) 전용 의존성.
+         * WBP/텍스처를 코드로 생성·편집하는 에디터 전용 도구(커맨드렛 등)가 쓰는 의존성.
          * 에디터 빌드에서만 필요하므로 런타임 패키지에 끌려들어가지 않게 bBuildEditor로 감싼다.
          */
         if (Target.bBuildEditor)
