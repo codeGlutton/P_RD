@@ -20,6 +20,7 @@ DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnBeginAnyActionUI, TSharedPtr<FPresenta
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnEndAnyActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGTurnContext& /*TurnContext*/, const FSRPGAction& /*Action*/, ESRPGActionResult /*Result*/)
 
 class AUnit;
+class USRPGCombatSubsystem;   // Clang(Android)은 friend 선언을 전방선언으로 인정하지 않음 → 정식 전방선언 필요
 struct FSRPGAction;
 
 /**
