@@ -64,20 +64,23 @@ struct FUnitEventLog
 	GENERATED_BODY()
 
 public:
-	// 유닛
+	// @brief 유닛의 아이디
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	int32 mTargetUnitID;
 
+	// @brief 유닛의 점유 변화 상태
 	// 유닛의 점유 변화 : None(변화 없음),입장(생성), 퇴장(제거), 변경
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	EOccupancyState mOccupancyState;
 
 	// 생성 대상의 종류
 
+	// @brief 유닛의 수치 변화
 	// 유닛의 상태 변화
 	// 이벤트 : 수치
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	FGameplayTag mGameplayTag;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	float mValue;
 
@@ -121,8 +124,11 @@ struct FEventLog
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	FOverlayEventLog	mOverlayEventLog;	// 장판 상태의 변화
+
+	// @brief 유닛의 변화(이벤트)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	FUnitEventLog		mUnitEventLog;		// 유닛 상태의 변화
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	FObstacleEventLog	mObstacleEventLog;	// 장애물 상태의 변화
 };
@@ -134,8 +140,11 @@ struct FTileLog
 	GENERATED_BODY()
 
 public:
+	// @brief 이벤트 발생 시점
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	EEffectEventTiming mEventTimig;
+
+	// @brief 이벤트 로그 목록
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	TMap<int32, FEventLog> mEventLog;
 };
@@ -147,6 +156,7 @@ struct FCommandLog
 	GENERATED_BODY()
 
 public:
+	// @brief 타일 이벤트 목록
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	TArray<FTileLog> mTileLog;
 };
@@ -192,6 +202,7 @@ struct FTileCloneData
 	GENERATED_BODY()
 
 public:
+	// @brief 타일에 있는 액터 목록
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<int32> mActorIDs; // 타일에 존재하는 대상의 아이디
 };
@@ -204,9 +215,11 @@ struct FTileMapCloneData
 	GENERATED_BODY()
 
 public:
+	// @brief 타일 목록
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FTileCloneData>						mTiles;					// 타일
 
+	// 타일맵에 존재하는 모든 액터 목록
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TMap<int32, FTileActorCloneData>	mTileActorDatas;		// 타일맵에 존재하는 액터들
 };
@@ -231,14 +244,19 @@ struct FCommandLogFunctionContext
 	GENERATED_BODY()
 
 public:
+	// @brief 이벤트를 발생 시킨 액터의 ID
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	int32					mSourceActorID;		// 소스 액터
+
+	// @brief 이벤트에 영향을 받는 타일 목록
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	TArray<FTileIndex>		mTargetTiles;		// 타겟 타일
 
+	// @brief 이벤트 요청 타입
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	ECommandLogRequestType	mRequestType;		// 시뮬레이터 요청 타입
 
+	// @brief 이벤트 요청 타입이 스킬일 때 해당 스킬 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	class UStaticSkillData* mSkillData;			// 스킬 효과
 	//TArray<class UPassive> mPassiveData;				// 패시브 효과
