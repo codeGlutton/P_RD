@@ -1,5 +1,6 @@
 ﻿#include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
 #include "Singleton/WorldSubsystem/PresentationSyncSubsystem.h"
+#include "SRPGFramework/SRPGCommand.h"
 #include "Setting/RDWorldSettings.h"
 
 #include "Actor/TileMap/TileMap.h"
@@ -465,10 +466,9 @@ void USRPGCombatSubsystem::NotifyRoundEndIfNeeded()
 	}
 }
 
-bool USRPGCombatSubsystem::SummitCommand(TSharedPtr<const FSRPGActionCommand> Command)
+bool USRPGCombatSubsystem::PushAction(TSharedPtr<FSRPGAction> Action)
 {
-	checkf(Command != nullptr, TEXT("유효하지 않은 액션 커맨드"));
-	checkf(Command->GetActionCommandType() != ESRPGActionCommandType::None, TEXT("유효하지 않은 액션 커맨드"));
+	checkf(Action != nullptr, TEXT("유효하지 않은 액션"));
 
 	if (mCurTurnContextNode == nullptr || mCurTurnContextNode->GetValue() == nullptr)
 	{
@@ -476,11 +476,8 @@ bool USRPGCombatSubsystem::SummitCommand(TSharedPtr<const FSRPGActionCommand> Co
 		return false;
 	}
 
-	// 입력 라우팅 시작
-	const ESRPGActionCommandResult Result = mCurTurnContextNode->GetValue()->RouteCommand(Command);
-	const bool IsCommandUsed = Result != ESRPGActionCommandResult::Ignored;
-	
-	return IsCommandUsed;
+	mCurTurnContextNode->GetValue()->EnqueueAction(Action);
+	return true;
 }
 
 TWeakPtr<FSRPGTurnContext> USRPGCombatSubsystem::GetCurrentTurnContext()

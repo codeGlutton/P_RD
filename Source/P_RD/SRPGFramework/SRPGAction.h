@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
+#include "SRPGFramework/SRPGCommandHandler.h"
 
 struct FPresentationBarrier;
 struct FSRPGAction;
@@ -18,57 +19,14 @@ DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnEndActionUI, TSharedPtr<FPresentationB
 
 class AUnit;
 struct FSRPGTurnContext;
-
-/**
- * @brief  사용자 입력 명령 객체
- */
-struct FSRPGActionCommand
-{
-public:
-	virtual ~FSRPGActionCommand() = default;
-
-public:
-	ESRPGActionCommandType GetActionCommandType() const;
-	virtual TSharedPtr<FSRPGAction> CreateAction() const;
-
-protected:
-	ESRPGActionCommandType mActionCommandType = ESRPGActionCommandType::None;
-};
-
-/**
- * @brief  사용자 월드 입력 명령 객체
- */
-struct FSRPGWorldTraceCommand : public FSRPGActionCommand
-{
-public:
-	FSRPGWorldTraceCommand();
-
-public:
-	bool mIsLongPress = false;
-};
-
-/**
- * @brief  액션 생성 명령 객체
- */
-template<typename ActionType>
-struct FSRPGActionCreationCommand : public FSRPGActionCommand
-{
-protected:
-	TSharedPtr<FSRPGAction> CreateAction() const override
-	{
-		return TSharedPtr<ActionType>(new ActionType(), [](ActionType* Action) {
-			delete Action;
-			});
-	}
-};
+struct FSRPGCommand;
 
 /**
  * @brief  사용자 입력에 따른 정해진 SRPG 행동 객체
  */
-struct FSRPGAction : public TSharedFromThis<FSRPGAction>
+struct FSRPGAction : public TSharedFromThis<FSRPGAction>, public ISRPGCommandHandler
 {
 	friend struct FSRPGTurnContext;
-	friend struct FSRPGActionCreationCommandBase;
 
 protected:
 	FSRPGAction() = default;
@@ -91,10 +49,13 @@ protected:
 
 	/* 액션 커맨드 처리 함수 */
 protected:
-	virtual ESRPGActionCommandResult HandleCommand(TSharedPtr<const FSRPGActionCommand> Command);
+	int8 GetCommandPriority() const override;
+	ESRPGCommandResult HandleCommand(TSharedPtr<const FSRPGCommand> Command) override;
+
+protected:
+	void ReserveCommand(TSharedPtr<const FSRPGCommand> Command);
 
 private:
-	void ReserveCommand(TSharedPtr<const FSRPGActionCommand> Command);
 	void FlushCommands();
 
 	/* 헬퍼 함수 */
@@ -121,11 +82,11 @@ protected:
 
 protected:
 	TWeakPtr<FSRPGTurnContext> mParent;
-	TObjectPtr<AUnit> mInstigator;
+	TWeakObjectPtr<AUnit> mInstigator;
 
 protected:
 	// @brief 예약된 명령들
-	TQueue<TSharedPtr<const FSRPGActionCommand>> mReservedCommands;
+	TQueue<TSharedPtr<const FSRPGCommand>> mReservedCommands;
 
 protected:
 	// @brief 현재 액션 상태

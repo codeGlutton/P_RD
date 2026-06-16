@@ -246,7 +246,7 @@ enum class ESRPGSkillBuildPhase : uint8
 };
 
 UENUM(BlueprintType)
-enum class ESRPGActionCommandType : uint8
+enum class ESRPGCommandType : uint8
 {
     None                UMETA(Hidden),
 
@@ -263,7 +263,7 @@ enum class ESRPGActionCommandType : uint8
  * @brief 명령 처리 여부를 나타내는 열거형
  */
 UENUM(BlueprintType)
-enum class ESRPGActionCommandResult : uint8
+enum class ESRPGCommandResult : uint8
 {
     Handled             UMETA(ToolTip = "처리되어 커맨드가 소비됨"),
     Continue            UMETA(ToolTip = "처리했으나 계속됨"),
@@ -277,7 +277,7 @@ enum class ESRPGActionCommandResult : uint8
  * @param Rhs 계산 결과 B
  * @return 최종 결과
  */
-inline ESRPGActionCommandResult CombineSRPGActionCommandResult(ESRPGActionCommandResult Lhs, ESRPGActionCommandResult Rhs)
+inline ESRPGCommandResult CombineSRPGCommandResult(ESRPGCommandResult Lhs, ESRPGCommandResult Rhs)
 {
     if (static_cast<uint8>(Lhs) < static_cast<uint8>(Lhs))
     {

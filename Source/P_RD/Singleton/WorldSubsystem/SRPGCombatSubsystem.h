@@ -29,7 +29,7 @@ DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnEndAnyTurnUI, TSharedPtr<FPresentation
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnBeginAnyTurnActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGTurnContext& /*TurnContext*/, const FSRPGAction& /*Action*/)
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnEndAnyTurnActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGTurnContext& /*TurnContext*/, const FSRPGAction& /*Action*/, ESRPGActionResult /*Result*/)
 
-struct FSRPGActionCommand;
+struct FSRPGCommand;
 
 class ITileActor;
 class AUnit;
@@ -138,14 +138,14 @@ protected:
 	void NotifyRoundStartIfNeeded();
 	void NotifyRoundEndIfNeeded();
 
-	/* 커맨드 함수 */
+	/* 액션 함수 */
 public:
 	/**
 	 * 유저 입력 처리
-	 * @param Command 처리할 명령 객체
-	 * @return 명령 처리 여부
+	 * @param Action 추가할 액션 객체
+	 * @return 액션 등록 여부
 	 */
-	bool SummitCommand(TSharedPtr<const FSRPGActionCommand> Command);
+	bool PushAction(TSharedPtr<FSRPGAction> Action);
 
 public:
 	TWeakPtr<FSRPGTurnContext> GetCurrentTurnContext();
