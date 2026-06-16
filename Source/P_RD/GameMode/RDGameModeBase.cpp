@@ -153,7 +153,10 @@ void ARDGameModeBase::StartFadeOutUIForRoomTransition()
 {
 	StartFadeOutUI(FOnEndFadeOutAnimation::CreateWeakLambda(this, [this](UFadeInOutWidget*)
 	{
-		checkf(MarkExternalReadyForTransition() == true, TEXT("외부 준비 상태 전달 오류"));
+		if (mWaitExternalWorkOnTransition == false)
+		{
+			checkf(MarkExternalReadyForTransition() == true, TEXT("외부 준비 상태 전달 오류"));
+		}
 	}));
 }
 
