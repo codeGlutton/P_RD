@@ -51,14 +51,27 @@ private:
 	static FEffectPacket CalculateDefaultSkillEffectValue(const FTileActorCloneData& Caster, const UStaticSkillData* SkillData);
 
 	// 효과값을 갱신하는 패시브
+	// @brief 스킬 사용 전 패시브 기반으로 효과 갱신
 	static void CalculateSkillPassive(const FTileActorCloneData& Caster, FEffectPacket& EffectPacket);
+
+	// @brief 모션 전 패시브 기반으로 효과 갱신
 	static void CalculateMotionPassive(const FTileActorCloneData& Caster, TPair<FGameplayTag, float>& Effect);
+	
+	// @brief 공격 전 패시브 기반으로 효과 갱신
 	static void CalculateAttackPassive(const FTileActorCloneData& Caster, int32 TargetTileIndex, TPair<FGameplayTag, float>& Effect);
+	
+	// @brief 피격 전 패시브 기반으로 효과 갱신
 	static void CalculateHitPassive(const FTileActorCloneData& Caster, int32 TargetTileIndex, TPair<FGameplayTag, float>& Effect);
 
-	// 스냅샷을 기반으로 이벤트 로그 생성
-	static FEventLog CreateEventLog(FTileMapCloneData& SnapShot, int32 TargetTileIndex, TPair<FGameplayTag, float>& Effect);
 
+
+	// 스냅샷을 기반으로 이벤트 로그 생성
+	// @brief 타일 복제체를 기반으로 효과 적용
+	static bool CreateEventLog(FTileMapCloneData& TileMapCloneData, int32 TargetTileIndex, TPair<FGameplayTag, float>& Effect, FEventLog& EventLog);
+
+	
+	
 	// 로그를 기반으로 스냅샷 변경
-	static void ChangeSnapShotFromEvent(FTileMapCloneData& SnapShot, const FEventLog& TileLog);
+	// @brief 생성한 이벤트를 복제체에 적용
+	static void ChangeTileMapCloneDataFromEvent(FTileMapCloneData& TileMapCloneData, const FEventLog& TileLog);
 };

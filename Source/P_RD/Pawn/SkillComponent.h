@@ -100,7 +100,7 @@ public:
 	/**
 	* @brief 스킬의 인덱스와 타일을 입력받으면 스킬 사용
 	* @details 
-	* 이미 가지고 있는 결과값을 토대로 스킬을 진행
+	* 이미 가지고 있는 커맨드 로그를 토대로 스킬을 진행
 	* @return bool : 실패 시 false 반환
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Skill")
@@ -111,10 +111,11 @@ public:
 	* @details 
 	* 스킬 인덱스와 타일이 들어오면 스킬 결과 값을 계산한다.
 	* @param[in] SkillIndex : 선택한 스킬의 인덱스
-	* @param[in] TileActors : 스킬로 선택된 타일들
-	* @param[out] Out_Result: 스킬로 선택된 타일들
+	* @param[in] In_CloneData : 타일맵 복제 데이터
+	* @param[in] In_Context: 계산에 필요한 정보들
+	* @param[out] Out_Result: 결과 로그
 	* @return bool : 실패 시 false 반환
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Skill")
-	bool CalculateSkillResult(int32 SkillIndex, FTileMapCloneData& CloneData, const TArray<FTileIndex>& TileIndex, FCommandLog& Out_Result);
+	bool CalculateSkillResult(int32 SkillIndex, const FTileMapCloneData& In_CloneData, const FCommandLogFunctionContext& In_Context, FCommandLog& Out_Result);
 };

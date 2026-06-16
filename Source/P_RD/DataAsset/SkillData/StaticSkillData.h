@@ -53,8 +53,8 @@ struct FSkillEffectLayer
     * @note
     * Damage, Heal 기타 등등
     */
-    UPROPERTY(Category = "SkillEffectLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "GameplayEffect", AssetBundles = "Actor"))
-    TSoftClassPtr<class UGameplayEffect_Base> mGameplayEffect;
+    UPROPERTY(Category = "SkillEffectLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "GameplayTag", AssetBundles = "Actor"))
+    FGameplayTag mGameplayTag;
 
     /**
     * @brief 효과 기본 값

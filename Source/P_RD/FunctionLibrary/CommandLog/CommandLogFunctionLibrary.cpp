@@ -12,6 +12,9 @@ bool UCommandLogFunctionLibrary::CalculateSkillCommandLog(
     FCommandLog& Out_Result)
 {
 
+    float TileSize = CloneTileMap.mTiles.Num() + 1;
+    UE_LOG(LogTemp, Warning, TEXT("타일 크기 : %f"), TileSize);
+
     // 캐스터와 스킬 데이터를 가지고 기본 효과 값을 계산한다.
     FEffectPacket EffectPacket = CalculateDefaultSkillEffectValue(CloneTileMap.mTileActorDatas[Context.mSourceActorID], Context.mSkillData);
 
@@ -21,19 +24,22 @@ bool UCommandLogFunctionLibrary::CalculateSkillCommandLog(
     // 모션 레이어
     for (TPair<FGameplayTag, float> Effect : EffectPacket.mEffectValue)
     {
+        UE_LOG(LogTemp, Warning, TEXT("모션 재생 중"));
+
         // 모션 패시브를 돌려서 효과 값 갱신
         CalculateMotionPassive(CloneTileMap.mTileActorDatas[Context.mSourceActorID], Effect);
 
         // 기본 효과 적용 커맨드 로그
         FTileLog SkillDefaultCommitCommandLog;
-        SkillDefaultCommitCommandLog.mEventTimig = EEffectEventTiming::SkillDefaultCommit;
+        SkillDefaultCommitCommandLog.mEventTimig = EEffectEventTiming::EffectDefaultCommit;
         // 타겟 스코프
 
         // 타겟 레이어
         for (const FTileIndex TargetTile : Context.mTargetTiles)
         {
-            float TileSize = Context.mTargetTiles.Num();
             int32 TileIndex = TargetTile.mY * FMath::Sqrt(TileSize) + TargetTile.mX;
+            UE_LOG(LogTemp, Warning, TEXT("타일 : %d"), TileIndex);
+
 
             // 타겟 필터 돌리기
 
@@ -42,15 +48,21 @@ bool UCommandLogFunctionLibrary::CalculateSkillCommandLog(
             CalculateHitPassive(CloneTileMap.mTileActorDatas[Context.mSourceActorID], TileIndex, Effect);
 
             // 스냅샷을 기반으로 타일 로그 생성
-            FEventLog EventLog = CreateEventLog(CloneTileMap, TileIndex, Effect);
-            SkillDefaultCommitCommandLog.mEventLog.Add(TileIndex, EventLog);
+            FEventLog EventLog;
 
-            // 현재 이벤트를 기반으로 스냅샷 변경
-            // 즉시 반영하여 다음 타겟이 적절한 스냅샷을 가지고 연산할 수 있게 변경한다.
-            ChangeSnapShotFromEvent(CloneTileMap, EventLog);
+            // 이벤트가 존재할 때만 기록한다.
+            if (CreateEventLog(CloneTileMap, TileIndex, Effect, EventLog))
+            {
+                SkillDefaultCommitCommandLog.mEventLog.Add(TileIndex, EventLog);
 
-            // 공격 후 패시브 지연을 위한 공격 후 패시브 버퍼
-            // 피격 후 패시브 지연을 위한 피격 후 패시브 버퍼
+                // 현재 이벤트를 기반으로 스냅샷 변경
+                // 즉시 반영하여 다음 타겟이 적절한 스냅샷을 가지고 연산할 수 있게 변경한다.
+                ChangeTileMapCloneDataFromEvent(CloneTileMap, EventLog);
+
+                // 공격 후 패시브 지연을 위한 공격 후 패시브 버퍼
+                // 피격 후 패시브 지연을 위한 피격 후 패시브 버퍼
+            }
+
         }
 
         // 커맨드 로그 삽입
@@ -69,6 +81,8 @@ bool UCommandLogFunctionLibrary::CalculateSkillCommandLog(
 
 FEffectPacket UCommandLogFunctionLibrary::CalculateDefaultSkillEffectValue(const FTileActorCloneData& Caster, const UStaticSkillData* SkillData)
 {
+    checkf(IsValid(SkillData), TEXT("스킬이 존재하지 않음"));
+
     FEffectPacket Packet;
 
     for (const FSkillAnimLayer& AnimLayer : SkillData->mSkillAnimLayers)
@@ -104,16 +118,21 @@ void UCommandLogFunctionLibrary::CalculateHitPassive(const FTileActorCloneData& 
     // 패시브 필요
 }
 
-FEventLog UCommandLogFunctionLibrary::CreateEventLog(FTileMapCloneData& SnapShot, int32 TargetTileIndex, TPair<FGameplayTag, float>& Effect)
+bool UCommandLogFunctionLibrary::CreateEventLog(FTileMapCloneData& TileMapCloneData, int32 TargetTileIndex, TPair<FGameplayTag, float>& Effect, FEventLog& EventLog)
 {
+    const FTileCloneData& TileCloneData = TileMapCloneData.mTiles[TargetTileIndex];
 
-    FEventLog EventLog;
-
-    const FTileCloneData& TileCloneData = SnapShot.mTiles[TargetTileIndex];
+    bool IsEvent = false;
 
     for (int32 ActorID : TileCloneData.mActorIDs)
     {
-        const FTileActorCloneData& ActorCloneData = SnapShot.mTileActorDatas[ActorID];
+        checkf(ActorID != 0, TEXT("존재하지 않는 대상의 객체가 있음"));
+        //UE_LOG(LogTemp, Warning, TEXT("타일에게 효과 적용 중 : %d"), TargetTileIndex);
+        //UE_LOG(LogTemp, Warning, TEXT("ActorID : %d"), ActorID);
+
+        IsEvent = true;
+
+        const FTileActorCloneData& ActorCloneData = TileMapCloneData.mTileActorDatas[ActorID];
 
         // 대충 오버레이
         if (ActorCloneData.mActorType == 0)
@@ -142,17 +161,17 @@ FEventLog UCommandLogFunctionLibrary::CreateEventLog(FTileMapCloneData& SnapShot
     }
 
 
-    return EventLog;
+    return IsEvent;
 }
 
-void UCommandLogFunctionLibrary::ChangeSnapShotFromEvent(FTileMapCloneData& SnapShot, const FEventLog& EventLog)
+void UCommandLogFunctionLibrary::ChangeTileMapCloneDataFromEvent(FTileMapCloneData& TileMapCloneData, const FEventLog& EventLog)
 {
     // 유닛 이벤트가 존재할 때만
     if (EventLog.mUnitEventLog.IsValid())
     {
         if (EventLog.mUnitEventLog.mGameplayTag == EffectTags::GameplayEffect_Skill_Effect_Damage)
         {
-            SnapShot.mTileActorDatas.Find(EventLog.mUnitEventLog.mTargetUnitID)->HP -= EventLog.mUnitEventLog.mValue;
+            TileMapCloneData.mTileActorDatas.Find(EventLog.mUnitEventLog.mTargetUnitID)->HP -= EventLog.mUnitEventLog.mValue;
         }
     }
 }

@@ -25,7 +25,7 @@ enum class EOccupancyState : uint8
 UENUM(BlueprintType)
 enum class EEffectEventTiming : uint8
 {
-	SkillDefaultCommit	UMETA(ToolTip = "스킬 적용 시점"),
+	EffectDefaultCommit	UMETA(ToolTip = "스킬 적용 시점"),
 	EndAttacking		UMETA(ToolTip = "공격 종료 패시브 발동 시점"),
 	EndHitting			UMETA(ToolTip = "피격 종료 패시브 발동 시점"),
 	EndMotion			UMETA(ToolTip = "모션 종료 패시브 발동 시점"),
@@ -40,9 +40,11 @@ struct FOverlayEventLog
 
 public:
 	// 장판
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	int32 mTargetUnitID;
 
 	// 장판의 점유 변화 : None(변화 없음), 입장(생성), 퇴장(제거), 변경
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	EOccupancyState mOccupancyState;
 
 	// 생성 대상의 종류
@@ -63,16 +65,20 @@ struct FUnitEventLog
 
 public:
 	// 유닛
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	int32 mTargetUnitID;
 
 	// 유닛의 점유 변화 : None(변화 없음),입장(생성), 퇴장(제거), 변경
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	EOccupancyState mOccupancyState;
 
 	// 생성 대상의 종류
 
 	// 유닛의 상태 변화
 	// 이벤트 : 수치
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	FGameplayTag mGameplayTag;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	float mValue;
 
 	// 데이터가 채워져 있는지 확인하는 함수
@@ -90,9 +96,11 @@ struct FObstacleEventLog
 
 public:
 	// 장애물
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	int32 mTargetUnitID;
 
 	// 장애물의 점유 변화 : None(변화 없음),입장(생성), 퇴장(제거), 변경
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	EOccupancyState mOccupancyState;
 
 	// 생성 대상의 종류
@@ -111,8 +119,11 @@ struct FEventLog
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	FOverlayEventLog	mOverlayEventLog;	// 장판 상태의 변화
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	FUnitEventLog		mUnitEventLog;		// 유닛 상태의 변화
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	FObstacleEventLog	mObstacleEventLog;	// 장애물 상태의 변화
 };
 
@@ -123,7 +134,9 @@ struct FTileLog
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	EEffectEventTiming mEventTimig;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	TMap<int32, FEventLog> mEventLog;
 };
 
@@ -134,7 +147,7 @@ struct FCommandLog
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(BlueprintReadOnly, Category = "Log")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
 	TArray<FTileLog> mTileLog;
 };
 
@@ -148,11 +161,23 @@ struct FTileActorCloneData
 
 public:
 
+	// @details
+	// 0 장판
+	// 1 유닛
+	// 2 장애물
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 mActorType;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 mID;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float mDiceCount;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float mDiceDots;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float HP;
 
 	// ...
@@ -167,7 +192,7 @@ struct FTileCloneData
 	GENERATED_BODY()
 
 public:
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<int32> mActorIDs; // 타일에 존재하는 대상의 아이디
 };
 
@@ -179,7 +204,10 @@ struct FTileMapCloneData
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FTileCloneData>						mTiles;					// 타일
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TMap<int32, FTileActorCloneData>	mTileActorDatas;		// 타일맵에 존재하는 액터들
 };
 
@@ -203,12 +231,16 @@ struct FCommandLogFunctionContext
 	GENERATED_BODY()
 
 public:
-	int32 mSourceActorID;					// 소스 액터
-	TArray<FTileIndex> mTargetTiles;			// 타겟 타일
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
+	int32					mSourceActorID;		// 소스 액터
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
+	TArray<FTileIndex>		mTargetTiles;		// 타겟 타일
 
-	ECommandLogRequestType mRequestType;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
+	ECommandLogRequestType	mRequestType;		// 시뮬레이터 요청 타입
 
-	class UStaticSkillData* mSkillData;				// 스킬 효과
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Log")
+	class UStaticSkillData* mSkillData;			// 스킬 효과
 	//TArray<class UPassive> mPassiveData;				// 패시브 효과
 	//TArray<class TOverlayTileActor> mOverlayTileActor;// 장판 효과
 };
