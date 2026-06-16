@@ -31,7 +31,7 @@ namespace
 		}
 	}
 
-	UTextBlock* BuildButtonText(UWidgetTree* WidgetTree, const TCHAR* Name, const FText& Text)
+	UTextBlock* BuildSkillButtonText(UWidgetTree* WidgetTree, const TCHAR* Name, const FText& Text)
 	{
 		if (WidgetTree == nullptr)
 		{
@@ -92,7 +92,7 @@ void USkillPanelWidget::EnsureSkillDetailWidgets()
 		mSkillDetailPreviousButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("SkillDetailPreviousButton"));
 		if (mSkillDetailPreviousButton != nullptr)
 		{
-			mSkillDetailPreviousButton->AddChild(BuildButtonText(WidgetTree, TEXT("SkillDetailPreviousButtonText"), NSLOCTEXT("SkillPanelWidget", "SkillDetailPreviousText", "<")));
+			mSkillDetailPreviousButton->AddChild(BuildSkillButtonText(WidgetTree, TEXT("SkillDetailPreviousButtonText"), NSLOCTEXT("SkillPanelWidget", "SkillDetailPreviousText", "<")));
 			mSkillDetailPreviousButton->SetBackgroundColor(RDPanelNavigationStyle::GetNavigationButtonColor());
 			mSkillDetailPreviousButton->OnClicked.AddUniqueDynamic(this, &USkillPanelWidget::HandleSkillDetailPreviousButtonClicked);
 			mRootCanvas->AddChildToCanvas(mSkillDetailPreviousButton);
@@ -104,7 +104,7 @@ void USkillPanelWidget::EnsureSkillDetailWidgets()
 		mSkillDetailNextButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("SkillDetailNextButton"));
 		if (mSkillDetailNextButton != nullptr)
 		{
-			mSkillDetailNextButton->AddChild(BuildButtonText(WidgetTree, TEXT("SkillDetailNextButtonText"), NSLOCTEXT("SkillPanelWidget", "SkillDetailNextText", ">")));
+			mSkillDetailNextButton->AddChild(BuildSkillButtonText(WidgetTree, TEXT("SkillDetailNextButtonText"), NSLOCTEXT("SkillPanelWidget", "SkillDetailNextText", ">")));
 			mSkillDetailNextButton->SetBackgroundColor(RDPanelNavigationStyle::GetNavigationButtonColor());
 			mSkillDetailNextButton->OnClicked.AddUniqueDynamic(this, &USkillPanelWidget::HandleSkillDetailNextButtonClicked);
 			mRootCanvas->AddChildToCanvas(mSkillDetailNextButton);
@@ -116,7 +116,7 @@ void USkillPanelWidget::EnsureSkillDetailWidgets()
 		mSkillDetailBackButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("SkillDetailBackButton"));
 		if (mSkillDetailBackButton != nullptr)
 		{
-			mSkillDetailBackButton->AddChild(BuildButtonText(WidgetTree, TEXT("SkillDetailBackButtonText"), NSLOCTEXT("SkillPanelWidget", "SkillDetailBackText", "BACK")));
+			mSkillDetailBackButton->AddChild(BuildSkillButtonText(WidgetTree, TEXT("SkillDetailBackButtonText"), NSLOCTEXT("SkillPanelWidget", "SkillDetailBackText", "BACK")));
 			mSkillDetailBackButton->SetBackgroundColor(RDPanelNavigationStyle::GetBackButtonColor());
 			mSkillDetailBackButton->OnClicked.AddUniqueDynamic(this, &USkillPanelWidget::HandleSkillDetailBackButtonClicked);
 			mRootCanvas->AddChildToCanvas(mSkillDetailBackButton);

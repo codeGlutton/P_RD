@@ -30,7 +30,7 @@ void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const
 
 	if (mCombatViewModel == nullptr)
 	{
-		// 뷰모델 미연결(시안 단독)에서는 상태바를 비워 둔다(임의 값 표시 안 함).
+		// 뷰모델 미연결(시안 단독)에서는 상태바를 비워 둔다.
 		mCombatStatusBarText->SetText(FText::GetEmpty());
 		return;
 	}
@@ -39,6 +39,7 @@ void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const
 	float PlayerHP = 0.f;
 	float PlayerMaxHP = 0.f;
 	int32 PlayerMove = 0;
+	int32 PlayerMaxMove = 0;
 	int32 EnemyCount = 0;
 	for (const FUnitView& Unit : mCombatViewModel->GetUnitViews())
 	{
@@ -47,6 +48,7 @@ void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const
 			PlayerHP = Unit.mHP;
 			PlayerMaxHP = Unit.mMaxHP;
 			PlayerMove = FMath::RoundToInt(Unit.mMovementPoint);
+			PlayerMaxMove = FMath::RoundToInt(Unit.mMaxMovementPoint);
 		}
 		else
 		{
@@ -58,10 +60,11 @@ void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const
 	const FTurnView& Turn = mCombatViewModel->GetTurnView();
 
 	const FText StatusText = FText::Format(
-		NSLOCTEXT("CombatTileMapHUDWidget", "CombatStatusBarFormat", "HP {0}/{1}   MOVE {2}   GOLD {3}   Lv {4}   ROUND {5}   ENEMY x{6}"),
+		NSLOCTEXT("CombatTileMapHUDWidget", "CombatStatusBarFormat", "HP {0}/{1}   MOVE {2}/{3}   GOLD {4}   Lv {5}   ROUND {6}   ENEMY x{7}"),
 		FText::AsNumber(FMath::RoundToInt(PlayerHP)),
 		FText::AsNumber(FMath::RoundToInt(PlayerMaxHP)),
 		FText::AsNumber(PlayerMove),
+		FText::AsNumber(PlayerMaxMove),
 		FText::AsNumber(Meta.mGold),
 		FText::AsNumber(Meta.mLevel),
 		FText::AsNumber(Turn.mRound),

@@ -1,6 +1,7 @@
 #include "Combat/CombatViewAdapter.h"
 
 #include "Actor/TileMap/TileMap.h"
+#include "GameFramework/PlayerController.h"
 #include "Pawn/Unit.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
@@ -9,6 +10,10 @@
 
 namespace
 {
+	// 스킬 레일 index (UI와 합의): BASIC=0, STEP=5.
+	constexpr int32 SkillIndexBasic = 0;
+	constexpr int32 SkillIndexStep = 5;
+
 	// 플레이스홀더 시작값(맞추면 됨). 실제 값은 UUnitData 연결 시 교체.
 	constexpr float PlayerStartHP = 100.0f;
 	constexpr float EnemyStartHP = 30.0f;
@@ -67,8 +72,226 @@ void UCombatViewAdapter::Build(USRPGCombatSubsystem* InCombat, const URunPersist
 
 void UCombatViewAdapter::BindViewModel(UCombatViewModel* InViewModel)
 {
+	if (mViewModel != nullptr)
+	{
+		mViewModel->OnCombatCommand.RemoveDynamic(this, &UCombatViewAdapter::HandleCombatCommand);
+		mViewModel->OnCombatWorldTouch.RemoveDynamic(this, &UCombatViewAdapter::HandleWorldTouch);
+	}
+
 	mViewModel = InViewModel;
+
+	if (mViewModel != nullptr)
+	{
+		mViewModel->OnCombatCommand.AddUniqueDynamic(this, &UCombatViewAdapter::HandleCombatCommand);
+		mViewModel->OnCombatWorldTouch.AddUniqueDynamic(this, &UCombatViewAdapter::HandleWorldTouch);
+	}
+
 	PushAll();
+}
+
+void UCombatViewAdapter::HandleCombatCommand(ECombatInputType Type, int32 IntPayload)
+{
+	switch (Type)
+	{
+	case ECombatInputType::SelectSkill:
+		mSelectedSkillIndex = IntPayload;
+		mPendingAttackDamage = -1;
+		mMovePending = false;
+		break;
+
+	case ECombatInputType::ToggleDice:
+	{
+		const int32 DiceValue = GetRolledDiceValue(IntPayload);
+		if (DiceValue <= 0)
+		{
+			break;
+		}
+		if (mSelectedSkillIndex == SkillIndexStep)
+		{
+			// STEP: 주사위 배치 → 본인 타일을 회색(Aim)으로. 탭마다 노랑→빨강(확정).
+			mPendingStepValue = DiceValue;
+			mStepStage = 0;
+			mStepTile = GetPlayerTile();
+			SetSingleTileHighlight(mStepTile, ETileHighlightFlag::Aim);
+		}
+		else if (mSelectedSkillIndex == SkillIndexBasic)
+		{
+			// BASIC: 주사위 배치 → 적 탭을 기다린다.
+			mPendingAttackDamage = DiceValue;
+		}
+		break;
+	}
+
+	case ECombatInputType::Move:
+		// MOVE 모드: 타일 탭으로 이동.
+		mMovePending = true;
+		mSelectedSkillIndex = INDEX_NONE;
+		mPendingAttackDamage = -1;
+		break;
+
+	case ECombatInputType::Cancel:
+		ClearPendingAction();
+		break;
+
+	default:
+		break;
+	}
+}
+
+void UCombatViewAdapter::HandleWorldTouch(FVector2D ScreenPosition, bool bLongPress)
+{
+	FTileIndex Tile;
+	if (ResolveTileFromScreen(ScreenPosition, Tile) == false)
+	{
+		// 타일맵 밖 탭 = 진행 중 스킬/이동 취소.
+		ClearPendingAction();
+		return;
+	}
+
+	// STEP 단계 확정: 본인 타일을 탭할 때마다 회색→노랑→빨강(확정).
+	if (mPendingStepValue >= 0)
+	{
+		if (Tile.mX == mStepTile.mX && Tile.mY == mStepTile.mY)
+		{
+			++mStepStage;
+			if (mStepStage == 1)
+			{
+				SetSingleTileHighlight(mStepTile, ETileHighlightFlag::Select);   // 노랑
+			}
+			else if (mStepStage >= 2)
+			{
+				SetSingleTileHighlight(mStepTile, ETileHighlightFlag::Effect);   // 빨강 = 확정
+				ApplyStep(mPendingStepValue);                                    // 이동력 += 주사위값
+				ClearPendingAction();
+			}
+		}
+		else
+		{
+			// 다른 곳 탭 = 취소.
+			ClearPendingAction();
+		}
+		return;
+	}
+
+	// BASIC 평타: 적이 있는 타일을 탭했으면 데미지.
+	if (mPendingAttackDamage >= 0)
+	{
+		const int32 TargetId = FindUnitIdAtTile(Tile);
+		FCombatUnitState* Target = FindStateById(TargetId);
+		if (Target != nullptr && Target->mIsPlayer == false)
+		{
+			ApplyBasicAttack(TargetId, mPendingAttackDamage);
+		}
+		ClearPendingAction();
+		return;
+	}
+
+	// MOVE: 빈 타일로 이동(이동력 소모). 남으면 모드 유지.
+	if (mMovePending)
+	{
+		TryMovePlayer(Tile);
+		if (GetPlayerMovePoint() <= 0)
+		{
+			ClearPendingAction();
+		}
+		return;
+	}
+}
+
+void UCombatViewAdapter::SetSingleTileHighlight(const FTileIndex& Tile, ETileHighlightFlag Flag) const
+{
+	ATileMap* TileMap = mCombat != nullptr ? mCombat->GetTileMap() : nullptr;
+	if (TileMap == nullptr)
+	{
+		return;
+	}
+	// 세 상태 모두 끄고 원하는 한 가지만 켠다(단계 전환).
+	TileMap->ClearTileHighlight(ETileHighlightFlag::Aim);
+	TileMap->ClearTileHighlight(ETileHighlightFlag::Select);
+	TileMap->ClearTileHighlight(ETileHighlightFlag::Effect);
+	TArray<FTileIndex> Tiles;
+	Tiles.Add(Tile);
+	TileMap->SetTileHighlight(Tiles, Flag);
+}
+
+void UCombatViewAdapter::ClearAllHighlight() const
+{
+	ATileMap* TileMap = mCombat != nullptr ? mCombat->GetTileMap() : nullptr;
+	if (TileMap == nullptr)
+	{
+		return;
+	}
+	TileMap->ClearTileHighlight(ETileHighlightFlag::Aim);
+	TileMap->ClearTileHighlight(ETileHighlightFlag::Select);
+	TileMap->ClearTileHighlight(ETileHighlightFlag::Effect);
+}
+
+int32 UCombatViewAdapter::GetRolledDiceValue(int32 DiceIndex) const
+{
+	if (mViewModel == nullptr)
+	{
+		return 0;
+	}
+	const TArray<FDiceSlotView>& Dice = mViewModel->GetDiceViews();
+	if (Dice.IsValidIndex(DiceIndex) == false)
+	{
+		return 0;
+	}
+	return Dice[DiceIndex].mIsRolled ? Dice[DiceIndex].mResultValue : 0;
+}
+
+void UCombatViewAdapter::ClearPendingAction()
+{
+	mSelectedSkillIndex = INDEX_NONE;
+	mPendingAttackDamage = -1;
+	mMovePending = false;
+	mPendingStepValue = -1;
+	mStepStage = 0;
+	ClearAllHighlight();
+}
+
+bool UCombatViewAdapter::ResolveTileFromScreen(const FVector2D& ScreenPosition, FTileIndex& OutTile) const
+{
+	ATileMap* TileMap = mCombat != nullptr ? mCombat->GetTileMap() : nullptr;
+	UWorld* World = mCombat != nullptr ? mCombat->GetWorld() : nullptr;
+	if (TileMap == nullptr || World == nullptr)
+	{
+		return false;
+	}
+	APlayerController* PlayerController = World->GetFirstPlayerController();
+	if (PlayerController == nullptr)
+	{
+		return false;
+	}
+
+	// 화면 좌표 → 월드 광선.
+	FVector WorldOrigin;
+	FVector WorldDirection;
+	if (PlayerController->DeprojectScreenPositionToWorld(ScreenPosition.X, ScreenPosition.Y, WorldOrigin, WorldDirection) == false)
+	{
+		return false;
+	}
+
+	// 타일맵 평면(z = 타일맵 액터 높이)과 광선 교차.
+	const float PlaneZ = TileMap->GetActorLocation().Z;
+	if (FMath::IsNearlyZero(WorldDirection.Z))
+	{
+		return false;
+	}
+	const float RayT = (PlaneZ - WorldOrigin.Z) / WorldDirection.Z;
+	if (RayT < 0.0f)
+	{
+		return false;
+	}
+	const FVector HitPoint = WorldOrigin + WorldDirection * RayT;
+
+	const FTileIndex Tile = TileMap->WorldToTileIndex(HitPoint);
+	if (TileMap->IsValidIndex(Tile) == false)
+	{
+		return false;   // 타일맵 밖.
+	}
+	OutTile = Tile;
+	return true;
 }
 
 FVector UCombatViewAdapter::TileToWorld(const FTileIndex& Tile) const
@@ -95,6 +318,7 @@ void UCombatViewAdapter::PushAll()
 		View.mHP = State.mHP;
 		View.mMaxHP = State.mMaxHP;
 		View.mMovementPoint = State.mMovePoint;
+		View.mMaxMovementPoint = State.mMaxMovePoint;
 		View.mTile = State.mTile;
 		// 실제 액터가 있으면 그 위치, 가상이면 타일→월드 변환.
 		View.mWorldLocation = State.mActor.IsValid()
@@ -156,6 +380,7 @@ void UCombatViewAdapter::ApplyStep(int32 Amount)
 		return;
 	}
 	Player->mMovePoint += Amount;
+	Player->mMaxMovePoint = Player->mMovePoint;   // STEP 직후 현재=최대(6/6).
 	PushAll();
 }
 

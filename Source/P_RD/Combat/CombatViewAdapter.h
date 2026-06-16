@@ -8,6 +8,7 @@
 
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGFrameworkType.h"   // FTileIndex
+#include "Actor/TileMap/TileHighlight.h"       // ETileHighlightFlag
 
 #include "CombatViewAdapter.generated.h"
 
@@ -16,6 +17,7 @@ class USRPGCombatSubsystem;
 class URunPersistData;
 class AUnit;
 class ATileMap;
+enum class ECombatInputType : uint8;
 
 /**
  * @brief 전투 유닛 한 기의 비GAS 런타임 상태(HP/이동력/타일). 플레이어는 실제 액터, 적은 가상.
@@ -33,6 +35,7 @@ struct FCombatUnitState
 	float mHP = 0.0f;
 	float mMaxHP = 0.0f;
 	int32 mMovePoint = 0;
+	int32 mMaxMovePoint = 0;        // STEP으로 확보한 이동 총량(현재/최대 표시).
 	TWeakObjectPtr<AUnit> mActor;   // 실제 액터(플레이어). 가상 적은 null.
 };
 
@@ -82,6 +85,29 @@ public:
 	int32 GetPlayerMovePoint() const;
 
 private:
+	/** @brief UI 의도(스킬 선택/주사위 배치/이동/취소)를 받아 액션으로 처리한다. */
+	UFUNCTION()
+	void HandleCombatCommand(ECombatInputType Type, int32 IntPayload);
+
+	/** @brief 화면 터치 좌표를 라인 트레이스로 타일 판정해 타겟/이동/취소를 처리한다. */
+	UFUNCTION()
+	void HandleWorldTouch(FVector2D ScreenPosition, bool bLongPress);
+
+	/** @brief 뷰모델의 주사위 뷰에서 해당 index 굴림값을 읽는다(안 굴렸으면 0). */
+	int32 GetRolledDiceValue(int32 DiceIndex) const;
+
+	/** @brief 진행 중이던 스킬/주사위 선택을 초기화한다(바깥 탭 취소 등). */
+	void ClearPendingAction();
+
+	/** @brief 화면 좌표를 타일맵 평면에 투영해 타일 인덱스를 구한다. 타일맵 밖이면 false. */
+	bool ResolveTileFromScreen(const FVector2D& ScreenPosition, FTileIndex& OutTile) const;
+
+	/** @brief 한 타일만 지정 하이라이트(Aim=회색/Select=노랑/Effect=빨강)로 켠다(나머지는 끔). */
+	void SetSingleTileHighlight(const FTileIndex& Tile, ETileHighlightFlag Flag) const;
+
+	/** @brief 모든 하이라이트를 끈다. */
+	void ClearAllHighlight() const;
+
 	const FCombatUnitState* FindPlayerState() const;
 	FCombatUnitState* FindStateById(int32 UnitId);
 	FVector TileToWorld(const FTileIndex& Tile) const;
@@ -96,6 +122,24 @@ private:
 	int32 mPlayerLevel = 1;
 	int32 mPlayerGold = 100;
 	int32 mNextUnitId = 0;
+
+	/** @brief 현재 선택된 스킬 레일 index(BASIC=0, STEP=5). 없으면 INDEX_NONE. */
+	int32 mSelectedSkillIndex = INDEX_NONE;
+
+	/** @brief BASIC 평타가 타겟(적 탭)을 기다리는 중이면, 배치된 주사위 값. -1이면 대기 아님. */
+	int32 mPendingAttackDamage = -1;
+
+	/** @brief MOVE 모드(타일 탭 대기) 여부. */
+	bool mMovePending = false;
+
+	/** @brief STEP 단계 확정 대기 중인 주사위 값. -1이면 대기 아님. */
+	int32 mPendingStepValue = -1;
+
+	/** @brief STEP 확정 단계(0=회색, 1=노랑, 2=빨강+확정). */
+	int32 mStepStage = 0;
+
+	/** @brief STEP 확정 중인 본인 타일. */
+	FTileIndex mStepTile;
 
 	TArray<FCombatUnitState> mUnitStates;
 };

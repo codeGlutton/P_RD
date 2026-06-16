@@ -37,9 +37,8 @@ namespace RDCombatHUD
 
 	inline FText GetCombatSkillRailLabel(int32 SkillIndex)
 	{
-		return SkillIndex == CombatSkillStepIndex
-			? NSLOCTEXT("CombatTileMapHUDWidget", "CombatSkillStepWithMove", "STEP\nMOVE 3")
-			: GetCombatSkillLabel(SkillIndex);
+		// STEP 레일은 "STEP"만 표시(이동 가능 수치는 상단 MOVE x/x로 보여준다).
+		return GetCombatSkillLabel(SkillIndex);
 	}
 
 	inline FLinearColor GetTransparentInputButtonColor()

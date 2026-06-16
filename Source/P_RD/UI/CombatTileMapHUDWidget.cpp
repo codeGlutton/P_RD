@@ -108,10 +108,11 @@ void UCombatTileMapHUDWidget::ApplyOpenUI()
 	RefreshDiceAssignmentText();
 
 	/*
-	 * HUD 루트는 입력을 통과시키고, 버튼만 입력을 받게 둔다.
-	 * 타일맵 조작 API가 붙은 뒤에도 장식/연출 영역이 맵 터치를 막지 않게 하기 위한 기본 상태다.
+	 * HUD 루트가 빈 영역(타일맵) 탭도 받아야 NativeOnTouchStarted에서 RequestWorldTouch로
+	 * 좌표를 게임플레이에 넘길 수 있다. 스킬레일/주사위 같은 자식 버튼은 여전히 우선 처리되고,
+	 * 버튼 밖(월드) 탭만 루트가 받아 좌표를 전달한다. (SelfHitTestInvisible이면 월드 탭이 통과돼버림)
 	 */
-	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	SetVisibility(ESlateVisibility::Visible);
 	PrepareIntroDiceRoll();
 }
 

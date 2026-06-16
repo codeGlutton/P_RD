@@ -233,6 +233,13 @@ void UCombatTileMapHUDWidget::HandleOwnedDiceCardClicked(int32 DiceIndex)
 	}
 
 	mSelectedDiceIndex = DiceIndex;
+
+	// 스킬에 주사위 배치 의도를 게임플레이로 보낸다(STEP은 즉시 실행, BASIC은 적 탭 대기).
+	if (mCombatViewModel != nullptr)
+	{
+		mCombatViewModel->RequestToggleDice(DiceIndex);
+	}
+
 	RefreshOwnedDiceCards();
 	RefreshDiceAssignmentText();
 }
