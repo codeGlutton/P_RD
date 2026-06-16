@@ -274,10 +274,10 @@ FTransform ATileMap::TileToWorldTransform(const FTileTransform& TileTransform) c
 {
 	// 월드 위치 획득
 	const FVector WorldLocation = TileToWorldLocation(TileTransform.mIndex);
-	// 타일맵의 YAW 회전을 타일에 적용 (그래야 같은 방향을 바라보니까)
-	const FQuat WorldRotation = GetActorQuat() * FRotator(0.0f, DirectionToYaw(TileTransform.mDirection), 0.0f).Quaternion();
-	// 타일맵의 스케일을 타일에 적용
-	return FTransform(WorldRotation, WorldLocation, GetActorScale3D());
+	// 타일맵 메시 컴포넌트의 YAW 회전을 타일에 적용 (그래야 같은 방향을 바라보니까)
+	const FQuat WorldRotation = mTileMeshComponent->GetComponentQuat() * FRotator(0.0f, DirectionToYaw(TileTransform.mDirection), 0.0f).Quaternion();
+	// 타일맵 메시 컴포넌트의 스케일을 타일에 적용
+	return FTransform(WorldRotation, WorldLocation, mTileMeshComponent->GetComponentScale());
 }
 
 FVector ATileMap::TileToWorldLocation(const FTileIndex& TileIndex) const
@@ -286,8 +286,8 @@ FVector ATileMap::TileToWorldLocation(const FTileIndex& TileIndex) const
 	// 메시 피벗이 중심인 엔진 Plane 기준이라 (X*TileSize, Y*TileSize)가 곧 타일 중심
 	// (피벗이 모서리인 커스텀 메시로 교체 시 이 가정이 깨지므로 양쪽 모두 보정 필요)
 	const FVector LocalLocation(TileIndex.mX * mTileSize, TileIndex.mY * mTileSize, 0.0f);
-	// 액터 트랜스폼(위치/회전/스케일)을 반영해 월드 위치로 변환
-	return GetActorTransform().TransformPosition(LocalLocation);
+	// 타일이 배치된 메시 컴포넌트 트랜스폼(위치/회전/스케일)을 반영해 월드 위치로 변환
+	return mTileMeshComponent->GetComponentTransform().TransformPosition(LocalLocation);
 }
 
 FTileIndex ATileMap::WorldToTileIndex(const FVector& WorldLocation) const
@@ -298,8 +298,8 @@ FTileIndex ATileMap::WorldToTileIndex(const FVector& WorldLocation) const
 		return FTileIndex::Invalid;
 	}
 
-	// 월드 좌표를 로컬 좌표로 변환
-	const FVector LocalLocation = GetActorTransform().InverseTransformPosition(WorldLocation);
+	// 월드 좌표를 타일이 배치된 메시 컴포넌트 로컬 좌표로 변환
+	const FVector LocalLocation = mTileMeshComponent->GetComponentTransform().InverseTransformPosition(WorldLocation);
 
 	// 로컬 좌표를 타일 크기로 나눈 뒤 반올림해 가장 가까운 타일 중심을 인덱스로 지정
 	// 예) 80 -> 80 / 100 = 0 -> 인덱스 0
