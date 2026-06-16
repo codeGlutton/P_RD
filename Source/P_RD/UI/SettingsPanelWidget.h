@@ -15,6 +15,7 @@
 
 #include "RDMinimal.h"
 #include "UI/RDUserWidget.h"
+#include "UI/SettingsPanelTypes.h"
 
 #include "SettingsPanelWidget.generated.h"
 
@@ -23,55 +24,6 @@ class UCheckBox;
 class USlider;
 class UTextBlock;
 class UWidget;
-
-/**
- * @brief 설정 패널이 타이틀용인지 인게임용인지 구분한다.
- *
- * @details
- * 타이틀과 인게임은 같은 WBP를 공유하지만 노출해야 하는 액션이 다르다.
- * Title 모드는 공통 설정만 보여주고, InGame 모드는 저장 후 종료/런 포기처럼 현재 런 상태가 필요한 버튼을 추가로 보여준다.
- */
-UENUM(BlueprintType)
-enum class ESettingsPanelMode : uint8
-{
-	/** @brief 타이틀 메뉴에서 열린 설정 패널. 런 저장/포기 같은 인게임 전용 액션은 숨긴다. */
-	Title,
-
-	/** @brief 런이 진행 중인 방에서 열린 설정 패널. 저장 후 종료와 런 포기 흐름을 노출할 수 있다. */
-	InGame,
-};
-
-/**
- * @brief 값 없이 발생하는 버튼형 설정 이벤트.
- *
- * @details
- * 뒤로가기, 저장 후 나가기, 런 포기 확정처럼 "무슨 요청이 들어왔다"만 알면 되는 입력에 사용한다.
- */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSettingsPanelEvent);
-
-/**
- * @brief 슬라이더처럼 실수 값을 함께 전달하는 설정 이벤트.
- *
- * @details
- * UMG Slider 값은 일반적으로 0.0~1.0 범위로 들어오며, 실제 볼륨 스케일 적용은 이벤트 수신자가 맡는다.
- */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSettingsPanelFloatEvent, float, Value);
-
-/**
- * @brief 체크박스처럼 켜짐/꺼짐 값을 함께 전달하는 설정 이벤트.
- *
- * @details
- * 이 위젯은 체크 상태만 전달하고, 실제 카메라 흔들림/진동 옵션 적용과 저장은 이벤트 수신자가 처리한다.
- */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSettingsPanelBoolEvent, bool, bValue);
-
-/**
- * @brief 선택지 번호를 함께 전달하는 설정 이벤트.
- *
- * @details
- * 현재 품질 버튼은 낮음/중간/높음을 0/1/2로 전달한다. 이 위젯은 번호만 올리고 실제 그래픽 프리셋 매핑은 바깥 정책에 맡긴다.
- */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSettingsPanelIntEvent, int32, Value);
 
 /**
  * @brief 공통 설정 UI의 표시 상태를 관리하고 버튼/슬라이더 입력을 이벤트로 전달한다.
@@ -153,6 +105,23 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "UI|Settings")
 	void SetStatusText(const FText& Text) const;
+
+	/**
+	 * @brief 외부 설정 시스템에서 전달한 현재 설정 값을 패널 입력 위젯에 반영한다.
+	 *
+	 * @details
+	 * 패널은 값을 저장하지 않고 화면 상태만 맞춘다. 값 적용 중 발생하는 위젯 변경 콜백은 외부 이벤트로 다시 내보내지 않는다.
+	 *
+	 * @param ValueModel 패널에 반영할 설정 값 묶음
+	 */
+	UFUNCTION(BlueprintCallable, Category = "UI|Settings")
+	void ApplyValueModel(const FSettingsPanelValueModel& ValueModel);
+
+	/**
+	 * @brief 패널이 마지막으로 받은/입력한 설정 값 묶음을 반환한다.
+	 */
+	UFUNCTION(BlueprintPure, Category = "UI|Settings")
+	FSettingsPanelValueModel GetValueModel() const;
 
 	/**
 	 * @brief 처리 중 중복 입력을 막기 위해 런 액션 버튼만 활성/비활성화한다.
@@ -567,4 +536,13 @@ private:
 	 */
 	UPROPERTY(Category = "Settings", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	ESettingsPanelMode mPanelMode = ESettingsPanelMode::Title;
+
+	/**
+	 * @brief 패널 입력이 마지막으로 반영한 설정 값 모델
+	 */
+	UPROPERTY(Category = "Settings", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	FSettingsPanelValueModel mValueModel;
+
+	/** @brief 외부 값 적용 중 위젯 콜백이 다시 외부 이벤트로 나가지 않게 막는 플래그 */
+	bool mIsApplyingValueModel = false;
 };
