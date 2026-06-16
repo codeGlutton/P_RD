@@ -1,9 +1,6 @@
 #include "UI/UITextureLoader.h"
 
 #include "Engine/Texture2D.h"
-#include "IImageWrapper.h"
-#include "IImageWrapperModule.h"
-#include "Modules/ModuleManager.h"
 
 FString RDUITexture::ResolveContentFilePath(const FString& RelativeContentPath)
 {
@@ -15,44 +12,19 @@ FString RDUITexture::ResolveContentFilePath(const FString& RelativeContentPath)
 	return FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir(), RelativeContentPath);
 }
 
-UTexture2D* RDUITexture::LoadTextureFromContentPng(const FString& RelativeContentPath, const TCHAR* LogOwner)
+UTexture2D* RDUITexture::LoadUITexture(const FString& AssetPath, const TCHAR* LogOwner)
 {
-	const FString ImagePath = ResolveContentFilePath(RelativeContentPath);
-	TArray<uint8> CompressedData;
-	if (FPaths::FileExists(ImagePath) == false || FFileHelper::LoadFileToArray(CompressedData, *ImagePath) == false)
+	if (AssetPath.IsEmpty())
 	{
-		UE_LOG(LogRD, Warning, TEXT("%s: PNG file missing: %s"), LogOwner, *ImagePath);
 		return nullptr;
 	}
 
-	IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(TEXT("ImageWrapper"));
-	const TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::PNG);
-	if (!ImageWrapper.IsValid() || ImageWrapper->SetCompressed(CompressedData.GetData(), CompressedData.Num()) == false)
+	// 무거운 텍스처는 SVN에 임포트해 둔 uasset을 그대로 로드한다(쿡 시 ASTC 압축·밉맵 적용).
+	UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, *AssetPath);
+	if (Texture == nullptr)
 	{
-		UE_LOG(LogRD, Warning, TEXT("%s: failed to decode PNG: %s"), LogOwner, *ImagePath);
-		return nullptr;
+		UE_LOG(LogRD, Warning, TEXT("%s: UI texture asset not found: %s"), LogOwner, *AssetPath);
 	}
 
-	TArray64<uint8> RawData;
-	if (ImageWrapper->GetRaw(ERGBFormat::BGRA, 8, RawData) == false)
-	{
-		UE_LOG(LogRD, Warning, TEXT("%s: failed to extract PNG pixels: %s"), LogOwner, *ImagePath);
-		return nullptr;
-	}
-
-	UTexture2D* LoadedTexture = UTexture2D::CreateTransient(ImageWrapper->GetWidth(), ImageWrapper->GetHeight(), PF_B8G8R8A8);
-	if (LoadedTexture == nullptr || LoadedTexture->GetPlatformData() == nullptr || LoadedTexture->GetPlatformData()->Mips.Num() == 0)
-	{
-		UE_LOG(LogRD, Warning, TEXT("%s: failed to create texture: %s"), LogOwner, *ImagePath);
-		return nullptr;
-	}
-
-	LoadedTexture->SRGB = true;
-	FTexture2DMipMap& Mip = LoadedTexture->GetPlatformData()->Mips[0];
-	void* TextureData = Mip.BulkData.Lock(LOCK_READ_WRITE);
-	FMemory::Memcpy(TextureData, RawData.GetData(), RawData.Num());
-	Mip.BulkData.Unlock();
-	LoadedTexture->UpdateResource();
-
-	return LoadedTexture;
+	return Texture;
 }
