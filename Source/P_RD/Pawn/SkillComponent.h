@@ -12,6 +12,7 @@
 #include "SRPGFramework/SRPGFrameworkType.h"
 //#include "Pawn/SkillComponent/PreviewEffectIconData.h"
 #include "../FunctionLibrary/CombatCalculator/CombatResult.h"
+#include "FunctionLibrary/CommandLog/CommandLog.h"
 #include "SRPGFramework/TileActor.h"
 #include "SkillComponent.generated.h"
 
@@ -103,7 +104,7 @@ public:
 	* @return bool : 실패 시 false 반환
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Skill")
-	bool ActivateSkill(const FSkillCommitResult& SkillResult);
+	bool ActivateSkill(const FCommandLog& SkillResult);
 
 	/**
 	* @brief 스킬 결과 값 계산
@@ -115,5 +116,5 @@ public:
 	* @return bool : 실패 시 false 반환
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Skill")
-	bool CalculateSkillResult(int32 SkillIndex, const TArray<TScriptInterface<ITileActor>>& TileActors, FSkillCommitResult& Out_Result);
+	bool CalculateSkillResult(int32 SkillIndex, FTileMapCloneData& CloneData, const TArray<FTileIndex>& TileIndex, FCommandLog& Out_Result);
 };
