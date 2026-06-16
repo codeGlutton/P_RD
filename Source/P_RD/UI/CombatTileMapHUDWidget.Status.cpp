@@ -1,5 +1,6 @@
 #include "UI/CombatTileMapHUDWidget.h"
 
+#include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "UI/Combat/CombatViewModel.h"
 
@@ -71,4 +72,49 @@ void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const
 		FText::AsNumber(EnemyCount));
 
 	mCombatStatusBarText->SetText(StatusText);
+	RefreshMoveButton();
+}
+
+void UCombatTileMapHUDWidget::RefreshMoveButton() const
+{
+	if (mMoveButtonText == nullptr || mCombatViewModel == nullptr)
+	{
+		return;
+	}
+
+	int32 Move = 0;
+	int32 MaxMove = 0;
+	for (const FUnitView& Unit : mCombatViewModel->GetUnitViews())
+	{
+		if (Unit.mIsPlayer)
+		{
+			Move = FMath::RoundToInt(Unit.mMovementPoint);
+			MaxMove = FMath::RoundToInt(Unit.mMaxMovementPoint);
+			break;
+		}
+	}
+
+	mMoveButtonText->SetText(FText::Format(
+		NSLOCTEXT("CombatTileMapHUDWidget", "MoveCommandCount", "MOVE\n{0}/{1}"),
+		FText::AsNumber(Move),
+		FText::AsNumber(MaxMove)));
+}
+
+void UCombatTileMapHUDWidget::HandleMoveButtonClicked()
+{
+	// 이동 모드 진입 의도. 게임플레이가 이동 가능 타일을 표시하고, 타일 탭으로 이동시킨다.
+	if (mCombatViewModel != nullptr)
+	{
+		mCombatViewModel->RequestMove();
+	}
+}
+
+void UCombatTileMapHUDWidget::HandleCombatActionResolved()
+{
+	// 스킬/주사위 선택 강조를 푼다(액션 확정·취소 후).
+	mSelectedSkillIndex = INDEX_NONE;
+	mSelectedDiceIndex = INDEX_NONE;
+	RefreshSkillRailWidgets();
+	RefreshOwnedDiceCards();
+	RefreshDiceAssignmentText();
 }

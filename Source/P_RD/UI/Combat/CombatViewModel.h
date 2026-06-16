@@ -38,6 +38,7 @@ enum class ECombatInputType : uint8
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatViewChanged, ECombatViewDomain, Domain);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatQueueNodeResolved, FCombatQueueNode, Node);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatActionResolved);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatCommand, ECombatInputType, Type, int32, IntPayload);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatWorldTouch, FVector2D, ScreenPosition, bool, bLongPress);
 
@@ -58,6 +59,10 @@ public:
 	/** @brief 큐 노드 하나가 처리(재생)됐음을 알림. 위젯은 머리 위 숫자 등을 띄우고 한 칸 비운다. */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
 	FOnCombatQueueNodeResolved OnQueueNodeResolved;
+
+	/** @brief 스킬/액션이 확정·취소되어 빌드가 끝났음을 알림. 위젯은 스킬/주사위 선택 강조를 푼다. */
+	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
+	FOnCombatActionResolved OnActionResolved;
 
 	/* ───────── 게임플레이가 구독하는 입력(의도) ───────── */
 public:
@@ -98,6 +103,9 @@ public:
 
 	/** @brief 큐 맨 앞 노드 하나를 처리 완료로 비우고 OnQueueNodeResolved를 쏜다(애니 한 단위 끝날 때 호출). */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void ResolveFrontQueueNode();
+
+	/** @brief 스킬/액션 빌드가 끝났음을 UI에 알린다(OnActionResolved). 게임플레이가 확정/취소 시 호출. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyActionResolved();
 
 	/* ───────── 위젯이 읽는다 ───────── */
 public:

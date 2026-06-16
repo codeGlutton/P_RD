@@ -186,6 +186,17 @@ private:
 	/** @brief 뷰모델의 플레이어 메타(HP/Gold/Lv)와 턴 정보를 상단 상태바 텍스트로 반영한다. */
 	void RefreshCombatStatusBar() const;
 
+	/** @brief 스킬/액션이 확정·취소되면 스킬·주사위 선택 강조를 푼다. */
+	UFUNCTION()
+	void HandleCombatActionResolved();
+
+	/** @brief 우측 MOVE 버튼 클릭 → 이동 모드 진입 의도(RequestMove). */
+	UFUNCTION()
+	void HandleMoveButtonClicked();
+
+	/** @brief 우측 MOVE 버튼의 이동 가능 수치(현재/최대)를 갱신한다. */
+	void RefreshMoveButton() const;
+
 	/** @brief 뷰모델의 유닛 수에 맞춰 머리 위 HP바 위젯을 다시 만든다. */
 	void RebuildUnitHpBars();
 
@@ -305,6 +316,14 @@ private:
 	/** @brief 상단 상태바(플레이어 HP/Gold/Lv·라운드) 런타임 텍스트 */
 	UPROPERTY(Transient)
 	TObjectPtr<UTextBlock> mCombatStatusBarText;
+
+	/** @brief 우측 MOVE 명령 버튼(이동 모드 진입) */
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mMoveButton;
+
+	/** @brief MOVE 버튼의 이동 가능 수치(현재/최대) 라벨 */
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mMoveButtonText;
 
 	/** @brief 유닛 머리 위에 월드→스크린 투영으로 띄우는 HP바(유닛 뷰 순서와 1:1) */
 	UPROPERTY(Transient)

@@ -25,6 +25,7 @@ void UCombatTileMapHUDWidget::BindCombatViewModel(UCombatViewModel* InViewModel)
 	{
 		mCombatViewModel->OnQueueNodeResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
 		mCombatViewModel->OnViewChanged.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatViewChanged);
+		mCombatViewModel->OnActionResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatActionResolved);
 	}
 
 	mCombatViewModel = InViewModel;
@@ -35,6 +36,8 @@ void UCombatTileMapHUDWidget::BindCombatViewModel(UCombatViewModel* InViewModel)
 		mCombatViewModel->OnQueueNodeResolved.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
 		// 메타/유닛/턴 갱신 시 상단 상태바를 다시 그린다.
 		mCombatViewModel->OnViewChanged.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatViewChanged);
+		// 액션 확정/취소 시 스킬·주사위 선택 강조를 푼다.
+		mCombatViewModel->OnActionResolved.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatActionResolved);
 		// 이미 어댑터가 push해 둔 현재 값을 즉시 반영(구독 전 발생분 보강).
 		RefreshCombatStatusBar();
 	}

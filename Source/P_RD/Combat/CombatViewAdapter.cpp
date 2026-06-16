@@ -248,6 +248,12 @@ void UCombatViewAdapter::ClearPendingAction()
 	mPendingStepValue = -1;
 	mStepStage = 0;
 	ClearAllHighlight();
+
+	// UI에 스킬/주사위 선택 강조를 풀라고 알린다(확정/취소 공통).
+	if (mViewModel != nullptr)
+	{
+		mViewModel->NotifyActionResolved();
+	}
 }
 
 bool UCombatViewAdapter::ResolveTileFromScreen(const FVector2D& ScreenPosition, FTileIndex& OutTile) const

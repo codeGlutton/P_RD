@@ -121,6 +121,25 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		}
 	}
 
+	if (mMoveButton == nullptr)
+	{
+		mMoveButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("MoveCommandButton"));
+		if (mMoveButton != nullptr)
+		{
+			mMoveButtonText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("MoveCommandButtonText"));
+			if (mMoveButtonText != nullptr)
+			{
+				mMoveButtonText->SetJustification(ETextJustify::Center);
+				mMoveButtonText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "MoveCommandIdle", "MOVE\n0/0"));
+				mMoveButtonText->SetColorAndOpacity(FSlateColor(FLinearColor(0.96f, 1.0f, 0.92f, 1.0f)));
+				mMoveButton->AddChild(mMoveButtonText);
+			}
+			mMoveButton->SetBackgroundColor(FLinearColor(0.10f, 0.30f, 0.32f, 0.95f));
+			mMoveButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleMoveButtonClicked);
+			TargetRootCanvas->AddChildToCanvas(mMoveButton);
+		}
+	}
+
 	if (EndTurnButton == nullptr)
 	{
 		EndTurnButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("EndTurnButton"));

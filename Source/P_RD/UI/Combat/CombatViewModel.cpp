@@ -135,3 +135,8 @@ void UCombatViewModel::ResolveFrontQueueNode()
 	OnQueueNodeResolved.Broadcast(Resolved);
 	OnViewChanged.Broadcast(ECombatViewDomain::Queue);
 }
+
+void UCombatViewModel::NotifyActionResolved()
+{
+	OnActionResolved.Broadcast();
+}
