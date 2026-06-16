@@ -1,3 +1,5 @@
+// 이 파일: 시네마틱 위젯의 Slate UI 구성(영상 이미지 + 검은 배경 + "로딩중" 대기 레이어)과
+//          수명 주기(재생 시작 PlayCinematic / 종료 FinishCinematic / 닫기 애니메이션 진입)를 담당.
 #include "UI/CinematicWidget.h"
 
 #include "MediaTexture.h"

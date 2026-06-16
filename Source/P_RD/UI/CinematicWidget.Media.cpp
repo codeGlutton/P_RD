@@ -1,3 +1,6 @@
+// 이 파일: 인트로 MP4 영상 재생 담당. MediaPlayer/MediaTexture/FileMediaSource를 만들어
+//          영상을 Slate 이미지에 그리고, 영상 열림→재생 / 실패·종료→FinishCinematic 으로 처리한다.
+//          파일은 SVN로 동기화되는 mp4를 디스크에서 직접 연다(없으면 경고만 + 폴백 타이머로 진행).
 #include "UI/CinematicWidget.h"
 
 #include "FileMediaSource.h"
