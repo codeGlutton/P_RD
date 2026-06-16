@@ -116,10 +116,16 @@ bool USkillComponent::ActivateSkill(const FCommandLog& SkillResult)
 	return true;
 }
 
-bool USkillComponent::CalculateSkillResult(int32 SkillIndex, const FTileMapCloneData& In_CloneData, const FCommandLogFunctionContext& In_Context, FCommandLog& Out_Result)
+bool USkillComponent::CalculateSkillResult(int32 SkillIndex, TArray<FTileIndex>	mTargetTiles, const FTileMapCloneData& In_CloneData,  FCommandLog& Out_Result)
 {
 	checkf(mSkillData.IsValidIndex(SkillIndex), TEXT("스킬 인덱스가 유효하지 않습니다."));
 
-	return UCommandLogFunctionLibrary::CalculateSkillCommandLog(In_CloneData, In_Context, Out_Result);
+	FCommandLogFunctionContext CLFContext;
+	CLFContext.mRequestType = ECommandLogRequestType::Skill;
+	CLFContext.mSourceActorID = GetOwner()->GetUniqueID(); // 추후 액터 아이디로 변경
+	CLFContext.mTargetTiles = mTargetTiles;
+	CLFContext.mSkillData = mSkillData[SkillIndex].Get();
+
+	return UCommandLogFunctionLibrary::CalculateSkillCommandLog(In_CloneData, CLFContext, Out_Result);
 }
 

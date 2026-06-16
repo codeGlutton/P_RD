@@ -190,7 +190,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float HP;
 
-	// ...
+	// ... 기타 정보들
+
+	// 패시브 동적 데이터
 	TMap<FString, float> mPassiveDynamic;
 
 	// 패시브 로직

@@ -117,5 +117,5 @@ public:
 	* @return bool : 실패 시 false 반환
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Skill")
-	bool CalculateSkillResult(int32 SkillIndex, const FTileMapCloneData& In_CloneData, const FCommandLogFunctionContext& In_Context, FCommandLog& Out_Result);
+	bool CalculateSkillResult(int32 SkillIndex, TArray<FTileIndex> mTargetTiles, const FTileMapCloneData& In_CloneData,  FCommandLog& Out_Result);
 };
