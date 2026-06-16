@@ -25,21 +25,11 @@ enum class ETileHighlightFlag : uint8
 ENUM_CLASS_FLAGS(ETileHighlightFlag)
 
 /**
- * @brief  타일 강조 색을 아래 누적색과 합성하는 방식
- */
-UENUM(BlueprintType)
-enum class ETileHighlightBlend : uint8
-{
-	Mix			UMETA(ToolTip = "아래 누적색과 섞음"),
-	Overwrite	UMETA(ToolTip = "아래를 무시하고 덮어씀"),
-};
-
-/**
  * @brief  타일 강조 상태 1종을 어떻게 그릴지 정의하는 스타일
  * @details
  * 상태(Aim/Select/Effect)마다 1개씩 타일맵이 보유하는 설정값.
- * 한 타일에 여러 상태가 겹치면 Priority 오름차순(낮음=바닥)으로 쌓고,
- * 각 겹의 BlendMode대로 누적해 최종 색을 만든다.
+ * 모든 강조는 타일 위에 자기 알파로 Mix한다(알파가 1이면 타일이 안 비침).
+ * 겹침 처리: Select가 있으면 Select만, 아니면 Effect가 아래 레이어(Aim/타일)와 자기 색 사이를 펄스로 오간다.
  */
 USTRUCT(BlueprintType)
 struct FTileHighlightStyle
@@ -47,20 +37,8 @@ struct FTileHighlightStyle
 	GENERATED_BODY()
 
 	/**
-	 * @brief 강조 색 (알파 포함)
+	 * @brief 강조 색 (알파 포함 — 알파로 타일 비침 정도 조절)
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TileHighlight", meta = (DisplayName = "Color"))
 	FLinearColor mColor = FLinearColor::White;
-
-	/**
-	 * @brief 아래 누적색과의 합성 방식
-	 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TileHighlight", meta = (DisplayName = "Blend Mode"))
-	ETileHighlightBlend mBlendMode = ETileHighlightBlend::Mix;
-
-	/**
-	 * @brief 합성 순서 (낮을수록 먼저 깔리고, 높을수록 위에 얹혀 최종을 지배)
-	 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TileHighlight", meta = (DisplayName = "Priority"))
-	int32 mPriority = 0;
 };

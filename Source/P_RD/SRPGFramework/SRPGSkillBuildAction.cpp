@@ -1,5 +1,6 @@
 ﻿#include "SRPGFramework/SRPGSkillBuildAction.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
+#include "Singleton/WorldSubsystem/SRPGCommandRouterSubsystem.h"
 
 #include "Pawn/Unit.h"
 #include "Actor/TileMap/TileMap.h"
@@ -10,12 +11,12 @@
 
 FSRPGSkillSelectCommand::FSRPGSkillSelectCommand()
 {
-    mActionCommandType = ESRPGActionCommandType::SkillSelect;
+    mCommandType = ESRPGCommandType::SkillSelect;
 }
 
 FSRPGCDiceSelectCommand::FSRPGCDiceSelectCommand()
 {
-    mActionCommandType = ESRPGActionCommandType::DiceSelect;
+    mCommandType = ESRPGCommandType::DiceSelect;
 }
 
 FSRPGSkillBuildAction::FSRPGSkillBuildAction()
@@ -35,25 +36,30 @@ void FSRPGSkillBuildAction::OnEndAction()
     Super::OnEndAction();
 }
 
-ESRPGActionCommandResult FSRPGSkillBuildAction::HandleCommand(TSharedPtr<const FSRPGActionCommand> Command)
+ESRPGCommandResult FSRPGSkillBuildAction::HandleCommand(TSharedPtr<const FSRPGCommand> Command)
 {
-    ESRPGActionCommandResult Result = Super::HandleCommand(Command);
-    if (Result == ESRPGActionCommandResult::Handled)
+    ESRPGCommandResult Result = Super::HandleCommand(Command);
+    if (Result == ESRPGCommandResult::Handled)
     {
         return Result;
     }
 
-    switch (Command->GetActionCommandType())
+    switch (Command->GetCommandType())
     {
-    case ESRPGActionCommandType::SkillSelect:
+    case ESRPGCommandType::SkillSelect:
     {
         /* 새롭게 스킬 선택 시 제거 */
 
-        ResetSkill();
-        SetSkill(mSelectedSkillIndex);
-        return CombineSRPGActionCommandResult(ESRPGActionCommandResult::Handled, Result);
+        TSharedPtr<const FSRPGSkillSelectCommand> SkillSelectCommand = StaticCastSharedPtr<const FSRPGSkillSelectCommand>(Command);
+
+        if (SkillSelectCommand->mSkillIndex != mSelectedSkillIndex)
+        {
+            ResetSkill();
+            SetSkill(SkillSelectCommand->mSkillIndex);
+        }
+        return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
-    case ESRPGActionCommandType::DiceSelect:
+    case ESRPGCommandType::DiceSelect:
     {
         /* 주사위 변경 시 타겟부터 재설정 */
 
@@ -61,23 +67,23 @@ ESRPGActionCommandResult FSRPGSkillBuildAction::HandleCommand(TSharedPtr<const F
 
         ResetTargetTile();
         ChangeDices(DiceSelectCommand->mDiceIndex);
-        return CombineSRPGActionCommandResult(ESRPGActionCommandResult::Handled, Result);
+        return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
-    case ESRPGActionCommandType::WorldTrace:
+    case ESRPGCommandType::WorldTrace:
     {
         /* 월드 공간 터치 시 선택 위치에 따라서 결정 */
 
         TSharedPtr<const FSRPGWorldTraceCommand> WorldTraceCommand = StaticCastSharedPtr<const FSRPGWorldTraceCommand>(Command);
-        return CombineSRPGActionCommandResult(HandleWorldTraceCommand(WorldTraceCommand), Result);
+        return CombineSRPGCommandResult(HandleWorldTraceCommand(WorldTraceCommand), Result);
     }
     }
 
-    return ESRPGActionCommandResult::Ignored;
+    return ESRPGCommandResult::Ignored;
 }
 
-ESRPGActionCommandResult FSRPGSkillBuildAction::HandleWorldTraceCommand(TSharedPtr<const FSRPGWorldTraceCommand> Command)
+ESRPGCommandResult FSRPGSkillBuildAction::HandleWorldTraceCommand(TSharedPtr<const FSRPGWorldTraceCommand> Command)
 {
-    ESRPGActionCommandResult Result = ESRPGActionCommandResult::Ignored;
+    ESRPGCommandResult Result = ESRPGCommandResult::Ignored;
 
     if (Command->mIsLongPress == false)
     {
@@ -103,7 +109,7 @@ ESRPGActionCommandResult FSRPGSkillBuildAction::HandleWorldTraceCommand(TSharedP
                     /* 프리뷰 단계에서 한단계 취소 시, 조준 대상 취소 처리 */
 
                     ResetTargetTile();
-                    Result = ESRPGActionCommandResult::Handled;
+                    Result = ESRPGCommandResult::Handled;
                     break;
                 }
                 case ESRPGSkillBuildPhase::AimSelection:
@@ -111,7 +117,7 @@ ESRPGActionCommandResult FSRPGSkillBuildAction::HandleWorldTraceCommand(TSharedP
                     /* 조준 대상 설정 단계에서 한단계 취소 시, 빌드 자체 종료 */
 
                     EndAction(ESRPGActionResult::Cancelled);
-                    Result = ESRPGActionCommandResult::Handled;
+                    Result = ESRPGCommandResult::Handled;
                     break;
                 }
                 }
@@ -130,7 +136,7 @@ ESRPGActionCommandResult FSRPGSkillBuildAction::HandleWorldTraceCommand(TSharedP
                     {
                         BuildSkill();
                         EndAction(ESRPGActionResult::Succeeded);
-                        Result = ESRPGActionCommandResult::Handled;
+                        Result = ESRPGCommandResult::Handled;
                         break;
                     }
                     [[fallthrough]];
@@ -143,7 +149,7 @@ ESRPGActionCommandResult FSRPGSkillBuildAction::HandleWorldTraceCommand(TSharedP
                     {
                         ResetTargetTile();
                         SetTargetTile(TargetTileIndex);
-                        Result = ESRPGActionCommandResult::Handled;
+                        Result = ESRPGCommandResult::Handled;
                         break;
                     }
                     break;
@@ -303,13 +309,13 @@ void FSRPGSkillBuildAction::BuildSkill()
 {
     checkf(mSkillBuildPhase == ESRPGSkillBuildPhase::Preview, TEXT("스킬 빌드 순서 오류"));
 
-    USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-    checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
+    USRPGCommandRouterSubsystem* CommandRouterSubsystem = GetWorld()->GetSubsystem<USRPGCommandRouterSubsystem>();
+    checkf(CommandRouterSubsystem != nullptr, TEXT("명령 라우터 서브시스템 nullptr"));
 
     TSharedPtr<FSRPGSkillCastCommand> SkillCastCommand = MakeShared<FSRPGSkillCastCommand>();
     SkillCastCommand->mCalculationResult = mCalculationResult;
 
-    CombatSubsystem->SummitCommand(SkillCastCommand);
+    CommandRouterSubsystem->SummitCommand(SkillCastCommand);
 }
 
 void FSRPGSkillBuildAction::SetBuildPhase(ESRPGSkillBuildPhase BuildPhase)

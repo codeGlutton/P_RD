@@ -1,27 +1,14 @@
 ﻿#include "SRPGFramework/SRPGAction.h"
 #include "SRPGFramework/SRPGTurnContext.h"
+#include "SRPGFramework/SRPGCommand.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
+#include "Singleton/WorldSubsystem/SRPGCommandRouterSubsystem.h"
 #include "Singleton/WorldSubsystem/PresentationSyncSubsystem.h"
 
 #include "Pawn/Unit.h"
 #include "Actor/TileMap/TileMap.h"
 
 #include "FunctionLibrary/GASTargetFunctionLibrary.h"
-
-ESRPGActionCommandType FSRPGActionCommand::GetActionCommandType() const
-{
-	return mActionCommandType;
-}
-
-TSharedPtr<FSRPGAction> FSRPGActionCommand::CreateAction() const
-{
-	return nullptr;
-}
-
-FSRPGWorldTraceCommand::FSRPGWorldTraceCommand()
-{
-	mActionCommandType = ESRPGActionCommandType::WorldTrace;
-}
 
 void FSRPGAction::InitAction(TSharedRef<FSRPGTurnContext> Parent, AUnit* Instigator)
 {
@@ -39,13 +26,21 @@ void FSRPGAction::BeginAction()
 	checkf(mActionPhase == ESRPGActionPhase::ActionInit, TEXT("이미 액션 진행 중에 재실행 오류"));
 	mActionPhase = ESRPGActionPhase::ActionStart;
 
+	// 시작 연출 시작
 	UPresentationSyncSubsystem* PresentationSyncSubsystem = GetWorld()->GetSubsystem<UPresentationSyncSubsystem>();
 	checkf(PresentationSyncSubsystem != nullptr, TEXT("연출 동기화 서브시스템 nullptr"));
-
 	auto PresentationBarrier = PresentationSyncSubsystem->MakePresentationBarrier(FOnFinishPresentation::CreateSPLambda(AsShared(), [this]() {
 		checkf(mActionPhase == ESRPGActionPhase::ActionStart, TEXT("액션 실행 절차 오류"));
 		mActionPhase = ESRPGActionPhase::ActionPlay;
+
+		// 핸들러 등록
+		USRPGCommandRouterSubsystem* CommandRouterSubsystem = GetWorld()->GetSubsystem<USRPGCommandRouterSubsystem>();
+		checkf(CommandRouterSubsystem != nullptr, TEXT("명령 라우터 서브시스템 nullptr"));
+		CommandRouterSubsystem->RegisterCommandHandler(AsShared());
+		// 예약된 초기화 커맨드 시작
 		FlushCommands();
+		
+		// 액션 시작 로직
 		OnBeginAction();
 		}));
 	OnBeginActionUI.Broadcast(PresentationBarrier, *this);
@@ -69,7 +64,13 @@ void FSRPGAction::EndAction(ESRPGActionResult Result)
 	checkf(mActionPhase == ESRPGActionPhase::ActionAbort, TEXT("액션 종료 절차 오류"));
 	mActionPhase = ESRPGActionPhase::ActionEnd;
 
+	// 액션 종료 로직
 	OnEndAction();
+
+	// 핸들러 등록 해제
+	USRPGCommandRouterSubsystem* CommandRouterSubsystem = GetWorld()->GetSubsystem<USRPGCommandRouterSubsystem>();
+	checkf(CommandRouterSubsystem != nullptr, TEXT("명령 라우터 서브시스템 nullptr"));
+	CommandRouterSubsystem->UnregisterCommandHandler(AsShared());
 
 	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
 	checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
@@ -77,9 +78,9 @@ void FSRPGAction::EndAction(ESRPGActionResult Result)
 	// 전투 상태 평가
 	CombatSubsystem->EvaluateCombatStates();
 
+	// 종료 연출 시작
 	UPresentationSyncSubsystem* PresentationSyncSubsystem = GetWorld()->GetSubsystem<UPresentationSyncSubsystem>();
 	checkf(PresentationSyncSubsystem != nullptr, TEXT("연출 동기화 서브시스템 nullptr"));
-
 	auto PresentationBarrier = PresentationSyncSubsystem->MakePresentationBarrier(FOnFinishPresentation::CreateSPLambda(AsShared(), [this]() {
 		TSharedPtr<FSRPGTurnContext> TurnContext = mParent.Pin();
 		checkf(TurnContext != nullptr, TEXT("이미 제거된 턴에서 Action 종료 명령 오류"));
@@ -117,12 +118,17 @@ void FSRPGAction::EvaluateActionEndState(bool ForceAbort)
 	}
 }
 
-ESRPGActionCommandResult FSRPGAction::HandleCommand(TSharedPtr<const FSRPGActionCommand> Command)
+int8 FSRPGAction::GetCommandPriority() const
 {
-	return ESRPGActionCommandResult::Ignored;
+	return 0;
 }
 
-void FSRPGAction::ReserveCommand(TSharedPtr<const FSRPGActionCommand> Command)
+ESRPGCommandResult FSRPGAction::HandleCommand(TSharedPtr<const FSRPGCommand> Command)
+{
+	return ESRPGCommandResult::Ignored;
+}
+
+void FSRPGAction::ReserveCommand(TSharedPtr<const FSRPGCommand> Command)
 {
 	mReservedCommands.Dequeue(Command);
 }
@@ -131,7 +137,7 @@ void FSRPGAction::FlushCommands()
 {
 	while (mActionPhase == ESRPGActionPhase::ActionPlay && mReservedCommands.IsEmpty() == false)
 	{
-		TSharedPtr<const FSRPGActionCommand> Command;
+		TSharedPtr<const FSRPGCommand> Command;
 		mReservedCommands.Dequeue(Command);
 		HandleCommand(Command);
 	}
@@ -172,7 +178,12 @@ void FSRPGAction::GetTileActorUnderCursor(ECollisionChannel Channel, OUT AActor*
 
 UWorld* FSRPGAction::GetWorld() const
 {
-	return mParent.Pin()->GetWorld();
+	TSharedPtr<FSRPGTurnContext> TurnContext = GetParent().Pin();
+	if (TurnContext != nullptr)
+	{
+		return TurnContext->GetWorld();
+	}
+	return nullptr;
 }
 
 TWeakPtr<FSRPGTurnContext> FSRPGAction::GetParent() const
@@ -182,7 +193,7 @@ TWeakPtr<FSRPGTurnContext> FSRPGAction::GetParent() const
 
 AUnit* FSRPGAction::GetInstigator() const
 {
-	return mInstigator;
+	return mInstigator.Get();
 }
 
 ESRPGActionType FSRPGAction::GetActionType() const

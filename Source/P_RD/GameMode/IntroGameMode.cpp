@@ -8,7 +8,7 @@
 
 AIntroGameMode::AIntroGameMode()
 {
-	mWorldWidgets = { EWorldWidgetType::LoadingNotify };
+	mWorldWidgets = { EWorldWidgetType::LoadingNotify, EWorldWidgetType::FadeInOut };
 
 	mShowFadeInUIOnTransition = false;
 	mShowFadeOutUIOnTransition = false;
@@ -27,13 +27,14 @@ void AIntroGameMode::BeginRoom()
 
 	UCinematicWidget* CinematicHUD = WorldWidgetSubsystem->GetHUD<UCinematicWidget>();
 	checkf(CinematicHUD != nullptr, TEXT("인트로에 보여줄 Cinematic 위젯 nullptr"));
-	
+
 	// UI 열리는 애니메이션 시작
 	CinematicHUD->OpenUI(FOnEndUIOpenAnimation::CreateWeakLambda(this, [this](UUserWidget* OpenedWidget) {
 		// 시네마틱 시작
 		UCinematicWidget* OpenedCinematicWidget = Cast<UCinematicWidget>(OpenedWidget);
+		checkf(OpenedCinematicWidget != nullptr, TEXT("시네마틱 위젯 nullptr"));
 		OpenedCinematicWidget->PlayCinematic(FOnEndCinematicAnimation::CreateUObject(this, &AIntroGameMode::OnEndCinematicAnimation));
-		
+
 		// 파일 비동기 로드 시작
 		USaveGameSubsystem* SaveGameSubsystem = GetGameInstance()->GetSubsystem<USaveGameSubsystem>();
 		checkf(SaveGameSubsystem != nullptr, TEXT("게임 저장 및 로드 서브시스템 nullptr"));
@@ -44,8 +45,10 @@ void AIntroGameMode::BeginRoom()
 
 void AIntroGameMode::OnEndCinematicAnimation(UCinematicWidget* CinematicWidget)
 {
-	EnumAddFlags(mStateFlag, EIntroGameModeStateFlag::CinematicAnimationEnded);
-	TryToMarkExternalReady();
+	StartFadeOutUI(FOnEndFadeOutAnimation::CreateWeakLambda(this, [this](UFadeInOutWidget* Widget) {
+		EnumAddFlags(mStateFlag, EIntroGameModeStateFlag::CinematicAnimationEnded);
+		TryToMarkExternalReady();
+		}));
 }
 
 void AIntroGameMode::OnLoadUserData(const FString& SlotName, int32 SlotIndex, USaveGame* SaveGame)

@@ -1,5 +1,12 @@
 ﻿using UnrealBuildTool;
 
+/**
+ * @brief P_RD 모듈이 사용하는 엔진 모듈 목록입니다.
+ *
+ * @details
+ * UI 코드에서 영상 재생, PNG 읽기, Slate 타입을 쓰기 때문에 관련 모듈을 여기에 추가합니다.
+ * 새 모듈을 넣을 때는 옆에 이유를 짧게 적어 두면 나중에 지워도 되는 의존성인지 판단하기 쉽습니다.
+ */
 public class P_RD : ModuleRules
 {
 	public P_RD(ReadOnlyTargetRules Target) : base(Target)
@@ -14,11 +21,12 @@ public class P_RD : ModuleRules
             "InputCore",
             "EnhancedInput",
             "UMG",
+            "MediaAssets",              // 인트로 시네마틱 MP4 재생(MediaPlayer/MediaSource)에 필요
+            "ImageWrapper",             // 실행 중 PNG 파일을 읽는 UITextureLoader에 필요
 
             /*
-             * WBP 자체는 UMG 모듈만으로 다루지만, 이번 UI 패널은 런타임에서 버튼 입력 방식,
-             * Slate Visibility, FReply, Widget Transform 같은 Slate 타입을 직접 사용한다.
-             * 그래서 Carousel/Dice/TopMenuBar 쪽 C++ 위젯 컴파일을 위해 Slate/SlateCore 의존성을 명시한다.
+             * UI 위젯을 C++에서 다룰 때 SlateVisibility, FReply 같은 Slate 타입을 쓴다.
+             * 그래서 UMG와 함께 Slate/SlateCore도 필요하다.
              */
             "Slate",
             "SlateCore",

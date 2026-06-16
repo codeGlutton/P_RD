@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGAction.h"
+#include "SRPGFramework/SRPGCommand.h"
 #include "FunctionLibrary/CombatCalculator/CombatResult.h"
 
 struct FSRPGSkillBuildAction;
@@ -29,7 +30,7 @@ public:
 	int32 mSkillIndex = 0;
 };
 
-struct FSRPGCDiceSelectCommand : public FSRPGActionCommand
+struct FSRPGCDiceSelectCommand : public FSRPGCommand
 {
 public:
 	FSRPGCDiceSelectCommand();
@@ -43,8 +44,7 @@ public:
  */
 struct FSRPGSkillBuildAction : public FSRPGAction
 {
-	template<typename ActionType>
-	friend struct FSRPGActionCreationCommand;
+	friend struct FSRPGActionCreationCommand<FSRPGSkillBuildAction>;
 	using Super = FSRPGAction;
 
 protected:
@@ -56,10 +56,10 @@ protected:
 	void OnEndAction() override;
 
 protected:
-	ESRPGActionCommandResult HandleCommand(TSharedPtr<const FSRPGActionCommand> Command) override;
+	ESRPGCommandResult HandleCommand(TSharedPtr<const FSRPGCommand> Command) override;
 
 protected:
-	ESRPGActionCommandResult HandleWorldTraceCommand(TSharedPtr<const FSRPGWorldTraceCommand> Command);
+	ESRPGCommandResult HandleWorldTraceCommand(TSharedPtr<const FSRPGWorldTraceCommand> Command);
 
 	/* 빌드 로직 처리 */
 private:

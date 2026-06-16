@@ -1,11 +1,55 @@
 ﻿#include "SRPGFramework/SRPGTurnContext.h"
+#include "SRPGFramework/SRPGAction.h"
+#include "SRPGFramework/SRPGCommand.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
+#include "Singleton/WorldSubsystem/SRPGCommandRouterSubsystem.h"
 #include "Singleton/WorldSubsystem/PresentationSyncSubsystem.h"
 
 #include "Pawn/Unit.h"
-#include "SRPGFramework/SRPGSkillBuildAction.h"
 
 #include "FunctionLibrary/GASTargetFunctionLibrary.h"
+
+UWorld* FSRPGActionCreationCommandHandler::GetWorld() const
+{
+	TSharedPtr<FSRPGTurnContext> TurnContext = GetParent().Pin();
+	if (TurnContext != nullptr)
+	{
+		return TurnContext->GetWorld();
+	}
+	return nullptr;
+}
+
+TWeakPtr<FSRPGTurnContext> FSRPGActionCreationCommandHandler::GetParent() const
+{
+	return mParent.Pin();
+}
+
+int8 FSRPGActionCreationCommandHandler::GetCommandPriority() const
+{
+	return ISRPGCommandHandler::LOWEST_PRIORITY;
+}
+
+ESRPGCommandResult FSRPGActionCreationCommandHandler::HandleCommand(TSharedPtr<const FSRPGCommand> Command)
+{
+	TSharedPtr<FSRPGAction> NewAction = Command->CreateAction();
+	if (NewAction == nullptr)
+	{
+		/* 생성 명령 외는 처리 않함 */
+
+		return ESRPGCommandResult::Ignored;
+	}
+
+	/* 새로운 Action 생성 후 등록 */
+
+	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
+	checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
+
+	if (CombatSubsystem->PushAction(NewAction) == false)
+	{
+		return ESRPGCommandResult::Ignored;
+	}
+	return ESRPGCommandResult::Handled;
+}
 
 void FSRPGTurnContext::InitTurn(USRPGCombatSubsystem* Parent, AUnit* Owner, int32 LifeCount)
 {
@@ -18,6 +62,10 @@ void FSRPGTurnContext::InitTurn(USRPGCombatSubsystem* Parent, AUnit* Owner, int3
 	mParent = Parent;
 	mOwner = Owner;
 	mLifeCount = LifeCount;
+
+	TSharedPtr<FSRPGActionCreationCommandHandler> ActionCreationCommandHandler = MakeShared<FSRPGActionCreationCommandHandler>();
+	ActionCreationCommandHandler->mParent = AsShared();
+	mTurnDefaultCommandHandlers.Add(ActionCreationCommandHandler);
 }
 
 void FSRPGTurnContext::BeginTurn()
@@ -27,24 +75,34 @@ void FSRPGTurnContext::BeginTurn()
 
 	UE_LOG(LogSRPGCombat, Log, TEXT("턴 시작"));
 	
+	// 턴 시작 연출
 	UPresentationSyncSubsystem* PresentationSyncSubsystem = GetWorld()->GetSubsystem<UPresentationSyncSubsystem>();
 	checkf(PresentationSyncSubsystem != nullptr, TEXT("연출 동기화 서브시스템 nullptr"));
-
 	auto PresentationBarrier = PresentationSyncSubsystem->MakePresentationBarrier(FOnFinishPresentation::CreateSPLambda(AsShared(), [this]() {
+		
+		// 턴 실행
+		checkf(mTurnPhase == ESRPGTurnPhase::TurnStart, TEXT("턴 진입 절차 오류"));
+		mTurnPhase = ESRPGTurnPhase::TurnPlay;
+
+		// 핸들러 등록
+		USRPGCommandRouterSubsystem* CommandRouterSubsystem = GetWorld()->GetSubsystem<USRPGCommandRouterSubsystem>();
+		checkf(CommandRouterSubsystem != nullptr, TEXT("명령 라우터 서브시스템 nullptr"));
+		for (TSharedPtr<ISRPGCommandHandler>& TurnDefaultCommandHandler : mTurnDefaultCommandHandlers)
+		{
+			CommandRouterSubsystem->RegisterCommandHandler(TurnDefaultCommandHandler);
+		}
+
+		// 유닛 턴 시작 단계
 		mOwner->OnBeginTurn();
 		
 		// 현 스텟을 캡처
 		FGameplayEventData EventData;
-		EventData.TargetData = UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle(mOwner);
-		EventData.Instigator = mOwner;
-		EventData.Target = mOwner;
+		EventData.TargetData = UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle(mOwner.Get());
+		EventData.Instigator = mOwner.Get();
+		EventData.Target = mOwner.Get();
 
 		// On Start Turn 패시브 실행
-		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(mOwner, AbilityTags::GameplayAbility_Passive_OnStartTurn, MoveTemp(EventData));
-
-		// 턴 실행
-		checkf(mTurnPhase == ESRPGTurnPhase::TurnStart, TEXT("턴 진입 절차 오류"));
-		mTurnPhase = ESRPGTurnPhase::TurnPlay;
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(mOwner.Get(), AbilityTags::GameplayAbility_Passive_OnStartTurn, MoveTemp(EventData));
 
 		USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
 		checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
@@ -75,9 +133,9 @@ void FSRPGTurnContext::BeginTurn()
 
 void FSRPGTurnContext::TickTurn(float DeltaTime)
 {
-	if (mTurnPhase == ESRPGTurnPhase::TurnPlay && mActions.IsEmpty() == false)
+	if (mTurnPhase == ESRPGTurnPhase::TurnPlay && mReservedActions.IsEmpty() == false)
 	{
-		(*mActions.Peek())->TickAction(DeltaTime);
+		(*mReservedActions.Peek())->TickAction(DeltaTime);
 	}
 }
 
@@ -86,30 +144,38 @@ void FSRPGTurnContext::EndTurn()
 	checkf(mTurnPhase == ESRPGTurnPhase::TurnAbort, TEXT("턴 종료 절차 오류"));
 	mTurnPhase = ESRPGTurnPhase::TurnEnd;
 
-	UPresentationSyncSubsystem* PresentationSyncSubsystem = GetWorld()->GetSubsystem<UPresentationSyncSubsystem>();
-	checkf(PresentationSyncSubsystem != nullptr, TEXT("연출 동기화 서브시스템 nullptr"));
+	UE_LOG(LogSRPGCombat, Log, TEXT("턴 종료"));
 
 	// 현 스텟을 캡처
 	FGameplayEventData EventData;
-	EventData.TargetData = UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle(mOwner);
-	EventData.Instigator = mOwner;
-	EventData.Target = mOwner;
+	EventData.TargetData = UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle(mOwner.Get());
+	EventData.Instigator = mOwner.Get();
+	EventData.Target = mOwner.Get();
 
 	// On End Turn 패시브 실행
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(mOwner, AbilityTags::GameplayAbility_Passive_OnEndTurn, MoveTemp(EventData));
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(mOwner.Get(), AbilityTags::GameplayAbility_Passive_OnEndTurn, MoveTemp(EventData));
 	mOwner->OnEndTurn();
 
+	// 턴 종료 연출
+	UPresentationSyncSubsystem* PresentationSyncSubsystem = GetWorld()->GetSubsystem<UPresentationSyncSubsystem>();
+	checkf(PresentationSyncSubsystem != nullptr, TEXT("연출 동기화 서브시스템 nullptr"));
 	auto PresentationBarrier = PresentationSyncSubsystem->MakePresentationBarrier(FOnFinishPresentation::CreateSPLambda(AsShared(), [this]() {
 		if (IsPermanent() == false)
 		{
 			--mLifeCount;
 		}
+		mReservedActions.Empty();
+
+		// 핸들러 등록 해제
+		USRPGCommandRouterSubsystem* CommandRouterSubsystem = GetWorld()->GetSubsystem<USRPGCommandRouterSubsystem>();
+		checkf(CommandRouterSubsystem != nullptr, TEXT("명령 라우터 서브시스템 nullptr"));
+		for (TSharedPtr<ISRPGCommandHandler>& TurnDefaultCommandHandler : mTurnDefaultCommandHandlers)
+		{
+			CommandRouterSubsystem->UnregisterCommandHandler(TurnDefaultCommandHandler);
+		}
 
 		checkf(mTurnPhase == ESRPGTurnPhase::TurnEnd, TEXT("턴 종료 절차 오류"));
 		mTurnPhase = ESRPGTurnPhase::TurnInit;
-		mActions.Empty();
-
-		UE_LOG(LogSRPGCombat, Log, TEXT("턴 종료"));
 
 		USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
 		checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
@@ -118,119 +184,21 @@ void FSRPGTurnContext::EndTurn()
 	OnEndTurnUI.Broadcast(PresentationBarrier, *this, mTurnResult);
 }
 
-ESRPGActionCommandResult FSRPGTurnContext::RouteCommand(TSharedPtr<const FSRPGActionCommand> Command)
-{
-	ESRPGActionCommandResult Result = ESRPGActionCommandResult::Ignored;
-
-	if (mTurnPhase != ESRPGTurnPhase::TurnPlay)
-	{
-		// 턴 실행 외 상황에서 진입한 명령은 무시 처리
-		return Result;
-	}
-
-	TSharedPtr<FSRPGAction> CurAction = nullptr;
-	mActions.Peek(CurAction);
-	if (CurAction != nullptr)
-	{
-		/* 실행 중인 액션 객체에 커맨드 처리 요청 */
-
-		Result = CombineSRPGActionCommandResult(CurAction->HandleCommand(Command), Result);
-		if (Result == ESRPGActionCommandResult::Handled)
-		{
-			return Result;
-		}
-	}
-
-	/* 액션 대기 중인 경우 직접 처리 */
-
-	Result = CombineSRPGActionCommandResult(HandleActionCreationCommand(Command), Result);
-	if (Result == ESRPGActionCommandResult::Handled)
-	{
-		return Result;
-	}
-
-	/* 커맨드 처리 실패 시 Fallback 처리 */
-
-	return CombineSRPGActionCommandResult(HandleFallbackCommand(Command), Result);
-}
-
-ESRPGActionCommandResult FSRPGTurnContext::HandleActionCreationCommand(TSharedPtr<const FSRPGActionCommand> Command)
-{
-	TSharedPtr<FSRPGAction> NewAction = Command->CreateAction();
-	if (NewAction == nullptr)
-	{
-		/* 생성 명령 외는 처리 않함 */
-
-		return ESRPGActionCommandResult::Ignored;
-	}
-
-	/* 새로운 Action 생성 후, 예약 걸어두기 */
-
-	NewAction->ReserveCommand(Command);
-	EnqueueAction(NewAction);
-	
-	return ESRPGActionCommandResult::Handled;
-}
-
-ESRPGActionCommandResult FSRPGTurnContext::HandleFallbackCommand(TSharedPtr<const FSRPGActionCommand> Command)
-{
-	if (Command->GetActionCommandType() == ESRPGActionCommandType::WorldTrace)
-	{
-		// TODO : 꾹 눌렀을 때 정보 처리 부분
-	}
-
-	return ESRPGActionCommandResult::Ignored;
-}
-
-void FSRPGTurnContext::EnqueueAction(TSharedPtr<FSRPGAction> NewAction)
-{
-	const bool IsWaitingNewAction = mActions.IsEmpty() == true;
-
-	NewAction->OnBeginActionUI.AddSPLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const FSRPGAction& Action) {
-		OnBeginAnyActionUI.Broadcast(Barrier, *this, Action);
-		});
-	NewAction->OnEndActionUI.AddSPLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const FSRPGAction& Action, ESRPGActionResult Result) {
-		OnEndAnyActionUI.Broadcast(Barrier, *this, Action, Result);
-		});
-	mActions.Enqueue(NewAction);
-
-	// 액션 대기 중 경우, 새로운 액션 즉시 진행
-	if (IsWaitingNewAction == true)
-	{
-		DequeueAction();
-	}
-}
-
-void FSRPGTurnContext::DequeueAction()
-{
-	checkf(mTurnPhase == ESRPGTurnPhase::TurnPlay, TEXT("액션 가능 상태에서만 다음 액션 진행 가능"));
-
-	if (mActions.IsEmpty() == true)
-	{
-		return;
-	}
-
-	mTurnPhase = ESRPGTurnPhase::TurnPlay;
-
-	TSharedRef<FSRPGAction> CurAction = mActions.Peek()->ToSharedRef();
-	CurAction->InitAction(AsShared(), mOwner);
-	CurAction->BeginAction();
-}
-
 void FSRPGTurnContext::EvaluateTurnStates(bool ForceAbort)
 {
 	EvaluateTurnEndState(ForceAbort);
 
-	if (mActions.IsEmpty() == false)
+	if (mReservedActions.IsEmpty() == false)
 	{
 		const bool ForceAbortAction = ForceAbort && mTurnPhase == ESRPGTurnPhase::TurnAbort;
-		(*mActions.Peek())->EvaluateActionEndState(ForceAbortAction);
+		(*mReservedActions.Peek())->EvaluateActionEndState(ForceAbortAction);
 	}
 }
 
 void FSRPGTurnContext::OnEndCurrentAction(TSharedRef<FSRPGAction> Action, ESRPGActionResult ActionResult)
 {
-	mActions.Pop();
+	// 액션 등록 해제
+	mReservedActions.Pop();
 
 	// 턴 소모 액션 처리
 	bool IsBlockTurnSuccessfully = Action->ConsumesTurn() == true && ActionResult == ESRPGActionResult::Succeeded;
@@ -253,6 +221,7 @@ void FSRPGTurnContext::OnEndCurrentAction(TSharedRef<FSRPGAction> Action, ESRPGA
 		return;
 	}
 
+	// 예약된 액션 꺼내기
 	DequeueAction();
 }
 
@@ -276,6 +245,45 @@ void FSRPGTurnContext::EvaluateTurnEndState(bool ForceAbort)
 	}
 }
 
+void FSRPGTurnContext::EnqueueAction(TSharedPtr<FSRPGAction> NewAction)
+{
+	const bool IsWaitingNewAction = mReservedActions.IsEmpty() == true;
+
+	NewAction->OnBeginActionUI.AddSPLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const FSRPGAction& Action) {
+		OnBeginAnyActionUI.Broadcast(Barrier, *this, Action);
+		});
+	NewAction->OnEndActionUI.AddSPLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const FSRPGAction& Action, ESRPGActionResult Result) {
+		OnEndAnyActionUI.Broadcast(Barrier, *this, Action, Result);
+		});
+
+	// 액션 등록
+	mReservedActions.Enqueue(NewAction);
+	// 액션 초기화
+	NewAction->InitAction(AsShared(), mOwner.Get());
+
+	// 액션 대기 중 경우, 새로운 액션 즉시 진행
+	if (IsWaitingNewAction == true)
+	{
+		DequeueAction();
+	}
+}
+
+void FSRPGTurnContext::DequeueAction()
+{
+	// 비어있는 경우는 그대로 대기
+	if (mReservedActions.IsEmpty() == true)
+	{
+		return;
+	}
+
+	checkf(mTurnPhase == ESRPGTurnPhase::TurnPlay, TEXT("액션 가능 상태에서만 다음 액션 진행 가능"));
+	mTurnPhase = ESRPGTurnPhase::TurnPlay;
+
+	// 액션 시작
+	TSharedRef<FSRPGAction> CurAction = mReservedActions.Peek()->ToSharedRef();
+	CurAction->BeginAction();
+}
+
 UWorld* FSRPGTurnContext::GetWorld() const
 {
 	return mOwner->GetWorld();
@@ -283,12 +291,12 @@ UWorld* FSRPGTurnContext::GetWorld() const
 
 USRPGCombatSubsystem* FSRPGTurnContext::GetParent() const
 {
-	return mParent;
+	return mParent.Get();
 }
 
 AUnit* FSRPGTurnContext::GetOwner() const
 {
-	return mOwner;
+	return mOwner.Get();
 }
 
 bool FSRPGTurnContext::IsPermanent() const
@@ -300,4 +308,5 @@ int32 FSRPGTurnContext::GetLifeCount() const
 {
 	return mLifeCount;
 }
+
 
