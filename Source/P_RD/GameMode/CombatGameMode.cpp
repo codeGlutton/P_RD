@@ -1,5 +1,6 @@
 ﻿#include "GameMode/CombatGameMode.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
+#include "Singleton/WorldSubsystem/SRPGCommandRouterSubsystem.h"
 
 #include "Engine/AssetManager.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
@@ -45,36 +46,36 @@ void ACombatGameMode::BeginRoom()
 
 bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 {
-	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-	checkf(CombatSubsystem != nullptr, TEXT("전투 시스템 서브시스템 nullptr"));
+	USRPGCommandRouterSubsystem* CommandRouterSubsystem = GetWorld()->GetSubsystem<USRPGCommandRouterSubsystem>();
+	checkf(CommandRouterSubsystem != nullptr, TEXT("명령 라우터 서브시스템 nullptr"));
 
 	TSharedPtr<FSRPGSkillSelectCommand> SkillSelectCommand = MakeShared<FSRPGSkillSelectCommand>();
 	SkillSelectCommand->mSkillIndex = SkillIndex;
 	SkillSelectCommand->OnChangeSkillBuildPhase.AddUObject(this, &ACombatGameMode::OnChangeSkillBuildPhase);
 
-	return CombatSubsystem->SummitCommand(SkillSelectCommand);
+	return CommandRouterSubsystem->SummitCommand(SkillSelectCommand);
 }
 
 bool ACombatGameMode::ResolveWorldTouchEvent()
 {
-	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-	checkf(CombatSubsystem != nullptr, TEXT("전투 시스템 서브시스템 nullptr"));
+	USRPGCommandRouterSubsystem* CommandRouterSubsystem = GetWorld()->GetSubsystem<USRPGCommandRouterSubsystem>();
+	checkf(CommandRouterSubsystem != nullptr, TEXT("명령 라우터 서브시스템 nullptr"));
 
 	TSharedPtr<FSRPGWorldTraceCommand> WorldTraceActionCommand = MakeShared<FSRPGWorldTraceCommand>();
 	WorldTraceActionCommand->mIsLongPress = false;
 
-	return CombatSubsystem->SummitCommand(WorldTraceActionCommand);
+	return CommandRouterSubsystem->SummitCommand(WorldTraceActionCommand);
 }
 
 bool ACombatGameMode::ResolveWorldLongPressEvent()
 {
-	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-	checkf(CombatSubsystem != nullptr, TEXT("전투 시스템 서브시스템 nullptr"));
+	USRPGCommandRouterSubsystem* CommandRouterSubsystem = GetWorld()->GetSubsystem<USRPGCommandRouterSubsystem>();
+	checkf(CommandRouterSubsystem != nullptr, TEXT("명령 라우터 서브시스템 nullptr"));
 
 	TSharedPtr<FSRPGWorldTraceCommand> WorldTraceActionCommand = MakeShared<FSRPGWorldTraceCommand>();
 	WorldTraceActionCommand->mIsLongPress = true;
 
-	return CombatSubsystem->SummitCommand(WorldTraceActionCommand);
+	return CommandRouterSubsystem->SummitCommand(WorldTraceActionCommand);
 }
 
 void ACombatGameMode::OnChangeSkillBuildPhase(const FSRPGSkillBuildAction& Action, ESRPGSkillBuildPhase Phase)

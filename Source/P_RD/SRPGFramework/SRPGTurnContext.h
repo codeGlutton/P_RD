@@ -9,8 +9,9 @@
 
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
-#include "SRPGFramework/SRPGAction.h"
+#include "SRPGFramework/SRPGCommandHandler.h"
 
+struct FSRPGAction;
 struct FSRPGTurnContext;
 struct FPresentationBarrier;
 
@@ -20,7 +21,23 @@ DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnBeginAnyActionUI, TSharedPtr<FPresenta
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnEndAnyActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGTurnContext& /*TurnContext*/, const FSRPGAction& /*Action*/, ESRPGActionResult /*Result*/)
 
 class AUnit;
-struct FSRPGAction;
+struct FSRPGCommand;
+
+struct FSRPGActionCreationCommandHandler : public ISRPGCommandHandler
+{
+	friend struct FSRPGTurnContext;
+
+protected:
+	int8 GetCommandPriority() const override;
+	ESRPGCommandResult HandleCommand(TSharedPtr<const FSRPGCommand> Command) override;
+
+protected:
+	UWorld* GetWorld() const;
+	TWeakPtr<FSRPGTurnContext> GetParent() const;
+
+protected:
+	TWeakPtr<FSRPGTurnContext> mParent;
+};
 
 /**
  * @brief  스킬 사용 시 임시 정보를 들고 있는 Context 객체
@@ -40,22 +57,17 @@ protected:
 	void TickTurn(float DeltaTime);
 	void EndTurn();
 
-	/* 액션 커맨드 처리 함수 */
-protected:
-	ESRPGActionCommandResult RouteCommand(TSharedPtr<const FSRPGActionCommand> Command);
-	ESRPGActionCommandResult HandleActionCreationCommand(TSharedPtr<const FSRPGActionCommand> Command);
-	ESRPGActionCommandResult HandleFallbackCommand(TSharedPtr<const FSRPGActionCommand> Command);
-
-private:
-	void EnqueueAction(TSharedPtr<FSRPGAction> NewAction);
-	void DequeueAction();
-
 public:
 	void EvaluateTurnStates(bool ForceAbort = false);
 	void OnEndCurrentAction(TSharedRef<FSRPGAction> Action, ESRPGActionResult ActionResult);
 
 protected:
 	void EvaluateTurnEndState(bool ForceAbort);
+
+	/* 액션 처리 함수 */
+protected:
+	void EnqueueAction(TSharedPtr<FSRPGAction> NewAction);
+	void DequeueAction();
 
 	/* 외부 API */
 public:
@@ -73,17 +85,23 @@ public:
 	FOnEndAnyActionUI OnEndAnyActionUI;
 
 protected:
-	TObjectPtr<USRPGCombatSubsystem> mParent;
-	TObjectPtr<AUnit> mOwner;
+	TWeakObjectPtr<USRPGCombatSubsystem> mParent;
+	TWeakObjectPtr<AUnit> mOwner;
 	
+protected:
 	// @brief 현재 턴 상태
 	ESRPGTurnPhase mTurnPhase = ESRPGTurnPhase::None;
 	// @brief 턴 종료 결과
 	ESRPGTurnResult mTurnResult = ESRPGTurnResult::Succeeded;
 
-	TQueue<TSharedPtr<FSRPGAction>> mActions;
+protected:
+	TQueue<TSharedPtr<FSRPGAction>> mReservedActions;
 
 protected:
 	static constexpr int32 PERMENENT_TURN = -1;
 	int32 mLifeCount = 0;
+
+protected:
+	// @brief 기본 핸들러들
+	TArray<TSharedPtr<ISRPGCommandHandler>> mTurnDefaultCommandHandlers;
 };

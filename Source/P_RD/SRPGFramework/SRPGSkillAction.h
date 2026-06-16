@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGAction.h"
+#include "SRPGFramework/SRPGCommand.h"
 #include "FunctionLibrary/CombatCalculator/CombatResult.h"
 
 struct FSRPGSkillAction;
@@ -27,8 +28,7 @@ public:
  */
 struct FSRPGSkillAction : public FSRPGAction
 {
-	template<typename ActionType>
-	friend struct FSRPGActionCreationCommand;
+	friend struct FSRPGActionCreationCommand<FSRPGSkillAction>;
 	using Super = FSRPGAction;
 
 protected:
