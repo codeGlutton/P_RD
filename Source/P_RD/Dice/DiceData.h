@@ -51,6 +51,10 @@ public:
 	bool IsRolled() const { return mIsRolled; }
 	const FPrimaryAssetId& GetSourceDiceId() const { return mSourceDiceId; }
 
+	/** @brief 이번 턴에 이미 스킬에 쓰였는지(다음 굴림까지 재사용 불가). */
+	bool IsUsed() const { return mIsUsed; }
+	void SetUsed(bool bUsed) { mIsUsed = bUsed; }
+
 private:
 	/** @brief 희귀도. 아트/색/표시 분류에 쓰인다(게임 로직은 결과값으로). */
 	UPROPERTY()
@@ -67,6 +71,10 @@ private:
 	/** @brief 한 번이라도 굴렸는지. */
 	UPROPERTY()
 	bool mIsRolled = false;
+
+	/** @brief 이번 턴에 스킬에 쓰였는지(다음 굴림 시 false로 리셋). */
+	UPROPERTY()
+	bool mIsUsed = false;
 
 	/** @brief 이 런타임 주사위가 어느 정적 주사위(런 보유 id)에서 나왔는지. */
 	UPROPERTY()

@@ -21,6 +21,7 @@ int32 UDiceData::Roll(const FRandomStream& Stream)
 {
 	mCurrentValue = Stream.RandRange(1, FMath::Max(1, mFaceCount));
 	mIsRolled = true;
+	mIsUsed = false;   // 새로 굴리면 사용 상태 해제(다음 턴).
 	return mCurrentValue;
 }
 

@@ -15,6 +15,7 @@
 class UCombatViewModel;
 class USRPGCombatSubsystem;
 class URunPersistData;
+class UDiceAdapter;
 class AUnit;
 class ATileMap;
 enum class ECombatInputType : uint8;
@@ -58,6 +59,9 @@ public:
 
 	/** @brief 뷰모델에 연결하고 현재 표시값을 push한다. */
 	void BindViewModel(UCombatViewModel* InViewModel);
+
+	/** @brief 다이스 어댑터를 연결한다(쓴 주사위 잠금 처리용). */
+	void SetDiceAdapter(UDiceAdapter* InDiceAdapter) { mDiceAdapter = InDiceAdapter; }
 
 	/** @brief 현재 상태로 유닛/메타/턴 표시값을 다시 만들어 뷰모델에 push한다. */
 	void PushAll();
@@ -118,6 +122,12 @@ private:
 
 	UPROPERTY(Transient)
 	TObjectPtr<USRPGCombatSubsystem> mCombat;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UDiceAdapter> mDiceAdapter;
+
+	/** @brief 현재 스킬에 배치된 주사위 index(확정 시 '사용됨' 처리). -1이면 없음. */
+	int32 mPendingDiceIndex = INDEX_NONE;
 
 	int32 mPlayerLevel = 1;
 	int32 mPlayerGold = 100;

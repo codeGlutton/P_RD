@@ -76,6 +76,7 @@ void UCombatTileMapHUDWidget::RefreshDiceViewsFromRunData()
 		{
 			DiceView.mResultValue = (*ViewModelDice)[DiceIndex].mResultValue;   // 굴림 결과는 뷰모델에서
 			DiceView.mIsRolled = (*ViewModelDice)[DiceIndex].mIsRolled;
+			DiceView.mIsUsed = (*ViewModelDice)[DiceIndex].mIsUsed;             // 사용 상태도 뷰모델에서
 		}
 		else
 		{
@@ -170,6 +171,12 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 			DiceColor = FLinearColor(1.0f, 0.82f, 0.30f, 1.0f);
 			DiceScale = 0.98f;
 		}
+		if (DiceView.mIsUsed)
+		{
+			// 이번 턴에 쓴 주사위: 어둡게 비활성 표시.
+			DiceColor = FLinearColor(0.28f, 0.28f, 0.30f, 0.5f);
+			DiceScale = 0.6f;
+		}
 
 		if (mOwnedDicePreviewActors.IsValidIndex(DiceIndex))
 		{
@@ -212,9 +219,14 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 		{
 			if (UIndexedButtonWidget* OwnedDiceCardWidget = mOwnedDiceCardWidgets[DiceIndex])
 			{
-				OwnedDiceCardWidget->SetBackgroundColor(DiceIndex == mSelectedDiceIndex
+				FLinearColor CardColor = DiceIndex == mSelectedDiceIndex
 					? FLinearColor(1.0f, 0.78f, 0.20f, 0.34f)
-					: FLinearColor(1.0f, 1.0f, 1.0f, 0.01f));
+					: FLinearColor(1.0f, 1.0f, 1.0f, 0.01f);
+				if (DiceView.mIsUsed)
+				{
+					CardColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.60f);   // 쓴 주사위: 어두운 오버레이
+				}
+				OwnedDiceCardWidget->SetBackgroundColor(CardColor);
 			}
 		}
 	}
@@ -223,6 +235,12 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 void UCombatTileMapHUDWidget::HandleOwnedDiceCardClicked(int32 DiceIndex)
 {
 	if (mDiceViews.IsValidIndex(DiceIndex) == false || mDiceViews[DiceIndex].mIsRolled == false)
+	{
+		return;
+	}
+
+	// 이번 턴에 이미 쓴 주사위는 다시 배치할 수 없다(다음 굴림까지 잠금).
+	if (mDiceViews[DiceIndex].mIsUsed)
 	{
 		return;
 	}

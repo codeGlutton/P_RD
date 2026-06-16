@@ -18,6 +18,7 @@ struct P_RD_API FDiceViewData
 	ERarityType mRarityType = ERarityType::Common;
 	int32 mResultValue = 1;
 	bool mIsRolled = false;
+	bool mIsUsed = false;   // 이번 턴에 이미 쓴 주사위(다음 굴림까지 잠금)
 };
 
 namespace RDUIDice

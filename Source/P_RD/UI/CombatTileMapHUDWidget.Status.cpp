@@ -20,6 +20,13 @@ void UCombatTileMapHUDWidget::HandleCombatViewChanged(ECombatViewDomain Domain)
 	{
 		RebuildUnitHpBars();
 	}
+
+	// 주사위(굴림/사용) 갱신 시 보유 주사위 표시를 다시 읽어 그린다(쓴 주사위 비활성 반영).
+	if (Domain == ECombatViewDomain::Dice || Domain == ECombatViewDomain::All)
+	{
+		RefreshDiceViewsFromRunData();
+		RefreshOwnedDiceCards();
+	}
 }
 
 void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const

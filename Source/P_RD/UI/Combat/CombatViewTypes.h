@@ -64,6 +64,7 @@ struct FDiceSlotView
 	UPROPERTY(BlueprintReadOnly) int32 mResultValue = 0;     // 굴림 결과. 0 = 아직 안 굴림
 	UPROPERTY(BlueprintReadOnly) bool mIsRolled = false;
 	UPROPERTY(BlueprintReadOnly) bool mIsSelected = false;   // 스킬 빌드에 선택됨
+	UPROPERTY(BlueprintReadOnly) bool mIsUsed = false;       // 이번 턴에 이미 쓴 주사위(다음 굴림까지 잠금)
 	UPROPERTY(BlueprintReadOnly) FLinearColor mRarityColor = FLinearColor::White;
 	UPROPERTY(BlueprintReadOnly) FText mRarityText;
 

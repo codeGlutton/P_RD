@@ -74,6 +74,7 @@ void ACombatGameMode::BeginRoom()
 	 */
 	mCombatViewAdapter = NewObject<UCombatViewAdapter>(this);
 	mCombatViewAdapter->Build(CombatSubsystem, RunPersistData);
+	mCombatViewAdapter->SetDiceAdapter(mDiceAdapter);   // 쓴 주사위 잠금 연동.
 	mCombatViewAdapter->BindViewModel(CombatViewModel);
 
 	if (UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())

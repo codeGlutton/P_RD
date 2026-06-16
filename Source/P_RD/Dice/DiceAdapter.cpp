@@ -61,6 +61,15 @@ void UDiceAdapter::RollAll(const FRandomStream& Stream)
 	PushDiceViews();
 }
 
+void UDiceAdapter::MarkDiceUsed(int32 DiceIndex)
+{
+	if (mDice.IsValidIndex(DiceIndex) && mDice[DiceIndex] != nullptr)
+	{
+		mDice[DiceIndex]->SetUsed(true);
+		PushDiceViews();
+	}
+}
+
 void UDiceAdapter::HandleCombatCommand(ECombatInputType Type, int32 IntPayload)
 {
 	if (Type != ECombatInputType::RollDice)
@@ -99,6 +108,7 @@ void UDiceAdapter::PushDiceViews() const
 		View.mDiceId = Dice->GetSourceDiceId();
 		View.mResultValue = Dice->GetCurrentValue();
 		View.mIsRolled = Dice->IsRolled();
+		View.mIsUsed = Dice->IsUsed();
 		View.mRarityColor = RDUIDice::GetDiceRarityColor(Dice->GetRarity());
 		View.mRarityText = RDUIDice::GetDiceRarityText(Dice->GetRarity());
 		Views.Add(MoveTemp(View));

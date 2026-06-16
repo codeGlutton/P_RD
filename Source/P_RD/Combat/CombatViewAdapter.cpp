@@ -1,6 +1,7 @@
 #include "Combat/CombatViewAdapter.h"
 
 #include "Actor/TileMap/TileMap.h"
+#include "Dice/DiceAdapter.h"
 #include "GameFramework/PlayerController.h"
 #include "Pawn/Unit.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
@@ -101,11 +102,22 @@ void UCombatViewAdapter::HandleCombatCommand(ECombatInputType Type, int32 IntPay
 
 	case ECombatInputType::ToggleDice:
 	{
+		// 이미 쓴 주사위는 무시(다음 굴림까지 잠금).
+		if (mViewModel != nullptr)
+		{
+			const TArray<FDiceSlotView>& Dice = mViewModel->GetDiceViews();
+			if (Dice.IsValidIndex(IntPayload) && Dice[IntPayload].mIsUsed)
+			{
+				break;
+			}
+		}
+
 		const int32 DiceValue = GetRolledDiceValue(IntPayload);
 		if (DiceValue <= 0)
 		{
 			break;
 		}
+		mPendingDiceIndex = IntPayload;   // 확정 시 '사용됨' 처리할 주사위.
 		if (mSelectedSkillIndex == SkillIndexStep)
 		{
 			// STEP: 주사위 배치 → 본인 타일을 회색(Aim)으로. 탭마다 노랑→빨강(확정).
@@ -162,6 +174,10 @@ void UCombatViewAdapter::HandleWorldTouch(FVector2D ScreenPosition, bool bLongPr
 			{
 				SetSingleTileHighlight(mStepTile, ETileHighlightFlag::Effect);   // 빨강 = 확정
 				ApplyStep(mPendingStepValue);                                    // 이동력 += 주사위값
+				if (mDiceAdapter != nullptr && mPendingDiceIndex != INDEX_NONE)
+				{
+					mDiceAdapter->MarkDiceUsed(mPendingDiceIndex);               // 쓴 주사위 잠금
+				}
 				ClearPendingAction();
 			}
 		}
@@ -181,6 +197,10 @@ void UCombatViewAdapter::HandleWorldTouch(FVector2D ScreenPosition, bool bLongPr
 		if (Target != nullptr && Target->mIsPlayer == false)
 		{
 			ApplyBasicAttack(TargetId, mPendingAttackDamage);
+			if (mDiceAdapter != nullptr && mPendingDiceIndex != INDEX_NONE)
+			{
+				mDiceAdapter->MarkDiceUsed(mPendingDiceIndex);   // 적을 친 경우에만 주사위 소모.
+			}
 		}
 		ClearPendingAction();
 		return;
@@ -247,6 +267,7 @@ void UCombatViewAdapter::ClearPendingAction()
 	mMovePending = false;
 	mPendingStepValue = -1;
 	mStepStage = 0;
+	mPendingDiceIndex = INDEX_NONE;
 	ClearAllHighlight();
 
 	// UI에 스킬/주사위 선택 강조를 풀라고 알린다(확정/취소 공통).

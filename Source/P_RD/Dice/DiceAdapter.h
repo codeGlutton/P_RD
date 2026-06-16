@@ -42,6 +42,9 @@ public:
 	/** @brief 보유 주사위 전부를 주어진 난수 스트림으로 굴린 뒤 뷰모델에 push한다. */
 	void RollAll(const FRandomStream& Stream);
 
+	/** @brief 지정 index 주사위를 '사용됨'으로 표시(다음 굴림까지 재사용 불가)하고 뷰모델에 반영한다. */
+	void MarkDiceUsed(int32 DiceIndex);
+
 	const TArray<TObjectPtr<UDiceData>>& GetDice() const { return mDice; }
 
 private:
