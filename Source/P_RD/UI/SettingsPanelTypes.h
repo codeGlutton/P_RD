@@ -57,7 +57,7 @@ struct P_RD_API FSettingsPanelValueModel
 // 설정 입력이 바뀌면 위젯이 올려보내는 이벤트들. 받는 쪽(타이틀/탑바/게임모드)이 실제 적용.
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSettingsPanelEvent);                              // 버튼류(닫기/저장 등)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSettingsPanelFloatEvent, float, Value);  // 슬라이더(볼륨)
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSettingsPanelBoolEvent, bool, bValue);   // 체크박스(흔들림/진동)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSettingsPanelBoolEvent, bool, Value);   // 체크박스(흔들림/진동)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSettingsPanelIntEvent, int32, Value);    // 품질 단계
 
 namespace RDSettingsPanel
