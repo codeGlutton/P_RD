@@ -8,11 +8,11 @@
 
 AIntroGameMode::AIntroGameMode()
 {
-	mWorldWidgets = { EWorldWidgetType::LoadingNotify };
+	mWorldWidgets = { };
 
 	mShowFadeInUIOnTransition = false;
 	mShowFadeOutUIOnTransition = false;
-	mShowLoadingNotifyUIOnTransition = true;
+	mShowLoadingNotifyUIOnTransition = false;
 	mWaitExternalWorkOnTransition = true;
 }
 
@@ -27,11 +27,13 @@ void AIntroGameMode::BeginRoom()
 
 	UCinematicWidget* CinematicHUD = WorldWidgetSubsystem->GetHUD<UCinematicWidget>();
 	checkf(CinematicHUD != nullptr, TEXT("인트로에 보여줄 Cinematic 위젯 nullptr"));
+	mCinematicHUD = CinematicHUD;
 	
 	// UI 열리는 애니메이션 시작
 	CinematicHUD->OpenUI(FOnEndUIOpenAnimation::CreateWeakLambda(this, [this](UUserWidget* OpenedWidget) {
 		// 시네마틱 시작
 		UCinematicWidget* OpenedCinematicWidget = Cast<UCinematicWidget>(OpenedWidget);
+		checkf(OpenedCinematicWidget != nullptr, TEXT("열린 인트로 위젯 타입 오류"));
 		OpenedCinematicWidget->PlayCinematic(FOnEndCinematicAnimation::CreateUObject(this, &AIntroGameMode::OnEndCinematicAnimation));
 		
 		// 파일 비동기 로드 시작
@@ -44,7 +46,13 @@ void AIntroGameMode::BeginRoom()
 
 void AIntroGameMode::OnEndCinematicAnimation(UCinematicWidget* CinematicWidget)
 {
+	mCinematicHUD = CinematicWidget;
+
 	EnumAddFlags(mStateFlag, EIntroGameModeStateFlag::CinematicAnimationEnded);
+	if (EnumHasAllFlags(mStateFlag, EIntroGameModeStateFlag::ReadyToTransition) == false && CinematicWidget != nullptr)
+	{
+		StartLoadingWaitDelay();
+	}
 	TryToMarkExternalReady();
 }
 
@@ -66,9 +74,66 @@ void AIntroGameMode::TryToMarkExternalReady()
 	{
 		return;
 	}
+	ClearLoadingWaitDelay();
 	mStateFlag = EIntroGameModeStateFlag::None;
 
-	// <시네마틱 && 런 데이터 로드 && 유저 데이터 로드>에 대한 대기 상태 모두 완료 알림
-	checkf(MarkExternalReadyForTransition() == true, TEXT("대기 상태 모두 완료 알림 실패"));
+	MarkIntroExternalReady();
+}
+
+void AIntroGameMode::StartLoadingWaitDelay()
+{
+	UWorld* World = GetWorld();
+	if (World == nullptr)
+	{
+		return;
+	}
+
+	ClearLoadingWaitDelay();
+	World->GetTimerManager().SetTimer(
+		mLoadingWaitDelayTimerHandle,
+		FTimerDelegate::CreateWeakLambda(this, [this]()
+		{
+			ShowLoadingWaitScreenIfStillNeeded();
+		}),
+		mLoadingWaitDelaySeconds,
+		false
+	);
+}
+
+void AIntroGameMode::ClearLoadingWaitDelay()
+{
+	UWorld* World = GetWorld();
+	if (World != nullptr)
+	{
+		World->GetTimerManager().ClearTimer(mLoadingWaitDelayTimerHandle);
+	}
+	mLoadingWaitDelayTimerHandle.Invalidate();
+}
+
+void AIntroGameMode::ShowLoadingWaitScreenIfStillNeeded()
+{
+	if (EnumHasAllFlags(mStateFlag, EIntroGameModeStateFlag::ReadyToTransition) == true)
+	{
+		return;
+	}
+
+	if (UCinematicWidget* CinematicHUD = mCinematicHUD.Get())
+	{
+		CinematicHUD->FadeToLoadingWaitScreen();
+	}
+}
+
+void AIntroGameMode::MarkIntroExternalReady()
+{
+	/*
+	 * 인트로는 영상 자체가 로딩 화면 역할을 한다.
+	 * 그래서 공통 MarkExternalReadyForTransition()을 쓰면 LoadingNotify가 한 번 더 열려
+	 * "인트로 종료 -> 별도 로딩 화면"으로 보인다.
+	 * 여기서는 시네마틱 위젯을 닫은 뒤 전환 서브시스템에 ExternalReady만 직접 전달한다.
+	 */
+	URoomTransitionSubsystem* RoomTransitionSubsystem = GetGameInstance()->GetSubsystem<URoomTransitionSubsystem>();
+	checkf(RoomTransitionSubsystem != nullptr, TEXT("방 전환 서브시스템 nullptr 오류"));
+	checkf(RoomTransitionSubsystem->MarkExternalReady() == true, TEXT("대기 상태 모두 완료 알림 실패"));
+	StartLoadingWaitDelay();
 }
 

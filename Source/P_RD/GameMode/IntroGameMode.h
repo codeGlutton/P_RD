@@ -51,6 +51,17 @@ private:
 protected:
 	void TryToMarkExternalReady();
 
+private:
+	void StartLoadingWaitDelay();
+	void ClearLoadingWaitDelay();
+	void ShowLoadingWaitScreenIfStillNeeded();
+	void MarkIntroExternalReady();
+
 protected:
 	EIntroGameModeStateFlag mStateFlag = EIntroGameModeStateFlag::None;
+
+private:
+	TWeakObjectPtr<UCinematicWidget> mCinematicHUD;
+	FTimerHandle mLoadingWaitDelayTimerHandle;
+	float mLoadingWaitDelaySeconds = 0.25f;
 };
