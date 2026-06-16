@@ -189,23 +189,6 @@ ARoomGameModeBase::ARoomGameModeBase()
 	mWaitExternalWorkOnTransition = false;
 }
 
-AActor* ARoomGameModeBase::ChoosePlayerStart_Implementation(AController* Player)
-{
-	AActor* PlayerStartActor = Super::ChoosePlayerStart_Implementation(Player);
-
-	ARDWorldSettings* WorldSettings = Cast<ARDWorldSettings>(GetWorld()->GetWorldSettings());
-	if (WorldSettings != nullptr)
-	{
-		AActor* SettingPointActor = WorldSettings->GetMainCameraPoint();
-		if (SettingPointActor != nullptr)
-		{
-			PlayerStartActor = SettingPointActor;
-		}
-	}
-
-	return PlayerStartActor;
-}
-
 /**
  * @brief 플레이어 스타트(스폰/카메라 위치)를 결정한다.
  *

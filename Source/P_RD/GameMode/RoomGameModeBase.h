@@ -29,10 +29,6 @@ class P_RD_API ARoomGameModeBase : public ARDGameModeBase
 public:
 	ARoomGameModeBase();
 	
-	/* ARDGameModeBase 상속 */
-public:
-	AActor* ChoosePlayerStart_Implementation(AController* Player) override;
-
 protected:
 	/** @brief MainCameraPoint(WorldSettings)를 플레이어 스타트로 선택해 카메라/스폰 위치를 맞춘다. */
 	AActor* ChoosePlayerStart_Implementation(AController* Player) override;
