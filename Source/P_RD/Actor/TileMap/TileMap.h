@@ -311,28 +311,22 @@ protected:
 	/* 강조 표시 */
 
 	/**
-	 * @brief 조준 범위 스타일 (우선순위 최하, 바닥에 깔림)
+	 * @brief 조준 범위 스타일 (타일 위에 자기 알파로 Mix)
 	 */
 	UPROPERTY(EditAnywhere, Category = "SRPG|Highlight", meta = (DisplayName = "Aim Style"))
 	FTileHighlightStyle mAimStyle;
 
 	/**
-	 * @brief 선택 타일 스타일 (Aim 위에 덮어씀)
+	 * @brief 선택 타일 스타일 (겹치면 최우선 — 자기 색만 칠하고 Effect/Aim 무시)
 	 */
 	UPROPERTY(EditAnywhere, Category = "SRPG|Highlight", meta = (DisplayName = "Select Style"))
 	FTileHighlightStyle mSelectStyle;
 
 	/**
-	 * @brief 영향 범위 스타일 (우선순위 최상, 펄스로 알파 변조)
+	 * @brief 영향 범위 스타일 (아래 레이어[Aim/타일] ↔ 자기 색 사이를 펄스로 오감)
 	 */
 	UPROPERTY(EditAnywhere, Category = "SRPG|Highlight", meta = (DisplayName = "Effect Style"))
 	FTileHighlightStyle mEffectStyle;
-
-	/**
-	 * @brief 펄스 강도 (Effect 알파에 곱하는 진동의 진폭, 0~1)
-	 */
-	UPROPERTY(EditAnywhere, Category = "SRPG|Highlight", meta = (DisplayName = "Pulse Intensity", ClampMin = "0.0", ClampMax = "1.0"))
-	float mPulseIntensity = 0.8f;
 
 	/**
 	 * @brief 펄스 주기 (초)
@@ -513,8 +507,9 @@ private:
 	/**
 	 * @brief 한 타일의 강조 상태(mHighlights)를 스타일로 합성해 ISM custom data에 기록
 	 * @details
-	 * 활성 레이어를 priority 오름차순으로 blend(Mix=알파 over, Overwrite=덮어쓰기)하고,
-	 * Effect는 알파에 펄스 계수를 곱한다. 슬롯 0~2=알파 곱해진(프리멀티) RGB, 3=커버리지 알파.
+	 * Select가 있으면 Select 색만(최우선). 아니면 Effect가 아래 레이어(Aim 있으면 Aim, 없으면 타일)와
+	 * 자기 색 사이를 펄스로 보간한다. 둘 다 없으면 Aim 색(또는 타일).
+	 * 모든 색은 타일 위에 자기 알파로 Mix(프리멀티). 슬롯 0~2=알파 곱해진 RGB, 3=커버리지 알파.
 	 * @param[in] LinearIndex 타일/인스턴스 1차원 인덱스
 	 */
 	void RefreshTileCustomData(int32 LinearIndex);
