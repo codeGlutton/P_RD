@@ -1,6 +1,3 @@
-// 이 파일: 영상이 끝난 뒤 화면을 검게 페이드하는 애니메이션(60fps 타이머로 투명도 0→1).
-//          용도 두 가지 — ① 프론트엔드 로드가 늦으면 "로딩중" 대기 화면으로(LoadingWait)
-//                          ② 이미 로드됐으면 인트로를 닫고 타이틀로(Close). FadePurpose로 구분.
 #include "UI/CinematicWidget.h"
 
 #include "Widgets/Images/SImage.h"

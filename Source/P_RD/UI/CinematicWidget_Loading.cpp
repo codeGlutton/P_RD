@@ -1,5 +1,3 @@
-// 이 파일: "로딩중" 대기 화면(검은 레이어 + 텍스트)의 표시/숨김과 레이어 투명도 제어.
-//          페이드가 끝나 검은 화면이 되면 여기서 텍스트를 띄우고, 인트로로 돌아가면 다시 숨긴다.
 #include "UI/CinematicWidget.h"
 
 #include "Widgets/Images/SImage.h"
