@@ -176,6 +176,7 @@ void USRPGCombatSubsystem::EvaluateCombatEndState()
 			}
 		}
 	}
+	// AnyEnemyExists gate가 핵심 불변식이다. "적이 없음"과 "있던 적을 모두 처치함"은 전투 결과가 다르다.
 	if (AnyEnemyExists && AnyEnemyAlive == false)
 	{
 		mCombatResult = ESRPGCombatResult::PlayerWin;
