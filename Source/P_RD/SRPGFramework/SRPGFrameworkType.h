@@ -124,10 +124,7 @@ enum class ETargetScope : uint8
     Caster UMETA(DisplayName = "Caster"),
 
     /** 대상 선정 기준: 선택된 타일/대상 */
-    Target UMETA(DisplayName = "Target"),
-
-    /** 대상 선정 기준: 시전자와 타겟 모두 포함 */
-    Both   UMETA(DisplayName = "Both")
+    Target UMETA(DisplayName = "Target")
 };
 
 /**
