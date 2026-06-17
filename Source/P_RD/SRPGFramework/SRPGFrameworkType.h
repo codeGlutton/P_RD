@@ -157,6 +157,16 @@ enum class ETargetFilter : uint8
 ENUM_CLASS_FLAGS(ETargetFilter);
 
 /**
+ * @brief 시뮬레이션 상태 열거형
+ */
+UENUM(BlueprintType)
+enum class ESRPGSimulationState : uint8
+{
+    RunningGame        UMETA(ToolTip = "인 게임 진행 중"),
+    RunningSimulation  UMETA(ToolTip = "시물레이션 진행 중"),
+};
+
+/**
  * @brief 전투 결과를 나타내는 열거형
  */
 UENUM(BlueprintType)
@@ -237,6 +247,9 @@ enum class ESRPGActionPhase : uint8
     ActionEnd           UMETA(ToolTip = "액션 종료"),
 };
 
+/**
+ * @brief 스킬 빌드 액션 내 진행 단계 열거형
+ */
 UENUM(BlueprintType)
 enum class ESRPGSkillBuildPhase : uint8
 {
@@ -245,6 +258,9 @@ enum class ESRPGSkillBuildPhase : uint8
     Preview             UMETA(ToolTip = "프리뷰 표기"),
 };
 
+/**
+ * @brief SRPG 명령 타입에 대한 열거형
+ */
 UENUM(BlueprintType)
 enum class ESRPGCommandType : uint8
 {
