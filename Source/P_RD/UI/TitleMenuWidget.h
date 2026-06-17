@@ -8,44 +8,39 @@
 
 #include "RDMinimal.h"
 #include "UI/RDUserWidget.h"
+#include "UI/TitleMenuRuntimeAssets.h"
 
 #include "TitleMenuWidget.generated.h"
 
 class UButton;
+class UCanvasPanel;
 class UCharacterSelectWidget;
+class UImage;
 class USettingsPanelWidget;
 class UTextBlock;
+class UTexture2D;
 class UWidget;
 class UWidgetSwitcher;
 
 /**
- * @brief 타이틀 UI의 가장 바깥 화면 전환을 담당하는 위젯
+ * @brief 타이틀 화면의 화면 전환과 비주얼 구성을 담당하는 위젯
  *
  * @details
- * 이 위젯은 게임을 시작하기 전의 큰 메뉴 흐름만 관리한다.
- * START를 누르면 캐릭터 선택 화면으로 넘기고,
- * SETTING을 누르면 공용 설정 패널을 OpenUI()로 열고,
- * 각 하위 화면에서 BACK 요청이 오면 메인 화면으로 돌아온다.
+ * WBP_TitleMenu는 ScreenSwitcher/버튼/텍스트 등 BindWidget 앵커와 기본 자리만 제공하고,
+ * C++이 두 가지를 맡는다.
+ *  1) 화면 흐름: START→캐릭터 선택, SETTING→공용 설정 패널 OpenUI(), 하위 화면 BACK→메인 복귀.
+ *  2) 비주얼 구성: 배경 영상(_Background), PNG 타이틀 로고(_Logo), 버튼 텍스처 스킨(_Buttons)을
+ *     런타임에 구성한다. 이 프로젝트 UI 공통 패턴(위젯이 자기 비주얼을 런타임에 조립)을 따른다.
  *
- * 실제 화면 배치는 WBP_TitleMenu에서 만든다.
- * C++은 ScreenSwitcher, StartButton 같은 이름의 위젯을 BindWidget으로 받아서
- * 버튼 이벤트와 화면 전환만 처리한다.
- *
- * 타이틀 뒤쪽 배경은 현재 WBP에 검은색 기본 레이어로 둔다.
- * 나중에 타이틀 이미지, 움짤, MediaTexture, 머티리얼 배경을 넣을 때는
- * WBP_TitleMenu에서 그 배경 레이어만 교체하면 된다.
- *
- * 캐릭터 목록을 만들거나, 캐릭터 카드를 갱신하거나, Confirm을 막는 일은
- * UCharacterSelectWidget 쪽 책임이다.
- * 실제 런 데이터 생성, 저장 로드, 방 전환은 GameMode/Subsystem API로 위임한다.
- * TitleMenuWidget 안에 그 로직을 직접 넣으면 캐릭터 수나 룸 규칙이 바뀔 때마다
- * 타이틀 메뉴 코드까지 같이 고쳐야 해서 구조가 다시 꼬인다.
+ * 단, 게임플레이 경계는 지킨다.
+ * 캐릭터 목록 구성/카드 갱신은 UCharacterSelectWidget,
+ * 런 데이터 생성·세이브 로드·방 전환은 GameMode/Subsystem API로 위임한다.
+ * 타이틀 위젯 안에 그 로직을 직접 넣으면 캐릭터 수·룸 규칙이 바뀔 때마다 같이 고쳐야 한다.
  *
  * @note
- * 이제 C++ fallback 화면은 만들지 않는다.
  * BP_FrontendGameMode의 HUDClass는 WBP_TitleMenu를 가리켜야 한다.
- * WBP에서 필수 BindWidget 이름이 바뀌면 화면은 뜨더라도 버튼 연결이 되지 않으므로
- * ValidateDesignerBindings() 로그를 먼저 확인하면 된다.
+ * 필수 BindWidget 이름이 WBP에서 바뀌면 화면은 떠도 버튼 연결이 끊기므로
+ * ValidateDesignerBindings() 로그를 먼저 확인한다.
  */
 UCLASS(BlueprintType, Blueprintable)
 class P_RD_API UTitleMenuWidget : public URDUserWidget
@@ -184,6 +179,37 @@ private:
 	void SetStatusText(const FText& InText) const;
 
 	/**
+	 * @brief 타이틀 배경 영상 재생을 시작한다.
+	 *
+	 * @details
+	 * 정적 비주얼(로고/버튼/레이아웃)은 WBP_TitleMenu가 책임진다.
+	 * C++은 표시용 Image(WBP의 TitleBackgroundImage)에 MediaTexture를 물려 영상만 재생한다.
+	 * TitleBackgroundImage가 없으면 배경 영상은 생략한다.
+	 */
+	void StartTitleBackgroundVideo();
+
+	/** @brief 타이틀 배경 영상용 MediaPlayer/MediaTexture/FileMediaSource를 준비한다. */
+	void EnsureTitleBackgroundMediaObjects();
+
+	/** @brief MediaTexture를 WBP 배경 Image(TitleBackgroundImage) Brush에 반영한다. */
+	void ApplyTitleBackgroundVideoBrush();
+
+	/** @brief 타이틀 배경 영상을 반복 재생한다. */
+	void PlayTitleBackgroundVideo();
+
+	/** @brief 타이틀 배경 영상 재생을 정리한다. */
+	void StopTitleBackgroundVideo();
+
+	/** @brief Content 기준 상대 경로를 실제 파일 경로로 바꾼다. */
+	FString ResolveTitleBackgroundVideoPath() const;
+
+	UFUNCTION()
+	void HandleTitleBackgroundMediaOpened(FString OpenedUrl);
+
+	UFUNCTION()
+	void HandleTitleBackgroundMediaOpenFailed(FString FailedUrl);
+
+	/**
 	 * @brief 화면에 필요한 위젯 연결 상태를 로그로 확인함
 	 *
 	 * @details
@@ -272,8 +298,8 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> SettingsButton;
 
-	/** @brief 게임 타이틀명을 표시하는 TextBlock */
-	UPROPERTY(meta = (BindWidget))
+	/** @brief (레거시) 게임 타이틀명 TextBlock. 이제 WBP의 TitleLogoImage가 타이틀을 대체하므로 Optional. */
+	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> TitleText;
 
 	/** @brief START 버튼 안에 표시할 라벨 */
@@ -325,5 +351,23 @@ private:
 	/** @brief 캐릭터 선택 위젯을 만들거나 붙일 수 없을 때 보여줄 문구 */
 	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	FText mCharacterSelectUnavailableText;
+
+	/**
+	 * @brief WBP가 제공하는 배경 영상 표시용 Image (BindWidgetOptional)
+	 * @details 위치/레이아웃은 WBP가 잡고, C++은 여기에 MediaTexture를 물려 영상만 재생한다.
+	 *          WBP에 없으면 배경 영상은 생략한다. (로고/버튼 등 나머지 정적 비주얼은 전부 WBP 책임)
+	 */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UImage> TitleBackgroundImage;
+
+	/**
+	 * @brief 타이틀 메인 화면에서 반복 재생할 MP4 파일의 Content 기준 상대 경로
+	 */
+	UPROPERTY(Category = "Title Menu|Background", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true, DisplayName = "Title Background Video Path"))
+	FString mTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/MS_TitleLoop_01.mp4");
+
+	/** @brief 배경 영상 재생용 런타임 객체(MediaPlayer/Texture/Source/브러시). 정적 비주얼은 WBP. */
+	UPROPERTY(Transient)
+	FTitleMenuBackgroundRuntimeAssets mBackgroundRuntime;
 
 };
