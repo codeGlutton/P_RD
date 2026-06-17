@@ -44,8 +44,8 @@ struct FSkillAnimLayer
     * @details
     * notify 호출 시 모든 효과들이 발동될 것이다.
     */
-    UPROPERTY(Category = "SkillAnimLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StaticSkillEffectLayer"))
-    TArray<UStaticSkillEffect_Base*> mStaticSkillEffectLayers;
+    UPROPERTY(Category = "SkillAnimLayer", EditAnywhere, Instanced, BlueprintReadWrite, meta = (DisplayName = "StaticSkillEffectLayer"))
+    TArray<TObjectPtr<UStaticSkillEffect_Base>> mStaticSkillEffectLayers;
 };
 
 
