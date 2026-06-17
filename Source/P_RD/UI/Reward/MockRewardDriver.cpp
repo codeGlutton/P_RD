@@ -10,6 +10,7 @@ void UMockRewardDriver::Start(URewardViewModel* ViewModel)
 	}
 	mViewModel = ViewModel;
 
+	// Mock은 실제 보상 지급자가 아니다. Claim 입력이 UI에서 ViewModel을 타고 올라오는지만 확인한다.
 	mViewModel->OnRewardClaimed.AddDynamic(this, &UMockRewardDriver::HandleClaimed);
 
 	// 가짜 보상: 돈 50, 경험치 30 (레벨 3, 40→70 / 최대 100)
