@@ -1,9 +1,7 @@
-﻿/*****************************************************************//**
- * @file   SRPGTurnContext.h
- * @brief  턴 런타임 정보를 담은 Context 객체 구현 헤더 
- * @author 모호재
- * @date   2026-04-28
- *********************************************************************/
+﻿// @file SRPGTurnContext.h
+// @brief 턴 런타임 정보를 담은 Context 객체 구현 헤더
+// @author 모호재
+// @date 2026-04-28
 
 #pragma once
 
@@ -40,9 +38,7 @@ protected:
 	TWeakPtr<FSRPGTurnContext> mParent;
 };
 
-/**
- * @brief  스킬 사용 시 임시 정보를 들고 있는 Context 객체
- */
+/** @brief 스킬 사용 시 임시 정보를 들고 있는 Context 객체 */
 struct FSRPGTurnContext : public TSharedFromThis<FSRPGTurnContext>
 {
 	friend class USRPGCombatSubsystem;
