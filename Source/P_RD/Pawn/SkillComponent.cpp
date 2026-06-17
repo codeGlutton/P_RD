@@ -4,6 +4,7 @@
 #include "SkillComponent.h"
 #include "SkillComponent/SkillCommitResultHolder.h"
 #include "../FunctionLibrary/CombatCalculator/CombatCalculatorFunctionLibrary.h"
+#include "../FunctionLibrary/CommandLog/CommandLogFunctionLibrary.h"
 #include "SRPGFramework/TileActor.h"
 #include "Pawn/Unit.h"
 
@@ -68,46 +69,63 @@ bool USkillComponent::AddSkillData(TSoftObjectPtr<UStaticSkillData> SkillData)
 	return true;
 }
 
-bool USkillComponent::ActivateSkill(const FSkillCommitResult& SkillResult)
+bool USkillComponent::ActivateSkill(const FCommandLog& SkillResult)
 {
-	checkf(GetOwner(), TEXT("주인 Actor가 없습니다."))
+	checkf(GetOwner(), TEXT("주인 Actor가 없습니다."));
 
-	// 추후 mSkillCommitResult가 유효하지 않다면 취소시키도록 한다.
-	// checkf(IsValid(mSkillCommitResult))
+	FString Log;
 
-	// 리팩토링 중 주석처리... ==============================================================================================================================
-	/*
+	Log += "\nCommandLog\n{\n";
+	for (const FTileLog& TileLog : SkillResult.mTileLog)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Timig : %s"), *StaticEnum<EEffectEventTiming>()->GetNameStringByValue((int32)TileLog.mEventTimig));
+		Log += FString::Printf(TEXT("\tTimig : %s\n"), *StaticEnum<EEffectEventTiming>()->GetNameStringByValue((int32)TileLog.mEventTimig));
+		Log += "\t{\n";
+		for (const TPair<int32, FEventLog>& Element : TileLog.mEventLog)
+		{
+			int32 TileMapIndex = Element.Key;
+			const FEventLog&  EventLog = Element.Value;
 
-	// 어빌리티를 발동시킨다.
-	FGameplayEventData EventData;
+			// 로직 처리
+			UE_LOG(LogTemp, Warning, TEXT("TileMapIndex : %d"), TileMapIndex);
+			Log += FString::Printf(TEXT("\t\tTileMapIndex : %d\n"), TileMapIndex);
 
-	EventData.Instigator = GetOwner();	// 사용자
+			Log += FString::Printf(TEXT("\t\tUnitEvent\n\t\t{\n"));
+			if (EventLog.mUnitEventLog.IsValid())
+			{
+				UE_LOG(LogTemp, Warning, TEXT("UnitID : %d"), EventLog.mUnitEventLog.mTargetUnitID);
+				Log += FString::Printf(TEXT("\t\t\tUnitID : %d\n"), EventLog.mUnitEventLog.mTargetUnitID);
 
-	EventData.EventTag = AbilityTags::GameplayAbility_Skill;
+				UE_LOG(LogTemp, Warning, TEXT("Effect Tag : %s"), *EventLog.mUnitEventLog.mGameplayTag.ToString());
+				Log += FString::Printf(TEXT("\t\t\tEffect Tag : %s\n"), *EventLog.mUnitEventLog.mGameplayTag.ToString());
 
-	// 1. 구조체를 담을 UObject 홀더 생성
-	USkillCommitResultHolder* ResultHolder = NewObject<USkillCommitResultHolder>();
+				UE_LOG(LogTemp, Warning, TEXT("Effect Value : %f"), EventLog.mUnitEventLog.mValue);
+				Log += FString::Printf(TEXT("\t\t\tEffect Value : %f\n"), EventLog.mUnitEventLog.mValue);
 
-	// 2. 결과 데이터 복사
-	ResultHolder->CommitResult = SkillResult;
+			}
+			Log += "\t\t}\n";
+		}
+		Log += "\t}\n";
+	}
+	Log += "}";
 
-	// 3. 이벤트 데이터의 OptionalObject에 래퍼 오브젝트 바인딩
-	EventData.OptionalObject = ResultHolder;
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *Log);
 
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), EventData.EventTag, EventData);
 
-	UE_LOG(LogTemp, Warning, TEXT("GA에게 전달 Start"));
-	*/
 
 	return true;
 }
 
-bool USkillComponent::CalculateSkillResult(int32 SkillIndex, const TArray<TScriptInterface<ITileActor>>& TileActors, FSkillCommitResult& Out_Result)
+bool USkillComponent::CalculateSkillResult(int32 SkillIndex, TArray<FTileIndex>	mTargetTiles, const FTileMapCloneData& In_CloneData,  FCommandLog& Out_Result)
 {
 	checkf(mSkillData.IsValidIndex(SkillIndex), TEXT("스킬 인덱스가 유효하지 않습니다."));
 
-	const AUnit* Unit = Cast<AUnit>(GetOwner());
-	TScriptInterface<const ITileActor> Caster = Unit;
-	return UCombatCalculatorFunctionLibrary::CalculateSkillResult(Caster, mSkillData[SkillIndex].Get(), TileActors, Out_Result);
+	FCommandLogFunctionContext CLFContext;
+	CLFContext.mRequestType = ECommandLogRequestType::Skill;
+	CLFContext.mSourceActorID = GetOwner()->GetUniqueID(); // 추후 액터 아이디로 변경
+	CLFContext.mTargetTiles = mTargetTiles;
+	CLFContext.mSkillData = mSkillData[SkillIndex].Get();
+
+	return UCommandLogFunctionLibrary::CalculateSkillCommandLog(In_CloneData, CLFContext, Out_Result);
 }
 
