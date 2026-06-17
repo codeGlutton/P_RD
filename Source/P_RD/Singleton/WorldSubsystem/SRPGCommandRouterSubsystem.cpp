@@ -1,0 +1,57 @@
+﻿#include "Singleton/WorldSubsystem/SRPGCommandRouterSubsystem.h"
+#include "SRPGFramework/SRPGCommandHandler.h"
+#include "SRPGFramework/SRPGCommand.h"
+
+DEFINE_LOG_CATEGORY(LogSRPGCommandRouter)
+
+bool USRPGCommandRouterSubsystem::SummitCommand(TSharedPtr<const FSRPGCommand> Command)
+{
+	checkf(Command != nullptr, TEXT("유효하지 않은 커맨드"));
+	checkf(Command->GetCommandType() != ESRPGCommandType::None, TEXT("유효하지 않은 커맨드"));
+
+	ESRPGCommandResult Result = ESRPGCommandResult::Ignored;
+
+	/* 핸들러 우선 순위대로 커맨드 처리 요청 */
+
+	for (const TSharedPtr<ISRPGCommandHandler>& Handler : mCommandHandlers)
+	{
+		Result = CombineSRPGCommandResult(Handler->HandleCommand(Command), Result);
+		if (Result == ESRPGCommandResult::Handled)
+		{
+			break;
+		}
+	}
+
+	/* 커맨드 처리 실패 시 Fallback 처리 */
+
+	if (Result != ESRPGCommandResult::Handled)
+	{
+		Result = CombineSRPGCommandResult(HandleFallbackCommand(Command), Result);
+	}
+
+	const bool IsCommandUsed = Result != ESRPGCommandResult::Ignored;
+	return IsCommandUsed;
+}
+
+void USRPGCommandRouterSubsystem::RegisterCommandHandler(TSharedPtr<ISRPGCommandHandler> Handler)
+{
+	mCommandHandlers.Add(Handler);
+	mCommandHandlers.Sort([](const TSharedPtr<ISRPGCommandHandler>& Lhs, const TSharedPtr<ISRPGCommandHandler>& Rhs) {
+		return Lhs->GetCommandPriority() > Rhs->GetCommandPriority();
+		});
+}
+
+void USRPGCommandRouterSubsystem::UnregisterCommandHandler(TSharedPtr<ISRPGCommandHandler> Handler)
+{
+	mCommandHandlers.Remove(Handler);
+}
+
+ESRPGCommandResult USRPGCommandRouterSubsystem::HandleFallbackCommand(TSharedPtr<const FSRPGCommand> Command)
+{
+	if (Command->GetCommandType() == ESRPGCommandType::WorldTrace)
+	{
+		// TODO : 꾹 눌렀을 때 정보 처리 부분
+	}
+
+	return ESRPGCommandResult::Ignored;
+}

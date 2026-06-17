@@ -64,21 +64,15 @@ ATileMap::ATileMap()
 		mTileMeshComponent->SetStaticMesh(mTileMesh);
 	}
 
-	// 강조 스타일 기본값 (우선순위 Aim < Select < Effect)
-	// 조준 범위: 회색 반투명, 바닥에 깔림
+	// 강조 스타일 기본값 (모두 타일 위에 자기 알파로 Mix — 알파<1이라 타일이 비침)
+	// 조준 범위: 회색 반투명
 	mAimStyle.mColor = FLinearColor(0.5f, 0.5f, 0.5f, 0.5f);
-	mAimStyle.mBlendMode = ETileHighlightBlend::Mix;
-	mAimStyle.mPriority = 0;
 
-	// 선택 타일: 노란색, Aim 위에 덮어씀
-	mSelectStyle.mColor = FLinearColor(1.0f, 0.9f, 0.1f, 1.0f);
-	mSelectStyle.mBlendMode = ETileHighlightBlend::Overwrite;
-	mSelectStyle.mPriority = 1;
+	// 선택 타일: 노란색 (겹치면 최우선)
+	mSelectStyle.mColor = FLinearColor(1.0f, 0.9f, 0.1f, 0.8f);
 
-	// 영향 범위: 빨간색, 최상위에서 펄스로 섞임
+	// 영향 범위: 빨간색 (아래 레이어 ↔ 자기 색을 펄스로 보간)
 	mEffectStyle.mColor = FLinearColor(1.0f, 0.1f, 0.1f, 0.6f);
-	mEffectStyle.mBlendMode = ETileHighlightBlend::Mix;
-	mEffectStyle.mPriority = 2;
 }
 
 void ATileMap::OnConstruction(const FTransform& Transform)
@@ -274,10 +268,10 @@ FTransform ATileMap::TileToWorldTransform(const FTileTransform& TileTransform) c
 {
 	// 월드 위치 획득
 	const FVector WorldLocation = TileToWorldLocation(TileTransform.mIndex);
-	// 타일맵의 YAW 회전을 타일에 적용 (그래야 같은 방향을 바라보니까)
-	const FQuat WorldRotation = GetActorQuat() * FRotator(0.0f, DirectionToYaw(TileTransform.mDirection), 0.0f).Quaternion();
-	// 타일맵의 스케일을 타일에 적용
-	return FTransform(WorldRotation, WorldLocation, GetActorScale3D());
+	// 타일맵 메시 컴포넌트의 YAW 회전을 타일에 적용 (그래야 같은 방향을 바라보니까)
+	const FQuat WorldRotation = mTileMeshComponent->GetComponentQuat() * FRotator(0.0f, DirectionToYaw(TileTransform.mDirection), 0.0f).Quaternion();
+	// 타일맵 메시 컴포넌트의 스케일을 타일에 적용
+	return FTransform(WorldRotation, WorldLocation, mTileMeshComponent->GetComponentScale());
 }
 
 FVector ATileMap::TileToWorldLocation(const FTileIndex& TileIndex) const
@@ -286,8 +280,8 @@ FVector ATileMap::TileToWorldLocation(const FTileIndex& TileIndex) const
 	// 메시 피벗이 중심인 엔진 Plane 기준이라 (X*TileSize, Y*TileSize)가 곧 타일 중심
 	// (피벗이 모서리인 커스텀 메시로 교체 시 이 가정이 깨지므로 양쪽 모두 보정 필요)
 	const FVector LocalLocation(TileIndex.mX * mTileSize, TileIndex.mY * mTileSize, 0.0f);
-	// 액터 트랜스폼(위치/회전/스케일)을 반영해 월드 위치로 변환
-	return GetActorTransform().TransformPosition(LocalLocation);
+	// 타일이 배치된 메시 컴포넌트 트랜스폼(위치/회전/스케일)을 반영해 월드 위치로 변환
+	return mTileMeshComponent->GetComponentTransform().TransformPosition(LocalLocation);
 }
 
 FTileIndex ATileMap::WorldToTileIndex(const FVector& WorldLocation) const
@@ -298,8 +292,8 @@ FTileIndex ATileMap::WorldToTileIndex(const FVector& WorldLocation) const
 		return FTileIndex::Invalid;
 	}
 
-	// 월드 좌표를 로컬 좌표로 변환
-	const FVector LocalLocation = GetActorTransform().InverseTransformPosition(WorldLocation);
+	// 월드 좌표를 타일이 배치된 메시 컴포넌트 로컬 좌표로 변환
+	const FVector LocalLocation = mTileMeshComponent->GetComponentTransform().InverseTransformPosition(WorldLocation);
 
 	// 로컬 좌표를 타일 크기로 나눈 뒤 반올림해 가장 가까운 타일 중심을 인덱스로 지정
 	// 예) 80 -> 80 / 100 = 0 -> 인덱스 0
@@ -682,8 +676,9 @@ TArray<FTileIndex> ATileMap::GetEffectTiles(const FTileIndex& Caster, const FTil
 
 /**
  * @details
- * - 우선순위 낮은 것부터 높은 것 순서로 타일에 칠할 색을 블랜딩
- * - 각각의 플래그의 속성에 따라 합성 또는 덮어쓰기 가능
+ * - 모든 강조는 타일 위에 자기 알파로 Mix (프리멀티플라이드 RGB + 커버리지 알파)
+ * - Select가 겹치면 최우선: 자기 색만 칠하고 Aim/Effect 무시
+ * - Effect는 [아래 레이어(Aim/타일)] ↔ [자기 색]을 펄스로 크로스페이드
  * - 알파까지 계산에 포함시켜서, 출력단에서 알파 합성을 따로 안해도 되게끔 최적화
  */
 void ATileMap::RefreshTileCustomData(int32 LinearIndex)
@@ -694,45 +689,42 @@ void ATileMap::RefreshTileCustomData(int32 LinearIndex)
 
 	const ETileHighlightFlag Flags = mHighlights[LinearIndex];
 
-	// 활성 레이어 수집 (스타일 + 펄스 여부)
-	struct FLayer { const FTileHighlightStyle* Style; bool bPulse; };
-	TArray<FLayer, TInlineAllocator<3>> ActiveLayers;
-	if (EnumHasAnyFlags(Flags, ETileHighlightFlag::Aim))    ActiveLayers.Add({ &mAimStyle, false });
-	if (EnumHasAnyFlags(Flags, ETileHighlightFlag::Select)) ActiveLayers.Add({ &mSelectStyle, false });
-	if (EnumHasAnyFlags(Flags, ETileHighlightFlag::Effect)) ActiveLayers.Add({ &mEffectStyle, true });
+	// 플래그 해석 (Select가 겹치면 최우선 → Effect 억제)
+	const bool bHasAim    = EnumHasAnyFlags(Flags, ETileHighlightFlag::Aim);
+	const bool bHasSelect = EnumHasAnyFlags(Flags, ETileHighlightFlag::Select);
+	const bool bHasEffect = EnumHasAnyFlags(Flags, ETileHighlightFlag::Effect) && !bHasSelect;
 
-	// 우선순위 오름차순 (낮음=바닥부터 깔림)
-	ActiveLayers.Sort([](const FLayer& A, const FLayer& B) { return A.Style->mPriority < B.Style->mPriority; });
-
-	// 펄스 계수: [1-Intensity, 1] 범위로 진동 (Effect 알파에 곱함)
-	const float Time = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
-	const float PulseWave = 0.5f - 0.5f * FMath::Cos(2.0f * PI * Time / mPulsePeriod);
-	const float PulseFactor = 1.0f - mPulseIntensity * PulseWave;
-
-	// 바닥부터 프리멀티플라이드(알파 곱해진) 색으로 합성
-	FLinearColor Accum(0.0f, 0.0f, 0.0f, 0.0f);
-	for (const FLayer& Layer : ActiveLayers)
+	// 스타일 색을 프리멀티플라이드(알파 곱한 RGB + 커버리지 알파)로 변환 — 타일 위 Mix용
+	auto Premultiply = [](const FTileHighlightStyle& Style)
 	{
-		FLinearColor C = Layer.Style->mColor;
-		if (Layer.bPulse)
-			C.A *= PulseFactor;   // Effect만 펄스로 알파 변조
+		const FLinearColor& C = Style.mColor;
+		return FLinearColor(C.R * C.A, C.G * C.A, C.B * C.A, C.A);
+	};
 
-		if (Layer.Style->mBlendMode == ETileHighlightBlend::Overwrite)
-		{
-			// 아래를 무시하고 덮어씀 (알파 곱한 값으로)
-			Accum.R = C.R * C.A;
-			Accum.G = C.G * C.A;
-			Accum.B = C.B * C.A;
-			Accum.A = C.A;
-		}
-		else
-		{
-			// Mix: 프리멀티플라이드 over 합성 (나눗셈 없이 덧셈만)
-			Accum.R = C.R * C.A + Accum.R * (1.0f - C.A);
-			Accum.G = C.G * C.A + Accum.G * (1.0f - C.A);
-			Accum.B = C.B * C.A + Accum.B * (1.0f - C.A);
-			Accum.A = C.A + Accum.A * (1.0f - C.A);
-		}
+	// 최종색 (기본=타일만 보이는 투명)
+	FLinearColor Accum(0.0f, 0.0f, 0.0f, 0.0f);
+
+	if (bHasSelect)
+	{
+		// 최우선: 선택 색만 칠함 (Aim/Effect 무시)
+		Accum = Premultiply(mSelectStyle);
+	}
+	else if (bHasEffect)
+	{
+		// 펄스: [아래 레이어 표시] ↔ [Effect 자기 색] 크로스페이드 (둘 다 타일 위)
+		// 저점 = Aim 있으면 Aim 색, 없으면 타일(투명) / 고점 = Effect 색
+		const FLinearColor Low  = bHasAim ? Premultiply(mAimStyle) : FLinearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		const FLinearColor High = Premultiply(mEffectStyle);
+
+		// 펄스 파동(0~1)으로 저점↔고점 보간
+		const float Time = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
+		const float PulseWave = 0.5f - 0.5f * FMath::Cos(2.0f * PI * Time / mPulsePeriod);
+		Accum = FMath::Lerp(Low, High, PulseWave);
+	}
+	else if (bHasAim)
+	{
+		// Aim만: 자기 색
+		Accum = Premultiply(mAimStyle);
 	}
 
 	// custom data 슬롯에 기록 (마지막 슬롯에서 렌더 상태 갱신)

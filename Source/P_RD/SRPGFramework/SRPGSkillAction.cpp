@@ -7,7 +7,7 @@
 
 FSRPGSkillCastCommand::FSRPGSkillCastCommand()
 {
-    mActionCommandType = ESRPGActionCommandType::SkillCast;
+    mCommandType = ESRPGCommandType::SkillCast;
 }
 
 FSRPGSkillAction::FSRPGSkillAction()
