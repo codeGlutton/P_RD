@@ -160,15 +160,23 @@ void USRPGCombatSubsystem::EvaluateCombatEndState()
 
 	/* 적군이 모두 죽어 전투가 종료되는가? */
 
+	// 적이 한 번이라도 배치됐는지(생존/사망 무관)와 현재 생존 여부를 함께 본다.
+	// 적 미배치 방(테스트 등)에서 "생존 적 0 == 즉시 승리"로 빠져 입장하자마자 승리 처리되는 것을 막는다.
+	// → 적이 애초에 없었으면 승리로 끝내지 않고 전투를 유지한다.
 	bool AnyEnemyAlive = false;
+	bool AnyEnemyExists = false;
 	for (const TObjectPtr<AUnit>& Unit : mUnits)
 	{
-		if (Unit->GetTeamAttitudeTowards(*mPlayerUnit) == ETeamAttitude::Hostile && Unit->IsDead() == false)
+		if (Unit->GetTeamAttitudeTowards(*mPlayerUnit) == ETeamAttitude::Hostile)
 		{
-			AnyEnemyAlive = true;
+			AnyEnemyExists = true;
+			if (Unit->IsDead() == false)
+			{
+				AnyEnemyAlive = true;
+			}
 		}
 	}
-	if (AnyEnemyAlive == false)
+	if (AnyEnemyExists && AnyEnemyAlive == false)
 	{
 		mCombatResult = ESRPGCombatResult::PlayerWin;
 		mCombatPhase = ESRPGCombatRoomPhase::CombatAbort;
