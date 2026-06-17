@@ -281,8 +281,10 @@ void FSRPGSkillBuildAction::SetTargetTile(const FTileIndex& TileIndex)
             TArray<TScriptInterface<ITileActor>> EffectActors = TileMap->GetActorsOnTile(EffectTileIndex);
             AllEffectActors.Append(EffectActors);
         }
-
-        SkillComp->CalculateSkillResult(mSelectedSkillIndex, AllEffectActors, OUT mCalculationResult);
+        
+        // 김준형
+        // 파라미터 변경으로 비활성화 처리했습니다.
+        //SkillComp->CalculateSkillResult(mSelectedSkillIndex, AllEffectActors, OUT mCalculationResult);
     }
 
     /* 상태 변경되면서 외부에서 바인딩된 UI 변경 */
