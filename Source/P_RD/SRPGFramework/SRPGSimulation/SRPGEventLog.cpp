@@ -1,0 +1,2 @@
+﻿#include "SRPGFramework/SRPGEventLog.h"
+
