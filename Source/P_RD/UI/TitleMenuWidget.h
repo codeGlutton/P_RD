@@ -23,14 +23,13 @@ class UWidget;
 class UWidgetSwitcher;
 
 /**
- * @brief 타이틀 화면의 화면 전환과 비주얼 구성을 담당하는 위젯
+ * @brief 타이틀 화면의 흐름과 런타임 제어를 담당하는 위젯
  *
  * @details
- * WBP_TitleMenu는 ScreenSwitcher/버튼/텍스트 등 BindWidget 앵커와 기본 자리만 제공하고,
- * C++이 두 가지를 맡는다.
+ * WBP_TitleMenu는 로고, 버튼 외형, SafeZone, 앵커 같은 정적 비주얼을 소유한다.
+ * C++은 WBP가 제공한 BindWidget에 의미와 흐름만 붙인다.
  *  1) 화면 흐름: START→캐릭터 선택, SETTING→공용 설정 패널 OpenUI(), 하위 화면 BACK→메인 복귀.
- *  2) 비주얼 구성: 배경 영상(_Background), PNG 타이틀 로고(_Logo), 버튼 텍스처 스킨(_Buttons)을
- *     런타임에 구성한다. 이 프로젝트 UI 공통 패턴(위젯이 자기 비주얼을 런타임에 조립)을 따른다.
+ *  2) 런타임 제어: WBP의 TitleBackgroundImage에 MediaTexture를 연결해 배경 영상만 재생.
  *
  * 단, 게임플레이 경계는 지킨다.
  * 캐릭터 목록 구성/카드 갱신은 UCharacterSelectWidget,
@@ -215,7 +214,8 @@ private:
 	 * @details
 	 * BindWidget 이름이 WBP에서 바뀌면 C++ 멤버가 nullptr이 된다.
 	 * 이 함수는 어떤 필드가 비었는지 로그로 바로 볼 수 있게 한다.
-	 * 화면을 C++로 다시 만들지는 않는다.
+	 * 정적 비주얼이 빠진 경우에도 C++ fallback을 새로 만들지 않는다.
+	 * WBP가 화면 구조의 원본이어야 리뷰와 해상도 프리뷰가 한곳으로 모인다.
 	 */
 	void ValidateDesignerBindings() const;
 

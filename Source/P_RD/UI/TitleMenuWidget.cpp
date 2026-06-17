@@ -224,11 +224,6 @@ void UTitleMenuWidget::ValidateDesignerBindings() const
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: SettingsButton is not connected."));
 	}
 
-	if (TitleText == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: TitleText is not connected."));
-	}
-
 	if (StartButtonText == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: StartButtonText is not connected."));
@@ -242,6 +237,11 @@ void UTitleMenuWidget::ValidateDesignerBindings() const
 	if (SettingsButtonText == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: SettingsButtonText is not connected."));
+	}
+
+	if (TitleBackgroundImage == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: TitleBackgroundImage is not connected. Background video will be skipped."));
 	}
 
 	if (GetTitleSettingsPanel() == nullptr)

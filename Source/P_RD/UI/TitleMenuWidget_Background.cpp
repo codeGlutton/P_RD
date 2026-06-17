@@ -8,7 +8,11 @@
 
 void UTitleMenuWidget::StartTitleBackgroundVideo()
 {
-	// 표시 Image는 WBP가 제공한다. 없으면 배경 영상은 생략(레이아웃은 WBP 책임).
+	/*
+	 * 표시 Image는 WBP가 제공한다.
+	 * C++이 Image를 새로 만들지 않는 이유는 타이틀의 정적 배치/해상도 대응을
+	 * WBP 자산 한곳에서 검토하게 하기 위해서다. 없으면 영상만 생략한다.
+	 */
 	if (TitleBackgroundImage == nullptr)
 	{
 		return;
@@ -60,6 +64,7 @@ void UTitleMenuWidget::ApplyTitleBackgroundVideoBrush()
 		return;
 	}
 
+	// WBP는 Image의 위치와 크기만 소유하고, 런타임 영상 리소스는 이 브러시로 주입한다.
 	mBackgroundRuntime.mVideoBrush = FSlateBrush();
 	mBackgroundRuntime.mVideoBrush.DrawAs = ESlateBrushDrawType::Image;
 	mBackgroundRuntime.mVideoBrush.ImageSize = FVector2D(1280.0f, 720.0f);
@@ -79,6 +84,7 @@ void UTitleMenuWidget::PlayTitleBackgroundVideo()
 	const FString VideoPath = ResolveTitleBackgroundVideoPath();
 	if (FPaths::FileExists(VideoPath) == false)
 	{
+		// WBP 배경 Image 자체는 남기고 영상 재생만 중단한다. 패키징 누락을 로그에서 찾기 위한 경고다.
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: title background video file missing: %s"), *VideoPath);
 		return;
 	}
