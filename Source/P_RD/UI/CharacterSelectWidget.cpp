@@ -47,6 +47,10 @@ void UCharacterSelectWidget::NativeConstruct()
 
 void UCharacterSelectWidget::ApplyButtonStyles() const
 {
+	/*
+	 * 선택 화면의 버튼도 타이틀 버튼과 같은 텍스처를 쓴다.
+	 * 버튼 뒤에 별도 Image를 까는 방식이 아니라 ButtonStyle 자체에 3상태 브러시를 넣어 press 피드백을 유지한다.
+	 */
 	struct FButtonTexture { UButton* Button; const TCHAR* Path; };
 	const FButtonTexture Targets[] = {
 		{ mConfirmButton,    TEXT("/Game/SVN/OutSideAsset/AICreation/Title/UI_Button_Start_DarkFantasy_Base.UI_Button_Start_DarkFantasy_Base") },
