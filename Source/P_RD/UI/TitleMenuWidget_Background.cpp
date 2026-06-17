@@ -25,6 +25,10 @@ void UTitleMenuWidget::StartTitleBackgroundVideo()
 
 void UTitleMenuWidget::EnsureTitleBackgroundMediaObjects()
 {
+	/*
+	 * Media 객체들은 WBP에 저장하지 않고 런타임 Transient로만 둔다.
+	 * 배경 영상 파일 경로/재생 상태는 실행 환경에 묶이고, WBP는 화면 배치만 검토 가능한 상태로 남아야 한다.
+	 */
 	if (mBackgroundRuntime.mMediaPlayer == nullptr)
 	{
 		mBackgroundRuntime.mMediaPlayer = NewObject<UMediaPlayer>(this, TEXT("TitleBackgroundMediaPlayer"));

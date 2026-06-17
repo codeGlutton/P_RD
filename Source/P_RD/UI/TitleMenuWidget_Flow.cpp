@@ -89,6 +89,7 @@ void UTitleMenuWidget::OpenSettingsPanel()
 
 	TitleSettingsPanel->OnBackRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsPanelBackRequested);
 	TitleSettingsPanel->SetPanelMode(ESettingsPanelMode::Title);
+	// 같은 SettingsPanel 인스턴스를 인게임에서도 쓰므로, 타이틀에서만 런 액션 영역을 숨긴 상태로 갱신한다.
 	TitleSettingsPanel->RefreshPanelState(false, false);
 	TitleSettingsPanel->HideAbandonConfirm();
 	TitleSettingsPanel->SetStatusText(FText::GetEmpty());
