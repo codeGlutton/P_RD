@@ -4,6 +4,7 @@
 #include "GameMode/FrontendGameMode.h"
 #include "UI/CharacterSelectWidgetPrivate.h"
 
+/** @brief 선택된 PlayerUnitId로 새 Run 생성을 요청하고 첫 방 전환 시작 여부를 돌려받는다. */
 bool UCharacterSelectWidget::BeginFirstRoomEntryWithSelectedCharacter()
 {
 	AFrontendGameMode* FrontendGameMode = GetFrontendGameMode();
@@ -12,7 +13,7 @@ bool UCharacterSelectWidget::BeginFirstRoomEntryWithSelectedCharacter()
 		return false;
 	}
 
-	// 난이도 선택 UI는 아직 없으므로 프론트엔드 기본 난이도 1로 새 Run 생성을 요청한다.
+	// [합의필요] 난이도 선택 UI는 아직 없으므로 프론트엔드 기본 난이도 1로 새 Run 생성을 요청한다.
 	if (!FrontendGameMode->StartNewRun(mSelectedPlayerUnitId, 1))
 	{
 		return false;
@@ -21,6 +22,7 @@ bool UCharacterSelectWidget::BeginFirstRoomEntryWithSelectedCharacter()
 	return true;
 }
 
+/** @brief 프론트엔드 방의 Auth GameMode를 가져온다; WBP 프리뷰/테스트에서는 nullptr을 허용한다. */
 AFrontendGameMode* UCharacterSelectWidget::GetFrontendGameMode() const
 {
 	if (UWorld* World = GetWorld())
@@ -31,6 +33,7 @@ AFrontendGameMode* UCharacterSelectWidget::GetFrontendGameMode() const
 	return nullptr;
 }
 
+/** @brief Confirm 입력을 검증, 중복 방지, GameMode 새 Run 요청으로 연결한다. */
 void UCharacterSelectWidget::HandleConfirmButtonClicked()
 {
 	if (mStartRequested)
@@ -69,6 +72,7 @@ void UCharacterSelectWidget::HandleConfirmButtonClicked()
 	}
 }
 
+/** @brief 시작 요청이 아직 나가지 않은 경우에만 타이틀 메인 복귀를 부모에게 알린다. */
 void UCharacterSelectWidget::HandleBackToMainButtonClicked()
 {
 	if (!mStartRequested)

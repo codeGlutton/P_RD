@@ -7,6 +7,7 @@
 #include "GameMode/FrontendGameMode.h"
 #include "UI/CharacterSelectWidgetPrivate.h"
 
+/** @brief GameMode에서 후보 View 목록을 다시 받아 이전 선택을 최대한 보존한다. */
 void UCharacterSelectWidget::RefreshCharacterOptions()
 {
 	const int32 PreviousSelectedCharacterIndex = mSelectedCharacterIndex;
@@ -49,6 +50,7 @@ void UCharacterSelectWidget::RefreshCharacterOptions()
 	SyncSelectedCharacter();
 }
 
+/** @brief 카드 클릭 index를 현재 선택으로 저장하되 잠긴 카드는 PlayerUnitId를 비워 확정을 막는다. */
 void UCharacterSelectWidget::SelectCharacter(int32 CharacterIndex)
 {
 	if (mStartRequested)
@@ -70,6 +72,7 @@ void UCharacterSelectWidget::SelectCharacter(int32 CharacterIndex)
 	SyncSelectedCharacter();
 }
 
+/** @brief 현재 선택 View 값을 상세 텍스트, 직업별 아트, BP 이벤트, Confirm 활성화에 반영한다. */
 void UCharacterSelectWidget::SyncSelectedCharacter()
 {
 	const FFrontendCharacterOption* SelectedOption = GetSelectedCharacterOption();
@@ -114,6 +117,7 @@ void UCharacterSelectWidget::SyncSelectedCharacter()
 		: (SelectedOption->mDisabledReason.IsEmpty() ? RDCharacterSelect::Text(TEXT("CharacterLockedStatus")) : SelectedOption->mDisabledReason));
 }
 
+/** @brief 후보가 없거나 선택이 무효한 상태를 상세 패널 fallback으로 되돌린다. */
 void UCharacterSelectWidget::ClearSelectedCharacter()
 {
 	SyncSelectedCharacterArt(EPlayerJobType::None);
@@ -146,6 +150,7 @@ void UCharacterSelectWidget::ClearSelectedCharacter()
 	}
 }
 
+/** @brief 선택 직업에 맞는 액션 일러스트만 표시하고 구형 Portrait 슬롯은 fallback 경로로 유지한다. */
 void UCharacterSelectWidget::SyncSelectedCharacterArt(EPlayerJobType JobType)
 {
 	/*
@@ -184,6 +189,7 @@ void UCharacterSelectWidget::SyncSelectedCharacterArt(EPlayerJobType JobType)
 	};
 
 	ApplyJobImage(mKnightActionImage, EPlayerJobType::Knight, JobType);
+	// [합의필요] 현재 WBP/아트 파일명은 Rogue지만 게임 enum은 Archer라 매핑을 코드에서 고정한다.
 	ApplyJobImage(mRogueActionImage, EPlayerJobType::Archer, JobType);
 	ApplyJobImage(mMageActionImage, EPlayerJobType::Mage, JobType);
 
@@ -226,6 +232,7 @@ void UCharacterSelectWidget::SyncSelectedCharacterArt(EPlayerJobType JobType)
 	}
 }
 
+/** @brief 직업별 일러스트 SoftObject를 필요 시 동기 로드하고 UPROPERTY 캐시에 보관한다. */
 UTexture2D* UCharacterSelectWidget::GetOrLoadJobIllustration(EPlayerJobType JobType)
 {
 	if (const TObjectPtr<UTexture2D>* Cached = mJobIllustrationCache.Find(JobType))
@@ -242,6 +249,7 @@ UTexture2D* UCharacterSelectWidget::GetOrLoadJobIllustration(EPlayerJobType JobT
 		return nullptr;
 	}
 
+	// 타이틀 진입 직후 한 번만 일어나는 UI 로드라 동기 로드를 허용한다. 잦은 교체 UI가 되면 비동기 스트리밍으로 바꿔야 한다.
 	UTexture2D* Loaded = Asset->LoadSynchronous();
 	if (Loaded != nullptr)
 	{
@@ -250,6 +258,7 @@ UTexture2D* UCharacterSelectWidget::GetOrLoadJobIllustration(EPlayerJobType JobT
 	return Loaded;
 }
 
+/** @brief 안정 index로 후보 View를 찾는다; 배열 위치 직접 접근을 피해 WBP 카드 순서 변경에 견딘다. */
 const FFrontendCharacterOption* UCharacterSelectWidget::GetCharacterOption(int32 CharacterIndex) const
 {
 	return mCharacterOptions.FindByPredicate([CharacterIndex](const FFrontendCharacterOption& Option)
@@ -258,11 +267,13 @@ const FFrontendCharacterOption* UCharacterSelectWidget::GetCharacterOption(int32
 	});
 }
 
+/** @brief 현재 선택 index가 가리키는 후보 View를 가져온다. */
 const FFrontendCharacterOption* UCharacterSelectWidget::GetSelectedCharacterOption() const
 {
 	return GetCharacterOption(mSelectedCharacterIndex);
 }
 
+/** @brief GameMode가 요약 문자열을 주지 않은 경우에만 숫자 필드로 표시 문구를 만든다. */
 FText UCharacterSelectWidget::BuildCharacterStatText(const FFrontendCharacterOption& Option) const
 {
 	if (!Option.mStatSummary.IsEmpty())

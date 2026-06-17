@@ -2,6 +2,7 @@
 
 namespace RDCharacterSelect
 {
+	/** @brief 선택 화면 C++ 기본 문구를 키 기반으로 반환하고 알 수 없는 키는 디버깅 가능한 원문으로 돌려준다. */
 	FText Text(const TCHAR* Key)
 	{
 		if (FCString::Strcmp(Key, TEXT("ConfirmText")) == 0)
