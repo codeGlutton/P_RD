@@ -6,6 +6,7 @@
 #include "MediaTexture.h"
 #include "UI/UITextureLoader.h"
 
+/** @brief WBP가 가진 배경 Image에 런타임 MediaTexture를 연결해 타이틀 루프 영상을 시작한다. */
 void UTitleMenuWidget::StartTitleBackgroundVideo()
 {
 	/*
@@ -23,6 +24,7 @@ void UTitleMenuWidget::StartTitleBackgroundVideo()
 	PlayTitleBackgroundVideo();
 }
 
+/** @brief 타이틀 위젯이 소유하는 Transient 미디어 객체를 지연 생성하고 델리게이트를 연결한다. */
 void UTitleMenuWidget::EnsureTitleBackgroundMediaObjects()
 {
 	/*
@@ -61,6 +63,7 @@ void UTitleMenuWidget::EnsureTitleBackgroundMediaObjects()
 	}
 }
 
+/** @brief MediaTexture를 Slate Brush에 넣어 WBP 배경 Image에 반영한다. */
 void UTitleMenuWidget::ApplyTitleBackgroundVideoBrush()
 {
 	if (TitleBackgroundImage == nullptr || mBackgroundRuntime.mMediaTexture == nullptr)
@@ -71,11 +74,13 @@ void UTitleMenuWidget::ApplyTitleBackgroundVideoBrush()
 	// WBP는 Image의 위치와 크기만 소유하고, 런타임 영상 리소스는 이 브러시로 주입한다.
 	mBackgroundRuntime.mVideoBrush = FSlateBrush();
 	mBackgroundRuntime.mVideoBrush.DrawAs = ESlateBrushDrawType::Image;
+	// [합의필요] 현재 타이틀 영상 기준 해상도다. 영상 교체 시 WBP 스케일 정책과 함께 조정해야 한다.
 	mBackgroundRuntime.mVideoBrush.ImageSize = FVector2D(1280.0f, 720.0f);
 	mBackgroundRuntime.mVideoBrush.SetResourceObject(mBackgroundRuntime.mMediaTexture);
 	TitleBackgroundImage->SetBrush(mBackgroundRuntime.mVideoBrush);
 }
 
+/** @brief 파일 존재와 MediaSource 열기까지 책임지고, 실패해도 타이틀 UI 자체는 유지한다. */
 void UTitleMenuWidget::PlayTitleBackgroundVideo()
 {
 	EnsureTitleBackgroundMediaObjects();
@@ -103,6 +108,7 @@ void UTitleMenuWidget::PlayTitleBackgroundVideo()
 	}
 }
 
+/** @brief 위젯 Destruct 시 MediaPlayer 델리게이트와 파일 핸들을 정리한다. */
 void UTitleMenuWidget::StopTitleBackgroundVideo()
 {
 	if (mBackgroundRuntime.mMediaPlayer != nullptr)
@@ -113,11 +119,13 @@ void UTitleMenuWidget::StopTitleBackgroundVideo()
 	}
 }
 
+/** @brief Content 상대 경로를 플랫폼별 실제 파일 경로로 바꾼다. */
 FString UTitleMenuWidget::ResolveTitleBackgroundVideoPath() const
 {
 	return RDUITexture::ResolveContentFilePath(mTitleBackgroundVideoPath);
 }
 
+/** @brief MediaPlayer가 파일을 연 뒤 실제 재생을 시작하는 비동기 완료 지점이다. */
 void UTitleMenuWidget::HandleTitleBackgroundMediaOpened(FString OpenedUrl)
 {
 	if (mBackgroundRuntime.mMediaPlayer != nullptr)
@@ -129,6 +137,7 @@ void UTitleMenuWidget::HandleTitleBackgroundMediaOpened(FString OpenedUrl)
 	UE_LOG(LogRD, Display, TEXT("TitleMenuWidget: title background media opened: %s"), *OpenedUrl);
 }
 
+/** @brief 미디어 파일 누락/코덱 실패를 화면 전환 실패로 승격하지 않고 로그에 남긴다. */
 void UTitleMenuWidget::HandleTitleBackgroundMediaOpenFailed(FString FailedUrl)
 {
 	UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: title background media open failed: %s"), *FailedUrl);
