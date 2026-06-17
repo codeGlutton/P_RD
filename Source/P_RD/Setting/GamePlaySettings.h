@@ -12,6 +12,7 @@
 
 #include "Setting/UnitTeamType.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
+#include "Singleton/InstanceSubsystem/PersistentDataType.h"
 
 #include "GamePlaySettings.generated.h"
 
@@ -70,4 +71,8 @@ public:
 public:
     UPROPERTY(Config, Category = Team, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TeamRelations"))
     TMap<TEnumAsByte<EUnitTeamType::Type>, FUnitTeamRelation> mTeamRelations;
+
+public:
+    UPROPERTY(Config, Category = Sound, EditAnywhere, meta = (DisplayName = "WorldWidgetClasses", ArraySizeEnum = "EGameVolumeType"))
+    TSoftObjectPtr<USoundClass> mSoundClasses[static_cast<uint8>(EGameVolumeType::Count)];
 };

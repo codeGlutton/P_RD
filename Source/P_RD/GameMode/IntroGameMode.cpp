@@ -40,6 +40,7 @@ void AIntroGameMode::BeginRoom()
 		checkf(SaveGameSubsystem != nullptr, TEXT("게임 저장 및 로드 서브시스템 nullptr"));
 		SaveGameSubsystem->LoadUserAsync(FAsyncLoadGameFromSlotDelegate::CreateUObject(this, &AIntroGameMode::OnLoadUserData));
 		SaveGameSubsystem->LoadRunAsync(FAsyncLoadGameFromSlotDelegate::CreateUObject(this, &AIntroGameMode::OnLoadRunData));
+		SaveGameSubsystem->LoadOptionAsync(FAsyncLoadGameFromSlotDelegate::CreateUObject(this, &AIntroGameMode::OnLoadOptionData));
 		}));
 }
 
@@ -60,6 +61,12 @@ void AIntroGameMode::OnLoadUserData(const FString& SlotName, int32 SlotIndex, US
 void AIntroGameMode::OnLoadRunData(const FString& SlotName, int32 SlotIndex, USaveGame* SaveGame)
 {
 	EnumAddFlags(mStateFlag, EIntroGameModeStateFlag::RunDataLoaded);
+	TryToMarkExternalReady();
+}
+
+void AIntroGameMode::OnLoadOptionData(const FString& SlotName, int32 SlotIndex, USaveGame* SaveGame)
+{
+	EnumAddFlags(mStateFlag, EIntroGameModeStateFlag::OptionDataLoaded);
 	TryToMarkExternalReady();
 }
 

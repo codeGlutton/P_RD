@@ -22,7 +22,7 @@ class UBinarySaveGame;
  * @brief  게임 저장을 위한 Subsystem
  */
 UCLASS()
-class P_RD_API USaveGameSubsystem : public UGameInstanceSubsystem, public IUserDataWriter, public IRunDataWriter
+class P_RD_API USaveGameSubsystem : public UGameInstanceSubsystem, public IUserDataWriter, public IRunDataWriter, public IOptionDataWriter
 {
 	GENERATED_BODY()
 
@@ -40,9 +40,17 @@ public:
 	void LoadRunAsync(FAsyncLoadGameFromSlotDelegate Callback) const;
 	void ClearRun() const;
 
+public:
+	bool SaveOption() const;
+	void SaveOptionAsync(FAsyncSaveGameToSlotDelegate Callback) const;
+	bool LoadOption() const;
+	void LoadOptionAsync(FAsyncLoadGameFromSlotDelegate Callback) const;
+	void ClearOption() const;
+
 protected:
 	void CreateUser() const;
 	void CreateRun() const;
+	void CreateOption() const;
 
 protected:
 	void SerializeObject(UObject* Object, OUT TArray<uint8>& Data) const;
@@ -55,7 +63,11 @@ protected:
 	UPROPERTY()
 	mutable TObjectPtr<UBinarySaveGame> mRunSaveGame;
 
+	UPROPERTY()
+	mutable TObjectPtr<UBinarySaveGame> mOptionSaveGame;
+
 protected:
 	static constexpr auto USER_SLOT_NAME = TEXT("User");
 	static constexpr auto RUN_SLOT_NAME = TEXT("Run");
+	static constexpr auto OPTION_SLOT_NAME = TEXT("Option");
 };

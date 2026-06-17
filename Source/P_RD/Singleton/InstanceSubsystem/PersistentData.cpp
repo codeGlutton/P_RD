@@ -8,6 +8,8 @@
 
 #include "FunctionLibrary/RandomStreamFunctionLibrary.h"
 
+#include "Setting/GamePlaySettings.h"
+
 void FRunLog::Clear()
 {
 	mKilledEnemyUnits.Empty();
@@ -295,4 +297,111 @@ bool UUserPersistData::IsActive() const
 const FUserLog& UUserPersistData::GetUserLog() const
 {
 	return mUserLog;
+}
+
+UOptionPersistData::UOptionPersistData()
+{
+	mVolumes.Init(1.f, StaticCast<int32>(EGameVolumeType::Count));
+	mOptionPersistDataCache.mSoundClassObjects.Init(nullptr, StaticCast<int32>(EGameVolumeType::Count));
+}
+
+void UOptionPersistData::MakeCaches()
+{
+	// 이미 로드되어 있기 때문에, 대기 없음
+	const UAudioSettings* AudioSettings = GetDefault<UAudioSettings>();
+	mOptionPersistDataCache.mSoundMixObject = Cast<USoundMix>(AudioSettings->DefaultBaseSoundMix.TryLoad());
+
+	const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
+	const int32 MaxGameVolumeType = StaticCast<int32>(EGameVolumeType::Count);
+	for (int32 i = 0; i < MaxGameVolumeType; ++i)
+	{
+		mOptionPersistDataCache.mSoundClassObjects[i] = Cast<USoundClass>(GamePlaySettings->mSoundClasses[i].ToSoftObjectPath().TryLoad());
+	}
+}
+
+void UOptionPersistData::MakeOption()
+{
+}
+
+void UOptionPersistData::ClearOption()
+{
+	const UOptionPersistData* CDO = GetDefault<UOptionPersistData>();
+	mVolumes = CDO->mVolumes;
+	mLanguageType = CDO->mLanguageType;
+	mResolution = CDO->mResolution;
+
+	ApplyCurrentOptions();
+}
+
+void UOptionPersistData::SetVolume(EGameVolumeType VolumeType, float Volume)
+{
+	Volume = FMath::Clamp(Volume, 0.f, 1.f);
+
+	mVolumes[StaticCast<int32>(VolumeType)] = Volume;
+	UGameplayStatics::SetSoundMixClassOverride(
+		GetWorld(),																	// 월드 컨텍스트
+		mOptionPersistDataCache.mSoundMixObject,									// 적용할 SoundMix
+		mOptionPersistDataCache.mSoundClassObjects[StaticCast<int32>(VolumeType)],	// 대상 SoundClass
+		Volume,																		// 볼륨 (0.0 ~ 1.0)
+		1.0f,																		// 피치 (기본값 1.0)
+		0.5f																		// 페이드 시간 (초 단위)
+	);
+}
+
+void UOptionPersistData::SetLanguage(ELanguageType LanguageType)
+{
+	FString LanguageStr;
+	switch (LanguageType)
+	{
+	case ELanguageType::KOREAN:
+		LanguageStr = TEXT("ko");
+		break;
+	case ELanguageType::ENGLISH:
+		LanguageStr = TEXT("en");
+		break;
+	}
+
+	if (LanguageStr.IsEmpty() == true)
+	{
+		return;
+	}
+
+	mLanguageType = LanguageType;
+	FInternationalization::Get().SetCurrentCulture(LanguageStr);
+}
+
+void UOptionPersistData::SetResolution(const FIntPoint& Resolution)
+{
+	// TODO
+}
+
+void UOptionPersistData::ApplyCurrentOptions()
+{
+	const int32 MaxGameVolumeType = StaticCast<int32>(EGameVolumeType::Count);
+	for (int32 i = 0; i < MaxGameVolumeType; ++i)
+	{
+		SetVolume(StaticCast<EGameVolumeType>(i), mVolumes[i]);
+	}
+	SetLanguage(mLanguageType);
+	SetResolution(mResolution);
+}
+
+float UOptionPersistData::GetVolume(EGameVolumeType VolumeType) const
+{
+	return mVolumes[StaticCast<int32>(VolumeType)];
+}
+
+ELanguageType UOptionPersistData::GetLanguage() const
+{
+	return mLanguageType;
+}
+
+const FIntPoint& UOptionPersistData::GetResolution() const
+{
+	return mResolution;
+}
+
+bool UOptionPersistData::IsActive() const
+{
+	return true;
 }

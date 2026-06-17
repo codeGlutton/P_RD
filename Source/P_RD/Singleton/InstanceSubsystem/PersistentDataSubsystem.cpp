@@ -7,6 +7,9 @@ void UPersistentDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 	mUserPersistData = NewObject<UUserPersistData>(this);
 	mRunPersistData = NewObject<URunPersistData>(this);
+	mOptionPersistData = NewObject<UOptionPersistData>(this);
+
+	mOptionPersistData->MakeCaches();
 }
 
 const UUserPersistData* UPersistentDataSubsystem::GetUserPersistData() const
@@ -17,6 +20,11 @@ const UUserPersistData* UPersistentDataSubsystem::GetUserPersistData() const
 const URunPersistData* UPersistentDataSubsystem::GetRunPersistData() const
 {
 	return mRunPersistData;
+}
+
+const UOptionPersistData* UPersistentDataSubsystem::GetOptionPersistData() const
+{
+	return mOptionPersistData;
 }
 
 void UPersistentDataSubsystem::DoStageBuildTest(bool UpdateBuildStream)

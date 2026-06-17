@@ -47,3 +47,20 @@ class P_RD_API IRunDataWriter
 protected:
 	URunPersistData* GetRunMutableData() const;
 };
+
+UINTERFACE(MinimalAPI)
+class UOptionDataWriter : public UInterface
+{
+	GENERATED_BODY()
+};
+
+/**
+ * @brief  영구 런 데이터를 수정할 수 있도록 해주는 인터페이스
+ */
+class P_RD_API IOptionDataWriter
+{
+	GENERATED_BODY()
+
+protected:
+	UOptionPersistData* GetOptionMutableData() const;
+};

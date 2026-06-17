@@ -14,6 +14,7 @@
 
 class UUserPersistData;
 class URunPersistData;
+class UOptionPersistData;
 
 /**
  * @brief  영구적 플레이 데이터 Subsystem
@@ -26,6 +27,7 @@ class P_RD_API UPersistentDataSubsystem : public UGameInstanceSubsystem
 public:
 	friend class IUserDataWriter;
 	friend class IRunDataWriter;
+	friend class IOptionDataWriter;
 
 	/* UGameInstanceSubsystem 상속 */
 public:
@@ -34,6 +36,7 @@ public:
 public:
 	const UUserPersistData* GetUserPersistData() const;
 	const URunPersistData* GetRunPersistData() const;
+	const UOptionPersistData* GetOptionPersistData() const;
 
 public:
 	// TODO : 삭제
@@ -45,4 +48,6 @@ protected:
 	TObjectPtr<UUserPersistData> mUserPersistData;
 	UPROPERTY(Category = Run, VisibleAnywhere, meta = (DisplayName = "RunPersistData"))
 	TObjectPtr<URunPersistData> mRunPersistData;
+	UPROPERTY(Category = Option, VisibleAnywhere, meta = (DisplayName = "OptionPersistData"))
+	TObjectPtr<UOptionPersistData> mOptionPersistData;
 };

@@ -22,9 +22,10 @@ enum class EIntroGameModeStateFlag : uint8
 
 	UserDataLoaded = 1 << 0,
 	RunDataLoaded = 1 << 1,
-	CinematicAnimationEnded = 1 << 2,
+	OptionDataLoaded = 1 << 2,
+	CinematicAnimationEnded = 1 << 3,
 
-	ReadyToTransition = UserDataLoaded | RunDataLoaded | CinematicAnimationEnded,
+	ReadyToTransition = UserDataLoaded | RunDataLoaded | OptionDataLoaded | CinematicAnimationEnded,
 };
 ENUM_CLASS_FLAGS(EIntroGameModeStateFlag);
 
@@ -47,6 +48,7 @@ private:
 	void OnEndCinematicAnimation(UCinematicWidget* CinematicWidget);
 	void OnLoadUserData(const FString& SlotName, int32 SlotIndex, USaveGame* SaveGame);
 	void OnLoadRunData(const FString& SlotName, int32 SlotIndex, USaveGame* SaveGame);
+	void OnLoadOptionData(const FString& SlotName, int32 SlotIndex, USaveGame* SaveGame);
 
 protected:
 	void TryToMarkExternalReady();
