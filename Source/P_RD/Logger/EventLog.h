@@ -1,5 +1,5 @@
 ﻿/*****************************************************************//**
- * @file   SRPGEventLog.h
+ * @file   EventLog.h
  * @brief  전투 결과 기록을 위한 구조체 헤더
  * @author 김준형, 모호재
  * @date   2026-06-11
@@ -8,7 +8,8 @@
 
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
-#include "SRPGEventLog.generated.h"
+#include "Model/BoardActorModel.h"
+#include "EventLog.generated.h"
 
 UENUM(BlueprintType)
 enum class ESRPGTileOccupancyState : uint8
@@ -41,7 +42,7 @@ public:
 	// @brief 보드 액터의 수치 변화량
 	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Magnitude"))
 	float												mMagnitude = 0.f;
-}
+};
 
 /**
  * @brief 타일을 이동시키는 이펙트 이벤트 로그
@@ -54,7 +55,7 @@ struct FSRPGTileEffectEventLog
 public:
 	bool IsValid() const
 	{
-		return mOccupancyState != EOccupancyState::None;
+		return mOccupancyState != ESRPGTileOccupancyState::None;
 	}
 
 public:
@@ -64,9 +65,13 @@ public:
 	 * None(변화 없음), Move(이동) Enter(생성), Exit(제거)
 	 */
 	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "OccupancyState"))
-	EOccupancyState										mOccupancyState = EOccupancyState::None;
+	ESRPGTileOccupancyState								mOccupancyState = ESRPGTileOccupancyState::None;
 
 public:
+	// @brief 시작 지점
+	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PreTileIndex"))
+	FTileIndex											mPreTileIndex = FTileIndex::Invalid;
+
 	// @brief 도달 지점
 	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "NextTileIndex"))
 	FTileIndex											mNextTileIndex = FTileIndex::Invalid;
@@ -83,7 +88,7 @@ struct FSRPGBoardActorEventLog
 public:
 	bool IsValid() const
 	{
-		return mTargetActorID != INDEX_NONE;
+		return mTargetActorID != INDEX_NONE && mBoardActorModelClass != nullptr;
 	}
 
 public:
@@ -91,9 +96,9 @@ public:
 	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SourceUnitID"))
 	int32												mTargetActorID = INDEX_NONE;
 
-	// @brief 모션 처리 전 시작 지점
-	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StartTileIndex"))
-	FTileIndex											mStartTileIndex = FTileIndex::Invalid;
+	// @brief 이벤트를 타겟이 된 보드 액터 모델 클래스
+	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BoardActorModelClass", MustImplement = "/Script/P_RD.BoardActorModel"))
+	TSubclassOf<UObject>								mBoardActorModelClass = nullptr;
 
 public:
 	// @brief 보드 액터의 타일 위치 변경 로그
@@ -136,19 +141,15 @@ struct FSRPGActionEventLog
 public:
 	bool IsValid() const
 	{
-		return mSourceUnitID != INDEX_NONE && mSourceTileIndex != FTileIndex::Invalid;
+		return mSourceTileIndex != FTileIndex::Invalid;
 	}
 
 public:
-	// @brief 이벤트를 발생 시킨 소스 유닛 ID
-	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SourceUnitID"))
-	int32												mSourceUnitID = INDEX_NONE;
-
-	// @brief 이벤트 초기에 위치한 소스 유닛의 타일 인덱스
+	// @brief 액션 초기에 위치한 소스 유닛의 타일 인덱스
 	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SourceTileIndex"))
 	FTileIndex											mSourceTileIndex = FTileIndex::Invalid;
 
-	// @brief 이벤트 초기에 지정한 타겟 타일 목록
+	// @brief 액션 초기에 지정한 타겟 타일 목록
 	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TargetTileIndexes"))
 	TArray<FTileIndex>									mTargetTileIndexes;
 
@@ -158,3 +159,31 @@ public:
 	TArray<FSRPGMotionEventLog>							mMotionEventLogs;
 };
 
+/**
+ * @brief 하나의 턴 내에서 발생한 이벤트 로그
+ */
+USTRUCT(BlueprintType)
+struct FSRPGTurnEventLog
+{
+	GENERATED_BODY()
+
+public:
+	bool IsValid() const
+	{
+		return mSourceUnitID != INDEX_NONE && mUnitActorModelClass != nullptr;
+	}
+
+public:
+	// @brief 이벤트를 발생 시킨 소스 유닛 ID
+	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SourceUnitID"))
+	int32												mSourceUnitID = INDEX_NONE;
+
+	// @brief 이벤트를 발생 시킨 액터 모델 클래스
+	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BoardActorModelClass", MustImplement = "/Script/P_RD.BoardActorModel"))
+	TSubclassOf<UObject>								mUnitActorModelClass = nullptr;
+
+public:
+	// @brief 각 액션마다의 변화 로그
+	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ActionEventLogs"))
+	TArray<FSRPGActionEventLog>							mActionEventLogs;
+};
