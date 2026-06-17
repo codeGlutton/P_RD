@@ -12,66 +12,8 @@
 #include "DataAsset/BundleType.h"
 #include "../../SRPGFramework/SRPGFrameworkType.h"
 #include "SkillType.h"
+#include "StaticSkillEffect/StaticSkillEffect_Base.h"
 #include "StaticSkillData.generated.h"
-
-
- /**
- * @brief 효과 발동 구조체
- *
- * @details
- * 효과 발동 시 타겟, 수치 등을 모두 개별적으로 관리할 수 있도록 구조체로 구분지었다.
- */
-USTRUCT(BlueprintType)
-struct FSkillEffectLayer
-{
-    GENERATED_BODY()
-
-    /**
-    * @brief 선택 대상
-    * 
-    * @details
-    * (Caster: 시전자만, Target: 선택된 대상, Both: 시전자 + 선택된 대상)
-    */
-    UPROPERTY(Category = "SkillEffectLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TargetScope"))
-    ETargetScope mTargetScope;
-
-    /**
-    * @brief 제외 대상
-    * 
-    * @details
-    * 없음, 자신, 아군, 적
-    */
-    UPROPERTY(Category = "SkillEffectLayer", EditAnywhere, BlueprintReadWrite, meta = (Bitmask, BitmaskEnum = "/Script/P_RD.ETargetFilter", DisplayName = "TargetFilter"))
-    uint8 mTargetFilter = 3;
-
-    /**
-    * @brief 효과
-    * 
-    * @details
-	* GameplayEffect_Base를 상속받은 Blueprint Class를 참조하는 SoftClassPtr
-    * 
-    * @note
-    * Damage, Heal 기타 등등
-    */
-    UPROPERTY(Category = "SkillEffectLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "GameplayTag", AssetBundles = "Actor"))
-    FGameplayTag mGameplayTag;
-
-    /**
-    * @brief 효과 기본 값
-    * @details
-    * 결과값 = Default + 눈금 * Ratio
-    */
-    UPROPERTY(Category = "SkillEffectLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DefaultValue"))
-    int32 mGameplayEffectDefaultValue;
-
-    /**
-    * @brief 효과 비율 값
-    * @details
-    * 결과값 = Default + 눈금 * Ratio
-    */
-    UPROPERTY(Category = "SkillEffectLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RatioValue"))
-    float mGameplayEffectRatioValue;
-};
 
 /**
 * @brief 액션과 여러 효과들을 묶은 구조체
@@ -102,8 +44,8 @@ struct FSkillAnimLayer
     * @details
     * notify 호출 시 모든 효과들이 발동될 것이다.
     */
-    UPROPERTY(Category = "SkillAnimLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillEffectLayer"))
-    TArray<FSkillEffectLayer> mSkillEffectLayers;
+    UPROPERTY(Category = "SkillAnimLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StaticSkillEffectLayer"))
+    TArray<UStaticSkillEffect_Base*> mStaticSkillEffectLayers;
 };
 
 
