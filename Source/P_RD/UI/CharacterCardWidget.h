@@ -12,10 +12,7 @@
 
 #include "CharacterCardWidget.generated.h"
 
-class UBorder;
 class UButton;
-class UImage;
-class UTextBlock;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCharacterCardClickedDelegate, int32, CharacterIndex);
 
@@ -26,10 +23,11 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCharacterCardClickedDelegate, int32
  * 이 클래스는 캐릭터 카드 "한 장"만 담당한다.
  * 캐릭터 목록을 어디서 가져오는지, Confirm을 눌렀을 때 다음 화면으로 가는지는 모른다.
  * 부모 위젯이 SetCharacterOption()으로 표시할 View 값을 넣어 주면,
- * 이 위젯은 WBP_CharacterCard에 배치된 CardButton, IconBackground, IconImage만 갱신한다.
+ * 이 위젯은 클릭 이벤트와 선택 상태 이벤트만 전달한다.
+ * 아이콘/색/배치 같은 비주얼은 WBP_CharacterCard 계열 블루프린트가 가진다.
  *
  * 캐릭터 수가 늘어나도 이 클래스는 바뀌지 않는다.
- * 부모가 캐릭터 개수만큼 WBP_CharacterCard 인스턴스를 만들고,
+ * 부모는 WBP에 배치된 카드 순서대로 데이터를 넣고,
  * 클릭 이벤트에 담긴 CharacterIndex로 어떤 캐릭터가 눌렸는지만 판단한다.
  *
  * @note 잠긴 캐릭터도 클릭은 가능하게 둔다.
@@ -68,9 +66,13 @@ protected:
 	void NativeConstruct() override;
 	void NativeDestruct() override;
 
+	/** @brief WBP에서 선택/잠금 연출을 처리할 수 있게 상태만 알려준다. */
+	UFUNCTION(Category = "Character Card", BlueprintImplementableEvent)
+	void BP_OnCharacterOptionChanged(const FFrontendCharacterOption& CharacterOption, bool bSelected);
+
 private:
 	/** @brief 저장된 캐릭터 값/선택 상태를 WBP_CharacterCard의 위젯들에 반영함 */
-	void SyncCard() const;
+	void SyncCard();
 
 	/** @brief WBP_CharacterCard에 필요한 BindWidget 이름이 빠졌는지 로그로 알려줌 */
 	void ValidateDesignerBindings() const;
@@ -82,30 +84,6 @@ private:
 	/** @brief 카드 전체를 누를 수 있게 하는 버튼 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> CardButton;
-
-	/** @brief 아이콘 텍스처가 없을 때도 카드가 보이게 하는 단색 배경 */
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UBorder> IconBackground;
-
-	/** @brief 실제 캐릭터 아이콘 텍스처를 표시하는 자리 */
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UImage> IconImage;
-
-	/** @brief 텍스트형 카드 레이아웃이 함께 남아 있을 때 숨기기 위한 선택 필드 */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> NameText;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> RoleText;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> StatText;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> DescriptionText;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> StateText;
 
 private:
 	FFrontendCharacterOption mCharacterOption;

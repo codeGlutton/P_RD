@@ -1,46 +1,10 @@
 #include "UI/CharacterCardWidget.h"
 
-#include "Components/Border.h"
 #include "Components/Button.h"
-#include "Components/Image.h"
-#include "Components/TextBlock.h"
-#include "Engine/Texture2D.h"
-
-namespace
-{
-	FLinearColor GetFallbackIconColor(int32 CharacterIndex, bool bSelectable, bool bSelected)
-	{
-		static const FLinearColor BaseColors[] =
-		{
-			FLinearColor(0.72f, 0.16f, 0.12f, 1.0f),
-			FLinearColor(0.15f, 0.56f, 0.24f, 1.0f),
-			FLinearColor(0.34f, 0.18f, 0.66f, 1.0f),
-			FLinearColor(0.70f, 0.55f, 0.18f, 1.0f),
-			FLinearColor(0.18f, 0.55f, 0.68f, 1.0f)
-		};
-
-		const int32 ColorIndex = FMath::Abs(CharacterIndex) % UE_ARRAY_COUNT(BaseColors);
-		const float Brightness = bSelectable ? (bSelected ? 1.0f : 0.55f) : (bSelected ? 0.38f : 0.22f);
-		const FLinearColor BaseColor = BaseColors[ColorIndex];
-		return FLinearColor(BaseColor.R * Brightness, BaseColor.G * Brightness, BaseColor.B * Brightness, 1.0f);
-	}
-
-	void HideLegacyText(UTextBlock* TextBlock)
-	{
-		if (TextBlock == nullptr)
-		{
-			return;
-		}
-
-		TextBlock->SetText(FText::GetEmpty());
-		TextBlock->SetVisibility(ESlateVisibility::Collapsed);
-	}
-}
 
 UCharacterCardWidget::UCharacterCardWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	SetVisibility(ESlateVisibility::Visible);
 }
 
 void UCharacterCardWidget::SetCharacterOption(const FFrontendCharacterOption& InOption, bool bSelected)
@@ -79,42 +43,14 @@ void UCharacterCardWidget::NativeDestruct()
 	Super::NativeDestruct();
 }
 
-void UCharacterCardWidget::SyncCard() const
+void UCharacterCardWidget::SyncCard()
 {
-	HideLegacyText(NameText);
-	HideLegacyText(RoleText);
-	HideLegacyText(StatText);
-	HideLegacyText(DescriptionText);
-	HideLegacyText(StateText);
-
 	if (CardButton != nullptr)
 	{
 		CardButton->SetIsEnabled(true);
 	}
 
-	if (IconBackground != nullptr)
-	{
-		IconBackground->SetBrushColor(GetFallbackIconColor(mCharacterOption.mIndex, mCharacterOption.mSelectable, mIsSelected));
-	}
-
-	if (IconImage == nullptr)
-	{
-		return;
-	}
-
-	UTexture2D* LoadedIcon = mCharacterOption.mIcon.IsValid()
-		? mCharacterOption.mIcon.Get()
-		: (mCharacterOption.mPortrait.IsValid() ? mCharacterOption.mPortrait.Get() : nullptr);
-	if (LoadedIcon != nullptr)
-	{
-		IconImage->SetBrushFromTexture(LoadedIcon, true);
-		IconImage->SetColorAndOpacity(mCharacterOption.mSelectable ? FLinearColor::White : FLinearColor(0.35f, 0.35f, 0.35f, 0.82f));
-		IconImage->SetVisibility(ESlateVisibility::Visible);
-	}
-	else
-	{
-		IconImage->SetVisibility(ESlateVisibility::Collapsed);
-	}
+	BP_OnCharacterOptionChanged(mCharacterOption, mIsSelected);
 }
 
 void UCharacterCardWidget::ValidateDesignerBindings() const
@@ -122,14 +58,6 @@ void UCharacterCardWidget::ValidateDesignerBindings() const
 	if (CardButton == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("CharacterCardWidget: WBP_CharacterCard requires CardButton."));
-	}
-	if (IconBackground == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("CharacterCardWidget: WBP_CharacterCard requires IconBackground."));
-	}
-	if (IconImage == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("CharacterCardWidget: WBP_CharacterCard requires IconImage."));
 	}
 }
 

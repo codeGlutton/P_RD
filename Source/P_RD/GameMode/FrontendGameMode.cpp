@@ -87,6 +87,8 @@ namespace
 		NewOption.mIndex = Options.Num();
 		NewOption.mDisplayName = GetPlayerJobName(JobType);
 		NewOption.mRoleText = GetPlayerJobName(JobType);
+		// 잠긴 카드도 직업별 일러스트는 보여줄 수 있게 화면 아트 키를 채운다.
+		NewOption.mJobType = JobType;
 		NewOption.mDescription = NSLOCTEXT("FrontendGameMode", "LockedCharacterDescription", "Character data is not ready");
 		NewOption.mDisabledReason = NewOption.mDescription;
 		NewOption.mSelectable = false;
@@ -345,6 +347,8 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 			? FText::FromName(LoadedPlayerUnitData->GetPrimaryAssetId().PrimaryAssetName)
 			: LoadedPlayerUnitData->mDisplayName;
 		NewOption.mRoleText = GetPlayerJobName(LoadedPlayerUnitData->mJobType);
+		// 화면 아트(직업별 일러스트) 선택용 키. 이 값이 빠지면 UI가 직업을 None으로 보고 일러스트를 못 고른다.
+		NewOption.mJobType = LoadedPlayerUnitData->mJobType;
 		NewOption.mDescription = LoadedPlayerUnitData->mDescription;
 		NewOption.mMaxHP = FMath::RoundToInt(LoadedPlayerUnitData->GetDefaultMaxHP(DefaultDifficulty));
 		NewOption.mDice = LoadedPlayerUnitData->mDiceDatas.Num();
