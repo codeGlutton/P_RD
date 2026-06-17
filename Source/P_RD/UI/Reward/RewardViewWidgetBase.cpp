@@ -2,6 +2,7 @@
 
 #include "UI/Reward/RewardViewModel.h"
 
+/** @brief 새 ViewModel을 구독하고 이미 들어온 보상 스냅샷도 즉시 한 번 그린다. */
 void URewardViewWidgetBase::BindViewModel(URewardViewModel* InViewModel)
 {
 	if (mViewModel == InViewModel)
@@ -21,6 +22,7 @@ void URewardViewWidgetBase::BindViewModel(URewardViewModel* InViewModel)
 	}
 }
 
+/** @brief WBP의 받기 버튼 입력을 ViewModel의 Claim 의도 이벤트로 전달한다. */
 void URewardViewWidgetBase::Claim()
 {
 	if (mViewModel != nullptr)
@@ -29,6 +31,7 @@ void URewardViewWidgetBase::Claim()
 	}
 }
 
+/** @brief 현재 ViewModel 구독을 해제해 화면 파괴 후 OnViewChanged가 들어오지 않게 한다. */
 void URewardViewWidgetBase::UnbindViewModel()
 {
 	if (mViewModel != nullptr)
@@ -38,11 +41,13 @@ void URewardViewWidgetBase::UnbindViewModel()
 	mViewModel = nullptr;
 }
 
+/** @brief ViewModel 변경 알림을 WBP 구현 이벤트로 변환한다. */
 void URewardViewWidgetBase::HandleViewChanged()
 {
 	OnRewardRefreshed();
 }
 
+/** @brief 위젯 생명주기 종료 시 ViewModel 델리게이트를 먼저 끊고 부모 정리를 따른다. */
 void URewardViewWidgetBase::NativeDestruct()
 {
 	UnbindViewModel();
