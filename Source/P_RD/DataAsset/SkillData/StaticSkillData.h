@@ -22,7 +22,7 @@
 * 하나의 애니메이션 발동 시 여러 효과가 발동 할 수 있게 구조체로 묶었다.
 */
 USTRUCT(BlueprintType)
-struct FSkillAnimLayer
+struct FSkillMotionLayer
 {
     GENERATED_BODY()
 
@@ -35,8 +35,8 @@ struct FSkillAnimLayer
     * @note
     * 애니메이션은 아직 확정된 사항이 없으므로 추후 변경될 것이다.
     */
-    UPROPERTY(Category = "SkillAnimLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Animation"))
-    FGameplayTag mAnimationTag;
+    UPROPERTY(Category = "SkillMotionLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillMotion"))
+    FGameplayTag mMotionTag;
 
     /**
     * @brief 효과 레이어
@@ -44,7 +44,7 @@ struct FSkillAnimLayer
     * @details
     * notify 호출 시 모든 효과들이 발동될 것이다.
     */
-    UPROPERTY(Category = "SkillAnimLayer", EditAnywhere, Instanced, BlueprintReadWrite, meta = (DisplayName = "StaticSkillEffectLayer"))
+    UPROPERTY(Category = "SkillMotionLayer", EditAnywhere, Instanced, BlueprintReadWrite, meta = (DisplayName = "StaticSkillEffectLayer"))
     TArray<TObjectPtr<UStaticSkillEffect_Base>> mStaticSkillEffectLayers;
 };
 
@@ -202,12 +202,12 @@ public:
 #pragma endregion EffectArea
 
     /**
-    * @brief 애니메이션 레이어
+    * @brief 모션 레이어
     * 
     * @details
-    * 하나의 애니메이션 발동 시 여러 효과가 발동 할 수 있게 구조체로 묶었다.
+    * 하나의 모션 발동 시 여러 효과가 발동 할 수 있게 구조체로 묶었다.
     */
-    UPROPERTY(Category = "SkillAnimLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillAnimLayers"))
-    TArray<FSkillAnimLayer> mSkillAnimLayers;
+    UPROPERTY(Category = "SkillMotionLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillMotionLayers"))
+    TArray<FSkillMotionLayer> mSkillMotionLayers;
 
 };

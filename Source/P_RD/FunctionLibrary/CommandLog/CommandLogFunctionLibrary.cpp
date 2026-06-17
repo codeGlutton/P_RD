@@ -85,15 +85,15 @@ FEffectPacket UCommandLogFunctionLibrary::CalculateDefaultSkillEffectValue(const
 
     FEffectPacket Packet;
 
-    for (const FSkillAnimLayer& AnimLayer : SkillData->mSkillAnimLayers)
-    {
-        //for (const FSkillEffectLayer& EffectLayer : AnimLayer.mSkillEffectLayers)
-        //{
-        //    float Value = EffectLayer.mGameplayEffectDefaultValue + EffectLayer.mGameplayEffectRatioValue * Caster.mDiceDots;
-        //    TPair TagValuePair = TPair<FGameplayTag, float>(EffectTags::GameplayEffect_Skill_Effect_Damage, Value);
-        //    Packet.mEffectValue.Add(TagValuePair);
-        //}
-    }
+    //for (const FSkillAnimLayer& AnimLayer : SkillData->mSkillAnimLayers)
+    //{
+    //    //for (const FSkillEffectLayer& EffectLayer : AnimLayer.mSkillEffectLayers)
+    //    //{
+    //    //    float Value = EffectLayer.mGameplayEffectDefaultValue + EffectLayer.mGameplayEffectRatioValue * Caster.mDiceDots;
+    //    //    TPair TagValuePair = TPair<FGameplayTag, float>(EffectTags::GameplayEffect_Skill_Effect_Damage, Value);
+    //    //    Packet.mEffectValue.Add(TagValuePair);
+    //    //}
+    //}
 
     return Packet;
 }
