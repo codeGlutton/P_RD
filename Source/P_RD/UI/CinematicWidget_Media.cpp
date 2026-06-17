@@ -7,6 +7,11 @@
 
 void UCinematicWidget::EnsureCinematicMediaObjects()
 {
+	/*
+	 * CinematicWidget은 Slate 기반으로 비디오 SImage를 만든다.
+	 * MediaPlayer/MediaTexture는 에셋에 박지 않고 위젯 수명에 맞춘 런타임 객체로 만들어,
+	 * 인트로가 닫힐 때 StopCinematicMedia()에서 델리게이트와 재생 상태를 함께 정리한다.
+	 */
 	if (mCinematicMediaPlayer == nullptr)
 	{
 		mCinematicMediaPlayer = NewObject<UMediaPlayer>(this, TEXT("IntroCinematicMediaPlayer"));
@@ -90,6 +95,7 @@ void UCinematicWidget::HandleCinematicMediaOpened(FString OpenedUrl)
 		const float MediaDurationSeconds = StaticCast<float>(mCinematicMediaPlayer->GetDuration().GetTotalSeconds());
 		if (MediaDurationSeconds > 0.0f)
 		{
+			// 일부 플랫폼에서 EndReached가 늦거나 누락돼도 인트로가 멈추지 않도록 영상 길이 기반 백업 타이머를 둔다.
 			StartDefaultCinematicTimer(MediaDurationSeconds + 1.0f);
 		}
 		else

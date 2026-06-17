@@ -20,6 +20,10 @@ void AIntroGameMode::BeginRoom()
 {
 	Super::BeginRoom();
 
+	/*
+	 * 프론트엔드 방 프리로드는 먼저 걸어두되, mWaitExternalWorkOnTransition=true라 실제 전환은 막혀 있다.
+	 * 아래 세 작업(인트로 재생, 유저 데이터 로드, 런 데이터 로드)이 모두 끝나면 MarkIntroExternalReady()가 잠금을 푼다.
+	 */
 	checkf(PreloadAndTransitionFrontendRoomAsync() == true, TEXT("Intro -> Frontend 과정에서 Preload 실패"));
 
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
@@ -51,6 +55,7 @@ void AIntroGameMode::OnEndCinematicAnimation(UCinematicWidget* CinematicWidget)
 	EnumAddFlags(mStateFlag, EIntroGameModeStateFlag::CinematicAnimationEnded);
 	if (EnumHasAllFlags(mStateFlag, EIntroGameModeStateFlag::ReadyToTransition) == false && CinematicWidget != nullptr)
 	{
+		// 영상이 먼저 끝났는데 저장 로드가 아직이면 짧은 지연 뒤 검은 로딩 대기 화면으로 전환한다.
 		StartLoadingWaitDelay();
 	}
 	TryToMarkExternalReady();
@@ -70,6 +75,7 @@ void AIntroGameMode::OnLoadRunData(const FString& SlotName, int32 SlotIndex, USa
 
 void AIntroGameMode::TryToMarkExternalReady()
 {
+	// 세 콜백이 어떤 순서로 도착해도 모든 플래그가 모인 한 번만 방 전환 대기를 해제한다.
 	if (EnumHasAllFlags(mStateFlag, EIntroGameModeStateFlag::ReadyToTransition) == false)
 	{
 		return;
@@ -89,6 +95,7 @@ void AIntroGameMode::StartLoadingWaitDelay()
 	}
 
 	ClearLoadingWaitDelay();
+	// 저장 로드가 아주 조금 늦는 경우 검은 화면 깜빡임을 피하려고 즉시 전환하지 않고 짧게 기다린다.
 	World->GetTimerManager().SetTimer(
 		mLoadingWaitDelayTimerHandle,
 		FTimerDelegate::CreateWeakLambda(this, [this]()

@@ -6,6 +6,10 @@
 
 void UCinematicWidget::StartFadeToBlack(ECinematicFadePurpose FadePurpose)
 {
+	/*
+	 * 같은 검은 페이드 레이어를 두 목적에 재사용한다.
+	 * LoadingWait은 영상 종료 후 저장 로드를 기다리는 화면이고, Close는 인트로 위젯을 닫기 전 정리 페이드다.
+	 */
 	if (mFadeOutDuration <= 0.0f)
 	{
 		mFadePurpose = FadePurpose;
@@ -75,6 +79,7 @@ void UCinematicWidget::FinishFadeToBlack()
 	const ECinematicFadePurpose FinishedFadePurpose = mFadePurpose;
 	mFadePurpose = ECinematicFadePurpose::None;
 
+	// 페이드가 끝난 뒤의 행동은 시작 목적에 따라 갈라진다. 타이머 틱에서는 alpha만 책임진다.
 	if (FinishedFadePurpose == ECinematicFadePurpose::LoadingWait)
 	{
 		ShowLoadingWaitScreen();

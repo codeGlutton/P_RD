@@ -6,6 +6,10 @@
 
 void UCinematicWidget::ShowLoadingWaitScreen()
 {
+	/*
+	 * 인트로 영상 자체가 로딩 화면 역할을 하므로 별도 LoadingNotify 위젯을 띄우지 않는다.
+	 * 영상이 먼저 끝났을 때만 같은 위젯 안의 검은 대기 레이어를 보여준다.
+	 */
 	ClearCinematicFadeTimer();
 	SetLoadingWaitLayerOpacity(1.0f);
 

@@ -15,6 +15,10 @@ class UCinematicWidget;
 
 /**
  * @brief 인트로 게임모드 상태 플래그
+ *
+ * @details
+ * 인트로 종료 조건은 영상 완료 하나가 아니라, 유저 세이브 로드 + 런 세이브 로드 + 시네마틱 종료 세 가지다.
+ * 각 비동기 콜백이 자기 플래그만 세우고 TryToMarkExternalReady()가 합류 지점을 맡는다.
  */
 enum class EIntroGameModeStateFlag : uint8
 {
