@@ -5,13 +5,19 @@
 
 namespace
 {
-	// 면 수는 최소 2면(동전)으로 강제한다. 0/1면은 굴림 자체가 성립하지 않기 때문이다.
+	/**
+	 * @brief 면 수를 최소 2면으로 강제한다.
+	 * @details 0/1면은 굴림 자체가 성립하지 않으므로(동전=2면이 최소) 하한을 둔다.
+	 */
 	int32 SanitizeDiceFaceCount(int32 FaceCount)
 	{
 		return FMath::Max(2, FaceCount);
 	}
 
-	// 면 값이 따로 주어지지 않을 때 쓰는 기본값: 1번 면=1 … N번 면=N (1-base 값, 0-base index).
+	/**
+	 * @brief 면 값이 주어지지 않을 때 쓰는 기본 면 값을 만든다.
+	 * @details 1번 면=1 … N번 면=N. 배열 index는 0-base, 값은 1-base다.
+	 */
 	void BuildDefaultFaceValues(int32 FaceCount, TArray<int32>& OutFaceValues)
 	{
 		OutFaceValues.Reset(FaceCount);
@@ -22,16 +28,21 @@ namespace
 	}
 }
 
-// 희귀도/식별자만으로 초기화한다. 면 값은 1..N 기본값, 텍스처는 비움.
+/**
+ * @details 기본 면 값(1..N)을 만들어 면별 초기화 경로(InitWithFaces)로 위임한다.
+ * 모든 초기화 로직을 InitWithFaces 한 곳으로 모으기 위한 얇은 진입점이다.
+ */
 void UDiceModel::Init(ERarityType Rarity, const FPrimaryAssetId& SourceDiceId, int32 FaceCount)
 {
-	// 기본 면 값(1..N)을 만들어 면별 초기화 경로(InitWithFaces)로 위임한다 — 초기화 로직 일원화.
 	TArray<int32> DefaultValues;
 	BuildDefaultFaceValues(SanitizeDiceFaceCount(FaceCount), DefaultValues);
 	InitWithFaces(Rarity, SourceDiceId, FaceCount, DefaultValues, TArray<TObjectPtr<UTexture>>());
 }
 
-// 면별 값/텍스처까지 받아 초기 상태를 채운다. 모든 초기화의 최종 종착 함수다.
+/**
+ * @details 모든 초기화가 최종적으로 도달하는 함수다.
+ * 면 값/텍스처를 면 수만큼 맞추고(모자란 면은 기본값/nullptr로 메움), 굴림 상태를 "아직 안 굴림"으로 리셋한다.
+ */
 void UDiceModel::InitWithFaces(ERarityType Rarity, const FPrimaryAssetId& SourceDiceId, int32 FaceCount, const TArray<int32>& FaceValues, const TArray<TObjectPtr<UTexture>>& FaceTextures)
 {
 	mRarityType = Rarity;
@@ -53,14 +64,18 @@ void UDiceModel::InitWithFaces(ERarityType Rarity, const FPrimaryAssetId& Source
 		mFaceTextures.Add(FaceTextures.IsValidIndex(FaceIndex) ? FaceTextures[FaceIndex] : nullptr);
 	}
 
-	// 굴림 상태는 "아직 안 굴림"으로 리셋한다.
+	// 굴림 상태 리셋.
 	mRolledFaceIndex = INDEX_NONE;
 	mCurrentValue = 0;
 	mIsRolled = false;
 	mIsUsed = false;
 }
 
-// 고정 템플릿(UStaticDiceData)에서 면/희귀도를 읽어 런타임 상태로 초기화한다.
+/**
+ * @details 고정 템플릿의 면 배열을 면 수만큼 펼쳐 InitWithFaces로 넘긴다.
+ * 텍스처는 TSoftObjectPtr라 여기서 동기 로드(LoadSynchronous)해 채운다.
+ * 템플릿이 null이거나 면을 면 수보다 적게 정의했으면 기본값으로 안전하게 메운다.
+ */
 void UDiceModel::InitFromStatic(const UStaticDiceData* StaticData, const FPrimaryAssetId& SourceDiceId)
 {
 	const ERarityType Rarity = StaticData != nullptr ? StaticData->mRarityType : ERarityType::Common;
@@ -72,7 +87,6 @@ void UDiceModel::InitFromStatic(const UStaticDiceData* StaticData, const FPrimar
 		return;
 	}
 
-	// 템플릿의 면 배열을 면 수만큼 펼친다. 텍스처는 SoftPtr라 여기서 동기 로드해 채운다.
 	const int32 FaceCount = SanitizeDiceFaceCount(StaticData->mFaceCount);
 	TArray<int32> FaceValues;
 	TArray<TObjectPtr<UTexture>> FaceTextures;
@@ -96,7 +110,11 @@ void UDiceModel::InitFromStatic(const UStaticDiceData* StaticData, const FPrimar
 	InitWithFaces(Rarity, SourceDiceId, FaceCount, FaceValues, FaceTextures);
 }
 
-// 난수 스트림으로 물리 면 하나를 뽑고, 그 면의 값을 현재 결과로 확정한다.
+/**
+ * @details 면 index를 추첨한 뒤 그 면에 적힌 값을 이번 굴림 결과로 확정한다.
+ * index와 값을 분리해 두어 숫자 결과와 별개로 3D 주사위 면 정합(어느 면이 위로 멈출지)을 맞출 수 있다.
+ * 난수 스트림을 외부에서 주입받으므로 런 시드 기반 재현이 가능하다.
+ */
 int32 UDiceModel::Roll(const FRandomStream& Stream)
 {
 	// 면 값이 비어 있는 비정상 상태면 기본값으로 복구해 크래시를 막는다.
@@ -105,7 +123,6 @@ int32 UDiceModel::Roll(const FRandomStream& Stream)
 		BuildDefaultFaceValues(mFaceCount, mFaceValues);
 	}
 
-	// 면 index를 추첨 → 그 면에 적힌 값이 이번 굴림 결과다(index와 값을 분리해 3D 면 정합도 가능).
 	mRolledFaceIndex = Stream.RandRange(0, mFaceValues.Num() - 1);
 	mCurrentValue = mFaceValues[mRolledFaceIndex];
 	mIsRolled = true;
@@ -113,9 +130,11 @@ int32 UDiceModel::Roll(const FRandomStream& Stream)
 	return mCurrentValue;
 }
 
-// 예측용 깊은 복제본. 사본에서만 Roll/계산을 돌려 라이브 주사위 상태를 보존한다.
+/**
+ * @details 예측용 깊은 복제본을 만든다. 사본에서만 Roll/계산을 돌려 라이브 주사위 상태를 보존한다.
+ * Outer를 지정하지 않으면 원본과 같은 Outer에 붙여 GC 수명을 일관되게 둔다.
+ */
 UDiceModel* UDiceModel::Clone(UObject* InOuter) const
 {
-	// Outer 미지정 시 원본과 같은 Outer에 붙인다(GC 수명 일관성).
 	return DuplicateObject<UDiceModel>(this, InOuter != nullptr ? InOuter : GetOuter());
 }
