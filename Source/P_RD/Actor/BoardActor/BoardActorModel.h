@@ -9,7 +9,11 @@
 
 #include "RDMinimal.h"
 #include "ObjectModel.h"
+#include "SRPGFramework/SRPGFrameworkType.h"
+#include "Actor/TileMap/TileLayer.h"
 #include "BoardActorModel.generated.h"
+
+struct FTile;
 
 /**
  * @brief  보드에 올라가는 액터 데이터 모델 클래스
@@ -21,4 +25,74 @@ class P_RD_API UBoardActorModel : public UObject, public IObjectModel
 	GENERATED_BODY()
 
 public:
+	/**
+	 * @brief 타일 트랜스폼 반환
+	 * @return 타일 트랜스폼
+	 */
+	virtual const FTileTransform& GetTileTransform() const;
+
+	/**
+	 * @brief 액터의 레이어 타입을 반환
+	 * @return 레이어 타입
+	 */
+	virtual ETileLayerFlag GetTileLayerFlags() const;
+
+	/**
+	 * @brief 타일 배치 시에 블로킹할 타입들 반환
+	 * @return 블로킹할 레이어 타입들
+	 */
+	virtual ETileLayerFlag GetBlockLayerFlags() const;
+
+	/**
+	 * @brief 타일 배치 시에 교체할 타입들 반환
+	 * @return 교체할 레이어 타입들
+	 */
+	virtual ETileLayerFlag GetReplaceLayerFlags() const;
+
+	/**
+	 * @brief Overlay 레이어 내 교체 우선순위 반환
+	 * @details 같은 교체 대상끼리 우열을 가린다. 진입자 우선순위가 같거나 더 높을 때만 기존 액터를 덮어쓴다.
+	 * @return 우선순위 (높을수록 우선)
+	 */
+	virtual int32 GetOverlayLayerPriority() const;
+
+protected:
+	/**
+	 * @brief 타일 트랜스폼 설정
+	 * @param Transform 설정할 타일 트랜스폼
+	 */
+	virtual void SetTileTransform(const FTileTransform& Transform);
+
+	/**
+	 * @brief 오버랩 시작 시 실행될 함수
+	 * @param CurTile 현재 위치한 타일 객체
+	 * @param Other 반대 대상
+	 */
+	virtual void OnBeginTileOverlap(FTile* CurTile, UBoardActorModel* Other);
+
+	/**
+	 * @brief 오버랩 종료 시 실행될 함수
+	 * @param CurTile 현재 위치한 타일 객체
+	 * @param Other 반대 대상
+	 */
+	virtual void OnEndTileOverlap(FTile* CurTile, UBoardActorModel* Other);
+
+	/**
+	 * @brief 다른 액터에게 교체되어 타일에서 밀려날 때 실행될 함수
+	 * @param CurTile 현재 위치한 타일 객체
+	 * @param Other 자신을 교체하고 들어오는 액터
+	 */
+	virtual void OnReplaced(FTile* CurTile, UBoardActorModel* Other);
+
+	/**
+	 * @brief 라운드 시작마다 실행될 함수 (라운드 : 고정된 턴 기준으로 한바퀴)
+	 */
+	virtual void OnBeginRound();
+	virtual void OnEndRound();
+
+	/**
+	 * @brief 자신의 턴 시작마다 실행될 함수
+	 */
+	virtual void OnBeginTurn();
+	virtual void OnEndTurn();
 };
