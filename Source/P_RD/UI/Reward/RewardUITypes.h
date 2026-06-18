@@ -1,14 +1,14 @@
 #pragma once
 
 /** @brief 전투 보상 화면이 게임플레이에서 받는 '뷰 데이터' 정의입니다. */
-// @file RewardViewTypes.h
+// @file RewardUITypes.h
 // 전투 뷰모델과 같은 원칙: UI는 게임플레이 객체를 직접 알지 않고 표시값만 받아 그린다.
 // 지금은 보상 종류 중 '돈(골드)'과 '경험치'만 담는다. 아이템/주사위 보상은 이후 같은 패턴으로 확장한다.
 // 카운트업/레벨업 막대 연출을 UI가 스스로 할 수 있게 '전/후' 값을 함께 준다(게임플레이는 결과만 알려줌).
 
 #include "RDMinimal.h"
 
-#include "RewardViewTypes.generated.h"
+#include "RewardUITypes.generated.h"
 
 class UTexture2D;
 
@@ -17,7 +17,7 @@ class UTexture2D;
 // - 경험치: 이번에 번 양(mExpGained)과, 막대 채움을 위한 레벨 내 전/후 값(mExpBefore→mExpAfter)
 // + 해당 레벨 최대치(mMaxExp). 레벨업이 있으면 mLevelBefore != mLevelAfter.
 USTRUCT(BlueprintType)
-struct FRewardView
+struct FRewardUI
 {
 	GENERATED_BODY()
 
@@ -48,7 +48,7 @@ enum class ERewardChoiceKind : uint8
 };
 
 /** @brief 전투 후 '3택1' 보상 선택지 한 칸을 그리기 위한 표시값입니다. */
-// 골드/경험치(FRewardView)는 자동 지급 연출이고, 이건 플레이어가 하나 고르는 선택형 보상이다.
+// 골드/경험치(FRewardUI)는 자동 지급 연출이고, 이건 플레이어가 하나 고르는 선택형 보상이다.
 // UI 필요값:
 // - mChoiceIndex: 선택 확정 시 RequestChooseReward payload(0..2).
 // - mKind: 다이스/스킬/장비/골드 구분(아이콘·배치).
@@ -56,7 +56,7 @@ enum class ERewardChoiceKind : uint8
 // - mRarityColor: 희귀도 테두리/배경(어댑터가 enum→색 변환).
 // [합의필요] 최종 소스 = 보상 롤 결과(게임플레이). 현재 Mock.
 USTRUCT(BlueprintType)
-struct FRewardChoiceView
+struct FRewardChoiceUI
 {
 	GENERATED_BODY()
 
