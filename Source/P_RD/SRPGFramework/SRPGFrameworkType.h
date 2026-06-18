@@ -120,11 +120,14 @@ enum class EEffectPattern : uint8
 UENUM(BlueprintType)
 enum class ETargetScope : uint8
 {
-    /** 대상 선정 기준: 시전자 본인 */
-    Caster UMETA(DisplayName = "Caster"),
+    /** 대상 선정 기준: 시전자 본인 (소유자)*/
+    Owner UMETA(DisplayName = "Owner"),
+
+    /** 대상 선정 기준: 이벤트를 발생시킨 원인 (피격 시 공격자 등) */
+    Instigator UMETA(DisplayName = "Instigator"),
 
     /** 대상 선정 기준: 선택된 타일/대상 */
-    Target UMETA(DisplayName = "Target")
+    Selected_Tile UMETA(DisplayName = "Selected Tile")
 };
 
 /**
