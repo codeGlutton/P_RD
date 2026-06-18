@@ -1,48 +1,55 @@
-﻿#include "Logger/EventLogger.h"
+﻿#include "Simulation/Logger/EventLogger.h"
 
 DEFINE_LOG_CATEGORY(LogEventLogger)
 
 void UGameEventLogger::BeginTurnLog(int32 SourceUnitID, UClass* UnitActorModelClass)
 {
-	// 아무것도 안함
+	UE_LOG(LogEventLogger, Log, TEXT("턴 이벤트 로그 시작"));
 }
 
 void UGameEventLogger::EndTurnLog()
 {
-	// 아무것도 안함
+	UE_LOG(LogEventLogger, Log, TEXT("턴 이벤트 로그 종료"));
 }
 
 void UGameEventLogger::BeginActionLog(const FTileIndex& SourceTileIndex, const TArray<FTileIndex>& TargetTileIndexes)
 {
-	// 아무것도 안함
+	UE_LOG(LogEventLogger, Log, TEXT("액션 이벤트 로그 시작"));
 }
 
 void UGameEventLogger::EndActionLog()
 {
-	// 아무것도 안함
+	UE_LOG(LogEventLogger, Log, TEXT("액션 이벤트 로그 종료"));
 }
 
 void UGameEventLogger::BeginMotionLog()
 {
-	// 아무것도 안함
+	UE_LOG(LogEventLogger, Log, TEXT("모션 이벤트 로그 시작"));
 }
 
 void UGameEventLogger::EndMotionLog()
 {
-	// 아무것도 안함
+	UE_LOG(LogEventLogger, Log, TEXT("모션 이벤트 로그 종료"));
 }
 
 void UGameEventLogger::LogAttributeEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGAttributeEffectEventLog& Log)
 {
-	// 아무것도 안함
+	UE_LOG(LogEventLogger, Log, TEXT("[%d][%s : %f] 속성 변경"), TargetActorID, *Log.mEffectTag.ToString(), Log.mMagnitude);
 }
 
 void UGameEventLogger::LogTileEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTileEffectEventLog& Log)
 {
-	// 아무것도 안함
+	UE_LOG(LogEventLogger, Log, TEXT("[%d][%s][(%d, %d) -> (%d, %d)] 타일 위치 이동"), TargetActorID, *EnumToString(Log.mOccupancyState), Log.mPreTileIndex.mX, Log.mPreTileIndex.mY, Log.mNextTileIndex.mX, Log.mNextTileIndex.mY);
 }
 
-TArray<FSRPGTurnEventLog> UGameEventLogger::PopAllLogs()
+const TArray<FSRPGTurnEventLog>& UGameEventLogger::GetSRPGLogs() const
+{
+	// 아무것도 안함
+
+	return TArray<FSRPGTurnEventLog>();
+}
+
+TArray<FSRPGTurnEventLog> UGameEventLogger::PopSRPGLogs()
 {
 	// 아무것도 안함
 
@@ -133,7 +140,7 @@ void USimulationEventLogger::LogAttributeEffect(int32 TargetActorID, UClass* Boa
 	AttributeEffectLog.mEffectTag = Log.mEffectTag;
 	AttributeEffectLog.mMagnitude += Log.mMagnitude;
 
-	UE_LOG(LogEventLogger, Log, TEXT("[%s : %f] 속성 변경"), *Log.mEffectTag.ToString(), Log.mMagnitude);
+	UE_LOG(LogEventLogger, Log, TEXT("[%d][%s : %f] 속성 변경"), TargetActorID, *Log.mEffectTag.ToString(), Log.mMagnitude);
 }
 
 void USimulationEventLogger::LogTileEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTileEffectEventLog& Log)
@@ -149,10 +156,15 @@ void USimulationEventLogger::LogTileEffect(int32 TargetActorID, UClass* BoardAct
 
 	BoardActorLog.mTileEffectEventLogs.Add(Log);
 
-	UE_LOG(LogEventLogger, Log, TEXT("모션 이벤트 로그 종료"));
+	UE_LOG(LogEventLogger, Log, TEXT("[%d][%s][(%d, %d) -> (%d, %d)] 타일 위치 이동"), TargetActorID, *EnumToString(Log.mOccupancyState), Log.mPreTileIndex.mX, Log.mPreTileIndex.mY, Log.mNextTileIndex.mX, Log.mNextTileIndex.mY);
 }
 
-TArray<FSRPGTurnEventLog> USimulationEventLogger::PopAllLogs()
+const TArray<FSRPGTurnEventLog>& USimulationEventLogger::GetSRPGLogs() const
+{
+	return mTurnEventLogs;
+}
+
+TArray<FSRPGTurnEventLog> USimulationEventLogger::PopSRPGLogs()
 {
 	return MoveTemp(mTurnEventLogs);
 }

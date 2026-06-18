@@ -154,16 +154,6 @@ enum class ETargetFilter : uint8
 ENUM_CLASS_FLAGS(ETargetFilter);
 
 /**
- * @brief 시뮬레이션 상태 열거형
- */
-UENUM(BlueprintType)
-enum class ESRPGSimulationState : uint8
-{
-    RunningGame        UMETA(ToolTip = "인 게임 진행 중"),
-    RunningSimulation  UMETA(ToolTip = "시물레이션 진행 중"),
-};
-
-/**
  * @brief 전투 결과를 나타내는 열거형
  */
 UENUM(BlueprintType)

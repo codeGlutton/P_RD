@@ -8,7 +8,7 @@
 
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
-#include "Logger/EventLog.h"
+#include "Simulation/Logger/EventLog.h"
 #include "EventLogger.generated.h"
 
 // Event Logger 신규 로그 카테고리 등록
@@ -38,7 +38,8 @@ public:
 	virtual void LogTileEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTileEffectEventLog& Log) = 0;
 
 public:
-	virtual TArray<FSRPGTurnEventLog> PopAllLogs() = 0;
+	virtual const TArray<FSRPGTurnEventLog>& GetSRPGLogs() const = 0;
+	virtual TArray<FSRPGTurnEventLog> PopSRPGLogs() = 0;
 };
 
 /**
@@ -63,7 +64,8 @@ public:
 	void LogTileEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTileEffectEventLog& Log) override;
 
 public:
-	TArray<FSRPGTurnEventLog> PopAllLogs() override;
+	const TArray<FSRPGTurnEventLog>& GetSRPGLogs() const override;
+	TArray<FSRPGTurnEventLog> PopSRPGLogs() override;
 };
 
 /**
@@ -88,7 +90,8 @@ public:
 	void LogTileEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTileEffectEventLog& Log) override;
 
 public:
-	TArray<FSRPGTurnEventLog> PopAllLogs() override;
+	const TArray<FSRPGTurnEventLog>& GetSRPGLogs() const override;
+	TArray<FSRPGTurnEventLog> PopSRPGLogs() override;
 
 protected:
 	TArray<FSRPGTurnEventLog> mTurnEventLogs;
