@@ -24,6 +24,7 @@ void UTopMenuBarWidget::NativeConstruct()
 	SyncDefaultText();
 	BindButtonEvents();
 	EnsureRuntimeTopBarHitAreas();
+	SetupDebugResultButtons();
 	BindCombatEvents();
 	ApplyInputPassThrough();
 }

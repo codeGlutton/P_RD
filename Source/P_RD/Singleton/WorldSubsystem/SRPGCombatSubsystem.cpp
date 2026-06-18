@@ -108,6 +108,19 @@ void USRPGCombatSubsystem::EndCombat()
 	OnEndCombatUI.Broadcast(PresentationBarrier, mCombatResult);
 }
 
+void USRPGCombatSubsystem::DebugForceEndCombat(ESRPGCombatResult Result)
+{
+	// 전투 진행 로직이 없는 상태에서 승/패 UI 흐름만 테스트하기 위한 디버그 경로.
+	// 결과를 직접 세팅하고 정상 종료 절차(EndCombat)를 그대로 태운다.
+	if (mCombatPhase == ESRPGCombatRoomPhase::CombatEnd)
+	{
+		return;   // 이미 종료됨(중복 클릭 방지)
+	}
+	mCombatResult = Result;
+	mCombatPhase = ESRPGCombatRoomPhase::CombatAbort;
+	EndCombat();
+}
+
 void USRPGCombatSubsystem::EvaluateCombatStates()
 {
 	EvaluateCombatEndState();

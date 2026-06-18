@@ -83,6 +83,9 @@ private:
 	// 시각 배치는 그대로 두고 살짝 아래쪽까지 입력 영역만 확장해 실제 터치가 같은 토글 핸들러로 들어오게 한다.
 	void EnsureRuntimeTopBarHitAreas();
 
+	/** @brief [디버그] 전투 진행 로직이 없어도 승/패 UI 흐름을 테스트하도록 탑바에 승리/패배 버튼을 런타임 생성한다. */
+	void SetupDebugResultButtons();
+
 	/** @brief 런타임 투명 터치 버튼 하나의 배치와 입력 방식을 설정한다. */
 	// @param Button 설정할 투명 터치 버튼
 	// @param Anchors 화면 비율 기준 터치 영역
@@ -172,6 +175,14 @@ private:
 	UFUNCTION()
 	void HandleSkillButtonClicked();
 
+	/** @brief [디버그] 승리 버튼 클릭 → SRPGCombatSubsystem을 강제 승리 종료시킨다. */
+	UFUNCTION()
+	void HandleDebugVictoryClicked();
+
+	/** @brief [디버그] 패배 버튼 클릭 → SRPGCombatSubsystem을 강제 패배 종료시킨다. */
+	UFUNCTION()
+	void HandleDebugDefeatClicked();
+
 	/** @brief 월드맵 위젯의 닫기 요청을 현재 흐름에 맞게 처리한다. */
 	UFUNCTION()
 	void HandleWorldMapCloseRequested();
@@ -230,6 +241,14 @@ private:
 	/** @brief SKILL 버튼 아래쪽까지 입력을 넓히는 런타임 투명 터치 영역 */
 	UPROPERTY(Transient)
 	TObjectPtr<UButton> mRuntimeSkillHitButton;
+
+	/** @brief [디버그] 전투 강제 승리 버튼(런타임 생성, 우상단) */
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mDebugVictoryButton;
+
+	/** @brief [디버그] 전투 강제 패배 버튼(런타임 생성, 우상단) */
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mDebugDefeatButton;
 
 	/** @brief 승리 후 다음 방 선택을 완료할 때까지 월드맵 복원을 강제할지 여부 */
 	// 플레이어가 승리 후 SET을 열거나 MAP을 닫아도 다음 방 선택 흐름이 사라지면 안 되므로,
