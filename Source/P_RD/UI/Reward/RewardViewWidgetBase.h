@@ -35,11 +35,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Reward|View")
 	void Claim();
 
+	/** @brief 3택1 선택지 카드가 호출. 선택 의도만 뷰모델로 넘긴다. */
+	UFUNCTION(BlueprintCallable, Category = "Reward|View")
+	void ChooseReward(int32 ChoiceIndex);
+
 protected:
 	/** @brief 보상값이 들어왔을 때 호출. WBP가 돈/경험치 연출을 시작한다. */
 	// C++은 표시 데이터 전달까지만 담당하고, 실제 애니메이션 타이밍은 WBP가 결정한다.
 	UFUNCTION(BlueprintImplementableEvent, Category = "Reward|View")
 	void OnRewardRefreshed();
+
+	/** @brief 3택1 선택지가 들어왔을 때 호출. WBP가 선택지 카드 3개를 그린다. */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Reward|View")
+	void OnRewardChoicesRefreshed();
 
 	/** @brief 화면 이탈 시 ViewModel 델리게이트 구독을 정리한다. */
 	virtual void NativeDestruct() override;
@@ -47,6 +55,9 @@ protected:
 private:
 	/** @brief ViewModel 변경 알림을 WBP 갱신 이벤트로 변환한다. */
 	UFUNCTION() void HandleViewChanged();
+
+	/** @brief 선택지 변경 알림을 WBP 선택지 갱신 이벤트로 변환한다. */
+	UFUNCTION() void HandleChoicesChanged();
 
 	/** @brief 현재 ViewModel 구독을 해제하고 참조를 비운다. */
 	void UnbindViewModel();

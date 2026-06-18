@@ -14,3 +14,17 @@ void URewardViewModel::SetReward(const FRewardView& Reward)
 	mReward = Reward;
 	OnViewChanged.Broadcast();
 }
+
+/** @brief UI의 선택 입력을 보상 지급자가 구독하는 의도 이벤트로만 내보낸다. */
+void URewardViewModel::RequestChooseReward(int32 ChoiceIndex)
+{
+	// 실제 지급/화면 전환은 구독한 게임플레이가 처리한다. ViewModel은 "이 선택지를 골랐다" 신호만 전달한다.
+	OnRewardChosen.Broadcast(ChoiceIndex);
+}
+
+/** @brief 3택1 선택지 목록을 저장하고 선택지 갱신 알림을 보낸다(보통 3개). */
+void URewardViewModel::SetRewardChoices(const TArray<FRewardChoiceView>& Choices)
+{
+	mChoices = Choices;
+	OnChoicesChanged.Broadcast();
+}

@@ -16,9 +16,20 @@ void URewardViewWidgetBase::BindViewModel(URewardViewModel* InViewModel)
 	if (mViewModel != nullptr)
 	{
 		mViewModel->OnViewChanged.AddDynamic(this, &URewardViewWidgetBase::HandleViewChanged);
+		mViewModel->OnChoicesChanged.AddDynamic(this, &URewardViewWidgetBase::HandleChoicesChanged);
 
 		// 보상 데이터가 BindViewModel보다 먼저 들어온 경우도 있으므로 연결 직후 한 번 그려 초기 상태를 표시한다.
 		OnRewardRefreshed();
+		OnRewardChoicesRefreshed();
+	}
+}
+
+/** @brief WBP의 선택지 카드 입력을 ViewModel의 선택 의도 이벤트로 전달한다. */
+void URewardViewWidgetBase::ChooseReward(int32 ChoiceIndex)
+{
+	if (mViewModel != nullptr)
+	{
+		mViewModel->RequestChooseReward(ChoiceIndex);
 	}
 }
 
@@ -37,6 +48,7 @@ void URewardViewWidgetBase::UnbindViewModel()
 	if (mViewModel != nullptr)
 	{
 		mViewModel->OnViewChanged.RemoveDynamic(this, &URewardViewWidgetBase::HandleViewChanged);
+		mViewModel->OnChoicesChanged.RemoveDynamic(this, &URewardViewWidgetBase::HandleChoicesChanged);
 	}
 	mViewModel = nullptr;
 }
@@ -45,6 +57,12 @@ void URewardViewWidgetBase::UnbindViewModel()
 void URewardViewWidgetBase::HandleViewChanged()
 {
 	OnRewardRefreshed();
+}
+
+/** @brief 선택지 변경 알림을 WBP 선택지 구현 이벤트로 변환한다. */
+void URewardViewWidgetBase::HandleChoicesChanged()
+{
+	OnRewardChoicesRefreshed();
 }
 
 /** @brief 위젯 생명주기 종료 시 ViewModel 델리게이트를 먼저 끊고 부모 정리를 따른다. */
