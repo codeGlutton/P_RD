@@ -23,6 +23,7 @@ public class P_RD : ModuleRules
             "UMG",
             "MediaAssets",              // 인트로 시네마틱 MP4 재생(MediaPlayer/MediaSource)에 필요
             "ImageWrapper",             // 실행 중 PNG 파일을 읽는 UITextureLoader에 필요
+            "ProceduralMeshComponent",   // 주사위 면 모양 그대로 잘리는 런타임 텍스처 커버 메시
 
             /*
              * UI 위젯을 C++에서 다룰 때 SlateVisibility, FReply 같은 Slate 타입을 쓴다.
