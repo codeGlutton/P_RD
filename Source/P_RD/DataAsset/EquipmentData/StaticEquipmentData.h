@@ -22,6 +22,15 @@ class P_RD_API UStaticEquipmentData : public UPrimaryDataAsset
 	GENERATED_BODY()
 
 public:
+    UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Name"))
+    FText mName;
+
+    UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Icon", AssetBundles = "UI"))
+    TSoftObjectPtr<UTexture2D> mIcon;
+
+    UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Price"))
+    int32 mPrice;
+
     /**
      * @brief 장비 희귀도
      * @details
