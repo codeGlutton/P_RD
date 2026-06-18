@@ -1,4 +1,4 @@
-// @file InventoryViewTypes.h
+// @file InventoryUITypes.h
 // @brief 인벤토리(런 상태 확인) 화면 UI에 표시할 뷰 데이터입니다.
 // @date 2026-06-18
 
@@ -6,7 +6,7 @@
 
 #include "RDMinimal.h"
 #include "DataAsset/RarityType.h"
-#include "InventoryViewTypes.generated.h"
+#include "InventoryUITypes.generated.h"
 
 class UTexture2D;
 
@@ -29,7 +29,7 @@ enum class EInventoryItemKind : uint8
 // - mRarityColor: 희귀도 테두리/배경(어댑터가 enum→색 변환).
 // - mDetailText: 다이스면 "d20", 장비면 슬롯명 등 보조 한 줄.
 USTRUCT(BlueprintType)
-struct FInventoryItemView
+struct FInventoryItemUI
 {
 	GENERATED_BODY()
 
@@ -48,7 +48,7 @@ struct FInventoryItemView
 // - mDice/mSkills/mEquipment: 종류별 보유 목록 그리드.
 // [합의필요] 최종 소스 = URunPersistData(보유 다이스 ids) + UDiceModel/USkillData/장비 + UUnitData(HP/Gold).
 USTRUCT(BlueprintType)
-struct FInventoryView
+struct FInventoryUI
 {
 	GENERATED_BODY()
 
@@ -57,7 +57,7 @@ struct FInventoryView
 	UPROPERTY(BlueprintReadOnly) float mHP = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mMaxHP = 0.f;
 
-	UPROPERTY(BlueprintReadOnly) TArray<FInventoryItemView> mDice;
-	UPROPERTY(BlueprintReadOnly) TArray<FInventoryItemView> mSkills;
-	UPROPERTY(BlueprintReadOnly) TArray<FInventoryItemView> mEquipment;
+	UPROPERTY(BlueprintReadOnly) TArray<FInventoryItemUI> mDice;
+	UPROPERTY(BlueprintReadOnly) TArray<FInventoryItemUI> mSkills;
+	UPROPERTY(BlueprintReadOnly) TArray<FInventoryItemUI> mEquipment;
 };

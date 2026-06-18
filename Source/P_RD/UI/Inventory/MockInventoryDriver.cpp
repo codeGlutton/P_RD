@@ -1,6 +1,6 @@
 #include "UI/Inventory/MockInventoryDriver.h"
 
-#include "UI/Inventory/InventoryViewModel.h"
+#include "UI/Inventory/InventoryUIModel.h"
 
 namespace
 {
@@ -16,9 +16,9 @@ namespace
 	}
 
 	// 종류/이름/희귀도/보조문구로 mock 항목 한 칸을 만든다.
-	FInventoryItemView MakeItem(EInventoryItemKind Kind, int32 Index, const FString& Name, const FString& Detail)
+	FInventoryItemUI MakeItem(EInventoryItemKind Kind, int32 Index, const FString& Name, const FString& Detail)
 	{
-		FInventoryItemView Item;
+		FInventoryItemUI Item;
 		Item.mKind = Kind;
 		Item.mItemIndex = Index;
 		Item.mName = FText::FromString(Name);
@@ -32,15 +32,15 @@ namespace
  * @details 게임플레이 어댑터가 붙기 전, 표시 검증용 가짜 런 상태를 채워 push한다.
  * 보유 다이스 6 / 스킬 4 / 장비 3 + 메타(골드/레벨/체력)로 그리드·상단바 레이아웃을 확인한다.
  */
-void UMockInventoryDriver::Start(UInventoryViewModel* ViewModel)
+void UMockInventoryDriver::Start(UInventoryUIModel* UIModel)
 {
-	if (ViewModel == nullptr)
+	if (UIModel == nullptr)
 	{
 		return;
 	}
-	mViewModel = ViewModel;
+	mUIModel = UIModel;
 
-	FInventoryView Inv;
+	FInventoryUI Inv;
 	Inv.mGold = 120;
 	Inv.mLevel = 3;
 	Inv.mHP = 24.f;
@@ -60,5 +60,5 @@ void UMockInventoryDriver::Start(UInventoryViewModel* ViewModel)
 		Inv.mEquipment.Add(MakeItem(EInventoryItemKind::Equipment, i, FString::Printf(TEXT("Equip %d"), i + 1), TEXT("장착")));
 	}
 
-	mViewModel->SetInventory(Inv);
+	mUIModel->SetInventory(Inv);
 }

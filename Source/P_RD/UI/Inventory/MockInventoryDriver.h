@@ -7,9 +7,9 @@
 #include "RDMinimal.h"
 #include "MockInventoryDriver.generated.h"
 
-class UInventoryViewModel;
+class UInventoryUIModel;
 
-/** @brief ViewModel에 mock 런 상태 스냅샷을 채워 WBP 표시를 검증한다. */
+/** @brief UIModel에 mock 런 상태 스냅샷을 채워 WBP 표시를 검증한다. */
 // 실제 어댑터(URunPersistData/UDiceModel/UUnitData 연결)가 생기기 전, UI를 먼저 만들기 위한 임시 드라이버.
 UCLASS()
 class P_RD_API UMockInventoryDriver : public UObject
@@ -17,10 +17,10 @@ class P_RD_API UMockInventoryDriver : public UObject
 	GENERATED_BODY()
 
 public:
-	/** @brief 가짜 보유 다이스/스킬/장비 + 메타를 만들어 ViewModel에 push한다. */
+	/** @brief 가짜 보유 다이스/스킬/장비 + 메타를 만들어 UIModel에 push한다. */
 	UFUNCTION(BlueprintCallable, Category = "Inventory|Mock")
-	void Start(UInventoryViewModel* ViewModel);
+	void Start(UInventoryUIModel* UIModel);
 
 private:
-	UPROPERTY(Transient) TObjectPtr<UInventoryViewModel> mViewModel;
+	UPROPERTY(Transient) TObjectPtr<UInventoryUIModel> mUIModel;
 };
