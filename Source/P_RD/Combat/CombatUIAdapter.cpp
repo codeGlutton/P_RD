@@ -1,7 +1,7 @@
 #include "Combat/CombatUIAdapter.h"
 
 #include "Actor/TileMap/TileMap.h"
-#include "Dice/DiceComponent.h"
+#include "Dice/DicePoolModel.h"
 #include "Dice/DiceModel.h"
 #include "GameFramework/PlayerController.h"
 #include "Pawn/Unit.h"
@@ -21,7 +21,7 @@ namespace
 
 	// [합의필요] HP/Gold/이동력 진짜 소스 = UUnitData(GAS 폐기 후). 아래는 임시 placeholder —
 	//           게임플레이가 UUnitData를 주면 이 상수 대신 거기서 읽어 SetUnitUIs/SetPlayerMeta를 채운다.
-	//           (다이스는 이미 진짜 — APlayerUnit::UDiceComponent에서 읽음. HP/Gold만 미연결.)
+	//           (다이스는 이미 진짜 — APlayerUnit::UDicePoolModel에서 읽음. HP/Gold만 미연결.)
 	constexpr float PlayerStartHP = 100.0f;
 	constexpr float EnemyStartHP = 30.0f;
 	constexpr int32 PlayerStartMovePoint = 0;
@@ -202,9 +202,9 @@ void UCombatUIAdapter::HandleWorldTouch(FVector2D ScreenPosition, bool bLongPres
 			{
 				SetSingleTileHighlight(mStepTile, ETileHighlightFlag::Effect);   // 빨강 = 확정
 				ApplyStep(mPendingStepValue);                                    // 이동력 += 주사위값
-				if (mDiceComponent != nullptr && mPendingDiceIndex != INDEX_NONE)
+				if (mDicePool != nullptr && mPendingDiceIndex != INDEX_NONE)
 				{
-					mDiceComponent->MarkDiceUsed(mPendingDiceIndex);             // 쓴 주사위 잠금
+					mDicePool->MarkDiceUsed(mPendingDiceIndex);             // 쓴 주사위 잠금
 					PushDiceUIs();                                             // 잠금 상태를 UI에 반영
 				}
 				ClearPendingAction();
@@ -226,9 +226,9 @@ void UCombatUIAdapter::HandleWorldTouch(FVector2D ScreenPosition, bool bLongPres
 		if (Target != nullptr && Target->mIsPlayer == false)
 		{
 			ApplyBasicAttack(TargetId, mPendingAttackDamage);
-			if (mDiceComponent != nullptr && mPendingDiceIndex != INDEX_NONE)
+			if (mDicePool != nullptr && mPendingDiceIndex != INDEX_NONE)
 			{
-				mDiceComponent->MarkDiceUsed(mPendingDiceIndex);   // 적을 친 경우에만 주사위 소모.
+				mDicePool->MarkDiceUsed(mPendingDiceIndex);   // 적을 친 경우에만 주사위 소모.
 				PushDiceUIs();                                   // 잠금 상태를 UI에 반영
 			}
 		}
@@ -253,9 +253,9 @@ void UCombatUIAdapter::HandleEndAnyTurn(TSharedPtr<FPresentationBarrier> /*Barri
 {
 	// 턴이 끝나면 이번 턴에 쓴 주사위 잠금을 해제한다(다음 턴 다시 사용 가능).
 	// Barrier는 즉시 처리(애니 대기 없음)라 붙잡지 않는다 → 스코프 종료 시 카운트가 줄어 로직이 이어진다.
-	if (mDiceComponent != nullptr)
+	if (mDicePool != nullptr)
 	{
-		mDiceComponent->ResetUsed();
+		mDicePool->ResetUsed();
 		PushDiceUIs();
 	}
 }
@@ -320,7 +320,7 @@ int32 UCombatUIAdapter::GetRolledDiceValue(int32 DiceIndex) const
 /** @brief 현재 플레이어 DiceComponent를 굴리고 결과를 FDiceSlotUI로 다시 push한다. */
 void UCombatUIAdapter::RollDice()
 {
-	if (mDiceComponent == nullptr)
+	if (mDicePool == nullptr)
 	{
 		return;
 	}
@@ -331,19 +331,19 @@ void UCombatUIAdapter::RollDice()
 	 */
 	FRandomStream Stream;
 	Stream.GenerateNewSeed();
-	mDiceComponent->RollAll(Stream);
+	mDicePool->RollAll(Stream);
 	PushDiceUIs();
 }
 
-/** @brief UDiceComponent의 런타임 주사위 상태를 UI 전용 FDiceSlotUI 배열로 변환한다. */
+/** @brief UDicePoolModel의 런타임 주사위 상태를 UI 전용 FDiceSlotUI 배열로 변환한다. */
 void UCombatUIAdapter::PushDiceUIs() const
 {
-	if (mUIModel == nullptr || mDiceComponent == nullptr)
+	if (mUIModel == nullptr || mDicePool == nullptr)
 	{
 		return;
 	}
 
-	const TArray<TObjectPtr<UDiceModel>>& Dice = mDiceComponent->GetDice();
+	const TArray<TObjectPtr<UDiceModel>>& Dice = mDicePool->GetDice();
 
 	TArray<FDiceSlotUI> Views;
 	Views.Reserve(Dice.Num());

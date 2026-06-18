@@ -13,7 +13,7 @@
 #include "PlayerUnit.generated.h"
 
 class ULevelAttributeSet;
-class UDiceComponent;
+class UDicePoolModel;
 
 /** @brief 플레이어 베이스 유닛입니다. */
 // 플레이어만 런 보유 주사위와 레벨/난이도 기반 Attribute 초기화를 갖는다. 적 유닛 공통 베이스에 이 계약을 올리지 않는다.
@@ -42,7 +42,7 @@ public:
 	bool IsPlayerUnit() const override;
 
 	/** @brief 플레이어 보유 주사위 컴포넌트입니다. 적은 주사위가 없어 AUnit이 아닌 APlayerUnit에 둡니다. */
-	UDiceComponent* GetDiceComponent() const;
+	UDicePoolModel* GetDicePool() const;
 
 private:
 	/** @brief 레벨 스케일 AttributeSet. 기존 GAS 초기화 경로가 참조하므로 제거 전까지 유지한다. */
@@ -51,7 +51,7 @@ private:
 
 	/** @brief 런타임 보유 주사위 묶음. 전투 HUD는 이 객체를 직접 소유하지 않고 어댑터를 통해 읽는다. */
 	UPROPERTY(Category = Dice, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "DiceComp"))
-	TObjectPtr<UDiceComponent> mDiceComp;
+	TObjectPtr<UDicePoolModel> mDicePool;
 
 protected:
 	UPROPERTY(Category = Unit, EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "JobType"))

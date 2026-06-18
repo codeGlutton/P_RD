@@ -13,7 +13,7 @@
 class UCombatUIModel;
 class USRPGCombatSubsystem;
 class URunPersistData;
-class UDiceComponent;
+class UDicePoolModel;
 class AUnit;
 class ATileMap;
 struct FPresentationBarrier;
@@ -57,7 +57,7 @@ public:
 
 	/** @brief 플레이어 다이스 컴포넌트를 연결한다(굴림 구동 + 쓴 주사위 잠금 + 뷰 push). */
 	// CombatGameMode/HUD 배선이 채운다. 어댑터는 소유하지 않고 런타임 상태를 읽어 FDiceSlotUI로 변환한다.
-	void SetDiceComponent(UDiceComponent* InDiceComponent) { mDiceComponent = InDiceComponent; }
+	void SetDicePool(UDicePoolModel* InDiceComponent) { mDicePool = InDiceComponent; }
 
 	/** @brief 현재 상태로 유닛/메타/턴 표시값을 다시 만들어 뷰모델에 push한다. */
 	void PushAll();
@@ -142,7 +142,7 @@ private:
 
 	/** @brief 플레이어가 가진 실제 런타임 주사위 묶음. 굴림/사용 잠금의 진짜 소스다. */
 	UPROPERTY(Transient)
-	TObjectPtr<UDiceComponent> mDiceComponent;
+	TObjectPtr<UDicePoolModel> mDicePool;
 
 	/** @brief OnEndAnyTurnUI(턴 종료) 구독 핸들. 해제/재빌드 때 Remove에 사용. */
 	FDelegateHandle mEndTurnHandle;

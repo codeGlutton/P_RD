@@ -1,7 +1,7 @@
 ﻿#include "Pawn/Player/PlayerUnit.h"
 #include "GAS/Attribute/UnitAttributeSet.h"
 #include "GAS/Attribute/LevelAttributeSet.h"
-#include "Dice/DiceComponent.h"
+#include "Dice/DicePoolModel.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 
 #include "GameMode/RDGameModeBase.h"
@@ -15,13 +15,13 @@ APlayerUnit::APlayerUnit()
     mUnitAttributeSet = CreateDefaultSubobject<UPlayerUnitAttributeSet>(TEXT("PlayerUnitAttributeSet"));
     mLevelAttributeSet = CreateDefaultSubobject<ULevelAttributeSet>(TEXT("LevelAttributeSet"));
     // 보유 주사위의 진짜 런타임 상태는 플레이어 유닛이 소유하고, CombatUIAdapter는 읽어서 UIModel로 변환한다.
-    mDiceComp = CreateDefaultSubobject<UDiceComponent>(TEXT("DiceComp"));
+    mDicePool = CreateDefaultSubobject<UDicePoolModel>(TEXT("DiceComp"));
 }
 
 /** @brief 전투 UI/어댑터가 플레이어 보유 주사위 상태를 읽기 위한 접근자다. */
-UDiceComponent* APlayerUnit::GetDiceComponent() const
+UDicePoolModel* APlayerUnit::GetDicePool() const
 {
-    return mDiceComp;
+    return mDicePool;
 }
 
 void APlayerUnit::PostInitializeComponents()

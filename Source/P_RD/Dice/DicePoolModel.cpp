@@ -1,4 +1,4 @@
-#include "Dice/DiceComponent.h"
+#include "Dice/DicePoolModel.h"
 
 #include "DataAsset/DiceData/StaticDiceData.h"
 #include "Dice/DiceModel.h"
@@ -32,15 +32,9 @@ namespace
 	}
 }
 
-/** @brief 주사위 상태만 들고 있는 컴포넌트라 Tick을 끈다. */
-UDiceComponent::UDiceComponent()
-{
-	// 데이터 컴포넌트라 매 프레임 틱이 필요 없다.
-	PrimaryComponentTick.bCanEverTick = false;
-}
 
 /** @brief 런 보유 DiceId 목록을 UDiceModel 런타임 인스턴스로 변환한다. */
-void UDiceComponent::BuildFromDiceIds(const TArray<FPrimaryAssetId>& DiceIds)
+void UDicePoolModel::BuildFromDiceIds(const TArray<FPrimaryAssetId>& DiceIds)
 {
 	mDice.Reset();
 	mDice.Reserve(DiceIds.Num());
@@ -61,7 +55,7 @@ void UDiceComponent::BuildFromDiceIds(const TArray<FPrimaryAssetId>& DiceIds)
 }
 
 /** @brief 보유 주사위를 모두 같은 난수 스트림 흐름으로 굴린다. */
-void UDiceComponent::RollAll(const FRandomStream& Stream)
+void UDicePoolModel::RollAll(const FRandomStream& Stream)
 {
 	for (const TObjectPtr<UDiceModel>& Dice : mDice)
 	{
@@ -73,7 +67,7 @@ void UDiceComponent::RollAll(const FRandomStream& Stream)
 }
 
 /** @brief 확정된 스킬에 사용한 주사위를 이번 턴 잠금 상태로 표시한다. */
-void UDiceComponent::MarkDiceUsed(int32 DiceIndex)
+void UDicePoolModel::MarkDiceUsed(int32 DiceIndex)
 {
 	if (mDice.IsValidIndex(DiceIndex) && mDice[DiceIndex] != nullptr)
 	{
@@ -82,7 +76,7 @@ void UDiceComponent::MarkDiceUsed(int32 DiceIndex)
 }
 
 /** @brief 턴 종료/새 턴 시작 시 모든 주사위 사용 잠금을 해제한다. */
-void UDiceComponent::ResetUsed()
+void UDicePoolModel::ResetUsed()
 {
 	for (const TObjectPtr<UDiceModel>& Dice : mDice)
 	{
@@ -94,7 +88,7 @@ void UDiceComponent::ResetUsed()
 }
 
 /** @brief 어댑터가 index 기반 UI payload를 굴림 결과로 되돌릴 때 쓰는 읽기 API다. */
-int32 UDiceComponent::GetRolledDiceValue(int32 DiceIndex) const
+int32 UDicePoolModel::GetRolledDiceValue(int32 DiceIndex) const
 {
 	if (mDice.IsValidIndex(DiceIndex) == false || mDice[DiceIndex] == nullptr)
 	{

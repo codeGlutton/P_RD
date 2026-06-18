@@ -94,7 +94,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetUnitUIs(const TArray<FUnitUI>& Units);
 	/** @brief 유닛 롱프레스 상세(이름/레벨/초상화/패시브). [합의필요] UUnitData 연결. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetUnitDetail(const FUnitDetailUI& Detail);
-	/** @brief 보유 주사위(굴림값/면수/희귀도색/사용잠금/3D프리뷰 슬롯). [소스] APlayerUnit UDiceComponent(진짜, 비GAS). */
+	/** @brief 보유 주사위(굴림값/면수/희귀도색/사용잠금/3D프리뷰 슬롯). [소스] APlayerUnit UDicePoolModel(진짜, 비GAS). */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetDiceUIs(const TArray<FDiceSlotUI>& Dice);
 	/** @brief 스킬에 올린 주사위 index들+합계. [소스] SRPGSkillBuildAction.mSelectedDices. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetSelectedDice(const TArray<int32>& SelectedIndices, int32 SelectedSum);

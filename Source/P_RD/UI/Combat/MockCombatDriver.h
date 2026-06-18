@@ -43,7 +43,7 @@ private:
 	/** @brief Mock이 바인딩한 UIModel. 실제 전투 수명 소유자는 아니다. */
 	UPROPERTY(Transient) TObjectPtr<UCombatUIModel> mUIModel;
 
-	/** @brief Mock 주사위 fixture 상태. 실제 UDiceData/UDiceComponent를 대체하지 않는다. */
+	/** @brief Mock 주사위 fixture 상태. 실제 UDiceModel/UDicePoolModel를 대체하지 않는다. */
 	UPROPERTY(Transient) TArray<FDiceSlotUI> mDice;
 
 	/** @brief Mock에서 선택 중인 주사위 index 목록. index는 mDice 배열 기준이다. */
