@@ -135,7 +135,7 @@ public:
     * @details
     * 패시브 장착 시 생성
     */
-    UPROPERTY(Category = "PassiveLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StaticPassiveEffect"))
+    UPROPERTY(Category = "PassiveLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Dynamic Passive Data"))
     TSubclassOf<UDynamicPassiveData_Base> mPassiveDynamicData;
 
 };
