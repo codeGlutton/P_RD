@@ -12,6 +12,7 @@
 #include "AIController/EnemyAIController.h"
 
 #include "FunctionLibrary/GASTargetFunctionLibrary.h"
+#include "UI/Combat/CombatUIModel.h"
 
 DEFINE_LOG_CATEGORY(LogSRPGCombat)
 
@@ -541,4 +542,13 @@ ATileMap* USRPGCombatSubsystem::GetTileMap()
 TArray<TObjectPtr<AUnit>>& USRPGCombatSubsystem::GetUnits()
 {
 	return mUnits;
+}
+
+UCombatUIModel* USRPGCombatSubsystem::GetCombatUIModel()
+{
+	if (mCombatUIModel == nullptr)
+	{
+		mCombatUIModel = NewObject<UCombatUIModel>(this);
+	}
+	return mCombatUIModel;
 }

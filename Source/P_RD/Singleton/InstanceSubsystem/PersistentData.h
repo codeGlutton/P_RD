@@ -88,6 +88,9 @@ public:
 	const TArray<FPrimaryAssetId>& GetSkillIds() const;
 	const TArray<FPrimaryAssetId>& GetEquipmentIds() const;
 	const TArray<FPrimaryAssetId>& GetDiceIds() const;
+	float GetHP() const { return mHP; }
+	float GetMaxHP() const { return mMaxHP; }
+	float GetMoney() const { return mMoney; }
 
 protected:
 	void SyncPlayerPersistData(APlayerUnit* PlayerUnit);
@@ -107,15 +110,15 @@ protected:
 
 protected:
 	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "MaxHP"))
-	float mMaxHP;
+	float mMaxHP = 100.f;
 	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "HP"))
-	float mHP;
+	float mHP = 100.f;
 
 	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "Exp"))
-	float mExp;
+	float mExp = 0.f;
 
 	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "Money"))
-	float mMoney;
+	float mMoney = 100.f;
 
 protected:
 	UPROPERTY(Category = Tag, SaveGame, VisibleAnywhere, meta = (DisplayName = "TagCountMap"))

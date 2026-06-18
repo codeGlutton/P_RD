@@ -4,11 +4,17 @@
 
 #include "Engine/AssetManager.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
+#include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "DataAsset/RoomSpawnData/StaticCombatRoomSpawnData.h"
 
 #include "PCGStage/Room.h"
 
 #include "Pawn/Unit.h"
+#include "Pawn/Player/PlayerUnit.h"
+#include "Combat/CombatUIAdapter.h"
+#include "Dice/DiceComponent.h"
+#include "UI/Combat/CombatUIModel.h"
+#include "UI/CombatTileMapHUDWidget.h"
 
 #include "SRPGFramework/SRPGSkillAction.h"
 #include "SRPGFramework/SRPGSkillBuildAction.h"
@@ -36,6 +42,33 @@ void ACombatGameMode::BeginRoom()
 
 	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
 	checkf(CombatSubsystem != nullptr, TEXT("전투 시스템 서브시스템 nullptr"));
+
+	UCombatUIModel* CombatUIModel = CombatSubsystem->GetCombatUIModel();
+	const URunPersistData* RunPersistData = GetRunPersistData();
+
+	UDiceComponent* DiceComponent = nullptr;
+	if (APlayerUnit* PlayerUnit = Cast<APlayerUnit>(GetPlayerUnit()))
+	{
+		DiceComponent = PlayerUnit->GetDiceComponent();
+		if (DiceComponent != nullptr && RunPersistData != nullptr)
+		{
+			DiceComponent->BuildFromDiceIds(RunPersistData->GetDiceIds());
+		}
+	}
+
+	mCombatUIAdapter = NewObject<UCombatUIAdapter>(this);
+	mCombatUIAdapter->Build(CombatSubsystem, RunPersistData);
+	mCombatUIAdapter->SetDiceComponent(DiceComponent);
+	mCombatUIAdapter->BindUIModel(CombatUIModel);
+
+	if (UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())
+	{
+		if (UCombatTileMapHUDWidget* CombatHUD = WorldWidgetSubsystem->GetHUD<UCombatTileMapHUDWidget>())
+		{
+			CombatHUD->BindCombatUIModel(CombatUIModel);
+			CombatHUD->OpenUI();
+		}
+	}
 
 	for (const TObjectPtr<AUnit>& Unit : CombatSubsystem->GetUnits())
 	{

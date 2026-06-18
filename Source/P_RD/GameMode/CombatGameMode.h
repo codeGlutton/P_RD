@@ -15,6 +15,7 @@
 DECLARE_LOG_CATEGORY_EXTERN(LogCombatGameMode, Log, All)
 
 struct FSRPGSkillBuildAction;
+class UCombatUIAdapter;
 
 /**
  * @brief  전투 방에 대한 GameMode
@@ -49,4 +50,9 @@ public:
 
 protected:
 	void OnChangeSkillBuildPhase(const FSRPGSkillBuildAction& Action, ESRPGSkillBuildPhase Phase);
+
+private:
+	/** @brief 전투 HUD 표시값과 입력 의도를 UIModel에 연결하는 임시 비GAS 어댑터입니다. */
+	UPROPERTY()
+	TObjectPtr<UCombatUIAdapter> mCombatUIAdapter;
 };

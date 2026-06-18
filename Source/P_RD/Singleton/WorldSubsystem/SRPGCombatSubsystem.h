@@ -36,6 +36,7 @@ class AUnit;
 class ATileMap;
 
 class UStaticCombatRoomSpawnData;
+class UCombatUIModel;
 struct FEnemyUnitPlacementData;
 struct FObstaclePlacementData;
 
@@ -153,6 +154,8 @@ public:
 	TArray<TWeakPtr<FSRPGTurnContext>> GetTurnContexts(const AUnit* Owner);
 	ATileMap* GetTileMap();
 	TArray<TObjectPtr<AUnit>>& GetUnits();
+	/** @brief 전투 UI와 게임플레이가 공유하는 UIModel을 반환합니다. 없으면 생성합니다. */
+	UCombatUIModel* GetCombatUIModel();
 
 public:
 	/**
@@ -215,4 +218,7 @@ protected:
 	TArray<TObjectPtr<AUnit>> mUnits;
 	// @brief 모든 등록 장애물
 	TArray<TScriptInterface<ITileActor>> mObstacles;
+	/** @brief 전투 UI와 게임플레이 API의 단일 경계 객체입니다. */
+	UPROPERTY()
+	TObjectPtr<UCombatUIModel> mCombatUIModel;
 };
