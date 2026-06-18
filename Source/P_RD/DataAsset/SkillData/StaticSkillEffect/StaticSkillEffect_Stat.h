@@ -35,18 +35,6 @@ public:
     uint8 mTargetFilter = 3;
 
     /**
-    * @brief 효과
-    *
-    * @details
-    * GameplayEffect_Base를 상속받은 Blueprint Class를 참조하는 SoftClassPtr
-    *
-    * @note
-    * Damage, Heal 기타 등등
-    */
-    UPROPERTY(Category = "SkillEffectLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "GameplayTag", AssetBundles = "Actor"))
-    FGameplayTag mGameplayTag;
-
-    /**
     * @brief 효과 기본 값
     * @details
     * 결과값 = Default + 눈금 * Ratio

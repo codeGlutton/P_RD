@@ -15,6 +15,18 @@ class P_RD_API UStaticSkillEffect_Base : public UObject
 {
 	GENERATED_BODY()
 	
+public:
+    /**
+    * @brief 효과
+    *
+    * @details
+    * GameplayEffect_Base를 상속받은 Blueprint Class를 참조하는 SoftClassPtr
+    *
+    * @note
+    * Damage, Heal 기타 등등
+    */
+    UPROPERTY(Category = "SkillEffectLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "GameplayTag"))
+    FGameplayTag mEffectTag;
 };
 
 
