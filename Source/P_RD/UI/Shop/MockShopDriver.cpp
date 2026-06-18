@@ -1,6 +1,6 @@
 #include "UI/Shop/MockShopDriver.h"
 
-#include "UI/Shop/ShopViewModel.h"
+#include "UI/Shop/ShopUIModel.h"
 
 namespace
 {
@@ -26,18 +26,18 @@ namespace
  * @details 가짜 판매 목록 + 보유 골드를 만들어 push하고, 구매/나가기 입력을 구독한다.
  * 실제 ShopGameMode 가 붙기 전 "슬롯 표시 → 구매 → 골드 차감 → 품절 갱신" UI 흐름을 검증한다.
  */
-void UMockShopDriver::Start(UShopViewModel* ViewModel)
+void UMockShopDriver::Start(UShopUIModel* UIModel)
 {
-	if (ViewModel == nullptr)
+	if (UIModel == nullptr)
 	{
 		return;
 	}
-	mViewModel = ViewModel;
+	mUIModel = UIModel;
 	mGold = 120;
 	mSoldOut.Init(false, GMockEntryCount);
 
-	mViewModel->OnBuyRequested.AddDynamic(this, &UMockShopDriver::HandleBuy);
-	mViewModel->OnLeaveRequested.AddDynamic(this, &UMockShopDriver::HandleLeave);
+	mUIModel->OnBuyRequested.AddDynamic(this, &UMockShopDriver::HandleBuy);
+	mUIModel->OnLeaveRequested.AddDynamic(this, &UMockShopDriver::HandleLeave);
 
 	PushShop();
 }
@@ -45,16 +45,16 @@ void UMockShopDriver::Start(UShopViewModel* ViewModel)
 /** @details 현재 골드/품절 상태로 상점 스냅샷을 만들어 push한다. 가격>골드면 mIsAffordable=false. */
 void UMockShopDriver::PushShop()
 {
-	if (mViewModel == nullptr)
+	if (mUIModel == nullptr)
 	{
 		return;
 	}
 
-	FShopView Shop;
+	FShopUI Shop;
 	Shop.mGold = mGold;
 	for (int32 i = 0; i < GMockEntryCount; ++i)
 	{
-		FShopItemView Item;
+		FShopItemUI Item;
 		Item.mSlotIndex = i;
 		Item.mKind = GMockEntries[i].Kind;
 		Item.mName = FText::FromString(GMockEntries[i].Name);
@@ -63,7 +63,7 @@ void UMockShopDriver::PushShop()
 		Item.mIsAffordable = !Item.mIsSoldOut && mGold >= Item.mPrice;
 		Shop.mItems.Add(Item);
 	}
-	mViewModel->SetShop(Shop);
+	mUIModel->SetShop(Shop);
 }
 
 /** @details mock 구매: 살 수 있으면 골드 차감 + 품절 처리 후 다시 push해 화면을 갱신한다. */

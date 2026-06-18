@@ -1,11 +1,11 @@
-// @file ShopViewTypes.h
+// @file ShopUITypes.h
 // @brief 상점(런 중 상점방) 화면 UI에 표시할 뷰 데이터입니다.
 // @date 2026-06-18
 
 #pragma once
 
 #include "RDMinimal.h"
-#include "ShopViewTypes.generated.h"
+#include "ShopUITypes.generated.h"
 
 class UTexture2D;
 
@@ -31,7 +31,7 @@ enum class EShopItemKind : uint8
 // - mIsSoldOut: 이미 구매되어 품절인지.
 // [합의필요] 최종 소스 = ShopGameMode + StaticShopRoomSpawnData. 현재 Mock.
 USTRUCT(BlueprintType)
-struct FShopItemView
+struct FShopItemUI
 {
 	GENERATED_BODY()
 
@@ -51,10 +51,10 @@ struct FShopItemView
 // - mGold: 상단 보유 골드(구매 가능 여부 갱신 기준).
 // - mItems: 판매 슬롯 목록.
 USTRUCT(BlueprintType)
-struct FShopView
+struct FShopUI
 {
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadOnly) int32 mGold = 0;
-	UPROPERTY(BlueprintReadOnly) TArray<FShopItemView> mItems;
+	UPROPERTY(BlueprintReadOnly) TArray<FShopItemUI> mItems;
 };
