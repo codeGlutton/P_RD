@@ -2,16 +2,8 @@
 
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
-#include "Components/WidgetSwitcher.h"
-#include "GameMode/FrontendGameMode.h"
-#include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/CharacterSelectWidget.h"
 #include "UI/SettingsPanelWidget.h"
-
-namespace
-{
-	constexpr int32 TitleMainScreenIndex = 0;
-}
 
 UTitleMenuWidget::UTitleMenuWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -28,15 +20,14 @@ UTitleMenuWidget::UTitleMenuWidget(const FObjectInitializer& ObjectInitializer)
 	 * 기본 Visibility를 Visible로 맞춰두되, 실제 AddToViewport/표시 생명주기는 RDUserWidget::OpenUI()가 처리한다.
 	 */
 	SetVisibility(ESlateVisibility::Visible);
+
+	// 타이틀 아트(로고/버튼 텍스처)와 배치는 이제 WBP_TitleMenu가 보유한다.
+	// C++ 생성자는 버튼/타이틀 텍스트 기본 문구만 정한다(위 초기화 리스트).
 }
 
-/**
- * @brief 캐릭터 선택 화면이 GameMode 기준 후보 목록을 다시 읽게 한다.
- *
- * @details
- * 타이틀 메뉴는 캐릭터 데이터를 직접 만들지 않는다.
- * CharacterSelectWidget에게 갱신 요청만 전달해, 캐릭터 카드 구성 책임이 해당 위젯에 남도록 한다.
- */
+/** @brief 캐릭터 선택 화면이 GameMode 기준 후보 목록을 다시 읽게 한다. */
+// 타이틀 메뉴는 캐릭터 데이터를 직접 만들지 않는다.
+// CharacterSelectWidget에게 갱신 요청만 전달해, 캐릭터 카드 구성 책임이 해당 위젯에 남도록 한다.
 void UTitleMenuWidget::RefreshCharacterOptionsFromGameMode()
 {
 	if (CharacterSelectWidget != nullptr)
@@ -45,34 +36,26 @@ void UTitleMenuWidget::RefreshCharacterOptionsFromGameMode()
 	}
 }
 
-/**
- * @brief GameMode가 요청한 타이틀 내부 화면 전환을 실제 WBP 화면 전환으로 수행한다.
- *
- * @details
- * AFrontendGameMode::RequestCharacterSelectFromTitle()은 런 생성 대신 이 함수를 통해 캐릭터 선택 화면만 연다.
- * 이렇게 하면 START 버튼 입력 경로와 GameMode API 경로가 모두 ShowCharacterScreen()으로 합쳐진다.
- */
+/** @brief GameMode가 요청한 타이틀 내부 화면 전환을 실제 WBP 화면 전환으로 수행한다. */
+// AFrontendGameMode::RequestCharacterSelectFromTitle()은 런 생성 대신 이 함수를 통해 캐릭터 선택 화면만 연다.
+// 이렇게 하면 START 버튼 입력 경로와 GameMode API 경로가 모두 ShowCharacterScreen()으로 합쳐진다.
 void UTitleMenuWidget::OpenCharacterSelectFromTitle()
 {
 	ShowCharacterScreen();
 }
 
-/**
- * @brief WBP 바인딩을 검증하고 타이틀 화면에서 필요한 버튼/하위 위젯 이벤트를 연결한다.
- *
- * @details
- * WBP_TitleMenu는 StartScreen과 CharacterScreen을 ScreenSwitcher 안에 직접 배치한다.
- * C++은 해당 화면을 새로 만들지 않고, BindWidget으로 들어온 인스턴스를 연결만 한다.
- *
- * 왜 여기서 공용 설정 패널/캐릭터 선택 이벤트까지 연결하는가:
- * 각 하위 위젯은 "뒤로 가기"나 "닫기 요청"만 외부로 알린다.
- * 실제로 타이틀 메인 화면으로 돌아갈지는 바깥 화면 전환을 알고 있는 TitleMenuWidget이 결정한다.
- */
+/** @brief WBP 바인딩을 검증하고 타이틀 화면에서 필요한 버튼/하위 위젯 이벤트를 연결한다. */
+// WBP_TitleMenu는 StartScreen과 CharacterScreen을 ScreenSwitcher 안에 직접 배치한다.
+// C++은 해당 화면을 새로 만들지 않고, BindWidget으로 들어온 인스턴스를 연결만 한다.
+// 왜 여기서 공용 설정 패널/캐릭터 선택 이벤트까지 연결하는가:
+// 각 하위 위젯은 "뒤로 가기"나 "닫기 요청"만 외부로 알린다.
+// 실제로 타이틀 메인 화면으로 돌아갈지는 바깥 화면 전환을 알고 있는 TitleMenuWidget이 결정한다.
 void UTitleMenuWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
 	ValidateDesignerBindings();
+	StartTitleBackgroundVideo();
 
 	if (StartButton != nullptr)
 	{
@@ -105,15 +88,13 @@ void UTitleMenuWidget::NativeConstruct()
 	SetStatusText(FText::GetEmpty());
 }
 
-/**
- * @brief Construct에서 붙인 이벤트를 제거해 재Construct 시 중복 호출을 막는다.
- *
- * @details
- * UUserWidget은 OpenUI/CloseUI나 레벨 전환 과정에서 다시 Construct될 수 있다.
- * AddUniqueDynamic을 사용하더라도 명시적으로 해제해두면 WBP 교체/하위 위젯 재생성 시 이벤트 잔류를 피할 수 있다.
- */
+/** @brief Construct에서 붙인 이벤트를 제거해 재Construct 시 중복 호출을 막는다. */
+// UUserWidget은 OpenUI/CloseUI나 레벨 전환 과정에서 다시 Construct될 수 있다.
+// AddUniqueDynamic을 사용하더라도 명시적으로 해제해두면 WBP 교체/하위 위젯 재생성 시 이벤트 잔류를 피할 수 있다.
 void UTitleMenuWidget::NativeDestruct()
 {
+	StopTitleBackgroundVideo();
+
 	if (StartButton != nullptr)
 	{
 		StartButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleStartButtonClicked);
@@ -142,98 +123,9 @@ void UTitleMenuWidget::NativeDestruct()
 	Super::NativeDestruct();
 }
 
-/**
- * @brief ScreenSwitcher의 표시 대상을 바꾼다.
- *
- * @details
- * 하위 위젯들이 ScreenSwitcher를 직접 만지지 않게 하기 위한 공통 진입점이다.
- * Screen이 nullptr인 경우에는 타이틀 메인 화면으로 돌려, WBP 연결 누락 시에도 사용자가 빈 화면에 갇히지 않게 한다.
- */
-void UTitleMenuWidget::ShowScreen(UWidget* Screen) const
-{
-	if (ScreenSwitcher == nullptr || Screen == nullptr)
-	{
-		if (ScreenSwitcher != nullptr && Screen == nullptr)
-		{
-			ScreenSwitcher->SetActiveWidgetIndex(TitleMainScreenIndex);
-		}
-		return;
-	}
-
-	ScreenSwitcher->SetActiveWidget(Screen);
-}
-
-/**
- * @brief 타이틀 메인 화면으로 복귀한다.
- *
- * @details
- * 캐릭터 선택이나 공용 설정 패널의 Back/Close 요청은 모두 이 함수로 모인다.
- * 타이틀의 "현재 화면" 정책을 한 곳에서 관리하기 위한 래퍼다.
- */
-void UTitleMenuWidget::ShowMainScreen() const
-{
-	ShowScreen(StartScreen);
-}
-
-/**
- * @brief 캐릭터 선택 화면을 열고 캐릭터 카드 상태를 초기화한다.
- *
- * @details
- * CharacterSelectWidget이 준비되어 있으면 OpenCharacterSelect()를 호출해 GameMode에서 캐릭터 후보를 다시 받아온다.
- * 위젯 연결이 빠진 경우에는 캐릭터 화면 슬롯으로 넘어가되 상태 문구를 남겨 WBP 바인딩 문제를 찾을 수 있게 한다.
- */
-void UTitleMenuWidget::ShowCharacterScreen()
-{
-	if (CharacterSelectWidget == nullptr)
-	{
-		SetStatusText(mCharacterSelectUnavailableText);
-		ShowScreen(CharacterScreen);
-		return;
-	}
-
-	CharacterSelectWidget->OpenCharacterSelect();
-	ShowScreen(CharacterScreen);
-}
-
-/**
- * @brief 타이틀에서 공용 설정 패널을 Title 모드로 열어 보여준다.
- *
- * @details
- * 설정 기능은 타이틀과 인게임에서 같은 WBP_SettingsPanel 월드 위젯을 공유한다.
- * 타이틀에서는 저장 후 종료/포기하기 같은 런 액션이 보이면 안 되므로 PanelMode를 Title로 바꾸고 Run 액션 상태를 비활성화한다.
- *
- * 왜 타이틀 내부 ScreenSwitcher로 보여주지 않는가:
- * 설정 패널은 HUD 하위 화면이 아니라 공용 팝업이다. InGameSettings 월드 위젯을 OpenUI()로 열어야
- * 타이틀/인게임 모두 AddToViewport, ZOrder, Back/Close 처리 규칙을 같은 경로로 검증할 수 있다.
- */
-void UTitleMenuWidget::OpenSettingsPanel()
-{
-	USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel();
-	if (TitleSettingsPanel == nullptr)
-	{
-		ShowMainScreen();
-		SetStatusText(mMainOnlyStatusText);
-		return;
-	}
-
-	TitleSettingsPanel->OnBackRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsPanelBackRequested);
-	TitleSettingsPanel->SetPanelMode(ESettingsPanelMode::Title);
-	TitleSettingsPanel->RefreshPanelState(false, false);
-	TitleSettingsPanel->HideAbandonConfirm();
-	TitleSettingsPanel->SetStatusText(FText::GetEmpty());
-
-	ShowMainScreen();
-	TitleSettingsPanel->OpenUI();
-	SetStatusText(FText::GetEmpty());
-}
-
-/**
- * @brief 생성자/에디터 기본값으로 준비된 문구를 실제 WBP TextBlock에 반영한다.
- *
- * @details
- * WBP는 레이아웃과 폰트/색을 담당하고, C++은 버튼 의미에 맞는 텍스트만 넣는다.
- * 텍스트 동기화를 한 함수로 모아두면 저장 슬롯/불러오기 버튼이 추가될 때 문구 갱신 지점이 분산되지 않는다.
- */
+/** @brief 생성자/에디터 기본값으로 준비된 문구를 실제 WBP TextBlock에 반영한다. */
+// WBP는 레이아웃과 폰트/색을 담당하고, C++은 버튼 의미에 맞는 텍스트만 넣는다.
+// 텍스트 동기화를 한 함수로 모아두면 저장 슬롯/불러오기 버튼이 추가될 때 문구 갱신 지점이 분산되지 않는다.
 void UTitleMenuWidget::SyncMainText() const
 {
 	if (TitleText != nullptr)
@@ -258,90 +150,9 @@ void UTitleMenuWidget::SyncMainText() const
 
 }
 
-/**
- * @brief 현재 활성 Run 여부에 따라 START/NEW START/CONTINUE 버튼 상태를 갱신한다.
- *
- * @details
- * 세이브 데이터 로드는 Intro 단계에서 끝난다는 전제를 사용한다.
- * 타이틀은 디스크를 다시 읽지 않고, FrontendGameMode가 현재 RunPersistData 요약을 만들 수 있는지만 본다.
- *
- * 활성 Run이 없으면 Continue는 숨기고 START 문구를 보여준다.
- * 활성 Run이 있으면 Continue를 보여주고, 새로 시작은 NEW START 문구로 바꿔 기존 런과 별도 행동임을 드러낸다.
- */
-void UTitleMenuWidget::RefreshMainMenuState() const
-{
-	const bool bCanContinueRun = CanContinueRun();
-
-	if (StartButton != nullptr)
-	{
-		StartButton->SetVisibility(ESlateVisibility::Visible);
-		StartButton->SetIsEnabled(true);
-	}
-
-	if (StartButtonText != nullptr)
-	{
-		StartButtonText->SetText(bCanContinueRun ? mNewStartButtonText : mStartButtonText);
-	}
-
-	if (ContinueButton != nullptr)
-	{
-		ContinueButton->SetVisibility(bCanContinueRun ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-		ContinueButton->SetIsEnabled(bCanContinueRun);
-	}
-
-	if (ContinueButtonText != nullptr)
-	{
-		ContinueButtonText->SetText(mContinueButtonText);
-	}
-
-	if (SettingsButton != nullptr)
-	{
-		SettingsButton->SetVisibility(ESlateVisibility::Visible);
-		SettingsButton->SetIsEnabled(true);
-	}
-}
-
-/**
- * @brief 현재 프론트엔드 GameMode가 이어가기 가능한 활성 Run을 갖는지 확인한다.
- *
- * @details
- * 여기서 SaveGame 파일을 직접 읽지는 않는다.
- * Intro에서 복구된 PersistentData에 활성 Run이 있는지만 확인해 CONTINUE 버튼 표시 여부를 정한다.
- * 현재 방 위치, 난이도, 레벨 같은 방 안 UI 표시는 실제 방에 들어간 뒤 RoomGameMode가 처리한다.
- */
-bool UTitleMenuWidget::CanContinueRun() const
-{
-	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
-	{
-		return FrontendGameMode->HasActiveRun();
-	}
-
-	return false;
-}
-
-/**
- * @brief 타이틀 설정에 사용할 공용 SettingsPanelWidget 월드 위젯을 찾는다.
- *
- * @details
- * 타이틀 WBP 안에 설정 패널을 직접 소유하지 않는다.
- * WorldWidgetSubsystem이 준비한 InGameSettings 월드 위젯만 받아와 OpenUI()/CloseUI() 생명주기를 통일한다.
- */
-USettingsPanelWidget* UTitleMenuWidget::GetTitleSettingsPanel() const
-{
-	UWorld* World = GetWorld();
-	UWorldWidgetSubsystem* WorldWidgetSubsystem = World != nullptr ? World->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
-	return WorldWidgetSubsystem != nullptr
-		? WorldWidgetSubsystem->GetWorldWidget<USettingsPanelWidget>(EWorldWidgetType::InGameSettings)
-		: nullptr;
-}
-
-/**
- * @brief 현재 타이틀 화면에서 사용하지 않는 상태 문구 영역을 항상 숨긴다.
- *
- * @details
- * 새 타이틀 WBP는 별도 상태 텍스트를 사용하지 않는다.
- * 기존 C++ 호출부 호환을 위해 함수는 남겨두지만, 어떤 텍스트가 들어와도 화면에는 표시하지 않는다.
- */
+/** @brief 현재 타이틀 화면에서 사용하지 않는 상태 문구 영역을 항상 숨긴다. */
+// 새 타이틀 WBP는 별도 상태 텍스트를 사용하지 않는다.
+// 기존 C++ 호출부 호환을 위해 함수는 남겨두지만, 어떤 텍스트가 들어와도 화면에는 표시하지 않는다.
 void UTitleMenuWidget::SetStatusText(const FText& /*InText*/) const
 {
 	if (StatusText != nullptr)
@@ -351,13 +162,6 @@ void UTitleMenuWidget::SetStatusText(const FText& /*InText*/) const
 	}
 }
 
-/**
- * @brief WBP_TitleMenu가 C++이 기대하는 BindWidget 이름을 제공하는지 로그로 확인한다.
- *
- * @details
- * UI 담당자가 WBP 디자인을 고칠 때 가장 흔한 문제가 이름 변경으로 인한 BindWidget nullptr이다.
- * 여기서 누락된 이름을 한 번에 로그로 남겨야, 화면이 안 넘어가는 문제가 C++ 로직인지 WBP 연결 문제인지 빠르게 구분할 수 있다.
- */
 void UTitleMenuWidget::ValidateDesignerBindings() const
 {
 	if (ScreenSwitcher == nullptr)
@@ -395,11 +199,6 @@ void UTitleMenuWidget::ValidateDesignerBindings() const
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: SettingsButton is not connected."));
 	}
 
-	if (TitleText == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: TitleText is not connected."));
-	}
-
 	if (StartButtonText == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: StartButtonText is not connected."));
@@ -415,86 +214,15 @@ void UTitleMenuWidget::ValidateDesignerBindings() const
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: SettingsButtonText is not connected."));
 	}
 
+	if (TitleBackgroundImage == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: TitleBackgroundImage is not connected. Background video will be skipped."));
+	}
+
 	if (GetTitleSettingsPanel() == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: InGameSettings world widget is not configured."));
 	}
 
-	SetStatusText(FText::GetEmpty());
-}
-
-/**
- * @brief START 버튼 입력을 GameMode의 새 런 시작 흐름으로 전달한다.
- *
- * @details
- * GameMode가 준비되어 있으면 RequestCharacterSelectFromTitle()을 통해 캐릭터 선택 화면을 열고,
- * 테스트/프리뷰처럼 GameMode가 없는 경우에는 WBP 화면 전환만 수행한다.
- */
-void UTitleMenuWidget::HandleStartButtonClicked()
-{
-	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
-	{
-		if (FrontendGameMode->RequestCharacterSelectFromTitle())
-		{
-			return;
-		}
-	}
-
-	ShowCharacterScreen();
-}
-
-/**
- * @brief CONTINUE 버튼 입력으로 현재 활성 Run의 방에 바로 들어간다.
- *
- * @details
- * 버튼은 RefreshMainMenuState()에서 활성 Run이 있을 때만 보이지만,
- * 클릭 순간에도 다시 검사해 Run 데이터가 비었거나 방 전환을 시작할 수 없으면 메인 화면으로 되돌린다.
- * 지도 조회/다음 방 선택은 방에 들어간 뒤 RoomGameMode가 준비한 WorldMap 위젯에서만 처리한다.
- */
-void UTitleMenuWidget::HandleContinueButtonClicked()
-{
-	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
-	{
-		if (FrontendGameMode->ContinueRunFromTitle())
-		{
-			return;
-		}
-	}
-
-	ShowMainScreen();
-	SetStatusText(mMainOnlyStatusText);
-}
-
-/**
- * @brief SETTING 버튼 입력으로 공용 설정 패널을 연다.
- */
-void UTitleMenuWidget::HandleSettingsButtonClicked()
-{
-	OpenSettingsPanel();
-}
-
-/**
- * @brief 설정 화면 Back 요청을 타이틀 메인 복귀로 처리한다.
- *
- * @details
- * 타이틀 설정도 공용 InGameSettings 월드 위젯으로 열리므로 CloseUI()까지 호출해 팝업 상태를 정리한다.
- */
-void UTitleMenuWidget::HandleSettingsPanelBackRequested()
-{
-	if (USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel())
-	{
-		TitleSettingsPanel->CloseUI();
-	}
-
-	ShowMainScreen();
-	SetStatusText(FText::GetEmpty());
-}
-
-/**
- * @brief 캐릭터 선택 화면의 Back 요청을 타이틀 메인 복귀로 처리한다.
- */
-void UTitleMenuWidget::HandleCharacterBackToMainRequested()
-{
-	ShowMainScreen();
 	SetStatusText(FText::GetEmpty());
 }
