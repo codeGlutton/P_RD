@@ -12,7 +12,7 @@
 #include "Pawn/Unit.h"
 #include "Pawn/Player/PlayerUnit.h"
 #include "Combat/CombatUIAdapter.h"
-#include "Dice/DiceComponent.h"
+#include "Dice/DicePoolModel.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/CombatTileMapHUDWidget.h"
 
@@ -46,10 +46,10 @@ void ACombatGameMode::BeginRoom()
 	UCombatUIModel* CombatUIModel = CombatSubsystem->GetCombatUIModel();
 	const URunPersistData* RunPersistData = GetRunPersistData();
 
-	UDiceComponent* DiceComponent = nullptr;
+	UDicePoolModel* DiceComponent = nullptr;
 	if (APlayerUnit* PlayerUnit = Cast<APlayerUnit>(GetPlayerUnit()))
 	{
-		DiceComponent = PlayerUnit->GetDiceComponent();
+		DiceComponent = PlayerUnit->GetDicePool();
 		if (DiceComponent != nullptr && RunPersistData != nullptr)
 		{
 			DiceComponent->BuildFromDiceIds(RunPersistData->GetDiceIds());
@@ -58,7 +58,7 @@ void ACombatGameMode::BeginRoom()
 
 	mCombatUIAdapter = NewObject<UCombatUIAdapter>(this);
 	mCombatUIAdapter->Build(CombatSubsystem, RunPersistData);
-	mCombatUIAdapter->SetDiceComponent(DiceComponent);
+	mCombatUIAdapter->SetDicePool(DiceComponent);
 	mCombatUIAdapter->BindUIModel(CombatUIModel);
 
 	if (UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())
