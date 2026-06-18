@@ -83,6 +83,16 @@ public:
 	 */
 	void OnEndCurrentTurn(TSharedRef<FSRPGTurnContext> TurnContext, ESRPGTurnResult TurnResult);
 
+	/* 디버그 */
+public:
+	/**
+	 * @brief [디버그] 전투 로직 없이 승/패 결과를 강제로 종료 처리한다.
+	 * @details 전투 진행 로직이 아직 없어 승/패 UI 흐름을 테스트할 수 없을 때, 탑바 디버그 버튼이 호출한다.
+	 *          결과를 직접 세팅하고 CombatAbort로 전환 후 EndCombat()을 태워 OnEndCombatUI 흐름을 그대로 재현한다.
+	 * @param Result PlayerWin / PlayerLose
+	 */
+	void DebugForceEndCombat(ESRPGCombatResult Result);
+
 protected:
 	void EvaluateCombatEndState();
 
