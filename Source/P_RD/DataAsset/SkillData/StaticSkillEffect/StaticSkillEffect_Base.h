@@ -1,5 +1,9 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+﻿/*****************************************************************//**
+ * @file   StaticSkillEffect_Base.h
+ * @brief  효과 기본 베이스
+ * @author 김준형
+ * @date   2026-06-18
+ *********************************************************************/
 #pragma once
 
 #include "GAS/GASMinimal.h"
@@ -25,7 +29,7 @@ public:
     * @note
     * Damage, Heal 기타 등등
     */
-    UPROPERTY(Category = "SkillEffectLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "GameplayTag"))
+    UPROPERTY(Category = "SkillEffect", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "GameplayTag" ))
     FGameplayTag mEffectTag;
 };
 

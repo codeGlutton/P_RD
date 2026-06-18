@@ -16,6 +16,19 @@
 #include "Passive/DynamicPassiveData/DynamicPassiveData_Base.h"
 #include "StaticPassiveData.generated.h"
 
+USTRUCT(BlueprintType)
+struct FPassiveCondition
+{
+    GENERATED_BODY()
+
+public:
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FGameplayTag mConditionTag;     // 조건 태그
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float mThresholdValue;          // 기준 수치 (예: 데미지 10, HP 30%)
+};
+
 /**
  * 
  */
@@ -41,19 +54,37 @@ public:
     * 모션 전, 후
     * 기타 등등
     */
-	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Passive Timig"))
-	FGameplayTag mPassiveTimig;     // 시점
+	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Passive Trigger Timig"))
+	FGameplayTag mPassiveTriggerTimig;     // 시점
 
     /**
-    * @brief 어떤 대상에게?
+    * @brief 패시브 발동 조건
     *
     * @details
-    * 자신의 타일
-    * 발동 주체자의 타일
+    * 패시브의 발동 조건(mConditionTag),
+    * 패시브의 발동 조건 수치(mThresholdValue)
     */
+    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Passive Trigger Condition"))
+    TArray<FPassiveCondition> mPassiveTriggerCondition;
 
-#pragma region EffectArea
-    UPROPERTY(Category = "EffectArea", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectAreaType"))
+#pragma region Effect
+
+    /**
+    * @brief 누구를 중심으로?
+    *
+    * @details
+    * 소유자의 타일을 중심으로?(패시브를 가지고 있는 주인)
+    * 유발자의 타일을 중심으로?(패시브와 연관된 대상 : 공격하고 있다면 피격자, 피격되고 있다면 공격자)
+    */
+    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectCenterType"))
+    EEffectCenterType mEffectCenterType;
+
+    /*
+    * @brief 효과 범위 패턴
+    *
+    * @details
+    */
+    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectAreaType"))
     EEffectPattern mEffectPattern;
 
     /**
@@ -63,7 +94,7 @@ public:
     * true면 유닛 넘어도 영향 대상
     * false면 유닛 넘어는 영향 대상이 아님
     */
-    UPROPERTY(Category = "EffectArea", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsPenetration"))
+    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsPenetration"))
     bool mIsPenetration;
 
     /**
@@ -73,10 +104,8 @@ public:
     * 고정값
     * 사정거리는 항상 DefaultArea + RatioArea * 눈금
     */
-    UPROPERTY(Category = "EffectArea", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectDefaultArea"))
+    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectDefaultArea"))
     int32 mEffectDefaultArea;
-
-#pragma endregion
 
     /**
     * @brief 패시브 효과 정적 데이터
@@ -88,6 +117,7 @@ public:
     UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StaticPassiveEffect"))
     TObjectPtr<UStaticSkillEffect_Base> mStaticPassiveEffect;
 
+#pragma endregion
 
     /**
     * @brief 패시브 로직
@@ -95,7 +125,7 @@ public:
     * @details
     * 함수만 사용 예정
     */
-	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Passive Logic"))
+	UPROPERTY(Category = "PassiveLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Passive Logic"))
 	TSubclassOf<UPassiveLogic> mPassiveLogic;
 
 
@@ -105,7 +135,7 @@ public:
     * @details
     * 패시브 장착 시 생성
     */
-    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StaticPassiveEffect"))
+    UPROPERTY(Category = "PassiveLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StaticPassiveEffect"))
     TSubclassOf<UDynamicPassiveData_Base> mPassiveDynamicData;
 
 };

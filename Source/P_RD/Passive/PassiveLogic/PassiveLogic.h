@@ -8,34 +8,52 @@
 
 class UStaticPassiveData;
 class UDynamicPassiveData_Base;
+class TacticalEffectContextHandle;	// 소유자, 유발자?, 효과 등
 
 /**
  * 
  */
-UCLASS(Abstract, BlueprintType, Blueprintable)
+UCLASS(Abstract, BlueprintType, Blueprintable, EditInlineNew, DefaultToInstanced)
 class P_RD_API UPassiveLogic : public UObject
 {
 	GENERATED_BODY()
 
 protected:
 	/**
-	 * @brief 오버랩 시작 시 실행될 함수
-	 * @param CurTile 현재 위치한 타일 객체
-	 * @param Other 반대 대상
+	 * @brief 패시브 장착 시 
+	 * 
+	 * @details
+	 * 패시브 장착 시 호출
+	 * 
+	 * @param StaticPassiveData : 패시브 정적 데이터
+	 * @param TacticalEffectContextHandle : 장착한 소유자
 	 */
-	virtual void OnEquip(TSoftObjectPtr<UStaticPassiveData> StaticPassiveData, TObjectPtr<UDynamicPassiveData_Base> DynamicPassiveData) {};
+	virtual void OnEquip(TSoftObjectPtr<UStaticPassiveData> StaticPassiveData,
+		TacticalEffectContextHandle& TacticalEffectContextHandle) {};
 
 	/**
-	 * @brief 오버랩 시작 시 실행될 함수
-	 * @param CurTile 현재 위치한 타일 객체
-	 * @param Other 반대 대상
+	 * @brief 패시브 해제 시
+	 * 
+	 * @details
+	 * 패시브 해제 시 호출
+	 * 
+	 * @param StaticPassiveData : 패시브 정적 데이터
+	 * @param TacticalEffectContextHandle : 해제한 소유자
 	 */
-	virtual void OnUnEquip(TSoftObjectPtr<UStaticPassiveData> StaticPassiveData, TObjectPtr<UDynamicPassiveData_Base> DynamicPassiveData) {};
+	virtual void OnUnEquip(TSoftObjectPtr<UStaticPassiveData> StaticPassiveData,
+		TacticalEffectContextHandle& TacticalEffectContextHandle) {};
 
 	/**
-	* @brief 오버랩 시작 시 실행될 함수
-	* @param Tactical Effect 
-	* @param Other 반대 대상
-	*/
-	virtual void OnExcute(TSoftObjectPtr<UStaticPassiveData> StaticPassiveData, TObjectPtr<UDynamicPassiveData_Base> DynamicPassiveData) {};
+	 * @brief 패시브 호출
+	 * 
+	 * @details
+	 * 패시브 호출
+	 * 
+	 * @param StaticPassiveData : 패시브 정적 데이터
+	 * @param DynamicPassiveData : 패시브 동적 데이터
+	 * @param TacticalEffectContextHandle : 해제한 소유자
+	 */
+	virtual void OnExcute(TSoftObjectPtr<UStaticPassiveData> StaticPassiveData, 
+		TObjectPtr<UDynamicPassiveData_Base> DynamicPassiveData,
+		TacticalEffectContextHandle& TacticalEffectContextHandle) {};
 };

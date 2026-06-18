@@ -1,5 +1,9 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+﻿/*****************************************************************
+ * @file   DynamicPassiveData_Base.h
+ * @brief  패시브 장착 시 패시브 컴포넌트가 함께 생성할 동적 데이터 베이스
+ * @author 김준형
+ * @date   2026-06-18
+ ****************************************************************/
 #pragma once
 
 #include "CoreMinimal.h"
