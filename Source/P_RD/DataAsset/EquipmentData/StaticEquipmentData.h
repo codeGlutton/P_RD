@@ -10,6 +10,7 @@
 #include "RDMinimal.h"
 #include "DataAsset/PrimaryAssetType.h"
 #include "DataAsset/BundleType.h"
+#include "DataAsset/PassiveData/StaticPassiveData.h"
 #include "StaticEquipmentData.generated.h"
 
 /**
@@ -28,4 +29,7 @@ public:
      */
     UPROPERTY(Category = "Equipment", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RarityType"))
     ERarityType mRarityType;
+
+    UPROPERTY(Category = "Equipment", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Passive"))
+    TArray<TSoftObjectPtr<UStaticPassiveData>> mStaticPassiveData;
 };
