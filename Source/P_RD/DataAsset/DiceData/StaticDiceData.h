@@ -28,9 +28,9 @@ struct P_RD_API FStaticDiceFaceData
 	TSoftObjectPtr<UTexture2D> mTexture;
 };
 
-/**
- * @brief  주사위 생성 시 사용되는 정적 Primary Data Asset
- */
+/** @brief 주사위의 안 변하는 정의를 담는 정적 Primary Data Asset(Data)입니다. */
+// 런 시작 시 이 고정 템플릿에서 런타임 UDiceModel을 찍어낸다(UDiceModel::InitFromStatic).
+// 굴림/사용 같은 변하는 상태는 여기 두지 않고 UDiceModel(Model)이 들고 간다.
 UCLASS()
 class P_RD_API UStaticDiceData : public UPrimaryDataAsset
 {
