@@ -8,7 +8,7 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "Model/ObjectModel.h"
+#include "ObjectModel.h"
 #include "ComponentModel.generated.h"
 
 /**
