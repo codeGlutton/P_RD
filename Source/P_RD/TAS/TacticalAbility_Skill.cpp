@@ -50,6 +50,14 @@ bool UTacticalAbility_Skill::CanActivateAbility(const FTacticalAbilityContext& C
 	return true;
 }
 
+void UTacticalAbility_Skill::CallStartCalculatePassive(const FTacticalAbilityContext& Context, TArray<UTacticalEffectContext*>& EffectContext)
+{
+}
+
+void UTacticalAbility_Skill::CallEndCalculatePassive(const FTacticalAbilityContext& Context, TArray<UTacticalEffectContext*>& EffectContext)
+{
+}
+
 void UTacticalAbility_Skill::ActivateSkill(const FTacticalAbilityContext& Context)
 {
 	// 스킬을 기반으로 효과를 계산한다.
@@ -69,7 +77,7 @@ void UTacticalAbility_Skill::ActivateSkill(const FTacticalAbilityContext& Contex
 			const UStaticSkillEffect_Stat* Effect_Stat = Cast<UStaticSkillEffect_Stat>(SkillMotionLayer.mStaticSkillEffectLayers[j]);
 			checkf(Effect_Stat != 0, TEXT("Stat이 아닙니다."));
 			EffectContext->mBase = Effect_Stat->mEffectDefaultValue + Effect_Stat->mEffectRatioValue * 10;
-			EffectContext->mGameplayTag = Effect_Stat->mGameplayTag;
+			EffectContext->mGameplayTag = Effect_Stat->mEffectTag;
 
 			EffectContexts.Add(EffectContext);
 		}

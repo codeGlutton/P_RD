@@ -1,0 +1,17 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "TAS/Effect/Stat/TacticalEffect_Stat.h"
+#include "TacticalEffect_Stat_Damage.generated.h"
+
+/**
+ * 
+ */
+UCLASS()
+class P_RD_API UTacticalEffect_Stat_Damage : public UTacticalEffect_Stat
+{
+	GENERATED_BODY()
+	
+};
