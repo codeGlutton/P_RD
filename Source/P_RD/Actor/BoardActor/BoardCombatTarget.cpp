@@ -1,4 +1,4 @@
-﻿#include "SRPGFramework/TileTargetable.h"
+﻿#include "Actor/BoardActor/BoardCombatTarget.h"
 
 UScriptStruct* FTileTargetSnapshotTargetData::GetScriptStruct() const
 {
@@ -19,12 +19,12 @@ bool FTileTargetSnapshotTargetData::NetSerialize(FArchive& Ar, UPackageMap* Map,
 	return true;
 }
 
-bool ITileTargetable::IsDead() const
+bool IBoardCombatTarget::IsDead() const
 {
 	return GetAbilitySystemComponent()->HasMatchingGameplayTag(EffectTags::GameplayEffect_ActorState_Dead);
 }
 
-bool ITileTargetable::IsTargetable() const
+bool IBoardCombatTarget::IsTargetable() const
 {
 	return true;
 }
