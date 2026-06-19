@@ -57,6 +57,9 @@ public:
 	/** @brief 타이틀/연출용 표시 상태처럼 입력 없이 정보만 보이는 상태로 바꾼다. */
 	void ApplyDisplayOnly();
 
+	/** @brief 전투 HUD가 읽은 Lv/HP/Gold를 탑바 요약 텍스트에 직접 반영한다. */
+	void SetCombatPlayerSummary(int32 Level, int32 HP, int32 MaxHP, int32 Gold);
+
 protected:
 	/**
 	 * @brief WBP 바인딩 검증, 버튼 연결, 전투 종료 이벤트 구독을 수행한다.
