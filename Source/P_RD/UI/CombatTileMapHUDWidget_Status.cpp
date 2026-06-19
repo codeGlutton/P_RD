@@ -83,6 +83,10 @@ void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const
 	const int32 MaxHP = FMath::RoundToInt(PlayerMaxHP);
 	const int32 Gold = Meta.mGold;
 
+	// 탑바 DICE/SKILL 라벨에 푸시할 보유 주사위/스킬 수(전부 뷰모델 경유).
+	const int32 DiceCount = mCombatUIModel->GetDiceUIs().Num();
+	const int32 SkillCount = mCombatUIModel->GetSkillUIs().Num();
+
 	// 로컬 상태줄(접힘 상태)에도 값은 채워두지만, 실제 표시는 탑바로 푸시한다.
 	mCombatStatusBarText->SetText(FText::Format(
 		NSLOCTEXT("CombatTileMapHUDWidget", "CombatStatusBarFormat", "Lv {0}    HP {1}/{2}    GOLD {3}"),
@@ -97,6 +101,7 @@ void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const
 			if (UTopMenuBarWidget* TopBar = WorldWidgetSubsystem->GetWorldWidget<UTopMenuBarWidget>(EWorldWidgetType::TopMenuBar))
 			{
 				TopBar->SetCombatPlayerSummary(Level, HP, MaxHP, Gold);
+				TopBar->SetCombatDiceSkillCount(DiceCount, SkillCount);
 			}
 		}
 	}
