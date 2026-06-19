@@ -545,7 +545,7 @@ void ATileMap::DebugPathTest()
 	// 모델 경유로 전체 파이프라인 확인: FindPath → 표시 델리깃 → 뷰 SetMovePath
 	// (빈 에디터 맵이면 장애물이 없어 시작→목표 계단식 경로가 나온다)
 	if (mModel != nullptr)
-		mModel->SetMovePath(FTileIndex(1, 1), FTileIndex(4, 3));
+		mModel->SetMovePath(FTileIndex(1, 3), FTileIndex(4, 5));
 }
 #endif
 
