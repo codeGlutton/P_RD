@@ -8,8 +8,12 @@
 #include "TAS/Effect/TacticalEffectContext_Stat.h"
 #include "TacticalAbility_Skill.generated.h"
 
-struct FTacticalEffectPayload_Skill : public FTacticalEffectPayload
+UCLASS()
+class P_RD_API UTacticalEffectPayload_Skill : public UTacticalEffectPayload
 {
+	GENERATED_BODY()
+
+public:
 	TSoftObjectPtr<UStaticSkillData> mSkillData;
 };
 

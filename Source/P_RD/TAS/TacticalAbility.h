@@ -5,7 +5,7 @@
 #include "GAS/GASMinimal.h"
 #include "UObject/Object.h"
 #pragma region Temp
-#include "SRPGFramework/TileActor.h"
+#include "Actor/BoardActor/BoardActorModel.h"
 #pragma endregion
 
 #include "TacticalAbility.generated.h"
@@ -18,17 +18,23 @@ enum class ETacticalEffectPayloadType
 	Area		// 장판
 };
 
-struct FTacticalEffectPayload
+
+UCLASS(Abstract)
+class P_RD_API UTacticalEffectPayload : public UObject
 {
+	GENERATED_BODY()
+
+public:
 	ETacticalEffectPayloadType mTacticalEffectPayloadType;
 };
 
+
 struct FTacticalAbilityContext
 {
-	TScriptInterface<ITileActor> mCasterActor;
+	TWeakObjectPtr<UBoardActorModel> mCasterActor;
 	TArray<FTileIndex> mTargetTile;
 
-	FTacticalEffectPayload mInstigatorData;
+	TObjectPtr<UTacticalEffectPayload> mInstigatorData;	// 수정 필요 ==================================================================
 };
 
 /**
@@ -45,7 +51,7 @@ public:
 	*/
 	virtual void ActivateAbility(const FTacticalAbilityContext Context) PURE_VIRTUAL(UTacticalAbility::ActivateAbility, );
 
-	void ApplyEffect(const FTacticalAbilityContext& Context, const TArray<class UTacticalEffectContext*>& EffectContext);
+	void ApplyEffect(const FTacticalAbilityContext& Context, TArray<class UTacticalEffectContext*>& EffectContext);
 
 	/*
 	* @brief 스킬을 종료한다.

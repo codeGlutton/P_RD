@@ -3,6 +3,8 @@
 
 #include "TAS/TacticalAbility_Skill.h"
 #include "DataAsset/SkillData/StaticSkillEffect/StaticSkillEffect_Stat.h"
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
+
 
 
 
@@ -17,9 +19,9 @@ void UTacticalAbility_Skill::ApplyCost() const
 
 void UTacticalAbility_Skill::ActivateAbility(const FTacticalAbilityContext Context)
 {
-	if (!IsValid(Context.mCasterActor.GetObject()) ||
+	if (!IsValid(Context.mCasterActor.Get()) ||
 		!Context.mTargetTile.Num() ||
-		Context.mInstigatorData.mTacticalEffectPayloadType != ETacticalEffectPayloadType::Skill)
+		Context.mInstigatorData->mTacticalEffectPayloadType != ETacticalEffectPayloadType::Skill)
 	{
 		EndAbility();
 	}
@@ -62,6 +64,12 @@ void UTacticalAbility_Skill::ActivateSkill(const FTacticalAbilityContext& Contex
 {
 	// 스킬을 기반으로 효과를 계산한다.
 	TSoftObjectPtr<UStaticSkillData> SkillData;
+	//TArray<UAttributeSetComponentModel*> ComponentArray = Context.mCasterActor.Get()->FindComponentModelsByClass<UAttributeSetComponentModel>();
+	//checkf(ComponentArray.Num(), TEXT("컴포넌트가 없습니다."));
+
+	// AS를 가져옵니다.
+	//TWeakObjectPtr<UAttributeSetComponentModel> AttributeSet = ComponentArray[0];
+
 
 	for (int32 i = 0; i < SkillData.Get()->mSkillMotionLayers.Num(); ++i)
 	{
