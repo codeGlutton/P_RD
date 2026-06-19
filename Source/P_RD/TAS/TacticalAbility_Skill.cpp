@@ -29,11 +29,9 @@ void UTacticalAbility_Skill::ActivateAbility(const FTacticalAbilityContext Conte
 		EndAbility();
 	}
 
-	// 효과를 계산한다.
-	TArray<UTacticalEffectContext*> EffectContext = CalculateEffect_Stat(Context);
 
-	// 효과를 적용한다.
-	ApplyEffect(Context, EffectContext);
+	// 스킬을 사용한다.
+	ActivateSkill(Context);
 
 	EndAbility();
 }
@@ -52,20 +50,17 @@ bool UTacticalAbility_Skill::CanActivateAbility(const FTacticalAbilityContext& C
 	return true;
 }
 
-TArray<UTacticalEffectContext*> UTacticalAbility_Skill::CalculateEffect_Stat(const FTacticalAbilityContext& Context)
+void UTacticalAbility_Skill::ActivateSkill(const FTacticalAbilityContext& Context)
 {
-	TArray<UTacticalEffectContext*> EffectContexts;
-
-	// 캐스터의 주사위 눈금을 가져온다.
-
 	// 스킬을 기반으로 효과를 계산한다.
 	TSoftObjectPtr<UStaticSkillData> SkillData;
 
 	for (int32 i = 0; i < SkillData.Get()->mSkillMotionLayers.Num(); ++i)
 	{
+		TArray<UTacticalEffectContext*> EffectContexts;
 		const FSkillMotionLayer& SkillMotionLayer = SkillData.Get()->mSkillMotionLayers[i];
-		
 
+		// 기본 Effect 값 계산한다.
 		for (int32 j = 0; j < SkillMotionLayer.mStaticSkillEffectLayers.Num(); ++j)
 		{
 			// 생성
@@ -79,9 +74,15 @@ TArray<UTacticalEffectContext*> UTacticalAbility_Skill::CalculateEffect_Stat(con
 			EffectContexts.Add(EffectContext);
 		}
 
+		// 효과를 계산합니다.
+		CallStartCalculatePassive(Context, EffectContexts);
+
+		// 효과를 적용한다.
+		ApplyEffect(Context, EffectContexts);
+
+		// 효과를 정산합니다.
+		CallEndCalculatePassive(Context, EffectContexts);
+
 	}
 
-
-	// 효과를 반환한다.
-	return EffectContexts;
 }
