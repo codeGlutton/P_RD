@@ -29,6 +29,7 @@
 
 #include "NativeGameplayTags.h"
 #include "GameplayTagContainer.h" 
+#include "GameplayTagType.h"
 
 template<typename T>
 FString EnumToString(T Value)

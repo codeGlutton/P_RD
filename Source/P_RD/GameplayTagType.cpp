@@ -1,4 +1,4 @@
-﻿#include "GAS/GASTag.h"
+﻿#include "GameplayTagType.h"
 
 namespace InputTags
 {
