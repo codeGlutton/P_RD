@@ -1,4 +1,4 @@
-// @file DiceView.h
+﻿// @file DiceView.h
 // @brief 주사위 한 개의 시각 표현(View). 데이터/로직은 UDiceModel이 갖고 여기는 시각 전용 상태만 둔다.
 // @date 2026-06-18
 
@@ -20,7 +20,7 @@ class UTexture;
 //   - 스킬 빌드에 올렸는지 같은 UI 선택 강조 상태.
 //   - 3D 굴림 면 프리뷰 렌더타깃 슬롯(캡처 계층이 채움).
 UCLASS(BlueprintType)
-class P_RD_API UDiceView : public UObject, public IObjectView
+class P_RD_API UDiceView : public UObject /*, public IObjectView --> 임시 폐기 했습니다 */
 {
 	GENERATED_BODY()
 
