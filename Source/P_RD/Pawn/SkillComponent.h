@@ -12,7 +12,7 @@
 #include "SRPGFramework/SRPGFrameworkType.h"
 //#include "Pawn/SkillComponent/PreviewEffectIconData.h"
 #include "../FunctionLibrary/CombatCalculator/CombatResult.h"
-#include "FunctionLibrary/CommandLog/CommandLog.h"
+//#include "FunctionLibrary/CommandLog/CommandLog.h"
 #include "SRPGFramework/TileActor.h"
 #include "SkillComponent.generated.h"
 
@@ -103,8 +103,8 @@ public:
 	* 이미 가지고 있는 커맨드 로그를 토대로 스킬을 진행
 	* @return bool : 실패 시 false 반환
 	*/
-	UFUNCTION(BlueprintCallable, Category = "Skill")
-	bool ActivateSkill(const FCommandLog& SkillResult);
+	//UFUNCTION(BlueprintCallable, Category = "Skill")
+	//bool ActivateSkill(const FCommandLog& SkillResult);
 
 	/**
 	* @brief 스킬 결과 값 계산
@@ -116,6 +116,6 @@ public:
 	* @param[out] Out_Result: 결과 로그
 	* @return bool : 실패 시 false 반환
 	*/
-	UFUNCTION(BlueprintCallable, Category = "Skill")
-	bool CalculateSkillResult(int32 SkillIndex, TArray<FTileIndex> mTargetTiles, const FTileMapCloneData& In_CloneData,  FCommandLog& Out_Result);
+	//UFUNCTION(BlueprintCallable, Category = "Skill")
+	//bool CalculateSkillResult(int32 SkillIndex, TArray<FTileIndex> mTargetTiles, const FTileMapCloneData& In_CloneData,  FCommandLog& Out_Result);
 };

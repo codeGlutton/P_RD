@@ -1,10 +1,10 @@
 ﻿#include "Pawn/Enemy/EnemyUnit.h"
 
-#include "Setting/UnitTeamType.h"
+#include "Setting/GameTeamType.h"
 
 AEnemyUnit::AEnemyUnit()
 {
-	SetGenericTeamId(EUnitTeamType::Enemy);
+	SetGenericTeamId(EGameTeamType::Enemy);
 }
 
 int32 AEnemyUnit::GetDifficulty() const

@@ -17,15 +17,15 @@ void UStaticPlayerUnitSpawnData::PostEditChangeProperty(FPropertyChangedEvent& P
 {
     Super::PostEditChangeProperty(PropertyChangedEvent);
 
-    if (PropertyChangedEvent.Property && PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(UStaticUnitSpawnData, mClass))
+    if (PropertyChangedEvent.Property && PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(UStaticUnitSpawnData, mUnitClass))
     {
-        if (mClass.IsNull() == true)
+        if (mUnitClass.IsNull() == true)
         {
             mJobType = EPlayerJobType::None;
         }
         else
         {
-            mJobType = GetDefault<APlayerUnit>(mClass.Get())->GetPlayerJobType();
+            mJobType = GetDefault<APlayerUnit>(mUnitClass.Get())->GetPlayerJobType();
         }
     }
 }

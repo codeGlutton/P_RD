@@ -18,6 +18,7 @@ bool USRPGCommandRouterSubsystem::SummitCommand(TSharedPtr<const FSRPGCommand> C
 		Result = CombineSRPGCommandResult(Handler->HandleCommand(Command), Result);
 		if (Result == ESRPGCommandResult::Handled)
 		{
+			UE_LOG(LogSRPGCommandRouter, Log, TEXT("[%s] 특정 핸들러가 처리"), *EnumToString(Command->GetCommandType()));
 			break;
 		}
 	}
@@ -26,6 +27,7 @@ bool USRPGCommandRouterSubsystem::SummitCommand(TSharedPtr<const FSRPGCommand> C
 
 	if (Result != ESRPGCommandResult::Handled)
 	{
+		UE_LOG(LogSRPGCommandRouter, Log, TEXT("[%s] 커맨드 Fallback"), *EnumToString(Command->GetCommandType()));
 		Result = CombineSRPGCommandResult(HandleFallbackCommand(Command), Result);
 	}
 
@@ -48,10 +50,7 @@ void USRPGCommandRouterSubsystem::UnregisterCommandHandler(TSharedPtr<ISRPGComma
 
 ESRPGCommandResult USRPGCommandRouterSubsystem::HandleFallbackCommand(TSharedPtr<const FSRPGCommand> Command)
 {
-	if (Command->GetCommandType() == ESRPGCommandType::WorldTrace)
-	{
-		// TODO : 꾹 눌렀을 때 정보 처리 부분
-	}
+	// TODO : 무언가... 하겠지?
 
 	return ESRPGCommandResult::Ignored;
 }

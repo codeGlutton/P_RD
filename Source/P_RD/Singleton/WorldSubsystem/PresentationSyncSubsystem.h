@@ -12,6 +12,9 @@
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 #include "PresentationSyncSubsystem.generated.h"
 
+ // Presentation Sync 신규 로그 카테고리 등록
+DECLARE_LOG_CATEGORY_EXTERN(LogPresentationSync, Log, All)
+
 /**
  * @brief  연출 동기화 서브시스템
  */

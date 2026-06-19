@@ -2,6 +2,7 @@
 #include "SRPGFramework/SRPGTurnContext.h"
 #include "SRPGFramework/SRPGCommand.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
+#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterSubsystem.h"
 #include "Singleton/WorldSubsystem/PresentationSyncSubsystem.h"
 
@@ -72,11 +73,13 @@ void FSRPGAction::EndAction(ESRPGActionResult Result)
 	checkf(CommandRouterSubsystem != nullptr, TEXT("명령 라우터 서브시스템 nullptr"));
 	CommandRouterSubsystem->UnregisterCommandHandler(AsShared());
 
-	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-	checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
+	TSharedPtr<FSRPGTurnContext> TurnContext = mParent.Pin();
+	checkf(TurnContext != nullptr, TEXT("턴 객체 nullptr"));
+	USRPGCombatModel* CombatModel = TurnContext->GetParent();
+	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 
 	// 전투 상태 평가
-	CombatSubsystem->EvaluateCombatStates();
+	CombatModel->EvaluateCombatStates();
 
 	// 종료 연출 시작
 	UPresentationSyncSubsystem* PresentationSyncSubsystem = GetWorld()->GetSubsystem<UPresentationSyncSubsystem>();
@@ -150,8 +153,10 @@ void FSRPGAction::GetTileActorUnderCursor(ECollisionChannel Channel, OUT AActor*
 
 	/* 마우스 포인트 지점 아래로 Raycast 검사 */
 
-	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-	checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
+	TSharedPtr<FSRPGTurnContext> TurnContext = mParent.Pin();
+	checkf(TurnContext != nullptr, TEXT("턴 객체 nullptr"));
+	USRPGCombatModel* CombatModel = TurnContext->GetParent();
+	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 
 	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
 	if (PlayerController != nullptr)
@@ -160,9 +165,9 @@ void FSRPGAction::GetTileActorUnderCursor(ECollisionChannel Channel, OUT AActor*
 		if (PlayerController->GetHitResultUnderCursor(Channel, false, HitResult) == true)
 		{
 			Actor = HitResult.GetActor();
-			if (Actor == CombatSubsystem->GetTileMap())
+			if (Actor == CombatModel->GetTileMap())
 			{
-				TileIndex = CombatSubsystem->GetTileMap()->WorldToTileIndex(HitResult.ImpactPoint);
+				TileIndex = CombatModel->GetTileMap()->WorldToTileIndex(HitResult.ImpactPoint);
 			}
 			else
 			{

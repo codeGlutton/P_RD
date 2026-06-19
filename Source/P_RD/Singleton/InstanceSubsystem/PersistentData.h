@@ -8,7 +8,9 @@
 #pragma once
 
 #include "GAS/GASMinimal.h"
+
 #include "PCGStage/Stage.h"
+#include "Singleton/InstanceSubsystem/PersistentDataType.h"
 
 #include "PersistentData.generated.h"
 
@@ -210,4 +212,67 @@ protected:
 
 	UPROPERTY(Category = Log, SaveGame, VisibleAnywhere, meta = (DisplayName = "UserLog"))
 	FUserLog mUserLog;
+};
+
+USTRUCT()
+struct FOptionPersistDataCache
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	TObjectPtr<USoundMix> mSoundMixObject;
+	UPROPERTY()
+	TArray<TObjectPtr<USoundClass>> mSoundClassObjects;
+};
+
+/**
+ * @brief 옵션의 영구적 데이터
+ */
+UCLASS()
+class P_RD_API UOptionPersistData : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	UOptionPersistData();
+
+public:
+	void MakeCaches();
+
+public:
+	void MakeOption();
+	void ClearOption();
+
+public:
+	void SetVolume(EGameVolumeType VolumeType, float Volume);
+	void SetLanguage(ELanguageType LanguageType);
+	void SetResolution(const FIntPoint& Resolution);
+
+	void ApplyCurrentOptions();
+
+public:
+	float GetVolume(EGameVolumeType VolumeType) const;
+	ELanguageType GetLanguage() const;
+	const FIntPoint& GetResolution() const;
+
+public:
+	bool IsActive() const;
+
+protected:
+	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "Volumes"))
+	TArray<float> mVolumes;
+
+protected:
+	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "LanguageType"))
+	ELanguageType mLanguageType = ELanguageType::ENGLISH;
+
+protected:
+	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "Resolution"))
+	FIntPoint mResolution = FIntPoint::ZeroValue;
+
+	/* 캐싱 */
+private:
+	UPROPERTY()
+	FOptionPersistDataCache mOptionPersistDataCache;
 };

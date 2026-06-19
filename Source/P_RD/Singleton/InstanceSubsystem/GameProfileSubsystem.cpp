@@ -33,3 +33,31 @@ void UGameProfileSubsystem::EndRun() const
 
 	UE_LOG(LogGameProfile, Log, TEXT("런 데이터 기록 후 삭제"));
 }
+
+void UGameProfileSubsystem::SetVolume(EGameVolumeType VolumeType, float Volume) const
+{
+	GetOptionMutableData()->SetVolume(VolumeType, Volume);
+
+	UE_LOG(LogGameProfile, Log, TEXT("[%s] 볼륨 변경"), *EnumToString(VolumeType));
+}
+
+void UGameProfileSubsystem::SetLanguage(ELanguageType LanguageType) const
+{
+	GetOptionMutableData()->SetLanguage(LanguageType);
+
+	UE_LOG(LogGameProfile, Log, TEXT("[%s] 언어 변경"), *EnumToString(LanguageType));
+}
+
+void UGameProfileSubsystem::SetResolution(const FIntPoint& Resolution) const
+{
+	GetOptionMutableData()->SetResolution(Resolution);
+
+	UE_LOG(LogGameProfile, Log, TEXT("[%d x %d] 해상도 변경"), Resolution.X, Resolution.Y);
+}
+
+void UGameProfileSubsystem::ResetOptions() const
+{
+	GetOptionMutableData()->ClearOption();
+
+	UE_LOG(LogGameProfile, Log, TEXT("옵션 초기화"));
+}

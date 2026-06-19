@@ -112,19 +112,19 @@ enum class EEffectPattern : uint8
 };
 
 /**
- * @brief 스킬 대상 선정의 대상을 결정
+ * @brief 효과 범위 중심
  * 
  * @details
- * 영향 범위 외에 자신에게 영향 주는 스킬들이 있을 때 효과를 구분하기 위해 만든 열거형
+ * 패시브 발동 시 어떤 유닛의 타일을 중심 인지에 대한 열거형
  */
 UENUM(BlueprintType)
-enum class ETargetScope : uint8
+enum class EEffectCenterType : uint8
 {
-    /** 대상 선정 기준: 시전자 본인 */
-    Caster UMETA(DisplayName = "Caster"),
+    /** 대상 선정 기준: 시전자 본인 (소유자)*/
+    Owner UMETA(DisplayName = "Owner"),
 
-    /** 대상 선정 기준: 선택된 타일/대상 */
-    Target UMETA(DisplayName = "Target")
+    /** 대상 선정 기준: 이벤트를 발생시킨 원인 (피격 시 공격자)(타격 시 피격자) */
+    Instigator UMETA(DisplayName = "Instigator"),
 };
 
 /**
@@ -234,6 +234,9 @@ enum class ESRPGActionPhase : uint8
     ActionEnd           UMETA(ToolTip = "액션 종료"),
 };
 
+/**
+ * @brief 스킬 빌드 액션 내 진행 단계 열거형
+ */
 UENUM(BlueprintType)
 enum class ESRPGSkillBuildPhase : uint8
 {
@@ -242,6 +245,9 @@ enum class ESRPGSkillBuildPhase : uint8
     Preview             UMETA(ToolTip = "프리뷰 표기"),
 };
 
+/**
+ * @brief SRPG 명령 타입에 대한 열거형
+ */
 UENUM(BlueprintType)
 enum class ESRPGCommandType : uint8
 {

@@ -9,7 +9,7 @@
 
 #include "RDMinimal.h"
 #include "UObject/Interface.h"
-#include "Actor/TileMap/Tile.h"
+#include "Actor/TileMap/TileMapModel.h"
 #include "Actor/TileMap/TileLayer.h"
 #include "TileActor.generated.h"
 
@@ -28,7 +28,7 @@ class P_RD_API ITileActor
 
 	friend class ATileMap;
 
-	friend class USRPGCombatSubsystem;
+	friend class USRPGCombatModel;
 	friend struct FSRPGTurnContext;
 
 public:

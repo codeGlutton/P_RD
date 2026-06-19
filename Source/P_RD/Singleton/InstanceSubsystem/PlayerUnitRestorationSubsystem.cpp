@@ -15,7 +15,7 @@ APlayerUnit* UPlayerUnitRestorationSubsystem::SpawnPlayerUnit(UWorld* World) con
 	checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
 
 	const UStaticPlayerUnitSpawnData* StaticPlayerUnitSpawnData = AssetManager->GetPrimaryAssetObject<UStaticPlayerUnitSpawnData>(GetRunMutableData()->GetPlayerUnitId());
-	AUnit* Unit = World->SpawnActorDeferred<AUnit>(StaticPlayerUnitSpawnData->mClass.Get(), FTransform());
+	AUnit* Unit = World->SpawnActorDeferred<AUnit>(StaticPlayerUnitSpawnData->mUnitClass.Get(), FTransform());
 	Unit->SetStaticSpawnData(StaticPlayerUnitSpawnData);
 	Unit->FinishSpawning(FTransform());
 

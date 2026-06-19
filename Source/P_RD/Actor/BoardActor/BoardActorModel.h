@@ -8,7 +8,7 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "ObjectModel.h"
+#include "Actor/ActorModel.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "Actor/TileMap/TileLayer.h"
 #include "BoardActorModel.generated.h"
@@ -19,10 +19,17 @@ struct FTile;
  * @brief  보드에 올라가는 액터 데이터 모델 클래스
  * @details 보드 위에 올라가는 액터(플레이어, 몬스터 등)의 데이터 모델 베이스 클래스다.
  */
-UCLASS()
-class P_RD_API UBoardActorModel : public UObject, public IObjectModel
+UCLASS(Abstract)
+class P_RD_API UBoardActorModel : public UActorModel
 {
 	GENERATED_BODY()
+
+	// 타일맵 모델이 배치/이동 시 타일 트랜스폼·오버랩 콜백(protected)을 호출
+	friend class UTileMapModel;
+    // SRPG 전투 모델이 라운드 시작과 종료를 호출
+    friend class USRPGCombatModel;
+    // 턴 객체가 턴 시작과 종료를 호출
+	friend struct FSRPGTurnContext;
 
 public:
 	/**
@@ -69,7 +76,6 @@ protected:
 	 * @param Other 반대 대상
 	 */
 	virtual void OnBeginTileOverlap(FTile* CurTile, UBoardActorModel* Other);
-
 	/**
 	 * @brief 오버랩 종료 시 실행될 함수
 	 * @param CurTile 현재 위치한 타일 객체
