@@ -1,4 +1,4 @@
-#include "Combat/CombatUIAdapter.h"
+﻿#include "Combat/CombatUIAdapter.h"
 
 #include "Actor/TileMap/TileMap.h"
 #include "Dice/DicePoolModel.h"
@@ -7,6 +7,7 @@
 #include "Pawn/Unit.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
+#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "SRPGFramework/SRPGTurnContext.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Combat/CombatUITypes.h"
@@ -41,7 +42,7 @@ void UCombatUIAdapter::Build(USRPGCombatSubsystem* InCombat, const URunPersistDa
 	// 재빌드 대비: 이전 subsystem 턴 종료 구독을 먼저 해제한다.
 	if (mCombat != nullptr && mEndTurnHandle.IsValid())
 	{
-		mCombat->OnEndAnyTurnUI.Remove(mEndTurnHandle);
+		mCombat->GetModel<USRPGCombatModel>()->OnEndAnyTurnUI.Remove(mEndTurnHandle);
 		mEndTurnHandle.Reset();
 	}
 
@@ -54,9 +55,9 @@ void UCombatUIAdapter::Build(USRPGCombatSubsystem* InCombat, const URunPersistDa
 	if (mCombat != nullptr)
 	{
 		// 턴이 끝날 때마다 이번 턴에 쓴 주사위 잠금을 해제하도록 훅을 건다(계약 D: Begin/EndTurn 리셋).
-		mEndTurnHandle = mCombat->OnEndAnyTurnUI.AddUObject(this, &UCombatUIAdapter::HandleEndAnyTurn);
+		mEndTurnHandle = mCombat->GetModel<USRPGCombatModel>()->OnEndAnyTurnUI.AddUObject(this, &UCombatUIAdapter::HandleEndAnyTurn);
 
-		for (const TObjectPtr<AUnit>& Unit : mCombat->GetUnits())
+		for (const TObjectPtr<AUnit>& Unit : mCombat->GetModel<USRPGCombatModel>()->GetUnits())
 		{
 			if (Unit == nullptr || Unit->IsPlayerUnit() == false)
 			{
@@ -265,7 +266,7 @@ void UCombatUIAdapter::BeginDestroy()
 {
 	if (mCombat != nullptr && mEndTurnHandle.IsValid())
 	{
-		mCombat->OnEndAnyTurnUI.Remove(mEndTurnHandle);
+		mCombat->GetModel<USRPGCombatModel>()->OnEndAnyTurnUI.Remove(mEndTurnHandle);
 		mEndTurnHandle.Reset();
 	}
 
@@ -275,7 +276,7 @@ void UCombatUIAdapter::BeginDestroy()
 /** @brief 타일맵의 하이라이트 레이어를 단일 타일/단일 플래그 상태로 맞춘다. */
 void UCombatUIAdapter::SetSingleTileHighlight(const FTileIndex& Tile, ETileHighlightFlag Flag) const
 {
-	ATileMap* TileMap = mCombat != nullptr ? mCombat->GetTileMap() : nullptr;
+	ATileMap* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap() : nullptr;
 	if (TileMap == nullptr)
 	{
 		return;
@@ -292,7 +293,7 @@ void UCombatUIAdapter::SetSingleTileHighlight(const FTileIndex& Tile, ETileHighl
 /** @brief Aim/Select/Effect 하이라이트를 모두 끄고 pending 액션의 시각 상태를 초기화한다. */
 void UCombatUIAdapter::ClearAllHighlight() const
 {
-	ATileMap* TileMap = mCombat != nullptr ? mCombat->GetTileMap() : nullptr;
+	ATileMap* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap() : nullptr;
 	if (TileMap == nullptr)
 	{
 		return;
@@ -393,7 +394,7 @@ void UCombatUIAdapter::ClearPendingAction()
 /** @brief 카메라 스크린 좌표를 타일맵 평면과 교차시켜 유효한 FTileIndex로 변환한다. */
 bool UCombatUIAdapter::ResolveTileFromScreen(const FVector2D& ScreenPosition, FTileIndex& OutTile) const
 {
-	ATileMap* TileMap = mCombat != nullptr ? mCombat->GetTileMap() : nullptr;
+	ATileMap* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap() : nullptr;
 	UWorld* World = mCombat != nullptr ? mCombat->GetWorld() : nullptr;
 	if (TileMap == nullptr || World == nullptr)
 	{
@@ -438,7 +439,7 @@ bool UCombatUIAdapter::ResolveTileFromScreen(const FVector2D& ScreenPosition, FT
 /** @brief Actor가 없는 가상 유닛의 화면 표시 위치를 타일맵 좌표에서 얻는다. */
 FVector UCombatUIAdapter::TileToWorld(const FTileIndex& Tile) const
 {
-	const ATileMap* TileMap = mCombat != nullptr ? mCombat->GetTileMap() : nullptr;
+	const ATileMap* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap() : nullptr;
 	return TileMap != nullptr ? TileMap->TileToWorldLocation(Tile) : FVector::ZeroVector;
 }
 
@@ -565,7 +566,7 @@ bool UCombatUIAdapter::TryMovePlayer(const FTileIndex& TargetTile)
 	// 실제 플레이어 액터도 타일맵 위에서 옮긴다.
 	if (Player->mActor.IsValid())
 	{
-		if (ATileMap* TileMap = mCombat != nullptr ? mCombat->GetTileMap() : nullptr)
+		if (ATileMap* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap() : nullptr)
 		{
 			TileMap->StartActorMovement(FTileTransform(TargetTile), Player->mActor.Get());
 			TileMap->CompleteActorMovement(Player->mActor.Get());
