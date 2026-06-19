@@ -727,7 +727,8 @@ bool UFrontendMapWidget::RefreshMap()
 			GetMapRoomPanelColor(Room),
 			GetMapRoomTypeColor(Room.mType),
 			GetMapRoomTextColor(Room),
-			FSlateColor(FLinearColor(0.f, 0.f, 0.f, 0.f)));
+			FSlateColor(FLinearColor(0.f, 0.f, 0.f, 0.f)),
+			Room.mType);
 		if (bShouldFocusRoom)
 		{
 			FocusMapNodeWidget = NodeWidget;
