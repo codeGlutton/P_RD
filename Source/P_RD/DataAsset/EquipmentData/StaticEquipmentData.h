@@ -10,6 +10,7 @@
 #include "RDMinimal.h"
 #include "DataAsset/PrimaryAssetType.h"
 #include "DataAsset/BundleType.h"
+#include "DataAsset/PassiveData/StaticPassiveData.h"
 #include "StaticEquipmentData.generated.h"
 
 /**
@@ -21,6 +22,15 @@ class P_RD_API UStaticEquipmentData : public UPrimaryDataAsset
 	GENERATED_BODY()
 
 public:
+    UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Name"))
+    FText mName;
+
+    UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Icon", AssetBundles = "UI"))
+    TSoftObjectPtr<UTexture2D> mIcon;
+
+    UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Price"))
+    int32 mPrice;
+
     /**
      * @brief 장비 희귀도
      * @details
@@ -28,4 +38,7 @@ public:
      */
     UPROPERTY(Category = "Equipment", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RarityType"))
     ERarityType mRarityType;
+
+    UPROPERTY(Category = "Equipment", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Passive"))
+    TArray<TSoftObjectPtr<UStaticPassiveData>> mStaticPassiveData;
 };
