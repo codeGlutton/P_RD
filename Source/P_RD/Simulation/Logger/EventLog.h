@@ -8,7 +8,7 @@
 
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
-#include "Model/BoardActorModel.h"
+#include "Actor/BoardActor/BoardActorModel.h"
 #include "EventLog.generated.h"
 
 UENUM(BlueprintType)

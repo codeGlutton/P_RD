@@ -18,7 +18,7 @@ bool USRPGCommandRouterSubsystem::SummitCommand(TSharedPtr<const FSRPGCommand> C
 		Result = CombineSRPGCommandResult(Handler->HandleCommand(Command), Result);
 		if (Result == ESRPGCommandResult::Handled)
 		{
-			UE_LOG(LogSRPGCommandRouter, Log, TEXT("[%s] 특정 핸들러가 처리"), *EnumToString(Command));
+			UE_LOG(LogSRPGCommandRouter, Log, TEXT("[%s] 특정 핸들러가 처리"), *EnumToString(Command->GetCommandType()));
 			break;
 		}
 	}
@@ -27,7 +27,7 @@ bool USRPGCommandRouterSubsystem::SummitCommand(TSharedPtr<const FSRPGCommand> C
 
 	if (Result != ESRPGCommandResult::Handled)
 	{
-		UE_LOG(LogSRPGCommandRouter, Log, TEXT("[%s] 커맨드 Fallback"), *EnumToString(Command));
+		UE_LOG(LogSRPGCommandRouter, Log, TEXT("[%s] 커맨드 Fallback"), *EnumToString(Command->GetCommandType()));
 		Result = CombineSRPGCommandResult(HandleFallbackCommand(Command), Result);
 	}
 

@@ -1,5 +1,6 @@
 ﻿#include "SRPGFramework/SRPGSkillBuildAction.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
+#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterSubsystem.h"
 
 #include "Pawn/Unit.h"
@@ -87,9 +88,12 @@ ESRPGCommandResult FSRPGSkillBuildAction::HandleWorldTraceCommand(TSharedPtr<con
 
     if (Command->mIsLongPress == false)
     {
-        USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-        checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
-        ATileMap* TileMap = CombatSubsystem->GetTileMap();
+        TSharedPtr<FSRPGTurnContext> TurnContext = mParent.Pin();
+        checkf(TurnContext != nullptr, TEXT("턴 객체 nullptr"));
+        USRPGCombatModel* CombatModel = TurnContext->GetParent();
+        checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+
+        ATileMap* TileMap = CombatModel->GetTileMap();
         checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"))
 
         AActor* TargetActor = nullptr;
@@ -191,11 +195,12 @@ void FSRPGSkillBuildAction::SetSkill(int32 SkillIndex)
     USkillComponent* SkillComp = mInstigator->GetSkillComponent();
     checkf(SkillComp != nullptr, TEXT("스킬 컴포넌트 nullptr"));
 
-    USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-    checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
-    ATileMap* TileMap = CombatSubsystem->GetTileMap();
+    TSharedPtr<FSRPGTurnContext> TurnContext = mParent.Pin();
+    checkf(TurnContext != nullptr, TEXT("턴 객체 nullptr"));
+    USRPGCombatModel* CombatModel = TurnContext->GetParent();
+    checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+    ATileMap* TileMap = CombatModel->GetTileMap();
     checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
-
 
     /* 스킬 등록 */
 
@@ -241,9 +246,11 @@ void FSRPGSkillBuildAction::ResetSkill()
     mTargetIndex = FTileIndex::Invalid;
     mCalculationResult.mEffectCommitResult.Empty();
 
-    USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-    checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
-    ATileMap* TileMap = CombatSubsystem->GetTileMap();
+    TSharedPtr<FSRPGTurnContext> TurnContext = mParent.Pin();
+    checkf(TurnContext != nullptr, TEXT("턴 객체 nullptr"));
+    USRPGCombatModel* CombatModel = TurnContext->GetParent();
+    checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+    ATileMap* TileMap = CombatModel->GetTileMap();
     checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
 
     TileMap->ClearTileHighlight(ETileHighlightFlag::Aim | ETileHighlightFlag::Effect | ETileHighlightFlag::Select);
@@ -257,9 +264,11 @@ void FSRPGSkillBuildAction::SetTargetTile(const FTileIndex& TileIndex)
     USkillComponent* SkillComp = mInstigator->GetSkillComponent();
     checkf(SkillComp != nullptr, TEXT("스킬 컴포넌트 nullptr"));
 
-    USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-    checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
-    ATileMap* TileMap = CombatSubsystem->GetTileMap();
+    TSharedPtr<FSRPGTurnContext> TurnContext = mParent.Pin();
+    checkf(TurnContext != nullptr, TEXT("턴 객체 nullptr"));
+    USRPGCombatModel* CombatModel = TurnContext->GetParent();
+    checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+    ATileMap* TileMap = CombatModel->GetTileMap();
     checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
 
     /* 맵 변경 */
@@ -298,9 +307,11 @@ void FSRPGSkillBuildAction::ResetTargetTile()
     mTargetIndex = FTileIndex::Invalid;
     mCalculationResult.mEffectCommitResult.Empty();
 
-    USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-    checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
-    ATileMap* TileMap = CombatSubsystem->GetTileMap();
+    TSharedPtr<FSRPGTurnContext> TurnContext = mParent.Pin();
+    checkf(TurnContext != nullptr, TEXT("턴 객체 nullptr"));
+    USRPGCombatModel* CombatModel = TurnContext->GetParent();
+    checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+    ATileMap* TileMap = CombatModel->GetTileMap();
     checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
 
     TileMap->ClearTileHighlight(ETileHighlightFlag::Effect | ETileHighlightFlag::Select);

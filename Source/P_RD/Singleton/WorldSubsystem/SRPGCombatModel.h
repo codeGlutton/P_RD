@@ -8,6 +8,7 @@
 #pragma once
 
 #include "RDMinimal.h"
+#include "ObjectModel.h"
 
 #include "Tool/CircularList.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
@@ -46,17 +47,21 @@ public:
 };
 
 /**
- * @brief  SRPG 턴제 전투를 제어하기 위한 서브 시스템
+ * @brief  SRPG 턴제 전투를 제어하기 위한 서브 시스템 모델
  */
 UCLASS()
-class P_RD_API USRPGCombatModel : public UObject
+class P_RD_API USRPGCombatModel : public UObjectModel, public FTickableGameObject
 {
 	GENERATED_BODY()
 
-	/* UTickableWorldSubsystem 상속 */
+	/* FTickableGameObject 상속 */
 public:
 	void Tick(float DeltaTime) override;
+	bool IsTickable() const override;
 	TStatId GetStatId() const override;
+
+public:
+	void Initialize() override;
 
 	/* 생명 주기 함수 */
 public:

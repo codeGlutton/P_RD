@@ -14,39 +14,41 @@
 // Event Logger 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogEventLogger, Log, All)
 
-UINTERFACE(MinimalAPI)
-class UEventLogger : public UInterface
-{
-	GENERATED_BODY()
-};
+struct FRoomContext;
 
-class P_RD_API IEventLogger
+UCLASS(abstract)
+class P_RD_API UEventLogger : public UObject
 {
 	GENERATED_BODY()
 
 public:
-	virtual void BeginTurnLog(int32 SourceUnitID, UClass* UnitActorModelClass) = 0;
-	virtual void EndTurnLog() = 0;
-
-	virtual void BeginActionLog(const FTileIndex& SourceTileIndex, const TArray<FTileIndex>& TargetTileIndexes) = 0;
-	virtual void EndActionLog() = 0;
-
-	virtual void BeginMotionLog() = 0;
-	virtual void EndMotionLog() = 0;
-
-	virtual void LogAttributeEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGAttributeEffectEventLog& Log) = 0;
-	virtual void LogTileEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTileEffectEventLog& Log) = 0;
+	void SetContext(FRoomContext& RoomContext);
 
 public:
-	virtual const TArray<FSRPGTurnEventLog>& GetSRPGLogs() const = 0;
-	virtual TArray<FSRPGTurnEventLog> PopSRPGLogs() = 0;
+	virtual void BeginTurnLog(int32 SourceUnitID, UClass* UnitActorModelClass) PURE_VIRTUAL(UEventLogger::BeginTurnLog, return;);
+	virtual void EndTurnLog() PURE_VIRTUAL(UEventLogger::EndTurnLog, return;);
+
+	virtual void BeginActionLog(const FTileIndex& SourceTileIndex, const TArray<FTileIndex>& TargetTileIndexes) PURE_VIRTUAL(UEventLogger::BeginActionLog, return;);
+	virtual void EndActionLog() PURE_VIRTUAL(UEventLogger::EndActionLog, return;);
+
+	virtual void BeginMotionLog() PURE_VIRTUAL(UEventLogger::BeginMotionLog, return;);
+	virtual void EndMotionLog() PURE_VIRTUAL(UEventLogger::EndMotionLog, return;);
+
+	virtual void LogAttributeEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGAttributeEffectEventLog& Log) PURE_VIRTUAL(UEventLogger::LogAttributeEffect, return;);
+	virtual void LogTileEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTileEffectEventLog& Log) PURE_VIRTUAL(UEventLogger::LogTileEffect, return;);
+
+public:
+	virtual TArray<FSRPGTurnEventLog> PopSRPGLogs() PURE_VIRTUAL(UEventLogger::PopSRPGLogs, return TArray<FSRPGTurnEventLog>(););
+
+protected:
+	FRoomContext* mRoomContext = nullptr;
 };
 
 /**
  * @brief 실제 게임에서의 이벤트 로거
  */
 UCLASS()
-class UGameEventLogger : public UObject, public IEventLogger
+class UGameEventLogger : public UEventLogger
 {
 	GENERATED_BODY()
 
@@ -64,7 +66,6 @@ public:
 	void LogTileEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTileEffectEventLog& Log) override;
 
 public:
-	const TArray<FSRPGTurnEventLog>& GetSRPGLogs() const override;
 	TArray<FSRPGTurnEventLog> PopSRPGLogs() override;
 };
 
@@ -72,7 +73,7 @@ public:
  * @brief 시뮬레이션에서의 이벤트 로거
  */
 UCLASS()
-class USimulationEventLogger : public UObject, public IEventLogger
+class USimulationEventLogger : public UEventLogger
 {
 	GENERATED_BODY()
 
@@ -90,7 +91,6 @@ public:
 	void LogTileEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTileEffectEventLog& Log) override;
 
 public:
-	const TArray<FSRPGTurnEventLog>& GetSRPGLogs() const override;
 	TArray<FSRPGTurnEventLog> PopSRPGLogs() override;
 
 protected:

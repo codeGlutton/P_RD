@@ -1,4 +1,5 @@
 ﻿#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
+#include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
 #include "Singleton/WorldSubsystem/PresentationSyncSubsystem.h"
 #include "SRPGFramework/SRPGCommand.h"
 #include "Setting/RDWorldSettings.h"
@@ -15,17 +16,28 @@
 
 void USRPGCombatModel::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
-
 	if (mCombatPhase == ESRPGCombatRoomPhase::CombatPlay && mCurTurnContextNode != nullptr)
 	{
 		mCurTurnContextNode->GetValue()->TickTurn(DeltaTime);
 	}
 }
 
+bool USRPGCombatModel::IsTickable() const
+{
+	return true;
+}
+
 TStatId USRPGCombatModel::GetStatId() const
 {
 	RETURN_QUICK_DECLARE_CYCLE_STAT(USRPGCombatModel, STATGROUP_Tickables);
+}
+
+void USRPGCombatModel::Initialize()
+{
+	USRPGCombatSubsystem* SRPGCombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
+	checkf(SRPGCombatSubsystem != nullptr, TEXT("SRPG 전투 서브시스템 nullptr"));
+
+	SRPGCombatSubsystem->BindModel(this);
 }
 
 void USRPGCombatModel::InitCombat(const UStaticCombatRoomSpawnData* RoomSpawnData, AUnit* PlayerUnit)
@@ -309,7 +321,7 @@ void USRPGCombatModel::RegisterEnemyUnit(const FEnemyUnitPlacementData& EnemyPla
 
 	// 적 유닛 스폰 & 초기 위치 등록
 	const UStaticEnemyUnitSpawnData* EnemyUnitSpawnData = EnemyPlacementData.mSpawnData.Get();
-	AUnit* EnemyUnit = GetWorld()->SpawnActorDeferred<AUnit>(EnemyUnitSpawnData->mClass.Get(), mTileMap->TileToWorldTransform(EnemyPlacementData.mTransform));
+	AUnit* EnemyUnit = GetWorld()->SpawnActorDeferred<AUnit>(EnemyUnitSpawnData->mUnitClass.Get(), mTileMap->TileToWorldTransform(EnemyPlacementData.mTransform));
 	EnemyUnit->SetStaticSpawnData(EnemyUnitSpawnData);
 	EnemyUnit->FinishSpawning(mTileMap->TileToWorldTransform(EnemyPlacementData.mTransform));
 	EnemyUnit->OnUnitDied.AddWeakLambda(this, [this](AUnit* Unit) {

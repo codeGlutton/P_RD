@@ -19,7 +19,7 @@ DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnBeginAnyActionUI, TSharedPtr<FPresenta
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnEndAnyActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGTurnContext& /*TurnContext*/, const FSRPGAction& /*Action*/, ESRPGActionResult /*Result*/)
 
 class AUnit;
-class USRPGCombatSubsystem;   // Clang(Android)은 friend 선언을 전방선언으로 인정하지 않음 → 정식 전방선언 필요(develop 안드로이드 빌드 fix)
+class USRPGCombatModel;
 struct FSRPGCommand;
 
 struct FSRPGActionCreationCommandHandler : public ISRPGCommandHandler
@@ -41,7 +41,7 @@ protected:
 /** @brief 스킬 사용 시 임시 정보를 들고 있는 Context 객체 */
 struct FSRPGTurnContext : public TSharedFromThis<FSRPGTurnContext>
 {
-	friend class USRPGCombatSubsystem;
+	friend class USRPGCombatModel;
 	friend struct FSRPGActionLock;
 
 protected:
@@ -49,7 +49,7 @@ protected:
 
 	/* 생명 주기 함수 */
 protected:
-	void InitTurn(USRPGCombatSubsystem* Parent, AUnit* Owner, int32 LifeCount);
+	void InitTurn(USRPGCombatModel* Parent, AUnit* Owner, int32 LifeCount);
 	void BeginTurn();
 	void TickTurn(float DeltaTime);
 	void EndTurn();
@@ -69,7 +69,7 @@ protected:
 	/* 외부 API */
 public:
 	UWorld* GetWorld() const;
-	USRPGCombatSubsystem* GetParent() const;
+	USRPGCombatModel* GetParent() const;
 	AUnit* GetOwner() const;
 
 	bool IsPermanent() const;
@@ -82,7 +82,7 @@ public:
 	FOnEndAnyActionUI OnEndAnyActionUI;
 
 protected:
-	TWeakObjectPtr<USRPGCombatSubsystem> mParent;
+	TWeakObjectPtr<USRPGCombatModel> mParent;
 	TWeakObjectPtr<AUnit> mOwner;
 	
 protected:

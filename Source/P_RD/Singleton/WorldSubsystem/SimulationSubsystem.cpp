@@ -1,8 +1,11 @@
 ﻿#include "Singleton/WorldSubsystem/SimulationSubsystem.h"
 
+#include "FunctionLibrary/RandomStreamFunctionLibrary.h"
+
 #include "Simulation/RoomContext.h"
+#include "Simulation/RoomInstance.h"
 #include "Simulation/Logger/EventLogger.h"
-#include "Simulation/Factory/ModelFactory.h"
+#include "Simulation/Factory/ObjectModelFactory.h"
 
 DEFINE_LOG_CATEGORY(LogSimulation)
 
@@ -10,11 +13,25 @@ void USimulationSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-	mGameRoomContext.mModelFactory = NewObject<UGameModelFactory>();
-	mGameRoomContext.mEventLogger = NewObject<UGameEventLogger>();
+	{
+		mGameRoomContext.mRoomInstance = NewObject<URoomInstance>(this);
 
-	mSimulationRoomContext.mModelFactory = NewObject<USimulationModelFactory>();
-	mSimulationRoomContext.mEventLogger = NewObject<USimulationEventLogger>();
+		mGameRoomContext.mModelFactory = NewObject<UGameObjectModelFactory>(this);
+		mGameRoomContext.mModelFactory->SetContext(mGameRoomContext);
+
+		mGameRoomContext.mEventLogger = NewObject<UGameEventLogger>(this);
+		mGameRoomContext.mEventLogger->SetContext(mGameRoomContext);
+	}
+
+	{
+		mSimulationRoomContext.mRoomInstance = nullptr;
+
+		mSimulationRoomContext.mModelFactory = NewObject<USimulationObjectModelFactory>(this);
+		mSimulationRoomContext.mModelFactory->SetContext(mGameRoomContext);
+
+		mSimulationRoomContext.mEventLogger = NewObject<USimulationEventLogger>(this);
+		mSimulationRoomContext.mEventLogger->SetContext(mGameRoomContext);
+	}
 
 	SetSimulationState(mSimulationState);
 }
@@ -50,30 +67,44 @@ void USimulationSubsystem::SetSimulationState(ESRPGSimulationState State)
 	mSimulationState = State;
 	if (State == ESRPGSimulationState::RunningGame)
 	{
+		mSimulationRoomContext.mRoomInstance = nullptr;
 		mCurrentRoomContext = &mGameRoomContext;
 	}
 	else
 	{
+		mSimulationRoomContext.mRoomInstance = Cast<URoomInstance>(StaticDuplicateObject(mSimulationRoomContext.mRoomInstance, this));
 		mCurrentRoomContext = &mSimulationRoomContext;
 	}
 }
 
-IEventLogger* USimulationSubsystem::GetEventLogger() const
+const FRandomStream& USimulationSubsystem::GetEventStream() const
 {
-	if (mCurrentRoomContext == nullptr)
+	if (mSimulationState == ESRPGSimulationState::RunningGame)
 	{
-		return nullptr;
+		return URandomStreamFunctionLibrary::GetEventStream(GetWorld());
 	}
-	return mCurrentRoomContext->mEventLogger.GetInterface();
+	else
+	{
+		return mSimulationRoomContext.mRoomInstance->mCopiedEventStream;
+	}
 }
 
-IModelFactory* USimulationSubsystem::GetModelFactory() const
+UEventLogger* USimulationSubsystem::GetEventLogger() const
 {
 	if (mCurrentRoomContext == nullptr)
 	{
 		return nullptr;
 	}
-	return mCurrentRoomContext->mModelFactory.GetInterface();
+	return mCurrentRoomContext->mEventLogger;
+}
+
+UObjectModelFactory* USimulationSubsystem::GetModelFactory() const
+{
+	if (mCurrentRoomContext == nullptr)
+	{
+		return nullptr;
+	}
+	return mCurrentRoomContext->mModelFactory;
 }
 
 ESRPGSimulationState USimulationSubsystem::GetSimulationState() const

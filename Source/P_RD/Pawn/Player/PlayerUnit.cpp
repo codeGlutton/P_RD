@@ -5,11 +5,11 @@
 
 #include "GameMode/RDGameModeBase.h"
 
-#include "Setting/UnitTeamType.h"
+#include "Setting/GameTeamType.h"
 
 APlayerUnit::APlayerUnit()
 {
-    SetGenericTeamId(EUnitTeamType::Adventurer);
+    SetGenericTeamId(EGameTeamType::Adventurer);
     mUnitAttributeSet = CreateDefaultSubobject<UPlayerUnitAttributeSet>(TEXT("PlayerUnitAttributeSet"));
     mLevelAttributeSet = CreateDefaultSubobject<ULevelAttributeSet>(TEXT("LevelAttributeSet"));
 }

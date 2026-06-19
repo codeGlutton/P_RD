@@ -12,6 +12,7 @@
 #include "DataAsset/BundleType.h"
 #include "StaticUnitSpawnData.generated.h"
 
+class UObjectModel;
 class AUnit;
 class UStaticSkillData;
 class UStaticEquipmentData;
@@ -26,6 +27,7 @@ class P_RD_API UStaticUnitSpawnData : public UPrimaryDataAsset
 
 #if WITH_EDITOR
 public:
+    void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
     EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
 #endif
 
@@ -33,8 +35,10 @@ public:
     FName GetKeyName() const;
 
 public:
-	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Class", AssetBundles = "Actor"))
-	TSoftClassPtr<AUnit> mClass;
+    UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ModelClass", AssetBundles = "Actor"))
+    TSoftClassPtr<UObjectModel> mModelClass;
+	UPROPERTY(Category = "Spawn", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "UnitClass", AssetBundles = "Actor"))
+	TSoftClassPtr<AUnit> mUnitClass;
 
 public:
 	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillDatas", AssetBundles = "PAD"))

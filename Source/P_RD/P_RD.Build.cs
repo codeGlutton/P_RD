@@ -20,14 +20,13 @@ public class P_RD : ModuleRules
             "Engine",
             "InputCore",
             "EnhancedInput",
-            "UMG",
+
+            /* Media Modules */
             "MediaAssets",              // 인트로 시네마틱 MP4 재생(MediaPlayer/MediaSource)에 필요
             "ImageWrapper",             // 실행 중 PNG 파일을 읽는 UITextureLoader에 필요
 
-            /*
-             * UI 위젯을 C++에서 다룰 때 SlateVisibility, FReply 같은 Slate 타입을 쓴다.
-             * 그래서 UMG와 함께 Slate/SlateCore도 필요하다.
-             */
+            /* Native SWidget Modules */
+            "UMG",
             "Slate",
             "SlateCore",
 

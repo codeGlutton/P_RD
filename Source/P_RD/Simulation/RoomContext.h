@@ -10,8 +10,9 @@
 #include "RDMinimal.h"
 #include "RoomContext.generated.h"
 
-class IModelFactory;
-class IEventLogger;
+class URoomInstance;
+class UObjectModelFactory;
+class UEventLogger;
 
 /**
  * @brief  방의 흐름 상태
@@ -22,17 +23,17 @@ struct FRoomContext
 	GENERATED_BODY()
 
 public:
-	//UPROPERTY(Category = Model, EditAnywhere, BlueprintReadWrite)
-	//TObjectPtr<USRPGCombatModel> mCombatModel;
+	// @brief 생성 및 제거될 데이터 객체
+	UPROPERTY(Category = Instance, EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<URoomInstance> mRoomInstance;
 
 public:
+	// @brief 사용할 모델 팩토리
 	UPROPERTY(Category = Factory, EditAnywhere, BlueprintReadWrite)
-	TScriptInterface<IModelFactory> mModelFactory;
+	TObjectPtr<UObjectModelFactory> mModelFactory;
 
-	//UPROPERTY(Category = Notifier, EditAnywhere, BlueprintReadWrite)
-	//TScriptInterface<IViewNotifier> mViewNotifier;
-
+	// @brief 사용할 이벤트 로거
 	UPROPERTY(Category = Handler, EditAnywhere, BlueprintReadWrite)
-	TScriptInterface<IEventLogger> mEventLogger;
+	TObjectPtr<UEventLogger> mEventLogger;
 };
 

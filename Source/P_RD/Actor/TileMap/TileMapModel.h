@@ -16,7 +16,7 @@
  * @details 보드 액터들이 배치되는 타일맵의 데이터 모델이다.
  */
 UCLASS()
-class P_RD_API UTileMapModel : public UObject, public IObjectModel
+class P_RD_API UTileMapModel : public UObjectModel
 {
 	GENERATED_BODY()
 

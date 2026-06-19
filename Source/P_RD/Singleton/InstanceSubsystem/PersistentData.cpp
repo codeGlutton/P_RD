@@ -9,6 +9,7 @@
 #include "FunctionLibrary/RandomStreamFunctionLibrary.h"
 
 #include "Setting/GamePlaySettings.h"
+#include "Sound/SoundClass.h"
 
 void FRunLog::Clear()
 {

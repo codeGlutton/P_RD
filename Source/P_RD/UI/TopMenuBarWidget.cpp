@@ -1,4 +1,4 @@
-#include "UI/TopMenuBarWidget.h"
+﻿#include "UI/TopMenuBarWidget.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
@@ -6,6 +6,7 @@
 #include "GameMode/RoomGameModeBase.h"
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
+#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/FrontendMapWidget.h"
 #include "UI/SettingsPanelWidget.h"
@@ -65,7 +66,7 @@ void UTopMenuBarWidget::NativeDestruct()
 {
 	if (USRPGCombatSubsystem* CombatSubsystem = GetWorld() != nullptr ? GetWorld()->GetSubsystem<USRPGCombatSubsystem>() : nullptr)
 	{
-		CombatSubsystem->OnEndCombatUI.RemoveAll(this);
+		CombatSubsystem->GetModel<USRPGCombatModel>()->OnEndCombatUI.RemoveAll(this);
 	}
 
 	if (UFrontendMapWidget* WorldMapWidget = Cast<UFrontendMapWidget>(GetToggleableWorldWidget(EWorldWidgetType::WorldMap)))
@@ -332,7 +333,7 @@ void UTopMenuBarWidget::BindCombatEvents()
 		return;
 	}
 
-	CombatSubsystem->OnEndCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result)
+	CombatSubsystem->GetModel<USRPGCombatModel>()->OnEndCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result)
 	{
 		HandleEndCombatUI(MoveTemp(Barrier), Result);
 	});

@@ -1,4 +1,4 @@
-﻿#include "Component/GameplayAttributeComponent.h"
+﻿#include "Component/AttributeComponent/GameplayAttributeComponent.h"
 
 UGameplayAttributeComponent::UGameplayAttributeComponent()
 {

@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
+#include "ObjectView.h"
 
 #include "Tool/CircularList.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
@@ -20,12 +21,13 @@
 DECLARE_LOG_CATEGORY_EXTERN(LogSRPGCombat, Log, All)
 
 class USRPGCombatModel;
+class IObjectModel;
 
 /**
  * @brief  SRPG 턴제 전투를 제어하기 위한 서브 시스템
  */
 UCLASS()
-class P_RD_API USRPGCombatSubsystem : public UTickableWorldSubsystem
+class P_RD_API USRPGCombatSubsystem : public UTickableWorldSubsystem, public IObjectView
 {
 	GENERATED_BODY()
 
@@ -34,8 +36,14 @@ public:
 	void Tick(float DeltaTime) override;
 	TStatId GetStatId() const override;
 
+	/* IObjectView 상속 */
+public:
+	void BindModel(UObjectModel* Model) override;
+	void UnbindModel(UObjectModel* Model) override;
+
 protected:
-	// @brief 실시간 모델 데이터
-	UPROPERTY()
-	TObjectPtr<USRPGCombatModel> mPlayModel;
+	UObjectModel* GetModel_Internal() const override;
+
+protected:
+	TWeakObjectPtr<USRPGCombatModel> mCombatModel;
 };

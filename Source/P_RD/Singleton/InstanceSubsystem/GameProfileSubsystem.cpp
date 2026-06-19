@@ -38,14 +38,14 @@ void UGameProfileSubsystem::SetVolume(EGameVolumeType VolumeType, float Volume) 
 {
 	GetOptionMutableData()->SetVolume(VolumeType, Volume);
 
-	UE_LOG(LogGameProfile, Log, TEXT("[%s] 볼륨 변경"), EnumToString(VolumeType));
+	UE_LOG(LogGameProfile, Log, TEXT("[%s] 볼륨 변경"), *EnumToString(VolumeType));
 }
 
 void UGameProfileSubsystem::SetLanguage(ELanguageType LanguageType) const
 {
 	GetOptionMutableData()->SetLanguage(LanguageType);
 
-	UE_LOG(LogGameProfile, Log, TEXT("[%s] 언어 변경"), EnumToString(LanguageType));
+	UE_LOG(LogGameProfile, Log, TEXT("[%s] 언어 변경"), *EnumToString(LanguageType));
 }
 
 void UGameProfileSubsystem::SetResolution(const FIntPoint& Resolution) const

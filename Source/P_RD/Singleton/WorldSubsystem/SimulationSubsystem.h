@@ -9,13 +9,16 @@
 
 #include "RDMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
-#include "Logger/EventLog.h"
-#include "SRPGSimulationSubsystem.generated.h"
+#include "Simulation/Logger/EventLog.h"
+#include "Simulation/RoomContext.h"
+#include "SimulationSubsystem.generated.h"
 
 // Simulation 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogSimulation, Log, All)
 
 struct FRoomContext;
+class UEventLogger;
+class UObjectModelFactory;
 
 /**
  * @brief 시뮬레이션 상태 열거형
@@ -52,20 +55,21 @@ public:
 	 */
 	TArray<FSRPGTurnEventLog> SimulateUntilNextPlayerTurn();
 
-private:
+protected:
 	void SetSimulationState(ESRPGSimulationState State);
 
 public:
-	IEventLogger* GetEventLogger() const;
-	IModelFactory* GetModelFactory() const;
+	const FRandomStream& GetEventStream() const;
+	UEventLogger* GetEventLogger() const;
+	UObjectModelFactory* GetModelFactory() const;
 
 	ESRPGSimulationState GetSimulationState() const;
 
-private:
+protected:
 	ESRPGSimulationState mSimulationState = ESRPGSimulationState::RunningGame;
 	FRoomContext* mCurrentRoomContext;
 
-private:
+protected:
 	UPROPERTY(Category = Context, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "GameRoomContext"))
 	FRoomContext mGameRoomContext;
 	UPROPERTY(Category = Context, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SimulationRoomContext"))

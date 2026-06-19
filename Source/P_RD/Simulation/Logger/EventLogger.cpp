@@ -2,6 +2,11 @@
 
 DEFINE_LOG_CATEGORY(LogEventLogger)
 
+void UEventLogger::SetContext(FRoomContext& RoomContext)
+{
+	mRoomContext = &RoomContext;
+}
+
 void UGameEventLogger::BeginTurnLog(int32 SourceUnitID, UClass* UnitActorModelClass)
 {
 	UE_LOG(LogEventLogger, Log, TEXT("턴 이벤트 로그 시작"));
@@ -40,13 +45,6 @@ void UGameEventLogger::LogAttributeEffect(int32 TargetActorID, UClass* BoardActo
 void UGameEventLogger::LogTileEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTileEffectEventLog& Log)
 {
 	UE_LOG(LogEventLogger, Log, TEXT("[%d][%s][(%d, %d) -> (%d, %d)] 타일 위치 이동"), TargetActorID, *EnumToString(Log.mOccupancyState), Log.mPreTileIndex.mX, Log.mPreTileIndex.mY, Log.mNextTileIndex.mX, Log.mNextTileIndex.mY);
-}
-
-const TArray<FSRPGTurnEventLog>& UGameEventLogger::GetSRPGLogs() const
-{
-	// 아무것도 안함
-
-	return TArray<FSRPGTurnEventLog>();
 }
 
 TArray<FSRPGTurnEventLog> UGameEventLogger::PopSRPGLogs()
@@ -157,11 +155,6 @@ void USimulationEventLogger::LogTileEffect(int32 TargetActorID, UClass* BoardAct
 	BoardActorLog.mTileEffectEventLogs.Add(Log);
 
 	UE_LOG(LogEventLogger, Log, TEXT("[%d][%s][(%d, %d) -> (%d, %d)] 타일 위치 이동"), TargetActorID, *EnumToString(Log.mOccupancyState), Log.mPreTileIndex.mX, Log.mPreTileIndex.mY, Log.mNextTileIndex.mX, Log.mNextTileIndex.mY);
-}
-
-const TArray<FSRPGTurnEventLog>& USimulationEventLogger::GetSRPGLogs() const
-{
-	return mTurnEventLogs;
 }
 
 TArray<FSRPGTurnEventLog> USimulationEventLogger::PopSRPGLogs()

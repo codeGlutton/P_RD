@@ -13,6 +13,7 @@
 
 class UUserPersistData;
 class URunPersistData;
+class UOptionPersistData;
 
 UINTERFACE(MinimalAPI)
 class UUserDataWriter : public UInterface

@@ -28,7 +28,7 @@ class P_RD_API ITileActor
 
 	friend class ATileMap;
 
-	friend class USRPGCombatSubsystem;
+	friend class USRPGCombatModel;
 	friend struct FSRPGTurnContext;
 
 public:

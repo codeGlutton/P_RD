@@ -34,11 +34,11 @@ void UWorldWidgetSubsystem::InitWorldWidget(EWorldWidgetType WorldWidgetType)
 		const TSubclassOf<UUserWidget> WorldWidgetClass = GetDefault<UGamePlaySettings>()->mWorldWidgetClasses[Index];
 		if (WorldWidgetClass == nullptr)
 		{
-			UE_LOG(LogWorldWidget, Warning, TEXT("[%s] 월드 위젯 클래스가 지정되지 않음"), *EnumToString(Index));
+			UE_LOG(LogWorldWidget, Warning, TEXT("[%s] 월드 위젯 클래스가 지정되지 않음"), *EnumToString(WorldWidgetType));
 			return;
 		}
 
-		UE_LOG(LogWorldWidget, Warning, TEXT("[%s] 월드 위젯 객체 생성"), *EnumToString(Index));
+		UE_LOG(LogWorldWidget, Warning, TEXT("[%s] 월드 위젯 객체 생성"), *EnumToString(WorldWidgetType));
 		mWorldWidgets[Index] = CreateWidget(GetWorld()->GetFirstPlayerController(), WorldWidgetClass);
 	}
 }
