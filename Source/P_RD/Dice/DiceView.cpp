@@ -1,4 +1,4 @@
-#include "Dice/DiceView.h"
+﻿#include "Dice/DiceView.h"
 
 #include "Dice/DiceModel.h"
 

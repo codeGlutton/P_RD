@@ -2,6 +2,7 @@
 #include "SRPGFramework/SRPGAction.h"
 #include "SRPGFramework/SRPGCommand.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
+#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterSubsystem.h"
 #include "Singleton/WorldSubsystem/PresentationSyncSubsystem.h"
 
@@ -21,7 +22,7 @@ UWorld* FSRPGActionCreationCommandHandler::GetWorld() const
 
 TWeakPtr<FSRPGTurnContext> FSRPGActionCreationCommandHandler::GetParent() const
 {
-	return mParent.Pin();
+	return mParent;
 }
 
 int8 FSRPGActionCreationCommandHandler::GetCommandPriority() const
@@ -41,17 +42,19 @@ ESRPGCommandResult FSRPGActionCreationCommandHandler::HandleCommand(TSharedPtr<c
 
 	/* 새로운 Action 생성 후 등록 */
 
-	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-	checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
+	TSharedPtr<FSRPGTurnContext> TurnContext = mParent.Pin();
+	checkf(TurnContext != nullptr, TEXT("턴 컨텍스트 nullptr"));
+	USRPGCombatModel* CombatModel = TurnContext->GetParent();
+	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 
-	if (CombatSubsystem->PushAction(NewAction) == false)
+	if (CombatModel->PushAction(NewAction) == false)
 	{
 		return ESRPGCommandResult::Ignored;
 	}
 	return ESRPGCommandResult::Handled;
 }
 
-void FSRPGTurnContext::InitTurn(USRPGCombatSubsystem* Parent, AUnit* Owner, int32 LifeCount)
+void FSRPGTurnContext::InitTurn(USRPGCombatModel* Parent, AUnit* Owner, int32 LifeCount)
 {
 	checkf(Parent != nullptr, TEXT("전투 서브시스템 nullptr"));
 	checkf(Owner != nullptr, TEXT("턴 오너 유닛 nullptr"));
@@ -104,11 +107,11 @@ void FSRPGTurnContext::BeginTurn()
 		// On Start Turn 패시브 실행
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(mOwner.Get(), AbilityTags::GameplayAbility_Passive_OnStartTurn, MoveTemp(EventData));
 
-		USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-		checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
+		USRPGCombatModel* CombatModel = mParent.Get();
+		checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 
 		// 전투 상태 평가
-		CombatSubsystem->EvaluateCombatStates();
+		CombatModel->EvaluateCombatStates();
 
 		// 턴 종료 여부 체크
 		if (mTurnPhase == ESRPGTurnPhase::TurnAbort)
@@ -177,9 +180,9 @@ void FSRPGTurnContext::EndTurn()
 		checkf(mTurnPhase == ESRPGTurnPhase::TurnEnd, TEXT("턴 종료 절차 오류"));
 		mTurnPhase = ESRPGTurnPhase::TurnInit;
 
-		USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-		checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
-		CombatSubsystem->OnEndCurrentTurn(AsShared(), mTurnResult);
+		USRPGCombatModel* CombatModel = mParent.Get();
+		checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+		CombatModel->OnEndCurrentTurn(AsShared(), mTurnResult);
 		}));
 	OnEndTurnUI.Broadcast(PresentationBarrier, *this, mTurnResult);
 }
@@ -208,11 +211,11 @@ void FSRPGTurnContext::OnEndCurrentAction(TSharedRef<FSRPGAction> Action, ESRPGA
 		mTurnResult = ESRPGTurnResult::Succeeded;
 	}
 
-	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-	checkf(CombatSubsystem != nullptr, TEXT("전투 서브시스템 nullptr"));
+	USRPGCombatModel* CombatModel = mParent.Get();
+	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 
 	// 전투 상태 평가
-	CombatSubsystem->EvaluateCombatStates();
+	CombatModel->EvaluateCombatStates();
 
 	// 턴 종료 여부 체크
 	if (mTurnPhase == ESRPGTurnPhase::TurnAbort)
@@ -289,7 +292,7 @@ UWorld* FSRPGTurnContext::GetWorld() const
 	return mOwner->GetWorld();
 }
 
-USRPGCombatSubsystem* FSRPGTurnContext::GetParent() const
+USRPGCombatModel* FSRPGTurnContext::GetParent() const
 {
 	return mParent.Get();
 }

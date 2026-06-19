@@ -234,6 +234,9 @@ enum class ESRPGActionPhase : uint8
     ActionEnd           UMETA(ToolTip = "액션 종료"),
 };
 
+/**
+ * @brief 스킬 빌드 액션 내 진행 단계 열거형
+ */
 UENUM(BlueprintType)
 enum class ESRPGSkillBuildPhase : uint8
 {
@@ -242,6 +245,9 @@ enum class ESRPGSkillBuildPhase : uint8
     Preview             UMETA(ToolTip = "프리뷰 표기"),
 };
 
+/**
+ * @brief SRPG 명령 타입에 대한 열거형
+ */
 UENUM(BlueprintType)
 enum class ESRPGCommandType : uint8
 {

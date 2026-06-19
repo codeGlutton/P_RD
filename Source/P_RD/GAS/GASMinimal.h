@@ -21,9 +21,6 @@
 #include "GameplayCueNotify_Static.h"
 #include "GameplayCueSet.h"
 
-#include "NativeGameplayTags.h"
-#include "GameplayTagContainer.h" 
-
 #include "GAS/GASTag.h"
 
 /**

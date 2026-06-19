@@ -51,8 +51,8 @@ DECLARE_DELEGATE_RetVal_OneParam(FTileIndex, FWorldToTileIndexDelegate, const FV
  * @warning UCLASS(EditInlineNew)는 ATileMap이 이 모델을 Instanced UPROPERTY로 인라인 편집(크기 확인·변경)하기 위한 것.
  *          제거하면 액터 디테일 패널에서 모델 내부 프로퍼티 편집이 불가하므로 변경 금지.
  */
-UCLASS(EditInlineNew)
-class P_RD_API UTileMapModel : public UObject, public IObjectModel
+UCLASS()
+class P_RD_API UTileMapModel : public UObjectModel
 {
 	GENERATED_BODY()
 

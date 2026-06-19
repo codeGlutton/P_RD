@@ -6,12 +6,12 @@
 
 #include "GameMode/RDGameModeBase.h"
 
-#include "Setting/UnitTeamType.h"
+#include "Setting/GameTeamType.h"
 
 /** @brief 플레이어 전용 AttributeSet과 DiceComponent를 서브오브젝트로 생성한다. */
 APlayerUnit::APlayerUnit()
 {
-    SetGenericTeamId(EUnitTeamType::Adventurer);
+    SetGenericTeamId(EGameTeamType::Adventurer);
     mUnitAttributeSet = CreateDefaultSubobject<UPlayerUnitAttributeSet>(TEXT("PlayerUnitAttributeSet"));
     mLevelAttributeSet = CreateDefaultSubobject<ULevelAttributeSet>(TEXT("LevelAttributeSet"));
     // 보유 주사위의 진짜 런타임 상태는 플레이어 유닛이 소유하고, CombatUIAdapter는 읽어서 UIModel로 변환한다.

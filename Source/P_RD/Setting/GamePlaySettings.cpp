@@ -26,10 +26,10 @@ FText UGamePlaySettings::GetSectionDescription() const
 ETeamAttitude::Type UGamePlaySettings::GetAttitude(FGenericTeamId OwnId, FGenericTeamId OtherId)
 {
     const auto& TeamRelations = GetDefault<UGamePlaySettings>()->mTeamRelations;
-    const auto* OwnTeamRelation = TeamRelations.Find(StaticCast<TEnumAsByte<EUnitTeamType::Type>>(OwnId.GetId()));
+    const auto* OwnTeamRelation = TeamRelations.Find(StaticCast<TEnumAsByte<EGameTeamType::Type>>(OwnId.GetId()));
     if (OwnTeamRelation != nullptr)
     {
-        const auto* AttitudeToOther = OwnTeamRelation->mAttitudes.Find(StaticCast<TEnumAsByte<EUnitTeamType::Type>>(OtherId.GetId()));
+        const auto* AttitudeToOther = OwnTeamRelation->mAttitudes.Find(StaticCast<TEnumAsByte<EGameTeamType::Type>>(OtherId.GetId()));
         if (AttitudeToOther != nullptr)
         {
             return *AttitudeToOther;

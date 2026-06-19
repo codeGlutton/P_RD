@@ -1,5 +1,10 @@
 ﻿#include "GameMode/CombatGameMode.h"
+#include "Singleton/WorldSubsystem/SimulationSubsystem.h"
+#include "Simulation/Factory/ObjectModelFactory.h"
+
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
+#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
+
 #include "Singleton/WorldSubsystem/SRPGCommandRouterSubsystem.h"
 
 #include "Engine/AssetManager.h"
@@ -26,8 +31,11 @@ void ACombatGameMode::InitializeRoom()
 	const UStaticCombatRoomSpawnData* StaticRoomData = AssetManager->GetPrimaryAssetObject<UStaticCombatRoomSpawnData>(CurRoom.mStaticRoomSpawnDataId);
 	checkf(StaticRoomData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
 
-	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-	CombatSubsystem->InitCombat(StaticRoomData, GetPlayerUnit());
+	USimulationSubsystem* SimulationSubsystem = GetWorld()->GetSubsystem<USimulationSubsystem>();
+	checkf(SimulationSubsystem != nullptr, TEXT("시뮬레이션 서브시스템 nullptr"));
+	USRPGCombatModel* CombatModel = SimulationSubsystem->GetModelFactory()->NewModel<USRPGCombatModel>(TEXT("SRPGCombatModel"));
+
+	CombatModel->InitCombat(StaticRoomData, GetPlayerUnit());
 }
 
 void ACombatGameMode::BeginRoom()
@@ -36,12 +44,14 @@ void ACombatGameMode::BeginRoom()
 
 	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
 	checkf(CombatSubsystem != nullptr, TEXT("전투 시스템 서브시스템 nullptr"));
+	USRPGCombatModel* CombatModel = CombatSubsystem->GetModel<USRPGCombatModel>();
+	checkf(CombatModel != nullptr, TEXT("전투 시스템 모델 nullptr"));
 
-	for (const TObjectPtr<AUnit>& Unit : CombatSubsystem->GetUnits())
+	for (const TObjectPtr<AUnit>& Unit : CombatModel->GetUnits())
 	{
 		Unit->OnBeginRoom();
 	}
-	CombatSubsystem->BeginCombat();
+	CombatModel->BeginCombat();
 }
 
 bool ACombatGameMode::SelectSkill(int32 SkillIndex)

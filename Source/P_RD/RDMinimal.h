@@ -25,6 +25,11 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Algo/RandomShuffle.h"
 
+/* 게임플레이 태그 헤더 */
+
+#include "NativeGameplayTags.h"
+#include "GameplayTagContainer.h" 
+
 template<typename T>
 FString EnumToString(T Value)
 {

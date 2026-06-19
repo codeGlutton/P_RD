@@ -1,13 +1,13 @@
 ﻿#include "Pawn/Unit.h"
 #include "GAS/Attribute/UnitAttributeSet.h"
-#include "Setting/UnitTeamType.h"
+#include "Setting/GameTeamType.h"
 
 #include "DataAsset/UnitSpawnData/StaticUnitSpawnData.h"
 
 #include "Pawn/SkillComponent.h"
 
 AUnit::AUnit() :
-	mTeamId(EUnitTeamType::AllNeutral)
+	mTeamId(EGameTeamType::AllNeutral)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
