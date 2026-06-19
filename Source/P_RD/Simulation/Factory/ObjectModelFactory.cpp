@@ -67,6 +67,12 @@ void UGameObjectModelFactory::OnPreRemoveModel(UObjectModel* Model)
 	if (View != nullptr)
 	{
 		View->UnbindModel(Model);
+		
+		AActor* ViewActor = Cast<AActor>(View);
+		if (ViewActor != nullptr)
+		{
+			ViewActor->Destroy();
+		}
 	}
 }
 
