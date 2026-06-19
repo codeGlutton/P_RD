@@ -2,37 +2,38 @@
 
 const FTileTransform& UBoardActorModel::GetTileTransform() const
 {
-	// TODO: 모델이 mTileTransform 저장하도록 전환, 현재는 무효 트랜스폼 반환
-	return FTileTransform::Invalid;
+	// 멤버에 저장된 타일 트랜스폼 반환
+	return mTileTransform;
 }
 
 void UBoardActorModel::SetTileTransform(const FTileTransform& Transform)
 {
-	// TODO: 모델이 mTileTransform 저장하도록 전환, 현재는 빈 구현
+	// 멤버에 타일 트랜스폼 저장
+	mTileTransform = Transform;
 }
 
 ETileLayerFlag UBoardActorModel::GetTileLayerFlags() const
 {
-	// TODO: 서브클래스/데이터로 레이어 타입 지정, 현재는 None 반환
-	return ETileLayerFlag::None;
+	// 멤버에 설정된 레이어 타입 반환
+	return mTileLayerFlags;
 }
 
 ETileLayerFlag UBoardActorModel::GetBlockLayerFlags() const
 {
-	// TODO: 구현 예정, 현재는 None 반환
-	return ETileLayerFlag::None;
+	// 멤버에 설정된 블로킹 레이어 타입들 반환
+	return mBlockLayerFlags;
 }
 
 ETileLayerFlag UBoardActorModel::GetReplaceLayerFlags() const
 {
-	// TODO: 구현 예정, 현재는 None 반환
-	return ETileLayerFlag::None;
+	// 멤버에 설정된 교체 레이어 타입들 반환
+	return mReplaceLayerFlags;
 }
 
 int32 UBoardActorModel::GetOverlayLayerPriority() const
 {
-	// TODO: 구현 예정, 현재는 0 반환
-	return 0;
+	// 멤버에 설정된 교체 우선순위 반환
+	return mOverlayLayerPriority;
 }
 
 void UBoardActorModel::OnBeginTileOverlap(FTile* CurTile, UBoardActorModel* Other)
