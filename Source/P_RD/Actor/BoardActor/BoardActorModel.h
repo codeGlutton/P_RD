@@ -36,39 +36,39 @@ public:
 	 * @brief 타일 트랜스폼 반환
 	 * @return 타일 트랜스폼
 	 */
-	virtual const FTileTransform& GetTileTransform() const;
+	const FTileTransform& GetTileTransform() const;
 
 	/**
 	 * @brief 액터의 레이어 타입을 반환
 	 * @return 레이어 타입
 	 */
-	virtual ETileLayerFlag GetTileLayerFlags() const;
+	ETileLayerFlag GetTileLayerFlags() const;
 
 	/**
 	 * @brief 타일 배치 시에 블로킹할 타입들 반환
 	 * @return 블로킹할 레이어 타입들
 	 */
-	virtual ETileLayerFlag GetBlockLayerFlags() const;
+	ETileLayerFlag GetBlockLayerFlags() const;
 
 	/**
 	 * @brief 타일 배치 시에 교체할 타입들 반환
 	 * @return 교체할 레이어 타입들
 	 */
-	virtual ETileLayerFlag GetReplaceLayerFlags() const;
+	ETileLayerFlag GetReplaceLayerFlags() const;
 
 	/**
 	 * @brief Overlay 레이어 내 교체 우선순위 반환
 	 * @details 같은 교체 대상끼리 우열을 가린다. 진입자 우선순위가 같거나 더 높을 때만 기존 액터를 덮어쓴다.
 	 * @return 우선순위 (높을수록 우선)
 	 */
-	virtual int32 GetOverlayLayerPriority() const;
+	int32 GetOverlayLayerPriority() const;
 
 protected:
 	/**
 	 * @brief 타일 트랜스폼 설정
 	 * @param Transform 설정할 타일 트랜스폼
 	 */
-	virtual void SetTileTransform(const FTileTransform& Transform);
+	void SetTileTransform(const FTileTransform& Transform);
 
 	/**
 	 * @brief 오버랩 시작 시 실행될 함수
@@ -101,4 +101,25 @@ protected:
 	 */
 	virtual void OnBeginTurn();
 	virtual void OnEndTurn();
+
+protected:
+	// @brief 타일 트랜스폼(런타임 배치 상태)
+	UPROPERTY(Category = "BoardActor", VisibleInstanceOnly, BlueprintReadOnly, Transient, meta = (DisplayName = "TileTransform"))
+	FTileTransform mTileTransform = FTileTransform::Invalid;
+
+	// @brief 액터가 속한 레이어 타입
+	UPROPERTY(Category = "BoardActor", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "TileLayerFlags", Bitmask, BitmaskEnum = "/Script/P_RD.ETileLayerFlag"))
+	ETileLayerFlag mTileLayerFlags = ETileLayerFlag::None;
+
+	// @brief 타일 배치 시 블로킹할 레이어 타입들
+	UPROPERTY(Category = "BoardActor", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "BlockLayerFlags", Bitmask, BitmaskEnum = "/Script/P_RD.ETileLayerFlag"))
+	ETileLayerFlag mBlockLayerFlags = ETileLayerFlag::None;
+
+	// @brief 타일 배치 시 교체할 레이어 타입들
+	UPROPERTY(Category = "BoardActor", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "ReplaceLayerFlags", Bitmask, BitmaskEnum = "/Script/P_RD.ETileLayerFlag"))
+	ETileLayerFlag mReplaceLayerFlags = ETileLayerFlag::None;
+
+	// @brief Overlay 레이어 내 교체 우선순위 (높을수록 우선)
+	UPROPERTY(Category = "BoardActor", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "OverlayLayerPriority"))
+	int32 mOverlayLayerPriority = 0;
 };
