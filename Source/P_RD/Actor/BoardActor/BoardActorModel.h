@@ -24,6 +24,9 @@ class P_RD_API UBoardActorModel : public UObject, public IObjectModel
 {
 	GENERATED_BODY()
 
+	// 타일맵 모델이 배치/이동 시 타일 트랜스폼·오버랩 콜백(protected)을 호출
+	friend class UTileMapModel;
+
 public:
 	/**
 	 * @brief 타일 트랜스폼 반환
