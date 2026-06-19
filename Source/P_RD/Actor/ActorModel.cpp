@@ -150,3 +150,7 @@ TArray<UComponentModel*> UActorModel::FindComponentModelsByClass(TSubclassOf<UCo
 	return FoundComponentModels;
 }
 
+const TSet<TObjectPtr<UComponentModel>>& UActorModel::GetComponentModels() const
+{
+	return mComponentModels;
+}

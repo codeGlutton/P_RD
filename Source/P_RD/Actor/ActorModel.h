@@ -124,5 +124,4 @@ public:
 protected:
 	UPROPERTY()
 	TSet<TObjectPtr<UComponentModel>> mComponentModels;
-	TWeakObjectPtr<UObject> mObjectView;
 };
