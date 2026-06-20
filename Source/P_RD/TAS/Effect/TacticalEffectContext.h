@@ -15,4 +15,6 @@ class P_RD_API UTacticalEffectContext : public UObject
 	GENERATED_BODY()
 public:
 	FGameplayTag mGameplayTag;
+	TSoftObjectPtr<class UTacticalEffect> mTacticalEffect;
+
 };

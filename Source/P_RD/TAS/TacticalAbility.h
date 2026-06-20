@@ -51,7 +51,9 @@ public:
 	*/
 	virtual void ActivateAbility(const FTacticalAbilityContext Context) PURE_VIRTUAL(UTacticalAbility::ActivateAbility, );
 
-	void ApplyEffect(const FTacticalAbilityContext& Context, TArray<class UTacticalEffectContext*>& EffectContext);
+	void ApplyEffect(
+		const FTacticalAbilityContext& Context,
+		TArray<class UTacticalEffectContext*>& EffectContext);
 
 	/*
 	* @brief 스킬을 종료한다.

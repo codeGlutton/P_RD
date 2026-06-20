@@ -1,7 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-#include "TAS/Effect/TacticalEffectContext_Stat.h"
 #include "TAS/Effect/Stat/TacticalEffect_Stat_Damage.h"
+#include "TAS/Effect/TacticalEffectContext_Stat.h"
 #include "Actor/BoardActor/BoardActorModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
@@ -17,7 +17,7 @@ void UTacticalEffect_Stat_Damage::ActivateEffect(const UBoardActorModel& Caster,
 	{
 		if (USRPGCombatSubsystem* CombatSubsytem = World->GetSubsystem<USRPGCombatSubsystem>())
 		{
-			UObjectModel* CombatObjectModel= CombatSubsytem->GetModel_Internal();
+			//UObjectModel* CombatObjectModel= CombatSubsytem->GetModel_Internal();
 		}
 	}
 

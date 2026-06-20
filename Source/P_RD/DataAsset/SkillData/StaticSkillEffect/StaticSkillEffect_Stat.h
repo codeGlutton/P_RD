@@ -50,4 +50,8 @@ public:
     */
     UPROPERTY(Category = "SkillEffectStat", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RatioValue"))
     float mEffectRatioValue;
+
+public:
+    virtual class UTacticalEffectContext* CreateContext(TWeakObjectPtr<class UBoardActorModel> CasterActor) override;
+
 };

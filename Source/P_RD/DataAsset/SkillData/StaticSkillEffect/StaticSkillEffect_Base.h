@@ -31,6 +31,12 @@ public:
     */
     UPROPERTY(Category = "SkillEffect", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "GameplayTag" ))
     FGameplayTag mEffectTag;
+
+    UPROPERTY(Category = "SkillEffect", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TacticalEffect"))
+    TSoftObjectPtr<class UTacticalEffect> mTacticalEffect;
+
+public:
+    virtual class UTacticalEffectContext* CreateContext(TWeakObjectPtr<class UBoardActorModel> CasterActor) PURE_VIRTUAL(UStaticSkillEffect_Base::CreateContext, return nullptr;)
 };
 
 

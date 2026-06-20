@@ -64,8 +64,6 @@ void UTacticalAbility_Skill::ActivateSkill(const FTacticalAbilityContext& Contex
 {
 	// 스킬을 기반으로 효과를 계산한다.
 	TSoftObjectPtr<UStaticSkillData> SkillData;
-	TWeakObjectPtr<UAttributeSetComponentModel> AttributeSet = Context.mCasterActor.Get()->FindComponentModelByClass<UAttributeSetComponentModel>();
-	checkf(AttributeSet.IsValid(), TEXT("컴포넌트가 없습니다."));
 
 	// AS를 가져옵니다.
 	//TWeakObjectPtr<UAttributeSetComponentModel> AttributeSet = ComponentArray[0];
@@ -80,14 +78,8 @@ void UTacticalAbility_Skill::ActivateSkill(const FTacticalAbilityContext& Contex
 		for (int32 j = 0; j < SkillMotionLayer.mStaticSkillEffectLayers.Num(); ++j)
 		{
 			// 생성
-			UTacticalEffectContext* EffectContext = NewObject<UTacticalEffectContext_Stat>();
-
-			const UStaticSkillEffect_Stat* Effect_Stat = Cast<UStaticSkillEffect_Stat>(SkillMotionLayer.mStaticSkillEffectLayers[j]);
-			checkf(Effect_Stat != 0, TEXT("Stat이 아닙니다."));
-			EffectContext->mBase = Effect_Stat->mEffectDefaultValue + Effect_Stat->mEffectRatioValue * AttributeSet->GetAttributeValue(UUnitAttributeSet::GetSkillPointAttribute());
-			EffectContext->mGameplayTag = Effect_Stat->mEffectTag;
-
-			EffectContexts.Add(EffectContext);
+			// 추후 팩토리 구성으로 Context 생성하도록 희망
+			UTacticalEffectContext* EffectContext = SkillMotionLayer.mStaticSkillEffectLayers[j]->CreateContext(Context.mCasterActor);
 		}
 
 		// 효과를 계산합니다.

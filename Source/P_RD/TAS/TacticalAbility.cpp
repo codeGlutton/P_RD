@@ -3,6 +3,7 @@
 
 #include "TAS/TacticalAbility.h"
 
+#include "TAS/Effect/TacticalEffectContext.h"
 #include "TAS/Effect/Stat/TacticalEffect_Stat_Damage.h"
 
 void UTacticalAbility::ApplyEffect(const FTacticalAbilityContext& Context, TArray<class UTacticalEffectContext*>& EffectContext)
@@ -10,6 +11,7 @@ void UTacticalAbility::ApplyEffect(const FTacticalAbilityContext& Context, TArra
 	// 각각의 타일에게 효과를 적용한다.
 	for (int32 i = 0; i < Context.mTargetTile.Num(); ++i)
 	{
-		NewObject<UTacticalEffect_Stat_Damage>()->ActivateEffect(*Context.mCasterActor.Get(), Context.mTargetTile[i], EffectContext);
+		TSoftObjectPtr<UTacticalEffect_Stat_Damage> TacticalEffect = EffectContext[i]->mTacticalEffect.Get();
+		TacticalEffect->ActivateEffect(*Context.mCasterActor.Get(), Context.mTargetTile[i], EffectContext);
 	}
 }
