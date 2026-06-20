@@ -6,7 +6,7 @@
 #include "Styling/CoreStyle.h"
 #include "Widgets/Images/SImage.h"
 #include "Widgets/Layout/SBorder.h"
-#include "Widgets/Layout/SScaleBox.h"
+#include "Widgets/Layout/SBox.h"
 #include "Widgets/SNullWidget.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/SOverlay.h"
@@ -40,12 +40,27 @@ TSharedRef<SWidget> UCinematicWidget::RebuildWidget()
 		.HAlign(HAlign_Fill)
 		.VAlign(VAlign_Fill)
 		[
-			SNew(SScaleBox)
-			.Stretch(EStretch::ScaleToFit)
-			.StretchDirection(EStretchDirection::Both)
+			// 다양한 해상도에서 비율을 유지한 채 화면을 꽉 채우고(cover) 넘치는 부분만 잘라낸다.
+			// 클립 박스가 화면을 채우며 자식을 중앙 정렬·클리핑하고, cover 박스는 영상 실제 비율로
+			// 화면보다 크게 잡힌다(넘친 위/아래 또는 좌/우가 잘림). 크기는 NativeTick에서 갱신.
+			SAssignNew(mCinematicVideoClipBox, SBox)
+			.HAlign(HAlign_Center)
+			.VAlign(VAlign_Center)
+			.Clipping(EWidgetClipping::ClipToBounds)
 			[
-				SAssignNew(mCinematicVideoImage, SImage)
-				.Image(&mCinematicVideoBrush)
+				SAssignNew(mCinematicVideoCoverBox, SBox)
+				.WidthOverride(TAttribute<FOptionalSize>::CreateLambda([this]()
+				{
+					return FOptionalSize(CalcCinematicVideoCoverSize().X);
+				}))
+				.HeightOverride(TAttribute<FOptionalSize>::CreateLambda([this]()
+				{
+					return FOptionalSize(CalcCinematicVideoCoverSize().Y);
+				}))
+				[
+					SAssignNew(mCinematicVideoImage, SImage)
+					.Image(&mCinematicVideoBrush)
+				]
 			]
 		]
 		+ SOverlay::Slot()
@@ -86,6 +101,44 @@ void UCinematicWidget::NativeDestruct()
 	StopCinematicMedia();
 
 	Super::NativeDestruct();
+}
+
+/** @details cover = 화면을 완전히 덮는 최소 배율(가로/세로 배율 중 큰 값)로 영상 박스를 키운다.
+ *  같은 배율을 양 축에 적용하므로 비율이 보존되고, 넘친 부분은 클립 박스가 잘라낸다.
+ *  영상 실제 해상도(미디어 텍스처)를 우선 쓰고, 아직 없으면 브러시 기본 크기를 폴백으로 쓴다.
+ *  SBox WidthOverride/HeightOverride 어트리뷰트 람다가 매 레이아웃마다 호출 → 별도 틱 불필요. */
+FVector2D UCinematicWidget::CalcCinematicVideoCoverSize() const
+{
+	if (mCinematicVideoClipBox.IsValid() == false)
+	{
+		return mCinematicVideoBrush.ImageSize;
+	}
+
+	const FVector2D ScreenSize = mCinematicVideoClipBox->GetCachedGeometry().GetLocalSize();
+	if (ScreenSize.X <= 0.0f || ScreenSize.Y <= 0.0f)
+	{
+		return mCinematicVideoBrush.ImageSize;
+	}
+
+	// 영상 실제 비율 기준: (1) 미디어가 열릴 때 플레이어에서 받은 네이티브 해상도(타이밍 안전) → (2) 미디어 텍스처 → (3) 미상이면 화면크기(=꽉 채움, 16:9로 눌리지 않음).
+	FVector2D VideoSize = mCinematicVideoNativeSize;
+	if ((VideoSize.X <= 0.0f || VideoSize.Y <= 0.0f) && mCinematicMediaTexture != nullptr)
+	{
+		const float TextureWidth = static_cast<float>(mCinematicMediaTexture->GetWidth());
+		const float TextureHeight = static_cast<float>(mCinematicMediaTexture->GetHeight());
+		if (TextureWidth > 0.0f && TextureHeight > 0.0f)
+		{
+			VideoSize = FVector2D(TextureWidth, TextureHeight);
+		}
+	}
+	if (VideoSize.X <= 0.0f || VideoSize.Y <= 0.0f)
+	{
+		return ScreenSize;
+	}
+
+	// 화면을 완전히 덮는 최소 배율(=가로/세로 배율 중 큰 값). 양 축에 같은 배율 → 비율 보존, 넘침은 클립박스가 크롭.
+	const float CoverScale = FMath::Max(ScreenSize.X / VideoSize.X, ScreenSize.Y / VideoSize.Y);
+	return VideoSize * CoverScale;
 }
 
 void UCinematicWidget::PlayCinematic(FOnEndCinematicAnimation Callback)

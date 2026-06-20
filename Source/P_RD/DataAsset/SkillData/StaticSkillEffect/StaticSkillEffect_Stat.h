@@ -33,7 +33,7 @@ public:
     * 없음, 자신, 아군, 적
     */
     UPROPERTY(Category = "SkillEffectStat", EditAnywhere, BlueprintReadWrite, meta = (Bitmask, BitmaskEnum = "/Script/P_RD.ETargetFilter", DisplayName = "TargetFilter"))
-    uint8 mTargetFilter = 3;
+    uint8 mTargetFilter = (uint8)ETargetFilter::All;
 
     /**
     * @brief 효과 기본 값
