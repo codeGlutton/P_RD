@@ -76,6 +76,8 @@ private:
 	void ClearDefaultCinematicTimer();
 	void ClearCinematicFadeTimer();
 	FString ResolveCinematicVideoPath() const;
+	/** @brief MP4 파일의 tkhd 박스에서 영상 픽셀 해상도를 직접 읽는다(미디어 재생 타이밍과 무관하게 cover 비율 확정용). 실패 시 0. */
+	FVector2D ReadCinematicVideoFileDimensions(const FString& VideoPath) const;
 
 	UFUNCTION()
 	void HandleCinematicMediaOpened(FString OpenedUrl);
