@@ -103,6 +103,9 @@ private:
 	// ToggleDice는 UIModel에 push된 결과를 기준으로 판단해 UI가 보는 값과 액션 값이 갈라지지 않게 한다.
 	int32 GetRolledDiceValue(int32 DiceIndex) const;
 
+	/** @brief 주사위 한 개를 스킬 빌드에 넣거나(이미 있으면) 취소한다. 교체 없음·순서 무관, 용량 초과/미굴림/사용됨은 무시. 변경 시마다 push. */
+	void ToggleDiceSelection(int32 DiceIndex);
+
 	/** @brief 다이스 컴포넌트를 굴리고(임시 난수 스트림) 그 결과를 뷰모델에 push한다. */
 	void RollDice();
 
@@ -150,8 +153,11 @@ private:
 	/** @brief OnEndAnyTurnUI(턴 종료) 구독 핸들. 해제/재빌드 때 Remove에 사용. */
 	FDelegateHandle mEndTurnHandle;
 
-	/** @brief 현재 스킬에 배치된 주사위 index(확정 시 '사용됨' 처리). -1이면 없음. */
-	int32 mPendingDiceIndex = INDEX_NONE;
+	/** @brief 현재 스킬 빌드에 올린(선택된) 주사위 index들. 순서 무관, 교체 없음(넣기/취소만), 확정 시 전부 '사용됨'. */
+	TArray<int32> mSelectedDiceIndices;
+
+	/** @brief 현재 스킬이 받을 수 있는 최대 주사위 수(꽉 참 판정·dim용). [임시] 진짜 값=선택 스킬 mDiceCount(액션 연동 시 교체). */
+	int32 mSelectedSkillDiceCapacity = 0;
 
 	/** @brief 메타 HUD 검증용 임시 레벨. 최종 소스는 RunPersistData/UUnitData 쪽으로 정리해야 한다. */
 	int32 mPlayerLevel = 1;

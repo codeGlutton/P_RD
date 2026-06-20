@@ -31,6 +31,10 @@ namespace
 	constexpr int32 SkillIndexBasic = 0;
 	constexpr int32 SkillIndexStep = 5;
 
+	// [임시] 스킬이 올릴 수 있는 주사위 수(꽉 참 판정용). 진짜 값은 선택 스킬의 mDiceCount —
+	//        액션(SRPGSkillBuildAction) 연동 시 거기서 읽어 교체한다. 그전까진 이 기본값으로 dim/용량을 흉내낸다.
+	constexpr int32 DefaultSkillDiceCapacity = 3;
+
 	// [합의필요] HP/Gold/이동력 진짜 소스 = UUnitData(GAS 폐기 후). 아래는 임시 placeholder —
 	//           게임플레이가 UUnitData를 주면 이 상수 대신 거기서 읽어 SetUnitUIs/SetPlayerMeta를 채운다.
 	//           (다이스는 이미 진짜 — APlayerUnit::UDicePoolModel에서 읽음. HP/Gold만 미연결.)
@@ -158,59 +162,18 @@ void UCombatUIAdapter::HandleCombatCommand(ECombatInputType Type, int32 IntPaylo
 	case ECombatInputType::SelectSkill:
 		mSelectedSkillIndex = IntPayload;
 		mPendingAttackDamage = -1;
+		mPendingStepValue = -1;
+		mStepStage = 0;
 		mMovePending = false;
+		mSelectedDiceIndices.Reset();   // 새 스킬 선택 = 주사위 선택 초기화.
+		// [임시] 수용량은 스킬 데이터(mDiceCount)에서 와야 하나, 아직 미연동이라 기본값으로 둔다.
+		mSelectedSkillDiceCapacity = (IntPayload == INDEX_NONE) ? 0 : DefaultSkillDiceCapacity;
+		PushDiceUIs();   // 선택 강조/플래그 초기 상태 반영.
 		break;
 
 	case ECombatInputType::ToggleDice:
-	{
-		// 이미 쓴 주사위는 무시(턴 종료/다음 턴 시작까지 잠금).
-		if (mUIModel != nullptr)
-		{
-			const TArray<FDiceSlotUI>& Dice = mUIModel->GetDiceUIs();
-			if (Dice.IsValidIndex(IntPayload) && Dice[IntPayload].mIsUsed)
-			{
-				break;
-			}
-		}
-
-		const int32 DiceValue = GetRolledDiceValue(IntPayload);
-		if (DiceValue <= 0)
-		{
-			break;
-		}
-		mPendingDiceIndex = IntPayload;   // 확정 시 '사용됨' 처리할 주사위.
-		if (mSelectedSkillIndex == SkillIndexStep)
-		{
-			// STEP: 주사위 배치 → 본인 타일을 회색(Aim)으로. 탭마다 노랑→빨강(확정).
-			mPendingStepValue = DiceValue;
-			mStepStage = 0;
-			mStepTile = GetPlayerTile();
-			SetSingleTileHighlight(mStepTile, ETileHighlightFlag::Aim);
-		}
-		else if (mSelectedSkillIndex == SkillIndexBasic)
-		{
-			// BASIC: 주사위 배치 → 사거리(회색 Aim)를 깐다. 그 안에서 타깃 탭=노랑, 재탭=빨강+실행.
-			mPendingAttackDamage = DiceValue;
-			mAttackTargetTile = FTileIndex::Invalid;
-			if (ATileMap* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap() : nullptr)
-			{
-				// 사거리 기준점 = 플레이어 타일. 타일 트랜스폼이 신뢰 안 될 수 있어((0,0) 등) 액터 실제 위치로 잡는다.
-				FTileIndex Origin = GetPlayerTile();
-				if (const FCombatUnitState* PlayerState = FindPlayerState())
-				{
-					if (PlayerState->mActor.IsValid())
-					{
-						Origin = TileMap->WorldToTileIndex(PlayerState->mActor->GetActorLocation());
-					}
-				}
-				// 사거리 = Square 범위(타일맵 GetAimableTiles, pyramidmine 구현). 점유 타일 포함(적 조준).
-				mAimTiles = TileMap->GetAimableTiles(Origin, BasicAttackRange, EAimPattern::Square, true, false);
-				ClearAllHighlight();
-				TileMap->SetTileHighlight(mAimTiles, ETileHighlightFlag::Aim);   // 회색 사거리
-			}
-		}
+		ToggleDiceSelection(IntPayload);
 		break;
-	}
 
 	case ECombatInputType::RollDice:
 		// 굴림 요청: 컴포넌트(데이터)에서 굴리고 결과 뷰를 push한다.
@@ -267,13 +230,16 @@ void UCombatUIAdapter::HandleWorldTouch(FVector2D ScreenPosition, bool bLongPres
 			else if (mStepStage >= 2)
 			{
 				SetSingleTileHighlight(mStepTile, ETileHighlightFlag::Effect);   // 빨강 = 확정
-				ApplyStep(mPendingStepValue);                                    // 이동력 += 주사위값
-				if (mDicePool != nullptr && mPendingDiceIndex != INDEX_NONE)
+				ApplyStep(mPendingStepValue);                                    // 이동력 += 올린 주사위 합
+				if (mDicePool != nullptr)
 				{
-					mDicePool->MarkDiceUsed(mPendingDiceIndex);             // 쓴 주사위 잠금
-					PushDiceUIs();                                             // 잠금 상태를 UI에 반영
+					for (int32 Index : mSelectedDiceIndices)
+					{
+						mDicePool->MarkDiceUsed(Index);                     // 올린 주사위 전부 잠금
+					}
 				}
 				ClearPendingAction();
+				PushDiceUIs();                                                 // 잠금·선택 해제 상태를 UI에 반영
 			}
 		}
 		else
@@ -326,13 +292,16 @@ void UCombatUIAdapter::HandleWorldTouch(FVector2D ScreenPosition, bool bLongPres
 		if (Target != nullptr && Target->mIsPlayer == false)
 		{
 			ApplyBasicAttack(TargetId, mPendingAttackDamage);
-			if (mDicePool != nullptr && mPendingDiceIndex != INDEX_NONE)
+			if (mDicePool != nullptr)
 			{
-				mDicePool->MarkDiceUsed(mPendingDiceIndex);   // 적을 친 경우에만 주사위 소모.
-				PushDiceUIs();                                   // 잠금 상태를 UI에 반영
+				for (int32 Index : mSelectedDiceIndices)
+				{
+					mDicePool->MarkDiceUsed(Index);   // 적을 친 경우에만 올린 주사위 전부 소모.
+				}
 			}
 		}
 		ClearPendingAction();
+		PushDiceUIs();                                   // 잠금·선택 해제 상태를 UI에 반영
 		return;
 	}
 
@@ -464,6 +433,94 @@ int32 UCombatUIAdapter::GetRolledDiceValue(int32 DiceIndex) const
 	return Dice[DiceIndex].mIsRolled ? Dice[DiceIndex].mResultValue : 0;
 }
 
+/** @brief 주사위 한 개를 스킬 빌드에 넣거나 취소한다(교체 없음·순서 무관). 변경 시마다 PushDiceUIs로 강조/합계를 알린다. */
+void UCombatUIAdapter::ToggleDiceSelection(int32 DiceIndex)
+{
+	if (mDicePool == nullptr)
+	{
+		return;
+	}
+
+	if (mSelectedDiceIndices.Contains(DiceIndex))
+	{
+		// 이미 올린 주사위 → 취소(내리기). 교체 기능은 없다.
+		mSelectedDiceIndices.Remove(DiceIndex);
+	}
+	else
+	{
+		// 새로 넣기: 굴린·미사용 주사위만, 수용량이 남았을 때만(꽉 차면 무시).
+		const TArray<TObjectPtr<UDiceModel>>& Dice = mDicePool->GetDice();
+		const bool bRolledUnused = Dice.IsValidIndex(DiceIndex) && Dice[DiceIndex] != nullptr
+			&& Dice[DiceIndex]->IsRolled() && Dice[DiceIndex]->IsUsed() == false;
+		const bool bHasRoom = (mSelectedSkillDiceCapacity <= 0) || (mSelectedDiceIndices.Num() < mSelectedSkillDiceCapacity);
+		if (bRolledUnused == false || bHasRoom == false)
+		{
+			return;
+		}
+		mSelectedDiceIndices.Add(DiceIndex);
+	}
+
+	// 올린 주사위 눈금값 합(STEP 이동력/BASIC 데미지용 임시 합 — 사정거리 재계산은 액션 몫).
+	int32 SelectedSum = 0;
+	for (int32 Index : mSelectedDiceIndices)
+	{
+		SelectedSum += GetRolledDiceValue(Index);
+	}
+	const bool bHasSelection = mSelectedDiceIndices.Num() > 0;
+
+	// 선택된 스킬에 따라 확정 대기 모드를 갱신한다(값=합계, 비면 비활성 -1).
+	if (mSelectedSkillIndex == SkillIndexStep)
+	{
+		mPendingAttackDamage = -1;
+		mPendingStepValue = bHasSelection ? SelectedSum : -1;
+		if (bHasSelection)
+		{
+			// STEP: 본인 타일을 회색(Aim)으로. 이후 본인 타일 탭으로 노랑→빨강(확정).
+			mStepStage = 0;
+			mStepTile = GetPlayerTile();
+			SetSingleTileHighlight(mStepTile, ETileHighlightFlag::Aim);
+		}
+		else
+		{
+			mStepStage = 0;
+			ClearAllHighlight();
+		}
+	}
+	else if (mSelectedSkillIndex == SkillIndexBasic)
+	{
+		mPendingStepValue = -1;
+		mPendingAttackDamage = bHasSelection ? SelectedSum : -1;
+		mAttackTargetTile = FTileIndex::Invalid;
+		if (bHasSelection)
+		{
+			// BASIC: 주사위를 올리면 사거리(회색 Aim)를 깐다. 그 안에서 타깃 탭=노랑, 재탭=빨강+실행.
+			// [모호재 칸] 사거리 = 기본 + 올린 주사위 합으로 재계산해야 함. 지금은 기본 BasicAttackRange만 사용(값은 OnDiceSelectionChanged로 이미 전달됨).
+			if (ATileMap* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap() : nullptr)
+			{
+				// 사거리 기준점 = 플레이어 타일. 타일 트랜스폼이 신뢰 안 될 수 있어((0,0) 등) 액터 실제 위치로 잡는다.
+				FTileIndex Origin = GetPlayerTile();
+				if (const FCombatUnitState* PlayerState = FindPlayerState())
+				{
+					if (PlayerState->mActor.IsValid())
+					{
+						Origin = TileMap->WorldToTileIndex(PlayerState->mActor->GetActorLocation());
+					}
+				}
+				mAimTiles = TileMap->GetAimableTiles(Origin, BasicAttackRange, EAimPattern::Square, true, false);
+				ClearAllHighlight();
+				TileMap->SetTileHighlight(mAimTiles, ETileHighlightFlag::Aim);   // 회색 사거리
+			}
+		}
+		else
+		{
+			mAimTiles.Reset();
+			ClearAllHighlight();
+		}
+	}
+
+	PushDiceUIs();   // 선택 빛남/꽉참 dim + SetSelectedDice(넣기·취소마다 알림).
+}
+
 /** @brief 현재 플레이어 DiceComponent를 굴리고 결과를 FDiceSlotUI로 다시 push한다. */
 void UCombatUIAdapter::RollDice()
 {
@@ -479,6 +536,12 @@ void UCombatUIAdapter::RollDice()
 	FRandomStream Stream;
 	Stream.GenerateNewSeed();
 	mDicePool->RollAll(Stream);
+
+	// 새로 굴리면 이전 선택은 의미가 없어진다(값이 바뀜) → 선택/대기 모드 초기화.
+	mSelectedDiceIndices.Reset();
+	mPendingStepValue = -1;
+	mPendingAttackDamage = -1;
+
 	PushDiceUIs();
 }
 
@@ -492,31 +555,48 @@ void UCombatUIAdapter::PushDiceUIs() const
 
 	const TArray<TObjectPtr<UDiceModel>>& Dice = mDicePool->GetDice();
 
+	// 선택이 수용량까지 찼는지(꽉 참) — 찼으면 더 못 올리는 비선택·미사용 주사위를 어둡게(dim) 표시.
+	const bool bSelectionFull = (mSelectedSkillDiceCapacity > 0) && (mSelectedDiceIndices.Num() >= mSelectedSkillDiceCapacity);
+
 	TArray<FDiceSlotUI> Views;
 	Views.Reserve(Dice.Num());
 
-	for (const TObjectPtr<UDiceModel>& DicePtr : Dice)
+	int32 SelectedSum = 0;
+	for (int32 DiceIndex = 0; DiceIndex < Dice.Num(); ++DiceIndex)
 	{
+		const UDiceModel* DicePtr = Dice[DiceIndex];
 		if (DicePtr == nullptr)
 		{
 			continue;
 		}
+
+		const bool bSelected = mSelectedDiceIndices.Contains(DiceIndex);
 
 		FDiceSlotUI View;
 		View.mDiceId = DicePtr->GetSourceDiceId();
 		View.mResultValue = DicePtr->GetCurrentValue();
 		View.mRolledFaceIndex = DicePtr->GetRolledFaceIndex();
 		View.mIsRolled = DicePtr->IsRolled();
+		View.mIsSelected = bSelected;                                                   // 선택됨 = 빛남
 		View.mIsUsed = DicePtr->IsUsed();
+		View.mIsDimmed = bSelectionFull && (bSelected == false) && (View.mIsUsed == false);   // 꽉 참 + 비선택 = 어둡게
 		View.mRarityColor = RDUIDice::GetDiceRarityColor(DicePtr->GetRarity());
 		View.mRarityText = RDUIDice::GetDiceRarityText(DicePtr->GetRarity());
 		View.mFaceCount = DicePtr->GetFaceCount();   // 종류 표시(d6/d20 등)용 면 수
 		View.mFaceValues = DicePtr->GetFaceValues();
 		View.mFaceTextures = DicePtr->GetFaceTextures();
+
+		if (bSelected && DicePtr->IsRolled())
+		{
+			SelectedSum += DicePtr->GetCurrentValue();
+		}
+
 		Views.Add(MoveTemp(View));
 	}
 
+	// SetDiceUIs 먼저(뷰 캐시 갱신) → SetSelectedDice(그 캐시에서 id·눈금값을 모아 OnDiceSelectionChanged로 알림).
 	mUIModel->SetDiceUIs(Views);
+	mUIModel->SetSelectedDice(mSelectedDiceIndices, SelectedSum);
 }
 
 /** @brief 스킬/주사위/이동 pending 상태와 하이라이트를 모두 초기화하고 UI 선택 강조 해제를 알린다. */
@@ -527,7 +607,8 @@ void UCombatUIAdapter::ClearPendingAction()
 	mMovePending = false;
 	mPendingStepValue = -1;
 	mStepStage = 0;
-	mPendingDiceIndex = INDEX_NONE;
+	mSelectedDiceIndices.Reset();
+	mSelectedSkillDiceCapacity = 0;
 	mAimTiles.Reset();
 	mAttackTargetTile = FTileIndex::Invalid;
 	ClearAllHighlight();

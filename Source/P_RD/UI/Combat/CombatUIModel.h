@@ -31,6 +31,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatQueueNodeResolved, FCombatQ
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatActionResolved);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatCommand, ECombatInputType, Type, int32, IntPayload);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatWorldTouch, FVector2D, ScreenPosition, bool, bLongPress);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDiceSelectionChanged, const TArray<FPrimaryAssetId>&, DiceIds, const TArray<int32>&, Values);
 
 /** @brief 전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다. */
 UCLASS(BlueprintType)
@@ -51,6 +52,11 @@ public:
 	/** @brief 스킬/액션이 확정·취소되어 빌드가 끝났음을 알림. 위젯은 스킬/주사위 선택 강조를 푼다. */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
 	FOnCombatActionResolved OnActionResolved;
+
+	/** @brief 주사위를 넣거나 취소할 때마다 현재 올린 주사위의 id+눈금값을 보낸다. UI가 바인딩해 강조/사정거리 표시에 쓴다. */
+	// 합산·사정거리 재계산은 액션이 이 값으로 직접 한다(뷰모델은 전달만).
+	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
+	FOnDiceSelectionChanged OnDiceSelectionChanged;
 
 	/* ───────── 게임플레이가 구독하는 입력(의도) ───────── */
 	// UI는 Request*()로 의도만 보낸다. 게임플레이가 아래 델리게이트를 구독해 실제 처리해야 한다.

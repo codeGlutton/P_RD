@@ -41,6 +41,9 @@ public:
 	/** @brief 해당 index 주사위의 현재 굴림값(안 굴렸으면 0). */
 	int32 GetRolledDiceValue(int32 DiceIndex) const;
 
+	/** @brief 해당 index 주사위의 런 보유 식별자(범위 밖/없으면 무효 id). 액션·UI 델리게이트가 주사위를 식별하는 데 쓴다. */
+	FPrimaryAssetId GetDiceId(int32 DiceIndex) const;
+
 private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UDiceModel>> mDice;

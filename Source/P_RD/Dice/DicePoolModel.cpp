@@ -97,3 +97,12 @@ int32 UDicePoolModel::GetRolledDiceValue(int32 DiceIndex) const
 	const UDiceModel* Dice = mDice[DiceIndex];
 	return Dice->IsRolled() ? Dice->GetCurrentValue() : 0;
 }
+
+FPrimaryAssetId UDicePoolModel::GetDiceId(int32 DiceIndex) const
+{
+	if (mDice.IsValidIndex(DiceIndex) == false || mDice[DiceIndex] == nullptr)
+	{
+		return FPrimaryAssetId();
+	}
+	return mDice[DiceIndex]->GetSourceDiceId();
+}

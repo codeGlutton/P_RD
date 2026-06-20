@@ -180,6 +180,10 @@ private:
 	UFUNCTION()
 	void HandleCombatActionResolved();
 
+	/** @brief 주사위를 넣거나 취소할 때마다 현재 올린 주사위의 id+눈금값을 받아 배치 안내 텍스트를 갱신한다. */
+	UFUNCTION()
+	void HandleDiceSelectionChanged(const TArray<FPrimaryAssetId>& DiceIds, const TArray<int32>& Values);
+
 	/** @brief 우측 MOVE 버튼 클릭 → 이동 모드 진입 의도(RequestMove). */
 	UFUNCTION()
 	void HandleMoveButtonClicked();
@@ -362,8 +366,11 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UIndexedButtonWidget>> mSkillInputButtons;
 
-	/** @brief 스킬-주사위 배치 후보로 선택된 주사위 index */
+	/** @brief 마지막으로 누른 주사위 index(빛남은 FDiceViewData.mIsSelected가 담당, 이 값은 보조용). */
 	int32 mSelectedDiceIndex = INDEX_NONE;
+
+	/** @brief 스킬 빌드에 올린 주사위들의 눈금값(OnDiceSelectionChanged로 받음). 배치 안내 텍스트의 개수·합계 표시용. */
+	TArray<int32> mSelectedDiceValues;
 
 	/** @brief 현재 선택된 스킬 index */
 	int32 mSelectedSkillIndex = INDEX_NONE;

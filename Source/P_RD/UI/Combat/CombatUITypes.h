@@ -67,7 +67,8 @@ struct FDiceSlotUI
 	UPROPERTY(BlueprintReadOnly) int32 mResultValue = 0;     // 굴림 결과. 0 = 아직 안 굴림
 	UPROPERTY(BlueprintReadOnly) int32 mRolledFaceIndex = INDEX_NONE;   // 실제 굴러진 물리 면 index(0-base)
 	UPROPERTY(BlueprintReadOnly) bool mIsRolled = false;
-	UPROPERTY(BlueprintReadOnly) bool mIsSelected = false;   // 스킬 빌드에 선택됨
+	UPROPERTY(BlueprintReadOnly) bool mIsSelected = false;   // 스킬 빌드에 선택됨(빛남)
+	UPROPERTY(BlueprintReadOnly) bool mIsDimmed = false;     // 선택이 꽉 차 더 못 올리는 비선택 주사위(어둡게)
 	UPROPERTY(BlueprintReadOnly) bool mIsUsed = false;       // 이번 턴에 이미 쓴 주사위(턴 종료/다음 턴 시작까지 잠금)
 	UPROPERTY(BlueprintReadOnly) int32 mFaceCount = 6;       // 면 수(종류 표시용: 2=동전 … 20=d20)
 	UPROPERTY(BlueprintReadOnly) TArray<int32> mFaceValues;  // 각 물리 면에 적힌 실제 값

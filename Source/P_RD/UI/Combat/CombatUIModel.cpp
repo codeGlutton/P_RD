@@ -90,6 +90,23 @@ void UCombatUIModel::SetSelectedDice(const TArray<int32>& SelectedIndices, int32
 {
 	mSelectedDiceIndices = SelectedIndices;
 	mSelectedDiceSum = SelectedSum;
+
+	// 올린 주사위의 id/눈금값을 모아 함께 알린다(UI·액션이 index→데이터 매핑 없이 바로 쓰게).
+	// mDiceUIs는 직전 SetDiceUIs로 갱신돼 있어야 한다(어댑터가 SetDiceUIs→SetSelectedDice 순으로 호출).
+	TArray<FPrimaryAssetId> SelectedIds;
+	TArray<int32> SelectedValues;
+	SelectedIds.Reserve(SelectedIndices.Num());
+	SelectedValues.Reserve(SelectedIndices.Num());
+	for (int32 Index : SelectedIndices)
+	{
+		if (mDiceUIs.IsValidIndex(Index))
+		{
+			SelectedIds.Add(mDiceUIs[Index].mDiceId);
+			SelectedValues.Add(mDiceUIs[Index].mResultValue);
+		}
+	}
+	OnDiceSelectionChanged.Broadcast(SelectedIds, SelectedValues);
+
 	OnUIChanged.Broadcast(ECombatUIDomain::Dice);
 }
 

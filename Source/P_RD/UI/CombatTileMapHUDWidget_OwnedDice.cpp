@@ -47,6 +47,7 @@ void UCombatTileMapHUDWidget::BindCombatUIModel(UCombatUIModel* InUIModel)
 		mCombatUIModel->OnQueueNodeResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
 		mCombatUIModel->OnUIChanged.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatUIChanged);
 		mCombatUIModel->OnActionResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatActionResolved);
+		mCombatUIModel->OnDiceSelectionChanged.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleDiceSelectionChanged);
 	}
 
 	mCombatUIModel = InUIModel;
@@ -59,6 +60,8 @@ void UCombatTileMapHUDWidget::BindCombatUIModel(UCombatUIModel* InUIModel)
 		mCombatUIModel->OnUIChanged.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatUIChanged);
 		// 액션 확정/취소 시 스킬·주사위 선택 강조를 푼다.
 		mCombatUIModel->OnActionResolved.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatActionResolved);
+		// 주사위 넣기/취소마다 올린 주사위 id+눈금값을 받아 배치 안내 텍스트를 갱신한다.
+		mCombatUIModel->OnDiceSelectionChanged.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleDiceSelectionChanged);
 		// 이미 어댑터가 push해 둔 현재 값을 즉시 반영(구독 전 발생분 보강).
 		RefreshCombatStatusBar();
 	}
@@ -84,6 +87,8 @@ void UCombatTileMapHUDWidget::RefreshDiceViewsFromRunData()
 			DiceView.mResultValue = SlotView.mResultValue;
 			DiceView.mRolledFaceIndex = SlotView.mRolledFaceIndex;
 			DiceView.mIsRolled = SlotView.mIsRolled;
+			DiceView.mIsSelected = SlotView.mIsSelected;
+			DiceView.mIsDimmed = SlotView.mIsDimmed;
 			DiceView.mIsUsed = SlotView.mIsUsed;
 			DiceView.mFaceCount = SlotView.mFaceCount;
 			DiceView.mFaceValues = SlotView.mFaceValues;
@@ -242,10 +247,17 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 
 		FLinearColor DiceColor = DiceView.mIsRolled ? RarityColor : PendingColor;
 		float DiceScale = DiceView.mIsRolled ? 0.80f : 0.72f;
-		if (DiceIndex == mSelectedDiceIndex)
+		if (DiceView.mIsSelected)
 		{
+			// 스킬에 올린(선택된) 주사위: 밝게 빛남(여러 개 동시 가능).
 			DiceColor = FLinearColor(1.0f, 0.82f, 0.30f, 1.0f);
 			DiceScale = 1.02f;
+		}
+		else if (DiceView.mIsDimmed)
+		{
+			// 선택이 꽉 차 더 못 올리는 비선택 주사위: 어둡게.
+			DiceColor = FLinearColor(DiceColor.R * 0.4f, DiceColor.G * 0.4f, DiceColor.B * 0.4f, 0.45f);
+			DiceScale = 0.70f;
 		}
 		if (DiceView.mIsUsed)
 		{
@@ -299,9 +311,13 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 		{
 			if (UIndexedButtonWidget* OwnedDiceCardWidget = mOwnedDiceCardWidgets[DiceIndex])
 			{
-				FLinearColor CardColor = DiceIndex == mSelectedDiceIndex
+				FLinearColor CardColor = DiceView.mIsSelected
 					? FLinearColor(1.0f, 0.78f, 0.20f, 0.34f)
 					: FLinearColor(1.0f, 1.0f, 1.0f, 0.01f);
+				if (DiceView.mIsDimmed)
+				{
+					CardColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.30f);   // 꽉 참: 비선택 카드 어둡게
+				}
 				if (DiceView.mIsUsed)
 				{
 					CardColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.60f);   // 쓴 주사위: 어두운 오버레이
