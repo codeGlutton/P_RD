@@ -45,7 +45,6 @@ public:
 
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;
-	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	virtual void NativeDestruct() override;
 
 	UFUNCTION(BlueprintNativeEvent, Category = "UI|Cinematic")
@@ -70,8 +69,9 @@ private:
 	void FinishFadeToBlack();
 	void SetLoadingWaitLayerOpacity(float Opacity);
 	void StopCinematicMedia();
-	/** @brief 영상 실제 해상도 기준으로 화면을 꽉 채우되 비율을 유지하고 넘치는 부분만 잘라내는(cover) 크기를 매 틱 갱신한다. */
-	void UpdateCinematicVideoCoverSize();
+	/** @brief 영상 실제 해상도 기준으로 화면을 꽉 채우되 비율을 유지하고 넘치는 부분만 잘라내는(cover) 박스 크기를 계산한다.
+	 *  SBox 크기 어트리뷰트 람다에서 매 레이아웃마다 호출되므로 별도 틱 없이 해상도 변화에 반응한다. */
+	FVector2D CalcCinematicVideoCoverSize() const;
 	void StartDefaultCinematicTimer(float DurationSeconds);
 	void ClearDefaultCinematicTimer();
 	void ClearCinematicFadeTimer();

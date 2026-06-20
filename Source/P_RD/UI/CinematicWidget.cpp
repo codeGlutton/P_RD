@@ -49,6 +49,14 @@ TSharedRef<SWidget> UCinematicWidget::RebuildWidget()
 			.Clipping(EWidgetClipping::ClipToBounds)
 			[
 				SAssignNew(mCinematicVideoCoverBox, SBox)
+				.WidthOverride(TAttribute<FOptionalSize>::CreateLambda([this]()
+				{
+					return FOptionalSize(CalcCinematicVideoCoverSize().X);
+				}))
+				.HeightOverride(TAttribute<FOptionalSize>::CreateLambda([this]()
+				{
+					return FOptionalSize(CalcCinematicVideoCoverSize().Y);
+				}))
 				[
 					SAssignNew(mCinematicVideoImage, SImage)
 					.Image(&mCinematicVideoBrush)
@@ -95,27 +103,22 @@ void UCinematicWidget::NativeDestruct()
 	Super::NativeDestruct();
 }
 
-/** @details 영상 표시 영역은 매 프레임 화면 크기/영상 해상도에 맞춰 cover 크기를 다시 계산해야 하므로 틱에서 갱신한다. */
-void UCinematicWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
-{
-	Super::NativeTick(MyGeometry, InDeltaTime);
-	UpdateCinematicVideoCoverSize();
-}
-
 /** @details cover = 화면을 완전히 덮는 최소 배율(가로/세로 배율 중 큰 값)로 영상 박스를 키운다.
  *  같은 배율을 양 축에 적용하므로 비율이 보존되고, 넘친 부분은 클립 박스가 잘라낸다.
- *  영상 실제 해상도(미디어 텍스처)를 우선 쓰고, 아직 없으면 브러시 기본 크기를 폴백으로 쓴다. */
-void UCinematicWidget::UpdateCinematicVideoCoverSize()
+ *  영상 실제 해상도(미디어 텍스처)를 우선 쓰고, 아직 없으면 브러시 기본 크기를 폴백으로 쓴다.
+ *  SBox WidthOverride/HeightOverride 어트리뷰트 람다가 매 레이아웃마다 호출 → 별도 틱 불필요. */
+FVector2D UCinematicWidget::CalcCinematicVideoCoverSize() const
 {
-	if (mCinematicVideoClipBox.IsValid() == false || mCinematicVideoCoverBox.IsValid() == false)
+	const FVector2D FallbackSize = mCinematicVideoBrush.ImageSize;
+	if (mCinematicVideoClipBox.IsValid() == false)
 	{
-		return;
+		return FallbackSize;
 	}
 
 	const FVector2D ScreenSize = mCinematicVideoClipBox->GetCachedGeometry().GetLocalSize();
 	if (ScreenSize.X <= 0.0f || ScreenSize.Y <= 0.0f)
 	{
-		return;
+		return FallbackSize;
 	}
 
 	FVector2D VideoSize = mCinematicVideoBrush.ImageSize;
@@ -130,12 +133,12 @@ void UCinematicWidget::UpdateCinematicVideoCoverSize()
 	}
 	if (VideoSize.X <= 0.0f || VideoSize.Y <= 0.0f)
 	{
-		return;
+		return ScreenSize;
 	}
 
+	// 화면을 완전히 덮는 최소 배율(=가로/세로 배율 중 큰 값). 양 축에 같은 배율 → 비율 보존, 넘침은 클립박스가 크롭.
 	const float CoverScale = FMath::Max(ScreenSize.X / VideoSize.X, ScreenSize.Y / VideoSize.Y);
-	mCinematicVideoCoverBox->SetWidthOverride(VideoSize.X * CoverScale);
-	mCinematicVideoCoverBox->SetHeightOverride(VideoSize.Y * CoverScale);
+	return VideoSize * CoverScale;
 }
 
 void UCinematicWidget::PlayCinematic(FOnEndCinematicAnimation Callback)
