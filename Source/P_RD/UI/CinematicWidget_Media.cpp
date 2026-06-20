@@ -60,7 +60,6 @@ bool UCinematicWidget::PlayCinematicVideo()
 
 	// cover 비율 기준이 되는 영상 실제 해상도를 파일에서 미리 확정한다(미디어 텍스처/플레이어 해상도는 첫 프레임 전까지 0이라 폴백 시 정사각이 16:9로 눌림).
 	mCinematicVideoNativeSize = ReadCinematicVideoFileDimensions(VideoPath);
-	UE_LOG(LogRD, Warning, TEXT("[RDIntroCover] native video size = %.0f x %.0f (path=%s)"), mCinematicVideoNativeSize.X, mCinematicVideoNativeSize.Y, *VideoPath);
 
 	mCinematicMediaPlayer->Rewind();
 	mCinematicMediaPlayer->Close();
