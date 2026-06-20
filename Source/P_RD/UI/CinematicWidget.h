@@ -92,7 +92,7 @@ protected:
 	 * 같은 폴더를 등록해 둔다.
 	 */
 	UPROPERTY(Category = "UI|Cinematic", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "Cinematic Video Path"))
-	FString mCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/MS_IntroCinematic_01.mp4");
+	FString mCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/MS_IntroCinematic_02.mp4");
 
 	/**
 	 * @brief 영상 재생 이벤트가 들어오지 않았을 때 인트로가 멈추지 않도록 기다릴 기본 시간
