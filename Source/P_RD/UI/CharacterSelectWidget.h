@@ -57,6 +57,9 @@ protected:
 	/** @brief WBP 바인딩/버튼 스타일/카드 목록을 현재 GameMode 상태에 맞춰 초기화한다. */
 	void NativeConstruct() override;
 
+	/** @brief 뷰포트/DPI 레이아웃 확정 뒤에도 클래스 배경 일러스트 cover 배치를 유지한다. */
+	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+
 	/** @brief 화면 이탈 시 버튼/카드 델리게이트를 해제해 재Construct 중복 호출을 막는다. */
 	void NativeDestruct() override;
 
@@ -111,7 +114,10 @@ private:
 	/** @brief 선택 직업에 맞는 액션 일러스트만 보이고 구형 포트레이트 슬롯은 fallback으로 사용한다. */
 	void SyncSelectedCharacterArt(EPlayerJobType JobType);
 
-	/** @brief 직업별 SVN 일러스트 PNG를 런타임 로드한다. 한 번 로드한 텍스처는 캐시해 재사용한다. */
+	/** @brief 현재 선택된 직업 액션 일러스트를 화면 전체 cover 방식으로 중앙 배치한다. */
+	void FitSelectedCharacterArtToViewport() const;
+
+	/** @brief 직업별 SVN Texture2D uasset을 런타임 로드한다. 한 번 로드한 텍스처는 캐시해 재사용한다. */
 	// [합의필요] SVN 임포트 uasset 경로 계약은 아트 교체/패키징 규칙과 함께 갱신되어야 한다.
 	UTexture2D* GetOrLoadJobIllustration(EPlayerJobType JobType);
 

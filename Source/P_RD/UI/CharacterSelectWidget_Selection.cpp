@@ -9,23 +9,22 @@
 #include "Engine/GameViewportClient.h"
 #include "Engine/World.h"
 #include "GameMode/FrontendGameMode.h"
+#include "Layout/Geometry.h"
 #include "UI/CharacterSelectWidgetPrivate.h"
 
 namespace
 {
-	constexpr float GClassSelectIllustrationAspect = 16.0f / 9.0f;
-
-	void FitClassActionImageSlotToViewport(const UCharacterSelectWidget* Owner, UImage* Image)
+	FVector2D ResolveClassSelectViewportSize(const UCharacterSelectWidget* Owner)
 	{
-		if (Owner == nullptr || Image == nullptr)
+		if (Owner == nullptr)
 		{
-			return;
+			return FVector2D::ZeroVector;
 		}
 
-		UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Image->Slot);
-		if (CanvasSlot == nullptr)
+		const FVector2D CachedWidgetSize = Owner->GetCachedGeometry().GetLocalSize();
+		if (CachedWidgetSize.X > 0.0f && CachedWidgetSize.Y > 0.0f)
 		{
-			return;
+			return CachedWidgetSize;
 		}
 
 		const UWorld* World = Owner->GetWorld();
@@ -35,6 +34,21 @@ namespace
 		{
 			GameViewport->GetViewportSize(OUT ViewportSize);
 		}
+		return ViewportSize;
+	}
+
+	void FitClassActionImageSlotToViewport(const UCharacterSelectWidget* Owner, UImage* Image, float ImageAspect)
+	{
+		if (Owner == nullptr || Image == nullptr)
+		{
+			return;
+		}
+		if (ImageAspect <= UE_SMALL_NUMBER)
+		{
+			ImageAspect = 1.0f;
+		}
+
+		const FVector2D ViewportSize = ResolveClassSelectViewportSize(Owner);
 		if (ViewportSize.X <= 0.0f || ViewportSize.Y <= 0.0f)
 		{
 			return;
@@ -42,21 +56,40 @@ namespace
 
 		const float ViewportAspect = ViewportSize.X / ViewportSize.Y;
 		FVector2D TargetSize;
-		if (ViewportAspect < GClassSelectIllustrationAspect)
+		if (ViewportAspect < ImageAspect)
 		{
 			TargetSize.Y = ViewportSize.Y;
-			TargetSize.X = ViewportSize.Y * GClassSelectIllustrationAspect;
+			TargetSize.X = ViewportSize.Y * ImageAspect;
 		}
 		else
 		{
 			TargetSize.X = ViewportSize.X;
-			TargetSize.Y = ViewportSize.X / GClassSelectIllustrationAspect;
+			TargetSize.Y = ViewportSize.X / ImageAspect;
 		}
 
-		CanvasSlot->SetAnchors(FAnchors(0.5f, 0.5f));
-		CanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));
-		CanvasSlot->SetPosition(FVector2D::ZeroVector);
-		CanvasSlot->SetSize(TargetSize);
+		Image->SetDesiredSizeOverride(TargetSize);
+		Image->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+		Image->SetRenderTransform(FWidgetTransform());
+
+		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Image->Slot))
+		{
+			CanvasSlot->SetAnchors(FAnchors(0.5f, 0.5f));
+			CanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+			CanvasSlot->SetPosition(FVector2D::ZeroVector);
+			CanvasSlot->SetAutoSize(false);
+			CanvasSlot->SetSize(TargetSize);
+			return;
+		}
+
+		const FVector2D CurrentImageSize = Image->GetCachedGeometry().GetLocalSize();
+		if (CurrentImageSize.X > 0.0f && CurrentImageSize.Y > 0.0f)
+		{
+			const float RenderScale = FMath::Max(TargetSize.X / CurrentImageSize.X, TargetSize.Y / CurrentImageSize.Y);
+			if (RenderScale > 0.0f)
+			{
+				Image->SetRenderTransform(FWidgetTransform(FVector2D::ZeroVector, FVector2D(RenderScale, RenderScale), FVector2D::ZeroVector, 0.0f));
+			}
+		}
 	}
 }
 
@@ -246,7 +279,7 @@ void UCharacterSelectWidget::SyncSelectedCharacterArt(EPlayerJobType JobType)
 	/*
 	 * 직업별 액션 이미지는 WBP에 이미 배치돼 있지만 브러시가 비어 있다.
 	 * 아트 원본은 팀 정책상 git이 아니라 SVN(Content/SVN)에만 있으므로, 타이틀 로고와 동일하게
-	 * 런타임에 PNG를 로드해 각 이미지에 채우고(캐시), 선택된 직업의 이미지만 표시한다.
+	 * 런타임에 Texture2D uasset을 로드해 각 이미지에 채우고(캐시), 선택된 직업의 이미지만 표시한다.
 	 */
 	const auto ApplyJobImage = [this](UImage* Image, EPlayerJobType ImageJob, EPlayerJobType SelectedJob)
 	{
@@ -261,10 +294,13 @@ void UCharacterSelectWidget::SyncSelectedCharacterArt(EPlayerJobType JobType)
 			return;
 		}
 
-		FitClassActionImageSlotToViewport(this, Image);
-
 		if (UTexture2D* Illustration = GetOrLoadJobIllustration(ImageJob))
 		{
+			const float IllustrationAspect = Illustration->GetSizeY() > 0
+				? static_cast<float>(Illustration->GetSizeX()) / static_cast<float>(Illustration->GetSizeY())
+				: 1.0f;
+			FitClassActionImageSlotToViewport(this, Image, IllustrationAspect);
+
 			FSlateBrush Brush;
 			Brush.DrawAs = ESlateBrushDrawType::Image;
 			Brush.ImageSize = FVector2D(
@@ -322,6 +358,41 @@ void UCharacterSelectWidget::SyncSelectedCharacterArt(EPlayerJobType JobType)
 			mSelectedCharacterPortraitFallbackText->SetVisibility(ESlateVisibility::HitTestInvisible);
 		}
 	}
+}
+
+/** @brief 선택된 직업 액션 일러스트를 화면 전체 cover 방식으로 중앙 배치한다. */
+void UCharacterSelectWidget::FitSelectedCharacterArtToViewport() const
+{
+	const FFrontendCharacterOption* SelectedOption = GetSelectedCharacterOption();
+	if (SelectedOption == nullptr)
+	{
+		return;
+	}
+
+	UImage* SelectedImage = nullptr;
+	switch (SelectedOption->mJobType)
+	{
+	case EPlayerJobType::Knight:
+		SelectedImage = mKnightActionImage;
+		break;
+	case EPlayerJobType::Archer:
+		SelectedImage = mRogueActionImage;
+		break;
+	case EPlayerJobType::Mage:
+		SelectedImage = mMageActionImage;
+		break;
+	default:
+		break;
+	}
+
+	if (SelectedImage == nullptr || SelectedImage->GetVisibility() == ESlateVisibility::Collapsed)
+	{
+		return;
+	}
+
+	const FVector2D BrushSize = SelectedImage->GetBrush().ImageSize;
+	const float ImageAspect = BrushSize.Y > 0.0f ? BrushSize.X / BrushSize.Y : 1.0f;
+	FitClassActionImageSlotToViewport(this, SelectedImage, ImageAspect);
 }
 
 /** @brief 직업별 일러스트 SoftObject를 필요 시 동기 로드하고 UPROPERTY 캐시에 보관한다. */

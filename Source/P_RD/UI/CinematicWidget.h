@@ -13,10 +13,9 @@
 
 #include "CinematicWidget.generated.h"
 
-class SImage;
 class SBorder;
-class SBox;
 class STextBlock;
+class SWidget;
 class UCinematicWidget;
 class UFileMediaSource;
 class UMediaPlayer;
@@ -69,9 +68,6 @@ private:
 	void FinishFadeToBlack();
 	void SetLoadingWaitLayerOpacity(float Opacity);
 	void StopCinematicMedia();
-	/** @brief 영상 실제 해상도 기준으로 화면을 꽉 채우되 비율을 유지하고 넘치는 부분만 잘라내는(cover) 박스 크기를 계산한다.
-	 *  SBox 크기 어트리뷰트 람다에서 매 레이아웃마다 호출되므로 별도 틱 없이 해상도 변화에 반응한다. */
-	FVector2D CalcCinematicVideoCoverSize() const;
 	void StartDefaultCinematicTimer(float DurationSeconds);
 	void ClearDefaultCinematicTimer();
 	void ClearCinematicFadeTimer();
@@ -98,7 +94,7 @@ protected:
 	 * 같은 폴더를 등록해 둔다.
 	 */
 	UPROPERTY(Category = "UI|Cinematic", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "Cinematic Video Path"))
-	FString mCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/MS_IntroCinematic_02.mp4");
+	FString mCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/hero_loading_intro4_1280_3s.mp4");
 
 	/**
 	 * @brief 영상 재생 이벤트가 들어오지 않았을 때 인트로가 멈추지 않도록 기다릴 기본 시간
@@ -135,11 +131,7 @@ private:
 	FSlateBrush mCinematicVideoBrush;
 	/** @brief 미디어가 열릴 때 플레이어에서 읽은 영상 실제 해상도(타이밍 안전한 cover 비율 기준). 0이면 미확정. */
 	FVector2D mCinematicVideoNativeSize = FVector2D::ZeroVector;
-	TSharedPtr<SImage> mCinematicVideoImage;
-	/** @brief 화면을 채우고 넘침을 잘라내는 클립 컨테이너(자식을 중앙 정렬하고 경계 밖을 클리핑). */
-	TSharedPtr<SBox> mCinematicVideoClipBox;
-	/** @brief cover 스케일로 영상 비율을 유지한 채 화면보다 크게 잡히는 실제 영상 박스(넘친 부분은 클립박스가 잘라냄). */
-	TSharedPtr<SBox> mCinematicVideoCoverBox;
+	TSharedPtr<SWidget> mCinematicVideoImage;
 	TSharedPtr<SBorder> mLoadingWaitLayer;
 	TSharedPtr<STextBlock> mLoadingWaitText;
 	FTimerHandle mDefaultCinematicTimerHandle;

@@ -3,14 +3,89 @@
 #include "UI/CinematicWidget.h"
 
 #include "MediaTexture.h"
+#include "Rendering/DrawElements.h"
 #include "Styling/CoreStyle.h"
-#include "Widgets/Images/SImage.h"
 #include "Widgets/Layout/SBorder.h"
-#include "Widgets/Layout/SBox.h"
 #include "Widgets/SNullWidget.h"
 #include "Widgets/SBoxPanel.h"
+#include "Widgets/SLeafWidget.h"
 #include "Widgets/SOverlay.h"
 #include "Widgets/Text/STextBlock.h"
+
+namespace
+{
+	class SCinematicCoverImage : public SLeafWidget
+	{
+	public:
+		SLATE_BEGIN_ARGS(SCinematicCoverImage)
+			: _Image(nullptr)
+		{
+		}
+
+			SLATE_ARGUMENT(const FSlateBrush*, Image)
+			SLATE_ATTRIBUTE(FVector2D, NativeSize)
+		SLATE_END_ARGS()
+
+		void Construct(const FArguments& InArgs)
+		{
+			Image = InArgs._Image;
+			NativeSize = InArgs._NativeSize;
+			SetCanTick(false);
+		}
+
+		virtual FVector2D ComputeDesiredSize(float) const override
+		{
+			return FVector2D::ZeroVector;
+		}
+
+		virtual int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect,
+			FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override
+		{
+			if (Image == nullptr || Image->DrawAs == ESlateBrushDrawType::NoDrawType)
+			{
+				return LayerId;
+			}
+
+			const FVector2D ScreenSize = AllottedGeometry.GetLocalSize();
+			if (ScreenSize.X <= 0.0f || ScreenSize.Y <= 0.0f)
+			{
+				return LayerId;
+			}
+
+			FVector2D VideoSize = NativeSize.Get();
+			if (VideoSize.X <= 0.0f || VideoSize.Y <= 0.0f)
+			{
+				VideoSize = Image->ImageSize;
+			}
+			if (VideoSize.X <= 0.0f || VideoSize.Y <= 0.0f)
+			{
+				VideoSize = FVector2D(1.0f, 1.0f);
+			}
+
+			const float CoverScale = FMath::Max(ScreenSize.X / VideoSize.X, ScreenSize.Y / VideoSize.Y);
+			const FVector2D DrawSize = VideoSize * CoverScale;
+			const FVector2D DrawOffset = (ScreenSize - DrawSize) * 0.5f;
+			const ESlateDrawEffect DrawEffects = ShouldBeEnabled(bParentEnabled) ? ESlateDrawEffect::None : ESlateDrawEffect::DisabledEffect;
+
+			OutDrawElements.PushClip(FSlateClippingZone(AllottedGeometry));
+			FSlateDrawElement::MakeBox(
+				OutDrawElements,
+				LayerId,
+				AllottedGeometry.ToPaintGeometry(DrawSize, FSlateLayoutTransform(DrawOffset)),
+				Image,
+				DrawEffects,
+				InWidgetStyle.GetColorAndOpacityTint() * Image->GetTint(InWidgetStyle)
+			);
+			OutDrawElements.PopClip();
+
+			return LayerId;
+		}
+
+	private:
+		const FSlateBrush* Image = nullptr;
+		TAttribute<FVector2D> NativeSize;
+	};
+}
 
 UCinematicWidget::UCinematicWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -24,7 +99,10 @@ TSharedRef<SWidget> UCinematicWidget::RebuildWidget()
 
 	mCinematicVideoBrush = FSlateBrush();
 	mCinematicVideoBrush.DrawAs = ESlateBrushDrawType::Image;
-	mCinematicVideoBrush.ImageSize = FVector2D(1280.0f, 720.0f);
+	mCinematicVideoNativeSize = ReadCinematicVideoFileDimensions(ResolveCinematicVideoPath());
+	mCinematicVideoBrush.ImageSize = mCinematicVideoNativeSize.X > 0.0f && mCinematicVideoNativeSize.Y > 0.0f
+		? mCinematicVideoNativeSize
+		: FVector2D(640.0f, 640.0f);
 	mCinematicVideoBrush.SetResourceObject(mCinematicMediaTexture);
 
 	return SNew(SOverlay)
@@ -40,28 +118,15 @@ TSharedRef<SWidget> UCinematicWidget::RebuildWidget()
 		.HAlign(HAlign_Fill)
 		.VAlign(VAlign_Fill)
 		[
-			// 다양한 해상도에서 비율을 유지한 채 화면을 꽉 채우고(cover) 넘치는 부분만 잘라낸다.
-			// 클립 박스가 화면을 채우며 자식을 중앙 정렬·클리핑하고, cover 박스는 영상 실제 비율로
-			// 화면보다 크게 잡힌다(넘친 위/아래 또는 좌/우가 잘림). 크기는 NativeTick에서 갱신.
-			SAssignNew(mCinematicVideoClipBox, SBox)
-			.HAlign(HAlign_Center)
-			.VAlign(VAlign_Center)
+			// 화면 전체에 직접 그리되 원본 비율을 유지한 cover rect를 계산한다.
+			// SImage는 할당 영역에 리소스를 그대로 늘려 그릴 수 있어 Android에서 정사각 영상이 4:3으로 찌그러졌다.
+			SAssignNew(mCinematicVideoImage, SCinematicCoverImage)
+			.Image(&mCinematicVideoBrush)
+			.NativeSize(TAttribute<FVector2D>::CreateLambda([this]()
+			{
+				return mCinematicVideoNativeSize;
+			}))
 			.Clipping(EWidgetClipping::ClipToBounds)
-			[
-				SAssignNew(mCinematicVideoCoverBox, SBox)
-				.WidthOverride(TAttribute<FOptionalSize>::CreateLambda([this]()
-				{
-					return FOptionalSize(CalcCinematicVideoCoverSize().X);
-				}))
-				.HeightOverride(TAttribute<FOptionalSize>::CreateLambda([this]()
-				{
-					return FOptionalSize(CalcCinematicVideoCoverSize().Y);
-				}))
-				[
-					SAssignNew(mCinematicVideoImage, SImage)
-					.Image(&mCinematicVideoBrush)
-				]
-			]
 		]
 		+ SOverlay::Slot()
 		.HAlign(HAlign_Fill)
@@ -101,44 +166,6 @@ void UCinematicWidget::NativeDestruct()
 	StopCinematicMedia();
 
 	Super::NativeDestruct();
-}
-
-/** @details cover = 화면을 완전히 덮는 최소 배율(가로/세로 배율 중 큰 값)로 영상 박스를 키운다.
- *  같은 배율을 양 축에 적용하므로 비율이 보존되고, 넘친 부분은 클립 박스가 잘라낸다.
- *  영상 실제 해상도(미디어 텍스처)를 우선 쓰고, 아직 없으면 브러시 기본 크기를 폴백으로 쓴다.
- *  SBox WidthOverride/HeightOverride 어트리뷰트 람다가 매 레이아웃마다 호출 → 별도 틱 불필요. */
-FVector2D UCinematicWidget::CalcCinematicVideoCoverSize() const
-{
-	if (mCinematicVideoClipBox.IsValid() == false)
-	{
-		return mCinematicVideoBrush.ImageSize;
-	}
-
-	const FVector2D ScreenSize = mCinematicVideoClipBox->GetCachedGeometry().GetLocalSize();
-	if (ScreenSize.X <= 0.0f || ScreenSize.Y <= 0.0f)
-	{
-		return mCinematicVideoBrush.ImageSize;
-	}
-
-	// 영상 실제 비율 기준: (1) 미디어가 열릴 때 플레이어에서 받은 네이티브 해상도(타이밍 안전) → (2) 미디어 텍스처 → (3) 미상이면 화면크기(=꽉 채움, 16:9로 눌리지 않음).
-	FVector2D VideoSize = mCinematicVideoNativeSize;
-	if ((VideoSize.X <= 0.0f || VideoSize.Y <= 0.0f) && mCinematicMediaTexture != nullptr)
-	{
-		const float TextureWidth = static_cast<float>(mCinematicMediaTexture->GetWidth());
-		const float TextureHeight = static_cast<float>(mCinematicMediaTexture->GetHeight());
-		if (TextureWidth > 0.0f && TextureHeight > 0.0f)
-		{
-			VideoSize = FVector2D(TextureWidth, TextureHeight);
-		}
-	}
-	if (VideoSize.X <= 0.0f || VideoSize.Y <= 0.0f)
-	{
-		return ScreenSize;
-	}
-
-	// 화면을 완전히 덮는 최소 배율(=가로/세로 배율 중 큰 값). 양 축에 같은 배율 → 비율 보존, 넘침은 클립박스가 크롭.
-	const float CoverScale = FMath::Max(ScreenSize.X / VideoSize.X, ScreenSize.Y / VideoSize.Y);
-	return VideoSize * CoverScale;
 }
 
 void UCinematicWidget::PlayCinematic(FOnEndCinematicAnimation Callback)

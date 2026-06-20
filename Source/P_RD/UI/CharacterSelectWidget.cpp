@@ -1,12 +1,48 @@
 #include "UI/CharacterSelectWidget.h"
 
 #include "Components/Button.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
 #include "Styling/SlateTypes.h"
 #include "UI/CharacterCardWidget.h"
 #include "UI/CharacterSelectWidgetPrivate.h"
 #include "UObject/SoftObjectPath.h"
+
+namespace
+{
+	void FitButtonSlotToTextureAspect(UButton* Button, const UTexture2D* Texture)
+	{
+		if (Button == nullptr || Texture == nullptr || Texture->GetSizeX() <= 0 || Texture->GetSizeY() <= 0)
+		{
+			return;
+		}
+
+		UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Button->Slot);
+		if (CanvasSlot == nullptr)
+		{
+			return;
+		}
+
+		FVector2D CurrentSize = CanvasSlot->GetSize();
+		if (CurrentSize.X <= 0.0f && CurrentSize.Y <= 0.0f)
+		{
+			return;
+		}
+
+		const float TextureAspect = static_cast<float>(Texture->GetSizeX()) / static_cast<float>(Texture->GetSizeY());
+		if (CurrentSize.X > 0.0f)
+		{
+			CurrentSize.Y = CurrentSize.X / TextureAspect;
+		}
+		else
+		{
+			CurrentSize.X = CurrentSize.Y * TextureAspect;
+		}
+
+		CanvasSlot->SetSize(CurrentSize);
+	}
+}
 
 /** @brief 선택 화면 기본 문구와 직업별 일러스트 경로 계약을 준비한다. */
 UCharacterSelectWidget::UCharacterSelectWidget(const FObjectInitializer& ObjectInitializer)
@@ -50,18 +86,25 @@ void UCharacterSelectWidget::NativeConstruct()
 	SetStatusText(mReadyStatusText);
 }
 
-/** @brief 타이틀 버튼 아트를 기존 WBP 버튼에 적용한다. */
+/** @brief 해상도 변화에 맞춰 선택 일러스트 cover-crop 배치를 보정한다. */
+void UCharacterSelectWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+	FitSelectedCharacterArtToViewport();
+}
+
+/** @brief 타이틀 버튼 아트와 동일한 3상태 ButtonStyle을 런타임에 주입한다. */
 void UCharacterSelectWidget::ApplyButtonStyles() const
 {
 	/*
-	 * 이 함수는 위젯을 생성하지 않고, WBP가 제공한 버튼 인스턴스의 스타일만 보정한다.
+	 * 이 함수는 위젯을 생성하지 않고, WBP가 제공한 버튼 인스턴스의 스타일/비율만 보정한다.
 	 * 버튼의 배치/텍스트/상호작용 대상은 WBP_CharacterSelect가 계속 소유한다.
 	 * 모바일에서는 hover/pressed 틴트가 눌린 상태처럼 남아 보일 수 있어 동일한 브러시를 사용한다.
 	 */
 	struct FButtonTexture { UButton* Button; const TCHAR* Path; };
 	const FButtonTexture Targets[] = {
-		{ mConfirmButton,    TEXT("/Game/SVN/OutSideAsset/AICreation/Title/UI_Button_Start_DarkFantasy_Base.UI_Button_Start_DarkFantasy_Base") },
-		{ mBackToMainButton, TEXT("/Game/SVN/OutSideAsset/AICreation/Title/UI_Button_Settings_DarkFantasy_Base.UI_Button_Settings_DarkFantasy_Base") },
+		{ mConfirmButton,    TEXT("/Game/SVN/OutSideAsset/AICreation/Title/UI_Button_Enter_ImageGen.UI_Button_Enter_ImageGen") },
+		{ mBackToMainButton, TEXT("/Game/SVN/OutSideAsset/AICreation/Title/UI_Button_Back_ImageGen.UI_Button_Back_ImageGen") },
 	};
 
 	for (const FButtonTexture& Target : Targets)
@@ -75,6 +118,10 @@ void UCharacterSelectWidget::ApplyButtonStyles() const
 		{
 			continue;
 		}
+
+		Target.Button->SetColorAndOpacity(FLinearColor::White);
+		Target.Button->SetBackgroundColor(FLinearColor::White);
+		FitButtonSlotToTextureAspect(Target.Button, Texture);
 
 		FSlateBrush NormalBrush;
 		NormalBrush.DrawAs = ESlateBrushDrawType::Image;
@@ -163,11 +210,13 @@ void UCharacterSelectWidget::SetConfirmButtonText(const FText& InText) const
 {
 	if (mConfirmButtonText != nullptr)
 	{
-		mConfirmButtonText->SetText(InText);
+		mConfirmButtonText->SetText(FText::GetEmpty());
+		mConfirmButtonText->SetVisibility(ESlateVisibility::Collapsed);
 	}
 	if (mBackToMainButtonText != nullptr)
 	{
-		mBackToMainButtonText->SetText(mBackText);
+		mBackToMainButtonText->SetText(FText::GetEmpty());
+		mBackToMainButtonText->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
 

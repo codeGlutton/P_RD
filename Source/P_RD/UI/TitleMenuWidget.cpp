@@ -1,7 +1,9 @@
 #include "UI/TitleMenuWidget.h"
 
 #include "Components/Button.h"
+#include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Engine/Texture2D.h"
 #include "UI/CharacterSelectWidget.h"
 #include "UI/SettingsPanelWidget.h"
 
@@ -84,8 +86,15 @@ void UTitleMenuWidget::NativeConstruct()
 
 	SyncMainText();
 	RefreshMainMenuState();
+	ApplyTitleArtAssets();
 	ShowMainScreen();
 	SetStatusText(FText::GetEmpty());
+}
+
+void UTitleMenuWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+	FitTitleBackgroundVideoToViewport();
 }
 
 /** @brief Construct에서 붙인 이벤트를 제거해 재Construct 시 중복 호출을 막는다. */
@@ -225,4 +234,76 @@ void UTitleMenuWidget::ValidateDesignerBindings() const
 	}
 
 	SetStatusText(FText::GetEmpty());
+}
+
+void UTitleMenuWidget::ApplyTitleArtAssets()
+{
+	ApplyImageTexture(TitleLogoImage, mTitleLogoTexture);
+	ApplyButtonTexture(StartButton, mNewButtonTexture);
+	ApplyButtonTexture(ContinueButton, mContinueButtonTexture);
+	ApplyButtonTexture(SettingsButton, mSettingsButtonTexture);
+
+	// 새 버튼 텍스처에는 문구가 이미 포함되어 있으므로 WBP의 레거시 라벨은 숨긴다.
+	if (StartButtonText != nullptr)
+	{
+		StartButtonText->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	if (ContinueButtonText != nullptr)
+	{
+		ContinueButtonText->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	if (SettingsButtonText != nullptr)
+	{
+		SettingsButtonText->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
+
+void UTitleMenuWidget::ApplyButtonTexture(UButton* Button, const TSoftObjectPtr<UTexture2D>& TextureAsset) const
+{
+	if (Button == nullptr)
+	{
+		return;
+	}
+
+	UTexture2D* Texture = TextureAsset.LoadSynchronous();
+	if (Texture == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: failed to load button texture: %s"), *TextureAsset.ToString());
+		return;
+	}
+
+	Button->SetColorAndOpacity(FLinearColor::White);
+	Button->SetBackgroundColor(FLinearColor::White);
+
+	FSlateBrush ButtonBrush;
+	ButtonBrush.DrawAs = ESlateBrushDrawType::Image;
+	ButtonBrush.Tiling = ESlateBrushTileType::NoTile;
+	ButtonBrush.Mirroring = ESlateBrushMirrorType::NoMirror;
+	ButtonBrush.ImageSize = FVector2D(Texture->GetSizeX(), Texture->GetSizeY());
+	ButtonBrush.SetResourceObject(Texture);
+
+	FButtonStyle ButtonStyle = Button->GetStyle();
+	ButtonStyle.Normal = ButtonBrush;
+	ButtonStyle.Hovered = ButtonBrush;
+	ButtonStyle.Pressed = ButtonBrush;
+	ButtonStyle.Disabled = ButtonBrush;
+	Button->SetStyle(ButtonStyle);
+}
+
+void UTitleMenuWidget::ApplyImageTexture(UImage* Image, const TSoftObjectPtr<UTexture2D>& TextureAsset) const
+{
+	if (Image == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: TitleLogoImage is not connected."));
+		return;
+	}
+
+	UTexture2D* Texture = TextureAsset.LoadSynchronous();
+	if (Texture == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: failed to load image texture: %s"), *TextureAsset.ToString());
+		return;
+	}
+
+	Image->SetBrushFromTexture(Texture, true);
 }
