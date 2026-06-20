@@ -682,3 +682,29 @@ void UTopMenuBarWidget::HandleSettingsBackRequested()
 
 	CloseWorldWidget(EWorldWidgetType::InGameSettings);
 }
+
+/** @details 전투 HUD가 푸시한 Lv/HP/Gold를 탑바 요약 텍스트에 직접 표시한다(전투 중 실데이터). */
+void UTopMenuBarWidget::SetCombatPlayerSummary(int32 Level, int32 HP, int32 MaxHP, int32 Gold)
+{
+	if (SummaryTextBlock != nullptr)
+	{
+		SummaryTextBlock->SetText(FText::Format(
+			NSLOCTEXT("TopMenuBarWidget", "CombatSummaryFormat", "Lv {0}  HP {1}/{2}  Gold {3}"),
+			FText::AsNumber(Level), FText::AsNumber(HP), FText::AsNumber(MaxHP), FText::AsNumber(Gold)));
+	}
+}
+
+/** @details 전투 HUD가 푸시한 보유 주사위/스킬 수를 탑바 DICE/SKILL 라벨에 표시한다(전투 중 실데이터). */
+void UTopMenuBarWidget::SetCombatDiceSkillCount(int32 DiceCount, int32 SkillCount)
+{
+	if (DiceButtonText != nullptr)
+	{
+		DiceButtonText->SetText(FText::Format(
+			NSLOCTEXT("TopMenuBarWidget", "DiceButtonCountFormat", "DICE {0}"), FText::AsNumber(DiceCount)));
+	}
+	if (SkillButtonText != nullptr)
+	{
+		SkillButtonText->SetText(FText::Format(
+			NSLOCTEXT("TopMenuBarWidget", "SkillButtonCountFormat", "SKILL {0}"), FText::AsNumber(SkillCount)));
+	}
+}

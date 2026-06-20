@@ -1,5 +1,6 @@
 ﻿#include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
+#include "UI/Combat/CombatUIModel.h"
 
 DEFINE_LOG_CATEGORY(LogSRPGCombat)
 
@@ -25,4 +26,13 @@ void USRPGCombatSubsystem::UnbindModel(UObjectModel* Model)
 UObjectModel* USRPGCombatSubsystem::GetModel_Internal() const
 {
 	return mCombatModel.Get();
+}
+
+UCombatUIModel* USRPGCombatSubsystem::GetCombatUIModel()
+{
+	if (mCombatUIModel == nullptr)
+	{
+		mCombatUIModel = NewObject<UCombatUIModel>(this);
+	}
+	return mCombatUIModel;
 }

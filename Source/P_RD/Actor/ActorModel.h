@@ -105,7 +105,7 @@ private:
 		{
 			check(TargetClass->IsChildOf(ComponentModelType::StaticClass()));
 
-			for (UActorComponent* ComponentModel : mComponentModels)
+			for (UComponentModel* ComponentModel : mComponentModels)
 			{
 				if (ComponentModel != nullptr)
 				{
