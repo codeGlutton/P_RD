@@ -208,6 +208,6 @@ public:
     * 하나의 모션 발동 시 여러 효과가 발동 할 수 있게 구조체로 묶었다.
     */
     UPROPERTY(Category = "SkillMotionLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillMotionLayers"))
-    TArray<FSkillMotionLayer> mSkillMotionLayers;
+    FSkillMotionLayer mSkillMotionLayers;
 
 };

@@ -139,17 +139,20 @@ enum class EEffectCenterType : uint8
 UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
 enum class ETargetFilter : uint8
 {
-    /** 필터링을 적용하지 않습니다. */
+    /** 아무도 대상에 포함하지 않습니다. (비어있음) */
     None = 0 UMETA(DisplayName = "None"),
 
-    /** 시전자 본인을 대상에서 제외합니다. */
-    ExcludeSelf = 1 << 0 UMETA(DisplayName = "Exclude Self"),
+    /** 시전자 본인을 대상에 포함합니다. */
+    IncludeSelf = 1 << 0 UMETA(DisplayName = "Include Self"),
 
-    /** 아군을 대상에서 제외합니다. */
-    ExcludeAlly = 1 << 1 UMETA(DisplayName = "Exclude Ally"),
+    /** 아군을 대상에 포함합니다. */
+    IncludeAlly = 1 << 1 UMETA(DisplayName = "Include Ally"),
 
-    /** 적군을 대상에서 제외합니다. */
-    ExcludeEnemy = 1 << 2 UMETA(DisplayName = "Exclude Enemy")
+    /** 적군을 대상에 포함합니다. */
+    IncludeEnemy = 1 << 2 UMETA(DisplayName = "Include Enemy"),
+
+    /** 모든 대상을 포함합니다. (기본값으로 활용 가능) */
+    All = IncludeSelf | IncludeAlly | IncludeEnemy UMETA(DisplayName = "All")
 };
 ENUM_CLASS_FLAGS(ETargetFilter);
 
