@@ -1,0 +1,19 @@
+﻿// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "TAS/Effect/TacticalEffect.h"
+#include "TacticalEffect_Move_Force.generated.h"
+
+/**
+ * 
+ */
+UCLASS()
+class P_RD_API UTacticalEffect_Move_Force : public UTacticalEffect
+{
+	GENERATED_BODY()
+	
+public:
+	virtual void ActivateEffect(const class UBoardActorModel& Caster, const struct FTileIndex& TargetTile, TArray<class UTacticalEffectContext*>& EffectContexts) override;
+};

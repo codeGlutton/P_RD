@@ -74,13 +74,9 @@ void UTacticalAbility_Skill::ActivateSkill(const FTacticalAbilityContext& Contex
 		TArray<UTacticalEffectContext*> EffectContexts;
 		const FSkillMotionLayer& SkillMotionLayer = SkillData.Get()->mSkillMotionLayers[i];
 
-		// 기본 Effect 값 계산한다.
-		for (int32 j = 0; j < SkillMotionLayer.mStaticSkillEffectLayers.Num(); ++j)
-		{
-			// 생성
-			// 추후 팩토리 구성으로 Context 생성하도록 희망
-			UTacticalEffectContext* EffectContext = SkillMotionLayer.mStaticSkillEffectLayers[j]->CreateContext(Context.mCasterActor);
-		}
+		// 생성
+		// 추후 팩토리 구성으로 Context 생성하도록 희망
+		UTacticalEffectContext* EffectContext = SkillMotionLayer.mStaticSkillEffectLayers->CreateContext(Context.mCasterActor);
 
 		// 효과를 계산합니다.
 		CallStartCalculatePassive(Context, EffectContexts);

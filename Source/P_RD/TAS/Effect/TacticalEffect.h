@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable, BlueprintType)
 class P_RD_API UTacticalEffect : public UObject
 {
 	GENERATED_BODY()

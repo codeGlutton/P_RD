@@ -46,6 +46,11 @@ class P_RD_API UTacticalAbility : public UObject
 	GENERATED_BODY()
 
 public:
+	// 시작 델리게이트
+	// 효과 적용 델리게이트(또는 효과 적용 해)
+	// 종료 델리게이트
+
+public:
 	/*
 	* @brief 스킬을 시전한다.
 	*/

@@ -1,7 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-#include "TAS/Effect/Stat/TacticalEffect_Stat_Damage.h"
-#include "TAS/Effect/TacticalEffectContext_Stat.h"
+
+#include "TAS/Effect/Move/TacticalEffect_Move_Force.h"
 #include "Actor/BoardActor/BoardActorModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
@@ -9,7 +9,7 @@
 #include "Actor/TileMap/TileMap.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 
-void UTacticalEffect_Stat_Damage::ActivateEffect(const UBoardActorModel& Caster, const FTileIndex& TargetTile, TArray<class UTacticalEffectContext*>& EffectContexts)
+void UTacticalEffect_Move_Force::ActivateEffect(const UBoardActorModel& Caster, const FTileIndex& TargetTile, TArray<class UTacticalEffectContext*>& EffectContexts)
 {
 	Super::ActivateEffect(Caster, TargetTile, EffectContexts);
 	// 캐스터의 ASC를 가져온다.
