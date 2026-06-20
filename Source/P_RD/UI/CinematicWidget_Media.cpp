@@ -90,6 +90,16 @@ void UCinematicWidget::HandleCinematicMediaOpened(FString OpenedUrl)
 	{
 		mCinematicMediaPlayer->Play();
 
+		// 영상 실제 해상도를 한 번 확보해 cover 비율 기준으로 쓴다.
+		// (미디어 텍스처 GetWidth/Height는 첫 프레임 디코드 전까지 0/부정확할 수 있어, 폴백 시 정사각(640x640) 영상이 16:9로 눌릴 수 있다.)
+		const int32 VideoTrack = mCinematicMediaPlayer->GetSelectedTrack(EMediaPlayerTrack::Video);
+		const int32 VideoFormat = mCinematicMediaPlayer->GetTrackFormat(EMediaPlayerTrack::Video, VideoTrack);
+		const FIntPoint VideoDimensions = mCinematicMediaPlayer->GetVideoTrackDimensions(VideoTrack, VideoFormat);
+		if (VideoDimensions.X > 0 && VideoDimensions.Y > 0)
+		{
+			mCinematicVideoNativeSize = FVector2D(VideoDimensions.X, VideoDimensions.Y);
+		}
+
 		const float MediaDurationSeconds = StaticCast<float>(mCinematicMediaPlayer->GetDuration().GetTotalSeconds());
 		if (MediaDurationSeconds > 0.0f)
 		{

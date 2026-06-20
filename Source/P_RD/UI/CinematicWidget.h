@@ -131,6 +131,8 @@ private:
 
 	FOnEndCinematicAnimation OnEndCinematicAnimation;
 	FSlateBrush mCinematicVideoBrush;
+	/** @brief 미디어가 열릴 때 플레이어에서 읽은 영상 실제 해상도(타이밍 안전한 cover 비율 기준). 0이면 미확정. */
+	FVector2D mCinematicVideoNativeSize = FVector2D::ZeroVector;
 	TSharedPtr<SImage> mCinematicVideoImage;
 	/** @brief 화면을 채우고 넘침을 잘라내는 클립 컨테이너(자식을 중앙 정렬하고 경계 밖을 클리핑). */
 	TSharedPtr<SBox> mCinematicVideoClipBox;

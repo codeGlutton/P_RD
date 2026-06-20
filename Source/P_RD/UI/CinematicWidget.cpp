@@ -109,20 +109,20 @@ void UCinematicWidget::NativeDestruct()
  *  SBox WidthOverride/HeightOverride 어트리뷰트 람다가 매 레이아웃마다 호출 → 별도 틱 불필요. */
 FVector2D UCinematicWidget::CalcCinematicVideoCoverSize() const
 {
-	const FVector2D FallbackSize = mCinematicVideoBrush.ImageSize;
 	if (mCinematicVideoClipBox.IsValid() == false)
 	{
-		return FallbackSize;
+		return mCinematicVideoBrush.ImageSize;
 	}
 
 	const FVector2D ScreenSize = mCinematicVideoClipBox->GetCachedGeometry().GetLocalSize();
 	if (ScreenSize.X <= 0.0f || ScreenSize.Y <= 0.0f)
 	{
-		return FallbackSize;
+		return mCinematicVideoBrush.ImageSize;
 	}
 
-	FVector2D VideoSize = mCinematicVideoBrush.ImageSize;
-	if (mCinematicMediaTexture != nullptr)
+	// 영상 실제 비율 기준: (1) 미디어가 열릴 때 플레이어에서 받은 네이티브 해상도(타이밍 안전) → (2) 미디어 텍스처 → (3) 미상이면 화면크기(=꽉 채움, 16:9로 눌리지 않음).
+	FVector2D VideoSize = mCinematicVideoNativeSize;
+	if ((VideoSize.X <= 0.0f || VideoSize.Y <= 0.0f) && mCinematicMediaTexture != nullptr)
 	{
 		const float TextureWidth = static_cast<float>(mCinematicMediaTexture->GetWidth());
 		const float TextureHeight = static_cast<float>(mCinematicMediaTexture->GetHeight());
