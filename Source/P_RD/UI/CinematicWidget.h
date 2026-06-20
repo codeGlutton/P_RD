@@ -15,6 +15,7 @@
 
 class SImage;
 class SBorder;
+class SBox;
 class STextBlock;
 class UCinematicWidget;
 class UFileMediaSource;
@@ -44,6 +45,7 @@ public:
 
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	virtual void NativeDestruct() override;
 
 	UFUNCTION(BlueprintNativeEvent, Category = "UI|Cinematic")
@@ -68,6 +70,8 @@ private:
 	void FinishFadeToBlack();
 	void SetLoadingWaitLayerOpacity(float Opacity);
 	void StopCinematicMedia();
+	/** @brief 영상 실제 해상도 기준으로 화면을 꽉 채우되 비율을 유지하고 넘치는 부분만 잘라내는(cover) 크기를 매 틱 갱신한다. */
+	void UpdateCinematicVideoCoverSize();
 	void StartDefaultCinematicTimer(float DurationSeconds);
 	void ClearDefaultCinematicTimer();
 	void ClearCinematicFadeTimer();
@@ -128,6 +132,10 @@ private:
 	FOnEndCinematicAnimation OnEndCinematicAnimation;
 	FSlateBrush mCinematicVideoBrush;
 	TSharedPtr<SImage> mCinematicVideoImage;
+	/** @brief 화면을 채우고 넘침을 잘라내는 클립 컨테이너(자식을 중앙 정렬하고 경계 밖을 클리핑). */
+	TSharedPtr<SBox> mCinematicVideoClipBox;
+	/** @brief cover 스케일로 영상 비율을 유지한 채 화면보다 크게 잡히는 실제 영상 박스(넘친 부분은 클립박스가 잘라냄). */
+	TSharedPtr<SBox> mCinematicVideoCoverBox;
 	TSharedPtr<SBorder> mLoadingWaitLayer;
 	TSharedPtr<STextBlock> mLoadingWaitText;
 	FTimerHandle mDefaultCinematicTimerHandle;
