@@ -138,6 +138,11 @@ public:
 	) const;
 
 	/**
+	 * @brief 기준 좌표에서 이동 가능한 타일 목록 반환 (모델 GetReachableTiles로 위임, BFS 경로 기반)
+	 */
+	TArray<FTileIndex> GetReachableTiles(const FTileIndex& Origin, int32 MoveDistance) const;
+
+	/**
 	 * @brief [스텁] 진입 액터 배치 가능 여부 — ITileActor↔모델 매핑 전까지 항상 true
 	 */
 	bool CanPlace(const FTileIndex& TileIndex, const ITileActor* Incoming) const;
