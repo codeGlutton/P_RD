@@ -15,6 +15,13 @@
 
 #include "Pawn/Unit.h"
 
+#include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
+#include "UI/CombatTileMapHUDWidget.h"
+#include "UI/Combat/CombatUIModel.h"
+#include "Combat/CombatUIAdapter.h"
+#include "Pawn/Player/PlayerUnit.h"
+#include "Dice/DicePoolModel.h"
+
 #include "SRPGFramework/SRPGSkillAction.h"
 #include "SRPGFramework/SRPGSkillBuildAction.h"
 
@@ -46,6 +53,32 @@ void ACombatGameMode::BeginRoom()
 	checkf(CombatSubsystem != nullptr, TEXT("전투 시스템 서브시스템 nullptr"));
 	USRPGCombatModel* CombatModel = CombatSubsystem->GetModel<USRPGCombatModel>();
 	checkf(CombatModel != nullptr, TEXT("전투 시스템 모델 nullptr"));
+
+	// --- 전투 UI 배선(정석/MVVM): CombatUIModel 1개를 전투 수명에 두고, HUD는 그걸 읽고(bind),
+	//     어댑터가 게임플레이를 읽어 Set*로 push + HUD의 Request 입력을 구독한다. ---
+	UCombatUIModel* CombatUIModel = CombatSubsystem->GetCombatUIModel();
+	if (UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())
+	{
+		if (UCombatTileMapHUDWidget* CombatHUD = WorldWidgetSubsystem->GetHUD<UCombatTileMapHUDWidget>())
+		{
+			CombatHUD->BindCombatUIModel(CombatUIModel);   // HUD가 모델을 읽고 구독
+			CombatHUD->OpenUI();                            // InitHUD로 생성만 된 HUD를 화면에 올림
+		}
+	}
+	// 임시 비GAS 어댑터: 전투 상태 → 모델 push, 모델의 Request → 게임플레이 처리.
+	mCombatUIAdapter = NewObject<UCombatUIAdapter>(this);
+	if (APlayerUnit* PlayerUnit = Cast<APlayerUnit>(GetPlayerUnit()))
+	{
+		// 런 다이스 목록(mDiceIds)으로 플레이어 주사위 풀을 구성한다. 비면 HUD 주사위 수가 0.
+		if (UDicePoolModel* DicePool = PlayerUnit->GetDicePool())
+		{
+			DicePool->BuildFromDiceIds(GetRunPersistData()->GetDiceIds());
+		}
+		mCombatUIAdapter->SetDicePool(PlayerUnit->GetDicePool());
+	}
+	mCombatUIAdapter->BindUIModel(CombatUIModel);
+	mCombatUIAdapter->Build(CombatSubsystem, GetRunPersistData());
+	mCombatUIAdapter->PushAll();
 
 	for (const TObjectPtr<AUnit>& Unit : CombatModel->GetUnits())
 	{
