@@ -57,6 +57,12 @@ public:
 	/** @brief 타이틀/연출용 표시 상태처럼 입력 없이 정보만 보이는 상태로 바꾼다. */
 	void ApplyDisplayOnly();
 
+	/** @brief 전투 HUD가 읽은 Lv/HP/Gold를 탑바 요약 텍스트에 직접 반영한다. */
+	void SetCombatPlayerSummary(int32 Level, int32 HP, int32 MaxHP, int32 Gold);
+
+	/** @brief 전투 HUD가 읽은 보유 주사위/스킬 수를 탑바 DICE/SKILL 라벨에 반영한다. */
+	void SetCombatDiceSkillCount(int32 DiceCount, int32 SkillCount);
+
 protected:
 	/**
 	 * @brief WBP 바인딩 검증, 버튼 연결, 전투 종료 이벤트 구독을 수행한다.
@@ -273,7 +279,7 @@ private:
 	 * @brief DICE 버튼 라벨
 	 *
 	 * @details
-	 * 아직 실제 주사위 보유 수와 연결하지 않았으므로 기본 문구는 DICE 0으로 둔다.
+	 * 기본 문구는 DICE 0이며, 전투 중에는 HUD가 SetCombatDiceSkillCount로 보유 주사위 수를 푸시해 갱신한다.
 	 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> DiceButtonText;
@@ -282,7 +288,7 @@ private:
 	 * @brief SKILL 버튼 라벨
 	 *
 	 * @details
-	 * 아직 실제 사용 가능 스킬 수와 연결하지 않았으므로 기본 문구는 SKILL 0으로 둔다.
+	 * 기본 문구는 SKILL 0이며, 전투 중에는 HUD가 SetCombatDiceSkillCount로 사용 가능 스킬 수를 푸시해 갱신한다.
 	 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> SkillButtonText;

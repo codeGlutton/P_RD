@@ -37,7 +37,9 @@ public:
 public:
     UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ModelClass", AssetBundles = "Actor"))
     TSoftClassPtr<UObjectModel> mModelClass;
-	UPROPERTY(Category = "Spawn", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "UnitClass", AssetBundles = "Actor"))
+	// [핫픽스] 모델-뷰 매핑이 아직 비어 있어 mModelClass 파생만으로는 항상 null이 된다(유닛 View 미구현).
+	// 매핑/유닛 뷰가 갖춰질 때까지 직접 지정도 허용한다(EditAnywhere). 매핑이 채워지면 다시 파생으로 좁혀도 됨.
+	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "UnitClass", AssetBundles = "Actor"))
 	TSoftClassPtr<AUnit> mUnitClass;
 
 public:

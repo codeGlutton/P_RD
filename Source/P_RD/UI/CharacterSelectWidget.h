@@ -78,7 +78,7 @@ private:
 	/** @brief Construct에서 연결한 버튼과 현재 카드 이벤트를 모두 정리한다. */
 	void UnbindEvents();
 
-	/** @brief 확인/뒤로 버튼에 타이틀과 동일한 UI_Button 텍스처 브러시를 입힌다(밋밋한 기본 버튼 대신). */
+	/** @brief 확인/뒤로 버튼에 타이틀과 동일한 UI_Button 텍스처 브러시를 입힌다(기존 WBP 버튼 스타일 fallback). */
 	void ApplyButtonStyles() const;
 
 	/** @brief FrontendGameMode가 만든 후보 View 목록을 다시 받아 선택 상태와 카드를 동기화한다. */
@@ -173,6 +173,19 @@ private:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> mSelectedCharacterStatText;
+
+	/** @brief 스탯 아이콘+값 행 컨테이너. 아이콘/배치는 WBP가 소유하고 C++은 값 텍스트만 갱신한다. */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<class UVerticalBox> mStatRowBox;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> mMaxHPStatValueText;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> mDiceStatValueText;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> mGoldStatValueText;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> mSelectedCharacterDescriptionText;

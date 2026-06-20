@@ -8,6 +8,7 @@
 
 #include "RDMinimal.h"
 #include "Components/Button.h"
+#include "PCGStage/RoomType.h"
 #include "UI/RDUserWidget.h"
 
 #include "FrontendMapGraphWidgets.generated.h"
@@ -102,7 +103,8 @@ public:
 		const FLinearColor& PanelColor,
 		const FLinearColor& TypeStripeColor,
 		const FSlateColor& LabelColor,
-		const FSlateColor& BadgeColor);
+		const FSlateColor& BadgeColor,
+		ERoomType RoomType = ERoomType::None);
 
 	/** @brief 부모 위젯이 현재 노드의 버튼 활성 여부를 정할 때 사용함 */
 	void SetNodeEnabled(bool bEnabled) const;
