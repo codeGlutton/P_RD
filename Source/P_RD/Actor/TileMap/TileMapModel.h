@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   TileMapModel.h
  * @brief  타일맵 데이터 모델 클래스 정의 헤더
  * @author 이문환
@@ -11,6 +11,7 @@
 #include "ObjectModel.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "Actor/TileMap/TileLayer.h"
+#include "Actor/TileMap/TileHighlight.h"
 #include "TileMapModel.generated.h"
 
 class UBoardActorModel;
@@ -51,6 +52,14 @@ DECLARE_DELEGATE_RetVal_OneParam(FTileIndex, FWorldToTileIndexDelegate, const FV
  *          빈 배열을 넘기면 표시 해제(SetMovePath의 빈 배열 처리)와 같다.
  */
 DECLARE_DELEGATE_OneParam(FSetMovePathDelegate, const TArray<FTileIndex>&);
+
+/**
+ * @brief 모델이 뷰(ATileMap)에 타일 강조(하이라이트) 표시/해제를 요청하는 델리깃
+ * @details 경로 델리깃과 동일하게 non-dynamic — 라이브에서 뷰가 SetTileHighlight/ClearTileHighlight로
+ *          바인딩하고, 미바인딩(심 복제본)이면 표시되지 않는다.
+ */
+DECLARE_DELEGATE_TwoParams(FSetTileHighlightDelegate, const TArray<FTileIndex>&, ETileHighlightFlag);
+DECLARE_DELEGATE_OneParam(FClearTileHighlightDelegate, ETileHighlightFlag);
 
 /**
  * @brief  타일맵 데이터 모델 클래스
@@ -136,6 +145,12 @@ public:
 	 */
 	FSetMovePathDelegate mSetMovePathDelegate;
 
+	/**
+	 * @brief 타일 강조 표시/해제 요청 델리깃 (라이브에서 ATileMap이 SetTileHighlight/ClearTileHighlight로 바인딩, 미바인딩=심이면 표시 없음)
+	 */
+	FSetTileHighlightDelegate mSetTileHighlightDelegate;
+	FClearTileHighlightDelegate mClearTileHighlightDelegate;
+
 	/* 이동 / 범위 조회 */
 	/**
 	 * @brief 기준 좌표에서 이동 가능한 타일 목록 반환
@@ -174,6 +189,21 @@ public:
 	 * @brief 이동경로 표시 해제 요청 (빈 경로를 뷰에 전달)
 	 */
 	void ClearMovePath();
+
+	/* 타일 강조 */
+	/**
+	 * @brief 지정 타일들을 강조 상태로 표시 요청 (뷰의 SetTileHighlight로 위임)
+	 * @details 미바인딩(심 복제본)이면 아무 일도 하지 않는다.
+	 * @param[in] Tiles : 강조할 타일 목록
+	 * @param[in] Flag  : 설정할 강조 상태(Aim/Select/Effect)
+	 */
+	void SetTileHighlight(const TArray<FTileIndex>& Tiles, ETileHighlightFlag Flag);
+
+	/**
+	 * @brief 지정한 강조 상태 해제 요청 (뷰의 ClearTileHighlight로 위임)
+	 * @param[in] Flag : 해제할 강조 상태 (비트 조합 가능)
+	 */
+	void ClearTileHighlight(ETileHighlightFlag Flag);
 
 	/**
 	 * @brief 기준 좌표에서 조준 가능한 타일 목록 반환

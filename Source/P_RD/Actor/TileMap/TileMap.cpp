@@ -105,6 +105,10 @@ void ATileMap::BindModelDelegates()
 
 	// 이동경로 표시 요청을 뷰의 SetMovePath로 연결 (싱글캐스트라 재호출 시 덮어씀)
 	mModel->mSetMovePathDelegate.BindUObject(this, &ATileMap::SetMovePath);
+
+	// 타일 강조 표시/해제 요청을 뷰의 SetTileHighlight/ClearTileHighlight로 연결
+	mModel->mSetTileHighlightDelegate.BindUObject(this, &ATileMap::SetTileHighlight);
+	mModel->mClearTileHighlightDelegate.BindUObject(this, &ATileMap::ClearTileHighlight);
 }
 
 void ATileMap::OnConstruction(const FTransform& Transform)
