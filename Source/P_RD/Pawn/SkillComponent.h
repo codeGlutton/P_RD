@@ -6,14 +6,13 @@
  *********************************************************************/
 #pragma once
 
-#include "GAS/GASMinimal.h"
+#include "RDMinimal.h"
 #include "Components/ActorComponent.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 //#include "Pawn/SkillComponent/PreviewEffectIconData.h"
 #include "../FunctionLibrary/CombatCalculator/CombatResult.h"
 //#include "FunctionLibrary/CommandLog/CommandLog.h"
-#include "SRPGFramework/TileActor.h"
 #include "SkillComponent.generated.h"
 
 /**
@@ -57,8 +56,8 @@ protected:
 	* @brief 액터의 ASC
 	* 편하게 사용하기 위해 WeakPtr로 참조
 	*/
-	UPROPERTY()
-	TWeakObjectPtr<UAbilitySystemComponent> mAbilitySystemComp;
+	// UPROPERTY()
+	// TWeakObjectPtr<UAbilitySystemComponent> mAbilitySystemComp;
 
 public:
 	/* 델리게이트 변수*/

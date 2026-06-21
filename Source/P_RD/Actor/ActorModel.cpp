@@ -68,6 +68,14 @@ void UActorModel::UninitializeComponentModels()
 	}
 }
 
+void UActorModel::BeginPlay()
+{
+}
+
+void UActorModel::EndPlay()
+{
+}
+
 UComponentModel* UActorModel::AddComponentModelByClass(UClass* ComponentModelClass)
 {
 	UComponentModel* ComponentModel = NewObject<UComponentModel>(this, ComponentModelClass);

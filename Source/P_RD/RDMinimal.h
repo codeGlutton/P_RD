@@ -29,6 +29,12 @@
 
 #include "NativeGameplayTags.h"
 #include "GameplayTagContainer.h" 
+#include "GameplayTagType.h"
+
+class UObjectModel;
+class UObjectModelFactory;
+
+/* 열거형 연관 */
 
 template<typename T>
 FString EnumToString(T Value)
@@ -43,3 +49,16 @@ FString EnumToFullString(T Value)
     static_assert(TIsEnum<T>::Value);
     return UEnum::GetValueAsString(Value);
 }
+
+/* 모델 연관 */
+
+UObjectModel* GetWorldSubsystemModel(const UObject* WorldContextObject, UClass* Class);
+
+template<typename T>
+T* GetWorldSubsystemModel(const UObject* WorldContextObject)
+{
+    static_assert(TIsDerivedFrom<T, UObjectModel>::IsDerived, "UObjectModel를 상속해야 함");
+	return Cast<T>(GetWorldSubsystemModel(WorldContextObject, T::StaticClass()));
+}
+
+UObjectModelFactory* GetWorldModelFactory(const UObject* WorldContextObject);

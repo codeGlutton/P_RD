@@ -14,6 +14,9 @@
 #include "BoardActorModel.generated.h"
 
 struct FTile;
+class UStaticObstacleSpawnData;
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnChangeTileTransform, const FTileTransform& /* TileTransform */);
 
 /**
  * @brief  보드에 올라가는 액터 데이터 모델 클래스
@@ -29,7 +32,17 @@ class P_RD_API UBoardActorModel : public UActorModel
     // SRPG 전투 모델이 라운드 시작과 종료를 호출
     friend class USRPGCombatModel;
     // 턴 객체가 턴 시작과 종료를 호출
-	friend struct FSRPGTurnContext;
+	friend class USRPGTurnContext;
+
+public:
+	/**
+	 * @brief 스폰 데이터 대입 함수
+	 * @param StaticSpawnData 스폰 데이터
+	 */
+	void SetStaticSpawnData(UStaticObstacleSpawnData* StaticSpawnData);
+
+	FName GetBoardActorKeyName() const;
+	const FText& GetBoardActorDisplayName() const;
 
 public:
 	/**
@@ -65,12 +78,6 @@ public:
 
 protected:
 	/**
-	 * @brief 타일 트랜스폼 설정
-	 * @param Transform 설정할 타일 트랜스폼
-	 */
-	void SetTileTransform(const FTileTransform& Transform);
-
-	/**
 	 * @brief 오버랩 시작 시 실행될 함수
 	 * @param CurTile 현재 위치한 타일 객체
 	 * @param Other 반대 대상
@@ -102,11 +109,20 @@ protected:
 	virtual void OnBeginTurn();
 	virtual void OnEndTurn();
 
-protected:
-	// @brief 타일 트랜스폼(런타임 배치 상태)
-	UPROPERTY(Category = "BoardActor", VisibleInstanceOnly, BlueprintReadOnly, Transient, meta = (DisplayName = "TileTransform"))
-	FTileTransform mTileTransform = FTileTransform::Invalid;
+private:
+	/**
+	 * @brief 타일 트랜스폼 설정. (타일맵 외에는 지정할 수 없도록 private 제한)
+	 * @param Transform 설정할 타일 트랜스폼
+	 */
+	void SetTileTransform(const FTileTransform& Transform);
 
+public:
+	/**
+	 * @brief 타일 트랜스폼이 변경되었을 때, 뷰에게 전달하는 대리자
+	 */
+	FOnChangeTileTransform OnChangeTileTransform;
+
+protected:
 	// @brief 액터가 속한 레이어 타입
 	UPROPERTY(Category = "BoardActor", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "TileLayerFlags", Bitmask, BitmaskEnum = "/Script/P_RD.ETileLayerFlag"))
 	ETileLayerFlag mTileLayerFlags = ETileLayerFlag::None;
@@ -122,4 +138,13 @@ protected:
 	// @brief Overlay 레이어 내 교체 우선순위 (높을수록 우선)
 	UPROPERTY(Category = "BoardActor", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "OverlayLayerPriority"))
 	int32 mOverlayLayerPriority = 0;
+
+private:
+	// @brief 타일 트랜스폼(런타임 배치 상태)
+	UPROPERTY(Category = "BoardActor", VisibleInstanceOnly, BlueprintReadOnly, meta = (DisplayName = "TileTransform", AllowPrivateAccess = "true"))
+	FTileTransform mTileTransform = FTileTransform::Invalid;
+
+protected:
+	UPROPERTY(Category = "Spawn", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "StaticSpawnData"))
+	TObjectPtr<UStaticObstacleSpawnData> mStaticSpawnData;
 };

@@ -15,7 +15,7 @@
  // Room Game Mode 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogRoomGameMode, Log, All)
 
-class AUnit;
+class UPlayerUnitModel;
 
 /**
  * @brief  방에 대한 베이스 GameMode
@@ -101,11 +101,11 @@ private:
 	bool IsRoomSelectable(int32 RoomRow, int32 RoomColumn) const;
 
 public:
-	AUnit* GetPlayerUnit() const;
+	UPlayerUnitModel* GetPlayerUnit() const;
 
 protected:
 	UPROPERTY()
-	TWeakObjectPtr<AUnit> mPlayerUnit;
+	TWeakObjectPtr<UPlayerUnitModel> mPlayerUnit;
 
 protected:
 	int32 mSelectedRoomRow = INDEX_NONE;

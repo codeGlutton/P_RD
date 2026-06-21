@@ -1,24 +1,23 @@
 ﻿/*****************************************************************//**
- * @file   TileTargetable.h
- * @brief  SRPG 타일에 타격 가능한 객체 인터페이스 정의 헤더
+ * @file   BoardCombatTarget.h
+ * @brief  SRPG 타일에 타격 가능한 모델 인터페이스 정의 헤더
  * @author 모호재
  * @date   2026-05-19
  *********************************************************************/
 
 #pragma once
 
-#include "GAS/GASMinimal.h"
+#include "RDMinimal.h"
 #include "UObject/Interface.h"
-#include "TileTargetable.generated.h"
+#include "GenericTeamAgentInterface.h"
+#include "BoardCombatTarget.generated.h"
+
+class UAttributeSetComponentModel;
 
 USTRUCT(Blueprintable)
-struct FTileTargetSnapshotTargetData : public FGameplayAbilityTargetData
+struct FBoardCombatTargetSnapshotData
 {
 	GENERATED_BODY()
-
-public:
-	UScriptStruct* GetScriptStruct() const override;
-	bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& OutSuccess);
 
 public:
 	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
@@ -41,15 +40,15 @@ public:
 };
 
 UINTERFACE(MinimalAPI)
-class UTileTargetable : public UAbilitySystemInterface
+class UBoardCombatTarget : public UInterface
 {
 	GENERATED_BODY()
 };
 
 /**
- * @brief  SRPG 타일에 타격 가능한 객체
+ * @brief  SRPG 타일에 타격 가능한 모델
  */
-class P_RD_API ITileTargetable : public IAbilitySystemInterface
+class P_RD_API IBoardCombatTarget
 {
 	GENERATED_BODY()
 
@@ -59,11 +58,27 @@ public:
 	 * @return 타격 가능 여부 
 	 */
 	virtual bool IsTargetable() const;
-	bool IsDead() const;
+	/**
+	 * 죽음 확인 함수
+	 * @return 죽음 여부
+	 */
+	virtual bool IsDead() const;
 
 public:
 	/**
-	 * 유닛의 현재 스탯 스냅샷을 찍어 타겟 정보로 반환하는 함수
+	 * 속성 컴포넌트를 반환하는 함수
+	 * @return 보유한 속성 컴포넌트
 	 */
-	virtual FTileTargetSnapshotTargetData* MakeSnapshotTargetData() const = 0;
+	virtual UAttributeSetComponentModel* GetAttributeComponentModel() const = 0;
+	/**
+	 * 현재 스탯 스냅샷을 찍어 타겟 정보로 반환하는 함수
+	 * @return 스냅샷 데이터
+	 */
+	virtual FBoardCombatTargetSnapshotData* MakeSnapshotData() const = 0;
+
+public:
+	virtual void SetGenericTeamId(const FGenericTeamId& TeamID) = 0;
+	virtual FGenericTeamId GetGenericTeamId() const = 0;
+
+	virtual ETeamAttitude::Type GetTeamAttitudeTowards(const UObject& Other) const;
 };
