@@ -21,7 +21,7 @@ class UUnitModel;
 class UUnitAttributeSet;
 class UStaticUnitSpawnData;
 
-class UGameplayAttributeComponentModel;
+class UAttributeSetComponentModel;
 class USkillComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUnitDied, UUnitModel*, Model);
@@ -48,7 +48,7 @@ public:
 
 	/* IBoardCombatTarget 상속 */
 public:
-	UGameplayAttributeComponentModel* GetAttributeComponentModel() const;
+	UAttributeSetComponentModel* GetAttributeComponentModel() const override;
 	FBoardCombatTargetSnapshotData* MakeSnapshotData() const override;
 
 public:
@@ -64,7 +64,7 @@ public:
 
 private:
 	UPROPERTY(Category = Attribute, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "AttributeCompModel"))
-	TObjectPtr<UGameplayAttributeComponentModel> mAttributeCompModel;
+	TObjectPtr<UAttributeSetComponentModel> mAttributeCompModel;
 
 	// TODO : 모델로 바꿔야됨
 	// UPROPERTY(Category = Skill, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "SkillComp"))

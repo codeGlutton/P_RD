@@ -2,13 +2,13 @@
 #include "Setting/GameTeamType.h"
 
 // #include "Pawn/SkillComponent.h"
-#include "Component/AttributeComponent/GameplayAttributeComponentModel.h"
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
 UUnitModel::UUnitModel() : mTeamId(EGameTeamType::AllNeutral)
 {
 	// TODO : 모델로 바꿔야됨
 
-	mAttributeCompModel = CreateDefaultSubobject<UGameplayAttributeComponentModel>(TEXT("AttributeComponentModel"));
+	mAttributeCompModel = CreateDefaultSubobject<UAttributeSetComponentModel>(TEXT("AttributeSetComponentModel"));
 	// mSkillComp = CreateDefaultSubobject<USkillComponent>(TEXT("SkillComp"));
 
 	mTileLayerFlags = ETileLayerFlag::Unit;
@@ -41,7 +41,7 @@ FGenericTeamId UUnitModel::GetGenericTeamId() const
 	return mTeamId;
 }
 
-UGameplayAttributeComponentModel* UUnitModel::GetAttributeComponentModel() const
+UAttributeSetComponentModel* UUnitModel::GetAttributeComponentModel() const
 {
 	return mAttributeCompModel;
 }

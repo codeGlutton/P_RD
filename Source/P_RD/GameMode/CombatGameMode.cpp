@@ -1,6 +1,7 @@
 ﻿#include "GameMode/CombatGameMode.h"
 #include "Simulation/Factory/ObjectModelFactory.h"
 
+#include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
@@ -36,7 +37,7 @@ void ACombatGameMode::InitializeRoom()
 	UStaticCombatRoomSpawnData* StaticRoomData = AssetManager->GetPrimaryAssetObject<UStaticCombatRoomSpawnData>(CurRoom.mStaticRoomSpawnDataId);
 	checkf(StaticRoomData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
 
-	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>();
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	CombatModel->InitCombat(StaticRoomData, GetPlayerUnit());
 }
 
@@ -44,6 +45,8 @@ void ACombatGameMode::BeginRoom()
 {
 	Super::BeginRoom();
 
+	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
+	checkf(CombatSubsystem != nullptr, TEXT("전투 시스템 nullptr"));
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 시스템 모델 nullptr"));
 
@@ -60,7 +63,7 @@ void ACombatGameMode::BeginRoom()
 	}
 	// 임시 비GAS 어댑터: 전투 상태 → 모델 push, 모델의 Request → 게임플레이 처리.
 	mCombatUIAdapter = NewObject<UCombatUIAdapter>(this);
-	if (APlayerUnit* PlayerUnit = Cast<APlayerUnit>(GetPlayerUnit()))
+	if (UPlayerUnitModel* PlayerUnit = GetPlayerUnit())
 	{
 		// 런 다이스 목록(mDiceIds)으로 플레이어 주사위 풀을 구성한다. 비면 HUD 주사위 수가 0.
 		if (UDicePoolModel* DicePool = PlayerUnit->GetDicePool())

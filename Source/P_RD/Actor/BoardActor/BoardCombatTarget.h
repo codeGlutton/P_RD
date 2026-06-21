@@ -12,7 +12,7 @@
 #include "GenericTeamAgentInterface.h"
 #include "BoardCombatTarget.generated.h"
 
-class UGameplayAttributeComponentModel;
+class UAttributeSetComponentModel;
 
 USTRUCT(Blueprintable)
 struct FBoardCombatTargetSnapshotData
@@ -69,7 +69,7 @@ public:
 	 * 속성 컴포넌트를 반환하는 함수
 	 * @return 보유한 속성 컴포넌트
 	 */
-	virtual UGameplayAttributeComponentModel* GetAttributeComponentModel() const = 0;
+	virtual UAttributeSetComponentModel* GetAttributeComponentModel() const = 0;
 	/**
 	 * 현재 스탯 스냅샷을 찍어 타겟 정보로 반환하는 함수
 	 * @return 스냅샷 데이터

@@ -197,10 +197,10 @@ void USRPGCombatModel::EvaluateCombatEndState()
 	/* 적군이 모두 죽어 전투가 종료되는가? */
 
     // TODO : (추후 삭제 필요) 적 미배치 방(테스트 등)에서 "생존 적 0 == 즉시 승리"로 빠져 입장하자마자 승리 처리되는 것을 막는다.
-    const bool NeedToProventToEndCombatForDebug = true;
+    const bool NeedToPreventToEndCombatForDebug = true;
 
 	bool AnyEnemyAlive = false;
-	for (const TObjectPtr<AUnit>& Unit : mUnits)
+	for (const TObjectPtr<UUnitModel>& Unit : mUnits)
 	{
 		if (Unit->GetTeamAttitudeTowards(*mPlayerUnit) == ETeamAttitude::Hostile)
 		{
@@ -211,7 +211,7 @@ void USRPGCombatModel::EvaluateCombatEndState()
 		}
 	}
 
-	if (NeedToProventToEndCombatForDebug == true && AnyEnemyAlive == false)
+	if (NeedToPreventToEndCombatForDebug == true && AnyEnemyAlive == false)
 	{
 		mCombatResult = ESRPGCombatResult::PlayerWin;
 		mCombatPhase = ESRPGCombatRoomPhase::CombatAbort;
