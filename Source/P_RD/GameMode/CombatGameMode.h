@@ -11,10 +11,10 @@
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "CombatGameMode.generated.h"
 
+class USRPGSkillBuildAction;
+
 // RD Game Mode 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogCombatGameMode, Log, All)
-
-struct FSRPGSkillBuildAction;
 
 /**
  * @brief  전투 방에 대한 GameMode
@@ -48,5 +48,5 @@ public:
 	bool ResolveWorldLongPressEvent();
 
 protected:
-	void OnChangeSkillBuildPhase(const FSRPGSkillBuildAction& Action, ESRPGSkillBuildPhase Phase);
+	void OnChangeSkillBuildPhase(const USRPGSkillBuildAction* Action, ESRPGSkillBuildPhase Phase);
 };

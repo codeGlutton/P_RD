@@ -1,23 +1,25 @@
-﻿#include "Pawn/Unit.h"
-#include "GAS/Attribute/UnitAttributeSet.h"
+﻿#include "Pawn/UnitModel.h"
 #include "Setting/GameTeamType.h"
 
-#include "DataAsset/UnitSpawnData/StaticUnitSpawnData.h"
+// #include "Pawn/SkillComponent.h"
+#include "Component/AttributeComponent/GameplayAttributeComponentModel.h"
 
-#include "Pawn/SkillComponent.h"
-
-UUnitModel::UUnitModel() :
-	mTeamId(EGameTeamType::AllNeutral)
+UUnitModel::UUnitModel() : mTeamId(EGameTeamType::AllNeutral)
 {
-	PrimaryActorTick.bCanEverTick = true;
+	// TODO : 모델로 바꿔야됨
 
-	mAbilitySystemComp = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
-	mSkillComp = CreateDefaultSubobject<USkillComponent>(TEXT("SkillComp"));
+	mAttributeCompModel = CreateDefaultSubobject<UGameplayAttributeComponentModel>(TEXT("AttributeComponentModel"));
+	// mSkillComp = CreateDefaultSubobject<USkillComponent>(TEXT("SkillComp"));
+
+	mTileLayerFlags = ETileLayerFlag::Unit;
+	mBlockLayerFlags = ETileLayerFlag::Unit | ETileLayerFlag::Obstacle;
+	mReplaceLayerFlags = ETileLayerFlag::None;
+	mOverlayLayerPriority = 0;
 }
 
-void UUnitModel::PostInitializeComponents()
+void UUnitModel::PostInitializeComponentModels()
 {
-	Super::PostInitializeComponents();
+	Super::PostInitializeComponentModels();
 
 	// TODO : 초기화 로직
 	
@@ -27,16 +29,6 @@ void UUnitModel::PostInitializeComponents()
 	// auto* AbilitySystemGlobals = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals();
 	// AbilitySystemGlobals->InitGlobalData();
 	// AbilitySystemGlobals->GetAttributeSetInitter()->InitAttributeSetDefaults(mAbilitySystemComp, GetUnitKeyName(), GetDifficulty(), true);
-}
-
-ETileLayerFlag UUnitModel::GetTileLayerFlags() const
-{
-	return ETileLayerFlag::Unit;
-}
-
-ETileLayerFlag AUnit::GetBlockLayerFlags() const
-{
-	return ETileLayerFlag::Unit;
 }
 
 void UUnitModel::SetGenericTeamId(const FGenericTeamId& TeamID)
@@ -49,9 +41,9 @@ FGenericTeamId UUnitModel::GetGenericTeamId() const
 	return mTeamId;
 }
 
-UGameplayAttributeComponent* UUnitModel::GetAttributeComponent() const
+UGameplayAttributeComponentModel* UUnitModel::GetAttributeComponentModel() const
 {
-	return mAbilitySystemComp;
+	return mAttributeCompModel;
 }
 
 FBoardCombatTargetSnapshotData* UUnitModel::MakeSnapshotData() const
@@ -77,31 +69,8 @@ FBoardCombatTargetSnapshotData* UUnitModel::MakeSnapshotData() const
 	return nullptr;
 }
 
-USkillComponent* AUnit::GetSkillComponent() const
-{
-	return mSkillComp;
-}
+//USkillComponent* UUnitModel::GetSkillComponent() const
+//{
+//	return mSkillComp;
+//}
 
-void AUnit::SetStaticSpawnData(const UStaticUnitSpawnData* StaticUnitSpawnData)
-{
-	mStaticUnitSpawnData = StaticUnitSpawnData;
-}
-
-UUnitAttributeSet* AUnit::GetUnitAttributeSet() const
-{
-	return mUnitAttributeSet;
-}
-
-FName AUnit::GetUnitKeyName() const
-{
-	checkf(mStaticUnitSpawnData != nullptr, TEXT("유닛 스폰 데이터 nullptr"));
-
-	return mStaticUnitSpawnData->GetKeyName();
-}
-
-const FText& AUnit::GetUnitDisplayName() const
-{
-	checkf(mStaticUnitSpawnData != nullptr, TEXT("유닛 스폰 데이터 nullptr"));
-
-	return mStaticUnitSpawnData->mDisplayName;
-}

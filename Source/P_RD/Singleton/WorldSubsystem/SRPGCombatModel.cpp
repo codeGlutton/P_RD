@@ -1,12 +1,16 @@
 ﻿#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
-#include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
+
 #include "Singleton/WorldSubsystem/PresentationSyncSubsystem.h"
+#include "Simulation/Factory/ObjectModelFactory.h"
+
 #include "SRPGFramework/SRPGCommand.h"
 #include "Setting/RDWorldSettings.h"
 
-#include "Actor/TileMap/TileMap.h"
-#include "Pawn/Unit.h"
+#include "Actor/TileMap/TileMapModel.h"
+#include "Pawn/UnitModel.h"
+
 #include "DataAsset/RoomSpawnData/StaticCombatRoomSpawnData.h"
+#include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
 #include "DataAsset/UnitSpawnData/StaticEnemyUnitSpawnData.h"
 #include "DataAsset/ObstacleSpawnData/StaticObstacleSpawnData.h"
 
@@ -14,11 +18,41 @@
 
 #include "FunctionLibrary/GASTargetFunctionLibrary.h"
 
+DEFINE_LOG_CATEGORY(LogSRPGCombat)
+
+void USRPGCombatModel::Serialize(FArchive& Ar)
+{
+	Super::Serialize(Ar);
+
+	if (Ar.IsSaving() == true)
+	{
+		auto* Node = mTurnContextOrder.GetHead();
+		int32 TotalContextNum = mTurnContextOrder.Num();
+		Ar << TotalContextNum;
+		for (int32 i = 0; i < TotalContextNum; ++i)
+		{
+			Ar << Node->GetValue();
+			Node = Node->GetNextNode();
+		}
+	}
+	if (Ar.IsLoading() == true)
+	{
+		int32 TotalContextNum = INDEX_NONE;
+		Ar << OUT TotalContextNum;
+		for (int32 i = 0; i < TotalContextNum; ++i)
+		{
+			int32 TurnIndex = INDEX_NONE;
+			Ar << OUT TurnIndex;
+			mTurnContextOrder.AddTail(TurnIndex);
+		}
+	}
+}
+
 void USRPGCombatModel::Tick(float DeltaTime)
 {
-	if (mCombatPhase == ESRPGCombatRoomPhase::CombatPlay && mCurTurnContextNode != nullptr)
+	if (mCombatPhase == ESRPGCombatRoomPhase::CombatPlay && mCurTurnContextOrder != nullptr)
 	{
-		mCurTurnContextNode->GetValue()->TickTurn(DeltaTime);
+		mTurnContextMap[mCurTurnContextOrder->GetValue()]->TickTurn(DeltaTime);
 	}
 }
 
@@ -32,15 +66,7 @@ TStatId USRPGCombatModel::GetStatId() const
 	RETURN_QUICK_DECLARE_CYCLE_STAT(USRPGCombatModel, STATGROUP_Tickables);
 }
 
-void USRPGCombatModel::Initialize()
-{
-	USRPGCombatSubsystem* SRPGCombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-	checkf(SRPGCombatSubsystem != nullptr, TEXT("SRPG 전투 서브시스템 nullptr"));
-
-	SRPGCombatSubsystem->BindModel(this);
-}
-
-void USRPGCombatModel::InitCombat(const UStaticCombatRoomSpawnData* RoomSpawnData, AUnit* PlayerUnit)
+void USRPGCombatModel::InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, UUnitModel* PlayerUnit)
 {
 	checkf(RoomSpawnData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
 	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
@@ -68,16 +94,16 @@ void USRPGCombatModel::BeginCombat()
 
 	// 전투 시작 시, 보여지는 UI의 애니메이션의 특정 시점 종료 이후 전투 로직이 시작됨
 	auto PresentationBarrier = PresentationSyncSubsystem->MakePresentationBarrier(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
-		for (TObjectPtr<AUnit>& Unit : mUnits)
+		for (TObjectPtr<UUnitModel>& Unit : mUnits)
 		{
 			// 현 스텟을 캡처
-			FGameplayEventData EventData;
+			/*FGameplayEventData EventData;
 			EventData.TargetData = UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle(Unit);
 			EventData.Instigator = Unit;
-			EventData.Target = Unit;
+			EventData.Target = Unit;*/
 
 			// On Start Room 패시브 실행
-			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Unit, AbilityTags::GameplayAbility_Passive_OnStartRoom, MoveTemp(EventData));
+			//UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Unit, AbilityTags::GameplayAbility_Passive_OnStartRoom, MoveTemp(EventData));
 		}
 		// 턴 실행
 		checkf(mCombatPhase == ESRPGCombatRoomPhase::CombatStart, TEXT("전투 진입 절차 오류"));
@@ -92,16 +118,16 @@ void USRPGCombatModel::EndCombat()
 	checkf(mCombatPhase == ESRPGCombatRoomPhase::CombatAbort, TEXT("전투 종료 절차 오류"));
 	mCombatPhase = ESRPGCombatRoomPhase::CombatEnd;
 
-	for (TObjectPtr<AUnit>& Unit : mUnits)
+	for (TObjectPtr<UUnitModel>& Unit : mUnits)
 	{
 		// 현 스텟을 캡처
-		FGameplayEventData EventData;
+		/*FGameplayEventData EventData;
 		EventData.TargetData = UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle(Unit);
 		EventData.Instigator = Unit;
-		EventData.Target = Unit;
+		EventData.Target = Unit;*/
 
 		// On End Room 패시브 실행
-		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Unit, AbilityTags::GameplayAbility_Passive_OnEndRoom, MoveTemp(EventData));
+		//UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Unit, AbilityTags::GameplayAbility_Passive_OnEndRoom, MoveTemp(EventData));
 	}
 
 	UPresentationSyncSubsystem* PresentationSyncSubsystem = GetWorld()->GetSubsystem<UPresentationSyncSubsystem>();
@@ -120,14 +146,14 @@ void USRPGCombatModel::EndCombat()
 void USRPGCombatModel::EvaluateCombatStates()
 {
 	EvaluateCombatEndState();
-	if (mCurTurnContextNode != nullptr)
+	if (mCurTurnContextOrder != nullptr)
 	{
 		const bool ForceAbort = mCombatPhase == ESRPGCombatRoomPhase::CombatAbort;
-		mCurTurnContextNode->GetValue()->EvaluateTurnEndState(ForceAbort);
+		mTurnContextMap[mCurTurnContextOrder->GetValue()]->EvaluateTurnEndState(ForceAbort);
 	}
 }
 
-void USRPGCombatModel::OnEndCurrentTurn(TSharedRef<FSRPGTurnContext> TurnContext, ESRPGTurnResult TurnResult)
+void USRPGCombatModel::OnEndCurrentTurn(USRPGTurnContext* TurnContext, ESRPGTurnResult TurnResult)
 {
 	// 전투 상태 평가
 	EvaluateCombatStates();
@@ -171,7 +197,7 @@ void USRPGCombatModel::EvaluateCombatEndState()
 	/* 적군이 모두 죽어 전투가 종료되는가? */
 
 	bool AnyEnemyAlive = false;
-	for (const TObjectPtr<AUnit>& Unit : mUnits)
+	for (const TObjectPtr<UUnitModel>& Unit : mUnits)
 	{
 		if (Unit->GetTeamAttitudeTowards(*mPlayerUnit) == ETeamAttitude::Hostile && Unit->IsDead() == false)
 		{
@@ -186,104 +212,107 @@ void USRPGCombatModel::EvaluateCombatEndState()
 	}
 }
 
-TWeakPtr<FSRPGTurnContext> USRPGCombatModel::RegisterTurn(AUnit* Owner, int32 LifeCount)
+USRPGTurnContext* USRPGCombatModel::RegisterTurn(UUnitModel* Owner, int32 LifeCount)
 {
-	TSharedPtr<FSRPGTurnContext> TurnContext = TSharedPtr<FSRPGTurnContext>(new FSRPGTurnContext(), [](FSRPGTurnContext* TurnContext) {
-		delete TurnContext;
-		});
-	TurnContext->InitTurn(this, Owner, LifeCount);
-	TurnContext->OnBeginTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const FSRPGTurnContext& TurnContext) {
+	USRPGTurnContext* TurnContext = NewObject<USRPGTurnContext>(this);
+	TurnContext->InitTurn(this, Owner, mTurnContextMaxIndex++, LifeCount);
+	TurnContext->OnBeginTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext) {
 		OnBeginAnyTurnUI.Broadcast(Barrier, TurnContext);
 		});
-	TurnContext->OnEndTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const FSRPGTurnContext& TurnContext, ESRPGTurnResult Result) {
+	TurnContext->OnEndTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, ESRPGTurnResult Result) {
 		OnEndAnyTurnUI.Broadcast(Barrier, TurnContext, Result);
 		});
-	TurnContext->OnBeginAnyActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const FSRPGTurnContext& TurnContext, const FSRPGAction& Action) {
+	TurnContext->OnBeginAnyActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action) {
 		OnBeginAnyTurnActionUI.Broadcast(Barrier, TurnContext, Action);
 		});
-	TurnContext->OnEndAnyActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const FSRPGTurnContext& TurnContext, const FSRPGAction& Action, ESRPGActionResult Result) {
+	TurnContext->OnEndAnyActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action, ESRPGActionResult Result) {
 		OnEndAnyTurnActionUI.Broadcast(Barrier, TurnContext, Action, Result);
 		});
 
-	if (mCurTurnContextNode == nullptr)
+	if (mCurTurnContextOrder == nullptr)
 	{
-		mTurnContexts.AddHead(TurnContext);
-		mCurTurnContextNode = mTurnContexts.GetHead();
+		mTurnContextOrder.AddHead(TurnContext->GetTurnId());
+		mCurTurnContextOrder = mTurnContextOrder.GetHead();
 	}
 	else
 	{
-		mTurnContexts.InsertNode(TurnContext, mCurTurnContextNode->GetPrevNode());
+		mTurnContextOrder.InsertNode(TurnContext->GetTurnId(), mCurTurnContextOrder->GetPrevNode());
+
 	}
+	mTurnContextMap[TurnContext->GetTurnId()] = TurnContext;
 
 	return TurnContext;
 }
 
-void USRPGCombatModel::UnregisterTurn(TSharedRef<FSRPGTurnContext> TurnContext)
+void USRPGCombatModel::UnregisterTurn(USRPGTurnContext* TurnContext)
 {
-	if (mCurTurnContextNode->GetValue() == TurnContext)
+	if (mTurnContextMap[mCurTurnContextOrder->GetValue()] == TurnContext)
 	{
 		// 턴 종료 후 예약
 		FSRPGTurnUnregisterRequest Request;
 		Request.mTargetTurnContext = TurnContext;
-		mPendingTurnRequests.Enqueue(Request);
+		mPendingTurnRequests.Add(Request);
 		return;
 	}
 
 	UnregisterTurnImmediately(TurnContext);
 }
 
-void USRPGCombatModel::UnregisterTurns(const AUnit* Owner)
+void USRPGCombatModel::UnregisterTurns(UUnitModel* Owner)
 {
-	if (mCurTurnContextNode->GetValue()->GetOwner() == Owner)
+	if (mTurnContextMap[mCurTurnContextOrder->GetValue()]->GetOwner() == Owner)
 	{
 		// 턴 종료 후 예약
 		FSRPGTurnUnregisterRequest Request;
 		Request.mTargetOwner = Owner;
-		mPendingTurnRequests.Enqueue(Request);
+		mPendingTurnRequests.Add(Request);
 		return;
 	}
 
 	UnregisterTurnsImmediately(Owner);
 }
 
-bool USRPGCombatModel::UnregisterTurnImmediately(TSharedRef<FSRPGTurnContext> TurnContext)
+bool USRPGCombatModel::UnregisterTurnImmediately(USRPGTurnContext* TurnContext)
 {
-	auto* CurNode = mTurnContexts.FindNode(TurnContext);
+	auto* CurNode = mTurnContextOrder.FindNode(TurnContext->GetTurnId());
 	if (CurNode != nullptr)
 	{
 		// 현재 진행 중인 턴을 삭제하게 되어 노드 전환이 필요한지 여부
-		const bool NeedToChangeTurnContext = mCurTurnContextNode->GetValue() == TurnContext;
+		const bool NeedToChangeTurnContext = mTurnContextMap[mCurTurnContextOrder->GetValue()] == TurnContext;
 
-		auto* NextNode = mTurnContexts.RemoveNode(CurNode);
+		auto* NextNode = mTurnContextOrder.RemoveNode(CurNode);
+		mTurnContextMap.Remove(CurNode->GetValue());
+
 		if (NeedToChangeTurnContext == true)
 		{
-			mCurTurnContextNode = NextNode;
+			mCurTurnContextOrder = NextNode;
 		}
 		return true;
 	}
 	return false;
 }
 
-int32 USRPGCombatModel::UnregisterTurnsImmediately(const AUnit* Owner)
+int32 USRPGCombatModel::UnregisterTurnsImmediately(UUnitModel* Owner)
 {
-	auto* CurNode = mTurnContexts.GetHead();
+	auto* CurNode = mTurnContextOrder.GetHead();
 
 	int32 UnregisterCount = 0;
-	const int32 TotalContextNum = mTurnContexts.Num();
+	const int32 TotalContextNum = mTurnContextOrder.Num();
 	for (int32 i = 0; i < TotalContextNum; ++i)
 	{
 		auto* NextNode = CurNode->GetNextNode();
 
-		TSharedPtr<FSRPGTurnContext> CurTurnContext = CurNode->GetValue();
+		USRPGTurnContext* CurTurnContext = mTurnContextMap[CurNode->GetValue()];
 		if (CurTurnContext->GetOwner() == Owner)
 		{
 			// 현재 진행 중인 턴을 삭제하게 되어 노드 전환이 필요한지 여부
-			const bool NeedToChangeTurnContext = mCurTurnContextNode->GetValue() == CurTurnContext;
+			const bool NeedToChangeTurnContext = mTurnContextMap[mCurTurnContextOrder->GetValue()] == CurTurnContext;
 
-			NextNode = mTurnContexts.RemoveNode(CurNode);
+			NextNode = mTurnContextOrder.RemoveNode(CurNode);
+			mTurnContextMap.Remove(CurNode->GetValue());
 			if (NeedToChangeTurnContext == true)
 			{
-				mCurTurnContextNode = NextNode;
+				mCurTurnContextOrder = NextNode;
 			}
 			++UnregisterCount;
 		}
@@ -296,38 +325,40 @@ int32 USRPGCombatModel::UnregisterTurnsImmediately(const AUnit* Owner)
 
 void USRPGCombatModel::FlushPendingTurnRequests()
 {
-	while (mPendingTurnRequests.IsEmpty() == false)
+	while (mPendingTurnRequests.Num() > mHeadRequestIndex)
 	{
-		FSRPGTurnUnregisterRequest* Request = mPendingTurnRequests.Peek();
+		FSRPGTurnUnregisterRequest& Request = mPendingTurnRequests[mHeadRequestIndex];
 
-		TSharedPtr<FSRPGTurnContext>& TargetTurnContext = Request->mTargetTurnContext;
+		USRPGTurnContext* TargetTurnContext = Request.mTargetTurnContext;
 		if (TargetTurnContext != nullptr)
 		{
-			UnregisterTurnImmediately(TargetTurnContext.ToSharedRef());
+			UnregisterTurnImmediately(TargetTurnContext);
 		}
-		const AUnit* TargetOwner = Request->mTargetOwner;
+		UUnitModel* TargetOwner = Request.mTargetOwner;
 		if (TargetOwner != nullptr)
 		{
 			UnregisterTurnsImmediately(TargetOwner);
 		}
 
-		mPendingTurnRequests.Pop();
+		++mHeadRequestIndex;
+		if (mHeadRequestIndex > 5)
+		{
+			mPendingTurnRequests.RemoveAt(0, mHeadRequestIndex);
+			mHeadRequestIndex = 0;
+		}
 	}
 }
 
-void USRPGCombatModel::RegisterEnemyUnit(const FEnemyUnitPlacementData& EnemyPlacementData)
+void USRPGCombatModel::RegisterEnemyUnit(FEnemyUnitPlacementData& EnemyPlacementData)
 {
 	checkf(mTileMap != nullptr, TEXT("타일맵 미존재"));
 
 	// 적 유닛 스폰 & 초기 위치 등록
-	const UStaticEnemyUnitSpawnData* EnemyUnitSpawnData = EnemyPlacementData.mSpawnData.Get();
-	AUnit* EnemyUnit = GetWorld()->SpawnActorDeferred<AUnit>(EnemyUnitSpawnData->mUnitClass.Get(), mTileMap->TileToWorldTransform(EnemyPlacementData.mTransform));
+	UStaticEnemyUnitSpawnData* EnemyUnitSpawnData = EnemyPlacementData.mSpawnData.Get();
+	UUnitModel* EnemyUnit = GetWorldModelFactory(this)->NewModelDeferred<UUnitModel>(EnemyUnitSpawnData->mModelClass.Get());
 	EnemyUnit->SetStaticSpawnData(EnemyUnitSpawnData);
-	EnemyUnit->FinishSpawning(mTileMap->TileToWorldTransform(EnemyPlacementData.mTransform));
-	EnemyUnit->OnUnitDied.AddWeakLambda(this, [this](AUnit* Unit) {
-		UnregisterTurns(Unit);
-		EvaluateCombatStates();
-		});
+	EnemyUnit->FinishCreating(mTileMap->TileToWorldTransform(EnemyPlacementData.mTransform));
+	EnemyUnit->OnUnitDied.AddDynamic(this, &USRPGCombatModel::PostUnitDeath);
 
 	checkf(mTileMap->CanPlace(EnemyPlacementData.mTransform.mIndex, EnemyUnit), TEXT("액터 배치 불가능"));
 	
@@ -339,17 +370,19 @@ void USRPGCombatModel::RegisterEnemyUnit(const FEnemyUnitPlacementData& EnemyPla
 	RegisterTurn(EnemyUnit);
 
 	// 적 AI 시작
-	AEnemyAIController* AIController = EnemyUnit->GetController<AEnemyAIController>();
-	AIController->StartLogic(EnemyUnitSpawnData->mStateTree.Get());
+	// AEnemyAIController* AIController = EnemyUnit->GetController<AEnemyAIController>();
+	// AIController->StartLogic(EnemyUnitSpawnData->mStateTree.Get());
 }
 
-void USRPGCombatModel::RegisterObstacle(const FObstaclePlacementData& ObstaclePlacementData)
+void USRPGCombatModel::RegisterObstacle(FObstaclePlacementData& ObstaclePlacementData)
 {
 	checkf(mTileMap != nullptr, TEXT("타일맵 미존재"));
 
 	// 적 유닛 스폰 & 초기 위치 등록
-	const UStaticObstacleSpawnData* ObstacleSpawnData = ObstaclePlacementData.mSpawnData.Get();
-	ITileActor* Obstacle = GetWorld()->SpawnActor<ITileActor>(ObstacleSpawnData->mClass.Get(), mTileMap->TileToWorldTransform(ObstaclePlacementData.mTransform));
+	UStaticObstacleSpawnData* ObstacleSpawnData = ObstaclePlacementData.mSpawnData.Get();
+	UBoardActorModel* Obstacle = GetWorldModelFactory(this)->NewModelDeferred<UBoardActorModel>(ObstacleSpawnData->mModelClass.Get());
+	Obstacle->SetStaticSpawnData(ObstacleSpawnData);
+	Obstacle->FinishCreating(mTileMap->TileToWorldTransform(ObstaclePlacementData.mTransform));
 
 	checkf(mTileMap->CanPlace(ObstaclePlacementData.mTransform.mIndex, Obstacle), TEXT("액터 배치 불가능"));
 
@@ -361,30 +394,16 @@ void USRPGCombatModel::SpawnTileMap()
 {
 	checkf(mTileMap == nullptr, TEXT("이미 타일 존재"));
 
-	UWorld* World = GetWorld();
-	checkf(World != nullptr, TEXT("월드 nullptr"));
-
-	const ARDWorldSettings* WorldSettings = Cast<ARDWorldSettings>(World->GetWorldSettings());
-	checkf(WorldSettings != nullptr, TEXT("RDWorldSettings nullptr"));
-
-	AActor* RoomStartPoint = WorldSettings->GetRoomStartPoint();
-	checkf(RoomStartPoint != nullptr, TEXT("RoomStartPoint nullptr"));
-
 	// 타일맵 스폰
-	mTileMap = World->SpawnActor<ATileMap>(ATileMap::StaticClass(), RoomStartPoint->GetTransform());
+	mTileMap = GetWorldModelFactory(this)->NewModel<UTileMapModel>();
 }
 
-void USRPGCombatModel::RegisterPlayerUnit(AUnit* PlayerUnit, const FTileTransform& Transform)
+void USRPGCombatModel::RegisterPlayerUnit(UUnitModel* PlayerUnit, const FTileTransform& Transform)
 {
 	checkf(mTileMap != nullptr, TEXT("타일맵 미존재"));
 	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
 
-	// 초기 위치 등록
-	PlayerUnit->SetActorTransform(mTileMap->TileToWorldTransform(Transform));
-	PlayerUnit->OnUnitDied.AddWeakLambda(this, [this](AUnit* Unit) {
-		UnregisterTurns(Unit);
-		EvaluateCombatStates();
-		});
+	PlayerUnit->OnUnitDied.AddDynamic(this, &USRPGCombatModel::PostUnitDeath);
 
 	// 타일 위에 배치
 	mTileMap->PlaceActor(Transform, PlayerUnit);
@@ -395,13 +414,13 @@ void USRPGCombatModel::RegisterPlayerUnit(AUnit* PlayerUnit, const FTileTransfor
 	RegisterTurn(PlayerUnit);
 }
 
-void USRPGCombatModel::RegisterEnemyUnits(const TArray<FEnemyUnitPlacementData>& EnemyPlacementDatas)
+void USRPGCombatModel::RegisterEnemyUnits(TArray<FEnemyUnitPlacementData>& EnemyPlacementDatas)
 {
 	checkf(mTileMap != nullptr, TEXT("타일맵 미존재"));
 
 	// 우선 순위 별로 유닛 재정렬
-	TSortedMap<int32, TArray<const FEnemyUnitPlacementData*>> RegisterMap;
-	for (const FEnemyUnitPlacementData& PlacementData : EnemyPlacementDatas)
+	TSortedMap<int32, TArray<FEnemyUnitPlacementData*>> RegisterMap;
+	for (FEnemyUnitPlacementData& PlacementData : EnemyPlacementDatas)
 	{
 		RegisterMap[PlacementData.mTurnPriority].Push(&PlacementData);
 	}
@@ -410,18 +429,18 @@ void USRPGCombatModel::RegisterEnemyUnits(const TArray<FEnemyUnitPlacementData>&
 	for (auto& RegisterPair : RegisterMap)
 	{
 		Algo::RandomShuffle(RegisterPair.Value);
-		for (const FEnemyUnitPlacementData*& Data : RegisterPair.Value)
+		for (FEnemyUnitPlacementData*& Data : RegisterPair.Value)
 		{
 			RegisterEnemyUnit(*Data);
 		}
 	}
 }
 
-void USRPGCombatModel::RegisterObstacles(const TArray<FObstaclePlacementData>& ObstaclePlacementDatas)
+void USRPGCombatModel::RegisterObstacles(TArray<FObstaclePlacementData>& ObstaclePlacementDatas)
 {
 	checkf(mTileMap != nullptr, TEXT("타일맵 미존재"));
 
-	for (const FObstaclePlacementData& PlacementData : ObstaclePlacementDatas)
+	for (FObstaclePlacementData& PlacementData : ObstaclePlacementDatas)
 	{
 		RegisterObstacle(PlacementData);
 	}
@@ -435,7 +454,7 @@ void USRPGCombatModel::AdvanceTurn(bool IsInitialRound)
 		NotifyRoundEndIfNeeded();
 
 		// 다음 턴 진행
-		mCurTurnContextNode = mCurTurnContextNode->GetNextNode();
+		mCurTurnContextOrder = mCurTurnContextOrder->GetNextNode();
 		// 밀려있던 턴 구성 변경 요청안들 처리
 		FlushPendingTurnRequests();
 	}
@@ -443,18 +462,18 @@ void USRPGCombatModel::AdvanceTurn(bool IsInitialRound)
 	// 라운드 시작 시 이벤트 처리
 	NotifyRoundStartIfNeeded();
 
-	mCurTurnContextNode->GetValue()->BeginTurn();
+	mTurnContextMap[mCurTurnContextOrder->GetValue()]->BeginTurn();
 }
 
 void USRPGCombatModel::NotifyRoundStartIfNeeded()
 {
-	if (mTurnContexts.IsEmpty() == false && mCurTurnContextNode == mTurnContexts.GetHead())
+	if (mTurnContextOrder.IsEmpty() == false && mCurTurnContextOrder == mTurnContextOrder.GetHead())
 	{
-		for (const TObjectPtr<AUnit>& Unit : mUnits)
+		for (const TObjectPtr<UUnitModel>& Unit : mUnits)
 		{
 			Unit->OnBeginRound();
 		}
-		for (const TScriptInterface<ITileActor>& Obstacle : mObstacles)
+		for (const TObjectPtr<UBoardActorModel>& Obstacle : mObstacles)
 		{
 			Obstacle->OnBeginRound();
 		}
@@ -463,70 +482,74 @@ void USRPGCombatModel::NotifyRoundStartIfNeeded()
 
 void USRPGCombatModel::NotifyRoundEndIfNeeded()
 {
-	if (mTurnContexts.IsEmpty() == false && mCurTurnContextNode == mTurnContexts.GetTail())
+	if (mTurnContextOrder.IsEmpty() == false && mCurTurnContextOrder == mTurnContextOrder.GetTail())
 	{
-		for (const TObjectPtr<AUnit>& Unit : mUnits)
+		for (const TObjectPtr<UUnitModel>& Unit : mUnits)
 		{
 			Unit->OnEndRound();
 		}
-		for (const TScriptInterface<ITileActor>& Obstacle : mObstacles)
+		for (const TObjectPtr<UBoardActorModel>& Obstacle : mObstacles)
 		{
 			Obstacle->OnEndRound();
 		}
 	}
 }
 
-bool USRPGCombatModel::PushAction(TSharedPtr<FSRPGAction> Action)
+void USRPGCombatModel::PostUnitDeath(UUnitModel* UnitModel)
+{
+	UnregisterTurns(UnitModel);
+	EvaluateCombatStates();
+}
+
+bool USRPGCombatModel::PushAction(USRPGAction* Action)
 {
 	checkf(Action != nullptr, TEXT("유효하지 않은 액션"));
 
-	if (mCurTurnContextNode == nullptr || mCurTurnContextNode->GetValue() == nullptr)
+	if (mCurTurnContextOrder == nullptr || mTurnContextMap[mCurTurnContextOrder->GetValue()] == nullptr)
 	{
 		UE_LOG(LogSRPGCombat, Log, TEXT("현재 등록된 턴 객체가 존재하지 않음"));
 		return false;
 	}
 
-	mCurTurnContextNode->GetValue()->EnqueueAction(Action);
+	mTurnContextMap[mCurTurnContextOrder->GetValue()]->EnqueueAction(Action);
 	return true;
 }
 
-TWeakPtr<FSRPGTurnContext> USRPGCombatModel::GetCurrentTurnContext()
+USRPGTurnContext* USRPGCombatModel::GetCurrentTurnContext()
 {
-	if (mCurTurnContextNode == nullptr)
+	if (mCurTurnContextOrder == nullptr)
 	{
 		return nullptr;
 	}
-	return mCurTurnContextNode->GetValue();
+	return mTurnContextMap[mCurTurnContextOrder->GetValue()];
 }
 
-TWeakPtr<FSRPGTurnContext> USRPGCombatModel::GetTurnContext(const AUnit* Owner)
+USRPGTurnContext* USRPGCombatModel::GetTurnContext(const UUnitModel* Owner)
 {
-	auto* HeadNode = mTurnContexts.GetHead();
-	const int32 TurnCount = mTurnContexts.Num();
+	auto* HeadNode = mTurnContextOrder.GetHead();
+	const int32 TurnCount = mTurnContextOrder.Num();
 	for (int32 i = 0; i < TurnCount; ++i)
 	{
-		if (HeadNode->GetValue()->GetOwner() == Owner)
+		if (mTurnContextMap[mCurTurnContextOrder->GetValue()]->GetOwner() == Owner)
 		{
-			return HeadNode->GetValue();
+			return mTurnContextMap[mCurTurnContextOrder->GetValue()];
 		}
 		HeadNode = HeadNode->GetNextNode();
 	}
-
-	checkNoEntry();
 	return nullptr;
 }
 
-TArray<TWeakPtr<FSRPGTurnContext>> USRPGCombatModel::GetTurnContexts(const AUnit* Owner)
+TArray<TObjectPtr<USRPGTurnContext>> USRPGCombatModel::GetTurnContexts(const UUnitModel* Owner)
 {
-	TArray<TWeakPtr<FSRPGTurnContext>> Contexts;
+	TArray<TObjectPtr<USRPGTurnContext>> Contexts;
 
-	auto* HeadNode = mTurnContexts.GetHead();
-	const int32 TurnCount = mTurnContexts.Num();
+	auto* HeadNode = mTurnContextOrder.GetHead();
+	const int32 TurnCount = mTurnContextOrder.Num();
 	for (int32 i = 0; i < TurnCount; ++i)
 	{
-		if (HeadNode->GetValue()->GetOwner() == Owner)
+		if (mTurnContextMap[mCurTurnContextOrder->GetValue()]->GetOwner() == Owner)
 		{
-			Contexts.Push(HeadNode->GetValue());
+			Contexts.Push(mTurnContextMap[mCurTurnContextOrder->GetValue()]);
 		}
 		HeadNode = HeadNode->GetNextNode();
 	}
@@ -534,12 +557,12 @@ TArray<TWeakPtr<FSRPGTurnContext>> USRPGCombatModel::GetTurnContexts(const AUnit
 	return Contexts;
 }
 
-ATileMap* USRPGCombatModel::GetTileMap()
+UTileMapModel* USRPGCombatModel::GetTileMap()
 {
 	return mTileMap;
 }
 
-TArray<TObjectPtr<AUnit>>& USRPGCombatModel::GetUnits()
+TArray<TObjectPtr<UUnitModel>>& USRPGCombatModel::GetUnits()
 {
 	return mUnits;
 }

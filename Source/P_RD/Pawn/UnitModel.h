@@ -7,31 +7,30 @@
 
 #pragma once
 
-#include "GAS/GASMinimal.h"
+#include "RDMinimal.h"
 
-#include "SRPGFramework/BoardActorModel.h"
-#include "SRPGFramework/BoardCombatTarget.h"
-#include "SRPGFramework/BoardSelectionTarget.h"
+#include "Actor/BoardActor/BoardActorModel.h"
+#include "Actor/BoardActor/BoardCombatTarget.h"
+#include "Actor/BoardActor/BoardSelectionTarget.h"
 #include "GenericTeamAgentInterface.h"
 
-#include "Unit.generated.h"
+#include "UnitModel.generated.h"
 
 class UUnitModel;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnitDied, UUnitModel* /* Model */);
-
 class UUnitAttributeSet;
-class UPackageMap;
 class UStaticUnitSpawnData;
 
-class UGameplayAttributeComponent;
+class UGameplayAttributeComponentModel;
 class USkillComponent;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUnitDied, UUnitModel*, Model);
 
 /**
  * @brief  턴을 소유할 수 있는 베이스 폰 클래스 모델
  */
 UCLASS(abstract)
-class P_RD_API UUnitModel : public UBoardActorModel, public IGenericTeamAgentInterface, public IBoardCombatTarget, public IBoardSelectionTarget
+class P_RD_API UUnitModel : public UBoardActorModel, public IBoardCombatTarget, public IBoardSelectionTarget
 {
 	GENERATED_BODY()
 
@@ -42,10 +41,6 @@ public:
 public:	
 	void PostInitializeComponentModels() override;
 
-public:
-	ETileLayerFlag GetTileLayerFlags() const override;
-	ETileLayerFlag GetBlockLayerFlags() const override;
-
 	/* IGenericTeamAgentInterface 상속 */
 public:
 	void SetGenericTeamId(const FGenericTeamId& TeamID) override;
@@ -53,42 +48,27 @@ public:
 
 	/* IBoardCombatTarget 상속 */
 public:
-	UGameplayAttributeComponent* GetAttributeComponent() const override;
+	UGameplayAttributeComponentModel* GetAttributeComponentModel() const;
 	FBoardCombatTargetSnapshotData* MakeSnapshotData() const override;
 
 public:
-	USkillComponent* GetSkillComponent() const;
+	// USkillComponent* GetSkillComponent() const;
 
 public:
-	void SetStaticSpawnData(const UStaticUnitSpawnData* StaticUnitSpawnData);
+	virtual int32 GetDifficulty() const PURE_VIRTUAL(UUnitModel::GetDifficulty, return 0;)
+	virtual bool IsPlayerUnitModel() const PURE_VIRTUAL(UUnitModel::IsPlayerUnit, return false;)
 
 public:
-	UUnitAttributeSet* GetUnitAttributeSet() const;
-
-	FName GetUnitKeyName() const;
-	const FText& GetUnitDisplayName() const;
-
-	virtual int32 GetDifficulty() const PURE_VIRTUAL(AUnit::GetDifficulty, return 0;)
-	virtual bool IsPlayerUnit() const PURE_VIRTUAL(AUnit::IsPlayerUnit, return false;)
-
-public:
+	UPROPERTY(Category = Event, BlueprintAssignable)
 	FOnUnitDied OnUnitDied;
 
 private:
-	UPROPERTY(Category = GAS, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "AbilitySystemComp"))
-	TObjectPtr<UAbilitySystemComponent>	mAbilitySystemComp;
+	UPROPERTY(Category = Attribute, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "AttributeCompModel"))
+	TObjectPtr<UGameplayAttributeComponentModel> mAttributeCompModel;
 
-protected:
-	UPROPERTY(Category = GAS, VisibleAnywhere, meta = (DisplayName = "UnitAttributeSet"))
-	TObjectPtr<UUnitAttributeSet> mUnitAttributeSet;
-
-private:
-	UPROPERTY(Category = Skill, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "SkillComp"))
-	TObjectPtr<USkillComponent>	mSkillComp;
-
-protected:
-	UPROPERTY(Category = Spawn, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "StaticUnitSpawnData"))
-	TObjectPtr<const UStaticUnitSpawnData> mStaticUnitSpawnData;
+	// TODO : 모델로 바꿔야됨
+	// UPROPERTY(Category = Skill, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "SkillComp"))
+	// TObjectPtr<USkillComponent>	mSkillComp;
 
 private:
 	// @brief 팀 ID

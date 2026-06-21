@@ -6,7 +6,7 @@
  *********************************************************************/
 #pragma once
 
-#include "GAS/GASMinimal.h"
+#include "RDMinimal.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "UObject/Object.h"
 #include "StaticSkillEffect_Base.generated.h"

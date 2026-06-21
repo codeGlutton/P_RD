@@ -1,4 +1,22 @@
 ﻿#include "Actor/BoardActor/BoardActorModel.h"
+#include "DataAsset/ObstacleSpawnData/StaticObstacleSpawnData.h"
+
+void UBoardActorModel::SetStaticSpawnData(UStaticObstacleSpawnData* StaticSpawnData)
+{
+	mStaticSpawnData = StaticSpawnData;
+}
+
+FName UBoardActorModel::GetBoardActorKeyName() const
+{
+	checkf(mStaticSpawnData != nullptr, TEXT("스폰 데이터 nullptr"));
+	return mStaticSpawnData->GetKeyName();
+}
+
+const FText& UBoardActorModel::GetBoardActorDisplayName() const
+{
+	checkf(mStaticSpawnData != nullptr, TEXT("스폰 데이터 nullptr"));
+	return mStaticSpawnData->mDisplayName;
+}
 
 const FTileTransform& UBoardActorModel::GetTileTransform() const
 {

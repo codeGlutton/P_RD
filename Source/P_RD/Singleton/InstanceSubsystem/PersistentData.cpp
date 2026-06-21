@@ -1,6 +1,6 @@
 ﻿#include "Singleton/InstanceSubsystem/PersistentData.h"
-#include "GAS/Attribute/UnitAttributeSet.h"
-#include "Pawn/Player/PlayerUnit.h"
+// #include "GAS/Attribute/UnitAttributeSet.h"
+#include "Pawn/Player/PlayerUnitModel.h"
 
 #include "Setting/GameBalanceSettings.h"
 #include "Engine/AssetManager.h"
@@ -29,14 +29,14 @@ void FUserLog::Clear()
 	mKnownDiceIds.Empty();
 }
 
-void UPlayerUnitPersistData::RegisterPlayerUnit(APlayerUnit* PlayerUnit)
+void UPlayerUnitPersistData::RegisterPlayerUnit(UPlayerUnitModel* PlayerUnit)
 {
 	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
-	UAbilitySystemComponent* ASC = PlayerUnit->GetAbilitySystemComponent();
-	checkf(ASC != nullptr, TEXT("어빌리티 시스템 컴포넌트 nullptr"));
-
-	SyncPlayerPersistData(PlayerUnit);
-	BindPlayerUnitEvent(PlayerUnit);
+	// UAbilitySystemComponent* ASC = PlayerUnit->GetAbilitySystemComponent();
+	// checkf(ASC != nullptr, TEXT("어빌리티 시스템 컴포넌트 nullptr"));
+	// 
+	// SyncPlayerPersistData(PlayerUnit);
+	// BindPlayerUnitEvent(PlayerUnit);
 }
 
 const FPrimaryAssetId& UPlayerUnitPersistData::GetPlayerUnitId() const
@@ -69,72 +69,72 @@ const TArray<FPrimaryAssetId>& UPlayerUnitPersistData::GetDiceIds() const
 	return mDiceIds;
 }
 
-void UPlayerUnitPersistData::SyncPlayerPersistData(APlayerUnit* PlayerUnit)
+void UPlayerUnitPersistData::SyncPlayerPersistData(UPlayerUnitModel* PlayerUnit)
 {
-	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
-	UAbilitySystemComponent* ASC = PlayerUnit->GetAbilitySystemComponent();
-	checkf(ASC != nullptr, TEXT("어빌리티 시스템 컴포넌트 nullptr"));
-
-	if (mIsNewData == true)
-	{
-		mIsNewData = false;
-
-		bool IsFound;
-
-		IsFound = false;
-		mMaxHP = ASC->GetGameplayAttributeValue(UPlayerUnitAttributeSet::GetMaxHPAttribute(), IsFound);
-		checkf(IsFound == true, TEXT("최대 체력 속성 미발견"));
-
-		IsFound = false;
-		mHP = ASC->GetGameplayAttributeValue(UPlayerUnitAttributeSet::GetHPAttribute(), IsFound);
-		checkf(IsFound == true, TEXT("체력 속성 미발견"));
-
-		IsFound = false;
-		mExp = ASC->GetGameplayAttributeValue(UPlayerUnitAttributeSet::GetExpAttribute(), IsFound);
-		checkf(IsFound == true, TEXT("경험치 속성 미발견"));
-
-		IsFound = false;
-		mMoney = ASC->GetGameplayAttributeValue(UPlayerUnitAttributeSet::GetMoneyAttribute(), IsFound);
-		checkf(IsFound == true, TEXT("돈 속성 미발견"));
-
-		return;
-	}
-
-	ASC->ApplyModToAttribute(UPlayerUnitAttributeSet::GetMaxHPAttribute(), EGameplayModOp::Override, mMaxHP);
-	ASC->ApplyModToAttribute(UPlayerUnitAttributeSet::GetHPAttribute(), EGameplayModOp::Override, mHP);
-	ASC->ApplyModToAttribute(UPlayerUnitAttributeSet::GetExpAttribute(), EGameplayModOp::Override, mExp);
-	ASC->ApplyModToAttribute(UPlayerUnitAttributeSet::GetMoneyAttribute(), EGameplayModOp::Override, mMoney);
-	for (auto& Pair : mTagCountMap)
-	{
-		ASC->AddLooseGameplayTag(Pair.Key, Pair.Value);
-	}
+	// checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
+	// UAbilitySystemComponent* ASC = PlayerUnit->GetAbilitySystemComponent();
+	// checkf(ASC != nullptr, TEXT("어빌리티 시스템 컴포넌트 nullptr"));
+	// 
+	// if (mIsNewData == true)
+	// {
+	// 	mIsNewData = false;
+	// 
+	// 	bool IsFound;
+	// 
+	// 	IsFound = false;
+	// 	mMaxHP = ASC->GetGameplayAttributeValue(UPlayerUnitAttributeSet::GetMaxHPAttribute(), IsFound);
+	// 	checkf(IsFound == true, TEXT("최대 체력 속성 미발견"));
+	// 
+	// 	IsFound = false;
+	// 	mHP = ASC->GetGameplayAttributeValue(UPlayerUnitAttributeSet::GetHPAttribute(), IsFound);
+	// 	checkf(IsFound == true, TEXT("체력 속성 미발견"));
+	// 
+	// 	IsFound = false;
+	// 	mExp = ASC->GetGameplayAttributeValue(UPlayerUnitAttributeSet::GetExpAttribute(), IsFound);
+	// 	checkf(IsFound == true, TEXT("경험치 속성 미발견"));
+	// 
+	// 	IsFound = false;
+	// 	mMoney = ASC->GetGameplayAttributeValue(UPlayerUnitAttributeSet::GetMoneyAttribute(), IsFound);
+	// 	checkf(IsFound == true, TEXT("돈 속성 미발견"));
+	// 
+	// 	return;
+	// }
+	// 
+	// ASC->ApplyModToAttribute(UPlayerUnitAttributeSet::GetMaxHPAttribute(), EGameplayModOp::Override, mMaxHP);
+	// ASC->ApplyModToAttribute(UPlayerUnitAttributeSet::GetHPAttribute(), EGameplayModOp::Override, mHP);
+	// ASC->ApplyModToAttribute(UPlayerUnitAttributeSet::GetExpAttribute(), EGameplayModOp::Override, mExp);
+	// ASC->ApplyModToAttribute(UPlayerUnitAttributeSet::GetMoneyAttribute(), EGameplayModOp::Override, mMoney);
+	// for (auto& Pair : mTagCountMap)
+	// {
+	// 	ASC->AddLooseGameplayTag(Pair.Key, Pair.Value);
+	// }
 }
 
-void UPlayerUnitPersistData::BindPlayerUnitEvent(APlayerUnit* PlayerUnit)
+void UPlayerUnitPersistData::BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit)
 {
-	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
-	UAbilitySystemComponent* ASC = PlayerUnit->GetAbilitySystemComponent();
-	checkf(ASC != nullptr, TEXT("어빌리티 시스템 컴포넌트 nullptr"));
-
-	ASC->GetGameplayAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).AddLambda([this](const FOnAttributeChangeData& Data) {
-		mMaxHP = Data.NewValue;
-		});
-	ASC->GetGameplayAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).AddLambda([this](const FOnAttributeChangeData& Data) {
-		mHP = Data.NewValue;
-		});
-	ASC->GetGameplayAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetExpAttribute()).AddLambda([this](const FOnAttributeChangeData& Data) {
-		mExp = Data.NewValue;
-		});
-	ASC->GetGameplayAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMoneyAttribute()).AddLambda([this](const FOnAttributeChangeData& Data) {
-		mMoney = Data.NewValue;
-		});
-	ASC->RegisterGameplayTagEvent(EffectTags::GameplayEffect_Cost_PassiveStack, EGameplayTagEventType::AnyCountChange).AddLambda([this](const FGameplayTag Tag, int32 Count) {
-		mTagCountMap[Tag] = Count;
-		if (Count == 0)
-		{
-			mTagCountMap.Remove(Tag);
-		}
-		});
+	// checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
+	// UAbilitySystemComponent* ASC = PlayerUnit->GetAbilitySystemComponent();
+	// checkf(ASC != nullptr, TEXT("어빌리티 시스템 컴포넌트 nullptr"));
+	// 
+	// ASC->GetGameplayAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).AddLambda([this](const FOnAttributeChangeData& Data) {
+	// 	mMaxHP = Data.NewValue;
+	// 	});
+	// ASC->GetGameplayAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).AddLambda([this](const FOnAttributeChangeData& Data) {
+	// 	mHP = Data.NewValue;
+	// 	});
+	// ASC->GetGameplayAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetExpAttribute()).AddLambda([this](const FOnAttributeChangeData& Data) {
+	// 	mExp = Data.NewValue;
+	// 	});
+	// ASC->GetGameplayAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMoneyAttribute()).AddLambda([this](const FOnAttributeChangeData& Data) {
+	// 	mMoney = Data.NewValue;
+	// 	});
+	// ASC->RegisterGameplayTagEvent(EffectTags::GameplayEffect_Cost_PassiveStack, EGameplayTagEventType::AnyCountChange).AddLambda([this](const FGameplayTag Tag, int32 Count) {
+	// 	mTagCountMap[Tag] = Count;
+	// 	if (Count == 0)
+	// 	{
+	// 		mTagCountMap.Remove(Tag);
+	// 	}
+	// 	});
 }
 
 void URunPersistData::StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty)

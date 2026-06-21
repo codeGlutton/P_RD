@@ -1,14 +1,42 @@
 ﻿#include "Simulation/RoomInstance.h"
-#include "FunctionLibrary/RandomStreamFunctionLibrary.h"
+#include "Singleton/InstanceSubsystem/PersistentData.h"
+#include "Singleton/InstanceSubsystem/PersistentDataSubsystem.h"
 
 #include "ObjectModel.h"
 
-void URoomInstance::PostDuplicate(EDuplicateMode::Type DuplicateMode)
+void URoomInstance::CollectGameDatas()
 {
-	Super::PostDuplicate(DuplicateMode);
+	mCopiedData.Reset();
 
-	if (DuplicateMode == EDuplicateMode::Normal)
+	/* 데이터 채우기 */
+
 	{
-		mCopiedEventStream = URandomStreamFunctionLibrary::GetEventStream(GetWorld());
+		UPersistentDataSubsystem* PersistentSubsystem = UGameplayStatics::GetGameInstance(GetWorld())->GetSubsystem<UPersistentDataSubsystem>();
+		checkf(PersistentSubsystem != nullptr, TEXT("영구 데이터 서브시스템 nullptr"));
+
+		mEventStreamPtr = &PersistentSubsystem->GetRunPersistData()->GetEventStream();
+	}
+}
+
+void URoomInstance::CollectSimulationDatas()
+{
+	mCopiedData.Reset();
+
+	/* 복제본 생성 */
+
+	mCopiedData.InitializeAs<FRoomCopyData>();
+	FRoomCopyData& CopyData = mCopiedData.GetMutable();
+
+	{
+		UPersistentDataSubsystem* PersistentSubsystem = UGameplayStatics::GetGameInstance(GetWorld())->GetSubsystem<UPersistentDataSubsystem>();
+		checkf(PersistentSubsystem != nullptr, TEXT("영구 데이터 서브시스템 nullptr"));
+
+		CopyData.mCopiedEventStream = PersistentSubsystem->GetRunPersistData()->GetEventStream();
+	}
+
+	/* 데이터 채우기 */
+
+	{
+		mEventStreamPtr = &CopyData.mCopiedEventStream;
 	}
 }

@@ -1,11 +1,8 @@
 ﻿#include "GameMode/CombatGameMode.h"
-#include "Singleton/WorldSubsystem/SimulationSubsystem.h"
 #include "Simulation/Factory/ObjectModelFactory.h"
 
-#include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
-
-#include "Singleton/WorldSubsystem/SRPGCommandRouterSubsystem.h"
+#include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
 #include "Engine/AssetManager.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
@@ -13,7 +10,8 @@
 
 #include "PCGStage/Room.h"
 
-#include "Pawn/Unit.h"
+#include "Pawn/UnitModel.h"
+#include "Pawn/Player/PlayerUnitModel.h"
 
 #include "SRPGFramework/SRPGSkillAction.h"
 #include "SRPGFramework/SRPGSkillBuildAction.h"
@@ -28,12 +26,10 @@ void ACombatGameMode::InitializeRoom()
 
 	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
 	checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
-	const UStaticCombatRoomSpawnData* StaticRoomData = AssetManager->GetPrimaryAssetObject<UStaticCombatRoomSpawnData>(CurRoom.mStaticRoomSpawnDataId);
+	UStaticCombatRoomSpawnData* StaticRoomData = AssetManager->GetPrimaryAssetObject<UStaticCombatRoomSpawnData>(CurRoom.mStaticRoomSpawnDataId);
 	checkf(StaticRoomData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
 
-	USimulationSubsystem* SimulationSubsystem = GetWorld()->GetSubsystem<USimulationSubsystem>();
-	checkf(SimulationSubsystem != nullptr, TEXT("시뮬레이션 서브시스템 nullptr"));
-	USRPGCombatModel* CombatModel = SimulationSubsystem->GetModelFactory()->NewModel<USRPGCombatModel>(TEXT("SRPGCombatModel"));
+	USRPGCombatModel* CombatModel = GetWorldModelFactory(this)->NewModel<USRPGCombatModel>();
 
 	CombatModel->InitCombat(StaticRoomData, GetPlayerUnit());
 }
@@ -42,52 +38,49 @@ void ACombatGameMode::BeginRoom()
 {
 	Super::BeginRoom();
 
-	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-	checkf(CombatSubsystem != nullptr, TEXT("전투 시스템 서브시스템 nullptr"));
-	USRPGCombatModel* CombatModel = CombatSubsystem->GetModel<USRPGCombatModel>();
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 시스템 모델 nullptr"));
 
-	for (const TObjectPtr<AUnit>& Unit : CombatModel->GetUnits())
-	{
-		Unit->OnBeginRoom();
-	}
 	CombatModel->BeginCombat();
 }
 
 bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 {
-	USRPGCommandRouterSubsystem* CommandRouterSubsystem = GetWorld()->GetSubsystem<USRPGCommandRouterSubsystem>();
-	checkf(CommandRouterSubsystem != nullptr, TEXT("명령 라우터 서브시스템 nullptr"));
+	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
 
-	TSharedPtr<FSRPGSkillSelectCommand> SkillSelectCommand = MakeShared<FSRPGSkillSelectCommand>();
-	SkillSelectCommand->mSkillIndex = SkillIndex;
-	SkillSelectCommand->OnChangeSkillBuildPhase.AddUObject(this, &ACombatGameMode::OnChangeSkillBuildPhase);
+	TInstancedStruct<FSRPGCommand> SkillSelectCommand;
+	SkillSelectCommand.InitializeAs<FSRPGSkillSelectCommand>();
+	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().mSkillIndex = SkillIndex;
+	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnChangeSkillBuildPhase.AddUObject(this, &ACombatGameMode::OnChangeSkillBuildPhase);
 
-	return CommandRouterSubsystem->SummitCommand(SkillSelectCommand);
+	return CommandRouterModel->SummitCommand(SkillSelectCommand);
 }
 
 bool ACombatGameMode::ResolveWorldTouchEvent()
 {
-	USRPGCommandRouterSubsystem* CommandRouterSubsystem = GetWorld()->GetSubsystem<USRPGCommandRouterSubsystem>();
-	checkf(CommandRouterSubsystem != nullptr, TEXT("명령 라우터 서브시스템 nullptr"));
+	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
 
-	TSharedPtr<FSRPGWorldTraceCommand> WorldTraceActionCommand = MakeShared<FSRPGWorldTraceCommand>();
-	WorldTraceActionCommand->mIsLongPress = false;
+	TInstancedStruct<FSRPGCommand> WorldTraceActionCommand;
+	WorldTraceActionCommand.InitializeAs<FSRPGWorldTraceCommand>();
+	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mIsLongPress = false;
 
-	return CommandRouterSubsystem->SummitCommand(WorldTraceActionCommand);
+	return CommandRouterModel->SummitCommand(WorldTraceActionCommand);
 }
 
 bool ACombatGameMode::ResolveWorldLongPressEvent()
 {
-	USRPGCommandRouterSubsystem* CommandRouterSubsystem = GetWorld()->GetSubsystem<USRPGCommandRouterSubsystem>();
-	checkf(CommandRouterSubsystem != nullptr, TEXT("명령 라우터 서브시스템 nullptr"));
+	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
 
-	TSharedPtr<FSRPGWorldTraceCommand> WorldTraceActionCommand = MakeShared<FSRPGWorldTraceCommand>();
-	WorldTraceActionCommand->mIsLongPress = true;
+	TInstancedStruct<FSRPGCommand> WorldTraceActionCommand;
+	WorldTraceActionCommand.InitializeAs<FSRPGWorldTraceCommand>();
+	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mIsLongPress = true;
 
-	return CommandRouterSubsystem->SummitCommand(WorldTraceActionCommand);
+	return CommandRouterModel->SummitCommand(WorldTraceActionCommand);
 }
 
-void ACombatGameMode::OnChangeSkillBuildPhase(const FSRPGSkillBuildAction& Action, ESRPGSkillBuildPhase Phase)
+void ACombatGameMode::OnChangeSkillBuildPhase(const USRPGSkillBuildAction* Action, ESRPGSkillBuildPhase Phase)
 {
 }

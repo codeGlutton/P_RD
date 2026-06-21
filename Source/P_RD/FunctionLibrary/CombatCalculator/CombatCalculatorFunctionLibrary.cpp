@@ -2,17 +2,17 @@
 
 
 #include "CombatCalculatorFunctionLibrary.h"
-#include "SRPGFramework/TileActor.h"
+#include "Actor/BoardActor/BoardActorModel.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
 
-bool UCombatCalculatorFunctionLibrary::CalculateSkillResult(TScriptInterface<const ITileActor> CasterTile, const UStaticSkillData* SkillData, const TArray<TScriptInterface<ITileActor>>& Tiles, FSkillCommitResult& Out_Result)
+bool UCombatCalculatorFunctionLibrary::CalculateSkillResult(UBoardActorModel* CasterTile, const UStaticSkillData* SkillData, const TArray<TObjectPtr<UBoardActorModel>>& Tiles, FSkillCommitResult& Out_Result)
 {
     FSkillCommitResult SkillCommitResult;
 
     // 1. 이펙트 적용 결과 생성
     FEffectCommitResult EffectCommitResult;
 
-    for (TScriptInterface<const ITileActor> TileActor : Tiles)
+    for (UBoardActorModel* TileActor : Tiles)
     {
         // 2. 타일 적용 결과 생성 (예: X=1, Y=2 타일)
         FTileActorCommitResult TileCommitResult;

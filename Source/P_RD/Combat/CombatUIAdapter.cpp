@@ -1,10 +1,13 @@
 ﻿#include "Combat/CombatUIAdapter.h"
 
 #include "Actor/TileMap/TileMap.h"
+#include "Actor/TileMap/TileMapModel.h"
 #include "Dice/DicePoolModel.h"
 #include "Dice/DiceModel.h"
 #include "GameFramework/PlayerController.h"
 #include "Pawn/Unit.h"
+#include "ObjectView.h"
+#include "Pawn/UnitModel.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
@@ -57,9 +60,9 @@ void UCombatUIAdapter::Build(USRPGCombatSubsystem* InCombat, const URunPersistDa
 		// 턴이 끝날 때마다 이번 턴에 쓴 주사위 잠금을 해제하도록 훅을 건다(계약 D: Begin/EndTurn 리셋).
 		mEndTurnHandle = mCombat->GetModel<USRPGCombatModel>()->OnEndAnyTurnUI.AddUObject(this, &UCombatUIAdapter::HandleEndAnyTurn);
 
-		for (const TObjectPtr<AUnit>& Unit : mCombat->GetModel<USRPGCombatModel>()->GetUnits())
+		for (const TObjectPtr<UUnitModel>& Unit : mCombat->GetModel<USRPGCombatModel>()->GetUnits())
 		{
-			if (Unit == nullptr || Unit->IsPlayerUnit() == false)
+			if (Unit == nullptr || Unit->IsPlayerUnitModel() == false)
 			{
 				continue;
 			}
@@ -70,7 +73,7 @@ void UCombatUIAdapter::Build(USRPGCombatSubsystem* InCombat, const URunPersistDa
 			State.mMaxHP = PlayerStartHP;
 			State.mHP = PlayerStartHP;
 			State.mMovePoint = PlayerStartMovePoint;
-			State.mActor = Unit;
+			State.mActor = Unit->GetView<AUnit>();
 			mUnitStates.Add(State);
 		}
 	}
@@ -250,7 +253,7 @@ void UCombatUIAdapter::HandleWorldTouch(FVector2D ScreenPosition, bool bLongPres
 }
 
 /** @brief 턴 종료 UI 이벤트에서 이번 턴 사용한 주사위 잠금을 해제하고 Dice 도메인을 다시 push한다. */
-void UCombatUIAdapter::HandleEndAnyTurn(TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGTurnContext& /*TurnContext*/, ESRPGTurnResult /*Result*/)
+void UCombatUIAdapter::HandleEndAnyTurn(TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, ESRPGTurnResult /*Result*/)
 {
 	// 턴이 끝나면 이번 턴에 쓴 주사위 잠금을 해제한다(다음 턴 다시 사용 가능).
 	// Barrier는 즉시 처리(애니 대기 없음)라 붙잡지 않는다 → 스코프 종료 시 카운트가 줄어 로직이 이어진다.
@@ -276,7 +279,7 @@ void UCombatUIAdapter::BeginDestroy()
 /** @brief 타일맵의 하이라이트 레이어를 단일 타일/단일 플래그 상태로 맞춘다. */
 void UCombatUIAdapter::SetSingleTileHighlight(const FTileIndex& Tile, ETileHighlightFlag Flag) const
 {
-	ATileMap* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap() : nullptr;
+	ATileMap* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap()->GetView<ATileMap>() : nullptr;
 	if (TileMap == nullptr)
 	{
 		return;
@@ -293,7 +296,7 @@ void UCombatUIAdapter::SetSingleTileHighlight(const FTileIndex& Tile, ETileHighl
 /** @brief Aim/Select/Effect 하이라이트를 모두 끄고 pending 액션의 시각 상태를 초기화한다. */
 void UCombatUIAdapter::ClearAllHighlight() const
 {
-	ATileMap* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap() : nullptr;
+	ATileMap* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap()->GetView<ATileMap>() : nullptr;
 	if (TileMap == nullptr)
 	{
 		return;
@@ -394,7 +397,7 @@ void UCombatUIAdapter::ClearPendingAction()
 /** @brief 카메라 스크린 좌표를 타일맵 평면과 교차시켜 유효한 FTileIndex로 변환한다. */
 bool UCombatUIAdapter::ResolveTileFromScreen(const FVector2D& ScreenPosition, FTileIndex& OutTile) const
 {
-	ATileMap* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap() : nullptr;
+	ATileMap* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap()->GetView<ATileMap>() : nullptr;
 	UWorld* World = mCombat != nullptr ? mCombat->GetWorld() : nullptr;
 	if (TileMap == nullptr || World == nullptr)
 	{
@@ -439,7 +442,7 @@ bool UCombatUIAdapter::ResolveTileFromScreen(const FVector2D& ScreenPosition, FT
 /** @brief Actor가 없는 가상 유닛의 화면 표시 위치를 타일맵 좌표에서 얻는다. */
 FVector UCombatUIAdapter::TileToWorld(const FTileIndex& Tile) const
 {
-	const ATileMap* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap() : nullptr;
+	const ATileMap* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap()->GetView<ATileMap>() : nullptr;
 	return TileMap != nullptr ? TileMap->TileToWorldLocation(Tile) : FVector::ZeroVector;
 }
 
@@ -566,10 +569,10 @@ bool UCombatUIAdapter::TryMovePlayer(const FTileIndex& TargetTile)
 	// 실제 플레이어 액터도 타일맵 위에서 옮긴다.
 	if (Player->mActor.IsValid())
 	{
-		if (ATileMap* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap() : nullptr)
+		if (UTileMapModel* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap() : nullptr)
 		{
-			TileMap->StartActorMovement(FTileTransform(TargetTile), Player->mActor.Get());
-			TileMap->CompleteActorMovement(Player->mActor.Get());
+			TileMap->StartActorMovement(FTileTransform(TargetTile), Player->mActor->GetModel<UUnitModel>());
+			TileMap->CompleteActorMovement(Player->mActor->GetModel<UUnitModel>());
 		}
 	}
 

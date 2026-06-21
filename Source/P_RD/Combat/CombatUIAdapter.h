@@ -1,4 +1,4 @@
-// @file CombatUIAdapter.h
+﻿// @file CombatUIAdapter.h
 // @brief 전투 유닛/메타/턴 표시값을 비GAS 소스에서 만들어 전투 뷰모델에 밀어넣는 어댑터
 // @date 2026-06-16
 
@@ -17,7 +17,7 @@ class UDicePoolModel;
 class AUnit;
 class ATileMap;
 struct FPresentationBarrier;
-struct FSRPGTurnContext;
+class USRPGTurnContext;
 enum class ECombatInputType : uint8;
 enum class ESRPGTurnResult : uint8;
 
@@ -97,7 +97,7 @@ private:
 	void HandleWorldTouch(FVector2D ScreenPosition, bool bLongPress);
 
 	/** @brief 턴 종료 시 '쓴 주사위' 잠금을 해제한다(다음 턴 재사용 가능). Barrier는 붙잡지 않아 즉시 해제. */
-	void HandleEndAnyTurn(TSharedPtr<FPresentationBarrier> Barrier, const FSRPGTurnContext& TurnContext, ESRPGTurnResult Result);
+	void HandleEndAnyTurn(TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, ESRPGTurnResult Result);
 
 	/** @brief 뷰모델의 주사위 뷰에서 해당 index 굴림값을 읽는다(안 굴렸으면 0). */
 	// ToggleDice는 UIModel에 push된 결과를 기준으로 판단해 UI가 보는 값과 액션 값이 갈라지지 않게 한다.

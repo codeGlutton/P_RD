@@ -29,14 +29,13 @@ public:
 	virtual void PostBindView(TScriptInterface<IObjectView> View);
 
 public:
-	virtual void BeginPlay();
-	virtual void EndPlay();
+	void FinishCreating(const FTransform& ViewTransform = FTransform::Identity);
+	void Destroy();
 
 public:
 	template<typename T>
 	T* GetView() const
 	{
-		static_assert(TIsDerivedFrom<T, IObjectView>::IsDerived, "IObjectView를 상속해야함");
 		return Cast<T>(GetView());
 	}
 
@@ -49,5 +48,9 @@ public:
 
 protected:
 	TWeakObjectPtr<UObject> mView;
+
+private:
+	bool mIsInitialized = false;
+	bool mIsPendingDestroy = false;
 };
 

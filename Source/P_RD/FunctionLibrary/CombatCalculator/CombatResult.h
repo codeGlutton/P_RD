@@ -6,10 +6,10 @@
  *********************************************************************/
 #pragma once
 
-#include "GAS/GASMinimal.h"
+#include "RDMinimal.h"
 #include "UObject/Object.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
-#include "SRPGFramework/TileActor.h"
+#include "Actor/BoardActor/BoardActorModel.h"
 #include "CombatResult.generated.h"
 
 // @brief 유닛 적용 결과
@@ -34,7 +34,7 @@ struct FTileActorCommitResult
 
 public:
 
-	TScriptInterface<const ITileActor> mTileActor;
+	TObjectPtr<UBoardActorModel> mTileActor;
 
 	// 유닛에게 이걸 적용했다.
 	FUnitCommitResult mUnitCommitResult;

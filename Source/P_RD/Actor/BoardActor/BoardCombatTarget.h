@@ -9,9 +9,10 @@
 
 #include "RDMinimal.h"
 #include "UObject/Interface.h"
+#include "GenericTeamAgentInterface.h"
 #include "BoardCombatTarget.generated.h"
 
-class UGameplayAttributeComponent;
+class UGameplayAttributeComponentModel;
 
 USTRUCT(Blueprintable)
 struct FBoardCombatTargetSnapshotData
@@ -61,17 +62,23 @@ public:
 	 * 죽음 확인 함수
 	 * @return 죽음 여부
 	 */
-	virtual bool IsDead();
+	virtual bool IsDead() const;
 
 public:
 	/**
 	 * 속성 컴포넌트를 반환하는 함수
 	 * @return 보유한 속성 컴포넌트
 	 */
-	virtual UGameplayAttributeComponent* GetAttributeComponent() const = 0;
+	virtual UGameplayAttributeComponentModel* GetAttributeComponentModel() const = 0;
 	/**
 	 * 현재 스탯 스냅샷을 찍어 타겟 정보로 반환하는 함수
 	 * @return 스냅샷 데이터
 	 */
 	virtual FBoardCombatTargetSnapshotData* MakeSnapshotData() const = 0;
+
+public:
+	virtual void SetGenericTeamId(const FGenericTeamId& TeamID) = 0;
+	virtual FGenericTeamId GetGenericTeamId() const = 0;
+
+	virtual ETeamAttitude::Type GetTeamAttitudeTowards(const UObject& Other) const;
 };

@@ -9,52 +9,43 @@
 
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
+#include "SRPGCommand.generated.h"
 
-struct FSRPGAction;
+class USRPGAction;
 
 /**
  * @brief  사용자 입력 명령 객체
  */
-struct FSRPGCommand : TSharedFromThis<FSRPGCommand>
+USTRUCT(BlueprintType)
+struct FSRPGCommand
 {
-public:
-	virtual ~FSRPGCommand() = default;
+	GENERATED_BODY()
 
 public:
 	ESRPGCommandType GetCommandType() const;
-	virtual TSharedPtr<FSRPGAction> CreateAction() const;
 
 protected:
+	UPROPERTY(Category = Command, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CommandType"))
 	ESRPGCommandType mCommandType = ESRPGCommandType::None;
+
+public:
+	UPROPERTY(Category = Action, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RequestedAction"))
+	TSubclassOf<USRPGAction> mRequestedAction = nullptr;
 };
 
 /**
  * @brief  사용자 월드 입력 명령 객체
  */
+USTRUCT(BlueprintType)
 struct FSRPGWorldTraceCommand : public FSRPGCommand
 {
+	GENERATED_BODY()
+
 public:
 	FSRPGWorldTraceCommand();
 
 public:
+	UPROPERTY(Category = Input, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsLongPress"))
 	bool mIsLongPress = false;
-};
-
-/**
- * @brief  액션 생성 명령 객체
- */
-template<typename ActionType>
-struct FSRPGActionCreationCommand : public FSRPGCommand
-{
-protected:
-	TSharedPtr<FSRPGAction> CreateAction() const override
-	{
-		TSharedPtr<ActionType> NewAction = TSharedPtr<ActionType>(new ActionType(), [](ActionType* Action) {
-			delete Action;
-			});
-		NewAction->ReserveCommand(AsShared());
-
-		return NewAction;
-	}
 };
 

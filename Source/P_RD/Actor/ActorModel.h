@@ -44,6 +44,10 @@ public:
 	void UninitializeComponentModels();
 
 public:
+	virtual void BeginPlay();
+	virtual void EndPlay();
+
+public:
 	template<typename T>
 	T* AddComponentModelByClass()
 	{

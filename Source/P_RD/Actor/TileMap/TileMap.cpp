@@ -6,7 +6,6 @@
 #include "Materials/MaterialInterface.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Algo/Reverse.h"
-#include "SRPGFramework/TileActor.h"
 
 namespace
 {

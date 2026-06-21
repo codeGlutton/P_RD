@@ -1,30 +1,24 @@
 ﻿#include "Actor/BoardActor/BoardCombatTarget.h"
 
-UScriptStruct* FTileTargetSnapshotTargetData::GetScriptStruct() const
+bool IBoardCombatTarget::IsTargetable() const
 {
-	return FTileTargetSnapshotTargetData::StaticStruct();
-}
-
-bool FTileTargetSnapshotTargetData::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& OutSuccess)
-{
-	Ar << mMaxHP;
-	Ar << mHP;
-	Ar << mSkillPoint;
-	Ar << mDamagePoint;
-	Ar << mDefensePoint;
-	Ar << mMovementPoint;
-	Ar << mBuffState;
-	Ar << mDebuffState;
-
 	return true;
 }
 
 bool IBoardCombatTarget::IsDead() const
 {
-	return GetAbilitySystemComponent()->HasMatchingGameplayTag(EffectTags::GameplayEffect_ActorState_Dead);
+	//return GetAbilitySystemComponent()->HasMatchingGameplayTag(EffectTags::GameplayEffect_ActorState_Dead);
+
+	return false;
 }
 
-bool IBoardCombatTarget::IsTargetable() const
+ETeamAttitude::Type IBoardCombatTarget::GetTeamAttitudeTowards(const UObject& Other) const
 {
-	return true;
+	const IBoardCombatTarget* BoardCombatTarget = Cast<const IBoardCombatTarget>(&Other);
+	if (BoardCombatTarget != nullptr)
+	{
+		return FGenericTeamId::GetAttitude(GetGenericTeamId(), BoardCombatTarget->GetGenericTeamId());
+	}
+	return ETeamAttitude::Neutral;
 }
+

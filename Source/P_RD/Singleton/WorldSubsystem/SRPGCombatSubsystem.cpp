@@ -1,7 +1,6 @@
 ﻿#include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
-
-DEFINE_LOG_CATEGORY(LogSRPGCombat)
+#include "Actor/TileMap/TileMapModel.h"
 
 void USRPGCombatSubsystem::Tick(float DeltaTime)
 {
@@ -20,6 +19,7 @@ void USRPGCombatSubsystem::BindModel(UObjectModel* Model)
 
 void USRPGCombatSubsystem::UnbindModel(UObjectModel* Model)
 {
+	mCombatModel.Reset();
 }
 
 UObjectModel* USRPGCombatSubsystem::GetModel_Internal() const
