@@ -105,6 +105,28 @@ void ATileMap::OnConstruction(const FTransform& Transform)
 
 	// 배치/스폰/프로퍼티 변경 시점에 그리드 인스턴스 재생성
 	RebuildTileInstances();
+
+#if WITH_EDITOR
+	// [에디터 전용] 에디터 뷰포트에서 디버그 경로 미리보기 — 좌표 변경 즉시 반영 (펄스 애니메이션은 틱이 도는 PIE에서만)
+	if (GetWorld() != nullptr && !GetWorld()->IsGameWorld())
+	{
+		if (mDebugDrawPathOnBeginPlay && mModel != nullptr)
+			mModel->SetMovePath(mDebugPathStart, mDebugPathGoal);
+		else
+			ClearMovePath();
+	}
+#endif
+}
+
+void ATileMap::BeginPlay()
+{
+	Super::BeginPlay();
+
+#if WITH_EDITOR
+	// [에디터 전용] 토글이 켜진 인스턴스에서만 PIE 시작 시 디버그 경로를 그려 펄스 검증 (패키징 빌드에선 제거됨)
+	if (mDebugDrawPathOnBeginPlay && mModel != nullptr)
+		mModel->SetMovePath(mDebugPathStart, mDebugPathGoal);
+#endif
 }
 
 void ATileMap::Tick(float DeltaSeconds)
@@ -488,8 +510,10 @@ void ATileMap::RefreshPathPulse()
 {
 	const float Time = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
 
-	// 타일당 위상 밀림(라디안) — 0이면 전체 동시 펄스, 클수록 경로 따라 흐름
-	const float PhasePerTile = 2.0f * PI * mPathFlowPerTile;
+	// 칸당 위상 밀림(라디안) — 경로 전체에 고점 mPathFlowCycles개가 흐르도록 길이로 정규화 (길이 무관 일정한 흐름)
+	// Span은 시작~도착 타일 간격(mPathLength-1) 기준이라 화살표와 도착 마커가 같은 파동을 공유함
+	const int32 Span = FMath::Max(1, mPathLength - 1);
+	const float PhasePerTile = 2.0f * PI * mPathFlowCycles / Span;
 
 	// 한 인스턴스에 펄스 색을 프리멀티로 기록하는 헬퍼
 	auto WriteInstance = [](UInstancedStaticMeshComponent* Component, int32 InstanceIndex, const FLinearColor& Color, float Wave)

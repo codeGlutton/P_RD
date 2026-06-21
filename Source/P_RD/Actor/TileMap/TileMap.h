@@ -34,6 +34,9 @@ public:
 	// @brief 에디터 배치/스폰 시 타일 그리드 인스턴스 재생성
 	virtual void OnConstruction(const FTransform& Transform) override;
 
+	// @brief 게임 시작 처리 (에디터 전용 디버그 경로 표시 토글 포함)
+	virtual void BeginPlay() override;
+
 	// @brief 매 프레임 Effect 하이라이트 펄스 갱신
 	virtual void Tick(float DeltaSeconds) override;
 
@@ -119,6 +122,26 @@ public:
 	 */
 	UFUNCTION(CallInEditor, Category = "SRPG")
 	void DebugPathTest();
+#endif
+
+#if WITH_EDITORONLY_DATA
+	/**
+	 * @brief [에디터 전용] PIE 시작 시 디버그 경로를 그릴지 여부 (펄스 검증용, 인스턴스별 토글)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Debug", meta = (DisplayName = "Debug Draw Path On Begin Play"))
+	bool mDebugDrawPathOnBeginPlay = false;
+
+	/**
+	 * @brief [에디터 전용] 디버그 경로 시작 타일
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Debug", meta = (DisplayName = "Debug Path Start", EditCondition = "mDebugDrawPathOnBeginPlay"))
+	FTileIndex mDebugPathStart = FTileIndex(1, 3);
+
+	/**
+	 * @brief [에디터 전용] 디버그 경로 목표 타일
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Debug", meta = (DisplayName = "Debug Path Goal", EditCondition = "mDebugDrawPathOnBeginPlay"))
+	FTileIndex mDebugPathGoal = FTileIndex(4, 5);
 #endif
 
 	/* 타일맵 정보 */
@@ -313,10 +336,10 @@ protected:
 	float mPathPulsePeriod = 1.0f;
 
 	/**
-	 * @brief 타일당 펄스 위상 밀림 비율 (0=전체 동시, 0.25=한 칸마다 1/4주기씩 밀려 경로 따라 흐름)
+	 * @brief 경로 전체에 동시에 흐르는 펄스 고점 개수 (1=한 줄기, 경로 길이에 무관하게 일정한 흐름. 0=전체 동시 펄스)
 	 */
-	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path Flow Per Tile", ClampMin = "0.0", ClampMax = "1.0"))
-	float mPathFlowPerTile = 0.25f;
+	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path Flow Cycles", ClampMin = "0.0"))
+	float mPathFlowCycles = 1.0f;
 
 	/**
 	 * @brief 화살표/마커 시각 크기 비율 (타일 크기 기준)
@@ -355,7 +378,9 @@ private:
 
 	/**
 	 * @brief 현재 표시 중인 경로 타일 수 (틱 펄스 갱신 대상 판단 + 도착 마커 위상 인덱스용)
+	 * @note PIE에 복제해서 볼 수 있도록 UPROPERTY 추가. 단, 저장할 필요는 없으므로 Transient 속성 부여
 	 */
+    UPROPERTY(Transient)
 	int32 mPathLength = 0;
 
 	/**
