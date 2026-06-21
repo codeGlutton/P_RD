@@ -14,6 +14,6 @@ class P_RD_API UTacticalEffect_Stat_Damage : public UTacticalEffect_Stat
 	GENERATED_BODY()
 	
 public:
-	virtual void ActivateEffect(const class UBoardActorModel& Caster, const struct FTileIndex& TargetTile, TArray<class UTacticalEffectContext*>& EffectContexts) override;
+	virtual void ActivateEffect(const UBoardActorModel& Caster, const FTileIndex& TargetTile, const UTacticalEffectContext* EffectContext) override;
 
 };

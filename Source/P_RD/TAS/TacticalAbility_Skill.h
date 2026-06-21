@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "TAS/TacticalAbility.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
-#include "TAS/Effect/TacticalEffectContext_Stat.h"
+#include "TAS/Effect/Stat/TacticalEffectContext_Stat.h"
 #include "TacticalAbility_Skill.generated.h"
 
 UCLASS()

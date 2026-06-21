@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "TacticalEffectContext.h"
+#include "TAS/Effect/TacticalEffectContext.h"
 #include "UObject/Object.h"
 #include "TacticalEffectContext_Stat.generated.h"
 
@@ -14,7 +14,7 @@ public:
 	float mBase;
 	float mAdd;
 	float mMul;
-	float GetFinal()
+	float GetFinal() const
 	{
 		return (mBase + mAdd) * mMul;
 	}

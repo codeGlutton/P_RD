@@ -2,7 +2,7 @@
 
 
 #include "DataAsset/SkillData/StaticSkillEffect/StaticSkillEffect_Stat.h"
-#include "TAS/Effect/TacticalEffectContext_Stat.h"
+#include "TAS/Effect/Stat/TacticalEffectContext_Stat.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Actor/BoardActor/BoardActorModel.h"
 

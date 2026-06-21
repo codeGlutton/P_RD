@@ -11,7 +11,11 @@ void UTacticalAbility::ApplyEffect(const FTacticalAbilityContext& Context, TArra
 	// 각각의 타일에게 효과를 적용한다.
 	for (int32 i = 0; i < Context.mTargetTile.Num(); ++i)
 	{
-		UTacticalEffect* EffectCDO = EffectContext[i]->mTacticalEffect->GetDefaultObject<UTacticalEffect>();
-		EffectCDO->ActivateEffect(*Context.mCasterActor.Get(), Context.mTargetTile[i], EffectContext);
+		for(int32 j = 0; j < EffectContext.Num(); ++j)
+		{
+			UTacticalEffect* EffectCDO = EffectContext[j]->mTacticalEffect->GetDefaultObject<UTacticalEffect>();
+			EffectCDO->ActivateEffect(*Context.mCasterActor.Get(), Context.mTargetTile[i], EffectContext[j]);
+		}
+
 	}
 }

@@ -6,6 +6,9 @@
 #include "UObject/Object.h"
 #include "TacticalEffect.generated.h"
 
+class UBoardActorModel;
+struct FTileIndex;
+class UTacticalEffectContext;
 /**
  * 
  */
@@ -16,6 +19,6 @@ class P_RD_API UTacticalEffect : public UObject
 
 
 public:
-	virtual void ActivateEffect(const class UBoardActorModel& Caster, const struct FTileIndex& TargetTile, TArray<class UTacticalEffectContext*>& EffectContexts) PURE_VIRTUAL(UTacticalEffect::ActivateEffect, return;);
+	virtual void ActivateEffect(const UBoardActorModel& Caster, const FTileIndex& TargetTile, const UTacticalEffectContext* EffectContext) PURE_VIRTUAL(UTacticalEffect::ActivateEffect, return;);
 
 };
