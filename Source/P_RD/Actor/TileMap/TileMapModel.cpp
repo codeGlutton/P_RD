@@ -582,6 +582,20 @@ void UTileMapModel::ClearMovePath()
 		mSetMovePathDelegate.Execute(TArray<FTileIndex>());
 }
 
+void UTileMapModel::SetTileHighlight(const TArray<FTileIndex>& Tiles, ETileHighlightFlag Flag)
+{
+	// 강조 표시를 뷰에 요청 (미바인딩=심 복제본이면 표시 없음)
+	if (mSetTileHighlightDelegate.IsBound())
+		mSetTileHighlightDelegate.Execute(Tiles, Flag);
+}
+
+void UTileMapModel::ClearTileHighlight(ETileHighlightFlag Flag)
+{
+	// 강조 해제를 뷰에 요청 (미바인딩=심 복제본이면 표시 없음)
+	if (mClearTileHighlightDelegate.IsBound())
+		mClearTileHighlightDelegate.Execute(Flag);
+}
+
 /**
  * @brief
  * - 1단계에서는 패턴에 따라 후보타일을 수집하고
