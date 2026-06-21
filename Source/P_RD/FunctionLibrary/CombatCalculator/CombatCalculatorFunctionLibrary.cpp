@@ -2,17 +2,17 @@
 
 
 #include "CombatCalculatorFunctionLibrary.h"
-#include "SRPGFramework/TileActor.h"
+#include "Actor/BoardActor/BoardActorModel.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
 
-bool UCombatCalculatorFunctionLibrary::CalculateSkillResult(TScriptInterface<const ITileActor> CasterTile, const UStaticSkillData* SkillData, const TArray<TScriptInterface<ITileActor>>& Tiles, FSkillCommitResult& Out_Result)
+bool UCombatCalculatorFunctionLibrary::CalculateSkillResult(UBoardActorModel* CasterTile, const UStaticSkillData* SkillData, const TArray<TObjectPtr<UBoardActorModel>>& Tiles, FSkillCommitResult& Out_Result)
 {
     FSkillCommitResult SkillCommitResult;
 
     // 1. 이펙트 적용 결과 생성
     FEffectCommitResult EffectCommitResult;
 
-    for (TScriptInterface<const ITileActor> TileActor : Tiles)
+    for (UBoardActorModel* TileActor : Tiles)
     {
         // 2. 타일 적용 결과 생성 (예: X=1, Y=2 타일)
         FTileActorCommitResult TileCommitResult;
@@ -27,7 +27,7 @@ bool UCombatCalculatorFunctionLibrary::CalculateSkillResult(TScriptInterface<con
             FUnitCommitResult UnitCommitResult;
 
             // GameplayTag는 프로젝트에서 사용하는 실제 데미지 태그로 교체 필요
-            FGameplayTag DamageTag = EffectTags::GameplayEffect_Skill_Effect_Damage;
+            FGameplayTag DamageTag = EffectTags::GameplayEffect_Skill_Effect_Stat_Damage;
             UnitCommitResult.mEffect.Add(DamageTag, 50.0f); // 데미지 수치 50 적용
 
             TileCommitResult.mUnitCommitResult = UnitCommitResult;

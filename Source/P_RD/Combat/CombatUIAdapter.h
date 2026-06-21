@@ -1,4 +1,4 @@
-// @file CombatUIAdapter.h
+﻿// @file CombatUIAdapter.h
 // @brief 전투 유닛/메타/턴 표시값을 비GAS 소스에서 만들어 전투 뷰모델에 밀어넣는 어댑터
 // @date 2026-06-16
 
@@ -17,7 +17,7 @@ class UDicePoolModel;
 class AUnit;
 class ATileMap;
 struct FPresentationBarrier;
-struct FSRPGTurnContext;
+class USRPGTurnContext;
 enum class ECombatInputType : uint8;
 enum class ESRPGTurnResult : uint8;
 
@@ -97,7 +97,7 @@ private:
 	void HandleWorldTouch(FVector2D ScreenPosition, bool bLongPress);
 
 	/** @brief 턴 종료 시 '쓴 주사위' 잠금을 해제한다(다음 턴 재사용 가능). Barrier는 붙잡지 않아 즉시 해제. */
-	void HandleEndAnyTurn(TSharedPtr<FPresentationBarrier> Barrier, const FSRPGTurnContext& TurnContext, ESRPGTurnResult Result);
+	void HandleEndAnyTurn(TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, ESRPGTurnResult Result);
 
 	/** @brief 뷰모델의 주사위 뷰에서 해당 index 굴림값을 읽는다(안 굴렸으면 0). */
 	// ToggleDice는 UIModel에 push된 결과를 기준으로 판단해 UI가 보는 값과 액션 값이 갈라지지 않게 한다.
@@ -130,6 +130,9 @@ private:
 
 	/** @brief 가상 적처럼 Actor가 없는 상태의 HP바 위치를 타일맵 기준 월드 좌표로 보정한다. */
 	FVector TileToWorld(const FTileIndex& Tile) const;
+
+	/** @brief (시각 검증용 임시) 각 유닛 위치에 기본 도형 마커를 깐다 — 플레이어/적이 어디 있는지 보이게. 콜리전 없음(타일 트레이스 통과). */
+	void RefreshUnitMarkers();
 
 private:
 	/** @brief UI 위젯들이 공유하는 표시/입력 계약 객체; 어댑터는 여기에 push하고 request를 구독한다. */
@@ -177,6 +180,16 @@ private:
 	/** @brief STEP 확정 중인 본인 타일. */
 	FTileIndex mStepTile;
 
+	/** @brief BASIC 사거리(회색 Aim) 타일 목록. 이 안에서만 타깃 선택 가능. */
+	TArray<FTileIndex> mAimTiles;
+
+	/** @brief BASIC 1차 선택된 타깃 타일(노랑). 같은 칸 재탭 시 빨강+실행. Invalid면 아직 미선택. */
+	FTileIndex mAttackTargetTile = FTileIndex::Invalid;
+
 	/** @brief 플레이어 실제 상태와 가상 적 상태를 함께 담는 임시 전투 상태 테이블. */
 	TArray<FCombatUnitState> mUnitStates;
+
+	/** @brief (시각 검증용 임시) 유닛 위치 도형 마커 액터들. RefreshUnitMarkers가 매번 정리/재생성. */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<AActor>> mUnitMarkers;
 };

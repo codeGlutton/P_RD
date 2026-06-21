@@ -9,7 +9,7 @@
 
 #include "MockRewardDriver.generated.h"
 
-class URewardViewModel;
+class URewardUIModel;
 
 UCLASS()
 class P_RD_API UMockRewardDriver : public UObject
@@ -18,14 +18,17 @@ class P_RD_API UMockRewardDriver : public UObject
 
 public:
 	/** @brief 뷰모델에 가짜 보상을 밀어넣고 '받기' 입력을 구독한다. */
-	// 실제 보상 지급/전환 로직을 대신하지 않는다. WBP가 ViewModel 계약을 구현했는지 확인하는 개발용 진입점이다.
+	// 실제 보상 지급/전환 로직을 대신하지 않는다. WBP가 UIModel 계약을 구현했는지 확인하는 개발용 진입점이다.
 	UFUNCTION(BlueprintCallable, Category = "Reward|Mock")
-	void Start(URewardViewModel* ViewModel);
+	void Start(URewardUIModel* UIModel);
 
 private:
 	/** @brief Mock에서는 Claim 신호가 왕복했는지만 로그로 확인한다. */
 	UFUNCTION() void HandleClaimed();
 
-	/** @brief 테스트 중 ViewModel이 GC되지 않게 들고 있는 참조; Mock이 실제 소유자는 아니다. */
-	UPROPERTY(Transient) TObjectPtr<URewardViewModel> mViewModel;
+	/** @brief Mock에서는 3택1 선택 신호가 왕복했는지만 로그로 확인한다. */
+	UFUNCTION() void HandleChosen(int32 ChoiceIndex);
+
+	/** @brief 테스트 중 UIModel이 GC되지 않게 들고 있는 참조; Mock이 실제 소유자는 아니다. */
+	UPROPERTY(Transient) TObjectPtr<URewardUIModel> mUIModel;
 };

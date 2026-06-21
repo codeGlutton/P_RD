@@ -8,12 +8,9 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "DataAsset/PrimaryAssetType.h"
-#include "DataAsset/BundleType.h"
+#include "DataAsset/ObstacleSpawnData/StaticObstacleSpawnData.h"
 #include "StaticUnitSpawnData.generated.h"
 
-class UObjectModel;
-class AUnit;
 class UStaticSkillData;
 class UStaticEquipmentData;
 
@@ -21,36 +18,13 @@ class UStaticEquipmentData;
  * @brief  유닛 생성 시 사용되는 정적 Primary Data Asset
  */
 UCLASS(abstract)
-class P_RD_API UStaticUnitSpawnData : public UPrimaryDataAsset
+class P_RD_API UStaticUnitSpawnData : public UStaticObstacleSpawnData
 {
 	GENERATED_BODY()
-
-#if WITH_EDITOR
-public:
-    void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
-    EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
-#endif
-
-public:
-    FName GetKeyName() const;
-
-public:
-    UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ModelClass", AssetBundles = "Actor"))
-    TSoftClassPtr<UObjectModel> mModelClass;
-	UPROPERTY(Category = "Spawn", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "UnitClass", AssetBundles = "Actor"))
-	TSoftClassPtr<AUnit> mUnitClass;
 
 public:
 	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillDatas", AssetBundles = "PAD"))
 	TArray<TSoftObjectPtr<UStaticSkillData>> mSkillDatas;
     UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EquipmentDatas", AssetBundles = "PAD"))
 	TArray<TSoftObjectPtr<UStaticEquipmentData>> mEquipmentDatas;
-
-public:
-    UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Icon", AssetBundles = "UI"))
-    TSoftObjectPtr<UTexture2D> mIcon;
-    UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DisplayName"))
-    FText mDisplayName;
-    UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Description", MultiLine = true))
-    FText mDescription;
 };

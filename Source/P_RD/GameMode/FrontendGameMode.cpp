@@ -43,19 +43,51 @@ namespace
 	// [합의필요] 난이도 선택 UI가 들어오기 전까지 새 Run 생성은 프론트엔드 기본 난이도 1로 고정한다.
 	constexpr int32 DefaultDifficulty = 1;
 
-	/** @brief UI 표시용 직업명을 GameMode에서 확정해 WBP가 enum 문자열을 직접 해석하지 않게 한다. */
+	/** @brief UI 표시용 직업명(한글)을 GameMode에서 확정해 WBP가 enum 문자열을 직접 해석하지 않게 한다. */
 	FText GetPlayerJobName(EPlayerJobType JobType)
 	{
 		switch (JobType)
 		{
 		case EPlayerJobType::Knight:
-			return NSLOCTEXT("FrontendGameMode", "KnightNameText", "Knight");
+			return NSLOCTEXT("FrontendGameMode", "KnightNameText", "기사");
 		case EPlayerJobType::Archer:
-			return NSLOCTEXT("FrontendGameMode", "ArcherNameText", "Archer");
+			return NSLOCTEXT("FrontendGameMode", "ArcherNameText", "도적");
 		case EPlayerJobType::Mage:
-			return NSLOCTEXT("FrontendGameMode", "MageNameText", "Mage");
+			return NSLOCTEXT("FrontendGameMode", "MageNameText", "마법사");
 		default:
-			return NSLOCTEXT("FrontendGameMode", "UnknownNameText", "Unknown");
+			return NSLOCTEXT("FrontendGameMode", "UnknownNameText", "알 수 없음");
+		}
+	}
+
+	/** @brief 이름과 구분되는 역할 한 줄 문구. 카드 상세에서 이름 아래 부제로 쓴다. */
+	FText GetPlayerJobRole(EPlayerJobType JobType)
+	{
+		switch (JobType)
+		{
+		case EPlayerJobType::Knight:
+			return NSLOCTEXT("FrontendGameMode", "KnightRoleText", "방패 탱커 · 근접");
+		case EPlayerJobType::Archer:
+			return NSLOCTEXT("FrontendGameMode", "ArcherRoleText", "기습 암살자 · 민첩");
+		case EPlayerJobType::Mage:
+			return NSLOCTEXT("FrontendGameMode", "MageRoleText", "주문 술사 · 원거리");
+		default:
+			return FText::GetEmpty();
+		}
+	}
+
+	/** @brief 직업별 설명 문구(DataAsset 설명이 비어 있을 때 폴백). 설명 스크림에 표시된다. */
+	FText GetPlayerJobDescription(EPlayerJobType JobType)
+	{
+		switch (JobType)
+		{
+		case EPlayerJobType::Knight:
+			return NSLOCTEXT("FrontendGameMode", "KnightDesc", "두꺼운 갑옷과 방패로 전열을 지키는 근접 수호자.\n높은 체력으로 적의 공격을 버틴다.");
+		case EPlayerJobType::Archer:
+			return NSLOCTEXT("FrontendGameMode", "ArcherDesc", "그림자에서 기습하는 민첩한 암살자.\n빠른 연속 공격으로 적을 무너뜨린다.");
+		case EPlayerJobType::Mage:
+			return NSLOCTEXT("FrontendGameMode", "MageDesc", "주사위 마법으로 광역 피해를 주는 원거리 술사.\n강력하지만 체력이 낮다.");
+		default:
+			return FText::GetEmpty();
 		}
 	}
 
@@ -67,10 +99,9 @@ namespace
 		 * 현재 Archer/Mage는 아직 실제 데이터가 준비되지 않은 경우가 있어, 없는 직업만 잠김 카드로 보강한다.
 		 * 이렇게 해야 "데이터가 없어서 빈 칸"과 "잠긴 캐릭터로 보여주려는 의도"가 UI에서 구분된다.
 		 */
-		const FText JobText = GetPlayerJobName(JobType);
-		return Options.ContainsByPredicate([&JobText](const FFrontendCharacterOption& Option)
+		return Options.ContainsByPredicate([JobType](const FFrontendCharacterOption& Option)
 		{
-			return Option.mRoleText.EqualTo(JobText);
+			return Option.mJobType == JobType;
 		});
 	}
 
@@ -85,11 +116,12 @@ namespace
 		FFrontendCharacterOption NewOption;
 		NewOption.mIndex = Options.Num();
 		NewOption.mDisplayName = GetPlayerJobName(JobType);
-		NewOption.mRoleText = GetPlayerJobName(JobType);
+		NewOption.mRoleText = GetPlayerJobRole(JobType);
 		// 잠긴 카드도 직업별 일러스트는 보여줄 수 있게 화면 아트 키를 채운다.
 		NewOption.mJobType = JobType;
-		NewOption.mDescription = NSLOCTEXT("FrontendGameMode", "LockedCharacterDescription", "Character data is not ready");
-		NewOption.mDisabledReason = NewOption.mDescription;
+		// "데이터 없음" 문구 대신 직업 설명을 표시(기획: not ready 삭제). 잠금 사유는 내부적으로만 유지.
+		NewOption.mDescription = GetPlayerJobDescription(JobType);
+		NewOption.mDisabledReason = NSLOCTEXT("FrontendGameMode", "LockedCharacterReason", "준비 중인 캐릭터입니다");
 		NewOption.mSelectable = false;
 		Options.Add(MoveTemp(NewOption));
 	}
@@ -310,13 +342,15 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 		FFrontendCharacterOption NewOption;
 		// mIndex는 클릭 이벤트의 안정 키다. WBP 카드 배열 위치와 같게 시작하지만 UI는 이 값을 기준으로 다시 찾는다.
 		NewOption.mIndex = OutOptions.Num();
-		NewOption.mDisplayName = LoadedPlayerUnitData->mDisplayName.IsEmpty()
-			? FText::FromName(LoadedPlayerUnitData->GetPrimaryAssetId().PrimaryAssetName)
-			: LoadedPlayerUnitData->mDisplayName;
-		NewOption.mRoleText = GetPlayerJobName(LoadedPlayerUnitData->mJobType);
+		// 표시 이름은 한글 직업명으로 통일(기획: 한글화). 역할은 이름과 구분되는 한 줄 문구.
+		NewOption.mDisplayName = GetPlayerJobName(LoadedPlayerUnitData->mJobType);
+		NewOption.mRoleText = GetPlayerJobRole(LoadedPlayerUnitData->mJobType);
+		// 설명: DataAsset 설명이 있으면 그것, 없으면 직업별 폴백(설명 스크림에 표시).
+		const FText JobDesc = GetPlayerJobDescription(LoadedPlayerUnitData->mJobType);
 		// 화면 아트(직업별 일러스트) 선택용 키. 이 값이 빠지면 UI가 직업을 None으로 보고 일러스트를 못 고른다.
 		NewOption.mJobType = LoadedPlayerUnitData->mJobType;
-		NewOption.mDescription = LoadedPlayerUnitData->mDescription;
+		NewOption.mDescription = LoadedPlayerUnitData->mDescription.IsEmpty()
+			? JobDesc : LoadedPlayerUnitData->mDescription;
 		NewOption.mMaxHP = FMath::RoundToInt(LoadedPlayerUnitData->GetDefaultMaxHP(DefaultDifficulty));
 		NewOption.mDice = LoadedPlayerUnitData->mDiceDatas.Num();
 		NewOption.mGold = FMath::RoundToInt(LoadedPlayerUnitData->GetDefaultMoney(DefaultDifficulty));
@@ -329,7 +363,7 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 		NewOption.mIcon = LoadedPlayerUnitData->mIcon;
 		NewOption.mPlayerUnitId = LoadedPlayerUnitData->GetPrimaryAssetId();
 		// 선택 가능 여부는 로드 상태와 실제 Pawn Class 설정을 동시에 본다. UI는 이 bool을 재해석하지 않는다.
-		NewOption.mSelectable = PlayerUnitData.IsValid() && !LoadedPlayerUnitData->mUnitClass.IsNull();
+		NewOption.mSelectable = PlayerUnitData.IsValid() && !LoadedPlayerUnitData->mViewClass.IsNull();
 		OutOptions.Add(MoveTemp(NewOption));
 	}
 

@@ -10,31 +10,32 @@
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "SRPGFramework/SRPGCommandHandler.h"
+#include "SRPGAction.generated.h"
 
 struct FPresentationBarrier;
-struct FSRPGAction;
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBeginActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGAction& /*Action*/);
-DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnEndActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGAction& /*Action*/, ESRPGActionResult /*Result*/);
+class UUnitModel;
 
-class AUnit;
-struct FSRPGTurnContext;
+class USRPGTurnContext;
+class USRPGAction;
 struct FSRPGCommand;
+
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBeginActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGAction* /*Action*/);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnEndActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGAction* /*Action*/, ESRPGActionResult /*Result*/);
 
 /**
  * @brief  사용자 입력에 따른 정해진 SRPG 행동 객체
  */
-struct FSRPGAction : public TSharedFromThis<FSRPGAction>, public ISRPGCommandHandler
+UCLASS(abstract)
+class USRPGAction : public UObject, public ISRPGCommandHandler
 {
-	friend struct FSRPGTurnContext;
+	GENERATED_BODY()
 
-protected:
-	FSRPGAction() = default;
-	virtual ~FSRPGAction()= default;
+	friend class USRPGTurnContext;
 
 	/* 생명 주기 함수 */
 protected:
-	void InitAction(TSharedRef<FSRPGTurnContext> Parent, AUnit* Instigator);
+	void InitAction(USRPGTurnContext* Parent, UUnitModel* Instigator);
 	void BeginAction();
 	void TickAction(float DeltaTime);
 	void EndAction(ESRPGActionResult Result);
@@ -50,13 +51,10 @@ protected:
 	/* 액션 커맨드 처리 함수 */
 protected:
 	int8 GetCommandPriority() const override;
-	ESRPGCommandResult HandleCommand(TSharedPtr<const FSRPGCommand> Command) override;
+	ESRPGCommandResult HandleCommand(const TInstancedStruct<FSRPGCommand>& Command) override;
 
 protected:
-	void ReserveCommand(TSharedPtr<const FSRPGCommand> Command);
-
-private:
-	void FlushCommands();
+	void ReserveInitializeCommand(TInstancedStruct<FSRPGCommand>&& Command);
 
 	/* 헬퍼 함수 */
 protected:
@@ -70,9 +68,8 @@ protected:
 
 	/* 외부 API */
 public:
-	UWorld* GetWorld() const;
-	TWeakPtr<FSRPGTurnContext> GetParent() const;
-	AUnit* GetInstigator() const;
+	TWeakObjectPtr<USRPGTurnContext> GetParent() const;
+	UUnitModel* GetInstigator() const;
 	ESRPGActionType GetActionType() const;
 	bool ConsumesTurn() const;
 
@@ -81,21 +78,28 @@ protected:
 	FOnEndActionUI OnEndActionUI;
 
 protected:
-	TWeakPtr<FSRPGTurnContext> mParent;
-	TWeakObjectPtr<AUnit> mInstigator;
+	UPROPERTY(Category = Parent, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "Parent"))
+	TWeakObjectPtr<USRPGTurnContext> mParent;
+	UPROPERTY(Category = Instigator, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "Instigator"))
+	TWeakObjectPtr<UUnitModel> mInstigator;
 
 protected:
-	// @brief 예약된 명령들
-	TQueue<TSharedPtr<const FSRPGCommand>> mReservedCommands;
+	// @brief 예약된 초기화 명령
+	UPROPERTY(Category = Command, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "InitializeCommand"))
+	TInstancedStruct<FSRPGCommand> mInitializeCommand;
 
 protected:
 	// @brief 현재 액션 상태
+	UPROPERTY(Category = Action, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "ActionPhase"))
 	ESRPGActionPhase mActionPhase = ESRPGActionPhase::None;
 	// @brief 액션 종료 결과
+	UPROPERTY(Category = Action, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "ActionResult"))
 	ESRPGActionResult mActionResult = ESRPGActionResult::Succeeded;
 	// @brief 액션 타입
+	UPROPERTY(Category = Action, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "ActionType"))
 	ESRPGActionType mActionType = ESRPGActionType::InPlayAction;
 	// @brief 해당 액션의 턴 소모 여부
+	UPROPERTY(Category = Action, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "ConsumesTurn"))
 	bool mConsumesTurn = false;
 };
 

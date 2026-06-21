@@ -44,6 +44,10 @@ public:
 	void UninitializeComponentModels();
 
 public:
+	virtual void BeginPlay();
+	virtual void EndPlay();
+
+public:
 	template<typename T>
 	T* AddComponentModelByClass()
 	{
@@ -105,7 +109,7 @@ private:
 		{
 			check(TargetClass->IsChildOf(ComponentModelType::StaticClass()));
 
-			for (UActorComponent* ComponentModel : mComponentModels)
+			for (UComponentModel* ComponentModel : mComponentModels)
 			{
 				if (ComponentModel != nullptr)
 				{

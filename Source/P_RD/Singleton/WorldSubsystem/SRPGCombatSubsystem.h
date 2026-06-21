@@ -17,11 +17,9 @@
 
 #include "SRPGCombatSubsystem.generated.h"
 
-// SRPG Combat 신규 로그 카테고리 등록
-DECLARE_LOG_CATEGORY_EXTERN(LogSRPGCombat, Log, All)
-
 class USRPGCombatModel;
 class IObjectModel;
+class UCombatUIModel;
 
 /**
  * @brief  SRPG 턴제 전투를 제어하기 위한 서브 시스템
@@ -44,6 +42,15 @@ public:
 protected:
 	UObjectModel* GetModel_Internal() const override;
 
+	/* 전투 UI 데이터 경계 (MVVM ViewModel; 전투 수명 동안 1개 소유) */
+public:
+	/** @brief 전투 UI가 읽고 어댑터가 쓰는 단일 CombatUIModel. 없으면 생성한다(권장 소유 위치=전투 서브시스템). */
+	UCombatUIModel* GetCombatUIModel();
+
 protected:
+	UPROPERTY(Category = Model, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatModel"))
 	TWeakObjectPtr<USRPGCombatModel> mCombatModel;
+
+	UPROPERTY()
+	TObjectPtr<UCombatUIModel> mCombatUIModel;
 };

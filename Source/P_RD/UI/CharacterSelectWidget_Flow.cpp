@@ -44,10 +44,8 @@ void UCharacterSelectWidget::HandleConfirmButtonClicked()
 	const FFrontendCharacterOption* SelectedOption = GetSelectedCharacterOption();
 	if (SelectedOption == nullptr || !SelectedOption->mSelectable || !mSelectedPlayerUnitId.IsValid())
 	{
-		// 잠긴 카드도 선택은 가능하지만 Confirm은 여기서 막고, GameMode가 내려준 잠금 사유를 그대로 보여준다.
-		SetStatusText(SelectedOption != nullptr && !SelectedOption->mDisabledReason.IsEmpty()
-			? SelectedOption->mDisabledReason
-			: RDCharacterSelect::Text(TEXT("CharacterLockedStatus")));
+		// 잠긴 카드는 Confirm만 막고, 상태 문구는 비운다(기획: "준비 중" 문구 노출 삭제).
+		SetStatusText(FText::GetEmpty());
 		return;
 	}
 

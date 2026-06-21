@@ -1,11 +1,64 @@
 #include "UI/CharacterSelectWidget.h"
 
 #include "Components/Button.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
 #include "Engine/Texture2D.h"
+#include "Engine/GameViewportClient.h"
+#include "Engine/World.h"
 #include "GameMode/FrontendGameMode.h"
 #include "UI/CharacterSelectWidgetPrivate.h"
+
+namespace
+{
+	constexpr float GClassSelectIllustrationAspect = 16.0f / 9.0f;
+
+	void FitClassActionImageSlotToViewport(const UCharacterSelectWidget* Owner, UImage* Image)
+	{
+		if (Owner == nullptr || Image == nullptr)
+		{
+			return;
+		}
+
+		UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Image->Slot);
+		if (CanvasSlot == nullptr)
+		{
+			return;
+		}
+
+		const UWorld* World = Owner->GetWorld();
+		const UGameViewportClient* GameViewport = World != nullptr ? World->GetGameViewport() : nullptr;
+		FVector2D ViewportSize = FVector2D::ZeroVector;
+		if (GameViewport != nullptr)
+		{
+			GameViewport->GetViewportSize(OUT ViewportSize);
+		}
+		if (ViewportSize.X <= 0.0f || ViewportSize.Y <= 0.0f)
+		{
+			return;
+		}
+
+		const float ViewportAspect = ViewportSize.X / ViewportSize.Y;
+		FVector2D TargetSize;
+		if (ViewportAspect < GClassSelectIllustrationAspect)
+		{
+			TargetSize.Y = ViewportSize.Y;
+			TargetSize.X = ViewportSize.Y * GClassSelectIllustrationAspect;
+		}
+		else
+		{
+			TargetSize.X = ViewportSize.X;
+			TargetSize.Y = ViewportSize.X / GClassSelectIllustrationAspect;
+		}
+
+		CanvasSlot->SetAnchors(FAnchors(0.5f, 0.5f));
+		CanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+		CanvasSlot->SetPosition(FVector2D::ZeroVector);
+		CanvasSlot->SetSize(TargetSize);
+	}
+}
 
 /** @brief GameMode에서 후보 View 목록을 다시 받아 이전 선택을 최대한 보존한다. */
 void UCharacterSelectWidget::RefreshCharacterOptions()
@@ -92,7 +145,28 @@ void UCharacterSelectWidget::SyncSelectedCharacter()
 	}
 	if (mSelectedCharacterStatText != nullptr)
 	{
+		const bool bHasWBPStatValues = mMaxHPStatValueText != nullptr
+			&& mDiceStatValueText != nullptr
+			&& mGoldStatValueText != nullptr;
 		mSelectedCharacterStatText->SetText(BuildCharacterStatText(*SelectedOption));
+		mSelectedCharacterStatText->SetVisibility(bHasWBPStatValues
+			? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
+	}
+	if (mMaxHPStatValueText != nullptr)
+	{
+		mMaxHPStatValueText->SetText(FText::AsNumber(SelectedOption->mMaxHP));
+	}
+	if (mDiceStatValueText != nullptr)
+	{
+		mDiceStatValueText->SetText(FText::AsNumber(SelectedOption->mDice));
+	}
+	if (mGoldStatValueText != nullptr)
+	{
+		mGoldStatValueText->SetText(FText::AsNumber(SelectedOption->mGold));
+	}
+	if (mStatRowBox != nullptr)
+	{
+		mStatRowBox->SetVisibility(ESlateVisibility::HitTestInvisible);
 	}
 	if (mSelectedCharacterDescriptionText != nullptr)
 	{
@@ -112,9 +186,8 @@ void UCharacterSelectWidget::SyncSelectedCharacter()
 		mConfirmButton->SetIsEnabled(SelectedOption->mSelectable && !mStartRequested);
 	}
 
-	SetStatusText(SelectedOption->mSelectable
-		? FText::Format(RDCharacterSelect::Text(TEXT("SelectedCharacterFormat")), SelectedOption->mDisplayName)
-		: (SelectedOption->mDisabledReason.IsEmpty() ? RDCharacterSelect::Text(TEXT("CharacterLockedStatus")) : SelectedOption->mDisabledReason));
+	// 선택 상태 문구는 상세 패널 노이즈라 숨긴다. 로딩/실패 같은 흐름 상태만 SetStatusText로 노출한다.
+	SetStatusText(FText::GetEmpty());
 }
 
 /** @brief 후보가 없거나 선택이 무효한 상태를 상세 패널 fallback으로 되돌린다. */
@@ -134,6 +207,23 @@ void UCharacterSelectWidget::ClearSelectedCharacter()
 	if (mSelectedCharacterStatText != nullptr)
 	{
 		mSelectedCharacterStatText->SetText(FText::GetEmpty());
+		mSelectedCharacterStatText->SetVisibility(ESlateVisibility::HitTestInvisible);
+	}
+	if (mMaxHPStatValueText != nullptr)
+	{
+		mMaxHPStatValueText->SetText(FText::GetEmpty());
+	}
+	if (mDiceStatValueText != nullptr)
+	{
+		mDiceStatValueText->SetText(FText::GetEmpty());
+	}
+	if (mGoldStatValueText != nullptr)
+	{
+		mGoldStatValueText->SetText(FText::GetEmpty());
+	}
+	if (mStatRowBox != nullptr)
+	{
+		mStatRowBox->SetVisibility(ESlateVisibility::Collapsed);
 	}
 	if (mSelectedCharacterDescriptionText != nullptr)
 	{
@@ -170,6 +260,8 @@ void UCharacterSelectWidget::SyncSelectedCharacterArt(EPlayerJobType JobType)
 			Image->SetVisibility(ESlateVisibility::Collapsed);
 			return;
 		}
+
+		FitClassActionImageSlotToViewport(this, Image);
 
 		if (UTexture2D* Illustration = GetOrLoadJobIllustration(ImageJob))
 		{

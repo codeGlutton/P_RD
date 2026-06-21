@@ -11,10 +11,11 @@
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "CombatGameMode.generated.h"
 
+class USRPGSkillBuildAction;
+class UCombatUIAdapter;
+
 // RD Game Mode 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogCombatGameMode, Log, All)
-
-struct FSRPGSkillBuildAction;
 
 /**
  * @brief  전투 방에 대한 GameMode
@@ -48,5 +49,10 @@ public:
 	bool ResolveWorldLongPressEvent();
 
 protected:
-	void OnChangeSkillBuildPhase(const FSRPGSkillBuildAction& Action, ESRPGSkillBuildPhase Phase);
+	void OnChangeSkillBuildPhase(const USRPGSkillBuildAction* Action, ESRPGSkillBuildPhase Phase);
+
+	/** @brief 전투 상태를 CombatUIModel로 push + HUD 입력 의도를 처리하는 임시 비GAS 어댑터(전투 수명 동안 보유). */
+    // TODO : 추후 삭제
+	UPROPERTY()
+	TObjectPtr<UCombatUIAdapter> mCombatUIAdapter;
 };

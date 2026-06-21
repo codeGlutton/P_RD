@@ -6,7 +6,6 @@
 #include "Materials/MaterialInterface.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Algo/Reverse.h"
-#include "SRPGFramework/TileActor.h"
 
 namespace
 {
@@ -49,6 +48,15 @@ ATileMap::ATileMap()
 	{
 		mTileMesh = PlaneMeshFinder.Object;
 		mTileMeshComponent->SetStaticMesh(mTileMesh);
+	}
+
+	// 하이라이트 표시용 머티리얼: PerInstanceCustomData(RGBA)를 읽어 타일 색에 합성한다.
+	// 없으면 엔진 기본 머티리얼로 렌더되어 하이라이트(Aim/Select/Effect)가 안 보인다.
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> TileHighlightMatFinder(TEXT("/Game/BP/Materials/M_TileHighlight.M_TileHighlight"));
+	if (TileHighlightMatFinder.Succeeded())
+	{
+		mTileMaterial = TileHighlightMatFinder.Object;
+		mTileMeshComponent->SetMaterial(0, mTileMaterial);
 	}
 
 	// 강조 스타일 기본값 (모두 타일 위에 자기 알파로 Mix — 알파<1이라 타일이 비침)
@@ -385,6 +393,14 @@ TArray<FTileIndex> ATileMap::GetEffectTiles(const FTileIndex& Caster, const FTil
 	// 모델로 위임
 	return mModel != nullptr
 		? mModel->GetEffectTiles(Caster, Target, Pattern, Size, bPenetrate)
+		: TArray<FTileIndex>();
+}
+
+TArray<FTileIndex> ATileMap::GetReachableTiles(const FTileIndex& Origin, int32 MoveDistance) const
+{
+	// 모델로 위임 (BFS 경로 기반 도달성)
+	return mModel != nullptr
+		? mModel->GetReachableTiles(Origin, MoveDistance)
 		: TArray<FTileIndex>();
 }
 

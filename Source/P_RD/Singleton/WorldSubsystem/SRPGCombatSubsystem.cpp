@@ -1,7 +1,6 @@
 ﻿#include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
-
-DEFINE_LOG_CATEGORY(LogSRPGCombat)
+#include "UI/Combat/CombatUIModel.h"
 
 void USRPGCombatSubsystem::Tick(float DeltaTime)
 {
@@ -20,9 +19,19 @@ void USRPGCombatSubsystem::BindModel(UObjectModel* Model)
 
 void USRPGCombatSubsystem::UnbindModel(UObjectModel* Model)
 {
+	mCombatModel.Reset();
 }
 
 UObjectModel* USRPGCombatSubsystem::GetModel_Internal() const
 {
 	return mCombatModel.Get();
+}
+
+UCombatUIModel* USRPGCombatSubsystem::GetCombatUIModel()
+{
+	if (mCombatUIModel == nullptr)
+	{
+		mCombatUIModel = NewObject<UCombatUIModel>(this);
+	}
+	return mCombatUIModel;
 }

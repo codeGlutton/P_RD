@@ -19,9 +19,6 @@ public:
 	static const FRandomStream& GetEventStream(const UObject* WorldContextObject);
 
 public:
-	static const FRandomStream& GetRoomEventStream(const UObject* WorldContextObject);
-
-public:
 	template<typename T>
 	static const T& GetRandomItem(const FRandomStream& Stream, const TArray<T>& Array)
 	{

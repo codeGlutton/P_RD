@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "GAS/GASMinimal.h"
+#include "RDMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 
 #include "PersistentDataSubsystem.generated.h"

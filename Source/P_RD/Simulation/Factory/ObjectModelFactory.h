@@ -9,11 +9,11 @@
 #include "RDMinimal.h"
 #include "ObjectModelFactory.generated.h"
 
-// Model Factory 신규 로그 카테고리 등록
-DECLARE_LOG_CATEGORY_EXTERN(LogObjectModelFactory, Log, All)
-
 class UObjectModel;
 struct FRoomContext;
+
+// Model Factory 신규 로그 카테고리 등록
+DECLARE_LOG_CATEGORY_EXTERN(LogObjectModelFactory, Log, All)
 
 UCLASS(abstract)
 class P_RD_API UObjectModelFactory : public UObject
@@ -25,28 +25,53 @@ public:
 
 public:
 	template<typename T>
-	T* NewModel(const UClass* Class, FName Name = NAME_None, EObjectFlags Flags = RF_NoFlags, UObject* Template = nullptr, bool CopyTransientsFromClassDefaults = false, FObjectInstancingGraph* InInstanceGraph = nullptr, UPackage* InExternalPackage = nullptr)
+	T* NewModel(const UClass* Class, const FTransform& ViewTransform = FTransform::Identity, FName Name = NAME_None, EObjectFlags Flags = RF_NoFlags, UObject* Template = nullptr, bool CopyTransientsFromClassDefaults = false, FObjectInstancingGraph* InInstanceGraph = nullptr, UPackage* InExternalPackage = nullptr)
 	{
-		T* Result = Cast<T>(NewModel_Internal(Class, Name, Flags, Template, CopyTransientsFromClassDefaults, InInstanceGraph, InExternalPackage));
+		T* Result = Cast<T>(NewModel_Internal(Class, ViewTransform, Name, Flags, Template, CopyTransientsFromClassDefaults, InInstanceGraph, InExternalPackage));
 		return Result;
 	}
 
 	template<typename T>
-	T* NewModel(FName Name, EObjectFlags Flags = RF_NoFlags, UObject* Template = nullptr, bool CopyTransientsFromClassDefaults = false, FObjectInstancingGraph* InInstanceGraph = nullptr, UPackage* InExternalPackage = nullptr)
+	T* NewModel(const FTransform& ViewTransform, FName Name, EObjectFlags Flags = RF_NoFlags, UObject* Template = nullptr, bool CopyTransientsFromClassDefaults = false, FObjectInstancingGraph* InInstanceGraph = nullptr, UPackage* InExternalPackage = nullptr)
 	{
 		static_assert(TIsDerivedFrom<T, UObjectModel>::IsDerived, "UObjectModel를 상속해야 함");
-		T* Result = Cast<T>(NewModel_Internal(T::StaticClass(), Name, Flags, Template, CopyTransientsFromClassDefaults, InInstanceGraph, InExternalPackage));
+		T* Result = Cast<T>(NewModel_Internal(T::StaticClass(), ViewTransform, Name, Flags, Template, CopyTransientsFromClassDefaults, InInstanceGraph, InExternalPackage));
 		return Result;
 	}
 
+	template<typename T>
+	T* NewModel(const FTransform& ViewTransform = FTransform::Identity)
+	{
+		static_assert(TIsDerivedFrom<T, UObjectModel>::IsDerived, "UObjectModel를 상속해야 함");
+		T* Result = Cast<T>(NewModel_Internal(T::StaticClass(), ViewTransform, NAME_None));
+		return Result;
+	}
+
+	template<typename T>
+	T* NewModelDeferred(const UClass* Class = T::StaticClass(), FName Name = NAME_None, EObjectFlags Flags = RF_NoFlags, UObject* Template = nullptr, bool CopyTransientsFromClassDefaults = false, FObjectInstancingGraph* InInstanceGraph = nullptr, UPackage* InExternalPackage = nullptr)
+	{
+		T* Result = Cast<T>(NewModelDeferred_Internal(T::StaticClass(), Name, Flags, Template, CopyTransientsFromClassDefaults, InInstanceGraph, InExternalPackage));
+		return Result;
+	}
+
+	template<typename T>
+	T* NewModelDeferred(FName Name = NAME_None, EObjectFlags Flags = RF_NoFlags, UObject* Template = nullptr, bool CopyTransientsFromClassDefaults = false, FObjectInstancingGraph* InInstanceGraph = nullptr, UPackage* InExternalPackage = nullptr)
+	{
+		static_assert(TIsDerivedFrom<T, UObjectModel>::IsDerived, "UObjectModel를 상속해야 함");
+		T* Result = Cast<T>(NewModelDeferred_Internal(T::StaticClass(), Name, Flags, Template, CopyTransientsFromClassDefaults, InInstanceGraph, InExternalPackage));
+		return Result;
+	}
+
+protected:
+	UObjectModel* NewModel_Internal(const UClass* Class, const FTransform& ViewTransform = FTransform::Identity, FName Name = NAME_None, EObjectFlags Flags = RF_NoFlags, UObject* Template = nullptr, bool CopyTransientsFromClassDefaults = false, FObjectInstancingGraph* InInstanceGraph = nullptr, UPackage* InExternalPackage = nullptr);
+	UObjectModel* NewModelDeferred_Internal(const UClass* Class, FName Name = NAME_None, EObjectFlags Flags = RF_NoFlags, UObject* Template = nullptr, bool CopyTransientsFromClassDefaults = false, FObjectInstancingGraph* InInstanceGraph = nullptr, UPackage* InExternalPackage = nullptr);
+
 public:
+	void FinishCreatingModel(UObjectModel* Model, const FTransform& ViewTransform = FTransform::Identity);
 	void DestroyModel(UObjectModel* Model);
 
 protected:
-	UObjectModel* NewModel_Internal(const UClass* Class, FName Name = NAME_None, EObjectFlags Flags = RF_NoFlags, UObject* Template = nullptr, bool CopyTransientsFromClassDefaults = false, FObjectInstancingGraph* InInstanceGraph = nullptr, UPackage* InExternalPackage = nullptr);
-
-protected:
-	virtual void OnPostCreateNewModel(UObjectModel* Model) PURE_VIRTUAL(UObjectModelFactory::OnPostCreateNewModel, return;);
+	virtual void OnPostCreateNewModel(UObjectModel* Model, const FTransform& ViewTransform) PURE_VIRTUAL(UObjectModelFactory::OnPostCreateNewModel, return;);
 	virtual void OnPreRemoveModel(UObjectModel* Model) PURE_VIRTUAL(UObjectModelFactory::OnPreRemoveModel, return;);
 
 protected:
@@ -61,8 +86,12 @@ class UGameObjectModelFactory : public UObjectModelFactory
 {
 	GENERATED_BODY()
 
+public:
+	void RegisterSubsystemModels();
+	void UnregisterSubsystemModels();
+
 protected:
-	void OnPostCreateNewModel(UObjectModel* Model) override;
+	void OnPostCreateNewModel(UObjectModel* Model, const FTransform& ViewTransform) override;
 	void OnPreRemoveModel(UObjectModel* Model) override;
 };
 
@@ -75,6 +104,6 @@ class USimulationObjectModelFactory : public UObjectModelFactory
 	GENERATED_BODY()
 
 protected:
-	void OnPostCreateNewModel(UObjectModel* Model) override;
+	void OnPostCreateNewModel(UObjectModel* Model, const FTransform& ViewTransform) override;
 	void OnPreRemoveModel(UObjectModel* Model) override;
 };
