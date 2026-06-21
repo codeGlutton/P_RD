@@ -42,10 +42,10 @@ struct FSkillMotionLayer
     * @brief 효과 레이어
     * 
     * @details
-    * notify 호출 시 모든 효과들이 발동될 것이다.
+    * notify 호출 시 효과들이 발동될 것이다.
     */
     UPROPERTY(Category = "SkillMotionLayer", EditAnywhere, Instanced, BlueprintReadWrite, meta = (DisplayName = "StaticSkillEffectLayer"))
-    TArray<TObjectPtr<UStaticSkillEffect_Base>> mStaticSkillEffectLayers;
+    TObjectPtr<UStaticSkillEffect_Base> mStaticSkillEffectLayers;
 };
 
 
@@ -205,7 +205,7 @@ public:
     * @brief 모션 레이어
     * 
     * @details
-    * 하나의 모션 발동 시 여러 효과가 발동 할 수 있게 구조체로 묶었다.
+    * 하나의 모션 발동 시 효과가 발동 할 수 있게 구조체로 묶었다.
     */
     UPROPERTY(Category = "SkillMotionLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillMotionLayers"))
     TArray<FSkillMotionLayer> mSkillMotionLayers;

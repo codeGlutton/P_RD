@@ -43,10 +43,8 @@ namespace EffectTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_Cooldown,								"GameplayEffect.Cooldown");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_ActorState_Dead,						"GameplayEffect.ActorState.Dead");
 
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_Skill_Effect_Damage,					"GameplayEffect.Skill.Effect.Damage");
-
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_Skill_Data_Damage,					"GameplayEffect.Skill.Data.Damage");
-
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_Skill_Effect_Stat_Damage,				"GameplayEffect.Skill.Effect.Stat.Damage");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_Skill_Effect_Move_Force_Push,			"GameplayEffect.Skill.Effect.Move.Force.Push");
 }
 
 namespace CueTags

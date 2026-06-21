@@ -50,12 +50,13 @@ void UCharacterSelectWidget::NativeConstruct()
 	SetStatusText(mReadyStatusText);
 }
 
-/** @brief 타이틀 버튼 아트와 동일한 3상태 ButtonStyle을 런타임에 주입한다. */
+/** @brief 타이틀 버튼 아트를 기존 WBP 버튼에 적용한다. */
 void UCharacterSelectWidget::ApplyButtonStyles() const
 {
 	/*
-	 * 선택 화면의 버튼도 타이틀 버튼과 같은 텍스처를 쓴다.
-	 * 버튼 뒤에 별도 Image를 까는 방식이 아니라 ButtonStyle 자체에 3상태 브러시를 넣어 press 피드백을 유지한다.
+	 * 이 함수는 위젯을 생성하지 않고, WBP가 제공한 버튼 인스턴스의 스타일만 보정한다.
+	 * 버튼의 배치/텍스트/상호작용 대상은 WBP_CharacterSelect가 계속 소유한다.
+	 * 모바일에서는 hover/pressed 틴트가 눌린 상태처럼 남아 보일 수 있어 동일한 브러시를 사용한다.
 	 */
 	struct FButtonTexture { UButton* Button; const TCHAR* Path; };
 	const FButtonTexture Targets[] = {
@@ -80,17 +81,13 @@ void UCharacterSelectWidget::ApplyButtonStyles() const
 		NormalBrush.ImageSize = FVector2D(static_cast<float>(Texture->GetSizeX()), static_cast<float>(Texture->GetSizeY()));
 		NormalBrush.SetResourceObject(Texture);
 
-		FSlateBrush HoveredBrush = NormalBrush;
-		// [합의필요] hover/pressed 색 보정값은 임시 시각 튜닝이다. 버튼 상태별 전용 텍스처가 생기면 제거한다.
-		HoveredBrush.TintColor = FSlateColor(FLinearColor(1.12f, 1.12f, 1.12f, 1.0f));
-		FSlateBrush PressedBrush = NormalBrush;
-		PressedBrush.TintColor = FSlateColor(FLinearColor(0.85f, 0.85f, 0.85f, 1.0f));
-
 		FButtonStyle Style = Target.Button->GetStyle();
 		Style.SetNormal(NormalBrush);
-		Style.SetHovered(HoveredBrush);
-		Style.SetPressed(PressedBrush);
+		Style.SetHovered(NormalBrush);
+		Style.SetPressed(NormalBrush);
 		Style.SetDisabled(NormalBrush);
+		Style.SetNormalPadding(FMargin(0.f));
+		Style.SetPressedPadding(FMargin(0.f));
 		Target.Button->SetStyle(Style);
 	}
 }

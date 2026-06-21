@@ -1,6 +1,6 @@
 ﻿#include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
-#include "Actor/TileMap/TileMapModel.h"
+#include "UI/Combat/CombatUIModel.h"
 
 void USRPGCombatSubsystem::Tick(float DeltaTime)
 {
@@ -25,4 +25,13 @@ void USRPGCombatSubsystem::UnbindModel(UObjectModel* Model)
 UObjectModel* USRPGCombatSubsystem::GetModel_Internal() const
 {
 	return mCombatModel.Get();
+}
+
+UCombatUIModel* USRPGCombatSubsystem::GetCombatUIModel()
+{
+	if (mCombatUIModel == nullptr)
+	{
+		mCombatUIModel = NewObject<UCombatUIModel>(this);
+	}
+	return mCombatUIModel;
 }

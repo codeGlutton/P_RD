@@ -27,7 +27,7 @@ bool UCombatCalculatorFunctionLibrary::CalculateSkillResult(UBoardActorModel* Ca
             FUnitCommitResult UnitCommitResult;
 
             // GameplayTag는 프로젝트에서 사용하는 실제 데미지 태그로 교체 필요
-            FGameplayTag DamageTag = EffectTags::GameplayEffect_Skill_Effect_Damage;
+            FGameplayTag DamageTag = EffectTags::GameplayEffect_Skill_Effect_Stat_Damage;
             UnitCommitResult.mEffect.Add(DamageTag, 50.0f); // 데미지 수치 50 적용
 
             TileCommitResult.mUnitCommitResult = UnitCommitResult;

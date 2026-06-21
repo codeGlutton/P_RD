@@ -6,6 +6,9 @@
 #include "Engine/AssetManager.h"
 #include "PCGStage/StageBuilder.h"
 
+#include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
+#include "DataAsset/DiceData/StaticDiceData.h"
+
 #include "FunctionLibrary/RandomStreamFunctionLibrary.h"
 
 #include "Setting/GamePlaySettings.h"
@@ -147,6 +150,22 @@ void URunPersistData::StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Diffic
 	mIsNewData = true;
 	mPlayerUnitId = PlayerUnitId;
 	mDifficulty = Difficulty;
+
+	// 선택한 캐릭터의 고정 주사위(mDiceDatas)를 런 다이스 목록(mDiceIds)으로 펼친다.
+	// 이게 비면 전투에서 DicePool이 비어 HUD 주사위 수가 0이 된다.
+	if (UAssetManager* AssetManager = UAssetManager::GetIfInitialized())
+	{
+		if (const UStaticPlayerUnitSpawnData* PlayerData = AssetManager->GetPrimaryAssetObject<UStaticPlayerUnitSpawnData>(PlayerUnitId))
+		{
+			for (const TSoftObjectPtr<UStaticDiceData>& DiceSoft : PlayerData->mDiceDatas)
+			{
+				if (const UStaticDiceData* DiceData = DiceSoft.LoadSynchronous())
+				{
+					mDiceIds.Add(DiceData->GetPrimaryAssetId());
+				}
+			}
+		}
+	}
 }
 
 void URunPersistData::ClearRun()
