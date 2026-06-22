@@ -6,7 +6,7 @@
  *********************************************************************/
 #pragma once
 
-#include "GAS/GASMinimal.h"
+#include "RDMinimal.h"
 #include "Component/ComponentModel.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "DataAsset/SkillData/StaticSkillData.h"

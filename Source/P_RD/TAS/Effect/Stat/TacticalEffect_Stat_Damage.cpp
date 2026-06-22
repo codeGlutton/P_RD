@@ -6,6 +6,7 @@
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Actor/TileMap/TileMapModel.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
+#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 
 void UTacticalEffect_Stat_Damage::ActivateEffect(const UBoardActorModel& Caster, const FTileIndex& TargetTile, const class UTacticalEffectContext* EffectContexts)
 {
@@ -19,9 +20,13 @@ void UTacticalEffect_Stat_Damage::ActivateEffect(const UBoardActorModel& Caster,
 	TWeakObjectPtr<const UTacticalEffectContext_Stat> EffectContext_Stat = Cast<UTacticalEffectContext_Stat>(EffectContexts);
 	checkf(EffectContext_Stat.IsValid(), TEXT("컨텍스트가 이상합니다."));
 
+	// CombatModel을 가져옵니다.
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	checkf(IsValid(CombatModel), TEXT("전투 모델이 비어있습니다."));
+
 	// 서브 시스템에 접근하여 타일맵 모델을 가져온다.
-	TWeakObjectPtr<UTileMapModel> TMModel;
-	checkf(TMModel.IsValid(), TEXT("타일맵 모델이 존재하지 않습니다.."));
+	TWeakObjectPtr<UTileMapModel> TMModel = CombatModel->GetTileMap();
+	checkf(TMModel.IsValid(), TEXT("타일맵 모델이 존재하지 않습니다."));
 	// ===============================================================
 
 	// 해당 타일에 유닛 모델을 가져온다.
