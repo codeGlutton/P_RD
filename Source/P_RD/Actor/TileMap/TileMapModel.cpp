@@ -740,6 +740,43 @@ TArray<FTileIndex> UTileMapModel::GetEffectTiles(const FTileIndex& Caster, const
 	return Result;
 }
 
+FTileIndex UTileMapModel::GetPushDestination(const FTileIndex& Pusher, const FTileIndex& Pushed, int32 MaxDistance) const
+{
+	// 밀리는 칸이 맵 밖이거나 밀칠 거리가 없으면 그대로 둔다
+	if (!IsValidIndex(Pushed) || MaxDistance <= 0)
+		return Pushed;
+
+	// 미는 쪽→밀리는 쪽 방향을 각 축 부호로 8방향 단위 스텝화 (대각 포함)
+	const FTileIndex Step(
+		FMath::Sign(Pushed.mX - Pusher.mX),
+		FMath::Sign(Pushed.mY - Pusher.mY)
+	);
+
+	// 같은 칸이라 방향이 없으면 밀 수 없음
+	if (Step.mX == 0 && Step.mY == 0)
+		return Pushed;
+
+	// 밀리는 칸에서부터 한 칸씩 전진하며 멈출 지점을 찾음
+	FTileIndex Current = Pushed;
+	for (int32 Distance = 0; Distance < MaxDistance; ++Distance)
+	{
+		const FTileIndex Next(Current.mX + Step.mX, Current.mY + Step.mY);
+
+		// 맵 밖으로는 밀리지 않음
+		if (!IsValidIndex(Next))
+			break;
+
+		// 장애물/유닛에 걸리면 더 밀리지 않고 직전 칸에서 멈춤
+		if (IsOccupied(Next))
+			break;
+
+		// 빈 칸이면 거기까지 밀려남
+		Current = Next;
+	}
+
+	return Current;
+}
+
 TArray<UBoardActorModel*> UTileMapModel::GetActorsOnTile(const FTileIndex& TileIndex, ETileLayerFlag LayerFilter) const
 {
 	TArray<UBoardActorModel*> Result;
