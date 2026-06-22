@@ -3,13 +3,13 @@
 
 UObjectModel* GetWorldSubsystemModel(const UObject* WorldContextObject, UClass* Class)
 {
-    if (WorldContextObject != nullptr)
+    if (WorldContextObject == nullptr)
     {
         return nullptr;
     }
 
     USimulationSubsystem* SimulationSubsystem =  WorldContextObject->GetWorld()->GetSubsystem<USimulationSubsystem>();
-    if (SimulationSubsystem != nullptr)
+    if (SimulationSubsystem == nullptr)
     {
         return nullptr;
     }
@@ -19,13 +19,13 @@ UObjectModel* GetWorldSubsystemModel(const UObject* WorldContextObject, UClass* 
 
 UObjectModelFactory* GetWorldModelFactory(const UObject* WorldContextObject)
 {
-    if (WorldContextObject != nullptr)
+    if (WorldContextObject == nullptr)
     {
         return nullptr;
     }
 
     USimulationSubsystem* SimulationSubsystem = WorldContextObject->GetWorld()->GetSubsystem<USimulationSubsystem>();
-    if (SimulationSubsystem != nullptr)
+    if (SimulationSubsystem == nullptr)
     {
         return nullptr;
     }
