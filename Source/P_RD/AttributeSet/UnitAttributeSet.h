@@ -15,6 +15,11 @@
 /**
  * @brief  SRPG Unit에 대한 Attribute Set 정의
  */
+
+// NOTE :	PreAttributeChange
+//			PostAttributeChange
+//			작동 할 수 있도록 구현해야 함
+
 UCLASS()
 class P_RD_API UUnitAttributeSet : public UAttributeSet
 {
@@ -25,7 +30,9 @@ public:
 
 	/* UAttributeSet 상속 */
 public:
+	// 미구현됨
 	void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
+	// 미구현됨
 	void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
 
 public:
