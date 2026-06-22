@@ -1,4 +1,4 @@
-﻿#include "GAS/Attribute/UnitAttributeSet.h"
+﻿#include "AttributeSet/UnitAttributeSet.h"
 
 UUnitAttributeSet::UUnitAttributeSet() : MaxHP(FLT_MAX)
 {
@@ -24,8 +24,8 @@ void UUnitAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute,
 	{
 		if (GetHP() > NewValue)
 		{
-			UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
-			ASC->ApplyModToAttribute(GetHPAttribute(), EGameplayModOp::Override, NewValue);
+			//UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
+			//ASC->ApplyModToAttribute(GetHPAttribute(), EGameplayModOp::Override, NewValue);
 		}
 	}
 }
@@ -54,8 +54,8 @@ void UPlayerUnitAttributeSet::PostAttributeChange(const FGameplayAttribute& Attr
 	{
 		if (NewValue >= GetMaxExp())
 		{
-			UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
-			ASC->TryActivateAbilitiesByTag(FGameplayTagContainer(AbilityTags::GameplayAbility_LevelUp));
+			//UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
+			//ASC->TryActivateAbilitiesByTag(FGameplayTagContainer(AbilityTags::GameplayAbility_LevelUp));
 		}
 	}
 }
