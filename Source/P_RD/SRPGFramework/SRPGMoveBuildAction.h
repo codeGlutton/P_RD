@@ -13,7 +13,6 @@
 #include "SRPGMoveBuildAction.generated.h"
 
 class USRPGMoveBuildAction;
-class UStaticSkillData;
 class UTileMapModel;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangeMoveBuildPhase, const USRPGMoveBuildAction* /*Action*/, ESRPGMoveBuildPhase /*Phase*/);
@@ -30,6 +29,11 @@ public:
 
 public:
 	FOnChangeMoveBuildPhase OnChangeMoveBuildPhase;
+
+public:
+	// @brief 이번 빌드에서 사용할 이동 포인트(외부에서 미리 계산된 도달 거리, 분할 이동 시 남은 포인트가 넘어온다)
+	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MovePoint"))
+	int32 mMovePoint = 0;
 };
 
 /**
@@ -37,8 +41,10 @@ public:
  *
  * @details
  * 스킬 생성 액션(USRPGSkillBuildAction)을 본떠 만든 이동 전용 빌드 액션이다.
- * 유닛의 이동 스킬을 얻어와 주사위로 도달 거리를 정하고, 도달 가능 타일에서
+ * 외부에서 미리 계산돼 넘어온 이동 포인트로 도달 범위를 정하고, 도달 가능 타일에서
  * 목적지를 골라 경로를 프리뷰한 뒤, 확정 시 이동 액션 생성 명령을 발행한다.
+ * 이동 포인트는 한 번에 다 쓰지 않아도 되며, 이동 후 남은 포인트로 이동 빌드를 다시
+ * 호출해 총 이동 거리를 여러 번에 나눠 사용할 수 있다.
  * 스킬과 달리 사용할 스킬은 이동 스킬 하나로 고정이라 스킬 인덱스를 두지 않는다.
  */
 UCLASS()
@@ -62,10 +68,8 @@ protected:
 
 	/* 빌드 로직 처리 */
 private:
-	void ChangeDices(int32 RequestedDiceIndex);
-
-	void SetMoveSkill();
-	void ResetMoveSkill();
+	void EnterMoveBuild();
+	void ResetMoveBuild();
 	void SetTargetTile(const FTileIndex& TileIndex);
 	void ResetTargetTile();
 	void BuildMove();
@@ -77,9 +81,7 @@ private:
 private:
 	// @brief 턴 컨텍스트 → 전투 모델 → 타일 맵 모델을 꺼내온다 (없으면 checkf)
 	UTileMapModel* GetTileMap() const;
-	// @brief 선택된 주사위들의 눈금 합을 실제 주사위 풀에서 합산
-	int32 GetSelectedDiceSum() const;
-	// @brief 현재 이동 스킬·주사위합 기준으로 도달 범위를 재계산하고 강조 갱신
+	// @brief 현재 이동 포인트 기준으로 도달 범위를 재계산하고 강조 갱신
 	void RefreshReachableTiles();
 
 protected:
@@ -92,13 +94,10 @@ protected:
 protected:
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ReachableTileIndexes"))
 	TArray<FTileIndex> mReachableTileIndexes;
-	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectedSkill"))
-	TObjectPtr<UStaticSkillData> mSelectedSkill;
 
-	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectedDices"))
-	TArray<int32> mSelectedDices;
-	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectedDiceSum"))
-	int32 mSelectedDiceSum = 0;
+	// @brief 이번 빌드에서 사용할 이동 포인트(외부에서 계산된 도달 거리, 분할 이동 시 남은 포인트)
+	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MovePoint"))
+	int32 mMovePoint = 0;
 
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PathTileIndexes"))
 	TArray<FTileIndex> mPathTileIndexes;

@@ -6,12 +6,8 @@
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
 #include "Pawn/UnitModel.h"
-#include "Pawn/Player/PlayerUnitModel.h"
-#include "Dice/DicePoolModel.h"
 #include "Actor/TileMap/TileMapModel.h"
 
-#include "DataAsset/SkillData/StaticSkillData.h"
-#include "SRPGFramework/SRPGSkillBuildAction.h"	// 주사위 선택 명령(FSRPGCDiceSelectCommand) 재사용
 #include "SRPGFramework/SRPGMoveAction.h"
 
 FSRPGMoveSelectCommand::FSRPGMoveSelectCommand()
@@ -33,7 +29,7 @@ void USRPGMoveBuildAction::OnBeginAction()
 
 void USRPGMoveBuildAction::OnEndAction()
 {
-    ResetMoveSkill();
+    ResetMoveBuild();
     Super::OnEndAction();
 }
 
@@ -49,22 +45,15 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleCommand(const TInstancedStruct<FS
     {
     case ESRPGCommandType::MoveSelect:
     {
-        /* 이동 빌드 진입 시 이동 스킬을 얻어와 도달 범위 계산 */
+        /* 이동 빌드 진입 시 외부에서 넘어온 이동 포인트를 받아 도달 범위 계산 */
 
-        if (mSelectedSkill == nullptr)
+        const FSRPGMoveSelectCommand& MoveSelectCommand = Command.Get<FSRPGMoveSelectCommand>();
+        mMovePoint = MoveSelectCommand.mMovePoint;
+
+        if (mMoveBuildPhase == ESRPGMoveBuildPhase::None)
         {
-            SetMoveSkill();
+            EnterMoveBuild();
         }
-        return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
-    }
-    case ESRPGCommandType::DiceSelect:
-    {
-        /* 주사위 변경 시 목적지부터 재설정 */
-
-        const FSRPGCDiceSelectCommand& DiceSelectCommand = Command.Get<FSRPGCDiceSelectCommand>();
-
-        ResetTargetTile();
-        ChangeDices(DiceSelectCommand.mDiceIndex);
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
     case ESRPGCommandType::WorldTrace:
@@ -158,46 +147,11 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleWorldTraceCommand(const TInstance
     return Result;
 }
 
-void USRPGMoveBuildAction::ChangeDices(int32 RequestedDiceIndex)
-{
-    checkf(mMoveBuildPhase == ESRPGMoveBuildPhase::DestSelection, TEXT("이동 빌드 순서 오류"));
-
-    if (mSelectedDices.Contains(RequestedDiceIndex) == true)
-    {
-        // 이전 주사위 제거
-        mSelectedDices.Remove(RequestedDiceIndex);
-    }
-    else if (mSelectedDices.Num() < mSelectedSkill->mDiceCount)
-    {
-        // 새로운 주사위 추가 할당
-        mSelectedDices.Add(RequestedDiceIndex);
-    }
-
-    // 선택된 주사위 눈금 합을 재계산하고, 바뀐 거리로 도달 범위 갱신 (주사위 선택은 유지)
-    mSelectedDiceSum = GetSelectedDiceSum();
-    RefreshReachableTiles();
-}
-
-void USRPGMoveBuildAction::SetMoveSkill()
+void USRPGMoveBuildAction::EnterMoveBuild()
 {
     checkf(mMoveBuildPhase == ESRPGMoveBuildPhase::None, TEXT("이동 빌드 순서 오류"));
 
-    // USkillComponent* SkillComp = mInstigator->GetSkillComponent();
-    // checkf(SkillComp != nullptr, TEXT("스킬 컴포넌트 nullptr"));
-
-    /* 이동 스킬 등록 */
-
-    {
-        TSoftObjectPtr<UStaticSkillData> MoveSkillSoftObj = nullptr;
-        // SkillComp->GetMoveSkillData(OUT MoveSkillSoftObj);
-        if (MoveSkillSoftObj == nullptr)
-        {
-            UE_LOG(LogSRPGCombat, Warning, TEXT("이동 시전 시 비정상적 이동 스킬"));
-            return;
-        }
-
-        mSelectedSkill = MoveSkillSoftObj.Get();
-    }
+    // 이동 스킬은 '이동'으로 고정이라 별도 조회 없이, 외부에서 받은 이동 포인트로 도달 범위를 강조한다
 
     /* 도달 범위 계산 및 강조 */
 
@@ -208,13 +162,11 @@ void USRPGMoveBuildAction::SetMoveSkill()
     SetBuildPhase(ESRPGMoveBuildPhase::DestSelection);
 }
 
-void USRPGMoveBuildAction::ResetMoveSkill()
+void USRPGMoveBuildAction::ResetMoveBuild()
 {
     mReachableTileIndexes.Empty();
-    mSelectedSkill = nullptr;
 
-    mSelectedDices.Empty();
-    mSelectedDiceSum = 0;
+    mMovePoint = 0;
 
     mPathTileIndexes.Empty();
     mTargetIndex = FTileIndex::Invalid;
@@ -291,9 +243,8 @@ void USRPGMoveBuildAction::SetBuildPhase(ESRPGMoveBuildPhase BuildPhase)
 
 UTileMapModel* USRPGMoveBuildAction::GetTileMap() const
 {
-    USRPGTurnContext* TurnContext = mParent.Get();
-    checkf(TurnContext != nullptr, TEXT("턴 객체 nullptr"));
-    USRPGCombatModel* CombatModel = TurnContext->GetParent();
+    // 전투 모델을 월드 서브시스템에서 바로 받아 타일 맵을 꺼낸다 (턴 컨텍스트 체인 의존 제거)
+    USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
     checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 
     UTileMapModel* TileMap = CombatModel->GetTileMap();
@@ -301,34 +252,12 @@ UTileMapModel* USRPGMoveBuildAction::GetTileMap() const
     return TileMap;
 }
 
-int32 USRPGMoveBuildAction::GetSelectedDiceSum() const
-{
-    int32 DiceSum = 0;
-
-    // 주사위는 플레이어 유닛만 보유 — 풀에서 선택된 주사위들의 굴림값을 합산한다
-    UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
-    if (PlayerUnit != nullptr)
-    {
-        if (UDicePoolModel* DicePool = PlayerUnit->GetDicePool())
-        {
-            for (int32 DiceIndex : mSelectedDices)
-            {
-                DiceSum += DicePool->GetRolledDiceValue(DiceIndex);
-            }
-        }
-    }
-
-    return DiceSum;
-}
-
 void USRPGMoveBuildAction::RefreshReachableTiles()
 {
-    checkf(mSelectedSkill != nullptr, TEXT("이동 스킬 미선택 상태에서 도달 범위 계산"));
-
     UTileMapModel* TileMap = GetTileMap();
 
-    // 이동 거리 = 기본 + 주사위합 * 비율 (스킬 사거리 규칙과 동일)
-    const int32 MoveRange = static_cast<int32>(mSelectedSkill->mAimDefaultRange + mSelectedDiceSum * mSelectedSkill->mAimRatioRange);
+    // 이동 거리 = 외부에서 넘어온 이동 포인트 (사거리 계산은 빌드 밖에서 수행)
+    const int32 MoveRange = mMovePoint;
     mReachableTileIndexes = TileMap->GetReachableTiles(mInstigator->GetTileTransform().mIndex, MoveRange);
 
     // 도달 범위를 조준 강조로 표시 (이동 범위 = 조준 범위로 표현)
