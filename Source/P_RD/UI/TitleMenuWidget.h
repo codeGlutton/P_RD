@@ -57,6 +57,9 @@ protected:
 	// AddUniqueDynamic을 사용하므로 같은 위젯이 다시 Construct 되어도 같은 델리게이트가 중복으로 붙지 않는다.
 	void NativeConstruct() override;
 
+	/** @brief 배경 영상 cover-crop 배치를 현재 화면 크기에 맞춰 갱신한다. */
+	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+
 	/** @brief 위젯이 화면에서 내려갈 때 연결한 이벤트를 해제함 */
 	// UUserWidget은 화면에서 사라졌다가 다시 Construct 될 수 있다.
 	// 이때 이전 델리게이트가 남아 있으면 클릭 한 번에 핸들러가 여러 번 호출될 수 있으므로
@@ -122,6 +125,15 @@ private:
 	// TitleBackgroundImage가 없으면 배경 영상은 생략한다.
 	void StartTitleBackgroundVideo();
 
+	/** @brief 타이틀 로고와 버튼 텍스처를 현재 설정된 아트 자산으로 적용한다. */
+	void ApplyTitleArtAssets();
+
+	/** @brief 버튼의 일반/호버/눌림/비활성 스타일을 같은 텍스처 브러시로 교체한다. */
+	void ApplyButtonTexture(UButton* Button, const TSoftObjectPtr<UTexture2D>& TextureAsset) const;
+
+	/** @brief Image 위젯에 텍스처 브러시를 적용한다. */
+	void ApplyImageTexture(UImage* Image, const TSoftObjectPtr<UTexture2D>& TextureAsset) const;
+
 	/** @brief 타이틀 배경 영상용 MediaPlayer/MediaTexture/FileMediaSource를 준비한다. */
 	void EnsureTitleBackgroundMediaObjects();
 
@@ -131,12 +143,18 @@ private:
 	/** @brief 타이틀 배경 영상을 반복 재생한다. */
 	void PlayTitleBackgroundVideo();
 
+	/** @brief 타이틀 배경 영상 Image를 원본 비율 유지 cover-crop으로 배치한다. */
+	void FitTitleBackgroundVideoToViewport() const;
+
 	/** @brief 타이틀 배경 영상 재생을 정리한다. */
 	void StopTitleBackgroundVideo();
 
 	/** @brief Content 기준 상대 경로를 실제 파일 경로로 바꾼다. */
 	// [합의필요] SVN raw media를 Content 밑 파일 경로로 직접 읽는 계약은 패키징 규칙과 함께 유지되어야 한다.
 	FString ResolveTitleBackgroundVideoPath() const;
+
+	/** @brief MP4 파일에서 비디오 트랙 표시 해상도를 읽는다. */
+	FVector2D ReadTitleBackgroundVideoFileDimensions(const FString& VideoPath) const;
 
 	/** @brief MediaPlayer가 파일을 열었을 때 반복 재생 상태를 확정한다. */
 	UFUNCTION()
@@ -214,6 +232,10 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> TitleText;
 
+	/** @brief 타이틀 로고 이미지. 있으면 C++ 기본 로고 텍스처로 런타임에 교체한다. */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UImage> TitleLogoImage;
+
 	/** @brief START 버튼 안에 표시할 라벨 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> StartButtonText;
@@ -260,6 +282,22 @@ private:
 	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	FText mCharacterSelectUnavailableText;
 
+	/** @brief 타이틀 로고 텍스처 */
+	UPROPERTY(Category = "Title Menu|Art", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	TSoftObjectPtr<UTexture2D> mTitleLogoTexture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/SVN/OutSideAsset/AICreation/Title/UI_Title_RogueTheDice_ImageGen.UI_Title_RogueTheDice_ImageGen")));
+
+	/** @brief 새 게임 버튼 텍스처 */
+	UPROPERTY(Category = "Title Menu|Art", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	TSoftObjectPtr<UTexture2D> mNewButtonTexture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/SVN/OutSideAsset/AICreation/Title/UI_Button_New_ImageGen.UI_Button_New_ImageGen")));
+
+	/** @brief 이어하기 버튼 텍스처 */
+	UPROPERTY(Category = "Title Menu|Art", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	TSoftObjectPtr<UTexture2D> mContinueButtonTexture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/SVN/OutSideAsset/AICreation/Title/UI_Button_Continue_ImageGen.UI_Button_Continue_ImageGen")));
+
+	/** @brief 설정 버튼 텍스처 */
+	UPROPERTY(Category = "Title Menu|Art", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	TSoftObjectPtr<UTexture2D> mSettingsButtonTexture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/SVN/OutSideAsset/AICreation/Title/UI_Button_Settings_ImageGen.UI_Button_Settings_ImageGen")));
+
 	/** @brief WBP가 제공하는 배경 영상 표시용 Image (BindWidgetOptional) */
 	// 위치/레이아웃은 WBP가 잡고, C++은 여기에 MediaTexture를 물려 영상만 재생한다.
 	// WBP에 없으면 배경 영상은 생략한다. (로고/버튼 등 나머지 정적 비주얼은 전부 WBP 책임)
@@ -268,7 +306,7 @@ private:
 
 	/** @brief 타이틀 메인 화면에서 반복 재생할 MP4 파일의 Content 기준 상대 경로 */
 	UPROPERTY(Category = "Title Menu|Background", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true, DisplayName = "Title Background Video Path"))
-	FString mTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/MS_TitleLoop_01.mp4");
+	FString mTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/campfire_titleloop_idle_x3preview.mp4");
 
 	/** @brief 배경 영상 재생용 런타임 객체(MediaPlayer/Texture/Source/브러시). 정적 비주얼은 WBP. */
 	UPROPERTY(Transient)

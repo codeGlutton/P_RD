@@ -31,4 +31,7 @@ struct P_RD_API FTitleMenuBackgroundRuntimeAssets
 
 	/** @brief TitleBackgroundImage에 적용하는 브러시 캐시; MediaTexture 참조 유지가 목적이다. */
 	FSlateBrush mVideoBrush;
+
+	/** @brief cover-crop 배치 계산에 쓰는 MP4 원본 해상도. */
+	FVector2D mVideoNativeSize = FVector2D::ZeroVector;
 };
