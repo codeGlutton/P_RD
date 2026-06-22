@@ -7,16 +7,16 @@
 
 #pragma once
 
-#include "GAS/GASMinimal.h"
+#include "RDMinimal.h"
 
 #include "PCGStage/Stage.h"
 #include "Singleton/InstanceSubsystem/PersistentDataType.h"
 
 #include "PersistentData.generated.h"
 
-DECLARE_DELEGATE_OneParam(FOnCreateStage, const FStage& /*NewStage*/)
+class UPlayerUnitModel;
 
-class APlayerUnit;
+DECLARE_DELEGATE_OneParam(FOnCreateStage, const FStage& /*NewStage*/)
 
 /**
  * @brief 한번의 런 동안 기록된 로그 데이터
@@ -79,7 +79,7 @@ class P_RD_API UPlayerUnitPersistData : public UObject
 	GENERATED_BODY()
 
 public:
-	void RegisterPlayerUnit(APlayerUnit* PlayerUnit);
+	void RegisterPlayerUnit(UPlayerUnitModel* PlayerUnit);
 
 public:
 	const FPrimaryAssetId& GetPlayerUnitId() const;
@@ -92,8 +92,8 @@ public:
 	const TArray<FPrimaryAssetId>& GetDiceIds() const;
 
 protected:
-	void SyncPlayerPersistData(APlayerUnit* PlayerUnit);
-	void BindPlayerUnitEvent(APlayerUnit* PlayerUnit);
+	void SyncPlayerPersistData(UPlayerUnitModel* PlayerUnit);
+	void BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit);
 
 protected:
 	UPROPERTY(SaveGame)

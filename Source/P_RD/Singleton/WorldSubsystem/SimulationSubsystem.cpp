@@ -1,20 +1,23 @@
 ﻿#include "Singleton/WorldSubsystem/SimulationSubsystem.h"
 
-#include "FunctionLibrary/RandomStreamFunctionLibrary.h"
-
 #include "Simulation/RoomContext.h"
 #include "Simulation/RoomInstance.h"
 #include "Simulation/Logger/EventLogger.h"
 #include "Simulation/Factory/ObjectModelFactory.h"
 
+#include "Setting/GamePlaySettings.h"
+
+#include "ObjectModel.h"
+
 DEFINE_LOG_CATEGORY(LogSimulation)
 
-void USimulationSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+void USimulationSubsystem::PostInitialize()
 {
-	Super::Initialize(Collection);
+	Super::PostInitialize();
 
 	{
 		mGameRoomContext.mRoomInstance = NewObject<URoomInstance>(this);
+		mGameRoomContext.mRoomInstance->CollectGameDatas();
 
 		mGameRoomContext.mModelFactory = NewObject<UGameObjectModelFactory>(this);
 		mGameRoomContext.mModelFactory->SetContext(mGameRoomContext);
@@ -33,7 +36,15 @@ void USimulationSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		mSimulationRoomContext.mEventLogger->SetContext(mGameRoomContext);
 	}
 
+	Cast<UGameObjectModelFactory>(mGameRoomContext.mModelFactory)->RegisterSubsystemModels();
 	SetSimulationState(mSimulationState);
+}
+
+void USimulationSubsystem::PreDeinitialize()
+{
+	Cast<UGameObjectModelFactory>(mGameRoomContext.mModelFactory)->UnregisterSubsystemModels();
+	
+	Super::PreDeinitialize();
 }
 
 TArray<FSRPGTurnEventLog> USimulationSubsystem::SimulateUntilNextAction()
@@ -43,7 +54,7 @@ TArray<FSRPGTurnEventLog> USimulationSubsystem::SimulateUntilNextAction()
 
 	// TODO
 
-	TArray<FSRPGTurnEventLog> ResultLogs = GetEventLogger()->PopSRPGLogs();
+	TArray<FSRPGTurnEventLog> ResultLogs = GetEventLogger().PopSRPGLogs();
 
 	SetSimulationState(ESRPGSimulationState::RunningGame);
 	return MoveTemp(ResultLogs);
@@ -56,7 +67,7 @@ TArray<FSRPGTurnEventLog> USimulationSubsystem::SimulateUntilNextPlayerTurn()
 
 	// TODO
 
-	TArray<FSRPGTurnEventLog> ResultLogs = GetEventLogger()->PopSRPGLogs();
+	TArray<FSRPGTurnEventLog> ResultLogs = GetEventLogger().PopSRPGLogs();
 
 	SetSimulationState(ESRPGSimulationState::RunningGame);
 	return MoveTemp(ResultLogs);
@@ -73,38 +84,30 @@ void USimulationSubsystem::SetSimulationState(ESRPGSimulationState State)
 	else
 	{
 		mSimulationRoomContext.mRoomInstance = Cast<URoomInstance>(StaticDuplicateObject(mSimulationRoomContext.mRoomInstance, this));
+		mGameRoomContext.mRoomInstance->CollectSimulationDatas();
 		mCurrentRoomContext = &mSimulationRoomContext;
 	}
 }
 
+UObjectModel* USimulationSubsystem::GetSubsystemModel(UClass* Class) const
+{
+	TObjectPtr<UObjectModel>* FoundModel = mCurrentRoomContext->mRoomInstance->mAliveSubsystemModels.Find(Class);
+	return FoundModel != nullptr ? *FoundModel : nullptr;
+}
+
 const FRandomStream& USimulationSubsystem::GetEventStream() const
 {
-	if (mSimulationState == ESRPGSimulationState::RunningGame)
-	{
-		return URandomStreamFunctionLibrary::GetEventStream(GetWorld());
-	}
-	else
-	{
-		return mSimulationRoomContext.mRoomInstance->mCopiedEventStream;
-	}
+	return *mCurrentRoomContext->mRoomInstance->mEventStreamPtr;
 }
 
-UEventLogger* USimulationSubsystem::GetEventLogger() const
+UEventLogger& USimulationSubsystem::GetEventLogger() const
 {
-	if (mCurrentRoomContext == nullptr)
-	{
-		return nullptr;
-	}
-	return mCurrentRoomContext->mEventLogger;
+	return *mCurrentRoomContext->mEventLogger;
 }
 
-UObjectModelFactory* USimulationSubsystem::GetModelFactory() const
+UObjectModelFactory& USimulationSubsystem::GetModelFactory() const
 {
-	if (mCurrentRoomContext == nullptr)
-	{
-		return nullptr;
-	}
-	return mCurrentRoomContext->mModelFactory;
+	return *mCurrentRoomContext->mModelFactory;
 }
 
 ESRPGSimulationState USimulationSubsystem::GetSimulationState() const

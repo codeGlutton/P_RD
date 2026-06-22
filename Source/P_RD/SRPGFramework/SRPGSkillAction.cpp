@@ -1,34 +1,35 @@
 ﻿#include "SRPGFramework/SRPGSkillAction.h"
-#include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
+#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 
-#include "Pawn/Unit.h"
+#include "Pawn/UnitModel.h"
 
-#include "Pawn/SkillComponent.h"
+// #include "Pawn/SkillComponent.h"
 
 FSRPGSkillCastCommand::FSRPGSkillCastCommand()
 {
     mCommandType = ESRPGCommandType::SkillCast;
+    mRequestedAction = USRPGSkillAction::StaticClass();
 }
 
-FSRPGSkillAction::FSRPGSkillAction()
+USRPGSkillAction::USRPGSkillAction()
 {
     mActionType = ESRPGActionType::InPlayAction;
     mConsumesTurn = false;
 }
 
-void FSRPGSkillAction::OnBeginAction()
+void USRPGSkillAction::OnBeginAction()
 {
     Super::OnBeginAction();
     
     // TODO : 스킬 처리 로직
 }
 
-void FSRPGSkillAction::OnTickAction(float DeltaTime)
+void USRPGSkillAction::OnTickAction(float DeltaTime)
 {
     Super::OnTickAction(DeltaTime);
 }
 
-void FSRPGSkillAction::OnEndAction()
+void USRPGSkillAction::OnEndAction()
 {
     Super::OnEndAction();
 }

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "GAS/GASMinimal.h"
+#include "RDMinimal.h"
 #include "DataAsset/PrimaryAssetType.h"
 #include "DataAsset/BundleType.h"
 #include "../../SRPGFramework/SRPGFrameworkType.h"

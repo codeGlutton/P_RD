@@ -1,5 +1,5 @@
 ﻿/**
- * @page gas_tag_page GAS 태그 매크로
+ * @page gas_tag_page Gameplay 태그 매크로
  * @tableofcontents
  *
  * @section tag_macro_section 태그 매크로란?
@@ -18,13 +18,13 @@
  * @code{.h}
  * UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player_Combat_Roll);
  * @endcode
- * 기본적으로 @ref GASInclude.h 에 작성합니다.\n
+ * 기본적으로 @ref GameplayTagType.h 에 작성합니다.\n
  * 적절한 namespace 내부에 UE_DECLARE_GAMEPLAY_TAG_EXTERN([Tag이름]_[Tag이름]_[Tag이름]) 선언합니다.\n
  * 
  * @code{.cpp}
  * UE_DEFINE_GAMEPLAY_TAG(Player_Combat_Roll, "Player.Combat.Roll");
  * @endcode
- * 기본적으로 @ref GASInclude.cpp 에 작성합니다.\n
+ * 기본적으로 @ref GameplayTagType.cpp 에 작성합니다.\n
  * 적절한 namespace 내부에 UE_DEFINE_GAMEPLAY_TAG([Tag이름]_[Tag이름]_[Tag이름], "[Tag이름].[Tag이름].[Tag이름]") 선언합니다.\n
  * 
  * @subsection use_tag_step2 사용 시

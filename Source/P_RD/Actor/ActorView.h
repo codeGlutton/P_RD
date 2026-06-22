@@ -21,7 +21,7 @@ class UActorView : public UObjectView
 };
 
 /**
- * @brief  시뮬레이션 뷰의 최상위 인터페이스
+ * @brief  액터 시뮬레이션 뷰의 인터페이스
  * @details 액터가 구현하는 공통 인터페이스다.
  */
 class P_RD_API IActorView : public IObjectView

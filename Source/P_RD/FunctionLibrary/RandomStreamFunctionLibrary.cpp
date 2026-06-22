@@ -13,14 +13,6 @@ const FRandomStream& URandomStreamFunctionLibrary::GetStageBuildStream(const UOb
 
 const FRandomStream& URandomStreamFunctionLibrary::GetEventStream(const UObject* WorldContextObject)
 {
-	UPersistentDataSubsystem* PersistentSubsystem = UGameplayStatics::GetGameInstance(WorldContextObject)->GetSubsystem<UPersistentDataSubsystem>();
-	checkf(PersistentSubsystem != nullptr, TEXT("영구 데이터 서브시스템 nullptr"));
-
-	return PersistentSubsystem->GetRunPersistData()->GetEventStream();
-}
-
-const FRandomStream& URandomStreamFunctionLibrary::GetRoomEventStream(const UObject* WorldContextObject)
-{
 	USimulationSubsystem* SimulationSubsystem = WorldContextObject->GetWorld()->GetSubsystem<USimulationSubsystem>();
 	checkf(SimulationSubsystem != nullptr, TEXT("시뮬레이션 서브시스템 nullptr"));
 

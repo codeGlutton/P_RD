@@ -11,11 +11,15 @@
 #include "SRPGFramework/SRPGAction.h"
 #include "SRPGFramework/SRPGCommand.h"
 #include "FunctionLibrary/CombatCalculator/CombatResult.h"
+#include "SRPGSkillAction.generated.h"
 
 struct FSRPGSkillAction;
 
-struct FSRPGSkillCastCommand : public FSRPGActionCreationCommand<FSRPGSkillAction>
+USTRUCT()
+struct FSRPGSkillCastCommand : public FSRPGCommand
 {
+	GENERATED_BODY()
+
 public:
 	FSRPGSkillCastCommand();
 
@@ -26,13 +30,13 @@ public:
 /**
  * @brief  사용자 입력에 따른 정해진 SRPG 행동 객체
  */
-struct FSRPGSkillAction : public FSRPGAction
+UCLASS()
+class USRPGSkillAction : public USRPGAction
 {
-	friend struct FSRPGActionCreationCommand<FSRPGSkillAction>;
-	using Super = FSRPGAction;
+	GENERATED_BODY()
 
 protected:
-	FSRPGSkillAction();
+	USRPGSkillAction();
 
 protected:
 	void OnBeginAction() override;

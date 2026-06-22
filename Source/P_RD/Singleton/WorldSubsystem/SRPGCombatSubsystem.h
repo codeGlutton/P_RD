@@ -17,9 +17,6 @@
 
 #include "SRPGCombatSubsystem.generated.h"
 
-// SRPG Combat 신규 로그 카테고리 등록
-DECLARE_LOG_CATEGORY_EXTERN(LogSRPGCombat, Log, All)
-
 class USRPGCombatModel;
 class IObjectModel;
 class UCombatUIModel;
@@ -50,6 +47,7 @@ public:
 	UCombatUIModel* GetCombatUIModel();
 
 protected:
+	UPROPERTY(Category = Model, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatModel"))
 	TWeakObjectPtr<USRPGCombatModel> mCombatModel;
 
 	UPROPERTY()

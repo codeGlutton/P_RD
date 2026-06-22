@@ -12,38 +12,44 @@
 
 #include "Tool/CircularList.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
+
 #include "SRPGFramework/SRPGTurnContext.h"
 
 #include "SRPGCombatModel.generated.h"
 
+ // SRPG Combat 신규 로그 카테고리 등록
+DECLARE_LOG_CATEGORY_EXTERN(LogSRPGCombat, Log, All)
+
 struct FPresentationBarrier;
-struct FSRPGAction;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnBeginCombatUI, TSharedPtr<FPresentationBarrier> /*Barrier*/)
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndCombatUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, ESRPGCombatResult /*Result*/)
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBeginAnyTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGTurnContext& /*TurnContext*/)
-DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnEndAnyTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGTurnContext& /*TurnContext*/, ESRPGTurnResult /*Result*/)
-DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnBeginAnyTurnActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGTurnContext& /*TurnContext*/, const FSRPGAction& /*Action*/)
-DECLARE_MULTICAST_DELEGATE_FourParams(FOnEndAnyTurnActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const FSRPGTurnContext& /*TurnContext*/, const FSRPGAction& /*Action*/, ESRPGActionResult /*Result*/)
+class USRPGTurnContext;
+class USRPGAction;
 
-struct FSRPGCommand;
-
-class ITileActor;
-class AUnit;
-class ATileMap;
+class UBoardActorModel;
+class UUnitModel;
+class UTileMapModel;
 
 class UStaticCombatRoomSpawnData;
 struct FEnemyUnitPlacementData;
 struct FObstaclePlacementData;
 
-USTRUCT()
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnBeginCombatUI, TSharedPtr<FPresentationBarrier> /*Barrier*/)
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndCombatUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, ESRPGCombatResult /*Result*/)
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBeginAnyTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/)
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnEndAnyTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, ESRPGTurnResult /*Result*/)
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnBeginAnyTurnActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, const USRPGAction* /*Action*/)
+DECLARE_MULTICAST_DELEGATE_FourParams(FOnEndAnyTurnActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, const USRPGAction* /*Action*/, ESRPGActionResult /*Result*/)
+
+USTRUCT(BlueprintType)
 struct FSRPGTurnUnregisterRequest
 {
 	GENERATED_BODY()
 
 public:
-	TSharedPtr<FSRPGTurnContext> mTargetTurnContext;
-	TObjectPtr<const AUnit> mTargetOwner;
+	UPROPERTY(Category = Request, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "TargetTurnContext"))
+	TObjectPtr<USRPGTurnContext> mTargetTurnContext;
+	UPROPERTY(Category = Request, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "TargetOwner"))
+	TObjectPtr<UUnitModel> mTargetOwner;
 };
 
 /**
@@ -54,18 +60,19 @@ class P_RD_API USRPGCombatModel : public UObjectModel, public FTickableGameObjec
 {
 	GENERATED_BODY()
 
+	/* UObjectModel 상속 */
+public:
+	void Serialize(FArchive& Ar) override;
+
 	/* FTickableGameObject 상속 */
 public:
 	void Tick(float DeltaTime) override;
 	bool IsTickable() const override;
 	TStatId GetStatId() const override;
 
-public:
-	void Initialize() override;
-
 	/* 생명 주기 함수 */
 public:
-	void InitCombat(const UStaticCombatRoomSpawnData* RoomSpawnData, AUnit* PlayerUnit);
+	void InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, UUnitModel* PlayerUnit);
 	void BeginCombat();
 	void EndCombat();
 
@@ -81,7 +88,7 @@ public:
 	 * @param TurnContext 종료된 현재 턴 객체
 	 * @param TurnResult 턴 종료 결과 타입
 	 */
-	void OnEndCurrentTurn(TSharedRef<FSRPGTurnContext> TurnContext, ESRPGTurnResult TurnResult);
+	void OnEndCurrentTurn(USRPGTurnContext* TurnContext, ESRPGTurnResult TurnResult);
 
 protected:
 	void EvaluateCombatEndState();
@@ -94,22 +101,22 @@ public:
 	 * @param LifeCount 턴의 생명 주기. 해당 턴에 대해서 남은 실행 횟수를 의미
 	 * @return 생성된 턴 컨텍스트
 	 */
-	TWeakPtr<FSRPGTurnContext> RegisterTurn(AUnit* Owner, int32 LifeCount = FSRPGTurnContext::PERMENENT_TURN);
+	USRPGTurnContext* RegisterTurn(UUnitModel* Owner, int32 LifeCount = USRPGTurnContext::PERMENENT_TURN);
 
 protected:
 	/**
 	 * 턴을 삭재하는 함수. 해당 턴이 현재 진행 중이면, Pending. 아니라면 즉시 제거.
 	 * @param TurnContext 삭제할 TurnContext
 	 */
-	void UnregisterTurn(TSharedRef<FSRPGTurnContext> TurnContext);
+	void UnregisterTurn(USRPGTurnContext* TurnContext);
 	/**
 	 * Owner가 동일한 모든 턴을 삭재하는 함수. 해당 턴이 현재 진행 중이면, Pending. 아니라면 즉시 제거.
 	 * @param Owner 삭제한 Owner
 	 */
-	void UnregisterTurns(const AUnit* Owner);
+	void UnregisterTurns(UUnitModel* Owner);
 
-	bool UnregisterTurnImmediately(TSharedRef<FSRPGTurnContext> TurnContext);
-	int32 UnregisterTurnsImmediately(const AUnit* Owner);
+	bool UnregisterTurnImmediately(USRPGTurnContext* TurnContext);
+	int32 UnregisterTurnsImmediately(UUnitModel* Owner);
 	
 	/**
 	 * 미뤄두었던 턴 삭제를 처리하는 함수
@@ -121,23 +128,26 @@ public:
 	 * 새로운 적을 등록하는 함수. 해당 적 턴은 항상 최후방에 등록
 	 * @param EnemyPlacementData 적 배치 데이터
 	 */
-	void RegisterEnemyUnit(const FEnemyUnitPlacementData& EnemyPlacementData);
+	void RegisterEnemyUnit(FEnemyUnitPlacementData& EnemyPlacementData);
 	/**
 	 * 새로운 장애물을 등록하는 함수
 	 * @param ObstaclePlacementDatas 장애물 배치 데이터
 	 */
-	void RegisterObstacle(const FObstaclePlacementData& ObstaclePlacementDatas);
+	void RegisterObstacle(FObstaclePlacementData& ObstaclePlacementDatas);
 
 protected:
 	void SpawnTileMap();
-	void RegisterPlayerUnit(AUnit* PlayerUnit, const FTileTransform& Transform);
-	void RegisterEnemyUnits(const TArray<FEnemyUnitPlacementData>& EnemyPlacementDatas);
-	void RegisterObstacles(const TArray<FObstaclePlacementData>& ObstaclePlacementDatas);
+	void RegisterPlayerUnit(UUnitModel* PlayerUnit, const FTileTransform& Transform);
+	void RegisterEnemyUnits(TArray<FEnemyUnitPlacementData>& EnemyPlacementDatas);
+	void RegisterObstacles(TArray<FObstaclePlacementData>& ObstaclePlacementDatas);
 
 protected:
 	void AdvanceTurn(bool IsInitialRound = false);
 	void NotifyRoundStartIfNeeded();
 	void NotifyRoundEndIfNeeded();
+
+protected:
+	void PostUnitDeath(UUnitModel* UnitModel);
 
 	/* 액션 함수 */
 public:
@@ -146,14 +156,14 @@ public:
 	 * @param Action 추가할 액션 객체
 	 * @return 액션 등록 여부
 	 */
-	bool PushAction(TSharedPtr<FSRPGAction> Action);
+	bool PushAction(USRPGAction* Action);
 
 public:
-	TWeakPtr<FSRPGTurnContext> GetCurrentTurnContext();
-	TWeakPtr<FSRPGTurnContext> GetTurnContext(const AUnit* Owner);
-	TArray<TWeakPtr<FSRPGTurnContext>> GetTurnContexts(const AUnit* Owner);
-	ATileMap* GetTileMap();
-	TArray<TObjectPtr<AUnit>>& GetUnits();
+	USRPGTurnContext* GetCurrentTurnContext();
+	USRPGTurnContext* GetTurnContext(const UUnitModel* Owner);
+	TArray<TObjectPtr<USRPGTurnContext>> GetTurnContexts(const UUnitModel* Owner);
+	UTileMapModel* GetTileMap();
+	TArray<TObjectPtr<UUnitModel>>& GetUnits();
 
 public:
 	/**
@@ -195,25 +205,40 @@ public:
 
 protected:
 	// @brief 현재 전투 방 상태
+	UPROPERTY(Category = Combat, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatPhase"))
 	ESRPGCombatRoomPhase mCombatPhase = ESRPGCombatRoomPhase::None;
 	// @brief 전투 방 결과
+	UPROPERTY(Category = Combat, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatResult"))
 	ESRPGCombatResult mCombatResult;
 
 	// @brief 등록된 턴 객체들
-	TCircularDoubleLinkedList<TSharedPtr<FSRPGTurnContext>> mTurnContexts;
-	TCircularDoubleLinkedList<TSharedPtr<FSRPGTurnContext>>::TCircularDoubleLinkedListNode* mCurTurnContextNode = nullptr;
+	TCircularDoubleLinkedList<int32> mTurnContextOrder;
+	TCircularDoubleLinkedList<int32>::TCircularDoubleLinkedListNode* mCurTurnContextOrder = nullptr;
 	
+	UPROPERTY(Category = Turn, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "TurnContextMaxIndex"))
+	int32 mTurnContextMaxIndex = 0;
+	UPROPERTY(Category = Turn, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "TurnContextMap"))
+	TMap<int32, TObjectPtr<USRPGTurnContext>> mTurnContextMap;
+
 	// @brief 미뤄진 턴 제거 요청
-	TQueue<FSRPGTurnUnregisterRequest> mPendingTurnRequests;
+	UPROPERTY(Category = Turn, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PendingTurnRequests"))
+	TArray<FSRPGTurnUnregisterRequest> mPendingTurnRequests;
+	// @brief 액션 큐 처리용 헤드 인덱스
+	UPROPERTY(Category = Turn, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "HeadRequestIndex"))
+	int32 mHeadRequestIndex = 0;
 
 protected:
 	// @brief 배치된 타일맵
-	TObjectPtr<ATileMap> mTileMap;
+	UPROPERTY(Category = TileMap, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "TileMap"))
+	TObjectPtr<UTileMapModel> mTileMap;
 
 	// @brief 등록된 Player 유닛
-	TObjectPtr<AUnit> mPlayerUnit;
+	UPROPERTY(Category = BoardActor, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PlayerUnit"))
+	TObjectPtr<UUnitModel> mPlayerUnit;
 	// @brief 모든 등록 유닛 (플레이어 포함)
-	TArray<TObjectPtr<AUnit>> mUnits;
+	UPROPERTY(Category = BoardActor, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "Units"))
+	TArray<TObjectPtr<UUnitModel>> mUnits;
 	// @brief 모든 등록 장애물
-	TArray<TScriptInterface<ITileActor>> mObstacles;
+	UPROPERTY(Category = BoardActor, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "Obstacles"))
+	TArray<TObjectPtr<UBoardActorModel>> mObstacles;
 };
