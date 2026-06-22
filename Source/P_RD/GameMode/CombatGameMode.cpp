@@ -1,6 +1,6 @@
 ﻿#include "GameMode/CombatGameMode.h"
-#include "Simulation/Factory/ObjectModelFactory.h"
 
+#include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
@@ -11,10 +11,10 @@
 
 #include "PCGStage/Room.h"
 
+#include "Simulation/Factory/ObjectModelFactory.h"
 #include "Pawn/UnitModel.h"
 #include "Pawn/Player/PlayerUnitModel.h"
 
-#include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/CombatTileMapHUDWidget.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "Combat/CombatUIAdapter.h"

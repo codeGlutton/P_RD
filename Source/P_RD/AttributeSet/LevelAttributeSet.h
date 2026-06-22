@@ -8,8 +8,6 @@
 #pragma once
 
 #include "AttributeSet/AttributeSetMinimal.h"
-#include "AttributeSet.h"
-
 #include "LevelAttributeSet.generated.h"
 
 /**

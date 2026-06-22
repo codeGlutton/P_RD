@@ -1,16 +1,18 @@
 ﻿#include "SRPGFramework/SRPGSkillBuildAction.h"
+#include "SRPGFramework/SRPGSkillAction.h"
+
+#include "RDCollision.h"
+
+// #include "Pawn/SkillComponent.h"
+#include "Dice/DicePoolModel.h"
+#include "DataAsset/SkillData/StaticSkillData.h"
 
 #include "Actor/ActorView.h"
+#include "Pawn/Player/PlayerUnitModel.h"
+#include "Actor/TileMap/TileMapModel.h"
 
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
-
-#include "Pawn/UnitModel.h"
-#include "Actor/TileMap/TileMapModel.h"
-
-#include "DataAsset/SkillData/StaticSkillData.h"
-// #include "Pawn/SkillComponent.h"
-#include "SRPGFramework/SRPGSkillAction.h"
 
 FSRPGSkillSelectCommand::FSRPGSkillSelectCommand()
 {
@@ -36,7 +38,11 @@ void USRPGSkillBuildAction::OnBeginAction()
 
 void USRPGSkillBuildAction::OnEndAction()
 {
+    ClearAllTileHighlights();
+    ResetTargetTile();
+    ResetDice();
     ResetSkill();
+
     Super::OnEndAction();
 }
 
@@ -58,8 +64,12 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
 
         if (SkillSelectCommand.mSkillIndex != mSelectedSkillIndex)
         {
+            ResetTargetTile();
+            ResetDice();
             ResetSkill();
             SetSkill(SkillSelectCommand.mSkillIndex);
+            RefreshAimableTileHighlights();
+            SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
         }
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
@@ -69,8 +79,13 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
 
         const FSRPGCDiceSelectCommand& DiceSelectCommand = Command.Get<FSRPGCDiceSelectCommand>();
 
-        ResetTargetTile();
-        ChangeDices(DiceSelectCommand.mDiceIndex);
+        if (DiceSelectCommand.mDiceIndex != INDEX_NONE)
+        {
+            ResetTargetTile();
+            ChangeDices(DiceSelectCommand.mDiceIndex);
+            RefreshAimableTileHighlights();
+            SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
+        }
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
     case ESRPGCommandType::WorldTrace:
@@ -89,108 +104,94 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
     ESRPGCommandResult Result = ESRPGCommandResult::Ignored;
 
     const FSRPGWorldTraceCommand& WorldTraceCommand = Command.Get<FSRPGWorldTraceCommand>();
-    if (WorldTraceCommand.mIsLongPress == false)
+    if (WorldTraceCommand.mIsLongPress == true)
     {
-        USRPGTurnContext* TurnContext = mParent.Get();
-        checkf(TurnContext != nullptr, TEXT("턴 객체 nullptr"));
-        USRPGCombatModel* CombatModel = TurnContext->GetParent();
-        checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+        return Result;
+    }
 
-        UTileMapModel* TileMap = CombatModel->GetTileMap();
-        checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"))
+    UTileMapModel* TileMap = GetTileMap();
+    checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
 
-        AActor* TargetActor = nullptr;
-        FTileIndex TargetTileIndex = FTileIndex::Invalid;
-        GetTileActorUnderCursor(ECC_GameTraceChannel1 /* TODO : 임시 */, OUT TargetActor, OUT TargetTileIndex);
-
-        IActorView* ActorView = Cast<IActorView>(TargetActor);
-        if (ActorView->GetModel() == TileMap)
+    AActor* TargetActor = nullptr;
+    FTileIndex TargetTileIndex = FTileIndex::Invalid;
+    GetTileActorUnderCursor(RDTraceChannels::TileOnlyTrace, OUT TargetActor, OUT TargetTileIndex);
+    
+    IActorView* ActorView = Cast<IActorView>(TargetActor);
+    const bool IsContactedTileMap = ActorView != nullptr && ActorView->GetModel() == TileMap;
+    if (IsContactedTileMap == true)
+    {
+        if (TargetTileIndex == FTileIndex::Invalid)
         {
-            if (TargetTileIndex == FTileIndex::Invalid)
+            /* 한단계 취소작업 */
+
+            switch (mSkillBuildPhase)
             {
-                /* 한단계 취소작업 */
+            case ESRPGSkillBuildPhase::Preview:
+            {
+                /* 프리뷰 단계에서 한단계 취소 시, 조준 대상 취소 처리 */
 
-                switch (mSkillBuildPhase)
-                {
-                case ESRPGSkillBuildPhase::Preview:
-                {
-                    /* 프리뷰 단계에서 한단계 취소 시, 조준 대상 취소 처리 */
+                ResetTargetTile();
+                RefreshAimableTileHighlights();
+                SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
 
-                    ResetTargetTile();
-                    Result = ESRPGCommandResult::Handled;
-                    break;
-                }
-                case ESRPGSkillBuildPhase::AimSelection:
-                {
-                    /* 조준 대상 설정 단계에서 한단계 취소 시, 빌드 자체 종료 */
-
-                    EndAction(ESRPGActionResult::Cancelled);
-                    Result = ESRPGCommandResult::Handled;
-                    break;
-                }
-                }
+                Result = ESRPGCommandResult::Handled;
+                break;
             }
-            else
+            case ESRPGSkillBuildPhase::AimSelection:
             {
-                /* 한단계 처리작업 */
+                /* 조준 대상 설정 단계에서 한단계 취소 시, 빌드 자체 종료 */
 
-                switch (mSkillBuildPhase)
-                {
-                case ESRPGSkillBuildPhase::Preview:
-                {
-                    /* 확정 칸 클릭 시, 스킬 캐스팅 */
+                SetBuildPhase(ESRPGSkillBuildPhase::None);
+                MarkActionCompleted(ESRPGActionResult::Cancelled);
 
-                    if (mTargetIndex == TargetTileIndex)
-                    {
-                        BuildSkill();
-                        EndAction(ESRPGActionResult::Succeeded);
-                        Result = ESRPGCommandResult::Handled;
-                        break;
-                    }
-                    [[fallthrough]];
-                }
-                case ESRPGSkillBuildPhase::AimSelection:
-                {
-                    /* 조준 가능한 칸 클릭 시, 프리뷰 단계까지 보여주기 */
+                Result = ESRPGCommandResult::Handled;
+                break;
+            }
+            }
+        }
+        else
+        {
+            /* 한단계 처리작업 */
 
-                    if (mAimTileIndexes.Contains(TargetTileIndex) == true)
-                    {
-                        ResetTargetTile();
-                        SetTargetTile(TargetTileIndex);
-                        Result = ESRPGCommandResult::Handled;
-                        break;
-                    }
+            switch (mSkillBuildPhase)
+            {
+            case ESRPGSkillBuildPhase::Preview:
+            {
+                /* 확정 칸 클릭 시, 스킬 캐스팅 */
+
+                if (mTargetIndex == TargetTileIndex)
+                {
+                    BuildSkill();
+                    SetBuildPhase(ESRPGSkillBuildPhase::Build);
+                    MarkActionCompleted(ESRPGActionResult::Succeeded);
+
+                    Result = ESRPGCommandResult::Handled;
                     break;
                 }
+                [[fallthrough]];
+            }
+            case ESRPGSkillBuildPhase::AimSelection:
+            {
+                /* 조준 가능한 칸 클릭 시, 프리뷰 단계까지 보여주기 */
+
+                const bool CanAim = mReachableTileIndexes.Contains(TargetTileIndex) == true && mSelectedDices.Num() == mSelectedSkill->mDiceCount;
+                if (CanAim == true)
+                {
+                    ResetTargetTile();
+                    SetTargetTile(TargetTileIndex);
+                    RefreshEffectTileHighlights();
+                    SetBuildPhase(ESRPGSkillBuildPhase::Preview);
+
+                    Result = ESRPGCommandResult::Handled;
+                    break;
                 }
+                break;
+            }
             }
         }
     }
-
     return Result;
 }
-
-void USRPGSkillBuildAction::ChangeDices(int32 RequestedDiceIndex)
-{
-    checkf(mSkillBuildPhase == ESRPGSkillBuildPhase::AimSelection, TEXT("스킬 빌드 순서 오류"));
-
-    if (mSelectedDices.Contains(RequestedDiceIndex) == true)
-    {
-        // 이전 주사위 제거
-        // mSelectedDiceSum -= GetDiceValue(RequestedDiceIndex);
-        mSelectedDices.Remove(RequestedDiceIndex);
-    }
-    else if (mSelectedDices.Num() < mSelectedSkill->mDiceCount)
-    {
-        // 새로운 주사위 추가 할당
-        // mSelectedDiceSum += GetDiceValue(RequestedDiceIndex);
-        mSelectedDices.Add(RequestedDiceIndex);
-    }
-
-    ResetSkill();
-    SetSkill(mSelectedSkillIndex);
-}
-
 
 void USRPGSkillBuildAction::SetSkill(int32 SkillIndex)
 {
@@ -199,12 +200,7 @@ void USRPGSkillBuildAction::SetSkill(int32 SkillIndex)
     // USkillComponent* SkillComp = mInstigator->GetSkillComponent();
     // checkf(SkillComp != nullptr, TEXT("스킬 컴포넌트 nullptr"));
 
-    USRPGTurnContext* TurnContext = mParent.Get();
-    checkf(TurnContext != nullptr, TEXT("턴 객체 nullptr"));
-    USRPGCombatModel* CombatModel = TurnContext->GetParent();
-    checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
-
-    UTileMapModel* TileMap = CombatModel->GetTileMap();
+    UTileMapModel* TileMap = GetTileMap();
     checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"))
 
     /* 스킬 등록 */
@@ -221,109 +217,59 @@ void USRPGSkillBuildAction::SetSkill(int32 SkillIndex)
         mSelectedSkillIndex = SkillIndex;
         mSelectedSkill = StaticSkillDataSoftObj.Get();
     }
-
-    /* 맵 변경 */
-
-    {
-        const float AimRange = mSelectedSkill->mAimDefaultRange + mSelectedDiceSum * mSelectedSkill->mAimRatioRange;
-        const EAimPattern Pattern = mSelectedSkill->mAimPattern;
-        const bool CanAimObstacle = mSelectedSkill->mCanAimObstacle;
-        const bool IsIndirect = mSelectedSkill->mIsIndirect;
-        mAimTileIndexes = TileMap->GetAimableTiles(mInstigator->GetTileTransform().mIndex, AimRange, Pattern, CanAimObstacle, IsIndirect);
-        TileMap->SetTileHighlight(mAimTileIndexes, ETileHighlightFlag::Aim);
-    }
-
-    /* 상태 변경되면서 외부에서 바인딩된 UI 변경 */
-
-    SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
 }
 
-void USRPGSkillBuildAction::ResetSkill()
-{
-    mAimTileIndexes.Empty();
-    mSelectedSkill = nullptr;
-    mSelectedSkillIndex = INDEX_NONE;
-
-    mSelectedDices.Empty();
-    mSelectedDiceSum = 0;
-
-    mEffectTileIndexes.Empty();
-    mTargetIndex = FTileIndex::Invalid;
-    mCalculationResult.mEffectCommitResult.Empty();
-
-    USRPGTurnContext* TurnContext = mParent.Get();
-    checkf(TurnContext != nullptr, TEXT("턴 객체 nullptr"));
-    USRPGCombatModel* CombatModel = TurnContext->GetParent();
-    checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
-
-    UTileMapModel* TileMap = CombatModel->GetTileMap();
-    checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"))
-
-    TileMap->ClearTileHighlight(ETileHighlightFlag::Aim | ETileHighlightFlag::Effect | ETileHighlightFlag::Select);
-    SetBuildPhase(ESRPGSkillBuildPhase::None);
-}
-
-void USRPGSkillBuildAction::SetTargetTile(const FTileIndex& TileIndex)
+void USRPGSkillBuildAction::ChangeDices(int32 RequestedDiceIndex)
 {
     checkf(mSkillBuildPhase == ESRPGSkillBuildPhase::AimSelection, TEXT("스킬 빌드 순서 오류"));
+
+    if (mSelectedDices.Contains(RequestedDiceIndex) == true)
+    {
+        // 이전 주사위 제거
+        mSelectedDices.Remove(RequestedDiceIndex);
+    }
+    else if (mSelectedDices.Num() < mSelectedSkill->mDiceCount)
+    {
+        // 새로운 주사위 추가 할당
+        mSelectedDices.Add(RequestedDiceIndex);
+    }
+
+    mSelectedDiceSum = 0;
+    UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
+    if (PlayerUnit != nullptr)
+    {
+        if (UDicePoolModel* DicePool = PlayerUnit->GetDicePool())
+        {
+            for (int32 DiceIndex : mSelectedDices)
+            {
+                mSelectedDiceSum += DicePool->GetRolledDiceValue(DiceIndex);
+            }
+        }
+    }
+}
+
+void USRPGSkillBuildAction::SetTargetTile(const FTileIndex& TargetIndex)
+{
+    checkf(mSkillBuildPhase == ESRPGSkillBuildPhase::AimSelection, TEXT("스킬 빌드 순서 오류"));
+
+    mTargetIndex = TargetIndex;
+
+    UTileMapModel* TileMap = GetTileMap();
+    checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
+
+    TArray<TObjectPtr<UBoardActorModel>> AllEffectActors;
+    for (const FTileIndex& EffectTileIndex : mEffectTileIndexes)
+    {
+        TArray<UBoardActorModel*> EffectActors = TileMap->GetActorsOnTile(EffectTileIndex);
+        AllEffectActors.Append(EffectActors);
+    }
 
     // USkillComponent* SkillComp = mInstigator->GetSkillComponent();
     // checkf(SkillComp != nullptr, TEXT("스킬 컴포넌트 nullptr"));
 
-    USRPGTurnContext* TurnContext = mParent.Get();
-    checkf(TurnContext != nullptr, TEXT("턴 객체 nullptr"));
-    USRPGCombatModel* CombatModel = TurnContext->GetParent();
-    checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
-
-    UTileMapModel* TileMap = CombatModel->GetTileMap();
-    checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"))
-
-    /* 맵 변경 */
-
-    {
-        const EEffectPattern Pattern = mSelectedSkill->mEffectPattern;
-        const int32 EffectRange = mSelectedSkill->mEffectDefaultArea + mSelectedDiceSum * mSelectedSkill->mEffectRatioArea;
-        const bool IsInDirect = mSelectedSkill->mIsIndirect;
-        mEffectTileIndexes = TileMap->GetEffectTiles(mInstigator->GetTileTransform().mIndex, TileIndex, Pattern, EffectRange, IsInDirect);
-        TileMap->SetTileHighlight(mEffectTileIndexes, ETileHighlightFlag::Effect);
-    }
-
-    /* 예측 시스템 */
-
-    {
-        TArray<TObjectPtr<UBoardActorModel>> AllEffectActors;
-        for (const FTileIndex& EffectTileIndex : mEffectTileIndexes)
-        {
-            TArray<UBoardActorModel*> EffectActors = TileMap->GetActorsOnTile(EffectTileIndex);
-            AllEffectActors.Append(EffectActors);
-        }
-        
-        // 김준형
-        // 파라미터 변경으로 비활성화 처리했습니다.
-        //SkillComp->CalculateSkillResult(mSelectedSkillIndex, AllEffectActors, OUT mCalculationResult);
-    }
-
-    /* 상태 변경되면서 외부에서 바인딩된 UI 변경 */
-
-    SetBuildPhase(ESRPGSkillBuildPhase::Preview);
-}
-
-void USRPGSkillBuildAction::ResetTargetTile()
-{
-    mEffectTileIndexes.Empty();
-    mTargetIndex = FTileIndex::Invalid;
-    mCalculationResult.mEffectCommitResult.Empty();
-
-    USRPGTurnContext* TurnContext = mParent.Get();
-    checkf(TurnContext != nullptr, TEXT("턴 객체 nullptr"));
-    USRPGCombatModel* CombatModel = TurnContext->GetParent();
-    checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
-
-    UTileMapModel* TileMap = CombatModel->GetTileMap();
-    checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"))
-
-    TileMap->ClearTileHighlight(ETileHighlightFlag::Effect | ETileHighlightFlag::Select);
-    SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
+    // 김준형
+    // 파라미터 변경으로 비활성화 처리했습니다.
+    //SkillComp->CalculateSkillResult(mSelectedSkillIndex, AllEffectActors, OUT mCalculationResult);
 }
 
 void USRPGSkillBuildAction::BuildSkill()
@@ -335,15 +281,82 @@ void USRPGSkillBuildAction::BuildSkill()
 
     TInstancedStruct<FSRPGCommand> SkillCastCommand;
     SkillCastCommand.InitializeAs<FSRPGSkillCastCommand>();
-    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mCalculationResult = mCalculationResult;
+    // SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mCalculationResult = mCalculationResult;
 
     CommandRouterModel->SummitCommand(SkillCastCommand);
+}
+
+void USRPGSkillBuildAction::ResetSkill()
+{
+    mReachableTileIndexes.Empty();
+    mSelectedSkill = nullptr;
+    mSelectedSkillIndex = INDEX_NONE;
+}
+
+void USRPGSkillBuildAction::ResetDice()
+{
+    mSelectedDices.Empty();
+    mSelectedDiceSum = 0;
+}
+
+void USRPGSkillBuildAction::ResetTargetTile()
+{
+    mEffectTileIndexes.Empty();
+    mTargetIndex = FTileIndex::Invalid;
+}
+
+void USRPGSkillBuildAction::ClearAllTileHighlights()
+{
+    UTileMapModel* TileMap = GetTileMap();
+    checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
+
+    TileMap->ClearTileHighlight(ETileHighlightFlag::All);
+}
+
+void USRPGSkillBuildAction::RefreshAimableTileHighlights()
+{
+    UTileMapModel* TileMap = GetTileMap();
+    checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
+
+    const float AimRange = mSelectedSkill->mAimDefaultRange + mSelectedDiceSum * mSelectedSkill->mAimRatioRange;
+    const EAimPattern Pattern = mSelectedSkill->mAimPattern;
+    const bool CanAimObstacle = mSelectedSkill->mCanAimObstacle;
+    const bool IsIndirect = mSelectedSkill->mIsIndirect;
+    mReachableTileIndexes = TileMap->GetAimableTiles(mInstigator->GetTileTransform().mIndex, AimRange, Pattern, CanAimObstacle, IsIndirect);
+    TileMap->SetTileHighlight(mReachableTileIndexes, ETileHighlightFlag::Aim);
+}
+
+void USRPGSkillBuildAction::RefreshEffectTileHighlights()
+{
+    UTileMapModel* TileMap = GetTileMap();
+    checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
+
+    const EEffectPattern Pattern = mSelectedSkill->mEffectPattern;
+    const int32 EffectRange = mSelectedSkill->mEffectDefaultArea + mSelectedDiceSum * mSelectedSkill->mEffectRatioArea;
+    const bool IsInDirect = mSelectedSkill->mIsIndirect;
+    mEffectTileIndexes = TileMap->GetEffectTiles(mInstigator->GetTileTransform().mIndex, mTargetIndex, Pattern, EffectRange, IsInDirect);
+    TileMap->SetTileHighlight(mEffectTileIndexes, ETileHighlightFlag::Effect);
 }
 
 void USRPGSkillBuildAction::SetBuildPhase(ESRPGSkillBuildPhase BuildPhase)
 {
     mSkillBuildPhase = BuildPhase;
     OnChangeSkillBuildPhase.Broadcast(this, BuildPhase);
+}
+
+UTileMapModel* USRPGSkillBuildAction::GetTileMap() const
+{
+    USRPGTurnContext* TurnContext = mParent.Get();
+    if (TurnContext != nullptr)
+    {
+        USRPGCombatModel* CombatModel = TurnContext->GetParent();
+        if (CombatModel != nullptr)
+        {
+            UTileMapModel* TileMap = CombatModel->GetTileMap();
+            return TileMap;
+        }
+    }
+    return nullptr;
 }
 
 

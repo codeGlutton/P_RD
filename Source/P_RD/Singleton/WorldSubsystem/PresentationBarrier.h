@@ -16,7 +16,8 @@ DECLARE_DELEGATE(FOnFinishPresentation);
  */
 struct FPresentationBarrier
 {
-	friend class UPresentationSyncSubsystem;
+public:
+	static TSharedPtr<FPresentationBarrier> Make(FOnFinishPresentation OnFinishPresentation);
 
 protected:
 	FPresentationBarrier(FOnFinishPresentation Delegate) :
