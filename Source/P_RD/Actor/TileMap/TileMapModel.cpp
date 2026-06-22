@@ -19,6 +19,51 @@ namespace
 	{
 		FTileIndex(1, 1), FTileIndex(1, -1), FTileIndex(-1, 1), FTileIndex(-1, -1)
 	};
+
+	/**
+	 * @brief 경로 탐색용 4방향 이웃 스텝을 목표 방향 우선으로 정렬
+	 * @details
+	 * BFS에서 같은 길이의 최단경로가 여럿일 때, 먼저 닿은 칸이 부모가 되므로 이웃을 보는 순서가 경로 모양을 정한다.
+	 * - 1·2순위: 목표 쪽 스텝. 남은 거리가 큰 축을 먼저 둬서 직선에 붙는 계단식 경로가 나오게 한다.
+	 * - 3·4순위: 목표에서 멀어지는 스텝(장애물 우회용). 목표와 같은 줄인 축은 양방향 모두 우회 후보로 넣는다.
+	 * 절대축(우/좌/하/상) 고정이 아니라 매 칸 목표 기준이라, 목표가 어느 쪽이든 "전진=목표 쪽"이 항상 1순위다.
+	 * @param[in] Current 현재 칸
+	 * @param[in] Goal    목표 칸
+	 * @param[out] OutSteps 정렬된 스텝 목록 (항상 4방향 모두 포함, 호출 시 비우고 채움)
+	 */
+	void BuildGoalOrderedSteps(const FTileIndex& Current, const FTileIndex& Goal, TArray<FTileIndex>& OutSteps)
+	{
+		OutSteps.Reset();
+
+		// 목표까지 각 축의 남은 변위
+		const int32 DeltaX = Goal.mX - Current.mX;
+		const int32 DeltaY = Goal.mY - Current.mY;
+
+		// 목표 쪽 부호 (0이면 그 축은 목표와 같은 줄)
+		const int32 SignX = (DeltaX > 0) - (DeltaX < 0);
+		const int32 SignY = (DeltaY > 0) - (DeltaY < 0);
+
+		// 남은 거리가 큰 축을 먼저 밟도록 우선순위 결정 (계단식 근접)
+		const bool bXFirst = FMath::Abs(DeltaX) >= FMath::Abs(DeltaY);
+
+		// 1·2순위: 목표 쪽 스텝 (해당 축이 0이 아닐 때만), 먼 축 먼저
+		if (bXFirst)
+		{
+			if (SignX != 0) OutSteps.Add(FTileIndex(SignX, 0));
+			if (SignY != 0) OutSteps.Add(FTileIndex(0, SignY));
+		}
+		else
+		{
+			if (SignY != 0) OutSteps.Add(FTileIndex(0, SignY));
+			if (SignX != 0) OutSteps.Add(FTileIndex(SignX, 0));
+		}
+
+		// 3·4순위: 목표에서 멀어지는 스텝(우회용). 같은 줄(부호 0)인 축은 양방향 모두 후보
+		if (SignX <= 0) OutSteps.AddUnique(FTileIndex(1, 0));
+		if (SignX >= 0) OutSteps.AddUnique(FTileIndex(-1, 0));
+		if (SignY <= 0) OutSteps.AddUnique(FTileIndex(0, 1));
+		if (SignY >= 0) OutSteps.AddUnique(FTileIndex(0, -1));
+	}
 }
 
 int32 UTileMapModel::GetWidth() const
@@ -419,6 +464,136 @@ TArray<FTileIndex> UTileMapModel::GetReachableTiles(const FTileIndex& Origin, in
 	}
 
 	return Result;
+}
+
+/**
+ * @details
+ * - GetReachableTiles와 같은 4방향 BFS지만, 칸별 직전 칸(부모)을 기록해 목표 도달 후 경로를 거슬러 복원한다.
+ * - BFS라 처음 닿은 경로가 곧 최단경로이므로, 목표를 만나면 즉시 탐색을 끝낸다.
+ * - 이웃 탐색은 BuildGoalOrderedSteps로 목표 방향(먼 축 먼저)을 우선해, 빈 지형에선 직선에 붙는 계단식 경로가 나온다.
+ */
+TArray<FTileIndex> UTileMapModel::FindPath(const FTileIndex& Start, const FTileIndex& Goal) const
+{
+	TArray<FTileIndex> Result;
+
+	// 양 끝 중 하나라도 맵 밖이면 경로 없음
+	if (!IsValidIndex(Start) || !IsValidIndex(Goal))
+		return Result;
+
+	// 시작=목표면 그 한 칸이 곧 경로
+	if (Start == Goal)
+	{
+		Result.Add(Start);
+		return Result;
+	}
+
+	// 목표 칸이 점유돼 있으면 도착 불가 (GetReachableTiles와 동일 규칙)
+	if (IsOccupied(Goal))
+		return Result;
+
+	// 칸별 직전 칸(부모)을 1차원 인덱스로 기록 — 방문표시(INDEX_NONE=미방문) + 경로 복원을 겸함
+	TArray<int32> Parent;
+	Parent.Init(INDEX_NONE, mWidth * mHeight);
+
+	// 시작 칸은 자기 자신을 부모로 둬서 방문 표시 겸 복원 종료 기준으로 삼음
+	const int32 StartLinear = TileIndexToLinearIndex(Start);
+	Parent[StartLinear] = StartLinear;
+
+	// BFS 큐: 가까운 칸부터 한 겹씩 확장 (인덱스 순회로 pop 비용 회피)
+	TArray<FTileIndex> Frontier;
+	Frontier.Add(Start);
+
+	// 매 칸의 목표 방향 우선 정렬 스텝을 담을 버퍼 (루프 밖 선언해 재할당 회피)
+	TArray<FTileIndex> OrderedSteps;
+
+	// 목표 도달 여부 (도달 시 바깥 루프까지 즉시 종료)
+	bool bReached = false;
+
+	for (int32 Head = 0; Head < Frontier.Num() && !bReached; ++Head)
+	{
+		const FTileIndex Current = Frontier[Head];
+
+		// 목표 쪽(먼 축 먼저) → 우회 순으로 4방향 스텝 정렬
+		BuildGoalOrderedSteps(Current, Goal, OrderedSteps);
+
+		for (const FTileIndex& Step : OrderedSteps)
+		{
+			const FTileIndex Next(Current.mX + Step.mX, Current.mY + Step.mY);
+
+			// 맵 밖이면 제외 (INDEX_NONE)
+			const int32 NextLinear = TileIndexToLinearIndex(Next);
+			if (NextLinear == INDEX_NONE)
+				continue;
+
+			// 이미 방문한 칸은 건너뜀 (BFS라 먼저 방문한 경로가 최단)
+			if (Parent[NextLinear] != INDEX_NONE)
+				continue;
+
+			// 장애물·유닛이 점유한 칸은 통과·도착 불가
+			if (IsOccupied(Next))
+				continue;
+
+			// 직전 칸을 부모로 기록
+			Parent[NextLinear] = TileIndexToLinearIndex(Current);
+
+			// 목표에 닿았으면 더 넓힐 필요 없이 종료 (BFS라 이게 최단)
+			if (Next == Goal)
+			{
+				bReached = true;
+				break;
+			}
+
+			// 다음 겹 확장을 위해 큐에 추가
+			Frontier.Add(Next);
+		}
+	}
+
+	// 목표에 끝내 닿지 못했으면 경로 없음
+	if (Parent[TileIndexToLinearIndex(Goal)] == INDEX_NONE)
+		return Result;
+
+	// 목표→시작으로 부모를 거슬러 올라가며 경로를 모음 (역순으로 쌓임)
+	for (int32 Linear = TileIndexToLinearIndex(Goal); ; Linear = Parent[Linear])
+	{
+		// 1차원 인덱스를 (x,y)로 환원 (y*Width + x의 역변환)
+		Result.Add(FTileIndex(Linear % mWidth, Linear / mWidth));
+
+		// 시작 칸까지 모았으면 종료 (시작은 부모가 자기 자신)
+		if (Linear == StartLinear)
+			break;
+	}
+
+	// 시작→목표 순서가 되도록 뒤집기
+	Algo::Reverse(Result);
+	return Result;
+}
+
+void UTileMapModel::SetMovePath(const FTileIndex& Start, const FTileIndex& Goal)
+{
+	// 경로를 계산해 뷰에 표시 요청 (미바인딩=심 복제본이면 표시 없음)
+	if (mSetMovePathDelegate.IsBound())
+		mSetMovePathDelegate.Execute(FindPath(Start, Goal));
+}
+
+void UTileMapModel::ClearMovePath()
+{
+	// 빈 경로를 넘겨 표시 해제 (뷰의 SetMovePath가 빈 배열을 해제로 처리)
+	if (mSetMovePathDelegate.IsBound())
+		mSetMovePathDelegate.Execute(TArray<FTileIndex>());
+}
+
+void UTileMapModel::SetTileHighlight(const TArray<FTileIndex>& Tiles, ETileHighlightFlag Flag)
+{
+	// 강조 표시를 뷰에 요청 (미바인딩=심 복제본이면 표시 없음)
+	if (mSetTileHighlightDelegate.IsBound())
+		mSetTileHighlightDelegate.Execute(Tiles, Flag);
+}
+
+void UTileMapModel::ClearTileHighlight(ETileHighlightFlag Flag)
+{
+	// 강조 해제를 뷰에 요청 (미바인딩=심 복제본이면 표시 없음)
+	if (mClearTileHighlightDelegate.IsBound())
+		mClearTileHighlightDelegate.Execute(Flag);
 }
 
 /**

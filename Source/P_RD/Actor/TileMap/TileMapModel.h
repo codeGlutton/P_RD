@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   TileMapModel.h
  * @brief  타일맵 데이터 모델 클래스 정의 헤더
  * @author 이문환
@@ -11,6 +11,7 @@
 #include "ObjectModel.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "Actor/TileMap/TileLayer.h"
+#include "Actor/TileMap/TileHighlight.h"
 #include "TileMapModel.generated.h"
 
 class UBoardActorModel;
@@ -44,6 +45,21 @@ protected:
 DECLARE_DELEGATE_RetVal_OneParam(FTransform, FTileToWorldTransformDelegate, const FTileTransform&);
 DECLARE_DELEGATE_RetVal_OneParam(FVector, FTileToWorldLocationDelegate, const FTileIndex&);
 DECLARE_DELEGATE_RetVal_OneParam(FTileIndex, FWorldToTileIndexDelegate, const FVector&);
+
+/**
+ * @brief 모델이 뷰(ATileMap)에 이동경로 표시를 요청하는 델리깃
+ * @details 좌표 델리깃과 동일하게 non-dynamic — 라이브에서 뷰가 SetMovePath로 바인딩하고, 미바인딩(심)이면 표시되지 않는다.
+ *          빈 배열을 넘기면 표시 해제(SetMovePath의 빈 배열 처리)와 같다.
+ */
+DECLARE_DELEGATE_OneParam(FSetMovePathDelegate, const TArray<FTileIndex>&);
+
+/**
+ * @brief 모델이 뷰(ATileMap)에 타일 강조(하이라이트) 표시/해제를 요청하는 델리깃
+ * @details 경로 델리깃과 동일하게 non-dynamic — 라이브에서 뷰가 SetTileHighlight/ClearTileHighlight로
+ *          바인딩하고, 미바인딩(심 복제본)이면 표시되지 않는다.
+ */
+DECLARE_DELEGATE_TwoParams(FSetTileHighlightDelegate, const TArray<FTileIndex>&, ETileHighlightFlag);
+DECLARE_DELEGATE_OneParam(FClearTileHighlightDelegate, ETileHighlightFlag);
 
 /**
  * @brief  타일맵 데이터 모델 클래스
@@ -124,6 +140,17 @@ public:
 	FTileToWorldLocationDelegate mTileToWorldLocationDelegate;
 	FWorldToTileIndexDelegate mWorldToTileIndexDelegate;
 
+	/**
+	 * @brief 이동경로 표시 요청 델리깃 (라이브에서 ATileMap이 SetMovePath로 바인딩, 미바인딩=심이면 표시 없음)
+	 */
+	FSetMovePathDelegate mSetMovePathDelegate;
+
+	/**
+	 * @brief 타일 강조 표시/해제 요청 델리깃 (라이브에서 ATileMap이 SetTileHighlight/ClearTileHighlight로 바인딩, 미바인딩=심이면 표시 없음)
+	 */
+	FSetTileHighlightDelegate mSetTileHighlightDelegate;
+	FClearTileHighlightDelegate mClearTileHighlightDelegate;
+
 	/* 이동 / 범위 조회 */
 	/**
 	 * @brief 기준 좌표에서 이동 가능한 타일 목록 반환
@@ -136,6 +163,47 @@ public:
 	 * @return TArray<FTileIndex> : 도달 가능한 타일 좌표 목록 (Origin 제외, 맵 밖 제외)
 	 */
 	TArray<FTileIndex> GetReachableTiles(const FTileIndex& Origin, int32 MoveDistance) const;
+
+	/**
+	 * @brief 시작→목표 최단 이동경로 계산 (장애물/유닛 회피)
+	 * @details
+	 * GetReachableTiles와 동일한 4방향(직교) BFS 규칙을 쓴다 — 도달 가능성과 경로 존재가 일치하도록.
+	 * 장애물·유닛(IsOccupied) 칸은 통과·도착 불가. 여러 최단경로 중 이웃 탐색 순서(직교 4방향)로 하나를 고른다.
+	 * 시작 칸은 점유돼 있어도(자기 유닛이 선 칸) 출발점으로 허용한다.
+	 *
+	 * @param[in] Start : 시작 좌표
+	 * @param[in] Goal  : 목표 좌표
+	 * @return TArray<FTileIndex> : Start부터 Goal까지 순서대로의 타일 목록(양 끝 포함). 경로가 없으면 빈 배열
+	 */
+	TArray<FTileIndex> FindPath(const FTileIndex& Start, const FTileIndex& Goal) const;
+
+	/**
+	 * @brief 시작→목표 경로를 계산해 뷰에 표시 요청 (FindPath + 뷰 표시 델리깃 호출)
+	 * @details 미바인딩(심 복제본)이면 아무 일도 하지 않는다. 경로가 없으면 빈 경로라 표시 해제와 같다.
+	 * @param[in] Start : 시작 좌표
+	 * @param[in] Goal  : 목표 좌표
+	 */
+	void SetMovePath(const FTileIndex& Start, const FTileIndex& Goal);
+
+	/**
+	 * @brief 이동경로 표시 해제 요청 (빈 경로를 뷰에 전달)
+	 */
+	void ClearMovePath();
+
+	/* 타일 강조 */
+	/**
+	 * @brief 지정 타일들을 강조 상태로 표시 요청 (뷰의 SetTileHighlight로 위임)
+	 * @details 미바인딩(심 복제본)이면 아무 일도 하지 않는다.
+	 * @param[in] Tiles : 강조할 타일 목록
+	 * @param[in] Flag  : 설정할 강조 상태(Aim/Select/Effect)
+	 */
+	void SetTileHighlight(const TArray<FTileIndex>& Tiles, ETileHighlightFlag Flag);
+
+	/**
+	 * @brief 지정한 강조 상태 해제 요청 (뷰의 ClearTileHighlight로 위임)
+	 * @param[in] Flag : 해제할 강조 상태 (비트 조합 가능)
+	 */
+	void ClearTileHighlight(ETileHighlightFlag Flag);
 
 	/**
 	 * @brief 기준 좌표에서 조준 가능한 타일 목록 반환

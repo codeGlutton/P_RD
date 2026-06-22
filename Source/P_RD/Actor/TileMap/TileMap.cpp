@@ -68,6 +68,47 @@ ATileMap::ATileMap()
 
 	// 영향 범위: 빨간색 (아래 레이어 ↔ 자기 색을 펄스로 보간)
 	mEffectStyle.mColor = FLinearColor(1.0f, 0.1f, 0.1f, 0.6f);
+
+	// 경로 화살표/도착 마커 컴포넌트 생성 (장식용 — 타일 트레이스 방해 않도록 충돌 없음)
+	mPathArrowComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("PathArrow"));
+	mPathArrowComponent->SetupAttachment(RootComponent);
+	mPathArrowComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	mPathArrowComponent->SetNumCustomDataFloats(4);
+
+	mPathEndComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("PathEnd"));
+	mPathEndComponent->SetupAttachment(RootComponent);
+	mPathEndComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	mPathEndComponent->SetNumCustomDataFloats(4);
+
+	// 화살표 메시는 엔진에 마땅한 게 없어 디폴트 미지정 — 전용 화살표 에셋(+X 방향)을 디테일에서 할당
+	// 도착 마커 기본 메시: 엔진 Sphere
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMeshFinder(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+	if (SphereMeshFinder.Succeeded())
+	{
+		mPathEndMesh = SphereMeshFinder.Object;
+		mPathEndComponent->SetStaticMesh(mPathEndMesh);
+	}
+
+	// 경로 색 기본값: 화살표 청록 반투명, 도착 마커 녹색 반투명
+	mPathArrowStyle.mColor = FLinearColor(0.1f, 0.8f, 1.0f, 0.9f);
+	mPathEndStyle.mColor = FLinearColor(0.1f, 1.0f, 0.3f, 0.9f);
+
+	// 생성자에서 만든 기본 모델에 표시 델리깃을 임시 바인딩 (런타임 모델 매핑 시 재호출)
+	BindModelDelegates();
+}
+
+void ATileMap::BindModelDelegates()
+{
+	// 모델이 없으면 바인딩 불가
+	if (mModel == nullptr)
+		return;
+
+	// 이동경로 표시 요청을 뷰의 SetMovePath로 연결 (싱글캐스트라 재호출 시 덮어씀)
+	mModel->mSetMovePathDelegate.BindUObject(this, &ATileMap::SetMovePath);
+
+	// 타일 강조 표시/해제 요청을 뷰의 SetTileHighlight/ClearTileHighlight로 연결
+	mModel->mSetTileHighlightDelegate.BindUObject(this, &ATileMap::SetTileHighlight);
+	mModel->mClearTileHighlightDelegate.BindUObject(this, &ATileMap::ClearTileHighlight);
 }
 
 void ATileMap::OnConstruction(const FTransform& Transform)
@@ -76,6 +117,28 @@ void ATileMap::OnConstruction(const FTransform& Transform)
 
 	// 배치/스폰/프로퍼티 변경 시점에 그리드 인스턴스 재생성
 	RebuildTileInstances();
+
+#if WITH_EDITOR
+	// [에디터 전용] 에디터 뷰포트에서 디버그 경로 미리보기 — 좌표 변경 즉시 반영 (펄스 애니메이션은 틱이 도는 PIE에서만)
+	if (GetWorld() != nullptr && !GetWorld()->IsGameWorld())
+	{
+		if (mDebugDrawPathOnBeginPlay && mModel != nullptr)
+			mModel->SetMovePath(mDebugPathStart, mDebugPathGoal);
+		else
+			ClearMovePath();
+	}
+#endif
+}
+
+void ATileMap::BeginPlay()
+{
+	Super::BeginPlay();
+
+#if WITH_EDITOR
+	// [에디터 전용] 토글이 켜진 인스턴스에서만 PIE 시작 시 디버그 경로를 그려 펄스 검증 (패키징 빌드에선 제거됨)
+	if (mDebugDrawPathOnBeginPlay && mModel != nullptr)
+		mModel->SetMovePath(mDebugPathStart, mDebugPathGoal);
+#endif
 }
 
 void ATileMap::Tick(float DeltaSeconds)
@@ -89,6 +152,10 @@ void ATileMap::Tick(float DeltaSeconds)
 		if (EnumHasAnyFlags(mHighlights[Index], ETileHighlightFlag::Effect))
 			RefreshTileCustomData(Index);
 	}
+
+	// 경로 화살표/도착 마커 알파도 펄스 — 표시 중일 때만 갱신
+	if (mPathLength > 0)
+		RefreshPathPulse();
 }
 
 void ATileMap::RebuildTileInstances()
@@ -374,6 +441,133 @@ void ATileMap::CompleteActorMovement(ITileActor* Actor)
 	// 스텁: ITileActor↔모델 매핑 전까지 동작 없음
 }
 
+float ATileMap::StepToYaw(const FTileIndex& Step)
+{
+	// +X 기준 방향 스텝을 yaw로 (atan2는 라디안 → 도). (1,0)=0°, (0,1)=90°, (-1,0)=180°, (0,-1)=-90°
+	return FMath::RadiansToDegrees(FMath::Atan2(static_cast<float>(Step.mY), static_cast<float>(Step.mX)));
+}
+
+void ATileMap::SetMovePath(const TArray<FTileIndex>& PathTiles)
+{
+	// 기존 표시 제거 후 다시 그림
+	ClearMovePath();
+
+	// 경로가 비었으면 표시할 것 없음 (해제와 동일)
+	if (PathTiles.Num() == 0)
+		return;
+
+	// 에디터에서 교체된 메시/머티리얼 반영
+	if (mPathArrowComponent != nullptr)
+	{
+		mPathArrowComponent->SetStaticMesh(mPathArrowMesh);
+		if (mPathArrowMaterial != nullptr)
+			mPathArrowComponent->SetMaterial(0, mPathArrowMaterial);
+	}
+	if (mPathEndComponent != nullptr)
+	{
+		mPathEndComponent->SetStaticMesh(mPathEndMesh);
+		if (mPathEndMaterial != nullptr)
+			mPathEndComponent->SetMaterial(0, mPathEndMaterial);
+	}
+
+	// 화살표/마커 균일 스케일 (타일 크기에 맞춤)
+	const float ArrowScale = (mTileSize / 100.0f) * mPathArrowScale;
+
+	// 마지막을 제외한 각 타일에 '다음 타일을 향하는' 화살표 배치 (인스턴스 순서 = 경로 순서)
+	const int32 LastIndex = PathTiles.Num() - 1;
+	if (mPathArrowComponent != nullptr)
+	{
+		for (int32 Index = 0; Index < LastIndex; ++Index)
+		{
+			const FTileIndex& Tile = PathTiles[Index];
+			const FTileIndex& Next = PathTiles[Index + 1];
+
+			// 진행 방향 스텝 → yaw 회전
+			const FTileIndex Step(Next.mX - Tile.mX, Next.mY - Tile.mY);
+			const FRotator Rotation(0.0f, StepToYaw(Step), 0.0f);
+
+			// 타일 중심 로컬 위치 + Z 오프셋 (RebuildTileInstances의 배치식과 동일, bWorldSpace=false)
+			const FVector Location(Tile.mX * mTileSize, Tile.mY * mTileSize, mPathHeightOffset);
+			const FTransform InstanceTransform(Rotation, Location, FVector(ArrowScale));
+			mPathArrowComponent->AddInstance(InstanceTransform, /*bWorldSpace=*/false);
+		}
+	}
+
+	// 마지막(도착) 타일엔 도착 마커 배치
+	if (mPathEndComponent != nullptr)
+	{
+		const FTileIndex& EndTile = PathTiles[LastIndex];
+		const FVector Location(EndTile.mX * mTileSize, EndTile.mY * mTileSize, mPathHeightOffset);
+		const FTransform InstanceTransform(FRotator::ZeroRotator, Location, FVector(ArrowScale));
+		mPathEndComponent->AddInstance(InstanceTransform, /*bWorldSpace=*/false);
+	}
+
+	// 표시 중인 경로 길이 기록 (틱 펄스 대상 판단 + 도착 마커 위상 인덱스)
+	mPathLength = PathTiles.Num();
+
+	// 최초 1회 펄스 색 기록 (이후 틱마다 자동 갱신)
+	RefreshPathPulse();
+}
+
+void ATileMap::ClearMovePath()
+{
+	// 화살표·도착 마커 인스턴스 모두 제거
+	if (mPathArrowComponent != nullptr)
+		mPathArrowComponent->ClearInstances();
+	if (mPathEndComponent != nullptr)
+		mPathEndComponent->ClearInstances();
+
+	// 표시 중 경로 없음
+	mPathLength = 0;
+}
+
+/**
+ * @details
+ * - 색을 프리멀티플라이드(알파 곱한 RGB + 커버리지 알파)로 custom data에 기록 — 화살표 머티리얼이 타일 하이라이트와 동일 합성 사용 가정
+ * - 알파만 펄스(0↔색알파)시키고, 화살표는 인스턴스 순서마다 위상차를 줘 경로를 따라 흐르게 함
+ */
+void ATileMap::RefreshPathPulse()
+{
+	const float Time = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
+
+	// 칸당 위상 밀림(라디안) — 경로 전체에 고점 mPathFlowCycles개가 흐르도록 길이로 정규화 (길이 무관 일정한 흐름)
+	// Span은 시작~도착 타일 간격(mPathLength-1) 기준이라 화살표와 도착 마커가 같은 파동을 공유함
+	const int32 Span = FMath::Max(1, mPathLength - 1);
+	const float PhasePerTile = 2.0f * PI * mPathFlowCycles / Span;
+
+	// 한 인스턴스에 펄스 색을 프리멀티로 기록하는 헬퍼
+	auto WriteInstance = [](UInstancedStaticMeshComponent* Component, int32 InstanceIndex, const FLinearColor& Color, float Wave)
+	{
+		// 알파만 펄스(0↔색알파), RGB는 알파 곱한 프리멀티
+		const float A = Color.A * Wave;
+		Component->SetCustomDataValue(InstanceIndex, 0, Color.R * A);
+		Component->SetCustomDataValue(InstanceIndex, 1, Color.G * A);
+		Component->SetCustomDataValue(InstanceIndex, 2, Color.B * A);
+		Component->SetCustomDataValue(InstanceIndex, 3, A, /*bMarkRenderStateDirty=*/true);
+	};
+
+	// 화살표: 인스턴스 순서(=경로 순서)마다 위상차를 줘 흐르게
+	if (mPathArrowComponent != nullptr)
+	{
+		const int32 Count = mPathArrowComponent->GetInstanceCount();
+		for (int32 Index = 0; Index < Count; ++Index)
+		{
+			const float Phase = 2.0f * PI * Time / mPathPulsePeriod - Index * PhasePerTile;
+			const float Wave = 0.5f - 0.5f * FMath::Cos(Phase);
+			WriteInstance(mPathArrowComponent, Index, mPathArrowStyle.mColor, Wave);
+		}
+	}
+
+	// 도착 마커: 경로 끝 인덱스의 위상으로 이어지게 (화살표 흐름의 다음 칸)
+	if (mPathEndComponent != nullptr && mPathEndComponent->GetInstanceCount() > 0)
+	{
+		const int32 EndPhaseIndex = FMath::Max(0, mPathLength - 1);
+		const float Phase = 2.0f * PI * Time / mPathPulsePeriod - EndPhaseIndex * PhasePerTile;
+		const float Wave = 0.5f - 0.5f * FMath::Cos(Phase);
+		WriteInstance(mPathEndComponent, 0, mPathEndStyle.mColor, Wave);
+	}
+}
+
 #if WITH_EDITOR
 void ATileMap::DebugPaintTest()
 {
@@ -388,6 +582,14 @@ void ATileMap::DebugPaintTest()
 
 	// 영향 범위 (일부는 Aim/Select와 겹침, (3,2)는 Effect 단독)
 	SetTileHighlight({ FTileIndex(3, 1), FTileIndex(3, 2), FTileIndex(4, 1) }, ETileHighlightFlag::Effect);
+}
+
+void ATileMap::DebugPathTest()
+{
+	// 모델 경유로 전체 파이프라인 확인: FindPath → 표시 델리깃 → 뷰 SetMovePath
+	// (빈 에디터 맵이면 장애물이 없어 시작→목표 계단식 경로가 나온다)
+	if (mModel != nullptr)
+		mModel->SetMovePath(FTileIndex(1, 3), FTileIndex(4, 5));
 }
 #endif
 
