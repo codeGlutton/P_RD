@@ -102,4 +102,12 @@ public:
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Skill")
 	bool ActivateSkill(int32 SkillIndex, const TArray<FTileIndex> TargetTiles);
+
+	/* 이동포인트 */
+	/**
+	* @brief 이동 완료 후 어트리뷰트 셋에서 moveCount를 감소 시키는 함수
+	* @details
+	*/
+	UFUNCTION(BlueprintCallable, Category = "Move")
+	void HandelMovePoint(float MovePoint);
 };

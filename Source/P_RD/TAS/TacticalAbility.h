@@ -10,6 +10,15 @@
 
 #include "TacticalAbility.generated.h"
 
+/*
+* @param SkillIndex : 변경된 스킬의 인덱스
+* @param SkillData : 변경된 스킬 데이터
+*/
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
+	FOnTacticalAbility,
+	TWeakObjectPtr<UBoardActorModel>, CasterActor
+);
+
 enum class ETacticalEffectPayloadType
 {
 	None,		
@@ -47,14 +56,19 @@ class P_RD_API UTacticalAbility : public UObject
 
 public:
 	// 시작 델리게이트
+	FOnTacticalAbility OnStartAbility;
+
 	// 효과 적용 델리게이트(또는 효과 적용 해)
+	FOnTacticalAbility OnApplyAbility;
+
 	// 종료 델리게이트
+	FOnTacticalAbility OnEndAbility;
 
 public:
 	/*
 	* @brief 스킬을 시전한다.
 	*/
-	virtual void ActivateAbility(const FTacticalAbilityContext Context) PURE_VIRTUAL(UTacticalAbility::ActivateAbility, );
+	virtual void ActivateAbility(const FTacticalAbilityContext Context);
 
 	void ApplyEffect(
 		const FTacticalAbilityContext& Context,
@@ -63,7 +77,7 @@ public:
 	/*
 	* @brief 스킬을 종료한다.
 	*/
-	virtual void EndAbility() PURE_VIRTUAL(UTacticalAbility::EndAbility, );
+	virtual void EndAbility(const FTacticalAbilityContext& Context);
 
 public:
 	/*

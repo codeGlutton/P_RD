@@ -37,7 +37,7 @@ public:
 public:
 	virtual void ActivateAbility(const FTacticalAbilityContext Context);
 
-	virtual void EndAbility();
+	virtual void EndAbility(const FTacticalAbilityContext& Context);
 
 	virtual bool CanActivateAbility(const FTacticalAbilityContext& Context) const;
 

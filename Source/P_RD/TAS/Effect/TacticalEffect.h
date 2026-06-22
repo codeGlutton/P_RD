@@ -21,4 +21,6 @@ class P_RD_API UTacticalEffect : public UObject
 public:
 	virtual void ActivateEffect(const UBoardActorModel& Caster, const FTileIndex& TargetTile, const UTacticalEffectContext* EffectContext) PURE_VIRTUAL(UTacticalEffect::ActivateEffect, return;);
 
+protected:
+	UBoardActorModel* ExtractTarget(const FTileIndex& TargetTile, const UTacticalEffectContext* EffectContext);
 };

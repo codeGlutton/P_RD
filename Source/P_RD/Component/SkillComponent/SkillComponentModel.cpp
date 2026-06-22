@@ -79,6 +79,7 @@ bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileInd
 	Context.mTargetTile = TargetTiles;
 
 	// 스킬 정보를 담는다.
+	// Playload 오브젝트를 생성합니다.
 	TObjectPtr<UTacticalEffectPayload_Skill> Payload = NewObject<UTacticalEffectPayload_Skill>();
 	Payload->mSkillData = mSkillData[SkillIndex];
 	Payload->mTacticalEffectPayloadType = ETacticalEffectPayloadType::Skill;
@@ -88,4 +89,8 @@ bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileInd
 	mAbility->ActivateAbility(Context);
 
 	return true;
+}
+
+void USkillComponentModel::HandelMovePoint(float MovePoint)
+{
 }

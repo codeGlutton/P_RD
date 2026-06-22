@@ -13,6 +13,8 @@ UTacticalEffectContext* UStaticSkillEffect_Move_Force::CreateContext(TWeakObject
 	TWeakObjectPtr<UAttributeSetComponentModel> AttributeSet = CasterActor.Get()->FindComponentModelByClass<UAttributeSetComponentModel>();
 	checkf(AttributeSet.IsValid(), TEXT("컴포넌트가 없습니다."));
 
+	EffectContext->mTileLayerFlag = ETileLayerFlag::Unit;
+
 	EffectContext->mBase = mEffectDefaultDistance + mEffectRatioDistance * AttributeSet->GetAttributeValue(UUnitAttributeSet::GetSkillPointAttribute());
 	EffectContext->mGameplayTag = mEffectTag;
 

@@ -19,27 +19,30 @@ void UTacticalAbility_Skill::ApplyCost() const
 
 void UTacticalAbility_Skill::ActivateAbility(const FTacticalAbilityContext Context)
 {
+	Super::ActivateAbility(Context);
+
 	if (!IsValid(Context.mCasterActor.Get()) ||
 		!Context.mTargetTile.Num() ||
 		Context.mInstigatorData->mTacticalEffectPayloadType != ETacticalEffectPayloadType::Skill)
 	{
-		EndAbility();
+		EndAbility(Context);
 	}
 
 	if (!CanActivateAbility(Context))
 	{
-		EndAbility();
+		EndAbility(Context);
 	}
 
 
 	// 스킬을 사용한다.
 	ActivateSkill(Context);
 
-	EndAbility();
+	EndAbility(Context);
 }
 
-void UTacticalAbility_Skill::EndAbility()
+void UTacticalAbility_Skill::EndAbility(const FTacticalAbilityContext& Context)
 {
+	Super::EndAbility(Context);
 
 }
 
@@ -65,18 +68,20 @@ void UTacticalAbility_Skill::ActivateSkill(const FTacticalAbilityContext& Contex
 	// 스킬을 기반으로 효과를 계산한다.
 	TSoftObjectPtr<UStaticSkillData> SkillData;
 
-	// AS를 가져옵니다.
-	//TWeakObjectPtr<UAttributeSetComponentModel> AttributeSet = ComponentArray[0];
+	TWeakObjectPtr<UTacticalEffectPayload_Skill> Payload_Skill = Cast<UTacticalEffectPayload_Skill>(Context.mInstigatorData);
+	checkf(!Payload_Skill.IsValid(), TEXT("잘못된 Context 구성체"));
 
+	SkillData = Payload_Skill.Get()->mSkillData;
 
 	for (int32 i = 0; i < SkillData.Get()->mSkillMotionLayers.Num(); ++i)
 	{
 		TArray<UTacticalEffectContext*> EffectContexts;
 		const FSkillMotionLayer& SkillMotionLayer = SkillData.Get()->mSkillMotionLayers[i];
 
-		// 생성
+		// Context 오브젝트를 생성합니다.
 		// 추후 팩토리 구성으로 Context 생성하도록 희망
 		UTacticalEffectContext* EffectContext = SkillMotionLayer.mStaticSkillEffectLayers->CreateContext(Context.mCasterActor);
+		EffectContexts.Add(EffectContext);
 
 		// 효과를 계산합니다.
 		CallStartCalculatePassive(Context, EffectContexts);
