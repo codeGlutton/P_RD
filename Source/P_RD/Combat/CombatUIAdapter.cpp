@@ -3,57 +3,22 @@
 #include "Actor/TileMap/TileMap.h"
 #include "Actor/TileMap/TileMapModel.h"
 #include "Blueprint/SlateBlueprintLibrary.h"
-#include "Components/StaticMeshComponent.h"
-#include "Engine/StaticMesh.h"
-#include "Engine/StaticMeshActor.h"
 #include "Engine/World.h"
 #include "InputCoreTypes.h"
-#include "Materials/MaterialInterface.h"
-#include "Materials/MaterialInstanceDynamic.h"
+#include "ObjectView.h"
 #include "RDCollision.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "Dice/DicePoolModel.h"
 #include "Dice/DiceModel.h"
 #include "GameFramework/PlayerController.h"
-#include "Pawn/Unit.h"
-#include "ObjectView.h"
-#include "Pawn/UnitModel.h"
-#include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
-#include "SRPGFramework/SRPGTurnContext.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Combat/CombatUITypes.h"
 #include "UI/DiceViewData.h"
 
-namespace
-{
-	// 스킬 레일 index (UI와 합의): BASIC=0, STEP=5.
-	// [합의필요] 실제 스킬 데이터가 연결되면 레일 index 하드코딩 대신 SkillId/BuildAction 매핑으로 교체해야 한다.
-	constexpr int32 SkillIndexBasic = 0;
-	constexpr int32 SkillIndexStep = 5;
-
-	// [합의필요] HP/Gold/이동력 진짜 소스 = UUnitData(GAS 폐기 후). 아래는 임시 placeholder —
-	//           게임플레이가 UUnitData를 주면 이 상수 대신 거기서 읽어 SetUnitUIs/SetPlayerMeta를 채운다.
-	//           (다이스는 이미 진짜 — APlayerUnit::UDicePoolModel에서 읽음. HP/Gold만 미연결.)
-	constexpr float PlayerStartHP = 100.0f;
-	constexpr float EnemyStartHP = 30.0f;
-
-	// (임시) BASIC 평타 사거리. 범위 "모양"이 보이도록 보드 일부만 덮는 값. 실제 스킬 데이터(StaticSkillData 사거리) 연결 시 교체.
-	constexpr int32 BasicAttackRange = 4;
-	constexpr int32 PlayerStartMovePoint = 0;
-
-	// 가상 적 시작 타일(9x9 보드, 플레이어 (0,0) 코너 기준 유효 좌표).
-	// [합의필요] 적 스폰/룸 데이터 연결 전까지 HUD 타겟/HP바 검증용 fixture로만 사용한다.
-	const FTileIndex VirtualEnemyTiles[] = {
-		FTileIndex(4, 4),
-		FTileIndex(6, 6),
-		FTileIndex(2, 5),
-	};
-}
-
-/** @brief 전투 서브시스템과 런 데이터를 기준으로 임시 유닛 상태를 재구성하고 첫 View push를 수행한다. */
-void UCombatUIAdapter::Build(USRPGCombatSubsystem* InCombat, const URunPersistData* InRun)
+/** @brief 전투 서브시스템에 연결하고 턴 종료 구독 + 초기 주사위 push를 수행한다. */
+void UCombatUIAdapter::Build(USRPGCombatSubsystem* InCombat, const URunPersistData* /*InRun*/)
 {
 	// 재빌드 대비: 이전 subsystem 턴 종료 구독을 먼저 해제한다.
 	if (mCombat != nullptr && mEndTurnHandle.IsValid())
@@ -63,76 +28,17 @@ void UCombatUIAdapter::Build(USRPGCombatSubsystem* InCombat, const URunPersistDa
 	}
 
 	mCombat = InCombat;
-	mPlayerLevel = InRun != nullptr ? InRun->GetPlayerLevel() : 1;
-	mUnitStates.Reset();
-	mNextUnitId = 0;
 
-	// 플레이어: 실제 스폰된 유닛에서 타일/액터를 가져온다(HP는 플레이스홀더).
 	if (mCombat != nullptr)
 	{
 		// 턴이 끝날 때마다 이번 턴에 쓴 주사위 잠금을 해제하도록 훅을 건다(계약 D: Begin/EndTurn 리셋).
 		mEndTurnHandle = mCombat->GetModel<USRPGCombatModel>()->OnEndAnyTurnUI.AddUObject(this, &UCombatUIAdapter::HandleEndAnyTurn);
-
-		for (const TObjectPtr<UUnitModel>& Unit : mCombat->GetModel<USRPGCombatModel>()->GetUnits())
-		{
-			if (Unit == nullptr || Unit->IsPlayerUnitModel() == false)
-			{
-				continue;
-			}
-			FCombatUnitState State;
-			State.mId = mNextUnitId++;
-			State.mIsPlayer = true;
-			State.mTile = Unit->GetTileTransform().mIndex;
-			// 타일 트랜스폼이 신뢰 안 될 수 있어((0,0) 등) 액터 실제 위치 기준으로 보정.
-			if (UTileMapModel* TileMap = mCombat->GetModel<USRPGCombatModel>()->GetTileMap())
-			{
-				const FTileIndex ActorTile = TileMap->WorldToTileIndex(Unit->GetView<AActor>()->GetActorLocation());
-				if (TileMap->IsValidIndex(ActorTile))
-				{
-					State.mTile = ActorTile;
-				}
-			}
-			// 진짜 속성값(turtlehand AttributeSet, 커브테이블 초기화)에서 HP를 읽는다.
-			// 단 전투 스폰 시점에 속성 초기화가 안 된 경우(MaxHP=0/INT_MAX 등 비정상)는 placeholder로 폴백.
-			// [게임플레이 확인필요] 전투 플레이어 ASC 속성 초기화가 붙으면 이 폴백은 자동 해제됨.
-			float RealMaxHP = 0.f;
-			// NOTE : GAS 플러그인 사용 여부에 따라서 주석 해제/코드 제거 필요
-			/*if (const UUnitAttributeSet* AttrSet = Unit->GetUnitAttributeSet())
-			{
-				RealMaxHP = AttrSet->GetMaxHP();
-				if (RealMaxHP > 0.f && RealMaxHP < 100000.f)
-				{
-					State.mMaxHP = RealMaxHP;
-					State.mHP = AttrSet->GetHP();
-				}
-			}*/
-			if (RealMaxHP <= 0.f || RealMaxHP >= 100000.f)
-			{
-				State.mMaxHP = PlayerStartHP;
-				State.mHP = PlayerStartHP;
-			}
-			State.mMovePoint = PlayerStartMovePoint;
-			State.mActor = Unit->GetView<AUnit>();
-			mUnitStates.Add(State);
-		}
 	}
 
-	// 적: 액터 스폰 대신 가상 유닛으로 타일 위에 둔다(스폰 크래시 회피).
-	for (const FTileIndex& Tile : VirtualEnemyTiles)
-	{
-		FCombatUnitState State;
-		State.mId = mNextUnitId++;
-		State.mIsPlayer = false;
-		State.mTile = Tile;
-		State.mMaxHP = EnemyStartHP;
-		State.mHP = EnemyStartHP;
-		mUnitStates.Add(State);
-	}
-
-	PushAll();
+	PushDiceUIs();
 }
 
-/** @brief UIModel 입력 델리게이트를 이 어댑터에 연결하고 현재 상태를 즉시 push한다. */
+/** @brief UIModel 입력 델리게이트를 이 어댑터에 연결하고 현재 주사위 상태를 즉시 push한다. */
 void UCombatUIAdapter::BindUIModel(UCombatUIModel* InUIModel)
 {
 	if (mUIModel != nullptr)
@@ -149,95 +55,28 @@ void UCombatUIAdapter::BindUIModel(UCombatUIModel* InUIModel)
 		mUIModel->OnCombatWorldTouch.AddUniqueDynamic(this, &UCombatUIAdapter::HandleWorldTouch);
 	}
 
-	PushAll();
 	PushDiceUIs();   // HUD가 열릴 때 주사위 뷰가 이미 있도록 초기 상태도 push.
 }
 
-/** @brief UI에서 올라온 index 기반 의도를 임시 BASIC/STEP/MOVE 상태 머신으로 해석한다. */
-void UCombatUIAdapter::HandleCombatCommand(ECombatInputType Type, int32 IntPayload)
+/** @brief UI에서 올라온 의도를 받는다. 굴림/취소만 직접 처리하고 나머지는 액션이 가져갈 예정이다. */
+void UCombatUIAdapter::HandleCombatCommand(ECombatInputType Type, int32 /*IntPayload*/)
 {
 	switch (Type)
 	{
-	case ECombatInputType::SelectSkill:
-		mSelectedSkillIndex = IntPayload;
-		mPendingAttackDamage = -1;
-		mMovePending = false;
-		break;
-
-	case ECombatInputType::ToggleDice:
-	{
-		// 이미 쓴 주사위는 무시(턴 종료/다음 턴 시작까지 잠금).
-		if (mUIModel != nullptr)
-		{
-			const TArray<FDiceSlotUI>& Dice = mUIModel->GetDiceUIs();
-			if (Dice.IsValidIndex(IntPayload) && Dice[IntPayload].mIsUsed)
-			{
-				break;
-			}
-		}
-
-		const int32 DiceValue = GetRolledDiceValue(IntPayload);
-		if (DiceValue <= 0)
-		{
-			break;
-		}
-		mPendingDiceIndex = IntPayload;   // 확정 시 '사용됨' 처리할 주사위.
-		if (mSelectedSkillIndex == SkillIndexStep)
-		{
-			// STEP: 주사위 배치 → 본인 타일을 회색(Aim)으로. 탭마다 노랑→빨강(확정).
-			mPendingStepValue = DiceValue;
-			mStepStage = 0;
-			mStepTile = GetPlayerTile();
-			SetSingleTileHighlight(mStepTile, ETileHighlightFlag::Aim);
-		}
-		else if (mSelectedSkillIndex == SkillIndexBasic)
-		{
-			// BASIC: 주사위 배치 → 사거리(회색 Aim)를 깐다. 그 안에서 타깃 탭=노랑, 재탭=빨강+실행.
-			mPendingAttackDamage = DiceValue;
-			mAttackTargetTile = FTileIndex::Invalid;
-			if (UTileMapModel* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap() : nullptr)
-			{
-				// 사거리 기준점 = 플레이어 타일. 타일 트랜스폼이 신뢰 안 될 수 있어((0,0) 등) 액터 실제 위치로 잡는다.
-				FTileIndex Origin = GetPlayerTile();
-				if (const FCombatUnitState* PlayerState = FindPlayerState())
-				{
-					if (PlayerState->mActor.IsValid())
-					{
-						Origin = TileMap->WorldToTileIndex(PlayerState->mActor->GetActorLocation());
-					}
-				}
-				// 사거리 = Square 범위(타일맵 GetAimableTiles, pyramidmine 구현). 점유 타일 포함(적 조준).
-				mAimTiles = TileMap->GetAimableTiles(Origin, BasicAttackRange, EAimPattern::Square, true, false);
-				ClearAllHighlight();
-				TileMap->GetView<ATileMap>()->SetTileHighlight(mAimTiles, ETileHighlightFlag::Aim);   // 회색 사거리
-			}
-		}
-		break;
-	}
-
 	case ECombatInputType::RollDice:
 		// 굴림 요청: 컴포넌트(데이터)에서 굴리고 결과 뷰를 push한다.
 		RollDice();
 		break;
 
-	case ECombatInputType::Move:
-	{
-		// MOVE 모드: 도달 가능 범위(BFS 경로 기반, 이동력 기준)를 회색으로 깔고 그 안만 이동.
-		mMovePending = true;
-		mSelectedSkillIndex = INDEX_NONE;
-		mPendingAttackDamage = -1;
-		mAttackTargetTile = FTileIndex::Invalid;
-		if (UTileMapModel* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap() : nullptr)
-		{
-			mAimTiles = TileMap->GetReachableTiles(GetPlayerTile(), GetPlayerMovePoint());
-			ClearAllHighlight();
-			TileMap->GetView<ATileMap>()->SetTileHighlight(mAimTiles, ETileHighlightFlag::Aim);
-		}
-		break;
-	}
-
 	case ECombatInputType::Cancel:
 		ClearPendingAction();
+		break;
+
+	case ECombatInputType::SelectSkill:
+	case ECombatInputType::ToggleDice:
+	case ECombatInputType::Move:
+		// TODO(액션 연동): IntPayload(스킬/주사위 index)를 USRPGSkillBuildAction의
+		//                  SetSkill / ChangeDices / Move phase 커맨드로 라우팅한다.
 		break;
 
 	default:
@@ -245,167 +84,18 @@ void UCombatUIAdapter::HandleCombatCommand(ECombatInputType Type, int32 IntPaylo
 	}
 }
 
-/** @brief 스크린 터치를 타일로 변환한 뒤 현재 대기 중인 액션의 확정/취소로 소비한다. */
-void UCombatUIAdapter::HandleWorldTouch(FVector2D ScreenPosition, bool bLongPress)
+/** @brief 스크린 터치를 타일로 변환한다. 확정/취소는 액션이 처리할 예정이다. */
+void UCombatUIAdapter::HandleWorldTouch(FVector2D ScreenPosition, bool /*bLongPress*/)
 {
-	// 롱프레스 여부는 후속 상세 패널 계약을 위해 받지만, 이 임시 어댑터는 일반 탭 액션만 처리한다.
 	FTileIndex Tile;
 	if (ResolveTileFromScreen(ScreenPosition, Tile) == false)
 	{
-		// 타일맵 밖 탭 = 진행 중 스킬/이동 취소.
+		// 타일맵 밖 탭 = 진행 중 하이라이트 취소.
 		ClearPendingAction();
 		return;
 	}
 
-	// STEP 단계 확정: 본인 타일을 탭할 때마다 회색→노랑→빨강(확정).
-	if (mPendingStepValue >= 0)
-	{
-		if (Tile.mX == mStepTile.mX && Tile.mY == mStepTile.mY)
-		{
-			++mStepStage;
-			if (mStepStage == 1)
-			{
-				SetSingleTileHighlight(mStepTile, ETileHighlightFlag::Select);   // 노랑
-			}
-			else if (mStepStage >= 2)
-			{
-				SetSingleTileHighlight(mStepTile, ETileHighlightFlag::Effect);   // 빨강 = 확정
-				ApplyStep(mPendingStepValue);                                    // 이동력 += 주사위값
-				if (mDicePool != nullptr && mPendingDiceIndex != INDEX_NONE)
-				{
-					mDicePool->MarkDiceUsed(mPendingDiceIndex);             // 쓴 주사위 잠금
-					PushDiceUIs();                                             // 잠금 상태를 UI에 반영
-				}
-				ClearPendingAction();
-			}
-		}
-		else
-		{
-			// 다른 곳 탭 = 취소.
-			ClearPendingAction();
-		}
-		return;
-	}
-
-	// BASIC 평타: 사거리(회색) 안에서 타깃 탭=노랑, 같은 칸 재탭=빨강+실행.
-	if (mPendingAttackDamage >= 0)
-	{
-		UTileMapModel* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap() : nullptr;
-
-		// 사거리 밖 탭 = 취소.
-		if (mAimTiles.Contains(Tile) == false)
-		{
-			ClearPendingAction();
-			return;
-		}
-
-		const bool bSameTile = (mAttackTargetTile.mX == Tile.mX && mAttackTargetTile.mY == Tile.mY);
-		if (bSameTile == false)
-		{
-			// 1차 선택(또는 다른 칸 재선택): 회색 사거리는 유지하고 선택칸만 노랑(Select 최우선).
-			mAttackTargetTile = Tile;
-			if (TileMap != nullptr)
-			{
-				ATileMap* TileMapView = TileMap->GetView<ATileMap>();
-
-				TileMapView->ClearTileHighlight(ETileHighlightFlag::Select);
-				TileMapView->ClearTileHighlight(ETileHighlightFlag::Effect);
-				TileMapView->SetTileHighlight(mAimTiles, ETileHighlightFlag::Aim);
-				TArray<FTileIndex> Picked;
-				Picked.Add(Tile);
-				TileMapView->SetTileHighlight(Picked, ETileHighlightFlag::Select);   // 노랑
-			}
-			return;
-		}
-
-		// 2차(같은 칸 재탭): 빨강 + 실행.
-		if (TileMap != nullptr)
-		{
-			ATileMap* TileMapView = TileMap->GetView<ATileMap>();
-
-			TileMapView->ClearTileHighlight(ETileHighlightFlag::Select);
-			TArray<FTileIndex> Picked;
-			Picked.Add(Tile);
-			TileMapView->SetTileHighlight(Picked, ETileHighlightFlag::Effect);   // 빨강
-		}
-		const int32 TargetId = FindUnitIdAtTile(Tile);
-		FCombatUnitState* Target = FindStateById(TargetId);
-		if (Target != nullptr && Target->mIsPlayer == false)
-		{
-			ApplyBasicAttack(TargetId, mPendingAttackDamage);
-			if (mDicePool != nullptr && mPendingDiceIndex != INDEX_NONE)
-			{
-				mDicePool->MarkDiceUsed(mPendingDiceIndex);   // 적을 친 경우에만 주사위 소모.
-				PushDiceUIs();                                   // 잠금 상태를 UI에 반영
-			}
-		}
-		ClearPendingAction();
-		return;
-	}
-
-	// MOVE: 도달 범위 안에서 칸 탭=노랑(선택), 같은 칸 재탭=빨강(확정)+이동. (BASIC과 동일 흐름)
-	if (mMovePending)
-	{
-		// 도달 범위 밖 탭 = 취소.
-		if (mAimTiles.Contains(Tile) == false)
-		{
-			ClearPendingAction();
-			return;
-		}
-
-		UTileMapModel* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap() : nullptr;
-		const bool bSameTile = (mAttackTargetTile.mX == Tile.mX && mAttackTargetTile.mY == Tile.mY);
-		if (bSameTile == false)
-		{
-			// 1차 선택: 회색 범위 유지 + 선택칸만 노랑.
-			mAttackTargetTile = Tile;
-			if (TileMap != nullptr)
-			{
-				ATileMap* TileMapView = TileMap->GetView<ATileMap>();
-
-				TileMapView->ClearTileHighlight(ETileHighlightFlag::Select);
-				TileMapView->ClearTileHighlight(ETileHighlightFlag::Effect);
-				TileMapView->SetTileHighlight(mAimTiles, ETileHighlightFlag::Aim);
-				TArray<FTileIndex> Picked;
-				Picked.Add(Tile);
-				TileMapView->SetTileHighlight(Picked, ETileHighlightFlag::Select);   // 노랑
-			}
-			return;
-		}
-
-		// 2차(같은 칸 재탭): 빨강 + 이동.
-		if (TileMap != nullptr)
-		{
-			ATileMap* TileMapView = TileMap->GetView<ATileMap>();
-
-			TileMapView->ClearTileHighlight(ETileHighlightFlag::Select);
-			TArray<FTileIndex> Picked;
-			Picked.Add(Tile);
-			TileMapView->SetTileHighlight(Picked, ETileHighlightFlag::Effect);   // 빨강
-		}
-		if (TryMovePlayer(Tile))
-		{
-			// 이동 후 남은 이동력으로 도달범위 재계산(다시 선택 가능), 없으면 종료.
-			if (GetPlayerMovePoint() > 0 && TileMap != nullptr)
-			{
-				ATileMap* TileMapView = TileMap->GetView<ATileMap>();
-
-				mAttackTargetTile = FTileIndex::Invalid;
-				mAimTiles = TileMap->GetReachableTiles(GetPlayerTile(), GetPlayerMovePoint());
-				ClearAllHighlight();
-				TileMapView->SetTileHighlight(mAimTiles, ETileHighlightFlag::Aim);
-			}
-			else
-			{
-				ClearPendingAction();
-			}
-		}
-		else
-		{
-			ClearPendingAction();
-		}
-		return;
-	}
+	// TODO(액션 연동): 판정된 Tile을 USRPGSkillBuildAction의 WorldTrace/SetTargetTile 커맨드로 넘긴다.
 }
 
 /** @brief 턴 종료 UI 이벤트에서 이번 턴 사용한 주사위 잠금을 해제하고 Dice 도메인을 다시 push한다. */
@@ -435,7 +125,8 @@ void UCombatUIAdapter::BeginDestroy()
 /** @brief 타일맵의 하이라이트 레이어를 단일 타일/단일 플래그 상태로 맞춘다. */
 void UCombatUIAdapter::SetSingleTileHighlight(const FTileIndex& Tile, ETileHighlightFlag Flag) const
 {
-	ATileMap* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap()->GetView<ATileMap>() : nullptr;
+	UTileMapModel* TileMapModel = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap() : nullptr;
+	ATileMap* TileMap = TileMapModel != nullptr ? TileMapModel->GetView<ATileMap>() : nullptr;
 	if (TileMap == nullptr)
 	{
 		return;
@@ -449,10 +140,11 @@ void UCombatUIAdapter::SetSingleTileHighlight(const FTileIndex& Tile, ETileHighl
 	TileMap->SetTileHighlight(Tiles, Flag);
 }
 
-/** @brief Aim/Select/Effect 하이라이트를 모두 끄고 pending 액션의 시각 상태를 초기화한다. */
+/** @brief Aim/Select/Effect 하이라이트를 모두 끈다. */
 void UCombatUIAdapter::ClearAllHighlight() const
 {
-	ATileMap* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap()->GetView<ATileMap>() : nullptr;
+	UTileMapModel* TileMapModel = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap() : nullptr;
+	ATileMap* TileMap = TileMapModel != nullptr ? TileMapModel->GetView<ATileMap>() : nullptr;
 	if (TileMap == nullptr)
 	{
 		return;
@@ -532,17 +224,9 @@ void UCombatUIAdapter::PushDiceUIs() const
 	mUIModel->SetDiceUIs(Views);
 }
 
-/** @brief 스킬/주사위/이동 pending 상태와 하이라이트를 모두 초기화하고 UI 선택 강조 해제를 알린다. */
+/** @brief 진행 중 하이라이트를 끄고 UI 선택 강조 해제를 알린다. */
 void UCombatUIAdapter::ClearPendingAction()
 {
-	mSelectedSkillIndex = INDEX_NONE;
-	mPendingAttackDamage = -1;
-	mMovePending = false;
-	mPendingStepValue = -1;
-	mStepStage = 0;
-	mPendingDiceIndex = INDEX_NONE;
-	mAimTiles.Reset();
-	mAttackTargetTile = FTileIndex::Invalid;
 	ClearAllHighlight();
 
 	// UI에 스킬/주사위 선택 강조를 풀라고 알린다(확정/취소 공통).
@@ -555,7 +239,8 @@ void UCombatUIAdapter::ClearPendingAction()
 /** @brief 카메라 스크린 좌표를 타일맵 평면과 교차시켜 유효한 FTileIndex로 변환한다. */
 bool UCombatUIAdapter::ResolveTileFromScreen(const FVector2D& ScreenPosition, FTileIndex& OutTile) const
 {
-	ATileMap* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap()->GetView<ATileMap>() : nullptr;
+	UTileMapModel* TileMapModel = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap() : nullptr;
+	ATileMap* TileMap = TileMapModel != nullptr ? TileMapModel->GetView<ATileMap>() : nullptr;
 	UWorld* World = mCombat != nullptr ? mCombat->GetWorld() : nullptr;
 	if (TileMap == nullptr || World == nullptr)
 	{
@@ -594,259 +279,4 @@ bool UCombatUIAdapter::ResolveTileFromScreen(const FVector2D& ScreenPosition, FT
 	}
 	OutTile = Tile;
 	return true;
-}
-
-/** @brief Actor가 없는 가상 유닛의 화면 표시 위치를 타일맵 좌표에서 얻는다. */
-FVector UCombatUIAdapter::TileToWorld(const FTileIndex& Tile) const
-{
-	const ATileMap* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap()->GetView<ATileMap>() : nullptr;
-	return TileMap != nullptr ? TileMap->TileToWorldLocation(Tile) : FVector::ZeroVector;
-}
-
-/** @brief 현재 임시 전투 상태를 Unit/Meta/Turn/Equipment 도메인으로 변환해 UIModel에 push한다. */
-void UCombatUIAdapter::PushAll()
-{
-	if (mUIModel == nullptr)
-	{
-		return;
-	}
-
-	TArray<FUnitUI> UnitUIs;
-	UnitUIs.Reserve(mUnitStates.Num());
-	int32 PlayerUnitId = INDEX_NONE;
-	for (const FCombatUnitState& State : mUnitStates)
-	{
-		FUnitUI View;
-		View.mUnitId = State.mId;
-		View.mIsPlayer = State.mIsPlayer;
-		View.mHP = State.mHP;
-		View.mMaxHP = State.mMaxHP;
-		View.mMovementPoint = State.mMovePoint;
-		View.mMaxMovementPoint = State.mMaxMovePoint;
-		View.mTile = State.mTile;
-		// 실제 액터가 있으면 그 위치, 가상이면 타일→월드 변환.
-		View.mWorldLocation = State.mActor.IsValid()
-			? State.mActor->GetActorLocation()
-			: TileToWorld(State.mTile);
-
-		if (State.mIsPlayer)
-		{
-			PlayerUnitId = State.mId;
-		}
-		UnitUIs.Add(View);
-	}
-	mUIModel->SetUnitUIs(UnitUIs);
-
-	FPlayerMetaUI Meta;
-	Meta.mLevel = mPlayerLevel;
-	Meta.mGold = mPlayerGold;   // 폴백
-	// 진짜 골드(turtlehand UPlayerUnitAttributeSet.Money). 속성이 초기화된 경우(MaxHP 정상)만 사용.
-	if (const FCombatUnitState* PlayerState = FindPlayerState())
-	{
-		if (PlayerState->mActor.IsValid())
-		{
-			/*if (const UPlayerUnitAttributeSet* PlayerAttr = Cast<UPlayerUnitAttributeSet>(PlayerState->mActor->GetUnitAttributeSet()))
-			{
-				const float RealMaxHP = PlayerAttr->GetMaxHP();
-				if (RealMaxHP > 0.f && RealMaxHP < 100000.f)
-				{
-					Meta.mGold = FMath::RoundToInt(PlayerAttr->GetMoney());
-				}
-			}*/
-		}
-	}
-	mUIModel->SetPlayerMeta(Meta);
-
-	FTurnUI Turn;
-	Turn.mRound = 1;
-	Turn.mCurrentUnitId = PlayerUnitId;
-	mUIModel->SetTurnUI(Turn);
-
-	// TEMP(시각 검증용): 게임플레이가 아직 장비를 채우지 않아, 탑바 좌측 하단 장비 줄의 위치/모양 확인을 위해
-	// 임시 3슬롯을 넣는다. 게임플레이가 실제 장비를 SetEquipmentUIs로 채우면 이 블록을 제거할 것.
-	TArray<FEquipmentUI> Equipment;
-	for (int32 SlotIndex = 0; SlotIndex < 3; ++SlotIndex)
-	{
-		FEquipmentUI Equip;
-		Equip.mSlotIndex = SlotIndex;
-		Equip.mName = FText::Format(NSLOCTEXT("CombatUIAdapter", "TempEquipSlot", "EQ{0}"), FText::AsNumber(SlotIndex + 1));
-		Equip.mIsEquipped = (SlotIndex == 0);
-		Equipment.Add(Equip);
-	}
-	mUIModel->SetEquipmentUIs(Equipment);
-
-	// (시각 검증용 임시) 유닛 위치에 도형 마커를 깐다 — 플레이어/적이 어디 있는지 보이게.
-	RefreshUnitMarkers();
-}
-
-/** @brief (시각 검증용 임시) 각 유닛 위치에 기본 도형(플레이어=원기둥/파랑, 적=정육면체/빨강)을 스폰한다.
-    콜리전을 끈다 — 타일 선택 라인 트레이스가 도형을 통과해 타일에 닿게 하기 위함. */
-void UCombatUIAdapter::RefreshUnitMarkers()
-{
-	UWorld* World = mCombat != nullptr ? mCombat->GetWorld() : nullptr;
-	if (World == nullptr)
-	{
-		return;
-	}
-
-	// 이전 마커 제거(이동/사망 반영을 위해 매 push마다 재생성).
-	for (const TObjectPtr<AActor>& Marker : mUnitMarkers)
-	{
-		if (Marker != nullptr)
-		{
-			Marker->Destroy();
-		}
-	}
-	mUnitMarkers.Reset();
-
-	UStaticMesh* PlayerMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
-	UStaticMesh* EnemyMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cube.Cube"));
-	UMaterialInterface* ShapeMat = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"));
-
-	for (const FCombatUnitState& State : mUnitStates)
-	{
-		// 마커는 유닛의 "논리 타일(mTile)" 기준으로 둔다. 그래야 이동 시 액터 mobility와 무관하게 항상 따라온다.
-		FVector Loc = TileToWorld(State.mTile);
-		Loc.Z += 50.0f;   // 타일 위로 살짝 띄움
-
-		FActorSpawnParameters Params;
-		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		AStaticMeshActor* Marker = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), Loc, FRotator::ZeroRotator, Params);
-		if (Marker == nullptr)
-		{
-			continue;
-		}
-
-		UStaticMeshComponent* MeshComp = Marker->GetStaticMeshComponent();
-		MeshComp->SetMobility(EComponentMobility::Movable);
-		MeshComp->SetStaticMesh(State.mIsPlayer ? PlayerMesh : EnemyMesh);
-		MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);   // 타일 트레이스 통과
-		Marker->SetActorScale3D(State.mIsPlayer ? FVector(0.45f, 0.45f, 0.9f) : FVector(0.5f));
-
-		if (ShapeMat != nullptr)
-		{
-			UMaterialInstanceDynamic* DynMat = UMaterialInstanceDynamic::Create(ShapeMat, Marker);
-			if (DynMat != nullptr)
-			{
-				DynMat->SetVectorParameterValue(TEXT("Color"), State.mIsPlayer ? FLinearColor(0.2f, 0.45f, 1.0f) : FLinearColor(1.0f, 0.2f, 0.2f));
-				MeshComp->SetMaterial(0, DynMat);
-			}
-		}
-
-		mUnitMarkers.Add(Marker);
-	}
-}
-
-/** @brief 임시 상태 테이블에서 플레이어 행을 찾는다. */
-const FCombatUnitState* UCombatUIAdapter::FindPlayerState() const
-{
-	return mUnitStates.FindByPredicate([](const FCombatUnitState& State) { return State.mIsPlayer; });
-}
-
-/** @brief UnitId payload를 임시 상태 테이블의 mutable 행으로 되돌린다. */
-FCombatUnitState* UCombatUIAdapter::FindStateById(int32 UnitId)
-{
-	return mUnitStates.FindByPredicate([UnitId](const FCombatUnitState& State) { return State.mId == UnitId; });
-}
-
-/** @brief BASIC 임시 평타를 가상 적 HP에 적용하고 사망 시 상태 테이블에서 제거한다. */
-void UCombatUIAdapter::ApplyBasicAttack(int32 TargetUnitId, int32 Amount)
-{
-	FCombatUnitState* Target = FindStateById(TargetUnitId);
-	if (Target == nullptr || Target->mIsPlayer)
-	{
-		return;
-	}
-
-	Target->mHP = FMath::Max(0.0f, Target->mHP - static_cast<float>(Amount));
-	if (Target->mHP <= 0.0f)
-	{
-		// 가상 적 사망: 상태에서 제거.
-		const int32 RemoveId = Target->mId;
-		mUnitStates.RemoveAll([RemoveId](const FCombatUnitState& State) { return State.mId == RemoveId; });
-	}
-	PushAll();
-}
-
-/** @brief STEP 임시 액션으로 플레이어 이동력 현재/최대값을 주사위 값만큼 채운다. */
-void UCombatUIAdapter::ApplyStep(int32 Amount)
-{
-	FCombatUnitState* Player = mUnitStates.FindByPredicate([](const FCombatUnitState& State) { return State.mIsPlayer; });
-	if (Player == nullptr)
-	{
-		return;
-	}
-	Player->mMovePoint += Amount;
-	Player->mMaxMovePoint = Player->mMovePoint;   // STEP 직후 현재=최대(6/6).
-	PushAll();
-}
-
-/** @brief MOVE 임시 액션으로 빈 타일 이동을 적용하고 실제 플레이어 액터 위치도 타일맵에 맞춘다. */
-bool UCombatUIAdapter::TryMovePlayer(const FTileIndex& TargetTile)
-{
-	FCombatUnitState* Player = mUnitStates.FindByPredicate([](const FCombatUnitState& State) { return State.mIsPlayer; });
-	if (Player == nullptr || Player->mMovePoint <= 0)
-	{
-		return false;
-	}
-
-	// 가상 적이 있는 타일로는 이동 불가.
-	const int32 OccupantId = FindUnitIdAtTile(TargetTile);
-	if (OccupantId != INDEX_NONE)
-	{
-		return false;
-	}
-
-	// 이동 비용 = 현재 칸→목표 칸 거리(Chebyshev 근사). 이동력이 모자라면 불가.
-	const int32 Cost = FMath::Max(FMath::Abs(TargetTile.mX - Player->mTile.mX), FMath::Abs(TargetTile.mY - Player->mTile.mY));
-	if (Cost <= 0 || Cost > Player->mMovePoint)
-	{
-		return false;
-	}
-
-	Player->mTile = TargetTile;
-	Player->mMovePoint -= Cost;
-
-	// 실제 플레이어 액터도 해당 타일 위로 옮긴다(StartActorMovement는 현재 스텁이라 위치를 직접 설정).
-	if (Player->mActor.IsValid())
-	{
-		if (UTileMapModel* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap() : nullptr)
-		{
-			FVector NewLoc = TileMap->TileToWorldLocation(TargetTile);
-			NewLoc.Z = Player->mActor->GetActorLocation().Z;   // 높이 유지
-			// 폰 루트가 Static mobility면 SetActorLocation이 실패(moved=0)한다. 이동 전 Movable로 바꾼다.
-			if (USceneComponent* Root = Player->mActor->GetRootComponent())
-			{
-				Root->SetMobility(EComponentMobility::Movable);
-			}
-			Player->mActor->SetActorLocation(NewLoc, /*bSweep=*/false, nullptr, ETeleportType::TeleportPhysics);
-		}
-	}
-
-	PushAll();
-	return true;
-}
-
-/** @brief 타일 점유 상태를 UnitId로 돌려준다; 빈 타일은 INDEX_NONE이다. */
-int32 UCombatUIAdapter::FindUnitIdAtTile(const FTileIndex& Tile) const
-{
-	const FCombatUnitState* Found = mUnitStates.FindByPredicate([&Tile](const FCombatUnitState& State)
-	{
-		return State.mTile.mX == Tile.mX && State.mTile.mY == Tile.mY;
-	});
-	return Found != nullptr ? Found->mId : INDEX_NONE;
-}
-
-/** @brief 현재 플레이어 타일을 반환하고, 플레이어 상태가 없으면 Invalid를 돌려준다. */
-FTileIndex UCombatUIAdapter::GetPlayerTile() const
-{
-	const FCombatUnitState* Player = FindPlayerState();
-	return Player != nullptr ? Player->mTile : FTileIndex::Invalid;
-}
-
-/** @brief MOVE 버튼/이동 유지 여부 판단에 쓰는 플레이어 현재 이동력. */
-int32 UCombatUIAdapter::GetPlayerMovePoint() const
-{
-	const FCombatUnitState* Player = FindPlayerState();
-	return Player != nullptr ? Player->mMovePoint : 0;
 }

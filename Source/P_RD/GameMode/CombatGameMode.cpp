@@ -74,7 +74,6 @@ void ACombatGameMode::BeginRoom()
 	}
 	mCombatUIAdapter->BindUIModel(CombatUIModel);
 	mCombatUIAdapter->Build(CombatSubsystem, GetRunPersistData());
-	mCombatUIAdapter->PushAll();
 
 	CombatModel->BeginCombat();
 }
