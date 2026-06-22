@@ -230,7 +230,7 @@ void USRPGSkillBuildAction::SetSkill(int32 SkillIndex)
         const bool CanAimObstacle = mSelectedSkill->mCanAimObstacle;
         const bool IsIndirect = mSelectedSkill->mIsIndirect;
         mAimTileIndexes = TileMap->GetAimableTiles(mInstigator->GetTileTransform().mIndex, AimRange, Pattern, CanAimObstacle, IsIndirect);
-        // TileMap->SetTileHighlight(mAimTileIndexes, ETileHighlightFlag::Aim);
+        TileMap->SetTileHighlight(mAimTileIndexes, ETileHighlightFlag::Aim);
     }
 
     /* 상태 변경되면서 외부에서 바인딩된 UI 변경 */
@@ -259,7 +259,7 @@ void USRPGSkillBuildAction::ResetSkill()
     UTileMapModel* TileMap = CombatModel->GetTileMap();
     checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"))
 
-    // TileMap->ClearTileHighlight(ETileHighlightFlag::Aim | ETileHighlightFlag::Effect | ETileHighlightFlag::Select);
+    TileMap->ClearTileHighlight(ETileHighlightFlag::Aim | ETileHighlightFlag::Effect | ETileHighlightFlag::Select);
     SetBuildPhase(ESRPGSkillBuildPhase::None);
 }
 
@@ -285,7 +285,7 @@ void USRPGSkillBuildAction::SetTargetTile(const FTileIndex& TileIndex)
         const int32 EffectRange = mSelectedSkill->mEffectDefaultArea + mSelectedDiceSum * mSelectedSkill->mEffectRatioArea;
         const bool IsInDirect = mSelectedSkill->mIsIndirect;
         mEffectTileIndexes = TileMap->GetEffectTiles(mInstigator->GetTileTransform().mIndex, TileIndex, Pattern, EffectRange, IsInDirect);
-        // TileMap->SetTileHighlight(mEffectTileIndexes, ETileHighlightFlag::Effect);
+        TileMap->SetTileHighlight(mEffectTileIndexes, ETileHighlightFlag::Effect);
     }
 
     /* 예측 시스템 */
@@ -322,7 +322,7 @@ void USRPGSkillBuildAction::ResetTargetTile()
     UTileMapModel* TileMap = CombatModel->GetTileMap();
     checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"))
 
-    // TileMap->ClearTileHighlight(ETileHighlightFlag::Effect | ETileHighlightFlag::Select);
+    TileMap->ClearTileHighlight(ETileHighlightFlag::Effect | ETileHighlightFlag::Select);
     SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
 }
 

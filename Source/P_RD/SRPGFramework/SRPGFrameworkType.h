@@ -249,6 +249,17 @@ enum class ESRPGSkillBuildPhase : uint8
 };
 
 /**
+ * @brief 이동 빌드 액션 내 진행 단계 열거형
+ */
+UENUM(BlueprintType)
+enum class ESRPGMoveBuildPhase : uint8
+{
+    None                UMETA(Hidden),
+    DestSelection       UMETA(ToolTip = "도달 가능 목적지 선택"),
+    Preview             UMETA(ToolTip = "이동 경로 프리뷰 표기"),
+};
+
+/**
  * @brief SRPG 명령 타입에 대한 열거형
  */
 UENUM(BlueprintType)
@@ -262,6 +273,7 @@ enum class ESRPGCommandType : uint8
     DiceSelect          UMETA(ToolTip = "사용 주사위 결정"),
     SkillCast           UMETA(ToolTip = "스킬 사용"),
     MoveSelect          UMETA(ToolTip = "이동 시작"),
+    MoveCast            UMETA(ToolTip = "이동 사용"),
     TurnEnd             UMETA(ToolTip = "턴 종료"),
 };
 

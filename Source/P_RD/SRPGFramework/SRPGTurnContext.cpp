@@ -38,6 +38,13 @@ ESRPGCommandResult USRPGActionCreationCommandHandler::HandleCommand(const TInsta
 		return ESRPGCommandResult::Ignored;
 	}
 
+	// TODO : 생성한 명령을 ReserveInitializeCommand 호출해야 나중에 BeginAction이 OnBeginAction 직전에
+	//        mInitializeCommand를 체크해서 HandleCommand 할 수 있는 것으로 보임
+	//        현재는 코드가 없어서 SkillBuildAction, SkillAction, MoveBuildAction, MoveAction 모두
+	//        자기 생성 명령을 못 받아서 빈 상태로 시작될 것 같음
+	//        ReserveInitializeCommand가 protected라 확인 필요
+    // by 이문환
+
 	/* 새로운 Action 생성 후 등록 */
 
 	USRPGTurnContext* TurnContext = mParent.Get();
@@ -76,12 +83,12 @@ void USRPGTurnContext::BeginTurn()
 	mTurnPhase = ESRPGTurnPhase::TurnStart;
 
 	UE_LOG(LogSRPGCombat, Log, TEXT("턴 시작"));
-	
+
 	// 턴 시작 연출
 	UPresentationSyncSubsystem* PresentationSyncSubsystem = GetWorld()->GetSubsystem<UPresentationSyncSubsystem>();
 	checkf(PresentationSyncSubsystem != nullptr, TEXT("연출 동기화 서브시스템 nullptr"));
 	auto PresentationBarrier = PresentationSyncSubsystem->MakePresentationBarrier(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
-		
+
 		// 턴 실행
 		checkf(mTurnPhase == ESRPGTurnPhase::TurnStart, TEXT("턴 진입 절차 오류"));
 		mTurnPhase = ESRPGTurnPhase::TurnPlay;
@@ -96,7 +103,7 @@ void USRPGTurnContext::BeginTurn()
 
 		// 유닛 턴 시작 단계
 		mOwner->OnBeginTurn();
-		
+
 		// 현 스텟을 캡처
 		/*FGameplayEventData EventData;
 		EventData.TargetData = UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle(mOwner.Get());
@@ -156,7 +163,7 @@ void USRPGTurnContext::EndTurn()
 
 	// On End Turn 패시브 실행
 	//UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(mOwner.Get(), AbilityTags::GameplayAbility_Passive_OnEndTurn, MoveTemp(EventData));
-	
+
 	mOwner->OnEndTurn();
 
 	// 턴 종료 연출
