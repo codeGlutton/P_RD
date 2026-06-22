@@ -299,7 +299,7 @@ protected:
 	/* 이동 경로 표시 */
 
 	/**
-	 * @brief 경로 중간 화살표 메시 (전용 화살표 에셋 할당 전제, +X를 가리키는 형상이어야 방향이 맞음)
+	 * @brief 경로 중간 화살표 메시 (기본: Kenney SM_Kenney_FactoryKit_Arrow, +X를 가리키는 형상이어야 방향이 맞음)
 	 */
 	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path Arrow Mesh"))
 	TObjectPtr<UStaticMesh> mPathArrowMesh;
@@ -311,7 +311,7 @@ protected:
 	TObjectPtr<UMaterialInterface> mPathArrowMaterial;
 
 	/**
-	 * @brief 도착(끝) 타일 마커 메시 (기본: 엔진 Sphere)
+	 * @brief 도착(끝) 타일 마커 메시 (기본: Kenney SM_Kenney_FactoryKit_IndicatorSpecialArrow)
 	 */
 	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path End Mesh"))
 	TObjectPtr<UStaticMesh> mPathEndMesh;
