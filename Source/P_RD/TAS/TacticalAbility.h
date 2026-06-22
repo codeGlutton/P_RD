@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "GAS/GASMinimal.h"
+#include "RDMinimal.h"
 #include "UObject/Object.h"
 #pragma region Temp
 #include "Actor/BoardActor/BoardActorModel.h"

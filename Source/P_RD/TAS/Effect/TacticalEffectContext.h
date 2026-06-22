@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "GAS/GASMinimal.h"
+#include "GameplayTagType.h"
 #include "UObject/Object.h"
 #include "TacticalEffectContext.generated.h"
 
