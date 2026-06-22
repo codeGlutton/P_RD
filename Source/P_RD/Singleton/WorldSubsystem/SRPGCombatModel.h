@@ -147,7 +147,8 @@ protected:
 	void NotifyRoundEndIfNeeded();
 
 protected:
-	void PostUnitDeath(UUnitModel* UnitModel);
+	UFUNCTION()
+	void OnUnitDied(UUnitModel* UnitModel);
 
 	/* 액션 함수 */
 public:

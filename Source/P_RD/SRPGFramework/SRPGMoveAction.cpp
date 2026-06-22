@@ -42,7 +42,7 @@ void USRPGMoveAction::OnBeginAction()
     /* 경로가 없거나 시작 타일만 있으면 이동 없이 즉시 종료 */
     if (mPathTileIndexes.Num() < 2)
     {
-        EndAction(ESRPGActionResult::Succeeded);
+        MarkActionCompleted(ESRPGActionResult::Succeeded);
         return;
     }
 
@@ -77,7 +77,7 @@ void USRPGMoveAction::OnTickAction(float DeltaTime)
     {
         /* 경로 끝까지 도착 — 이동 종료 */
         mCurrentStepIndex = INDEX_NONE;
-        EndAction(ESRPGActionResult::Succeeded);
+        MarkActionCompleted(ESRPGActionResult::Succeeded);
     }
 }
 

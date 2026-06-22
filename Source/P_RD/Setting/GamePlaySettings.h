@@ -55,9 +55,9 @@ public:
     TSubclassOf<UUserWidget> mWorldWidgetClasses[static_cast<uint8>(EWorldWidgetType::Count)];
 
 public:
-    UPROPERTY(Config, Category = Model, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SubsystemModelViewMappings"))
+    UPROPERTY(Config, Category = Model, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SubsystemModelViewMappings", ConfigRestartRequired = true))
     TSet<FSubsystemModelViewMapping> mSubsystemModelViewMappings;
-    UPROPERTY(Config, Category = Model, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "WorldModelViewMappings"))
+    UPROPERTY(Config, Category = Model, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "WorldModelViewMappings", ConfigRestartRequired = true))
     TSet<FWorldModelViewMapping> mWorldModelViewMappings;
 
 public:

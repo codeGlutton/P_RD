@@ -31,6 +31,10 @@ bool USRPGCommandRouterModel::SummitCommand(const TInstancedStruct<FSRPGCommand>
 		Result = CombineSRPGCommandResult(HandleFallbackCommand(Command), Result);
 	}
 
+	/* 대리자 처리 */
+
+	OnHandleCommand.Broadcast(Result);
+	
 	const bool IsCommandUsed = Result != ESRPGCommandResult::Ignored;
 	return IsCommandUsed;
 }
