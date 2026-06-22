@@ -16,7 +16,6 @@ class UCharacterSelectWidget;
 class UImage;
 class USettingsPanelWidget;
 class UTextBlock;
-class UTexture2D;
 class UWidget;
 class UWidgetSwitcher;
 
@@ -56,6 +55,9 @@ protected:
 	// 캐릭터 선택 위젯이 보내는 BACK 요청도 여기서 받는다.
 	// AddUniqueDynamic을 사용하므로 같은 위젯이 다시 Construct 되어도 같은 델리게이트가 중복으로 붙지 않는다.
 	void NativeConstruct() override;
+
+	/** @brief 배경 영상 cover-crop 배치를 현재 화면 크기에 맞춰 갱신한다. */
+	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 	/** @brief 위젯이 화면에서 내려갈 때 연결한 이벤트를 해제함 */
 	// UUserWidget은 화면에서 사라졌다가 다시 Construct 될 수 있다.
@@ -131,12 +133,18 @@ private:
 	/** @brief 타이틀 배경 영상을 반복 재생한다. */
 	void PlayTitleBackgroundVideo();
 
+	/** @brief 타이틀 배경 영상 Image를 원본 비율 유지 cover-crop으로 배치한다. */
+	void FitTitleBackgroundVideoToViewport() const;
+
 	/** @brief 타이틀 배경 영상 재생을 정리한다. */
 	void StopTitleBackgroundVideo();
 
 	/** @brief Content 기준 상대 경로를 실제 파일 경로로 바꾼다. */
 	// [합의필요] SVN raw media를 Content 밑 파일 경로로 직접 읽는 계약은 패키징 규칙과 함께 유지되어야 한다.
 	FString ResolveTitleBackgroundVideoPath() const;
+
+	/** @brief MP4 파일에서 비디오 트랙 표시 해상도를 읽는다. */
+	FVector2D ReadTitleBackgroundVideoFileDimensions(const FString& VideoPath) const;
 
 	/** @brief MediaPlayer가 파일을 열었을 때 반복 재생 상태를 확정한다. */
 	UFUNCTION()
@@ -268,7 +276,7 @@ private:
 
 	/** @brief 타이틀 메인 화면에서 반복 재생할 MP4 파일의 Content 기준 상대 경로 */
 	UPROPERTY(Category = "Title Menu|Background", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true, DisplayName = "Title Background Video Path"))
-	FString mTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/MS_TitleLoop_01.mp4");
+	FString mTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/campfire_titleloop_idle_x3preview.mp4");
 
 	/** @brief 배경 영상 재생용 런타임 객체(MediaPlayer/Texture/Source/브러시). 정적 비주얼은 WBP. */
 	UPROPERTY(Transient)

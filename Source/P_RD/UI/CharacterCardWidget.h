@@ -64,6 +64,12 @@ private:
 	/** @brief 저장된 캐릭터 값/선택 상태를 WBP_CharacterCard의 위젯들에 반영함 */
 	void SyncCard();
 
+	/** @brief 직업별 심볼 버튼 텍스처를 ButtonStyle에 직접 적용하고 루트 SizeBox 비율을 맞춘다. */
+	void ApplyCardButtonArt();
+
+	/** @brief 카드 루트 SizeBox가 있으면 1024x512 심볼 버튼 계약(2:1)에 맞춘다. */
+	void FitRootSizeBoxToButtonAspect() const;
+
 	/** @brief WBP_CharacterCard에 필요한 BindWidget 이름이 빠졌는지 로그로 알려줌 */
 	void ValidateDesignerBindings() const;
 

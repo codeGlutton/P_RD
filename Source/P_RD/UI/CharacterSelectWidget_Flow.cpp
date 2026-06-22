@@ -55,7 +55,8 @@ void UCharacterSelectWidget::HandleConfirmButtonClicked()
 	SetStatusText(mLoadingStatusText);
 	if (mConfirmButton != nullptr)
 	{
-		mConfirmButton->SetIsEnabled(false);
+		// 입력 재진입은 mStartRequested로 막고, 버튼은 enabled 상태를 유지해 원본 색을 보존한다.
+		mConfirmButton->SetIsEnabled(true);
 	}
 
 	if (!BeginFirstRoomEntryWithSelectedCharacter())

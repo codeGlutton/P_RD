@@ -5,6 +5,7 @@
 #include "Components/WidgetSwitcher.h"
 #include "GameMode/FrontendGameMode.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
+#include "Styling/SlateTypes.h"
 #include "UI/CharacterSelectWidget.h"
 #include "UI/SettingsPanelWidget.h"
 
@@ -12,6 +13,30 @@ namespace
 {
 	// WBP_TitleMenu의 ScreenSwitcher 0번 슬롯은 메인 메뉴여야 한다. nullptr fallback이 이 인덱스에 의존한다.
 	constexpr int32 TitleMainScreenIndex = 0;
+
+	void KeepTitleButtonArtUntinted(UButton* Button)
+	{
+		if (Button == nullptr)
+		{
+			return;
+		}
+
+		Button->SetIsEnabled(true);
+		Button->SetRenderOpacity(1.0f);
+		Button->SetColorAndOpacity(FLinearColor::White);
+		Button->SetBackgroundColor(FLinearColor::White);
+
+		FButtonStyle Style = Button->GetStyle();
+		const FSlateBrush NormalBrush = Style.Normal;
+		Style.SetHovered(NormalBrush);
+		Style.SetPressed(NormalBrush);
+		Style.SetDisabled(NormalBrush);
+		Style.SetNormalForeground(FSlateColor(FLinearColor::White));
+		Style.SetHoveredForeground(FSlateColor(FLinearColor::White));
+		Style.SetPressedForeground(FSlateColor(FLinearColor::White));
+		Style.SetDisabledForeground(FSlateColor(FLinearColor::White));
+		Button->SetStyle(Style);
+	}
 }
 
 /** @brief ScreenSwitcher의 표시 대상을 바꾼다. */
@@ -95,7 +120,7 @@ void UTitleMenuWidget::RefreshMainMenuState() const
 	if (StartButton != nullptr)
 	{
 		StartButton->SetVisibility(ESlateVisibility::Visible);
-		StartButton->SetIsEnabled(true);
+		KeepTitleButtonArtUntinted(StartButton);
 	}
 
 	if (StartButtonText != nullptr)
@@ -106,7 +131,9 @@ void UTitleMenuWidget::RefreshMainMenuState() const
 	if (ContinueButton != nullptr)
 	{
 		ContinueButton->SetVisibility(bCanContinueRun ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-		ContinueButton->SetIsEnabled(bCanContinueRun);
+		// 비활성 버튼은 Slate가 전체 위젯에 DisabledEffect를 입혀 아트 색을 죽인다.
+		// 사용 불가 상태는 Collapsed로 표현하고, 보이는 버튼은 항상 원본 색을 유지한다.
+		KeepTitleButtonArtUntinted(ContinueButton);
 	}
 
 	if (ContinueButtonText != nullptr)
@@ -117,7 +144,7 @@ void UTitleMenuWidget::RefreshMainMenuState() const
 	if (SettingsButton != nullptr)
 	{
 		SettingsButton->SetVisibility(ESlateVisibility::Visible);
-		SettingsButton->SetIsEnabled(true);
+		KeepTitleButtonArtUntinted(SettingsButton);
 	}
 }
 

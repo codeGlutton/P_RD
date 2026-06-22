@@ -1,6 +1,30 @@
 #include "UI/CharacterCardWidget.h"
 
+#include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
+#include "Components/SizeBox.h"
+#include "Engine/Texture2D.h"
+#include "Styling/SlateTypes.h"
+
+namespace
+{
+	constexpr float CardButtonAspect = 2.0f;
+
+	const TCHAR* ResolveCharacterCardButtonTexturePath(EPlayerJobType JobType)
+	{
+		switch (JobType)
+		{
+		case EPlayerJobType::Knight:
+			return TEXT("/Game/SVN/OutSideAsset/AICreation/ClassSelect/classselect_knight_symbol_button_1024x512.classselect_knight_symbol_button_1024x512");
+		case EPlayerJobType::Archer:
+			return TEXT("/Game/SVN/OutSideAsset/AICreation/ClassSelect/classselect_rogue_symbol_button_1024x512.classselect_rogue_symbol_button_1024x512");
+		case EPlayerJobType::Mage:
+			return TEXT("/Game/SVN/OutSideAsset/AICreation/ClassSelect/classselect_mage_symbol_button_1024x512.classselect_mage_symbol_button_1024x512");
+		default:
+			return nullptr;
+		}
+	}
+}
 
 /** @brief 카드 데이터는 부모가 주입하므로 생성자는 별도 에셋/목록 조회를 하지 않는다. */
 UCharacterCardWidget::UCharacterCardWidget(const FObjectInitializer& ObjectInitializer)
@@ -57,7 +81,95 @@ void UCharacterCardWidget::SyncCard()
 		CardButton->SetIsEnabled(true);
 	}
 
+	ApplyCardButtonArt();
 	BP_OnCharacterOptionChanged(mCharacterOption, mIsSelected);
+}
+
+void UCharacterCardWidget::ApplyCardButtonArt()
+{
+	if (CardButton == nullptr)
+	{
+		return;
+	}
+
+	const TCHAR* TexturePath = ResolveCharacterCardButtonTexturePath(mCharacterOption.mJobType);
+	if (TexturePath == nullptr)
+	{
+		return;
+	}
+
+	UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, TexturePath);
+	if (Texture == nullptr || Texture->GetSizeX() <= 0 || Texture->GetSizeY() <= 0)
+	{
+		UE_LOG(LogRD, Warning, TEXT("CharacterCardWidget: failed to load card button texture: %s"), TexturePath);
+		return;
+	}
+
+	FitRootSizeBoxToButtonAspect();
+
+	CardButton->SetColorAndOpacity(FLinearColor::White);
+	CardButton->SetBackgroundColor(FLinearColor::White);
+	CardButton->SetRenderOpacity(1.0f);
+
+	FSlateBrush ButtonBrush;
+	ButtonBrush.DrawAs = ESlateBrushDrawType::Image;
+	ButtonBrush.Tiling = ESlateBrushTileType::NoTile;
+	ButtonBrush.Mirroring = ESlateBrushMirrorType::NoMirror;
+	ButtonBrush.ImageSize = FVector2D(1024.0f, 512.0f);
+	ButtonBrush.SetResourceObject(Texture);
+
+	FButtonStyle ButtonStyle = CardButton->GetStyle();
+	ButtonStyle.SetNormal(ButtonBrush);
+	ButtonStyle.SetHovered(ButtonBrush);
+	ButtonStyle.SetPressed(ButtonBrush);
+	ButtonStyle.SetDisabled(ButtonBrush);
+	ButtonStyle.SetNormalPadding(FMargin(0.0f));
+	ButtonStyle.SetPressedPadding(FMargin(0.0f));
+	ButtonStyle.SetNormalForeground(FSlateColor(FLinearColor::White));
+	ButtonStyle.SetHoveredForeground(FSlateColor(FLinearColor::White));
+	ButtonStyle.SetPressedForeground(FSlateColor(FLinearColor::White));
+	ButtonStyle.SetDisabledForeground(FSlateColor(FLinearColor::White));
+	CardButton->SetStyle(ButtonStyle);
+}
+
+void UCharacterCardWidget::FitRootSizeBoxToButtonAspect() const
+{
+	USizeBox* RootSizeBox = Cast<USizeBox>(GetRootWidget());
+	if (RootSizeBox == nullptr && WidgetTree != nullptr)
+	{
+		WidgetTree->ForEachWidget([&RootSizeBox](UWidget* Widget)
+		{
+			if (RootSizeBox == nullptr)
+			{
+				RootSizeBox = Cast<USizeBox>(Widget);
+			}
+		});
+	}
+	if (RootSizeBox == nullptr)
+	{
+		return;
+	}
+
+	float TargetWidth = RootSizeBox->IsWidthOverride() ? RootSizeBox->GetWidthOverride() : 0.0f;
+	float TargetHeight = RootSizeBox->IsHeightOverride() ? RootSizeBox->GetHeightOverride() : 0.0f;
+	if (TargetWidth <= 0.0f && TargetHeight <= 0.0f)
+	{
+		return;
+	}
+
+	if (TargetHeight > 0.0f)
+	{
+		TargetWidth = TargetHeight * CardButtonAspect;
+	}
+	else
+	{
+		TargetHeight = TargetWidth / CardButtonAspect;
+	}
+
+	RootSizeBox->SetWidthOverride(TargetWidth);
+	RootSizeBox->SetHeightOverride(TargetHeight);
+	RootSizeBox->SetMinDesiredWidth(TargetWidth);
+	RootSizeBox->SetMinDesiredHeight(TargetHeight);
 }
 
 /** @brief WBP_CharacterCard가 제공해야 하는 루트 버튼 바인딩 누락을 로그로 노출한다. */
