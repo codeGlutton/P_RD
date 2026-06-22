@@ -1,7 +1,9 @@
 #include "UI/TitleMenuWidget.h"
 
 #include "Components/Button.h"
+#include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Engine/Texture2D.h"
 #include "UI/CharacterSelectWidget.h"
 #include "UI/SettingsPanelWidget.h"
 
@@ -86,6 +88,12 @@ void UTitleMenuWidget::NativeConstruct()
 	RefreshMainMenuState();
 	ShowMainScreen();
 	SetStatusText(FText::GetEmpty());
+}
+
+void UTitleMenuWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+	FitTitleBackgroundVideoToViewport();
 }
 
 /** @brief Construct에서 붙인 이벤트를 제거해 재Construct 시 중복 호출을 막는다. */
@@ -226,3 +234,4 @@ void UTitleMenuWidget::ValidateDesignerBindings() const
 
 	SetStatusText(FText::GetEmpty());
 }
+
