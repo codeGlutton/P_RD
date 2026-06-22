@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "AttributSet/AttributeSetMinimal.h"
+#include "AttributeSet/AttributeSetMinimal.h"
 #include "AttributeSet.h"
 
 #include "LevelAttributeSet.generated.h"
