@@ -1,6 +1,6 @@
 ﻿#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 
-#include "Singleton/WorldSubsystem/PresentationSyncSubsystem.h"
+#include "Singleton/WorldSubsystem/PresentationBarrier.h"
 #include "Simulation/Factory/ObjectModelFactory.h"
 
 #include "SRPGFramework/SRPGCommand.h"
@@ -89,11 +89,8 @@ void USRPGCombatModel::BeginCombat()
 
 	UE_LOG(LogSRPGCombat, Log, TEXT("SRPG 전투 시작"))
 
-	UPresentationSyncSubsystem* PresentationSyncSubsystem = GetWorld()->GetSubsystem<UPresentationSyncSubsystem>();
-	checkf(PresentationSyncSubsystem != nullptr, TEXT("연출 동기화 서브시스템 nullptr"));
-
 	// 전투 시작 시, 보여지는 UI의 애니메이션의 특정 시점 종료 이후 전투 로직이 시작됨
-	auto PresentationBarrier = PresentationSyncSubsystem->MakePresentationBarrier(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+	auto PresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
 		for (TObjectPtr<UUnitModel>& Unit : mUnits)
 		{
 			// 현 스텟을 캡처
@@ -130,11 +127,8 @@ void USRPGCombatModel::EndCombat()
 		//UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Unit, AbilityTags::GameplayAbility_Passive_OnEndRoom, MoveTemp(EventData));
 	}
 
-	UPresentationSyncSubsystem* PresentationSyncSubsystem = GetWorld()->GetSubsystem<UPresentationSyncSubsystem>();
-	checkf(PresentationSyncSubsystem != nullptr, TEXT("연출 동기화 서브시스템 nullptr"));
-
 	// 전투 종료 시, 보여지는 UI의 애니메이션의 특정 시점 종료 이후 맵 보상 로직이 시작됨
-	auto PresentationBarrier = PresentationSyncSubsystem->MakePresentationBarrier(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+	auto PresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
 		
 		// TODO : 보상 로직
 

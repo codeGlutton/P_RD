@@ -8,8 +8,6 @@
 #pragma once
 
 #include "AttributeSet/AttributeSetMinimal.h"
-#include "AttributeSet.h"
-
 #include "UnitAttributeSet.generated.h"
 
 /**
@@ -19,7 +17,6 @@
 // NOTE :	PreAttributeChange
 //			PostAttributeChange
 //			작동 할 수 있도록 구현해야 함
-
 UCLASS()
 class P_RD_API UUnitAttributeSet : public UAttributeSet
 {

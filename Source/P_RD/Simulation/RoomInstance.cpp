@@ -10,11 +10,19 @@ void URoomInstance::CollectGameDatas()
 
 	/* 데이터 채우기 */
 
+	UWorld* World = GetWorld();
+	if (World != nullptr)
 	{
-		UPersistentDataSubsystem* PersistentSubsystem = UGameplayStatics::GetGameInstance(GetWorld())->GetSubsystem<UPersistentDataSubsystem>();
-		checkf(PersistentSubsystem != nullptr, TEXT("영구 데이터 서브시스템 nullptr"));
-
-		mEventStreamPtr = &PersistentSubsystem->GetRunPersistData()->GetEventStream();
+		UGameInstance* GameInstance = UGameplayStatics::GetGameInstance(World);
+		if (GameInstance != nullptr)
+		{
+			UPersistentDataSubsystem* PersistentSubsystem = GameInstance->GetSubsystem<UPersistentDataSubsystem>();
+			if (PersistentSubsystem != nullptr)
+			{
+				UE_LOG(LogRD, Log, TEXT("게임 룸 인스턴스 채우기 완료"));
+				mEventStreamPtr = &PersistentSubsystem->GetRunPersistData()->GetEventStream();
+			}
+		}
 	}
 }
 
@@ -27,16 +35,21 @@ void URoomInstance::CollectSimulationDatas()
 	mCopiedData.InitializeAs<FRoomCopyData>();
 	FRoomCopyData& CopyData = mCopiedData.GetMutable();
 
-	{
-		UPersistentDataSubsystem* PersistentSubsystem = UGameplayStatics::GetGameInstance(GetWorld())->GetSubsystem<UPersistentDataSubsystem>();
-		checkf(PersistentSubsystem != nullptr, TEXT("영구 데이터 서브시스템 nullptr"));
-
-		CopyData.mCopiedEventStream = PersistentSubsystem->GetRunPersistData()->GetEventStream();
-	}
-
 	/* 데이터 채우기 */
 
+	UWorld* World = GetWorld();
+	if (World != nullptr)
 	{
-		mEventStreamPtr = &CopyData.mCopiedEventStream;
+		UGameInstance* GameInstance = UGameplayStatics::GetGameInstance(World);
+		if (GameInstance != nullptr)
+		{
+			UPersistentDataSubsystem* PersistentSubsystem = GameInstance->GetSubsystem<UPersistentDataSubsystem>();
+			if (PersistentSubsystem != nullptr)
+			{
+				UE_LOG(LogRD, Log, TEXT("시뮬 룸 인스턴스 채우기 완료"));
+				CopyData.mCopiedEventStream = PersistentSubsystem->GetRunPersistData()->GetEventStream();
+				mEventStreamPtr = &CopyData.mCopiedEventStream;
+			}
+		}
 	}
 }
