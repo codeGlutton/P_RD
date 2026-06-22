@@ -1,10 +1,18 @@
 ﻿#include "Setting/ModelViewMapping.h"
 
-FModelViewMapping::FModelViewMapping(UClass* ModelClass) : mModelClass(ModelClass)
+FSubsystemModelViewMapping::FSubsystemModelViewMapping(UClass* ModelClass) : mModelClass(ModelClass)
 {
 
 }
 
-FModelViewMapping::FModelViewMapping(TSoftClassPtr<UObjectModel> ModelClass) : mModelClass(ModelClass)
+FSubsystemModelViewMapping::FSubsystemModelViewMapping(TSoftClassPtr<UObjectModel> ModelClass) : mModelClass(ModelClass)
+{
+}
+
+FWorldModelViewMapping::FWorldModelViewMapping(UClass* ModelClass) : mModelClass(ModelClass)
+{
+}
+
+FWorldModelViewMapping::FWorldModelViewMapping(TSoftClassPtr<UObjectModel> ModelClass) : mModelClass(ModelClass)
 {
 }

@@ -5,7 +5,6 @@
 #include "SkillComponent/SkillCommitResultHolder.h"
 #include "../FunctionLibrary/CombatCalculator/CombatCalculatorFunctionLibrary.h"
 //#include "../FunctionLibrary/CommandLog/CommandLogFunctionLibrary.h"
-#include "SRPGFramework/TileActor.h"
 #include "Pawn/Unit.h"
 
 // Sets default values for this component's properties

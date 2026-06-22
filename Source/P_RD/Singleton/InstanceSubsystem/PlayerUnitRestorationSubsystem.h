@@ -16,7 +16,7 @@
  // Player Unit Restoration 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogPlayerUnitRestoration, Log, All)
 
-class APlayerUnit;
+class UPlayerUnitModel;
 
 /**
  * @brief  플레이어 유닛 복구 Subsystem
@@ -27,6 +27,6 @@ class P_RD_API UPlayerUnitRestorationSubsystem : public UGameInstanceSubsystem, 
 	GENERATED_BODY()
 
 public:
-	APlayerUnit* SpawnPlayerUnit(UWorld* World) const;
-	void RegisterPlayerUnit(APlayerUnit* PlayerUnit) const;
+	UPlayerUnitModel* SpawnPlayerUnit(UWorld* World) const;
+	void RegisterPlayerUnit(UPlayerUnitModel* PlayerUnit) const;
 };

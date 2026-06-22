@@ -4,7 +4,7 @@
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/InstanceSubsystem/RoomTransitionSubsystem.h"
 #include "Singleton/InstanceSubsystem/PlayerUnitRestorationSubsystem.h"
-#include "Pawn/Player/PlayerUnit.h"
+#include "Pawn/Player/PlayerUnitModel.h"
 
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Blueprint/UserWidget.h"
@@ -547,7 +547,7 @@ void ARoomGameModeBase::RestorePlayerUnit()
 	UPlayerUnitRestorationSubsystem* PlayerUnitRestorationSubsystem = GetGameInstance()->GetSubsystem<UPlayerUnitRestorationSubsystem>();
 	checkf(PlayerUnitRestorationSubsystem != nullptr, TEXT("플레이어 유닛 복원 서브시스템 nullptr 오류"));
 
-	APlayerUnit* PlayerUnit = PlayerUnitRestorationSubsystem->SpawnPlayerUnit(GetWorld());
+	UPlayerUnitModel* PlayerUnit = PlayerUnitRestorationSubsystem->SpawnPlayerUnit(GetWorld());
 	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 스폰 오류"));
 
 	PlayerUnitRestorationSubsystem->RegisterPlayerUnit(PlayerUnit);
@@ -612,7 +612,7 @@ bool ARoomGameModeBase::IsRoomSelectable(int32 RoomRow, int32 RoomColumn) const
  * InitializeCommonRoom()에서 RestorePlayerUnit()이 성공하면 mPlayerUnit에 등록된다.
  * 전투/상점/보상 처리처럼 현재 플레이어 유닛이 필요한 시스템은 이 접근자를 통해 GameMode가 보관한 유닛을 조회한다.
  */
-AUnit* ARoomGameModeBase::GetPlayerUnit() const
+UPlayerUnitModel* ARoomGameModeBase::GetPlayerUnit() const
 {
 	return mPlayerUnit.Get();
 }

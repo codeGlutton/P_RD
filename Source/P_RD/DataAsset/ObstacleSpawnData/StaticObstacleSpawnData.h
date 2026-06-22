@@ -12,23 +12,45 @@
 #include "DataAsset/BundleType.h"
 #include "StaticObstacleSpawnData.generated.h"
 
+class UBoardActorModel;
+
 /**
  * @brief  장애물 생성 시 사용되는 정적 Data Asset
  */
 UCLASS()
-class P_RD_API UStaticObstacleSpawnData : public UDataAsset
+class P_RD_API UStaticObstacleSpawnData : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 
 public:
-    UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Class", MustImplement = "/Script/P_RD.TileActor", AssetBundles = "Actor"))
-    TSoftClassPtr<AActor> mClass;
+    FPrimaryAssetId GetPrimaryAssetId() const override
+    {
+        return FPrimaryAssetId(ObstaclePrimaryAssetTypes::GetObstacleType(), GetFName());
+    }
 
 public:
-    UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Portrait", AssetBundles = "UI"))
-    TSoftObjectPtr<UTexture2D> mPortrait;
-    UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Name"))
-    FText mName;
+    void PostLoad() override;
+
+#if WITH_EDITOR
+public:
+    void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+    EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
+#endif
+
+public:
+    FName GetKeyName() const;
+
+public:
+    UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ModelClass", AssetBundles = "Actor"))
+    TSoftClassPtr<UBoardActorModel> mModelClass;
+    UPROPERTY(Category = "Spawn", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "UnitClass", MustImplement = "/Script/P_RD.ActorView",  AssetBundles = "Actor"))
+    TSoftClassPtr<AActor> mViewClass;
+
+public:
+    UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Icon", AssetBundles = "UI"))
+    TSoftObjectPtr<UTexture2D> mIcon;
+    UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DisplayName"))
+    FText mDisplayName;
     UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Description", MultiLine = true))
     FText mDescription;
 };

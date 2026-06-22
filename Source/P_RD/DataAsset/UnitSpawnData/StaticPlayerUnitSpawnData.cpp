@@ -1,14 +1,11 @@
 ﻿#include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
-
-#include "Singleton/InstanceSubsystem/PersistentDataSubsystem.h"
-#include "GAS/GASMinimal.h"
-#include "GAS/Attribute/UnitAttributeSet.h"
-
-#include "Pawn/Player/PlayerUnit.h"
+#include "Pawn/Player/PlayerUnitModel.h"
 
 #if WITH_EDITOR
 #include "Misc/DataValidation.h"
+#endif
 
+#if WITH_EDITOR
 /**
  * @brief 에디터에서 생성 클래스가 변경되면 플레이어 직업 타입을 동기화한다.
  * @param PropertyChangedEvent 변경된 프로퍼티 정보
@@ -17,15 +14,15 @@ void UStaticPlayerUnitSpawnData::PostEditChangeProperty(FPropertyChangedEvent& P
 {
     Super::PostEditChangeProperty(PropertyChangedEvent);
 
-    if (PropertyChangedEvent.Property && PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(UStaticUnitSpawnData, mUnitClass))
+    if (PropertyChangedEvent.Property && PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(UStaticPlayerUnitSpawnData, mViewClass))
     {
-        if (mUnitClass.IsNull() == true)
+        if (mViewClass.IsNull() == true)
         {
             mJobType = EPlayerJobType::None;
         }
         else
         {
-            mJobType = GetDefault<APlayerUnit>(mUnitClass.Get())->GetPlayerJobType();
+            mJobType = GetDefault<UPlayerUnitModel>(mModelClass.LoadSynchronous())->GetPlayerJobType();
         }
     }
 }
@@ -66,7 +63,7 @@ EDataValidationResult UStaticPlayerUnitSpawnData::IsDataValid(FDataValidationCon
  */
 float UStaticPlayerUnitSpawnData::GetDefaultMaxHP(int32 Difficulty) const
 {
-    UAbilitySystemGlobals* AbilitySystemGlobals = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals();
+    /*UAbilitySystemGlobals* AbilitySystemGlobals = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals();
     AbilitySystemGlobals->InitGlobalData();
     auto MaxHPArray = AbilitySystemGlobals->GetAttributeSetInitter()->GetAttributeSetValues(
         UPlayerUnitAttributeSet::StaticClass(), 
@@ -78,7 +75,9 @@ float UStaticPlayerUnitSpawnData::GetDefaultMaxHP(int32 Difficulty) const
     {
         return 0.f;
     }
-    return MaxHPArray[Difficulty];
+    return MaxHPArray[Difficulty];*/
+
+    return 0.f;
 }
 
 /**
@@ -97,7 +96,7 @@ float UStaticPlayerUnitSpawnData::GetDefaultMaxHP(int32 Difficulty) const
  */
 float UStaticPlayerUnitSpawnData::GetDefaultMoney(int32 Difficulty) const
 {
-    UAbilitySystemGlobals* AbilitySystemGlobals = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals();
+   /* UAbilitySystemGlobals* AbilitySystemGlobals = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals();
     AbilitySystemGlobals->InitGlobalData();
     auto MoneyArray = AbilitySystemGlobals->GetAttributeSetInitter()->GetAttributeSetValues(
         UPlayerUnitAttributeSet::StaticClass(),
@@ -109,5 +108,7 @@ float UStaticPlayerUnitSpawnData::GetDefaultMoney(int32 Difficulty) const
     {
         return 0.f;
     }
-    return MoneyArray[Difficulty];
+    return MoneyArray[Difficulty];*/
+
+    return 0.f;
 }

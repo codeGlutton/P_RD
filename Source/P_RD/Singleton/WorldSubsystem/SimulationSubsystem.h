@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
+#include "Simulation/SimulationType.h"
 #include "Simulation/Logger/EventLog.h"
 #include "Simulation/RoomContext.h"
 #include "SimulationSubsystem.generated.h"
@@ -20,15 +21,7 @@ struct FRoomContext;
 class UEventLogger;
 class UObjectModelFactory;
 
-/**
- * @brief 시뮬레이션 상태 열거형
- */
-UENUM(BlueprintType)
-enum class ESRPGSimulationState : uint8
-{
-	RunningGame        UMETA(ToolTip = "인 게임 진행 중"),
-	RunningSimulation  UMETA(ToolTip = "시물레이션 진행 중"),
-};
+class UObjectModel;
 
 /**
  * @brief  SRPG 시뮬레이션을 처리하는 서브시스템
@@ -40,7 +33,8 @@ class P_RD_API USimulationSubsystem : public UWorldSubsystem
 
 	/* UWorldSubsystem 상속 */
 public:
-	void Initialize(FSubsystemCollectionBase& Collection) override;
+	void PostInitialize() override;
+	void PreDeinitialize() override;
 
 	/* 시뮬레이션 함수 */
 public:
@@ -59,9 +53,24 @@ protected:
 	void SetSimulationState(ESRPGSimulationState State);
 
 public:
+	UObjectModel* GetSubsystemModel(UClass* Class) const;
+
+	template<typename T>
+	T* GetSubsystemModel() const
+	{
+		static_assert(TIsDerivedFrom<T, UObjectModel>::IsDerived, "UObjectModel를 상속해야 함");
+
+		if (mCurrentRoomContext == nullptr || mCurrentRoomContext->mRoomInstance == nullptr)
+		{
+			return nullptr;
+		}
+		return Cast<T>(GetSubsystemModel(T::StaticClass()));
+	}
+
+public:
 	const FRandomStream& GetEventStream() const;
-	UEventLogger* GetEventLogger() const;
-	UObjectModelFactory* GetModelFactory() const;
+	UEventLogger& GetEventLogger() const;
+	UObjectModelFactory& GetModelFactory() const;
 
 	ESRPGSimulationState GetSimulationState() const;
 
@@ -75,3 +84,4 @@ protected:
 	UPROPERTY(Category = Context, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SimulationRoomContext"))
 	FRoomContext mSimulationRoomContext;
 };
+

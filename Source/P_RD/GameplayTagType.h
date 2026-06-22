@@ -1,8 +1,8 @@
 ﻿/*****************************************************************//**
- * @file   GASTag.h
+ * @file   GameplayTagType.h
  * @brief  사용되는 태그 정의 매크로를 모아둔 파일
  * @details
- * 태그 매크로 규칙은 @subpage gas_tag_page 참고
+ * 태그 매크로 규칙은 @subpage gameplay_tag_page 참고
  * @author 모호재
  * @date   2026-04-25
  *********************************************************************/
@@ -10,7 +10,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-
 #include "NativeGameplayTags.h"
 
 /**

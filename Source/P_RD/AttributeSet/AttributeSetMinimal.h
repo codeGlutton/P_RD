@@ -1,6 +1,6 @@
 ﻿/*****************************************************************//**
- * @file   GASMinimal.h
- * @brief  GAS 활용 영역에서 사용되는 포함 헤더
+ * @file   AttributeSetMinimal.h
+ * @brief  AttributeSet 활용 영역에서 사용되는 포함 헤더
  * @author 모호재
  * @date   2026-04-24
  *********************************************************************/
@@ -10,18 +10,10 @@
 #include "RDMinimal.h"
 
 #include "GameplayAbilitiesModule.h"
-
 #include "AbilitySystemGlobals.h"
-#include "AbilitySystemInterface.h"
-#include "AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
-#include "GameplayEffectExtension.h"
 
-#include "GameplayCueManager.h"
-#include "GameplayCueNotify_Static.h"
-#include "GameplayCueSet.h"
-
-#include "GAS/GASTag.h"
+#include "AttributeSet.h"
 
 /**
  * @brief Gameplay Attribute의 Get/Set 등의 접근 함수 자동 정의 매크로
