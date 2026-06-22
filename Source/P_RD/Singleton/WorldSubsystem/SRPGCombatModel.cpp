@@ -365,7 +365,7 @@ void USRPGCombatModel::RegisterEnemyUnit(FEnemyUnitPlacementData& EnemyPlacement
 	UUnitModel* EnemyUnit = GetWorldModelFactory(this)->NewModelDeferred<UUnitModel>(EnemyUnitSpawnData->mModelClass.Get());
 	EnemyUnit->SetStaticSpawnData(EnemyUnitSpawnData);
 	EnemyUnit->FinishCreating(mTileMap->TileToWorldTransform(EnemyPlacementData.mTransform));
-	EnemyUnit->OnUnitDied.AddDynamic(this, &USRPGCombatModel::PostUnitDeath);
+	EnemyUnit->OnUnitDied.AddDynamic(this, &USRPGCombatModel::OnUnitDied);
 
 	checkf(mTileMap->CanPlace(EnemyPlacementData.mTransform.mIndex, EnemyUnit), TEXT("액터 배치 불가능"));
 	
@@ -410,7 +410,7 @@ void USRPGCombatModel::RegisterPlayerUnit(UUnitModel* PlayerUnit, const FTileTra
 	checkf(mTileMap != nullptr, TEXT("타일맵 미존재"));
 	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
 
-	PlayerUnit->OnUnitDied.AddDynamic(this, &USRPGCombatModel::PostUnitDeath);
+	PlayerUnit->OnUnitDied.AddDynamic(this, &USRPGCombatModel::OnUnitDied);
 
 	// 타일 위에 배치
 	mTileMap->PlaceActor(Transform, PlayerUnit);
@@ -502,7 +502,7 @@ void USRPGCombatModel::NotifyRoundEndIfNeeded()
 	}
 }
 
-void USRPGCombatModel::PostUnitDeath(UUnitModel* UnitModel)
+void USRPGCombatModel::OnUnitDied(UUnitModel* UnitModel)
 {
 	UnregisterTurns(UnitModel);
 	EvaluateCombatStates();

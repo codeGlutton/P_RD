@@ -112,7 +112,7 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleWorldTraceCommand(const TInstance
                 {
                     /* 목적지 선택 단계에서 한단계 취소 시, 빌드 자체 종료 */
 
-                    EndAction(ESRPGActionResult::Cancelled);
+                    MarkActionCompleted(ESRPGActionResult::Cancelled);
                     Result = ESRPGCommandResult::Handled;
                     break;
                 }
@@ -131,7 +131,7 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleWorldTraceCommand(const TInstance
                     if (mTargetIndex == TargetTileIndex)
                     {
                         BuildMove();
-                        EndAction(ESRPGActionResult::Succeeded);
+                        MarkActionCompleted(ESRPGActionResult::Succeeded);
                         Result = ESRPGCommandResult::Handled;
                         break;
                     }

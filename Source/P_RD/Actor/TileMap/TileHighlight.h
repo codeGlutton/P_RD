@@ -21,6 +21,8 @@ enum class ETileHighlightFlag : uint8
 	Aim		= 1 << 0	UMETA(ToolTip = "조준 범위"),
 	Select	= 1 << 1	UMETA(ToolTip = "선택된 타일"),
 	Effect	= 1 << 2	UMETA(ToolTip = "영향 범위"),
+
+	All		= Aim | Select | Effect,
 };
 ENUM_CLASS_FLAGS(ETileHighlightFlag)
 

@@ -12,11 +12,13 @@
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "SRPGCommandRouterModel.generated.h"
 
+struct FSRPGCommand;
+class ISRPGCommandHandler;
+
 // SRPG Command 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogSRPGCommandRouter, Log, All)
 
-struct FSRPGCommand;
-class ISRPGCommandHandler;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHandleCommand, ESRPGCommandResult, Result);
 
 /**
  * @brief  SRPG 유저 명령을 전달하는 서브시스템 모델
@@ -40,6 +42,10 @@ public:
 
 protected:
 	ESRPGCommandResult HandleFallbackCommand(const TInstancedStruct<FSRPGCommand>& Command);
+
+public:
+	UPROPERTY(Category = Event, BlueprintAssignable)
+	FOnHandleCommand OnHandleCommand;
 
 protected:
 	// @brief 등록된 명령 처리자들

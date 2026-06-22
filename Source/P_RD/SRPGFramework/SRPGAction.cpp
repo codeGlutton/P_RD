@@ -5,7 +5,7 @@
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
-#include "Singleton/WorldSubsystem/PresentationSyncSubsystem.h"
+#include "Singleton/WorldSubsystem/PresentationBarrier.h"
 
 #include "ObjectView.h"
 #include "Actor/BoardActor/BoardActorModel.h"
@@ -31,9 +31,7 @@ void USRPGAction::BeginAction()
 	mActionPhase = ESRPGActionPhase::ActionStart;
 
 	// 시작 연출 시작
-	UPresentationSyncSubsystem* PresentationSyncSubsystem = GetWorld()->GetSubsystem<UPresentationSyncSubsystem>();
-	checkf(PresentationSyncSubsystem != nullptr, TEXT("연출 동기화 서브시스템 nullptr"));
-	auto PresentationBarrier = PresentationSyncSubsystem->MakePresentationBarrier(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+	TSharedPtr<FPresentationBarrier> PresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
 		checkf(mActionPhase == ESRPGActionPhase::ActionStart, TEXT("액션 실행 절차 오류"));
 		mActionPhase = ESRPGActionPhase::ActionPlay;
 		
@@ -60,16 +58,8 @@ void USRPGAction::TickAction(float DeltaTime)
 	OnTickAction(DeltaTime);
 }
 
-void USRPGAction::EndAction(ESRPGActionResult Result)
+void USRPGAction::EndAction()
 {
-	if (mActionPhase == ESRPGActionPhase::ActionPlay)
-	{
-		/* 정상 종료 시, 원하는 결과로 반영 */
-
-		mActionPhase = ESRPGActionPhase::ActionAbort;
-		mActionResult = Result;
-	}
-
 	checkf(mActionPhase == ESRPGActionPhase::ActionAbort, TEXT("액션 종료 절차 오류"));
 	mActionPhase = ESRPGActionPhase::ActionEnd;
 
@@ -89,14 +79,31 @@ void USRPGAction::EndAction(ESRPGActionResult Result)
 	CombatModel->EvaluateCombatStates();
 
 	// 종료 연출 시작
-	UPresentationSyncSubsystem* PresentationSyncSubsystem = GetWorld()->GetSubsystem<UPresentationSyncSubsystem>();
-	checkf(PresentationSyncSubsystem != nullptr, TEXT("연출 동기화 서브시스템 nullptr"));
-	auto PresentationBarrier = PresentationSyncSubsystem->MakePresentationBarrier(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+	TSharedPtr<FPresentationBarrier> PresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
 		USRPGTurnContext* TurnContext = mParent.Get();
 		checkf(TurnContext != nullptr, TEXT("이미 제거된 턴에서 Action 종료 명령 오류"));
 		TurnContext->OnEndCurrentAction(this, mActionResult);
 		}));
 	OnEndActionUI.Broadcast(PresentationBarrier, this, mActionResult);
+}
+
+void USRPGAction::MarkActionCompleted(ESRPGActionResult Result)
+{
+	if (mActionPhase == ESRPGActionPhase::ActionPlay)
+	{
+		/* 정상 종료 시, 원하는 결과로 반영 */
+
+		mActionPhase = ESRPGActionPhase::ActionAbort;
+		mActionResult = Result;
+	}
+}
+
+void USRPGAction::TryEndAction()
+{
+	if (mActionPhase == ESRPGActionPhase::ActionAbort)
+	{
+		EndAction();
+	}
 }
 
 void USRPGAction::OnBeginAction()
@@ -138,7 +145,7 @@ ESRPGCommandResult USRPGAction::HandleCommand(const TInstancedStruct<FSRPGComman
 	return ESRPGCommandResult::Ignored;
 }
 
-void USRPGAction::ReserveInitializeCommand(TInstancedStruct<FSRPGCommand>&& Command)
+void USRPGAction::ReserveInitializeCommand(TInstancedStruct<FSRPGCommand> Command)
 {
 	mInitializeCommand = MoveTemp(Command);
 }

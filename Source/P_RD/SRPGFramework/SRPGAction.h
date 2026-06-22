@@ -32,13 +32,22 @@ class USRPGAction : public UObject, public ISRPGCommandHandler
 	GENERATED_BODY()
 
 	friend class USRPGTurnContext;
+	friend class USRPGActionCreationCommandHandler;
 
 	/* 생명 주기 함수 */
 protected:
 	void InitAction(USRPGTurnContext* Parent, UUnitModel* Instigator);
 	void BeginAction();
 	void TickAction(float DeltaTime);
-	void EndAction(ESRPGActionResult Result);
+	void EndAction();
+
+protected:
+	/**
+	 * 액션 내부에서 종료됨을 알리는 함수
+	 * @param Result 결과
+	 */
+	void MarkActionCompleted(ESRPGActionResult Result);
+	void TryEndAction();
 
 protected:
 	virtual void OnBeginAction();
@@ -54,7 +63,7 @@ protected:
 	ESRPGCommandResult HandleCommand(const TInstancedStruct<FSRPGCommand>& Command) override;
 
 protected:
-	void ReserveInitializeCommand(TInstancedStruct<FSRPGCommand>&& Command);
+	void ReserveInitializeCommand(TInstancedStruct<FSRPGCommand> Command);
 
 	/* 헬퍼 함수 */
 protected:

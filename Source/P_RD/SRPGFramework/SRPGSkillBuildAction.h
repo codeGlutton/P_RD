@@ -72,16 +72,28 @@ protected:
 
 	/* 빌드 로직 처리 */
 private:
-	void ChangeDices(int32 RequestedDiceIndex);
-
 	void SetSkill(int32 SkillIndex);
-	void ResetSkill();
-	void SetTargetTile(const FTileIndex& TileIndex);
-	void ResetTargetTile();
+	void ChangeDices(int32 RequestedDiceIndex);
+	void SetTargetTile(const FTileIndex& TargetIndex);
 	void BuildSkill();
 
 private:
+	void ResetSkill();
+	void ResetDice();
+	void ResetTargetTile();
+
+private:
+	void ClearAllTileHighlights();
+	void RefreshAimableTileHighlights();
+	void RefreshEffectTileHighlights();
+
+private:
 	void SetBuildPhase(ESRPGSkillBuildPhase BuildPhase);
+
+	/* 헬퍼 */
+private:
+	// @brief 턴 컨텍스트 → 전투 모델 → 타일 맵 모델을 꺼내온다
+	UTileMapModel* GetTileMap() const;
 
 protected:
 	FOnChangeSkillBuildPhase OnChangeSkillBuildPhase;
@@ -91,8 +103,8 @@ protected:
 	ESRPGSkillBuildPhase mSkillBuildPhase = ESRPGSkillBuildPhase::None;
 
 protected:
-	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "AimTileIndexes"))
-	TArray<FTileIndex> mAimTileIndexes;
+	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ReachableTileIndexes"))
+	TArray<FTileIndex> mReachableTileIndexes;
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectedSkill"))
 	TObjectPtr<UStaticSkillData> mSelectedSkill;
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectedSkillIndex"))
@@ -107,7 +119,5 @@ protected:
 	TArray<FTileIndex> mEffectTileIndexes;
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TargetIndex"))
 	FTileIndex mTargetIndex = FTileIndex::Invalid;
-	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "CalculationResult"))
-	FSkillCommitResult mCalculationResult;
 };
 

@@ -5,7 +5,7 @@
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
-#include "Singleton/WorldSubsystem/PresentationSyncSubsystem.h"
+#include "Singleton/WorldSubsystem/PresentationBarrier.h"
 
 #include "Pawn/UnitModel.h"
 
@@ -38,14 +38,9 @@ ESRPGCommandResult USRPGActionCreationCommandHandler::HandleCommand(const TInsta
 		return ESRPGCommandResult::Ignored;
 	}
 
-	// TODO : 생성한 명령을 ReserveInitializeCommand 호출해야 나중에 BeginAction이 OnBeginAction 직전에
-	//        mInitializeCommand를 체크해서 HandleCommand 할 수 있는 것으로 보임
-	//        현재는 코드가 없어서 SkillBuildAction, SkillAction, MoveBuildAction, MoveAction 모두
-	//        자기 생성 명령을 못 받아서 빈 상태로 시작될 것 같음
-	//        ReserveInitializeCommand가 protected라 확인 필요
-    // by 이문환
+	/* 새로운 액션에 명령 예약 걸고 넣기 */
 
-	/* 새로운 Action 생성 후 등록 */
+	NewAction->ReserveInitializeCommand(Command);
 
 	USRPGTurnContext* TurnContext = mParent.Get();
 	checkf(TurnContext != nullptr, TEXT("턴 컨텍스트 nullptr"));
@@ -85,9 +80,7 @@ void USRPGTurnContext::BeginTurn()
 	UE_LOG(LogSRPGCombat, Log, TEXT("턴 시작"));
 
 	// 턴 시작 연출
-	UPresentationSyncSubsystem* PresentationSyncSubsystem = GetWorld()->GetSubsystem<UPresentationSyncSubsystem>();
-	checkf(PresentationSyncSubsystem != nullptr, TEXT("연출 동기화 서브시스템 nullptr"));
-	auto PresentationBarrier = PresentationSyncSubsystem->MakePresentationBarrier(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+	TSharedPtr<FPresentationBarrier> PresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
 
 		// 턴 실행
 		checkf(mTurnPhase == ESRPGTurnPhase::TurnStart, TEXT("턴 진입 절차 오류"));
@@ -98,6 +91,7 @@ void USRPGTurnContext::BeginTurn()
 		checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
 		for (TScriptInterface<ISRPGCommandHandler>& TurnDefaultCommandHandler : mTurnDefaultCommandHandlers)
 		{
+			CommandRouterModel->OnHandleCommand.AddDynamic(this, &USRPGTurnContext::OnHandleCommand);
 			CommandRouterModel->RegisterCommandHandler(TurnDefaultCommandHandler);
 		}
 
@@ -145,6 +139,7 @@ void USRPGTurnContext::TickTurn(float DeltaTime)
 	if (mTurnPhase == ESRPGTurnPhase::TurnPlay && mReservedActions.Num() > mHeadActionIndex)
 	{
 		mReservedActions[mHeadActionIndex]->TickAction(DeltaTime);
+		mReservedActions[mHeadActionIndex]->TryEndAction();
 	}
 }
 
@@ -167,9 +162,7 @@ void USRPGTurnContext::EndTurn()
 	mOwner->OnEndTurn();
 
 	// 턴 종료 연출
-	UPresentationSyncSubsystem* PresentationSyncSubsystem = GetWorld()->GetSubsystem<UPresentationSyncSubsystem>();
-	checkf(PresentationSyncSubsystem != nullptr, TEXT("연출 동기화 서브시스템 nullptr"));
-	auto PresentationBarrier = PresentationSyncSubsystem->MakePresentationBarrier(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+	TSharedPtr<FPresentationBarrier> PresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
 		if (IsPermanent() == false)
 		{
 			--mLifeCount;
@@ -182,6 +175,7 @@ void USRPGTurnContext::EndTurn()
 		for (TScriptInterface<ISRPGCommandHandler>& TurnDefaultCommandHandler : mTurnDefaultCommandHandlers)
 		{
 			CommandRouterModel->UnregisterCommandHandler(TurnDefaultCommandHandler);
+			CommandRouterModel->OnHandleCommand.RemoveDynamic(this, &USRPGTurnContext::OnHandleCommand);
 		}
 
 		checkf(mTurnPhase == ESRPGTurnPhase::TurnEnd, TEXT("턴 종료 절차 오류"));
@@ -297,6 +291,14 @@ void USRPGTurnContext::DequeueAction()
 	// 액션 시작
 	USRPGAction* CurAction = mReservedActions[mHeadActionIndex];
 	CurAction->BeginAction();
+}
+
+void USRPGTurnContext::OnHandleCommand(ESRPGCommandResult Result)
+{
+	if (mTurnPhase == ESRPGTurnPhase::TurnPlay && mReservedActions.Num() > mHeadActionIndex)
+	{
+		mReservedActions[mHeadActionIndex]->TryEndAction();
+	}
 }
 
 USRPGCombatModel* USRPGTurnContext::GetParent() const
