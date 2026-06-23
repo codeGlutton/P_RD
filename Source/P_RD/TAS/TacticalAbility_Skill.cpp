@@ -17,42 +17,40 @@ void UTacticalAbility_Skill::ApplyCost() const
 	
 }
 
-void UTacticalAbility_Skill::ActivateAbility(const FTacticalAbilityContext Context)
+bool UTacticalAbility_Skill::ActivateAbility(
+	const FTacticalAbilityContext Context,
+	OUT TArray<class UTacticalEffectContext*>& EffectContext,
+	OUT class UPassiveStackContext* PassiveStackContext)
 {
-	Super::ActivateAbility(Context);
+	Super::ActivateAbility(Context, EffectContext, PassiveStackContext);
 
 	if (!IsValid(Context.mCasterActor.Get()) ||
 		!Context.mTargetTile.Num() ||
 		Context.mInstigatorData->mTacticalEffectPayloadType != ETacticalEffectPayloadType::Skill)
 	{
-		EndAbility(Context);
+		return false;
 	}
 
-	if (!CanActivateAbility(Context))
+	if (!CanActivateAbility(Context, EffectContext, PassiveStackContext))
 	{
-		EndAbility(Context);
+		return false;
 	}
 
 
 	// 스킬을 사용한다.
 	ActivateSkill(Context);
 
-	EndAbility(Context);
+	return false;
 }
 
-void UTacticalAbility_Skill::EndAbility(const FTacticalAbilityContext& Context)
+bool UTacticalAbility_Skill::UpdatePassive(OUT class UPassiveStackContext* PassiveStackContext)
 {
-	Super::EndAbility(Context);
-
+	return false;
 }
 
-bool UTacticalAbility_Skill::CanActivateAbility(const FTacticalAbilityContext& Context) const
+bool UTacticalAbility_Skill::CanActivateAbility(const FTacticalAbilityContext Context, const TArray<class UTacticalEffectContext*>& EffectContext, const UPassiveStackContext* PassiveStackContext)
 {
-	// 주사위의 개수를 검사한다.
-	// 주체자의 상태를 검사한다.
-
-	// 우선은 그냥 무조건 가능
-	return true;
+	return false;
 }
 
 void UTacticalAbility_Skill::CallStartCalculatePassive(const FTacticalAbilityContext& Context, TArray<UTacticalEffectContext*>& EffectContext)
@@ -87,7 +85,7 @@ void UTacticalAbility_Skill::ActivateSkill(const FTacticalAbilityContext& Contex
 		CallStartCalculatePassive(Context, EffectContexts);
 
 		// 효과를 적용한다.
-		ApplyEffect(Context, EffectContexts);
+		//ApplyEffect(Context, EffectContexts);
 
 		// 효과를 정산합니다.
 		CallEndCalculatePassive(Context, EffectContexts);
