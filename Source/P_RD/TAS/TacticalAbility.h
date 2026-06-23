@@ -46,38 +46,39 @@ class P_RD_API UTacticalAbility : public UObject
 	GENERATED_BODY()
 
 public:
-
-public:
 	/*
 	* @brief Ability를 발동하여 효과를 업데이트 시킨다.
 	* 
 	* @param Context 기본 효과에 필요한 정보 컨텍스트
-	* @param EffectContext 효과값을 갱신한 반환값
+	* @param EffectContext 효과값을 갱신할 반환값
 	* @param PassiveStackContext 패시브 업데이트 값(실제 적용 X)
 	* 
-	* @return 패시브 업데이트 여부
+	* @return bool 어빌리티 온전히 발동되었는지 여부, 업데이트 된 EffectContext
 	*/
 	virtual bool ActivateAbility(
 		const FTacticalAbilityContext& Context,
-		OUT TArray<class UTacticalEffectContext*>& EffectContext,
-		OUT class UPassiveStackContext* PassiveStackContext) PURE_VIRTUAL(TacticalAbility::ActivateAbility, return false;);
+		IN OUT TArray<class UTacticalEffectContext*>& EffectContext,
+		IN const class UPassiveStackContext* PassiveStackContext) PURE_VIRTUAL(TacticalAbility::ActivateAbility, return false;);
 
 	/*
 	* @brief 패시브를 실제로 업데이트 시킨다.
 	* 
 	* @param PassiveStackContext 패시브 업데이트를 시킬 대상
 	* 
-	* @return 패시브 업데이트 여부
+	* @return bool 패시브가 온전히 갱신되었는지 여부, 업데이트 된 PassiveStackContext
 	*/
 	virtual bool UpdatePassive(OUT class UPassiveStackContext* PassiveStackContext) PURE_VIRTUAL(TacticalAbility::UpdatePassive, return false;);
 
 public:
 	/*
 	* @brief 스킬을 사용이 가능한지 알려준다.
+	* 
+	* @return bool 효과가 발동이 가능한지 여부
+	*
 	*/
 	virtual bool CanActivateAbility(
 		const FTacticalAbilityContext Context,
 		const TArray<class UTacticalEffectContext*>& EffectContext,
-		const class UPassiveStackContext* PassiveStackContext) PURE_VIRTUAL(TacticalAbility::ActivateAbility, return false;);
+		const class UPassiveStackContext* PassiveStackContext);
 
 };
