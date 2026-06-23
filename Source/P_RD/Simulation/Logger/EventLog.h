@@ -6,7 +6,7 @@
  *********************************************************************/
 #pragma once
 
-#include "RDMinimal.h"
+#include "AttributeSet/AttributeSetMinimal.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "Actor/BoardActor/BoardActorModel.h"
 #include "EventLog.generated.h"
@@ -21,10 +21,49 @@ enum class ESRPGTileOccupancyState : uint8
 };
 
 /**
- * @brief 상태를 변경시키는 이펙트 이벤트 로그
+ * @brief 속성값을 변경시키는 이펙트 이벤트 로그
  */
 USTRUCT(BlueprintType)
 struct FSRPGAttributeEffectEventLog
+{
+	GENERATED_BODY()
+
+public:
+	bool IsValid() const
+	{
+		return mEffectAttribute.IsValid() == true;
+	}
+
+public:
+	bool operator==(const FSRPGAttributeEffectEventLog& Other) const
+	{
+		return mEffectAttribute == Other.mEffectAttribute;
+	}
+	bool operator!=(const FSRPGAttributeEffectEventLog& Other) const
+	{
+		return mEffectAttribute != Other.mEffectAttribute;
+	}
+
+	friend uint32 GetTypeHash(const FSRPGAttributeEffectEventLog& Log)
+	{
+		return GetTypeHash(Log.mEffectAttribute);
+	}
+
+public:
+	// @brief 보드 액터의 변화된 속성
+	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectAttribute"))
+	FGameplayAttribute										mEffectAttribute;
+
+	// @brief 보드 액터의 수치 변화량
+	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Magnitude"))
+	float													mMagnitude = 0.f;
+};
+
+/**
+ * @brief 태그 상태를 변경시키는 이펙트 이벤트 로그
+ */
+USTRUCT(BlueprintType)
+struct FSRPGTagEffectEventLog
 {
 	GENERATED_BODY()
 
@@ -35,13 +74,28 @@ public:
 	}
 
 public:
-	// @brief 보드 액터의 변화된 속성
-	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectTag"))
-	FGameplayTag										mEffectTag;
+	bool operator==(const FSRPGTagEffectEventLog& Other) const
+	{
+		return mEffectTag == Other.mEffectTag;
+	}
+	bool operator!=(const FSRPGTagEffectEventLog& Other) const
+	{
+		return mEffectTag != Other.mEffectTag;
+	}
 
-	// @brief 보드 액터의 수치 변화량
-	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Magnitude"))
-	float												mMagnitude = 0.f;
+	friend uint32 GetTypeHash(const FSRPGTagEffectEventLog& Log)
+	{
+		return GetTypeHash(Log.mEffectTag);
+	}
+
+public:
+	// @brief 보드 액터의 변화된 태그
+	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectTag"))
+	FGameplayTag											mEffectTag;
+
+	// @brief 보드 액터의 태그 개수 변화량
+	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Count"))
+	int32													mCount = 0.f;
 };
 
 /**
@@ -65,16 +119,16 @@ public:
 	 * None(변화 없음), Move(이동) Enter(생성), Exit(제거)
 	 */
 	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "OccupancyState"))
-	ESRPGTileOccupancyState								mOccupancyState = ESRPGTileOccupancyState::None;
+	ESRPGTileOccupancyState									mOccupancyState = ESRPGTileOccupancyState::None;
 
 public:
 	// @brief 시작 지점
 	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PreTileIndex"))
-	FTileIndex											mPreTileIndex = FTileIndex::Invalid;
+	FTileIndex												mPreTileIndex = FTileIndex::Invalid;
 
 	// @brief 도달 지점
 	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "NextTileIndex"))
-	FTileIndex											mNextTileIndex = FTileIndex::Invalid;
+	FTileIndex												mNextTileIndex = FTileIndex::Invalid;
 };
 
 /**
@@ -94,21 +148,25 @@ public:
 public:
 	// @brief 이벤트를 타겟이 된 액터 ID
 	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SourceUnitID"))
-	int32												mTargetActorID = INDEX_NONE;
+	int32													mTargetActorID = INDEX_NONE;
 
 	// @brief 이벤트를 타겟이 된 보드 액터 모델 클래스
 	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BoardActorModelClass", MustImplement = "/Script/P_RD.BoardActorModel"))
-	TSubclassOf<UObject>								mBoardActorModelClass = nullptr;
+	TSubclassOf<UObject>									mBoardActorModelClass = nullptr;
 
 public:
 	// @brief 보드 액터의 타일 위치 변경 로그
 	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TileEffectEventLogs"))
-	TArray<FSRPGTileEffectEventLog>						mTileEffectEventLogs;
+	TArray<FSRPGTileEffectEventLog>							mTileEffectEventLogs;
+
+	// @brief 보드 액터의 태그 갯수 변경 로그
+	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TagEffectEventLogs"))
+	TSet<FSRPGTagEffectEventLog>							mTagEffectEventLogs;
 
 	// @brief 보드 액터의 속성 값 변경 로그
 	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "AttributeEffectEventLogs"))
-	TMap<FGameplayTag, FSRPGAttributeEffectEventLog>	mAttributeEffectEventLogs;
-};
+	TSet<FSRPGAttributeEffectEventLog>						mAttributeEffectEventLogs;
+}; 
 
 /**
  * @brief 하나의 모션내에서 발생한 이벤트 로그
@@ -127,7 +185,7 @@ public:
 public:
 	// @brief 한 모션 내에 각 액터마다의 변화 로그
 	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BoardActorEventLogs"))
-	TMap<int32, FSRPGBoardActorEventLog>				mBoardActorEventLogs;
+	TMap<int32, FSRPGBoardActorEventLog>					mBoardActorEventLogs;
 };
 
 /**
@@ -147,16 +205,16 @@ public:
 public:
 	// @brief 액션 초기에 위치한 소스 유닛의 타일 인덱스
 	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SourceTileIndex"))
-	FTileIndex											mSourceTileIndex = FTileIndex::Invalid;
+	FTileIndex												mSourceTileIndex = FTileIndex::Invalid;
 
 	// @brief 액션 초기에 지정한 타겟 타일 목록
 	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TargetTileIndexes"))
-	TArray<FTileIndex>									mTargetTileIndexes;
+	TArray<FTileIndex>										mTargetTileIndexes;
 
 public:
 	// @brief 각 모션마다의 변화 로그
 	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MotionEventLogs"))
-	TArray<FSRPGMotionEventLog>							mMotionEventLogs;
+	TArray<FSRPGMotionEventLog>								mMotionEventLogs;
 };
 
 /**
@@ -176,14 +234,14 @@ public:
 public:
 	// @brief 이벤트를 발생 시킨 소스 유닛 ID
 	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SourceUnitID"))
-	int32												mSourceUnitID = INDEX_NONE;
+	int32													mSourceUnitID = INDEX_NONE;
 
 	// @brief 이벤트를 발생 시킨 액터 모델 클래스
 	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BoardActorModelClass", MustImplement = "/Script/P_RD.BoardActorModel"))
-	TSubclassOf<UObject>								mUnitActorModelClass = nullptr;
+	TSubclassOf<UObject>									mUnitActorModelClass = nullptr;
 
 public:
 	// @brief 각 액션마다의 변화 로그
 	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ActionEventLogs"))
-	TArray<FSRPGActionEventLog>							mActionEventLogs;
+	TArray<FSRPGActionEventLog>								mActionEventLogs;
 };

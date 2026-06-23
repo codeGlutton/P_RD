@@ -142,8 +142,8 @@ void FActiveTacticalEffectsContainer::OnMagnitudeDependencyChange(FActiveTactica
             //    }
             //}
 
-            //// Second pass, update the aggregators that we need to
-            //UpdateAggregatorModMagnitudes(AttributesToUpdate, *ActiveEffect);
+            // Second pass, update the aggregators that we need to
+            // UpdateAggregatorModMagnitudes(AttributesToUpdate, *ActiveEffect);
         }
     }
 }

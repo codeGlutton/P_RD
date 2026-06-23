@@ -45,6 +45,11 @@ public:
         return (*this == Other) == false;
     }
 
+    friend uint32 GetTypeHash(const FTileIndex& Tile)
+    {
+        return HashCombine(GetTypeHash(Tile.mX), GetTypeHash(Tile.mY));
+    }
+
     // @brief 가로(X) 방향 인덱스
     UPROPERTY(Category = "TileIndex", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "X"))
     int32 mX = 0;
