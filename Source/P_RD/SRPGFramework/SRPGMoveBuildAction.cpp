@@ -61,7 +61,7 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleCommand(const TInstancedStruct<FS
     {
         /* 주사위 변경 시 목적지부터 재설정 */
 
-        const FSRPGCDiceSelectCommand& DiceSelectCommand = Command.Get<FSRPGCDiceSelectCommand>();
+        const FSRPGDiceSelectCommand& DiceSelectCommand = Command.Get<FSRPGDiceSelectCommand>();
 
         ResetTargetTile();
         ChangeDices(DiceSelectCommand.mDiceIndex);

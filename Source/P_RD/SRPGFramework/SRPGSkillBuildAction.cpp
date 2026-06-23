@@ -20,7 +20,7 @@ FSRPGSkillSelectCommand::FSRPGSkillSelectCommand()
     mRequestedAction = USRPGSkillBuildAction::StaticClass();
 }
 
-FSRPGCDiceSelectCommand::FSRPGCDiceSelectCommand()
+FSRPGDiceSelectCommand::FSRPGDiceSelectCommand()
 {
     mCommandType = ESRPGCommandType::DiceSelect;
 }
@@ -77,7 +77,7 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
     {
         /* 주사위 변경 시 타겟부터 재설정 */
 
-        const FSRPGCDiceSelectCommand& DiceSelectCommand = Command.Get<FSRPGCDiceSelectCommand>();
+        const FSRPGDiceSelectCommand& DiceSelectCommand = Command.Get<FSRPGDiceSelectCommand>();
 
         if (DiceSelectCommand.mDiceIndex != INDEX_NONE)
         {
