@@ -34,3 +34,8 @@ IObjectView* UObjectModel::GetView() const
 {
 	return Cast<IObjectView>(mView);
 }
+
+int32 UObjectModel::GetModelId() const
+{
+	return mModelId;
+}

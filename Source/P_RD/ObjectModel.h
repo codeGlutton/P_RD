@@ -11,6 +11,7 @@
 #include "ObjectModel.generated.h"
 
 class IObjectView;
+class UObjectModelFactory;
 
 /**
  * @brief  시뮬레이션 데이터 모델의 최상위 인터페이스
@@ -20,6 +21,8 @@ UCLASS(abstract)
 class P_RD_API UObjectModel : public UObject
 {
 	GENERATED_BODY()
+
+	friend UObjectModelFactory;
 
 public:
 	virtual void Initialize();
@@ -45,12 +48,20 @@ public:
 	 * @return 참고한 모델 객체
 	 */
 	IObjectView* GetView() const;
+	int32 GetModelId() const;
 
 protected:
 	TWeakObjectPtr<UObject> mView;
 
+protected:
+	// @brief 구분용 ID
+	UPROPERTY(Category = "Spawn", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "ModelId"))
+	int32 mModelId;
+
 private:
+	UPROPERTY()
 	bool mIsInitialized = false;
+	UPROPERTY()
 	bool mIsPendingDestroy = false;
 };
 

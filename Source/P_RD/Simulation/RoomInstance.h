@@ -44,15 +44,15 @@ public:
 
 	// @brief 살아있는 월드 모델들 강참조
 	UPROPERTY()
-	TArray<TObjectPtr<UObjectModel>> mAliveWorldModels;
+	TMap<int32, TObjectPtr<UObjectModel>> mAliveWorldModels;
 
 	// @brief 최대 ID 값
 	UPROPERTY()
-	int32 mBoardActorMaxId;
+	int32 mModelMaxId = 0;
 
 public:
 	// @brief 이벤트 스트림 값 참조
-	const FRandomStream* mEventStreamPtr;
+	const FRandomStream* mEventStreamPtr = nullptr;
 
 	/* 복제본 데이터 */
 private:

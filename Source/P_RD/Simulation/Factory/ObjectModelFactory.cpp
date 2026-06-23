@@ -25,7 +25,8 @@ UObjectModel* UObjectModelFactory::NewModel_Internal(const UClass* Class, const 
 UObjectModel* UObjectModelFactory::NewModelDeferred_Internal(const UClass* Class, FName Name, EObjectFlags Flags, UObject* Template, bool CopyTransientsFromClassDefaults, FObjectInstancingGraph* InInstanceGraph, UPackage* InExternalPackage)
 {
 	UObjectModel* Model = NewObject<UObjectModel>(mRoomContext->mRoomInstance.Get(), Class, Name, Flags, Template, CopyTransientsFromClassDefaults, InInstanceGraph, InExternalPackage);
-	mRoomContext->mRoomInstance->mAliveWorldModels.Add(Model);
+	Model->mModelId = mRoomContext->mRoomInstance->mModelMaxId++;
+	mRoomContext->mRoomInstance->mAliveWorldModels.Add(Model->mModelId, Model);
 	checkf(Model != nullptr, TEXT("새로운 모델 nullptr"));
 
 	return Model;
@@ -45,11 +46,10 @@ void UObjectModelFactory::FinishCreatingModel(UObjectModel* Model, const FTransf
 
 void UObjectModelFactory::DestroyModel(UObjectModel* Model)
 {
-	const int32 TargetModelIndex = mRoomContext->mRoomInstance->mAliveWorldModels.IndexOfByPredicate([Model](const TObjectPtr<UObjectModel>& Entry) {
-		return Entry == Model;
-		});
-	
-	checkf(TargetModelIndex != INDEX_NONE, TEXT("제거될 모델 찾지 못함"));
+	const int32 ModelId = Model->GetModelId();
+
+	bool IsFound = mRoomContext->mRoomInstance->mAliveWorldModels.Contains(ModelId);
+	checkf(IsFound == true, TEXT("제거될 모델 찾지 못함"));
 
 	OnPreRemoveModel(Model);
 	UActorModel* ActorModel = Cast<UActorModel>(Model);
@@ -59,7 +59,7 @@ void UObjectModelFactory::DestroyModel(UObjectModel* Model)
 	}
 	Model->Uninitialize();
 
-	mRoomContext->mRoomInstance->mAliveWorldModels.RemoveAtSwap(TargetModelIndex);
+	mRoomContext->mRoomInstance->mAliveWorldModels.Remove(ModelId);
 }
 
 void UGameObjectModelFactory::RegisterSubsystemModels()
