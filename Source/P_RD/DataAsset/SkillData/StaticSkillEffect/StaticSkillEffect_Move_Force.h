@@ -40,4 +40,7 @@ public:
     */
     UPROPERTY(Category = "SkillEffectMoveForce", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RatioDistance"))
     float mEffectRatioDistance;
+
+public:
+    virtual class UTacticalEffectContext* CreateContext(TWeakObjectPtr<class UBoardActorModel> CasterActor) override;
 };
