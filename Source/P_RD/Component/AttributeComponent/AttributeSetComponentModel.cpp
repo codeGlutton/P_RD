@@ -4,24 +4,29 @@
 
 DEFINE_LOG_CATEGORY(LogAttributeSetComp)
 
-FActiveAttributeEffectHandle::FActiveAttributeEffectHandle(int32 Index, UAttributeSetComponentModel* OwningModel) : mIndex(Index), mOwningModel(OwningModel)
+FActiveTacticalEffectHandle::FActiveTacticalEffectHandle(int32 Index, UAttributeSetComponentModel* OwningModel) : mIndex(Index), mOwningModel(OwningModel)
 {
 }
 
-FActiveAttributeEffectHandle FActiveAttributeEffectHandle::GenerateNewHandle(UAttributeSetComponentModel* OwningModel)
+FActiveTacticalEffectHandle FActiveTacticalEffectHandle::GenerateNewHandle(UAttributeSetComponentModel* OwningModel)
 {
     static int32 MaxHandleIndex = 0;
-    FActiveAttributeEffectHandle NewHandle(MaxHandleIndex++, OwningModel);
+    FActiveTacticalEffectHandle NewHandle(MaxHandleIndex++, OwningModel);
 
     return NewHandle;
 }
 
-float FAttributeAggregator::GetAttributeBaseValue() const
+UAttributeSetComponentModel* FActiveTacticalEffectHandle::GetOwningAttributeSetComponentModel() const
+{
+    return mOwningModel.Get();
+}
+
+float FTacticalAggregator::GetAttributeBaseValue() const
 {
     return mBaseValue;
 }
 
-void FAttributeAggregator::SetAttributeBaseValue(float BaseValue, bool BroadcastDirtyEvent = true)
+void FTacticalAggregator::SetAttributeBaseValue(float BaseValue, bool BroadcastDirtyEvent = true)
 {
     mBaseValue = BaseValue;
     if (BroadcastDirtyEvent == true)
@@ -30,7 +35,7 @@ void FAttributeAggregator::SetAttributeBaseValue(float BaseValue, bool Broadcast
     }
 }
 
-void FAttributeAggregator::BroadcastOnDirty()
+void FTacticalAggregator::BroadcastOnDirty()
 {
     /* 재귀 검사 */
 
@@ -46,32 +51,113 @@ void FAttributeAggregator::BroadcastOnDirty()
 
     /* 값 갱신 요청 */
 
-    TArray<FActiveGameplayEffectHandle> DependantsLocalCopy = Dependents;
-    Dependents.Empty(); // We will add valid handles back as we process the local list
+    TArray<FActiveTacticalEffectHandle> DependentEffectsCopy = mDependentEffects;
+    DependentEffectsCopy.Empty();
 
-    for (FActiveGameplayEffectHandle Handle : DependantsLocalCopy)
+    for (FActiveTacticalEffectHandle& Handle : DependentEffectsCopy)
     {
-        UAbilitySystemComponent* ASC = Handle.GetOwningAbilitySystemComponent();
-        if (ASC)
+        UAttributeSetComponentModel* ASC = Handle.GetOwningAttributeSetComponentModel();
+        if (ASC != nullptr)
         {
+            /* ASC가 아직 살아있다면 재 등록 */
+
             ASC->OnMagnitudeDependencyChange(Handle, this);
-            Dependents.Add(Handle);
+            mDependentEffects.Add(Handle);
         }
     }
 
     mDirtyCount--;
 }
 
-void FActiveAttributeEffectsContainer::CleanupAttributeAggregator(const FGameplayAttribute& Attribute)
+FScopedActiveTacticalEffectLock::FScopedActiveTacticalEffectLock(FActiveTacticalEffectsContainer& Container) :
+    mContainer(Container)
 {
-    TSharedPtr<FAttributeAggregator>* AggregatorPtr = mAttributeAggregatorMap.Find(Attribute);
+    mContainer.IncrementLock();
+}
+
+FScopedActiveTacticalEffectLock::~FScopedActiveTacticalEffectLock()
+{
+    mContainer.DecrementLock();
+}
+
+void FActiveTacticalEffectsContainer::IncrementLock()
+{
+    mScopedLockCount++;
+}
+
+void FActiveTacticalEffectsContainer::DecrementLock()
+{
+    if (--mScopedLockCount == 0)
+    {
+        /* 추가 작업 */
+
+        FActiveTacticalEffect* CurPendingEffect = mPendingGameplayEffectHead;
+        FActiveTacticalEffect* EndPendingEffect = *mPendingGameplayEffectTail;
+
+        while (CurPendingEffect != EndPendingEffect)
+        {
+            if (CurPendingEffect->mIsPendingRemove == false)
+            {
+                /* 추가가 미루어진 이펙트 추가 */
+
+                mAttributeEffects.Add(MoveTemp(*CurPendingEffect));
+            }
+            else
+            {
+                /* 추가가 미루어진 이펙트는 이미 제거됨 */
+
+                mPendingRemoveCount--;
+            }
+            CurPendingEffect = CurPendingEffect->mPendingNext;
+        }
+        mPendingGameplayEffectTail = &mPendingGameplayEffectHead;
+
+        /* 제거 작업 */
+
+        for (int32 index = mAttributeEffects.Num() - 1; index >= 0 && mPendingRemoveCount > 0; --index)
+        {
+            FActiveTacticalEffect& Effect = mAttributeEffects[index];
+
+            if (Effect.mIsPendingRemove)
+            {
+                // 해당 이펙트 핸들이 사라짐을 알리기
+                Effect.mHandle.RemoveFromGlobalMap();
+
+                mAttributeEffects.RemoveAtSwap(index, EAllowShrinking::No);
+
+                mPendingRemoveCount--;
+            }
+        }
+
+        checkf(mPendingRemoveCount == 0, TEXT("예약된 이펙트 증감 로직 에러"));
+    }
+}
+
+void FActiveTacticalEffectsContainer::CleanupAttributeAggregator(const FGameplayAttribute& Attribute)
+{
+    TSharedPtr<FTacticalAggregator>* AggregatorPtr = mAttributeAggregatorMap.Find(Attribute);
     if (AggregatorPtr != nullptr)
     {
-        (*AggregatorPtr)->OnDirty.RemoveAll(Owner);
-        (*AggregatorPtr)->OnDirtyRecursive.RemoveAll(Owner);
+        (*AggregatorPtr)->OnDirty.RemoveAll(mOwner.Get());
 
         mAttributeAggregatorMap.Remove(Attribute);
     }
+}
+
+void FActiveTacticalEffectsContainer::OnAttributeAggregatorDirty(FTacticalAggregator* Aggregator, FGameplayAttribute Attribute)
+{
+    checkf(mAttributeAggregatorMap.FindChecked(Attribute).Get() == Aggregator, TEXT("속성에 대한 계산 객체가 동일하지 않음"));
+
+    const float NewCurrentValue = Aggregator->Evaluate(EvaluationParameters);
+    const float OldCurrentValue = mOwner->GetAttributeCurrentValue(Attribute);
+    UE_LOG(LogAttributeSetComp, Log, TEXT("현재 값 변경 %.2f -> %.2f"), *Attribute.GetName(), OldCurrentValue, NewCurrentValue);
+
+    InternalUpdateNumericalAttribute(Attribute, NewValue, nullptr, bFromRecursiveCall);
+}
+
+void FActiveTacticalEffectsContainer::OnMagnitudeDependencyChange(FActiveTacticalEffectHandle Handle, const FTacticalAggregator* ChangedAgg)
+{
+
 }
 
 void UAttributeSetComponentModel::Initialize()
@@ -171,5 +257,15 @@ float UAttributeSetComponentModel::GetAttributeCurrentValue(const FGameplayAttri
         return 0.f;
     }
     return Attribute.GetNumericValue(FoundAttributeSet);
+}
+
+void UAttributeSetComponentModel::OnAttributeAggregatorDirty(FTacticalAggregator* Aggregator, FGameplayAttribute Attribute, bool FromRecursiveCall)
+{
+    mActiveAttributeEffects.OnAttributeAggregatorDirty(Aggregator, Attribute);
+}
+
+void UAttributeSetComponentModel::OnMagnitudeDependencyChange(FActiveTacticalEffectHandle Handle, const FTacticalAggregator* ChangedAggregator)
+{
+    mActiveAttributeEffects.OnMagnitudeDependencyChange(Handle, ChangedAggregator);
 }
 
