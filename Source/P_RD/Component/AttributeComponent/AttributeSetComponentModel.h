@@ -11,8 +11,12 @@
 #include "Component/ComponentModel.h"
 #include "AttributeSetComponentModel.generated.h"
 
+class UAttributeSet;
 class UAttributeSetComponentModel;
 struct FAttributeChangeData;
+
+// USaveGameSubsystem 신규 로그 카테고리 등록
+DECLARE_LOG_CATEGORY_EXTERN(LogAttributeSetComp, Log, All)
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnChangeAttributeValue, const FAttributeChangeData& /*ChangeData*/);
 
@@ -40,10 +44,10 @@ struct FActiveAttributeEffectHandle
 
 public:
     FActiveAttributeEffectHandle() = default;
-    FActiveAttributeEffectHandle(int32 Index);
+    FActiveAttributeEffectHandle(int32 Index, UAttributeSetComponentModel* OwningModel);
 
 public:
-    static FActiveAttributeEffectHandle GenerateNewHandle(UAttributeSetComponentModel* OwningComponent);
+    static FActiveAttributeEffectHandle GenerateNewHandle(UAttributeSetComponentModel* OwningModel);
 
 public:
     bool operator==(const FActiveAttributeEffectHandle& Other) const
@@ -74,6 +78,9 @@ public:
 private:
     UPROPERTY()
     int32 mIndex = INDEX_NONE;
+
+    UPROPERTY()
+    TWeakObjectPtr<UAttributeSetComponentModel> mOwningModel;
 };
 
 /**
@@ -92,6 +99,48 @@ public:
     // FGameplayEffectSpec mSpec;
 };
 
+UGameplayEffect
+
+/**
+ * @brief 하나의 변화값
+ */
+struct FAttributeAggregatorMod
+{
+public:
+    // @brief 평가된 값
+    float mEvaluatedMagnitude;
+    // @brief 스택 갯수
+    float mStackCount;
+};
+
+/**
+ * @brief 속성 값에 대한 모든 변화 계산기 객체
+ */
+struct FAttributeAggregator : public TSharedFromThis<FAttributeAggregator>
+{
+    friend struct FActiveAttributeEffectsContainer;
+
+    DECLARE_MULTICAST_DELEGATE_OneParam(FOnAttributeAggregatorDirty, FAttributeAggregator*);
+
+public:
+    float GetAttributeBaseValue() const;
+    void SetAttributeBaseValue(float BaseValue, bool BroadcastDirtyEvent = true);
+
+private:
+    void BroadcastOnDirty();
+
+public:
+    // @brief 값이 변경됨을 알리는 대리자
+    FOnAttributeAggregatorDirty OnDirty;
+    int32 mDirtyCount;
+
+private:
+    // @brief 베이스 값
+    float mBaseValue;
+    // @brief 각 연산자에 따른 결과값들
+    TArray<FAttributeAggregatorMod> Mods[EGameplayModOp::Max];
+};
+
 /**
  * @brief 현재 활성화 이펙트들과 그에 따른 결과를 보유한 객체
  */
@@ -100,7 +149,13 @@ struct FActiveAttributeEffectsContainer
 {
     GENERATED_BODY()
 
+    friend class UAttributeSetComponentModel;
+
+private:
+    void CleanupAttributeAggregator(const FGameplayAttribute& Attribute);
+
 public:
+    // @brief 해당 객체를 소유한 컴포넌트 모델
     UPROPERTY()
     TWeakObjectPtr<UAttributeSetComponentModel> mOwner;
 
@@ -109,13 +164,14 @@ private:
     UPROPERTY()
     TArray<FActiveAttributeEffect> mAttributeEffects;
 
-//    UPROPERTY()
-//    TMap<FGameplayAttribute, FAggregatorRef> mAttributeAggregatorMap;
+    /* 이펙트를 확인하여 복구 가능한 객체들 */
+private:
+    // @brief 속성에 따른 값 계산기
+    TMap<FGameplayAttribute, TSharedPtr<FAttributeAggregator>> mAttributeAggregatorMap;
 
     // @brief 값 변경에 따른 대리자
     TMap<FGameplayAttribute, FOnChangeAttributeValue> mAttributeValueChangeDelegates;
 //
-//    UPROPERTY()
 //    TMap<TWeakObjectPtr<UGameplayEffect>, TArray<FActiveAttributeEffectHandle>> SourceStackingMap;
 };
 
@@ -133,14 +189,44 @@ public:
     void BeginPlay() override;
     void EndPlay() override;
 
+    /* AttributeSet 세팅 */
 public:
-	/*
-    * @brief 해당하는 속성의 값을 가져온다.
-    */
-    float GetAttributeValue(FGameplayAttribute Attribute) const;
-    void SetAttributeValue(FGameplayAttribute Attribute, float NewValue);
+    template <typename T>
+    const T* GetAttributeSet() const
+    {
+        return StaticCast<T*>(GetAttributeSet_Internal(T::StaticClass()));
+    }
+    template <typename T>
+    const T* AddAttributeSet()
+    {
+        return StaticCast<T*>(GetOrCreateAttributeSet_Internal(T::StaticClass()));
+    }
+
+public:
+    void AddSpawnedAttribute(UAttributeSet* Attribute);
+    void RemoveSpawnedAttribute(UAttributeSet* Attribute);
 
 protected:
-    UPROPERTY()
+    const UAttributeSet* GetAttributeSet_Internal(TSubclassOf<UAttributeSet> Class) const;
+    const UAttributeSet* GetOrCreateAttributeSet_Internal(TSubclassOf<UAttributeSet> Class);
+
+    /* 기본값 설정 */
+public:
+    void SetAttributeBaseValue(const FGameplayAttribute& Attribute, float BaseValue);
+    float GetAttributeBaseValue(const FGameplayAttribute& Attribute) const;
+
+    /* 현재값 세팅 */
+public:
+    float GetAttributeCurrentValue(const FGameplayAttribute& Attribute) const;
+
+public:
+    void OnAttributeAggregatorDirty(FAggregator* Aggregator, FGameplayAttribute Attribute, bool FromRecursiveCall = false);
+
+protected:
+    UPROPERTY(Category = "Effect", VisibleAnywhere, meta = (DisplayName = "ActiveAttributeEffects"))
     FActiveAttributeEffectsContainer mActiveAttributeEffects;
+
+protected:
+    UPROPERTY(Category = "AttributeSet", VisibleAnywhere, meta = (DisplayName = "SpawnedAttributes"))
+    TArray<TObjectPtr<UAttributeSet>> mSpawnedAttributes;
 };
