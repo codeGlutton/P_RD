@@ -9,6 +9,7 @@
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "UObject/Object.h"
+#include "TAS/Effect/TacticalEffect.h"
 #include "StaticSkillEffect_Base.generated.h"
 
 /**
@@ -31,6 +32,12 @@ public:
     */
     UPROPERTY(Category = "SkillEffect", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "GameplayTag" ))
     FGameplayTag mEffectTag;
+
+    UPROPERTY(Category = "SkillEffect", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TacticalEffect"))
+    TSubclassOf<UTacticalEffect> mTacticalEffect;
+
+public:
+    virtual class UTacticalEffectContext* CreateContext(TWeakObjectPtr<class UBoardActorModel> CasterActor) PURE_VIRTUAL(UStaticSkillEffect_Base::CreateContext, return nullptr;)
 };
 
 

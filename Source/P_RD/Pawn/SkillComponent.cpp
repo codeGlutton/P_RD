@@ -51,8 +51,8 @@ bool USkillComponent::SetSkillData(int SkillIndex, TSoftObjectPtr<UStaticSkillDa
 
 	mSkillData[SkillIndex] = SkillData;
 
-	if(OnSkillChange.IsBound())
-		OnSkillChange.Broadcast(SkillIndex, SkillData);
+	//if(OnSkillChange.IsBound())
+	//	OnSkillChange.Broadcast(SkillIndex, SkillData);
 
 	return true;
 }
@@ -62,8 +62,8 @@ bool USkillComponent::AddSkillData(TSoftObjectPtr<UStaticSkillData> SkillData)
 {
 	mSkillData.Add(SkillData);
 
-	if (OnSkillChange.IsBound())
-		OnSkillChange.Broadcast(mSkillData.Num() - 1, SkillData);
+	//if (OnSkillChange.IsBound())
+	//	OnSkillChange.Broadcast(mSkillData.Num() - 1, SkillData);
 
 	return true;
 }

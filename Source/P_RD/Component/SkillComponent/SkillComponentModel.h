@@ -7,29 +7,32 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "Components/ActorComponent.h"
-#include "DataAsset/SkillData/StaticSkillData.h"
+#include "Component/ComponentModel.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
-//#include "Pawn/SkillComponent/PreviewEffectIconData.h"
-#include "../FunctionLibrary/CombatCalculator/CombatResult.h"
-//#include "FunctionLibrary/CommandLog/CommandLog.h"
-#include "SkillComponent.generated.h"
-
-/**
-* @brief 스킬 변경 시 사용되는 델리게이트(대리자)
-* @details SkillIndex의 데이터가 SkillData로 변경되었다는 것을 알리는 델리게이트(대리자)
+#include "DataAsset/SkillData/StaticSkillData.h"
+#include "TAS/TacticalAbility_Skill.h"
+#include "SkillComponentModel.generated.h"
+/*
 * @param SkillIndex : 변경된 스킬의 인덱스
 * @param SkillData : 변경된 스킬 데이터
 */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
+	FOnSkillChange,
+	int32, SkillIndex,
+	TSoftObjectPtr<UStaticSkillData>, SkillData
+);
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class P_RD_API USkillComponent : public UActorComponent
+/**
+ * 
+ */
+UCLASS()
+class P_RD_API USkillComponentModel : public UComponentModel
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	// Sets default values for this component's properties
-	USkillComponent();
+	USkillComponentModel();
 
 protected:
 	/**
@@ -38,7 +41,15 @@ protected:
 	 * 적 가변적
 	 */
 	UPROPERTY(VisibleAnywhere)
-	TArray<TSoftObjectPtr<UStaticSkillData>> mSkillData;
+	TArray<TSoftObjectPtr<class UStaticSkillData>> mSkillData;
+
+	/*
+	* @brief 스킬 작동기
+	* 
+	* @note 추후 Outer? 물어볼 것
+	*/
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UTacticalAbility> mAbility;
 
 	/**
 	* @brief 스킬 어빌리티
@@ -47,24 +58,16 @@ protected:
 	//UPROPERTY()
 	//TSoftObjectPtr<FGameplayAbilitySpec> mActivatableAbilities;
 
-	/**
-	* @brief 액터의 ASC
-	* 편하게 사용하기 위해 WeakPtr로 참조
-	*/
-	// UPROPERTY()
-	// TWeakObjectPtr<UAbilitySystemComponent> mAbilitySystemComp;
-
 public:
 	/* 델리게이트 변수*/
-	//FOnSkillChange OnSkillChange;
+	FOnSkillChange OnSkillChange;
+
+public:
+	virtual void Initialize() override;
 
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
 	/* Get, Set */
@@ -93,23 +96,18 @@ public:
 	/* 스킬 사용 */
 	/**
 	* @brief 스킬의 인덱스와 타일을 입력받으면 스킬 사용
-	* @details 
+	* @details
 	* 이미 가지고 있는 커맨드 로그를 토대로 스킬을 진행
 	* @return bool : 실패 시 false 반환
 	*/
-	//UFUNCTION(BlueprintCallable, Category = "Skill")
-	//bool ActivateSkill(const FCommandLog& SkillResult);
+	UFUNCTION(BlueprintCallable, Category = "Skill")
+	bool ActivateSkill(int32 SkillIndex, const TArray<FTileIndex> TargetTiles);
 
+	/* 이동포인트 */
 	/**
-	* @brief 스킬 결과 값 계산
-	* @details 
-	* 스킬 인덱스와 타일이 들어오면 스킬 결과 값을 계산한다.
-	* @param[in] SkillIndex : 선택한 스킬의 인덱스
-	* @param[in] In_CloneData : 타일맵 복제 데이터
-	* @param[in] In_Context: 계산에 필요한 정보들
-	* @param[out] Out_Result: 결과 로그
-	* @return bool : 실패 시 false 반환
+	* @brief 이동 완료 후 어트리뷰트 셋에서 moveCount를 감소 시키는 함수
+	* @details
 	*/
-	//UFUNCTION(BlueprintCallable, Category = "Skill")
-	//bool CalculateSkillResult(int32 SkillIndex, TArray<FTileIndex> mTargetTiles, const FTileMapCloneData& In_CloneData,  FCommandLog& Out_Result);
+	UFUNCTION(BlueprintCallable, Category = "Move")
+	void HandelMovePoint(float MovePoint);
 };
