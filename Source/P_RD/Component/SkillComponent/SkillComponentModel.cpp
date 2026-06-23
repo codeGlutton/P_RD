@@ -86,7 +86,7 @@ bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileInd
 
 	Context.mInstigatorData = Payload;
 
-	mAbility->ActivateAbility(Context);
+	//mAbility->ActivateAbility(Context);
 
 	return true;
 }

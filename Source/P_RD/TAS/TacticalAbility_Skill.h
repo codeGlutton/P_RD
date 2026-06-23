@@ -35,12 +35,24 @@ public:
 	void ApplyCost() const;
 
 public:
-	virtual void ActivateAbility(const FTacticalAbilityContext Context);
+	virtual bool ActivateAbility(
+		const FTacticalAbilityContext Context,
+		OUT TArray<class UTacticalEffectContext*>& EffectContext,
+		OUT class UPassiveStackContext* PassiveStackContext);
 
-	virtual void EndAbility(const FTacticalAbilityContext& Context);
+	/*
+	* @brief 패시브를 실제로 업데이트 시킨다.
+	*
+	* @param PassiveStackContext 패시브 업데이트를 시킬 대상
+	*
+	* @return 패시브 업데이트 여부
+	*/
+	virtual bool UpdatePassive(OUT class UPassiveStackContext* PassiveStackContext) override;
 
-	virtual bool CanActivateAbility(const FTacticalAbilityContext& Context) const;
-
+	virtual bool CanActivateAbility(
+		const FTacticalAbilityContext Context,
+		const TArray<class UTacticalEffectContext*>& EffectContext,
+		const class UPassiveStackContext* PassiveStackContext) override;
 private:
 	/*
 	* @brief  스킬 사용 전 패시브 호출
@@ -61,20 +73,4 @@ private:
 	*/
 	void ActivateSkill(const FTacticalAbilityContext& Context);
 
-
-
-
-
-
-	// TacticalAbility용 Task 만들 예정
-public:
-	/*
-	* @brief 모션 재생이 완료되었다.
-	*/
-	void MotionComplete();
-
-	/*
-	* @brief 모션 재생 중 어빌리티에게 효과 적용 요청이 들어왔다.
-	*/
-	void MotionEffectApplyNotify();
 };
