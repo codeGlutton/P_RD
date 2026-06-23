@@ -251,6 +251,20 @@ public:
 	) const;
 
 	/**
+	 * @brief 밀치기 시 밀려나는 액터의 최종 도착 좌표 계산 (순수 계산, 뷰 비의존)
+	 * @details
+	 * Pusher→Pushed 방향을 각 축 부호로 8방향 단위 스텝화해(대각 포함) Pushed에서부터 한 칸씩 전진시킨다.
+	 * 다음 칸이 맵 밖이거나 장애물/유닛(IsOccupied)이면 더 밀리지 않고 직전 칸에서 멈춘다.
+	 * 코너 컷(대각 틈새 통과)은 시야 판정과 동일하게 허용한다 — 목적지 칸만 검사한다.
+	 * 첫 칸부터 막히면(또는 Pusher==Pushed로 방향이 없으면) Pushed 그대로 반환한다.
+	 * @param[in] Pusher : 미는 쪽 좌표 (방향 계산용)
+	 * @param[in] Pushed : 밀리는 쪽 좌표 (전진 시작점)
+	 * @param[in] MaxDistance : 최대 밀치기 칸 수 (0 이하이면 Pushed 그대로)
+	 * @return FTileIndex : 밀려난 최종 좌표 (못 밀리면 Pushed)
+	 */
+	FTileIndex GetPushDestination(const FTileIndex& Pusher, const FTileIndex& Pushed, int32 MaxDistance) const;
+
+	/**
 	 * 진입 액터를 해당 타일에 배치할 수 있는지 검사하는 함수
 	 * @details 막히지 않았거나, 막혔어도 기존 액터를 교체할 수 있으면 배치 가능
 	 * @param TileIndex 검사할 타일 인덱스

@@ -84,6 +84,19 @@ void USRPGMoveAction::OnTickAction(float DeltaTime)
 void USRPGMoveAction::OnEndAction()
 {
     Super::OnEndAction();
+
+    /* 이동을 정상 완료한 경우, 사용한 이동 포인트를 이동 유닛에게 차감 통지한다 */
+
+    if (mActionResult == ESRPGActionResult::Succeeded && mPathTileIndexes.Num() >= 2)
+    {
+        // 소모 이동 포인트 = 밟은 칸 수 (경로 칸 수 - 시작 타일)
+        const int32 SpentPoint = mPathTileIndexes.Num() - 1;
+
+        // TODO : 이동 스킬 컴포넌트 API 완성 후 연결
+        //        mInstigator에서 이동 스킬 컴포넌트를 찾아 SpentPoint 만큼 이동 포인트 차감 통지
+        //        (컴포넌트 접근자·차감 함수 이름은 추후 확정)
+        UE_LOG(LogSRPGCombat, Log, TEXT("이동 완료 — 소모 이동 포인트 %d (차감 통지 API 대기)"), SpentPoint);
+    }
 }
 
 void USRPGMoveAction::StartStep(int32 StepIndex)
@@ -110,9 +123,8 @@ void USRPGMoveAction::CompleteStep()
 
 UTileMapModel* USRPGMoveAction::GetTileMap() const
 {
-    USRPGTurnContext* TurnContext = mParent.Get();
-    checkf(TurnContext != nullptr, TEXT("턴 객체 nullptr"));
-    USRPGCombatModel* CombatModel = TurnContext->GetParent();
+    // 전투 모델을 월드 서브시스템에서 바로 받아 타일 맵을 꺼낸다 (턴 컨텍스트 체인 의존 제거)
+    USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
     checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 
     UTileMapModel* TileMap = CombatModel->GetTileMap();
