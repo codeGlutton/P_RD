@@ -24,7 +24,7 @@ namespace RDCollisionProfiles
 	inline const FName TileMap(TEXT("TileMap"));
 
 	/** @brief 타일맵 위 액터(유닛/장애물) 전용. 정보 확인(TileAnyTrace) 터치만 받고 타일 선택은 통과 */
-	inline const FName TileActor(TEXT("TileActor"));
+	inline const FName BoardActor(TEXT("TileActor"));
 }
 
 /**

@@ -29,16 +29,11 @@ public:
 
 #if WITH_EDITOR
 public:
-	void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 	EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
 #endif
 
 public:
-	float GetDefaultMaxHP(int32 Difficulty) const;
-	float GetDefaultMoney(int32 Difficulty) const;
-
-public:
-	UPROPERTY(Category = "Spawn", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "JobType"))
+	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "JobType"))
 	EPlayerJobType mJobType = EPlayerJobType::None;
 
 public:

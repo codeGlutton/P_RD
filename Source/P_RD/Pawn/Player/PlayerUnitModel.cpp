@@ -4,6 +4,8 @@
 #include "GameMode/RDGameModeBase.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 
+#include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
+
 #include "Dice/DicePoolModel.h"
 
 /** @brief 플레이어 전용 AttributeSet과 DiceComponent를 서브오브젝트로 생성한다. */
@@ -33,7 +35,12 @@ UUserWidget* UPlayerUnitModel::GetInfoPanel() const
 
 EPlayerJobType UPlayerUnitModel::GetPlayerJobType() const
 {
-    return mJobType;
+    UStaticPlayerUnitSpawnData* PlayerUnitSpawnData = Cast<UStaticPlayerUnitSpawnData>(mStaticSpawnData);
+    if (PlayerUnitSpawnData == nullptr)
+    {
+        return EPlayerJobType::None;
+    }
+    return PlayerUnitSpawnData->mJobType;
 }
 
 int32 UPlayerUnitModel::GetPlayerLevel() const

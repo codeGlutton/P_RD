@@ -14,8 +14,11 @@
 
 #include "PlayerUnitModel.generated.h"
 
+class UPlayerUnitModel;
 class ULevelAttributeSet;
 class UDicePoolModel;
+
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePlayerLevel, UPlayerUnitModel* /*Model*/, int32 /*PlayerLevel*/);
 
 /**
  * @brief 플레이어 베이스 유닛 모델 입니다.
@@ -44,8 +47,12 @@ public:
 	int32 GetDifficulty() const override;
 	bool IsPlayerUnitModel() const override;
 
+public:
 	/** @brief 플레이어 보유 주사위 컴포넌트입니다. 적은 주사위가 없어 AUnit이 아닌 APlayerUnit에 둡니다. */
 	UDicePoolModel* GetDicePool() const;
+
+public:
+	FOnChangePlayerLevel OnChangePlayerLevel;
 
 private:
 	/** @brief 레벨 스케일 AttributeSet. 기존 GAS 초기화 경로가 참조하므로 제거 전까지 유지한다. */
@@ -57,6 +64,6 @@ private:
 	TObjectPtr<UDicePoolModel> mDicePool;
 
 protected:
-	UPROPERTY(Category = Unit, EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "JobType"))
-	EPlayerJobType mJobType;
+	UPROPERTY(Category = Attribute, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PlayerLevel"))
+	int32 mPlayerLevel = 1;
 };
