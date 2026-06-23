@@ -56,16 +56,6 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleCommand(const TInstancedStruct<FS
         }
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
-    case ESRPGCommandType::DiceSelect:
-    {
-        /* 주사위 변경 시 목적지부터 재설정 */
-
-        const FSRPGDiceSelectCommand& DiceSelectCommand = Command.Get<FSRPGDiceSelectCommand>();
-
-        ResetTargetTile();
-        ChangeDices(DiceSelectCommand.mDiceIndex);
-        return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
-    }
     case ESRPGCommandType::WorldTrace:
     {
         /* 월드 공간 터치 시 선택 위치에 따라서 결정 */
