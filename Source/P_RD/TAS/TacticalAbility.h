@@ -25,16 +25,26 @@ class P_RD_API UTacticalEffectPayload : public UObject
 	GENERATED_BODY()
 
 public:
+	// 발동하는 정보 타입
 	ETacticalEffectPayloadType mTacticalEffectPayloadType;
 };
 
 
 struct FTacticalAbilityContext
 {
-	TWeakObjectPtr<UBoardActorModel> mCasterActor;
-	TArray<FTileIndex> mTargetTile;
+	// @brief 발동하는 주체
+	// 발동하는 주체 (스킬이면 스킬 사용자, 패시브면 패시브 발동자)
+	TWeakObjectPtr<UBoardActorModel>	mCasterActor;
+	
+	// 스킬 또는 패시브 타겟 타일
+	TArray<FTileIndex>					mTargetTile;
 
-	TObjectPtr<UTacticalEffectPayload> mInstigatorData;	// 수정 필요 ==================================================================
+	// @brief 발동하는 효과의 정보
+	// 
+	// @details 
+	// 스킬 : 스킬 데이터 외 기타
+	// 패시브 : 패시브 데이터 외 기타
+	TObjectPtr<UTacticalEffectPayload>	mInstigatorData;
 };
 
 /**
