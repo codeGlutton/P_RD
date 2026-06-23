@@ -1,11 +1,9 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-#include "TAS/Effect/Stat/TacticalEffect_Stat_Damage.h"
+﻿#include "TAS/Effect/Stat/TacticalEffect_Stat_Damage.h"
 #include "TAS/Effect/Stat/TacticalEffectContext_Stat.h"
 #include "Actor/BoardActor/BoardActorModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
-
+#include "AttributeSet/UnitAttributeSet.h"
 
 void UTacticalEffect_Stat_Damage::ActivateEffect(const UBoardActorModel& Caster, const FTileIndex& TargetTile, const class UTacticalEffectContext* EffectContexts)
 {
@@ -27,7 +25,6 @@ void UTacticalEffect_Stat_Damage::ActivateEffect(const UBoardActorModel& Caster,
 	checkf(EffectContext_Stat.IsValid(), TEXT("컨텍스트가 이상합니다."));
 
 	// 타겟의 체력을 깍는다.
-	float HP = TargetASC->GetAttributeValue(UUnitAttributeSet::GetHPAttribute());
-	TargetASC->SetAttributeValue(UUnitAttributeSet::GetHPAttribute(), HP - EffectContext_Stat.Get()->GetFinal());
-
+	float HP = TargetASC->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute());
+	//TargetASC->SetAttributeValue(UUnitAttributeSet::GetHPAttribute(), HP - EffectContext_Stat.Get()->GetFinal());
 }
