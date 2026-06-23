@@ -10,15 +10,6 @@
 
 #include "TacticalAbility.generated.h"
 
-/*
-* @param SkillIndex : 변경된 스킬의 인덱스
-* @param SkillData : 변경된 스킬 데이터
-*/
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
-	FOnTacticalAbility,
-	TWeakObjectPtr<UBoardActorModel>, CasterActor
-);
-
 enum class ETacticalEffectPayloadType
 {
 	None,		
