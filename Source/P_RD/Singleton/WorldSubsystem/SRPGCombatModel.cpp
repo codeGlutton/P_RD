@@ -567,3 +567,4 @@ TArray<TObjectPtr<UUnitModel>>& USRPGCombatModel::GetUnits()
 {
 	return mUnits;
 }
+

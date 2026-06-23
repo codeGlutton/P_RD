@@ -12,7 +12,6 @@
 #include "PCGStage/Room.h"
 
 #include "Simulation/Factory/ObjectModelFactory.h"
-#include "Pawn/UnitModel.h"
 #include "Pawn/Player/PlayerUnitModel.h"
 
 #include "UI/CombatTileMapHUDWidget.h"
@@ -21,7 +20,6 @@
 #include "Pawn/Player/PlayerUnit.h"
 #include "Dice/DicePoolModel.h"
 
-#include "SRPGFramework/SRPGSkillAction.h"
 #include "SRPGFramework/SRPGSkillBuildAction.h"
 
 DEFINE_LOG_CATEGORY(LogCombatGameMode);
@@ -90,6 +88,18 @@ bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnChangeSkillBuildPhase.AddUObject(this, &ACombatGameMode::OnChangeSkillBuildPhase);
 
 	return CommandRouterModel->SummitCommand(SkillSelectCommand);
+}
+
+bool ACombatGameMode::SelectDice(int32 DiceIndex)
+{
+	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
+
+	TInstancedStruct<FSRPGCommand> DiceSelectCommand;
+	DiceSelectCommand.InitializeAs<FSRPGDiceSelectCommand>();
+	DiceSelectCommand.GetMutable<FSRPGDiceSelectCommand>().mDiceIndex = DiceIndex;
+
+	return CommandRouterModel->SummitCommand(DiceSelectCommand);
 }
 
 bool ACombatGameMode::ResolveWorldTouchEvent()

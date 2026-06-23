@@ -69,6 +69,7 @@ public:
 
 public:
 	const FRandomStream& GetEventStream() const;
+
 	UEventLogger& GetEventLogger() const;
 	UObjectModelFactory& GetModelFactory() const;
 

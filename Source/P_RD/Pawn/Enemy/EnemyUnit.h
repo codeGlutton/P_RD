@@ -8,9 +8,7 @@
 #pragma once
 
 #include "RDMinimal.h"
-
 #include "Pawn/Unit.h"
-
 #include "EnemyUnit.generated.h"
 
 /**

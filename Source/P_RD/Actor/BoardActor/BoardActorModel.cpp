@@ -33,19 +33,19 @@ void UBoardActorModel::SetTileTransform(const FTileTransform& Transform)
 ETileLayerFlag UBoardActorModel::GetTileLayerFlags() const
 {
 	// 멤버에 설정된 레이어 타입 반환
-	return mTileLayerFlags;
+	return StaticCast<ETileLayerFlag>(mTileLayerFlags);
 }
 
 ETileLayerFlag UBoardActorModel::GetBlockLayerFlags() const
 {
 	// 멤버에 설정된 블로킹 레이어 타입들 반환
-	return mBlockLayerFlags;
+	return StaticCast<ETileLayerFlag>(mBlockLayerFlags);
 }
 
 ETileLayerFlag UBoardActorModel::GetReplaceLayerFlags() const
 {
 	// 멤버에 설정된 교체 레이어 타입들 반환
-	return mReplaceLayerFlags;
+	return StaticCast<ETileLayerFlag>(mReplaceLayerFlags);
 }
 
 int32 UBoardActorModel::GetOverlayLayerPriority() const

@@ -34,6 +34,9 @@ public:
 	UFUNCTION(Category = UI, BlueprintCallable)
 	bool SelectSkill(int32 SkillIndex);
 
+	UFUNCTION(Category = UI, BlueprintCallable)
+	bool SelectDice(int32 DiceIndex);
+
 	/**
 	 * @brief 터치 입력 아래의 월드 액터를 검사하여 이벤트를 실행한다.
 	 * @return 이벤트 성공 여부

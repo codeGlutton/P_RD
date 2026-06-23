@@ -125,15 +125,15 @@ public:
 protected:
 	// @brief 액터가 속한 레이어 타입
 	UPROPERTY(Category = "BoardActor", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "TileLayerFlags", Bitmask, BitmaskEnum = "/Script/P_RD.ETileLayerFlag"))
-	ETileLayerFlag mTileLayerFlags = ETileLayerFlag::None;
+	int32 mTileLayerFlags = static_cast<int32>(ETileLayerFlag::None);
 
 	// @brief 타일 배치 시 블로킹할 레이어 타입들
 	UPROPERTY(Category = "BoardActor", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "BlockLayerFlags", Bitmask, BitmaskEnum = "/Script/P_RD.ETileLayerFlag"))
-	ETileLayerFlag mBlockLayerFlags = ETileLayerFlag::None;
+	int32 mBlockLayerFlags = static_cast<int32>(ETileLayerFlag::None);
 
 	// @brief 타일 배치 시 교체할 레이어 타입들
 	UPROPERTY(Category = "BoardActor", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "ReplaceLayerFlags", Bitmask, BitmaskEnum = "/Script/P_RD.ETileLayerFlag"))
-	ETileLayerFlag mReplaceLayerFlags = ETileLayerFlag::None;
+	int32 mReplaceLayerFlags = static_cast<int32>(ETileLayerFlag::None);
 
 	// @brief Overlay 레이어 내 교체 우선순위 (높을수록 우선)
 	UPROPERTY(Category = "BoardActor", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "OverlayLayerPriority"))
@@ -145,6 +145,7 @@ private:
 	FTileTransform mTileTransform = FTileTransform::Invalid;
 
 protected:
+	// @brief 초기 스폰 데이터
 	UPROPERTY(Category = "Spawn", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "StaticSpawnData"))
 	TObjectPtr<UStaticObstacleSpawnData> mStaticSpawnData;
 };

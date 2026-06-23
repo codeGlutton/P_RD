@@ -13,6 +13,8 @@
 #include "StaticObstacleSpawnData.generated.h"
 
 class UBoardActorModel;
+class UAttributeSet;
+struct FGameplayAttribute;
 
 /**
  * @brief  장애물 생성 시 사용되는 정적 Data Asset
@@ -39,6 +41,7 @@ public:
 
 public:
     FName GetKeyName() const;
+    float GetDefaultAttributeValue(TSubclassOf<UAttributeSet> AttributeSetClass, const FGameplayAttribute& Attrubute, int32 Level) const;
 
 public:
     UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ModelClass", AssetBundles = "Actor"))

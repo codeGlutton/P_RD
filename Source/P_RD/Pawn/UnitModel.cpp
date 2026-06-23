@@ -11,9 +11,9 @@ UUnitModel::UUnitModel() : mTeamId(EGameTeamType::AllNeutral)
 	mAttributeCompModel = CreateDefaultSubobject<UAttributeSetComponentModel>(TEXT("AttributeSetComponentModel"));
 	// mSkillComp = CreateDefaultSubobject<USkillComponent>(TEXT("SkillComp"));
 
-	mTileLayerFlags = ETileLayerFlag::Unit;
-	mBlockLayerFlags = ETileLayerFlag::Unit | ETileLayerFlag::Obstacle;
-	mReplaceLayerFlags = ETileLayerFlag::None;
+	mTileLayerFlags = StaticCast<int32>(ETileLayerFlag::Unit);
+	mBlockLayerFlags = StaticCast<int32>(ETileLayerFlag::Unit | ETileLayerFlag::Obstacle);
+	mReplaceLayerFlags = StaticCast<int32>(ETileLayerFlag::None);
 	mOverlayLayerPriority = 0;
 }
 
@@ -21,14 +21,8 @@ void UUnitModel::PostInitializeComponentModels()
 {
 	Super::PostInitializeComponentModels();
 
-	// TODO : 초기화 로직
-	
-	//mAbilitySystemComp->InitAbilityActorInfo(this, this);
-	// 
-	// Difficulty값에 따라 ASC Attribute 초기화
-	// auto* AbilitySystemGlobals = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals();
-	// AbilitySystemGlobals->InitGlobalData();
-	// AbilitySystemGlobals->GetAttributeSetInitter()->InitAttributeSetDefaults(mAbilitySystemComp, GetUnitKeyName(), GetDifficulty(), true);
+	auto* AbilitySystemGlobals = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals();
+	// AbilitySystemGlobals->GetAttributeSetInitter()->();
 }
 
 void UUnitModel::SetGenericTeamId(const FGenericTeamId& TeamID)
