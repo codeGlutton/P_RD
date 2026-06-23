@@ -38,7 +38,7 @@ public:
 public:
 	void BindModel(UObjectModel* Model) override;
 	void UnbindModel(UObjectModel* Model) override;
-
+protected:
 	UObjectModel* GetModel_Internal() const override;
 
 	/* 전투 UI 데이터 경계 (MVVM ViewModel; 전투 수명 동안 1개 소유) */
