@@ -15,6 +15,7 @@
 
 class USRPGSkillBuildAction;
 class UStaticSkillData;
+class UTileMapModel;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangeSkillBuildPhase, const USRPGSkillBuildAction* /*Action*/, ESRPGSkillBuildPhase /*Phase*/);
 
