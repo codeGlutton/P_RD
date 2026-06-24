@@ -36,9 +36,9 @@ public:
 
 public:
 	virtual bool ActivateAbility(
-		const FTacticalAbilityContext Context,
+		const FTacticalAbilityContext& Context,
 		OUT TArray<class UTacticalEffectContext*>& EffectContext,
-		OUT class UPassiveStackContext* PassiveStackContext);
+		OUT const class UPassiveStackContext* PassiveStackContext) override;
 
 	/*
 	* @brief 패시브를 실제로 업데이트 시킨다.

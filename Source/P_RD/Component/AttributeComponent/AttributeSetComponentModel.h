@@ -1,62 +1,90 @@
 ﻿/*****************************************************************//**
  * @file   AttributeSetComponentModel.h
  * @brief  속성 컴포넌트 모델 정의 헤더
- * @author 김준형
+ * @author 모호재
  * @date   2026-06-19
  *********************************************************************/
 
 #pragma once
 
 #include "AttributeSet/AttributeSetMinimal.h"
-#include "AttributeSet/UnitAttributeSet.h"
 #include "Component/ComponentModel.h"
+#include "TAS/Effect/ActiveTacticalEffect.h"
+#include "TAS/Effect/ActiveTacticalEffectsContainer.h"
 #include "AttributeSetComponentModel.generated.h"
 
-// NOTE :	저희 GAS를 안쓰기로 해서 종속성을 다 빼려했는데, 요기서는 다시 쓰시는 것으로 보입니다.
-//			월요일에 확실하게 결정을 하시죠.... 일단 여기서는 다 빼두었습니다.
+struct FTacticalAggregator;
 
 UCLASS()
 class P_RD_API UAttributeSetComponentModel : public UComponentModel
 {
 	GENERATED_BODY()
 
-public:	
-	UAttributeSetComponentModel();
+    friend struct FActiveTacticalEffect;
+    friend struct FActiveTacticalEffectsContainer;
+
+    /* UComponentModel 상속 */
+public:
+    void Initialize() override;
+    void Uninitialize() override;
+
+public:
+    void BeginPlay() override;
+    void EndPlay() override;
+
+    /* AttributeSet 세팅 */
+public:
+    template <typename T>
+    const T* GetAttributeSet() const
+    {
+        return StaticCast<T*>(GetAttributeSet_Internal(T::StaticClass()));
+    }
+    template <typename T>
+    const T* AddAttributeSet()
+    {
+        return StaticCast<T*>(GetOrCreateAttributeSet_Internal(T::StaticClass()));
+    }
+
+public:
+    void AddSpawnedAttributeSet(UAttributeSet* AttributeSet);
+    void RemoveSpawnedAttributeSet(UAttributeSet* AttributeSet);
 
 protected:
-	UPROPERTY(Category = GAS, VisibleAnywhere, meta = (DisplayName = "UnitAttributeSet"))
-	TObjectPtr<UUnitAttributeSet> mUnitAttributeSet;
+    const UAttributeSet* GetAttributeSet_Internal(TSubclassOf<UAttributeSet> Class) const;
+    const UAttributeSet* GetOrCreateAttributeSet_Internal(TSubclassOf<UAttributeSet> Class);
 
-    TMap<FGameplayAttribute, FOnGameplayAttributeValueChange> DelegateMap;
-
+    /* 기본값 설정 */
 public:
-	virtual void Initialize() override;
+    void SetAttributeBaseValue(const FGameplayAttribute& Attribute, float BaseValue);
+    float GetAttributeBaseValue(const FGameplayAttribute& Attribute) const;
 
+    /* 현재값 설정 */
 public:
-	virtual void BeginPlay() override;
+    float GetAttributeCurrentValue(const FGameplayAttribute& Attribute) const;
 
+protected:
+    void SetAttributeCurrentValue_Internal(const FGameplayAttribute& Attribute, float& NewValue);
+
+    /* 변경 알림 */
 public:
-	/*
-    * @brief 해당하는 속성의 값을 가져온다.
-    */
-    float GetAttributeValue(FGameplayAttribute Attribute) const;
+    /**
+     * 속성 값이 변경될 경우 실행
+     * @param Aggregator 해당 속성의 계산 객체
+     * @param Attribute 변경 속성
+     */
+    void OnAttributeAggregatorDirty(FTacticalAggregator* Aggregator, FGameplayAttribute Attribute);
+    /**
+     * 속성 값에 의존하는 Effect에게 전파를 위해 실행
+     * @param Handle 대상 Effect 핸들
+     * @param ChangedAggregator 해당 속성의 계산 객체
+     */
+    void OnMagnitudeDependencyChange(FActiveTacticalEffectHandle Handle, const FTacticalAggregator* ChangedAggregator);
 
-    /*
-    * @brief 델리게이트를 찾아서 반환합니다.
-    */
-    FOnGameplayAttributeValueChange& GetGameplayAttributeValueChangeDelegate(FGameplayAttribute Attribute)
-    {
-        return DelegateMap.FindOrAdd(Attribute);
-    }
-    /*
-    * @brief 속성값을 변경합니다.
-    * 
-    * @details
-    * 변경하면서 델리게이트를 작동합니다.
-    * 어트리뷰트셋 수정에 제한을 두고 싶어 우선은 사용 자제 부탁드립니다.
-    * 
-    * @note
-    * 속도가 느리다고 함. 추후 변경 요망
-    */
-    void SetAttributeValue(FGameplayAttribute Attribute, float NewValue);
+protected:
+    UPROPERTY(Category = "Effect", VisibleAnywhere, meta = (DisplayName = "ActiveAttributeEffects"))
+    FActiveTacticalEffectsContainer mActiveAttributeEffects;
+
+protected:
+    UPROPERTY(Category = "AttributeSet", VisibleAnywhere, meta = (DisplayName = "SpawnedAttributes"))
+    TArray<TObjectPtr<UAttributeSet>> mSpawnedAttributes;
 };

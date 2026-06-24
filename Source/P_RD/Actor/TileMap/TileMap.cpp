@@ -51,11 +51,12 @@ ATileMap::ATileMap()
 	}
 
 	// 하이라이트 표시용 머티리얼: PerInstanceCustomData(RGBA)를 읽어 타일 색에 합성한다.
-	// 없으면 엔진 기본 머티리얼로 렌더되어 하이라이트(Aim/Select/Effect)가 안 보인다.
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> TileHighlightMatFinder(TEXT("/Game/BP/Materials/M_TileHighlight.M_TileHighlight"));
-	if (TileHighlightMatFinder.Succeeded())
+	// M_TileTransparent는 반투명이라 타일맵이 배경에 깔릴 때 바닥이 비치고, 남색 바탕이 없어 하이라이트 색 구분이 잘 된다.
+	// 없으면 엔진 기본 머티리얼로 렌더되어 하이라이트(Aim/Select/Effect)가 안 보인다. (경로 화살표/마커도 아래에서 이 머티리얼 재사용)
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> TileTransparentMatFinder(TEXT("/Game/SVN/InSideAsset/Material/M_TileTransparent.M_TileTransparent"));
+	if (TileTransparentMatFinder.Succeeded())
 	{
-		mTileMaterial = TileHighlightMatFinder.Object;
+		mTileMaterial = TileTransparentMatFinder.Object;
 		mTileMeshComponent->SetMaterial(0, mTileMaterial);
 	}
 
@@ -80,17 +81,31 @@ ATileMap::ATileMap()
 	mPathEndComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	mPathEndComponent->SetNumCustomDataFloats(4);
 
-	// 화살표 메시는 엔진에 마땅한 게 없어 디폴트 미지정 — 전용 화살표 에셋(+X 방향)을 디테일에서 할당
-	// 도착 마커 기본 메시: 엔진 Sphere
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMeshFinder(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
-	if (SphereMeshFinder.Succeeded())
+	// 경로 중간 화살표 기본 메시: +X를 가리키는 Kenney 화살표 에셋 (방향 회전이 이 형상 기준이라 +X 향이어야 함)
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> ArrowMeshFinder(TEXT("/Game/SVN/OutSideAsset/Kenney/FactoryKit/SM_Kenney_FactoryKit_Arrow.SM_Kenney_FactoryKit_Arrow"));
+	if (ArrowMeshFinder.Succeeded())
 	{
-		mPathEndMesh = SphereMeshFinder.Object;
+		mPathArrowMesh = ArrowMeshFinder.Object;
+		mPathArrowComponent->SetStaticMesh(mPathArrowMesh);
+	}
+
+	// 도착(끝) 타일 마커 기본 메시: Kenney 특수 인디케이터 화살표 에셋
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> EndMeshFinder(TEXT("/Game/SVN/OutSideAsset/Kenney/FactoryKit/SM_Kenney_FactoryKit_IndicatorSpecialArrow.SM_Kenney_FactoryKit_IndicatorSpecialArrow"));
+	if (EndMeshFinder.Succeeded())
+	{
+		mPathEndMesh = EndMeshFinder.Object;
 		mPathEndComponent->SetStaticMesh(mPathEndMesh);
 	}
 
-	// 경로 색 기본값: 화살표 청록 반투명, 도착 마커 녹색 반투명
-	mPathArrowStyle.mColor = FLinearColor(0.1f, 0.8f, 1.0f, 0.9f);
+	// 화살표/마커도 타일과 동일한 반투명 하이라이트 머티리얼(custom data RGBA 합성) 재사용 — SetMovePath에서 컴포넌트에 적용
+	if (TileTransparentMatFinder.Succeeded())
+	{
+		mPathArrowMaterial = TileTransparentMatFinder.Object;
+		mPathEndMaterial = TileTransparentMatFinder.Object;
+	}
+
+	// 경로 색 기본값: 화살표 호박색 반투명, 도착 마커 녹색 반투명
+	mPathArrowStyle.mColor = FLinearColor(0.9f, 0.7f, 0.2f, 0.9f);
 	mPathEndStyle.mColor = FLinearColor(0.1f, 1.0f, 0.3f, 0.9f);
 
 	// 생성자에서 만든 기본 모델에 표시 델리깃을 임시 바인딩 (런타임 모델 매핑 시 재호출)
@@ -493,12 +508,23 @@ void ATileMap::SetMovePath(const TArray<FTileIndex>& PathTiles)
 		}
 	}
 
-	// 마지막(도착) 타일엔 도착 마커 배치
+	// 마지막(도착) 타일엔 도착 마커 배치 (인디케이터 메시가 방향성이 있어 진입 방향으로 회전)
 	if (mPathEndComponent != nullptr)
 	{
 		const FTileIndex& EndTile = PathTiles[LastIndex];
+
+		// 진입 방향 = 마지막 스텝(직전 타일 → 도착 타일), 마지막 화살표와 같은 방향을 가리킴
+		// 단일 타일 경로(직전 타일 없음)면 진입 방향이 없어 회전 없음(+X)
+		FRotator Rotation = FRotator::ZeroRotator;
+		if (LastIndex >= 1)
+		{
+			const FTileIndex& PrevTile = PathTiles[LastIndex - 1];
+			const FTileIndex Step(EndTile.mX - PrevTile.mX, EndTile.mY - PrevTile.mY);
+			Rotation = FRotator(0.0f, StepToYaw(Step), 0.0f);
+		}
+
 		const FVector Location(EndTile.mX * mTileSize, EndTile.mY * mTileSize, mPathHeightOffset);
-		const FTransform InstanceTransform(FRotator::ZeroRotator, Location, FVector(ArrowScale));
+		const FTransform InstanceTransform(Rotation, Location, FVector(ArrowScale));
 		mPathEndComponent->AddInstance(InstanceTransform, /*bWorldSpace=*/false);
 	}
 

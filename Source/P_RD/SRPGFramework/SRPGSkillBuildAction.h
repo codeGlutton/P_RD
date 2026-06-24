@@ -15,6 +15,7 @@
 
 class USRPGSkillBuildAction;
 class UStaticSkillData;
+class UTileMapModel;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangeSkillBuildPhase, const USRPGSkillBuildAction* /*Action*/, ESRPGSkillBuildPhase /*Phase*/);
 
@@ -36,12 +37,12 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FSRPGCDiceSelectCommand : public FSRPGCommand
+struct FSRPGDiceSelectCommand : public FSRPGCommand
 {
 	GENERATED_BODY()
 
 public:
-	FSRPGCDiceSelectCommand();
+	FSRPGDiceSelectCommand();
 
 public:
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceIndex"))

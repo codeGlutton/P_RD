@@ -37,9 +37,14 @@ void UGameEventLogger::EndMotionLog()
 	UE_LOG(LogEventLogger, Log, TEXT("모션 이벤트 로그 종료"));
 }
 
+void UGameEventLogger::LogTagEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTagEffectEventLog& Log)
+{
+	UE_LOG(LogEventLogger, Log, TEXT("[%d][%s : %d] 태그 변경"), TargetActorID, *Log.mEffectTag.ToString(), Log.mCount);
+}
+
 void UGameEventLogger::LogAttributeEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGAttributeEffectEventLog& Log)
 {
-	UE_LOG(LogEventLogger, Log, TEXT("[%d][%s : %f] 속성 변경"), TargetActorID, *Log.mEffectTag.ToString(), Log.mMagnitude);
+	UE_LOG(LogEventLogger, Log, TEXT("[%d][%s : %f] 속성 변경"), TargetActorID, *Log.mEffectAttribute.GetName(), Log.mMagnitude);
 }
 
 void UGameEventLogger::LogTileEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTileEffectEventLog& Log)
@@ -123,6 +128,24 @@ void USimulationEventLogger::EndMotionLog()
 	UE_LOG(LogEventLogger, Log, TEXT("모션 이벤트 로그 종료"));
 }
 
+void USimulationEventLogger::LogTagEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTagEffectEventLog& Log)
+{
+	checkf(mCurrentMotionEventLog != nullptr, TEXT("모션 로그 시작 없이 태그 변경 기록 오류"));
+	checkf(Log.IsValid() == true, TEXT("태그 변경 로그 불량"));
+
+	FSRPGBoardActorEventLog& BoardActorLog = mCurrentMotionEventLog->mBoardActorEventLogs[TargetActorID];
+	BoardActorLog.mTargetActorID = TargetActorID;
+	BoardActorLog.mBoardActorModelClass = BoardActorModelClass;
+
+	checkf(BoardActorLog.IsValid() == true, TEXT("보드 액터 로그 불량"));
+
+	FSRPGTagEffectEventLog& TagEffectEventLog = BoardActorLog.mTagEffectEventLogs.FindOrAdd(Log);
+	TagEffectEventLog.mEffectTag = Log.mEffectTag;
+	TagEffectEventLog.mCount += Log.mCount;
+
+	UE_LOG(LogEventLogger, Log, TEXT("[%d][%s : %d] 태그 변경"), TargetActorID, *Log.mEffectTag.ToString(), Log.mCount);
+}
+
 void USimulationEventLogger::LogAttributeEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGAttributeEffectEventLog& Log)
 {
 	checkf(mCurrentMotionEventLog != nullptr, TEXT("모션 로그 시작 없이 속성 변경 기록 오류"));
@@ -134,11 +157,11 @@ void USimulationEventLogger::LogAttributeEffect(int32 TargetActorID, UClass* Boa
 
 	checkf(BoardActorLog.IsValid() == true, TEXT("보드 액터 로그 불량"));
 
-	FSRPGAttributeEffectEventLog& AttributeEffectLog = BoardActorLog.mAttributeEffectEventLogs[Log.mEffectTag];
-	AttributeEffectLog.mEffectTag = Log.mEffectTag;
+	FSRPGAttributeEffectEventLog& AttributeEffectLog = BoardActorLog.mAttributeEffectEventLogs.FindOrAdd(Log);
+	AttributeEffectLog.mEffectAttribute = Log.mEffectAttribute;
 	AttributeEffectLog.mMagnitude += Log.mMagnitude;
 
-	UE_LOG(LogEventLogger, Log, TEXT("[%d][%s : %f] 속성 변경"), TargetActorID, *Log.mEffectTag.ToString(), Log.mMagnitude);
+	UE_LOG(LogEventLogger, Log, TEXT("[%d][%s : %f] 속성 변경"), TargetActorID, *Log.mEffectAttribute.GetName(), Log.mMagnitude);
 }
 
 void USimulationEventLogger::LogTileEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTileEffectEventLog& Log)

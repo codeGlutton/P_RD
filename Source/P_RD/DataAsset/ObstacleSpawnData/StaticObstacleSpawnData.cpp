@@ -2,6 +2,8 @@
 #include "Setting/GamePlaySettings.h"
 #include "Actor/BoardActor/BoardActorModel.h"
 
+#include "AttributeSet/AttributeSetMinimal.h"
+
 #if WITH_EDITOR
 #include "Misc/DataValidation.h"
 #endif
@@ -69,4 +71,21 @@ FName UStaticObstacleSpawnData::GetKeyName() const
 	FString Key = mDisplayName.ToString();
 	Key.RemoveSpacesInline();
 	return *Key;
+}
+
+float UStaticObstacleSpawnData::GetDefaultAttributeValue(TSubclassOf<UAttributeSet> AttributeSetClass, const FGameplayAttribute& Attrubute, int32 Level) const
+{
+	UAbilitySystemGlobals* AbilitySystemGlobals = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals();
+	AbilitySystemGlobals->InitGlobalData();
+	auto MaxHPArray = AbilitySystemGlobals->GetAttributeSetInitter()->GetAttributeSetValues(
+		AttributeSetClass,
+		Attrubute.GetUProperty(),
+		GetKeyName()
+	);
+
+	if (MaxHPArray.IsValidIndex(Level) == false)
+	{
+		return 0.f;
+	}
+	return MaxHPArray[Level];
 }

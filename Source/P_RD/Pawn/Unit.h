@@ -16,6 +16,11 @@
 
 class UUnitModel;
 
+class USkeletalMeshComponent;
+class UFloatingPawnMovement;
+class UCapsuleComponent;
+class UArrowComponent;
+
 /**
  * @brief  턴을 소유할 수 있는 베이스 폰 클래스
  */
@@ -24,9 +29,37 @@ class P_RD_API AUnit : public APawn, public IActorView
 {
 	GENERATED_BODY()
 
+public:
+	AUnit();
+
 	/* IActorView 상속 */
 protected:
 	UObjectModel* GetModel_Internal() const override;
+
+public:
+	UCapsuleComponent* GetCapsuleComponent() const;
+	USkeletalMeshComponent* GetMesh() const;
+	UFloatingPawnMovement* GetCharacterMovement() const;
+
+#if WITH_EDITORONLY_DATA
+	UArrowComponent* GetArrowComponent() const;
+#endif
+
+private:
+	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CapsuleComp", AllowPrivateAccess = "true"))
+	TObjectPtr<UCapsuleComponent> mCapsuleComp;
+
+	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MeshComp", AllowPrivateAccess = "true"))
+	TObjectPtr<USkeletalMeshComponent> mMeshComp;
+
+	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MovementComp", AllowPrivateAccess = "true"))
+	TObjectPtr<UFloatingPawnMovement> mMovementComp;
+
+
+#if WITH_EDITORONLY_DATA
+	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "ArrowComp", AllowPrivateAccess = "true"))
+	TObjectPtr<UArrowComponent> mArrowComp;
+#endif
 
 protected:
 	TWeakObjectPtr<UUnitModel> mUnitModel;

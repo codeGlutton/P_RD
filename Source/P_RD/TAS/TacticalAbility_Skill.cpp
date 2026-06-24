@@ -18,9 +18,9 @@ void UTacticalAbility_Skill::ApplyCost() const
 }
 
 bool UTacticalAbility_Skill::ActivateAbility(
-	const FTacticalAbilityContext Context,
+	const FTacticalAbilityContext& Context,
 	OUT TArray<class UTacticalEffectContext*>& EffectContext,
-	OUT class UPassiveStackContext* PassiveStackContext)
+	OUT const class UPassiveStackContext* PassiveStackContext)
 {
 	Super::ActivateAbility(Context, EffectContext, PassiveStackContext);
 
