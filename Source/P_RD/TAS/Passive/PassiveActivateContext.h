@@ -17,6 +17,8 @@ struct FBoardCombatTargetSnapshotData;
  *
  * @details
  * 패시브가 효과를 계산(ActivatePassive)할 때 읽는 일회성 입력.
+ * 드라이버 함수 내에서 채워 const 참조로 전달하며, 복제 없이 함수 스코프 동안만 유효.
+ * 따라서 리플렉션이 불필요해 USTRUCT가 아닌 일반 struct로 둠.
  * 패시브 내부 상태(mState)와 달리 호출마다 새로 채워짐.
  * 가변 수치는 스냅샷에서, 정체성(팀/직업)·위치는 모델 포인터에서 조회.
  */

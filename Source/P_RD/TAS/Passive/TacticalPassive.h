@@ -32,6 +32,10 @@ class P_RD_API UTacticalPassive : public UObject
 {
 	GENERATED_BODY()
 
+	// 자동화 테스트에서만 protected 상태(mTriggerTiming 등)에 접근하기 위한 friend
+	// 릴리즈 빌드에 테스트 모듈이 빠져도 이름 선언일 뿐이라 무해
+	friend class FPassiveComponentModelTests;
+
 public:
 	/**
 	 * @brief 패시브 효과 계산
@@ -59,6 +63,10 @@ public:
 	 * @param PassiveState 커밋할 패시브 내부 상태
 	 */
 	virtual void CommitPassive(IN const TInstancedStruct<FTacticalPassiveState>& PassiveState) {}
+
+public:
+	// 발동 시점 태그 반환 (드라이버/컴포넌트가 시점별로 패시브를 모을 때 사용)
+	const FGameplayTag& GetTriggerTiming() const { return mTriggerTiming; }
 
 protected:
 	/**

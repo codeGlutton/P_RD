@@ -29,6 +29,9 @@ public class P_RDTests : ModuleRules
             /* GAS Plugin Modules */
             "GameplayAbilities",
 
+            /* 게임플레이 태그 (시점 태그 직접 참조) */
+            "GameplayTags",
+
             /* AI Module (BoardCombatTarget가 참조하는 GenericTeamAgentInterface 등) */
             "AIModule",
         });
