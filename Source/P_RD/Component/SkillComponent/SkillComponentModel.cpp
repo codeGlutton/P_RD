@@ -9,6 +9,8 @@
 #include "AttributeSet/UnitAttributeSet.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
+#include "Pawn/UnitModel.h"
+
 
 // Sets default values for this component's properties
 USkillComponentModel::USkillComponentModel()
@@ -18,12 +20,26 @@ USkillComponentModel::USkillComponentModel()
 	
 
 	// ...
+
+	// 테스트 Initialize
+	{
+		FString AssetPath = TEXT("/Game/BP/DataAsset/Skill/Attack/DA_TestAttack_Common.DA_TestAttack_Common");
+		UStaticSkillData* LoadedData = Cast<UStaticSkillData>(StaticLoadObject(UStaticSkillData::StaticClass(), nullptr, *AssetPath));
+
+		if (LoadedData)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("로드됨"));
+			// 데이터 활용
+			AddSkillData(LoadedData);
+		}
+	}
 }
 
 
 void USkillComponentModel::Initialize()
 {
 	Super::Initialize();
+
 }
 
 // Called when the game starts
@@ -229,11 +245,11 @@ void USkillComponentModel::ApplyEffect(FTacticalEffectRequestContainer& Tactical
 			for (TMap<FGameplayAttribute, float>::TIterator iter = Data.mAttributes.CreateIterator(); iter; ++iter)
 			{
 				float BaseValue = Actor->FindComponentModelByClass<UAttributeSetComponentModel>()->GetAttributeCurrentValue(iter.Key());
-				//UE_LOG(LogTemp, Warning, TEXT("BaseValue : %d"), BaseValue);
+				UE_LOG(LogTemp, Warning, TEXT("BaseValue : %f"), BaseValue);
 				float CurrentValue = BaseValue - iter.Value();
-				//UE_LOG(LogTemp, Warning, TEXT("CurrentValue : %d"), CurrentValue);
+				UE_LOG(LogTemp, Warning, TEXT("CurrentValue : %f"), CurrentValue);
 				FString Name = iter.Key().AttributeName;
-				//UE_LOG(LogTemp, Warning, TEXT("AttributeName : %s"), *Name);
+				UE_LOG(LogTemp, Warning, TEXT("AttributeName : %s"), *Name);
 			}
 		}
 	}
@@ -242,18 +258,20 @@ void USkillComponentModel::ApplyEffect(FTacticalEffectRequestContainer& Tactical
 void USkillComponentModel::ExtractTarget(const TArray<FTileIndex>& TargetTile, ETileLayerFlag ActorFlag, ETargetFilter TargetFilter, OUT TArray<TWeakObjectPtr<UBoardActorModel>>& TargetActors)
 {
 	// CombatModel을 가져옵니다.
-	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
-	checkf(IsValid(CombatModel), TEXT("전투 모델이 비어있습니다."));
+	//USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	//checkf(IsValid(CombatModel), TEXT("전투 모델이 비어있습니다."));
 
 	// 서브 시스템에 접근하여 타일맵 모델을 가져온다.
-	TWeakObjectPtr<UTileMapModel> TMModel = CombatModel->GetTileMap();
-	checkf(TMModel.IsValid(), TEXT("타일맵 모델이 존재하지 않습니다."));
+	//TWeakObjectPtr<UTileMapModel> TMModel = CombatModel->GetTileMap();
+	//checkf(TMModel.IsValid(), TEXT("타일맵 모델이 존재하지 않습니다."));
 	// ===============================================================
 
-	for (int i = 0; i < TargetTile.Num(); ++i)
+	for (int i = -2; i < TargetTile.Num(); ++i)
 	{
 		// 해당 타일에 유닛 모델을 가져온다.
-		TWeakObjectPtr<UBoardActorModel> TargetBoardModel = TMModel->GetActorOnTile<UBoardActorModel>(TargetTile[i], ActorFlag);
+		//TWeakObjectPtr<UBoardActorModel> TargetBoardModel = TMModel->GetActorOnTile<UBoardActorModel>(TargetTile[i], ActorFlag);
+		TWeakObjectPtr<UBoardActorModel> TargetBoardModel = NewObject<UUnitModel>();
+
 
 		// 유닛이 없다면 반환한다.
 		if (!TargetBoardModel.IsValid())

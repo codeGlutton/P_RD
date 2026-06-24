@@ -3,13 +3,14 @@
 
 // #include "Pawn/SkillComponent.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "Component/SkillComponent/SkillComponentModel.h"
 
 UUnitModel::UUnitModel() : mTeamId(EGameTeamType::AllNeutral)
 {
 	// TODO : 모델로 바꿔야됨
 
 	mAttributeCompModel = CreateDefaultSubobject<UAttributeSetComponentModel>(TEXT("AttributeSetComponentModel"));
-	// mSkillComp = CreateDefaultSubobject<USkillComponent>(TEXT("SkillComp"));
+	mSkillCompModel = CreateDefaultSubobject<USkillComponentModel>(TEXT("SkillComp"));
 
 	mTileLayerFlags = StaticCast<int32>(ETileLayerFlag::Unit);
 	mBlockLayerFlags = StaticCast<int32>(ETileLayerFlag::Unit | ETileLayerFlag::Obstacle);

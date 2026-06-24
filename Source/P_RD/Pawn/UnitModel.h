@@ -22,7 +22,7 @@ class UUnitAttributeSet;
 class UStaticUnitSpawnData;
 
 class UAttributeSetComponentModel;
-class USkillComponent;
+class USkillComponentModel;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUnitDied, UUnitModel*, Model);
 
@@ -67,8 +67,8 @@ private:
 	TObjectPtr<UAttributeSetComponentModel> mAttributeCompModel;
 
 	// TODO : 모델로 바꿔야됨
-	// UPROPERTY(Category = Skill, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "SkillComp"))
-	// TObjectPtr<USkillComponent>	mSkillComp;
+	UPROPERTY(Category = Skill, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "SkillComp"))
+	TObjectPtr<USkillComponentModel>	mSkillCompModel;
 
 private:
 	// @brief 팀 ID
