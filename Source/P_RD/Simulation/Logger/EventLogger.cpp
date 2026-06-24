@@ -139,9 +139,13 @@ void USimulationEventLogger::LogTagEffect(int32 TargetActorID, UClass* BoardActo
 
 	checkf(BoardActorLog.IsValid() == true, TEXT("보드 액터 로그 불량"));
 
-	FSRPGTagEffectEventLog& TagEffectEventLog = BoardActorLog.mTagEffectEventLogs.FindOrAdd(Log);
-	TagEffectEventLog.mEffectTag = Log.mEffectTag;
-	TagEffectEventLog.mCount += Log.mCount;
+	bool IsAlreadyExisted = false;
+	FSRPGTagEffectEventLog& TagEffectEventLog = BoardActorLog.mTagEffectEventLogs.FindOrAdd(Log, &IsAlreadyExisted);
+	if (IsAlreadyExisted == true)
+	{
+		TagEffectEventLog.mEffectTag = Log.mEffectTag;
+		TagEffectEventLog.mCount += Log.mCount;
+	}
 
 	UE_LOG(LogEventLogger, Log, TEXT("[%d][%s : %d] 태그 변경"), TargetActorID, *Log.mEffectTag.ToString(), Log.mCount);
 }
@@ -157,9 +161,13 @@ void USimulationEventLogger::LogAttributeEffect(int32 TargetActorID, UClass* Boa
 
 	checkf(BoardActorLog.IsValid() == true, TEXT("보드 액터 로그 불량"));
 
-	FSRPGAttributeEffectEventLog& AttributeEffectLog = BoardActorLog.mAttributeEffectEventLogs.FindOrAdd(Log);
-	AttributeEffectLog.mEffectAttribute = Log.mEffectAttribute;
-	AttributeEffectLog.mMagnitude += Log.mMagnitude;
+	bool IsAlreadyExisted = false;
+	FSRPGAttributeEffectEventLog& AttributeEffectLog = BoardActorLog.mAttributeEffectEventLogs.FindOrAdd(Log, &IsAlreadyExisted);
+	if (IsAlreadyExisted == true)
+	{
+		AttributeEffectLog.mEffectAttribute = Log.mEffectAttribute;
+		AttributeEffectLog.mMagnitude += Log.mMagnitude;
+	}
 
 	UE_LOG(LogEventLogger, Log, TEXT("[%d][%s : %f] 속성 변경"), TargetActorID, *Log.mEffectAttribute.GetName(), Log.mMagnitude);
 }

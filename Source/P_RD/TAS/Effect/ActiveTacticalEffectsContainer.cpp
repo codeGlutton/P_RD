@@ -14,6 +14,33 @@ FScopedActiveTacticalEffectLock::~FScopedActiveTacticalEffectLock()
     mContainer.DecrementLock();
 }
 
+FActiveTacticalEffectsContainer::FActiveTacticalEffectsContainer() :
+    mOwner(nullptr),
+    mScopedLockCount(0),
+    mPendingRemoveCount(0),
+    mPendingGameplayEffectHead(nullptr)
+{
+    mPendingGameplayEffectTail = &mPendingGameplayEffectHead;
+}
+
+FActiveTacticalEffectsContainer::~FActiveTacticalEffectsContainer()
+{
+    while (mPendingGameplayEffectHead != nullptr)
+    {
+        FActiveTacticalEffect* Next = mPendingGameplayEffectHead->mPendingNext;
+        delete mPendingGameplayEffectHead;
+        mPendingGameplayEffectHead = Next;
+    }
+}
+
+void FActiveTacticalEffectsContainer::RegisterWithOwnerModel(UAttributeSetComponentModel* Owner)
+{
+    if (mOwner != Owner && Owner != nullptr)
+    {
+        mOwner = Owner;
+    }
+}
+
 void FActiveTacticalEffectsContainer::IncrementLock()
 {
     mScopedLockCount++;

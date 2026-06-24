@@ -79,7 +79,7 @@ void FTacticalAggregator::BroadcastOnDirty()
     /* 값 갱신 요청 */
 
     TArray<FActiveTacticalEffectHandle> DependentEffectsCopy = mDependentEffects;
-    DependentEffectsCopy.Empty();
+    mDependentEffects.Empty();
 
     for (FActiveTacticalEffectHandle& Handle : DependentEffectsCopy)
     {

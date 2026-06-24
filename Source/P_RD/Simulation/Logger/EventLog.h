@@ -95,7 +95,7 @@ public:
 
 	// @brief 보드 액터의 태그 개수 변화량
 	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Count"))
-	int32													mCount = 0.f;
+	int32													mCount = 0;
 };
 
 /**

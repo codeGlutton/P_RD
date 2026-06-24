@@ -8,6 +8,7 @@
 #pragma once
 
 #include "AttributeSet/AttributeSetMinimal.h"
+#include "TAS/Effect/TacticalEffect.h"
 #include "ActiveTacticalEffect.generated.h"
 
 class UAttributeSetComponentModel;
@@ -86,8 +87,8 @@ public:
     FActiveTacticalEffectHandle mHandle;
 
     // @brief 이펙트 런타임 구성 데이터
-    // UPROPERTY()
-    // FGameplayEffectSpec mSpec;
+    UPROPERTY(Category = "Effect", VisibleAnywhere, meta = (DisplayName = "Spec"))
+    FTacticalEffectSpec mSpec;
 
 public:
     // @brief 추가 예약된 다음 이펙트 포인터

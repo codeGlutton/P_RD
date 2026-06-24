@@ -65,6 +65,10 @@ public:
 protected:
     void SetAttributeCurrentValue_Internal(const FGameplayAttribute& Attribute, float& NewValue);
 
+    /* 수정자 적용 */
+public:
+    void ApplyModToAttribute(const FGameplayAttribute& Attribute, TEnumAsByte<EGameplayModOp::Type> ModifierOp, float ModifierMagnitude);
+
     /* 변경 알림 */
 public:
     /**

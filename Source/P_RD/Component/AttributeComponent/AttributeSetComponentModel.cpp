@@ -109,6 +109,11 @@ void UAttributeSetComponentModel::SetAttributeCurrentValue_Internal(const FGamep
     Attribute.SetNumericValueChecked(NewValue, const_cast<UAttributeSet*>(AttributeSet));
 }
 
+void UAttributeSetComponentModel::ApplyModToAttribute(const FGameplayAttribute& Attribute, TEnumAsByte<EGameplayModOp::Type> ModifierOp, float ModifierMagnitude)
+{
+    mActiveAttributeEffects.ApplyModToAttribute(Attribute, ModifierOp, ModifierMagnitude);
+}
+
 void UAttributeSetComponentModel::OnAttributeAggregatorDirty(FTacticalAggregator* Aggregator, FGameplayAttribute Attribute)
 {
     mActiveAttributeEffects.OnAttributeAggregatorDirty(Aggregator, Attribute);

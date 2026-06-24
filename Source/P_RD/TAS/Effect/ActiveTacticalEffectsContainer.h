@@ -27,9 +27,9 @@ struct FTacticalAttributeChangeData
     GENERATED_BODY()
 
 public:
-    FGameplayAttribute Attribute = nullptr;
-    float NewValue = 0.f;;
-    float OldValue = 0.f;;
+    FGameplayAttribute mAttribute = nullptr;
+    float mNewValue = 0.f;
+    float mOldValue = 0.f;
 };
 
 /**
@@ -174,6 +174,14 @@ struct FActiveTacticalEffectsContainer
     typedef FActiveTacticalEffectIterator<const FActiveTacticalEffect, FActiveTacticalEffectsContainer> ConstIterator;
     typedef FActiveTacticalEffectIterator<FActiveTacticalEffect, FActiveTacticalEffectsContainer> Iterator;
 
+public:
+    FActiveTacticalEffectsContainer();
+    ~FActiveTacticalEffectsContainer();
+
+    /* 초기 등록 */
+public:
+    void RegisterWithOwnerModel(UAttributeSetComponentModel* Owner);
+
     /* 이펙트 증감 락 카운팅 */
 private:
     void IncrementLock();
@@ -190,9 +198,11 @@ public:
     void SetAttributeBaseValue(FGameplayAttribute Attribute, float BaseValue);
     float GetAttributeBaseValue(FGameplayAttribute Attribute) const;
 
+    FActiveTacticalEffect* ApplyGameplayEffectSpec(const FGameplayEffectSpec& Spec, bool& bFoundExistingStackableGE);
+
 private:
     void UpdateAttributeCurrentValue(FGameplayAttribute Attribute, float CurrentValue);
-
+    
 public:
     FActiveTacticalEffect* GetActiveTacticalEffect(const FActiveTacticalEffectHandle Handle);
     const FActiveTacticalEffect* GetActiveTacticalEffect(const FActiveTacticalEffectHandle Handle) const;

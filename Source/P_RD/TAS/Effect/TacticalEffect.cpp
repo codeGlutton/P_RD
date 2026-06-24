@@ -1,7 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-
-#include "TAS/Effect/TacticalEffect.h"
+﻿#include "TAS/Effect/TacticalEffect.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Actor/TileMap/TileMapModel.h"
