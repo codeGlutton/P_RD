@@ -1,10 +1,9 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-
-#include "DataAsset/SkillData/StaticSkillEffect/StaticSkillEffect_Move_Force.h"
+﻿#include "DataAsset/SkillData/StaticSkillEffect/StaticSkillEffect_Move_Force.h"
 #include "TAS/Effect/Move/TacticalEffectContext_Move_Force.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Actor/BoardActor/BoardActorModel.h"
+
+#include "AttributeSet/UnitAttributeSet.h"
 
 UTacticalEffectContext* UStaticSkillEffect_Move_Force::CreateContext(TWeakObjectPtr<class UBoardActorModel> CasterActor)
 {
@@ -15,7 +14,7 @@ UTacticalEffectContext* UStaticSkillEffect_Move_Force::CreateContext(TWeakObject
 
 	EffectContext->mTileLayerFlag = ETileLayerFlag::Unit;
 
-	EffectContext->mBase = mEffectDefaultDistance + mEffectRatioDistance * AttributeSet->GetAttributeValue(UUnitAttributeSet::GetSkillPointAttribute());
+	EffectContext->mBase = mEffectDefaultDistance + mEffectRatioDistance * AttributeSet->GetAttributeCurrentValue(UUnitAttributeSet::GetSkillPointAttribute());
 	EffectContext->mGameplayTag = mEffectTag;
 
 	EffectContext->mTacticalEffect = mTacticalEffect;

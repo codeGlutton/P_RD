@@ -34,6 +34,7 @@ public:
 	virtual void BeginMotionLog() PURE_VIRTUAL(UEventLogger::BeginMotionLog, return;);
 	virtual void EndMotionLog() PURE_VIRTUAL(UEventLogger::EndMotionLog, return;);
 
+	virtual void LogTagEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTagEffectEventLog& Log) PURE_VIRTUAL(UEventLogger::LogTagEffect, return;);
 	virtual void LogAttributeEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGAttributeEffectEventLog& Log) PURE_VIRTUAL(UEventLogger::LogAttributeEffect, return;);
 	virtual void LogTileEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTileEffectEventLog& Log) PURE_VIRTUAL(UEventLogger::LogTileEffect, return;);
 
@@ -62,6 +63,7 @@ public:
 	void BeginMotionLog() override;
 	void EndMotionLog() override;
 
+	void LogTagEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTagEffectEventLog& Log) override;
 	void LogAttributeEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGAttributeEffectEventLog& Log) override;
 	void LogTileEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTileEffectEventLog& Log) override;
 
@@ -87,6 +89,7 @@ public:
 	void BeginMotionLog() override;
 	void EndMotionLog() override;
 
+	void LogTagEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTagEffectEventLog& Log) override;
 	void LogAttributeEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGAttributeEffectEventLog& Log) override;
 	void LogTileEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTileEffectEventLog& Log) override;
 

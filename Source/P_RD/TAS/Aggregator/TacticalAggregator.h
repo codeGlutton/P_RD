@@ -1,0 +1,69 @@
+﻿/*****************************************************************//**
+ * @file   TacticalAggregator.h
+ * @brief  속성 값에 대한 모든 변화 계산기 객체 정의 헤더
+ * @author 모호재
+ * @date   2026-06-23
+ *********************************************************************/
+
+#pragma once
+
+#include "AttributeSet/AttributeSetMinimal.h"
+#include "TAS/Effect/ActiveTacticalEffect.h"
+
+/**
+ * @brief 하나의 변화값
+ */
+struct FTacticalAggregatorMod
+{
+public:
+    // @brief 평가된 값
+    float mEvaluatedMagnitude;
+    // @brief 스택 갯수
+    float mStackCount;
+};
+
+/**
+ * @brief 속성 값에 대한 모든 변화 계산기 객체
+ */
+struct FTacticalAggregator : public TSharedFromThis<FTacticalAggregator>
+{
+    friend struct FActiveTacticalEffectsContainer;
+
+    DECLARE_MULTICAST_DELEGATE_OneParam(FOnAttributeAggregatorDirty, FTacticalAggregator*);
+
+    /* 계산 함수 */
+public:
+    float GetAttributeBaseValue() const;
+    void SetAttributeBaseValue(float BaseValue, bool BroadcastDirtyEvent = true);
+
+public:
+    /**
+     * 현재 값 계산
+     */
+    float Evaluate() const;
+    float EvaluateWithBase(float BaseValue) const;
+
+    /* 헬퍼 함수 */
+public:
+    static float SumMods(const TArray<FTacticalAggregatorMod>& Mods, float Bias);
+    static float MultiplyMods(const TArray<FTacticalAggregatorMod>& Mods);
+
+    /* 업데이트 함수 */
+private:
+    void BroadcastOnDirty();
+
+public:
+    // @brief 값이 변경됨을 알리는 대리자
+    FOnAttributeAggregatorDirty OnDirty;
+    // @brief 재귀적 호출 방지용 카운팅
+    int32 mDirtyCount;
+
+private:
+    // @brief 베이스 값
+    float mBaseValue;
+    // @brief 각 연산자에 따른 결과값들
+    TArray<FTacticalAggregatorMod> mMods[EGameplayModOp::Max];
+    // @brief 해당 값에 영향을 받는 외부 이펙트들
+    TArray<FActiveTacticalEffectHandle>	mDependentEffects;
+};
+

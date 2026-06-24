@@ -15,6 +15,9 @@
 
 #include "AttributeSet.h"
 
+// Attribute Set Comp 신규 로그 카테고리 등록
+DECLARE_LOG_CATEGORY_EXTERN(LogAttributeSetComp, Log, All)
+
 /**
  * @brief Gameplay Attribute의 Get/Set 등의 접근 함수 자동 정의 매크로
  * @param ClassName AttributeSet 파생 클래스명
