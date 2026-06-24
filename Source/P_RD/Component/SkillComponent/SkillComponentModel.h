@@ -104,5 +104,5 @@ public:
 	void HandelMovePoint(float MovePoint);
 
 private:
-	void ApplyEffect(FTileIndex TargetTile, TArray<UTacticalEffectContext*> EffectContexts);
+	void ApplyEffect(FTileIndex TargetTile, TArray<UTacticalEffectContext*>& EffectContexts);
 };

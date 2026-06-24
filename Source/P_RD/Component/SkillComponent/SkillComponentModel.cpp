@@ -66,6 +66,7 @@ bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileInd
 	// 스킬을 기반으로 효과를 계산한다.
 	TSoftObjectPtr<UStaticSkillData> SkillData = mSkillData[SkillIndex];
 	checkf(SkillData.IsValid(), TEXT("잘못된 스킬"));
+	checkf(SkillData.IsPending(), TEXT("로드되어있지 않는 스킬"));
 
 	TWeakObjectPtr<UBoardActorModel> BoardActor = Cast<UBoardActorModel>(GetOwnerModel());
 	checkf(BoardActor.IsValid(), TEXT("보드 액터"));
@@ -85,7 +86,7 @@ bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileInd
 		// 효과를 적용한다.
 		for (int32 j = 0; j < TargetTiles.Num(); ++j)
 		{
-			ApplyEffect(TargetTiles[i], EffectContexts);
+			ApplyEffect(TargetTiles[j], EffectContexts);
 		}
 
 		// 우선 패시브 없이
