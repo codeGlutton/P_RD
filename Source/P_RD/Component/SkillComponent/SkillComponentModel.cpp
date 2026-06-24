@@ -29,17 +29,14 @@ void USkillComponentModel::BeginPlay()
 
 }
 
-
-bool USkillComponentModel::GetSkillData(int In_SkillIndex, TSoftObjectPtr<UStaticSkillData>& Out_SkillData)
+void USkillComponentModel::GetSkillData(int In_SkillIndex, OUT TSoftObjectPtr<UStaticSkillData>& Out_SkillData)
 {
 	checkf(mSkillData.IsValidIndex(In_SkillIndex), TEXT("잘못된 배열 범위"))
 
-		Out_SkillData = mSkillData[In_SkillIndex];
-
-	return true;
+	Out_SkillData = mSkillData[In_SkillIndex];
 }
 
-bool USkillComponentModel::SetSkillData(int SkillIndex, TSoftObjectPtr<UStaticSkillData> SkillData)
+void USkillComponentModel::SetSkillData(int SkillIndex, IN const TSoftObjectPtr<UStaticSkillData>& SkillData)
 {
 	checkf(mSkillData.IsValidIndex(SkillIndex), TEXT("잘못된 배열 범위"))
 
@@ -47,25 +44,22 @@ bool USkillComponentModel::SetSkillData(int SkillIndex, TSoftObjectPtr<UStaticSk
 
 	if (OnSkillChange.IsBound())
 		OnSkillChange.Broadcast(SkillIndex, SkillData);
-
-	return true;
 }
 
 
-bool USkillComponentModel::AddSkillData(TSoftObjectPtr<UStaticSkillData> SkillData)
+void USkillComponentModel::AddSkillData(IN const TSoftObjectPtr<UStaticSkillData>& SkillData)
 {
 	mSkillData.Add(SkillData);
 
 	if (OnSkillChange.IsBound())
 		OnSkillChange.Broadcast(mSkillData.Num() - 1, SkillData);
 
-	return true;
 }
 
 bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileIndex> TargetTiles)
 {
 	// checkf(GetOwner(), TEXT("주인 Actor가 없습니다."));
-	checkf(IsValid(mAbility), TEXT("Ability 없음"));
+	// checkf(IsValid(mAbility), TEXT("Ability 없음"));
 	checkf(IsValid(GetOwnerModel()), TEXT("OwnerModel 없음"));
 	checkf(mSkillData.IsValidIndex(SkillIndex), TEXT("잘못된 스킬 인덱스"));
 
@@ -86,11 +80,15 @@ bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileInd
 		UTacticalEffectContext* EffectContext = SkillMotionLayer.mStaticSkillEffectLayers->CreateContext(BoardActor);
 		EffectContexts.Add(EffectContext);
 
+		// 우선 패시브 없이
+
 		// 효과를 적용한다.
 		for (int32 j = 0; j < TargetTiles.Num(); ++j)
 		{
 			ApplyEffect(TargetTiles[i], EffectContexts);
 		}
+
+		// 우선 패시브 없이
 	}
 
 	return true;

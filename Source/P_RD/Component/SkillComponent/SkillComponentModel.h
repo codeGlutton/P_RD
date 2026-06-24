@@ -43,14 +43,6 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TArray<TSoftObjectPtr<class UStaticSkillData>> mSkillData;
 
-	/*
-	* @brief 스킬 작동기
-	* 
-	* @note 추후 Outer? 물어볼 것
-	*/
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<class UTacticalAbility> mAbility;
-
 	/**
 	* @brief 스킬 어빌리티
 	* ASC에서 가져올 예정
@@ -75,13 +67,13 @@ public:
 	 * @brief 스킬 인덱스를 입력하면 Out_SkillData에 기록하는 함수
 	 * @details 범위가 유효하지 않으면 false 반환
 	 */
-	bool GetSkillData(int In_SkillIndex, TSoftObjectPtr<UStaticSkillData>& Out_SkillData);
+	void GetSkillData(int In_SkillIndex, OUT TSoftObjectPtr<UStaticSkillData>& Out_SkillData);
 
 	/**
 	* @brief 스킬 인덱스에 SkillData를 설정하는 함수
 	* @details 범위가 유효하지 않으면 false 반환
 	*/
-	bool SetSkillData(int SkillIndex, TSoftObjectPtr<UStaticSkillData> SkillData);
+	void SetSkillData(int SkillIndex, IN const TSoftObjectPtr<UStaticSkillData>& SkillData);
 
 	/**
 	* @brief SkillData를 추가하는 함수
@@ -90,7 +82,7 @@ public:
 	* 플레이어는 소지 스킬 개수가 고정되어 있으므로 사용하면 안됨
 	* 어차피 적만 필요할 것 같으므로 적에게만 작성해도 될 듯
 	*/
-	virtual bool AddSkillData(TSoftObjectPtr<UStaticSkillData> SkillData);
+	virtual void AddSkillData(IN const TSoftObjectPtr<UStaticSkillData>& SkillData);
 
 public:
 	/* 스킬 사용 */
