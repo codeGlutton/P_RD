@@ -67,30 +67,48 @@ bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileInd
 	// checkf(GetOwner(), TEXT("주인 Actor가 없습니다."));
 	checkf(IsValid(mAbility), TEXT("Ability 없음"));
 	checkf(IsValid(GetOwnerModel()), TEXT("OwnerModel 없음"));
+	checkf(mSkillData.IsValidIndex(SkillIndex), TEXT("잘못된 스킬 인덱스"));
 
-	// 주인 액터를 찾아서 BoardActor로 캐스팅한다.
+	// 스킬을 기반으로 효과를 계산한다.
+	TSoftObjectPtr<UStaticSkillData> SkillData = mSkillData[SkillIndex];
+	checkf(SkillData.IsValid(), TEXT("잘못된 스킬"));
+
 	TWeakObjectPtr<UBoardActorModel> BoardActor = Cast<UBoardActorModel>(GetOwnerModel());
+	checkf(BoardActor.IsValid(), TEXT("보드 액터"));
 
-	checkf(IsValid(BoardActor.Get()), TEXT("BoardActor 없음"));
+	for (int32 i = 0; i < SkillData.Get()->mSkillMotionLayers.Num(); ++i)
+	{
+		TArray<UTacticalEffectContext*> EffectContexts;
+		const FSkillMotionLayer& SkillMotionLayer = SkillData.Get()->mSkillMotionLayers[i];
 
-	// Context를 만들어서 스킬을 준비한다.
-	FTacticalAbilityContext Context;
-	Context.mCasterActor = BoardActor;
-	Context.mTargetTile = TargetTiles;
+		// Context 오브젝트를 생성합니다.
+		// 추후 팩토리 구성으로 Context 생성하도록 희망
+		UTacticalEffectContext* EffectContext = SkillMotionLayer.mStaticSkillEffectLayers->CreateContext(BoardActor);
+		EffectContexts.Add(EffectContext);
 
-	// 스킬 정보를 담는다.
-	// Playload 오브젝트를 생성합니다.
-	TObjectPtr<UTacticalEffectPayload_Skill> Payload = NewObject<UTacticalEffectPayload_Skill>();
-	Payload->mSkillData = mSkillData[SkillIndex];
-	Payload->mTacticalEffectPayloadType = ETacticalEffectPayloadType::Skill;
-
-	Context.mInstigatorData = Payload;
-
-	//mAbility->ActivateAbility(Context);
+		// 효과를 적용한다.
+		for (int32 j = 0; j < TargetTiles.Num(); ++j)
+		{
+			ApplyEffect(TargetTiles[i], EffectContexts);
+		}
+	}
 
 	return true;
 }
 
 void USkillComponentModel::HandelMovePoint(float MovePoint)
 {
+}
+
+void USkillComponentModel::ApplyEffect(FTileIndex TargetTile, TArray<UTacticalEffectContext*> EffectContexts)
+{
+	TWeakObjectPtr<UBoardActorModel> BoardActor = Cast<UBoardActorModel>(GetOwnerModel());
+	checkf(BoardActor.IsValid(), TEXT("보드 액터"));
+
+	// 각각의 타일에게 효과를 적용한다.
+	for (int32 j = 0; j < EffectContexts.Num(); ++j)
+	{
+		UTacticalEffect* EffectCDO = EffectContexts[j]->mTacticalEffect->GetDefaultObject<UTacticalEffect>();
+		EffectCDO->ActivateEffect(*BoardActor.Get(), TargetTile, EffectContexts[j]);
+	}
 }
