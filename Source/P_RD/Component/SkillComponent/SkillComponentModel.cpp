@@ -91,10 +91,10 @@ bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileInd
 		TArray<TWeakObjectPtr<UBoardActorModel>> TargetActors;
 		ExtractTarget(TargetTiles, ETileLayerFlag::Unit, ETargetFilter::All, TargetActors);
 
-		for (int i = 0; i < TargetActors.Num(); ++i)
+		for (int32 j = 0; j < TargetActors.Num(); ++j)
 		{
 			// 기본 효과값을 넣는다.
-			EffectContainer.mTargetRequests.Add(TargetActors[i].Get(), SnapShotData);
+			EffectContainer.mTargetRequests.Add(TargetActors[j].Get(), SnapShotData);
 		}
 
 		//	모션 전 패시브
@@ -228,12 +228,12 @@ void USkillComponentModel::ApplyEffect(FTacticalEffectRequestContainer& Tactical
 		{
 			for (TMap<FGameplayAttribute, float>::TIterator iter = Data.mAttributes.CreateIterator(); iter; ++iter)
 			{
-				float BaseValue = Actor->FindComponentModelByInterface<UAttributeSetComponentModel>()->GetAttributeCurrentValue(iter.Key());
-				UE_LOG(LogTemp, Warning, TEXT("BaseValue : %d"), BaseValue);
+				float BaseValue = Actor->FindComponentModelByClass<UAttributeSetComponentModel>()->GetAttributeCurrentValue(iter.Key());
+				//UE_LOG(LogTemp, Warning, TEXT("BaseValue : %d"), BaseValue);
 				float CurrentValue = BaseValue - iter.Value();
-				UE_LOG(LogTemp, Warning, TEXT("CurrentValue : %d"), CurrentValue);
+				//UE_LOG(LogTemp, Warning, TEXT("CurrentValue : %d"), CurrentValue);
 				FString Name = iter.Key().AttributeName;
-				UE_LOG(LogTemp, Warning, TEXT("AttributeName : %s"), *Name);
+				//UE_LOG(LogTemp, Warning, TEXT("AttributeName : %s"), *Name);
 			}
 		}
 	}
