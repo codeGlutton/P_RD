@@ -10,7 +10,7 @@
 #include "Component/ComponentModel.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
-#include "TAS/TacticalAbility_Skill.h"
+#include "TAS/TacticalAbility.h"
 #include "SkillComponentModel.generated.h"
 /*
 * @param SkillIndex : 변경된 스킬의 인덱스
@@ -104,5 +104,13 @@ public:
 	void HandelMovePoint(float MovePoint);
 
 private:
-	void ApplyEffect(FTileIndex TargetTile, TArray<UTacticalEffectContext*> EffectContexts);
+	void ApplyEffect(FTacticalEffectRequestContainer& TacticalEffectRequestContainer);
+
+	// @brief 타겟을 가져오는 함수
+	// @detilas
+	// 해당 속성을 넣어서 원하는 타겟을 가져옵니다.
+	void ExtractTarget(const TArray<FTileIndex>& TargetTile,
+		ETileLayerFlag ActorFlag,
+		ETargetFilter TargetFilter,
+		OUT TArray<TWeakObjectPtr<UBoardActorModel>>& TargetActors);
 };
