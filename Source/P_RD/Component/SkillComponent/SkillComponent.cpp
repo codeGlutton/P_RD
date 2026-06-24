@@ -1,9 +1,8 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "SkillComponent.h"
-#include "SkillComponent/SkillCommitResultHolder.h"
-#include "../FunctionLibrary/CombatCalculator/CombatCalculatorFunctionLibrary.h"
+#include "Component/SkillComponent/SkillComponent.h"
+//#include "../FunctionLibrary/CombatCalculator/CombatCalculatorFunctionLibrary.h"
 //#include "../FunctionLibrary/CommandLog/CommandLogFunctionLibrary.h"
 #include "Pawn/Unit.h"
 
@@ -38,18 +37,18 @@ void USkillComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 
 bool USkillComponent::GetSkillData(int In_SkillIndex, TSoftObjectPtr<UStaticSkillData>& Out_SkillData)
 {
-	checkf(mSkillData.IsValidIndex(In_SkillIndex), TEXT("잘못된 배열 범위"))
+	//checkf(mSkillData.IsValidIndex(In_SkillIndex), TEXT("잘못된 배열 범위"))
 
-	Out_SkillData = mSkillData[In_SkillIndex];
+	//Out_SkillData = mSkillData[In_SkillIndex];
 
 	return true;
 }
 
 bool USkillComponent::SetSkillData(int SkillIndex, TSoftObjectPtr<UStaticSkillData> SkillData)
 {
-	checkf(mSkillData.IsValidIndex(SkillIndex), TEXT("잘못된 배열 범위"))
+	//checkf(mSkillData.IsValidIndex(SkillIndex), TEXT("잘못된 배열 범위"))
 
-	mSkillData[SkillIndex] = SkillData;
+	//mSkillData[SkillIndex] = SkillData;
 
 	//if(OnSkillChange.IsBound())
 	//	OnSkillChange.Broadcast(SkillIndex, SkillData);
@@ -60,7 +59,7 @@ bool USkillComponent::SetSkillData(int SkillIndex, TSoftObjectPtr<UStaticSkillDa
 
 bool USkillComponent::AddSkillData(TSoftObjectPtr<UStaticSkillData> SkillData)
 {
-	mSkillData.Add(SkillData);
+	//mSkillData.Add(SkillData);
 
 	//if (OnSkillChange.IsBound())
 	//	OnSkillChange.Broadcast(mSkillData.Num() - 1, SkillData);
