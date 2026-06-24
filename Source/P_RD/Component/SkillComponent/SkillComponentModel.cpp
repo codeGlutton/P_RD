@@ -99,7 +99,7 @@ void USkillComponentModel::HandelMovePoint(float MovePoint)
 {
 }
 
-void USkillComponentModel::ApplyEffect(FTileIndex TargetTile, TArray<UTacticalEffectContext*> EffectContexts)
+void USkillComponentModel::ApplyEffect(FTileIndex TargetTile, TArray<UTacticalEffectContext*>& EffectContexts)
 {
 	TWeakObjectPtr<UBoardActorModel> BoardActor = Cast<UBoardActorModel>(GetOwnerModel());
 	checkf(BoardActor.IsValid(), TEXT("보드 액터"));
