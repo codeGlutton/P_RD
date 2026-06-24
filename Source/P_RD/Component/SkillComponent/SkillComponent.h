@@ -11,7 +11,7 @@
 #include "DataAsset/SkillData/StaticSkillData.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 //#include "Pawn/SkillComponent/PreviewEffectIconData.h"
-#include "../FunctionLibrary/CombatCalculator/CombatResult.h"
+//#include "../FunctionLibrary/CombatCalculator/CombatResult.h"
 //#include "FunctionLibrary/CommandLog/CommandLog.h"
 #include "SkillComponent.generated.h"
 
