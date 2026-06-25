@@ -12,13 +12,13 @@ UTacticalEffectContext* UStaticSkillEffect_Stat::CreateContext(TWeakObjectPtr<cl
 	TWeakObjectPtr<UAttributeSetComponentModel> AttributeSet = CasterActor.Get()->FindComponentModelByClass<UAttributeSetComponentModel>();
 	checkf(AttributeSet.IsValid(), TEXT("컴포넌트가 없습니다."));
 
-	EffectContext->mTileLayerFlag = ETileLayerFlag::Unit;
+	//EffectContext->mTileLayerFlag = ETileLayerFlag::Unit;
 
-	//EffectContext->mAttributeData = 
-	EffectContext->mBase = mEffectDefaultValue + mEffectRatioValue * AttributeSet->GetAttributeCurrentValue(UUnitAttributeSet::GetSkillPointAttribute());
-	EffectContext->mGameplayTag = mEffectTag;
+	////EffectContext->mAttributeData = 
+	//EffectContext->mBase = mEffectDefaultValue + mEffectRatioValue * AttributeSet->GetAttributeCurrentValue(UUnitAttributeSet::GetSkillPointAttribute());
+	//EffectContext->mGameplayTag = mEffectTag;
 
-	EffectContext->mTacticalEffect = mTacticalEffect;
+	//EffectContext->mTacticalEffect = mTacticalEffect;
 
 
 	return EffectContext;
