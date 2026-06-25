@@ -21,18 +21,6 @@ USkillComponentModel::USkillComponentModel()
 
 	// ...
 
-	// 테스트 Initialize
-	{
-		FString AssetPath = TEXT("/Game/BP/DataAsset/Skill/Attack/DA_TestAttack_Common.DA_TestAttack_Common");
-		UStaticSkillData* LoadedData = Cast<UStaticSkillData>(StaticLoadObject(UStaticSkillData::StaticClass(), nullptr, *AssetPath));
-
-		if (LoadedData)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("로드됨"));
-			// 데이터 활용
-			AddSkillData(LoadedData);
-		}
-	}
 }
 
 
@@ -80,15 +68,27 @@ void USkillComponentModel::AddSkillData(IN const TSoftObjectPtr<UStaticSkillData
 
 bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileIndex> TargetTiles)
 {
-	// checkf(GetOwner(), TEXT("주인 Actor가 없습니다."));
-	// checkf(IsValid(mAbility), TEXT("Ability 없음"));
+
+	// 테스트 Initialize
+	// @Note 제거 할 것
+	{
+		FString AssetPath = TEXT("/Game/BP/DataAsset/Skill/Attack/DA_TestAttack_Common.DA_TestAttack_Common");
+		UStaticSkillData* LoadedData = Cast<UStaticSkillData>(StaticLoadObject(UStaticSkillData::StaticClass(), nullptr, *AssetPath));
+
+		if (LoadedData)
+		{
+			// 바로 객체를 사용
+			AddSkillData(LoadedData);
+		}
+	}
+
 	checkf(IsValid(GetOwnerModel()), TEXT("OwnerModel 없음"));
 	checkf(mSkillData.IsValidIndex(SkillIndex), TEXT("잘못된 스킬 인덱스"));
 
 	// 스킬을 기반으로 효과를 계산한다.
 	TSoftObjectPtr<UStaticSkillData> SkillData = mSkillData[SkillIndex];
 	checkf(SkillData.IsValid(), TEXT("잘못된 스킬"));
-	checkf(SkillData.IsPending(), TEXT("로드되어있지 않는 스킬"));
+	checkf(!SkillData.IsPending(), TEXT("로드되어있지 않는 스킬"));
 
 	TWeakObjectPtr<UBoardActorModel> BoardActor = Cast<UBoardActorModel>(GetOwnerModel());
 	checkf(BoardActor.IsValid(), TEXT("보드 액터"));
@@ -99,10 +99,11 @@ bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileInd
 
 		// Context 오브젝트를 생성합니다.
 		FTacticalEffectRequestContainer EffectContainer;
+		FBoardCombatTargetSnapshotData Container;
 
+		// @Note 스킬 데이터를 기반으로 TacticalEffect를 사용하여 효과를 적용하자.
 		// 효과의 정보를 가져온다.
-		FBoardCombatTargetSnapshotData SnapShotData;
-		SnapShotData.mAttributes.Add(UUnitAttributeSet::GetHPAttribute(), 10);		// 임시 데이터
+		SkillMotionLayer.mStaticSkillEffectLayers->CreateBaseEffectContainer(BoardActor, Container);
 
 		// 타겟을 우선 가져옵니다.
 		TArray<TWeakObjectPtr<UBoardActorModel>> TargetActors;
@@ -111,10 +112,10 @@ bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileInd
 		for (int32 j = 0; j < TargetActors.Num(); ++j)
 		{
 			// 기본 효과값을 넣는다.
-			EffectContainer.mTargetRequests.Add(TargetActors[j].Get(), SnapShotData);
-
+			EffectContainer.mTargetRequests.Add(TargetActors[j].Get(), Container);
 		}
 
+		// @Note 패시브가 완료되면 적용하자.
 		//	모션 전 패시브
 		//	for(Passive : Passsives)
 		//	{
@@ -238,20 +239,21 @@ void USkillComponentModel::ApplyEffect(FTacticalEffectRequestContainer& Tactical
 
 		// 적용
 		// 각각에게 적용합니다.
+		// @Note 나중에 TacticalEffect를 사용하여 효과를 적용하자.
 
 		UE_LOG(LogTemp, Warning, TEXT("TestActor : %d"), Actor->GetUniqueID());
 
 
-		for (int i = 0; i < Data.mAttributes.Num(); ++i)
+		for (int i = 0; i < Data.mTags.Num(); ++i)
 		{
-			for (TMap<FGameplayAttribute, float>::TIterator iter = Data.mAttributes.CreateIterator(); iter; ++iter)
+			for (TMap<FGameplayTag, int32>::TIterator iter = Data.mTags.CreateIterator(); iter; ++iter)
 			{
-				float BaseValue = Actor->FindComponentModelByClass<UAttributeSetComponentModel>()->GetAttributeCurrentValue(iter.Key());
-				UE_LOG(LogTemp, Warning, TEXT("BaseValue : %f"), BaseValue);
-				float CurrentValue = BaseValue - iter.Value();
-				UE_LOG(LogTemp, Warning, TEXT("CurrentValue : %f"), CurrentValue);
-				FString Name = iter.Key().AttributeName;
-				UE_LOG(LogTemp, Warning, TEXT("AttributeName : %s"), *Name);
+				//float BaseValue = Actor->FindComponentModelByClass<UAttributeSetComponentModel>()->GetAttributeCurrentValue(iter.Key());
+				//UE_LOG(LogTemp, Warning, TEXT("BaseValue : %f"), BaseValue);
+				int32 Value = iter.Value();
+				UE_LOG(LogTemp, Warning, TEXT("Value : %d"), Value);
+				FName Name = iter.Key().GetTagName();
+				UE_LOG(LogTemp, Warning, TEXT("TagName : %s"), *Name.ToString());
 			}
 		}
 	}
@@ -259,6 +261,9 @@ void USkillComponentModel::ApplyEffect(FTacticalEffectRequestContainer& Tactical
 
 void USkillComponentModel::ExtractTarget(const TArray<FTileIndex>& TargetTile, ETileLayerFlag ActorFlag, ETargetFilter TargetFilter, OUT TArray<TWeakObjectPtr<UBoardActorModel>>& TargetActors)
 {
+	// @Note 서브시스템이 작동이 가능하다면 서브시스템에서 가져오자.
+
+
 	// CombatModel을 가져옵니다.
 	//USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	//checkf(IsValid(CombatModel), TEXT("전투 모델이 비어있습니다."));
@@ -271,7 +276,9 @@ void USkillComponentModel::ExtractTarget(const TArray<FTileIndex>& TargetTile, E
 	for (int i = -2; i < TargetTile.Num(); ++i)
 	{
 		// 해당 타일에 유닛 모델을 가져온다.
-		//TWeakObjectPtr<UBoardActorModel> TargetBoardModel = TMModel->GetActorOnTile<UBoardActorModel>(TargetTile[i], ActorFlag);
+		//TWeakObjectPtr<UBoardActorModel> TargetBoardModel = TMModel->GetActorOnTile<UBoardActorModel>(TargetTile[i], ActorFlag);\
+
+		// 더미 모델
 		TWeakObjectPtr<UBoardActorModel> TargetBoardModel = NewObject<UUnitModel>();
 
 

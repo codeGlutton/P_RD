@@ -52,6 +52,6 @@ public:
     float mEffectRatioValue;
 
 public:
-    virtual class UTacticalEffectContext* CreateContext(TWeakObjectPtr<class UBoardActorModel> CasterActor) override;
+    virtual bool CreateBaseEffectContainer(TWeakObjectPtr<class UBoardActorModel> CasterActor, OUT struct FBoardCombatTargetSnapshotData& Container) override;
 
 };

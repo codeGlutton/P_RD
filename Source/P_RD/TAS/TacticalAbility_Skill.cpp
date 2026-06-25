@@ -78,8 +78,8 @@ void UTacticalAbility_Skill::ActivateSkill(const FTacticalAbilityContext& Contex
 
 		// Context 오브젝트를 생성합니다.
 		// 추후 팩토리 구성으로 Context 생성하도록 희망
-		UTacticalEffectContext* EffectContext = SkillMotionLayer.mStaticSkillEffectLayers->CreateContext(Context.mCasterActor);
-		EffectContexts.Add(EffectContext);
+		//UTacticalEffectContext* EffectContext = SkillMotionLayer.mStaticSkillEffectLayers->CreateContext(Context.mCasterActor);
+		//EffectContexts.Add(EffectContext);
 
 		// 효과를 계산합니다.
 		CallStartCalculatePassive(Context, EffectContexts);

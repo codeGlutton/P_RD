@@ -37,7 +37,14 @@ public:
     TSubclassOf<UTacticalEffect> mTacticalEffect;
 
 public:
-    virtual class UTacticalEffectContext* CreateContext(TWeakObjectPtr<class UBoardActorModel> CasterActor) PURE_VIRTUAL(UStaticSkillEffect_Base::CreateContext, return nullptr;)
+    /**
+    * @brief 캐스터의 스킬 포인트를 (AS가 존재하지 않으면 기본값을) 기반으로 FBoardCombatTargetSnapshotData를 만들어줍니다.
+    *
+    * @details
+    * 효과값을 반영하여 기본적인 효과 데이터를 만들어줍니다.
+    * 실패 시 false를 반환합니다.
+    */
+    virtual bool CreateBaseEffectContainer(TWeakObjectPtr<class UBoardActorModel> CasterActor, OUT struct FBoardCombatTargetSnapshotData& Container) PURE_VIRTUAL(UStaticSkillEffect_Base::CreateBaseEffectContainer, return false;)
 };
 
 
