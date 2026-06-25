@@ -15,7 +15,7 @@ bool UStaticSkillEffect_Move_Force::CreateBaseEffectContainer(TWeakObjectPtr<cla
 
 	if (AttributeSet.IsValid())
 	{
-		Container.mTags.Add(mEffectTag, mEffectDefaultDistance + mEffectRatioDistance * AttributeSet->GetAttributeCurrentValue(UUnitAttributeSet::GetSkillPointAttribute()));
+		//Container.mTags.Add(mEffectTag, mEffectDefaultDistance + mEffectRatioDistance * AttributeSet->GetAttributeCurrentValue(UUnitAttributeSet::GetSkillPointAttribute()));
 	}
 	else
 	{
@@ -23,4 +23,17 @@ bool UStaticSkillEffect_Move_Force::CreateBaseEffectContainer(TWeakObjectPtr<cla
 	}
 
 	return true;
+}
+
+float UStaticSkillEffect_Move_Force::GetPoint(TWeakObjectPtr<class UBoardActorModel> CasterActor, float SkillPoint)
+{
+	TWeakObjectPtr<UAttributeSetComponentModel> AttributeSet = CasterActor.Get()->FindComponentModelByClass<UAttributeSetComponentModel>();
+	checkf(AttributeSet.IsValid(), TEXT("컴포넌트가 없습니다."));
+
+	if (AttributeSet.IsValid())
+	{
+		return mEffectDefaultDistance + mEffectRatioDistance * SkillPoint;
+	}
+
+	return mEffectDefaultDistance;
 }

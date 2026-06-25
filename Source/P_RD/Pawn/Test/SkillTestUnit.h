@@ -18,5 +18,5 @@ class P_RD_API ASkillTestUnit : public AUnit
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Skill")
-	void ActivateSkill();
+	void ActivateSkill(int32 SkillPoint);
 };

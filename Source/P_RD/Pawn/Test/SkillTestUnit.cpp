@@ -11,8 +11,8 @@ ASkillTestUnit::ASkillTestUnit()
 	//mUnitModel = NewObject<UUnitModel>();
 }
 
-void ASkillTestUnit::ActivateSkill()
+void ASkillTestUnit::ActivateSkill(int32 SkillPoint)
 {
-	TArray<FTileIndex> mTile;
-	NewObject<UUnitModel>()->FindComponentModelByClass<USkillComponentModel>()->ActivateSkill(0, mTile);
+	TArray<FTileIndex> Tile;
+	NewObject<UUnitModel>()->FindComponentModelByClass<USkillComponentModel>()->ActivateSkill(0, Tile, 100);
 }

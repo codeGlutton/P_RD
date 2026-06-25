@@ -43,4 +43,6 @@ public:
 
 public:
     virtual bool CreateBaseEffectContainer(TWeakObjectPtr<class UBoardActorModel> CasterActor, OUT struct FBoardCombatTargetSnapshotData& Container) override;
+
+    virtual float GetPoint(TWeakObjectPtr<class UBoardActorModel> CasterActor, float SkillPoint) override;
 };

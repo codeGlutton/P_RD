@@ -45,6 +45,8 @@ public:
     * 실패 시 false를 반환합니다.
     */
     virtual bool CreateBaseEffectContainer(TWeakObjectPtr<class UBoardActorModel> CasterActor, OUT struct FBoardCombatTargetSnapshotData& Container) PURE_VIRTUAL(UStaticSkillEffect_Base::CreateBaseEffectContainer, return false;)
+    
+    virtual float GetPoint(TWeakObjectPtr<class UBoardActorModel> CasterActor, float SkillPoint) PURE_VIRTUAL(UStaticSkillEffect_Base::GetPoint, return 0.0;)
 };
 
 

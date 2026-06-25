@@ -66,7 +66,7 @@ void USkillComponentModel::AddSkillData(IN const TSoftObjectPtr<UStaticSkillData
 
 }
 
-bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileIndex> TargetTiles)
+bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileIndex> TargetTiles, int32 SkillPoint)
 {
 
 	// 테스트 Initialize
@@ -90,139 +90,31 @@ bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileInd
 	checkf(SkillData.IsValid(), TEXT("잘못된 스킬"));
 	checkf(!SkillData.IsPending(), TEXT("로드되어있지 않는 스킬"));
 
-	TWeakObjectPtr<UBoardActorModel> BoardActor = Cast<UBoardActorModel>(GetOwnerModel());
-	checkf(BoardActor.IsValid(), TEXT("보드 액터"));
+	TWeakObjectPtr<UBoardActorModel> Owner = Cast<UBoardActorModel>(GetOwnerModel());
+	checkf(Owner.IsValid(), TEXT("보드 액터"));
 
 	for (int32 i = 0; i < SkillData.Get()->mSkillMotionLayers.Num(); ++i)
 	{
 		const FSkillMotionLayer& SkillMotionLayer = SkillData.Get()->mSkillMotionLayers[i];
 
-		// Context 오브젝트를 생성합니다.
-		FTacticalEffectRequestContainer EffectContainer;
-		FBoardCombatTargetSnapshotData Container;
+		// 스킬 포인트를 기반으로 Owner의 AS를 변경 시켜준다.
+		int DamagePoint = SkillMotionLayer.mStaticSkillEffectLayers->GetPoint(Owner, SkillPoint);
 
-		// @Note 스킬 데이터를 기반으로 TacticalEffect를 사용하여 효과를 적용하자.
-		// 효과의 정보를 가져온다.
-		SkillMotionLayer.mStaticSkillEffectLayers->CreateBaseEffectContainer(BoardActor, Container);
-
-		// 타겟을 우선 가져옵니다.
+		// 타겟을 가져옵니다.
 		TArray<TWeakObjectPtr<UBoardActorModel>> TargetActors;
 		ExtractTarget(TargetTiles, ETileLayerFlag::Unit, ETargetFilter::All, TargetActors);
 
-		for (int32 j = 0; j < TargetActors.Num(); ++j)
-		{
-			// 기본 효과값을 넣는다.
-			EffectContainer.mTargetRequests.Add(TargetActors[j].Get(), Container);
-		}
-
-		// @Note 패시브가 완료되면 적용하자.
-		//	모션 전 패시브
-		//	for(Passive : Passsives)
-		//	{
-		//		Context
-		//		{
-		//			발동시킨 대상 = 없음,
-		//			발동시킨 대상의 스냅샷 = 없음,
-		//			소유자,
-		//			소유자의 스냅샷
-		//		}
-		//
-		//		패시브
-		//		Passive->ActivateAbility(Context, EffectContexts, PassiveStackContexts);
-		//		Passive->UpdatePassive(PassiveStackContexts);
-		//	}
-
-		//	for(TargetActor : TargetActors)
-		//	{
-		//		EffectContexts 복제
-		//		피격 전 패시브
-		//		for(TargetActorPassive : TargetActorPassives)
-		//		{
-		//			Context
-		//			{
-		//				발동시킨 대상,
-		//				발동시킨 대상의 스냅샷,
-		//				소유자,
-		//				소유자의 스냅샷
-		//			}
-		//				
-		//		패시브
-		//		Passive->ActivateAbility(Context, EffectContexts, PassiveStackContexts);
-		//		Passive->UpdatePassive(PassiveStackContexts);
-		//		}
-		//			
-		//		타격 전 패시브
-		//		for(Passive : Passives)
-		//		{
-		//			Context
-		//			{
-		//				발동시킨 대상,
-		//				발동시킨 대상의 스냅샷,
-		//				소유자,
-		//				소유자의 스냅샷
-		//			}	
-		// 			패시브
-		//			Passive->ActivateAbility(Context, EffectContexts, PassiveStackContexts);
-		//			Passive->UpdatePassive(PassiveStackContexts);
-		//		}
-		//	}
-
 		// 효과를 적용한다.
-		ApplyEffect(EffectContainer);
-
-		//	for(TargetActor : TargetActors)
-		//	{
-		//		EffectContexts 복제
-		//		피격 후 패시브
-		//		for(TargetActorPassive : TargetActorPassives)
-		//		{
-		//			Context
-		//			{
-		//				발동시킨 대상,
-		//				발동시킨 대상의 스냅샷,
-		//				소유자,
-		//				소유자의 스냅샷
-		//			}
-		//				
-		//		패시브
-		//		Passive->ActivateAbility(Context, EffectContexts, PassiveStackContexts);
-		//		Passive->UpdatePassive(PassiveStackContexts);
-		//		}
-		//		ApplyEffect(TargetActors, EffectContexts);
-		//			
-		//		타격 후 패시브
-		//		for(Passive : Passives)
-		//		{
-		//			Context
-		//			{
-		//				발동시킨 대상,
-		//				발동시킨 대상의 스냅샷,
-		//				소유자,
-		//				소유자의 스냅샷
-		//			}	
-		// 			패시브
-		//			Passive->ActivateAbility(Context, EffectContexts, PassiveStackContexts);
-		//			Passive->UpdatePassive(PassiveStackContexts);
-		//		}
-		//		ApplyEffect(TargetActors, EffectContexts);
-		//	}
-
-		//	모션 후 패시브
-		//	for(Passive : Passsives)
-		//	{
-		//		Context = 발동시킨 대상, 발동시킨 대상의 스냅샷, 소유자, 소유자의 스냅샷
-		//	
-		//		패시브
-		//		Passive->ActivateAbility(Context, EffectContexts, PassiveStackContexts);
-		//		Passive->UpdatePassive(PassiveStackContexts);
-		//	}
-		//	ApplyEffect(TargetActors, EffectContexts);
+		for (int j = 0; j < TargetActors.Num(); ++j)
+		{
+			ApplyEffect(Owner, TargetActors[i], DamagePoint);
+		}
 	}
 
 	return true;
 }
 
-void USkillComponentModel::HandelMovePoint(float MovePoint)
+void USkillComponentModel::HandelMovePoint(int32 MovePoint)
 {
 }
 
@@ -259,6 +151,11 @@ void USkillComponentModel::ApplyEffect(FTacticalEffectRequestContainer& Tactical
 	}
 }
 
+void USkillComponentModel::ApplyEffect(TWeakObjectPtr<UBoardActorModel> BoardActor, TWeakObjectPtr<UBoardActorModel> Target, float DamagePoint)
+{
+	TestCalcualateDamage(BoardActor.Get()->FindComponentModelByClass<UAttributeSetComponentModel>(), Target.Get()->FindComponentModelByClass<UAttributeSetComponentModel>(), DamagePoint);
+}
+
 void USkillComponentModel::ExtractTarget(const TArray<FTileIndex>& TargetTile, ETileLayerFlag ActorFlag, ETargetFilter TargetFilter, OUT TArray<TWeakObjectPtr<UBoardActorModel>>& TargetActors)
 {
 	// @Note 서브시스템이 작동이 가능하다면 서브시스템에서 가져오자.
@@ -273,10 +170,11 @@ void USkillComponentModel::ExtractTarget(const TArray<FTileIndex>& TargetTile, E
 	//checkf(TMModel.IsValid(), TEXT("타일맵 모델이 존재하지 않습니다."));
 	// ===============================================================
 
+	// @Note 유닛 모델 생성이 아닌 참조로 바꾸기
 	for (int i = -2; i < TargetTile.Num(); ++i)
 	{
 		// 해당 타일에 유닛 모델을 가져온다.
-		//TWeakObjectPtr<UBoardActorModel> TargetBoardModel = TMModel->GetActorOnTile<UBoardActorModel>(TargetTile[i], ActorFlag);\
+		//TWeakObjectPtr<UBoardActorModel> TargetBoardModel = TMModel->GetActorOnTile<UBoardActorModel>(TargetTile[i], ActorFlag);
 
 		// 더미 모델
 		TWeakObjectPtr<UBoardActorModel> TargetBoardModel = NewObject<UUnitModel>();
@@ -288,4 +186,48 @@ void USkillComponentModel::ExtractTarget(const TArray<FTileIndex>& TargetTile, E
 
 		TargetActors.Add(TargetBoardModel);
 	}
+}
+
+void USkillComponentModel::TestCalcualateDamage(TWeakObjectPtr<class UAttributeSetComponentModel> Attacker, TWeakObjectPtr<class UAttributeSetComponentModel> Defenser, float DamagePoint)
+{
+	// 공격자, 피격자의 AS가 모두 유효할 시 
+	if (!(Attacker.IsValid() && Defenser.IsValid()))
+		return;
+
+	UE_LOG(LogTemp, Warning, TEXT("DamagePoint : %f"), DamagePoint);
+
+
+	float MyDamage = DamagePoint; //Attacker.Get()->GetAttributeCurrentValue(UUnitAttributeSet::GetDamagePointAttribute());
+	//float MyStrenth = Attacker.Get()->GetAttributeCurrentValue(UUnitAttributeSet::GetSkillPointAttribute());
+	//float MyVulnerable = Attacker.Get()->GetAttributeCurrentValue(UUnitAttributeSet::GetSkillPointAttribute());
+
+	float YouHP = 100; // Defenser.Get()->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute());
+	float YouDefense = 5; // Defenser.Get()->GetAttributeCurrentValue(UUnitAttributeSet::GetDefensePointAttribute());
+	//float YouWeak = Defenser.Get()->GetAttributeCurrentValue(UUnitAttributeSet::GetSkillPointAttribute());
+
+	// 공격자의 스탯으로 계산
+	float MyCaluDamage = MyDamage; //FMath::Max(0, (MyDamage + MyStrenth) * (MyVulnerable ? 0.75f : 1.0f));
+
+	// 방어자의 스탯으로 재계산
+	float YouDamage = FMath::Max(0, MyCaluDamage  - YouDefense);
+
+	// 체력 감소
+	// 추후 TacticalEffect로 변경
+	//Defenser.Get()->SetAttributeBaseValue(UUnitAttributeSet::GetHPAttribute(), YouHP - YouDamage);
+	UE_LOG(LogTemp, Warning, TEXT("CurHP : %f"), YouHP);
+
+	YouHP = FMath::Max(0, YouHP - YouDamage);
+	UE_LOG(LogTemp, Warning, TEXT("NextHP : %f"), YouHP);
+
+
+	// 경감 감소
+	// 추후 TacticalEffect로 변경
+	//Defenser.Get()->SetAttributeBaseValue(UUnitAttributeSet::GetDefensePointAttribute(), YouDefense - MyCaluDamage);
+	UE_LOG(LogTemp, Warning, TEXT("CurDefense : %f"), YouDefense);
+
+	YouDefense = FMath::Max(0, YouDefense - MyCaluDamage);
+	UE_LOG(LogTemp, Warning, TEXT("NextDefense : %f"), YouDefense);
+
+	UE_LOG(LogTemp, Warning, TEXT("End"));
+
 }

@@ -93,7 +93,7 @@ public:
 	* @return bool : 실패 시 false 반환
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Skill")
-	bool ActivateSkill(int32 SkillIndex, const TArray<FTileIndex> TargetTiles);
+	bool ActivateSkill(int32 SkillIndex, const TArray<FTileIndex> TargetTiles, int32 SkillPoint);
 
 	/* 이동포인트 */
 	/**
@@ -101,10 +101,16 @@ public:
 	* @details
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Move")
-	void HandelMovePoint(float MovePoint);
+	void HandelMovePoint(int32 MovePoint);
 
 private:
+	// @brief FTacticalEffectRequestContainer을 효과를 적용하는 스킬 적용기
+	// @details 효과 적용기 어떻게 사용될지 아직 미 확정
 	void ApplyEffect(FTacticalEffectRequestContainer& TacticalEffectRequestContainer);
+
+	// @brief 피격자와 사용자의 AS를 바탕으로 효과를 적용하는 스킬 적용기
+	// @details 효과 적용기 어떻게 사용될지 아직 미 확정
+	void ApplyEffect(TWeakObjectPtr<UBoardActorModel> BoardActor, TWeakObjectPtr<UBoardActorModel> Target, float DamagePoint);
 
 	// @brief 타겟을 가져오는 함수
 	// @detilas
@@ -113,4 +119,7 @@ private:
 		ETileLayerFlag ActorFlag,
 		ETargetFilter TargetFilter,
 		OUT TArray<TWeakObjectPtr<UBoardActorModel>>& TargetActors);
+
+	// @brief 테스트용 스킬 적용기
+	void TestCalcualateDamage(TWeakObjectPtr<class UAttributeSetComponentModel> Attacker, TWeakObjectPtr<class UAttributeSetComponentModel> Defenser, float DamagePoint);
 };
