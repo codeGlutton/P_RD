@@ -15,8 +15,10 @@ struct FTacticalAttributeChangeData;
 class UAttributeSetComponentModel;
 struct FTacticalAggregator;
 class UTacticalEffect;
+struct FTacticalEffectSpec;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnChangeAttributeValue, const FTacticalAttributeChangeData& /*ChangeData*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnGivenActiveTacticalEffectRemoved, const FActiveTacticalEffect& /*TacticalEffect*/);
 
 /**
  * @brief 수치 변경 결과 데이터
@@ -101,7 +103,7 @@ public:
 private:
     ElementType* AdvancePending(ElementType** Next)
     {
-        return (Next != const_cast<ElementType**>(mContainer.mPendingGameplayEffectTail)) ? *Next : nullptr;
+        return (Next != const_cast<ElementType**>(mContainer.mPendingTacticalEffectTail)) ? *Next : nullptr;
     }
 
     void Next()
@@ -126,17 +128,17 @@ private:
             // 이미 추가 예약된 객체 순회로 전환됨. Linked-List에 따라서 Pending을 현재 탐색 노드로 지정
             mCurrent = mPending;
         }
-        else if (mIndex >= mContainer.mAttributeEffects.Num())
+        else if (mIndex >= mContainer.mTacticalEffects.Num())
         {
             // 기존 Effect를 모두 살폈다면, 추가 예약된 객체도 탐색
-            mPending = AdvancePending(const_cast<ElementType**>(&mContainer.mPendingGameplayEffectHead));
+            mPending = AdvancePending(const_cast<ElementType**>(&mContainer.mPendingTacticalEffectHead));
             mCurrent = mPending;
             mIndex = INDEX_NONE;
         }
         else
         {
             // 우선적으로 기존 Effect부터 살피기
-            mCurrent = &mContainer.mAttributeEffects[mIndex];
+            mCurrent = &mContainer.mTacticalEffects[mIndex];
         }
 
         if (mCurrent != nullptr && mCurrent->mIsPendingRemove == true)
@@ -189,23 +191,48 @@ private:
 
     /* 변경에 따른 후속 조치 */
 private:
+    TSharedPtr<FTacticalAggregator>& FindOrCreateAttributeAggregator(const FGameplayAttribute& Attribute);
     void CleanupAttributeAggregator(const FGameplayAttribute& Attribute);
     void OnAttributeAggregatorDirty(FTacticalAggregator* Aggregator, FGameplayAttribute Attribute);
     void OnMagnitudeDependencyChange(FActiveTacticalEffectHandle Handle, const FTacticalAggregator* ChangedAgg);
+
+    void OnStackCountChange(FActiveTacticalEffect& ActiveEffect, int32 OldStackCount, int32 NewStackCount);
 
     /* 속성 값 변화 */
 public:
     void SetAttributeBaseValue(FGameplayAttribute Attribute, float BaseValue);
     float GetAttributeBaseValue(FGameplayAttribute Attribute) const;
 
-    FActiveTacticalEffect* ApplyGameplayEffectSpec(const FGameplayEffectSpec& Spec, bool& bFoundExistingStackableGE);
+    void ApplyModToAttribute(const FGameplayAttribute& Attribute, TEnumAsByte<EGameplayModOp::Type> ModifierOp, float ModifierMagnitude);
+    FActiveTacticalEffect* ApplyTacticalEffectSpec(const FTacticalEffectSpec& Spec, bool& FoundExistingStackableGE);
+    void ExecuteActiveEffectsFrom(FTacticalEffectSpec& Spec);
+    bool RemoveActiveTacticalEffect(FActiveTacticalEffectHandle Handle, int32 StacksToRemove);
+
+    FOnChangeAttributeValue& GetTacticalAttributeValueChangeDelegate(FGameplayAttribute Attribute);
+
+private:
+    void InternalOnActiveTacticalEffectAdded(FActiveTacticalEffect& Effect);
+    void InternalOnActiveTacticalEffectRemoved(FActiveTacticalEffect& Effect, const FTacticalEffectRemovalInfo& TacticalEffectRemovalInfo);
+    
+    bool InternalExecuteMod(FTacticalEffectSpec& Spec, FGameplayModifierEvaluatedData& ModEvalData);
+
+    bool InternalRemoveActiveTacticalEffect(int32 Idx, int32 StacksToRemove, bool bPrematureRemoval);
 
 private:
     void UpdateAttributeCurrentValue(FGameplayAttribute Attribute, float CurrentValue);
-    
+    void UpdateAllAggregatorModMagnitudes(FActiveTacticalEffect& ActiveEffect);
+    void UpdateAggregatorModMagnitudes(const TSet<FGameplayAttribute>& AttributesToUpdate, FActiveTacticalEffect& ActiveEffect);
+
 public:
     FActiveTacticalEffect* GetActiveTacticalEffect(const FActiveTacticalEffectHandle Handle);
     const FActiveTacticalEffect* GetActiveTacticalEffect(const FActiveTacticalEffectHandle Handle) const;
+    FActiveTacticalEffect* GetActiveTacticalEffect(int32 Index);
+    const FActiveTacticalEffect* GetActiveTacticalEffect(int32 Index) const;
+
+    int32 GetNumTacticalEffects() const;
+
+private:
+    FActiveTacticalEffect* FindStackableActiveTacticalEffect(const FTacticalEffectSpec& Spec);
 
     /* 반복자 정의 */
 public:
@@ -239,6 +266,9 @@ public:
     }
 
 public:
+    FOnGivenActiveTacticalEffectRemoved	OnGivenActiveTacticalEffectRemovedDelegate;
+
+public:
     // @brief 해당 객체를 소유한 컴포넌트 모델
     UPROPERTY(Category = "Owner", VisibleAnywhere, meta = (DisplayName = "Owner"))
     TWeakObjectPtr<UAttributeSetComponentModel> mOwner;
@@ -246,7 +276,7 @@ public:
 private:
     // @brief 활성화 중인 이펙트들
     UPROPERTY(Category = "Effect", VisibleAnywhere, meta = (DisplayName = "AttributeEffects"))
-    TArray<FActiveTacticalEffect> mAttributeEffects;
+    TArray<FActiveTacticalEffect> mTacticalEffects;
 
     /* 이펙트를 확인하여 복구 가능한 객체들 */
 private:
@@ -268,7 +298,7 @@ private:
     int32 mPendingRemoveCount;
 
     // @brief Lock에 의해 미루어진 추가 이펙트들 Linked-List 방식 자료구조
-    FActiveTacticalEffect* mPendingGameplayEffectHead;
-    FActiveTacticalEffect** mPendingGameplayEffectTail;
+    FActiveTacticalEffect* mPendingTacticalEffectHead;
+    FActiveTacticalEffect** mPendingTacticalEffectTail;
 };
 

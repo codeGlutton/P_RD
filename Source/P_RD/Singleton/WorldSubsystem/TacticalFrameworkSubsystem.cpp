@@ -15,3 +15,4 @@ UObjectModel* UTacticalFrameworkSubsystem::GetModel_Internal() const
 {
 	return mFrameworkModel.Get();
 }
+

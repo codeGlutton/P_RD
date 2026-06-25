@@ -23,12 +23,12 @@ class P_RD_API UComponentModel : public UObject
 	GENERATED_BODY()
 
 public:
-	virtual void Initialize() PURE_VIRTUAL(UComponentModel::Initialize, return;);
-	virtual void Uninitialize() PURE_VIRTUAL(UComponentModel::Uninitialize, return;);
+	virtual void Initialize() {}
+	virtual void Uninitialize() {}
 
 public:
-	virtual void BeginPlay() PURE_VIRTUAL(UComponentModel::BeginPlay, return;);
-	virtual void EndPlay() PURE_VIRTUAL(UComponentModel::EndPlay, return;);
+	virtual void BeginPlay() {}
+	virtual void EndPlay() {}
 
 public:
 	template<typename T>

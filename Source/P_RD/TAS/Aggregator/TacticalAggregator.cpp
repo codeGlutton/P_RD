@@ -16,6 +16,89 @@ void FTacticalAggregator::SetAttributeBaseValue(float BaseValue, bool BroadcastD
     }
 }
 
+float FTacticalAggregator::StaticExecModOnBaseValue(float BaseValue, TEnumAsByte<EGameplayModOp::Type> ModifierOp, float EvaluatedMagnitude)
+{
+    switch (ModifierOp)
+    {
+    case EGameplayModOp::Override:
+    {
+        BaseValue = EvaluatedMagnitude;
+        break;
+    }
+    case EGameplayModOp::AddBase:
+    case EGameplayModOp::AddFinal:
+    {
+        BaseValue += EvaluatedMagnitude;
+        break;
+    }
+    case EGameplayModOp::MultiplyAdditive:
+    case EGameplayModOp::MultiplyCompound:
+    {
+        BaseValue *= EvaluatedMagnitude;
+        break;
+    }
+    case EGameplayModOp::DivideAdditive:
+    {
+        if (FMath::IsNearlyZero(EvaluatedMagnitude) == false)
+        {
+            BaseValue /= EvaluatedMagnitude;
+        }
+        break;
+    }
+    }
+    return BaseValue;
+}
+
+void FTacticalAggregator::ExecModOnBaseValue(TEnumAsByte<EGameplayModOp::Type> ModifierOp, float EvaluatedMagnitude)
+{
+    mBaseValue = StaticExecModOnBaseValue(mBaseValue, ModifierOp, EvaluatedMagnitude);
+    BroadcastOnDirty();
+}
+
+void FTacticalAggregator::AddAggregatorMod(float EvaluatedData, TEnumAsByte<EGameplayModOp::Type> ModifierOp, FActiveTacticalEffectHandle ActiveHandle)
+{
+    TArray<FTacticalAggregatorMod>& ModList = mMods[ModifierOp];
+
+    int32 NewIdx = ModList.AddUninitialized();
+    FTacticalAggregatorMod& NewMod = ModList[NewIdx];
+
+    NewMod.mEvaluatedMagnitude = EvaluatedData;
+    NewMod.mStackCount = 0;
+    NewMod.mActiveHandle = ActiveHandle;
+
+    BroadcastOnDirty();
+}
+
+void FTacticalAggregator::RemoveAggregatorMod(FActiveTacticalEffectHandle ActiveHandle)
+{
+    checkf(ActiveHandle.IsValid() == true, TEXT("비활성 핸들을 제거하려 시도"));
+
+    for (int32 ModOpIdx = 0; ModOpIdx < UE_ARRAY_COUNT(mMods); ++ModOpIdx)
+    {
+        mMods[ModOpIdx].RemoveAllSwap([&ActiveHandle](const FTacticalAggregatorMod& Element) {
+                return (Element.mActiveHandle == ActiveHandle);
+            }, EAllowShrinking::No);
+    }
+
+    BroadcastOnDirty();
+}
+
+void FTacticalAggregator::UpdateAggregatorMod(FActiveTacticalEffectHandle ActiveHandle, const FGameplayAttribute& Attribute, const FTacticalEffectSpec& Spec, FActiveTacticalEffectHandle InHandle)
+{
+    RemoveAggregatorMod(ActiveHandle);
+
+    for (int32 ModIdx = 0; ModIdx < Spec.mModifierValues.Num(); ++ModIdx)
+    {
+        const FTacticalModifierInfo& ModDef = Spec.mEffectClass->mModifiers[ModIdx];
+        if (ModDef.mAttribute == Attribute)
+        {
+            AddAggregatorMod(Spec.GetModifierMagnitude(ModIdx), ModDef.mModifierOp, InHandle);
+        }
+    }
+
+    BroadcastOnDirty();
+}
+
 float FTacticalAggregator::Evaluate() const
 {
     return EvaluateWithBase(mBaseValue);

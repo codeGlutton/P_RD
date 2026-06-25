@@ -13,9 +13,23 @@
 #include "TacticalFrameworkModel.generated.h"
 
 class UAttributeSetComponentModel;
+class UAttributeSetComponentModel;
+struct FTacticalEffectSpec;
+
+class UTacticalEffectContext;
 
 // Tactical Framework 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogTacticalFramework, Log, All)
+
+struct FScopeCurrentTacticalEffectBeingApplied
+{
+public:
+	FScopeCurrentTacticalEffectBeingApplied(UWorld* World, const FTacticalEffectSpec* Spec, UAttributeSetComponentModel* Model);
+	~FScopeCurrentTacticalEffectBeingApplied();
+
+private:
+	TObjectPtr<UWorld> mWorld;
+};
 
 /**
  * @brief  SRPG 유저 명령을 전달하는 서브시스템 모델
@@ -26,6 +40,17 @@ class P_RD_API UTacticalFrameworkModel : public UObjectModel
 	GENERATED_BODY()
 
 	friend struct FActiveTacticalEffectHandle;
+
+public:
+	virtual void GlobalPreTacticalEffectSpecApply(FTacticalEffectSpec& Spec, UAttributeSetComponentModel* Model);
+
+public:
+	virtual UTacticalEffectContext* AllocTacticalEffectContext() const;
+
+public:
+	virtual void PushCurrentAppliedGE(const FTacticalEffectSpec* Spec, UAttributeSetComponentModel* Model);
+	virtual void SetCurrentAppliedGE(const FTacticalEffectSpec* Spec);
+	virtual void PopCurrentAppliedGE();
 
 protected:
 	UPROPERTY(Category = "Effect", VisibleAnywhere, meta = (DisplayName = "EffectOwningModelMap"))

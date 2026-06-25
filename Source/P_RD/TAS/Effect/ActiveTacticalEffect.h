@@ -12,6 +12,7 @@
 #include "ActiveTacticalEffect.generated.h"
 
 class UAttributeSetComponentModel;
+struct FTacticalEffectRemovalInfo;
 
 /**
  * @brief 활성화된 이펙트를 쉽게 탐색하기 위한 핸들
@@ -67,6 +68,15 @@ private:
     TWeakObjectPtr<UWorld> mWorld;
 };
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnActiveTacticalEffectRemoved_Info, const FTacticalEffectRemovalInfo&);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnActiveTacticalEffectStackChange, FActiveTacticalEffectHandle, int32 /*NewStackCount*/, int32 /*PreviousStackCount*/);
+
+struct FActiveTacticalEffectEvents
+{
+    FOnActiveTacticalEffectRemoved_Info OnEffectRemoved;
+    FOnActiveTacticalEffectStackChange OnStackChanged;
+};
+
 /**
  * @brief 현재 활성화 이펙트
  */
@@ -74,6 +84,10 @@ USTRUCT()
 struct FActiveTacticalEffect
 {
     GENERATED_BODY()
+
+public:
+    FActiveTacticalEffect() = default;
+    FActiveTacticalEffect(FActiveTacticalEffectHandle Handle, const FTacticalEffectSpec& Spec);
 
 public:
     bool operator==(const FActiveTacticalEffect& Other)
@@ -95,5 +109,9 @@ public:
     FActiveTacticalEffect* mPendingNext = nullptr;
     // @brief 삭제 예약된 이펙트 여부
     bool mIsPendingRemove = false;
+
+public:
+    // @brief 각 상황에 맞는 대리자
+    FActiveTacticalEffectEvents mEventSet;
 };
 

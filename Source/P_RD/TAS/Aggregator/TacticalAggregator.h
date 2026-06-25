@@ -20,6 +20,9 @@ public:
     float mEvaluatedMagnitude = 0.f;
     // @brief 스택 갯수
     float mStackCount = 0.f;
+
+    // @brief 활성화 핸들
+    FActiveTacticalEffectHandle mActiveHandle;
 };
 
 /**
@@ -31,10 +34,25 @@ struct FTacticalAggregator : public TSharedFromThis<FTacticalAggregator>
 
     DECLARE_MULTICAST_DELEGATE_OneParam(FOnAttributeAggregatorDirty, FTacticalAggregator*);
 
+public:
+    FTacticalAggregator(float InBaseValue = 0.f) : 
+        mDirtyCount(0),
+        mBaseValue(InBaseValue)
+    {
+    }
+
     /* 계산 함수 */
 public:
     float GetAttributeBaseValue() const;
     void SetAttributeBaseValue(float BaseValue, bool BroadcastDirtyEvent = true);
+
+public:
+    static float StaticExecModOnBaseValue(float BaseValue, TEnumAsByte<EGameplayModOp::Type> ModifierOp, float EvaluatedMagnitude);
+    void ExecModOnBaseValue(TEnumAsByte<EGameplayModOp::Type> ModifierOp, float EvaluatedMagnitude);
+
+    void AddAggregatorMod(float EvaluatedData, TEnumAsByte<EGameplayModOp::Type> ModifierOp, FActiveTacticalEffectHandle ActiveHandle = FActiveTacticalEffectHandle());
+    void RemoveAggregatorMod(FActiveTacticalEffectHandle ActiveHandle);
+    void UpdateAggregatorMod(FActiveTacticalEffectHandle ActiveHandle, const FGameplayAttribute& Attribute, const FTacticalEffectSpec& Spec, FActiveTacticalEffectHandle InHandle);
 
 public:
     /**

@@ -1,28 +1,139 @@
 ﻿#include "TAS/Effect/TacticalEffect.h"
-#include "SRPGFramework/SRPGFrameworkType.h"
-#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
-#include "Actor/TileMap/TileMapModel.h"
-#include "Actor/BoardActor/BoardActorModel.h"
-#include "TAS/Effect/TacticalEffectContext.h"
 
-
-UBoardActorModel* UTacticalEffect::ExtractTarget(const FTileIndex& TargetTile, const UTacticalEffectContext* EffectContext)
+FTacticalEffectSpec::FTacticalEffectSpec(const UTacticalEffect* Class, UTacticalEffectContext* EffectContext) :
+	FTacticalEffectSpec()
 {
-	// CombatModel을 가져옵니다.
-	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
-	checkf(IsValid(CombatModel), TEXT("전투 모델이 비어있습니다."));
+	Initialize(Class, EffectContext);
+}
 
-	// 서브 시스템에 접근하여 타일맵 모델을 가져온다.
-	TWeakObjectPtr<UTileMapModel> TMModel = CombatModel->GetTileMap();
-	checkf(TMModel.IsValid(), TEXT("타일맵 모델이 존재하지 않습니다."));
-	// ===============================================================
+FTacticalEffectSpec::FTacticalEffectSpec(const FTacticalEffectSpec& Other, UTacticalEffectContext* EffectContext)
+{
+	*this = Other;
+	mEffectContext = EffectContext;
+}
 
-	// 해당 타일에 유닛 모델을 가져온다.
-	TWeakObjectPtr<UBoardActorModel> TargetBoardModel = TMModel->GetActorOnTile<UBoardActorModel>(TargetTile, EffectContext->mTileLayerFlag);
+void FTacticalEffectSpec::Initialize(const UTacticalEffect* Class, UTacticalEffectContext* EffectContext)
+{
+	mEffectClass = Class;
+	check(mEffectClass != nullptr);
 
-	// 유닛이 없다면 반환한다.
-	if (!TargetBoardModel.IsValid())
-		return nullptr;
+	mIsInfinite = mEffectClass->mDurationPolicy == ETacticalEffectDurationType::Infinite;
 
-	return TargetBoardModel.Get();
+	SetContext(EffectContext);
+	mModifierValues.SetNum(mEffectClass->mModifiers.Num());
+}
+
+void FTacticalEffectSpec::SetStackCount(int32 NewStackCount)
+{
+	mStackCount = NewStackCount;
+}
+
+void FTacticalEffectSpec::SetContext(UTacticalEffectContext* NewEffectContext)
+{
+	mEffectContext = NewEffectContext;
+}
+
+int32 FTacticalEffectSpec::GetStackCount() const
+{
+	return mStackCount;
+}
+
+UTacticalEffectContext* FTacticalEffectSpec::GetContext() const
+{
+	return mEffectContext;
+}
+
+void FTacticalEffectSpec::CalculateModifierMagnitudes()
+{
+	for (int32 ModIdx = 0; ModIdx < mModifierValues.Num(); ++ModIdx)
+	{
+		const FTacticalModifierInfo& ModDef = mEffectClass->mModifiers[ModIdx];
+		float& ModifierValue = mModifierValues[ModIdx];
+
+		ModifierValue = ModDef.mModifierMagnitude * mDynamicMagnitude;
+	}
+}
+
+float FTacticalEffectSpec::GetModifierMagnitude(int32 ModifierIdx) const
+{
+	check(mModifierValues.IsValidIndex(ModifierIdx) && mEffectClass != nullptr && mEffectClass->mModifiers.IsValidIndex(ModifierIdx));
+
+	const float SingleEvaluatedMagnitude = mModifierValues[ModifierIdx];
+	float ModMagnitude = SingleEvaluatedMagnitude;
+	if (mEffectClass->mFactorInStackCount == true)
+	{
+		/* 스택 반영 */
+
+		ModMagnitude = GameplayEffectUtilities::ComputeStackedModifierMagnitude(SingleEvaluatedMagnitude, GetStackCount(), mEffectClass->mModifiers[ModifierIdx].mModifierOp);
+	}
+	return ModMagnitude;
+}
+
+bool FTacticalModifierInfo::operator==(const FTacticalModifierInfo& Other) const
+{
+	if (mAttribute != Other.mAttribute)
+	{
+		return false;
+	}
+
+	if (mModifierOp != Other.mModifierOp)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool FTacticalModifierInfo::operator!=(const FTacticalModifierInfo& Other) const
+{
+	return !(*this == Other);
+}
+
+bool UTacticalEffect::CanApply(const FActiveTacticalEffectsContainer& ActiveGEContainer, const FTacticalEffectSpec& GESpec) const
+{
+	/*for (const UGameplayEffectComponent* GEComponent : GEComponents)
+	{
+		if (GEComponent && !GEComponent->CanGameplayEffectApply(ActiveGEContainer, GESpec))
+		{
+			return false;
+		}
+	}*/
+
+	return true;
+}
+
+bool UTacticalEffect::OnAddedToActiveContainer(FActiveTacticalEffectsContainer& ActiveGEContainer, FActiveTacticalEffect& ActiveGE) const
+{
+	bool ShouldBeActive = true;
+	/*for (const UGameplayEffectComponent* GEComponent : GEComponents)
+	{
+		if (GEComponent)
+		{
+			bShouldBeActive = GEComponent->OnActiveGameplayEffectAdded(ActiveGEContainer, ActiveGE) && bShouldBeActive;
+		}
+	}*/
+
+	return ShouldBeActive;
+}
+
+void UTacticalEffect::OnExecuted(FActiveTacticalEffectsContainer& ActiveGEContainer, FTacticalEffectSpec& GESpec) const
+{
+	/*for (const UGameplayEffectComponent* GEComponent : GEComponents)
+	{
+		if (GEComponent)
+		{
+			GEComponent->OnGameplayEffectExecuted(ActiveGEContainer, GESpec, PredictionKey);
+		}
+	}*/
+}
+
+void UTacticalEffect::OnApplied(FActiveTacticalEffectsContainer& ActiveGEContainer, FTacticalEffectSpec& GESpec) const
+{
+	/*for (const UGameplayEffectComponent* GEComponent : GEComponents)
+	{
+		if (GEComponent)
+		{
+			GEComponent->OnGameplayEffectApplied(ActiveGEContainer, GESpec, PredictionKey);
+		}
+	}*/
 }

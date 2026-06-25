@@ -67,7 +67,7 @@ void UTacticalAbility_Skill::ActivateSkill(const FTacticalAbilityContext& Contex
 	TSoftObjectPtr<UStaticSkillData> SkillData;
 
 	TWeakObjectPtr<UTacticalEffectPayload_Skill> Payload_Skill = Cast<UTacticalEffectPayload_Skill>(Context.mInstigatorData);
-	checkf(!Payload_Skill.IsValid(), TEXT("잘못된 Context 구성체"));
+	checkf(Payload_Skill.IsValid() == true, TEXT("잘못된 Context 구성체"));
 
 	SkillData = Payload_Skill.Get()->mSkillData;
 
