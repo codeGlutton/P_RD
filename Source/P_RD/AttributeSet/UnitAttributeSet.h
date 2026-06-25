@@ -35,33 +35,18 @@ public:
 public:
 	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, MaxHP)
 	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, HP)
-	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, SkillPoint)
-	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, DamagePoint)
 	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, DefensePoint)
 	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, MovementPoint)
 
+	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, DamagePoint)
+	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, HealPoint)
+
+	/* 단순 덧셈만 적용하는 영구적인 Attribute 값 */
 protected:
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FGameplayAttributeData MaxHP;
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FGameplayAttributeData HP;
-
-	/**
-	 * @brief 스킬 시전 동안만 유지되는 스킬 포인트
-	 * @details
-	 * 공격 스킬 사용 시에는 최종 추가 공격력, 
-	 * 방어 스킬 사용 시에는 최종 추가 방어력, 
-	 * 이동 스킬 사용 시에는 최종 추가 이동력으로 활용
-	 */
-	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FGameplayAttributeData SkillPoint;
-	/**
-	 * @brief 피격 동안만 유지되는 피격 포인트
-	 * @details
-	 * 피격 시 실질적으로 들어오는 데미지로 활용
-	 */
-	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FGameplayAttributeData DamagePoint;
 
 	// @brief 턴 동안만 유지되는 방어 포인트
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
@@ -69,6 +54,27 @@ protected:
 	// @brief 턴 동안만 유지되는 움직임 포인트
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FGameplayAttributeData MovementPoint;
+
+	/* 복잡한 계산 이후에 실제 적용하는 일시적인 Attribute 값 */
+protected:
+	/**
+	 * @brief 타격 동안만 유지되는 타격 포인트
+	 * @details
+	 * 타격 시 실질적으로 주는 데미지로 활용
+	 */
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FGameplayAttributeData DamagePoint;
+	/**
+	 * @brief 힐 동안만 유지되는 힐 포인트
+	 * @details
+	 * 힐 시 실질적으로 얻는 체력 변화로 활용
+	 */
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FGameplayAttributeData HealPoint;
+
+	/**
+	 * [NOTE] 상태이상은 그냥 Tag로 달자
+	 */
 };
 
 /**

@@ -27,4 +27,6 @@ void UTacticalEffect_Stat_Damage::ActivateEffect(const UBoardActorModel& Caster,
 	// 타겟의 체력을 깍는다.
 	float HP = TargetASC->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute());
 	//TargetASC->SetAttributeValue(UUnitAttributeSet::GetHPAttribute(), HP - EffectContext_Stat.Get()->GetFinal());
+
+	UE_LOG(LogTemp, Warning, TEXT("Damage : %f"), HP);
 }
