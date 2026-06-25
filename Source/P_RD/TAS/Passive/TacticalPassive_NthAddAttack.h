@@ -14,7 +14,7 @@
  * @brief N번째 발동마다 공격력 보너스 패시브
  *
  * @details
- * ActivatePassive: 러닝 카운터 +1, mThreshold 도달 시 대상 공격력(DamagePoint)에 mAttackBonus 추가 (리셋 안 함).
+ * EvaluatePassive: 러닝 카운터 +1, mThreshold 도달 시 대상 공격력(DamagePoint)에 mAttackBonus 추가 (리셋 안 함).
  * CommitPassive: 러닝 카운터를 mState에 커밋, 임계값 도달 시 0으로 리셋.
  *
  * 카운터는 패시브 내부 상태(FTacticalPassiveState_NthCounter), 임계값(N)은 config라 클래스에 둠.
@@ -24,12 +24,13 @@ class P_RD_API UTacticalPassive_NthAddAttack : public UTacticalPassive
 {
 	GENERATED_BODY()
 
-public:
-	virtual void ActivatePassive(
+protected:
+	virtual void EvaluatePassive(
 		IN const FPassiveActivateContext& Ctx,
 		OUT FBoardCombatTargetSnapshotData& TargetDelta,
 		IN OUT TInstancedStruct<FTacticalPassiveState>& PassiveState) override;
 
+public:
 	virtual void CommitPassive(
 		IN const TInstancedStruct<FTacticalPassiveState>& PassiveState) override;
 

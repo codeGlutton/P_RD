@@ -10,7 +10,7 @@
 #include "Actor/BoardActor/BoardCombatTarget.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
-void UTacticalPassive_NthAddAttack::ActivatePassive(
+void UTacticalPassive_NthAddAttack::EvaluatePassive(
 	const FPassiveActivateContext& Ctx,
 	FBoardCombatTargetSnapshotData& TargetDelta,
 	TInstancedStruct<FTacticalPassiveState>& PassiveState)

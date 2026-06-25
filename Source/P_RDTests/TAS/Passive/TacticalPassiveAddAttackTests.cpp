@@ -38,8 +38,10 @@ bool FTacticalPassiveAddAttackTests::RunTest(const FString& Parameters)
 	FBoardCombatTargetSnapshotData TargetDelta;
 	TInstancedStruct<FTacticalPassiveState> State;
 
-	// 계산
-	Passive->ActivatePassive(Ctx, TargetDelta, State);
+	// 계산만 검증 (적용/이펙트는 별도 효과 테스트).
+	// EvaluatePassive는 protected이고 friend는 상속/서브클래스 override에 적용 안 되므로 베이스 타입으로 호출.
+	UTacticalPassive* Base = Passive;
+	Base->EvaluatePassive(Ctx, TargetDelta, State);
 
 	// DamagePoint 델타가 보너스만큼 누적됐는지 확인
 	const float* Value = TargetDelta.mAttributes.Find(UUnitAttributeSet::GetDamagePointAttribute());

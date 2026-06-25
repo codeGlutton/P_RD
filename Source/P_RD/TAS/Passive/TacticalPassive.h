@@ -35,24 +35,27 @@ class P_RD_API UTacticalPassive : public UObject
 	// 자동화 테스트에서만 protected 상태(mTriggerTiming 등)에 접근하기 위한 friend
 	// 릴리즈 빌드에 테스트 모듈이 빠져도 이름 선언일 뿐이라 무해
 	friend class FPassiveComponentModelTests;
+	// 패시브별 단위 테스트가 protected(EvaluatePassive/mState)에 접근하기 위한 friend
+	friend class FTacticalPassiveAddAttackTests;
+	friend class FTacticalPassiveNthAddAttackCalcTests;
+	friend class FTacticalPassiveNthAddAttackCommitTests;
 
 public:
 	/**
-	 * @brief 패시브 효과 계산
+	 * @brief 패시브 발동 (계산 -> 적용 연쇄, 고정)
 	 *
 	 * @details
-	 * TargetDelta에 변화값을 누적.
-	 * 패시브 내부 상태가 있으면 PassiveState를 읽어 갱신 (커밋은 CommitPassive에서).
+	 * 내부적으로 EvaluatePassive(계산) -> NotifyPassive(적용) 순서로 호출.
+	 * 계산 결과(기여값)는 내부 로컬에만 존재하고 외부로 반환하지 않는다 (이펙트로 바로 적용).
+	 * 고정 체인이라 일반 함수(non-virtual)로 두며, 서브클래스는 이 함수가 아니라
+	 * EvaluatePassive를 구현한다.
 	 *
 	 * @param Ctx          소유자/대상 및 현재 스냅샷
-	 * @param TargetDelta  [out] 대상에게 가할 수치 변화 누적
 	 * @param PassiveState [in,out] 패시브 내부 상태 (러닝본, 무상태면 무시)
 	 */
-	virtual void ActivatePassive(
+	void ActivatePassive(
 		IN const FPassiveActivateContext& Ctx,
-		OUT FBoardCombatTargetSnapshotData& TargetDelta,
-		IN OUT TInstancedStruct<FTacticalPassiveState>& PassiveState)
-		PURE_VIRTUAL(UTacticalPassive::ActivatePassive, );
+		IN OUT TInstancedStruct<FTacticalPassiveState>& PassiveState);
 
 	/**
 	 * @brief 계산된 패시브 내부 상태를 커밋
@@ -69,6 +72,38 @@ public:
 	const FGameplayTag& GetTriggerTiming() const { return mTriggerTiming; }
 
 protected:
+	/**
+	 * @brief 패시브 효과 계산 (순수)
+	 *
+	 * @details
+	 * TargetDelta에 변화값을 누적. 내부 상태는 읽기만 하고 실제로 바꾸지 않으며,
+	 * 다음 상태가 어떻게 변해야 할지는 PassiveState(러닝본)에 기록 (커밋은 CommitPassive).
+	 * 서브클래스가 구현한다.
+	 *
+	 * @param Ctx          소유자/대상 및 현재 스냅샷
+	 * @param TargetDelta  [out] 대상에게 가할 수치 변화 누적
+	 * @param PassiveState [in,out] 패시브 내부 상태 (러닝본, 무상태면 무시)
+	 */
+	virtual void EvaluatePassive(
+		IN const FPassiveActivateContext& Ctx,
+		OUT FBoardCombatTargetSnapshotData& TargetDelta,
+		IN OUT TInstancedStruct<FTacticalPassiveState>& PassiveState)
+		PURE_VIRTUAL(UTacticalPassive::EvaluatePassive, );
+
+	/**
+	 * @brief 계산된 기여값을 드라이버가 원하는 형태로 출력
+	 *
+	 * @details
+	 * 기본은 OUT 모드(TargetDelta를 그대로 둠). 이펙트 발사 등 출력 방식이
+	 * 달라지면 베이스에서 이 함수만 교체하면 되고, 서브클래스는 영향 없음.
+	 *
+	 * @param Ctx         소유자/대상 및 현재 스냅샷
+	 * @param TargetDelta [in,out] 계산된 수치 변화
+	 */
+	virtual void NotifyPassive(
+		IN const FPassiveActivateContext& Ctx,
+		IN OUT FBoardCombatTargetSnapshotData& TargetDelta);
+
 	/**
 	 * @brief 발동 시점 태그
 	 *
