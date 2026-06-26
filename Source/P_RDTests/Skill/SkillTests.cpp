@@ -105,13 +105,9 @@ bool FSkillTest::RunTest(const FString& Parameters)
         RoomInstance->mAliveSubsystemModels.Add(UTacticalFrameworkModel::StaticClass(), FrameworkModel);
         bCreatedFrameworkMock = true;
     }
-
-    // =======================================================================
-    // 목업 데이터 생성
-    // =======================================================================
     
     // =============================================================================
-    // 액터 모델 생성
+    // 시전자 액터 모델 생성
     // ============================================================================ =
     TObjectPtr<USkillTestUnitModel> SkillActorModel = NewObject<USkillTestUnitModel>(World);
     SkillActorModel->Initialize();

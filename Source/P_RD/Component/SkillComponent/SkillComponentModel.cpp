@@ -68,7 +68,8 @@ void USkillComponentModel::AddSkillData(IN const TSoftObjectPtr<UStaticSkillData
 
 void USkillComponentModel::ExtractTarget(const TArray<FTileIndex>& TargetTile, ETileLayerFlag ActorFlag, ETargetFilter TargetFilter, OUT TArray<TWeakObjectPtr<UBoardActorModel>>& TargetActors)
 {
-	// @Note 서브시스템이 작동이 가능하다면 서브시스템에서 가져오자.
+	// TODO: [2026-06-26] 향후 실제 타일맵 기반의 액터 검색 시스템으로 교체 필요
+	// 현재는 스킬 로직 테스트를 위해 임시로 유닛을 생성함.
 
 	// CombatModel을 가져옵니다.
 	//USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
@@ -134,9 +135,9 @@ bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileInd
 		{
 			// 피격자의 스냅샷을 따옵니다.
 			TWeakObjectPtr<UUnitModel> TargetUnit = Cast<UUnitModel>(TargetActors[j]);
-			checkf(TargetUnit.IsValid(), TEXT("타겟 유닛 유효하지 않음"));
+			if (!TargetUnit.IsValid(), TEXT("타겟 유닛 유효하지 않음"))
+				continue;
 			FBoardCombatTargetSnapshotData* TargetSnapShot = TargetUnit->MakeSnapshotData();
-
 
 			SkillData.Get()->mSkillMotionLayers[i].mStaticSkillEffectLayers->ApplySkillEffect(DicePoint, OwnerActor, TargetActors[j], OwnerSnapShot, TargetSnapShot);
 		}
