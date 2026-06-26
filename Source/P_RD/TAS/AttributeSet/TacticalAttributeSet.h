@@ -67,16 +67,6 @@ public:
 
 	FTacticalAttribute(FProperty *NewProperty);
 
-	FTacticalAttribute(const FTacticalAttribute& Other)
-	{
-		SetUProperty(Other.GetUProperty());
-	}
-
-	operator FTacticalAttribute() const
-	{
-		return FTacticalAttribute(GetUProperty());
-	}
-
 	bool IsValid() const
 	{
 		return mAttribute.Get() != nullptr;
