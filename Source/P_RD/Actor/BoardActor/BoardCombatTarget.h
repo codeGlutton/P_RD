@@ -28,7 +28,7 @@ public:
 		FBoardCombatTargetSnapshotData Result = *this;
 
 		// Attributes 값 합산
-		for (const TPair<FGameplayAttribute, float>& Pair : Other.mAttributes)
+		for (const TPair<FTacticalAttribute, float>& Pair : Other.mAttributes)
 		{
 			Result.mAttributes.FindOrAdd(Pair.Key) += Pair.Value;
 		}
@@ -45,7 +45,7 @@ public:
 	FBoardCombatTargetSnapshotData& operator+=(const FBoardCombatTargetSnapshotData& Other)
 	{
 		// Attributes 값 합산
-		for (const TPair<FGameplayAttribute, float>& Pair : Other.mAttributes)
+		for (const TPair<FTacticalAttribute, float>& Pair : Other.mAttributes)
 		{
 			mAttributes.FindOrAdd(Pair.Key) += Pair.Value;
 		}
@@ -62,7 +62,7 @@ public:
 public:
 	// @brief HP, Money, power 등의 "수치"가 중요한 변화
 	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
-	TMap<FGameplayAttribute, float> mAttributes;
+	TMap<FTacticalAttribute, float> mAttributes;
 
 	// @brief 밀치기, 약화(타격 피해량 25퍼 감소), 취약(피격 피해량 50퍼 증가) 등의 "발동 여부"가 중요한 변화
 	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)

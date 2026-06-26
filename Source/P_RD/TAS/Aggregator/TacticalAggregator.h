@@ -69,7 +69,7 @@ public:
 
     void AddAggregatorMod(float EvaluatedData, TEnumAsByte<EGameplayModOp::Type> ModifierOp, FActiveTacticalEffectHandle ActiveHandle = FActiveTacticalEffectHandle());
     void RemoveAggregatorMod(FActiveTacticalEffectHandle ActiveHandle);
-    void UpdateAggregatorMod(FActiveTacticalEffectHandle ActiveHandle, const FGameplayAttribute& Attribute, const FTacticalEffectSpec& Spec, FActiveTacticalEffectHandle InHandle);
+    void UpdateAggregatorMod(FActiveTacticalEffectHandle ActiveHandle, const FTacticalAttribute& Attribute, const FTacticalEffectSpec& Spec, FActiveTacticalEffectHandle InHandle);
 
 public:
     /**

@@ -29,7 +29,7 @@ struct FTacticalAttributeChangeData
     GENERATED_BODY()
 
 public:
-    FGameplayAttribute mAttribute = nullptr;
+    FTacticalAttribute mAttribute = nullptr;
     float mNewValue = 0.f;
     float mOldValue = 0.f;
 };
@@ -191,30 +191,30 @@ private:
 
     /* 변경에 따른 후속 조치 */
 private:
-    TSharedPtr<FTacticalAggregator>& FindOrCreateAttributeAggregator(const FGameplayAttribute& Attribute);
-    void CleanupAttributeAggregator(const FGameplayAttribute& Attribute);
-    void OnAttributeAggregatorDirty(FTacticalAggregator* Aggregator, FGameplayAttribute Attribute);
+    TSharedPtr<FTacticalAggregator>& FindOrCreateAttributeAggregator(const FTacticalAttribute& Attribute);
+    void CleanupAttributeAggregator(const FTacticalAttribute& Attribute);
+    void OnAttributeAggregatorDirty(FTacticalAggregator* Aggregator, FTacticalAttribute Attribute);
     void OnMagnitudeDependencyChange(FActiveTacticalEffectHandle Handle, const FTacticalAggregator* ChangedAgg);
 
     void OnStackCountChange(FActiveTacticalEffect& ActiveEffect, int32 OldStackCount, int32 NewStackCount);
 
     /* 속성 값 변화 */
 public:
-    void SetAttributeBaseValue(FGameplayAttribute Attribute, float BaseValue);
-    float GetAttributeBaseValue(FGameplayAttribute Attribute) const;
+    void SetAttributeBaseValue(FTacticalAttribute Attribute, float BaseValue);
+    float GetAttributeBaseValue(FTacticalAttribute Attribute) const;
 
-    void ApplyModToAttribute(const FGameplayAttribute& Attribute, TEnumAsByte<EGameplayModOp::Type> ModifierOp, float ModifierMagnitude);
+    void ApplyModToAttribute(const FTacticalAttribute& Attribute, TEnumAsByte<EGameplayModOp::Type> ModifierOp, float ModifierMagnitude);
     FActiveTacticalEffect* ApplyTacticalEffectSpec(const FTacticalEffectSpec& Spec, bool& FoundExistingStackableGE);
     void ExecuteActiveEffectsFrom(FTacticalEffectSpec& Spec);
     bool RemoveActiveTacticalEffect(FActiveTacticalEffectHandle Handle, int32 StacksToRemove);
 
-    FOnChangeAttributeValue& GetTacticalAttributeValueChangeDelegate(FGameplayAttribute Attribute);
+    FOnChangeAttributeValue& GetTacticalAttributeValueChangeDelegate(FTacticalAttribute Attribute);
 
 private:
     void InternalOnActiveTacticalEffectAdded(FActiveTacticalEffect& Effect);
     void InternalOnActiveTacticalEffectRemoved(FActiveTacticalEffect& Effect, const FTacticalEffectRemovalInfo& TacticalEffectRemovalInfo);
     
-    bool InternalExecuteMod(FTacticalEffectSpec& Spec, FGameplayModifierEvaluatedData& ModEvalData);
+    bool InternalExecuteMod(FTacticalEffectSpec& Spec, FTacticalModifierEvaluatedData& ModEvalData);
 
     bool InternalRemoveActiveTacticalEffect(int32 Idx, int32 StacksToRemove, bool bPrematureRemoval);
 
@@ -222,9 +222,9 @@ private:
     void RemoveActiveTacticalEffectGrantedTagsAndModifiers(const FActiveTacticalEffect& Effect);
 
 private:
-    void UpdateAttributeCurrentValue(FGameplayAttribute Attribute, float CurrentValue);
+    void UpdateAttributeCurrentValue(FTacticalAttribute Attribute, float CurrentValue);
     void UpdateAllAggregatorModMagnitudes(FActiveTacticalEffect& ActiveEffect);
-    void UpdateAggregatorModMagnitudes(const TSet<FGameplayAttribute>& AttributesToUpdate, FActiveTacticalEffect& ActiveEffect);
+    void UpdateAggregatorModMagnitudes(const TSet<FTacticalAttribute>& AttributesToUpdate, FActiveTacticalEffect& ActiveEffect);
 
 public:
     FActiveTacticalEffect* GetActiveTacticalEffect(const FActiveTacticalEffectHandle Handle);
@@ -284,10 +284,10 @@ private:
     /* 이펙트를 확인하여 복구 가능한 객체들 */
 private:
     // @brief 속성에 따른 값 계산기
-    TMap<FGameplayAttribute, TSharedPtr<FTacticalAggregator>> mAttributeAggregatorMap;
+    TMap<FTacticalAttribute, TSharedPtr<FTacticalAggregator>> mAttributeAggregatorMap;
 
     // @brief 값 변경에 따른 대리자
-    TMap<FGameplayAttribute, FOnChangeAttributeValue> mAttributeValueChangeDelegates;
+    TMap<FTacticalAttribute, FOnChangeAttributeValue> mAttributeValueChangeDelegates;
 
     // @brief 누적된 이펙트들
     TMap<TWeakObjectPtr<UTacticalEffect>, TArray<FActiveTacticalEffectHandle>> mSourceStackingMap;

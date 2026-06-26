@@ -117,7 +117,7 @@ void FTacticalAggregator::RemoveAggregatorMod(FActiveTacticalEffectHandle Active
     BroadcastOnDirty();
 }
 
-void FTacticalAggregator::UpdateAggregatorMod(FActiveTacticalEffectHandle ActiveHandle, const FGameplayAttribute& Attribute, const FTacticalEffectSpec& Spec, FActiveTacticalEffectHandle InHandle)
+void FTacticalAggregator::UpdateAggregatorMod(FActiveTacticalEffectHandle ActiveHandle, const FTacticalAttribute& Attribute, const FTacticalEffectSpec& Spec, FActiveTacticalEffectHandle InHandle)
 {
     RemoveAggregatorMod(ActiveHandle);
 

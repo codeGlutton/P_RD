@@ -22,7 +22,7 @@ void UAttributeSetComponentModel::Initialize()
 
     for (UObject* Obj : ChildObjects)
     {
-        UAttributeSet* Set = Cast<UAttributeSet>(Obj);
+        UTacticalAttributeSet* Set = Cast<UTacticalAttributeSet>(Obj);
         if (Set)
         {
             mSpawnedAttributes.AddUnique(Set);
@@ -48,9 +48,14 @@ void UAttributeSetComponentModel::EndPlay()
     Super::EndPlay();
 }
 
-const UAttributeSet* UAttributeSetComponentModel::GetAttributeSet_Internal(TSubclassOf<UAttributeSet> Class) const
+const TArray<UTacticalAttributeSet*>& UAttributeSetComponentModel::GetSpawnedAttributes() const
 {
-    for (const UAttributeSet* Set : mSpawnedAttributes)
+    return mSpawnedAttributes;
+}
+
+const UTacticalAttributeSet* UAttributeSetComponentModel::GetAttributeSet_Internal(TSubclassOf<UTacticalAttributeSet> Class) const
+{
+    for (const UTacticalAttributeSet* Set : mSpawnedAttributes)
     {
         if (Set != nullptr && Set->IsA(Class) == true)
         {
@@ -60,12 +65,12 @@ const UAttributeSet* UAttributeSetComponentModel::GetAttributeSet_Internal(TSubc
     return nullptr;
 }
 
-bool UAttributeSetComponentModel::HasAttributeSetForAttribute(FGameplayAttribute Attribute) const
+bool UAttributeSetComponentModel::HasAttributeSetForAttribute(FTacticalAttribute Attribute) const
 {
     return (Attribute.IsValid() == true && (GetAttributeSet_Internal(Attribute.GetAttributeSetClass()) != nullptr));
 }
 
-void UAttributeSetComponentModel::AddSpawnedAttributeSet(UAttributeSet* AttributeSet)
+void UAttributeSetComponentModel::AddSpawnedAttributeSet(UTacticalAttributeSet* AttributeSet)
 {
     if (IsValid(AttributeSet) == false)
     {
@@ -74,15 +79,15 @@ void UAttributeSetComponentModel::AddSpawnedAttributeSet(UAttributeSet* Attribut
     mSpawnedAttributes.AddUnique(AttributeSet);
 }
 
-void UAttributeSetComponentModel::RemoveSpawnedAttributeSet(UAttributeSet* AttributeSet)
+void UAttributeSetComponentModel::RemoveSpawnedAttributeSet(UTacticalAttributeSet* AttributeSet)
 {
     if (mSpawnedAttributes.RemoveSingle(AttributeSet) == 1)
     {
         /* 모든 클래스 속성 가져오기 */
 
-        TArray<FGameplayAttribute> Attributes;
-        UAttributeSet::GetAttributesFromSetClass(AttributeSet->GetClass(), Attributes);
-        for (const FGameplayAttribute& Attribute : Attributes)
+        TArray<FTacticalAttribute> Attributes;
+        UTacticalAttributeSet::GetAttributesFromSetClass(AttributeSet->GetClass(), Attributes);
+        for (const FTacticalAttribute& Attribute : Attributes)
         {
             UE_LOG(LogAttributeSetComp, Log, TEXT("계산 객체 Aggregator에서 해당 속성 값 [%s] 제거"), *Attribute.GetName());
             mActiveAttributeEffects.CleanupAttributeAggregator(Attribute);
@@ -90,10 +95,10 @@ void UAttributeSetComponentModel::RemoveSpawnedAttributeSet(UAttributeSet* Attri
     }
 }
 
-const UAttributeSet* UAttributeSetComponentModel::GetOrCreateAttributeSet_Internal(TSubclassOf<UAttributeSet> Class)
+const UTacticalAttributeSet* UAttributeSetComponentModel::GetOrCreateAttributeSet_Internal(TSubclassOf<UTacticalAttributeSet> Class)
 {
     UActorModel* OwningActorModel = GetOwnerModel();
-    const UAttributeSet* OwnedAttributes = nullptr;
+    const UTacticalAttributeSet* OwnedAttributes = nullptr;
     if (OwningActorModel != nullptr && Class != nullptr)
     {
         /* 기존 속성 객체 찾아보기 */
@@ -103,7 +108,7 @@ const UAttributeSet* UAttributeSetComponentModel::GetOrCreateAttributeSet_Intern
         {
             /* 발견 못해서 생성 */
 
-            UAttributeSet* Attributes = NewObject<UAttributeSet>(OwningActorModel, Class);
+            UTacticalAttributeSet* Attributes = NewObject<UTacticalAttributeSet>(OwningActorModel, Class);
             AddSpawnedAttributeSet(Attributes);
             OwnedAttributes = Attributes;
         }
@@ -112,21 +117,21 @@ const UAttributeSet* UAttributeSetComponentModel::GetOrCreateAttributeSet_Intern
     return OwnedAttributes;
 }
 
-void UAttributeSetComponentModel::SetAttributeBaseValue(const FGameplayAttribute& Attribute, float BaseValue)
+void UAttributeSetComponentModel::SetAttributeBaseValue(const FTacticalAttribute& Attribute, float BaseValue)
 {
     mActiveAttributeEffects.SetAttributeBaseValue(Attribute, BaseValue);
 }
 
-float UAttributeSetComponentModel::GetAttributeBaseValue(const FGameplayAttribute& Attribute) const
+float UAttributeSetComponentModel::GetAttributeBaseValue(const FTacticalAttribute& Attribute) const
 {
     return mActiveAttributeEffects.GetAttributeBaseValue(Attribute);
 }
 
-float UAttributeSetComponentModel::GetAttributeCurrentValue(FGameplayAttribute Attribute, bool& Found) const
+float UAttributeSetComponentModel::GetAttributeCurrentValue(FTacticalAttribute Attribute, bool& Found) const
 {
     if (Attribute.IsValid() == true)
     {
-        const UAttributeSet* FoundAttributeSet = GetAttributeSet_Internal(Attribute.GetAttributeSetClass());
+        const UTacticalAttributeSet* FoundAttributeSet = GetAttributeSet_Internal(Attribute.GetAttributeSetClass());
         if (FoundAttributeSet != nullptr)
         {
             Found = true;
@@ -138,9 +143,9 @@ float UAttributeSetComponentModel::GetAttributeCurrentValue(FGameplayAttribute A
     return 0.0f;
 }
 
-float UAttributeSetComponentModel::GetAttributeCurrentValue(const FGameplayAttribute& Attribute) const
+float UAttributeSetComponentModel::GetAttributeCurrentValue(const FTacticalAttribute& Attribute) const
 {
-    const UAttributeSet* FoundAttributeSet = GetAttributeSet_Internal(Attribute.GetAttributeSetClass());
+    const UTacticalAttributeSet* FoundAttributeSet = GetAttributeSet_Internal(Attribute.GetAttributeSetClass());
     if (FoundAttributeSet == nullptr)
     {
         return 0.f;
@@ -148,15 +153,15 @@ float UAttributeSetComponentModel::GetAttributeCurrentValue(const FGameplayAttri
     return Attribute.GetNumericValue(FoundAttributeSet);
 }
 
-void UAttributeSetComponentModel::SetAttributeCurrentValue_Internal(const FGameplayAttribute& Attribute, float& NewValue)
+void UAttributeSetComponentModel::SetAttributeCurrentValue_Internal(const FTacticalAttribute& Attribute, float& NewValue)
 {
-    const UAttributeSet* AttributeSet = GetAttributeSet_Internal(Attribute.GetAttributeSetClass());
+    const UTacticalAttributeSet* AttributeSet = GetAttributeSet_Internal(Attribute.GetAttributeSetClass());
     checkf(AttributeSet != nullptr, TEXT("변경하려는 AttributeSet이 nullptr"));
 
-    Attribute.SetNumericValueChecked(NewValue, const_cast<UAttributeSet*>(AttributeSet));
+    Attribute.SetNumericValueChecked(NewValue, const_cast<UTacticalAttributeSet*>(AttributeSet));
 }
 
-FOnChangeAttributeValue& UAttributeSetComponentModel::GetTacticalAttributeValueChangeDelegate(FGameplayAttribute Attribute)
+FOnChangeAttributeValue& UAttributeSetComponentModel::GetTacticalAttributeValueChangeDelegate(FTacticalAttribute Attribute)
 {
     return mActiveAttributeEffects.GetTacticalAttributeValueChangeDelegate(Attribute);
 }
@@ -171,7 +176,7 @@ void UAttributeSetComponentModel::OnTacticalEffectAppliedToSelf(UAttributeSetCom
     OnTacticalEffectAppliedDelegateToSelf.Broadcast(Model, SpecApplied, ActiveHandle);
 }
 
-void UAttributeSetComponentModel::ApplyModToAttribute(const FGameplayAttribute& Attribute, TEnumAsByte<EGameplayModOp::Type> ModifierOp, float ModifierMagnitude)
+void UAttributeSetComponentModel::ApplyModToAttribute(const FTacticalAttribute& Attribute, TEnumAsByte<EGameplayModOp::Type> ModifierOp, float ModifierMagnitude)
 {
     mActiveAttributeEffects.ApplyModToAttribute(Attribute, ModifierOp, ModifierMagnitude);
 }
@@ -326,7 +331,7 @@ const UTacticalEffect* UAttributeSetComponentModel::GetTacticalEffectDefForHandl
     return nullptr;
 }
 
-void UAttributeSetComponentModel::OnAttributeAggregatorDirty(FTacticalAggregator* Aggregator, FGameplayAttribute Attribute)
+void UAttributeSetComponentModel::OnAttributeAggregatorDirty(FTacticalAggregator* Aggregator, FTacticalAttribute Attribute)
 {
     mActiveAttributeEffects.OnAttributeAggregatorDirty(Aggregator, Attribute);
 }

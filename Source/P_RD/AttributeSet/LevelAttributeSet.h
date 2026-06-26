@@ -8,13 +8,14 @@
 #pragma once
 
 #include "AttributeSet/AttributeSetMinimal.h"
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "LevelAttributeSet.generated.h"
 
 /**
  * @brief  Level에 대한 Attribute Set 정의
  */
 UCLASS()
-class P_RD_API ULevelAttributeSet : public UAttributeSet
+class P_RD_API ULevelAttributeSet : public UTacticalAttributeSet
 {
 	GENERATED_BODY()
 	
@@ -22,16 +23,16 @@ public:
 	ULevelAttributeSet();
 
 public:
-	ATTRIBUTE_ACCESSORS(ULevelAttributeSet, CommonSkillWeight)
-	ATTRIBUTE_ACCESSORS(ULevelAttributeSet, RareSkillWeight)
-	ATTRIBUTE_ACCESSORS(ULevelAttributeSet, EpicSkillWeight)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(ULevelAttributeSet, CommonSkillWeight)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(ULevelAttributeSet, RareSkillWeight)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(ULevelAttributeSet, EpicSkillWeight)
 
 protected:
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FGameplayAttributeData CommonSkillWeight;
+	FTacticalAttributeData CommonSkillWeight;
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FGameplayAttributeData RareSkillWeight;
+	FTacticalAttributeData RareSkillWeight;
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FGameplayAttributeData EpicSkillWeight;
+	FTacticalAttributeData EpicSkillWeight;
 };
 
