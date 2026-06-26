@@ -353,9 +353,9 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 		NewOption.mJobType = LoadedPlayerUnitData->mJobType;
 		NewOption.mDescription = LoadedPlayerUnitData->mDescription.IsEmpty()
 			? JobDesc : LoadedPlayerUnitData->mDescription;
-		NewOption.mMaxHP = FMath::RoundToInt(LoadedPlayerUnitData->GetDefaultAttributeValue(UUnitAttributeSet::StaticClass(), UUnitAttributeSet::GetMaxHPAttribute(), DefaultDifficulty));
+		NewOption.mMaxHP = FMath::RoundToInt(LoadedPlayerUnitData->GetDefaultAttributeValue(GetWorld(), UPlayerUnitAttributeSet::StaticClass(), UPlayerUnitAttributeSet::GetMaxHPAttribute(), DefaultDifficulty));
 		NewOption.mDice = LoadedPlayerUnitData->mDiceDatas.Num();
-		NewOption.mGold = FMath::RoundToInt(LoadedPlayerUnitData->GetDefaultAttributeValue(UPlayerUnitAttributeSet::StaticClass(), UPlayerUnitAttributeSet::GetMoneyAttribute(), DefaultDifficulty));
+		NewOption.mGold = FMath::RoundToInt(LoadedPlayerUnitData->GetDefaultAttributeValue(GetWorld(), UPlayerUnitAttributeSet::StaticClass(), UPlayerUnitAttributeSet::GetMoneyAttribute(), DefaultDifficulty));
 		NewOption.mStatSummary = FText::Format(
 			NSLOCTEXT("FrontendGameMode", "CharacterStatSummary", "HP {0} / Dice {1} / Gold {2}"),
 			FText::AsNumber(NewOption.mMaxHP),

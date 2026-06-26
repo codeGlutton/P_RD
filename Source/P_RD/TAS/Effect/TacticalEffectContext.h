@@ -34,6 +34,7 @@ public:
 	void SetInstigator(UActorModel* Instigator);
 	void SetEffectCauser(UObject* EffectCauser);
 	void SetSourceObject(const UObject* SourceObject);
+	void AddTargetActor(UActorModel* TargetActor);
 	void SetAbility(const UTacticalAbility* Ability);
 	void SetAttributeSetComponentModel(const UAttributeSetComponentModel* Model);
 

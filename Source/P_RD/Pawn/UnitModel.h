@@ -18,9 +18,6 @@
 
 class UUnitModel;
 
-class UUnitAttributeSet;
-class UStaticUnitSpawnData;
-
 class UAttributeSetComponentModel;
 class USkillComponentModel;
 

@@ -43,16 +43,36 @@ class P_RD_API UTacticalFrameworkModel : public UObjectModel
 	friend struct FActiveTacticalEffectHandle;
 
 public:
-	virtual void GlobalPreTacticalEffectSpecApply(FTacticalEffectSpec& Spec, UAttributeSetComponentModel* Model);
+	void Initialize() override;
+	void Uninitialize() override;
 
+public:
+	UCurveTable* GetGlobalInitCurveTable();
+	FTacticalAttributeSetInitter* GetAttributeSetInitter();
+
+protected:
+	void ReloadAttributeDefaults();
+	void AllocAttributeSetInitter();
+
+#if WITH_EDITOR
+	void OnTableReimported(UObject* InObject);
+#endif
+
+	/* Effect Context 제작 */
 public:
 	virtual UTacticalEffectContext* AllocTacticalEffectContext() const;
 
+	/* 특정 시기 호출 */
 public:
-	virtual void PushCurrentAppliedGE(const FTacticalEffectSpec* Spec, UAttributeSetComponentModel* Model);
-	virtual void SetCurrentAppliedGE(const FTacticalEffectSpec* Spec);
-	virtual void PopCurrentAppliedGE();
+	void GlobalPreTacticalEffectSpecApply(FTacticalEffectSpec& Spec, UAttributeSetComponentModel* Model);
 
+	/* Effect 적용 시 최상위 객체 추적 */
+public:
+	void PushCurrentAppliedGE(const FTacticalEffectSpec* Spec, UAttributeSetComponentModel* Model);
+	void SetCurrentAppliedGE(const FTacticalEffectSpec* Spec);
+	void PopCurrentAppliedGE();
+
+	/* Aggregator 배칭 */
 public:
 	void BeginAggregatorDirtyBatch();
 	void EndAggregatorDirtyBatch();
@@ -62,10 +82,19 @@ public:
 
 	int32 GetGlobalBatchCount() const;
 
+	/* 초기 구성 데이터 */
+protected:
+	UPROPERTY(Category = "Attribute", DuplicateTransient, VisibleAnywhere, meta = (DisplayName = "GlobalInitCurveTable"))
+	TObjectPtr<UCurveTable> mGlobalInitCurveTable;
+
+	TSharedPtr<FTacticalAttributeSetInitter> mGlobalAttributeSetInitter;
+
+	/* Effect 매핑 데이터 */
 protected:
 	UPROPERTY(Category = "Effect", VisibleAnywhere, meta = (DisplayName = "EffectOwningModelMap"))
 	TMap<FActiveTacticalEffectHandle, TWeakObjectPtr<UAttributeSetComponentModel>> mEffectOwningModelMap;
 
+	/* 임시 데이터 */
 protected:
 	int32 mGlobalBatchCount;
 	TSet<FTacticalAggregator*> mDirtyAggregators;

@@ -50,6 +50,14 @@ public class P_RD : ModuleRules
             "P_RD",
         });
 
+        if (Target.bBuildEditor == true)
+        {
+            PrivateDependencyModuleNames.AddRange(new string[]
+            {
+                "UnrealEd",
+            });
+        }
+
         // 온라인 기능을 사용할 때만 OnlineSubsystem을 추가한다.
         // PrivateDependencyModuleNames.Add("OnlineSubsystem");
 
