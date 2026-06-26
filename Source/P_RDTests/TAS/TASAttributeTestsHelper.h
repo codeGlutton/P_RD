@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   TASAttributeTestsHelper.h
  * @brief  TAS Attribute 테스트를 위한 Mock 모델 정의 헤더
  * @author 모호재
@@ -84,3 +84,17 @@ public:
 	}
 };
 
+UCLASS()
+class UTestInfiniteTagEffect : public UTacticalEffect
+{
+	GENERATED_BODY()
+
+public:
+	UTestInfiniteTagEffect()
+	{
+		mDurationPolicy = ETacticalEffectDurationType::Infinite;
+		mStackingType = ETacticalEffectStackingType::None;
+
+		mCachedGrantedTags.AddTag(AbilityTags::GameplayAbility_Passive_OnEndAttacking);
+	}
+};
