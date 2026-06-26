@@ -32,6 +32,8 @@ public:
 public:
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, MaxHP)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, HP)
+
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, AttackPoint)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, DefensePoint)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, MovementPoint)
 
@@ -45,6 +47,9 @@ protected:
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData HP;
 
+	// @brief 타격 데미지 산출의 base가 되는 공격력
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FGameplayAttributeData AttackPoint;
 	// @brief 턴 동안만 유지되는 방어 포인트
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData DefensePoint;

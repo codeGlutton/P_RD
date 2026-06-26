@@ -30,8 +30,11 @@ public class P_RDTests : ModuleRules
             "GameplayTags",				// 게임플레이 태그 시스템
 
             /* GAS Plugin Modules */
-			"GameplayTasks",			// GAS에서 비동기적인 작업을 생성하고 관리하는 모듈
-			"GameplayAbilities",		// GAS 프레임워크
+            "GameplayTasks",			// GAS에서 비동기적인 작업을 생성하고 관리하는 모듈
+            "GameplayAbilities",		// GAS 프레임워크
+
+            /* AI Module (BoardCombatTarget가 참조하는 GenericTeamAgentInterface 등) */
+            "AIModule",
         });
 
         // 모듈 내 하위 폴더에서 루트 헤더를 참조할 수 있도록 경로 추가
