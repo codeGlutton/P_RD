@@ -10,6 +10,8 @@
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "UObject/Object.h"
 #include "TAS/Effect/TacticalEffect.h"
+#include "Actor/BoardActor/BoardCombatTarget.h"
+#include "Actor/TileMap/TileLayer.h"
 #include "StaticSkillEffect_Base.generated.h"
 
 /**
@@ -30,23 +32,40 @@ public:
     * @note
     * Damage, Heal 기타 등등
     */
-    UPROPERTY(Category = "SkillEffect", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "GameplayTag" ))
-    FGameplayTag mEffectTag;
+    //UPROPERTY(Category = "SkillEffect", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "GameplayTag" ))
+    //FGameplayTag mEffectTag;
+    //
+    //UPROPERTY(Category = "SkillEffect", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TacticalEffect"))
+    //TSubclassOf<UTacticalEffect> mTacticalEffect;
 
-    UPROPERTY(Category = "SkillEffect", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TacticalEffect"))
-    TSubclassOf<UTacticalEffect> mTacticalEffect;
+
+    UPROPERTY(Category = "SkillEffectStat", EditAnywhere, BlueprintReadWrite, meta = (Bitmask, BitmaskEnum = "/Script/P_RD.ETileLayerFlag", DisplayName = "TargetLayer"))
+    uint8 mTileLayer = (uint8)ETileLayerFlag::Unit;
+
+    /**
+    * @brief 제외 대상
+    *
+    * @details
+    * 없음, 자신, 아군, 적
+    */
+    UPROPERTY(Category = "SkillEffectStat", EditAnywhere, BlueprintReadWrite, meta = (Bitmask, BitmaskEnum = "/Script/P_RD.ETargetFilter", DisplayName = "TargetFilter"))
+    uint8 mTargetFilter = (uint8)ETargetFilter::All;
 
 public:
     /**
-    * @brief 캐스터의 스킬 포인트를 (AS가 존재하지 않으면 기본값을) 기반으로 FBoardCombatTargetSnapshotData를 만들어줍니다.
+    * @brief 효과를 적용합니다.
     *
     * @details
-    * 효과값을 반영하여 기본적인 효과 데이터를 만들어줍니다.
-    * 실패 시 false를 반환합니다.
+    * 
+    * @note 추후 Context와 같은 구조체로 전달하도록 변경이 필요해보입니다.
     */
-    virtual bool CreateBaseEffectContainer(TWeakObjectPtr<class UBoardActorModel> CasterActor, OUT struct FBoardCombatTargetSnapshotData& Container) PURE_VIRTUAL(UStaticSkillEffect_Base::CreateBaseEffectContainer, return false;)
-    
-    virtual float GetPoint(TWeakObjectPtr<class UBoardActorModel> CasterActor, float SkillPoint) PURE_VIRTUAL(UStaticSkillEffect_Base::GetPoint, return 0.0;)
+    virtual void ApplySkillEffect(
+        float SkillPoint,
+        TWeakObjectPtr<class UBoardActorModel> SourceActor,
+        TWeakObjectPtr<class UBoardActorModel> TargetActor,
+        struct FBoardCombatTargetSnapshotData* SourceSnapShot = nullptr, 
+        struct FBoardCombatTargetSnapshotData* TargetSnapShot = nullptr) PURE_VIRTUAL(UStaticSkillEffect_Base::ApplySkillEffect, return;);
+
 };
 
 

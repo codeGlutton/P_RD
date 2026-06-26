@@ -47,6 +47,7 @@ public:
 public:
 	UAttributeSetComponentModel* GetAttributeComponentModel() const override;
 	FBoardCombatTargetSnapshotData* MakeSnapshotData() const override;
+	USkillComponentModel* GetSkillComponentModel() const;
 
 public:
 	// USkillComponent* GetSkillComponent() const;

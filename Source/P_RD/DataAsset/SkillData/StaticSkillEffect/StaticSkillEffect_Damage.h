@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "DataAsset/SkillData/StaticSkillEffect/StaticSkillEffect_Base.h"
-#include "StaticSkillEffect_Stat.generated.h"
+#include "StaticSkillEffect_Damage.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class UStaticSkillEffect_Stat : public UStaticSkillEffect_Base
+class UStaticSkillEffect_Damage : public UStaticSkillEffect_Base
 {
 	GENERATED_BODY()
 
@@ -25,15 +25,6 @@ public:
     */
     //UPROPERTY(Category = "SkillEffectLayer", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TargetScope"))
     //ETargetScope mTargetScope;
-
-    /**
-    * @brief 제외 대상
-    *
-    * @details
-    * 없음, 자신, 아군, 적
-    */
-    UPROPERTY(Category = "SkillEffectStat", EditAnywhere, BlueprintReadWrite, meta = (Bitmask, BitmaskEnum = "/Script/P_RD.ETargetFilter", DisplayName = "TargetFilter"))
-    uint8 mTargetFilter = (uint8)ETargetFilter::All;
 
     /**
     * @brief 효과 기본 값
@@ -52,8 +43,11 @@ public:
     float mEffectRatioValue;
 
 public:
-    virtual bool CreateBaseEffectContainer(TWeakObjectPtr<class UBoardActorModel> CasterActor, OUT struct FBoardCombatTargetSnapshotData& Container) override;
-
-    virtual float GetPoint(TWeakObjectPtr<class UBoardActorModel> CasterActor, float SkillPoint) override;
+    virtual void ApplySkillEffect(
+        float SkillPoint,
+        TWeakObjectPtr<class UBoardActorModel> SourceActor,
+        TWeakObjectPtr<class UBoardActorModel> TargetActor,
+        struct FBoardCombatTargetSnapshotData* SourceSnapShot = nullptr,
+        struct FBoardCombatTargetSnapshotData* TargetSnapShot = nullptr) override;
 
 };
