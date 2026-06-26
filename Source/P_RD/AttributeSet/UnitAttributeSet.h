@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   UnitAttributeSet.h
  * @brief  SRPGUnit에 대한 Attribute Set 정의 헤더
  * @author 모호재
@@ -32,40 +32,46 @@ public:
 public:
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, MaxHP)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, HP)
-	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, SkillPoint)
-	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, DamagePoint)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, DefensePoint)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, MovementPoint)
 
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, DamagePoint)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, HealPoint)
+
+	/* 단순 덧셈만 적용하는 영구적인 Attribute 값 */
 protected:
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData MaxHP;
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData HP;
 
-	/**
-	 * @brief 스킬 시전 동안만 유지되는 스킬 포인트
-	 * @details
-	 * 공격 스킬 사용 시에는 최종 추가 공격력, 
-	 * 방어 스킬 사용 시에는 최종 추가 방어력, 
-	 * 이동 스킬 사용 시에는 최종 추가 이동력으로 활용
-	 */
+	// @brief 턴 동안만 유지되는 방어 포인트
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FTacticalAttributeData SkillPoint;
+	FGameplayAttributeData DefensePoint;
+	// @brief 턴 동안만 유지되는 움직임 포인트
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FGameplayAttributeData MovementPoint;
+
+	/* 복잡한 계산 이후에 실제 적용하는 일시적인 Attribute 값 */
+protected:
 	/**
-	 * @brief 피격 동안만 유지되는 피격 포인트
+	 * @brief 타격 동안만 유지되는 타격 포인트
 	 * @details
-	 * 피격 시 실질적으로 들어오는 데미지로 활용
+	 * 타격 시 실질적으로 주는 데미지로 활용
 	 */
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData DamagePoint;
+	/**
+	 * @brief 힐 동안만 유지되는 힐 포인트
+	 * @details
+	 * 힐 시 실질적으로 얻는 체력 변화로 활용
+	 */
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FTacticalAttributeData HealPoint;
 
-	// @brief 턴 동안만 유지되는 방어 포인트
-	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FTacticalAttributeData DefensePoint;
-	// @brief 턴 동안만 유지되는 움직임 포인트
-	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FTacticalAttributeData MovementPoint;
+	/**
+	 * [NOTE] 상태이상은 그냥 Tag로 달자
+	 */
 };
 
 /**
