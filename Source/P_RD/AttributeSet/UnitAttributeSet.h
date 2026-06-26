@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   UnitAttributeSet.h
  * @brief  SRPGUnit에 대한 Attribute Set 정의 헤더
  * @author 모호재
@@ -8,47 +8,44 @@
 #pragma once
 
 #include "AttributeSet/AttributeSetMinimal.h"
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "UnitAttributeSet.generated.h"
 
 /**
  * @brief  SRPG Unit에 대한 Attribute Set 정의
  */
-
-// NOTE :	PreAttributeChange
-//			PostAttributeChange
-//			작동 할 수 있도록 구현해야 함
 UCLASS()
-class P_RD_API UUnitAttributeSet : public UAttributeSet
+class P_RD_API UUnitAttributeSet : public UTacticalAttributeSet
 {
 	GENERATED_BODY()
 	
 public:
 	UUnitAttributeSet();
 
-	/* UAttributeSet 상속 */
+	/* UTacticalAttributeSet 상속 */
 public:
 	// 미구현됨
-	void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
+	void PreAttributeChange(const FTacticalAttribute& Attribute, float& NewValue) override;
 	// 미구현됨
-	void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
+	void PostAttributeChange(const FTacticalAttribute& Attribute, float OldValue, float NewValue) override;
 
 public:
-	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, MaxHP)
-	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, HP)
-	
-	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, AttackPoint)
-	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, DefensePoint)
-	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, MovementPoint)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, MaxHP)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, HP)
 
-	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, DamagePoint)
-	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, HealPoint)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, AttackPoint)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, DefensePoint)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, MovementPoint)
+
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, DamagePoint)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, HealPoint)
 
 	/* 단순 덧셈만 적용하는 영구적인 Attribute 값 */
 protected:
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FGameplayAttributeData MaxHP;
+	FTacticalAttributeData MaxHP;
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FGameplayAttributeData HP;
+	FTacticalAttributeData HP;
 
 	// @brief 타격 데미지 산출의 base가 되는 공격력
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
@@ -68,14 +65,14 @@ protected:
 	 * 타격 시 실질적으로 주는 데미지로 활용
 	 */
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FGameplayAttributeData DamagePoint;
+	FTacticalAttributeData DamagePoint;
 	/**
 	 * @brief 힐 동안만 유지되는 힐 포인트
 	 * @details
 	 * 힐 시 실질적으로 얻는 체력 변화로 활용
 	 */
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FGameplayAttributeData HealPoint;
+	FTacticalAttributeData HealPoint;
 
 	/**
 	 * [NOTE] 상태이상은 그냥 Tag로 달자
@@ -93,22 +90,22 @@ class P_RD_API UPlayerUnitAttributeSet : public UUnitAttributeSet
 public:
 	UPlayerUnitAttributeSet();
 
-	/* UAttributeSet 상속 */
+	/* UTacticalAttributeSet 상속 */
 public:
-	void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
-	void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
+	void PreAttributeChange(const FTacticalAttribute& Attribute, float& NewValue) override;
+	void PostAttributeChange(const FTacticalAttribute& Attribute, float OldValue, float NewValue) override;
 
 public:
-	ATTRIBUTE_ACCESSORS(UPlayerUnitAttributeSet, MaxExp)
-	ATTRIBUTE_ACCESSORS(UPlayerUnitAttributeSet, Exp)
-	ATTRIBUTE_ACCESSORS(UPlayerUnitAttributeSet, Money)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UPlayerUnitAttributeSet, MaxExp)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UPlayerUnitAttributeSet, Exp)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UPlayerUnitAttributeSet, Money)
 
 protected:
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FGameplayAttributeData MaxExp;
+	FTacticalAttributeData MaxExp;
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FGameplayAttributeData Exp;
+	FTacticalAttributeData Exp;
 	
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FGameplayAttributeData Money;
+	FTacticalAttributeData Money;
 };

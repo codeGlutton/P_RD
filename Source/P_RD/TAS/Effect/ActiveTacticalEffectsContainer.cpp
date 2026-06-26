@@ -98,7 +98,7 @@ void FActiveTacticalEffectsContainer::DecrementLock()
     }
 }
 
-TSharedPtr<FTacticalAggregator>& FActiveTacticalEffectsContainer::FindOrCreateAttributeAggregator(const FGameplayAttribute& Attribute)
+TSharedPtr<FTacticalAggregator>& FActiveTacticalEffectsContainer::FindOrCreateAttributeAggregator(const FTacticalAttribute& Attribute)
 {
     TSharedPtr<FTacticalAggregator>* RefPtr = mAttributeAggregatorMap.Find(Attribute);
     if (RefPtr != nullptr)
@@ -107,13 +107,13 @@ TSharedPtr<FTacticalAggregator>& FActiveTacticalEffectsContainer::FindOrCreateAt
     }
 
     float CurrentBaseValueOfProperty = mOwner->GetAttributeBaseValue(Attribute);
-    TSharedPtr<FTacticalAggregator> NewAttributeAggregator = MakeShared<FTacticalAggregator>(CurrentBaseValueOfProperty);
+    TSharedPtr<FTacticalAggregator> NewAttributeAggregator = MakeShared<FTacticalAggregator>(mOwner.Get(), CurrentBaseValueOfProperty);
     NewAttributeAggregator->OnDirty.AddUObject(mOwner.Get(), &UAttributeSetComponentModel::OnAttributeAggregatorDirty, Attribute);
 
     return mAttributeAggregatorMap.Add(Attribute, MoveTemp(NewAttributeAggregator));
 }
 
-void FActiveTacticalEffectsContainer::CleanupAttributeAggregator(const FGameplayAttribute& Attribute)
+void FActiveTacticalEffectsContainer::CleanupAttributeAggregator(const FTacticalAttribute& Attribute)
 {
     TSharedPtr<FTacticalAggregator>* AggregatorPtr = mAttributeAggregatorMap.Find(Attribute);
     if (AggregatorPtr != nullptr)
@@ -124,7 +124,7 @@ void FActiveTacticalEffectsContainer::CleanupAttributeAggregator(const FGameplay
     }
 }
 
-void FActiveTacticalEffectsContainer::OnAttributeAggregatorDirty(FTacticalAggregator* Aggregator, FGameplayAttribute Attribute)
+void FActiveTacticalEffectsContainer::OnAttributeAggregatorDirty(FTacticalAggregator* Aggregator, FTacticalAttribute Attribute)
 {
     checkf(mAttributeAggregatorMap.FindChecked(Attribute).Get() == Aggregator, TEXT("속성에 대한 계산 객체가 동일하지 않음"));
 
@@ -160,7 +160,7 @@ void FActiveTacticalEffectsContainer::OnStackCountChange(FActiveTacticalEffect& 
     ActiveEffect.mEventSet.OnStackChanged.Broadcast(ActiveEffect.mHandle, ActiveEffect.mSpec.GetStackCount(), OldStackCount);
 }
 
-void FActiveTacticalEffectsContainer::ApplyModToAttribute(const FGameplayAttribute& Attribute, TEnumAsByte<EGameplayModOp::Type> ModifierOp, float ModifierMagnitude)
+void FActiveTacticalEffectsContainer::ApplyModToAttribute(const FTacticalAttribute& Attribute, TEnumAsByte<EGameplayModOp::Type> ModifierOp, float ModifierMagnitude)
 {
     float CurrentBase = GetAttributeBaseValue(Attribute);
     float NewBase = FTacticalAggregator::StaticExecModOnBaseValue(CurrentBase, ModifierOp, ModifierMagnitude);
@@ -267,7 +267,7 @@ void FActiveTacticalEffectsContainer::ExecuteActiveEffectsFrom(FTacticalEffectSp
     {
         const FTacticalModifierInfo& ModDef = SpecToUse.mEffectClass->mModifiers[ModIdx];
 
-        FGameplayModifierEvaluatedData EvalData(ModDef.mAttribute, ModDef.mModifierOp, SpecToUse.GetModifierMagnitude(ModIdx));
+        FTacticalModifierEvaluatedData EvalData(ModDef.mAttribute, ModDef.mModifierOp, SpecToUse.GetModifierMagnitude(ModIdx));
         ModifierSuccessfullyExecuted |= InternalExecuteMod(SpecToUse, EvalData);
     }
 
@@ -277,12 +277,12 @@ void FActiveTacticalEffectsContainer::ExecuteActiveEffectsFrom(FTacticalEffectSp
 bool FActiveTacticalEffectsContainer::RemoveActiveTacticalEffect(FActiveTacticalEffectHandle Handle, int32 StacksToRemove)
 {
     int32 NumTacticalEffects = GetNumTacticalEffects();
-    for (int32 ActiveGEIdx = 0; ActiveGEIdx < NumTacticalEffects; ++ActiveGEIdx)
+    for (int32 ActiveEffectIdx = 0; ActiveEffectIdx < NumTacticalEffects; ++ActiveEffectIdx)
     {
-        FActiveTacticalEffect& Effect = *GetActiveTacticalEffect(ActiveGEIdx);
+        FActiveTacticalEffect& Effect = *GetActiveTacticalEffect(ActiveEffectIdx);
         if (Effect.mHandle == Handle && Effect.mIsPendingRemove == false)
         {
-            InternalRemoveActiveTacticalEffect(ActiveGEIdx, StacksToRemove, true);
+            InternalRemoveActiveTacticalEffect(ActiveEffectIdx, StacksToRemove, true);
             return true;
         }
     }
@@ -290,7 +290,7 @@ bool FActiveTacticalEffectsContainer::RemoveActiveTacticalEffect(FActiveTactical
     return false;
 }
 
-FOnChangeAttributeValue& FActiveTacticalEffectsContainer::GetTacticalAttributeValueChangeDelegate(FGameplayAttribute Attribute)
+FOnChangeAttributeValue& FActiveTacticalEffectsContainer::GetTacticalAttributeValueChangeDelegate(FTacticalAttribute Attribute)
 {
     return mAttributeValueChangeDelegates.FindOrAdd(Attribute);
 }
@@ -301,33 +301,44 @@ void FActiveTacticalEffectsContainer::InternalOnActiveTacticalEffectAdded(FActiv
     checkf(EffectDef != nullptr, TEXT("추가한 Effect Class가 nullptr"));
 
     EffectDef->OnAddedToActiveContainer(*this, Effect);
+
+    FActiveTacticalEffectHandle EffectHandle = Effect.mHandle;
+    if (mOwner.IsValid() == true)
+    {
+        mOwner->SetActiveTacticalEffect(MoveTemp(EffectHandle));
+    }
 }
 
 void FActiveTacticalEffectsContainer::InternalOnActiveTacticalEffectRemoved(FActiveTacticalEffect& Effect, const FTacticalEffectRemovalInfo& TacticalEffectRemovalInfo)
 {
     Effect.mIsPendingRemove = true;
-    Effect.mEventSet.OnEffectRemoved.Broadcast(TacticalEffectRemovalInfo);
 
+    if (Effect.mSpec.mEffectClass)
+    {
+        RemoveActiveTacticalEffectGrantedTagsAndModifiers(Effect);
+    }
+
+    Effect.mEventSet.OnEffectRemoved.Broadcast(TacticalEffectRemovalInfo);
     OnGivenActiveTacticalEffectRemovedDelegate.Broadcast(Effect);
 }
 
-bool FActiveTacticalEffectsContainer::InternalExecuteMod(FTacticalEffectSpec& Spec, FGameplayModifierEvaluatedData& ModEvalData)
+bool FActiveTacticalEffectsContainer::InternalExecuteMod(FTacticalEffectSpec& Spec, FTacticalModifierEvaluatedData& ModEvalData)
 {
     check(mOwner.IsValid() == true);
 
     bool Executed = false;
 
-    UAttributeSet* AttributeSet = nullptr;
-    UClass* AttributeSetClass = ModEvalData.Attribute.GetAttributeSetClass();
-    if (AttributeSetClass != nullptr && AttributeSetClass->IsChildOf(UAttributeSet::StaticClass()) == true)
+    UTacticalAttributeSet* AttributeSet = nullptr;
+    UClass* AttributeSetClass = ModEvalData.mAttribute.GetAttributeSetClass();
+    if (AttributeSetClass != nullptr && AttributeSetClass->IsChildOf(UTacticalAttributeSet::StaticClass()) == true)
     {
-        AttributeSet = const_cast<UAttributeSet*>(mOwner->GetAttributeSet_Internal(AttributeSetClass));
+        AttributeSet = const_cast<UTacticalAttributeSet*>(mOwner->GetAttributeSet_Internal(AttributeSetClass));
     }
 
     if (AttributeSet != nullptr)
     {
-        float OldValueOfProperty = mOwner->GetAttributeCurrentValue(ModEvalData.Attribute);
-        ApplyModToAttribute(ModEvalData.Attribute, ModEvalData.ModifierOp, ModEvalData.Magnitude);
+        float OldValueOfProperty = mOwner->GetAttributeCurrentValue(ModEvalData.mAttribute);
+        ApplyModToAttribute(ModEvalData.mAttribute, ModEvalData.mModifierOp, ModEvalData.mMagnitude);
 
         Executed = true;
     }
@@ -381,10 +392,57 @@ bool FActiveTacticalEffectsContainer::InternalRemoveActiveTacticalEffect(int32 I
     return false;
 }
 
-void FActiveTacticalEffectsContainer::SetAttributeBaseValue(FGameplayAttribute Attribute, float BaseValue)
+void FActiveTacticalEffectsContainer::AddActiveTacticalEffectGrantedTagsAndModifiers(FActiveTacticalEffect& Effect)
+{
+    check(Effect.mSpec.mEffectClass != nullptr);
+    check(mOwner != nullptr);
+
+    TACTICAL_EFFECT_SCOPE_LOCK();
+
+    for (int32 ModIdx = 0; ModIdx < Effect.mSpec.mModifierValues.Num(); ++ModIdx)
+    {
+        if (Effect.mSpec.mEffectClass->mModifiers.IsValidIndex(ModIdx) == false)
+        {
+            continue;
+        }
+
+        const FTacticalModifierInfo& ModInfo = Effect.mSpec.mEffectClass->mModifiers[ModIdx];
+        if (mOwner->HasAttributeSetForAttribute(ModInfo.mAttribute) == false)
+        {
+            continue;
+        }
+
+        float EvaluatedMagnitude = Effect.mSpec.GetModifierMagnitude(ModIdx);
+        FTacticalAggregator* Aggregator = FindOrCreateAttributeAggregator(Effect.mSpec.mEffectClass->mModifiers[ModIdx].mAttribute).Get();
+        if (ensure(Aggregator))
+        {
+            Aggregator->AddAggregatorMod(EvaluatedMagnitude, ModInfo.mModifierOp, Effect.mHandle);
+        }
+    }
+
+    mOwner->UpdateTagMap(Effect.mSpec.mEffectClass->GetGrantedTags(), 1);
+    mOwner->OnActiveTacticalEffectAddedDelegateToSelf.Broadcast(mOwner.Get(), Effect.mSpec, Effect.mHandle);
+}
+
+void FActiveTacticalEffectsContainer::RemoveActiveTacticalEffectGrantedTagsAndModifiers(const FActiveTacticalEffect& Effect)
+{
+    for (const FTacticalModifierInfo& Mod : Effect.mSpec.mEffectClass->mModifiers)
+    {
+        if (Mod.mAttribute.IsValid() == true)
+        {
+            if (const TSharedPtr<FTacticalAggregator>* RefPtr = mAttributeAggregatorMap.Find(Mod.mAttribute))
+            {
+                RefPtr->Get()->RemoveAggregatorMod(Effect.mHandle);
+            }
+        }
+    }
+    mOwner->UpdateTagMap(Effect.mSpec.mEffectClass->GetGrantedTags(), -1);
+}
+
+void FActiveTacticalEffectsContainer::SetAttributeBaseValue(FTacticalAttribute Attribute, float BaseValue)
 {
     checkf(mOwner != nullptr, TEXT("변경 ASC 대상이 존재하지 않음"));
-    const UAttributeSet* Set = mOwner->GetAttributeSet_Internal(Attribute.GetAttributeSetClass());
+    const UTacticalAttributeSet* Set = mOwner->GetAttributeSet_Internal(Attribute.GetAttributeSetClass());
     checkf(Set != nullptr, TEXT("변경 AttributeSet 대상이 존재하지 않음"));
 
     float OldBaseValue = 0.0f;
@@ -394,7 +452,7 @@ void FActiveTacticalEffectsContainer::SetAttributeBaseValue(FGameplayAttribute A
 
     const FStructProperty* StructProperty = CastField<FStructProperty>(Attribute.GetUProperty());
     checkf(StructProperty != nullptr, TEXT("변경 속성 대상이 존재하지 않음"));
-    FGameplayAttributeData* DataPtr = StructProperty->ContainerPtrToValuePtr<FGameplayAttributeData>(const_cast<UAttributeSet*>(Set));
+    FGameplayAttributeData* DataPtr = StructProperty->ContainerPtrToValuePtr<FGameplayAttributeData>(const_cast<UTacticalAttributeSet*>(Set));
     checkf(DataPtr != nullptr, TEXT("변경 FGameplayAttributeData 대상이 존재하지 않음"));
     OldBaseValue = DataPtr->GetBaseValue();
     DataPtr->SetBaseValue(BaseValue);
@@ -419,17 +477,17 @@ void FActiveTacticalEffectsContainer::SetAttributeBaseValue(FGameplayAttribute A
     Set->PostAttributeBaseChange(Attribute, OldBaseValue, GetAttributeBaseValue(Attribute));
 }
 
-float FActiveTacticalEffectsContainer::GetAttributeBaseValue(FGameplayAttribute Attribute) const
+float FActiveTacticalEffectsContainer::GetAttributeBaseValue(FTacticalAttribute Attribute) const
 {
     float BaseValue = 0.f;
     if (mOwner != nullptr)
     {
-        const UAttributeSet* AttributeSet = mOwner->GetAttributeSet_Internal(Attribute.GetAttributeSetClass());
+        const UTacticalAttributeSet* AttributeSet = mOwner->GetAttributeSet_Internal(Attribute.GetAttributeSetClass());
         checkf(AttributeSet != nullptr, TEXT("탐색 AttributeSet 대상이 존재하지 않음"));
 
         const TSharedPtr<FTacticalAggregator>* RefPtr = mAttributeAggregatorMap.Find(Attribute);
 
-        if (FGameplayAttribute::IsGameplayAttributeDataProperty(Attribute.GetUProperty()))
+        if (FTacticalAttribute::IsTacticalAttributeDataProperty(Attribute.GetUProperty()))
         {
             const FStructProperty* StructProperty = CastField<FStructProperty>(Attribute.GetUProperty());
             checkf(StructProperty != nullptr, TEXT("탐색 속성 대상이 존재하지 않음"));
@@ -451,7 +509,7 @@ float FActiveTacticalEffectsContainer::GetAttributeBaseValue(FGameplayAttribute 
     return BaseValue;
 }
 
-void FActiveTacticalEffectsContainer::UpdateAttributeCurrentValue(FGameplayAttribute Attribute, float CurrentValue)
+void FActiveTacticalEffectsContainer::UpdateAttributeCurrentValue(FTacticalAttribute Attribute, float CurrentValue)
 {
     const float OldValue = mOwner->GetAttributeCurrentValue(Attribute);
     mOwner->SetAttributeCurrentValue_Internal(Attribute, CurrentValue);
@@ -472,7 +530,7 @@ void FActiveTacticalEffectsContainer::UpdateAllAggregatorModMagnitudes(FActiveTa
     const FTacticalEffectSpec& Spec = ActiveEffect.mSpec;
     checkf(Spec.mEffectClass == nullptr, TEXT("추가하려는 Effect Class가 보이지 않음"));
 
-    TSet<FGameplayAttribute> AttributesToUpdate;
+    TSet<FTacticalAttribute> AttributesToUpdate;
     for (int32 ModIdx = 0; ModIdx < Spec.mModifierValues.Num(); ++ModIdx)
     {
         const FTacticalModifierInfo& ModDef = Spec.mEffectClass->mModifiers[ModIdx];
@@ -483,10 +541,10 @@ void FActiveTacticalEffectsContainer::UpdateAllAggregatorModMagnitudes(FActiveTa
     UpdateAggregatorModMagnitudes(AttributesToUpdate, ActiveEffect);
 }
 
-void FActiveTacticalEffectsContainer::UpdateAggregatorModMagnitudes(const TSet<FGameplayAttribute>& AttributesToUpdate, FActiveTacticalEffect& ActiveEffect)
+void FActiveTacticalEffectsContainer::UpdateAggregatorModMagnitudes(const TSet<FTacticalAttribute>& AttributesToUpdate, FActiveTacticalEffect& ActiveEffect)
 {
     const FTacticalEffectSpec& Spec = ActiveEffect.mSpec;
-    for (const FGameplayAttribute& Attribute : AttributesToUpdate)
+    for (const FTacticalAttribute& Attribute : AttributesToUpdate)
     {
         if (mOwner == nullptr || mOwner->HasAttributeSetForAttribute(Attribute) == false)
         {

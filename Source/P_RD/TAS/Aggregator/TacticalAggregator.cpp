@@ -1,6 +1,40 @@
 ﻿#include "TAS/Aggregator/TacticalAggregator.h"
 
+#include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
+
+FScopedTacticalAggregatorOnDirtyBatch::FScopedTacticalAggregatorOnDirtyBatch(UWorld* World) :
+    mWorld(World)
+{
+    check(mWorld);
+
+    UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(mWorld);
+    checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
+
+    TacticalFrameworkModel->BeginAggregatorDirtyBatch();
+}
+
+FScopedTacticalAggregatorOnDirtyBatch::~FScopedTacticalAggregatorOnDirtyBatch()
+{
+    check(mWorld);
+
+    UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(mWorld);
+    checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
+
+    TacticalFrameworkModel->EndAggregatorDirtyBatch();
+}
+
+FTacticalAggregator::~FTacticalAggregator()
+{
+    if (mOwner != nullptr)
+    {
+        UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(mOwner->GetWorld());
+        checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
+
+        int32 NumRemoved = TacticalFrameworkModel->RemoveAggregatorDirty(this);
+        ensure(NumRemoved == 0);
+    }
+}
 
 float FTacticalAggregator::GetAttributeBaseValue() const
 {
@@ -83,7 +117,7 @@ void FTacticalAggregator::RemoveAggregatorMod(FActiveTacticalEffectHandle Active
     BroadcastOnDirty();
 }
 
-void FTacticalAggregator::UpdateAggregatorMod(FActiveTacticalEffectHandle ActiveHandle, const FGameplayAttribute& Attribute, const FTacticalEffectSpec& Spec, FActiveTacticalEffectHandle InHandle)
+void FTacticalAggregator::UpdateAggregatorMod(FActiveTacticalEffectHandle ActiveHandle, const FTacticalAttribute& Attribute, const FTacticalEffectSpec& Spec, FActiveTacticalEffectHandle InHandle)
 {
     RemoveAggregatorMod(ActiveHandle);
 
@@ -147,6 +181,15 @@ float FTacticalAggregator::MultiplyMods(const TArray<FTacticalAggregatorMod>& Mo
 
 void FTacticalAggregator::BroadcastOnDirty()
 {
+    UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(mOwner->GetWorld());
+    checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
+
+    if (TacticalFrameworkModel->GetGlobalBatchCount() > 0 && (mDependentEffects.Num() > 0 || OnDirty.IsBound()))
+    {
+        TacticalFrameworkModel->AddAggregatorDirty(this);
+        return;
+    }
+
     /* 재귀 검사 */
 
     const int32 MAX_DIRTY = 10;

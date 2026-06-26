@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   TacticalAttributeTests.cpp
  * @brief  UAttributeSetComponentModel 자동화 테스트
  * @details
@@ -11,13 +11,13 @@
 #include "Misc/AutomationTest.h"
 #include "TASAttributeTestsHelper.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "AttributeSet/AttributeSetMinimal.h"
 #include "AttributeSet/UnitAttributeSet.h"
 #include "TAS/Effect/TacticalEffect.h"
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "Singleton/WorldSubsystem/SimulationSubsystem.h"
 #include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
 #include "Simulation/RoomInstance.h"
-#include "GameplayTagsManager.h"
 #include "Engine/World.h"
 #include "Engine/Engine.h"
 
@@ -165,8 +165,8 @@ bool FTacticalAttributeTests::RunTest(const FString& Parameters)
     // ----------------------------------------------------
     AddInfo(TEXT("=== Test Case 4: Loose Tag Add & Remove ==="));
     // 테스트에 사용할 태그 등록
-    FGameplayTag TestTagA = UGameplayTagsManager::Get().AddNativeGameplayTag(TEXT("Test.GameplayAbility.Skill"), TEXT("Loose Tag for unit tests"));
-    
+    FGameplayTag TestTagA = AbilityTags::GameplayAbility_LevelUp;
+
     TestFalse(TEXT("Should not have TestTagA initially"), CompModel->HasMatchingGameplayTag(TestTagA));
 
     CompModel->AddLooseGameplayTag(TestTagA);
@@ -180,18 +180,14 @@ bool FTacticalAttributeTests::RunTest(const FString& Parameters)
     // 7. 테스트 케이스 5: Effect를 통한 Granted Tag 부여 및 해제 검증
     // ----------------------------------------------------
     AddInfo(TEXT("=== Test Case 5: Granted Tag by Infinite Effect ==="));
-    FGameplayTag GrantedTag = UGameplayTagsManager::Get().AddNativeGameplayTag(TEXT("Test.GameplayAbility.SkillGranted"), TEXT("Granted Tag for unit tests"));
+    FGameplayTag GrantedTag = AbilityTags::GameplayAbility_Passive_OnEndAttacking;
 
-    UTacticalEffect* TagEffect = NewObject<UTacticalEffect>();
-    TagEffect->mDurationPolicy = ETacticalEffectDurationType::Infinite;
-    TagEffect->mCachedGrantedTags.AddTag(GrantedTag);
-
-    UTacticalEffectContext* EffectContext3 = NewObject<UTacticalEffectContext>(World);
+    UTacticalEffectContext* EffectContext3 = CompModel->MakeEffectContext();
     EffectContext3->SetInstigator(MockActorModel);
     EffectContext3->SetAttributeSetComponentModel(CompModel);
 
-    FTacticalEffectSpec TagSpec(TagEffect, EffectContext3);
-    FActiveTacticalEffectHandle TagActiveHandle = CompModel->ApplyTacticalEffectSpecToSelf(TagSpec);
+    TSharedPtr<FTacticalEffectSpec> TagSpec = CompModel->MakeOutgoingSpec(UTestInfiniteTagEffect::StaticClass(), EffectContext3);
+    FActiveTacticalEffectHandle TagActiveHandle = CompModel->ApplyTacticalEffectSpecToSelf(*TagSpec);
 
     TestTrue(TEXT("GrantedTag should be active on CompModel"), CompModel->HasMatchingGameplayTag(GrantedTag));
     TestEqual(TEXT("GrantedTag count should be 1"), CompModel->GetTagCount(GrantedTag), 1);

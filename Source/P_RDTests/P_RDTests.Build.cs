@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   P_RDTests.Build.cs
  * @brief  P_RD 프로젝트 자동화 테스트 모듈 빌드 설정
  * @details
@@ -26,11 +26,12 @@ public class P_RDTests : ModuleRules
             /* 테스트 대상 게임 모듈 */
             "P_RD",
 
-            /* GAS Plugin Modules */
-            "GameplayAbilities",
+            /* Gameplay Tag Modules */
+            "GameplayTags",				// 게임플레이 태그 시스템
 
-            /* 게임플레이 태그 (시점 태그 직접 참조) */
-            "GameplayTags",
+            /* GAS Plugin Modules */
+            "GameplayTasks",			// GAS에서 비동기적인 작업을 생성하고 관리하는 모듈
+            "GameplayAbilities",		// GAS 프레임워크
 
             /* AI Module (BoardCombatTarget가 참조하는 GenericTeamAgentInterface 등) */
             "AIModule",

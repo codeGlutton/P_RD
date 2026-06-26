@@ -13,10 +13,11 @@
 #include "TacticalFrameworkModel.generated.h"
 
 class UAttributeSetComponentModel;
-class UAttributeSetComponentModel;
-struct FTacticalEffectSpec;
 
+struct FTacticalEffectSpec;
 class UTacticalEffectContext;
+
+struct FTacticalAggregator;
 
 // Tactical Framework 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogTacticalFramework, Log, All)
@@ -52,7 +53,20 @@ public:
 	virtual void SetCurrentAppliedGE(const FTacticalEffectSpec* Spec);
 	virtual void PopCurrentAppliedGE();
 
+public:
+	void BeginAggregatorDirtyBatch();
+	void EndAggregatorDirtyBatch();
+
+	void AddAggregatorDirty(FTacticalAggregator* Aggregator);
+	int32 RemoveAggregatorDirty(FTacticalAggregator* Aggregator);
+
+	int32 GetGlobalBatchCount() const;
+
 protected:
 	UPROPERTY(Category = "Effect", VisibleAnywhere, meta = (DisplayName = "EffectOwningModelMap"))
 	TMap<FActiveTacticalEffectHandle, TWeakObjectPtr<UAttributeSetComponentModel>> mEffectOwningModelMap;
+
+protected:
+	int32 mGlobalBatchCount;
+	TSet<FTacticalAggregator*> mDirtyAggregators;
 };

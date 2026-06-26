@@ -1,10 +1,11 @@
 ﻿#include "AttributeSet/UnitAttributeSet.h"
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
 UUnitAttributeSet::UUnitAttributeSet() : MaxHP(FLT_MAX)
 {
 }
 
-void UUnitAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
+void UUnitAttributeSet::PreAttributeChange(const FTacticalAttribute& Attribute, float& NewValue)
 {
 	/* 체력 변경 시, 체력 초과 방지 */
 	if (Attribute == GetHPAttribute())
@@ -15,7 +16,7 @@ void UUnitAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, 
 	Super::PreAttributeChange(Attribute, NewValue);
 }
 
-void UUnitAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
+void UUnitAttributeSet::PostAttributeChange(const FTacticalAttribute& Attribute, float OldValue, float NewValue)
 {
 	Super::PostAttributeChange(Attribute, OldValue, NewValue);
 
@@ -24,8 +25,8 @@ void UUnitAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute,
 	{
 		if (GetHP() > NewValue)
 		{
-			//UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
-			//ASC->ApplyModToAttribute(GetHPAttribute(), EGameplayModOp::Override, NewValue);
+			UAttributeSetComponentModel* ASC = GetOwningAttributeSetComponentModel();
+			ASC->ApplyModToAttribute(GetHPAttribute(), EGameplayModOp::Override, NewValue);
 		}
 	}
 }
@@ -34,7 +35,7 @@ UPlayerUnitAttributeSet::UPlayerUnitAttributeSet()
 {
 }
 
-void UPlayerUnitAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
+void UPlayerUnitAttributeSet::PreAttributeChange(const FTacticalAttribute& Attribute, float& NewValue)
 {
 	/* 경험치 감소 시, 마이너스 방지 */
 	if (Attribute == GetExpAttribute())
@@ -45,7 +46,7 @@ void UPlayerUnitAttributeSet::PreAttributeChange(const FGameplayAttribute& Attri
 	Super::PreAttributeChange(Attribute, NewValue);
 }
 
-void UPlayerUnitAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
+void UPlayerUnitAttributeSet::PostAttributeChange(const FTacticalAttribute& Attribute, float OldValue, float NewValue)
 {
 	Super::PostAttributeChange(Attribute, OldValue, NewValue);
 
@@ -54,8 +55,9 @@ void UPlayerUnitAttributeSet::PostAttributeChange(const FGameplayAttribute& Attr
 	{
 		if (NewValue >= GetMaxExp())
 		{
-			//UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
-			//ASC->TryActivateAbilitiesByTag(FGameplayTagContainer(AbilityTags::GameplayAbility_LevelUp));
+			UAttributeSetComponentModel* ASC = GetOwningAttributeSetComponentModel();
+
+			// TODO : 레벨업 시도
 		}
 	}
 }
