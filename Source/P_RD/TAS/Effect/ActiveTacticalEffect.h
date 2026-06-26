@@ -68,6 +68,49 @@ private:
     TWeakObjectPtr<UWorld> mWorld;
 };
 
+USTRUCT(BlueprintType)
+struct FTacticalModifierEvaluatedData
+{
+    GENERATED_USTRUCT_BODY()
+
+    FTacticalModifierEvaluatedData() :
+        mAttribute(),
+        mModifierOp(EGameplayModOp::Additive),
+        mMagnitude(0.f),
+        mIsValid(false)
+    {
+    }
+
+    FTacticalModifierEvaluatedData(const FTacticalAttribute& InAttribute, TEnumAsByte<EGameplayModOp::Type> InModOp, float InMagnitude, FActiveTacticalEffectHandle InHandle = FActiveTacticalEffectHandle()) :
+        mAttribute(InAttribute),
+        mModifierOp(InModOp),
+        mMagnitude(InMagnitude),
+        mHandle(InHandle),
+        mIsValid(true)
+    {
+    }
+
+    FString ToSimpleString() const
+    {
+        return FString::Printf(TEXT("%s %s EvalMag: %f"), *mAttribute.GetName(), *EGameplayModOpToString(mModifierOp), mMagnitude);
+    }
+
+    UPROPERTY()
+    FTacticalAttribute mAttribute;
+
+    UPROPERTY()
+    TEnumAsByte<EGameplayModOp::Type> mModifierOp;
+
+    UPROPERTY()
+    float mMagnitude;
+
+    UPROPERTY()
+    FActiveTacticalEffectHandle	mHandle;
+
+    UPROPERTY()
+    bool mIsValid;
+};
+
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnActiveTacticalEffectRemoved_Info, const FTacticalEffectRemovalInfo&);
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnActiveTacticalEffectStackChange, FActiveTacticalEffectHandle, int32 /*NewStackCount*/, int32 /*PreviousStackCount*/);
 

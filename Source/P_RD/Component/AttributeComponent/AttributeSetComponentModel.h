@@ -51,36 +51,38 @@ public:
         return StaticCast<T*>(GetOrCreateAttributeSet_Internal(T::StaticClass()));
     }
 
+    const TArray<UTacticalAttributeSet*>& GetSpawnedAttributes() const;
+
 public:
-    bool HasAttributeSetForAttribute(FGameplayAttribute Attribute) const;
-    void AddSpawnedAttributeSet(UAttributeSet* AttributeSet);
-    void RemoveSpawnedAttributeSet(UAttributeSet* AttributeSet);
+    bool HasAttributeSetForAttribute(FTacticalAttribute Attribute) const;
+    void AddSpawnedAttributeSet(UTacticalAttributeSet* AttributeSet);
+    void RemoveSpawnedAttributeSet(UTacticalAttributeSet* AttributeSet);
 
 protected:
-    const UAttributeSet* GetAttributeSet_Internal(TSubclassOf<UAttributeSet> Class) const;
-    const UAttributeSet* GetOrCreateAttributeSet_Internal(TSubclassOf<UAttributeSet> Class);
+    const UTacticalAttributeSet* GetAttributeSet_Internal(TSubclassOf<UTacticalAttributeSet> Class) const;
+    const UTacticalAttributeSet* GetOrCreateAttributeSet_Internal(TSubclassOf<UTacticalAttributeSet> Class);
 
     /* 기본값 설정 */
 public:
-    void SetAttributeBaseValue(const FGameplayAttribute& Attribute, float BaseValue);
-    float GetAttributeBaseValue(const FGameplayAttribute& Attribute) const;
+    void SetAttributeBaseValue(const FTacticalAttribute& Attribute, float BaseValue);
+    float GetAttributeBaseValue(const FTacticalAttribute& Attribute) const;
 
     /* 현재값 설정 */
 public:
-    float GetAttributeCurrentValue(FGameplayAttribute Attribute, bool& Found) const;
-    float GetAttributeCurrentValue(const FGameplayAttribute& Attribute) const;
+    float GetAttributeCurrentValue(FTacticalAttribute Attribute, bool& Found) const;
+    float GetAttributeCurrentValue(const FTacticalAttribute& Attribute) const;
 
 protected:
-    void SetAttributeCurrentValue_Internal(const FGameplayAttribute& Attribute, float& NewValue);
+    void SetAttributeCurrentValue_Internal(const FTacticalAttribute& Attribute, float& NewValue);
 
 public:
-    FOnChangeAttributeValue& GetTacticalAttributeValueChangeDelegate(FGameplayAttribute Attribute);
+    FOnChangeAttributeValue& GetTacticalAttributeValueChangeDelegate(FTacticalAttribute Attribute);
     void OnTacticalEffectAppliedToTarget(UAttributeSetComponentModel* Model, const FTacticalEffectSpec& SpecApplied, FActiveTacticalEffectHandle ActiveHandle);
     void OnTacticalEffectAppliedToSelf(UAttributeSetComponentModel* Model, const FTacticalEffectSpec& SpecApplied, FActiveTacticalEffectHandle ActiveHandle);
 
     /* 수정자 적용 */
 public:
-    void ApplyModToAttribute(const FGameplayAttribute& Attribute, TEnumAsByte<EGameplayModOp::Type> ModifierOp, float ModifierMagnitude);
+    void ApplyModToAttribute(const FTacticalAttribute& Attribute, TEnumAsByte<EGameplayModOp::Type> ModifierOp, float ModifierMagnitude);
 
     /* Effect 적용 */
 public:
@@ -92,6 +94,7 @@ public:
 
     void ExecuteTacticalEffect(FTacticalEffectSpec& Spec);
 
+    virtual FActiveTacticalEffectHandle SetActiveTacticalEffect(FActiveTacticalEffectHandle&& ActiveHandle);
     virtual bool RemoveActiveTacticalEffect(FActiveTacticalEffectHandle Handle, int32 StacksToRemove = -1);
 
     const UTacticalEffect* GetTacticalEffectDefForHandle(FActiveTacticalEffectHandle Handle);
@@ -191,7 +194,7 @@ public:
      * @param Aggregator 해당 속성의 계산 객체
      * @param Attribute 변경 속성
      */
-    void OnAttributeAggregatorDirty(FTacticalAggregator* Aggregator, FGameplayAttribute Attribute);
+    void OnAttributeAggregatorDirty(FTacticalAggregator* Aggregator, FTacticalAttribute Attribute);
     /**
      * 속성 값에 의존하는 Effect에게 전파를 위해 실행
      * @param Handle 대상 Effect 핸들
@@ -202,6 +205,7 @@ public:
 public:
     FOnTacticalEffectAppliedDelegate OnTacticalEffectAppliedDelegateToSelf;
     FOnTacticalEffectAppliedDelegate OnTacticalEffectAppliedDelegateToTarget;
+    FOnTacticalEffectAppliedDelegate OnActiveTacticalEffectAddedDelegateToSelf;
 
 protected:
     UPROPERTY(Category = "Effect", VisibleAnywhere, meta = (DisplayName = "ActiveAttributeEffects"))
@@ -209,7 +213,7 @@ protected:
 
 protected:
     UPROPERTY(Category = "AttributeSet", VisibleAnywhere, meta = (DisplayName = "SpawnedAttributes"))
-    TArray<TObjectPtr<UAttributeSet>> mSpawnedAttributes;
+    TArray<TObjectPtr<UTacticalAttributeSet>> mSpawnedAttributes;
 
 protected:
     UPROPERTY(Category = "Tag", VisibleAnywhere, meta = (DisplayName = "TacticalTagCountContainer"))

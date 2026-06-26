@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   TacticalEffect.h
  * @brief  속성값 및 태그를 변경하는 객체 정의 헤더
  * @author 모호재, 김준형
@@ -26,7 +26,7 @@ struct P_RD_API FTacticalEffectModifiedAttribute
 
 public:
 	UPROPERTY(Category = "Attribute", VisibleAnywhere, meta = (DisplayName = "Attribute"))
-	FGameplayAttribute mAttribute;
+	FTacticalAttribute mAttribute;
 
 	UPROPERTY(Category = "Attribute", VisibleAnywhere, meta = (DisplayName = "TotalMagnitude"))
 	float mTotalMagnitude = 0.f;
@@ -119,7 +119,7 @@ public:
 
 public:
 	UPROPERTY(Category = "Attribute", EditDefaultsOnly, meta = (DisplayName = "Attribute"))
-	FGameplayAttribute mAttribute;
+	FTacticalAttribute mAttribute;
 
 	UPROPERTY(Category = "Attribute", EditDefaultsOnly, meta = (DisplayName = "ModifierOp"))
 	TEnumAsByte<EGameplayModOp::Type> mModifierOp = EGameplayModOp::Additive;

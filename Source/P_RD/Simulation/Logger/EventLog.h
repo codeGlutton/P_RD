@@ -52,7 +52,7 @@ public:
 public:
 	// @brief 보드 액터의 변화된 속성
 	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectAttribute"))
-	FGameplayAttribute										mEffectAttribute;
+	FTacticalAttribute										mEffectAttribute;
 
 	// @brief 보드 액터의 수치 변화량
 	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Magnitude"))

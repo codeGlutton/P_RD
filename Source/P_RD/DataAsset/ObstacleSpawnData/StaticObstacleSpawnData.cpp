@@ -73,7 +73,7 @@ FName UStaticObstacleSpawnData::GetKeyName() const
 	return *Key;
 }
 
-float UStaticObstacleSpawnData::GetDefaultAttributeValue(TSubclassOf<UAttributeSet> AttributeSetClass, const FGameplayAttribute& Attrubute, int32 Level) const
+float UStaticObstacleSpawnData::GetDefaultAttributeValue(TSubclassOf<UTacticalAttributeSet> AttributeSetClass, const FTacticalAttribute& Attrubute, int32 Level) const
 {
 	UAbilitySystemGlobals* AbilitySystemGlobals = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals();
 	AbilitySystemGlobals->InitGlobalData();
