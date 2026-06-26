@@ -17,9 +17,12 @@ struct FTacticalAggregatorMod
 {
 public:
     // @brief 평가된 값
-    float mEvaluatedMagnitude;
+    float mEvaluatedMagnitude = 0.f;
     // @brief 스택 갯수
-    float mStackCount;
+    float mStackCount = 0.f;
+
+    // @brief 활성화 핸들
+    FActiveTacticalEffectHandle mActiveHandle;
 };
 
 /**
@@ -31,10 +34,25 @@ struct FTacticalAggregator : public TSharedFromThis<FTacticalAggregator>
 
     DECLARE_MULTICAST_DELEGATE_OneParam(FOnAttributeAggregatorDirty, FTacticalAggregator*);
 
+public:
+    FTacticalAggregator(float InBaseValue = 0.f) : 
+        mDirtyCount(0),
+        mBaseValue(InBaseValue)
+    {
+    }
+
     /* 계산 함수 */
 public:
     float GetAttributeBaseValue() const;
     void SetAttributeBaseValue(float BaseValue, bool BroadcastDirtyEvent = true);
+
+public:
+    static float StaticExecModOnBaseValue(float BaseValue, TEnumAsByte<EGameplayModOp::Type> ModifierOp, float EvaluatedMagnitude);
+    void ExecModOnBaseValue(TEnumAsByte<EGameplayModOp::Type> ModifierOp, float EvaluatedMagnitude);
+
+    void AddAggregatorMod(float EvaluatedData, TEnumAsByte<EGameplayModOp::Type> ModifierOp, FActiveTacticalEffectHandle ActiveHandle = FActiveTacticalEffectHandle());
+    void RemoveAggregatorMod(FActiveTacticalEffectHandle ActiveHandle);
+    void UpdateAggregatorMod(FActiveTacticalEffectHandle ActiveHandle, const FGameplayAttribute& Attribute, const FTacticalEffectSpec& Spec, FActiveTacticalEffectHandle InHandle);
 
 public:
     /**
@@ -56,11 +74,11 @@ public:
     // @brief 값이 변경됨을 알리는 대리자
     FOnAttributeAggregatorDirty OnDirty;
     // @brief 재귀적 호출 방지용 카운팅
-    int32 mDirtyCount;
+    int32 mDirtyCount = 0;
 
 private:
     // @brief 베이스 값
-    float mBaseValue;
+    float mBaseValue = 0.f;
     // @brief 각 연산자에 따른 결과값들
     TArray<FTacticalAggregatorMod> mMods[EGameplayModOp::Max];
     // @brief 해당 값에 영향을 받는 외부 이펙트들

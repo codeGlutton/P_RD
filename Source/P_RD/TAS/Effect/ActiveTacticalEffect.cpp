@@ -52,3 +52,8 @@ void FActiveTacticalEffectHandle::RemoveFromGlobalMap()
     TacticalFrameworkModel->mEffectOwningModelMap.Remove(*this);
 }
 
+FActiveTacticalEffect::FActiveTacticalEffect(FActiveTacticalEffectHandle Handle, const FTacticalEffectSpec& Spec) :
+    mHandle(Handle),
+    mSpec(Spec)
+{
+}

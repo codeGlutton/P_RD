@@ -28,6 +28,7 @@ public class P_RDTests : ModuleRules
 
             /* GAS Plugin Modules */
             "GameplayAbilities",
+            "GameplayTags",
         });
 
         // 모듈 내 하위 폴더에서 루트 헤더를 참조할 수 있도록 경로 추가

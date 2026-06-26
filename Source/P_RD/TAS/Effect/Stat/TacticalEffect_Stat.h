@@ -13,6 +13,4 @@ UCLASS()
 class P_RD_API UTacticalEffect_Stat : public UTacticalEffect
 {
 	GENERATED_BODY()
-public:
-	virtual void ActivateEffect(const UBoardActorModel& Caster, const FTileIndex& TargetTile, const UTacticalEffectContext* EffectContext) override {};
 };
