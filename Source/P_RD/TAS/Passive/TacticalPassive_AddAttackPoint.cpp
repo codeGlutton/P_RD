@@ -9,9 +9,14 @@
 #include "TAS/Effect/Stat/TacticalEffect_AttackPoint.h"
 #include "Actor/BoardActor/BoardCombatTarget.h"
 #include "AttributeSet/UnitAttributeSet.h"
+#include "GameplayTagType.h"
 
 UTacticalPassive_AddAttackPoint::UTacticalPassive_AddAttackPoint()
 {
+	// 관여 시점: 턴 시작(발동)·턴 끝(커밋·해제). BP 서브클래스에서 교체 가능
+	mTimingTags.AddTag(AbilityTags::GameplayAbility_Passive_OnStartTurn);
+	mTimingTags.AddTag(AbilityTags::GameplayAbility_Passive_OnEndTurn);
+
 	// 기본 적용 이펙트(공격력 가산). 패시브 BP 서브클래스에서 BP 이펙트로 교체 가능
 	mEffectClass = UTacticalEffect_AttackPoint::StaticClass();
 }

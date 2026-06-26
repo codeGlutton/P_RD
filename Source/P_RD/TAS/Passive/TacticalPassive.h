@@ -38,7 +38,7 @@ class P_RD_API UTacticalPassive : public UObject
 	 * @brief 유닛테스트 모듈이 패시브 객체에 접근하기 위해 friend 선언
 	 * @note 릴리즈 빌드에서는 테스트 모듈이 빠져도 전방선언만 했기 때문에 영향 없음
 	 */ 
-	// 자동화 테스트에서만 protected 상태(mTriggerTiming 등)에 접근하기 위한 friend
+	// 자동화 테스트에서만 protected 상태(mTimingTags 등)에 접근하기 위한 friend
 	friend class FPassiveComponentModelTests;
 	// 패시브별 단위 테스트가 protected(EvaluatePassive/mState)에 접근하기 위한 friend
 	friend class FTacticalPassiveAddAttackPointTests;
@@ -95,8 +95,15 @@ public:
 	bool TryDeactivatePassive();
 
 public:
-	// 발동 시점 태그 반환 (드라이버/컴포넌트가 시점별로 패시브를 모을 때 사용)
-	const FGameplayTag& GetTriggerTiming() const { return mTriggerTiming; }
+	/**
+	 * @brief 주어진 태그가 이 패시브가 보유한 타이밍 태그 중 하나인지
+	 *
+	 * @details
+	 * 패시브는 여러 타이밍 태그(시작·끝 등)를 보유하고, 드라이버가 페이즈 태그를
+	 * 순회하며 호출해 일치 여부만 받는다. 역할(발동 vs 커밋·해제)은 묻는 쪽이
+	 * 현재 어느 페이즈인지로 판단.
+	 */
+	bool HasTimingTag(FGameplayTag Tag) const { return mTimingTags.HasTagExact(Tag); }
 
 protected:
 	/**
@@ -162,14 +169,15 @@ protected:
 	FActiveTacticalEffectHandle mActiveHandle;
 
 	/**
-	 * @brief 발동 시점 태그
+	 * @brief 패시브가 관여하는 타이밍 태그들
 	 *
 	 * @details
-	 * 어느 시점 버킷에서 발동할지 표시(예: 타격 전, 피격 후).
-	 * 드라이버가 이 태그로 패시브를 모아 호출하므로, 패시브 자신의 시점 검사는 불필요.
+	 * 시작·끝 등 이 패시브가 반응할 시점들을 모두 담는다(예: {OnStartTurn, OnEndTurn}).
+	 * 드라이버가 페이즈 태그로 HasTimingTag를 질의하고, 그 페이즈의 역할에 따라
+	 * ActivatePassive 또는 CommitPassive+(Try)DeactivatePassive를 호출.
 	 */
-	UPROPERTY(Category = "Passive", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "TriggerTiming"))
-	FGameplayTag mTriggerTiming;
+	UPROPERTY(Category = "Passive", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "TimingTags"))
+	FGameplayTagContainer mTimingTags;
 
 	/**
 	 * @brief 커밋된 패시브 내부 상태

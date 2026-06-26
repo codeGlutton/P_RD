@@ -52,8 +52,11 @@ bool FPassiveComponentModelTests::RunTest(const FString& Parameters)
 	}
 
 	// 서로 다른 발동 시점 설정 (friend로 protected 접근)
-	AddPassive->mTriggerTiming = StartTiming;
-	NthPassive->mTriggerTiming = EndTiming;
+	// 생성자 기본 태그를 비우고 테스트용 시점만 지정 (결정적 버킷 검증)
+	AddPassive->mTimingTags.Reset();
+	AddPassive->mTimingTags.AddTag(StartTiming);
+	NthPassive->mTimingTags.Reset();
+	NthPassive->mTimingTags.AddTag(EndTiming);
 
 	// 보유 수 확인
 	TestEqual(TEXT("보유 패시브 2개"), Component->GetPassives().Num(), 2);

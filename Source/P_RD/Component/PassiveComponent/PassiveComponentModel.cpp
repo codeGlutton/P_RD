@@ -70,7 +70,7 @@ TArray<UTacticalPassive*> UPassiveComponentModel::GetPassivesByTiming(const FGam
 	// 보유 목록 전체를 순회하며 시점 태그 일치분 수집
 	for (const TObjectPtr<UTacticalPassive>& Passive : mPassives)
 	{
-		if (Passive != nullptr && Passive->GetTriggerTiming() == TriggerTiming)
+		if (Passive != nullptr && Passive->HasTimingTag(TriggerTiming))
 		{
 			Result.Add(Passive);
 		}
