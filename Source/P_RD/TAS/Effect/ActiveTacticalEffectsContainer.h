@@ -218,6 +218,9 @@ private:
 
     bool InternalRemoveActiveTacticalEffect(int32 Idx, int32 StacksToRemove, bool bPrematureRemoval);
 
+    void AddActiveTacticalEffectGrantedTagsAndModifiers(FActiveTacticalEffect& Effect);
+    void RemoveActiveTacticalEffectGrantedTagsAndModifiers(const FActiveTacticalEffect& Effect);
+
 private:
     void UpdateAttributeCurrentValue(FGameplayAttribute Attribute, float CurrentValue);
     void UpdateAllAggregatorModMagnitudes(FActiveTacticalEffect& ActiveEffect);

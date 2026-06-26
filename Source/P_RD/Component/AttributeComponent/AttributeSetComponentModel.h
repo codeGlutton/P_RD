@@ -92,6 +92,7 @@ public:
 
     void ExecuteTacticalEffect(FTacticalEffectSpec& Spec);
 
+    virtual FActiveTacticalEffectHandle SetActiveTacticalEffect(FActiveTacticalEffectHandle&& ActiveHandle);
     virtual bool RemoveActiveTacticalEffect(FActiveTacticalEffectHandle Handle, int32 StacksToRemove = -1);
 
     const UTacticalEffect* GetTacticalEffectDefForHandle(FActiveTacticalEffectHandle Handle);
@@ -202,6 +203,7 @@ public:
 public:
     FOnTacticalEffectAppliedDelegate OnTacticalEffectAppliedDelegateToSelf;
     FOnTacticalEffectAppliedDelegate OnTacticalEffectAppliedDelegateToTarget;
+    FOnTacticalEffectAppliedDelegate OnActiveTacticalEffectAddedDelegateToSelf;
 
 protected:
     UPROPERTY(Category = "Effect", VisibleAnywhere, meta = (DisplayName = "ActiveAttributeEffects"))

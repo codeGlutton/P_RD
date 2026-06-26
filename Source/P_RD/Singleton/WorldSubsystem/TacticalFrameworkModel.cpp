@@ -3,6 +3,7 @@
 
 #include "TAS/Effect/TacticalEffect.h"
 #include "TAS/Effect/TacticalEffectContext.h"
+#include "TAS/Aggregator/TacticalAggregator.h"
 
 DEFINE_LOG_CATEGORY(LogTacticalFramework)
 
@@ -44,4 +45,38 @@ void UTacticalFrameworkModel::SetCurrentAppliedGE(const FTacticalEffectSpec* Spe
 
 void UTacticalFrameworkModel::PopCurrentAppliedGE()
 {
+}
+
+void UTacticalFrameworkModel::BeginAggregatorDirtyBatch()
+{
+	++mGlobalBatchCount;
+}
+
+void UTacticalFrameworkModel::EndAggregatorDirtyBatch()
+{
+	--mGlobalBatchCount;
+	if (mGlobalBatchCount == 0)
+	{
+		TSet<FTacticalAggregator*> LocalSet(MoveTemp(mDirtyAggregators));
+		for (FTacticalAggregator* Agg : LocalSet)
+		{
+			Agg->BroadcastOnDirty();
+		}
+		LocalSet.Empty();
+	}
+}
+
+void UTacticalFrameworkModel::AddAggregatorDirty(FTacticalAggregator* Aggregator)
+{
+	mDirtyAggregators.Add(Aggregator);
+}
+
+int32 UTacticalFrameworkModel::RemoveAggregatorDirty(FTacticalAggregator* Aggregator)
+{
+	return mDirtyAggregators.Remove(Aggregator);
+}
+
+int32 UTacticalFrameworkModel::GetGlobalBatchCount() const
+{
+	return mGlobalBatchCount;
 }

@@ -1,6 +1,7 @@
 ﻿#include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
 #include "TAS/Effect/TacticalEffectContext.h"
+#include "TAS/Aggregator/TacticalAggregator.h"
 
 #include "Actor/ActorModel.h"
 
@@ -279,7 +280,7 @@ FActiveTacticalEffectHandle UAttributeSetComponentModel::ApplyTacticalEffectSpec
 
     UAttributeSetComponentModel* InstigatorASCModel = Spec.GetContext()->GetAttributeSetComponentModel();
     OnTacticalEffectAppliedToSelf(InstigatorASCModel, *OurCopyOfSpec, MyHandle);
-
+    
 	if (InstigatorASCModel != nullptr)
 	{
         InstigatorASCModel->OnTacticalEffectAppliedToTarget(this, *OurCopyOfSpec, MyHandle);
@@ -292,6 +293,22 @@ void UAttributeSetComponentModel::ExecuteTacticalEffect(FTacticalEffectSpec& Spe
 {
     check(Spec.mIsInfinite == false);
     mActiveAttributeEffects.ExecuteActiveEffectsFrom(Spec);
+}
+
+FActiveTacticalEffectHandle UAttributeSetComponentModel::SetActiveTacticalEffect(FActiveTacticalEffectHandle&& ActiveHandle)
+{
+    FActiveTacticalEffect* ActiveEffect = mActiveAttributeEffects.GetActiveTacticalEffect(ActiveHandle);
+    checkf(ActiveEffect != nullptr, TEXT("활성화할 Effect 미존재"));
+
+    FScopedActiveTacticalEffectLock ScopeLockActiveGameplayEffects(mActiveAttributeEffects);
+    FScopedTacticalAggregatorOnDirtyBatch AggregatorOnDirtyBatcher(GetWorld());
+    mActiveAttributeEffects.AddActiveTacticalEffectGrantedTagsAndModifiers(*ActiveEffect);
+
+    if (ActiveEffect->mIsPendingRemove == true)
+    {
+        return FActiveTacticalEffectHandle();
+    }
+    return MoveTemp(ActiveHandle);
 }
 
 bool UAttributeSetComponentModel::RemoveActiveTacticalEffect(FActiveTacticalEffectHandle Handle, int32 StacksToRemove)

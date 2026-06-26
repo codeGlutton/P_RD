@@ -10,6 +10,19 @@
 #include "AttributeSet/AttributeSetMinimal.h"
 #include "TAS/Effect/ActiveTacticalEffect.h"
 
+struct FActiveTacticalEffectsContainer;
+class UTacticalFrameworkModel;
+
+struct FScopedTacticalAggregatorOnDirtyBatch
+{
+public:
+    FScopedTacticalAggregatorOnDirtyBatch(UWorld* World);
+    ~FScopedTacticalAggregatorOnDirtyBatch();
+
+protected:
+    TObjectPtr<UWorld> mWorld = nullptr;
+};
+
 /**
  * @brief 하나의 변화값
  */
@@ -31,15 +44,19 @@ public:
 struct FTacticalAggregator : public TSharedFromThis<FTacticalAggregator>
 {
     friend struct FActiveTacticalEffectsContainer;
+    friend class UTacticalFrameworkModel;
 
     DECLARE_MULTICAST_DELEGATE_OneParam(FOnAttributeAggregatorDirty, FTacticalAggregator*);
 
 public:
-    FTacticalAggregator(float InBaseValue = 0.f) : 
+    FTacticalAggregator(UAttributeSetComponentModel* Owner, float InBaseValue = 0.f) :
+        mOwner(Owner),
         mDirtyCount(0),
         mBaseValue(InBaseValue)
     {
     }
+
+    ~FTacticalAggregator();
 
     /* 계산 함수 */
 public:
@@ -69,6 +86,9 @@ public:
     /* 업데이트 함수 */
 private:
     void BroadcastOnDirty();
+
+public:
+    TWeakObjectPtr<UAttributeSetComponentModel> mOwner;
 
 public:
     // @brief 값이 변경됨을 알리는 대리자

@@ -107,7 +107,7 @@ TSharedPtr<FTacticalAggregator>& FActiveTacticalEffectsContainer::FindOrCreateAt
     }
 
     float CurrentBaseValueOfProperty = mOwner->GetAttributeBaseValue(Attribute);
-    TSharedPtr<FTacticalAggregator> NewAttributeAggregator = MakeShared<FTacticalAggregator>(CurrentBaseValueOfProperty);
+    TSharedPtr<FTacticalAggregator> NewAttributeAggregator = MakeShared<FTacticalAggregator>(mOwner.Get(), CurrentBaseValueOfProperty);
     NewAttributeAggregator->OnDirty.AddUObject(mOwner.Get(), &UAttributeSetComponentModel::OnAttributeAggregatorDirty, Attribute);
 
     return mAttributeAggregatorMap.Add(Attribute, MoveTemp(NewAttributeAggregator));
@@ -277,12 +277,12 @@ void FActiveTacticalEffectsContainer::ExecuteActiveEffectsFrom(FTacticalEffectSp
 bool FActiveTacticalEffectsContainer::RemoveActiveTacticalEffect(FActiveTacticalEffectHandle Handle, int32 StacksToRemove)
 {
     int32 NumTacticalEffects = GetNumTacticalEffects();
-    for (int32 ActiveGEIdx = 0; ActiveGEIdx < NumTacticalEffects; ++ActiveGEIdx)
+    for (int32 ActiveEffectIdx = 0; ActiveEffectIdx < NumTacticalEffects; ++ActiveEffectIdx)
     {
-        FActiveTacticalEffect& Effect = *GetActiveTacticalEffect(ActiveGEIdx);
+        FActiveTacticalEffect& Effect = *GetActiveTacticalEffect(ActiveEffectIdx);
         if (Effect.mHandle == Handle && Effect.mIsPendingRemove == false)
         {
-            InternalRemoveActiveTacticalEffect(ActiveGEIdx, StacksToRemove, true);
+            InternalRemoveActiveTacticalEffect(ActiveEffectIdx, StacksToRemove, true);
             return true;
         }
     }
@@ -301,13 +301,24 @@ void FActiveTacticalEffectsContainer::InternalOnActiveTacticalEffectAdded(FActiv
     checkf(EffectDef != nullptr, TEXT("추가한 Effect Class가 nullptr"));
 
     EffectDef->OnAddedToActiveContainer(*this, Effect);
+
+    FActiveTacticalEffectHandle EffectHandle = Effect.mHandle;
+    if (mOwner.IsValid() == true)
+    {
+        mOwner->SetActiveTacticalEffect(MoveTemp(EffectHandle));
+    }
 }
 
 void FActiveTacticalEffectsContainer::InternalOnActiveTacticalEffectRemoved(FActiveTacticalEffect& Effect, const FTacticalEffectRemovalInfo& TacticalEffectRemovalInfo)
 {
     Effect.mIsPendingRemove = true;
-    Effect.mEventSet.OnEffectRemoved.Broadcast(TacticalEffectRemovalInfo);
 
+    if (Effect.mSpec.mEffectClass)
+    {
+        RemoveActiveTacticalEffectGrantedTagsAndModifiers(Effect);
+    }
+
+    Effect.mEventSet.OnEffectRemoved.Broadcast(TacticalEffectRemovalInfo);
     OnGivenActiveTacticalEffectRemovedDelegate.Broadcast(Effect);
 }
 
@@ -379,6 +390,53 @@ bool FActiveTacticalEffectsContainer::InternalRemoveActiveTacticalEffect(int32 I
     }
 
     return false;
+}
+
+void FActiveTacticalEffectsContainer::AddActiveTacticalEffectGrantedTagsAndModifiers(FActiveTacticalEffect& Effect)
+{
+    check(Effect.mSpec.mEffectClass != nullptr);
+    check(mOwner != nullptr);
+
+    TACTICAL_EFFECT_SCOPE_LOCK();
+
+    for (int32 ModIdx = 0; ModIdx < Effect.mSpec.mModifierValues.Num(); ++ModIdx)
+    {
+        if (Effect.mSpec.mEffectClass->mModifiers.IsValidIndex(ModIdx) == false)
+        {
+            continue;
+        }
+
+        const FTacticalModifierInfo& ModInfo = Effect.mSpec.mEffectClass->mModifiers[ModIdx];
+        if (mOwner->HasAttributeSetForAttribute(ModInfo.mAttribute) == false)
+        {
+            continue;
+        }
+
+        float EvaluatedMagnitude = Effect.mSpec.GetModifierMagnitude(ModIdx);
+        FTacticalAggregator* Aggregator = FindOrCreateAttributeAggregator(Effect.mSpec.mEffectClass->mModifiers[ModIdx].mAttribute).Get();
+        if (ensure(Aggregator))
+        {
+            Aggregator->AddAggregatorMod(EvaluatedMagnitude, ModInfo.mModifierOp, Effect.mHandle);
+        }
+    }
+
+    mOwner->UpdateTagMap(Effect.mSpec.mEffectClass->GetGrantedTags(), 1);
+    mOwner->OnActiveTacticalEffectAddedDelegateToSelf.Broadcast(mOwner.Get(), Effect.mSpec, Effect.mHandle);
+}
+
+void FActiveTacticalEffectsContainer::RemoveActiveTacticalEffectGrantedTagsAndModifiers(const FActiveTacticalEffect& Effect)
+{
+    for (const FTacticalModifierInfo& Mod : Effect.mSpec.mEffectClass->mModifiers)
+    {
+        if (Mod.mAttribute.IsValid() == true)
+        {
+            if (const TSharedPtr<FTacticalAggregator>* RefPtr = mAttributeAggregatorMap.Find(Mod.mAttribute))
+            {
+                RefPtr->Get()->RemoveAggregatorMod(Effect.mHandle);
+            }
+        }
+    }
+    mOwner->UpdateTagMap(Effect.mSpec.mEffectClass->GetGrantedTags(), -1);
 }
 
 void FActiveTacticalEffectsContainer::SetAttributeBaseValue(FGameplayAttribute Attribute, float BaseValue)
