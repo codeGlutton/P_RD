@@ -4,6 +4,9 @@
 // #include "Pawn/SkillComponent.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
+#include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
+#include "Singleton/WorldSubsystem/TacticalFrameworkSubsystem.h"
+
 UUnitModel::UUnitModel() : mTeamId(EGameTeamType::AllNeutral)
 {
 	// TODO : 모델로 바꿔야됨
@@ -21,8 +24,13 @@ void UUnitModel::PostInitializeComponentModels()
 {
 	Super::PostInitializeComponentModels();
 
-	auto* AbilitySystemGlobals = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals();
-	// AbilitySystemGlobals->GetAttributeSetInitter()->();
+	UTacticalFrameworkSubsystem* TacticalFrameworkSubsystem = GetWorld()->GetSubsystem<UTacticalFrameworkSubsystem>();
+	checkf(TacticalFrameworkSubsystem != nullptr, TEXT("전략 프레임워크 서브시스템 nullptr"));
+
+	UTacticalFrameworkModel* TacticalFrameworkModel = TacticalFrameworkSubsystem->GetModel<UTacticalFrameworkModel>();
+	checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
+
+	TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), GetBoardActorKeyName(), GetDifficulty(), true);
 }
 
 void UUnitModel::SetGenericTeamId(const FGenericTeamId& TeamID)

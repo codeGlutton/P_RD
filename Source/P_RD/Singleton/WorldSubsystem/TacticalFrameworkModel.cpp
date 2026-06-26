@@ -1,9 +1,16 @@
 ﻿#include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
+#include "TAS/AttributeSet/TacticalAttributeSet.h"
 #include "TAS/Effect/TacticalEffect.h"
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "TAS/Aggregator/TacticalAggregator.h"
+
+#include "Setting/GameBalanceSettings.h"
+
+#if WITH_EDITOR
+#include "Editor.h"
+#endif
 
 DEFINE_LOG_CATEGORY(LogTacticalFramework)
 
@@ -26,13 +33,84 @@ FScopeCurrentTacticalEffectBeingApplied::~FScopeCurrentTacticalEffectBeingApplie
 	TacticalFrameworkModel->PopCurrentAppliedGE();
 }
 
-void UTacticalFrameworkModel::GlobalPreTacticalEffectSpecApply(FTacticalEffectSpec& Spec, UAttributeSetComponentModel* Model)
+void UTacticalFrameworkModel::Initialize()
 {
+	Super::Initialize();
+
+	GetGlobalInitCurveTable();
+	ReloadAttributeDefaults();
 }
+
+void UTacticalFrameworkModel::Uninitialize()
+{
+	Super::Uninitialize();
+}
+
+UCurveTable* UTacticalFrameworkModel::GetGlobalInitCurveTable()
+{
+	if (mGlobalInitCurveTable == nullptr)
+	{
+		const UGameBalanceSettings* GameBalanceSettings = GetDefault<UGameBalanceSettings>();
+		if (GameBalanceSettings->mInitializeCurveTable.ToSoftObjectPath().IsNull() == false)
+		{
+			mGlobalInitCurveTable = Cast<UCurveTable>(GameBalanceSettings->mInitializeCurveTable.LoadSynchronous());
+		}
+	}
+	return mGlobalInitCurveTable;
+}
+
+FTacticalAttributeSetInitter* UTacticalFrameworkModel::GetAttributeSetInitter()
+{
+	check(mGlobalAttributeSetInitter.IsValid() == true);
+	return mGlobalAttributeSetInitter.Get();
+}
+
+void UTacticalFrameworkModel::ReloadAttributeDefaults()
+{
+	if (mGlobalInitCurveTable != nullptr)
+	{
+		AllocAttributeSetInitter();
+
+		TArray<UCurveTable*> TmpTables = { mGlobalInitCurveTable };
+		GetAttributeSetInitter()->PreloadAttributeSetData(TmpTables);
+
+#if WITH_EDITOR
+		if (GIsEditor == true)
+		{
+			GEditor->GetEditorSubsystem<UImportSubsystem>()->OnAssetReimport.AddUObject(this, &UTacticalFrameworkModel::OnTableReimported);
+		}
+#endif
+	}
+}
+
+void UTacticalFrameworkModel::AllocAttributeSetInitter()
+{
+	mGlobalAttributeSetInitter = MakeShared<FTacticalAttributeSetInitterDiscreteLevels>();
+}
+
+#if WITH_EDITOR
+
+void UTacticalFrameworkModel::OnTableReimported(UObject* InObject)
+{
+	if (GIsEditor && !IsRunningCommandlet() && InObject)
+	{
+		UCurveTable* ReimportedCurveTable = Cast<UCurveTable>(InObject);
+		if (ReimportedCurveTable && mGlobalInitCurveTable == ReimportedCurveTable)
+		{
+			ReloadAttributeDefaults();
+		}
+	}
+}
+
+#endif
 
 UTacticalEffectContext* UTacticalFrameworkModel::AllocTacticalEffectContext() const
 {
 	return NewObject<UTacticalEffectContext>(const_cast<UTacticalFrameworkModel*>(this));
+}
+
+void UTacticalFrameworkModel::GlobalPreTacticalEffectSpecApply(FTacticalEffectSpec& Spec, UAttributeSetComponentModel* Model)
+{
 }
 
 void UTacticalFrameworkModel::PushCurrentAppliedGE(const FTacticalEffectSpec* Spec, UAttributeSetComponentModel* Model)

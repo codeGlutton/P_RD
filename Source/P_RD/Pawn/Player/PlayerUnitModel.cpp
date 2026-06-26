@@ -4,17 +4,23 @@
 #include "GameMode/RDGameModeBase.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 
+#include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
+#include "Singleton/WorldSubsystem/TacticalFrameworkSubsystem.h"
+
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
+
+#include "AttributeSet/LevelAttributeSet.h"
+#include "AttributeSet/UnitAttributeSet.h"
 
 #include "Dice/DicePoolModel.h"
 
-/** @brief 플레이어 전용 AttributeSet과 DiceComponent를 서브오브젝트로 생성한다. */
 UPlayerUnitModel::UPlayerUnitModel()
 {
     SetGenericTeamId(EGameTeamType::Adventurer);
-    // mUnitAttributeSet = CreateDefaultSubobject<UPlayerUnitAttributeSet>(TEXT("PlayerUnitAttributeSet"));
-    // mLevelAttributeSet = CreateDefaultSubobject<ULevelAttributeSet>(TEXT("LevelAttributeSet"));
-    // 보유 주사위의 진짜 런타임 상태는 플레이어 유닛이 소유하고, CombatUIAdapter는 읽어서 UIModel로 변환한다.
+    
+    mUnitAttributeSet = CreateDefaultSubobject<UPlayerUnitAttributeSet>(TEXT("PlayerUnitAttributeSet"));
+    mLevelAttributeSet = CreateDefaultSubobject<ULevelAttributeSet>(TEXT("LevelAttributeSet"));
+
     mDicePool = CreateDefaultSubobject<UDicePoolModel>(TEXT("DiceComp"));
 }
 
@@ -22,10 +28,13 @@ void UPlayerUnitModel::PostInitializeComponentModels()
 {
     Super::PostInitializeComponentModels();
 
-    // Level값에 따라 ASC Attribute 초기화
-    // auto* AbilitySystemGlobals = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals();
-    // AbilitySystemGlobals->InitGlobalData();
-    // AbilitySystemGlobals->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAbilitySystemComponent(), TEXT("PlayerLevel"), GetPlayerLevel(), true);
+    UTacticalFrameworkSubsystem* TacticalFrameworkSubsystem = GetWorld()->GetSubsystem<UTacticalFrameworkSubsystem>();
+    checkf(TacticalFrameworkSubsystem != nullptr, TEXT("전략 프레임워크 서브시스템 nullptr"));
+
+    UTacticalFrameworkModel* TacticalFrameworkModel = TacticalFrameworkSubsystem->GetModel<UTacticalFrameworkModel>();
+    checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
+
+    TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), TEXT("PlayerLevel"), GetPlayerLevel(), true);
 }
 
 UUserWidget* UPlayerUnitModel::GetInfoPanel() const
@@ -64,7 +73,6 @@ bool UPlayerUnitModel::IsPlayerUnitModel() const
     return true;
 }
 
-/** @brief 전투 UI/어댑터가 플레이어 보유 주사위 상태를 읽기 위한 접근자다. */
 UDicePoolModel* UPlayerUnitModel::GetDicePool() const
 {
     return mDicePool;

@@ -15,8 +15,10 @@
 #include "PlayerUnitModel.generated.h"
 
 class UPlayerUnitModel;
-class ULevelAttributeSet;
 class UDicePoolModel;
+
+class UPlayerUnitAttributeSet;
+class ULevelAttributeSet;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePlayerLevel, UPlayerUnitModel* /*Model*/, int32 /*PlayerLevel*/);
 
@@ -55,9 +57,13 @@ public:
 	FOnChangePlayerLevel OnChangePlayerLevel;
 
 private:
-	/** @brief 레벨 스케일 AttributeSet. 기존 GAS 초기화 경로가 참조하므로 제거 전까지 유지한다. */
-	/*UPROPERTY(Category = GAS, VisibleAnywhere, meta = (DisplayName = "LevelAttributeSet"))
-	TObjectPtr<ULevelAttributeSet> mLevelAttributeSet;*/
+	/** @brief 난이도 스케일 AttributeSet */
+	UPROPERTY(Category = AttributeSet, VisibleAnywhere, meta = (DisplayName = "UnitAttributeSet"))
+	TObjectPtr<UPlayerUnitAttributeSet> mUnitAttributeSet;
+
+	/** @brief 레벨 스케일 AttributeSet */
+	UPROPERTY(Category = AttributeSet, VisibleAnywhere, meta = (DisplayName = "LevelAttributeSet"))
+	TObjectPtr<ULevelAttributeSet> mLevelAttributeSet;
 
 	/** @brief 런타임 보유 주사위 묶음. 전투 HUD는 이 객체를 직접 소유하지 않고 어댑터를 통해 읽는다. */
 	UPROPERTY(Category = Dice, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "DiceComp"))

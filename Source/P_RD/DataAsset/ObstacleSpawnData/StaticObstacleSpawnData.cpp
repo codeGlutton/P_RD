@@ -4,6 +4,9 @@
 
 #include "AttributeSet/AttributeSetMinimal.h"
 
+#include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
+#include "Singleton/WorldSubsystem/TacticalFrameworkSubsystem.h"
+
 #if WITH_EDITOR
 #include "Misc/DataValidation.h"
 #endif
@@ -73,11 +76,15 @@ FName UStaticObstacleSpawnData::GetKeyName() const
 	return *Key;
 }
 
-float UStaticObstacleSpawnData::GetDefaultAttributeValue(TSubclassOf<UTacticalAttributeSet> AttributeSetClass, const FTacticalAttribute& Attrubute, int32 Level) const
+float UStaticObstacleSpawnData::GetDefaultAttributeValue(UWorld* World, TSubclassOf<UTacticalAttributeSet> AttributeSetClass, const FTacticalAttribute& Attrubute, int32 Level) const
 {
-	UAbilitySystemGlobals* AbilitySystemGlobals = IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals();
-	AbilitySystemGlobals->InitGlobalData();
-	auto MaxHPArray = AbilitySystemGlobals->GetAttributeSetInitter()->GetAttributeSetValues(
+	UTacticalFrameworkSubsystem* TacticalFrameworkSubsystem = World->GetSubsystem<UTacticalFrameworkSubsystem>();
+	checkf(TacticalFrameworkSubsystem != nullptr, TEXT("전략 프레임워크 서브시스템 nullptr"));
+
+	UTacticalFrameworkModel* TacticalFrameworkModel = TacticalFrameworkSubsystem->GetModel<UTacticalFrameworkModel>();
+	checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
+
+	auto MaxHPArray = TacticalFrameworkModel->GetAttributeSetInitter()->GetAttributeSetValues(
 		AttributeSetClass,
 		Attrubute.GetUProperty(),
 		GetKeyName()

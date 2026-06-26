@@ -80,7 +80,7 @@ void UGameObjectModelFactory::RegisterSubsystemModels()
 		const TSoftClassPtr<UWorldSubsystem>& ViewClass = SubsystemModelViewMapping.mViewClass;
 		if (ViewClass != nullptr)
 		{
-			TScriptInterface<IActorView> View = GetWorld()->SpawnActor(ViewClass.LoadSynchronous());
+			TScriptInterface<IObjectView> View = GetWorld()->GetSubsystemBase(ViewClass.LoadSynchronous());
 			if (View != nullptr)
 			{
 				View->BindModel(Model);
