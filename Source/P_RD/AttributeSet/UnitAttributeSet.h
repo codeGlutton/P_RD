@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   UnitAttributeSet.h
  * @brief  SRPGUnit에 대한 Attribute Set 정의 헤더
  * @author 모호재
@@ -47,10 +47,10 @@ protected:
 
 	// @brief 턴 동안만 유지되는 방어 포인트
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FGameplayAttributeData DefensePoint;
+	FTacticalAttributeData DefensePoint;
 	// @brief 턴 동안만 유지되는 움직임 포인트
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FGameplayAttributeData MovementPoint;
+	FTacticalAttributeData MovementPoint;
 
 	/* 복잡한 계산 이후에 실제 적용하는 일시적인 Attribute 값 */
 protected:

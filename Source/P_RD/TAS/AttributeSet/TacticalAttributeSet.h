@@ -16,7 +16,24 @@ class UActorModel;
 class UAttributeSetComponentModel;
 class UTacticalAttributeSet;
 class UCurveTable;
+
 struct FTacticalAggregator;
+struct FTacticalEffectSpec;
+struct FTacticalModifierEvaluatedData;
+
+struct FTacticalEffectModCallbackData
+{
+	FTacticalEffectModCallbackData(const FTacticalEffectSpec& EffectSpec, FTacticalModifierEvaluatedData& EvaluatedData, UAttributeSetComponentModel& Model) :
+		mEffectSpec(EffectSpec),
+		mEvaluatedData(EvaluatedData),
+		mModel(Model)
+	{
+	}
+
+	const FTacticalEffectSpec& mEffectSpec;
+	FTacticalModifierEvaluatedData& mEvaluatedData;
+	UAttributeSetComponentModel& mModel;
+};
 
 USTRUCT(BlueprintType)
 struct P_RD_API FTacticalAttributeData
@@ -167,8 +184,8 @@ public:
 	static void GetAttributesFromSetClass(const TSubclassOf<UTacticalAttributeSet>& AttributeSetClass, TArray<FTacticalAttribute>& Attributes);
 
 	virtual bool ShouldInitProperty(bool FirstInit, FProperty* PropertyToInit) const { return true; }
-	virtual bool PreGameplayEffectExecute(struct FGameplayEffectModCallbackData &Data) { return true; }
-	virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData &Data) { }
+	virtual bool PreTacticalEffectExecute(FTacticalEffectModCallbackData& Data) { return true; }
+	virtual void PostTacticalEffectExecute(const FTacticalEffectModCallbackData& Data) { }
 
 	virtual void PreAttributeChange(const FTacticalAttribute& Attribute, float& NewValue) { }
 	virtual void PostAttributeChange(const FTacticalAttribute& Attribute, float OldValue, float NewValue) { }
@@ -239,10 +256,10 @@ private:
 
 	struct FAttributeSetDefaultsCollection
 	{
-		TArray<FAttributeSetDefaults>		mLevelData;
+		TArray<FAttributeSetDefaults> mLevelData;
 	};
 
-	TMap<FName, FAttributeSetDefaultsCollection>	mDefaults;
+	TMap<FName, FAttributeSetDefaultsCollection> mDefaults;
 };
 
 #define TACTICAL_ATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \

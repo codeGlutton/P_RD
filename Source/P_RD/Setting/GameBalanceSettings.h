@@ -29,10 +29,16 @@ public:
 	FText GetSectionDescription() const override;
 #endif
 
+	/* 스테이지 구성 */
 public:
 	UPROPERTY(Config, Category = Stage, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "GlobalStageBuildSetting", ToolTip = "Stage 생성 시, 사용되는 전역 설정 값 테이블"))
 	FGlobalStageBuildSetting mGlobalStageBuildSetting;
 
 	UPROPERTY(Config, Category = Stage, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "StageBuildSettingTable", ToolTip = "Stage 생성 시, 사용되는 설정 값 테이블", RequiredAssetDataTags = "RowStructure=/Script/P_RD.StageBuilderParams"))
 	TSoftObjectPtr<UDataTable> mStageBuildSettingTable;
+
+	/* 전투 구성 */
+public:
+	UPROPERTY(Config, Category = Attribute, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "InitializeCurveTable", ToolTip = "Attribute 초기 값 테이블", ConfigRestartRequired = true))
+	TSoftObjectPtr<UCurveTable> mInitializeCurveTable;
 };
