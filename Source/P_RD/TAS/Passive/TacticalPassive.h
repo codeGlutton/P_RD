@@ -41,9 +41,9 @@ class P_RD_API UTacticalPassive : public UObject
 	// 자동화 테스트에서만 protected 상태(mTriggerTiming 등)에 접근하기 위한 friend
 	friend class FPassiveComponentModelTests;
 	// 패시브별 단위 테스트가 protected(EvaluatePassive/mState)에 접근하기 위한 friend
-	friend class FTacticalPassiveAddAttackTests;
-	friend class FTacticalPassiveNthAddAttackCalcTests;
-	friend class FTacticalPassiveNthAddAttackCommitTests;
+	friend class FTacticalPassiveAddAttackPointTests;
+	friend class FTacticalPassiveNthAddAttackPointCalcTests;
+	friend class FTacticalPassiveNthAddAttackPointCommitTests;
 
 public:
 	/**
@@ -73,14 +73,26 @@ public:
 	virtual void CommitPassive(IN const TInstancedStruct<FTacticalPassiveState>& PassiveState) {}
 
 	/**
-	 * @brief 적용 중인 이펙트를 해제(제거)
+	 * @brief 적용 중인 이펙트를 강제로 해제(제거)
 	 *
 	 * @details
 	 * NotifyPassive에서 저장해 둔 핸들로 이펙트를 활성 집합에서 제거한다.
 	 * 되돌리는 수치 계산은 없으며, 제거 후 TAS가 base에서 재계산해 기여가 빠진 값이 된다.
-	 * 만료/해제 타이밍에 드라이버가 호출.
+	 * 조건을 따지지 않고 즉시 내린다(예: 장비 장착 해제).
 	 */
 	void DeactivatePassive();
+
+	/**
+	 * @brief 조건부 해제: 패시브에게 빠질지 물어보고, 빠진다고 하면 해제
+	 *
+	 * @details
+	 * 강제로 내리는 DeactivatePassive와 달리, 드라이버가 "빠질래?"라고 물으면
+	 * 패시브가 ShouldDeactivate로 스스로 판단한다. true일 때만 DeactivatePassive 수행.
+	 * 적용 중이 아니거나(핸들 무효) 유지 판단이면 아무 것도 하지 않는다.
+	 *
+	 * @return 실제로 해제됐으면 true
+	 */
+	bool TryDeactivatePassive();
 
 public:
 	// 발동 시점 태그 반환 (드라이버/컴포넌트가 시점별로 패시브를 모을 때 사용)
@@ -118,6 +130,15 @@ protected:
 	virtual void NotifyPassive(
 		IN const FPassiveActivateContext& Ctx,
 		IN OUT FBoardCombatTargetSnapshotData& TargetDelta);
+
+	/**
+	 * @brief 조건부 해제 판단 (TryDeactivatePassive에서 사용)
+	 *
+	 * @details
+	 * 기본은 false(유지). 만료·조건 종료 등으로 스스로 빠져야 하는 패시브만 override.
+	 * 판단 근거(잔여 턴/스택, 현재 스냅샷 등)는 추후 입력으로 확장 가능.
+	 */
+	virtual bool ShouldDeactivate() const { return false; }
 
 	/**
 	 * @brief 이 패시브가 적용할 이펙트

@@ -1,5 +1,5 @@
 ﻿/*****************************************************************//**
- * @file   TacticalPassive_NthAddAttack.h
+ * @file   TacticalPassive_NthAddAttackPoint.h
  * @brief  N번째 발동마다 공격력 보너스 패시브 (상태 보유)
  * @author 이문환
  * @date   2026-06-24
@@ -8,21 +8,25 @@
 #pragma once
 
 #include "TAS/Passive/TacticalPassive.h"
-#include "TacticalPassive_NthAddAttack.generated.h"
+#include "TacticalPassive_NthAddAttackPoint.generated.h"
 
 /**
  * @brief N번째 발동마다 공격력 보너스 패시브
  *
  * @details
- * EvaluatePassive: 러닝 카운터 +1, mThreshold 도달 시 대상 공격력(DamagePoint)에 mAttackBonus 추가 (리셋 안 함).
- * CommitPassive: 러닝 카운터를 mState에 커밋, 임계값 도달 시 0으로 리셋.
+ * EvaluatePassive: 완료 횟수(mCount)는 읽기만. 이번 차수(=완료+1)가 mThreshold면 공격력(AttackPoint)에
+ *                  mAttackBonus 추가하고, 러닝본(NextState)에 발동=리셋(0)/미발동=차수 전진을 기록.
+ * CommitPassive: 러닝본을 mState에 그대로 확정(리셋은 Evaluate가 이미 반영).
  *
- * 카운터는 패시브 내부 상태(FTacticalPassiveState_NthCounter), 임계값(N)은 config라 클래스에 둠.
+ * 카운터는 패시브 내부 상태(FTacticalPassiveState_NthCounter, 0-base 완료 횟수), 임계값(N)은 config라 클래스에 둠.
  */
 UCLASS()
-class P_RD_API UTacticalPassive_NthAddAttack : public UTacticalPassive
+class P_RD_API UTacticalPassive_NthAddAttackPoint : public UTacticalPassive
 {
 	GENERATED_BODY()
+
+public:
+	UTacticalPassive_NthAddAttackPoint();
 
 protected:
 	virtual void EvaluatePassive(

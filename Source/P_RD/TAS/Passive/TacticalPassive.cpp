@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   TacticalPassive.cpp
  * @brief  패시브 베이스 클래스 구현
  * @author 이문환
@@ -97,4 +97,23 @@ void UTacticalPassive::DeactivatePassive()
 		OwningComp->RemoveActiveTacticalEffect(mActiveHandle);
 	}
 	mActiveHandle.Reset();
+}
+
+bool UTacticalPassive::TryDeactivatePassive()
+{
+	// 적용 중이 아니면 해제할 것도 없음
+	if (mActiveHandle.IsValid() == false)
+	{
+		return false;
+	}
+
+	// 패시브가 스스로 빠질지 판단 (기본 유지). 유지면 그대로 둠
+	if (ShouldDeactivate() == false)
+	{
+		return false;
+	}
+
+	// 빠진다고 했으니 실제 해제
+	DeactivatePassive();
+	return true;
 }

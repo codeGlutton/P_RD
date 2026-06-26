@@ -12,8 +12,8 @@
 #include "GameplayTagContainer.h"
 
 #include "Component/PassiveComponent/PassiveComponentModel.h"
-#include "TAS/Passive/TacticalPassive_AddAttack.h"
-#include "TAS/Passive/TacticalPassive_NthAddAttack.h"
+#include "TAS/Passive/TacticalPassive_AddAttackPoint.h"
+#include "TAS/Passive/TacticalPassive_NthAddAttackPoint.h"
 
 namespace
 {
@@ -44,9 +44,9 @@ bool FPassiveComponentModelTests::RunTest(const FString& Parameters)
 	}
 
 	// 서로 다른 타입의 패시브 2개 추가 (무상태 / 상태형)
-	UTacticalPassive* AddPassive = Component->AddPassive(UTacticalPassive_AddAttack::StaticClass());
-	UTacticalPassive* NthPassive = Component->AddPassive(UTacticalPassive_NthAddAttack::StaticClass());
-	if (!TestNotNull(TEXT("AddAttack 추가"), AddPassive) || !TestNotNull(TEXT("NthAddAttack 추가"), NthPassive))
+	UTacticalPassive* AddPassive = Component->AddPassive(UTacticalPassive_AddAttackPoint::StaticClass());
+	UTacticalPassive* NthPassive = Component->AddPassive(UTacticalPassive_NthAddAttackPoint::StaticClass());
+	if (!TestNotNull(TEXT("AddAttackPoint 추가"), AddPassive) || !TestNotNull(TEXT("NthAddAttackPoint 추가"), NthPassive))
 	{
 		return false;
 	}
@@ -78,7 +78,7 @@ bool FPassiveComponentModelTests::RunTest(const FString& Parameters)
 	TestEqual(TEXT("미설정 시점 0개"), NoneList.Num(), 0);
 
 	// 제거: 성공 후 보유 수 감소, 같은 대상 재제거는 실패
-	TestTrue(TEXT("AddAttack 제거 성공"), Component->RemovePassive(AddPassive));
+	TestTrue(TEXT("AddAttackPoint 제거 성공"), Component->RemovePassive(AddPassive));
 	TestEqual(TEXT("제거 후 1개"), Component->GetPassives().Num(), 1);
 	TestFalse(TEXT("이미 제거된 대상 재제거 실패"), Component->RemovePassive(AddPassive));
 
