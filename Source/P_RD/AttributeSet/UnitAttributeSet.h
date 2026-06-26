@@ -35,6 +35,8 @@ public:
 public:
 	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, MaxHP)
 	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, HP)
+	
+	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, AttackPoint)
 	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, DefensePoint)
 	ATTRIBUTE_ACCESSORS(UUnitAttributeSet, MovementPoint)
 
@@ -48,6 +50,9 @@ protected:
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FGameplayAttributeData HP;
 
+	// @brief 타격 데미지 산출의 base가 되는 공격력
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FGameplayAttributeData AttackPoint;
 	// @brief 턴 동안만 유지되는 방어 포인트
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FGameplayAttributeData DefensePoint;

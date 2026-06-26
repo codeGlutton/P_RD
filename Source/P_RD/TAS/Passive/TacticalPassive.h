@@ -9,10 +9,12 @@
 
 #include "RDMinimal.h"
 #include "TAS/Passive/TacticalPassiveState.h"
+#include "TAS/Effect/ActiveTacticalEffect.h"
 #include "TacticalPassive.generated.h"
 
 struct FPassiveActivateContext;
 struct FBoardCombatTargetSnapshotData;
+class UTacticalEffect;
 
 /**
  * @brief 패시브 베이스 클래스
@@ -32,8 +34,11 @@ class P_RD_API UTacticalPassive : public UObject
 {
 	GENERATED_BODY()
 
+	/**
+	 * @brief 유닛테스트 모듈이 패시브 객체에 접근하기 위해 friend 선언
+	 * @note 릴리즈 빌드에서는 테스트 모듈이 빠져도 전방선언만 했기 때문에 영향 없음
+	 */ 
 	// 자동화 테스트에서만 protected 상태(mTriggerTiming 등)에 접근하기 위한 friend
-	// 릴리즈 빌드에 테스트 모듈이 빠져도 이름 선언일 뿐이라 무해
 	friend class FPassiveComponentModelTests;
 	// 패시브별 단위 테스트가 protected(EvaluatePassive/mState)에 접근하기 위한 friend
 	friend class FTacticalPassiveAddAttackTests;
@@ -66,6 +71,16 @@ public:
 	 * @param PassiveState 커밋할 패시브 내부 상태
 	 */
 	virtual void CommitPassive(IN const TInstancedStruct<FTacticalPassiveState>& PassiveState) {}
+
+	/**
+	 * @brief 적용 중인 이펙트를 해제(제거)
+	 *
+	 * @details
+	 * NotifyPassive에서 저장해 둔 핸들로 이펙트를 활성 집합에서 제거한다.
+	 * 되돌리는 수치 계산은 없으며, 제거 후 TAS가 base에서 재계산해 기여가 빠진 값이 된다.
+	 * 만료/해제 타이밍에 드라이버가 호출.
+	 */
+	void DeactivatePassive();
 
 public:
 	// 발동 시점 태그 반환 (드라이버/컴포넌트가 시점별로 패시브를 모을 때 사용)
@@ -103,6 +118,27 @@ protected:
 	virtual void NotifyPassive(
 		IN const FPassiveActivateContext& Ctx,
 		IN OUT FBoardCombatTargetSnapshotData& TargetDelta);
+
+	/**
+	 * @brief 이 패시브가 적용할 이펙트
+	 *
+	 * @details
+	 * 대상 속성·연산(op)·지속정책(Infinite/Instant)은 이 이펙트가 정의하고,
+	 * 패시브 계산은 크기(magnitude)만 공급한다.
+	 * (이펙트의 기본 modifier 크기는 1로 두고, 계산된 값을 배율 mDynamicMagnitude로 주입)
+	 * 미설정이면 NotifyPassive가 이펙트 적용을 건너뜀.
+	 */
+	UPROPERTY(Category = "Passive", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "Effect"))
+	TSubclassOf<UTacticalEffect> mEffectClass;
+
+	/**
+	 * @brief 적용 중인 이펙트 핸들 (단일)
+	 *
+	 * @details
+	 * NotifyPassive 적용 시 저장하고 DeactivatePassive 제거 시 사용 후 리셋.
+	 * 동시에 살아있는 이펙트는 하나라는 전제(직렬 apply/deactivate).
+	 */
+	FActiveTacticalEffectHandle mActiveHandle;
 
 	/**
 	 * @brief 발동 시점 태그
