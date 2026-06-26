@@ -104,10 +104,10 @@ void USkillComponentModel::ApplyEffect(FTileIndex TargetTile, TArray<UTacticalEf
 	TWeakObjectPtr<UBoardActorModel> BoardActor = Cast<UBoardActorModel>(GetOwnerModel());
 	checkf(BoardActor.IsValid(), TEXT("보드 액터"));
 
-	// 각각의 타일에게 효과를 적용한다.
-	for (int32 j = 0; j < EffectContexts.Num(); ++j)
-	{
-		UTacticalEffect* EffectCDO = EffectContexts[j]->mTacticalEffect->GetDefaultObject<UTacticalEffect>();
-		EffectCDO->ActivateEffect(*BoardActor.Get(), TargetTile, EffectContexts[j]);
-	}
+	//// 각각의 타일에게 효과를 적용한다.
+	//for (int32 j = 0; j < EffectContexts.Num(); ++j)
+	//{
+	//	UTacticalEffect* EffectCDO = EffectContexts[j]->mTacticalEffect->GetDefaultObject<UTacticalEffect>();
+	//	EffectCDO->ActivateEffect(*BoardActor.Get(), TargetTile, EffectContexts[j]);
+	//}
 }

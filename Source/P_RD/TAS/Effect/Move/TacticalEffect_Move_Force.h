@@ -15,5 +15,5 @@ class P_RD_API UTacticalEffect_Move_Force : public UTacticalEffect
 	GENERATED_BODY()
 	
 public:
-	virtual void ActivateEffect(const UBoardActorModel& Caster, const FTileIndex& TargetTile, const UTacticalEffectContext* EffectContext) override;
+	//virtual void ActivateEffect(const UBoardActorModel& Caster, const FTileIndex& TargetTile, const UTacticalEffectContext* EffectContext) override;
 };
