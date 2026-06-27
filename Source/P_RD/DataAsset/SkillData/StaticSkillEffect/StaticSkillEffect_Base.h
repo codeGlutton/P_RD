@@ -10,6 +10,8 @@
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "UObject/Object.h"
 #include "TAS/Effect/TacticalEffect.h"
+#include "Actor/BoardActor/BoardCombatTarget.h"
+#include "Actor/TileMap/TileLayer.h"
 #include "StaticSkillEffect_Base.generated.h"
 
 /**
@@ -30,14 +32,40 @@ public:
     * @note
     * Damage, Heal 기타 등등
     */
-    UPROPERTY(Category = "SkillEffect", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "GameplayTag" ))
-    FGameplayTag mEffectTag;
+    //UPROPERTY(Category = "SkillEffect", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "GameplayTag" ))
+    //FGameplayTag mEffectTag;
+    //
+    //UPROPERTY(Category = "SkillEffect", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TacticalEffect"))
+    //TSubclassOf<UTacticalEffect> mTacticalEffect;
 
-    UPROPERTY(Category = "SkillEffect", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TacticalEffect"))
-    TSubclassOf<UTacticalEffect> mTacticalEffect;
+
+    UPROPERTY(Category = "SkillEffectStat", EditAnywhere, BlueprintReadWrite, meta = (Bitmask, BitmaskEnum = "/Script/P_RD.ETileLayerFlag", DisplayName = "TargetLayer"))
+    uint8 mTileLayer = (uint8)ETileLayerFlag::Unit;
+
+    /**
+    * @brief 제외 대상
+    *
+    * @details
+    * 없음, 자신, 아군, 적
+    */
+    UPROPERTY(Category = "SkillEffectStat", EditAnywhere, BlueprintReadWrite, meta = (Bitmask, BitmaskEnum = "/Script/P_RD.ETargetFilter", DisplayName = "TargetFilter"))
+    uint8 mTargetFilter = (uint8)ETargetFilter::All;
 
 public:
-    virtual class UTacticalEffectContext* CreateContext(TWeakObjectPtr<class UBoardActorModel> CasterActor) PURE_VIRTUAL(UStaticSkillEffect_Base::CreateContext, return nullptr;)
+    /**
+    * @brief 효과를 적용합니다.
+    *
+    * @details
+    * 
+    * @note 추후 Context와 같은 구조체로 전달하도록 변경이 필요해보입니다.
+    */
+    virtual void ApplySkillEffect(
+        float SkillPoint,
+        TWeakObjectPtr<class UBoardActorModel> SourceActor,
+        TWeakObjectPtr<class UBoardActorModel> TargetActor,
+        struct FBoardCombatTargetSnapshotData* SourceSnapShot = nullptr, 
+        struct FBoardCombatTargetSnapshotData* TargetSnapShot = nullptr) PURE_VIRTUAL(UStaticSkillEffect_Base::ApplySkillEffect, return;);
+
 };
 
 
