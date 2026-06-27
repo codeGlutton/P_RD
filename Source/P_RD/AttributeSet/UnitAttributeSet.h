@@ -49,7 +49,7 @@ protected:
 
 	// @brief 타격 데미지 산출의 base가 되는 공격력
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FGameplayAttributeData AttackPoint;
+	FTacticalAttributeData AttackPoint;
 	// @brief 턴 동안만 유지되는 방어 포인트
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData DefensePoint;

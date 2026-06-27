@@ -21,22 +21,16 @@
 #include "Engine/World.h"
 #include "Engine/Engine.h"
 
-// USimulationSubsystem의 protected 멤버 접근용 우회 클래스
-class FSimulationSubsystemTestAccessor : public USimulationSubsystem
-{
-public:
-    static URoomInstance* GetRoomInstance(USimulationSubsystem* Subsystem)
-    {
-        if (Subsystem == nullptr) return nullptr;
-        const FSimulationSubsystemTestAccessor* Accessor = static_cast<const FSimulationSubsystemTestAccessor*>(Subsystem);
-        return Accessor->mGameRoomContext.mRoomInstance;
-    }
-};
-
-// 활성화된 월드(PIE, Game)를 탐색하는 헬퍼 함수
+/**
+ * @brief 활성화된 월드(PIE, Game)를 탐색하는 헬퍼 함수
+ * @return 현재 월드
+ */
 static UWorld* GetAnyGameWorld()
 {
-    if (GEngine == nullptr) return nullptr;
+    if (GEngine == nullptr)
+    {
+        return nullptr;
+    }
     for (const FWorldContext& Context : GEngine->GetWorldContexts())
     {
         if ((Context.WorldType == EWorldType::PIE || Context.WorldType == EWorldType::Game) && Context.World() != nullptr)
@@ -59,36 +53,34 @@ bool FTacticalAttributeTests::RunTest(const FString& Parameters)
     // 1. 에디터에 이미 존재하는 활성화된 GWorld 환경 사용
     // ----------------------------------------------------
     UWorld* World = GetAnyGameWorld();
-    if (!World)
+    if (World == nullptr)
     {
         World = GWorld;
     }
-    if (!World)
+    if (World == nullptr)
     {
-        AddError(TEXT("Failed to find a valid UWorld"));
+        AddError(TEXT("유효한 UWorld를 찾는 데 실패했습니다."));
         return false;
     }
 
     USimulationSubsystem* SimSubsystem = World->GetSubsystem<USimulationSubsystem>();
-    if (!TestNotNull(TEXT("USimulationSubsystem should be initialized"), SimSubsystem))
+    if (TestNotNull(TEXT("USimulationSubsystem이 초기화되어야 합니다."), SimSubsystem) == false)
     {
         return false;
     }
 
     URoomInstance* RoomInstance = FSimulationSubsystemTestAccessor::GetRoomInstance(SimSubsystem);
-    if (!TestNotNull(TEXT("RoomInstance should be initialized"), RoomInstance))
+    if (TestNotNull(TEXT("RoomInstance가 초기화되어야 합니다."), RoomInstance) == false)
     {
         return false;
     }
 
     // UTacticalFrameworkModel 모크 등록 (기존 등록 상태가 없을 때만 등록)
     UTacticalFrameworkModel* FrameworkModel = Cast<UTacticalFrameworkModel>(RoomInstance->mAliveSubsystemModels.FindRef(UTacticalFrameworkModel::StaticClass()));
-    bool bCreatedFrameworkMock = false;
-    if (!FrameworkModel)
+    if (FrameworkModel == nullptr)
     {
         FrameworkModel = NewObject<UTacticalFrameworkModel>(RoomInstance);
         RoomInstance->mAliveSubsystemModels.Add(UTacticalFrameworkModel::StaticClass(), FrameworkModel);
-        bCreatedFrameworkMock = true;
     }
 
     // ----------------------------------------------------
@@ -99,30 +91,30 @@ bool FTacticalAttributeTests::RunTest(const FString& Parameters)
     MockActorModel->BeginPlay();
 
     UAttributeSetComponentModel* CompModel = MockActorModel->GetAttributeComponent();
-    if (!TestNotNull(TEXT("AttributeSetComponentModel should be valid"), CompModel))
+    if (TestNotNull(TEXT("AttributeSetComponentModel이 유효해야 합니다."), CompModel) == false)
     {
         return false;
     }
 
     // AttributeSet이 정상 부착되었는지 확인
-    TestTrue(TEXT("UUnitAttributeSet should be registered"), CompModel->HasAttributeSetForAttribute(UUnitAttributeSet::GetHPAttribute()));
+    TestTrue(TEXT("UUnitAttributeSet이 등록되어야 합니다."), CompModel->HasAttributeSetForAttribute(UUnitAttributeSet::GetHPAttribute()));
 
     // ----------------------------------------------------
     // 3. 테스트 케이스 1: 기본 속성 변경 검증 (HP 및 MaxHP 초기화)
     // ----------------------------------------------------
-    AddInfo(TEXT("=== Test Case 1: Base Value & Current Value Initialization ==="));
+    AddInfo(TEXT("=== 테스트 케이스 1: 기본값 및 현재값 초기화 검증 ==="));
     CompModel->SetAttributeBaseValue(UUnitAttributeSet::GetMaxHPAttribute(), 100.f);
     CompModel->SetAttributeBaseValue(UUnitAttributeSet::GetHPAttribute(), 100.f);
 
-    TestEqual(TEXT("Base MaxHP should be 100.f"), CompModel->GetAttributeBaseValue(UUnitAttributeSet::GetMaxHPAttribute()), 100.f);
-    TestEqual(TEXT("Current MaxHP should be 100.f"), CompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMaxHPAttribute()), 100.f);
-    TestEqual(TEXT("Base HP should be 100.f"), CompModel->GetAttributeBaseValue(UUnitAttributeSet::GetHPAttribute()), 100.f);
-    TestEqual(TEXT("Current HP should be 100.f"), CompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute()), 100.f);
+    TestEqual(TEXT("기본 MaxHP는 100.f이어야 합니다."), CompModel->GetAttributeBaseValue(UUnitAttributeSet::GetMaxHPAttribute()), 100.f);
+    TestEqual(TEXT("현재 MaxHP는 100.f이어야 합니다."), CompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMaxHPAttribute()), 100.f);
+    TestEqual(TEXT("기본 HP는 100.f이어야 합니다."), CompModel->GetAttributeBaseValue(UUnitAttributeSet::GetHPAttribute()), 100.f);
+    TestEqual(TEXT("현재 HP는 100.f이어야 합니다."), CompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute()), 100.f);
 
     // ----------------------------------------------------
     // 4. 테스트 케이스 2: Instant Effect 적용 검증 (MaxHP 데미지 차감 -20)
     // ----------------------------------------------------
-    AddInfo(TEXT("=== Test Case 2: Apply Instant Effect ==="));
+    AddInfo(TEXT("=== 테스트 케이스 2: Instant 이펙트 적용 검증 ==="));
 
     UTacticalEffectContext* EffectContext1 = CompModel->MakeEffectContext();
     EffectContext1->SetInstigator(MockActorModel);
@@ -133,15 +125,15 @@ bool FTacticalAttributeTests::RunTest(const FString& Parameters)
     CompModel->ApplyTacticalEffectSpecToSelf(*InstantSpec);
 
     // Instant Effect는 베이스 값과 현재 값을 모두 영구적으로 변화시킴
-    TestEqual(TEXT("After Instant HP Mod, Base MaxHP should be 80.f"), CompModel->GetAttributeBaseValue(UUnitAttributeSet::GetMaxHPAttribute()), 80.f);
-    TestEqual(TEXT("After Instant HP Mod, Current MaxHP should be 80.f"), CompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMaxHPAttribute()), 80.f);
+    TestEqual(TEXT("Instant HP 변경 후, 기본 MaxHP는 80.f이어야 합니다."), CompModel->GetAttributeBaseValue(UUnitAttributeSet::GetMaxHPAttribute()), 80.f);
+    TestEqual(TEXT("Instant HP 변경 후, 현재 MaxHP는 80.f이어야 합니다."), CompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMaxHPAttribute()), 80.f);
 
     // ----------------------------------------------------
     // 5. 테스트 케이스 3: Infinite Effect 적용 및 해제 검증 (DefensePoint +30)
     // ----------------------------------------------------
-    AddInfo(TEXT("=== Test Case 3: Apply & Remove Infinite Effect ==="));
+    AddInfo(TEXT("=== 테스트 케이스 3: Infinite 이펙트 적용 및 제거 검증 ==="));
     CompModel->SetAttributeBaseValue(UUnitAttributeSet::GetDefensePointAttribute(), 10.f);
-    TestEqual(TEXT("Base Defense should be 10.f"), CompModel->GetAttributeBaseValue(UUnitAttributeSet::GetDefensePointAttribute()), 10.f);
+    TestEqual(TEXT("기본 방어력은 10.f이어야 합니다."), CompModel->GetAttributeBaseValue(UUnitAttributeSet::GetDefensePointAttribute()), 10.f);
 
     UTacticalEffectContext* EffectContext2 = CompModel->MakeEffectContext();
     EffectContext2->SetInstigator(MockActorModel);
@@ -151,35 +143,35 @@ bool FTacticalAttributeTests::RunTest(const FString& Parameters)
     InfiniteEffect->mDynamicMagnitude = 30.f;
     FActiveTacticalEffectHandle ActiveHandle = CompModel->ApplyTacticalEffectSpecToSelf(*InfiniteEffect);
 
-    TestTrue(TEXT("ActiveHandle should be valid"), ActiveHandle.IsValid());
+    TestTrue(TEXT("ActiveHandle이 유효해야 합니다."), ActiveHandle.IsValid());
     // Infinite Effect는 베이스 값은 그대로 두고 현재 값만 변화시킴 (Aggregator에 가산)
-    TestEqual(TEXT("Base Defense should remain 10.f"), CompModel->GetAttributeBaseValue(UUnitAttributeSet::GetDefensePointAttribute()), 10.f);
-    TestEqual(TEXT("Current Defense should be 40.f (Base 10 + Mod 30)"), CompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefensePointAttribute()), 40.f);
+    TestEqual(TEXT("기본 방어력은 10.f로 유지되어야 합니다."), CompModel->GetAttributeBaseValue(UUnitAttributeSet::GetDefensePointAttribute()), 10.f);
+    TestEqual(TEXT("현재 방어력은 40.f이어야 합니다. (기본 10 + 모디파이어 30)"), CompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefensePointAttribute()), 40.f);
 
     // 이펙트 제거 후 원래대로 복원되는지 확인
     CompModel->RemoveActiveTacticalEffect(ActiveHandle);
-    TestEqual(TEXT("After removing Infinite Effect, Current Defense should return to 10.f"), CompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefensePointAttribute()), 10.f);
+    TestEqual(TEXT("Infinite 이펙트 제거 후, 현재 방어력은 10.f로 복구되어야 합니다."), CompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefensePointAttribute()), 10.f);
 
     // ----------------------------------------------------
     // 6. 테스트 케이스 4: Loose Tag 부여 및 해제 검증
     // ----------------------------------------------------
-    AddInfo(TEXT("=== Test Case 4: Loose Tag Add & Remove ==="));
+    AddInfo(TEXT("=== 테스트 케이스 4: Loose 태그 추가 및 제거 검증 ==="));
     // 테스트에 사용할 태그 등록
     FGameplayTag TestTagA = AbilityTags::GameplayAbility_LevelUp;
 
-    TestFalse(TEXT("Should not have TestTagA initially"), CompModel->HasMatchingGameplayTag(TestTagA));
+    TestFalse(TEXT("초기에는 TestTagA를 가지고 있지 않아야 합니다."), CompModel->HasMatchingGameplayTag(TestTagA));
 
     CompModel->AddLooseGameplayTag(TestTagA);
-    TestTrue(TEXT("Should have TestTagA after addition"), CompModel->HasMatchingGameplayTag(TestTagA));
-    TestEqual(TEXT("TestTagA count should be 1"), CompModel->GetTagCount(TestTagA), 1);
+    TestTrue(TEXT("태그 추가 후에는 TestTagA를 가지고 있어야 합니다."), CompModel->HasMatchingGameplayTag(TestTagA));
+    TestEqual(TEXT("TestTagA의 개수는 1이어야 합니다."), CompModel->GetTagCount(TestTagA), 1);
 
     CompModel->RemoveLooseGameplayTag(TestTagA);
-    TestFalse(TEXT("Should not have TestTagA after removal"), CompModel->HasMatchingGameplayTag(TestTagA));
+    TestFalse(TEXT("태그 제거 후에는 TestTagA를 가지고 있지 않아야 합니다."), CompModel->HasMatchingGameplayTag(TestTagA));
 
     // ----------------------------------------------------
     // 7. 테스트 케이스 5: Effect를 통한 Granted Tag 부여 및 해제 검증
     // ----------------------------------------------------
-    AddInfo(TEXT("=== Test Case 5: Granted Tag by Infinite Effect ==="));
+    AddInfo(TEXT("=== 테스트 케이스 5: Infinite 이펙트에 의한 Granted 태그 부여 검증 ==="));
     FGameplayTag GrantedTag = AbilityTags::GameplayAbility_Passive_OnEndAttacking;
 
     UTacticalEffectContext* EffectContext3 = CompModel->MakeEffectContext();
@@ -189,11 +181,11 @@ bool FTacticalAttributeTests::RunTest(const FString& Parameters)
     TSharedPtr<FTacticalEffectSpec> TagSpec = CompModel->MakeOutgoingSpec(UTestInfiniteTagEffect::StaticClass(), EffectContext3);
     FActiveTacticalEffectHandle TagActiveHandle = CompModel->ApplyTacticalEffectSpecToSelf(*TagSpec);
 
-    TestTrue(TEXT("GrantedTag should be active on CompModel"), CompModel->HasMatchingGameplayTag(GrantedTag));
-    TestEqual(TEXT("GrantedTag count should be 1"), CompModel->GetTagCount(GrantedTag), 1);
+    TestTrue(TEXT("CompModel에 GrantedTag가 활성화되어야 합니다."), CompModel->HasMatchingGameplayTag(GrantedTag));
+    TestEqual(TEXT("GrantedTag의 개수는 1이어야 합니다."), CompModel->GetTagCount(GrantedTag), 1);
 
     CompModel->RemoveActiveTacticalEffect(TagActiveHandle);
-    TestFalse(TEXT("GrantedTag should be removed from CompModel"), CompModel->HasMatchingGameplayTag(GrantedTag));
+    TestFalse(TEXT("CompModel에서 GrantedTag가 제거되어야 합니다."), CompModel->HasMatchingGameplayTag(GrantedTag));
 
     // ----------------------------------------------------
     // 8. 환경 정리 (Clean up)
@@ -204,7 +196,7 @@ bool FTacticalAttributeTests::RunTest(const FString& Parameters)
     CompModel->MarkAsGarbage();
     MockActorModel->MarkAsGarbage();
 
-    if (bCreatedFrameworkMock && RoomInstance)
+    if (RoomInstance != nullptr)
     {
         RoomInstance->mAliveSubsystemModels.Remove(UTacticalFrameworkModel::StaticClass());
         FrameworkModel->MarkAsGarbage();

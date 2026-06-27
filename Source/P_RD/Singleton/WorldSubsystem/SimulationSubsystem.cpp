@@ -37,7 +37,7 @@ void USimulationSubsystem::PostInitialize()
 	}
 
 	Cast<UGameObjectModelFactory>(mGameRoomContext.mModelFactory)->RegisterSubsystemModels();
-	SetSimulationState(mSimulationState);
+	SetSimulationState(ESRPGSimulationState::RunningGame);
 }
 
 void USimulationSubsystem::PreDeinitialize()
@@ -83,8 +83,8 @@ void USimulationSubsystem::SetSimulationState(ESRPGSimulationState State)
 	}
 	else
 	{
-		mSimulationRoomContext.mRoomInstance = Cast<URoomInstance>(StaticDuplicateObject(mSimulationRoomContext.mRoomInstance, this));
-		mGameRoomContext.mRoomInstance->CollectSimulationDatas();
+		mSimulationRoomContext.mRoomInstance = Cast<URoomInstance>(StaticDuplicateObject(mGameRoomContext.mRoomInstance, this));
+		mSimulationRoomContext.mRoomInstance->CollectSimulationDatas();
 		mCurrentRoomContext = &mSimulationRoomContext;
 	}
 }

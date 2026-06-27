@@ -2,6 +2,7 @@
 .vs/
 
 # IDE / Editor tools
+.agents/
 .idea/
 .claude/
 .vsconfig

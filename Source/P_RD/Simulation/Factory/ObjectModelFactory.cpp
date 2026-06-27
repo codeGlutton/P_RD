@@ -55,7 +55,7 @@ void UObjectModelFactory::DestroyModel(UObjectModel* Model)
 	UActorModel* ActorModel = Cast<UActorModel>(Model);
 	if (ActorModel != nullptr)
 	{
-		ActorModel->BeginDestroy();
+		ActorModel->EndPlay();
 	}
 	Model->Uninitialize();
 

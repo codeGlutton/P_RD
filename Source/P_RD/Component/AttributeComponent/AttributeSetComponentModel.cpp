@@ -38,6 +38,13 @@ void UAttributeSetComponentModel::Uninitialize()
     Super::Uninitialize();
 }
 
+void UAttributeSetComponentModel::PostDuplicate(bool DuplicateForPIE)
+{
+	Super::PostDuplicate(DuplicateForPIE);
+
+	mActiveAttributeEffects.PostDuplicate(DuplicateForPIE);
+}
+
 void UAttributeSetComponentModel::BeginPlay()
 {
 	Super::BeginPlay();

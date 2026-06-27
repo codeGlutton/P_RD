@@ -35,6 +35,9 @@ public:
     void Uninitialize() override;
 
 public:
+    void PostDuplicate(bool DuplicateForPIE) override;
+
+public:
     void BeginPlay() override;
     void EndPlay() override;
 

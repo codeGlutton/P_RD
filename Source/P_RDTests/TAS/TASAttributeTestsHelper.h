@@ -12,7 +12,37 @@
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "AttributeSet/UnitAttributeSet.h"
 #include "TAS/Effect/TacticalEffect.h"
+#include "Singleton/WorldSubsystem/SimulationSubsystem.h"
 #include "TASAttributeTestsHelper.generated.h"
+
+/**
+ * @brief USimulationSubsystem의 protected 멤버 접근용 우회 클래스
+ */
+class FSimulationSubsystemTestAccessor : public USimulationSubsystem
+{
+public:
+    static URoomInstance* GetRoomInstance(USimulationSubsystem* Subsystem)
+    {
+        if (Subsystem == nullptr) 
+        {
+            return nullptr;
+        }
+
+        const FSimulationSubsystemTestAccessor* Accessor = static_cast<const FSimulationSubsystemTestAccessor*>(Subsystem);
+        return Accessor->mCurrentRoomContext->mRoomInstance;
+    }
+
+    static void SetSimState(USimulationSubsystem* Subsystem, ESRPGSimulationState State)
+    {
+        if (Subsystem == nullptr) 
+        {
+            return;
+        }
+
+        FSimulationSubsystemTestAccessor* Accessor = static_cast<FSimulationSubsystemTestAccessor*>(Subsystem);
+        Accessor->SetSimulationState(State);
+    }
+};
 
 UCLASS()
 class UTASActorModelMock : public UActorModel

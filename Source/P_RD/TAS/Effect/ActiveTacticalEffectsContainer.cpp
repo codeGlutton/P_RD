@@ -45,6 +45,26 @@ void FActiveTacticalEffectsContainer::RegisterWithOwnerModel(UAttributeSetCompon
     }
 }
 
+void FActiveTacticalEffectsContainer::PostDuplicate(bool DuplicateForPIE)
+{
+    mScopedLockCount = 0;
+    mPendingRemoveCount = 0;
+    mPendingTacticalEffectHead = nullptr;
+    mPendingTacticalEffectTail = &mPendingTacticalEffectHead;
+
+    mAttributeAggregatorMap.Empty();
+    mAttributeValueChangeDelegates.Empty();
+    mSourceStackingMap.Empty();
+
+    for (FActiveTacticalEffect& Effect : mTacticalEffects)
+    {
+        if (Effect.mIsPendingRemove == false && Effect.mSpec.mEffectClass != nullptr)
+        {
+            UpdateAllAggregatorModMagnitudes(Effect);
+        }
+    }
+}
+
 void FActiveTacticalEffectsContainer::IncrementLock()
 {
     mScopedLockCount++;
@@ -528,7 +548,7 @@ void FActiveTacticalEffectsContainer::UpdateAttributeCurrentValue(FTacticalAttri
 void FActiveTacticalEffectsContainer::UpdateAllAggregatorModMagnitudes(FActiveTacticalEffect& ActiveEffect)
 {
     const FTacticalEffectSpec& Spec = ActiveEffect.mSpec;
-    checkf(Spec.mEffectClass == nullptr, TEXT("추가하려는 Effect Class가 보이지 않음"));
+    checkf(Spec.mEffectClass != nullptr, TEXT("추가하려는 Effect Class가 보이지 않음"));
 
     TSet<FTacticalAttribute> AttributesToUpdate;
     for (int32 ModIdx = 0; ModIdx < Spec.mModifierValues.Num(); ++ModIdx)
