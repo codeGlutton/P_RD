@@ -183,6 +183,7 @@ public:
     /* 초기 등록 */
 public:
     void RegisterWithOwnerModel(UAttributeSetComponentModel* Owner);
+    void PostDuplicate(bool DuplicateForPIE);
 
     /* 이펙트 증감 락 카운팅 */
 private:
