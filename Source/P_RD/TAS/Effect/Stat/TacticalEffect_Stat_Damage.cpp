@@ -1,6 +1,6 @@
 ﻿#include "TAS/Effect/Stat/TacticalEffect_Stat_Damage.h"
 #include "TAS/Effect/Stat/TacticalEffectContext_Stat.h"
-#include "Actor/BoardActor/BoardActorModel.h"
+#include "AttributeSet/UnitAttributeSet.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
 #include "AttributeSet/UnitAttributeSet.h"
@@ -30,3 +30,16 @@
 //
 //	UE_LOG(LogTemp, Warning, TEXT("Damage : %f"), HP);
 //}
+
+UTacticalEffect_Stat_Damage::UTacticalEffect_Stat_Damage()
+{
+	mDurationPolicy = ETacticalEffectDurationType::Instant;
+	mStackingType = ETacticalEffectStackingType::None;
+
+	FTacticalModifierInfo Info;
+	Info.mAttribute = UUnitAttributeSet::GetHPAttribute();
+	Info.mModifierOp = EGameplayModOp::Additive;
+	Info.mModifierMagnitude = -1.f;
+
+	mModifiers.Add(Info);
+}

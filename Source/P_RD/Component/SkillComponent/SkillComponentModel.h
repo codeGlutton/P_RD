@@ -10,7 +10,7 @@
 #include "Component/ComponentModel.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
-#include "TAS/TacticalAbility_Skill.h"
+#include "TAS/TacticalAbility.h"
 #include "SkillComponentModel.generated.h"
 /*
 * @param SkillIndex : 변경된 스킬의 인덱스
@@ -90,10 +90,14 @@ public:
 	* @brief 스킬의 인덱스와 타일을 입력받으면 스킬 사용
 	* @details
 	* 이미 가지고 있는 커맨드 로그를 토대로 스킬을 진행
+	* @param SkillIndex 사용할 스킬의 인덱스
+	* @param TargetTils 타겟팅한 타일들
+	* @param DicePoint 주사위 눈금
+	* 
 	* @return bool : 실패 시 false 반환
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Skill")
-	bool ActivateSkill(int32 SkillIndex, const TArray<FTileIndex> TargetTiles);
+	bool ActivateSkill(int32 SkillIndex, const TArray<FTileIndex>& TargetTiles, float DicePoint);
 
 	/* 이동포인트 */
 	/**
@@ -104,5 +108,11 @@ public:
 	void HandelMovePoint(float MovePoint);
 
 private:
-	void ApplyEffect(FTileIndex TargetTile, TArray<UTacticalEffectContext*>& EffectContexts);
+	// @brief 타겟을 가져오는 함수
+	// @detilas
+	// 해당 속성을 넣어서 원하는 타겟을 가져옵니다.
+	void ExtractTarget(const TArray<FTileIndex>& TargetTile,
+		ETileLayerFlag ActorFlag,
+		ETargetFilter TargetFilter,
+		OUT TArray<TWeakObjectPtr<UBoardActorModel>>& TargetActors);
 };

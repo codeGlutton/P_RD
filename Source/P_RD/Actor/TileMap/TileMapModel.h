@@ -72,6 +72,15 @@ class P_RD_API UTileMapModel : public UObjectModel
 {
 	GENERATED_BODY()
 
+	/* UObjectModel 상속 */
+public:
+	/**
+	 * @brief 모델 생성 시 타일 저장소(mTiles)를 채운다.
+	 * @details mTiles의 소유자는 모델이므로, 뷰(ATileMap) 생성 여부나 시뮬레이션 모드와 무관하게
+	 *          생성 시점에 직접 RebuildTiles로 Width*Height 크기의 기본 타일을 채운다.
+	 */
+	void Initialize() override;
+
 public:
 	/**
 	 * @brief 타일맵의 가로 길이 (X 방향 타일 개수)
