@@ -128,7 +128,7 @@ bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileInd
 		// 시전자의 스냅샵을 따옵니다.
 		TWeakObjectPtr<UUnitModel> OwnerUnit = Cast<UUnitModel>(OwnerActor.Get());
 		checkf(OwnerUnit.IsValid(), TEXT("주인 유닛 유효하지 않음"));
-		FBoardCombatTargetSnapshotData* OwnerSnapShot = OwnerUnit->MakeSnapshotData();
+		FBoardCombatTargetSnapshotData OwnerSnapShot = OwnerUnit->MakeSnapshotData();
 
 		// 효과를 적용한다.
 		for (int32 j = 0; j < TargetActors.Num(); ++j)
@@ -137,9 +137,9 @@ bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileInd
 			TWeakObjectPtr<UUnitModel> TargetUnit = Cast<UUnitModel>(TargetActors[j]);
 			if (!TargetUnit.IsValid(), TEXT("타겟 유닛 유효하지 않음"))
 				continue;
-			FBoardCombatTargetSnapshotData* TargetSnapShot = TargetUnit->MakeSnapshotData();
+			FBoardCombatTargetSnapshotData TargetSnapShot = TargetUnit->MakeSnapshotData();
 
-			SkillData.Get()->mSkillMotionLayers[i].mStaticSkillEffectLayers->ApplySkillEffect(DicePoint, OwnerActor, TargetActors[j], OwnerSnapShot, TargetSnapShot);
+			SkillData.Get()->mSkillMotionLayers[i].mStaticSkillEffectLayers->ApplySkillEffect(DicePoint, OwnerActor, TargetActors[j], &OwnerSnapShot, &TargetSnapShot);
 		}
 	}
 

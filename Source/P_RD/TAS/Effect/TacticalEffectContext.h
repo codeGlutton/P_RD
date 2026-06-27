@@ -12,7 +12,7 @@
 #include "TacticalEffectContext.generated.h"
 
 class UActorModel;
-class UTacticalAbility;
+class UTacticalPassive;
 class UAttributeSetComponentModel;
 
 /**
@@ -34,8 +34,7 @@ public:
 	void SetInstigator(UActorModel* Instigator);
 	void SetEffectCauser(UObject* EffectCauser);
 	void SetSourceObject(const UObject* SourceObject);
-	void AddTargetActor(UActorModel* TargetActor);
-	void SetAbility(const UTacticalAbility* Ability);
+	void SetAbility(const UTacticalPassive* Ability);
 	void SetAttributeSetComponentModel(const UAttributeSetComponentModel* Model);
 
 public:
@@ -54,7 +53,7 @@ public:
 		return mSourceObject.Get();
 	}
 
-	UTacticalAbility* GetAbility() const
+	UTacticalPassive* GetAbility() const
 	{
 		return mAbilityInstance.Get();
 	}
@@ -80,7 +79,7 @@ protected:
 protected:
 	// @brief Effect를 호출한 어빌리티
 	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (DisplayName = "AbilityInstance"))
-	TWeakObjectPtr<UTacticalAbility> mAbilityInstance = nullptr;
+	TWeakObjectPtr<UTacticalPassive> mAbilityInstance = nullptr;
 
 	// @brief 피해 유발자의 어빌리티
 	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (DisplayName = "AttributeSetCompModelInstance"))

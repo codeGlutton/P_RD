@@ -10,7 +10,6 @@
 #include "Component/ComponentModel.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
-#include "TAS/TacticalAbility.h"
 #include "SkillComponentModel.generated.h"
 /*
 * @param SkillIndex : 변경된 스킬의 인덱스

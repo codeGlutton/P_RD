@@ -74,6 +74,7 @@ void UTacticalPassive::NotifyPassive(
 	UTacticalEffectContext* EffectContext = OwnerComp->MakeEffectContext();
 	EffectContext->SetInstigator(Ctx.mOwner.Get());
 	EffectContext->SetAttributeSetComponentModel(OwnerComp);
+	EffectContext->SetAbility(this);
 
 	TSharedPtr<FTacticalEffectSpec> Spec = OwnerComp->MakeOutgoingSpec(mEffectClass, EffectContext);
 	Spec->mDynamicMagnitude = *Magnitude;

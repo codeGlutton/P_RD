@@ -8,10 +8,11 @@
  *********************************************************************/
 
 #include "P_RDTests.h"
+#include "TAS/TASAttributeTestsHelper.h"
 #include "Misc/AutomationTest.h"
-#include "SkillTestsHelper.h"
 #include "Pawn/Test/SkillTestUnitModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "Component/SkillComponent/SkillComponentModel.h"
 #include "DataAsset/SkillData/StaticAttackSkillData.h"
 #include "AttributeSet/UnitAttributeSet.h"
 #include "TAS/Effect/TacticalEffect.h"
@@ -29,18 +30,6 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
     "P_RD.Skill.ActivateSkill",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
 )
-
-// USimulationSubsystem의 protected 멤버 접근용 우회 클래스
-class FSimulationSubsystemTestAccessor : public USimulationSubsystem
-{
-public:
-    static URoomInstance* GetRoomInstance(USimulationSubsystem* Subsystem)
-    {
-        if (Subsystem == nullptr) return nullptr;
-        const FSimulationSubsystemTestAccessor* Accessor = static_cast<const FSimulationSubsystemTestAccessor*>(Subsystem);
-        return Accessor->mGameRoomContext.mRoomInstance;
-    }
-};
 
 // 활성화된 월드(PIE, Game)를 탐색하는 헬퍼 함수
 static UWorld* GetAnyGameWorld()

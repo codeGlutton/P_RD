@@ -1,8 +1,10 @@
 ﻿#include "DataAsset/SkillData/StaticSkillEffect/StaticSkillEffect_Damage.h"
-#include "TAS/Effect/Stat/TacticalEffectContext_Stat.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Actor/BoardActor/BoardActorModel.h"
 #include "TAS/Effect/Stat/TacticalEffect_Stat_Damage.h"
+#include "TAS/Effect/TacticalEffectContext.h"
+
+#include "Actor/BoardActor/BoardCombatTarget.h"
 
 #include "AttributeSet/UnitAttributeSet.h"
 
@@ -17,17 +19,30 @@ void UStaticSkillEffect_Damage::ApplySkillEffect(
 	checkf(SourceActor.IsValid(), TEXT("시전자 유효하지 않음"));
 	checkf(TargetActor.IsValid(), TEXT("타겟 유효하지 않음"));
 
-	// 시전자의 정보를 가져온다.
-	TWeakObjectPtr<UAttributeSetComponentModel> SourceASC = SourceActor->FindComponentModelByClass<UAttributeSetComponentModel>();
-	UE_LOG(LogTemp, Warning, TEXT("SourceID : %d"), SourceASC->GetUniqueID());
+	IBoardCombatTarget* SourceActorTarget = Cast<IBoardCombatTarget>(SourceActor);
+	if (SourceActorTarget == nullptr)
+	{
+		// 전투 가능한 대상이 아님
+		return;
+	}
+	IBoardCombatTarget* TargetActorTarget = Cast<IBoardCombatTarget>(TargetActor);
+	if (TargetActorTarget == nullptr)
+	{
+		// 전투 가능한 대상이 아님
+		return;
+	}
 
-	// 시전자의 ASC는 없어도 된다.
+	// 시전자의 정보를 가져온다.
+	TWeakObjectPtr<UAttributeSetComponentModel> SourceASC = SourceActorTarget->GetAttributeComponentModel();
+	UE_LOG(LogTemp, Log, TEXT("SourceID : %d"), SourceASC->GetUniqueID());
+
+	if (!SourceASC.IsValid())
+		return;
 
 	// 피격자의 정보를 가져온다.
-	TWeakObjectPtr<UAttributeSetComponentModel> TargetASC = TargetActor->FindComponentModelByClass<UAttributeSetComponentModel>();
-	UE_LOG(LogTemp, Warning, TEXT("TargetID : %d"), TargetASC->GetUniqueID());
+	TWeakObjectPtr<UAttributeSetComponentModel> TargetASC = TargetActorTarget->GetAttributeComponentModel();
+	UE_LOG(LogTemp, Log, TEXT("TargetID : %d"), TargetASC->GetUniqueID());
 
-	// 피격자의 ASC는 반드시 필요하다.
 	if (!TargetASC.IsValid())
 		return;
 
@@ -41,7 +56,7 @@ void UStaticSkillEffect_Damage::ApplySkillEffect(
 
 	UE_LOG(LogTemp, Warning, TEXT("PreHP : %f"), TargetASC->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute()));
 
-	TargetASC->ApplyTacticalEffectSpecToSelf(*EffectSpec);
+	SourceASC->ApplyTacticalEffectSpecToTarget(*EffectSpec, TargetASC.Get());
 
 	UE_LOG(LogTemp, Warning, TEXT("CurHP : %f"), TargetASC->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute()));
 }
