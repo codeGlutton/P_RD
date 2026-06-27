@@ -1,4 +1,5 @@
 ﻿#include "Actor/BoardActor/BoardCombatTarget.h"
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
 bool IBoardCombatTarget::IsTargetable() const
 {
@@ -7,9 +8,15 @@ bool IBoardCombatTarget::IsTargetable() const
 
 bool IBoardCombatTarget::IsDead() const
 {
-	//return GetAbilitySystemComponent()->HasMatchingGameplayTag(EffectTags::GameplayEffect_ActorState_Dead);
+	return GetAttributeComponentModel()->HasMatchingGameplayTag(EffectTags::GameplayEffect_ActorState_Dead);
+}
 
-	return false;
+FBoardCombatTargetSnapshotData IBoardCombatTarget::MakeSnapshotData() const
+{
+	FBoardCombatTargetSnapshotData Snapshot;
+	GetAttributeComponentModel()->CaptureAllStates(OUT Snapshot);
+
+	return Snapshot;
 }
 
 ETeamAttitude::Type IBoardCombatTarget::GetTeamAttitudeTowards(const UObject& Other) const

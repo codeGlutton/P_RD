@@ -12,7 +12,7 @@
 #include "Pawn/UnitModel.h"
 #include "Actor/TileMap/TileMap.h"
 
-#include "FunctionLibrary/GASTargetFunctionLibrary.h"
+#include "Simulation/Logger/EventLogger.h"
 
 void USRPGAction::InitAction(USRPGTurnContext* Parent, UUnitModel* Instigator)
 {
@@ -30,6 +30,8 @@ void USRPGAction::BeginAction()
 	checkf(mActionPhase == ESRPGActionPhase::ActionInit, TEXT("이미 액션 진행 중에 재실행 오류"));
 	mActionPhase = ESRPGActionPhase::ActionStart;
 
+	UE_LOG(LogSRPGCombat, Log, TEXT("액션 시작"));
+
 	// 시작 연출 시작
 	TSharedPtr<FPresentationBarrier> PresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
 		checkf(mActionPhase == ESRPGActionPhase::ActionStart, TEXT("액션 실행 절차 오류"));
@@ -39,6 +41,9 @@ void USRPGAction::BeginAction()
 		USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
 		checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
 		CommandRouterModel->RegisterCommandHandler(this);
+
+		// 로그 작성
+		GetWorldEventLogger(this)->BeginActionLog(mInstigator->GetTileTransform().mIndex);
 
 		// 예약된 초기화 커맨드 시작
 		if (mInitializeCommand.IsValid() == true)
@@ -63,8 +68,13 @@ void USRPGAction::EndAction()
 	checkf(mActionPhase == ESRPGActionPhase::ActionAbort, TEXT("액션 종료 절차 오류"));
 	mActionPhase = ESRPGActionPhase::ActionEnd;
 
+	UE_LOG(LogSRPGCombat, Log, TEXT("액션 종료"));
+
 	// 액션 종료 로직
 	OnEndAction();
+
+	// 로그 작성
+	GetWorldEventLogger(this)->EndActionLog();
 
 	// 핸들러 등록 해제
 	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);

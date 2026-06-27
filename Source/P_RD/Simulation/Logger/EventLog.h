@@ -207,10 +207,6 @@ public:
 	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SourceTileIndex"))
 	FTileIndex												mSourceTileIndex = FTileIndex::Invalid;
 
-	// @brief 액션 초기에 지정한 타겟 타일 목록
-	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TargetTileIndexes"))
-	TArray<FTileIndex>										mTargetTileIndexes;
-
 public:
 	// @brief 각 모션마다의 변화 로그
 	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MotionEventLogs"))

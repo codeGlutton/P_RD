@@ -4,6 +4,7 @@
 #include "TAS/Aggregator/TacticalAggregator.h"
 
 #include "Actor/ActorModel.h"
+#include "Actor/BoardActor/BoardCombatTarget.h"
 
 void UAttributeSetComponentModel::Initialize()
 {
@@ -122,6 +123,15 @@ const UTacticalAttributeSet* UAttributeSetComponentModel::GetOrCreateAttributeSe
     }
 
     return OwnedAttributes;
+}
+
+void UAttributeSetComponentModel::CaptureAllStates(FBoardCombatTargetSnapshotData& Snapshot) const
+{
+    for (const TObjectPtr<UTacticalAttributeSet>& SpawnedAttribute : mSpawnedAttributes)
+    {
+        SpawnedAttribute->CaptureAllAttributes(Snapshot);
+    }
+    mTacticalTagCountContainer.CaptureAllTags(Snapshot);
 }
 
 void UAttributeSetComponentModel::SetAttributeBaseValue(const FTacticalAttribute& Attribute, float BaseValue)

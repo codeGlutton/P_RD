@@ -21,6 +21,8 @@ struct FTacticalAggregator;
 struct FTacticalEffectSpec;
 struct FTacticalModifierEvaluatedData;
 
+struct FBoardCombatTargetSnapshotData;
+
 struct FTacticalEffectModCallbackData
 {
 	FTacticalEffectModCallbackData(const FTacticalEffectSpec& EffectSpec, FTacticalModifierEvaluatedData& EvaluatedData, UAttributeSetComponentModel& Model) :
@@ -203,10 +205,8 @@ public:
 	UAttributeSetComponentModel* GetOwningAttributeSetComponentModel() const;
 	UAttributeSetComponentModel* GetOwningAttributeSetComponentModelChecked() const;
 
-	virtual void PrintDebug();
-
-protected:
-	uint32 mNetAddressable : 1;
+public:
+	void CaptureAllAttributes(FBoardCombatTargetSnapshotData& Snapshot) const;
 };
 
 struct FTacticalAttributeSetInitter
