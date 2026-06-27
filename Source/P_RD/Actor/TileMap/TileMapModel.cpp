@@ -66,6 +66,14 @@ namespace
 	}
 }
 
+void UTileMapModel::Initialize()
+{
+	Super::Initialize();
+
+	// 모델이 타일 저장소의 소유자이므로, 뷰 생성 여부와 무관하게 생성 시점에 직접 타일을 채운다.
+	RebuildTiles();
+}
+
 int32 UTileMapModel::GetWidth() const
 {
 	return mWidth;
