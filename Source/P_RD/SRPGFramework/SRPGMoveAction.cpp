@@ -3,6 +3,7 @@
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 
 #include "Pawn/UnitModel.h"
+#include "Component/SkillComponent/SkillComponentModel.h"
 #include "Actor/TileMap/TileMapModel.h"
 
 FSRPGMoveCommand::FSRPGMoveCommand()
@@ -92,10 +93,11 @@ void USRPGMoveAction::OnEndAction()
         // 소모 이동 포인트 = 밟은 칸 수 (경로 칸 수 - 시작 타일)
         const int32 SpentPoint = mPathTileIndexes.Num() - 1;
 
-        // TODO : 이동 스킬 컴포넌트 API 완성 후 연결
-        //        mInstigator에서 이동 스킬 컴포넌트를 찾아 SpentPoint 만큼 이동 포인트 차감 통지
-        //        (컴포넌트 접근자·차감 함수 이름은 추후 확정)
-        UE_LOG(LogSRPGCombat, Log, TEXT("이동 완료 — 소모 이동 포인트 %d (차감 통지 API 대기)"), SpentPoint);
+        // 이동 유닛의 스킬 컴포넌트에 소모 이동 포인트 차감 통지
+        if (USkillComponentModel* SkillComp = mInstigator->GetSkillComponentModel())
+        {
+            SkillComp->HandelMovePoint(SpentPoint);
+        }
     }
 }
 
@@ -117,7 +119,7 @@ void USRPGMoveAction::StartStep(int32 StepIndex)
 
 void USRPGMoveAction::CompleteStep()
 {
-    // 현재(도착) 타일의 오버랩 통지 — 함정/장판 등 타일 효과가 여기서 발동(현재 OnBeginTileOverlap 스텁)
+    // 현재(도착) 타일의 오버랩 통지 — 함정/장판 등 타일 효과가 여기서 발동
     GetTileMap()->CompleteActorMovement(mInstigator.Get());
 }
 

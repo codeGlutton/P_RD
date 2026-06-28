@@ -263,6 +263,7 @@ enum class ESRPGMoveBuildPhase : uint8
     None                UMETA(Hidden),
     DestSelection       UMETA(ToolTip = "도달 가능 목적지 선택"),
     Preview             UMETA(ToolTip = "이동 경로 프리뷰 표기"),
+    Build               UMETA(ToolTip = "빌드 성공"),
 };
 
 /**
