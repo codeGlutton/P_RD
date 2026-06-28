@@ -17,6 +17,9 @@ class UButton;
 class UCanvasPanel;
 class UFrontendMapLineWidget;
 class UFrontendMapNodeWidget;
+class UHorizontalBox;
+class UImage;
+class UVerticalBox;
 class UScrollBox;
 class USizeBox;
 class UTextBlock;
@@ -142,6 +145,9 @@ private:
 	/** @brief 닫기/입장 버튼 이벤트를 해제한다. */
 	void UnbindEvents();
 
+	/** @brief 지도 BACK/ENTER 버튼에 공통 이미지 버튼 스타일을 적용한다. */
+	void ApplyMapButtonStyles() const;
+
 	/** @brief 지도 노드 클릭을 GameMode의 방 선택 요청으로 전달한다. */
 	void HandleMapRoomClicked(int32 RowIndex, int32 ColumnIndex);
 
@@ -150,6 +156,9 @@ private:
 
 	/** @brief ENTER 버튼 라벨을 요청 상태에 맞게 갱신한다. */
 	void SetEnterButtonText(const FText& InText) const;
+
+	/** @brief 조회용 지도에서는 ENTER 버튼 자체를 숨긴다. */
+	void SetEnterButtonVisible(bool bVisible) const;
 
 	/** @brief 선택 방 프리뷰 텍스트를 갱신한다. 현재 WBP에서는 숨김 처리만 유지한다. */
 	void SetMapPreviewText(const FText& Title, const FText& Description, const FText& State, const FSlateColor& StateColor) const;
@@ -160,8 +169,23 @@ private:
 	/** @brief 현재 월드에서 실제 방 선택/입장 요청을 처리할 수 있는지 확인한다. */
 	bool IsFrontendMapNavigationEnabled() const;
 
+	/** @brief 현재 화면 폭에 맞춘 지도 스크롤 콘텐츠 크기를 계산한다. */
+	FVector2D GetMapGraphContentSize() const;
+
 	/** @brief 지도 캔버스와 스크롤 영역의 고정 레이아웃 값을 적용한다. */
 	void ConfigureMapGraphLayout() const;
+
+	/** @brief 임시 스테이지 맵 배경 이미지를 준비한다. */
+	void EnsureMapBackground();
+
+	/** @brief 임시 스테이지 맵 배경 이미지를 전체 팝업 뒤쪽에 맞춘다. */
+	void ApplyMapBackgroundLayout() const;
+
+	/** @brief 기존 텍스트 범례를 숨기고 아이콘 범례를 준비한다. */
+	void EnsureIconLegend();
+
+	/** @brief 런타임 아이콘 범례의 위치를 맞춘다. */
+	void ApplyIconLegendLayout() const;
 
 	/** @brief 지정 인덱스의 연결선 위젯을 풀에서 가져오거나 새로 만든다. */
 	FFrontendMapLinePoolEntry* AcquireMapLineWidget(int32 LineIndex);
@@ -246,6 +270,33 @@ private:
 
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UScrollBox> MapScrollBox;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UWidget> MapLegendScroll;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UWidget> MapLegendList;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UWidget> MapLegendTitle;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UBorder> MapDimBackground;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UBorder> MapPaperPanel;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UBorder> MapPaperShadow;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UImage> mMapBackgroundImage;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UBorder> mIconLegendPanel;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UVerticalBox> mIconLegendList;
 
 	/**
 	 * @brief 연결선 하나를 만들 때 사용할 WBP 클래스
