@@ -1,0 +1,33 @@
+{
+	"FileVersion": 3,
+	"Version": 5,
+	"VersionName": "2.2.0",
+	"FriendlyName": "UnrealMCPython",
+	"Description": "",
+	"Category": "Other",
+	"CreatedBy": "GenOrca",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"FabURL": "com.epicgames.launcher://ue/Fab/product/5cd0eb75-3c66-43bf-88ac-693be184fb95",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"Installed": true,
+	"Modules": [
+		{
+			"Name": "UnrealMCPython",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit",
+			"PlatformAllowList": [
+				"Win64"
+			]
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "PythonScriptPlugin",
+			"Enabled": true
+		}
+	]
+}
