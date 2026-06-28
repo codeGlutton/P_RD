@@ -124,6 +124,49 @@ void ATileMap::BindModelDelegates()
 	// 타일 강조 표시/해제 요청을 뷰의 SetTileHighlight/ClearTileHighlight로 연결
 	mModel->mSetTileHighlightDelegate.BindUObject(this, &ATileMap::SetTileHighlight);
 	mModel->mClearTileHighlightDelegate.BindUObject(this, &ATileMap::ClearTileHighlight);
+
+	// 좌표 변환 질의를 뷰의 컴포넌트 트랜스폼 기반 함수로 연결 (모델이 시각 정보가 필요한 변환을 질의)
+	mModel->mTileToWorldTransformDelegate.BindUObject(this, &ATileMap::TileToWorldTransform);
+	mModel->mTileToWorldLocationDelegate.BindUObject(this, &ATileMap::TileToWorldLocation);
+	mModel->mWorldToTileIndexDelegate.BindUObject(this, &ATileMap::WorldToTileIndex);
+}
+
+void ATileMap::BindModel(UObjectModel* Model)
+{
+	// 컴포넌트 뷰 바인딩 (기반 구현 — 현재 부착 컴포넌트 뷰는 없지만 일관성 유지)
+	IActorView::BindModel(Model);
+
+	// 런타임 모델을 뷰의 모델로 교체
+	mModel = Cast<UTileMapModel>(Model);
+
+	// 표시·좌표 델리깃을 교체된 모델에 재바인딩
+	BindModelDelegates();
+
+	// 모델 크기에 맞춰 그리드 인스턴스 재생성
+	RebuildTileInstances();
+}
+
+void ATileMap::UnbindModel(UObjectModel* Model)
+{
+	// 컴포넌트 뷰 해제 (기반 구현)
+	IActorView::UnbindModel(Model);
+
+	// 교체된 모델의 델리깃 정리 (싱글캐스트라 명시적으로 비움)
+	if (mModel != nullptr)
+	{
+		mModel->mSetMovePathDelegate.Unbind();
+		mModel->mSetTileHighlightDelegate.Unbind();
+		mModel->mClearTileHighlightDelegate.Unbind();
+		mModel->mTileToWorldTransformDelegate.Unbind();
+		mModel->mTileToWorldLocationDelegate.Unbind();
+		mModel->mWorldToTileIndexDelegate.Unbind();
+	}
+}
+
+UObjectModel* ATileMap::GetModel_Internal() const
+{
+	// IObjectView::GetModel 템플릿이 참조하는 보유 모델 반환
+	return mModel;
 }
 
 void ATileMap::OnConstruction(const FTransform& Transform)

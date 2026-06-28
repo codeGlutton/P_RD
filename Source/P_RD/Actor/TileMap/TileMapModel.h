@@ -119,6 +119,14 @@ public:
 	int32 TileIndexToLinearIndex(const FTileIndex& TileIndex) const;
 
 	/**
+	 * @brief 격자 크기(Width/Height) 설정 후 타일 저장소 재생성
+	 * @details 1 미만은 1로 보정(ClampMin=1 정책과 동일). 크기 변경이 곧 저장소 크기 변경이라 RebuildTiles까지 수행.
+	 * @param[in] Width  가로 칸 수
+	 * @param[in] Height 세로 칸 수
+	 */
+	void SetDimensions(int32 Width, int32 Height);
+
+	/**
 	 * @brief 현재 Width/Height에 맞춰 타일 저장소(mTiles)를 기본 타일로 재생성
 	 */
 	void RebuildTiles();
