@@ -1,4 +1,7 @@
-﻿/**
+﻿#include "AttributeSet/UnitAttributeSet.h"
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
+
+/**
  * @file   UnitAttributeSet.cpp
  * @brief  유닛 어트리뷰트 셋 구현부.
  *         UUnitAttributeSet(공통 유닛: HP/MaxHP 클램프)과
@@ -20,12 +23,7 @@
  *         DivideAdditive(2)=나눗셈 가산, Override(3)=덮어쓰기,
  *         MultiplyCompound(4)=거듭제곱 곱, AddFinal(5)=최종 합산, Max(6)=무효/개수.
  *         (+ 구 GAS 이름 하위호환 별칭: Additive=0 / Multiplicitive=1 / Division=2 / Override=3)
- *
- * @author 박용수
- * @date   2026-06-26
  */
-#include "AttributeSet/UnitAttributeSet.h"
-#include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
 /**
  * @brief 기본 생성자.

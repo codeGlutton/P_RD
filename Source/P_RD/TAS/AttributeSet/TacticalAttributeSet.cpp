@@ -576,7 +576,7 @@ void FTacticalAttributeSetInitterDiscreteLevels::InitAttributeSetDefaults(UAttri
 				continue;
 			}
 
-			UE_LOG(LogTacticalFramework, Log, TEXT("Initializing Set %s (defaults from %s)"), *Set->GetName(), *SetClass->GetName());
+			UE_LOG(LogTacticalFramework, Log, TEXT("%s 초기화 중 (%s의 기본값 참조)"), *Set->GetName(), *SetClass->GetName());
 
 			for (auto& DataPair : DefaultDataList->mList)
 			{

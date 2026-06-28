@@ -1,3 +1,5 @@
+﻿#include "TAS/Effect/TacticalEffectType.h"
+
 /**
  * @file TacticalEffectType.cpp
  * @brief 전술 이펙트 모디파이어 "연산 종류"(ETacticalModOp) 유틸리티 구현.
@@ -27,12 +29,7 @@
  *   Max(6)              : 무효/개수(enum 끝 표식, 배열 크기 = op 개수).
  *   ※ 헤더에는 구 GAS 이름(Additive/Multiplicitive/Division/Override) 별칭이
  *     같은 정수값으로 남아 하위호환을 보장한다.
- *
- * @author 박용수
- * @date 2026-06-26
  */
-
-#include "TAS/Effect/TacticalEffectType.h"
 
 /**
  * @brief 연산 종류별 "항등값(bias)"을 반환한다.

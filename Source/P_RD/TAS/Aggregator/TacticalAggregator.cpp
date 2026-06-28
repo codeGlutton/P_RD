@@ -1,4 +1,9 @@
-﻿/**
+﻿#include "TAS/Aggregator/TacticalAggregator.h"
+
+#include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
+
+/**
  * @file TacticalAggregator.cpp
  * @brief 한 속성(Attribute)에 걸린 모든 이펙트 모디파이어를 연산 종류별로 모아 최종 값을 산출하는 Aggregator 구현.
  *
@@ -27,15 +32,7 @@
  *        최종 산출 수식(EvaluateWithBase 참조):
  *          result = ((Base + Additive) * Multiplicitive / Division * CompoundMultiply) + FinalAdd
  *          단, Override 모디파이어가 하나라도 있으면 그 값으로 즉시 단락(short-circuit).
- *
- * @author 박용수
- * @date 2026-06-26
  */
-
-#include "TAS/Aggregator/TacticalAggregator.h"
-
-#include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
-#include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
 /**
  * @brief RAII 스코프 가드: 생성~소멸 구간 동안 Aggregator의 Dirty 전파를 배치(batch)로 묶는다.
