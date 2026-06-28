@@ -3,7 +3,9 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/CanvasPanel.h"
 #include "Components/Image.h"
+#include "Engine/Texture2D.h"
 #include "Actor/Dice/CombatDiceCaptureActor.h"
+#include "Actor/Dice/CombatDiceRollCaptureActor.h"
 #include "UI/CombatTileMapHUDWidgetPrivate.h"
 #include "UI/DiceCapturePreviewUtils.h"
 
@@ -53,6 +55,52 @@ void UCombatTileMapHUDWidget::DestroyDiceCaptureActors(TArray<TObjectPtr<ACombat
 	RDDiceCapturePreview::DestroyCaptureActors(DiceActors);
 }
 
+void UCombatTileMapHUDWidget::EnsureDiceRollPhysicsActor()
+{
+	if (mDiceRollPhysicsActor != nullptr && IsValid(mDiceRollPhysicsActor))
+	{
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	if (World == nullptr)
+	{
+		return;
+	}
+
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	mDiceRollPhysicsActor = World->SpawnActor<ACombatDiceRollCaptureActor>(
+		ACombatDiceRollCaptureActor::StaticClass(),
+		RDDiceCapturePreview::GetCombatPreviewLocation(2, 0),
+		FRotator::ZeroRotator,
+		SpawnParameters
+	);
+	if (mDiceRollPhysicsActor == nullptr)
+	{
+		return;
+	}
+
+	mDiceRollPhysicsActor->InitializeCapture(this, 1536, 704);
+	if (mDiceRollPhysicsImage != nullptr && mDiceRollPhysicsActor->GetCaptureMaterial() != nullptr)
+	{
+		FSlateBrush DiceBrush = mDiceRollPhysicsImage->GetBrush();
+		DiceBrush.SetResourceObject(mDiceRollPhysicsActor->GetCaptureMaterial());
+		DiceBrush.ImageSize = FVector2D(1536.0f, 704.0f);
+		mDiceRollPhysicsImage->SetBrush(DiceBrush);
+		mDiceRollPhysicsImage->SetColorAndOpacity(FLinearColor::White);
+	}
+}
+
+void UCombatTileMapHUDWidget::DestroyDiceRollPhysicsActor()
+{
+	if (IsValid(mDiceRollPhysicsActor))
+	{
+		mDiceRollPhysicsActor->Destroy();
+	}
+	mDiceRollPhysicsActor = nullptr;
+}
+
 /** @brief 입장 굴림용 Image/캡처 액터를 현재 주사위 수에 맞춰 재구성한다. */
 void UCombatTileMapHUDWidget::EnsureDicePreviewActors()
 {
@@ -69,6 +117,14 @@ void UCombatTileMapHUDWidget::EnsureDicePreviewActors()
 		}
 	}
 	mDiceRollImages.Reset();
+	for (UImage* ShadowImage : mDiceRollShadowImages)
+	{
+		if (ShadowImage != nullptr)
+		{
+			ShadowImage->RemoveFromParent();
+		}
+	}
+	mDiceRollShadowImages.Reset();
 	DestroyDiceCaptureActors(mDicePreviewActors);
 	mIntroDiceSettleStartRotations.Reset();
 
@@ -81,12 +137,32 @@ void UCombatTileMapHUDWidget::EnsureDicePreviewActors()
 
 	for (int32 DiceIndex = 0; DiceIndex < DiceCount; ++DiceIndex)
 	{
+		UImage* ShadowImage = nullptr;
+		if (mDiceRollShadowTexture != nullptr)
+		{
+			ShadowImage = WidgetTree->ConstructWidget<UImage>(
+				UImage::StaticClass(),
+				FName(*FString::Printf(TEXT("DiceRollShadowImage_%d"), DiceIndex))
+			);
+			if (ShadowImage != nullptr)
+			{
+				ShadowImage->SetBrushFromTexture(mDiceRollShadowTexture, true);
+				ShadowImage->SetColorAndOpacity(FLinearColor(0.0f, 0.18f, 0.28f, 0.68f));
+				ShadowImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+				RootCanvas->AddChildToCanvas(ShadowImage);
+			}
+		}
+
 		UImage* DiceImage = WidgetTree->ConstructWidget<UImage>(
 			UImage::StaticClass(),
 			FName(*FString::Printf(TEXT("DiceRollImage_%d"), DiceIndex))
 		);
 		if (DiceImage == nullptr)
 		{
+			if (ShadowImage != nullptr)
+			{
+				ShadowImage->RemoveFromParent();
+			}
 			continue;
 		}
 
@@ -111,6 +187,7 @@ void UCombatTileMapHUDWidget::EnsureDicePreviewActors()
 			ApplyDiceCaptureBrush(DiceImage, DicePreviewActor, RDDiceCapturePreview::GetDefaultBrushSize());
 		}
 
+		mDiceRollShadowImages.Add(ShadowImage);
 		mDiceRollImages.Add(DiceImage);
 		mDicePreviewActors.Add(DicePreviewActor);
 		// 굴림 후반부 보간의 시작 회전값. 액터가 재생성되어도 결과 정착이 튀지 않도록 배열에 별도로 보존한다.

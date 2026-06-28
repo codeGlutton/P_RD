@@ -79,12 +79,14 @@ void UCombatTileMapHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 	RefreshDicePreviewActors();
 	RefreshOwnedDiceCards();
 	UpdateUnitHpBars();   // 유닛 머리 위 HP바를 월드→스크린 투영으로 매 프레임 따라가게 한다.
+	HideLegacyTopBarWhenSkinned();   // 패널 토글로 되살아나는 레거시 탑바를 스킨 모드에선 계속 접어 둔다.
 
 	if (mIntroDiceRollActive)
 	{
 		UpdateIntroDiceRoll(InDeltaTime);
 	}
 
+	UpdateShakeToRoll(InDeltaTime);
 	UpdateSkillPress(InDeltaTime);
 }
 

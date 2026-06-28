@@ -18,6 +18,8 @@
 #include "Pawn/Unit.h"
 #include "ObjectView.h"
 #include "Pawn/UnitModel.h"
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "AttributeSet/UnitAttributeSet.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
@@ -56,9 +58,13 @@ namespace
 void UCombatUIAdapter::Build(USRPGCombatSubsystem* InCombat, const URunPersistData* InRun)
 {
 	// 재빌드 대비: 이전 subsystem 턴 종료 구독을 먼저 해제한다.
+	// 전환/teardown 시 모델이 이미 파괴돼 GetModel()이 null일 수 있으므로 모델까지 null 가드한다.
 	if (mCombat != nullptr && mEndTurnHandle.IsValid())
 	{
-		mCombat->GetModel<USRPGCombatModel>()->OnEndAnyTurnUI.Remove(mEndTurnHandle);
+		if (USRPGCombatModel* PrevModel = mCombat->GetModel<USRPGCombatModel>())
+		{
+			PrevModel->OnEndAnyTurnUI.Remove(mEndTurnHandle);
+		}
 		mEndTurnHandle.Reset();
 	}
 
@@ -67,13 +73,14 @@ void UCombatUIAdapter::Build(USRPGCombatSubsystem* InCombat, const URunPersistDa
 	mUnitStates.Reset();
 	mNextUnitId = 0;
 
-	// 플레이어: 실제 스폰된 유닛에서 타일/액터를 가져온다(HP는 플레이스홀더).
-	if (mCombat != nullptr)
+	// 플레이어: 실제 스폰된 유닛에서 타일/액터를 가져온다.
+	USRPGCombatModel* CombatModel = (mCombat != nullptr) ? mCombat->GetModel<USRPGCombatModel>() : nullptr;
+	if (CombatModel != nullptr)
 	{
 		// 턴이 끝날 때마다 이번 턴에 쓴 주사위 잠금을 해제하도록 훅을 건다(계약 D: Begin/EndTurn 리셋).
-		mEndTurnHandle = mCombat->GetModel<USRPGCombatModel>()->OnEndAnyTurnUI.AddUObject(this, &UCombatUIAdapter::HandleEndAnyTurn);
+		mEndTurnHandle = CombatModel->OnEndAnyTurnUI.AddUObject(this, &UCombatUIAdapter::HandleEndAnyTurn);
 
-		for (const TObjectPtr<UUnitModel>& Unit : mCombat->GetModel<USRPGCombatModel>()->GetUnits())
+		for (const TObjectPtr<UUnitModel>& Unit : CombatModel->GetUnits())
 		{
 			if (Unit == nullptr || Unit->IsPlayerUnitModel() == false)
 			{
@@ -92,21 +99,26 @@ void UCombatUIAdapter::Build(USRPGCombatSubsystem* InCombat, const URunPersistDa
 					State.mTile = ActorTile;
 				}
 			}
-			// 진짜 속성값(turtlehand AttributeSet, 커브테이블 초기화)에서 HP를 읽는다.
-			// 단 전투 스폰 시점에 속성 초기화가 안 된 경우(MaxHP=0/INT_MAX 등 비정상)는 placeholder로 폴백.
-			// [게임플레이 확인필요] 전투 플레이어 ASC 속성 초기화가 붙으면 이 폴백은 자동 해제됨.
+			// 진짜 속성값(TAS AttributeSet, 커브테이블 초기화)에서 HP를 읽는다.
+			// 단 속성 초기화가 안 된 경우(MaxHP=0/비정상)는 placeholder로 폴백.
 			float RealMaxHP = 0.f;
-			// NOTE : GAS 플러그인 사용 여부에 따라서 주석 해제/코드 제거 필요
-			/*if (const UUnitAttributeSet* AttrSet = Unit->GetUnitAttributeSet())
+			float RealHP = 0.f;
+			if (UAttributeSetComponentModel* AttrComp = Unit->GetAttributeComponentModel())
 			{
-				RealMaxHP = AttrSet->GetMaxHP();
-				if (RealMaxHP > 0.f && RealMaxHP < 100000.f)
+				bool bFound = false;
+				const float MaxHPValue = AttrComp->GetAttributeCurrentValue(UUnitAttributeSet::GetMaxHPAttribute(), bFound);
+				if (bFound)
 				{
-					State.mMaxHP = RealMaxHP;
-					State.mHP = AttrSet->GetHP();
+					RealMaxHP = MaxHPValue;
+					RealHP = AttrComp->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute(), bFound);
 				}
-			}*/
-			if (RealMaxHP <= 0.f || RealMaxHP >= 100000.f)
+			}
+			if (RealMaxHP > 0.f && RealMaxHP < 100000.f)
+			{
+				State.mMaxHP = RealMaxHP;
+				State.mHP = (RealHP > 0.f && RealHP < 100000.f) ? RealHP : RealMaxHP;
+			}
+			else
 			{
 				State.mMaxHP = PlayerStartHP;
 				State.mHP = PlayerStartHP;
@@ -423,9 +435,13 @@ void UCombatUIAdapter::HandleEndAnyTurn(TSharedPtr<FPresentationBarrier> /*Barri
 /** @brief UObject 파괴 시 전투 서브시스템에 남은 턴 종료 구독을 해제한다. */
 void UCombatUIAdapter::BeginDestroy()
 {
+	// 전환/teardown 시 모델이 이미 파괴돼 GetModel()이 null일 수 있으므로 모델까지 null 가드한다.
 	if (mCombat != nullptr && mEndTurnHandle.IsValid())
 	{
-		mCombat->GetModel<USRPGCombatModel>()->OnEndAnyTurnUI.Remove(mEndTurnHandle);
+		if (USRPGCombatModel* CombatModel = mCombat->GetModel<USRPGCombatModel>())
+		{
+			CombatModel->OnEndAnyTurnUI.Remove(mEndTurnHandle);
+		}
 		mEndTurnHandle.Reset();
 	}
 
@@ -640,19 +656,25 @@ void UCombatUIAdapter::PushAll()
 	FPlayerMetaUI Meta;
 	Meta.mLevel = mPlayerLevel;
 	Meta.mGold = mPlayerGold;   // 폴백
-	// 진짜 골드(turtlehand UPlayerUnitAttributeSet.Money). 속성이 초기화된 경우(MaxHP 정상)만 사용.
-	if (const FCombatUnitState* PlayerState = FindPlayerState())
+	// 진짜 골드(TAS UPlayerUnitAttributeSet.Money). 전투 모델에서 플레이어 유닛 → AttributeComponent로 읽는다.
+	if (USRPGCombatModel* CombatModel = (mCombat != nullptr) ? mCombat->GetModel<USRPGCombatModel>() : nullptr)
 	{
-		if (PlayerState->mActor.IsValid())
+		for (const TObjectPtr<UUnitModel>& Unit : CombatModel->GetUnits())
 		{
-			/*if (const UPlayerUnitAttributeSet* PlayerAttr = Cast<UPlayerUnitAttributeSet>(PlayerState->mActor->GetUnitAttributeSet()))
+			if (Unit == nullptr || Unit->IsPlayerUnitModel() == false)
 			{
-				const float RealMaxHP = PlayerAttr->GetMaxHP();
-				if (RealMaxHP > 0.f && RealMaxHP < 100000.f)
+				continue;
+			}
+			if (UAttributeSetComponentModel* AttrComp = Unit->GetAttributeComponentModel())
+			{
+				bool bFound = false;
+				const float Money = AttrComp->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMoneyAttribute(), bFound);
+				if (bFound)
 				{
-					Meta.mGold = FMath::RoundToInt(PlayerAttr->GetMoney());
+					Meta.mGold = FMath::RoundToInt(Money);
 				}
-			}*/
+			}
+			break;
 		}
 	}
 	mUIModel->SetPlayerMeta(Meta);
