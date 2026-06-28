@@ -13,10 +13,11 @@
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "TAS/Effect/TacticalEffect.h"
 #include "TAS/Effect/TacticalEffectContext.h"
+#include "DataAsset/PassiveData/StaticPassiveData.h"
 
 void UTacticalPassive::ActivatePassive(
 	const FPassiveActivateContext& Ctx,
-	TInstancedStruct<FTacticalPassiveState>& PassiveState)
+	TInstancedStruct<FDynamicPassiveData>& PassiveState)
 {
 	// 계산 결과를 담을 내부 중간 버퍼 (외부로 반환하지 않음)
 	FBoardCombatTargetSnapshotData Contribution;
@@ -25,6 +26,31 @@ void UTacticalPassive::ActivatePassive(
 	EvaluatePassive(Ctx, Contribution, PassiveState);
 	// 적용: 계산된 기여값을 대상 이펙트로 적용
 	NotifyPassive(Ctx, Contribution);
+}
+
+void UTacticalPassive::SetStaticData(UStaticPassiveData* InStaticData)
+{
+	// 정적 데이터 주입 후, 공통 필드(이펙트/타이밍)를 데이터에서 채움
+	mStaticData = InStaticData;
+	InitializeFromData();
+}
+
+void UTacticalPassive::InitializeFromData()
+{
+	// 데이터가 없으면(클래스 구동 패시브) 아무 것도 하지 않음
+	if (mStaticData == nullptr)
+	{
+		return;
+	}
+
+	// 이펙트 종류와 발동 시점을 데이터에서 베이스 멤버로 복사
+	mEffectClass = mStaticData->mEffectClass;
+
+	mTimingTags.Reset();
+	if (mStaticData->mPassiveTriggerTimig.IsValid())
+	{
+		mTimingTags.AddTag(mStaticData->mPassiveTriggerTimig);
+	}
 }
 
 void UTacticalPassive::NotifyPassive(
