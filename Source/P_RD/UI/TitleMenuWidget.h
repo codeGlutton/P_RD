@@ -1,5 +1,9 @@
-// @file TitleMenuWidget.h
-// @brief 타이틀 화면 위젯 정의 헤더
+/**
+ * @file TitleMenuWidget.h
+ * @brief 타이틀 화면 위젯(타이틀 메뉴 + 배경 영상 표시) 정의 헤더
+ * @author 박용수
+ * @date 2026-06-26
+ */
 // @date 2026-06-02
 
 #pragma once
@@ -10,13 +14,14 @@
 
 #include "TitleMenuWidget.generated.h"
 
+// WBP에서 BindWidget으로 채워질 자식 위젯/서브 화면 타입의 전방 선언.
+// 헤더 의존을 줄이려고 포인터 멤버는 여기서 전방 선언만 하고 실제 포함은 .cpp에서 한다.
 class UButton;
 class UCanvasPanel;
 class UCharacterSelectWidget;
 class UImage;
 class USettingsPanelWidget;
 class UTextBlock;
-class UTexture2D;
 class UWidget;
 class UWidgetSwitcher;
 
@@ -44,6 +49,9 @@ public:
 	// @param ObjectInitializer Unreal 객체 생성에 사용하는 기본 초기화 값
 	UTitleMenuWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+	/** @brief 화면에 올라오기 전 타이틀 배경 영상을 미리 열어 둔다. */
+	void PrimeTitleBackgroundVideo();
+
 	/** @brief GameMode 기준 캐릭터 후보 목록을 캐릭터 선택 화면에 다시 반영 */
 	void RefreshCharacterOptionsFromGameMode();
 
@@ -56,6 +64,9 @@ protected:
 	// 캐릭터 선택 위젯이 보내는 BACK 요청도 여기서 받는다.
 	// AddUniqueDynamic을 사용하므로 같은 위젯이 다시 Construct 되어도 같은 델리게이트가 중복으로 붙지 않는다.
 	void NativeConstruct() override;
+
+	/** @brief 배경 영상 cover-crop 배치를 현재 화면 크기에 맞춰 갱신한다. */
+	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 	/** @brief 위젯이 화면에서 내려갈 때 연결한 이벤트를 해제함 */
 	// UUserWidget은 화면에서 사라졌다가 다시 Construct 될 수 있다.
@@ -123,13 +134,26 @@ private:
 	void StartTitleBackgroundVideo();
 
 	/** @brief 타이틀 배경 영상용 MediaPlayer/MediaTexture/FileMediaSource를 준비한다. */
+	// 공유 텍스처를 못 쓸 때만 이 위젯 전용 미디어 객체를 새로 만들어 mBackgroundRuntime에 보관한다.
 	void EnsureTitleBackgroundMediaObjects();
 
+	/** @brief GameInstanceSubsystem이 미리 연 MediaTexture를 타이틀 배경으로 연결한다. */
+	// UTitleBackgroundVideoSubsystem이 인트로 단계에서 영상을 미리 열어 두므로,
+	// 가능하면 공유 텍스처를 재사용해 타이틀 진입 시 영상이 처음부터 끊김 없이 보이게 한다.
+	// @return 공유 MediaTexture를 배경으로 연결했으면 true, 직접 준비가 필요하면 false
+	bool TryUseSharedTitleBackgroundVideo();
+
 	/** @brief MediaTexture를 WBP 배경 Image(TitleBackgroundImage) Brush에 반영한다. */
+	// 머티리얼/브러시의 ResourceObject를 MediaTexture로 바꿔, Image가 매 프레임 영상 프레임을 그리게 한다.
 	void ApplyTitleBackgroundVideoBrush();
 
 	/** @brief 타이틀 배경 영상을 반복 재생한다. */
 	void PlayTitleBackgroundVideo();
+
+	/** @brief 타이틀 배경 영상 Image를 원본 비율 유지 cover-crop으로 배치한다. */
+	// 좌우는 뷰포트 너비에 맞추고(letterbox 없이 가득 채움), 비율 초과분은 상하를 잘라낸다(crop).
+	// 영상 원본 비율과 화면 비율이 다를 때 검은 띠 없이 화면을 가득 덮기 위한 cover 방식 배치다.
+	void FitTitleBackgroundVideoToViewport() const;
 
 	/** @brief 타이틀 배경 영상 재생을 정리한다. */
 	void StopTitleBackgroundVideo();
@@ -138,11 +162,18 @@ private:
 	// [합의필요] SVN raw media를 Content 밑 파일 경로로 직접 읽는 계약은 패키징 규칙과 함께 유지되어야 한다.
 	FString ResolveTitleBackgroundVideoPath() const;
 
+	/** @brief MP4 파일에서 비디오 트랙 표시 해상도를 읽는다. */
+	FVector2D ReadTitleBackgroundVideoFileDimensions(const FString& VideoPath) const;
+
 	/** @brief MediaPlayer가 파일을 열었을 때 반복 재생 상태를 확정한다. */
+	// MediaPlayer.OnMediaOpened 델리게이트 콜백. 열기 시점이 비동기라 여기서 Looping/Play를 확정한다.
+	// @param OpenedUrl 실제로 열린 미디어 URL
 	UFUNCTION()
 	void HandleTitleBackgroundMediaOpened(FString OpenedUrl);
 
 	/** @brief 패키징/경로 누락을 타이틀 화면 실패 대신 로그로만 남긴다. */
+	// 배경 영상은 보조 연출이므로 열기에 실패해도 타이틀 화면 자체는 떠야 한다. 그래서 로그만 남기고 넘어간다.
+	// @param FailedUrl 열기에 실패한 미디어 URL
 	UFUNCTION()
 	void HandleTitleBackgroundMediaOpenFailed(FString FailedUrl);
 
@@ -153,6 +184,8 @@ private:
 	// WBP가 화면 구조의 원본이어야 리뷰와 해상도 프리뷰가 한곳으로 모인다.
 	void ValidateDesignerBindings() const;
 
+	/** @brief START 버튼 클릭을 캐릭터 선택 화면 진입으로 연결한다. */
+	// 저장된 런이 있을 때는 이 버튼이 NEW START(새 런 시작) 의미로 쓰인다.
 	UFUNCTION()
 	void HandleStartButtonClicked();
 
@@ -268,9 +301,11 @@ private:
 
 	/** @brief 타이틀 메인 화면에서 반복 재생할 MP4 파일의 Content 기준 상대 경로 */
 	UPROPERTY(Category = "Title Menu|Background", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true, DisplayName = "Title Background Video Path"))
-	FString mTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/MS_TitleLoop_01.mp4");
+	FString mTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/campfire_titleloop_idle_x3preview.mp4");
 
 	/** @brief 배경 영상 재생용 런타임 객체(MediaPlayer/Texture/Source/브러시). 정적 비주얼은 WBP. */
+	// Transient: 세이브/직렬화 대상이 아닌 순수 런타임 핸들 묶음이라 저장하지 않는다.
+	// 공유 텍스처(TryUseSharedTitleBackgroundVideo) 사용 시 일부 필드는 비어 있을 수 있다.
 	UPROPERTY(Transient)
 	FTitleMenuBackgroundRuntimeAssets mBackgroundRuntime;
 

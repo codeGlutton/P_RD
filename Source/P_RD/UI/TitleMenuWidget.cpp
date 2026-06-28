@@ -1,10 +1,32 @@
+/**
+ * @file TitleMenuWidget.cpp
+ * @brief 타이틀 메인 메뉴 위젯 구현. WBP 바인딩 연결, 메뉴 텍스트 동기화, 배경 영상 시작/종료/뷰포트 핏을 담당한다.
+ * @details
+ *  - 타이틀 아트/레이아웃은 WBP_TitleMenu가 보유하고, 이 C++ 클래스는 버튼 이벤트 배선과 화면 전환만 담당한다.
+ *  - 배경 영상(루프 mp4) 관련 핏 로직은 *_Background.cpp 파일에 분리되어 있다.
+ * @author 박용수
+ * @date 2026-06-26
+ */
 #include "UI/TitleMenuWidget.h"
 
 #include "Components/Button.h"
+#include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Engine/Texture2D.h"
 #include "UI/CharacterSelectWidget.h"
 #include "UI/SettingsPanelWidget.h"
 
+/**
+ * @brief 타이틀 메인 메뉴 UI 위젯.
+ * @details
+ *  방 진입 직후 보이는 메인 화면으로, START/CONTINUE/SETTING 버튼과 캐릭터 선택 화면 전환,
+ *  배경 영상(UMediaTexture) 표시를 담당한다. 화면 전환(메인↔캐릭터)과 하위 위젯의 "뒤로 가기"
+ *  요청 처리 책임이 이 클래스에 모여 있다.
+ */
+/**
+ * @brief 생성자. 버튼/타이틀 텍스트의 기본 문구와 기본 Visibility를 설정한다.
+ * @param ObjectInitializer UObject 생성 초기화 인자(Super로 전달).
+ */
 UTitleMenuWidget::UTitleMenuWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 	, mTitleText(NSLOCTEXT("TitleMenuWidget", "TitleText", "Rogue The Dice"))
@@ -34,6 +56,13 @@ void UTitleMenuWidget::RefreshCharacterOptionsFromGameMode()
 	{
 		CharacterSelectWidget->RefreshCharacterOptionsFromGameMode();
 	}
+}
+
+/** @brief 외부(예: GameMode)에서 타이틀 진입 시 배경 영상을 미리 시작시키기 위한 진입점. */
+// 실제 시작 로직은 StartTitleBackgroundVideo()(*_Background.cpp)에 위임해 핏/재생 책임을 한곳에 둔다.
+void UTitleMenuWidget::PrimeTitleBackgroundVideo()
+{
+	StartTitleBackgroundVideo();
 }
 
 /** @brief GameMode가 요청한 타이틀 내부 화면 전환을 실제 WBP 화면 전환으로 수행한다. */
@@ -86,6 +115,18 @@ void UTitleMenuWidget::NativeConstruct()
 	RefreshMainMenuState();
 	ShowMainScreen();
 	SetStatusText(FText::GetEmpty());
+}
+
+/**
+ * @brief 매 프레임 배경 영상 브러시를 현재 뷰포트 비율에 맞춰 재계산한다.
+ * @param MyGeometry 위젯의 현재 지오메트리.
+ * @param InDeltaTime 직전 프레임과의 시간 간격(초).
+ */
+// 창 크기/해상도 변경에 즉시 반응하도록 Tick마다 좌우맞춤+상하크롭 핏을 갱신한다(*_Background.cpp).
+void UTitleMenuWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+	FitTitleBackgroundVideoToViewport();
 }
 
 /** @brief Construct에서 붙인 이벤트를 제거해 재Construct 시 중복 호출을 막는다. */
@@ -162,6 +203,9 @@ void UTitleMenuWidget::SetStatusText(const FText& /*InText*/) const
 	}
 }
 
+/** @brief BindWidget으로 들어와야 할 WBP 하위 위젯/버튼/텍스트가 모두 연결됐는지 검증하고 경고 로그를 남긴다. */
+// WBP 디자이너에서 위젯 이름을 잘못 바꾸거나 배치를 빠뜨리면 nullptr가 되므로,
+// NativeConstruct 초기에 각 바인딩을 점검해 어떤 위젯이 누락됐는지 명시적으로 로깅한다(배경 영상은 누락 시 스킵).
 void UTitleMenuWidget::ValidateDesignerBindings() const
 {
 	if (ScreenSwitcher == nullptr)
