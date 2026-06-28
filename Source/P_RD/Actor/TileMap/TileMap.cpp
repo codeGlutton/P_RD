@@ -440,63 +440,12 @@ void ATileMap::ClearTileHighlight(ETileHighlightFlag Flag)
 	}
 }
 
-/* 옛 ITileActor 인터페이스 호환 (전환기 — 호출부 이관 후 제거) */
-
-TArray<FTileIndex> ATileMap::GetAimableTiles(const FTileIndex& Origin, int32 Range, EAimPattern Pattern, bool bIncludeOccupied, bool bIndirect, const ITileActor* Incoming) const
-{
-	// 모델로 위임 (Incoming은 모델 액터로 매핑 불가라 무시)
-	return mModel != nullptr
-		? mModel->GetAimableTiles(Origin, Range, Pattern, bIncludeOccupied, bIndirect, nullptr)
-		: TArray<FTileIndex>();
-}
-
-TArray<FTileIndex> ATileMap::GetEffectTiles(const FTileIndex& Caster, const FTileIndex& Target, EEffectPattern Pattern, int32 Size, bool bPenetrate) const
-{
-	// 모델로 위임
-	return mModel != nullptr
-		? mModel->GetEffectTiles(Caster, Target, Pattern, Size, bPenetrate)
-		: TArray<FTileIndex>();
-}
-
-TArray<FTileIndex> ATileMap::GetReachableTiles(const FTileIndex& Origin, int32 MoveDistance) const
-{
-	// 모델로 위임 (BFS 경로 기반 도달성)
-	return mModel != nullptr
-		? mModel->GetReachableTiles(Origin, MoveDistance)
-		: TArray<FTileIndex>();
-}
-
-bool ATileMap::CanPlace(const FTileIndex& TileIndex, const ITileActor* Incoming) const
-{
-	// 스텁: ITileActor를 모델 UBoardActorModel로 매핑하기 전까지 배치 가능으로 간주
-	return true;
-}
-
-void ATileMap::PlaceActor(const FTileTransform& NextTransform, ITileActor* Actor)
-{
-	// 스텁: ITileActor↔모델 매핑 전까지 동작 없음
-}
-
-TArray<TScriptInterface<ITileActor>> ATileMap::GetActorsOnTile(const FTileIndex& TileIndex, ETileLayerFlag LayerFilter) const
-{
-	// 스텁: ITileActor↔모델 매핑 전까지 빈 목록
-	return TArray<TScriptInterface<ITileActor>>();
-}
+/* 좌표 유효성 (모델 위임) */
 
 bool ATileMap::IsValidIndex(const FTileIndex& TileIndex) const
 {
 	// 모델로 위임
 	return mModel != nullptr && mModel->IsValidIndex(TileIndex);
-}
-
-void ATileMap::StartActorMovement(const FTileTransform& NextTransform, ITileActor* Actor)
-{
-	// 스텁: ITileActor↔모델 매핑 전까지 동작 없음
-}
-
-void ATileMap::CompleteActorMovement(ITileActor* Actor)
-{
-	// 스텁: ITileActor↔모델 매핑 전까지 동작 없음
 }
 
 float ATileMap::StepToYaw(const FTileIndex& Step)

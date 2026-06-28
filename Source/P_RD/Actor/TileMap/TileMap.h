@@ -19,7 +19,6 @@
 class UInstancedStaticMeshComponent;
 class UStaticMesh;
 class UMaterialInterface;
-class ITileActor;
 
 /**
  * @brief  타일맵 액터
@@ -162,73 +161,11 @@ public:
 	 */
 	float GetTileSize() const;
 
-	/* 옛 ITileActor 인터페이스 호환 (전환기) */
-	/**
-	 * @details
-	 * 타일맵 로직이 UTileMapModel로 이전되면서 기존 호출부(SRPGCombatSubsystem / SRPGSkillBuildAction /
-	 * SRPGAction)가 쓰던 옛 시그니처가 사라졌다. 호출부를 모델 기반으로 이관하기 전까지 빌드를 살리는 호환층이다.
-	 * 좌표/타일 계산(Aim/Effect)은 모델로 위임해 실제 동작하고, 액터 배치·조회는 ITileActor↔UBoardActorModel
-	 * 매핑이 없어 껍데기 스텁이다. 호출부 이관 후 이 묶음은 제거한다.
-	 */
-
-	/**
-	 * @brief 기준 좌표에서 조준 가능한 타일 목록 반환 (모델 GetAimableTiles로 위임)
-	 * @details Incoming(ITileActor)은 모델의 UBoardActorModel로 매핑할 수 없어 무시(nullptr 전달)한다.
-	 */
-	TArray<FTileIndex> GetAimableTiles(
-		const FTileIndex& Origin,
-		int32 Range,
-		EAimPattern Pattern,
-		bool bIncludeOccupied,
-		bool bIndirect,
-		const ITileActor* Incoming = nullptr
-	) const;
-
-	/**
-	 * @brief 스킬 발동 시 영향받는 타일 목록 반환 (모델 GetEffectTiles로 위임)
-	 */
-	TArray<FTileIndex> GetEffectTiles(
-		const FTileIndex& Caster,
-		const FTileIndex& Target,
-		EEffectPattern Pattern,
-		int32 Size,
-		bool bPenetrate
-	) const;
-
-	/**
-	 * @brief 기준 좌표에서 이동 가능한 타일 목록 반환 (모델 GetReachableTiles로 위임, BFS 경로 기반)
-	 */
-	TArray<FTileIndex> GetReachableTiles(const FTileIndex& Origin, int32 MoveDistance) const;
-
-	/**
-	 * @brief [스텁] 진입 액터 배치 가능 여부 — ITileActor↔모델 매핑 전까지 항상 true
-	 */
-	bool CanPlace(const FTileIndex& TileIndex, const ITileActor* Incoming) const;
-
-	/**
-	 * @brief [스텁] 액터 배치 — ITileActor↔모델 매핑 전까지 동작 없음
-	 */
-	void PlaceActor(const FTileTransform& NextTransform, ITileActor* Actor);
-
-	/**
-	 * @brief [스텁] 타일 위 액터 조회 — ITileActor↔모델 매핑 전까지 빈 목록
-	 */
-	TArray<TScriptInterface<ITileActor>> GetActorsOnTile(const FTileIndex& TileIndex, ETileLayerFlag LayerFilter = ETileLayerFlag::All) const;
-
+	/* 좌표 유효성 (모델 위임) */
 	/**
 	 * @brief 타일 인덱스가 맵 범위 안 유효 좌표인지 검사 (모델 IsValidIndex로 위임)
 	 */
 	bool IsValidIndex(const FTileIndex& TileIndex) const;
-
-	/**
-	 * @brief [스텁] 액터 이동 시작 — ITileActor↔모델 매핑 전까지 동작 없음
-	 */
-	void StartActorMovement(const FTileTransform& NextTransform, ITileActor* Actor);
-
-	/**
-	 * @brief [스텁] 액터 이동 완료 — ITileActor↔모델 매핑 전까지 동작 없음
-	 */
-	void CompleteActorMovement(ITileActor* Actor);
 
 protected:
 	/**
