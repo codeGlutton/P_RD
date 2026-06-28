@@ -46,6 +46,6 @@ protected:
 	void OnEndAction() override;
 
 protected:
-	// TArray<FSRPGCalculatedData> mCalculateDatas;
+	ESRPGCommandResult HandleCommand(const TInstancedStruct<FSRPGCommand>& Command) override;
 };
 

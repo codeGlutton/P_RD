@@ -3,6 +3,7 @@
 
 #include "RDCollision.h"
 
+#include "Component/SkillComponent/SkillComponentModel.h"
 #include "Dice/DicePoolModel.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
 
@@ -197,8 +198,8 @@ void USRPGSkillBuildAction::SetSkill(int32 SkillIndex)
 {
     checkf(mSkillBuildPhase == ESRPGSkillBuildPhase::None, TEXT("스킬 빌드 순서 오류"));
 
-    // USkillComponent* SkillComp = mInstigator->GetSkillComponent();
-    // checkf(SkillComp != nullptr, TEXT("스킬 컴포넌트 nullptr"));
+    USkillComponentModel* SkillCompModel = mInstigator->GetSkillComponentModel();
+    checkf(SkillCompModel != nullptr, TEXT("스킬 컴포넌트 모델 nullptr"));
 
     UTileMapModel* TileMap = GetTileMap();
     checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"))
@@ -207,7 +208,7 @@ void USRPGSkillBuildAction::SetSkill(int32 SkillIndex)
 
     {
         TSoftObjectPtr<UStaticSkillData> StaticSkillDataSoftObj = nullptr;
-        // SkillComp->GetSkillData(SkillIndex, OUT StaticSkillDataSoftObj);
+        SkillCompModel->GetSkillData(SkillIndex, OUT StaticSkillDataSoftObj);
         if (StaticSkillDataSoftObj == nullptr)
         {
             UE_LOG(LogSRPGCombat, Warning, TEXT("스킬 시전 시 비정상적 스킬 선택"));
@@ -273,7 +274,8 @@ void USRPGSkillBuildAction::SetTargetTile(const FTileIndex& TargetIndex)
     SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDicePoint = mSelectedDiceSum;
 
     TArray<FSRPGTurnEventLog> TurnEventLogs = SimulationSubsystem->SimulateUntilNextAction(MoveTemp(SkillCastCommand));
-    // TurnEventLogs 전달
+    
+    // TurnEventLogs를 UI에게 전달
 }
 
 void USRPGSkillBuildAction::BuildSkill()

@@ -90,6 +90,8 @@ namespace EquipmentPrimaryAssetTypes
  */
 namespace SkillPrimaryAssetTypes
 {
+	DECLARE_PRIMARY_ASSET_TYPE(Passive);
+
 	DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX(Attack, ERarityType, Rarity);
 	DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX(Spell, ERarityType, Rarity);
 }

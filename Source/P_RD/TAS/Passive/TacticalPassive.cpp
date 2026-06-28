@@ -44,7 +44,7 @@ void UTacticalPassive::InitializeFromData()
 	}
 
 	// 이펙트 종류와 발동 시점을 데이터에서 베이스 멤버로 복사
-	mEffectClass = mStaticData->mEffectClass;
+	mEffectClass = mStaticData->mEffectClass.LoadSynchronous();
 
 	mTimingTags.Reset();
 	if (mStaticData->mPassiveTriggerTimig.IsValid())

@@ -50,7 +50,7 @@ UTacticalPassive* UPassiveComponentModel::AddPassiveFromData(UStaticPassiveData*
 	}
 
 	// 데이터의 패시브 클래스로 인스턴스 생성 후 정적 데이터 주입
-	UTacticalPassive* Passive = NewObject<UTacticalPassive>(this, StaticData->mPassiveClass);
+	UTacticalPassive* Passive = NewObject<UTacticalPassive>(this, StaticData->mPassiveClass.LoadSynchronous());
 	Passive->SetStaticData(StaticData);
 
 	mPassives.Add(Passive);
