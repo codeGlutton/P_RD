@@ -1,38 +1,55 @@
 ﻿/*****************************************************************//**
- * @file   TacticalPassiveNthAddAttackPointTests.cpp
- * @brief  UTacticalPassive_NthAddAttackPoint 자동화 테스트
+ * @file   TacticalPassiveNthAddStatTests.cpp
+ * @brief  UTacticalPassive_NthAddStat 자동화 테스트
  * @details
  * 계산(EvaluatePassive): 이번 차수(완료+1)가 임계값이면 발동, 러닝본(NextState)에 발동=리셋(0)/미발동=차수 전진 기록.
  * 커밋(CommitPassive): 러닝본을 mState에 그대로 확정(리셋은 Evaluate 담당).
+ * 속성/수치/임계는 정적 데이터(UStaticPassiveData)에서 읽음(데이터 구동).
  * @author 이문환
- * @date   2026-06-24
+ * @date   2026-06-28
  *********************************************************************/
 
 #include "P_RDTests.h"
 #include "Misc/AutomationTest.h"
 
-#include "TAS/Passive/TacticalPassive_NthAddAttackPoint.h"
+#include "TAS/Passive/TacticalPassive_NthAddStat.h"
 #include "TAS/Passive/DynamicPassiveData_NthCounter.h"
 #include "TAS/Passive/PassiveActivateContext.h"
+#include "DataAsset/PassiveData/StaticPassiveData.h"
+#include "TAS/Effect/Stat/TacticalEffect_AttackPoint.h"
 #include "Actor/BoardActor/BoardCombatTarget.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
+namespace
+{
+	// 데이터 구동 NthAddStat 패시브 생성 (EffectClass=AttackPoint → 속성 AttackPoint, Magnitude=50, Threshold=3)
+	UTacticalPassive_NthAddStat* MakeNthAddStat()
+	{
+		UStaticPassiveData* Data = NewObject<UStaticPassiveData>();
+		Data->mEffectClass = UTacticalEffect_AttackPoint::StaticClass();
+		Data->mMagnitude = 50.f;
+		Data->mThreshold = 3;
+
+		UTacticalPassive_NthAddStat* Passive = NewObject<UTacticalPassive_NthAddStat>();
+		Passive->SetStaticData(Data);
+		return Passive;
+	}
+}
+
 // ===== 계산: EvaluatePassive가 임계 차수에서 발동하고, 러닝본(NextState)을 전진/리셋시키는지 =====
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
-	FTacticalPassiveNthAddAttackPointCalcTests,
-	"P_RD.TAS.Passive.NthAddAttackPoint.Calc",
+	FTacticalPassiveNthAddStatCalcTests,
+	"P_RD.TAS.Passive.NthAddStat.Calc",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
 )
 
-bool FTacticalPassiveNthAddAttackPointCalcTests::RunTest(const FString& Parameters)
+bool FTacticalPassiveNthAddStatCalcTests::RunTest(const FString& Parameters)
 {
-	UTacticalPassive_NthAddAttackPoint* Passive = NewObject<UTacticalPassive_NthAddAttackPoint>();
+	UTacticalPassive_NthAddStat* Passive = MakeNthAddStat();
 	if (!TestNotNull(TEXT("패시브 생성"), Passive))
 	{
 		return false;
 	}
-	Passive->mThreshold = 3;
-	Passive->mAttackBonus = 50.f;
 
 	// 러닝본 하나를 이어서 굴리며 사이클 검증 (threshold=3 → 3·6회차 발동)
 	TInstancedStruct<FDynamicPassiveData> Running;
@@ -80,20 +97,18 @@ bool FTacticalPassiveNthAddAttackPointCalcTests::RunTest(const FString& Paramete
 
 // ===== 커밋: CommitPassive가 러닝본을 mState에 그대로 확정하는지 (리셋은 Evaluate 담당) =====
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
-	FTacticalPassiveNthAddAttackPointCommitTests,
-	"P_RD.TAS.Passive.NthAddAttackPoint.Commit",
+	FTacticalPassiveNthAddStatCommitTests,
+	"P_RD.TAS.Passive.NthAddStat.Commit",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
 )
 
-bool FTacticalPassiveNthAddAttackPointCommitTests::RunTest(const FString& Parameters)
+bool FTacticalPassiveNthAddStatCommitTests::RunTest(const FString& Parameters)
 {
-	UTacticalPassive_NthAddAttackPoint* Passive = NewObject<UTacticalPassive_NthAddAttackPoint>();
+	UTacticalPassive_NthAddStat* Passive = MakeNthAddStat();
 	if (!TestNotNull(TEXT("패시브 생성"), Passive))
 	{
 		return false;
 	}
-	Passive->mThreshold = 3;
-	Passive->mAttackBonus = 50.f;
 
 	// 러닝 카운터를 RunningCount로 만들어 커밋 → 커밋된 mState 카운터 반환
 	// mState는 protected라 friend(테스트 클래스)로 직접 접근

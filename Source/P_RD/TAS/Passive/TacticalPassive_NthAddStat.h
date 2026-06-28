@@ -11,10 +11,11 @@
 #include "TacticalPassive_NthAddStat.generated.h"
 
 /**
- * @brief 데이터 구동 N번째 발동마다 스탯 가산 패시브 (계산형)
+ * @brief N번째 발동마다 스탯 가산하는 계산형 패시브
  *
  * @details
- * 임계값(mStaticData->mThreshold) 차수마다 이펙트 속성에 mMagnitude를 더하고 카운터를 리셋.
+ *
+ * 임계값(mStaticData->mThreshold) 다다를 때마다 이펙트 속성에 mMagnitude를 더하고 카운터를 리셋.
  * 카운터는 내부 상태(FDynamicPassiveData_NthCounter)에 보관.
  * EffectClass/Magnitude/Threshold 모두 데이터에서 읽으므로 동작별로 클래스 하나만 둠.
  */

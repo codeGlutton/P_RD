@@ -47,9 +47,9 @@ class P_RD_API UTacticalPassive : public UObject
 	// 자동화 테스트에서만 protected 상태(mTimingTags 등)에 접근하기 위한 friend
 	friend class FPassiveComponentModelTests;
 	// 패시브별 단위 테스트가 protected(EvaluatePassive/mState)에 접근하기 위한 friend
-	friend class FTacticalPassiveAddAttackPointTests;
-	friend class FTacticalPassiveNthAddAttackPointCalcTests;
-	friend class FTacticalPassiveNthAddAttackPointCommitTests;
+	friend class FTacticalPassiveAddStatTests;
+	friend class FTacticalPassiveNthAddStatCalcTests;
+	friend class FTacticalPassiveNthAddStatCommitTests;
 
 public:
 	/**
@@ -100,7 +100,6 @@ public:
 	 */
 	bool TryDeactivatePassive();
 
-public:
 	/**
 	 * @brief 주어진 태그가 이 패시브가 보유한 타이밍 태그 중 하나인지
 	 *
@@ -111,7 +110,6 @@ public:
 	 */
 	bool HasTimingTag(FGameplayTag Tag) const { return mTimingTags.HasTagExact(Tag); }
 
-public:
 	/**
 	 * @brief 정적 데이터(UStaticPassiveData) 주입 + 데이터 기반 공통 필드 초기화
 	 *

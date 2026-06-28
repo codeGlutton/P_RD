@@ -15,7 +15,7 @@
  *
  * @details
  * 매 발동마다 증가하는 카운터를 보관.
- * 임계값(N) 도달 시 발동 + 리셋하는 Nth 계열 패시브(NthAddAttackPoint, NthAddStat 등)가 공유.
+ * 임계값(N) 도달 시 발동 + 리셋하는 Nth 계열 패시브(NthAddStat 등)가 공유.
  * 임계값(N)은 변하지 않는 config라 패시브/데이터에 두고, 여기에는 변하는 카운터만 둠.
  */
 USTRUCT()
