@@ -102,7 +102,7 @@ bool FEquipmentStatModifierTests::RunTest(const FString& Parameters)
 	UStaticWeaponEquipmentData* Weapon = NewObject<UStaticWeaponEquipmentData>();
 	FTacticalModifierInfo Mod;
 	Mod.mAttribute = AttackPoint;
-	Mod.mModifierOp = EGameplayModOp::Additive;
+	Mod.mModifierOp = ETacticalModOp::Additive;
 	Mod.mModifierMagnitude = 5.f;
 	Weapon->mStatModifiers.Add(Mod);
 
