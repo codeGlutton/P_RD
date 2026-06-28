@@ -13,6 +13,8 @@
 #include "DataAsset/EquipmentData/StaticEquipmentData.h"
 #include "DataAsset/PassiveData/StaticPassiveData.h"
 #include "TAS/Passive/TacticalPassive.h"
+#include "TAS/Effect/TacticalEffect.h"
+#include "TAS/Effect/TacticalEffectContext.h"
 
 void UEquipmentComponentModel::Initialize()
 {
@@ -100,7 +102,22 @@ bool UEquipmentComponentModel::EquipInternal(UStaticEquipmentData* Data, UPassiv
 		}
 	}
 
-	// TODO: [3단계] 장비 고유 스탯(mStatModifiers)을 무한 이펙트로 self 적용 후 Entry.mStatEffectHandle 저장
+	// 장비 고유 스탯이 있으면 무한 이펙트로 자신에게 적용 (해제 시 핸들로 제거)
+	if (AttrComp != nullptr && Data->mStatModifiers.Num() > 0)
+	{
+		// 데이터의 수정자들을 런타임 이펙트 인스턴스에 담아 무한 정책으로 구성
+		UTacticalEffect* StatEffect = NewObject<UTacticalEffect>(this);
+		StatEffect->mModifiers = Data->mStatModifiers;
+		StatEffect->mDurationPolicy = ETacticalEffectDurationType::Infinite;
+
+		// 소유자를 시전자로 컨텍스트 구성 후 self 적용, 인스턴스·핸들 보관
+		UTacticalEffectContext* EffectContext = AttrComp->MakeEffectContext();
+		EffectContext->SetAttributeSetComponentModel(AttrComp);
+
+		FTacticalEffectSpec Spec(StatEffect, EffectContext);
+		Entry.mStatEffect = StatEffect;
+		Entry.mStatEffectHandle = AttrComp->ApplyTacticalEffectSpecToSelf(Spec);
+	}
 
 	mEquipped.Add(Slot, MoveTemp(Entry));
 	return true;
@@ -127,7 +144,7 @@ bool UEquipmentComponentModel::UnequipInternal(EEquipmentType Slot, UPassiveComp
 		}
 	}
 
-	// 장비 고유 스탯 이펙트 제거 (3단계에서 적용된 경우)
+	// 장비 고유 스탯 이펙트 제거 (적용돼 있던 경우)
 	if (Entry->mStatEffectHandle.IsValid() && AttrComp != nullptr)
 	{
 		AttrComp->RemoveActiveTacticalEffect(Entry->mStatEffectHandle);

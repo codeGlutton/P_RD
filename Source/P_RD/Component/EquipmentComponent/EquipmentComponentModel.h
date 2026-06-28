@@ -15,6 +15,7 @@
 
 class UStaticEquipmentData;
 class UTacticalPassive;
+class UTacticalEffect;
 class UPassiveComponentModel;
 class UAttributeSetComponentModel;
 
@@ -34,7 +35,11 @@ struct FEquippedEntry
 	UPROPERTY()
 	TArray<TObjectPtr<UTacticalPassive>> mInstalledPassives;
 
-	// 장비 고유 스탯 이펙트 핸들 (3단계에서 적용/제거)
+	// 장비 고유 스탯을 적용하는 런타임 이펙트 인스턴스 (엔트리 수명 동안 GC 보호)
+	UPROPERTY()
+	TObjectPtr<UTacticalEffect> mStatEffect = nullptr;
+
+	// 적용된 장비 스탯 이펙트 핸들 (해제 시 제거용)
 	UPROPERTY()
 	FActiveTacticalEffectHandle mStatEffectHandle;
 };
@@ -60,6 +65,8 @@ class P_RD_API UEquipmentComponentModel : public UComponentModel
 
 	// 자동화 테스트가 오너 없이 형제 컴포넌트를 직접 주입해 내부 로직을 검증하기 위한 friend
 	friend class FEquipmentComponentModelTests;
+	// 장비 스탯 적용/원복(라이브 월드 기반) 테스트용 friend
+	friend class FEquipmentStatModifierTests;
 
 public:
 	virtual void Initialize() override;
