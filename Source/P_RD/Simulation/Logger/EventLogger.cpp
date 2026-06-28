@@ -17,7 +17,7 @@ void UGameEventLogger::EndTurnLog()
 	UE_LOG(LogEventLogger, Log, TEXT("턴 이벤트 로그 종료"));
 }
 
-void UGameEventLogger::BeginActionLog(const FTileIndex& SourceTileIndex, const TArray<FTileIndex>& TargetTileIndexes)
+void UGameEventLogger::BeginActionLog(const FTileIndex& SourceTileIndex)
 {
 	UE_LOG(LogEventLogger, Log, TEXT("액션 이벤트 로그 시작"));
 }
@@ -81,13 +81,12 @@ void USimulationEventLogger::EndTurnLog()
 	UE_LOG(LogEventLogger, Log, TEXT("턴 이벤트 로그 종료"));
 }
 
-void USimulationEventLogger::BeginActionLog(const FTileIndex& SourceTileIndex, const TArray<FTileIndex>& TargetTileIndexes)
+void USimulationEventLogger::BeginActionLog(const FTileIndex& SourceTileIndex)
 {
 	checkf(mCurrentTurnEventLog != nullptr, TEXT("턴 로그 시작 없이 액션 로그 시작 오류"));
 
 	FSRPGActionEventLog ActionLog;
 	ActionLog.mSourceTileIndex = SourceTileIndex;
-	ActionLog.mTargetTileIndexes = TargetTileIndexes;
 
 	checkf(ActionLog.IsValid() == true, TEXT("액션 로그 불량"));
 

@@ -1,5 +1,7 @@
 ﻿#include "TAS/Effect/TacticalTagCountContainer.h"
 
+#include "Actor/BoardActor/BoardCombatTarget.h"
+
 bool FTacticalTagCountContainer::HasMatchingGameplayTag(FGameplayTag TagToCheck) const
 {
 	return mTagCountMap.FindRef(TagToCheck) > 0;
@@ -43,6 +45,11 @@ bool FTacticalTagCountContainer::HasAnyMatchingGameplayTags(const FGameplayTagCo
 	return AnyMatch;
 }
 
+void FTacticalTagCountContainer::CaptureAllTags(FBoardCombatTargetSnapshotData& Snapshot) const
+{
+	Snapshot.mTags = mTagCountMap;
+}
+
 void FTacticalTagCountContainer::UpdateTagCount(const FGameplayTagContainer& Container, int32 CountDelta)
 {
 	if (CountDelta != 0)
@@ -54,7 +61,7 @@ void FTacticalTagCountContainer::UpdateTagCount(const FGameplayTagContainer& Con
 			UpdatedAny |= UpdateTagMapDeferredParentRemoval_Internal(*TagIt, CountDelta, DeferredTagChangeDelegates);
 		}
 
-		// mExplicitTags.FillParentTags(); (FGameplayTagContainer has no FillParentTags)
+		mExplicitTags.FillParentTags();
 
 		for (FDeferredTagChangeDelegate& Delegate : DeferredTagChangeDelegates)
 		{
@@ -146,7 +153,7 @@ void FTacticalTagCountContainer::Reset(bool ResetCallbacks)
 
 void FTacticalTagCountContainer::FillParentTags()
 {
-	// mExplicitTags.FillParentTags();
+	mExplicitTags.FillParentTags();
 }
 
 void FTacticalTagCountContainer::Notify_StackCountChange(const FGameplayTag& Tag)

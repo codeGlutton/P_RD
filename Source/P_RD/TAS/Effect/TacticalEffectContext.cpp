@@ -1,7 +1,7 @@
 ﻿#include "TAS/Effect/TacticalEffectContext.h"
 #include "Actor/ActorModel.h"
 
-#include "TAS/TacticalAbility.h"
+#include "TAS/Passive/TacticalPassive.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
 UTacticalEffectContext::UTacticalEffectContext(UActorModel* Instigator, UObject* EffectCauser)
@@ -25,9 +25,9 @@ void UTacticalEffectContext::SetSourceObject(const UObject* SourceObject)
 	mSourceObject = MakeWeakObjectPtr(const_cast<UObject*>(SourceObject));
 }
 
-void UTacticalEffectContext::SetAbility(const UTacticalAbility* Ability)
+void UTacticalEffectContext::SetAbility(const UTacticalPassive* Ability)
 {
-	mAbilityInstance = MakeWeakObjectPtr<UTacticalAbility>(const_cast<UTacticalAbility*>(Ability));
+	mAbilityInstance = MakeWeakObjectPtr<UTacticalPassive>(const_cast<UTacticalPassive*>(Ability));
 }
 
 void UTacticalEffectContext::SetAttributeSetComponentModel(const UAttributeSetComponentModel* Model)

@@ -20,6 +20,7 @@ class UUnitModel;
 
 class UAttributeSetComponentModel;
 class USkillComponentModel;
+class UPassiveComponentModel;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUnitDied, UUnitModel*, Model);
 
@@ -46,11 +47,10 @@ public:
 	/* IBoardCombatTarget 상속 */
 public:
 	UAttributeSetComponentModel* GetAttributeComponentModel() const override;
-	FBoardCombatTargetSnapshotData* MakeSnapshotData() const override;
-	USkillComponentModel* GetSkillComponentModel() const;
 
 public:
-	// USkillComponent* GetSkillComponent() const;
+	USkillComponentModel* GetSkillComponentModel() const;
+	UPassiveComponentModel* GetPassiveComponentModel() const;
 
 public:
 	virtual int32 GetDifficulty() const PURE_VIRTUAL(UUnitModel::GetDifficulty, return 0;)
@@ -64,9 +64,11 @@ private:
 	UPROPERTY(Category = Attribute, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "AttributeCompModel"))
 	TObjectPtr<UAttributeSetComponentModel> mAttributeCompModel;
 
-	// TODO : 모델로 바꿔야됨
-	UPROPERTY(Category = Skill, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "SkillComp"))
-	TObjectPtr<USkillComponentModel>	mSkillCompModel;
+	UPROPERTY(Category = Skill, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "SkillCompModel"))
+	TObjectPtr<USkillComponentModel> mSkillCompModel;
+
+	UPROPERTY(Category = Skill, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "PassiveCompModel"))
+	TObjectPtr<UPassiveComponentModel> mPassiveCompModel;
 
 private:
 	// @brief 팀 ID

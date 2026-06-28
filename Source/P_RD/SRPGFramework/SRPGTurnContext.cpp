@@ -9,7 +9,7 @@
 
 #include "Pawn/UnitModel.h"
 
-#include "FunctionLibrary/GASTargetFunctionLibrary.h"
+#include "Simulation/Logger/EventLogger.h"
 
 TWeakObjectPtr<USRPGTurnContext> USRPGActionCreationCommandHandler::GetParent() const
 {
@@ -95,6 +95,9 @@ void USRPGTurnContext::BeginTurn()
 			CommandRouterModel->RegisterCommandHandler(TurnDefaultCommandHandler);
 		}
 
+		// 로그 작성
+		GetWorldEventLogger(this)->BeginTurnLog(mOwner->GetModelId(), mOwner->GetClass());
+
 		// 유닛 턴 시작 단계
 		mOwner->OnBeginTurn();
 
@@ -159,7 +162,11 @@ void USRPGTurnContext::EndTurn()
 	// On End Turn 패시브 실행
 	//UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(mOwner.Get(), AbilityTags::GameplayAbility_Passive_OnEndTurn, MoveTemp(EventData));
 
+	// 유닛 턴 종료 단계
 	mOwner->OnEndTurn();
+
+	// 로그 작성
+	GetWorldEventLogger(this)->EndTurnLog();
 
 	// 턴 종료 연출
 	TSharedPtr<FPresentationBarrier> PresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {

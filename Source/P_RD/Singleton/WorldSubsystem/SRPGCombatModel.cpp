@@ -16,8 +16,6 @@
 
 #include "AIController/EnemyAIController.h"
 
-#include "FunctionLibrary/GASTargetFunctionLibrary.h"
-
 DEFINE_LOG_CATEGORY(LogSRPGCombat)
 
 void USRPGCombatModel::Serialize(FArchive& Ar)

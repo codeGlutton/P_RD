@@ -104,7 +104,7 @@ public:
 	 * 현재 스탯 스냅샷을 찍어 타겟 정보로 반환하는 함수
 	 * @return 스냅샷 데이터
 	 */
-	virtual FBoardCombatTargetSnapshotData* MakeSnapshotData() const = 0;
+	FBoardCombatTargetSnapshotData MakeSnapshotData() const;
 
 public:
 	virtual void SetGenericTeamId(const FGenericTeamId& TeamID) = 0;

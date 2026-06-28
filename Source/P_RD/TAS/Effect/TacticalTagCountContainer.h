@@ -12,6 +12,7 @@
 #include "TacticalTagCountContainer.generated.h"
 
 class UAttributeSetComponentModel;
+struct FBoardCombatTargetSnapshotData;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnTacticalEffectTagCountChanged, const FGameplayTag /*Tag*/, int32 /*Count*/);
 DECLARE_DELEGATE(FDeferredTagChangeDelegate);
@@ -90,6 +91,9 @@ public:
 	bool HasMatchingGameplayTag(FGameplayTag TagToCheck) const;
 	bool HasAllMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const;
 	bool HasAnyMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const;
+
+public:
+	void CaptureAllTags(FBoardCombatTargetSnapshotData& Snapshot) const;
 
 public:
 	void UpdateTagCount(const FGameplayTagContainer& Container, int32 CountDelta);

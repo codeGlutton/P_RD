@@ -65,6 +65,10 @@ protected:
     const UTacticalAttributeSet* GetAttributeSet_Internal(TSubclassOf<UTacticalAttributeSet> Class) const;
     const UTacticalAttributeSet* GetOrCreateAttributeSet_Internal(TSubclassOf<UTacticalAttributeSet> Class);
 
+    /* 캡처 */
+public:
+    void CaptureAllStates(FBoardCombatTargetSnapshotData& Snapshot) const;
+
     /* 기본값 설정 */
 public:
     void SetAttributeBaseValue(const FTacticalAttribute& Attribute, float BaseValue);

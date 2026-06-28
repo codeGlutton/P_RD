@@ -28,7 +28,7 @@ public:
 	virtual void BeginTurnLog(int32 SourceUnitID, UClass* UnitActorModelClass) PURE_VIRTUAL(UEventLogger::BeginTurnLog, return;);
 	virtual void EndTurnLog() PURE_VIRTUAL(UEventLogger::EndTurnLog, return;);
 
-	virtual void BeginActionLog(const FTileIndex& SourceTileIndex, const TArray<FTileIndex>& TargetTileIndexes) PURE_VIRTUAL(UEventLogger::BeginActionLog, return;);
+	virtual void BeginActionLog(const FTileIndex& SourceTileIndex) PURE_VIRTUAL(UEventLogger::BeginActionLog, return;);
 	virtual void EndActionLog() PURE_VIRTUAL(UEventLogger::EndActionLog, return;);
 
 	virtual void BeginMotionLog() PURE_VIRTUAL(UEventLogger::BeginMotionLog, return;);
@@ -57,7 +57,7 @@ public:
 	void BeginTurnLog(int32 SourceUnitID, UClass* UnitActorModelClass) override;
 	void EndTurnLog() override;
 
-	void BeginActionLog(const FTileIndex& SourceTileIndex, const TArray<FTileIndex>& TargetTileIndexes) override;
+	void BeginActionLog(const FTileIndex& SourceTileIndex) override;
 	void EndActionLog() override;
 
 	void BeginMotionLog() override;
@@ -83,7 +83,7 @@ public:
 	void BeginTurnLog(int32 SourceUnitID, UClass* UnitActorModelClass) override;
 	void EndTurnLog() override;
 
-	void BeginActionLog(const FTileIndex& SourceTileIndex, const TArray<FTileIndex>& TargetTileIndexes) override;
+	void BeginActionLog(const FTileIndex& SourceTileIndex) override;
 	void EndActionLog() override;
 
 	void BeginMotionLog() override;

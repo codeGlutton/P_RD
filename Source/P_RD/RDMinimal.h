@@ -33,6 +33,7 @@
 
 class UObjectModel;
 class UObjectModelFactory;
+class UEventLogger;
 
 /* 열거형 연관 */
 
@@ -62,3 +63,9 @@ T* GetWorldSubsystemModel(const UObject* WorldContextObject)
 }
 
 UObjectModelFactory* GetWorldModelFactory(const UObject* WorldContextObject);
+
+/* 로그 연관 */
+
+UEventLogger* GetWorldEventLogger(const UObject* WorldContextObject);
+
+
