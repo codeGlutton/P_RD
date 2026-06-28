@@ -34,17 +34,15 @@ void UStaticSkillEffect_Damage::ApplySkillEffect(
 
 	// 시전자의 정보를 가져온다.
 	TWeakObjectPtr<UAttributeSetComponentModel> SourceASC = SourceActorTarget->GetAttributeComponentModel();
-	UE_LOG(LogTemp, Log, TEXT("SourceID : %d"), SourceASC->GetUniqueID());
-
 	if (!SourceASC.IsValid())
 		return;
+	UE_LOG(LogTemp, Log, TEXT("SourceID : %d"), SourceASC->GetUniqueID());
 
 	// 피격자의 정보를 가져온다.
 	TWeakObjectPtr<UAttributeSetComponentModel> TargetASC = TargetActorTarget->GetAttributeComponentModel();
-	UE_LOG(LogTemp, Log, TEXT("TargetID : %d"), TargetASC->GetUniqueID());
-
 	if (!TargetASC.IsValid())
 		return;
+	UE_LOG(LogTemp, Log, TEXT("TargetID : %d"), TargetASC->GetUniqueID());
 
 	// Effect를 적용한다.
 	UTacticalEffectContext* EffectContext = TargetASC->MakeEffectContext();

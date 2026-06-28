@@ -1,4 +1,5 @@
 ﻿#include "Singleton/WorldSubsystem/SimulationSubsystem.h"
+#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 
 #include "Simulation/RoomContext.h"
 #include "Simulation/RoomInstance.h"
@@ -8,6 +9,8 @@
 #include "Setting/GamePlaySettings.h"
 
 #include "ObjectModel.h"
+
+#include "SRPGFramework/SRPGCommand.h"
 
 DEFINE_LOG_CATEGORY(LogSimulation)
 
@@ -47,12 +50,14 @@ void USimulationSubsystem::PreDeinitialize()
 	Super::PreDeinitialize();
 }
 
-TArray<FSRPGTurnEventLog> USimulationSubsystem::SimulateUntilNextAction()
+TArray<FSRPGTurnEventLog> USimulationSubsystem::SimulateUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand, bool NeedEndCurrentAction)
 {
 	checkf(mSimulationState == ESRPGSimulationState::RunningGame, TEXT("이미 시뮬레이션 중"));
 	SetSimulationState(ESRPGSimulationState::RunningSimulation);
 
-	// TODO
+	USRPGCombatModel* SRPGCombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+
+	SRPGCombatModel->ForcedAdvanceUntilNextAction(NextCommand, NeedEndCurrentAction);
 
 	TArray<FSRPGTurnEventLog> ResultLogs = GetEventLogger().PopSRPGLogs();
 
@@ -60,12 +65,14 @@ TArray<FSRPGTurnEventLog> USimulationSubsystem::SimulateUntilNextAction()
 	return MoveTemp(ResultLogs);
 }
 
-TArray<FSRPGTurnEventLog> USimulationSubsystem::SimulateUntilNextPlayerTurn()
+TArray<FSRPGTurnEventLog> USimulationSubsystem::SimulateUntilNextPlayerTurn(bool NeedEndCurrentAction)
 {
 	checkf(mSimulationState == ESRPGSimulationState::RunningGame, TEXT("이미 시뮬레이션 중"));
 	SetSimulationState(ESRPGSimulationState::RunningSimulation);
 
-	// TODO
+	USRPGCombatModel* SRPGCombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+
+	SRPGCombatModel->ForcedAdvanceUntilNextPlayerTurn(NeedEndCurrentAction);
 
 	TArray<FSRPGTurnEventLog> ResultLogs = GetEventLogger().PopSRPGLogs();
 

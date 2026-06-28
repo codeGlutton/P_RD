@@ -166,6 +166,11 @@ public:
 	UTileMapModel* GetTileMap();
 	TArray<TObjectPtr<UUnitModel>>& GetUnits();
 
+	/* 시뮬 함수 */
+public:
+	void ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand, bool NeedEndCurrentAction);
+	void ForcedAdvanceUntilNextPlayerTurn(bool NeedEndCurrentAction);
+
 public:
 	/**
 	 * @brief 전투 시작 시 뜰 UI
@@ -242,4 +247,8 @@ protected:
 	// @brief 모든 등록 장애물
 	UPROPERTY(Category = BoardActor, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "Obstacles"))
 	TArray<TObjectPtr<UBoardActorModel>> mObstacles;
+
+protected:
+	// @brief 플레이어 턴 진입 시, 중단해야될 필요가 있는지
+	bool mShouldTerminateBeforePlayerTurnStart = false;
 };

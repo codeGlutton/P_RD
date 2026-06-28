@@ -24,7 +24,9 @@ public:
 	FSRPGSkillCastCommand();
 
 public:
-	FSkillCommitResult mCalculationResult;
+	int32 mSkillIndex;
+	TArray<FTileIndex> mEffectTileIndexes;
+	float mDicePoint;
 };
 
 /**

@@ -23,6 +23,8 @@ class UObjectModelFactory;
 
 class UObjectModel;
 
+struct FSRPGCommand;
+
 /**
  * @brief  SRPG 시뮬레이션을 처리하는 서브시스템
  */
@@ -42,12 +44,12 @@ public:
 	 * 다음 액션까지 결과를 시뮬레이션 돌리는 함수
 	 * @return 결과 로그
 	 */
-	TArray<FSRPGTurnEventLog> SimulateUntilNextAction();
+	TArray<FSRPGTurnEventLog> SimulateUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand, bool NeedEndCurrentAction = true);
 	/**
 	 * 다음 플레이어 턴까지 결과를 시뮬레이션 돌리는 함수
 	 * @return 결과 로그
 	 */
-	TArray<FSRPGTurnEventLog> SimulateUntilNextPlayerTurn();
+	TArray<FSRPGTurnEventLog> SimulateUntilNextPlayerTurn(bool NeedEndCurrentAction = true);
 
 protected:
 	void SetSimulationState(ESRPGSimulationState State);

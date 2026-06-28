@@ -526,7 +526,7 @@ void FTacticalAttributeSetInitterDiscreteLevels::InitAttributeSetDefaults(UAttri
 	check(AttributeSetComponentModel != nullptr);
 	
 	const FAttributeSetDefaultsCollection* Collection = mDefaults.Find(GroupName);
-	if (Collection != nullptr)
+	if (Collection == nullptr)
 	{
 		UE_LOG(LogTacticalFramework, Warning, TEXT("[%s] 그룹 해당 속성 기본 값을 찾을 수 없음. Default 값으로 치환"), *GroupName.ToString());
 		Collection = mDefaults.Find(FName(TEXT("Default")));
@@ -569,7 +569,7 @@ void FTacticalAttributeSetInitterDiscreteLevels::InitAttributeSetDefaults(UAttri
 void FTacticalAttributeSetInitterDiscreteLevels::ApplyAttributeDefault(UAttributeSetComponentModel* AttributeSetComponentModel, FTacticalAttribute& Attribute, FName GroupName, int32 Level) const
 {
 	const FAttributeSetDefaultsCollection* Collection = mDefaults.Find(GroupName);
-	if (Collection != nullptr)
+	if (Collection == nullptr)
 	{
 		UE_LOG(LogTacticalFramework, Warning, TEXT("[%s] 그룹 해당 속성 기본 값을 찾을 수 없음. Default 값으로 치환"), *GroupName.ToString());
 		Collection = mDefaults.Find(FName(TEXT("Default")));
