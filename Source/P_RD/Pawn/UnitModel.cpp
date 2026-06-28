@@ -6,6 +6,8 @@
 #include "Component/PassiveComponent/PassiveComponentModel.h"
 #include "Component/EquipmentComponent/EquipmentComponentModel.h"
 
+#include "DataAsset/UnitSpawnData/StaticUnitSpawnData.h"
+
 #include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
 #include "Singleton/WorldSubsystem/TacticalFrameworkSubsystem.h"
 
@@ -33,6 +35,12 @@ void UUnitModel::PostInitializeComponentModels()
 	checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
 
 	TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), GetBoardActorKeyName(), GetDifficulty(), true);
+
+	// 스폰 데이터에 지정된 장비를 일괄 장착
+	if (UStaticUnitSpawnData* UnitSpawn = Cast<UStaticUnitSpawnData>(mStaticSpawnData))
+	{
+		GetEquipmentComponentModel()->EquipFrom(UnitSpawn->mEquipmentDatas);
+	}
 }
 
 void UUnitModel::SetGenericTeamId(const FGenericTeamId& TeamID)
