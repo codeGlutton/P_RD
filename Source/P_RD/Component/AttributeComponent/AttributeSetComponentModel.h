@@ -89,7 +89,7 @@ public:
 
     /* 수정자 적용 */
 public:
-    void ApplyModToAttribute(const FTacticalAttribute& Attribute, TEnumAsByte<EGameplayModOp::Type> ModifierOp, float ModifierMagnitude);
+    void ApplyModToAttribute(const FTacticalAttribute& Attribute, TEnumAsByte<ETacticalModOp::Type> ModifierOp, float ModifierMagnitude);
 
     /* Effect 적용 */
 public:

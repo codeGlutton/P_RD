@@ -64,10 +64,10 @@ public:
     void SetAttributeBaseValue(float BaseValue, bool BroadcastDirtyEvent = true);
 
 public:
-    static float StaticExecModOnBaseValue(float BaseValue, TEnumAsByte<EGameplayModOp::Type> ModifierOp, float EvaluatedMagnitude);
-    void ExecModOnBaseValue(TEnumAsByte<EGameplayModOp::Type> ModifierOp, float EvaluatedMagnitude);
+    static float StaticExecModOnBaseValue(float BaseValue, TEnumAsByte<ETacticalModOp::Type> ModifierOp, float EvaluatedMagnitude);
+    void ExecModOnBaseValue(TEnumAsByte<ETacticalModOp::Type> ModifierOp, float EvaluatedMagnitude);
 
-    void AddAggregatorMod(float EvaluatedData, TEnumAsByte<EGameplayModOp::Type> ModifierOp, FActiveTacticalEffectHandle ActiveHandle = FActiveTacticalEffectHandle());
+    void AddAggregatorMod(float EvaluatedData, TEnumAsByte<ETacticalModOp::Type> ModifierOp, FActiveTacticalEffectHandle ActiveHandle = FActiveTacticalEffectHandle());
     void RemoveAggregatorMod(FActiveTacticalEffectHandle ActiveHandle);
     void UpdateAggregatorMod(FActiveTacticalEffectHandle ActiveHandle, const FTacticalAttribute& Attribute, const FTacticalEffectSpec& Spec, FActiveTacticalEffectHandle InHandle);
 
@@ -100,7 +100,7 @@ private:
     // @brief 베이스 값
     float mBaseValue = 0.f;
     // @brief 각 연산자에 따른 결과값들
-    TArray<FTacticalAggregatorMod> mMods[EGameplayModOp::Max];
+    TArray<FTacticalAggregatorMod> mMods[ETacticalModOp::Max];
     // @brief 해당 값에 영향을 받는 외부 이펙트들
     TArray<FActiveTacticalEffectHandle>	mDependentEffects;
 };

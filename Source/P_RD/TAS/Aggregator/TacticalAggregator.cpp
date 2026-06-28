@@ -50,28 +50,28 @@ void FTacticalAggregator::SetAttributeBaseValue(float BaseValue, bool BroadcastD
     }
 }
 
-float FTacticalAggregator::StaticExecModOnBaseValue(float BaseValue, TEnumAsByte<EGameplayModOp::Type> ModifierOp, float EvaluatedMagnitude)
+float FTacticalAggregator::StaticExecModOnBaseValue(float BaseValue, TEnumAsByte<ETacticalModOp::Type> ModifierOp, float EvaluatedMagnitude)
 {
     switch (ModifierOp)
     {
-    case EGameplayModOp::Override:
+    case ETacticalModOp::Override:
     {
         BaseValue = EvaluatedMagnitude;
         break;
     }
-    case EGameplayModOp::AddBase:
-    case EGameplayModOp::AddFinal:
+    case ETacticalModOp::AddBase:
+    case ETacticalModOp::AddFinal:
     {
         BaseValue += EvaluatedMagnitude;
         break;
     }
-    case EGameplayModOp::MultiplyAdditive:
-    case EGameplayModOp::MultiplyCompound:
+    case ETacticalModOp::MultiplyAdditive:
+    case ETacticalModOp::MultiplyCompound:
     {
         BaseValue *= EvaluatedMagnitude;
         break;
     }
-    case EGameplayModOp::DivideAdditive:
+    case ETacticalModOp::DivideAdditive:
     {
         if (FMath::IsNearlyZero(EvaluatedMagnitude) == false)
         {
@@ -83,13 +83,13 @@ float FTacticalAggregator::StaticExecModOnBaseValue(float BaseValue, TEnumAsByte
     return BaseValue;
 }
 
-void FTacticalAggregator::ExecModOnBaseValue(TEnumAsByte<EGameplayModOp::Type> ModifierOp, float EvaluatedMagnitude)
+void FTacticalAggregator::ExecModOnBaseValue(TEnumAsByte<ETacticalModOp::Type> ModifierOp, float EvaluatedMagnitude)
 {
     mBaseValue = StaticExecModOnBaseValue(mBaseValue, ModifierOp, EvaluatedMagnitude);
     BroadcastOnDirty();
 }
 
-void FTacticalAggregator::AddAggregatorMod(float EvaluatedData, TEnumAsByte<EGameplayModOp::Type> ModifierOp, FActiveTacticalEffectHandle ActiveHandle)
+void FTacticalAggregator::AddAggregatorMod(float EvaluatedData, TEnumAsByte<ETacticalModOp::Type> ModifierOp, FActiveTacticalEffectHandle ActiveHandle)
 {
     TArray<FTacticalAggregatorMod>& ModList = mMods[ModifierOp];
 
@@ -140,16 +140,16 @@ float FTacticalAggregator::Evaluate() const
 
 float FTacticalAggregator::EvaluateWithBase(float BaseValue) const
 {
-    for (const FTacticalAggregatorMod& Mod : mMods[EGameplayModOp::Override])
+    for (const FTacticalAggregatorMod& Mod : mMods[ETacticalModOp::Override])
     {
         return Mod.mEvaluatedMagnitude;
     }
 
-    float Additive = SumMods(mMods[EGameplayModOp::Additive], GameplayEffectUtilities::GetModifierBiasByModifierOp(EGameplayModOp::Additive));
-    float Multiplicitive = SumMods(mMods[EGameplayModOp::Multiplicitive], GameplayEffectUtilities::GetModifierBiasByModifierOp(EGameplayModOp::Multiplicitive));
-    float Division = SumMods(mMods[EGameplayModOp::Division], GameplayEffectUtilities::GetModifierBiasByModifierOp(EGameplayModOp::Division));
-    float FinalAdd = SumMods(mMods[EGameplayModOp::AddFinal], GameplayEffectUtilities::GetModifierBiasByModifierOp(EGameplayModOp::AddFinal));
-    float CompoundMultiply = MultiplyMods(mMods[EGameplayModOp::MultiplyCompound]);
+    float Additive = SumMods(mMods[ETacticalModOp::Additive], TacticalEffectUtilities::GetModifierBiasByModifierOp(ETacticalModOp::Additive));
+    float Multiplicitive = SumMods(mMods[ETacticalModOp::Multiplicitive], TacticalEffectUtilities::GetModifierBiasByModifierOp(ETacticalModOp::Multiplicitive));
+    float Division = SumMods(mMods[ETacticalModOp::Division], TacticalEffectUtilities::GetModifierBiasByModifierOp(ETacticalModOp::Division));
+    float FinalAdd = SumMods(mMods[ETacticalModOp::AddFinal], TacticalEffectUtilities::GetModifierBiasByModifierOp(ETacticalModOp::AddFinal));
+    float CompoundMultiply = MultiplyMods(mMods[ETacticalModOp::MultiplyCompound]);
 
     if (FMath::IsNearlyZero(Division) == true)
     {

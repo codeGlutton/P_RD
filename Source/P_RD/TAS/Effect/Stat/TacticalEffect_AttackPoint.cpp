@@ -18,7 +18,7 @@ UTacticalEffect_AttackPoint::UTacticalEffect_AttackPoint()
 	// 대상 속성/연산만 정의 (크기 1, 실제 배율은 적용 측이 mDynamicMagnitude로 주입)
 	FTacticalModifierInfo Info;
 	Info.mAttribute = UUnitAttributeSet::GetAttackPointAttribute();
-	Info.mModifierOp = EGameplayModOp::Additive;
+	Info.mModifierOp = ETacticalModOp::Additive;
 	Info.mModifierMagnitude = 1.f;
 
 	mModifiers.Add(Info);

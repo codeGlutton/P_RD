@@ -122,7 +122,7 @@ public:
 	FTacticalAttribute mAttribute;
 
 	UPROPERTY(Category = "Attribute", EditDefaultsOnly, meta = (DisplayName = "ModifierOp"))
-	TEnumAsByte<EGameplayModOp::Type> mModifierOp = EGameplayModOp::Additive;
+	TEnumAsByte<ETacticalModOp::Type> mModifierOp = ETacticalModOp::Additive;
 
 	UPROPERTY(Category = "Attribute", EditDefaultsOnly, meta = (DisplayName = "ModifierMagnitude"))
 	float mModifierMagnitude;

@@ -75,13 +75,13 @@ struct FTacticalModifierEvaluatedData
 
     FTacticalModifierEvaluatedData() :
         mAttribute(),
-        mModifierOp(EGameplayModOp::Additive),
+        mModifierOp(ETacticalModOp::Additive),
         mMagnitude(0.f),
         mIsValid(false)
     {
     }
 
-    FTacticalModifierEvaluatedData(const FTacticalAttribute& InAttribute, TEnumAsByte<EGameplayModOp::Type> InModOp, float InMagnitude, FActiveTacticalEffectHandle InHandle = FActiveTacticalEffectHandle()) :
+    FTacticalModifierEvaluatedData(const FTacticalAttribute& InAttribute, TEnumAsByte<ETacticalModOp::Type> InModOp, float InMagnitude, FActiveTacticalEffectHandle InHandle = FActiveTacticalEffectHandle()) :
         mAttribute(InAttribute),
         mModifierOp(InModOp),
         mMagnitude(InMagnitude),
@@ -92,14 +92,14 @@ struct FTacticalModifierEvaluatedData
 
     FString ToSimpleString() const
     {
-        return FString::Printf(TEXT("%s %s EvalMag: %f"), *mAttribute.GetName(), *EGameplayModOpToString(mModifierOp), mMagnitude);
+        return FString::Printf(TEXT("%s %s EvalMag: %f"), *mAttribute.GetName(), *TacticalEffectUtilities::TacticalModOpToString(mModifierOp), mMagnitude);
     }
 
     UPROPERTY()
     FTacticalAttribute mAttribute;
 
     UPROPERTY()
-    TEnumAsByte<EGameplayModOp::Type> mModifierOp;
+    TEnumAsByte<ETacticalModOp::Type> mModifierOp;
 
     UPROPERTY()
     float mMagnitude;

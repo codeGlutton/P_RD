@@ -180,7 +180,7 @@ void FActiveTacticalEffectsContainer::OnStackCountChange(FActiveTacticalEffect& 
     ActiveEffect.mEventSet.OnStackChanged.Broadcast(ActiveEffect.mHandle, ActiveEffect.mSpec.GetStackCount(), OldStackCount);
 }
 
-void FActiveTacticalEffectsContainer::ApplyModToAttribute(const FTacticalAttribute& Attribute, TEnumAsByte<EGameplayModOp::Type> ModifierOp, float ModifierMagnitude)
+void FActiveTacticalEffectsContainer::ApplyModToAttribute(const FTacticalAttribute& Attribute, TEnumAsByte<ETacticalModOp::Type> ModifierOp, float ModifierMagnitude)
 {
     float CurrentBase = GetAttributeBaseValue(Attribute);
     float NewBase = FTacticalAggregator::StaticExecModOnBaseValue(CurrentBase, ModifierOp, ModifierMagnitude);
@@ -472,8 +472,10 @@ void FActiveTacticalEffectsContainer::SetAttributeBaseValue(FTacticalAttribute A
 
     const FStructProperty* StructProperty = CastField<FStructProperty>(Attribute.GetUProperty());
     checkf(StructProperty != nullptr, TEXT("변경 속성 대상이 존재하지 않음"));
-    FGameplayAttributeData* DataPtr = StructProperty->ContainerPtrToValuePtr<FGameplayAttributeData>(const_cast<UTacticalAttributeSet*>(Set));
-    checkf(DataPtr != nullptr, TEXT("변경 FGameplayAttributeData 대상이 존재하지 않음"));
+    // 속성 데이터는 FTacticalAttributeData(virtual 보유로 vptr이 있어 FGameplayAttributeData와 메모리 레이아웃이 다름).
+    // 반드시 FTacticalAttributeData로 접근해야 base 값이 올바른 오프셋에 읽고 쓰인다.
+    FTacticalAttributeData* DataPtr = StructProperty->ContainerPtrToValuePtr<FTacticalAttributeData>(const_cast<UTacticalAttributeSet*>(Set));
+    checkf(DataPtr != nullptr, TEXT("변경 FTacticalAttributeData 대상이 존재하지 않음"));
     OldBaseValue = DataPtr->GetBaseValue();
     DataPtr->SetBaseValue(BaseValue);
 
@@ -511,7 +513,7 @@ float FActiveTacticalEffectsContainer::GetAttributeBaseValue(FTacticalAttribute 
         {
             const FStructProperty* StructProperty = CastField<FStructProperty>(Attribute.GetUProperty());
             checkf(StructProperty != nullptr, TEXT("탐색 속성 대상이 존재하지 않음"));
-            const FGameplayAttributeData* DataPtr = StructProperty->ContainerPtrToValuePtr<FGameplayAttributeData>(AttributeSet);
+            const FTacticalAttributeData* DataPtr = StructProperty->ContainerPtrToValuePtr<FTacticalAttributeData>(AttributeSet);
             if (DataPtr != nullptr)
             {
                 BaseValue = DataPtr->GetBaseValue();

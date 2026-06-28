@@ -17,8 +17,14 @@ UPlayerUnitModel* UPlayerUnitRestorationSubsystem::SpawnPlayerUnit(UWorld* World
 	checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
 
 	UStaticPlayerUnitSpawnData* StaticPlayerUnitSpawnData = AssetManager->GetPrimaryAssetObject<UStaticPlayerUnitSpawnData>(GetRunMutableData()->GetPlayerUnitId());
-	
-	UPlayerUnitModel* UnitModel = GetWorldModelFactory(this)->NewModelDeferred<UPlayerUnitModel>(StaticPlayerUnitSpawnData->mModelClass.Get());
+	checkf(StaticPlayerUnitSpawnData != nullptr, TEXT("플레이어 유닛 스폰 데이터 nullptr"));
+
+	// mModelClass는 TSoftClassPtr라 .Get()은 이미 로드된 경우만 유효(미로드 시 nullptr → 팩토리가 추상 UPlayerUnitModel로 폴백해 크래시).
+	// 반드시 동기 로드해서 구체 BP 클래스를 넘긴다.
+	UClass* ModelClass = StaticPlayerUnitSpawnData->mModelClass.LoadSynchronous();
+	checkf(ModelClass != nullptr, TEXT("플레이어 유닛 ModelClass 로드 실패 — DataAsset의 mModelClass 확인"));
+
+	UPlayerUnitModel* UnitModel = GetWorldModelFactory(this)->NewModelDeferred<UPlayerUnitModel>(ModelClass);
 	UnitModel->SetStaticSpawnData(StaticPlayerUnitSpawnData);
 	UnitModel->FinishCreating();
 	

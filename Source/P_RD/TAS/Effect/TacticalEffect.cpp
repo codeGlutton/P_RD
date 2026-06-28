@@ -64,7 +64,7 @@ float FTacticalEffectSpec::GetModifierMagnitude(int32 ModifierIdx) const
 	{
 		/* 스택 반영 */
 
-		ModMagnitude = GameplayEffectUtilities::ComputeStackedModifierMagnitude(SingleEvaluatedMagnitude, GetStackCount(), mEffectClass->mModifiers[ModifierIdx].mModifierOp);
+		ModMagnitude = TacticalEffectUtilities::ComputeStackedModifierMagnitude(SingleEvaluatedMagnitude, GetStackCount(), mEffectClass->mModifiers[ModifierIdx].mModifierOp);
 	}
 	return ModMagnitude;
 }

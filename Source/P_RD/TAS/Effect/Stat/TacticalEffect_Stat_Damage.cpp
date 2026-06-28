@@ -8,7 +8,7 @@ UTacticalEffect_Stat_Damage::UTacticalEffect_Stat_Damage()
 
 	FTacticalModifierInfo Info;
 	Info.mAttribute = UUnitAttributeSet::GetHPAttribute();
-	Info.mModifierOp = EGameplayModOp::Additive;
+	Info.mModifierOp = ETacticalModOp::Additive;
 	Info.mModifierMagnitude = -1.f;
 
 	mModifiers.Add(Info);

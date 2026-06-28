@@ -87,7 +87,7 @@ public:
 
 		FTacticalModifierInfo Info;
 		Info.mAttribute = UUnitAttributeSet::GetMaxHPAttribute();
-		Info.mModifierOp = EGameplayModOp::Additive;
+		Info.mModifierOp = ETacticalModOp::Additive;
 		Info.mModifierMagnitude = 1.f;
 
 		mModifiers.Add(Info);
@@ -107,7 +107,7 @@ public:
 
 		FTacticalModifierInfo Info;
 		Info.mAttribute = UUnitAttributeSet::GetDefensePointAttribute();
-		Info.mModifierOp = EGameplayModOp::Additive;
+		Info.mModifierOp = ETacticalModOp::Additive;
 		Info.mModifierMagnitude = 1.f;
 
 		mModifiers.Add(Info);

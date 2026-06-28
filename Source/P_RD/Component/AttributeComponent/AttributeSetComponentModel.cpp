@@ -193,7 +193,7 @@ void UAttributeSetComponentModel::OnTacticalEffectAppliedToSelf(UAttributeSetCom
     OnTacticalEffectAppliedDelegateToSelf.Broadcast(Model, SpecApplied, ActiveHandle);
 }
 
-void UAttributeSetComponentModel::ApplyModToAttribute(const FTacticalAttribute& Attribute, TEnumAsByte<EGameplayModOp::Type> ModifierOp, float ModifierMagnitude)
+void UAttributeSetComponentModel::ApplyModToAttribute(const FTacticalAttribute& Attribute, TEnumAsByte<ETacticalModOp::Type> ModifierOp, float ModifierMagnitude)
 {
     mActiveAttributeEffects.ApplyModToAttribute(Attribute, ModifierOp, ModifierMagnitude);
 }

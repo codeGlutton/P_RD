@@ -26,7 +26,7 @@ void UUnitAttributeSet::PostAttributeChange(const FTacticalAttribute& Attribute,
 		if (GetHP() > NewValue)
 		{
 			UAttributeSetComponentModel* ASC = GetOwningAttributeSetComponentModel();
-			ASC->ApplyModToAttribute(GetHPAttribute(), EGameplayModOp::Override, NewValue);
+			ASC->ApplyModToAttribute(GetHPAttribute(), ETacticalModOp::Override, NewValue);
 		}
 	}
 }

@@ -204,7 +204,7 @@ public:
     void SetAttributeBaseValue(FTacticalAttribute Attribute, float BaseValue);
     float GetAttributeBaseValue(FTacticalAttribute Attribute) const;
 
-    void ApplyModToAttribute(const FTacticalAttribute& Attribute, TEnumAsByte<EGameplayModOp::Type> ModifierOp, float ModifierMagnitude);
+    void ApplyModToAttribute(const FTacticalAttribute& Attribute, TEnumAsByte<ETacticalModOp::Type> ModifierOp, float ModifierMagnitude);
     FActiveTacticalEffect* ApplyTacticalEffectSpec(const FTacticalEffectSpec& Spec, bool& FoundExistingStackableGE);
     void ExecuteActiveEffectsFrom(FTacticalEffectSpec& Spec);
     bool RemoveActiveTacticalEffect(FActiveTacticalEffectHandle Handle, int32 StacksToRemove);
