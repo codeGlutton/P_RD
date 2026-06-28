@@ -4,10 +4,12 @@
 #include "UI/DiceViewData.h"
 #include "UI/Combat/CombatUITypes.h"
 #include "UI/RDUserWidget.h"
+#include "Widgets/Layout/Anchors.h"
 
 #include "CombatTileMapHUDWidget.generated.h"
 
 class ACombatDiceCaptureActor;
+class ACombatDiceRollCaptureActor;
 class UBorder;
 class UButton;
 class UCanvasPanel;
@@ -82,8 +84,29 @@ private:
 	/** @brief 런타임으로 붙인 위젯들의 화면 위치를 모바일 화면 비율 기준으로 맞춘다. */
 	void ApplyRuntimeWidgetLayout() const;
 
+	/** @brief WBP에 디자이너 스킨(HUD_* 앵커 위젯)이 있는지 한 번 판별해 캐시한다. */
+	void ResolveDesignerSkin();
+
+	/** @brief 디자이너 스킨이 활성(WBP가 좌표/아트를 정의)인지 여부. */
+	bool IsDesignerSkinActive() const { return mDesignerSkinActive; }
+
+	/** @brief WBP의 명명 앵커 위젯(HUD_*)에서 정규화 영역을 읽는다. 없으면 Fallback(기존 코드 좌표). */
+	FAnchors GroupRect(FName AnchorWidgetName, const FAnchors& Fallback) const;
+
+	/** @brief 스킬 레일 전체 영역(WBP HUD_SkillRail 또는 기존 상수 기반 Fallback). */
+	FAnchors GetSkillRailGroupRect() const;
+
+	/** @brief 스킬 레일 Count개 중 Index 항목의 정규화 영역(렌더/히트테스트 공용). */
+	FAnchors GetSkillRailItemRect(int32 Index, int32 Count) const;
+
 	/** @brief 보유 주사위 개수에 맞춰 투명 캡처 Image와 3D 주사위 액터를 준비한다. */
 	void EnsureDicePreviewActors();
+
+	/** @brief 입장 굴림용 실제 물리 테이블 캡처 액터를 준비한다. */
+	void EnsureDiceRollPhysicsActor();
+
+	/** @brief 입장 굴림용 물리 캡처 액터를 정리한다. */
+	void DestroyDiceRollPhysicsActor();
 
 	/** @brief RenderTarget 캡처 주사위 액터를 준비하고 Image brush를 갱신한다. */
 	void RefreshDicePreviewActors();
@@ -130,15 +153,33 @@ private:
 	/** @brief 전투 진입 주사위 굴림 연출을 시작한다. */
 	void StartIntroDiceRoll();
 
+	/** @brief 굴림 연출이 정착 구간에 들어갈 때 실제 결과를 확정/동기화한다. */
+	void ResolveIntroDiceRollResults();
+
+	/** @brief 물리 굴림에서 읽은 결과면을 시안/단독 표시 데이터에 반영한다. */
+	void ApplyIntroDicePhysicsResults();
+
 	/** @brief 굴림 연출의 현재 프레임을 계산한다. */
 	void UpdateIntroDiceRoll(float InDeltaTime);
+
+	/** @brief 굴림 대기 상태에서 기기 가속도(흔들기)를 감지해 자동으로 굴림을 시작한다. */
+	void UpdateShakeToRoll(float InDeltaTime);
+
+	/** @brief 주사위 RenderTarget Image를 판 위에서 굴러가는 듯 이동/바운스시킨다. */
+	void UpdateDiceRollWidgetTransforms(float NormalizedRollAlpha) const;
+
+	/** @brief 주사위 연출 Image/그림자 변형을 기본 위치로 되돌린다. */
+	void ResetDiceRollWidgetTransforms() const;
+
+	/** @brief 주사위 팝업이 떠 있는 동안 전투 HUD 조작층을 숨기거나 되돌린다. */
+	void SetDiceRollCombatLayerSuppressed(bool bSuppressed);
 
 	/** @brief 모든 주사위 결과를 보유 주사위 카드에 한 번에 반영한다. */
 	void MarkAllDiceRolled();
 
 	/** @brief 주사위 연출 UI를 보이거나 숨긴다. */
 	// @param NewVisibility 적용할 표시 상태
-	void SetDiceRollVisibility(ESlateVisibility NewVisibility) const;
+	void SetDiceRollVisibility(ESlateVisibility NewVisibility);
 
 	/** @brief 주사위 연출 영역을 눌렀을 때 대기/결과 상태에 맞춰 굴림 시작 또는 닫기를 처리한다. */
 	UFUNCTION()
@@ -170,6 +211,9 @@ private:
 	/** @brief 뷰모델의 플레이어 메타(Lv/HP/Gold)를 상단 상태바 텍스트로 반영한다. */
 	void RefreshCombatStatusBar() const;
 
+	/** @brief 디자이너 스킨 시, concept value 칸(HUD_M_lv/hp/gold_value 앵커)에 Lv/HP/Gold 텍스트를 칸 크기에 맞춰 그린다. */
+	void RefreshSkinValueLabels() const;
+
 	/** @brief 장비 슬롯 칩(탑바 좌측 하단)을 뷰모델 장비 뷰로 다시 만든다. */
 	void RebuildEquipmentBar();
 
@@ -186,6 +230,23 @@ private:
 
 	/** @brief 우측 MOVE 버튼의 이동 가능 수치(현재/최대)를 갱신한다. */
 	void RefreshMoveButton() const;
+
+	/** @brief 탑바 내비 버튼 클릭 → 숨겨진 TopMenuBar의 해당 패널 토글로 위임한다(MAP/DICE/SKILL/SET). */
+	UFUNCTION()
+	void HandleNavMapButtonClicked();
+	UFUNCTION()
+	void HandleNavDiceButtonClicked();
+	UFUNCTION()
+	void HandleNavSkillButtonClicked();
+	UFUNCTION()
+	void HandleNavSettingsButtonClicked();
+
+	/** @brief 월드위젯 서브시스템에서 공용 탑바 위젯을 가져온다(스킨 모드에서 숨겨져 있어도 인스턴스는 살아있음). */
+	class UTopMenuBarWidget* GetTopMenuBar() const;
+
+	/** @brief 스킨 모드에서 레거시 탑바(WBP_TopMenuBar)를 접어 둔다. 패널 토글의 ApplyInputPassThrough가
+	    매번 탑바를 다시 보이게 하므로, concept HUD 위에 레거시 상태바/INVENTORY/ROOM 배너가 겹쳐 뜨는 걸 막는다. */
+	void HideLegacyTopBarWhenSkinned() const;
 
 	/** @brief 뷰모델의 유닛 수에 맞춰 머리 위 HP바 위젯을 다시 만든다. */
 	void RebuildUnitHpBars();
@@ -235,6 +296,10 @@ private:
 	/** @brief 런타임으로 주사위/턴 종료 UI를 붙일 WBP 루트 Canvas */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UCanvasPanel> RootCanvas;
+
+	/** @brief 디자이너 스킨 아트와 런타임 위젯이 함께 쓰는 1920x1080 기준 Canvas */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UCanvasPanel> DesignCanvas;
 
 	/** @brief 이전 WBP에 남아 있을 수 있는 3D 주사위 UMG Viewport. 새 구조에서는 숨긴다. */
 	UPROPERTY(meta = (BindWidgetOptional))
@@ -293,6 +358,34 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<ACombatDiceCaptureActor>> mDicePreviewActors;
 
+	/** @brief 전투 진입 주사위 팝업 뒤에서 전투 HUD를 가리는 반투명 배경 */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UBorder> mDiceRollBackdropPanel;
+
+	/** @brief 실제 물리 테이블을 한 번에 캡처한 RenderTarget Image */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UImage> mDiceRollPhysicsImage;
+
+	/** @brief 전투 진입 주사위가 놓이는 팝업 보드 배경 */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UImage> mDiceRollBoardImage;
+
+	/** @brief 전투 진입 주사위 아래에 까는 부드러운 그림자 Image */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UImage>> mDiceRollShadowImages;
+
+	/** @brief 팝업 보드 Texture2D */
+	UPROPERTY(Transient)
+	TObjectPtr<UTexture2D> mDiceRollBoardTexture;
+
+	/** @brief 주사위 그림자 Texture2D */
+	UPROPERTY(Transient)
+	TObjectPtr<UTexture2D> mDiceRollShadowTexture;
+
+	/** @brief 여러 주사위를 하나의 숨겨진 물리 테이블에서 굴리는 캡처 액터 */
+	UPROPERTY(Transient)
+	TObjectPtr<ACombatDiceRollCaptureActor> mDiceRollPhysicsActor;
+
 	/** @brief 현재 런에서 읽은 보유 주사위 표시 데이터 */
 	TArray<FDiceViewData> mDiceUIs;
 
@@ -326,9 +419,15 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UButton> mMoveButton;
 
-	/** @brief MOVE 버튼의 이동 가능 수치(현재/최대) 라벨 */
+	/** @brief 탑바 내비 투명 버튼(concept 아트 위 클릭영역). 런타임 생성, TopMenuBar 패널 토글로 위임. */
 	UPROPERTY(Transient)
-	TObjectPtr<UTextBlock> mMoveButtonText;
+	TObjectPtr<UButton> mNavMapButton;
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mNavDiceButton;
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mNavSkillButton;
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mNavSettingsButton;
 
 	/** @brief 유닛 머리 위에 월드→스크린 투영으로 띄우는 HP바(유닛 뷰 순서와 1:1) */
 	UPROPERTY(Transient)
@@ -368,6 +467,9 @@ private:
 	/** @brief 현재 선택된 스킬 index */
 	int32 mSelectedSkillIndex = INDEX_NONE;
 
+	/** @brief WBP에 디자이너 스킨(HUD_* 앵커 위젯)이 있어 좌표/아트를 WBP에서 읽는 모드인지. */
+	bool mDesignerSkinActive = false;
+
 	/** @brief 지금 누르고 있는 스킬 index */
 	int32 mPressedSkillIndex = INDEX_NONE;
 
@@ -398,6 +500,9 @@ private:
 	/** @brief 보유 주사위 카드에 결과를 이미 반영했는지 여부. 반복 Tick으로 중복 갱신하지 않기 위한 latch */
 	bool mIntroDiceResultsApplied = false;
 
+	/** @brief 입장 굴림의 실제 결과를 전투/시안 데이터에서 이미 받아왔는지 여부 */
+	bool mIntroDiceRollResultsResolved = false;
+
 	/** @brief 현재 주사위 연출 누적 시간 */
 	float mIntroDiceRollElapsed = 0.0f;
 
@@ -406,6 +511,33 @@ private:
 
 	/** @brief 결과면을 보여준 뒤 닫기 대기 문구로 전환하기 전 유지 시간 */
 	float mIntroDiceHoldDuration = 1.25f;
+
+	/** @brief 굴림 완료 후 정렬을 시작하기까지의 대기 간격(결과를 잠깐 보여주는 시간). */
+	float mIntroDiceAlignDelay = 0.55f;
+
+	/** @brief 정렬 시작 전 대기 누적 시간. */
+	float mIntroDiceAlignTimer = 0.0f;
+
+	/** @brief 주사위가 한 줄로 정렬되는 애니메이션 진행 중인지. */
+	bool mIntroDiceAligning = false;
+
+	/** @brief 정렬이 끝나 탭으로 닫기를 기다리는 상태인지. */
+	bool mIntroDiceAligned = false;
+
+	/** @brief 직전 프레임의 기기 가속도(흔들기 감지용 기준값). */
+	FVector mLastShakeAcceleration = FVector::ZeroVector;
+
+	/** @brief 가속도 기준값이 한 번이라도 채워졌는지(첫 프레임 오탐 방지). */
+	bool mHasShakeBaseline = false;
+
+	/** @brief 흔들기 한 번에 한 번만 굴리도록 남은 쿨다운(초). */
+	float mShakeRollCooldown = 0.0f;
+
+	/** @brief 흔들기로 인정할 가속도 변화량 임계값(기기 단위). 작을수록 민감. */
+	float mShakeTriggerThreshold = 2.6f;
+
+	/** @brief 모션 입력 활성화를 한 번만 요청하기 위한 플래그. */
+	bool mMotionControlsRequested = false;
 
 	/** @brief 결과면 보간 시작 회전값. 캡처 액터 재생성/프레임 중간 진입에도 정착 애니메이션을 안정화한다. */
 	TArray<FRotator> mIntroDiceSettleStartRotations;

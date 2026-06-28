@@ -66,7 +66,10 @@ void UTopMenuBarWidget::NativeDestruct()
 {
 	if (USRPGCombatSubsystem* CombatSubsystem = GetWorld() != nullptr ? GetWorld()->GetSubsystem<USRPGCombatSubsystem>() : nullptr)
 	{
-		CombatSubsystem->GetModel<USRPGCombatModel>()->OnEndCombatUI.RemoveAll(this);
+		if (USRPGCombatModel* CombatModel = CombatSubsystem->GetModel<USRPGCombatModel>())
+		{
+			CombatModel->OnEndCombatUI.RemoveAll(this);
+		}
 	}
 
 	if (UFrontendMapWidget* WorldMapWidget = Cast<UFrontendMapWidget>(GetToggleableWorldWidget(EWorldWidgetType::WorldMap)))
@@ -333,7 +336,14 @@ void UTopMenuBarWidget::BindCombatEvents()
 		return;
 	}
 
-	CombatSubsystem->GetModel<USRPGCombatModel>()->OnEndCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result)
+	// 전투 모델이 아직 서브시스템에 바인딩되지 않았을 수 있다(HUD 구성 시점). null 역참조 크래시 방지.
+	USRPGCombatModel* CombatModel = CombatSubsystem->GetModel<USRPGCombatModel>();
+	if (CombatModel == nullptr)
+	{
+		return;
+	}
+
+	CombatModel->OnEndCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result)
 	{
 		HandleEndCombatUI(MoveTemp(Barrier), Result);
 	});
@@ -519,6 +529,12 @@ void UTopMenuBarWidget::ToggleFloatingPanel(EWorldWidgetType WorldWidgetType, co
 	FloatingPanel->OpenUI();
 	ApplyInputPassThrough();
 }
+
+// 전투 HUD의 concept 내비 버튼이 호출하는 public 포워더. 탑바 버튼 클릭과 동일한 토글 동작을 그대로 위임한다.
+void UTopMenuBarWidget::RequestMapPanel()      { HandleMapButtonClicked(); }
+void UTopMenuBarWidget::RequestSettingsPanel() { HandleSettingsButtonClicked(); }
+void UTopMenuBarWidget::RequestDicePanel()     { HandleDiceButtonClicked(); }
+void UTopMenuBarWidget::RequestSkillPanel()    { HandleSkillButtonClicked(); }
 
 /**
  * @brief MAP 버튼 클릭을 월드맵 토글로 연결한다.

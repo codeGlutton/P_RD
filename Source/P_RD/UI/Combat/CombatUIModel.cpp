@@ -20,6 +20,12 @@ void UCombatUIModel::RequestRollDice()
 	OnCombatCommand.Broadcast(ECombatInputType::RollDice, INDEX_NONE);
 }
 
+/** @brief 입장 물리 굴림 결과면(0-base)을 게임플레이에 반영하라고 알린다. */
+void UCombatUIModel::RequestApplyDiceResults(const TArray<int32>& RolledFaceIndices)
+{
+	OnApplyDiceResults.Broadcast(RolledFaceIndices);
+}
+
 /** @brief 스킬 상세 요청을 SkillIndex payload로 전달한다. */
 void UCombatUIModel::RequestLongPressSkill(int32 SkillIndex)
 {

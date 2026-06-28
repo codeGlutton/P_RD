@@ -63,6 +63,13 @@ public:
 	/** @brief 전투 HUD가 읽은 보유 주사위/스킬 수를 탑바 DICE/SKILL 라벨에 반영한다. */
 	void SetCombatDiceSkillCount(int32 DiceCount, int32 SkillCount);
 
+	/** @brief 전투 HUD의 concept 내비 버튼(MAP/DICE/SKILL/SET)이 탑바 버튼과 동일한 패널 토글을
+	    트리거하도록 외부에 노출한다(스킨 모드에서 탑바는 Collapsed라 concept 버튼이 입력을 대신 받는다). */
+	void RequestMapPanel();
+	void RequestSettingsPanel();
+	void RequestDicePanel();
+	void RequestSkillPanel();
+
 protected:
 	/**
 	 * @brief WBP 바인딩 검증, 버튼 연결, 전투 종료 이벤트 구독을 수행한다.

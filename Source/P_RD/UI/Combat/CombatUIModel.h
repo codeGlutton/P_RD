@@ -31,6 +31,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatQueueNodeResolved, FCombatQ
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatActionResolved);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatCommand, ECombatInputType, Type, int32, IntPayload);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatWorldTouch, FVector2D, ScreenPosition, bool, bLongPress);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnApplyDiceResults, const TArray<int32>&, RolledFaceIndices);
 
 /** @brief 전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다. */
 UCLASS(BlueprintType)
@@ -63,6 +64,10 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Combat|Input")
 	FOnCombatWorldTouch OnCombatWorldTouch;
 
+	/** @brief 입장 물리 굴림의 결과면(0-base index)을 전투 풀에 반영하라는 알림. [게임플레이 구독] */
+	UPROPERTY(BlueprintAssignable, Category = "Combat|Input")
+	FOnApplyDiceResults OnApplyDiceResults;
+
 	/* ───────── UI → gameplay : 의도만 보낸다 ───────── */
 public:
 	/** @brief SkillIndex를 그대로 게임플레이에 전달한다. UI는 스킬 객체를 직접 들고 있지 않는다. */
@@ -71,6 +76,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestToggleDice(int32 DiceIndex);
 	/** @brief 현재 보유 주사위 굴림 요청만 보낸다. RNG와 결과 push는 구독자가 책임진다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestRollDice();
+
+	/** @brief 입장 물리 굴림 결과면(0-base)을 게임플레이에 반영하라고 알린다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestApplyDiceResults(const TArray<int32>& RolledFaceIndices);
 	/** @brief SkillIndex 상세 표시 요청을 보낸다. 상세 데이터는 SetSkillDetail()로 되돌아온다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestLongPressSkill(int32 SkillIndex);
 	/** @brief UnitId 상세 표시 요청을 보낸다. UI는 UnitId를 상태 객체로 해석하지 않는다. */
