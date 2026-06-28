@@ -60,11 +60,20 @@ void UCombatTileMapHUDWidget::RebuildSkillRailWidgets()
 			continue;
 		}
 
-		SkillRailPanel->SetBrushColor(GetCombatSkillRailBrushColor(false));
 		SkillRailPanel->SetPadding(GetCombatSkillRailPadding());
 		SkillRailText->SetJustification(ETextJustify::Center);
-		SkillRailText->SetColorAndOpacity(FSlateColor(GetCombatSkillRailTextColor(false)));
-		SkillRailText->SetText(ResolveSkillRailLabel(mCombatUIModel, SkillIndex));
+		if (IsDesignerSkinActive())
+		{
+			// 디자이너 스킨: 레일 배경/라벨을 숨겨 WBP의 concept 스킬 아이콘이 그대로 보이게 한다(선택 강조만 Refresh에서 입힘).
+			SkillRailPanel->SetBrushColor(FLinearColor(0.0f, 0.0f, 0.0f, 0.0f));
+			SkillRailText->SetVisibility(ESlateVisibility::Collapsed);
+		}
+		else
+		{
+			SkillRailPanel->SetBrushColor(GetCombatSkillRailBrushColor(false));
+			SkillRailText->SetColorAndOpacity(FSlateColor(GetCombatSkillRailTextColor(false)));
+			SkillRailText->SetText(ResolveSkillRailLabel(mCombatUIModel, SkillIndex));
+		}
 		SkillRailPanel->AddChild(SkillRailText);
 		RootCanvas->AddChildToCanvas(SkillRailPanel);
 
@@ -82,7 +91,15 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 		const bool bSelected = SkillIndex == mSelectedSkillIndex;
 		if (UBorder* SkillRailPanel = mSkillRailPanels[SkillIndex])
 		{
-			SkillRailPanel->SetBrushColor(GetCombatSkillRailBrushColor(bSelected));
+			if (IsDesignerSkinActive())
+			{
+				// 스킨 모드: 비선택은 투명(아이콘만), 선택은 옅은 금색 틴트로만 강조.
+				SkillRailPanel->SetBrushColor(bSelected ? FLinearColor(1.0f, 0.95f, 0.55f, 0.30f) : FLinearColor(0.0f, 0.0f, 0.0f, 0.0f));
+			}
+			else
+			{
+				SkillRailPanel->SetBrushColor(GetCombatSkillRailBrushColor(bSelected));
+			}
 			SkillRailPanel->SetRenderScale(GetCombatSkillRailScale(bSelected));
 		}
 
@@ -135,7 +152,13 @@ void UCombatTileMapHUDWidget::EnsureSkillInputButtons()
 
 int32 UCombatTileMapHUDWidget::FindSkillRailIndexAtScreenPosition(const FVector2D& ScreenPosition) const
 {
-	const FGeometry CachedGeometry = GetCachedGeometry();
+	// 렌더는 스킬레일을 DesignCanvas(1920x1080, ScaleBox 레터박스) 좌표에 그린다. 히트테스트도 같은
+	// DesignCanvas 지오메트리로 정규화해야 탭 영역이 렌더와 일치한다. (루트 GetCachedGeometry는 풀뷰포트라
+	// 화면비 차이만큼 어긋난다.) 스킨 비활성 fallback은 루트 지오메트리.
+	const UWidget* GeometrySource = (IsDesignerSkinActive() && DesignCanvas.Get() != nullptr)
+		? StaticCast<const UWidget*>(DesignCanvas.Get())
+		: StaticCast<const UWidget*>(this);
+	const FGeometry CachedGeometry = GeometrySource->GetCachedGeometry();
 	const FVector2D LocalPosition = CachedGeometry.AbsoluteToLocal(ScreenPosition);
 	const FVector2D LocalSize = CachedGeometry.GetLocalSize();
 	if (LocalSize.X <= 0.0f || LocalSize.Y <= 0.0f)
@@ -145,16 +168,17 @@ int32 UCombatTileMapHUDWidget::FindSkillRailIndexAtScreenPosition(const FVector2
 
 	const float NormalizedX = LocalPosition.X / LocalSize.X;
 	const float NormalizedY = LocalPosition.Y / LocalSize.Y;
-	if (NormalizedX < CombatSkillRailLeft || NormalizedX > CombatSkillRailRight)
+	// 렌더와 같은 영역 계산(GetSkillRailItemRect)을 써서 WBP 스킨 좌표에서도 탭 영역이 일치하게 한다.
+	const FAnchors RailGroup = GetSkillRailGroupRect();
+	if (NormalizedX < RailGroup.Minimum.X || NormalizedX > RailGroup.Maximum.X)
 	{
 		return INDEX_NONE;
 	}
 
 	for (int32 SkillIndex = 0; SkillIndex < CombatSkillSlotCount; ++SkillIndex)
 	{
-		const float SlotTop = CombatSkillRailTop + StaticCast<float>(SkillIndex) * (CombatSkillRailHeight + CombatSkillRailGap);
-		const float SlotBottom = SlotTop + CombatSkillRailHeight;
-		if (NormalizedY >= SlotTop && NormalizedY <= SlotBottom)
+		const FAnchors ItemRect = GetSkillRailItemRect(SkillIndex, CombatSkillSlotCount);
+		if (NormalizedY >= ItemRect.Minimum.Y && NormalizedY <= ItemRect.Maximum.Y)
 		{
 			return SkillIndex;
 		}

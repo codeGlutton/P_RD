@@ -13,6 +13,7 @@
 #include "Components/CanvasPanelSlot.h"
 
 class UWidget;
+class UWidgetTree;
 
 /**
  * @brief CanvasPanel 위젯 배치 함수 모음입니다.
@@ -73,4 +74,20 @@ namespace RDUILayout
 	 * @param ZOrder 앞뒤 순서.
 	 */
 	P_RD_API void ApplyCenteredSlot(UWidget* Widget, const FVector2D& Position, const FVector2D& Size, int32 ZOrder);
+
+	/**
+	 * @brief WBP 디자이너가 배치한 명명 앵커 위젯에서 정규화(0~1) 영역을 읽습니다.
+	 *
+	 * @details
+	 * 디자인은 코드가 아니라 WBP에 둡니다. WBP에 (0,0) 점앵커 + 디자인좌표 오프셋/크기로 둔
+	 * 앵커 위젯(예: HUD_SkillRail)을 찾아, 그 위치/크기를 DesignSize로 나눠 정규화 영역을 돌려줍니다.
+	 * 위젯이 없거나 CanvasPanelSlot이 아니면 Fallback을 그대로 돌려줍니다(앵커 없으면 기존 코드 좌표 유지).
+	 *
+	 * @param WidgetTree 탐색할 위젯 트리.
+	 * @param AnchorWidgetName 찾을 앵커 위젯 이름.
+	 * @param DesignSize 앵커 위젯 좌표의 기준 캔버스 크기(예: 1920x1080).
+	 * @param Fallback 앵커가 없을 때 돌려줄 정규화 영역.
+	 * @return 정규화된 (좌,상,우,하) 영역.
+	 */
+	P_RD_API FAnchors GetDesignerGroupRect(UWidgetTree* WidgetTree, FName AnchorWidgetName, const FVector2D& DesignSize, const FAnchors& Fallback);
 }
