@@ -24,4 +24,6 @@ public:
 	{
 		return FPrimaryAssetId(EquipmentPrimaryAssetTypes::GetGlovesType(mRarityType), GetFName());
 	}
+
+	virtual EEquipmentType GetEquipmentType() const override { return EEquipmentType::Gloves; }
 };
