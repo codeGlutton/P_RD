@@ -46,7 +46,6 @@ protected:
 
 protected:
 	void OnBeginAction() override;
-	void OnTickAction(float DeltaTime) override;
 	void OnEndAction() override;
 
 protected:
@@ -67,16 +66,4 @@ protected:
 	// @brief 따라갈 경로 타일 목록 (인덱스 0은 시작 타일)
 	UPROPERTY(Category = Move, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PathTileIndexes"))
 	TArray<FTileIndex> mPathTileIndexes;
-
-	// @brief 현재 진행 중인 경로 인덱스 (다음 도착 타일 기준, INDEX_NONE이면 미진행)
-	UPROPERTY(Category = Move, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CurrentStepIndex"))
-	int32 mCurrentStepIndex = INDEX_NONE;
-
-	// @brief 한 칸 이동 누적 시간
-	UPROPERTY(Category = Move, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "StepElapsed"))
-	float mStepElapsed = 0.0f;
-
-private:
-	// TODO : 실제 이동 애니메이션 길이/연출 동기화 연결. 임시 한 칸 이동 시간.
-	static constexpr float STEP_DURATION = 0.15f;
 };
