@@ -126,6 +126,42 @@ void ATileMap::BindModelDelegates()
 	mModel->mClearTileHighlightDelegate.BindUObject(this, &ATileMap::ClearTileHighlight);
 }
 
+// [Model-View 프레임워크] 뷰 바인딩 진입점(IActorView 계약).
+// 팩토리(UGameObjectModelFactory)가 이 뷰 액터를 스폰한 직후 BindModel(Model)을 호출한다(생성 단계: 양방향 바인딩).
+// ATileMap은 "뷰"이므로 게임 로직을 갖지 않고, 모델의 표시 요청(이동경로/하이라이트)을 받아 그리는 역할만 한다.
+// 순서: ① 모델을 구체 타입으로 캐스팅 검증 → ② 기본 모델을 런타임 전투 모델로 교체 → ③ 표시 델리게이트 재바인딩
+//       → ④ 모델 격자 크기로 인스턴스 재생성 → ⑤ 베이스 IActorView::BindModel로 위임(모델의 PostBindView 후처리).
+void ATileMap::BindModel(UObjectModel* Model)
+{
+	UTileMapModel* TileMapModel = Cast<UTileMapModel>(Model);
+	checkf(TileMapModel != nullptr, TEXT("ATileMap은 UTileMapModel만 바인딩할 수 있습니다."));
+
+	mModel = TileMapModel;
+	BindModelDelegates();
+	RebuildTileInstances();
+
+	IActorView::BindModel(Model);
+}
+
+void ATileMap::UnbindModel(UObjectModel* Model)
+{
+	IActorView::UnbindModel(Model);
+
+	if (mModel == Model)
+	{
+		// BindModelDelegates가 실제로 거는 3개만 해제한다.
+		mModel->mSetMovePathDelegate.Unbind();
+		mModel->mSetTileHighlightDelegate.Unbind();
+		mModel->mClearTileHighlightDelegate.Unbind();
+		mModel = nullptr;
+	}
+}
+
+UObjectModel* ATileMap::GetModel_Internal() const
+{
+	return mModel;
+}
+
 void ATileMap::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);

@@ -8,6 +8,7 @@
 #pragma once
 
 #include "RDMinimal.h"
+#include "Actor/ActorView.h"
 #include "GameFramework/Actor.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "Actor/TileMap/TileMapModel.h"
@@ -24,7 +25,7 @@ class ITileActor;
  * @brief  타일맵 액터
  */
 UCLASS()
-class P_RD_API ATileMap : public AActor
+class P_RD_API ATileMap : public AActor, public IActorView
 {
 	GENERATED_BODY()
 
@@ -40,6 +41,17 @@ public:
 	// @brief 매 프레임 Effect 하이라이트 펄스 갱신
 	virtual void Tick(float DeltaSeconds) override;
 
+	/* IActorView 상속 — 팩토리(UGameObjectModelFactory::OnPostCreateNewModel)가 스폰 후 호출하여
+	   런타임 전투 모델(UTileMapModel)을 이 뷰 액터에 바인딩한다. 바인딩되어야 GetView<ATileMap>()가
+	   유효해지고(CombatUIAdapter의 타일 하이라이트), 모델 좌표로 그리드 인스턴스를 재생성한다. */
+public:
+	void BindModel(UObjectModel* Model) override;
+	void UnbindModel(UObjectModel* Model) override;
+
+protected:
+	UObjectModel* GetModel_Internal() const override;
+
+public:
 	/* 타일 → 월드 변환 */
 	/**
 	 * @brief 타일 트랜스폼(인덱스+방향)을 월드 트랜스폼으로 변환
