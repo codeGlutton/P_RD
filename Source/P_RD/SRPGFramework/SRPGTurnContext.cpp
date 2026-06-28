@@ -230,6 +230,13 @@ void USRPGTurnContext::OnEndCurrentAction(USRPGAction* Action, ESRPGActionResult
 	// 전투 상태 평가
 	CombatModel->EvaluateCombatStates();
 
+	// 강제 중단
+	if (mShouldTerminateAfterAction == true)
+	{
+		mShouldTerminateAfterAction = false;
+		return;
+	}
+
 	// 턴 종료 여부 체크
 	if (mTurnPhase == ESRPGTurnPhase::TurnAbort)
 	{
@@ -331,6 +338,42 @@ bool USRPGTurnContext::IsPermanent() const
 int32 USRPGTurnContext::GetLifeCount() const
 {
 	return mLifeCount;
+}
+
+void USRPGTurnContext::ForcedClearActions()
+{
+	if (mTurnPhase == ESRPGTurnPhase::TurnPlay && mReservedActions.Num() > mHeadActionIndex)
+	{
+		const int32 NewHeadActionIndex = mHeadActionIndex + 1;
+		while (mReservedActions.Num() != NewHeadActionIndex)
+		{
+			// 현재 액션이 마지막 액션이 되도록 예약된 액션 전부 제거
+			mReservedActions.Pop();
+		}
+
+		// 로그 작성
+		GetWorldEventLogger(this)->BeginTurnLog(mOwner->GetModelId(), mOwner->GetClass());
+		GetWorldEventLogger(this)->BeginActionLog(mOwner->GetTileTransform().mIndex);
+
+		// 현재 액션 종료 요청
+		mReservedActions[mHeadActionIndex]->MarkActionCompleted(ESRPGActionResult::Cancelled);
+		mReservedActions[mHeadActionIndex]->TryEndAction();
+	}
+	else
+	{
+		mReservedActions.Empty();
+		mHeadActionIndex = 0;
+	}
+}
+
+void USRPGTurnContext::ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand)
+{
+	mShouldTerminateAfterAction = true;
+
+	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 서브시스템 모델 nullptr"));
+
+	CommandRouterModel->SummitCommand(NextCommand);
 }
 
 

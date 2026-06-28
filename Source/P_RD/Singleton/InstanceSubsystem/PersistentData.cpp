@@ -1,4 +1,21 @@
-﻿/**
+﻿#include "Singleton/InstanceSubsystem/PersistentData.h"
+#include "AttributeSet/UnitAttributeSet.h"
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "Pawn/Player/PlayerUnitModel.h"
+
+#include "Setting/GameBalanceSettings.h"
+#include "Engine/AssetManager.h"
+#include "PCGStage/StageBuilder.h"
+
+#include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
+#include "DataAsset/DiceData/StaticDiceData.h"
+
+#include "FunctionLibrary/RandomStreamFunctionLibrary.h"
+
+#include "Setting/GamePlaySettings.h"
+#include "Sound/SoundClass.h"
+
+/**
  * @file PersistentData.cpp
  * @brief 런(Run)/유저/플레이어 유닛/옵션의 영속 데이터 객체 구현부.
  *        한 판(런) 진행 중에 누적/유지되어야 하는 상태(플레이어 스탯, 스킬/장비/주사위 보유 목록,
@@ -15,27 +32,7 @@
  *          (3) CoreRedirect : DefaultEngine.ini가 구 enum 이름을 새 enum으로 매핑.
  *        - Override(=정수 3)는 "덮어쓰기" 연산. 누적이 아니라 최종값을 그 값으로 강제 설정한다.
  *          영속 스탯 복원은 항상 정확한 절대값을 다시 심어야 하므로 Override가 적합하다.
- *
- * @author 박용수
- * @date 2026-06-26
  */
-
-#include "Singleton/InstanceSubsystem/PersistentData.h"
-#include "AttributeSet/UnitAttributeSet.h"
-#include "Component/AttributeComponent/AttributeSetComponentModel.h"
-#include "Pawn/Player/PlayerUnitModel.h"
-
-#include "Setting/GameBalanceSettings.h"
-#include "Engine/AssetManager.h"
-#include "PCGStage/StageBuilder.h"
-
-#include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
-#include "DataAsset/DiceData/StaticDiceData.h"
-
-#include "FunctionLibrary/RandomStreamFunctionLibrary.h"
-
-#include "Setting/GamePlaySettings.h"
-#include "Sound/SoundClass.h"
 
 /**
  * @brief 한 런(Run) 동안 누적된 로그(처치 적/획득 스킬/장비/주사위)를 모두 비운다.

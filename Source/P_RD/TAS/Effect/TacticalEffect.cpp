@@ -1,4 +1,6 @@
-﻿/**
+﻿#include "TAS/Effect/TacticalEffect.h"
+
+/**
  * @file TacticalEffect.cpp
  * @brief 전술 전투(TAS) 이펙트 시스템의 런타임 구현. 이펙트 스펙(FTacticalEffectSpec)의
  *        모디파이어 크기 계산과 이펙트 정의(UTacticalEffect)의 적용 콜백을 담당한다.
@@ -14,11 +16,7 @@
  *        연산 종류: AddBase(0)=합산, MultiplyAdditive(1)=배율 가산, DivideAdditive(2)=나눗셈 가산,
  *        Override(3)=덮어쓰기, MultiplyCompound(4)=거듭제곱 곱, AddFinal(5)=최종 합산, Max(6)=무효/개수.
  *        구 GAS 이름(Additive/Multiplicitive/Division/Override)은 동일 정수값의 하위호환 별칭으로 남아 있다.
- * @author 박용수
- * @date 2026-06-26
  */
-
-#include "TAS/Effect/TacticalEffect.h"
 
 /**
  * @brief 이펙트 클래스와 컨텍스트로부터 스펙을 생성하는 생성자.

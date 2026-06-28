@@ -35,6 +35,7 @@
  *       Max(6)=무효/개수. 하위호환 별칭(구 GAS 이름): Additive=0 / Multiplicitive=1 /
  *       Division=2 / Override=3.
  */
+
 UTacticalEffect_AttackPoint::UTacticalEffect_AttackPoint()
 {
 	// 지속: 영구(핸들로 적용/해제) · 스택: 없음

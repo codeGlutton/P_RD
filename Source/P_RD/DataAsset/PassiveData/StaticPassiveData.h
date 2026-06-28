@@ -37,8 +37,14 @@ UCLASS()
 class P_RD_API UStaticPassiveData : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
-public:
 
+public:
+    FPrimaryAssetId GetPrimaryAssetId() const override
+    {
+        return FPrimaryAssetId(SkillPrimaryAssetTypes::GetPassiveType(), GetFName());
+    }
+
+public:
     UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Description"))
     FText mDescription;
 
@@ -75,8 +81,8 @@ public:
     * 고정형은 제네릭(UTacticalPassive_AddStat), 계산형은 Nth 등.
     * 컴포넌트가 이 클래스로 런타임 패시브를 생성하고 본 데이터를 주입한다.
     */
-    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PassiveClass"))
-    TSubclassOf<UTacticalPassive> mPassiveClass;
+    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PassiveClass", AssetBundles = "Actor"))
+    TSoftClassPtr<UTacticalPassive> mPassiveClass;
 
     /**
     * @brief 적용할 이펙트 "종류" 클래스
@@ -84,8 +90,8 @@ public:
     * @details
     * 속성·연산(op)·지속정책은 이 이펙트 클래스가 정의. 양(magnitude)은 mMagnitude로 공급.
     */
-    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectClass"))
-    TSubclassOf<UTacticalEffect> mEffectClass;
+    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectClass", AssetBundles = "Actor"))
+    TSoftClassPtr<UTacticalEffect> mEffectClass;
 
     /**
     * @brief 적용 수치(양)
@@ -149,8 +155,8 @@ public:
     * 패시브 효과
     * 데미지, 힐, 밀치기 등
     */
-    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StaticPassiveEffect"))
-    TObjectPtr<UStaticSkillEffect_Base> mStaticPassiveEffect;
+    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StaticPassiveEffect", AssetBundles = "Actor"))
+    TSoftObjectPtr<UStaticSkillEffect_Base> mStaticPassiveEffect;
 
 #pragma endregion
 

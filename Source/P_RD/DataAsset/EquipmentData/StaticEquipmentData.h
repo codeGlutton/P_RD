@@ -41,7 +41,7 @@ public:
     UPROPERTY(Category = "Equipment", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RarityType"))
     ERarityType mRarityType;
 
-    UPROPERTY(Category = "Equipment", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Passive"))
+    UPROPERTY(Category = "Equipment", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Passive", AssetBundles = "Actor"))
     TArray<TSoftObjectPtr<UStaticPassiveData>> mStaticPassiveData;
 
     /**

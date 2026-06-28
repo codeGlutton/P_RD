@@ -5,45 +5,6 @@
  * @date   2026-06-23
  *********************************************************************/
 
-/**
- * @file   TacticalAggregator.h
- * @brief  하나의 속성(Attribute)에 적용되는 모든 모디파이어를 누적/평가하는 Aggregator 정의.
- *
- * [PR #191 마이그레이션 맥락]
- *  본 PR은 효과 모디파이어의 "연산 종류(operation)" enum을 GAS의 EGameplayModOp에서
- *  자체 정의한 ETacticalModOp(TacticalEffectType.h)로 치환하는 GAS 폐기 작업의 일부다.
- *  이 파일에서 모디파이어 연산자를 받는 모든 지점(예: ExecModOnBaseValue, AddAggregatorMod 등)이
- *  TEnumAsByte<EGameplayModOp::Type> → TEnumAsByte<ETacticalModOp::Type> 로 바뀌었다.
- *
- * [ETacticalModOp의 정수값을 구 EGameplayModOp와 동일하게 유지하는 이유 3가지]
- *  (1) 직렬화 호환: 기존 에셋/세이브 데이터에 정수값(byte)으로 박혀 있는 연산자 값을 그대로 보존하기 위함.
- *      enum 이름만 바뀌고 정수값이 달라지면 기존 데이터가 엉뚱한 연산으로 해석된다.
- *  (2) 배열 인덱싱: 아래 mMods[ETacticalModOp::Max] 처럼 연산자 값(op)을 그대로 배열 인덱스로 사용한다.
- *      각 모디파이어는 자신의 op 값에 해당하는 버킷(mMods[op])에 분류되어 누적된다.
- *  (3) CoreRedirect: DefaultEngine.ini의 CoreRedirect가 구 enum 이름(EGameplayModOp)을
- *      신 enum 이름(ETacticalModOp)으로 매핑한다. 정수값이 같아야 이 이름 매핑만으로 안전하게 치환된다.
- *
- * [ETacticalModOp 연산 값 대응표 (정수값 = 구 EGameplayModOp 값)]
- *  - AddBase(0)           : 합산.        Base에 EvaluatedMagnitude를 더함.           (구 GAS Additive)
- *  - MultiplyAdditive(1)  : 배율 가산.    여러 배율을 (1 + sum)으로 합산해 곱함.       (구 GAS Multiplicitive)
- *  - DivideAdditive(2)    : 나눗셈 가산.  여러 제수를 (1 + sum)으로 합산해 나눔.        (구 GAS Division)
- *  - Override(3)          : 덮어쓰기.     최종값을 EvaluatedMagnitude로 강제 대체.     (구 GAS Override)
- *  - MultiplyCompound(4)  : 거듭제곱 곱.  각 배율을 (1 + mag)으로 보고 모두 곱셈 복리.
- *  - AddFinal(5)          : 최종 합산.    위 모든 연산 이후 마지막에 더해지는 보정.
- *  - Max(6)               : 무효/개수.    실제 연산이 아니라 enum 원소 개수(=배열 길이)로 사용.
- *  하위호환 별칭: Additive=0 / Multiplicitive=1 / Division=2 / Override=3 (구 GAS 이름 그대로 사용 가능).
- *
- * [연관 유틸: TacticalEffectUtilities (TacticalEffectType.cpp) — 구 GameplayEffectUtilities 대체]
- *  - GetModifierBiasByModifierOp : 연산별 항등값. 곱셈계열(Multiply/Divide/Compound)=1, 합산계열(Add)=0.
- *      SumMods/MultiplyMods가 빈 버킷에서도 올바른 항등원으로 시작하도록 Bias를 공급한다.
- *  - ComputeStackedModifierMagnitude : 스택(중첩) 수에 따른 모디파이어 크기 계산.
- *      MultiplyCompound는 거듭제곱(복리), 그 외는 선형 스케일.
- *  - TacticalModOpToString : 연산자를 디버그용 문자열로 변환.
- *
- * @author 박용수
- * @date   2026-06-26
- */
-
 #pragma once
 
 #include "AttributeSet/AttributeSetMinimal.h"

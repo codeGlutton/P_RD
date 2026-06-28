@@ -86,6 +86,11 @@ public:
 	bool IsPermanent() const;
 	int32 GetLifeCount() const;
 
+	/* 시뮬 함수 */
+protected:
+	void ForcedClearActions();
+	void ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand);
+
 public:
 	FOnBeginTurnUI OnBeginTurnUI;
 	FOnEndTurnUI OnEndTurnUI;
@@ -128,4 +133,8 @@ protected:
 	// @brief 기본 핸들러들
 	UPROPERTY(Category = Handler, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "TurnDefaultCommandHandlers"))
 	TArray<TScriptInterface<ISRPGCommandHandler>> mTurnDefaultCommandHandlers;
+
+protected:
+	// @brief 액션 종료 시, 중단해야될 필요가 있는지
+	bool mShouldTerminateAfterAction = false;
 };

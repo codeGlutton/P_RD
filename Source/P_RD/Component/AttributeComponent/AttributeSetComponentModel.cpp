@@ -1,4 +1,12 @@
-﻿/**
+﻿#include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
+#include "TAS/Effect/TacticalEffectContext.h"
+#include "TAS/Aggregator/TacticalAggregator.h"
+
+#include "Actor/ActorModel.h"
+#include "Actor/BoardActor/BoardCombatTarget.h"
+
+/**
  * @file AttributeSetComponentModel.cpp
  * @brief 유닛(ActorModel)에 부착되어 속성(Attribute)과 전술 이펙트(TacticalEffect)를
  *        총괄하는 컴포넌트 모델 구현부. GAS의 UAbilitySystemComponent에 대응하는 자체 구현이다.
@@ -28,18 +36,7 @@
  *        ※ 항등값/스택 누적 수식은 TacticalEffectUtilities(TacticalEffectType.cpp)의
  *          GetModifierBiasByModifierOp(곱셈계열=1, 합산계열=0)와
  *          ComputeStackedModifierMagnitude(MultiplyCompound는 거듭제곱)에서 처리한다.
- *
- * @author 박용수
- * @date 2026-06-26
  */
-
-#include "Component/AttributeComponent/AttributeSetComponentModel.h"
-#include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
-#include "TAS/Effect/TacticalEffectContext.h"
-#include "TAS/Aggregator/TacticalAggregator.h"
-
-#include "Actor/ActorModel.h"
-#include "Actor/BoardActor/BoardCombatTarget.h"
 
 /**
  * @brief 컴포넌트 초기화. 소유 ActorModel 하위에 이미 존재하는 AttributeSet들을 수집하고

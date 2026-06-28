@@ -1,9 +1,11 @@
 ﻿#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
+#include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 #include "Simulation/Factory/ObjectModelFactory.h"
 
 #include "SRPGFramework/SRPGCommand.h"
+#include "SRPGFramework/SRPGTurnEndAction.h"
 #include "Setting/RDWorldSettings.h"
 
 #include "Actor/TileMap/TileMapModel.h"
@@ -153,6 +155,13 @@ void USRPGCombatModel::OnEndCurrentTurn(USRPGTurnContext* TurnContext, ESRPGTurn
 	// 전투 종료 여부 체크
 	if (mCombatPhase == ESRPGCombatRoomPhase::CombatAbort)
 	{
+		// 강제 중단
+		if (mShouldTerminateBeforePlayerTurnStart == true)
+		{
+			mShouldTerminateBeforePlayerTurnStart = false;
+			return;
+		}
+
 		EndCombat();
 		return;
 	}
@@ -471,6 +480,13 @@ void USRPGCombatModel::AdvanceTurn(bool IsInitialRound)
 		FlushPendingTurnRequests();
 	}
 
+	// 강제 중단
+	if (mShouldTerminateBeforePlayerTurnStart == true && mTurnContextMap[mCurTurnContextOrder->GetValue()]->GetOwner()->IsPlayerUnitModel() == true)
+	{
+		mShouldTerminateBeforePlayerTurnStart = false;
+		return;
+	}
+
 	// 라운드 시작 시 이벤트 처리
 	NotifyRoundStartIfNeeded();
 
@@ -577,5 +593,38 @@ UTileMapModel* USRPGCombatModel::GetTileMap()
 TArray<TObjectPtr<UUnitModel>>& USRPGCombatModel::GetUnits()
 {
 	return mUnits;
+}
+
+void USRPGCombatModel::ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand, bool NeedEndCurrentAction)
+{
+	checkf(mCurTurnContextOrder != nullptr, TEXT("현재 전투가 진행 중이 아님"));
+	TObjectPtr<USRPGTurnContext>& CurTurnContext = mTurnContextMap[mCurTurnContextOrder->GetValue()];
+
+	if (NeedEndCurrentAction == true)
+	{
+		CurTurnContext->ForcedClearActions();
+	}
+	CurTurnContext->ForcedAdvanceUntilNextAction(MoveTemp(NextCommand));
+}
+
+void USRPGCombatModel::ForcedAdvanceUntilNextPlayerTurn(bool NeedEndCurrentAction)
+{
+	checkf(mCurTurnContextOrder != nullptr, TEXT("현재 전투가 진행 중이 아님"));
+	TObjectPtr<USRPGTurnContext>& CurTurnContext = mTurnContextMap[mCurTurnContextOrder->GetValue()];
+
+	if (NeedEndCurrentAction == true)
+	{
+		CurTurnContext->ForcedClearActions();
+	}
+
+	mShouldTerminateBeforePlayerTurnStart = true;
+
+	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 서브시스템 모델 nullptr"));
+
+	TInstancedStruct<FSRPGCommand> TurnEndCommand;
+	TurnEndCommand.InitializeAs<FSRPGTurnEndCommand>();
+
+	CommandRouterModel->SummitCommand(TurnEndCommand);
 }
 

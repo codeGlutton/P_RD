@@ -3,7 +3,7 @@
 
 #include "RDCollision.h"
 
-// #include "Pawn/SkillComponent.h"
+#include "Component/SkillComponent/SkillComponentModel.h"
 #include "Dice/DicePoolModel.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
 
@@ -11,6 +11,7 @@
 #include "Pawn/Player/PlayerUnitModel.h"
 #include "Actor/TileMap/TileMapModel.h"
 
+#include "Singleton/WorldSubsystem/SimulationSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
@@ -197,8 +198,8 @@ void USRPGSkillBuildAction::SetSkill(int32 SkillIndex)
 {
     checkf(mSkillBuildPhase == ESRPGSkillBuildPhase::None, TEXT("스킬 빌드 순서 오류"));
 
-    // USkillComponent* SkillComp = mInstigator->GetSkillComponent();
-    // checkf(SkillComp != nullptr, TEXT("스킬 컴포넌트 nullptr"));
+    USkillComponentModel* SkillCompModel = mInstigator->GetSkillComponentModel();
+    checkf(SkillCompModel != nullptr, TEXT("스킬 컴포넌트 모델 nullptr"));
 
     UTileMapModel* TileMap = GetTileMap();
     checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"))
@@ -207,7 +208,7 @@ void USRPGSkillBuildAction::SetSkill(int32 SkillIndex)
 
     {
         TSoftObjectPtr<UStaticSkillData> StaticSkillDataSoftObj = nullptr;
-        // SkillComp->GetSkillData(SkillIndex, OUT StaticSkillDataSoftObj);
+        SkillCompModel->GetSkillData(SkillIndex, OUT StaticSkillDataSoftObj);
         if (StaticSkillDataSoftObj == nullptr)
         {
             UE_LOG(LogSRPGCombat, Warning, TEXT("스킬 시전 시 비정상적 스킬 선택"));
@@ -234,17 +235,16 @@ void USRPGSkillBuildAction::ChangeDices(int32 RequestedDiceIndex)
         mSelectedDices.Add(RequestedDiceIndex);
     }
 
-    mSelectedDiceSum = 0;
     UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
-    if (PlayerUnit != nullptr)
+    checkf(PlayerUnit != nullptr, TEXT("주사위를 굴릴 수 있는 플레이어 유닛이 아님"));
+
+    UDicePoolModel* DicePool = PlayerUnit->GetDicePool();
+    checkf(DicePool != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
+
+    mSelectedDiceSum = 0;
+    for (int32 DiceIndex : mSelectedDices)
     {
-        if (UDicePoolModel* DicePool = PlayerUnit->GetDicePool())
-        {
-            for (int32 DiceIndex : mSelectedDices)
-            {
-                mSelectedDiceSum += DicePool->GetRolledDiceValue(DiceIndex);
-            }
-        }
+        mSelectedDiceSum += DicePool->GetRolledDiceValue(DiceIndex);
     }
 }
 
@@ -264,24 +264,44 @@ void USRPGSkillBuildAction::SetTargetTile(const FTileIndex& TargetIndex)
         AllEffectActors.Append(EffectActors);
     }
 
-    // USkillComponent* SkillComp = mInstigator->GetSkillComponent();
-    // checkf(SkillComp != nullptr, TEXT("스킬 컴포넌트 nullptr"));
+    USimulationSubsystem* SimulationSubsystem = GetWorld()->GetSubsystem<USimulationSubsystem>();
+    checkf(SimulationSubsystem != nullptr, TEXT("시뮬레이션 서브시스템 모델 nullptr"));
 
-    // 김준형
-    // 파라미터 변경으로 비활성화 처리했습니다.
-    //SkillComp->CalculateSkillResult(mSelectedSkillIndex, AllEffectActors, OUT mCalculationResult);
+    TInstancedStruct<FSRPGCommand> SkillCastCommand;
+    SkillCastCommand.InitializeAs<FSRPGSkillCastCommand>();
+    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mSkillIndex = mSelectedSkillIndex;
+    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mEffectTileIndexes = mEffectTileIndexes;
+    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDicePoint = mSelectedDiceSum;
+
+    TArray<FSRPGTurnEventLog> TurnEventLogs = SimulationSubsystem->SimulateUntilNextAction(MoveTemp(SkillCastCommand));
+    
+    // TurnEventLogs를 UI에게 전달
 }
 
 void USRPGSkillBuildAction::BuildSkill()
 {
     checkf(mSkillBuildPhase == ESRPGSkillBuildPhase::Preview, TEXT("스킬 빌드 순서 오류"));
 
+    UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
+    checkf(PlayerUnit != nullptr, TEXT("주사위를 굴릴 수 있는 플레이어 유닛이 아님"));
+
+    UDicePoolModel* DicePool = PlayerUnit->GetDicePool();
+    checkf(DicePool != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
+
+    for (int32 DiceIndex : mSelectedDices)
+    {
+        // 확정
+        DicePool->MarkDiceUsed(DiceIndex);
+    }
+
     USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
     checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 서브시스템 모델 nullptr"));
 
     TInstancedStruct<FSRPGCommand> SkillCastCommand;
     SkillCastCommand.InitializeAs<FSRPGSkillCastCommand>();
-    // SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mCalculationResult = mCalculationResult;
+    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mSkillIndex = mSelectedSkillIndex;
+    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mEffectTileIndexes = mEffectTileIndexes;
+    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDicePoint = mSelectedDiceSum;
 
     CommandRouterModel->SummitCommand(SkillCastCommand);
 }

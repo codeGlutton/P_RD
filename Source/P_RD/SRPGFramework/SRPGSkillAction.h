@@ -24,7 +24,9 @@ public:
 	FSRPGSkillCastCommand();
 
 public:
-	FSkillCommitResult mCalculationResult;
+	int32 mSkillIndex;
+	TArray<FTileIndex> mEffectTileIndexes;
+	float mDicePoint;
 };
 
 /**
@@ -44,6 +46,6 @@ protected:
 	void OnEndAction() override;
 
 protected:
-	// TArray<FSRPGCalculatedData> mCalculateDatas;
+	ESRPGCommandResult HandleCommand(const TInstancedStruct<FSRPGCommand>& Command) override;
 };
 

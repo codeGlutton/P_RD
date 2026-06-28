@@ -1,4 +1,13 @@
-﻿/**
+﻿#include "TAS/Effect/ActiveTacticalEffectsContainer.h"
+#include "TAS/Aggregator/TacticalAggregator.h"
+
+#include "TAS/Effect/TacticalEffectContext.h"
+
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
+
+#include "GameplayEffectExtension.h"
+
+/**
  * @file ActiveTacticalEffectsContainer.cpp
  * @brief 한 유닛(AttributeSetComponentModel)에 적용 중인 Tactical Effect들을 보관/실행/제거하는 컨테이너 구현.
  *
@@ -8,18 +17,7 @@
  *          - 모디파이어를 Attribute에 반영 (Aggregator를 통한 current value 계산, 또는 base value 직접 실행)
  *          - 모디파이어 "연산 종류"는 본 PR(#191)에서 GAS의 EGameplayModOp 대신 자체 ETacticalModOp를 사용한다.
  *            연산 종류 enum 치환이 이 파일 전반에 걸쳐 나타나므로 해당 지점마다 별도 주석을 둔다.
- *
- * @author 박용수
- * @date 2026-06-26
  */
-#include "TAS/Effect/ActiveTacticalEffectsContainer.h"
-#include "TAS/Aggregator/TacticalAggregator.h"
-
-#include "TAS/Effect/TacticalEffectContext.h"
-
-#include "Component/AttributeComponent/AttributeSetComponentModel.h"
-
-#include "GameplayEffectExtension.h"
 
 /**
  * @brief Scope 진입 시 컨테이너 Lock을 증가시키는 RAII 가드 생성자.
