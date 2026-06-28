@@ -1,7 +1,7 @@
 ﻿#include "TAS/AttributeSet/TacticalAttributeSet.h"
-#include "AbilitySystemLog.h"
-#include "AbilitySystemStats.h"
 #include "UObject/UObjectIterator.h"
+
+#include "Engine/CurveTable.h"
 
 #include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
 
@@ -422,6 +422,18 @@ bool FTacticalAttribute::operator!=(const FTacticalAttribute& Other) const
 
 TSubclassOf<UTacticalAttributeSet> FindBestAttributeClass(TArray<TSubclassOf<UTacticalAttributeSet> >& ClassList, FString PartialName)
 {
+	// 1순위: 클래스명 정확 일치.
+	// 부분 포함만으로 고르면 "UnitAttributeSet"가 "PlayerUnitAttributeSet"에도 포함되어
+	// 상속 속성(MaxHP 등)이 파생 클래스로 잘못 매핑된다(반복 순서에 따라 비결정적). 정확 일치를 먼저 본다.
+	for (auto Class : ClassList)
+	{
+		if (Class->GetName() == PartialName)
+		{
+			return Class;
+		}
+	}
+
+	// 2순위: 부분 포함(기존 동작 폴백).
 	for (auto Class : ClassList)
 	{
 		if (Class->GetName().Contains(PartialName) == true)
@@ -526,12 +538,16 @@ void FTacticalAttributeSetInitterDiscreteLevels::InitAttributeSetDefaults(UAttri
 	check(AttributeSetComponentModel != nullptr);
 	
 	const FAttributeSetDefaultsCollection* Collection = mDefaults.Find(GroupName);
-	if (Collection != nullptr)
+	if (Collection == nullptr)
 	{
-		UE_LOG(LogTacticalFramework, Warning, TEXT("[%s] 그룹 해당 속성 기본 값을 찾을 수 없음. Default 값으로 치환"), *GroupName.ToString());
+		UE_LOG(LogTacticalFramework, Warning, TEXT("'%s' 그룹의 속성 기본값을 찾을 수 없음. Default 그룹으로 폴백."), *GroupName.ToString());
 		Collection = mDefaults.Find(FName(TEXT("Default")));
-
-		checkf(Collection != nullptr, TEXT("Default 그룹 속성 기본 값을 찾을 수 없음"));
+	}
+	if (Collection == nullptr)
+	{
+		// 그룹/Default 둘 다 없으면 하드 크래시 대신 초기화를 건너뛴다(원래 GAS 동작 복원).
+		UE_LOG(LogTacticalFramework, Error, TEXT("'%s'(및 Default) 그룹의 속성 기본값이 없어 초기화를 건너뜁니다."), *GroupName.ToString());
+		return;
 	}
 
 	if (Collection->mLevelData.IsValidIndex(Level - 1) == false)
@@ -547,10 +563,20 @@ void FTacticalAttributeSetInitterDiscreteLevels::InitAttributeSetDefaults(UAttri
 		{
 			continue;
 		}
-		const FAttributeDefaultValueList* DefaultDataList = SetDefaults.mDataMap.Find(Set->GetClass());
-		if (DefaultDataList != nullptr)
+		// 커브의 기본값 목록은 속성을 "선언한" 클래스 단위로 키가 잡힌다.
+		// 파생 AttributeSet(예: UPlayerUnitAttributeSet)은 베이스(UUnitAttributeSet)에서 상속한 속성도 가지므로,
+		// 스폰된 셋의 클래스부터 UTacticalAttributeSet까지 거슬러 올라가며 각 단계의 기본값을 모두 적용한다.
+		for (UClass* SetClass = Set->GetClass();
+			SetClass != nullptr && SetClass->IsChildOf(UTacticalAttributeSet::StaticClass());
+			SetClass = SetClass->GetSuperClass())
 		{
-			UE_LOG(LogTacticalFramework, Log, TEXT("%s 초기화 중"), *Set->GetName());
+			const FAttributeDefaultValueList* DefaultDataList = SetDefaults.mDataMap.Find(SetClass);
+			if (!DefaultDataList)
+			{
+				continue;
+			}
+
+			UE_LOG(LogTacticalFramework, Log, TEXT("Initializing Set %s (defaults from %s)"), *Set->GetName(), *SetClass->GetName());
 
 			for (auto& DataPair : DefaultDataList->mList)
 			{
@@ -562,19 +588,23 @@ void FTacticalAttributeSetInitterDiscreteLevels::InitAttributeSetDefaults(UAttri
 					AttributeSetComponentModel->SetAttributeBaseValue(AttributeToModify, DataPair.mValue);
 				}
 			}
-		}		
+		}
 	}
 }
 
 void FTacticalAttributeSetInitterDiscreteLevels::ApplyAttributeDefault(UAttributeSetComponentModel* AttributeSetComponentModel, FTacticalAttribute& Attribute, FName GroupName, int32 Level) const
 {
 	const FAttributeSetDefaultsCollection* Collection = mDefaults.Find(GroupName);
-	if (Collection != nullptr)
+	if (Collection == nullptr)
 	{
-		UE_LOG(LogTacticalFramework, Warning, TEXT("[%s] 그룹 해당 속성 기본 값을 찾을 수 없음. Default 값으로 치환"), *GroupName.ToString());
+		UE_LOG(LogTacticalFramework, Warning, TEXT("'%s' 그룹의 속성 기본값을 찾을 수 없음. Default 그룹으로 폴백."), *GroupName.ToString());
 		Collection = mDefaults.Find(FName(TEXT("Default")));
-
-		checkf(Collection != nullptr, TEXT("Default 그룹 속성 기본 값을 찾을 수 없음"));
+	}
+	if (Collection == nullptr)
+	{
+		// 그룹/Default 둘 다 없으면 하드 크래시 대신 초기화를 건너뛴다(원래 GAS 동작 복원).
+		UE_LOG(LogTacticalFramework, Error, TEXT("'%s'(및 Default) 그룹의 속성 기본값이 없어 초기화를 건너뜁니다."), *GroupName.ToString());
+		return;
 	}
 
 	if (Collection->mLevelData.IsValidIndex(Level - 1) == false)

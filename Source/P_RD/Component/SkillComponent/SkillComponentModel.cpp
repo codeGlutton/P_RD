@@ -135,7 +135,7 @@ bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileInd
 		{
 			// 피격자의 스냅샷을 따옵니다.
 			TWeakObjectPtr<UUnitModel> TargetUnit = Cast<UUnitModel>(TargetActors[j]);
-			if (!TargetUnit.IsValid(), TEXT("타겟 유닛 유효하지 않음"))
+			if (!TargetUnit.IsValid())
 				continue;
 			FBoardCombatTargetSnapshotData TargetSnapShot = TargetUnit->MakeSnapshotData();
 
