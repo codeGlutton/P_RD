@@ -24,7 +24,7 @@ UTacticalPassive_AddAttackPoint::UTacticalPassive_AddAttackPoint()
 void UTacticalPassive_AddAttackPoint::EvaluatePassive(
 	const FPassiveActivateContext& Ctx,
 	FBoardCombatTargetSnapshotData& TargetDelta,
-	TInstancedStruct<FTacticalPassiveState>& PassiveState)
+	TInstancedStruct<FDynamicPassiveData>& PassiveState)
 {
 	// 대상 공격력(AttackPoint)에 보너스 누적 (무상태, Ctx/PassiveState 미사용)
 	TargetDelta.mAttributes.FindOrAdd(UUnitAttributeSet::GetAttackPointAttribute()) += mAttackBonus;

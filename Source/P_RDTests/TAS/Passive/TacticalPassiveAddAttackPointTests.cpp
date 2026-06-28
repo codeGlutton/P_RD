@@ -36,7 +36,7 @@ bool FTacticalPassiveAddAttackPointTests::RunTest(const FString& Parameters)
 	// 입력/출력 준비 (AddAttackPoint은 Ctx/State 미사용)
 	FPassiveActivateContext Ctx;
 	FBoardCombatTargetSnapshotData TargetDelta;
-	TInstancedStruct<FTacticalPassiveState> State;
+	TInstancedStruct<FDynamicPassiveData> State;
 
 	// 계산만 검증 (적용/이펙트는 별도 효과 테스트).
 	// EvaluatePassive는 protected이고 friend는 상속/서브클래스 override에 적용 안 되므로 베이스 타입으로 호출.

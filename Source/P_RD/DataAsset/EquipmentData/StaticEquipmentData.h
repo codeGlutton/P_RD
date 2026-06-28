@@ -10,7 +10,9 @@
 #include "RDMinimal.h"
 #include "DataAsset/PrimaryAssetType.h"
 #include "DataAsset/BundleType.h"
+#include "DataAsset/EquipmentData/EquipmentType.h"
 #include "DataAsset/PassiveData/StaticPassiveData.h"
+#include "TAS/Effect/TacticalEffect.h"
 #include "StaticEquipmentData.generated.h"
 
 /**
@@ -41,4 +43,18 @@ public:
 
     UPROPERTY(Category = "Equipment", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Passive"))
     TArray<TSoftObjectPtr<UStaticPassiveData>> mStaticPassiveData;
+
+    /**
+     * @brief 장비 고유 스탯 수정자
+     *
+     * @details
+     * 장착 시 무한(Infinite) 이펙트로 AttributeSet에 즉시 적용하고, 해제 시 핸들로 제거.
+     */
+    UPROPERTY(Category = "Equipment", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StatModifiers"))
+    TArray<FTacticalModifierInfo> mStatModifiers;
+
+    /**
+     * @brief 장비 슬롯 타입 반환 (서브클래스가 자기 슬롯으로 override)
+     */
+    virtual EEquipmentType GetEquipmentType() const PURE_VIRTUAL(UStaticEquipmentData::GetEquipmentType, return EEquipmentType::Count;)
 };

@@ -12,6 +12,7 @@
 #include "PassiveComponentModel.generated.h"
 
 class UTacticalPassive;
+class UStaticPassiveData;
 
 // 패시브 추가/제거 알림 (대상 패시브 인스턴스 전달)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPassiveChanged, UTacticalPassive*, Passive);
@@ -43,6 +44,18 @@ public:
 	 * @return 생성된 패시브 인스턴스 (PassiveClass가 없으면 nullptr)
 	 */
 	UTacticalPassive* AddPassive(TSubclassOf<UTacticalPassive> PassiveClass);
+
+	/**
+	 * @brief 정적 데이터(UStaticPassiveData)로 패시브를 생성해 보유 목록에 추가
+	 *
+	 * @details
+	 * 데이터의 패시브 클래스(mPassiveClass)로 인스턴스를 만들고 본 데이터를 주입(SetStaticData).
+	 * 이펙트/시점/수치 등 설정을 모두 데이터에서 읽으므로 수치별 서브클래스가 불필요.
+	 *
+	 * @param StaticData 패시브 정적 설정 데이터
+	 * @return 생성된 패시브 인스턴스 (데이터/클래스가 없으면 nullptr)
+	 */
+	UTacticalPassive* AddPassiveFromData(UStaticPassiveData* StaticData);
 
 	/**
 	 * @brief 보유 목록에서 패시브를 제거

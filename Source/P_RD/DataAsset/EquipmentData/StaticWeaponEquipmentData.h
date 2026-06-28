@@ -24,4 +24,6 @@ public:
 	{
 		return FPrimaryAssetId(EquipmentPrimaryAssetTypes::GetWeaponType(mRarityType), GetFName());
 	}
+
+	virtual EEquipmentType GetEquipmentType() const override { return EEquipmentType::Weapon; }
 };

@@ -29,7 +29,7 @@ protected:
 	virtual void EvaluatePassive(
 		IN const FPassiveActivateContext& Ctx,
 		OUT FBoardCombatTargetSnapshotData& TargetDelta,
-		IN OUT TInstancedStruct<FTacticalPassiveState>& PassiveState) override;
+		IN OUT TInstancedStruct<FDynamicPassiveData>& PassiveState) override;
 
 public:
 	// 더할 공격력 값

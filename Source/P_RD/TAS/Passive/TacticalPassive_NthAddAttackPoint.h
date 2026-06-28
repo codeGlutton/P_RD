@@ -18,7 +18,7 @@
  *                  mAttackBonus 추가하고, 러닝본(NextState)에 발동=리셋(0)/미발동=차수 전진을 기록.
  * CommitPassive: 러닝본을 mState에 그대로 확정(리셋은 Evaluate가 이미 반영).
  *
- * 카운터는 패시브 내부 상태(FTacticalPassiveState_NthCounter, 0-base 완료 횟수), 임계값(N)은 config라 클래스에 둠.
+ * 카운터는 패시브 내부 상태(FDynamicPassiveData_NthCounter, 0-base 완료 횟수), 임계값(N)은 config라 클래스에 둠.
  */
 UCLASS()
 class P_RD_API UTacticalPassive_NthAddAttackPoint : public UTacticalPassive
@@ -32,11 +32,11 @@ protected:
 	virtual void EvaluatePassive(
 		IN const FPassiveActivateContext& Ctx,
 		OUT FBoardCombatTargetSnapshotData& TargetDelta,
-		IN OUT TInstancedStruct<FTacticalPassiveState>& PassiveState) override;
+		IN OUT TInstancedStruct<FDynamicPassiveData>& PassiveState) override;
 
 public:
 	virtual void CommitPassive(
-		IN const TInstancedStruct<FTacticalPassiveState>& PassiveState) override;
+		IN const TInstancedStruct<FDynamicPassiveData>& PassiveState) override;
 
 public:
 	// 발동 임계값 (몇 번째마다 터지는지)

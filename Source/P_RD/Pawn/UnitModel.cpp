@@ -4,6 +4,7 @@
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
 #include "Component/PassiveComponent/PassiveComponentModel.h"
+#include "Component/EquipmentComponent/EquipmentComponentModel.h"
 
 #include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
 #include "Singleton/WorldSubsystem/TacticalFrameworkSubsystem.h"
@@ -13,6 +14,7 @@ UUnitModel::UUnitModel() : mTeamId(EGameTeamType::AllNeutral)
 	mAttributeCompModel = CreateDefaultSubobject<UAttributeSetComponentModel>(TEXT("AttributeSetComponentModel"));
 	mSkillCompModel = CreateDefaultSubobject<USkillComponentModel>(TEXT("SkillComponentModel"));
 	mPassiveCompModel = CreateDefaultSubobject<UPassiveComponentModel>(TEXT("PassiveComponentModel"));
+	mEquipmentCompModel = CreateDefaultSubobject<UEquipmentComponentModel>(TEXT("EquipmentComponentModel"));
 
 	mTileLayerFlags = StaticCast<int32>(ETileLayerFlag::Unit);
 	mBlockLayerFlags = StaticCast<int32>(ETileLayerFlag::Unit | ETileLayerFlag::Obstacle);
@@ -56,5 +58,10 @@ USkillComponentModel* UUnitModel::GetSkillComponentModel() const
 UPassiveComponentModel* UUnitModel::GetPassiveComponentModel() const
 {
 	return mPassiveCompModel;
+}
+
+UEquipmentComponentModel* UUnitModel::GetEquipmentComponentModel() const
+{
+	return mEquipmentCompModel;
 }
 

@@ -8,13 +8,14 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "TAS/Passive/TacticalPassiveState.h"
+#include "TAS/Passive/DynamicPassiveData.h"
 #include "TAS/Effect/ActiveTacticalEffect.h"
 #include "TacticalPassive.generated.h"
 
 struct FPassiveActivateContext;
 struct FBoardCombatTargetSnapshotData;
 class UTacticalEffect;
+class UStaticPassiveData;
 
 /**
  * @brief 패시브 베이스 클래스
@@ -28,6 +29,11 @@ class UTacticalEffect;
  * @par 상태 보유 여부
  * 스택 카운터 같은 내부 상태가 필요한 패시브만 mState를 사용함.
  * 상태가 없는 패시브는 mState를 비워두고 PassiveState를 무시하면 됨.
+ *
+ * @note 복잡 계산(구 UPassiveLogic 역할)은 서브클래스의 EvaluatePassive(C++)가 담당하므로
+ * UPassiveLogic은 제거함. 추후 디자이너가 BP로 패시브를 직접 굴려보며 밸런스(임계값 등)를 맞춰야 하면,
+ * EvaluatePassive나 발동 조건 검사를 BlueprintNativeEvent 훅(+ BP 노출용 입력 struct)으로 열면 됨.
+ * 지금은 시뮬 핫패스 성능·편의로 C++ 타입으로 둠.
  */
 UCLASS(Abstract, Blueprintable)
 class P_RD_API UTacticalPassive : public UObject
@@ -37,7 +43,7 @@ class P_RD_API UTacticalPassive : public UObject
 	/**
 	 * @brief 유닛테스트 모듈이 패시브 객체에 접근하기 위해 friend 선언
 	 * @note 릴리즈 빌드에서는 테스트 모듈이 빠져도 전방선언만 했기 때문에 영향 없음
-	 */ 
+	 */
 	// 자동화 테스트에서만 protected 상태(mTimingTags 등)에 접근하기 위한 friend
 	friend class FPassiveComponentModelTests;
 	// 패시브별 단위 테스트가 protected(EvaluatePassive/mState)에 접근하기 위한 friend
@@ -60,7 +66,7 @@ public:
 	 */
 	void ActivatePassive(
 		IN const FPassiveActivateContext& Ctx,
-		IN OUT TInstancedStruct<FTacticalPassiveState>& PassiveState);
+		IN OUT TInstancedStruct<FDynamicPassiveData>& PassiveState);
 
 	/**
 	 * @brief 계산된 패시브 내부 상태를 커밋
@@ -70,7 +76,7 @@ public:
 	 *
 	 * @param PassiveState 커밋할 패시브 내부 상태
 	 */
-	virtual void CommitPassive(IN const TInstancedStruct<FTacticalPassiveState>& PassiveState) {}
+	virtual void CommitPassive(IN const TInstancedStruct<FDynamicPassiveData>& PassiveState) {}
 
 	/**
 	 * @brief 적용 중인 이펙트를 강제로 해제(제거)
@@ -105,7 +111,29 @@ public:
 	 */
 	bool HasTimingTag(FGameplayTag Tag) const { return mTimingTags.HasTagExact(Tag); }
 
+public:
+	/**
+	 * @brief 정적 데이터(UStaticPassiveData) 주입 + 데이터 기반 공통 필드 초기화
+	 *
+	 * @details
+	 * 데이터 구동 패시브는 이펙트/시점/수치를 클래스가 아니라 mStaticData에서 읽는다.
+	 * 컴포넌트가 패시브 생성 직후 호출. 내부적으로 InitializeFromData로 공통 필드를 채움.
+	 */
+	void SetStaticData(UStaticPassiveData* InStaticData);
+
+	// 주입된 정적 데이터 (클래스 구동 패시브는 null)
+	UStaticPassiveData* GetStaticData() const { return mStaticData; }
+
 protected:
+	/**
+	 * @brief 정적 데이터로 공통 필드(이펙트 클래스/타이밍 태그) 초기화
+	 *
+	 * @details
+	 * 기본은 mStaticData의 EffectClass/TriggerTimig를 베이스 멤버로 복사.
+	 * 패시브별 추가 파라미터(임계 등)는 각자 EvaluatePassive에서 mStaticData를 직접 읽음.
+	 */
+	virtual void InitializeFromData();
+
 	/**
 	 * @brief 패시브 효과 계산 (순수)
 	 *
@@ -121,7 +149,7 @@ protected:
 	virtual void EvaluatePassive(
 		IN const FPassiveActivateContext& Ctx,
 		OUT FBoardCombatTargetSnapshotData& TargetDelta,
-		IN OUT TInstancedStruct<FTacticalPassiveState>& PassiveState)
+		IN OUT TInstancedStruct<FDynamicPassiveData>& PassiveState)
 		PURE_VIRTUAL(UTacticalPassive::EvaluatePassive, );
 
 	/**
@@ -183,8 +211,17 @@ protected:
 	 * @brief 커밋된 패시브 내부 상태
 	 *
 	 * @details
-	 * 스택 카운터 등 패시브마다 다른 내부 상태를 FTacticalPassiveState 파생형으로 저장.
+	 * 스택 카운터 등 패시브마다 다른 내부 상태를 FDynamicPassiveData 파생형으로 저장.
 	 */
 	UPROPERTY(Category = "Passive", VisibleAnywhere, meta = (DisplayName = "State"))
-	TInstancedStruct<FTacticalPassiveState> mState;
+	TInstancedStruct<FDynamicPassiveData> mState;
+
+	/**
+	 * @brief 이 패시브의 정적 설정 데이터 (데이터 구동 시 주입)
+	 *
+	 * @details
+	 * 클래스 구동(생성자에서 직접 세팅) 패시브는 null. 데이터 구동 아키타입은 여기서 수치를 읽음.
+	 */
+	UPROPERTY(Category = "Passive", VisibleAnywhere, meta = (DisplayName = "StaticData"))
+	TObjectPtr<UStaticPassiveData> mStaticData = nullptr;
 };

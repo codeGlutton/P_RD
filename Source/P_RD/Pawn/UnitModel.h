@@ -21,6 +21,7 @@ class UUnitModel;
 class UAttributeSetComponentModel;
 class USkillComponentModel;
 class UPassiveComponentModel;
+class UEquipmentComponentModel;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUnitDied, UUnitModel*, Model);
 
@@ -51,6 +52,7 @@ public:
 public:
 	USkillComponentModel* GetSkillComponentModel() const;
 	UPassiveComponentModel* GetPassiveComponentModel() const;
+	UEquipmentComponentModel* GetEquipmentComponentModel() const;
 
 public:
 	virtual int32 GetDifficulty() const PURE_VIRTUAL(UUnitModel::GetDifficulty, return 0;)
@@ -69,6 +71,9 @@ private:
 
 	UPROPERTY(Category = Skill, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "PassiveCompModel"))
 	TObjectPtr<UPassiveComponentModel> mPassiveCompModel;
+
+	UPROPERTY(Category = Equipment, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "EquipmentCompModel"))
+	TObjectPtr<UEquipmentComponentModel> mEquipmentCompModel;
 
 private:
 	// @brief 팀 ID

@@ -12,7 +12,7 @@
 #include "Misc/AutomationTest.h"
 
 #include "TAS/Passive/TacticalPassive_NthAddAttackPoint.h"
-#include "TAS/Passive/TacticalPassiveState_NthCounter.h"
+#include "TAS/Passive/DynamicPassiveData_NthCounter.h"
 #include "TAS/Passive/PassiveActivateContext.h"
 #include "Actor/BoardActor/BoardCombatTarget.h"
 #include "AttributeSet/UnitAttributeSet.h"
@@ -35,8 +35,8 @@ bool FTacticalPassiveNthAddAttackPointCalcTests::RunTest(const FString& Paramete
 	Passive->mAttackBonus = 50.f;
 
 	// 러닝본 하나를 이어서 굴리며 사이클 검증 (threshold=3 → 3·6회차 발동)
-	TInstancedStruct<FTacticalPassiveState> Running;
-	Running.InitializeAs<FTacticalPassiveState_NthCounter>();   // 완료 0에서 시작
+	TInstancedStruct<FDynamicPassiveData> Running;
+	Running.InitializeAs<FDynamicPassiveData_NthCounter>();   // 완료 0에서 시작
 
 	// 한 회차 계산 → 이번 회차 발동 여부 반환 (러닝본은 NextState로 갱신되어 다음 회차로 이어짐)
 	// EvaluatePassive는 protected라 friend(테스트 클래스)로 직접 호출
@@ -72,7 +72,7 @@ bool FTacticalPassiveNthAddAttackPointCalcTests::RunTest(const FString& Paramete
 	}
 
 	// 7회차 후 완료횟수 1 (6회차 리셋→0, 7회차 전진→1)
-	const int32 FinalCount = Running.Get<FTacticalPassiveState_NthCounter>().mCount;
+	const int32 FinalCount = Running.Get<FDynamicPassiveData_NthCounter>().mCount;
 	TestEqual(TEXT("7회차 후 완료횟수 1"), FinalCount, 1);
 
 	return true;
@@ -99,16 +99,16 @@ bool FTacticalPassiveNthAddAttackPointCommitTests::RunTest(const FString& Parame
 	// mState는 protected라 friend(테스트 클래스)로 직접 접근
 	auto Commit = [&](int32 RunningCount) -> int32
 	{
-		TInstancedStruct<FTacticalPassiveState> Running;
-		Running.InitializeAs<FTacticalPassiveState_NthCounter>();
-		Running.GetMutable<FTacticalPassiveState_NthCounter>().mCount = RunningCount;
+		TInstancedStruct<FDynamicPassiveData> Running;
+		Running.InitializeAs<FDynamicPassiveData_NthCounter>();
+		Running.GetMutable<FDynamicPassiveData_NthCounter>().mCount = RunningCount;
 
 		Passive->CommitPassive(Running);
 
 		// mState는 protected라 베이스 타입으로 접근 (friend 적용)
 		const UTacticalPassive* Base = Passive;
-		const TInstancedStruct<FTacticalPassiveState>& Committed = Base->mState;
-		return Committed.IsValid() ? Committed.Get<FTacticalPassiveState_NthCounter>().mCount : -1;
+		const TInstancedStruct<FDynamicPassiveData>& Committed = Base->mState;
+		return Committed.IsValid() ? Committed.Get<FDynamicPassiveData_NthCounter>().mCount : -1;
 	};
 
 	// 커밋은 러닝본을 그대로 mState에 확정 (리셋은 Evaluate가 NextState에 이미 반영하므로 여기선 안 함)
