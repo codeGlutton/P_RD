@@ -73,6 +73,15 @@ public:
 	/** @brief 지정한 눈이 정면에 보이도록 정지 자세를 맞춘다. */
 	void SettleToFace(int32 FaceValue);
 
+	/** @brief 물리 바디 등 외부 Transform을 시각 주사위 전체에 적용한다. */
+	void SetDiceWorldTransform(const FTransform& NewTransform);
+
+	/** @brief 메인 카메라에는 숨기고 SceneCapture에서만 보이도록 Primitive 표시 상태를 바꾼다. */
+	void SetDiceVisibleInSceneCaptureOnly(bool bSceneCaptureOnly);
+
+	/** @brief 여러 주사위를 한 장면에서 캡처할 때 개별 프리뷰 라이트 중첩을 막는다. */
+	void SetPreviewLightingEnabled(bool bEnabled);
+
 	/** @brief 주사위 몸체 색(희귀도/상태 구분)을 적용한다. */
 	void SetDiceColor(const FLinearColor& NewColor);
 

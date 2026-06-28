@@ -25,6 +25,8 @@ public:
 	/* AUnit 상속 */
 public:
 	int32 GetDifficulty() const override;
+	// 적 유닛은 플레이어가 아니다. 미구현 시 UUnitModel의 순수가상이 호출돼 크래시한다.
+	bool IsPlayerUnitModel() const override { return false; }
 
 protected:
 	UUserWidget* GetInfoPanel() const override;

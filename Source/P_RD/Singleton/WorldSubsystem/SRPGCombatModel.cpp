@@ -247,7 +247,8 @@ USRPGTurnContext* USRPGCombatModel::RegisterTurn(UUnitModel* Owner, int32 LifeCo
 		mTurnContextOrder.InsertNode(TurnContext->GetTurnId(), mCurTurnContextOrder->GetPrevNode());
 
 	}
-	mTurnContextMap[TurnContext->GetTurnId()] = TurnContext;
+	// UE TMap::operator[]는 FindChecked(키 없으면 assert)라 삽입에 쓰면 크래시한다. 새 키는 Add로 삽입.
+	mTurnContextMap.Add(TurnContext->GetTurnId(), TurnContext);
 
 	return TurnContext;
 }
@@ -361,9 +362,12 @@ void USRPGCombatModel::RegisterEnemyUnit(FEnemyUnitPlacementData& EnemyPlacement
 {
 	checkf(mTileMap != nullptr, TEXT("타일맵 미존재"));
 
-	// 적 유닛 스폰 & 초기 위치 등록
-	UStaticEnemyUnitSpawnData* EnemyUnitSpawnData = EnemyPlacementData.mSpawnData.Get();
-	UUnitModel* EnemyUnit = GetWorldModelFactory(this)->NewModelDeferred<UUnitModel>(EnemyUnitSpawnData->mModelClass.Get());
+	// 적 유닛 스폰 & 초기 위치 등록 (소프트 포인터는 동기 로드해야 한다. .Get()은 미로드 시 null → 크래시)
+	UStaticEnemyUnitSpawnData* EnemyUnitSpawnData = EnemyPlacementData.mSpawnData.LoadSynchronous();
+	checkf(EnemyUnitSpawnData != nullptr, TEXT("적 유닛 스폰 데이터 로드 실패"));
+	UClass* EnemyModelClass = EnemyUnitSpawnData->mModelClass.LoadSynchronous();
+	checkf(EnemyModelClass != nullptr, TEXT("적 유닛 ModelClass 로드 실패 — DataAsset의 mModelClass 확인"));
+	UUnitModel* EnemyUnit = GetWorldModelFactory(this)->NewModelDeferred<UUnitModel>(EnemyModelClass);
 	EnemyUnit->SetStaticSpawnData(EnemyUnitSpawnData);
 	EnemyUnit->FinishCreating(mTileMap->TileToWorldTransform(EnemyPlacementData.mTransform));
 	EnemyUnit->OnUnitDied.AddDynamic(this, &USRPGCombatModel::OnUnitDied);
@@ -386,9 +390,12 @@ void USRPGCombatModel::RegisterObstacle(FObstaclePlacementData& ObstaclePlacemen
 {
 	checkf(mTileMap != nullptr, TEXT("타일맵 미존재"));
 
-	// 적 유닛 스폰 & 초기 위치 등록
-	UStaticObstacleSpawnData* ObstacleSpawnData = ObstaclePlacementData.mSpawnData.Get();
-	UBoardActorModel* Obstacle = GetWorldModelFactory(this)->NewModelDeferred<UBoardActorModel>(ObstacleSpawnData->mModelClass.Get());
+	// 장애물 스폰 & 초기 위치 등록 (소프트 포인터 동기 로드)
+	UStaticObstacleSpawnData* ObstacleSpawnData = ObstaclePlacementData.mSpawnData.LoadSynchronous();
+	checkf(ObstacleSpawnData != nullptr, TEXT("장애물 스폰 데이터 로드 실패"));
+	UClass* ObstacleModelClass = ObstacleSpawnData->mModelClass.LoadSynchronous();
+	checkf(ObstacleModelClass != nullptr, TEXT("장애물 ModelClass 로드 실패 — DataAsset의 mModelClass 확인"));
+	UBoardActorModel* Obstacle = GetWorldModelFactory(this)->NewModelDeferred<UBoardActorModel>(ObstacleModelClass);
 	Obstacle->SetStaticSpawnData(ObstacleSpawnData);
 	Obstacle->FinishCreating(mTileMap->TileToWorldTransform(ObstaclePlacementData.mTransform));
 
@@ -404,6 +411,11 @@ void USRPGCombatModel::SpawnTileMap()
 
 	// 타일맵 스폰
 	mTileMap = GetWorldModelFactory(this)->NewModel<UTileMapModel>();
+
+	// 모델이 자기 타일 저장소(mTiles)를 직접 빌드한다.
+	// 기존엔 View(ATileMap)만 RebuildTiles를 호출해서, View 스폰/타이밍에 따라 모델 타일이 비어 있었고
+	// 이어지는 유닛 배치(PlaceActor→CanPlace)가 빈 타일맵에서 크래시했다. 배치 전에 모델이 직접 빌드한다.
+	mTileMap->RebuildTiles();
 }
 
 void USRPGCombatModel::RegisterPlayerUnit(UUnitModel* PlayerUnit, const FTileTransform& Transform)
@@ -430,7 +442,8 @@ void USRPGCombatModel::RegisterEnemyUnits(TArray<FEnemyUnitPlacementData>& Enemy
 	TSortedMap<int32, TArray<FEnemyUnitPlacementData*>> RegisterMap;
 	for (FEnemyUnitPlacementData& PlacementData : EnemyPlacementDatas)
 	{
-		RegisterMap[PlacementData.mTurnPriority].Push(&PlacementData);
+		// UE TSortedMap::operator[]는 FindChecked(키 없으면 assert)라 삽입에 쓰면 크래시. 새 키는 FindOrAdd로.
+		RegisterMap.FindOrAdd(PlacementData.mTurnPriority).Push(&PlacementData);
 	}
 
 	// 동일 우선 순위 유닛은 랜덤 등록

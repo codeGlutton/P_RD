@@ -37,9 +37,11 @@ public:
 	void Uninitialize() override;
 
 public:
-	virtual void PreInitializeComponentModels() PURE_VIRTUAL(UActorModel::PreInitializeComponentModels, return;);
+	// Pre/Post는 선택적 초기화 훅이다. 기본 빈 구현으로 두어, 오버라이드하지 않은 모델이나
+	// 파생 클래스의 Super:: 호출에서 순수가상 미구현 크래시가 나지 않도록 한다.
+	virtual void PreInitializeComponentModels() {}
 	void InitializeComponentModels();
-	virtual void PostInitializeComponentModels() PURE_VIRTUAL(UActorModel::PostInitializeComponentModels, return;);
+	virtual void PostInitializeComponentModels() {}
 
 	void UninitializeComponentModels();
 

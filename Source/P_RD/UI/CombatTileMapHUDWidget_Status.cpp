@@ -4,6 +4,7 @@
 #include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Components/TextBlock.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
@@ -100,18 +101,81 @@ void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const
 		{
 			if (UTopMenuBarWidget* TopBar = WorldWidgetSubsystem->GetWorldWidget<UTopMenuBarWidget>(EWorldWidgetType::TopMenuBar))
 			{
-				TopBar->SetCombatPlayerSummary(Level, HP, MaxHP, Gold);
-				TopBar->SetCombatDiceSkillCount(DiceCount, SkillCount);
+				if (IsDesignerSkinActive())
+				{
+					// 스킨 모드(concept_02): 레거시 탑바도, 합쳐진 단일 상태줄도 숨긴다. Lv/HP/Gold는
+					// concept value 칸(HUD_M_*)에 칸 크기에 맞춘 개별 텍스트로 그린다(RefreshSkinValueLabels).
+					TopBar->SetVisibility(ESlateVisibility::Collapsed);
+					if (mCombatStatusBarText != nullptr)
+					{
+						mCombatStatusBarText->SetVisibility(ESlateVisibility::Collapsed);
+					}
+				}
+				else
+				{
+					TopBar->SetCombatPlayerSummary(Level, HP, MaxHP, Gold);
+					TopBar->SetCombatDiceSkillCount(DiceCount, SkillCount);
+				}
 			}
 		}
 	}
 
 	RefreshMoveButton();
+	RefreshSkinValueLabels();
+}
+
+void UCombatTileMapHUDWidget::RefreshSkinValueLabels() const
+{
+	// 값 텍스트(LV/HP/Gold)의 위치·폰트·정렬은 WBP가 소유한다(빌드가 HUD_M_lv/hp/gold_value를 실제
+	// TextBlock으로 심음). C++는 동적으로 변하는 '내용'만 채운다 — 런타임 좌표 계산/재부모화 핵 없음.
+	if (IsDesignerSkinActive() == false || mCombatUIModel == nullptr || WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	float PlayerHP = 0.f;
+	float PlayerMaxHP = 0.f;
+	for (const FUnitUI& Unit : mCombatUIModel->GetUnitUIs())
+	{
+		if (Unit.mIsPlayer)
+		{
+			PlayerHP = Unit.mHP;
+			PlayerMaxHP = Unit.mMaxHP;
+			break;
+		}
+	}
+	const FPlayerMetaUI& Meta = mCombatUIModel->GetPlayerMeta();
+
+	struct FSkinValueBinding
+	{
+		const TCHAR* WidgetName;
+		FText Text;
+	};
+	// 빌드는 빈 TextBlock(color/font/slot만)으로 마커를 심는다(Android 직렬화 안전). 내용/정렬은 여기서 채운다.
+	// END TURN 라벨은 정적이지만 동일하게 C++가 설정(CDO에 FText를 넣지 않기 위함).
+	const FSkinValueBinding Bindings[] = {
+		{ TEXT("HUD_M_lv_value"), FText::AsNumber(Meta.mLevel) },
+		{ TEXT("HUD_M_hp_value"), FText::Format(NSLOCTEXT("CombatTileMapHUDWidget", "SkinHP", "{0}/{1}"),
+			FText::AsNumber(FMath::RoundToInt(PlayerHP)), FText::AsNumber(FMath::RoundToInt(PlayerMaxHP))) },
+		{ TEXT("HUD_M_gold_value"), FText::AsNumber(Meta.mGold) },
+		{ TEXT("HUD_M_btn_end_turn_label"), NSLOCTEXT("CombatTileMapHUDWidget", "EndTurnLabel", "END\nTURN") },
+	};
+
+	for (const FSkinValueBinding& Binding : Bindings)
+	{
+		if (UTextBlock* ValueText = Cast<UTextBlock>(WidgetTree->FindWidget(FName(Binding.WidgetName))))
+		{
+			ValueText->SetText(Binding.Text);
+			ValueText->SetJustification(ETextJustify::Center);
+		}
+	}
 }
 
 void UCombatTileMapHUDWidget::RefreshMoveButton() const
 {
-	if (mMoveButtonText == nullptr || mCombatUIModel == nullptr)
+	// MOVE 라벨은 WBP TextBlock(HUD_M_btn_move_label)이 소유한다. C++는 이동력 수치만 채운다.
+	UTextBlock* MoveLabel = WidgetTree != nullptr ? Cast<UTextBlock>(WidgetTree->FindWidget(TEXT("HUD_M_btn_move_label"))) : nullptr;
+	if (MoveLabel == nullptr || mCombatUIModel == nullptr)
 	{
 		return;
 	}
@@ -128,10 +192,11 @@ void UCombatTileMapHUDWidget::RefreshMoveButton() const
 		}
 	}
 
-	mMoveButtonText->SetText(FText::Format(
+	MoveLabel->SetText(FText::Format(
 		NSLOCTEXT("CombatTileMapHUDWidget", "MoveCommandCount", "MOVE\n{0}/{1}"),
 		FText::AsNumber(Move),
 		FText::AsNumber(MaxMove)));
+	MoveLabel->SetJustification(ETextJustify::Center);
 }
 
 void UCombatTileMapHUDWidget::HandleMoveButtonClicked()
@@ -140,6 +205,72 @@ void UCombatTileMapHUDWidget::HandleMoveButtonClicked()
 	if (mCombatUIModel != nullptr)
 	{
 		mCombatUIModel->RequestMove();
+	}
+}
+
+UTopMenuBarWidget* UCombatTileMapHUDWidget::GetTopMenuBar() const
+{
+	if (const UWorld* World = GetWorld())
+	{
+		if (UWorldWidgetSubsystem* WorldWidgetSubsystem = World->GetSubsystem<UWorldWidgetSubsystem>())
+		{
+			return WorldWidgetSubsystem->GetWorldWidget<UTopMenuBarWidget>(EWorldWidgetType::TopMenuBar);
+		}
+	}
+	return nullptr;
+}
+
+// [아키텍처 의도] 콘셉트 HUD의 상단 내비 버튼(MAP/DICE/SKILL/SET)은 패널 열기/닫기를 자체 구현하지 않고,
+// 이미 존재하는 TopMenuBar의 패널 토글(WorldWidget 기반 패널 시스템)에 그대로 위임한다.
+// → HUD 위젯은 "표시 + 입력 전달"만 하는 thin view로 유지되고, 패널 생명주기/상태 관리는 기존 시스템이 단일 책임으로 가짐.
+// (스킨 모드에선 레거시 TopMenuBar 자체는 HideLegacyTopBarWhenSkinned로 숨기고, 토글 로직만 재사용)
+void UCombatTileMapHUDWidget::HandleNavMapButtonClicked()
+{
+	if (UTopMenuBarWidget* TopBar = GetTopMenuBar())
+	{
+		TopBar->RequestMapPanel();
+	}
+}
+
+void UCombatTileMapHUDWidget::HandleNavDiceButtonClicked()
+{
+	if (UTopMenuBarWidget* TopBar = GetTopMenuBar())
+	{
+		TopBar->RequestDicePanel();
+	}
+}
+
+void UCombatTileMapHUDWidget::HandleNavSkillButtonClicked()
+{
+	if (UTopMenuBarWidget* TopBar = GetTopMenuBar())
+	{
+		TopBar->RequestSkillPanel();
+	}
+}
+
+void UCombatTileMapHUDWidget::HandleNavSettingsButtonClicked()
+{
+	if (UTopMenuBarWidget* TopBar = GetTopMenuBar())
+	{
+		TopBar->RequestSettingsPanel();
+	}
+}
+
+void UCombatTileMapHUDWidget::HideLegacyTopBarWhenSkinned() const
+{
+	if (!IsDesignerSkinActive())
+	{
+		return;
+	}
+	// 패널 토글(ApplyInputPassThrough)이 매 호출마다 탑바를 SelfHitTestInvisible로 되살리므로, 스킨 모드에선
+	// 매 틱 다시 접어 concept HUD 위에 레거시 상태바/INVENTORY/ROOM/Difficulty 배너가 겹치지 않게 한다.
+	// (패널 WBP는 탑바와 별개 WorldWidget이라 탑바를 접어도 정상 표시/닫힘.)
+	if (UTopMenuBarWidget* TopBar = GetTopMenuBar())
+	{
+		if (TopBar->GetVisibility() != ESlateVisibility::Collapsed)
+		{
+			TopBar->SetVisibility(ESlateVisibility::Collapsed);
+		}
 	}
 }
 
@@ -181,6 +312,12 @@ void UCombatTileMapHUDWidget::RebuildEquipmentBar()
 	}
 	mEquipmentChips.Reset();
 	mEquipmentChipTexts.Reset();
+
+	// 디자이너 스킨(concept_02): 장비칸은 레거시라 만들지 않는다(기존 칩은 위에서 제거됨).
+	if (IsDesignerSkinActive())
+	{
+		return;
+	}
 
 	UCanvasPanel* Canvas = RootCanvas.Get();
 	if (Canvas == nullptr || WidgetTree == nullptr || mCombatUIModel == nullptr)

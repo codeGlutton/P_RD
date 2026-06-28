@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Actor/ActorView.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "Actor/TileMap/TileMapModel.h"
 #include "Actor/TileMap/TileLayer.h"
@@ -24,7 +25,7 @@ class ITileActor;
  * @brief  타일맵 액터
  */
 UCLASS()
-class P_RD_API ATileMap : public AActor
+class P_RD_API ATileMap : public AActor, public IActorView
 {
 	GENERATED_BODY()
 
@@ -40,6 +41,17 @@ public:
 	// @brief 매 프레임 Effect 하이라이트 펄스 갱신
 	virtual void Tick(float DeltaSeconds) override;
 
+	/* IActorView 상속 */
+public:
+	// @brief 런타임 모델을 뷰에 바인딩 (모델 교체 + 델리깃 재바인딩 + 그리드 재생성)
+	void BindModel(UObjectModel* Model) override;
+	// @brief 모델 바인딩 해제 (델리깃 정리)
+	void UnbindModel(UObjectModel* Model) override;
+protected:
+	// @brief 보유 모델 반환 (IObjectView::GetModel 용)
+	UObjectModel* GetModel_Internal() const override;
+
+public:
 	/* 타일 → 월드 변환 */
 	/**
 	 * @brief 타일 트랜스폼(인덱스+방향)을 월드 트랜스폼으로 변환
