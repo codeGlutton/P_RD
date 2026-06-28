@@ -12,11 +12,12 @@ namespace
 	{
 		switch (RoomType)
 		{
-		case ERoomType::Treasure:     return TEXT("/Game/SVN/InSideAsset/UI/Tex/Nodes/T_Node_Treasure.T_Node_Treasure");
-		case ERoomType::Shop:         return TEXT("/Game/SVN/InSideAsset/UI/Tex/Nodes/T_Node_Shop.T_Node_Shop");
-		case ERoomType::Monster:      return TEXT("/Game/SVN/InSideAsset/UI/Tex/Nodes/T_Node_Monster.T_Node_Monster");
-		case ERoomType::EliteMonster: return TEXT("/Game/SVN/InSideAsset/UI/Tex/Nodes/T_Node_Elite.T_Node_Elite");
-		case ERoomType::BossMonster:  return TEXT("/Game/SVN/InSideAsset/UI/Tex/Nodes/T_Node_Boss.T_Node_Boss");
+		// 배경제거(RMBG-2.0) 월드맵 노드 아이콘 — D:/...P_RD_CombatUI_Assets_nobg/12_WorldMap/05_CustomNodeIcons 에서 임포트.
+		case ERoomType::Treasure:     return TEXT("/Game/UI/WorldMap/Nodes/T_Node_Treasure.T_Node_Treasure");
+		case ERoomType::Shop:         return TEXT("/Game/UI/WorldMap/Nodes/T_Node_Shop.T_Node_Shop");
+		case ERoomType::Monster:      return TEXT("/Game/UI/WorldMap/Nodes/T_Node_Monster.T_Node_Monster");
+		case ERoomType::EliteMonster: return TEXT("/Game/UI/WorldMap/Nodes/T_Node_Elite.T_Node_Elite");
+		case ERoomType::BossMonster:  return TEXT("/Game/UI/WorldMap/Nodes/T_Node_Boss.T_Node_Boss");
 		default:                      return nullptr;
 		}
 	}
@@ -70,30 +71,46 @@ void UFrontendMapNodeWidget::SetNodeVisual(
 	mRowIndex = InRowIndex;
 	mColumnIndex = InColumnIndex;
 
+	// 아이콘 위주 노드: 타입 아이콘이 주인공. 상태(잠금/선택/현재)는 옅은 상태색 테두리 + 라벨로만 표현.
+	bool bHasIcon = false;
 	if (NodePanel != nullptr)
 	{
-		// 방 타입 토큰 텍스처가 있으면 노드 배경을 그 아이콘으로(흰 틴트=원색). 없으면 기존 상태 색을 유지.
-		// 상태(잠금/선택/진입가능)는 NodeTypeStripe 색·라벨 색·버튼 활성으로 계속 표현된다.
 		const TCHAR* IconPath = MapNodeIconPath(RoomType);
 		UTexture2D* Icon = (IconPath != nullptr) ? LoadObject<UTexture2D>(nullptr, IconPath) : nullptr;
 		if (Icon != nullptr)
 		{
 			NodePanel->SetBrushFromTexture(Icon);
-			NodePanel->SetBrushColor(FLinearColor::White);
+			NodePanel->SetBrushColor(FLinearColor::White);   // 원색 아이콘
+			bHasIcon = true;
 		}
 		else
 		{
-			NodePanel->SetBrushColor(PanelColor);
+			NodePanel->SetBrushColor(PanelColor);            // 아이콘 누락 시 기존 상태색 폴백
 		}
 	}
 	if (NodeTypeStripe != nullptr)
 	{
-		NodeTypeStripe->SetBrushColor(TypeStripeColor);
+		// 아이콘이 있으면 밝은 상태색 프레임을 옅게(아이콘을 덮지 않게). 없으면 기존대로.
+		FLinearColor StripeColor = TypeStripeColor;
+		if (bHasIcon)
+		{
+			StripeColor.A *= 0.35f;
+		}
+		NodeTypeStripe->SetBrushColor(StripeColor);
 	}
 	if (NodeLabelText != nullptr)
 	{
-		NodeLabelText->SetText(Label);
-		NodeLabelText->SetColorAndOpacity(LabelColor);
+		// 아이콘이 타입을 말하므로 아이콘 노드에선 라벨을 숨겨 깔끔하게(범례가 타입을 안내).
+		if (bHasIcon)
+		{
+			NodeLabelText->SetVisibility(ESlateVisibility::Collapsed);
+		}
+		else
+		{
+			NodeLabelText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			NodeLabelText->SetText(Label);
+			NodeLabelText->SetColorAndOpacity(LabelColor);
+		}
 	}
 	if (NodeBadgeText != nullptr)
 	{
