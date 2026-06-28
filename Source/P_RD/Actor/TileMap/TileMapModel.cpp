@@ -119,6 +119,16 @@ FTile* UTileMapModel::GetTile(const FTileIndex& TileIndex)
 	return const_cast<FTile*>(AsConst(*this).GetTile(TileIndex));
 }
 
+void UTileMapModel::SetDimensions(int32 Width, int32 Height)
+{
+	// 1 미만 방지 후 멤버에 반영
+	mWidth = FMath::Max(1, Width);
+	mHeight = FMath::Max(1, Height);
+
+	// 변경된 크기로 타일 저장소 재생성
+	RebuildTiles();
+}
+
 void UTileMapModel::RebuildTiles()
 {
 	// 타일 저장소를 현재 크기에 맞춰 기본 타일로 새로 채움
