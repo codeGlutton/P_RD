@@ -4,8 +4,6 @@
 
 #include "Pawn/UnitModel.h"
 
-// #include "Pawn/SkillComponent.h"
-
 FSRPGSkillCastCommand::FSRPGSkillCastCommand()
 {
     mCommandType = ESRPGCommandType::SkillCast;
@@ -21,8 +19,6 @@ USRPGSkillAction::USRPGSkillAction()
 void USRPGSkillAction::OnBeginAction()
 {
     Super::OnBeginAction();
-    
-    // TODO : 스킬 처리 로직
 }
 
 void USRPGSkillAction::OnTickAction(float DeltaTime)
@@ -55,6 +51,11 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
         checkf(SkillCompModel != nullptr, TEXT("스킬 컴포넌트 모델 nullptr"));
 
         SkillCompModel->ActivateSkill(SkillCastCommand.mSkillIndex, SkillCastCommand.mEffectTileIndexes, SkillCastCommand.mDicePoint);
+
+        {
+            // TODO : 원래는 비동기 적으로 애니메이션 종료 타이밍을 알려줘서 끝내야함. 임시적으로 곧바로 종료
+            MarkActionCompleted(ESRPGActionResult::Succeeded);
+        }
 
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }

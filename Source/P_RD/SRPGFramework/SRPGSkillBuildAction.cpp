@@ -238,7 +238,7 @@ void USRPGSkillBuildAction::ChangeDices(int32 RequestedDiceIndex)
     UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
     checkf(PlayerUnit != nullptr, TEXT("주사위를 굴릴 수 있는 플레이어 유닛이 아님"));
 
-    UDicePoolModel* DicePool = PlayerUnit->GetDicePool();
+    UDicePoolModel* DicePool = PlayerUnit->GetDicePoolModel();
     checkf(DicePool != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
 
     mSelectedDiceSum = 0;
@@ -285,7 +285,7 @@ void USRPGSkillBuildAction::BuildSkill()
     UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
     checkf(PlayerUnit != nullptr, TEXT("주사위를 굴릴 수 있는 플레이어 유닛이 아님"));
 
-    UDicePoolModel* DicePool = PlayerUnit->GetDicePool();
+    UDicePoolModel* DicePool = PlayerUnit->GetDicePoolModel();
     checkf(DicePool != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
 
     for (int32 DiceIndex : mSelectedDices)

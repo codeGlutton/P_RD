@@ -2,6 +2,8 @@
 #include "SRPGFramework/SRPGAction.h"
 #include "SRPGFramework/SRPGCommand.h"
 
+#include "SRPGFramework/SRPGDiceRollAction.h"
+
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
@@ -123,15 +125,20 @@ void USRPGTurnContext::BeginTurn()
 			return;
 		}
 
-		// 플레이어의 경우 주사위 굴리기 액션 추가
 		if (mOwner->IsPlayerUnitModel() == true)
 		{
-			// 액션 추가
+			/* 플레이어의 경우 주사위 굴리기 액션 추가 */
+
+			TInstancedStruct<FSRPGCommand> DicePrepareCommand;
+			DicePrepareCommand.InitializeAs<FSRPGDicePrepareCommand>();
+
+			CommandRouterModel->SummitCommand(DicePrepareCommand);
 		}
-		// AI의 경우 움직임 판단 로직 시작
 		else
 		{
-			// 액션 추가
+			/* AI의 경우 움직임 판단 로직 시작 */
+
+
 		}
 		}));
 	OnBeginTurnUI.Broadcast(PresentationBarrier, this);
