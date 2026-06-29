@@ -13,6 +13,23 @@
 #include "MediaPlayer.h"
 #include "MediaTexture.h"
 #include "Misc/FileHelper.h"
+#include "Setting/GamePlaySettings.h"
+
+namespace
+{
+	const TCHAR* const FallbackIntroCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/MS_IntroCinematic_01.mp4");
+
+	FString GetIntroCinematicVideoPath()
+	{
+		const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
+		if (GamePlaySettings != nullptr && GamePlaySettings->mIntroCinematicVideoPath.IsEmpty() == false)
+		{
+			return GamePlaySettings->mIntroCinematicVideoPath;
+		}
+
+		return FString(FallbackIntroCinematicVideoPath);
+	}
+}
 
 /**
  * @brief 시네마틱 재생에 필요한 미디어 오브젝트(플레이어/텍스처/소스)와 브러시를 지연 생성한다.
@@ -24,6 +41,9 @@ void UCinematicWidget::EnsureCinematicMediaObjects()
 	if (mCinematicMediaPlayer == nullptr)
 	{
 		mCinematicMediaPlayer = NewObject<UMediaPlayer>(this, TEXT("IntroCinematicMediaPlayer"));
+#if PLATFORM_WINDOWS || PLATFORM_MAC
+		mCinematicMediaPlayer->SetDesiredPlayerName(FName(TEXT("ElectraProtron")));
+#endif
 		mCinematicMediaPlayer->SetLooping(false); // 인트로는 1회 재생 후 종료(루프 X)
 		// 열림/실패/종료 이벤트를 바인딩해 재생 시작·폴백·다음 단계 전환을 제어한다(AddUnique로 중복 바인딩 방지).
 		mCinematicMediaPlayer->OnMediaOpened.AddUniqueDynamic(this, &UCinematicWidget::HandleCinematicMediaOpened);
@@ -160,13 +180,14 @@ void UCinematicWidget::StopCinematicMedia()
  */
 FString UCinematicWidget::ResolveCinematicVideoPath() const
 {
-	if (FPaths::IsRelative(mCinematicVideoPath) == false)
+	const FString CinematicVideoPath = GetIntroCinematicVideoPath();
+	if (FPaths::IsRelative(CinematicVideoPath) == false)
 	{
-		return FPaths::ConvertRelativePathToFull(mCinematicVideoPath); // 이미 절대 경로면 정규화만 수행
+		return FPaths::ConvertRelativePathToFull(CinematicVideoPath); // 이미 절대 경로면 정규화만 수행
 	}
 
 	// 상대 경로는 Content 디렉터리를 기준 디렉터리로 삼아 절대 경로로 합친다.
-	return FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir(), mCinematicVideoPath);
+	return FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir(), CinematicVideoPath);
 }
 
 /**

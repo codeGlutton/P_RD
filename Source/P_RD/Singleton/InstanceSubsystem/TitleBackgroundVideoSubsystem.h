@@ -37,7 +37,7 @@ class P_RD_API UTitleBackgroundVideoSubsystem : public UGameInstanceSubsystem
 public:
 	/**
 	 * @brief  타이틀 배경 영상을 열고 루프 재생을 시작한다. 위젯 표시 전에 호출해 첫 프레임 지연을 줄인다.
-	 * @param  RelativeContentPath  Content 기준 상대 경로의 mp4. 빈 문자열이면 기본 campfire 영상을 사용한다.
+	 * @param  RelativeContentPath  Content 기준 상대 경로의 mp4. 빈 문자열이면 게임 설정의 기본 타이틀 배경 영상.
 	 * @details 같은 경로로 이미 열도록 요청했으면 무시(중복 열기 방지). 실제 첫 프레임 준비는 HandleMediaOpened에서 확정.
 	 */
 	void PreloadTitleBackgroundVideo(const FString& RelativeContentPath);
