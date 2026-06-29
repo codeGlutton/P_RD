@@ -1,6 +1,7 @@
 ﻿#include "SRPGFramework/SRPGMoveBuildAction.h"
 
 #include "Actor/ActorView.h"
+#include "RDCollision.h"
 
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
@@ -50,6 +51,9 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleCommand(const TInstancedStruct<FS
         const FSRPGMoveSelectCommand& MoveSelectCommand = Command.Get<FSRPGMoveSelectCommand>();
         mMovePoint = MoveSelectCommand.mMovePoint;
 
+        // 커맨드 델리깃을 복사해서 페이즈가 바뀔 때 통지
+        OnChangeMoveBuildPhase = MoveSelectCommand.OnChangeMoveBuildPhase;
+
         if (mMoveBuildPhase == ESRPGMoveBuildPhase::None)
         {
             EnterMoveBuild();
@@ -72,74 +76,78 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleWorldTraceCommand(const TInstance
     ESRPGCommandResult Result = ESRPGCommandResult::Ignored;
 
     const FSRPGWorldTraceCommand& WorldTraceCommand = Command.Get<FSRPGWorldTraceCommand>();
-    if (WorldTraceCommand.mIsLongPress == false)
+    if (WorldTraceCommand.mIsLongPress == true)
     {
-        UTileMapModel* TileMap = GetTileMap();
+        return Result;
+    }
 
-        AActor* TargetActor = nullptr;
-        FTileIndex TargetTileIndex = FTileIndex::Invalid;
-        GetTileActorUnderCursor(ECC_GameTraceChannel1 /* TODO : 임시 */, OUT TargetActor, OUT TargetTileIndex);
+    UTileMapModel* TileMap = GetTileMap();
 
-        IActorView* ActorView = Cast<IActorView>(TargetActor);
-        if (ActorView != nullptr && ActorView->GetModel() == TileMap)
+    AActor* TargetActor = nullptr;
+    FTileIndex TargetTileIndex = FTileIndex::Invalid;
+    GetTileActorUnderCursor(RDTraceChannels::TileOnlyTrace, OUT TargetActor, OUT TargetTileIndex);
+
+    IActorView* ActorView = Cast<IActorView>(TargetActor);
+    const bool IsContactedTileMap = ActorView != nullptr && ActorView->GetModel() == TileMap;
+    if (IsContactedTileMap == true)
+    {
+        if (TargetTileIndex == FTileIndex::Invalid)
         {
-            if (TargetTileIndex == FTileIndex::Invalid)
+            /* 한단계 취소작업 */
+
+            switch (mMoveBuildPhase)
             {
-                /* 한단계 취소작업 */
+            case ESRPGMoveBuildPhase::Preview:
+            {
+                /* 프리뷰 단계에서 한단계 취소 시, 목적지 취소 처리 */
 
-                switch (mMoveBuildPhase)
-                {
-                case ESRPGMoveBuildPhase::Preview:
-                {
-                    /* 프리뷰 단계에서 한단계 취소 시, 목적지 취소 처리 */
-
-                    ResetTargetTile();
-                    Result = ESRPGCommandResult::Handled;
-                    break;
-                }
-                case ESRPGMoveBuildPhase::DestSelection:
-                {
-                    /* 목적지 선택 단계에서 한단계 취소 시, 빌드 자체 종료 */
-
-                    MarkActionCompleted(ESRPGActionResult::Cancelled);
-                    Result = ESRPGCommandResult::Handled;
-                    break;
-                }
-                }
+                ResetTargetTile();
+                Result = ESRPGCommandResult::Handled;
+                break;
             }
-            else
+            case ESRPGMoveBuildPhase::DestSelection:
             {
-                /* 한단계 처리작업 */
+                /* 목적지 선택 단계에서 한단계 취소 시, 빌드 자체 종료 */
 
-                switch (mMoveBuildPhase)
-                {
-                case ESRPGMoveBuildPhase::Preview:
-                {
-                    /* 확정 칸 클릭 시, 이동 발행 */
+                MarkActionCompleted(ESRPGActionResult::Cancelled);
+                Result = ESRPGCommandResult::Handled;
+                break;
+            }
+            }
+        }
+        else
+        {
+            /* 한단계 처리작업 */
 
-                    if (mTargetIndex == TargetTileIndex)
-                    {
-                        BuildMove();
-                        MarkActionCompleted(ESRPGActionResult::Succeeded);
-                        Result = ESRPGCommandResult::Handled;
-                        break;
-                    }
-                    [[fallthrough]];
-                }
-                case ESRPGMoveBuildPhase::DestSelection:
-                {
-                    /* 도달 가능한 칸 클릭 시, 프리뷰 단계까지 보여주기 */
+            switch (mMoveBuildPhase)
+            {
+            case ESRPGMoveBuildPhase::Preview:
+            {
+                /* 확정 칸 클릭 시, 이동 발행 */
 
-                    if (mReachableTileIndexes.Contains(TargetTileIndex) == true)
-                    {
-                        ResetTargetTile();
-                        SetTargetTile(TargetTileIndex);
-                        Result = ESRPGCommandResult::Handled;
-                        break;
-                    }
+                if (mTargetIndex == TargetTileIndex)
+                {
+                    BuildMove();
+                    SetBuildPhase(ESRPGMoveBuildPhase::Build);
+                    MarkActionCompleted(ESRPGActionResult::Succeeded);
+                    Result = ESRPGCommandResult::Handled;
                     break;
                 }
+                [[fallthrough]];
+            }
+            case ESRPGMoveBuildPhase::DestSelection:
+            {
+                /* 도달 가능한 칸 클릭 시, 프리뷰 단계까지 보여주기 */
+
+                if (mReachableTileIndexes.Contains(TargetTileIndex) == true)
+                {
+                    ResetTargetTile();
+                    SetTargetTile(TargetTileIndex);
+                    Result = ESRPGCommandResult::Handled;
+                    break;
                 }
+                break;
+            }
             }
         }
     }
@@ -196,11 +204,11 @@ void USRPGMoveBuildAction::SetTargetTile(const FTileIndex& TileIndex)
     /* 예측 시스템 — 이동 시 '받는' 영향(경로/도착 타일의 함정·장판 데미지·상태이상) 예측 */
 
     {
-        // 스킬의 CalculateSkillResult(가하는 데미지)의 역방향이다.
-        // 받는 효과의 실제 적용은 실행 시 도착·경유 타일의 OnBeginTileOverlap이 담당한다(현재 스텁).
-        // 시뮬레이션이 완성되면, 심 복제본에서 이 경로 이동을 실행해 출발/도착 스냅샷(MakeSnapshotData)을
-        // 비교하거나 EventLog(mAttributeEffectEventLogs)로 스탯 델타를 산출해 프리뷰로 보여준다.
-        // TODO : 시뮬레이션·속성·타일효과 시스템 연결 후 구현 (상대 API가 전부 스텁/null이라 현재 호출 불가)
+        // 스킬의 CalculateSkillResult(가하는 데미지)의 역방향.
+        // 받는 효과의 실제 적용은 실행 시 도착·경유 타일의 OnBeginTileOverlap이 담당.
+        // 심 복제본에서 이 경로 이동을 실행해 출발/도착 스냅샷(MakeSnapshotData) 비교 또는
+        // EventLog(mAttributeEffectEventLogs)로 스탯 델타를 산출해 프리뷰로 표시.
+        // TODO : 이동 예측 계산 연결
     }
 
     /* 상태 변경되면서 외부에서 바인딩된 UI 변경 */
