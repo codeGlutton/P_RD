@@ -10,22 +10,26 @@
 #include "Actor/BoardActor/BoardCombatTarget.h"
 #include "DataAsset/PassiveData/StaticPassiveData.h"
 
-void UTacticalPassive_AddStat::EvaluatePassive(
+EPassiveAction UTacticalPassive_AddStat::DecideAction(
+	const FGameplayTag& Timing,
 	const FPassiveActivateContext& Ctx,
-	FBoardCombatTargetSnapshotData& TargetDelta,
-	TInstancedStruct<FDynamicPassiveData>& PassiveState)
+	TInstancedStruct<FDynamicPassiveData>& PassiveState,
+	FBoardCombatTargetSnapshotData& TargetDelta)
 {
-	// 데이터/이펙트가 없으면 기여 없음 (Ctx/PassiveState 미사용 - 무상태)
+	// 데이터/이펙트가 없으면 발동 안 함 (Timing/Ctx/PassiveState 미사용 - 무상태)
 	if (mStaticData == nullptr || mEffectClass == nullptr)
 	{
-		return;
+		return EPassiveAction::None;
 	}
 
 	// 이펙트가 정의한 속성에 데이터 수치(mMagnitude)를 그대로 누적
 	const UTacticalEffect* EffectCDO = mEffectClass.GetDefaultObject();
 	if (EffectCDO == nullptr || EffectCDO->mModifiers.Num() == 0)
 	{
-		return;
+		return EPassiveAction::None;
 	}
 	TargetDelta.mAttributes.FindOrAdd(EffectCDO->mModifiers[0].mAttribute) += mStaticData->mMagnitude;
+
+	// 발동했다고 회신
+	return EPassiveAction::Activate;
 }

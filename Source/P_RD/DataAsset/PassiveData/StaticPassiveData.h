@@ -52,7 +52,7 @@ public:
     TSoftObjectPtr<UTexture2D> mIcon;
 
     /**
-    * @brief 패시브 적용 시점
+    * @brief 패시브가 반응하는 시점들 (발동/해제 등 다중)
     *
     * @details
     * 타격 전, 후
@@ -60,9 +60,10 @@ public:
     * 스킬 시전 전, 후
     * 모션 전, 후
     * 기타 등등
+    * 발동 시점과 해제 시점이 다를 수 있어 여러 개를 담는다.
     */
-	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Passive Trigger Timig"))
-	FGameplayTag mPassiveTriggerTimig;     // 시점
+	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Timing Tags"))
+	FGameplayTagContainer mTimingTags;     // 시점들
 
     /**
     * @brief 패시브 발동 조건

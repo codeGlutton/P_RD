@@ -46,9 +46,13 @@ bool FTacticalPassiveAddStatTests::RunTest(const FString& Parameters)
 	TInstancedStruct<FDynamicPassiveData> State;
 
 	// 계산만 검증 (적용/이펙트는 별도 효과 테스트).
-	// EvaluatePassive는 protected이고 friend는 서브클래스 override에 적용 안 되므로 베이스 타입으로 호출.
+	// DecideAction은 protected이고 friend는 서브클래스 override에 적용 안 되므로 베이스 타입으로 호출.
+	const FGameplayTag Timing;   // AddStat은 Timing 미사용(무상태)
 	UTacticalPassive* Base = Passive;
-	Base->EvaluatePassive(Ctx, TargetDelta, State);
+	const EPassiveAction Action = Base->DecideAction(Timing, Ctx, State, TargetDelta);
+
+	// 무상태 고정 가산은 시점이 오면 항상 발동
+	TestTrue(TEXT("발동(Activate) 반환"), Action == EPassiveAction::Activate);
 
 	// AttackPoint 델타가 수치만큼 누적됐는지 확인
 	const float* Value = TargetDelta.mAttributes.Find(UUnitAttributeSet::GetAttackPointAttribute());
