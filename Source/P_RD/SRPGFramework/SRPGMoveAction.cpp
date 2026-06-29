@@ -47,39 +47,15 @@ void USRPGMoveAction::OnBeginAction()
         return;
     }
 
-    /* 인덱스 0은 시작(현재) 타일이므로 1번 칸부터 이동 시작 */
-    StartStep(1);
-}
-
-void USRPGMoveAction::OnTickAction(float DeltaTime)
-{
-    Super::OnTickAction(DeltaTime);
-
-    if (mCurrentStepIndex == INDEX_NONE)
+    /* 인덱스 0은 시작(현재) 타일 — 1번 칸부터 경로 끝까지 한 칸씩 동기로 밟는다.
+       뷰가 없어도 논리 좌표·오버랩이 즉시 확정됨(시뮬). 뷰 연출 페이싱은 추후 배리어로 얹음. */
+    for (int32 StepIndex = 1; StepIndex < mPathTileIndexes.Num(); ++StepIndex)
     {
-        return;
+        StartStep(StepIndex);
+        CompleteStep();
     }
 
-    /* 한 칸 이동 연출 시간이 지나면 도착 처리 후 다음 칸으로 진행 */
-    mStepElapsed += DeltaTime;
-    if (mStepElapsed < STEP_DURATION)
-    {
-        return;
-    }
-
-    CompleteStep();
-
-    const int32 NextStepIndex = mCurrentStepIndex + 1;
-    if (mPathTileIndexes.IsValidIndex(NextStepIndex) == true)
-    {
-        StartStep(NextStepIndex);
-    }
-    else
-    {
-        /* 경로 끝까지 도착 — 이동 종료 */
-        mCurrentStepIndex = INDEX_NONE;
-        MarkActionCompleted(ESRPGActionResult::Succeeded);
-    }
+    MarkActionCompleted(ESRPGActionResult::Succeeded);
 }
 
 void USRPGMoveAction::OnEndAction()
@@ -112,9 +88,6 @@ void USRPGMoveAction::StartStep(int32 StepIndex)
     const ETileActorDirection Direction = mInstigator->GetTileTransform().mDirection;
     const FTileTransform NextTransform(mPathTileIndexes[StepIndex], Direction);
     TileMap->StartActorMovement(NextTransform, mInstigator.Get());
-
-    mCurrentStepIndex = StepIndex;
-    mStepElapsed = 0.0f;
 }
 
 void USRPGMoveAction::CompleteStep()
