@@ -1,5 +1,6 @@
 #include "UI/CharacterSelectWidget.h"
 
+#include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
@@ -13,11 +14,9 @@
 
 namespace
 {
-	constexpr float GClassSelectIllustrationAspect = 16.0f / 9.0f;
-
-	void FitClassActionImageSlotToViewport(const UCharacterSelectWidget* Owner, UImage* Image)
+	void FitClassActionImageSlotToViewportWidthCrop(const UCharacterSelectWidget* Owner, UImage* Image, const UTexture2D* Illustration)
 	{
-		if (Owner == nullptr || Image == nullptr)
+		if (Owner == nullptr || Image == nullptr || Illustration == nullptr)
 		{
 			return;
 		}
@@ -40,18 +39,15 @@ namespace
 			return;
 		}
 
-		const float ViewportAspect = ViewportSize.X / ViewportSize.Y;
-		FVector2D TargetSize;
-		if (ViewportAspect < GClassSelectIllustrationAspect)
+		const float ViewportScale = FMath::Max(UWidgetLayoutLibrary::GetViewportScale(Owner), KINDA_SMALL_NUMBER);
+		const FVector2D LogicalViewportSize = ViewportSize / ViewportScale;
+		const float IllustrationAspect = static_cast<float>(Illustration->GetSizeX()) / FMath::Max(1.0f, static_cast<float>(Illustration->GetSizeY()));
+		if (IllustrationAspect <= 0.0f)
 		{
-			TargetSize.Y = ViewportSize.Y;
-			TargetSize.X = ViewportSize.Y * GClassSelectIllustrationAspect;
+			return;
 		}
-		else
-		{
-			TargetSize.X = ViewportSize.X;
-			TargetSize.Y = ViewportSize.X / GClassSelectIllustrationAspect;
-		}
+
+		const FVector2D TargetSize(LogicalViewportSize.X, LogicalViewportSize.X / IllustrationAspect);
 
 		CanvasSlot->SetAnchors(FAnchors(0.5f, 0.5f));
 		CanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));
@@ -261,10 +257,10 @@ void UCharacterSelectWidget::SyncSelectedCharacterArt(EPlayerJobType JobType)
 			return;
 		}
 
-		FitClassActionImageSlotToViewport(this, Image);
-
 		if (UTexture2D* Illustration = GetOrLoadJobIllustration(ImageJob))
 		{
+			FitClassActionImageSlotToViewportWidthCrop(this, Image, Illustration);
+
 			FSlateBrush Brush;
 			Brush.DrawAs = ESlateBrushDrawType::Image;
 			Brush.ImageSize = FVector2D(

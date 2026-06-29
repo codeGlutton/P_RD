@@ -50,6 +50,11 @@ public class P_RD : ModuleRules
             "P_RD",
         });
 
+        // MediaPlayer가 파일 경로로 직접 여는 mp4만 UFS 런타임 의존성으로 넣는다.
+        // Content/SVN 전체를 패키징하면 SVN 원본/시안/.svn 메타데이터까지 들어가 APK가 크게 불어난다.
+        RuntimeDependencies.Add("$(ProjectDir)/Content/SVN/OutSideAsset/AICreation/campfire_titleloop_idle_x3preview.mp4", StagedFileType.UFS);
+        RuntimeDependencies.Add("$(ProjectDir)/Content/SVN/OutSideAsset/AICreation/hero_loading_intro4_1280_3s.mp4", StagedFileType.UFS);
+
         if (Target.bBuildEditor == true)
         {
             PrivateDependencyModuleNames.AddRange(new string[]

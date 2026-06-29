@@ -154,6 +154,9 @@ protected:
 	bool IsDifficultyValid(int32 Difficulty) const;
 
 private:
+	UFUNCTION()
+	void HandleCharacterSelectBackRequested();
+
 	bool OpenTitleCharacterSelect();
 	bool CreateRunData(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty);
 

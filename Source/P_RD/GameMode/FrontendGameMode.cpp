@@ -14,6 +14,7 @@
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/TitleMenuWidget.h"
+#include "UI/CharacterSelectWidget.h"
 
 #include "Setting/GamePlaySettings.h"
 #include "DataAsset/RoomSpawnData/StaticFrontendRoomSpawnData.h"
@@ -128,6 +129,41 @@ namespace
 		Options.Add(MoveTemp(NewOption));
 	}
 
+	int32 GetClassSelectSortOrder(EPlayerJobType JobType)
+	{
+		switch (JobType)
+		{
+		case EPlayerJobType::Knight:
+			return 0;
+		case EPlayerJobType::Mage:
+			return 1;
+		case EPlayerJobType::Archer:
+			return 2;
+		default:
+			return 99;
+		}
+	}
+
+	void SortCharacterOptionsForClassSelect(TArray<FFrontendCharacterOption>& Options)
+	{
+		Options.StableSort([](const FFrontendCharacterOption& Left, const FFrontendCharacterOption& Right)
+		{
+			const int32 LeftOrder = GetClassSelectSortOrder(Left.mJobType);
+			const int32 RightOrder = GetClassSelectSortOrder(Right.mJobType);
+			if (LeftOrder != RightOrder)
+			{
+				return LeftOrder < RightOrder;
+			}
+
+			return Left.mIndex < Right.mIndex;
+		});
+
+		for (int32 OptionIndex = 0; OptionIndex < Options.Num(); ++OptionIndex)
+		{
+			Options[OptionIndex].mIndex = OptionIndex;
+		}
+	}
+
 }
 
 /** @brief 프론트엔드 방에서 생성해둘 공용 월드 위젯 타입을 등록한다. */
@@ -150,6 +186,7 @@ AFrontendGameMode::AFrontendGameMode()
 		EWorldWidgetType::FadeInOut,
 		EWorldWidgetType::LoadingNotify,
 		EWorldWidgetType::InGameSettings,
+		EWorldWidgetType::CharacterSelect,
 	};
 
 	mShowFadeInUIOnTransition = true;
@@ -381,6 +418,7 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 	}
 
 	// 위 placeholder는 선택 불가 View 데이터라 런 생성으로 이어지지 않는다.
+	SortCharacterOptionsForClassSelect(OutOptions);
 
 	return OutOptions.IsEmpty() == false;
 }
@@ -455,24 +493,51 @@ bool AFrontendGameMode::IsDifficultyValid(int32 Difficulty) const
 	return true;
 }
 
-/** @brief TitleMenuWidget에 캐릭터 선택 화면을 열라고 전달한다. */
-// GameMode는 타이틀 HUD 내부의 ScreenSwitcher나 WBP 위젯 트리를 직접 조작하지 않는다.
-// 타이틀 화면 안에서 어떤 패널을 보여줄지는 TitleMenuWidget이 맡고,
-// GameMode는 "캐릭터 선택으로 넘어가라"는 흐름 요청만 보낸다.
+/** @brief 독립 캐릭터 선택 월드 위젯을 열고 타이틀 HUD를 잠시 닫는다. */
+// 캐릭터 선택은 타이틀 HUD 내부 ScreenSwitcher 슬롯이 아니라 WorldWidgetSubsystem이 관리하는 별도 위젯이다.
+// 그래서 START 입력 시 타이틀 HUD를 닫고 CharacterSelect 월드 위젯을 OpenUI()로 열며,
+// Back 요청을 받으면 다시 타이틀 HUD를 OpenUI()로 복귀시킨다.
 bool AFrontendGameMode::OpenTitleCharacterSelect()
 {
 	/*
-	 * 타이틀 HUD 내부 화면 전환은 TitleMenuWidget이 맡는다.
-	 * GameMode가 ScreenSwitcher를 직접 만지지 않고, 타이틀 위젯에 "캐릭터 선택 화면을 열어 달라"고 요청하는 구조다.
+	 * 캐릭터 선택 화면은 타이틀 HUD와 분리된 독립 월드 위젯이다.
+	 * 타이틀 HUD 안에 끼워 넣지 않아야 새 WBP_CharacterSelect_New의 전체 화면 레이아웃과 버튼 배선이 그대로 동작한다.
 	 */
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
 	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr"));
 
-	UTitleMenuWidget* TitleMenuWidget = WorldWidgetSubsystem->GetHUD<UTitleMenuWidget>();
-	checkf(TitleMenuWidget != nullptr, TEXT("타이틀 HUD가 준비가 안됨"));
+	UCharacterSelectWidget* CharacterSelectWidget = WorldWidgetSubsystem->GetWorldWidget<UCharacterSelectWidget>(EWorldWidgetType::CharacterSelect);
+	checkf(CharacterSelectWidget != nullptr, TEXT("캐릭터 선택 위젯이 준비가 안됨"));
 
-	TitleMenuWidget->OpenCharacterSelectFromTitle();
+	CharacterSelectWidget->OnBackToMainRequested.AddUniqueDynamic(this, &AFrontendGameMode::HandleCharacterSelectBackRequested);
+
+	if (UTitleMenuWidget* TitleMenuWidget = WorldWidgetSubsystem->GetHUD<UTitleMenuWidget>())
+	{
+		TitleMenuWidget->CloseUI();
+	}
+
+	CharacterSelectWidget->OpenCharacterSelect();
+	CharacterSelectWidget->OpenUI();
 	return true;
+}
+
+/** @brief 독립 캐릭터 선택 위젯의 Back 요청을 타이틀 HUD 복귀로 처리한다. */
+void AFrontendGameMode::HandleCharacterSelectBackRequested()
+{
+	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld() != nullptr
+		? GetWorld()->GetSubsystem<UWorldWidgetSubsystem>()
+		: nullptr;
+	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr"));
+
+	if (UCharacterSelectWidget* CharacterSelectWidget = WorldWidgetSubsystem->GetWorldWidget<UCharacterSelectWidget>(EWorldWidgetType::CharacterSelect))
+	{
+		CharacterSelectWidget->CloseUI();
+	}
+
+	if (UTitleMenuWidget* TitleMenuWidget = WorldWidgetSubsystem->GetHUD<UTitleMenuWidget>())
+	{
+		TitleMenuWidget->OpenUI();
+	}
 }
 
 /** @brief 선택된 캐릭터/난이도로 RunPersistData 생성을 GameProfileSubsystem에 위임한다. */

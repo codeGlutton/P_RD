@@ -8,6 +8,17 @@
 #include "UI/CharacterSelectWidgetPrivate.h"
 #include "UObject/SoftObjectPath.h"
 
+namespace
+{
+	void MakeButtonLabelInputTransparent(UTextBlock* Label)
+	{
+		if (Label != nullptr)
+		{
+			Label->SetVisibility(ESlateVisibility::HitTestInvisible);
+		}
+	}
+}
+
 /** @brief 선택 화면 기본 문구와 직업별 일러스트 경로 계약을 준비한다. */
 UCharacterSelectWidget::UCharacterSelectWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -17,9 +28,9 @@ UCharacterSelectWidget::UCharacterSelectWidget(const FObjectInitializer& ObjectI
 
 	// 직업별 일러스트 텍스처 기본값(SVN 임포트 uasset). 직업 enum(Archer)과 아트 이름(rogue)이 다를 수 있어 여기서 매핑.
 	// [합의필요] 아트 파일명이 직업명과 다를 수 있는 계약은 AssetRegistry/DataAsset로 이동할지 결정이 필요하다.
-	mJobIllustrationAssets.Add(EPlayerJobType::Knight, TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/SVN/OutSideAsset/AICreation/ClassSelect/classselect_knight_action_illustration_1920x1080.classselect_knight_action_illustration_1920x1080"))));
-	mJobIllustrationAssets.Add(EPlayerJobType::Archer, TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/SVN/OutSideAsset/AICreation/ClassSelect/classselect_rogue_action_illustration_1920x1080.classselect_rogue_action_illustration_1920x1080"))));
-	mJobIllustrationAssets.Add(EPlayerJobType::Mage, TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/SVN/OutSideAsset/AICreation/ClassSelect/classselect_mage_action_illustration_1920x1080.classselect_mage_action_illustration_1920x1080"))));
+	mJobIllustrationAssets.Add(EPlayerJobType::Knight, TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/SVN/OutSideAsset/AICreation/ClassSelect/class_illust_knight_v2.class_illust_knight_v2"))));
+	mJobIllustrationAssets.Add(EPlayerJobType::Archer, TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/SVN/OutSideAsset/AICreation/ClassSelect/class_illust_rogue_v2.class_illust_rogue_v2"))));
+	mJobIllustrationAssets.Add(EPlayerJobType::Mage, TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/SVN/OutSideAsset/AICreation/ClassSelect/class_illust_mage_v2.class_illust_mage_v2"))));
 }
 
 /** @brief 타이틀 START로 진입할 때 중복 시작 게이트를 풀고 후보/상태를 새로 맞춘다. */
@@ -45,12 +56,14 @@ void UCharacterSelectWidget::NativeConstruct()
 	ValidateDesignerBindings();
 	BindEvents();
 	ApplyButtonStyles();
+	MakeButtonLabelInputTransparent(mConfirmButtonText);
+	MakeButtonLabelInputTransparent(mBackToMainButtonText);
 	RefreshLocalizedTextCache();
 	RefreshCharacterOptions();
 	SetStatusText(mReadyStatusText);
 }
 
-/** @brief 타이틀 버튼 아트를 기존 WBP 버튼에 적용한다. */
+/** @brief 캐릭터 선택 버튼 아트를 기존 WBP 버튼에 적용한다. */
 void UCharacterSelectWidget::ApplyButtonStyles() const
 {
 	/*
@@ -60,8 +73,8 @@ void UCharacterSelectWidget::ApplyButtonStyles() const
 	 */
 	struct FButtonTexture { UButton* Button; const TCHAR* Path; };
 	const FButtonTexture Targets[] = {
-		{ mConfirmButton,    TEXT("/Game/SVN/OutSideAsset/AICreation/Title/UI_Button_Start_DarkFantasy_Base.UI_Button_Start_DarkFantasy_Base") },
-		{ mBackToMainButton, TEXT("/Game/SVN/OutSideAsset/AICreation/Title/UI_Button_Settings_DarkFantasy_Base.UI_Button_Settings_DarkFantasy_Base") },
+		{ mConfirmButton,    TEXT("/Game/UI/ClassSelect/Tex/T_confirm_button_frame_normal.T_confirm_button_frame_normal") },
+		{ mBackToMainButton, TEXT("/Game/UI/ClassSelect/Tex/T_back_button_frame_normal.T_back_button_frame_normal") },
 	};
 
 	for (const FButtonTexture& Target : Targets)
@@ -163,10 +176,12 @@ void UCharacterSelectWidget::SetConfirmButtonText(const FText& InText) const
 {
 	if (mConfirmButtonText != nullptr)
 	{
+		MakeButtonLabelInputTransparent(mConfirmButtonText);
 		mConfirmButtonText->SetText(InText);
 	}
 	if (mBackToMainButtonText != nullptr)
 	{
+		MakeButtonLabelInputTransparent(mBackToMainButtonText);
 		mBackToMainButtonText->SetText(mBackText);
 	}
 }

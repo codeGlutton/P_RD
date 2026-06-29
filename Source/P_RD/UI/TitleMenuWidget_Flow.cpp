@@ -2,58 +2,9 @@
 
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
-#include "Components/WidgetSwitcher.h"
 #include "GameMode/FrontendGameMode.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
-#include "UI/CharacterSelectWidget.h"
 #include "UI/SettingsPanelWidget.h"
-
-namespace
-{
-	// WBP_TitleMenu의 ScreenSwitcher 0번 슬롯은 메인 메뉴여야 한다. nullptr fallback이 이 인덱스에 의존한다.
-	constexpr int32 TitleMainScreenIndex = 0;
-}
-
-/** @brief ScreenSwitcher의 표시 대상을 바꾼다. */
-// 하위 위젯들이 ScreenSwitcher를 직접 만지지 않게 하기 위한 공통 진입점이다.
-// Screen이 nullptr인 경우에는 타이틀 메인 화면으로 돌려, WBP 연결 누락 시에도 사용자가 빈 화면에 갇히지 않게 한다.
-void UTitleMenuWidget::ShowScreen(UWidget* Screen) const
-{
-	if (ScreenSwitcher == nullptr || Screen == nullptr)
-	{
-		if (ScreenSwitcher != nullptr && Screen == nullptr)
-		{
-			ScreenSwitcher->SetActiveWidgetIndex(TitleMainScreenIndex);
-		}
-		return;
-	}
-
-	ScreenSwitcher->SetActiveWidget(Screen);
-}
-
-/** @brief 타이틀 메인 화면으로 복귀한다. */
-// 캐릭터 선택이나 공용 설정 패널의 Back/Close 요청은 모두 이 함수로 모인다.
-// 타이틀의 "현재 화면" 정책을 한 곳에서 관리하기 위한 래퍼다.
-void UTitleMenuWidget::ShowMainScreen() const
-{
-	ShowScreen(StartScreen);
-}
-
-/** @brief 캐릭터 선택 화면을 열고 캐릭터 카드 상태를 초기화한다. */
-// CharacterSelectWidget이 준비되어 있으면 OpenCharacterSelect()를 호출해 GameMode에서 캐릭터 후보를 다시 받아온다.
-// 위젯 연결이 빠진 경우에는 캐릭터 화면 슬롯으로 넘어가되 상태 문구를 남겨 WBP 바인딩 문제를 찾을 수 있게 한다.
-void UTitleMenuWidget::ShowCharacterScreen()
-{
-	if (CharacterSelectWidget == nullptr)
-	{
-		SetStatusText(mCharacterSelectUnavailableText);
-		ShowScreen(CharacterScreen);
-		return;
-	}
-
-	CharacterSelectWidget->OpenCharacterSelect();
-	ShowScreen(CharacterScreen);
-}
 
 /** @brief 타이틀에서 공용 설정 패널을 Title 모드로 열어 보여준다. */
 // 설정 기능은 타이틀과 인게임에서 같은 WBP_SettingsPanel 월드 위젯을 공유한다.
@@ -66,7 +17,6 @@ void UTitleMenuWidget::OpenSettingsPanel()
 	USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel();
 	if (TitleSettingsPanel == nullptr)
 	{
-		ShowMainScreen();
 		SetStatusText(mMainOnlyStatusText);
 		return;
 	}
@@ -78,7 +28,6 @@ void UTitleMenuWidget::OpenSettingsPanel()
 	TitleSettingsPanel->HideAbandonConfirm();
 	TitleSettingsPanel->SetStatusText(FText::GetEmpty());
 
-	ShowMainScreen();
 	TitleSettingsPanel->OpenUI();
 	SetStatusText(FText::GetEmpty());
 }
@@ -148,8 +97,7 @@ USettingsPanelWidget* UTitleMenuWidget::GetTitleSettingsPanel() const
 }
 
 /** @brief START 버튼 입력을 GameMode의 새 런 시작 흐름으로 전달한다. */
-// GameMode가 준비되어 있으면 RequestCharacterSelectFromTitle()을 통해 캐릭터 선택 화면을 열고,
-// 테스트/프리뷰처럼 GameMode가 없는 경우에는 WBP 화면 전환만 수행한다.
+// GameMode가 준비되어 있으면 RequestCharacterSelectFromTitle()을 통해 독립 캐릭터 선택 월드 위젯을 연다.
 void UTitleMenuWidget::HandleStartButtonClicked()
 {
 	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
@@ -159,8 +107,6 @@ void UTitleMenuWidget::HandleStartButtonClicked()
 			return;
 		}
 	}
-
-	ShowCharacterScreen();
 }
 
 /** @brief CONTINUE 버튼 입력으로 현재 활성 Run의 방에 바로 들어간다. */
@@ -177,7 +123,6 @@ void UTitleMenuWidget::HandleContinueButtonClicked()
 		}
 	}
 
-	ShowMainScreen();
 	SetStatusText(mMainOnlyStatusText);
 }
 
@@ -196,13 +141,5 @@ void UTitleMenuWidget::HandleSettingsPanelBackRequested()
 		TitleSettingsPanel->CloseUI();
 	}
 
-	ShowMainScreen();
-	SetStatusText(FText::GetEmpty());
-}
-
-/** @brief 캐릭터 선택 화면의 Back 요청을 타이틀 메인 복귀로 처리한다. */
-void UTitleMenuWidget::HandleCharacterBackToMainRequested()
-{
-	ShowMainScreen();
 	SetStatusText(FText::GetEmpty());
 }
