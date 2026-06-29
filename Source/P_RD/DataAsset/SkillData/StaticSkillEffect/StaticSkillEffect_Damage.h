@@ -43,6 +43,11 @@ public:
     float mEffectRatioValue;
 
 public:
+    virtual bool ApplyOtherPointToSkillPoint(
+        float SkillPoint,
+        TWeakObjectPtr<class UBoardActorModel> SourceActor,
+        OUT struct FActiveTacticalEffectHandle& EffectHandle) override;
+
     virtual void ApplySkillEffect(
         float SkillPoint,
         TWeakObjectPtr<class UBoardActorModel> SourceActor,

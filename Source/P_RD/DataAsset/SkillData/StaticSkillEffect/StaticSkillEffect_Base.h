@@ -53,6 +53,22 @@ public:
 
 public:
     /**
+    * @brief SkillPoint를 특정 포인트로 변경합니다.
+    *
+    * @details
+    * SourceActor에게 Effect를 사용하여 SkillPoint를 특정 포인트로 변환합니다.
+    * DamagePoint, HealPoint 등
+    * 
+    * @return true를 반환 시 EffectHandle이 생성되었습니다.
+    * @return false를 반환 시 EffectHandle이 생성되지 않았습니다.
+    */
+    virtual bool ApplyOtherPointToSkillPoint(
+        float SkillPoint,
+        TWeakObjectPtr<class UBoardActorModel> SourceActor,
+        OUT struct FActiveTacticalEffectHandle& EffectHandle) PURE_VIRTUAL(UStaticSkillEffect_Base::ApplyOtherPointToSkillPoint, return false;);
+    
+
+    /**
     * @brief 효과를 적용합니다.
     *
     * @details

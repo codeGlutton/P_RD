@@ -117,7 +117,8 @@ bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileInd
 		const FSkillMotionLayer& SkillMotionLayer = SkillData.Get()->mSkillMotionLayers[i];
 		
 		// 스킬 포인트를 사용하여 특정 포인트로 전환합니다.
-
+		FActiveTacticalEffectHandle PointEffectHandle;
+		bool IsValidHandle = SkillData.Get()->mSkillMotionLayers[i].mStaticSkillEffectLayers->ApplyOtherPointToSkillPoint(DicePoint, OwnerActor, PointEffectHandle);
 
 		// 타겟 액터를 가져옵니다.
 		TArray<TWeakObjectPtr<UBoardActorModel>> TargetActors;
@@ -140,6 +141,17 @@ bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileInd
 			FBoardCombatTargetSnapshotData TargetSnapShot = TargetUnit->MakeSnapshotData();
 
 			SkillData.Get()->mSkillMotionLayers[i].mStaticSkillEffectLayers->ApplySkillEffect(DicePoint, OwnerActor, TargetActors[j], &OwnerSnapShot, &TargetSnapShot);
+		}
+
+
+		// 올려준 Point를 제거해줍니다.
+		if (IsValidHandle)
+		{
+			TWeakObjectPtr<UAttributeSetComponentModel> OwnerASC = OwnerUnit->GetAttributeComponentModel();
+			checkf(OwnerASC.IsValid(), TEXT("주인의 ASC가 없습니다"));
+
+
+			OwnerASC->RemoveActiveTacticalEffect(PointEffectHandle);
 		}
 	}
 
