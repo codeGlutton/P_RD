@@ -74,6 +74,19 @@ enum class EWorldWidgetType : uint8
 	 */
 	SkillPanel,
 
+	/**
+	 * @brief 타이틀 START로 여는 독립 캐릭터 선택 오버레이
+	 *
+	 * @details
+	 * 캐릭터 선택은 더 이상 타이틀 HUD 안의 화면이 아니라 InGameSettings처럼 OpenUI()로 여는 독립 월드 위젯이다.
+	 * GameMode가 타이틀 HUD를 닫고 이 위젯을 열며, BACK 요청을 받아 다시 타이틀로 되돌린다.
+	 *
+	 * @note
+	 * Config/DefaultGame.ini의 mWorldWidgetClasses index와 이 enum 순서는 직접 대응한다.
+	 * 기존 [0..8] 인덱스가 밀리지 않게 항상 마지막 실제 값으로 두고, CharacterSelect는 [9] 매핑을 쓴다.
+	 */
+	CharacterSelect,
+
 	Count UMETA(Hidden),
 };
 

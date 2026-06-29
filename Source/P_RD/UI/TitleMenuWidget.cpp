@@ -13,7 +13,6 @@
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
-#include "UI/CharacterSelectWidget.h"
 #include "UI/SettingsPanelWidget.h"
 
 /**
@@ -35,7 +34,6 @@ UTitleMenuWidget::UTitleMenuWidget(const FObjectInitializer& ObjectInitializer)
 	, mContinueButtonText(NSLOCTEXT("TitleMenuWidget", "ContinueText", "CONTINUE"))
 	, mSettingsButtonText(NSLOCTEXT("TitleMenuWidget", "SettingsText", "SETTING"))
 	, mMainOnlyStatusText(NSLOCTEXT("TitleMenuWidget", "MainOnlyStatusText", "Title main screen only"))
-	, mCharacterSelectUnavailableText(NSLOCTEXT("TitleMenuWidget", "CharacterSelectUnavailableText", "Character select widget is not ready"))
 {
 	/*
 	 * 타이틀 HUD는 방 진입 직후 바로 보이는 메인 UI다.
@@ -47,17 +45,6 @@ UTitleMenuWidget::UTitleMenuWidget(const FObjectInitializer& ObjectInitializer)
 	// C++ 생성자는 버튼/타이틀 텍스트 기본 문구만 정한다(위 초기화 리스트).
 }
 
-/** @brief 캐릭터 선택 화면이 GameMode 기준 후보 목록을 다시 읽게 한다. */
-// 타이틀 메뉴는 캐릭터 데이터를 직접 만들지 않는다.
-// CharacterSelectWidget에게 갱신 요청만 전달해, 캐릭터 카드 구성 책임이 해당 위젯에 남도록 한다.
-void UTitleMenuWidget::RefreshCharacterOptionsFromGameMode()
-{
-	if (CharacterSelectWidget != nullptr)
-	{
-		CharacterSelectWidget->RefreshCharacterOptionsFromGameMode();
-	}
-}
-
 /** @brief 외부(예: GameMode)에서 타이틀 진입 시 배경 영상을 미리 시작시키기 위한 진입점. */
 // 실제 시작 로직은 StartTitleBackgroundVideo()(*_Background.cpp)에 위임해 핏/재생 책임을 한곳에 둔다.
 void UTitleMenuWidget::PrimeTitleBackgroundVideo()
@@ -65,20 +52,9 @@ void UTitleMenuWidget::PrimeTitleBackgroundVideo()
 	StartTitleBackgroundVideo();
 }
 
-/** @brief GameMode가 요청한 타이틀 내부 화면 전환을 실제 WBP 화면 전환으로 수행한다. */
-// AFrontendGameMode::RequestCharacterSelectFromTitle()은 런 생성 대신 이 함수를 통해 캐릭터 선택 화면만 연다.
-// 이렇게 하면 START 버튼 입력 경로와 GameMode API 경로가 모두 ShowCharacterScreen()으로 합쳐진다.
-void UTitleMenuWidget::OpenCharacterSelectFromTitle()
-{
-	ShowCharacterScreen();
-}
-
 /** @brief WBP 바인딩을 검증하고 타이틀 화면에서 필요한 버튼/하위 위젯 이벤트를 연결한다. */
-// WBP_TitleMenu는 StartScreen과 CharacterScreen을 ScreenSwitcher 안에 직접 배치한다.
-// C++은 해당 화면을 새로 만들지 않고, BindWidget으로 들어온 인스턴스를 연결만 한다.
-// 왜 여기서 공용 설정 패널/캐릭터 선택 이벤트까지 연결하는가:
-// 각 하위 위젯은 "뒤로 가기"나 "닫기 요청"만 외부로 알린다.
-// 실제로 타이틀 메인 화면으로 돌아갈지는 바깥 화면 전환을 알고 있는 TitleMenuWidget이 결정한다.
+// WBP_TitleMenu는 START/CONTINUE/SETTING 버튼과 배경 영상을 가진 타이틀 HUD다.
+// 캐릭터 선택 화면은 GameMode가 여는 별도 WorldWidget이므로, 이 위젯은 START 요청만 GameMode에 전달한다.
 void UTitleMenuWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -106,14 +82,8 @@ void UTitleMenuWidget::NativeConstruct()
 		TitleSettingsPanel->OnBackRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsPanelBackRequested);
 	}
 
-	if (CharacterSelectWidget != nullptr)
-	{
-		CharacterSelectWidget->OnBackToMainRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleCharacterBackToMainRequested);
-	}
-
 	SyncMainText();
 	RefreshMainMenuState();
-	ShowMainScreen();
 	SetStatusText(FText::GetEmpty());
 }
 
@@ -154,11 +124,6 @@ void UTitleMenuWidget::NativeDestruct()
 	if (USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel())
 	{
 		TitleSettingsPanel->OnBackRequested.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsPanelBackRequested);
-	}
-
-	if (CharacterSelectWidget != nullptr)
-	{
-		CharacterSelectWidget->OnBackToMainRequested.RemoveDynamic(this, &UTitleMenuWidget::HandleCharacterBackToMainRequested);
 	}
 
 	Super::NativeDestruct();
@@ -208,26 +173,6 @@ void UTitleMenuWidget::SetStatusText(const FText& /*InText*/) const
 // NativeConstruct 초기에 각 바인딩을 점검해 어떤 위젯이 누락됐는지 명시적으로 로깅한다(배경 영상은 누락 시 스킵).
 void UTitleMenuWidget::ValidateDesignerBindings() const
 {
-	if (ScreenSwitcher == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: ScreenSwitcher is not connected."));
-	}
-
-	if (StartScreen == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: StartScreen is not connected."));
-	}
-
-	if (CharacterScreen == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: CharacterScreen is not connected."));
-	}
-
-	if (CharacterSelectWidget == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: CharacterSelectWidget is not connected. Place WBP_CharacterSelect inside WBP_TitleMenu."));
-	}
-
 	if (StartButton == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: StartButton is not connected."));

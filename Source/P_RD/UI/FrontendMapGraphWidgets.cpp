@@ -7,7 +7,7 @@
 
 namespace
 {
-	/** @brief 방 타입별 맵 노드 토큰 텍스처 경로(P_RD_codex_img에서 SVN으로 임포트). None이면 nullptr. */
+	/** @brief 방 타입별 맵 노드 토큰 텍스처 경로(작업용 이미지에서 SVN으로 임포트). None이면 nullptr. */
 	const TCHAR* MapNodeIconPath(ERoomType RoomType)
 	{
 		switch (RoomType)

@@ -18,17 +18,14 @@
 // 헤더 의존을 줄이려고 포인터 멤버는 여기서 전방 선언만 하고 실제 포함은 .cpp에서 한다.
 class UButton;
 class UCanvasPanel;
-class UCharacterSelectWidget;
 class UImage;
 class USettingsPanelWidget;
 class UTextBlock;
-class UWidget;
-class UWidgetSwitcher;
 
 /** @brief 타이틀 화면의 흐름과 런타임 제어를 담당하는 위젯 */
 // WBP_TitleMenu는 로고, 버튼 외형, SafeZone, 앵커 같은 정적 비주얼을 소유한다.
 // C++은 WBP가 제공한 BindWidget에 의미와 흐름만 붙인다.
-// 1) 화면 흐름: START→캐릭터 선택, SETTING→공용 설정 패널 OpenUI(), 하위 화면 BACK→메인 복귀.
+// 1) 화면 흐름: START→GameMode 캐릭터 선택 요청, SETTING→공용 설정 패널 OpenUI().
 // 2) 런타임 제어: WBP의 TitleBackgroundImage에 MediaTexture를 연결해 배경 영상만 재생.
 // 단, 게임플레이 경계는 지킨다.
 // 캐릭터 목록 구성/카드 갱신은 UCharacterSelectWidget,
@@ -52,16 +49,9 @@ public:
 	/** @brief 화면에 올라오기 전 타이틀 배경 영상을 미리 열어 둔다. */
 	void PrimeTitleBackgroundVideo();
 
-	/** @brief GameMode 기준 캐릭터 후보 목록을 캐릭터 선택 화면에 다시 반영 */
-	void RefreshCharacterOptionsFromGameMode();
-
-	/** @brief GameMode의 타이틀 START API가 요청한 캐릭터 선택 화면 전환을 수행 */
-	void OpenCharacterSelectFromTitle();
-
 protected:
 	/** @brief 위젯이 화면에 올라올 때 버튼 이벤트와 하위 화면 이벤트를 연결함 */
 	// START, CONTINUE, SETTING 버튼을 이 위젯의 핸들러에 연결한다.
-	// 캐릭터 선택 위젯이 보내는 BACK 요청도 여기서 받는다.
 	// AddUniqueDynamic을 사용하므로 같은 위젯이 다시 Construct 되어도 같은 델리게이트가 중복으로 붙지 않는다.
 	void NativeConstruct() override;
 
@@ -75,22 +65,6 @@ protected:
 	void NativeDestruct() override;
 
 private:
-	/** @brief 원하는 화면을 ScreenSwitcher의 현재 화면으로 바꿈 */
-	// Screen이 nullptr이면 메인 화면 인덱스로 되돌린다.
-	// 연결이 깨진 WBP에서도 앱이 바로 죽지 않게 하기 위한 방어 코드다.
-	// @param Screen 보여줄 화면 위젯
-	void ShowScreen(UWidget* Screen) const;
-
-	/** @brief 타이틀 메인 화면을 보여줌 */
-	// 게임 시작 전 기본 메뉴 화면으로 돌아갈 때 사용한다.
-	// 캐릭터 선택 화면이나 설정 화면이 직접 ScreenSwitcher를 만지지 않게 하기 위한 작은 래퍼다.
-	void ShowMainScreen() const;
-
-	/** @brief 캐릭터 선택 화면을 준비한 뒤 보여줌 */
-	// WBP_TitleMenu 안에 직접 배치된 CharacterSelectWidget을 사용한다.
-	// OpenCharacterSelect()를 호출해 캐릭터 목록을 새로 받아오고 선택 화면 상태를 초기화한다.
-	void ShowCharacterScreen();
-
 	/** @brief 공용 설정 패널 월드 위젯을 타이틀 모드로 열어 보여줌 */
 	// 설정 화면은 타이틀 HUD 안에 직접 끼워 넣지 않고 InGameSettings 월드 위젯을 OpenUI()로 연다.
 	// 타이틀과 인게임이 같은 WBP_SettingsPanel 생명주기를 공유해야 Back/Close, 입력, 팝업 ZOrder 규칙이 갈라지지 않는다.
@@ -203,34 +177,7 @@ private:
 	UFUNCTION()
 	void HandleSettingsPanelBackRequested();
 
-	/** @brief 캐릭터 선택 화면의 Back 요청을 타이틀 메인 화면 복귀로 처리한다. */
-	UFUNCTION()
-	void HandleCharacterBackToMainRequested();
-
 private:
-	/** @brief 타이틀 메인/캐릭터 선택 화면을 전환하는 위젯 */
-	// TitleMenuWidget은 직접 위젯을 숨기고 보이기보다 이 ScreenSwitcher의 ActiveWidget을 바꾼다.
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UWidgetSwitcher> ScreenSwitcher;
-
-	/** @brief START, CONTINUE, SETTING 버튼이 있는 타이틀 메인 화면 */
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UWidget> StartScreen;
-
-	/** @brief CharacterSelectWidget을 담는 캐릭터 선택 화면 자리 */
-	// WBP_TitleMenu의 ScreenSwitcher 안에서 캐릭터 선택 화면으로 쓰는 슬롯이다.
-	// 이 화면 안에는 WBP_CharacterSelect가 CharacterSelectWidget이라는 이름으로 직접 배치되어 있어야 한다.
-	// C++은 이 화면의 자식을 새로 만들거나 갈아 끼우지 않는다.
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UWidget> CharacterScreen;
-
-	/** @brief WBP에 직접 배치한 캐릭터 선택 위젯 */
-	// WBP_TitleMenu의 CharacterScreen 안에 WBP_CharacterSelect를 직접 배치하면 이 멤버에 바인딩된다.
-	// 이제 C++ fallback 생성은 하지 않는다.
-	// 이 값이 nullptr이면 WBP_TitleMenu 자산이 잘못된 것이므로 ValidateDesignerBindings()에서 로그를 남긴다.
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UCharacterSelectWidget> CharacterSelectWidget;
-
 	/** @brief 캐릭터 선택 화면으로 넘어가는 START 버튼 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> StartButton;
@@ -288,10 +235,6 @@ private:
 	/** @brief 아직 실제 기능이 연결되지 않은 메뉴를 눌렀을 때 보여줄 문구 */
 	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	FText mMainOnlyStatusText;
-
-	/** @brief 캐릭터 선택 위젯을 만들거나 붙일 수 없을 때 보여줄 문구 */
-	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	FText mCharacterSelectUnavailableText;
 
 	/** @brief WBP가 제공하는 배경 영상 표시용 Image (BindWidgetOptional) */
 	// 위치/레이아웃은 WBP가 잡고, C++은 여기에 MediaTexture를 물려 영상만 재생한다.
