@@ -406,6 +406,7 @@ void UFrontendMapWidget::NativeConstruct()
  */
 void UFrontendMapWidget::NativeDestruct()
 {
+	mMapDragScrolling = false;
 	UnbindEvents();
 	for (FFrontendMapNodePoolEntry& NodeEntry : mMapNodePool)
 	{
@@ -417,6 +418,63 @@ void UFrontendMapWidget::NativeDestruct()
 	mMapLinePool.Reset();
 	mMapNodePool.Reset();
 	Super::NativeDestruct();
+}
+
+FReply UFrontendMapWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton && MapScrollBox != nullptr)
+	{
+		const FVector2D ScreenPosition = InMouseEvent.GetScreenSpacePosition();
+		if (MapScrollBox->GetCachedGeometry().IsUnderLocation(ScreenPosition))
+		{
+			mMapDragScrolling = true;
+			mMapDragLastScreenPosition = ScreenPosition;
+			MapScrollBox->EndInertialScrolling();
+			return FReply::Handled().CaptureMouse(TakeWidget());
+		}
+	}
+
+	return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+}
+
+FReply UFrontendMapWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton && mMapDragScrolling)
+	{
+		mMapDragScrolling = false;
+		return FReply::Handled().ReleaseMouseCapture();
+	}
+
+	return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+}
+
+FReply UFrontendMapWidget::NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	if (mMapDragScrolling && MapScrollBox != nullptr)
+	{
+		if (!InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton))
+		{
+			mMapDragScrolling = false;
+			return FReply::Handled().ReleaseMouseCapture();
+		}
+
+		const FVector2D ScreenPosition = InMouseEvent.GetScreenSpacePosition();
+		const float DeltaY = ScreenPosition.Y - mMapDragLastScreenPosition.Y;
+		if (!FMath::IsNearlyZero(DeltaY))
+		{
+			MapScrollBox->SetScrollOffset(FMath::Max(0.0f, MapScrollBox->GetScrollOffset() - DeltaY));
+			mMapDragLastScreenPosition = ScreenPosition;
+		}
+		return FReply::Handled();
+	}
+
+	return Super::NativeOnMouseMove(InGeometry, InMouseEvent);
+}
+
+void UFrontendMapWidget::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
+{
+	mMapDragScrolling = false;
+	Super::NativeOnMouseLeave(InMouseEvent);
 }
 
 /**
@@ -1188,11 +1246,11 @@ namespace
 	{
 		switch (RoomType)
 		{
-		case ERoomType::Treasure:     return TEXT("/Game/UI/WorldMap/Nodes/T_Node_Treasure.T_Node_Treasure");
-		case ERoomType::Shop:         return TEXT("/Game/UI/WorldMap/Nodes/T_Node_Shop.T_Node_Shop");
-		case ERoomType::Monster:      return TEXT("/Game/UI/WorldMap/Nodes/T_Node_Monster.T_Node_Monster");
-		case ERoomType::EliteMonster: return TEXT("/Game/UI/WorldMap/Nodes/T_Node_Elite.T_Node_Elite");
-		case ERoomType::BossMonster:  return TEXT("/Game/UI/WorldMap/Nodes/T_Node_Boss.T_Node_Boss");
+		case ERoomType::Treasure:     return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Treasure.T_MapNode_Treasure");
+		case ERoomType::Shop:         return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Shop.T_MapNode_Shop");
+		case ERoomType::Monster:      return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Monster.T_MapNode_Monster");
+		case ERoomType::EliteMonster: return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Elite.T_MapNode_Elite");
+		case ERoomType::BossMonster:  return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Boss.T_MapNode_Boss");
 		default:                      return nullptr;
 		}
 	}
