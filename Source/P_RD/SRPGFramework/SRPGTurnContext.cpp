@@ -2,6 +2,8 @@
 #include "SRPGFramework/SRPGAction.h"
 #include "SRPGFramework/SRPGCommand.h"
 
+#include "SRPGFramework/SRPGDiceRollAction.h"
+
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
@@ -123,15 +125,20 @@ void USRPGTurnContext::BeginTurn()
 			return;
 		}
 
-		// 플레이어의 경우 주사위 굴리기 액션 추가
 		if (mOwner->IsPlayerUnitModel() == true)
 		{
-			// 액션 추가
+			/* 플레이어의 경우 주사위 굴리기 액션 추가 */
+
+			TInstancedStruct<FSRPGCommand> DicePrepareCommand;
+			DicePrepareCommand.InitializeAs<FSRPGDicePrepareCommand>();
+
+			CommandRouterModel->SummitCommand(DicePrepareCommand);
 		}
-		// AI의 경우 움직임 판단 로직 시작
 		else
 		{
-			// 액션 추가
+			/* AI의 경우 움직임 판단 로직 시작 */
+
+
 		}
 		}));
 	OnBeginTurnUI.Broadcast(PresentationBarrier, this);
@@ -141,6 +148,7 @@ void USRPGTurnContext::TickTurn(float DeltaTime)
 {
 	if (mTurnPhase == ESRPGTurnPhase::TurnPlay && mReservedActions.Num() > mHeadActionIndex)
 	{
+		mReservedActions[mHeadActionIndex]->TryBeginAction();
 		mReservedActions[mHeadActionIndex]->TickAction(DeltaTime);
 		mReservedActions[mHeadActionIndex]->TryEndAction();
 	}
@@ -208,14 +216,6 @@ void USRPGTurnContext::EvaluateTurnStates(bool ForceAbort)
 
 void USRPGTurnContext::OnEndCurrentAction(USRPGAction* Action, ESRPGActionResult ActionResult)
 {
-	// 액션 등록 해제
-	++mHeadActionIndex;
-	if (mHeadActionIndex > 5)
-	{
-		mReservedActions.RemoveAt(0, mHeadActionIndex);
-		mHeadActionIndex = 0;
-	}
-
 	// 턴 소모 액션 처리
 	bool IsBlockTurnSuccessfully = Action->ConsumesTurn() == true && ActionResult == ESRPGActionResult::Succeeded;
 	if (IsBlockTurnSuccessfully == true)
@@ -246,6 +246,12 @@ void USRPGTurnContext::OnEndCurrentAction(USRPGAction* Action, ESRPGActionResult
 
 	// 예약된 액션 꺼내기
 	DequeueAction();
+
+	// 다음 액션 실행
+	if (mTurnPhase == ESRPGTurnPhase::TurnPlay && mReservedActions.Num() > mHeadActionIndex)
+	{
+		mReservedActions[mHeadActionIndex]->TryBeginAction();
+	}
 }
 
 void USRPGTurnContext::EvaluateTurnEndState(bool ForceAbort)
@@ -270,8 +276,6 @@ void USRPGTurnContext::EvaluateTurnEndState(bool ForceAbort)
 
 void USRPGTurnContext::EnqueueAction(USRPGAction* NewAction)
 {
-	const bool IsWaitingNewAction = mReservedActions.Num() <= mHeadActionIndex;
-
 	NewAction->OnBeginActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGAction* Action) {
 		OnBeginAnyActionUI.Broadcast(Barrier, this, Action);
 		});
@@ -283,12 +287,6 @@ void USRPGTurnContext::EnqueueAction(USRPGAction* NewAction)
 	mReservedActions.Add(NewAction);
 	// 액션 초기화
 	NewAction->InitAction(this, mOwner.Get());
-
-	// 액션 대기 중 경우, 새로운 액션 즉시 진행
-	if (IsWaitingNewAction == true)
-	{
-		DequeueAction();
-	}
 }
 
 void USRPGTurnContext::DequeueAction()
@@ -299,18 +297,20 @@ void USRPGTurnContext::DequeueAction()
 		return;
 	}
 
-	checkf(mTurnPhase == ESRPGTurnPhase::TurnPlay, TEXT("액션 가능 상태에서만 다음 액션 진행 가능"));
-	mTurnPhase = ESRPGTurnPhase::TurnPlay;
-
-	// 액션 시작
-	USRPGAction* CurAction = mReservedActions[mHeadActionIndex];
-	CurAction->BeginAction();
+	// 액션 등록 해제
+	++mHeadActionIndex;
+	if (mHeadActionIndex > 5)
+	{
+		mReservedActions.RemoveAt(0, mHeadActionIndex);
+		mHeadActionIndex = 0;
+	}
 }
 
 void USRPGTurnContext::OnHandleCommand(ESRPGCommandResult Result)
 {
 	if (mTurnPhase == ESRPGTurnPhase::TurnPlay && mReservedActions.Num() > mHeadActionIndex)
 	{
+		mReservedActions[mHeadActionIndex]->TryBeginAction();
 		mReservedActions[mHeadActionIndex]->TryEndAction();
 	}
 }

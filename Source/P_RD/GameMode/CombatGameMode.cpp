@@ -64,11 +64,11 @@ void ACombatGameMode::BeginRoom()
 	if (UPlayerUnitModel* PlayerUnit = GetPlayerUnit())
 	{
 		// 런 다이스 목록(mDiceIds)으로 플레이어 주사위 풀을 구성한다. 비면 HUD 주사위 수가 0.
-		if (UDicePoolModel* DicePool = PlayerUnit->GetDicePool())
+		if (UDicePoolModel* DicePool = PlayerUnit->GetDicePoolModel())
 		{
 			DicePool->BuildFromDiceIds(GetRunPersistData()->GetDiceIds());
 		}
-		mCombatUIAdapter->SetDicePool(PlayerUnit->GetDicePool());
+		mCombatUIAdapter->SetDicePool(PlayerUnit->GetDicePoolModel());
 	}
 	mCombatUIAdapter->BindUIModel(CombatUIModel);
 	mCombatUIAdapter->Build(CombatSubsystem, GetRunPersistData());

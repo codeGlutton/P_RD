@@ -73,7 +73,7 @@ bool UPlayerUnitModel::IsPlayerUnitModel() const
     return true;
 }
 
-UDicePoolModel* UPlayerUnitModel::GetDicePool() const
+UDicePoolModel* UPlayerUnitModel::GetDicePoolModel() const
 {
     return mDicePool;
 }

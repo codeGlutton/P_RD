@@ -43,10 +43,17 @@ protected:
 
 protected:
 	/**
+	 * 액션 상태를 확인하여 조건적으로 실행하는 함수
+	 */
+	void TryBeginAction();
+	/**
 	 * 액션 내부에서 종료됨을 알리는 함수
 	 * @param Result 결과
 	 */
 	void MarkActionCompleted(ESRPGActionResult Result);
+	/**
+	 * 액션 상태를 확인하여 조건적으로 종료하는 함수
+	 */
 	void TryEndAction();
 
 protected:

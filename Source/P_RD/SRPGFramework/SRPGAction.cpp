@@ -60,7 +60,10 @@ void USRPGAction::BeginAction()
 
 void USRPGAction::TickAction(float DeltaTime)
 {
-	OnTickAction(DeltaTime);
+	if (mActionPhase == ESRPGActionPhase::ActionPlay)
+	{
+		OnTickAction(DeltaTime);
+	}
 }
 
 void USRPGAction::EndAction()
@@ -95,6 +98,14 @@ void USRPGAction::EndAction()
 		TurnContext->OnEndCurrentAction(this, mActionResult);
 		}));
 	OnEndActionUI.Broadcast(PresentationBarrier, this, mActionResult);
+}
+
+void USRPGAction::TryBeginAction()
+{
+	if (mActionPhase == ESRPGActionPhase::ActionInit)
+	{
+		BeginAction();
+	}
 }
 
 void USRPGAction::MarkActionCompleted(ESRPGActionResult Result)

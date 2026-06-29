@@ -51,7 +51,7 @@ public:
 
 public:
 	/** @brief 플레이어 보유 주사위 컴포넌트입니다. 적은 주사위가 없어 AUnit이 아닌 APlayerUnit에 둡니다. */
-	UDicePoolModel* GetDicePool() const;
+	UDicePoolModel* GetDicePoolModel() const;
 
 public:
 	FOnChangePlayerLevel OnChangePlayerLevel;
