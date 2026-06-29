@@ -471,12 +471,6 @@ FReply UFrontendMapWidget::NativeOnMouseMove(const FGeometry& InGeometry, const 
 	return Super::NativeOnMouseMove(InGeometry, InMouseEvent);
 }
 
-void UFrontendMapWidget::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
-{
-	mMapDragScrolling = false;
-	Super::NativeOnMouseLeave(InMouseEvent);
-}
-
 /**
  * @brief 지도 화면에서 사용하는 기본 문구 캐시를 갱신한다.
  */

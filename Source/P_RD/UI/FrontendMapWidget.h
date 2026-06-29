@@ -135,7 +135,6 @@ protected:
 	FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-	void NativeOnMouseLeave(const FPointerEvent& InMouseEvent) override;
 
 private:
 	/** @brief 지도 위젯에서 사용하는 기본 문구 캐시를 갱신한다. */
