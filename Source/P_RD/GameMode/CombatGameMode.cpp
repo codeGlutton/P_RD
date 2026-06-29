@@ -2,7 +2,6 @@
 
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
-#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
 #include "Engine/AssetManager.h"
@@ -21,6 +20,9 @@
 #include "Dice/DicePoolModel.h"
 
 #include "SRPGFramework/SRPGSkillBuildAction.h"
+#include "SRPGFramework/SRPGMoveBuildAction.h"
+#include "SRPGFramework/SRPGDiceRollAction.h"
+#include "SRPGFramework/SRPGTurnEndAction.h"
 
 DEFINE_LOG_CATEGORY(LogCombatGameMode);
 
@@ -63,11 +65,6 @@ void ACombatGameMode::BeginRoom()
 	mCombatUIAdapter = NewObject<UCombatUIAdapter>(this);
 	if (UPlayerUnitModel* PlayerUnit = GetPlayerUnit())
 	{
-		// 런 다이스 목록(mDiceIds)으로 플레이어 주사위 풀을 구성한다. 비면 HUD 주사위 수가 0.
-		if (UDicePoolModel* DicePool = PlayerUnit->GetDicePoolModel())
-		{
-			DicePool->BuildFromDiceIds(GetRunPersistData()->GetDiceIds());
-		}
 		mCombatUIAdapter->SetDicePool(PlayerUnit->GetDicePoolModel());
 	}
 	mCombatUIAdapter->BindUIModel(CombatUIModel);
@@ -100,6 +97,54 @@ bool ACombatGameMode::SelectDice(int32 DiceIndex)
 	DiceSelectCommand.GetMutable<FSRPGDiceSelectCommand>().mDiceIndex = DiceIndex;
 
 	return CommandRouterModel->SummitCommand(DiceSelectCommand);
+}
+
+bool ACombatGameMode::RollDices()
+{
+	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
+
+	TInstancedStruct<FSRPGCommand> DiceSelectCommand;
+	DiceSelectCommand.InitializeAs<FSRPGDiceRollCommand>();
+
+	return CommandRouterModel->SummitCommand(DiceSelectCommand);
+}
+
+bool ACombatGameMode::SelectMove()
+{
+	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
+
+	TInstancedStruct<FSRPGCommand> DiceSelectCommand;
+	DiceSelectCommand.InitializeAs<FSRPGMoveSelectCommand>();
+	// DiceSelectCommand.GetMutable<FSRPGMoveSelectCommand>().OnChangeMoveBuildPhase
+
+	return CommandRouterModel->SummitCommand(DiceSelectCommand);
+}
+
+bool ACombatGameMode::EndTurn()
+{
+	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
+
+	TInstancedStruct<FSRPGCommand> DiceSelectCommand;
+	DiceSelectCommand.InitializeAs<FSRPGTurnEndCommand>();
+
+	return CommandRouterModel->SummitCommand(DiceSelectCommand);
+}
+
+bool ACombatGameMode::ShowSkillDetail(int32 SkillIndex)
+{
+	// TODO
+
+	return true;
+}
+
+bool ACombatGameMode::ShowEquipmentDetail(int32 EquipmentIndex)
+{
+	// TODO
+
+	return true;
 }
 
 bool ACombatGameMode::ResolveWorldTouchEvent()

@@ -1,5 +1,7 @@
 ﻿#include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "AttributeSet/UnitAttributeSet.h"
+
+#include "Dice/DicePoolModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Pawn/Player/PlayerUnitModel.h"
 
@@ -8,6 +10,8 @@
 #include "PCGStage/StageBuilder.h"
 
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
+#include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/EquipmentData/StaticEquipmentData.h"
 #include "DataAsset/DiceData/StaticDiceData.h"
 
 #include "FunctionLibrary/RandomStreamFunctionLibrary.h"
@@ -136,26 +140,6 @@ void UPlayerUnitPersistData::SyncPlayerPersistData(UPlayerUnitModel* PlayerUnit)
 	 if (mIsNewData == true)
 	 {
 	 	mIsNewData = false;
-	 
-	 	bool IsFound;
-	 
-	 	IsFound = false;
-	 	mMaxHP = ASCModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMaxHPAttribute(), IsFound);
-	 	checkf(IsFound == true, TEXT("최대 체력 속성 미발견"));
-	 
-	 	IsFound = false;
-	 	mHP = ASCModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetHPAttribute(), IsFound);
-	 	checkf(IsFound == true, TEXT("체력 속성 미발견"));
-	 
-	 	IsFound = false;
-	 	mExp = ASCModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute(), IsFound);
-	 	checkf(IsFound == true, TEXT("경험치 속성 미발견"));
-	 
-	 	IsFound = false;
-	 	mMoney = ASCModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMoneyAttribute(), IsFound);
-	 	checkf(IsFound == true, TEXT("돈 속성 미발견"));
-	 
-	 	return;
 	 }
 	 
 	 // 저장본 -> 유닛 복원. ETacticalModOp::Override(정수 3, 구 EGameplayModOp::Override 대체)는
@@ -165,10 +149,20 @@ void UPlayerUnitPersistData::SyncPlayerPersistData(UPlayerUnitModel* PlayerUnit)
 	 ASCModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetHPAttribute(), ETacticalModOp::Override, mHP);
 	 ASCModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetExpAttribute(), ETacticalModOp::Override, mExp);
 	 ASCModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetMoneyAttribute(), ETacticalModOp::Override, mMoney);
-	 // 저장해 둔 패시브 스택 등 Loose 게임플레이 태그를 개수(Pair.Value)만큼 다시 부여한다.
+	 
+	 // (여러 방 내에서 유지되는 특수한 패시브 스택) Loose 게임플레이 태그를 개수(Pair.Value)만큼 다시 부여한다.
 	 for (auto& Pair : mTagCountMap)
 	 {
 		 ASCModel->AddLooseGameplayTag(Pair.Key, Pair.Value);
+	 }
+
+	 // TODO : 플레이어 스킬 동기화
+	 // TODO : 플레이어 장비 동기화
+
+	 // 플레이어 주사위 동기화
+	 if (UDicePoolModel* DicePool = PlayerUnit->GetDicePoolModel())
+	 {
+		 DicePool->BuildFromDiceIds(GetDiceIds());
 	 }
 }
 
@@ -204,6 +198,10 @@ void UPlayerUnitPersistData::BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit)
 	 		mTagCountMap.Remove(Tag);
 	 	}
 	 	});
+
+	 // TODO: 스킬 변경 시 대리자에 바인딩. 이걸로 영구 데이터도 동기화
+	 // TODO: 장비 변경 시 대리자에 바인딩. 이걸로 영구 데이터도 동기화
+	 // TODO: 주사위 변경 시 대리자에 바인딩. 이걸로 영구 데이터도 동기화
 }
 
 /**
@@ -214,27 +212,63 @@ void UPlayerUnitPersistData::BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit)
  */
 void URunPersistData::StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty)
 {
+	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
+	checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
+
+	const UStaticPlayerUnitSpawnData* PlayerData = AssetManager->GetPrimaryAssetObject<UStaticPlayerUnitSpawnData>(PlayerUnitId);
+	checkf(PlayerData != nullptr, TEXT("플레이어 데이터 nullptr"));
+
 	ClearRun();
 
-	mStageBuildStream.Initialize(FMath::Rand32());
-	mEventStream.Initialize(FMath::Rand32());
-
-	mIsNewData = true;
-	mPlayerUnitId = PlayerUnitId;
-	mDifficulty = Difficulty;
-
-	// 선택한 캐릭터의 고정 주사위(mDiceDatas)를 런 다이스 목록(mDiceIds)으로 펼친다.
-	// 이게 비면 전투에서 DicePool이 비어 HUD 주사위 수가 0이 된다.
-	if (UAssetManager* AssetManager = UAssetManager::GetIfInitialized())
+	// 시드 초기 세팅
 	{
-		if (const UStaticPlayerUnitSpawnData* PlayerData = AssetManager->GetPrimaryAssetObject<UStaticPlayerUnitSpawnData>(PlayerUnitId))
+		mStageBuildStream.Initialize(FMath::Rand32());
+		mEventStream.Initialize(FMath::Rand32());
+	}
+
+	// 플레이어 기본 데이터 세팅
+	{
+		mPlayerUnitId = PlayerUnitId;
+		mDifficulty = Difficulty;
+	}
+
+	// 플레이어 기본 속성 세팅
+	{
+		mMaxHP = PlayerData->GetDefaultAttributeValue(GetWorld(), UPlayerUnitAttributeSet::StaticClass(), UPlayerUnitAttributeSet::GetMaxHPAttribute(), mPlayerLevel);
+		mHP = mMaxHP;
+		mExp = 0.f;
+		mMoney = PlayerData->GetDefaultAttributeValue(GetWorld(), UPlayerUnitAttributeSet::StaticClass(), UPlayerUnitAttributeSet::GetMoneyAttribute(), mPlayerLevel);
+	}
+
+	// 스킬 기본 값 세팅
+	{
+		for (const TSoftObjectPtr<UStaticSkillData>& SkillSoft : PlayerData->mSkillDatas)
 		{
-			for (const TSoftObjectPtr<UStaticDiceData>& DiceSoft : PlayerData->mDiceDatas)
+			if (const UStaticSkillData* SkillData = SkillSoft.LoadSynchronous())
 			{
-				if (const UStaticDiceData* DiceData = DiceSoft.LoadSynchronous())
-				{
-					mDiceIds.Add(DiceData->GetPrimaryAssetId());
-				}
+				mSkillIds.Add(SkillData->GetPrimaryAssetId());
+			}
+		}
+	}
+
+	// 장비 기본 값 세팅
+	{
+		for (const TSoftObjectPtr<UStaticEquipmentData>& EquipmentSoft : PlayerData->mEquipmentDatas)
+		{
+			if (const UStaticEquipmentData* EquipmentData = EquipmentSoft.LoadSynchronous())
+			{
+				mDiceIds.Add(EquipmentData->GetPrimaryAssetId());
+			}
+		}
+	}
+
+	// 주사위 기본 값 세팅
+	{
+		for (const TSoftObjectPtr<UStaticDiceData>& DiceSoft : PlayerData->mDiceDatas)
+		{
+			if (const UStaticDiceData* DiceData = DiceSoft.LoadSynchronous())
+			{
+				mDiceIds.Add(DiceData->GetPrimaryAssetId());
 			}
 		}
 	}
@@ -246,9 +280,9 @@ void URunPersistData::StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Diffic
  */
 void URunPersistData::ClearRun()
 {
+	mIsNewData = true;
 	mPlayerLevel = 1;
 	mDifficulty = 1;
-	mIsNewData = true;
 
 	mTagCountMap.Empty();
 	mSkillIds.Empty();

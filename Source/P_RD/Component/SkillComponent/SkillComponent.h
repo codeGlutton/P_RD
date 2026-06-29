@@ -1,7 +1,7 @@
 ﻿/*****************************************************************//**
  * @file   SkillComponent.h
- * @brief  스킬 컴포넌트 기본 베이스
- * @author 김준형
+ * @brief  액티브 스킬 컴포넌트 구현 정의 헤더
+ * @author 모호재
  * @date   2026-05-26
  *********************************************************************/
 #pragma once
@@ -10,18 +10,11 @@
 #include "Components/ActorComponent.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
-//#include "Pawn/SkillComponent/PreviewEffectIconData.h"
-//#include "../FunctionLibrary/CombatCalculator/CombatResult.h"
-//#include "FunctionLibrary/CommandLog/CommandLog.h"
 #include "SkillComponent.generated.h"
 
 /**
-* @brief 스킬 변경 시 사용되는 델리게이트(대리자)
-* @details SkillIndex의 데이터가 SkillData로 변경되었다는 것을 알리는 델리게이트(대리자)
-* @param SkillIndex : 변경된 스킬의 인덱스
-* @param SkillData : 변경된 스킬 데이터
-*/
-
+ * @brief  액티브 스킬 컴포넌트
+ */
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class P_RD_API USkillComponent : public UActorComponent
 {

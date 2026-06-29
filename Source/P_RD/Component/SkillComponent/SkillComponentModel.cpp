@@ -3,6 +3,8 @@
 
 #include "Component/SkillComponent/SkillComponentModel.h"
 
+#include "DataAsset/SkillData/StaticSkillData.h"
+
 #include "Pawn/UnitModel.h"
 #include "Pawn/Test/SkillTestUnit.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
@@ -39,30 +41,32 @@ void USkillComponentModel::BeginPlay()
 
 }
 
-void USkillComponentModel::GetSkillData(int In_SkillIndex, OUT TSoftObjectPtr<UStaticSkillData>& Out_SkillData)
+void USkillComponentModel::GetSkillData(int32 SkillIndex, OUT TSoftObjectPtr<UStaticSkillData>& Out_SkillData)
 {
-	checkf(mSkillData.IsValidIndex(In_SkillIndex), TEXT("잘못된 배열 범위"))
+	checkf(mSkillData.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
 
-	Out_SkillData = mSkillData[In_SkillIndex];
+	Out_SkillData = mSkillData[SkillIndex];
 }
 
-void USkillComponentModel::SetSkillData(int SkillIndex, IN const TSoftObjectPtr<UStaticSkillData>& SkillData)
+void USkillComponentModel::SetSkillData(int32 SkillIndex, IN const TSoftObjectPtr<UStaticSkillData>& SkillData)
 {
-	checkf(mSkillData.IsValidIndex(SkillIndex), TEXT("잘못된 배열 범위"))
+	checkf(mSkillData.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
 
-		mSkillData[SkillIndex] = SkillData;
+	UStaticSkillData* PreSkillData = mSkillData[SkillIndex].Get();
+	mSkillData[SkillIndex] = SkillData;
 
-	if (OnSkillChange.IsBound())
-		OnSkillChange.Broadcast(SkillIndex, SkillData);
+	if (OnChangeSkill.IsBound())
+		OnChangeSkill.Broadcast(SkillIndex, SkillData.Get(), PreSkillData);
 }
 
 
 void USkillComponentModel::AddSkillData(IN const TSoftObjectPtr<UStaticSkillData>& SkillData)
 {
-	mSkillData.Add(SkillData);
+	// 지울듯
+	/*mSkillData.Add(SkillData);
 
-	if (OnSkillChange.IsBound())
-		OnSkillChange.Broadcast(mSkillData.Num() - 1, SkillData);
+	if (OnChangeSkill.IsBound())
+		OnChangeSkill.Broadcast(mSkillData.Num() - 1, SkillData);*/
 
 }
 

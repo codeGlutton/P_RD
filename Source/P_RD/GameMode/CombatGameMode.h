@@ -9,13 +9,39 @@
 
 #include "GameMode/RoomGameModeBase.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
+#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "CombatGameMode.generated.h"
+
+struct FEquippedEntry;
+struct FPresentationBarrier;
+class IBoardSelectionTarget;
 
 class USRPGSkillBuildAction;
 class UCombatUIAdapter;
 
 // RD Game Mode 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogCombatGameMode, Log, All)
+
+/* UI 갱신 대리자 */
+
+DECLARE_MULTICAST_DELEGATE(FOnRefreshAllUI);
+
+DECLARE_MULTICAST_DELEGATE(FOnRefreshUnitUI);
+
+DECLARE_MULTICAST_DELEGATE(FOnRefreshDiceUI);
+DECLARE_MULTICAST_DELEGATE(FOnRefreshSelectedDiceUI);
+
+DECLARE_MULTICAST_DELEGATE(FOnRefreshSkillUI);
+
+/* 디테일 패널 대리자 */
+
+DECLARE_MULTICAST_DELEGATE(FOnHideAllDetailPanelUI);
+
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnShowEquipmentDetailPanelUI, int32 /*DetailIndex*/, FEquippedEntry* /*Equipment*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowTargetDetailPanelUI, IBoardSelectionTarget* /*Target*/);
+
+// TODO : 아직 스킬 개발 중
+// DECLARE_MULTICAST_DELEGATE_TwoParams(FOnShowSkillDetailPanelUI, int32 /*SkillIndex*/, FSkillEntry* /*Skill*/);
 
 /**
  * @brief  전투 방에 대한 GameMode
@@ -37,6 +63,33 @@ public:
 	UFUNCTION(Category = UI, BlueprintCallable)
 	bool SelectDice(int32 DiceIndex);
 
+	UFUNCTION(Category = UI, BlueprintCallable)
+	bool RollDices();
+
+	UFUNCTION(Category = UI, BlueprintCallable)
+	bool SelectMove();
+
+	UFUNCTION(Category = UI, BlueprintCallable)
+	bool EndTurn();
+
+public:
+	/**
+	 * @brief 스킬 디테일 창을 실행한다.
+	 * @param SkillIndex 원하는 스킬 대상
+	 * @return 이벤트 성공 여부
+	 */
+	UFUNCTION(Category = UI, BlueprintCallable)
+	bool ShowSkillDetail(int32 SkillIndex);
+
+	/**
+	 * @brief 장비 디테일 창을 실행한다.
+	 * @param EquipmentIndex 원하는 장비 대상
+	 * @return 이벤트 성공 여부
+	 */
+	UFUNCTION(Category = UI, BlueprintCallable)
+	bool ShowEquipmentDetail(int32 EquipmentIndex);
+
+public:
 	/**
 	 * @brief 터치 입력 아래의 월드 액터를 검사하여 이벤트를 실행한다.
 	 * @return 이벤트 성공 여부
@@ -54,6 +107,33 @@ public:
 protected:
 	void OnChangeSkillBuildPhase(const USRPGSkillBuildAction* Action, ESRPGSkillBuildPhase Phase);
 
+	/* UI 갱신 대리자 */
+public:
+	FOnRefreshAllUI OnRefreshAllUI;
+	FOnRefreshUnitUI OnRefreshUnitUI;
+	FOnRefreshDiceUI OnRefreshDiceUI;
+	FOnRefreshSelectedDiceUI OnRefreshSelectedDiceUI;
+	FOnRefreshSkillUI OnRefreshSkillUI;
+
+	/* 연출용 대리자 */
+public:
+	FOnBeginCombatUI OnBeginCombatUI;
+	FOnEndCombatUI OnEndCombatUI;
+	FOnBeginAnyTurnUI OnBeginAnyTurnUI;
+	FOnEndAnyTurnUI OnEndAnyTurnUI;
+	FOnBeginAnyTurnActionUI OnBeginAnyTurnActionUI;
+	FOnEndAnyTurnActionUI OnEndAnyTurnActionUI;
+
+	/* 디테일 패널 대리자 */
+public:
+	FOnHideAllDetailPanelUI OnHideAllDetailPanelUI;
+	FOnShowEquipmentDetailPanelUI OnShowEquipmentDetailPanelUI;
+	FOnShowTargetDetailPanelUI OnShowTargetDetailPanelUI;
+
+	// TODO : 아직 스킬 개발 중
+	// FOnShowSkillDetailPanelUI OnShowSkillDetailPanelUI;
+
+public:
 	/** @brief 전투 상태를 CombatUIModel로 push + HUD 입력 의도를 처리하는 임시 비GAS 어댑터(전투 수명 동안 보유). */
     // TODO : 추후 삭제
 	UPROPERTY()

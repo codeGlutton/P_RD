@@ -1,6 +1,6 @@
 ﻿/*****************************************************************//**
  * @file   SkillComponent.h
- * @brief  스킬 컴포넌트 기본 베이스
+ * @brief  액티브 스킬 컴포넌트 모델 구현 정의 헤더
  * @author 김준형
  * @date   2026-05-26
  *********************************************************************/
@@ -8,21 +8,17 @@
 
 #include "RDMinimal.h"
 #include "Component/ComponentModel.h"
+#include "Actor/TileMap/TileLayer.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
-#include "DataAsset/SkillData/StaticSkillData.h"
 #include "SkillComponentModel.generated.h"
-/*
-* @param SkillIndex : 변경된 스킬의 인덱스
-* @param SkillData : 변경된 스킬 데이터
-*/
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
-	FOnSkillChange,
-	int32, SkillIndex,
-	TSoftObjectPtr<UStaticSkillData>, SkillData
-);
+
+class UStaticSkillData;
+class UBoardActorModel;
+
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnChangeSkill, int32 /*SkillIndex*/, UStaticSkillData* /*PreSkillData*/, UStaticSkillData* /*NewSkillData*/);
 
 /**
- * 
+ * @brief  액티브 스킬 컴포넌트 모델
  */
 UCLASS()
 class P_RD_API USkillComponentModel : public UComponentModel
@@ -51,7 +47,7 @@ protected:
 
 public:
 	/* 델리게이트 변수*/
-	FOnSkillChange OnSkillChange;
+	FOnChangeSkill OnChangeSkill;
 
 public:
 	virtual void Initialize() override;
