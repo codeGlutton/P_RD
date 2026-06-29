@@ -157,7 +157,7 @@ bool FSkillTest::RunTest(const FString& Parameters)
     // ===========================
     ASCompModel->SetAttributeBaseValue(UUnitAttributeSet::GetMaxHPAttribute(), 100.f);
     ASCompModel->SetAttributeBaseValue(UUnitAttributeSet::GetHPAttribute(), 100.f);
-    ASCompModel->SetAttributeBaseValue(UUnitAttributeSet::GetDamagePointAttribute(), 10.f);
+    ASCompModel->SetAttributeBaseValue(UUnitAttributeSet::GetAttackPointAttribute(), 10.f);
 
     // =============================================================================
     // 스킬 시전
@@ -174,6 +174,10 @@ bool FSkillTest::RunTest(const FString& Parameters)
     TArray<FTileIndex> Tiles;
     Tiles.Add(FTileIndex(0, 0));
     SkillComp->ActivateSkill(0, Tiles, 10);
+
+    // =========================================================================
+    // 패시브 테스트
+    // =========================================================================
 
     return true;
 }

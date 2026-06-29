@@ -142,7 +142,7 @@ bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileInd
 				continue;
 			FBoardCombatTargetSnapshotData TargetSnapShot = TargetUnit->MakeSnapshotData();
 
-			SkillData.Get()->mSkillMotionLayers[i].mStaticSkillEffectLayers->ApplySkillEffect(DicePoint, OwnerActor, TargetActors[j], &OwnerSnapShot, &TargetSnapShot);
+			SkillData.Get()->mSkillMotionLayers[i].mStaticSkillEffectLayers->ApplySkillEffect(OwnerActor, TargetActors[j], &OwnerSnapShot, &TargetSnapShot);
 		}
 
 		// EffectHandle이 유효한다면 

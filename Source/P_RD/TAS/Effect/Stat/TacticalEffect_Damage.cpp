@@ -1,5 +1,5 @@
 ﻿/**
- * @file   TacticalEffect_Stat_Damage.cpp
+ * @file   TacticalEffect_Damage.cpp
  * @brief  HP 어트리뷰트에 고정 피해(-1)를 즉시 가하는 택티컬 이펙트의 구현부.
  *         GAS 폐기 마이그레이션(PR #191)의 일부로, 모디파이어 "연산 종류"를
  *         GAS의 EGameplayModOp가 아닌 자체 ETacticalModOp로 지정한다.
@@ -7,7 +7,7 @@
  * @date   2026-06-26
  */
 
-#include "TAS/Effect/Stat/TacticalEffect_Stat_Damage.h"
+#include "TAS/Effect/Stat/TacticalEffect_Damage.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
 /**
@@ -20,7 +20,7 @@
  *         (3) DefaultEngine.ini의 CoreRedirect가 구 enum 이름을 새 enum으로 매핑할 수 있다.
  *         ETacticalModOp::Additive(=0)는 AddBase(=0)의 구 GAS 이름 별칭으로, "합산" 연산을 의미한다.
  */
-UTacticalEffect_Stat_Damage::UTacticalEffect_Stat_Damage()
+UTacticalEffect_Damage::UTacticalEffect_Damage()
 {
 	// 즉시(Instant) 적용: 듀레이션 없이 1회성으로 어트리뷰트 BaseValue에 직접 반영된다.
 	mDurationPolicy = ETacticalEffectDurationType::Instant;

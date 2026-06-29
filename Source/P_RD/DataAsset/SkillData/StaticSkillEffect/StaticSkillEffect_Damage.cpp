@@ -1,8 +1,8 @@
 ﻿#include "DataAsset/SkillData/StaticSkillEffect/StaticSkillEffect_Damage.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Actor/BoardActor/BoardActorModel.h"
-#include "TAS/Effect/Stat/TacticalEffect_Stat_Damage.h"
-#include "TAS/Effect/Stat/TacticalEffect_AttackPoint.h"
+#include "TAS/Effect/Stat/TacticalEffect_Damage.h"
+#include "TAS/Effect/Stat/TacticalEffect_DamagePoint.h"
 #include "TAS/Effect/TacticalEffectContext.h"
 
 #include "Actor/BoardActor/BoardCombatTarget.h"
@@ -33,14 +33,18 @@ bool UStaticSkillEffect_Damage::ApplyOtherPointToSkillPoint(float SkillPoint,
 	EffectContext->SetInstigator(SourceActor.Get());
 	EffectContext->SetAttributeSetComponentModel(SourceASC.Get());
 
-	TSharedPtr<FTacticalEffectSpec> EffectSpec = SourceASC->MakeOutgoingSpec(UTacticalEffect_AttackPoint::StaticClass(), EffectContext);
+	UE_LOG(LogTemp, Warning, TEXT("기본 값 + (계수) * 주사위 포인트 = 결과값"), SourceASC->GetAttributeCurrentValue(UUnitAttributeSet::GetDamagePointAttribute()));
+	UE_LOG(LogTemp, Warning, TEXT("%d + (%f) * %f = %f"), mEffectDefaultValue, mEffectRatioValue, SkillPoint, mEffectDefaultValue + mEffectRatioValue * SkillPoint);
+
+
+	TSharedPtr<FTacticalEffectSpec> EffectSpec = SourceASC->MakeOutgoingSpec(UTacticalEffect_DamagePoint::StaticClass(), EffectContext);
 	EffectSpec->mDynamicMagnitude = mEffectDefaultValue + mEffectRatioValue * SkillPoint;
 
-	UE_LOG(LogTemp, Warning, TEXT("PreAttackPoint : %f"), SourceASC->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackPointAttribute()));
+	UE_LOG(LogTemp, Warning, TEXT("PreDamagekPoint : %f"), SourceASC->GetAttributeCurrentValue(UUnitAttributeSet::GetDamagePointAttribute()));
 
 	EffectHandle = SourceASC->ApplyTacticalEffectSpecToSelf(*EffectSpec);
 
-	UE_LOG(LogTemp, Warning, TEXT("CurAttackPoint : %f"), SourceASC->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackPointAttribute()));
+	UE_LOG(LogTemp, Warning, TEXT("CurDamagePoint : %f"), SourceASC->GetAttributeCurrentValue(UUnitAttributeSet::GetDamagePointAttribute()));
 
 	return true;
 }
@@ -72,22 +76,22 @@ void UStaticSkillEffect_Damage::ApplySkillEffect(
 	TWeakObjectPtr<UAttributeSetComponentModel> SourceASC = SourceActorTarget->GetAttributeComponentModel();
 	if (!SourceASC.IsValid())
 		return;
-	UE_LOG(LogTemp, Log, TEXT("SourceID : %d"), SourceASC->GetUniqueID());
+	UE_LOG(LogTemp, Warning, TEXT("SourceID : %d"), SourceASC->GetUniqueID());
 
 	// 피격자의 정보를 가져온다.
 	TWeakObjectPtr<UAttributeSetComponentModel> TargetASC = TargetActorTarget->GetAttributeComponentModel();
 	if (!TargetASC.IsValid())
 		return;
-	UE_LOG(LogTemp, Log, TEXT("TargetID : %d"), TargetASC->GetUniqueID());
+	UE_LOG(LogTemp, Warning, TEXT("TargetID : %d"), TargetASC->GetUniqueID());
 
 	// Effect를 적용한다.
 	UTacticalEffectContext* EffectContext = TargetASC->MakeEffectContext();
 	EffectContext->SetInstigator(SourceActor.Get());
 	EffectContext->SetAttributeSetComponentModel(TargetASC.Get());
 
-	TSharedPtr<FTacticalEffectSpec> EffectSpec = TargetASC->MakeOutgoingSpec(UTacticalEffect_Stat_Damage::StaticClass(), EffectContext);
+	TSharedPtr<FTacticalEffectSpec> EffectSpec = TargetASC->MakeOutgoingSpec(UTacticalEffect_Damage::StaticClass(), EffectContext);
 	// 공격 포인트를 가져옵니다.
-	EffectSpec->mDynamicMagnitude = SourceASC->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackPointAttribute());
+	EffectSpec->mDynamicMagnitude = SourceASC->GetAttributeCurrentValue(UUnitAttributeSet::GetDamagePointAttribute());
 
 	UE_LOG(LogTemp, Warning, TEXT("PreHP : %f"), TargetASC->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute()));
 
