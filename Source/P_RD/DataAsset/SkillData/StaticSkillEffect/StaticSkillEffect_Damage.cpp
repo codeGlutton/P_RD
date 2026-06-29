@@ -46,7 +46,6 @@ bool UStaticSkillEffect_Damage::ApplyOtherPointToSkillPoint(float SkillPoint,
 }
 
 void UStaticSkillEffect_Damage::ApplySkillEffect(
-	float SkillPoint,
 	TWeakObjectPtr<UBoardActorModel> SourceActor,
 	TWeakObjectPtr<UBoardActorModel> TargetActor,
 	FBoardCombatTargetSnapshotData* SourceSnapShot,

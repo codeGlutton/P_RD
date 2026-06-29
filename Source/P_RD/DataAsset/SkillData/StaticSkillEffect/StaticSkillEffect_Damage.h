@@ -49,7 +49,6 @@ public:
         OUT struct FActiveTacticalEffectHandle& EffectHandle) override;
 
     virtual void ApplySkillEffect(
-        float SkillPoint,
         TWeakObjectPtr<class UBoardActorModel> SourceActor,
         TWeakObjectPtr<class UBoardActorModel> TargetActor,
         struct FBoardCombatTargetSnapshotData* SourceSnapShot = nullptr,
