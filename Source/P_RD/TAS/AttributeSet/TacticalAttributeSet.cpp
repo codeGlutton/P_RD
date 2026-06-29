@@ -405,7 +405,12 @@ void UTacticalAttributeSet::CaptureAllAttributes(FBoardCombatTargetSnapshotData&
 			check(DataPtr);
 
 			FTacticalAttribute Attribute(Property);
-			Snapshot.mAttributes[Attribute] = DataPtr->GetCurrentValue();
+
+			// @김준형 크래시가 나여 Snapshot에 추가하는 형태로 변경했습니다.
+			//Snapshot.mAttributes[Attribute] = DataPtr->GetCurrentValue();
+
+			Snapshot.mAttributes.Add(Attribute, DataPtr->GetCurrentValue());
+
 		}
 	}
 }
