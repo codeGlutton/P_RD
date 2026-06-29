@@ -132,6 +132,10 @@ protected:
 	 */
 	void NativeDestruct() override;
 
+	FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+
 private:
 	/** @brief 지도 위젯에서 사용하는 기본 문구 캐시를 갱신한다. */
 	void RefreshLocalizedTextCache();
@@ -346,4 +350,8 @@ private:
 	 * 방 전환 API가 호출될 수 있다. 표시 상태와 입력 허용 상태를 분리해 그런 실수를 막는다.
 	 */
 	bool mRoomSelectionEnabled = false;
+
+	bool mMapDragScrolling = false;
+
+	FVector2D mMapDragLastScreenPosition = FVector2D::ZeroVector;
 };

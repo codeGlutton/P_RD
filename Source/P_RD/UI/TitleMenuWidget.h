@@ -132,8 +132,7 @@ private:
 	/** @brief 타이틀 배경 영상 재생을 정리한다. */
 	void StopTitleBackgroundVideo();
 
-	/** @brief Content 기준 상대 경로를 실제 파일 경로로 바꾼다. */
-	// [합의필요] SVN raw media를 Content 밑 파일 경로로 직접 읽는 계약은 패키징 규칙과 함께 유지되어야 한다.
+	/** @brief 게임 설정의 타이틀 배경 영상 경로를 실제 파일 경로로 바꾼다. */
 	FString ResolveTitleBackgroundVideoPath() const;
 
 	/** @brief MP4 파일에서 비디오 트랙 표시 해상도를 읽는다. */
@@ -241,10 +240,6 @@ private:
 	// WBP에 없으면 배경 영상은 생략한다. (로고/버튼 등 나머지 정적 비주얼은 전부 WBP 책임)
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UImage> TitleBackgroundImage;
-
-	/** @brief 타이틀 메인 화면에서 반복 재생할 MP4 파일의 Content 기준 상대 경로 */
-	UPROPERTY(Category = "Title Menu|Background", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true, DisplayName = "Title Background Video Path"))
-	FString mTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/campfire_titleloop_idle_x3preview.mp4");
 
 	/** @brief 배경 영상 재생용 런타임 객체(MediaPlayer/Texture/Source/브러시). 정적 비주얼은 WBP. */
 	// Transient: 세이브/직렬화 대상이 아닌 순수 런타임 핸들 묶음이라 저장하지 않는다.
