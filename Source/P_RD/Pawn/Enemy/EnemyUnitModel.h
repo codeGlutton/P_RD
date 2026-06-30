@@ -29,9 +29,6 @@ public:
 	bool IsPlayerUnitModel() const override { return false; }
 
 protected:
-	UUserWidget* GetInfoPanel() const override;
-
-protected:
 	// @brief 초기 스텟에 반영되는 난이도 수치
 	UPROPERTY(Category = Enemy, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "Difficulty"))
 	int32 mDifficulty;
