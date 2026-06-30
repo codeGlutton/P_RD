@@ -106,5 +106,5 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void Zoom(float ZoomValue, FVector2D PinchCenter);
 
-	void SkillMotionZoomIn() {};
+	//void SkillMotionZoomIn() {};
 };
