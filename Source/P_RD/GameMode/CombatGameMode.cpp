@@ -17,6 +17,7 @@
 
 #include "UI/CombatTileMapHUDWidget.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "UI/Combat/CombatUIProjection.h"
 
 #include "SRPGFramework/SRPGSkillBuildAction.h"
 #include "SRPGFramework/SRPGMoveBuildAction.h"
@@ -35,102 +36,7 @@
 
 DEFINE_LOG_CATEGORY(LogCombatGameMode);
 
-namespace
-{
-	FLinearColor GetCombatRarityColor(ERarityType RarityType)
-	{
-		switch (RarityType)
-		{
-		case ERarityType::Rare:
-			return FLinearColor(0.55f, 0.72f, 1.0f, 1.0f);
-		case ERarityType::Epic:
-			return FLinearColor(0.82f, 0.58f, 1.0f, 1.0f);
-		case ERarityType::Common:
-		default:
-			return FLinearColor(0.86f, 0.98f, 0.94f, 1.0f);
-		}
-	}
-
-	ECombatSkillSelectShapeUI ToCombatSkillSelectShape(EAimPattern Pattern)
-	{
-		switch (Pattern)
-		{
-		case EAimPattern::Single:
-			return ECombatSkillSelectShapeUI::Single;
-		case EAimPattern::Cross:
-			return ECombatSkillSelectShapeUI::Cross;
-		case EAimPattern::Star:
-			return ECombatSkillSelectShapeUI::Diagonal;
-		case EAimPattern::Square:
-			return ECombatSkillSelectShapeUI::Square;
-		default:
-			return ECombatSkillSelectShapeUI::None;
-		}
-	}
-
-	ECombatSkillHitShapeUI ToCombatSkillHitShape(EEffectPattern Pattern)
-	{
-		switch (Pattern)
-		{
-		case EEffectPattern::Single:
-			return ECombatSkillHitShapeUI::Single;
-		case EEffectPattern::Cross:
-		case EEffectPattern::Star:
-			return ECombatSkillHitShapeUI::Cross;
-		case EEffectPattern::Square:
-			return ECombatSkillHitShapeUI::Circle;
-		case EEffectPattern::Beam:
-			return ECombatSkillHitShapeUI::Single;
-		default:
-			return ECombatSkillHitShapeUI::None;
-		}
-	}
-
-	ECombatBuildPhaseUI ToCombatBuildPhaseUI(ESRPGSkillBuildPhase Phase)
-	{
-		switch (Phase)
-		{
-		case ESRPGSkillBuildPhase::AimSelection:
-			return ECombatBuildPhaseUI::AimSelection;
-		case ESRPGSkillBuildPhase::Preview:
-			return ECombatBuildPhaseUI::Preview;
-		case ESRPGSkillBuildPhase::Build:
-		case ESRPGSkillBuildPhase::None:
-		default:
-			return ECombatBuildPhaseUI::None;
-		}
-	}
-
-	ECombatBuildPhaseUI ToCombatBuildPhaseUI(ESRPGMoveBuildPhase Phase)
-	{
-		switch (Phase)
-		{
-		case ESRPGMoveBuildPhase::DestSelection:
-			return ECombatBuildPhaseUI::AimSelection;
-		case ESRPGMoveBuildPhase::Preview:
-			return ECombatBuildPhaseUI::Preview;
-		case ESRPGMoveBuildPhase::Build:
-		case ESRPGMoveBuildPhase::None:
-		default:
-			return ECombatBuildPhaseUI::None;
-		}
-	}
-
-	FText GetEquipmentSlotFallbackName(EEquipmentType Slot)
-	{
-		switch (Slot)
-		{
-		case EEquipmentType::Weapon:
-			return NSLOCTEXT("CombatGameMode", "EquipmentSlotWeapon", "WEAPON");
-		case EEquipmentType::Gloves:
-			return NSLOCTEXT("CombatGameMode", "EquipmentSlotGloves", "GLOVES");
-		case EEquipmentType::Boots:
-			return NSLOCTEXT("CombatGameMode", "EquipmentSlotBoots", "BOOTS");
-		default:
-			return NSLOCTEXT("CombatGameMode", "EquipmentSlotEmpty", "EMPTY");
-		}
-	}
-}
+// 게임플레이 모델/enum -> 표시 DTO 변환 헬퍼는 UI/Combat/CombatUIProjection.{h,cpp}로 분리됨.
 
 void ACombatGameMode::InitializeRoom()
 {
@@ -226,7 +132,7 @@ bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 	SkillSelectCommand.InitializeAs<FSRPGSkillSelectCommand>();
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().mSkillIndex = SkillIndex;
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnChangeSkillBuildPhase.AddWeakLambda(this, [this](const USRPGSkillBuildAction* Action, ESRPGSkillBuildPhase Phase) {
-		OnRefreshSkillBuildPhase.Broadcast(ToCombatBuildPhaseUI(Phase));
+		OnRefreshSkillBuildPhase.Broadcast(CombatUIProjection::ToCombatBuildPhaseUI(Phase));
 		PushSelectedDiceUI();
 		PushDiceUI();
 		PushTurnUI();
@@ -270,7 +176,7 @@ bool ACombatGameMode::SelectMove()
 	TInstancedStruct<FSRPGCommand> MoveSelectCommand;
 	MoveSelectCommand.InitializeAs<FSRPGMoveSelectCommand>();
 	MoveSelectCommand.GetMutable<FSRPGMoveSelectCommand>().OnChangeMoveBuildPhase.AddWeakLambda(this, [this](const USRPGMoveBuildAction* Action, ESRPGMoveBuildPhase Phase) {
-		OnRefreshMoveBuildPhase.Broadcast(ToCombatBuildPhaseUI(Phase));
+		OnRefreshMoveBuildPhase.Broadcast(CombatUIProjection::ToCombatBuildPhaseUI(Phase));
 		PushTurnUI();
 		if (Phase == ESRPGMoveBuildPhase::Build || Phase == ESRPGMoveBuildPhase::None)
 		{
@@ -510,41 +416,7 @@ void ACombatGameMode::PushUnitUI()
 		return;
 	}
 
-	TArray<FUnitUI> UnitUIs;
-	for (const TObjectPtr<UUnitModel>& Unit : CombatModel->GetUnits())
-	{
-		if (Unit == nullptr)
-		{
-			continue;
-		}
-
-		FUnitUI UnitUI;
-		UnitUI.mUnitId = Unit->GetModelId();
-		UnitUI.mIsPlayer = Unit->IsPlayerUnitModel();
-		UnitUI.mTile = Unit->GetTileTransform().mIndex;
-
-		if (AActor* UnitActor = Unit->GetView<AActor>())
-		{
-			UnitUI.mWorldLocation = UnitActor->GetActorLocation();
-		}
-
-		if (UAttributeSetComponentModel* AttributeComponentModel = Unit->GetAttributeComponentModel())
-		{
-			UnitUI.mHP = AttributeComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute());
-			UnitUI.mMaxHP = AttributeComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMaxHPAttribute());
-			// [216 통합] UnitUI.mDamagePoint는 의도적으로 미할당(기본값 0) — 215가 DamagePoint 속성을 제거함.
-			//            TODO: AttackPoint/AttackFactor 중 정책 확정 후 mDamagePoint 매핑.
-			UnitUI.mDefensePoint = AttributeComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefensePointAttribute());
-			UnitUI.mMovementPoint = AttributeComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMovementPointAttribute());
-			UnitUI.mMaxMovementPoint = UnitUI.mMovementPoint;
-			UnitUI.mSkillPoint = AttributeComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackPointAttribute());
-			UnitUI.mStatusTags = AttributeComponentModel->GetOwnedGameplayTags();
-		}
-
-		UnitUIs.Add(UnitUI);
-	}
-
-	CombatUIModel->SetUnitUIs(UnitUIs);
+	CombatUIModel->SetUnitUIs(CombatUIProjection::BuildUnitUIs(CombatModel));
 	OnRefreshUnitUI.Broadcast();
 }
 
@@ -563,33 +435,7 @@ void ACombatGameMode::PushDiceUI()
 		return;
 	}
 
-	TArray<FDiceSlotUI> DiceUIs;
-	const TArray<TObjectPtr<UDiceModel>>& Dices = DicePoolModel->GetDices();
-	DiceUIs.Reserve(Dices.Num());
-
-	for (int32 DiceIndex = 0; DiceIndex < Dices.Num(); ++DiceIndex)
-	{
-		const UDiceModel* Dice = Dices[DiceIndex];
-		if (Dice == nullptr)
-		{
-			continue;
-		}
-
-		FDiceSlotUI DiceUI;
-		DiceUI.mDiceId = Dice->GetSourceDiceId();
-		DiceUI.mResultValue = Dice->IsRolled() ? Dice->GetCurrentValue() : 0;
-		DiceUI.mRolledFaceIndex = Dice->GetRolledFaceIndex();
-		DiceUI.mIsRolled = Dice->IsRolled();
-		DiceUI.mIsSelected = DicePoolModel->IsSelectedDice(DiceIndex);
-		DiceUI.mIsUsed = Dice->IsUsed();
-		DiceUI.mFaceCount = Dice->GetFaceCount();
-		DiceUI.mFaceValues = Dice->GetFaceValues();
-		DiceUI.mFaceTextures = Dice->GetFaceTextures();
-
-		DiceUIs.Add(DiceUI);
-	}
-
-	CombatUIModel->SetDiceUIs(DiceUIs);
+	CombatUIModel->SetDiceUIs(CombatUIProjection::BuildDiceUIs(DicePoolModel));
 	OnRefreshDiceUI.Broadcast();
 }
 
@@ -608,17 +454,7 @@ void ACombatGameMode::PushSelectedDiceUI()
 		return;
 	}
 
-	TArray<int32> SelectedDiceIndices;
-	const TArray<TObjectPtr<UDiceModel>>& Dices = DicePoolModel->GetDices();
-	for (int32 DiceIndex = 0; DiceIndex < Dices.Num(); ++DiceIndex)
-	{
-		if (DicePoolModel->IsSelectedDice(DiceIndex))
-		{
-			SelectedDiceIndices.Add(DiceIndex);
-		}
-	}
-
-	CombatUIModel->SetSelectedDice(SelectedDiceIndices, DicePoolModel->GetSelectedDiceSum());
+	CombatUIModel->SetSelectedDice(CombatUIProjection::BuildSelectedDiceIndices(DicePoolModel), DicePoolModel->GetSelectedDiceSum());
 	OnRefreshSelectedDiceUI.Broadcast();
 }
 
@@ -631,16 +467,7 @@ void ACombatGameMode::PushTurnUI()
 		return;
 	}
 
-	FTurnUI TurnUI;
-	if (USRPGTurnContext* CurrentTurnContext = CombatModel->GetCurrentTurnContext())
-	{
-		if (UUnitModel* TurnOwner = CurrentTurnContext->GetOwner())
-		{
-			TurnUI.mCurrentUnitId = TurnOwner->GetModelId();
-		}
-	}
-
-	CombatUIModel->SetTurnUI(TurnUI);
+	CombatUIModel->SetTurnUI(CombatUIProjection::BuildTurnUI(CombatModel));
 	OnRefreshTurnUI.Broadcast();
 }
 
@@ -660,46 +487,7 @@ void ACombatGameMode::PushSkillUI()
 		return;
 	}
 
-	TArray<FSkillUI> SkillUIs;
-	const int32 SkillCount = SkillComponentModel->GetSkillNum();
-	SkillUIs.Reserve(SkillCount);
-
-	int32 LoadedSkillCount = 0;
-	for (int32 SkillIndex = 0; SkillIndex < SkillCount; ++SkillIndex)
-	{
-		FSkillUI SkillUI;
-		SkillUI.mSkillIndex = SkillIndex;
-		SkillUI.mIsUsable = false;
-
-		// [216 통합] 215의 새 스킬 API. FSkillEntry.mData는 이미 로드된 UStaticSkillData.
-		FSkillEntry* SkillEntry = SkillComponentModel->GetSkill(SkillIndex);
-		UStaticSkillData* StaticSkillData = (SkillEntry != nullptr) ? SkillEntry->mData : nullptr;
-		if (StaticSkillData == nullptr)
-		{
-			UE_LOG(LogCombatGameMode, Warning, TEXT("CombatGameMode: PushSkillUI skill slot %d has no StaticSkillData."), SkillIndex);
-			SkillUIs.Add(SkillUI);
-			continue;
-		}
-
-		++LoadedSkillCount;
-		SkillUI.mName = StaticSkillData->mName;
-		SkillUI.mDescription = StaticSkillData->mDescription;
-		SkillUI.mIcon = StaticSkillData->mIcon.LoadSynchronous();
-		SkillUI.mDiceCost = StaticSkillData->mRequiredDiceCount;
-		SkillUI.mIsUsable = true;
-		SkillUI.mTargeting.mSelectShape = ToCombatSkillSelectShape(StaticSkillData->mAimPattern);
-		SkillUI.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRangeDefaultValue);
-		SkillUI.mTargeting.mSelectRangeRatio = StaticSkillData->mAimRangeRatio;
-		SkillUI.mTargeting.mHitShape = ToCombatSkillHitShape(StaticSkillData->mEffectPattern);
-		SkillUI.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectAreaDefaultValue);
-		SkillUI.mTargeting.mHitRangeRatio = StaticSkillData->mEffectAreaRatio;
-		SkillUI.mTargeting.mIsIndirect = StaticSkillData->mIsIndirect;
-		SkillUI.mTargeting.mIsPenetration = StaticSkillData->mIsPenetration;
-		SkillUIs.Add(SkillUI);
-	}
-
-	CombatUIModel->SetSkillUIs(SkillUIs);
-	UE_LOG(LogCombatGameMode, Log, TEXT("CombatGameMode: PushSkillUI pushed %d/%d usable skills."), LoadedSkillCount, SkillCount);
+	CombatUIModel->SetSkillUIs(CombatUIProjection::BuildSkillUIs(SkillComponentModel));
 	OnRefreshSkillUI.Broadcast();
 }
 
@@ -718,33 +506,7 @@ void ACombatGameMode::PushEquipmentUI()
 		return;
 	}
 
-	TArray<FEquipmentUI> EquipmentUIs;
-	const int32 SlotCount = StaticCast<int32>(EEquipmentType::Count);
-	EquipmentUIs.Reserve(SlotCount);
-
-	for (int32 SlotIndex = 0; SlotIndex < SlotCount; ++SlotIndex)
-	{
-		const EEquipmentType Slot = StaticCast<EEquipmentType>(SlotIndex);
-		const FEquippedEntry* EquippedEntry = EquipmentComponentModel->GetEquipped(Slot);
-		const UStaticEquipmentData* StaticEquipmentData = EquippedEntry != nullptr ? EquippedEntry->mData.Get() : nullptr;
-
-		FEquipmentUI EquipmentUI;
-		EquipmentUI.mSlotIndex = SlotIndex;
-		EquipmentUI.mName = GetEquipmentSlotFallbackName(Slot);
-
-		if (StaticEquipmentData != nullptr)
-		{
-			EquipmentUI.mItemId = StaticEquipmentData->GetPrimaryAssetId();
-			EquipmentUI.mName = StaticEquipmentData->mName.IsEmpty() ? EquipmentUI.mName : StaticEquipmentData->mName;
-			EquipmentUI.mIcon = StaticEquipmentData->mIcon.LoadSynchronous();
-			EquipmentUI.mIsEquipped = true;
-			EquipmentUI.mRarityColor = GetCombatRarityColor(StaticEquipmentData->mRarityType);
-		}
-
-		EquipmentUIs.Add(EquipmentUI);
-	}
-
-	CombatUIModel->SetEquipmentUIs(EquipmentUIs);
+	CombatUIModel->SetEquipmentUIs(CombatUIProjection::BuildEquipmentUIs(EquipmentComponentModel));
 	OnRefreshEquipmentUI.Broadcast();
 }
 
@@ -757,17 +519,7 @@ void ACombatGameMode::PushPlayerMetaUI()
 		return;
 	}
 
-	FPlayerMetaUI MetaUI;
-	MetaUI.mLevel = PlayerUnit->GetPlayerLevel();
-
-	if (UAttributeSetComponentModel* AttributeComponentModel = PlayerUnit->GetAttributeComponentModel())
-	{
-		MetaUI.mGold = FMath::RoundToInt(AttributeComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMoneyAttribute()));
-		MetaUI.mExp = AttributeComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute());
-		MetaUI.mMaxExp = AttributeComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMaxExpAttribute());
-	}
-
-	CombatUIModel->SetPlayerMeta(MetaUI);
+	CombatUIModel->SetPlayerMeta(CombatUIProjection::BuildPlayerMetaUI(PlayerUnit));
 	OnRefreshPlayerMetaUI.Broadcast();
 }
 
