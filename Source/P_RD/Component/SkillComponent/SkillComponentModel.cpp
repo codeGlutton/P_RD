@@ -48,7 +48,7 @@ void USkillComponentModel::SetSkillFrom(const TArray<TSoftObjectPtr<UStaticSkill
 	int32 NextSkillIndex = 0;
 	for (const TSoftObjectPtr<UStaticSkillData>& Skill : SkillList)
 	{
-		SetSkill(NextSkillIndex++, Skill.Get());
+		SetSkill(NextSkillIndex++, Skill.LoadSynchronous());
 	}
 }
 
@@ -78,7 +78,7 @@ void USkillComponentModel::SetSkill(int32 SkillIndex, UStaticSkillData* SkillDat
 	const UStaticSkillData* PreSkillData = mSkillEntries[SkillIndex].mData;
 	mSkillEntries[SkillIndex] = FSkillEntry(SkillData);
 
-	OnChangeSkillUI.Broadcast(SkillIndex, SkillData, PreSkillData);
+	OnChangeSkillUI.Broadcast(SkillIndex, PreSkillData, SkillData);
 }
 
 bool USkillComponentModel::ActivateSkill(int32 SkillIndex, const TArray<FTileIndex>& TargetTiles, float DiceSum)
