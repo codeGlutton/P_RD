@@ -13,6 +13,12 @@
 
 class USRPGAction;
 
+struct FEquippedEntry;
+class IBoardSelectionTarget;
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowTargetDetailPanelUI, IBoardSelectionTarget* /*Target*/);
+
+
 /**
  * @brief  사용자 입력 명령 객체
  */
@@ -47,5 +53,8 @@ public:
 public:
 	UPROPERTY(Category = Input, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsLongPress"))
 	bool mIsLongPress = false;
+
+public:
+	FOnShowTargetDetailPanelUI OnShowTargetDetailPanelUI;
 };
 

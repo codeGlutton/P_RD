@@ -135,6 +135,10 @@ public:
 	 */
 	void RegisterObstacle(FObstaclePlacementData& ObstaclePlacementDatas);
 
+public:
+	void UnregisterUnit(UUnitModel* Unit);
+	void UnregisterObstacle(UBoardActorModel* Obstcle);
+
 protected:
 	void SpawnTileMap();
 	void RegisterPlayerUnit(UUnitModel* PlayerUnit, const FTileTransform& Transform);
@@ -165,6 +169,7 @@ public:
 	TArray<TObjectPtr<USRPGTurnContext>> GetTurnContexts(const UUnitModel* Owner);
 	UTileMapModel* GetTileMap();
 	TArray<TObjectPtr<UUnitModel>>& GetUnits();
+	TArray<TObjectPtr<UBoardActorModel>>& GetObstacles();
 
 	/* 시뮬 함수 */
 public:

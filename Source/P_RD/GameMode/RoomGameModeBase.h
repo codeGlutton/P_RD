@@ -101,7 +101,7 @@ private:
 	bool IsRoomSelectable(int32 RoomRow, int32 RoomColumn) const;
 
 public:
-	UPlayerUnitModel* GetPlayerUnit() const;
+	UPlayerUnitModel* GetPlayerUnitModel() const;
 
 protected:
 	UPROPERTY()
