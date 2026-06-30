@@ -3,19 +3,19 @@
 // ───────── gameplay → UI : 표시값을 캐시에 넣는다 ─────────
 // 화면 갱신 알림은 CombatGameMode의 OnRefresh*UI 대리자가 담당한다.
 
-/** @brief 유닛 표시 스냅샷을 교체하고 Unit 도메인 갱신만 알린다. */
+/** @brief 유닛 표시 스냅샷 캐시를 교체한다. (화면 갱신 알림은 CombatGameMode의 OnRefresh*UI 담당) */
 void UCombatUIModel::SetUnitUIs(const TArray<FUnitUI>& Units)
 {
 	mUnitUIs = Units;
 }
 
-/** @brief 유닛 상세 스냅샷을 교체하고 Unit 도메인 갱신을 알린다. */
+/** @brief 유닛 상세 스냅샷 캐시를 교체한다. */
 void UCombatUIModel::SetUnitDetail(const FUnitDetailUI& Detail)
 {
 	mUnitDetail = Detail;
 }
 
-/** @brief 주사위 표시 스냅샷을 교체하고 Dice 도메인 갱신을 알린다. */
+/** @brief 주사위 표시 스냅샷 캐시를 교체한다. */
 void UCombatUIModel::SetDiceUIs(const TArray<FDiceSlotUI>& Dice)
 {
 	mDiceUIs = Dice;
@@ -28,31 +28,31 @@ void UCombatUIModel::SetSelectedDice(const TArray<int32>& SelectedIndices, int32
 	mSelectedDiceSum = SelectedSum;
 }
 
-/** @brief 스킬 레일 표시 스냅샷을 교체하고 Skill 도메인을 갱신한다. */
+/** @brief 스킬 레일 표시 스냅샷 캐시를 교체한다. */
 void UCombatUIModel::SetSkillUIs(const TArray<FSkillUI>& Skills)
 {
 	mSkillUIs = Skills;
 }
 
-/** @brief 턴 표시 스냅샷을 교체하고 Turn 도메인을 갱신한다. */
+/** @brief 턴 표시 스냅샷 캐시를 교체한다. */
 void UCombatUIModel::SetTurnUI(const FTurnUI& Turn)
 {
 	mTurnUI = Turn;
 }
 
-/** @brief 장비 슬롯 표시 스냅샷을 교체하고 Equipment 도메인을 갱신한다. */
+/** @brief 장비 슬롯 표시 스냅샷 캐시를 교체한다. (소비/표시는 탑바 담당 — 후속) */
 void UCombatUIModel::SetEquipmentUIs(const TArray<FEquipmentUI>& Equipment)
 {
 	mEquipmentUIs = Equipment;
 }
 
-/** @brief 골드/레벨/경험치 메타 스냅샷을 교체하고 Meta 도메인을 갱신한다. */
+/** @brief 골드/레벨/경험치 메타 스냅샷 캐시를 교체한다. */
 void UCombatUIModel::SetPlayerMeta(const FPlayerMetaUI& Meta)
 {
 	mPlayerMeta = Meta;
 }
 
-/** @brief 행동 결과 큐를 통째로 교체하고 Queue 도메인 갱신을 알린다. */
+/** @brief 행동 결과 큐 스냅샷을 통째로 교체한다. (재생 신호는 ResolveFrontQueueNode가 발행) */
 void UCombatUIModel::SetActionQueue(const TArray<FCombatQueueNode>& Queue)
 {
 	mActionQueue = Queue;
