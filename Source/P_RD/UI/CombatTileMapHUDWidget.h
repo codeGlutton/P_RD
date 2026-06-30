@@ -38,7 +38,7 @@ public:
 	// 이 모델은 HUD 표시 데이터를 읽는 단방향 경계다. 입력 의도 경로는 Phase 2에서 UCombatUIModel 경계로 복원한다.
 	void BindCombatUIModel(UCombatUIModel* InUIModel);
 
-	/** @brief TopMenuBar의 DicePanel이 현재 전투 주사위 표시 스냅샷을 읽을 때 사용한다. */
+	/** @brief DicePanel이 현재 전투 주사위 표시 스냅샷을 읽을 때 사용한다. */
 	int32 GetCombatDiceViewCount() const;
 	bool GetCombatDiceView(int32 DiceIndex, FDiceViewData& OutDiceView) const;
 
@@ -67,7 +67,7 @@ protected:
 	/** @brief OpenUI()로 표시될 때 주사위 입장 연출을 다시 시작한다. */
 	void ApplyOpenUI() override;
 
-	/** @brief 전투 HUD가 TopMenuBar보다 뒤에 깔리도록 낮은 ZOrder를 사용한다. */
+	/** @brief 전투 HUD가 월드 팝업보다 뒤에 깔리도록 낮은 ZOrder를 사용한다. */
 	int32 GetViewportZOrder() const override;
 
 private:
@@ -226,7 +226,7 @@ private:
 	/** @brief 디자이너 스킨 시, concept value 칸(HUD_M_lv/hp/gold_value 앵커)에 Lv/HP/Gold 텍스트를 칸 크기에 맞춰 그린다. */
 	void RefreshSkinValueLabels() const;
 
-	/** @brief 턴 순서 칩(탑바 가운데 하단)을 다시 만든다(무조건 플레이어부터, 그 뒤 적). */
+	/** @brief 턴 순서 칩(전투 HUD 가운데 하단)을 다시 만든다(무조건 플레이어부터, 그 뒤 적). */
 	void RebuildTurnOrderBar();
 
 	/** @brief 스킬/액션이 확정·취소되면 스킬·주사위 선택 강조를 푼다. */
@@ -390,7 +390,7 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UTextBlock> mCombatStatusBarText;
 
-	/** @brief 턴 순서 칩(탑바 가운데 하단, 플레이어부터) 배경/문구 */
+	/** @brief 턴 순서 칩(전투 HUD 가운데 하단, 플레이어부터) 배경/문구 */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UBorder>> mTurnOrderChips;
 

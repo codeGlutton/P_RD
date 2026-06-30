@@ -7,10 +7,7 @@
 #include "Components/CanvasPanelSlot.h"
 #include "Components/TextBlock.h"
 #include "GameMode/CombatGameMode.h"
-#include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
-#include "Singleton/WorldSubsystem/WorldWidgetType.h"
 #include "UI/Combat/CombatUIModel.h"
-#include "UI/TopMenuBarWidget.h"
 #include "UI/UIRuntimeLayout.h"
 
 void UCombatTileMapHUDWidget::BindCombatGameModeDelegates()
@@ -186,28 +183,10 @@ void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const
 	const int32 MaxHP = FMath::RoundToInt(PlayerMaxHP);
 	const int32 Gold = Meta.mGold;
 
-	// 탑바 DICE/SKILL 라벨에 푸시할 보유 주사위/스킬 수(전부 뷰모델 경유).
-	const int32 DiceCount = mCombatUIModel->GetDiceUIs().Num();
-	const int32 SkillCount = mCombatUIModel->GetSkillUIs().Num();
-
-	// 로컬 상태줄(접힘 상태)에도 값은 채워두지만, 실제 표시는 탑바로 푸시한다.
+	// 로컬 상태줄에도 값은 채워두고, 디자이너 스킨 값 텍스트는 RefreshSkinValueLabels에서 갱신한다.
 	mCombatStatusBarText->SetText(FText::Format(
 		NSLOCTEXT("CombatTileMapHUDWidget", "CombatStatusBarFormat", "Lv {0}    HP {1}/{2}    GOLD {3}"),
 		FText::AsNumber(Level), FText::AsNumber(HP), FText::AsNumber(MaxHP), FText::AsNumber(Gold)));
-
-	// 게임플레이 ASC 속성 동기화가 깨져 RunPersistData를 못 믿으므로, 전투 중에는 뷰모델 값을
-	// 탑바 요약에 직접 푸시한다(탑바=Lv/HP/Gold 정상 표시). 속성 초기화가 고쳐지면 이 경로는 정리 가능.
-	if (UWorld* World = GetWorld())
-	{
-		if (UWorldWidgetSubsystem* WorldWidgetSubsystem = World->GetSubsystem<UWorldWidgetSubsystem>())
-		{
-			if (UTopMenuBarWidget* TopBar = WorldWidgetSubsystem->GetWorldWidget<UTopMenuBarWidget>(EWorldWidgetType::TopMenuBar))
-			{
-				TopBar->SetCombatPlayerSummary(Level, HP, MaxHP, Gold);
-				TopBar->SetCombatDiceSkillCount(DiceCount, SkillCount);
-			}
-		}
-	}
 
 	RefreshMoveButton();
 	RefreshSkinValueLabels();
@@ -382,7 +361,7 @@ void UCombatTileMapHUDWidget::RebuildTurnOrderBar()
 		return;
 	}
 
-	// 탑바 가운데 하단, 칩 줄을 가로 중앙 정렬.
+	// 전투 HUD 가운데 하단, 칩 줄을 가로 중앙 정렬.
 	const float ChipWidth = 0.048f;
 	const float ChipHeight = 0.040f;
 	const float Gap = 0.007f;

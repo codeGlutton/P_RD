@@ -196,7 +196,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		{
 			mCombatStatusBarText->SetJustification(ETextJustify::Left);
 			mCombatStatusBarText->SetColorAndOpacity(FSlateColor(FLinearColor(0.96f, 1.0f, 0.92f, 1.0f)));
-			// Lv/HP/Gold는 이제 탑바(TopMenuBar)에서 보여주므로 전투 HUD의 중복 상태줄은 숨긴다.
+			// Lv/HP/Gold는 디자이너 스킨의 전투 HUD 값 텍스트에서 보여주므로 중복 상태줄은 숨긴다.
 			mCombatStatusBarText->SetVisibility(ESlateVisibility::Collapsed);
 			TargetRootCanvas->AddChildToCanvas(mCombatStatusBarText);
 		}
@@ -233,6 +233,6 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 
 	RebuildSkillRailWidgets();
 	EnsureSkillInputButtons();
-	RebuildTurnOrderBar();    // 탑바 가운데 하단 턴 순서 칩
+	RebuildTurnOrderBar();    // 전투 HUD 가운데 하단 턴 순서 칩
 	ApplyRuntimeWidgetLayout();
 }

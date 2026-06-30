@@ -104,7 +104,7 @@ public:
 	 */
 	const FEquippedEntry* GetEquipmentDetail(EEquipmentType EquipmentType);
 
-	/* 연출용 대리자 (전투 수명/턴 연출 배리어 — TopMenuBar 등 UI가 구독) */
+	/* 연출용 대리자 (전투 수명/턴 연출 배리어 — UI가 구독) */
 public:
 	FOnCombatPresentationUI OnBeginCombatUI;
 	FOnCombatEndedUI OnEndCombatUI;

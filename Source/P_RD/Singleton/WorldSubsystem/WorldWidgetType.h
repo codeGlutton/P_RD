@@ -16,7 +16,8 @@
 UENUM(BlueprintType)
 enum class EWorldWidgetType : uint8
 {
-	TopMenuBar = 0,
+	/** @brief 삭제된 레거시 상단바 자리. Config index 0 호환을 위해 비워 둔다. */
+	ReservedLegacySlot0 = 0 UMETA(Hidden),
 	MsgNotify,
 	SaveNotify,
 	
@@ -44,7 +45,7 @@ enum class EWorldWidgetType : uint8
 	 *
 	 * 왜 WorldWidget인가:
 	 * 설정은 화면마다 따로 만든 슬롯이 아니라 같은 팝업 생명주기로 열려야 한다.
-	 * WorldWidgetSubsystem에 두면 타이틀과 TopMenuBar가 모두 같은 OpenUI/CloseUI 경로를 공유할 수 있다.
+	 * WorldWidgetSubsystem에 두면 타이틀과 인게임 화면이 모두 같은 OpenUI/CloseUI 경로를 공유할 수 있다.
 	 */
 	InGameSettings,
 
@@ -52,7 +53,7 @@ enum class EWorldWidgetType : uint8
 	 * @brief 인게임 DICE 버튼으로 여는 보유 주사위 패널
 	 *
 	 * @details
-	 * 탑바가 공용 진입점으로 OpenUI/CloseUI를 관리하고, 패널은 표시와 상세 확인만 담당한다.
+	 * 호출한 화면이 OpenUI/CloseUI를 관리하고, 패널은 표시와 상세 확인만 담당한다.
 	 *
 	 * @note
 	 * Config/DefaultGame.ini의 mWorldWidgetClasses index와 이 enum 순서는 직접 대응한다.
@@ -64,7 +65,7 @@ enum class EWorldWidgetType : uint8
 	 * @brief 인게임 SKILL 버튼으로 여는 보유 스킬 패널
 	 *
 	 * @details
-	 * 탑바가 공용 진입점으로 OpenUI/CloseUI를 관리하고, 패널은 스킬 목록/상세 표시를 담당한다.
+	 * 호출한 화면이 OpenUI/CloseUI를 관리하고, 패널은 스킬 목록/상세 표시를 담당한다.
 	 *
 	 * @note
 	 * Config/DefaultGame.ini의 mWorldWidgetClasses index와 이 enum 순서는 직접 대응한다.

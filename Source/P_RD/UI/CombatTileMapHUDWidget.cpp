@@ -81,7 +81,7 @@ void UCombatTileMapHUDWidget::ApplyOpenUI()
 	RefreshDiceViewsFromUIModel();
 	RebuildOwnedDiceCards();
 	RefreshCombatStatusBar();   // 위젯 생성 이후에 뷰모델 값(Lv/HP/Gold)을 상단 상태바에 채운다.
-	RebuildTurnOrderBar();      // 탑바 가운데 하단 턴 순서 칩.
+	RebuildTurnOrderBar();      // 전투 HUD 가운데 하단 턴 순서 칩.
 	RebuildUnitHpBars();        // 유닛 수에 맞춰 머리 위 HP바를 만든다.
 	mSelectedDiceIndex = INDEX_NONE;
 	mSelectedSkillIndex = INDEX_NONE;
