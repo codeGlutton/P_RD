@@ -18,7 +18,6 @@ class IBoardSelectionTarget;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowTargetDetailPanelUI, IBoardSelectionTarget* /*Target*/);
 
-
 /**
  * @brief  사용자 입력 명령 객체
  */

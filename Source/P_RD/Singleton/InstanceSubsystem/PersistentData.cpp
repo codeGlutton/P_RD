@@ -1,9 +1,12 @@
 ﻿#include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
+#include "Pawn/Player/PlayerUnitModel.h"
+
 #include "Dice/DicePoolModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
-#include "Pawn/Player/PlayerUnitModel.h"
+#include "Component/EquipmentComponent/EquipmentComponentModel.h"
+#include "Component/SkillComponent/SkillComponentModel.h"
 
 #include "Setting/GameBalanceSettings.h"
 #include "Engine/AssetManager.h"
@@ -156,13 +159,25 @@ void UPlayerUnitPersistData::SyncPlayerPersistData(UPlayerUnitModel* PlayerUnit)
 		 ASCModel->AddLooseGameplayTag(Pair.Key, Pair.Value);
 	 }
 
-	 // TODO : 플레이어 스킬 동기화
-	 // TODO : 플레이어 장비 동기화
+	 // 플레이어 스킬 동기화
+	 USkillComponentModel* SkillComponentModel = PlayerUnit->GetSkillComponentModel();
+	 if (SkillComponentModel != nullptr)
+	 {
+		 SkillComponentModel->SetSkillFrom(GetSkillIds());
+	 }
+
+	 // 플레이어 장비 동기화
+	 UEquipmentComponentModel* EquipmentComponentModel = PlayerUnit->GetEquipmentComponentModel();
+	 if (EquipmentComponentModel != nullptr)
+	 {
+		 EquipmentComponentModel->EquipFrom(GetEquipmentIds());
+	 }
 
 	 // 플레이어 주사위 동기화
-	 if (UDicePoolModel* DicePool = PlayerUnit->GetDicePoolModel())
+	UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
+	 if (DicePoolModel != nullptr)
 	 {
-		 DicePool->BuildFromDiceIds(GetDiceIds());
+		 DicePoolModel->BuildFromDiceIds(GetDiceIds());
 	 }
 }
 
@@ -257,7 +272,7 @@ void URunPersistData::StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Diffic
 		{
 			if (const UStaticEquipmentData* EquipmentData = EquipmentSoft.LoadSynchronous())
 			{
-				mDiceIds.Add(EquipmentData->GetPrimaryAssetId());
+				mEquipmentIds.Add(EquipmentData->GetPrimaryAssetId());
 			}
 		}
 	}

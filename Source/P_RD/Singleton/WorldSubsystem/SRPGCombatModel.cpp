@@ -16,8 +16,6 @@
 #include "DataAsset/UnitSpawnData/StaticEnemyUnitSpawnData.h"
 #include "DataAsset/ObstacleSpawnData/StaticObstacleSpawnData.h"
 
-#include "AIController/EnemyAIController.h"
-
 DEFINE_LOG_CATEGORY(LogSRPGCombat)
 
 void USRPGCombatModel::Serialize(FArchive& Ar)
@@ -380,10 +378,6 @@ void USRPGCombatModel::RegisterEnemyUnit(FEnemyUnitPlacementData& EnemyPlacement
 
 	// 턴 등록
 	RegisterTurn(EnemyUnit);
-
-	// 적 AI 시작
-	// AEnemyAIController* AIController = EnemyUnit->GetController<AEnemyAIController>();
-	// AIController->StartLogic(EnemyUnitSpawnData->mStateTree.Get());
 }
 
 void USRPGCombatModel::RegisterObstacle(FObstaclePlacementData& ObstaclePlacementData)

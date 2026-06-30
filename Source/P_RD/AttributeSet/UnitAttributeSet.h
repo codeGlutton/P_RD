@@ -24,59 +24,70 @@ public:
 
 	/* UTacticalAttributeSet 상속 */
 public:
-	// 미구현됨
 	void PreAttributeChange(const FTacticalAttribute& Attribute, float& NewValue) override;
-	// 미구현됨
 	void PostAttributeChange(const FTacticalAttribute& Attribute, float OldValue, float NewValue) override;
 
 public:
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, MaxHP)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, HP)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, Defense)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, Movement)
 
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, AttackPoint)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, HealPoint)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, DefensePoint)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, MovementPoint)
 
-	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, DamagePoint)
-	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, HealPoint)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, AttackFactor)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, HealFactor)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, DefenseFactor)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, MovementFactor)
 
-	/* 단순 덧셈만 적용하는 영구적인 Attribute 값 */
+	/* Instant로 즉각 적용되는 Attribute 값 */
 protected:
+	// @brief 최대 체력
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData MaxHP;
+	// @brief 현재 체력
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData HP;
 
-	// @brief 타격 데미지 산출의 base가 되는 공격력
+	// @brief 이번 턴 동안 유지되는 방어 스택
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FTacticalAttributeData Defense;
+	// @brief 이번 턴 동안 유지되는 움직임 스택
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FTacticalAttributeData Movement;
+
+	/* 임시적으로 패시브들이 스냅샷 참고하라고 넣어두는 기본 값 */
+protected:
+	// @brief 스킬 모션 동안만 유지되는 기본 공격 포인트 (스킬 기본 공격량과 주사위 계수 합산 값)
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData AttackPoint;
-	// @brief 턴 동안만 유지되는 방어 포인트
+	// @brief 스킬 모션 동안만 유지되는 기본 회복 포인트 (스킬 기본 회복량과 주사위 계수 합산 값)
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FTacticalAttributeData HealPoint;
+	// @brief 스킬 모션 동안만 유지되는 기본 방어 획득 포인트 (스킬 기본 방어 획득량과 주사위 계수 합산 값)
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData DefensePoint;
-	// @brief 턴 동안만 유지되는 움직임 포인트
+	// @brief 스킬 모션 동안만 유지되는 기본 움직임 획득 포인트 (스킬 기본 움직임 획득량과 주사위 계수 합산 값)
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData MovementPoint;
 
-	/* 복잡한 계산 이후에 실제 적용하는 일시적인 Attribute 값 */
+	/* 특정 기간적으로 추가되는 반영 스텟들 */
 protected:
-	/**
-	 * @brief 타격 동안만 유지되는 타격 포인트
-	 * @details
-	 * 타격 시 실질적으로 주는 데미지로 활용
-	 */
+	// @brief 추가 공격력 값 (ex 버프, 장비, 특정 기간 동안의 패시브 반영)
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FTacticalAttributeData DamagePoint;
-	/**
-	 * @brief 힐 동안만 유지되는 힐 포인트
-	 * @details
-	 * 힐 시 실질적으로 얻는 체력 변화로 활용
-	 */
+	FTacticalAttributeData AttackFactor;
+	// @brief 추가 회복력 값 (ex 버프, 장비, 특정 기간 동안의 패시브 반영)
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FTacticalAttributeData HealPoint;
-
-	/**
-	 * [NOTE] 상태이상은 그냥 Tag로 달자
-	 */
+	FTacticalAttributeData HealFactor;
+	// @brief 추가 방어휙득력 값 (ex 버프, 장비, 특정 기간 동안의 패시브 반영)
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FTacticalAttributeData DefenseFactor;
+	// @brief 추가 이동휙득력 값 (ex 버프, 장비, 특정 기간 동안의 패시브 반영)
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FTacticalAttributeData MovementFactor;
 };
 
 /**

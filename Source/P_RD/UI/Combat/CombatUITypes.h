@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 /** @brief 전투 UI와 게임플레이 사이에서 주고받는 표시용 뷰 데이터입니다. */
 // UI는 게임플레이 객체(UUnitData/UDiceData 등)를 직접 알지 않고 이 struct들만 읽는다.
@@ -116,7 +116,7 @@ struct FUnitUI
 
 /** @brief 적/유닛을 길게 눌렀을 때 띄우는 상세 정보(초상화·이름·레벨·패시브 등). */
 // 이 struct는 "상세 패널에만 추가로 필요한 값"만 담는다.
-// HP/MaxHP/DamagePoint 같은 라이브 전투 스탯은 여기서 중복 보관하지 않고,
+// HP/MaxHP/AttackFactor 같은 라이브 전투 스탯은 여기서 중복 보관하지 않고,
 // mUnitId로 같은 유닛의 FUnitUI를 찾아 거기서 읽는다(HP 진실원본 이원화 방지).
 // UI 필요값:
 // - mUnitId: 어떤 유닛 상세인지 식별 + 라이브 스탯(HP 등)을 가져올 FUnitUI 매칭 키.
