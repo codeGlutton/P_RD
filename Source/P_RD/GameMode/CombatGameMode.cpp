@@ -16,13 +16,16 @@
 #include "UI/CombatTileMapHUDWidget.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "Combat/CombatUIAdapter.h"
-#include "Pawn/Player/PlayerUnit.h"
-#include "Dice/DicePoolModel.h"
 
 #include "SRPGFramework/SRPGSkillBuildAction.h"
 #include "SRPGFramework/SRPGMoveBuildAction.h"
 #include "SRPGFramework/SRPGDiceRollAction.h"
 #include "SRPGFramework/SRPGTurnEndAction.h"
+
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "Dice/DicePoolModel.h"
+
+#include "AttributeSet/UnitAttributeSet.h"
 
 DEFINE_LOG_CATEGORY(LogCombatGameMode);
 
@@ -38,7 +41,54 @@ void ACombatGameMode::InitializeRoom()
 	checkf(StaticRoomData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
 
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
-	CombatModel->InitCombat(StaticRoomData, GetPlayerUnit());
+	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModel());
+
+	/* 전투 모델 대리자 연결 */
+
+	CombatModel->OnBeginCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier) {
+		OnRefreshAllUI.Broadcast();
+		OnBeginCombatUI.Broadcast(Barrier);
+		});
+	CombatModel->OnEndCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result) {
+		OnEndCombatUI.Broadcast(Barrier, Result);
+		});
+	CombatModel->OnBeginAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext) {
+		OnBeginAnyTurnUI.Broadcast(Barrier, TurnContext);
+		});
+	CombatModel->OnEndAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, ESRPGTurnResult Result) {
+		OnEndAnyTurnUI.Broadcast(Barrier, TurnContext, Result);
+		});
+	CombatModel->OnBeginAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action) {
+		OnBeginAnyTurnActionUI.Broadcast(Barrier, TurnContext, Action);
+		});
+	CombatModel->OnEndAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action, ESRPGActionResult Result) {
+		OnEndAnyTurnActionUI.Broadcast(Barrier, TurnContext, Action, Result);
+		});
+
+	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
+	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
+
+	/* 주사위 대리자 연결 */
+
+	UDicePoolModel* DicePoolModel = PlayerUnitModel->GetDicePoolModel();
+	checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트 nullptr"));
+
+	DicePoolModel->OnRollAllDicesUI.AddWeakLambda(this, [this](const TArray<TObjectPtr<UDiceModel>>& Dices) {
+		OnRefreshDiceUI.Broadcast();
+		});
+	DicePoolModel->OnUseDiceUI.AddWeakLambda(this, [this](const UDiceModel* Dice) {
+		OnRefreshDiceUI.Broadcast();
+		});
+	DicePoolModel->OnResetAllDiceUI.AddWeakLambda(this, [this](const TArray<TObjectPtr<UDiceModel>>& Dices) {
+		OnRefreshDiceUI.Broadcast();
+		});
+
+	DicePoolModel->OnSelectedDiceUI.AddWeakLambda(this, [this](const UDiceModel* Dice) {
+		OnRefreshSelectedDiceUI.Broadcast();
+		});
+	DicePoolModel->OnUnselectedDiceUI.AddWeakLambda(this, [this](const UDiceModel* Dice) {
+		OnRefreshSelectedDiceUI.Broadcast();
+		});
 }
 
 void ACombatGameMode::BeginRoom()
@@ -63,7 +113,7 @@ void ACombatGameMode::BeginRoom()
 	}
 	// 임시 비GAS 어댑터: 전투 상태 → 모델 push, 모델의 Request → 게임플레이 처리.
 	mCombatUIAdapter = NewObject<UCombatUIAdapter>(this);
-	if (UPlayerUnitModel* PlayerUnit = GetPlayerUnit())
+	if (UPlayerUnitModel* PlayerUnit = GetPlayerUnitModel())
 	{
 		mCombatUIAdapter->SetDicePool(PlayerUnit->GetDicePoolModel());
 	}
@@ -82,7 +132,9 @@ bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 	TInstancedStruct<FSRPGCommand> SkillSelectCommand;
 	SkillSelectCommand.InitializeAs<FSRPGSkillSelectCommand>();
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().mSkillIndex = SkillIndex;
-	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnChangeSkillBuildPhase.AddUObject(this, &ACombatGameMode::OnChangeSkillBuildPhase);
+	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnChangeSkillBuildPhase.AddWeakLambda(this, [this](const USRPGSkillBuildAction* Action, ESRPGSkillBuildPhase Phase) {
+		OnRefreshSkillBuildPhase.Broadcast(Phase);
+		});
 
 	return CommandRouterModel->SummitCommand(SkillSelectCommand);
 }
@@ -115,11 +167,13 @@ bool ACombatGameMode::SelectMove()
 	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
 	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
 
-	TInstancedStruct<FSRPGCommand> DiceSelectCommand;
-	DiceSelectCommand.InitializeAs<FSRPGMoveSelectCommand>();
-	// DiceSelectCommand.GetMutable<FSRPGMoveSelectCommand>().OnChangeMoveBuildPhase
+	TInstancedStruct<FSRPGCommand> MoveSelectCommand;
+	MoveSelectCommand.InitializeAs<FSRPGMoveSelectCommand>();
+	MoveSelectCommand.GetMutable<FSRPGMoveSelectCommand>().OnChangeMoveBuildPhase.AddWeakLambda(this, [this](const USRPGMoveBuildAction* Action, ESRPGMoveBuildPhase Phase) {
+		OnRefreshMoveBuildPhase.Broadcast(Phase);
+		});
 
-	return CommandRouterModel->SummitCommand(DiceSelectCommand);
+	return CommandRouterModel->SummitCommand(MoveSelectCommand);
 }
 
 bool ACombatGameMode::EndTurn()
@@ -131,20 +185,6 @@ bool ACombatGameMode::EndTurn()
 	DiceSelectCommand.InitializeAs<FSRPGTurnEndCommand>();
 
 	return CommandRouterModel->SummitCommand(DiceSelectCommand);
-}
-
-bool ACombatGameMode::ShowSkillDetail(int32 SkillIndex)
-{
-	// TODO
-
-	return true;
-}
-
-bool ACombatGameMode::ShowEquipmentDetail(int32 EquipmentIndex)
-{
-	// TODO
-
-	return true;
 }
 
 bool ACombatGameMode::ResolveWorldTouchEvent()
@@ -167,10 +207,15 @@ bool ACombatGameMode::ResolveWorldLongPressEvent()
 	TInstancedStruct<FSRPGCommand> WorldTraceActionCommand;
 	WorldTraceActionCommand.InitializeAs<FSRPGWorldTraceCommand>();
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mIsLongPress = true;
+	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().OnShowTargetDetailPanelUI.AddWeakLambda(this, [this](IBoardSelectionTarget* Target) {
+		OnShowTargetDetailPanelUI.Broadcast(Target);
+		});
 
 	return CommandRouterModel->SummitCommand(WorldTraceActionCommand);
 }
 
-void ACombatGameMode::OnChangeSkillBuildPhase(const USRPGSkillBuildAction* Action, ESRPGSkillBuildPhase Phase)
+FEquippedEntry* ACombatGameMode::GetEquipmentDetail(int32 EquipmentIndex)
 {
+	return nullptr;
 }
+

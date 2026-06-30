@@ -405,6 +405,16 @@ void USRPGCombatModel::RegisterObstacle(FObstaclePlacementData& ObstaclePlacemen
 	mTileMap->PlaceActor(ObstaclePlacementData.mTransform, Obstacle);
 }
 
+void USRPGCombatModel::UnregisterUnit(UUnitModel* Unit)
+{
+
+}
+
+void USRPGCombatModel::UnregisterObstacle(UBoardActorModel* Obstcle)
+{
+
+}
+
 void USRPGCombatModel::SpawnTileMap()
 {
 	checkf(mTileMap == nullptr, TEXT("이미 타일 존재"));
@@ -593,6 +603,11 @@ UTileMapModel* USRPGCombatModel::GetTileMap()
 TArray<TObjectPtr<UUnitModel>>& USRPGCombatModel::GetUnits()
 {
 	return mUnits;
+}
+
+TArray<TObjectPtr<UBoardActorModel>>& USRPGCombatModel::GetObstacles()
+{
+	return mObstacles;
 }
 
 void USRPGCombatModel::ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand, bool NeedEndCurrentAction)

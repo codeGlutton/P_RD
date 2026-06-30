@@ -16,6 +16,7 @@
 class USRPGSkillBuildAction;
 class UStaticSkillData;
 class UTileMapModel;
+class UDiceModel;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangeSkillBuildPhase, const USRPGSkillBuildAction* /*Action*/, ESRPGSkillBuildPhase /*Phase*/);
 
@@ -89,6 +90,9 @@ private:
 	void RefreshEffectTileHighlights();
 
 private:
+	bool CanSelectTargetTile(const FTileIndex& Index) const;
+
+private:
 	void SetBuildPhase(ESRPGSkillBuildPhase BuildPhase);
 
 	/* 헬퍼 */
@@ -110,11 +114,6 @@ protected:
 	TObjectPtr<UStaticSkillData> mSelectedSkill;
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectedSkillIndex"))
 	int32 mSelectedSkillIndex = INDEX_NONE;
-
-	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectedDices"))
-	TArray<int32> mSelectedDices;
-	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectedDiceSum"))
-	int32 mSelectedDiceSum = 0;
 
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectTileIndexes"))
 	TArray<FTileIndex> mEffectTileIndexes;
