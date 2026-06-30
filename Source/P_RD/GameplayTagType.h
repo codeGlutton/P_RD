@@ -81,11 +81,15 @@ namespace EffectTags
 
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_ActorState_Dead);
 
-	/* 스킬 이펙트 태그들*/
+	/* 상태 이상 태그들 */
 
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_Skill_Effect_Stat_Damage);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect);
 
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_Skill_Effect_Move_Force_Push);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_Buff);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_Debuff);
+
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_Debuff_Weakness);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_Debuff_Vulnerability);
 }
 
 /**

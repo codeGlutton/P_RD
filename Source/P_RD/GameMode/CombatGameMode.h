@@ -8,11 +8,13 @@
 #pragma once
 
 #include "GameMode/RoomGameModeBase.h"
+#include "DataAsset/EquipmentData/EquipmentType.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "SRPGFramework/SRPGCommand.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "CombatGameMode.generated.h"
 
+class UUnitModel;
 class UCombatUIAdapter;
 
 // RD Game Mode 신규 로그 카테고리 등록
@@ -84,10 +86,14 @@ public:
 
 	/**
 	 * @brief 장비 디테일 정보를 가져온다.
-	 * @param EquipmentIndex 원하는 장비 대상
+	 * @param EquipmentType 원하는 장비 타입
 	 * @return 장비 런타임 정보
 	 */
-	FEquippedEntry* GetEquipmentDetail(int32 EquipmentIndex);
+	const FEquippedEntry* GetEquipmentDetail(EEquipmentType EquipmentType);
+
+protected:
+	void OnRegisterUnit(UUnitModel* Unit);
+	void OnUnregisterUnit(UUnitModel* Unit);
 
 	/* UI 갱신 대리자 */
 public:
@@ -106,8 +112,9 @@ public:
 	FOnBeginAnyTurnActionUI OnBeginAnyTurnActionUI;
 	FOnEndAnyTurnActionUI OnEndAnyTurnActionUI;
 
-	/* 디테일 패널 대리자 */
+	/* 패널 대리자 */
 public:
+	FOnShowDicePanelAnyTurnUI OnShowDicePanelAnyTurnUI;
 	FOnShowTargetDetailPanelUI OnShowTargetDetailPanelUI;
 
 	/* 빌드 과정 대리자 */

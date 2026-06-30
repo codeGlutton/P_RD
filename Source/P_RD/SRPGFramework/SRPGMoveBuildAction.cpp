@@ -92,7 +92,7 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleWorldTraceCommand(const TInstance
 
     AActor* TargetActor = nullptr;
     FTileIndex TargetTileIndex = FTileIndex::Invalid;
-    GetTileActorUnderCursor(RDTraceChannels::TileOnlyTrace, OUT TargetActor, OUT TargetTileIndex);
+    GetTileActorUnderCursor(GetWorld(), RDTraceChannels::TileOnlyTrace, OUT TargetActor, OUT TargetTileIndex);
 
     IActorView* ActorView = Cast<IActorView>(TargetActor);
     const bool IsContactedTileMap = ActorView != nullptr && ActorView->GetModel() == TileMap;
@@ -117,6 +117,7 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleWorldTraceCommand(const TInstance
                 /* 목적지 선택 단계에서 한단계 취소 시, 빌드 자체 종료 */
 
                 MarkActionCompleted(ESRPGActionResult::Cancelled);
+                SetBuildPhase(ESRPGMoveBuildPhase::None);
                 Result = ESRPGCommandResult::Handled;
                 break;
             }
@@ -135,8 +136,8 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleWorldTraceCommand(const TInstance
                 if (mTargetIndex == TargetTileIndex)
                 {
                     BuildMove();
-                    SetBuildPhase(ESRPGMoveBuildPhase::Build);
                     MarkActionCompleted(ESRPGActionResult::Succeeded);
+                    SetBuildPhase(ESRPGMoveBuildPhase::Build);
                     Result = ESRPGCommandResult::Handled;
                     break;
                 }

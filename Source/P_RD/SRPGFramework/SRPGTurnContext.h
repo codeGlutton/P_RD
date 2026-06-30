@@ -21,6 +21,8 @@ struct FSRPGCommand;
 
 class UUnitModel;
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowDicePanelAtTurnStartUI, const USRPGTurnContext* /*TurnContext*/);
+
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBeginTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/);
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnEndTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, ESRPGTurnResult /*Result*/);
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnBeginAnyActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, const USRPGAction* /*Action*/);
@@ -28,6 +30,25 @@ DECLARE_MULTICAST_DELEGATE_FourParams(FOnEndAnyActionUI, TSharedPtr<FPresentatio
 
 UCLASS()
 class USRPGActionCreationCommandHandler : public UObject, public ISRPGCommandHandler
+{
+	GENERATED_BODY()
+
+	friend class USRPGTurnContext;
+
+protected:
+	int8 GetCommandPriority() const override;
+	ESRPGCommandResult HandleCommand(const TInstancedStruct<FSRPGCommand>& Command) override;
+
+protected:
+	TWeakObjectPtr<USRPGTurnContext> GetParent() const;
+
+protected:
+	UPROPERTY(Category = Parent, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "Parent"))
+	TWeakObjectPtr<USRPGTurnContext> mParent;
+};
+
+UCLASS()
+class USRPGDetailInfoPopupCommandHandler : public UObject, public ISRPGCommandHandler
 {
 	GENERATED_BODY()
 
@@ -92,6 +113,8 @@ protected:
 	void ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand);
 
 public:
+	FOnShowDicePanelAtTurnStartUI OnShowDicePanelAtTurnStartUI;
+
 	FOnBeginTurnUI OnBeginTurnUI;
 	FOnEndTurnUI OnEndTurnUI;
 	FOnBeginAnyActionUI OnBeginAnyActionUI;

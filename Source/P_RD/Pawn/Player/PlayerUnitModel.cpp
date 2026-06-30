@@ -37,11 +37,6 @@ void UPlayerUnitModel::PostInitializeComponentModels()
     TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), TEXT("PlayerLevel"), GetPlayerLevel(), true);
 }
 
-UUserWidget* UPlayerUnitModel::GetInfoPanel() const
-{
-    return nullptr;
-}
-
 EPlayerJobType UPlayerUnitModel::GetPlayerJobType() const
 {
     UStaticPlayerUnitSpawnData* PlayerUnitSpawnData = Cast<UStaticPlayerUnitSpawnData>(mStaticSpawnData);
