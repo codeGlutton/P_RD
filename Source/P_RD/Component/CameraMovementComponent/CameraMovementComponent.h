@@ -8,11 +8,27 @@
 
 class UCameraComponent;
 
+USTRUCT(BlueprintType)
 struct FTouchStateContext
 {
-	ETouchIndex::Type FingerIndex;
+	GENERATED_BODY()
+
+	/*
+	* @brief 뷰포트 X 위치
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TouchState")
 	float LocationX;
+
+	/*
+	* @brief 뷰포트 Y 위치
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TouchState")
 	float LocationY;
+
+	/*
+	* @brief 터치가 되고 있는지
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TouchState")
 	bool bIsCurrentlyPressed;
 };
 
@@ -43,13 +59,51 @@ public:
 	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CameraComponent", AllowPrivateAccess = "true"))
 	TWeakObjectPtr<UCameraComponent> mCameraComponent;
 
+	TMap<ETouchIndex::Type, FTouchStateContext> mPrevTickTouchState;
+
+	/*
+	* @brief 줌 속력
+	*/
+	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "ZoomSpeed", AllowPrivateAccess = "true"))
+	float mZoomSpeed = 50.f;
+
+	/*
+	* @brief 최대 OrthoWidth, 또는 최소 확대
+	* @details 
+	* OrthoWidth 최대 값
+	* 커질수록 화면이 더 많이 축소할 수 있다.
+	*/
+	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MaxZoom", AllowPrivateAccess = "true"))
+	float mMaxOrthoWidth = 2000.f;
+
+
+	/*
+	* @brief 최소 OrthoWidth, 또는 최대 확대
+	* @details 
+	* OrthoWidth 최소 값
+	* 커질수록 화면이 더 많이 확대할 수 있다.
+	*/
+	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MinZoom", AllowPrivateAccess = "true"))
+	float mMinOrthoWidth = 500.f;
+
 public:
+	UFUNCTION(BlueprintCallable)
 	void SetCameraComponent(UCameraComponent* CameraComponent);
 
+	UFUNCTION(BlueprintCallable)
 	UCameraComponent* GetCameraComponent();
 
-public:
-	void Zoom(const FTouchStateContext& Touch0, const FTouchStateContext& Touch1) {};
+	UFUNCTION(BlueprintCallable)
+	void SetZoomSpeed(float ZoomSpeed);
 
-	void SkillMotionZoomIn() {};
+public:
+	/*
+	* @brief 줌 값을 받아서 Zoom을 실행한다.
+	* @param FingerIndex0, Touch0 첫번째 터치 정보
+	* @param FingerIndex1, Touch1 두번째 터치 정보
+	*/
+	UFUNCTION(BlueprintCallable)
+	void Zoom(float ZoomValue);
+
+	//void SkillMotionZoomIn() {};
 };

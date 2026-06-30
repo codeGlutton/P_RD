@@ -6,6 +6,7 @@
 #include "GameFramework/Pawn.h"
 #include "CombatCameraPawn.generated.h"
 
+class USpringArmComponent;
 class UCameraComponent;
 class UCameraMovementComponent;
 
@@ -32,7 +33,7 @@ public:
 
 public:
 	UPROPERTY(Category = Default, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SceneComponent", AllowPrivateAccess = "true"))
-	TObjectPtr< USceneComponent> mSceneComponent;
+	TObjectPtr<USpringArmComponent> mSpringArmComponent;
 
 	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CameraComponent", AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> mCameraComponent;

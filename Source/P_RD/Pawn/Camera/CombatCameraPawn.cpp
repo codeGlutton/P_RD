@@ -4,6 +4,7 @@
 #include "Pawn/Camera/CombatCameraPawn.h"
 #include "Camera/CameraComponent.h"
 #include "Component/CameraMovementComponent/CameraMovementComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 
 // Sets default values
 ACombatCameraPawn::ACombatCameraPawn()
@@ -11,12 +12,13 @@ ACombatCameraPawn::ACombatCameraPawn()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	mSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
+	mSpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
+	mSpringArmComponent->SetRelativeRotation(FRotator(-30, 0, 0));
 
 	mCameraComponent = CreateDefaultSubobject<UCameraComponent>("Camera");
 	mCameraComponent->ProjectionMode = ECameraProjectionMode::Orthographic;
 	mCameraComponent->OrthoWidth = 1024.0f;
-	mCameraComponent->SetupAttachment(mSceneComponent);
+	mCameraComponent->SetupAttachment(mSpringArmComponent);
 
 	mCameraMovementComponent = CreateDefaultSubobject<UCameraMovementComponent>("CameraMovement");
 	mCameraMovementComponent->SetCameraComponent(mCameraComponent);

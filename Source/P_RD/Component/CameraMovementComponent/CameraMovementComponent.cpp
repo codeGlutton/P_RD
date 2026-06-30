@@ -42,3 +42,15 @@ UCameraComponent* UCameraMovementComponent::GetCameraComponent()
 {
 	return mCameraComponent.Get();
 }
+
+void UCameraMovementComponent::SetZoomSpeed(float ZoomSpeed)
+{
+	mZoomSpeed = ZoomSpeed;
+}
+
+void UCameraMovementComponent::Zoom(float Zoom)
+{
+	float OW = mCameraComponent->OrthoWidth + Zoom;
+	mCameraComponent->OrthoWidth = FMath::Clamp(OW, mMinOrthoWidth, mMaxOrthoWidth);
+
+}
