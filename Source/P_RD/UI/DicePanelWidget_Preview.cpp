@@ -320,7 +320,7 @@ void UDicePanelWidget::RefreshDicePanelPreviewActors()
 		DicePreviewActor->SetFaceData(mDicePanelViews[DiceIndex].mFaceValues, mDicePanelViews[DiceIndex].mFaceTextures);
 		DicePreviewActor->SetActorScale3D(FVector(DiceScale));
 		DicePreviewActor->SetBackdropVisible(false);
-		DicePreviewActor->SetDiceColor(RDUIDice::GetDiceRarityColor(mDicePanelViews[DiceIndex].mRarityType, RDUIDice::EDiceRarityColorTone::DicePanel));
+		DicePreviewActor->SetDiceColor(RDUIDice::GetDiceRarityColor(mDicePanelViews[DiceIndex]));
 		// d2/d4는 idle 각도에서 숫자 가독성이 떨어져, 미굴림 상태도 1번 면을 정면으로 둔다.
 		const bool bUseFaceOnReadyPose = mDicePanelViews[DiceIndex].mFaceCount == 2 || mDicePanelViews[DiceIndex].mFaceCount == 4;
 		if (bUseFaceOnReadyPose

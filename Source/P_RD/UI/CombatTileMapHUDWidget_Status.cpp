@@ -6,49 +6,166 @@
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/TextBlock.h"
+#include "GameMode/CombatGameMode.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/TopMenuBarWidget.h"
 #include "UI/UIRuntimeLayout.h"
 
-void UCombatTileMapHUDWidget::HandleCombatUIChanged(ECombatUIDomain Domain)
+void UCombatTileMapHUDWidget::BindCombatGameModeDelegates()
 {
-	// 상단 상태바에 영향을 주는 도메인(메타/유닛/턴/전체)만 다시 그린다.
-	if (Domain == ECombatUIDomain::Meta
-		|| Domain == ECombatUIDomain::Unit
-		|| Domain == ECombatUIDomain::Turn
-		|| Domain == ECombatUIDomain::All)
+	ACombatGameMode* CombatGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ACombatGameMode>() : nullptr;
+	if (CombatGameMode == nullptr)
 	{
-		RefreshCombatStatusBar();
+		return;
 	}
 
-	// 장비 칩(탑바 좌측 하단): 장비 도메인.
-	if (Domain == ECombatUIDomain::Equipment || Domain == ECombatUIDomain::All)
+	UnbindCombatGameModeDelegates();
+
+	CombatGameMode->OnRefreshAllUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshAllUI);
+	CombatGameMode->OnRefreshUnitUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshUnitUI);
+	CombatGameMode->OnRefreshDiceUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshDiceUI);
+	CombatGameMode->OnRefreshSelectedDiceUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshSelectedDiceUI);
+	CombatGameMode->OnRefreshSkillUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshSkillUI);
+	CombatGameMode->OnRefreshEquipmentUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshEquipmentUI);
+	CombatGameMode->OnRefreshTurnUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshTurnUI);
+	CombatGameMode->OnRefreshPlayerMetaUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshPlayerMetaUI);
+	CombatGameMode->OnRefreshSkillBuildPhase.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshSkillBuildPhase);
+	CombatGameMode->OnRefreshMoveBuildPhase.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshMoveBuildPhase);
+	CombatGameMode->OnCombatActionResolvedUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleCombatActionResolvedUI);
+	CombatGameMode->OnShowDicePanelAnyTurnUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleShowDicePanelAnyTurn);
+	CombatGameMode->OnShowTargetDetailPanelUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleShowTargetDetailPanel);
+	CombatGameMode->OnShowSkillDetailPanelUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleShowSkillDetailPanel);
+	CombatGameMode->OnShowEquipmentDetailPanelUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleShowEquipmentDetailPanel);
+}
+
+void UCombatTileMapHUDWidget::UnbindCombatGameModeDelegates()
+{
+	ACombatGameMode* CombatGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ACombatGameMode>() : nullptr;
+	if (CombatGameMode == nullptr)
 	{
-		RebuildEquipmentBar();
+		return;
 	}
 
-	// 턴 순서 칩(탑바 가운데 하단): 턴/유닛이 바뀌면 순서·현재턴 강조가 달라진다.
-	if (Domain == ECombatUIDomain::Turn
-		|| Domain == ECombatUIDomain::Unit
-		|| Domain == ECombatUIDomain::All)
+	CombatGameMode->OnRefreshAllUI.RemoveAll(this);
+	CombatGameMode->OnRefreshUnitUI.RemoveAll(this);
+	CombatGameMode->OnRefreshDiceUI.RemoveAll(this);
+	CombatGameMode->OnRefreshSelectedDiceUI.RemoveAll(this);
+	CombatGameMode->OnRefreshSkillUI.RemoveAll(this);
+	CombatGameMode->OnRefreshEquipmentUI.RemoveAll(this);
+	CombatGameMode->OnRefreshTurnUI.RemoveAll(this);
+	CombatGameMode->OnRefreshPlayerMetaUI.RemoveAll(this);
+	CombatGameMode->OnRefreshSkillBuildPhase.RemoveAll(this);
+	CombatGameMode->OnRefreshMoveBuildPhase.RemoveAll(this);
+	CombatGameMode->OnCombatActionResolvedUI.RemoveAll(this);
+	CombatGameMode->OnShowDicePanelAnyTurnUI.RemoveAll(this);
+	CombatGameMode->OnShowTargetDetailPanelUI.RemoveAll(this);
+	CombatGameMode->OnShowSkillDetailPanelUI.RemoveAll(this);
+	CombatGameMode->OnShowEquipmentDetailPanelUI.RemoveAll(this);
+}
+
+void UCombatTileMapHUDWidget::HandleRefreshAllUI()
+{
+	RefreshCombatStatusBar();
+	RebuildEquipmentBar();
+	RebuildTurnOrderBar();
+	RebuildUnitHpBars();
+	RefreshDiceViewsFromUIModel();
+	RebuildOwnedDiceCards();
+	RebuildSkillRailWidgets();
+	RefreshSkillRailWidgets();
+	RefreshDiceAssignmentText();
+}
+
+void UCombatTileMapHUDWidget::HandleRefreshUnitUI()
+{
+	RefreshCombatStatusBar();
+	RebuildTurnOrderBar();
+	RebuildUnitHpBars();
+	RefreshMoveButton();
+}
+
+void UCombatTileMapHUDWidget::HandleRefreshDiceUI()
+{
+	RefreshDiceViewsFromUIModel();
+	RebuildOwnedDiceCards();
+	RefreshDiceAssignmentText();
+}
+
+void UCombatTileMapHUDWidget::HandleRefreshSelectedDiceUI()
+{
+	RefreshDiceViewsFromUIModel();
+	RefreshOwnedDiceCards();
+	RefreshDiceAssignmentText();
+}
+
+void UCombatTileMapHUDWidget::HandleRefreshSkillUI()
+{
+	RebuildSkillRailWidgets();
+	RefreshSkillRailWidgets();
+	RefreshCombatStatusBar();
+}
+
+void UCombatTileMapHUDWidget::HandleRefreshEquipmentUI()
+{
+	RebuildEquipmentBar();
+}
+
+void UCombatTileMapHUDWidget::HandleRefreshTurnUI()
+{
+	RefreshCombatStatusBar();
+	RebuildTurnOrderBar();
+	RefreshMoveButton();
+}
+
+void UCombatTileMapHUDWidget::HandleRefreshPlayerMetaUI()
+{
+	RefreshCombatStatusBar();
+}
+
+void UCombatTileMapHUDWidget::HandleRefreshSkillBuildPhase(ECombatBuildPhaseUI Phase)
+{
+	if (Phase == ECombatBuildPhaseUI::None)
 	{
-		RebuildTurnOrderBar();
+		HandleCombatActionResolved();
+		return;
 	}
 
-	// 유닛 수가 바뀌면 머리 위 HP바도 다시 만든다.
-	if (Domain == ECombatUIDomain::Unit || Domain == ECombatUIDomain::All)
-	{
-		RebuildUnitHpBars();
-	}
+	RefreshSkillRailWidgets();
+	RefreshOwnedDiceCards();
+	RefreshDiceAssignmentText();
+}
 
-	// 주사위(굴림/사용) 갱신 시 보유 주사위 표시를 다시 읽어 그린다(쓴 주사위 비활성 반영).
-	if (Domain == ECombatUIDomain::Dice || Domain == ECombatUIDomain::All)
+void UCombatTileMapHUDWidget::HandleRefreshMoveBuildPhase(ECombatBuildPhaseUI Phase)
+{
+	mMoveBuildPhase = Phase;
+	RefreshMoveButton();
+
+	if (Phase == ECombatBuildPhaseUI::None)
 	{
-		RefreshDiceViewsFromRunData();
-		RefreshOwnedDiceCards();
+		HandleCombatActionResolved();
 	}
+}
+
+void UCombatTileMapHUDWidget::HandleCombatActionResolvedUI()
+{
+	HandleCombatActionResolved();
+}
+
+void UCombatTileMapHUDWidget::HandleShowTargetDetailPanel()
+{
+	UE_LOG(LogRD, Log, TEXT("Combat HUD target detail requested."));
+}
+
+void UCombatTileMapHUDWidget::HandleShowSkillDetailPanel(int32 SkillIndex)
+{
+	ShowSkillDetailPanel(SkillIndex);
+}
+
+void UCombatTileMapHUDWidget::HandleShowEquipmentDetailPanel(int32 SlotIndex)
+{
+	UE_LOG(LogRD, Log, TEXT("Combat HUD equipment detail requested: %d"), SlotIndex);
 }
 
 void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const
@@ -101,21 +218,8 @@ void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const
 		{
 			if (UTopMenuBarWidget* TopBar = WorldWidgetSubsystem->GetWorldWidget<UTopMenuBarWidget>(EWorldWidgetType::TopMenuBar))
 			{
-				if (IsDesignerSkinActive())
-				{
-					// 스킨 모드(concept_02): 레거시 탑바도, 합쳐진 단일 상태줄도 숨긴다. Lv/HP/Gold는
-					// concept value 칸(HUD_M_*)에 칸 크기에 맞춘 개별 텍스트로 그린다(RefreshSkinValueLabels).
-					TopBar->SetVisibility(ESlateVisibility::Collapsed);
-					if (mCombatStatusBarText != nullptr)
-					{
-						mCombatStatusBarText->SetVisibility(ESlateVisibility::Collapsed);
-					}
-				}
-				else
-				{
-					TopBar->SetCombatPlayerSummary(Level, HP, MaxHP, Gold);
-					TopBar->SetCombatDiceSkillCount(DiceCount, SkillCount);
-				}
+				TopBar->SetCombatPlayerSummary(Level, HP, MaxHP, Gold);
+				TopBar->SetCombatDiceSkillCount(DiceCount, SkillCount);
 			}
 		}
 	}
@@ -192,8 +296,15 @@ void UCombatTileMapHUDWidget::RefreshMoveButton() const
 		}
 	}
 
+	const bool bMoveBuildActive = mMoveBuildPhase == ECombatBuildPhaseUI::AimSelection
+		|| mMoveBuildPhase == ECombatBuildPhaseUI::Preview;
+	const FText MoveModeText = bMoveBuildActive
+		? NSLOCTEXT("CombatTileMapHUDWidget", "MoveCommandCancel", "CANCEL")
+		: NSLOCTEXT("CombatTileMapHUDWidget", "MoveCommandMove", "MOVE");
+
 	MoveLabel->SetText(FText::Format(
-		NSLOCTEXT("CombatTileMapHUDWidget", "MoveCommandCount", "MOVE\n{0}/{1}"),
+		NSLOCTEXT("CombatTileMapHUDWidget", "MoveCommandCount", "{0}\n{1}/{2}"),
+		MoveModeText,
 		FText::AsNumber(Move),
 		FText::AsNumber(MaxMove)));
 	MoveLabel->SetJustification(ETextJustify::Center);
@@ -202,75 +313,9 @@ void UCombatTileMapHUDWidget::RefreshMoveButton() const
 void UCombatTileMapHUDWidget::HandleMoveButtonClicked()
 {
 	// 이동 모드 진입 의도. 게임플레이가 이동 가능 타일을 표시하고, 타일 탭으로 이동시킨다.
-	if (mCombatUIModel != nullptr)
+	if (ACombatGameMode* CombatGameMode = GetWorld()->GetAuthGameMode<ACombatGameMode>())
 	{
-		mCombatUIModel->RequestMove();
-	}
-}
-
-UTopMenuBarWidget* UCombatTileMapHUDWidget::GetTopMenuBar() const
-{
-	if (const UWorld* World = GetWorld())
-	{
-		if (UWorldWidgetSubsystem* WorldWidgetSubsystem = World->GetSubsystem<UWorldWidgetSubsystem>())
-		{
-			return WorldWidgetSubsystem->GetWorldWidget<UTopMenuBarWidget>(EWorldWidgetType::TopMenuBar);
-		}
-	}
-	return nullptr;
-}
-
-// [아키텍처 의도] 콘셉트 HUD의 상단 내비 버튼(MAP/DICE/SKILL/SET)은 패널 열기/닫기를 자체 구현하지 않고,
-// 이미 존재하는 TopMenuBar의 패널 토글(WorldWidget 기반 패널 시스템)에 그대로 위임한다.
-// → HUD 위젯은 "표시 + 입력 전달"만 하는 thin view로 유지되고, 패널 생명주기/상태 관리는 기존 시스템이 단일 책임으로 가짐.
-// (스킨 모드에선 레거시 TopMenuBar 자체는 HideLegacyTopBarWhenSkinned로 숨기고, 토글 로직만 재사용)
-void UCombatTileMapHUDWidget::HandleNavMapButtonClicked()
-{
-	if (UTopMenuBarWidget* TopBar = GetTopMenuBar())
-	{
-		TopBar->RequestMapPanel();
-	}
-}
-
-void UCombatTileMapHUDWidget::HandleNavDiceButtonClicked()
-{
-	if (UTopMenuBarWidget* TopBar = GetTopMenuBar())
-	{
-		TopBar->RequestDicePanel();
-	}
-}
-
-void UCombatTileMapHUDWidget::HandleNavSkillButtonClicked()
-{
-	if (UTopMenuBarWidget* TopBar = GetTopMenuBar())
-	{
-		TopBar->RequestSkillPanel();
-	}
-}
-
-void UCombatTileMapHUDWidget::HandleNavSettingsButtonClicked()
-{
-	if (UTopMenuBarWidget* TopBar = GetTopMenuBar())
-	{
-		TopBar->RequestSettingsPanel();
-	}
-}
-
-void UCombatTileMapHUDWidget::HideLegacyTopBarWhenSkinned() const
-{
-	if (!IsDesignerSkinActive())
-	{
-		return;
-	}
-	// 패널 토글(ApplyInputPassThrough)이 매 호출마다 탑바를 SelfHitTestInvisible로 되살리므로, 스킨 모드에선
-	// 매 틱 다시 접어 concept HUD 위에 레거시 상태바/INVENTORY/ROOM/Difficulty 배너가 겹치지 않게 한다.
-	// (패널 WBP는 탑바와 별개 WorldWidget이라 탑바를 접어도 정상 표시/닫힘.)
-	if (UTopMenuBarWidget* TopBar = GetTopMenuBar())
-	{
-		if (TopBar->GetVisibility() != ESlateVisibility::Collapsed)
-		{
-			TopBar->SetVisibility(ESlateVisibility::Collapsed);
-		}
+		CombatGameMode->SelectMove();
 	}
 }
 

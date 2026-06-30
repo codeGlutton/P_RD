@@ -25,6 +25,7 @@ DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBeginTurnUI, TSharedPtr<FPresentationBar
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnEndTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, ESRPGTurnResult /*Result*/);
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnBeginAnyActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, const USRPGAction* /*Action*/);
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnEndAnyActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, const USRPGAction* /*Action*/, ESRPGActionResult /*Result*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowDicePanelAtTurnStartUI, const USRPGTurnContext* /*TurnContext*/);
 
 UCLASS()
 class USRPGActionCreationCommandHandler : public UObject, public ISRPGCommandHandler
@@ -43,6 +44,18 @@ protected:
 protected:
 	UPROPERTY(Category = Parent, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "Parent"))
 	TWeakObjectPtr<USRPGTurnContext> mParent;
+};
+
+UCLASS()
+class USRPGDetailInfoPopupCommandHandler : public UObject, public ISRPGCommandHandler
+{
+	GENERATED_BODY()
+
+	friend class USRPGTurnContext;
+
+protected:
+	int8 GetCommandPriority() const override;
+	ESRPGCommandResult HandleCommand(const TInstancedStruct<FSRPGCommand>& Command) override;
 };
 
 /** @brief 스킬 사용 시 임시 정보를 들고 있는 Context 객체 */
@@ -96,6 +109,7 @@ public:
 	FOnEndTurnUI OnEndTurnUI;
 	FOnBeginAnyActionUI OnBeginAnyActionUI;
 	FOnEndAnyActionUI OnEndAnyActionUI;
+	FOnShowDicePanelAtTurnStartUI OnShowDicePanelAtTurnStartUI;
 
 protected:
 	UPROPERTY(Category = Parent, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "Parent"))

@@ -6,13 +6,10 @@
 #include "DataAsset/SkillData/StaticSkillData.h"
 
 #include "Pawn/UnitModel.h"
-#include "Pawn/Test/SkillTestUnit.h"
-#include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Actor/BoardActor/BoardActorModel.h"
 #include "Actor/TileMap/TileMapModel.h"
 
 #include "TAS/Effect/TacticalEffectContext.h"
-#include "Pawn/Test/SkillTestUnitModel.h"
 
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 
@@ -41,11 +38,29 @@ void USkillComponentModel::BeginPlay()
 
 }
 
-void USkillComponentModel::GetSkillData(int32 SkillIndex, OUT TSoftObjectPtr<UStaticSkillData>& Out_SkillData)
+bool USkillComponentModel::TryGetSkillData(int32 SkillIndex, OUT TSoftObjectPtr<UStaticSkillData>& Out_SkillData) const
 {
-	checkf(mSkillData.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
+	if (mSkillData.IsValidIndex(SkillIndex) == false)
+	{
+		Out_SkillData = nullptr;
+		return false;
+	}
 
 	Out_SkillData = mSkillData[SkillIndex];
+	return Out_SkillData.IsNull() == false;
+}
+
+void USkillComponentModel::GetSkillData(int32 SkillIndex, OUT TSoftObjectPtr<UStaticSkillData>& Out_SkillData) const
+{
+	if (TryGetSkillData(SkillIndex, OUT Out_SkillData) == false)
+	{
+		ensureMsgf(false, TEXT("잘못된 스킬 인덱스 범위: %d"), SkillIndex);
+	}
+}
+
+int32 USkillComponentModel::GetSkillDataNum() const
+{
+	return mSkillData.Num();
 }
 
 void USkillComponentModel::SetSkillData(int32 SkillIndex, IN const TSoftObjectPtr<UStaticSkillData>& SkillData)
@@ -62,45 +77,57 @@ void USkillComponentModel::SetSkillData(int32 SkillIndex, IN const TSoftObjectPt
 
 void USkillComponentModel::AddSkillData(IN const TSoftObjectPtr<UStaticSkillData>& SkillData)
 {
-	// 지울듯
-	/*mSkillData.Add(SkillData);
+	const int32 SkillIndex = mSkillData.Add(SkillData);
 
 	if (OnChangeSkill.IsBound())
-		OnChangeSkill.Broadcast(mSkillData.Num() - 1, SkillData);*/
-
+	{
+		OnChangeSkill.Broadcast(SkillIndex, nullptr, SkillData.Get());
+	}
 }
 
 void USkillComponentModel::ExtractTarget(const TArray<FTileIndex>& TargetTile, ETileLayerFlag ActorFlag, ETargetFilter TargetFilter, OUT TArray<TWeakObjectPtr<UBoardActorModel>>& TargetActors)
 {
-	// TODO: [2026-06-26] 향후 실제 타일맵 기반의 액터 검색 시스템으로 교체 필요
-	// 현재는 스킬 로직 테스트를 위해 임시로 유닛을 생성함.
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	checkf(IsValid(CombatModel), TEXT("전투 모델이 비어있습니다."));
 
-	// CombatModel을 가져옵니다.
-	//USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
-	//checkf(IsValid(CombatModel), TEXT("전투 모델이 비어있습니다."));
+	UTileMapModel* TileMapModel = CombatModel->GetTileMap();
+	checkf(IsValid(TileMapModel), TEXT("타일맵 모델이 존재하지 않습니다."));
 
-	// 서브 시스템에 접근하여 타일맵 모델을 가져온다.
-	//TWeakObjectPtr<UTileMapModel> TMModel = CombatModel->GetTileMap();
-	//checkf(TMModel.IsValid(), TEXT("타일맵 모델이 존재하지 않습니다."));
-	// ===============================================================
+	UUnitModel* OwnerUnit = Cast<UUnitModel>(GetOwnerModel());
+	checkf(IsValid(OwnerUnit), TEXT("스킬 소유 유닛이 존재하지 않습니다."));
 
-	// @Note 유닛 모델 생성이 아닌 참조로 바꾸기
-	for (int i = 0; i < TargetTile.Num(); ++i)
+	for (const FTileIndex& TileIndex : TargetTile)
 	{
-		// 해당 타일에 유닛 모델을 가져온다.
-		//TWeakObjectPtr<UBoardActorModel> TargetBoardModel = TMModel->GetActorOnTile<UBoardActorModel>(TargetTile[i], ActorFlag);
-		TWeakObjectPtr<USkillTestUnitModel> TargetBoardModel = NewObject<USkillTestUnitModel>(this);// = NewObject<USkilTestUnit>();
-		TargetBoardModel->Initialize();
-		TargetBoardModel->BeginPlay();
+		for (UBoardActorModel* TargetActor : TileMapModel->GetActorsOnTile(TileIndex, ActorFlag))
+		{
+			if (TargetActor == nullptr)
+			{
+				continue;
+			}
 
+			UUnitModel* TargetUnit = Cast<UUnitModel>(TargetActor);
+			bool bIncludeTarget = TargetFilter != ETargetFilter::None;
+			if (TargetUnit != nullptr)
+			{
+				if (TargetUnit == OwnerUnit)
+				{
+					bIncludeTarget = EnumHasAnyFlags(TargetFilter, ETargetFilter::IncludeSelf);
+				}
+				else if (TargetUnit->GetGenericTeamId() == OwnerUnit->GetGenericTeamId())
+				{
+					bIncludeTarget = EnumHasAnyFlags(TargetFilter, ETargetFilter::IncludeAlly);
+				}
+				else
+				{
+					bIncludeTarget = EnumHasAnyFlags(TargetFilter, ETargetFilter::IncludeEnemy);
+				}
+			}
 
-		checkf(IsValid(TargetBoardModel->GetAttributeComponentModel()), TEXT("컴포넌트 없음"));
-		TargetBoardModel->GetAttributeComponentModel()->SetAttributeBaseValue(UUnitAttributeSet::GetMaxHPAttribute(), 100);
-		TargetBoardModel->GetAttributeComponentModel()->SetAttributeBaseValue(UUnitAttributeSet::GetHPAttribute(), 100);
-		TargetBoardModel->GetAttributeComponentModel()->SetAttributeBaseValue(UUnitAttributeSet::GetDamagePointAttribute(), 10);
-		TargetBoardModel->GetAttributeComponentModel()->SetAttributeBaseValue(UUnitAttributeSet::GetDefensePointAttribute(), 5);
-
-		TargetActors.Add(TargetBoardModel);
+			if (bIncludeTarget)
+			{
+				TargetActors.AddUnique(TWeakObjectPtr<UBoardActorModel>(TargetActor));
+			}
+		}
 	}
 }
 

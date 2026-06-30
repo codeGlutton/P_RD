@@ -22,8 +22,7 @@ class UViewport;
 class UWidget;
 
 /** @brief 전투 타일맵 HUD 와이어프레임 위젯 */
-// 현재는 실제 전투 API가 붙기 전의 UI 시안 단계다.
-// 스킬 레일, 보유 주사위, 명령 버튼 배치와 함께 전투 진입 시 주사위가 굴러가는 3D 연출을 확인한다.
+// 스킬 레일, 보유 주사위, 명령 버튼 배치와 함께 전투 진입 시 주사위가 굴러가는 3D 연출을 표시한다.
 // 주사위 연출은 타일맵 월드에 액터를 직접 올리지 않고, UMG Viewport의 별도 미리보기 월드에서만 재생한다.
 // 이렇게 해야 카메라/타일/유닛 배치와 독립적으로 "화면 정면에서 주사위가 굴러 멈추는" UI 연출을 만들 수 있다.
 UCLASS(BlueprintType, Blueprintable)
@@ -35,19 +34,13 @@ public:
 	UCombatTileMapHUDWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 public:
-	/** @brief 전투 HUD가 현재 표시 중인 보유 주사위 개수를 반환한다. */
-	int32 GetCombatDiceViewCount() const;
-
-	/** @brief 지정 index의 보유 주사위 표시 상태를 반환한다. */
-	// DicePanel은 실제 주사위 굴림을 다시 만들지 않고, 전투 HUD가 이미 굴린 결과를 읽어 같은 값을 보여준다.
-	// 반환값이 false면 해당 index에 표시할 주사위가 없다는 뜻이다.
-	bool GetCombatDiceView(int32 DiceIndex, FDiceViewData& OutDiceView) const;
-
 	/** @brief 전투 뷰모델을 연결한다(데이터/비주얼 분리 경계). */
-	// 연결되면 주사위 굴림 결과는 더 이상 HUD가 정하지 않고 뷰모델(게임플레이/Mock)에서 읽는다.
-	// 미연결 상태에서는 기존 단독 동작(시안용 임시 굴림)을 그대로 유지해 회귀가 없다.
-	// 게임플레이 어댑터가 준비되면 여기에 같은 뷰모델을 넘기면 된다(UI 무수정).
+	// 이 모델은 HUD 표시 데이터를 읽는 단방향 경계다. 입력 의도 경로는 Phase 2에서 UCombatUIModel 경계로 복원한다.
 	void BindCombatUIModel(UCombatUIModel* InUIModel);
+
+	/** @brief TopMenuBar의 DicePanel이 현재 전투 주사위 표시 스냅샷을 읽을 때 사용한다. */
+	int32 GetCombatDiceViewCount() const;
+	bool GetCombatDiceView(int32 DiceIndex, FDiceViewData& OutDiceView) const;
 
 protected:
 	/** @brief WBP 바인딩과 버튼 이벤트를 연결한다. */
@@ -62,13 +55,13 @@ protected:
 	/** @brief PC/에디터에서 스킬 레일을 누르기 시작한 위치를 기록한다. */
 	FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 
-	/** @brief PC/에디터에서 스킬 레일 입력을 짧은 선택 또는 롱프레스 상세로 확정한다. */
+	/** @brief PC/에디터에서 스킬 레일 입력을 짧은 선택으로 확정한다. */
 	FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 
 	/** @brief 모바일에서 스킬 레일을 누르기 시작한 위치를 기록한다. */
 	FReply NativeOnTouchStarted(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent) override;
 
-	/** @brief 모바일에서 스킬 레일 입력을 짧은 선택 또는 롱프레스 상세로 확정한다. */
+	/** @brief 모바일에서 스킬 레일 입력을 짧은 선택으로 확정한다. */
 	FReply NativeOnTouchEnded(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent) override;
 
 	/** @brief OpenUI()로 표시될 때 주사위 입장 연출을 다시 시작한다. */
@@ -78,7 +71,7 @@ protected:
 	int32 GetViewportZOrder() const override;
 
 private:
-	/** @brief WBP에 없는 테스트용 전투 HUD 요소를 RootCanvas 위에 런타임으로 붙인다. */
+	/** @brief WBP에 없는 전투 HUD fallback 요소를 RootCanvas 위에 런타임으로 붙인다. */
 	void EnsureRuntimeWidgets();
 
 	/** @brief 런타임으로 붙인 위젯들의 화면 위치를 모바일 화면 비율 기준으로 맞춘다. */
@@ -120,8 +113,8 @@ private:
 	/** @brief 기존 주사위 캡처 액터들을 정리한다. */
 	void DestroyDiceCaptureActors(TArray<TObjectPtr<ACombatDiceCaptureActor>>& DiceActors) const;
 
-	/** @brief 현재 RunPersistData의 보유 주사위 목록을 전투 HUD 표시용 데이터로 변환한다. */
-	void RefreshDiceViewsFromRunData();
+	/** @brief 현재 전투 표시 모델의 보유 주사위 목록을 전투 HUD 표시용 데이터로 변환한다. */
+	void RefreshDiceViewsFromUIModel();
 
 	/** @brief 이전 WBP 시안에 남아 있는 고정 주사위 슬롯을 숨긴다. */
 	void HideLegacyDiceSlots() const;
@@ -185,12 +178,11 @@ private:
 	UFUNCTION()
 	void HandleDiceRollInputButtonClicked();
 
+	/** @brief 턴 시작 주사위 패널 표시 요청을 받는다. */
+	void HandleShowDicePanelAnyTurn();
+
 	/** @brief 결과 확인이 끝난 주사위 연출 UI를 닫는다. */
 	void DismissIntroDiceRoll();
-
-	/** @brief 스킬 상세 카드 바깥을 눌렀을 때 상세 카드를 닫는다. */
-	UFUNCTION()
-	void HandleSkillDetailDismissButtonClicked();
 
 	/** @brief 턴 종료 버튼 클릭을 받는다. 실제 전투 API가 붙기 전까지는 로그만 남긴다. */
 	UFUNCTION()
@@ -204,9 +196,31 @@ private:
 	UFUNCTION()
 	void HandleCombatQueueNodeResolved(FCombatQueueNode Node);
 
-	/** @brief 뷰모델 도메인 갱신 알림. 메타/유닛/턴이 바뀌면 상단 상태바를 다시 그린다. */
+	/** @brief CombatGameMode 갱신 대리자를 생명주기에 맞춰 구독/해제한다. */
+	void BindCombatGameModeDelegates();
+	void UnbindCombatGameModeDelegates();
+
+	void HandleRefreshAllUI();
+	void HandleRefreshUnitUI();
+	void HandleRefreshDiceUI();
+	void HandleRefreshSelectedDiceUI();
+	void HandleRefreshSkillUI();
+	void HandleRefreshEquipmentUI();
+	void HandleRefreshTurnUI();
+	void HandleRefreshPlayerMetaUI();
+	void HandleRefreshSkillBuildPhase(ECombatBuildPhaseUI Phase);
+	void HandleRefreshMoveBuildPhase(ECombatBuildPhaseUI Phase);
+	void HandleCombatActionResolvedUI();
+	void HandleShowTargetDetailPanel();
+	void HandleShowSkillDetailPanel(int32 SkillIndex);
+	void HandleShowEquipmentDetailPanel(int32 SlotIndex);
+
+	/** @brief 스킬 롱프레스 상세 패널을 표시/닫는다. */
+	void ShowSkillDetailPanel(int32 SkillIndex);
+	void HideSkillDetailPanel();
+
 	UFUNCTION()
-	void HandleCombatUIChanged(ECombatUIDomain Domain);
+	void HandleSkillDetailCloseButtonClicked();
 
 	/** @brief 뷰모델의 플레이어 메타(Lv/HP/Gold)를 상단 상태바 텍스트로 반영한다. */
 	void RefreshCombatStatusBar() const;
@@ -224,29 +238,12 @@ private:
 	UFUNCTION()
 	void HandleCombatActionResolved();
 
-	/** @brief 우측 MOVE 버튼 클릭 → 이동 모드 진입 의도(RequestMove). */
+	/** @brief 우측 MOVE 버튼 클릭 → CombatGameMode::SelectMove(). */
 	UFUNCTION()
 	void HandleMoveButtonClicked();
 
 	/** @brief 우측 MOVE 버튼의 이동 가능 수치(현재/최대)를 갱신한다. */
 	void RefreshMoveButton() const;
-
-	/** @brief 탑바 내비 버튼 클릭 → 숨겨진 TopMenuBar의 해당 패널 토글로 위임한다(MAP/DICE/SKILL/SET). */
-	UFUNCTION()
-	void HandleNavMapButtonClicked();
-	UFUNCTION()
-	void HandleNavDiceButtonClicked();
-	UFUNCTION()
-	void HandleNavSkillButtonClicked();
-	UFUNCTION()
-	void HandleNavSettingsButtonClicked();
-
-	/** @brief 월드위젯 서브시스템에서 공용 탑바 위젯을 가져온다(스킨 모드에서 숨겨져 있어도 인스턴스는 살아있음). */
-	class UTopMenuBarWidget* GetTopMenuBar() const;
-
-	/** @brief 스킨 모드에서 레거시 탑바(WBP_TopMenuBar)를 접어 둔다. 패널 토글의 ApplyInputPassThrough가
-	    매번 탑바를 다시 보이게 하므로, concept HUD 위에 레거시 상태바/INVENTORY/ROOM 배너가 겹쳐 뜨는 걸 막는다. */
-	void HideLegacyTopBarWhenSkinned() const;
 
 	/** @brief 뷰모델의 유닛 수에 맞춰 머리 위 HP바 위젯을 다시 만든다. */
 	void RebuildUnitHpBars();
@@ -268,26 +265,23 @@ private:
 	/** @brief 스킬 레일 누름을 시작한다. 짧게 떼면 선택, 오래 누르면 상세로 처리한다. */
 	void BeginSkillPress(int32 SkillIndex);
 
-	/** @brief 스킬 레일을 누르고 있는 시간을 누적해 롱프레스 상세 표시를 판단한다. */
+	/** @brief 현재 뷰모델 기준으로 실제 선택 가능한 스킬 슬롯인지 확인한다. */
+	bool IsSkillSlotAvailable(int32 SkillIndex) const;
+
+	/** @brief 스킬 레일을 누르고 있는 시간을 누적해 롱프레스 입력 소비를 판단한다. */
 	void UpdateSkillPress(float InDeltaTime);
+
+	/** @brief 월드 영역 누름을 시작한다. 짧게 떼면 일반 클릭, 오래 누르면 상세로 처리한다. */
+	void BeginWorldPress();
+
+	/** @brief 월드 영역 누름을 해제해 탭/롱프레스 결과를 확정한다. */
+	FReply EndWorldPress(bool bReleaseMouseCapture);
+
+	/** @brief 월드 영역 누름 시간을 누적해 롱프레스 명령을 전투 계층에 전달한다. */
+	void UpdateWorldPress(float InDeltaTime);
 
 	/** @brief 스킬을 선택한다. 다른 스킬로 바뀌면 주사위 배치 후보를 초기화한다. */
 	void SelectSkillForAssignment(int32 SkillIndex);
-
-	/** @brief 스킬 상세 카드를 표시한다. 현재는 API 연결 전 설명용 카드만 보여준다. */
-	void ShowSkillDetail(int32 SkillIndex);
-
-	/** @brief 스킬 상세 카드를 숨긴다. */
-	void HideSkillDetail() const;
-
-	/** @brief 스킬 상세 카드가 현재 화면에 보이는지 반환한다. */
-	bool IsSkillDetailVisible() const;
-
-	/** @brief 화면 좌표가 스킬 상세 카드 안쪽인지 확인한다. */
-	bool IsScreenPositionInSkillDetailPanel(const FVector2D& ScreenPosition) const;
-
-	/** @brief 상세 카드 바깥 입력이면 상세 카드를 닫는다. */
-	bool HideSkillDetailIfClickedOutside(const FVector2D& ScreenPosition);
 
 	/** @brief 선택된 주사위와 스킬의 임시 배치 상태를 안내 문구에 반영한다. */
 	void RefreshDiceAssignmentText() const;
@@ -419,16 +413,6 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UButton> mMoveButton;
 
-	/** @brief 탑바 내비 투명 버튼(concept 아트 위 클릭영역). 런타임 생성, TopMenuBar 패널 토글로 위임. */
-	UPROPERTY(Transient)
-	TObjectPtr<UButton> mNavMapButton;
-	UPROPERTY(Transient)
-	TObjectPtr<UButton> mNavDiceButton;
-	UPROPERTY(Transient)
-	TObjectPtr<UButton> mNavSkillButton;
-	UPROPERTY(Transient)
-	TObjectPtr<UButton> mNavSettingsButton;
-
 	/** @brief 유닛 머리 위에 월드→스크린 투영으로 띄우는 HP바(유닛 뷰 순서와 1:1) */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UProgressBar>> mUnitHpBars;
@@ -457,6 +441,22 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UTextBlock>> mSkillRailTexts;
 
+	/** @brief 스킬 롱프레스 상세 패널과 내부 표시 요소 */
+	UPROPERTY(Transient)
+	TObjectPtr<UBorder> mSkillDetailPanel;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UImage> mSkillDetailIconImage;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mSkillDetailNameText;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mSkillDetailDescriptionText;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mSkillDetailCloseButton;
+
 	/** @brief 스킬 레일 입력을 받기 위해 WBP 위에 얹는 투명 버튼들 */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UIndexedButtonWidget>> mSkillInputButtons;
@@ -476,14 +476,29 @@ private:
 	/** @brief 현재 프레임에서 스킬 레일 입력을 추적 중인지 여부 */
 	bool mSkillPressing = false;
 
-	/** @brief 같은 누름에서 탭 선택과 롱프레스 상세가 동시에 발생하지 않게 막는 latch */
-	bool mSkillDetailOpenedFromPress = false;
+	/** @brief 같은 누름에서 탭 선택과 롱프레스 소비가 동시에 발생하지 않게 막는 latch */
+	bool mSkillLongPressConsumed = false;
 
 	/** @brief 현재 스킬 누름의 누적 시간. NativeTick에서만 증가해 입력 이벤트 순서에 덜 민감하게 둔다. */
 	float mSkillPressElapsed = 0.0f;
 
-	/** @brief 스킬 상세를 열기 위해 필요한 누름 시간. [합의필요] 모바일 손맛 기준으로 확정되면 설정화 대상. */
+	/** @brief 롱프레스 입력으로 인정할 누름 시간. */
 	float mSkillLongPressThreshold = 0.45f;
+
+	/** @brief 지금 월드 영역을 누르고 있는지 여부 */
+	bool mWorldPressing = false;
+
+	/** @brief 같은 월드 누름에서 탭과 롱프레스가 동시에 발생하지 않게 막는 latch */
+	bool mWorldLongPressConsumed = false;
+
+	/** @brief 현재 월드 누름의 누적 시간 */
+	float mWorldPressElapsed = 0.0f;
+
+	/** @brief 월드 롱프레스 입력으로 인정할 누름 시간 */
+	float mWorldLongPressThreshold = 0.45f;
+
+	/** @brief 현재 MOVE 버튼 표시에 반영할 이동 빌드 단계 */
+	ECombatBuildPhaseUI mMoveBuildPhase = ECombatBuildPhaseUI::None;
 
 	/** @brief 입장 주사위가 실제 회전/정착 애니메이션을 재생 중인지 여부 */
 	bool mIntroDiceRollActive = false;
@@ -502,6 +517,13 @@ private:
 
 	/** @brief 입장 굴림의 실제 결과를 전투/시안 데이터에서 이미 받아왔는지 여부 */
 	bool mIntroDiceRollResultsResolved = false;
+
+	/** @brief 보유 주사위 카드를 '굴림 완료' 모양으로 드러낼지 — 연출 전용 게이트. */
+	// 권위 플래그(FDiceSlotUI.mIsRolled)는 게임플레이가 정하고 위젯은 읽기만 한다. 이 bool은 연출 타이밍만 제어한다.
+	bool mIntroDiceCardsRevealed = true;
+
+	/** @brief 입장 주사위 물리 텀블용 연출 전용 시드 — 결과값과 무관, 굴림마다 증가하는 결정적 값(UI는 RNG로 결과를 만들지 않는다). */
+	uint32 mIntroDiceVisualSeed = 0;
 
 	/** @brief 현재 주사위 연출 누적 시간 */
 	float mIntroDiceRollElapsed = 0.0f;
@@ -546,23 +568,7 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UTextBlock> mDiceAssignmentText;
 
-	/** @brief 롱프레스 때만 보이는 스킬 상세 카드 배경 */
-	UPROPERTY(Transient)
-	TObjectPtr<UBorder> mSkillDetailPanel;
-
-	/** @brief 롱프레스 때만 보이는 스킬 상세 문구 */
-	UPROPERTY(Transient)
-	TObjectPtr<UTextBlock> mSkillDetailText;
-
-	/** @brief 스킬칸을 제외한 왼쪽 빈 영역을 어둡게 덮는 상세 오버레이 조각 */
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<UBorder>> mSkillDetailBackdropPanels;
-
 	/** @brief 주사위 연출을 시작/닫기 위한 투명 입력 버튼 */
 	UPROPERTY(Transient)
 	TObjectPtr<UButton> mDiceRollInputButton;
-
-	/** @brief 스킬 상세가 열린 동안 바깥 터치를 받는 투명 버튼 */
-	UPROPERTY(Transient)
-	TObjectPtr<UButton> mSkillDetailDismissButton;
 };

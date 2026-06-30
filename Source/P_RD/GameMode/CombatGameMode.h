@@ -8,27 +8,38 @@
 #pragma once
 
 #include "GameMode/RoomGameModeBase.h"
-#include "SRPGFramework/SRPGFrameworkType.h"
-#include "SRPGFramework/SRPGCommand.h"
-#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
+#include "DataAsset/EquipmentData/EquipmentType.h"
+#include "UI/Combat/CombatUITypes.h"
 #include "CombatGameMode.generated.h"
 
-class UCombatUIAdapter;
+struct FEquippedEntry;
+struct FPresentationBarrier;
+class UCombatUIModel;
+class UUnitModel;
+
+class USRPGSkillBuildAction;
 
 // RD Game Mode 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogCombatGameMode, Log, All)
 
 DECLARE_MULTICAST_DELEGATE(FOnRefreshAllUI);
-
 DECLARE_MULTICAST_DELEGATE(FOnRefreshUnitUI);
-
 DECLARE_MULTICAST_DELEGATE(FOnRefreshDiceUI);
-
 DECLARE_MULTICAST_DELEGATE(FOnRefreshSelectedDiceUI);
-DECLARE_MULTICAST_DELEGATE(FOnRefreshSelectedSkillUI);
-
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnRefreshSkillBuildPhase, ESRPGSkillBuildPhase /*Phase*/);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnRefreshMoveBuildPhase, ESRPGMoveBuildPhase /*Phase*/);
+DECLARE_MULTICAST_DELEGATE(FOnRefreshSkillUI);
+DECLARE_MULTICAST_DELEGATE(FOnRefreshEquipmentUI);
+DECLARE_MULTICAST_DELEGATE(FOnRefreshTurnUI);
+DECLARE_MULTICAST_DELEGATE(FOnRefreshPlayerMetaUI);
+DECLARE_MULTICAST_DELEGATE(FOnCombatActionResolvedUI);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnCombatPresentationUI, TSharedPtr<FPresentationBarrier> /*Barrier*/);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCombatEndedUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, bool /*bPlayerWin*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnTurnPresentationUI, TSharedPtr<FPresentationBarrier> /*Barrier*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnActionPresentationUI, TSharedPtr<FPresentationBarrier> /*Barrier*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnRefreshCombatBuildPhase, ECombatBuildPhaseUI /*Phase*/);
+DECLARE_MULTICAST_DELEGATE(FOnCombatShowDicePanelUI);
+DECLARE_MULTICAST_DELEGATE(FOnCombatShowTargetDetailPanelUI);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowSkillDetailPanelUI, int32 /*SkillIndex*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowEquipmentDetailPanelUI, int32 /*SlotIndex*/);
 
 /**
  * @brief  전투 방에 대한 GameMode
@@ -59,6 +70,15 @@ public:
 	UFUNCTION(Category = UI, BlueprintCallable)
 	bool EndTurn();
 
+	UFUNCTION(Category = UI, BlueprintCallable)
+	bool ShowSkillDetail(int32 SkillIndex);
+
+	UFUNCTION(Category = UI, BlueprintCallable)
+	bool ShowEquipmentDetail(int32 SlotIndex);
+
+	UFUNCTION(Category = UI, BlueprintCallable)
+	void PushAllCombatUI();
+
 public:
 	/**
 	 * @brief 터치 입력 아래의 월드 액터를 검사하여 이벤트를 실행한다.
@@ -76,48 +96,51 @@ public:
 
 public:
 	/**
-	 * @brief 스킬 디테일 정보를 가져온다.
-	 * @param SkillIndex 원하는 스킬 대상
-	 * @return 스킬 런타임 정보
-	 */
-	// FSkillEntry* GetSkillDetail(int32 SkillIndex);
-
-	/**
 	 * @brief 장비 디테일 정보를 가져온다.
-	 * @param EquipmentIndex 원하는 장비 대상
+	 * @param EquipmentType 원하는 장비 대상
 	 * @return 장비 런타임 정보
 	 */
-	FEquippedEntry* GetEquipmentDetail(int32 EquipmentIndex);
+	const FEquippedEntry* GetEquipmentDetail(EEquipmentType EquipmentType);
 
-	/* UI 갱신 대리자 */
+	/* 연출용 대리자 (전투 수명/턴 연출 배리어 — TopMenuBar 등 UI가 구독) */
+public:
+	FOnCombatPresentationUI OnBeginCombatUI;
+	FOnCombatEndedUI OnEndCombatUI;
+	FOnTurnPresentationUI OnBeginAnyTurnUI;
+	FOnTurnPresentationUI OnEndAnyTurnUI;
+	FOnActionPresentationUI OnBeginAnyTurnActionUI;
+	FOnActionPresentationUI OnEndAnyTurnActionUI;
+
 public:
 	FOnRefreshAllUI OnRefreshAllUI;
 	FOnRefreshUnitUI OnRefreshUnitUI;
 	FOnRefreshDiceUI OnRefreshDiceUI;
 	FOnRefreshSelectedDiceUI OnRefreshSelectedDiceUI;
-	// FOnRefreshSelectedSkillUI OnRefreshSelectedSkillUI;
+	FOnRefreshSkillUI OnRefreshSkillUI;
+	FOnRefreshEquipmentUI OnRefreshEquipmentUI;
+	FOnRefreshTurnUI OnRefreshTurnUI;
+	FOnRefreshPlayerMetaUI OnRefreshPlayerMetaUI;
+	FOnCombatActionResolvedUI OnCombatActionResolvedUI;
+	FOnRefreshCombatBuildPhase OnRefreshSkillBuildPhase;
+	FOnRefreshCombatBuildPhase OnRefreshMoveBuildPhase;
+	FOnCombatShowDicePanelUI OnShowDicePanelAnyTurnUI;
+	FOnCombatShowTargetDetailPanelUI OnShowTargetDetailPanelUI;
+	FOnShowSkillDetailPanelUI OnShowSkillDetailPanelUI;
+	FOnShowEquipmentDetailPanelUI OnShowEquipmentDetailPanelUI;
 
-	/* 연출용 대리자 */
-public:
-	FOnBeginCombatUI OnBeginCombatUI;
-	FOnEndCombatUI OnEndCombatUI;
-	FOnBeginAnyTurnUI OnBeginAnyTurnUI;
-	FOnEndAnyTurnUI OnEndAnyTurnUI;
-	FOnBeginAnyTurnActionUI OnBeginAnyTurnActionUI;
-	FOnEndAnyTurnActionUI OnEndAnyTurnActionUI;
+protected:
+	void OnRegisterUnit(UUnitModel* Unit);
+	void OnUnregisterUnit(UUnitModel* Unit);
+	void BindPlayerDicePoolUIEvents();
+	void BindPlayerMetaUIEvents();
 
-	/* 디테일 패널 대리자 */
-public:
-	FOnShowTargetDetailPanelUI OnShowTargetDetailPanelUI;
+	void PushUnitUI();
+	void PushDiceUI();
+	void PushSelectedDiceUI();
+	void PushTurnUI();
+	void PushSkillUI();
+	void PushEquipmentUI();
+	void PushPlayerMetaUI();
 
-	/* 빌드 과정 대리자 */
-public:
-	FOnRefreshSkillBuildPhase OnRefreshSkillBuildPhase;
-	FOnRefreshMoveBuildPhase OnRefreshMoveBuildPhase;
-
-public:
-	/** @brief 전투 상태를 CombatUIModel로 push + HUD 입력 의도를 처리하는 임시 비GAS 어댑터(전투 수명 동안 보유). */
-    // TODO : 추후 삭제
-	UPROPERTY()
-	TObjectPtr<UCombatUIAdapter> mCombatUIAdapter;
+	UCombatUIModel* GetCombatUIModel() const;
 };

@@ -22,7 +22,7 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnselectedDiceUI, const UDiceModel* /*Dic
 /** @brief 플레이어가 보유한 런타임 주사위들을 소유하고 굴림/사용 상태를 관리하는 컴포넌트 모델입니다. */
 // 주사위 풀은 플레이어 전용 메커닉이라 APlayerUnit이 소유한다(적은 주사위를 굴리지 않음).
 // 규칙: 컴포넌트 형식 Model이므로 UComponentModel(IObjectModel)을 상속한다.
-// 이 모델은 UI를 알지 않는다(단방향). UCombatUIAdapter가 GetDices()를 읽어 FDiceSlotUI로 변환해 push한다.
+// 이 모델은 UI를 알지 않는다(단방향). 전투/표시 계층이 GetDice()/GetDices()를 읽어 UI 표시값으로 변환한다.
 // 보유 구성은 런 mDiceIds 기반이며, 굴림 난수는 추후 런 RandomStream 주입으로 결정론을 맞춘다.
 UCLASS()
 class P_RD_API UDicePoolModel : public UComponentModel
@@ -54,7 +54,7 @@ public:
 	/** @brief 모든 주사위의 '사용됨'을 해제한다(턴 종료 훅용). */
 	void ResetUsed();
 
-	/** @brief 보유 주사위 묶음(읽기 전용). UI 어댑터가 뷰 변환에 사용. */
+	/** @brief 보유 주사위 묶음(읽기 전용). 전투 UI 표시 계층이 뷰 변환에 사용. */
 	const UDiceModel* GetDice(int32 DiceIndex) const
 	{ 
 		if (mDices.IsValidIndex(DiceIndex) == false)
@@ -89,4 +89,7 @@ public:
 private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UDiceModel>> mDices;
+
+	UPROPERTY(Transient)
+	TSet<int32> mSelectedDiceIndices;
 };

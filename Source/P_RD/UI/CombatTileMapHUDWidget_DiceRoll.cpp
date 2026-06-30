@@ -9,6 +9,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Actor/Dice/CombatDiceCaptureActor.h"
 #include "Actor/Dice/CombatDiceRollCaptureActor.h"
+#include "GameMode/CombatGameMode.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/CombatTileMapHUDWidgetPrivate.h"
 #include "UI/IndexedButtonWidget.h"
@@ -235,10 +236,8 @@ void UCombatTileMapHUDWidget::PrepareIntroDiceRoll()
 	DestroyDiceCaptureActors(mDicePreviewActors);
 	mIntroDiceSettleStartRotations.Reset();
 
-	for (FDiceViewData& DiceView : mDiceUIs)
-	{
-		DiceView.mIsRolled = false;
-	}
+	// 연출 준비: 보유 카드를 'pending' 모양으로(권위 mIsRolled는 그대로, 연출 게이트만 닫는다).
+	mIntroDiceCardsRevealed = false;
 	RefreshOwnedDiceCards();
 
 	if ((mDiceRollPhysicsActor == nullptr || mDiceUIs.IsEmpty()) && mDicePreviewActors.IsEmpty())
@@ -260,7 +259,7 @@ void UCombatTileMapHUDWidget::PrepareIntroDiceRoll()
 			DiceSpec.mFaceCount = DiceView.mFaceCount;
 			DiceSpec.mFaceValues = DiceView.mFaceValues;
 			DiceSpec.mFaceTextures = DiceView.mFaceTextures;
-			DiceSpec.mDiceColor = RDUIDice::GetDiceRarityColor(DiceView.mRarityType);
+			DiceSpec.mDiceColor = RDUIDice::GetDiceRarityColor(DiceView);
 			DiceSpecs.Add(MoveTemp(DiceSpec));
 		}
 		mDiceRollPhysicsActor->ConfigureDice(DiceSpecs);
@@ -303,10 +302,7 @@ void UCombatTileMapHUDWidget::StartIntroDiceRoll()
 		return;
 	}
 
-	for (FDiceViewData& DiceView : mDiceUIs)
-	{
-		DiceView.mIsRolled = false;
-	}
+	mIntroDiceCardsRevealed = false;
 	RefreshOwnedDiceCards();
 
 	mIntroDiceRollElapsed = 0.0f;
@@ -322,7 +318,8 @@ void UCombatTileMapHUDWidget::StartIntroDiceRoll()
 	UpdateDiceRollWidgetTransforms(0.0f);
 	if (mDiceRollPhysicsActor != nullptr)
 	{
-		mDiceRollPhysicsActor->StartRoll(FMath::Rand());
+		// 연출 전용 시드(결과값과 무관). UI는 RNG로 결과를 만들지 않으므로 굴림마다 증가하는 결정적 값만 넘긴다.
+		mDiceRollPhysicsActor->StartRoll(static_cast<int32>(++mIntroDiceVisualSeed));
 	}
 
 	SetDiceRollVisibility(ESlateVisibility::HitTestInvisible);
@@ -349,8 +346,8 @@ void UCombatTileMapHUDWidget::UpdateIntroDiceRoll(float InDeltaTime)
 
 		if (mIntroDiceRollResultsResolved == false)
 		{
-			// A안: 물리 주사위가 멈춘 윗면을 그대로 게임 결과로 사용한다("보이는 면 = 기록 숫자").
-			// 뷰모델이 있으면 물리 윗면을 전투 풀에 주입하고, 단독 시안이면 mDiceUIs를 직접 갱신한다.
+			// 물리 텀블은 연출 전용이다. 권위 결과값은 게임플레이가 정하며(Phase 2에서 경계로 주입),
+			// 위젯은 그 값을 읽어(RefreshDiceViewsFromUIModel) 표시만 한다. 물리 윗면은 결과를 결정하지 않는다.
 			ApplyIntroDicePhysicsResults();
 		}
 
@@ -614,6 +611,10 @@ void UCombatTileMapHUDWidget::UpdateShakeToRoll(float InDeltaTime)
 	if (Jerk >= mShakeTriggerThreshold && mShakeRollCooldown <= 0.0f)
 	{
 		mShakeRollCooldown = 1.0f;   // 한 번 흔들면 한 번만 굴리게 한다.
+		if (ACombatGameMode* CombatGameMode = GetWorld()->GetAuthGameMode<ACombatGameMode>())
+		{
+			CombatGameMode->RollDices();
+		}
 		StartIntroDiceRoll();
 	}
 }
@@ -621,10 +622,8 @@ void UCombatTileMapHUDWidget::UpdateShakeToRoll(float InDeltaTime)
 /** @brief 결과 연출이 끝난 시점에 보유 주사위 카드 상태를 한 번만 Rolled로 전환한다. */
 void UCombatTileMapHUDWidget::MarkAllDiceRolled()
 {
-	for (FDiceViewData& DiceView : mDiceUIs)
-	{
-		DiceView.mIsRolled = true;
-	}
+	// 연출 종료: 카드 드러내기 게이트만 연다. 어떤 주사위가 'rolled'인지는 권위(mIsRolled)가 결정한다.
+	mIntroDiceCardsRevealed = true;
 	RefreshOwnedDiceCards();
 	RefreshDiceAssignmentText();
 }
@@ -638,27 +637,12 @@ void UCombatTileMapHUDWidget::ResolveIntroDiceRollResults()
 
 	mIntroDiceRollResultsResolved = true;
 
-	if (mCombatUIModel != nullptr)
-	{
-		mCombatUIModel->RequestRollDice();
-		RefreshDiceViewsFromRunData();
-	}
-	else
-	{
-		for (FDiceViewData& DiceView : mDiceUIs)
-		{
-			const int32 FaceCount = FMath::Max(1, DiceView.mFaceValues.Num() > 0 ? DiceView.mFaceValues.Num() : DiceView.mFaceCount);
-			DiceView.mRolledFaceIndex = FMath::RandRange(0, FaceCount - 1);
-			DiceView.mResultValue = DiceView.mFaceValues.IsValidIndex(DiceView.mRolledFaceIndex)
-				? DiceView.mFaceValues[DiceView.mRolledFaceIndex]
-				: DiceView.mRolledFaceIndex + 1;
-		}
-	}
+	// 굴림 결과의 권위는 GameMode 입력 → DicePoolModel → CombatUIModel push 경로에 있다.
+	RefreshDiceViewsFromUIModel();
 
 	for (int32 DiceIndex = 0; DiceIndex < mDiceUIs.Num(); ++DiceIndex)
 	{
 		FDiceViewData& DiceView = mDiceUIs[DiceIndex];
-		DiceView.mIsRolled = false;
 
 		if (mDicePreviewActors.IsValidIndex(DiceIndex))
 		{
@@ -666,7 +650,7 @@ void UCombatTileMapHUDWidget::ResolveIntroDiceRollResults()
 			{
 				DicePreviewActor->SetDiceType(DiceView.mFaceCount);
 				DicePreviewActor->SetFaceData(DiceView.mFaceValues, DiceView.mFaceTextures);
-				DicePreviewActor->SetDiceColor(RDUIDice::GetDiceRarityColor(DiceView.mRarityType));
+				DicePreviewActor->SetDiceColor(RDUIDice::GetDiceRarityColor(DiceView));
 			}
 		}
 	}
@@ -687,46 +671,9 @@ void UCombatTileMapHUDWidget::ApplyIntroDicePhysicsResults()
 		return;
 	}
 
-	// 물리 윗면 ordinal(1-base) → 물리 면 index(0-base) 배열로 변환.
-	TArray<int32> FaceOrdinals;
-	mDiceRollPhysicsActor->GetSettledFaceOrdinals(FaceOrdinals);
-	TArray<int32> RolledFaceIndices;
-	RolledFaceIndices.Reserve(FaceOrdinals.Num());
-	for (int32 Ordinal : FaceOrdinals)
-	{
-		RolledFaceIndices.Add(Ordinal - 1);
-	}
-
-	// 뷰모델 연결 시: 물리 결과를 전투 풀에 주입해 데미지/세이브까지 같은 값을 쓰게 한 뒤, 표시 데이터를 모델에서 다시 읽는다.
-	if (mCombatUIModel != nullptr)
-	{
-		mCombatUIModel->RequestApplyDiceResults(RolledFaceIndices);
-		RefreshDiceViewsFromRunData();
-		for (FDiceViewData& DiceView : mDiceUIs)
-		{
-			DiceView.mIsRolled = false;   // 결과 표시는 끝났지만 보유 카드 'Rolled' 전환은 MarkAllDiceRolled에서 일괄 처리.
-		}
-		RefreshOwnedDiceCards();
-		return;
-	}
-
-	// 단독 시안(뷰모델 없음): mDiceUIs를 직접 갱신.
-	for (int32 DiceIndex = 0; DiceIndex < mDiceUIs.Num(); ++DiceIndex)
-	{
-		if (RolledFaceIndices.IsValidIndex(DiceIndex) == false)
-		{
-			continue;
-		}
-
-		FDiceViewData& DiceView = mDiceUIs[DiceIndex];
-		const int32 FaceCount = FMath::Max(1, DiceView.mFaceValues.Num() > 0 ? DiceView.mFaceValues.Num() : DiceView.mFaceCount);
-		DiceView.mRolledFaceIndex = FMath::Clamp(RolledFaceIndices[DiceIndex], 0, FaceCount - 1);
-		DiceView.mResultValue = DiceView.mFaceValues.IsValidIndex(DiceView.mRolledFaceIndex)
-			? DiceView.mFaceValues[DiceView.mRolledFaceIndex]
-			: DiceView.mRolledFaceIndex + 1;
-		DiceView.mIsRolled = false;
-	}
-
+	// 굴림 결과의 권위는 GameMode 입력 → DicePoolModel → CombatUIModel push 경로에 있다.
+	RefreshDiceViewsFromUIModel();
+	// 카드 드러내기는 MarkAllDiceRolled에서 게이트를 열 때 일괄 처리한다(권위 mIsRolled는 건드리지 않는다).
 	RefreshOwnedDiceCards();
 }
 
@@ -909,7 +856,18 @@ void UCombatTileMapHUDWidget::HandleDiceRollInputButtonClicked()
 		return;
 	}
 
+	if (ACombatGameMode* CombatGameMode = GetWorld()->GetAuthGameMode<ACombatGameMode>())
+	{
+		CombatGameMode->RollDices();
+	}
 	StartIntroDiceRoll();
+}
+
+void UCombatTileMapHUDWidget::HandleShowDicePanelAnyTurn()
+{
+	RefreshDiceViewsFromUIModel();
+	RebuildOwnedDiceCards();
+	PrepareIntroDiceRoll();
 }
 
 /** @brief 결과 확인 후 입장 굴림 오버레이를 닫고 다음 OpenUI에서 다시 준비되게 상태를 비운다. */

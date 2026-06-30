@@ -2,11 +2,12 @@
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Components/TextBlock.h"
+#include "GameMode/CombatGameMode.h"
 #include "GameMode/RoomGameModeBase.h"
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
-#include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
-#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/FrontendMapWidget.h"
 #include "UI/SettingsPanelWidget.h"
@@ -53,8 +54,10 @@ void UTopMenuBarWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 	ValidateDesignerBindings();
+	EnsureRuntimeSummaryTextBlocks();
 	SyncDefaultText();
 	BindButtonEvents();
+	BindRoomControlEvents();
 	BindCombatEvents();
 	ApplyInputPassThrough();
 }
@@ -64,13 +67,7 @@ void UTopMenuBarWidget::NativeConstruct()
  */
 void UTopMenuBarWidget::NativeDestruct()
 {
-	if (USRPGCombatSubsystem* CombatSubsystem = GetWorld() != nullptr ? GetWorld()->GetSubsystem<USRPGCombatSubsystem>() : nullptr)
-	{
-		if (USRPGCombatModel* CombatModel = CombatSubsystem->GetModel<USRPGCombatModel>())
-		{
-			CombatModel->OnEndCombatUI.RemoveAll(this);
-		}
-	}
+	UnbindCombatEvents();
 
 	if (UFrontendMapWidget* WorldMapWidget = Cast<UFrontendMapWidget>(GetToggleableWorldWidget(EWorldWidgetType::WorldMap)))
 	{
@@ -83,6 +80,7 @@ void UTopMenuBarWidget::NativeDestruct()
 	}
 
 	UnbindButtonEvents();
+	UnbindRoomControlEvents();
 
 	Super::NativeDestruct();
 }
@@ -139,9 +137,9 @@ void UTopMenuBarWidget::ApplyInputPassThrough()
 	}
 
 	ConfigureDesignerButton(MapButton);
-	ConfigureDesignerButton(SettingsButton);
 	ConfigureDesignerButton(DiceButton);
 	ConfigureDesignerButton(SkillButton);
+	ConfigureDesignerButton(SettingsButton);
 }
 
 /**
@@ -204,6 +202,29 @@ void UTopMenuBarWidget::UnbindButtonEvents()
 	}
 }
 
+void UTopMenuBarWidget::BindRoomControlEvents()
+{
+	ARoomGameModeBase* GameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ARoomGameModeBase>() : nullptr;
+	if (GameMode == nullptr)
+	{
+		return;
+	}
+
+	GameMode->OnRefreshRunControlUI.RemoveAll(this);
+	GameMode->OnRefreshRunControlUI.AddUObject(this, &UTopMenuBarWidget::HandleRefreshRunControlUI);
+}
+
+void UTopMenuBarWidget::UnbindRoomControlEvents()
+{
+	ARoomGameModeBase* GameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ARoomGameModeBase>() : nullptr;
+	if (GameMode == nullptr)
+	{
+		return;
+	}
+
+	GameMode->OnRefreshRunControlUI.RemoveAll(this);
+}
+
 /**
  * @brief 모바일 입력에서 버튼이 눌림 즉시 반응하도록 버튼 입력 방식을 보정한다.
  */
@@ -245,6 +266,51 @@ void UTopMenuBarWidget::ValidateDesignerBindings() const
 	{
 		UE_LOG(LogRD, Verbose, TEXT("TopMenuBarWidget: SkillButton is not connected."));
 	}
+
+	if (CombatSummaryTextBlock == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TopMenuBarWidget: CombatSummaryTextBlock is not connected. Runtime fallback will be created."));
+	}
+}
+
+void UTopMenuBarWidget::EnsureRuntimeSummaryTextBlocks()
+{
+	if (CombatSummaryTextBlock != nullptr || WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	UCanvasPanel* RootCanvas = Cast<UCanvasPanel>(WidgetTree->RootWidget);
+	if (RootCanvas == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TopMenuBarWidget: Cannot create CombatSummaryTextBlock fallback because root is not CanvasPanel."));
+		return;
+	}
+
+	UTextBlock* RuntimeCombatSummaryText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("RuntimeCombatSummaryTextBlock"));
+	if (RuntimeCombatSummaryText == nullptr)
+	{
+		return;
+	}
+
+	RuntimeCombatSummaryText->SetText(FText::GetEmpty());
+	RuntimeCombatSummaryText->SetJustification(ETextJustify::Right);
+	RuntimeCombatSummaryText->SetColorAndOpacity(FSlateColor(FLinearColor(0.90f, 1.0f, 0.96f, 1.0f)));
+
+	FSlateFontInfo Font = RuntimeCombatSummaryText->GetFont();
+	Font.Size = 16;
+	RuntimeCombatSummaryText->SetFont(Font);
+
+	RootCanvas->AddChildToCanvas(RuntimeCombatSummaryText);
+	if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(RuntimeCombatSummaryText->Slot))
+	{
+		CanvasSlot->SetAnchors(FAnchors(0.52f, 0.018f, 0.86f, 0.078f));
+		CanvasSlot->SetOffsets(FMargin(0.0f));
+		CanvasSlot->SetAlignment(FVector2D(0.0f, 0.0f));
+		CanvasSlot->SetZOrder(2);
+	}
+
+	CombatSummaryTextBlock = RuntimeCombatSummaryText;
 }
 
 /**
@@ -277,12 +343,16 @@ void UTopMenuBarWidget::SyncDefaultText() const
 		TitleTextBlock->SetText(NSLOCTEXT("TopMenuBarWidget", "TitleText", "ROOM"));
 	}
 
-	if (SummaryTextBlock != nullptr)
+	if (UTextBlock* RoomSummaryText = GetRoomSummaryTextBlock())
 	{
-		SummaryTextBlock->SetText(FText::GetEmpty());
+		RoomSummaryText->SetText(FText::GetEmpty());
 	}
 
-	RefreshRoomInfo();
+	if (UTextBlock* CombatSummaryText = GetCombatSummaryTextBlock())
+	{
+		CombatSummaryText->SetText(FText::GetEmpty());
+	}
+
 }
 
 /**
@@ -298,9 +368,9 @@ void UTopMenuBarWidget::RefreshRoomInfo() const
 		{
 			TitleTextBlock->SetText(NSLOCTEXT("TopMenuBarWidget", "TitleTextFallback", "ROOM"));
 		}
-		if (SummaryTextBlock != nullptr)
+		if (UTextBlock* RoomSummaryText = GetRoomSummaryTextBlock())
 		{
-			SummaryTextBlock->SetText(FText::GetEmpty());
+			RoomSummaryText->SetText(FText::GetEmpty());
 		}
 		return;
 	}
@@ -313,40 +383,60 @@ void UTopMenuBarWidget::RefreshRoomInfo() const
 			FText::AsNumber(RunControlView.mColumn + 1)));
 	}
 
-	if (SummaryTextBlock != nullptr)
+	if (UTextBlock* RoomSummaryText = GetRoomSummaryTextBlock())
 	{
-		SummaryTextBlock->SetText(FText::Format(
+		RoomSummaryText->SetText(FText::Format(
 			NSLOCTEXT("TopMenuBarWidget", "RoomSummaryFormat", "Lv {0} | Difficulty {1}"),
 			FText::AsNumber(RunControlView.mPlayerLevel),
 			FText::AsNumber(RunControlView.mDifficulty)));
 	}
 }
 
+UTextBlock* UTopMenuBarWidget::GetRoomSummaryTextBlock() const
+{
+	return RoomSummaryTextBlock != nullptr ? RoomSummaryTextBlock.Get() : SummaryTextBlock.Get();
+}
+
+UTextBlock* UTopMenuBarWidget::GetCombatSummaryTextBlock() const
+{
+	return CombatSummaryTextBlock.Get();
+}
+
+void UTopMenuBarWidget::HandleRefreshRunControlUI()
+{
+	RefreshRoomInfo();
+}
+
 /**
  * @brief 전투 종료 UI 이벤트를 구독한다.
  *
  * @details
- * 전투 결과 판단은 SRPGCombatSubsystem의 책임으로 두고, 탑바는 플레이어 승리 결과만 받아 월드맵 표시 흐름을 시작한다.
+ * 전투 결과 판단은 전투 계층의 책임으로 두고, 탑바는 CombatGameMode가 재방송한 결과만 받아 월드맵 표시 흐름을 시작한다.
  */
 void UTopMenuBarWidget::BindCombatEvents()
 {
-	USRPGCombatSubsystem* CombatSubsystem = GetWorld() != nullptr ? GetWorld()->GetSubsystem<USRPGCombatSubsystem>() : nullptr;
-	if (CombatSubsystem == nullptr)
+	ACombatGameMode* CombatGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ACombatGameMode>() : nullptr;
+	if (CombatGameMode == nullptr)
 	{
 		return;
 	}
 
-	// 전투 모델이 아직 서브시스템에 바인딩되지 않았을 수 있다(HUD 구성 시점). null 역참조 크래시 방지.
-	USRPGCombatModel* CombatModel = CombatSubsystem->GetModel<USRPGCombatModel>();
-	if (CombatModel == nullptr)
+	CombatGameMode->OnEndCombatUI.RemoveAll(this);
+	CombatGameMode->OnEndCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, bool bPlayerWin)
 	{
-		return;
-	}
-
-	CombatModel->OnEndCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result)
-	{
-		HandleEndCombatUI(MoveTemp(Barrier), Result);
+		HandleEndCombatUI(MoveTemp(Barrier), bPlayerWin);
 	});
+}
+
+void UTopMenuBarWidget::UnbindCombatEvents()
+{
+	ACombatGameMode* CombatGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ACombatGameMode>() : nullptr;
+	if (CombatGameMode == nullptr)
+	{
+		return;
+	}
+
+	CombatGameMode->OnEndCombatUI.RemoveAll(this);
 }
 
 /**
@@ -390,8 +480,7 @@ void UTopMenuBarWidget::CloseWorldWidget(EWorldWidgetType WorldWidgetType) const
 void UTopMenuBarWidget::CloseFloatingPanels(EWorldWidgetType ExceptWorldWidgetType) const
 {
 	/*
-	 * 탑바에서 여는 네 패널은 모두 같은 "현재 조작 중인 팝업" 자리를 공유한다.
-	 * 예를 들어 MAP 위에 DICE가 겹치면 아래 지도 버튼이 눌리는지, 위 주사위가 눌리는지 애매해진다.
+	 * 탑바에서 여는 팝업은 모두 같은 "현재 조작 중인 팝업" 자리를 공유한다.
 	 * 그래서 새 패널을 열기 전에 나머지 패널을 명시적으로 닫는다.
 	 */
 	constexpr EWorldWidgetType FloatingPanels[] = {
@@ -423,8 +512,6 @@ void UTopMenuBarWidget::CloseFloatingPanels(EWorldWidgetType ExceptWorldWidgetTy
  */
 void UTopMenuBarWidget::ToggleWorldMap()
 {
-	RefreshRoomInfo();
-
 	UFrontendMapWidget* WorldMapWidget = Cast<UFrontendMapWidget>(GetToggleableWorldWidget(EWorldWidgetType::WorldMap));
 	if (WorldMapWidget == nullptr)
 	{
@@ -453,6 +540,46 @@ void UTopMenuBarWidget::ToggleWorldMap()
 	ApplyInputPassThrough();
 }
 
+void UTopMenuBarWidget::ToggleDicePanel()
+{
+	URDUserWidget* DicePanelWidget = GetToggleableWorldWidget(EWorldWidgetType::DicePanel);
+	if (DicePanelWidget == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TopMenuBarWidget: DicePanel widget is not configured."));
+		return;
+	}
+
+	if (DicePanelWidget->IsOpened())
+	{
+		DicePanelWidget->CloseUI();
+		return;
+	}
+
+	CloseFloatingPanels(EWorldWidgetType::DicePanel);
+	DicePanelWidget->OpenUI();
+	ApplyInputPassThrough();
+}
+
+void UTopMenuBarWidget::ToggleSkillPanel()
+{
+	URDUserWidget* SkillPanelWidget = GetToggleableWorldWidget(EWorldWidgetType::SkillPanel);
+	if (SkillPanelWidget == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TopMenuBarWidget: SkillPanel widget is not configured."));
+		return;
+	}
+
+	if (SkillPanelWidget->IsOpened())
+	{
+		SkillPanelWidget->CloseUI();
+		return;
+	}
+
+	CloseFloatingPanels(EWorldWidgetType::SkillPanel);
+	SkillPanelWidget->OpenUI();
+	ApplyInputPassThrough();
+}
+
 /**
  * @brief 인게임 설정 패널을 토글한다.
  *
@@ -465,8 +592,6 @@ void UTopMenuBarWidget::ToggleWorldMap()
  */
 void UTopMenuBarWidget::ToggleSettingsPanel()
 {
-	RefreshRoomInfo();
-
 	USettingsPanelWidget* SettingsPanelWidget = Cast<USettingsPanelWidget>(GetToggleableWorldWidget(EWorldWidgetType::InGameSettings));
 	if (SettingsPanelWidget == nullptr)
 	{
@@ -496,45 +621,10 @@ void UTopMenuBarWidget::ToggleSettingsPanel()
 	ApplyInputPassThrough();
 }
 
-/**
- * @brief 단순 플로팅 패널을 토글한다.
- *
- * @details
- * DicePanel/SkillPanel은 현재 단계에서 별도 게임 로직을 실행하지 않는다.
- * 하지만 WBP가 존재하므로 버튼을 누르면 실제 패널이 OpenUI/CloseUI 흐름으로 열리고 닫혀야 한다.
- */
-void UTopMenuBarWidget::ToggleFloatingPanel(EWorldWidgetType WorldWidgetType, const TCHAR* DebugName)
-{
-	/*
-	 * DICE/SKILL은 지금 단계에서 "버튼을 누르면 해당 WBP 패널이 열린다"까지만 담당한다.
-	 * 실제 주사위 굴림이나 스킬 발동은 아직 연결하지 않는다.
-	 * 이 함수가 하는 일은 월드 위젯 등록 누락을 검사하고, 다른 팝업을 닫은 뒤 OpenUI/CloseUI 생명주기를 태우는 것이다.
-	 */
-	RefreshRoomInfo();
-
-	URDUserWidget* FloatingPanel = GetToggleableWorldWidget(WorldWidgetType);
-	if (FloatingPanel == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("TopMenuBarWidget: %s widget is not configured."), DebugName);
-		return;
-	}
-
-	if (FloatingPanel->IsOpened())
-	{
-		FloatingPanel->CloseUI();
-		return;
-	}
-
-	CloseFloatingPanels(WorldWidgetType);
-	FloatingPanel->OpenUI();
-	ApplyInputPassThrough();
-}
-
-// 전투 HUD의 concept 내비 버튼이 호출하는 public 포워더. 탑바 버튼 클릭과 동일한 토글 동작을 그대로 위임한다.
 void UTopMenuBarWidget::RequestMapPanel()      { HandleMapButtonClicked(); }
-void UTopMenuBarWidget::RequestSettingsPanel() { HandleSettingsButtonClicked(); }
 void UTopMenuBarWidget::RequestDicePanel()     { HandleDiceButtonClicked(); }
 void UTopMenuBarWidget::RequestSkillPanel()    { HandleSkillButtonClicked(); }
+void UTopMenuBarWidget::RequestSettingsPanel() { HandleSettingsButtonClicked(); }
 
 /**
  * @brief MAP 버튼 클릭을 월드맵 토글로 연결한다.
@@ -542,6 +632,16 @@ void UTopMenuBarWidget::RequestSkillPanel()    { HandleSkillButtonClicked(); }
 void UTopMenuBarWidget::HandleMapButtonClicked()
 {
 	ToggleWorldMap();
+}
+
+void UTopMenuBarWidget::HandleDiceButtonClicked()
+{
+	ToggleDicePanel();
+}
+
+void UTopMenuBarWidget::HandleSkillButtonClicked()
+{
+	ToggleSkillPanel();
 }
 
 /**
@@ -552,30 +652,12 @@ void UTopMenuBarWidget::HandleSettingsButtonClicked()
 	ToggleSettingsPanel();
 }
 
-void UTopMenuBarWidget::HandleDiceButtonClicked()
-{
-	/*
-	 * 주사위 버튼은 WBP_DicePanel 표시만 담당한다.
-	 * 주사위 수량/사용 가능 여부가 붙으면 이 버튼은 패널을 여는 역할을 유지하고, 실제 검증은 DicePanel 또는 별도 주사위 시스템으로 위임한다.
-	 */
-	ToggleFloatingPanel(EWorldWidgetType::DicePanel, TEXT("DicePanel"));
-}
-
-void UTopMenuBarWidget::HandleSkillButtonClicked()
-{
-	/*
-	 * 스킬 버튼은 WBP_SkillPanel 표시만 담당한다.
-	 * 아직 "스킬 사용"이 아니라 "스킬 패널 UI를 열 수 있는지"를 검증하는 단계라서 버튼 라벨도 SKILL 0으로 고정한다.
-	 */
-	ToggleFloatingPanel(EWorldWidgetType::SkillPanel, TEXT("SkillPanel"));
-}
-
 /**
  * @brief 플레이어 승리 결과를 다음 방 선택 월드맵 표시로 연결한다.
  */
-void UTopMenuBarWidget::HandleEndCombatUI(TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result)
+void UTopMenuBarWidget::HandleEndCombatUI(TSharedPtr<FPresentationBarrier> Barrier, bool bPlayerWin)
 {
-	if (Result != ESRPGCombatResult::PlayerWin)
+	if (bPlayerWin == false)
 	{
 		return;
 	}
@@ -607,8 +689,6 @@ void UTopMenuBarWidget::OpenWorldMapAfterPlayerWin(TSharedPtr<FPresentationBarri
 	}
 
 	CloseWorldWidget(EWorldWidgetType::InGameSettings);
-	CloseWorldWidget(EWorldWidgetType::DicePanel);
-	CloseWorldWidget(EWorldWidgetType::SkillPanel);
 	WorldMapWidget->OnCloseRequested.AddUniqueDynamic(this, &UTopMenuBarWidget::HandleWorldMapCloseRequested);
 	WorldMapWidget->SetRoomSelectionEnabled(true);
 	WorldMapWidget->SetMapStatusOverride(NSLOCTEXT("TopMenuBarWidget", "VictoryMapStatus", "승리했습니다!"));
@@ -702,9 +782,9 @@ void UTopMenuBarWidget::HandleSettingsBackRequested()
 /** @details 전투 HUD가 푸시한 Lv/HP/Gold를 탑바 요약 텍스트에 직접 표시한다(전투 중 실데이터). */
 void UTopMenuBarWidget::SetCombatPlayerSummary(int32 Level, int32 HP, int32 MaxHP, int32 Gold)
 {
-	if (SummaryTextBlock != nullptr)
+	if (UTextBlock* CombatSummaryText = GetCombatSummaryTextBlock())
 	{
-		SummaryTextBlock->SetText(FText::Format(
+		CombatSummaryText->SetText(FText::Format(
 			NSLOCTEXT("TopMenuBarWidget", "CombatSummaryFormat", "Lv {0}  HP {1}/{2}  Gold {3}"),
 			FText::AsNumber(Level), FText::AsNumber(HP), FText::AsNumber(MaxHP), FText::AsNumber(Gold)));
 	}

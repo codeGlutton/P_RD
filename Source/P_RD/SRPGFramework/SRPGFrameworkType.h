@@ -309,7 +309,7 @@ enum class ESRPGCommandResult : uint8
  */
 inline ESRPGCommandResult CombineSRPGCommandResult(ESRPGCommandResult Lhs, ESRPGCommandResult Rhs)
 {
-    if (static_cast<uint8>(Lhs) < static_cast<uint8>(Lhs))
+    if (static_cast<uint8>(Lhs) < static_cast<uint8>(Rhs))
     {
         return Lhs;
     }

@@ -6,7 +6,6 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "SRPGFramework/SRPGFrameworkType.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
 #include "UI/RDUserWidget.h"
 
@@ -26,7 +25,7 @@ class URDUserWidget;
  * 전투 승리 여부와 현재 방 정보는 게임 모드/서브시스템에서 조회하고, 실제 지도/설정 화면의 표시 방식은
  * 각 위젯의 OpenUI/CloseUI 구현에 맡긴다.
  *
- * 탑바는 전투 결과를 계산하지 않고 SRPGCombatSubsystem의 종료 이벤트를 구독한다. 플레이어 승리 후에는
+ * 탑바는 전투 결과를 계산하지 않고 CombatGameMode의 종료 이벤트를 구독한다. 플레이어 승리 후에는
  * 지도 위젯을 열어 다음 방 선택을 안내하고, 사용자가 SET을 열었다 닫아도 승리 후 지도 표시 상태가
  * 유지되도록 복원만 담당한다.
  *
@@ -63,12 +62,11 @@ public:
 	/** @brief 전투 HUD가 읽은 보유 주사위/스킬 수를 탑바 DICE/SKILL 라벨에 반영한다. */
 	void SetCombatDiceSkillCount(int32 DiceCount, int32 SkillCount);
 
-	/** @brief 전투 HUD의 concept 내비 버튼(MAP/DICE/SKILL/SET)이 탑바 버튼과 동일한 패널 토글을
-	    트리거하도록 외부에 노출한다(스킨 모드에서 탑바는 Collapsed라 concept 버튼이 입력을 대신 받는다). */
+	/** @brief 외부 UI가 탑바 버튼과 동일한 패널 토글을 요청할 때 쓰는 진입점. */
 	void RequestMapPanel();
-	void RequestSettingsPanel();
 	void RequestDicePanel();
 	void RequestSkillPanel();
+	void RequestSettingsPanel();
 
 protected:
 	/**
@@ -97,6 +95,10 @@ private:
 	 */
 	void UnbindButtonEvents();
 
+	/** @brief RoomGameModeBase의 룸/런 요약 갱신 신호를 구독/해제한다. */
+	void BindRoomControlEvents();
+	void UnbindRoomControlEvents();
+
 	/**
 	 * @brief 탑바 버튼이 모바일 터치에서 즉시 눌리도록 입력 방식을 보정한다.
 	 *
@@ -109,6 +111,9 @@ private:
 	 */
 	void ValidateDesignerBindings() const;
 
+	/** @brief WBP에 전투 요약 TextBlock이 아직 없으면 런타임 fallback을 만든다. */
+	void EnsureRuntimeSummaryTextBlocks();
+
 	/**
 	 * @brief 탑바 기본 문구를 WBP TextBlock에 동기화한다.
 	 */
@@ -119,13 +124,20 @@ private:
 	 */
 	void RefreshRoomInfo() const;
 
+	/** @brief 룸 정보와 전투 정보가 같은 TextBlock을 덮어쓰지 않도록 채널별 대상 TextBlock을 가져온다. */
+	UTextBlock* GetRoomSummaryTextBlock() const;
+	UTextBlock* GetCombatSummaryTextBlock() const;
+
+	void HandleRefreshRunControlUI();
+
 	/**
 	 * @brief 전투 종료 UI 이벤트를 구독해 승리 후 월드맵 흐름을 시작한다.
 	 *
 	 * @details
-	 * 탑바가 전투 결과를 계산하지 않고, 전투 서브시스템이 보낸 결과만 받아 다음 UI 흐름을 연다.
+	 * 탑바가 전투 결과를 계산하지 않고, CombatGameMode가 보낸 결과만 받아 다음 UI 흐름을 연다.
 	 */
 	void BindCombatEvents();
+	void UnbindCombatEvents();
 
 	/**
 	 * @brief WorldWidgetSubsystem에서 RDUserWidget 기반 월드 위젯을 가져온다.
@@ -165,6 +177,12 @@ private:
 	 */
 	void ToggleWorldMap();
 
+	/** @brief DICE 버튼 입력에 따라 보유 주사위 패널을 열거나 닫는다. */
+	void ToggleDicePanel();
+
+	/** @brief SKILL 버튼 입력에 따라 보유 스킬 패널을 열거나 닫는다. */
+	void ToggleSkillPanel();
+
 	/**
 	 * @brief SET 버튼 입력에 따라 인게임 설정 패널을 열거나 닫는다.
 	 *
@@ -178,24 +196,11 @@ private:
 	void ToggleSettingsPanel();
 
 	/**
-	 * @brief DICE/SKILL처럼 단순히 열고 닫는 플로팅 패널을 토글한다.
-	 *
-	 * @details
-	 * 아직 실제 주사위/스킬 사용 로직은 각 패널에 붙지 않았지만, WBP가 있는 패널은 공통 OpenUI 경로로 동작해야 한다.
-	 * 이 함수는 탑바 버튼과 월드 위젯 연결만 책임진다.
-	 *
-	 * @param WorldWidgetType 열고 닫을 패널 타입
-	 * @param DebugName 설정 누락 로그에 표시할 이름
-	 */
-	void ToggleFloatingPanel(EWorldWidgetType WorldWidgetType, const TCHAR* DebugName);
-
-	/**
 	 * @brief 전투 종료 결과를 받아 플레이어 승리일 때 다음 방 선택 지도를 연다.
 	 *
 	 * @param Barrier 전투 종료 연출이 끝나기 전까지 흐름을 붙잡는 presentation barrier
-	 * @param Result 전투 결과
 	 */
-	void HandleEndCombatUI(TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result);
+	void HandleEndCombatUI(TSharedPtr<FPresentationBarrier> Barrier, bool bPlayerWin);
 
 	/**
 	 * @brief 승리 후 다음 방 선택이 가능한 월드맵을 연다.
@@ -221,29 +226,19 @@ private:
 	UFUNCTION()
 	void HandleMapButtonClicked();
 
+	/** @brief DICE 버튼 클릭을 주사위 패널 토글로 연결한다. */
+	UFUNCTION()
+	void HandleDiceButtonClicked();
+
+	/** @brief SKILL 버튼 클릭을 스킬 패널 토글로 연결한다. */
+	UFUNCTION()
+	void HandleSkillButtonClicked();
+
 	/**
 	 * @brief SET 버튼 클릭을 설정 패널 토글로 연결한다.
 	 */
 	UFUNCTION()
 	void HandleSettingsButtonClicked();
-
-	/**
-	 * @brief DICE 버튼 클릭을 주사위 패널 토글로 연결한다.
-	 *
-	 * @details
-	 * 현재 단계에서는 실제 주사위 사용이 아니라 WBP_DicePanel 표시와 터치 반응 확인만 담당한다.
-	 */
-	UFUNCTION()
-	void HandleDiceButtonClicked();
-
-	/**
-	 * @brief SKILL 버튼 클릭을 스킬 패널 토글로 연결한다.
-	 *
-	 * @details
-	 * 현재 단계에서는 실제 스킬 발동이 아니라 WBP_SkillPanel 표시와 카드 선택 흐름 확인만 담당한다.
-	 */
-	UFUNCTION()
-	void HandleSkillButtonClicked();
 
 	/**
 	 * @brief 월드맵 위젯의 닫기 요청을 현재 흐름에 맞게 처리한다.
@@ -304,9 +299,17 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> TitleTextBlock;
 
-	/** @brief 현재 런 요약 정보를 표시하는 텍스트 */
+	/** @brief 현재 런 요약 정보를 표시하는 텍스트(레거시 fallback). */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> SummaryTextBlock;
+
+	/** @brief 룸/런 요약 전용 텍스트. 없으면 SummaryTextBlock을 fallback으로 쓴다. */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> RoomSummaryTextBlock;
+
+	/** @brief 전투 중 HP/Gold 요약 전용 텍스트. 없으면 전투 요약을 쓰지 않아 룸 요약과 충돌하지 않는다. */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> CombatSummaryTextBlock;
 
 	/**
 	 * @brief 승리 후 다음 방 선택을 완료할 때까지 월드맵 복원을 강제할지 여부

@@ -220,7 +220,7 @@ void UCombatTileMapHUDWidget::RefreshDicePreviewActors()
 			{
 				const FDiceViewData* DiceView = mDiceUIs.IsValidIndex(DiceIndex) ? &mDiceUIs[DiceIndex] : nullptr;
 				const FLinearColor DiceColor = mDiceUIs.IsValidIndex(DiceIndex)
-					? RDUIDice::GetDiceRarityColor(mDiceUIs[DiceIndex].mRarityType)
+					? RDUIDice::GetDiceRarityColor(mDiceUIs[DiceIndex])
 					: RDUIDice::GetDiceRarityColor(ERarityType::Common);
 
 				DicePreviewActor->SetDiceType(DiceView != nullptr ? DiceView->mFaceCount : 6);

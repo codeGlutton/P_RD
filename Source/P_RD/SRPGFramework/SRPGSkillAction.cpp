@@ -13,7 +13,7 @@ FSRPGSkillCastCommand::FSRPGSkillCastCommand()
 USRPGSkillAction::USRPGSkillAction()
 {
     mActionType = ESRPGActionType::InPlayAction;
-    mConsumesTurn = false;
+    mConsumesTurn = true;
 }
 
 void USRPGSkillAction::OnBeginAction()

@@ -19,12 +19,8 @@ namespace RDCombatHUD
 	static constexpr float CombatSkillRailTop = 0.144f;
 	static constexpr float CombatSkillRailHeight = 0.071f;
 	static constexpr float CombatSkillRailGap = 0.012f;
-	static constexpr float CombatSkillDetailSafeGap = 0.016f;
+	static constexpr int32 CombatSkillRailZOrder = 900;
 	static constexpr int32 CombatSkillInputZOrder = 1000;
-	static constexpr int32 CombatSkillDetailDismissZOrder = 148;
-	static constexpr int32 CombatSkillDetailBackdropZOrder = 149;
-	static constexpr int32 CombatSkillDetailPanelZOrder = 150;
-	static constexpr int32 CombatSkillDetailRailZOrder = 170;
 	static constexpr int32 CombatSkillStepIndex = 5;
 
 	inline FText GetCombatSkillLabel(int32 SkillIndex)

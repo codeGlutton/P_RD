@@ -9,7 +9,7 @@
 
 class UTexture2D;
 
-/** @brief 상점 판매 항목 종류. UI가 게임플레이 데이터 타입을 직접 모르게 어댑터가 변환해 넣는다. */
+/** @brief 상점 판매 항목 종류. UI가 게임플레이 데이터 타입을 직접 모르게 게임플레이/표시 계층이 변환해 넣는다. */
 UENUM(BlueprintType)
 enum class EShopItemKind : uint8
 {
@@ -26,10 +26,10 @@ enum class EShopItemKind : uint8
 // - mKind: 종류별 아이콘/배치.
 // - mName/mIcon/mDescription: 슬롯 표시.
 // - mPrice: 가격(골드).
-// - mRarityColor: 희귀도 테두리(어댑터가 enum→색 변환).
+// - mRarityColor: 희귀도 테두리(표시 계층이 enum→색 변환).
 // - mIsAffordable: 현재 골드로 살 수 있는지(비활성 표시).
 // - mIsSoldOut: 이미 구매되어 품절인지.
-// [합의필요] 최종 소스 = ShopGameMode + StaticShopRoomSpawnData. 현재 Mock.
+// [합의필요] 최종 소스 = ShopGameMode + StaticShopRoomSpawnData.
 USTRUCT(BlueprintType)
 struct FShopItemUI
 {

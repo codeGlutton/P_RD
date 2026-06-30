@@ -17,6 +17,8 @@ DECLARE_LOG_CATEGORY_EXTERN(LogRoomGameMode, Log, All)
 
 class UPlayerUnitModel;
 
+DECLARE_MULTICAST_DELEGATE(FOnRefreshRunControlUI);
+
 /**
  * @brief  방에 대한 베이스 GameMode
  */
@@ -102,6 +104,9 @@ private:
 
 public:
 	UPlayerUnitModel* GetPlayerUnitModel() const;
+
+public:
+	FOnRefreshRunControlUI OnRefreshRunControlUI;
 
 protected:
 	UPROPERTY()

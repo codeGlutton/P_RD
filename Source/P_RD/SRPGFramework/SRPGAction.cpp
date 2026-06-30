@@ -171,7 +171,7 @@ void USRPGAction::ReserveInitializeCommand(TInstancedStruct<FSRPGCommand> Comman
 	mInitializeCommand = MoveTemp(Command);
 }
 
-void USRPGAction::GetTileActorUnderCursor(ECollisionChannel Channel, OUT AActor* Actor, OUT FTileIndex& TileIndex) const
+void USRPGAction::GetTileActorUnderCursor(ECollisionChannel Channel, OUT AActor*& Actor, OUT FTileIndex& TileIndex) const
 {
 	Actor = nullptr;
 	TileIndex = FTileIndex::Invalid;

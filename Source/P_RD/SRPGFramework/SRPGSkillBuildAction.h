@@ -74,7 +74,7 @@ protected:
 
 	/* 빌드 로직 처리 */
 private:
-	void SetSkill(int32 SkillIndex);
+	bool SetSkill(int32 SkillIndex);
 	void ChangeDices(int32 RequestedDiceIndex);
 	void SetTargetTile(const FTileIndex& TargetIndex);
 	void BuildSkill();

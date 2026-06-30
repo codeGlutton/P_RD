@@ -1,21 +1,21 @@
 #include "UI/CombatTileMapHUDWidget.h"
 
 #include "Components/TextBlock.h"
-#include "UI/Combat/CombatUIModel.h"
+#include "GameMode/CombatGameMode.h"
 #include "UI/CombatTileMapHUDWidgetPrivate.h"
 
 using namespace RDCombatHUD;
 
 void UCombatTileMapHUDWidget::HandleEndTurnButtonClicked()
 {
-	// 뷰모델 연결 시 턴 종료는 의도로 보낸다. 미연결 시 기존처럼 로그만.
-	if (mCombatUIModel != nullptr)
+	if (ACombatGameMode* CombatGameMode = GetWorld()->GetAuthGameMode<ACombatGameMode>())
 	{
-		mCombatUIModel->RequestEndTurn();
+		const bool bHandled = CombatGameMode->EndTurn();
+		UE_LOG(LogRD, Log, TEXT("Combat HUD end turn clicked. Handled=%s"), bHandled ? TEXT("true") : TEXT("false"));
 		return;
 	}
 
-	UE_LOG(LogRD, Log, TEXT("END TURN button clicked. Combat turn API is not connected yet."));
+	UE_LOG(LogRD, Warning, TEXT("Combat HUD end turn clicked, but CombatGameMode is not available."));
 }
 
 void UCombatTileMapHUDWidget::RefreshDiceAssignmentText() const

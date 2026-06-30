@@ -165,7 +165,7 @@ namespace
 ARoomGameModeBase::ARoomGameModeBase()
 {
 	/*
-	 * 실제 방에서는 TopMenuBar가 월드맵/설정/주사위/스킬 패널을 여는 공통 진입점이다.
+	 * 실제 방에서는 TopMenuBar가 월드맵/설정 패널을 여는 공통 진입점이다.
 	 * 각 방 HUD에 팝업을 직접 넣지 않고 WorldWidgetSubsystem에 등록해두면,
 	 * 전투/상점/보물 방이 모두 같은 OpenUI/CloseUI 규칙을 공유한다.
 	 */
@@ -241,6 +241,7 @@ void ARoomGameModeBase::BeginRoom()
 		if (URDUserWidget* TopMenuBar = WorldWidgetSubsystem->GetWorldWidget<URDUserWidget>(EWorldWidgetType::TopMenuBar))
 		{
 			TopMenuBar->OpenUI();
+			OnRefreshRunControlUI.Broadcast();
 		}
 	}
 

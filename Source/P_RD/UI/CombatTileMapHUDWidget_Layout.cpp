@@ -138,26 +138,11 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 	RDUILayout::ApplyAnchoredSlot(DiceRollStatusText, FAnchors(0.365f, DiceRollStatusTop, 0.635f, DiceRollStatusBottom), DiceRollStatusZOrder);
 	RDUILayout::ApplyAnchoredSlot(mDiceRollInputButton, FAnchors(0.0f, DiceRollOverlayTop, 1.0f, 1.0f), DiceRollInputZOrder);
 	RDUILayout::ApplyAnchoredSlot(mDiceAssignmentText, FAnchors(0.025f, 0.700f, 0.225f, 0.785f), 24);
-	RDUILayout::ApplyAnchoredSlot(mSkillDetailDismissButton, FAnchors(0.0f, 0.0f, 1.0f, 1.0f), CombatSkillDetailDismissZOrder);
-	if (mSkillDetailBackdropPanels.IsValidIndex(0))
-	{
-		RDUILayout::ApplyAnchoredSlot(
-			mSkillDetailBackdropPanels[0],
-			FAnchors(0.0f, 0.0f, CombatSkillRailRight + CombatSkillDetailSafeGap, 1.0f),
-			CombatSkillDetailBackdropZOrder
-		);
-	}
-	RDUILayout::ApplyAnchoredSlot(
-		mSkillDetailPanel,
-		FAnchors(CombatSkillRailRight + CombatSkillDetailSafeGap, 0.0f, 1.0f, 1.0f),
-		CombatSkillDetailPanelZOrder
-	);
 	// 스킬 레일: 항목 위치는 WBP HUD_SkillRail(없으면 기존 상수) 영역 안에서 균등 분배한다(렌더/히트테스트 공용).
-	const int32 SkillRailZOrder = IsSkillDetailVisible() ? CombatSkillDetailRailZOrder : 18;
 	const int32 SkillRailPanelCount = mSkillRailPanels.Num();
 	for (int32 SkillIndex = 0; SkillIndex < SkillRailPanelCount; ++SkillIndex)
 	{
-		RDUILayout::ApplyAnchoredSlot(mSkillRailPanels[SkillIndex], GetSkillRailItemRect(SkillIndex, SkillRailPanelCount), SkillRailZOrder);
+		RDUILayout::ApplyAnchoredSlot(mSkillRailPanels[SkillIndex], GetSkillRailItemRect(SkillIndex, SkillRailPanelCount), CombatSkillRailZOrder);
 	}
 	const int32 SkillInputCount = mSkillInputButtons.Num();
 	for (int32 SkillIndex = 0; SkillIndex < SkillInputCount; ++SkillIndex)
@@ -167,11 +152,6 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 	// 우측 명령 버튼: WBP HUD_EndTurn / HUD_Move 영역(없으면 기존 좌표).
 	RDUILayout::ApplyAnchoredSlot(EndTurnButton, GroupRect(TEXT("HUD_EndTurn"), FAnchors(0.795f, 0.845f, 0.925f, 0.940f)), 18);
 	RDUILayout::ApplyAnchoredSlot(mMoveButton, GroupRect(TEXT("HUD_Move"), FAnchors(0.795f, 0.625f, 0.925f, 0.720f)), 18);
-	// 탑바 내비 투명 버튼: concept 앵커(HUD_Map/Dice/Skill/Settings = btn_* 자리). 없으면 상단 우측 폴백 좌표.
-	RDUILayout::ApplyAnchoredSlot(mNavMapButton, GroupRect(TEXT("HUD_Map"), FAnchors(0.7448f, 0.0185f, 0.7969f, 0.0963f)), 19);
-	RDUILayout::ApplyAnchoredSlot(mNavDiceButton, GroupRect(TEXT("HUD_Dice"), FAnchors(0.8031f, 0.0185f, 0.8552f, 0.0963f)), 19);
-	RDUILayout::ApplyAnchoredSlot(mNavSkillButton, GroupRect(TEXT("HUD_Skill"), FAnchors(0.8615f, 0.0185f, 0.9135f, 0.0963f)), 19);
-	RDUILayout::ApplyAnchoredSlot(mNavSettingsButton, GroupRect(TEXT("HUD_Settings"), FAnchors(0.9198f, 0.0185f, 0.9719f, 0.0963f)), 19);
 	RDUILayout::ApplyAnchoredSlot(mCombatFeedText, FAnchors(0.350f, 0.430f, 0.650f, 0.500f), 200);
 	RDUILayout::ApplyAnchoredSlot(mCombatStatusBarText, FAnchors(0.025f, 0.050f, 0.520f, 0.110f), 30);
 

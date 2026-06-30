@@ -42,7 +42,7 @@ ESRPGCommandResult USRPGDiceRollAction::HandleCommand(const TInstancedStruct<FSR
         checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트 모델 nullptr"));
         
         DicePoolModel->ResetUsed();
-        // TODO 주사위 팝업 띄우기
+        Command.Get<FSRPGDicePrepareCommand>().OnShowDicePanelUI.Broadcast();
 
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }

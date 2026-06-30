@@ -177,56 +177,6 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		}
 	}
 
-	if (mSkillDetailDismissButton == nullptr)
-	{
-		mSkillDetailDismissButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("SkillDetailDismissButton"));
-		if (mSkillDetailDismissButton != nullptr)
-		{
-			mSkillDetailDismissButton->SetBackgroundColor(FLinearColor(0.0f, 0.0f, 0.0f, 0.01f));
-			mSkillDetailDismissButton->SetVisibility(ESlateVisibility::Collapsed);
-			mSkillDetailDismissButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleSkillDetailDismissButtonClicked);
-			TargetRootCanvas->AddChildToCanvas(mSkillDetailDismissButton);
-		}
-	}
-
-	if (mSkillDetailPanel == nullptr)
-	{
-		mSkillDetailPanel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("SkillDetailPanel"));
-		mSkillDetailText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("SkillDetailText"));
-		if (mSkillDetailPanel != nullptr && mSkillDetailText != nullptr)
-		{
-			mSkillDetailPanel->SetBrushColor(FLinearColor(0.025f, 0.042f, 0.048f, 0.96f));
-			mSkillDetailPanel->SetPadding(FMargin(32.0f, 28.0f));
-			mSkillDetailPanel->AddChild(mSkillDetailText);
-			mSkillDetailText->SetJustification(ETextJustify::Left);
-			mSkillDetailText->SetColorAndOpacity(FSlateColor(FLinearColor(0.88f, 1.0f, 0.96f, 1.0f)));
-			mSkillDetailText->SetAutoWrapText(true);
-			mSkillDetailText->SetLineHeightPercentage(1.12f);
-			mSkillDetailPanel->SetVisibility(ESlateVisibility::Collapsed);
-			TargetRootCanvas->AddChildToCanvas(mSkillDetailPanel);
-		}
-	}
-
-	if (mSkillDetailBackdropPanels.Num() == 0)
-	{
-		for (int32 PanelIndex = 0; PanelIndex < 1; ++PanelIndex)
-		{
-			UBorder* BackdropPanel = WidgetTree->ConstructWidget<UBorder>(
-				UBorder::StaticClass(),
-				FName(*FString::Printf(TEXT("SkillDetailBackdropPanel_%d"), PanelIndex))
-			);
-			if (BackdropPanel == nullptr)
-			{
-				continue;
-			}
-
-			BackdropPanel->SetBrushColor(FLinearColor(0.015f, 0.020f, 0.025f, 0.78f));
-			BackdropPanel->SetVisibility(ESlateVisibility::Collapsed);
-			TargetRootCanvas->AddChildToCanvas(BackdropPanel);
-			mSkillDetailBackdropPanels.Add(BackdropPanel);
-		}
-	}
-
 	if (mCombatFeedText == nullptr)
 	{
 		mCombatFeedText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("CombatFeedText"));
@@ -278,44 +228,6 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 				? FLinearColor(1.0f, 1.0f, 1.0f, 0.01f)
 				: FLinearColor(0.32f, 0.08f, 0.07f, 0.95f));
 			TargetRootCanvas->AddChildToCanvas(EndTurnButton);
-		}
-	}
-
-	// 탑바 내비 투명 버튼(MAP/DICE/SKILL/SET): concept 내비 아트 위에 얹어 클릭만 받고 TopMenuBar 패널 토글로 위임한다.
-	// 스킨 모드에서만 만든다 — 비스킨 모드는 레거시 TopMenuBar가 보이며 직접 입력을 받기 때문(중복 방지).
-	if (IsDesignerSkinActive())
-	{
-		auto MakeNavButton = [&](TObjectPtr<UButton>& OutButton, const TCHAR* Name)
-		{
-			if (OutButton == nullptr)
-			{
-				OutButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), Name);
-				if (OutButton != nullptr)
-				{
-					OutButton->SetBackgroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.01f));   // 항상 투명: concept 내비 아트가 보이게.
-					TargetRootCanvas->AddChildToCanvas(OutButton);
-				}
-			}
-		};
-		MakeNavButton(mNavMapButton, TEXT("NavMapButton"));
-		MakeNavButton(mNavDiceButton, TEXT("NavDiceButton"));
-		MakeNavButton(mNavSkillButton, TEXT("NavSkillButton"));
-		MakeNavButton(mNavSettingsButton, TEXT("NavSettingsButton"));
-		if (mNavMapButton != nullptr)
-		{
-			mNavMapButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleNavMapButtonClicked);
-		}
-		if (mNavDiceButton != nullptr)
-		{
-			mNavDiceButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleNavDiceButtonClicked);
-		}
-		if (mNavSkillButton != nullptr)
-		{
-			mNavSkillButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleNavSkillButtonClicked);
-		}
-		if (mNavSettingsButton != nullptr)
-		{
-			mNavSettingsButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleNavSettingsButtonClicked);
 		}
 	}
 

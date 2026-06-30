@@ -2,7 +2,7 @@
 
 /** @brief 주사위 UI에 필요한 표시값을 모아 둔 파일입니다. */
 // @file DiceViewData.h
-// 전투 HUD와 주사위 패널이 같은 색과 문구를 쓰도록, 주사위 희귀도 관련 처리를 한곳에 모았습니다.
+// 전투 HUD가 쓰는 주사위 희귀도 관련 표시 처리를 한곳에 모았습니다.
 // 위젯 쪽에서는 이 함수들만 쓰면 됩니다.
 
 #include "RDMinimal.h"
@@ -25,16 +25,16 @@ struct P_RD_API FDiceViewData
 	// 아래 두 배열은 UDiceModel/FDiceSlotUI와 같은 물리 면 0-base 순서다.
 	TArray<int32> mFaceValues;   // 각 물리 면에 적힌 실제 값
 	TArray<TObjectPtr<UTexture>> mFaceTextures;   // 각 물리 면에 덮을 선택 텍스처
+	FLinearColor mRarityColor = FLinearColor::White;
+	FText mRarityText;
 };
 
 namespace RDUIDice
 {
 	/** @brief 주사위 색을 어디에 그릴지 구분합니다. */
-	// 전투 HUD와 주사위 패널은 배경이 달라서 같은 희귀도라도 색 밝기를 조금 다르게 씁니다.
 	enum class EDiceRarityColorTone : uint8
 	{
-		CombatHUD,
-		DicePanel
+		CombatHUD
 	};
 
 	/** @brief 주사위 id로 희귀도를 찾습니다. */
@@ -43,6 +43,9 @@ namespace RDUIDice
 
 	/** @brief 희귀도에 맞는 색을 돌려줍니다. */
 	P_RD_API FLinearColor GetDiceRarityColor(ERarityType RarityType, EDiceRarityColorTone ColorTone = EDiceRarityColorTone::CombatHUD);
+
+	/** @brief 뷰 데이터가 이미 들고 있는 희귀도 색을 우선 사용합니다. */
+	P_RD_API FLinearColor GetDiceRarityColor(const FDiceViewData& DiceView, EDiceRarityColorTone ColorTone = EDiceRarityColorTone::CombatHUD);
 
 	/** @brief 희귀도 표시 문구(Common/Rare/Epic)를 돌려줍니다. */
 	P_RD_API FText GetDiceRarityText(ERarityType RarityType);

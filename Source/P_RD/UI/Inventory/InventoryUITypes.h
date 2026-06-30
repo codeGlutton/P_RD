@@ -10,7 +10,7 @@
 class UTexture2D;
 
 /** @brief 인벤토리 항목 종류. 같은 슬롯 위젯을 종류별로 구분해 그리기 위한 값입니다. */
-// UI는 게임플레이 데이터 클래스를 직접 모르고, 어댑터가 종류를 이 enum으로 변환해 넣는다.
+// UI는 게임플레이 데이터 클래스를 직접 모르고, 게임플레이/표시 계층이 종류를 이 enum으로 변환해 넣는다.
 UENUM(BlueprintType)
 enum class EInventoryItemKind : uint8
 {
@@ -25,7 +25,7 @@ enum class EInventoryItemKind : uint8
 // - mKind: 다이스/스킬/장비 구분(슬롯 아이콘·배치 결정).
 // - mItemIndex: 롱프레스 상세 요청 payload(같은 종류 배열 기준 index).
 // - mName/mIcon: 슬롯 기본 표시.
-// - mRarityColor: 희귀도 테두리/배경(어댑터가 enum→색 변환).
+// - mRarityColor: 희귀도 테두리/배경(표시 계층이 enum→색 변환).
 // - mDetailText: 다이스면 "d20", 장비면 슬롯명 등 보조 한 줄.
 USTRUCT(BlueprintType)
 struct FInventoryItemUI

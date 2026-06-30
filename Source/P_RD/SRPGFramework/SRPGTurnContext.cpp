@@ -3,7 +3,10 @@
 #include "SRPGFramework/SRPGCommand.h"
 
 #include "SRPGFramework/SRPGDiceRollAction.h"
+#include "SRPGFramework/SRPGTurnEndAction.h"
 
+#include "Actor/BoardActor/BoardSelectionTarget.h"
+#include "RDCollision.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
@@ -56,6 +59,37 @@ ESRPGCommandResult USRPGActionCreationCommandHandler::HandleCommand(const TInsta
 	return ESRPGCommandResult::Handled;
 }
 
+int8 USRPGDetailInfoPopupCommandHandler::GetCommandPriority() const
+{
+	return ISRPGCommandHandler::HIGHEST_PRIORITY;
+}
+
+ESRPGCommandResult USRPGDetailInfoPopupCommandHandler::HandleCommand(const TInstancedStruct<FSRPGCommand>& Command)
+{
+	if (Command.Get().GetCommandType() != ESRPGCommandType::WorldTrace)
+	{
+		return ESRPGCommandResult::Ignored;
+	}
+
+	const FSRPGWorldTraceCommand& WorldTraceCommand = Command.Get<FSRPGWorldTraceCommand>();
+	if (WorldTraceCommand.mIsLongPress == false)
+	{
+		return ESRPGCommandResult::Ignored;
+	}
+
+	AActor* HitActor = nullptr;
+	FTileIndex TileIndex = FTileIndex::Invalid;
+	GetTileActorUnderCursor(GetWorld(), RDTraceChannels::TileAnyTrace, OUT HitActor, OUT TileIndex);
+
+	IBoardSelectionTarget* SelectionTarget = Cast<IBoardSelectionTarget>(HitActor);
+	if (SelectionTarget != nullptr && SelectionTarget->IsSelectable())
+	{
+		WorldTraceCommand.OnShowTargetDetailPanelUI.Broadcast(SelectionTarget);
+	}
+
+	return ESRPGCommandResult::Handled;
+}
+
 void USRPGTurnContext::InitTurn(USRPGCombatModel* Parent, UUnitModel* Owner, int32 TurnId, int32 LifeCount)
 {
 	checkf(Parent != nullptr, TEXT("전투 서브시스템 nullptr"));
@@ -72,6 +106,9 @@ void USRPGTurnContext::InitTurn(USRPGCombatModel* Parent, UUnitModel* Owner, int
 	USRPGActionCreationCommandHandler* ActionCreationCommandHandler = NewObject<USRPGActionCreationCommandHandler>(this);
 	ActionCreationCommandHandler->mParent = this;
 	mTurnDefaultCommandHandlers.Add(ActionCreationCommandHandler);
+
+	USRPGDetailInfoPopupCommandHandler* DetailInfoPopupCommandHandler = NewObject<USRPGDetailInfoPopupCommandHandler>(this);
+	mTurnDefaultCommandHandlers.Add(DetailInfoPopupCommandHandler);
 }
 
 void USRPGTurnContext::BeginTurn()
@@ -91,9 +128,9 @@ void USRPGTurnContext::BeginTurn()
 		// 핸들러 등록
 		USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
 		checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
+		CommandRouterModel->OnHandleCommand.AddUniqueDynamic(this, &USRPGTurnContext::OnHandleCommand);
 		for (TScriptInterface<ISRPGCommandHandler>& TurnDefaultCommandHandler : mTurnDefaultCommandHandlers)
 		{
-			CommandRouterModel->OnHandleCommand.AddDynamic(this, &USRPGTurnContext::OnHandleCommand);
 			CommandRouterModel->RegisterCommandHandler(TurnDefaultCommandHandler);
 		}
 
@@ -131,14 +168,21 @@ void USRPGTurnContext::BeginTurn()
 
 			TInstancedStruct<FSRPGCommand> DicePrepareCommand;
 			DicePrepareCommand.InitializeAs<FSRPGDicePrepareCommand>();
+			DicePrepareCommand.GetMutable<FSRPGDicePrepareCommand>().OnShowDicePanelUI.AddWeakLambda(this, [this]() {
+				OnShowDicePanelAtTurnStartUI.Broadcast(this);
+				});
 
 			CommandRouterModel->SummitCommand(DicePrepareCommand);
 		}
 		else
 		{
 			/* AI의 경우 움직임 판단 로직 시작 */
+			// TODO: 적 AI가 실제 행동 커맨드를 제출하기 전까지는 적 턴이 멈추지 않도록 바로 패스한다.
+			UE_LOG(LogSRPGCombat, Log, TEXT("적 턴 자동 패스: AI 행동 로직 미구현"));
 
-
+			TInstancedStruct<FSRPGCommand> TurnEndCommand;
+			TurnEndCommand.InitializeAs<FSRPGTurnEndCommand>();
+			CommandRouterModel->SummitCommand(TurnEndCommand);
 		}
 		}));
 	OnBeginTurnUI.Broadcast(PresentationBarrier, this);
@@ -190,8 +234,8 @@ void USRPGTurnContext::EndTurn()
 		for (TScriptInterface<ISRPGCommandHandler>& TurnDefaultCommandHandler : mTurnDefaultCommandHandlers)
 		{
 			CommandRouterModel->UnregisterCommandHandler(TurnDefaultCommandHandler);
-			CommandRouterModel->OnHandleCommand.RemoveDynamic(this, &USRPGTurnContext::OnHandleCommand);
 		}
+		CommandRouterModel->OnHandleCommand.RemoveDynamic(this, &USRPGTurnContext::OnHandleCommand);
 
 		checkf(mTurnPhase == ESRPGTurnPhase::TurnEnd, TEXT("턴 종료 절차 오류"));
 		mTurnPhase = ESRPGTurnPhase::TurnInit;

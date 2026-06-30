@@ -257,7 +257,7 @@ void URunPersistData::StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Diffic
 		{
 			if (const UStaticEquipmentData* EquipmentData = EquipmentSoft.LoadSynchronous())
 			{
-				mDiceIds.Add(EquipmentData->GetPrimaryAssetId());
+				mEquipmentIds.Add(EquipmentData->GetPrimaryAssetId());
 			}
 		}
 	}

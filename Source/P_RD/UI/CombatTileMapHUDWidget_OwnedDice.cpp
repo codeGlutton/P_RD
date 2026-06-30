@@ -5,9 +5,8 @@
 #include "Components/CanvasPanel.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
-#include "GameMode/RDGameModeBase.h"
-#include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Actor/Dice/CombatDiceCaptureActor.h"
+#include "GameMode/CombatGameMode.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/CombatTileMapHUDWidgetPrivate.h"
 #include "UI/IndexedButtonWidget.h"
@@ -45,8 +44,6 @@ void UCombatTileMapHUDWidget::BindCombatUIModel(UCombatUIModel* InUIModel)
 	if (mCombatUIModel != nullptr)
 	{
 		mCombatUIModel->OnQueueNodeResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
-		mCombatUIModel->OnUIChanged.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatUIChanged);
-		mCombatUIModel->OnActionResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatActionResolved);
 	}
 
 	mCombatUIModel = InUIModel;
@@ -55,22 +52,17 @@ void UCombatTileMapHUDWidget::BindCombatUIModel(UCombatUIModel* InUIModel)
 	{
 		// 행동 큐 노드가 한 단위 해소될 때마다 전투 피드를 갱신한다.
 		mCombatUIModel->OnQueueNodeResolved.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
-		// 메타/유닛/턴 갱신 시 상단 상태바를 다시 그린다.
-		mCombatUIModel->OnUIChanged.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatUIChanged);
-		// 액션 확정/취소 시 스킬·주사위 선택 강조를 푼다.
-		mCombatUIModel->OnActionResolved.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatActionResolved);
-		// 이미 어댑터가 push해 둔 현재 값을 즉시 반영(구독 전 발생분 보강).
+		// 이미 공급된 현재 값을 즉시 반영(구독 전 발생분 보강).
 		RefreshCombatStatusBar();
 	}
 }
 
-/** @brief 보유 주사위 표시 데이터의 출처를 뷰모델 우선, 단독 시안용 RunPersistData fallback 순서로 결정한다. */
-void UCombatTileMapHUDWidget::RefreshDiceViewsFromRunData()
+/** @brief 보유 주사위 표시 데이터를 전투 표시 모델에서 읽는다. */
+void UCombatTileMapHUDWidget::RefreshDiceViewsFromUIModel()
 {
 	mDiceUIs.Reset();
 
-	// 보유 주사위는 개수 제한이 없다(런 중 무제한으로 늘 수 있음). 뷰모델이 연결돼 있으면
-	// 종류/결과/희귀도/개수 모두 뷰모델(어댑터가 push한 보유 주사위)을 그대로 따른다.
+	// 보유 주사위는 개수 제한이 없다(런 중 무제한으로 늘 수 있음).
 	const TArray<FDiceSlotUI>* ViewModelDice =
 		mCombatUIModel != nullptr ? &mCombatUIModel->GetDiceUIs() : nullptr;
 
@@ -80,7 +72,8 @@ void UCombatTileMapHUDWidget::RefreshDiceViewsFromRunData()
 		{
 			FDiceViewData DiceView;
 			DiceView.mDiceId = SlotView.mDiceId;
-			DiceView.mRarityType = RDUIDice::ResolveDiceRarity(SlotView.mDiceId);
+			DiceView.mRarityColor = SlotView.mRarityColor;
+			DiceView.mRarityText = SlotView.mRarityText;
 			DiceView.mResultValue = SlotView.mResultValue;
 			DiceView.mRolledFaceIndex = SlotView.mRolledFaceIndex;
 			DiceView.mIsRolled = SlotView.mIsRolled;
@@ -92,36 +85,22 @@ void UCombatTileMapHUDWidget::RefreshDiceViewsFromRunData()
 		}
 		return;
 	}
+}
 
-	// 뷰모델 미연결(시안 단독 실행) — 런 데이터의 주사위 id로 임시 값 채워 데모 유지.
-	const UWorld* World = GetWorld();
-	const ARDGameModeBase* GameMode = World != nullptr ? World->GetAuthGameMode<ARDGameModeBase>() : nullptr;
-	const URunPersistData* RunPersistData = GameMode != nullptr ? GameMode->GetRunPersistData() : nullptr;
-	if (RunPersistData == nullptr || RunPersistData->IsActive() == false)
+int32 UCombatTileMapHUDWidget::GetCombatDiceViewCount() const
+{
+	return mDiceUIs.Num();
+}
+
+bool UCombatTileMapHUDWidget::GetCombatDiceView(int32 DiceIndex, FDiceViewData& OutDiceView) const
+{
+	if (mDiceUIs.IsValidIndex(DiceIndex) == false)
 	{
-		return;
+		return false;
 	}
 
-	for (const FPrimaryAssetId& DiceId : RunPersistData->GetDiceIds())
-	{
-		if (DiceId.IsValid() == false)
-		{
-			continue;
-		}
-
-		FDiceViewData DiceView;
-		DiceView.mDiceId = DiceId;
-		DiceView.mRarityType = RDUIDice::ResolveDiceRarity(DiceId);
-		DiceView.mResultValue = FMath::RandRange(1, 6);
-		DiceView.mRolledFaceIndex = DiceView.mResultValue - 1;
-		DiceView.mFaceCount = 6;
-		for (int32 FaceIndex = 0; FaceIndex < DiceView.mFaceCount; ++FaceIndex)
-		{
-			DiceView.mFaceValues.Add(FaceIndex + 1);
-			DiceView.mFaceTextures.Add(nullptr);
-		}
-		mDiceUIs.Add(MoveTemp(DiceView));
-	}
+	OutDiceView = mDiceUIs[DiceIndex];
+	return true;
 }
 
 /** @brief 보유 주사위 카드의 위젯/캡처 액터 배열을 mDiceUIs와 1:1로 다시 맞춘다. */
@@ -220,6 +199,9 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 
 		const FDiceViewData& DiceView = mDiceUIs[DiceIndex];
 
+		// '굴림 완료' 모양 표시 여부 = 권위(게임플레이가 굴렸다) AND 연출 게이트(드러내기 단계 도달).
+		const bool bShowRolled = DiceView.mIsRolled && mIntroDiceCardsRevealed;
+
 		// 종류 라벨 갱신: 2면은 "동전", 그 외는 "d{면수}"(d4/d6/.../d20).
 		if (mOwnedDiceTypeTexts.IsValidIndex(DiceIndex))
 		{
@@ -232,7 +214,7 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 			}
 		}
 
-		const FLinearColor RarityColor = RDUIDice::GetDiceRarityColor(DiceView.mRarityType);
+		const FLinearColor RarityColor = RDUIDice::GetDiceRarityColor(DiceView);
 		const FLinearColor PendingColor(
 			RarityColor.R * 0.55f,
 			RarityColor.G * 0.55f,
@@ -240,8 +222,8 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 			0.58f
 		);
 
-		FLinearColor DiceColor = DiceView.mIsRolled ? RarityColor : PendingColor;
-		float DiceScale = DiceView.mIsRolled ? 0.80f : 0.72f;
+		FLinearColor DiceColor = bShowRolled ? RarityColor : PendingColor;
+		float DiceScale = bShowRolled ? 0.80f : 0.72f;
 		if (DiceIndex == mSelectedDiceIndex)
 		{
 			DiceColor = FLinearColor(1.0f, 0.82f, 0.30f, 1.0f);
@@ -280,7 +262,7 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 				OwnedDicePreviewActor->SetDiceColor(DiceColor);
 				OwnedDicePreviewActor->SetActorScale3D(FVector(DiceScale));
 				OwnedDicePreviewActor->SetBackdropVisible(false);
-				if (DiceView.mIsRolled == true)
+				if (bShowRolled == true)
 				{
 					OwnedDicePreviewActor->SettleToFace(GetDiceSettledFaceOrdinal(DiceView));
 				}
@@ -315,7 +297,7 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 /** @brief 굴린 주사위만 스킬 배치 후보가 되며, 실제 적용 가능 여부는 뷰모델/게임플레이가 최종 판단한다. */
 void UCombatTileMapHUDWidget::HandleOwnedDiceCardClicked(int32 DiceIndex)
 {
-	if (mDiceUIs.IsValidIndex(DiceIndex) == false || mDiceUIs[DiceIndex].mIsRolled == false)
+	if (mDiceUIs.IsValidIndex(DiceIndex) == false || mDiceUIs[DiceIndex].mIsRolled == false || mIntroDiceCardsRevealed == false)
 	{
 		return;
 	}
@@ -336,10 +318,9 @@ void UCombatTileMapHUDWidget::HandleOwnedDiceCardClicked(int32 DiceIndex)
 
 	mSelectedDiceIndex = DiceIndex;
 
-	// 스킬에 주사위 배치 의도를 게임플레이로 보낸다(STEP은 즉시 실행, BASIC은 적 탭 대기).
-	if (mCombatUIModel != nullptr)
+	if (ACombatGameMode* CombatGameMode = GetWorld()->GetAuthGameMode<ACombatGameMode>())
 	{
-		mCombatUIModel->RequestToggleDice(DiceIndex);
+		CombatGameMode->SelectDice(DiceIndex);
 	}
 
 	RefreshOwnedDiceCards();

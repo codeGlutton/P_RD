@@ -37,6 +37,7 @@ namespace
 void UDicePoolModel::BuildFromDiceIds(const TArray<FPrimaryAssetId>& DiceIds)
 {
 	mDices.Reset();
+	mSelectedDiceIndices.Reset();
 	mDices.Reserve(DiceIds.Num());
 
 	/*
@@ -57,6 +58,8 @@ void UDicePoolModel::BuildFromDiceIds(const TArray<FPrimaryAssetId>& DiceIds)
 /** @brief 보유 주사위를 모두 같은 난수 스트림 흐름으로 굴린다. */
 void UDicePoolModel::RollAll(const FRandomStream& Stream)
 {
+	mSelectedDiceIndices.Reset();
+
 	for (const TObjectPtr<UDiceModel>& Dice : mDices)
 	{
 		if (Dice != nullptr)
@@ -70,17 +73,52 @@ void UDicePoolModel::RollAll(const FRandomStream& Stream)
 
 void UDicePoolModel::MarkDiceSelected(int32 DiceIndex)
 {
-	// TODO
+	if (mDices.IsValidIndex(DiceIndex) == false || mDices[DiceIndex] == nullptr)
+	{
+		return;
+	}
+
+	if (mSelectedDiceIndices.Contains(DiceIndex))
+	{
+		return;
+	}
+
+	if (mDices[DiceIndex]->IsUsed())
+	{
+		return;
+	}
+
+	mSelectedDiceIndices.Add(DiceIndex);
+	OnSelectedDiceUI.Broadcast(mDices[DiceIndex]);
 }
 
 void UDicePoolModel::MarkDiceUnselected(int32 DiceIndex)
 {
-	// TODO
+	if (mDices.IsValidIndex(DiceIndex) == false || mDices[DiceIndex] == nullptr)
+	{
+		return;
+	}
+
+	if (mSelectedDiceIndices.Remove(DiceIndex) > 0)
+	{
+		OnUnselectedDiceUI.Broadcast(mDices[DiceIndex]);
+	}
 }
 
 void UDicePoolModel::ResetSelected()
 {
-	// TODO
+	TArray<int32> SelectedDiceIndices;
+	SelectedDiceIndices = mSelectedDiceIndices.Array();
+
+	mSelectedDiceIndices.Reset();
+
+	for (int32 DiceIndex : SelectedDiceIndices)
+	{
+		if (mDices.IsValidIndex(DiceIndex) && mDices[DiceIndex] != nullptr)
+		{
+			OnUnselectedDiceUI.Broadcast(mDices[DiceIndex]);
+		}
+	}
 }
 
 /** @brief 확정된 스킬에 사용한 주사위를 이번 턴 잠금 상태로 표시한다. */
@@ -96,12 +134,22 @@ void UDicePoolModel::MarkDiceUsed(int32 DiceIndex)
 
 void UDicePoolModel::MarkSelectedDiceAsUsed()
 {
-	// TODO
+	TArray<int32> SelectedDiceIndices;
+	SelectedDiceIndices = mSelectedDiceIndices.Array();
+
+	for (int32 DiceIndex : SelectedDiceIndices)
+	{
+		MarkDiceUsed(DiceIndex);
+	}
+
+	ResetSelected();
 }
 
 /** @brief 턴 종료/새 턴 시작 시 모든 주사위 사용 잠금을 해제한다. */
 void UDicePoolModel::ResetUsed()
 {
+	ResetSelected();
+
 	for (const TObjectPtr<UDiceModel>& Dice : mDices)
 	{
 		if (Dice != nullptr)
@@ -126,21 +174,20 @@ int32 UDicePoolModel::GetRolledDiceValue(int32 DiceIndex) const
 
 bool UDicePoolModel::IsSelectedDice(int32 DiceIndex) const
 {
-	// TODO
-
-	return false;
+	return mSelectedDiceIndices.Contains(DiceIndex);
 }
 
 int32 UDicePoolModel::GetSelectedDiceNum() const
 {
-	// TODO
-
-	return int32();
+	return mSelectedDiceIndices.Num();
 }
 
 int32 UDicePoolModel::GetSelectedDiceSum() const
 {
-	// TODO
-
-	return int32();
+	int32 SelectedDiceSum = 0;
+	for (int32 DiceIndex : mSelectedDiceIndices)
+	{
+		SelectedDiceSum += GetRolledDiceValue(DiceIndex);
+	}
+	return SelectedDiceSum;
 }

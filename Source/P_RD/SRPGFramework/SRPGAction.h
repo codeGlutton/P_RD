@@ -80,7 +80,7 @@ protected:
 	 * @param Actor 측정된 액터
 	 * @param TileIndex 부딧친 대상의 타일의 인덱스 값
 	 */
-	void GetTileActorUnderCursor(ECollisionChannel Channel, OUT AActor* Actor, OUT FTileIndex& TileIndex) const;
+	void GetTileActorUnderCursor(ECollisionChannel Channel, OUT AActor*& Actor, OUT FTileIndex& TileIndex) const;
 
 	/* 외부 API */
 public:

@@ -62,7 +62,9 @@ public:
 	 * @brief 스킬 인덱스를 입력하면 Out_SkillData에 기록하는 함수
 	 * @details 범위가 유효하지 않으면 false 반환
 	 */
-	void GetSkillData(int In_SkillIndex, OUT TSoftObjectPtr<UStaticSkillData>& Out_SkillData);
+	bool TryGetSkillData(int In_SkillIndex, OUT TSoftObjectPtr<UStaticSkillData>& Out_SkillData) const;
+	void GetSkillData(int In_SkillIndex, OUT TSoftObjectPtr<UStaticSkillData>& Out_SkillData) const;
+	int32 GetSkillDataNum() const;
 
 	/**
 	* @brief 스킬 인덱스에 SkillData를 설정하는 함수

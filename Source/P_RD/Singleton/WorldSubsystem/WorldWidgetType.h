@@ -49,11 +49,10 @@ enum class EWorldWidgetType : uint8
 	InGameSettings,
 
 	/**
-	 * @brief 인게임 탑바의 주사위 버튼으로 여는 공용 주사위 패널
+	 * @brief 인게임 DICE 버튼으로 여는 보유 주사위 패널
 	 *
 	 * @details
-	 * 전투 HUD가 직접 소유하지 않고 WorldWidget으로 준비해 두면, 탑바는 다른 팝업과 같은 OpenUI/CloseUI 규칙으로 열 수 있다.
-	 * 현재는 실제 주사위 사용 로직이 아니라 WBP_DicePanel 표시, 카드 선택, 임시 회전 입력을 확인하는 단계다.
+	 * 탑바가 공용 진입점으로 OpenUI/CloseUI를 관리하고, 패널은 표시와 상세 확인만 담당한다.
 	 *
 	 * @note
 	 * Config/DefaultGame.ini의 mWorldWidgetClasses index와 이 enum 순서는 직접 대응한다.
@@ -62,11 +61,10 @@ enum class EWorldWidgetType : uint8
 	DicePanel,
 
 	/**
-	 * @brief 인게임 탑바의 스킬 버튼으로 여는 공용 스킬 패널
+	 * @brief 인게임 SKILL 버튼으로 여는 보유 스킬 패널
 	 *
 	 * @details
-	 * 주사위 패널과 같은 플로팅 팝업 계층에 두어 MAP/SET/DICE/SKILL 중 하나만 열리는 규칙을 공유한다.
-	 * 현재는 실제 스킬 실행 로직이 아니라 WBP_SkillPanel을 탑바에서 열고 닫는 연결을 확인하는 단계다.
+	 * 탑바가 공용 진입점으로 OpenUI/CloseUI를 관리하고, 패널은 스킬 목록/상세 표시를 담당한다.
 	 *
 	 * @note
 	 * Config/DefaultGame.ini의 mWorldWidgetClasses index와 이 enum 순서는 직접 대응한다.

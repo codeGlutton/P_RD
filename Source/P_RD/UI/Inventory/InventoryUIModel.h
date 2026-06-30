@@ -38,7 +38,7 @@ public:
 
 	/* ───────── gameplay → UI : 표시값을 밀어넣는다 ───────── */
 public:
-	/** @brief 게임플레이/어댑터가 모은 런 상태 표시 스냅샷을 저장하고 변경 알림을 보낸다. */
+	/** @brief 게임플레이가 모은 런 상태 표시 스냅샷을 저장하고 변경 알림을 보낸다. */
 	UFUNCTION(BlueprintCallable, Category = "Inventory|Push") void SetInventory(const FInventoryUI& Inventory);
 
 	/* ───────── 위젯이 읽는다 ───────── */
