@@ -12,6 +12,8 @@
 #include "SRPGFramework/SRPGCommand.h"
 #include "SRPGDiceRollAction.generated.h"
 
+DECLARE_MULTICAST_DELEGATE(FOnShowDicePanelUI);
+
 USTRUCT()
 struct FSRPGDicePrepareCommand : public FSRPGCommand
 {
@@ -19,6 +21,9 @@ struct FSRPGDicePrepareCommand : public FSRPGCommand
 
 public:
 	FSRPGDicePrepareCommand();
+
+public:
+	FOnShowDicePanelUI OnShowDicePanelUI;
 };
 
 USTRUCT()

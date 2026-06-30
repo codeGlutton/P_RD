@@ -519,7 +519,7 @@ void UCombatUIAdapter::PushDiceUIs() const
 		return;
 	}
 
-	const TArray<TObjectPtr<UDiceModel>>& Dice = mDicePool->GetDice();
+	const TArray<TObjectPtr<UDiceModel>>& Dice = mDicePool->GetDices();
 
 	TArray<FDiceSlotUI> Views;
 	Views.Reserve(Dice.Num());

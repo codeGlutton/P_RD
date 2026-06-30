@@ -40,9 +40,6 @@ public:
 public:
 	void PostInitializeComponentModels() override;
 
-protected:
-	UUserWidget* GetInfoPanel() const override;
-
 public:
 	EPlayerJobType GetPlayerJobType() const;
 	int32 GetPlayerLevel() const;

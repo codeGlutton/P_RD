@@ -224,6 +224,9 @@ USRPGTurnContext* USRPGCombatModel::RegisterTurn(UUnitModel* Owner, int32 LifeCo
 {
 	USRPGTurnContext* TurnContext = NewObject<USRPGTurnContext>(this);
 	TurnContext->InitTurn(this, Owner, mTurnContextMaxIndex++, LifeCount);
+	TurnContext->OnShowDicePanelAtTurnStartUI.AddWeakLambda(this, [this](const USRPGTurnContext* TurnContext) {
+		OnShowDicePanelAnyTurnUI.Broadcast(TurnContext);
+		});
 	TurnContext->OnBeginTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext) {
 		OnBeginAnyTurnUI.Broadcast(Barrier, TurnContext);
 		});
@@ -296,6 +299,12 @@ bool USRPGCombatModel::UnregisterTurnImmediately(USRPGTurnContext* TurnContext)
 		{
 			mCurTurnContextOrder = NextNode;
 		}
+
+		TArray<TObjectPtr<USRPGTurnContext>> ActiveTurns = GetTurnContexts(TurnContext->GetOwner());
+		if (ActiveTurns.Num() == 0)
+		{
+			UnregisterUnit(TurnContext->GetOwner());
+		}
 		return true;
 	}
 	return false;
@@ -327,6 +336,11 @@ int32 USRPGCombatModel::UnregisterTurnsImmediately(UUnitModel* Owner)
 		}
 
 		CurNode = NextNode;
+	}
+
+	if (UnregisterCount > 0)
+	{
+		UnregisterUnit(Owner);
 	}
 
 	return UnregisterCount;
@@ -374,16 +388,15 @@ void USRPGCombatModel::RegisterEnemyUnit(FEnemyUnitPlacementData& EnemyPlacement
 
 	checkf(mTileMap->CanPlace(EnemyPlacementData.mTransform.mIndex, EnemyUnit), TEXT("액터 배치 불가능"));
 	
+	mUnits.Push(EnemyUnit);
+
 	// 타일 위에 배치
 	mTileMap->PlaceActor(EnemyPlacementData.mTransform, EnemyUnit);
-	mUnits.Push(EnemyUnit);
 
 	// 턴 등록
 	RegisterTurn(EnemyUnit);
 
-	// 적 AI 시작
-	// AEnemyAIController* AIController = EnemyUnit->GetController<AEnemyAIController>();
-	// AIController->StartLogic(EnemyUnitSpawnData->mStateTree.Get());
+	OnRegisterUnitUI.Broadcast(EnemyUnit);
 }
 
 void USRPGCombatModel::RegisterObstacle(FObstaclePlacementData& ObstaclePlacementData)
@@ -401,8 +414,36 @@ void USRPGCombatModel::RegisterObstacle(FObstaclePlacementData& ObstaclePlacemen
 
 	checkf(mTileMap->CanPlace(ObstaclePlacementData.mTransform.mIndex, Obstacle), TEXT("액터 배치 불가능"));
 
+	mObstacles.Push(Obstacle);
+
 	// 타일 위에 배치
 	mTileMap->PlaceActor(ObstaclePlacementData.mTransform, Obstacle);
+
+	OnRegisterObstacleUI.Broadcast(Obstacle);
+}
+
+void USRPGCombatModel::UnregisterUnit(UUnitModel* Unit)
+{
+	checkf(mTileMap != nullptr, TEXT("타일맵 미존재"));
+
+	OnUnregisterUnitUI.Broadcast(Unit);
+
+	// 타일 위에서 제거
+	mTileMap->RemoveActor(Unit);
+
+	mUnits.RemoveSingleSwap(Unit);
+}
+
+void USRPGCombatModel::UnregisterObstacle(UBoardActorModel* Obstcle)
+{
+	checkf(mTileMap != nullptr, TEXT("타일맵 미존재"));
+
+	OnUnregisterObstacleUI.Broadcast(Obstcle);
+
+	// 타일 위에서 제거
+	mTileMap->RemoveActor(Obstcle);
+
+	mObstacles.RemoveSingleSwap(Obstcle);
 }
 
 void USRPGCombatModel::SpawnTileMap()
@@ -432,6 +473,8 @@ void USRPGCombatModel::RegisterPlayerUnit(UUnitModel* PlayerUnit, const FTileTra
 
 	// 턴 등록
 	RegisterTurn(PlayerUnit);
+
+	OnRegisterUnitUI.Broadcast(PlayerUnit);
 }
 
 void USRPGCombatModel::RegisterEnemyUnits(TArray<FEnemyUnitPlacementData>& EnemyPlacementDatas)
@@ -593,6 +636,11 @@ UTileMapModel* USRPGCombatModel::GetTileMap()
 TArray<TObjectPtr<UUnitModel>>& USRPGCombatModel::GetUnits()
 {
 	return mUnits;
+}
+
+TArray<TObjectPtr<UBoardActorModel>>& USRPGCombatModel::GetObstacles()
+{
+	return mObstacles;
 }
 
 void USRPGCombatModel::ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand, bool NeedEndCurrentAction)

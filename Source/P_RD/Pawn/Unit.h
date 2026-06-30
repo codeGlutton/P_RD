@@ -10,6 +10,7 @@
 #include "RDMinimal.h"
 
 #include "Actor/ActorView.h"
+#include "Actor/BoardActor/BoardSelectionTarget.h"
 #include "GameFramework/Pawn.h"
 
 #include "Unit.generated.h"
@@ -25,7 +26,7 @@ class UArrowComponent;
  * @brief  턴을 소유할 수 있는 베이스 폰 클래스
  */
 UCLASS(abstract)
-class P_RD_API AUnit : public APawn, public IActorView
+class P_RD_API AUnit : public APawn, public IActorView, public IBoardSelectionTarget
 {
 	GENERATED_BODY()
 
