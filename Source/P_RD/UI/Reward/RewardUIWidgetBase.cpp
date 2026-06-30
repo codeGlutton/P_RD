@@ -10,7 +10,7 @@
 
 namespace
 {
-	/** @brief 종류별 기본(폴백) 아이콘 경로. 어댑터가 mIcon을 채우면 그걸 쓰고, 없을 때만 사용. */
+	/** @brief 종류별 기본(폴백) 아이콘 경로. 게임플레이/표시 계층이 mIcon을 채우면 그걸 쓰고, 없을 때만 사용. */
 	const TCHAR* RewardKindIconPath(ERewardChoiceKind Kind)
 	{
 		switch (Kind)

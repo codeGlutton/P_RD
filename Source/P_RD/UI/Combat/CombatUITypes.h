@@ -34,7 +34,7 @@ enum class ECombatUIDomain : uint8
 // 구성: 게임플레이 develop의 ESRPGSkillBuildPhase는 None/AimSelection/Preview 3개뿐이다.
 //   - AimSelection/Preview = 그 enum과 직접 대응.
 //   - SkillSelected/DiceSelect = 게임플레이엔 페이즈로 없고 SRPGSkillBuildAction 상태(mSelectedSkillIndex 채워짐 / mSelectedDices 진행 중)에서
-//     어댑터가 파생해 채우는 UI 하위상태다. 따라서 이 enum을 "develop enum의 거울"로 취급하지 말 것.
+//     UI 표시 계층이 파생해 채우는 UI 하위상태다. 따라서 이 enum을 "develop enum의 거울"로 취급하지 말 것.
 // [합의필요] AimSelection/Preview를 ESRPGSkillBuildPhase와 매핑하는 값만 게임플레이와 맞춘다(나머지 2개는 UI 파생).
 UENUM(BlueprintType)
 enum class ECombatBuildPhaseUI : uint8
@@ -47,14 +47,14 @@ enum class ECombatBuildPhaseUI : uint8
 };
 
 /** @brief 주사위 한 칸을 그릴 때 필요한 표시값입니다. */
-// 어댑터가 UDiceData를 이 struct로 변환한다. 희귀도는 UI가 바로 쓸 수 있게 색/문구로 변환해 담는다.
+// 게임플레이/표시 계층이 UDiceData를 이 struct로 변환한다. 희귀도는 UI가 바로 쓸 수 있게 색/문구로 변환해 담는다.
 // UI 필요값:
 // - mDiceId: 슬롯이 어떤 런 보유 주사위인지 추적한다.
 // - mResultValue/mIsRolled/mRolledFaceIndex: 굴림 전/후 표시, 선택 가능 여부, 3D 면 프리뷰 매칭에 필요하다.
 // - mIsSelected: 스킬 빌드에 올린 주사위 강조 표시.
 // - mIsUsed: 이번 턴 이미 소비된 주사위 잠금/비활성 표시.
 // - mFaceCount/mFaceValues/mFaceTextures: d2/d4/d6/d8/d12/d20 종류와 면별 값/텍스처 표시.
-// - mRarityColor/mRarityText: 희귀도 테두리/라벨 표시. UI가 희귀도 enum을 직접 알지 않게 어댑터가 변환한다.
+// - mRarityColor/mRarityText: 희귀도 테두리/라벨 표시. UI가 희귀도 enum을 직접 알지 않게 표시 계층이 변환한다.
 // - mPreviewTexture: 후속 3D 캡처 계층이 붙으면 굴림면 렌더타깃을 표시한다. 현재는 비워질 수 있다.
 USTRUCT(BlueprintType)
 struct FDiceSlotUI
@@ -107,7 +107,7 @@ struct FUnitUI
 	UPROPERTY(BlueprintReadOnly) float mSkillPoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) FTileIndex mTile;
 
-	// 머리 위 HP바를 월드→스크린 투영으로 띄우기 위한 유닛 월드 위치. 어댑터가 채우고 UI는 투영만 한다.
+	// 머리 위 HP바를 월드→스크린 투영으로 띄우기 위한 유닛 월드 위치. 게임플레이가 채우고 UI는 투영만 한다.
 	UPROPERTY(BlueprintReadOnly) FVector mWorldLocation = FVector::ZeroVector;
 
 	// 머리 위 버프/디버프 아이콘용. enum 대신 태그로 받아 UI가 게임플레이 상태 enum에 의존하지 않게 한다.
@@ -181,8 +181,8 @@ struct FSkillTargetingUI
 
 /** @brief 스킬 레일에 그릴 스킬 한 칸. */
 // UI 필요값:
-// - mSkillIndex: 클릭/롱프레스 시 RequestSelectSkill/RequestLongPressSkill payload.
-// - mName/mIcon: 스킬 버튼의 기본 표시.
+// - mSkillIndex: 클릭/롱프레스 시 CombatGameMode 입력 payload.
+// - mName/mIcon/mDescription: 스킬 버튼과 롱프레스 상세 패널의 기본 표시.
 // - mDiceCost: 필요한 주사위 개수/조건 표시.
 // - mIsUsable: 현재 페이즈/자원에서 누를 수 있는지 비활성 표시.
 // - mTargeting: 스킬 선택 시 조준 가이드(사거리/형태)를 즉시 그리기 위한 시전/타격 범위 메타.
@@ -195,32 +195,12 @@ struct FSkillUI
 	// UI payload로 왕복하는 index. 최종 스킬 데이터 연결 시 SkillId와 1:1 매핑되어야 한다.
 	UPROPERTY(BlueprintReadOnly) int32 mSkillIndex = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) FText mName;
+	UPROPERTY(BlueprintReadOnly) FText mDescription;
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
 	UPROPERTY(BlueprintReadOnly) int32 mDiceCost = 0;
 	UPROPERTY(BlueprintReadOnly) bool mIsUsable = false;
 	UPROPERTY(BlueprintReadOnly) FSkillTargetingUI mTargeting;
 };
-
-/** @brief 스킬을 길게 눌렀을 때의 상세창 내용. */
-// UI 필요값:
-// - mSkillIndex: 현재 상세창이 어떤 스킬을 설명하는지 식별.
-// - mName/mDescription/mIcon: 롱프레스 상세 패널의 제목/본문/아이콘.
-// - mDiceCost: 상세 패널에서도 요구 주사위 조건을 보여준다.
-// - mTargeting: 상세 패널에서 사거리/타격범위/곡사·관통 등 풀스펙 안내.
-// [합의필요] 스킬 설명/아이콘 최종 데이터 연결 필요.
-USTRUCT(BlueprintType)
-struct FSkillDetailUI
-{
-	GENERATED_BODY()
-
-	UPROPERTY(BlueprintReadOnly) int32 mSkillIndex = INDEX_NONE;
-	UPROPERTY(BlueprintReadOnly) FText mName;
-	UPROPERTY(BlueprintReadOnly) FText mDescription;
-	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
-	UPROPERTY(BlueprintReadOnly) int32 mDiceCost = 0;
-	UPROPERTY(BlueprintReadOnly) FSkillTargetingUI mTargeting;
-};
-
 
 /** @brief 행동/시뮬레이션 결과 큐의 한 노드이며 애니메이션 한 단위에 해당합니다. */
 // 여러 효과를 한 노드에 담을지 효과별로 나눌지는 합의 전이다. 현재 계약은 mTags로 종류를 구분한다.
@@ -250,7 +230,7 @@ struct FCombatQueueNode
 // - mName/mIcon: 슬롯 표시와 상세 패널 제목/아이콘.
 // - mIsEquipped: 장착 상태 강조.
 // - mRarityColor: 희귀도 테두리/배경색.
-// [합의필요] 장비/인벤토리 최종 데이터 소스 연결 필요. 현재 어댑터는 임시 슬롯만 넣는다.
+// [합의필요] 장비/인벤토리 최종 데이터 소스 연결 필요.
 USTRUCT(BlueprintType)
 struct FEquipmentUI
 {
@@ -287,7 +267,7 @@ struct FPlayerMetaUI
 // - mRound: 라운드 카운터.
 // - mPhase: 스킬 선택/주사위 선택/조준/미리보기 등 UI 레이어 전환(ECombatBuildPhaseUI — UI 전용 상태).
 // - mTurnOrderUnitIds: 턴 순서 바/다음 행동자 표시.
-// [합의필요] mPhase의 AimSelection/Preview만 develop ESRPGSkillBuildPhase와 매핑(SkillSelected/DiceSelect는 어댑터 파생).
+// [합의필요] mPhase의 AimSelection/Preview만 develop ESRPGSkillBuildPhase와 매핑(SkillSelected/DiceSelect는 UI 표시 계층 파생).
 USTRUCT(BlueprintType)
 struct FTurnUI
 {

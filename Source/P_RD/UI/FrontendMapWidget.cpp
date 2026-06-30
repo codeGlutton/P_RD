@@ -375,7 +375,7 @@ namespace
  * @details
  * 선/노드 WBP 클래스는 WBP_FrontendMap Class Defaults에서 지정한다.
  * C++은 특정 WBP 경로를 직접 알지 않고, 런타임에는 지정된 클래스가 없을 때 경고만 남긴다.
- * 월드맵은 탑바에서 OpenUI()로 열리는 팝업이므로 일반 HUD보다 위에 표시한다.
+ * 월드맵은 인게임에서 OpenUI()로 열리는 팝업이므로 일반 HUD보다 위에 표시한다.
  */
 UFrontendMapWidget::UFrontendMapWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

@@ -59,7 +59,7 @@ void UDicePanelWidget::RefreshDicePanelWidgets()
 			mDicePanelCardBorders[DiceIndex]->SetVisibility(bShouldShowDice ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 			if (bShouldShowDice)
 			{
-				const FLinearColor RarityColor = RDUIDice::GetDiceRarityColor(mDicePanelViews[DiceIndex].mRarityType, RDUIDice::EDiceRarityColorTone::DicePanel);
+				const FLinearColor RarityColor = RDUIDice::GetDiceRarityColor(mDicePanelViews[DiceIndex]);
 				mDicePanelCardBorders[DiceIndex]->SetBrushColor(FLinearColor(RarityColor.R * 0.38f, RarityColor.G * 0.45f, RarityColor.B * 0.44f, 0.92f));
 			}
 		}
@@ -76,7 +76,7 @@ void UDicePanelWidget::RefreshDicePanelWidgets()
 
 void UDicePanelWidget::ApplyDiceFaceVisuals(int32 DiceIndex, const FDiceViewData& DiceView)
 {
-	const FLinearColor RarityColor = RDUIDice::GetDiceRarityColor(DiceView.mRarityType, RDUIDice::EDiceRarityColorTone::DicePanel);
+	const FLinearColor RarityColor = RDUIDice::GetDiceRarityColor(DiceView);
 	const FLinearColor PendingColor(
 		RarityColor.R * 0.58f,
 		RarityColor.G * 0.58f,

@@ -46,7 +46,7 @@ public:
 
 	/* ───────── gameplay → UI : 표시값을 밀어넣는다 ───────── */
 public:
-	/** @brief 게임플레이/어댑터가 확정한 상점 표시 스냅샷을 저장하고 변경 알림을 보낸다. */
+	/** @brief 게임플레이가 확정한 상점 표시 스냅샷을 저장하고 변경 알림을 보낸다. */
 	UFUNCTION(BlueprintCallable, Category = "Shop|Push") void SetShop(const FShopUI& Shop);
 
 	/* ───────── 위젯이 읽는다 ───────── */

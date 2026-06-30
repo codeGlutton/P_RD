@@ -8,6 +8,7 @@
 #include "Components/TextBlock.h"
 #include "Components/Viewport.h"
 #include "Engine/Texture2D.h"
+#include "UI/CombatTileMapHUDWidgetPrivate.h"
 
 namespace
 {
@@ -177,56 +178,6 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		}
 	}
 
-	if (mSkillDetailDismissButton == nullptr)
-	{
-		mSkillDetailDismissButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("SkillDetailDismissButton"));
-		if (mSkillDetailDismissButton != nullptr)
-		{
-			mSkillDetailDismissButton->SetBackgroundColor(FLinearColor(0.0f, 0.0f, 0.0f, 0.01f));
-			mSkillDetailDismissButton->SetVisibility(ESlateVisibility::Collapsed);
-			mSkillDetailDismissButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleSkillDetailDismissButtonClicked);
-			TargetRootCanvas->AddChildToCanvas(mSkillDetailDismissButton);
-		}
-	}
-
-	if (mSkillDetailPanel == nullptr)
-	{
-		mSkillDetailPanel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("SkillDetailPanel"));
-		mSkillDetailText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("SkillDetailText"));
-		if (mSkillDetailPanel != nullptr && mSkillDetailText != nullptr)
-		{
-			mSkillDetailPanel->SetBrushColor(FLinearColor(0.025f, 0.042f, 0.048f, 0.96f));
-			mSkillDetailPanel->SetPadding(FMargin(32.0f, 28.0f));
-			mSkillDetailPanel->AddChild(mSkillDetailText);
-			mSkillDetailText->SetJustification(ETextJustify::Left);
-			mSkillDetailText->SetColorAndOpacity(FSlateColor(FLinearColor(0.88f, 1.0f, 0.96f, 1.0f)));
-			mSkillDetailText->SetAutoWrapText(true);
-			mSkillDetailText->SetLineHeightPercentage(1.12f);
-			mSkillDetailPanel->SetVisibility(ESlateVisibility::Collapsed);
-			TargetRootCanvas->AddChildToCanvas(mSkillDetailPanel);
-		}
-	}
-
-	if (mSkillDetailBackdropPanels.Num() == 0)
-	{
-		for (int32 PanelIndex = 0; PanelIndex < 1; ++PanelIndex)
-		{
-			UBorder* BackdropPanel = WidgetTree->ConstructWidget<UBorder>(
-				UBorder::StaticClass(),
-				FName(*FString::Printf(TEXT("SkillDetailBackdropPanel_%d"), PanelIndex))
-			);
-			if (BackdropPanel == nullptr)
-			{
-				continue;
-			}
-
-			BackdropPanel->SetBrushColor(FLinearColor(0.015f, 0.020f, 0.025f, 0.78f));
-			BackdropPanel->SetVisibility(ESlateVisibility::Collapsed);
-			TargetRootCanvas->AddChildToCanvas(BackdropPanel);
-			mSkillDetailBackdropPanels.Add(BackdropPanel);
-		}
-	}
-
 	if (mCombatFeedText == nullptr)
 	{
 		mCombatFeedText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("CombatFeedText"));
@@ -246,7 +197,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		{
 			mCombatStatusBarText->SetJustification(ETextJustify::Left);
 			mCombatStatusBarText->SetColorAndOpacity(FSlateColor(FLinearColor(0.96f, 1.0f, 0.92f, 1.0f)));
-			// Lv/HP/Gold는 이제 탑바(TopMenuBar)에서 보여주므로 전투 HUD의 중복 상태줄은 숨긴다.
+			// Lv/HP/Gold는 디자이너 스킨의 전투 HUD 값 텍스트에서 보여주므로 중복 상태줄은 숨긴다.
 			mCombatStatusBarText->SetVisibility(ESlateVisibility::Collapsed);
 			TargetRootCanvas->AddChildToCanvas(mCombatStatusBarText);
 		}
@@ -267,6 +218,45 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		}
 	}
 
+	auto EnsureTransparentButton = [this, TargetRootCanvas](TObjectPtr<UButton>& Button, const TCHAR* ButtonName) -> UButton*
+	{
+		if (Button == nullptr)
+		{
+			Button = FindNamedWidget<UButton>(WidgetTree, ButtonName);
+		}
+		if (Button == nullptr)
+		{
+			Button = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), FName(ButtonName));
+			if (Button != nullptr)
+			{
+				TargetRootCanvas->AddChildToCanvas(Button);
+			}
+		}
+		if (Button != nullptr)
+		{
+			Button->SetBackgroundColor(RDCombatHUD::GetTransparentInputButtonColor());
+			Button->SetVisibility(ESlateVisibility::Visible);
+		}
+		return Button.Get();
+	};
+
+	if (UButton* MapButton = EnsureTransparentButton(mMapNavButton, TEXT("MapNavInputButton")))
+	{
+		MapButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleMapNavButtonClicked);
+	}
+	if (UButton* DiceButton = EnsureTransparentButton(mDiceNavButton, TEXT("DiceNavInputButton")))
+	{
+		DiceButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleDiceNavButtonClicked);
+	}
+	if (UButton* SkillButton = EnsureTransparentButton(mSkillNavButton, TEXT("SkillNavInputButton")))
+	{
+		SkillButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleSkillNavButtonClicked);
+	}
+	if (UButton* SettingsButton = EnsureTransparentButton(mSettingsNavButton, TEXT("SettingsNavInputButton")))
+	{
+		SettingsButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleSettingsNavButtonClicked);
+	}
+
 	if (EndTurnButton == nullptr)
 	{
 		EndTurnButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("EndTurnButton"));
@@ -281,47 +271,8 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		}
 	}
 
-	// 탑바 내비 투명 버튼(MAP/DICE/SKILL/SET): concept 내비 아트 위에 얹어 클릭만 받고 TopMenuBar 패널 토글로 위임한다.
-	// 스킨 모드에서만 만든다 — 비스킨 모드는 레거시 TopMenuBar가 보이며 직접 입력을 받기 때문(중복 방지).
-	if (IsDesignerSkinActive())
-	{
-		auto MakeNavButton = [&](TObjectPtr<UButton>& OutButton, const TCHAR* Name)
-		{
-			if (OutButton == nullptr)
-			{
-				OutButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), Name);
-				if (OutButton != nullptr)
-				{
-					OutButton->SetBackgroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.01f));   // 항상 투명: concept 내비 아트가 보이게.
-					TargetRootCanvas->AddChildToCanvas(OutButton);
-				}
-			}
-		};
-		MakeNavButton(mNavMapButton, TEXT("NavMapButton"));
-		MakeNavButton(mNavDiceButton, TEXT("NavDiceButton"));
-		MakeNavButton(mNavSkillButton, TEXT("NavSkillButton"));
-		MakeNavButton(mNavSettingsButton, TEXT("NavSettingsButton"));
-		if (mNavMapButton != nullptr)
-		{
-			mNavMapButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleNavMapButtonClicked);
-		}
-		if (mNavDiceButton != nullptr)
-		{
-			mNavDiceButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleNavDiceButtonClicked);
-		}
-		if (mNavSkillButton != nullptr)
-		{
-			mNavSkillButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleNavSkillButtonClicked);
-		}
-		if (mNavSettingsButton != nullptr)
-		{
-			mNavSettingsButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleNavSettingsButtonClicked);
-		}
-	}
-
 	RebuildSkillRailWidgets();
 	EnsureSkillInputButtons();
-	RebuildEquipmentBar();    // 탑바 좌측 하단 장비 칩(뷰모델 미연결이면 비워 둠)
-	RebuildTurnOrderBar();    // 탑바 가운데 하단 턴 순서 칩
+	RebuildTurnOrderBar();    // 전투 HUD 가운데 하단 턴 순서 칩
 	ApplyRuntimeWidgetLayout();
 }

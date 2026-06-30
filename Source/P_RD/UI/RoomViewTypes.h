@@ -123,7 +123,7 @@ struct P_RD_API FMapRoomView
  *
  * @details
  * URunPersistData는 현재 런/스테이지/플레이어 값을 제공하지만,
- * TopMenuBar와 월드맵 UI가 그 객체를 직접 만지면 저장/포기/지도 표시 가능 여부 판단이 위젯으로 새기 쉽다.
+ * 월드맵 UI가 그 객체를 직접 만지면 저장/포기/지도 표시 가능 여부 판단이 위젯으로 새기 쉽다.
  * 이 구조체는 그 경계를 막기 위한 View DTO다.
  *
  * 예를 들어 "현재 Run이 있는지", "저장 버튼을 켤 수 있는지", "지도 처음 표시 시 시작 지점으로
@@ -134,7 +134,7 @@ struct P_RD_API FMapRoomView
  * Widget은 이 값을 보고 버튼 활성화, 시작 위치 스크롤 같은 표시만 결정한다.
  * 실제 저장/포기/전환 명령은 GameMode 또는 Subsystem API를 통해 수행한다.
  * Run 저장은 방 진입 시 RoomGameModeBase에서 자동 처리하므로,
- * TopMenuBar/월드맵 화면에서는 Run 저장 버튼을 활성화하지 않는다. 옵션 저장처럼 UserPersistData에 속하는
+ * 월드맵 화면에서는 Run 저장 버튼을 활성화하지 않는다. 옵션 저장처럼 UserPersistData에 속하는
  * 설정 저장 API가 생기면 그때 별도 View 값으로 분리한다.
  */
 USTRUCT(BlueprintType)
@@ -145,7 +145,7 @@ struct P_RD_API FRunControlView
 	UPROPERTY(Category = UI, BlueprintReadOnly)
 	bool mHasActiveRun = false;
 
-	// TopMenuBar와 월드맵에서는 Run 저장을 제공하지 않으므로 현재 false로 유지한다.
+	// 월드맵에서는 Run 저장을 제공하지 않으므로 현재 false로 유지한다.
 	UPROPERTY(Category = UI, BlueprintReadOnly)
 	bool mCanSaveRun = false;
 

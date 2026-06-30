@@ -53,6 +53,8 @@ void UDicePanelWidget::RefreshDicePanelViews()
 		FDiceViewData DiceView;
 		DiceView.mDiceId = DiceId;
 		DiceView.mRarityType = RDUIDice::ResolveDiceRarity(DiceId);
+		DiceView.mRarityColor = RDUIDice::GetDiceRarityColor(DiceView.mRarityType);
+		DiceView.mRarityText = RDUIDice::GetDiceRarityText(DiceView.mRarityType);
 		DiceView.mIsRolled = false;
 		DiceView.mFaceCount = 6;
 		DiceView.mRolledFaceIndex = INDEX_NONE;

@@ -63,17 +63,24 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
 
         const FSRPGSkillSelectCommand& SkillSelectCommand = Command.Get<FSRPGSkillSelectCommand>();
 
-        if (SkillSelectCommand.mSkillIndex != mSelectedSkillIndex)
-        {
-            OnChangeSkillBuildPhase = SkillSelectCommand.OnChangeSkillBuildPhase;
+        OnChangeSkillBuildPhase = SkillSelectCommand.OnChangeSkillBuildPhase;
 
-            ResetTargetTile();
-            ResetDice();
-            ResetSkill();
-            SetSkill(SkillSelectCommand.mSkillIndex);
-            RefreshAimableTileHighlights();
-            SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
+        if (SkillSelectCommand.mSkillIndex == mSelectedSkillIndex)
+        {
+            SetBuildPhase(ESRPGSkillBuildPhase::None);
+            MarkActionCompleted(ESRPGActionResult::Cancelled);
+            return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
         }
+
+        ResetTargetTile();
+        ResetDice();
+        ResetSkill();
+        if (SetSkill(SkillSelectCommand.mSkillIndex) == false)
+        {
+            return CombineSRPGCommandResult(ESRPGCommandResult::Ignored, Result);
+        }
+        RefreshAimableTileHighlights();
+        SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
     case ESRPGCommandType::DiceSelect:
@@ -195,7 +202,7 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
     return Result;
 }
 
-void USRPGSkillBuildAction::SetSkill(int32 SkillIndex)
+bool USRPGSkillBuildAction::SetSkill(int32 SkillIndex)
 {
     checkf(mSkillBuildPhase == ESRPGSkillBuildPhase::None, TEXT("스킬 빌드 순서 오류"));
 
@@ -213,12 +220,21 @@ void USRPGSkillBuildAction::SetSkill(int32 SkillIndex)
         if (StaticSkillDataSoftObj == nullptr)
         {
             UE_LOG(LogSRPGCombat, Warning, TEXT("스킬 시전 시 비정상적 스킬 선택"));
-            return;
+            return false;
+        }
+
+        UStaticSkillData* StaticSkillData = StaticSkillDataSoftObj.LoadSynchronous();
+        if (StaticSkillData == nullptr)
+        {
+            UE_LOG(LogSRPGCombat, Warning, TEXT("스킬 시전 시 스킬 데이터 로드 실패"));
+            return false;
         }
 
         mSelectedSkillIndex = SkillIndex;
-        mSelectedSkill = StaticSkillDataSoftObj.Get();
+        mSelectedSkill = StaticSkillData;
     }
+
+    return true;
 }
 
 void USRPGSkillBuildAction::ChangeDices(int32 RequestedDiceIndex)
@@ -289,8 +305,9 @@ void USRPGSkillBuildAction::BuildSkill()
     UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
     checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
 
-    // 확정
-    DicePoolModel->MarkSelectedDiceAsUsed();
+	// 확정 전에 합계를 보관한다. MarkSelectedDiceAsUsed()는 선택 목록을 비우므로 이후 합산하면 0이 된다.
+	const int32 SelectedDiceSum = DicePoolModel->GetSelectedDiceSum();
+	DicePoolModel->MarkSelectedDiceAsUsed();
 
     USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
     checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 서브시스템 모델 nullptr"));
@@ -299,7 +316,7 @@ void USRPGSkillBuildAction::BuildSkill()
     SkillCastCommand.InitializeAs<FSRPGSkillCastCommand>();
     SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mSkillIndex = mSelectedSkillIndex;
     SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mEffectTileIndexes = mEffectTileIndexes;
-    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDicePoint = DicePoolModel->GetSelectedDiceSum();
+    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDicePoint = SelectedDiceSum;
 
     CommandRouterModel->SummitCommand(SkillCastCommand);
 }

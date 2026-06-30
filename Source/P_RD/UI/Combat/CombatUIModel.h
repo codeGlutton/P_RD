@@ -1,37 +1,16 @@
 #pragma once
 
-/** @brief 전투 UI와 게임플레이를 잇는 단일 뷰모델 계약입니다. */
-// gameplay -> UI: 게임플레이/어댑터가 Set*()으로 표시값을 밀어넣고, 위젯은 Get*()으로 읽는다.
-// UI -> gameplay: 위젯은 Request*()로 의도만 보내고, 게임플레이가 입력 델리게이트를 구독해 실제 처리한다.
+/** @brief 전투 UI가 읽는 표시 스냅샷 모델입니다. */
+// gameplay -> UI: 게임플레이/표시 계층이 Set*()으로 표시값을 밀어넣고, 위젯은 Get*()으로 읽는다.
 // Queue: 행동 결과는 FCombatQueueNode 큐로 받고, ResolveFrontQueueNode() 한 번에 한 연출 단위씩 비운다.
-// 계약 의도: 게임플레이가 리팩토링돼도 Set/Get/Request 경계가 유지되면 위젯 변경을 최소화한다.
+// 계약 의도: 게임플레이가 리팩토링돼도 Set/Get 표시 경계가 유지되면 위젯 변경을 최소화한다.
 
 #include "RDMinimal.h"
 #include "UI/Combat/CombatUITypes.h"
 
 #include "CombatUIModel.generated.h"
 
-/** @brief UI가 게임플레이에 보내는 의도 종류(index 기반 명령). 타일/월드 터치는 별도 델리게이트로 보낸다. */
-UENUM(BlueprintType)
-enum class ECombatInputType : uint8
-{
-	SelectSkill,      // payload = SkillIndex
-	ToggleDice,       // payload = DiceIndex
-	RollDice,         // payload 없음(터치로 굴림)
-	LongPressSkill,   // payload = SkillIndex (상세창)
-	LongPressUnit,    // payload = UnitId (적 정보)
-	Move,             // payload 없음(채운 무브포인트 소모)
-	EndTurn,          // payload 없음
-	Cancel,           // payload 없음(딴 데 탭 = 초기화)
-	LongPressEquip    // payload = SlotIndex (장비 상세)
-};
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatUIChanged, ECombatUIDomain, Domain);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatQueueNodeResolved, FCombatQueueNode, Node);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatActionResolved);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatCommand, ECombatInputType, Type, int32, IntPayload);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatWorldTouch, FVector2D, ScreenPosition, bool, bLongPress);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnApplyDiceResults, const TArray<int32>&, RolledFaceIndices);
 
 /** @brief 전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다. */
 UCLASS(BlueprintType)
@@ -41,64 +20,15 @@ class P_RD_API UCombatUIModel : public UObject
 
 	/* ───────── 위젯이 구독하는 알림 ───────── */
 public:
-	/** @brief 어떤 도메인이 갱신됐는지 알림. 위젯은 자기 도메인만 다시 그린다. */
-	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
-	FOnCombatUIChanged OnUIChanged;
-
 	/** @brief 큐 노드 하나가 처리(재생)됐음을 알림. 위젯은 머리 위 숫자 등을 띄우고 한 칸 비운다. */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
 	FOnCombatQueueNodeResolved OnQueueNodeResolved;
 
-	/** @brief 스킬/액션이 확정·취소되어 빌드가 끝났음을 알림. 위젯은 스킬/주사위 선택 강조를 푼다. */
-	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
-	FOnCombatActionResolved OnActionResolved;
-
-	/* ───────── 게임플레이가 구독하는 입력(의도) ───────── */
-	// UI는 Request*()로 의도만 보낸다. 게임플레이가 아래 델리게이트를 구독해 실제 처리해야 한다.
-public:
-	/** @brief UI 명령(스킬선택/주사위토글/굴림/이동/턴종료/취소/롱프레스). [게임플레이 구독] RollDice면 굴려서 SetDiceUIs로 결과 push. */
-	UPROPERTY(BlueprintAssignable, Category = "Combat|Input")
-	FOnCombatCommand OnCombatCommand;
-
-	/** @brief 월드 터치(UI는 스크린좌표만 전달). [게임플레이 구독] 스크린→타일 변환은 게임플레이가 수행. [합의필요] 변환 책임 일원화. */
-	UPROPERTY(BlueprintAssignable, Category = "Combat|Input")
-	FOnCombatWorldTouch OnCombatWorldTouch;
-
-	/** @brief 입장 물리 굴림의 결과면(0-base index)을 전투 풀에 반영하라는 알림. [게임플레이 구독] */
-	UPROPERTY(BlueprintAssignable, Category = "Combat|Input")
-	FOnApplyDiceResults OnApplyDiceResults;
-
-	/* ───────── UI → gameplay : 의도만 보낸다 ───────── */
-public:
-	/** @brief SkillIndex를 그대로 게임플레이에 전달한다. UI는 스킬 객체를 직접 들고 있지 않는다. */
-	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestSelectSkill(int32 SkillIndex);
-	/** @brief DiceIndex 선택/해제를 의도로 보낸다. 사용 가능 여부와 값 검증은 게임플레이/어댑터가 수행한다. */
-	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestToggleDice(int32 DiceIndex);
-	/** @brief 현재 보유 주사위 굴림 요청만 보낸다. RNG와 결과 push는 구독자가 책임진다. */
-	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestRollDice();
-
-	/** @brief 입장 물리 굴림 결과면(0-base)을 게임플레이에 반영하라고 알린다. */
-	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestApplyDiceResults(const TArray<int32>& RolledFaceIndices);
-	/** @brief SkillIndex 상세 표시 요청을 보낸다. 상세 데이터는 SetSkillDetail()로 되돌아온다. */
-	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestLongPressSkill(int32 SkillIndex);
-	/** @brief UnitId 상세 표시 요청을 보낸다. UI는 UnitId를 상태 객체로 해석하지 않는다. */
-	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestLongPressUnit(int32 UnitId);
-	/** @brief MOVE 모드 진입 의도만 보낸다. 실제 타일 판정은 월드 터치 입력 뒤 처리된다. */
-	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestMove();
-	/** @brief 턴 종료 버튼 의도. 실제 턴 시스템 호출과 실패 처리는 게임플레이가 맡는다. */
-	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestEndTurn();
-	/** @brief 현재 스킬/주사위/타겟 선택 취소 의도. UI 강조 해제는 OnActionResolved로 되돌아온다. */
-	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestCancel();
-	/** @brief 장비 슬롯 상세 요청. SlotIndex는 FEquipmentUI.mSlotIndex와 같은 계약이다. */
-	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestLongPressEquip(int32 SlotIndex);
-	/** @brief 화면 좌표와 롱프레스 여부만 넘긴다. 월드/타일 변환은 UIModel 바깥의 책임이다. */
-	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress);
-
 	/* ───────── gameplay → UI : 표시값을 밀어넣는다 ─────────
 	   각 Set*()은 UI가 그리려면 게임플레이가 반드시 공급해야 하는 값이다(UI는 못 만듦).
-	   [소스]=가져올 곳(정해짐), [합의필요]=진짜 소스 미정(현재 Mock/placeholder). */
+	   [소스]=가져올 곳(정해짐), [합의필요]=진짜 소스 미정. */
 public:
-	/** @brief 전체 유닛 HP/이동력/타일/HP바위치/상태태그. [합의필요] HP/MaxHP 진짜소스=UUnitData(GAS 폐기후), 현재 placeholder. */
+	/** @brief 전체 유닛 HP/이동력/타일/HP바위치/상태태그. [합의필요] HP/MaxHP 진짜소스=UUnitData(GAS 폐기후). */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetUnitUIs(const TArray<FUnitUI>& Units);
 	/** @brief 유닛 롱프레스 상세(이름/레벨/초상화/패시브). [합의필요] UUnitData 연결. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetUnitDetail(const FUnitDetailUI& Detail);
@@ -106,15 +36,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetDiceUIs(const TArray<FDiceSlotUI>& Dice);
 	/** @brief 스킬에 올린 주사위 index들+합계. [소스] SRPGSkillBuildAction.mSelectedDices. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetSelectedDice(const TArray<int32>& SelectedIndices, int32 SelectedSum);
-	/** @brief 스킬 레일(이름/아이콘/주사위코스트/사용가능). [합의필요] 소스=USkillComponent(김준형), 현재 Mock. */
+	/** @brief 스킬 레일(이름/아이콘/주사위코스트/사용가능). [합의필요] 소스=USkillComponent(김준형). */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetSkillUIs(const TArray<FSkillUI>& Skills);
-	/** @brief 스킬 롱프레스 상세. [합의필요] 스킬 데이터 연결. */
-	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetSkillDetail(const FSkillDetailUI& Detail);
-	/** @brief 턴유닛/라운드/페이즈/턴순서. mPhase=ECombatBuildPhaseUI(UI 전용). [합의필요] AimSelection/Preview만 ESRPGSkillBuildPhase와 매핑(모호재), SkillSelected/DiceSelect는 어댑터 파생. */
+	/** @brief 턴유닛/라운드/페이즈/턴순서. mPhase=ECombatBuildPhaseUI(UI 전용). [합의필요] AimSelection/Preview만 ESRPGSkillBuildPhase와 매핑(모호재), SkillSelected/DiceSelect는 UI 표시 계층 파생. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetTurnUI(const FTurnUI& Turn);
 	/** @brief 장비 슬롯(아이콘/이름/장착/희귀도). [합의필요] 장비 데이터 소스 미정, 현재 임시. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetEquipmentUIs(const TArray<FEquipmentUI>& Equipment);
-	/** @brief 상단 메타(Gold/Lv/Exp). [합의필요] 진짜소스=UUnitData/URunPersistData, 현재 placeholder. */
+	/** @brief 상단 메타(Gold/Lv/Exp). [합의필요] 진짜소스=UUnitData/URunPersistData. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetPlayerMeta(const FPlayerMetaUI& Meta);
 
 	/** @brief 행동/예측 결과 큐를 통째로 설정(예측 표시용). */
@@ -122,9 +50,6 @@ public:
 
 	/** @brief 큐 맨 앞 노드 하나를 처리 완료로 비우고 OnQueueNodeResolved를 쏜다(애니 한 단위 끝날 때 호출). */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void ResolveFrontQueueNode();
-
-	/** @brief 스킬/액션 빌드가 끝났음을 UI에 알린다(OnActionResolved). 게임플레이가 확정/취소 시 호출. */
-	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyActionResolved();
 
 	/* ───────── 위젯이 읽는다 ───────── */
 public:
@@ -134,7 +59,6 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<int32>& GetSelectedDiceIndices() const { return mSelectedDiceIndices; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") int32 GetSelectedDiceSum() const { return mSelectedDiceSum; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FSkillUI>& GetSkillUIs() const { return mSkillUIs; }
-	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FSkillDetailUI& GetSkillDetail() const { return mSkillDetail; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FCombatQueueNode>& GetActionQueue() const { return mActionQueue; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FTurnUI& GetTurnUI() const { return mTurnUI; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FEquipmentUI>& GetEquipmentUIs() const { return mEquipmentUIs; }
@@ -153,8 +77,6 @@ private:
 	UPROPERTY(Transient) int32 mSelectedDiceSum = 0;
 	/** @brief 스킬 레일 표시 스냅샷. SkillIndex payload와 같은 index 계약을 가진다. */
 	UPROPERTY(Transient) TArray<FSkillUI> mSkillUIs;
-	/** @brief 마지막 스킬 상세 스냅샷. */
-	UPROPERTY(Transient) FSkillDetailUI mSkillDetail;
 	/** @brief 아직 재생되지 않은 행동 결과 큐. ResolveFrontQueueNode()가 앞에서 하나씩 제거한다. */
 	UPROPERTY(Transient) TArray<FCombatQueueNode> mActionQueue;
 	/** @brief 현재 턴/라운드/페이즈 표시 스냅샷. */

@@ -39,6 +39,12 @@ void UUnitModel::PostInitializeComponentModels()
 	// 스폰 데이터에 지정된 장비를 일괄 장착
 	if (UStaticUnitSpawnData* UnitSpawn = Cast<UStaticUnitSpawnData>(mStaticSpawnData))
 	{
+		if (USkillComponentModel* SkillComponentModel = GetSkillComponentModel())
+		{
+			// [216 통합] 215 API: 스킬 목록 일괄 장착.
+			SkillComponentModel->SetSkillFrom(UnitSpawn->mSkillDatas);
+		}
+
 		GetEquipmentComponentModel()->EquipFrom(UnitSpawn->mEquipmentDatas);
 	}
 }

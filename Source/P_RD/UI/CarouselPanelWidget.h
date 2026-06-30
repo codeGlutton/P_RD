@@ -1,6 +1,6 @@
 /**
  * @file CarouselPanelWidget.h
- * @brief 탑바 플로팅 패널에서 공통으로 쓰는 캐러셀형 선택 위젯 베이스.
+ * @brief 인게임 플로팅 패널에서 공통으로 쓰는 캐러셀형 선택 위젯 베이스.
  */
 
 #pragma once
@@ -24,7 +24,7 @@ class UWidget;
  * 항목 안에 CarouselButton_0 같은 버튼을 따로 넣어두면 클릭 이벤트도 연결하지만, 버튼이 없어도 패널 자체가 터치 위치로 항목을 선택한다.
  *
  * 왜 공통 베이스로 두는가:
- * 주사위와 스킬은 내용은 다르지만 “탑바 버튼으로 열림, 닫기 버튼으로 닫힘, 여러 카드 중 하나를 선택함”이라는 화면 동작이 같다.
+ * 주사위와 스킬은 내용은 다르지만 “버튼으로 열림, 닫기 버튼으로 닫힘, 여러 카드 중 하나를 선택함”이라는 화면 동작이 같다.
  * 이 동작을 각 패널에 따로 넣으면 이후 카드 배치나 터치 반응을 고칠 때 두 파일을 같이 수정해야 한다.
  */
 UCLASS(Abstract, BlueprintType, Blueprintable)
@@ -37,7 +37,7 @@ public:
 	 * @brief 공통 캐러셀 패널의 표시 계층과 기본 상태를 준비한다.
 	 *
 	 * @details
-	 * 실제 카드 위젯은 WBP에서 만들고, 생성자는 패널이 탑바 팝업 계층에서 보이도록 기본 ZOrder만 잡는다.
+	 * 실제 카드 위젯은 WBP에서 만들고, 생성자는 패널이 팝업 계층에서 보이도록 기본 ZOrder만 잡는다.
 	 */
 	UCarouselPanelWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 

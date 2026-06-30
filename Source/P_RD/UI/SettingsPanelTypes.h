@@ -54,7 +54,7 @@ struct P_RD_API FSettingsPanelValueModel
 	ESettingsQualityLevel mQualityLevel = ESettingsQualityLevel::Medium;
 };
 
-// 설정 입력이 바뀌면 위젯이 올려보내는 이벤트들. 받는 쪽(타이틀/탑바/게임모드)이 실제 적용.
+// 설정 입력이 바뀌면 위젯이 올려보내는 이벤트들. 받는 쪽(타이틀/인게임/게임모드)이 실제 적용.
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSettingsPanelEvent);                              // 버튼류(닫기/저장 등)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSettingsPanelFloatEvent, float, Value);  // 슬라이더(볼륨)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSettingsPanelBoolEvent, bool, Value);   // 체크박스(흔들림/진동)

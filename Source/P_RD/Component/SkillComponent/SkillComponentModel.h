@@ -64,6 +64,9 @@ public:
 	FSkillEntry* GetSkill(int32 SkillIndex);
 	void SetSkill(int32 SkillIndex, UStaticSkillData* SkillData);
 
+	// [216 통합] PushSkillUI 등 UI가 슬롯 수를 알아야 해서 추가한 카운트 게터.
+	int32 GetSkillNum() const { return mSkillEntries.Num(); }
+
 public:
 	/**
 	* @brief 액티브 스킬을 활성화하는 함수

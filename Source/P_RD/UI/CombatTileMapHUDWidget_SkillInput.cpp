@@ -1,8 +1,9 @@
 #include "UI/CombatTileMapHUDWidget.h"
 
+#include "GameMode/CombatGameMode.h"
 #include "UI/Combat/CombatUIModel.h"
 
-/** @brief 스킬 버튼 해제 시 짧은 탭은 선택, 롱프레스는 상세 표시로 소모한다. */
+/** @brief 스킬 버튼 해제 시 짧은 탭은 선택, 롱프레스는 전투 쪽 상세 요청 API가 생길 때까지 소비만 한다. */
 void UCombatTileMapHUDWidget::HandleSkillButtonReleased()
 {
 	if (mSkillPressing == false)
@@ -10,7 +11,7 @@ void UCombatTileMapHUDWidget::HandleSkillButtonReleased()
 		return;
 	}
 
-	if (mSkillDetailOpenedFromPress == false)
+	if (mSkillLongPressConsumed == false)
 	{
 		SelectSkillForAssignment(mPressedSkillIndex);
 	}
@@ -18,17 +19,12 @@ void UCombatTileMapHUDWidget::HandleSkillButtonReleased()
 	mSkillPressing = false;
 	mPressedSkillIndex = INDEX_NONE;
 	mSkillPressElapsed = 0.0f;
-	mSkillDetailOpenedFromPress = false;
+	mSkillLongPressConsumed = false;
 }
 
-/** @brief 상세 카드가 열린 상태에서 새 스킬을 누르면 먼저 닫고 새 누름 상태로 갈아탄다. */
+/** @brief 스킬 레일 누름 상태로 진입한다. */
 void UCombatTileMapHUDWidget::HandleSkillButtonPressed(int32 SkillIndex)
 {
-	if (IsSkillDetailVisible() == true)
-	{
-		HideSkillDetail();
-	}
-
 	BeginSkillPress(SkillIndex);
 }
 
@@ -39,17 +35,21 @@ void UCombatTileMapHUDWidget::BeginSkillPress(int32 SkillIndex)
 	{
 		return;
 	}
+	if (IsSkillSlotAvailable(SkillIndex) == false)
+	{
+		return;
+	}
 
 	mPressedSkillIndex = SkillIndex;
 	mSkillPressing = true;
-	mSkillDetailOpenedFromPress = false;
+	mSkillLongPressConsumed = false;
 	mSkillPressElapsed = 0.0f;
 }
 
-/** @brief NativeTick에서 누름 시간을 누적해 탭/롱프레스 분기를 프레임 독립적으로 처리한다. */
+/** @brief NativeTick에서 누름 시간을 누적해 롱프레스 입력을 선택 탭과 분리한다. */
 void UCombatTileMapHUDWidget::UpdateSkillPress(float InDeltaTime)
 {
-	if (mSkillPressing == false || mSkillDetailOpenedFromPress == true)
+	if (mSkillPressing == false || mSkillLongPressConsumed == true)
 	{
 		return;
 	}
@@ -57,15 +57,65 @@ void UCombatTileMapHUDWidget::UpdateSkillPress(float InDeltaTime)
 	mSkillPressElapsed += InDeltaTime;
 	if (mSkillPressElapsed >= mSkillLongPressThreshold)
 	{
-		ShowSkillDetail(mPressedSkillIndex);
-		mSkillDetailOpenedFromPress = true;
+		mSkillLongPressConsumed = true;
+		if (IsSkillSlotAvailable(mPressedSkillIndex))
+		{
+			if (ACombatGameMode* CombatGameMode = GetWorld()->GetAuthGameMode<ACombatGameMode>())
+			{
+				CombatGameMode->ShowSkillDetail(mPressedSkillIndex);
+			}
+		}
+	}
+}
+
+void UCombatTileMapHUDWidget::BeginWorldPress()
+{
+	mWorldPressing = true;
+	mWorldLongPressConsumed = false;
+	mWorldPressElapsed = 0.0f;
+}
+
+FReply UCombatTileMapHUDWidget::EndWorldPress(bool bReleaseMouseCapture)
+{
+	if (mWorldLongPressConsumed == false)
+	{
+		if (ACombatGameMode* CombatGameMode = GetWorld()->GetAuthGameMode<ACombatGameMode>())
+		{
+			CombatGameMode->ResolveWorldTouchEvent();
+		}
+	}
+
+	mWorldPressing = false;
+	mWorldLongPressConsumed = false;
+	mWorldPressElapsed = 0.0f;
+
+	return bReleaseMouseCapture
+		? FReply::Handled().ReleaseMouseCapture()
+		: FReply::Handled();
+}
+
+void UCombatTileMapHUDWidget::UpdateWorldPress(float InDeltaTime)
+{
+	if (mWorldPressing == false || mWorldLongPressConsumed == true)
+	{
+		return;
+	}
+
+	mWorldPressElapsed += InDeltaTime;
+	if (mWorldPressElapsed >= mWorldLongPressThreshold)
+	{
+		mWorldLongPressConsumed = true;
+		if (ACombatGameMode* CombatGameMode = GetWorld()->GetAuthGameMode<ACombatGameMode>())
+		{
+			CombatGameMode->ResolveWorldLongPressEvent();
+		}
 	}
 }
 
 /** @brief 스킬 선택은 UI 강조와 의도 전달까지만 담당하고, 스킬 유효성/실행은 전투 계층에 맡긴다. */
 void UCombatTileMapHUDWidget::SelectSkillForAssignment(int32 SkillIndex)
 {
-	if (SkillIndex == INDEX_NONE)
+	if (IsSkillSlotAvailable(SkillIndex) == false)
 	{
 		return;
 	}
@@ -76,13 +126,28 @@ void UCombatTileMapHUDWidget::SelectSkillForAssignment(int32 SkillIndex)
 	}
 	mSelectedSkillIndex = SkillIndex;
 
-	// 뷰모델 연결 시 선택은 의도로만 보낸다(실행/검증은 게임플레이). 시각 강조는 로컬 유지.
-	if (mCombatUIModel != nullptr)
+	if (ACombatGameMode* CombatGameMode = GetWorld()->GetAuthGameMode<ACombatGameMode>())
 	{
-		mCombatUIModel->RequestSelectSkill(SkillIndex);
+		CombatGameMode->SelectSkill(SkillIndex);
 	}
 
 	RefreshSkillRailWidgets();
 	RefreshOwnedDiceCards();
 	RefreshDiceAssignmentText();
+}
+
+bool UCombatTileMapHUDWidget::IsSkillSlotAvailable(int32 SkillIndex) const
+{
+	if (SkillIndex == INDEX_NONE)
+	{
+		return false;
+	}
+
+	if (mCombatUIModel == nullptr)
+	{
+		return true;
+	}
+
+	const TArray<FSkillUI>& Skills = mCombatUIModel->GetSkillUIs();
+	return Skills.IsValidIndex(SkillIndex) && Skills[SkillIndex].mIsUsable;
 }

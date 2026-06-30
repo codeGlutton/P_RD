@@ -1,7 +1,7 @@
 #include "UI/CombatTileMapHUDWidget.h"
 
+#include "GameMode/CombatGameMode.h"
 #include "InputCoreTypes.h"
-#include "UI/Combat/CombatUIModel.h"
 
 FReply UCombatTileMapHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
@@ -11,21 +11,12 @@ FReply UCombatTileMapHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeome
 	}
 
 	const FVector2D ScreenPosition = InMouseEvent.GetScreenSpacePosition();
-	const bool bClosedSkillDetail = HideSkillDetailIfClickedOutside(ScreenPosition);
 	const int32 SkillIndex = FindSkillRailIndexAtScreenPosition(ScreenPosition);
 	if (SkillIndex == INDEX_NONE)
 	{
-		if (bClosedSkillDetail == true)
-		{
-			return FReply::Handled();
-		}
-		// 스킬 레일 밖 = 월드(타일/유닛) 영역. 뷰모델 연결 시 좌표만 넘기고 타일/유닛 판정은 게임플레이가.
-		if (mCombatUIModel != nullptr)
-		{
-			mCombatUIModel->RequestWorldTouch(ScreenPosition, false);
-			return FReply::Handled();
-		}
-		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+		// 스킬 레일 밖 = 월드(타일/유닛) 영역.
+		BeginWorldPress();
+		return FReply::Handled().CaptureMouse(TakeWidget());
 	}
 
 	BeginSkillPress(SkillIndex);
@@ -34,12 +25,22 @@ FReply UCombatTileMapHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeome
 
 FReply UCombatTileMapHUDWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton || mSkillPressing == false)
+	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton)
 	{
 		return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
 	}
 
-	if (mSkillDetailOpenedFromPress == false)
+	if (mWorldPressing == true)
+	{
+		return EndWorldPress(true);
+	}
+
+	if (mSkillPressing == false)
+	{
+		return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+	}
+
+	if (mSkillLongPressConsumed == false)
 	{
 		SelectSkillForAssignment(mPressedSkillIndex);
 	}
@@ -47,28 +48,19 @@ FReply UCombatTileMapHUDWidget::NativeOnMouseButtonUp(const FGeometry& InGeometr
 	mSkillPressing = false;
 	mPressedSkillIndex = INDEX_NONE;
 	mSkillPressElapsed = 0.0f;
-	mSkillDetailOpenedFromPress = false;
+	mSkillLongPressConsumed = false;
 	return FReply::Handled().ReleaseMouseCapture();
 }
 
 FReply UCombatTileMapHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent)
 {
 	const FVector2D ScreenPosition = InGestureEvent.GetScreenSpacePosition();
-	const bool bClosedSkillDetail = HideSkillDetailIfClickedOutside(ScreenPosition);
 	const int32 SkillIndex = FindSkillRailIndexAtScreenPosition(ScreenPosition);
 	if (SkillIndex == INDEX_NONE)
 	{
-		if (bClosedSkillDetail == true)
-		{
-			return FReply::Handled();
-		}
-		// 스킬 레일 밖 = 월드(타일/유닛) 영역. 뷰모델 연결 시 좌표만 넘기고 타일/유닛 판정은 게임플레이가.
-		if (mCombatUIModel != nullptr)
-		{
-			mCombatUIModel->RequestWorldTouch(ScreenPosition, false);
-			return FReply::Handled();
-		}
-		return Super::NativeOnTouchStarted(InGeometry, InGestureEvent);
+		// 스킬 레일 밖 = 월드(타일/유닛) 영역.
+		BeginWorldPress();
+		return FReply::Handled();
 	}
 
 	BeginSkillPress(SkillIndex);
@@ -79,10 +71,14 @@ FReply UCombatTileMapHUDWidget::NativeOnTouchEnded(const FGeometry& InGeometry, 
 {
 	if (mSkillPressing == false)
 	{
+		if (mWorldPressing == true)
+		{
+			return EndWorldPress(false);
+		}
 		return Super::NativeOnTouchEnded(InGeometry, InGestureEvent);
 	}
 
-	if (mSkillDetailOpenedFromPress == false)
+	if (mSkillLongPressConsumed == false)
 	{
 		SelectSkillForAssignment(mPressedSkillIndex);
 	}
@@ -90,6 +86,6 @@ FReply UCombatTileMapHUDWidget::NativeOnTouchEnded(const FGeometry& InGeometry, 
 	mSkillPressing = false;
 	mPressedSkillIndex = INDEX_NONE;
 	mSkillPressElapsed = 0.0f;
-	mSkillDetailOpenedFromPress = false;
+	mSkillLongPressConsumed = false;
 	return FReply::Handled();
 }

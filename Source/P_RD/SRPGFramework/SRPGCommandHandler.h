@@ -47,9 +47,9 @@ protected:
 	/**
 	 * 커서가 어떤 타일 액터를 가리키는지 알아오는 함수. 대상이 없는 경우 FTileIndex::Invalid를 반환
 	 * @param World 월드 객체
-	 * @param Channel 검사할 트래이스 채널명
+	 * @param Channel 검사할 트레이스 채널명
 	 * @param Actor 측정된 액터
-	 * @param TileIndex 부딧친 대상의 타일의 인덱스 값
+	 * @param TileIndex 부딪친 대상의 타일 인덱스 값
 	 */
 	static void GetTileActorUnderCursor(UWorld* World, ECollisionChannel Channel, OUT AActor*& Actor, OUT FTileIndex& TileIndex);
 

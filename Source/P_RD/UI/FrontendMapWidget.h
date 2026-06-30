@@ -109,7 +109,7 @@ public:
 	 */
 	bool IsRoomSelectionEnabled() const;
 
-	/** @brief 탑바/전환 흐름이 일시적으로 표시할 상태 문구를 지정한다. */
+	/** @brief 인게임/전환 흐름이 일시적으로 표시할 상태 문구를 지정한다. */
 	void SetMapStatusOverride(const FText& InText);
 
 	/**
@@ -232,7 +232,7 @@ private:
 	FText mMapUnavailableStatusText;
 
 	/**
-	 * @brief 탑바/전투 결과 흐름이 지도 기본 상태 문구 대신 임시로 보여줄 문구
+	 * @brief 인게임/전투 결과 흐름이 지도 기본 상태 문구 대신 임시로 보여줄 문구
 	 */
 	FText mStatusOverrideText;
 

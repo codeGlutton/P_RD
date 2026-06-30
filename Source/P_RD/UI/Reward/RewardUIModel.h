@@ -3,7 +3,7 @@
 /** @brief 전투 보상 화면 UI와 게임플레이를 잇는 경계(뷰모델)입니다. */
 // @file RewardUIModel.h
 // 전투 뷰모델(UCombatUIModel)과 같은 계약:
-// - 읽기(gameplay → UI): 게임플레이/어댑터가 SetReward()로 결과를 밀어넣고, 위젯은 GetReward()로 읽는다.
+// - 읽기(gameplay → UI): 게임플레이가 SetReward()로 결과를 밀어넣고, 위젯은 GetReward()로 읽는다.
 // - 주기(UI → gameplay): '받기' 버튼은 RequestClaim()으로 의도만 보내고, 게임플레이가 OnRewardClaimed를
 // 구독해 다음 화면으로 넘어간다. UI는 보상을 직접 지급/소모하지 않는다.
 // 지금은 돈/경험치만 다룬다(아이템 보상은 이후 도메인 추가).
@@ -57,7 +57,7 @@ public:
 
 	/* ───────── gameplay → UI : 표시값을 밀어넣는다 ───────── */
 public:
-	/** @brief 게임플레이/어댑터가 확정한 보상 표시 스냅샷을 저장하고 변경 알림을 보낸다. */
+	/** @brief 게임플레이가 확정한 보상 표시 스냅샷을 저장하고 변경 알림을 보낸다. */
 	UFUNCTION(BlueprintCallable, Category = "Reward|Push") void SetReward(const FRewardUI& Reward);
 
 	/** @brief 3택1 보상 선택지를 설정하고 변경 알림을 보낸다(보통 3개). */
