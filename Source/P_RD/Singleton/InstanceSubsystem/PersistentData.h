@@ -103,21 +103,21 @@ protected:
 	UPROPERTY(Category = Player, SaveGame, VisibleAnywhere, meta = (DisplayName = "PlayerUnitId"))
 	FPrimaryAssetId mPlayerUnitId;
 	UPROPERTY(Category = Player, SaveGame, VisibleAnywhere, meta = (DisplayName = "PlayerLevel"))
-	int32 mPlayerLevel;
+	int32 mPlayerLevel = 1;
 	UPROPERTY(Category = Player, SaveGame, VisibleAnywhere, meta = (DisplayName = "Difficulty"))
-	int32 mDifficulty;
+	int32 mDifficulty = 1;
 
 protected:
 	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "MaxHP"))
-	float mMaxHP;
+	float mMaxHP = 0.f;
 	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "HP"))
-	float mHP;
+	float mHP = 0.f;
 
 	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "Exp"))
-	float mExp;
+	float mExp = 0.f;
 
 	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "Money"))
-	float mMoney;
+	float mMoney = 0.f;
 
 protected:
 	UPROPERTY(Category = Tag, SaveGame, VisibleAnywhere, meta = (DisplayName = "TagCountMap"))
@@ -146,6 +146,7 @@ public:
 	void StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty);
 	void ClearRun();
 
+public:
 	void MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCreateStage);
 	void SetCurrentRoomIndex(int32 RowIndex, int32 ColumnIndex);
 

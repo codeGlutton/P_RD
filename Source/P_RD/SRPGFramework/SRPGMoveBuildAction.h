@@ -29,11 +29,6 @@ public:
 
 public:
 	FOnChangeMoveBuildPhase OnChangeMoveBuildPhase;
-
-public:
-	// @brief 이번 빌드에서 사용할 이동 포인트(외부에서 미리 계산된 도달 거리, 분할 이동 시 남은 포인트가 넘어온다)
-	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MovePoint"))
-	int32 mMovePoint = 0;
 };
 
 /**
