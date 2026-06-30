@@ -28,7 +28,6 @@ void UCombatTileMapHUDWidget::BindCombatGameModeDelegates()
 	CombatGameMode->OnRefreshDiceUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshDiceUI);
 	CombatGameMode->OnRefreshSelectedDiceUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshSelectedDiceUI);
 	CombatGameMode->OnRefreshSkillUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshSkillUI);
-	CombatGameMode->OnRefreshEquipmentUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshEquipmentUI);
 	CombatGameMode->OnRefreshTurnUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshTurnUI);
 	CombatGameMode->OnRefreshPlayerMetaUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshPlayerMetaUI);
 	CombatGameMode->OnRefreshSkillBuildPhase.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshSkillBuildPhase);
@@ -37,7 +36,6 @@ void UCombatTileMapHUDWidget::BindCombatGameModeDelegates()
 	CombatGameMode->OnShowDicePanelAnyTurnUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleShowDicePanelAnyTurn);
 	CombatGameMode->OnShowTargetDetailPanelUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleShowTargetDetailPanel);
 	CombatGameMode->OnShowSkillDetailPanelUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleShowSkillDetailPanel);
-	CombatGameMode->OnShowEquipmentDetailPanelUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleShowEquipmentDetailPanel);
 }
 
 void UCombatTileMapHUDWidget::UnbindCombatGameModeDelegates()
@@ -53,7 +51,6 @@ void UCombatTileMapHUDWidget::UnbindCombatGameModeDelegates()
 	CombatGameMode->OnRefreshDiceUI.RemoveAll(this);
 	CombatGameMode->OnRefreshSelectedDiceUI.RemoveAll(this);
 	CombatGameMode->OnRefreshSkillUI.RemoveAll(this);
-	CombatGameMode->OnRefreshEquipmentUI.RemoveAll(this);
 	CombatGameMode->OnRefreshTurnUI.RemoveAll(this);
 	CombatGameMode->OnRefreshPlayerMetaUI.RemoveAll(this);
 	CombatGameMode->OnRefreshSkillBuildPhase.RemoveAll(this);
@@ -62,13 +59,11 @@ void UCombatTileMapHUDWidget::UnbindCombatGameModeDelegates()
 	CombatGameMode->OnShowDicePanelAnyTurnUI.RemoveAll(this);
 	CombatGameMode->OnShowTargetDetailPanelUI.RemoveAll(this);
 	CombatGameMode->OnShowSkillDetailPanelUI.RemoveAll(this);
-	CombatGameMode->OnShowEquipmentDetailPanelUI.RemoveAll(this);
 }
 
 void UCombatTileMapHUDWidget::HandleRefreshAllUI()
 {
 	RefreshCombatStatusBar();
-	RebuildEquipmentBar();
 	RebuildTurnOrderBar();
 	RebuildUnitHpBars();
 	RefreshDiceViewsFromUIModel();
@@ -105,11 +100,6 @@ void UCombatTileMapHUDWidget::HandleRefreshSkillUI()
 	RebuildSkillRailWidgets();
 	RefreshSkillRailWidgets();
 	RefreshCombatStatusBar();
-}
-
-void UCombatTileMapHUDWidget::HandleRefreshEquipmentUI()
-{
-	RebuildEquipmentBar();
 }
 
 void UCombatTileMapHUDWidget::HandleRefreshTurnUI()
@@ -161,11 +151,6 @@ void UCombatTileMapHUDWidget::HandleShowTargetDetailPanel()
 void UCombatTileMapHUDWidget::HandleShowSkillDetailPanel(int32 SkillIndex)
 {
 	ShowSkillDetailPanel(SkillIndex);
-}
-
-void UCombatTileMapHUDWidget::HandleShowEquipmentDetailPanel(int32 SlotIndex)
-{
-	UE_LOG(LogRD, Log, TEXT("Combat HUD equipment detail requested: %d"), SlotIndex);
 }
 
 void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const
@@ -341,72 +326,6 @@ namespace
 		FSlateFontInfo Font = Text->GetFont();
 		Font.Size = Size;
 		Text->SetFont(Font);
-	}
-}
-
-void UCombatTileMapHUDWidget::RebuildEquipmentBar()
-{
-	// 기존 칩 제거(개수가 바뀔 수 있어 매번 다시 만든다).
-	for (UBorder* Chip : mEquipmentChips)
-	{
-		if (Chip != nullptr) { Chip->RemoveFromParent(); }
-	}
-	for (UTextBlock* Text : mEquipmentChipTexts)
-	{
-		if (Text != nullptr) { Text->RemoveFromParent(); }
-	}
-	mEquipmentChips.Reset();
-	mEquipmentChipTexts.Reset();
-
-	// 디자이너 스킨(concept_02): 장비칸은 레거시라 만들지 않는다(기존 칩은 위에서 제거됨).
-	if (IsDesignerSkinActive())
-	{
-		return;
-	}
-
-	UCanvasPanel* Canvas = RootCanvas.Get();
-	if (Canvas == nullptr || WidgetTree == nullptr || mCombatUIModel == nullptr)
-	{
-		return;
-	}
-
-	const TArray<FEquipmentUI>& Equips = mCombatUIModel->GetEquipmentUIs();
-
-	// 탑바(~0.11) 바로 아래, 스킬레일(0.144) 위의 얇은 좌측 줄.
-	const float ChipWidth = 0.050f;
-	const float ChipHeight = 0.030f;
-	const float Gap = 0.006f;
-	const float Left0 = 0.022f;
-	const float Top = 0.112f;
-	for (int32 Index = 0; Index < Equips.Num(); ++Index)
-	{
-		UBorder* Chip = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
-		UTextBlock* Text = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
-		if (Chip == nullptr || Text == nullptr)
-		{
-			continue;
-		}
-
-		Chip->SetBrushColor(Equips[Index].mIsEquipped
-			? FLinearColor(0.16f, 0.40f, 0.40f, 0.92f)
-			: FLinearColor(0.12f, 0.17f, 0.19f, 0.80f));
-		Chip->SetPadding(FMargin(2.0f, 1.0f));
-
-		Text->SetJustification(ETextJustify::Center);
-		Text->SetText(Equips[Index].mName.IsEmpty()
-			? FText::Format(NSLOCTEXT("CombatTileMapHUDWidget", "EquipSlotFallback", "EQ{0}"), FText::AsNumber(Index + 1))
-			: Equips[Index].mName);
-		Text->SetColorAndOpacity(FSlateColor(FLinearColor(0.90f, 1.0f, 0.96f, 1.0f)));
-		SetChipFontSize(Text, 11);
-
-		Chip->AddChild(Text);
-		Canvas->AddChildToCanvas(Chip);
-
-		const float Left = Left0 + StaticCast<float>(Index) * (ChipWidth + Gap);
-		RDUILayout::ApplyAnchoredSlot(Chip, FAnchors(Left, Top, Left + ChipWidth, Top + ChipHeight), 31);
-
-		mEquipmentChips.Add(Chip);
-		mEquipmentChipTexts.Add(Text);
 	}
 }
 

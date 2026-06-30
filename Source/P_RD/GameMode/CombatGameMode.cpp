@@ -783,6 +783,20 @@ void ACombatGameMode::PushPlayerMetaUI()
 	OnRefreshPlayerMetaUI.Broadcast();
 }
 
+bool ACombatGameMode::GetEquipmentUIs(TArray<FEquipmentUI>& OutEquipmentUIs) const
+{
+	OutEquipmentUIs.Reset();
+
+	const UCombatUIModel* CombatUIModel = GetCombatUIModel();
+	if (CombatUIModel == nullptr)
+	{
+		return false;
+	}
+
+	OutEquipmentUIs = CombatUIModel->GetEquipmentUIs();
+	return true;
+}
+
 UCombatUIModel* ACombatGameMode::GetCombatUIModel() const
 {
 	if (UWorld* World = GetWorld())

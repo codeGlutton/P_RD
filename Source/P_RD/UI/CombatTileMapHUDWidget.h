@@ -205,7 +205,6 @@ private:
 	void HandleRefreshDiceUI();
 	void HandleRefreshSelectedDiceUI();
 	void HandleRefreshSkillUI();
-	void HandleRefreshEquipmentUI();
 	void HandleRefreshTurnUI();
 	void HandleRefreshPlayerMetaUI();
 	void HandleRefreshSkillBuildPhase(ECombatBuildPhaseUI Phase);
@@ -213,7 +212,6 @@ private:
 	void HandleCombatActionResolvedUI();
 	void HandleShowTargetDetailPanel();
 	void HandleShowSkillDetailPanel(int32 SkillIndex);
-	void HandleShowEquipmentDetailPanel(int32 SlotIndex);
 
 	/** @brief 스킬 롱프레스 상세 패널을 표시/닫는다. */
 	void ShowSkillDetailPanel(int32 SkillIndex);
@@ -227,9 +225,6 @@ private:
 
 	/** @brief 디자이너 스킨 시, concept value 칸(HUD_M_lv/hp/gold_value 앵커)에 Lv/HP/Gold 텍스트를 칸 크기에 맞춰 그린다. */
 	void RefreshSkinValueLabels() const;
-
-	/** @brief 장비 슬롯 칩(탑바 좌측 하단)을 뷰모델 장비 뷰로 다시 만든다. */
-	void RebuildEquipmentBar();
 
 	/** @brief 턴 순서 칩(탑바 가운데 하단)을 다시 만든다(무조건 플레이어부터, 그 뒤 적). */
 	void RebuildTurnOrderBar();
@@ -394,13 +389,6 @@ private:
 	/** @brief 상단 상태바(플레이어 Lv/HP/Gold) 런타임 텍스트 */
 	UPROPERTY(Transient)
 	TObjectPtr<UTextBlock> mCombatStatusBarText;
-
-	/** @brief 장비 칩(탑바 좌측 하단) 배경/문구 */
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<UBorder>> mEquipmentChips;
-
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<UTextBlock>> mEquipmentChipTexts;
 
 	/** @brief 턴 순서 칩(탑바 가운데 하단, 플레이어부터) 배경/문구 */
 	UPROPERTY(Transient)

@@ -233,7 +233,6 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 
 	RebuildSkillRailWidgets();
 	EnsureSkillInputButtons();
-	RebuildEquipmentBar();    // 탑바 좌측 하단 장비 칩(뷰모델 미연결이면 비워 둠)
 	RebuildTurnOrderBar();    // 탑바 가운데 하단 턴 순서 칩
 	ApplyRuntimeWidgetLayout();
 }

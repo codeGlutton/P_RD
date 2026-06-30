@@ -79,6 +79,8 @@ public:
 	UFUNCTION(Category = UI, BlueprintCallable)
 	void PushAllCombatUI();
 
+	bool GetEquipmentUIs(TArray<FEquipmentUI>& OutEquipmentUIs) const;
+
 public:
 	/**
 	 * @brief 터치 입력 아래의 월드 액터를 검사하여 이벤트를 실행한다.

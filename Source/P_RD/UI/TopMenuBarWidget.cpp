@@ -1,6 +1,7 @@
 ﻿#include "UI/TopMenuBarWidget.h"
 
 #include "Blueprint/WidgetTree.h"
+#include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
@@ -10,8 +11,10 @@
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/FrontendMapWidget.h"
+#include "UI/IndexedButtonWidget.h"
 #include "UI/SettingsPanelWidget.h"
 #include "UI/ViewportZOrderType.h"
+#include "Widgets/Layout/Anchors.h"
 
 namespace
 {
@@ -59,6 +62,7 @@ void UTopMenuBarWidget::NativeConstruct()
 	BindButtonEvents();
 	BindRoomControlEvents();
 	BindCombatEvents();
+	RefreshEquipmentSlots();
 	ApplyInputPassThrough();
 }
 
@@ -67,6 +71,7 @@ void UTopMenuBarWidget::NativeConstruct()
  */
 void UTopMenuBarWidget::NativeDestruct()
 {
+	ClearEquipmentSlots();
 	UnbindCombatEvents();
 
 	if (UFrontendMapWidget* WorldMapWidget = Cast<UFrontendMapWidget>(GetToggleableWorldWidget(EWorldWidgetType::WorldMap)))
@@ -92,6 +97,7 @@ void UTopMenuBarWidget::ApplyOpenUI()
 {
 	Super::ApplyOpenUI();
 	RefreshRoomInfo();
+	RefreshEquipmentSlots();
 	ApplyInputPassThrough();
 }
 
@@ -426,6 +432,12 @@ void UTopMenuBarWidget::BindCombatEvents()
 	{
 		HandleEndCombatUI(MoveTemp(Barrier), bPlayerWin);
 	});
+
+	CombatGameMode->OnRefreshEquipmentUI.RemoveAll(this);
+	CombatGameMode->OnRefreshEquipmentUI.AddUObject(this, &UTopMenuBarWidget::HandleRefreshEquipmentUI);
+
+	CombatGameMode->OnShowEquipmentDetailPanelUI.RemoveAll(this);
+	CombatGameMode->OnShowEquipmentDetailPanelUI.AddUObject(this, &UTopMenuBarWidget::HandleShowEquipmentDetailPanel);
 }
 
 void UTopMenuBarWidget::UnbindCombatEvents()
@@ -437,6 +449,133 @@ void UTopMenuBarWidget::UnbindCombatEvents()
 	}
 
 	CombatGameMode->OnEndCombatUI.RemoveAll(this);
+	CombatGameMode->OnRefreshEquipmentUI.RemoveAll(this);
+	CombatGameMode->OnShowEquipmentDetailPanelUI.RemoveAll(this);
+}
+
+void UTopMenuBarWidget::HandleRefreshEquipmentUI()
+{
+	RefreshEquipmentSlots();
+}
+
+void UTopMenuBarWidget::HandleShowEquipmentDetailPanel(int32 SlotIndex)
+{
+	UE_LOG(LogRD, Log, TEXT("TopMenuBarWidget: equipment detail requested: %d"), SlotIndex);
+}
+
+void UTopMenuBarWidget::ClearEquipmentSlots()
+{
+	for (UIndexedButtonWidget* SlotButton : mEquipmentSlotButtons)
+	{
+		if (SlotButton != nullptr)
+		{
+			SlotButton->OnIndexedClicked.RemoveDynamic(this, &UTopMenuBarWidget::HandleEquipmentSlotClicked);
+			SlotButton->RemoveFromParent();
+		}
+	}
+
+	mEquipmentSlotButtons.Reset();
+	mEquipmentSlotFrames.Reset();
+	mEquipmentSlotTexts.Reset();
+}
+
+void UTopMenuBarWidget::RefreshEquipmentSlots()
+{
+	ClearEquipmentSlots();
+
+	ACombatGameMode* CombatGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ACombatGameMode>() : nullptr;
+	if (CombatGameMode == nullptr || WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	UCanvasPanel* RootCanvas = Cast<UCanvasPanel>(WidgetTree->RootWidget);
+	if (RootCanvas == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TopMenuBarWidget: Cannot create equipment slots because root is not CanvasPanel."));
+		return;
+	}
+
+	TArray<FEquipmentUI> EquipmentUIs;
+	if (!CombatGameMode->GetEquipmentUIs(OUT EquipmentUIs) || EquipmentUIs.Num() == 0)
+	{
+		return;
+	}
+
+	constexpr float SlotWidth = 0.050f;
+	constexpr float SlotHeight = 0.034f;
+	constexpr float SlotGap = 0.006f;
+	constexpr float LeftStart = 0.020f;
+	constexpr float Top = 0.084f;
+
+	for (int32 Index = 0; Index < EquipmentUIs.Num(); ++Index)
+	{
+		const FEquipmentUI& EquipmentUI = EquipmentUIs[Index];
+
+		UIndexedButtonWidget* SlotButton = WidgetTree->ConstructWidget<UIndexedButtonWidget>(
+			UIndexedButtonWidget::StaticClass(),
+			*FString::Printf(TEXT("TopBarEquipmentSlot_%d"), Index));
+		UBorder* SlotFrame = WidgetTree->ConstructWidget<UBorder>(
+			UBorder::StaticClass(),
+			*FString::Printf(TEXT("TopBarEquipmentSlotFrame_%d"), Index));
+		UTextBlock* SlotText = WidgetTree->ConstructWidget<UTextBlock>(
+			UTextBlock::StaticClass(),
+			*FString::Printf(TEXT("TopBarEquipmentSlotText_%d"), Index));
+
+		if (SlotButton == nullptr || SlotFrame == nullptr || SlotText == nullptr)
+		{
+			continue;
+		}
+
+		SlotButton->SetButtonIndex(EquipmentUI.mSlotIndex != INDEX_NONE ? EquipmentUI.mSlotIndex : Index);
+		SlotButton->OnIndexedClicked.AddUniqueDynamic(this, &UTopMenuBarWidget::HandleEquipmentSlotClicked);
+		SlotButton->SetBackgroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.01f));
+		ConfigureDesignerButton(SlotButton);
+
+		FLinearColor SlotColor = EquipmentUI.mIsEquipped
+			? EquipmentUI.mRarityColor
+			: FLinearColor(0.10f, 0.13f, 0.15f, 0.72f);
+		SlotColor.A = EquipmentUI.mIsEquipped ? 0.86f : 0.72f;
+		SlotFrame->SetBrushColor(SlotColor);
+		SlotFrame->SetPadding(FMargin(2.0f, 1.0f));
+
+		SlotText->SetJustification(ETextJustify::Center);
+		SlotText->SetColorAndOpacity(FSlateColor(FLinearColor(0.92f, 1.0f, 0.96f, 1.0f)));
+		SlotText->SetText(EquipmentUI.mName.IsEmpty()
+			? FText::Format(NSLOCTEXT("TopMenuBarWidget", "EquipmentSlotFallback", "EQ{0}"), FText::AsNumber(Index + 1))
+			: EquipmentUI.mName);
+		FSlateFontInfo SlotFont = SlotText->GetFont();
+		SlotFont.Size = 10;
+		SlotText->SetFont(SlotFont);
+
+		SlotFrame->AddChild(SlotText);
+		SlotButton->AddChild(SlotFrame);
+		RootCanvas->AddChildToCanvas(SlotButton);
+
+		const float Left = LeftStart + StaticCast<float>(Index) * (SlotWidth + SlotGap);
+		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(SlotButton->Slot))
+		{
+			CanvasSlot->SetAnchors(FAnchors(Left, Top, Left + SlotWidth, Top + SlotHeight));
+			CanvasSlot->SetOffsets(FMargin(0.0f));
+			CanvasSlot->SetAlignment(FVector2D(0.0f, 0.0f));
+			CanvasSlot->SetZOrder(4);
+		}
+
+		mEquipmentSlotButtons.Add(SlotButton);
+		mEquipmentSlotFrames.Add(SlotFrame);
+		mEquipmentSlotTexts.Add(SlotText);
+	}
+}
+
+void UTopMenuBarWidget::HandleEquipmentSlotClicked(int32 SlotIndex)
+{
+	ACombatGameMode* CombatGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ACombatGameMode>() : nullptr;
+	if (CombatGameMode == nullptr)
+	{
+		return;
+	}
+
+	CombatGameMode->ShowEquipmentDetail(SlotIndex);
 }
 
 /**

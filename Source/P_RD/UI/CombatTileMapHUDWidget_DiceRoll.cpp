@@ -783,8 +783,6 @@ void UCombatTileMapHUDWidget::SetDiceRollCombatLayerSuppressed(bool bSuppressed)
 	SetWidgetArrayVisibility(mSkillRailPanels, ESlateVisibility::HitTestInvisible);
 	SetWidgetArrayVisibility(mSkillRailTexts, ESlateVisibility::HitTestInvisible);
 	SetWidgetArrayVisibility(mSkillInputButtons, ESlateVisibility::Visible);
-	SetWidgetArrayVisibility(mEquipmentChips, ESlateVisibility::HitTestInvisible);
-	SetWidgetArrayVisibility(mEquipmentChipTexts, ESlateVisibility::HitTestInvisible);
 	SetWidgetArrayVisibility(mTurnOrderChips, ESlateVisibility::HitTestInvisible);
 	SetWidgetArrayVisibility(mTurnOrderChipTexts, ESlateVisibility::HitTestInvisible);
 

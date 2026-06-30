@@ -14,7 +14,10 @@
 struct FPresentationBarrier;
 
 class UButton;
+class UBorder;
+class UCanvasPanel;
 class UFrontendMapWidget;
+class UIndexedButtonWidget;
 class USettingsPanelWidget;
 class UTextBlock;
 class URDUserWidget;
@@ -139,6 +142,12 @@ private:
 	void BindCombatEvents();
 	void UnbindCombatEvents();
 
+	/** @brief 전투 GameMode가 푸시한 장비 슬롯 스냅샷을 탑바 슬롯으로 다시 그린다. */
+	void HandleRefreshEquipmentUI();
+	void HandleShowEquipmentDetailPanel(int32 SlotIndex);
+	void RefreshEquipmentSlots();
+	void ClearEquipmentSlots();
+
 	/**
 	 * @brief WorldWidgetSubsystem에서 RDUserWidget 기반 월드 위젯을 가져온다.
 	 *
@@ -252,6 +261,10 @@ private:
 	UFUNCTION()
 	void HandleSettingsBackRequested();
 
+	/** @brief 탑바 장비 슬롯 클릭을 장비 상세 요청으로 보낸다. */
+	UFUNCTION()
+	void HandleEquipmentSlotClicked(int32 SlotIndex);
+
 private:
 	/** @brief 월드맵을 여는 버튼 */
 	UPROPERTY(meta = (BindWidgetOptional))
@@ -310,6 +323,16 @@ private:
 	/** @brief 전투 중 HP/Gold 요약 전용 텍스트. 없으면 전투 요약을 쓰지 않아 룸 요약과 충돌하지 않는다. */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> CombatSummaryTextBlock;
+
+	/** @brief 런타임으로 만든 탑바 장비 슬롯 버튼/배경/문구. */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UIndexedButtonWidget>> mEquipmentSlotButtons;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UBorder>> mEquipmentSlotFrames;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UTextBlock>> mEquipmentSlotTexts;
 
 	/**
 	 * @brief 승리 후 다음 방 선택을 완료할 때까지 월드맵 복원을 강제할지 여부
