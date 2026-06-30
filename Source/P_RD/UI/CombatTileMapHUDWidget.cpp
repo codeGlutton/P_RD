@@ -2,6 +2,8 @@
 
 #include "Components/Button.h"
 #include "GameMode/CombatGameMode.h"
+#include "UI/FrontendMapWidget.h"
+#include "UI/SettingsPanelWidget.h"
 #include "UI/Combat/CombatUIModel.h"
 
 UCombatTileMapHUDWidget::UCombatTileMapHUDWidget(const FObjectInitializer& ObjectInitializer)
@@ -37,6 +39,30 @@ void UCombatTileMapHUDWidget::NativeDestruct()
 	if (mDiceRollInputButton != nullptr)
 	{
 		mDiceRollInputButton->OnClicked.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleDiceRollInputButtonClicked);
+	}
+	if (mMapNavButton != nullptr)
+	{
+		mMapNavButton->OnClicked.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleMapNavButtonClicked);
+	}
+	if (mDiceNavButton != nullptr)
+	{
+		mDiceNavButton->OnClicked.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleDiceNavButtonClicked);
+	}
+	if (mSkillNavButton != nullptr)
+	{
+		mSkillNavButton->OnClicked.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleSkillNavButtonClicked);
+	}
+	if (mSettingsNavButton != nullptr)
+	{
+		mSettingsNavButton->OnClicked.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleSettingsNavButtonClicked);
+	}
+	if (UFrontendMapWidget* WorldMapWidget = Cast<UFrontendMapWidget>(GetCombatFloatingPanel(EWorldWidgetType::WorldMap)))
+	{
+		WorldMapWidget->OnCloseRequested.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleWorldMapCloseRequested);
+	}
+	if (USettingsPanelWidget* SettingsPanelWidget = Cast<USettingsPanelWidget>(GetCombatFloatingPanel(EWorldWidgetType::InGameSettings)))
+	{
+		SettingsPanelWidget->OnBackRequested.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleSettingsPanelBackRequested);
 	}
 	if (mSkillDetailCloseButton != nullptr)
 	{

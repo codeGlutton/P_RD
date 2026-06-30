@@ -8,6 +8,7 @@
 #include "Components/TextBlock.h"
 #include "Components/Viewport.h"
 #include "Engine/Texture2D.h"
+#include "UI/CombatTileMapHUDWidgetPrivate.h"
 
 namespace
 {
@@ -215,6 +216,45 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 			mMoveButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleMoveButtonClicked);
 			TargetRootCanvas->AddChildToCanvas(mMoveButton);
 		}
+	}
+
+	auto EnsureTransparentButton = [this, TargetRootCanvas](TObjectPtr<UButton>& Button, const TCHAR* ButtonName) -> UButton*
+	{
+		if (Button == nullptr)
+		{
+			Button = FindNamedWidget<UButton>(WidgetTree, ButtonName);
+		}
+		if (Button == nullptr)
+		{
+			Button = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), FName(ButtonName));
+			if (Button != nullptr)
+			{
+				TargetRootCanvas->AddChildToCanvas(Button);
+			}
+		}
+		if (Button != nullptr)
+		{
+			Button->SetBackgroundColor(RDCombatHUD::GetTransparentInputButtonColor());
+			Button->SetVisibility(ESlateVisibility::Visible);
+		}
+		return Button.Get();
+	};
+
+	if (UButton* MapButton = EnsureTransparentButton(mMapNavButton, TEXT("MapNavInputButton")))
+	{
+		MapButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleMapNavButtonClicked);
+	}
+	if (UButton* DiceButton = EnsureTransparentButton(mDiceNavButton, TEXT("DiceNavInputButton")))
+	{
+		DiceButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleDiceNavButtonClicked);
+	}
+	if (UButton* SkillButton = EnsureTransparentButton(mSkillNavButton, TEXT("SkillNavInputButton")))
+	{
+		SkillButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleSkillNavButtonClicked);
+	}
+	if (UButton* SettingsButton = EnsureTransparentButton(mSettingsNavButton, TEXT("SettingsNavInputButton")))
+	{
+		SettingsButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleSettingsNavButtonClicked);
 	}
 
 	if (EndTurnButton == nullptr)

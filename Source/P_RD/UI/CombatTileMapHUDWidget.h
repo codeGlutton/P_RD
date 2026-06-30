@@ -4,6 +4,7 @@
 #include "UI/DiceViewData.h"
 #include "UI/Combat/CombatUITypes.h"
 #include "UI/RDUserWidget.h"
+#include "Singleton/WorldSubsystem/WorldWidgetType.h"
 #include "Widgets/Layout/Anchors.h"
 
 #include "CombatTileMapHUDWidget.generated.h"
@@ -183,6 +184,32 @@ private:
 
 	/** @brief 결과 확인이 끝난 주사위 연출 UI를 닫는다. */
 	void DismissIntroDiceRoll();
+
+	/** @brief 새 전투 HUD 상단 Nav 버튼 입력을 공용 월드 팝업으로 연결한다. */
+	UFUNCTION()
+	void HandleMapNavButtonClicked();
+
+	UFUNCTION()
+	void HandleDiceNavButtonClicked();
+
+	UFUNCTION()
+	void HandleSkillNavButtonClicked();
+
+	UFUNCTION()
+	void HandleSettingsNavButtonClicked();
+
+	UFUNCTION()
+	void HandleWorldMapCloseRequested();
+
+	UFUNCTION()
+	void HandleSettingsPanelBackRequested();
+
+	URDUserWidget* GetCombatFloatingPanel(EWorldWidgetType PanelType) const;
+	void CloseCombatFloatingPanel(EWorldWidgetType PanelType) const;
+	void CloseCombatFloatingPanels(EWorldWidgetType ExceptPanelType) const;
+	void ToggleWorldMapPanel();
+	void ToggleSimpleCombatPanel(EWorldWidgetType PanelType, const TCHAR* PanelLogName);
+	void ToggleSettingsPanel();
 
 	/** @brief 턴 종료 버튼 클릭을 받는다. 실제 전투 API가 붙기 전까지는 로그만 남긴다. */
 	UFUNCTION()
@@ -400,6 +427,19 @@ private:
 	/** @brief 우측 MOVE 명령 버튼(이동 모드 진입) */
 	UPROPERTY(Transient)
 	TObjectPtr<UButton> mMoveButton;
+
+	/** @brief 새 상단 Nav 아트 위에 얹는 투명 클릭 버튼들 */
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mMapNavButton;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mDiceNavButton;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mSkillNavButton;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mSettingsNavButton;
 
 	/** @brief 유닛 머리 위에 월드→스크린 투영으로 띄우는 HP바(유닛 뷰 순서와 1:1) */
 	UPROPERTY(Transient)

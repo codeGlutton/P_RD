@@ -152,6 +152,11 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 	// 우측 명령 버튼: WBP HUD_EndTurn / HUD_Move 영역(없으면 기존 좌표).
 	RDUILayout::ApplyAnchoredSlot(EndTurnButton, GroupRect(TEXT("HUD_EndTurn"), FAnchors(0.795f, 0.845f, 0.925f, 0.940f)), 18);
 	RDUILayout::ApplyAnchoredSlot(mMoveButton, GroupRect(TEXT("HUD_Move"), FAnchors(0.795f, 0.625f, 0.925f, 0.720f)), 18);
+	// 새 상단 Nav 버튼: WBP Concept02의 HUD_Map/Dice/Skill/Settings 아트 위에 투명 입력층을 얹는다.
+	RDUILayout::ApplyAnchoredSlot(mMapNavButton, GroupRect(TEXT("HUD_Map"), FAnchors(0.710f, 0.018f, 0.752f, 0.088f)), 80);
+	RDUILayout::ApplyAnchoredSlot(mDiceNavButton, GroupRect(TEXT("HUD_Dice"), FAnchors(0.758f, 0.018f, 0.800f, 0.088f)), 80);
+	RDUILayout::ApplyAnchoredSlot(mSkillNavButton, GroupRect(TEXT("HUD_Skill"), FAnchors(0.806f, 0.018f, 0.848f, 0.088f)), 80);
+	RDUILayout::ApplyAnchoredSlot(mSettingsNavButton, GroupRect(TEXT("HUD_Settings"), FAnchors(0.854f, 0.018f, 0.896f, 0.088f)), 80);
 	RDUILayout::ApplyAnchoredSlot(mCombatFeedText, FAnchors(0.350f, 0.430f, 0.650f, 0.500f), 200);
 	RDUILayout::ApplyAnchoredSlot(mCombatStatusBarText, FAnchors(0.025f, 0.050f, 0.520f, 0.110f), 30);
 
