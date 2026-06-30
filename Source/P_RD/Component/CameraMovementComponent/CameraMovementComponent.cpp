@@ -48,9 +48,17 @@ void UCameraMovementComponent::SetZoomSpeed(float ZoomSpeed)
 	mZoomSpeed = ZoomSpeed;
 }
 
-void UCameraMovementComponent::Zoom(float Zoom)
+void UCameraMovementComponent::Zoom(float ZoomValue, FVector2D ScreenCenter)
 {
-	float OW = mCameraComponent->OrthoWidth + Zoom;
+	// A. 줌 전 중심점 월드 좌표 저장
+	//FVector WorldPos_Before = DeprojectToWorld(ScreenCenter);
+
+	float OW = mCameraComponent->OrthoWidth + ZoomValue * mZoomSpeed;
 	mCameraComponent->OrthoWidth = FMath::Clamp(OW, mMinOrthoWidth, mMaxOrthoWidth);
 
+	// C. 줌 후 중심점 월드 좌표 확인 및 보정
+	//FVector WorldPos_After = DeprojectToWorld(ScreenCenter);
+
+	// D. 차이만큼 카메라 위치 이동
+	//GetOwner()->AddActorWorldOffset(WorldPos_Before - WorldPos_After);
 }

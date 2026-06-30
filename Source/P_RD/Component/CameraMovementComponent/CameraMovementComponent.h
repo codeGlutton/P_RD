@@ -65,7 +65,7 @@ public:
 	* @brief 줌 속력
 	*/
 	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "ZoomSpeed", AllowPrivateAccess = "true"))
-	float mZoomSpeed = 50.f;
+	float mZoomSpeed = 10.f;
 
 	/*
 	* @brief 최대 OrthoWidth, 또는 최소 확대
@@ -99,11 +99,12 @@ public:
 public:
 	/*
 	* @brief 줌 값을 받아서 Zoom을 실행한다.
-	* @param FingerIndex0, Touch0 첫번째 터치 정보
-	* @param FingerIndex1, Touch1 두번째 터치 정보
+	* 
+	* @param Zoom할 값
+	* @param Zoom할 중심 위치
 	*/
 	UFUNCTION(BlueprintCallable)
-	void Zoom(float ZoomValue);
+	void Zoom(float ZoomValue, FVector2D PinchCenter);
 
-	//void SkillMotionZoomIn() {};
+	void SkillMotionZoomIn() {};
 };
