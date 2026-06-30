@@ -11,7 +11,6 @@
 
 #include "Actor/BoardActor/BoardActorModel.h"
 #include "Actor/BoardActor/BoardCombatTarget.h"
-#include "Actor/BoardActor/BoardSelectionTarget.h"
 #include "GenericTeamAgentInterface.h"
 
 #include "UnitModel.generated.h"
@@ -29,7 +28,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUnitDied, UUnitModel*, Model);
  * @brief  턴을 소유할 수 있는 베이스 폰 클래스 모델
  */
 UCLASS(abstract, Blueprintable)
-class P_RD_API UUnitModel : public UBoardActorModel, public IBoardCombatTarget, public IBoardSelectionTarget
+class P_RD_API UUnitModel : public UBoardActorModel, public IBoardCombatTarget
 {
 	GENERATED_BODY()
 

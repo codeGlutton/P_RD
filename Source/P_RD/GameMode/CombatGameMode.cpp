@@ -23,6 +23,7 @@
 #include "SRPGFramework/SRPGTurnEndAction.h"
 
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "Component/EquipmentComponent/EquipmentComponentModel.h"
 #include "Dice/DicePoolModel.h"
 
 #include "AttributeSet/UnitAttributeSet.h"
@@ -44,6 +45,13 @@ void ACombatGameMode::InitializeRoom()
 	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModel());
 
 	/* 전투 모델 대리자 연결 */
+
+	CombatModel->OnRegisterUnitUI.AddUObject(this, &ACombatGameMode::OnRegisterUnit);
+	CombatModel->OnUnregisterUnitUI.AddUObject(this, &ACombatGameMode::OnUnregisterUnit);
+
+	CombatModel->OnShowDicePanelAnyTurnUI.AddWeakLambda(this, [this](const USRPGTurnContext* TurnContext) {
+		OnShowDicePanelAnyTurnUI.Broadcast(TurnContext);
+		});
 
 	CombatModel->OnBeginCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier) {
 		OnRefreshAllUI.Broadcast();
@@ -214,8 +222,52 @@ bool ACombatGameMode::ResolveWorldLongPressEvent()
 	return CommandRouterModel->SummitCommand(WorldTraceActionCommand);
 }
 
-FEquippedEntry* ACombatGameMode::GetEquipmentDetail(int32 EquipmentIndex)
+const FEquippedEntry* ACombatGameMode::GetEquipmentDetail(EEquipmentType EquipmentType)
 {
-	return nullptr;
+	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
+	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
+
+	UEquipmentComponentModel* EquipmentComponentModel = PlayerUnitModel->GetEquipmentComponentModel();
+	checkf(EquipmentComponentModel != nullptr, TEXT("장비 컴포넌트 nullptr"));
+
+	return EquipmentComponentModel->GetEquipped(EquipmentType);
+}
+
+void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
+{
+	UAttributeSetComponentModel* AttributeSetComponentModel = Unit->GetAttributeComponentModel();
+	checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+	// 각 속성이 변경될 때마다 OnRefreshUnitUI를 브로드캐스트하도록 바인딩
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
+		OnRefreshUnitUI.Broadcast();
+		});
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
+		OnRefreshUnitUI.Broadcast();
+		});
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementPointAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
+		OnRefreshUnitUI.Broadcast();
+		});
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefensePointAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
+		OnRefreshUnitUI.Broadcast();
+		});
+
+	// 상태 이상 태그 변경 시에도 UI 갱신 바인딩
+	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_StatusEffect, EGameplayTagEventType::NewOrRemoved).AddWeakLambda(this, [this](const FGameplayTag Tag, int32 Count) {
+		OnRefreshUnitUI.Broadcast();
+		});
+}
+
+void ACombatGameMode::OnUnregisterUnit(UUnitModel* Unit)
+{
+	UAttributeSetComponentModel* AttributeSetComponentModel = Unit->GetAttributeComponentModel();
+	checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).RemoveAll(this);
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).RemoveAll(this);
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementPointAttribute()).RemoveAll(this);
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefensePointAttribute()).RemoveAll(this);
+
+	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_StatusEffect, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
 }
 

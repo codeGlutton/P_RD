@@ -2,21 +2,19 @@
 #include "SRPGFramework/SRPGAction.h"
 #include "SRPGFramework/SRPGCommand.h"
 
+#include "RDCollision.h"
+
 #include "SRPGFramework/SRPGDiceRollAction.h"
 
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
+#include "Pawn/UnitModel.h"
+
+#include "Actor/BoardActor/BoardSelectionTarget.h"
 
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 
-#include "Pawn/UnitModel.h"
-
 #include "Simulation/Logger/EventLogger.h"
-
-TWeakObjectPtr<USRPGTurnContext> USRPGActionCreationCommandHandler::GetParent() const
-{
-	return mParent;
-}
 
 int8 USRPGActionCreationCommandHandler::GetCommandPriority() const
 {
@@ -56,6 +54,46 @@ ESRPGCommandResult USRPGActionCreationCommandHandler::HandleCommand(const TInsta
 	return ESRPGCommandResult::Handled;
 }
 
+TWeakObjectPtr<USRPGTurnContext> USRPGActionCreationCommandHandler::GetParent() const
+{
+	return mParent;
+}
+
+int8 USRPGDetailInfoPopupCommandHandler::GetCommandPriority() const
+{
+	return ISRPGCommandHandler::HIGHEST_PRIORITY;
+}
+
+ESRPGCommandResult USRPGDetailInfoPopupCommandHandler::HandleCommand(const TInstancedStruct<FSRPGCommand>& Command)
+{
+	if (Command.Get().GetCommandType() == ESRPGCommandType::WorldTrace)
+	{
+		/* 월드 공간 터치 시 선택 위치에 따라서 결정 */
+
+		const FSRPGWorldTraceCommand& WorldTraceCommand = Command.Get<FSRPGWorldTraceCommand>();
+		if (WorldTraceCommand.mIsLongPress == true)
+		{
+			AActor* HitActor = nullptr;
+			FTileIndex TileIndex = FTileIndex::Invalid;
+			GetTileActorUnderCursor(GetWorld(), RDTraceChannels::TileAnyTrace, OUT HitActor, OUT TileIndex);
+
+			IBoardSelectionTarget* SelectionTarget = Cast<IBoardSelectionTarget>(HitActor);
+			if (SelectionTarget != nullptr && SelectionTarget->IsSelectable() == true)
+			{
+				WorldTraceCommand.OnShowTargetDetailPanelUI.Broadcast(SelectionTarget);
+			}
+			return ESRPGCommandResult::Handled;
+		}
+	}
+
+	return ESRPGCommandResult::Ignored;
+}
+
+TWeakObjectPtr<USRPGTurnContext> USRPGDetailInfoPopupCommandHandler::GetParent() const
+{
+	return mParent;
+}
+
 void USRPGTurnContext::InitTurn(USRPGCombatModel* Parent, UUnitModel* Owner, int32 TurnId, int32 LifeCount)
 {
 	checkf(Parent != nullptr, TEXT("전투 서브시스템 nullptr"));
@@ -72,6 +110,10 @@ void USRPGTurnContext::InitTurn(USRPGCombatModel* Parent, UUnitModel* Owner, int
 	USRPGActionCreationCommandHandler* ActionCreationCommandHandler = NewObject<USRPGActionCreationCommandHandler>(this);
 	ActionCreationCommandHandler->mParent = this;
 	mTurnDefaultCommandHandlers.Add(ActionCreationCommandHandler);
+
+	USRPGDetailInfoPopupCommandHandler* DetailInfoPopupCommandHandler = NewObject<USRPGDetailInfoPopupCommandHandler>(this);
+	DetailInfoPopupCommandHandler->mParent = this;
+	mTurnDefaultCommandHandlers.Add(DetailInfoPopupCommandHandler);
 }
 
 void USRPGTurnContext::BeginTurn()
@@ -131,6 +173,9 @@ void USRPGTurnContext::BeginTurn()
 
 			TInstancedStruct<FSRPGCommand> DicePrepareCommand;
 			DicePrepareCommand.InitializeAs<FSRPGDicePrepareCommand>();
+			DicePrepareCommand.GetMutable<FSRPGDicePrepareCommand>().OnShowDicePanelUI.AddWeakLambda(this, [this]() {
+				OnShowDicePanelAtTurnStartUI.Broadcast(this);
+				});
 
 			CommandRouterModel->SummitCommand(DicePrepareCommand);
 		}
@@ -375,5 +420,3 @@ void USRPGTurnContext::ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGComman
 
 	CommandRouterModel->SummitCommand(NextCommand);
 }
-
-
