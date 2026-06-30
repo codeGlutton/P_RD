@@ -3,6 +3,7 @@
 
 #include "Component/CameraMovementComponent/CameraMovementComponent.h"
 #include "Camera/CameraComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 
 // Sets default values for this component's properties
 UCameraMovementComponent::UCameraMovementComponent()
@@ -31,12 +32,19 @@ void UCameraMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
+	// 확대, 축소 최소 최대 거리
+	mCameraComponent->OrthoWidth = FMath::Clamp(mCameraComponent->OrthoWidth, mMinOrthoWidth, mMaxOrthoWidth);
 }
 
 void UCameraMovementComponent::SetCameraComponent(UCameraComponent* CameraComponent)
 {
 	mCameraComponent = CameraComponent;
 }
+
+//void UCameraMovementComponent::SetSpringArmComponent(USpringArmComponent* SpringComponent)
+//{
+//	mSpringArmComponent = SpringComponent;
+//}
 
 UCameraComponent* UCameraMovementComponent::GetCameraComponent()
 {
@@ -48,17 +56,37 @@ void UCameraMovementComponent::SetZoomSpeed(float ZoomSpeed)
 	mZoomSpeed = ZoomSpeed;
 }
 
-void UCameraMovementComponent::Zoom(float ZoomValue, FVector2D ScreenCenter)
+void UCameraMovementComponent::SetMaxOrthoWidth(float MaxOrthoWidth)
 {
-	// A. 줌 전 중심점 월드 좌표 저장
-	//FVector WorldPos_Before = DeprojectToWorld(ScreenCenter);
+	mMaxOrthoWidth = MaxOrthoWidth;
+}
 
+void UCameraMovementComponent::SetMinOrthoWidth(float MinOrthoWidth)
+{
+	mMaxOrthoWidth = MinOrthoWidth;
+}
+
+void UCameraMovementComponent::ZoomCamera(float ZoomValue)
+{
+	// OW 값을 추가합니다.
 	float OW = mCameraComponent->OrthoWidth + ZoomValue * mZoomSpeed;
 	mCameraComponent->OrthoWidth = FMath::Clamp(OW, mMinOrthoWidth, mMaxOrthoWidth);
+}
 
-	// C. 줌 후 중심점 월드 좌표 확인 및 보정
-	//FVector WorldPos_After = DeprojectToWorld(ScreenCenter);
+void UCameraMovementComponent::ZoomCameraAndMoveToViewport(float ZoomValue, FVector2D ViewPortPos)
+{
+	ZoomCamera(ZoomValue);
+	MoveToViewport(ViewPortPos);
+}
 
-	// D. 차이만큼 카메라 위치 이동
-	//GetOwner()->AddActorWorldOffset(WorldPos_Before - WorldPos_After);
+void UCameraMovementComponent::MoveToViewport(FVector2D ViewPortPos)
+{
+	FVector WorldLocation;
+	FVector WorldDirection;
+
+	// ViewPort를 WorldLocation으로 변환
+	GetWorld()->GetFirstPlayerController()->DeprojectScreenPositionToWorld(ViewPortPos.X,ViewPortPos.Y, WorldLocation, WorldDirection);
+
+	// 변환된 WorldLocation로 액터의 위치를 변경합니다.
+	GetOwner()->SetActorLocation(WorldLocation);
 }

@@ -9,6 +9,7 @@
 class USpringArmComponent;
 class UCameraComponent;
 class UCameraMovementComponent;
+class USceneComponent;
 
 
 UCLASS()
@@ -33,7 +34,10 @@ public:
 
 public:
 	UPROPERTY(Category = Default, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SceneComponent", AllowPrivateAccess = "true"))
-	TObjectPtr<USpringArmComponent> mSpringArmComponent;
+	TObjectPtr<USceneComponent> mSceneComponent;
+
+	//UPROPERTY(Category = Default, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SceneComponent", AllowPrivateAccess = "true"))
+	//TObjectPtr<USpringArmComponent> mSpringArmComponent;
 
 	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CameraComponent", AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> mCameraComponent;
