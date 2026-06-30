@@ -1,7 +1,17 @@
 #include "UI/Combat/CombatUIModel.h"
 
-// ───────── gameplay → UI : 표시값을 캐시에 넣는다 ─────────
-// 화면 갱신 알림은 CombatGameMode의 OnRefresh*UI 대리자가 담당한다.
+/*
+ * gameplay -> UI : 표시 스냅샷 저장소.
+ *
+ * 이 모델은 MVVM처럼 스스로 변경 알림을 쏘지 않는다.
+ * 알림 채널은 ACombatGameMode의 OnRefresh*UI 대리자 하나로 통일했다.
+ *
+ * 흐름:
+ * ACombatGameMode::PushXxxUI()
+ * -> UCombatUIModel::SetXxx()
+ * -> ACombatGameMode::OnRefreshXxxUI.Broadcast()
+ * -> HUD/TopBar가 GetXxx()로 다시 읽어 redraw
+ */
 
 /** @brief 유닛 표시 스냅샷 캐시를 교체한다. (화면 갱신 알림은 CombatGameMode의 OnRefresh*UI 담당) */
 void UCombatUIModel::SetUnitUIs(const TArray<FUnitUI>& Units)

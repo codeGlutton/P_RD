@@ -1,9 +1,22 @@
 #pragma once
 
-/** @brief 게임플레이 모델 -> 전투 UI 표시 DTO 변환(무상태 함수 모음). */
-// 책임: USRPGCombatModel/DicePool/Skill/Equipment 등 게임플레이 모델을 읽어 CombatUITypes의 표시 DTO로 옮긴다.
-// CombatGameMode의 Push*UI()는 이 함수들을 호출해 UCombatUIModel에 Set*하고 OnRefresh*UI를 Broadcast만 한다.
-// (UObject/델리게이트를 만들지 않는다 — GameMode 경계는 그대로 두고 "변환 본문"만 떼어낸 것.)
+/*
+ * 게임플레이 모델 -> 전투 UI 표시 DTO 변환(무상태 함수 모음).
+ *
+ * #216에서는 CombatGameMode가 너무 비대해져서, "모델을 읽어 DTO로 바꾸는 본문"만 이 파일로 뺐다.
+ * #217에서 이 파일을 따로 보여주는 이유는, 변환 정책이 UI 시각화와 게임플레이 데이터 해석 사이에 걸쳐 있기 때문이다.
+ *
+ * 이 파일이 하지 않는 것:
+ * - UObject를 만들지 않는다.
+ * - 대리자를 Broadcast하지 않는다.
+ * - 커맨드를 제출하지 않는다.
+ * - UI 위젯을 직접 만지지 않는다.
+ *
+ * 이 파일이 하는 것:
+ * - CombatModel, DicePool, SkillComponent, EquipmentComponent 등 권위 모델을 읽는다.
+ * - 위젯이 바로 그릴 수 있는 CombatUITypes DTO로 옮긴다.
+ * - 게임플레이 enum/데이터를 UI enum/표현값으로 낮춘다.
+ */
 
 #include "RDMinimal.h"
 #include "UI/Combat/CombatUITypes.h"                // 표시 DTO + UI enum (+ SRPGFrameworkType: EAimPattern/EEffectPattern/ESRPG*BuildPhase)

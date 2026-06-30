@@ -21,7 +21,13 @@
 
 #include "AttributeSet/UnitAttributeSet.h"
 
-// 변환에만 쓰는 파일 내부 헬퍼(게임플레이 enum/데이터 -> UI 표현값).
+/*
+ * 변환에만 쓰는 파일 내부 헬퍼(게임플레이 enum/데이터 -> UI 표현값).
+ *
+ * PM 리뷰 포인트:
+ * 아래 enum/색상 매핑은 "게임플레이 데이터가 화면에서 어떻게 보이는가"의 정책이다.
+ * 틀리면 전투 로직이 깨지지는 않지만, 플레이어에게 보이는 조준/타격 형태가 달라진다.
+ */
 namespace
 {
 	FLinearColor GetCombatRarityColor(ERarityType RarityType)
@@ -40,6 +46,8 @@ namespace
 
 	ECombatSkillSelectShapeUI ToCombatSkillSelectShape(EAimPattern Pattern)
 	{
+		// 게임플레이 조준 패턴을 HUD가 이해하는 단순 shape로 낮춘다.
+		// Star를 Diagonal로 보여주는 정책은 임시 매핑이므로 PM/기획 확인 대상이다.
 		switch (Pattern)
 		{
 		case EAimPattern::Single:
@@ -57,6 +65,8 @@ namespace
 
 	ECombatSkillHitShapeUI ToCombatSkillHitShape(EEffectPattern Pattern)
 	{
+		// 실제 효과 패턴을 상세하게 그리기 전까지, HUD 피드백용 shape로 축약한다.
+		// Beam/Square 같은 케이스가 실제 연출과 다르면 이 함수만 바꾸면 된다.
 		switch (Pattern)
 		{
 		case EEffectPattern::Single:
@@ -121,6 +131,10 @@ ECombatBuildPhaseUI CombatUIProjection::ToCombatBuildPhaseUI(ESRPGMoveBuildPhase
 
 TArray<FUnitUI> CombatUIProjection::BuildUnitUIs(USRPGCombatModel* CombatModel)
 {
+	/*
+	 * 전투 보드에 올라온 모든 유닛을 UI 스냅샷으로 복사한다.
+	 * UI는 UUnitModel 포인터를 들지 않고, UnitId/Tile/WorldLocation/HP 같은 값만 가진다.
+	 */
 	TArray<FUnitUI> UnitUIs;
 	if (CombatModel == nullptr)
 	{
@@ -165,6 +179,11 @@ TArray<FUnitUI> CombatUIProjection::BuildUnitUIs(USRPGCombatModel* CombatModel)
 
 TArray<FDiceSlotUI> CombatUIProjection::BuildDiceUIs(UDicePoolModel* DicePoolModel)
 {
+	/*
+	 * 주사위 슬롯 DTO.
+	 * 사용됨/선택됨/굴림됨 상태를 전부 같이 싣는다.
+	 * 그래야 HUD의 3D 주사위, 선택 카드, 턴 시작 패널이 같은 기준으로 그려진다.
+	 */
 	TArray<FDiceSlotUI> DiceUIs;
 	if (DicePoolModel == nullptr)
 	{
@@ -221,6 +240,7 @@ TArray<int32> CombatUIProjection::BuildSelectedDiceIndices(UDicePoolModel* DiceP
 
 FTurnUI CombatUIProjection::BuildTurnUI(USRPGCombatModel* CombatModel)
 {
+	// 지금은 현재 턴 유닛 id 중심의 최소 DTO다. 턴오더바 세부 데이터가 확정되면 여기서 확장하면 된다.
 	FTurnUI TurnUI;
 	if (CombatModel == nullptr)
 	{
@@ -240,6 +260,11 @@ FTurnUI CombatUIProjection::BuildTurnUI(USRPGCombatModel* CombatModel)
 
 TArray<FSkillUI> CombatUIProjection::BuildSkillUIs(USkillComponentModel* SkillComponentModel)
 {
+	/*
+	 * 스킬 레일 DTO.
+	 * 배열 index == SkillIndex가 유지되어야 한다.
+	 * 그래서 데이터가 비어 있는 슬롯도 건너뛰지 않고 unusable DTO로 넣는다.
+	 */
 	TArray<FSkillUI> SkillUIs;
 	if (SkillComponentModel == nullptr)
 	{
@@ -285,6 +310,11 @@ TArray<FSkillUI> CombatUIProjection::BuildSkillUIs(USkillComponentModel* SkillCo
 
 TArray<FEquipmentUI> CombatUIProjection::BuildEquipmentUIs(UEquipmentComponentModel* EquipmentComponentModel)
 {
+	/*
+	 * 장비 슬롯 DTO.
+	 * 소비자는 Combat HUD가 아니라 TopMenuBar다.
+	 * 비어 있는 슬롯도 fallback 이름을 가진 DTO로 남겨 슬롯 개수/순서를 고정한다.
+	 */
 	TArray<FEquipmentUI> EquipmentUIs;
 	if (EquipmentComponentModel == nullptr)
 	{
@@ -321,6 +351,7 @@ TArray<FEquipmentUI> CombatUIProjection::BuildEquipmentUIs(UEquipmentComponentMo
 
 FPlayerMetaUI CombatUIProjection::BuildPlayerMetaUI(UPlayerUnitModel* PlayerUnit)
 {
+	// 플레이어 메타 요약. 전투 HUD/TopBar가 Gold/Lv/Exp를 직접 AttributeSet에서 읽지 않게 하는 얇은 DTO다.
 	FPlayerMetaUI MetaUI;
 	if (PlayerUnit == nullptr)
 	{

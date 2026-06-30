@@ -36,7 +36,18 @@
 
 DEFINE_LOG_CATEGORY(LogCombatGameMode);
 
-// 게임플레이 모델/enum -> 표시 DTO 변환 헬퍼는 UI/Combat/CombatUIProjection.{h,cpp}로 분리됨.
+/*
+ * #216 / #217 경계 메모
+ *
+ * 이 파일은 전투 HUD가 실제 게임플레이와 연결되기 위해 필요한 "중간 관제탑"이다.
+ * 위젯은 이 GameMode의 public 함수만 호출하고, GameMode는 커맨드 라우터/전투 모델/플레이어 모델을 다룬다.
+ *
+ * - #216: 이 경계를 사용해서 전투 HUD가 실제로 동작하게 만드는 PR.
+ * - #217: 이 파일의 커맨드 발행, 이벤트 바인딩, Push*UI 오케스트레이션을 PM이 검토/이관할 수 있게 떼어 둔 참고 PR.
+ *
+ * 게임플레이 모델/enum -> 표시 DTO 변환 본문은 UI/Combat/CombatUIProjection.{h,cpp}로 분리했다.
+ * GameMode에는 "언제 Push할지"만 남기고, "어떻게 DTO로 바꿀지"는 무상태 Projection 함수로 보낸 구조다.
+ */
 
 void ACombatGameMode::InitializeRoom()
 {
@@ -54,6 +65,12 @@ void ACombatGameMode::InitializeRoom()
 
 	/* 전투 모델 대리자 연결 */
 
+	/*
+	 * PM 리뷰 포인트:
+	 * 여기부터는 전투 모델 이벤트를 UI용 신호로 중계하는 GameMode 배선이다.
+	 * HUD가 CombatModel을 직접 구독하지 않게 하려는 구조지만,
+	 * 어떤 게임플레이 이벤트에서 어떤 Push*UI를 호출할지는 게임플레이 흐름과 강하게 묶인다.
+	 */
 	CombatModel->OnBeginCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier) {
 		OnBeginCombatUI.Broadcast(Barrier);
 		});
@@ -61,6 +78,7 @@ void ACombatGameMode::InitializeRoom()
 		OnEndCombatUI.Broadcast(Barrier, Result == ESRPGCombatResult::PlayerWin);
 		});
 	CombatModel->OnBeginAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext) {
+		// 턴 주인이 바뀌면 FTurnUI를 먼저 갱신하고, 이후 연출용 begin-turn 신호를 넘긴다.
 		PushTurnUI();
 		OnBeginAnyTurnUI.Broadcast(Barrier);
 		});
@@ -76,6 +94,7 @@ void ACombatGameMode::InitializeRoom()
 	CombatModel->OnRegisterUnitUI.AddUObject(this, &ACombatGameMode::OnRegisterUnit);
 	CombatModel->OnUnregisterUnitUI.AddUObject(this, &ACombatGameMode::OnUnregisterUnit);
 	CombatModel->OnShowDicePanelAnyTurnUI.AddWeakLambda(this, [this](const USRPGTurnContext* TurnContext) {
+		// 턴 시작 주사위 패널은 UI 내부에서 열지만, 열기 직전 표시 데이터는 GameMode가 최신화한다.
 		PushDiceUI();
 		PushSelectedDiceUI();
 		OnShowDicePanelAnyTurnUI.Broadcast();
@@ -110,12 +129,21 @@ void ACombatGameMode::BeginRoom()
 		}
 	}
 
+	// HUD가 대리자를 구독한 뒤 첫 스냅샷을 채운다. 순서가 바뀌면 첫 화면이 비어 보일 수 있다.
 	PushAllCombatUI();
+
+	// 전투 시작 자체는 게임플레이 라이프사이클이다. #217에서 PM 검토 대상으로 표시한 이유가 이 줄이다.
 	CombatModel->BeginCombat();
 }
 
 bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 {
+	/*
+	 * UI 입력 가드:
+	 * 빈 슬롯/로드 실패 슬롯은 커맨드 라우터까지 보내지 않는다.
+	 * 실제 스킬 실행 가능 여부의 최종 판정은 게임플레이 커맨드 쪽에 남고,
+	 * 여기서는 UI가 보여주는 슬롯 범위와 usable 상태만 막는다.
+	 */
 	if (UCombatUIModel* CombatUIModel = GetCombatUIModel())
 	{
 		const TArray<FSkillUI>& SkillUIs = CombatUIModel->GetSkillUIs();
@@ -132,6 +160,7 @@ bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 	SkillSelectCommand.InitializeAs<FSRPGSkillSelectCommand>();
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().mSkillIndex = SkillIndex;
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnChangeSkillBuildPhase.AddWeakLambda(this, [this](const USRPGSkillBuildAction* Action, ESRPGSkillBuildPhase Phase) {
+		// 게임플레이 phase를 UI enum으로 낮춰서 전달한다. HUD는 ESRPGSkillBuildPhase를 몰라도 된다.
 		OnRefreshSkillBuildPhase.Broadcast(CombatUIProjection::ToCombatBuildPhaseUI(Phase));
 		PushSelectedDiceUI();
 		PushDiceUI();
@@ -176,6 +205,7 @@ bool ACombatGameMode::SelectMove()
 	TInstancedStruct<FSRPGCommand> MoveSelectCommand;
 	MoveSelectCommand.InitializeAs<FSRPGMoveSelectCommand>();
 	MoveSelectCommand.GetMutable<FSRPGMoveSelectCommand>().OnChangeMoveBuildPhase.AddWeakLambda(this, [this](const USRPGMoveBuildAction* Action, ESRPGMoveBuildPhase Phase) {
+		// MOVE는 스킬과 별도 행동이다. UI에는 공용 ECombatBuildPhaseUI만 내려서 MOVE/CANCEL 표시를 결정한다.
 		OnRefreshMoveBuildPhase.Broadcast(CombatUIProjection::ToCombatBuildPhaseUI(Phase));
 		PushTurnUI();
 		if (Phase == ESRPGMoveBuildPhase::Build || Phase == ESRPGMoveBuildPhase::None)
@@ -229,6 +259,7 @@ bool ACombatGameMode::ResolveWorldLongPressEvent()
 
 bool ACombatGameMode::ShowSkillDetail(int32 SkillIndex)
 {
+	// 상세창을 여는 것은 UI 일이지만, "존재하는 스킬인지" 확인하는 기준은 최신 FSkillUI 스냅샷이다.
 	if (UCombatUIModel* CombatUIModel = GetCombatUIModel())
 	{
 		const TArray<FSkillUI>& SkillUIs = CombatUIModel->GetSkillUIs();
@@ -244,6 +275,7 @@ bool ACombatGameMode::ShowSkillDetail(int32 SkillIndex)
 
 bool ACombatGameMode::ShowEquipmentDetail(int32 SlotIndex)
 {
+	// 장비 슬롯의 표시/입력 위치는 TopMenuBar다. GameMode는 슬롯 번호를 받아 상세 신호만 중계한다.
 	OnShowEquipmentDetailPanelUI.Broadcast(SlotIndex);
 	return GetEquipmentDetail(static_cast<EEquipmentType>(SlotIndex)) != nullptr;
 }
@@ -267,6 +299,11 @@ const FEquippedEntry* ACombatGameMode::GetEquipmentDetail(EEquipmentType Equipme
 
 void ACombatGameMode::PushAllCombatUI()
 {
+	/*
+	 * 초기/전체 갱신 스냅샷.
+	 * Push*UI는 "모델 읽기 -> DTO 저장 -> 도메인별 Broadcast" 패턴으로 맞춰져 있다.
+	 * 마지막 OnRefreshAllUI는 전체 redraw가 필요한 HUD를 위한 넓은 신호다.
+	 */
 	PushUnitUI();
 	PushDiceUI();
 	PushSelectedDiceUI();
@@ -288,6 +325,8 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 	UAttributeSetComponentModel* AttributeComponentModel = Unit->GetAttributeComponentModel();
 	if (AttributeComponentModel != nullptr)
 	{
+		// 유닛 HUD가 다시 그려져야 하는 최소 전투 속성만 구독한다.
+		// 상태이상 태그 구독은 후속으로 넣어도 같은 PushUnitUI 경로를 사용하면 된다.
 		const TArray<FTacticalAttribute> AttributesToRefresh = {
 			UUnitAttributeSet::GetHPAttribute(),
 			UUnitAttributeSet::GetMaxHPAttribute(),
@@ -351,6 +390,7 @@ void ACombatGameMode::BindPlayerDicePoolUIEvents()
 
 	DicePoolModel->OnRollAllDicesUI.RemoveAll(this);
 	DicePoolModel->OnRollAllDicesUI.AddWeakLambda(this, [this](const TArray<TObjectPtr<UDiceModel>>& Dices) {
+		// 굴림 결과와 선택 합계를 함께 갱신해야 패널/보유주사위 표시가 어긋나지 않는다.
 		PushDiceUI();
 		PushSelectedDiceUI();
 		});
@@ -416,6 +456,7 @@ void ACombatGameMode::PushUnitUI()
 		return;
 	}
 
+	// 실제 변환은 CombatUIProjection이 담당한다. GameMode는 저장과 신호만 담당한다.
 	CombatUIModel->SetUnitUIs(CombatUIProjection::BuildUnitUIs(CombatModel));
 	OnRefreshUnitUI.Broadcast();
 }
@@ -435,6 +476,7 @@ void ACombatGameMode::PushDiceUI()
 		return;
 	}
 
+	// 주사위 원본 모델을 읽어 FDiceSlotUI 배열로 만든 뒤, Dice 영역만 redraw하게 알린다.
 	CombatUIModel->SetDiceUIs(CombatUIProjection::BuildDiceUIs(DicePoolModel));
 	OnRefreshDiceUI.Broadcast();
 }
@@ -454,6 +496,7 @@ void ACombatGameMode::PushSelectedDiceUI()
 		return;
 	}
 
+	// 선택 목록과 합계를 같은 타이밍에 저장한다. 합계만 늦게 읽으면 스킬 빌드 표시가 틀어진다.
 	CombatUIModel->SetSelectedDice(CombatUIProjection::BuildSelectedDiceIndices(DicePoolModel), DicePoolModel->GetSelectedDiceSum());
 	OnRefreshSelectedDiceUI.Broadcast();
 }
@@ -467,6 +510,7 @@ void ACombatGameMode::PushTurnUI()
 		return;
 	}
 
+	// 턴 주인 id 중심의 얇은 DTO다. UI가 TurnContext를 직접 들고 있지 않게 한다.
 	CombatUIModel->SetTurnUI(CombatUIProjection::BuildTurnUI(CombatModel));
 	OnRefreshTurnUI.Broadcast();
 }
@@ -487,6 +531,7 @@ void ACombatGameMode::PushSkillUI()
 		return;
 	}
 
+	// SkillComponentModel -> FSkillUI 변환. 빈 슬롯도 unusable DTO로 남겨 UI 인덱스와 실제 스킬 인덱스를 맞춘다.
 	CombatUIModel->SetSkillUIs(CombatUIProjection::BuildSkillUIs(SkillComponentModel));
 	OnRefreshSkillUI.Broadcast();
 }
@@ -506,6 +551,7 @@ void ACombatGameMode::PushEquipmentUI()
 		return;
 	}
 
+	// 장비 DTO는 TopMenuBar가 소비한다. Combat HUD가 장비바를 다시 소유하지 않게 이 신호만 유지한다.
 	CombatUIModel->SetEquipmentUIs(CombatUIProjection::BuildEquipmentUIs(EquipmentComponentModel));
 	OnRefreshEquipmentUI.Broadcast();
 }
@@ -519,6 +565,7 @@ void ACombatGameMode::PushPlayerMetaUI()
 		return;
 	}
 
+	// Gold/Level/Exp 같은 전투 중 요약값. 탑바/상태바는 이 스냅샷을 다시 읽어 표시한다.
 	CombatUIModel->SetPlayerMeta(CombatUIProjection::BuildPlayerMetaUI(PlayerUnit));
 	OnRefreshPlayerMetaUI.Broadcast();
 }

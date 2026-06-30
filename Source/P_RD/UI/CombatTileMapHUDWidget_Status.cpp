@@ -20,6 +20,13 @@ void UCombatTileMapHUDWidget::BindCombatGameModeDelegates()
 
 	UnbindCombatGameModeDelegates();
 
+	/*
+	 * Combat HUD 구독 범위.
+	 *
+	 * HUD는 전투 조작/전투 보드 표시만 구독한다.
+	 * 장비 슬롯은 TopMenuBar 소유라서 OnRefreshEquipmentUI / OnShowEquipmentDetailPanelUI를 여기서 구독하지 않는다.
+	 * 신호를 받으면 payload를 신뢰하는 방식이 아니라 UCombatUIModel을 다시 읽어 필요한 영역만 redraw한다.
+	 */
 	CombatGameMode->OnRefreshAllUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshAllUI);
 	CombatGameMode->OnRefreshUnitUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshUnitUI);
 	CombatGameMode->OnRefreshDiceUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshDiceUI);
@@ -60,6 +67,7 @@ void UCombatTileMapHUDWidget::UnbindCombatGameModeDelegates()
 
 void UCombatTileMapHUDWidget::HandleRefreshAllUI()
 {
+	// 전체 스냅샷을 다시 읽는 broad refresh. 초기 HUD open 직후와 큰 상태 변경에서 사용한다.
 	RefreshCombatStatusBar();
 	RebuildTurnOrderBar();
 	RebuildUnitHpBars();
@@ -113,6 +121,7 @@ void UCombatTileMapHUDWidget::HandleRefreshPlayerMetaUI()
 
 void UCombatTileMapHUDWidget::HandleRefreshSkillBuildPhase(ECombatBuildPhaseUI Phase)
 {
+	// 스킬 phase는 UI enum만 받는다. HUD는 SRPGSkillBuildPhase/커맨드 객체를 몰라도 된다.
 	if (Phase == ECombatBuildPhaseUI::None)
 	{
 		HandleCombatActionResolved();
@@ -126,6 +135,7 @@ void UCombatTileMapHUDWidget::HandleRefreshSkillBuildPhase(ECombatBuildPhaseUI P
 
 void UCombatTileMapHUDWidget::HandleRefreshMoveBuildPhase(ECombatBuildPhaseUI Phase)
 {
+	// MOVE는 스킬과 독립된 행동이다. phase에 따라 MOVE/CANCEL 표시만 바꾼다.
 	mMoveBuildPhase = Phase;
 	RefreshMoveButton();
 
