@@ -43,7 +43,7 @@ DECLARE_MULTICAST_DELEGATE(FOnRefreshTurnUI);
 DECLARE_MULTICAST_DELEGATE(FOnRefreshPlayerMetaUI);
 DECLARE_MULTICAST_DELEGATE(FOnCombatActionResolvedUI);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnCombatPresentationUI, TSharedPtr<FPresentationBarrier> /*Barrier*/);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCombatEndedUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, bool /*bPlayerWin*/);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCombatEndedUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, bool /*playerWin*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnTurnPresentationUI, TSharedPtr<FPresentationBarrier> /*Barrier*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnActionPresentationUI, TSharedPtr<FPresentationBarrier> /*Barrier*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnRefreshCombatBuildPhase, ECombatBuildPhaseUI /*Phase*/);
@@ -129,7 +129,7 @@ public:
 	 * 연출 대리자.
 	 *
 	 * 게임플레이 내부 타입을 UI에 최대한 노출하지 않기 위해 payload를 줄였다.
-	 * 예: 전투 종료는 ESRPGCombatResult 대신 bool bPlayerWin만 내려준다.
+	 * 예: 전투 종료는 ESRPGCombatResult 대신 bool playerWin만 내려준다.
 	 */
 	FOnCombatPresentationUI OnBeginCombatUI;
 	FOnCombatEndedUI OnEndCombatUI;
