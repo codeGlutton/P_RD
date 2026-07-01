@@ -72,7 +72,7 @@ void UCombatTileMapHUDWidget::SelectSkillForAssignment(int32 SkillIndex)
 
 	if (mSelectedSkillIndex != SkillIndex)
 	{
-		mSelectedDiceIndex = INDEX_NONE;
+		ClearOwnedDiceSelectionHighlight();
 	}
 	mSelectedSkillIndex = SkillIndex;
 

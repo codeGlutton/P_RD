@@ -85,6 +85,7 @@ void UCombatTileMapHUDWidget::RefreshDiceViewsFromRunData()
 			DiceView.mRolledFaceIndex = SlotView.mRolledFaceIndex;
 			DiceView.mIsRolled = SlotView.mIsRolled;
 			DiceView.mIsUsed = SlotView.mIsUsed;
+			DiceView.mIsSelected = SlotView.mIsSelected;
 			DiceView.mFaceCount = SlotView.mFaceCount;
 			DiceView.mFaceValues = SlotView.mFaceValues;
 			DiceView.mFaceTextures = SlotView.mFaceTextures;
@@ -242,7 +243,7 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 
 		FLinearColor DiceColor = DiceView.mIsRolled ? RarityColor : PendingColor;
 		float DiceScale = DiceView.mIsRolled ? 0.80f : 0.72f;
-		if (DiceIndex == mSelectedDiceIndex)
+		if (DiceView.mIsSelected)
 		{
 			DiceColor = FLinearColor(1.0f, 0.82f, 0.30f, 1.0f);
 			DiceScale = 1.02f;
@@ -299,7 +300,7 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 		{
 			if (UIndexedButtonWidget* OwnedDiceCardWidget = mOwnedDiceCardWidgets[DiceIndex])
 			{
-				FLinearColor CardColor = DiceIndex == mSelectedDiceIndex
+				FLinearColor CardColor = DiceView.mIsSelected
 					? FLinearColor(1.0f, 0.78f, 0.20f, 0.34f)
 					: FLinearColor(1.0f, 1.0f, 1.0f, 0.01f);
 				if (DiceView.mIsUsed)
@@ -309,6 +310,16 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 				OwnedDiceCardWidget->SetBackgroundColor(CardColor);
 			}
 		}
+	}
+}
+
+/** @brief 보유 주사위 카드의 선택 강조를 모두 끈다(스킬 변경/액션 확정·취소/무스킬 클릭 시).
+    선택의 진실원본은 DicePoolModel이고, 이 함수는 다음 DTO push 전까지의 즉시 강조 해제만 담당한다. */
+void UCombatTileMapHUDWidget::ClearOwnedDiceSelectionHighlight()
+{
+	for (FDiceViewData& DiceView : mDiceUIs)
+	{
+		DiceView.mIsSelected = false;
 	}
 }
 
@@ -328,15 +339,14 @@ void UCombatTileMapHUDWidget::HandleOwnedDiceCardClicked(int32 DiceIndex)
 
 	if (mSelectedSkillIndex == INDEX_NONE)
 	{
-		mSelectedDiceIndex = INDEX_NONE;
+		ClearOwnedDiceSelectionHighlight();
 		RefreshOwnedDiceCards();
 		RefreshDiceAssignmentText();
 		return;
 	}
 
-	mSelectedDiceIndex = DiceIndex;
-
-	// 스킬에 주사위 배치 의도를 게임플레이로 보낸다(STEP은 즉시 실행, BASIC은 적 탭 대기).
+	// 주사위 토글(올림/내림) 의도만 게임플레이로 보낸다. 선택의 진실원본은 DicePoolModel이며,
+	// 갱신된 선택은 FDiceSlotUI.mIsSelected로 되돌아와(RefreshDiceViewsFromRunData) 여러 칸이 동시에 강조된다.
 	if (mCombatUIModel != nullptr)
 	{
 		mCombatUIModel->RequestToggleDice(DiceIndex);
