@@ -34,24 +34,39 @@ void UCameraMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
 
 	// ...
+	// =============================
 	// 확대, 축소 최소 최대 거리
 	mCameraComponent->OrthoWidth = FMath::Clamp(mCameraComponent->OrthoWidth, mMinOrthoWidth, mMaxOrthoWidth);
 
+	//=================================
+	// 카메라 이동의 제한을 둡니다.
+	// 카메라의 크기는 무시힌다.
+	FVector ActorLocation = GetOwner()->GetActorLocation();
+
+	ActorLocation.X = FMath::Clamp(ActorLocation.X, -mMoveClampBox.X / 2, mMoveClampBox.X / 2);
+	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, -mMoveClampBox.Y / 2, mMoveClampBox.Y / 2);
+
+	GetOwner()->SetActorLocation(ActorLocation);
+
+	//==============================
+	// 이동 제한 범위를 보여줍니다.
 	FVector Center = mDefaultPos;
-	FVector Extent = mMoveClampBox;
-	FQuat Rotation = GetOwner()->GetActorQuat(); // 액터의 회전 값을 쿼터니언으로 전달
+	FVector Extent = mMoveClampBox/2;
+	FQuat Rotation = FQuat();
 
 	DrawDebugBox(
 		GetWorld(),
 		Center,
 		Extent,
 		Rotation, // 여기에 회전 값을 넣으면 기울어진 박스가 그려집니다.
-		FColor::Green,
+		FColor::Red,
 		false,
 		-1.0f,
 		0,
 		5.0f
 	);
+
+
 }
 
 void UCameraMovementComponent::SetCameraComponent(UCameraComponent* CameraComponent)
@@ -101,57 +116,97 @@ void UCameraMovementComponent::ZoomCameraAndMoveToViewport(float ZoomValue, FVec
 
 void UCameraMovementComponent::MoveToViewport(FVector2D ViewPortPos)
 {
+	//==============================
+	// ViewPort를 WorldLocation으로 변환합니다.
 	FVector WorldLocation;
 	FVector WorldDirection;
 
-	// ViewPort를 WorldLocation으로 변환
 	GetWorld()->GetFirstPlayerController()->DeprojectScreenPositionToWorld(ViewPortPos.X,ViewPortPos.Y, WorldLocation, WorldDirection);
 
-	FHitResult HitResult;
+	FHitResult ViewPortHitResult;
 	FVector StartTrace = WorldLocation; // 시작 지점
-	FVector EndTrace = StartTrace + (WorldDirection * 1000.0f); // 1000유닛 앞
+	FVector EndTrace = StartTrace + (WorldDirection * 100000.0f);
 
 	// 채널 설정 (ECC_Visibility 등)
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(GetOwner()); // 자기 자신은 충돌에서 제외
 
-	bool bHit = GetWorld()->LineTraceSingleByChannel(
-		HitResult,
+	bool bViewPortHit = GetWorld()->LineTraceSingleByChannel(
+		ViewPortHitResult,
 		StartTrace,
 		EndTrace,
 		ECC_Visibility, // 충돌 채널
 		QueryParams
 	);
 
-	FVector LocationPos = HitResult.ImpactPoint;
-	FVector CameraPos = GetCameraPos(); // 카메라가 바라보고 있는 땅의 위치를 가져온다.
-	UE_LOG(LogTemp, Warning, TEXT("LocPos : %f, %f, %f"), LocationPos.X, LocationPos.Y, LocationPos.Z);
-	UE_LOG(LogTemp, Warning, TEXT("CameraPos : %f, %f, %f"), CameraPos.X, CameraPos.Y, CameraPos.Z);
+	if (!bViewPortHit)
+		return;
+
+	// ============================================
+	// 카메라의 시선으로로 Ray를 쏜다.
+	FHitResult CameraCenterRayCastHitResult;
+	bool bCameraHit = GetCameraRayHitPoint(CameraCenterRayCastHitResult);
+
+	// 카메라의 중심에서 Ray가 적중하지 않았다면 이동시키지 않는다.
+	if (!bCameraHit)
+		return;
+
+	// ==========================================
+	// 카메라의 위치를 이동시킨다.
+	// Z 축은 반영하지 않으므로 0으로 만든다.
+	FVector LocationPos = ViewPortHitResult.ImpactPoint;
+	FVector CameraPos = CameraCenterRayCastHitResult.ImpactPoint; // 카메라가 바라보고 있는 땅의 위치를 가져온다.
 	LocationPos.Z = 0;
 	CameraPos.Z = 0;
 
-
 	// 변환된 WorldLocation로 액터의 위치를 변경합니다.
 	GetOwner()->AddActorWorldOffset(LocationPos - CameraPos);
+
+	//=================================
+	// 카메라 이동의 제한을 둡니다.
+	// 카메라의 크기는 무시힌다.
+	FVector ActorLocation = GetOwner()->GetActorLocation();
+
+	ActorLocation.X = FMath::Clamp(ActorLocation.X, -mMoveClampBox.X / 2, mMoveClampBox.X / 2);
+	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, -mMoveClampBox.Y / 2, mMoveClampBox.Y / 2);
+
+	GetOwner()->SetActorLocation(ActorLocation);
 }
 
 void UCameraMovementComponent::MoveToLocation(FVector LocationPos)
 {
+	// =====================================
+	// 카메라의 중심을 기준으로 레이를 쏜다.
+	FHitResult CameraCenterRayCastHitResult;
+	bool bCameraHit = GetCameraRayHitPoint(CameraCenterRayCastHitResult);
 
-	FVector CameraPos = GetCameraPos();	// 카메라가 바라보고 있는 땅의 위치를 가져온다.
-	UE_LOG(LogTemp, Warning, TEXT("LocPos : %f, %f, %f"), LocationPos.X, LocationPos.Y, LocationPos.Z);
-	UE_LOG(LogTemp, Warning, TEXT("CameraPos : %f, %f, %f"), CameraPos.X, CameraPos.Y, CameraPos.Z);
+	// 카메라의 중심에서 Ray가 적중하지 않았다면 이동시키지 않는다.
+	if (!bCameraHit)
+		return;
+
+	// ==========================================
+	// 카메라의 위치를 이동시킨다.
+	// Z 축은 반영하지 않으므로 0으로 만든다.
+	FVector CameraPos = CameraCenterRayCastHitResult.ImpactPoint;
 	LocationPos.Z = 0;
 	CameraPos.Z = 0;
 
-
-	// 변환된 WorldLocation로 액터의 위치를 변경합니다.
 	GetOwner()->AddActorWorldOffset(LocationPos - CameraPos);
+
+	//=================================
+	// 카메라 이동의 제한을 둡니다.
+	// 카메라의 크기는 무시힌다.
+	FVector ActorLocation = GetOwner()->GetActorLocation();
+
+	ActorLocation.X = FMath::Clamp(ActorLocation.X, -mMoveClampBox.X / 2, mMoveClampBox.X / 2);
+	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, -mMoveClampBox.Y / 2, mMoveClampBox.Y / 2);
+
+	GetOwner()->SetActorLocation(ActorLocation);
+
 }
 
-FVector UCameraMovementComponent::GetCameraPos()
+bool UCameraMovementComponent::GetCameraRayHitPoint(OUT FHitResult& HitResult)
 {
-	FHitResult HitResult;
 	FVector StartTrace = GetOwner()->GetActorLocation(); // 시작 지점
 	FVector EndTrace = StartTrace + (GetOwner()->GetActorForwardVector() * 1000.0f); // 1000유닛 앞
 
@@ -167,5 +222,5 @@ FVector UCameraMovementComponent::GetCameraPos()
 		QueryParams
 	);
 
-	return HitResult.ImpactPoint;
+	return bHit;
 }

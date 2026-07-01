@@ -67,7 +67,7 @@ public:
 	* 박스 크기로 이동의 최대 거리를 제한한다.
 	*/
 	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MoveClmapBox", AllowPrivateAccess = "true"))
-	FVector mMoveClampBox = FVector(5000, 5000, 0);
+	FVector mMoveClampBox = FVector(1000, 1000, 0);
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -108,17 +108,19 @@ public:
 	void ZoomCameraAndMoveToViewport(float ZoomValue, FVector2D ViewPortPos);
 
 	/*
-	* @brief 터치한 방향으로 카메라를 옮긴다.
-	*
-	* @param ViewPortPos 위치로 카메라를 옮깁니다.
+	* @brief ViewPortPos로 카메라의 시선을 옮긴다.
+	* @defatils
+	* ViewPortPos에서 Ray를 쏜다음 충돌한 위치로 카메라의 시선을 옮깁니다.
+	* @param ViewPortPos에서 Ray를 쏜 다음 충돌한 위치로 카메라의 시선 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
 	void MoveToViewport(FVector2D ViewPortPos);
 
 	/*
-	* @brief 해당하는 위치를 중심으로 카메라를 옮긴다.
-	*
-	* @param LocationPos 위치로 카메라를 옮깁니다.
+	* @brief LocationPos로 카메라의 시선을 옮긴다.
+	* @defatils
+	* LocationPos로 카메라의 시선을 옮깁니다.
+	* @param LocationPos 위치로 카메라의 시선 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
 	void MoveToLocation(FVector LocationPos);
@@ -126,7 +128,13 @@ public:
 	//void SkillMotionZoomIn() {};
 
 private:
-	FVector GetCameraPos();
+	 
+	/*
+	* @brief 카메라가 있는 위치를 기준으로 Ray를 쏘고 결과를 받습니다.
+	* @param HitResult 결과를 반환합니다.
+	* @return 성공 여부를 반환합니다.
+	*/
+	bool GetCameraRayHitPoint(OUT FHitResult& HitResult);
 
 
 };
