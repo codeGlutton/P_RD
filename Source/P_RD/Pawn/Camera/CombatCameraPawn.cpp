@@ -124,6 +124,7 @@ void ACombatCameraPawn::TouchMoveKey(const FInputActionValue& Value)
 {
 	checkf(IsValid(mCameraMovementComponent), TEXT("CameraMovementComponent Is Not Valid"));
 
+	// 현재 터치 상태를 가져와서 카메라를 옮깁니다.
 	float X, Y;
 	bool bTouchState;
 	GetWorld()->GetPlayerControllerIterator()->Get()->GetInputTouchState(ETouchIndex::Touch1, X, Y, bTouchState);
@@ -136,11 +137,13 @@ void ACombatCameraPawn::ZoomKey(const FInputActionValue& Value)
 {
 	checkf(IsValid(mCameraMovementComponent), TEXT("CameraMovementComponent Is Not Valid"));
 
+	// 현재 터치 상태를 가져옵니다.
 	FTouchState CurTouchState1;
 	FTouchState CurTouchState2;
 	GetWorld()->GetPlayerControllerIterator()->Get()->GetInputTouchState(ETouchIndex::Touch1, CurTouchState1.LocationX, CurTouchState1.LocationY, CurTouchState1.bIsCurrentlyPressed);
 	GetWorld()->GetPlayerControllerIterator()->Get()->GetInputTouchState(ETouchIndex::Touch2, CurTouchState2.LocationX, CurTouchState2.LocationY, CurTouchState2.bIsCurrentlyPressed);
 
+	// 이전 틱의 터치 상태, 현재 틱의 터치 상태 모두 true라면 Zoom을 합니다.
 	if (CurTouchState1.bIsCurrentlyPressed && CurTouchState2.bIsCurrentlyPressed && mPreTouchState1.bIsCurrentlyPressed && mPreTouchState2.bIsCurrentlyPressed)
 	{
 		FVector2D PreTouch1 = FVector2D(mPreTouchState1.LocationX, mPreTouchState1.LocationY);
@@ -154,6 +157,7 @@ void ACombatCameraPawn::ZoomKey(const FInputActionValue& Value)
 		mCameraMovementComponent.Get()->ZoomCamera(PreDis - CurDis);
 	}
 
+	// 이전 Touch 상태를 현재 Touch 상태로 되돌립니다.
 	mPreTouchState1 = CurTouchState1;
 	mPreTouchState2 = CurTouchState2;
 }
@@ -182,7 +186,7 @@ void ACombatCameraPawn::SecondTouchStart(const FInputActionValue& Value)
 {
 
 	FVector2D CurTouch;
-	GetWorld()->GetPlayerControllerIterator()->Get()->GetMousePosition(CurTouch.X, CurTouch.Y);
+ 	GetWorld()->GetPlayerControllerIterator()->Get()->GetMousePosition(CurTouch.X, CurTouch.Y);
 
 	checkf(IsValid(mCameraMovementComponent), TEXT("CameraMovementComponent Is Not Valid"));
 

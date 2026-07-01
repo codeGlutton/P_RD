@@ -56,10 +56,13 @@ public:
 	UPROPERTY(Category = CameraMovement, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CameraMovementComponent", AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraMovementComponent> mCameraMovementComponent;
 
+	//@brief 이전 틱의 Touch 위치와 상태 변수
 	FTouchState mPreTouchState1;
 
+	//@brief 이전 틱의 Touch 위치와 상태 변수
 	FTouchState mPreTouchState2;
 
+	// 테스트용 변수
 	bool mFirstTouch;
 	bool mSecondTouch;
 	FVector2D mPreFirstTouch;
@@ -74,8 +77,13 @@ public:
 	UCameraMovementComponent* GetCameraMovementComponent();
 
 private:
+	// @brief 터치 한 위치로 카메라의 시선을 이동 시키는 함수
 	void TouchMoveKey(const FInputActionValue& Value);
+
+	// @brief 지속적으로 Zoom을 하는 함수
 	void ZoomKey(const FInputActionValue& Value);
+	
+	// @brief 틱 상태를 false로 되돌립니다.
 	void ZoomEndKey(const FInputActionValue& Value);
 
 	// Zoom 테스트
