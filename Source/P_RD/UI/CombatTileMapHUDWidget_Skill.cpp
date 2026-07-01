@@ -10,8 +10,8 @@ void UCombatTileMapHUDWidget::HandleEndTurnButtonClicked()
 {
 	if (ACombatGameMode* CombatGameMode = GetWorld()->GetAuthGameMode<ACombatGameMode>())
 	{
-		const bool bHandled = CombatGameMode->EndTurn();
-		UE_LOG(LogRD, Log, TEXT("Combat HUD end turn clicked. Handled=%s"), bHandled ? TEXT("true") : TEXT("false"));
+		const bool commandHandled = CombatGameMode->EndTurn();
+		UE_LOG(LogRD, Log, TEXT("Combat HUD end turn clicked. Handled=%s"), commandHandled ? TEXT("true") : TEXT("false"));
 		return;
 	}
 

@@ -195,8 +195,8 @@ void USRPGCombatModel::EvaluateCombatEndState()
 
 	/* 적군이 모두 죽어 전투가 종료되는가? */
 
-    // TODO : 적 미배치 테스트 방을 계속 돌려야 하면 false로 내려 자동 승리를 막는다.
-    const bool bAllowPlayerWinWhenNoEnemyAlive = true;
+	// TODO : 적 미배치 테스트 방을 계속 돌려야 하면 false로 내려 자동 승리를 막는다.
+	const bool allowPlayerWinWhenNoEnemyAlive = true;
 
 	bool AnyEnemyAlive = false;
 	for (const TObjectPtr<UUnitModel>& Unit : mUnits)
@@ -210,7 +210,7 @@ void USRPGCombatModel::EvaluateCombatEndState()
 		}
 	}
 
-	if (bAllowPlayerWinWhenNoEnemyAlive == true && AnyEnemyAlive == false)
+	if (allowPlayerWinWhenNoEnemyAlive == true && AnyEnemyAlive == false)
 	{
 		mCombatResult = ESRPGCombatResult::PlayerWin;
 		mCombatPhase = ESRPGCombatRoomPhase::CombatAbort;

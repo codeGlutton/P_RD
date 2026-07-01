@@ -225,9 +225,9 @@ bool ACombatGameMode::EndTurn()
 	TInstancedStruct<FSRPGCommand> DiceSelectCommand;
 	DiceSelectCommand.InitializeAs<FSRPGTurnEndCommand>();
 
-	const bool bHandled = CommandRouterModel->SummitCommand(DiceSelectCommand);
-	UE_LOG(LogCombatGameMode, Log, TEXT("CombatGameMode: EndTurn command submitted. Handled=%s"), bHandled ? TEXT("true") : TEXT("false"));
-	return bHandled;
+	const bool commandHandled = CommandRouterModel->SummitCommand(DiceSelectCommand);
+	UE_LOG(LogCombatGameMode, Log, TEXT("CombatGameMode: EndTurn command submitted. Handled=%s"), commandHandled ? TEXT("true") : TEXT("false"));
+	return commandHandled;
 }
 
 bool ACombatGameMode::ResolveWorldTouchEvent()
