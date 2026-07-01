@@ -12,12 +12,11 @@ namespace
 	{
 		switch (RoomType)
 		{
-		// 배경제거(RMBG-2.0) 월드맵 노드 아이콘 — D:/...P_RD_CombatUI_Assets_nobg/12_WorldMap/05_CustomNodeIcons 에서 임포트.
-		case ERoomType::Treasure:     return TEXT("/Game/UI/WorldMap/Nodes/T_Node_Treasure.T_Node_Treasure");
-		case ERoomType::Shop:         return TEXT("/Game/UI/WorldMap/Nodes/T_Node_Shop.T_Node_Shop");
-		case ERoomType::Monster:      return TEXT("/Game/UI/WorldMap/Nodes/T_Node_Monster.T_Node_Monster");
-		case ERoomType::EliteMonster: return TEXT("/Game/UI/WorldMap/Nodes/T_Node_Elite.T_Node_Elite");
-		case ERoomType::BossMonster:  return TEXT("/Game/UI/WorldMap/Nodes/T_Node_Boss.T_Node_Boss");
+		case ERoomType::Treasure:     return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Treasure.T_MapNode_Treasure");
+		case ERoomType::Shop:         return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Shop.T_MapNode_Shop");
+		case ERoomType::Monster:      return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Monster.T_MapNode_Monster");
+		case ERoomType::EliteMonster: return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Elite.T_MapNode_Elite");
+		case ERoomType::BossMonster:  return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Boss.T_MapNode_Boss");
 		default:                      return nullptr;
 		}
 	}

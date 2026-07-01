@@ -23,6 +23,7 @@
 #include "MediaPlayer.h"
 #include "MediaTexture.h"
 #include "Misc/FileHelper.h"
+#include "Setting/GamePlaySettings.h"
 #include "Singleton/InstanceSubsystem/TitleBackgroundVideoSubsystem.h"
 #include "UI/UITextureLoader.h"
 #include "Widgets/SWindow.h"
@@ -30,8 +31,18 @@
 // 이 번역 단위 내부에서만 쓰는 배경 영상 핏 보조 함수/상수 모음(외부 링크 노출 방지용 익명 namespace).
 namespace
 {
-	// mTitleBackgroundVideoPath가 비어 있을 때 사용하는 기본 배경 영상 경로(Content 상대). 캠프파이어 타이틀 루프.
-	const TCHAR* const TitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/campfire_titleloop_idle_x3preview.mp4");
+	const TCHAR* const FallbackTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/campfire_titleloop_idle_x3preview.mp4");
+
+	FString GetTitleBackgroundVideoPath()
+	{
+		const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
+		if (GamePlaySettings != nullptr && GamePlaySettings->mTitleBackgroundVideoPath.IsEmpty() == false)
+		{
+			return GamePlaySettings->mTitleBackgroundVideoPath;
+		}
+
+		return FString(FallbackTitleBackgroundVideoPath);
+	}
 
 	/**
 	 * @brief 후보 크기가 유효(양수)하고 면적이 더 크면 현재 최선값을 갱신한다.
@@ -161,6 +172,9 @@ void UTitleMenuWidget::EnsureTitleBackgroundMediaObjects()
 	if (mBackgroundRuntime.mMediaPlayer == nullptr)
 	{
 		mBackgroundRuntime.mMediaPlayer = NewObject<UMediaPlayer>(this, TEXT("TitleBackgroundMediaPlayer"));
+#if PLATFORM_WINDOWS || PLATFORM_MAC
+		mBackgroundRuntime.mMediaPlayer->SetDesiredPlayerName(FName(TEXT("ElectraProtron")));
+#endif
 	}
 
 	if (mBackgroundRuntime.mMediaPlayer != nullptr)
@@ -210,10 +224,7 @@ bool UTitleMenuWidget::TryUseSharedTitleBackgroundVideo()
 		return false;
 	}
 
-	// 멤버 경로가 비어 있으면 기본 캠프파이어 루프 경로로 폴백한 뒤 서브시스템에 프리로드를 요청한다.
-	const FString RequestedPath = mTitleBackgroundVideoPath.IsEmpty()
-		? FString(TitleBackgroundVideoPath)
-		: mTitleBackgroundVideoPath;
+	const FString RequestedPath = GetTitleBackgroundVideoPath();
 	VideoSubsystem->PreloadTitleBackgroundVideo(RequestedPath);
 
 	UMediaPlayer* SharedMediaPlayer = VideoSubsystem->GetMediaPlayer();
@@ -443,12 +454,10 @@ void UTitleMenuWidget::StopTitleBackgroundVideo()
 	}
 }
 
-/** @brief Content 상대 경로를 플랫폼별 실제 파일 경로로 바꾼다. */
+/** @brief 게임 설정의 Content 상대 경로를 플랫폼별 실제 파일 경로로 바꾼다. */
 FString UTitleMenuWidget::ResolveTitleBackgroundVideoPath() const
 {
-	const FString RequestedPath = mTitleBackgroundVideoPath.IsEmpty()
-		? FString(TitleBackgroundVideoPath)
-		: mTitleBackgroundVideoPath;
+	const FString RequestedPath = GetTitleBackgroundVideoPath();
 	return RDUITexture::ResolveContentFilePath(RequestedPath);
 }
 

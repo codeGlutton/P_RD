@@ -6,8 +6,6 @@
  *********************************************************************/
 
 #include "TAS/Effect/Stat/TacticalEffect_AttackPoint.h"
-
-// AttackPoint 속성 캡처용. GetAttackPointAttribute()로 모디파이어 대상 속성을 지정한다.
 #include "AttributeSet/UnitAttributeSet.h"
 
 /**

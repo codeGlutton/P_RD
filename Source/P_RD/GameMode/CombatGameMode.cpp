@@ -2,7 +2,6 @@
 
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
-#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
 #include "Engine/AssetManager.h"
@@ -17,10 +16,17 @@
 #include "UI/CombatTileMapHUDWidget.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "Combat/CombatUIAdapter.h"
-#include "Pawn/Player/PlayerUnit.h"
-#include "Dice/DicePoolModel.h"
 
 #include "SRPGFramework/SRPGSkillBuildAction.h"
+#include "SRPGFramework/SRPGMoveBuildAction.h"
+#include "SRPGFramework/SRPGDiceRollAction.h"
+#include "SRPGFramework/SRPGTurnEndAction.h"
+
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "Component/EquipmentComponent/EquipmentComponentModel.h"
+#include "Dice/DicePoolModel.h"
+
+#include "AttributeSet/UnitAttributeSet.h"
 
 DEFINE_LOG_CATEGORY(LogCombatGameMode);
 
@@ -36,7 +42,61 @@ void ACombatGameMode::InitializeRoom()
 	checkf(StaticRoomData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
 
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
-	CombatModel->InitCombat(StaticRoomData, GetPlayerUnit());
+	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModel());
+
+	/* 전투 모델 대리자 연결 */
+
+	CombatModel->OnRegisterUnitUI.AddUObject(this, &ACombatGameMode::OnRegisterUnit);
+	CombatModel->OnUnregisterUnitUI.AddUObject(this, &ACombatGameMode::OnUnregisterUnit);
+
+	CombatModel->OnShowDicePanelAnyTurnUI.AddWeakLambda(this, [this](const USRPGTurnContext* TurnContext) {
+		OnShowDicePanelAnyTurnUI.Broadcast(TurnContext);
+		});
+
+	CombatModel->OnBeginCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier) {
+		OnRefreshAllUI.Broadcast();
+		OnBeginCombatUI.Broadcast(Barrier);
+		});
+	CombatModel->OnEndCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result) {
+		OnEndCombatUI.Broadcast(Barrier, Result);
+		});
+	CombatModel->OnBeginAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext) {
+		OnBeginAnyTurnUI.Broadcast(Barrier, TurnContext);
+		});
+	CombatModel->OnEndAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, ESRPGTurnResult Result) {
+		OnEndAnyTurnUI.Broadcast(Barrier, TurnContext, Result);
+		});
+	CombatModel->OnBeginAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action) {
+		OnBeginAnyTurnActionUI.Broadcast(Barrier, TurnContext, Action);
+		});
+	CombatModel->OnEndAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action, ESRPGActionResult Result) {
+		OnEndAnyTurnActionUI.Broadcast(Barrier, TurnContext, Action, Result);
+		});
+
+	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
+	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
+
+	/* 주사위 대리자 연결 */
+
+	UDicePoolModel* DicePoolModel = PlayerUnitModel->GetDicePoolModel();
+	checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트 nullptr"));
+
+	DicePoolModel->OnRollAllDicesUI.AddWeakLambda(this, [this](const TArray<TObjectPtr<UDiceModel>>& Dices) {
+		OnRefreshDiceUI.Broadcast();
+		});
+	DicePoolModel->OnUseDiceUI.AddWeakLambda(this, [this](const UDiceModel* Dice) {
+		OnRefreshDiceUI.Broadcast();
+		});
+	DicePoolModel->OnResetAllDiceUI.AddWeakLambda(this, [this](const TArray<TObjectPtr<UDiceModel>>& Dices) {
+		OnRefreshDiceUI.Broadcast();
+		});
+
+	DicePoolModel->OnSelectedDiceUI.AddWeakLambda(this, [this](const UDiceModel* Dice) {
+		OnRefreshSelectedDiceUI.Broadcast();
+		});
+	DicePoolModel->OnUnselectedDiceUI.AddWeakLambda(this, [this](const UDiceModel* Dice) {
+		OnRefreshSelectedDiceUI.Broadcast();
+		});
 }
 
 void ACombatGameMode::BeginRoom()
@@ -61,13 +121,8 @@ void ACombatGameMode::BeginRoom()
 	}
 	// 임시 비GAS 어댑터: 전투 상태 → 모델 push, 모델의 Request → 게임플레이 처리.
 	mCombatUIAdapter = NewObject<UCombatUIAdapter>(this);
-	if (UPlayerUnitModel* PlayerUnit = GetPlayerUnit())
+	if (UPlayerUnitModel* PlayerUnit = GetPlayerUnitModel())
 	{
-		// 런 다이스 목록(mDiceIds)으로 플레이어 주사위 풀을 구성한다. 비면 HUD 주사위 수가 0.
-		if (UDicePoolModel* DicePool = PlayerUnit->GetDicePoolModel())
-		{
-			DicePool->BuildFromDiceIds(GetRunPersistData()->GetDiceIds());
-		}
 		mCombatUIAdapter->SetDicePool(PlayerUnit->GetDicePoolModel());
 	}
 	mCombatUIAdapter->BindUIModel(CombatUIModel);
@@ -85,7 +140,9 @@ bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 	TInstancedStruct<FSRPGCommand> SkillSelectCommand;
 	SkillSelectCommand.InitializeAs<FSRPGSkillSelectCommand>();
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().mSkillIndex = SkillIndex;
-	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnChangeSkillBuildPhase.AddUObject(this, &ACombatGameMode::OnChangeSkillBuildPhase);
+	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnChangeSkillBuildPhase.AddWeakLambda(this, [this](const USRPGSkillBuildAction* Action, ESRPGSkillBuildPhase Phase) {
+		OnRefreshSkillBuildPhase.Broadcast(Phase);
+		});
 
 	return CommandRouterModel->SummitCommand(SkillSelectCommand);
 }
@@ -98,6 +155,42 @@ bool ACombatGameMode::SelectDice(int32 DiceIndex)
 	TInstancedStruct<FSRPGCommand> DiceSelectCommand;
 	DiceSelectCommand.InitializeAs<FSRPGDiceSelectCommand>();
 	DiceSelectCommand.GetMutable<FSRPGDiceSelectCommand>().mDiceIndex = DiceIndex;
+
+	return CommandRouterModel->SummitCommand(DiceSelectCommand);
+}
+
+bool ACombatGameMode::RollDices()
+{
+	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
+
+	TInstancedStruct<FSRPGCommand> DiceSelectCommand;
+	DiceSelectCommand.InitializeAs<FSRPGDiceRollCommand>();
+
+	return CommandRouterModel->SummitCommand(DiceSelectCommand);
+}
+
+bool ACombatGameMode::SelectMove()
+{
+	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
+
+	TInstancedStruct<FSRPGCommand> MoveSelectCommand;
+	MoveSelectCommand.InitializeAs<FSRPGMoveSelectCommand>();
+	MoveSelectCommand.GetMutable<FSRPGMoveSelectCommand>().OnChangeMoveBuildPhase.AddWeakLambda(this, [this](const USRPGMoveBuildAction* Action, ESRPGMoveBuildPhase Phase) {
+		OnRefreshMoveBuildPhase.Broadcast(Phase);
+		});
+
+	return CommandRouterModel->SummitCommand(MoveSelectCommand);
+}
+
+bool ACombatGameMode::EndTurn()
+{
+	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
+
+	TInstancedStruct<FSRPGCommand> DiceSelectCommand;
+	DiceSelectCommand.InitializeAs<FSRPGTurnEndCommand>();
 
 	return CommandRouterModel->SummitCommand(DiceSelectCommand);
 }
@@ -122,10 +215,59 @@ bool ACombatGameMode::ResolveWorldLongPressEvent()
 	TInstancedStruct<FSRPGCommand> WorldTraceActionCommand;
 	WorldTraceActionCommand.InitializeAs<FSRPGWorldTraceCommand>();
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mIsLongPress = true;
+	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().OnShowTargetDetailPanelUI.AddWeakLambda(this, [this](IBoardSelectionTarget* Target) {
+		OnShowTargetDetailPanelUI.Broadcast(Target);
+		});
 
 	return CommandRouterModel->SummitCommand(WorldTraceActionCommand);
 }
 
-void ACombatGameMode::OnChangeSkillBuildPhase(const USRPGSkillBuildAction* Action, ESRPGSkillBuildPhase Phase)
+const FEquippedEntry* ACombatGameMode::GetEquipmentDetail(EEquipmentType EquipmentType)
 {
+	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
+	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
+
+	UEquipmentComponentModel* EquipmentComponentModel = PlayerUnitModel->GetEquipmentComponentModel();
+	checkf(EquipmentComponentModel != nullptr, TEXT("장비 컴포넌트 nullptr"));
+
+	return EquipmentComponentModel->GetEquipped(EquipmentType);
 }
+
+void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
+{
+	UAttributeSetComponentModel* AttributeSetComponentModel = Unit->GetAttributeComponentModel();
+	checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+	// 각 속성이 변경될 때마다 OnRefreshUnitUI를 브로드캐스트하도록 바인딩
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
+		OnRefreshUnitUI.Broadcast();
+		});
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
+		OnRefreshUnitUI.Broadcast();
+		});
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementPointAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
+		OnRefreshUnitUI.Broadcast();
+		});
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefensePointAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
+		OnRefreshUnitUI.Broadcast();
+		});
+
+	// 상태 이상 태그 변경 시에도 UI 갱신 바인딩
+	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_StatusEffect, EGameplayTagEventType::NewOrRemoved).AddWeakLambda(this, [this](const FGameplayTag Tag, int32 Count) {
+		OnRefreshUnitUI.Broadcast();
+		});
+}
+
+void ACombatGameMode::OnUnregisterUnit(UUnitModel* Unit)
+{
+	UAttributeSetComponentModel* AttributeSetComponentModel = Unit->GetAttributeComponentModel();
+	checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).RemoveAll(this);
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).RemoveAll(this);
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementPointAttribute()).RemoveAll(this);
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefensePointAttribute()).RemoveAll(this);
+
+	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_StatusEffect, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
+}
+

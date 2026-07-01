@@ -10,25 +10,36 @@
 #include "FileMediaSource.h"
 #include "MediaPlayer.h"
 #include "MediaTexture.h"
+#include "Setting/GamePlaySettings.h"
 #include "UI/UITextureLoader.h"
 
 namespace
 {
-	// 기본 타이틀 배경 영상(Content 상대 경로). PreloadTitleBackgroundVideo에 빈 경로가 오면 이걸 쓴다.
-	const TCHAR* const DefaultTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/campfire_titleloop_idle_x3preview.mp4");
+	const TCHAR* const FallbackTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/campfire_titleloop_idle_x3preview.mp4");
+
+	FString GetDefaultTitleBackgroundVideoPath()
+	{
+		const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
+		if (GamePlaySettings != nullptr && GamePlaySettings->mTitleBackgroundVideoPath.IsEmpty() == false)
+		{
+			return GamePlaySettings->mTitleBackgroundVideoPath;
+		}
+
+		return FString(FallbackTitleBackgroundVideoPath);
+	}
 }
 
 /**
  * @brief  타이틀 배경 영상을 열어 루프 재생을 시작한다(위젯 표시 전 호출용).
- * @param  RelativeContentPath  Content 기준 상대 경로의 mp4. 빈 문자열이면 기본 campfire 영상.
+ * @param  RelativeContentPath  Content 기준 상대 경로의 mp4. 빈 문자열이면 게임 설정의 기본 타이틀 배경 영상.
  * @details 같은 경로를 이미 열도록 요청했으면 즉시 반환(중복 열기 방지). 파일이 없으면 경고만 남기고 반환.
  *          미디어 열기는 비동기이므로 실제 첫 프레임 준비는 HandleMediaOpened 콜백에서 확정된다.
  */
 void UTitleBackgroundVideoSubsystem::PreloadTitleBackgroundVideo(const FString& RelativeContentPath)
 {
-	// 빈 경로면 기본 영상을 사용.
+	// 빈 경로면 게임 설정의 기본 영상을 사용.
 	const FString RequestedPath = RelativeContentPath.IsEmpty()
-		? FString(DefaultTitleBackgroundVideoPath)
+		? GetDefaultTitleBackgroundVideoPath()
 		: RelativeContentPath;
 
 	// 같은 영상을 이미 열도록 요청했으면 다시 열지 않는다(GameInstance라 화면 재진입 시 중복 호출될 수 있음).
@@ -103,6 +114,9 @@ void UTitleBackgroundVideoSubsystem::EnsureMediaObjects()
 	if (mMediaPlayer == nullptr)
 	{
 		mMediaPlayer = NewObject<UMediaPlayer>(this, TEXT("SharedTitleBackgroundMediaPlayer"));
+#if PLATFORM_WINDOWS || PLATFORM_MAC
+		mMediaPlayer->SetDesiredPlayerName(FName(TEXT("ElectraProtron")));
+#endif
 	}
 	if (mMediaPlayer != nullptr)
 	{

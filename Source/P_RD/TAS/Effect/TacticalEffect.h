@@ -181,7 +181,7 @@ public:
 
 	// @brief 연산에 사용할 크기 값(예: Additive면 더할 양, MultiplyAdditive면 더할 배율 등)
 	UPROPERTY(Category = "Attribute", EditDefaultsOnly, meta = (DisplayName = "ModifierMagnitude"))
-	float mModifierMagnitude;
+	float mModifierMagnitude = 0.f;
 };
 
 /**

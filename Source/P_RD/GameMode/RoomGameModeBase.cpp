@@ -39,7 +39,7 @@ DEFINE_LOG_CATEGORY(LogRoomGameMode);
  * - EnterSelectedRoom(): 이미 선택된 다음 방으로 입장 요청을 시작한다.
  * - PreloadAndTransitionSelectedRoomAsync(): 선택된 방 좌표를 최종 검증하고 프리로드/전환을 요청한다.
  * - AbandonRunFromRoom(): 방 안에서 Run을 포기하고 프론트엔드 방으로 돌아간다.
- * - GetPlayerUnit(): 방 안에서 복원된 플레이어 유닛 포인터를 제공한다.
+ * - GetPlayerUnitModel(): 방 안에서 복원된 플레이어 유닛 포인터를 제공한다.
  */
 namespace
 {
@@ -612,7 +612,7 @@ bool ARoomGameModeBase::IsRoomSelectable(int32 RoomRow, int32 RoomColumn) const
  * InitializeCommonRoom()에서 RestorePlayerUnit()이 성공하면 mPlayerUnit에 등록된다.
  * 전투/상점/보상 처리처럼 현재 플레이어 유닛이 필요한 시스템은 이 접근자를 통해 GameMode가 보관한 유닛을 조회한다.
  */
-UPlayerUnitModel* ARoomGameModeBase::GetPlayerUnit() const
+UPlayerUnitModel* ARoomGameModeBase::GetPlayerUnitModel() const
 {
 	return mPlayerUnit.Get();
 }

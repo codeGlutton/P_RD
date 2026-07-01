@@ -7,6 +7,8 @@
 
 #include "Component/EquipmentComponent/EquipmentComponentModel.h"
 
+#include "Engine/AssetManager.h"
+
 #include "Actor/ActorModel.h"
 #include "Component/PassiveComponent/PassiveComponentModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
@@ -15,6 +17,31 @@
 #include "TAS/Passive/TacticalPassive.h"
 #include "TAS/Effect/TacticalEffect.h"
 #include "TAS/Effect/TacticalEffectContext.h"
+
+namespace
+{
+	UStaticEquipmentData* LoadStaticEquipmentData(const FPrimaryAssetId& EquipmentId)
+	{
+		if (EquipmentId.IsValid() == false)
+		{
+			return nullptr;
+		}
+
+		UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
+		if (AssetManager == nullptr)
+		{
+			return nullptr;
+		}
+
+		if (UStaticEquipmentData* Loaded = AssetManager->GetPrimaryAssetObject<UStaticEquipmentData>(EquipmentId))
+		{
+			return Loaded;
+		}
+
+		const FSoftObjectPath AssetPath = AssetManager->GetPrimaryAssetPath(EquipmentId);
+		return Cast<UStaticEquipmentData>(AssetPath.TryLoad());
+	}
+}
 
 void UEquipmentComponentModel::Initialize()
 {
@@ -50,6 +77,18 @@ void UEquipmentComponentModel::EquipFrom(const TArray<TSoftObjectPtr<UStaticEqui
 	for (const TSoftObjectPtr<UStaticEquipmentData>& DataPtr : List)
 	{
 		Equip(DataPtr);
+	}
+}
+
+void UEquipmentComponentModel::EquipFrom(const TArray<FPrimaryAssetId>& List)
+{
+	for (const FPrimaryAssetId& AssetId : List)
+	{
+		UStaticEquipmentData* StaticEquipmentData = LoadStaticEquipmentData(AssetId);
+		if (StaticEquipmentData != nullptr)
+		{
+			Equip(StaticEquipmentData);
+		}
 	}
 }
 

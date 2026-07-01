@@ -132,10 +132,7 @@ private:
 	/** @brief 페이드 진행 타이머를 해제한다. */
 	void ClearCinematicFadeTimer();
 
-	/**
-	 * @brief 설정된 상대 경로(mCinematicVideoPath)를 실제 재생 가능한 절대/플랫폼 경로로 변환한다.
-	 * @return 해석된 영상 파일 경로.
-	 */
+	/** @brief 게임 설정의 인트로 영상 상대 경로를 실제 재생 가능한 절대/플랫폼 경로로 변환한다. */
 	FString ResolveCinematicVideoPath() const;
 	/** @brief MP4 파일의 tkhd 박스에서 영상 픽셀 해상도를 직접 읽는다(미디어 재생 타이밍과 무관하게 cover 비율 확정용). 실패 시 0. */
 	FVector2D ReadCinematicVideoFileDimensions(const FString& VideoPath) const;
@@ -159,17 +156,6 @@ private:
 	void HandleCinematicMediaEndReached();
 
 protected:
-	/**
-	 * @brief 인트로에서 재생할 MP4 파일의 Content 기준 상대 경로
-	 *
-	 * @details
-	 * AI 생성 원본 영상은 SVN 규칙에 맞춰 OutSideAsset/AICreation 아래에 둔다.
-	 * Android 패키징에서 MediaPlayer가 직접 파일을 열 수 있도록 DefaultGame.ini의 NonUFS 스테이징 경로에도
-	 * 같은 폴더를 등록해 둔다.
-	 */
-	UPROPERTY(Category = "UI|Cinematic", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "Cinematic Video Path"))
-	FString mCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/hero_loading_intro4_1280_3s.mp4");
-
 	/**
 	 * @brief 영상 재생 이벤트가 들어오지 않았을 때 인트로가 멈추지 않도록 기다릴 기본 시간
 	 *

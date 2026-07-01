@@ -39,6 +39,10 @@
 			]
 		},
 		{
+			"Name": "ElectraPlayer",
+			"Enabled": true
+		},
+		{
 			"Name": "GameplayAbilities",
 			"Enabled": true
 		},

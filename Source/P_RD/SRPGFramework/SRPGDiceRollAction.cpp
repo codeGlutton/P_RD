@@ -40,8 +40,11 @@ ESRPGCommandResult USRPGDiceRollAction::HandleCommand(const TInstancedStruct<FSR
         checkf(PlayerUnit != nullptr, TEXT("주사위를 굴릴 수 있는 플레이어 유닛이 아님"));
         UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
         checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트 모델 nullptr"));
+        
+        DicePoolModel->ResetUsed();
 
-        // TODO 주사위 팝업 띄우기
+        const FSRPGDicePrepareCommand& DicePrepareCommand = Command.Get<FSRPGDicePrepareCommand>();
+        DicePrepareCommand.OnShowDicePanelUI.Broadcast();
 
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }

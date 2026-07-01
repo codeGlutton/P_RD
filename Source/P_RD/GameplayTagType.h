@@ -50,19 +50,13 @@ namespace AbilityTags
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartRollingDice);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnEndRollingDice);
 
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartUseSkill_Add);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartUseSkill_Multiply);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartUseSkill_Final);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartUseSkill);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnEndUseSkill);
 
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartAttacking_Add);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartAttacking_Multiply);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartAttacking_Final);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartAttacking);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnEndAttacking);
 
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartHitting_Add);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartHitting_Multiply);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartHitting_Final);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartHitting);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnEndHitting);
 
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartOneMove);
@@ -87,11 +81,15 @@ namespace EffectTags
 
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_ActorState_Dead);
 
-	/* 스킬 이펙트 태그들*/
+	/* 상태 이상 태그들 */
 
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_Skill_Effect_Stat_Damage);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect);
 
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_Skill_Effect_Move_Force_Push);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_Buff);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_Debuff);
+
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_Debuff_Weakness);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_Debuff_Vulnerability);
 }
 
 /**
