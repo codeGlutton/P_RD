@@ -162,8 +162,6 @@ TArray<FUnitUI> CombatUIProjection::BuildUnitUIs(USRPGCombatModel* CombatModel)
 		{
 			UnitUI.mHP = AttributeComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute());
 			UnitUI.mMaxHP = AttributeComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMaxHPAttribute());
-			// [216 통합] UnitUI.mDamagePoint는 의도적으로 미할당(기본값 0) — 215가 DamagePoint 속성을 제거함.
-			//            TODO: AttackPoint/AttackFactor 중 정책 확정 후 mDamagePoint 매핑.
 			UnitUI.mDefensePoint = AttributeComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefensePointAttribute());
 			UnitUI.mMovementPoint = AttributeComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMovementPointAttribute());
 			UnitUI.mMaxMovementPoint = UnitUI.mMovementPoint;

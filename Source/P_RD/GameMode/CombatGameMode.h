@@ -10,13 +10,11 @@
 #include "GameMode/RoomGameModeBase.h"
 #include "DataAsset/EquipmentData/EquipmentType.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
-#include "SRPGFramework/SRPGFrameworkType.h"
 #include "UI/Combat/CombatUITypes.h"
 #include "CombatGameMode.generated.h"
 
 struct FEquippedEntry;
 struct FSkillEntry;
-struct FPresentationBarrier;
 class UCombatUIModel;
 class UUnitModel;
 

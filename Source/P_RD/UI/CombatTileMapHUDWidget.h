@@ -1,7 +1,6 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "SRPGFramework/SRPGFrameworkType.h"
 #include "UI/DiceViewData.h"
 #include "UI/Combat/CombatUITypes.h"
 #include "UI/RDUserWidget.h"
@@ -96,9 +95,6 @@ private:
 	/** @brief 스킬 레일 Count개 중 Index 항목의 정규화 영역(렌더/히트테스트 공용). */
 	FAnchors GetSkillRailItemRect(int32 Index, int32 Count) const;
 
-	/** @brief 보유 주사위 개수에 맞춰 투명 캡처 Image와 3D 주사위 액터를 준비한다. */
-	void EnsureDicePreviewActors();
-
 	/** @brief 입장 굴림용 실제 물리 테이블 캡처 액터를 준비한다. */
 	void EnsureDiceRollPhysicsActor();
 
@@ -119,15 +115,6 @@ private:
 
 	/** @brief 현재 전투 표시 모델의 보유 주사위 목록을 전투 HUD 표시용 데이터로 변환한다. */
 	void RefreshDiceViewsFromUIModel();
-
-	/** @brief 이전 WBP 시안에 남아 있는 고정 주사위 슬롯을 숨긴다. */
-	void HideLegacyDiceSlots() const;
-
-	/** @brief 이전 WBP 시안에 항상 보이던 스킬 상세 카드를 숨긴다. */
-	void HideLegacySkillDetailCard() const;
-
-	/** @brief 이전 WBP 시안의 고정 스킬 레일을 숨긴다. */
-	void HideLegacySkillRail() const;
 
 	/** @brief 선택 강조가 들어가지 않은 중립 스킬 레일을 런타임으로 다시 만든다. */
 	void RebuildSkillRailWidgets();
@@ -327,43 +314,6 @@ private:
 	/** @brief 턴 종료 버튼 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UButton> EndTurnButton;
-
-	/** @brief 이전 WBP 시안에 남아 있는 고정 주사위 슬롯. 실제 보유 주사위 카드와 겹치지 않게 숨긴다. */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceSize_0;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceSize_1;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceSize_2;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceSize_3;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceFill_0;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceFill_1;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceFill_2;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceFill_3;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceLabel_0;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceLabel_1;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceLabel_2;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceLabel_3;
 
 	/** @brief 전투 진입 주사위 RenderTarget을 표시하는 Image */
 	UPROPERTY(Transient)

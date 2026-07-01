@@ -66,10 +66,6 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 	// (값 텍스트 LV/HP/Gold는 더 이상 C++가 생성/정렬하지 않는다 — 빌드가 WBP의 HUD_M_lv/hp/gold_value를
 	//  실제 TextBlock으로 심고 위치/폰트/정렬을 소유한다. C++는 RefreshSkinValueLabels에서 내용만 채운다.)
 
-	HideLegacyDiceSlots();
-	HideLegacySkillDetailCard();
-	HideLegacySkillRail();
-
 	if (DiceRollViewport != nullptr)
 	{
 		DiceRollViewport->SetVisibility(ESlateVisibility::Collapsed);

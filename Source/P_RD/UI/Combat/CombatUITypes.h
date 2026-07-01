@@ -36,15 +36,11 @@ enum class ECombatUIDomain : uint8
 // UI 필요값: 스킬 선택/주사위 선택/조준/미리보기 중 어느 조작 레이어를 열지 결정한다.
 // 구성: 게임플레이 develop의 ESRPGSkillBuildPhase는 None/AimSelection/Preview 3개뿐이다.
 //   - AimSelection/Preview = 그 enum과 직접 대응.
-//   - SkillSelected/DiceSelect = 게임플레이엔 페이즈로 없고 SRPGSkillBuildAction 상태(mSelectedSkillIndex 채워짐 / mSelectedDices 진행 중)에서
-//     UI 표시 계층이 파생해 채우는 UI 하위상태다. 따라서 이 enum을 "develop enum의 거울"로 취급하지 말 것.
-// [합의필요] AimSelection/Preview를 ESRPGSkillBuildPhase와 매핑하는 값만 게임플레이와 맞춘다(나머지 2개는 UI 파생).
+// [합의필요] AimSelection/Preview를 ESRPGSkillBuildPhase와 매핑한다.
 UENUM(BlueprintType)
 enum class ECombatBuildPhaseUI : uint8
 {
 	None,
-	SkillSelected,   // [UI 파생] 스킬을 골랐음(mSelectedSkillIndex != NONE)
-	DiceSelect,      // [UI 파생] 주사위를 올리는 중(스킬 빌드 진행)
 	AimSelection,    // [거울] ESRPGSkillBuildPhase::AimSelection
 	Preview          // [거울] ESRPGSkillBuildPhase::Preview
 };
@@ -86,7 +82,7 @@ struct FDiceSlotUI
 // UI 필요값:
 // - mUnitId/mIsPlayer: 플레이어/적 구분, 터치 타겟, 상세창 요청 payload에 필요하다.
 // - mHP/mMaxHP: 머리 위 HP바와 적/플레이어 생존 상태 표시.
-// - mDamagePoint/mDefensePoint/mSkillPoint: 전투 HUD/상세 패널에 노출할 스탯.
+// - mDefensePoint/mSkillPoint: 전투 HUD/상세 패널에 노출할 스탯.
 // - mMovementPoint/mMaxMovementPoint: STEP/MOVE 후 이동력 게이지와 MOVE 버튼 상태 표시(유닛 자원 — 이동 가능 "영역"과는 별개. 영역은 ATileMap 쿼리 → 타일맵 파트(ATileMap) 하이라이트).
 // - mTile: 이 유닛이 올라간 타일. [소스] ATileMap 점유의 거울값(권위 아님) — 점유 단일 진실원본은 타일맵 파트(ATileMap).mOccupantUnitId다.
 //          UI는 "유닛을 그 타일 위에 그린다" 방향으로만 쓰고, "이 타일에 누가 있나" 판정은 mTile에서 역산하지 말 것.
@@ -103,7 +99,6 @@ struct FUnitUI
 	UPROPERTY(BlueprintReadOnly) bool mIsPlayer = false;
 	UPROPERTY(BlueprintReadOnly) float mHP = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mMaxHP = 0.f;
-	UPROPERTY(BlueprintReadOnly) float mDamagePoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mDefensePoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mMovementPoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mMaxMovementPoint = 0.f;   // STEP으로 확보한 이동 가능 총량(현재/최대 표시용)
@@ -249,7 +244,7 @@ struct FPlayerMetaUI
 // - mRound: 라운드 카운터.
 // - mPhase: 스킬 선택/주사위 선택/조준/미리보기 등 UI 레이어 전환(ECombatBuildPhaseUI — UI 전용 상태).
 // - mTurnOrderUnitIds: 턴 순서 바/다음 행동자 표시.
-// [합의필요] mPhase의 AimSelection/Preview만 develop ESRPGSkillBuildPhase와 매핑(SkillSelected/DiceSelect는 UI 표시 계층 파생).
+// [합의필요] mPhase의 AimSelection/Preview만 develop ESRPGSkillBuildPhase와 매핑.
 USTRUCT(BlueprintType)
 struct FTurnUI
 {
