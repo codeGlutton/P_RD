@@ -11,10 +11,18 @@
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "SkillEffectLayer.generated.h"
 
-USTRUCT()
+class UTileMapModel;
+class UBoardActorModel;
+
+USTRUCT(BlueprintType)
 struct P_RD_API FSkillEffectLayer
 {
 	GENERATED_BODY()
 
 public:
+	virtual ~FSkillEffectLayer() = default;
+
+public:
+	virtual void ApplyPointEffect(float DiceSum) const PURE_VIRTUAL(FSkillEffectLayer::ApplyPointEffect, return; );
+	virtual void CommitEffect(float DiceSum) const PURE_VIRTUAL(FSkillEffectLayer::CommitEffect, return; );
 };

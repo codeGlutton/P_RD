@@ -4,6 +4,11 @@
 #include "Pawn/Player/PlayerUnitModel.h"
 
 #include "Dice/DicePoolModel.h"
+#include "Component/PassiveComponent/PassiveComponentModel.h"
+
+#include "TAS/Passive/TacticalPassive.h"
+#include "TAS/Passive/PassiveActivateContext.h"
+#include "TAS/Passive/DynamicPassiveData.h"
 
 FSRPGDicePrepareCommand::FSRPGDicePrepareCommand()
 {
@@ -56,10 +61,50 @@ ESRPGCommandResult USRPGDiceRollAction::HandleCommand(const TInstancedStruct<FSR
         checkf(PlayerUnit != nullptr, TEXT("주사위를 굴릴 수 있는 플레이어 유닛이 아님"));
         UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
         checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트 모델 nullptr"));
+        UPassiveComponentModel* PassiveComponentModel = PlayerUnit->GetPassiveComponentModel();
+        checkf(PassiveComponentModel != nullptr, TEXT("패시브 컴포넌트 nullptr"));
+
+        // 주사위 굴리기 전 패시브
+        {
+            TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartRollingDice);
+            const int32 PassiveNum = Passives.Num();
+
+            FBoardCombatTargetSnapshotData PlayerUnitSnapshot = PlayerUnit->MakeSnapshotData();
+
+            FPassiveActivateContext PassiveContext;
+            PassiveContext.mOwner = PlayerUnit;
+            PassiveContext.mOwnerSnapshot = &PlayerUnitSnapshot;
+
+            for (UTacticalPassive*& Passive : Passives)
+            {
+                TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
+                Passive->ActivatePassive(PassiveContext, OUT DynamicPassiveData);
+                Passive->CommitPassive(DynamicPassiveData);
+            }
+        }
 
         DicePoolModel->RollAll(URandomStreamFunctionLibrary::GetEventStream(this));
-        MarkActionCompleted(ESRPGActionResult::Succeeded);
 
+        // 주사위 굴리기 후 패시브
+        {
+            TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndRollingDice);
+            const int32 PassiveNum = Passives.Num();
+
+            FBoardCombatTargetSnapshotData PlayerUnitSnapshot = PlayerUnit->MakeSnapshotData();
+
+            FPassiveActivateContext PassiveContext;
+            PassiveContext.mOwner = PlayerUnit;
+            PassiveContext.mOwnerSnapshot = &PlayerUnitSnapshot;
+
+            for (UTacticalPassive*& Passive : Passives)
+            {
+                TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
+                Passive->ActivatePassive(PassiveContext, OUT DynamicPassiveData);
+                Passive->CommitPassive(DynamicPassiveData);
+            }
+        }
+
+        MarkActionCompleted(ESRPGActionResult::Succeeded);
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
     }

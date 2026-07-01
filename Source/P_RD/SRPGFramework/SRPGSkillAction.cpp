@@ -1,8 +1,15 @@
 ﻿#include "SRPGFramework/SRPGSkillAction.h"
 
-#include "Component/SkillComponent/SkillComponentModel.h"
-
 #include "Pawn/UnitModel.h"
+#include "Component/SkillComponent/SkillComponentModel.h"
+#include "Component/PassiveComponent/PassiveComponentModel.h"
+
+#include "TAS/Passive/TacticalPassive.h"
+#include "TAS/Passive/PassiveActivateContext.h"
+#include "TAS/Passive/DynamicPassiveData.h"
+
+#include "Actor/TileMap/TileMapModel.h"
+#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 
 FSRPGSkillCastCommand::FSRPGSkillCastCommand()
 {
@@ -49,11 +56,54 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
 
         USkillComponentModel* SkillCompModel = mInstigator->GetSkillComponentModel();
         checkf(SkillCompModel != nullptr, TEXT("스킬 컴포넌트 모델 nullptr"));
+        UPassiveComponentModel* PassiveComponentModel = mInstigator->GetPassiveComponentModel();
+        checkf(PassiveComponentModel != nullptr, TEXT("패시브 컴포넌트 nullptr"));
 
-        SkillCompModel->ActivateSkill(SkillCastCommand.mSkillIndex, SkillCastCommand.mEffectTileIndexes, SkillCastCommand.mDicePoint);
+        // 스킬 시전 전 패시브
+        {
+            TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartUsingSkill);
+            const int32 PassiveNum = Passives.Num();
+
+            FBoardCombatTargetSnapshotData mInstigatorSnapshot = mInstigator->MakeSnapshotData();
+
+            FPassiveActivateContext PassiveContext;
+            PassiveContext.mOwner = mInstigator.Get();
+            PassiveContext.mOwnerSnapshot = &mInstigatorSnapshot;
+
+            for (UTacticalPassive*& Passive : Passives)
+            {
+                TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
+                Passive->ActivatePassive(PassiveContext, OUT DynamicPassiveData);
+                Passive->CommitPassive(DynamicPassiveData);
+            }
+        }
+
+        UTileMapModel* TileMap = GetTileMap();
+        checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
+        SkillCompModel->ActivateSkill(TileMap, SkillCastCommand.mSkillIndex, SkillCastCommand.mTargetIndex, SkillCastCommand.mDiceSum);
 
         {
             // TODO : 원래는 비동기 적으로 애니메이션 종료 타이밍을 알려줘서 끝내야함. 임시적으로 곧바로 종료
+
+            // 스킬 시전 후 패시브
+            {
+                TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndUsingSkill);
+                const int32 PassiveNum = Passives.Num();
+
+                FBoardCombatTargetSnapshotData mInstigatorSnapshot = mInstigator->MakeSnapshotData();
+
+                FPassiveActivateContext PassiveContext;
+                PassiveContext.mOwner = mInstigator.Get();
+                PassiveContext.mOwnerSnapshot = &mInstigatorSnapshot;
+
+                for (UTacticalPassive*& Passive : Passives)
+                {
+                    TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
+                    Passive->ActivatePassive(PassiveContext, OUT DynamicPassiveData);
+                    Passive->CommitPassive(DynamicPassiveData);
+                }
+            }
+
             MarkActionCompleted(ESRPGActionResult::Succeeded);
         }
 
@@ -62,5 +112,20 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
     }
 
     return ESRPGCommandResult::Ignored;
+}
+
+UTileMapModel* USRPGSkillAction::GetTileMap() const
+{
+    USRPGTurnContext* TurnContext = mParent.Get();
+    if (TurnContext != nullptr)
+    {
+        USRPGCombatModel* CombatModel = TurnContext->GetParent();
+        if (CombatModel != nullptr)
+        {
+            UTileMapModel* TileMap = CombatModel->GetTileMap();
+            return TileMap;
+        }
+    }
+    return nullptr;
 }
 
