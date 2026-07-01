@@ -7,10 +7,7 @@
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
-#include "Component/SkillComponent/SkillComponentModel.h"
 #include "Engine/Texture2D.h"
-#include "GameMode/CombatGameMode.h"
-#include "DataAsset/SkillData/StaticSkillData.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/UIRuntimeLayout.h"
 
@@ -54,17 +51,6 @@ void UCombatTileMapHUDWidget::ShowSkillDetailPanel(int32 SkillIndex)
 	if (Skills.IsValidIndex(SkillIndex) == false || Skills[SkillIndex].mIsUsable == false)
 	{
 		return;
-	}
-
-	const FSkillEntry* SkillEntry = nullptr;
-	const UStaticSkillData* StaticSkillData = nullptr;
-	if (ACombatGameMode* CombatGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ACombatGameMode>() : nullptr)
-	{
-		SkillEntry = CombatGameMode->GetSkillDetail(SkillIndex);
-		if (SkillEntry != nullptr && SkillEntry->IsValid())
-		{
-			StaticSkillData = SkillEntry->mData.Get();
-		}
 	}
 
 	UCanvasPanel* TargetCanvas = IsDesignerSkinActive() && DesignCanvas != nullptr ? DesignCanvas.Get() : RootCanvas.Get();
@@ -126,31 +112,22 @@ void UCombatTileMapHUDWidget::ShowSkillDetailPanel(int32 SkillIndex)
 		TargetCanvas->AddChildToCanvas(mSkillDetailPanel);
 	}
 
+	// 상세창은 이미 정제된 FSkillUI DTO만 읽는다. 원본 게임플레이 데이터(FSkillEntry/UStaticSkillData)는
+	// CombatUIProjection::BuildSkillUIs가 DTO로 변환해 두므로 위젯이 다시 조회하지 않는다(단일 경계 유지).
 	const FSkillUI& Skill = Skills[SkillIndex];
 	if (mSkillDetailNameText != nullptr)
 	{
-		const FText DetailName = StaticSkillData != nullptr && StaticSkillData->mName.IsEmpty() == false
-			? StaticSkillData->mName
-			: Skill.mName;
-		mSkillDetailNameText->SetText(DetailName.IsEmpty()
+		mSkillDetailNameText->SetText(Skill.mName.IsEmpty()
 			? FText::Format(NSLOCTEXT("CombatTileMapHUDWidget", "SkillDetailFallbackName", "Skill {0}"), FText::AsNumber(SkillIndex + 1))
-			: DetailName);
+			: Skill.mName);
 	}
 	if (mSkillDetailDescriptionText != nullptr)
 	{
-		const FText DetailDescription = StaticSkillData != nullptr && StaticSkillData->mDescription.IsEmpty() == false
-			? StaticSkillData->mDescription
-			: Skill.mDescription;
-		mSkillDetailDescriptionText->SetText(DetailDescription.IsEmpty() ? BuildFallbackSkillDescription(Skill) : DetailDescription);
+		mSkillDetailDescriptionText->SetText(Skill.mDescription.IsEmpty() ? BuildFallbackSkillDescription(Skill) : Skill.mDescription);
 	}
 	if (mSkillDetailIconImage != nullptr)
 	{
 		UTexture2D* DetailIcon = Skill.mIcon.Get();
-		if (StaticSkillData != nullptr && StaticSkillData->mIcon.IsNull() == false)
-		{
-			DetailIcon = StaticSkillData->mIcon.LoadSynchronous();
-		}
-
 		if (DetailIcon != nullptr)
 		{
 			mSkillDetailIconImage->SetBrushFromTexture(DetailIcon, true);
