@@ -1,94 +1,30 @@
 #include "UI/Combat/CombatUIModel.h"
 
-// ───────── UI → gameplay : 의도만 브로드캐스트 (실행은 게임플레이가) ─────────
+/*
+ * gameplay -> UI : 표시 스냅샷 저장소.
+ *
+ * 이 모델은 gameplay가 넣어준 표시 스냅샷을 저장하고, Set*() 직후 변경 도메인을 알린다.
+ * HUD는 GameMode refresh 대리자가 아니라 이 모델을 구독해 필요한 영역만 다시 읽는다.
+ *
+ * 흐름:
+ * ACombatGameMode::PushXxxUI()
+ * -> UCombatUIModel::SetXxx()
+ * -> UCombatUIModel::OnCombatUIChanged.Broadcast(Domain)
+ * -> HUD/TopBar가 GetXxx()로 다시 읽어 redraw
+ */
 
-/** @brief 스킬 레일 index 선택 의도를 게임플레이 구독자에게 전달한다. */
-void UCombatUIModel::RequestSelectSkill(int32 SkillIndex)
-{
-	OnCombatCommand.Broadcast(ECombatInputType::SelectSkill, SkillIndex);
-}
-
-/** @brief 주사위 슬롯 index 토글 의도를 전달한다. */
-void UCombatUIModel::RequestToggleDice(int32 DiceIndex)
-{
-	OnCombatCommand.Broadcast(ECombatInputType::ToggleDice, DiceIndex);
-}
-
-/** @brief 보유 주사위 전체 굴림 의도를 전달한다. */
-void UCombatUIModel::RequestRollDice()
-{
-	OnCombatCommand.Broadcast(ECombatInputType::RollDice, INDEX_NONE);
-}
-
-/** @brief 입장 물리 굴림 결과면(0-base)을 게임플레이에 반영하라고 알린다. */
-void UCombatUIModel::RequestApplyDiceResults(const TArray<int32>& RolledFaceIndices)
-{
-	OnApplyDiceResults.Broadcast(RolledFaceIndices);
-}
-
-/** @brief 스킬 상세 요청을 SkillIndex payload로 전달한다. */
-void UCombatUIModel::RequestLongPressSkill(int32 SkillIndex)
-{
-	OnCombatCommand.Broadcast(ECombatInputType::LongPressSkill, SkillIndex);
-}
-
-/** @brief 유닛 상세 요청을 UnitId payload로 전달한다. */
-void UCombatUIModel::RequestLongPressUnit(int32 UnitId)
-{
-	OnCombatCommand.Broadcast(ECombatInputType::LongPressUnit, UnitId);
-}
-
-/** @brief MOVE 모드 진입 의도를 전달한다. */
-void UCombatUIModel::RequestMove()
-{
-	OnCombatCommand.Broadcast(ECombatInputType::Move, INDEX_NONE);
-}
-
-/** @brief 턴 종료 의도를 전달한다. */
-void UCombatUIModel::RequestEndTurn()
-{
-	OnCombatCommand.Broadcast(ECombatInputType::EndTurn, INDEX_NONE);
-}
-
-/** @brief 현재 선택/빌드 취소 의도를 전달한다. */
-void UCombatUIModel::RequestCancel()
-{
-	OnCombatCommand.Broadcast(ECombatInputType::Cancel, INDEX_NONE);
-}
-
-/** @brief 장비 슬롯 상세 요청을 SlotIndex payload로 전달한다. */
-void UCombatUIModel::RequestLongPressEquip(int32 SlotIndex)
-{
-	OnCombatCommand.Broadcast(ECombatInputType::LongPressEquip, SlotIndex);
-}
-
-/** @brief 월드 터치 스크린 좌표를 변환하지 않고 그대로 게임플레이 경계로 넘긴다. */
-void UCombatUIModel::RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress)
-{
-	OnCombatWorldTouch.Broadcast(ScreenPosition, bLongPress);
-}
-
-// ───────── gameplay → UI : 표시값을 캐시에 넣고 도메인 갱신을 알린다 ─────────
-
-/** @brief 유닛 표시 스냅샷을 교체하고 Unit 도메인 갱신만 알린다. */
+/** @brief 유닛 표시 스냅샷 캐시를 교체하고 Unit 도메인 갱신을 알린다. */
 void UCombatUIModel::SetUnitUIs(const TArray<FUnitUI>& Units)
 {
 	mUnitUIs = Units;
-	OnUIChanged.Broadcast(ECombatUIDomain::Unit);
+	OnCombatUIChanged.Broadcast(ECombatUIDomain::Unit);
 }
 
-/** @brief 유닛 상세 스냅샷을 교체하고 Unit 도메인 갱신을 알린다. */
-void UCombatUIModel::SetUnitDetail(const FUnitDetailUI& Detail)
-{
-	mUnitDetail = Detail;
-	OnUIChanged.Broadcast(ECombatUIDomain::Unit);
-}
-
-/** @brief 주사위 표시 스냅샷을 교체하고 Dice 도메인 갱신을 알린다. */
+/** @brief 주사위 표시 스냅샷 캐시를 교체한다. */
 void UCombatUIModel::SetDiceUIs(const TArray<FDiceSlotUI>& Dice)
 {
 	mDiceUIs = Dice;
-	OnUIChanged.Broadcast(ECombatUIDomain::Dice);
+	OnCombatUIChanged.Broadcast(ECombatUIDomain::Dice);
 }
 
 /** @brief 스킬 빌드에 올린 주사위 index 목록과 합계를 교체한다. */
@@ -96,50 +32,56 @@ void UCombatUIModel::SetSelectedDice(const TArray<int32>& SelectedIndices, int32
 {
 	mSelectedDiceIndices = SelectedIndices;
 	mSelectedDiceSum = SelectedSum;
-	OnUIChanged.Broadcast(ECombatUIDomain::Dice);
+	OnCombatUIChanged.Broadcast(ECombatUIDomain::SelectedDice);
 }
 
-/** @brief 스킬 레일 표시 스냅샷을 교체하고 Skill 도메인을 갱신한다. */
+/** @brief 스킬 레일 표시 스냅샷 캐시를 교체한다. */
 void UCombatUIModel::SetSkillUIs(const TArray<FSkillUI>& Skills)
 {
 	mSkillUIs = Skills;
-	OnUIChanged.Broadcast(ECombatUIDomain::Skill);
+	OnCombatUIChanged.Broadcast(ECombatUIDomain::Skill);
 }
 
-/** @brief 스킬 상세 스냅샷을 교체하고 Skill 도메인을 갱신한다. */
-void UCombatUIModel::SetSkillDetail(const FSkillDetailUI& Detail)
-{
-	mSkillDetail = Detail;
-	OnUIChanged.Broadcast(ECombatUIDomain::Skill);
-}
-
-
-/** @brief 턴 표시 스냅샷을 교체하고 Turn 도메인을 갱신한다. */
+/** @brief 턴 표시 스냅샷 캐시를 교체한다. */
 void UCombatUIModel::SetTurnUI(const FTurnUI& Turn)
 {
 	mTurnUI = Turn;
-	OnUIChanged.Broadcast(ECombatUIDomain::Turn);
+	OnCombatUIChanged.Broadcast(ECombatUIDomain::Turn);
 }
 
-/** @brief 장비 슬롯 표시 스냅샷을 교체하고 Equipment 도메인을 갱신한다. */
+/** @brief 스킬 빌드 phase 스냅샷을 교체한다. */
+void UCombatUIModel::SetSkillBuildPhase(ECombatBuildPhaseUI Phase)
+{
+	mSkillBuildPhase = Phase;
+	OnCombatUIChanged.Broadcast(ECombatUIDomain::SkillBuildPhase);
+}
+
+/** @brief MOVE 빌드 phase 스냅샷을 교체한다. */
+void UCombatUIModel::SetMoveBuildPhase(ECombatBuildPhaseUI Phase)
+{
+	mMoveBuildPhase = Phase;
+	OnCombatUIChanged.Broadcast(ECombatUIDomain::MoveBuildPhase);
+}
+
+/** @brief 장비 슬롯 표시 스냅샷 캐시를 교체한다. (소비/표시는 탑바 담당 — 후속) */
 void UCombatUIModel::SetEquipmentUIs(const TArray<FEquipmentUI>& Equipment)
 {
 	mEquipmentUIs = Equipment;
-	OnUIChanged.Broadcast(ECombatUIDomain::Equipment);
+	OnCombatUIChanged.Broadcast(ECombatUIDomain::Equipment);
 }
 
-/** @brief 골드/레벨/경험치 메타 스냅샷을 교체하고 Meta 도메인을 갱신한다. */
+/** @brief 골드/레벨/경험치 메타 스냅샷 캐시를 교체한다. */
 void UCombatUIModel::SetPlayerMeta(const FPlayerMetaUI& Meta)
 {
 	mPlayerMeta = Meta;
-	OnUIChanged.Broadcast(ECombatUIDomain::Meta);
+	OnCombatUIChanged.Broadcast(ECombatUIDomain::Meta);
 }
 
-/** @brief 행동 결과 큐를 통째로 교체하고 Queue 도메인 갱신을 알린다. */
+/** @brief 행동 결과 큐 스냅샷을 통째로 교체한다. (재생 신호는 ResolveFrontQueueNode가 발행) */
 void UCombatUIModel::SetActionQueue(const TArray<FCombatQueueNode>& Queue)
 {
 	mActionQueue = Queue;
-	OnUIChanged.Broadcast(ECombatUIDomain::Queue);
+	OnCombatUIChanged.Broadcast(ECombatUIDomain::Queue);
 }
 
 /** @brief 큐 앞 노드 하나를 제거한 뒤 해당 노드를 재생 이벤트로 내보낸다. */
@@ -155,11 +97,16 @@ void UCombatUIModel::ResolveFrontQueueNode()
 	mActionQueue.RemoveAt(0);
 
 	OnQueueNodeResolved.Broadcast(Resolved);
-	OnUIChanged.Broadcast(ECombatUIDomain::Queue);
 }
 
-/** @brief 액션 빌드가 끝났음을 구독 위젯에 알려 선택 강조를 정리하게 한다. */
-void UCombatUIModel::NotifyActionResolved()
+/** @brief 주사위 굴림판 표시 요청을 HUD에 전달한다. */
+void UCombatUIModel::NotifyDiceRollPresentationRequested(const USRPGTurnContext* TurnContext)
 {
-	OnActionResolved.Broadcast();
+	OnDiceRollPresentationRequested.Broadcast(TurnContext);
+}
+
+/** @brief 월드 타겟 상세 패널 표시 요청을 HUD에 전달한다. */
+void UCombatUIModel::NotifyTargetDetailPanelRequested(IBoardSelectionTarget* Target)
+{
+	OnTargetDetailPanelRequested.Broadcast(Target);
 }

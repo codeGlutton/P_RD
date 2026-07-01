@@ -1,8 +1,8 @@
 #pragma once
 
 /** @brief 전투 위젯들이 상속하는 베이스입니다. 뷰모델 하나에 묶여 표시와 입력 전달만 담당합니다. */
-// WBP는 BindUIModel()로 공용 UCombatUIModel에 연결하고 OnUIRefreshed/OnQueueNodePlayed에서 자기 화면만 다시 그린다.
-// 탭/터치는 UIModel의 Request*()를 호출해 의도만 보낸다. 위젯은 게임플레이 상태나 RNG를 직접 소유하지 않는다.
+// WBP는 BindUIModel()로 공용 UCombatUIModel에 연결하고, 갱신 타이밍도 UIModel 변경 알림에서 받는다.
+// 탭/터치는 GameMode public 입력 함수로 의도만 보낸다. 위젯은 게임플레이 상태나 RNG를 직접 소유하지 않는다.
 
 #include "RDMinimal.h"
 #include "UI/RDUserWidget.h"
@@ -18,7 +18,7 @@ class P_RD_API UCombatUIWidgetBase : public URDUserWidget
 	GENERATED_BODY()
 
 public:
-	/** @brief 공용 뷰모델에 연결하고 갱신/큐 알림을 구독한다. */
+	/** @brief 공용 뷰모델에 연결하고 큐 알림을 구독한다. */
 	// 패널 재사용 가능성을 위해 기존 구독을 먼저 끊고, 새 UIModel 연결 직후 All 갱신을 받는다.
 	UFUNCTION(BlueprintCallable, Category = "Combat|View")
 	void BindUIModel(UCombatUIModel* InUIModel);
@@ -40,8 +40,8 @@ protected:
 	virtual void NativeDestruct() override;
 
 private:
-	/** @brief UIModel 도메인 갱신을 WBP 구현 이벤트로 변환한다. */
-	UFUNCTION() void HandleUIChanged(ECombatUIDomain Domain);
+	/** @brief UIModel 변경 알림을 WBP의 도메인별 갱신 이벤트로 넘긴다. */
+	void HandleUIModelChanged(ECombatUIDomain Domain);
 
 	/** @brief Queue resolved 이벤트를 WBP의 큐 노드 재생 이벤트로 변환한다. */
 	UFUNCTION() void HandleQueueNodeResolved(FCombatQueueNode Node);
