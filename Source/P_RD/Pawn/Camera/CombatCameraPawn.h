@@ -4,12 +4,23 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "InputAction.h"
+#include "InputMappingContext.h"
+#include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
 #include "CombatCameraPawn.generated.h"
 
 class USpringArmComponent;
 class UCameraComponent;
 class UCameraMovementComponent;
 class USceneComponent;
+
+struct FTouchState
+{
+	float LocationX;
+	float LocationY;
+	bool bIsCurrentlyPressed = false;
+};
 
 
 UCLASS()
@@ -45,10 +56,32 @@ public:
 	UPROPERTY(Category = CameraMovement, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CameraMovementComponent", AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraMovementComponent> mCameraMovementComponent;
 
+	FTouchState mPreTouchState1;
+
+	FTouchState mPreTouchState2;
+
+	bool mFirstTouch;
+	bool mSecondTouch;
+	FVector2D mPreFirstTouch;
+	FVector2D mPreSecondTouch;
+
+
 public:
 	UFUNCTION(BlueprintCallable)
 	UCameraComponent* GetCameraComponent();
 
 	UFUNCTION(BlueprintCallable)
 	UCameraMovementComponent* GetCameraMovementComponent();
+
+private:
+	void TouchMoveKey(const FInputActionValue& Value);
+	void ZoomKey(const FInputActionValue& Value);
+	void ZoomEndKey(const FInputActionValue& Value);
+
+	// Zoom 테스트
+	void FirstTouchStart(const FInputActionValue& Value);
+	void FirstTouchCompleted(const FInputActionValue& Value);
+
+	void SecondTouchStart(const FInputActionValue& Value);
+	void SecondTouchCompleted(const FInputActionValue& Value);
 };

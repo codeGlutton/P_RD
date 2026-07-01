@@ -124,6 +124,12 @@ void UCameraMovementComponent::ZoomCameraAndMoveToViewportPosition(float ZoomVal
 	MoveToViewportPosition(ViewPortPos);
 }
 
+void UCameraMovementComponent::ZoomCameraAndMoveToWorldPosition(float ZoomValue, FVector WorldPosition)
+{
+	ZoomCamera(ZoomValue);
+	MoveToWorldPosition(WorldPosition);
+}
+
 void UCameraMovementComponent::MoveToViewportPosition(FVector2D ViewPortPos)
 {
 	//==============================

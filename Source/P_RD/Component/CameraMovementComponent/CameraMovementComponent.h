@@ -125,6 +125,15 @@ public:
 	void ZoomCameraAndMoveToViewportPosition(float ZoomValue, FVector2D ViewPortPos);
 
 	/*
+	* @brief 줌 값을 받아서 카메라를 Zoom합니다.
+	*
+	* @param ZoomValue 만큼 Zoom 합니다
+	* @param ViewPortPos위치로 카메라를 옮깁니다.
+	*/
+	UFUNCTION(BlueprintCallable)
+	void ZoomCameraAndMoveToWorldPosition(float ZoomValue, FVector WorldPosition);
+
+	/*
 	* @brief MoveToViewportPosition로 카메라의 시선을 옮긴다.
 	* @defatils
 	* MoveToViewportPosition에서 Ray를 쏜다음 충돌한 위치로 카메라의 시선을 옮깁니다.
