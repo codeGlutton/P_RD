@@ -196,8 +196,8 @@ void ACombatCameraPawn::SecondTouchStart(const FInputActionValue& Value)
 		float PreDis = FVector2D::Distance(PreTouch1, PreTouch2);
 		float CurDis = FVector2D::Distance(CurTouch1, CurTouch2);
 
-		//mCameraMovementComponent.Get()->ZoomCamera(PreDis - CurDis);
-		mCameraMovementComponent.Get()->ZoomCameraAndMoveToViewportPosition(PreDis - CurDis, (CurTouch1 + CurTouch2) / 2);
+		mCameraMovementComponent.Get()->ZoomCamera(PreDis - CurDis);
+		//mCameraMovementComponent.Get()->ZoomCameraAndMoveToViewportPosition(PreDis - CurDis, (CurTouch1 + CurTouch2) / 2);
 
 	}
 
