@@ -270,9 +270,9 @@ void UCombatTileMapHUDWidget::RefreshMoveButton() const
 		}
 	}
 
-	const bool bMoveBuildActive = mMoveBuildPhase == ECombatBuildPhaseUI::AimSelection
+	const bool moveBuildActive = mMoveBuildPhase == ECombatBuildPhaseUI::AimSelection
 		|| mMoveBuildPhase == ECombatBuildPhaseUI::Preview;
-	const FText MoveModeText = bMoveBuildActive
+	const FText MoveModeText = moveBuildActive
 		? NSLOCTEXT("CombatTileMapHUDWidget", "MoveCommandCancel", "CANCEL")
 		: NSLOCTEXT("CombatTileMapHUDWidget", "MoveCommandMove", "MOVE");
 

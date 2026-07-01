@@ -75,7 +75,7 @@ void UCombatTileMapHUDWidget::BeginWorldPress()
 	mWorldPressElapsed = 0.0f;
 }
 
-FReply UCombatTileMapHUDWidget::EndWorldPress(bool bReleaseMouseCapture)
+FReply UCombatTileMapHUDWidget::EndWorldPress(bool releaseMouseCapture)
 {
 	if (mWorldLongPressConsumed == false)
 	{
@@ -89,7 +89,7 @@ FReply UCombatTileMapHUDWidget::EndWorldPress(bool bReleaseMouseCapture)
 	mWorldLongPressConsumed = false;
 	mWorldPressElapsed = 0.0f;
 
-	return bReleaseMouseCapture
+	return releaseMouseCapture
 		? FReply::Handled().ReleaseMouseCapture()
 		: FReply::Handled();
 }
