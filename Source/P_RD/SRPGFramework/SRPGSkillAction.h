@@ -12,6 +12,7 @@
 #include "SRPGFramework/SRPGCommand.h"
 #include "SRPGSkillAction.generated.h"
 
+class UTileMapModel;
 struct FSRPGSkillAction;
 
 USTRUCT()
@@ -23,9 +24,9 @@ public:
 	FSRPGSkillCastCommand();
 
 public:
-	int32 mSkillIndex;
-	TArray<FTileIndex> mEffectTileIndexes;
-	float mDicePoint;
+	int32 mSkillIndex = 0;
+	FTileIndex mTargetIndex = FTileIndex::Invalid;
+	int32 mDiceSum = 0;
 };
 
 /**
@@ -46,5 +47,10 @@ protected:
 
 protected:
 	ESRPGCommandResult HandleCommand(const TInstancedStruct<FSRPGCommand>& Command) override;
+
+	/* 헬퍼 */
+private:
+	// @brief 턴 컨텍스트 → 전투 모델 → 타일 맵 모델을 꺼내온다
+	UTileMapModel* GetTileMap() const;
 };
 

@@ -14,6 +14,9 @@
 #include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer.h"
 #include "StaticSkillData.generated.h"
 
+class IBoardCombatTarget;
+class UTileMapModel;
+
 /**
 * @brief 하나의 스킬 내에서 같은 타이밍에 처리하는 단위
 * @details
@@ -25,6 +28,15 @@ struct FSkillMotionLayer
     GENERATED_BODY()
 
 public:
+    TArray<FTileIndex> FilterTileIndexes(const FTileIndex& SelfIndex, const TArray<FTileIndex>& TargetTileIndexes) const;
+    TArray<IBoardCombatTarget*> FilterCombatTargets(const UTileMapModel* MapModel, const IBoardCombatTarget* SelfInstigator, const TArray<FTileIndex>& FilteredTileIndexes) const;
+
+public:
+    // @brief 하나의 모션 내에서 적용하는 단일 효과 단위의 TArray 묶음
+    UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillEffectLayers"))
+    TArray<TInstancedStruct<FSkillEffectLayer>> mSkillEffectLayers;
+
+public:
     /**
     * @brief 처리 시에 활용할 애니메이션 구분 태그
     * @details
@@ -33,9 +45,14 @@ public:
     UPROPERTY(Category = "Motion", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MotionTag"))
     FGameplayTag mMotionTag;
 
-    // @brief 하나의 모션 내에서 적용하는 단일 효과 단위의 TArray 묶음
-    UPROPERTY(Category = "Motion", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillEffectLayers"))
-    TArray<TInstancedStruct<FSkillEffectLayer>> mSkillEffectLayers;
+public:
+    // @brief 자신, 지정 범위 포함 여부 타겟 필터링
+    UPROPERTY(Category = "Filter", EditAnywhere, BlueprintReadWrite, meta = (Bitmask, BitmaskEnum = "/Script/P_RD.ETargetIndexFilter", DisplayName = "TargetIndexFilter"))
+    int32 mTargetIndexFilter = static_cast<int32>(ETargetIndexFilter::IncludeTargetIndexes);
+
+    // @brief 팀 타겟 필터링
+    UPROPERTY(Category = "Filter", EditAnywhere, BlueprintReadWrite, meta = (Bitmask, BitmaskEnum = "/Script/P_RD.ETeamAttitudeFilter", DisplayName = "TeamAttitudeFilter"))
+    int32 mTeamAttitudeFilter = static_cast<int32>(ETeamAttitudeFilter::Hostile);
 };
 
 /**
@@ -113,10 +130,6 @@ public:
     // @brief 영향 범위 유형
     UPROPERTY(Category = "EffectLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectPattern"))
     EEffectPattern mEffectPattern;
-
-    // @brief 관통 여부
-    UPROPERTY(Category = "EffectLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsPenetration"))
-    bool mIsPenetration;
     
     /**
      * @brief 영향 범위 계산 시 사용되는 기본 값
@@ -133,4 +146,8 @@ public:
      */
     UPROPERTY(Category = "EffectLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectAreaRatio"))
     float mEffectAreaRatio;
+
+    // @brief 관통 여부
+    UPROPERTY(Category = "EffectLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsPenetration"))
+    bool mIsPenetration;
 };

@@ -3,18 +3,21 @@
 #include "SRPGFramework/SRPGCommand.h"
 
 #include "RDCollision.h"
+#include "Singleton/WorldSubsystem/PresentationBarrier.h"
+#include "Simulation/Logger/EventLogger.h"
 
 #include "SRPGFramework/SRPGDiceRollAction.h"
 
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
-#include "Pawn/UnitModel.h"
 
 #include "Actor/BoardActor/BoardSelectionTarget.h"
+#include "Pawn/UnitModel.h"
+#include "Component/PassiveComponent/PassiveComponentModel.h"
 
-#include "Singleton/WorldSubsystem/PresentationBarrier.h"
-
-#include "Simulation/Logger/EventLogger.h"
+#include "TAS/Passive/TacticalPassive.h"
+#include "TAS/Passive/PassiveActivateContext.h"
+#include "TAS/Passive/DynamicPassiveData.h"
 
 int8 USRPGActionCreationCommandHandler::GetCommandPriority() const
 {
@@ -130,13 +133,20 @@ void USRPGTurnContext::BeginTurn()
 		checkf(mTurnPhase == ESRPGTurnPhase::TurnStart, TEXT("턴 진입 절차 오류"));
 		mTurnPhase = ESRPGTurnPhase::TurnPlay;
 
-		// 핸들러 등록
 		USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
 		checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
-		for (TScriptInterface<ISRPGCommandHandler>& TurnDefaultCommandHandler : mTurnDefaultCommandHandlers)
+		UPassiveComponentModel* PassiveComponentModel = mOwner->GetPassiveComponentModel();
+		checkf(PassiveComponentModel != nullptr, TEXT("패시브 컴포넌트 nullptr"));
+		USRPGCombatModel* CombatModel = mParent.Get();
+		checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+
+		// 핸들러 등록
 		{
 			CommandRouterModel->OnHandleCommand.AddDynamic(this, &USRPGTurnContext::OnHandleCommand);
-			CommandRouterModel->RegisterCommandHandler(TurnDefaultCommandHandler);
+			for (TScriptInterface<ISRPGCommandHandler>& TurnDefaultCommandHandler : mTurnDefaultCommandHandlers)
+			{
+				CommandRouterModel->RegisterCommandHandler(TurnDefaultCommandHandler);
+			}
 		}
 
 		// 로그 작성
@@ -145,17 +155,23 @@ void USRPGTurnContext::BeginTurn()
 		// 유닛 턴 시작 단계
 		mOwner->OnBeginTurn();
 
-		// 현 스텟을 캡처
-		/*FGameplayEventData EventData;
-		EventData.TargetData = UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle(mOwner.Get());
-		EventData.Instigator = mOwner.Get();
-		EventData.Target = mOwner.Get();*/
+		// 턴 시작 패시브 처리
+		{
+			TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartTurn);
 
-		// On Start Turn 패시브 실행
-		//UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(mOwner.Get(), AbilityTags::GameplayAbility_Passive_OnStartTurn, MoveTemp(EventData));
+			FBoardCombatTargetSnapshotData OwnerSnapshot = mOwner->MakeSnapshotData();
 
-		USRPGCombatModel* CombatModel = mParent.Get();
-		checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+			FPassiveActivateContext PassiveContext;
+			PassiveContext.mOwner = mOwner;
+			PassiveContext.mOwnerSnapshot = &OwnerSnapshot;
+
+			for (UTacticalPassive*& Passive :Passives)
+			{
+				TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
+				Passive->ActivatePassive(PassiveContext, OUT DynamicPassiveData);
+				Passive->CommitPassive(DynamicPassiveData);
+			}
+		}
 
 		// 전투 상태 평가
 		CombatModel->EvaluateCombatStates();
@@ -204,16 +220,29 @@ void USRPGTurnContext::EndTurn()
 	checkf(mTurnPhase == ESRPGTurnPhase::TurnAbort, TEXT("턴 종료 절차 오류"));
 	mTurnPhase = ESRPGTurnPhase::TurnEnd;
 
+	UPassiveComponentModel* PassiveComponentModel = mOwner->GetPassiveComponentModel();
+	checkf(PassiveComponentModel != nullptr, TEXT("패시브 컴포넌트 nullptr"));
+
 	UE_LOG(LogSRPGCombat, Log, TEXT("턴 종료"));
 
-	// 현 스텟을 캡처
-	/*FGameplayEventData EventData;
-	EventData.TargetData = UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle(mOwner.Get());
-	EventData.Instigator = mOwner.Get();
-	EventData.Target = mOwner.Get();*/
+	// 턴 종료 패시브 처리
+	{
+		TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndTurn);
+		const int32 PassiveNum = Passives.Num();
 
-	// On End Turn 패시브 실행
-	//UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(mOwner.Get(), AbilityTags::GameplayAbility_Passive_OnEndTurn, MoveTemp(EventData));
+		FBoardCombatTargetSnapshotData OwnerSnapshot = mOwner->MakeSnapshotData();
+
+		FPassiveActivateContext PassiveContext;
+		PassiveContext.mOwner = mOwner;
+		PassiveContext.mOwnerSnapshot = &OwnerSnapshot;
+
+		for (UTacticalPassive*& Passive : Passives)
+		{
+			TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
+			Passive->ActivatePassive(PassiveContext, OUT DynamicPassiveData);
+			Passive->CommitPassive(DynamicPassiveData);
+		}
+	}
 
 	// 유닛 턴 종료 단계
 	mOwner->OnEndTurn();
@@ -235,8 +264,8 @@ void USRPGTurnContext::EndTurn()
 		for (TScriptInterface<ISRPGCommandHandler>& TurnDefaultCommandHandler : mTurnDefaultCommandHandlers)
 		{
 			CommandRouterModel->UnregisterCommandHandler(TurnDefaultCommandHandler);
-			CommandRouterModel->OnHandleCommand.RemoveDynamic(this, &USRPGTurnContext::OnHandleCommand);
 		}
+		CommandRouterModel->OnHandleCommand.RemoveDynamic(this, &USRPGTurnContext::OnHandleCommand);
 
 		checkf(mTurnPhase == ESRPGTurnPhase::TurnEnd, TEXT("턴 종료 절차 오류"));
 		mTurnPhase = ESRPGTurnPhase::TurnInit;

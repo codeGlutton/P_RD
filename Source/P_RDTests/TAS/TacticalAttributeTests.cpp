@@ -172,7 +172,7 @@ bool FTacticalAttributeTests::RunTest(const FString& Parameters)
     // 7. 테스트 케이스 5: Effect를 통한 Granted Tag 부여 및 해제 검증
     // ----------------------------------------------------
     AddInfo(TEXT("=== 테스트 케이스 5: Infinite 이펙트에 의한 Granted 태그 부여 검증 ==="));
-    FGameplayTag GrantedTag = AbilityTags::GameplayAbility_Passive_OnEndAttacking;
+    FGameplayTag GrantedTag = AbilityTags::GameplayAbility_Passive_OnEndApplyingEffect;
 
     UTacticalEffectContext* EffectContext3 = CompModel->MakeEffectContext();
     EffectContext3->SetInstigator(MockActorModel);

@@ -73,7 +73,10 @@ public:
 	TArray<UTacticalPassive*> GetPassivesByTiming(const FGameplayTag& TriggerTiming) const;
 
 	// 보유한 패시브 전체 반환
-	const TArray<TObjectPtr<UTacticalPassive>>& GetPassives() const { return mPassives; }
+	const TArray<TObjectPtr<UTacticalPassive>>& GetPassives() const 
+	{ 
+		return mPassives; 
+	}
 
 public:
 	// 패시브 추가 알림

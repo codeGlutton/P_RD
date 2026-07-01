@@ -87,6 +87,6 @@ public:
 	FOnUnselectedDiceUI OnUnselectedDiceUI;
 
 private:
-	UPROPERTY(Transient)
+	UPROPERTY(Category = "Entry", VisibleAnywhere, meta = (DisplayName = "Dices"))
 	TArray<TObjectPtr<UDiceModel>> mDices;
 };

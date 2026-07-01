@@ -1,7 +1,7 @@
 ﻿/*****************************************************************//**
  * @file   SkillComponentModel.h
  * @brief  액티브 스킬 컴포넌트 모델 구현 정의 헤더
- * @author 모호재
+ * @author 모호재, 이문환
  * @date   2026-06-30
  *********************************************************************/
 #pragma once
@@ -12,7 +12,9 @@
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "SkillComponentModel.generated.h"
 
+class UTileMapModel;
 class UStaticSkillData;
+struct FSkillEffectLayer;
 
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnChangeSkillUI, int32 /*SkillIndex*/, const UStaticSkillData* /*PreSkillData*/, const UStaticSkillData* /*NewSkillData*/);
 
@@ -61,18 +63,23 @@ public:
 	void SetSkillFrom(const TArray<FPrimaryAssetId>& SkillList);
 
 public:
-	FSkillEntry* GetSkill(int32 SkillIndex);
+	const FSkillEntry* GetSkill(int32 SkillIndex) const;
 	void SetSkill(int32 SkillIndex, UStaticSkillData* SkillData);
 
 public:
 	/**
 	* @brief 액티브 스킬을 활성화하는 함수
+	* @param MapModel 참고할 맵 모델
 	* @param SkillIndex 사용할 스킬의 인덱스
-	* @param TargetTiles 타겟팅한 타일들
+	* @param TargetIndex 타겟팅 타일
 	* @param DiceSum 주사위 눈금 합
 	* @return 사용 성공 여부
 	*/
-	bool ActivateSkill(int32 SkillIndex, const TArray<FTileIndex>& TargetTiles, float DiceSum);
+	bool ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum);
+
+public:
+	TArray<FTileIndex> GetAimableTiles(UTileMapModel* MapModel, int32 SkillIndex, int32 DiceSum) const;
+	TArray<FTileIndex> GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum) const;
 
 public:
 	FOnChangeSkillUI OnChangeSkillUI;
