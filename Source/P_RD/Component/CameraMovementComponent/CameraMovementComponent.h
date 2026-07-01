@@ -68,7 +68,7 @@ public:
 	* @details
 	* 해당 위치를 중심으로 클램핑 박스가 설정됩니다.
 	*/
-	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "DefaultPos", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MoveClampingBoxCenter", AllowPrivateAccess = "true"))
 	FVector mMoveClampingBoxCenter = FVector(0, 0, 0);
 	
 	/*
@@ -77,7 +77,7 @@ public:
 	* 박스 크기로 해당 카메라는 해당 위치를 벗어나지 못합니다.
 	* Z축은 사용하지 않습니다.
 	*/
-	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MoveClmapBox", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MoveClampingBox", AllowPrivateAccess = "true"))
 	FVector2D mMoveClampingBox = FVector2D(1000, 1000);
 
 public:
@@ -98,6 +98,12 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetMinOrthoWidth(float MinOrthoWidth);
+
+	UFUNCTION(BlueprintCallable)
+	void SetMoveClampingBoxCenter(FVector MoveClampingBoxCenter);
+
+	UFUNCTION(BlueprintCallable)
+	void SetMoveClampingBox(FVector2D MoveClampingBox);
 
 public:
 

@@ -99,6 +99,16 @@ void UCameraMovementComponent::SetMinOrthoWidth(float MinOrthoWidth)
 	mMinOrthoWidth = MinOrthoWidth;
 }
 
+void UCameraMovementComponent::SetMoveClampingBoxCenter(FVector MoveClampingBoxCenter)
+{
+	mMoveClampingBoxCenter = MoveClampingBoxCenter;
+}
+
+void UCameraMovementComponent::SetMoveClampingBox(FVector2D MoveClampingBox)
+{
+	mMoveClampingBox = MoveClampingBox;
+}
+
 void UCameraMovementComponent::ZoomCamera(float ZoomValue)
 {
 	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
@@ -117,7 +127,7 @@ void UCameraMovementComponent::ZoomCameraAndMoveToViewportPosition(float ZoomVal
 void UCameraMovementComponent::MoveToViewportPosition(FVector2D ViewPortPos)
 {
 	//==============================
-	// ViewPort를 WorldLocation으로 변환합니다.
+	// ViewPortPos를 WorldLocation으로 변환하고 Lay를 쏩니다.
 	FVector WorldLocation;
 	FVector WorldDirection;
 
@@ -163,7 +173,7 @@ void UCameraMovementComponent::MoveToViewportPosition(FVector2D ViewPortPos)
 	GetOwner()->AddActorWorldOffset(LocationPos - CameraPos);
 
 	//=================================
-	// 카메라 이동의 제한을 둡니다.
+	// 카메라 이동에 제한을 둡니다.
 	// 카메라의 크기는 무시힌다.
 	FVector ActorLocation = GetOwner()->GetActorLocation();
 
