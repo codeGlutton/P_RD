@@ -16,32 +16,30 @@
 #include "DataAsset/PassiveData/StaticPassiveData.h"
 
 void UTacticalPassive::ActivatePassive(
-	const FGameplayTag& Timing,
+	const FGameplayTag& TimingTag,
 	const FPassiveActivateContext& Ctx,
 	TInstancedStruct<FDynamicPassiveData>& PassiveState)
 {
-	// 발동 시 대상에게 가할 기여값을 담을 내부 중간 버퍼
-	FBoardCombatTargetSnapshotData Contribution;
-
-	// 타이밍태그와 내부상태로 발동/해제/무시를 결정하고 다음 상태를 PassiveState에 기록
-	// 여기서는 아직 내부상태가 변경되진 않음 (CommitPassive 해야 변경됨)
-	const EPassiveAction Action = DecideAction(Timing, Ctx, PassiveState, Contribution);
-
-	switch (Action)
+	// 들어온 타이밍이 발동 시점이면: 적용 여부를 묻고 참이면 이펙트 적용
+	if (TimingTag == mActivateTimingTag)
 	{
-	case EPassiveAction::Activate:
-		// 계산된 수치를 이펙트로 적용
-		NotifyPassive(Ctx, Contribution);
-		break;
-	case EPassiveAction::Deactivate:
-		// 이펙트를 제거
-		DeactivatePassive();
-		break;
-	case EPassiveAction::None:
-	default:
-		// 변화 없음
-		break;
+		// 발동 시 대상에게 가할 기여값을 담을 내부 중간 버퍼
+		FBoardCombatTargetSnapshotData Contribution;
+
+		// 내부상태로 적용 여부를 판단하고 다음 상태를 PassiveState에 기록
+		// 여기서는 아직 내부상태가 변경되진 않음 (CommitPassive 해야 변경됨)
+		if (EvaluateActivate(Ctx, PassiveState, Contribution))
+		{
+			// 계산된 수치를 이펙트로 적용
+			NotifyPassive(Ctx, Contribution);
+		}
 	}
+	// 해제 시점이면: 적용 중인 이펙트를 제거 (핸들 없으면 내부에서 no-op)
+	else if (TimingTag == mDeactivateTimingTag)
+	{
+		DeactivatePassive();
+	}
+	// 둘 다 아니면 무시
 }
 
 void UTacticalPassive::SetStaticData(UStaticPassiveData* InStaticData)
@@ -59,9 +57,10 @@ void UTacticalPassive::InitializeFromData()
 		return;
 	}
 
-	// 이펙트 종류와 시점 태그들을 데이터에서 베이스 멤버로 복사 (발동/해제 등 다중 시점 통째 복사)
+	// 이펙트 종류와 발동/해제 시점 태그를 데이터에서 베이스 멤버로 복사
 	mEffectClass = mStaticData->mEffectClass.LoadSynchronous();
-	mTimingTags = mStaticData->mTimingTags;
+	mActivateTimingTag = mStaticData->mActivateTimingTag;
+	mDeactivateTimingTag = mStaticData->mDeactivateTimingTag;
 }
 
 void UTacticalPassive::NotifyPassive(

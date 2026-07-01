@@ -1,7 +1,7 @@
 ﻿/*****************************************************************//**
  * @file   UStaticPassiveData.h
  * @brief  패시브 정적 데이터
- * @author 김준형
+ * @author 김준형, 이문환
  * @date   2026-06-18
  *********************************************************************/
 
@@ -51,18 +51,23 @@ public:
 
 public:
     /**
-    * @brief 패시브가 반응하는 시점들 (발동/해제 등 다중)
+    * @brief 패시브 발동 시점 (단일)
     *
     * @details
-    * 타격 전, 후
-    * 피격 전, 후
-    * 스킬 시전 전, 후
-    * 모션 전, 후
-    * 기타 등등
-    * 발동 시점과 해제 시점이 다를 수 있어 여러 개를 담는다.
+    * 이펙트를 적용(발동)할 시점(예: 공격 시작, 타격 전 등).
+    * 주기형 버프는 여기에 시작 시점을, mDeactivateTimingTag에 끝 시점을 둔다.
     */
-	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Timing Tags"))
-	FGameplayTagContainer mTimingTags;     // 시점들
+	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Activate Timing"))
+	FGameplayTag mActivateTimingTag;
+
+    /**
+    * @brief 패시브 해제 시점 (단일)
+    *
+    * @details
+    * 적용 중인 이펙트를 제거(해제)할 시점(예: 공격 끝).
+    */
+	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Deactivate Timing"))
+	FGameplayTag mDeactivateTimingTag;
 
     /**
     * @brief 패시브 발동 조건

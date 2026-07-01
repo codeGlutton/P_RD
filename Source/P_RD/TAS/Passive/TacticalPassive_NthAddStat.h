@@ -25,8 +25,7 @@ class P_RD_API UTacticalPassive_NthAddStat : public UTacticalPassive
 	GENERATED_BODY()
 
 protected:
-	virtual EPassiveAction DecideAction(
-		IN const FGameplayTag& Timing,
+	virtual bool EvaluateActivate(
 		IN const FPassiveActivateContext& Ctx,
 		IN OUT TInstancedStruct<FDynamicPassiveData>& PassiveState,
 		OUT FBoardCombatTargetSnapshotData& TargetDelta) override;
