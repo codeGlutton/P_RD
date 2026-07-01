@@ -22,7 +22,7 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnselectedDiceUI, const UDiceModel* /*Dic
 /** @brief 플레이어가 보유한 런타임 주사위들을 소유하고 굴림/사용 상태를 관리하는 컴포넌트 모델입니다. */
 // 주사위 풀은 플레이어 전용 메커닉이라 APlayerUnit이 소유한다(적은 주사위를 굴리지 않음).
 // 규칙: 컴포넌트 형식 Model이므로 UComponentModel(IObjectModel)을 상속한다.
-// 이 모델은 UI를 알지 않는다(단방향). UCombatUIAdapter가 GetDices()를 읽어 FDiceSlotUI로 변환해 push한다.
+// 이 모델은 UI를 알지 않는다(단방향). 게임플레이/표시 계층이 GetDices()를 읽어 FDiceSlotUI로 변환해 push한다.
 // 보유 구성은 런 mDiceIds 기반이며, 굴림 난수는 추후 런 RandomStream 주입으로 결정론을 맞춘다.
 UCLASS()
 class P_RD_API UDicePoolModel : public UComponentModel

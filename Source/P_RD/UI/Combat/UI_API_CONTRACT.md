@@ -8,7 +8,7 @@
 원칙 3줄:
 - **UI는 상태·RNG가 없다.** 진실은 게임플레이. UI는 VM의 캐시를 읽어 그리기만.
 - **UI는 행동을 실행하지 않는다.** 탭/터치는 "의도"만 보내고(`Request*`), 게임플레이가 입력 델리게이트를 구독해 실제 처리.
-- **게임플레이가 리팩토링돼도 이 계약만 지키면 UI는 무수정.** 게임플레이 미연결 시 `MockCombatDriver`가 같은 `Set*`로 가짜 데이터를 밀어 UI 선개발 가능.
+- **게임플레이가 리팩토링돼도 이 계약만 지키면 UI는 무수정.**
 
 ---
 
@@ -67,7 +67,7 @@
 ---
 
 ## D. 게임플레이(모호재/김준형) 측 연결 지점 — 무엇을 어디에 물릴지
-현재는 비GAS **임시 어댑터**(`UCombatUIAdapter`)가 A의 `Set*`를 채우고 B의 입력을 처리한다(플레이스홀더·가상 적 포함). 다이스 데이터는 `APlayerUnit`의 `UDiceComponent`/`UDiceData`가 소유하고, 어댑터가 이를 `FDiceSlotUI`로 변환한다. 실제 게임플레이 연결 시 어댑터 자리를 다음으로 대체:
+비GAS **임시 어댑터**(`UCombatUIAdapter`)와 UI 개발용 목업(`MockCombatDriver`)은 **제거됨** — 전부 플레이스홀더·가짜 데이터라 걷어냈다. 이제 A의 `Set*` 채우기·B의 입력 처리는 **미연결** 상태이며, 게임플레이 연결 시 아래로 붙인다. 다이스 데이터는 `APlayerUnit`의 `UDiceComponent`/`UDiceData`가 소유한다. 연결 지점:
 
 - **유닛/메타/턴 값**(A) ← `UUnitData`(GAS 폐기 후 일반 런타임 데이터)·`URunPersistData`. 현재 HP/Gold는 플레이스홀더.
 - **다이스**(A.Dice / B.Roll·Toggle) ← `UDiceData`(굴림/보유/사용/index 소유) = 회의의 **DiceComponent**. 굴림값은 `SRPGSkillBuildAction`(develop, 스킬에 주사위 적용)로 전달.

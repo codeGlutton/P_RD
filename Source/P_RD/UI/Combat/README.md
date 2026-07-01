@@ -21,7 +21,6 @@
 | `CombatUITypes.h` | 표시용 struct + 행동 1단위 큐 노드 `FCombatQueueNode` |
 | `CombatUIModel.h/.cpp` | 경계 허브. **읽기**(`Set*`/`Get*`+`OnUIChanged`) · **주기**(`Request*`→`OnCombatCommand`/`OnCombatWorldTouch`) · **큐**(`SetActionQueue`/`ResolveFrontQueueNode`→`OnQueueNodeResolved`) |
 | `CombatUIWidgetBase.h/.cpp` | 위젯 베이스. `BindUIModel()` 후 `OnUIRefreshed`/`OnQueueNodePlayed`만 구현 |
-| `MockCombatDriver.h/.cpp` | 게임플레이 없이 가짜 데이터로 UI를 먼저 만들고 테스트하는 개발용 |
 
 ### 다루는 도메인 (`ECombatUIDomain`)
 | 도메인 | struct | push | read |
@@ -43,7 +42,6 @@
 3. `OnUIRefreshed(Domain)`에서 `VM->GetDiceUIs()` 등을 읽어 자기 화면을 그린다.
 4. 탭/터치 → `VM->RequestSelectSkill(i)` / `RequestToggleDice(i)` / `RequestRollDice()` / `RequestWorldTouch(pos,long)` …
 5. `OnQueueNodePlayed(Node)`에서 머리 위 숫자·효과를 띄운다.
-6. 게임플레이 전이라도 `UMockCombatDriver::Start(VM)`로 굴림·선택·예측 큐 재생까지 테스트.
 
 ## 모호재(게임플레이) 사용법
 Mock 자리에 **어댑터**만 구현(위젯 무수정):

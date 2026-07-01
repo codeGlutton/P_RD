@@ -16,6 +16,7 @@
 DECLARE_LOG_CATEGORY_EXTERN(LogRoomGameMode, Log, All)
 
 class UPlayerUnitModel;
+class URoomUIModel;
 
 /**
  * @brief  방에 대한 베이스 GameMode
@@ -103,9 +104,26 @@ private:
 public:
 	UPlayerUnitModel* GetPlayerUnitModel() const;
 
+	/**
+	 * @brief  모든 방이 공유하는 상단바 공통 뷰모델(레벨/HP/골드 등)을 가져온다.
+	 * @return InitializeCommonRoom()에서 생성된 RoomUIModel(방 수명 동안 유효).
+	 */
+	URoomUIModel* GetRoomUIModel() const { return mRoomUIModel; }
+
+private:
+	/**
+	 * @brief 현재 런 상태로 방 공통 상단바 요약을 만들어 RoomUIModel에 push한다.
+	 * @note  레벨은 URunPersistData에서 실값을 읽는다. HP/골드는 플레이어 속성(ASC) 정리 후 연결 예정.
+	 */
+	void PushRoomPlayerSummary();
+
 protected:
 	UPROPERTY()
 	TWeakObjectPtr<UPlayerUnitModel> mPlayerUnit;
+
+	// 방 공통(상단바) 표시 뷰모델. InitializeCommonRoom에서 생성해 모든 방에서 공유한다.
+	UPROPERTY()
+	TObjectPtr<URoomUIModel> mRoomUIModel;
 
 protected:
 	int32 mSelectedRoomRow = INDEX_NONE;

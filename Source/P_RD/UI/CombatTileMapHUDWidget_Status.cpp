@@ -93,8 +93,8 @@ void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const
 		NSLOCTEXT("CombatTileMapHUDWidget", "CombatStatusBarFormat", "Lv {0}    HP {1}/{2}    GOLD {3}"),
 		FText::AsNumber(Level), FText::AsNumber(HP), FText::AsNumber(MaxHP), FText::AsNumber(Gold)));
 
-	// 게임플레이 ASC 속성 동기화가 깨져 RunPersistData를 못 믿으므로, 전투 중에는 뷰모델 값을
-	// 탑바 요약에 직접 푸시한다(탑바=Lv/HP/Gold 정상 표시). 속성 초기화가 고쳐지면 이 경로는 정리 가능.
+	// 방 공통 요약(Lv/HP/Gold)은 RoomUIModel이 탑바에 연결·통지한다(RoomGameModeBase가 push).
+	// 여기서는 전투 전용 DICE/SKILL 카운트만 탑바에 반영하고, 스킨 모드에선 레거시 탑바를 숨긴다.
 	if (UWorld* World = GetWorld())
 	{
 		if (UWorldWidgetSubsystem* WorldWidgetSubsystem = World->GetSubsystem<UWorldWidgetSubsystem>())
@@ -113,7 +113,7 @@ void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const
 				}
 				else
 				{
-					TopBar->SetCombatPlayerSummary(Level, HP, MaxHP, Gold);
+					// 전투 전용 DICE/SKILL 카운트만 반영(방 공통 요약은 RoomUIModel이 담당).
 					TopBar->SetCombatDiceSkillCount(DiceCount, SkillCount);
 				}
 			}

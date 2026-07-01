@@ -15,7 +15,6 @@
 
 #include "UI/CombatTileMapHUDWidget.h"
 #include "UI/Combat/CombatUIModel.h"
-#include "Combat/CombatUIAdapter.h"
 
 #include "SRPGFramework/SRPGSkillBuildAction.h"
 #include "SRPGFramework/SRPGMoveBuildAction.h"
@@ -108,8 +107,9 @@ void ACombatGameMode::BeginRoom()
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 시스템 모델 nullptr"));
 
-	// --- 전투 UI 배선(정석/MVVM): CombatUIModel 1개를 전투 수명에 두고, HUD는 그걸 읽고(bind),
-	//     어댑터가 게임플레이를 읽어 Set*로 push + HUD의 Request 입력을 구독한다. ---
+	// --- 전투 UI 배선(정석/MVVM): CombatUIModel 1개를 전투 수명에 두고, HUD는 그걸 읽고(bind) 구독한다.
+	//     표시값을 모델에 push하던 임시 비GAS 어댑터(UCombatUIAdapter)는 제거됨 —
+	//     후속 PR에서 GameMode/게임플레이가 직접 Set*()로 채운다. ---
 	UCombatUIModel* CombatUIModel = CombatSubsystem->GetCombatUIModel();
 	if (UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())
 	{
@@ -119,15 +119,6 @@ void ACombatGameMode::BeginRoom()
 			CombatHUD->OpenUI();                            // InitHUD로 생성만 된 HUD를 화면에 올림
 		}
 	}
-	// 임시 비GAS 어댑터: 전투 상태 → 모델 push, 모델의 Request → 게임플레이 처리.
-	mCombatUIAdapter = NewObject<UCombatUIAdapter>(this);
-	if (UPlayerUnitModel* PlayerUnit = GetPlayerUnitModel())
-	{
-		mCombatUIAdapter->SetDicePool(PlayerUnit->GetDicePoolModel());
-	}
-	mCombatUIAdapter->BindUIModel(CombatUIModel);
-	mCombatUIAdapter->Build(CombatSubsystem, GetRunPersistData());
-	mCombatUIAdapter->PushAll();
 
 	CombatModel->BeginCombat();
 }

@@ -9,6 +9,8 @@
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Blueprint/UserWidget.h"
 #include "UI/RDUserWidget.h"
+#include "UI/TopMenuBarWidget.h"
+#include "UI/Room/RoomUIModel.h"
 
 #include "Setting/RDWorldSettings.h"
 
@@ -216,6 +218,12 @@ void ARoomGameModeBase::InitializeCommonRoom()
 {
 	Super::InitializeCommonRoom();
 
+	// 모든 방이 공유하는 상단바 공통 뷰모델을 생성한다(방 수명 동안 유지).
+	if (mRoomUIModel == nullptr)
+	{
+		mRoomUIModel = NewObject<URoomUIModel>(this);
+	}
+
 	// 플레이어 복원
 	RestorePlayerUnit();
 }
@@ -238,11 +246,16 @@ void ARoomGameModeBase::BeginRoom()
 	 */
 	if (UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())
 	{
-		if (URDUserWidget* TopMenuBar = WorldWidgetSubsystem->GetWorldWidget<URDUserWidget>(EWorldWidgetType::TopMenuBar))
+		if (UTopMenuBarWidget* TopMenuBar = WorldWidgetSubsystem->GetWorldWidget<UTopMenuBarWidget>(EWorldWidgetType::TopMenuBar))
 		{
 			TopMenuBar->OpenUI();
+			// 상단바를 방 공통 뷰모델에 연결한다. 이후 RoomUIModel이 바뀌면 상단바가 스스로 다시 그린다.
+			TopMenuBar->BindRoomUIModel(GetRoomUIModel());
 		}
 	}
+
+	// 현재 런 상태로 상단바 공통 요약(레벨 등)을 채운다.
+	PushRoomPlayerSummary();
 
 	// 방 전환 즉시 저장
 	SaveRunWithUIAsync();
@@ -465,6 +478,22 @@ bool ARoomGameModeBase::GetRunControlState(OUT int32& RowIndex, OUT int32& Colum
 	PlayerLevel = RunView.mPlayerLevel;
 	Difficulty = RunView.mDifficulty;
 	return true;
+}
+
+void ARoomGameModeBase::PushRoomPlayerSummary()
+{
+	if (mRoomUIModel == nullptr)
+	{
+		return;
+	}
+
+	FRoomPlayerSummaryUI Summary;
+	if (const URunPersistData* RunPersistData = GetRunPersistData())
+	{
+		Summary.mLevel = RunPersistData->GetPlayerLevel();
+	}
+	// HP/MaxHP/Gold는 플레이어 유닛 속성(ASC) 정리 후 연결 예정([합의필요]). 현재는 레벨만 실값이다.
+	mRoomUIModel->SetPlayerSummary(Summary);
 }
 
 /**
