@@ -14,6 +14,9 @@
 #include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer.h"
 #include "StaticSkillData.generated.h"
 
+class IBoardCombatTarget;
+class UTileMapModel;
+
 /**
 * @brief 하나의 스킬 내에서 같은 타이밍에 처리하는 단위
 * @details

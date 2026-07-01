@@ -29,8 +29,8 @@ TArray<IBoardCombatTarget*> FSkillMotionLayer::FilterCombatTargets(const UTileMa
             IBoardCombatTarget* CombatTarget = Cast<IBoardCombatTarget>(BoardActor);
             if (CombatTarget != nullptr)
             {
-                const ETeamAttitudeFilter CombatTargetAttitude = StaticCast<ETeamAttitudeFilter>(1 << SelfInstigator->GetTeamAttitudeTowards(*BoardActor));
-                if (EnumHasAllFlags(StaticCast<ETeamAttitudeFilter>(mTeamAttitudeFilter), CombatTargetAttitude) == true)
+                ETeamAttitudeFilter CombatTargetAttitude = StaticCast<ETeamAttitudeFilter>(1 << SelfInstigator->GetTeamAttitudeTowards(*BoardActor));
+                if (EnumHasAnyFlags(StaticCast<ETeamAttitudeFilter>(mTeamAttitudeFilter), CombatTargetAttitude) == true)
                 {
                     FilteredCombatTargets.Add(CombatTarget);
                 }

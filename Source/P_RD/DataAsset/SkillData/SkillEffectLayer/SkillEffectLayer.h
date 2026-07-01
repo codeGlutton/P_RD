@@ -11,9 +11,6 @@
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "SkillEffectLayer.generated.h"
 
-class UTileMapModel;
-class UBoardActorModel;
-
 USTRUCT(BlueprintType)
 struct P_RD_API FSkillEffectLayer
 {
