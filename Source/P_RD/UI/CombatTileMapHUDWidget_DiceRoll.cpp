@@ -861,7 +861,7 @@ void UCombatTileMapHUDWidget::HandleDiceRollInputButtonClicked()
 	StartIntroDiceRoll();
 }
 
-void UCombatTileMapHUDWidget::HandleShowDicePanelAnyTurn()
+void UCombatTileMapHUDWidget::HandleShowDicePanelAnyTurn(const USRPGTurnContext* TurnContext)
 {
 	RefreshDiceViewsFromUIModel();
 	RebuildOwnedDiceCards();

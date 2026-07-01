@@ -8,6 +8,7 @@
 #include "Components/TextBlock.h"
 #include "GameMode/CombatGameMode.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "UI/Combat/CombatUIProjection.h"
 #include "UI/UIRuntimeLayout.h"
 
 void UCombatTileMapHUDWidget::BindCombatGameModeDelegates()
@@ -98,10 +99,10 @@ void UCombatTileMapHUDWidget::HandleRefreshSelectedSkillUI()
 	RefreshDiceAssignmentText();
 }
 
-void UCombatTileMapHUDWidget::HandleRefreshSkillBuildPhase(ECombatBuildPhaseUI Phase)
+void UCombatTileMapHUDWidget::HandleRefreshSkillBuildPhase(ESRPGSkillBuildPhase Phase)
 {
-	// 스킬 phase는 UI enum만 받는다. HUD는 SRPGSkillBuildPhase/커맨드 객체를 몰라도 된다.
-	if (Phase == ECombatBuildPhaseUI::None)
+	const ECombatBuildPhaseUI UIPhase = CombatUIProjection::ToCombatBuildPhaseUI(Phase);
+	if (UIPhase == ECombatBuildPhaseUI::None)
 	{
 		HandleCombatActionResolved();
 		return;
@@ -112,13 +113,13 @@ void UCombatTileMapHUDWidget::HandleRefreshSkillBuildPhase(ECombatBuildPhaseUI P
 	RefreshDiceAssignmentText();
 }
 
-void UCombatTileMapHUDWidget::HandleRefreshMoveBuildPhase(ECombatBuildPhaseUI Phase)
+void UCombatTileMapHUDWidget::HandleRefreshMoveBuildPhase(ESRPGMoveBuildPhase Phase)
 {
 	// MOVE는 스킬과 독립된 행동이다. phase에 따라 MOVE/CANCEL 표시만 바꾼다.
-	mMoveBuildPhase = Phase;
+	mMoveBuildPhase = CombatUIProjection::ToCombatBuildPhaseUI(Phase);
 	RefreshMoveButton();
 
-	if (Phase == ECombatBuildPhaseUI::None)
+	if (mMoveBuildPhase == ECombatBuildPhaseUI::None)
 	{
 		HandleCombatActionResolved();
 	}

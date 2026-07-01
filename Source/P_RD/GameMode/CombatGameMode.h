@@ -9,6 +9,9 @@
 
 #include "GameMode/RoomGameModeBase.h"
 #include "DataAsset/EquipmentData/EquipmentType.h"
+#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
+#include "SRPGFramework/SRPGCommand.h"
+#include "SRPGFramework/SRPGFrameworkType.h"
 #include "UI/Combat/CombatUITypes.h"
 #include "CombatGameMode.generated.h"
 
@@ -40,13 +43,8 @@ DECLARE_MULTICAST_DELEGATE(FOnRefreshUnitUI);
 DECLARE_MULTICAST_DELEGATE(FOnRefreshDiceUI);
 DECLARE_MULTICAST_DELEGATE(FOnRefreshSelectedDiceUI);
 DECLARE_MULTICAST_DELEGATE(FOnRefreshSelectedSkillUI);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnCombatPresentationUI, TSharedPtr<FPresentationBarrier> /*Barrier*/);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCombatEndedUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, bool /*bPlayerWin*/);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnTurnPresentationUI, TSharedPtr<FPresentationBarrier> /*Barrier*/);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnActionPresentationUI, TSharedPtr<FPresentationBarrier> /*Barrier*/);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnRefreshCombatBuildPhase, ECombatBuildPhaseUI /*Phase*/);
-DECLARE_MULTICAST_DELEGATE(FOnCombatShowDicePanelUI);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnCombatShowTargetDetailPanelUI, IBoardSelectionTarget* /*Target*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnRefreshSkillBuildPhase, ESRPGSkillBuildPhase /*Phase*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnRefreshMoveBuildPhase, ESRPGMoveBuildPhase /*Phase*/);
 
 /**
  * @brief  전투 방에 대한 GameMode
@@ -125,15 +123,15 @@ public:
 	/*
 	 * 연출 대리자.
 	 *
-	 * 게임플레이 내부 타입을 UI에 최대한 노출하지 않기 위해 payload를 줄였다.
-	 * 예: 전투 종료는 ESRPGCombatResult 대신 bool bPlayerWin만 내려준다.
+	 * SRPGCombatModel에 이미 정의된 연출 신호 타입을 그대로 쓴다.
+	 * UI가 연출 barrier/turn/action/result payload를 받을 수 있게 GameMode는 중계만 한다.
 	 */
-	FOnCombatPresentationUI OnBeginCombatUI;
-	FOnCombatEndedUI OnEndCombatUI;
-	FOnTurnPresentationUI OnBeginAnyTurnUI;
-	FOnTurnPresentationUI OnEndAnyTurnUI;
-	FOnActionPresentationUI OnBeginAnyTurnActionUI;
-	FOnActionPresentationUI OnEndAnyTurnActionUI;
+	FOnBeginCombatUI OnBeginCombatUI;
+	FOnEndCombatUI OnEndCombatUI;
+	FOnBeginAnyTurnUI OnBeginAnyTurnUI;
+	FOnEndAnyTurnUI OnEndAnyTurnUI;
+	FOnBeginAnyTurnActionUI OnBeginAnyTurnActionUI;
+	FOnEndAnyTurnActionUI OnEndAnyTurnActionUI;
 
 public:
 	/*
@@ -152,10 +150,10 @@ public:
 	FOnRefreshDiceUI OnRefreshDiceUI;
 	FOnRefreshSelectedDiceUI OnRefreshSelectedDiceUI;
 	FOnRefreshSelectedSkillUI OnRefreshSelectedSkillUI;
-	FOnRefreshCombatBuildPhase OnRefreshSkillBuildPhase;
-	FOnRefreshCombatBuildPhase OnRefreshMoveBuildPhase;
-	FOnCombatShowDicePanelUI OnShowDicePanelAnyTurnUI;
-	FOnCombatShowTargetDetailPanelUI OnShowTargetDetailPanelUI;
+	FOnRefreshSkillBuildPhase OnRefreshSkillBuildPhase;
+	FOnRefreshMoveBuildPhase OnRefreshMoveBuildPhase;
+	FOnShowDicePanelAnyTurnUI OnShowDicePanelAnyTurnUI;
+	FOnShowTargetDetailPanelUI OnShowTargetDetailPanelUI;
 
 protected:
 	/*

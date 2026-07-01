@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RDMinimal.h"
+#include "SRPGFramework/SRPGFrameworkType.h"
 #include "UI/DiceViewData.h"
 #include "UI/Combat/CombatUITypes.h"
 #include "UI/RDUserWidget.h"
@@ -19,6 +20,7 @@ class UCombatUIModel;
 class UIndexedButtonWidget;
 class UImage;
 class UProgressBar;
+class USRPGTurnContext;
 class UTextBlock;
 class UViewport;
 class UWidget;
@@ -181,7 +183,7 @@ private:
 	void HandleDiceRollInputButtonClicked();
 
 	/** @brief 턴 시작 주사위 패널 표시 요청을 받는다. */
-	void HandleShowDicePanelAnyTurn();
+	void HandleShowDicePanelAnyTurn(const USRPGTurnContext* TurnContext);
 
 	/** @brief 결과 확인이 끝난 주사위 연출 UI를 닫는다. */
 	void DismissIntroDiceRoll();
@@ -233,8 +235,8 @@ private:
 	void HandleRefreshDiceUI();
 	void HandleRefreshSelectedDiceUI();
 	void HandleRefreshSelectedSkillUI();
-	void HandleRefreshSkillBuildPhase(ECombatBuildPhaseUI Phase);
-	void HandleRefreshMoveBuildPhase(ECombatBuildPhaseUI Phase);
+	void HandleRefreshSkillBuildPhase(ESRPGSkillBuildPhase Phase);
+	void HandleRefreshMoveBuildPhase(ESRPGMoveBuildPhase Phase);
 	void HandleShowTargetDetailPanel(IBoardSelectionTarget* Target);
 
 	/** @brief 스킬 롱프레스 상세 패널을 표시/닫는다. */
