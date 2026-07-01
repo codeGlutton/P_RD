@@ -27,11 +27,3 @@ UObjectModel* USRPGCombatSubsystem::GetModel_Internal() const
 	return mCombatModel.Get();
 }
 
-UCombatUIModel* USRPGCombatSubsystem::GetCombatUIModel()
-{
-	if (mCombatUIModel == nullptr)
-	{
-		mCombatUIModel = NewObject<UCombatUIModel>(this);
-	}
-	return mCombatUIModel;
-}

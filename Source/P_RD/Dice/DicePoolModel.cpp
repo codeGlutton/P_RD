@@ -113,6 +113,22 @@ void UDicePoolModel::ResetUsed()
 	OnResetAllDiceUI.Broadcast(mDices);
 }
 
+TArray<int32> UDicePoolModel::GetSelectedDices() const
+{
+	TArray<int32> SelectedDiceIndexes;
+
+	const int32 DiceNum = mDices.Num();
+	for (int32 i = 0; i < DiceNum; ++i)
+	{
+		const TObjectPtr<UDiceModel>& Dice = mDices[i];
+		if (Dice != nullptr && Dice->IsSelected())
+		{
+			SelectedDiceIndexes.Add(i);
+		}
+	}
+	return SelectedDiceIndexes;
+}
+
 /** @brief 어댑터가 index 기반 UI payload를 굴림 결과로 되돌릴 때 쓰는 읽기 API다. */
 int32 UDicePoolModel::GetRolledDiceValue(int32 DiceIndex) const
 {
