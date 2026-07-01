@@ -43,22 +43,22 @@ void UCameraMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	// 카메라의 크기는 무시힌다.
 	FVector ActorLocation = GetOwner()->GetActorLocation();
 
-	ActorLocation.X = FMath::Clamp(ActorLocation.X, -mMoveClampBox.X / 2, mMoveClampBox.X / 2);
-	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, -mMoveClampBox.Y / 2, mMoveClampBox.Y / 2);
+	ActorLocation.X = FMath::Clamp(ActorLocation.X, -mMoveClampingBox.X / 2, mMoveClampingBox.X / 2);
+	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, -mMoveClampingBox.Y / 2, mMoveClampingBox.Y / 2);
 
 	GetOwner()->SetActorLocation(ActorLocation);
 
 	//==============================
 	// 이동 제한 범위를 보여줍니다.
-	FVector Center = mDefaultPos;
-	FVector Extent = mMoveClampBox/2;
+	FVector Center = mMoveClampingBoxCenter;
+	FVector Extent = FVector(mMoveClampingBox /2, 0);
 	FQuat Rotation = FQuat();
 
 	DrawDebugBox(
 		GetWorld(),
 		Center,
 		Extent,
-		Rotation, // 여기에 회전 값을 넣으면 기울어진 박스가 그려집니다.
+		Rotation,
 		FColor::Red,
 		false,
 		-1.0f,
@@ -108,13 +108,13 @@ void UCameraMovementComponent::ZoomCamera(float ZoomValue)
 	mCameraComponent->OrthoWidth = FMath::Clamp(OW, mMinOrthoWidth, mMaxOrthoWidth);
 }
 
-void UCameraMovementComponent::ZoomCameraAndMoveToViewport(float ZoomValue, FVector2D ViewPortPos)
+void UCameraMovementComponent::ZoomCameraAndMoveToViewportPosition(float ZoomValue, FVector2D ViewPortPos)
 {
 	ZoomCamera(ZoomValue);
-	MoveToViewport(ViewPortPos);
+	MoveToViewportPosition(ViewPortPos);
 }
 
-void UCameraMovementComponent::MoveToViewport(FVector2D ViewPortPos)
+void UCameraMovementComponent::MoveToViewportPosition(FVector2D ViewPortPos)
 {
 	//==============================
 	// ViewPort를 WorldLocation으로 변환합니다.
@@ -167,13 +167,13 @@ void UCameraMovementComponent::MoveToViewport(FVector2D ViewPortPos)
 	// 카메라의 크기는 무시힌다.
 	FVector ActorLocation = GetOwner()->GetActorLocation();
 
-	ActorLocation.X = FMath::Clamp(ActorLocation.X, -mMoveClampBox.X / 2, mMoveClampBox.X / 2);
-	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, -mMoveClampBox.Y / 2, mMoveClampBox.Y / 2);
+	ActorLocation.X = FMath::Clamp(ActorLocation.X, -mMoveClampingBox.X / 2, mMoveClampingBox.X / 2);
+	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, -mMoveClampingBox.Y / 2, mMoveClampingBox.Y / 2);
 
 	GetOwner()->SetActorLocation(ActorLocation);
 }
 
-void UCameraMovementComponent::MoveToLocation(FVector LocationPos)
+void UCameraMovementComponent::MoveToWorldPosition(FVector LocationPos)
 {
 	// =====================================
 	// 카메라의 중심을 기준으로 레이를 쏜다.
@@ -198,8 +198,8 @@ void UCameraMovementComponent::MoveToLocation(FVector LocationPos)
 	// 카메라의 크기는 무시힌다.
 	FVector ActorLocation = GetOwner()->GetActorLocation();
 
-	ActorLocation.X = FMath::Clamp(ActorLocation.X, -mMoveClampBox.X / 2, mMoveClampBox.X / 2);
-	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, -mMoveClampBox.Y / 2, mMoveClampBox.Y / 2);
+	ActorLocation.X = FMath::Clamp(ActorLocation.X, -mMoveClampingBox.X / 2, mMoveClampingBox.X / 2);
+	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, -mMoveClampingBox.Y / 2, mMoveClampingBox.Y / 2);
 
 	GetOwner()->SetActorLocation(ActorLocation);
 
@@ -208,7 +208,7 @@ void UCameraMovementComponent::MoveToLocation(FVector LocationPos)
 bool UCameraMovementComponent::GetCameraRayHitPoint(OUT FHitResult& HitResult)
 {
 	FVector StartTrace = GetOwner()->GetActorLocation(); // 시작 지점
-	FVector EndTrace = StartTrace + (GetOwner()->GetActorForwardVector() * 1000.0f); // 1000유닛 앞
+	FVector EndTrace = StartTrace + (GetOwner()->GetActorForwardVector() * 100000.0f); // 1000유닛 앞
 
 	// 채널 설정 (ECC_Visibility 등)
 	FCollisionQueryParams QueryParams;

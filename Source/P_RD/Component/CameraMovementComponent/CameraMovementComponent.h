@@ -9,6 +9,12 @@
 class UCameraComponent;
 class USpringArmComponent;
 
+//@note Raycast 시 충돌 판정에 관하여 아직 정해진 것이 없습니다.
+// 추후 입력을 넣어서 작동하게 될 때 문제가 생기면 고쳐나가도록 하겠습니다.
+
+//@note Raycast 시 끝 거리는 우선 하드 코딩해놨습니다.
+// 전투 시 카메라의 위치 해당 거리를 벗어나지는 않을 것이라고 판단되어 그냥 큰 값을 넣었습니다.
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class P_RD_API UCameraMovementComponent : public UActorComponent
 {
@@ -57,17 +63,22 @@ public:
 	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MinZoom", AllowPrivateAccess = "true"))
 	float mMinOrthoWidth = 100.f;
 
-	/*추후 이동 제한 로직에서 쓸 변수*/
+	/*
+	* @brief 클램핑 박스 중앙 위치
+	* @details
+	* 해당 위치를 중심으로 클램핑 박스가 설정됩니다.
+	*/
 	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "DefaultPos", AllowPrivateAccess = "true"))
-	FVector mDefaultPos = FVector(0, 0, 0);
+	FVector mMoveClampingBoxCenter = FVector(0, 0, 0);
 	
 	/*
-	* @brief 이동할 수 있는 거리
+	* @brief 클램핑 박스
 	* @details
-	* 박스 크기로 이동의 최대 거리를 제한한다.
+	* 박스 크기로 해당 카메라는 해당 위치를 벗어나지 못합니다.
+	* Z축은 사용하지 않습니다.
 	*/
 	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MoveClmapBox", AllowPrivateAccess = "true"))
-	FVector mMoveClampBox = FVector(1000, 1000, 0);
+	FVector2D mMoveClampingBox = FVector2D(1000, 1000);
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -105,25 +116,25 @@ public:
 	* @param ViewPortPos위치로 카메라를 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void ZoomCameraAndMoveToViewport(float ZoomValue, FVector2D ViewPortPos);
+	void ZoomCameraAndMoveToViewportPosition(float ZoomValue, FVector2D ViewPortPos);
 
 	/*
-	* @brief ViewPortPos로 카메라의 시선을 옮긴다.
+	* @brief MoveToViewportPosition로 카메라의 시선을 옮긴다.
 	* @defatils
-	* ViewPortPos에서 Ray를 쏜다음 충돌한 위치로 카메라의 시선을 옮깁니다.
-	* @param ViewPortPos에서 Ray를 쏜 다음 충돌한 위치로 카메라의 시선 옮깁니다.
+	* MoveToViewportPosition에서 Ray를 쏜다음 충돌한 위치로 카메라의 시선을 옮깁니다.
+	* @param MoveToViewportPosition에서 Ray를 쏜 다음 충돌한 위치로 카메라의 시선 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void MoveToViewport(FVector2D ViewPortPos);
+	void MoveToViewportPosition(FVector2D ViewPortPos);
 
 	/*
-	* @brief LocationPos로 카메라의 시선을 옮긴다.
+	* @brief WorldPosition로 카메라의 시선을 옮긴다.
 	* @defatils
-	* LocationPos로 카메라의 시선을 옮깁니다.
-	* @param LocationPos 위치로 카메라의 시선 옮깁니다.
+	* WorldPosition로 카메라의 시선을 옮깁니다.
+	* @param WorldPosition 위치로 카메라의 시선 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void MoveToLocation(FVector LocationPos);
+	void MoveToWorldPosition(FVector WorldPosition);
 
 	//void SkillMotionZoomIn() {};
 
