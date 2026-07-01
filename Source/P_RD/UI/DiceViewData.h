@@ -21,6 +21,7 @@ struct P_RD_API FDiceViewData
 	int32 mRolledFaceIndex = INDEX_NONE;   // 물리적으로 굴러진 면 index(0-base). 회전/정지 자세는 이 값을 쓴다.
 	bool mIsRolled = false;
 	bool mIsUsed = false;   // 이번 턴에 이미 쓴 주사위(다음 굴림까지 잠금)
+	bool mIsSelected = false;   // 스킬 빌드에 올린(선택된) 주사위. 여러 개 동시 선택 가능(다중 강조).
 	int32 mFaceCount = 6;   // 면 수(종류 표시용: 2=동전 … 20=d20)
 	// 아래 두 배열은 UDiceModel/FDiceSlotUI와 같은 물리 면 0-base 순서다.
 	TArray<int32> mFaceValues;   // 각 물리 면에 적힌 실제 값
