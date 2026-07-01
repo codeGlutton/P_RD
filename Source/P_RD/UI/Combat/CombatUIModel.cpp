@@ -20,13 +20,6 @@ void UCombatUIModel::SetUnitUIs(const TArray<FUnitUI>& Units)
 	OnCombatUIChanged.Broadcast(ECombatUIDomain::Unit);
 }
 
-/** @brief 유닛 상세 스냅샷 캐시를 교체한다. */
-void UCombatUIModel::SetUnitDetail(const FUnitDetailUI& Detail)
-{
-	mUnitDetail = Detail;
-	OnCombatUIChanged.Broadcast(ECombatUIDomain::Unit);
-}
-
 /** @brief 주사위 표시 스냅샷 캐시를 교체한다. */
 void UCombatUIModel::SetDiceUIs(const TArray<FDiceSlotUI>& Dice)
 {

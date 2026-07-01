@@ -45,8 +45,6 @@ public:
 public:
 	/** @brief 전체 유닛 HP/이동력/타일/HP바위치/상태태그. [합의필요] HP/MaxHP 진짜소스=UUnitData(GAS 폐기후). */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetUnitUIs(const TArray<FUnitUI>& Units);
-	/** @brief 유닛 롱프레스 상세(이름/레벨/초상화/패시브). [합의필요] UUnitData 연결. */
-	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetUnitDetail(const FUnitDetailUI& Detail);
 	/** @brief 보유 주사위(굴림값/면수/희귀도색/사용잠금/3D프리뷰 슬롯). [소스] APlayerUnit UDicePoolModel(진짜, 비GAS). */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetDiceUIs(const TArray<FDiceSlotUI>& Dice);
 	/** @brief 스킬에 올린 주사위 index들+합계. [소스] SRPGSkillBuildAction.mSelectedDices. */
@@ -79,7 +77,6 @@ public:
 	/* ───────── 위젯이 읽는다 ───────── */
 public:
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FUnitUI>& GetUnitUIs() const { return mUnitUIs; }
-	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FUnitDetailUI& GetUnitDetail() const { return mUnitDetail; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FDiceSlotUI>& GetDiceUIs() const { return mDiceUIs; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<int32>& GetSelectedDiceIndices() const { return mSelectedDiceIndices; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") int32 GetSelectedDiceSum() const { return mSelectedDiceSum; }
@@ -94,8 +91,6 @@ public:
 private:
 	/** @brief 마지막으로 push된 유닛 표시 스냅샷. 위젯은 참조로 읽고 수정하지 않는다. */
 	UPROPERTY(Transient) TArray<FUnitUI> mUnitUIs;
-	/** @brief 마지막 유닛 상세 스냅샷. 롱프레스 상세 패널의 단일 소스다. */
-	UPROPERTY(Transient) FUnitDetailUI mUnitDetail;
 	/** @brief 마지막 주사위 표시 스냅샷. 굴림값/사용잠금/면 정보가 모두 여기에 모인다. */
 	UPROPERTY(Transient) TArray<FDiceSlotUI> mDiceUIs;
 	/** @brief 현재 스킬 빌드에 올린 주사위 index 목록. index는 mDiceUIs 배열 기준이다. */

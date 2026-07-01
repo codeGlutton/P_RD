@@ -117,27 +117,6 @@ struct FUnitUI
 	UPROPERTY(BlueprintReadOnly) FGameplayTagContainer mStatusTags;
 };
 
-/** @brief 적/유닛을 길게 눌렀을 때 띄우는 상세 정보(초상화·이름·레벨·패시브 등). */
-// 이 struct는 "상세 패널에만 추가로 필요한 값"만 담는다.
-// HP/MaxHP/AttackFactor 같은 라이브 전투 스탯은 여기서 중복 보관하지 않고,
-// mUnitId로 같은 유닛의 FUnitUI를 찾아 거기서 읽는다(HP 진실원본 이원화 방지).
-// UI 필요값:
-// - mUnitId: 어떤 유닛 상세인지 식별 + 라이브 스탯(HP 등)을 가져올 FUnitUI 매칭 키.
-// - mName/mLevel/mPortrait: 큰 정보 패널 헤더와 초상화 표시.
-// - mPassiveDescriptions: 적 패시브/특수 규칙을 텍스트 리스트로 표시.
-// [합의필요] 이름/초상화/패시브 최종 소스는 UUnitData 연결 필요.
-USTRUCT(BlueprintType)
-struct FUnitDetailUI
-{
-	GENERATED_BODY()
-
-	UPROPERTY(BlueprintReadOnly) int32 mUnitId = INDEX_NONE;
-	UPROPERTY(BlueprintReadOnly) FText mName;
-	UPROPERTY(BlueprintReadOnly) int32 mLevel = 0;
-	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mPortrait = nullptr;
-	UPROPERTY(BlueprintReadOnly) TArray<FText> mPassiveDescriptions;
-};
-
 /** @brief 스킬 시전(선택) 범위 형태. UI 조준 가이드용. 스킬데이터 SelectType의 UI 거울. */
 // [합의필요] develop 최종 SelectType enum과 매핑 필요(아래는 스킬데이터 설계 표의 후보 형태).
 UENUM(BlueprintType)
