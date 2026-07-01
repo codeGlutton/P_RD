@@ -76,9 +76,6 @@ public:
 	/** @brief 월드 타겟 상세 패널을 열어야 하는 순간 이벤트를 HUD에 알린다. */
 	void NotifyTargetDetailPanelRequested(IBoardSelectionTarget* Target);
 
-	/** @brief 선택 스킬 강조처럼 HUD 로컬 상태를 다시 그려야 하는 순간을 알린다. */
-	void NotifySelectedSkillChanged();
-
 	/* ───────── 위젯이 읽는다 ───────── */
 public:
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FUnitUI>& GetUnitUIs() const { return mUnitUIs; }

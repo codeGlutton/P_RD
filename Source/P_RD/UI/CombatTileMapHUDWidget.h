@@ -235,7 +235,6 @@ private:
 	void HandleRefreshUnitUI();
 	void HandleRefreshDiceUI();
 	void HandleRefreshSelectedDiceUI();
-	void HandleRefreshSelectedSkillUI();
 	void HandleRefreshSkillBuildPhase();
 	void HandleRefreshMoveBuildPhase();
 	void HandleShowTargetDetailPanel(IBoardSelectionTarget* Target);

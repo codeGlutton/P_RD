@@ -65,9 +65,6 @@ void UCombatTileMapHUDWidget::HandleCombatUIModelChanged(ECombatUIDomain Domain)
 		RefreshSkillRailWidgets();
 		RefreshCombatStatusBar();
 		break;
-	case ECombatUIDomain::SelectedSkill:
-		HandleRefreshSelectedSkillUI();
-		break;
 	case ECombatUIDomain::SkillBuildPhase:
 		HandleRefreshSkillBuildPhase();
 		break;
@@ -121,12 +118,6 @@ void UCombatTileMapHUDWidget::HandleRefreshSelectedDiceUI()
 {
 	RefreshDiceViewsFromUIModel();
 	RefreshOwnedDiceCards();
-	RefreshDiceAssignmentText();
-}
-
-void UCombatTileMapHUDWidget::HandleRefreshSelectedSkillUI()
-{
-	RefreshSkillRailWidgets();
 	RefreshDiceAssignmentText();
 }
 

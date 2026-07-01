@@ -170,15 +170,9 @@ bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 		}
 		});
 
-	const bool bHandled = CommandRouterModel->SummitCommand(SkillSelectCommand);
-	if (bHandled == true)
-	{
-		if (UCombatUIModel* CombatUIModel = GetCombatUIModel())
-		{
-			CombatUIModel->NotifySelectedSkillChanged();
-		}
-	}
-	return bHandled;
+	// 선택 스킬 강조는 HUD 로컬(mSelectedSkillIndex) 상태다. 위젯이 SelectSkill 호출 직후 스스로 다시 그리므로
+	// UIModel 알림(구 NotifySelectedSkillChanged)은 값이 없는 중복 신호라 제거했다.
+	return CommandRouterModel->SummitCommand(SkillSelectCommand);
 }
 
 bool ACombatGameMode::SelectDice(int32 DiceIndex)

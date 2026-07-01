@@ -117,9 +117,3 @@ void UCombatUIModel::NotifyTargetDetailPanelRequested(IBoardSelectionTarget* Tar
 {
 	OnTargetDetailPanelRequested.Broadcast(Target);
 }
-
-/** @brief HUD 로컬 선택 스킬 표시를 다시 그리도록 알린다. */
-void UCombatUIModel::NotifySelectedSkillChanged()
-{
-	OnCombatUIChanged.Broadcast(ECombatUIDomain::SelectedSkill);
-}
