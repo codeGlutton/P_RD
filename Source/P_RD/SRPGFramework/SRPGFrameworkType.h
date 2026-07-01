@@ -117,22 +117,6 @@ enum class EEffectPattern : uint8
 };
 
 /**
- * @brief 효과 범위 중심
- * 
- * @details
- * 패시브 발동 시 어떤 유닛의 타일을 중심 인지에 대한 열거형
- */
-UENUM(BlueprintType)
-enum class EEffectCenterType : uint8
-{
-    /** 대상 선정 기준: 시전자 본인 (소유자)*/
-    Owner UMETA(DisplayName = "Owner"),
-
-    /** 대상 선정 기준: 이벤트를 발생시킨 원인 (피격 시 공격자)(타격 시 피격자) */
-    Instigator UMETA(DisplayName = "Instigator"),
-};
-
-/**
  * @brief 대상 선정 시 특정 객체를 제외하기 위한 필터(Bitmask)입니다.
  * 
  * @details
@@ -309,7 +293,7 @@ enum class ESRPGCommandResult : uint8
  */
 inline ESRPGCommandResult CombineSRPGCommandResult(ESRPGCommandResult Lhs, ESRPGCommandResult Rhs)
 {
-    if (static_cast<uint8>(Lhs) < static_cast<uint8>(Lhs))
+    if (static_cast<uint8>(Lhs) < static_cast<uint8>(Rhs))
     {
         return Lhs;
     }

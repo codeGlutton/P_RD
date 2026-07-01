@@ -23,4 +23,10 @@ public:
 	{
 		return FPrimaryAssetId(SkillPrimaryAssetTypes::GetSpellType(mRarityType), GetFName());
 	}
+
+public:
+	ESkillType GetSkillType() const override
+	{
+		return ESkillType::Spell;
+	}
 };

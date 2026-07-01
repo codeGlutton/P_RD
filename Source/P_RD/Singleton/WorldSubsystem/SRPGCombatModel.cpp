@@ -16,8 +16,6 @@
 #include "DataAsset/UnitSpawnData/StaticEnemyUnitSpawnData.h"
 #include "DataAsset/ObstacleSpawnData/StaticObstacleSpawnData.h"
 
-#include "AIController/EnemyAIController.h"
-
 DEFINE_LOG_CATEGORY(LogSRPGCombat)
 
 void USRPGCombatModel::Serialize(FArchive& Ar)

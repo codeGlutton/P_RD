@@ -72,7 +72,7 @@ void USRPGMoveAction::OnEndAction()
         // 이동 유닛의 스킬 컴포넌트에 소모 이동 포인트 차감 통지
         if (USkillComponentModel* SkillComp = mInstigator->GetSkillComponentModel())
         {
-            SkillComp->HandelMovePoint(SpentPoint);
+            //SkillComp->UseMovePoint(SpentPoint);
         }
     }
 }

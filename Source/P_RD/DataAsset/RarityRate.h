@@ -31,5 +31,5 @@ protected:
 
 public:
 	UPROPERTY(Category = "Weight", EditAnywhere, meta = (DisplayName = "Weights", ArraySizeEnum = "ERarityType"))
-	float mWeights[static_cast<uint8>(ERarityType::Count)];
+	float mWeights[static_cast<uint8>(ERarityType::Count)] = {};
 };

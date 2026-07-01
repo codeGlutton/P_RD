@@ -10,7 +10,6 @@
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGAction.h"
 #include "SRPGFramework/SRPGCommand.h"
-#include "FunctionLibrary/CombatCalculator/CombatResult.h"
 #include "SRPGSkillAction.generated.h"
 
 struct FSRPGSkillAction;

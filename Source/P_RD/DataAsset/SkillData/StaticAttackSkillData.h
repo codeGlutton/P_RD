@@ -23,4 +23,10 @@ public:
 	{
 		return FPrimaryAssetId(SkillPrimaryAssetTypes::GetAttackType(mRarityType), GetFName());
 	}
+
+public:
+	ESkillType GetSkillType() const override
+	{
+		return ESkillType::Attack;
+	}
 };

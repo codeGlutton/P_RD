@@ -53,7 +53,7 @@ public:
 
 public:
 	UPROPERTY(Category = Record, SaveGame, VisibleAnywhere, meta = (DisplayName = "RunCount"))
-	int32 mRunCount;
+	int32 mRunCount = 0;
 
 public:
 	UPROPERTY(Category = Record, SaveGame, VisibleAnywhere, meta = (DisplayName = "RunCountPerUnit"))
