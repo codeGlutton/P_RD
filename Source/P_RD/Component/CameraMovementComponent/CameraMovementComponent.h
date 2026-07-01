@@ -58,16 +58,16 @@ public:
 	float mMinOrthoWidth = 100.f;
 
 	/*추후 이동 제한 로직에서 쓸 변수*/
-	//UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "DefaultPos", AllowPrivateAccess = "true"))
-	//FVector mDefaultPos = FVector(0, 0, 0);
-	//
-	///*
-	//* @brief 이동할 수 있는 거리
-	//* @details
-	//* 박스 크기로 이동의 최대 거리를 제한한다.
-	//*/
-	//UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MoveClmapBox", AllowPrivateAccess = "true"))
-	//FVector2D mMoveClampBox = FVector2D(1000,1000);
+	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "DefaultPos", AllowPrivateAccess = "true"))
+	FVector mDefaultPos = FVector(0, 0, 0);
+	
+	/*
+	* @brief 이동할 수 있는 거리
+	* @details
+	* 박스 크기로 이동의 최대 거리를 제한한다.
+	*/
+	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MoveClmapBox", AllowPrivateAccess = "true"))
+	FVector mMoveClampBox = FVector(5000, 5000, 0);
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -115,5 +115,18 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void MoveToViewport(FVector2D ViewPortPos);
 
+	/*
+	* @brief 해당하는 위치를 중심으로 카메라를 옮긴다.
+	*
+	* @param LocationPos 위치로 카메라를 옮깁니다.
+	*/
+	UFUNCTION(BlueprintCallable)
+	void MoveToLocation(FVector LocationPos);
+
 	//void SkillMotionZoomIn() {};
+
+private:
+	FVector GetCameraPos();
+
+
 };

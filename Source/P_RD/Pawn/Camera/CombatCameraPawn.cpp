@@ -13,7 +13,7 @@ ACombatCameraPawn::ACombatCameraPawn()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	mSceneComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("DefaultSceneComponent"));
+	mSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("DefaultSceneComponent"));
 	mSceneComponent->SetRelativeRotation(FRotator(-30, 0, 0));
 	RootComponent = mSceneComponent;
 
@@ -23,6 +23,7 @@ ACombatCameraPawn::ACombatCameraPawn()
 	mCameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
 	mCameraComponent->ProjectionMode = ECameraProjectionMode::Orthographic;
 	mCameraComponent->OrthoWidth = 1024.0f;
+	mCameraComponent->bCameraMeshHiddenInGame = false;
 	mCameraComponent->SetupAttachment(mSceneComponent);
 
 	mCameraMovementComponent = CreateDefaultSubobject<UCameraMovementComponent>("CameraMovementComponent");
