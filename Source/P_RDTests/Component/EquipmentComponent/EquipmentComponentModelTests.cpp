@@ -53,7 +53,7 @@ bool FEquipmentComponentModelTests::RunTest(const FString& Parameters)
 	PassiveData->mPassiveClass = UTacticalPassive_AddStat::StaticClass();
 	PassiveData->mEffectClass = UTacticalEffect_AttackPoint::StaticClass();
 	PassiveData->mMagnitude = 5.f;
-	PassiveData->mPassiveTriggerTimig = StartTiming;
+	PassiveData->mActivateTimingTag = StartTiming;
 
 	// 무기 DA (코드 구성): 위 패시브를 참조
 	UStaticWeaponEquipmentData* Weapon = NewObject<UStaticWeaponEquipmentData>();

@@ -16,16 +16,30 @@
 #include "DataAsset/PassiveData/StaticPassiveData.h"
 
 void UTacticalPassive::ActivatePassive(
+	const FGameplayTag& TimingTag,
 	const FPassiveActivateContext& Ctx,
 	TInstancedStruct<FDynamicPassiveData>& PassiveState)
 {
-	// 계산 결과를 담을 내부 중간 버퍼 (외부로 반환하지 않음)
-	FBoardCombatTargetSnapshotData Contribution;
+	// 들어온 타이밍이 발동 시점이면: 적용 여부를 묻고 참이면 이펙트 적용
+	if (TimingTag == mActivateTimingTag)
+	{
+		// 발동 시 대상에게 가할 기여값을 담을 내부 중간 버퍼
+		FBoardCombatTargetSnapshotData Contribution;
 
-	// 계산: 기여값 산출 + 러닝 상태 갱신 (실제 내부 상태는 여기서 안 바꿈)
-	EvaluatePassive(Ctx, Contribution, PassiveState);
-	// 적용: 계산된 기여값을 대상 이펙트로 적용
-	NotifyPassive(Ctx, Contribution);
+		// 내부상태로 적용 여부를 판단하고 다음 상태를 PassiveState에 기록
+		// 여기서는 아직 내부상태가 변경되진 않음 (CommitPassive 해야 변경됨)
+		if (EvaluateActivate(Ctx, PassiveState, Contribution))
+		{
+			// 계산된 수치를 이펙트로 적용
+			NotifyPassive(Ctx, Contribution);
+		}
+	}
+	// 해제 시점이면: 적용 중인 이펙트를 제거 (핸들 없으면 내부에서 no-op)
+	else if (TimingTag == mDeactivateTimingTag)
+	{
+		DeactivatePassive();
+	}
+	// 둘 다 아니면 무시
 }
 
 void UTacticalPassive::SetStaticData(UStaticPassiveData* InStaticData)
@@ -43,14 +57,10 @@ void UTacticalPassive::InitializeFromData()
 		return;
 	}
 
-	// 이펙트 종류와 발동 시점을 데이터에서 베이스 멤버로 복사
+	// 이펙트 종류와 발동/해제 시점 태그를 데이터에서 베이스 멤버로 복사
 	mEffectClass = mStaticData->mEffectClass.LoadSynchronous();
-
-	mTimingTags.Reset();
-	if (mStaticData->mPassiveTriggerTimig.IsValid())
-	{
-		mTimingTags.AddTag(mStaticData->mPassiveTriggerTimig);
-	}
+	mActivateTimingTag = mStaticData->mActivateTimingTag;
+	mDeactivateTimingTag = mStaticData->mDeactivateTimingTag;
 }
 
 void UTacticalPassive::NotifyPassive(
@@ -124,23 +134,4 @@ void UTacticalPassive::DeactivatePassive()
 		OwningComp->RemoveActiveTacticalEffect(mActiveHandle);
 	}
 	mActiveHandle.Reset();
-}
-
-bool UTacticalPassive::TryDeactivatePassive()
-{
-	// 적용 중이 아니면 해제할 것도 없음
-	if (mActiveHandle.IsValid() == false)
-	{
-		return false;
-	}
-
-	// 패시브가 스스로 빠질지 판단 (기본 유지). 유지면 그대로 둠
-	if (ShouldDeactivate() == false)
-	{
-		return false;
-	}
-
-	// 빠진다고 했으니 실제 해제
-	DeactivatePassive();
-	return true;
 }
