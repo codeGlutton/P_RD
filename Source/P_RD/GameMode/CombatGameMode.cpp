@@ -75,28 +75,28 @@ void ACombatGameMode::InitializeRoom()
 		OnBeginCombatUI.Broadcast(Barrier);
 		});
 	CombatModel->OnEndCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result) {
-		OnEndCombatUI.Broadcast(Barrier, Result == ESRPGCombatResult::PlayerWin);
+		OnEndCombatUI.Broadcast(Barrier, Result);
 		});
 	CombatModel->OnBeginAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext) {
 		// 턴 시작 시에는 PM안대로 전체 스냅샷을 한 번 다시 채운다.
 		PushAllCombatUI();
-		OnBeginAnyTurnUI.Broadcast(Barrier);
+		OnBeginAnyTurnUI.Broadcast(Barrier, TurnContext);
 		});
 	CombatModel->OnEndAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, ESRPGTurnResult Result) {
-		OnEndAnyTurnUI.Broadcast(Barrier);
+		OnEndAnyTurnUI.Broadcast(Barrier, TurnContext, Result);
 		});
 	CombatModel->OnBeginAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action) {
-		OnBeginAnyTurnActionUI.Broadcast(Barrier);
+		OnBeginAnyTurnActionUI.Broadcast(Barrier, TurnContext, Action);
 		});
 	CombatModel->OnEndAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action, ESRPGActionResult Result) {
-		OnEndAnyTurnActionUI.Broadcast(Barrier);
+		OnEndAnyTurnActionUI.Broadcast(Barrier, TurnContext, Action, Result);
 		});
 	CombatModel->OnRegisterUnitUI.AddUObject(this, &ACombatGameMode::OnRegisterUnit);
 	CombatModel->OnUnregisterUnitUI.AddUObject(this, &ACombatGameMode::OnUnregisterUnit);
 	CombatModel->OnShowDicePanelAnyTurnUI.AddWeakLambda(this, [this](const USRPGTurnContext* TurnContext) {
 		// 턴 시작 주사위 패널은 UI 내부에서 열지만, 열기 직전 전체 스냅샷은 GameMode가 최신화한다.
 		PushAllCombatUI();
-		OnShowDicePanelAnyTurnUI.Broadcast();
+		OnShowDicePanelAnyTurnUI.Broadcast(TurnContext);
 		});
 
 	for (TObjectPtr<UUnitModel>& Unit : CombatModel->GetUnits())
@@ -159,8 +159,7 @@ bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 	SkillSelectCommand.InitializeAs<FSRPGSkillSelectCommand>();
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().mSkillIndex = SkillIndex;
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnChangeSkillBuildPhase.AddWeakLambda(this, [this](const USRPGSkillBuildAction* Action, ESRPGSkillBuildPhase Phase) {
-		// 게임플레이 phase를 UI enum으로 낮춰서 전달한다. HUD는 ESRPGSkillBuildPhase를 몰라도 된다.
-		OnRefreshSkillBuildPhase.Broadcast(CombatUIProjection::ToCombatBuildPhaseUI(Phase));
+		OnRefreshSkillBuildPhase.Broadcast(Phase);
 		});
 
 	const bool bHandled = CommandRouterModel->SummitCommand(SkillSelectCommand);
@@ -202,8 +201,7 @@ bool ACombatGameMode::SelectMove()
 	TInstancedStruct<FSRPGCommand> MoveSelectCommand;
 	MoveSelectCommand.InitializeAs<FSRPGMoveSelectCommand>();
 	MoveSelectCommand.GetMutable<FSRPGMoveSelectCommand>().OnChangeMoveBuildPhase.AddWeakLambda(this, [this](const USRPGMoveBuildAction* Action, ESRPGMoveBuildPhase Phase) {
-		// MOVE는 스킬과 별도 행동이다. UI에는 공용 ECombatBuildPhaseUI만 내려서 MOVE/CANCEL 표시를 결정한다.
-		OnRefreshMoveBuildPhase.Broadcast(CombatUIProjection::ToCombatBuildPhaseUI(Phase));
+		OnRefreshMoveBuildPhase.Broadcast(Phase);
 		});
 
 	return CommandRouterModel->SummitCommand(MoveSelectCommand);
