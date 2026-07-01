@@ -63,9 +63,10 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
 
         const FSRPGSkillSelectCommand& SkillSelectCommand = Command.Get<FSRPGSkillSelectCommand>();
 
+        OnChangeSkillBuildPhase = SkillSelectCommand.OnChangeSkillBuildPhase;
         if (SkillSelectCommand.mSkillIndex != mSelectedSkillIndex)
         {
-            OnChangeSkillBuildPhase = SkillSelectCommand.OnChangeSkillBuildPhase;
+            /* 다르면 변경 */
 
             ResetTargetTile();
             ResetDice();
@@ -73,6 +74,13 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
             SetSkill(SkillSelectCommand.mSkillIndex);
             RefreshAimableTileHighlights();
             SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
+        }
+        else
+        {
+            /* 같으면 취소 */
+
+            MarkActionCompleted(ESRPGActionResult::Cancelled);
+            SetBuildPhase(ESRPGSkillBuildPhase::None);
         }
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
@@ -209,7 +217,7 @@ void USRPGSkillBuildAction::SetSkill(int32 SkillIndex)
 
     {
         TSoftObjectPtr<UStaticSkillData> StaticSkillDataSoftObj = nullptr;
-        SkillCompModel->GetSkillData(SkillIndex, OUT StaticSkillDataSoftObj);
+        StaticSkillDataSoftObj = SkillCompModel->GetSkill(SkillIndex)->mData;
         if (StaticSkillDataSoftObj == nullptr)
         {
             UE_LOG(LogSRPGCombat, Warning, TEXT("스킬 시전 시 비정상적 스킬 선택"));
@@ -236,7 +244,7 @@ void USRPGSkillBuildAction::ChangeDices(int32 RequestedDiceIndex)
         // 이전 주사위 제거
         DicePoolModel->MarkDiceUnselected(RequestedDiceIndex);
     }
-    else if (DicePoolModel->GetSelectedDiceNum() < mSelectedSkill->mDiceCount)
+    else if (DicePoolModel->GetSelectedDiceNum() < mSelectedSkill->mRequiredDiceCount)
     {
         // 새로운 주사위 추가 할당
         DicePoolModel->MarkDiceSelected(RequestedDiceIndex);
@@ -271,8 +279,8 @@ void USRPGSkillBuildAction::SetTargetTile(const FTileIndex& TargetIndex)
     TInstancedStruct<FSRPGCommand> SkillCastCommand;
     SkillCastCommand.InitializeAs<FSRPGSkillCastCommand>();
     SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mSkillIndex = mSelectedSkillIndex;
-    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mEffectTileIndexes = mEffectTileIndexes;
-    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDicePoint = DicePoolModel->GetSelectedDiceSum();
+    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mTargetIndex = mTargetIndex;
+    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDiceSum = DicePoolModel->GetSelectedDiceSum();
 
     TArray<FSRPGTurnEventLog> TurnEventLogs = SimulationSubsystem->SimulateUntilNextAction(MoveTemp(SkillCastCommand));
     
@@ -298,8 +306,8 @@ void USRPGSkillBuildAction::BuildSkill()
     TInstancedStruct<FSRPGCommand> SkillCastCommand;
     SkillCastCommand.InitializeAs<FSRPGSkillCastCommand>();
     SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mSkillIndex = mSelectedSkillIndex;
-    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mEffectTileIndexes = mEffectTileIndexes;
-    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDicePoint = DicePoolModel->GetSelectedDiceSum();
+    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mTargetIndex = mTargetIndex;
+    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDiceSum = DicePoolModel->GetSelectedDiceSum();
 
     CommandRouterModel->SummitCommand(SkillCastCommand);
 }
@@ -347,11 +355,10 @@ void USRPGSkillBuildAction::RefreshAimableTileHighlights()
     UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
     checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
 
-    const float AimRange = mSelectedSkill->mAimDefaultRange + DicePoolModel->GetSelectedDiceSum() * mSelectedSkill->mAimRatioRange;
-    const EAimPattern Pattern = mSelectedSkill->mAimPattern;
-    const bool CanAimObstacle = mSelectedSkill->mCanAimObstacle;
-    const bool IsIndirect = mSelectedSkill->mIsIndirect;
-    mReachableTileIndexes = TileMap->GetAimableTiles(mInstigator->GetTileTransform().mIndex, AimRange, Pattern, CanAimObstacle, IsIndirect);
+    USkillComponentModel* SkillCompModel = mInstigator->GetSkillComponentModel();
+    checkf(SkillCompModel != nullptr, TEXT("스킬 컴포넌트 모델 nullptr"));
+
+    mReachableTileIndexes = SkillCompModel->GetAimableTiles(TileMap, mSelectedSkillIndex, DicePoolModel->GetSelectedDiceSum());
     TileMap->SetTileHighlight(mReachableTileIndexes, ETileHighlightFlag::Aim);
 }
 
@@ -366,10 +373,10 @@ void USRPGSkillBuildAction::RefreshEffectTileHighlights()
     UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
     checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
 
-    const EEffectPattern Pattern = mSelectedSkill->mEffectPattern;
-    const int32 EffectRange = mSelectedSkill->mEffectDefaultArea + DicePoolModel->GetSelectedDiceSum() * mSelectedSkill->mEffectRatioArea;
-    const bool IsInDirect = mSelectedSkill->mIsIndirect;
-    mEffectTileIndexes = TileMap->GetEffectTiles(mInstigator->GetTileTransform().mIndex, mTargetIndex, Pattern, EffectRange, IsInDirect);
+    USkillComponentModel* SkillCompModel = mInstigator->GetSkillComponentModel();
+    checkf(SkillCompModel != nullptr, TEXT("스킬 컴포넌트 모델 nullptr"));
+
+    mEffectTileIndexes = SkillCompModel->GetEffectTiles(TileMap, mSelectedSkillIndex, mTargetIndex, DicePoolModel->GetSelectedDiceSum());
     TileMap->SetTileHighlight(mEffectTileIndexes, ETileHighlightFlag::Effect);
 }
 
@@ -381,7 +388,7 @@ bool USRPGSkillBuildAction::CanSelectTargetTile(const FTileIndex& Index) const
     UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
     checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
 
-    return mReachableTileIndexes.Contains(Index) == true && DicePoolModel->GetSelectedDiceNum() == mSelectedSkill->mDiceCount;
+    return mReachableTileIndexes.Contains(Index) == true && DicePoolModel->GetSelectedDiceNum() == mSelectedSkill->mRequiredDiceCount;
 }
 
 void USRPGSkillBuildAction::SetBuildPhase(ESRPGSkillBuildPhase BuildPhase)

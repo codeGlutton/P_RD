@@ -89,6 +89,7 @@ public:
 	 * @brief 장비 목록(스폰 데이터 등)을 일괄 장착
 	 */
 	void EquipFrom(const TArray<TSoftObjectPtr<UStaticEquipmentData>>& List);
+	void EquipFrom(const TArray<FPrimaryAssetId>& List);
 
 	/**
 	 * @brief 슬롯의 장비를 해제 (설치한 패시브·스탯 제거)

@@ -10,13 +10,16 @@
 
 #include "Actor/TileMap/TileMapModel.h"
 #include "Pawn/UnitModel.h"
+#include "Component/PassiveComponent/PassiveComponentModel.h"
 
 #include "DataAsset/RoomSpawnData/StaticCombatRoomSpawnData.h"
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
 #include "DataAsset/UnitSpawnData/StaticEnemyUnitSpawnData.h"
 #include "DataAsset/ObstacleSpawnData/StaticObstacleSpawnData.h"
 
-#include "AIController/EnemyAIController.h"
+#include "TAS/Passive/TacticalPassive.h"
+#include "TAS/Passive/PassiveActivateContext.h"
+#include "TAS/Passive/DynamicPassiveData.h"
 
 DEFINE_LOG_CATEGORY(LogSRPGCombat)
 
@@ -91,16 +94,27 @@ void USRPGCombatModel::BeginCombat()
 
 	// 전투 시작 시, 보여지는 UI의 애니메이션의 특정 시점 종료 이후 전투 로직이 시작됨
 	auto PresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+		// 전투 시작 패시브 처리
 		for (TObjectPtr<UUnitModel>& Unit : mUnits)
 		{
-			// 현 스텟을 캡처
-			/*FGameplayEventData EventData;
-			EventData.TargetData = UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle(Unit);
-			EventData.Instigator = Unit;
-			EventData.Target = Unit;*/
+			UPassiveComponentModel* PassiveComponentModel = Unit->GetPassiveComponentModel();
+			checkf(PassiveComponentModel != nullptr, TEXT("패시브 컴포넌트 nullptr"));
 
-			// On Start Room 패시브 실행
-			//UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Unit, AbilityTags::GameplayAbility_Passive_OnStartRoom, MoveTemp(EventData));
+			TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartRoom);
+			const int32 PassiveNum = Passives.Num();
+
+			FBoardCombatTargetSnapshotData UnitSnapshot = Unit->MakeSnapshotData();
+
+			FPassiveActivateContext PassiveContext;
+			PassiveContext.mOwner = Unit;
+			PassiveContext.mOwnerSnapshot = &UnitSnapshot;
+
+			for (UTacticalPassive*& Passive : Passives)
+			{
+				TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
+				Passive->ActivatePassive(PassiveContext, OUT DynamicPassiveData);
+				Passive->CommitPassive(DynamicPassiveData);
+			}
 		}
 		// 턴 실행
 		checkf(mCombatPhase == ESRPGCombatRoomPhase::CombatStart, TEXT("전투 진입 절차 오류"));
@@ -115,16 +129,27 @@ void USRPGCombatModel::EndCombat()
 	checkf(mCombatPhase == ESRPGCombatRoomPhase::CombatAbort, TEXT("전투 종료 절차 오류"));
 	mCombatPhase = ESRPGCombatRoomPhase::CombatEnd;
 
+	// 전투 종료 패시브 처리
 	for (TObjectPtr<UUnitModel>& Unit : mUnits)
 	{
-		// 현 스텟을 캡처
-		/*FGameplayEventData EventData;
-		EventData.TargetData = UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle(Unit);
-		EventData.Instigator = Unit;
-		EventData.Target = Unit;*/
+		UPassiveComponentModel* PassiveComponentModel = Unit->GetPassiveComponentModel();
+		checkf(PassiveComponentModel != nullptr, TEXT("패시브 컴포넌트 nullptr"));
 
-		// On End Room 패시브 실행
-		//UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Unit, AbilityTags::GameplayAbility_Passive_OnEndRoom, MoveTemp(EventData));
+		TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndRoom);
+		const int32 PassiveNum = Passives.Num();
+
+		FBoardCombatTargetSnapshotData UnitSnapshot = Unit->MakeSnapshotData();
+
+		FPassiveActivateContext PassiveContext;
+		PassiveContext.mOwner = Unit;
+		PassiveContext.mOwnerSnapshot = &UnitSnapshot;
+
+		for (UTacticalPassive*& Passive : Passives)
+		{
+			TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
+			Passive->ActivatePassive(PassiveContext, OUT DynamicPassiveData);
+			Passive->CommitPassive(DynamicPassiveData);
+		}
 	}
 
 	// 전투 종료 시, 보여지는 UI의 애니메이션의 특정 시점 종료 이후 맵 보상 로직이 시작됨

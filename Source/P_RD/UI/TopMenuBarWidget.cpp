@@ -11,6 +11,7 @@
 #include "UI/FrontendMapWidget.h"
 #include "UI/SettingsPanelWidget.h"
 #include "UI/ViewportZOrderType.h"
+#include "UI/Room/RoomUIModel.h"
 
 namespace
 {
@@ -723,4 +724,38 @@ void UTopMenuBarWidget::SetCombatDiceSkillCount(int32 DiceCount, int32 SkillCoun
 		SkillButtonText->SetText(FText::Format(
 			NSLOCTEXT("TopMenuBarWidget", "SkillButtonCountFormat", "SKILL {0}"), FText::AsNumber(SkillCount)));
 	}
+}
+
+void UTopMenuBarWidget::BindRoomUIModel(URoomUIModel* InRoomUIModel)
+{
+	if (mRoomUIModel == InRoomUIModel)
+	{
+		return;
+	}
+
+	if (mRoomUIModel != nullptr)
+	{
+		mRoomUIModel->OnUIChanged.RemoveDynamic(this, &UTopMenuBarWidget::HandleRoomUIChanged);
+	}
+
+	mRoomUIModel = InRoomUIModel;
+
+	if (mRoomUIModel != nullptr)
+	{
+		mRoomUIModel->OnUIChanged.AddUniqueDynamic(this, &UTopMenuBarWidget::HandleRoomUIChanged);
+		// 구독 전에 이미 채워졌을 수 있는 현재 값도 즉시 반영한다.
+		HandleRoomUIChanged();
+	}
+}
+
+void UTopMenuBarWidget::HandleRoomUIChanged()
+{
+	if (mRoomUIModel == nullptr)
+	{
+		return;
+	}
+
+	// 방 공통 요약(레벨/HP/골드)을 모델에서 다시 읽어 상단바 요약 텍스트에 반영한다.
+	const FRoomPlayerSummaryUI& Summary = mRoomUIModel->GetPlayerSummary();
+	SetCombatPlayerSummary(Summary.mLevel, Summary.mHP, Summary.mMaxHP, Summary.mGold);
 }

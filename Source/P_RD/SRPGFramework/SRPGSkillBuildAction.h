@@ -10,7 +10,6 @@
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGAction.h"
 #include "SRPGFramework/SRPGCommand.h"
-#include "FunctionLibrary/CombatCalculator/CombatResult.h"
 #include "SRPGSkillBuildAction.generated.h"
 
 class USRPGSkillBuildAction;
@@ -19,7 +18,6 @@ class UTileMapModel;
 class UDiceModel;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangeSkillBuildPhase, const USRPGSkillBuildAction* /*Action*/, ESRPGSkillBuildPhase /*Phase*/);
-
 
 USTRUCT(BlueprintType)
 struct FSRPGSkillSelectCommand : public FSRPGCommand

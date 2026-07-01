@@ -33,7 +33,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FPassiveComponentModelTests::RunTest(const FString& Parameters)
 {
-	const FGameplayTag StartTiming = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartAttacking.Add"));
+	const FGameplayTag StartTiming = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartAttacking"));
 	const FGameplayTag EndTiming = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndAttacking"));
 	const FGameplayTag UnusedTiming = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartTurn"));
 
@@ -52,11 +52,9 @@ bool FPassiveComponentModelTests::RunTest(const FString& Parameters)
 	}
 
 	// 서로 다른 발동 시점 설정 (friend로 protected 접근)
-	// 생성자 기본 태그를 비우고 테스트용 시점만 지정 (결정적 버킷 검증)
-	AddPassive->mTimingTags.Reset();
-	AddPassive->mTimingTags.AddTag(StartTiming);
-	NthPassive->mTimingTags.Reset();
-	NthPassive->mTimingTags.AddTag(EndTiming);
+	// 단일 태그라 기본값은 비어있음 → 테스트용 시점만 지정 (결정적 버킷 검증)
+	AddPassive->mActivateTimingTag = StartTiming;
+	NthPassive->mActivateTimingTag = EndTiming;
 
 	// 보유 수 확인
 	TestEqual(TEXT("보유 패시브 2개"), Component->GetPassives().Num(), 2);

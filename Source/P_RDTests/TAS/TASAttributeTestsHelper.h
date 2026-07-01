@@ -198,6 +198,6 @@ public:
 		mStackingType = ETacticalEffectStackingType::None;
 
 		// 모디파이어가 아닌 부여 태그만 설정: 이펙트 적용 시 대상에 붙는 태그 검증용
-		mCachedGrantedTags.AddTag(AbilityTags::GameplayAbility_Passive_OnEndAttacking);
+		mCachedGrantedTags.AddTag(AbilityTags::GameplayAbility_Passive_OnEndApplyingEffect);
 	}
 };

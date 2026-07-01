@@ -21,9 +21,7 @@ class UCombatUIAdapter;
 DECLARE_LOG_CATEGORY_EXTERN(LogCombatGameMode, Log, All)
 
 DECLARE_MULTICAST_DELEGATE(FOnRefreshAllUI);
-
 DECLARE_MULTICAST_DELEGATE(FOnRefreshUnitUI);
-
 DECLARE_MULTICAST_DELEGATE(FOnRefreshDiceUI);
 
 DECLARE_MULTICAST_DELEGATE(FOnRefreshSelectedDiceUI);
@@ -82,7 +80,7 @@ public:
 	 * @param SkillIndex 원하는 스킬 대상
 	 * @return 스킬 런타임 정보
 	 */
-	// FSkillEntry* GetSkillDetail(int32 SkillIndex);
+	// const FSkillEntry* GetSkillDetail(int32 SkillIndex);
 
 	/**
 	 * @brief 장비 디테일 정보를 가져온다.
