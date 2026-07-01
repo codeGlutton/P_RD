@@ -297,7 +297,7 @@ private:
 	void BeginWorldPress();
 
 	/** @brief 월드 영역 누름을 해제해 탭/롱프레스 결과를 확정한다. */
-	FReply EndWorldPress(bool releaseMouseCapture);
+	FReply EndWorldPress(bool bReleaseMouseCapture);
 
 	/** @brief 월드 영역 누름 시간을 누적해 롱프레스 명령을 전투 계층에 전달한다. */
 	void UpdateWorldPress(float InDeltaTime);

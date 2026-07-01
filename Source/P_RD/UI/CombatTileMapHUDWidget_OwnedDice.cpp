@@ -200,7 +200,7 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 		const FDiceViewData& DiceView = mDiceUIs[DiceIndex];
 
 		// '굴림 완료' 모양 표시 여부 = 권위(게임플레이가 굴렸다) AND 연출 게이트(드러내기 단계 도달).
-		const bool showRolled = DiceView.mIsRolled && mIntroDiceCardsRevealed;
+		const bool bShowRolled = DiceView.mIsRolled && mIntroDiceCardsRevealed;
 
 		// 종류 라벨 갱신: 2면은 "동전", 그 외는 "d{면수}"(d4/d6/.../d20).
 		if (mOwnedDiceTypeTexts.IsValidIndex(DiceIndex))
@@ -222,8 +222,8 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 			0.58f
 		);
 
-		FLinearColor DiceColor = showRolled ? RarityColor : PendingColor;
-		float DiceScale = showRolled ? 0.80f : 0.72f;
+		FLinearColor DiceColor = bShowRolled ? RarityColor : PendingColor;
+		float DiceScale = bShowRolled ? 0.80f : 0.72f;
 		if (DiceIndex == mSelectedDiceIndex)
 		{
 			DiceColor = FLinearColor(1.0f, 0.82f, 0.30f, 1.0f);
@@ -262,7 +262,7 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 				OwnedDicePreviewActor->SetDiceColor(DiceColor);
 				OwnedDicePreviewActor->SetActorScale3D(FVector(DiceScale));
 				OwnedDicePreviewActor->SetBackdropVisible(false);
-				if (showRolled == true)
+				if (bShowRolled == true)
 				{
 					OwnedDicePreviewActor->SettleToFace(GetDiceSettledFaceOrdinal(DiceView));
 				}

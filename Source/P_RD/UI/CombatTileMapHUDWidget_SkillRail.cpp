@@ -92,20 +92,20 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 {
 	for (int32 SkillIndex = 0; SkillIndex < mSkillRailPanels.Num(); ++SkillIndex)
 	{
-		const bool available = IsSkillSlotAvailable(SkillIndex);
-		const bool selected = available && SkillIndex == mSelectedSkillIndex;
+		const bool bAvailable = IsSkillSlotAvailable(SkillIndex);
+		const bool bSelected = bAvailable && SkillIndex == mSelectedSkillIndex;
 		if (UBorder* SkillRailPanel = mSkillRailPanels[SkillIndex])
 		{
 			if (IsDesignerSkinActive())
 			{
 				// 스킨 모드: 비선택은 아이콘만 보이고, 선택 슬롯은 아트 위에 확실히 보이는 금색 틴트를 얹는다.
-				SkillRailPanel->SetBrushColor(selected ? FLinearColor(1.0f, 0.84f, 0.18f, 0.68f) : FLinearColor(0.0f, 0.0f, 0.0f, 0.0f));
+				SkillRailPanel->SetBrushColor(bSelected ? FLinearColor(1.0f, 0.84f, 0.18f, 0.68f) : FLinearColor(0.0f, 0.0f, 0.0f, 0.0f));
 			}
 			else
 			{
-				SkillRailPanel->SetBrushColor(available ? GetCombatSkillRailBrushColor(selected) : FLinearColor(0.04f, 0.06f, 0.07f, 0.45f));
+				SkillRailPanel->SetBrushColor(bAvailable ? GetCombatSkillRailBrushColor(bSelected) : FLinearColor(0.04f, 0.06f, 0.07f, 0.45f));
 			}
-			SkillRailPanel->SetRenderScale(available ? GetCombatSkillRailScale(selected) : FVector2D(1.0f, 1.0f));
+			SkillRailPanel->SetRenderScale(bAvailable ? GetCombatSkillRailScale(bSelected) : FVector2D(1.0f, 1.0f));
 		}
 
 		if (mSkillRailTexts.IsValidIndex(SkillIndex))
@@ -116,7 +116,7 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 				{
 					SkillRailText->SetText(ResolveSkillRailLabel(mCombatUIModel, SkillIndex));
 				}
-				SkillRailText->SetColorAndOpacity(FSlateColor(available ? GetCombatSkillRailTextColor(selected) : FLinearColor(0.48f, 0.55f, 0.55f, 0.70f)));
+				SkillRailText->SetColorAndOpacity(FSlateColor(bAvailable ? GetCombatSkillRailTextColor(bSelected) : FLinearColor(0.48f, 0.55f, 0.55f, 0.70f)));
 			}
 		}
 
@@ -124,7 +124,7 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 		{
 			if (UIndexedButtonWidget* SkillInputButton = mSkillInputButtons[SkillIndex])
 			{
-				SkillInputButton->SetIsEnabled(available);
+				SkillInputButton->SetIsEnabled(bAvailable);
 			}
 		}
 	}

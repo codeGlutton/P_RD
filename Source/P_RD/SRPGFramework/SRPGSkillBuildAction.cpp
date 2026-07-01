@@ -366,9 +366,9 @@ void USRPGSkillBuildAction::RefreshAimableTileHighlights()
 
     const float AimRange = mSelectedSkill->mAimRangeDefaultValue + DicePoolModel->GetSelectedDiceSum() * mSelectedSkill->mAimRangeRatio;
     const EAimPattern Pattern = mSelectedSkill->mAimPattern;
-    const bool CanAimObstacle = mSelectedSkill->mCanAimBoardActor;
-    const bool IsIndirect = mSelectedSkill->mIsIndirect;
-    mReachableTileIndexes = TileMap->GetAimableTiles(mInstigator->GetTileTransform().mIndex, AimRange, Pattern, CanAimObstacle, IsIndirect);
+    const bool bCanAimObstacle = mSelectedSkill->mCanAimBoardActor;
+    const bool bIsIndirect = mSelectedSkill->mIsIndirect;
+    mReachableTileIndexes = TileMap->GetAimableTiles(mInstigator->GetTileTransform().mIndex, AimRange, Pattern, bCanAimObstacle, bIsIndirect);
     TileMap->SetTileHighlight(mReachableTileIndexes, ETileHighlightFlag::Aim);
 }
 
