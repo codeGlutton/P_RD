@@ -10,7 +10,13 @@
 
 #include "CombatUIModel.generated.h"
 
+class IBoardSelectionTarget;
+class USRPGTurnContext;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatQueueNodeResolved, FCombatQueueNode, Node);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnCombatUIModelChanged, ECombatUIDomain /*Domain*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnDiceRollPresentationRequested, const USRPGTurnContext* /*TurnContext*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnTargetDetailPanelRequested, IBoardSelectionTarget* /*Target*/);
 
 /** @brief 전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다. */
 UCLASS(BlueprintType)
@@ -23,6 +29,15 @@ public:
 	/** @brief 큐 노드 하나가 처리(재생)됐음을 알림. 위젯은 머리 위 숫자 등을 띄우고 한 칸 비운다. */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
 	FOnCombatQueueNodeResolved OnQueueNodeResolved;
+
+	/** @brief Set*()으로 표시 스냅샷이 바뀔 때 C++ HUD가 구독하는 알림. */
+	FOnCombatUIModelChanged OnCombatUIChanged;
+
+	/** @brief 턴 시작 주사위 굴림판 표시 요청. */
+	FOnDiceRollPresentationRequested OnDiceRollPresentationRequested;
+
+	/** @brief 월드 타겟 상세 패널 표시 요청. */
+	FOnTargetDetailPanelRequested OnTargetDetailPanelRequested;
 
 	/* ───────── gameplay → UI : 표시값을 밀어넣는다 ─────────
 	   각 Set*()은 UI가 그리려면 게임플레이가 반드시 공급해야 하는 값이다(UI는 못 만듦).
@@ -40,6 +55,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetSkillUIs(const TArray<FSkillUI>& Skills);
 	/** @brief 턴유닛/라운드/페이즈/턴순서. mPhase=ECombatBuildPhaseUI(UI 전용). [합의필요] AimSelection/Preview만 ESRPGSkillBuildPhase와 매핑(모호재), SkillSelected/DiceSelect는 UI 표시 계층 파생. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetTurnUI(const FTurnUI& Turn);
+	/** @brief 스킬 빌드 phase를 UI 친화적인 phase 스냅샷으로 저장한다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetSkillBuildPhase(ECombatBuildPhaseUI Phase);
+	/** @brief MOVE 빌드 phase를 UI 친화적인 phase 스냅샷으로 저장한다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetMoveBuildPhase(ECombatBuildPhaseUI Phase);
 	/** @brief 장비 슬롯(아이콘/이름/장착/희귀도). [합의필요] 장비 데이터 소스 미정, 현재 임시. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetEquipmentUIs(const TArray<FEquipmentUI>& Equipment);
 	/** @brief 상단 메타(Gold/Lv/Exp). [합의필요] 진짜소스=UUnitData/URunPersistData. */
@@ -51,6 +70,15 @@ public:
 	/** @brief 큐 맨 앞 노드 하나를 처리 완료로 비우고 OnQueueNodeResolved를 쏜다(애니 한 단위 끝날 때 호출). */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void ResolveFrontQueueNode();
 
+	/** @brief 주사위 굴림판을 열어야 하는 순간 이벤트를 HUD에 알린다. */
+	void NotifyDiceRollPresentationRequested(const USRPGTurnContext* TurnContext);
+
+	/** @brief 월드 타겟 상세 패널을 열어야 하는 순간 이벤트를 HUD에 알린다. */
+	void NotifyTargetDetailPanelRequested(IBoardSelectionTarget* Target);
+
+	/** @brief 선택 스킬 강조처럼 HUD 로컬 상태를 다시 그려야 하는 순간을 알린다. */
+	void NotifySelectedSkillChanged();
+
 	/* ───────── 위젯이 읽는다 ───────── */
 public:
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FUnitUI>& GetUnitUIs() const { return mUnitUIs; }
@@ -61,6 +89,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FSkillUI>& GetSkillUIs() const { return mSkillUIs; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FCombatQueueNode>& GetActionQueue() const { return mActionQueue; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FTurnUI& GetTurnUI() const { return mTurnUI; }
+	UFUNCTION(BlueprintPure, Category = "Combat|Read") ECombatBuildPhaseUI GetSkillBuildPhase() const { return mSkillBuildPhase; }
+	UFUNCTION(BlueprintPure, Category = "Combat|Read") ECombatBuildPhaseUI GetMoveBuildPhase() const { return mMoveBuildPhase; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FEquipmentUI>& GetEquipmentUIs() const { return mEquipmentUIs; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FPlayerMetaUI& GetPlayerMeta() const { return mPlayerMeta; }
 
@@ -81,6 +111,10 @@ private:
 	UPROPERTY(Transient) TArray<FCombatQueueNode> mActionQueue;
 	/** @brief 현재 턴/라운드/페이즈 표시 스냅샷. */
 	UPROPERTY(Transient) FTurnUI mTurnUI;
+	/** @brief 현재 스킬 빌드 표시 phase. */
+	UPROPERTY(Transient) ECombatBuildPhaseUI mSkillBuildPhase = ECombatBuildPhaseUI::None;
+	/** @brief 현재 MOVE 빌드 표시 phase. */
+	UPROPERTY(Transient) ECombatBuildPhaseUI mMoveBuildPhase = ECombatBuildPhaseUI::None;
 	/** @brief 장비 슬롯 표시 스냅샷. */
 	UPROPERTY(Transient) TArray<FEquipmentUI> mEquipmentUIs;
 	/** @brief 플레이어 메타 표시 스냅샷. */

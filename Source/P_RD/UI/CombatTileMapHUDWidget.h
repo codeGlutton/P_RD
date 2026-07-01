@@ -226,17 +226,18 @@ private:
 	UFUNCTION()
 	void HandleCombatQueueNodeResolved(FCombatQueueNode Node);
 
-	/** @brief CombatGameMode 갱신 대리자를 생명주기에 맞춰 구독/해제한다. */
-	void BindCombatGameModeDelegates();
-	void UnbindCombatGameModeDelegates();
+	/** @brief UIModel 갱신 대리자를 생명주기에 맞춰 구독/해제한다. */
+	void BindCombatUIModelDelegates();
+	void UnbindCombatUIModelDelegates();
 
+	void HandleCombatUIModelChanged(ECombatUIDomain Domain);
 	void HandleRefreshAllUI();
 	void HandleRefreshUnitUI();
 	void HandleRefreshDiceUI();
 	void HandleRefreshSelectedDiceUI();
 	void HandleRefreshSelectedSkillUI();
-	void HandleRefreshSkillBuildPhase(ESRPGSkillBuildPhase Phase);
-	void HandleRefreshMoveBuildPhase(ESRPGMoveBuildPhase Phase);
+	void HandleRefreshSkillBuildPhase();
+	void HandleRefreshMoveBuildPhase();
 	void HandleShowTargetDetailPanel(IBoardSelectionTarget* Target);
 
 	/** @brief 스킬 롱프레스 상세 패널을 표시/닫는다. */

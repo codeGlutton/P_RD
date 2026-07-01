@@ -1,8 +1,8 @@
 #pragma once
 
 /** @brief 전투 위젯들이 상속하는 베이스입니다. 뷰모델 하나에 묶여 표시와 입력 전달만 담당합니다. */
-// WBP는 BindUIModel()로 공용 UCombatUIModel에 연결하고, 갱신 타이밍은 CombatGameMode 대리자에서 받는다.
-// 탭/터치는 UIModel의 Request*()를 호출해 의도만 보낸다. 위젯은 게임플레이 상태나 RNG를 직접 소유하지 않는다.
+// WBP는 BindUIModel()로 공용 UCombatUIModel에 연결하고, 갱신 타이밍도 UIModel 변경 알림에서 받는다.
+// 탭/터치는 GameMode public 입력 함수로 의도만 보낸다. 위젯은 게임플레이 상태나 RNG를 직접 소유하지 않는다.
 
 #include "RDMinimal.h"
 #include "UI/RDUserWidget.h"
@@ -40,6 +40,9 @@ protected:
 	virtual void NativeDestruct() override;
 
 private:
+	/** @brief UIModel 변경 알림을 WBP의 도메인별 갱신 이벤트로 넘긴다. */
+	void HandleUIModelChanged(ECombatUIDomain Domain);
+
 	/** @brief Queue resolved 이벤트를 WBP의 큐 노드 재생 이벤트로 변환한다. */
 	UFUNCTION() void HandleQueueNodeResolved(FCombatQueueNode Node);
 

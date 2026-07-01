@@ -8,54 +8,85 @@
 #include "Components/TextBlock.h"
 #include "GameMode/CombatGameMode.h"
 #include "UI/Combat/CombatUIModel.h"
-#include "UI/Combat/CombatUIProjection.h"
 #include "UI/UIRuntimeLayout.h"
 
-void UCombatTileMapHUDWidget::BindCombatGameModeDelegates()
+void UCombatTileMapHUDWidget::BindCombatUIModelDelegates()
 {
-	ACombatGameMode* CombatGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ACombatGameMode>() : nullptr;
-	if (CombatGameMode == nullptr)
+	if (mCombatUIModel == nullptr)
 	{
 		return;
 	}
 
-	UnbindCombatGameModeDelegates();
+	UnbindCombatUIModelDelegates();
 
 	/*
 	 * Combat HUD 구독 범위.
 	 *
-	 * HUD는 전투 조작/전투 보드 표시만 구독한다.
-	 * 장비 슬롯은 TopMenuBar 소유라서 전투 HUD API에서는 구독하지 않는다.
-	 * 신호를 받으면 payload를 신뢰하는 방식이 아니라 UCombatUIModel을 다시 읽어 필요한 영역만 redraw한다.
+	 * GameMode가 UCombatUIModel에 UI 친화적 스냅샷을 Set하면,
+	 * UIModel이 변경 도메인을 알리고 HUD는 UIModel을 다시 읽어 자기 영역만 redraw한다.
 	 */
-	CombatGameMode->OnRefreshAllUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshAllUI);
-	CombatGameMode->OnRefreshUnitUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshUnitUI);
-	CombatGameMode->OnRefreshDiceUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshDiceUI);
-	CombatGameMode->OnRefreshSelectedDiceUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshSelectedDiceUI);
-	CombatGameMode->OnRefreshSelectedSkillUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshSelectedSkillUI);
-	CombatGameMode->OnRefreshSkillBuildPhase.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshSkillBuildPhase);
-	CombatGameMode->OnRefreshMoveBuildPhase.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshMoveBuildPhase);
-	CombatGameMode->OnShowDicePanelAnyTurnUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleShowDicePanelAnyTurn);
-	CombatGameMode->OnShowTargetDetailPanelUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleShowTargetDetailPanel);
+	mCombatUIModel->OnCombatUIChanged.AddUObject(this, &UCombatTileMapHUDWidget::HandleCombatUIModelChanged);
+	mCombatUIModel->OnDiceRollPresentationRequested.AddUObject(this, &UCombatTileMapHUDWidget::HandleShowDicePanelAnyTurn);
+	mCombatUIModel->OnTargetDetailPanelRequested.AddUObject(this, &UCombatTileMapHUDWidget::HandleShowTargetDetailPanel);
+	mCombatUIModel->OnQueueNodeResolved.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
 }
 
-void UCombatTileMapHUDWidget::UnbindCombatGameModeDelegates()
+void UCombatTileMapHUDWidget::UnbindCombatUIModelDelegates()
 {
-	ACombatGameMode* CombatGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ACombatGameMode>() : nullptr;
-	if (CombatGameMode == nullptr)
+	if (mCombatUIModel == nullptr)
 	{
 		return;
 	}
 
-	CombatGameMode->OnRefreshAllUI.RemoveAll(this);
-	CombatGameMode->OnRefreshUnitUI.RemoveAll(this);
-	CombatGameMode->OnRefreshDiceUI.RemoveAll(this);
-	CombatGameMode->OnRefreshSelectedDiceUI.RemoveAll(this);
-	CombatGameMode->OnRefreshSelectedSkillUI.RemoveAll(this);
-	CombatGameMode->OnRefreshSkillBuildPhase.RemoveAll(this);
-	CombatGameMode->OnRefreshMoveBuildPhase.RemoveAll(this);
-	CombatGameMode->OnShowDicePanelAnyTurnUI.RemoveAll(this);
-	CombatGameMode->OnShowTargetDetailPanelUI.RemoveAll(this);
+	mCombatUIModel->OnCombatUIChanged.RemoveAll(this);
+	mCombatUIModel->OnDiceRollPresentationRequested.RemoveAll(this);
+	mCombatUIModel->OnTargetDetailPanelRequested.RemoveAll(this);
+	mCombatUIModel->OnQueueNodeResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
+}
+
+void UCombatTileMapHUDWidget::HandleCombatUIModelChanged(ECombatUIDomain Domain)
+{
+	switch (Domain)
+	{
+	case ECombatUIDomain::All:
+		HandleRefreshAllUI();
+		break;
+	case ECombatUIDomain::Unit:
+		HandleRefreshUnitUI();
+		break;
+	case ECombatUIDomain::Dice:
+		HandleRefreshDiceUI();
+		break;
+	case ECombatUIDomain::SelectedDice:
+		HandleRefreshSelectedDiceUI();
+		break;
+	case ECombatUIDomain::Skill:
+		RebuildSkillRailWidgets();
+		RefreshSkillRailWidgets();
+		RefreshCombatStatusBar();
+		break;
+	case ECombatUIDomain::SelectedSkill:
+		HandleRefreshSelectedSkillUI();
+		break;
+	case ECombatUIDomain::SkillBuildPhase:
+		HandleRefreshSkillBuildPhase();
+		break;
+	case ECombatUIDomain::MoveBuildPhase:
+		HandleRefreshMoveBuildPhase();
+		break;
+	case ECombatUIDomain::Turn:
+		RefreshCombatStatusBar();
+		RebuildTurnOrderBar();
+		RefreshMoveButton();
+		break;
+	case ECombatUIDomain::Meta:
+		RefreshCombatStatusBar();
+		break;
+	case ECombatUIDomain::Queue:
+	case ECombatUIDomain::Equipment:
+	default:
+		break;
+	}
 }
 
 void UCombatTileMapHUDWidget::HandleRefreshAllUI()
@@ -99,9 +130,9 @@ void UCombatTileMapHUDWidget::HandleRefreshSelectedSkillUI()
 	RefreshDiceAssignmentText();
 }
 
-void UCombatTileMapHUDWidget::HandleRefreshSkillBuildPhase(ESRPGSkillBuildPhase Phase)
+void UCombatTileMapHUDWidget::HandleRefreshSkillBuildPhase()
 {
-	const ECombatBuildPhaseUI UIPhase = CombatUIProjection::ToCombatBuildPhaseUI(Phase);
+	const ECombatBuildPhaseUI UIPhase = mCombatUIModel != nullptr ? mCombatUIModel->GetSkillBuildPhase() : ECombatBuildPhaseUI::None;
 	if (UIPhase == ECombatBuildPhaseUI::None)
 	{
 		HandleCombatActionResolved();
@@ -113,10 +144,10 @@ void UCombatTileMapHUDWidget::HandleRefreshSkillBuildPhase(ESRPGSkillBuildPhase 
 	RefreshDiceAssignmentText();
 }
 
-void UCombatTileMapHUDWidget::HandleRefreshMoveBuildPhase(ESRPGMoveBuildPhase Phase)
+void UCombatTileMapHUDWidget::HandleRefreshMoveBuildPhase()
 {
 	// MOVE는 스킬과 독립된 행동이다. phase에 따라 MOVE/CANCEL 표시만 바꾼다.
-	mMoveBuildPhase = CombatUIProjection::ToCombatBuildPhaseUI(Phase);
+	mMoveBuildPhase = mCombatUIModel != nullptr ? mCombatUIModel->GetMoveBuildPhase() : ECombatBuildPhaseUI::None;
 	RefreshMoveButton();
 
 	if (mMoveBuildPhase == ECombatBuildPhaseUI::None)

@@ -21,7 +21,11 @@ enum class ECombatUIDomain : uint8
 {
 	All,
 	Dice,
+	SelectedDice,
 	Skill,
+	SelectedSkill,
+	SkillBuildPhase,
+	MoveBuildPhase,
 	Unit,
 	Turn,
 	Queue,

@@ -10,7 +10,6 @@
 #include "GameMode/RoomGameModeBase.h"
 #include "DataAsset/EquipmentData/EquipmentType.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
-#include "SRPGFramework/SRPGCommand.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "UI/Combat/CombatUITypes.h"
 #include "CombatGameMode.generated.h"
@@ -18,11 +17,8 @@
 struct FEquippedEntry;
 struct FSkillEntry;
 struct FPresentationBarrier;
-class IBoardSelectionTarget;
 class UCombatUIModel;
 class UUnitModel;
-
-class USRPGSkillBuildAction;
 
 // RD Game Mode 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogCombatGameMode, Log, All)
@@ -34,17 +30,15 @@ DECLARE_LOG_CATEGORY_EXTERN(LogCombatGameMode, Log, All)
  * #217은 이 파일처럼 "UI가 필요해서 작성했지만 GameMode/게임플레이 소유에 가까운 코드"를
  * PM이 검토하거나 가져갈 수 있게 떼어 둔 참고용 PR이다.
  *
- * 이 파일의 public UI 함수와 OnRefresh* 대리자는 위젯이 직접 만지는 경계면이다.
- * 반면 함수 본문에서 커맨드를 만들고, 전투 모델 이벤트를 받아 Push*UI를 호출하는 오케스트레이션은
- * UI 위젯 책임이 아니라 GameMode/게임플레이 책임에 가깝다.
+ * 이 파일의 public UI 함수는 위젯이 직접 호출하는 입력 경계면이다.
+ * 표시 갱신은 GameMode가 HUD에 직접 Broadcast하지 않고 UCombatUIModel::Set*()으로 저장한다.
+ * UIModel이 "어느 도메인이 바뀌었는지" 알리고, HUD는 UIModel을 다시 읽어 자기 화면을 그린다.
+ *
+ * 즉 현재 책임은 아래처럼 나뉜다.
+ * - GameMode/Projection: 게임플레이 데이터를 UI 친화적 DTO로 정제해서 UIModel에 저장
+ * - UCombatUIModel: DTO 저장 + 변경 알림
+ * - HUD/WBP: UIModel을 읽어 표시
  */
-DECLARE_MULTICAST_DELEGATE(FOnRefreshAllUI);
-DECLARE_MULTICAST_DELEGATE(FOnRefreshUnitUI);
-DECLARE_MULTICAST_DELEGATE(FOnRefreshDiceUI);
-DECLARE_MULTICAST_DELEGATE(FOnRefreshSelectedDiceUI);
-DECLARE_MULTICAST_DELEGATE(FOnRefreshSelectedSkillUI);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnRefreshSkillBuildPhase, ESRPGSkillBuildPhase /*Phase*/);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnRefreshMoveBuildPhase, ESRPGMoveBuildPhase /*Phase*/);
 
 /**
  * @brief  전투 방에 대한 GameMode
@@ -133,35 +127,13 @@ public:
 	FOnBeginAnyTurnActionUI OnBeginAnyTurnActionUI;
 	FOnEndAnyTurnActionUI OnEndAnyTurnActionUI;
 
-public:
-	/*
-	 * 표시 갱신 대리자.
-	 *
-	 * 규칙:
-	 * 1. Push*UI()가 UCombatUIModel에 DTO를 저장한다.
-	 * 2. 해당 OnRefresh*UI를 Broadcast한다.
-	 * 3. HUD/TopBar는 신호를 받으면 UCombatUIModel을 다시 읽어 자기 영역만 다시 그린다.
-	 *
-	 * 즉 이 대리자들은 새 데이터를 직접 실어 나르는 채널이 아니라
-	 * "어느 영역을 다시 읽고 그릴지" 알려주는 신호선이다.
-	 */
-	FOnRefreshAllUI OnRefreshAllUI;
-	FOnRefreshUnitUI OnRefreshUnitUI;
-	FOnRefreshDiceUI OnRefreshDiceUI;
-	FOnRefreshSelectedDiceUI OnRefreshSelectedDiceUI;
-	FOnRefreshSelectedSkillUI OnRefreshSelectedSkillUI;
-	FOnRefreshSkillBuildPhase OnRefreshSkillBuildPhase;
-	FOnRefreshMoveBuildPhase OnRefreshMoveBuildPhase;
-	FOnShowDicePanelAnyTurnUI OnShowDicePanelAnyTurnUI;
-	FOnShowTargetDetailPanelUI OnShowTargetDetailPanelUI;
-
 protected:
 	/*
 	 * 게임플레이 이벤트 -> UI DTO push 경계.
 	 *
 	 * 아래 함수들은 위젯 코드가 아니다.
-	 * 전투 모델/플레이어 모델/컴포넌트를 읽어 표시 DTO를 만들고 UCombatUIModel에 저장한 뒤,
-	 * 도메인별 OnRefresh*UI를 쏘는 GameMode 쪽 배선이다.
+	 * 전투 모델/플레이어 모델/컴포넌트를 읽어 표시 DTO를 만들고 UCombatUIModel에 저장한다.
+	 * 변경 알림은 UIModel Set*() 내부에서 발행하므로 GameMode는 HUD redraw 대리자를 직접 소유하지 않는다.
 	 *
 	 * 그래서 #216 기능에는 필요하지만, 최종 소유/리뷰는 #217에서 PM이 확인하기 쉽게 분리했다.
 	 */

@@ -41,19 +41,15 @@ void UCombatTileMapHUDWidget::BindCombatUIModel(UCombatUIModel* InUIModel)
 	}
 
 	// 이전 뷰모델 구독 해제 후 교체.
-	if (mCombatUIModel != nullptr)
-	{
-		mCombatUIModel->OnQueueNodeResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
-	}
+	UnbindCombatUIModelDelegates();
 
 	mCombatUIModel = InUIModel;
 
 	if (mCombatUIModel != nullptr)
 	{
-		// 행동 큐 노드가 한 단위 해소될 때마다 전투 피드를 갱신한다.
-		mCombatUIModel->OnQueueNodeResolved.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
+		BindCombatUIModelDelegates();
 		// 이미 공급된 현재 값을 즉시 반영(구독 전 발생분 보강).
-		RefreshCombatStatusBar();
+		HandleRefreshAllUI();
 	}
 }
 

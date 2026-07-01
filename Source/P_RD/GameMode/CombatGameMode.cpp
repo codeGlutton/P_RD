@@ -19,6 +19,7 @@
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Combat/CombatUIProjection.h"
 
+#include "SRPGFramework/SRPGCommand.h"
 #include "SRPGFramework/SRPGSkillBuildAction.h"
 #include "SRPGFramework/SRPGMoveBuildAction.h"
 #include "SRPGFramework/SRPGDiceRollAction.h"
@@ -46,7 +47,8 @@ DEFINE_LOG_CATEGORY(LogCombatGameMode);
  * - #217: 이 파일의 커맨드 발행, 이벤트 바인딩, Push*UI 오케스트레이션을 PM이 검토/이관할 수 있게 떼어 둔 참고 PR.
  *
  * 게임플레이 모델/enum -> 표시 DTO 변환 본문은 UI/Combat/CombatUIProjection.{h,cpp}로 분리했다.
- * GameMode에는 "언제 Push할지"만 남기고, "어떻게 DTO로 바꿀지"는 무상태 Projection 함수로 보낸 구조다.
+ * GameMode에는 "언제 UIModel에 저장할지"만 남기고, "어떻게 DTO로 바꿀지"는 무상태 Projection 함수로 보낸 구조다.
+ * 저장 이후의 redraw 알림은 UCombatUIModel::Set*()이 담당한다.
  */
 
 void ACombatGameMode::InitializeRoom()
@@ -96,7 +98,10 @@ void ACombatGameMode::InitializeRoom()
 	CombatModel->OnShowDicePanelAnyTurnUI.AddWeakLambda(this, [this](const USRPGTurnContext* TurnContext) {
 		// 턴 시작 주사위 패널은 UI 내부에서 열지만, 열기 직전 전체 스냅샷은 GameMode가 최신화한다.
 		PushAllCombatUI();
-		OnShowDicePanelAnyTurnUI.Broadcast(TurnContext);
+		if (UCombatUIModel* CombatUIModel = GetCombatUIModel())
+		{
+			CombatUIModel->NotifyDiceRollPresentationRequested(TurnContext);
+		}
 		});
 
 	for (TObjectPtr<UUnitModel>& Unit : CombatModel->GetUnits())
@@ -159,13 +164,19 @@ bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 	SkillSelectCommand.InitializeAs<FSRPGSkillSelectCommand>();
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().mSkillIndex = SkillIndex;
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnChangeSkillBuildPhase.AddWeakLambda(this, [this](const USRPGSkillBuildAction* Action, ESRPGSkillBuildPhase Phase) {
-		OnRefreshSkillBuildPhase.Broadcast(Phase);
+		if (UCombatUIModel* CombatUIModel = GetCombatUIModel())
+		{
+			CombatUIModel->SetSkillBuildPhase(CombatUIProjection::ToCombatBuildPhaseUI(Phase));
+		}
 		});
 
 	const bool bHandled = CommandRouterModel->SummitCommand(SkillSelectCommand);
 	if (bHandled == true)
 	{
-		OnRefreshSelectedSkillUI.Broadcast();
+		if (UCombatUIModel* CombatUIModel = GetCombatUIModel())
+		{
+			CombatUIModel->NotifySelectedSkillChanged();
+		}
 	}
 	return bHandled;
 }
@@ -201,7 +212,10 @@ bool ACombatGameMode::SelectMove()
 	TInstancedStruct<FSRPGCommand> MoveSelectCommand;
 	MoveSelectCommand.InitializeAs<FSRPGMoveSelectCommand>();
 	MoveSelectCommand.GetMutable<FSRPGMoveSelectCommand>().OnChangeMoveBuildPhase.AddWeakLambda(this, [this](const USRPGMoveBuildAction* Action, ESRPGMoveBuildPhase Phase) {
-		OnRefreshMoveBuildPhase.Broadcast(Phase);
+		if (UCombatUIModel* CombatUIModel = GetCombatUIModel())
+		{
+			CombatUIModel->SetMoveBuildPhase(CombatUIProjection::ToCombatBuildPhaseUI(Phase));
+		}
 		});
 
 	return CommandRouterModel->SummitCommand(MoveSelectCommand);
@@ -241,7 +255,10 @@ bool ACombatGameMode::ResolveWorldLongPressEvent()
 	WorldTraceActionCommand.InitializeAs<FSRPGWorldTraceCommand>();
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mIsLongPress = true;
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().OnShowTargetDetailPanelUI.AddWeakLambda(this, [this](IBoardSelectionTarget* Target) {
-		OnShowTargetDetailPanelUI.Broadcast(Target);
+		if (UCombatUIModel* CombatUIModel = GetCombatUIModel())
+		{
+			CombatUIModel->NotifyTargetDetailPanelRequested(Target);
+		}
 		});
 
 	return CommandRouterModel->SummitCommand(WorldTraceActionCommand);
@@ -290,8 +307,8 @@ void ACombatGameMode::PushAllCombatUI()
 {
 	/*
 	 * 초기/전체 갱신 스냅샷.
-	 * Push*UI는 모델을 읽어 DTO를 저장하고, 개별 갱신 신호가 남아 있는 도메인은 즉시 redraw를 요청한다.
-	 * 턴 시작/초기화처럼 넓은 갱신이 필요한 시점은 마지막 OnRefreshAllUI로 한 번 더 묶는다.
+	 * Push*UI는 모델을 읽어 DTO를 저장한다.
+	 * 각 Set*()이 UIModel 도메인 변경 알림을 내보내므로 GameMode가 HUD refresh 대리자를 직접 쏘지 않는다.
 	 */
 	PushUnitUI();
 	PushDiceUI();
@@ -300,8 +317,6 @@ void ACombatGameMode::PushAllCombatUI()
 	PushSkillUI();
 	PushEquipmentUI();
 	PushPlayerMetaUI();
-
-	OnRefreshAllUI.Broadcast();
 }
 
 void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
@@ -432,8 +447,6 @@ void ACombatGameMode::BindPlayerMetaUIEvents()
 		AttributeComponentModel->GetTacticalAttributeValueChangeDelegate(Attribute).RemoveAll(this);
 		AttributeComponentModel->GetTacticalAttributeValueChangeDelegate(Attribute).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& ChangeData) {
 			PushPlayerMetaUI();
-			// PM API에는 PlayerMeta 전용 refresh가 없으므로, 메타 변화는 넓은 갱신 신호로 소비하게 한다.
-			OnRefreshAllUI.Broadcast();
 			});
 	}
 }
@@ -447,9 +460,8 @@ void ACombatGameMode::PushUnitUI()
 		return;
 	}
 
-	// 실제 변환은 CombatUIProjection이 담당한다. GameMode는 저장과 신호만 담당한다.
+	// 실제 변환은 CombatUIProjection이 담당한다. GameMode는 UIModel 저장만 담당한다.
 	CombatUIModel->SetUnitUIs(CombatUIProjection::BuildUnitUIs(CombatModel));
-	OnRefreshUnitUI.Broadcast();
 }
 
 void ACombatGameMode::PushDiceUI()
@@ -467,9 +479,8 @@ void ACombatGameMode::PushDiceUI()
 		return;
 	}
 
-	// 주사위 원본 모델을 읽어 FDiceSlotUI 배열로 만든 뒤, Dice 영역만 redraw하게 알린다.
+	// 주사위 원본 모델을 읽어 FDiceSlotUI 배열로 만든 뒤 UIModel에 저장한다.
 	CombatUIModel->SetDiceUIs(CombatUIProjection::BuildDiceUIs(DicePoolModel));
-	OnRefreshDiceUI.Broadcast();
 }
 
 void ACombatGameMode::PushSelectedDiceUI()
@@ -489,7 +500,6 @@ void ACombatGameMode::PushSelectedDiceUI()
 
 	// 선택 목록과 합계를 같은 타이밍에 저장한다. 합계만 늦게 읽으면 스킬 빌드 표시가 틀어진다.
 	CombatUIModel->SetSelectedDice(CombatUIProjection::BuildSelectedDiceIndices(DicePoolModel), DicePoolModel->GetSelectedDiceSum());
-	OnRefreshSelectedDiceUI.Broadcast();
 }
 
 void ACombatGameMode::PushTurnUI()

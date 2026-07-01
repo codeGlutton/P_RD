@@ -15,6 +15,7 @@ void UCombatUIWidgetBase::BindUIModel(UCombatUIModel* InUIModel)
 
 	if (mUIModel != nullptr)
 	{
+		mUIModel->OnCombatUIChanged.AddUObject(this, &UCombatUIWidgetBase::HandleUIModelChanged);
 		mUIModel->OnQueueNodeResolved.AddDynamic(this, &UCombatUIWidgetBase::HandleQueueNodeResolved);
 
 		// 연결 직후 한 번 전체 갱신을 호출해 초기 상태를 그린다.
@@ -27,9 +28,16 @@ void UCombatUIWidgetBase::UnbindUIModel()
 {
 	if (mUIModel != nullptr)
 	{
+		mUIModel->OnCombatUIChanged.RemoveAll(this);
 		mUIModel->OnQueueNodeResolved.RemoveDynamic(this, &UCombatUIWidgetBase::HandleQueueNodeResolved);
 	}
 	mUIModel = nullptr;
+}
+
+/** @brief UIModel 변경 도메인을 WBP 갱신 이벤트로 전달한다. */
+void UCombatUIWidgetBase::HandleUIModelChanged(ECombatUIDomain Domain)
+{
+	OnUIRefreshed(Domain);
 }
 
 /** @brief 큐 resolved 노드를 WBP 재생 이벤트로 전달한다. */

@@ -27,7 +27,6 @@ void UCombatTileMapHUDWidget::NativeConstruct()
 	{
 		mDiceRollInputButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleDiceRollInputButtonClicked);
 	}
-	BindCombatGameModeDelegates();
 }
 
 void UCombatTileMapHUDWidget::NativeDestruct()
@@ -68,11 +67,7 @@ void UCombatTileMapHUDWidget::NativeDestruct()
 	{
 		mSkillDetailCloseButton->OnClicked.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleSkillDetailCloseButtonClicked);
 	}
-	if (mCombatUIModel != nullptr)
-	{
-		mCombatUIModel->OnQueueNodeResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
-	}
-	UnbindCombatGameModeDelegates();
+	UnbindCombatUIModelDelegates();
 
 	DestroyDiceCaptureActors(mDicePreviewActors);
 	DestroyDiceCaptureActors(mOwnedDicePreviewActors);
