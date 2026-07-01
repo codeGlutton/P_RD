@@ -13,18 +13,19 @@ ACombatCameraPawn::ACombatCameraPawn()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	mSceneComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("DefaultScene"));
+	mSceneComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("DefaultSceneComponent"));
 	mSceneComponent->SetRelativeRotation(FRotator(-30, 0, 0));
+	RootComponent = mSceneComponent;
 
 	//mSpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	//mSpringArmComponent->SetRelativeRotation(FRotator(-30, 0, 0));
 
-	mCameraComponent = CreateDefaultSubobject<UCameraComponent>("Camera");
+	mCameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
 	mCameraComponent->ProjectionMode = ECameraProjectionMode::Orthographic;
 	mCameraComponent->OrthoWidth = 1024.0f;
 	mCameraComponent->SetupAttachment(mSceneComponent);
 
-	mCameraMovementComponent = CreateDefaultSubobject<UCameraMovementComponent>("CameraMovement");
+	mCameraMovementComponent = CreateDefaultSubobject<UCameraMovementComponent>("CameraMovementComponent");
 	mCameraMovementComponent->SetCameraComponent(mCameraComponent);
 	//mCameraMovementComponent->SetSpringArmComponent(mSpringArmComponent);
 

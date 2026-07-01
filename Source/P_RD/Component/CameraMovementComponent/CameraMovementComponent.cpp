@@ -31,6 +31,8 @@ void UCameraMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
+
 	// ...
 	// 확대, 축소 최소 최대 거리
 	mCameraComponent->OrthoWidth = FMath::Clamp(mCameraComponent->OrthoWidth, mMinOrthoWidth, mMaxOrthoWidth);
@@ -63,11 +65,13 @@ void UCameraMovementComponent::SetMaxOrthoWidth(float MaxOrthoWidth)
 
 void UCameraMovementComponent::SetMinOrthoWidth(float MinOrthoWidth)
 {
-	mMaxOrthoWidth = MinOrthoWidth;
+	mMinOrthoWidth = MinOrthoWidth;
 }
 
 void UCameraMovementComponent::ZoomCamera(float ZoomValue)
 {
+	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
+
 	// OW 값을 추가합니다.
 	float OW = mCameraComponent->OrthoWidth + ZoomValue * mZoomSpeed;
 	mCameraComponent->OrthoWidth = FMath::Clamp(OW, mMinOrthoWidth, mMaxOrthoWidth);

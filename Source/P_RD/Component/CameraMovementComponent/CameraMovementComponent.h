@@ -83,10 +83,10 @@ public:
 	void SetZoomSpeed(float ZoomSpeed);
 
 	UFUNCTION(BlueprintCallable)
-	void SetMaxOrthoWidth(float SetMaxOrthoWidth);
+	void SetMaxOrthoWidth(float MaxOrthoWidth);
 
 	UFUNCTION(BlueprintCallable)
-	void SetMinOrthoWidth(float SetMinOrthoWidth);
+	void SetMinOrthoWidth(float MinOrthoWidth);
 
 public:
 
