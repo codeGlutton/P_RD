@@ -165,6 +165,8 @@ public:
 	TArray<TObjectPtr<USRPGTurnContext>> GetTurnContexts(const UUnitModel* Owner);
 	UTileMapModel* GetTileMap();
 	TArray<TObjectPtr<UUnitModel>>& GetUnits();
+	// @brief 등록된 플레이어 유닛 반환 (적 AI가 표적 좌표를 얻는 용도)
+	UUnitModel* GetPlayerUnit() const { return mPlayerUnit; }
 
 	/* 시뮬 함수 */
 public:

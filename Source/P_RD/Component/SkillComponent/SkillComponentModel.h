@@ -63,6 +63,12 @@ protected:
 public:
 	/* Get, Set */
 	/**
+	 * @brief 보유한 스킬 개수 반환
+	 * @details 스킬 인덱스 유효성(특히 적 AI의 시그니처 스킬 보유 여부)을 안전하게 확인하는 용도
+	 */
+	int32 GetSkillCount() const { return mSkillData.Num(); }
+
+	/**
 	 * @brief 스킬 인덱스를 입력하면 Out_SkillData에 기록하는 함수
 	 * @details 범위가 유효하지 않으면 false 반환
 	 */

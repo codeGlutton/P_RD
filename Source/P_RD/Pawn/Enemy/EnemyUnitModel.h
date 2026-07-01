@@ -1,7 +1,7 @@
 ﻿/*****************************************************************//**
  * @file   EnemyUnitModel.h
  * @brief  적 베이스 유닛 모델 정의 헤더
- * @author 모호재
+ * @author 모호재, 이문환
  * @date   2026-05-15
  *********************************************************************/
 
@@ -9,10 +9,11 @@
 
 #include "RDMinimal.h"
 #include "Pawn/UnitModel.h"
+#include "DataAsset/UnitSpawnData/StaticEnemyUnitSpawnData.h" // EMoveTendency
 #include "EnemyUnitModel.generated.h"
 
 /**
- * @brief  적 베이스 유닛 모델
+ * @brief 적 베이스 유닛 모델
  */
 UCLASS(abstract)
 class P_RD_API UEnemyUnitModel : public UUnitModel
@@ -22,17 +23,26 @@ class P_RD_API UEnemyUnitModel : public UUnitModel
 public:
 	UEnemyUnitModel();
 
-	/* AUnit 상속 */
-public:
+	// @brief 스폰 데이터에서 스킬 데이터를 얻어서 스킬 컴포넌트에 적재
+	void PostInitializeComponentModels() override;
+
+	// @brief 난이도
 	int32 GetDifficulty() const override;
-	// 적 유닛은 플레이어가 아니다. 미구현 시 UUnitModel의 순수가상이 호출돼 크래시한다.
-	bool IsPlayerUnitModel() const override { return false; }
+	
+	// @brief 플레이어유닛 여부
+	bool IsPlayerUnitModel() const override;
+
+	// @brief 이동 성향
+	EMoveTendency GetMoveTendency() const;
 
 protected:
 	UUserWidget* GetInfoPanel() const override;
 
-protected:
 	// @brief 초기 스텟에 반영되는 난이도 수치
 	UPROPERTY(Category = Enemy, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "Difficulty"))
 	int32 mDifficulty;
+
+	// @brief 이동 성향
+	UPROPERTY(Category = AI, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MoveTendency"))
+	EMoveTendency mMoveTendency = EMoveTendency::HoldRange;
 };
