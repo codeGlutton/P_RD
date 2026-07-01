@@ -24,22 +24,18 @@ void UCombatTileMapHUDWidget::BindCombatGameModeDelegates()
 	 * Combat HUD 구독 범위.
 	 *
 	 * HUD는 전투 조작/전투 보드 표시만 구독한다.
-	 * 장비 슬롯은 TopMenuBar 소유라서 OnRefreshEquipmentUI / OnShowEquipmentDetailPanelUI를 여기서 구독하지 않는다.
+	 * 장비 슬롯은 TopMenuBar 소유라서 전투 HUD API에서는 구독하지 않는다.
 	 * 신호를 받으면 payload를 신뢰하는 방식이 아니라 UCombatUIModel을 다시 읽어 필요한 영역만 redraw한다.
 	 */
 	CombatGameMode->OnRefreshAllUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshAllUI);
 	CombatGameMode->OnRefreshUnitUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshUnitUI);
 	CombatGameMode->OnRefreshDiceUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshDiceUI);
 	CombatGameMode->OnRefreshSelectedDiceUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshSelectedDiceUI);
-	CombatGameMode->OnRefreshSkillUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshSkillUI);
-	CombatGameMode->OnRefreshTurnUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshTurnUI);
-	CombatGameMode->OnRefreshPlayerMetaUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshPlayerMetaUI);
+	CombatGameMode->OnRefreshSelectedSkillUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshSelectedSkillUI);
 	CombatGameMode->OnRefreshSkillBuildPhase.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshSkillBuildPhase);
 	CombatGameMode->OnRefreshMoveBuildPhase.AddUObject(this, &UCombatTileMapHUDWidget::HandleRefreshMoveBuildPhase);
-	CombatGameMode->OnCombatActionResolvedUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleCombatActionResolvedUI);
 	CombatGameMode->OnShowDicePanelAnyTurnUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleShowDicePanelAnyTurn);
 	CombatGameMode->OnShowTargetDetailPanelUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleShowTargetDetailPanel);
-	CombatGameMode->OnShowSkillDetailPanelUI.AddUObject(this, &UCombatTileMapHUDWidget::HandleShowSkillDetailPanel);
 }
 
 void UCombatTileMapHUDWidget::UnbindCombatGameModeDelegates()
@@ -54,15 +50,11 @@ void UCombatTileMapHUDWidget::UnbindCombatGameModeDelegates()
 	CombatGameMode->OnRefreshUnitUI.RemoveAll(this);
 	CombatGameMode->OnRefreshDiceUI.RemoveAll(this);
 	CombatGameMode->OnRefreshSelectedDiceUI.RemoveAll(this);
-	CombatGameMode->OnRefreshSkillUI.RemoveAll(this);
-	CombatGameMode->OnRefreshTurnUI.RemoveAll(this);
-	CombatGameMode->OnRefreshPlayerMetaUI.RemoveAll(this);
+	CombatGameMode->OnRefreshSelectedSkillUI.RemoveAll(this);
 	CombatGameMode->OnRefreshSkillBuildPhase.RemoveAll(this);
 	CombatGameMode->OnRefreshMoveBuildPhase.RemoveAll(this);
-	CombatGameMode->OnCombatActionResolvedUI.RemoveAll(this);
 	CombatGameMode->OnShowDicePanelAnyTurnUI.RemoveAll(this);
 	CombatGameMode->OnShowTargetDetailPanelUI.RemoveAll(this);
-	CombatGameMode->OnShowSkillDetailPanelUI.RemoveAll(this);
 }
 
 void UCombatTileMapHUDWidget::HandleRefreshAllUI()
@@ -100,23 +92,10 @@ void UCombatTileMapHUDWidget::HandleRefreshSelectedDiceUI()
 	RefreshDiceAssignmentText();
 }
 
-void UCombatTileMapHUDWidget::HandleRefreshSkillUI()
+void UCombatTileMapHUDWidget::HandleRefreshSelectedSkillUI()
 {
-	RebuildSkillRailWidgets();
 	RefreshSkillRailWidgets();
-	RefreshCombatStatusBar();
-}
-
-void UCombatTileMapHUDWidget::HandleRefreshTurnUI()
-{
-	RefreshCombatStatusBar();
-	RebuildTurnOrderBar();
-	RefreshMoveButton();
-}
-
-void UCombatTileMapHUDWidget::HandleRefreshPlayerMetaUI()
-{
-	RefreshCombatStatusBar();
+	RefreshDiceAssignmentText();
 }
 
 void UCombatTileMapHUDWidget::HandleRefreshSkillBuildPhase(ECombatBuildPhaseUI Phase)
@@ -145,19 +124,9 @@ void UCombatTileMapHUDWidget::HandleRefreshMoveBuildPhase(ECombatBuildPhaseUI Ph
 	}
 }
 
-void UCombatTileMapHUDWidget::HandleCombatActionResolvedUI()
-{
-	HandleCombatActionResolved();
-}
-
-void UCombatTileMapHUDWidget::HandleShowTargetDetailPanel()
+void UCombatTileMapHUDWidget::HandleShowTargetDetailPanel(IBoardSelectionTarget* Target)
 {
 	UE_LOG(LogRD, Log, TEXT("Combat HUD target detail requested."));
-}
-
-void UCombatTileMapHUDWidget::HandleShowSkillDetailPanel(int32 SkillIndex)
-{
-	ShowSkillDetailPanel(SkillIndex);
 }
 
 void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const

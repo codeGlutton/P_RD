@@ -7,7 +7,10 @@
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
+#include "Component/SkillComponent/SkillComponentModel.h"
 #include "Engine/Texture2D.h"
+#include "GameMode/CombatGameMode.h"
+#include "DataAsset/SkillData/StaticSkillData.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/UIRuntimeLayout.h"
 
@@ -51,6 +54,17 @@ void UCombatTileMapHUDWidget::ShowSkillDetailPanel(int32 SkillIndex)
 	if (Skills.IsValidIndex(SkillIndex) == false || Skills[SkillIndex].mIsUsable == false)
 	{
 		return;
+	}
+
+	const FSkillEntry* SkillEntry = nullptr;
+	const UStaticSkillData* StaticSkillData = nullptr;
+	if (ACombatGameMode* CombatGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ACombatGameMode>() : nullptr)
+	{
+		SkillEntry = CombatGameMode->GetSkillDetail(SkillIndex);
+		if (SkillEntry != nullptr && SkillEntry->IsValid())
+		{
+			StaticSkillData = SkillEntry->mData.Get();
+		}
 	}
 
 	UCanvasPanel* TargetCanvas = IsDesignerSkinActive() && DesignCanvas != nullptr ? DesignCanvas.Get() : RootCanvas.Get();
@@ -115,19 +129,31 @@ void UCombatTileMapHUDWidget::ShowSkillDetailPanel(int32 SkillIndex)
 	const FSkillUI& Skill = Skills[SkillIndex];
 	if (mSkillDetailNameText != nullptr)
 	{
-		mSkillDetailNameText->SetText(Skill.mName.IsEmpty()
+		const FText DetailName = StaticSkillData != nullptr && StaticSkillData->mName.IsEmpty() == false
+			? StaticSkillData->mName
+			: Skill.mName;
+		mSkillDetailNameText->SetText(DetailName.IsEmpty()
 			? FText::Format(NSLOCTEXT("CombatTileMapHUDWidget", "SkillDetailFallbackName", "Skill {0}"), FText::AsNumber(SkillIndex + 1))
-			: Skill.mName);
+			: DetailName);
 	}
 	if (mSkillDetailDescriptionText != nullptr)
 	{
-		mSkillDetailDescriptionText->SetText(Skill.mDescription.IsEmpty() ? BuildFallbackSkillDescription(Skill) : Skill.mDescription);
+		const FText DetailDescription = StaticSkillData != nullptr && StaticSkillData->mDescription.IsEmpty() == false
+			? StaticSkillData->mDescription
+			: Skill.mDescription;
+		mSkillDetailDescriptionText->SetText(DetailDescription.IsEmpty() ? BuildFallbackSkillDescription(Skill) : DetailDescription);
 	}
 	if (mSkillDetailIconImage != nullptr)
 	{
-		if (Skill.mIcon != nullptr)
+		UTexture2D* DetailIcon = Skill.mIcon.Get();
+		if (StaticSkillData != nullptr && StaticSkillData->mIcon.IsNull() == false)
 		{
-			mSkillDetailIconImage->SetBrushFromTexture(Skill.mIcon, true);
+			DetailIcon = StaticSkillData->mIcon.LoadSynchronous();
+		}
+
+		if (DetailIcon != nullptr)
+		{
+			mSkillDetailIconImage->SetBrushFromTexture(DetailIcon, true);
 			mSkillDetailIconImage->SetVisibility(ESlateVisibility::HitTestInvisible);
 		}
 		else

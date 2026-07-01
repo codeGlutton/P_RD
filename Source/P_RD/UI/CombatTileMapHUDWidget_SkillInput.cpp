@@ -62,7 +62,10 @@ void UCombatTileMapHUDWidget::UpdateSkillPress(float InDeltaTime)
 		{
 			if (ACombatGameMode* CombatGameMode = GetWorld()->GetAuthGameMode<ACombatGameMode>())
 			{
-				CombatGameMode->ShowSkillDetail(mPressedSkillIndex);
+				if (CombatGameMode->GetSkillDetail(mPressedSkillIndex) != nullptr)
+				{
+					ShowSkillDetailPanel(mPressedSkillIndex);
+				}
 			}
 		}
 	}

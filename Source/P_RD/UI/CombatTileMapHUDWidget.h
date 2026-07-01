@@ -11,6 +11,7 @@
 
 class ACombatDiceCaptureActor;
 class ACombatDiceRollCaptureActor;
+class IBoardSelectionTarget;
 class UBorder;
 class UButton;
 class UCanvasPanel;
@@ -231,14 +232,10 @@ private:
 	void HandleRefreshUnitUI();
 	void HandleRefreshDiceUI();
 	void HandleRefreshSelectedDiceUI();
-	void HandleRefreshSkillUI();
-	void HandleRefreshTurnUI();
-	void HandleRefreshPlayerMetaUI();
+	void HandleRefreshSelectedSkillUI();
 	void HandleRefreshSkillBuildPhase(ECombatBuildPhaseUI Phase);
 	void HandleRefreshMoveBuildPhase(ECombatBuildPhaseUI Phase);
-	void HandleCombatActionResolvedUI();
-	void HandleShowTargetDetailPanel();
-	void HandleShowSkillDetailPanel(int32 SkillIndex);
+	void HandleShowTargetDetailPanel(IBoardSelectionTarget* Target);
 
 	/** @brief 스킬 롱프레스 상세 패널을 표시/닫는다. */
 	void ShowSkillDetailPanel(int32 SkillIndex);
