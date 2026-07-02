@@ -8,8 +8,11 @@
 
 
 // @brief 카메라 강조 Handle
+USTRUCT()
 enum class ECameraControlState : uint8
 {
+	GENERATED_BODY()
+
 	Normal,
 	Emphasis
 };
@@ -102,13 +105,19 @@ private:
 	* @brief 강조 시 변경되는 설정되는 줌값
 	* @details
 	*/
-	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveClampingBox", AllowPrivateAccess = "true"))
-	float mEmphasisZoom = 500;
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "강조 시 줌 값", AllowPrivateAccess = "true"))
+	float				mEmphasisZoom = 500;
+
+	/*
+	* @brief 현재 강조 상태
+	* @details
+	*/
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "현재 강조 상태", AllowPrivateAccess = "true"))
 
 	ECameraControlState mCamerControlState;
 
 	/*
-	* @brief 현재 강조 상태
+	* @brief 강조를 되돌릴 때 사용하는 위치, Zoom 변화량
 	* @details
 	*/
 	FCameraEmphasisState mPreDefaultState;
