@@ -13,6 +13,6 @@
 
 namespace RDUITexture
 {
-	/** @brief mp4 등 raw 미디어의 Content 상대경로를 디스크 절대경로로 변환(영상 재생용). */
+	/** @brief mp4 등 raw 미디어의 Content 상대경로를 MediaPlayer가 열 수 있는 디스크 절대경로로 변환한다. */
 	FString ResolveContentFilePath(const FString& RelativeContentPath);
 }

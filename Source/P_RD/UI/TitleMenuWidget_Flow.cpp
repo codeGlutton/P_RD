@@ -1,10 +1,85 @@
 #include "UI/TitleMenuWidget.h"
 
 #include "Components/Button.h"
+#include "Components/PanelWidget.h"
 #include "Components/TextBlock.h"
+#include "Components/Widget.h"
 #include "GameMode/FrontendGameMode.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/SettingsPanelWidget.h"
+
+namespace
+{
+	const FName TitleLayoutProfiles[] =
+	{
+		FName(TEXT("base_16_9")),
+		FName(TEXT("phone_wide")),
+		FName(TEXT("phone_ultrawide")),
+		FName(TEXT("fold_inner")),
+		FName(TEXT("tablet_16_10")),
+	};
+
+	FName MakeProfileWidgetName(const TCHAR* BaseName, const FName ProfileName)
+	{
+		return FName(*FString::Printf(TEXT("%s__%s"), BaseName, *ProfileName.ToString()));
+	}
+
+	void SetWidgetAndGeneratedParentVisibility(UWidget* Widget, ESlateVisibility Visibility)
+	{
+		if (Widget == nullptr)
+		{
+			return;
+		}
+
+		Widget->SetVisibility(Visibility);
+
+		// TitleMenuWidget.cpp가 세로 중앙 정렬 보정을 위해 TextBlock을 런타임 Overlay로 감싼다.
+		// 실제 텍스트를 숨길 때 그 임시 부모도 같이 숨겨야 빈 Overlay가 입력/레이아웃에 남지 않는다.
+		if (UPanelWidget* ParentWidget = Widget->GetParent())
+		{
+			if (ParentWidget->GetName().Contains(TEXT("_CenterOverlay")))
+			{
+				ParentWidget->SetVisibility(Visibility);
+			}
+		}
+	}
+
+	void SetNamedWidgetAndGeneratedParentVisibility(const UUserWidget* Owner, const FName WidgetName, ESlateVisibility Visibility)
+	{
+		if (Owner == nullptr)
+		{
+			return;
+		}
+
+		SetWidgetAndGeneratedParentVisibility(const_cast<UUserWidget*>(Owner)->GetWidgetFromName(WidgetName), Visibility);
+	}
+
+	void SetNamedText(const UUserWidget* Owner, const FName WidgetName, const FText& Text)
+	{
+		if (Owner == nullptr)
+		{
+			return;
+		}
+
+		if (UTextBlock* TextBlock = Cast<UTextBlock>(const_cast<UUserWidget*>(Owner)->GetWidgetFromName(WidgetName)))
+		{
+			TextBlock->SetText(Text);
+		}
+	}
+
+	void SetNamedButtonEnabled(const UUserWidget* Owner, const FName WidgetName, const bool bIsEnabled)
+	{
+		if (Owner == nullptr)
+		{
+			return;
+		}
+
+		if (UButton* Button = Cast<UButton>(const_cast<UUserWidget*>(Owner)->GetWidgetFromName(WidgetName)))
+		{
+			Button->SetIsEnabled(bIsEnabled);
+		}
+	}
+}
 
 /** @brief 타이틀에서 공용 설정 패널을 Title 모드로 열어 보여준다. */
 // 설정 기능은 타이틀과 인게임에서 같은 WBP_SettingsPanel 월드 위젯을 공유한다.
@@ -35,11 +110,53 @@ void UTitleMenuWidget::OpenSettingsPanel()
 /** @brief 현재 활성 Run 여부에 따라 START/NEW START/CONTINUE 버튼 상태를 갱신한다. */
 // 세이브 데이터 로드는 Intro 단계에서 끝난다는 전제를 사용한다.
 // 타이틀은 디스크를 다시 읽지 않고, FrontendGameMode가 현재 RunPersistData 요약을 만들 수 있는지만 본다.
-// 활성 Run이 없으면 Continue는 숨기고 START 문구를 보여준다.
-// 활성 Run이 있으면 Continue를 보여주고, 새로 시작은 NEW START 문구로 바꿔 기존 런과 별도 행동임을 드러낸다.
+// 활성 Run이 없어도 새 런 시작 버튼은 항상 NEW START로 보여준다.
+// 활성 Run이 있으면 CONTINUE 버튼 묶음까지 같이 보여주고, 없으면 버튼/프레임/텍스트를 모두 숨긴다.
 void UTitleMenuWidget::RefreshMainMenuState() const
 {
 	const bool bCanContinueRun = CanContinueRun();
+	const ESlateVisibility ContinueVisibility = bCanContinueRun ? ESlateVisibility::Visible : ESlateVisibility::Collapsed;
+
+	if (TitleLayoutSwitcher != nullptr)
+	{
+		SetWidgetAndGeneratedParentVisibility(StartButton, ESlateVisibility::Collapsed);
+		SetWidgetAndGeneratedParentVisibility(ContinueButton, ESlateVisibility::Collapsed);
+		SetWidgetAndGeneratedParentVisibility(SettingsButton, ESlateVisibility::Collapsed);
+		SetWidgetAndGeneratedParentVisibility(StartButtonText, ESlateVisibility::Collapsed);
+		SetWidgetAndGeneratedParentVisibility(ContinueButtonText, ESlateVisibility::Collapsed);
+		SetWidgetAndGeneratedParentVisibility(SettingsButtonText, ESlateVisibility::Collapsed);
+		SetNamedWidgetAndGeneratedParentVisibility(this, TEXT("TitleLogoImage"), ESlateVisibility::Collapsed);
+		SetNamedWidgetAndGeneratedParentVisibility(this, TEXT("StartButtonFrameImage"), ESlateVisibility::Collapsed);
+		SetNamedWidgetAndGeneratedParentVisibility(this, TEXT("ContinueButtonFrameImage"), ESlateVisibility::Collapsed);
+		SetNamedWidgetAndGeneratedParentVisibility(this, TEXT("SettingsButtonFrameImage"), ESlateVisibility::Collapsed);
+		SetNamedWidgetAndGeneratedParentVisibility(this, TEXT("ExitButtonFrameImage"), ESlateVisibility::Collapsed);
+		SetNamedWidgetAndGeneratedParentVisibility(this, TEXT("ExitButtonText"), ESlateVisibility::Collapsed);
+		SetNamedWidgetAndGeneratedParentVisibility(this, TEXT("VersionPlateImage"), ESlateVisibility::Collapsed);
+		SetNamedWidgetAndGeneratedParentVisibility(this, TEXT("VersionText"), ESlateVisibility::Collapsed);
+
+		for (const FName ProfileName : TitleLayoutProfiles)
+		{
+			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("StartButtonFrameImage"), ProfileName), ESlateVisibility::Visible);
+			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("StartButton"), ProfileName), ESlateVisibility::Visible);
+			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("StartButtonText"), ProfileName), ESlateVisibility::Visible);
+			SetNamedText(this, MakeProfileWidgetName(TEXT("StartButtonText"), ProfileName), mNewStartButtonText);
+			SetNamedButtonEnabled(this, MakeProfileWidgetName(TEXT("StartButton"), ProfileName), true);
+
+			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("ContinueButtonFrameImage"), ProfileName), ContinueVisibility);
+			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("ContinueButton"), ProfileName), ContinueVisibility);
+			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("ContinueButtonText"), ProfileName), ContinueVisibility);
+			SetNamedText(this, MakeProfileWidgetName(TEXT("ContinueButtonText"), ProfileName), mContinueButtonText);
+			SetNamedButtonEnabled(this, MakeProfileWidgetName(TEXT("ContinueButton"), ProfileName), bCanContinueRun);
+
+			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("SettingsButtonFrameImage"), ProfileName), ESlateVisibility::Visible);
+			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("SettingsButton"), ProfileName), ESlateVisibility::Visible);
+			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("SettingsButtonText"), ProfileName), ESlateVisibility::Visible);
+			SetNamedText(this, MakeProfileWidgetName(TEXT("SettingsButtonText"), ProfileName), mSettingsButtonText);
+			SetNamedButtonEnabled(this, MakeProfileWidgetName(TEXT("SettingsButton"), ProfileName), true);
+		}
+
+		return;
+	}
 
 	if (StartButton != nullptr)
 	{
@@ -49,19 +166,22 @@ void UTitleMenuWidget::RefreshMainMenuState() const
 
 	if (StartButtonText != nullptr)
 	{
-		StartButtonText->SetText(bCanContinueRun ? mNewStartButtonText : mStartButtonText);
+		StartButtonText->SetText(mNewStartButtonText);
 	}
 
 	if (ContinueButton != nullptr)
 	{
-		ContinueButton->SetVisibility(bCanContinueRun ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+		ContinueButton->SetVisibility(ContinueVisibility);
 		ContinueButton->SetIsEnabled(bCanContinueRun);
 	}
 
 	if (ContinueButtonText != nullptr)
 	{
 		ContinueButtonText->SetText(mContinueButtonText);
+		SetWidgetAndGeneratedParentVisibility(ContinueButtonText, ContinueVisibility);
 	}
+
+	SetWidgetAndGeneratedParentVisibility(GetWidgetFromName(TEXT("ContinueButtonFrameImage")), ContinueVisibility);
 
 	if (SettingsButton != nullptr)
 	{
