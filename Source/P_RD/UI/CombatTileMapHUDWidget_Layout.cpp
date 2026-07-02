@@ -113,7 +113,26 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 	const int32 SkillRailPanelCount = mSkillRailPanels.Num();
 	for (int32 SkillIndex = 0; SkillIndex < SkillRailPanelCount; ++SkillIndex)
 	{
-		RDUILayout::ApplyAnchoredSlot(mSkillRailPanels[SkillIndex], GetSkillRailItemRect(SkillIndex, SkillRailPanelCount), SkillRailZOrder);
+		const FAnchors ItemRect = GetSkillRailItemRect(SkillIndex, SkillRailPanelCount);
+		RDUILayout::ApplyAnchoredSlot(mSkillRailPanels[SkillIndex], ItemRect, SkillRailZOrder);
+
+		// 보유 스킬 아이콘: 슬롯 위쪽 65% 영역(여백 15%), 라벨: 아래 35% 스트립. 패널보다 위에 그린다.
+		const float ItemW = ItemRect.Maximum.X - ItemRect.Minimum.X;
+		const float ItemH = ItemRect.Maximum.Y - ItemRect.Minimum.Y;
+		if (mSkillRailIcons.IsValidIndex(SkillIndex))
+		{
+			const FAnchors IconRect(
+				ItemRect.Minimum.X + ItemW * 0.15f, ItemRect.Minimum.Y + ItemH * 0.05f,
+				ItemRect.Maximum.X - ItemW * 0.15f, ItemRect.Minimum.Y + ItemH * 0.65f);
+			RDUILayout::ApplyAnchoredSlot(mSkillRailIcons[SkillIndex], IconRect, SkillRailZOrder + 1);
+		}
+		if (mSkillRailTexts.IsValidIndex(SkillIndex))
+		{
+			const FAnchors TextRect(
+				ItemRect.Minimum.X, ItemRect.Minimum.Y + ItemH * 0.62f,
+				ItemRect.Maximum.X, ItemRect.Maximum.Y - ItemH * 0.02f);
+			RDUILayout::ApplyAnchoredSlot(mSkillRailTexts[SkillIndex], TextRect, SkillRailZOrder + 2);
+		}
 	}
 	const int32 SkillInputCount = mSkillInputButtons.Num();
 	for (int32 SkillIndex = 0; SkillIndex < SkillInputCount; ++SkillIndex)

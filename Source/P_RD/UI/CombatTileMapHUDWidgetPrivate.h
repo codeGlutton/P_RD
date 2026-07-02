@@ -20,34 +20,6 @@ namespace RDCombatHUD
 	static constexpr int32 CombatSkillDetailBackdropZOrder = 149;
 	static constexpr int32 CombatSkillDetailPanelZOrder = 150;
 	static constexpr int32 CombatSkillDetailRailZOrder = 170;
-	static constexpr int32 CombatSkillStepIndex = 5;
-
-	inline FText GetCombatSkillLabel(int32 SkillIndex)
-	{
-		switch (SkillIndex)
-		{
-		case 0:
-			return NSLOCTEXT("CombatTileMapHUDWidget", "CombatSkillBasicAttack", "BASIC");
-		case 1:
-			return NSLOCTEXT("CombatTileMapHUDWidget", "CombatSkill1", "SKILL 1");
-		case 2:
-			return NSLOCTEXT("CombatTileMapHUDWidget", "CombatSkill2", "SKILL 2");
-		case 3:
-			return NSLOCTEXT("CombatTileMapHUDWidget", "CombatSkill3", "SKILL 3");
-		case 4:
-			return NSLOCTEXT("CombatTileMapHUDWidget", "CombatSkill4", "SKILL 4");
-		case 5:
-			return NSLOCTEXT("CombatTileMapHUDWidget", "CombatSkillStep", "STEP");
-		default:
-			return NSLOCTEXT("CombatTileMapHUDWidget", "CombatSkillUnknown", "SKILL");
-		}
-	}
-
-	inline FText GetCombatSkillRailLabel(int32 SkillIndex)
-	{
-		// STEP 레일은 "STEP"만 표시(이동 가능 수치는 상단 MOVE x/x로 보여준다).
-		return GetCombatSkillLabel(SkillIndex);
-	}
 
 	inline FLinearColor GetTransparentInputButtonColor()
 	{

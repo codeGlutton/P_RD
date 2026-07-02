@@ -123,8 +123,11 @@ private:
 	/** @brief 선택 강조가 들어가지 않은 중립 스킬 레일을 런타임으로 다시 만든다. */
 	void RebuildSkillRailWidgets();
 
-	/** @brief 현재 선택된 스킬만 가볍게 강조한다. */
+	/** @brief 보유 스킬 스냅샷(FSkillUI) 기준으로 레일 슬롯 3상태(보유/사용불가/빈칸)를 다시 그린다. */
 	void RefreshSkillRailWidgets();
+
+	/** @brief 보유 스킬의 표시 이름을 뷰모델에서 읽는다(없으면 빈 텍스트 - 시안 라벨 폴백 없음). */
+	FText GetOwnedSkillLabel(int32 SkillIndex) const;
 
 	/** @brief 보유 주사위 3D 표시 위젯을 현재 주사위 개수에 맞춰 다시 만든다. */
 	void RebuildOwnedDiceCards();
@@ -417,6 +420,10 @@ private:
 	/** @brief 중립 상태로 표시하는 런타임 스킬 레일 문구 */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UTextBlock>> mSkillRailTexts;
+
+	/** @brief 보유 스킬 아이콘(FSkillUI.mIcon)을 그리는 슬롯별 Image. 빈 슬롯은 숨긴다. */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UImage>> mSkillRailIcons;
 
 	/** @brief 스킬 레일 입력을 받기 위해 WBP 위에 얹는 투명 버튼들 */
 	UPROPERTY(Transient)
