@@ -244,6 +244,15 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void MoveToWorldPosition(FVector WorldPosition);
 
+	/*
+	* @brief MoveToViewportPosition로 카메라의 시선을 옮긴다.
+	* @defatils
+	* MoveToViewportPosition에서 Ray를 쏜다음 충돌한 위치로 카메라의 시선을 옮깁니다.
+	* @param MoveToViewportPosition에서 Ray를 쏜 다음 충돌한 위치로 카메라의 시선 옮깁니다.
+	*/
+	UFUNCTION(BlueprintCallable)
+	void DragMoveToViewportPosition(FVector2D PreViewPortPos, FVector2D CurViewPortPos);
+
 
 private:
 	void MoveStep();

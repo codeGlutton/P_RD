@@ -50,7 +50,8 @@ void UCameraMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 
 	//==============================
 	// 이동 제한 범위를 보여줍니다.
-	FVector Center = mMoveClampingBoxCenter;
+	// @note 수학 공식 이상함. 하지만 현재 각도에서는 우선 원하는 제한 범위가 나오므로 후 순위
+	FVector Center = mMoveClampingBoxCenter + FMath::Sin(FMath::Abs(FMath::DegreesToRadians(GetOwner()->GetActorRotation().Pitch))) * GetOwner()->GetActorLocation().Z;
 	FVector Extent = FVector(mMoveClampingBox /2, 0);
 	FQuat Rotation = FQuat();
 
@@ -218,6 +219,61 @@ void UCameraMovementComponent::MoveToViewportPosition(FVector2D ViewPortPos)
 
 	// Timer로 이동을 수행합니다.
 	GetWorld()->GetTimerManager().SetTimer(mTimerHandle_Move, this, &UCameraMovementComponent::MoveStep, 0.01f, true);
+}
+
+
+void UCameraMovementComponent::DragMoveToViewportPosition(FVector2D PreViewPortPos, FVector2D CurViewPortPos)
+{
+	FVector PreWorldLocation;
+	FVector PreWorldDirection;
+
+	GetWorld()->GetFirstPlayerController()->DeprojectScreenPositionToWorld(PreViewPortPos.X, PreViewPortPos.Y, PreWorldLocation, PreWorldDirection);
+
+	FHitResult ViewPortHitResult;
+	FVector StartTrace = PreWorldLocation; // 시작 지점
+	FVector EndTrace = StartTrace + (PreWorldDirection * 100000.0f);
+
+	// 채널 설정 (ECC_Visibility 등)
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(GetOwner()); // 자기 자신은 충돌에서 제외
+
+	bool bViewPortHit = GetWorld()->LineTraceSingleByChannel(
+		ViewPortHitResult,
+		StartTrace,
+		EndTrace,
+		ECC_Visibility, // 충돌 채널
+		QueryParams
+	);
+
+	FVector PrePos = ViewPortHitResult.ImpactPoint;
+	PrePos.Z = 0;
+
+	//======================================
+	FVector CurWorldLocation;
+	FVector CurWorldDirection;
+
+	GetWorld()->GetFirstPlayerController()->DeprojectScreenPositionToWorld(CurViewPortPos.X, CurViewPortPos.Y, CurWorldLocation, CurWorldDirection);
+
+	ViewPortHitResult;
+	StartTrace = CurWorldLocation; // 시작 지점
+	EndTrace = StartTrace + (CurWorldDirection * 100000.0f);
+
+	// 채널 설정 (ECC_Visibility 등)
+	QueryParams;
+	QueryParams.AddIgnoredActor(GetOwner()); // 자기 자신은 충돌에서 제외
+
+	bViewPortHit = GetWorld()->LineTraceSingleByChannel(
+		ViewPortHitResult,
+		StartTrace,
+		EndTrace,
+		ECC_Visibility, // 충돌 채널
+		QueryParams
+	);
+
+	FVector CurPos = ViewPortHitResult.ImpactPoint;
+	CurPos.Z = 0;
+
+	GetOwner()->AddActorWorldOffset(PrePos - CurPos);
 }
 
 void UCameraMovementComponent::MoveToWorldPosition(FVector LocationPos)
