@@ -132,6 +132,30 @@ namespace
 				Commands.Last().Get().GetCommandType() == ESRPGCommandType::TurnEnd);
 		}
 	}
+
+	// @brief 이동해서도 플레이어를 조준 불가능한 케이스 검증
+	void CheckApproachNoCast(
+		FAutomationTestBase& Test,
+		const TArray<TInstancedStruct<FSRPGCommand>>& Commands,
+		const TCHAR* Label,
+		FTileIndex ExpectedDest)
+	{
+		CheckTail(Test, Commands, Label);
+
+		// 이동커맨드가 있고 경로가 2칸 이상이어야 목적지 검증이 의미 있음
+		const FSRPGMoveCommand* Move = FindMoveCommand(Commands);
+		if (Test.TestTrue(FString::Printf(TEXT("[%s] 이동커맨드 존재"), Label), Move != nullptr) &&
+			Test.TestTrue(FString::Printf(TEXT("[%s] 경로는 2칸 이상"), Label), Move->mPathTileIndexes.Num() >= 2))
+		{
+			// 목적지 = 경로 마지막 (FindPath가 goal을 마지막 원소로 넣음)
+			const FTileIndex Dest = Move->mPathTileIndexes.Last();
+			Test.TestTrue(FString::Printf(TEXT("[%s] 목적지=(%d,%d)"), Label, ExpectedDest.mX, ExpectedDest.mY),
+				Dest == ExpectedDest);
+		}
+
+		// 도착해서도 조준범위 밖이라 스킬캐스팅 없어야 함
+		Test.TestTrue(FString::Printf(TEXT("[%s] 스킬커맨드 없음(이동 후에도 조준 불가능)"), Label), FindCast(Commands) == nullptr);
+	}
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
@@ -155,95 +179,130 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	// 유닛테스트 동안 SkillComponent가 GC 당하지 않도록 걸어두는 장치
 	TArray<UObject*> KeepAlive;
 
-	// ============================================================
-	// 시나리오 A: 현재 위치(또는 사거리 내)에서 조준 가능
-	// 맵 α (6x3): E(2,1) P(3,1) 인접
-	// ============================================================
+	/**
+	 * 케이스 레이블: CaseX-Y
+	 *   X = 이동성향  (1:원거리/MoveAway, 2:등거리/HoldRange, 3:근거리/MoveClose)
+	 *   Y = 조준 여부 (1:가능, 2:불가)
+	 * 조준 불가는 "이동 후에도 조준범위 밖"인 경우.
+	 */
 
-	// --- Case1: MoveClose + 일반공격(r1) → 이미 인접이라 제자리 시전 ---
-	AddInfo(TEXT("=== Case1: MoveClose / 인접 조준 → 제자리+시전 ==="));
+	/**
+	 * Case1-1: 원거리(MoveAway) / 조준 가능
+	 *   -> 최대조준거리로 이동 후 스킬 사용
+	 * 맵 (8x2): E(2,1) P(1,0)
+	 *   -> 최대 원거리 타격가능지점인 (4,1)로 이동
+	 */
+	AddInfo(TEXT("=== Case1-1: 원거리(MoveAway), 조준 가능 ==="));
 	{
-		const TArray<TInstancedStruct<FSRPGCommand>> Commands =
-			Plan(World, KeepAlive, EMoveTendency::MoveClose, 3, 1, 6, 3, FTileIndex(2, 1), FTileIndex(3, 1));
-		CheckTail(*this, Commands, TEXT("Case1"));
-		TestTrue(TEXT("[Case1] 이동커맨드 없음(제자리)"), FindMoveCommand(Commands) == nullptr);
-		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
-		if (TestTrue(TEXT("[Case1] 시전커맨드 존재"), Cast != nullptr))
-		{
-			TestEqual(TEXT("[Case1] 스킬 인덱스 0"), Cast->mSkillIndex, 0);
-			TestTrue(TEXT("[Case1] 효과 타일에 플레이어 포함"), Cast->mEffectTileIndexes.Contains(FTileIndex(3, 1)));
-		}
-	}
-
-	// --- Case3: HoldRange + 일반공격(r1) → 제자리에서 조준되므로 정지+시전 ---
-	AddInfo(TEXT("=== Case3: HoldRange / 제자리 조준 → 제자리+시전 ==="));
-	{
-		const TArray<TInstancedStruct<FSRPGCommand>> Commands =
-			Plan(World, KeepAlive, EMoveTendency::HoldRange, 3, 1, 6, 3, FTileIndex(2, 1), FTileIndex(3, 1));
-		CheckTail(*this, Commands, TEXT("Case3"));
-		TestTrue(TEXT("[Case3] 이동커맨드 없음(제자리)"), FindMoveCommand(Commands) == nullptr);
-		TestTrue(TEXT("[Case3] 시전커맨드 존재"), FindCast(Commands) != nullptr);
-	}
-
-	// --- Case2: MoveAway + 원거리(r3) → 근접했으니 최대사거리로 후퇴 후 시전 ---
-	// 맵 β (8x2): E(2,1) P(1,0). cheby3 내 최원거리 유일 타일 (4,1)로 후퇴
-	AddInfo(TEXT("=== Case2: MoveAway / 조준 가능하나 근접 → 최원거리 후퇴+시전 ==="));
-	{
-		const TArray<TInstancedStruct<FSRPGCommand>> Commands =
-			Plan(World, KeepAlive, EMoveTendency::MoveAway, 6, 3, 8, 2, FTileIndex(2, 1), FTileIndex(1, 0));
-		CheckTail(*this, Commands, TEXT("Case2"));
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::MoveAway,
+			6, 3, 8, 2,
+			FTileIndex(2, 1),
+			FTileIndex(1, 0));
+		CheckTail(*this, Commands, TEXT("Case1-1"));
 		const FSRPGMoveCommand* Move = FindMoveCommand(Commands);
-		if (TestTrue(TEXT("[Case2] 이동커맨드 존재"), Move != nullptr)
-			&& TestTrue(TEXT("[Case2] 경로 2칸 이상"), Move->mPathTileIndexes.Num() >= 2))
+		if (TestTrue(TEXT("[Case1-1] 이동커맨드 존재"), Move != nullptr) &&
+			TestTrue(TEXT("[Case1-1] 경로 2칸 이상"), Move->mPathTileIndexes.Num() >= 2))
 		{
-			// 목적지 = 경로 마지막 (MoveCommand엔 목적지 필드가 없고, FindPath가 goal을 마지막 원소로 넣음)
+			// 이동 경로 확인
 			const FTileIndex Dest = Move->mPathTileIndexes.Last();
-			TestTrue(TEXT("[Case2] 경로 시작=origin(2,1)"), Move->mPathTileIndexes[0] == FTileIndex(2, 1));
-			TestTrue(TEXT("[Case2] 목적지=(4,1) 최원거리 후퇴"), Dest == FTileIndex(4, 1));
+			TestTrue(TEXT("[Case1-1] 출발지=(2,1)"), Move->mPathTileIndexes[0] == FTileIndex(2, 1));
+			TestTrue(TEXT("[Case1-1] 목적지=(4,1)"), Dest == FTileIndex(4, 1));
 		}
-		TestTrue(TEXT("[Case2] 시전커맨드 존재"), FindCast(Commands) != nullptr);
+		TestTrue(TEXT("[Case1-1] 스킬커맨드 존재"), FindCast(Commands) != nullptr);
 	}
 
-	// ============================================================
-	// 시나리오 B: 이동해도 조준 불가 (사거리 밖) → 접근만, 시전 없음
-	// 맵 γ (10x3): E(0,1) P(9,1). 도달 최대 x=4 < 조준 필요 x → 3성향 모두 (4,1)로 접근
-	// ============================================================
-	AddInfo(TEXT("=== Case4~6: 조준 불가(사거리 밖) → 접근+시전없음 (성향 무관 동일) ==="));
+	/**
+	 * Case1-2: 원거리(MoveAway) / 이동 후에도 조준 불가능
+	 *   -> 플레이어에게 최대한 접근
+	 * 맵 (10x3): E(0,1) P(9,1)
+	 *   -> 이동포인트를 최대한 사용해서 (4,1)로 접근
+	 */
+	AddInfo(TEXT("=== Case1-2: 원거리(MoveAway) / 조준 불가능 ==="));
 	{
-		struct FCaseB { EMoveTendency Tendency; int32 AimRange; const TCHAR* Name; };
-		const FCaseB Cases[] =
-		{
-			{ EMoveTendency::MoveClose, 1, TEXT("Case4-MoveClose") },
-			{ EMoveTendency::MoveAway,  3, TEXT("Case5-MoveAway")  },
-			{ EMoveTendency::HoldRange, 1, TEXT("Case6-HoldRange") },
-		};
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::MoveAway,
+			4, 3, 10, 3,
+			FTileIndex(0, 1),
+			FTileIndex(9, 1));
+		CheckApproachNoCast(*this, Commands, TEXT("Case1-2"), FTileIndex(4, 1));
+	}
 
-		for (const FCaseB& C : Cases)
-		{
-			const TArray<TInstancedStruct<FSRPGCommand>> Commands =
-				Plan(World, KeepAlive, C.Tendency, 4, C.AimRange, 10, 3, FTileIndex(0, 1), FTileIndex(9, 1));
-			CheckTail(*this, Commands, C.Name);
+	/**
+	 * Case2-1: 등거리(HoldRange) / 조준 가능
+	 *   -> 현재위치에서 조준되므로 이동없음 + 스킬사용
+	 * 맵 (6x3): E(2,1) P(3,1)
+	 *   -> 이동커맨드 없고, 바로 스킬 사용
+	 */
+	AddInfo(TEXT("=== Case2-1: 등거리(HoldRange) / 조준 가능 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::HoldRange,
+			3, 1, 6, 3,
+			FTileIndex(2, 1),
+			FTileIndex(3, 1));
+		CheckTail(*this, Commands, TEXT("Case2-1"));
+		TestTrue(TEXT("[Case2-1] 이동커맨드 없음(현재위치에서 스킬 사용이 가능하니까)"), FindMoveCommand(Commands) == nullptr);
+		TestTrue(TEXT("[Case2-1] 스킬커맨드 존재"), FindCast(Commands) != nullptr);
+	}
 
-			const FSRPGMoveCommand* Move = FindMoveCommand(Commands);
-			if (TestTrue(FString::Printf(TEXT("[%s] 이동커맨드 존재"), C.Name), Move != nullptr)
-				&& TestTrue(FString::Printf(TEXT("[%s] 경로 2칸 이상"), C.Name), Move->mPathTileIndexes.Num() >= 2))
-			{
-				// 목적지 = 경로 마지막
-				const FTileIndex Dest = Move->mPathTileIndexes.Last();
-				TestTrue(FString::Printf(TEXT("[%s] 접근 목적지=(4,1)"), C.Name), Dest == FTileIndex(4, 1));
-			}
-			TestTrue(FString::Printf(TEXT("[%s] 시전커맨드 없음(조준 불가)"), C.Name), FindCast(Commands) == nullptr);
+	/**
+	 * Case2-2: 등거리(HoldRange) / 이동 후에도 조준 불가능
+	 *   -> 플레이어에게 최대한 접근
+	 * 맵과 결과는 Case1-2와 동일
+	 */
+	AddInfo(TEXT("=== Case2-2: 등거리(HoldRange) / 조준 불가능 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::HoldRange,
+			4, 1, 10, 3,
+			FTileIndex(0, 1),
+			FTileIndex(9, 1));
+		CheckApproachNoCast(*this, Commands, TEXT("Case2-2"), FTileIndex(4, 1));
+	}
+
+	/**
+	 * Case3-1: 근거리(MoveClose) / 조준 가능
+	 *   -> 현재위치에서 조준되므로 이동없음 + 스킬사용
+	 * 맵 (6x3): E(2,1) P(3,1)
+	 *   -> 이동커맨드 없고, 바로 스킬 사용
+	 */
+	AddInfo(TEXT("=== Case3-1: 근거리(MoveClose) / 조준 가능 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::MoveClose,
+			3, 1, 6, 3,
+			FTileIndex(2, 1),
+			FTileIndex(3, 1));
+		CheckTail(*this, Commands, TEXT("Case3-1"));
+		TestTrue(TEXT("[Case3-1] 이동커맨드 없음(현재위치에서 스킬 사용 가능)"), FindMoveCommand(Commands) == nullptr);
+		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
+		if (TestTrue(TEXT("[Case3-1] 스킬커맨드 존재"), Cast != nullptr))
+		{
+			TestEqual(TEXT("[Case3-1] 스킬 인덱스 0"), Cast->mSkillIndex, 0);
+			TestTrue(TEXT("[Case3-1] 영향범위 타일에 플레이어 타일 포함"), Cast->mEffectTileIndexes.Contains(FTileIndex(3, 1)));
 		}
 	}
 
-	// 루트 해제
+	/**
+	 * Case3-2: 근거리(MoveClose) / 이동 후에도 조준 불가능
+	 *   -> 플레이어에게 최대한 접근
+	 * 맵과 결과는 Case1-2와 동일
+	 */
+	AddInfo(TEXT("=== Case3-2: 근거리(MoveClose) / 이동 후에도 조준 불가능 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::MoveClose,
+			4, 1, 10, 3,
+			FTileIndex(0, 1),
+			FTileIndex(9, 1));
+		CheckApproachNoCast(*this, Commands, TEXT("Case3-2"), FTileIndex(4, 1));
+	}
+
+	// GC 안당하려고 KeepAlive에 마달아놨던 SkillComponent 연결 해제 -> GC 대상
 	for (UObject* Object : KeepAlive)
-	{
 		if (IsValid(Object))
-		{
 			Object->RemoveFromRoot();
-		}
-	}
 
 	return true;
 }
