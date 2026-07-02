@@ -114,7 +114,16 @@ void UCameraMovementComponent::SetEmphasisZoom(float EmphasisZoom)
 	mEmphasisZoom = EmphasisZoom;
 }
 
-void UCameraMovementComponent::ZoomCamera(float ZoomDelta)
+void UCameraMovementComponent::ZoomCamera_Instant(float ZoomDelta)
+{
+	if (mCamerControlState != ECameraControlState::Normal)
+		return;
+
+	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
+	mCameraComponent->OrthoWidth = FMath::Clamp(mCameraComponent->OrthoWidth + ZoomDelta, mMinOrthoWidth, mMaxOrthoWidth);
+}
+
+void UCameraMovementComponent::ZoomCamera_Smooth(float ZoomDelta)
 {
 	if (mCamerControlState != ECameraControlState::Normal)
 		return;
@@ -129,6 +138,7 @@ void UCameraMovementComponent::ZoomCamera(float ZoomDelta)
 	// 0.01초 간격으로 호출할 예정이므로 (Duration / 0.01)번 반복
 	mCurrentZoomAlpha = 0.0f;
 
+	// Timer로 Zoom을 수행합니다.
 	GetWorld()->GetTimerManager().SetTimer(mTimerHandle_Zoom, this, &UCameraMovementComponent::ZoomStep, 0.01f, true);
 }
 
@@ -137,7 +147,7 @@ void UCameraMovementComponent::ZoomCameraAndMoveToViewportPosition(float ZoomDel
 	if (mCamerControlState != ECameraControlState::Normal)
 		return;
 
-	ZoomCamera(ZoomDelta);
+	ZoomCamera_Smooth(ZoomDelta);
 	MoveToViewportPosition(ViewPortPos);
 }
 
@@ -146,7 +156,7 @@ void UCameraMovementComponent::ZoomCameraAndMoveToWorldPosition(float ZoomDelta,
 	if (mCamerControlState != ECameraControlState::Normal)
 		return;
 
-	ZoomCamera(ZoomDelta);
+	ZoomCamera_Smooth(ZoomDelta);
 	MoveToWorldPosition(WorldPosition);
 }
 
@@ -206,6 +216,7 @@ void UCameraMovementComponent::MoveToViewportPosition(FVector2D ViewPortPos)
 	// 0.01초 간격으로 호출할 예정이므로 (Duration / 0.01)번 반복
 	mCurrentMoveAlpha = 0.0f;
 
+	// Timer로 이동을 수행합니다.
 	GetWorld()->GetTimerManager().SetTimer(mTimerHandle_Move, this, &UCameraMovementComponent::MoveStep, 0.01f, true);
 }
 
@@ -237,6 +248,7 @@ void UCameraMovementComponent::MoveToWorldPosition(FVector LocationPos)
 	// 0.01초 간격으로 호출할 예정이므로 (Duration / 0.01)번 반복
 	mCurrentMoveAlpha = 0.0f;
 
+	// Timer로 이동을 수행합니다.
 	GetWorld()->GetTimerManager().SetTimer(mTimerHandle_Move, this, &UCameraMovementComponent::MoveStep, 0.01f, true);
 
 }
@@ -321,6 +333,7 @@ void UCameraMovementComponent::StartEmphasisToViewPortPosition(FVector2D ViewPor
 
 void UCameraMovementComponent::EndEmphasis()
 {
+	// 카메라의 강조 상태를 종료합니다.
 	mCamerControlState = ECameraControlState::Normal;
 
 	ZoomCameraAndMoveToWorldPosition(-mPreDefaultState.ZoomDelta, mPreDefaultState.Position);
@@ -348,6 +361,7 @@ bool UCameraMovementComponent::GetCameraRayHitPoint(OUT FHitResult& HitResult)
 
 void UCameraMovementComponent::MoveStep()
 {
+	// mMoveDuration 시간동안 이동 합니다.
 	mCurrentMoveAlpha += 0.01f / mMoveDuration; // 시간에 따른 진행도 증가
 
 	if (mCurrentMoveAlpha >= 1.0f)
@@ -376,6 +390,7 @@ void UCameraMovementComponent::MoveStep()
 
 void UCameraMovementComponent::ZoomStep()
 {
+	// mZoomDuration 시간동안 줌을 합니다.
 	mCurrentZoomAlpha += 0.01f / mZoomDuration; // 시간에 따른 진행도 증가
 
 	if (mCurrentZoomAlpha >= 1.0f)

@@ -154,7 +154,7 @@ void ACombatCameraPawn::ZoomKey(const FInputActionValue& Value)
 		float PreDis = FVector2D::Distance(PreTouch1, PreTouch2);
 		float CurDis = FVector2D::Distance(CurTouch1, CurTouch2);
 
-		mCameraMovementComponent.Get()->ZoomCamera(PreDis - CurDis);
+		mCameraMovementComponent.Get()->ZoomCamera_Instant(PreDis - CurDis);
 	}
 
 	// 이전 Touch 상태를 현재 Touch 상태로 되돌립니다.
@@ -200,7 +200,7 @@ void ACombatCameraPawn::SecondTouchStart(const FInputActionValue& Value)
 		float PreDis = FVector2D::Distance(PreTouch1, PreTouch2);
 		float CurDis = FVector2D::Distance(CurTouch1, CurTouch2);
 
-		mCameraMovementComponent.Get()->ZoomCamera(PreDis - CurDis);
+		mCameraMovementComponent.Get()->ZoomCamera_Instant(PreDis - CurDis);
 		//mCameraMovementComponent.Get()->ZoomCameraAndMoveToViewportPosition(PreDis - CurDis, (CurTouch1 + CurTouch2) / 2);
 
 	}

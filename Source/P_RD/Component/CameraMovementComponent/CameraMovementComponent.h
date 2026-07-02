@@ -81,17 +81,22 @@ public:
 	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MinZoom", AllowPrivateAccess = "true"))
 	float mMinOrthoWidth = 100.f;
 
+	/*
+	* @brief Zoom 시 걸리는 시간
+	* @details
+	* 터치로 이동 시 걸리는 시간
+	*/
 	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "ZoomDuration", AllowPrivateAccess = "true"))
 	float mZoomDuration = 0.2f; // 이동에 걸릴 시간
 
 	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "ZoomExp", AllowPrivateAccess = "true"))
 	float mZoomExp = 2.f;
 
-	FTimerHandle mTimerHandle_Zoom;
-	float mStartZoom;
-	float mCurZoom;
-	float mEndZoom;
-	float mCurrentZoomAlpha = 0.0f;
+	FTimerHandle mTimerHandle_Zoom;		// Zoom 로직에 쓸 타이머 핸들
+	float mStartZoom;					// 시작 Zoom
+	float mCurZoom;						// 현재 Zoom
+	float mEndZoom;						// 끝 Zoom
+	float mCurrentZoomAlpha = 0.0f;		// Zoom 로직 진행도
 
 public:
 	/* 클램핑 박스 제한*/
@@ -112,17 +117,25 @@ public:
 	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveClampingBox", AllowPrivateAccess = "true"))
 	FVector2D mMoveClampingBox = FVector2D(3000, 3000);
 
+	/*
+	* @brief 이동 시 걸리는 시간
+	* @details
+	* 터치로 이동 시 걸리는 시간
+	*/
 	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveDuration", AllowPrivateAccess = "true"))
 	float mMoveDuration = 0.2f; // 이동에 걸릴 시간
 
+	/*
+	* @brief 가속도 강도
+	*/
 	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveExp", AllowPrivateAccess = "true"))
 	float mMoveExp = 2.f;
 
-	FTimerHandle mTimerHandle_Move;
-	FVector mStartLocation;
-	FVector mCurLocation;
-	FVector mEndLocation;
-	float mCurrentMoveAlpha = 0.0f;
+	FTimerHandle mTimerHandle_Move;		// 이동 로직에 쓸 타이머 핸들
+	FVector mStartLocation;				// 이동 시작 위치
+	FVector mCurLocation;				// 현재 위치
+	FVector mEndLocation;				// 종료 위치
+	float mCurrentMoveAlpha = 0.0f;		// 이동 진행도
 	
 
 private:
@@ -137,7 +150,6 @@ private:
 
 	/*
 	* @brief 현재 강조 상태
-	* @details
 	*/
 	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "현재 강조 상태", AllowPrivateAccess = "true"))
 
@@ -181,12 +193,20 @@ public:
 public:
 
 	/*
-	* @brief 줌 값을 받아서 카메라를 Zoom합니다
+	* @brief 줌 값을 받으면 즉시 카메라를 Zoom합니다
 	*
-	* @param ZoomDelta 만큼 Zoom 합니다
+	* @param ZoomDelta 만큼 즉시 Zoom 합니다
 	*/
 	UFUNCTION(BlueprintCallable)
-	void ZoomCamera(float ZoomDelta);
+	void ZoomCamera_Instant(float ZoomDelta);
+
+	/*
+	* @brief 줌 값을 받아서 일정 시간동안 카메라를 Zoom합니다
+	*
+	* @param ZoomDelta 만큼 일정 시간동안  Zoom 합니다
+	*/
+	UFUNCTION(BlueprintCallable)
+	void ZoomCamera_Smooth(float ZoomDelta);
 
 	/*
 	* @brief 줌 값을 받아서 카메라를 Zoom합니다.
@@ -224,6 +244,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void MoveToWorldPosition(FVector WorldPosition);
 
+
+private:
 	void MoveStep();
 
 	void ZoomStep();
