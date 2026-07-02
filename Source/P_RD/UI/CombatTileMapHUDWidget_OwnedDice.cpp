@@ -61,6 +61,9 @@ void UCombatTileMapHUDWidget::BindCombatUIModel(UCombatUIModel* InUIModel)
 		mCombatUIModel->OnActionResolved.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatActionResolved);
 		// 이미 어댑터가 push해 둔 현재 값을 즉시 반영(구독 전 발생분 보강).
 		RefreshCombatStatusBar();
+
+		// 이 시점(BeginRoom, InitCombat 이후)엔 전투 모델이 준비돼 있다 — 승리 후 월드맵 흐름을 HUD가 구독한다.
+		BindVictoryFlowEvents();
 	}
 }
 

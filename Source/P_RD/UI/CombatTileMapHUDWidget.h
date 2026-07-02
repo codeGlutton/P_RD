@@ -10,6 +10,9 @@
 
 class ACombatDiceCaptureActor;
 class ACombatDiceRollCaptureActor;
+struct FPresentationBarrier;
+enum class EWorldWidgetType : uint8;
+enum class ESRPGCombatResult : uint8;
 class UBorder;
 class UButton;
 class UCanvasPanel;
@@ -74,7 +77,7 @@ protected:
 	/** @brief OpenUI()로 표시될 때 주사위 입장 연출을 다시 시작한다. */
 	void ApplyOpenUI() override;
 
-	/** @brief 전투 HUD가 TopMenuBar보다 뒤에 깔리도록 낮은 ZOrder를 사용한다. */
+	/** @brief 전투 HUD가 공용 팝업(월드맵/설정/패널)보다 뒤에 깔리도록 낮은 ZOrder를 사용한다. */
 	int32 GetViewportZOrder() const override;
 
 private:
@@ -116,15 +119,6 @@ private:
 
 	/** @brief 현재 RunPersistData의 보유 주사위 목록을 전투 HUD 표시용 데이터로 변환한다. */
 	void RefreshDiceViewsFromRunData();
-
-	/** @brief 이전 WBP 시안에 남아 있는 고정 주사위 슬롯을 숨긴다. */
-	void HideLegacyDiceSlots() const;
-
-	/** @brief 이전 WBP 시안에 항상 보이던 스킬 상세 카드를 숨긴다. */
-	void HideLegacySkillDetailCard() const;
-
-	/** @brief 이전 WBP 시안의 고정 스킬 레일을 숨긴다. */
-	void HideLegacySkillRail() const;
 
 	/** @brief 선택 강조가 들어가지 않은 중립 스킬 레일을 런타임으로 다시 만든다. */
 	void RebuildSkillRailWidgets();
@@ -216,7 +210,7 @@ private:
 	/** @brief 우측 MOVE 버튼의 이동 가능 수치(현재/최대)를 갱신한다. */
 	void RefreshMoveButton() const;
 
-	/** @brief 탑바 내비 버튼 클릭 → 숨겨진 TopMenuBar의 해당 패널 토글로 위임한다(MAP/DICE/SKILL/SET). */
+	/** @brief 내비 버튼 클릭(MAP/DICE/SKILL/SET)을 HUD 소유의 패널 토글로 연결한다. */
 	UFUNCTION()
 	void HandleNavMapButtonClicked();
 	UFUNCTION()
@@ -226,12 +220,48 @@ private:
 	UFUNCTION()
 	void HandleNavSettingsButtonClicked();
 
-	/** @brief 월드위젯 서브시스템에서 공용 탑바 위젯을 가져온다(스킨 모드에서 숨겨져 있어도 인스턴스는 살아있음). */
-	class UTopMenuBarWidget* GetTopMenuBar() const;
+	/* 패널 내비/승리 흐름 (레거시 탑바에서 이관, CombatTileMapHUDWidget_Nav.cpp) */
 
-	/** @brief 스킨 모드에서 레거시 탑바(WBP_TopMenuBar)를 접어 둔다. 패널 토글의 ApplyInputPassThrough가
-	    매번 탑바를 다시 보이게 하므로, concept HUD 위에 레거시 상태바/INVENTORY/ROOM 배너가 겹쳐 뜨는 걸 막는다. */
-	void HideLegacyTopBarWhenSkinned() const;
+	/** @brief 전투 모델의 전투 종료 이벤트를 구독해 승리 후 월드맵 흐름을 HUD가 소유한다. 새 전투마다 승리 잠금을 초기화한다. */
+	void BindVictoryFlowEvents();
+
+	/** @brief 월드 서브시스템에 등록된 월드 위젯을 URDUserWidget으로 가져온다. */
+	URDUserWidget* GetToggleableWorldWidget(EWorldWidgetType WorldWidgetType) const;
+
+	/** @brief 지정한 월드 위젯을 공통 CloseUI() 경로로 닫는다. */
+	void CloseWorldWidget(EWorldWidgetType WorldWidgetType) const;
+
+	/** @brief 플로팅 패널(MAP/SET/DICE/SKILL)을 하나만 남기고 닫는다(상호배타). */
+	void CloseFloatingPanels(EWorldWidgetType ExceptWorldWidgetType) const;
+
+	/** @brief 월드맵 토글. 조회용은 방 선택 비활성, 승리 잠금 중엔 복원 흐름으로 보낸다. */
+	void ToggleWorldMap();
+
+	/** @brief 인게임 설정 패널 토글(+InGame 모드/상태 문구 초기화). */
+	void ToggleSettingsPanel();
+
+	/** @brief DICE/SKILL처럼 단순히 열고 닫는 플로팅 패널을 토글한다. */
+	void ToggleFloatingPanel(EWorldWidgetType WorldWidgetType, const TCHAR* DebugName);
+
+	/** @brief 플레이어 승리 결과를 다음 방 선택 월드맵 표시로 연결한다. */
+	void HandleEndCombatUI(TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result);
+
+	/** @brief 승리 후 다음 방 선택이 가능한 상태로 월드맵을 연다(OpenUI 완료 시 barrier 해제). */
+	void OpenWorldMapAfterPlayerWin(TSharedPtr<FPresentationBarrier> Barrier);
+
+	/** @brief 승리 후 지도 잠금이 유지되는 동안 월드맵을 다시 연다. */
+	void RestoreVictoryWorldMap();
+
+	/** @brief 설정 패널이 열려 있으면 닫힘 완료 뒤 승리 후 월드맵을 복원한다. */
+	void CloseSettingsPanelAndRestoreVictoryWorldMap();
+
+	/** @brief 월드맵 닫기 요청을 승리 잠금 상태에 맞게 처리한다. */
+	UFUNCTION()
+	void HandleWorldMapCloseRequested();
+
+	/** @brief 설정 패널 Back 요청을 승리 잠금 상태에 맞게 처리한다. */
+	UFUNCTION()
+	void HandleSettingsBackRequested();
 
 	/** @brief 뷰모델의 유닛 수에 맞춰 머리 위 HP바 위젯을 다시 만든다. */
 	void RebuildUnitHpBars();
@@ -289,10 +319,6 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UCanvasPanel> DesignCanvas;
 
-	/** @brief 이전 WBP에 남아 있을 수 있는 3D 주사위 UMG Viewport. 새 구조에서는 숨긴다. */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UViewport> DiceRollViewport;
-
 	/** @brief 주사위 연출 안내 문구 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> DiceRollStatusText;
@@ -300,43 +326,6 @@ private:
 	/** @brief 턴 종료 버튼 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UButton> EndTurnButton;
-
-	/** @brief 이전 WBP 시안에 남아 있는 고정 주사위 슬롯. 실제 보유 주사위 카드와 겹치지 않게 숨긴다. */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceSize_0;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceSize_1;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceSize_2;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceSize_3;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceFill_0;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceFill_1;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceFill_2;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceFill_3;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceLabel_0;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceLabel_1;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceLabel_2;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceLabel_3;
 
 	/** @brief 전투 진입 주사위 팝업 뒤에서 전투 HUD를 가리는 반투명 배경 */
 	UPROPERTY(meta = (BindWidgetOptional))
@@ -391,7 +380,7 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UButton> mMoveButton;
 
-	/** @brief 탑바 내비 투명 버튼(concept 아트 위 클릭영역). 런타임 생성, TopMenuBar 패널 토글로 위임. */
+	/** @brief 내비 투명 버튼(concept 아트 위 클릭영역). 런타임 생성, HUD 소유 패널 토글 호출. */
 	UPROPERTY(Transient)
 	TObjectPtr<UButton> mNavMapButton;
 	UPROPERTY(Transient)
@@ -435,6 +424,9 @@ private:
 
 	/** @brief 현재 선택된 스킬 index */
 	int32 mSelectedSkillIndex = INDEX_NONE;
+
+	/** @brief 승리 후 다음 방을 고르기 전까지 월드맵을 강제 유지하는 잠금. 새 전투 바인딩 시 초기화된다. */
+	bool mVictoryWorldMapLocked = false;
 
 	/** @brief WBP에 디자이너 스킨(HUD_* 앵커 위젯)이 있어 좌표/아트를 WBP에서 읽는 모드인지. */
 	bool mDesignerSkinActive = false;
