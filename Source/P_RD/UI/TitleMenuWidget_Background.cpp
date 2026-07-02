@@ -285,6 +285,13 @@ void UTitleMenuWidget::ApplyTitleBackgroundVideoBrush()
 		: FVector2D(1280.0f, 1280.0f);
 	mBackgroundRuntime.mVideoBrush.SetResourceObject(mBackgroundRuntime.mMediaTexture);
 	TitleBackgroundImage->SetBrush(mBackgroundRuntime.mVideoBrush);
+
+	// concept_title_01_classic의 TitleVignetteImage는 투명 오버레이가 아니라 불투명 정적 배경이다.
+	// 영상 브러시가 실제로 적용된 뒤에는 숨겨야 재생 중인 MediaTexture가 화면에 보인다.
+	if (UWidget* TitleVignetteWidget = GetWidgetFromName(TEXT("TitleVignetteImage")))
+	{
+		TitleVignetteWidget->SetVisibility(ESlateVisibility::Collapsed);
+	}
 }
 
 /** @brief 파일 존재와 MediaSource 열기까지 책임지고, 실패해도 타이틀 UI 자체는 유지한다. */
