@@ -117,15 +117,6 @@ private:
 	/** @brief 현재 RunPersistData의 보유 주사위 목록을 전투 HUD 표시용 데이터로 변환한다. */
 	void RefreshDiceViewsFromRunData();
 
-	/** @brief 이전 WBP 시안에 남아 있는 고정 주사위 슬롯을 숨긴다. */
-	void HideLegacyDiceSlots() const;
-
-	/** @brief 이전 WBP 시안에 항상 보이던 스킬 상세 카드를 숨긴다. */
-	void HideLegacySkillDetailCard() const;
-
-	/** @brief 이전 WBP 시안의 고정 스킬 레일을 숨긴다. */
-	void HideLegacySkillRail() const;
-
 	/** @brief 선택 강조가 들어가지 않은 중립 스킬 레일을 런타임으로 다시 만든다. */
 	void RebuildSkillRailWidgets();
 
@@ -289,10 +280,6 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UCanvasPanel> DesignCanvas;
 
-	/** @brief 이전 WBP에 남아 있을 수 있는 3D 주사위 UMG Viewport. 새 구조에서는 숨긴다. */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UViewport> DiceRollViewport;
-
 	/** @brief 주사위 연출 안내 문구 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> DiceRollStatusText;
@@ -300,43 +287,6 @@ private:
 	/** @brief 턴 종료 버튼 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UButton> EndTurnButton;
-
-	/** @brief 이전 WBP 시안에 남아 있는 고정 주사위 슬롯. 실제 보유 주사위 카드와 겹치지 않게 숨긴다. */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceSize_0;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceSize_1;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceSize_2;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceSize_3;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceFill_0;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceFill_1;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceFill_2;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceFaceFill_3;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceLabel_0;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceLabel_1;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceLabel_2;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidget> DiceLabel_3;
 
 	/** @brief 전투 진입 주사위 팝업 뒤에서 전투 HUD를 가리는 반투명 배경 */
 	UPROPERTY(meta = (BindWidgetOptional))

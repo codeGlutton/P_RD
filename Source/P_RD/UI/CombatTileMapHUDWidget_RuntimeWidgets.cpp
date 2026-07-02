@@ -6,7 +6,6 @@
 #include "Components/CanvasPanel.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
-#include "Components/Viewport.h"
 #include "Engine/Texture2D.h"
 
 namespace
@@ -64,14 +63,6 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 	// (값 텍스트 LV/HP/Gold는 더 이상 C++가 생성/정렬하지 않는다 — 빌드가 WBP의 HUD_M_lv/hp/gold_value를
 	//  실제 TextBlock으로 심고 위치/폰트/정렬을 소유한다. C++는 RefreshSkinValueLabels에서 내용만 채운다.)
 
-	HideLegacyDiceSlots();
-	HideLegacySkillDetailCard();
-	HideLegacySkillRail();
-
-	if (DiceRollViewport != nullptr)
-	{
-		DiceRollViewport->SetVisibility(ESlateVisibility::Collapsed);
-	}
 
 	// --- 주사위 판(물리 굴림) 보드/배경/캡처 위젯 (20260622 이식). 위치는 ApplyRuntimeWidgetLayout에서 잡는다. ---
 	if (mDiceRollBoardTexture == nullptr)
