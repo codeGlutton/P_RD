@@ -15,225 +15,11 @@
 
 using namespace RDCombatHUD;
 
-// ShouldUseFaceOnReadyPose / GetDiceReadyRotation 는 Private 헤더 선언 + DicePreview.cpp 정의를 공용으로 쓴다.
-
-namespace
-{
-	constexpr float DiceRollSettleStartAlpha = 0.78f;
-	constexpr float DiceRollFaceSettleCompleteAlpha = 0.94f;
-	constexpr float DiceRollPi = 3.14159265358979323846f;
-	constexpr bool bSkipFinalDiceRollSettleForTest = false;
-
-	struct FDiceRollVisualState
-	{
-		FVector2D Offset = FVector2D::ZeroVector;
-		float HopAlpha = 0.0f;
-		float ImpactAlpha = 0.0f;
-		FVector2D DiceScale = FVector2D::UnitVector;
-		FVector2D ShadowScale = FVector2D::UnitVector;
-		float ShadowOpacity = 0.68f;
-		float TiltAngle = 0.0f;
-	};
-
-	float SmoothStep01(float Alpha)
-	{
-		const float ClampedAlpha = FMath::Clamp(Alpha, 0.0f, 1.0f);
-		return ClampedAlpha * ClampedAlpha * (3.0f - 2.0f * ClampedAlpha);
-	}
-
-	float EaseOutQuad(float Alpha)
-	{
-		const float ClampedAlpha = FMath::Clamp(Alpha, 0.0f, 1.0f);
-		return 1.0f - (1.0f - ClampedAlpha) * (1.0f - ClampedAlpha);
-	}
-
-	float SinePulse(float Alpha, float StartAlpha, float EndAlpha)
-	{
-		if (Alpha <= StartAlpha || Alpha >= EndAlpha)
-		{
-			return 0.0f;
-		}
-
-		return FMath::Sin(((Alpha - StartAlpha) / (EndAlpha - StartAlpha)) * DiceRollPi);
-	}
-
-	float CollisionPulse(float Alpha, float CenterAlpha, float Width)
-	{
-		const float Distance = FMath::Abs(Alpha - CenterAlpha);
-		const float Pulse = 1.0f - FMath::Clamp(Distance / Width, 0.0f, 1.0f);
-		return Pulse * Pulse * (3.0f - 2.0f * Pulse);
-	}
-
-	float GetDiceClusterPullX(int32 DiceIndex, int32 DiceCount)
-	{
-		if (DiceCount <= 1)
-		{
-			return 0.0f;
-		}
-
-		const float CenterIndex = (StaticCast<float>(DiceCount) - 1.0f) * 0.5f;
-		const float NormalizedIndex = (StaticCast<float>(DiceIndex) - CenterIndex) / FMath::Max(1.0f, CenterIndex);
-		return -NormalizedIndex * 138.0f;
-	}
-
-	float GetDiceRollImpactAlpha(int32 DiceIndex, float TravelAlpha)
-	{
-		const float DicePhase = StaticCast<float>(DiceIndex % 4) * 0.013f;
-		return FMath::Clamp(
-			CollisionPulse(TravelAlpha, 0.18f + DicePhase, 0.042f) * 0.90f
-			+ CollisionPulse(TravelAlpha, 0.34f - DicePhase * 0.65f, 0.052f) * 0.78f
-			+ CollisionPulse(TravelAlpha, 0.51f + DicePhase * 0.45f, 0.050f) * 0.68f
-			+ CollisionPulse(TravelAlpha, 0.66f - DicePhase * 0.35f, 0.044f) * 0.52f,
-			0.0f,
-			1.0f
-		);
-	}
-
-	float GetDiceRollFinalThumpAlpha(int32 DiceIndex, float Alpha)
-	{
-		const float DiceDelay = StaticCast<float>(DiceIndex % 4) * 0.009f;
-		return FMath::Clamp(
-			CollisionPulse(Alpha, 0.835f + DiceDelay, 0.035f) * 0.95f
-			+ CollisionPulse(Alpha, 0.930f + DiceDelay * 0.5f, 0.026f) * 0.45f,
-			0.0f,
-			1.0f
-		);
-	}
-
-	float GetDiceRollBoardImpactAlpha(float Alpha)
-	{
-		return FMath::Clamp(
-			CollisionPulse(Alpha, 0.17f, 0.036f) * 0.70f
-			+ CollisionPulse(Alpha, 0.31f, 0.044f) * 0.62f
-			+ CollisionPulse(Alpha, 0.48f, 0.044f) * 0.55f
-			+ CollisionPulse(Alpha, 0.64f, 0.040f) * 0.45f
-			+ CollisionPulse(Alpha, 0.84f, 0.040f) * 0.72f,
-			0.0f,
-			1.0f
-		);
-	}
-
-	FDiceRollVisualState GetDiceRollVisualState(int32 DiceIndex, int32 DiceCount, float NormalizedRollAlpha)
-	{
-		FDiceRollVisualState State;
-		const float Alpha = FMath::Clamp(NormalizedRollAlpha, 0.0f, 1.0f);
-		const float TravelAlpha = FMath::Clamp(Alpha / DiceRollSettleStartAlpha, 0.0f, 1.0f);
-		const float SettleAlpha = Alpha > DiceRollSettleStartAlpha
-			? EaseOutCubic((Alpha - DiceRollSettleStartAlpha) / (1.0f - DiceRollSettleStartAlpha))
-			: 0.0f;
-		const float SettleWeight = 1.0f - SettleAlpha;
-		const float GatherWeight = SinePulse(TravelAlpha, 0.02f, 0.78f) * SettleWeight;
-		const float MixWeight = SinePulse(TravelAlpha, 0.06f, 0.92f) * SettleWeight;
-		const float SlowdownWeight = 1.0f - SmoothStep01(TravelAlpha);
-		const float PairDirection = (DiceIndex % 2 == 0) ? -1.0f : 1.0f;
-		const float RowDirection = (DiceIndex % 3 == 0) ? -1.0f : 1.0f;
-		const float Phase = StaticCast<float>(DiceIndex) * 1.371f;
-		const float ImpactAlpha = GetDiceRollImpactAlpha(DiceIndex, TravelAlpha) * SettleWeight;
-		const float FinalThumpAlpha = GetDiceRollFinalThumpAlpha(DiceIndex, Alpha);
-
-		const float OrbitRadiusX = (82.0f + 18.0f * FMath::Sin(Phase)) * MixWeight * (0.78f + 0.22f * SlowdownWeight);
-		const float OrbitRadiusY = (34.0f + 10.0f * FMath::Cos(Phase * 0.7f)) * MixWeight * (0.70f + 0.30f * SlowdownWeight);
-		const float OrbitX = FMath::Sin(TravelAlpha * DiceRollPi * 4.1f + Phase) * OrbitRadiusX;
-		const float OrbitY = FMath::Cos(TravelAlpha * DiceRollPi * 3.2f + Phase * 0.84f) * OrbitRadiusY;
-		const float ClusterPullX = GetDiceClusterPullX(DiceIndex, DiceCount) * GatherWeight;
-		const float ClusterPullY = RowDirection * 22.0f * GatherWeight;
-		const float PairKnockX = PairDirection * ImpactAlpha * (58.0f + StaticCast<float>(DiceIndex % 3) * 9.0f);
-		const float PairKnockY = RowDirection * ImpactAlpha * (14.0f + StaticCast<float>(DiceIndex % 2) * 5.0f);
-		const float MicroJitterX = FMath::Sin(TravelAlpha * DiceRollPi * 14.0f + Phase * 1.7f) * 5.0f * SlowdownWeight * SettleWeight;
-		const float MicroJitterY = FMath::Cos(TravelAlpha * DiceRollPi * 12.0f + Phase * 1.3f) * 2.5f * SlowdownWeight * SettleWeight;
-
-		State.HopAlpha = FMath::Clamp(
-			(FMath::Abs(FMath::Sin(TravelAlpha * DiceRollPi * 5.2f + Phase)) * 0.12f + ImpactAlpha * 0.26f) * MixWeight
-			+ FinalThumpAlpha * 0.12f,
-			0.0f,
-			0.42f
-		);
-		State.ImpactAlpha = FMath::Clamp(ImpactAlpha + FinalThumpAlpha, 0.0f, 1.0f);
-		const float HopY = -8.0f * State.HopAlpha;
-
-		State.Offset = FVector2D(
-			FMath::Clamp(ClusterPullX + OrbitX + PairKnockX + MicroJitterX, -164.0f, 164.0f),
-			FMath::Clamp(ClusterPullY + OrbitY + PairKnockY + MicroJitterY + HopY, -70.0f, 70.0f)
-		);
-
-		const float AirScale = State.HopAlpha * 0.014f;
-		State.DiceScale = FVector2D(
-			1.0f + AirScale + State.ImpactAlpha * 0.045f,
-			1.0f + AirScale - State.ImpactAlpha * 0.035f
-		);
-		State.ShadowScale = FVector2D(
-			1.04f + State.HopAlpha * 0.08f + State.ImpactAlpha * 0.18f,
-			0.92f - State.HopAlpha * 0.04f + State.ImpactAlpha * 0.03f
-		);
-		State.ShadowOpacity = FMath::Clamp(0.78f - State.HopAlpha * 0.08f + State.ImpactAlpha * 0.16f, 0.58f, 0.92f);
-		State.TiltAngle = FMath::Clamp(
-			FMath::Sin(TravelAlpha * DiceRollPi * 5.7f + Phase) * 3.8f * MixWeight
-			+ PairDirection * State.ImpactAlpha * 3.6f,
-			-6.0f,
-			6.0f
-		);
-		return State;
-	}
-
-	FVector2D GetDiceRollGroundVelocity(int32 DiceIndex, int32 DiceCount, float NormalizedRollAlpha)
-	{
-		const float CurrentAlpha = FMath::Clamp(NormalizedRollAlpha, 0.0f, DiceRollSettleStartAlpha);
-		const float PreviousAlpha = FMath::Max(0.0f, CurrentAlpha - 0.018f);
-		const FVector2D CurrentOffset = GetDiceRollVisualState(DiceIndex, DiceCount, CurrentAlpha).Offset;
-		const FVector2D PreviousOffset = GetDiceRollVisualState(DiceIndex, DiceCount, PreviousAlpha).Offset;
-		return CurrentOffset - PreviousOffset;
-	}
-
-	FRotator GetDiceRollSpinRotation(int32 DiceIndex, int32 DiceCount, float NormalizedRollAlpha)
-	{
-		const float SpinAlpha = FMath::Clamp(NormalizedRollAlpha / DiceRollSettleStartAlpha, 0.0f, 1.0f);
-		const float DiceOffset = StaticCast<float>(DiceIndex);
-		const float Phase = DiceOffset * 1.371f;
-		const float SpinTravel = EaseOutQuad(SpinAlpha);
-		const float ImpactAlpha = GetDiceRollImpactAlpha(DiceIndex, SpinAlpha);
-		const FVector2D GroundVelocity = GetDiceRollGroundVelocity(DiceIndex, DiceCount, NormalizedRollAlpha);
-		const float GroundSpeed = GroundVelocity.Size();
-		const float GroundSpeedAlpha = FMath::Clamp(GroundSpeed / 10.0f, 0.0f, 1.0f);
-		const float DirectionRadians = GroundVelocity.SizeSquared() > 0.25f
-			? FMath::Atan2(GroundVelocity.Y, GroundVelocity.X)
-			: Phase;
-		const float DirectionDegrees = FMath::RadiansToDegrees(DirectionRadians);
-		const float RollDistance = SpinTravel * (760.0f + DiceOffset * 64.0f);
-		const float GroundGrip = FMath::Lerp(0.48f, 1.0f, GroundSpeedAlpha);
-		const float ContactRock = ImpactAlpha * (16.0f + GroundSpeedAlpha * 10.0f);
-		const float Wobble = FMath::Sin(SpinAlpha * DiceRollPi * 5.0f + Phase) * (1.0f - SmoothStep01(SpinAlpha)) * 8.0f;
-
-		return FRotator(
-			22.0f + FMath::Cos(DirectionRadians) * RollDistance * GroundGrip + ContactRock,
-			DirectionDegrees * 0.55f + DiceOffset * 28.0f + FMath::Sin(SpinAlpha * DiceRollPi * 1.7f + Phase) * 12.0f,
-			14.0f - FMath::Sin(DirectionRadians) * RollDistance * GroundGrip + Wobble - ContactRock * 0.35f
-		);
-	}
-}
 
 /** @brief 전투 입장 직후 주사위 연출을 "터치 대기" 상태로 초기화한다. */
 void UCombatTileMapHUDWidget::PrepareIntroDiceRoll()
 {
 	EnsureDiceRollPhysicsActor();
-
-	for (UImage* DiceImage : mDiceRollImages)
-	{
-		if (DiceImage != nullptr)
-		{
-			DiceImage->RemoveFromParent();
-		}
-	}
-	mDiceRollImages.Reset();
-	for (UImage* ShadowImage : mDiceRollShadowImages)
-	{
-		if (ShadowImage != nullptr)
-		{
-			ShadowImage->RemoveFromParent();
-		}
-	}
-	mDiceRollShadowImages.Reset();
-	DestroyDiceCaptureActors(mDicePreviewActors);
-	mIntroDiceSettleStartRotations.Reset();
 
 	for (FDiceViewData& DiceView : mDiceUIs)
 	{
@@ -241,7 +27,7 @@ void UCombatTileMapHUDWidget::PrepareIntroDiceRoll()
 	}
 	RefreshOwnedDiceCards();
 
-	if ((mDiceRollPhysicsActor == nullptr || mDiceUIs.IsEmpty()) && mDicePreviewActors.IsEmpty())
+	if (mDiceRollPhysicsActor == nullptr || mDiceUIs.IsEmpty())
 	{
 		SetDiceRollVisibility(ESlateVisibility::Collapsed);
 		mIntroDiceRollReady = false;
@@ -271,13 +57,11 @@ void UCombatTileMapHUDWidget::PrepareIntroDiceRoll()
 	mIntroDiceRollActive = false;
 	mIntroDiceRollReady = true;
 	mIntroDiceResultWaitingForDismiss = false;
-	mIntroDiceSettling = false;
 	mIntroDiceResultsApplied = false;
 	mIntroDiceRollResultsResolved = false;
 	mIntroDiceAligning = false;
 	mIntroDiceAligned = false;
 	mIntroDiceAlignTimer = 0.0f;
-	ResetDiceRollWidgetTransforms();
 
 	SetDiceRollVisibility(ESlateVisibility::HitTestInvisible);
 	if (DiceRollStatusText != nullptr)
@@ -297,7 +81,7 @@ void UCombatTileMapHUDWidget::StartIntroDiceRoll()
 		PrepareIntroDiceRoll();
 	}
 
-	if (mIntroDiceRollReady == false || mDiceUIs.IsEmpty() || (mDiceRollPhysicsActor == nullptr && mDicePreviewActors.IsEmpty()))
+	if (mIntroDiceRollReady == false || mDiceUIs.IsEmpty() || mDiceRollPhysicsActor == nullptr)
 	{
 		SetDiceRollVisibility(ESlateVisibility::Collapsed);
 		return;
@@ -313,13 +97,11 @@ void UCombatTileMapHUDWidget::StartIntroDiceRoll()
 	mIntroDiceRollActive = true;
 	mIntroDiceRollReady = false;
 	mIntroDiceResultWaitingForDismiss = false;
-	mIntroDiceSettling = false;
 	mIntroDiceResultsApplied = false;
 	mIntroDiceRollResultsResolved = false;
 	mIntroDiceAligning = false;
 	mIntroDiceAligned = false;
 	mIntroDiceAlignTimer = 0.0f;
-	UpdateDiceRollWidgetTransforms(0.0f);
 	if (mDiceRollPhysicsActor != nullptr)
 	{
 		mDiceRollPhysicsActor->StartRoll(FMath::Rand());
@@ -430,140 +212,8 @@ void UCombatTileMapHUDWidget::UpdateIntroDiceRoll(float InDeltaTime)
 		return;
 	}
 
-	if (mDicePreviewActors.IsEmpty())
-	{
-		mIntroDiceRollActive = false;
-		return;
-	}
-
-	mIntroDiceRollElapsed += InDeltaTime;
-
-	if (mIntroDiceRollElapsed < mIntroDiceRollDuration)
-	{
-		const float Alpha = FMath::Clamp(mIntroDiceRollElapsed / mIntroDiceRollDuration, 0.0f, 1.0f);
-		const float VisualAlpha = bSkipFinalDiceRollSettleForTest == true
-			? FMath::Min(Alpha, DiceRollSettleStartAlpha - KINDA_SMALL_NUMBER)
-			: Alpha;
-		UpdateDiceRollWidgetTransforms(VisualAlpha);
-
-		if (Alpha < DiceRollSettleStartAlpha || bSkipFinalDiceRollSettleForTest == true)
-		{
-			for (int32 DiceIndex = 0; DiceIndex < mDicePreviewActors.Num(); ++DiceIndex)
-			{
-				ACombatDiceCaptureActor* DicePreviewActor = mDicePreviewActors[DiceIndex];
-				if (DicePreviewActor == nullptr)
-				{
-					continue;
-				}
-
-				const FRotator RollingRotation = GetDiceRollSpinRotation(DiceIndex, mDicePreviewActors.Num(), Alpha);
-
-				if (mIntroDiceSettleStartRotations.IsValidIndex(DiceIndex))
-				{
-					mIntroDiceSettleStartRotations[DiceIndex] = RollingRotation;
-				}
-				DicePreviewActor->SetDiceRotation(RollingRotation);
-				DicePreviewActor->CaptureDice();
-			}
-
-			if (Alpha >= DiceRollSettleStartAlpha)
-			{
-				if (mIntroDiceSettling == false)
-				{
-					mIntroDiceSettling = true;
-				}
-				ResolveIntroDiceRollResults();
-			}
-			return;
-		}
-
-		if (mIntroDiceSettling == false)
-		{
-			mIntroDiceSettling = true;
-		}
-		ResolveIntroDiceRollResults();
-
-		const float FaceSettleAlpha = FMath::Clamp(
-			(Alpha - DiceRollSettleStartAlpha) / (DiceRollFaceSettleCompleteAlpha - DiceRollSettleStartAlpha),
-			0.0f,
-			1.0f
-		);
-		const float SettleAlpha = EaseOutCubic(FaceSettleAlpha);
-		for (int32 DiceIndex = 0; DiceIndex < mDicePreviewActors.Num(); ++DiceIndex)
-		{
-			ACombatDiceCaptureActor* DicePreviewActor = mDicePreviewActors[DiceIndex];
-			if (DicePreviewActor == nullptr || mIntroDiceSettleStartRotations.IsValidIndex(DiceIndex) == false)
-			{
-				continue;
-			}
-
-			const int32 SettledFaceOrdinal = mDiceUIs.IsValidIndex(DiceIndex) ? GetDiceSettledFaceOrdinal(mDiceUIs[DiceIndex]) : 1;
-			const FQuat StartQuat = mIntroDiceSettleStartRotations[DiceIndex].Quaternion();
-			const FQuat EndQuat = DicePreviewActor->GetSettledFaceRotation(SettledFaceOrdinal).Quaternion();
-			DicePreviewActor->SetDiceRotation(FQuat::Slerp(StartQuat, EndQuat, SettleAlpha).Rotator());
-			DicePreviewActor->CaptureDice();
-		}
-		return;
-	}
-
-	for (int32 DiceIndex = 0; DiceIndex < mDicePreviewActors.Num(); ++DiceIndex)
-	{
-		if (ACombatDiceCaptureActor* DicePreviewActor = mDicePreviewActors[DiceIndex])
-		{
-			const int32 SettledFaceOrdinal = mDiceUIs.IsValidIndex(DiceIndex) ? GetDiceSettledFaceOrdinal(mDiceUIs[DiceIndex]) : 1;
-			DicePreviewActor->SettleToFace(SettledFaceOrdinal);
-			DicePreviewActor->CaptureDice();
-		}
-	}
-	UpdateDiceRollWidgetTransforms(1.0f);
-
-	if (mIntroDiceResultsApplied == false)
-	{
-		MarkAllDiceRolled();
-		mIntroDiceResultsApplied = true;
-	}
-
-	const float HoldElapsed = mIntroDiceRollElapsed - mIntroDiceRollDuration;
-	if (DiceRollStatusText != nullptr)
-	{
-		FString ResultText;
-		for (int32 DiceIndex = 0; DiceIndex < mDiceUIs.Num(); ++DiceIndex)
-		{
-			if (DiceIndex > 0)
-			{
-				ResultText += TEXT(" / ");
-			}
-			ResultText += FString::FromInt(mDiceUIs[DiceIndex].mResultValue);
-		}
-
-		DiceRollStatusText->SetText(FText::Format(
-			NSLOCTEXT("CombatTileMapHUDWidget", "IntroDiceResultAllFormat", "DICE RESULT\n{0}"),
-			FText::FromString(ResultText)
-		));
-	}
-
-	if (HoldElapsed >= mIntroDiceHoldDuration)
-	{
-		mIntroDiceRollActive = false;
-		mIntroDiceResultWaitingForDismiss = true;
-		if (DiceRollStatusText != nullptr)
-		{
-			FString ResultText;
-			for (int32 DiceIndex = 0; DiceIndex < mDiceUIs.Num(); ++DiceIndex)
-			{
-				if (DiceIndex > 0)
-				{
-					ResultText += TEXT(" / ");
-				}
-				ResultText += FString::FromInt(mDiceUIs[DiceIndex].mResultValue);
-			}
-
-			DiceRollStatusText->SetText(FText::Format(
-				NSLOCTEXT("CombatTileMapHUDWidget", "IntroDiceResultDismissAllFormat", "DICE RESULT\n{0}\nTAP TO CLOSE"),
-				FText::FromString(ResultText)
-			));
-		}
-	}
+	// 물리 캡처 액터가 없으면(스폰 실패 등) 이번 입장 연출은 종료 상태로 둔다.
+	mIntroDiceRollActive = false;
 }
 
 /** @brief 굴림 대기 상태에서 기기를 흔들면(가속도 급변) 자동으로 굴림을 시작한다. */
@@ -629,51 +279,6 @@ void UCombatTileMapHUDWidget::MarkAllDiceRolled()
 	RefreshDiceAssignmentText();
 }
 
-void UCombatTileMapHUDWidget::ResolveIntroDiceRollResults()
-{
-	if (mIntroDiceRollResultsResolved == true)
-	{
-		return;
-	}
-
-	mIntroDiceRollResultsResolved = true;
-
-	if (mCombatUIModel != nullptr)
-	{
-		mCombatUIModel->RequestRollDice();
-		RefreshDiceViewsFromRunData();
-	}
-	else
-	{
-		for (FDiceViewData& DiceView : mDiceUIs)
-		{
-			const int32 FaceCount = FMath::Max(1, DiceView.mFaceValues.Num() > 0 ? DiceView.mFaceValues.Num() : DiceView.mFaceCount);
-			DiceView.mRolledFaceIndex = FMath::RandRange(0, FaceCount - 1);
-			DiceView.mResultValue = DiceView.mFaceValues.IsValidIndex(DiceView.mRolledFaceIndex)
-				? DiceView.mFaceValues[DiceView.mRolledFaceIndex]
-				: DiceView.mRolledFaceIndex + 1;
-		}
-	}
-
-	for (int32 DiceIndex = 0; DiceIndex < mDiceUIs.Num(); ++DiceIndex)
-	{
-		FDiceViewData& DiceView = mDiceUIs[DiceIndex];
-		DiceView.mIsRolled = false;
-
-		if (mDicePreviewActors.IsValidIndex(DiceIndex))
-		{
-			if (ACombatDiceCaptureActor* DicePreviewActor = mDicePreviewActors[DiceIndex])
-			{
-				DicePreviewActor->SetDiceType(DiceView.mFaceCount);
-				DicePreviewActor->SetFaceData(DiceView.mFaceValues, DiceView.mFaceTextures);
-				DicePreviewActor->SetDiceColor(RDUIDice::GetDiceRarityColor(DiceView.mRarityType));
-			}
-		}
-	}
-
-	RefreshOwnedDiceCards();
-}
-
 void UCombatTileMapHUDWidget::ApplyIntroDicePhysicsResults()
 {
 	if (mIntroDiceRollResultsResolved == true)
@@ -728,77 +333,6 @@ void UCombatTileMapHUDWidget::ApplyIntroDicePhysicsResults()
 	}
 
 	RefreshOwnedDiceCards();
-}
-
-void UCombatTileMapHUDWidget::UpdateDiceRollWidgetTransforms(float NormalizedRollAlpha) const
-{
-	const float ClampedAlpha = FMath::Clamp(NormalizedRollAlpha, 0.0f, 1.0f);
-	if (mDiceRollBoardImage != nullptr)
-	{
-		const float BoardImpact = GetDiceRollBoardImpactAlpha(ClampedAlpha);
-		mDiceRollBoardImage->SetRenderTranslation(FVector2D(
-			FMath::Sin(ClampedAlpha * DiceRollPi * 18.0f) * 4.0f * BoardImpact,
-			FMath::Cos(ClampedAlpha * DiceRollPi * 14.0f) * 3.0f * BoardImpact
-		));
-		mDiceRollBoardImage->SetRenderScale(FVector2D(1.0f + BoardImpact * 0.006f, 1.0f + BoardImpact * 0.004f));
-	}
-
-	for (int32 DiceIndex = 0; DiceIndex < mDiceRollImages.Num(); ++DiceIndex)
-	{
-		const FDiceRollVisualState VisualState = GetDiceRollVisualState(DiceIndex, mDiceRollImages.Num(), ClampedAlpha);
-
-		if (UImage* DiceImage = mDiceRollImages[DiceIndex])
-		{
-			DiceImage->SetRenderTranslation(VisualState.Offset);
-			DiceImage->SetRenderScale(VisualState.DiceScale);
-			DiceImage->SetRenderTransformAngle(VisualState.TiltAngle);
-			DiceImage->SetRenderOpacity(1.0f);
-		}
-
-		if (mDiceRollShadowImages.IsValidIndex(DiceIndex))
-		{
-			if (UImage* ShadowImage = mDiceRollShadowImages[DiceIndex])
-			{
-				ShadowImage->SetRenderTranslation(FVector2D(
-					VisualState.Offset.X * 0.94f,
-					VisualState.Offset.Y * 0.88f + 5.0f + VisualState.HopAlpha * 5.0f + VisualState.ImpactAlpha * 1.5f
-				));
-				ShadowImage->SetRenderScale(VisualState.ShadowScale);
-				ShadowImage->SetRenderOpacity(VisualState.ShadowOpacity);
-			}
-		}
-	}
-}
-
-void UCombatTileMapHUDWidget::ResetDiceRollWidgetTransforms() const
-{
-	if (mDiceRollBoardImage != nullptr)
-	{
-		mDiceRollBoardImage->SetRenderTranslation(FVector2D::ZeroVector);
-		mDiceRollBoardImage->SetRenderScale(FVector2D::UnitVector);
-		mDiceRollBoardImage->SetRenderTransformAngle(0.0f);
-	}
-
-	for (UImage* DiceImage : mDiceRollImages)
-	{
-		if (DiceImage != nullptr)
-		{
-			DiceImage->SetRenderTranslation(FVector2D::ZeroVector);
-			DiceImage->SetRenderScale(FVector2D::UnitVector);
-			DiceImage->SetRenderTransformAngle(0.0f);
-			DiceImage->SetRenderOpacity(1.0f);
-		}
-	}
-
-	for (UImage* ShadowImage : mDiceRollShadowImages)
-	{
-		if (ShadowImage != nullptr)
-		{
-			ShadowImage->SetRenderTranslation(FVector2D::ZeroVector);
-			ShadowImage->SetRenderScale(FVector2D::UnitVector);
-			ShadowImage->SetRenderOpacity(0.68f);
-		}
-	}
 }
 
 /** @brief 굴림 오버레이의 시각 요소와 입력 레이어를 같은 visibility로 묶어 상태 불일치를 막는다. */
@@ -865,22 +399,6 @@ void UCombatTileMapHUDWidget::SetDiceRollVisibility(ESlateVisibility NewVisibili
 		mDiceRollPhysicsImage->SetVisibility(NewVisibility);
 	}
 
-	for (UImage* ShadowImage : mDiceRollShadowImages)
-	{
-		if (ShadowImage != nullptr)
-		{
-			ShadowImage->SetVisibility(NewVisibility);
-		}
-	}
-
-	for (UImage* DiceImage : mDiceRollImages)
-	{
-		if (DiceImage != nullptr)
-		{
-			DiceImage->SetVisibility(NewVisibility);
-		}
-	}
-
 	if (DiceRollStatusText != nullptr)
 	{
 		DiceRollStatusText->SetText(FText::GetEmpty());
@@ -922,6 +440,5 @@ void UCombatTileMapHUDWidget::DismissIntroDiceRoll()
 	mIntroDiceAligning = false;
 	mIntroDiceAligned = false;
 	mIntroDiceAlignTimer = 0.0f;
-	ResetDiceRollWidgetTransforms();
 	SetDiceRollVisibility(ESlateVisibility::Collapsed);
 }

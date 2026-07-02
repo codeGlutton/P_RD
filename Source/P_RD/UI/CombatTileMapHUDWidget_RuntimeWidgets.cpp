@@ -13,7 +13,6 @@ namespace
 {
 	// 주사위 판(물리 굴림) 보드/그림자 텍스처. 20260626 디스크에 이미 존재.
 	const TCHAR* const DiceRollBoardTexturePath = TEXT("/Game/SVN/OutSideAsset/AICreation/DiceRoll/UI_DiceRoll_Board_StyleMatch.UI_DiceRoll_Board_StyleMatch");
-	const TCHAR* const DiceRollShadowTexturePath = TEXT("/Game/SVN/OutSideAsset/AICreation/DiceRoll/UI_DiceRoll_DiceShadow.UI_DiceRoll_DiceShadow");
 
 	template <typename T>
 	T* FindNamedWidget(const UWidgetTree* InWidgetTree, const TCHAR* WidgetName)
@@ -78,10 +77,6 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 	if (mDiceRollBoardTexture == nullptr)
 	{
 		mDiceRollBoardTexture = LoadObject<UTexture2D>(nullptr, DiceRollBoardTexturePath);
-	}
-	if (mDiceRollShadowTexture == nullptr)
-	{
-		mDiceRollShadowTexture = LoadObject<UTexture2D>(nullptr, DiceRollShadowTexturePath);
 	}
 	if (mDiceRollBackdropPanel == nullptr)
 	{
