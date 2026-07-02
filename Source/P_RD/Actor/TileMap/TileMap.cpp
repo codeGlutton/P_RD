@@ -82,7 +82,7 @@ ATileMap::ATileMap()
 	mPathEndComponent->SetNumCustomDataFloats(4);
 
 	// 경로 중간 화살표 기본 메시: +X를 가리키는 Kenney 화살표 에셋 (방향 회전이 이 형상 기준이라 +X 향이어야 함)
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> ArrowMeshFinder(TEXT("/Game/SVN/OutSideAsset/Kenney/FactoryKit/SM_Kenney_FactoryKit_Arrow.SM_Kenney_FactoryKit_Arrow"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> ArrowMeshFinder(TEXT("/Game/SVN/OutSideAsset/Others/Kenney/FactoryKit/SM_Kenney_FactoryKit_Arrow.SM_Kenney_FactoryKit_Arrow"));
 	if (ArrowMeshFinder.Succeeded())
 	{
 		mPathArrowMesh = ArrowMeshFinder.Object;
@@ -90,7 +90,7 @@ ATileMap::ATileMap()
 	}
 
 	// 도착(끝) 타일 마커 기본 메시: Kenney 특수 인디케이터 화살표 에셋
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> EndMeshFinder(TEXT("/Game/SVN/OutSideAsset/Kenney/FactoryKit/SM_Kenney_FactoryKit_IndicatorSpecialArrow.SM_Kenney_FactoryKit_IndicatorSpecialArrow"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> EndMeshFinder(TEXT("/Game/SVN/OutSideAsset/Others/Kenney/FactoryKit/SM_Kenney_FactoryKit_IndicatorSpecialArrow.SM_Kenney_FactoryKit_IndicatorSpecialArrow"));
 	if (EndMeshFinder.Succeeded())
 	{
 		mPathEndMesh = EndMeshFinder.Object;
