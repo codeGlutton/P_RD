@@ -99,17 +99,11 @@ private:
 	/** @brief 스킬 레일 Count개 중 Index 항목의 정규화 영역(렌더/히트테스트 공용). */
 	FAnchors GetSkillRailItemRect(int32 Index, int32 Count) const;
 
-	/** @brief 보유 주사위 개수에 맞춰 투명 캡처 Image와 3D 주사위 액터를 준비한다. */
-	void EnsureDicePreviewActors();
-
 	/** @brief 입장 굴림용 실제 물리 테이블 캡처 액터를 준비한다. */
 	void EnsureDiceRollPhysicsActor();
 
 	/** @brief 입장 굴림용 물리 캡처 액터를 정리한다. */
 	void DestroyDiceRollPhysicsActor();
-
-	/** @brief RenderTarget 캡처 주사위 액터를 준비하고 Image brush를 갱신한다. */
-	void RefreshDicePreviewActors();
 
 	/** @brief 지정 Image에 주사위 RenderTarget을 연결한다. */
 	void ApplyDiceCaptureBrush(UImage* DiceImage, ACombatDiceCaptureActor* DiceActor, FVector2D BrushSize) const;
@@ -153,9 +147,6 @@ private:
 	/** @brief 전투 진입 주사위 굴림 연출을 시작한다. */
 	void StartIntroDiceRoll();
 
-	/** @brief 굴림 연출이 정착 구간에 들어갈 때 실제 결과를 확정/동기화한다. */
-	void ResolveIntroDiceRollResults();
-
 	/** @brief 물리 굴림에서 읽은 결과면을 시안/단독 표시 데이터에 반영한다. */
 	void ApplyIntroDicePhysicsResults();
 
@@ -164,12 +155,6 @@ private:
 
 	/** @brief 굴림 대기 상태에서 기기 가속도(흔들기)를 감지해 자동으로 굴림을 시작한다. */
 	void UpdateShakeToRoll(float InDeltaTime);
-
-	/** @brief 주사위 RenderTarget Image를 판 위에서 굴러가는 듯 이동/바운스시킨다. */
-	void UpdateDiceRollWidgetTransforms(float NormalizedRollAlpha) const;
-
-	/** @brief 주사위 연출 Image/그림자 변형을 기본 위치로 되돌린다. */
-	void ResetDiceRollWidgetTransforms() const;
 
 	/** @brief 주사위 팝업이 떠 있는 동안 전투 HUD 조작층을 숨기거나 되돌린다. */
 	void SetDiceRollCombatLayerSuppressed(bool bSuppressed);
@@ -353,14 +338,6 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UWidget> DiceLabel_3;
 
-	/** @brief 전투 진입 주사위 RenderTarget을 표시하는 Image */
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<UImage>> mDiceRollImages;
-
-	/** @brief SceneCapture2D로 투명 RenderTarget을 만드는 주사위 액터들 */
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<ACombatDiceCaptureActor>> mDicePreviewActors;
-
 	/** @brief 전투 진입 주사위 팝업 뒤에서 전투 HUD를 가리는 반투명 배경 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UBorder> mDiceRollBackdropPanel;
@@ -373,17 +350,9 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UImage> mDiceRollBoardImage;
 
-	/** @brief 전투 진입 주사위 아래에 까는 부드러운 그림자 Image */
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<UImage>> mDiceRollShadowImages;
-
 	/** @brief 팝업 보드 Texture2D */
 	UPROPERTY(Transient)
 	TObjectPtr<UTexture2D> mDiceRollBoardTexture;
-
-	/** @brief 주사위 그림자 Texture2D */
-	UPROPERTY(Transient)
-	TObjectPtr<UTexture2D> mDiceRollShadowTexture;
 
 	/** @brief 여러 주사위를 하나의 숨겨진 물리 테이블에서 굴리는 캡처 액터 */
 	UPROPERTY(Transient)
@@ -494,9 +463,6 @@ private:
 	/** @brief 결과 표시가 끝나 닫기 터치만 기다리는 상태 */
 	bool mIntroDiceResultWaitingForDismiss = false;
 
-	/** @brief 회전 구간에서 결과면 정착 보간 구간으로 넘어갔는지 여부 */
-	bool mIntroDiceSettling = false;
-
 	/** @brief 보유 주사위 카드에 결과를 이미 반영했는지 여부. 반복 Tick으로 중복 갱신하지 않기 위한 latch */
 	bool mIntroDiceResultsApplied = false;
 
@@ -505,12 +471,6 @@ private:
 
 	/** @brief 현재 주사위 연출 누적 시간 */
 	float mIntroDiceRollElapsed = 0.0f;
-
-	/** @brief 굴림 시작부터 결과면 정착 완료까지의 시간. [합의필요] 연출 스펙 확정 후 데이터화 대상 */
-	float mIntroDiceRollDuration = 1.65f;
-
-	/** @brief 결과면을 보여준 뒤 닫기 대기 문구로 전환하기 전 유지 시간 */
-	float mIntroDiceHoldDuration = 1.25f;
 
 	/** @brief 굴림 완료 후 정렬을 시작하기까지의 대기 간격(결과를 잠깐 보여주는 시간). */
 	float mIntroDiceAlignDelay = 0.55f;
@@ -538,9 +498,6 @@ private:
 
 	/** @brief 모션 입력 활성화를 한 번만 요청하기 위한 플래그. */
 	bool mMotionControlsRequested = false;
-
-	/** @brief 결과면 보간 시작 회전값. 캡처 액터 재생성/프레임 중간 진입에도 정착 애니메이션을 안정화한다. */
-	TArray<FRotator> mIntroDiceSettleStartRotations;
 
 	/** @brief 선택된 주사위/스킬 배치 상태를 보여주는 안내 문구 */
 	UPROPERTY(Transient)
