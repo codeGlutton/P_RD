@@ -1,4 +1,5 @@
 #include "UI/TitleMenuWidget.h"
+#include "UI/TitleMenuWidgetPrivate.h"
 
 #include "Components/Button.h"
 #include "Components/PanelWidget.h"
@@ -8,22 +9,10 @@
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/SettingsPanelWidget.h"
 
+using namespace RDTitleMenu;
+
 namespace
 {
-	const FName TitleLayoutProfiles[] =
-	{
-		FName(TEXT("base_16_9")),
-		FName(TEXT("phone_wide")),
-		FName(TEXT("phone_ultrawide")),
-		FName(TEXT("fold_inner")),
-		FName(TEXT("tablet_16_10")),
-	};
-
-	FName MakeProfileWidgetName(const TCHAR* BaseName, const FName ProfileName)
-	{
-		return FName(*FString::Printf(TEXT("%s__%s"), BaseName, *ProfileName.ToString()));
-	}
-
 	void SetWidgetAndGeneratedParentVisibility(UWidget* Widget, ESlateVisibility Visibility)
 	{
 		if (Widget == nullptr)

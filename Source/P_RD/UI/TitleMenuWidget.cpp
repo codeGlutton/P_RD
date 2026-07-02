@@ -8,6 +8,7 @@
  * @date 2026-06-26
  */
 #include "UI/TitleMenuWidget.h"
+#include "UI/TitleMenuWidgetPrivate.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
@@ -24,28 +25,11 @@
 #include "Engine/Texture2D.h"
 #include "UI/SettingsPanelWidget.h"
 
+using namespace RDTitleMenu;
+
 namespace
 {
-	const FName TitleLayoutProfileBase16x9(TEXT("base_16_9"));
-	const FName TitleLayoutProfilePhoneWide(TEXT("phone_wide"));
-	const FName TitleLayoutProfilePhoneUltraWide(TEXT("phone_ultrawide"));
-	const FName TitleLayoutProfileFoldInner(TEXT("fold_inner"));
-	const FName TitleLayoutProfileTablet16x10(TEXT("tablet_16_10"));
 	constexpr float TitleLayoutLogViewportThreshold = 12.0f;
-
-	const FName TitleLayoutProfiles[] =
-	{
-		TitleLayoutProfileBase16x9,
-		TitleLayoutProfilePhoneWide,
-		TitleLayoutProfilePhoneUltraWide,
-		TitleLayoutProfileFoldInner,
-		TitleLayoutProfileTablet16x10,
-	};
-
-	FName MakeProfileWidgetName(const TCHAR* BaseName, const FName ProfileName)
-	{
-		return FName(*FString::Printf(TEXT("%s__%s"), BaseName, *ProfileName.ToString()));
-	}
 
 	void SetProfileText(const UUserWidget* Owner, const TCHAR* BaseName, const FName ProfileName, const FText& Text)
 	{
