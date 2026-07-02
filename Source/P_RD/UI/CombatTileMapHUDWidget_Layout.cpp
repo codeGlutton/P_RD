@@ -27,7 +27,9 @@ namespace
 	constexpr int32 DiceRollBoardZOrder = 310;
 	constexpr int32 DiceRollPhysicsZOrder = 330;
 	constexpr int32 DiceRollStatusZOrder = 340;
-	constexpr int32 DiceRollInputZOrder = 350;
+	// 입장 굴림 오버레이는 모달이다 — 입력 레이어가 스킬 입력(CombatSkillInputZOrder=1000)보다 위에 있어야
+	// 오버레이 위 아무 곳이나 탭해 닫을 수 있고, 닫기 전엔 스킬/주사위 클릭이 새어 들어가지 않는다.
+	constexpr int32 DiceRollInputZOrder = RDCombatHUD::CombatSkillInputZOrder + 100;
 }
 
 void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
