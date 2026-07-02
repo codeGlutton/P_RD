@@ -405,7 +405,9 @@ void UTacticalAttributeSet::CaptureAllAttributes(FBoardCombatTargetSnapshotData&
 			check(DataPtr);
 
 			FTacticalAttribute Attribute(Property);
-			Snapshot.mAttributes[Attribute] = DataPtr->GetCurrentValue();
+			// TMap::operator[]는 std::map과 달리 없는 키를 만들어주지 않고 FindChecked로 assert한다.
+			// 빈 스냅샷에 첫 속성을 쓰는 순간 크래시하므로 Add(삽입 또는 덮어쓰기)를 쓴다.
+			Snapshot.mAttributes.Add(Attribute, DataPtr->GetCurrentValue());
 		}
 	}
 }
