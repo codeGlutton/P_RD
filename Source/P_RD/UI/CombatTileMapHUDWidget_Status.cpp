@@ -220,40 +220,27 @@ UTopMenuBarWidget* UCombatTileMapHUDWidget::GetTopMenuBar() const
 	return nullptr;
 }
 
-// [아키텍처 의도] 콘셉트 HUD의 상단 내비 버튼(MAP/DICE/SKILL/SET)은 패널 열기/닫기를 자체 구현하지 않고,
-// 이미 존재하는 TopMenuBar의 패널 토글(WorldWidget 기반 패널 시스템)에 그대로 위임한다.
-// → HUD 위젯은 "표시 + 입력 전달"만 하는 thin view로 유지되고, 패널 생명주기/상태 관리는 기존 시스템이 단일 책임으로 가짐.
-// (스킨 모드에선 레거시 TopMenuBar 자체는 HideLegacyTopBarWhenSkinned로 숨기고, 토글 로직만 재사용)
+// [아키텍처 의도] 콘셉트 HUD의 상단 내비 버튼(MAP/DICE/SKILL/SET)은 HUD가 소유한 패널 토글
+// (CombatTileMapHUDWidget_Nav.cpp — 레거시 탑바에서 이관)을 직접 호출한다.
+// 패널 생명주기/상호배타/승리 후 월드맵 흐름의 단일 책임자가 HUD가 되고, 탑바 경유 위임은 제거됐다.
 void UCombatTileMapHUDWidget::HandleNavMapButtonClicked()
 {
-	if (UTopMenuBarWidget* TopBar = GetTopMenuBar())
-	{
-		TopBar->RequestMapPanel();
-	}
+	ToggleWorldMap();
 }
 
 void UCombatTileMapHUDWidget::HandleNavDiceButtonClicked()
 {
-	if (UTopMenuBarWidget* TopBar = GetTopMenuBar())
-	{
-		TopBar->RequestDicePanel();
-	}
+	ToggleFloatingPanel(EWorldWidgetType::DicePanel, TEXT("DicePanel"));
 }
 
 void UCombatTileMapHUDWidget::HandleNavSkillButtonClicked()
 {
-	if (UTopMenuBarWidget* TopBar = GetTopMenuBar())
-	{
-		TopBar->RequestSkillPanel();
-	}
+	ToggleFloatingPanel(EWorldWidgetType::SkillPanel, TEXT("SkillPanel"));
 }
 
 void UCombatTileMapHUDWidget::HandleNavSettingsButtonClicked()
 {
-	if (UTopMenuBarWidget* TopBar = GetTopMenuBar())
-	{
-		TopBar->RequestSettingsPanel();
-	}
+	ToggleSettingsPanel();
 }
 
 void UCombatTileMapHUDWidget::HideLegacyTopBarWhenSkinned() const

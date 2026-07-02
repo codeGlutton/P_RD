@@ -56,7 +56,7 @@ void UTopMenuBarWidget::NativeConstruct()
 	ValidateDesignerBindings();
 	SyncDefaultText();
 	BindButtonEvents();
-	BindCombatEvents();
+	// 승리 후 월드맵 흐름은 전투 HUD(CombatTileMapHUDWidget_Nav.cpp)로 이관됐다 — 여기서 구독하지 않는다(이중 처리 방지).
 	ApplyInputPassThrough();
 }
 
@@ -321,33 +321,6 @@ void UTopMenuBarWidget::RefreshRoomInfo() const
 			FText::AsNumber(RunControlView.mPlayerLevel),
 			FText::AsNumber(RunControlView.mDifficulty)));
 	}
-}
-
-/**
- * @brief 전투 종료 UI 이벤트를 구독한다.
- *
- * @details
- * 전투 결과 판단은 SRPGCombatSubsystem의 책임으로 두고, 탑바는 플레이어 승리 결과만 받아 월드맵 표시 흐름을 시작한다.
- */
-void UTopMenuBarWidget::BindCombatEvents()
-{
-	USRPGCombatSubsystem* CombatSubsystem = GetWorld() != nullptr ? GetWorld()->GetSubsystem<USRPGCombatSubsystem>() : nullptr;
-	if (CombatSubsystem == nullptr)
-	{
-		return;
-	}
-
-	// 전투 모델이 아직 서브시스템에 바인딩되지 않았을 수 있다(HUD 구성 시점). null 역참조 크래시 방지.
-	USRPGCombatModel* CombatModel = CombatSubsystem->GetModel<USRPGCombatModel>();
-	if (CombatModel == nullptr)
-	{
-		return;
-	}
-
-	CombatModel->OnEndCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result)
-	{
-		HandleEndCombatUI(MoveTemp(Barrier), Result);
-	});
 }
 
 /**
