@@ -218,6 +218,22 @@ public:
 	UPROPERTY(Category = "UI|Settings", BlueprintAssignable)
 	FSettingsPanelIntEvent OnQualityRequested;
 
+	/** @brief 전체(마스터) 볼륨 슬라이더 값 변경 이벤트. */
+	UPROPERTY(Category = "UI|Settings", BlueprintAssignable)
+	FSettingsPanelFloatEvent OnMasterVolumeChanged;
+
+	/** @brief FPS 제한 선택 요청 이벤트. 전달 값은 30 또는 60. 수신 시스템이 아직 없다(값 전달만). */
+	UPROPERTY(Category = "UI|Settings", BlueprintAssignable)
+	FSettingsPanelIntEvent OnFpsLimitRequested;
+
+	/** @brief 전투 이펙트 표시 체크 상태 변경 이벤트. 수신 시스템이 아직 없다(값 전달만). */
+	UPROPERTY(Category = "UI|Settings", BlueprintAssignable)
+	FSettingsPanelBoolEvent OnEffectsChanged;
+
+	/** @brief 언어 선택 요청 이벤트. 전달 값은 ELanguageType 정수(0=한국어, 1=English). */
+	UPROPERTY(Category = "UI|Settings", BlueprintAssignable)
+	FSettingsPanelIntEvent OnLanguageRequested;
+
 protected:
 	/**
 	 * @brief WBP 바인딩 검증, 입력 이벤트 연결, 초기 표시 상태 동기화를 수행한다.
@@ -334,6 +350,30 @@ private:
 	/** @brief 진동 체크박스 상태를 외부 설정 정책으로 전달한다. */
 	UFUNCTION()
 	void HandleVibrationChanged(bool bChecked);
+
+	/** @brief 전체(마스터) 슬라이더 값을 이벤트로 올리고 프로필 볼륨에 기본 적용한다. */
+	UFUNCTION()
+	void HandleMasterVolumeChanged(float Value);
+
+	/** @brief FPS 30 선택을 이벤트로 올린다(수신 시스템 미구현). */
+	UFUNCTION()
+	void HandleFpsThirtyButtonClicked();
+
+	/** @brief FPS 60 선택을 이벤트로 올린다(수신 시스템 미구현). */
+	UFUNCTION()
+	void HandleFpsSixtyButtonClicked();
+
+	/** @brief 한국어 선택을 이벤트로 올리고 로컬라이제이션에 기본 적용한다. */
+	UFUNCTION()
+	void HandleLanguageKoreanButtonClicked();
+
+	/** @brief English 선택을 이벤트로 올리고 로컬라이제이션에 기본 적용한다. */
+	UFUNCTION()
+	void HandleLanguageEnglishButtonClicked();
+
+	/** @brief 이펙트 표시 체크 상태를 이벤트로 올린다(수신 시스템 미구현). */
+	UFUNCTION()
+	void HandleEffectsChanged(bool bChecked);
 
 private:
 	/** @brief 설정 패널 제목 */
@@ -495,6 +535,30 @@ private:
 	/** @brief 진동 사용 여부 입력 체크박스 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UCheckBox> VibrationCheckBox;
+
+	/** @brief 전체(마스터) 볼륨 입력 슬라이더 */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<USlider> MasterVolumeSlider;
+
+	/** @brief FPS 30 선택 버튼(세그먼트 좌측) */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UButton> FpsThirtyButton;
+
+	/** @brief FPS 60 선택 버튼(세그먼트 우측) */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UButton> FpsSixtyButton;
+
+	/** @brief 한국어 선택 버튼(언어 세그먼트 좌측) */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UButton> LanguageKoreanButton;
+
+	/** @brief English 선택 버튼(언어 세그먼트 우측) */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UButton> LanguageEnglishButton;
+
+	/** @brief 전투 이펙트 표시 여부 입력 체크박스 */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UCheckBox> EffectsCheckBox;
 
 	/** @brief 인게임에서만 사용하는 저장/포기 버튼 묶음 */
 	UPROPERTY(meta = (BindWidgetOptional))

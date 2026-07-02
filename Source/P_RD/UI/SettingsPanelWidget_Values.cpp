@@ -2,6 +2,7 @@
 
 #include "Components/CheckBox.h"
 #include "Components/Slider.h"
+#include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 
 void USettingsPanelWidget::ApplyValueModel(const FSettingsPanelValueModel& ValueModel)
 {
@@ -27,6 +28,14 @@ void USettingsPanelWidget::ApplyValueModel(const FSettingsPanelValueModel& Value
 	if (VibrationCheckBox != nullptr)
 	{
 		VibrationCheckBox->SetIsChecked(mValueModel.mVibrationEnabled);
+	}
+	if (MasterVolumeSlider != nullptr)
+	{
+		MasterVolumeSlider->SetValue(mValueModel.mMasterVolume);
+	}
+	if (EffectsCheckBox != nullptr)
+	{
+		EffectsCheckBox->SetIsChecked(mValueModel.mEffectsEnabled);
 	}
 	mIsApplyingValueModel = false;
 }
@@ -173,5 +182,90 @@ void USettingsPanelWidget::HandleVibrationChanged(bool bChecked)
 	if (mIsApplyingValueModel == false)
 	{
 		OnVibrationChanged.Broadcast(mValueModel.mVibrationEnabled);
+	}
+}
+
+/**
+ * @brief 전체(마스터) 볼륨 변경을 이벤트로 올리고 프로필에 기본 적용한다.
+ *
+ * @details
+ * 볼륨 이벤트들은 아직 전용 수신 시스템이 없다. 소리가 실제로 반응해야 설정 화면이 의미가 있으므로,
+ * 프로필 서브시스템 공개 API(SetVolume)로 기본 적용을 함께 수행한다.
+ * 전용 수신자(오디오 정책 시스템)가 생기면 이 직접 호출은 제거한다.
+ */
+void USettingsPanelWidget::HandleMasterVolumeChanged(float Value)
+{
+	mValueModel.mMasterVolume = RDSettingsPanel::NormalizeVolumeValue(Value);
+	if (mIsApplyingValueModel == false)
+	{
+		OnMasterVolumeChanged.Broadcast(mValueModel.mMasterVolume);
+		if (UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>())
+		{
+			GameProfileSubsystem->SetVolume(EGameVolumeType::Master, mValueModel.mMasterVolume);
+		}
+	}
+}
+
+/** @brief FPS 30 선택. 수신 시스템이 아직 없어 값 보관 + 이벤트 발신까지만 한다. */
+void USettingsPanelWidget::HandleFpsThirtyButtonClicked()
+{
+	mValueModel.mFpsLimit = 30;
+	if (mIsApplyingValueModel == false)
+	{
+		OnFpsLimitRequested.Broadcast(mValueModel.mFpsLimit);
+	}
+}
+
+/** @brief FPS 60 선택. 수신 시스템이 아직 없어 값 보관 + 이벤트 발신까지만 한다. */
+void USettingsPanelWidget::HandleFpsSixtyButtonClicked()
+{
+	mValueModel.mFpsLimit = 60;
+	if (mIsApplyingValueModel == false)
+	{
+		OnFpsLimitRequested.Broadcast(mValueModel.mFpsLimit);
+	}
+}
+
+/**
+ * @brief 한국어 선택을 이벤트로 올리고 로컬라이제이션에 기본 적용한다.
+ *
+ * @details
+ * 언어 저장/적용 경로(UOptionPersistData::SetLanguage -> SetCurrentCulture)는 완비되어 있고
+ * 호출자만 없었다. 프로필 서브시스템 공개 API로 기본 적용한다(전용 수신자가 생기면 제거).
+ */
+void USettingsPanelWidget::HandleLanguageKoreanButtonClicked()
+{
+	mValueModel.mUseKoreanLanguage = true;
+	if (mIsApplyingValueModel == false)
+	{
+		OnLanguageRequested.Broadcast(StaticCast<int32>(ELanguageType::KOREAN));
+		if (UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>())
+		{
+			GameProfileSubsystem->SetLanguage(ELanguageType::KOREAN);
+		}
+	}
+}
+
+/** @brief English 선택을 이벤트로 올리고 로컬라이제이션에 기본 적용한다. */
+void USettingsPanelWidget::HandleLanguageEnglishButtonClicked()
+{
+	mValueModel.mUseKoreanLanguage = false;
+	if (mIsApplyingValueModel == false)
+	{
+		OnLanguageRequested.Broadcast(StaticCast<int32>(ELanguageType::ENGLISH));
+		if (UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>())
+		{
+			GameProfileSubsystem->SetLanguage(ELanguageType::ENGLISH);
+		}
+	}
+}
+
+/** @brief 전투 이펙트 표시 체크 상태를 이벤트로 올린다(수신 VFX 시스템 미구현 - 값 전달만). */
+void USettingsPanelWidget::HandleEffectsChanged(bool bChecked)
+{
+	mValueModel.mEffectsEnabled = bChecked;
+	if (mIsApplyingValueModel == false)
+	{
+		OnEffectsChanged.Broadcast(mValueModel.mEffectsEnabled);
 	}
 }

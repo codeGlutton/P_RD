@@ -105,6 +105,36 @@ void USettingsPanelWidget::NativeConstruct()
 		VibrationCheckBox->OnCheckStateChanged.AddUniqueDynamic(this, &USettingsPanelWidget::HandleVibrationChanged);
 	}
 
+	if (MasterVolumeSlider != nullptr)
+	{
+		MasterVolumeSlider->OnValueChanged.AddUniqueDynamic(this, &USettingsPanelWidget::HandleMasterVolumeChanged);
+	}
+
+	if (FpsThirtyButton != nullptr)
+	{
+		FpsThirtyButton->OnClicked.AddUniqueDynamic(this, &USettingsPanelWidget::HandleFpsThirtyButtonClicked);
+	}
+
+	if (FpsSixtyButton != nullptr)
+	{
+		FpsSixtyButton->OnClicked.AddUniqueDynamic(this, &USettingsPanelWidget::HandleFpsSixtyButtonClicked);
+	}
+
+	if (LanguageKoreanButton != nullptr)
+	{
+		LanguageKoreanButton->OnClicked.AddUniqueDynamic(this, &USettingsPanelWidget::HandleLanguageKoreanButtonClicked);
+	}
+
+	if (LanguageEnglishButton != nullptr)
+	{
+		LanguageEnglishButton->OnClicked.AddUniqueDynamic(this, &USettingsPanelWidget::HandleLanguageEnglishButtonClicked);
+	}
+
+	if (EffectsCheckBox != nullptr)
+	{
+		EffectsCheckBox->OnCheckStateChanged.AddUniqueDynamic(this, &USettingsPanelWidget::HandleEffectsChanged);
+	}
+
 	/* WBP가 가진 임시 표시 상태를 C++ 기본 표시 정책으로 정리한다. */
 
 	SyncText();
