@@ -48,6 +48,13 @@ void UCombatTileMapHUDWidget::HandleCombatUIChanged(ECombatUIDomain Domain)
 		RefreshDiceViewsFromRunData();
 		RefreshOwnedDiceCards();
 	}
+
+	// 스킬: 보유 스킬 스냅샷이 바뀌면 레일 슬롯 상태(아이콘/라벨/빈칸 커버)를 다시 그린다.
+	if (Domain == ECombatUIDomain::Skill || Domain == ECombatUIDomain::All)
+	{
+		RefreshSkillRailWidgets();
+		RefreshDiceAssignmentText();
+	}
 }
 
 void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const
