@@ -195,11 +195,14 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 			OwnedDiceTypeText->SetColorAndOpacity(FSlateColor(FLinearColor(0.95f, 1.0f, 0.85f, 1.0f)));
 		}
 
-		RootCanvas->AddChildToCanvas(OwnedDiceImage);
-		RootCanvas->AddChildToCanvas(OwnedDiceCard);
+		// 스킨 활성 시 DesignCanvas에 붙여 레터박스 스킨(주사위 트레이 아트)과 함께 움직이게 한다.
+		// RootCanvas(뷰포트)에 붙이면 16:9가 아닐 때 트레이만 따로 노는 정렬 버그가 생긴다.
+		UCanvasPanel* OwnedDiceCanvas = GetSkinTargetCanvas();
+		OwnedDiceCanvas->AddChildToCanvas(OwnedDiceImage);
+		OwnedDiceCanvas->AddChildToCanvas(OwnedDiceCard);
 		if (OwnedDiceTypeText != nullptr)
 		{
-			RootCanvas->AddChildToCanvas(OwnedDiceTypeText);
+			OwnedDiceCanvas->AddChildToCanvas(OwnedDiceTypeText);
 		}
 
 		mOwnedDiceImages.Add(OwnedDiceImage);

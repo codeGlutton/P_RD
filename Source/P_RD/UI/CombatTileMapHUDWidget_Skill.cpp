@@ -62,7 +62,7 @@ void UCombatTileMapHUDWidget::RefreshDiceAssignmentText() const
 	{
 		mDiceAssignmentText->SetText(FText::Format(
 			NSLOCTEXT("CombatTileMapHUDWidget", "DiceAssignmentSkillOnlyFormat", "{0}\nTap a rolled die"),
-			GetCombatSkillLabel(mSelectedSkillIndex)
+			GetOwnedSkillLabel(mSelectedSkillIndex)
 		));
 		return;
 	}

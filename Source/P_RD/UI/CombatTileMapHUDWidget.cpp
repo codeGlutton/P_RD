@@ -73,6 +73,15 @@ void UCombatTileMapHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
+	// 뷰포트 크기가 바뀔 때만 레이아웃 진단 로그 + 화면비 변형(폴드 마커 기반, 마커 없으면 no-op)을 갱신한다.
+	const FVector2D ViewportSize = MyGeometry.GetLocalSize();
+	if (ViewportSize.Equals(mLastLoggedLayoutViewportSize, 0.5f) == false)
+	{
+		mLastLoggedLayoutViewportSize = ViewportSize;
+		LogCombatLayoutMetrics(ViewportSize);
+		ApplyAspectVariantSlots(ViewportSize);
+	}
+
 	RefreshOwnedDiceCards();
 	UpdateUnitHpBars();   // 유닛 머리 위 HP바를 월드→스크린 투영으로 매 프레임 따라가게 한다.
 

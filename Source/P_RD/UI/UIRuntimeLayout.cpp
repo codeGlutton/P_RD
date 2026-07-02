@@ -62,13 +62,19 @@ FAnchors RDUILayout::GetDesignerGroupRect(UWidgetTree* WidgetTree, FName AnchorW
 		return Fallback;
 	}
 
-	// 앵커 위젯은 (0,0) 점앵커 + 디자인좌표(좌상단) 오프셋/크기로 둔다.
-	// 따라서 슬롯의 위치/크기가 곧 디자인 공간 좌표이며, DesignSize로 나누면 정규화 영역이 된다.
-	const FVector2D Position = CanvasSlot->GetPosition();
+	// 앵커 위젯은 점앵커 + 디자인px 오프셋/크기로 둔다. 레거시는 (0,0) 점앵커 절대좌표,
+	// 엣지 피닝 스킨은 (ax,ay) 점앵커 상대좌표 — 디자인 기준 절대좌표로 환산해 정규화한다(진단/레거시 경로용).
+	const FAnchors SlotAnchors = CanvasSlot->GetAnchors();
+	FVector2D Position = CanvasSlot->GetPosition();
 	const FVector2D Size = CanvasSlot->GetSize();
 	if (Size.X <= 0.0f || Size.Y <= 0.0f)
 	{
 		return Fallback;
+	}
+	if (SlotAnchors.Minimum == SlotAnchors.Maximum)
+	{
+		Position.X += SlotAnchors.Minimum.X * DesignSize.X;
+		Position.Y += SlotAnchors.Minimum.Y * DesignSize.Y;
 	}
 
 	return FAnchors(
@@ -76,4 +82,68 @@ FAnchors RDUILayout::GetDesignerGroupRect(UWidgetTree* WidgetTree, FName AnchorW
 		Position.Y / DesignSize.Y,
 		(Position.X + Size.X) / DesignSize.X,
 		(Position.Y + Size.Y) / DesignSize.Y);
+}
+
+bool RDUILayout::GetDesignerSlotData(UWidgetTree* WidgetTree, FName MarkerName, FAnchorData& OutSlotData)
+{
+	if (WidgetTree == nullptr || MarkerName.IsNone())
+	{
+		return false;
+	}
+	UCanvasPanelSlot* CanvasSlot = GetCanvasSlot(WidgetTree->FindWidget(MarkerName));
+	if (CanvasSlot == nullptr)
+	{
+		return false;
+	}
+	OutSlotData = CanvasSlot->GetLayout();
+	return true;
+}
+
+FAnchorData RDUILayout::NormalizedToDesignPointSlot(const FAnchors& Normalized, const FVector2D& DesignSize)
+{
+	FAnchorData Out;
+	Out.Anchors = FAnchors(0.0f, 0.0f, 0.0f, 0.0f);
+	Out.Alignment = FVector2D::ZeroVector;
+	Out.Offsets = FMargin(
+		Normalized.Minimum.X * DesignSize.X,
+		Normalized.Minimum.Y * DesignSize.Y,
+		(Normalized.Maximum.X - Normalized.Minimum.X) * DesignSize.X,
+		(Normalized.Maximum.Y - Normalized.Minimum.Y) * DesignSize.Y);
+	return Out;
+}
+
+FAnchorData RDUILayout::GetDesignerSlotDataOr(UWidgetTree* WidgetTree, FName MarkerName, const FAnchors& FallbackNormalized, const FVector2D& DesignSize)
+{
+	FAnchorData SlotData;
+	if (GetDesignerSlotData(WidgetTree, MarkerName, SlotData))
+	{
+		return SlotData;
+	}
+	return NormalizedToDesignPointSlot(FallbackNormalized, DesignSize);
+}
+
+void RDUILayout::ApplyDesignerSlotData(UWidget* Widget, const FAnchorData& SlotData, int32 ZOrder)
+{
+	UCanvasPanelSlot* CanvasSlot = GetCanvasSlot(Widget);
+	if (CanvasSlot == nullptr)
+	{
+		return;
+	}
+	CanvasSlot->SetAutoSize(false);
+	CanvasSlot->SetLayout(SlotData);
+	CanvasSlot->SetZOrder(ZOrder);
+}
+
+FAnchorData RDUILayout::MakeVerticalSubSlot(const FAnchorData& GroupSlot, int32 Index, int32 Count, float GapPx)
+{
+	FAnchorData Out = GroupSlot;
+	if (Count <= 0)
+	{
+		return Out;
+	}
+	// 점앵커 슬롯 전제: Offsets.Right/Bottom = 크기(px).
+	const float ItemHeight = (GroupSlot.Offsets.Bottom - StaticCast<float>(Count - 1) * GapPx) / StaticCast<float>(Count);
+	Out.Offsets.Top += StaticCast<float>(Index) * (ItemHeight + GapPx);
+	Out.Offsets.Bottom = ItemHeight;
+	return Out;
 }

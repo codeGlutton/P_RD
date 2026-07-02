@@ -4,6 +4,7 @@
 #include "UI/DiceViewData.h"
 #include "UI/Combat/CombatUITypes.h"
 #include "UI/RDUserWidget.h"
+#include "Components/CanvasPanelSlot.h"   // FAnchorData (폴드 변형 베이스 슬롯 캐시)
 #include "Widgets/Layout/Anchors.h"
 
 #include "CombatTileMapHUDWidget.generated.h"
@@ -93,11 +94,29 @@ private:
 	/** @brief 디자이너 스킨이 활성(WBP가 좌표/아트를 정의)인지 여부. */
 	bool IsDesignerSkinActive() const { return mDesignerSkinActive; }
 
+	/**
+	 * @brief 스킨 런타임 위젯이 붙을 캔버스.
+	 * 스킨 활성 시 DesignCanvas(1920x1080 디자인 좌표계, ScaleBox 레터박스) — 디자인 정규화 앵커가 스킨 아트와 정렬된다.
+	 * 아니면 풀뷰포트 RootCanvas(레거시 뷰포트 정규화 상수용). 월드투영 HP바만 예외적으로 항상 RootCanvas를 쓴다.
+	 */
+	UCanvasPanel* GetSkinTargetCanvas() const { return (IsDesignerSkinActive() && DesignCanvas != nullptr) ? DesignCanvas.Get() : RootCanvas.Get(); }
+
 	/** @brief WBP의 명명 앵커 위젯(HUD_*)에서 정규화 영역을 읽는다. 없으면 Fallback(기존 코드 좌표). */
 	FAnchors GroupRect(FName AnchorWidgetName, const FAnchors& Fallback) const;
 
 	/** @brief 스킬 레일 전체 영역(WBP HUD_SkillRail 또는 기존 상수 기반 Fallback). */
 	FAnchors GetSkillRailGroupRect() const;
+
+	/**
+	 * @brief 화면비 변형(폴드/좁은 가로): 배너·턴순서 클러스터를 fold 마커의 y델타로 이동/복원한다.
+	 * @details 컷(1.68)은 concept_02 responsive.fold_narrow와 동기. 폴드 마커가 없는 WBP에선 아무것도 안 한다.
+	 *          C++은 계산하지 않는다 — 마커(디자이너 데이터)와 베이스 슬롯 캐시 사이를 전환만 한다.
+	 */
+	void ApplyAspectVariantSlots(const FVector2D& ViewportSize);
+
+	/** @brief 전투 HUD 레이아웃 진단 로그(뷰포트/비율/스킨/HUD_* 그룹 rect). resize·1920x1080 하드코딩 점검용. */
+	// 뷰포트 크기가 바뀔 때만 NativeTick에서 호출한다. 타이틀 LayoutMetrics 로그와 같은 목적.
+	void LogCombatLayoutMetrics(const FVector2D& ViewportSize) const;
 
 	/** @brief 스킬 레일 Count개 중 Index 항목의 정규화 영역(렌더/히트테스트 공용). */
 	FAnchors GetSkillRailItemRect(int32 Index, int32 Count) const;
@@ -123,8 +142,11 @@ private:
 	/** @brief 선택 강조가 들어가지 않은 중립 스킬 레일을 런타임으로 다시 만든다. */
 	void RebuildSkillRailWidgets();
 
-	/** @brief 현재 선택된 스킬만 가볍게 강조한다. */
+	/** @brief 보유 스킬 스냅샷(FSkillUI) 기준으로 레일 슬롯 3상태(보유/사용불가/빈칸)를 다시 그린다. */
 	void RefreshSkillRailWidgets();
+
+	/** @brief 보유 스킬의 표시 이름을 뷰모델에서 읽는다(없으면 빈 텍스트 - 시안 라벨 폴백 없음). */
+	FText GetOwnedSkillLabel(int32 SkillIndex) const;
 
 	/** @brief 보유 주사위 3D 표시 위젯을 현재 주사위 개수에 맞춰 다시 만든다. */
 	void RebuildOwnedDiceCards();
@@ -418,6 +440,10 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UTextBlock>> mSkillRailTexts;
 
+	/** @brief 보유 스킬 아이콘(FSkillUI.mIcon)을 그리는 슬롯별 Image. 빈 슬롯은 숨긴다. */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UImage>> mSkillRailIcons;
+
 	/** @brief 스킬 레일 입력을 받기 위해 WBP 위에 얹는 투명 버튼들 */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UIndexedButtonWidget>> mSkillInputButtons;
@@ -430,6 +456,18 @@ private:
 
 	/** @brief WBP에 디자이너 스킨(HUD_* 앵커 위젯)이 있어 좌표/아트를 WBP에서 읽는 모드인지. */
 	bool mDesignerSkinActive = false;
+
+	/** @brief 마지막으로 레이아웃 진단 로그를 남긴 뷰포트 크기. 변할 때만 로그해 스팸을 막는다. */
+	FVector2D mLastLoggedLayoutViewportSize = FVector2D(-1.0f, -1.0f);
+
+	/** @brief 폴드(좁은 화면비) 변형이 현재 적용 중인지. */
+	bool mFoldVariantActive = false;
+
+	/** @brief 폴드 변형 대상 위젯의 베이스 슬롯 캐시(기준 화면비 복원용). */
+	TMap<FName, FAnchorData> mAspectVariantBaseSlots;
+
+	/** @brief 폴드에서 턴 칩 줄에 더할 y델타(디자인px, HUD_TurnOrderFold 마커에서 산출). */
+	float mFoldTurnOrderDeltaY = 0.0f;
 
 	/** @brief 지금 누르고 있는 스킬 index */
 	int32 mPressedSkillIndex = INDEX_NONE;

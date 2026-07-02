@@ -132,6 +132,25 @@ int32 UDiceModel::Roll(const FRandomStream& Stream)
 }
 
 /**
+ * @details 물리 굴림 연출이 화면에 보여준 윗면을 그대로 게임 결과로 기록한다.
+ * Roll()과 같은 상태 전이(사용/선택 해제 포함)를 밟되, 면 index만 외부에서 받는다.
+ */
+int32 UDiceModel::ApplyRolledFace(int32 FaceIndex)
+{
+	if (mFaceValues.IsEmpty())
+	{
+		BuildDefaultFaceValues(mFaceCount, mFaceValues);
+	}
+
+	mRolledFaceIndex = FMath::Clamp(FaceIndex, 0, mFaceValues.Num() - 1);
+	mCurrentValue = mFaceValues[mRolledFaceIndex];
+	mIsRolled = true;
+	mIsUsed = false;
+	mIsSelected = false;
+	return mCurrentValue;
+}
+
+/**
  * @details 예측용 깊은 복제본을 만든다. 사본에서만 Roll/계산을 돌려 라이브 주사위 상태를 보존한다.
  * Outer를 지정하지 않으면 원본과 같은 Outer에 붙여 GC 수명을 일관되게 둔다.
  */
