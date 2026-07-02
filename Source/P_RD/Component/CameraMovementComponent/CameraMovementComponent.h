@@ -17,7 +17,7 @@ enum class ECameraControlState : uint8
 struct FCameraEmphasisState
 {
 	FVector		Position;
-	float		OrthoWidth;
+	float		ZoomDelta;
 };
 
 class UCameraComponent;
@@ -98,17 +98,21 @@ public:
 private:
 	/* 강조 */
 
+	/*
+	* @brief 강조 시 변경되는 설정되는 줌값
+	* @details
+	*/
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveClampingBox", AllowPrivateAccess = "true"))
+	float mEmphasisZoom = 500;
+
 	ECameraControlState mCamerControlState;
+
 	/*
 	* @brief 현재 강조 상태
 	* @details
 	*/
-	FCameraEmphasisState mCurEmphasisState;
-	/*
-	* @brief 기본 상태
-	* @details
-	*/
 	FCameraEmphasisState mPreDefaultState;
+
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -134,6 +138,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetMoveClampingBox(FVector2D MoveClampingBox);
+
+	UFUNCTION(BlueprintCallable)
+	void SetEmphasisZoom(float EmphasisZoom);
 
 public:
 
@@ -184,10 +191,16 @@ public:
 public:
 	/* 강조 기능*/
 	UFUNCTION(BlueprintCallable)
-	void StartEmphasisToWorldPosition(float ZoomDelta, FVector WorldPosition);
+	void StartEmphasisToWorldPositionWithZoomDelta(float ZoomDelta, FVector WorldPosition);
 
 	UFUNCTION(BlueprintCallable)
-	void StartEmphasisToViewPortPosition(float ZoomDelta, FVector2D ViewPortPos);
+	void StartEmphasisToViewPortPositionWithZoomDelta(float ZoomDelta, FVector2D ViewPortPos);
+
+	UFUNCTION(BlueprintCallable)
+	void StartEmphasisToWorldPosition(FVector WorldPosition);
+
+	UFUNCTION(BlueprintCallable)
+	void StartEmphasisToViewPortPosition(FVector2D ViewPortPos);
 
 	UFUNCTION(BlueprintCallable)
 	void EndEmphasis();
