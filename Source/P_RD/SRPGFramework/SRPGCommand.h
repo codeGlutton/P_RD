@@ -22,7 +22,7 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowTargetDetailPanelUI, IBoardSelectionT
  * @brief  사용자 입력 명령 객체
  */
 USTRUCT(BlueprintType)
-struct FSRPGCommand
+struct P_RD_API FSRPGCommand
 {
 	GENERATED_BODY()
 

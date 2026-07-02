@@ -8,7 +8,6 @@
 #pragma once
 
 #include "DataAsset/UnitSpawnData/StaticUnitSpawnData.h"
-#include "StateTree.h"
 #include "StaticEnemyUnitSpawnData.generated.h"
 
 /**
@@ -41,12 +40,6 @@ public:
 	}
 
 public:
-	// TODO: 시뮬 모드는 액터(뷰)가 없어 StateTree(UStateTreeAIComponent on AEnemyAIController)를 못 돌린다.
-	//       모델 레이어 플래너(USRPGEnemyTurnPlanner)로 대체했으므로, 이번 AI 작업 완료 후 이 필드와
-	//       AEnemyAIController 스캐폴딩을 함께 제거한다.
-	UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StateTree", AssetBundles = "Actor"))
-	TSoftObjectPtr<UStateTree> mStateTree;
-
 	// @brief 기본 이동 성향: 멀어짐 / 사거리 유지(정지) / 붙음 중 택1
 	// @note 사거리는 스킬(추후 스킬+장비+패시브)에서 나오므로 여기엔 눈금값을 두지 않는다.
 	UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveTendency"))

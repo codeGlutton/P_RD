@@ -104,11 +104,11 @@ namespace
 		// 스킬 추가: 일반공격 계열
 		UStaticAttackSkillData* Skill = NewObject<UStaticAttackSkillData>(World);
 		Skill->mAimPattern = EAimPattern::Square;
-		Skill->mAimDefaultRange = AimRange;
-		Skill->mCanAimObstacle = true;
+		Skill->mAimRangeDefaultValue = AimRange;
+		Skill->mCanAimBoardActor = true;
 		Skill->mIsIndirect = false;
 		Skill->mEffectPattern = EEffectPattern::Single;
-		Skill->mEffectDefaultArea = 0;
+		Skill->mEffectAreaDefaultValue = 0;
 		Skill->mIsPenetration = false;
 		Skill->AddToRoot();
 		KeepAlive.Add(Skill);
@@ -280,7 +280,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 		if (TestTrue(TEXT("[Case3-1] 스킬커맨드 존재"), Cast != nullptr))
 		{
 			TestEqual(TEXT("[Case3-1] 스킬 인덱스 0"), Cast->mSkillIndex, 0);
-			TestTrue(TEXT("[Case3-1] 영향범위 타일에 플레이어 타일 포함"), Cast->mEffectTileIndexes.Contains(FTileIndex(3, 1)));
+			TestTrue(TEXT("[Case3-1] 타겟이 플레이어 타일"), Cast->mTargetIndex == FTileIndex(3, 1));
 		}
 	}
 

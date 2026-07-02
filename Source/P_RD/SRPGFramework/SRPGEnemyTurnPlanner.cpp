@@ -74,7 +74,8 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	MoveRange = FMath::Max(MoveRange, 0);
 
 	// 조준거리
-	const int32 AimRange = Skill->mAimDefaultRange;
+	// @note 몹은 주사위가 없어 DiceSum=0 → 사거리는 기본값(mAimRangeDefaultValue) 그대로
+	const int32 AimRange = Skill->mAimRangeDefaultValue;
 
 	// 목적지 결정 (이동 성향 기반)
 	bool CanCast = false;
@@ -107,22 +108,16 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	 */ 
 	if (CanCast == true)
 	{
-		// 시전 원점은 이동 후 목적지(Dest)
-		const int32 EffectArea = Skill->mEffectDefaultArea;
-		TArray<FTileIndex> EffectTiles = TileMap->GetEffectTiles(
-			Dest,
-			PlayerTile,
-			Skill->mEffectPattern,
-			EffectArea,
-			Skill->mIsPenetration);
-
+		// 시전 커맨드에는 타겟 타일과 주사위 합만 담는다.
+		// 실제 효과 타일은 실행 시점에 스킬 컴포넌트가 목적지(시전 원점) 기준으로 계산한다.
 		TInstancedStruct<FSRPGCommand> Cast;
 		Cast.InitializeAs<FSRPGSkillCastCommand>();
 		FSRPGSkillCastCommand& CastRef = Cast.GetMutable<FSRPGSkillCastCommand>();
 		CastRef.mSkillIndex = SkillIndex;
-		CastRef.mEffectTileIndexes = MoveTemp(EffectTiles);
-		// 몹은 주사위 포인트 없다고 가정
-		CastRef.mDicePoint = 0.0f;
+		// 타겟은 플레이어 위치
+		CastRef.mTargetIndex = PlayerTile;
+		// 몹은 주사위가 없다고 가정
+		CastRef.mDiceSum = 0;
 		AddAction(MoveTemp(Cast));
 	}
 
@@ -147,7 +142,7 @@ FTileIndex USRPGEnemyTurnPlanner::ChooseDestination(
 	TArray<FTileIndex> Feasible;
 	for (const FTileIndex& Candidate : Candidates)
 	{
-		TArray<FTileIndex> Aimable = TileMap->GetAimableTiles(Candidate, AimRange, Skill->mAimPattern, Skill->mCanAimObstacle, Skill->mIsIndirect);
+		TArray<FTileIndex> Aimable = TileMap->GetAimableTiles(Candidate, AimRange, Skill->mAimPattern, Skill->mCanAimBoardActor, Skill->mIsIndirect);
 		if (Aimable.Contains(PlayerTile) == true)
 		{
 			Feasible.Add(Candidate);
