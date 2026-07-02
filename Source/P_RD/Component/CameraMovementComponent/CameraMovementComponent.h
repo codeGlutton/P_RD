@@ -6,6 +6,20 @@
 #include "Components/ActorComponent.h"
 #include "CameraMovementComponent.generated.h"
 
+
+// @brief 카메라 강조 Handle
+enum class ECameraControlState : uint8
+{
+	Normal,
+	Emphasis
+};
+
+struct FCameraEmphasisState
+{
+	FVector		Position;
+	float		OrthoWidth;
+};
+
 class UCameraComponent;
 class USpringArmComponent;
 
@@ -33,7 +47,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
-	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CameraComponent", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "CameraComponent", AllowPrivateAccess = "true"))
 	TWeakObjectPtr<UCameraComponent> mCameraComponent;
 
 	//UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SpringArmComponent", AllowPrivateAccess = "true"))
@@ -42,7 +56,7 @@ public:
 	/*
 	* @brief 줌 속력
 	*/
-	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "ZoomSpeed", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "ZoomSpeed", AllowPrivateAccess = "true"))
 	float mZoomSpeed = 1.f;
 
 	/*
@@ -51,7 +65,7 @@ public:
 	* OrthoWidth 최대 값
 	* 커질수록 화면이 더 많이 축소할 수 있다.
 	*/
-	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MaxZoom", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MaxZoom", AllowPrivateAccess = "true"))
 	float mMaxOrthoWidth = 10000.f;
 
 	/*
@@ -60,15 +74,16 @@ public:
 	* OrthoWidth 최소 값
 	* 작을수록 화면이 더 많이 확대할 수 있다.
 	*/
-	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MinZoom", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MinZoom", AllowPrivateAccess = "true"))
 	float mMinOrthoWidth = 100.f;
 
+	/* 클램핑 박스 제한*/
 	/*
 	* @brief 클램핑 박스 중앙 위치
 	* @details
 	* 해당 위치를 중심으로 클램핑 박스가 설정됩니다.
 	*/
-	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MoveClampingBoxCenter", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveClampingBoxCenter", AllowPrivateAccess = "true"))
 	FVector mMoveClampingBoxCenter = FVector(0, 0, 0);
 	
 	/*
@@ -77,8 +92,23 @@ public:
 	* 박스 크기로 해당 카메라는 해당 위치를 벗어나지 못합니다.
 	* Z축은 사용하지 않습니다.
 	*/
-	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MoveClampingBox", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveClampingBox", AllowPrivateAccess = "true"))
 	FVector2D mMoveClampingBox = FVector2D(3000, 3000);
+
+private:
+	/* 강조 */
+
+	ECameraControlState mCamerControlState;
+	/*
+	* @brief 현재 강조 상태
+	* @details
+	*/
+	FCameraEmphasisState mCurEmphasisState;
+	/*
+	* @brief 기본 상태
+	* @details
+	*/
+	FCameraEmphasisState mPreDefaultState;
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -151,7 +181,18 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void MoveToWorldPosition(FVector WorldPosition);
 
-	//void SkillMotionZoomIn() {};
+public:
+	/* 강조 기능*/
+	UFUNCTION(BlueprintCallable)
+	void StartEmphasisToWorldPosition(float ZoomValue, FVector WorldPosition);
+
+	UFUNCTION(BlueprintCallable)
+	void StartEmphasisToViewPortPosition(float ZoomValue, FVector2D ViewPortPos);
+
+	UFUNCTION(BlueprintCallable)
+	void EndEmphasis();
+
+
 
 private:
 	 
