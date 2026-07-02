@@ -73,8 +73,8 @@ void UCharacterSelectWidget::ApplyButtonStyles() const
 	 */
 	struct FButtonTexture { UButton* Button; const TCHAR* Path; };
 	const FButtonTexture Targets[] = {
-		{ mConfirmButton,    TEXT("/Game/UI/ClassSelect/Tex/T_confirm_button_frame_normal.T_confirm_button_frame_normal") },
-		{ mBackToMainButton, TEXT("/Game/UI/ClassSelect/Tex/T_back_button_frame_normal.T_back_button_frame_normal") },
+		{ mConfirmButton,    TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ClassSelect/T_confirm_button_frame_normal.T_confirm_button_frame_normal") },
+		{ mBackToMainButton, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ClassSelect/T_back_button_frame_normal.T_back_button_frame_normal") },
 	};
 
 	for (const FButtonTexture& Target : Targets)
