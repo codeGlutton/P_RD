@@ -140,28 +140,28 @@ public:
 	/*
 	* @brief 줌 값을 받아서 카메라를 Zoom합니다
 	*
-	* @param ZoomValue 만큼 Zoom 합니다
+	* @param ZoomDelta 만큼 Zoom 합니다
 	*/
 	UFUNCTION(BlueprintCallable)
-	void ZoomCamera(float ZoomValue);
+	void ZoomCamera(float ZoomDelta);
 
 	/*
 	* @brief 줌 값을 받아서 카메라를 Zoom합니다.
 	*
-	* @param ZoomValue 만큼 Zoom 합니다
+	* @param ZoomDelta 만큼 Zoom 합니다
 	* @param ViewPortPos위치로 카메라를 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void ZoomCameraAndMoveToViewportPosition(float ZoomValue, FVector2D ViewPortPos);
+	void ZoomCameraAndMoveToViewportPosition(float ZoomDelta, FVector2D ViewPortPos);
 
 	/*
 	* @brief 줌 값을 받아서 카메라를 Zoom합니다.
 	*
-	* @param ZoomValue 만큼 Zoom 합니다
+	* @param ZoomDelta 만큼 Zoom 합니다
 	* @param ViewPortPos위치로 카메라를 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void ZoomCameraAndMoveToWorldPosition(float ZoomValue, FVector WorldPosition);
+	void ZoomCameraAndMoveToWorldPosition(float ZoomDelta, FVector WorldPosition);
 
 	/*
 	* @brief MoveToViewportPosition로 카메라의 시선을 옮긴다.
@@ -184,10 +184,10 @@ public:
 public:
 	/* 강조 기능*/
 	UFUNCTION(BlueprintCallable)
-	void StartEmphasisToWorldPosition(float ZoomValue, FVector WorldPosition);
+	void StartEmphasisToWorldPosition(float ZoomDelta, FVector WorldPosition);
 
 	UFUNCTION(BlueprintCallable)
-	void StartEmphasisToViewPortPosition(float ZoomValue, FVector2D ViewPortPos);
+	void StartEmphasisToViewPortPosition(float ZoomDelta, FVector2D ViewPortPos);
 
 	UFUNCTION(BlueprintCallable)
 	void EndEmphasis();

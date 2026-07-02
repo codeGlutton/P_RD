@@ -109,7 +109,7 @@ void UCameraMovementComponent::SetMoveClampingBox(FVector2D MoveClampingBox)
 	mMoveClampingBox = MoveClampingBox;
 }
 
-void UCameraMovementComponent::ZoomCamera(float ZoomValue)
+void UCameraMovementComponent::ZoomCamera(float ZoomDelta)
 {
 	if (mCamerControlState != ECameraControlState::Normal)
 		return;
@@ -117,25 +117,25 @@ void UCameraMovementComponent::ZoomCamera(float ZoomValue)
 	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
 
 	// OW 값을 추가합니다.
-	float OW = mCameraComponent->OrthoWidth + ZoomValue * mZoomSpeed;
+	float OW = mCameraComponent->OrthoWidth + ZoomDelta * mZoomSpeed;
 	mCameraComponent->OrthoWidth = FMath::Clamp(OW, mMinOrthoWidth, mMaxOrthoWidth);
 }
 
-void UCameraMovementComponent::ZoomCameraAndMoveToViewportPosition(float ZoomValue, FVector2D ViewPortPos)
+void UCameraMovementComponent::ZoomCameraAndMoveToViewportPosition(float ZoomDelta, FVector2D ViewPortPos)
 {
 	if (mCamerControlState != ECameraControlState::Normal)
 		return;
 
-	ZoomCamera(ZoomValue);
+	ZoomCamera(ZoomDelta);
 	MoveToViewportPosition(ViewPortPos);
 }
 
-void UCameraMovementComponent::ZoomCameraAndMoveToWorldPosition(float ZoomValue, FVector WorldPosition)
+void UCameraMovementComponent::ZoomCameraAndMoveToWorldPosition(float ZoomDelta, FVector WorldPosition)
 {
 	if (mCamerControlState != ECameraControlState::Normal)
 		return;
 
-	ZoomCamera(ZoomValue);
+	ZoomCamera(ZoomDelta);
 	MoveToWorldPosition(WorldPosition);
 }
 
@@ -236,7 +236,7 @@ void UCameraMovementComponent::MoveToWorldPosition(FVector LocationPos)
 
 }
 
-void UCameraMovementComponent::StartEmphasisToWorldPosition(float ZoomValue, FVector WorldPosition)
+void UCameraMovementComponent::StartEmphasisToWorldPosition(float ZoomDelta, FVector WorldPosition)
 {
 	if (mCamerControlState != ECameraControlState::Normal)
 		return;
@@ -246,17 +246,17 @@ void UCameraMovementComponent::StartEmphasisToWorldPosition(float ZoomValue, FVe
 	if (GetCameraRayHitPoint(CameraRayHitResult))
 	{
 		mPreDefaultState.Position = CameraRayHitResult.ImpactPoint;
-		mPreDefaultState.OrthoWidth = mCameraComponent->OrthoWidth;
+		mPreDefaultState.OrthoWidth = -ZoomDelta;
 	}
 
 	// 해당 위치로 Zoom과 이동을 수행합니다.
-	ZoomCameraAndMoveToWorldPosition(ZoomValue, WorldPosition);
+	ZoomCameraAndMoveToWorldPosition(ZoomDelta, WorldPosition);
 
 	mCamerControlState = ECameraControlState::Emphasis;
 
 }
 
-void UCameraMovementComponent::StartEmphasisToViewPortPosition(float ZoomValue, FVector2D ViewPortPos)
+void UCameraMovementComponent::StartEmphasisToViewPortPosition(float ZoomDelta, FVector2D ViewPortPos)
 {
 	if (mCamerControlState != ECameraControlState::Normal)
 		return;
@@ -266,11 +266,11 @@ void UCameraMovementComponent::StartEmphasisToViewPortPosition(float ZoomValue, 
 	if (GetCameraRayHitPoint(CameraRayHitResult))
 	{
 		mPreDefaultState.Position = CameraRayHitResult.ImpactPoint;
-		mPreDefaultState.OrthoWidth = mCameraComponent->OrthoWidth;
+		mPreDefaultState.OrthoWidth = -ZoomDelta;
 	}
 
 	// 해당 위치로 Zoom과 이동을 수행합니다.
-	ZoomCameraAndMoveToViewportPosition(ZoomValue, ViewPortPos);
+	ZoomCameraAndMoveToViewportPosition(ZoomDelta, ViewPortPos);
 
 	mCamerControlState = ECameraControlState::Emphasis;
 
@@ -280,9 +280,7 @@ void UCameraMovementComponent::EndEmphasis()
 {
 	mCamerControlState = ECameraControlState::Normal;
 
-	mCameraComponent->OrthoWidth = mPreDefaultState.OrthoWidth;
-	MoveToWorldPosition(mPreDefaultState.Position);
-
+	ZoomCameraAndMoveToWorldPosition(mPreDefaultState.OrthoWidth, mPreDefaultState.Position);
 }
 
 bool UCameraMovementComponent::GetCameraRayHitPoint(OUT FHitResult& HitResult)
