@@ -121,6 +121,13 @@ void UCombatUIModel::SetTurnUI(const FTurnUI& Turn)
 	OnUIChanged.Broadcast(ECombatUIDomain::Turn);
 }
 
+/** @brief 조작 빌드 페이즈만 바꾸고 Turn 도메인을 갱신한다(스킬/이동 빌드 공용). */
+void UCombatUIModel::SetBuildPhase(ECombatBuildPhaseUI Phase)
+{
+	mTurnUI.mPhase = Phase;
+	OnUIChanged.Broadcast(ECombatUIDomain::Turn);
+}
+
 /** @brief 장비 슬롯 표시 스냅샷을 교체하고 Equipment 도메인을 갱신한다. */
 void UCombatUIModel::SetEquipmentUIs(const TArray<FEquipmentUI>& Equipment)
 {

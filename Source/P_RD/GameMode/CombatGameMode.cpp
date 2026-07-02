@@ -175,9 +175,11 @@ void ACombatGameMode::InitializeRoom()
 		});
 
 	DicePoolModel->OnSelectedDiceUI.AddWeakLambda(this, [this](const UDiceModel* Dice) {
+		PushDiceUIData();   // 슬롯별 mIsSelected 강조도 함께 갱신(선택 토글은 이 이벤트로만 온다)
 		PushSelectedDiceUIData();
 		});
 	DicePoolModel->OnUnselectedDiceUI.AddWeakLambda(this, [this](const UDiceModel* Dice) {
+		PushDiceUIData();
 		PushSelectedDiceUIData();
 		});
 
@@ -197,6 +199,8 @@ void ACombatGameMode::BeginRoom()
 	{
 		if (UCombatTileMapHUDWidget* CombatHUD = WorldWidgetSubsystem->GetHUD<UCombatTileMapHUDWidget>())
 		{
+			// HUD가 게임모드 소유 뷰모델을 구독해야 Push*UIData가 화면에 반영된다(미바인딩이면 push 전체가 표시로 이어지지 않음).
+			CombatHUD->BindCombatUIModel(mCombatUIModel);
 			CombatHUD->OpenUI();                            // InitHUD로 생성만 된 HUD를 화면에 올림
 		}
 	}
@@ -325,6 +329,9 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
 		});
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementPointAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
+		PushUnitUIData();   // 이동 소모/회복 시 이동력 게이지 갱신
+		});
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefenseAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
 		});
@@ -345,8 +352,10 @@ void ACombatGameMode::OnUnregisterUnit(UUnitModel* Unit)
 
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).RemoveAll(this);
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).RemoveAll(this);
+	// 해제는 구독(OnRegisterUnit)과 같은 속성 쌍이어야 한다 — 다른 속성을 지우면 no-op이라 바인딩이 잔존한다.
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementAttribute()).RemoveAll(this);
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementPointAttribute()).RemoveAll(this);
-	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefensePointAttribute()).RemoveAll(this);
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefenseAttribute()).RemoveAll(this);
 
 	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_StatusEffect, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
 
@@ -361,9 +370,17 @@ void ACombatGameMode::PushTurnUIData() const
 
 	const TArray<TObjectPtr<UUnitModel>>& UnitModels = CombatModel->GetUnits();
 
+	// 마지막 턴 노드가 제거된 직후(OnUnregisterUnit 경로)에는 현재 턴이 없을 수 있다 — 그때는 push를 생략한다.
+	USRPGTurnContext* TurnContext = CombatModel->GetCurrentTurnContext();
+	if (TurnContext == nullptr)
+	{
+		return;
+	}
+
 	FTurnUI TurnUI;
-	TurnUI.mCurrentUnitId = CombatModel->GetCurrentTurnContext()->GetOwner()->GetModelId();
-	TurnUI.mPhase = ECombatBuildPhaseUI::None;
+	TurnUI.mCurrentUnitId = TurnContext->GetOwner()->GetModelId();
+	// 페이즈의 단일 소유자는 SetBuildPhase(빌드 이벤트) — 턴 스냅샷 push가 진행 중 페이즈를 덮지 않게 보존한다.
+	TurnUI.mPhase = mCombatUIModel->GetTurnUI().mPhase;
 	TurnUI.mRound = 0; // TODO : 라운드 수
 	for (const TObjectPtr<UUnitModel>& UnitModel : UnitModels)
 	{
@@ -378,13 +395,13 @@ void ACombatGameMode::PushSkillBuildUIData(ESRPGSkillBuildPhase Phase) const
 	{
 	case ESRPGSkillBuildPhase::None:
 	case ESRPGSkillBuildPhase::Build:
-		// mCombatUIModel->SetSkillBuildPhase(ECombatBuildPhaseUI::None);
+		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::None);
 		break;
 	case ESRPGSkillBuildPhase::AimSelection:
-		// mCombatUIModel->SetSkillBuildPhase(ECombatBuildPhaseUI::AimSelection);
+		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::AimSelection);
 		break;
 	case ESRPGSkillBuildPhase::Preview:
-		// mCombatUIModel->SetSkillBuildPhase(ECombatBuildPhaseUI::Preview);
+		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::Preview);
 		break;
 	}
 }
@@ -395,13 +412,13 @@ void ACombatGameMode::PushMoveBuildUIData(ESRPGMoveBuildPhase Phase) const
 	{
 	case ESRPGMoveBuildPhase::None:
 	case ESRPGMoveBuildPhase::Build:
-		// mCombatUIModel->SetSkillBuildPhase(ECombatBuildPhaseUI::None);
+		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::None);
 		break;
 	case ESRPGMoveBuildPhase::DestSelection:
-		// mCombatUIModel->SetSkillBuildPhase(ECombatBuildPhaseUI::AimSelection);
+		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::AimSelection);
 		break;
 	case ESRPGMoveBuildPhase::Preview:
-		// mCombatUIModel->SetSkillBuildPhase(ECombatBuildPhaseUI::Preview);
+		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::Preview);
 		break;
 	}
 }
@@ -435,9 +452,14 @@ void ACombatGameMode::PushUnitUIData() const
 
 		UnitUIData.mStatusTags = AttributeSetComponentModel->GetOwnedGameplayTags(); // 모든 소유 태그가 아닌 고의적으로 넣은 태그만 해당
 
-		UnitUIData.mMovementPoint = UnitUIData.mMaxMovementPoint; // 의미 없음
-		UnitUIData.mSkillPoint = 0; // 의미 없음
-		UnitUIData.mWorldLocation = UnitModel->GetView<AActor>()->GetActorLocation(); // 삭제 가능성 있음
+		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMovementPointAttribute());
+
+		// 죽는 유닛 등 뷰가 이미 없는 경로에서도 push가 돌 수 있어 null 가드한다.
+		// mWorldLocation은 머리 위 HP바 스크린 투영(UnitBars)에 실사용된다.
+		if (const AActor* UnitViewActor = UnitModel->GetView<AActor>())
+		{
+			UnitUIData.mWorldLocation = UnitViewActor->GetActorLocation();
+		}
 	}
 
 	mCombatUIModel->SetUnitUIs(UnitUIDatas);
@@ -462,7 +484,9 @@ void ACombatGameMode::PushDiceUIData() const
 		const TObjectPtr<UDiceModel>& DiceModel = DiceModels[i];
 		FDiceSlotUI& DiceSlotUIData = DiceSlotUIDatas[i];
 
-		DiceSlotUIData.mDiceId = DiceModel->GetPrimaryAssetId();
+		// UObject 기본 GetPrimaryAssetId()는 무효 id를 반환한다 — 주사위의 원본 정적 데이터 id를 써야
+		// 위젯의 희귀도 색(ResolveDiceRarity)/프리뷰 매칭이 동작한다.
+		DiceSlotUIData.mDiceId = DiceModel->GetSourceDiceId();
 		DiceSlotUIData.mResultValue = DiceModel->IsRolled() ? DiceModel->GetCurrentValue() : 0;
 		DiceSlotUIData.mRolledFaceIndex = DiceModel->GetRolledFaceIndex();
 		DiceSlotUIData.mIsRolled = DiceModel->IsRolled();
@@ -487,7 +511,7 @@ void ACombatGameMode::PushSelectedDiceUIData() const
 	UDicePoolModel* DicePoolModel = PlayerUnitModel->GetDicePoolModel();
 	checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트 nullptr"));
 
-	//mCombatUIModel->SetSelectedDice(DicePoolModel->GetSelectedDices(), DicePoolModel->GetSelectedDiceSum());
+	mCombatUIModel->SetSelectedDice(DicePoolModel->GetSelectedDices(), DicePoolModel->GetSelectedDiceSum());
 }
 
 void ACombatGameMode::PushSkillUIData() const
@@ -509,6 +533,7 @@ void ACombatGameMode::PushSkillUIData() const
 		const FSkillEntry& SkillEntry = SkillEntries[i];
 		FSkillUI& SkillUIData = SkillUIDatas[i];
 
+		SkillUIData.mSkillIndex = i;   // UI가 스킬 선택 의도(SelectSkill)에 되돌려 보내는 왕복 식별자
 		SkillUIData.mIsUsable = false;
 
 		UStaticSkillData* StaticSkillData = (SkillEntry.IsValid() == true) ? SkillEntry.mData.Get() : nullptr;
