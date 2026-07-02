@@ -401,8 +401,13 @@ void UCombatTileMapHUDWidget::SetDiceRollVisibility(ESlateVisibility NewVisibili
 
 	if (DiceRollStatusText != nullptr)
 	{
-		DiceRollStatusText->SetText(FText::GetEmpty());
-		DiceRollStatusText->SetVisibility(ESlateVisibility::Collapsed);
+		// 오버레이가 보이면 상태 문구(TAP TO ROLL / DICE RESULT / TAP TO CLOSE)도 같이 노출한다.
+		// 실제 문구는 호출부(Prepare/Start/Update)가 이 뒤에 채운다. 클릭은 입력 버튼이 받으므로 HitTestInvisible.
+		DiceRollStatusText->SetVisibility(bVisible ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+		if (bVisible == false)
+		{
+			DiceRollStatusText->SetText(FText::GetEmpty());
+		}
 	}
 
 	if (mDiceRollInputButton != nullptr)
