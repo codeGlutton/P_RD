@@ -106,6 +106,8 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 			if (bOwned == false)
 			{
 				// 미보유: 슬롯을 아예 비운다 - WBP의 빈 프레임이 그대로 "빈 칸"으로 보인다.
+				// 브러시도 투명화해 둔다(방어): 외부에서 visibility를 강제 복원해도 UBorder 기본 흰 브러시가 새지 않게.
+				SkillRailPanel->SetBrushColor(FLinearColor(0.0f, 0.0f, 0.0f, 0.0f));
 				SkillRailPanel->SetVisibility(ESlateVisibility::Collapsed);
 			}
 			else

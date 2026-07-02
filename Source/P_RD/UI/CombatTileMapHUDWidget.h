@@ -439,6 +439,13 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UTextBlock>> mOwnedDiceTypeTexts;
 
+	/** @brief 보유 주사위 카드의 굴림 값 텍스트(2D 면 표시 - 크고 진한 숫자). */
+	TArray<TObjectPtr<UTextBlock>> mOwnedDiceValueTexts;
+
+	/** @brief 보유 주사위 2D 면 판 텍스처(카드 공용, 지연 로드 캐시). */
+	UPROPERTY(Transient)
+	TObjectPtr<UTexture2D> mOwnedDiceFaceTexture;
+
 	/** @brief 중립 상태로 표시하는 런타임 스킬 레일 배경 */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UBorder>> mSkillRailPanels;

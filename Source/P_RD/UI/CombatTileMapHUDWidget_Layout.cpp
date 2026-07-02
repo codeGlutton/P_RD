@@ -88,7 +88,7 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 			{
 				RDUILayout::ApplyDesignerSlotData(mOwnedDiceCardWidgets[DiceIndex], CellSlot, 23);
 			}
-			// 종류 라벨(d6/d20 등): 셀 하단 28% 스트립. Z를 더 높여 프리뷰 위로 보이게 한다.
+			// 종류 라벨(d6/d20 등): 셀 하단 28% 스트립. Z를 더 높여 면 판 위로 보이게 한다.
 			if (mOwnedDiceTypeTexts.IsValidIndex(DiceIndex))
 			{
 				FAnchorData LabelSlot = CellSlot;
@@ -96,6 +96,13 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 				LabelSlot.Offsets.Top += CellHeightPx * 0.72f;
 				LabelSlot.Offsets.Bottom = CellHeightPx * 0.28f;
 				RDUILayout::ApplyDesignerSlotData(mOwnedDiceTypeTexts[DiceIndex], LabelSlot, 24);
+			}
+			// 굴림 값: 면 판(상단 72%) 중앙에 크고 진하게.
+			if (mOwnedDiceValueTexts.IsValidIndex(DiceIndex))
+			{
+				FAnchorData ValueSlot = CellSlot;
+				ValueSlot.Offsets.Bottom = CellSlot.Offsets.Bottom * 0.72f;
+				RDUILayout::ApplyDesignerSlotData(mOwnedDiceValueTexts[DiceIndex], ValueSlot, 25);
 			}
 		}
 	}
@@ -119,6 +126,10 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 			{
 				const float LabelTop = Top + CellHeight * 0.72f;
 				RDUILayout::ApplyAnchoredSlot(mOwnedDiceTypeTexts[DiceIndex], FAnchors(Left, LabelTop, Left + CellWidth, Top + CellHeight), 24);
+			}
+			if (mOwnedDiceValueTexts.IsValidIndex(DiceIndex))
+			{
+				RDUILayout::ApplyAnchoredSlot(mOwnedDiceValueTexts[DiceIndex], FAnchors(Left, Top, Left + CellWidth, Top + CellHeight * 0.72f), 25);
 			}
 		}
 	}
