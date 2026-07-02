@@ -117,49 +117,35 @@ enum class EEffectPattern : uint8
 };
 
 /**
- * @brief 효과 범위 중심
- * 
- * @details
- * 패시브 발동 시 어떤 유닛의 타일을 중심 인지에 대한 열거형
- */
-UENUM(BlueprintType)
-enum class EEffectCenterType : uint8
-{
-    /** 대상 선정 기준: 시전자 본인 (소유자)*/
-    Owner UMETA(DisplayName = "Owner"),
-
-    /** 대상 선정 기준: 이벤트를 발생시킨 원인 (피격 시 공격자)(타격 시 피격자) */
-    Instigator UMETA(DisplayName = "Instigator"),
-};
-
-/**
- * @brief 대상 선정 시 특정 객체를 제외하기 위한 필터(Bitmask)입니다.
- * 
- * @details
- * 영향 범위 안에 특정 유닛들은 제외하고 싶을 때 사용하는 열거형
- * 
- * @note 
- * 여러 옵션을 조합하여 사용 가능합니다. 예: ExcludeSelf | ExcludeAlly
+ * @brief 효과 적용 시 특정 범위를 설정하기 위한 필터(Bitmask)입니다.
  */
 UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
-enum class ETargetFilter : uint8
+enum class ETargetIndexFilter : uint8
 {
-    /** 아무도 대상에 포함하지 않습니다. (비어있음) */
-    None = 0 UMETA(DisplayName = "None"),
+    None = 0                                        UMETA(ToolTip = "아무도 대상에 포함하지 않음"),
 
-    /** 시전자 본인을 대상에 포함합니다. */
-    IncludeSelf = 1 << 0 UMETA(DisplayName = "Include Self"),
+    IncludeSelfIndex = 1 << 0                       UMETA(ToolTip = "시전자 인덱스를 적용 대상에 포함"),
+    IncludeTargetIndexes = 1 << 1                   UMETA(ToolTip = "지정 타겟 인덱스들을 적용 대상에 포함"),
 
-    /** 아군을 대상에 포함합니다. */
-    IncludeAlly = 1 << 1 UMETA(DisplayName = "Include Ally"),
-
-    /** 적군을 대상에 포함합니다. */
-    IncludeEnemy = 1 << 2 UMETA(DisplayName = "Include Enemy"),
-
-    /** 모든 대상을 포함합니다. (기본값으로 활용 가능) */
-    All = IncludeSelf | IncludeAlly | IncludeEnemy UMETA(DisplayName = "All")
+    All = IncludeSelfIndex | IncludeTargetIndexes   UMETA(ToolTip = "모든 대상을 포함"),
 };
-ENUM_CLASS_FLAGS(ETargetFilter);
+ENUM_CLASS_FLAGS(ETargetIndexFilter);
+
+/**
+ * @brief 효과 적용 시 특정 팀을 설정하기 위한 필터(Bitmask)입니다.
+ */
+UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
+enum class ETeamAttitudeFilter : uint8
+{
+    None = 0                                        UMETA(ToolTip = "아무도 대상에 포함하지 않음"),
+
+    Friendly = 1 << 0                               UMETA(ToolTip = "동료를 적용 대상에 포함"),
+    Neutral = 1 << 1                                UMETA(ToolTip = "중립을 적용 대상에 포함"),
+    Hostile = 1 << 2                                UMETA(ToolTip = "적을 적용 대상에 포함"),
+
+    All = Friendly | Neutral | Hostile              UMETA(ToolTip = "모든 대상을 포함"),
+};
+ENUM_CLASS_FLAGS(ETeamAttitudeFilter)
 
 /**
  * @brief 전투 결과를 나타내는 열거형
@@ -309,7 +295,7 @@ enum class ESRPGCommandResult : uint8
  */
 inline ESRPGCommandResult CombineSRPGCommandResult(ESRPGCommandResult Lhs, ESRPGCommandResult Rhs)
 {
-    if (static_cast<uint8>(Lhs) < static_cast<uint8>(Lhs))
+    if (static_cast<uint8>(Lhs) < static_cast<uint8>(Rhs))
     {
         return Lhs;
     }

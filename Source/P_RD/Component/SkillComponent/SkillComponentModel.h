@@ -1,28 +1,50 @@
 ﻿/*****************************************************************//**
- * @file   SkillComponent.h
- * @brief  스킬 컴포넌트 기본 베이스
- * @author 김준형
- * @date   2026-05-26
+ * @file   SkillComponentModel.h
+ * @brief  액티브 스킬 컴포넌트 모델 구현 정의 헤더
+ * @author 모호재, 이문환
+ * @date   2026-06-30
  *********************************************************************/
 #pragma once
 
 #include "RDMinimal.h"
 #include "Component/ComponentModel.h"
+#include "Actor/TileMap/TileLayer.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
-#include "DataAsset/SkillData/StaticSkillData.h"
 #include "SkillComponentModel.generated.h"
-/*
-* @param SkillIndex : 변경된 스킬의 인덱스
-* @param SkillData : 변경된 스킬 데이터
-*/
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
-	FOnSkillChange,
-	int32, SkillIndex,
-	TSoftObjectPtr<UStaticSkillData>, SkillData
-);
+
+class UTileMapModel;
+class UStaticSkillData;
+struct FSkillEffectLayer;
+
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnChangeSkillUI, int32 /*SkillIndex*/, const UStaticSkillData* /*PreSkillData*/, const UStaticSkillData* /*NewSkillData*/);
 
 /**
- * 
+ * @brief 한 슬롯에 장착된 스킬과 그로 인해 설치된 런타임 객체 추적
+ */
+USTRUCT(BlueprintType)
+struct FSkillEntry
+{
+	GENERATED_BODY()
+
+public:
+	FSkillEntry() = default;
+	FSkillEntry(UStaticSkillData* Data);
+
+public:
+	bool IsValid() const;
+
+public:
+	// @brief 장착된 고정 스킬 데이터
+	UPROPERTY(Category = "Static", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Data"))
+	TObjectPtr<UStaticSkillData> mData = nullptr;
+
+	// @brief 현재 선택된 스킬 여부
+	UPROPERTY(Category = "Runtime", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsSelected"))
+	bool mIsSelected = false;
+};
+
+/**
+ * @brief  액티브 스킬 컴포넌트 모델
  */
 UCLASS()
 class P_RD_API USkillComponentModel : public UComponentModel
@@ -30,94 +52,40 @@ class P_RD_API USkillComponentModel : public UComponentModel
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this component's properties
 	USkillComponentModel();
 
-protected:
+public:
 	/**
-	 * @brief 보유한 스킬 데이터
-	 * 플레이어 4개 + 공격
-	 * 적 가변적
+	 * @brief 스킬 목록(스폰 데이터 등)을 일괄 장착
+	 * @param SkillList 스킬 목록
 	 */
-	UPROPERTY(VisibleAnywhere)
-	TArray<TSoftObjectPtr<class UStaticSkillData>> mSkillData;
-
-	/**
-	* @brief 스킬 어빌리티
-	* ASC에서 가져올 예정
-	*/
-	//UPROPERTY()
-	//TSoftObjectPtr<FGameplayAbilitySpec> mActivatableAbilities;
+	void SetSkillFrom(const TArray<TSoftObjectPtr<UStaticSkillData>>& SkillList);
+	void SetSkillFrom(const TArray<FPrimaryAssetId>& SkillList);
 
 public:
-	/* 델리게이트 변수*/
-	FOnSkillChange OnSkillChange;
+	const TArray<FSkillEntry>& GetSkills() const;
+	const FSkillEntry* GetSkill(int32 SkillIndex) const;
+	void SetSkill(int32 SkillIndex, UStaticSkillData* SkillData);
 
 public:
-	virtual void Initialize() override;
-
-protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
-
-public:
-	/* Get, Set */
 	/**
-	 * @brief 보유한 스킬 개수 반환
-	 * @details 스킬 인덱스 유효성(특히 적 AI의 시그니처 스킬 보유 여부)을 안전하게 확인하는 용도
-	 */
-	int32 GetSkillCount() const { return mSkillData.Num(); }
-
-	/**
-	 * @brief 스킬 인덱스를 입력하면 Out_SkillData에 기록하는 함수
-	 * @details 범위가 유효하지 않으면 false 반환
-	 */
-	void GetSkillData(int In_SkillIndex, OUT TSoftObjectPtr<UStaticSkillData>& Out_SkillData);
-
-	/**
-	* @brief 스킬 인덱스에 SkillData를 설정하는 함수
-	* @details 범위가 유효하지 않으면 false 반환
-	*/
-	void SetSkillData(int SkillIndex, IN const TSoftObjectPtr<UStaticSkillData>& SkillData);
-
-	/**
-	* @brief SkillData를 추가하는 함수
-	* @details
-	* 적들의 스킬을 추가할 때 사용할 것
-	* 플레이어는 소지 스킬 개수가 고정되어 있으므로 사용하면 안됨
-	* 어차피 적만 필요할 것 같으므로 적에게만 작성해도 될 듯
-	*/
-	virtual void AddSkillData(IN const TSoftObjectPtr<UStaticSkillData>& SkillData);
-
-public:
-	/* 스킬 사용 */
-	/**
-	* @brief 스킬의 인덱스와 타일을 입력받으면 스킬 사용
-	* @details
-	* 이미 가지고 있는 커맨드 로그를 토대로 스킬을 진행
+	* @brief 액티브 스킬을 활성화하는 함수
+	* @param MapModel 참고할 맵 모델
 	* @param SkillIndex 사용할 스킬의 인덱스
-	* @param TargetTils 타겟팅한 타일들
-	* @param DicePoint 주사위 눈금
-	* 
-	* @return bool : 실패 시 false 반환
+	* @param TargetIndex 타겟팅 타일
+	* @param DiceSum 주사위 눈금 합
+	* @return 사용 성공 여부
 	*/
-	UFUNCTION(BlueprintCallable, Category = "Skill")
-	bool ActivateSkill(int32 SkillIndex, const TArray<FTileIndex>& TargetTiles, float DicePoint);
+	bool ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum);
 
-	/* 이동포인트 */
-	/**
-	* @brief 이동 완료 후 어트리뷰트 셋에서 moveCount를 감소 시키는 함수
-	* @details
-	*/
-	UFUNCTION(BlueprintCallable, Category = "Move")
-	void HandelMovePoint(float MovePoint);
+public:
+	TArray<FTileIndex> GetAimableTiles(UTileMapModel* MapModel, int32 SkillIndex, int32 DiceSum) const;
+	TArray<FTileIndex> GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum) const;
 
-private:
-	// @brief 타겟을 가져오는 함수
-	// @detilas
-	// 해당 속성을 넣어서 원하는 타겟을 가져옵니다.
-	void ExtractTarget(const TArray<FTileIndex>& TargetTile,
-		ETileLayerFlag ActorFlag,
-		ETargetFilter TargetFilter,
-		OUT TArray<TWeakObjectPtr<UBoardActorModel>>& TargetActors);
+public:
+	FOnChangeSkillUI OnChangeSkillUI;
+
+protected:
+	UPROPERTY(Category = "Entry", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillEntries"))
+	TArray<FSkillEntry> mSkillEntries;
 };

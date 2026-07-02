@@ -6,8 +6,11 @@
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
-#include "Pawn/UnitModel.h"
+#include "Pawn/Player/PlayerUnitModel.h"
 #include "Actor/TileMap/TileMapModel.h"
+
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "AttributeSet/UnitAttributeSet.h"
 
 #include "SRPGFramework/SRPGMoveAction.h"
 
@@ -48,9 +51,13 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleCommand(const TInstancedStruct<FS
     {
         /* 이동 빌드 진입 시 외부에서 넘어온 이동 포인트를 받아 도달 범위 계산 */
 
-        const FSRPGMoveSelectCommand& MoveSelectCommand = Command.Get<FSRPGMoveSelectCommand>();
-        mMovePoint = MoveSelectCommand.mMovePoint;
+        UPlayerUnitModel* PlayerUnitModel = Cast<UPlayerUnitModel>(mInstigator);
+        checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 모델 nullptr"));
+        UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnitModel->GetAttributeComponentModel();
+        checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 모델 nullptr"));
+        mMovePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMovementPointAttribute());
 
+        const FSRPGMoveSelectCommand& MoveSelectCommand = Command.Get<FSRPGMoveSelectCommand>();
         // 커맨드 델리깃을 복사해서 페이즈가 바뀔 때 통지
         OnChangeMoveBuildPhase = MoveSelectCommand.OnChangeMoveBuildPhase;
 
@@ -85,7 +92,7 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleWorldTraceCommand(const TInstance
 
     AActor* TargetActor = nullptr;
     FTileIndex TargetTileIndex = FTileIndex::Invalid;
-    GetTileActorUnderCursor(RDTraceChannels::TileOnlyTrace, OUT TargetActor, OUT TargetTileIndex);
+    GetTileActorUnderCursor(GetWorld(), RDTraceChannels::TileOnlyTrace, OUT TargetActor, OUT TargetTileIndex);
 
     IActorView* ActorView = Cast<IActorView>(TargetActor);
     const bool IsContactedTileMap = ActorView != nullptr && ActorView->GetModel() == TileMap;
@@ -110,6 +117,7 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleWorldTraceCommand(const TInstance
                 /* 목적지 선택 단계에서 한단계 취소 시, 빌드 자체 종료 */
 
                 MarkActionCompleted(ESRPGActionResult::Cancelled);
+                SetBuildPhase(ESRPGMoveBuildPhase::None);
                 Result = ESRPGCommandResult::Handled;
                 break;
             }
@@ -128,8 +136,8 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleWorldTraceCommand(const TInstance
                 if (mTargetIndex == TargetTileIndex)
                 {
                     BuildMove();
-                    SetBuildPhase(ESRPGMoveBuildPhase::Build);
                     MarkActionCompleted(ESRPGActionResult::Succeeded);
+                    SetBuildPhase(ESRPGMoveBuildPhase::Build);
                     Result = ESRPGCommandResult::Handled;
                     break;
                 }

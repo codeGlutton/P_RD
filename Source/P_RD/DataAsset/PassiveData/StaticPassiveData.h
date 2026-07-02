@@ -1,7 +1,7 @@
 ﻿/*****************************************************************//**
  * @file   UStaticPassiveData.h
  * @brief  패시브 정적 데이터
- * @author 김준형
+ * @author 김준형, 이문환
  * @date   2026-06-18
  *********************************************************************/
 
@@ -9,9 +9,7 @@
 
 #include "RDMinimal.h"
 #include "DataAsset/PrimaryAssetType.h"
-#include "DataAsset/BundleType.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
-#include "DataAsset/SkillData/StaticSkillEffect/StaticSkillEffect_Base.h"
 #include "StaticPassiveData.generated.h"
 
 class UTacticalPassive;
@@ -27,7 +25,7 @@ public:
     FGameplayTag mConditionTag;     // 조건 태그
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    float mThresholdValue;          // 기준 수치 (예: 데미지 10, HP 30%)
+    float mThresholdValue = 0.f;    // 기준 수치 (예: 데미지 10, HP 30%)
 };
 
 /**
@@ -45,24 +43,31 @@ public:
     }
 
 public:
-    UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Description"))
+    UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Description"))
     FText mDescription;
 
-    UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Icon", AssetBundles = "UI"))
+    UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Icon", AssetBundles = "UI"))
     TSoftObjectPtr<UTexture2D> mIcon;
 
+public:
     /**
-    * @brief 패시브 적용 시점
+    * @brief 패시브 발동 시점 (단일)
     *
     * @details
-    * 타격 전, 후
-    * 피격 전, 후
-    * 스킬 시전 전, 후
-    * 모션 전, 후
-    * 기타 등등
+    * 이펙트를 적용(발동)할 시점(예: 공격 시작, 타격 전 등).
+    * 주기형 버프는 여기에 시작 시점을, mDeactivateTimingTag에 끝 시점을 둔다.
     */
-	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Passive Trigger Timig"))
-	FGameplayTag mPassiveTriggerTimig;     // 시점
+	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Activate Timing"))
+	FGameplayTag mActivateTimingTag;
+
+    /**
+    * @brief 패시브 해제 시점 (단일)
+    *
+    * @details
+    * 적용 중인 이펙트를 제거(해제)할 시점(예: 공격 끝).
+    */
+	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Deactivate Timing"))
+	FGameplayTag mDeactivateTimingTag;
 
     /**
     * @brief 패시브 발동 조건
@@ -107,57 +112,4 @@ public:
     */
     UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Threshold"))
     int32 mThreshold = 0;
-
-#pragma region Effect
-
-    /**
-    * @brief 누구를 중심으로?
-    *
-    * @details
-    * 소유자의 타일을 중심으로?(패시브를 가지고 있는 주인)
-    * 유발자의 타일을 중심으로?(패시브와 연관된 대상 : 공격하고 있다면 피격자, 피격되고 있다면 공격자)
-    */
-    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectCenterType"))
-    EEffectCenterType mEffectCenterType;
-
-    /*
-    * @brief 효과 범위 패턴
-    *
-    * @details
-    */
-    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectAreaType"))
-    EEffectPattern mEffectPattern;
-
-    /**
-    * @brief 관통 여부
-    *
-    * @details
-    * true면 유닛 넘어도 영향 대상
-    * false면 유닛 넘어는 영향 대상이 아님
-    */
-    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsPenetration"))
-    bool mIsPenetration;
-
-    /**
-    * @brief 기본 영향 범위
-    *
-    * @details
-    * 고정값
-    * 사정거리는 항상 DefaultArea + RatioArea * 눈금
-    */
-    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectDefaultArea"))
-    int32 mEffectDefaultArea;
-
-    /**
-    * @brief 패시브 효과 정적 데이터
-    *
-    * @details
-    * 패시브 효과
-    * 데미지, 힐, 밀치기 등
-    */
-    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StaticPassiveEffect", AssetBundles = "Actor"))
-    TSoftObjectPtr<UStaticSkillEffect_Base> mStaticPassiveEffect;
-
-#pragma endregion
-
 };

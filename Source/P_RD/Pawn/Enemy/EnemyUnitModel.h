@@ -30,14 +30,12 @@ public:
 	int32 GetDifficulty() const override;
 	
 	// @brief 플레이어유닛 여부
-	bool IsPlayerUnitModel() const override;
+	bool IsPlayerUnitModel() const override { return false; }
 
 	// @brief 이동 성향
 	EMoveTendency GetMoveTendency() const;
 
 protected:
-	UUserWidget* GetInfoPanel() const override;
-
 	// @brief 초기 스텟에 반영되는 난이도 수치
 	UPROPERTY(Category = Enemy, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "Difficulty"))
 	int32 mDifficulty;

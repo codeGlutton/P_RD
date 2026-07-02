@@ -34,6 +34,8 @@ class URDUserWidget;
  * 방 HUD마다 MAP/SET 버튼을 따로 만들면 방 종류가 늘 때마다 열기 규칙과 닫기 규칙이 갈라진다.
  * 탑바가 WorldWidgetSubsystem의 공용 위젯만 열고 닫으면 전투/상점/보물 방 모두 같은 OpenUI 경로를 쓴다.
  */
+class URoomUIModel;
+
 UCLASS(BlueprintType, Blueprintable)
 class P_RD_API UTopMenuBarWidget : public URDUserWidget
 {
@@ -62,6 +64,13 @@ public:
 
 	/** @brief 전투 HUD가 읽은 보유 주사위/스킬 수를 탑바 DICE/SKILL 라벨에 반영한다. */
 	void SetCombatDiceSkillCount(int32 DiceCount, int32 SkillCount);
+
+	/**
+	 * @brief  방 공통 뷰모델(RoomUIModel)에 연결한다.
+	 * @param  InRoomUIModel 상단바가 읽고 구독할 방 공통 뷰모델. nullptr이면 연결을 해제한다.
+	 * @details OnUIChanged를 구독하고 현재 값을 즉시 반영한다. 이후 값이 바뀌면 상단바가 스스로 다시 그린다.
+	 */
+	void BindRoomUIModel(URoomUIModel* InRoomUIModel);
 
 	/** @brief 전투 HUD의 concept 내비 버튼(MAP/DICE/SKILL/SET)이 탑바 버튼과 동일한 패널 토글을
 	    트리거하도록 외부에 노출한다(스킨 모드에서 탑바는 Collapsed라 concept 버튼이 입력을 대신 받는다). */
@@ -325,4 +334,12 @@ private:
 	 * 나중에 같은 월드를 유지한 채 방만 교체하는 구조로 바뀌면, 전환 확정 시점에 이 플래그를 명시적으로 내려야 한다.
 	 */
 	bool mVictoryWorldMapLocked = false;
+
+	/** @brief RoomUIModel 변경 알림을 받아 방 공통 요약(레벨/HP/골드)을 다시 그린다. */
+	UFUNCTION()
+	void HandleRoomUIChanged();
+
+	/** @brief 연결된 방 공통 뷰모델. 상단바는 이걸 읽고 OnUIChanged를 구독한다. */
+	UPROPERTY(Transient)
+	TObjectPtr<URoomUIModel> mRoomUIModel;
 };

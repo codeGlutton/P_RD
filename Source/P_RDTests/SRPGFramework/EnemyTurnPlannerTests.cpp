@@ -112,7 +112,7 @@ namespace
 		Skill->mIsPenetration = false;
 		Skill->AddToRoot();
 		KeepAlive.Add(Skill);
-		Enemy->GetSkillComponentModel()->AddSkillData(TSoftObjectPtr<UStaticSkillData>(Skill));
+		Enemy->GetSkillComponentModel()->SetSkill(0, Skill);
 
 		// 플레이어유닛과 적유닛 배치
 		TileMap->PlaceActor(FTileTransform(PlayerIndex), Player);

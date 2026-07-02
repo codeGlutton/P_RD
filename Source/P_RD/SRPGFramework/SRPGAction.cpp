@@ -7,10 +7,8 @@
 
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 
-#include "ObjectView.h"
 #include "Actor/BoardActor/BoardActorModel.h"
 #include "Pawn/UnitModel.h"
-#include "Actor/TileMap/TileMap.h"
 
 #include "Simulation/Logger/EventLogger.h"
 
@@ -169,42 +167,6 @@ ESRPGCommandResult USRPGAction::HandleCommand(const TInstancedStruct<FSRPGComman
 void USRPGAction::ReserveInitializeCommand(TInstancedStruct<FSRPGCommand> Command)
 {
 	mInitializeCommand = MoveTemp(Command);
-}
-
-void USRPGAction::GetTileActorUnderCursor(ECollisionChannel Channel, OUT AActor* Actor, OUT FTileIndex& TileIndex) const
-{
-	Actor = nullptr;
-	TileIndex = FTileIndex::Invalid;
-
-	/* 마우스 포인트 지점 아래로 Raycast 검사 */
-
-	USRPGTurnContext* TurnContext = mParent.Get();
-	checkf(TurnContext != nullptr, TEXT("턴 객체 nullptr"));
-	USRPGCombatModel* CombatModel = TurnContext->GetParent();
-	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
-
-	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
-	if (PlayerController != nullptr)
-	{
-		FHitResult HitResult;
-		if (PlayerController->GetHitResultUnderCursor(Channel, false, HitResult) == true)
-		{
-			Actor = HitResult.GetActor();
-			if (Actor == CombatModel->GetTileMap()->GetView<AActor>())
-			{
-				TileIndex = CombatModel->GetTileMap()->WorldToTileIndex(HitResult.ImpactPoint);
-			}
-			else
-			{
-				IObjectView* ObjectView = Cast<IObjectView>(HitResult.GetActor());
-				if (ObjectView != nullptr)
-				{
-					UBoardActorModel* BoardActorModel = ObjectView->GetModel<UBoardActorModel>();
-					TileIndex = BoardActorModel->GetTileTransform().mIndex;
-				}
-			}
-		}
-	}
 }
 
 TWeakObjectPtr<USRPGTurnContext> USRPGAction::GetParent() const

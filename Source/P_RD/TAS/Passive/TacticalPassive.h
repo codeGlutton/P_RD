@@ -29,11 +29,6 @@ class UStaticPassiveData;
  * @par 상태 보유 여부
  * 스택 카운터 같은 내부 상태가 필요한 패시브만 mState를 사용함.
  * 상태가 없는 패시브는 mState를 비워두고 PassiveState를 무시하면 됨.
- *
- * @note 복잡 계산(구 UPassiveLogic 역할)은 서브클래스의 EvaluatePassive(C++)가 담당하므로
- * UPassiveLogic은 제거함. 추후 디자이너가 BP로 패시브를 직접 굴려보며 밸런스(임계값 등)를 맞춰야 하면,
- * EvaluatePassive나 발동 조건 검사를 BlueprintNativeEvent 훅(+ BP 노출용 입력 struct)으로 열면 됨.
- * 지금은 시뮬 핫패스 성능·편의로 C++ 타입으로 둠.
  */
 UCLASS(Abstract, Blueprintable)
 class P_RD_API UTacticalPassive : public UObject
@@ -44,27 +39,33 @@ class P_RD_API UTacticalPassive : public UObject
 	 * @brief 유닛테스트 모듈이 패시브 객체에 접근하기 위해 friend 선언
 	 * @note 릴리즈 빌드에서는 테스트 모듈이 빠져도 전방선언만 했기 때문에 영향 없음
 	 */
-	// 자동화 테스트에서만 protected 상태(mTimingTags 등)에 접근하기 위한 friend
 	friend class FPassiveComponentModelTests;
-	// 패시브별 단위 테스트가 protected(EvaluatePassive/mState)에 접근하기 위한 friend
+	
 	friend class FTacticalPassiveAddStatTests;
 	friend class FTacticalPassiveNthAddStatCalcTests;
 	friend class FTacticalPassiveNthAddStatCommitTests;
 
 public:
 	/**
-	 * @brief 패시브 발동 (계산 -> 적용 연쇄, 고정)
+	 * @brief 패시브 발동/해제/무시 요청
 	 *
 	 * @details
-	 * 내부적으로 EvaluatePassive(계산) -> NotifyPassive(적용) 순서로 호출.
-	 * 계산 결과(기여값)는 내부 로컬에만 존재하고 외부로 반환하지 않는다 (이펙트로 바로 적용).
-	 * 고정 체인이라 일반 함수(non-virtual)로 두며, 서브클래스는 이 함수가 아니라
-	 * EvaluatePassive를 구현한다.
+	 * 드라이버는 타이밍태그마다 패시브의 발동/해제 여부를 모른 채 이 함수를 호출.
+	 * 
+	 * 들어온 타이밍이
+	 * - 발동 시점(mActivateTimingTag)이면 EvaluateActivate로 적용 여부를 묻고,
+	 *   참이면 NotifyPassive(발동=적용).
+	 * - 해제 시점(mDeactivateTimingTag)이면 DeactivatePassive(해제=제거).
+	 * - 둘 다 아니면 무시.
+	 * 
+	 * 라우팅이 고정돼 있으므로 일반함수로 두고, 파생클래스에서는 EvaluateActivate를 구현.
 	 *
-	 * @param Ctx          소유자/대상 및 현재 스냅샷
-	 * @param PassiveState [in,out] 패시브 내부 상태 (러닝본, 무상태면 무시)
+	 * @param TimingTag    타이밍 태그 (발동/해제 시점 분기에 사용)
+	 * @param Ctx          소유자/대상 및 스냅샷
+	 * @param PassiveState [in,out] 패시브 내부 상태 (드라이버가 받아서 CommitPassive 함수 호출에 사용)
 	 */
 	void ActivatePassive(
+		IN const FGameplayTag& TimingTag,
 		IN const FPassiveActivateContext& Ctx,
 		IN OUT TInstancedStruct<FDynamicPassiveData>& PassiveState);
 
@@ -89,26 +90,9 @@ public:
 	void DeactivatePassive();
 
 	/**
-	 * @brief 조건부 해제: 패시브에게 빠질지 물어보고, 빠진다고 하면 해제
-	 *
-	 * @details
-	 * 강제로 내리는 DeactivatePassive와 달리, 드라이버가 "빠질래?"라고 물으면
-	 * 패시브가 ShouldDeactivate로 스스로 판단한다. true일 때만 DeactivatePassive 수행.
-	 * 적용 중이 아니거나(핸들 무효) 유지 판단이면 아무 것도 하지 않는다.
-	 *
-	 * @return 실제로 해제됐으면 true
+	 * @brief 패시브가 해당 타이밍태그를 갖고 있는 지 회신 
 	 */
-	bool TryDeactivatePassive();
-
-	/**
-	 * @brief 주어진 태그가 이 패시브가 보유한 타이밍 태그 중 하나인지
-	 *
-	 * @details
-	 * 패시브는 여러 타이밍 태그(시작·끝 등)를 보유하고, 드라이버가 페이즈 태그를
-	 * 순회하며 호출해 일치 여부만 받는다. 역할(발동 vs 커밋·해제)은 묻는 쪽이
-	 * 현재 어느 페이즈인지로 판단.
-	 */
-	bool HasTimingTag(FGameplayTag Tag) const { return mTimingTags.HasTagExact(Tag); }
+	bool HasTimingTag(FGameplayTag Tag) const { return Tag == mActivateTimingTag || Tag == mDeactivateTimingTag; }
 
 	/**
 	 * @brief 정적 데이터(UStaticPassiveData) 주입 + 데이터 기반 공통 필드 초기화
@@ -127,28 +111,28 @@ protected:
 	 * @brief 정적 데이터로 공통 필드(이펙트 클래스/타이밍 태그) 초기화
 	 *
 	 * @details
-	 * 기본은 mStaticData의 EffectClass/TriggerTimig를 베이스 멤버로 복사.
-	 * 패시브별 추가 파라미터(임계 등)는 각자 EvaluatePassive에서 mStaticData를 직접 읽음.
+	 * 기본은 mStaticData를 베이스 멤버로 복사.
+	 * 패시브별 추가 파라미터(임계 등)는 각자 EvaluateActivate에서 mStaticData를 직접 읽음.
 	 */
 	virtual void InitializeFromData();
 
 	/**
-	 * @brief 패시브 효과 계산 (순수)
+	 * @brief 발동 시점에서 적용 여부 결정 + 다음 상태 계산 + 기여값 산출
 	 *
 	 * @details
-	 * TargetDelta에 변화값을 누적. 내부 상태는 읽기만 하고 실제로 바꾸지 않으며,
-	 * 다음 상태가 어떻게 변해야 할지는 PassiveState(러닝본)에 기록 (커밋은 CommitPassive).
-	 * 서브클래스가 구현한다.
+	 * 발동 시점(mActivateTimingTag)에 베이스가 호출. 해제는 베이스가 라우팅하므로 여기선 발동만 판단.
+	 * 내부상태는 인자로 받은 PassiveState를 사용하고 다음 내부상태도 여기에 써서 돌려줌.
 	 *
-	 * @param Ctx          소유자/대상 및 현재 스냅샷
-	 * @param TargetDelta  [out] 대상에게 가할 수치 변화 누적
-	 * @param PassiveState [in,out] 패시브 내부 상태 (러닝본, 무상태면 무시)
+	 * @param Ctx          소유자/대상 및 스냅샷
+	 * @param PassiveState [in,out] 패시브 내부 상태
+	 * @param TargetDelta  [out] 적용 시 대상에게 가할 수치 변화
+	 * @return 이펙트를 적용하면 true, 스킵이면 false
 	 */
-	virtual void EvaluatePassive(
+	virtual bool EvaluateActivate(
 		IN const FPassiveActivateContext& Ctx,
-		OUT FBoardCombatTargetSnapshotData& TargetDelta,
-		IN OUT TInstancedStruct<FDynamicPassiveData>& PassiveState)
-		PURE_VIRTUAL(UTacticalPassive::EvaluatePassive, );
+		IN OUT TInstancedStruct<FDynamicPassiveData>& PassiveState,
+		OUT FBoardCombatTargetSnapshotData& TargetDelta)
+		PURE_VIRTUAL(UTacticalPassive::EvaluateActivate, return false;);
 
 	/**
 	 * @brief 계산된 기여값을 드라이버가 원하는 형태로 출력
@@ -163,15 +147,6 @@ protected:
 	virtual void NotifyPassive(
 		IN const FPassiveActivateContext& Ctx,
 		IN OUT FBoardCombatTargetSnapshotData& TargetDelta);
-
-	/**
-	 * @brief 조건부 해제 판단 (TryDeactivatePassive에서 사용)
-	 *
-	 * @details
-	 * 기본은 false(유지). 만료·조건 종료 등으로 스스로 빠져야 하는 패시브만 override.
-	 * 판단 근거(잔여 턴/스택, 현재 스냅샷 등)는 추후 입력으로 확장 가능.
-	 */
-	virtual bool ShouldDeactivate() const { return false; }
 
 	/**
 	 * @brief 이 패시브가 적용할 이펙트
@@ -195,15 +170,25 @@ protected:
 	FActiveTacticalEffectHandle mActiveHandle;
 
 	/**
-	 * @brief 패시브가 관여하는 타이밍 태그들
+	 * @brief 발동 시점 태그 (단일)
 	 *
 	 * @details
-	 * 시작·끝 등 이 패시브가 반응할 시점들을 모두 담는다(예: {OnStartTurn, OnEndTurn}).
-	 * 드라이버가 페이즈 태그로 HasTimingTag를 질의하고, 그 페이즈의 역할에 따라
-	 * ActivatePassive 또는 CommitPassive+(Try)DeactivatePassive를 호출.
+	 * 이 패시브가 발동(이펙트 적용)할 시점(예: OnStartAttacking).
+	 * 드라이버가 HasTimingTag로 모아서 ActivatePassive 호출 시,
+	 * 이 태그와 일치하면 EvaluateActivate로 분기.
 	 */
-	UPROPERTY(Category = "Passive", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "TimingTags"))
-	FGameplayTagContainer mTimingTags;
+	UPROPERTY(Category = "Passive", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "ActivateTiming"))
+	FGameplayTag mActivateTimingTag;
+
+	/**
+	 * @brief 해제 시점 태그 (단일)
+	 *
+	 * @details
+	 * 이 패시브가 해제(이펙트 제거)할 시점(예: OnEndAttacking)
+	 * 이 태그와 일치하면 DeactivatePassive로 분기.
+	 */
+	UPROPERTY(Category = "Passive", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "DeactivateTiming"))
+	FGameplayTag mDeactivateTimingTag;
 
 	/**
 	 * @brief 커밋된 패시브 내부 상태

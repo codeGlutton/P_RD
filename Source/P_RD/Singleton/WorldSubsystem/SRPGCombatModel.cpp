@@ -10,13 +10,16 @@
 
 #include "Actor/TileMap/TileMapModel.h"
 #include "Pawn/UnitModel.h"
+#include "Component/PassiveComponent/PassiveComponentModel.h"
 
 #include "DataAsset/RoomSpawnData/StaticCombatRoomSpawnData.h"
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
 #include "DataAsset/UnitSpawnData/StaticEnemyUnitSpawnData.h"
 #include "DataAsset/ObstacleSpawnData/StaticObstacleSpawnData.h"
 
-#include "AIController/EnemyAIController.h"
+#include "TAS/Passive/TacticalPassive.h"
+#include "TAS/Passive/PassiveActivateContext.h"
+#include "TAS/Passive/DynamicPassiveData.h"
 
 DEFINE_LOG_CATEGORY(LogSRPGCombat)
 
@@ -91,16 +94,27 @@ void USRPGCombatModel::BeginCombat()
 
 	// 전투 시작 시, 보여지는 UI의 애니메이션의 특정 시점 종료 이후 전투 로직이 시작됨
 	auto PresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+		// 전투 시작 패시브 처리
 		for (TObjectPtr<UUnitModel>& Unit : mUnits)
 		{
-			// 현 스텟을 캡처
-			/*FGameplayEventData EventData;
-			EventData.TargetData = UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle(Unit);
-			EventData.Instigator = Unit;
-			EventData.Target = Unit;*/
+			UPassiveComponentModel* PassiveComponentModel = Unit->GetPassiveComponentModel();
+			checkf(PassiveComponentModel != nullptr, TEXT("패시브 컴포넌트 nullptr"));
 
-			// On Start Room 패시브 실행
-			//UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Unit, AbilityTags::GameplayAbility_Passive_OnStartRoom, MoveTemp(EventData));
+			TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartRoom);
+			const int32 PassiveNum = Passives.Num();
+
+			FBoardCombatTargetSnapshotData UnitSnapshot = Unit->MakeSnapshotData();
+
+			FPassiveActivateContext PassiveContext;
+			PassiveContext.mOwner = Unit;
+			PassiveContext.mOwnerSnapshot = &UnitSnapshot;
+
+			for (UTacticalPassive*& Passive : Passives)
+			{
+				TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
+				Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnStartRoom, PassiveContext, OUT DynamicPassiveData);
+				Passive->CommitPassive(DynamicPassiveData);
+			}
 		}
 		// 턴 실행
 		checkf(mCombatPhase == ESRPGCombatRoomPhase::CombatStart, TEXT("전투 진입 절차 오류"));
@@ -115,16 +129,27 @@ void USRPGCombatModel::EndCombat()
 	checkf(mCombatPhase == ESRPGCombatRoomPhase::CombatAbort, TEXT("전투 종료 절차 오류"));
 	mCombatPhase = ESRPGCombatRoomPhase::CombatEnd;
 
+	// 전투 종료 패시브 처리
 	for (TObjectPtr<UUnitModel>& Unit : mUnits)
 	{
-		// 현 스텟을 캡처
-		/*FGameplayEventData EventData;
-		EventData.TargetData = UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle(Unit);
-		EventData.Instigator = Unit;
-		EventData.Target = Unit;*/
+		UPassiveComponentModel* PassiveComponentModel = Unit->GetPassiveComponentModel();
+		checkf(PassiveComponentModel != nullptr, TEXT("패시브 컴포넌트 nullptr"));
 
-		// On End Room 패시브 실행
-		//UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Unit, AbilityTags::GameplayAbility_Passive_OnEndRoom, MoveTemp(EventData));
+		TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndRoom);
+		const int32 PassiveNum = Passives.Num();
+
+		FBoardCombatTargetSnapshotData UnitSnapshot = Unit->MakeSnapshotData();
+
+		FPassiveActivateContext PassiveContext;
+		PassiveContext.mOwner = Unit;
+		PassiveContext.mOwnerSnapshot = &UnitSnapshot;
+
+		for (UTacticalPassive*& Passive : Passives)
+		{
+			TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
+			Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnEndRoom, PassiveContext, OUT DynamicPassiveData);
+			Passive->CommitPassive(DynamicPassiveData);
+		}
 	}
 
 	// 전투 종료 시, 보여지는 UI의 애니메이션의 특정 시점 종료 이후 맵 보상 로직이 시작됨
@@ -224,6 +249,9 @@ USRPGTurnContext* USRPGCombatModel::RegisterTurn(UUnitModel* Owner, int32 LifeCo
 {
 	USRPGTurnContext* TurnContext = NewObject<USRPGTurnContext>(this);
 	TurnContext->InitTurn(this, Owner, mTurnContextMaxIndex++, LifeCount);
+	TurnContext->OnShowDicePanelAtTurnStartUI.AddWeakLambda(this, [this](const USRPGTurnContext* TurnContext) {
+		OnShowDicePanelAnyTurnUI.Broadcast(TurnContext);
+		});
 	TurnContext->OnBeginTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext) {
 		OnBeginAnyTurnUI.Broadcast(Barrier, TurnContext);
 		});
@@ -296,6 +324,12 @@ bool USRPGCombatModel::UnregisterTurnImmediately(USRPGTurnContext* TurnContext)
 		{
 			mCurTurnContextOrder = NextNode;
 		}
+
+		TArray<TObjectPtr<USRPGTurnContext>> ActiveTurns = GetTurnContexts(TurnContext->GetOwner());
+		if (ActiveTurns.Num() == 0)
+		{
+			UnregisterUnit(TurnContext->GetOwner());
+		}
 		return true;
 	}
 	return false;
@@ -327,6 +361,11 @@ int32 USRPGCombatModel::UnregisterTurnsImmediately(UUnitModel* Owner)
 		}
 
 		CurNode = NextNode;
+	}
+
+	if (UnregisterCount > 0)
+	{
+		UnregisterUnit(Owner);
 	}
 
 	return UnregisterCount;
@@ -374,16 +413,15 @@ void USRPGCombatModel::RegisterEnemyUnit(FEnemyUnitPlacementData& EnemyPlacement
 
 	checkf(mTileMap->CanPlace(EnemyPlacementData.mTransform.mIndex, EnemyUnit), TEXT("액터 배치 불가능"));
 	
+	mUnits.Push(EnemyUnit);
+
 	// 타일 위에 배치
 	mTileMap->PlaceActor(EnemyPlacementData.mTransform, EnemyUnit);
-	mUnits.Push(EnemyUnit);
 
 	// 턴 등록
 	RegisterTurn(EnemyUnit);
 
-	// 적 AI 시작
-	// AEnemyAIController* AIController = EnemyUnit->GetController<AEnemyAIController>();
-	// AIController->StartLogic(EnemyUnitSpawnData->mStateTree.Get());
+	OnRegisterUnitUI.Broadcast(EnemyUnit);
 }
 
 void USRPGCombatModel::RegisterObstacle(FObstaclePlacementData& ObstaclePlacementData)
@@ -401,8 +439,36 @@ void USRPGCombatModel::RegisterObstacle(FObstaclePlacementData& ObstaclePlacemen
 
 	checkf(mTileMap->CanPlace(ObstaclePlacementData.mTransform.mIndex, Obstacle), TEXT("액터 배치 불가능"));
 
+	mObstacles.Push(Obstacle);
+
 	// 타일 위에 배치
 	mTileMap->PlaceActor(ObstaclePlacementData.mTransform, Obstacle);
+
+	OnRegisterObstacleUI.Broadcast(Obstacle);
+}
+
+void USRPGCombatModel::UnregisterUnit(UUnitModel* Unit)
+{
+	checkf(mTileMap != nullptr, TEXT("타일맵 미존재"));
+
+	OnUnregisterUnitUI.Broadcast(Unit);
+
+	// 타일 위에서 제거
+	mTileMap->RemoveActor(Unit);
+
+	mUnits.RemoveSingleSwap(Unit);
+}
+
+void USRPGCombatModel::UnregisterObstacle(UBoardActorModel* Obstcle)
+{
+	checkf(mTileMap != nullptr, TEXT("타일맵 미존재"));
+
+	OnUnregisterObstacleUI.Broadcast(Obstcle);
+
+	// 타일 위에서 제거
+	mTileMap->RemoveActor(Obstcle);
+
+	mObstacles.RemoveSingleSwap(Obstcle);
 }
 
 void USRPGCombatModel::SpawnTileMap()
@@ -432,6 +498,8 @@ void USRPGCombatModel::RegisterPlayerUnit(UUnitModel* PlayerUnit, const FTileTra
 
 	// 턴 등록
 	RegisterTurn(PlayerUnit);
+
+	OnRegisterUnitUI.Broadcast(PlayerUnit);
 }
 
 void USRPGCombatModel::RegisterEnemyUnits(TArray<FEnemyUnitPlacementData>& EnemyPlacementDatas)
@@ -593,6 +661,11 @@ UTileMapModel* USRPGCombatModel::GetTileMap()
 TArray<TObjectPtr<UUnitModel>>& USRPGCombatModel::GetUnits()
 {
 	return mUnits;
+}
+
+TArray<TObjectPtr<UBoardActorModel>>& USRPGCombatModel::GetObstacles()
+{
+	return mObstacles;
 }
 
 void USRPGCombatModel::ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand, bool NeedEndCurrentAction)

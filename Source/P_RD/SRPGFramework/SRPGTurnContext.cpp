@@ -2,23 +2,24 @@
 #include "SRPGFramework/SRPGAction.h"
 #include "SRPGFramework/SRPGCommand.h"
 
+#include "RDCollision.h"
+#include "Singleton/WorldSubsystem/PresentationBarrier.h"
+#include "Simulation/Logger/EventLogger.h"
+
 #include "SRPGFramework/SRPGDiceRollAction.h"
 #include "SRPGFramework/SRPGEnemyTurnPlanner.h"
 
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
-#include "Singleton/WorldSubsystem/PresentationBarrier.h"
-
+#include "Actor/BoardActor/BoardSelectionTarget.h"
 #include "Pawn/UnitModel.h"
 #include "Pawn/Enemy/EnemyUnitModel.h"
+#include "Component/PassiveComponent/PassiveComponentModel.h"
 
-#include "Simulation/Logger/EventLogger.h"
-
-TWeakObjectPtr<USRPGTurnContext> USRPGActionCreationCommandHandler::GetParent() const
-{
-	return mParent;
-}
+#include "TAS/Passive/TacticalPassive.h"
+#include "TAS/Passive/PassiveActivateContext.h"
+#include "TAS/Passive/DynamicPassiveData.h"
 
 int8 USRPGActionCreationCommandHandler::GetCommandPriority() const
 {
@@ -58,6 +59,46 @@ ESRPGCommandResult USRPGActionCreationCommandHandler::HandleCommand(const TInsta
 	return ESRPGCommandResult::Handled;
 }
 
+TWeakObjectPtr<USRPGTurnContext> USRPGActionCreationCommandHandler::GetParent() const
+{
+	return mParent;
+}
+
+int8 USRPGDetailInfoPopupCommandHandler::GetCommandPriority() const
+{
+	return ISRPGCommandHandler::HIGHEST_PRIORITY;
+}
+
+ESRPGCommandResult USRPGDetailInfoPopupCommandHandler::HandleCommand(const TInstancedStruct<FSRPGCommand>& Command)
+{
+	if (Command.Get().GetCommandType() == ESRPGCommandType::WorldTrace)
+	{
+		/* 월드 공간 터치 시 선택 위치에 따라서 결정 */
+
+		const FSRPGWorldTraceCommand& WorldTraceCommand = Command.Get<FSRPGWorldTraceCommand>();
+		if (WorldTraceCommand.mIsLongPress == true)
+		{
+			AActor* HitActor = nullptr;
+			FTileIndex TileIndex = FTileIndex::Invalid;
+			GetTileActorUnderCursor(GetWorld(), RDTraceChannels::TileAnyTrace, OUT HitActor, OUT TileIndex);
+
+			IBoardSelectionTarget* SelectionTarget = Cast<IBoardSelectionTarget>(HitActor);
+			if (SelectionTarget != nullptr && SelectionTarget->IsSelectable() == true)
+			{
+				WorldTraceCommand.OnShowTargetDetailPanelUI.Broadcast(SelectionTarget);
+			}
+			return ESRPGCommandResult::Handled;
+		}
+	}
+
+	return ESRPGCommandResult::Ignored;
+}
+
+TWeakObjectPtr<USRPGTurnContext> USRPGDetailInfoPopupCommandHandler::GetParent() const
+{
+	return mParent;
+}
+
 void USRPGTurnContext::InitTurn(USRPGCombatModel* Parent, UUnitModel* Owner, int32 TurnId, int32 LifeCount)
 {
 	checkf(Parent != nullptr, TEXT("전투 서브시스템 nullptr"));
@@ -74,6 +115,10 @@ void USRPGTurnContext::InitTurn(USRPGCombatModel* Parent, UUnitModel* Owner, int
 	USRPGActionCreationCommandHandler* ActionCreationCommandHandler = NewObject<USRPGActionCreationCommandHandler>(this);
 	ActionCreationCommandHandler->mParent = this;
 	mTurnDefaultCommandHandlers.Add(ActionCreationCommandHandler);
+
+	USRPGDetailInfoPopupCommandHandler* DetailInfoPopupCommandHandler = NewObject<USRPGDetailInfoPopupCommandHandler>(this);
+	DetailInfoPopupCommandHandler->mParent = this;
+	mTurnDefaultCommandHandlers.Add(DetailInfoPopupCommandHandler);
 }
 
 void USRPGTurnContext::BeginTurn()
@@ -90,13 +135,20 @@ void USRPGTurnContext::BeginTurn()
 		checkf(mTurnPhase == ESRPGTurnPhase::TurnStart, TEXT("턴 진입 절차 오류"));
 		mTurnPhase = ESRPGTurnPhase::TurnPlay;
 
-		// 핸들러 등록
 		USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
 		checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
-		for (TScriptInterface<ISRPGCommandHandler>& TurnDefaultCommandHandler : mTurnDefaultCommandHandlers)
+		UPassiveComponentModel* PassiveComponentModel = mOwner->GetPassiveComponentModel();
+		checkf(PassiveComponentModel != nullptr, TEXT("패시브 컴포넌트 nullptr"));
+		USRPGCombatModel* CombatModel = mParent.Get();
+		checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+
+		// 핸들러 등록
 		{
 			CommandRouterModel->OnHandleCommand.AddDynamic(this, &USRPGTurnContext::OnHandleCommand);
-			CommandRouterModel->RegisterCommandHandler(TurnDefaultCommandHandler);
+			for (TScriptInterface<ISRPGCommandHandler>& TurnDefaultCommandHandler : mTurnDefaultCommandHandlers)
+			{
+				CommandRouterModel->RegisterCommandHandler(TurnDefaultCommandHandler);
+			}
 		}
 
 		// 로그 작성
@@ -105,17 +157,23 @@ void USRPGTurnContext::BeginTurn()
 		// 유닛 턴 시작 단계
 		mOwner->OnBeginTurn();
 
-		// 현 스텟을 캡처
-		/*FGameplayEventData EventData;
-		EventData.TargetData = UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle(mOwner.Get());
-		EventData.Instigator = mOwner.Get();
-		EventData.Target = mOwner.Get();*/
+		// 턴 시작 패시브 처리
+		{
+			TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartTurn);
 
-		// On Start Turn 패시브 실행
-		//UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(mOwner.Get(), AbilityTags::GameplayAbility_Passive_OnStartTurn, MoveTemp(EventData));
+			FBoardCombatTargetSnapshotData OwnerSnapshot = mOwner->MakeSnapshotData();
 
-		USRPGCombatModel* CombatModel = mParent.Get();
-		checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+			FPassiveActivateContext PassiveContext;
+			PassiveContext.mOwner = mOwner;
+			PassiveContext.mOwnerSnapshot = &OwnerSnapshot;
+
+			for (UTacticalPassive*& Passive :Passives)
+			{
+				TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
+				Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnStartTurn, PassiveContext, OUT DynamicPassiveData);
+				Passive->CommitPassive(DynamicPassiveData);
+			}
+		}
 
 		// 전투 상태 평가
 		CombatModel->EvaluateCombatStates();
@@ -133,6 +191,9 @@ void USRPGTurnContext::BeginTurn()
 
 			TInstancedStruct<FSRPGCommand> DicePrepareCommand;
 			DicePrepareCommand.InitializeAs<FSRPGDicePrepareCommand>();
+			DicePrepareCommand.GetMutable<FSRPGDicePrepareCommand>().OnShowDicePanelUI.AddWeakLambda(this, [this]() {
+				OnShowDicePanelAtTurnStartUI.Broadcast(this);
+				});
 
 			CommandRouterModel->SummitCommand(DicePrepareCommand);
 		}
@@ -169,16 +230,29 @@ void USRPGTurnContext::EndTurn()
 	checkf(mTurnPhase == ESRPGTurnPhase::TurnAbort, TEXT("턴 종료 절차 오류"));
 	mTurnPhase = ESRPGTurnPhase::TurnEnd;
 
+	UPassiveComponentModel* PassiveComponentModel = mOwner->GetPassiveComponentModel();
+	checkf(PassiveComponentModel != nullptr, TEXT("패시브 컴포넌트 nullptr"));
+
 	UE_LOG(LogSRPGCombat, Log, TEXT("턴 종료"));
 
-	// 현 스텟을 캡처
-	/*FGameplayEventData EventData;
-	EventData.TargetData = UGASTargetFunctionLibrary::MakeSnapshotTargetDataHandle(mOwner.Get());
-	EventData.Instigator = mOwner.Get();
-	EventData.Target = mOwner.Get();*/
+	// 턴 종료 패시브 처리
+	{
+		TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndTurn);
+		const int32 PassiveNum = Passives.Num();
 
-	// On End Turn 패시브 실행
-	//UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(mOwner.Get(), AbilityTags::GameplayAbility_Passive_OnEndTurn, MoveTemp(EventData));
+		FBoardCombatTargetSnapshotData OwnerSnapshot = mOwner->MakeSnapshotData();
+
+		FPassiveActivateContext PassiveContext;
+		PassiveContext.mOwner = mOwner;
+		PassiveContext.mOwnerSnapshot = &OwnerSnapshot;
+
+		for (UTacticalPassive*& Passive : Passives)
+		{
+			TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
+			Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnEndTurn, PassiveContext, OUT DynamicPassiveData);
+			Passive->CommitPassive(DynamicPassiveData);
+		}
+	}
 
 	// 유닛 턴 종료 단계
 	mOwner->OnEndTurn();
@@ -200,8 +274,8 @@ void USRPGTurnContext::EndTurn()
 		for (TScriptInterface<ISRPGCommandHandler>& TurnDefaultCommandHandler : mTurnDefaultCommandHandlers)
 		{
 			CommandRouterModel->UnregisterCommandHandler(TurnDefaultCommandHandler);
-			CommandRouterModel->OnHandleCommand.RemoveDynamic(this, &USRPGTurnContext::OnHandleCommand);
 		}
+		CommandRouterModel->OnHandleCommand.RemoveDynamic(this, &USRPGTurnContext::OnHandleCommand);
 
 		checkf(mTurnPhase == ESRPGTurnPhase::TurnEnd, TEXT("턴 종료 절차 오류"));
 		mTurnPhase = ESRPGTurnPhase::TurnInit;
@@ -385,5 +459,3 @@ void USRPGTurnContext::ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGComman
 
 	CommandRouterModel->SummitCommand(NextCommand);
 }
-
-

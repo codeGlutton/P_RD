@@ -33,6 +33,13 @@ class UStaticCombatRoomSpawnData;
 struct FEnemyUnitPlacementData;
 struct FObstaclePlacementData;
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnRegisterUnitUI, UUnitModel* /*Unit*/)
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnregisterUnitUI, UUnitModel* /*Unit*/)
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnRegisterObstacleUI, UBoardActorModel* /*Actor*/)
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnregisterObstacleUI, UBoardActorModel* /*Actor*/)
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowDicePanelAnyTurnUI, const USRPGTurnContext* /*TurnContext*/);
+
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnBeginCombatUI, TSharedPtr<FPresentationBarrier> /*Barrier*/)
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndCombatUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, ESRPGCombatResult /*Result*/)
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBeginAnyTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/)
@@ -135,6 +142,10 @@ public:
 	 */
 	void RegisterObstacle(FObstaclePlacementData& ObstaclePlacementDatas);
 
+public:
+	void UnregisterUnit(UUnitModel* Unit);
+	void UnregisterObstacle(UBoardActorModel* Obstcle);
+
 protected:
 	void SpawnTileMap();
 	void RegisterPlayerUnit(UUnitModel* PlayerUnit, const FTileTransform& Transform);
@@ -167,11 +178,36 @@ public:
 	TArray<TObjectPtr<UUnitModel>>& GetUnits();
 	// @brief 등록된 플레이어 유닛 반환 (적 AI가 표적 좌표를 얻는 용도)
 	UUnitModel* GetPlayerUnit() const { return mPlayerUnit; }
+	TArray<TObjectPtr<UBoardActorModel>>& GetObstacles();
 
 	/* 시뮬 함수 */
 public:
 	void ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand, bool NeedEndCurrentAction);
 	void ForcedAdvanceUntilNextPlayerTurn(bool NeedEndCurrentAction);
+
+public:
+	/**
+	 * @brief 유닛 등록 시 알림 대리자
+	 */
+	FOnRegisterUnitUI OnRegisterUnitUI;
+	/**
+	 * @brief 유닛 해제 시 알림 대리자
+	 */
+	FOnUnregisterUnitUI OnUnregisterUnitUI;
+	/**
+	 * @brief 장애물 등록 시 알림 대리자
+	 */
+	FOnRegisterObstacleUI OnRegisterObstacleUI;
+	/**
+	 * @brief 장애물 해제 시 알림 대리자
+	 */
+	FOnUnregisterObstacleUI OnUnregisterObstacleUI;
+
+public:
+	/**
+	 * @brief 주사위 굴리기 패널 실행 타이밍 대리자
+	 */
+	FOnShowDicePanelAnyTurnUI OnShowDicePanelAnyTurnUI;
 
 public:
 	/**

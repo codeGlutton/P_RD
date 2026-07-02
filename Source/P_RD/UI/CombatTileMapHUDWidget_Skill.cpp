@@ -28,20 +28,32 @@ void UCombatTileMapHUDWidget::RefreshDiceAssignmentText() const
 	// 실제 배치 상태일 때만 보이게 한다(유휴 안내문구는 표시하지 않음).
 	mDiceAssignmentText->SetVisibility(ESlateVisibility::HitTestInvisible);
 
-	if (mSelectedDiceIndex != INDEX_NONE && mDiceUIs.IsValidIndex(mSelectedDiceIndex) && mSelectedSkillIndex != INDEX_NONE)
+	// 선택된 주사위는 여러 개일 수 있다 — 개수와 합을 DTO(mIsSelected)에서 집계해 표시한다.
+	int32 SelectedCount = 0;
+	int32 SelectedSum = 0;
+	for (const FDiceViewData& DiceView : mDiceUIs)
+	{
+		if (DiceView.mIsSelected)
+		{
+			++SelectedCount;
+			SelectedSum += DiceView.mResultValue;
+		}
+	}
+
+	if (SelectedCount > 0 && mSelectedSkillIndex != INDEX_NONE)
 	{
 		mDiceAssignmentText->SetText(FText::Format(
-			NSLOCTEXT("CombatTileMapHUDWidget", "DiceAssignmentReadyFormat", "DICE {0} PLACED\nTap another die to replace"),
-			FText::AsNumber(mDiceUIs[mSelectedDiceIndex].mResultValue)
+			NSLOCTEXT("CombatTileMapHUDWidget", "DiceAssignmentReadyFormat", "DICE x{0} PLACED (SUM {1})\nTap dice to add or remove"),
+			FText::AsNumber(SelectedCount), FText::AsNumber(SelectedSum)
 		));
 		return;
 	}
 
-	if (mSelectedDiceIndex != INDEX_NONE && mDiceUIs.IsValidIndex(mSelectedDiceIndex))
+	if (SelectedCount > 0)
 	{
 		mDiceAssignmentText->SetText(FText::Format(
-			NSLOCTEXT("CombatTileMapHUDWidget", "DiceAssignmentDiceOnlyFormat", "SELECT SKILL FIRST\nDICE {0} is waiting"),
-			FText::AsNumber(mDiceUIs[mSelectedDiceIndex].mResultValue)
+			NSLOCTEXT("CombatTileMapHUDWidget", "DiceAssignmentDiceOnlyFormat", "SELECT SKILL FIRST\nDICE x{0} (SUM {1}) waiting"),
+			FText::AsNumber(SelectedCount), FText::AsNumber(SelectedSum)
 		));
 		return;
 	}

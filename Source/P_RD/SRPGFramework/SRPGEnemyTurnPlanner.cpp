@@ -44,18 +44,19 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		return Commands;
 	}
 
-	// 스킬 개수 확인: 0이면 할 게 없으므로 턴 종료
+	// 스킬 컴포넌트 확인: 없으면 할 게 없으므로 턴 종료
 	USkillComponentModel* SkillComp = Enemy->GetSkillComponentModel();
-	if (SkillComp == nullptr || SkillComp->GetSkillCount() <= 0)
+	if (SkillComp == nullptr)
 	{
 		return Commands;
 	}
 
-	// 사거리를 알기 위해 스킬 정보 조회
+	// 사거리를 알기 위해 스킬 정보 조회 (슬롯 0의 시그니처 스킬 사용)
+	// @note 스킬 슬롯은 고정 크기로 미리 확보되므로, 개수가 아니라 슬롯의 데이터 유무로 판단
 	const int32 SkillIndex = 0;
-	TSoftObjectPtr<UStaticSkillData> SkillSoft;
-	SkillComp->GetSkillData(SkillIndex, OUT SkillSoft);
-	const UStaticSkillData* Skill = SkillSoft.Get();
+	const TArray<FSkillEntry>& Skills = SkillComp->GetSkills();
+	const UStaticSkillData* Skill = Skills.IsValidIndex(SkillIndex) ? Skills[SkillIndex].mData : nullptr;
+	// 슬롯이 비어있으면(스킬 미장착) 할 게 없으므로 턴 종료
 	if (Skill == nullptr)
 	{
 		return Commands;

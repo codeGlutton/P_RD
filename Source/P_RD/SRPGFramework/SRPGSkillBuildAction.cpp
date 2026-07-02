@@ -63,14 +63,24 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
 
         const FSRPGSkillSelectCommand& SkillSelectCommand = Command.Get<FSRPGSkillSelectCommand>();
 
+        OnChangeSkillBuildPhase = SkillSelectCommand.OnChangeSkillBuildPhase;
         if (SkillSelectCommand.mSkillIndex != mSelectedSkillIndex)
         {
+            /* 다르면 변경 */
+
             ResetTargetTile();
             ResetDice();
             ResetSkill();
             SetSkill(SkillSelectCommand.mSkillIndex);
             RefreshAimableTileHighlights();
             SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
+        }
+        else
+        {
+            /* 같으면 취소 */
+
+            MarkActionCompleted(ESRPGActionResult::Cancelled);
+            SetBuildPhase(ESRPGSkillBuildPhase::None);
         }
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
@@ -115,7 +125,7 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
 
     AActor* TargetActor = nullptr;
     FTileIndex TargetTileIndex = FTileIndex::Invalid;
-    GetTileActorUnderCursor(RDTraceChannels::TileOnlyTrace, OUT TargetActor, OUT TargetTileIndex);
+    GetTileActorUnderCursor(GetWorld(), RDTraceChannels::TileOnlyTrace, OUT TargetActor, OUT TargetTileIndex);
     
     IActorView* ActorView = Cast<IActorView>(TargetActor);
     const bool IsContactedTileMap = ActorView != nullptr && ActorView->GetModel() == TileMap;
@@ -142,8 +152,8 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
             {
                 /* 조준 대상 설정 단계에서 한단계 취소 시, 빌드 자체 종료 */
 
-                SetBuildPhase(ESRPGSkillBuildPhase::None);
                 MarkActionCompleted(ESRPGActionResult::Cancelled);
+                SetBuildPhase(ESRPGSkillBuildPhase::None);
 
                 Result = ESRPGCommandResult::Handled;
                 break;
@@ -175,8 +185,7 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
             {
                 /* 조준 가능한 칸 클릭 시, 프리뷰 단계까지 보여주기 */
 
-                const bool CanAim = mReachableTileIndexes.Contains(TargetTileIndex) == true && mSelectedDices.Num() == mSelectedSkill->mDiceCount;
-                if (CanAim == true)
+                if (CanSelectTargetTile(TargetTileIndex) == true)
                 {
                     ResetTargetTile();
                     SetTargetTile(TargetTileIndex);
@@ -208,7 +217,7 @@ void USRPGSkillBuildAction::SetSkill(int32 SkillIndex)
 
     {
         TSoftObjectPtr<UStaticSkillData> StaticSkillDataSoftObj = nullptr;
-        SkillCompModel->GetSkillData(SkillIndex, OUT StaticSkillDataSoftObj);
+        StaticSkillDataSoftObj = SkillCompModel->GetSkill(SkillIndex)->mData;
         if (StaticSkillDataSoftObj == nullptr)
         {
             UE_LOG(LogSRPGCombat, Warning, TEXT("스킬 시전 시 비정상적 스킬 선택"));
@@ -224,33 +233,33 @@ void USRPGSkillBuildAction::ChangeDices(int32 RequestedDiceIndex)
 {
     checkf(mSkillBuildPhase == ESRPGSkillBuildPhase::AimSelection, TEXT("스킬 빌드 순서 오류"));
 
-    if (mSelectedDices.Contains(RequestedDiceIndex) == true)
-    {
-        // 이전 주사위 제거
-        mSelectedDices.Remove(RequestedDiceIndex);
-    }
-    else if (mSelectedDices.Num() < mSelectedSkill->mDiceCount)
-    {
-        // 새로운 주사위 추가 할당
-        mSelectedDices.Add(RequestedDiceIndex);
-    }
-
     UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
     checkf(PlayerUnit != nullptr, TEXT("주사위를 굴릴 수 있는 플레이어 유닛이 아님"));
 
-    UDicePoolModel* DicePool = PlayerUnit->GetDicePoolModel();
-    checkf(DicePool != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
+    UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
+    checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
 
-    mSelectedDiceSum = 0;
-    for (int32 DiceIndex : mSelectedDices)
+    if (DicePoolModel->IsSelectedDice(RequestedDiceIndex) == true)
     {
-        mSelectedDiceSum += DicePool->GetRolledDiceValue(DiceIndex);
+        // 이전 주사위 제거
+        DicePoolModel->MarkDiceUnselected(RequestedDiceIndex);
+    }
+    else if (DicePoolModel->GetSelectedDiceNum() < mSelectedSkill->mRequiredDiceCount)
+    {
+        // 새로운 주사위 추가 할당
+        DicePoolModel->MarkDiceSelected(RequestedDiceIndex);
     }
 }
 
 void USRPGSkillBuildAction::SetTargetTile(const FTileIndex& TargetIndex)
 {
     checkf(mSkillBuildPhase == ESRPGSkillBuildPhase::AimSelection, TEXT("스킬 빌드 순서 오류"));
+
+    UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
+    checkf(PlayerUnit != nullptr, TEXT("주사위를 굴릴 수 있는 플레이어 유닛이 아님"));
+
+    UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
+    checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
 
     mTargetIndex = TargetIndex;
 
@@ -270,8 +279,8 @@ void USRPGSkillBuildAction::SetTargetTile(const FTileIndex& TargetIndex)
     TInstancedStruct<FSRPGCommand> SkillCastCommand;
     SkillCastCommand.InitializeAs<FSRPGSkillCastCommand>();
     SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mSkillIndex = mSelectedSkillIndex;
-    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mEffectTileIndexes = mEffectTileIndexes;
-    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDicePoint = mSelectedDiceSum;
+    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mTargetIndex = mTargetIndex;
+    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDiceSum = DicePoolModel->GetSelectedDiceSum();
 
     TArray<FSRPGTurnEventLog> TurnEventLogs = SimulationSubsystem->SimulateUntilNextAction(MoveTemp(SkillCastCommand));
     
@@ -285,14 +294,11 @@ void USRPGSkillBuildAction::BuildSkill()
     UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
     checkf(PlayerUnit != nullptr, TEXT("주사위를 굴릴 수 있는 플레이어 유닛이 아님"));
 
-    UDicePoolModel* DicePool = PlayerUnit->GetDicePoolModel();
-    checkf(DicePool != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
+    UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
+    checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
 
-    for (int32 DiceIndex : mSelectedDices)
-    {
-        // 확정
-        DicePool->MarkDiceUsed(DiceIndex);
-    }
+    // 확정
+    DicePoolModel->MarkSelectedDiceAsUsed();
 
     USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
     checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 서브시스템 모델 nullptr"));
@@ -300,8 +306,8 @@ void USRPGSkillBuildAction::BuildSkill()
     TInstancedStruct<FSRPGCommand> SkillCastCommand;
     SkillCastCommand.InitializeAs<FSRPGSkillCastCommand>();
     SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mSkillIndex = mSelectedSkillIndex;
-    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mEffectTileIndexes = mEffectTileIndexes;
-    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDicePoint = mSelectedDiceSum;
+    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mTargetIndex = mTargetIndex;
+    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDiceSum = DicePoolModel->GetSelectedDiceSum();
 
     CommandRouterModel->SummitCommand(SkillCastCommand);
 }
@@ -315,8 +321,13 @@ void USRPGSkillBuildAction::ResetSkill()
 
 void USRPGSkillBuildAction::ResetDice()
 {
-    mSelectedDices.Empty();
-    mSelectedDiceSum = 0;
+    UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
+    checkf(PlayerUnit != nullptr, TEXT("주사위를 굴릴 수 있는 플레이어 유닛이 아님"));
+
+    UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
+    checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
+
+    DicePoolModel->ResetSelected();
 }
 
 void USRPGSkillBuildAction::ResetTargetTile()
@@ -338,11 +349,16 @@ void USRPGSkillBuildAction::RefreshAimableTileHighlights()
     UTileMapModel* TileMap = GetTileMap();
     checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
 
-    const float AimRange = mSelectedSkill->mAimDefaultRange + mSelectedDiceSum * mSelectedSkill->mAimRatioRange;
-    const EAimPattern Pattern = mSelectedSkill->mAimPattern;
-    const bool CanAimObstacle = mSelectedSkill->mCanAimObstacle;
-    const bool IsIndirect = mSelectedSkill->mIsIndirect;
-    mReachableTileIndexes = TileMap->GetAimableTiles(mInstigator->GetTileTransform().mIndex, AimRange, Pattern, CanAimObstacle, IsIndirect);
+    UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
+    checkf(PlayerUnit != nullptr, TEXT("주사위를 굴릴 수 있는 플레이어 유닛이 아님"));
+
+    UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
+    checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
+
+    USkillComponentModel* SkillCompModel = mInstigator->GetSkillComponentModel();
+    checkf(SkillCompModel != nullptr, TEXT("스킬 컴포넌트 모델 nullptr"));
+
+    mReachableTileIndexes = SkillCompModel->GetAimableTiles(TileMap, mSelectedSkillIndex, DicePoolModel->GetSelectedDiceSum());
     TileMap->SetTileHighlight(mReachableTileIndexes, ETileHighlightFlag::Aim);
 }
 
@@ -351,11 +367,28 @@ void USRPGSkillBuildAction::RefreshEffectTileHighlights()
     UTileMapModel* TileMap = GetTileMap();
     checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
 
-    const EEffectPattern Pattern = mSelectedSkill->mEffectPattern;
-    const int32 EffectRange = mSelectedSkill->mEffectDefaultArea + mSelectedDiceSum * mSelectedSkill->mEffectRatioArea;
-    const bool IsInDirect = mSelectedSkill->mIsIndirect;
-    mEffectTileIndexes = TileMap->GetEffectTiles(mInstigator->GetTileTransform().mIndex, mTargetIndex, Pattern, EffectRange, IsInDirect);
+    UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
+    checkf(PlayerUnit != nullptr, TEXT("주사위를 굴릴 수 있는 플레이어 유닛이 아님"));
+
+    UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
+    checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
+
+    USkillComponentModel* SkillCompModel = mInstigator->GetSkillComponentModel();
+    checkf(SkillCompModel != nullptr, TEXT("스킬 컴포넌트 모델 nullptr"));
+
+    mEffectTileIndexes = SkillCompModel->GetEffectTiles(TileMap, mSelectedSkillIndex, mTargetIndex, DicePoolModel->GetSelectedDiceSum());
     TileMap->SetTileHighlight(mEffectTileIndexes, ETileHighlightFlag::Effect);
+}
+
+bool USRPGSkillBuildAction::CanSelectTargetTile(const FTileIndex& Index) const
+{
+    UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
+    checkf(PlayerUnit != nullptr, TEXT("주사위를 굴릴 수 있는 플레이어 유닛이 아님"));
+
+    UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
+    checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
+
+    return mReachableTileIndexes.Contains(Index) == true && DicePoolModel->GetSelectedDiceNum() == mSelectedSkill->mRequiredDiceCount;
 }
 
 void USRPGSkillBuildAction::SetBuildPhase(ESRPGSkillBuildPhase BuildPhase)

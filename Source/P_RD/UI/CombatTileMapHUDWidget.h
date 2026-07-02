@@ -292,6 +292,9 @@ private:
 	/** @brief 선택된 주사위와 스킬의 임시 배치 상태를 안내 문구에 반영한다. */
 	void RefreshDiceAssignmentText() const;
 
+	/** @brief 보유 주사위 카드의 선택 강조를 모두 끈다(선택의 진실원본은 DicePoolModel의 mIsSelected). */
+	void ClearOwnedDiceSelectionHighlight();
+
 private:
 	/** @brief 런타임으로 주사위/턴 종료 UI를 붙일 WBP 루트 Canvas */
 	UPROPERTY(meta = (BindWidgetOptional))
@@ -460,9 +463,6 @@ private:
 	/** @brief 스킬 레일 입력을 받기 위해 WBP 위에 얹는 투명 버튼들 */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UIndexedButtonWidget>> mSkillInputButtons;
-
-	/** @brief 스킬-주사위 배치 후보로 선택된 주사위 index */
-	int32 mSelectedDiceIndex = INDEX_NONE;
 
 	/** @brief 현재 선택된 스킬 index */
 	int32 mSelectedSkillIndex = INDEX_NONE;

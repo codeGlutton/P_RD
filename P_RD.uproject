@@ -39,6 +39,10 @@
 			]
 		},
 		{
+			"Name": "ElectraPlayer",
+			"Enabled": true
+		},
+		{
 			"Name": "GameplayAbilities",
 			"Enabled": true
 		},
@@ -49,6 +53,10 @@
 		{
 			"Name": "StateTree",
 			"Enabled": true
+		},
+		{
+			"Name": "ActorSequence",
+			"Enabled": false
 		}
 	]
 }
