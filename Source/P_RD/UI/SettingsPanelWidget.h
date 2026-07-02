@@ -32,7 +32,7 @@ class UWidget;
  * InGame 모드에서 표시한다.
  *
  * 이 위젯은 설정값 저장, 런 종료, 타이틀 이동을 직접 수행하지 않는다. 버튼 입력을 On... 이벤트로
- * 올려 보내면 TitleMenuWidget, TopMenuBarWidget, GameMode가 각 화면의 권한에 맞게 처리한다.
+ * 올려 보내면 TitleMenuWidget, 전투 HUD, GameMode가 각 화면의 권한에 맞게 처리한다.
  *
  * 왜 이벤트만 내보내는가:
  * 설정 패널 안에 저장/전환 로직을 넣으면 타이틀에서 열린 패널도 인게임 런 상태를 알아야 한다.

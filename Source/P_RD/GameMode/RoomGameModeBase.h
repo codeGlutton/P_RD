@@ -72,7 +72,7 @@ public:
 
 	/**
 	 * @brief 지도 첫 표시 위치 계산용 런 상태 View를 가져온다.
-	 * @param OutView TopMenuBar와 WorldMap이 표시만 할 Run 상태 View
+	 * @param OutView WorldMap이 표시만 할 Run 상태 View
 	 * @return 활성 런 상태를 만들 수 있으면 true
 	 */
 	UFUNCTION(Category = Room, BlueprintCallable)

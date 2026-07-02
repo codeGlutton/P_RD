@@ -77,7 +77,7 @@ protected:
 	/** @brief OpenUI()로 표시될 때 주사위 입장 연출을 다시 시작한다. */
 	void ApplyOpenUI() override;
 
-	/** @brief 전투 HUD가 TopMenuBar보다 뒤에 깔리도록 낮은 ZOrder를 사용한다. */
+	/** @brief 전투 HUD가 공용 팝업(월드맵/설정/패널)보다 뒤에 깔리도록 낮은 ZOrder를 사용한다. */
 	int32 GetViewportZOrder() const override;
 
 private:
@@ -263,13 +263,6 @@ private:
 	UFUNCTION()
 	void HandleSettingsBackRequested();
 
-	/** @brief 월드위젯 서브시스템에서 공용 탑바 위젯을 가져온다(스킨 모드에서 숨겨져 있어도 인스턴스는 살아있음). */
-	class UTopMenuBarWidget* GetTopMenuBar() const;
-
-	/** @brief 스킨 모드에서 레거시 탑바(WBP_TopMenuBar)를 접어 둔다. 패널 토글의 ApplyInputPassThrough가
-	    매번 탑바를 다시 보이게 하므로, concept HUD 위에 레거시 상태바/INVENTORY/ROOM 배너가 겹쳐 뜨는 걸 막는다. */
-	void HideLegacyTopBarWhenSkinned() const;
-
 	/** @brief 뷰모델의 유닛 수에 맞춰 머리 위 HP바 위젯을 다시 만든다. */
 	void RebuildUnitHpBars();
 
@@ -387,7 +380,7 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UButton> mMoveButton;
 
-	/** @brief 탑바 내비 투명 버튼(concept 아트 위 클릭영역). 런타임 생성, TopMenuBar 패널 토글로 위임. */
+	/** @brief 내비 투명 버튼(concept 아트 위 클릭영역). 런타임 생성, HUD 소유 패널 토글 호출. */
 	UPROPERTY(Transient)
 	TObjectPtr<UButton> mNavMapButton;
 	UPROPERTY(Transient)

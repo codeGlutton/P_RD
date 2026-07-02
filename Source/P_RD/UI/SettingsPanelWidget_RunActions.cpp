@@ -9,7 +9,7 @@
  * @details
  * 모드 변경은 이 위젯 안의 UI 표시 상태만 바꾼다.
  * 타이틀 모드가 됐다고 타이틀로 이동하거나, 인게임 모드가 됐다고 런 상태를 조회하지 않는다.
- * 그런 흐름은 이 패널을 여는 TitleMenuWidget 또는 TopMenuBarWidget 쪽의 책임이다.
+ * 그런 흐름은 이 패널을 여는 TitleMenuWidget 또는 전투 HUD 쪽의 책임이다.
  */
 void USettingsPanelWidget::SetPanelMode(ESettingsPanelMode NewPanelMode)
 {
