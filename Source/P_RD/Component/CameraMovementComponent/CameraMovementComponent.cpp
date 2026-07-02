@@ -192,18 +192,15 @@ void UCameraMovementComponent::MoveToViewportPosition(FVector2D ViewPortPos)
 	LocationPos.Z = 0;
 	CameraPos.Z = 0;
 
-	// 변환된 WorldLocation로 액터의 위치를 변경합니다.
-	GetOwner()->AddActorWorldOffset(LocationPos - CameraPos);
+	// 0.01초 간격으로 호출할 예정이므로 (Duration / 0.01)번 반복
+	mStartLocation = CameraPos;
+	mCurLocation = CameraPos;
+	mEndLocation = LocationPos;
 
-	//=================================
-	// 카메라 이동에 제한을 둡니다.
-	// 카메라의 크기는 무시힌다.
-	FVector ActorLocation = GetOwner()->GetActorLocation();
+	// 0.01초 간격으로 호출할 예정이므로 (Duration / 0.01)번 반복
+	mCurrentAlpha = 0.0f;
 
-	ActorLocation.X = FMath::Clamp(ActorLocation.X, mMoveClampingBoxCenter.X - mMoveClampingBox.X / 2, mMoveClampingBoxCenter.X + mMoveClampingBox.X / 2);
-	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, mMoveClampingBoxCenter.Y - mMoveClampingBox.Y / 2, mMoveClampingBoxCenter.Y + mMoveClampingBox.Y / 2);
-
-	GetOwner()->SetActorLocation(ActorLocation);
+	GetWorld()->GetTimerManager().SetTimer(mTimerHandle_Move, this, &UCameraMovementComponent::MoveStep, 0.01f, true);
 }
 
 void UCameraMovementComponent::MoveToWorldPosition(FVector LocationPos)
@@ -227,17 +224,14 @@ void UCameraMovementComponent::MoveToWorldPosition(FVector LocationPos)
 	LocationPos.Z = 0;
 	CameraPos.Z = 0;
 
-	GetOwner()->AddActorWorldOffset(LocationPos - CameraPos);
+	mStartLocation = CameraPos;
+	mCurLocation = CameraPos;
+	mEndLocation = LocationPos;
 
-	//=================================
-	// 카메라 이동의 제한을 둡니다.
-	// 카메라의 크기는 무시힌다.
-	FVector ActorLocation = GetOwner()->GetActorLocation();
+	// 0.01초 간격으로 호출할 예정이므로 (Duration / 0.01)번 반복
+	mCurrentAlpha = 0.0f;
 
-	ActorLocation.X = FMath::Clamp(ActorLocation.X, mMoveClampingBoxCenter.X - mMoveClampingBox.X / 2, mMoveClampingBoxCenter.X + mMoveClampingBox.X / 2);
-	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, mMoveClampingBoxCenter.Y - mMoveClampingBox.Y / 2, mMoveClampingBoxCenter.Y + mMoveClampingBox.Y / 2);
-
-	GetOwner()->SetActorLocation(ActorLocation);
+	GetWorld()->GetTimerManager().SetTimer(mTimerHandle_Move, this, &UCameraMovementComponent::MoveStep, 0.01f, true);
 
 }
 
@@ -344,4 +338,32 @@ bool UCameraMovementComponent::GetCameraRayHitPoint(OUT FHitResult& HitResult)
 	);
 
 	return bHit;
+}
+
+void UCameraMovementComponent::MoveStep()
+{
+	mCurrentAlpha += 0.01f / mMoveDuration; // 시간에 따른 진행도 증가
+
+	if (mCurrentAlpha >= 1.0f)
+	{
+		mCurrentAlpha = 1.0f;
+		GetWorld()->GetTimerManager().ClearTimer(mTimerHandle_Move); // 타이머 종료
+	}
+
+	// 선형 보간 적용
+	FVector NewLocation = FMath::InterpEaseInOut(mStartLocation, mEndLocation, mCurrentAlpha, 1.f);
+
+	GetOwner()->AddActorWorldOffset(NewLocation - mCurLocation);
+
+	mCurLocation = NewLocation;
+
+	//=================================
+	// 카메라 이동의 제한을 둡니다.
+	// 카메라의 크기는 무시힌다.
+	FVector ActorLocation = GetOwner()->GetActorLocation();
+
+	ActorLocation.X = FMath::Clamp(ActorLocation.X, mMoveClampingBoxCenter.X - mMoveClampingBox.X / 2, mMoveClampingBoxCenter.X + mMoveClampingBox.X / 2);
+	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, mMoveClampingBoxCenter.Y - mMoveClampingBox.Y / 2, mMoveClampingBoxCenter.Y + mMoveClampingBox.Y / 2);
+
+	GetOwner()->SetActorLocation(ActorLocation);
 }

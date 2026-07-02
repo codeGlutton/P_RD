@@ -97,6 +97,19 @@ public:
 	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveClampingBox", AllowPrivateAccess = "true"))
 	FVector2D mMoveClampingBox = FVector2D(3000, 3000);
 
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveDuration", AllowPrivateAccess = "true"))
+	float mMoveDuration = 0.2f; // 이동에 걸릴 시간
+
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveExp", AllowPrivateAccess = "true"))
+	float mMoveExp = 2.f;
+
+	FTimerHandle mTimerHandle_Move;
+	FVector mStartLocation;
+	FVector mCurLocation;
+	FVector mEndLocation;
+	float mCurrentAlpha = 0.0f;
+	
+
 private:
 	/* 강조 */
 
@@ -195,6 +208,8 @@ public:
 	*/
 	UFUNCTION(BlueprintCallable)
 	void MoveToWorldPosition(FVector WorldPosition);
+
+	void MoveStep();
 
 public:
 	/* 강조 기능*/
