@@ -43,8 +43,8 @@ void UCameraMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	// 카메라의 크기는 무시힌다.
 	FVector ActorLocation = GetOwner()->GetActorLocation();
 
-	ActorLocation.X = FMath::Clamp(ActorLocation.X, -mMoveClampingBox.X / 2, mMoveClampingBox.X / 2);
-	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, -mMoveClampingBox.Y / 2, mMoveClampingBox.Y / 2);
+	ActorLocation.X = FMath::Clamp(ActorLocation.X, mMoveClampingBoxCenter.X - mMoveClampingBox.X / 2, mMoveClampingBoxCenter.X + mMoveClampingBox.X / 2);
+	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, mMoveClampingBoxCenter.Y - mMoveClampingBox.Y / 2, mMoveClampingBoxCenter.Y + mMoveClampingBox.Y / 2);
 
 	GetOwner()->SetActorLocation(ActorLocation);
 
@@ -183,8 +183,8 @@ void UCameraMovementComponent::MoveToViewportPosition(FVector2D ViewPortPos)
 	// 카메라의 크기는 무시힌다.
 	FVector ActorLocation = GetOwner()->GetActorLocation();
 
-	ActorLocation.X = FMath::Clamp(ActorLocation.X, -mMoveClampingBox.X / 2, mMoveClampingBox.X / 2);
-	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, -mMoveClampingBox.Y / 2, mMoveClampingBox.Y / 2);
+	ActorLocation.X = FMath::Clamp(ActorLocation.X, mMoveClampingBoxCenter.X - mMoveClampingBox.X / 2, mMoveClampingBoxCenter.X + mMoveClampingBox.X / 2);
+	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, mMoveClampingBoxCenter.Y - mMoveClampingBox.Y / 2, mMoveClampingBoxCenter.Y + mMoveClampingBox.Y / 2);
 
 	GetOwner()->SetActorLocation(ActorLocation);
 }
@@ -214,8 +214,8 @@ void UCameraMovementComponent::MoveToWorldPosition(FVector LocationPos)
 	// 카메라의 크기는 무시힌다.
 	FVector ActorLocation = GetOwner()->GetActorLocation();
 
-	ActorLocation.X = FMath::Clamp(ActorLocation.X, -mMoveClampingBox.X / 2, mMoveClampingBox.X / 2);
-	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, -mMoveClampingBox.Y / 2, mMoveClampingBox.Y / 2);
+	ActorLocation.X = FMath::Clamp(ActorLocation.X, mMoveClampingBoxCenter.X - mMoveClampingBox.X / 2, mMoveClampingBoxCenter.X + mMoveClampingBox.X / 2);
+	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, mMoveClampingBoxCenter.Y - mMoveClampingBox.Y / 2, mMoveClampingBoxCenter.Y + mMoveClampingBox.Y / 2);
 
 	GetOwner()->SetActorLocation(ActorLocation);
 

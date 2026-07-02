@@ -78,7 +78,7 @@ public:
 	* Z축은 사용하지 않습니다.
 	*/
 	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MoveClampingBox", AllowPrivateAccess = "true"))
-	FVector2D mMoveClampingBox = FVector2D(1000, 1000);
+	FVector2D mMoveClampingBox = FVector2D(3000, 3000);
 
 public:
 	UFUNCTION(BlueprintCallable)
