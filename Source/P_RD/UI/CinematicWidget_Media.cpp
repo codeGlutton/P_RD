@@ -14,6 +14,7 @@
 #include "MediaTexture.h"
 #include "Misc/FileHelper.h"
 #include "Setting/GamePlaySettings.h"
+#include "UI/UITextureLoader.h"
 
 namespace
 {
@@ -181,13 +182,7 @@ void UCinematicWidget::StopCinematicMedia()
 FString UCinematicWidget::ResolveCinematicVideoPath() const
 {
 	const FString CinematicVideoPath = GetIntroCinematicVideoPath();
-	if (FPaths::IsRelative(CinematicVideoPath) == false)
-	{
-		return FPaths::ConvertRelativePathToFull(CinematicVideoPath); // 이미 절대 경로면 정규화만 수행
-	}
-
-	// 상대 경로는 Content 디렉터리를 기준 디렉터리로 삼아 절대 경로로 합친다.
-	return FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir(), CinematicVideoPath);
+	return RDUITexture::ResolveContentFilePath(CinematicVideoPath);
 }
 
 /**
