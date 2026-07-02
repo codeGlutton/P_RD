@@ -68,10 +68,11 @@ void UDicePoolModel::RollAll(const FRandomStream& Stream)
 	OnRollAllDicesUI.Broadcast(mDices);
 }
 
-/** @brief 지정 index 주사위를 스킬 빌드 선택 상태로 표시하고 UI에 알린다. */
+/** @brief 지정 index 주사위를 스킬 빌드 선택 상태로 표시하고 UI에 알린다.
+    이번 턴에 이미 쓴 주사위는 선택 불가 — UI 가드와 별개로 모델에서도 막는다(진실원본). */
 void UDicePoolModel::MarkDiceSelected(int32 DiceIndex)
 {
-	if (mDices.IsValidIndex(DiceIndex) && mDices[DiceIndex] != nullptr)
+	if (mDices.IsValidIndex(DiceIndex) && mDices[DiceIndex] != nullptr && mDices[DiceIndex]->IsUsed() == false)
 	{
 		mDices[DiceIndex]->SetSelected(true);
 
