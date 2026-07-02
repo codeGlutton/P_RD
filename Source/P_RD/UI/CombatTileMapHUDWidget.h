@@ -10,6 +10,9 @@
 
 class ACombatDiceCaptureActor;
 class ACombatDiceRollCaptureActor;
+struct FPresentationBarrier;
+enum class EWorldWidgetType : uint8;
+enum class ESRPGCombatResult : uint8;
 class UBorder;
 class UButton;
 class UCanvasPanel;
@@ -207,7 +210,7 @@ private:
 	/** @brief 우측 MOVE 버튼의 이동 가능 수치(현재/최대)를 갱신한다. */
 	void RefreshMoveButton() const;
 
-	/** @brief 탑바 내비 버튼 클릭 → 숨겨진 TopMenuBar의 해당 패널 토글로 위임한다(MAP/DICE/SKILL/SET). */
+	/** @brief 내비 버튼 클릭(MAP/DICE/SKILL/SET)을 HUD 소유의 패널 토글로 연결한다. */
 	UFUNCTION()
 	void HandleNavMapButtonClicked();
 	UFUNCTION()
@@ -216,6 +219,49 @@ private:
 	void HandleNavSkillButtonClicked();
 	UFUNCTION()
 	void HandleNavSettingsButtonClicked();
+
+	/* 패널 내비/승리 흐름 (레거시 탑바에서 이관, CombatTileMapHUDWidget_Nav.cpp) */
+
+	/** @brief 전투 모델의 전투 종료 이벤트를 구독해 승리 후 월드맵 흐름을 HUD가 소유한다. 새 전투마다 승리 잠금을 초기화한다. */
+	void BindVictoryFlowEvents();
+
+	/** @brief 월드 서브시스템에 등록된 월드 위젯을 URDUserWidget으로 가져온다. */
+	URDUserWidget* GetToggleableWorldWidget(EWorldWidgetType WorldWidgetType) const;
+
+	/** @brief 지정한 월드 위젯을 공통 CloseUI() 경로로 닫는다. */
+	void CloseWorldWidget(EWorldWidgetType WorldWidgetType) const;
+
+	/** @brief 플로팅 패널(MAP/SET/DICE/SKILL)을 하나만 남기고 닫는다(상호배타). */
+	void CloseFloatingPanels(EWorldWidgetType ExceptWorldWidgetType) const;
+
+	/** @brief 월드맵 토글. 조회용은 방 선택 비활성, 승리 잠금 중엔 복원 흐름으로 보낸다. */
+	void ToggleWorldMap();
+
+	/** @brief 인게임 설정 패널 토글(+InGame 모드/상태 문구 초기화). */
+	void ToggleSettingsPanel();
+
+	/** @brief DICE/SKILL처럼 단순히 열고 닫는 플로팅 패널을 토글한다. */
+	void ToggleFloatingPanel(EWorldWidgetType WorldWidgetType, const TCHAR* DebugName);
+
+	/** @brief 플레이어 승리 결과를 다음 방 선택 월드맵 표시로 연결한다. */
+	void HandleEndCombatUI(TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result);
+
+	/** @brief 승리 후 다음 방 선택이 가능한 상태로 월드맵을 연다(OpenUI 완료 시 barrier 해제). */
+	void OpenWorldMapAfterPlayerWin(TSharedPtr<FPresentationBarrier> Barrier);
+
+	/** @brief 승리 후 지도 잠금이 유지되는 동안 월드맵을 다시 연다. */
+	void RestoreVictoryWorldMap();
+
+	/** @brief 설정 패널이 열려 있으면 닫힘 완료 뒤 승리 후 월드맵을 복원한다. */
+	void CloseSettingsPanelAndRestoreVictoryWorldMap();
+
+	/** @brief 월드맵 닫기 요청을 승리 잠금 상태에 맞게 처리한다. */
+	UFUNCTION()
+	void HandleWorldMapCloseRequested();
+
+	/** @brief 설정 패널 Back 요청을 승리 잠금 상태에 맞게 처리한다. */
+	UFUNCTION()
+	void HandleSettingsBackRequested();
 
 	/** @brief 월드위젯 서브시스템에서 공용 탑바 위젯을 가져온다(스킨 모드에서 숨겨져 있어도 인스턴스는 살아있음). */
 	class UTopMenuBarWidget* GetTopMenuBar() const;
@@ -385,6 +431,9 @@ private:
 
 	/** @brief 현재 선택된 스킬 index */
 	int32 mSelectedSkillIndex = INDEX_NONE;
+
+	/** @brief 승리 후 다음 방을 고르기 전까지 월드맵을 강제 유지하는 잠금. 새 전투 바인딩 시 초기화된다. */
+	bool mVictoryWorldMapLocked = false;
 
 	/** @brief WBP에 디자이너 스킨(HUD_* 앵커 위젯)이 있어 좌표/아트를 WBP에서 읽는 모드인지. */
 	bool mDesignerSkinActive = false;

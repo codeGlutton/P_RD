@@ -129,14 +129,6 @@ private:
 	void RefreshRoomInfo() const;
 
 	/**
-	 * @brief 전투 종료 UI 이벤트를 구독해 승리 후 월드맵 흐름을 시작한다.
-	 *
-	 * @details
-	 * 탑바가 전투 결과를 계산하지 않고, 전투 서브시스템이 보낸 결과만 받아 다음 UI 흐름을 연다.
-	 */
-	void BindCombatEvents();
-
-	/**
 	 * @brief WorldWidgetSubsystem에서 RDUserWidget 기반 월드 위젯을 가져온다.
 	 *
 	 * @param WorldWidgetType 가져올 월드 위젯 타입
