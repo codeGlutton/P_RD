@@ -31,29 +31,30 @@ namespace
 		const float SafeX = FMath::Max(DiceRadius, TableHalfDepth - DiceRadius - DiceTableVisibleMarginX);
 		const float SafeY = FMath::Max(DiceRadius, TableHalfWidth - DiceRadius - DiceTableVisibleMarginY);
 
+		// 벽 반사계수↑(0.24→0.52): 판 안에서 통통 튀며 리코셰하는 "빠바박" 손맛.
 		if (LocalLocation.X < -SafeX)
 		{
 			LocalLocation.X = -SafeX;
-			LocalVelocity.X = FMath::Abs(LocalVelocity.X) * 0.24f;
+			LocalVelocity.X = FMath::Abs(LocalVelocity.X) * 0.52f;
 			bClamped = true;
 		}
 		else if (LocalLocation.X > SafeX)
 		{
 			LocalLocation.X = SafeX;
-			LocalVelocity.X = -FMath::Abs(LocalVelocity.X) * 0.24f;
+			LocalVelocity.X = -FMath::Abs(LocalVelocity.X) * 0.52f;
 			bClamped = true;
 		}
 
 		if (LocalLocation.Y < -SafeY)
 		{
 			LocalLocation.Y = -SafeY;
-			LocalVelocity.Y = FMath::Abs(LocalVelocity.Y) * 0.24f;
+			LocalVelocity.Y = FMath::Abs(LocalVelocity.Y) * 0.52f;
 			bClamped = true;
 		}
 		else if (LocalLocation.Y > SafeY)
 		{
 			LocalLocation.Y = SafeY;
-			LocalVelocity.Y = -FMath::Abs(LocalVelocity.Y) * 0.24f;
+			LocalVelocity.Y = -FMath::Abs(LocalVelocity.Y) * 0.52f;
 			bClamped = true;
 		}
 
@@ -73,8 +74,8 @@ namespace
 				const float NewAbsY = CornerStartY + (AbsY - CornerStartY) * Scale;
 				LocalLocation.X = FMath::Sign(LocalLocation.X) * NewAbsX;
 				LocalLocation.Y = FMath::Sign(LocalLocation.Y) * NewAbsY;
-				LocalVelocity.X *= 0.18f;
-				LocalVelocity.Y *= 0.18f;
+				LocalVelocity.X *= 0.40f;
+				LocalVelocity.Y *= 0.40f;
 				bClamped = true;
 			}
 		}
@@ -461,10 +462,11 @@ UProceduralMeshComponent* ACombatDiceRollCaptureActor::CreatePhysicsBody(int32 D
 	PhysicsBody->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	PhysicsBody->SetCollisionObjectType(ECC_PhysicsBody);
 	PhysicsBody->SetCollisionResponseToAllChannels(ECR_Block);
-	// 댐핑을 약간 높여 짧은 굴림 시간 안에 깔끔하게 멈추게 한다(빠른 손맛).
-	PhysicsBody->SetLinearDamping(1.05f);
-	PhysicsBody->SetAngularDamping(1.65f);
-	PhysicsBody->SetMassOverrideInKg(NAME_None, 0.18f, true);
+	// "빠바박" 손맛: 감쇠/질량을 더 낮춰 가볍고 오래 튀며 세게 텀블하게 한다.
+	// 위치는 매 틱 하드클램프로 판 안에 강제되므로(ClampToVisibleDiceBoard) 임펄스를 키워도 이탈하지 않는다.
+	PhysicsBody->SetLinearDamping(0.48f);
+	PhysicsBody->SetAngularDamping(0.52f);
+	PhysicsBody->SetMassOverrideInKg(NAME_None, 0.11f, true);
 	PhysicsBody->BodyInstance.bUseCCD = true;
 	PhysicsBody->SetSimulatePhysics(false);
 	return PhysicsBody;
@@ -519,17 +521,17 @@ void ACombatDiceRollCaptureActor::StartRoll(int32 RollSeed)
 		PhysicsBody->SetSimulatePhysics(true);
 		PhysicsBody->WakeAllRigidBodies();
 
-		// 좌우(Y) 임펄스가 너무 세면 주사위가 벽을 타고 넘어 판을 벗어난다 → 적당히 줄이고 수직(Z)도 낮춘다.
-		// 회전(AngularImpulse)은 손맛을 위해 충분히 유지(이동이 아니라 굴림이라 판을 벗어나게 하지 않는다).
+		// "빠바박": 발사/좌우(Y)/수직(Z)을 모두 키워 세게 흩뿌리고 튀게 한다. 벽 반사계수가 커져 판 안에서 리코셰한다.
+		// 위치는 매 틱 하드클램프로 강제 포함되므로 큰 임펄스에도 판을 벗어나지 않는다.
 		const float Side = (DiceIndex % 2 == 0) ? 1.0f : -1.0f;
 		const FVector LocalImpulse(
-			Stream.FRandRange(24.0f, 44.0f),
-			-Side * Stream.FRandRange(48.0f, 82.0f),
-			Stream.FRandRange(5.0f, 12.0f));
+			Stream.FRandRange(32.0f, 56.0f),
+			-Side * Stream.FRandRange(58.0f, 96.0f),
+			Stream.FRandRange(14.0f, 28.0f));
 		const FVector LocalAngularImpulse(
-			Stream.FRandRange(-820.0f, 820.0f),
-			Stream.FRandRange(-1240.0f, 1240.0f),
-			Side * Stream.FRandRange(1280.0f, 1880.0f));
+			Stream.FRandRange(-1500.0f, 1500.0f),
+			Stream.FRandRange(-2100.0f, 2100.0f),
+			Side * Stream.FRandRange(2150.0f, 3100.0f));
 
 		PhysicsBody->AddImpulse(GetActorTransform().TransformVectorNoScale(LocalImpulse), NAME_None, true);
 		PhysicsBody->AddAngularImpulseInDegrees(GetActorTransform().TransformVectorNoScale(LocalAngularImpulse), NAME_None, true);
@@ -604,7 +606,8 @@ void ACombatDiceRollCaptureActor::ConstrainDiceToTable(UProceduralMeshComponent*
 	if (LocalLocation.Z < SafeZ)
 	{
 		LocalLocation.Z = SafeZ;
-		LocalVelocity.Z = FMath::Max(0.0f, LocalVelocity.Z) * 0.25f;
+		// 바닥 충돌: 하강 속도가 충분하면 위로 튕겨 "빠바박", 미미하면 정착시킨다(무한 바운스/미정착 방지).
+		LocalVelocity.Z = (LocalVelocity.Z < -60.0f) ? -LocalVelocity.Z * 0.50f : FMath::Max(0.0f, LocalVelocity.Z) * 0.25f;
 		bClamped = true;
 	}
 

@@ -90,4 +90,39 @@ namespace RDUILayout
 	 * @return 정규화된 (좌,상,우,하) 영역.
 	 */
 	P_RD_API FAnchors GetDesignerGroupRect(UWidgetTree* WidgetTree, FName AnchorWidgetName, const FVector2D& DesignSize, const FAnchors& Fallback);
+
+	/**
+	 * @brief 명명 마커 위젯의 캔버스 슬롯 데이터(앵커+오프셋+정렬)를 그대로 읽습니다.
+	 *
+	 * @details
+	 * 엣지 피닝 스킨의 정본 좌표입니다. 마커가 (ax,ay) 점앵커 + 상대 디자인px 오프셋을 갖고,
+	 * 런타임 위젯이 이 데이터를 복사하면 마커와 같은 화면 위치에 붙습니다(레거시 (0,0) 점앵커에도 동일 동작).
+	 *
+	 * @return 마커가 없거나 CanvasPanelSlot이 아니면 false(OutSlotData 불변).
+	 */
+	P_RD_API bool GetDesignerSlotData(UWidgetTree* WidgetTree, FName MarkerName, FAnchorData& OutSlotData);
+
+	/**
+	 * @brief 정규화(0~1) 영역을 (0,0) 점앵커 + 디자인px 오프셋 슬롯으로 변환합니다.
+	 *
+	 * @details
+	 * 마커가 없을 때 스킨 경로의 fallback으로 씁니다. 좌상단 고정이라 16:9에서 기존과 동일하며,
+	 * 와이드에서도 화면 안에 남습니다(레거시 뷰포트 정규화를 fill 캔버스에 그대로 쓰면 안 됨).
+	 */
+	P_RD_API FAnchorData NormalizedToDesignPointSlot(const FAnchors& Normalized, const FVector2D& DesignSize);
+
+	/** @brief 마커 슬롯 데이터를 읽되, 없으면 정규화 fallback을 디자인px 점앵커 슬롯으로 변환해 돌려줍니다. */
+	P_RD_API FAnchorData GetDesignerSlotDataOr(UWidgetTree* WidgetTree, FName MarkerName, const FAnchors& FallbackNormalized, const FVector2D& DesignSize);
+
+	/** @brief 슬롯 데이터(앵커/오프셋/정렬)를 런타임 위젯에 그대로 적용합니다(ZOrder 별도). */
+	P_RD_API void ApplyDesignerSlotData(UWidget* Widget, const FAnchorData& SlotData, int32 ZOrder);
+
+	/**
+	 * @brief 점앵커 그룹 슬롯 안에서 세로 Index/Count 분배 셀 슬롯을 만듭니다.
+	 *
+	 * @details
+	 * 오프셋은 디자인px(1080 세로 기준)이라 뷰포트와 무관합니다 — 리사이즈 재계산이 필요 없습니다.
+	 * 셀 높이 = (그룹높이 - (Count-1)*GapPx) / Count. 앵커/가로/정렬은 그룹 슬롯을 그대로 상속합니다.
+	 */
+	P_RD_API FAnchorData MakeVerticalSubSlot(const FAnchorData& GroupSlot, int32 Index, int32 Count, float GapPx);
 }
