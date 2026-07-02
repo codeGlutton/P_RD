@@ -317,7 +317,7 @@ void UCombatTileMapHUDWidget::RebuildTurnOrderBar()
 	mTurnOrderChips.Reset();
 	mTurnOrderChipTexts.Reset();
 
-	UCanvasPanel* Canvas = RootCanvas.Get();
+	UCanvasPanel* Canvas = GetSkinTargetCanvas();   // 스킨 활성 시 DesignCanvas — 칩 줄이 레터박스 스킨과 함께 움직인다.
 	if (Canvas == nullptr || WidgetTree == nullptr || mCombatUIModel == nullptr)
 	{
 		return;
@@ -357,13 +357,20 @@ void UCombatTileMapHUDWidget::RebuildTurnOrderBar()
 		return;
 	}
 
-	// 탑바 가운데 하단, 칩 줄을 가로 중앙 정렬.
+	// 전투 HUD 가운데 하단, 칩 줄을 가로 중앙 정렬.
+	const bool bChipSkin = IsDesignerSkinActive();
 	const float ChipWidth = 0.048f;
 	const float ChipHeight = 0.040f;
 	const float Gap = 0.007f;
 	const float Top = 0.108f;
 	const float Total = StaticCast<float>(Order.Num()) * ChipWidth + StaticCast<float>(Order.Num() - 1) * Gap;
 	const float Start = 0.5f - Total * 0.5f;
+	// 스킨(엣지 피닝): 중앙(0.5,0) 핀 + 디자인px 오프셋 — turn_order 요소의 center/top 핀을 따른다.
+	const float ChipWidthPx = ChipWidth * 1920.0f;
+	const float ChipHeightPx = ChipHeight * 1080.0f;
+	const float GapPx = Gap * 1920.0f;
+	const float TopPx = Top * 1080.0f + mFoldTurnOrderDeltaY;   // 폴드 변형이면 턴 스트립과 함께 내려간다.
+	const float TotalPx = StaticCast<float>(Order.Num()) * ChipWidthPx + StaticCast<float>(Order.Num() - 1) * GapPx;
 
 	int32 EnemyOrdinal = 0;
 	for (int32 SlotIndex = 0; SlotIndex < Order.Num(); ++SlotIndex)
@@ -402,8 +409,19 @@ void UCombatTileMapHUDWidget::RebuildTurnOrderBar()
 		Chip->AddChild(Text);
 		Canvas->AddChildToCanvas(Chip);
 
-		const float Left = Start + StaticCast<float>(SlotIndex) * (ChipWidth + Gap);
-		RDUILayout::ApplyAnchoredSlot(Chip, FAnchors(Left, Top, Left + ChipWidth, Top + ChipHeight), 32);
+		if (bChipSkin)
+		{
+			FAnchorData ChipSlot;
+			ChipSlot.Anchors = FAnchors(0.5f, 0.0f, 0.5f, 0.0f);
+			ChipSlot.Alignment = FVector2D::ZeroVector;
+			ChipSlot.Offsets = FMargin(-TotalPx * 0.5f + StaticCast<float>(SlotIndex) * (ChipWidthPx + GapPx), TopPx, ChipWidthPx, ChipHeightPx);
+			RDUILayout::ApplyDesignerSlotData(Chip, ChipSlot, 32);
+		}
+		else
+		{
+			const float Left = Start + StaticCast<float>(SlotIndex) * (ChipWidth + Gap);
+			RDUILayout::ApplyAnchoredSlot(Chip, FAnchors(Left, Top, Left + ChipWidth, Top + ChipHeight), 32);
+		}
 
 		mTurnOrderChips.Add(Chip);
 		mTurnOrderChipTexts.Add(Text);

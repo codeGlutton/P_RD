@@ -70,9 +70,12 @@ void UCombatTileMapHUDWidget::RebuildSkillRailWidgets()
 		SkillRailText->SetJustification(ETextJustify::Center);
 		SkillRailText->SetVisibility(ESlateVisibility::HitTestInvisible);
 
-		RootCanvas->AddChildToCanvas(SkillRailPanel);
-		RootCanvas->AddChildToCanvas(SkillRailIcon);
-		RootCanvas->AddChildToCanvas(SkillRailText);
+		// 스킨 활성 시 DesignCanvas: 렌더/히트테스트가 같은 레터박스 좌표계를 쓴다.
+		// RootCanvas(뷰포트)에 붙이면 16:9가 아닐 때 레일만 따로 노는 정렬 버그가 생긴다.
+		UCanvasPanel* SkillRailCanvas = GetSkinTargetCanvas();
+		SkillRailCanvas->AddChildToCanvas(SkillRailPanel);
+		SkillRailCanvas->AddChildToCanvas(SkillRailIcon);
+		SkillRailCanvas->AddChildToCanvas(SkillRailText);
 
 		mSkillRailPanels.Add(SkillRailPanel);
 		mSkillRailIcons.Add(SkillRailIcon);
@@ -200,44 +203,32 @@ void UCombatTileMapHUDWidget::EnsureSkillInputButtons()
 		SkillInputButton->SetButtonIndex(SkillIndex);
 		SkillInputButton->OnIndexedPressed.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleSkillButtonPressed);
 		SkillInputButton->OnReleased.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleSkillButtonReleased);
-		RootCanvas->AddChildToCanvas(SkillInputButton);
+		GetSkinTargetCanvas()->AddChildToCanvas(SkillInputButton);   // 렌더(패널)와 같은 좌표계 — 16:9 외 화면에서 탭 영역 어긋남 방지
 		mSkillInputButtons.Add(SkillInputButton);
 	}
 }
 
 int32 UCombatTileMapHUDWidget::FindSkillRailIndexAtScreenPosition(const FVector2D& ScreenPosition) const
 {
-	// 렌더는 스킬레일을 DesignCanvas(1920x1080, ScaleBox 레터박스) 좌표에 그린다. 히트테스트도 같은
-	// DesignCanvas 지오메트리로 정규화해야 탭 영역이 렌더와 일치한다. (루트 GetCachedGeometry는 풀뷰포트라
-	// 화면비 차이만큼 어긋난다.) 스킨 비활성 fallback은 루트 지오메트리.
-	const UWidget* GeometrySource = (IsDesignerSkinActive() && DesignCanvas.Get() != nullptr)
-		? StaticCast<const UWidget*>(DesignCanvas.Get())
-		: StaticCast<const UWidget*>(this);
-	const FGeometry CachedGeometry = GeometrySource->GetCachedGeometry();
-	const FVector2D LocalPosition = CachedGeometry.AbsoluteToLocal(ScreenPosition);
-	const FVector2D LocalSize = CachedGeometry.GetLocalSize();
-	if (LocalSize.X <= 0.0f || LocalSize.Y <= 0.0f)
+	// 렌더된 입력 버튼 자신의 geometry로 판정한다 — 좌표계(엣지 피닝/레터박스/레거시)와 무관하게
+	// 렌더와 히트테스트가 항상 일치한다. 첫 페인트 전(크기 0)이나 비표시는 건너뛴다.
+	for (int32 SkillIndex = 0; SkillIndex < mSkillInputButtons.Num(); ++SkillIndex)
 	{
-		return INDEX_NONE;
-	}
-
-	const float NormalizedX = LocalPosition.X / LocalSize.X;
-	const float NormalizedY = LocalPosition.Y / LocalSize.Y;
-	// 렌더와 같은 영역 계산(GetSkillRailItemRect)을 써서 WBP 스킨 좌표에서도 탭 영역이 일치하게 한다.
-	const FAnchors RailGroup = GetSkillRailGroupRect();
-	if (NormalizedX < RailGroup.Minimum.X || NormalizedX > RailGroup.Maximum.X)
-	{
-		return INDEX_NONE;
-	}
-
-	for (int32 SkillIndex = 0; SkillIndex < CombatSkillSlotCount; ++SkillIndex)
-	{
-		const FAnchors ItemRect = GetSkillRailItemRect(SkillIndex, CombatSkillSlotCount);
-		if (NormalizedY >= ItemRect.Minimum.Y && NormalizedY <= ItemRect.Maximum.Y)
+		const UWidget* InputButton = mSkillInputButtons[SkillIndex];
+		if (InputButton == nullptr || InputButton->IsVisible() == false)
+		{
+			continue;
+		}
+		const FGeometry& ButtonGeometry = InputButton->GetCachedGeometry();
+		const FVector2D LocalSize = ButtonGeometry.GetLocalSize();
+		if (LocalSize.X <= 0.0f || LocalSize.Y <= 0.0f)
+		{
+			continue;
+		}
+		if (ButtonGeometry.IsUnderLocation(ScreenPosition))
 		{
 			return SkillIndex;
 		}
 	}
-
 	return INDEX_NONE;
 }

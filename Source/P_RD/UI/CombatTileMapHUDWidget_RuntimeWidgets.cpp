@@ -78,7 +78,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		mDiceRollBackdropPanel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("DiceRollBackdropPanel"));
 		if (mDiceRollBackdropPanel != nullptr)
 		{
-			TargetRootCanvas->AddChildToCanvas(mDiceRollBackdropPanel);
+			RootCanvas->AddChildToCanvas(mDiceRollBackdropPanel);   // 풀뷰포트 회색 배경(전체 덮기)
 		}
 	}
 	if (mDiceRollBackdropPanel != nullptr)
@@ -96,7 +96,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		mDiceRollBoardImage = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("DiceRollBoardImage"));
 		if (mDiceRollBoardImage != nullptr)
 		{
-			TargetRootCanvas->AddChildToCanvas(mDiceRollBoardImage);
+			RootCanvas->AddChildToCanvas(mDiceRollBoardImage);   // 오버레이는 풀뷰포트 RootCanvas 기준
 		}
 	}
 	if (mDiceRollBoardImage != nullptr)
@@ -118,7 +118,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		mDiceRollPhysicsImage = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("DiceRollPhysicsImage"));
 		if (mDiceRollPhysicsImage != nullptr)
 		{
-			TargetRootCanvas->AddChildToCanvas(mDiceRollPhysicsImage);
+			RootCanvas->AddChildToCanvas(mDiceRollPhysicsImage);   // 오버레이는 풀뷰포트 RootCanvas 기준
 		}
 	}
 	if (mDiceRollPhysicsImage != nullptr)
@@ -135,19 +135,26 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 			DiceRollStatusText->SetJustification(ETextJustify::Center);
 			DiceRollStatusText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "IntroDiceRolling", "ROLLING DICE"));
 			DiceRollStatusText->SetColorAndOpacity(FSlateColor(FLinearColor(0.82f, 1.0f, 0.96f, 1.0f)));
-			TargetRootCanvas->AddChildToCanvas(DiceRollStatusText);
+			RootCanvas->AddChildToCanvas(DiceRollStatusText);   // 오버레이는 풀뷰포트 RootCanvas 기준
 		}
 	}
 
 	if (mDiceRollInputButton == nullptr)
 	{
+		mDiceRollInputButton = FindNamedWidget<UButton>(WidgetTree, TEXT("DiceRollInputButton"));   // WBP-네이티브 버튼 우선 바인딩
+	}
+	if (mDiceRollInputButton == nullptr)
+	{
 		mDiceRollInputButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("DiceRollInputButton"));
 		if (mDiceRollInputButton != nullptr)
 		{
-			mDiceRollInputButton->SetBackgroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.01f));
-			mDiceRollInputButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleDiceRollInputButtonClicked);
-			TargetRootCanvas->AddChildToCanvas(mDiceRollInputButton);
+			RootCanvas->AddChildToCanvas(mDiceRollInputButton);   // 풀뷰포트 입력 차단막(WBP에 없을 때만)
 		}
+	}
+	if (mDiceRollInputButton != nullptr)
+	{
+		mDiceRollInputButton->SetBackgroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.01f));
+		mDiceRollInputButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleDiceRollInputButtonClicked);
 	}
 
 	if (mDiceAssignmentText == nullptr)
