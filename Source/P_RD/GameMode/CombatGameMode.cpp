@@ -186,6 +186,7 @@ void ACombatGameMode::InitializeRoom()
 	/* UI 조작 의도 라우팅 — 위젯 탭이 쏘는 Request*(OnCombatCommand)를 게임플레이 진입점에 연결 */
 
 	mCombatUIModel->OnCombatCommand.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatCommand);
+	mCombatUIModel->OnApplyDiceResults.AddUniqueDynamic(this, &ACombatGameMode::HandleApplyDiceResults);
 
 	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModel());
 }
@@ -224,6 +225,32 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		// 대응 진입점(취소/상세 패널 경로)이 아직 없다 — 각 기능 구현 시 여기서 라우팅한다.
 		break;
 	}
+}
+
+void ACombatGameMode::HandleApplyDiceResults(const TArray<int32>& RolledFaceIndices)
+{
+	ApplyRolledDices(RolledFaceIndices);
+}
+
+/**
+ * @brief 물리 굴림 연출이 확정한 면 index들을 굴림 커맨드에 실어 발행한다.
+ *
+ * @details
+ * 입장 주사위 연출은 실제 물리로 굴려 멈춘 윗면을 보여준다. 그 "보이는 면"을 그대로
+ * 게임 결과로 기록해야 표시와 판정이 어긋나지 않는다. 결과를 실은 DiceRoll 커맨드는
+ * 대기 중인 USRPGDiceRollAction이 소비하며(내부 난수 굴림 대신 주입값 기록),
+ * 이로써 굴림 액션이 완료되어 이후 스킬 빌드 커맨드가 흐를 수 있다.
+ */
+bool ACombatGameMode::ApplyRolledDices(const TArray<int32>& RolledFaceIndices)
+{
+	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
+
+	TInstancedStruct<FSRPGCommand> DiceRollCommand;
+	DiceRollCommand.InitializeAs<FSRPGDiceRollCommand>();
+	DiceRollCommand.GetMutable<FSRPGDiceRollCommand>().mRolledFaceIndices = RolledFaceIndices;
+
+	return CommandRouterModel->SummitCommand(DiceRollCommand);
 }
 
 void ACombatGameMode::BeginRoom()

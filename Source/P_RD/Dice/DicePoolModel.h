@@ -36,6 +36,9 @@ public:
 	/** @brief 보유 주사위 전부를 주어진 난수 스트림으로 굴린다. */
 	void RollAll(const FRandomStream& Stream);
 
+	/** @brief 물리 굴림 연출이 확정한 면 index들을 굴림 결과로 기록한다(index = 주사위 순서). */
+	void ApplyRolledFaceIndices(const TArray<int32>& RolledFaceIndices);
+
 	/** @brief 지정 index 주사위를 선택됨으로 표시합니다. */
 	void MarkDiceSelected(int32 DiceIndex);
 

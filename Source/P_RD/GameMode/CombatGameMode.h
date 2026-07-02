@@ -70,12 +70,19 @@ public:
 	UFUNCTION(Category = UI, BlueprintCallable)
 	bool EndTurn();
 
+	/** @brief 물리 굴림 연출이 확정한 면 index들을 굴림 커맨드에 실어 발행한다("보이는 면 = 기록 숫자"). */
+	bool ApplyRolledDices(const TArray<int32>& RolledFaceIndices);
+
 	/**
 	 * @brief UIModel의 조작 의도(OnCombatCommand)를 위 진입점으로 라우팅한다.
 	 * @details 위젯은 게임모드를 직접 모른다 — Request*로 의도만 쏘고, 여기서 커맨드 발행 진입점에 연결한다.
 	 */
 	UFUNCTION()
 	void HandleCombatCommand(ECombatInputType Type, int32 IntPayload);
+
+	/** @brief UIModel의 물리 굴림 결과 주입 의도(OnApplyDiceResults)를 굴림 커맨드로 연결한다. */
+	UFUNCTION()
+	void HandleApplyDiceResults(const TArray<int32>& RolledFaceIndices);
 
 public:
 	/**
