@@ -36,6 +36,9 @@ public:
 	/** @brief 주어진 난수 스트림으로 면 index를 뽑고, 그 면에 적힌 값을 현재 값으로 반환한다. */
 	int32 Roll(const FRandomStream& Stream);
 
+	/** @brief 외부(물리 굴림 연출)가 확정한 면 index를 굴림 결과로 기록한다("보이는 면 = 기록 숫자"). */
+	int32 ApplyRolledFace(int32 FaceIndex);
+
 	/** @brief 예측용 깊은 복제본을 만든다(사본에서 굴려 라이브를 건드리지 않기 위함). */
 	UDiceModel* Clone(UObject* InOuter = nullptr) const;
 

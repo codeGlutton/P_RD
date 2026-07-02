@@ -7,7 +7,7 @@
  * @brief 탑바 팝업보다 살짝 위에 뜨는 캐러셀 패널 기본 ZOrder를 설정한다.
  *
  * @details
- * DicePanel/SkillPanel은 TopMenuBar 버튼으로 열리는 플로팅 패널이다.
+ * DicePanel/SkillPanel은 전투 HUD 내비 버튼으로 열리는 플로팅 패널이다.
  * 탑바는 계속 조작 가능해야 하므로 탑바보다 아래가 아니라 일반 팝업보다 조금 높은 계층에 둔다.
  */
 UCarouselPanelWidget::UCarouselPanelWidget(const FObjectInitializer& ObjectInitializer)

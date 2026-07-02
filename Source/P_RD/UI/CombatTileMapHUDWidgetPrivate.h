@@ -7,11 +7,6 @@ class ACombatDiceCaptureActor;
 
 namespace RDCombatHUD
 {
-	// 주사위 대기 자세 헬퍼(정의는 CombatTileMapHUDWidget_DicePreview.cpp 한 곳).
-	// DiceRoll/DicePreview 양쪽에서 쓰므로 익명 네임스페이스 중복정의 대신 공용 선언으로 둔다(유니티 빌드 충돌 방지).
-	bool ShouldUseFaceOnReadyPose(const FDiceViewData* DiceView);
-	FRotator GetDiceReadyRotation(const FDiceViewData* DiceView, int32 DiceIndex, const ACombatDiceCaptureActor* DiceActor);
-
 	static constexpr int32 MaxCombatDiceCardCount = 8;
 	static constexpr int32 CombatSkillSlotCount = 6;
 	static constexpr float CombatSkillRailLeft = 0.020f;
@@ -25,34 +20,6 @@ namespace RDCombatHUD
 	static constexpr int32 CombatSkillDetailBackdropZOrder = 149;
 	static constexpr int32 CombatSkillDetailPanelZOrder = 150;
 	static constexpr int32 CombatSkillDetailRailZOrder = 170;
-	static constexpr int32 CombatSkillStepIndex = 5;
-
-	inline FText GetCombatSkillLabel(int32 SkillIndex)
-	{
-		switch (SkillIndex)
-		{
-		case 0:
-			return NSLOCTEXT("CombatTileMapHUDWidget", "CombatSkillBasicAttack", "BASIC");
-		case 1:
-			return NSLOCTEXT("CombatTileMapHUDWidget", "CombatSkill1", "SKILL 1");
-		case 2:
-			return NSLOCTEXT("CombatTileMapHUDWidget", "CombatSkill2", "SKILL 2");
-		case 3:
-			return NSLOCTEXT("CombatTileMapHUDWidget", "CombatSkill3", "SKILL 3");
-		case 4:
-			return NSLOCTEXT("CombatTileMapHUDWidget", "CombatSkill4", "SKILL 4");
-		case 5:
-			return NSLOCTEXT("CombatTileMapHUDWidget", "CombatSkillStep", "STEP");
-		default:
-			return NSLOCTEXT("CombatTileMapHUDWidget", "CombatSkillUnknown", "SKILL");
-		}
-	}
-
-	inline FText GetCombatSkillRailLabel(int32 SkillIndex)
-	{
-		// STEP 레일은 "STEP"만 표시(이동 가능 수치는 상단 MOVE x/x로 보여준다).
-		return GetCombatSkillLabel(SkillIndex);
-	}
 
 	inline FLinearColor GetTransparentInputButtonColor()
 	{
@@ -81,13 +48,6 @@ namespace RDCombatHUD
 	inline FVector2D GetCombatSkillRailScale(bool bSelected)
 	{
 		return bSelected ? FVector2D(1.035f, 1.035f) : FVector2D::UnitVector;
-	}
-
-	inline float EaseOutCubic(float Alpha)
-	{
-		const float ClampedAlpha = FMath::Clamp(Alpha, 0.0f, 1.0f);
-		const float InverseAlpha = 1.0f - ClampedAlpha;
-		return 1.0f - InverseAlpha * InverseAlpha * InverseAlpha;
 	}
 
 	inline int32 GetDiceSettledFaceOrdinal(const FDiceViewData& DiceView)

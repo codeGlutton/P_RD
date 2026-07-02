@@ -19,22 +19,17 @@ namespace
 	constexpr float DiceRollBoardTop = 0.275f;
 	constexpr float DiceRollBoardRight = 0.815f;
 	constexpr float DiceRollBoardBottom = 0.770f;
-	constexpr float DiceRollBoardInnerLeft = 0.280f;
-	constexpr float DiceRollBoardInnerRight = 0.720f;
-	constexpr float DiceRollBoardSingleRowCenterY = 0.522f;
-	constexpr float DiceRollBoardTwoRowTopCenterY = 0.477f;
-	constexpr float DiceRollBoardTwoRowGapY = 0.105f;
 	constexpr float DiceRollPhysicsTop = 0.325f;
 	constexpr float DiceRollPhysicsBottom = 0.695f;
 	constexpr float DiceRollStatusTop = 0.710f;
 	constexpr float DiceRollStatusBottom = 0.770f;
 	constexpr int32 DiceRollBackdropZOrder = 300;
 	constexpr int32 DiceRollBoardZOrder = 310;
-	constexpr int32 DiceRollShadowZOrder = 316;
-	constexpr int32 DiceRollDiceZOrder = 320;
 	constexpr int32 DiceRollPhysicsZOrder = 330;
 	constexpr int32 DiceRollStatusZOrder = 340;
-	constexpr int32 DiceRollInputZOrder = 350;
+	// 입장 굴림 오버레이는 모달이다 — 입력 레이어가 스킬 입력(CombatSkillInputZOrder=1000)보다 위에 있어야
+	// 오버레이 위 아무 곳이나 탭해 닫을 수 있고, 닫기 전엔 스킬/주사위 클릭이 새어 들어가지 않는다.
+	constexpr int32 DiceRollInputZOrder = RDCombatHUD::CombatSkillInputZOrder + 100;
 }
 
 void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
@@ -44,7 +39,6 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 	 * 주사위 연출은 화면 중앙 위에 짧게 띄우고, 턴 종료는 ROLL/MOVE와 같은 우측 명령 열에 둔다.
 	 */
 	// 주사위 판(물리 굴림): 화면 중앙 위에 보드 배경 + 물리 캡처 + 주사위/그림자를 보드 안 레인에 배치한다.
-	const int32 DiceViewportCount = mDiceRollImages.Num();
 	if (mDiceRollBackdropPanel != nullptr)
 	{
 		RDUILayout::ApplyAnchoredSlot(mDiceRollBackdropPanel, FAnchors(0.0f, DiceRollOverlayTop, 1.0f, 1.0f), DiceRollBackdropZOrder);
@@ -56,44 +50,6 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 	if (mDiceRollPhysicsImage != nullptr)
 	{
 		RDUILayout::ApplyAnchoredSlot(mDiceRollPhysicsImage, FAnchors(0.245f, DiceRollPhysicsTop, 0.755f, DiceRollPhysicsBottom), DiceRollPhysicsZOrder);
-	}
-	if (DiceViewportCount > 0)
-	{
-		const int32 ColumnCount = DiceViewportCount <= 4 ? DiceViewportCount : 4;
-		const int32 RowCount = FMath::DivideAndRoundUp(DiceViewportCount, ColumnCount);
-		const float ViewportWidth = RowCount <= 1 ? 0.100f : 0.078f;
-		const float ViewportHeight = ViewportWidth * 1.74f;
-		const float LaneWidth = (DiceRollBoardInnerRight - DiceRollBoardInnerLeft) / StaticCast<float>(FMath::Max(1, ColumnCount));
-		for (int32 DiceIndex = 0; DiceIndex < DiceViewportCount; ++DiceIndex)
-		{
-			const int32 ColumnIndex = DiceIndex % ColumnCount;
-			const int32 RowIndex = DiceIndex / ColumnCount;
-			const int32 RowItemCount = (RowIndex == RowCount - 1)
-				? DiceViewportCount - RowIndex * ColumnCount
-				: ColumnCount;
-			const float RowLeft = 0.5f - (LaneWidth * StaticCast<float>(RowItemCount)) * 0.5f;
-			const float CenterX = RowLeft + LaneWidth * (StaticCast<float>(ColumnIndex) + 0.5f);
-			const float CenterY = RowCount <= 1
-				? DiceRollBoardSingleRowCenterY
-				: DiceRollBoardTwoRowTopCenterY + StaticCast<float>(RowIndex) * DiceRollBoardTwoRowGapY;
-			const float Left = CenterX - ViewportWidth * 0.5f;
-			const float Top = CenterY - ViewportHeight * 0.5f;
-
-			if (mDiceRollShadowImages.IsValidIndex(DiceIndex))
-			{
-				const float ShadowWidth = ViewportWidth * 0.92f;
-				const float ShadowHeight = ViewportHeight * 0.30f;
-				const float ShadowLeft = CenterX - ShadowWidth * 0.5f;
-				const float ShadowTop = CenterY + ViewportHeight * 0.22f;
-				RDUILayout::ApplyAnchoredSlot(
-					mDiceRollShadowImages[DiceIndex],
-					FAnchors(ShadowLeft, ShadowTop, ShadowLeft + ShadowWidth, ShadowTop + ShadowHeight),
-					DiceRollShadowZOrder + DiceIndex
-				);
-			}
-
-			RDUILayout::ApplyAnchoredSlot(mDiceRollImages[DiceIndex], FAnchors(Left, Top, Left + ViewportWidth, Top + ViewportHeight), DiceRollDiceZOrder + DiceIndex);
-		}
 	}
 
 	// 보유 주사위: 디자이너 스킨이면 WBP 주사위 트레이(HUD_DiceTray) 안에 세로 분배, 아니면 기존 좌하단 3열 그리드.
@@ -157,7 +113,26 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 	const int32 SkillRailPanelCount = mSkillRailPanels.Num();
 	for (int32 SkillIndex = 0; SkillIndex < SkillRailPanelCount; ++SkillIndex)
 	{
-		RDUILayout::ApplyAnchoredSlot(mSkillRailPanels[SkillIndex], GetSkillRailItemRect(SkillIndex, SkillRailPanelCount), SkillRailZOrder);
+		const FAnchors ItemRect = GetSkillRailItemRect(SkillIndex, SkillRailPanelCount);
+		RDUILayout::ApplyAnchoredSlot(mSkillRailPanels[SkillIndex], ItemRect, SkillRailZOrder);
+
+		// 보유 스킬 아이콘: 슬롯 위쪽 65% 영역(여백 15%), 라벨: 아래 35% 스트립. 패널보다 위에 그린다.
+		const float ItemW = ItemRect.Maximum.X - ItemRect.Minimum.X;
+		const float ItemH = ItemRect.Maximum.Y - ItemRect.Minimum.Y;
+		if (mSkillRailIcons.IsValidIndex(SkillIndex))
+		{
+			const FAnchors IconRect(
+				ItemRect.Minimum.X + ItemW * 0.15f, ItemRect.Minimum.Y + ItemH * 0.05f,
+				ItemRect.Maximum.X - ItemW * 0.15f, ItemRect.Minimum.Y + ItemH * 0.65f);
+			RDUILayout::ApplyAnchoredSlot(mSkillRailIcons[SkillIndex], IconRect, SkillRailZOrder + 1);
+		}
+		if (mSkillRailTexts.IsValidIndex(SkillIndex))
+		{
+			const FAnchors TextRect(
+				ItemRect.Minimum.X, ItemRect.Minimum.Y + ItemH * 0.62f,
+				ItemRect.Maximum.X, ItemRect.Maximum.Y - ItemH * 0.02f);
+			RDUILayout::ApplyAnchoredSlot(mSkillRailTexts[SkillIndex], TextRect, SkillRailZOrder + 2);
+		}
 	}
 	const int32 SkillInputCount = mSkillInputButtons.Num();
 	for (int32 SkillIndex = 0; SkillIndex < SkillInputCount; ++SkillIndex)

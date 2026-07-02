@@ -4,8 +4,8 @@
  * @details
  * 패시브를 타이밍태그로 구동하고, 속성 변화를 체크해서 발동/해제의 정상동작을 검증.
  *  - 즉시형: AddStat + HP(Instant), OnEndTurn 발동 (해제 없음)
- *  - 주기형: AddStat + AttackFactor(Infinite), OnStartAttacking 발동 / OnEndAttacking 해제
- *  - 스택형: NthAddStat + AttackFactor, OnStartHitting 발동 / OnEndHitting 해제, 매 3타 발동
+ *  - 주기형: AddStat + AttackFactor(Infinite), OnStartTurn 발동 / OnEndTurn 해제
+ *  - 스택형: NthAddStat + AttackFactor, OnStartUsingSkill 발동 / OnEndUsingSkill 해제, 매 3타 발동
  * @author 이문환
  * @date   2026-07-01
  *********************************************************************/
@@ -163,7 +163,7 @@ bool FPassiveInstantHealTest::RunTest(const FString& Parameters)
 
 /**
  * @brief 주기형 테스트
- * AddStat + AttackFactor(Infinite), OnStartAttacking 발동 / OnEndAttacking 해제
+ * AddStat + AttackFactor(Infinite), OnStartTurn 발동 / OnEndTurn 해제
  */
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FPassiveInfiniteBuffTest,
@@ -183,10 +183,10 @@ bool FPassiveInfiniteBuffTest::RunTest(const FString& Parameters)
 	// 패시브 적용 전 AttackFactor 10
 	Comp->SetAttributeBaseValue(UUnitAttributeSet::GetAttackFactorAttribute(), 10.f);
 
-	const FGameplayTag OnStartAttacking = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartAttacking"));
-	const FGameplayTag OnEndAttacking = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndAttacking"));
+	const FGameplayTag OnStartTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartTurn"));
+	const FGameplayTag OnEndTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndTurn"));
 	// 패시브 값 설정: AttackFactor +5
-	UStaticPassiveData* Data = MakePassiveData(UTacticalEffect_AttackFactor::StaticClass(), 5.f, OnStartAttacking, OnEndAttacking, 0);
+	UStaticPassiveData* Data = MakePassiveData(UTacticalEffect_AttackFactor::StaticClass(), 5.f, OnStartTurn, OnEndTurn, 0);
 
 	UTacticalPassive_AddStat* Passive = NewObject<UTacticalPassive_AddStat>();
 	Passive->SetStaticData(Data);
@@ -195,20 +195,20 @@ bool FPassiveInfiniteBuffTest::RunTest(const FString& Parameters)
 	Ctx.mOwner = Actor;
 	Ctx.mTarget = Actor;
 
-	// 발동 테스트: OnStartAttacking에 기본 AttackFactor에 패시브 AttackFactor +5 합산
-	DriveTiming(Passive, OnStartAttacking, Ctx);
-	TestEqual(TEXT("OnStartAttacking에 발동 함: AttackFactor는 15로 증가"), Comp->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackFactorAttribute()), 15.f);
+	// 발동 테스트: OnStartTurn에 기본 AttackFactor에 패시브 AttackFactor +5 합산
+	DriveTiming(Passive, OnStartTurn, Ctx);
+	TestEqual(TEXT("OnStartTurn에 발동 함: AttackFactor는 15로 증가"), Comp->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackFactorAttribute()), 15.f);
 
-	// 해제 테스트: OnEndAttacking에 패시브 AttackFactor +5 감산
-	DriveTiming(Passive, OnEndAttacking, Ctx);
-	TestEqual(TEXT("OnEndAttacking에 해제 함: AttackFactor는 10으로 감소"), Comp->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackFactorAttribute()), 10.f);
+	// 해제 테스트: OnEndTurn에 패시브 AttackFactor +5 감산
+	DriveTiming(Passive, OnEndTurn, Ctx);
+	TestEqual(TEXT("OnEndTurn에 해제 함: AttackFactor는 10으로 감소"), Comp->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackFactorAttribute()), 10.f);
 
 	return true;
 }
 
 /**
  * @brief 스택형 테스트
- * NthAddStat + AttackFactor, OnStartHitting 발동 / OnEndHitting 해제, 매 3번째 타격때만 발동
+ * NthAddStat + AttackFactor, OnStartUsingSkill 발동 / OnEndUsingSkill 해제, 매 3번째 타격때만 발동
  */
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FPassiveStackTest,
@@ -228,10 +228,10 @@ bool FPassiveStackTest::RunTest(const FString& Parameters)
 	// 패시브 적용 전 AttackFactor 10
 	Comp->SetAttributeBaseValue(UUnitAttributeSet::GetAttackFactorAttribute(), 10.f);
 
-	const FGameplayTag OnStartHitting = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartHitting"));
-	const FGameplayTag OnEndHitting = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndHitting"));
+	const FGameplayTag OnStartUsingSkill = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartUsingSkill"));
+	const FGameplayTag OnEndUsingSkill = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndUsingSkill"));
 	// 패시브 값 설정: AttackFactor +5, 임계치 3(매 3번째에만 패시브 효과 발동)
-	UStaticPassiveData* Data = MakePassiveData(UTacticalEffect_AttackFactor::StaticClass(), 5.f, OnStartHitting, OnEndHitting, 3);
+	UStaticPassiveData* Data = MakePassiveData(UTacticalEffect_AttackFactor::StaticClass(), 5.f, OnStartUsingSkill, OnEndUsingSkill, 3);
 
 	UTacticalPassive_NthAddStat* Passive = NewObject<UTacticalPassive_NthAddStat>();
 	Passive->SetStaticData(Data);
@@ -248,10 +248,10 @@ bool FPassiveStackTest::RunTest(const FString& Parameters)
 		// 기대 AttackFactor: 발동했으면 15, 아니면 10
 		const float ExpectedOnHit = bExpectFire ? 15.f : 10.f;
 
-		DriveTiming(Passive, OnStartHitting, Ctx);
+		DriveTiming(Passive, OnStartUsingSkill, Ctx);
 		TestEqual(FString::Printf(TEXT("%d번째 타격 시작, 기대 AttackFactor %.0f"), Hit, ExpectedOnHit), Comp->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackFactorAttribute()), ExpectedOnHit);
 
-		DriveTiming(Passive, OnEndHitting, Ctx);
+		DriveTiming(Passive, OnEndUsingSkill, Ctx);
 		TestEqual(FString::Printf(TEXT("%d번째 타격 종료, 기대 AttackFactor 10"), Hit), Comp->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackFactorAttribute()), 10.f);
 	}
 

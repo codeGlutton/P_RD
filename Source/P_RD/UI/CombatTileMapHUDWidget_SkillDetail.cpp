@@ -51,7 +51,7 @@ void UCombatTileMapHUDWidget::ShowSkillDetail(int32 SkillIndex)
 
 	mSkillDetailText->SetText(FText::Format(
 		NSLOCTEXT("CombatTileMapHUDWidget", "SkillDetailTextFormat", "{0}\nSkill detail preview\nAPI connection pending"),
-		GetCombatSkillLabel(SkillIndex)
+		GetOwnedSkillLabel(SkillIndex)
 	));
 	if (mSkillDetailDismissButton != nullptr)
 	{

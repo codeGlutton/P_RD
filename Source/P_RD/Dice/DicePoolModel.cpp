@@ -68,6 +68,25 @@ void UDicePoolModel::RollAll(const FRandomStream& Stream)
 	OnRollAllDicesUI.Broadcast(mDices);
 }
 
+/**
+ * @brief 물리 굴림 연출이 보여준 윗면들을 그대로 굴림 결과로 기록한다("보이는 면 = 기록 숫자").
+ * @details RollAll과 같은 UI 갱신 경로(OnRollAllDicesUI)를 태워 표시가 함께 갱신된다.
+ *          배열이 짧으면 남는 주사위는 미굴림 상태로 둔다(물리 연출과 개수가 다를 때의 보수 처리).
+ */
+void UDicePoolModel::ApplyRolledFaceIndices(const TArray<int32>& RolledFaceIndices)
+{
+	const int32 ApplyNum = FMath::Min(mDices.Num(), RolledFaceIndices.Num());
+	for (int32 i = 0; i < ApplyNum; ++i)
+	{
+		if (mDices[i] != nullptr)
+		{
+			mDices[i]->ApplyRolledFace(RolledFaceIndices[i]);
+		}
+	}
+
+	OnRollAllDicesUI.Broadcast(mDices);
+}
+
 /** @brief 지정 index 주사위를 스킬 빌드 선택 상태로 표시하고 UI에 알린다.
     이번 턴에 이미 쓴 주사위는 선택 불가 — UI 가드와 별개로 모델에서도 막는다(진실원본). */
 void UDicePoolModel::MarkDiceSelected(int32 DiceIndex)

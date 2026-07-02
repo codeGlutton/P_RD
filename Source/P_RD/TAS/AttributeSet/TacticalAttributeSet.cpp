@@ -405,10 +405,8 @@ void UTacticalAttributeSet::CaptureAllAttributes(FBoardCombatTargetSnapshotData&
 			check(DataPtr);
 
 			FTacticalAttribute Attribute(Property);
-			//Snapshot.mAttributes[Attribute] = DataPtr->GetCurrentValue();
-			Snapshot.mAttributes.Add(Attribute,DataPtr->GetCurrentValue());
-
-			// @note 김준형 - 크래쉬가 나는 문제로 .Add로 수정했습니다.
+			// 스냅샷 맵은 빈 상태로 진입하므로 operator[](FindChecked) 대신 Add로 삽입
+			Snapshot.mAttributes.Add(Attribute, DataPtr->GetCurrentValue());
 		}
 	}
 }
