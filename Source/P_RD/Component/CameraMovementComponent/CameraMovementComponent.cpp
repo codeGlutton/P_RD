@@ -121,9 +121,15 @@ void UCameraMovementComponent::ZoomCamera(float ZoomDelta)
 
 	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
 
-	// OW 값을 추가합니다.
-	float OW = mCameraComponent->OrthoWidth + ZoomDelta * mZoomSpeed;
-	mCameraComponent->OrthoWidth = FMath::Clamp(OW, mMinOrthoWidth, mMaxOrthoWidth);
+	// 0.01초 간격으로 호출할 예정이므로 (Duration / 0.01)번 반복
+	mStartZoom = mCameraComponent->OrthoWidth;
+	mCurZoom = mStartZoom;
+	mEndZoom = mStartZoom + ZoomDelta;
+
+	// 0.01초 간격으로 호출할 예정이므로 (Duration / 0.01)번 반복
+	mCurrentZoomAlpha = 0.0f;
+
+	GetWorld()->GetTimerManager().SetTimer(mTimerHandle_Zoom, this, &UCameraMovementComponent::ZoomStep, 0.01f, true);
 }
 
 void UCameraMovementComponent::ZoomCameraAndMoveToViewportPosition(float ZoomDelta, FVector2D ViewPortPos)
@@ -198,7 +204,7 @@ void UCameraMovementComponent::MoveToViewportPosition(FVector2D ViewPortPos)
 	mEndLocation = LocationPos;
 
 	// 0.01초 간격으로 호출할 예정이므로 (Duration / 0.01)번 반복
-	mCurrentAlpha = 0.0f;
+	mCurrentMoveAlpha = 0.0f;
 
 	GetWorld()->GetTimerManager().SetTimer(mTimerHandle_Move, this, &UCameraMovementComponent::MoveStep, 0.01f, true);
 }
@@ -229,7 +235,7 @@ void UCameraMovementComponent::MoveToWorldPosition(FVector LocationPos)
 	mEndLocation = LocationPos;
 
 	// 0.01초 간격으로 호출할 예정이므로 (Duration / 0.01)번 반복
-	mCurrentAlpha = 0.0f;
+	mCurrentMoveAlpha = 0.0f;
 
 	GetWorld()->GetTimerManager().SetTimer(mTimerHandle_Move, this, &UCameraMovementComponent::MoveStep, 0.01f, true);
 
@@ -342,16 +348,16 @@ bool UCameraMovementComponent::GetCameraRayHitPoint(OUT FHitResult& HitResult)
 
 void UCameraMovementComponent::MoveStep()
 {
-	mCurrentAlpha += 0.01f / mMoveDuration; // 시간에 따른 진행도 증가
+	mCurrentMoveAlpha += 0.01f / mMoveDuration; // 시간에 따른 진행도 증가
 
-	if (mCurrentAlpha >= 1.0f)
+	if (mCurrentMoveAlpha >= 1.0f)
 	{
-		mCurrentAlpha = 1.0f;
+		mCurrentMoveAlpha = 1.0f;
 		GetWorld()->GetTimerManager().ClearTimer(mTimerHandle_Move); // 타이머 종료
 	}
 
 	// 선형 보간 적용
-	FVector NewLocation = FMath::InterpEaseInOut(mStartLocation, mEndLocation, mCurrentAlpha, 1.f);
+	FVector NewLocation = FMath::InterpEaseInOut(mStartLocation, mEndLocation, mCurrentMoveAlpha, mMoveExp);
 
 	GetOwner()->AddActorWorldOffset(NewLocation - mCurLocation);
 
@@ -366,4 +372,21 @@ void UCameraMovementComponent::MoveStep()
 	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, mMoveClampingBoxCenter.Y - mMoveClampingBox.Y / 2, mMoveClampingBoxCenter.Y + mMoveClampingBox.Y / 2);
 
 	GetOwner()->SetActorLocation(ActorLocation);
+}
+
+void UCameraMovementComponent::ZoomStep()
+{
+	mCurrentZoomAlpha += 0.01f / mZoomDuration; // 시간에 따른 진행도 증가
+
+	if (mCurrentZoomAlpha >= 1.0f)
+	{
+		mCurrentZoomAlpha = 1.0f;
+		GetWorld()->GetTimerManager().ClearTimer(mTimerHandle_Zoom); // 타이머 종료
+	}
+
+	// 선형 보간 적용
+	float NewZoom= FMath::InterpEaseInOut(mStartZoom, mEndZoom, mCurrentZoomAlpha, mZoomExp);
+
+	mCameraComponent->OrthoWidth = FMath::Clamp(NewZoom, mMinOrthoWidth, mMaxOrthoWidth);
+
 }

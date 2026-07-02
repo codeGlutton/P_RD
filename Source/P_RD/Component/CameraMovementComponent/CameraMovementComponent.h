@@ -55,6 +55,8 @@ public:
 	//UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SpringArmComponent", AllowPrivateAccess = "true"))
 	//TObjectPtr<USpringArmComponent> mSpringArmComponent;
 
+
+public:
 	/*
 	* @brief 줌 속력
 	*/
@@ -79,6 +81,19 @@ public:
 	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MinZoom", AllowPrivateAccess = "true"))
 	float mMinOrthoWidth = 100.f;
 
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "ZoomDuration", AllowPrivateAccess = "true"))
+	float mZoomDuration = 0.2f; // 이동에 걸릴 시간
+
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "ZoomExp", AllowPrivateAccess = "true"))
+	float mZoomExp = 2.f;
+
+	FTimerHandle mTimerHandle_Zoom;
+	float mStartZoom;
+	float mCurZoom;
+	float mEndZoom;
+	float mCurrentZoomAlpha = 0.0f;
+
+public:
 	/* 클램핑 박스 제한*/
 	/*
 	* @brief 클램핑 박스 중앙 위치
@@ -107,7 +122,7 @@ public:
 	FVector mStartLocation;
 	FVector mCurLocation;
 	FVector mEndLocation;
-	float mCurrentAlpha = 0.0f;
+	float mCurrentMoveAlpha = 0.0f;
 	
 
 private:
@@ -210,6 +225,9 @@ public:
 	void MoveToWorldPosition(FVector WorldPosition);
 
 	void MoveStep();
+
+	void ZoomStep();
+
 
 public:
 	/* 강조 기능*/
