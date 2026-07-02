@@ -18,6 +18,7 @@ class USRPGTurnContext;
 class UUnitModel;
 class UCombatUIAdapter;
 class UCombatUIModel;
+enum class ECombatInputType : uint8;
 
 struct FTacticalAttributeChangeData;
 
@@ -68,6 +69,13 @@ public:
 
 	UFUNCTION(Category = UI, BlueprintCallable)
 	bool EndTurn();
+
+	/**
+	 * @brief UIModel의 조작 의도(OnCombatCommand)를 위 진입점으로 라우팅한다.
+	 * @details 위젯은 게임모드를 직접 모른다 — Request*로 의도만 쏘고, 여기서 커맨드 발행 진입점에 연결한다.
+	 */
+	UFUNCTION()
+	void HandleCombatCommand(ECombatInputType Type, int32 IntPayload);
 
 public:
 	/**

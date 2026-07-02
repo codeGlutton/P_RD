@@ -183,7 +183,47 @@ void ACombatGameMode::InitializeRoom()
 		PushSelectedDiceUIData();
 		});
 
+	/* UI 조작 의도 라우팅 — 위젯 탭이 쏘는 Request*(OnCombatCommand)를 게임플레이 진입점에 연결 */
+
+	mCombatUIModel->OnCombatCommand.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatCommand);
+
 	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModel());
+}
+
+/**
+ * @brief UIModel의 조작 의도(OnCombatCommand)를 게임플레이 진입점으로 라우팅한다.
+ *
+ * @details
+ * UI 경계 원칙: 위젯은 게임모드를 직접 알지 않고 UIModel의 Request*로 의도만 보낸다.
+ * 그 의도를 실제 커맨드 발행 진입점(SelectSkill/SelectDice/RollDices/SelectMove/EndTurn)으로
+ * 연결하는 유일한 지점이 여기다. 과거 임시 어댑터(UCombatUIAdapter)가 맡던 역할의 정식 대체.
+ */
+void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayload)
+{
+	switch (Type)
+	{
+	case ECombatInputType::SelectSkill:
+		SelectSkill(IntPayload);
+		break;
+	case ECombatInputType::ToggleDice:
+		SelectDice(IntPayload);
+		break;
+	case ECombatInputType::RollDice:
+		RollDices();
+		break;
+	case ECombatInputType::Move:
+		SelectMove();
+		break;
+	case ECombatInputType::EndTurn:
+		EndTurn();
+		break;
+	case ECombatInputType::Cancel:
+	case ECombatInputType::LongPressSkill:
+	case ECombatInputType::LongPressUnit:
+	case ECombatInputType::LongPressEquip:
+		// 대응 진입점(취소/상세 패널 경로)이 아직 없다 — 각 기능 구현 시 여기서 라우팅한다.
+		break;
+	}
 }
 
 void ACombatGameMode::BeginRoom()
