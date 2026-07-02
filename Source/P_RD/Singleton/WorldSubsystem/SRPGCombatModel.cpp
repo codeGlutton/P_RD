@@ -112,7 +112,7 @@ void USRPGCombatModel::BeginCombat()
 			for (UTacticalPassive*& Passive : Passives)
 			{
 				TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
-				Passive->ActivatePassive(PassiveContext, OUT DynamicPassiveData);
+				Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnStartRoom, PassiveContext, OUT DynamicPassiveData);
 				Passive->CommitPassive(DynamicPassiveData);
 			}
 		}
@@ -147,7 +147,7 @@ void USRPGCombatModel::EndCombat()
 		for (UTacticalPassive*& Passive : Passives)
 		{
 			TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
-			Passive->ActivatePassive(PassiveContext, OUT DynamicPassiveData);
+			Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnEndRoom, PassiveContext, OUT DynamicPassiveData);
 			Passive->CommitPassive(DynamicPassiveData);
 		}
 	}

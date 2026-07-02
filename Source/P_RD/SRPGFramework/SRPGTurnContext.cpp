@@ -168,7 +168,7 @@ void USRPGTurnContext::BeginTurn()
 			for (UTacticalPassive*& Passive :Passives)
 			{
 				TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
-				Passive->ActivatePassive(PassiveContext, OUT DynamicPassiveData);
+				Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnStartTurn, PassiveContext, OUT DynamicPassiveData);
 				Passive->CommitPassive(DynamicPassiveData);
 			}
 		}
@@ -239,7 +239,7 @@ void USRPGTurnContext::EndTurn()
 		for (UTacticalPassive*& Passive : Passives)
 		{
 			TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
-			Passive->ActivatePassive(PassiveContext, OUT DynamicPassiveData);
+			Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnEndTurn, PassiveContext, OUT DynamicPassiveData);
 			Passive->CommitPassive(DynamicPassiveData);
 		}
 	}

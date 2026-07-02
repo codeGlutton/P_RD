@@ -73,7 +73,7 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
             for (UTacticalPassive*& Passive : Passives)
             {
                 TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
-                Passive->ActivatePassive(PassiveContext, OUT DynamicPassiveData);
+                Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnStartUsingSkill, PassiveContext, OUT DynamicPassiveData);
                 Passive->CommitPassive(DynamicPassiveData);
             }
         }
@@ -99,7 +99,7 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
                 for (UTacticalPassive*& Passive : Passives)
                 {
                     TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
-                    Passive->ActivatePassive(PassiveContext, OUT DynamicPassiveData);
+                    Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnEndUsingSkill, PassiveContext, OUT DynamicPassiveData);
                     Passive->CommitPassive(DynamicPassiveData);
                 }
             }

@@ -73,6 +73,11 @@ void USkillComponentModel::SetSkillFrom(const TArray<FPrimaryAssetId>& SkillList
 	}
 }
 
+const TArray<FSkillEntry>& USkillComponentModel::GetSkills() const
+{
+	return mSkillEntries;
+}
+
 const FSkillEntry* USkillComponentModel::GetSkill(int32 SkillIndex) const
 {
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));

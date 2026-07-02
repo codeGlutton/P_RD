@@ -14,8 +14,12 @@
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "CombatGameMode.generated.h"
 
+class USRPGTurnContext;
 class UUnitModel;
 class UCombatUIAdapter;
+class UCombatUIModel;
+
+struct FTacticalAttributeChangeData;
 
 // RD Game Mode 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogCombatGameMode, Log, All)
@@ -38,9 +42,15 @@ class P_RD_API ACombatGameMode : public ARoomGameModeBase
 {
 	GENERATED_BODY()
 
+public:
+	ACombatGameMode();
+
 protected:
 	void InitializeRoom() override;
 	void BeginRoom() override;
+
+public:
+	UCombatUIModel* GetCombatUIModel() const;
 
 	/* UI 진입점 */
 public:
@@ -93,13 +103,16 @@ protected:
 	void OnRegisterUnit(UUnitModel* Unit);
 	void OnUnregisterUnit(UUnitModel* Unit);
 
-	/* UI 갱신 대리자 */
-public:
-	FOnRefreshAllUI OnRefreshAllUI;
-	FOnRefreshUnitUI OnRefreshUnitUI;
-	FOnRefreshDiceUI OnRefreshDiceUI;
-	FOnRefreshSelectedDiceUI OnRefreshSelectedDiceUI;
-	// FOnRefreshSelectedSkillUI OnRefreshSelectedSkillUI;
+protected:
+	void PushTurnUIData() const;
+	void PushSkillBuildUIData(ESRPGSkillBuildPhase Phase) const;
+	void PushMoveBuildUIData(ESRPGMoveBuildPhase Phase) const;
+	void PushUnitUIData() const;
+	void PushDiceUIData() const;
+	void PushSelectedDiceUIData() const;
+	void PushSkillUIData() const;
+	void PushEquipmentUIData() const;
+	void PushPlayerMetaUIData() const;
 
 	/* 연출용 대리자 */
 public:
@@ -110,15 +123,9 @@ public:
 	FOnBeginAnyTurnActionUI OnBeginAnyTurnActionUI;
 	FOnEndAnyTurnActionUI OnEndAnyTurnActionUI;
 
-	/* 패널 대리자 */
 public:
-	FOnShowDicePanelAnyTurnUI OnShowDicePanelAnyTurnUI;
-	FOnShowTargetDetailPanelUI OnShowTargetDetailPanelUI;
-
-	/* 빌드 과정 대리자 */
-public:
-	FOnRefreshSkillBuildPhase OnRefreshSkillBuildPhase;
-	FOnRefreshMoveBuildPhase OnRefreshMoveBuildPhase;
+	UPROPERTY(Category = "UI", VisibleAnywhere, DuplicateTransient, meta = (DisplayName = "CombatUIModel"))
+	TObjectPtr<UCombatUIModel> mCombatUIModel;
 
 public:
 	/** @brief 전투 상태를 CombatUIModel로 push + HUD 입력 의도를 처리하는 임시 비GAS 어댑터(전투 수명 동안 보유). */
