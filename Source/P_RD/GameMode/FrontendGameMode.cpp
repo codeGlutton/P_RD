@@ -28,7 +28,7 @@ DEFINE_LOG_CATEGORY(LogFrontendGameMode);
 
 /** @brief 프론트엔드 방 GameMode 역할 요약 */
 // AFrontendGameMode는 "타이틀 -> 캐릭터 선택 -> 새 Run 생성/이어하기 시작" 흐름만 담당한다.
-// 실제 방 안에서의 TopMenuBar, WorldMap, 다음 방 선택, 저장 후 전환은 ARoomGameModeBase 쪽 책임이다.
+// 실제 방 안에서의 WorldMap, 다음 방 선택, 저장 후 전환은 ARoomGameModeBase 쪽 책임이다.
 // 주요 흐름:
 // - BeginRoom(): 프론트엔드 방에 들어오면 TitleMenuWidget HUD를 OpenUI()로 열고 입력 모드를 설정한다.
 // - RequestCharacterSelectFromTitle(): 타이틀 START 입력을 받아 캐릭터 선택 화면 진입만 요청한다.

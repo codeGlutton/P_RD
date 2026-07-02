@@ -232,7 +232,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		{
 			mCombatStatusBarText->SetJustification(ETextJustify::Left);
 			mCombatStatusBarText->SetColorAndOpacity(FSlateColor(FLinearColor(0.96f, 1.0f, 0.92f, 1.0f)));
-			// Lv/HP/Gold는 이제 탑바(TopMenuBar)에서 보여주므로 전투 HUD의 중복 상태줄은 숨긴다.
+			// Lv/HP/Gold는 concept 값 라벨(HUD_M_*)이 보여주므로 합쳐진 단일 상태줄은 숨긴다.
 			mCombatStatusBarText->SetVisibility(ESlateVisibility::Collapsed);
 			TargetRootCanvas->AddChildToCanvas(mCombatStatusBarText);
 		}
@@ -267,8 +267,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		}
 	}
 
-	// 탑바 내비 투명 버튼(MAP/DICE/SKILL/SET): concept 내비 아트 위에 얹어 클릭만 받고 TopMenuBar 패널 토글로 위임한다.
-	// 스킨 모드에서만 만든다 — 비스킨 모드는 레거시 TopMenuBar가 보이며 직접 입력을 받기 때문(중복 방지).
+	// 내비 투명 버튼(MAP/DICE/SKILL/SET): concept 내비 아트 위에 얹어 클릭만 받고 HUD 소유 패널 토글을 호출한다.
 	if (IsDesignerSkinActive())
 	{
 		auto MakeNavButton = [&](TObjectPtr<UButton>& OutButton, const TCHAR* Name)

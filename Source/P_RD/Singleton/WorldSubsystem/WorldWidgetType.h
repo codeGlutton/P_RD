@@ -16,7 +16,8 @@
 UENUM(BlueprintType)
 enum class EWorldWidgetType : uint8
 {
-	TopMenuBar = 0,
+	// 구 TopMenuBar 자리. enum 값 = DefaultGame.ini 배열 인덱스라 뒷항목이 밀리지 않게 예약으로 비워 둔다.
+	ReservedLegacySlot0 = 0 UMETA(Hidden),
 	MsgNotify,
 	SaveNotify,
 	
@@ -44,7 +45,7 @@ enum class EWorldWidgetType : uint8
 	 *
 	 * 왜 WorldWidget인가:
 	 * 설정은 화면마다 따로 만든 슬롯이 아니라 같은 팝업 생명주기로 열려야 한다.
-	 * WorldWidgetSubsystem에 두면 타이틀과 TopMenuBar가 모두 같은 OpenUI/CloseUI 경로를 공유할 수 있다.
+	 * WorldWidgetSubsystem에 두면 타이틀과 인게임 화면이 모두 같은 OpenUI/CloseUI 경로를 공유할 수 있다.
 	 */
 	InGameSettings,
 
