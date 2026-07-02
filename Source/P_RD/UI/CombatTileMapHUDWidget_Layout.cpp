@@ -170,7 +170,9 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 			+ StaticCast<float>(CombatSkillSlotCount - 1) * CombatSkillRailGap;
 		const FAnchorData RailSlot = RDUILayout::GetDesignerSlotDataOr(WidgetTree, TEXT("HUD_SkillRail"),
 			FAnchors(CombatSkillRailLeft, CombatSkillRailTop, CombatSkillRailRight, RailFallbackBottom), DesignSize);
-		const float RailGapPx = CombatSkillRailGap * 1080.0f;
+		// 틈은 WBP에 구운 프레임 아트의 피치(프레임 96px + 틈 20px)와 동기 — 마커(34,228,96,676)와 함께
+		// 셀이 프레임에 픽셀 단위로 겹쳐야 빈 슬롯 커버가 아트를 정확히 가린다. 프레임 아트 개편 시 함께 수정.
+		const float RailGapPx = 20.0f;
 		for (int32 SkillIndex = 0; SkillIndex < SkillRailPanelCount; ++SkillIndex)
 		{
 			const FAnchorData CellSlot = RDUILayout::MakeVerticalSubSlot(RailSlot, SkillIndex, SkillRailPanelCount, RailGapPx);
