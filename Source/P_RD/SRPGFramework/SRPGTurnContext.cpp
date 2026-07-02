@@ -7,12 +7,14 @@
 #include "Simulation/Logger/EventLogger.h"
 
 #include "SRPGFramework/SRPGDiceRollAction.h"
+#include "SRPGFramework/SRPGEnemyTurnPlanner.h"
 
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
 #include "Actor/BoardActor/BoardSelectionTarget.h"
 #include "Pawn/UnitModel.h"
+#include "Pawn/Enemy/EnemyUnitModel.h"
 #include "Component/PassiveComponent/PassiveComponentModel.h"
 
 #include "TAS/Passive/TacticalPassive.h"
@@ -199,7 +201,15 @@ void USRPGTurnContext::BeginTurn()
 		{
 			/* AI의 경우 움직임 판단 로직 시작 */
 
+			UEnemyUnitModel* Enemy = Cast<UEnemyUnitModel>(mOwner.Get());
+			UUnitModel* Player = CombatModel->GetPlayerUnit();
+			UTileMapModel* TileMap = CombatModel->GetTileMap();
 
+			// PlanTurn에서 Command 리스트를 리턴하면 순서대로 라우터에 전달
+			for (TInstancedStruct<FSRPGCommand>& Command : USRPGEnemyTurnPlanner::PlanTurn(Enemy, Player, TileMap))
+			{
+				CommandRouterModel->SummitCommand(Command);
+			}
 		}
 		}));
 	OnBeginTurnUI.Broadcast(PresentationBarrier, this);

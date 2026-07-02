@@ -405,7 +405,8 @@ void UTacticalAttributeSet::CaptureAllAttributes(FBoardCombatTargetSnapshotData&
 			check(DataPtr);
 
 			FTacticalAttribute Attribute(Property);
-			Snapshot.mAttributes[Attribute] = DataPtr->GetCurrentValue();
+			// 스냅샷 맵은 빈 상태로 진입하므로 operator[](FindChecked) 대신 Add로 삽입
+			Snapshot.mAttributes.Add(Attribute, DataPtr->GetCurrentValue());
 		}
 	}
 }

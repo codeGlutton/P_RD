@@ -41,8 +41,6 @@ public class P_RD : ModuleRules
 
             /* AI Plugin Modules */
             "AIModule",                 // 기본 AI 연관 도구 사용
-            "StateTreeModule",          // StateTree 사용
-            "GameplayStateTreeModule",  // StateTree AI Comp 사용
 
             /* Procedural Mesh */
             "ProceduralMeshComponent",  // 전투 3D 주사위 프리뷰 액터(CombatDicePreviewActor) 면 텍스처 쿼드에 필요

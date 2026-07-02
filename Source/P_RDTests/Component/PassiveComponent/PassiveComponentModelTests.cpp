@@ -33,8 +33,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FPassiveComponentModelTests::RunTest(const FString& Parameters)
 {
-	const FGameplayTag StartTiming = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartAttacking"));
-	const FGameplayTag EndTiming = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndAttacking"));
+	const FGameplayTag StartTiming = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartApplyingEffect"));
+	const FGameplayTag EndTiming = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndApplyingEffect"));
 	const FGameplayTag UnusedTiming = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartTurn"));
 
 	UPassiveComponentModel* Component = NewObject<UPassiveComponentModel>();
@@ -61,17 +61,17 @@ bool FPassiveComponentModelTests::RunTest(const FString& Parameters)
 
 	// 시점별 조회: 일치분만 반환
 	TArray<UTacticalPassive*> StartList = Component->GetPassivesByTiming(StartTiming);
-	TestEqual(TEXT("OnStartAttacking_Add 1개"), StartList.Num(), 1);
+	TestEqual(TEXT("OnStartApplyingEffect_Add 1개"), StartList.Num(), 1);
 	if (StartList.Num() == 1)
 	{
-		TestEqual(TEXT("OnStartAttacking_Add 대상 일치"), StartList[0], AddPassive);
+		TestEqual(TEXT("OnStartApplyingEffect_Add 대상 일치"), StartList[0], AddPassive);
 	}
 
 	TArray<UTacticalPassive*> EndList = Component->GetPassivesByTiming(EndTiming);
-	TestEqual(TEXT("OnEndAttacking 1개"), EndList.Num(), 1);
+	TestEqual(TEXT("OnEndApplyingEffect 1개"), EndList.Num(), 1);
 	if (EndList.Num() == 1)
 	{
-		TestEqual(TEXT("OnEndAttacking 대상 일치"), EndList[0], NthPassive);
+		TestEqual(TEXT("OnEndApplyingEffect 대상 일치"), EndList[0], NthPassive);
 	}
 
 	// 미설정 시점 조회: 0개
