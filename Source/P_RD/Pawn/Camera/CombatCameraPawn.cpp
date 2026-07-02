@@ -15,7 +15,7 @@ ACombatCameraPawn::ACombatCameraPawn()
 	PrimaryActorTick.bCanEverTick = true;
 
 	mSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("DefaultSceneComponent"));
-	mSceneComponent->SetRelativeRotation(FRotator(-60, 0, 0));
+	mSceneComponent->SetRelativeRotation(FRotator(-30, 0, 0));
 	RootComponent = mSceneComponent;
 
 	//mSpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
