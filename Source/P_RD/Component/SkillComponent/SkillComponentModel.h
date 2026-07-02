@@ -63,6 +63,7 @@ public:
 	void SetSkillFrom(const TArray<FPrimaryAssetId>& SkillList);
 
 public:
+	const TArray<FSkillEntry>& GetSkills() const;
 	const FSkillEntry* GetSkill(int32 SkillIndex) const;
 	void SetSkill(int32 SkillIndex, UStaticSkillData* SkillData);
 

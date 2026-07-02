@@ -78,7 +78,7 @@ ESRPGCommandResult USRPGDiceRollAction::HandleCommand(const TInstancedStruct<FSR
             for (UTacticalPassive*& Passive : Passives)
             {
                 TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
-                Passive->ActivatePassive(PassiveContext, OUT DynamicPassiveData);
+                Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnStartRollingDice, PassiveContext, OUT DynamicPassiveData);
                 Passive->CommitPassive(DynamicPassiveData);
             }
         }
@@ -99,7 +99,7 @@ ESRPGCommandResult USRPGDiceRollAction::HandleCommand(const TInstancedStruct<FSR
             for (UTacticalPassive*& Passive : Passives)
             {
                 TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
-                Passive->ActivatePassive(PassiveContext, OUT DynamicPassiveData);
+                Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnEndRollingDice, PassiveContext, OUT DynamicPassiveData);
                 Passive->CommitPassive(DynamicPassiveData);
             }
         }

@@ -68,6 +68,8 @@ public:
 		return mDices; 
 	}
 
+	TArray<int32> GetSelectedDices() const;
+
 	/** @brief 해당 index 주사위의 현재 굴림값(안 굴렸으면 0). */
 	int32 GetRolledDiceValue(int32 DiceIndex) const;
 

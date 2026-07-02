@@ -68,19 +68,41 @@ void UDicePoolModel::RollAll(const FRandomStream& Stream)
 	OnRollAllDicesUI.Broadcast(mDices);
 }
 
+/** @brief 지정 index 주사위를 스킬 빌드 선택 상태로 표시하고 UI에 알린다.
+    이번 턴에 이미 쓴 주사위는 선택 불가 — UI 가드와 별개로 모델에서도 막는다(진실원본). */
 void UDicePoolModel::MarkDiceSelected(int32 DiceIndex)
 {
-	// TODO
+	if (mDices.IsValidIndex(DiceIndex) && mDices[DiceIndex] != nullptr && mDices[DiceIndex]->IsUsed() == false)
+	{
+		mDices[DiceIndex]->SetSelected(true);
+
+		OnSelectedDiceUI.Broadcast(mDices[DiceIndex]);
+	}
 }
 
+/** @brief 지정 index 주사위의 선택을 해제하고 UI에 알린다. */
 void UDicePoolModel::MarkDiceUnselected(int32 DiceIndex)
 {
-	// TODO
+	if (mDices.IsValidIndex(DiceIndex) && mDices[DiceIndex] != nullptr)
+	{
+		mDices[DiceIndex]->SetSelected(false);
+
+		OnUnselectedDiceUI.Broadcast(mDices[DiceIndex]);
+	}
 }
 
+/** @brief 스킬 취소 등으로 모든 주사위 선택을 해제한다(선택돼 있던 것만 UI에 알림). */
 void UDicePoolModel::ResetSelected()
 {
-	// TODO
+	for (const TObjectPtr<UDiceModel>& Dice : mDices)
+	{
+		if (Dice != nullptr && Dice->IsSelected())
+		{
+			Dice->SetSelected(false);
+
+			OnUnselectedDiceUI.Broadcast(Dice);
+		}
+	}
 }
 
 /** @brief 확정된 스킬에 사용한 주사위를 이번 턴 잠금 상태로 표시한다. */
@@ -94,9 +116,22 @@ void UDicePoolModel::MarkDiceUsed(int32 DiceIndex)
 	}
 }
 
+/**
+ * @brief 확정된 스킬에 올린(선택된) 주사위들을 이번 턴 사용됨으로 잠근다.
+ * @details 선택 표시는 여기서 지우지 않는다 — 호출자(BuildSkill)가 직후 GetSelectedDiceSum()으로
+ *          확정 주사위 합을 다시 읽기 때문이다. 선택 해제는 ResetSelected()가 담당한다.
+ */
 void UDicePoolModel::MarkSelectedDiceAsUsed()
 {
-	// TODO
+	for (const TObjectPtr<UDiceModel>& Dice : mDices)
+	{
+		if (Dice != nullptr && Dice->IsSelected())
+		{
+			Dice->SetUsed(true);
+
+			OnUseDiceUI.Broadcast(Dice);
+		}
+	}
 }
 
 /** @brief 턴 종료/새 턴 시작 시 모든 주사위 사용 잠금을 해제한다. */
@@ -113,6 +148,22 @@ void UDicePoolModel::ResetUsed()
 	OnResetAllDiceUI.Broadcast(mDices);
 }
 
+TArray<int32> UDicePoolModel::GetSelectedDices() const
+{
+	TArray<int32> SelectedDiceIndexes;
+
+	const int32 DiceNum = mDices.Num();
+	for (int32 i = 0; i < DiceNum; ++i)
+	{
+		const TObjectPtr<UDiceModel>& Dice = mDices[i];
+		if (Dice != nullptr && Dice->IsSelected())
+		{
+			SelectedDiceIndexes.Add(i);
+		}
+	}
+	return SelectedDiceIndexes;
+}
+
 /** @brief 어댑터가 index 기반 UI payload를 굴림 결과로 되돌릴 때 쓰는 읽기 API다. */
 int32 UDicePoolModel::GetRolledDiceValue(int32 DiceIndex) const
 {
@@ -124,23 +175,40 @@ int32 UDicePoolModel::GetRolledDiceValue(int32 DiceIndex) const
 	return Dice->IsRolled() ? Dice->GetCurrentValue() : 0;
 }
 
+/** @brief 해당 index 주사위가 현재 스킬 빌드에 선택돼 있는지. */
 bool UDicePoolModel::IsSelectedDice(int32 DiceIndex) const
 {
-	// TODO
-
-	return false;
+	if (mDices.IsValidIndex(DiceIndex) == false || mDices[DiceIndex] == nullptr)
+	{
+		return false;
+	}
+	return mDices[DiceIndex]->IsSelected();
 }
 
+/** @brief 현재 선택된 주사위 개수(필요 주사위 수 게이트/상한 판정용). */
 int32 UDicePoolModel::GetSelectedDiceNum() const
 {
-	// TODO
-
-	return int32();
+	int32 SelectedNum = 0;
+	for (const TObjectPtr<UDiceModel>& Dice : mDices)
+	{
+		if (Dice != nullptr && Dice->IsSelected())
+		{
+			++SelectedNum;
+		}
+	}
+	return SelectedNum;
 }
 
+/** @brief 현재 선택된 주사위들의 굴림값 합(스킬 dice point/사거리/범위 계산용). */
 int32 UDicePoolModel::GetSelectedDiceSum() const
 {
-	// TODO
-
-	return int32();
+	int32 SelectedSum = 0;
+	for (const TObjectPtr<UDiceModel>& Dice : mDices)
+	{
+		if (Dice != nullptr && Dice->IsSelected())
+		{
+			SelectedSum += Dice->GetCurrentValue();
+		}
+	}
+	return SelectedSum;
 }

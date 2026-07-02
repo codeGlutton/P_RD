@@ -101,7 +101,7 @@ void UCombatTileMapHUDWidget::ApplyOpenUI()
 	RebuildEquipmentBar();      // 탑바 좌측 하단 장비 칩.
 	RebuildTurnOrderBar();      // 탑바 가운데 하단 턴 순서 칩.
 	RebuildUnitHpBars();        // 유닛 수에 맞춰 머리 위 HP바를 만든다.
-	mSelectedDiceIndex = INDEX_NONE;
+	ClearOwnedDiceSelectionHighlight();
 	mSelectedSkillIndex = INDEX_NONE;
 	HideSkillDetail();
 	RefreshSkillRailWidgets();

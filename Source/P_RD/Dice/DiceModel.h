@@ -52,6 +52,10 @@ public:
 	bool IsUsed() const { return mIsUsed; }
 	void SetUsed(bool bUsed) { mIsUsed = bUsed; }
 
+	/** @brief 스킬 빌드에 올린(선택된) 주사위인지 여부입니다. */
+	bool IsSelected() const { return mIsSelected; }
+	void SetSelected(bool bSelected) { mIsSelected = bSelected; }
+
 private:
 	/** @brief 희귀도. 아트/색/표시 분류에 쓰인다(게임 로직은 결과값으로). */
 	UPROPERTY()
@@ -84,6 +88,10 @@ private:
 	/** @brief 이번 턴에 스킬에 쓰였는지 여부입니다. 턴 리셋 또는 새 턴 굴림에서 false가 됩니다. */
 	UPROPERTY()
 	bool mIsUsed = false;
+
+	/** @brief 스킬 빌드에 올린(선택된) 주사위인지 여부입니다. 스킬 확정/취소 시 해제됩니다. */
+	UPROPERTY()
+	bool mIsSelected = false;
 
 	/** @brief 이 런타임 주사위가 어느 정적 주사위(런 보유 id)에서 나왔는지. */
 	UPROPERTY()
