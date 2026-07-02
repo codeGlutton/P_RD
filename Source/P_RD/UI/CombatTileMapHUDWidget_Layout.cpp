@@ -123,10 +123,11 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 		}
 	}
 
-	// 좌하단 어사인먼트 힌트: 스킨이면 좌상단 핀 디자인px(트레이 열과 같이 움직임), 레거시는 기존 정규화.
+	// 어사인먼트 힌트: 스킨이면 트레이 열 오른쪽(디자인px 300~720, 하단) - 레일/트레이 열과 겹치지 않는 빈 보드 영역.
+	// 레거시는 기존 좌하단 정규화 좌표 유지.
 	if (bSkin)
 	{
-		RDUILayout::ApplyDesignerSlotData(mDiceAssignmentText, RDUILayout::NormalizedToDesignPointSlot(FAnchors(0.025f, 0.700f, 0.225f, 0.785f), DesignSize), 24);
+		RDUILayout::ApplyDesignerSlotData(mDiceAssignmentText, RDUILayout::NormalizedToDesignPointSlot(FAnchors(0.156f, 0.759f, 0.375f, 0.852f), DesignSize), 24);
 	}
 	else
 	{
