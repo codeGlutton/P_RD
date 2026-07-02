@@ -163,21 +163,19 @@ void UCombatTileMapHUDWidget::RefreshMoveButton() const
 	}
 
 	int32 Move = 0;
-	int32 MaxMove = 0;
 	for (const FUnitUI& Unit : mCombatUIModel->GetUnitUIs())
 	{
 		if (Unit.mIsPlayer)
 		{
 			Move = FMath::RoundToInt(Unit.mMovementPoint);
-			MaxMove = FMath::RoundToInt(Unit.mMaxMovementPoint);
 			break;
 		}
 	}
 
+	// 남은 이동력만 표시한다 - 최대치는 플레이어 판단에 불필요해 노출하지 않는다.
 	MoveLabel->SetText(FText::Format(
-		NSLOCTEXT("CombatTileMapHUDWidget", "MoveCommandCount", "MOVE\n{0}/{1}"),
-		FText::AsNumber(Move),
-		FText::AsNumber(MaxMove)));
+		NSLOCTEXT("CombatTileMapHUDWidget", "MoveCommandCount", "MOVE\n{0}"),
+		FText::AsNumber(Move)));
 	MoveLabel->SetJustification(ETextJustify::Center);
 }
 

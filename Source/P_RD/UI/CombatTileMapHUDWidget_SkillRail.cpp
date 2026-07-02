@@ -12,21 +12,6 @@
 
 using namespace RDCombatHUD;
 
-namespace
-{
-	// 프레임 하단 스트립(셀의 36%)에 한 줄로 들어가게 레일 라벨 폰트를 줄인다.
-	void SetSkillRailLabelFontSize(UTextBlock* Text, int32 Size)
-	{
-		if (Text == nullptr)
-		{
-			return;
-		}
-		FSlateFontInfo Font = Text->GetFont();
-		Font.Size = Size;
-		Text->SetFont(Font);
-	}
-}
-
 void UCombatTileMapHUDWidget::RebuildSkillRailWidgets()
 {
 	if (RootCanvas == nullptr || WidgetTree == nullptr || mSkillRailPanels.Num() == CombatSkillSlotCount)
@@ -160,21 +145,8 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 		{
 			if (UTextBlock* SkillRailText = mSkillRailTexts[RailSlotIndex])
 			{
-				if (bOwned)
-				{
-					// 프레임 하단 스트립에 한 줄로: 이름과 코스트. 두 줄이면 프레임 밖으로 넘친다.
-					SkillRailText->SetText(FText::Format(
-						NSLOCTEXT("CombatTileMapHUDWidget", "SkillRailSlotFormat", "{0} {1} DICE"),
-						Skill->mName, FText::AsNumber(Skill->mDiceCost)));
-					SetSkillRailLabelFontSize(SkillRailText, 10);
-					SkillRailText->SetColorAndOpacity(FSlateColor(GetCombatSkillRailTextColor(bSelected)));
-					SkillRailText->SetRenderOpacity(DimOpacity);
-					SkillRailText->SetVisibility(ESlateVisibility::HitTestInvisible);
-				}
-				else
-				{
-					SkillRailText->SetVisibility(ESlateVisibility::Collapsed);
-				}
+				// 레일에는 아이콘만 보여준다 - 이름/코스트는 롱프레스 상세 카드가 담당한다.
+				SkillRailText->SetVisibility(ESlateVisibility::Collapsed);
 			}
 		}
 	}

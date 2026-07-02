@@ -179,24 +179,17 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 			const FAnchorData CellSlot = RDUILayout::MakeVerticalSubSlot(RailSlot, SkillIndex, SkillRailPanelCount, RailGapPx);
 			RDUILayout::ApplyDesignerSlotData(mSkillRailPanels[SkillIndex], CellSlot, SkillRailZOrder);
 
-			// 보유 스킬 아이콘: 셀 위쪽 60% 영역(가로 여백 15%), 라벨: 아래 36% 스트립 (#242 비율의 디자인px 미러).
+			// 보유 스킬 아이콘: 라벨 없이 아이콘만 - 프레임 안 중앙(가로 여백 15%, 세로 여백 8%).
 			const float CellWidthPx = CellSlot.Offsets.Right;    // 점앵커 슬롯: Right/Bottom = 크기(px).
 			const float CellHeightPx = CellSlot.Offsets.Bottom;
 			if (mSkillRailIcons.IsValidIndex(SkillIndex))
 			{
 				FAnchorData IconSlot = CellSlot;
 				IconSlot.Offsets.Left += CellWidthPx * 0.15f;
-				IconSlot.Offsets.Top += CellHeightPx * 0.05f;
+				IconSlot.Offsets.Top += CellHeightPx * 0.08f;
 				IconSlot.Offsets.Right = CellWidthPx * 0.70f;
-				IconSlot.Offsets.Bottom = CellHeightPx * 0.60f;
+				IconSlot.Offsets.Bottom = CellHeightPx * 0.84f;
 				RDUILayout::ApplyDesignerSlotData(mSkillRailIcons[SkillIndex], IconSlot, SkillRailZOrder + 1);
-			}
-			if (mSkillRailTexts.IsValidIndex(SkillIndex))
-			{
-				FAnchorData TextSlot = CellSlot;
-				TextSlot.Offsets.Top += CellHeightPx * 0.62f;
-				TextSlot.Offsets.Bottom = CellHeightPx * 0.36f;
-				RDUILayout::ApplyDesignerSlotData(mSkillRailTexts[SkillIndex], TextSlot, SkillRailZOrder + 2);
 			}
 		}
 		for (int32 SkillIndex = 0; SkillIndex < SkillInputCount; ++SkillIndex)
@@ -211,22 +204,15 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 			const FAnchors ItemRect = GetSkillRailItemRect(SkillIndex, SkillRailPanelCount);
 			RDUILayout::ApplyAnchoredSlot(mSkillRailPanels[SkillIndex], ItemRect, SkillRailZOrder);
 
-			// 보유 스킬 아이콘: 슬롯 위쪽 65% 영역(여백 15%), 라벨: 아래 35% 스트립. 패널보다 위에 그린다.
+			// 보유 스킬 아이콘: 라벨 없이 아이콘만 - 슬롯 안 중앙(가로 여백 15%, 세로 여백 8%).
 			const float ItemW = ItemRect.Maximum.X - ItemRect.Minimum.X;
 			const float ItemH = ItemRect.Maximum.Y - ItemRect.Minimum.Y;
 			if (mSkillRailIcons.IsValidIndex(SkillIndex))
 			{
 				const FAnchors IconRect(
-					ItemRect.Minimum.X + ItemW * 0.15f, ItemRect.Minimum.Y + ItemH * 0.05f,
-					ItemRect.Maximum.X - ItemW * 0.15f, ItemRect.Minimum.Y + ItemH * 0.65f);
+					ItemRect.Minimum.X + ItemW * 0.15f, ItemRect.Minimum.Y + ItemH * 0.08f,
+					ItemRect.Maximum.X - ItemW * 0.15f, ItemRect.Maximum.Y - ItemH * 0.08f);
 				RDUILayout::ApplyAnchoredSlot(mSkillRailIcons[SkillIndex], IconRect, SkillRailZOrder + 1);
-			}
-			if (mSkillRailTexts.IsValidIndex(SkillIndex))
-			{
-				const FAnchors TextRect(
-					ItemRect.Minimum.X, ItemRect.Minimum.Y + ItemH * 0.62f,
-					ItemRect.Maximum.X, ItemRect.Maximum.Y - ItemH * 0.02f);
-				RDUILayout::ApplyAnchoredSlot(mSkillRailTexts[SkillIndex], TextRect, SkillRailZOrder + 2);
 			}
 		}
 		for (int32 SkillIndex = 0; SkillIndex < SkillInputCount; ++SkillIndex)
