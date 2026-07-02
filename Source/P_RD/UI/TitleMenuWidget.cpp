@@ -9,11 +9,79 @@
  */
 #include "UI/TitleMenuWidget.h"
 
+#include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
+#include "Components/Overlay.h"
+#include "Components/OverlaySlot.h"
+#include "Components/PanelWidget.h"
+#include "Components/ScaleBox.h"
+#include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
+#include "Components/WidgetSwitcher.h"
 #include "Engine/Texture2D.h"
 #include "UI/SettingsPanelWidget.h"
+
+namespace
+{
+	const FName TitleLayoutProfileBase16x9(TEXT("base_16_9"));
+	const FName TitleLayoutProfilePhoneWide(TEXT("phone_wide"));
+	const FName TitleLayoutProfilePhoneUltraWide(TEXT("phone_ultrawide"));
+	const FName TitleLayoutProfileFoldInner(TEXT("fold_inner"));
+	const FName TitleLayoutProfileTablet16x10(TEXT("tablet_16_10"));
+	constexpr float TitleLayoutLogViewportThreshold = 12.0f;
+
+	const FName TitleLayoutProfiles[] =
+	{
+		TitleLayoutProfileBase16x9,
+		TitleLayoutProfilePhoneWide,
+		TitleLayoutProfilePhoneUltraWide,
+		TitleLayoutProfileFoldInner,
+		TitleLayoutProfileTablet16x10,
+	};
+
+	FName MakeProfileWidgetName(const TCHAR* BaseName, const FName ProfileName)
+	{
+		return FName(*FString::Printf(TEXT("%s__%s"), BaseName, *ProfileName.ToString()));
+	}
+
+	void SetProfileText(const UUserWidget* Owner, const TCHAR* BaseName, const FName ProfileName, const FText& Text)
+	{
+		if (Owner == nullptr)
+		{
+			return;
+		}
+
+		if (UTextBlock* TextBlock = Cast<UTextBlock>(const_cast<UUserWidget*>(Owner)->GetWidgetFromName(MakeProfileWidgetName(BaseName, ProfileName))))
+		{
+			TextBlock->SetText(Text);
+		}
+	}
+
+	FString FormatVec2(const FVector2D& Value)
+	{
+		return FString::Printf(TEXT("%.1f,%.1f"), Value.X, Value.Y);
+	}
+
+	FString DescribeWidgetGeometry(const UWidget* Widget)
+	{
+		if (Widget == nullptr)
+		{
+			return TEXT("missing");
+		}
+
+		const FGeometry Geometry = Widget->GetCachedGeometry();
+		const FVector2D AbsolutePosition = Geometry.LocalToAbsolute(FVector2D::ZeroVector);
+		return FString::Printf(
+			TEXT("%s local=%s abs=%s desired=%s"),
+			*Widget->GetName(),
+			*FormatVec2(Geometry.GetLocalSize()),
+			*FormatVec2(AbsolutePosition),
+			*FormatVec2(Widget->GetDesiredSize()));
+	}
+}
 
 /**
  * @brief 타이틀 메인 메뉴 UI 위젯.
@@ -34,6 +102,7 @@ UTitleMenuWidget::UTitleMenuWidget(const FObjectInitializer& ObjectInitializer)
 	, mContinueButtonText(NSLOCTEXT("TitleMenuWidget", "ContinueText", "CONTINUE"))
 	, mSettingsButtonText(NSLOCTEXT("TitleMenuWidget", "SettingsText", "SETTING"))
 	, mMainOnlyStatusText(NSLOCTEXT("TitleMenuWidget", "MainOnlyStatusText", "Title main screen only"))
+	, mLastLoggedTitleLayoutViewportSize(FVector2D::ZeroVector)
 {
 	/*
 	 * 타이틀 HUD는 방 진입 직후 바로 보이는 메인 UI다.
@@ -62,20 +131,7 @@ void UTitleMenuWidget::NativeConstruct()
 	ValidateDesignerBindings();
 	StartTitleBackgroundVideo();
 
-	if (StartButton != nullptr)
-	{
-		StartButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleStartButtonClicked);
-	}
-
-	if (ContinueButton != nullptr)
-	{
-		ContinueButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleContinueButtonClicked);
-	}
-
-	if (SettingsButton != nullptr)
-	{
-		SettingsButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
-	}
+	BindMainMenuButtons();
 
 	if (USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel())
 	{
@@ -83,7 +139,9 @@ void UTitleMenuWidget::NativeConstruct()
 	}
 
 	SyncMainText();
+	AlignMainMenuTextBlocks();
 	RefreshMainMenuState();
+	RefreshResponsiveTitleLayout(GetCachedGeometry().GetLocalSize());
 	SetStatusText(FText::GetEmpty());
 }
 
@@ -97,6 +155,7 @@ void UTitleMenuWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 	FitTitleBackgroundVideoToViewport();
+	RefreshResponsiveTitleLayout(MyGeometry.GetLocalSize());
 }
 
 /** @brief Construct에서 붙인 이벤트를 제거해 재Construct 시 중복 호출을 막는다. */
@@ -106,20 +165,7 @@ void UTitleMenuWidget::NativeDestruct()
 {
 	StopTitleBackgroundVideo();
 
-	if (StartButton != nullptr)
-	{
-		StartButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleStartButtonClicked);
-	}
-
-	if (ContinueButton != nullptr)
-	{
-		ContinueButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleContinueButtonClicked);
-	}
-
-	if (SettingsButton != nullptr)
-	{
-		SettingsButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
-	}
+	UnbindMainMenuButtons();
 
 	if (USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel())
 	{
@@ -154,6 +200,320 @@ void UTitleMenuWidget::SyncMainText() const
 		SettingsButtonText->SetText(mSettingsButtonText);
 	}
 
+	for (const FName ProfileName : TitleLayoutProfiles)
+	{
+		SetProfileText(this, TEXT("StartButtonText"), ProfileName, mStartButtonText);
+		SetProfileText(this, TEXT("ContinueButtonText"), ProfileName, mContinueButtonText);
+		SetProfileText(this, TEXT("SettingsButtonText"), ProfileName, mSettingsButtonText);
+	}
+}
+
+/** @brief 화면비에 따라 WBP 안의 프로필별 레이아웃 캔버스 중 하나만 활성화한다. */
+void UTitleMenuWidget::RefreshResponsiveTitleLayout(const FVector2D& ViewportSize)
+{
+	if (TitleLayoutSwitcher == nullptr)
+	{
+		return;
+	}
+
+	const FName DesiredProfileName = SelectTitleLayoutProfile(ViewportSize);
+	if (DesiredProfileName.IsNone() || DesiredProfileName == mActiveTitleLayoutProfileName)
+	{
+		const bool bViewportChangedEnoughForLog =
+			FMath::Abs(ViewportSize.X - mLastLoggedTitleLayoutViewportSize.X) >= TitleLayoutLogViewportThreshold ||
+			FMath::Abs(ViewportSize.Y - mLastLoggedTitleLayoutViewportSize.Y) >= TitleLayoutLogViewportThreshold;
+		const bool bProfileChangedForLog = DesiredProfileName != mLastLoggedTitleLayoutProfileName;
+		if (DesiredProfileName.IsNone() || (bViewportChangedEnoughForLog == false && bProfileChangedForLog == false))
+		{
+			return;
+		}
+
+		LogResponsiveTitleLayoutMetrics(
+			ViewportSize,
+			DesiredProfileName,
+			TitleLayoutSwitcher->GetActiveWidget(),
+			TitleLayoutSwitcher->GetActiveWidgetIndex());
+		mLastLoggedTitleLayoutProfileName = DesiredProfileName;
+		mLastLoggedTitleLayoutViewportSize = ViewportSize;
+		return;
+	}
+
+	const FName DesiredScaleBoxWidgetName(*FString::Printf(TEXT("TitleLayoutScaleBox_%s"), *DesiredProfileName.ToString()));
+	const FName LegacyLayoutWidgetName(*FString::Printf(TEXT("TitleLayout_%s"), *DesiredProfileName.ToString()));
+	for (int32 WidgetIndex = 0; WidgetIndex < TitleLayoutSwitcher->GetNumWidgets(); ++WidgetIndex)
+	{
+		const UWidget* LayoutWidget = TitleLayoutSwitcher->GetWidgetAtIndex(WidgetIndex);
+		if (LayoutWidget != nullptr && LayoutWidget->GetFName() == DesiredScaleBoxWidgetName)
+		{
+			TitleLayoutSwitcher->SetActiveWidgetIndex(WidgetIndex);
+			mActiveTitleLayoutProfileName = DesiredProfileName;
+			LogResponsiveTitleLayoutMetrics(ViewportSize, DesiredProfileName, LayoutWidget, WidgetIndex);
+			mLastLoggedTitleLayoutProfileName = DesiredProfileName;
+			mLastLoggedTitleLayoutViewportSize = ViewportSize;
+			return;
+		}
+	}
+
+	for (int32 WidgetIndex = 0; WidgetIndex < TitleLayoutSwitcher->GetNumWidgets(); ++WidgetIndex)
+	{
+		const UWidget* LayoutWidget = TitleLayoutSwitcher->GetWidgetAtIndex(WidgetIndex);
+		if (LayoutWidget != nullptr && LayoutWidget->GetFName() == LegacyLayoutWidgetName)
+		{
+			TitleLayoutSwitcher->SetActiveWidgetIndex(WidgetIndex);
+			mActiveTitleLayoutProfileName = DesiredProfileName;
+			LogResponsiveTitleLayoutMetrics(ViewportSize, DesiredProfileName, LayoutWidget, WidgetIndex);
+			mLastLoggedTitleLayoutProfileName = DesiredProfileName;
+			mLastLoggedTitleLayoutViewportSize = ViewportSize;
+			return;
+		}
+	}
+
+	UE_LOG(
+		LogRD,
+		Warning,
+		TEXT("TitleMenuWidget LayoutMetrics: no layout widget for profile=%s viewport=%s aspect=%.3f expected=%s legacy=%s switcherChildren=%d"),
+		*DesiredProfileName.ToString(),
+		*FormatVec2(ViewportSize),
+		ViewportSize.Y > 0.0f ? ViewportSize.X / ViewportSize.Y : 0.0f,
+		*DesiredScaleBoxWidgetName.ToString(),
+		*LegacyLayoutWidgetName.ToString(),
+		TitleLayoutSwitcher->GetNumWidgets());
+}
+
+/** @brief 타이틀 반응형 레이아웃의 실제 선택/스케일/위젯 위치를 비교 가능한 로그로 남긴다. */
+void UTitleMenuWidget::LogResponsiveTitleLayoutMetrics(const FVector2D& ViewportSize, const FName ProfileName, const UWidget* ActiveLayoutWidget, const int32 ActiveWidgetIndex) const
+{
+	const FString ProfileString = ProfileName.ToString();
+	const UWidget* MutableSizeBoxWidget = const_cast<UTitleMenuWidget*>(this)->GetWidgetFromName(FName(*FString::Printf(TEXT("TitleLayoutSizeBox_%s"), *ProfileString)));
+	const USizeBox* ProfileSizeBox = Cast<USizeBox>(MutableSizeBoxWidget);
+	const UWidget* ProfileCanvas = const_cast<UTitleMenuWidget*>(this)->GetWidgetFromName(FName(*FString::Printf(TEXT("TitleLayoutCanvas_%s"), *ProfileString)));
+	const UWidget* LogoWidget = const_cast<UTitleMenuWidget*>(this)->GetWidgetFromName(MakeProfileWidgetName(TEXT("TitleLogoImage"), ProfileName));
+	const UWidget* StartButtonWidget = const_cast<UTitleMenuWidget*>(this)->GetWidgetFromName(MakeProfileWidgetName(TEXT("StartButton"), ProfileName));
+	const UWidget* VersionTextWidget = const_cast<UTitleMenuWidget*>(this)->GetWidgetFromName(MakeProfileWidgetName(TEXT("VersionText"), ProfileName));
+
+	FVector2D DesignSize = FVector2D::ZeroVector;
+	if (ProfileSizeBox != nullptr)
+	{
+		DesignSize.X = ProfileSizeBox->IsWidthOverride() ? ProfileSizeBox->GetWidthOverride() : ProfileSizeBox->GetDesiredSize().X;
+		DesignSize.Y = ProfileSizeBox->IsHeightOverride() ? ProfileSizeBox->GetHeightOverride() : ProfileSizeBox->GetDesiredSize().Y;
+	}
+
+	float CalculatedScale = 0.0f;
+	FVector2D FittedSize = FVector2D::ZeroVector;
+	FVector2D LetterboxInset = FVector2D::ZeroVector;
+	if (ViewportSize.X > 0.0f && ViewportSize.Y > 0.0f && DesignSize.X > 0.0f && DesignSize.Y > 0.0f)
+	{
+		CalculatedScale = FMath::Min(ViewportSize.X / DesignSize.X, ViewportSize.Y / DesignSize.Y);
+		FittedSize = DesignSize * CalculatedScale;
+		LetterboxInset = (ViewportSize - FittedSize) * 0.5f;
+	}
+
+	UE_LOG(
+		LogRD,
+		Display,
+		TEXT("TitleMenuWidget LayoutMetrics: viewport=%s aspect=%.3f profile=%s activeIndex=%d active=%s design=%s scale=%.4f fitted=%s inset=%s switcher=%s activeGeom=%s sizeBox=%s canvas=%s"),
+		*FormatVec2(ViewportSize),
+		ViewportSize.Y > 0.0f ? ViewportSize.X / ViewportSize.Y : 0.0f,
+		*ProfileString,
+		ActiveWidgetIndex,
+		ActiveLayoutWidget != nullptr ? *ActiveLayoutWidget->GetName() : TEXT("missing"),
+		*FormatVec2(DesignSize),
+		CalculatedScale,
+		*FormatVec2(FittedSize),
+		*FormatVec2(LetterboxInset),
+		*DescribeWidgetGeometry(TitleLayoutSwitcher),
+		*DescribeWidgetGeometry(ActiveLayoutWidget),
+		*DescribeWidgetGeometry(ProfileSizeBox),
+		*DescribeWidgetGeometry(ProfileCanvas));
+
+	UE_LOG(
+		LogRD,
+		Display,
+		TEXT("TitleMenuWidget LayoutMetrics Widgets: profile=%s logo={%s} startButton={%s} versionText={%s}"),
+		*ProfileString,
+		*DescribeWidgetGeometry(LogoWidget),
+		*DescribeWidgetGeometry(StartButtonWidget),
+		*DescribeWidgetGeometry(VersionTextWidget));
+}
+
+/** @brief 현재 화면비를 타이틀 전용 레이아웃 프로필로 분류한다. */
+FName UTitleMenuWidget::SelectTitleLayoutProfile(const FVector2D& ViewportSize) const
+{
+	if (ViewportSize.X <= 0.0f || ViewportSize.Y <= 0.0f)
+	{
+		return NAME_None;
+	}
+
+	const float AspectRatio = ViewportSize.X / ViewportSize.Y;
+	if (AspectRatio <= 1.35f)
+	{
+		return TitleLayoutProfileFoldInner;
+	}
+	if (AspectRatio <= 1.70f)
+	{
+		return TitleLayoutProfileTablet16x10;
+	}
+	if (AspectRatio <= 1.95f)
+	{
+		return TitleLayoutProfileBase16x9;
+	}
+	if (AspectRatio <= 2.25f)
+	{
+		return TitleLayoutProfilePhoneWide;
+	}
+
+	return TitleLayoutProfilePhoneUltraWide;
+}
+
+/** @brief 레거시 단일 버튼과 프로필별 버튼을 같은 입력 핸들러에 연결한다. */
+void UTitleMenuWidget::BindMainMenuButtons()
+{
+	if (StartButton != nullptr)
+	{
+		StartButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleStartButtonClicked);
+	}
+	if (ContinueButton != nullptr)
+	{
+		ContinueButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleContinueButtonClicked);
+	}
+	if (SettingsButton != nullptr)
+	{
+		SettingsButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
+	}
+
+	for (const FName ProfileName : TitleLayoutProfiles)
+	{
+		if (UButton* ProfileStartButton = Cast<UButton>(GetWidgetFromName(MakeProfileWidgetName(TEXT("StartButton"), ProfileName))))
+		{
+			ProfileStartButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleStartButtonClicked);
+		}
+		if (UButton* ProfileContinueButton = Cast<UButton>(GetWidgetFromName(MakeProfileWidgetName(TEXT("ContinueButton"), ProfileName))))
+		{
+			ProfileContinueButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleContinueButtonClicked);
+		}
+		if (UButton* ProfileSettingsButton = Cast<UButton>(GetWidgetFromName(MakeProfileWidgetName(TEXT("SettingsButton"), ProfileName))))
+		{
+			ProfileSettingsButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
+		}
+	}
+}
+
+/** @brief Construct에서 연결한 레거시/프로필별 메뉴 버튼 입력을 모두 해제한다. */
+void UTitleMenuWidget::UnbindMainMenuButtons()
+{
+	if (StartButton != nullptr)
+	{
+		StartButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleStartButtonClicked);
+	}
+	if (ContinueButton != nullptr)
+	{
+		ContinueButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleContinueButtonClicked);
+	}
+	if (SettingsButton != nullptr)
+	{
+		SettingsButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
+	}
+
+	for (const FName ProfileName : TitleLayoutProfiles)
+	{
+		if (UButton* ProfileStartButton = Cast<UButton>(GetWidgetFromName(MakeProfileWidgetName(TEXT("StartButton"), ProfileName))))
+		{
+			ProfileStartButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleStartButtonClicked);
+		}
+		if (UButton* ProfileContinueButton = Cast<UButton>(GetWidgetFromName(MakeProfileWidgetName(TEXT("ContinueButton"), ProfileName))))
+		{
+			ProfileContinueButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleContinueButtonClicked);
+		}
+		if (UButton* ProfileSettingsButton = Cast<UButton>(GetWidgetFromName(MakeProfileWidgetName(TEXT("SettingsButton"), ProfileName))))
+		{
+			ProfileSettingsButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
+		}
+	}
+}
+
+/** @brief WBP 생성 단계에서 빠진 버튼 텍스트 가로/세로 중앙 정렬을 런타임에서 보정한다. */
+void UTitleMenuWidget::AlignMainMenuTextBlocks()
+{
+	AlignMenuTextBlock(StartButtonText);
+	AlignMenuTextBlock(ContinueButtonText);
+	AlignMenuTextBlock(SettingsButtonText);
+	AlignMenuTextBlock(Cast<UTextBlock>(GetWidgetFromName(TEXT("ExitButtonText"))));
+	AlignMenuTextBlock(Cast<UTextBlock>(GetWidgetFromName(TEXT("VersionText"))));
+
+	for (const FName ProfileName : TitleLayoutProfiles)
+	{
+		AlignMenuTextBlock(Cast<UTextBlock>(GetWidgetFromName(MakeProfileWidgetName(TEXT("StartButtonText"), ProfileName))));
+		AlignMenuTextBlock(Cast<UTextBlock>(GetWidgetFromName(MakeProfileWidgetName(TEXT("ContinueButtonText"), ProfileName))));
+		AlignMenuTextBlock(Cast<UTextBlock>(GetWidgetFromName(MakeProfileWidgetName(TEXT("SettingsButtonText"), ProfileName))));
+		AlignMenuTextBlock(Cast<UTextBlock>(GetWidgetFromName(MakeProfileWidgetName(TEXT("ExitButtonText"), ProfileName))));
+		AlignMenuTextBlock(Cast<UTextBlock>(GetWidgetFromName(MakeProfileWidgetName(TEXT("VersionText"), ProfileName))));
+	}
+}
+
+/** @brief CanvasPanel 직계 TextBlock을 같은 위치의 Overlay로 감싸 슬롯 VerticalAlignment를 줄 수 있게 한다. */
+void UTitleMenuWidget::AlignMenuTextBlock(UTextBlock* TextBlock)
+{
+	if (TextBlock == nullptr)
+	{
+		return;
+	}
+
+	TextBlock->SetJustification(ETextJustify::Center);
+
+	if (UOverlaySlot* ExistingOverlaySlot = Cast<UOverlaySlot>(TextBlock->Slot))
+	{
+		ExistingOverlaySlot->SetHorizontalAlignment(HAlign_Fill);
+		ExistingOverlaySlot->SetVerticalAlignment(VAlign_Center);
+		return;
+	}
+
+	UCanvasPanelSlot* SourceCanvasSlot = Cast<UCanvasPanelSlot>(TextBlock->Slot);
+	UPanelWidget* SourceParent = TextBlock->GetParent();
+	if (WidgetTree == nullptr || SourceCanvasSlot == nullptr || SourceParent == nullptr)
+	{
+		return;
+	}
+
+	const FAnchors Anchors = SourceCanvasSlot->GetAnchors();
+	const FMargin Offsets = SourceCanvasSlot->GetOffsets();
+	const FVector2D Alignment = SourceCanvasSlot->GetAlignment();
+	const int32 ZOrder = SourceCanvasSlot->GetZOrder();
+	const bool bAutoSize = SourceCanvasSlot->GetAutoSize();
+
+	const FName OverlayName = MakeUniqueObjectName(this, UOverlay::StaticClass(), *FString::Printf(TEXT("%s_CenterOverlay"), *TextBlock->GetName()));
+	UOverlay* CenterOverlay = WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass(), OverlayName);
+	if (CenterOverlay == nullptr)
+	{
+		return;
+	}
+
+	SourceParent->RemoveChild(TextBlock);
+	if (UCanvasPanel* CanvasParent = Cast<UCanvasPanel>(SourceParent))
+	{
+		UCanvasPanelSlot* OverlayCanvasSlot = CanvasParent->AddChildToCanvas(CenterOverlay);
+		if (OverlayCanvasSlot == nullptr)
+		{
+			return;
+		}
+
+		OverlayCanvasSlot->SetAnchors(Anchors);
+		OverlayCanvasSlot->SetOffsets(Offsets);
+		OverlayCanvasSlot->SetAlignment(Alignment);
+		OverlayCanvasSlot->SetAutoSize(bAutoSize);
+		OverlayCanvasSlot->SetZOrder(ZOrder);
+	}
+	else
+	{
+		SourceParent->AddChild(CenterOverlay);
+	}
+
+	UOverlaySlot* TextOverlaySlot = CenterOverlay->AddChildToOverlay(TextBlock);
+	if (TextOverlaySlot != nullptr)
+	{
+		TextOverlaySlot->SetHorizontalAlignment(HAlign_Fill);
+		TextOverlaySlot->SetVerticalAlignment(VAlign_Center);
+		TextOverlaySlot->SetPadding(FMargin(0.0f));
+	}
 }
 
 /** @brief 현재 타이틀 화면에서 사용하지 않는 상태 문구 영역을 항상 숨긴다. */
@@ -173,32 +533,38 @@ void UTitleMenuWidget::SetStatusText(const FText& /*InText*/) const
 // NativeConstruct 초기에 각 바인딩을 점검해 어떤 위젯이 누락됐는지 명시적으로 로깅한다(배경 영상은 누락 시 스킵).
 void UTitleMenuWidget::ValidateDesignerBindings() const
 {
-	if (StartButton == nullptr)
+	if (TitleLayoutSwitcher == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: TitleLayoutSwitcher is not connected. Legacy single title layout will be used if available."));
+	}
+
+	const bool bUsesProfileLayouts = TitleLayoutSwitcher != nullptr;
+	if (bUsesProfileLayouts == false && StartButton == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: StartButton is not connected."));
 	}
 
-	if (ContinueButton == nullptr)
+	if (bUsesProfileLayouts == false && ContinueButton == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: ContinueButton is not connected."));
 	}
 
-	if (SettingsButton == nullptr)
+	if (bUsesProfileLayouts == false && SettingsButton == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: SettingsButton is not connected."));
 	}
 
-	if (StartButtonText == nullptr)
+	if (bUsesProfileLayouts == false && StartButtonText == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: StartButtonText is not connected."));
 	}
 
-	if (ContinueButtonText == nullptr)
+	if (bUsesProfileLayouts == false && ContinueButtonText == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: ContinueButtonText is not connected."));
 	}
 
-	if (SettingsButtonText == nullptr)
+	if (bUsesProfileLayouts == false && SettingsButtonText == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: SettingsButtonText is not connected."));
 	}
