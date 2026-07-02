@@ -33,6 +33,10 @@ struct FSRPGDiceRollCommand : public FSRPGCommand
 
 public:
 	FSRPGDiceRollCommand();
+
+	/** @brief 물리 굴림 연출이 확정한 면 index(0-base, 주사위 순서). 비어 있으면 내부 난수로 굴린다. */
+	UPROPERTY(Category = Roll, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RolledFaceIndices"))
+	TArray<int32> mRolledFaceIndices;
 };
 
 /**

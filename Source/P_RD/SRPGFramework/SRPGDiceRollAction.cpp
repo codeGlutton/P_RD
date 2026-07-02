@@ -83,7 +83,16 @@ ESRPGCommandResult USRPGDiceRollAction::HandleCommand(const TInstancedStruct<FSR
             }
         }
 
-        DicePoolModel->RollAll(URandomStreamFunctionLibrary::GetEventStream(this));
+        const FSRPGDiceRollCommand& DiceRollCommand = Command.Get<FSRPGDiceRollCommand>();
+        if (DiceRollCommand.mRolledFaceIndices.IsEmpty() == true)
+        {
+            DicePoolModel->RollAll(URandomStreamFunctionLibrary::GetEventStream(this));
+        }
+        else
+        {
+            // 물리 굴림 연출이 보여준 윗면을 그대로 기록한다("보이는 면 = 기록 숫자").
+            DicePoolModel->ApplyRolledFaceIndices(DiceRollCommand.mRolledFaceIndices);
+        }
 
         // 주사위 굴리기 후 패시브
         {
