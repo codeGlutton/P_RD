@@ -127,6 +127,7 @@ int32 UDiceModel::Roll(const FRandomStream& Stream)
 	mCurrentValue = mFaceValues[mRolledFaceIndex];
 	mIsRolled = true;
 	mIsUsed = false;   // 새 턴 굴림에서 이전 턴 사용 잠금을 해제.
+	mIsSelected = false;   // 새 굴림이면 값이 바뀌므로 이전 스킬 빌드 선택도 무효화한다.
 	return mCurrentValue;
 }
 
