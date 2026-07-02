@@ -379,7 +379,8 @@ void ACombatGameMode::PushTurnUIData() const
 
 	FTurnUI TurnUI;
 	TurnUI.mCurrentUnitId = TurnContext->GetOwner()->GetModelId();
-	TurnUI.mPhase = ECombatBuildPhaseUI::None;
+	// 페이즈의 단일 소유자는 SetBuildPhase(빌드 이벤트) — 턴 스냅샷 push가 진행 중 페이즈를 덮지 않게 보존한다.
+	TurnUI.mPhase = mCombatUIModel->GetTurnUI().mPhase;
 	TurnUI.mRound = 0; // TODO : 라운드 수
 	for (const TObjectPtr<UUnitModel>& UnitModel : UnitModels)
 	{
@@ -394,13 +395,13 @@ void ACombatGameMode::PushSkillBuildUIData(ESRPGSkillBuildPhase Phase) const
 	{
 	case ESRPGSkillBuildPhase::None:
 	case ESRPGSkillBuildPhase::Build:
-		// mCombatUIModel->SetSkillBuildPhase(ECombatBuildPhaseUI::None);
+		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::None);
 		break;
 	case ESRPGSkillBuildPhase::AimSelection:
-		// mCombatUIModel->SetSkillBuildPhase(ECombatBuildPhaseUI::AimSelection);
+		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::AimSelection);
 		break;
 	case ESRPGSkillBuildPhase::Preview:
-		// mCombatUIModel->SetSkillBuildPhase(ECombatBuildPhaseUI::Preview);
+		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::Preview);
 		break;
 	}
 }
@@ -411,13 +412,13 @@ void ACombatGameMode::PushMoveBuildUIData(ESRPGMoveBuildPhase Phase) const
 	{
 	case ESRPGMoveBuildPhase::None:
 	case ESRPGMoveBuildPhase::Build:
-		// mCombatUIModel->SetSkillBuildPhase(ECombatBuildPhaseUI::None);
+		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::None);
 		break;
 	case ESRPGMoveBuildPhase::DestSelection:
-		// mCombatUIModel->SetSkillBuildPhase(ECombatBuildPhaseUI::AimSelection);
+		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::AimSelection);
 		break;
 	case ESRPGMoveBuildPhase::Preview:
-		// mCombatUIModel->SetSkillBuildPhase(ECombatBuildPhaseUI::Preview);
+		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::Preview);
 		break;
 	}
 }
