@@ -8,10 +8,9 @@
 
 
 // @brief 카메라 강조 Handle
-USTRUCT()
+UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
 enum class ECameraControlState : uint8
 {
-	GENERATED_BODY()
 
 	Normal,
 	Emphasis
@@ -199,21 +198,45 @@ public:
 
 public:
 	/* 강조 기능*/
+	/*
+	* @brief WorldPosition로 카메라의 시선을 옮기고 ZoomDelta만큼 Zoom 합니다.
+	* @details Emphasis 상태로 변경하여 카메라를 옮길 수 없습니다.
+	* @param WorldPosition 위치로 카메라의 시선 옮깁니다.
+	* @param ZoomDelta 만큼 Zoom 합니다.
+	*/
 	UFUNCTION(BlueprintCallable)
 	void StartEmphasisToWorldPositionWithZoomDelta(float ZoomDelta, FVector WorldPosition);
 
+	/*
+	* @brief ViewPortPosition로 카메라의 시선을 옮기고 ZoomDelta만큼 Zoom 합니다.
+	* @details Emphasis 상태로 변경하여 카메라를 옮길 수 없습니다.
+	* @param ViewPortPosition 위치로 카메라의 시선 옮깁니다.
+	* @param ZoomDelta 만큼 Zoom 합니다.
+	*/
 	UFUNCTION(BlueprintCallable)
 	void StartEmphasisToViewPortPositionWithZoomDelta(float ZoomDelta, FVector2D ViewPortPos);
 
+	/*
+	* @brief WorldPosition로 카메라의 시선을 옮기고 Zoom값을 mEmphasisZoom로 변경합니다.
+	* @details Emphasis 상태로 변경하여 카메라를 옮길 수 없습니다.
+	* @param WorldPosition 위치로 카메라의 시선 옮깁니다.
+	*/
 	UFUNCTION(BlueprintCallable)
 	void StartEmphasisToWorldPosition(FVector WorldPosition);
 
+	/*
+	* @brief ViewPortPosition로 카메라의 시선을 옮기고 Zoom값을 mEmphasisZoom로 변경합니다.
+	* @details Emphasis 상태로 변경하여 카메라를 옮길 수 없습니다.
+	* @param ViewPortPosition 위치로 카메라의 시선 옮깁니다.
+	*/
 	UFUNCTION(BlueprintCallable)
 	void StartEmphasisToViewPortPosition(FVector2D ViewPortPos);
 
+	/*
+	* @brief Emphasis 상태를 종료하고 원래 카메라 위치, Zoom 값으로 변경합니다.
+	*/
 	UFUNCTION(BlueprintCallable)
 	void EndEmphasis();
-
 
 
 private:
