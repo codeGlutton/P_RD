@@ -218,7 +218,12 @@ void UFrontendMapNodeWidget::SetNodeEnabled(bool bEnabled) const
 {
 	if (NodeButton != nullptr)
 	{
-		NodeButton->SetIsEnabled(bEnabled);
+		/*
+		 * SetIsEnabled(false)는 Slate가 버튼 자식(아이콘/링)까지 자동으로 흐리게 렌더한다.
+		 * 잠김/선택불가 표현은 링 텍스처와 틴트가 담당하므로, 여기서는 입력만 차단하고 시각은 원색을 유지한다.
+		 */
+		NodeButton->SetIsEnabled(true);
+		NodeButton->SetVisibility(bEnabled ? ESlateVisibility::Visible : ESlateVisibility::HitTestInvisible);
 	}
 }
 

@@ -22,7 +22,13 @@
 #   2) 탑바 배경판 신설(sync_hud_backdrop): topbar_backdrop 요소 -> 다른 WBP(/Game/UI/Concept02/WBP_Concept02_HUD)의
 #      TopBar_Backdrop Image 하나만 소유. 좌우 스트레치 앵커(0,0)-(1,0), 높이 112, 단색(wbp.color), z-50,
 #      Collapsed(C++이 켬). 요소 삭제 시 위젯 제거(삭제 동기 규칙 동일). HUD의 다른 위젯 절대 불가침.
-# 규칙: 슬롯/브러시/클래스 디폴트만 쓴다. 이벤트/바인딩/그래프 불가침. 재실행 안전(idempotent, v5 상태로 수렴).
+# v6(20260704): 양피지 한 장 + 로드 철회 —
+#   1) parchment_body = 두루마리 상단+몸통+하단 합성 한 장(worldmap_scroll_full.png, 1797x4197) —
+#      브러시 BOX + Margin(0, nineSliceV.top, 0, nineSliceV.bottom): 세로만 9-slice(두루마리 보존, 몸통만 늘어남).
+#      기존 세로 타일링(VERTICAL) 철회 — NO_TILE로 리셋(9-slice와 충돌, 재실행 수렴).
+#   2) scroll_rod_top/bottom 요소 삭제 -> ELEMENT_WIDGET 매핑 추가로 Map_ScrollRodTop/Bottom 위젯 제거.
+#   3) topbar_backdrop 알파 1.0 — 빌더는 wbp.color 배열 알파를 그대로 사용(폴백 기본값도 1.0으로 정렬).
+# 규칙: 슬롯/브러시/클래스 디폴트만 쓴다. 이벤트/바인딩/그래프 불가침. 재실행 안전(idempotent, v6 상태로 수렴).
 # 실행: UnrealEditor-Cmd <uproject> -ExecutePythonScript=<이 파일> (headless)
 # 최종 출력: "WORLDMAPSYNC|" + json 리포트 한 줄 (saved 플래그/생성/갱신/제거/임포트 수)
 import unreal, json, os, shutil
@@ -166,13 +172,18 @@ def load_ue_tex(obj_path):
 
 # ---------------- 브러시/슬롯 유틸 ----------------
 def apply_brush(img, tex, w_px, h_px, draw="image", margin=None):
-    """Image 위젯 기존 브러시에 텍스처만 얹는다. image_size는 DeprecateSlateVector2D 폴백 체인."""
+    """Image 위젯 기존 브러시에 텍스처만 얹는다. image_size는 DeprecateSlateVector2D 폴백 체인.
+    margin: float(4변 균일) 또는 (L,T,R,B) 튜플(비대칭 — v6 세로 전용 9-slice)."""
     b = img.get_editor_property("brush")
     b.set_editor_property("resource_object", tex)
     b.set_editor_property("draw_as",
                           unreal.SlateBrushDrawType.BOX if draw == "box" else unreal.SlateBrushDrawType.IMAGE)
     if margin is not None:
-        b.set_editor_property("margin", unreal.Margin(margin, margin, margin, margin))
+        if isinstance(margin, (tuple, list)):
+            b.set_editor_property("margin", unreal.Margin(float(margin[0]), float(margin[1]),
+                                                          float(margin[2]), float(margin[3])))
+        else:
+            b.set_editor_property("margin", unreal.Margin(margin, margin, margin, margin))
     try:
         b.set_editor_property("image_size", unreal.DeprecateSlateVector2D(float(w_px), float(h_px)))
     except Exception:
@@ -455,6 +466,8 @@ ELEMENT_WIDGET = {
     "hint_scroll": "Map_ScrollHint",
     "map_title": "MapTitleText",
     "legend_panel": "Map_LegendImage",
+    "scroll_rod_top": "Map_ScrollRodTop",       # v6: 합성 양피지 한 장으로 통합 — 로드 요소 철회
+    "scroll_rod_bottom": "Map_ScrollRodBottom",
 }
 
 # v3 범례 행: 리전 '행_<키>' -> (위젯 접미사, 기존 노드 아이콘 에셋 | None=커스텀 휴식 아이콘 임포트)
@@ -758,18 +771,27 @@ def sync_main_map():
         err("map", "MapStatusText " + str(ex)[:70])
 
     # ---- MapGraphCanvas(스크롤 콘텐츠) 안 ----
-    # Map_ParchmentBody: 슬롯은 임의(C++이 매 리프레시 크기 동기), zorder -200
+    # Map_ParchmentBody(v6): 두루마리 상단+몸통+하단 합성 한 장(1797x4197) — 세로만 9-slice.
+    # 브러시 BOX + Margin(0, top, 0, bottom): 좌우 마진 0, 상/하 = 두루마리 로드 보존, 몸통만 늘어남.
+    # 슬롯은 임의(C++이 매 리프레시 크기 동기), zorder -200.
     try:
         w = ensure_widget(bp, unreal.Image, "Map_ParchmentBody", "MapGraphCanvas")
         if w is not None:
-            prect = region_abs("parchment_body", rg_type="content") or [0, 0, 1240, 812]
+            prect = None
+            if "parchment_body" in els:
+                prect = region_abs("parchment_body") or elem_abs("parchment_body")
+            if prect is None:
+                prect = [0.0, 0.0, 1920.0, 812.0]
+            nsv = els.get("parchment_body", {}).get("wbp", {}).get("nineSliceV", {})
+            m_top = float(nsv.get("top", 0.1227))
+            m_bot = float(nsv.get("bottom", 0.1165))
             pin_slot(w, 0.0, 0.0, [0.0, 0.0, prect[2], prect[3]], z=-200)
             w.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
             if t_parch is not None:
-                apply_brush(w, t_parch, prect[2], prect[3])
+                apply_brush(w, t_parch, prect[2], prect[3], draw="box", margin=(0.0, m_top, 0.0, m_bot))
                 try:
                     b = w.get_editor_property("brush")
-                    b.set_editor_property("tiling", unreal.SlateBrushTileType.VERTICAL)  # 세로 타일링(시안 노트)
+                    b.set_editor_property("tiling", unreal.SlateBrushTileType.NO_TILE)  # v6: 타일링 철회(9-slice와 충돌)
                     w.set_editor_property("brush", b)
                 except Exception:
                     pass
@@ -1071,8 +1093,9 @@ def sync_hud_backdrop():
                     apply_brush(w, t, DW, h)
                 w.set_color_and_opacity(unreal.LinearColor(1.0, 1.0, 1.0, 1.0))
             else:
-                # 현재: 텍스처 없이 단색 — 기본 흰 브러시에 위젯 틴트로 색을 입힌다
-                color = (el.get("wbp", {}) or {}).get("color", [0.02, 0.035, 0.07, 0.94])
+                # 현재: 텍스처 없이 단색 — 기본 흰 브러시에 위젯 틴트로 색을 입힌다.
+                # 알파 포함 wbp.color 배열을 그대로 사용(v6: 알파 1.0 — 하드코딩 없음, 폴백도 1.0).
+                color = (el.get("wbp", {}) or {}).get("color", [0.02, 0.035, 0.07, 1.0])
                 w.set_color_and_opacity(unreal.LinearColor(*[float(c) for c in color]))
             # Collapsed — C++이 월드맵 열림과 동기로 켠다(켤 때 HitTestInvisible로 표시하는 것은 C++ 책임)
             w.set_visibility(unreal.SlateVisibility.COLLAPSED)
