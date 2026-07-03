@@ -52,10 +52,18 @@ void ACombatCameraPawn::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	AController* DefaultController = GetController();
-	checkf(DefaultController, TEXT("DefaultController가 없습니다."));
+	// DefaultController가 존재하지 않으면 함수를 종료합니다.
+	if (!ensureMsgf(IsValid(DefaultController), TEXT("컨트롤러가 없습니다")))
+	{
+		return;
+	}
 
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	checkf(PlayerController, TEXT("PC가 없습니다."));
+	// PlayerController가 존재하지 않으면 함수를 종료합니다.
+	if (!ensureMsgf(IsValid(PlayerController), TEXT("Player 컨트롤러가 없습니다")))
+	{
+		return;
+	}
 
 	// 터치 상태를 보고 제스처를 판단한다.
 	for (int i = 0; i < 2; ++i)
@@ -130,14 +138,20 @@ bool ACombatCameraPawn::IsPinch()
 
 void ACombatCameraPawn::Dragging(const TArray<FTouchState>& Touch1State)
 {
-	checkf(IsValid(mCameraMovementComponent), TEXT("CameraMovementComponent Is Not Valid"));
+	if (!ensureMsgf(IsValid(mCameraMovementComponent), TEXT("CameraMovementComponent가 없습니다")))
+	{
+		return;
+	}
 
 	mCameraMovementComponent.Get()->DragMoveToViewportPosition_Instant(Touch1State[0].PreTouchPos, Touch1State[0].CurTouchPos);
 }
 
 void ACombatCameraPawn::Pinching(const TArray<FTouchState>& TouchState)
 {
-	checkf(IsValid(mCameraMovementComponent), TEXT("CameraMovementComponent Is Not Valid"));
+	if (!ensureMsgf(IsValid(mCameraMovementComponent), TEXT("CameraMovementComponent가 없습니다")))
+	{
+		return;
+	}
 
 	float PrePinchDis = FVector2D::Distance(mTouchStates[0].PreTouchPos, mTouchStates[1].PreTouchPos);
 	float CurPinchDis = FVector2D::Distance(mTouchStates[0].CurTouchPos, mTouchStates[1].CurTouchPos);
