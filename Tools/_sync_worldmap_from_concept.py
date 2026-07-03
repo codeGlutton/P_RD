@@ -7,10 +7,16 @@
 #   3) CloseButton = 클래스 선택과 동일한 기존 UE 에셋(wbp.ueAsset) 직접 로드(임포트 금지), 전 상태 동일 브러시 + disabled 틴트 0.44
 #   4) wbpNativeSpec.topUIInset -> 메인 WBP CDO mTopUIInset 주입
 # v3(20260704): 범례 PNG(legend_full)가 내용 없는 빈 프레임으로 판명 —
-#   Map_LegendImage는 [1596,300,300,460] right/center + 9-slice(BOX, wbp.nineSlice=0.28)로 세로 스트레치,
-#   프레임 리전(범례제목/행_*) 기준으로 제목 + 6행(아이콘 44px + 라벨) 재조립(루트 캔버스 직속, z=11).
+#   Map_LegendImage는 9-slice(BOX, wbp.nineSlice=0.28)로 스트레치, 프레임 리전 기준 6행(아이콘 44px + 라벨) 재조립.
 #   제거 목록은 Map_LegendPanel(옛 프레임)만 유지. MapStatusText는 ensure-생성(제거 금지).
-# 규칙: 슬롯/브러시/클래스 디폴트만 쓴다. 이벤트/바인딩/그래프 불가침. 재실행 안전(idempotent, v3 상태로 수렴).
+# v4(20260704): 사용자 에디터 직접 수정 반영 —
+#   1) "JSON에 요소가 없으면 대응 위젯도 제거" 일반 규칙(ELEMENT_WIDGET 매핑). 이번 삭제분:
+#      decor_candle/decor_spellbook/selected_room_strip -> Map_DecorCandle/Map_DecorSpellbook/Map_SelectedRoomStrip 제거.
+#      생성 테이블은 없는 요소를 조용히 스킵(에러 금지).
+#   2) MapStatusText: strip 요소가 있으면 리전 중앙, 없으면 center/bottom 핀 design [960,1024] 중심 폴백(폰트 18). 위젯 자체는 항상 유지.
+#   3) 범례: 프레임 이미지는 element rect가 아니라 '범례프레임' 리전 절대 rect(요소 원점+리전 raw, 스케일 없음)가 정본.
+#      행 rect도 요소 원점+리전 raw 오프셋(region_raw_abs). '범례제목' 리전 삭제 -> 위젯 제거, 리전 존재 시에만 생성(데이터 주도).
+# 규칙: 슬롯/브러시/클래스 디폴트만 쓴다. 이벤트/바인딩/그래프 불가침. 재실행 안전(idempotent, v4 상태로 수렴).
 # 실행: UnrealEditor-Cmd <uproject> -ExecutePythonScript=<이 파일> (headless)
 # 최종 출력: "WORLDMAPSYNC|" + json 리포트 한 줄 (saved 플래그/생성/갱신/제거/임포트 수)
 import unreal, json, os, shutil
@@ -50,7 +56,10 @@ def elem_abs(el_name):
 
 
 def region_abs(el_name, rg_name_prefix=None, rg_type=None, index=0):
-    """요소 내부 리전의 화면 절대 rect. prefix/type로 매칭, index로 n번째 선택."""
+    """요소 내부 리전의 화면 절대 rect(innerDesignSize 스케일 적용). prefix/type로 매칭, index로 n번째 선택.
+    요소가 JSON에 없으면 None(에러 금지 — v4 삭제 규칙)."""
+    if el_name not in els:
+        return None
     e = els[el_name]
     ex, ey, ew, eh = map(float, e["screenRect"])
     ids = e.get("innerDesignSize") or [ew, eh]
@@ -68,7 +77,23 @@ def region_abs(el_name, rg_name_prefix=None, rg_type=None, index=0):
     return None
 
 
+def region_raw_abs(el_name, rg_name_prefix):
+    """리전 rect를 '요소 원점 + raw 오프셋'으로 해석(innerDesignSize 스케일 없음) — v4 범례 규칙.
+    사용자가 그린 프레임/행 리전 크기 그대로가 정본이다(요소 rect가 리전보다 커도 스케일하지 않는다)."""
+    if el_name not in els:
+        return None
+    e = els[el_name]
+    ex, ey = float(e["screenRect"][0]), float(e["screenRect"][1])
+    for r in e.get("regions", []):
+        if r.get("name", "").startswith(rg_name_prefix):
+            rx, ry, rw, rh = map(float, r["rect"])
+            return [ex + rx, ey + ry, rw, rh]
+    return None
+
+
 def region_image(el_name, index=0, rg_type=None):
+    if el_name not in els:
+        return None
     for r in els[el_name].get("regions", []):
         if rg_type is not None and r.get("type") != rg_type:
             continue
@@ -428,6 +453,17 @@ COL_INK = (0.30, 0.22, 0.12, 0.85)
 #     옛 프레임 Map_LegendPanel만 남긴다. MapStatusText 절대 포함 금지(C++ 필수 바인딩).
 V2_REMOVED = ["Map_StageInfoPanel", "Map_StageNameText", "Map_StageProgressText", "Map_LegendPanel"]
 
+# v4 일반 규칙: "JSON에 요소가 없으면 대응 위젯도 제거" — 요소명 -> 빌더 소유 위젯명 매핑.
+# CloseButton/EnterRoomButton/MapStatusText는 C++ 필수 바인딩이라 이 규칙에 넣지 않는다(요소가 사라져도 위젯 유지).
+ELEMENT_WIDGET = {
+    "decor_candle": "Map_DecorCandle",
+    "decor_spellbook": "Map_DecorSpellbook",
+    "selected_room_strip": "Map_SelectedRoomStrip",
+    "hint_scroll": "Map_ScrollHint",
+    "map_title": "MapTitleText",
+    "legend_panel": "Map_LegendImage",
+}
+
 # v3 범례 행: 리전 '행_<키>' -> (위젯 접미사, 기존 노드 아이콘 에셋 | None=커스텀 휴식 아이콘 임포트)
 LEGEND_ROWS = {"전투": ("Battle", "T_MapNode_Monster"), "엘리트": ("Elite", "T_MapNode_Elite"),
                "보스": ("Boss", "T_MapNode_Boss"), "상점": ("Shop", "T_MapNode_Shop"),
@@ -437,6 +473,10 @@ LEGEND_ICON = 44.0          # 행 아이콘 한 변(px)
 LEGEND_ICON_GAP = 14.0      # 아이콘-라벨 간격(px, 재량값)
 COL_LEGEND_GOLD = (0.96, 0.93, 0.80, 1.0)
 COL_WHITE = (1.0, 1.0, 1.0, 1.0)
+# 범례 부속 위젯 전체(legend_panel 요소 삭제 시 프레임과 함께 제거 — 고아 방지)
+LEGEND_CHILD_WIDGETS = (["Map_LegendTitleText"]
+                        + ["Map_LegendIcon_" + s for s, _ in LEGEND_ROWS.values()]
+                        + ["Map_LegendLabel_" + s for s, _ in LEGEND_ROWS.values()])
 
 
 # ==================================================================================
@@ -459,8 +499,15 @@ def sync_main_map():
         err("map", "MapGraphCanvas missing")
         return
 
-    # ---- 철회 위젯 제거 (v3: 스테이지 패널 계열 + 옛 범례 프레임만 — 없으면 조용히 스킵) ----
+    # ---- 철회 위젯 제거 (스테이지 패널 계열 + 옛 범례 프레임 — 없으면 조용히 스킵) ----
     remove_widgets(bp, V2_REMOVED)
+
+    # ---- v4 일반 규칙: JSON에서 삭제된 요소의 대응 위젯 제거 ----
+    for el_name, widget_name in ELEMENT_WIDGET.items():
+        if el_name not in els:
+            remove_widgets(bp, [widget_name])
+            if el_name == "legend_panel":
+                remove_widgets(bp, LEGEND_CHILD_WIDGETS)   # 프레임이 사라지면 행/제목도 고아 — 함께 제거
 
     # ---- 텍스처 준비 (JSON imageAsset 정본, T_wm_* 로 임포트) ----
     t_scrim = ensure_import(region_image("bg_scrim"))
@@ -469,12 +516,12 @@ def sync_main_map():
     t_rod_bot = ensure_import(region_image("scroll_rod_bottom"))
     t_marker = ensure_import(region_image("marker_current"))
     t_glow = ensure_import(region_image("next_select_glow"))
-    t_legend = ensure_import(region_image("legend_panel"))     # legend_full.png -> T_wm_legend_full
-    t_candle = ensure_import(region_image("decor_candle"))
+    t_legend = ensure_import(region_image("legend_panel"))     # '범례프레임' 리전 imageAsset(사용자 업로드 PNG)
+    t_candle = ensure_import(region_image("decor_candle"))     # 요소 삭제 시 None — 조용히 스킵
     t_book = ensure_import(region_image("decor_spellbook"))
     t_strip = ensure_import(region_image("selected_room_strip"))
     # CloseButton: 기존 UE 에셋 직접 참조(wbp.ueAsset, 임포트 금지) — 클래스 선택 BACK 프레임과 동일
-    t_back = load_ue_tex(els["btn_close"].get("wbp", {}).get("ueAsset"))
+    t_back = load_ue_tex(els.get("btn_close", {}).get("wbp", {}).get("ueAsset"))
     enter_src = region_image("btn_enter")
     t_enter_n = ensure_import(enter_src)
     t_enter_p = ensure_import(enter_src.replace("_normal", "_pressed")) if enter_src else None
@@ -503,33 +550,33 @@ def sync_main_map():
     except Exception as ex:
         err("map", "MapScrollBox " + str(ex)[:70])
 
-    # ---- Map_ScrollHint: 텍스트 힌트(center/top 핀, 박스중심+autosize) ----
-    try:
-        w = find_w(bp, "Map_ScrollHint")
-        if w is None:
-            w = ensure_widget(bp, unreal.TextBlock, "Map_ScrollHint", root_name)
+    # ---- Map_ScrollHint: 텍스트 힌트(center/top 핀, 박스중심+autosize) — 요소 없으면 조용히 스킵 ----
+    if "hint_scroll" in els:
+        try:
+            w = find_w(bp, "Map_ScrollHint")
+            if w is None:
+                w = ensure_widget(bp, unreal.TextBlock, "Map_ScrollHint", root_name)
+                if w is not None:
+                    w.set_text(unreal.Text("드래그하여 지도 탐색"))
             if w is not None:
-                w.set_text(unreal.Text("드래그하여 지도 탐색"))
-        if w is not None:
-            ax, ay = pin_of("hint_scroll")
-            rect = elem_abs("hint_scroll")
-            text_center_slot(w, ax, ay, rect, z=12)
-            style_text(w, rect[3], COL_INK)
-            w.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
-            res["synced"].append("Map_ScrollHint")
-    except Exception as ex:
-        err("map", "Map_ScrollHint " + str(ex)[:70])
+                ax, ay = pin_of("hint_scroll")
+                rect = elem_abs("hint_scroll")
+                text_center_slot(w, ax, ay, rect, z=12)
+                style_text(w, rect[3], COL_INK)
+                w.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
+                res["synced"].append("Map_ScrollHint")
+        except Exception as ex:
+            err("map", "Map_ScrollHint " + str(ex)[:70])
 
-    # ---- 프레임/장식 이미지들: edge-pin + 브러시 ----
-    # Map_LegendImage(v3): 빈 프레임 PNG — 9-slice(BOX, wbp.nineSlice)로 300x460 세로 스트레치가 안 깨지게
-    legend_slice = float(els["legend_panel"].get("wbp", {}).get("nineSlice", 0.28))
+    # ---- 프레임/장식 이미지들: edge-pin + 브러시 — JSON에 없는 요소는 조용히 스킵(위젯 제거는 v4 규칙이 담당) ----
     ART = [
-        ("Map_LegendImage", "legend_panel", t_legend, "box", legend_slice),
         ("Map_DecorCandle", "decor_candle", t_candle, "image", None),
         ("Map_DecorSpellbook", "decor_spellbook", t_book, "image", None),
         ("Map_SelectedRoomStrip", "selected_room_strip", t_strip, "box", 0.30),
     ]
     for name, el, tex, draw, margin in ART:
+        if el not in els:
+            continue   # v4: 삭제된 요소 — 에러 금지, 조용히 스킵
         try:
             w = ensure_widget(bp, unreal.Image, name, root_name)
             if w is None:
@@ -545,94 +592,115 @@ def sync_main_map():
         except Exception as ex:
             err("map", name + " " + str(ex)[:70])
 
-    # ---- v3 범례 재조립: 빈 프레임(Map_LegendImage, z10) 안에 제목 + 6행(아이콘+라벨), 전부 루트 직속 z=11 ----
-    # Map_LegendImage와 같은 pin(right/center) 기준으로 프레임 리전 좌표를 절대 오프셋 배치 — 프레임과 함께 움직인다.
-    try:
-        lg_ax, lg_ay = pin_of("legend_panel")
-        title_rect = region_abs("legend_panel", rg_name_prefix="범례제목")
-        if title_rect is not None:
-            w = find_w(bp, "Map_LegendTitleText")
-            if w is None:
-                w = ensure_widget(bp, unreal.TextBlock, "Map_LegendTitleText", root_name)
-                if w is not None:
-                    w.set_text(unreal.Text("범례"))
+    # ---- Map_LegendImage(v4): element rect가 아니라 '범례프레임' 리전의 절대 rect가 정본 ----
+    # 사용자가 그린 프레임 크기([1455,271]+[0,0,301,465]) 그대로, 9-slice(BOX, wbp.nineSlice) 스트레치.
+    if "legend_panel" in els:
+        try:
+            legend_slice = float(els["legend_panel"].get("wbp", {}).get("nineSlice", 0.28))
+            frame_rect = region_raw_abs("legend_panel", "범례프레임") or elem_abs("legend_panel")
+            w = ensure_widget(bp, unreal.Image, "Map_LegendImage", root_name)
             if w is not None:
-                text_center_slot(w, lg_ax, lg_ay, title_rect, z=11)
-                style_text(w, title_rect[3], COL_LEGEND_GOLD)   # 중앙정렬 + 골드
+                lg_ax, lg_ay = pin_of("legend_panel")
+                pin_slot(w, lg_ax, lg_ay, frame_rect, z=10)
                 w.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
-                res["synced"].append("Map_LegendTitleText")
-        else:
-            res["missing"].append("legend:범례제목")
-        for r in els["legend_panel"].get("regions", []):
-            rname = r.get("name", "")
-            if not rname.startswith("행_"):
-                continue
-            key_kr = rname.split("_", 1)[1]
-            if key_kr not in LEGEND_ROWS:
-                res["notes"].append("legend row unmapped: " + key_kr)
-                continue
-            suffix, mapnode = LEGEND_ROWS[key_kr]
-            row = region_abs("legend_panel", rg_name_prefix=rname)
-            if row is None:
-                res["missing"].append("legend:" + rname)
-                continue
-            row_cy = row[1] + row[3] / 2.0
-            # 아이콘: 행 왼쪽 끝, 44px 정방형, 수직중앙
-            t_icon = load_mapnode(mapnode) if mapnode else ensure_import(LEGEND_REST_SRC)
-            iw = ensure_widget(bp, unreal.Image, "Map_LegendIcon_" + suffix, root_name)
-            if iw is not None:
-                icon_rect = [row[0], row_cy - LEGEND_ICON / 2.0, LEGEND_ICON, LEGEND_ICON]
-                pin_slot(iw, lg_ax, lg_ay, icon_rect, z=11)
-                iw.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
-                if t_icon is not None:
-                    apply_brush(iw, t_icon, LEGEND_ICON, LEGEND_ICON)
-                res["synced"].append("Map_LegendIcon_" + suffix)
-            # 라벨: 아이콘 오른쪽, 좌정렬 수직중앙(alignment(0,0.5)+autosize), 흰색, 폰트=행 높이*0.38
-            lw = find_w(bp, "Map_LegendLabel_" + suffix)
-            if lw is None:
-                lw = ensure_widget(bp, unreal.TextBlock, "Map_LegendLabel_" + suffix, root_name)
-                if lw is not None:
-                    lw.set_text(unreal.Text(key_kr))
-            if lw is not None:
-                label_x = row[0] + LEGEND_ICON + LEGEND_ICON_GAP
-                ld = unreal.AnchorData(
-                    offsets=unreal.Margin(label_x - lg_ax * DW, row_cy - lg_ay * DH, 0.0, 0.0),
-                    anchors=unreal.Anchors(minimum=unreal.Vector2D(lg_ax, lg_ay),
-                                           maximum=unreal.Vector2D(lg_ax, lg_ay)),
-                    alignment=unreal.Vector2D(0.0, 0.5))
-                lw.slot.set_editor_property("layout_data", ld)
-                lw.slot.set_editor_property("auto_size", True)
-                lw.slot.set_editor_property("z_order", 11)
-                lw.set_editor_property("justification", unreal.TextJustify.LEFT)
-                lw.set_color_and_opacity(unreal.SlateColor(unreal.LinearColor(*COL_WHITE)))
-                set_font_size(lw, row[3] * 0.38)
-                lw.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
-                res["synced"].append("Map_LegendLabel_" + suffix)
-    except Exception as ex:
-        err("map", "legend rows " + str(ex)[:70])
+                if t_legend is not None:
+                    apply_brush(w, t_legend, frame_rect[2], frame_rect[3], draw="box", margin=legend_slice)
+                res["synced"].append("Map_LegendImage")
+        except Exception as ex:
+            err("map", "Map_LegendImage " + str(ex)[:70])
 
-    # ---- MapTitleText: map_title rect 중심, autosize+중앙정렬, 폰트=rect높이*0.55 ----
-    try:
-        w = find_w(bp, "MapTitleText")
-        if w is None:
-            # 현재 WBP에는 MapTitleText가 없다(BindWidgetOptional) — 생성해 바인딩을 살린다
-            w = ensure_widget(bp, unreal.TextBlock, "MapTitleText", root_name)
-        if w is not None:
-            ensure_on_canvas(w, canvas)
-            ax, ay = pin_of("map_title")
-            rect = elem_abs("map_title")
-            text_center_slot(w, ax, ay, rect, z=12)
-            style_text(w, rect[3], COL_GOLD)
-            w.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
-            res["synced"].append("MapTitleText")
-    except Exception as ex:
-        err("map", "MapTitleText " + str(ex)[:70])
+    # ---- 범례 재조립(v4): 행 rect = 요소 원점 + 리전 raw 오프셋(region_raw_abs, 스케일 없음), 루트 직속 z=11 ----
+    # '범례제목' 리전은 데이터 주도: 존재 시에만 생성, 없으면 위젯 제거.
+    if "legend_panel" in els:
+        try:
+            lg_ax, lg_ay = pin_of("legend_panel")
+            title_rect = region_raw_abs("legend_panel", "범례제목")
+            if title_rect is not None:
+                w = find_w(bp, "Map_LegendTitleText")
+                if w is None:
+                    w = ensure_widget(bp, unreal.TextBlock, "Map_LegendTitleText", root_name)
+                    if w is not None:
+                        w.set_text(unreal.Text("범례"))
+                if w is not None:
+                    text_center_slot(w, lg_ax, lg_ay, title_rect, z=11)
+                    style_text(w, title_rect[3], COL_LEGEND_GOLD)   # 중앙정렬 + 골드
+                    w.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
+                    res["synced"].append("Map_LegendTitleText")
+            else:
+                remove_widgets(bp, ["Map_LegendTitleText"])   # v4: 리전 삭제 -> 위젯 제거
+            for r in els["legend_panel"].get("regions", []):
+                rname = r.get("name", "")
+                if not rname.startswith("행_"):
+                    continue
+                key_kr = rname.split("_", 1)[1]
+                if key_kr not in LEGEND_ROWS:
+                    res["notes"].append("legend row unmapped: " + key_kr)
+                    continue
+                suffix, mapnode = LEGEND_ROWS[key_kr]
+                row = region_raw_abs("legend_panel", rname)
+                if row is None:
+                    res["missing"].append("legend:" + rname)
+                    continue
+                row_cy = row[1] + row[3] / 2.0
+                # 아이콘: 행 왼쪽 끝, 44px 정방형, 수직중앙
+                t_icon = load_mapnode(mapnode) if mapnode else ensure_import(LEGEND_REST_SRC)
+                iw = ensure_widget(bp, unreal.Image, "Map_LegendIcon_" + suffix, root_name)
+                if iw is not None:
+                    icon_rect = [row[0], row_cy - LEGEND_ICON / 2.0, LEGEND_ICON, LEGEND_ICON]
+                    pin_slot(iw, lg_ax, lg_ay, icon_rect, z=11)
+                    iw.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
+                    if t_icon is not None:
+                        apply_brush(iw, t_icon, LEGEND_ICON, LEGEND_ICON)
+                    res["synced"].append("Map_LegendIcon_" + suffix)
+                # 라벨: 아이콘 오른쪽, 좌정렬 수직중앙(alignment(0,0.5)+autosize), 흰색, 폰트=행 높이*0.38
+                lw = find_w(bp, "Map_LegendLabel_" + suffix)
+                if lw is None:
+                    lw = ensure_widget(bp, unreal.TextBlock, "Map_LegendLabel_" + suffix, root_name)
+                    if lw is not None:
+                        lw.set_text(unreal.Text(key_kr))
+                if lw is not None:
+                    label_x = row[0] + LEGEND_ICON + LEGEND_ICON_GAP
+                    ld = unreal.AnchorData(
+                        offsets=unreal.Margin(label_x - lg_ax * DW, row_cy - lg_ay * DH, 0.0, 0.0),
+                        anchors=unreal.Anchors(minimum=unreal.Vector2D(lg_ax, lg_ay),
+                                               maximum=unreal.Vector2D(lg_ax, lg_ay)),
+                        alignment=unreal.Vector2D(0.0, 0.5))
+                    lw.slot.set_editor_property("layout_data", ld)
+                    lw.slot.set_editor_property("auto_size", True)
+                    lw.slot.set_editor_property("z_order", 11)
+                    lw.set_editor_property("justification", unreal.TextJustify.LEFT)
+                    lw.set_color_and_opacity(unreal.SlateColor(unreal.LinearColor(*COL_WHITE)))
+                    set_font_size(lw, row[3] * 0.38)
+                    lw.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
+                    res["synced"].append("Map_LegendLabel_" + suffix)
+        except Exception as ex:
+            err("map", "legend rows " + str(ex)[:70])
+
+    # ---- MapTitleText: map_title rect 중심, autosize+중앙정렬, 폰트=rect높이*0.55 — 요소 없으면 조용히 스킵 ----
+    if "map_title" in els:
+        try:
+            w = find_w(bp, "MapTitleText")
+            if w is None:
+                # 기존 WBP에는 MapTitleText가 없을 수 있다(BindWidgetOptional) — 생성해 바인딩을 살린다
+                w = ensure_widget(bp, unreal.TextBlock, "MapTitleText", root_name)
+            if w is not None:
+                ensure_on_canvas(w, canvas)
+                ax, ay = pin_of("map_title")
+                rect = elem_abs("map_title")
+                text_center_slot(w, ax, ay, rect, z=12)
+                style_text(w, rect[3], COL_GOLD)
+                w.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
+                res["synced"].append("MapTitleText")
+        except Exception as ex:
+            err("map", "MapTitleText " + str(ex)[:70])
 
     # ---- CloseButton / EnterRoomButton: 하단 edge-pin + 버튼 스타일 브러시 ----
     # CloseButton: 기존 UE 에셋(t_back) 전 상태 동일, disabled만 틴트 0.44 감쇠. EnterRoomButton: v1 유지.
     BTNS = [("CloseButton", "btn_close", t_back, t_back, t_back, True),
             ("EnterRoomButton", "btn_enter", t_enter_n, t_enter_n, t_enter_p or t_enter_n, False)]
     for bname, el, t_n, t_h, t_p, dim_disabled in BTNS:
+        if el not in els:
+            continue   # 요소 삭제 시 슬롯/스타일 싱크만 스킵 — 버튼 위젯은 C++ 필수라 제거하지 않는다
         try:
             b = find_w(bp, bname)
             if b is None:
@@ -667,8 +735,8 @@ def sync_main_map():
             err("map", bname + " " + str(ex)[:70])
 
     # ---- MapStatusText: C++ BindWidgetOptional 필수 위젯(승리/로딩/지도 준비 안 됨 상태 문구) ----
-    # v2 실행에서 소실 확인 — "찾아 이동"이 아니라 ensure(없으면 루트 캔버스 직속 TextBlock 생성)로 복구.
-    # 재부모화 없음(루트 직속 생성/갱신만). V2_REMOVED에 절대 포함 금지.
+    # ensure(없으면 루트 캔버스 직속 TextBlock 생성) — 재부모화 없음, 제거 규칙에 절대 포함 금지.
+    # v4: strip 요소가 있으면 리전 중앙, 없으면 center/bottom 핀 design [960,1024] 중심 폴백(폰트 18).
     try:
         w = find_w(bp, "MapStatusText")
         if w is None:
@@ -678,13 +746,18 @@ def sync_main_map():
         if w is None:
             err("map", "MapStatusText create failed")
         else:
-            ax, ay = pin_of("selected_room_strip")   # center/bottom edge-pin
-            rect = region_abs("selected_room_strip", rg_type="text", index=0) or elem_abs("selected_room_strip")
-            text_center_slot(w, ax, ay, rect, z=12)  # 리전 중앙 + autosize + alignment(0.5,0.5), 스트립 프레임(z10) 위
+            if "selected_room_strip" in els:
+                ax, ay = pin_of("selected_room_strip")   # center/bottom edge-pin
+                rect = region_abs("selected_room_strip", rg_type="text", index=0) or elem_abs("selected_room_strip")
+                text_center_slot(w, ax, ay, rect, z=12)  # 리전 중앙 + autosize + alignment(0.5,0.5)
+                set_font_size(w, rect[3] * 0.5)          # 폰트 = 리전 높이*0.5
+                res["synced"].append("MapStatusText(strip)")
+            else:
+                text_center_slot(w, 0.5, 1.0, [960.0, 1024.0, 0.0, 0.0], z=12)   # 폴백: 하단 중앙 [960,1024]
+                set_font_size(w, 18)
+                res["synced"].append("MapStatusText(fallback-bottom)")
             w.set_editor_property("justification", unreal.TextJustify.CENTER)
-            set_font_size(w, rect[3] * 0.5)          # 폰트 = 리전 높이*0.5
             w.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
-            res["synced"].append("MapStatusText(strip)")
     except Exception as ex:
         err("map", "MapStatusText " + str(ex)[:70])
 
@@ -711,6 +784,8 @@ def sync_main_map():
     # Map_ScrollRodTop/Bottom: 높이=concept rect 높이(84), 폭/위치는 C++ 동기, zorder -190
     for name, el, tex, y0 in [("Map_ScrollRodTop", "scroll_rod_top", t_rod_top, 0.0),
                               ("Map_ScrollRodBottom", "scroll_rod_bottom", t_rod_bot, 728.0)]:
+        if el not in els:
+            continue   # v4: 요소 삭제 시 조용히 스킵
         try:
             w = ensure_widget(bp, unreal.Image, name, "MapGraphCanvas")
             if w is None:
@@ -728,6 +803,8 @@ def sync_main_map():
     # Map_NodeArea 마커(Border, 투명, HitTestInvisible):
     # 앵커 X = x/1920 분수(min/max), 앵커 Y = (0,1), 오프셋 Left/Right=0, Top=y, Bottom=1080-y-h
     try:
+        if "node_area" not in els:
+            raise KeyError("node_area element missing in concept")   # 배치 경계 마커는 필수 — 에러로 노출
         w = ensure_widget(bp, unreal.Border, "Map_NodeArea", "MapGraphCanvas")
         if w is not None:
             na = elem_abs("node_area")
@@ -761,6 +838,8 @@ def sync_main_map():
     # Map_CurrentMarker / Map_SelectGlow (Collapsed — C++이 이동/표시)
     for name, el, tex, z in [("Map_CurrentMarker", "marker_current", t_marker, 20),
                              ("Map_SelectGlow", "next_select_glow", t_glow, -10)]:
+        if el not in els:
+            continue   # v4: 요소 삭제 시 조용히 스킵 (Collapsed 마커라 위젯 잔존 무해)
         try:
             w = ensure_widget(bp, unreal.Image, name, "MapGraphCanvas")
             if w is not None:
