@@ -14,9 +14,15 @@
 #      decor_candle/decor_spellbook/selected_room_strip -> Map_DecorCandle/Map_DecorSpellbook/Map_SelectedRoomStrip 제거.
 #      생성 테이블은 없는 요소를 조용히 스킵(에러 금지).
 #   2) MapStatusText: strip 요소가 있으면 리전 중앙, 없으면 center/bottom 핀 design [960,1024] 중심 폴백(폰트 18). 위젯 자체는 항상 유지.
-#   3) 범례: 프레임 이미지는 element rect가 아니라 '범례프레임' 리전 절대 rect(요소 원점+리전 raw, 스케일 없음)가 정본.
-#      행 rect도 요소 원점+리전 raw 오프셋(region_raw_abs). '범례제목' 리전 삭제 -> 위젯 제거, 리전 존재 시에만 생성(데이터 주도).
-# 규칙: 슬롯/브러시/클래스 디폴트만 쓴다. 이벤트/바인딩/그래프 불가침. 재실행 안전(idempotent, v4 상태로 수렴).
+#   3) 범례: '범례제목' 리전 삭제 -> 위젯 제거, 리전 존재 시에만 생성(데이터 주도).
+# v5(20260704): 해석 정정 + HUD 확장 —
+#   1) 범례 = innerDesignSize 비례 확대가 정본(v4 raw 해석 철회): 사용자 에디터의 "내부 스케일" 모드 —
+#      리전 좌표는 innerDesignSize(300x460) 기준이고 요소 박스(429x599)로 비례 확대된다(region_abs).
+#      프레임 = 요소 박스 전체, 행 = region_abs 확대 rect, 아이콘 = 행높이x0.85, 라벨 x = 아이콘+행높이x0.27, 폰트 = 행높이x0.38.
+#   2) 탑바 배경판 신설(sync_hud_backdrop): topbar_backdrop 요소 -> 다른 WBP(/Game/UI/Concept02/WBP_Concept02_HUD)의
+#      TopBar_Backdrop Image 하나만 소유. 좌우 스트레치 앵커(0,0)-(1,0), 높이 112, 단색(wbp.color), z-50,
+#      Collapsed(C++이 켬). 요소 삭제 시 위젯 제거(삭제 동기 규칙 동일). HUD의 다른 위젯 절대 불가침.
+# 규칙: 슬롯/브러시/클래스 디폴트만 쓴다. 이벤트/바인딩/그래프 불가침. 재실행 안전(idempotent, v5 상태로 수렴).
 # 실행: UnrealEditor-Cmd <uproject> -ExecutePythonScript=<이 파일> (headless)
 # 최종 출력: "WORLDMAPSYNC|" + json 리포트 한 줄 (saved 플래그/생성/갱신/제거/임포트 수)
 import unreal, json, os, shutil
@@ -41,7 +47,8 @@ ROW_PITCH = float(NM.get("rowPitch", 176))
 COL_PITCH_MAX = float(NM.get("colPitchMax", 240))
 TOP_UI_INSET = float(doc.get("wbpNativeSpec", {}).get("topUIInset", 112))
 
-res = {"project": "", "saved": {"WBP_FrontendMap": None, "WBP_FrontendMapNode": None, "WBP_FrontendMapLine": None},
+res = {"project": "", "saved": {"WBP_FrontendMap": None, "WBP_FrontendMapNode": None, "WBP_FrontendMapLine": None,
+                                "WBP_Concept02_HUD": None},
        "created": [], "synced": [], "removed": [], "imported": [], "collapsed": [], "reparented": [],
        "missing": [], "errors": [], "notes": [], "trees": {}, "counts": {}}
 
@@ -74,20 +81,6 @@ def region_abs(el_name, rg_name_prefix=None, rg_type=None, index=0):
             rx, ry, rw, rh = map(float, r["rect"])
             return [ex + rx * sx, ey + ry * sy, rw * sx, rh * sy]
         hit += 1
-    return None
-
-
-def region_raw_abs(el_name, rg_name_prefix):
-    """리전 rect를 '요소 원점 + raw 오프셋'으로 해석(innerDesignSize 스케일 없음) — v4 범례 규칙.
-    사용자가 그린 프레임/행 리전 크기 그대로가 정본이다(요소 rect가 리전보다 커도 스케일하지 않는다)."""
-    if el_name not in els:
-        return None
-    e = els[el_name]
-    ex, ey = float(e["screenRect"][0]), float(e["screenRect"][1])
-    for r in e.get("regions", []):
-        if r.get("name", "").startswith(rg_name_prefix):
-            rx, ry, rw, rh = map(float, r["rect"])
-            return [ex + rx, ey + ry, rw, rh]
     return None
 
 
@@ -354,7 +347,7 @@ def collapse_if_found(bp, names):
             err("map", n + " collapse " + str(ex)[:50])
 
 
-def remove_widgets(bp, names):
+def remove_widgets(bp, names, scope="map"):
     """소스 트리에서 제거. WidgetTree.RemoveWidget은 스크립트 미노출 — 부모 remove_child로 분리하면
     루트 탐색 기반인 find_source_widget_by_name에서 사라져 재실행 시 조용히 스킵된다(idempotent)."""
     for n in names:
@@ -370,7 +363,7 @@ def remove_widgets(bp, names):
                 w.set_visibility(unreal.SlateVisibility.COLLAPSED)
                 res["removed"].append(n + "(collapsed:no-parent)")
         except Exception as ex:
-            err("map", n + " remove " + str(ex)[:50])
+            err(scope, n + " remove " + str(ex)[:50])
 
 
 def get_cdo(asset_path):
@@ -469,8 +462,10 @@ LEGEND_ROWS = {"전투": ("Battle", "T_MapNode_Monster"), "엘리트": ("Elite",
                "보스": ("Boss", "T_MapNode_Boss"), "상점": ("Shop", "T_MapNode_Shop"),
                "보물": ("Treasure", "T_MapNode_Treasure"), "휴식": ("Rest", None)}
 LEGEND_REST_SRC = ASSETS + "12_WorldMap/05_CustomNodeIcons/node_rest_nobg.png"   # 기존 임포트분(T_wm_node_rest_nobg) 재사용
-LEGEND_ICON = 44.0          # 행 아이콘 한 변(px)
-LEGEND_ICON_GAP = 14.0      # 아이콘-라벨 간격(px, 재량값)
+# v5: 아이콘/간격/폰트는 확대된 행 높이에 비례(고정 px 철회) — 내부 스케일 모드에서 요소 리사이즈를 따라간다
+LEGEND_ICON_RATIO = 0.85    # 아이콘 한 변 = 행 높이 x 0.85
+LEGEND_GAP_RATIO = 0.27     # 아이콘-라벨 간격 = 행 높이 x 0.27
+LEGEND_FONT_RATIO = 0.38    # 라벨 폰트 = 행 높이 x 0.38
 COL_LEGEND_GOLD = (0.96, 0.93, 0.80, 1.0)
 COL_WHITE = (1.0, 1.0, 1.0, 1.0)
 # 범례 부속 위젯 전체(legend_panel 요소 삭제 시 프레임과 함께 제거 — 고아 방지)
@@ -592,12 +587,12 @@ def sync_main_map():
         except Exception as ex:
             err("map", name + " " + str(ex)[:70])
 
-    # ---- Map_LegendImage(v4): element rect가 아니라 '범례프레임' 리전의 절대 rect가 정본 ----
-    # 사용자가 그린 프레임 크기([1455,271]+[0,0,301,465]) 그대로, 9-slice(BOX, wbp.nineSlice) 스트레치.
+    # ---- Map_LegendImage(v5): innerDesignSize 비례 확대가 정본 — 프레임 = 요소 박스 전체(≈429x599) ----
+    # 사용자 에디터 "내부 스케일" 모드: 프레임 리전(≈풀 인너 300x460)이 요소 박스로 비례 확대된다.
     if "legend_panel" in els:
         try:
             legend_slice = float(els["legend_panel"].get("wbp", {}).get("nineSlice", 0.28))
-            frame_rect = region_raw_abs("legend_panel", "범례프레임") or elem_abs("legend_panel")
+            frame_rect = elem_abs("legend_panel")   # 요소 박스 전체 = 확대된 프레임
             w = ensure_widget(bp, unreal.Image, "Map_LegendImage", root_name)
             if w is not None:
                 lg_ax, lg_ay = pin_of("legend_panel")
@@ -609,12 +604,12 @@ def sync_main_map():
         except Exception as ex:
             err("map", "Map_LegendImage " + str(ex)[:70])
 
-    # ---- 범례 재조립(v4): 행 rect = 요소 원점 + 리전 raw 오프셋(region_raw_abs, 스케일 없음), 루트 직속 z=11 ----
+    # ---- 범례 재조립(v5): 행 rect = region_abs(innerDesignSize 비례 확대), 아이콘/간격/폰트도 행 높이 비례 ----
     # '범례제목' 리전은 데이터 주도: 존재 시에만 생성, 없으면 위젯 제거.
     if "legend_panel" in els:
         try:
             lg_ax, lg_ay = pin_of("legend_panel")
-            title_rect = region_raw_abs("legend_panel", "범례제목")
+            title_rect = region_abs("legend_panel", rg_name_prefix="범례제목")
             if title_rect is not None:
                 w = find_w(bp, "Map_LegendTitleText")
                 if w is None:
@@ -627,7 +622,7 @@ def sync_main_map():
                     w.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
                     res["synced"].append("Map_LegendTitleText")
             else:
-                remove_widgets(bp, ["Map_LegendTitleText"])   # v4: 리전 삭제 -> 위젯 제거
+                remove_widgets(bp, ["Map_LegendTitleText"])   # 리전 삭제 -> 위젯 제거
             for r in els["legend_panel"].get("regions", []):
                 rname = r.get("name", "")
                 if not rname.startswith("행_"):
@@ -637,29 +632,30 @@ def sync_main_map():
                     res["notes"].append("legend row unmapped: " + key_kr)
                     continue
                 suffix, mapnode = LEGEND_ROWS[key_kr]
-                row = region_raw_abs("legend_panel", rname)
+                row = region_abs("legend_panel", rg_name_prefix=rname)
                 if row is None:
                     res["missing"].append("legend:" + rname)
                     continue
                 row_cy = row[1] + row[3] / 2.0
-                # 아이콘: 행 왼쪽 끝, 44px 정방형, 수직중앙
+                icon_px = row[3] * LEGEND_ICON_RATIO       # v5: 행 높이 비례
+                # 아이콘: 행 왼쪽 끝, 정방형, 수직중앙
                 t_icon = load_mapnode(mapnode) if mapnode else ensure_import(LEGEND_REST_SRC)
                 iw = ensure_widget(bp, unreal.Image, "Map_LegendIcon_" + suffix, root_name)
                 if iw is not None:
-                    icon_rect = [row[0], row_cy - LEGEND_ICON / 2.0, LEGEND_ICON, LEGEND_ICON]
+                    icon_rect = [row[0], row_cy - icon_px / 2.0, icon_px, icon_px]
                     pin_slot(iw, lg_ax, lg_ay, icon_rect, z=11)
                     iw.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
                     if t_icon is not None:
-                        apply_brush(iw, t_icon, LEGEND_ICON, LEGEND_ICON)
+                        apply_brush(iw, t_icon, icon_px, icon_px)
                     res["synced"].append("Map_LegendIcon_" + suffix)
-                # 라벨: 아이콘 오른쪽, 좌정렬 수직중앙(alignment(0,0.5)+autosize), 흰색, 폰트=행 높이*0.38
+                # 라벨: 아이콘 오른쪽(간격=행높이x0.27), 좌정렬 수직중앙(alignment(0,0.5)+autosize), 흰색, 폰트=행높이x0.38
                 lw = find_w(bp, "Map_LegendLabel_" + suffix)
                 if lw is None:
                     lw = ensure_widget(bp, unreal.TextBlock, "Map_LegendLabel_" + suffix, root_name)
                     if lw is not None:
                         lw.set_text(unreal.Text(key_kr))
                 if lw is not None:
-                    label_x = row[0] + LEGEND_ICON + LEGEND_ICON_GAP
+                    label_x = row[0] + icon_px + row[3] * LEGEND_GAP_RATIO
                     ld = unreal.AnchorData(
                         offsets=unreal.Margin(label_x - lg_ax * DW, row_cy - lg_ay * DH, 0.0, 0.0),
                         anchors=unreal.Anchors(minimum=unreal.Vector2D(lg_ax, lg_ay),
@@ -670,7 +666,7 @@ def sync_main_map():
                     lw.slot.set_editor_property("z_order", 11)
                     lw.set_editor_property("justification", unreal.TextJustify.LEFT)
                     lw.set_color_and_opacity(unreal.SlateColor(unreal.LinearColor(*COL_WHITE)))
-                    set_font_size(lw, row[3] * 0.38)
+                    set_font_size(lw, row[3] * LEGEND_FONT_RATIO)
                     lw.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
                     res["synced"].append("Map_LegendLabel_" + suffix)
         except Exception as ex:
@@ -1012,6 +1008,82 @@ def sync_line_wbp():
 
 
 # ==================================================================================
+# 4) WBP_Concept02_HUD — 탑바 배경판(TopBar_Backdrop) 하나만 소유 (다른 위젯 절대 불가침)
+# ==================================================================================
+HUD_PATH_FALLBACK = "/Game/UI/Concept02/WBP_Concept02_HUD"
+
+
+def sync_hud_backdrop():
+    """topbar_backdrop 요소 -> HUD WBP의 TopBar_Backdrop Image 생성/갱신.
+    지도가 열려 있는 동안만 HUD가 켜는 탑바 배경판(초기 Collapsed — C++ UCombatTileMapHUDWidget이 표시).
+    요소가 JSON에서 사라지면 위젯 제거(삭제 동기 규칙 동일)."""
+    el = els.get("topbar_backdrop")
+    hud_path = (el or {}).get("wbp", {}).get("targetWidget") or HUD_PATH_FALLBACK
+    key = "WBP_Concept02_HUD"
+    if not unreal.EditorAssetLibrary.does_asset_exist(hud_path):
+        err("hud", "asset missing " + hud_path)
+        return
+    # 최초 1회 백업 (/Game -> Content 경로 변환)
+    uasset = TARGET_PROJECT + "/Content" + hud_path[len("/Game"):] + ".uasset"
+    try:
+        if os.path.exists(uasset) and not os.path.exists(uasset + ".bak_pre_worldmap_sync"):
+            shutil.copy2(uasset, uasset + ".bak_pre_worldmap_sync")
+    except Exception as ex:
+        res["notes"].append("backup " + key + ": " + str(ex)[:60])
+
+    bp = unreal.EditorAssetLibrary.load_asset(hud_path)
+    if bp is None:
+        err("hud", "load failed " + hud_path)
+        return
+
+    # 요소 삭제 동기: topbar_backdrop이 JSON에서 사라지면 위젯 제거 후 저장(위젯도 없으면 no-op)
+    if el is None:
+        if find_w(bp, "TopBar_Backdrop") is not None:
+            remove_widgets(bp, ["TopBar_Backdrop"], scope="hud")
+            compile_and_save(bp, hud_path, "hud", key)
+        else:
+            res["notes"].append(key + ": topbar_backdrop absent, widget absent — no-op")
+        return
+
+    root = find_root(bp, ["RootCanvas", "HUD_Map", "HUD_Settings"])
+    canvas = first_canvas(root)
+    if canvas is None:
+        err("hud", "root canvas not found")
+        return
+    try:
+        w = ensure_widget(bp, unreal.Image, "TopBar_Backdrop", canvas.get_name())
+        if w is None:
+            err("hud", "TopBar_Backdrop create failed")
+        else:
+            h = float(el["screenRect"][3])                       # 높이 = 요소 rect 높이(=topUIInset 112)
+            z = int((el.get("wbp", {}) or {}).get("zOrder", -50))  # 탑바 아트보다 뒤
+            ld = unreal.AnchorData(
+                offsets=unreal.Margin(0.0, 0.0, 0.0, h),         # L0 / Top0 / R0 / 높이(h)
+                anchors=unreal.Anchors(minimum=unreal.Vector2D(0.0, 0.0), maximum=unreal.Vector2D(1.0, 0.0)),
+                alignment=unreal.Vector2D(0.0, 0.0))
+            w.slot.set_editor_property("layout_data", ld)
+            w.slot.set_editor_property("z_order", z)
+            tex_src = region_image("topbar_backdrop")
+            if tex_src:
+                # 아트 확정 시: 리전 imageAsset 텍스처 임포트 + 흰색 틴트
+                t = ensure_import(tex_src)
+                if t is not None:
+                    apply_brush(w, t, DW, h)
+                w.set_color_and_opacity(unreal.LinearColor(1.0, 1.0, 1.0, 1.0))
+            else:
+                # 현재: 텍스처 없이 단색 — 기본 흰 브러시에 위젯 틴트로 색을 입힌다
+                color = (el.get("wbp", {}) or {}).get("color", [0.02, 0.035, 0.07, 0.94])
+                w.set_color_and_opacity(unreal.LinearColor(*[float(c) for c in color]))
+            # Collapsed — C++이 월드맵 열림과 동기로 켠다(켤 때 HitTestInvisible로 표시하는 것은 C++ 책임)
+            w.set_visibility(unreal.SlateVisibility.COLLAPSED)
+            res["synced"].append("TopBar_Backdrop")
+    except Exception as ex:
+        err("hud", "TopBar_Backdrop " + str(ex)[:70])
+
+    compile_and_save(bp, hud_path, "hud", key)
+
+
+# ==================================================================================
 # main
 # ==================================================================================
 def main():
@@ -1040,6 +1112,7 @@ def main():
     sync_main_map()
     sync_node_wbp()
     sync_line_wbp()
+    sync_hud_backdrop()
 
 
 try:
