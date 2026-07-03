@@ -197,8 +197,6 @@ private:
 	/** @brief 현재 위치 마커/선택 글로우(WBP 소유)를 해당 노드 위치로 옮긴다. */
 	void UpdateOverlayMarkers(const TMap<FIntPoint, FVector2D>& NodeCenters, const FIntPoint& CurrentCoord, const FIntPoint& SelectedCoord) const;
 
-	/** @brief 좌측 스테이지 정보 패널(WBP 소유)의 진행도 텍스트를 채운다. */
-	void UpdateStageInfoText(int32 CurrentRowIndex, int32 RowCount) const;
 
 	/** @brief 지정 인덱스의 연결선 위젯을 풀에서 가져오거나 새로 만든다. */
 	FFrontendMapLinePoolEntry* AcquireMapLineWidget(int32 LineIndex);
@@ -307,6 +305,10 @@ private:
 	 * 과거 C++ 런타임 생성(배경/범례)을 WBP 소유로 이관한 것 — C++은 동적 크기/위치 동기만 한다.
 	 */
 
+	/** @brief 풀스크린 스크림(빌더 생성). 탑바 인셋 적용 대상. */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UImage> Map_Scrim;
+
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UImage> Map_ParchmentBody;
 
@@ -334,11 +336,6 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UImage> Map_SelectGlow;
 
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> Map_StageNameText;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> Map_StageProgressText;
 
 	/**
 	 * @brief 연결선 하나를 만들 때 사용할 WBP 클래스
@@ -365,6 +362,17 @@ private:
 	 */
 	UPROPERTY(Category = "Frontend Map", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	TSubclassOf<UFrontendMapNodeWidget> MapNodeWidgetClass;
+
+	/**
+	 * @brief 지도 콘텐츠(스크림+스크롤)를 위에서 내리는 인셋(px, 디자인 1080 기준)
+	 *
+	 * @details
+	 * 전투 HUD 탑바(상태바/방 이름/내비 버튼)가 지도 위에 계속 보이게 하기 위한 값이다.
+	 * 인셋 영역은 이 위젯이 아무것도 그리지 않아 히트테스트가 통과하고, 탑바 버튼을 그대로 누를 수 있다.
+	 * 값은 concept 시안(wbpNativeSpec.topUIInset)이 정본이며 빌더가 WBP Class Defaults로 주입한다.
+	 */
+	UPROPERTY(Category = "Frontend Map", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	float mTopUIInset = 0.f;
 
 	UPROPERTY(Transient)
 	TArray<FFrontendMapLinePoolEntry> mMapLinePool;

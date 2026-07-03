@@ -809,7 +809,6 @@ bool UFrontendMapWidget::RefreshMap()
 
 	HideUnusedMapGraphWidgets(UsedLineCount, UsedNodeCount);
 	UpdateOverlayMarkers(NodeCenters, CurrentCoord, SelectedCoord);
-	UpdateStageInfoText(CurrentCoord.X, mCachedRowCount);
 
 	if (bHasSelectedRoom)
 	{
@@ -1221,10 +1220,19 @@ void UFrontendMapWidget::ConfigureMapGraphLayout() const
 		if (UCanvasPanelSlot* ScrollSlot = Cast<UCanvasPanelSlot>(MapScrollBox->Slot))
 		{
 			ScrollSlot->SetAnchors(FAnchors(0.0f, 0.0f, 1.0f, 1.0f));
-			ScrollSlot->SetOffsets(FMargin(0.0f));
+			// 탑바 인셋: 위 영역을 비워 전투 HUD 탑바가 보이고 눌리게 한다.
+			ScrollSlot->SetOffsets(FMargin(0.0f, FMath::Max(0.f, mTopUIInset), 0.0f, 0.0f));
 			ScrollSlot->SetAlignment(FVector2D::ZeroVector);
 			ScrollSlot->SetAutoSize(false);
 			ScrollSlot->SetZOrder(0);
+		}
+	}
+	if (Map_Scrim != nullptr)
+	{
+		if (UCanvasPanelSlot* ScrimSlot = Cast<UCanvasPanelSlot>(Map_Scrim->Slot))
+		{
+			ScrimSlot->SetAnchors(FAnchors(0.0f, 0.0f, 1.0f, 1.0f));
+			ScrimSlot->SetOffsets(FMargin(0.0f, FMath::Max(0.f, mTopUIInset), 0.0f, 0.0f));
 		}
 	}
 	if (MapGraphCanvas != nullptr)
@@ -1320,30 +1328,5 @@ void UFrontendMapWidget::UpdateOverlayMarkers(const TMap<FIntPoint, FVector2D>& 
 		{
 			Map_SelectGlow->SetVisibility(ESlateVisibility::Collapsed);
 		}
-	}
-}
-
-void UFrontendMapWidget::UpdateStageInfoText(int32 CurrentRowIndex, int32 RowCount) const
-{
-	// 좌측 스테이지 정보 패널(WBP 소유)의 진행도만 채운다. 프레임/이름 스타일은 빌더가 잡는다.
-	if (Map_StageProgressText != nullptr)
-	{
-		if (RowCount > 0 && CurrentRowIndex >= 0)
-		{
-			Map_StageProgressText->SetText(FText::Format(
-				NSLOCTEXT("FrontendMapWidget", "StageProgressFormat", "{0} / {1}"),
-				FText::AsNumber(CurrentRowIndex + 1),
-				FText::AsNumber(RowCount)));
-		}
-		else
-		{
-			Map_StageProgressText->SetText(FText::GetEmpty());
-		}
-	}
-
-	if (Map_StageNameText != nullptr && Map_StageNameText->GetText().IsEmpty())
-	{
-		// 막 이름 데이터가 생기기 전까지는 기본 제목을 표시한다.
-		Map_StageNameText->SetText(mMapText);
 	}
 }

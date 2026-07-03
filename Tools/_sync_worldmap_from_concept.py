@@ -1,9 +1,14 @@
 # WBP_FrontendMap/Node/Line 월드맵 시안 싱크: concept_worldmap_claude02.json(216)을 정본으로.
 # hybridSlotSync — 프레임(스크림/양피지/두루마리/패널/버튼/범례/마커)은 WBP 슬롯+브러시로 소유 이전,
 # 노드/선 스타일(링/경로 텍스처, 두께)은 WBP 클래스 디폴트(CDO)로 이관한다.
-# 규칙: 슬롯/브러시/클래스 디폴트만 쓴다. 이벤트/바인딩/그래프 불가침. 재실행 안전(idempotent).
+# v2(20260703): concept 갱신 반영 —
+#   1) stage_info_panel 철회: Map_StageInfoPanel/Map_StageNameText/Map_StageProgressText 생성 중단 + 1차 실행 산출물 제거
+#   2) 범례 = 완성형 이미지 1장(Map_LegendImage, T_wm_legend_full) — 구 행 조립 위젯(Map_LegendPanel/Title/Icon_*/Label_*) 제거
+#   3) CloseButton = 클래스 선택과 동일한 기존 UE 에셋(wbp.ueAsset) 직접 로드(임포트 금지), 전 상태 동일 브러시 + disabled 틴트 0.44
+#   4) wbpNativeSpec.topUIInset -> 메인 WBP CDO mTopUIInset 주입
+# 규칙: 슬롯/브러시/클래스 디폴트만 쓴다. 이벤트/바인딩/그래프 불가침. 재실행 안전(idempotent, v2 상태로 수렴).
 # 실행: UnrealEditor-Cmd <uproject> -ExecutePythonScript=<이 파일> (headless)
-# 최종 출력: "WORLDMAPSYNC|" + json 리포트 한 줄 (saved 플래그/생성/갱신/임포트 수)
+# 최종 출력: "WORLDMAPSYNC|" + json 리포트 한 줄 (saved 플래그/생성/갱신/제거/임포트 수)
 import unreal, json, os, shutil
 
 CONCEPT = "D:/UnrealProjects/P_RD_develop_20260701_216/Start_CombatUIRectEditor/concept_worldmap_claude02.json"
@@ -24,9 +29,10 @@ NODE_SIZE = float(NM.get("nodeSize", 112))
 BOSS_NODE_SIZE = float(NM.get("bossNodeSize", 128))
 ROW_PITCH = float(NM.get("rowPitch", 176))
 COL_PITCH_MAX = float(NM.get("colPitchMax", 240))
+TOP_UI_INSET = float(doc.get("wbpNativeSpec", {}).get("topUIInset", 112))
 
 res = {"project": "", "saved": {"WBP_FrontendMap": None, "WBP_FrontendMapNode": None, "WBP_FrontendMapLine": None},
-       "created": [], "synced": [], "imported": [], "collapsed": [], "reparented": [],
+       "created": [], "synced": [], "removed": [], "imported": [], "collapsed": [], "reparented": [],
        "missing": [], "errors": [], "notes": [], "trees": {}, "counts": {}}
 
 
@@ -125,14 +131,15 @@ def load_mapnode(base):
     return None
 
 
-def icon_tex_for(image_asset):
-    """리전 imageAsset 해석: T_MapNode_*는 기존 에셋 로드, 그 외(커스텀 휴식 등)는 임포트."""
-    if not image_asset:
+def load_ue_tex(obj_path):
+    """기존 UE 텍스처 에셋 직접 로드(임포트 금지) — '/Game/.../T_x' 패키지 경로."""
+    if not obj_path:
         return None
-    base = os.path.splitext(os.path.basename(image_asset))[0]
-    if base.startswith("T_MapNode_"):
-        return load_mapnode(base)
-    return ensure_import(image_asset)
+    full = obj_path if "." in obj_path else obj_path + "." + obj_path.rsplit("/", 1)[-1]
+    if unreal.EditorAssetLibrary.does_asset_exist(full):
+        return unreal.load_asset(full)
+    res["missing"].append("ueAsset:" + obj_path)
+    return None
 
 
 # ---------------- 브러시/슬롯 유틸 ----------------
@@ -318,6 +325,25 @@ def collapse_if_found(bp, names):
             err("map", n + " collapse " + str(ex)[:50])
 
 
+def remove_widgets(bp, names):
+    """소스 트리에서 제거. WidgetTree.RemoveWidget은 스크립트 미노출 — 부모 remove_child로 분리하면
+    루트 탐색 기반인 find_source_widget_by_name에서 사라져 재실행 시 조용히 스킵된다(idempotent)."""
+    for n in names:
+        w = find_w(bp, n)
+        if w is None:
+            continue  # 없으면 조용히 스킵
+        try:
+            p = w.get_parent()
+            if p is not None:
+                p.remove_child(w)
+                res["removed"].append(n)
+            else:
+                w.set_visibility(unreal.SlateVisibility.COLLAPSED)
+                res["removed"].append(n + "(collapsed:no-parent)")
+        except Exception as ex:
+            err("map", n + " remove " + str(ex)[:50])
+
+
 def get_cdo(asset_path):
     gen_path = asset_path + "." + asset_path.rsplit("/", 1)[-1] + "_C"
     cls = None
@@ -360,8 +386,9 @@ def scope_errors(scope):
     return [e for e in res["errors"] if e.startswith(scope + ":")]
 
 
-def compile_and_save(bp, asset_path, scope, key):
-    """save_asset은 에디터가 열려 있으면 False(조용한 실패) — 반환값을 saved 플래그로 그대로 노출."""
+def compile_and_save(bp, asset_path, scope, key, cdo_pairs=None):
+    """위젯 편집 -> 컴파일(generated_class 최신화) -> CDO 클래스 디폴트 주입 -> 저장.
+    save_asset은 에디터가 열려 있으면 False(조용한 실패) — 반환값을 saved 플래그로 그대로 노출."""
     if scope_errors(scope):
         res["saved"][key] = False
         res["notes"].append(key + ": errors present, save skipped")
@@ -372,19 +399,31 @@ def compile_and_save(bp, asset_path, scope, key):
         err(scope, "compile " + str(ex)[:80])
         res["saved"][key] = False
         return
+    if cdo_pairs:
+        cdo = get_cdo(asset_path)
+        if cdo is None:
+            err(scope, "CDO load failed")
+        else:
+            set_cdo_props(cdo, scope, cdo_pairs)
+        if scope_errors(scope):
+            res["saved"][key] = False
+            res["notes"].append(key + ": errors present, save skipped")
+            return
     ok = bool(unreal.EditorAssetLibrary.save_asset(asset_path))
     res["saved"][key] = ok
     if not ok:
         res["notes"].append(key + ": save_asset returned False (editor open? asset locked?)")
 
 
-# 텍스트 색: 네이비/골드 패널 위 밝은 톤, 양피지 위 잉크 톤 (시안 무드 기준의 재량값)
-COL_LIGHT = (0.88, 0.91, 0.96, 1.0)
+# 텍스트 색: 양피지 위 잉크 톤, 타이틀 골드 톤 (시안 무드 기준의 재량값)
 COL_GOLD = (0.95, 0.87, 0.60, 1.0)
 COL_INK = (0.30, 0.22, 0.12, 0.85)
 
-# 범례 행 한글 키 -> 위젯 접미사(ASCII, 결정적 이름 = idempotent 재실행 안전)
-LEGEND_KEY = {"전투": "Battle", "엘리트": "Elite", "보스": "Boss", "상점": "Shop", "보물": "Treasure", "휴식": "Rest"}
+# v1 빌더 산출물 중 v2에서 철회된 위젯 — 찾아서 소스 트리에서 제거(없으면 스킵)
+V2_REMOVED = (["Map_StageInfoPanel", "Map_StageNameText", "Map_StageProgressText",
+               "Map_LegendPanel", "Map_LegendTitleText"]
+              + ["Map_LegendIcon_" + s for s in ("Battle", "Elite", "Boss", "Shop", "Treasure", "Rest")]
+              + ["Map_LegendLabel_" + s for s in ("Battle", "Elite", "Boss", "Shop", "Treasure", "Rest")])
 
 
 # ==================================================================================
@@ -407,6 +446,9 @@ def sync_main_map():
         err("map", "MapGraphCanvas missing")
         return
 
+    # ---- v2 철회 위젯 제거 (1차 실행 산출물 — 없으면 조용히 스킵) ----
+    remove_widgets(bp, V2_REMOVED)
+
     # ---- 텍스처 준비 (JSON imageAsset 정본, T_wm_* 로 임포트) ----
     t_scrim = ensure_import(region_image("bg_scrim"))
     t_parch = ensure_import(region_image("parchment_body"))
@@ -414,14 +456,13 @@ def sync_main_map():
     t_rod_bot = ensure_import(region_image("scroll_rod_bottom"))
     t_marker = ensure_import(region_image("marker_current"))
     t_glow = ensure_import(region_image("next_select_glow"))
-    t_panel = ensure_import(region_image("stage_info_panel"))
+    t_legend = ensure_import(region_image("legend_panel"))     # legend_full.png -> T_wm_legend_full
     t_candle = ensure_import(region_image("decor_candle"))
     t_book = ensure_import(region_image("decor_spellbook"))
     t_strip = ensure_import(region_image("selected_room_strip"))
-    close_src = region_image("btn_close")
+    # CloseButton: 기존 UE 에셋 직접 참조(wbp.ueAsset, 임포트 금지) — 클래스 선택 BACK 프레임과 동일
+    t_back = load_ue_tex(els["btn_close"].get("wbp", {}).get("ueAsset"))
     enter_src = region_image("btn_enter")
-    t_close_n = ensure_import(close_src)
-    t_close_p = ensure_import(close_src.replace("_normal", "_pressed")) if close_src else None
     t_enter_n = ensure_import(enter_src)
     t_enter_p = ensure_import(enter_src.replace("_normal", "_pressed")) if enter_src else None
 
@@ -466,10 +507,10 @@ def sync_main_map():
     except Exception as ex:
         err("map", "Map_ScrollHint " + str(ex)[:70])
 
-    # ---- 프레임/장식 이미지들: edge-pin + 브러시 (프레임은 BOX 9-slice로 모서리 보존) ----
+    # ---- 프레임/장식 이미지들: edge-pin + 브러시 ----
+    # Map_LegendImage: 완성형 범례 아트 1장(1024사각) — 원본 비율 그대로 IMAGE, 행 조립 없음
     ART = [
-        ("Map_StageInfoPanel", "stage_info_panel", t_panel, "box", 0.25),
-        ("Map_LegendPanel", "legend_panel", t_panel, "box", 0.25),
+        ("Map_LegendImage", "legend_panel", t_legend, "image", None),
         ("Map_DecorCandle", "decor_candle", t_candle, "image", None),
         ("Map_DecorSpellbook", "decor_spellbook", t_book, "image", None),
         ("Map_SelectedRoomStrip", "selected_room_strip", t_strip, "box", 0.30),
@@ -490,76 +531,6 @@ def sync_main_map():
         except Exception as ex:
             err("map", name + " " + str(ex)[:70])
 
-    # ---- stage_info_panel 내부 TextBlock 2개 (텍스트는 비움 — C++이 채움) ----
-    try:
-        ax, ay = pin_of("stage_info_panel")
-        name_rect = region_abs("stage_info_panel", rg_type="text", index=0)
-        prog_rect = region_abs("stage_info_panel", rg_type="text", index=1)
-        for tname, rect, color in [("Map_StageNameText", name_rect, COL_GOLD),
-                                   ("Map_StageProgressText", prog_rect, COL_LIGHT)]:
-            if rect is None:
-                res["missing"].append(tname + ":region")
-                continue
-            w = find_w(bp, tname)
-            if w is None:
-                w = ensure_widget(bp, unreal.TextBlock, tname, root_name)
-                if w is not None:
-                    w.set_text(unreal.Text(""))
-            if w is not None:
-                text_center_slot(w, ax, ay, rect, z=12)
-                style_text(w, rect[3], color)
-                w.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
-                res["synced"].append(tname)
-    except Exception as ex:
-        err("map", "stage texts " + str(ex)[:70])
-
-    # ---- legend_panel: 아이콘(기존 T_MapNode_* 재사용) + 라벨 TextBlock 행들 + 제목 ----
-    try:
-        ax, ay = pin_of("legend_panel")
-        title_rect = region_abs("legend_panel", rg_name_prefix="범례제목")
-        if title_rect is not None:
-            w = find_w(bp, "Map_LegendTitleText")
-            if w is None:
-                w = ensure_widget(bp, unreal.TextBlock, "Map_LegendTitleText", root_name)
-                if w is not None:
-                    w.set_text(unreal.Text("범례"))
-            if w is not None:
-                text_center_slot(w, ax, ay, title_rect, z=12)
-                style_text(w, title_rect[3], COL_GOLD)
-                w.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
-                res["synced"].append("Map_LegendTitleText")
-        for r in els["legend_panel"].get("regions", []):
-            rname = r.get("name", "")
-            if not rname.startswith("범례아이콘_"):
-                continue
-            key_kr = rname.split("_", 1)[1]
-            suffix = LEGEND_KEY.get(key_kr)
-            if suffix is None:
-                res["notes"].append("legend key unmapped: " + key_kr)
-                continue
-            icon_rect = region_abs("legend_panel", rg_name_prefix=rname)
-            label_rect = region_abs("legend_panel", rg_name_prefix="범례라벨_" + key_kr)
-            t_icon = icon_tex_for(r.get("imageAsset"))
-            iw = ensure_widget(bp, unreal.Image, "Map_LegendIcon_" + suffix, root_name)
-            if iw is not None and icon_rect is not None:
-                pin_slot(iw, ax, ay, icon_rect, z=12)
-                iw.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
-                if t_icon is not None:
-                    apply_brush(iw, t_icon, icon_rect[2], icon_rect[3])
-                res["synced"].append("Map_LegendIcon_" + suffix)
-            lw = find_w(bp, "Map_LegendLabel_" + suffix)
-            if lw is None:
-                lw = ensure_widget(bp, unreal.TextBlock, "Map_LegendLabel_" + suffix, root_name)
-                if lw is not None:
-                    lw.set_text(unreal.Text(key_kr))
-            if lw is not None and label_rect is not None:
-                text_center_slot(lw, ax, ay, label_rect, z=12)
-                style_text(lw, label_rect[3], COL_LIGHT)
-                lw.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
-                res["synced"].append("Map_LegendLabel_" + suffix)
-    except Exception as ex:
-        err("map", "legend " + str(ex)[:70])
-
     # ---- MapTitleText: map_title rect 중심, autosize+중앙정렬, 폰트=rect높이*0.55 ----
     try:
         w = find_w(bp, "MapTitleText")
@@ -578,8 +549,10 @@ def sync_main_map():
         err("map", "MapTitleText " + str(ex)[:70])
 
     # ---- CloseButton / EnterRoomButton: 하단 edge-pin + 버튼 스타일 브러시 ----
-    for bname, el, t_n, t_p in [("CloseButton", "btn_close", t_close_n, t_close_p),
-                                ("EnterRoomButton", "btn_enter", t_enter_n, t_enter_p)]:
+    # CloseButton: 기존 UE 에셋(t_back) 전 상태 동일, disabled만 틴트 0.44 감쇠. EnterRoomButton: v1 유지.
+    BTNS = [("CloseButton", "btn_close", t_back, t_back, t_back, True),
+            ("EnterRoomButton", "btn_enter", t_enter_n, t_enter_n, t_enter_p or t_enter_n, False)]
+    for bname, el, t_n, t_h, t_p, dim_disabled in BTNS:
         try:
             b = find_w(bp, bname)
             if b is None:
@@ -592,8 +565,13 @@ def sync_main_map():
             if t_n is not None:
                 st = b.get_editor_property("widget_style")
                 st.set_editor_property("normal", make_brush(t_n, rect[2], rect[3]))
-                st.set_editor_property("hovered", make_brush(t_n, rect[2], rect[3]))   # hovered 원본 없음 → normal
-                st.set_editor_property("pressed", make_brush(t_p or t_n, rect[2], rect[3]))
+                st.set_editor_property("hovered", make_brush(t_h, rect[2], rect[3]))
+                st.set_editor_property("pressed", make_brush(t_p, rect[2], rect[3]))
+                if dim_disabled:
+                    db = make_brush(t_n, rect[2], rect[3])
+                    db.set_editor_property("tint_color",
+                                           unreal.SlateColor(unreal.LinearColor(0.44, 0.44, 0.44, 1.0)))
+                    st.set_editor_property("disabled", db)
                 b.set_editor_property("widget_style", st)
             # 버튼 안 텍스트 중앙 정렬(레퍼런스 패턴)
             for ci in range(b.get_children_count()):
@@ -608,18 +586,24 @@ def sync_main_map():
         except Exception as ex:
             err("map", bname + " " + str(ex)[:70])
 
-    # ---- MapStatusText: Map_SelectedRoomStrip 안 텍스트 리전 중앙으로 ----
+    # ---- MapStatusText: C++ BindWidgetOptional 필수 위젯(승리/로딩/지도 준비 안 됨 상태 문구) ----
+    # v2 실행에서 소실 확인 — "찾아 이동"이 아니라 ensure(없으면 루트 캔버스 직속 TextBlock 생성)로 복구.
+    # 재부모화 없음(루트 직속 생성/갱신만). V2_REMOVED에 절대 포함 금지.
     try:
         w = find_w(bp, "MapStatusText")
         if w is None:
-            res["missing"].append("MapStatusText")
+            w = ensure_widget(bp, unreal.TextBlock, "MapStatusText", root_name)
+            if w is not None:
+                w.set_text(unreal.Text(""))   # 문구는 C++이 채운다 — 비워둔다
+        if w is None:
+            err("map", "MapStatusText create failed")
         else:
-            ensure_on_canvas(w, canvas)
-            ax, ay = pin_of("selected_room_strip")
+            ax, ay = pin_of("selected_room_strip")   # center/bottom edge-pin
             rect = region_abs("selected_room_strip", rg_type="text", index=0) or elem_abs("selected_room_strip")
-            text_center_slot(w, ax, ay, rect, z=12)
+            text_center_slot(w, ax, ay, rect, z=12)  # 리전 중앙 + autosize + alignment(0.5,0.5), 스트립 프레임(z10) 위
             w.set_editor_property("justification", unreal.TextJustify.CENTER)
-            set_font_size(w, rect[3] * 0.55)   # 색은 기존 디자인 유지
+            set_font_size(w, rect[3] * 0.5)          # 폰트 = 리전 높이*0.5
+            w.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
             res["synced"].append("MapStatusText(strip)")
     except Exception as ex:
         err("map", "MapStatusText " + str(ex)[:70])
@@ -715,7 +699,9 @@ def sync_main_map():
                            "MapPreviewStateText", "MapLegendScroll", "MapLegendList", "MapLegendTitle"])
 
     res["trees"]["map_after"] = dump_tree(find_root(bp, ["MapScrollBox"]))
-    compile_and_save(bp, MAP_PATH, "map", "WBP_FrontendMap")
+    # 컴파일 후 메인 WBP generated_class CDO에 topUIInset 주입 (C++ UPROPERTY float mTopUIInset — 컴파일 후 실행 전제)
+    compile_and_save(bp, MAP_PATH, "map", "WBP_FrontendMap",
+                     cdo_pairs=[("mTopUIInset", TOP_UI_INSET)])
 
 
 # ==================================================================================
@@ -777,34 +763,13 @@ def sync_node_wbp():
     except Exception as ex:
         err("node", "NodeRingImage " + str(ex)[:70])
 
-    # 위젯 편집을 먼저 컴파일해 generated_class를 최신화한 뒤 CDO에 클래스 디폴트를 넣고 저장한다.
-    if scope_errors("node"):
-        res["saved"]["WBP_FrontendMapNode"] = False
-        return
-    try:
-        unreal.BlueprintEditorLibrary.compile_blueprint(bp)
-    except Exception as ex:
-        err("node", "compile " + str(ex)[:80])
-        res["saved"]["WBP_FrontendMapNode"] = False
-        return
-    cdo = get_cdo(NODE_PATH)
-    if cdo is None:
-        err("node", "CDO load failed")
-    else:
-        set_cdo_props(cdo, "node", [
-            ("mRingNormalTexture", rings.get("normal")),
-            ("mRingCurrentTexture", rings.get("current")),
-            ("mRingLockedTexture", rings.get("locked")),
-            ("mRingClearedTexture", rings.get("cleared")),
-        ] + list(icons.items()))
-    if scope_errors("node"):
-        res["saved"]["WBP_FrontendMapNode"] = False
-        res["notes"].append("WBP_FrontendMapNode: errors present, save skipped")
-        return
-    ok = bool(unreal.EditorAssetLibrary.save_asset(NODE_PATH))
-    res["saved"]["WBP_FrontendMapNode"] = ok
-    if not ok:
-        res["notes"].append("WBP_FrontendMapNode: save_asset returned False (editor open?)")
+    # 위젯 편집 -> 컴파일 -> CDO 클래스 디폴트(링 4종 + 아이콘 5종) -> 저장
+    compile_and_save(bp, NODE_PATH, "node", "WBP_FrontendMapNode", cdo_pairs=[
+        ("mRingNormalTexture", rings.get("normal")),
+        ("mRingCurrentTexture", rings.get("current")),
+        ("mRingLockedTexture", rings.get("locked")),
+        ("mRingClearedTexture", rings.get("cleared")),
+    ] + list(icons.items()))
 
 
 # ==================================================================================
@@ -879,32 +844,12 @@ def sync_line_wbp():
     except Exception as ex:
         err("line", "LineImage " + str(ex)[:70])
 
-    if scope_errors("line"):
-        res["saved"]["WBP_FrontendMapLine"] = False
-        return
-    try:
-        unreal.BlueprintEditorLibrary.compile_blueprint(bp)
-    except Exception as ex:
-        err("line", "compile " + str(ex)[:80])
-        res["saved"]["WBP_FrontendMapLine"] = False
-        return
-    cdo = get_cdo(LINE_PATH)
-    if cdo is None:
-        err("line", "CDO load failed")
-    else:
-        set_cdo_props(cdo, "line", [
-            ("mSolidTexture", t_solid),
-            ("mDashedTexture", t_dash),
-            ("mLineThickness", thickness),
-        ])
-    if scope_errors("line"):
-        res["saved"]["WBP_FrontendMapLine"] = False
-        res["notes"].append("WBP_FrontendMapLine: errors present, save skipped")
-        return
-    ok = bool(unreal.EditorAssetLibrary.save_asset(LINE_PATH))
-    res["saved"]["WBP_FrontendMapLine"] = ok
-    if not ok:
-        res["notes"].append("WBP_FrontendMapLine: save_asset returned False (editor open?)")
+    # 위젯 편집 -> 컴파일 -> CDO 클래스 디폴트(경로 텍스처/두께) -> 저장
+    compile_and_save(bp, LINE_PATH, "line", "WBP_FrontendMapLine", cdo_pairs=[
+        ("mSolidTexture", t_solid),
+        ("mDashedTexture", t_dash),
+        ("mLineThickness", thickness),
+    ])
 
 
 # ==================================================================================
@@ -946,7 +891,7 @@ except Exception as ex:
     res["notes"].append(traceback.format_exc()[-400:])
 
 res["counts"] = {"created": len(res["created"]), "synced": len(res["synced"]),
-                 "imported": len(res["imported"]), "collapsed": len(res["collapsed"]),
-                 "reparented": len(res["reparented"]), "missing": len(res["missing"]),
-                 "errors": len(res["errors"])}
+                 "removed": len(res["removed"]), "imported": len(res["imported"]),
+                 "collapsed": len(res["collapsed"]), "reparented": len(res["reparented"]),
+                 "missing": len(res["missing"]), "errors": len(res["errors"])}
 print("WORLDMAPSYNC|" + json.dumps(res, ensure_ascii=False))
