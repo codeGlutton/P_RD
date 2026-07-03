@@ -59,9 +59,10 @@ public:
 public:
 	/*
 	* @brief 줌 속력
+	* @note 사용처가 불확실하여 우선 주석 처리
 	*/
-	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "ZoomSpeed", AllowPrivateAccess = "true"))
-	float mZoomSpeed = 1.f;
+	//UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "ZoomSpeed", AllowPrivateAccess = "true"))
+	//float mZoomSpeed = 1.f;
 
 	/*
 	* @brief 최대 OrthoWidth, 또는 최소 확대
@@ -193,15 +194,21 @@ public:
 public:
 
 	/*
-	* @brief 줌 값을 받으면 즉시 카메라를 Zoom합니다
+	* @brief ZoomDelta 값을 받으면 즉시 카메라를 해당 값만큼 Zoom 합니다
 	*
 	* @param ZoomDelta 만큼 즉시 Zoom 합니다
 	*/
 	UFUNCTION(BlueprintCallable)
 	void ZoomCamera_Instant(float ZoomDelta);
 
+	/*
+	* @brief ZoomDelta과 ViewPort 위치 값을 받으면 해당 위치로 Zoom하며 ViewPortPos에 맞는 위치로 이동합니다
+	*
+	* @param ZoomDelta 만큼 즉시 Zoom 합니다
+	* @param ViewPortPos를 WorldPos로 변환하고 즉시 이동합니다.
+	*/
 	UFUNCTION(BlueprintCallable)
-	void ZoomCamera_InstantAndMoveToViewportPosition(float ZoomDelta, FVector2D ViewPortPos);
+	void ZoomCamera_InstantAndMoveToViewportPosition_Instant(float ZoomDelta, FVector2D ViewPortPos);
 
 	/*
 	* @brief 줌 값을 받아서 일정 시간동안 카메라를 Zoom합니다
@@ -218,7 +225,7 @@ public:
 	* @param ViewPortPos위치로 카메라를 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void ZoomCamera_SmoothAndMoveToViewportPosition(float ZoomDelta, FVector2D ViewPortPos);
+	void ZoomCamera_SmoothAndMoveToViewportPosition_Smooth(float ZoomDelta, FVector2D ViewPortPos);
 
 	/*
 	* @brief 줌 값을 받아서 카메라를 Zoom합니다.
@@ -227,7 +234,7 @@ public:
 	* @param ViewPortPos위치로 카메라를 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void ZoomCamera_SmoothAndMoveToWorldPosition(float ZoomDelta, FVector WorldPosition);
+	void ZoomCamera_SmoothAndMoveToWorldPosition_Smooth(float ZoomDelta, FVector WorldPosition);
 
 	/*
 	* @brief MoveToViewportPosition로 카메라의 시선을 옮긴다.
@@ -236,7 +243,7 @@ public:
 	* @param MoveToViewportPosition에서 Ray를 쏜 다음 충돌한 위치로 카메라의 시선 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void MoveToViewportPosition(FVector2D ViewPortPos);
+	void MoveToViewportPosition_Smooth(FVector2D ViewPortPos);
 
 	/*
 	* @brief WorldPosition로 카메라의 시선을 옮긴다.
@@ -245,7 +252,7 @@ public:
 	* @param WorldPosition 위치로 카메라의 시선 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void MoveToWorldPosition(FVector WorldPosition);
+	void MoveToWorldPosition_Smooth(FVector WorldPosition);
 
 	/*
 	* @brief MoveToViewportPosition로 카메라의 시선을 옮긴다.
@@ -254,13 +261,19 @@ public:
 	* @param MoveToViewportPosition에서 Ray를 쏜 다음 충돌한 위치로 카메라의 시선 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void DragMoveToViewportPosition(FVector2D PreViewPortPos, FVector2D CurViewPortPos);
+	void DragMoveToViewportPosition_Instant(FVector2D PreViewPortPos, FVector2D CurViewPortPos);
 
 
 private:
-	void MoveStep();
+	/* 
+	* @brief 이동 시 매 틱마다 호출하는 함수
+	*/
+	void MoveSmooth();
 
-	void ZoomStep();
+	/*
+	* @brief 줌 시 매 틱마다 호출하는 함수
+	*/
+	void ZoomSmooth();
 
 
 public:

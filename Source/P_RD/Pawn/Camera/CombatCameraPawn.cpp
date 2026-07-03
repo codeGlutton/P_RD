@@ -113,7 +113,7 @@ UCameraMovementComponent* ACombatCameraPawn::GetCameraMovementComponent()
 bool ACombatCameraPawn::IsDrag()
 {
 	return mTouchStates[0].bIsCurrentlyPressed &&
-		3.f < FVector2D::Distance(mTouchStates[0].PreTouchPos, mTouchStates[0].CurTouchPos);
+		mImageStabilization < FVector2D::Distance(mTouchStates[0].PreTouchPos, mTouchStates[0].CurTouchPos);
 }
 
 bool ACombatCameraPawn::IsPinch()
@@ -123,14 +123,14 @@ bool ACombatCameraPawn::IsPinch()
 
 	return mTouchStates[0].bIsCurrentlyPressed &&
 		mTouchStates[1].bIsCurrentlyPressed &&
-		3.f < FMath::Abs(PrePinchDis - CurPinchDis);
+		mImageStabilization < FMath::Abs(PrePinchDis - CurPinchDis);
 }
 
 void ACombatCameraPawn::Dragging(const TArray<FTouchState>& Touch1State)
 {
 	checkf(IsValid(mCameraMovementComponent), TEXT("CameraMovementComponent Is Not Valid"));
 
-	mCameraMovementComponent.Get()->DragMoveToViewportPosition(Touch1State[0].PreTouchPos, Touch1State[0].CurTouchPos);
+	mCameraMovementComponent.Get()->DragMoveToViewportPosition_Instant(Touch1State[0].PreTouchPos, Touch1State[0].CurTouchPos);
 }
 
 void ACombatCameraPawn::Pinching(const TArray<FTouchState>& TouchState)
@@ -141,5 +141,5 @@ void ACombatCameraPawn::Pinching(const TArray<FTouchState>& TouchState)
 	float CurPinchDis = FVector2D::Distance(mTouchStates[0].CurTouchPos, mTouchStates[1].CurTouchPos);
 
 	//mCameraMovementComponent.Get()->ZoomCamera_Instant(PrePinchDis - CurPinchDis);
-	mCameraMovementComponent.Get()->ZoomCamera_InstantAndMoveToViewportPosition(PrePinchDis - CurPinchDis, (mTouchStates[0].CurTouchPos + mTouchStates[1].CurTouchPos)/2);
+	mCameraMovementComponent.Get()->ZoomCamera_InstantAndMoveToViewportPosition_Instant(PrePinchDis - CurPinchDis, (mTouchStates[0].CurTouchPos + mTouchStates[1].CurTouchPos)/2);
 }

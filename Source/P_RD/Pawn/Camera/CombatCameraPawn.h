@@ -24,10 +24,8 @@ struct FTouchState
 
 };
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnDragging, const TArray<FTouchState>& /*Delta*/);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnPinching, const TArray<FTouchState>& /*Delta*/);
-
-
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnDragging, const TArray<FTouchState>&);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnPinching, const TArray<FTouchState>&);
 
 UCLASS()
 class P_RD_API ACombatCameraPawn : public APawn
@@ -64,11 +62,26 @@ public:
 
 	// ========================================
 	// Touch 상태 관련 변수
-	//@brief 이전 틱의 Touch 위치와 상태 변수
-	TArray<FTouchState> mTouchStates;
+
+
+	/*
+	* @brief 카메라 조작 시 손떨림 방지 변수
+	*/
 	float mImageStabilization = 3.f;
 
+	/*
+	* @brief 터치 관련 상태 저장
+	*/
+	TArray<FTouchState> mTouchStates;
+
+	/*
+	* @brief Draggin 제스쳐 사용 시 호출할 카메라 행동 대리자
+	*/
 	FOnDragging OnDragging;
+	
+	/* 
+	* @brief Pinching 제스쳐 사용 시 호출할 카메라 행동 대리자
+	*/
 	FOnPinching OnPinching;
 
 
@@ -80,10 +93,27 @@ public:
 	UCameraMovementComponent* GetCameraMovementComponent();
 
 private:
+	/*
+	* @brief Drag 중인지 나타내는 함수
+	* @return true 시 드래그 중, false 시 드래그 아님
+	*/
 	bool IsDrag();
+
+	/*
+	* @brief Pinch 중인지 나타내는 함수
+	* @return true 시 Pinch 중, false 시 Pinch 아님
+	*/
 	bool IsPinch();
 
 private:
+
+	/*
+	* @brief Drag 중 카메라가 시행할 행동 
+	*/
 	void Dragging(const TArray<FTouchState>& TouchState);
+
+	/*
+	* @brief Pinch 중 카메라가 시행할 행동
+	*/
 	void Pinching(const TArray<FTouchState>& TouchState);
 };
