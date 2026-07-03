@@ -57,8 +57,10 @@ void UFrontendMapLineWidget::SetLineColor(const FLinearColor& InColor)
 	}
 }
 
-void UFrontendMapLineWidget::SetLineStyle(bool bIsOpenPath, const FLinearColor& Tint)
+void UFrontendMapLineWidget::SetLineStyle(bool bIsOpenPath)
 {
+	// 틴트도 시안(WBP 클래스 디폴트)이 정본 — C++ 하드코딩 금지.
+	const FLinearColor Tint = bIsOpenPath ? mOpenTint : mLockedTint;
 	UTexture2D* PathTexture = bIsOpenPath ? mSolidTexture.Get() : mDashedTexture.Get();
 	if (LineImage != nullptr && PathTexture != nullptr)
 	{
@@ -151,9 +153,9 @@ void UFrontendMapNodeWidget::SetNodeVisual(
 		if (Icon != nullptr)
 		{
 			NodePanel->SetBrushFromTexture(Icon);
-			// 잠김은 자물쇠 링이 이미 표현하므로 아이콘은 살짝만 눌러 원색을 유지한다(과한 감쇠는 씻겨 보임).
+			// 잠김은 자물쇠 링이 이미 표현하므로 아이콘은 살짝만 누른다. 값은 시안(nodeStyle.lockedIconTint)이 정본.
 			NodePanel->SetBrushColor(RoomState == EMapRoomState::Locked && !bIsCurrentRoom
-				? FLinearColor(0.8f, 0.8f, 0.8f, 1.f)
+				? mLockedIconTint
 				: FLinearColor::White);
 			bHasIcon = true;
 		}

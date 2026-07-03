@@ -79,7 +79,7 @@ public:
 	 * @details
 	 * 텍스처는 WBP Class Defaults(시안 빌더가 주입)가 소유한다. 텍스처가 없으면 기존 색상 Border로 폴백한다.
 	 */
-	void SetLineStyle(bool bIsOpenPath, const FLinearColor& Tint);
+	void SetLineStyle(bool bIsOpenPath);
 
 	/** @brief 시안이 정한 선 두께. 부모가 CanvasPanelSlot 높이로 쓴다. */
 	float GetLineThickness() const;
@@ -109,6 +109,14 @@ private:
 	/** @brief 선 두께(px, 디자인 기준) */
 	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	float mLineThickness = 14.f;
+
+	/** @brief 열린 길 틴트(시안 mOpenTint) */
+	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	FLinearColor mOpenTint = FLinearColor(1.f, 1.f, 1.f, 0.95f);
+
+	/** @brief 잠긴 길 틴트(시안 mLockedTint) */
+	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	FLinearColor mLockedTint = FLinearColor(1.f, 1.f, 1.f, 0.55f);
 };
 
 /**
@@ -209,6 +217,10 @@ private:
 
 	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	TObjectPtr<UTexture2D> mIconTreasureTexture;
+
+	/** @brief 잠긴 방 아이콘 곱색(시안 nodeStyle.lockedIconTint) — 잠김의 주역은 링, 이 틴트는 보조 */
+	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	FLinearColor mLockedIconTint = FLinearColor(0.8f, 0.8f, 0.8f, 1.f);
 
 	int32 mRowIndex = INDEX_NONE;
 	int32 mColumnIndex = INDEX_NONE;

@@ -734,11 +734,8 @@ bool UFrontendMapWidget::RefreshMap()
 			}
 
 			UFrontendMapLineWidget* ConnectionLine = LineEntry->mLineWidget;
-			// 실선=열린 길 / 점선=잠긴 길 (텍스처는 시안이 WBP 클래스 디폴트로 소유).
-			const bool bOpenPath = Room.mState != EMapRoomState::Locked;
-			ConnectionLine->SetLineStyle(bOpenPath, bOpenPath
-				? FLinearColor(1.f, 1.f, 1.f, 0.95f)
-				: FLinearColor(1.f, 1.f, 1.f, 0.55f));
+			// 실선=열린 길 / 점선=잠긴 길 — 텍스처/틴트 모두 시안(WBP 클래스 디폴트) 소유.
+			ConnectionLine->SetLineStyle(Room.mState != EMapRoomState::Locked);
 
 			FWidgetTransform LineTransform;
 			LineTransform.Angle = FMath::RadiansToDegrees(FMath::Atan2(Delta.Y, Delta.X));

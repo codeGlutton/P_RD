@@ -28,7 +28,13 @@
 #      기존 세로 타일링(VERTICAL) 철회 — NO_TILE로 리셋(9-slice와 충돌, 재실행 수렴).
 #   2) scroll_rod_top/bottom 요소 삭제 -> ELEMENT_WIDGET 매핑 추가로 Map_ScrollRodTop/Bottom 위젯 제거.
 #   3) topbar_backdrop 알파 1.0 — 빌더는 wbp.color 배열 알파를 그대로 사용(폴백 기본값도 1.0으로 정렬).
-# 규칙: 슬롯/브러시/클래스 디폴트만 쓴다. 이벤트/바인딩/그래프 불가침. 재실행 안전(idempotent, v6 상태로 수렴).
+# v7(20260704): 데이터 주도 확대 + 틴트 CDO(새 C++ UPROPERTY — 컴파일 후 실행 전제) —
+#   1) status_text 요소 신설 -> MapStatusText 배치를 요소 rect 기준(박스 중심 autosize+중앙, 폰트=높이x0.4)으로.
+#      요소 없으면 기존 strip/하드코딩 폴백 체인 유지. ensure-생성 로직 불변.
+#   2) LINE CDO에 mOpenTint/mLockedTint(FLinearColor) 주입 — path_layer wbp.classDefaults에서 읽음.
+#   3) NODE CDO에 mLockedIconTint(FLinearColor) 주입 — wbpNativeSpec.nodeStyle.lockedIconTint.
+#   4) 범례 비율(iconRatio/gapRatio/fontRatio)을 legend_panel wbp.rowStyle에서 읽음(폴백 동일값).
+# 규칙: 슬롯/브러시/클래스 디폴트만 쓴다. 이벤트/바인딩/그래프 불가침. 재실행 안전(idempotent, v7 상태로 수렴).
 # 실행: UnrealEditor-Cmd <uproject> -ExecutePythonScript=<이 파일> (headless)
 # 최종 출력: "WORLDMAPSYNC|" + json 리포트 한 줄 (saved 플래그/생성/갱신/제거/임포트 수)
 import unreal, json, os, shutil
@@ -475,10 +481,12 @@ LEGEND_ROWS = {"전투": ("Battle", "T_MapNode_Monster"), "엘리트": ("Elite",
                "보스": ("Boss", "T_MapNode_Boss"), "상점": ("Shop", "T_MapNode_Shop"),
                "보물": ("Treasure", "T_MapNode_Treasure"), "휴식": ("Rest", None)}
 LEGEND_REST_SRC = ASSETS + "12_WorldMap/05_CustomNodeIcons/node_rest_nobg.png"   # 기존 임포트분(T_wm_node_rest_nobg) 재사용
-# v5: 아이콘/간격/폰트는 확대된 행 높이에 비례(고정 px 철회) — 내부 스케일 모드에서 요소 리사이즈를 따라간다
-LEGEND_ICON_RATIO = 0.85    # 아이콘 한 변 = 행 높이 x 0.85
-LEGEND_GAP_RATIO = 0.27     # 아이콘-라벨 간격 = 행 높이 x 0.27
-LEGEND_FONT_RATIO = 0.38    # 라벨 폰트 = 행 높이 x 0.38
+# v5: 아이콘/간격/폰트는 확대된 행 높이에 비례(고정 px 철회) — 내부 스케일 모드에서 요소 리사이즈를 따라간다.
+# v7: 비율은 legend_panel wbp.rowStyle 메타가 정본(데이터 주도) — 폴백은 기존 재량값과 동일.
+_ROW_STYLE = (els.get("legend_panel") or {}).get("wbp", {}).get("rowStyle", {})
+LEGEND_ICON_RATIO = float(_ROW_STYLE.get("iconRatio", 0.85))   # 아이콘 한 변 = 행 높이 x 비율
+LEGEND_GAP_RATIO = float(_ROW_STYLE.get("gapRatio", 0.27))     # 아이콘-라벨 간격 = 행 높이 x 비율
+LEGEND_FONT_RATIO = float(_ROW_STYLE.get("fontRatio", 0.38))   # 라벨 폰트 = 행 높이 x 비율
 COL_LEGEND_GOLD = (0.96, 0.93, 0.80, 1.0)
 COL_WHITE = (1.0, 1.0, 1.0, 1.0)
 # 범례 부속 위젯 전체(legend_panel 요소 삭제 시 프레임과 함께 제거 — 고아 방지)
@@ -745,7 +753,8 @@ def sync_main_map():
 
     # ---- MapStatusText: C++ BindWidgetOptional 필수 위젯(승리/로딩/지도 준비 안 됨 상태 문구) ----
     # ensure(없으면 루트 캔버스 직속 TextBlock 생성) — 재부모화 없음, 제거 규칙에 절대 포함 금지.
-    # v4: strip 요소가 있으면 리전 중앙, 없으면 center/bottom 핀 design [960,1024] 중심 폴백(폰트 18).
+    # v7: status_text 요소가 정본(박스 중심 autosize+중앙정렬, 폰트=박스 높이x0.4).
+    #     요소 없으면 v4 폴백 체인 유지: strip 리전 중앙 -> 하드코딩 [960,1024](폰트 18).
     try:
         w = find_w(bp, "MapStatusText")
         if w is None:
@@ -755,7 +764,13 @@ def sync_main_map():
         if w is None:
             err("map", "MapStatusText create failed")
         else:
-            if "selected_room_strip" in els:
+            if "status_text" in els:
+                ax, ay = pin_of("status_text")           # center/bottom edge-pin
+                rect = elem_abs("status_text")
+                text_center_slot(w, ax, ay, rect, z=12)  # 박스 중심 + autosize + alignment(0.5,0.5)
+                set_font_size(w, rect[3] * 0.4)          # 폰트 = 박스 높이 x 0.4
+                res["synced"].append("MapStatusText(status_text)")
+            elif "selected_room_strip" in els:
                 ax, ay = pin_of("selected_room_strip")   # center/bottom edge-pin
                 rect = region_abs("selected_room_strip", rg_type="text", index=0) or elem_abs("selected_room_strip")
                 text_center_slot(w, ax, ay, rect, z=12)  # 리전 중앙 + autosize + alignment(0.5,0.5)
@@ -940,12 +955,15 @@ def sync_node_wbp():
     except Exception as ex:
         err("node", "NodeRingImage " + str(ex)[:70])
 
-    # 위젯 편집 -> 컴파일 -> CDO 클래스 디폴트(링 4종 + 아이콘 5종) -> 저장
+    # 위젯 편집 -> 컴파일 -> CDO 클래스 디폴트(링 4종 + 아이콘 5종 + 잠김 틴트) -> 저장
+    # v7: 잠긴 방 아이콘 곱색 — wbpNativeSpec.nodeStyle.lockedIconTint (C++ UPROPERTY FLinearColor mLockedIconTint)
+    locked_icon_tint = doc.get("wbpNativeSpec", {}).get("nodeStyle", {}).get("lockedIconTint", [0.8, 0.8, 0.8, 1.0])
     compile_and_save(bp, NODE_PATH, "node", "WBP_FrontendMapNode", cdo_pairs=[
         ("mRingNormalTexture", rings.get("normal")),
         ("mRingCurrentTexture", rings.get("current")),
         ("mRingLockedTexture", rings.get("locked")),
         ("mRingClearedTexture", rings.get("cleared")),
+        ("mLockedIconTint", unreal.LinearColor(*[float(c) for c in locked_icon_tint])),
     ] + list(icons.items()))
 
 
@@ -1021,11 +1039,16 @@ def sync_line_wbp():
     except Exception as ex:
         err("line", "LineImage " + str(ex)[:70])
 
-    # 위젯 편집 -> 컴파일 -> CDO 클래스 디폴트(경로 텍스처/두께) -> 저장
+    # 위젯 편집 -> 컴파일 -> CDO 클래스 디폴트(경로 텍스처/두께 + v7 열림/잠김 틴트) -> 저장
+    # (C++ UPROPERTY FLinearColor mOpenTint/mLockedTint — 컴파일 후 실행 전제)
+    open_tint = cd.get("mOpenTint", [1.0, 1.0, 1.0, 0.95])
+    locked_tint = cd.get("mLockedTint", [1.0, 1.0, 1.0, 0.55])
     compile_and_save(bp, LINE_PATH, "line", "WBP_FrontendMapLine", cdo_pairs=[
         ("mSolidTexture", t_solid),
         ("mDashedTexture", t_dash),
         ("mLineThickness", thickness),
+        ("mOpenTint", unreal.LinearColor(*[float(c) for c in open_tint])),
+        ("mLockedTint", unreal.LinearColor(*[float(c) for c in locked_tint])),
     ])
 
 
