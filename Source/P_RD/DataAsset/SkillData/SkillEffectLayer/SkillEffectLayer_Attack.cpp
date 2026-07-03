@@ -29,7 +29,7 @@ void FSkillEffectLayer_Attack::ApplyPointEffect(IBoardCombatTarget* ActorModel, 
     EffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
 
     TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_AttackPoint::StaticClass(), EffectContext);
-    EffectSpec->mDynamicMagnitude = 1.f;
+    EffectSpec->mDynamicMagnitude = mDefaultDamage + DiceSum * mDiceRatio;
     AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
 }
 

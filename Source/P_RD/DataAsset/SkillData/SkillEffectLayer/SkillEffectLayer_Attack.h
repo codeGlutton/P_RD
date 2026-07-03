@@ -24,4 +24,10 @@ public:
 public:
 	void ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const override;
 	void CommitEffect(IBoardCombatTarget* ActorModel, const TArray<FTileIndex>& TargetTileIndexes, const TArray<IBoardCombatTarget*>& OtherCombatTargets, float DiceSum) const override;
+
+public:
+	UPROPERTY(Category = "Attack", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DefaultDamage"))
+	float mDefaultDamage = 0.f;
+	UPROPERTY(Category = "Attack", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceRatio"))
+	float mDiceRatio = 0.f;
 };
