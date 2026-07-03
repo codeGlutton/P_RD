@@ -149,6 +149,32 @@ protected:
 		IN OUT FBoardCombatTargetSnapshotData& TargetDelta);
 
 	/**
+	 * @brief 수량 조건 판정
+	 *
+	 * @details
+	 * mTargets를 순회하며 IsTargetQualified로 자격 타겟 수를 센 뒤,
+	 * 수량 조건(Any/All)으로 발동 여부를 결정.
+	 * 타겟이 비어 있으면 판정 대상이 없으므로 통과.
+	 *
+	 * @param Ctx 소유자/대상 및 스냅샷
+	 * @return 발동 허용이면 true
+	 */
+	bool PassesTargetQuantifier(IN const FPassiveActivateContext& Ctx) const;
+
+	/**
+	 * @brief 자격 조건 판정
+	 *
+	 * @details
+	 * 기본은 무조건 통과(true).
+	 * '체력 50% 이하' 같은 자격 조건이 있는 패시브가 override해서 스냅샷 수치로 판정.
+	 * (TODO: 지금 보니 자격 조건을 데이터로 지정하고 판정하는 로직이 없음. 이거 구현은 나중에 ^^)
+	 *
+	 * @param Snapshot 대상 스냅샷 (없으면 nullptr)
+	 * @return 자격을 갖췄으면 true
+	 */
+	virtual bool IsTargetQualified(IN const FBoardCombatTargetSnapshotData* Snapshot) const { return true; }
+
+	/**
 	 * @brief 이 패시브가 적용할 이펙트
 	 *
 	 * @details
@@ -161,13 +187,13 @@ protected:
 	TSubclassOf<UTacticalEffect> mEffectClass;
 
 	/**
-	 * @brief 적용 중인 이펙트 핸들 (단일)
+	 * @brief 적용 중인 이펙트 핸들들 (대상별)
 	 *
 	 * @details
-	 * NotifyPassive 적용 시 저장하고 DeactivatePassive 제거 시 사용 후 리셋.
-	 * 동시에 살아있는 이펙트는 하나라는 전제(직렬 apply/deactivate).
+	 * NotifyPassive 적용 시 대상마다 하나씩 저장하고 DeactivatePassive 제거 시 전부 비움.
+	 * 한 배치는 통째로 적용/해제된다는 전제(직렬 apply/deactivate).
 	 */
-	FActiveTacticalEffectHandle mActiveHandle;
+	TArray<FActiveTacticalEffectHandle> mActiveHandles;
 
 	/**
 	 * @brief 발동 시점 태그 (단일)

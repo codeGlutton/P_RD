@@ -52,6 +52,18 @@ struct P_RD_API FSettingsPanelValueModel
 
 	UPROPERTY(Category = "Settings", EditAnywhere, BlueprintReadWrite)
 	ESettingsQualityLevel mQualityLevel = ESettingsQualityLevel::Medium;
+
+	UPROPERTY(Category = "Settings", EditAnywhere, BlueprintReadWrite)
+	float mMasterVolume = 1.0f;   // 전체 음량 (0~1)
+
+	UPROPERTY(Category = "Settings", EditAnywhere, BlueprintReadWrite)
+	bool mEffectsEnabled = true;  // 전투 이펙트 on/off (수신 시스템 미구현 - 값/이벤트만)
+
+	UPROPERTY(Category = "Settings", EditAnywhere, BlueprintReadWrite)
+	int32 mFpsLimit = 60;         // FPS 제한(30/60) (수신 시스템 미구현 - 값/이벤트만)
+
+	UPROPERTY(Category = "Settings", EditAnywhere, BlueprintReadWrite)
+	bool mUseKoreanLanguage = true;   // 언어(한국어=true / English=false)
 };
 
 // 설정 입력이 바뀌면 위젯이 올려보내는 이벤트들. 받는 쪽(타이틀/탑바/게임모드)이 실제 적용.
