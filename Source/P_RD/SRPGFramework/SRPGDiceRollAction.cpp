@@ -74,6 +74,8 @@ ESRPGCommandResult USRPGDiceRollAction::HandleCommand(const TInstancedStruct<FSR
             FPassiveActivateContext PassiveContext;
             PassiveContext.mOwner = PlayerUnit;
             PassiveContext.mOwnerSnapshot = &PlayerUnitSnapshot;
+            PassiveContext.mTargets.Add(PlayerUnit);
+            PassiveContext.mTargetSnapshots.Add(&PlayerUnitSnapshot);
 
             for (UTacticalPassive*& Passive : Passives)
             {
@@ -104,6 +106,8 @@ ESRPGCommandResult USRPGDiceRollAction::HandleCommand(const TInstancedStruct<FSR
             FPassiveActivateContext PassiveContext;
             PassiveContext.mOwner = PlayerUnit;
             PassiveContext.mOwnerSnapshot = &PlayerUnitSnapshot;
+            PassiveContext.mTargets.Add(PlayerUnit);
+            PassiveContext.mTargetSnapshots.Add(&PlayerUnitSnapshot);
 
             for (UTacticalPassive*& Passive : Passives)
             {

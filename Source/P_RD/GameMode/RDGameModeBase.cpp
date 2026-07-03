@@ -91,6 +91,15 @@ bool ARDGameModeBase::BackFromOptionPanel() const
 	return true;
 }
 
+bool ARDGameModeBase::SetMasterVolume(float Volume) const
+{
+	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
+	GameProfileSubsystem->SetVolume(EGameVolumeType::Master, Volume);
+
+	return true;
+}
+
 bool ARDGameModeBase::SetBGMVolume(float Volume) const
 {
 	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
@@ -114,6 +123,15 @@ bool ARDGameModeBase::SetVoiceVolume(float Volume) const
 	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
 	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
 	GameProfileSubsystem->SetVolume(EGameVolumeType::Voice, Volume);
+
+	return true;
+}
+
+bool ARDGameModeBase::SetLanguage(ELanguageType Language) const
+{
+	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
+	GameProfileSubsystem->SetLanguage(Language);
 
 	return true;
 }

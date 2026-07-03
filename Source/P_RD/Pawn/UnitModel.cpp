@@ -59,8 +59,8 @@ void UUnitModel::OnBeginRoom()
 	FPassiveActivateContext PassiveContext;
 	PassiveContext.mOwner = this;
 	PassiveContext.mOwnerSnapshot = &UnitSnapshot;
-	PassiveContext.mTarget = this;
-	PassiveContext.mTargetSnapshot = &UnitSnapshot;
+	PassiveContext.mTargets.Add(this);
+	PassiveContext.mTargetSnapshots.Add(&UnitSnapshot);
 
 	for (UTacticalPassive*& Passive : Passives)
 	{
@@ -82,8 +82,8 @@ void UUnitModel::OnEndRoom()
 	FPassiveActivateContext PassiveContext;
 	PassiveContext.mOwner = this;
 	PassiveContext.mOwnerSnapshot = &UnitSnapshot;
-	PassiveContext.mTarget = this;
-	PassiveContext.mTargetSnapshot = &UnitSnapshot;
+	PassiveContext.mTargets.Add(this);
+	PassiveContext.mTargetSnapshots.Add(&UnitSnapshot);
 
 	for (UTacticalPassive*& Passive : Passives)
 	{
@@ -103,8 +103,8 @@ void UUnitModel::OnBeginTurn()
 	FPassiveActivateContext PassiveContext;
 	PassiveContext.mOwner = this;
 	PassiveContext.mOwnerSnapshot = &OwnerSnapshot;
-	PassiveContext.mTarget = this;
-	PassiveContext.mTargetSnapshot = &OwnerSnapshot;
+	PassiveContext.mTargets.Add(this);
+	PassiveContext.mTargetSnapshots.Add(&OwnerSnapshot);
 
 	for (UTacticalPassive*& Passive : Passives)
 	{
@@ -124,8 +124,8 @@ void UUnitModel::OnEndTurn()
 	FPassiveActivateContext PassiveContext;
 	PassiveContext.mOwner = this;
 	PassiveContext.mOwnerSnapshot = &OwnerSnapshot;
-	PassiveContext.mTarget = this;
-	PassiveContext.mTargetSnapshot = &OwnerSnapshot;
+	PassiveContext.mTargets.Add(this);
+	PassiveContext.mTargetSnapshots.Add(&OwnerSnapshot);
 
 	for (UTacticalPassive*& Passive : Passives)
 	{
