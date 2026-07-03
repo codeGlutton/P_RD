@@ -57,6 +57,8 @@ private:
 	void StartStep(int32 StepIndex);
 	// @brief 현재 칸 도착 처리 (오버랩 통지)
 	void CompleteStep();
+	// @brief 이동연출베리어가 완료됐을 때 호출될 콜백 (그 다음 타일로 이동한다든지)
+	void OnStepPresentationFinished();
 
 	/* 헬퍼 */
 private:
@@ -66,4 +68,8 @@ protected:
 	// @brief 따라갈 경로 타일 목록 (인덱스 0은 시작 타일)
 	UPROPERTY(Category = Move, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PathTileIndexes"))
 	TArray<FTileIndex> mPathTileIndexes;
+
+	// @brief 진행 중인 스텝 인덱스 (mPathTileIndexes 기준, 0은 시작 타일이라 1부터 시작)
+	UPROPERTY(Category = Move, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CurrentStepIndex"))
+	int32 mCurrentStepIndex = 0;
 };

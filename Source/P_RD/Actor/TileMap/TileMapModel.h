@@ -131,6 +131,14 @@ public:
 	 */
 	void RebuildTiles();
 
+	/**
+	 * @brief From 타일에서 To 타일을 바라볼 때의 방향을 계산
+	 * @details
+	 * 이동 스텝마다 유닛이 진행 방향을 바라보게 하는 데 사용.
+	 * @param Fallback 제자리거나 방향을 정할 수 없을 때 폴백 방향
+	 */
+	static ETileActorDirection TileDeltaToDirection(const FTileIndex& From, const FTileIndex& To, ETileActorDirection Fallback);
+
 	/* 좌표 변환 (뷰 질의) */
 	/**
 	 * @brief 타일 트랜스폼(인덱스+방향)을 월드 트랜스폼으로 변환 — 뷰에 질의

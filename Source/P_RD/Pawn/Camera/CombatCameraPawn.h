@@ -77,6 +77,22 @@ public:
 	UFUNCTION(BlueprintCallable)
 	UCameraMovementComponent* GetCameraMovementComponent();
 
+	/* 콘솔 치트 (개발 전용) */
+public:
+	/**
+	 * @brief 플레이어 유닛을 지정 타일까지 경로 이동 — 콘솔에서 "RDMoveTo X Y"
+	 * @details
+	 * 이동 빌드 UI(MOVE 버튼·이동 포인트)를 건너뛰고,
+	 * 확정 경로를 실은 이동 커맨드를 직접 발행해
+	 * MoveAction부터 뷰 연출까지 실제 파이프라인으로 검증.
+	 * 전투에서 빙의되는 폰이라 exec 라우팅이 보장되어 여기 둠.
+	 * @note
+	 * UFUNCTION(Exec) 때문에 전처리기에 못 넣고, cpp에서 전처리
+	 * -> 릴리즈에서는 빈 함수로 동작
+	 */
+	UFUNCTION(Exec)
+	void RDMoveTo(int32 X, int32 Y);
+
 private:
 	// @brief 터치 한 위치로 카메라의 시선을 이동 시키는 함수
 	void TouchMoveKey(const FInputActionValue& Value);
