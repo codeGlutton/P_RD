@@ -5,6 +5,8 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
+// @note checkf(Camera) 할 것
+
 // Sets default values for this component's properties
 UCameraMovementComponent::UCameraMovementComponent()
 {
@@ -124,7 +126,7 @@ void UCameraMovementComponent::ZoomCamera_Instant(float ZoomDelta)
 	mCameraComponent->OrthoWidth = FMath::Clamp(mCameraComponent->OrthoWidth + ZoomDelta, mMinOrthoWidth, mMaxOrthoWidth);
 }
 
-void UCameraMovementComponent::ZoomCamera_Smooth(float ZoomDelta)
+void UCameraMovementComponent::ZoomCamera_Smooth(float TargetZoom)
 {
 	if (mCamerControlState != ECameraControlState::Normal)
 		return;
@@ -134,7 +136,7 @@ void UCameraMovementComponent::ZoomCamera_Smooth(float ZoomDelta)
 	// 0.01초 간격으로 호출할 예정이므로 (Duration / 0.01)번 반복
 	mStartZoom = mCameraComponent->OrthoWidth;
 	mCurZoom = mStartZoom;
-	mEndZoom = mStartZoom + ZoomDelta;
+	mEndZoom = TargetZoom;
 
 	// 0.01초 간격으로 호출할 예정이므로 (Duration / 0.01)번 반복
 	mCurrentZoomAlpha = 0.0f;
@@ -143,7 +145,7 @@ void UCameraMovementComponent::ZoomCamera_Smooth(float ZoomDelta)
 	GetWorld()->GetTimerManager().SetTimer(mTimerHandle_Zoom, this, &UCameraMovementComponent::ZoomStep, 0.01f, true);
 }
 
-void UCameraMovementComponent::ZoomCameraAndMoveToViewportPosition(float ZoomDelta, FVector2D ViewPortPos)
+void UCameraMovementComponent::ZoomCamera_SmoothAndMoveToViewportPosition(float ZoomDelta, FVector2D ViewPortPos)
 {
 	if (mCamerControlState != ECameraControlState::Normal)
 		return;
@@ -152,7 +154,7 @@ void UCameraMovementComponent::ZoomCameraAndMoveToViewportPosition(float ZoomDel
 	MoveToViewportPosition(ViewPortPos);
 }
 
-void UCameraMovementComponent::ZoomCameraAndMoveToWorldPosition(float ZoomDelta, FVector WorldPosition)
+void UCameraMovementComponent::ZoomCamera_SmoothAndMoveToWorldPosition(float ZoomDelta, FVector WorldPosition)
 {
 	if (mCamerControlState != ECameraControlState::Normal)
 		return;
@@ -254,12 +256,12 @@ void UCameraMovementComponent::DragMoveToViewportPosition(FVector2D PreViewPortP
 
 	GetWorld()->GetFirstPlayerController()->DeprojectScreenPositionToWorld(CurViewPortPos.X, CurViewPortPos.Y, CurWorldLocation, CurWorldDirection);
 
-	ViewPortHitResult;
+	//ViewPortHitResult;
 	StartTrace = CurWorldLocation; // 시작 지점
 	EndTrace = StartTrace + (CurWorldDirection * 100000.0f);
 
 	// 채널 설정 (ECC_Visibility 등)
-	QueryParams;
+	//QueryParams;
 	QueryParams.AddIgnoredActor(GetOwner()); // 자기 자신은 충돌에서 제외
 
 	bViewPortHit = GetWorld()->LineTraceSingleByChannel(
@@ -309,7 +311,7 @@ void UCameraMovementComponent::MoveToWorldPosition(FVector LocationPos)
 
 }
 
-void UCameraMovementComponent::StartEmphasisToWorldPositionWithZoomDelta(float ZoomDelta, FVector WorldPosition)
+void UCameraMovementComponent::StartEmphasisToWorldPositionWithZoomDelta(float TargetZoom, FVector WorldPosition)
 {
 	if (mCamerControlState != ECameraControlState::Normal)
 		return;
@@ -318,18 +320,21 @@ void UCameraMovementComponent::StartEmphasisToWorldPositionWithZoomDelta(float Z
 	FHitResult CameraRayHitResult;
 	if (GetCameraRayHitPoint(CameraRayHitResult))
 	{
-		mPreDefaultState.Position = CameraRayHitResult.ImpactPoint;
-		mPreDefaultState.ZoomDelta = ZoomDelta;
+		// 아직 타이머가 작동 중이라면 이전값을 유지합니다.
+		mPreDefaultState.Position = GetWorld()->GetTimerManager().IsTimerActive(mTimerHandle_Move) ?
+			mPreDefaultState.Position : CameraRayHitResult.ImpactPoint;
+		mPreDefaultState.Zoom = GetWorld()->GetTimerManager().IsTimerActive(mTimerHandle_Move) ?
+			mPreDefaultState.Zoom : mCameraComponent->OrthoWidth;
 	}
 
 	// 해당 위치로 Zoom과 이동을 수행합니다.
-	ZoomCameraAndMoveToWorldPosition(ZoomDelta, WorldPosition);
+	ZoomCamera_SmoothAndMoveToWorldPosition(TargetZoom, WorldPosition);
 
 	mCamerControlState = ECameraControlState::Emphasis;
 
 }
 
-void UCameraMovementComponent::StartEmphasisToViewPortPositionWithZoomDelta(float ZoomDelta, FVector2D ViewPortPos)
+void UCameraMovementComponent::StartEmphasisToViewPortPositionWithZoomDelta(float TargetZoom, FVector2D ViewPortPos)
 {
 	if (mCamerControlState != ECameraControlState::Normal)
 		return;
@@ -338,12 +343,15 @@ void UCameraMovementComponent::StartEmphasisToViewPortPositionWithZoomDelta(floa
 	FHitResult CameraRayHitResult;
 	if (GetCameraRayHitPoint(CameraRayHitResult))
 	{
-		mPreDefaultState.Position = CameraRayHitResult.ImpactPoint;
-		mPreDefaultState.ZoomDelta = ZoomDelta;
+		// 아직 타이머가 작동 중이라면 이전값을 유지합니다.
+		mPreDefaultState.Position = GetWorld()->GetTimerManager().IsTimerActive(mTimerHandle_Move) ?
+			mPreDefaultState.Position : CameraRayHitResult.ImpactPoint;
+		mPreDefaultState.Zoom = GetWorld()->GetTimerManager().IsTimerActive(mTimerHandle_Move) ?
+			mPreDefaultState.Zoom : mCameraComponent->OrthoWidth;
 	}
 
 	// 해당 위치로 Zoom과 이동을 수행합니다.
-	ZoomCameraAndMoveToViewportPosition(ZoomDelta, ViewPortPos);
+	ZoomCamera_SmoothAndMoveToViewportPosition(TargetZoom, ViewPortPos);
 
 	mCamerControlState = ECameraControlState::Emphasis;
 
@@ -358,12 +366,15 @@ void UCameraMovementComponent::StartEmphasisToWorldPosition(FVector WorldPositio
 	FHitResult CameraRayHitResult;
 	if (GetCameraRayHitPoint(CameraRayHitResult))
 	{
-		mPreDefaultState.Position = CameraRayHitResult.ImpactPoint;
-		mPreDefaultState.ZoomDelta = mEmphasisZoom - mCameraComponent->OrthoWidth;
+		// 아직 타이머가 작동 중이라면 이전값을 유지합니다.
+		mPreDefaultState.Position = GetWorld()->GetTimerManager().IsTimerActive(mTimerHandle_Move) ?
+			mPreDefaultState.Position : CameraRayHitResult.ImpactPoint;
+		mPreDefaultState.Zoom = GetWorld()->GetTimerManager().IsTimerActive(mTimerHandle_Move) ?
+			mPreDefaultState.Zoom : mCameraComponent->OrthoWidth;
 	}
 
 	// 해당 위치로 Zoom과 이동을 수행합니다.
-	ZoomCameraAndMoveToWorldPosition(mPreDefaultState.ZoomDelta, WorldPosition);
+	ZoomCamera_SmoothAndMoveToWorldPosition(mEmphasisZoom, WorldPosition);
 
 	mCamerControlState = ECameraControlState::Emphasis;
 }
@@ -377,12 +388,15 @@ void UCameraMovementComponent::StartEmphasisToViewPortPosition(FVector2D ViewPor
 	FHitResult CameraRayHitResult;
 	if (GetCameraRayHitPoint(CameraRayHitResult))
 	{
-		mPreDefaultState.Position = CameraRayHitResult.ImpactPoint;
-		mPreDefaultState.ZoomDelta = mEmphasisZoom - mCameraComponent->OrthoWidth;
+		// 아직 타이머가 작동 중이라면 이전값을 유지합니다.
+		mPreDefaultState.Position = GetWorld()->GetTimerManager().IsTimerActive(mTimerHandle_Move) ?
+			mPreDefaultState.Position : CameraRayHitResult.ImpactPoint;
+		mPreDefaultState.Zoom = GetWorld()->GetTimerManager().IsTimerActive(mTimerHandle_Move) ? 
+			mPreDefaultState.Zoom : mCameraComponent->OrthoWidth;
 	}
 
 	// 해당 위치로 Zoom과 이동을 수행합니다.
-	ZoomCameraAndMoveToViewportPosition(mPreDefaultState.ZoomDelta, ViewPortPos);
+	ZoomCamera_SmoothAndMoveToViewportPosition(mEmphasisZoom, ViewPortPos);
 
 	mCamerControlState = ECameraControlState::Emphasis;
 }
@@ -392,7 +406,7 @@ void UCameraMovementComponent::EndEmphasis()
 	// 카메라의 강조 상태를 종료합니다.
 	mCamerControlState = ECameraControlState::Normal;
 
-	ZoomCameraAndMoveToWorldPosition(-mPreDefaultState.ZoomDelta, mPreDefaultState.Position);
+	ZoomCamera_SmoothAndMoveToWorldPosition(mPreDefaultState.Zoom, mPreDefaultState.Position);
 }
 
 bool UCameraMovementComponent::GetCameraRayHitPoint(OUT FHitResult& HitResult)

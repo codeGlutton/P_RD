@@ -17,10 +17,16 @@ class USceneComponent;
 
 struct FTouchState
 {
-	float LocationX;
-	float LocationY;
 	bool bIsCurrentlyPressed = false;
+	FVector2D StartTouchPos;
+	FVector2D PreTouchPos;
+	FVector2D CurTouchPos;
+
 };
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnDragging, const TArray<FTouchState>& /*Delta*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnPinching, const TArray<FTouchState>& /*Delta*/);
+
 
 
 UCLASS()
@@ -56,18 +62,14 @@ public:
 	UPROPERTY(Category = CameraMovement, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CameraMovementComponent", AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraMovementComponent> mCameraMovementComponent;
 
+	// ========================================
+	// Touch 상태 관련 변수
 	//@brief 이전 틱의 Touch 위치와 상태 변수
-	FTouchState mPreTouchState1;
+	TArray<FTouchState> mTouchStates;
+	float mImageStabilization = 3.f;
 
-	//@brief 이전 틱의 Touch 위치와 상태 변수
-	FTouchState mPreTouchState2;
-
-	// ==============================================
-	// 테스트용 변수
-	bool mFirstTouch;
-	bool mSecondTouch;
-	FVector2D mPreFirstTouch;
-	FVector2D mPreSecondTouch;
+	FOnDragging OnDragging;
+	FOnPinching OnPinching;
 
 
 public:
@@ -78,23 +80,10 @@ public:
 	UCameraMovementComponent* GetCameraMovementComponent();
 
 private:
-	// @brief 터치 한 위치로 카메라의 시선을 이동 시키는 함수
-	void TouchMoveKey(const FInputActionValue& Value);
+	bool IsDrag();
+	bool IsPinch();
 
-	// @brief 지속적으로 Zoom을 하는 함수
-	void ZoomKey(const FInputActionValue& Value);
-	
-	// @brief 틱 상태를 false로 되돌립니다.
-	void ZoomEndKey(const FInputActionValue& Value);
-
-	// @brief 틱 상태를 false로 되돌립니다.
-	void TouchTragMoveKey(const FInputActionValue& Value);
-
-	// ==================================================
-	// Zoom 테스트
-	void FirstTouchStart(const FInputActionValue& Value);
-	void FirstTouchCompleted(const FInputActionValue& Value);
-
-	void SecondTouchStart(const FInputActionValue& Value);
-	void SecondTouchCompleted(const FInputActionValue& Value);
+private:
+	void Dragging(const TArray<FTouchState>& TouchState);
+	void Pinching(const TArray<FTouchState>& TouchState);
 };

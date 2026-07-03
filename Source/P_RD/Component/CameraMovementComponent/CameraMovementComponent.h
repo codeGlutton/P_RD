@@ -19,7 +19,7 @@ enum class ECameraControlState : uint8
 struct FCameraEmphasisState
 {
 	FVector		Position;
-	float		ZoomDelta;
+	float		Zoom;
 };
 
 class UCameraComponent;
@@ -206,7 +206,7 @@ public:
 	* @param ZoomDelta 만큼 일정 시간동안  Zoom 합니다
 	*/
 	UFUNCTION(BlueprintCallable)
-	void ZoomCamera_Smooth(float ZoomDelta);
+	void ZoomCamera_Smooth(float TargetZoom);
 
 	/*
 	* @brief 줌 값을 받아서 카메라를 Zoom합니다.
@@ -215,7 +215,7 @@ public:
 	* @param ViewPortPos위치로 카메라를 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void ZoomCameraAndMoveToViewportPosition(float ZoomDelta, FVector2D ViewPortPos);
+	void ZoomCamera_SmoothAndMoveToViewportPosition(float ZoomDelta, FVector2D ViewPortPos);
 
 	/*
 	* @brief 줌 값을 받아서 카메라를 Zoom합니다.
@@ -224,7 +224,7 @@ public:
 	* @param ViewPortPos위치로 카메라를 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void ZoomCameraAndMoveToWorldPosition(float ZoomDelta, FVector WorldPosition);
+	void ZoomCamera_SmoothAndMoveToWorldPosition(float ZoomDelta, FVector WorldPosition);
 
 	/*
 	* @brief MoveToViewportPosition로 카메라의 시선을 옮긴다.
@@ -269,7 +269,7 @@ public:
 	* @param ZoomDelta 만큼 Zoom 합니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void StartEmphasisToWorldPositionWithZoomDelta(float ZoomDelta, FVector WorldPosition);
+	void StartEmphasisToWorldPositionWithZoomDelta(float TargetZoom, FVector WorldPosition);
 
 	/*
 	* @brief ViewPortPosition로 카메라의 시선을 옮기고 ZoomDelta만큼 Zoom 합니다.
@@ -278,7 +278,7 @@ public:
 	* @param ZoomDelta 만큼 Zoom 합니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void StartEmphasisToViewPortPositionWithZoomDelta(float ZoomDelta, FVector2D ViewPortPos);
+	void StartEmphasisToViewPortPositionWithZoomDelta(float TargetZoom, FVector2D ViewPortPos);
 
 	/*
 	* @brief WorldPosition로 카메라의 시선을 옮기고 Zoom값을 mEmphasisZoom로 변경합니다.
