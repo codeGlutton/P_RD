@@ -56,27 +56,6 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
 
         USkillComponentModel* SkillCompModel = mInstigator->GetSkillComponentModel();
         checkf(SkillCompModel != nullptr, TEXT("스킬 컴포넌트 모델 nullptr"));
-        UPassiveComponentModel* PassiveComponentModel = mInstigator->GetPassiveComponentModel();
-        checkf(PassiveComponentModel != nullptr, TEXT("패시브 컴포넌트 nullptr"));
-
-        // 스킬 시전 전 패시브
-        {
-            TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartUsingSkill);
-            const int32 PassiveNum = Passives.Num();
-
-            FBoardCombatTargetSnapshotData mInstigatorSnapshot = mInstigator->MakeSnapshotData();
-
-            FPassiveActivateContext PassiveContext;
-            PassiveContext.mOwner = mInstigator.Get();
-            PassiveContext.mOwnerSnapshot = &mInstigatorSnapshot;
-
-            for (UTacticalPassive*& Passive : Passives)
-            {
-                TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
-                Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnStartUsingSkill, PassiveContext, OUT DynamicPassiveData);
-                Passive->CommitPassive(DynamicPassiveData);
-            }
-        }
 
         UTileMapModel* TileMap = GetTileMap();
         checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
@@ -84,25 +63,6 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
 
         {
             // TODO : 원래는 비동기 적으로 애니메이션 종료 타이밍을 알려줘서 끝내야함. 임시적으로 곧바로 종료
-
-            // 스킬 시전 후 패시브
-            {
-                TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndUsingSkill);
-                const int32 PassiveNum = Passives.Num();
-
-                FBoardCombatTargetSnapshotData mInstigatorSnapshot = mInstigator->MakeSnapshotData();
-
-                FPassiveActivateContext PassiveContext;
-                PassiveContext.mOwner = mInstigator.Get();
-                PassiveContext.mOwnerSnapshot = &mInstigatorSnapshot;
-
-                for (UTacticalPassive*& Passive : Passives)
-                {
-                    TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
-                    Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnEndUsingSkill, PassiveContext, OUT DynamicPassiveData);
-                    Passive->CommitPassive(DynamicPassiveData);
-                }
-            }
 
             MarkActionCompleted(ESRPGActionResult::Succeeded);
         }

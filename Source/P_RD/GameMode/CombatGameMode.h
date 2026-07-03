@@ -99,21 +99,6 @@ public:
 	UFUNCTION(Category = UI, BlueprintCallable)
 	bool ResolveWorldLongPressEvent();
 
-public:
-	/**
-	 * @brief 스킬 디테일 정보를 가져온다.
-	 * @param SkillIndex 원하는 스킬 대상
-	 * @return 스킬 런타임 정보
-	 */
-	// const FSkillEntry* GetSkillDetail(int32 SkillIndex);
-
-	/**
-	 * @brief 장비 디테일 정보를 가져온다.
-	 * @param EquipmentType 원하는 장비 타입
-	 * @return 장비 런타임 정보
-	 */
-	const FEquippedEntry* GetEquipmentDetail(EEquipmentType EquipmentType);
-
 protected:
 	void OnRegisterUnit(UUnitModel* Unit);
 	void OnUnregisterUnit(UUnitModel* Unit);

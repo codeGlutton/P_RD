@@ -10,16 +10,11 @@
 
 #include "Actor/TileMap/TileMapModel.h"
 #include "Pawn/UnitModel.h"
-#include "Component/PassiveComponent/PassiveComponentModel.h"
 
 #include "DataAsset/RoomSpawnData/StaticCombatRoomSpawnData.h"
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
 #include "DataAsset/UnitSpawnData/StaticEnemyUnitSpawnData.h"
 #include "DataAsset/ObstacleSpawnData/StaticObstacleSpawnData.h"
-
-#include "TAS/Passive/TacticalPassive.h"
-#include "TAS/Passive/PassiveActivateContext.h"
-#include "TAS/Passive/DynamicPassiveData.h"
 
 DEFINE_LOG_CATEGORY(LogSRPGCombat)
 
@@ -94,28 +89,16 @@ void USRPGCombatModel::BeginCombat()
 
 	// 전투 시작 시, 보여지는 UI의 애니메이션의 특정 시점 종료 이후 전투 로직이 시작됨
 	auto PresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
-		// 전투 시작 패시브 처리
+		// 전투 종료 알림
 		for (TObjectPtr<UUnitModel>& Unit : mUnits)
 		{
-			UPassiveComponentModel* PassiveComponentModel = Unit->GetPassiveComponentModel();
-			checkf(PassiveComponentModel != nullptr, TEXT("패시브 컴포넌트 nullptr"));
-
-			TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartRoom);
-			const int32 PassiveNum = Passives.Num();
-
-			FBoardCombatTargetSnapshotData UnitSnapshot = Unit->MakeSnapshotData();
-
-			FPassiveActivateContext PassiveContext;
-			PassiveContext.mOwner = Unit;
-			PassiveContext.mOwnerSnapshot = &UnitSnapshot;
-
-			for (UTacticalPassive*& Passive : Passives)
-			{
-				TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
-				Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnStartRoom, PassiveContext, OUT DynamicPassiveData);
-				Passive->CommitPassive(DynamicPassiveData);
-			}
+			StaticCast<UBoardActorModel*>(Unit.Get())->OnBeginRoom();
 		}
+		for (TObjectPtr<UBoardActorModel>& Obstacle : mObstacles)
+		{
+			Obstacle->OnBeginRoom();
+		}
+		
 		// 턴 실행
 		checkf(mCombatPhase == ESRPGCombatRoomPhase::CombatStart, TEXT("전투 진입 절차 오류"));
 		mCombatPhase = ESRPGCombatRoomPhase::CombatPlay;
@@ -129,27 +112,14 @@ void USRPGCombatModel::EndCombat()
 	checkf(mCombatPhase == ESRPGCombatRoomPhase::CombatAbort, TEXT("전투 종료 절차 오류"));
 	mCombatPhase = ESRPGCombatRoomPhase::CombatEnd;
 
-	// 전투 종료 패시브 처리
+	// 전투 종료 알림
 	for (TObjectPtr<UUnitModel>& Unit : mUnits)
 	{
-		UPassiveComponentModel* PassiveComponentModel = Unit->GetPassiveComponentModel();
-		checkf(PassiveComponentModel != nullptr, TEXT("패시브 컴포넌트 nullptr"));
-
-		TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndRoom);
-		const int32 PassiveNum = Passives.Num();
-
-		FBoardCombatTargetSnapshotData UnitSnapshot = Unit->MakeSnapshotData();
-
-		FPassiveActivateContext PassiveContext;
-		PassiveContext.mOwner = Unit;
-		PassiveContext.mOwnerSnapshot = &UnitSnapshot;
-
-		for (UTacticalPassive*& Passive : Passives)
-		{
-			TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
-			Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnEndRoom, PassiveContext, OUT DynamicPassiveData);
-			Passive->CommitPassive(DynamicPassiveData);
-		}
+		StaticCast<UBoardActorModel*>(Unit.Get())->OnEndRoom();
+	}
+	for (TObjectPtr<UBoardActorModel>& Obstacle : mObstacles)
+	{
+		Obstacle->OnEndRoom();
 	}
 
 	// 전투 종료 시, 보여지는 UI의 애니메이션의 특정 시점 종료 이후 맵 보상 로직이 시작됨
@@ -421,6 +391,11 @@ void USRPGCombatModel::RegisterEnemyUnit(FEnemyUnitPlacementData& EnemyPlacement
 	// 턴 등록
 	RegisterTurn(EnemyUnit);
 
+	if (mCombatPhase == ESRPGCombatRoomPhase::CombatPlay)
+	{
+		StaticCast<UBoardActorModel*>(EnemyUnit)->OnBeginRoom();
+	}
+
 	OnRegisterUnitUI.Broadcast(EnemyUnit);
 }
 
@@ -444,6 +419,11 @@ void USRPGCombatModel::RegisterObstacle(FObstaclePlacementData& ObstaclePlacemen
 	// 타일 위에 배치
 	mTileMap->PlaceActor(ObstaclePlacementData.mTransform, Obstacle);
 
+	if (mCombatPhase == ESRPGCombatRoomPhase::CombatPlay)
+	{
+		Obstacle->OnBeginRoom();
+	}
+
 	OnRegisterObstacleUI.Broadcast(Obstacle);
 }
 
@@ -451,24 +431,34 @@ void USRPGCombatModel::UnregisterUnit(UUnitModel* Unit)
 {
 	checkf(mTileMap != nullptr, TEXT("타일맵 미존재"));
 
-	OnUnregisterUnitUI.Broadcast(Unit);
+	if (mCombatPhase == ESRPGCombatRoomPhase::CombatPlay)
+	{
+		StaticCast<UBoardActorModel*>(Unit)->OnEndRoom();
+	}
 
 	// 타일 위에서 제거
 	mTileMap->RemoveActor(Unit);
 
 	mUnits.RemoveSingleSwap(Unit);
+
+	OnUnregisterUnitUI.Broadcast(Unit);
 }
 
-void USRPGCombatModel::UnregisterObstacle(UBoardActorModel* Obstcle)
+void USRPGCombatModel::UnregisterObstacle(UBoardActorModel* Obstacle)
 {
 	checkf(mTileMap != nullptr, TEXT("타일맵 미존재"));
 
-	OnUnregisterObstacleUI.Broadcast(Obstcle);
+	if (mCombatPhase == ESRPGCombatRoomPhase::CombatPlay)
+	{
+		Obstacle->OnEndRoom();
+	}
 
 	// 타일 위에서 제거
-	mTileMap->RemoveActor(Obstcle);
+	mTileMap->RemoveActor(Obstacle);
 
-	mObstacles.RemoveSingleSwap(Obstcle);
+	mObstacles.RemoveSingleSwap(Obstacle);
+
+	OnUnregisterObstacleUI.Broadcast(Obstacle);
 }
 
 void USRPGCombatModel::SpawnTileMap()
@@ -498,6 +488,11 @@ void USRPGCombatModel::RegisterPlayerUnit(UUnitModel* PlayerUnit, const FTileTra
 
 	// 턴 등록
 	RegisterTurn(PlayerUnit);
+
+	if (mCombatPhase == ESRPGCombatRoomPhase::CombatPlay)
+	{
+		StaticCast<UBoardActorModel*>(PlayerUnit)->OnBeginRoom();
+	}
 
 	OnRegisterUnitUI.Broadcast(PlayerUnit);
 }

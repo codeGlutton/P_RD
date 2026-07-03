@@ -56,35 +56,29 @@ int32 UBoardActorModel::GetOverlayLayerPriority() const
 
 void UBoardActorModel::OnBeginTileOverlap(FTile* CurTile, UBoardActorModel* Other)
 {
-	// TODO: 구현 예정
 }
 
 void UBoardActorModel::OnEndTileOverlap(FTile* CurTile, UBoardActorModel* Other)
 {
-	// TODO: 구현 예정
 }
 
 void UBoardActorModel::OnReplaced(FTile* CurTile, UBoardActorModel* Other)
 {
-	// TODO: 구현 예정
+}
+
+void UBoardActorModel::OnBeginRoom()
+{
+}
+
+void UBoardActorModel::OnEndRoom()
+{
 }
 
 void UBoardActorModel::OnBeginRound()
 {
-	// TODO: 구현 예정
 }
 
 void UBoardActorModel::OnEndRound()
 {
-	// TODO: 구현 예정
 }
 
-void UBoardActorModel::OnBeginTurn()
-{
-	// TODO: 구현 예정
-}
-
-void UBoardActorModel::OnEndTurn()
-{
-	// TODO: 구현 예정
-}

@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   TacticalEffect_HealPoint.cpp
  * @brief  HealPoint 이펙트 구현
  * @author 이문환
@@ -10,8 +10,8 @@
 
 UTacticalEffect_HealPoint::UTacticalEffect_HealPoint()
 {
-	// 지속형
-	mDurationPolicy = ETacticalEffectDurationType::Infinite;
+	// 일시적
+	mDurationPolicy = ETacticalEffectDurationType::Instant;
 	mStackingType = ETacticalEffectStackingType::None;
 
 	FTacticalModifierInfo Info;

@@ -60,6 +60,22 @@ public:
 	UFUNCTION(Category = UI, BlueprintPure)
 	bool CanAbandonRun() const;
 
+public:
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool ResetFromOptionPanel() const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool BackFromOptionPanel() const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetBGMVolume(float Volume) const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetSFXVolume(float Volume) const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetVoiceVolume(float Volume) const;
+
 protected:
 	/**
 	 * @brief 페이드 레이어를 열고 검은 화면에서 게임 화면으로 드러내는 페이드인을 시작한다.

@@ -3,6 +3,7 @@
 #include "Singleton/InstanceSubsystem/PersistentDataSubsystem.h"
 #include "Singleton/InstanceSubsystem/RoomTransitionSubsystem.h"
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
+#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 
@@ -66,6 +67,55 @@ bool ARDGameModeBase::HasActiveRun() const
 bool ARDGameModeBase::CanAbandonRun() const
 {
 	return HasActiveRun() == true;
+}
+
+bool ARDGameModeBase::ResetFromOptionPanel() const
+{
+	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
+	GameProfileSubsystem->ResetOptions();
+
+	USaveGameSubsystem* SaveGameSubsystem = GetGameInstance()->GetSubsystem<USaveGameSubsystem>();
+	checkf(SaveGameSubsystem != nullptr, TEXT("세이브 서브시스템 nullptr 오류"));
+	SaveGameSubsystem->SaveOptionAsync(FAsyncSaveGameToSlotDelegate());
+
+	return true;
+}
+
+bool ARDGameModeBase::BackFromOptionPanel() const
+{
+	USaveGameSubsystem* SaveGameSubsystem = GetGameInstance()->GetSubsystem<USaveGameSubsystem>();
+	checkf(SaveGameSubsystem != nullptr, TEXT("세이브 서브시스템 nullptr 오류"));
+	SaveGameSubsystem->SaveOptionAsync(FAsyncSaveGameToSlotDelegate());
+
+	return true;
+}
+
+bool ARDGameModeBase::SetBGMVolume(float Volume) const
+{
+	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
+	GameProfileSubsystem->SetVolume(EGameVolumeType::BGM, Volume);
+
+	return true;
+}
+
+bool ARDGameModeBase::SetSFXVolume(float Volume) const
+{
+	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
+	GameProfileSubsystem->SetVolume(EGameVolumeType::SFX, Volume);
+
+	return true;
+}
+
+bool ARDGameModeBase::SetVoiceVolume(float Volume) const
+{
+	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
+	GameProfileSubsystem->SetVolume(EGameVolumeType::Voice, Volume);
+
+	return true;
 }
 
 /**

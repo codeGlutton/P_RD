@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   TacticalEffect_MovementPoint.cpp
  * @brief  MovementPoint 이펙트 구현
  * @author 이문환
@@ -10,8 +10,8 @@
 
 UTacticalEffect_MovementPoint::UTacticalEffect_MovementPoint()
 {
-	// 지속형
-	mDurationPolicy = ETacticalEffectDurationType::Infinite;
+	// 일시적
+	mDurationPolicy = ETacticalEffectDurationType::Instant;
 	mStackingType = ETacticalEffectStackingType::None;
 
 	FTacticalModifierInfo Info;

@@ -13,10 +13,13 @@
 #include "SkillComponentModel.generated.h"
 
 class UTileMapModel;
+class IBoardCombatTarget;
 class UStaticSkillData;
-struct FSkillEffectLayer;
+
+struct FPresentationBarrier;
 
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnChangeSkillUI, int32 /*SkillIndex*/, const UStaticSkillData* /*PreSkillData*/, const UStaticSkillData* /*NewSkillData*/);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnPlayMotionLayerUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, TSharedPtr<FPresentationBarrier> /*MotionTriggerBarrier*/, FGameplayTag /*ApplyMotionTag*/);
 
 /**
  * @brief 한 슬롯에 장착된 스킬과 그로 인해 설치된 런타임 객체 추적
@@ -41,6 +44,36 @@ public:
 	// @brief 현재 선택된 스킬 여부
 	UPROPERTY(Category = "Runtime", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsSelected"))
 	bool mIsSelected = false;
+};
+
+USTRUCT(BlueprintType)
+struct FActiveSkillContext
+{
+	GENERATED_BODY()
+
+public:
+	void Clear();
+
+	/* 스킬 임시 데이터 */
+public:
+	TWeakObjectPtr<UTileMapModel> mMapModel = nullptr;
+
+public:
+	int32 mDiceSum = 0;
+	FTileIndex mSelfTileIndex = FTileIndex::Invalid;
+	TArray<FTileIndex> mEffectTileIndexes;
+
+public:
+	int32 mSkillIndex = INDEX_NONE;
+	int32 mMotionIndex = INDEX_NONE;
+
+	/* 모션 임시 데이터 */
+public:
+	TArray<FTileIndex> mTargetTileIndexes;
+	TArray<IBoardCombatTarget*> mOtherCombatTargets;
+
+public:
+	TWeakPtr<FPresentationBarrier> mMotionEndBarrier = nullptr;
 };
 
 /**
@@ -74,18 +107,34 @@ public:
 	* @param SkillIndex 사용할 스킬의 인덱스
 	* @param TargetIndex 타겟팅 타일
 	* @param DiceSum 주사위 눈금 합
-	* @return 사용 성공 여부
 	*/
-	bool ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum);
+	void ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum);
+
+protected:
+	void PlayMotionLayer();
+	void TriggerMotionLayer();
+	void EndMotionLayer();
+	void DeactivateSkill();
 
 public:
 	TArray<FTileIndex> GetAimableTiles(UTileMapModel* MapModel, int32 SkillIndex, int32 DiceSum) const;
 	TArray<FTileIndex> GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum) const;
 
 public:
+	/**
+	 * @brief 스킬 변경 시 호출되는 대리자
+	 */
 	FOnChangeSkillUI OnChangeSkillUI;
+
+	/**
+	 * @brief 모션 애니메이션 재생 요청 시 호출되는 대리자
+	 */
+	FOnPlayMotionLayerUI OnPlayMotionLayerUI;
 
 protected:
 	UPROPERTY(Category = "Entry", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillEntries"))
 	TArray<FSkillEntry> mSkillEntries;
+
+protected:
+	FActiveSkillContext mActiveSkillContext;
 };
