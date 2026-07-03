@@ -173,8 +173,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	UCameraComponent* GetCameraComponent();
 
-	UFUNCTION(BlueprintCallable)
-	void SetZoomSpeed(float ZoomSpeed);
+	//UFUNCTION(BlueprintCallable)
+	//void SetZoomSpeed(float ZoomSpeed);
 
 	UFUNCTION(BlueprintCallable)
 	void SetMaxOrthoWidth(float MaxOrthoWidth);
