@@ -370,17 +370,6 @@ bool ACombatGameMode::ResolveWorldLongPressEvent()
 	return CommandRouterModel->SummitCommand(WorldTraceActionCommand);
 }
 
-const FEquippedEntry* ACombatGameMode::GetEquipmentDetail(EEquipmentType EquipmentType)
-{
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
-	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
-
-	UEquipmentComponentModel* EquipmentComponentModel = PlayerUnitModel->GetEquipmentComponentModel();
-	checkf(EquipmentComponentModel != nullptr, TEXT("장비 컴포넌트 nullptr"));
-
-	return EquipmentComponentModel->GetEquipped(EquipmentType);
-}
-
 void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 {
 	UAttributeSetComponentModel* AttributeSetComponentModel = Unit->GetAttributeComponentModel();
@@ -395,9 +384,6 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 		});
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
-		});
-	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementPointAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
-		PushUnitUIData();   // 이동 소모/회복 시 이동력 게이지 갱신
 		});
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefenseAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
@@ -421,7 +407,6 @@ void ACombatGameMode::OnUnregisterUnit(UUnitModel* Unit)
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).RemoveAll(this);
 	// 해제는 구독(OnRegisterUnit)과 같은 속성 쌍이어야 한다 — 다른 속성을 지우면 no-op이라 바인딩이 잔존한다.
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementAttribute()).RemoveAll(this);
-	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementPointAttribute()).RemoveAll(this);
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefenseAttribute()).RemoveAll(this);
 
 	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_StatusEffect, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
@@ -518,8 +503,6 @@ void ACombatGameMode::PushUnitUIData() const
 		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMovementAttribute());
 
 		UnitUIData.mStatusTags = AttributeSetComponentModel->GetOwnedGameplayTags(); // 모든 소유 태그가 아닌 고의적으로 넣은 태그만 해당
-
-		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMovementPointAttribute());
 
 		// 죽는 유닛 등 뷰가 이미 없는 경로에서도 push가 돌 수 있어 null 가드한다.
 		// mWorldLocation은 머리 위 HP바 스크린 투영(UnitBars)에 실사용된다.

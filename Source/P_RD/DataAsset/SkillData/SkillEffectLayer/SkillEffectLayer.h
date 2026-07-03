@@ -11,6 +11,8 @@
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "SkillEffectLayer.generated.h"
 
+class IBoardCombatTarget;
+
 USTRUCT(BlueprintType)
 struct P_RD_API FSkillEffectLayer
 {
@@ -20,6 +22,9 @@ public:
 	virtual ~FSkillEffectLayer() = default;
 
 public:
-	virtual void ApplyPointEffect(float DiceSum) const PURE_VIRTUAL(FSkillEffectLayer::ApplyPointEffect, return; );
-	virtual void CommitEffect(float DiceSum) const PURE_VIRTUAL(FSkillEffectLayer::CommitEffect, return; );
+	virtual void ClearPointEffect(IBoardCombatTarget* ActorModel) const PURE_VIRTUAL(FSkillEffectLayer::ClearPointEffect, return; );
+
+public:
+	virtual void ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const PURE_VIRTUAL(FSkillEffectLayer::ApplyPointEffect, return; );
+	virtual void CommitEffect(IBoardCombatTarget* ActorModel, const TArray<FTileIndex>& TargetTileIndexes, const TArray<IBoardCombatTarget*>& OtherCombatTargets, float DiceSum) const PURE_VIRTUAL(FSkillEffectLayer::CommitEffect, return; );
 };

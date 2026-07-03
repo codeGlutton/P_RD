@@ -38,12 +38,19 @@ public:
 
 public:
     /**
-    * @brief 처리 시에 활용할 애니메이션 구분 태그
+    * @brief 타격 처리 시에 활용할 애니메이션 구분 태그
     * @details
     * (ex: GameplayAnim.Attack, GameplayAnim.Spell)
     */
-    UPROPERTY(Category = "Motion", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MotionTag"))
-    FGameplayTag mMotionTag;
+    UPROPERTY(Category = "Motion", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ApplyMotionTag"))
+    FGameplayTag mApplyMotionTag;
+    /**
+    * @brief 피격 처리 시에 활용할 애니메이션 구분 태그
+    * @details
+    * (ex: GameplayAnim.Hit.Slash, GameplayAnim.Hit.Stab)
+    */
+    UPROPERTY(Category = "Motion", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ReceiveMotionTag"))
+    FGameplayTag mReceiveMotionTag;
 
 public:
     // @brief 자신, 지정 범위 포함 여부 타겟 필터링

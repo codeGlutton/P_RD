@@ -15,8 +15,11 @@
 
 struct FTile;
 class UStaticObstacleSpawnData;
+struct FPresentationBarrier;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnChangeTileTransform, const FTileTransform& /* TileTransform */);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnPlayApplyAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, TSharedPtr<FPresentationBarrier> /*MotionTriggerBarrier*/, FGameplayTag /*ApplyMotionTag*/);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlayReceiveAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, FGameplayTag /*ReceiveMotionTag*/);
 
 /**
  * @brief  보드에 올라가는 액터 데이터 모델 클래스
@@ -31,8 +34,6 @@ class P_RD_API UBoardActorModel : public UActorModel
 	friend class UTileMapModel;
     // SRPG 전투 모델이 라운드 시작과 종료를 호출
     friend class USRPGCombatModel;
-    // 턴 객체가 턴 시작과 종료를 호출
-	friend class USRPGTurnContext;
 
 public:
 	/**
@@ -76,7 +77,7 @@ public:
 	 */
 	int32 GetOverlayLayerPriority() const;
 
-protected:
+public:
 	/**
 	 * @brief 오버랩 시작 시 실행될 함수
 	 * @param CurTile 현재 위치한 타일 객체
@@ -98,16 +99,19 @@ protected:
 	virtual void OnReplaced(FTile* CurTile, UBoardActorModel* Other);
 
 	/**
+	 * @brief 방 진입시마다 실행될 함수
+	 */
+	virtual void OnBeginRoom();
+	virtual void OnEndRoom();
+
+	/**
 	 * @brief 라운드 시작마다 실행될 함수 (라운드 : 고정된 턴 기준으로 한바퀴)
 	 */
 	virtual void OnBeginRound();
 	virtual void OnEndRound();
 
-	/**
-	 * @brief 자신의 턴 시작마다 실행될 함수
-	 */
-	virtual void OnBeginTurn();
-	virtual void OnEndTurn();
+public:
+	void PlayAnimationUsingTag(FGameplayTag Tag);
 
 private:
 	/**
@@ -121,6 +125,15 @@ public:
 	 * @brief 타일 트랜스폼이 변경되었을 때, 뷰에게 전달하는 대리자
 	 */
 	FOnChangeTileTransform OnChangeTileTransform;
+
+	/**
+	 * @brief 능동적 행동을 전달하는 대리자
+	 */
+	FOnPlayApplyAnimationUI OnPlayApplyAnimationUI;
+	/**
+	 * @brief 피동적 행동을 전달하는 대리자
+	 */
+	FOnPlayReceiveAnimationUI OnPlayReceiveAnimationUI;
 
 protected:
 	// @brief 액터가 속한 레이어 타입
