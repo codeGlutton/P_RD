@@ -116,6 +116,10 @@ void UTitleBackgroundVideoSubsystem::EnsureMediaObjects()
 		mMediaPlayer = NewObject<UMediaPlayer>(this, TEXT("SharedTitleBackgroundMediaPlayer"));
 #if PLATFORM_WINDOWS || PLATFORM_MAC
 		mMediaPlayer->SetDesiredPlayerName(FName(TEXT("ElectraProtron")));
+#elif PLATFORM_ANDROID
+		// Electra가 자동 선택되면 본 프로젝트의 로컬 H.264 mp4를 "No playable streams"로 거부한다(5.7 실측).
+		// OS MediaPlayer 경로(AndroidMedia)가 로컬 파일 재생에 검증돼 있어 명시 지정한다.
+		mMediaPlayer->SetDesiredPlayerName(FName(TEXT("AndroidMedia")));
 #endif
 	}
 	if (mMediaPlayer != nullptr)

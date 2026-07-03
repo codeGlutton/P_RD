@@ -16,20 +16,21 @@ using namespace RDCombatHUD;
 
 namespace
 {
-	/** @brief 보유 주사위 썸네일에서 숫자 면 판독성이 idle 포즈보다 우선인 주사위 종류. */
-	bool ShouldUseFaceOnOwnedPose(const FDiceViewData& DiceView)
-	{
-		return DiceView.mFaceCount == 2 || DiceView.mFaceCount == 4;
-	}
+	// 보유 주사위 카드의 2D 면 텍스처. 3D 캡처(주사위별 SceneCapture+RT)를 쓰지 않고
+	// 면 판만 그린다 - 값 판독성(큰 숫자)과 모바일 비용(캡처 7개 제거) 모두를 위해서다.
+	const TCHAR* const OwnedDiceFaceTexturePath = TEXT("/Game/SVN/OutSideAsset/AICreation/Dice/T_DiceFace_Base.T_DiceFace_Base");
 
-	/** @brief 보유 주사위 카드의 기본 회전값을 입장 굴림 프리뷰와 같은 규칙으로 맞춘다. */
-	FRotator GetOwnedDiceReadyRotation(const FDiceViewData& DiceView, int32 DiceIndex, const ACombatDiceCaptureActor* DiceActor)
+	/** @brief 보유 주사위 값 텍스트를 크고 진하게(볼드) 맞춘다 - 면 판 위에서 한눈에 읽히게. */
+	void SetOwnedDiceValueFont(UTextBlock* Text, int32 Size)
 	{
-		if (ShouldUseFaceOnOwnedPose(DiceView) && DiceActor != nullptr)
+		if (Text == nullptr)
 		{
-			return DiceActor->GetSettledFaceRotation(1);
+			return;
 		}
-		return GetReadableDiceIdleRotation(DiceIndex);
+		FSlateFontInfo Font = Text->GetFont();
+		Font.Size = Size;
+		Font.TypefaceFontName = FName(TEXT("Bold"));
+		Text->SetFont(Font);
 	}
 }
 
@@ -157,10 +158,18 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 			OwnedDiceTypeText->RemoveFromParent();
 		}
 	}
+	for (UTextBlock* OwnedDiceValueText : mOwnedDiceValueTexts)
+	{
+		if (OwnedDiceValueText != nullptr)
+		{
+			OwnedDiceValueText->RemoveFromParent();
+		}
+	}
 	mOwnedDiceImages.Reset();
 	DestroyDiceCaptureActors(mOwnedDicePreviewActors);
 	mOwnedDiceCardWidgets.Reset();
 	mOwnedDiceTypeTexts.Reset();
+	mOwnedDiceValueTexts.Reset();
 
 	const int32 DiceCount = mDiceUIs.Num();
 	for (int32 DiceIndex = 0; DiceIndex < DiceCount; ++DiceIndex)
@@ -195,6 +204,18 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 			OwnedDiceTypeText->SetColorAndOpacity(FSlateColor(FLinearColor(0.95f, 1.0f, 0.85f, 1.0f)));
 		}
 
+		// 굴림 값 텍스트: 2D 면 판 중앙에 크고 진하게.
+		UTextBlock* OwnedDiceValueText = WidgetTree->ConstructWidget<UTextBlock>(
+			UTextBlock::StaticClass(),
+			FName(*FString::Printf(TEXT("OwnedDiceValue_%d"), DiceIndex))
+		);
+		if (OwnedDiceValueText != nullptr)
+		{
+			OwnedDiceValueText->SetVisibility(ESlateVisibility::HitTestInvisible);
+			OwnedDiceValueText->SetJustification(ETextJustify::Center);
+			SetOwnedDiceValueFont(OwnedDiceValueText, 30);
+		}
+
 		// 스킨 활성 시 DesignCanvas에 붙여 레터박스 스킨(주사위 트레이 아트)과 함께 움직이게 한다.
 		// RootCanvas(뷰포트)에 붙이면 16:9가 아닐 때 트레이만 따로 노는 정렬 버그가 생긴다.
 		UCanvasPanel* OwnedDiceCanvas = GetSkinTargetCanvas();
@@ -204,11 +225,16 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 		{
 			OwnedDiceCanvas->AddChildToCanvas(OwnedDiceTypeText);
 		}
+		if (OwnedDiceValueText != nullptr)
+		{
+			OwnedDiceCanvas->AddChildToCanvas(OwnedDiceValueText);
+		}
 
 		mOwnedDiceImages.Add(OwnedDiceImage);
 		mOwnedDicePreviewActors.Add(nullptr);
 		mOwnedDiceCardWidgets.Add(OwnedDiceCard);
 		mOwnedDiceTypeTexts.Add(OwnedDiceTypeText);
+		mOwnedDiceValueTexts.Add(OwnedDiceValueText);
 	}
 
 	ApplyRuntimeWidgetLayout();
@@ -261,45 +287,34 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 			DiceScale = 0.64f;
 		}
 
-		if (mOwnedDicePreviewActors.IsValidIndex(DiceIndex))
+		// 2D 면 판: 3D 캡처 대신 면 텍스처에 상태색(레어도/선택/사용)을 틴트로 얹는다.
+		if (mOwnedDiceImages.IsValidIndex(DiceIndex))
 		{
-			if (IsValid(mOwnedDicePreviewActors[DiceIndex]) == false && mOwnedDiceImages.IsValidIndex(DiceIndex))
+			if (UImage* OwnedDiceImage = mOwnedDiceImages[DiceIndex])
 			{
-				if (UImage* OwnedDiceImage = mOwnedDiceImages[DiceIndex])
+				if (mOwnedDiceFaceTexture == nullptr)
 				{
-					// [합의필요] 384는 보유 주사위 카드 전용 RT 크기. 모바일 메모리/선명도 기준이 정해지면 정책 함수로 올린다.
-					mOwnedDicePreviewActors[DiceIndex] = SpawnDiceCaptureActor(1, DiceIndex, 384);
-					if (ACombatDiceCaptureActor* OwnedDicePreviewActor = mOwnedDicePreviewActors[DiceIndex])
-					{
-						OwnedDicePreviewActor->SetDiceType(DiceView.mFaceCount);   // 면 수에 맞는 다면체 메시로 교체
-						OwnedDicePreviewActor->SetFaceData(DiceView.mFaceValues, DiceView.mFaceTextures);
-						OwnedDicePreviewActor->SetBackdropVisible(false);
-						OwnedDicePreviewActor->SetDiceRotation(GetOwnedDiceReadyRotation(DiceView, DiceIndex, OwnedDicePreviewActor));
-						OwnedDicePreviewActor->CaptureDice();
-						ApplyDiceCaptureBrush(OwnedDiceImage, OwnedDicePreviewActor, FVector2D(384.0f, 384.0f));
-					}
+					mOwnedDiceFaceTexture = LoadObject<UTexture2D>(nullptr, OwnedDiceFaceTexturePath);
 				}
+				if (mOwnedDiceFaceTexture != nullptr)
+				{
+					OwnedDiceImage->SetBrushFromTexture(mOwnedDiceFaceTexture, false);
+				}
+				OwnedDiceImage->SetColorAndOpacity(DiceColor);
+				OwnedDiceImage->SetRenderScale(FVector2D(DiceScale, DiceScale));
 			}
+		}
 
-			if (ACombatDiceCaptureActor* OwnedDicePreviewActor = mOwnedDicePreviewActors[DiceIndex])
+		// 굴림 값: 면 판 중앙에 크고 진하게. 안 굴렸으면 물음표, 사용했으면 흐리게.
+		if (mOwnedDiceValueTexts.IsValidIndex(DiceIndex))
+		{
+			if (UTextBlock* OwnedDiceValueText = mOwnedDiceValueTexts[DiceIndex])
 			{
-				OwnedDicePreviewActor->SetFaceData(DiceView.mFaceValues, DiceView.mFaceTextures);
-				OwnedDicePreviewActor->SetDiceColor(DiceColor);
-				OwnedDicePreviewActor->SetActorScale3D(FVector(DiceScale));
-				OwnedDicePreviewActor->SetBackdropVisible(false);
-				if (DiceView.mIsRolled == true)
-				{
-					OwnedDicePreviewActor->SettleToFace(GetDiceSettledFaceOrdinal(DiceView));
-				}
-				else
-				{
-					OwnedDicePreviewActor->SetDiceRotation(GetOwnedDiceReadyRotation(DiceView, DiceIndex, OwnedDicePreviewActor));
-				}
-				OwnedDicePreviewActor->CaptureDice();
-				if (mOwnedDiceImages.IsValidIndex(DiceIndex))
-				{
-					ApplyDiceCaptureBrush(mOwnedDiceImages[DiceIndex], OwnedDicePreviewActor, FVector2D(384.0f, 384.0f));
-				}
+				OwnedDiceValueText->SetText(DiceView.mIsRolled
+					? FText::AsNumber(DiceView.mResultValue)
+					: NSLOCTEXT("CombatTileMapHUDWidget", "OwnedDiceNotRolled", "?"));
+				OwnedDiceValueText->SetColorAndOpacity(FSlateColor(FLinearColor(0.07f, 0.06f, 0.11f, 1.0f)));
+				OwnedDiceValueText->SetRenderOpacity(DiceView.mIsUsed ? 0.35f : 1.0f);
 			}
 		}
 		if (mOwnedDiceCardWidgets.IsValidIndex(DiceIndex))

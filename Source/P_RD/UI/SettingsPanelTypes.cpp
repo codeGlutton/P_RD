@@ -20,5 +20,8 @@ FSettingsPanelValueModel RDSettingsPanel::SanitizeValueModel(const FSettingsPane
 	SanitizedValueModel.mBgmVolume = NormalizeVolumeValue(SanitizedValueModel.mBgmVolume);
 	SanitizedValueModel.mSfxVolume = NormalizeVolumeValue(SanitizedValueModel.mSfxVolume);
 	SanitizedValueModel.mUiVolume = NormalizeVolumeValue(SanitizedValueModel.mUiVolume);
+	SanitizedValueModel.mMasterVolume = NormalizeVolumeValue(SanitizedValueModel.mMasterVolume);
+	// FPS는 지원 값(30/60)으로 스냅한다.
+	SanitizedValueModel.mFpsLimit = SanitizedValueModel.mFpsLimit <= 30 ? 30 : 60;
 	return SanitizedValueModel;
 }
