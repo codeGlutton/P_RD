@@ -189,7 +189,6 @@ void USkillComponentModel::PlayMotionLayer()
 
 	mActiveSkillContext.mTargetTileIndexes = MotionLayer.FilterTileIndexes(mActiveSkillContext.mSelfTileIndex, mActiveSkillContext.mEffectTileIndexes);
 	mActiveSkillContext.mOtherCombatTargets = MotionLayer.FilterCombatTargets(mActiveSkillContext.mMapModel.Get(), OwnerCombatTarget, mActiveSkillContext.mTargetTileIndexes);
-	mActiveSkillContext.mMotionEndBarrier = nullptr;
 
 	/* Effect 기본 값부터 참고용으로 적용 */
 
@@ -272,6 +271,8 @@ void USkillComponentModel::PlayMotionLayer()
 	auto MotionTriggerBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this, MotionEndBarrier]() {
 		TriggerMotionLayer();
 		}));
+
+	mActiveSkillContext.mMotionEndBarrier = MotionEndBarrier;
 
 	OwnerUnitModel->OnPlayApplyAnimationUI.Broadcast(MotionEndBarrier, MotionTriggerBarrier, MotionLayer.mApplyMotionTag);
 	OnPlayMotionLayerUI.Broadcast(MotionEndBarrier, MotionTriggerBarrier, MotionLayer.mApplyMotionTag);
@@ -362,6 +363,7 @@ void USkillComponentModel::TriggerMotionLayer()
 		PassiveContext.mOwnerSnapshot = &OwnerSnapshot;
 
 		TArray<FBoardCombatTargetSnapshotData> OtherSnapshots;
+		OtherSnapshots.Reserve(mActiveSkillContext.mOtherCombatTargets.Num());
 		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mOtherCombatTargets)
 		{
 			UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
