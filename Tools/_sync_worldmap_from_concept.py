@@ -352,7 +352,7 @@ def collapse_if_found(bp, names):
         if w is None:
             continue
         try:
-            w.set_visibility(unreal.SlateVisibility.COLLAPSED)
+            w.set_editor_property("visibility", unreal.SlateVisibility.COLLAPSED)
             res["collapsed"].append(n)
         except Exception as ex:
             err("map", n + " collapse " + str(ex)[:50])
@@ -442,7 +442,7 @@ def compile_and_save(bp, asset_path, scope, key, cdo_pairs=None):
             res["saved"][key] = False
             res["notes"].append(key + ": errors present, save skipped")
             return
-    ok = bool(unreal.EditorAssetLibrary.save_asset(asset_path))
+    ok = bool(unreal.EditorAssetLibrary.save_asset(asset_path, only_if_is_dirty=False))
     res["saved"][key] = ok
     if not ok:
         res["notes"].append(key + ": save_asset returned False (editor open? asset locked?)")
@@ -1091,12 +1091,13 @@ def sync_hud_backdrop():
                 t = ensure_import(tex_src)
                 if t is not None:
                     apply_brush(w, t, DW, h)
-                w.set_color_and_opacity(unreal.LinearColor(1.0, 1.0, 1.0, 1.0))
+                w.set_editor_property("color_and_opacity", unreal.LinearColor(1.0, 1.0, 1.0, 1.0))
             else:
                 # 현재: 텍스처 없이 단색 — 기본 흰 브러시에 위젯 틴트로 색을 입힌다.
                 # 알파 포함 wbp.color 배열을 그대로 사용(v6: 알파 1.0 — 하드코딩 없음, 폴백도 1.0).
                 color = (el.get("wbp", {}) or {}).get("color", [0.02, 0.035, 0.07, 1.0])
-                w.set_color_and_opacity(unreal.LinearColor(*[float(c) for c in color]))
+                # 런타임 세터(set_color_and_opacity)는 에셋을 더티로 만들지 않아 저장이 조용히 생략된다 — 프로퍼티 경유가 정본.
+                w.set_editor_property("color_and_opacity", unreal.LinearColor(*[float(c) for c in color]))
             # Collapsed — C++이 월드맵 열림과 동기로 켠다(켤 때 HitTestInvisible로 표시하는 것은 C++ 책임)
             w.set_visibility(unreal.SlateVisibility.COLLAPSED)
             res["synced"].append("TopBar_Backdrop")
