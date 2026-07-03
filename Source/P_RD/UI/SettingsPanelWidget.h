@@ -257,7 +257,42 @@ protected:
 	 */
 	void NativeDestruct() override;
 
+	/**
+	 * @brief 매 틱 뷰포트 화면비를 보고 폴드(<1.68) 모달 스케일 변형을 전환한다.
+	 *
+	 * @details
+	 * 중앙(0.5,0.5) 점앵커 위젯들(=시안 모달 그리드)에 렌더 트랜스폼 균일 스케일을 얹어
+	 * 좁은 화면(폴드 내부)에서 2단 그리드가 화면 폭 안에 들어오게 한다. 스케일 비율은
+	 * WBP의 폴드 마커(Set_grid_fold/Set_grid_base 폭 비율)에서 읽는다 — C++은 계산하지 않고
+	 * 디자이너 데이터를 적용만 한다(전투 HUD 폴드 컷과 동일 규약, 컷 1.68 동기).
+	 */
+	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+
 private:
+	/** @brief 폴드 모달 스케일 변형이 현재 적용 중인지. */
+	bool mFoldScaleActive = false;
+
+	/** @brief 슬라이더 값 채움 바(빌더 생성 ProgressBar) 포인터 캐시. 없으면(구 WBP) 동기 생략. */
+	TWeakObjectPtr<class UProgressBar> mMasterFillBar;
+	TWeakObjectPtr<class UProgressBar> mBgmFillBar;
+	TWeakObjectPtr<class UProgressBar> mSfxFillBar;
+	bool mFillBarsResolved = false;
+
+	/** @brief 채움 바를 각 슬라이더 값과 동기한다(매 틱, 위젯 없으면 no-op). */
+	void SyncSliderFillBars();
+
+	/** @brief [진단] 설정 레이아웃 전수 로그: 레터박스 체인 + 위젯별 슬롯 vs 실제 geometry vs 텍스트 실측. */
+	void LogSettingsMetrics(const FVector2D& ViewportSize);
+
+	/** @brief [진단] 마지막 로그 시점 뷰포트. 변할 때만 재로그. */
+	FVector2D mMetricsLastViewport = FVector2D(-1.0f, -1.0f);
+
+	/** @brief [진단] geometry 안정화 대기 카운터(뷰포트 변경 후 N프레임 뒤 1회 로그). */
+	int32 mMetricsCountdown = 0;
+
+	/** @brief 폴드/기준 전환 실행부. NativeTick이 화면비 컷(1.68) 교차 시에만 호출한다. */
+	void ApplyFoldScaleVariant(const FVector2D& ViewportSize);
+
 	/**
 	 * @brief 설정 패널의 기본 표시 문구를 WBP TextBlock에 반영한다.
 	 *
