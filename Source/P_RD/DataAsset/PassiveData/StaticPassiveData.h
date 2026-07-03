@@ -15,6 +15,16 @@
 class UTacticalPassive;
 class UTacticalEffect;
 
+/**
+ * @brief 수량 조건 - 발동 조건을 통과한 타겟이 얼마나 있어야 하는가
+ */
+UENUM(BlueprintType)
+enum class EPassiveTargetQuantifier : uint8
+{
+	Any		UMETA(DisplayName = "Any"),		// 타겟이 하나라도 있으면 발동
+	All		UMETA(DisplayName = "All"),		// 모든 타겟이 자격을 갖춰야 발동
+};
+
 USTRUCT(BlueprintType)
 struct FPassiveCondition
 {
@@ -78,6 +88,16 @@ public:
     */
     UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Passive Trigger Condition"))
     TArray<FPassiveCondition> mPassiveTriggerCondition;
+
+    /**
+    * @brief 수량 조건
+    *
+    * @details
+    * 발동 조건을 통과한 타겟이 얼마나 있어야 발동하는지 여부.
+    * Any=하나라도, All=전부.
+    */
+    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Target Quantifier"))
+    EPassiveTargetQuantifier mTargetQuantifier = EPassiveTargetQuantifier::Any;
 
     /**
     * @brief 패시브 클래스
