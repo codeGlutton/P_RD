@@ -209,6 +209,7 @@ void USkillComponentModel::PlayMotionLayer()
 		PassiveContext.mOwnerSnapshot = &OwnerSnapshot;
 
 		TArray<FBoardCombatTargetSnapshotData> OtherSnapshots;
+		OtherSnapshots.Reserve(mActiveSkillContext.mOtherCombatTargets.Num());
 		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mOtherCombatTargets)
 		{
 			UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
