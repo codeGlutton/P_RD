@@ -3,6 +3,7 @@
 #include "Components/CheckBox.h"
 #include "Components/Slider.h"
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
+#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 
 void USettingsPanelWidget::ApplyValueModel(const FSettingsPanelValueModel& ValueModel)
 {
@@ -55,6 +56,19 @@ FSettingsPanelValueModel USettingsPanelWidget::GetValueModel() const
 void USettingsPanelWidget::HandleResetButtonClicked()
 {
 	OnResetRequested.Broadcast();
+	// 전용 수신자가 생기기 전까지의 기본 적용: 옵션을 CDO 기본값으로 되돌리고
+	// (ResetOptions -> ClearOption -> ApplyCurrentOptions로 볼륨/언어/해상도 즉시 재적용),
+	// 패널 UI도 기본 값 모델로 갱신한다(ApplyValueModel은 콜백 가드로 이벤트 재발신 없음).
+	if (UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>())
+	{
+		GameProfileSubsystem->ResetOptions();
+	}
+	ApplyValueModel(FSettingsPanelValueModel());
+	// 초기화도 커밋 행위다 — 되돌린 옵션을 즉시 디스크에 저장한다.
+	if (USaveGameSubsystem* SaveGameSubsystem = GetGameInstance()->GetSubsystem<USaveGameSubsystem>())
+	{
+		SaveGameSubsystem->SaveOptionAsync(FAsyncSaveGameToSlotDelegate());
+	}
 }
 
 /**
@@ -118,6 +132,11 @@ void USettingsPanelWidget::HandleBgmVolumeChanged(float Value)
 	if (mIsApplyingValueModel == false)
 	{
 		OnBgmVolumeChanged.Broadcast(mValueModel.mBgmVolume);
+		// 전용 오디오 정책 시스템이 생기기 전까지 프로필 서브시스템으로 기본 적용한다(Master와 동일 패턴).
+		if (UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>())
+		{
+			GameProfileSubsystem->SetVolume(EGameVolumeType::BGM, mValueModel.mBgmVolume);
+		}
 	}
 }
 
@@ -134,6 +153,11 @@ void USettingsPanelWidget::HandleSfxVolumeChanged(float Value)
 	if (mIsApplyingValueModel == false)
 	{
 		OnSfxVolumeChanged.Broadcast(mValueModel.mSfxVolume);
+		// 전용 오디오 정책 시스템이 생기기 전까지 프로필 서브시스템으로 기본 적용한다(Master와 동일 패턴).
+		if (UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>())
+		{
+			GameProfileSubsystem->SetVolume(EGameVolumeType::SFX, mValueModel.mSfxVolume);
+		}
 	}
 }
 
