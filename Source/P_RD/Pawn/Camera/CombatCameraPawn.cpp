@@ -51,16 +51,18 @@ void ACombatCameraPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	AController* DefaultController = GetController();
+	checkf(DefaultController, TEXT("DefaultController가 없습니다."));
 
-	APlayerController* PC = Cast<APlayerController>(GetController());
-	checkf(PC, TEXT("PC가 없습니다."));
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	checkf(PlayerController, TEXT("PC가 없습니다."));
 
 	// 터치 상태를 보고 제스처를 판단한다.
 	for (int i = 0; i < 2; ++i)
 	{
 		mTouchStates[i].PreTouchPos = mTouchStates[i].CurTouchPos;
 		bool bPreTickTouch = mTouchStates[i].bIsCurrentlyPressed;
-		PC->GetInputTouchState((ETouchIndex::Type)i, mTouchStates[i].CurTouchPos.X, mTouchStates[i].CurTouchPos.Y, mTouchStates[i].bIsCurrentlyPressed);
+		PlayerController->GetInputTouchState((ETouchIndex::Type)i, mTouchStates[i].CurTouchPos.X, mTouchStates[i].CurTouchPos.Y, mTouchStates[i].bIsCurrentlyPressed);
 
 		if (bPreTickTouch == 0 && mTouchStates[i].bIsCurrentlyPressed)
 		{
