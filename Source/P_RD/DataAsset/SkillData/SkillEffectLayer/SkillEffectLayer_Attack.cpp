@@ -60,7 +60,7 @@ void FSkillEffectLayer_Attack::CommitEffect(IBoardCombatTarget* OwnerActorModel,
         UAttributeSetComponentModel* OtherAttributeSetComponentModel = OtherCombatTarget->GetAttributeComponentModel();
         checkf(OtherAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
-        const float TotalDefense = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefenseAttribute());
+        const float TotalDefense = OtherAttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefenseAttribute());
 
         /* 방어력 까기 */
         {
