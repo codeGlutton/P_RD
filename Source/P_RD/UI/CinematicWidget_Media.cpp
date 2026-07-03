@@ -44,6 +44,10 @@ void UCinematicWidget::EnsureCinematicMediaObjects()
 		mCinematicMediaPlayer = NewObject<UMediaPlayer>(this, TEXT("IntroCinematicMediaPlayer"));
 #if PLATFORM_WINDOWS || PLATFORM_MAC
 		mCinematicMediaPlayer->SetDesiredPlayerName(FName(TEXT("ElectraProtron")));
+#elif PLATFORM_ANDROID
+		// Electra가 자동 선택되면 본 프로젝트의 로컬 H.264 mp4를 "No playable streams"로 거부한다(5.7 실측).
+		// OS MediaPlayer 경로(AndroidMedia)가 로컬 파일 재생에 검증돼 있어 명시 지정한다.
+		mCinematicMediaPlayer->SetDesiredPlayerName(FName(TEXT("AndroidMedia")));
 #endif
 		mCinematicMediaPlayer->SetLooping(false); // 인트로는 1회 재생 후 종료(루프 X)
 		// 열림/실패/종료 이벤트를 바인딩해 재생 시작·폴백·다음 단계 전환을 제어한다(AddUnique로 중복 바인딩 방지).
