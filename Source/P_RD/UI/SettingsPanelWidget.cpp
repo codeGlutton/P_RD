@@ -5,6 +5,7 @@
 #include "Components/Slider.h"
 #include "UI/ViewportZOrderType.h"
 #include "Blueprint/WidgetTree.h"
+#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/ProgressBar.h"
 #include "Components/ButtonSlot.h"
@@ -459,5 +460,11 @@ void USettingsPanelWidget::NativeDestruct()
  */
 void USettingsPanelWidget::HandleBackButtonClicked()
 {
+	// 패널이 닫히는 시점이 옵션 커밋 지점이다. SaveOptionAsync는 존재했지만 호출처가 없어
+	// 옵션(볼륨/언어)이 세션 안에서만 유지되던 문제를 보완한다. 구독자가 패널을 닫기 전에 저장을 건다.
+	if (USaveGameSubsystem* SaveGameSubsystem = GetGameInstance()->GetSubsystem<USaveGameSubsystem>())
+	{
+		SaveGameSubsystem->SaveOptionAsync(FAsyncSaveGameToSlotDelegate());
+	}
 	OnBackRequested.Broadcast();
 }
