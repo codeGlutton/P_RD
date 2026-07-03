@@ -85,42 +85,50 @@ void UCombatTileMapHUDWidget::RebuildSkillRailWidgets()
 	RefreshSkillRailWidgets();
 }
 
-/** @details 슬롯 3상태 - [보유+사용가능] 아이콘+라벨 / [보유+사용불가] 흐림 / [빈 슬롯] 어두운 커버.
- * 빈 슬롯 커버가 WBP에 박힌 concept 고정 아트를 가려 "실제 보유한 스킬만" 보이게 한다. 데이터 소스는 FSkillUI 단일. */
+/** @details 레일 고정 배치 - 맨 위 칸=기본 공격(평타), 맨 아래 칸=STEP, 중간 4칸=추가 스킬(시각 슬롯 매핑).
+ * 슬롯 2상태 - [보유] WBP 빈 프레임 안에 아이콘+코스트를 채운다(사용불가면 흐림) / [미보유] 아무것도 안 그린다.
+ * WBP에는 빈 프레임(크롬)만 있으므로 "가리기(검은 커버)"가 필요 없다. 데이터 소스는 FSkillUI 단일. */
 void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 {
 	const TArray<FSkillUI>* Skills = mCombatUIModel != nullptr ? &mCombatUIModel->GetSkillUIs() : nullptr;
 
-	for (int32 SkillIndex = 0; SkillIndex < mSkillRailPanels.Num(); ++SkillIndex)
+	for (int32 RailSlotIndex = 0; RailSlotIndex < mSkillRailPanels.Num(); ++RailSlotIndex)
 	{
-		const FSkillUI* Skill = (Skills != nullptr && Skills->IsValidIndex(SkillIndex)) ? &(*Skills)[SkillIndex] : nullptr;
+		const int32 SkillDataIndex = GetSkillDataIndexForRailSlot(RailSlotIndex);
+		const FSkillUI* Skill = (Skills != nullptr && Skills->IsValidIndex(SkillDataIndex)) ? &(*Skills)[SkillDataIndex] : nullptr;
 		const bool bOwned = Skill != nullptr && Skill->mName.IsEmpty() == false;
 		const bool bUsable = bOwned && Skill->mIsUsable;
-		const bool bSelected = bOwned && SkillIndex == mSelectedSkillIndex;
+		const bool bSelected = bOwned && SkillDataIndex == mSelectedSkillIndex;
 		const float DimOpacity = bUsable ? 1.0f : 0.45f;
 
-		if (UBorder* SkillRailPanel = mSkillRailPanels[SkillIndex])
+		if (UBorder* SkillRailPanel = mSkillRailPanels[RailSlotIndex])
 		{
 			if (bOwned == false)
 			{
-				// 빈 슬롯: WBP 고정 아트 위를 어둡게 덮어 "없는 스킬"이 보이지 않게 한다.
-				SkillRailPanel->SetBrushColor(FLinearColor(0.02f, 0.03f, 0.05f, 0.92f));
-			}
-			else if (IsDesignerSkinActive())
-			{
-				// 스킨 모드: 비선택은 투명(아이콘만), 선택은 옅은 금색 틴트로만 강조.
-				SkillRailPanel->SetBrushColor(bSelected ? FLinearColor(1.0f, 0.95f, 0.55f, 0.30f) : FLinearColor(0.0f, 0.0f, 0.0f, 0.0f));
+				// 미보유: 슬롯을 아예 비운다 - WBP의 빈 프레임이 그대로 "빈 칸"으로 보인다.
+				// 브러시도 투명화해 둔다(방어): 외부에서 visibility를 강제 복원해도 UBorder 기본 흰 브러시가 새지 않게.
+				SkillRailPanel->SetBrushColor(FLinearColor(0.0f, 0.0f, 0.0f, 0.0f));
+				SkillRailPanel->SetVisibility(ESlateVisibility::Collapsed);
 			}
 			else
 			{
-				SkillRailPanel->SetBrushColor(GetCombatSkillRailBrushColor(bSelected));
+				SkillRailPanel->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+				if (IsDesignerSkinActive())
+				{
+					// 스킨 모드: 비선택은 투명(프레임+아이콘만), 선택은 옅은 금색 틴트로만 강조.
+					SkillRailPanel->SetBrushColor(bSelected ? FLinearColor(1.0f, 0.95f, 0.55f, 0.30f) : FLinearColor(0.0f, 0.0f, 0.0f, 0.0f));
+				}
+				else
+				{
+					SkillRailPanel->SetBrushColor(GetCombatSkillRailBrushColor(bSelected));
+				}
+				SkillRailPanel->SetRenderScale(GetCombatSkillRailScale(bSelected));
 			}
-			SkillRailPanel->SetRenderScale(GetCombatSkillRailScale(bSelected));
 		}
 
-		if (mSkillRailIcons.IsValidIndex(SkillIndex))
+		if (mSkillRailIcons.IsValidIndex(RailSlotIndex))
 		{
-			if (UImage* SkillRailIcon = mSkillRailIcons[SkillIndex])
+			if (UImage* SkillRailIcon = mSkillRailIcons[RailSlotIndex])
 			{
 				if (bOwned && Skill->mIcon != nullptr)
 				{
@@ -135,26 +143,44 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 			}
 		}
 
-		if (mSkillRailTexts.IsValidIndex(SkillIndex))
+		if (mSkillRailTexts.IsValidIndex(RailSlotIndex))
 		{
-			if (UTextBlock* SkillRailText = mSkillRailTexts[SkillIndex])
+			if (UTextBlock* SkillRailText = mSkillRailTexts[RailSlotIndex])
 			{
-				if (bOwned)
-				{
-					SkillRailText->SetText(FText::Format(
-						NSLOCTEXT("CombatTileMapHUDWidget", "SkillRailSlotFormat", "{0}\n{1} DICE"),
-						Skill->mName, FText::AsNumber(Skill->mDiceCost)));
-					SkillRailText->SetColorAndOpacity(FSlateColor(GetCombatSkillRailTextColor(bSelected)));
-					SkillRailText->SetRenderOpacity(DimOpacity);
-					SkillRailText->SetVisibility(ESlateVisibility::HitTestInvisible);
-				}
-				else
-				{
-					SkillRailText->SetVisibility(ESlateVisibility::Collapsed);
-				}
+				// 레일에는 아이콘만 보여준다 - 이름/코스트는 롱프레스 상세 카드가 담당한다.
+				SkillRailText->SetVisibility(ESlateVisibility::Collapsed);
 			}
 		}
 	}
+}
+
+/** @details 시각 슬롯 규칙은 헤더 주석 참고. 반환 전에 보유 여부(FSkillUI 이름)까지 검증해 미보유면 INDEX_NONE. */
+int32 UCombatTileMapHUDWidget::GetSkillDataIndexForRailSlot(int32 RailSlotIndex) const
+{
+	int32 SkillDataIndex = INDEX_NONE;
+	if (RailSlotIndex == 0)
+	{
+		SkillDataIndex = 0;                                // 맨 위 고정: 기본 공격(평타)
+	}
+	else if (RailSlotIndex == CombatSkillSlotCount - 1)
+	{
+		SkillDataIndex = 1;                                // 맨 아래 고정: 기본 이동(STEP)
+	}
+	else if (RailSlotIndex >= 1 && RailSlotIndex < CombatSkillSlotCount - 1)
+	{
+		SkillDataIndex = RailSlotIndex + 1;                // 중간 4칸: 추가 스킬(데이터 2..5)을 위에서부터
+	}
+
+	if (mCombatUIModel == nullptr)
+	{
+		return INDEX_NONE;
+	}
+	const TArray<FSkillUI>& Skills = mCombatUIModel->GetSkillUIs();
+	if (Skills.IsValidIndex(SkillDataIndex) == false || Skills[SkillDataIndex].mName.IsEmpty() == true)
+	{
+		return INDEX_NONE;
+	}
+	return SkillDataIndex;
 }
 
 /** @details 시안 라벨 폴백 없이 뷰모델의 보유 스킬 이름만 반환한다(없으면 빈 텍스트). */

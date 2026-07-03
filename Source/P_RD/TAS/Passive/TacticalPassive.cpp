@@ -23,6 +23,12 @@ void UTacticalPassive::ActivatePassive(
 	// 들어온 타이밍이 발동 시점이면: 적용 여부를 묻고 참이면 이펙트 적용
 	if (TimingTag == mActivateTimingTag)
 	{
+		// 수량 조건(quantifier) 게이트: 자격 타겟 수가 기준 미달이면 발동하지 않음
+		if (PassesTargetQuantifier(Ctx) == false)
+		{
+			return;
+		}
+
 		// 발동 시 대상에게 가할 기여값을 담을 내부 중간 버퍼
 		FBoardCombatTargetSnapshotData Contribution;
 
@@ -73,16 +79,14 @@ void UTacticalPassive::NotifyPassive(
 		return;
 	}
 
-	// 소유자(시전 주체)와 대상의 속성 컴포넌트 획득. 자기버프면 둘이 동일.
+	// 소유자(시전 주체)의 속성 컴포넌트 획득. 대상과 무관하게 1회만 조회.
 	IBoardCombatTarget* OwnerTarget = Cast<IBoardCombatTarget>(Ctx.mOwner.Get());
-	IBoardCombatTarget* HitTarget = Cast<IBoardCombatTarget>(Ctx.mTarget.Get());
-	if (OwnerTarget == nullptr || HitTarget == nullptr)
+	if (OwnerTarget == nullptr)
 	{
 		return;
 	}
 	UAttributeSetComponentModel* OwnerComp = OwnerTarget->GetAttributeComponentModel();
-	UAttributeSetComponentModel* TargetComp = HitTarget->GetAttributeComponentModel();
-	if (OwnerComp == nullptr || TargetComp == nullptr)
+	if (OwnerComp == nullptr)
 	{
 		return;
 	}
@@ -100,38 +104,108 @@ void UTacticalPassive::NotifyPassive(
 		return;
 	}
 
-	// 단일 핸들 전제: 이전 적용분이 남아있으면 먼저 제거(직렬 보장)
-	if (mActiveHandle.IsValid())
+	// 적용할 대상이 없으면 종료
+	if (Ctx.mTargets.Num() == 0)
+	{
+		return;
+	}
+
+	// 이전 핸들이 남아있으면 먼저 제거
+	if (mActiveHandles.Num() > 0)
 	{
 		DeactivatePassive();
 	}
 
-	// 소유자를 시전자로 spec 생성 -> 계산된 크기를 배율로 주입 -> 대상에 적용 -> 핸들 저장
-	UTacticalEffectContext* EffectContext = OwnerComp->MakeEffectContext();
-	EffectContext->SetInstigator(Ctx.mOwner.Get());
-	EffectContext->SetAttributeSetComponentModel(OwnerComp);
-	EffectContext->SetAbility(this);
+	// 대상마다 이펙트 적용하면서 핸들을 배열에 저장
+	for (const TWeakObjectPtr<UBoardActorModel>& TargetPtr : Ctx.mTargets)
+	{
+		// 대상의 속성 컴포넌트 획득.
+		// 유효하지 않은 대상은 건너뜀.
+		IBoardCombatTarget* HitTarget = Cast<IBoardCombatTarget>(TargetPtr.Get());
+		if (HitTarget == nullptr)
+		{
+			continue;
+		}
+		UAttributeSetComponentModel* TargetComp = HitTarget->GetAttributeComponentModel();
+		if (TargetComp == nullptr)
+		{
+			continue;
+		}
 
-	TSharedPtr<FTacticalEffectSpec> Spec = OwnerComp->MakeOutgoingSpec(mEffectClass, EffectContext);
-	Spec->mDynamicMagnitude = *Magnitude;
+		// 소유자를 시전자로 spec 생성 -> 계산된 크기를 배율로 주입 -> 대상에 적용 -> 핸들 저장
+		UTacticalEffectContext* EffectContext = OwnerComp->MakeEffectContext();
+		EffectContext->SetInstigator(Ctx.mOwner.Get());
+		EffectContext->SetAttributeSetComponentModel(OwnerComp);
+		EffectContext->SetAbility(this);
 
-	mActiveHandle = OwnerComp->ApplyTacticalEffectSpecToTarget(*Spec, TargetComp);
+		TSharedPtr<FTacticalEffectSpec> Spec = OwnerComp->MakeOutgoingSpec(mEffectClass, EffectContext);
+		Spec->mDynamicMagnitude = *Magnitude;
+
+		mActiveHandles.Add(OwnerComp->ApplyTacticalEffectSpecToTarget(*Spec, TargetComp));
+	}
 
 	// TODO: TargetDelta.mTags(발동 여부형 변화) 적용 경로는 미정. 정해지면 추가.
 }
 
 void UTacticalPassive::DeactivatePassive()
 {
-	if (mActiveHandle.IsValid() == false)
+	if (mActiveHandles.Num() == 0)
 	{
 		return;
 	}
 
-	// 핸들로 이펙트를 활성 집합에서 제거 -> TAS가 base에서 재계산(기여분을 산술로 되돌리지 않음)
-	UAttributeSetComponentModel* OwningComp = mActiveHandle.GetOwningAttributeSetComponentModel();
-	if (OwningComp != nullptr)
+	// 핸들마다 이펙트를 활성 집합에서 제거 -> TAS가 base에서 재계산(기여분을 산술로 되돌리지 않음)
+	for (FActiveTacticalEffectHandle& Handle : mActiveHandles)
 	{
-		OwningComp->RemoveActiveTacticalEffect(mActiveHandle);
+		if (Handle.IsValid() == false)
+		{
+			continue;
+		}
+		UAttributeSetComponentModel* OwningComp = Handle.GetOwningAttributeSetComponentModel();
+		if (OwningComp != nullptr)
+		{
+			OwningComp->RemoveActiveTacticalEffect(Handle);
+		}
 	}
-	mActiveHandle.Reset();
+
+	// 배치 핸들 전체 비움
+	mActiveHandles.Reset();
+}
+
+bool UTacticalPassive::PassesTargetQuantifier(const FPassiveActivateContext& Ctx) const
+{
+	// 판정 대상이 없으면(자기 대상 등) 게이트 통과
+	const int32 TargetNum = Ctx.mTargets.Num();
+	if (TargetNum == 0)
+	{
+		return true;
+	}
+
+	// 타겟별 자격 조건(predicate)으로 자격 타겟 수 집계
+	int32 QualifiedNum = 0;
+	for (int32 Index = 0; Index < TargetNum; ++Index)
+	{
+		// 스냅샷이 짝으로 있으면 넘기고, 없으면 스냅샷과 실제객체가 다르므로 nullptr
+		const FBoardCombatTargetSnapshotData* Snapshot =
+			Ctx.mTargetSnapshots.IsValidIndex(Index) ? Ctx.mTargetSnapshots[Index] : nullptr;
+
+		if (IsTargetQualified(Snapshot))
+		{
+			++QualifiedNum;
+		}
+	}
+
+	// 수량 조건 값: 기본값은 Any
+	const EPassiveTargetQuantifier Quantifier = (mStaticData != nullptr)
+		? mStaticData->mTargetQuantifier
+		: EPassiveTargetQuantifier::Any;
+
+	switch (Quantifier)
+	{
+	case EPassiveTargetQuantifier::All:
+		return QualifiedNum == TargetNum;
+	case EPassiveTargetQuantifier::Any:
+	default:
+		return QualifiedNum >= 1;
+	}
 }

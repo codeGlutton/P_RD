@@ -218,6 +218,22 @@ public:
 	UPROPERTY(Category = "UI|Settings", BlueprintAssignable)
 	FSettingsPanelIntEvent OnQualityRequested;
 
+	/** @brief 전체(마스터) 볼륨 슬라이더 값 변경 이벤트. */
+	UPROPERTY(Category = "UI|Settings", BlueprintAssignable)
+	FSettingsPanelFloatEvent OnMasterVolumeChanged;
+
+	/** @brief FPS 제한 선택 요청 이벤트. 전달 값은 30 또는 60. 수신 시스템이 아직 없다(값 전달만). */
+	UPROPERTY(Category = "UI|Settings", BlueprintAssignable)
+	FSettingsPanelIntEvent OnFpsLimitRequested;
+
+	/** @brief 전투 이펙트 표시 체크 상태 변경 이벤트. 수신 시스템이 아직 없다(값 전달만). */
+	UPROPERTY(Category = "UI|Settings", BlueprintAssignable)
+	FSettingsPanelBoolEvent OnEffectsChanged;
+
+	/** @brief 언어 선택 요청 이벤트. 전달 값은 ELanguageType 정수(0=한국어, 1=English). */
+	UPROPERTY(Category = "UI|Settings", BlueprintAssignable)
+	FSettingsPanelIntEvent OnLanguageRequested;
+
 protected:
 	/**
 	 * @brief WBP 바인딩 검증, 입력 이벤트 연결, 초기 표시 상태 동기화를 수행한다.
@@ -241,7 +257,42 @@ protected:
 	 */
 	void NativeDestruct() override;
 
+	/**
+	 * @brief 매 틱 뷰포트 화면비를 보고 폴드(<1.68) 모달 스케일 변형을 전환한다.
+	 *
+	 * @details
+	 * 중앙(0.5,0.5) 점앵커 위젯들(=시안 모달 그리드)에 렌더 트랜스폼 균일 스케일을 얹어
+	 * 좁은 화면(폴드 내부)에서 2단 그리드가 화면 폭 안에 들어오게 한다. 스케일 비율은
+	 * WBP의 폴드 마커(Set_grid_fold/Set_grid_base 폭 비율)에서 읽는다 — C++은 계산하지 않고
+	 * 디자이너 데이터를 적용만 한다(전투 HUD 폴드 컷과 동일 규약, 컷 1.68 동기).
+	 */
+	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+
 private:
+	/** @brief 폴드 모달 스케일 변형이 현재 적용 중인지. */
+	bool mFoldScaleActive = false;
+
+	/** @brief 슬라이더 값 채움 바(빌더 생성 ProgressBar) 포인터 캐시. 없으면(구 WBP) 동기 생략. */
+	TWeakObjectPtr<class UProgressBar> mMasterFillBar;
+	TWeakObjectPtr<class UProgressBar> mBgmFillBar;
+	TWeakObjectPtr<class UProgressBar> mSfxFillBar;
+	bool mFillBarsResolved = false;
+
+	/** @brief 채움 바를 각 슬라이더 값과 동기한다(매 틱, 위젯 없으면 no-op). */
+	void SyncSliderFillBars();
+
+	/** @brief [진단] 설정 레이아웃 전수 로그: 레터박스 체인 + 위젯별 슬롯 vs 실제 geometry vs 텍스트 실측. */
+	void LogSettingsMetrics(const FVector2D& ViewportSize);
+
+	/** @brief [진단] 마지막 로그 시점 뷰포트. 변할 때만 재로그. */
+	FVector2D mMetricsLastViewport = FVector2D(-1.0f, -1.0f);
+
+	/** @brief [진단] geometry 안정화 대기 카운터(뷰포트 변경 후 N프레임 뒤 1회 로그). */
+	int32 mMetricsCountdown = 0;
+
+	/** @brief 폴드/기준 전환 실행부. NativeTick이 화면비 컷(1.68) 교차 시에만 호출한다. */
+	void ApplyFoldScaleVariant(const FVector2D& ViewportSize);
+
 	/**
 	 * @brief 설정 패널의 기본 표시 문구를 WBP TextBlock에 반영한다.
 	 *
@@ -334,6 +385,30 @@ private:
 	/** @brief 진동 체크박스 상태를 외부 설정 정책으로 전달한다. */
 	UFUNCTION()
 	void HandleVibrationChanged(bool bChecked);
+
+	/** @brief 전체(마스터) 슬라이더 값을 이벤트로 올리고 프로필 볼륨에 기본 적용한다. */
+	UFUNCTION()
+	void HandleMasterVolumeChanged(float Value);
+
+	/** @brief FPS 30 선택을 이벤트로 올린다(수신 시스템 미구현). */
+	UFUNCTION()
+	void HandleFpsThirtyButtonClicked();
+
+	/** @brief FPS 60 선택을 이벤트로 올린다(수신 시스템 미구현). */
+	UFUNCTION()
+	void HandleFpsSixtyButtonClicked();
+
+	/** @brief 한국어 선택을 이벤트로 올리고 로컬라이제이션에 기본 적용한다. */
+	UFUNCTION()
+	void HandleLanguageKoreanButtonClicked();
+
+	/** @brief English 선택을 이벤트로 올리고 로컬라이제이션에 기본 적용한다. */
+	UFUNCTION()
+	void HandleLanguageEnglishButtonClicked();
+
+	/** @brief 이펙트 표시 체크 상태를 이벤트로 올린다(수신 시스템 미구현). */
+	UFUNCTION()
+	void HandleEffectsChanged(bool bChecked);
 
 private:
 	/** @brief 설정 패널 제목 */
@@ -495,6 +570,30 @@ private:
 	/** @brief 진동 사용 여부 입력 체크박스 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UCheckBox> VibrationCheckBox;
+
+	/** @brief 전체(마스터) 볼륨 입력 슬라이더 */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<USlider> MasterVolumeSlider;
+
+	/** @brief FPS 30 선택 버튼(세그먼트 좌측) */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UButton> FpsThirtyButton;
+
+	/** @brief FPS 60 선택 버튼(세그먼트 우측) */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UButton> FpsSixtyButton;
+
+	/** @brief 한국어 선택 버튼(언어 세그먼트 좌측) */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UButton> LanguageKoreanButton;
+
+	/** @brief English 선택 버튼(언어 세그먼트 우측) */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UButton> LanguageEnglishButton;
+
+	/** @brief 전투 이펙트 표시 여부 입력 체크박스 */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UCheckBox> EffectsCheckBox;
 
 	/** @brief 인게임에서만 사용하는 저장/포기 버튼 묶음 */
 	UPROPERTY(meta = (BindWidgetOptional))

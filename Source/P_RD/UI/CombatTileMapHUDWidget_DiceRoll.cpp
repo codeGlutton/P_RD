@@ -367,13 +367,16 @@ void UCombatTileMapHUDWidget::SetDiceRollCombatLayerSuppressed(bool bSuppressed)
 	SetWidgetArrayVisibility(mOwnedDiceImages, ESlateVisibility::HitTestInvisible);
 	SetWidgetArrayVisibility(mOwnedDiceCardWidgets, ESlateVisibility::Visible);
 	SetWidgetArrayVisibility(mOwnedDiceTypeTexts, ESlateVisibility::HitTestInvisible);
-	SetWidgetArrayVisibility(mSkillRailPanels, ESlateVisibility::HitTestInvisible);
-	SetWidgetArrayVisibility(mSkillRailTexts, ESlateVisibility::HitTestInvisible);
 	SetWidgetArrayVisibility(mSkillInputButtons, ESlateVisibility::Visible);
 	SetWidgetArrayVisibility(mEquipmentChips, ESlateVisibility::HitTestInvisible);
 	SetWidgetArrayVisibility(mEquipmentChipTexts, ESlateVisibility::HitTestInvisible);
 	SetWidgetArrayVisibility(mTurnOrderChips, ESlateVisibility::HitTestInvisible);
 	SetWidgetArrayVisibility(mTurnOrderChipTexts, ESlateVisibility::HitTestInvisible);
+
+	// 스킬 레일(패널/아이콘/라벨)은 블랭킷 복원 금지 - 미보유 슬롯은 Collapsed가 정상 상태라
+	// 강제로 펴면 UBorder 기본 흰 브러시가 그대로 노출된다(굴림 종료 후 흰 박스 버그).
+	// 슬롯별 정상 상태는 Refresh가 데이터 기준으로 다시 세운다.
+	RefreshSkillRailWidgets();
 
 	RefreshDiceAssignmentText();
 	UpdateUnitHpBars();

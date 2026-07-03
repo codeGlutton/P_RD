@@ -20,6 +20,7 @@
 #include "Actor/BoardActor/BoardCombatTarget.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "AttributeSet/UnitAttributeSet.h"
+#include "TAS/Passive/TacticalPassive_AddStat.h"
 #include "PassiveTestsHelper.generated.h"
 
 /**
@@ -56,4 +57,31 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UUnitAttributeSet> mUnitAttributeSet;
+};
+
+/**
+ * @brief 수량 조건 테스트용 목 패시브 (AddStat + HP 자격 조건)
+ *
+ * @details
+ *  자격 조건에 체력 조건 판정을 구현한 목 패시브
+ */
+UCLASS()
+class UMockConditionAddStatPassive : public UTacticalPassive_AddStat
+{
+	GENERATED_BODY()
+
+public:
+	// 이 값 미만 HP면 자격 있음!
+	float mQualifyHPBelow = 50.f;
+
+protected:
+	virtual bool IsTargetQualified(const FBoardCombatTargetSnapshotData* Snapshot) const override
+	{
+		if (Snapshot == nullptr)
+		{
+			return false;
+		}
+		const float* HP = Snapshot->mAttributes.Find(UUnitAttributeSet::GetHPAttribute());
+		return (HP != nullptr) && (*HP < mQualifyHPBelow);
+	}
 };

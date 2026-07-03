@@ -27,12 +27,12 @@ struct FPassiveActivateContext
 	// 패시브 소유자 (본인)
 	TWeakObjectPtr<UBoardActorModel> mOwner;
 
-	// 이번 계산 대상 (단수, 자기 대상이면 mOwner와 동일)
-	TWeakObjectPtr<UBoardActorModel> mTarget;
+	// 타겟들 (자기가 타겟이면 mOwner 하나만 담김)
+	TArray<TWeakObjectPtr<UBoardActorModel>> mTargets;
 
 	// 소유자 스냅샷 (base + 누적, 읽기 전용)
 	const FBoardCombatTargetSnapshotData* mOwnerSnapshot = nullptr;
 
-	// 대상 스냅샷 (base + 누적, 읽기 전용)
-	const FBoardCombatTargetSnapshotData* mTargetSnapshot = nullptr;
+	// 타겟들 스탭샷 (mTargets와 짝이 맞아야 됨)
+	TArray<const FBoardCombatTargetSnapshotData*> mTargetSnapshots;
 };
