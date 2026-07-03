@@ -126,6 +126,61 @@ void UCameraMovementComponent::ZoomCamera_Instant(float ZoomDelta)
 	mCameraComponent->OrthoWidth = FMath::Clamp(mCameraComponent->OrthoWidth + ZoomDelta, mMinOrthoWidth, mMaxOrthoWidth);
 }
 
+void UCameraMovementComponent::ZoomCamera_InstantAndMoveToViewportPosition(float ZoomDelta, FVector2D ViewPortPos)
+{
+	FVector WorldLocation;
+	FVector WorldDirection;
+
+	GetWorld()->GetFirstPlayerController()->DeprojectScreenPositionToWorld(ViewPortPos.X, ViewPortPos.Y, WorldLocation, WorldDirection);
+
+	FHitResult ViewPortHitResult;
+	FVector StartTrace = WorldLocation; // 시작 지점
+	FVector EndTrace = StartTrace + (WorldDirection * 100000.0f);
+
+	// 채널 설정 (ECC_Visibility 등)
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(GetOwner()); // 자기 자신은 충돌에서 제외
+
+	bool bViewPortHit = GetWorld()->LineTraceSingleByChannel(
+		ViewPortHitResult,
+		StartTrace,
+		EndTrace,
+		ECC_Visibility, // 충돌 채널
+		QueryParams
+	);
+
+	if (!bViewPortHit)
+		return;
+
+	FVector PrePos = ViewPortHitResult.ImpactPoint;
+	PrePos.Z = 0;
+
+	// 카메라를 줌 한다.
+	ZoomCamera_Instant(ZoomDelta);
+	GetWorld()->GetFirstPlayerController()->PlayerCameraManager->UpdateCamera(0.0f);
+
+	GetWorld()->GetFirstPlayerController()->DeprojectScreenPositionToWorld(ViewPortPos.X, ViewPortPos.Y, WorldLocation, WorldDirection);
+
+	StartTrace = WorldLocation; // 시작 지점
+	EndTrace = StartTrace + (WorldDirection * 100000.0f);
+
+	bViewPortHit = GetWorld()->LineTraceSingleByChannel(
+		ViewPortHitResult,
+		StartTrace,
+		EndTrace,
+		ECC_Visibility, // 충돌 채널
+		QueryParams
+	);
+
+	if (!bViewPortHit)
+		return;
+
+	FVector NextPos = ViewPortHitResult.ImpactPoint;
+	NextPos.Z = 0;
+	
+	GetOwner()->AddActorWorldOffset(PrePos - NextPos);
+}
+
 void UCameraMovementComponent::ZoomCamera_Smooth(float TargetZoom)
 {
 	if (mCamerControlState != ECameraControlState::Normal)

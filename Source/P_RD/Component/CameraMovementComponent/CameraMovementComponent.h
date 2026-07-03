@@ -200,6 +200,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ZoomCamera_Instant(float ZoomDelta);
 
+	UFUNCTION(BlueprintCallable)
+	void ZoomCamera_InstantAndMoveToViewportPosition(float ZoomDelta, FVector2D ViewPortPos);
+
 	/*
 	* @brief 줌 값을 받아서 일정 시간동안 카메라를 Zoom합니다
 	*

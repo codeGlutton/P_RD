@@ -39,11 +39,6 @@ void ACombatCameraPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
-
-	// PlayerController를 얻어온다.
-	TObjectPtr<APlayerController>	PlayerController = GetController<APlayerController>();
-
-
 	mTouchStates.SetNum(2);
 
 	OnDragging.AddUObject(this, &ACombatCameraPawn::Dragging);
@@ -71,7 +66,6 @@ void ACombatCameraPawn::Tick(float DeltaTime)
 		{
 			mTouchStates[i].StartTouchPos = mTouchStates[i].CurTouchPos;
 			mTouchStates[i].PreTouchPos = mTouchStates[i].CurTouchPos;
-
 		}
 	}
 
@@ -146,5 +140,6 @@ void ACombatCameraPawn::Pinching(const TArray<FTouchState>& TouchState)
 	float PrePinchDis = FVector2D::Distance(mTouchStates[0].PreTouchPos, mTouchStates[1].PreTouchPos);
 	float CurPinchDis = FVector2D::Distance(mTouchStates[0].CurTouchPos, mTouchStates[1].CurTouchPos);
 
-	mCameraMovementComponent.Get()->ZoomCamera_Instant(PrePinchDis - CurPinchDis);
+	//mCameraMovementComponent.Get()->ZoomCamera_Instant(PrePinchDis - CurPinchDis);
+	mCameraMovementComponent.Get()->ZoomCamera_InstantAndMoveToViewportPosition(PrePinchDis - CurPinchDis, (mTouchStates[0].CurTouchPos + mTouchStates[1].CurTouchPos)/2);
 }
