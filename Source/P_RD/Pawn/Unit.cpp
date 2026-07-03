@@ -108,6 +108,15 @@ void AUnit::OnStartMoveStep(const FTileTransform& NextTileTransform, const FTran
 	mMoveTargetTransform = TargetWorldTransform;
 	mMoveBarrier = Barrier;
 
+	// 타일 월드트랜스폼의 Z축은 타일 바닥이 기준이므로 액터의 중심이 타일 바닥에 파묻힘
+	// 액터의 캡슐 중심만큼 더해서 바닥을 딛고 있도록 변경
+	if (mCapsuleComp != nullptr)
+	{
+		FVector TargetLocation = mMoveTargetTransform.GetLocation();
+		TargetLocation.Z += mCapsuleComp->GetScaledCapsuleHalfHeight();
+		mMoveTargetTransform.SetLocation(TargetLocation);
+	}
+
 	// 루트가 Movable이 아니면 SetActorLocation이 실패하므로 보정 (BP 설정 실수 방어)
 	if (RootComponent != nullptr && RootComponent->Mobility != EComponentMobility::Movable)
 	{
