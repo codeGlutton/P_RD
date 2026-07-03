@@ -10,6 +10,8 @@
 
 #include "Setting/GameBalanceSettings.h"
 #include "Engine/AssetManager.h"
+#include "GameFramework/GameUserSettings.h"
+#include "Scalability.h"
 #include "PCGStage/StageBuilder.h"
 
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
@@ -542,6 +544,10 @@ void UOptionPersistData::ClearOption()
 	mVolumes = CDO->mVolumes;
 	mLanguageType = CDO->mLanguageType;
 	mResolution = CDO->mResolution;
+	mFpsLimit = CDO->mFpsLimit;
+	mQualityLevel = CDO->mQualityLevel;
+	mScreenShakeEnabled = CDO->mScreenShakeEnabled;
+	mEffectsEnabled = CDO->mEffectsEnabled;
 
 	ApplyCurrentOptions();
 }
@@ -616,6 +622,65 @@ void UOptionPersistData::ApplyCurrentOptions()
 	}
 	SetLanguage(mLanguageType);
 	SetResolution(mResolution);
+	SetFpsLimit(mFpsLimit);
+	SetQualityLevel(mQualityLevel);
+	// 흔들림/이펙트는 저장된 선호를 소비자가 조회하는 방식이라 별도 적용 절차가 없다.
+}
+
+void UOptionPersistData::SetFpsLimit(int32 FpsLimit)
+{
+	// UI와 같은 규칙으로 30/60 두 단계로 스냅한다.
+	mFpsLimit = FpsLimit <= 30 ? 30 : 60;
+
+	if (GEngine != nullptr)
+	{
+		if (UGameUserSettings* GameUserSettings = GEngine->GetGameUserSettings())
+		{
+			GameUserSettings->SetFrameRateLimit(StaticCast<float>(mFpsLimit));
+			// 해상도 변경 없이 프레임 제한만 반영한다. 영속화는 옵션 SaveGame이 담당하므로 ini 저장은 하지 않는다.
+			GameUserSettings->ApplyNonResolutionSettings();
+		}
+	}
+}
+
+void UOptionPersistData::SetQualityLevel(int32 QualityLevel)
+{
+	mQualityLevel = FMath::Clamp(QualityLevel, 0, 2);
+
+	// 단일 레벨(0=낮음,1=중간,2=높음)을 Scalability 전 항목에 일괄 적용한다(에픽(3)은 UI 스펙 밖).
+	Scalability::FQualityLevels QualityLevels = Scalability::GetQualityLevels();
+	QualityLevels.SetFromSingleQualityLevel(mQualityLevel);
+	Scalability::SetQualityLevels(QualityLevels);
+}
+
+void UOptionPersistData::SetScreenShakeEnabled(bool bEnabled)
+{
+	mScreenShakeEnabled = bEnabled;
+}
+
+void UOptionPersistData::SetEffectsEnabled(bool bEnabled)
+{
+	mEffectsEnabled = bEnabled;
+}
+
+int32 UOptionPersistData::GetFpsLimit() const
+{
+	return mFpsLimit;
+}
+
+int32 UOptionPersistData::GetQualityLevel() const
+{
+	return mQualityLevel;
+}
+
+bool UOptionPersistData::IsScreenShakeEnabled() const
+{
+	return mScreenShakeEnabled;
+}
+
+bool UOptionPersistData::AreEffectsEnabled() const
+{
+	return mEffectsEnabled;
 }
 
 /**

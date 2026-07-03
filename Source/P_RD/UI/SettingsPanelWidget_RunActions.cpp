@@ -1,6 +1,7 @@
 #include "UI/SettingsPanelWidget.h"
 
 #include "Components/Button.h"
+#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Components/Widget.h"
 
 /**
@@ -101,6 +102,11 @@ void USettingsPanelWidget::SetButtonEnabled(UButton* Button, bool bEnabled) cons
  */
 void USettingsPanelWidget::HandleSaveAndExitButtonClicked()
 {
+	// 패널이 닫히는 경로이므로 Back과 동일하게 옵션을 디스크에 커밋한다.
+	if (USaveGameSubsystem* SaveGameSubsystem = GetGameInstance()->GetSubsystem<USaveGameSubsystem>())
+	{
+		SaveGameSubsystem->SaveOptionAsync(FAsyncSaveGameToSlotDelegate());
+	}
 	OnSaveAndExitRequested.Broadcast();
 }
 

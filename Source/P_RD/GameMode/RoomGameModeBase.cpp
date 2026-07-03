@@ -320,6 +320,24 @@ bool ARoomGameModeBase::AbandonRunFromRoom()
 	return true;
 }
 
+bool ARoomGameModeBase::SaveRunAndExitToFrontendAsync()
+{
+	if (mWasNextRoomPreloadRequested == true)
+	{
+		UE_LOG(LogRDGameMode, Log, TEXT("방 전환 시 추가 로직 요청 불가"));
+		return false;
+	}
+
+	// 런을 남긴 채(이어하기 가능) 저장만 하고 나간다. 전환은 저장 완료 후에 시작한다.
+	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->SaveRunAsync(
+		FAsyncSaveGameToSlotDelegate::CreateWeakLambda(this, [this](const FString& SlotName, int32 UserIndex, bool IsSuccussed) {
+			checkf(IsSuccussed == true, TEXT("저장 후 종료 시점 저장 실패"));
+			checkf(PreloadAndTransitionFrontendRoomAsync() == true, TEXT("저장 후 종료 이후, Frontend로 전환 실패"));
+		}));
+
+	return true;
+}
+
 /**
  * @brief 현재 런의 스테이지 정보를 월드맵 표시용 View 배열로 변환한다.
  *

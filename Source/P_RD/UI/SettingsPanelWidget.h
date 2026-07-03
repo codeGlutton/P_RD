@@ -117,6 +117,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UI|Settings")
 	void ApplyValueModel(const FSettingsPanelValueModel& ValueModel);
 
+	/** @brief 저장된 옵션(프로필)을 읽어 패널 UI에 반영한다. 여는 쪽이 OpenUI 전에 호출한다. */
+	void ApplyOptionsFromProfile();
+
 	/**
 	 * @brief 패널이 마지막으로 받은/입력한 설정 값 묶음을 반환한다.
 	 */

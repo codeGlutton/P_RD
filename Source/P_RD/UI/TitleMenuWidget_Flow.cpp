@@ -86,6 +86,7 @@ void UTitleMenuWidget::OpenSettingsPanel()
 	}
 
 	TitleSettingsPanel->OnBackRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsPanelBackRequested);
+	TitleSettingsPanel->ApplyOptionsFromProfile();   // 저장된 옵션을 UI에 반영(이전엔 항상 기본값 표시)
 	TitleSettingsPanel->SetPanelMode(ESettingsPanelMode::Title);
 	// 같은 SettingsPanel 인스턴스를 인게임에서도 쓰므로, 타이틀에서만 런 액션 영역을 숨긴 상태로 갱신한다.
 	TitleSettingsPanel->RefreshPanelState(false, false);

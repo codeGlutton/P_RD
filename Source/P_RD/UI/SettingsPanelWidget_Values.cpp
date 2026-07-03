@@ -3,7 +3,31 @@
 #include "Components/CheckBox.h"
 #include "Components/Slider.h"
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
+#include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
+
+void USettingsPanelWidget::ApplyOptionsFromProfile()
+{
+	// 패널을 열 때 저장된 옵션을 UI에 반영한다. 지금까지는 호출처가 없어 항상 기본값이 표시됐다.
+	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+	if (GameProfileSubsystem == nullptr)
+	{
+		return;
+	}
+	const UOptionPersistData* OptionData = GameProfileSubsystem->GetOptionData();
+	FSettingsPanelValueModel NewValueModel;
+	NewValueModel.mMasterVolume = OptionData->GetVolume(EGameVolumeType::Master);
+	NewValueModel.mBgmVolume = OptionData->GetVolume(EGameVolumeType::BGM);
+	NewValueModel.mSfxVolume = OptionData->GetVolume(EGameVolumeType::SFX);
+	NewValueModel.mUiVolume = mValueModel.mUiVolume;   // 옵션 데이터에 대응 필드가 없어 현 상태 유지
+	NewValueModel.mUseKoreanLanguage = OptionData->GetLanguage() == ELanguageType::KOREAN;
+	NewValueModel.mFpsLimit = OptionData->GetFpsLimit();
+	NewValueModel.mQualityLevel = StaticCast<ESettingsQualityLevel>(OptionData->GetQualityLevel());
+	NewValueModel.mScreenShakeEnabled = OptionData->IsScreenShakeEnabled();
+	NewValueModel.mEffectsEnabled = OptionData->AreEffectsEnabled();
+	NewValueModel.mVibrationEnabled = mValueModel.mVibrationEnabled;   // 옵션 미보유 - 유지
+	ApplyValueModel(NewValueModel);
+}
 
 void USettingsPanelWidget::ApplyValueModel(const FSettingsPanelValueModel& ValueModel)
 {
@@ -84,6 +108,11 @@ void USettingsPanelWidget::HandleLowQualityButtonClicked()
 	if (mIsApplyingValueModel == false)
 	{
 		OnQualityRequested.Broadcast(RDSettingsPanel::ToQualityRequestValue(mValueModel.mQualityLevel));
+		// 전용 수신 시스템 전까지 기본 적용(Master/언어와 동일 규약).
+		if (UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>())
+		{
+			GameProfileSubsystem->SetQualityLevel(StaticCast<int32>(mValueModel.mQualityLevel));
+		}
 	}
 }
 
@@ -100,6 +129,11 @@ void USettingsPanelWidget::HandleMediumQualityButtonClicked()
 	if (mIsApplyingValueModel == false)
 	{
 		OnQualityRequested.Broadcast(RDSettingsPanel::ToQualityRequestValue(mValueModel.mQualityLevel));
+		// 전용 수신 시스템 전까지 기본 적용(Master/언어와 동일 규약).
+		if (UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>())
+		{
+			GameProfileSubsystem->SetQualityLevel(StaticCast<int32>(mValueModel.mQualityLevel));
+		}
 	}
 }
 
@@ -116,6 +150,11 @@ void USettingsPanelWidget::HandleHighQualityButtonClicked()
 	if (mIsApplyingValueModel == false)
 	{
 		OnQualityRequested.Broadcast(RDSettingsPanel::ToQualityRequestValue(mValueModel.mQualityLevel));
+		// 전용 수신 시스템 전까지 기본 적용(Master/언어와 동일 규약).
+		if (UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>())
+		{
+			GameProfileSubsystem->SetQualityLevel(StaticCast<int32>(mValueModel.mQualityLevel));
+		}
 	}
 }
 
@@ -190,6 +229,11 @@ void USettingsPanelWidget::HandleScreenShakeChanged(bool bChecked)
 	if (mIsApplyingValueModel == false)
 	{
 		OnScreenShakeChanged.Broadcast(mValueModel.mScreenShakeEnabled);
+		// 전용 수신 시스템 전까지 기본 적용(Master/언어와 동일 규약).
+		if (UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>())
+		{
+			GameProfileSubsystem->SetScreenShakeEnabled(mValueModel.mScreenShakeEnabled);
+		}
 	}
 }
 
@@ -237,6 +281,11 @@ void USettingsPanelWidget::HandleFpsThirtyButtonClicked()
 	if (mIsApplyingValueModel == false)
 	{
 		OnFpsLimitRequested.Broadcast(mValueModel.mFpsLimit);
+		// 전용 수신 시스템 전까지 기본 적용(Master/언어와 동일 규약).
+		if (UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>())
+		{
+			GameProfileSubsystem->SetFpsLimit(mValueModel.mFpsLimit);
+		}
 	}
 }
 
@@ -247,6 +296,11 @@ void USettingsPanelWidget::HandleFpsSixtyButtonClicked()
 	if (mIsApplyingValueModel == false)
 	{
 		OnFpsLimitRequested.Broadcast(mValueModel.mFpsLimit);
+		// 전용 수신 시스템 전까지 기본 적용(Master/언어와 동일 규약).
+		if (UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>())
+		{
+			GameProfileSubsystem->SetFpsLimit(mValueModel.mFpsLimit);
+		}
 	}
 }
 
@@ -291,5 +345,10 @@ void USettingsPanelWidget::HandleEffectsChanged(bool bChecked)
 	if (mIsApplyingValueModel == false)
 	{
 		OnEffectsChanged.Broadcast(mValueModel.mEffectsEnabled);
+		// 전용 수신 시스템 전까지 기본 적용(Master/언어와 동일 규약).
+		if (UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>())
+		{
+			GameProfileSubsystem->SetEffectsEnabled(mValueModel.mEffectsEnabled);
+		}
 	}
 }

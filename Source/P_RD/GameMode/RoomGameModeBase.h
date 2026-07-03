@@ -61,6 +61,15 @@ public:
 	UFUNCTION(Category = Room, BlueprintCallable)
 	bool AbandonRunFromRoom();
 
+	/**
+	 * @brief 현재 런을 저장한 뒤 프론트엔드(타이틀) 방으로 나간다.
+	 *
+	 * @details
+	 * AbandonRunFromRoom()과 달리 RunPersistData를 비우지 않는다 — 저장된 런은 타이틀의 CONTINUE로 이어갈 수 있다.
+	 * 저장은 비동기이며, 저장 완료 콜백에서 프론트엔드 전환을 시작한다(저장 중 방 전환 경합 방지).
+	 */
+	bool SaveRunAndExitToFrontendAsync();
+
 public:
 	/**
 	 * @brief 지도 UI가 그릴 방 노드 View 데이터를 가져온다.

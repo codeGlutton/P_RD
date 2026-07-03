@@ -292,6 +292,14 @@ private:
 	UFUNCTION()
 	void HandleSettingsBackRequested();
 
+	/** @brief 인게임 설정의 '저장 후 종료' — 런 저장 후 프론트엔드로 전환한다. */
+	UFUNCTION()
+	void HandleSettingsSaveAndExitRequested();
+
+	/** @brief 인게임 설정의 '런 포기' 확정 — 런 데이터를 비우고 프론트엔드로 전환한다. */
+	UFUNCTION()
+	void HandleSettingsAbandonRunConfirmed();
+
 	/** @brief 뷰모델의 유닛 수에 맞춰 머리 위 HP바 위젯을 다시 만든다. */
 	void RebuildUnitHpBars();
 

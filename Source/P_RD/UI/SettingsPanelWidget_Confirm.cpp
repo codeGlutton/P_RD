@@ -1,6 +1,7 @@
 #include "UI/SettingsPanelWidget.h"
 
 #include "Components/Widget.h"
+#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 
 /**
  * @brief 런 포기 확정 패널을 표시한다.
@@ -41,6 +42,11 @@ void USettingsPanelWidget::HideAbandonConfirm() const
  */
 void USettingsPanelWidget::HandleConfirmAbandonButtonClicked()
 {
+	// 패널이 닫히는 경로이므로 Back과 동일하게 옵션을 디스크에 커밋한다.
+	if (USaveGameSubsystem* SaveGameSubsystem = GetGameInstance()->GetSubsystem<USaveGameSubsystem>())
+	{
+		SaveGameSubsystem->SaveOptionAsync(FAsyncSaveGameToSlotDelegate());
+	}
 	OnAbandonRunConfirmed.Broadcast();
 }
 

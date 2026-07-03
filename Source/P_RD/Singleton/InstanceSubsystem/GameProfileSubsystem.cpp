@@ -61,3 +61,36 @@ void UGameProfileSubsystem::ResetOptions() const
 
 	UE_LOG(LogGameProfile, Log, TEXT("옵션 초기화"));
 }
+
+void UGameProfileSubsystem::SetFpsLimit(int32 FpsLimit) const
+{
+	GetOptionMutableData()->SetFpsLimit(FpsLimit);
+
+	UE_LOG(LogGameProfile, Log, TEXT("[%d] FPS 상한 변경"), GetOptionMutableData()->GetFpsLimit());
+}
+
+void UGameProfileSubsystem::SetQualityLevel(int32 QualityLevel) const
+{
+	GetOptionMutableData()->SetQualityLevel(QualityLevel);
+
+	UE_LOG(LogGameProfile, Log, TEXT("[%d] 그래픽 품질 변경"), GetOptionMutableData()->GetQualityLevel());
+}
+
+void UGameProfileSubsystem::SetScreenShakeEnabled(bool bEnabled) const
+{
+	GetOptionMutableData()->SetScreenShakeEnabled(bEnabled);
+
+	UE_LOG(LogGameProfile, Log, TEXT("[%s] 화면 흔들림 변경"), bEnabled ? TEXT("켬") : TEXT("끔"));
+}
+
+void UGameProfileSubsystem::SetEffectsEnabled(bool bEnabled) const
+{
+	GetOptionMutableData()->SetEffectsEnabled(bEnabled);
+
+	UE_LOG(LogGameProfile, Log, TEXT("[%s] 전투 이펙트 표시 변경"), bEnabled ? TEXT("켬") : TEXT("끔"));
+}
+
+const UOptionPersistData* UGameProfileSubsystem::GetOptionData() const
+{
+	return GetOptionMutableData();
+}

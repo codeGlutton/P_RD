@@ -1,4 +1,6 @@
 #include "UI/CombatTileMapHUDWidget.h"
+#include "GameMode/RoomGameModeBase.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
@@ -176,9 +178,13 @@ void UCombatTileMapHUDWidget::ToggleSettingsPanel()
 
 	CloseFloatingPanels(EWorldWidgetType::InGameSettings);
 	SettingsPanelWidget->OnBackRequested.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleSettingsBackRequested);
+	SettingsPanelWidget->OnSaveAndExitRequested.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleSettingsSaveAndExitRequested);
+	SettingsPanelWidget->OnAbandonRunConfirmed.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleSettingsAbandonRunConfirmed);
+	SettingsPanelWidget->ApplyOptionsFromProfile();   // 저장된 옵션을 UI에 반영(이전엔 항상 기본값 표시)
 	SettingsPanelWidget->OpenUI();
 	SettingsPanelWidget->SetPanelMode(ESettingsPanelMode::InGame);
-	SettingsPanelWidget->RefreshPanelState(false, false);
+	// 런 액션이 실제 동작(저장 후 종료/포기)과 연결되었으므로 활성화한다.
+	SettingsPanelWidget->RefreshPanelState(true, true);
 	SettingsPanelWidget->HideAbandonConfirm();
 	SettingsPanelWidget->SetStatusText(FText::GetEmpty());
 }
@@ -325,5 +331,35 @@ void UCombatTileMapHUDWidget::HandleSettingsBackRequested()
 		return;
 	}
 
+	CloseWorldWidget(EWorldWidgetType::InGameSettings);
+}
+
+void UCombatTileMapHUDWidget::HandleSettingsSaveAndExitRequested()
+{
+	ARoomGameModeBase* RoomGameMode = Cast<ARoomGameModeBase>(UGameplayStatics::GetGameMode(this));
+	if (RoomGameMode == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("CombatTileMapHUDWidget: 저장 후 종료 - RoomGameModeBase가 아니어서 무시"));
+		return;
+	}
+	if (RoomGameMode->SaveRunAndExitToFrontendAsync() == false)
+	{
+		return;   // 방 전환 경합 등으로 거부 - 패널은 그대로 둔다.
+	}
+	CloseWorldWidget(EWorldWidgetType::InGameSettings);
+}
+
+void UCombatTileMapHUDWidget::HandleSettingsAbandonRunConfirmed()
+{
+	ARoomGameModeBase* RoomGameMode = Cast<ARoomGameModeBase>(UGameplayStatics::GetGameMode(this));
+	if (RoomGameMode == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("CombatTileMapHUDWidget: 런 포기 - RoomGameModeBase가 아니어서 무시"));
+		return;
+	}
+	if (RoomGameMode->AbandonRunFromRoom() == false)
+	{
+		return;
+	}
 	CloseWorldWidget(EWorldWidgetType::InGameSettings);
 }

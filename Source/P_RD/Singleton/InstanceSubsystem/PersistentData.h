@@ -250,12 +250,28 @@ public:
 	void SetLanguage(ELanguageType LanguageType);
 	void SetResolution(const FIntPoint& Resolution);
 
+	/** @brief FPS 상한을 30/60으로 스냅해 저장하고 GameUserSettings로 즉시 적용한다. */
+	void SetFpsLimit(int32 FpsLimit);
+
+	/** @brief 그래픽 품질(0=낮음,1=중간,2=높음)을 저장하고 Scalability 단일 레벨로 즉시 적용한다. */
+	void SetQualityLevel(int32 QualityLevel);
+
+	/** @brief 화면 흔들림 선호를 저장한다. 소비자는 카메라 연출 쪽이 IsScreenShakeEnabled()로 조회한다(게이팅 지점 미구현). */
+	void SetScreenShakeEnabled(bool bEnabled);
+
+	/** @brief 전투 이펙트 표시 선호를 저장한다. 소비자는 VFX 스폰 쪽이 AreEffectsEnabled()로 조회한다(게이팅 지점 미구현). */
+	void SetEffectsEnabled(bool bEnabled);
+
 	void ApplyCurrentOptions();
 
 public:
 	float GetVolume(EGameVolumeType VolumeType) const;
 	ELanguageType GetLanguage() const;
 	const FIntPoint& GetResolution() const;
+	int32 GetFpsLimit() const;
+	int32 GetQualityLevel() const;
+	bool IsScreenShakeEnabled() const;
+	bool AreEffectsEnabled() const;
 
 public:
 	bool IsActive() const;
@@ -271,6 +287,23 @@ protected:
 protected:
 	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "Resolution"))
 	FIntPoint mResolution = FIntPoint::ZeroValue;
+
+protected:
+	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "FpsLimit"))
+	int32 mFpsLimit = 60;
+
+protected:
+	/* 0=낮음, 1=중간, 2=높음 (UI 레이어 enum과의 결합을 피하려 정수로 저장) */
+	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "QualityLevel"))
+	int32 mQualityLevel = 1;
+
+protected:
+	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "ScreenShakeEnabled"))
+	bool mScreenShakeEnabled = true;
+
+protected:
+	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "EffectsEnabled"))
+	bool mEffectsEnabled = true;
 
 	/* 캐싱 */
 private:
