@@ -6,7 +6,11 @@
 #   2) 범례 = 완성형 이미지 1장(Map_LegendImage, T_wm_legend_full) — 구 행 조립 위젯(Map_LegendPanel/Title/Icon_*/Label_*) 제거
 #   3) CloseButton = 클래스 선택과 동일한 기존 UE 에셋(wbp.ueAsset) 직접 로드(임포트 금지), 전 상태 동일 브러시 + disabled 틴트 0.44
 #   4) wbpNativeSpec.topUIInset -> 메인 WBP CDO mTopUIInset 주입
-# 규칙: 슬롯/브러시/클래스 디폴트만 쓴다. 이벤트/바인딩/그래프 불가침. 재실행 안전(idempotent, v2 상태로 수렴).
+# v3(20260704): 범례 PNG(legend_full)가 내용 없는 빈 프레임으로 판명 —
+#   Map_LegendImage는 [1596,300,300,460] right/center + 9-slice(BOX, wbp.nineSlice=0.28)로 세로 스트레치,
+#   프레임 리전(범례제목/행_*) 기준으로 제목 + 6행(아이콘 44px + 라벨) 재조립(루트 캔버스 직속, z=11).
+#   제거 목록은 Map_LegendPanel(옛 프레임)만 유지. MapStatusText는 ensure-생성(제거 금지).
+# 규칙: 슬롯/브러시/클래스 디폴트만 쓴다. 이벤트/바인딩/그래프 불가침. 재실행 안전(idempotent, v3 상태로 수렴).
 # 실행: UnrealEditor-Cmd <uproject> -ExecutePythonScript=<이 파일> (headless)
 # 최종 출력: "WORLDMAPSYNC|" + json 리포트 한 줄 (saved 플래그/생성/갱신/제거/임포트 수)
 import unreal, json, os, shutil
@@ -419,11 +423,20 @@ def compile_and_save(bp, asset_path, scope, key, cdo_pairs=None):
 COL_GOLD = (0.95, 0.87, 0.60, 1.0)
 COL_INK = (0.30, 0.22, 0.12, 0.85)
 
-# v1 빌더 산출물 중 v2에서 철회된 위젯 — 찾아서 소스 트리에서 제거(없으면 스킵)
-V2_REMOVED = (["Map_StageInfoPanel", "Map_StageNameText", "Map_StageProgressText",
-               "Map_LegendPanel", "Map_LegendTitleText"]
-              + ["Map_LegendIcon_" + s for s in ("Battle", "Elite", "Boss", "Shop", "Treasure", "Rest")]
-              + ["Map_LegendLabel_" + s for s in ("Battle", "Elite", "Boss", "Shop", "Treasure", "Rest")])
+# 철회된 v1 산출물 — 찾아서 소스 트리에서 제거(없으면 스킵).
+# v3: 범례 행(Map_LegendTitleText/Icon_*/Label_*)은 프레임 리전 기준으로 다시 만들므로 제거 금지 —
+#     옛 프레임 Map_LegendPanel만 남긴다. MapStatusText 절대 포함 금지(C++ 필수 바인딩).
+V2_REMOVED = ["Map_StageInfoPanel", "Map_StageNameText", "Map_StageProgressText", "Map_LegendPanel"]
+
+# v3 범례 행: 리전 '행_<키>' -> (위젯 접미사, 기존 노드 아이콘 에셋 | None=커스텀 휴식 아이콘 임포트)
+LEGEND_ROWS = {"전투": ("Battle", "T_MapNode_Monster"), "엘리트": ("Elite", "T_MapNode_Elite"),
+               "보스": ("Boss", "T_MapNode_Boss"), "상점": ("Shop", "T_MapNode_Shop"),
+               "보물": ("Treasure", "T_MapNode_Treasure"), "휴식": ("Rest", None)}
+LEGEND_REST_SRC = ASSETS + "12_WorldMap/05_CustomNodeIcons/node_rest_nobg.png"   # 기존 임포트분(T_wm_node_rest_nobg) 재사용
+LEGEND_ICON = 44.0          # 행 아이콘 한 변(px)
+LEGEND_ICON_GAP = 14.0      # 아이콘-라벨 간격(px, 재량값)
+COL_LEGEND_GOLD = (0.96, 0.93, 0.80, 1.0)
+COL_WHITE = (1.0, 1.0, 1.0, 1.0)
 
 
 # ==================================================================================
@@ -446,7 +459,7 @@ def sync_main_map():
         err("map", "MapGraphCanvas missing")
         return
 
-    # ---- v2 철회 위젯 제거 (1차 실행 산출물 — 없으면 조용히 스킵) ----
+    # ---- 철회 위젯 제거 (v3: 스테이지 패널 계열 + 옛 범례 프레임만 — 없으면 조용히 스킵) ----
     remove_widgets(bp, V2_REMOVED)
 
     # ---- 텍스처 준비 (JSON imageAsset 정본, T_wm_* 로 임포트) ----
@@ -508,9 +521,10 @@ def sync_main_map():
         err("map", "Map_ScrollHint " + str(ex)[:70])
 
     # ---- 프레임/장식 이미지들: edge-pin + 브러시 ----
-    # Map_LegendImage: 완성형 범례 아트 1장(1024사각) — 원본 비율 그대로 IMAGE, 행 조립 없음
+    # Map_LegendImage(v3): 빈 프레임 PNG — 9-slice(BOX, wbp.nineSlice)로 300x460 세로 스트레치가 안 깨지게
+    legend_slice = float(els["legend_panel"].get("wbp", {}).get("nineSlice", 0.28))
     ART = [
-        ("Map_LegendImage", "legend_panel", t_legend, "image", None),
+        ("Map_LegendImage", "legend_panel", t_legend, "box", legend_slice),
         ("Map_DecorCandle", "decor_candle", t_candle, "image", None),
         ("Map_DecorSpellbook", "decor_spellbook", t_book, "image", None),
         ("Map_SelectedRoomStrip", "selected_room_strip", t_strip, "box", 0.30),
@@ -530,6 +544,72 @@ def sync_main_map():
             res["synced"].append(name)
         except Exception as ex:
             err("map", name + " " + str(ex)[:70])
+
+    # ---- v3 범례 재조립: 빈 프레임(Map_LegendImage, z10) 안에 제목 + 6행(아이콘+라벨), 전부 루트 직속 z=11 ----
+    # Map_LegendImage와 같은 pin(right/center) 기준으로 프레임 리전 좌표를 절대 오프셋 배치 — 프레임과 함께 움직인다.
+    try:
+        lg_ax, lg_ay = pin_of("legend_panel")
+        title_rect = region_abs("legend_panel", rg_name_prefix="범례제목")
+        if title_rect is not None:
+            w = find_w(bp, "Map_LegendTitleText")
+            if w is None:
+                w = ensure_widget(bp, unreal.TextBlock, "Map_LegendTitleText", root_name)
+                if w is not None:
+                    w.set_text(unreal.Text("범례"))
+            if w is not None:
+                text_center_slot(w, lg_ax, lg_ay, title_rect, z=11)
+                style_text(w, title_rect[3], COL_LEGEND_GOLD)   # 중앙정렬 + 골드
+                w.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
+                res["synced"].append("Map_LegendTitleText")
+        else:
+            res["missing"].append("legend:범례제목")
+        for r in els["legend_panel"].get("regions", []):
+            rname = r.get("name", "")
+            if not rname.startswith("행_"):
+                continue
+            key_kr = rname.split("_", 1)[1]
+            if key_kr not in LEGEND_ROWS:
+                res["notes"].append("legend row unmapped: " + key_kr)
+                continue
+            suffix, mapnode = LEGEND_ROWS[key_kr]
+            row = region_abs("legend_panel", rg_name_prefix=rname)
+            if row is None:
+                res["missing"].append("legend:" + rname)
+                continue
+            row_cy = row[1] + row[3] / 2.0
+            # 아이콘: 행 왼쪽 끝, 44px 정방형, 수직중앙
+            t_icon = load_mapnode(mapnode) if mapnode else ensure_import(LEGEND_REST_SRC)
+            iw = ensure_widget(bp, unreal.Image, "Map_LegendIcon_" + suffix, root_name)
+            if iw is not None:
+                icon_rect = [row[0], row_cy - LEGEND_ICON / 2.0, LEGEND_ICON, LEGEND_ICON]
+                pin_slot(iw, lg_ax, lg_ay, icon_rect, z=11)
+                iw.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
+                if t_icon is not None:
+                    apply_brush(iw, t_icon, LEGEND_ICON, LEGEND_ICON)
+                res["synced"].append("Map_LegendIcon_" + suffix)
+            # 라벨: 아이콘 오른쪽, 좌정렬 수직중앙(alignment(0,0.5)+autosize), 흰색, 폰트=행 높이*0.38
+            lw = find_w(bp, "Map_LegendLabel_" + suffix)
+            if lw is None:
+                lw = ensure_widget(bp, unreal.TextBlock, "Map_LegendLabel_" + suffix, root_name)
+                if lw is not None:
+                    lw.set_text(unreal.Text(key_kr))
+            if lw is not None:
+                label_x = row[0] + LEGEND_ICON + LEGEND_ICON_GAP
+                ld = unreal.AnchorData(
+                    offsets=unreal.Margin(label_x - lg_ax * DW, row_cy - lg_ay * DH, 0.0, 0.0),
+                    anchors=unreal.Anchors(minimum=unreal.Vector2D(lg_ax, lg_ay),
+                                           maximum=unreal.Vector2D(lg_ax, lg_ay)),
+                    alignment=unreal.Vector2D(0.0, 0.5))
+                lw.slot.set_editor_property("layout_data", ld)
+                lw.slot.set_editor_property("auto_size", True)
+                lw.slot.set_editor_property("z_order", 11)
+                lw.set_editor_property("justification", unreal.TextJustify.LEFT)
+                lw.set_color_and_opacity(unreal.SlateColor(unreal.LinearColor(*COL_WHITE)))
+                set_font_size(lw, row[3] * 0.38)
+                lw.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
+                res["synced"].append("Map_LegendLabel_" + suffix)
+    except Exception as ex:
+        err("map", "legend rows " + str(ex)[:70])
 
     # ---- MapTitleText: map_title rect 중심, autosize+중앙정렬, 폰트=rect높이*0.55 ----
     try:

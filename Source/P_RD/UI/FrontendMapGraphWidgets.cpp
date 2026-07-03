@@ -151,9 +151,9 @@ void UFrontendMapNodeWidget::SetNodeVisual(
 		if (Icon != nullptr)
 		{
 			NodePanel->SetBrushFromTexture(Icon);
-			// 잠긴 방 아이콘은 어둡게 눌러 "보이지만 아직 못 감"을 표현한다.
+			// 잠김은 자물쇠 링이 이미 표현하므로 아이콘은 살짝만 눌러 원색을 유지한다(과한 감쇠는 씻겨 보임).
 			NodePanel->SetBrushColor(RoomState == EMapRoomState::Locked && !bIsCurrentRoom
-				? FLinearColor(0.42f, 0.42f, 0.42f, 1.f)
+				? FLinearColor(0.8f, 0.8f, 0.8f, 1.f)
 				: FLinearColor::White);
 			bHasIcon = true;
 		}

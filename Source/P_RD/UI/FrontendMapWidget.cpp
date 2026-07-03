@@ -999,14 +999,11 @@ void UFrontendMapWidget::HideUnusedMapTextSurfaces() const
 	}
 	if (CloseButtonText != nullptr)
 	{
-		CloseButtonText->SetText(FText::GetEmpty());
-		CloseButtonText->SetVisibility(ESlateVisibility::Collapsed);
+		// 프레임 텍스처에는 문구가 없다 — 클래스 선택과 동일하게 라벨을 버튼 위에 표시한다.
+		CloseButtonText->SetText(mCloseText);
+		CloseButtonText->SetVisibility(ESlateVisibility::HitTestInvisible);
 	}
-	if (EnterButtonText != nullptr)
-	{
-		EnterButtonText->SetText(FText::GetEmpty());
-		EnterButtonText->SetVisibility(ESlateVisibility::Collapsed);
-	}
+	// EnterButtonText는 SetEnterButtonVisible/SetEnterButtonText가 모드에 따라 관리한다(여기서 끄지 않는다).
 	if (MapLegendScroll != nullptr)
 	{
 		MapLegendScroll->SetVisibility(ESlateVisibility::Collapsed);
