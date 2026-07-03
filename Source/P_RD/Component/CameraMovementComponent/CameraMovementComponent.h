@@ -6,6 +6,22 @@
 #include "Components/ActorComponent.h"
 #include "CameraMovementComponent.generated.h"
 
+
+// @brief 카메라 강조 Handle
+UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
+enum class ECameraControlState : uint8
+{
+
+	Normal,
+	Emphasis
+};
+
+struct FCameraEmphasisState
+{
+	FVector		Position;
+	float		ZoomDelta;
+};
+
 class UCameraComponent;
 class USpringArmComponent;
 
@@ -33,16 +49,18 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
-	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CameraComponent", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "CameraComponent", AllowPrivateAccess = "true"))
 	TWeakObjectPtr<UCameraComponent> mCameraComponent;
 
 	//UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SpringArmComponent", AllowPrivateAccess = "true"))
 	//TObjectPtr<USpringArmComponent> mSpringArmComponent;
 
+
+public:
 	/*
 	* @brief 줌 속력
 	*/
-	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "ZoomSpeed", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "ZoomSpeed", AllowPrivateAccess = "true"))
 	float mZoomSpeed = 1.f;
 
 	/*
@@ -51,7 +69,7 @@ public:
 	* OrthoWidth 최대 값
 	* 커질수록 화면이 더 많이 축소할 수 있다.
 	*/
-	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MaxZoom", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MaxZoom", AllowPrivateAccess = "true"))
 	float mMaxOrthoWidth = 10000.f;
 
 	/*
@@ -60,15 +78,34 @@ public:
 	* OrthoWidth 최소 값
 	* 작을수록 화면이 더 많이 확대할 수 있다.
 	*/
-	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MinZoom", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MinZoom", AllowPrivateAccess = "true"))
 	float mMinOrthoWidth = 100.f;
 
+	/*
+	* @brief Zoom 시 걸리는 시간
+	* @details
+	* 터치로 이동 시 걸리는 시간
+	*/
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "ZoomDuration", AllowPrivateAccess = "true"))
+	float mZoomDuration = 0.2f; // 이동에 걸릴 시간
+
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "ZoomExp", AllowPrivateAccess = "true"))
+	float mZoomExp = 2.f;
+
+	FTimerHandle mTimerHandle_Zoom;		// Zoom 로직에 쓸 타이머 핸들
+	float mStartZoom;					// 시작 Zoom
+	float mCurZoom;						// 현재 Zoom
+	float mEndZoom;						// 끝 Zoom
+	float mCurrentZoomAlpha = 0.0f;		// Zoom 로직 진행도
+
+public:
+	/* 클램핑 박스 제한*/
 	/*
 	* @brief 클램핑 박스 중앙 위치
 	* @details
 	* 해당 위치를 중심으로 클램핑 박스가 설정됩니다.
 	*/
-	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MoveClampingBoxCenter", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveClampingBoxCenter", AllowPrivateAccess = "true"))
 	FVector mMoveClampingBoxCenter = FVector(0, 0, 0);
 	
 	/*
@@ -77,8 +114,53 @@ public:
 	* 박스 크기로 해당 카메라는 해당 위치를 벗어나지 못합니다.
 	* Z축은 사용하지 않습니다.
 	*/
-	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MoveClampingBox", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveClampingBox", AllowPrivateAccess = "true"))
 	FVector2D mMoveClampingBox = FVector2D(3000, 3000);
+
+	/*
+	* @brief 이동 시 걸리는 시간
+	* @details
+	* 터치로 이동 시 걸리는 시간
+	*/
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveDuration", AllowPrivateAccess = "true"))
+	float mMoveDuration = 0.2f; // 이동에 걸릴 시간
+
+	/*
+	* @brief 가속도 강도
+	*/
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveExp", AllowPrivateAccess = "true"))
+	float mMoveExp = 2.f;
+
+	FTimerHandle mTimerHandle_Move;		// 이동 로직에 쓸 타이머 핸들
+	FVector mStartLocation;				// 이동 시작 위치
+	FVector mCurLocation;				// 현재 위치
+	FVector mEndLocation;				// 종료 위치
+	float mCurrentMoveAlpha = 0.0f;		// 이동 진행도
+	
+
+private:
+	/* 강조 */
+
+	/*
+	* @brief 강조 시 변경되는 설정되는 줌값
+	* @details
+	*/
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "강조 시 줌 값", AllowPrivateAccess = "true"))
+	float				mEmphasisZoom = 500;
+
+	/*
+	* @brief 현재 강조 상태
+	*/
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "현재 강조 상태", AllowPrivateAccess = "true"))
+
+	ECameraControlState mCamerControlState;
+
+	/*
+	* @brief 강조를 되돌릴 때 사용하는 위치, Zoom 변화량
+	* @details
+	*/
+	FCameraEmphasisState mPreDefaultState;
+
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -105,33 +187,44 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetMoveClampingBox(FVector2D MoveClampingBox);
 
+	UFUNCTION(BlueprintCallable)
+	void SetEmphasisZoom(float EmphasisZoom);
+
 public:
 
 	/*
-	* @brief 줌 값을 받아서 카메라를 Zoom합니다
+	* @brief 줌 값을 받으면 즉시 카메라를 Zoom합니다
 	*
-	* @param ZoomValue 만큼 Zoom 합니다
+	* @param ZoomDelta 만큼 즉시 Zoom 합니다
 	*/
 	UFUNCTION(BlueprintCallable)
-	void ZoomCamera(float ZoomValue);
+	void ZoomCamera_Instant(float ZoomDelta);
+
+	/*
+	* @brief 줌 값을 받아서 일정 시간동안 카메라를 Zoom합니다
+	*
+	* @param ZoomDelta 만큼 일정 시간동안  Zoom 합니다
+	*/
+	UFUNCTION(BlueprintCallable)
+	void ZoomCamera_Smooth(float ZoomDelta);
 
 	/*
 	* @brief 줌 값을 받아서 카메라를 Zoom합니다.
 	*
-	* @param ZoomValue 만큼 Zoom 합니다
+	* @param ZoomDelta 만큼 Zoom 합니다
 	* @param ViewPortPos위치로 카메라를 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void ZoomCameraAndMoveToViewportPosition(float ZoomValue, FVector2D ViewPortPos);
+	void ZoomCameraAndMoveToViewportPosition(float ZoomDelta, FVector2D ViewPortPos);
 
 	/*
 	* @brief 줌 값을 받아서 카메라를 Zoom합니다.
 	*
-	* @param ZoomValue 만큼 Zoom 합니다
+	* @param ZoomDelta 만큼 Zoom 합니다
 	* @param ViewPortPos위치로 카메라를 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void ZoomCameraAndMoveToWorldPosition(float ZoomValue, FVector WorldPosition);
+	void ZoomCameraAndMoveToWorldPosition(float ZoomDelta, FVector WorldPosition);
 
 	/*
 	* @brief MoveToViewportPosition로 카메라의 시선을 옮긴다.
@@ -151,7 +244,64 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void MoveToWorldPosition(FVector WorldPosition);
 
-	//void SkillMotionZoomIn() {};
+	/*
+	* @brief MoveToViewportPosition로 카메라의 시선을 옮긴다.
+	* @defatils
+	* MoveToViewportPosition에서 Ray를 쏜다음 충돌한 위치로 카메라의 시선을 옮깁니다.
+	* @param MoveToViewportPosition에서 Ray를 쏜 다음 충돌한 위치로 카메라의 시선 옮깁니다.
+	*/
+	UFUNCTION(BlueprintCallable)
+	void DragMoveToViewportPosition(FVector2D PreViewPortPos, FVector2D CurViewPortPos);
+
+
+private:
+	void MoveStep();
+
+	void ZoomStep();
+
+
+public:
+	/* 강조 기능*/
+	/*
+	* @brief WorldPosition로 카메라의 시선을 옮기고 ZoomDelta만큼 Zoom 합니다.
+	* @details Emphasis 상태로 변경하여 카메라를 옮길 수 없습니다.
+	* @param WorldPosition 위치로 카메라의 시선 옮깁니다.
+	* @param ZoomDelta 만큼 Zoom 합니다.
+	*/
+	UFUNCTION(BlueprintCallable)
+	void StartEmphasisToWorldPositionWithZoomDelta(float ZoomDelta, FVector WorldPosition);
+
+	/*
+	* @brief ViewPortPosition로 카메라의 시선을 옮기고 ZoomDelta만큼 Zoom 합니다.
+	* @details Emphasis 상태로 변경하여 카메라를 옮길 수 없습니다.
+	* @param ViewPortPosition 위치로 카메라의 시선 옮깁니다.
+	* @param ZoomDelta 만큼 Zoom 합니다.
+	*/
+	UFUNCTION(BlueprintCallable)
+	void StartEmphasisToViewPortPositionWithZoomDelta(float ZoomDelta, FVector2D ViewPortPos);
+
+	/*
+	* @brief WorldPosition로 카메라의 시선을 옮기고 Zoom값을 mEmphasisZoom로 변경합니다.
+	* @details Emphasis 상태로 변경하여 카메라를 옮길 수 없습니다.
+	* @param WorldPosition 위치로 카메라의 시선 옮깁니다.
+	*/
+	UFUNCTION(BlueprintCallable)
+	void StartEmphasisToWorldPosition(FVector WorldPosition);
+
+	/*
+	* @brief ViewPortPosition로 카메라의 시선을 옮기고 Zoom값을 mEmphasisZoom로 변경합니다.
+	* @details Emphasis 상태로 변경하여 카메라를 옮길 수 없습니다.
+	* @param ViewPortPosition 위치로 카메라의 시선 옮깁니다.
+	*/
+	UFUNCTION(BlueprintCallable)
+	void StartEmphasisToViewPortPosition(FVector2D ViewPortPos);
+
+	/*
+	* @brief Emphasis 상태를 종료하고 원래 카메라 위치, Zoom 값으로 변경합니다.
+	*/
+	UFUNCTION(BlueprintCallable)
+	void EndEmphasis();
+
 
 private:
 	 

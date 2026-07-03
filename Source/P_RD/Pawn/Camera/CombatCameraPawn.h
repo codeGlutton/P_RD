@@ -62,6 +62,7 @@ public:
 	//@brief 이전 틱의 Touch 위치와 상태 변수
 	FTouchState mPreTouchState2;
 
+	// ==============================================
 	// 테스트용 변수
 	bool mFirstTouch;
 	bool mSecondTouch;
@@ -86,6 +87,10 @@ private:
 	// @brief 틱 상태를 false로 되돌립니다.
 	void ZoomEndKey(const FInputActionValue& Value);
 
+	// @brief 틱 상태를 false로 되돌립니다.
+	void TouchTragMoveKey(const FInputActionValue& Value);
+
+	// ==================================================
 	// Zoom 테스트
 	void FirstTouchStart(const FInputActionValue& Value);
 	void FirstTouchCompleted(const FInputActionValue& Value);

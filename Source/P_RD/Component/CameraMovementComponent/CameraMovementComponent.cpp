@@ -50,7 +50,8 @@ void UCameraMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 
 	//==============================
 	// 이동 제한 범위를 보여줍니다.
-	FVector Center = mMoveClampingBoxCenter;
+	// @note 수학 공식 이상함. 하지만 현재 각도에서는 우선 원하는 제한 범위가 나오므로 후 순위
+	FVector Center = mMoveClampingBoxCenter + FMath::Sin(FMath::Abs(FMath::DegreesToRadians(GetOwner()->GetActorRotation().Pitch))) * GetOwner()->GetActorLocation().Z;
 	FVector Extent = FVector(mMoveClampingBox /2, 0);
 	FQuat Rotation = FQuat();
 
@@ -109,29 +110,62 @@ void UCameraMovementComponent::SetMoveClampingBox(FVector2D MoveClampingBox)
 	mMoveClampingBox = MoveClampingBox;
 }
 
-void UCameraMovementComponent::ZoomCamera(float ZoomValue)
+void UCameraMovementComponent::SetEmphasisZoom(float EmphasisZoom)
 {
-	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
-
-	// OW 값을 추가합니다.
-	float OW = mCameraComponent->OrthoWidth + ZoomValue * mZoomSpeed;
-	mCameraComponent->OrthoWidth = FMath::Clamp(OW, mMinOrthoWidth, mMaxOrthoWidth);
+	mEmphasisZoom = EmphasisZoom;
 }
 
-void UCameraMovementComponent::ZoomCameraAndMoveToViewportPosition(float ZoomValue, FVector2D ViewPortPos)
+void UCameraMovementComponent::ZoomCamera_Instant(float ZoomDelta)
 {
-	ZoomCamera(ZoomValue);
+	if (mCamerControlState != ECameraControlState::Normal)
+		return;
+
+	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
+	mCameraComponent->OrthoWidth = FMath::Clamp(mCameraComponent->OrthoWidth + ZoomDelta, mMinOrthoWidth, mMaxOrthoWidth);
+}
+
+void UCameraMovementComponent::ZoomCamera_Smooth(float ZoomDelta)
+{
+	if (mCamerControlState != ECameraControlState::Normal)
+		return;
+
+	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
+
+	// 0.01초 간격으로 호출할 예정이므로 (Duration / 0.01)번 반복
+	mStartZoom = mCameraComponent->OrthoWidth;
+	mCurZoom = mStartZoom;
+	mEndZoom = mStartZoom + ZoomDelta;
+
+	// 0.01초 간격으로 호출할 예정이므로 (Duration / 0.01)번 반복
+	mCurrentZoomAlpha = 0.0f;
+
+	// Timer로 Zoom을 수행합니다.
+	GetWorld()->GetTimerManager().SetTimer(mTimerHandle_Zoom, this, &UCameraMovementComponent::ZoomStep, 0.01f, true);
+}
+
+void UCameraMovementComponent::ZoomCameraAndMoveToViewportPosition(float ZoomDelta, FVector2D ViewPortPos)
+{
+	if (mCamerControlState != ECameraControlState::Normal)
+		return;
+
+	ZoomCamera_Smooth(ZoomDelta);
 	MoveToViewportPosition(ViewPortPos);
 }
 
-void UCameraMovementComponent::ZoomCameraAndMoveToWorldPosition(float ZoomValue, FVector WorldPosition)
+void UCameraMovementComponent::ZoomCameraAndMoveToWorldPosition(float ZoomDelta, FVector WorldPosition)
 {
-	ZoomCamera(ZoomValue);
+	if (mCamerControlState != ECameraControlState::Normal)
+		return;
+
+	ZoomCamera_Smooth(ZoomDelta);
 	MoveToWorldPosition(WorldPosition);
 }
 
 void UCameraMovementComponent::MoveToViewportPosition(FVector2D ViewPortPos)
 {
+	if (mCamerControlState != ECameraControlState::Normal)
+		return;
+
 	//==============================
 	// ViewPortPos를 WorldLocation으로 변환하고 Lay를 쏩니다.
 	FVector WorldLocation;
@@ -175,22 +209,78 @@ void UCameraMovementComponent::MoveToViewportPosition(FVector2D ViewPortPos)
 	LocationPos.Z = 0;
 	CameraPos.Z = 0;
 
-	// 변환된 WorldLocation로 액터의 위치를 변경합니다.
-	GetOwner()->AddActorWorldOffset(LocationPos - CameraPos);
+	// 0.01초 간격으로 호출할 예정이므로 (Duration / 0.01)번 반복
+	mStartLocation = CameraPos;
+	mCurLocation = CameraPos;
+	mEndLocation = LocationPos;
 
-	//=================================
-	// 카메라 이동에 제한을 둡니다.
-	// 카메라의 크기는 무시힌다.
-	FVector ActorLocation = GetOwner()->GetActorLocation();
+	// 0.01초 간격으로 호출할 예정이므로 (Duration / 0.01)번 반복
+	mCurrentMoveAlpha = 0.0f;
 
-	ActorLocation.X = FMath::Clamp(ActorLocation.X, mMoveClampingBoxCenter.X - mMoveClampingBox.X / 2, mMoveClampingBoxCenter.X + mMoveClampingBox.X / 2);
-	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, mMoveClampingBoxCenter.Y - mMoveClampingBox.Y / 2, mMoveClampingBoxCenter.Y + mMoveClampingBox.Y / 2);
+	// Timer로 이동을 수행합니다.
+	GetWorld()->GetTimerManager().SetTimer(mTimerHandle_Move, this, &UCameraMovementComponent::MoveStep, 0.01f, true);
+}
 
-	GetOwner()->SetActorLocation(ActorLocation);
+
+void UCameraMovementComponent::DragMoveToViewportPosition(FVector2D PreViewPortPos, FVector2D CurViewPortPos)
+{
+	FVector PreWorldLocation;
+	FVector PreWorldDirection;
+
+	GetWorld()->GetFirstPlayerController()->DeprojectScreenPositionToWorld(PreViewPortPos.X, PreViewPortPos.Y, PreWorldLocation, PreWorldDirection);
+
+	FHitResult ViewPortHitResult;
+	FVector StartTrace = PreWorldLocation; // 시작 지점
+	FVector EndTrace = StartTrace + (PreWorldDirection * 100000.0f);
+
+	// 채널 설정 (ECC_Visibility 등)
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(GetOwner()); // 자기 자신은 충돌에서 제외
+
+	bool bViewPortHit = GetWorld()->LineTraceSingleByChannel(
+		ViewPortHitResult,
+		StartTrace,
+		EndTrace,
+		ECC_Visibility, // 충돌 채널
+		QueryParams
+	);
+
+	FVector PrePos = ViewPortHitResult.ImpactPoint;
+	PrePos.Z = 0;
+
+	//======================================
+	FVector CurWorldLocation;
+	FVector CurWorldDirection;
+
+	GetWorld()->GetFirstPlayerController()->DeprojectScreenPositionToWorld(CurViewPortPos.X, CurViewPortPos.Y, CurWorldLocation, CurWorldDirection);
+
+	ViewPortHitResult;
+	StartTrace = CurWorldLocation; // 시작 지점
+	EndTrace = StartTrace + (CurWorldDirection * 100000.0f);
+
+	// 채널 설정 (ECC_Visibility 등)
+	QueryParams;
+	QueryParams.AddIgnoredActor(GetOwner()); // 자기 자신은 충돌에서 제외
+
+	bViewPortHit = GetWorld()->LineTraceSingleByChannel(
+		ViewPortHitResult,
+		StartTrace,
+		EndTrace,
+		ECC_Visibility, // 충돌 채널
+		QueryParams
+	);
+
+	FVector CurPos = ViewPortHitResult.ImpactPoint;
+	CurPos.Z = 0;
+
+	GetOwner()->AddActorWorldOffset(PrePos - CurPos);
 }
 
 void UCameraMovementComponent::MoveToWorldPosition(FVector LocationPos)
 {
+	if (mCamerControlState != ECameraControlState::Normal)
+		return;
+
 	// =====================================
 	// 카메라의 중심을 기준으로 레이를 쏜다.
 	FHitResult CameraCenterRayCastHitResult;
@@ -207,24 +297,108 @@ void UCameraMovementComponent::MoveToWorldPosition(FVector LocationPos)
 	LocationPos.Z = 0;
 	CameraPos.Z = 0;
 
-	GetOwner()->AddActorWorldOffset(LocationPos - CameraPos);
+	mStartLocation = CameraPos;
+	mCurLocation = CameraPos;
+	mEndLocation = LocationPos;
 
-	//=================================
-	// 카메라 이동의 제한을 둡니다.
-	// 카메라의 크기는 무시힌다.
-	FVector ActorLocation = GetOwner()->GetActorLocation();
+	// 0.01초 간격으로 호출할 예정이므로 (Duration / 0.01)번 반복
+	mCurrentMoveAlpha = 0.0f;
 
-	ActorLocation.X = FMath::Clamp(ActorLocation.X, mMoveClampingBoxCenter.X - mMoveClampingBox.X / 2, mMoveClampingBoxCenter.X + mMoveClampingBox.X / 2);
-	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, mMoveClampingBoxCenter.Y - mMoveClampingBox.Y / 2, mMoveClampingBoxCenter.Y + mMoveClampingBox.Y / 2);
+	// Timer로 이동을 수행합니다.
+	GetWorld()->GetTimerManager().SetTimer(mTimerHandle_Move, this, &UCameraMovementComponent::MoveStep, 0.01f, true);
 
-	GetOwner()->SetActorLocation(ActorLocation);
+}
 
+void UCameraMovementComponent::StartEmphasisToWorldPositionWithZoomDelta(float ZoomDelta, FVector WorldPosition)
+{
+	if (mCamerControlState != ECameraControlState::Normal)
+		return;
+
+	// 카메라의 현재 상태를 저장합니다.
+	FHitResult CameraRayHitResult;
+	if (GetCameraRayHitPoint(CameraRayHitResult))
+	{
+		mPreDefaultState.Position = CameraRayHitResult.ImpactPoint;
+		mPreDefaultState.ZoomDelta = ZoomDelta;
+	}
+
+	// 해당 위치로 Zoom과 이동을 수행합니다.
+	ZoomCameraAndMoveToWorldPosition(ZoomDelta, WorldPosition);
+
+	mCamerControlState = ECameraControlState::Emphasis;
+
+}
+
+void UCameraMovementComponent::StartEmphasisToViewPortPositionWithZoomDelta(float ZoomDelta, FVector2D ViewPortPos)
+{
+	if (mCamerControlState != ECameraControlState::Normal)
+		return;
+
+	// 카메라의 현재 상태를 저장합니다.
+	FHitResult CameraRayHitResult;
+	if (GetCameraRayHitPoint(CameraRayHitResult))
+	{
+		mPreDefaultState.Position = CameraRayHitResult.ImpactPoint;
+		mPreDefaultState.ZoomDelta = ZoomDelta;
+	}
+
+	// 해당 위치로 Zoom과 이동을 수행합니다.
+	ZoomCameraAndMoveToViewportPosition(ZoomDelta, ViewPortPos);
+
+	mCamerControlState = ECameraControlState::Emphasis;
+
+}
+
+void UCameraMovementComponent::StartEmphasisToWorldPosition(FVector WorldPosition)
+{
+	if (mCamerControlState != ECameraControlState::Normal)
+		return;
+
+	// 카메라의 현재 상태를 저장합니다.
+	FHitResult CameraRayHitResult;
+	if (GetCameraRayHitPoint(CameraRayHitResult))
+	{
+		mPreDefaultState.Position = CameraRayHitResult.ImpactPoint;
+		mPreDefaultState.ZoomDelta = mEmphasisZoom - mCameraComponent->OrthoWidth;
+	}
+
+	// 해당 위치로 Zoom과 이동을 수행합니다.
+	ZoomCameraAndMoveToWorldPosition(mPreDefaultState.ZoomDelta, WorldPosition);
+
+	mCamerControlState = ECameraControlState::Emphasis;
+}
+
+void UCameraMovementComponent::StartEmphasisToViewPortPosition(FVector2D ViewPortPos)
+{
+	if (mCamerControlState != ECameraControlState::Normal)
+		return;
+
+	// 카메라의 현재 상태를 저장합니다.
+	FHitResult CameraRayHitResult;
+	if (GetCameraRayHitPoint(CameraRayHitResult))
+	{
+		mPreDefaultState.Position = CameraRayHitResult.ImpactPoint;
+		mPreDefaultState.ZoomDelta = mEmphasisZoom - mCameraComponent->OrthoWidth;
+	}
+
+	// 해당 위치로 Zoom과 이동을 수행합니다.
+	ZoomCameraAndMoveToViewportPosition(mPreDefaultState.ZoomDelta, ViewPortPos);
+
+	mCamerControlState = ECameraControlState::Emphasis;
+}
+
+void UCameraMovementComponent::EndEmphasis()
+{
+	// 카메라의 강조 상태를 종료합니다.
+	mCamerControlState = ECameraControlState::Normal;
+
+	ZoomCameraAndMoveToWorldPosition(-mPreDefaultState.ZoomDelta, mPreDefaultState.Position);
 }
 
 bool UCameraMovementComponent::GetCameraRayHitPoint(OUT FHitResult& HitResult)
 {
 	FVector StartTrace = GetOwner()->GetActorLocation(); // 시작 지점
-	FVector EndTrace = StartTrace + (GetOwner()->GetActorForwardVector() * 100000.0f); // 1000유닛 앞
+	FVector EndTrace = StartTrace + (GetOwner()->GetActorForwardVector() * 100000.0f);
 
 	// 채널 설정 (ECC_Visibility 등)
 	FCollisionQueryParams QueryParams;
@@ -239,4 +413,51 @@ bool UCameraMovementComponent::GetCameraRayHitPoint(OUT FHitResult& HitResult)
 	);
 
 	return bHit;
+}
+
+void UCameraMovementComponent::MoveStep()
+{
+	// mMoveDuration 시간동안 이동 합니다.
+	mCurrentMoveAlpha += 0.01f / mMoveDuration; // 시간에 따른 진행도 증가
+
+	if (mCurrentMoveAlpha >= 1.0f)
+	{
+		mCurrentMoveAlpha = 1.0f;
+		GetWorld()->GetTimerManager().ClearTimer(mTimerHandle_Move); // 타이머 종료
+	}
+
+	// 선형 보간 적용
+	FVector NewLocation = FMath::InterpEaseInOut(mStartLocation, mEndLocation, mCurrentMoveAlpha, mMoveExp);
+
+	GetOwner()->AddActorWorldOffset(NewLocation - mCurLocation);
+
+	mCurLocation = NewLocation;
+
+	//=================================
+	// 카메라 이동의 제한을 둡니다.
+	// 카메라의 크기는 무시힌다.
+	FVector ActorLocation = GetOwner()->GetActorLocation();
+
+	ActorLocation.X = FMath::Clamp(ActorLocation.X, mMoveClampingBoxCenter.X - mMoveClampingBox.X / 2, mMoveClampingBoxCenter.X + mMoveClampingBox.X / 2);
+	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, mMoveClampingBoxCenter.Y - mMoveClampingBox.Y / 2, mMoveClampingBoxCenter.Y + mMoveClampingBox.Y / 2);
+
+	GetOwner()->SetActorLocation(ActorLocation);
+}
+
+void UCameraMovementComponent::ZoomStep()
+{
+	// mZoomDuration 시간동안 줌을 합니다.
+	mCurrentZoomAlpha += 0.01f / mZoomDuration; // 시간에 따른 진행도 증가
+
+	if (mCurrentZoomAlpha >= 1.0f)
+	{
+		mCurrentZoomAlpha = 1.0f;
+		GetWorld()->GetTimerManager().ClearTimer(mTimerHandle_Zoom); // 타이머 종료
+	}
+
+	// 선형 보간 적용
+	float NewZoom= FMath::InterpEaseInOut(mStartZoom, mEndZoom, mCurrentZoomAlpha, mZoomExp);
+
+	mCameraComponent->OrthoWidth = FMath::Clamp(NewZoom, mMinOrthoWidth, mMaxOrthoWidth);
+
 }
