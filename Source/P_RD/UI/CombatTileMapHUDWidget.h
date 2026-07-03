@@ -121,6 +121,13 @@ private:
 	/** @brief 스킬 레일 Count개 중 Index 항목의 정규화 영역(렌더/히트테스트 공용). */
 	FAnchors GetSkillRailItemRect(int32 Index, int32 Count) const;
 
+	/**
+	 * @brief 레일 시각 슬롯 -> 스킬 데이터 index 매핑. 미보유 슬롯이면 INDEX_NONE.
+	 * @details 레일 고정 배치: 맨 위 칸=기본 공격(평타, 데이터0), 맨 아래 칸=STEP(기본 이동, 데이터1),
+	 *          중간 4칸=추가 스킬(데이터 2..5). 데이터 순서는 SkillComponentModel의 "기본2+추가4" 규약을 따른다.
+	 */
+	int32 GetSkillDataIndexForRailSlot(int32 RailSlotIndex) const;
+
 	/** @brief 입장 굴림용 실제 물리 테이블 캡처 액터를 준비한다. */
 	void EnsureDiceRollPhysicsActor();
 
@@ -431,6 +438,13 @@ private:
 	/** @brief 주사위 종류 라벨(d2/d4/d6/d8/d10/d12/d20) */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UTextBlock>> mOwnedDiceTypeTexts;
+
+	/** @brief 보유 주사위 카드의 굴림 값 텍스트(2D 면 표시 - 크고 진한 숫자). */
+	TArray<TObjectPtr<UTextBlock>> mOwnedDiceValueTexts;
+
+	/** @brief 보유 주사위 2D 면 판 텍스처(카드 공용, 지연 로드 캐시). */
+	UPROPERTY(Transient)
+	TObjectPtr<UTexture2D> mOwnedDiceFaceTexture;
 
 	/** @brief 중립 상태로 표시하는 런타임 스킬 레일 배경 */
 	UPROPERTY(Transient)

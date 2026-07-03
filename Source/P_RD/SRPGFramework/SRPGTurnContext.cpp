@@ -15,11 +15,6 @@
 #include "Actor/BoardActor/BoardSelectionTarget.h"
 #include "Pawn/UnitModel.h"
 #include "Pawn/Enemy/EnemyUnitModel.h"
-#include "Component/PassiveComponent/PassiveComponentModel.h"
-
-#include "TAS/Passive/TacticalPassive.h"
-#include "TAS/Passive/PassiveActivateContext.h"
-#include "TAS/Passive/DynamicPassiveData.h"
 
 int8 USRPGActionCreationCommandHandler::GetCommandPriority() const
 {
@@ -157,24 +152,6 @@ void USRPGTurnContext::BeginTurn()
 		// 유닛 턴 시작 단계
 		mOwner->OnBeginTurn();
 
-		// 턴 시작 패시브 처리
-		{
-			TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartTurn);
-
-			FBoardCombatTargetSnapshotData OwnerSnapshot = mOwner->MakeSnapshotData();
-
-			FPassiveActivateContext PassiveContext;
-			PassiveContext.mOwner = mOwner;
-			PassiveContext.mOwnerSnapshot = &OwnerSnapshot;
-
-			for (UTacticalPassive*& Passive :Passives)
-			{
-				TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
-				Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnStartTurn, PassiveContext, OUT DynamicPassiveData);
-				Passive->CommitPassive(DynamicPassiveData);
-			}
-		}
-
 		// 전투 상태 평가
 		CombatModel->EvaluateCombatStates();
 
@@ -234,25 +211,6 @@ void USRPGTurnContext::EndTurn()
 	checkf(PassiveComponentModel != nullptr, TEXT("패시브 컴포넌트 nullptr"));
 
 	UE_LOG(LogSRPGCombat, Log, TEXT("턴 종료"));
-
-	// 턴 종료 패시브 처리
-	{
-		TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndTurn);
-		const int32 PassiveNum = Passives.Num();
-
-		FBoardCombatTargetSnapshotData OwnerSnapshot = mOwner->MakeSnapshotData();
-
-		FPassiveActivateContext PassiveContext;
-		PassiveContext.mOwner = mOwner;
-		PassiveContext.mOwnerSnapshot = &OwnerSnapshot;
-
-		for (UTacticalPassive*& Passive : Passives)
-		{
-			TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
-			Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnEndTurn, PassiveContext, OUT DynamicPassiveData);
-			Passive->CommitPassive(DynamicPassiveData);
-		}
-	}
 
 	// 유닛 턴 종료 단계
 	mOwner->OnEndTurn();

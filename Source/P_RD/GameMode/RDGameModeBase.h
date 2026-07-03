@@ -10,6 +10,7 @@
 #include "RDMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "Blueprint/UserWidget.h"
+#include "Singleton/InstanceSubsystem/PersistentDataType.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
 #include "DataAsset/StageSpawnData/StageLevelType.h"
 #include "UI/FadeInOutWidget.h"
@@ -59,6 +60,28 @@ public:
 	 */
 	UFUNCTION(Category = UI, BlueprintPure)
 	bool CanAbandonRun() const;
+
+public:
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool ResetFromOptionPanel() const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool BackFromOptionPanel() const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetMasterVolume(float Volume) const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetBGMVolume(float Volume) const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetSFXVolume(float Volume) const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetVoiceVolume(float Volume) const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetLanguage(ELanguageType Language) const;
 
 protected:
 	/**

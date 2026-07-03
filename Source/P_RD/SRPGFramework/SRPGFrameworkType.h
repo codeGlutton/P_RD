@@ -122,7 +122,7 @@ enum class EEffectPattern : uint8
 UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
 enum class ETargetIndexFilter : uint8
 {
-    None = 0                                        UMETA(ToolTip = "아무도 대상에 포함하지 않음"),
+    None = 0                                        UMETA(Hidden, ToolTip = "아무도 대상에 포함하지 않음"),
 
     IncludeSelfIndex = 1 << 0                       UMETA(ToolTip = "시전자 인덱스를 적용 대상에 포함"),
     IncludeTargetIndexes = 1 << 1                   UMETA(ToolTip = "지정 타겟 인덱스들을 적용 대상에 포함"),
@@ -137,7 +137,7 @@ ENUM_CLASS_FLAGS(ETargetIndexFilter);
 UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
 enum class ETeamAttitudeFilter : uint8
 {
-    None = 0                                        UMETA(ToolTip = "아무도 대상에 포함하지 않음"),
+    None = 0                                        UMETA(Hidden, ToolTip = "아무도 대상에 포함하지 않음"),
 
     Friendly = 1 << 0                               UMETA(ToolTip = "동료를 적용 대상에 포함"),
     Neutral = 1 << 1                                UMETA(ToolTip = "중립을 적용 대상에 포함"),

@@ -40,7 +40,15 @@ void UCombatTileMapHUDWidget::BeginSkillPress(int32 SkillIndex)
 		return;
 	}
 
-	mPressedSkillIndex = SkillIndex;
+	// 히트 테스트/버튼은 시각 슬롯을 넘긴다. 여기가 유일한 변환 지점 - 이후(선택/상세)는 전부 데이터 index로 흐른다.
+	// 미보유 슬롯(빈 프레임) 탭은 여기서 무시된다.
+	const int32 SkillDataIndex = GetSkillDataIndexForRailSlot(SkillIndex);
+	if (SkillDataIndex == INDEX_NONE)
+	{
+		return;
+	}
+
+	mPressedSkillIndex = SkillDataIndex;
 	mSkillPressing = true;
 	mSkillDetailOpenedFromPress = false;
 	mSkillPressElapsed = 0.0f;

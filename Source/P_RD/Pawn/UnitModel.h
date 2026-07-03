@@ -39,6 +39,17 @@ public:
 public:	
 	void PostInitializeComponentModels() override;
 
+public:
+	void OnBeginRoom() override;
+	void OnEndRoom() override;
+
+public:
+	/**
+	 * @brief 자신의 턴 시작마다 실행될 함수
+	 */
+	virtual void OnBeginTurn();
+	virtual void OnEndTurn();
+
 	/* IGenericTeamAgentInterface 상속 */
 public:
 	void SetGenericTeamId(const FGenericTeamId& TeamID) override;

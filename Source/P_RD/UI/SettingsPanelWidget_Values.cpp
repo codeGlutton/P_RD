@@ -1,7 +1,10 @@
-#include "UI/SettingsPanelWidget.h"
+﻿#include "UI/SettingsPanelWidget.h"
 
 #include "Components/CheckBox.h"
 #include "Components/Slider.h"
+#include "GameMode/RDGameModeBase.h"
+
+#include "Singleton/InstanceSubsystem/PersistentDataType.h"
 
 void USettingsPanelWidget::ApplyValueModel(const FSettingsPanelValueModel& ValueModel)
 {
@@ -28,6 +31,14 @@ void USettingsPanelWidget::ApplyValueModel(const FSettingsPanelValueModel& Value
 	{
 		VibrationCheckBox->SetIsChecked(mValueModel.mVibrationEnabled);
 	}
+	if (MasterVolumeSlider != nullptr)
+	{
+		MasterVolumeSlider->SetValue(mValueModel.mMasterVolume);
+	}
+	if (EffectsCheckBox != nullptr)
+	{
+		EffectsCheckBox->SetIsChecked(mValueModel.mEffectsEnabled);
+	}
 	mIsApplyingValueModel = false;
 }
 
@@ -46,6 +57,15 @@ FSettingsPanelValueModel USettingsPanelWidget::GetValueModel() const
 void USettingsPanelWidget::HandleResetButtonClicked()
 {
 	OnResetRequested.Broadcast();
+	// 전용 수신자가 생기기 전까지의 기본 적용: 옵션을 CDO 기본값으로 되돌리고
+	// (ResetOptions -> ClearOption -> ApplyCurrentOptions로 볼륨/언어/해상도 즉시 재적용),
+	// 패널 UI도 기본 값 모델로 갱신한다(ApplyValueModel은 콜백 가드로 이벤트 재발신 없음).
+	// 초기화도 커밋 행위다 — 되돌린 옵션을 즉시 디스크에 저장한다.
+	if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+	{
+		GameModeBase->ResetFromOptionPanel();
+	}
+	ApplyValueModel(FSettingsPanelValueModel());
 }
 
 /**
@@ -109,6 +129,11 @@ void USettingsPanelWidget::HandleBgmVolumeChanged(float Value)
 	if (mIsApplyingValueModel == false)
 	{
 		OnBgmVolumeChanged.Broadcast(mValueModel.mBgmVolume);
+		// 전용 오디오 정책 시스템이 생기기 전까지 프로필 서브시스템으로 기본 적용한다(Master와 동일 패턴).
+		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+		{
+			GameModeBase->SetBGMVolume(mValueModel.mBgmVolume);
+		}
 	}
 }
 
@@ -125,6 +150,11 @@ void USettingsPanelWidget::HandleSfxVolumeChanged(float Value)
 	if (mIsApplyingValueModel == false)
 	{
 		OnSfxVolumeChanged.Broadcast(mValueModel.mSfxVolume);
+		// 전용 오디오 정책 시스템이 생기기 전까지 프로필 서브시스템으로 기본 적용한다(Master와 동일 패턴).
+		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+		{
+			GameModeBase->SetSFXVolume(mValueModel.mSfxVolume);
+		}
 	}
 }
 
@@ -173,5 +203,91 @@ void USettingsPanelWidget::HandleVibrationChanged(bool bChecked)
 	if (mIsApplyingValueModel == false)
 	{
 		OnVibrationChanged.Broadcast(mValueModel.mVibrationEnabled);
+	}
+}
+
+/**
+ * @brief 전체(마스터) 볼륨 변경을 이벤트로 올리고 프로필에 기본 적용한다.
+ *
+ * @details
+ * 볼륨 이벤트들은 아직 전용 수신 시스템이 없다. 소리가 실제로 반응해야 설정 화면이 의미가 있으므로,
+ * 프로필 서브시스템 공개 API(SetVolume)로 기본 적용을 함께 수행한다.
+ * 전용 수신자(오디오 정책 시스템)가 생기면 이 직접 호출은 제거한다.
+ */
+void USettingsPanelWidget::HandleMasterVolumeChanged(float Value)
+{
+	mValueModel.mMasterVolume = RDSettingsPanel::NormalizeVolumeValue(Value);
+	if (mIsApplyingValueModel == false)
+	{
+		OnMasterVolumeChanged.Broadcast(mValueModel.mMasterVolume);
+		// 전용 오디오 정책 시스템이 생기기 전까지 프로필 서브시스템으로 기본 적용한다(Master와 동일 패턴).
+		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+		{
+			GameModeBase->SetMasterVolume(mValueModel.mMasterVolume);
+		}
+	}
+}
+
+/** @brief FPS 30 선택. 수신 시스템이 아직 없어 값 보관 + 이벤트 발신까지만 한다. */
+void USettingsPanelWidget::HandleFpsThirtyButtonClicked()
+{
+	mValueModel.mFpsLimit = 30;
+	if (mIsApplyingValueModel == false)
+	{
+		OnFpsLimitRequested.Broadcast(mValueModel.mFpsLimit);
+	}
+}
+
+/** @brief FPS 60 선택. 수신 시스템이 아직 없어 값 보관 + 이벤트 발신까지만 한다. */
+void USettingsPanelWidget::HandleFpsSixtyButtonClicked()
+{
+	mValueModel.mFpsLimit = 60;
+	if (mIsApplyingValueModel == false)
+	{
+		OnFpsLimitRequested.Broadcast(mValueModel.mFpsLimit);
+	}
+}
+
+/**
+ * @brief 한국어 선택을 이벤트로 올리고 로컬라이제이션에 기본 적용한다.
+ *
+ * @details
+ * 언어 저장/적용 경로(UOptionPersistData::SetLanguage -> SetCurrentCulture)는 완비되어 있고
+ * 호출자만 없었다. 프로필 서브시스템 공개 API로 기본 적용한다(전용 수신자가 생기면 제거).
+ */
+void USettingsPanelWidget::HandleLanguageKoreanButtonClicked()
+{
+	mValueModel.mUseKoreanLanguage = true;
+	if (mIsApplyingValueModel == false)
+	{
+		OnLanguageRequested.Broadcast(StaticCast<int32>(ELanguageType::KOREAN));
+		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+		{
+			GameModeBase->SetLanguage(ELanguageType::KOREAN);
+		}
+	}
+}
+
+/** @brief English 선택을 이벤트로 올리고 로컬라이제이션에 기본 적용한다. */
+void USettingsPanelWidget::HandleLanguageEnglishButtonClicked()
+{
+	mValueModel.mUseKoreanLanguage = false;
+	if (mIsApplyingValueModel == false)
+	{
+		OnLanguageRequested.Broadcast(StaticCast<int32>(ELanguageType::ENGLISH));
+		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+		{
+			GameModeBase->SetLanguage(ELanguageType::ENGLISH);
+		}
+	}
+}
+
+/** @brief 전투 이펙트 표시 체크 상태를 이벤트로 올린다(수신 VFX 시스템 미구현 - 값 전달만). */
+void USettingsPanelWidget::HandleEffectsChanged(bool bChecked)
+{
+	mValueModel.mEffectsEnabled = bChecked;
+	if (mIsApplyingValueModel == false)
+	{
+		OnEffectsChanged.Broadcast(mValueModel.mEffectsEnabled);
 	}
 }

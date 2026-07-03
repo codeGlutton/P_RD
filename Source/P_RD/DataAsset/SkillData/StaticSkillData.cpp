@@ -7,13 +7,13 @@
 TArray<FTileIndex> FSkillMotionLayer::FilterTileIndexes(const FTileIndex& SelfIndex, const TArray<FTileIndex>& TargetTileIndexes) const
 {
     TArray<FTileIndex> FilteredTileIndexes;
-    if (EnumHasAllFlags(StaticCast<ETargetIndexFilter>(mTargetIndexFilter), ETargetIndexFilter::IncludeSelfIndex) == true)
-    {
-        FilteredTileIndexes.Add(SelfIndex);
-    }
     if (EnumHasAllFlags(StaticCast<ETargetIndexFilter>(mTargetIndexFilter), ETargetIndexFilter::IncludeTargetIndexes) == true)
     {
         FilteredTileIndexes.Append(TargetTileIndexes);
+    }
+    if (EnumHasAllFlags(StaticCast<ETargetIndexFilter>(mTargetIndexFilter), ETargetIndexFilter::IncludeSelfIndex) == true)
+    {
+        FilteredTileIndexes.AddUnique(SelfIndex);
     }
     return FilteredTileIndexes;
 }
@@ -27,7 +27,7 @@ TArray<IBoardCombatTarget*> FSkillMotionLayer::FilterCombatTargets(const UTileMa
         for (UBoardActorModel*& BoardActor : BoardActors)
         {
             IBoardCombatTarget* CombatTarget = Cast<IBoardCombatTarget>(BoardActor);
-            if (CombatTarget != nullptr)
+            if (CombatTarget != nullptr && CombatTarget->IsTargetable() == true)
             {
                 ETeamAttitudeFilter CombatTargetAttitude = StaticCast<ETeamAttitudeFilter>(1 << SelfInstigator->GetTeamAttitudeTowards(*BoardActor));
                 if (EnumHasAnyFlags(StaticCast<ETeamAttitudeFilter>(mTeamAttitudeFilter), CombatTargetAttitude) == true)
