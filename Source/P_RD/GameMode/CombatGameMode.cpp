@@ -254,6 +254,23 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
  */
 void ACombatGameMode::HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLongPress)
 {
+	/*
+	 * 활성 플레이어 턴이 아니면 월드 터치를 게임플레이로 넘기지 않는다.
+	 * 스킬로 적을 잡아 마지막 턴 노드가 제거되면 현재 턴이 잠깐 사라지는데(PushTurnUIData와 동일 상태),
+	 * 그때 터치를 넘기면 SetTargetTile->SimulateUntilNextAction이 활성 턴 부재로
+	 * 어설션("현재 전투가 진행 중이 아님")에 걸린다. 적 턴 중 조준도 무의미하므로 함께 막는다.
+	 */
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	if (CombatModel == nullptr)
+	{
+		return;
+	}
+	const USRPGTurnContext* TurnContext = CombatModel->GetCurrentTurnContext();
+	if (TurnContext == nullptr || TurnContext->GetOwner()->IsPlayerUnitModel() == false)
+	{
+		return;
+	}
+
 	if (bLongPress == true)
 	{
 		ResolveWorldLongPressEvent();
