@@ -72,10 +72,8 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
             ResetDice();
             ResetSkill();
             /*
-             * 조준/프리뷰 진행 중 다른 스킬을 고르면 빌드를 처음부터 다시 시작한다.
-             * SetSkill은 None 페이즈 전제(checkf)인데 직전 선택이 페이즈를 AimSelection까지
-             * 올려둔 상태라, 위 리셋과 함께 페이즈도 되돌려야 스킬 재선택이 안전하다.
-             * (스킬 A 조준 중 스킬 B 탭 -> 어설션 크래시 수정)
+             * 조준 중 다른 스킬을 고르면 처음부터 다시 시작한다.
+             * 페이즈도 None으로 돌려야 다음 SetSkill이 안전하다.
              */
             SetBuildPhase(ESRPGSkillBuildPhase::None);
             SetSkill(SkillSelectCommand.mSkillIndex);
@@ -97,12 +95,22 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
 
         const FSRPGDiceSelectCommand& DiceSelectCommand = Command.Get<FSRPGDiceSelectCommand>();
 
-        if (DiceSelectCommand.mDiceIndex != INDEX_NONE)
+        /*
+         * 주사위 변경은 스킬을 고른 뒤(조준/프리뷰 단계)에만 의미가 있다.
+         * - 스킬 미선택(None)/시전 완료(Build) 상태의 주사위 클릭은 무시한다(억지로 진행하면
+         *   선택 스킬이 없어 ChangeDices에서 nullptr 참조로 죽는다).
+         * - 프리뷰에서 주사위를 바꾸면 주사위 합이 달라져 조준이 무효가 되므로, ChangeDices 전에
+         *   조준 단계로 되돌린다. ChangeDices는 AimSelection 전제(checkf)라 안 되돌리면 어설션 크래시.
+         *   (스킬 조준 -> 주사위 재선택 크래시 수정)
+         */
+        const bool IsSkillSelectedForDice = mSkillBuildPhase == ESRPGSkillBuildPhase::AimSelection
+            || mSkillBuildPhase == ESRPGSkillBuildPhase::Preview;
+        if (DiceSelectCommand.mDiceIndex != INDEX_NONE && IsSkillSelectedForDice == true)
         {
             ResetTargetTile();
+            SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
             ChangeDices(DiceSelectCommand.mDiceIndex);
             RefreshAimableTileHighlights();
-            SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
         }
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
@@ -418,5 +426,4 @@ UTileMapModel* USRPGSkillBuildAction::GetTileMap() const
     }
     return nullptr;
 }
-
 
