@@ -1,5 +1,6 @@
 #include "UI/CombatTileMapHUDWidget.h"
 
+#include "Components/Image.h"
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
@@ -294,6 +295,22 @@ void UCombatTileMapHUDWidget::CloseSettingsPanelAndRestoreVictoryWorldMap()
 	}
 
 	RestoreVictoryWorldMap();
+}
+
+void UCombatTileMapHUDWidget::UpdateTopBarBackdrop() const
+{
+	if (TopBar_Backdrop == nullptr)
+	{
+		return;
+	}
+
+	const URDUserWidget* WorldMapWidget = GetToggleableWorldWidget(EWorldWidgetType::WorldMap);
+	const bool bWorldMapOpened = WorldMapWidget != nullptr && WorldMapWidget->IsOpened();
+	const ESlateVisibility Desired = bWorldMapOpened ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed;
+	if (TopBar_Backdrop->GetVisibility() != Desired)
+	{
+		TopBar_Backdrop->SetVisibility(Desired);
+	}
 }
 
 /**

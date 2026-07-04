@@ -5,6 +5,8 @@
 
 #include "Pawn/UnitModel.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "AttributeSet/UnitAttributeSet.h"
 #include "Actor/TileMap/TileMapModel.h"
 
 FSRPGMoveCommand::FSRPGMoveCommand()
@@ -65,10 +67,11 @@ void USRPGMoveAction::OnEndAction()
         // 소모 이동 포인트 = 밟은 칸 수 (경로 칸 수 - 시작 타일)
         const int32 SpentPoint = mPathTileIndexes.Num() - 1;
 
-        // 이동 유닛의 스킬 컴포넌트에 소모 이동 포인트 차감 통지
-        if (USkillComponentModel* SkillComp = mInstigator->GetSkillComponentModel())
+        // [로컬/임시] 이동력 차감. 정본 API(UseMovePoint)가 아직 미구현 스텁이라, MOVE 표시/범위와 같은
+        // Movement 어트리뷰트를 직접 차감해 카운터가 줄게 한다. [주의] 정본 차감 API가 생기면 교체(Mo).
+        if (UAttributeSetComponentModel* AttrComp = mInstigator->GetAttributeComponentModel())
         {
-            //SkillComp->UseMovePoint(SpentPoint);
+            AttrComp->ApplyModToAttribute(UUnitAttributeSet::GetMovementAttribute(), ETacticalModOp::Additive, -static_cast<float>(SpentPoint));
         }
     }
 }

@@ -182,12 +182,15 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 			+ StaticCast<float>(CombatSkillSlotCount - 1) * CombatSkillRailGap;
 		const FAnchorData RailSlot = RDUILayout::GetDesignerSlotDataOr(WidgetTree, TEXT("HUD_SkillRail"),
 			FAnchors(CombatSkillRailLeft, CombatSkillRailTop, CombatSkillRailRight, RailFallbackBottom), DesignSize);
-		// 틈은 WBP에 구운 프레임 아트의 피치(프레임 96px + 틈 20px)와 동기 — 마커(34,228,96,676)와 함께
-		// 셀이 프레임에 픽셀 단위로 겹쳐야 빈 슬롯 커버가 아트를 정확히 가린다. 프레임 아트 개편 시 함께 수정.
+		// 스킨 프레임 아트의 실제 슬롯을 기준으로 아이콘과 입력 버튼을 맞춘다.
+		// 프레임을 못 찾으면 기존처럼 레일 영역을 등분한다.
+		const TArray<FAnchorData> RailFrameSlots = RDUILayout::CollectPointSlotsByPrefix(WidgetTree, TEXT("R_skill_rail_slot"));
 		const float RailGapPx = 20.0f;
 		for (int32 SkillIndex = 0; SkillIndex < SkillRailPanelCount; ++SkillIndex)
 		{
-			const FAnchorData CellSlot = RDUILayout::MakeVerticalSubSlot(RailSlot, SkillIndex, SkillRailPanelCount, RailGapPx);
+			const FAnchorData CellSlot = RailFrameSlots.IsValidIndex(SkillIndex)
+				? RailFrameSlots[SkillIndex]
+				: RDUILayout::MakeVerticalSubSlot(RailSlot, SkillIndex, SkillRailPanelCount, RailGapPx);
 			RDUILayout::ApplyDesignerSlotData(mSkillRailPanels[SkillIndex], CellSlot, SkillRailZOrder);
 
 			// 보유 스킬 아이콘: 라벨 없이 아이콘만 - 프레임 안 중앙(가로 여백 15%, 세로 여백 8%).
@@ -205,7 +208,11 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 		}
 		for (int32 SkillIndex = 0; SkillIndex < SkillInputCount; ++SkillIndex)
 		{
-			RDUILayout::ApplyDesignerSlotData(mSkillInputButtons[SkillIndex], RDUILayout::MakeVerticalSubSlot(RailSlot, SkillIndex, SkillInputCount, RailGapPx), CombatSkillInputZOrder);
+			// 보이는 칸과 입력 영역이 어긋나지 않게 같은 슬롯을 쓴다.
+			const FAnchorData ButtonSlot = RailFrameSlots.IsValidIndex(SkillIndex)
+				? RailFrameSlots[SkillIndex]
+				: RDUILayout::MakeVerticalSubSlot(RailSlot, SkillIndex, SkillInputCount, RailGapPx);
+			RDUILayout::ApplyDesignerSlotData(mSkillInputButtons[SkillIndex], ButtonSlot, CombatSkillInputZOrder);
 		}
 	}
 	else

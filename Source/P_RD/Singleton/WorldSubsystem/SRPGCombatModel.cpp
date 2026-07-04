@@ -32,6 +32,9 @@ void USRPGCombatModel::Serialize(FArchive& Ar)
 			Ar << Node->GetValue();
 			Node = Node->GetNextNode();
 		}
+		// 시뮬레이션 복제본에서도 현재 턴을 알 수 있게 현재 턴 id를 저장한다.
+		int32 CurrentTurnId = (mCurTurnContextOrder != nullptr) ? mCurTurnContextOrder->GetValue() : INDEX_NONE;
+		Ar << CurrentTurnId;
 	}
 	if (Ar.IsLoading() == true)
 	{
@@ -43,6 +46,10 @@ void USRPGCombatModel::Serialize(FArchive& Ar)
 			Ar << OUT TurnIndex;
 			mTurnContextOrder.AddTail(TurnIndex);
 		}
+		// 저장한 id로 현재 턴 노드를 다시 찾는다.
+		int32 CurrentTurnId = INDEX_NONE;
+		Ar << OUT CurrentTurnId;
+		mCurTurnContextOrder = (CurrentTurnId != INDEX_NONE) ? mTurnContextOrder.FindNode(CurrentTurnId) : nullptr;
 	}
 }
 

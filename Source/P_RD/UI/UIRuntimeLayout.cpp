@@ -134,6 +134,29 @@ void RDUILayout::ApplyDesignerSlotData(UWidget* Widget, const FAnchorData& SlotD
 	CanvasSlot->SetZOrder(ZOrder);
 }
 
+TArray<FAnchorData> RDUILayout::CollectPointSlotsByPrefix(UWidgetTree* WidgetTree, const FString& NamePrefix)
+{
+	TArray<FAnchorData> Out;
+	if (WidgetTree == nullptr)
+	{
+		return Out;
+	}
+	WidgetTree->ForEachWidget([&Out, &NamePrefix](UWidget* Widget) {
+		if (Widget == nullptr || Widget->GetName().StartsWith(NamePrefix) == false)
+		{
+			return;
+		}
+		if (UCanvasPanelSlot* CanvasSlot = GetCanvasSlot(Widget))
+		{
+			Out.Add(CanvasSlot->GetLayout());
+		}
+		});
+	Out.Sort([](const FAnchorData& Lhs, const FAnchorData& Rhs) {
+		return Lhs.Offsets.Top < Rhs.Offsets.Top;
+		});
+	return Out;
+}
+
 FAnchorData RDUILayout::MakeVerticalSubSlot(const FAnchorData& GroupSlot, int32 Index, int32 Count, float GapPx)
 {
 	FAnchorData Out = GroupSlot;

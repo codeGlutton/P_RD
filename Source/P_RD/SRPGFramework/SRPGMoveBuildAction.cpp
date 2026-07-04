@@ -55,7 +55,10 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleCommand(const TInstancedStruct<FS
         checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 모델 nullptr"));
         UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnitModel->GetAttributeComponentModel();
         checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 모델 nullptr"));
-        mMovePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMovementPointAttribute());
+        // 이동 예산은 스텝(GetMove)이 Movement 어트리뷰트에 남긴다(MovementPoint는 모션 종료 시 0으로 리셋).
+        // MovementPoint를 읽으면 항상 0이라 도달 범위가 0 -> MOVE 버튼이 아무 타일도 못 켠다. 실제 예산인 Movement를 읽는다.
+        // [주의] 적 이동은 SRPGEnemyTurnPlanner가 별도로 MovementPoint를 읽는다 — 어트리뷰트 정본 통일은 Mo 확정 필요.
+        mMovePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMovementAttribute());
 
         const FSRPGMoveSelectCommand& MoveSelectCommand = Command.Get<FSRPGMoveSelectCommand>();
         // 커맨드 델리깃을 복사해서 페이즈가 바뀔 때 통지

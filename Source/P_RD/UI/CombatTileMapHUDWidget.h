@@ -257,6 +257,15 @@ private:
 	/** @brief 월드 서브시스템에 등록된 월드 위젯을 URDUserWidget으로 가져온다. */
 	URDUserWidget* GetToggleableWorldWidget(EWorldWidgetType WorldWidgetType) const;
 
+	/**
+	 * @brief 탑바 배경판(TopBar_Backdrop)을 월드맵 열림 상태와 동기한다.
+	 *
+	 * @details
+	 * 월드맵이 열리는 경로가 여러 갈래(내비 토글/승리 강제/복원)라 개별 훅 대신 틱에서 상태를 본다.
+	 * 배경판은 지도 위젯이 아니라 HUD 소유다 — 지도 팝업은 탑바보다 위층이라 탑바 뒤 배경을 가질 수 없다.
+	 */
+	void UpdateTopBarBackdrop() const;
+
 	/** @brief 지정한 월드 위젯을 공통 CloseUI() 경로로 닫는다. */
 	void CloseWorldWidget(EWorldWidgetType WorldWidgetType) const;
 
@@ -291,6 +300,10 @@ private:
 	/** @brief 설정 패널 Back 요청을 승리 잠금 상태에 맞게 처리한다. */
 	UFUNCTION()
 	void HandleSettingsBackRequested();
+
+	/** @brief 지도 열림 동안 탑바 뒤 월드 비침을 가리는 배경판(시안 빌더가 WBP에 생성, 초기 Collapsed) */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UImage> TopBar_Backdrop;
 
 	/** @brief 뷰모델의 유닛 수에 맞춰 머리 위 HP바 위젯을 다시 만든다. */
 	void RebuildUnitHpBars();

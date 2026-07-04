@@ -68,9 +68,17 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
         {
             /* 다르면 변경 */
 
+            // 이전 스킬의 조준/효과 하이라이트를 먼저 지운다. ResetTargetTile은 데이터(mEffectTileIndexes)만
+            // 비우고 화면 하이라이트는 안 지워서, 안 지우면 이전 스킬의 효과 범위가 남아 "취소가 안 된 것"처럼 보인다.
+            ClearAllTileHighlights();
             ResetTargetTile();
             ResetDice();
             ResetSkill();
+            /*
+             * 조준 중 다른 스킬을 고르면 처음부터 다시 시작한다.
+             * 페이즈도 None으로 돌려야 다음 SetSkill이 안전하다.
+             */
+            SetBuildPhase(ESRPGSkillBuildPhase::None);
             SetSkill(SkillSelectCommand.mSkillIndex);
             RefreshAimableTileHighlights();
             SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
@@ -90,12 +98,22 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
 
         const FSRPGDiceSelectCommand& DiceSelectCommand = Command.Get<FSRPGDiceSelectCommand>();
 
-        if (DiceSelectCommand.mDiceIndex != INDEX_NONE)
+        /*
+         * 주사위 변경은 스킬을 고른 뒤(조준/프리뷰 단계)에만 의미가 있다.
+         * - 스킬 미선택(None)/시전 완료(Build) 상태의 주사위 클릭은 무시한다(억지로 진행하면
+         *   선택 스킬이 없어 ChangeDices에서 nullptr 참조로 죽는다).
+         * - 프리뷰에서 주사위를 바꾸면 주사위 합이 달라져 조준이 무효가 되므로, ChangeDices 전에
+         *   조준 단계로 되돌린다. ChangeDices는 AimSelection 전제(checkf)라 안 되돌리면 어설션 크래시.
+         *   (스킬 조준 -> 주사위 재선택 크래시 수정)
+         */
+        const bool IsSkillSelectedForDice = mSkillBuildPhase == ESRPGSkillBuildPhase::AimSelection
+            || mSkillBuildPhase == ESRPGSkillBuildPhase::Preview;
+        if (DiceSelectCommand.mDiceIndex != INDEX_NONE && IsSkillSelectedForDice == true)
         {
             ResetTargetTile();
+            SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
             ChangeDices(DiceSelectCommand.mDiceIndex);
             RefreshAimableTileHighlights();
-            SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
         }
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
@@ -129,7 +147,11 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
     
     IActorView* ActorView = Cast<IActorView>(TargetActor);
     const bool IsContactedTileMap = ActorView != nullptr && ActorView->GetModel() == TileMap;
-    if (IsContactedTileMap == true)
+    // 적 등 유닛이 선 타일을 클릭하면 TileOnlyTrace가 유닛에 막혀 TargetActor가 타일맵이 아니게 된다.
+    // 하지만 GetTileActorUnderCursor가 그 유닛의 타일을 이미 돌려주므로, 유효 타일이면 그대로 처리한다
+    // (적이 선 칸을 공격/조준 가능하게). 타일맵 격자 밖 클릭만 Invalid로 남아 한단계 취소로 간다.
+    const bool IsContactedBoard = IsContactedTileMap || TargetTileIndex != FTileIndex::Invalid;
+    if (IsContactedBoard == true)
     {
         if (TargetTileIndex == FTileIndex::Invalid)
         {
@@ -188,6 +210,10 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
                 if (CanSelectTargetTile(TargetTileIndex) == true)
                 {
                     ResetTargetTile();
+                    // 프리뷰에서 다른 칸을 찍으면 위 Preview case가 [[fallthrough]]로 여기 들어오는데
+                    // 그때 페이즈가 아직 Preview라 SetTargetTile 전제(AimSelection, checkf)에 걸린다.
+                    // 재조준은 조준 단계부터 다시이므로 페이즈를 먼저 되돌린다. (프리뷰 재조준 크래시 수정)
+                    SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
                     SetTargetTile(TargetTileIndex);
                     RefreshEffectTileHighlights();
                     SetBuildPhase(ESRPGSkillBuildPhase::Preview);
@@ -411,5 +437,4 @@ UTileMapModel* USRPGSkillBuildAction::GetTileMap() const
     }
     return nullptr;
 }
-
 
