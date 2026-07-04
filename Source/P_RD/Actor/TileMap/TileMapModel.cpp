@@ -864,11 +864,6 @@ void UTileMapModel::StartActorMovement(const FTileTransform& NextTransform, UBoa
 	Actor->SetTileTransform(NextTransform);
 	FTile* NextTile = GetTile(NextTransform.mIndex);
 	RegisterActorToTile(NextTile, Actor);
-
-	// [로컬/임시] 뷰 이동 통지. SetTileTransform은 좌표만 저장하고 통지를 안 해서 캐릭터가 화면에서 안 움직였다.
-	// 초기 배치(PlaceActor)와 동일하게 OnPlaceTileTransform을 쏴 뷰가 따라오게 한다(애니 없이 즉시 스냅).
-	// [주의] #255의 이동 스텝 연출(OnStartMoveStep)과 통합 시 이 임시 통지는 정리 필요.
-	Actor->OnPlaceTileTransform.Broadcast(NextTransform, TileToWorldTransform(NextTransform));
 }
 
 void UTileMapModel::CompleteActorMovement(UBoardActorModel* Actor)
