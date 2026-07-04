@@ -82,8 +82,6 @@ void FSkillEffectLayer_Attack::CommitEffect(IBoardCombatTarget* OwnerActorModel,
                 AttributeSetComponentModel->ApplyTacticalEffectSpecToTarget(*EffectSpec, OtherAttributeSetComponentModel);
             }
         }
-
-        OtherCombatTarget->GetAttributeComponentModel();
     }
 
     /* 포인트를 Factor에서 제거 */

@@ -64,6 +64,30 @@ AUnit::AUnit()
 #endif
 }
 
+void AUnit::BindModel(UObjectModel* Model)
+{
+	IActorView::BindModel(Model);
+	mUnitModel = Cast<UUnitModel>(Model);
+
+	// 즉시 이동 구독
+	if (mUnitModel.IsValid() == true)
+	{
+		mUnitModel->OnPlaceTileTransform.AddLambda([this](const FTileTransform& TileTransform, const FTransform& Transform) {
+			FVector UnitLocation = Transform.GetLocation() + FVector(0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+			FTransform UnitTransform = Transform;
+			UnitTransform.SetLocation(UnitLocation);
+
+			SetActorTransform(UnitTransform);
+			});
+	}
+}
+
+void AUnit::UnbindModel(UObjectModel* Model)
+{
+	IActorView::UnbindModel(Model);
+
+}
+
 UObjectModel* AUnit::GetModel_Internal() const
 {
 	return mUnitModel.Get();
