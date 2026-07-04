@@ -125,4 +125,13 @@ namespace RDUILayout
 	 * 셀 높이 = (그룹높이 - (Count-1)*GapPx) / Count. 앵커/가로/정렬은 그룹 슬롯을 그대로 상속합니다.
 	 */
 	P_RD_API FAnchorData MakeVerticalSubSlot(const FAnchorData& GroupSlot, int32 Index, int32 Count, float GapPx);
+
+	/**
+	 * @brief 이름 접두사로 캔버스 위젯들의 점앵커 슬롯을 모아 세로(Top) 순으로 반환한다.
+	 *
+	 * @details
+	 * 스킨이 반복 아트(예: 스킬 레일 프레임 6칸)를 개별 위젯으로 굽는 경우, 마커 등분 계산 대신
+	 * 프레임 위젯 자신의 슬롯을 정본으로 상속하기 위한 헬퍼다(등분-아트 어긋남 원천 차단).
+	 */
+	P_RD_API TArray<FAnchorData> CollectPointSlotsByPrefix(UWidgetTree* WidgetTree, const FString& NamePrefix);
 }

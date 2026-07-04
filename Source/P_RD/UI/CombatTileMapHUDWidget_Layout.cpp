@@ -182,12 +182,19 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 			+ StaticCast<float>(CombatSkillSlotCount - 1) * CombatSkillRailGap;
 		const FAnchorData RailSlot = RDUILayout::GetDesignerSlotDataOr(WidgetTree, TEXT("HUD_SkillRail"),
 			FAnchors(CombatSkillRailLeft, CombatSkillRailTop, CombatSkillRailRight, RailFallbackBottom), DesignSize);
-		// 틈은 WBP에 구운 프레임 아트의 피치(프레임 96px + 틈 20px)와 동기 — 마커(34,228,96,676)와 함께
-		// 셀이 프레임에 픽셀 단위로 겹쳐야 빈 슬롯 커버가 아트를 정확히 가린다. 프레임 아트 개편 시 함께 수정.
+		/*
+		 * 셀의 정본은 스킨 프레임 아트(R_skill_rail_slot_*) 자신의 슬롯이다.
+		 * 마커 등분은 마커 rect가 프레임 스택과 어긋나면(실측: 마커 24,232,116,720 vs 프레임 34,228,96,676)
+		 * 슬롯마다 오차가 누적돼 아이콘이 칸 밖으로 밀린다 — 프레임 슬롯 상속이 픽셀 단위로 정확하고
+		 * 스킨 아트를 옮겨도 자동 추종한다. 프레임을 못 찾을 때만 마커 등분 폴백.
+		 */
+		const TArray<FAnchorData> RailFrameSlots = RDUILayout::CollectPointSlotsByPrefix(WidgetTree, TEXT("R_skill_rail_slot"));
 		const float RailGapPx = 20.0f;
 		for (int32 SkillIndex = 0; SkillIndex < SkillRailPanelCount; ++SkillIndex)
 		{
-			const FAnchorData CellSlot = RDUILayout::MakeVerticalSubSlot(RailSlot, SkillIndex, SkillRailPanelCount, RailGapPx);
+			const FAnchorData CellSlot = RailFrameSlots.IsValidIndex(SkillIndex)
+				? RailFrameSlots[SkillIndex]
+				: RDUILayout::MakeVerticalSubSlot(RailSlot, SkillIndex, SkillRailPanelCount, RailGapPx);
 			RDUILayout::ApplyDesignerSlotData(mSkillRailPanels[SkillIndex], CellSlot, SkillRailZOrder);
 
 			// 보유 스킬 아이콘: 라벨 없이 아이콘만 - 프레임 안 중앙(가로 여백 15%, 세로 여백 8%).
@@ -205,7 +212,11 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 		}
 		for (int32 SkillIndex = 0; SkillIndex < SkillInputCount; ++SkillIndex)
 		{
-			RDUILayout::ApplyDesignerSlotData(mSkillInputButtons[SkillIndex], RDUILayout::MakeVerticalSubSlot(RailSlot, SkillIndex, SkillInputCount, RailGapPx), CombatSkillInputZOrder);
+			// 입력 버튼도 같은 프레임 슬롯 상속 — 히트 영역이 보이는 칸과 어긋나지 않게.
+			const FAnchorData ButtonSlot = RailFrameSlots.IsValidIndex(SkillIndex)
+				? RailFrameSlots[SkillIndex]
+				: RDUILayout::MakeVerticalSubSlot(RailSlot, SkillIndex, SkillInputCount, RailGapPx);
+			RDUILayout::ApplyDesignerSlotData(mSkillInputButtons[SkillIndex], ButtonSlot, CombatSkillInputZOrder);
 		}
 	}
 	else
