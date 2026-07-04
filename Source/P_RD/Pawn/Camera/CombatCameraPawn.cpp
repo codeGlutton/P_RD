@@ -24,7 +24,7 @@ ACombatCameraPawn::ACombatCameraPawn()
 	mCameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
 	mCameraComponent->ProjectionMode = ECameraProjectionMode::Orthographic;
 	mCameraComponent->OrthoWidth = 1024.0f;
-	mCameraComponent->bCameraMeshHiddenInGame = false;
+	//mCameraComponent->bCameraMeshHiddenInGame = false;
 	mCameraComponent->SetupAttachment(mSceneComponent);
 
 	mCameraMovementComponent = CreateDefaultSubobject<UCameraMovementComponent>("CameraMovementComponent");
@@ -39,23 +39,10 @@ void ACombatCameraPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
+	mTouchStates.SetNum(2);
 
-	// PlayerController를 얻어온다.
-	TObjectPtr<APlayerController>	PlayerController = GetController<APlayerController>();
-
-	// IsValid : 유효성 검사를 해주는 함수이다. 언리얼 객체가 유효한지를 판단해준다.
-	if (IsValid(PlayerController))
-	{
-		// Enhanced Input System을 얻어온다.
-		TObjectPtr<UEnhancedInputLocalPlayerSubsystem>	Subsystem =
-			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
-
-		// UDefaultInputData CDO를 얻어온다.
-		const UCombatInputData* InputData = GetDefault<UCombatInputData>();
-
-		// MappingContext를 등록한다.
-		Subsystem->AddMappingContext(InputData->mContext, 0);
-	}
+	OnDragging.AddUObject(this, &ACombatCameraPawn::Dragging);
+	OnPinching.AddUObject(this, &ACombatCameraPawn::Pinching);
 	
 }
 
@@ -63,6 +50,52 @@ void ACombatCameraPawn::BeginPlay()
 void ACombatCameraPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	AController* DefaultController = GetController();
+	// DefaultController가 존재하지 않으면 함수를 종료합니다.
+	if (!ensureMsgf(IsValid(DefaultController), TEXT("컨트롤러가 없습니다")))
+	{
+		return;
+	}
+
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	// PlayerController가 존재하지 않으면 함수를 종료합니다.
+	if (!ensureMsgf(IsValid(PlayerController), TEXT("Player 컨트롤러가 없습니다")))
+	{
+		return;
+	}
+
+	// 터치 상태를 보고 제스처를 판단한다.
+	for (int i = 0; i < 2; ++i)
+	{
+		mTouchStates[i].PreTouchPos = mTouchStates[i].CurTouchPos;
+		bool bPreTickTouch = mTouchStates[i].bIsCurrentlyPressed;
+		PlayerController->GetInputTouchState((ETouchIndex::Type)i, mTouchStates[i].CurTouchPos.X, mTouchStates[i].CurTouchPos.Y, mTouchStates[i].bIsCurrentlyPressed);
+
+		if (bPreTickTouch == 0 && mTouchStates[i].bIsCurrentlyPressed)
+		{
+			mTouchStates[i].StartTouchPos = mTouchStates[i].CurTouchPos;
+			mTouchStates[i].PreTouchPos = mTouchStates[i].CurTouchPos;
+		}
+	}
+
+
+	// Pinch 중
+	if (IsPinch())
+	{
+		if (OnPinching.IsBound())
+		{
+			OnPinching.Broadcast(mTouchStates);
+		}
+	}
+	// 드래그 중
+	else if (IsDrag())
+	{
+		if (OnDragging.IsBound())
+		{
+			OnDragging.Broadcast(mTouchStates);
+		}
+	}
 }
 
 // Called to bind functionality to input
@@ -75,41 +108,6 @@ void ACombatCameraPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	// 언리얼 오브젝트는 항상 Cast<Type>() 함수를 이용해서 형변환한다.
 	TObjectPtr<UEnhancedInputComponent>	Input =
 		Cast<UEnhancedInputComponent>(PlayerInputComponent);
-	
-	if (IsValid(Input))
-	{
-		// UDefaultInputData CDO를 얻어온다.
-		const UCombatInputData* InputData = GetDefault<UCombatInputData>();
-
-		// 이동키를 누를때 동작할 함수를 바인딩한다.
-
-		Input->BindAction(InputData->FindAction(TEXT("TouchMove")), ETriggerEvent::Completed,
-			this, &ACombatCameraPawn::TouchMoveKey);
-
-		Input->BindAction(InputData->FindAction(TEXT("TouchMove")), ETriggerEvent::Triggered,
-			this, &ACombatCameraPawn::TouchTragMoveKey);
-
-		Input->BindAction(InputData->FindAction(TEXT("Zoom")), ETriggerEvent::Triggered,
-			this, &ACombatCameraPawn::ZoomKey);
-
-		Input->BindAction(InputData->FindAction(TEXT("Zoom")), ETriggerEvent::Completed,
-			this, &ACombatCameraPawn::ZoomEndKey);
-
-		// ===========================================
-		// 줌 기능 테스트 
-		Input->BindAction(InputData->FindAction(TEXT("FirstTouch")), ETriggerEvent::Started,
-			this, &ACombatCameraPawn::FirstTouchStart);
-
-		Input->BindAction(InputData->FindAction(TEXT("FirstTouch")), ETriggerEvent::Completed,
-			this, &ACombatCameraPawn::FirstTouchCompleted);
-
-		Input->BindAction(InputData->FindAction(TEXT("SecondTouch")), ETriggerEvent::Triggered,
-			this, &ACombatCameraPawn::SecondTouchStart);
-
-		Input->BindAction(InputData->FindAction(TEXT("SecondTouch")), ETriggerEvent::Completed,
-			this, &ACombatCameraPawn::SecondTouchCompleted);
-	
-	}
 }
 
 UCameraComponent* ACombatCameraPawn::GetCameraComponent()
@@ -122,122 +120,42 @@ UCameraMovementComponent* ACombatCameraPawn::GetCameraMovementComponent()
 	return mCameraMovementComponent.Get();
 }
 
-
-void ACombatCameraPawn::TouchMoveKey(const FInputActionValue& Value)
+bool ACombatCameraPawn::IsDrag()
 {
-	checkf(IsValid(mCameraMovementComponent), TEXT("CameraMovementComponent Is Not Valid"));
-
-	//// 현재 터치 상태를 가져와서 카메라를 옮깁니다.
-	//float X, Y;
-	//bool bTouchState;
-	//GetWorld()->GetPlayerControllerIterator()->Get()->GetInputTouchState(ETouchIndex::Touch1, X, Y, bTouchState);
-	//
-	//mCameraMovementComponent->MoveToViewportPosition(FVector2D(X, Y));
-
-	mPreTouchState1.bIsCurrentlyPressed = false;
-
+	return mTouchStates[0].bIsCurrentlyPressed &&
+		mImageStabilization < FVector2D::Distance(mTouchStates[0].PreTouchPos, mTouchStates[0].CurTouchPos);
 }
 
-void ACombatCameraPawn::ZoomKey(const FInputActionValue& Value)
+bool ACombatCameraPawn::IsPinch()
 {
-	checkf(IsValid(mCameraMovementComponent), TEXT("CameraMovementComponent Is Not Valid"));
+	float PrePinchDis = FVector2D::Distance(mTouchStates[0].PreTouchPos, mTouchStates[1].PreTouchPos);
+	float CurPinchDis = FVector2D::Distance(mTouchStates[0].CurTouchPos, mTouchStates[1].CurTouchPos);
 
-	// 현재 터치 상태를 가져옵니다.
-	FTouchState CurTouchState1;
-	FTouchState CurTouchState2;
-	GetWorld()->GetPlayerControllerIterator()->Get()->GetInputTouchState(ETouchIndex::Touch1, CurTouchState1.LocationX, CurTouchState1.LocationY, CurTouchState1.bIsCurrentlyPressed);
-	GetWorld()->GetPlayerControllerIterator()->Get()->GetInputTouchState(ETouchIndex::Touch2, CurTouchState2.LocationX, CurTouchState2.LocationY, CurTouchState2.bIsCurrentlyPressed);
+	return mTouchStates[0].bIsCurrentlyPressed &&
+		mTouchStates[1].bIsCurrentlyPressed &&
+		mImageStabilization < FMath::Abs(PrePinchDis - CurPinchDis);
+}
 
-	// 이전 틱의 터치 상태, 현재 틱의 터치 상태 모두 true라면 Zoom을 합니다.
-	if (CurTouchState1.bIsCurrentlyPressed && CurTouchState2.bIsCurrentlyPressed && mPreTouchState1.bIsCurrentlyPressed && mPreTouchState2.bIsCurrentlyPressed)
+void ACombatCameraPawn::Dragging(const TArray<FTouchState>& Touch1State)
+{
+	if (!ensureMsgf(IsValid(mCameraMovementComponent), TEXT("CameraMovementComponent가 없습니다")))
 	{
-		FVector2D PreTouch1 = FVector2D(mPreTouchState1.LocationX, mPreTouchState1.LocationY);
-		FVector2D PreTouch2 = FVector2D(mPreTouchState2.LocationX, mPreTouchState2.LocationY);
-		FVector2D CurTouch1 = FVector2D(CurTouchState1.LocationX, CurTouchState1.LocationY);
-		FVector2D CurTouch2 = FVector2D(CurTouchState2.LocationX, CurTouchState2.LocationY);
-
-		float PreDis = FVector2D::Distance(PreTouch1, PreTouch2);
-		float CurDis = FVector2D::Distance(CurTouch1, CurTouch2);
-
-		mCameraMovementComponent.Get()->ZoomCamera_Instant(PreDis - CurDis);
+		return;
 	}
 
-	// 이전 Touch 상태를 현재 Touch 상태로 되돌립니다.
-	mPreTouchState1 = CurTouchState1;
-	mPreTouchState2 = CurTouchState2;
+	mCameraMovementComponent.Get()->DragMoveToViewportPosition_Instant(Touch1State[0].PreTouchPos, Touch1State[0].CurTouchPos);
 }
 
-void ACombatCameraPawn::ZoomEndKey(const FInputActionValue& Value)
+void ACombatCameraPawn::Pinching(const TArray<FTouchState>& TouchState)
 {
-	mPreTouchState1.bIsCurrentlyPressed = false;
-	mPreTouchState2.bIsCurrentlyPressed = false;
-}
-
-void ACombatCameraPawn::TouchTragMoveKey(const FInputActionValue& Value)
-{
-
-	// 현재 터치 상태를 가져옵니다.
-	FTouchState CurTouchState1;
-	GetWorld()->GetPlayerControllerIterator()->Get()->GetInputTouchState(ETouchIndex::Touch1, CurTouchState1.LocationX, CurTouchState1.LocationY, CurTouchState1.bIsCurrentlyPressed);
-
-	// 이전 틱의 터치 상태, 현재 틱의 터치 상태 모두 true라면 Zoom을 합니다.
-	if (CurTouchState1.bIsCurrentlyPressed && mPreTouchState1.bIsCurrentlyPressed)
+	if (!ensureMsgf(IsValid(mCameraMovementComponent), TEXT("CameraMovementComponent가 없습니다")))
 	{
-		FVector2D PreTouch1 = FVector2D(mPreTouchState1.LocationX, mPreTouchState1.LocationY);
-		FVector2D CurTouch1 = FVector2D(CurTouchState1.LocationX, CurTouchState1.LocationY);
-
-		float PreDis = FVector2D::Distance(PreTouch1, CurTouch1);
-
-		mCameraMovementComponent.Get()->DragMoveToViewportPosition(PreTouch1, CurTouch1);
+		return;
 	}
 
-	// 이전 Touch 상태를 현재 Touch 상태로 되돌립니다.
-	mPreTouchState1 = CurTouchState1;
+	float PrePinchDis = FVector2D::Distance(mTouchStates[0].PreTouchPos, mTouchStates[1].PreTouchPos);
+	float CurPinchDis = FVector2D::Distance(mTouchStates[0].CurTouchPos, mTouchStates[1].CurTouchPos);
+
+	//mCameraMovementComponent.Get()->ZoomCamera_Instant(PrePinchDis - CurPinchDis);
+	mCameraMovementComponent.Get()->ZoomCamera_InstantAndMoveToViewportPosition_Instant(PrePinchDis - CurPinchDis, (mTouchStates[0].CurTouchPos + mTouchStates[1].CurTouchPos)/2);
 }
-
-
-// =====================================
-// PC에서 Zoom 조작 테스트
-void ACombatCameraPawn::FirstTouchStart(const FInputActionValue& Value)
-{
-	mFirstTouch = true;
-	GetWorld()->GetPlayerControllerIterator()->Get()->GetMousePosition(mPreFirstTouch.X, mPreFirstTouch.Y);
-}
-
-void ACombatCameraPawn::FirstTouchCompleted(const FInputActionValue& Value)
-{
-	mFirstTouch = false;
-}
-
-void ACombatCameraPawn::SecondTouchStart(const FInputActionValue& Value)
-{
-
-	FVector2D CurTouch;
- 	GetWorld()->GetPlayerControllerIterator()->Get()->GetMousePosition(CurTouch.X, CurTouch.Y);
-
-	checkf(IsValid(mCameraMovementComponent), TEXT("CameraMovementComponent Is Not Valid"));
-
-	if (mFirstTouch && mSecondTouch)
-	{
-		FVector2D PreTouch1 = FVector2D(mPreFirstTouch.X, mPreFirstTouch.Y);
-		FVector2D PreTouch2 = FVector2D(mPreSecondTouch.X, mPreSecondTouch.Y);
-		FVector2D CurTouch1 = FVector2D(mPreFirstTouch.X, mPreFirstTouch.Y);
-		FVector2D CurTouch2 = FVector2D(CurTouch.X, CurTouch.Y);
-
-		float PreDis = FVector2D::Distance(PreTouch1, PreTouch2);
-		float CurDis = FVector2D::Distance(CurTouch1, CurTouch2);
-
-		mCameraMovementComponent.Get()->ZoomCamera_Instant(PreDis - CurDis);
-		//mCameraMovementComponent.Get()->ZoomCameraAndMoveToViewportPosition(PreDis - CurDis, (CurTouch1 + CurTouch2) / 2);
-
-	}
-
-	mSecondTouch = true;
-	mPreSecondTouch = CurTouch;
-}
-
-void ACombatCameraPawn::SecondTouchCompleted(const FInputActionValue& Value)
-{
-	mSecondTouch = false;
-}
-
