@@ -182,12 +182,8 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 			+ StaticCast<float>(CombatSkillSlotCount - 1) * CombatSkillRailGap;
 		const FAnchorData RailSlot = RDUILayout::GetDesignerSlotDataOr(WidgetTree, TEXT("HUD_SkillRail"),
 			FAnchors(CombatSkillRailLeft, CombatSkillRailTop, CombatSkillRailRight, RailFallbackBottom), DesignSize);
-		/*
-		 * 셀의 정본은 스킨 프레임 아트(R_skill_rail_slot_*) 자신의 슬롯이다.
-		 * 마커 등분은 마커 rect가 프레임 스택과 어긋나면(실측: 마커 24,232,116,720 vs 프레임 34,228,96,676)
-		 * 슬롯마다 오차가 누적돼 아이콘이 칸 밖으로 밀린다 — 프레임 슬롯 상속이 픽셀 단위로 정확하고
-		 * 스킨 아트를 옮겨도 자동 추종한다. 프레임을 못 찾을 때만 마커 등분 폴백.
-		 */
+		// 스킨 프레임 아트의 실제 슬롯을 기준으로 아이콘과 입력 버튼을 맞춘다.
+		// 프레임을 못 찾으면 기존처럼 레일 영역을 등분한다.
 		const TArray<FAnchorData> RailFrameSlots = RDUILayout::CollectPointSlotsByPrefix(WidgetTree, TEXT("R_skill_rail_slot"));
 		const float RailGapPx = 20.0f;
 		for (int32 SkillIndex = 0; SkillIndex < SkillRailPanelCount; ++SkillIndex)
@@ -212,7 +208,7 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 		}
 		for (int32 SkillIndex = 0; SkillIndex < SkillInputCount; ++SkillIndex)
 		{
-			// 입력 버튼도 같은 프레임 슬롯 상속 — 히트 영역이 보이는 칸과 어긋나지 않게.
+			// 보이는 칸과 입력 영역이 어긋나지 않게 같은 슬롯을 쓴다.
 			const FAnchorData ButtonSlot = RailFrameSlots.IsValidIndex(SkillIndex)
 				? RailFrameSlots[SkillIndex]
 				: RDUILayout::MakeVerticalSubSlot(RailSlot, SkillIndex, SkillInputCount, RailGapPx);

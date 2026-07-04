@@ -32,10 +32,7 @@ void USRPGCombatModel::Serialize(FArchive& Ar)
 			Ar << Node->GetValue();
 			Node = Node->GetNextNode();
 		}
-		// 현재 턴 노드도 함께 보존한다. mTurnContextOrder/mCurTurnContextOrder는 UPROPERTY가 아니라
-		// 복제(StaticDuplicateObject)가 오직 이 Serialize에만 의존하는데, 여기서 현재 노드를 빼면
-		// 시뮬레이션 복제본의 mCurTurnContextOrder가 null로 남아 ForcedAdvanceUntilNextAction 진입
-		// checkf(mCurTurnContextOrder != nullptr)에 걸린다(스킬 시전 프리뷰 시뮬 크래시).
+		// 시뮬레이션 복제본에서도 현재 턴을 알 수 있게 현재 턴 id를 저장한다.
 		int32 CurrentTurnId = (mCurTurnContextOrder != nullptr) ? mCurTurnContextOrder->GetValue() : INDEX_NONE;
 		Ar << CurrentTurnId;
 	}
@@ -49,7 +46,7 @@ void USRPGCombatModel::Serialize(FArchive& Ar)
 			Ar << OUT TurnIndex;
 			mTurnContextOrder.AddTail(TurnIndex);
 		}
-		// 순서 리스트를 모두 복원한 뒤 현재 턴 노드 포인터를 되살린다(값으로 노드 재탐색).
+		// 저장한 id로 현재 턴 노드를 다시 찾는다.
 		int32 CurrentTurnId = INDEX_NONE;
 		Ar << OUT CurrentTurnId;
 		mCurTurnContextOrder = (CurrentTurnId != INDEX_NONE) ? mTurnContextOrder.FindNode(CurrentTurnId) : nullptr;

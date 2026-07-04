@@ -68,6 +68,9 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
         {
             /* 다르면 변경 */
 
+            // 이전 스킬의 조준/효과 하이라이트를 먼저 지운다. ResetTargetTile은 데이터(mEffectTileIndexes)만
+            // 비우고 화면 하이라이트는 안 지워서, 안 지우면 이전 스킬의 효과 범위가 남아 "취소가 안 된 것"처럼 보인다.
+            ClearAllTileHighlights();
             ResetTargetTile();
             ResetDice();
             ResetSkill();
@@ -144,7 +147,18 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
     
     IActorView* ActorView = Cast<IActorView>(TargetActor);
     const bool IsContactedTileMap = ActorView != nullptr && ActorView->GetModel() == TileMap;
-    if (IsContactedTileMap == true)
+    // 적 등 유닛이 선 타일을 클릭하면 TileOnlyTrace가 유닛에 막혀 TargetActor가 타일맵이 아니게 된다.
+    // 하지만 GetTileActorUnderCursor가 그 유닛의 타일을 이미 돌려주므로, 유효 타일이면 그대로 처리한다
+    // (적이 선 칸을 공격/조준 가능하게). 타일맵 격자 밖 클릭만 Invalid로 남아 한단계 취소로 간다.
+    const bool IsContactedBoard = IsContactedTileMap || TargetTileIndex != FTileIndex::Invalid;
+    // [임시 진단] 클릭한 타일이 무엇으로 잡혔고, 조준 가능/현재 페이즈가 어떤지 실측용. 확정 후 제거.
+    UE_LOG(LogSRPGCombat, Warning, TEXT("[AimDbg] trace actor=%s tile=(%d,%d) tilemap=%d board=%d phase=%d canSelect=%d target=(%d,%d)"),
+        TargetActor != nullptr ? *TargetActor->GetName() : TEXT("null"),
+        TargetTileIndex.mX, TargetTileIndex.mY, IsContactedTileMap ? 1 : 0, IsContactedBoard ? 1 : 0,
+        static_cast<int32>(mSkillBuildPhase),
+        (TargetTileIndex != FTileIndex::Invalid && mSelectedSkill != nullptr) ? (CanSelectTargetTile(TargetTileIndex) ? 1 : 0) : -1,
+        mTargetIndex.mX, mTargetIndex.mY);
+    if (IsContactedBoard == true)
     {
         if (TargetTileIndex == FTileIndex::Invalid)
         {
@@ -203,6 +217,10 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
                 if (CanSelectTargetTile(TargetTileIndex) == true)
                 {
                     ResetTargetTile();
+                    // 프리뷰에서 다른 칸을 찍으면 위 Preview case가 [[fallthrough]]로 여기 들어오는데
+                    // 그때 페이즈가 아직 Preview라 SetTargetTile 전제(AimSelection, checkf)에 걸린다.
+                    // 재조준은 조준 단계부터 다시이므로 페이즈를 먼저 되돌린다. (프리뷰 재조준 크래시 수정)
+                    SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
                     SetTargetTile(TargetTileIndex);
                     RefreshEffectTileHighlights();
                     SetBuildPhase(ESRPGSkillBuildPhase::Preview);
@@ -375,6 +393,15 @@ void USRPGSkillBuildAction::RefreshAimableTileHighlights()
 
     mReachableTileIndexes = SkillCompModel->GetAimableTiles(TileMap, mSelectedSkillIndex, DicePoolModel->GetSelectedDiceSum());
     TileMap->SetTileHighlight(mReachableTileIndexes, ETileHighlightFlag::Aim);
+
+    // [임시 진단] 조준 가능 타일이 실제로 무엇인지(적 칸이 포함되는지) 실측용. 확정 후 제거.
+    {
+        const FTileIndex Self = mInstigator->GetTileTransform().mIndex;
+        FString TilesStr;
+        for (const FTileIndex& T : mReachableTileIndexes) { TilesStr += FString::Printf(TEXT("(%d,%d) "), T.mX, T.mY); }
+        UE_LOG(LogSRPGCombat, Warning, TEXT("[AimDbg] refresh skill=%d diceSum=%d self=(%d,%d) aimableCount=%d tiles=%s"),
+            mSelectedSkillIndex, DicePoolModel->GetSelectedDiceSum(), Self.mX, Self.mY, mReachableTileIndexes.Num(), *TilesStr);
+    }
 }
 
 void USRPGSkillBuildAction::RefreshEffectTileHighlights()

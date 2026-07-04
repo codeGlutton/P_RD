@@ -121,19 +121,9 @@ void ACombatGameMode::InitializeRoom()
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 
 	/*
-	 * === UI <-> 게임플레이 경계 배선 ===
-	 *
-	 * 스킬 버튼/터치를 실제 게임 로직에 잇는 곳이다. 원래는 "보내는 쪽만 있고 받는 쪽이 없거나,
-	 * 받는 쪽만 있고 보내는 쪽이 없던" 반쪽 지점이 있었고, 그 끊긴 선을 여기서 잇는다.
-	 * 방향은 두 갈래다:
-	 *   1) 게임 -> UI (push): 모델 이벤트를 구독해 스냅샷을 UI로 밀어넣는다(레일/주사위/턴 등).
-	 *   2) UI -> 게임 (route): 위젯 탭이 쏘는 Request*를 게임플레이 진입점으로 넘긴다.
-	 *
-	 * 이번에 새로 이은 4가닥(없으면 무슨 일이 안 됐는지 함께 표기):
-	 *   - OnEndAnyTurnActionUI  -> NotifyActionResolved   : 시전 끝나도 선택 강조가 안 풀리던 것
-	 *   - OnChangeSkillUI       -> PushSkillUIData         : 전투 중 스킬 교체가 레일에 안 보이던 것
-	 *   - OnCombatWorldTouch    -> HandleCombatWorldTouch  : 타일 탭이 게임에 도달 못 해 조준이 안 되던 것
-	 *   - LongPressSkill        -> PushSkillDetailUIData   : 스킬 상세가 "연결 대기중"만 뜨던 것(HandleCombatCommand)
+	 * UI와 전투 로직을 여기서 연결한다.
+	 * - 게임 상태가 바뀌면 UIModel에 새 값을 넣는다.
+	 * - UI 버튼/터치 입력은 전투 명령으로 보낸다.
 	 */
 
 	/* 전투 모델 대리자 연결 */
@@ -169,8 +159,7 @@ void ACombatGameMode::InitializeRoom()
 		// OnBeginAnyTurnActionUI.Broadcast(Barrier, TurnContext, Action); 연출은 연결고리가 아직 없음
 		});
 	CombatModel->OnEndAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action, ESRPGActionResult Result) {
-		// 액션(스킬/이동 빌드 등) 종료 시 UI 선택 강조를 해제한다 — HUD 수신자(HandleCombatActionResolved)는
-		// 이미 대기 중이었고 발신자만 없었다(과거 어댑터 잔재).
+		// 액션이 끝나면 UI의 스킬/주사위 선택 표시를 지운다.
 		mCombatUIModel->NotifyActionResolved();
 		// OnEndAnyTurnActionUI.Broadcast(Barrier, TurnContext, Action, Result); 연출은 연결고리가 아직 없음
 		});
@@ -208,27 +197,21 @@ void ACombatGameMode::InitializeRoom()
 	checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
 
 	SkillComponentModel->OnChangeSkillUI.AddWeakLambda(this, [this](int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData) {
-		PushSkillUIData();   // 전투 중 스킬 교체가 다음 턴 시작까지 레일에 안 보이던 공백을 메운다
+		PushSkillUIData();   // 스킬이 바뀌면 레일을 바로 다시 그린다.
 		});
 
 	/* UI 조작 의도 라우팅 — 위젯 탭이 쏘는 Request*(OnCombatCommand)를 게임플레이 진입점에 연결 */
 
 	mCombatUIModel->OnCombatCommand.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatCommand);
 	mCombatUIModel->OnApplyDiceResults.AddUniqueDynamic(this, &ACombatGameMode::HandleApplyDiceResults);
-	// 월드 터치(조준 타일 선택/한 단계 취소)가 이 구독 없이는 게임플레이에 도달하지 못했다 —
-	// 스킬 조준->프리뷰->시전 확정 입력 체인의 마지막 공백.
+	// 월드 탭을 전투 명령으로 넘겨 조준/시전을 진행한다.
 	mCombatUIModel->OnCombatWorldTouch.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatWorldTouch);
 
 	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModel());
 }
 
 /**
- * @brief UIModel의 조작 의도(OnCombatCommand)를 게임플레이 진입점으로 라우팅한다.
- *
- * @details
- * UI 경계 원칙: 위젯은 게임모드를 직접 알지 않고 UIModel의 Request*로 의도만 보낸다.
- * 그 의도를 실제 커맨드 발행 진입점(SelectSkill/SelectDice/RollDices/SelectMove/EndTurn)으로
- * 연결하는 유일한 지점이 여기다. 과거 임시 어댑터(UCombatUIAdapter)가 맡던 역할의 정식 대체.
+ * @brief UIModel에서 올라온 버튼 입력을 전투 명령으로 보낸다.
  */
 void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayload)
 {
@@ -250,32 +233,28 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		EndTurn();
 		break;
 	case ECombatInputType::LongPressSkill:
-		// 스킬을 길게 누르면 상세(이름/설명/사거리) 카드를 채운다 — 이 라우팅이 없어 "연결 대기중"만 떴었다.
+		// 길게 누른 스킬의 상세 정보를 UIModel에 채운다.
 		PushSkillDetailUIData(IntPayload);
 		break;
 	case ECombatInputType::Cancel:
 	case ECombatInputType::LongPressUnit:
 	case ECombatInputType::LongPressEquip:
-		// 대응 진입점(취소/유닛·장비 상세 경로)이 아직 없다 — 각 기능 구현 시 여기서 라우팅한다.
+		// 아직 연결할 기능이 없다.
 		break;
 	}
 }
 
 /**
- * @brief UI의 월드 터치 의도를 월드 트레이스 커맨드로 라우팅한다.
+ * @brief 월드 탭/롱프레스를 조준 입력으로 처리한다.
  *
  * @details
- * 조준 타일 선택/프리뷰 재조준/빈 타일 탭의 한 단계 취소가 전부 이 경로다.
- * ScreenPosition은 커맨드에 싣지 않는다 — Summit이 동기라 소비 측(GetTileActorUnderCursor)이
- * 트레이스하는 시점의 커서 위치가 곧 이 터치 위치다. 좌표를 커맨드로 옮기는 개편은 프레임워크 확장으로 남긴다.
+ * 지금 명령에는 ScreenPosition을 싣지 않는다. 전투 로직은 현재 커서 아래 타일을 직접 찾는다.
  */
 void ACombatGameMode::HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLongPress)
 {
 	/*
-	 * 활성 플레이어 턴이 아니면 월드 터치를 게임플레이로 넘기지 않는다.
-	 * 스킬로 적을 잡아 마지막 턴 노드가 제거되면 현재 턴이 잠깐 사라지는데(PushTurnUIData와 동일 상태),
-	 * 그때 터치를 넘기면 SetTargetTile->SimulateUntilNextAction이 활성 턴 부재로
-	 * 어설션("현재 전투가 진행 중이 아님")에 걸린다. 적 턴 중 조준도 무의미하므로 함께 막는다.
+	 * 플레이어 턴이 아닐 때는 무시한다.
+	 * 턴이 비어 있거나 적 턴일 때 넘기면 프리뷰 시뮬레이션에서 크래시가 날 수 있다.
 	 */
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	if (CombatModel == nullptr)
@@ -456,6 +435,10 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
 		});
+	// 스텝 시전 등으로 이동 예산(MovementPoint)이 바뀔 때도 MOVE 수치를 즉시 갱신한다(미구독 시 다음 턴까지 미반영).
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementPointAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
+		PushUnitUIData();
+		});
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefenseAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
 		});
@@ -478,6 +461,7 @@ void ACombatGameMode::OnUnregisterUnit(UUnitModel* Unit)
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).RemoveAll(this);
 	// 해제는 구독(OnRegisterUnit)과 같은 속성 쌍이어야 한다 — 다른 속성을 지우면 no-op이라 바인딩이 잔존한다.
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementAttribute()).RemoveAll(this);
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementPointAttribute()).RemoveAll(this);
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefenseAttribute()).RemoveAll(this);
 
 	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_StatusEffect, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
@@ -572,6 +556,12 @@ void ACombatGameMode::PushUnitUIData() const
 		UnitUIData.mMaxHP = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMaxHPAttribute());
 		UnitUIData.mDefensePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefenseAttribute());
 		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMovementAttribute());
+		// MOVE 표시(RefreshMoveButton)는 mMovementPoint(현재 남은 이동력)를 읽는다. 이 대입이 없어 항상 0이었다.
+		// GetMove(스텝)는 이동 예산을 Movement 어트리뷰트에 남기고 MovementPoint는 모션 종료 시 0으로 리셋하므로,
+		// 표시는 Movement(=이번 턴 이동 스택)를 읽어야 실제 벌어둔 이동력이 보인다.
+		// [주의] MOVE 버튼의 실제 이동 범위(SRPGMoveBuildAction)는 아직 MovementPoint를 읽는다 — 어트리뷰트
+		//        정본(Movement vs MovementPoint) 통일은 Mo와 확정 필요. 여기선 표시만 실제 예산에 맞춘다.
+		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMovementAttribute());
 
 		UnitUIData.mStatusTags = AttributeSetComponentModel->GetOwnedGameplayTags(); // 모든 소유 태그가 아닌 고의적으로 넣은 태그만 해당
 
@@ -679,12 +669,10 @@ void ACombatGameMode::PushSkillUIData() const
 }
 
 /**
- * @brief 롱프레스한 스킬의 상세 DTO를 UIModel로 push한다.
+ * @brief 길게 누른 스킬의 상세 정보를 UIModel에 넣는다.
  *
  * @details
- * UI는 RequestLongPressSkill 직후 GetSkillDetail()을 동기로 읽는 계약이다.
- * Request -> OnCombatCommand -> 이 함수까지 전 구간이 동기 브로드캐스트라 UI의 읽기보다 항상 먼저 실행된다.
- * 데이터가 없는 슬롯이면 빈 상세(mSkillIndex만 유효)를 push해 UI가 폴백 문구를 띄우게 한다.
+ * UI는 요청 직후 이 값을 읽는다. 데이터가 없는 슬롯이면 빈 상세 정보를 넣는다.
  */
 void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 {
@@ -772,4 +760,3 @@ void ACombatGameMode::PushPlayerMetaUIData() const
 
 	mCombatUIModel->SetPlayerMeta(PlayerMetaUIData);
 }
-
