@@ -71,6 +71,13 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
             ResetTargetTile();
             ResetDice();
             ResetSkill();
+            /*
+             * 조준/프리뷰 진행 중 다른 스킬을 고르면 빌드를 처음부터 다시 시작한다.
+             * SetSkill은 None 페이즈 전제(checkf)인데 직전 선택이 페이즈를 AimSelection까지
+             * 올려둔 상태라, 위 리셋과 함께 페이즈도 되돌려야 스킬 재선택이 안전하다.
+             * (스킬 A 조준 중 스킬 B 탭 -> 어설션 크래시 수정)
+             */
+            SetBuildPhase(ESRPGSkillBuildPhase::None);
             SetSkill(SkillSelectCommand.mSkillIndex);
             RefreshAimableTileHighlights();
             SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
