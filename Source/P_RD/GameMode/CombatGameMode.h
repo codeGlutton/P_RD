@@ -94,18 +94,20 @@ public:
 
 public:
 	/**
-	 * @brief 터치 입력 아래의 월드 액터를 검사하여 이벤트를 실행한다.
+	 * @brief 터치/클릭 지점의 월드 액터를 검사하여 이벤트를 실행한다.
+	 * @param ScreenPosition 입력 지점의 화면 좌표(픽셀). 모바일 터치는 커서가 없으므로 이 좌표로 트레이스한다.
 	 * @return 이벤트 성공 여부
 	 */
 	UFUNCTION(Category = UI, BlueprintCallable)
-	bool ResolveWorldTouchEvent();
+	bool ResolveWorldTouchEvent(FVector2D ScreenPosition);
 
 	/**
-	 * @brief 긴 터치 입력 아래의 월드 액터를 검사하여 이벤트를 실행한다.
+	 * @brief 긴 터치/클릭 지점의 월드 액터를 검사하여 이벤트를 실행한다.
+	 * @param ScreenPosition 입력 지점의 화면 좌표(픽셀). 모바일 터치는 커서가 없으므로 이 좌표로 트레이스한다.
 	 * @return 이벤트 성공 여부
 	 */
 	UFUNCTION(Category = UI, BlueprintCallable)
-	bool ResolveWorldLongPressEvent();
+	bool ResolveWorldLongPressEvent(FVector2D ScreenPosition);
 
 protected:
 	void OnRegisterUnit(UUnitModel* Unit);
