@@ -8,6 +8,14 @@
 #include "Components/SceneComponent.h"
 #include "Input/InputData.h"
 
+#if !UE_BUILD_SHIPPING
+#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
+#include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
+#include "Actor/TileMap/TileMapModel.h"
+#include "Pawn/UnitModel.h"
+#include "SRPGFramework/SRPGMoveAction.h"
+#endif
+
 // Sets default values
 ACombatCameraPawn::ACombatCameraPawn()
 {
@@ -159,3 +167,39 @@ void ACombatCameraPawn::Pinching(const TArray<FTouchState>& TouchState)
 	//mCameraMovementComponent.Get()->ZoomCamera_Instant(PrePinchDis - CurPinchDis);
 	mCameraMovementComponent.Get()->ZoomCamera_InstantAndMoveToViewportPosition_Instant(PrePinchDis - CurPinchDis, (mTouchStates[0].CurTouchPos + mTouchStates[1].CurTouchPos)/2);
 }
+
+void ACombatCameraPawn::RDMoveTo(int32 X, int32 Y)
+{
+	// 치트는 출시 빌드에서 본문만 비움 (UFUNCTION 선언은 전처리 제외 불가)
+#if !UE_BUILD_SHIPPING
+	// 전투 모델·타일맵·플레이어 유닛 확보 (전투 중이 아니면 무시)
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+	UUnitModel* PlayerUnit = CombatModel != nullptr ? CombatModel->GetPlayerUnit() : nullptr;
+	if (TileMap == nullptr || PlayerUnit == nullptr)
+	{
+		UE_LOG(LogSRPGCombat, Warning, TEXT("RDMoveTo: 전투 진행 중이 아니라 무시"));
+		return;
+	}
+
+	// 현재 칸 → 목표 칸 최단 경로 계산 (막히거나 맵 밖이면 빈 경로)
+	const TArray<FTileIndex> Path = TileMap->FindPath(PlayerUnit->GetTileTransform().mIndex, FTileIndex(X, Y));
+	if (Path.Num() < 2)
+	{
+		UE_LOG(LogSRPGCombat, Warning, TEXT("RDMoveTo: (%d,%d)까지 경로 없음"), X, Y);
+		return;
+	}
+
+	// 확정 경로를 실은 이동 커맨드 발행 — 빌드 액션 없이 MoveAction 직행 (BuildMove와 동일 형식)
+	USRPGCommandRouterModel* CommandRouter = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	checkf(CommandRouter != nullptr, TEXT("명령 라우터 모델 nullptr"));
+
+	TInstancedStruct<FSRPGCommand> MoveCommand;
+	MoveCommand.InitializeAs<FSRPGMoveCommand>();
+	MoveCommand.GetMutable<FSRPGMoveCommand>().mPathTileIndexes = Path;
+	const bool Submitted = CommandRouter->SummitCommand(MoveCommand);
+
+	UE_LOG(LogSRPGCombat, Log, TEXT("RDMoveTo: (%d,%d) 경로 %d칸, 커맨드 %s"), X, Y, Path.Num(), Submitted ? TEXT("제출됨") : TEXT("거부됨"));
+#endif
+}
+

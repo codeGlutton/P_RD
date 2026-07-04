@@ -1,6 +1,7 @@
 ﻿#include "SRPGFramework/SRPGMoveAction.h"
 
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
+#include "Singleton/WorldSubsystem/PresentationBarrier.h"
 
 #include "Pawn/UnitModel.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
@@ -42,22 +43,17 @@ void USRPGMoveAction::OnBeginAction()
 {
     Super::OnBeginAction();
 
-    /* 경로가 없거나 시작 타일만 있으면 이동 없이 즉시 종료 */
+    // 경로가 없거나 시작 타일만 있으면 이동 없이 즉시 종료
     if (mPathTileIndexes.Num() < 2)
     {
         MarkActionCompleted(ESRPGActionResult::Succeeded);
         return;
     }
 
-    /* 인덱스 0은 시작(현재) 타일 — 1번 칸부터 경로 끝까지 한 칸씩 동기로 밟는다.
-       뷰가 없어도 논리 좌표·오버랩이 즉시 확정됨(시뮬). 뷰 연출 페이싱은 추후 배리어로 얹음. */
-    for (int32 StepIndex = 1; StepIndex < mPathTileIndexes.Num(); ++StepIndex)
-    {
-        StartStep(StepIndex);
-        CompleteStep();
-    }
-
-    MarkActionCompleted(ESRPGActionResult::Succeeded);
+    // 1번 타일로 이동하는 것부터 시작 (0번은 현재 타일).
+    // 해당 타일로 이동이 완료되면, 베리어가 끝나고 다시 다음 스텝으로 가는 걸 마지막 타일까지 반복.
+    // 시뮬레이션모드에서는 베리어가 없으므로 즉각 다음 스텝으로 진행하므로 문제 없음
+    StartStep(1);
 }
 
 void USRPGMoveAction::OnEndAction()
@@ -83,20 +79,60 @@ void USRPGMoveAction::OnEndAction()
 void USRPGMoveAction::StartStep(int32 StepIndex)
 {
     checkf(mPathTileIndexes.IsValidIndex(StepIndex) == true, TEXT("이동 경로 인덱스 오류"));
+    mCurrentStepIndex = StepIndex;
 
     UTileMapModel* TileMap = GetTileMap();
 
-    // 다음 타일로 이동 시작 (모델 점유는 즉시, 도착 오버랩 통지는 CompleteStep에서)
-    // TODO : 진행 방향에 맞춰 바라보는 방향 설정. 임시로 현재 방향 유지.
-    const ETileActorDirection Direction = mInstigator->GetTileTransform().mDirection;
+    // 직전 타일에서 이번 타일을 바라볼때의 방향 계산
+    // 직전->현재와 현재->다음 방향을 보간해서 자연스럽게 코너링 할 계획
+    const ETileActorDirection Direction = UTileMapModel::TileDeltaToDirection(
+        mPathTileIndexes[StepIndex - 1],
+        mPathTileIndexes[StepIndex],
+        mInstigator->GetTileTransform().mDirection);
+
+    // 다음 타일로 이동 (모델의 논리적 위치 변경)
+    // 점유는 즉시 하고, 도착 오버랩 통지는 CompleteStep가 함
     const FTileTransform NextTransform(mPathTileIndexes[StepIndex], Direction);
     TileMap->StartActorMovement(NextTransform, mInstigator.Get());
+
+    // 이동 후 받을 베리어 생성
+    // 액션이 먼저 파괴될 수 있으므로 WeakLambda로 보호.
+    TSharedPtr<FPresentationBarrier> Barrier = FPresentationBarrier::Make(
+        FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+            OnStepPresentationFinished();
+            }));
+    
+    // OnStartMoveStep을 구독하고 있던 뷰가 이동 시작 (뷰의 물리적 위치 변경)
+    mInstigator->OnStartMoveStep.Broadcast(NextTransform, TileMap->TileToWorldTransform(NextTransform), Barrier);
 }
 
 void USRPGMoveAction::CompleteStep()
 {
     // 현재(도착) 타일의 오버랩 통지 — 함정/장판 등 타일 효과가 여기서 발동
     GetTileMap()->CompleteActorMovement(mInstigator.Get());
+}
+
+void USRPGMoveAction::OnStepPresentationFinished()
+{
+    // ActionPlay 상태가 아니면 중단됐다고 보고 바로 리턴
+    if (mActionPhase != ESRPGActionPhase::ActionPlay)
+    {
+        return;
+    }
+
+    // 현재 타일 도착 처리 -> 함정/장판 등 오버랩 관련된 처리
+    CompleteStep();
+
+    // 1) 마지막 타일이면 이동 완료.
+    if (mCurrentStepIndex >= mPathTileIndexes.Num() - 1)
+    {
+        MarkActionCompleted(ESRPGActionResult::Succeeded);
+    }
+    // 2) 마지막 타일이 아니면 다음 타일로 이동
+    else
+    {
+        StartStep(mCurrentStepIndex + 1);
+    }
 }
 
 UTileMapModel* USRPGMoveAction::GetTileMap() const
