@@ -874,6 +874,7 @@ void UTileMapModel::PlaceActor(const FTileTransform& NextTransform, UBoardActorM
 
 	// 논리 좌표 갱신
 	Actor->SetTileTransform(NextTransform);
+	Actor->OnPlaceTileTransform.Broadcast(NextTransform, TileToWorldTransform(NextTransform));
 
 	// 다음 타일에 등록 후 진입 오버랩 통지 (등록 → Begin 순서)
 	RegisterActorToTile(Tile, Actor);

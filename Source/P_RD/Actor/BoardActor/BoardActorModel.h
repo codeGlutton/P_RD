@@ -17,7 +17,7 @@ struct FTile;
 class UStaticObstacleSpawnData;
 struct FPresentationBarrier;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnChangeTileTransform, const FTileTransform& /* TileTransform */);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlaceTileTransform, const FTileTransform& /* TileTransform */, const FTransform& /* Transform */);
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnPlayApplyAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, TSharedPtr<FPresentationBarrier> /*MotionTriggerBarrier*/, FGameplayTag /*ApplyMotionTag*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlayReceiveAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, FGameplayTag /*ReceiveMotionTag*/);
 
@@ -122,9 +122,9 @@ private:
 
 public:
 	/**
-	 * @brief 타일 트랜스폼이 변경되었을 때, 뷰에게 전달하는 대리자
+	 * @brief 타일 트랜스폼이 즉시 변경되었을 때, 뷰에게 전달하는 대리자
 	 */
-	FOnChangeTileTransform OnChangeTileTransform;
+	FOnPlaceTileTransform OnPlaceTileTransform;
 
 	/**
 	 * @brief 능동적 행동을 전달하는 대리자
