@@ -465,8 +465,19 @@ void USRPGCombatModel::SpawnTileMap()
 {
 	checkf(mTileMap == nullptr, TEXT("이미 타일 존재"));
 
+	FTransform TileMapViewSpawnTransform = FTransform::Identity;
+	ARDWorldSettings* WorldSettings = Cast<ARDWorldSettings>(GetWorld()->GetWorldSettings());
+	if (WorldSettings != nullptr)
+	{
+		AActor* SettingStartPoint = WorldSettings->GetRoomStartPoint();
+		if (SettingStartPoint != nullptr)
+		{
+			TileMapViewSpawnTransform = SettingStartPoint->GetTransform();
+		}
+	}
+
 	// 타일맵 스폰
-	mTileMap = GetWorldModelFactory(this)->NewModel<UTileMapModel>();
+	mTileMap = GetWorldModelFactory(this)->NewModel<UTileMapModel>(TileMapViewSpawnTransform);
 
 	// 모델이 자기 타일 저장소(mTiles)를 직접 빌드한다.
 	// 기존엔 View(ATileMap)만 RebuildTiles를 호출해서, View 스폰/타이밍에 따라 모델 타일이 비어 있었고
@@ -483,6 +494,7 @@ void USRPGCombatModel::RegisterPlayerUnit(UUnitModel* PlayerUnit, const FTileTra
 
 	// 타일 위에 배치
 	mTileMap->PlaceActor(Transform, PlayerUnit);
+
 	mPlayerUnit = PlayerUnit;
 	mUnits.Push(PlayerUnit);
 

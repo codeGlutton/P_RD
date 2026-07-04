@@ -17,10 +17,10 @@ struct FTile;
 class UStaticObstacleSpawnData;
 struct FPresentationBarrier;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnChangeTileTransform, const FTileTransform& /* TileTransform */);
-DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnStartMoveStep, const FTileTransform& /* NextTileTransform */, const FTransform& /* TargetWorldTransform */, TSharedPtr<FPresentationBarrier> /* Barrier */);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlaceTileTransform, const FTileTransform& /* TileTransform */, const FTransform& /* Transform */);
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnPlayApplyAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, TSharedPtr<FPresentationBarrier> /*MotionTriggerBarrier*/, FGameplayTag /*ApplyMotionTag*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlayReceiveAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, FGameplayTag /*ReceiveMotionTag*/);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnStartMoveStep, const FTileTransform& /* NextTileTransform */, const FTransform& /* TargetWorldTransform */, TSharedPtr<FPresentationBarrier> /* Barrier */);
 
 /**
  * @brief  보드에 올라가는 액터 데이터 모델 클래스
@@ -123,9 +123,9 @@ private:
 
 public:
 	/**
-	 * @brief 타일 트랜스폼이 변경되었을 때, 뷰에게 전달하는 대리자
+	 * @brief 타일 트랜스폼이 즉시 변경되었을 때, 뷰에게 전달하는 대리자
 	 */
-	FOnChangeTileTransform OnChangeTileTransform;
+	FOnPlaceTileTransform OnPlaceTileTransform;
 
 	/**
 	 * @brief 이동 스텝 시작 시 뷰에게 한 칸 이동 연출을 요청하는 대리자
