@@ -1,5 +1,6 @@
 #include "UI/FrontendMapWidget.h"
 
+#include "Blueprint/WidgetLayoutLibrary.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
@@ -348,6 +349,31 @@ void UFrontendMapWidget::NativeDestruct()
 	mMapLinePool.Reset();
 	mMapNodePool.Reset();
 	Super::NativeDestruct();
+}
+
+void UFrontendMapWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+
+	/*
+	 * 뷰포트가 바뀌면(창 리사이즈/회전) 그래프 폭·높이와 노드 배치가 낡은 값으로 남는다.
+	 * 몇 프레임 안정된 뒤 전체 리프레시로 다시 깔고, 조정용 메트릭 로그를 남긴다.
+	 */
+	FVector2D ViewportSize = FVector2D::ZeroVector;
+	if (UGameViewportClient* ViewportClient = GetWorld() != nullptr ? GetWorld()->GetGameViewport() : nullptr)
+	{
+		ViewportClient->GetViewportSize(OUT ViewportSize);
+	}
+	if (!ViewportSize.Equals(mMetricsLastViewport, 0.5f))
+	{
+		mMetricsLastViewport = ViewportSize;
+		mMetricsCountdown = 3;
+	}
+	else if (mMetricsCountdown > 0 && --mMetricsCountdown == 0)
+	{
+		RefreshMap();
+		LogWorldMapMetrics();
+	}
 }
 
 FReply UFrontendMapWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
@@ -806,6 +832,19 @@ bool UFrontendMapWidget::RefreshMap()
 
 	HideUnusedMapGraphWidgets(UsedLineCount, UsedNodeCount);
 	UpdateOverlayMarkers(NodeCenters, CurrentCoord, SelectedCoord);
+
+	// [임시 진단] 노드/선 배치 덤프 — 해상도별 조정용. 배치 확정 후 제거.
+	UE_LOG(LogRD, Display, TEXT("[WorldMapMetrics] refresh: nodes=%d lines=%d current=r%dc%d selected=r%dc%d"),
+		UsedNodeCount, UsedLineCount, CurrentCoord.X, CurrentCoord.Y, SelectedCoord.X, SelectedCoord.Y);
+	for (const FMapRoomView& Room : Rooms)
+	{
+		const FVector2D& Center = NodeCenters.FindChecked(FIntPoint(Room.mRow, Room.mColumn));
+		UE_LOG(LogRD, Display, TEXT("[WorldMapMetrics] node r%dc%d %s %s center=(%.0f,%.0f)"),
+			Room.mRow, Room.mColumn,
+			*StaticEnum<ERoomType>()->GetNameStringByValue(StaticCast<int64>(Room.mType)),
+			*StaticEnum<EMapRoomState>()->GetNameStringByValue(StaticCast<int64>(Room.mState)),
+			Center.X, Center.Y);
+	}
 
 	if (bHasSelectedRoom)
 	{
@@ -1324,3 +1363,68 @@ void UFrontendMapWidget::UpdateOverlayMarkers(const TMap<FIntPoint, FVector2D>& 
 		}
 	}
 }
+
+void UFrontendMapWidget::LogWorldMapMetrics() const
+{
+	/* [임시 진단] 좌표는 전부 디자인 px(DPI 나눔) — 시안(1920x1080 기준)과 직접 비교 가능. */
+	FVector2D ViewportSize = FVector2D::ZeroVector;
+	if (UGameViewportClient* ViewportClient = GetWorld() != nullptr ? GetWorld()->GetGameViewport() : nullptr)
+	{
+		ViewportClient->GetViewportSize(OUT ViewportSize);
+	}
+	const float Dpi = FMath::Max(UWidgetLayoutLibrary::GetViewportScale(this), KINDA_SMALL_NUMBER);
+	const FVector2D DesignSize = ViewportSize / Dpi;
+
+	UE_LOG(LogRD, Display, TEXT("[WorldMapMetrics] ==== viewport=(%.0f,%.0f) dpi=%.3f design=(%.1f,%.1f) topInset=%.0f rows=%d"),
+		ViewportSize.X, ViewportSize.Y, Dpi, DesignSize.X, DesignSize.Y, mTopUIInset, mCachedRowCount);
+
+	const FVector2D GraphSize = GetMapGraphContentSize();
+	float LeftFrac = 0.f;
+	float RightFrac = 0.f;
+	float TopPx = 0.f;
+	float BottomPx = 0.f;
+	GetNodeAreaLayout(OUT LeftFrac, OUT RightFrac, OUT TopPx, OUT BottomPx);
+	const FVector2D NodeSize = GetMapNodeSize();
+	const float AreaLeft = GraphSize.X * LeftFrac + NodeSize.X * 0.5f;
+	const float AreaRight = GraphSize.X * RightFrac - NodeSize.X * 0.5f;
+	UE_LOG(LogRD, Display, TEXT("[WorldMapMetrics] graph: size=(%.0f,%.0f) rowPitch=%.0f colPitchMax=%.0f nodeSize=%.0f"),
+		GraphSize.X, GraphSize.Y, GetMapRowPitch(), GetMapColPitchMax(), NodeSize.X);
+	UE_LOG(LogRD, Display, TEXT("[WorldMapMetrics] nodeArea: fracX=%.3f..%.3f topPx=%.0f bottomPx=%.0f centerRangeX=%.0f..%.0f"),
+		LeftFrac, RightFrac, TopPx, BottomPx, AreaLeft, AreaRight);
+	if (MapScrollBox != nullptr)
+	{
+		UE_LOG(LogRD, Display, TEXT("[WorldMapMetrics] scroll: offset=%.0f end=%.0f viewportH=%.0f"),
+			MapScrollBox->GetScrollOffset(), MapScrollBox->GetScrollOffsetOfEnd(),
+			MapScrollBox->GetCachedGeometry().GetLocalSize().Y);
+	}
+
+	auto LogWidgetGeometry = [Dpi](const TCHAR* Label, const UWidget* Widget)
+	{
+		if (Widget == nullptr)
+		{
+			UE_LOG(LogRD, Display, TEXT("[WorldMapMetrics] widget %s: (미바인딩)"), Label);
+			return;
+		}
+		const FGeometry& Geometry = Widget->GetCachedGeometry();
+		const FVector2D Position = Geometry.GetAbsolutePosition() / Dpi;
+		const FVector2D Size = Geometry.GetLocalSize();
+		UE_LOG(LogRD, Display, TEXT("[WorldMapMetrics] widget %s: pos=(%.0f,%.0f) size=(%.0f,%.0f) vis=%s"),
+			Label, Position.X, Position.Y, Size.X, Size.Y,
+			*StaticEnum<ESlateVisibility>()->GetNameStringByValue(StaticCast<int64>(Widget->GetVisibility())));
+	};
+	LogWidgetGeometry(TEXT("MapScrollBox"), MapScrollBox);
+	LogWidgetGeometry(TEXT("Map_ParchmentBody"), Map_ParchmentBody);
+	LogWidgetGeometry(TEXT("Map_NodeArea"), Map_NodeArea);
+	LogWidgetGeometry(TEXT("Map_CurrentMarker"), Map_CurrentMarker);
+	LogWidgetGeometry(TEXT("Map_SelectGlow"), Map_SelectGlow);
+	LogWidgetGeometry(TEXT("CloseButton"), CloseButton);
+	LogWidgetGeometry(TEXT("EnterRoomButton"), EnterRoomButton);
+	LogWidgetGeometry(TEXT("MapStatusText"), MapStatusText);
+	LogWidgetGeometry(TEXT("MapTitleText"), MapTitleText);
+	if (WidgetTree != nullptr)
+	{
+		LogWidgetGeometry(TEXT("Map_LegendImage"), WidgetTree->FindWidget(TEXT("Map_LegendImage")));
+		LogWidgetGeometry(TEXT("Map_Scrim"), WidgetTree->FindWidget(TEXT("Map_Scrim")));
+	}
+}
+

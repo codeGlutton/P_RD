@@ -132,6 +132,8 @@ protected:
 	 */
 	void NativeDestruct() override;
 
+	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+
 	FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
@@ -196,6 +198,14 @@ private:
 
 	/** @brief 현재 위치 마커/선택 글로우(WBP 소유)를 해당 노드 위치로 옮긴다. */
 	void UpdateOverlayMarkers(const TMap<FIntPoint, FVector2D>& NodeCenters, const FIntPoint& CurrentCoord, const FIntPoint& SelectedCoord) const;
+
+	/**
+	 * @brief [임시 진단] 조정용 정밀 로그 — 뷰포트/그래프/노드경계/주요 위젯 지오메트리를 덤프한다.
+	 *
+	 * @details
+	 * 해상도별 배치를 사용자가 로그로 확인하고 시안 수치를 조정하기 위한 것. 배치 확정 후 제거 대상.
+	 */
+	void LogWorldMapMetrics() const;
 
 
 	/** @brief 지정 인덱스의 연결선 위젯을 풀에서 가져오거나 새로 만든다. */
@@ -400,6 +410,12 @@ private:
 	bool mMapDragScrolling = false;
 
 	FVector2D mMapDragLastScreenPosition = FVector2D::ZeroVector;
+
+	/** @brief [임시 진단] 뷰포트 변화 감지(라이브 리사이즈 재배치 + 메트릭 로그 트리거) */
+	FVector2D mMetricsLastViewport = FVector2D::ZeroVector;
+
+	/** @brief [임시 진단] 레이아웃 안정 대기 프레임 카운트다운 */
+	int32 mMetricsCountdown = 0;
 
 	/**
 	 * @brief 마지막 RefreshMap이 확인한 지도 행 수(그래프 높이 계산용)
