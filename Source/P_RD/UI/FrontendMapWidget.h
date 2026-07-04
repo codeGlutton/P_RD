@@ -199,14 +199,6 @@ private:
 	/** @brief 현재 위치 마커/선택 글로우(WBP 소유)를 해당 노드 위치로 옮긴다. */
 	void UpdateOverlayMarkers(const TMap<FIntPoint, FVector2D>& NodeCenters, const FIntPoint& CurrentCoord, const FIntPoint& SelectedCoord) const;
 
-	/**
-	 * @brief [임시 진단] 조정용 정밀 로그 — 뷰포트/그래프/노드경계/주요 위젯 지오메트리를 덤프한다.
-	 *
-	 * @details
-	 * 해상도별 배치를 사용자가 로그로 확인하고 시안 수치를 조정하기 위한 것. 배치 확정 후 제거 대상.
-	 */
-	void LogWorldMapMetrics() const;
-
 
 	/** @brief 지정 인덱스의 연결선 위젯을 풀에서 가져오거나 새로 만든다. */
 	FFrontendMapLinePoolEntry* AcquireMapLineWidget(int32 LineIndex);
@@ -423,11 +415,11 @@ private:
 
 	FVector2D mMapDragLastScreenPosition = FVector2D::ZeroVector;
 
-	/** @brief [임시 진단] 뷰포트 변화 감지(라이브 리사이즈 재배치 + 메트릭 로그 트리거) */
-	FVector2D mMetricsLastViewport = FVector2D::ZeroVector;
+	/** @brief 뷰포트 변화 감지용 마지막 크기 — 창 리사이즈/회전 시 그래프를 다시 깐다(라이브 리사이즈 재배치). */
+	FVector2D mLastViewportSize = FVector2D::ZeroVector;
 
-	/** @brief [임시 진단] 레이아웃 안정 대기 프레임 카운트다운 */
-	int32 mMetricsCountdown = 0;
+	/** @brief 리사이즈 후 레이아웃 안정 대기 프레임 카운트다운(0이 되면 RefreshMap). */
+	int32 mResizeRefreshCountdown = 0;
 
 	/**
 	 * @brief 마지막 RefreshMap이 확인한 지도 행 수(그래프 높이 계산용)

@@ -151,13 +151,6 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
     // 하지만 GetTileActorUnderCursor가 그 유닛의 타일을 이미 돌려주므로, 유효 타일이면 그대로 처리한다
     // (적이 선 칸을 공격/조준 가능하게). 타일맵 격자 밖 클릭만 Invalid로 남아 한단계 취소로 간다.
     const bool IsContactedBoard = IsContactedTileMap || TargetTileIndex != FTileIndex::Invalid;
-    // [임시 진단] 클릭한 타일이 무엇으로 잡혔고, 조준 가능/현재 페이즈가 어떤지 실측용. 확정 후 제거.
-    UE_LOG(LogSRPGCombat, Warning, TEXT("[AimDbg] trace actor=%s tile=(%d,%d) tilemap=%d board=%d phase=%d canSelect=%d target=(%d,%d)"),
-        TargetActor != nullptr ? *TargetActor->GetName() : TEXT("null"),
-        TargetTileIndex.mX, TargetTileIndex.mY, IsContactedTileMap ? 1 : 0, IsContactedBoard ? 1 : 0,
-        static_cast<int32>(mSkillBuildPhase),
-        (TargetTileIndex != FTileIndex::Invalid && mSelectedSkill != nullptr) ? (CanSelectTargetTile(TargetTileIndex) ? 1 : 0) : -1,
-        mTargetIndex.mX, mTargetIndex.mY);
     if (IsContactedBoard == true)
     {
         if (TargetTileIndex == FTileIndex::Invalid)
@@ -393,15 +386,6 @@ void USRPGSkillBuildAction::RefreshAimableTileHighlights()
 
     mReachableTileIndexes = SkillCompModel->GetAimableTiles(TileMap, mSelectedSkillIndex, DicePoolModel->GetSelectedDiceSum());
     TileMap->SetTileHighlight(mReachableTileIndexes, ETileHighlightFlag::Aim);
-
-    // [임시 진단] 조준 가능 타일이 실제로 무엇인지(적 칸이 포함되는지) 실측용. 확정 후 제거.
-    {
-        const FTileIndex Self = mInstigator->GetTileTransform().mIndex;
-        FString TilesStr;
-        for (const FTileIndex& T : mReachableTileIndexes) { TilesStr += FString::Printf(TEXT("(%d,%d) "), T.mX, T.mY); }
-        UE_LOG(LogSRPGCombat, Warning, TEXT("[AimDbg] refresh skill=%d diceSum=%d self=(%d,%d) aimableCount=%d tiles=%s"),
-            mSelectedSkillIndex, DicePoolModel->GetSelectedDiceSum(), Self.mX, Self.mY, mReachableTileIndexes.Num(), *TilesStr);
-    }
 }
 
 void USRPGSkillBuildAction::RefreshEffectTileHighlights()
