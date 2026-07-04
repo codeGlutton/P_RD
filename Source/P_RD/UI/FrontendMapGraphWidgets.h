@@ -9,13 +9,16 @@
 #include "RDMinimal.h"
 #include "Components/Button.h"
 #include "PCGStage/RoomType.h"
+#include "UI/RoomViewTypes.h"
 #include "UI/RDUserWidget.h"
 
 #include "FrontendMapGraphWidgets.generated.h"
 
 class UBorder;
 class UButton;
+class UImage;
 class UTextBlock;
+class UTexture2D;
 
 /**
  * @brief 지도 노드 클릭 시 행/열 좌표만 부모 위젯으로 전달하는 UI delegate
@@ -70,13 +73,50 @@ public:
 	/** @brief 선 색상을 현재 방 상태에 맞게 바꿈 */
 	void SetLineColor(const FLinearColor& InColor);
 
+	/**
+	 * @brief 경로 개방 여부에 맞는 텍스처(실선/점선)와 틴트를 적용한다.
+	 *
+	 * @details
+	 * 텍스처는 WBP Class Defaults(시안 빌더가 주입)가 소유한다. 텍스처가 없으면 기존 색상 Border로 폴백한다.
+	 */
+	void SetLineStyle(bool bIsOpenPath);
+
+	/** @brief 시안이 정한 선 두께. 부모가 CanvasPanelSlot 높이로 쓴다. */
+	float GetLineThickness() const;
+
 protected:
 	void NativeConstruct() override;
 
 private:
-	/** @brief WBP 안에서 실제 선 색상을 받는 Border */
+	/** @brief WBP 안에서 실제 선 색상을 받는 Border(텍스처 미지정 시 폴백) */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UBorder> LinePanel;
+
+	/** @brief 경로 텍스처를 그리는 Image(시안 빌더가 WBP에 생성) */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UImage> LineImage;
+
+	/* 아래 스타일 값들은 concept 시안이 정본이며 빌더가 WBP Class Defaults로 주입한다. C++ 하드코딩 금지. */
+
+	/** @brief 열린 경로(갈 수 있는 길) 텍스처 */
+	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	TObjectPtr<UTexture2D> mSolidTexture;
+
+	/** @brief 잠긴 경로 점선 텍스처 */
+	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	TObjectPtr<UTexture2D> mDashedTexture;
+
+	/** @brief 선 두께(px, 디자인 기준) */
+	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	float mLineThickness = 14.f;
+
+	/** @brief 열린 길 틴트(시안 mOpenTint) */
+	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	FLinearColor mOpenTint = FLinearColor(1.f, 1.f, 1.f, 0.95f);
+
+	/** @brief 잠긴 길 틴트(시안 mLockedTint) */
+	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	FLinearColor mLockedTint = FLinearColor(1.f, 1.f, 1.f, 0.55f);
 };
 
 /**
@@ -104,7 +144,9 @@ public:
 		const FLinearColor& TypeStripeColor,
 		const FSlateColor& LabelColor,
 		const FSlateColor& BadgeColor,
-		ERoomType RoomType = ERoomType::None);
+		ERoomType RoomType = ERoomType::None,
+		EMapRoomState RoomState = EMapRoomState::Locked,
+		bool bIsCurrentRoom = false);
 
 	/** @brief 부모 위젯이 현재 노드의 버튼 활성 여부를 정할 때 사용함 */
 	void SetNodeEnabled(bool bEnabled) const;
@@ -121,6 +163,12 @@ private:
 	UFUNCTION()
 	void HandleNodeButtonClicked();
 
+	/** @brief 타입 아이콘: 클래스 디폴트(시안) 우선, 없으면 기존 경로 폴백. */
+	UTexture2D* GetTypeIconTexture(ERoomType RoomType) const;
+
+	/** @brief 상태별 링 텍스처(현재 위치가 최우선). */
+	UTexture2D* GetStateRingTexture(EMapRoomState RoomState, bool bIsCurrentRoom) const;
+
 private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UButton> NodeButton;
@@ -136,6 +184,43 @@ private:
 
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> NodeBadgeText;
+
+	/** @brief 상태 링 오버레이 Image(시안 빌더가 WBP에 생성). 링이 상태를 표현하면 색 프레임은 숨긴다. */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UImage> NodeRingImage;
+
+	/* 링/아이콘 텍스처는 concept 시안이 정본 — 빌더가 WBP Class Defaults로 주입. C++ 경로 하드코딩은 폴백 전용. */
+
+	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	TObjectPtr<UTexture2D> mRingNormalTexture;
+
+	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	TObjectPtr<UTexture2D> mRingCurrentTexture;
+
+	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	TObjectPtr<UTexture2D> mRingLockedTexture;
+
+	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	TObjectPtr<UTexture2D> mRingClearedTexture;
+
+	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	TObjectPtr<UTexture2D> mIconMonsterTexture;
+
+	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	TObjectPtr<UTexture2D> mIconEliteTexture;
+
+	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	TObjectPtr<UTexture2D> mIconBossTexture;
+
+	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	TObjectPtr<UTexture2D> mIconShopTexture;
+
+	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	TObjectPtr<UTexture2D> mIconTreasureTexture;
+
+	/** @brief 잠긴 방 아이콘 곱색(시안 nodeStyle.lockedIconTint) — 잠김의 주역은 링, 이 틴트는 보조 */
+	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	FLinearColor mLockedIconTint = FLinearColor(0.8f, 0.8f, 0.8f, 1.f);
 
 	int32 mRowIndex = INDEX_NONE;
 	int32 mColumnIndex = INDEX_NONE;

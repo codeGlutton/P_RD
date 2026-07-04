@@ -132,6 +132,8 @@ protected:
 	 */
 	void NativeDestruct() override;
 
+	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+
 	FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
@@ -148,9 +150,6 @@ private:
 
 	/** @brief 닫기/입장 버튼 이벤트를 해제한다. */
 	void UnbindEvents();
-
-	/** @brief 지도 BACK/ENTER 버튼에 공통 이미지 버튼 스타일을 적용한다. */
-	void ApplyMapButtonStyles() const;
 
 	/** @brief 지도 노드 클릭을 GameMode의 방 선택 요청으로 전달한다. */
 	void HandleMapRoomClicked(int32 RowIndex, int32 ColumnIndex);
@@ -173,23 +172,41 @@ private:
 	/** @brief 현재 월드에서 실제 방 선택/입장 요청을 처리할 수 있는지 확인한다. */
 	bool IsFrontendMapNavigationEnabled() const;
 
-	/** @brief 현재 화면 폭에 맞춘 지도 스크롤 콘텐츠 크기를 계산한다. */
+	/** @brief 현재 화면 폭 + 행 수 기반 지도 스크롤 콘텐츠 크기를 계산한다(폭=뷰포트 풀블리드, 높이=행수x행간격). */
 	FVector2D GetMapGraphContentSize() const;
 
 	/** @brief 지도 캔버스와 스크롤 영역의 고정 레이아웃 값을 적용한다. */
 	void ConfigureMapGraphLayout() const;
 
-	/** @brief 임시 스테이지 맵 배경 이미지를 준비한다. */
-	void EnsureMapBackground();
+	/** @brief 노드 크기(시안 마커 Map_NodeMetrics 폭, 폴백 96). */
+	FVector2D GetMapNodeSize() const;
 
-	/** @brief 임시 스테이지 맵 배경 이미지를 전체 팝업 뒤쪽에 맞춘다. */
-	void ApplyMapBackgroundLayout() const;
+	/** @brief 행 간격(시안 마커 Map_NodeMetrics 높이, 폴백 176) — 그래프 높이의 정본. */
+	float GetMapRowPitch() const;
 
-	/** @brief 기존 텍스트 범례를 숨기고 아이콘 범례를 준비한다. */
-	void EnsureIconLegend();
+	/** @brief 열 간격 상한(시안 마커 Map_ColPitch 폭, 폴백 240) — 열이 적을 때 중앙으로 모아 간격 과대를 막는다. */
+	float GetMapColPitchMax() const;
 
-	/** @brief 런타임 아이콘 범례의 위치를 맞춘다. */
-	void ApplyIconLegendLayout() const;
+	/** @brief 노드 배치 경계(시안 마커 Map_NodeArea): 좌우는 앵커 분수, 상하는 px 오프셋. */
+	void GetNodeAreaLayout(float& OutLeftFrac, float& OutRightFrac, float& OutTopPx, float& OutBottomPx) const;
+
+	/** @brief Stage row/column을 시안 경계/간격 기반 캔버스 좌표로 변환한다. */
+	FVector2D GetMapRoomNodeCenter(const TArray<FMapRoomView>& Rooms, const FMapRoomView& Room, const FVector2D& GraphSize) const;
+
+	/** @brief 양피지/두루마리(WBP 소유)를 동적 그래프 크기에 슬롯만 동기한다. */
+	void UpdateGraphDecorLayout(const FVector2D& GraphSize) const;
+
+	/** @brief 현재 위치 마커/선택 글로우(WBP 소유)를 해당 노드 위치로 옮긴다. */
+	void UpdateOverlayMarkers(const TMap<FIntPoint, FVector2D>& NodeCenters, const FIntPoint& CurrentCoord, const FIntPoint& SelectedCoord) const;
+
+	/**
+	 * @brief [임시 진단] 조정용 정밀 로그 — 뷰포트/그래프/노드경계/주요 위젯 지오메트리를 덤프한다.
+	 *
+	 * @details
+	 * 해상도별 배치를 사용자가 로그로 확인하고 시안 수치를 조정하기 위한 것. 배치 확정 후 제거 대상.
+	 */
+	void LogWorldMapMetrics() const;
+
 
 	/** @brief 지정 인덱스의 연결선 위젯을 풀에서 가져오거나 새로 만든다. */
 	FFrontendMapLinePoolEntry* AcquireMapLineWidget(int32 LineIndex);
@@ -293,14 +310,46 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UBorder> MapPaperShadow;
 
-	UPROPERTY(Transient)
-	TObjectPtr<UImage> mMapBackgroundImage;
+	/*
+	 * 아래 Map_* 위젯들은 concept 시안 빌더(_sync_worldmap_from_concept.py)가 WBP_FrontendMap에 생성/배치한다.
+	 * 과거 C++ 런타임 생성(배경/범례)을 WBP 소유로 이관한 것 — C++은 동적 크기/위치 동기만 한다.
+	 */
 
-	UPROPERTY(Transient)
-	TObjectPtr<UBorder> mIconLegendPanel;
+	/** @brief 풀스크린 스크림(빌더 생성). 탑바 인셋 적용 대상. */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UImage> Map_Scrim;
 
-	UPROPERTY(Transient)
-	TObjectPtr<UVerticalBox> mIconLegendList;
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UImage> Map_ParchmentBody;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UImage> Map_ScrollRodTop;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UImage> Map_ScrollRodBottom;
+
+	/** @brief 노드 배치 경계 마커(투명) — 앵커 X 분수 + 오프셋 Top/Bottom px가 정본 */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UWidget> Map_NodeArea;
+
+	/** @brief 노드 크기(W)/행 간격(H) 마커 SizeBox(Collapsed) */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<USizeBox> Map_NodeMetrics;
+
+	/** @brief 열 간격 상한(W) 마커 SizeBox(Collapsed) */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<USizeBox> Map_ColPitch;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UImage> Map_CurrentMarker;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UImage> Map_SelectGlow;
+
+	/** @brief 범례 그룹(프레임+행, 빌더 생성). 좁은 화면에서 통째로 렌더 스케일 축소한다. */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UWidget> Map_LegendGroup;
+
 
 	/**
 	 * @brief 연결선 하나를 만들 때 사용할 WBP 클래스
@@ -328,6 +377,25 @@ private:
 	UPROPERTY(Category = "Frontend Map", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	TSubclassOf<UFrontendMapNodeWidget> MapNodeWidgetClass;
 
+	/**
+	 * @brief 지도 콘텐츠(스크림+스크롤)를 위에서 내리는 인셋(px, 디자인 1080 기준)
+	 *
+	 * @details
+	 * 전투 HUD 탑바(상태바/방 이름/내비 버튼)가 지도 위에 계속 보이게 하기 위한 값이다.
+	 * 인셋 영역은 이 위젯이 아무것도 그리지 않아 히트테스트가 통과하고, 탑바 버튼을 그대로 누를 수 있다.
+	 * 값은 concept 시안(wbpNativeSpec.topUIInset)이 정본이며 빌더가 WBP Class Defaults로 주입한다.
+	 */
+	UPROPERTY(Category = "Frontend Map", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	float mTopUIInset = 0.f;
+
+	/** @brief 범례 축소 기준 폭(시안 legendScale.refWidth). 디자인 폭이 이보다 좁으면 비례 축소. */
+	UPROPERTY(Category = "Frontend Map", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	float mLegendRefWidth = 1920.f;
+
+	/** @brief 범례 축소 하한(시안 legendScale.minScale). */
+	UPROPERTY(Category = "Frontend Map", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	float mLegendMinScale = 0.5f;
+
 	UPROPERTY(Transient)
 	TArray<FFrontendMapLinePoolEntry> mMapLinePool;
 
@@ -354,4 +422,18 @@ private:
 	bool mMapDragScrolling = false;
 
 	FVector2D mMapDragLastScreenPosition = FVector2D::ZeroVector;
+
+	/** @brief [임시 진단] 뷰포트 변화 감지(라이브 리사이즈 재배치 + 메트릭 로그 트리거) */
+	FVector2D mMetricsLastViewport = FVector2D::ZeroVector;
+
+	/** @brief [임시 진단] 레이아웃 안정 대기 프레임 카운트다운 */
+	int32 mMetricsCountdown = 0;
+
+	/**
+	 * @brief 마지막 RefreshMap이 확인한 지도 행 수(그래프 높이 계산용)
+	 *
+	 * @details
+	 * 그래프 높이는 "행 수 x 행 간격"이 정본이라 데이터 이후에만 정확하다. 데이터 이전(NativeConstruct)에는 폴백 비율을 쓴다.
+	 */
+	int32 mCachedRowCount = 0;
 };
