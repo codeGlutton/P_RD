@@ -84,6 +84,10 @@ public:
 	UFUNCTION()
 	void HandleApplyDiceResults(const TArray<int32>& RolledFaceIndices);
 
+	/** @brief UIModel의 월드 터치 의도(OnCombatWorldTouch)를 월드 트레이스 커맨드로 라우팅한다. */
+	UFUNCTION()
+	void HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLongPress);
+
 public:
 	/**
 	 * @brief 터치 입력 아래의 월드 액터를 검사하여 이벤트를 실행한다.
@@ -111,6 +115,9 @@ protected:
 	void PushDiceUIData() const;
 	void PushSelectedDiceUIData() const;
 	void PushSkillUIData() const;
+
+	/** @brief 롱프레스한 스킬의 상세 DTO를 UIModel로 push한다(UI는 직후 동기 read). */
+	void PushSkillDetailUIData(int32 SkillIndex) const;
 	void PushEquipmentUIData() const;
 	void PushPlayerMetaUIData() const;
 

@@ -153,6 +153,9 @@ void ACombatGameMode::InitializeRoom()
 		// OnBeginAnyTurnActionUI.Broadcast(Barrier, TurnContext, Action); 연출은 연결고리가 아직 없음
 		});
 	CombatModel->OnEndAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action, ESRPGActionResult Result) {
+		// 액션(스킬/이동 빌드 등) 종료 시 UI 선택 강조를 해제한다 — HUD 수신자(HandleCombatActionResolved)는
+		// 이미 대기 중이었고 발신자만 없었다(과거 어댑터 잔재).
+		mCombatUIModel->NotifyActionResolved();
 		// OnEndAnyTurnActionUI.Broadcast(Barrier, TurnContext, Action, Result); 연출은 연결고리가 아직 없음
 		});
 
@@ -183,10 +186,22 @@ void ACombatGameMode::InitializeRoom()
 		PushSelectedDiceUIData();
 		});
 
+	/* 스킬 대리자 연결 */
+
+	USkillComponentModel* SkillComponentModel = PlayerUnitModel->GetSkillComponentModel();
+	checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
+
+	SkillComponentModel->OnChangeSkillUI.AddWeakLambda(this, [this](int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData) {
+		PushSkillUIData();   // 전투 중 스킬 교체가 다음 턴 시작까지 레일에 안 보이던 공백을 메운다
+		});
+
 	/* UI 조작 의도 라우팅 — 위젯 탭이 쏘는 Request*(OnCombatCommand)를 게임플레이 진입점에 연결 */
 
 	mCombatUIModel->OnCombatCommand.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatCommand);
 	mCombatUIModel->OnApplyDiceResults.AddUniqueDynamic(this, &ACombatGameMode::HandleApplyDiceResults);
+	// 월드 터치(조준 타일 선택/한 단계 취소)가 이 구독 없이는 게임플레이에 도달하지 못했다 —
+	// 스킬 조준->프리뷰->시전 확정 입력 체인의 마지막 공백.
+	mCombatUIModel->OnCombatWorldTouch.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatWorldTouch);
 
 	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModel());
 }
@@ -218,12 +233,34 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 	case ECombatInputType::EndTurn:
 		EndTurn();
 		break;
-	case ECombatInputType::Cancel:
 	case ECombatInputType::LongPressSkill:
+		PushSkillDetailUIData(IntPayload);
+		break;
+	case ECombatInputType::Cancel:
 	case ECombatInputType::LongPressUnit:
 	case ECombatInputType::LongPressEquip:
-		// 대응 진입점(취소/상세 패널 경로)이 아직 없다 — 각 기능 구현 시 여기서 라우팅한다.
+		// 대응 진입점(취소/유닛·장비 상세 경로)이 아직 없다 — 각 기능 구현 시 여기서 라우팅한다.
 		break;
+	}
+}
+
+/**
+ * @brief UI의 월드 터치 의도를 월드 트레이스 커맨드로 라우팅한다.
+ *
+ * @details
+ * 조준 타일 선택/프리뷰 재조준/빈 타일 탭의 한 단계 취소가 전부 이 경로다.
+ * ScreenPosition은 커맨드에 싣지 않는다 — Summit이 동기라 소비 측(GetTileActorUnderCursor)이
+ * 트레이스하는 시점의 커서 위치가 곧 이 터치 위치다. 좌표를 커맨드로 옮기는 개편은 프레임워크 확장으로 남긴다.
+ */
+void ACombatGameMode::HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLongPress)
+{
+	if (bLongPress == true)
+	{
+		ResolveWorldLongPressEvent();
+	}
+	else
+	{
+		ResolveWorldTouchEvent();
 	}
 }
 
@@ -605,6 +642,46 @@ void ACombatGameMode::PushSkillUIData() const
 	}
 
 	mCombatUIModel->SetSkillUIs(SkillUIDatas);
+}
+
+/**
+ * @brief 롱프레스한 스킬의 상세 DTO를 UIModel로 push한다.
+ *
+ * @details
+ * UI는 RequestLongPressSkill 직후 GetSkillDetail()을 동기로 읽는 계약이다.
+ * Request -> OnCombatCommand -> 이 함수까지 전 구간이 동기 브로드캐스트라 UI의 읽기보다 항상 먼저 실행된다.
+ * 데이터가 없는 슬롯이면 빈 상세(mSkillIndex만 유효)를 push해 UI가 폴백 문구를 띄우게 한다.
+ */
+void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
+{
+	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
+	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
+
+	USkillComponentModel* SkillComponentModel = PlayerUnitModel->GetSkillComponentModel();
+	checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
+
+	FSkillDetailUI SkillDetailUIData;
+	SkillDetailUIData.mSkillIndex = SkillIndex;
+
+	const FSkillEntry* SkillEntry = SkillComponentModel->GetSkill(SkillIndex);
+	UStaticSkillData* StaticSkillData = (SkillEntry != nullptr && SkillEntry->IsValid() == true) ? SkillEntry->mData.Get() : nullptr;
+	if (StaticSkillData != nullptr)
+	{
+		SkillDetailUIData.mName = StaticSkillData->mName;
+		SkillDetailUIData.mDescription = StaticSkillData->mDescription;
+		SkillDetailUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
+		SkillDetailUIData.mDiceCost = StaticSkillData->mRequiredDiceCount;
+		SkillDetailUIData.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
+		SkillDetailUIData.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRangeDefaultValue);
+		SkillDetailUIData.mTargeting.mSelectRangeRatio = StaticSkillData->mAimRangeRatio;
+		SkillDetailUIData.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
+		SkillDetailUIData.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectAreaDefaultValue);
+		SkillDetailUIData.mTargeting.mHitRangeRatio = StaticSkillData->mEffectAreaRatio;
+		SkillDetailUIData.mTargeting.mIsIndirect = StaticSkillData->mIsIndirect;
+		SkillDetailUIData.mTargeting.mIsPenetration = StaticSkillData->mIsPenetration;
+	}
+
+	mCombatUIModel->SetSkillDetail(SkillDetailUIData);
 }
 
 void ACombatGameMode::PushEquipmentUIData() const
