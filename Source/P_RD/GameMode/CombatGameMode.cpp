@@ -269,11 +269,11 @@ void ACombatGameMode::HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLon
 
 	if (bLongPress == true)
 	{
-		ResolveWorldLongPressEvent();
+		ResolveWorldLongPressEvent(ScreenPosition);
 	}
 	else
 	{
-		ResolveWorldTouchEvent();
+		ResolveWorldTouchEvent(ScreenPosition);
 	}
 }
 
@@ -393,7 +393,7 @@ bool ACombatGameMode::EndTurn()
 	return CommandRouterModel->SummitCommand(DiceSelectCommand);
 }
 
-bool ACombatGameMode::ResolveWorldTouchEvent()
+bool ACombatGameMode::ResolveWorldTouchEvent(FVector2D ScreenPosition)
 {
 	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
 	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
@@ -401,11 +401,13 @@ bool ACombatGameMode::ResolveWorldTouchEvent()
 	TInstancedStruct<FSRPGCommand> WorldTraceActionCommand;
 	WorldTraceActionCommand.InitializeAs<FSRPGWorldTraceCommand>();
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mIsLongPress = false;
+	// 모바일 터치는 커서가 없으므로, 탭 화면 좌표를 커맨드에 실어 월드 트레이스에 사용한다.
+	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mScreenPosition = ScreenPosition;
 
 	return CommandRouterModel->SummitCommand(WorldTraceActionCommand);
 }
 
-bool ACombatGameMode::ResolveWorldLongPressEvent()
+bool ACombatGameMode::ResolveWorldLongPressEvent(FVector2D ScreenPosition)
 {
 	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
 	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
@@ -413,6 +415,8 @@ bool ACombatGameMode::ResolveWorldLongPressEvent()
 	TInstancedStruct<FSRPGCommand> WorldTraceActionCommand;
 	WorldTraceActionCommand.InitializeAs<FSRPGWorldTraceCommand>();
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mIsLongPress = true;
+	// 모바일 터치는 커서가 없으므로, 롱프레스 화면 좌표를 커맨드에 실어 월드 트레이스에 사용한다.
+	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mScreenPosition = ScreenPosition;
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().OnShowTargetDetailPanelUI.AddWeakLambda(this, [this](IBoardSelectionTarget* Target) {
 		// mCombatUIModel->NotifyTargetDetailPanelRequested(Target);
 		});

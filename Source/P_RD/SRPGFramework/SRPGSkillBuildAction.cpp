@@ -143,8 +143,8 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
 
     AActor* TargetActor = nullptr;
     FTileIndex TargetTileIndex = FTileIndex::Invalid;
-    GetTileActorUnderCursor(GetWorld(), RDTraceChannels::TileOnlyTrace, OUT TargetActor, OUT TargetTileIndex);
-    
+    GetTileActorUnderCursor(GetWorld(), RDTraceChannels::TileOnlyTrace, OUT TargetActor, OUT TargetTileIndex, WorldTraceCommand.mScreenPosition);
+
     IActorView* ActorView = Cast<IActorView>(TargetActor);
     const bool IsContactedTileMap = ActorView != nullptr && ActorView->GetModel() == TileMap;
     // 적 등 유닛이 선 타일을 클릭하면 TileOnlyTrace가 유닛에 막혀 TargetActor가 타일맵이 아니게 된다.

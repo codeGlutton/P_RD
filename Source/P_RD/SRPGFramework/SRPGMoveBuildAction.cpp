@@ -95,7 +95,7 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleWorldTraceCommand(const TInstance
 
     AActor* TargetActor = nullptr;
     FTileIndex TargetTileIndex = FTileIndex::Invalid;
-    GetTileActorUnderCursor(GetWorld(), RDTraceChannels::TileOnlyTrace, OUT TargetActor, OUT TargetTileIndex);
+    GetTileActorUnderCursor(GetWorld(), RDTraceChannels::TileOnlyTrace, OUT TargetActor, OUT TargetTileIndex, WorldTraceCommand.mScreenPosition);
 
     IActorView* ActorView = Cast<IActorView>(TargetActor);
     const bool IsContactedTileMap = ActorView != nullptr && ActorView->GetModel() == TileMap;
