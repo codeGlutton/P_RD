@@ -346,6 +346,10 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UImage> Map_SelectGlow;
 
+	/** @brief 범례 그룹(프레임+행, 빌더 생성). 좁은 화면에서 통째로 렌더 스케일 축소한다. */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UWidget> Map_LegendGroup;
+
 
 	/**
 	 * @brief 연결선 하나를 만들 때 사용할 WBP 클래스
@@ -383,6 +387,14 @@ private:
 	 */
 	UPROPERTY(Category = "Frontend Map", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	float mTopUIInset = 0.f;
+
+	/** @brief 범례 축소 기준 폭(시안 legendScale.refWidth). 디자인 폭이 이보다 좁으면 비례 축소. */
+	UPROPERTY(Category = "Frontend Map", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	float mLegendRefWidth = 1920.f;
+
+	/** @brief 범례 축소 하한(시안 legendScale.minScale). */
+	UPROPERTY(Category = "Frontend Map", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	float mLegendMinScale = 0.5f;
 
 	UPROPERTY(Transient)
 	TArray<FFrontendMapLinePoolEntry> mMapLinePool;

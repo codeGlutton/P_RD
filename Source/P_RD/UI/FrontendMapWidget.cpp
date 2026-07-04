@@ -1240,6 +1240,17 @@ void UFrontendMapWidget::ConfigureMapGraphLayout() const
 	 */
 	const FVector2D GraphSize = GetMapGraphContentSize();
 	UpdateGraphDecorLayout(GraphSize);
+
+	// 범례 반응형 축소: 로그 실측상 고정 크기(429x599)가 좁은 화면(폭 1110)에서 39%를 덮는다.
+	// 디자인 폭 / 기준 폭 비율로 통째로 줄이되(우측 중앙 피벗 - 오른쪽에 붙은 채 축소), 하한은 시안이 정한다.
+	if (Map_LegendGroup != nullptr && mLegendRefWidth > KINDA_SMALL_NUMBER)
+	{
+		const float LegendScale = FMath::Clamp(GraphSize.X / mLegendRefWidth, mLegendMinScale, 1.f);
+		Map_LegendGroup->SetRenderTransformPivot(FVector2D(1.f, 0.5f));
+		FWidgetTransform LegendTransform;
+		LegendTransform.Scale = FVector2D(LegendScale, LegendScale);
+		Map_LegendGroup->SetRenderTransform(LegendTransform);
+	}
 	if (MapGraphSize != nullptr)
 	{
 		MapGraphSize->SetWidthOverride(GraphSize.X);
@@ -1421,9 +1432,14 @@ void UFrontendMapWidget::LogWorldMapMetrics() const
 	LogWidgetGeometry(TEXT("EnterRoomButton"), EnterRoomButton);
 	LogWidgetGeometry(TEXT("MapStatusText"), MapStatusText);
 	LogWidgetGeometry(TEXT("MapTitleText"), MapTitleText);
+	LogWidgetGeometry(TEXT("Map_LegendGroup"), Map_LegendGroup);
+	if (Map_LegendGroup != nullptr)
+	{
+		UE_LOG(LogRD, Display, TEXT("[WorldMapMetrics] legendScale=%.3f (refW=%.0f min=%.2f)"),
+			Map_LegendGroup->GetRenderTransform().Scale.X, mLegendRefWidth, mLegendMinScale);
+	}
 	if (WidgetTree != nullptr)
 	{
-		LogWidgetGeometry(TEXT("Map_LegendImage"), WidgetTree->FindWidget(TEXT("Map_LegendImage")));
 		LogWidgetGeometry(TEXT("Map_Scrim"), WidgetTree->FindWidget(TEXT("Map_Scrim")));
 	}
 }

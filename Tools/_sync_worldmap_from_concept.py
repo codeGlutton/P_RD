@@ -34,7 +34,14 @@
 #   2) LINE CDO에 mOpenTint/mLockedTint(FLinearColor) 주입 — path_layer wbp.classDefaults에서 읽음.
 #   3) NODE CDO에 mLockedIconTint(FLinearColor) 주입 — wbpNativeSpec.nodeStyle.lockedIconTint.
 #   4) 범례 비율(iconRatio/gapRatio/fontRatio)을 legend_panel wbp.rowStyle에서 읽음(폴백 동일값).
-# 규칙: 슬롯/브러시/클래스 디폴트만 쓴다. 이벤트/바인딩/그래프 불가침. 재실행 안전(idempotent, v7 상태로 수렴).
+# v8(20260704): 범례 그룹화 — PIE 실측(폭 1110에서 범례가 화면 39% 점유) 대응.
+#   1) Map_LegendGroup(CanvasPanel) 신설: 기존 프레임과 동일한 right/center 핀 + 요소 rect(429x599) 슬롯(autosize 아님).
+#      C++이 wbpNativeSpec.legendScale(refWidth/minScale)로 그룹 렌더 스케일을 통째 축소(우중앙 피벗).
+#   2) 프레임(Map_LegendImage, 그룹 fill)/제목/행 12종을 그룹 안으로 이주 — 그룹-상대 좌표(절대 rect - 요소 원점).
+#      루트 낱개 잔재(pre-v8)는 발견 시 제거 후 그룹 안에 재생성(idempotent).
+#   3) 메인 WBP CDO에 mLegendRefWidth/mLegendMinScale(float) 주입(C++ UPROPERTY — 컴파일 후 실행 전제).
+#   4) 삭제 동기: legend_panel -> Map_LegendGroup(그룹째) + 낱개 잔재 전체.
+# 규칙: 슬롯/브러시/클래스 디폴트만 쓴다. 이벤트/바인딩/그래프 불가침. 재실행 안전(idempotent, v8 상태로 수렴).
 # 실행: UnrealEditor-Cmd <uproject> -ExecutePythonScript=<이 파일> (headless)
 # 최종 출력: "WORLDMAPSYNC|" + json 리포트 한 줄 (saved 플래그/생성/갱신/제거/임포트 수)
 import unreal, json, os, shutil
@@ -58,6 +65,10 @@ BOSS_NODE_SIZE = float(NM.get("bossNodeSize", 128))
 ROW_PITCH = float(NM.get("rowPitch", 176))
 COL_PITCH_MAX = float(NM.get("colPitchMax", 240))
 TOP_UI_INSET = float(doc.get("wbpNativeSpec", {}).get("topUIInset", 112))
+# v8: 범례 그룹 렌더 스케일 메타 — C++이 (디자인 폭 / refWidth)로 축소(상한 1.0, 하한 minScale)
+_LEGEND_SCALE = doc.get("wbpNativeSpec", {}).get("legendScale", {})
+LEGEND_REF_WIDTH = float(_LEGEND_SCALE.get("refWidth", 1920))
+LEGEND_MIN_SCALE = float(_LEGEND_SCALE.get("minScale", 0.5))
 
 res = {"project": "", "saved": {"WBP_FrontendMap": None, "WBP_FrontendMapNode": None, "WBP_FrontendMapLine": None,
                                 "WBP_Concept02_HUD": None},
@@ -471,7 +482,7 @@ ELEMENT_WIDGET = {
     "selected_room_strip": "Map_SelectedRoomStrip",
     "hint_scroll": "Map_ScrollHint",
     "map_title": "MapTitleText",
-    "legend_panel": "Map_LegendImage",
+    "legend_panel": "Map_LegendGroup",          # v8: 그룹째 제거(낱개 잔재는 삭제 분기에서 추가 정리)
     "scroll_rod_top": "Map_ScrollRodTop",       # v6: 합성 양피지 한 장으로 통합 — 로드 요소 철회
     "scroll_rod_bottom": "Map_ScrollRodBottom",
 }
@@ -523,7 +534,8 @@ def sync_main_map():
         if el_name not in els:
             remove_widgets(bp, [widget_name])
             if el_name == "legend_panel":
-                remove_widgets(bp, LEGEND_CHILD_WIDGETS)   # 프레임이 사라지면 행/제목도 고아 — 함께 제거
+                # v8: 그룹 제거가 내부 부속을 함께 지운다 — 아래는 pre-v8 루트 낱개 잔재 정리용
+                remove_widgets(bp, ["Map_LegendImage"] + LEGEND_CHILD_WIDGETS)
 
     # ---- 텍스처 준비 (JSON imageAsset 정본, T_wm_* 로 임포트) ----
     t_scrim = ensure_import(region_image("bg_scrim"))
@@ -608,42 +620,61 @@ def sync_main_map():
         except Exception as ex:
             err("map", name + " " + str(ex)[:70])
 
-    # ---- Map_LegendImage(v5): innerDesignSize 비례 확대가 정본 — 프레임 = 요소 박스 전체(≈429x599) ----
-    # 사용자 에디터 "내부 스케일" 모드: 프레임 리전(≈풀 인너 300x460)이 요소 박스로 비례 확대된다.
-    if "legend_panel" in els:
-        try:
-            legend_slice = float(els["legend_panel"].get("wbp", {}).get("nineSlice", 0.28))
-            frame_rect = elem_abs("legend_panel")   # 요소 박스 전체 = 확대된 프레임
-            w = ensure_widget(bp, unreal.Image, "Map_LegendImage", root_name)
-            if w is not None:
-                lg_ax, lg_ay = pin_of("legend_panel")
-                pin_slot(w, lg_ax, lg_ay, frame_rect, z=10)
-                w.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
-                if t_legend is not None:
-                    apply_brush(w, t_legend, frame_rect[2], frame_rect[3], draw="box", margin=legend_slice)
-                res["synced"].append("Map_LegendImage")
-        except Exception as ex:
-            err("map", "Map_LegendImage " + str(ex)[:70])
-
-    # ---- 범례 재조립(v5): 행 rect = region_abs(innerDesignSize 비례 확대), 아이콘/간격/폰트도 행 높이 비례 ----
-    # '범례제목' 리전은 데이터 주도: 존재 시에만 생성, 없으면 위젯 제거.
+    # ---- 범례(v8): Map_LegendGroup(CanvasPanel)으로 묶음 — C++이 legendScale 메타로 통째 렌더 스케일 축소 ----
+    # 그룹 슬롯 = 기존 프레임과 동일한 right/center 핀 + 요소 rect(429x599, autosize 아님).
+    # 내부는 그룹-상대 좌표(절대 rect - 요소 원점): 프레임 fill, 제목/행은 기존 region_abs 산식 그대로.
+    # idempotent: 그룹 있으면 내부 갱신, 루트 낱개 잔재(pre-v8)는 in_group()이 제거 후 그룹 안에 재생성.
     if "legend_panel" in els:
         try:
             lg_ax, lg_ay = pin_of("legend_panel")
+            frame_rect = elem_abs("legend_panel")            # 그룹 = 요소 박스 전체(429x599)
+            gx, gy = frame_rect[0], frame_rect[1]            # 그룹-상대 변환 원점
+            group = ensure_widget(bp, unreal.CanvasPanel, "Map_LegendGroup", root_name)
+            if group is None:
+                raise RuntimeError("Map_LegendGroup create failed")
+            pin_slot(group, lg_ax, lg_ay, frame_rect, z=10)
+            group.set_visibility(unreal.SlateVisibility.SELF_HIT_TEST_INVISIBLE)
+            res["synced"].append("Map_LegendGroup")
+
+            def in_group(cls, name):
+                """그룹 소속 보장: 루트 낱개 잔재는 제거 후 그룹 안에 새로 만든다. (widget, 신규여부) 반환."""
+                gw = find_w(bp, name)
+                if gw is not None and gw.get_parent() != group:
+                    remove_widgets(bp, [name])
+                    gw = None
+                was_new = False
+                if gw is None:
+                    gw = unreal.EditorUtilityLibrary.add_source_widget(bp, cls, name, "Map_LegendGroup")
+                    if gw is not None:
+                        res["created"].append(name)
+                        was_new = True
+                return gw, was_new
+
+            # 프레임: 그룹 전체 fill = (0,0,429,599), 9-slice(BOX, wbp.nineSlice)
+            legend_slice = float(els["legend_panel"].get("wbp", {}).get("nineSlice", 0.28))
+            w, _ = in_group(unreal.Image, "Map_LegendImage")
+            if w is not None:
+                fill_slot(w, z=0)
+                w.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
+                if t_legend is not None:
+                    apply_brush(w, t_legend, frame_rect[2], frame_rect[3], draw="box", margin=legend_slice)
+                res["synced"].append("Map_LegendImage(group)")
+
+            # 제목: 리전 존재 시에만(데이터 주도) — 그룹-상대 중심
             title_rect = region_abs("legend_panel", rg_name_prefix="범례제목")
             if title_rect is not None:
-                w = find_w(bp, "Map_LegendTitleText")
-                if w is None:
-                    w = ensure_widget(bp, unreal.TextBlock, "Map_LegendTitleText", root_name)
-                    if w is not None:
-                        w.set_text(unreal.Text("범례"))
-                if w is not None:
-                    text_center_slot(w, lg_ax, lg_ay, title_rect, z=11)
-                    style_text(w, title_rect[3], COL_LEGEND_GOLD)   # 중앙정렬 + 골드
-                    w.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
+                tw, tw_new = in_group(unreal.TextBlock, "Map_LegendTitleText")
+                if tw is not None:
+                    if tw_new:
+                        tw.set_text(unreal.Text("범례"))
+                    rel = [title_rect[0] - gx, title_rect[1] - gy, title_rect[2], title_rect[3]]
+                    text_center_slot(tw, 0.0, 0.0, rel, z=1)
+                    style_text(tw, title_rect[3], COL_LEGEND_GOLD)   # 중앙정렬 + 골드
+                    tw.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
                     res["synced"].append("Map_LegendTitleText")
             else:
                 remove_widgets(bp, ["Map_LegendTitleText"])   # 리전 삭제 -> 위젯 제거
+
             for r in els["legend_panel"].get("regions", []):
                 rname = r.get("name", "")
                 if not rname.startswith("행_"):
@@ -657,41 +688,39 @@ def sync_main_map():
                 if row is None:
                     res["missing"].append("legend:" + rname)
                     continue
-                row_cy = row[1] + row[3] / 2.0
-                icon_px = row[3] * LEGEND_ICON_RATIO       # v5: 행 높이 비례
+                rel_x, rel_y = row[0] - gx, row[1] - gy      # 그룹-상대(핀 수식은 ax=ay=0으로 항등)
+                row_cy = rel_y + row[3] / 2.0
+                icon_px = row[3] * LEGEND_ICON_RATIO
                 # 아이콘: 행 왼쪽 끝, 정방형, 수직중앙
                 t_icon = load_mapnode(mapnode) if mapnode else ensure_import(LEGEND_REST_SRC)
-                iw = ensure_widget(bp, unreal.Image, "Map_LegendIcon_" + suffix, root_name)
+                iw, _ = in_group(unreal.Image, "Map_LegendIcon_" + suffix)
                 if iw is not None:
-                    icon_rect = [row[0], row_cy - icon_px / 2.0, icon_px, icon_px]
-                    pin_slot(iw, lg_ax, lg_ay, icon_rect, z=11)
+                    pin_slot(iw, 0.0, 0.0, [rel_x, row_cy - icon_px / 2.0, icon_px, icon_px], z=1)
                     iw.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
                     if t_icon is not None:
                         apply_brush(iw, t_icon, icon_px, icon_px)
                     res["synced"].append("Map_LegendIcon_" + suffix)
-                # 라벨: 아이콘 오른쪽(간격=행높이x0.27), 좌정렬 수직중앙(alignment(0,0.5)+autosize), 흰색, 폰트=행높이x0.38
-                lw = find_w(bp, "Map_LegendLabel_" + suffix)
-                if lw is None:
-                    lw = ensure_widget(bp, unreal.TextBlock, "Map_LegendLabel_" + suffix, root_name)
-                    if lw is not None:
-                        lw.set_text(unreal.Text(key_kr))
+                # 라벨: 아이콘 오른쪽(간격=행높이x비율), 좌정렬 수직중앙(alignment(0,0.5)+autosize), 흰색
+                lw, lw_new = in_group(unreal.TextBlock, "Map_LegendLabel_" + suffix)
                 if lw is not None:
-                    label_x = row[0] + icon_px + row[3] * LEGEND_GAP_RATIO
+                    if lw_new:
+                        lw.set_text(unreal.Text(key_kr))
+                    label_x = rel_x + icon_px + row[3] * LEGEND_GAP_RATIO
                     ld = unreal.AnchorData(
-                        offsets=unreal.Margin(label_x - lg_ax * DW, row_cy - lg_ay * DH, 0.0, 0.0),
-                        anchors=unreal.Anchors(minimum=unreal.Vector2D(lg_ax, lg_ay),
-                                               maximum=unreal.Vector2D(lg_ax, lg_ay)),
+                        offsets=unreal.Margin(label_x, row_cy, 0.0, 0.0),
+                        anchors=unreal.Anchors(minimum=unreal.Vector2D(0.0, 0.0),
+                                               maximum=unreal.Vector2D(0.0, 0.0)),
                         alignment=unreal.Vector2D(0.0, 0.5))
                     lw.slot.set_editor_property("layout_data", ld)
                     lw.slot.set_editor_property("auto_size", True)
-                    lw.slot.set_editor_property("z_order", 11)
+                    lw.slot.set_editor_property("z_order", 1)
                     lw.set_editor_property("justification", unreal.TextJustify.LEFT)
                     lw.set_color_and_opacity(unreal.SlateColor(unreal.LinearColor(*COL_WHITE)))
                     set_font_size(lw, row[3] * LEGEND_FONT_RATIO)
                     lw.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
                     res["synced"].append("Map_LegendLabel_" + suffix)
         except Exception as ex:
-            err("map", "legend rows " + str(ex)[:70])
+            err("map", "legend group " + str(ex)[:70])
 
     # ---- MapTitleText: map_title rect 중심, autosize+중앙정렬, 폰트=rect높이*0.55 — 요소 없으면 조용히 스킵 ----
     if "map_title" in els:
@@ -891,9 +920,12 @@ def sync_main_map():
                            "MapPreviewStateText", "MapLegendScroll", "MapLegendList", "MapLegendTitle"])
 
     res["trees"]["map_after"] = dump_tree(find_root(bp, ["MapScrollBox"]))
-    # 컴파일 후 메인 WBP generated_class CDO에 topUIInset 주입 (C++ UPROPERTY float mTopUIInset — 컴파일 후 실행 전제)
+    # 컴파일 후 메인 WBP generated_class CDO 주입 (C++ UPROPERTY — 컴파일 후 실행 전제):
+    #   mTopUIInset(v2) + mLegendRefWidth/mLegendMinScale(v8, 범례 그룹 렌더 스케일)
     compile_and_save(bp, MAP_PATH, "map", "WBP_FrontendMap",
-                     cdo_pairs=[("mTopUIInset", TOP_UI_INSET)])
+                     cdo_pairs=[("mTopUIInset", TOP_UI_INSET),
+                                ("mLegendRefWidth", LEGEND_REF_WIDTH),
+                                ("mLegendMinScale", LEGEND_MIN_SCALE)])
 
 
 # ==================================================================================
