@@ -84,6 +84,13 @@ void AUnit::BindModel(UObjectModel* Model)
 	if (mUnitModel.IsValid())
 	{
 		mUnitModel->OnStartMoveStep.AddUObject(this, &AUnit::OnStartMoveStep);
+		mUnitModel->OnPlaceTileTransform.AddLambda([this](const FTileTransform& TileTransform, const FTransform& Transform) {
+			FVector UnitLocation = Transform.GetLocation() + FVector(0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+			FTransform UnitTransform = Transform;
+			UnitTransform.SetLocation(UnitLocation);
+
+			SetActorTransform(UnitTransform);
+			});
 	}
 }
 
