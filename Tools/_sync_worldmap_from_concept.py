@@ -51,7 +51,13 @@
 #     렌더에는 영향 없지만 메타 정확성+관측 목적 — brushSizes의 got이 실값으로 채워진다.
 #   변경3) legend_panel.wbp.nineSlice = dict {left,top,right,bottom}(테두리 아트 실측) — margin 인자에 dict 지원.
 #     이 마진이면 코너 (153,229)/(161,128)px로 위젯(429x599) 안에 들어가 크레스트가 온전히 나온다.
-# 규칙: 슬롯/브러시/클래스 디폴트만 쓴다. 이벤트/바인딩/그래프 불가침. 재실행 안전(idempotent, v10 상태로 수렴).
+# v11(20260704): 사용자 UMG 수동 확정 레이아웃 역반영 — 목표: 재실행해도 확정 레이아웃과 1px 내 동일.
+#   1) frameOutset 지원: Map_LegendImage 슬롯 = 그룹 fill 대신 stretch 앵커(0,0)-(1,1) +
+#      offsets(-L,-T,-R,-B) — 프레임이 그룹 경계 밖으로 outset만큼 확장. frameOutset 없으면 기존 fill 유지.
+#   2) legend innerDesignSize=[429,599](요소 크기와 동일=스케일 1) + 행 리전 요소 px 그대로 — region_abs가 항등 처리(확인).
+#   3) nineSlice 숫자 0.01(균일) 복귀 — 기존 숫자 마진 경로 그대로. rowStyle fontRatio 0.369 — 데이터로 흐름(확인).
+#   4) set_font_size 절사(int) -> 반올림(round): 행 67.7 x 0.369 = 24.98은 사용자 확정 25가 되어야 한다.
+# 규칙: 슬롯/브러시/클래스 디폴트만 쓴다. 이벤트/바인딩/그래프 불가침. 재실행 안전(idempotent, v11 상태로 수렴).
 # 실행: UnrealEditor-Cmd <uproject> -ExecutePythonScript=<이 파일> (headless)
 # 최종 출력: "WORLDMAPSYNC|" + json 리포트 한 줄 (saved 플래그/생성/갱신/제거/임포트 수)
 import unreal, json, os, re, shutil
@@ -316,8 +322,9 @@ def text_center_slot(w, ax, ay, box_rect, z=None):
 
 
 def set_font_size(t, size):
+    # v11: 절사(int) -> 반올림 — 사용자 확정 레이아웃과 1px 내 동일 목표(예: 67.7행 x 0.369 = 24.98 -> 25)
     f = t.get_editor_property("font")
-    f.set_editor_property("size", int(max(12, min(30, size))))
+    f.set_editor_property("size", int(round(max(12.0, min(30.0, float(size))))))
     t.set_editor_property("font", f)
 
 
@@ -703,16 +710,33 @@ def sync_main_map():
                         was_new = True
                 return gw, was_new
 
-            # 프레임: 그룹 전체 fill = (0,0,429,599), 9-slice(BOX, wbp.nineSlice)
-            # v10: nineSlice가 dict {left,top,right,bottom}(사변 실측)일 수 있다 — 그대로 margin에 전달(숫자면 균일)
+            # 프레임: 9-slice(BOX, wbp.nineSlice — 숫자=균일, dict=사변)
+            # v11 frameOutset: 사용자가 프레임을 그룹 밖으로 확장 확정 — stretch 앵커(0,0)-(1,1) +
+            # offsets(-L,-T,-R,-B)로 그룹 경계 밖 outset만큼 확장. frameOutset 없으면 기존 그룹 fill.
             legend_slice = els["legend_panel"].get("wbp", {}).get("nineSlice", 0.28)
+            frame_outset = els["legend_panel"].get("wbp", {}).get("frameOutset")
             w, _ = in_group(unreal.Image, "Map_LegendImage")
             if w is not None:
-                fill_slot(w, z=0)
+                if isinstance(frame_outset, dict):
+                    o_l = float(frame_outset.get("left", 0.0))
+                    o_t = float(frame_outset.get("top", 0.0))
+                    o_r = float(frame_outset.get("right", 0.0))
+                    o_b = float(frame_outset.get("bottom", 0.0))
+                    ld = unreal.AnchorData(
+                        offsets=unreal.Margin(-o_l, -o_t, -o_r, -o_b),
+                        anchors=unreal.Anchors(minimum=unreal.Vector2D(0.0, 0.0),
+                                               maximum=unreal.Vector2D(1.0, 1.0)),
+                        alignment=unreal.Vector2D(0.0, 0.0))
+                    w.slot.set_editor_property("layout_data", ld)
+                    w.slot.set_editor_property("z_order", 0)
+                    fw, fh = frame_rect[2] + o_l + o_r, frame_rect[3] + o_t + o_b   # 실제 렌더 크기(메타용)
+                else:
+                    fill_slot(w, z=0)
+                    fw, fh = frame_rect[2], frame_rect[3]
                 w.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
                 if t_legend is not None:
-                    apply_brush(w, t_legend, frame_rect[2], frame_rect[3], draw="box", margin=legend_slice)
-                res["synced"].append("Map_LegendImage(group)")
+                    apply_brush(w, t_legend, fw, fh, draw="box", margin=legend_slice)
+                res["synced"].append("Map_LegendImage(group%s)" % ("+outset" if isinstance(frame_outset, dict) else ""))
 
             # 제목: 리전 존재 시에만(데이터 주도) — 그룹-상대 중심
             title_rect = region_abs("legend_panel", rg_name_prefix="범례제목")
