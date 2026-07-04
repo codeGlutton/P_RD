@@ -84,7 +84,14 @@ public:
 	UFUNCTION()
 	void HandleApplyDiceResults(const TArray<int32>& RolledFaceIndices);
 
-	/** @brief UIModel의 월드 터치 의도(OnCombatWorldTouch)를 월드 트레이스 커맨드로 라우팅한다. */
+	/**
+	 * @brief 전장 타일을 탭했을 때(UI의 OnCombatWorldTouch) 게임플레이로 넘겨 조준/시전을 진행시킨다.
+	 *
+	 * @details
+	 * 스킬을 골라도 이 선이 없으면 타일 탭이 게임에 도달하지 못해 조준 자체가 안 됐다.
+	 * 단, 플레이어의 활성 턴이 아니면 넘기지 않는다 — 넘기면 시전 프리뷰 시뮬레이션이
+	 * "현재 전투가 진행 중이 아님" 어설션에 걸린다(구현부 주석 참고).
+	 */
 	UFUNCTION()
 	void HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLongPress);
 
@@ -116,7 +123,13 @@ protected:
 	void PushSelectedDiceUIData() const;
 	void PushSkillUIData() const;
 
-	/** @brief 롱프레스한 스킬의 상세 DTO를 UIModel로 push한다(UI는 직후 동기 read). */
+	/**
+	 * @brief 스킬을 길게 눌렀을 때 그 스킬의 상세(이름/설명/아이콘/코스트/사거리)를 UI로 밀어넣는다.
+	 *
+	 * @details
+	 * 이 생산자가 없어서 상세 카드가 "연결 대기중" 폴백만 띄웠다. UI는 요청 직후 GetSkillDetail()을
+	 * 동기로 읽는 계약이라, 요청->이 함수까지 전 구간이 동기 브로드캐스트여서 읽기보다 항상 먼저 실행된다.
+	 */
 	void PushSkillDetailUIData(int32 SkillIndex) const;
 	void PushEquipmentUIData() const;
 	void PushPlayerMetaUIData() const;

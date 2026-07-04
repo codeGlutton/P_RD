@@ -120,6 +120,22 @@ void ACombatGameMode::InitializeRoom()
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 
+	/*
+	 * === UI <-> 게임플레이 경계 배선 ===
+	 *
+	 * 스킬 버튼/터치를 실제 게임 로직에 잇는 곳이다. 원래는 "보내는 쪽만 있고 받는 쪽이 없거나,
+	 * 받는 쪽만 있고 보내는 쪽이 없던" 반쪽 지점이 있었고, 그 끊긴 선을 여기서 잇는다.
+	 * 방향은 두 갈래다:
+	 *   1) 게임 -> UI (push): 모델 이벤트를 구독해 스냅샷을 UI로 밀어넣는다(레일/주사위/턴 등).
+	 *   2) UI -> 게임 (route): 위젯 탭이 쏘는 Request*를 게임플레이 진입점으로 넘긴다.
+	 *
+	 * 이번에 새로 이은 4가닥(없으면 무슨 일이 안 됐는지 함께 표기):
+	 *   - OnEndAnyTurnActionUI  -> NotifyActionResolved   : 시전 끝나도 선택 강조가 안 풀리던 것
+	 *   - OnChangeSkillUI       -> PushSkillUIData         : 전투 중 스킬 교체가 레일에 안 보이던 것
+	 *   - OnCombatWorldTouch    -> HandleCombatWorldTouch  : 타일 탭이 게임에 도달 못 해 조준이 안 되던 것
+	 *   - LongPressSkill        -> PushSkillDetailUIData   : 스킬 상세가 "연결 대기중"만 뜨던 것(HandleCombatCommand)
+	 */
+
 	/* 전투 모델 대리자 연결 */
 
 	CombatModel->OnRegisterUnitUI.AddUObject(this, &ACombatGameMode::OnRegisterUnit);
@@ -234,6 +250,7 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		EndTurn();
 		break;
 	case ECombatInputType::LongPressSkill:
+		// 스킬을 길게 누르면 상세(이름/설명/사거리) 카드를 채운다 — 이 라우팅이 없어 "연결 대기중"만 떴었다.
 		PushSkillDetailUIData(IntPayload);
 		break;
 	case ECombatInputType::Cancel:
