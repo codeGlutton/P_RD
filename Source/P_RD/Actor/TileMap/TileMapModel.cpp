@@ -135,6 +135,26 @@ void UTileMapModel::RebuildTiles()
 	mTiles.Init(FTile(), FMath::Max(0, mWidth * mHeight));
 }
 
+ETileActorDirection UTileMapModel::TileDeltaToDirection(const FTileIndex& From, const FTileIndex& To, ETileActorDirection Fallback)
+{
+	const int32 DeltaX = To.mX - From.mX;
+	const int32 DeltaY = To.mY - From.mY;
+
+	// 제자리면 폴백 방향 리턴
+	if (DeltaX == 0 && DeltaY == 0)
+	{
+		return Fallback;
+	}
+
+	// 델타값이 큰 쪽을 바라보게 되므로 그쪽으로 방향 결정.
+	// X, Y축 델타가 같을때는 X 우선.
+	if (FMath::Abs(DeltaX) >= FMath::Abs(DeltaY))
+	{
+		return DeltaX > 0 ? ETileActorDirection::Forward : ETileActorDirection::Backward;
+	}
+	return DeltaY > 0 ? ETileActorDirection::Right : ETileActorDirection::Left;
+}
+
 FTransform UTileMapModel::TileToWorldTransform(const FTileTransform& TileTransform) const
 {
 	// 뷰가 바인딩돼 있으면 뷰에 질의, 아니면(심 등) 항등 변환 (Invalid 값이 따로 없으니까)
