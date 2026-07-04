@@ -41,10 +41,20 @@
 #      루트 낱개 잔재(pre-v8)는 발견 시 제거 후 그룹 안에 재생성(idempotent).
 #   3) 메인 WBP CDO에 mLegendRefWidth/mLegendMinScale(float) 주입(C++ UPROPERTY — 컴파일 후 실행 전제).
 #   4) 삭제 동기: legend_panel -> Map_LegendGroup(그룹째) + 낱개 잔재 전체.
-# 규칙: 슬롯/브러시/클래스 디폴트만 쓴다. 이벤트/바인딩/그래프 불가침. 재실행 안전(idempotent, v8 상태로 수렴).
+# v9(20260704): 브러시 image_size 조용한 실패 봉쇄 — 쓰기-되돌리기 + 재읽기 검증 + brushSizes 리포트.
+# v10(20260704): 프로브 진상 확정 반영 —
+#   사실1) 슬레이트 Box 테두리 픽셀 크기 = "마진 x 텍스처 실제 크기"(ImageSize 무관). 기존 ImageSize가 전부
+#     32x32(UMG 기본값)로 남아 있었는데도 테두리가 뻥튀기된 게 그 증거. 범례 버그 전체 메커니즘 =
+#     균일 마진 0.28 x (1024,1636) = 코너 287x458 > 위젯 429x599 -> 슬레이트 축소-맞춤 -> 중앙 띠 붕괴.
+#   사실2) image_size는 UE5.7 파이썬에서 오직 텍스트 직렬화(export_text/import_text + ImageSize 정규식)로만
+#     설정 가능(프로브: DeprecateSlateVector2D 생성자 인자 불가, set_editor_property x/y 무효, to_tuple 항상 빈값).
+#     렌더에는 영향 없지만 메타 정확성+관측 목적 — brushSizes의 got이 실값으로 채워진다.
+#   변경3) legend_panel.wbp.nineSlice = dict {left,top,right,bottom}(테두리 아트 실측) — margin 인자에 dict 지원.
+#     이 마진이면 코너 (153,229)/(161,128)px로 위젯(429x599) 안에 들어가 크레스트가 온전히 나온다.
+# 규칙: 슬롯/브러시/클래스 디폴트만 쓴다. 이벤트/바인딩/그래프 불가침. 재실행 안전(idempotent, v10 상태로 수렴).
 # 실행: UnrealEditor-Cmd <uproject> -ExecutePythonScript=<이 파일> (headless)
 # 최종 출력: "WORLDMAPSYNC|" + json 리포트 한 줄 (saved 플래그/생성/갱신/제거/임포트 수)
-import unreal, json, os, shutil
+import unreal, json, os, re, shutil
 
 CONCEPT = "D:/UnrealProjects/P_RD_develop_20260701_216/Start_CombatUIRectEditor/concept_worldmap_claude02.json"
 TARGET_PROJECT = "D:/UnrealProjects/P_RD_develop_20260702"
@@ -73,7 +83,8 @@ LEGEND_MIN_SCALE = float(_LEGEND_SCALE.get("minScale", 0.5))
 res = {"project": "", "saved": {"WBP_FrontendMap": None, "WBP_FrontendMapNode": None, "WBP_FrontendMapLine": None,
                                 "WBP_Concept02_HUD": None},
        "created": [], "synced": [], "removed": [], "imported": [], "collapsed": [], "reparented": [],
-       "missing": [], "errors": [], "notes": [], "trees": {}, "counts": {}}
+       "missing": [], "errors": [], "notes": [], "trees": {}, "counts": {},
+       "brushSizes": []}   # v9: box(9-slice) 브러시 전수 검증 — {widget, got, want, ok}. 조용한 실패 감시.
 
 
 def err(scope, msg):
@@ -189,26 +200,68 @@ def load_ue_tex(obj_path):
 
 # ---------------- 브러시/슬롯 유틸 ----------------
 def apply_brush(img, tex, w_px, h_px, draw="image", margin=None):
-    """Image 위젯 기존 브러시에 텍스처만 얹는다. image_size는 DeprecateSlateVector2D 폴백 체인.
-    margin: float(4변 균일) 또는 (L,T,R,B) 튜플(비대칭 — v6 세로 전용 9-slice)."""
+    """Image 위젯 브러시 설정 — v9 쓰기-되돌리기 + v10 텍스트 직렬화 image_size.
+    margin: 숫자(4변 균일) | (L,T,R,B) 튜플 | dict {left,top,right,bottom} (v10 사변 실측).
+
+    범례 버그의 진짜 메커니즘(v10 프로브 확정): 슬레이트 Box의 테두리 픽셀 크기는 ImageSize가 아니라
+    "마진 x 텍스처 실제 크기"다 — 기존 ImageSize가 전부 32x32(UMG 기본값)로 남아 있었는데도 테두리가
+    뻥튀기된 게 그 증거. 균일 마진 0.28 x (1024,1636) = 코너 287x458 > 위젯 429x599
+    -> 슬레이트 축소-맞춤 -> 중앙 띠 붕괴. 해법은 마진 자체(사변 실측 dict)이고,
+    image_size는 렌더와 무관하지만 메타 정확성+관측(brushSizes) 목적으로 정확히 기록한다.
+
+    image_size는 UE5.7 파이썬에서 오직 텍스트 직렬화로만 설정 가능(프로브 검증:
+    DeprecateSlateVector2D 생성자 인자 불가, set_editor_property x/y 무효, to_tuple 항상 빈값).
+    get_editor_property가 주는 것은 구조체 복사본 — 마지막에 반드시 brush를 되쓴다."""
+    want_w, want_h = float(w_px), float(h_px)
     b = img.get_editor_property("brush")
     b.set_editor_property("resource_object", tex)
     b.set_editor_property("draw_as",
                           unreal.SlateBrushDrawType.BOX if draw == "box" else unreal.SlateBrushDrawType.IMAGE)
     if margin is not None:
-        if isinstance(margin, (tuple, list)):
+        if isinstance(margin, dict):
+            b.set_editor_property("margin", unreal.Margin(float(margin.get("left", 0.0)),
+                                                          float(margin.get("top", 0.0)),
+                                                          float(margin.get("right", 0.0)),
+                                                          float(margin.get("bottom", 0.0))))
+        elif isinstance(margin, (tuple, list)):
             b.set_editor_property("margin", unreal.Margin(float(margin[0]), float(margin[1]),
                                                           float(margin[2]), float(margin[3])))
         else:
             b.set_editor_property("margin", unreal.Margin(margin, margin, margin, margin))
+    # image_size: 텍스트 직렬화 경로(검증된 유일 레시피)
     try:
-        b.set_editor_property("image_size", unreal.DeprecateSlateVector2D(float(w_px), float(h_px)))
+        txt = b.export_text()
+        size_token = "ImageSize=(X=%.6f,Y=%.6f)" % (want_w, want_h)
+        if re.search(r"ImageSize=\([^)]*\)", txt):
+            new_txt = re.sub(r"ImageSize=\([^)]*\)", size_token, txt)
+        elif txt.startswith("("):
+            new_txt = "(" + size_token + "," + txt[1:]   # 기본값 생략 직렬화 대비: 토큰 삽입
+        else:
+            new_txt = txt
+        if new_txt != txt:
+            b.import_text(new_txt)
     except Exception:
-        try:
-            b.set_editor_property("image_size", [float(w_px), float(h_px)])
-        except Exception:
-            pass  # 크기 미설정 시 브러시 기본값 — 슬롯 크기가 렌더 박스를 지배한다.
-    img.set_editor_property("brush", b)
+        pass   # 실패해도 아래 재읽기 검증이 잡아 리포트한다
+    img.set_editor_property("brush", b)   # 복사본 수정 후 반드시 되쓴다
+
+    # ---- 되쓴 뒤 재읽기 검증: export_text에서 ImageSize 정규식 추출 — 다시는 조용히 못 실패하게 ----
+    got_w, got_h = None, None
+    try:
+        txt2 = img.get_editor_property("brush").export_text()
+        m = re.search(r"ImageSize=\(X=([-+0-9.eE]+),Y=([-+0-9.eE]+)\)", txt2)
+        if m:
+            got_w, got_h = float(m.group(1)), float(m.group(2))
+    except Exception:
+        pass
+    name = img.get_name()
+    ok = (got_w is not None and got_h is not None
+          and abs(got_w - want_w) <= 1.0 and abs(got_h - want_h) <= 1.0)
+    if draw == "box":
+        res["brushSizes"].append({"widget": name, "got": [got_w, got_h],
+                                  "want": [want_w, want_h], "ok": ok})
+    if not ok:
+        res["notes"].append("brush image_size verify failed: %s got=(%s,%s) want=(%.0f,%.0f)"
+                            % (name, got_w, got_h, want_w, want_h))
 
 
 def make_brush(tex, w_px, h_px, draw="image", margin=None):
@@ -651,7 +704,8 @@ def sync_main_map():
                 return gw, was_new
 
             # 프레임: 그룹 전체 fill = (0,0,429,599), 9-slice(BOX, wbp.nineSlice)
-            legend_slice = float(els["legend_panel"].get("wbp", {}).get("nineSlice", 0.28))
+            # v10: nineSlice가 dict {left,top,right,bottom}(사변 실측)일 수 있다 — 그대로 margin에 전달(숫자면 균일)
+            legend_slice = els["legend_panel"].get("wbp", {}).get("nineSlice", 0.28)
             w, _ = in_group(unreal.Image, "Map_LegendImage")
             if w is not None:
                 fill_slot(w, z=0)
