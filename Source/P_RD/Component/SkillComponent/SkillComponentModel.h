@@ -19,7 +19,7 @@ class UStaticSkillData;
 struct FPresentationBarrier;
 
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnChangeSkillUI, int32 /*SkillIndex*/, const UStaticSkillData* /*PreSkillData*/, const UStaticSkillData* /*NewSkillData*/);
-DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnPlayMotionLayerUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, TSharedPtr<FPresentationBarrier> /*MotionTriggerBarrier*/, FGameplayTag /*ApplyMotionTag*/);
+DECLARE_MULTICAST_DELEGATE_FourParams(FOnPlayMotionLayerUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, TSharedPtr<FPresentationBarrier> /*MotionTriggerBarrier*/, FGameplayTag /*ApplyMotionTag*/, ETileActorDirection /*Direction*/);
 
 /**
  * @brief 한 슬롯에 장착된 스킬과 그로 인해 설치된 런타임 객체 추적

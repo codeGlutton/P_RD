@@ -275,8 +275,8 @@ void USkillComponentModel::PlayMotionLayer()
 
 	mActiveSkillContext.mMotionEndBarrier = MotionEndBarrier;
 
-	OwnerUnitModel->OnPlayApplyAnimationUI.Broadcast(MotionEndBarrier, MotionTriggerBarrier, MotionLayer.mApplyMotionTag);
-	OnPlayMotionLayerUI.Broadcast(MotionEndBarrier, MotionTriggerBarrier, MotionLayer.mApplyMotionTag);
+	OwnerUnitModel->OnPlayApplyAnimationUI.Broadcast(MotionEndBarrier, MotionTriggerBarrier, MotionLayer.mApplyMotionTag, );
+	OnPlayMotionLayerUI.Broadcast(MotionEndBarrier, MotionTriggerBarrier, MotionLayer.mApplyMotionTag, );
 }
 
 void USkillComponentModel::TriggerMotionLayer()
@@ -314,7 +314,7 @@ void USkillComponentModel::TriggerMotionLayer()
 		UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
 		checkf(OtherActorModel != nullptr, TEXT("스킬을 받은 타겟이 유효하지 않음"));
 
-		OtherActorModel->OnPlayReceiveAnimationUI.Broadcast(mActiveSkillContext.mMotionEndBarrier.Pin(), MotionLayer.mReceiveMotionTag);
+		OtherActorModel->OnPlayReceiveAnimationUI.Broadcast(mActiveSkillContext.mMotionEndBarrier.Pin(), MotionLayer.mReceiveMotionTag, );
 	}
 
 	/* 이펙트 피격 후 패시브 적용 (선택적) */

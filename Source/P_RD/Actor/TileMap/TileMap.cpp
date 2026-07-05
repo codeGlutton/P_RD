@@ -291,6 +291,13 @@ FVector ATileMap::TileToWorldLocation(const FTileIndex& TileIndex) const
 	return mTileMeshComponent->GetComponentTransform().TransformPosition(LocalLocation);
 }
 
+FRotator ATileMap::TileToWorldRotation(ETileActorDirection Direction) const
+{
+	// 타일맵 메시 컴포넌트의 YAW 회전을 타일에 적용
+	const FQuat WorldRotation = mTileMeshComponent->GetComponentQuat() * FRotator(0.0f, DirectionToYaw(Direction), 0.0f).Quaternion();
+	return WorldRotation.Rotator();
+}
+
 FTileIndex ATileMap::WorldToTileIndex(const FVector& WorldLocation) const
 {
 	// 타일 크기가 설정되지 않으면 계산 불가 (0으로 나눗셈 방지)

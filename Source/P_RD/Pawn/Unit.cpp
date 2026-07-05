@@ -8,6 +8,8 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/ArrowComponent.h"
 
+#include "Animation/BoardActorAnimInstance.h"
+
 AUnit::AUnit()
 {
 	AutoPossessAI = EAutoPossessAI::Disabled;
@@ -72,12 +74,28 @@ void AUnit::BindModel(UObjectModel* Model)
 	// 즉시 이동 구독
 	if (mUnitModel.IsValid() == true)
 	{
-		mUnitModel->OnPlaceTileTransform.AddLambda([this](const FTileTransform& TileTransform, const FTransform& Transform) {
+		mUnitModel->OnPlaceTileTransform.AddWeakLambda(this, [this](const FTileTransform& TileTransform, const FTransform& Transform) {
 			FVector UnitLocation = Transform.GetLocation() + FVector(0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
 			FTransform UnitTransform = Transform;
 			UnitTransform.SetLocation(UnitLocation);
 
 			SetActorTransform(UnitTransform);
+			});
+
+		mUnitModel->OnPlayApplyAnimationUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> MotionEndBarrier, TSharedPtr<FPresentationBarrier> MotionTriggerBarrier, FGameplayTag ApplyMotionTag) {
+			if (mMeshComp != nullptr)
+			{
+				UBoardActorAnimInstance* BoardActorAnimInst = Cast<UBoardActorAnimInstance>(mMeshComp->GetAnimInstance());
+				if (BoardActorAnimInst != nullptr)
+				{
+					FOnTriggerEndAnimationEvent OnTriggerEndAnimationEvent;
+					OnTriggerEndAnimationEvent.AddLambda([MotionEndBarrier](FGameplayTag Tag, UAnimMontage* EndAnim, bool IsInterrupted) {
+						});
+					BoardActorAnimInst->PlayMontageUsingTag(ApplyMotionTag, MoveTemp(OnTriggerEndAnimationEvent));
+
+					BoardActorAnimInst->RegisterEventOnMontage();
+				}
+			}
 			});
 	}
 }
@@ -85,7 +103,6 @@ void AUnit::BindModel(UObjectModel* Model)
 void AUnit::UnbindModel(UObjectModel* Model)
 {
 	IActorView::UnbindModel(Model);
-
 }
 
 UObjectModel* AUnit::GetModel_Internal() const
