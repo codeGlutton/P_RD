@@ -120,6 +120,12 @@ void ACombatGameMode::InitializeRoom()
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 
+	/*
+	 * UI와 전투 로직을 여기서 연결한다.
+	 * - 게임 상태가 바뀌면 UIModel에 새 값을 넣는다.
+	 * - UI 버튼/터치 입력은 전투 명령으로 보낸다.
+	 */
+
 	/* 전투 모델 대리자 연결 */
 
 	CombatModel->OnRegisterUnitUI.AddUObject(this, &ACombatGameMode::OnRegisterUnit);
@@ -153,6 +159,8 @@ void ACombatGameMode::InitializeRoom()
 		// OnBeginAnyTurnActionUI.Broadcast(Barrier, TurnContext, Action); 연출은 연결고리가 아직 없음
 		});
 	CombatModel->OnEndAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action, ESRPGActionResult Result) {
+		// 액션이 끝나면 UI의 스킬/주사위 선택 표시를 지운다.
+		mCombatUIModel->NotifyActionResolved();
 		// OnEndAnyTurnActionUI.Broadcast(Barrier, TurnContext, Action, Result); 연출은 연결고리가 아직 없음
 		});
 
@@ -183,21 +191,27 @@ void ACombatGameMode::InitializeRoom()
 		PushSelectedDiceUIData();
 		});
 
+	/* 스킬 대리자 연결 */
+
+	USkillComponentModel* SkillComponentModel = PlayerUnitModel->GetSkillComponentModel();
+	checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
+
+	SkillComponentModel->OnChangeSkillUI.AddWeakLambda(this, [this](int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData) {
+		PushSkillUIData();   // 스킬이 바뀌면 레일을 바로 다시 그린다.
+		});
+
 	/* UI 조작 의도 라우팅 — 위젯 탭이 쏘는 Request*(OnCombatCommand)를 게임플레이 진입점에 연결 */
 
 	mCombatUIModel->OnCombatCommand.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatCommand);
 	mCombatUIModel->OnApplyDiceResults.AddUniqueDynamic(this, &ACombatGameMode::HandleApplyDiceResults);
+	// 월드 탭을 전투 명령으로 넘겨 조준/시전을 진행한다.
+	mCombatUIModel->OnCombatWorldTouch.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatWorldTouch);
 
 	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModel());
 }
 
 /**
- * @brief UIModel의 조작 의도(OnCombatCommand)를 게임플레이 진입점으로 라우팅한다.
- *
- * @details
- * UI 경계 원칙: 위젯은 게임모드를 직접 알지 않고 UIModel의 Request*로 의도만 보낸다.
- * 그 의도를 실제 커맨드 발행 진입점(SelectSkill/SelectDice/RollDices/SelectMove/EndTurn)으로
- * 연결하는 유일한 지점이 여기다. 과거 임시 어댑터(UCombatUIAdapter)가 맡던 역할의 정식 대체.
+ * @brief UIModel에서 올라온 버튼 입력을 전투 명령으로 보낸다.
  */
 void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayload)
 {
@@ -218,12 +232,48 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 	case ECombatInputType::EndTurn:
 		EndTurn();
 		break;
-	case ECombatInputType::Cancel:
 	case ECombatInputType::LongPressSkill:
+		// 길게 누른 스킬의 상세 정보를 UIModel에 채운다.
+		PushSkillDetailUIData(IntPayload);
+		break;
+	case ECombatInputType::Cancel:
 	case ECombatInputType::LongPressUnit:
 	case ECombatInputType::LongPressEquip:
-		// 대응 진입점(취소/상세 패널 경로)이 아직 없다 — 각 기능 구현 시 여기서 라우팅한다.
+		// 아직 연결할 기능이 없다.
 		break;
+	}
+}
+
+/**
+ * @brief 월드 탭/롱프레스를 조준 입력으로 처리한다.
+ *
+ * @details
+ * 지금 명령에는 ScreenPosition을 싣지 않는다. 전투 로직은 현재 커서 아래 타일을 직접 찾는다.
+ */
+void ACombatGameMode::HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLongPress)
+{
+	/*
+	 * 플레이어 턴이 아닐 때는 무시한다.
+	 * 턴이 비어 있거나 적 턴일 때 넘기면 프리뷰 시뮬레이션에서 크래시가 날 수 있다.
+	 */
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	if (CombatModel == nullptr)
+	{
+		return;
+	}
+	const USRPGTurnContext* TurnContext = CombatModel->GetCurrentTurnContext();
+	if (TurnContext == nullptr || TurnContext->GetOwner()->IsPlayerUnitModel() == false)
+	{
+		return;
+	}
+
+	if (bLongPress == true)
+	{
+		ResolveWorldLongPressEvent(ScreenPosition);
+	}
+	else
+	{
+		ResolveWorldTouchEvent(ScreenPosition);
 	}
 }
 
@@ -343,7 +393,7 @@ bool ACombatGameMode::EndTurn()
 	return CommandRouterModel->SummitCommand(DiceSelectCommand);
 }
 
-bool ACombatGameMode::ResolveWorldTouchEvent()
+bool ACombatGameMode::ResolveWorldTouchEvent(FVector2D ScreenPosition)
 {
 	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
 	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
@@ -351,11 +401,13 @@ bool ACombatGameMode::ResolveWorldTouchEvent()
 	TInstancedStruct<FSRPGCommand> WorldTraceActionCommand;
 	WorldTraceActionCommand.InitializeAs<FSRPGWorldTraceCommand>();
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mIsLongPress = false;
+	// 모바일 터치는 커서가 없으므로, 탭 화면 좌표를 커맨드에 실어 월드 트레이스에 사용한다.
+	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mScreenPosition = ScreenPosition;
 
 	return CommandRouterModel->SummitCommand(WorldTraceActionCommand);
 }
 
-bool ACombatGameMode::ResolveWorldLongPressEvent()
+bool ACombatGameMode::ResolveWorldLongPressEvent(FVector2D ScreenPosition)
 {
 	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
 	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
@@ -363,6 +415,8 @@ bool ACombatGameMode::ResolveWorldLongPressEvent()
 	TInstancedStruct<FSRPGCommand> WorldTraceActionCommand;
 	WorldTraceActionCommand.InitializeAs<FSRPGWorldTraceCommand>();
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mIsLongPress = true;
+	// 모바일 터치는 커서가 없으므로, 롱프레스 화면 좌표를 커맨드에 실어 월드 트레이스에 사용한다.
+	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mScreenPosition = ScreenPosition;
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().OnShowTargetDetailPanelUI.AddWeakLambda(this, [this](IBoardSelectionTarget* Target) {
 		// mCombatUIModel->NotifyTargetDetailPanelRequested(Target);
 		});
@@ -383,6 +437,10 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 		PushUnitUIData();
 		});
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
+		PushUnitUIData();
+		});
+	// 스텝 시전 등으로 이동 예산(MovementPoint)이 바뀔 때도 MOVE 수치를 즉시 갱신한다(미구독 시 다음 턴까지 미반영).
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementPointAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
 		});
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefenseAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
@@ -407,6 +465,7 @@ void ACombatGameMode::OnUnregisterUnit(UUnitModel* Unit)
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).RemoveAll(this);
 	// 해제는 구독(OnRegisterUnit)과 같은 속성 쌍이어야 한다 — 다른 속성을 지우면 no-op이라 바인딩이 잔존한다.
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementAttribute()).RemoveAll(this);
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementPointAttribute()).RemoveAll(this);
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefenseAttribute()).RemoveAll(this);
 
 	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_StatusEffect, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
@@ -501,6 +560,12 @@ void ACombatGameMode::PushUnitUIData() const
 		UnitUIData.mMaxHP = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMaxHPAttribute());
 		UnitUIData.mDefensePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefenseAttribute());
 		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMovementAttribute());
+		// MOVE 표시(RefreshMoveButton)는 mMovementPoint(현재 남은 이동력)를 읽는다. 이 대입이 없어 항상 0이었다.
+		// GetMove(스텝)는 이동 예산을 Movement 어트리뷰트에 남기고 MovementPoint는 모션 종료 시 0으로 리셋하므로,
+		// 표시는 Movement(=이번 턴 이동 스택)를 읽어야 실제 벌어둔 이동력이 보인다.
+		// [주의] MOVE 버튼의 실제 이동 범위(SRPGMoveBuildAction)는 아직 MovementPoint를 읽는다 — 어트리뷰트
+		//        정본(Movement vs MovementPoint) 통일은 Mo와 확정 필요. 여기선 표시만 실제 예산에 맞춘다.
+		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMovementAttribute());
 
 		UnitUIData.mStatusTags = AttributeSetComponentModel->GetOwnedGameplayTags(); // 모든 소유 태그가 아닌 고의적으로 넣은 태그만 해당
 
@@ -607,6 +672,44 @@ void ACombatGameMode::PushSkillUIData() const
 	mCombatUIModel->SetSkillUIs(SkillUIDatas);
 }
 
+/**
+ * @brief 길게 누른 스킬의 상세 정보를 UIModel에 넣는다.
+ *
+ * @details
+ * UI는 요청 직후 이 값을 읽는다. 데이터가 없는 슬롯이면 빈 상세 정보를 넣는다.
+ */
+void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
+{
+	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
+	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
+
+	USkillComponentModel* SkillComponentModel = PlayerUnitModel->GetSkillComponentModel();
+	checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
+
+	FSkillDetailUI SkillDetailUIData;
+	SkillDetailUIData.mSkillIndex = SkillIndex;
+
+	const FSkillEntry* SkillEntry = SkillComponentModel->GetSkill(SkillIndex);
+	UStaticSkillData* StaticSkillData = (SkillEntry != nullptr && SkillEntry->IsValid() == true) ? SkillEntry->mData.Get() : nullptr;
+	if (StaticSkillData != nullptr)
+	{
+		SkillDetailUIData.mName = StaticSkillData->mName;
+		SkillDetailUIData.mDescription = StaticSkillData->mDescription;
+		SkillDetailUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
+		SkillDetailUIData.mDiceCost = StaticSkillData->mRequiredDiceCount;
+		SkillDetailUIData.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
+		SkillDetailUIData.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRangeDefaultValue);
+		SkillDetailUIData.mTargeting.mSelectRangeRatio = StaticSkillData->mAimRangeRatio;
+		SkillDetailUIData.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
+		SkillDetailUIData.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectAreaDefaultValue);
+		SkillDetailUIData.mTargeting.mHitRangeRatio = StaticSkillData->mEffectAreaRatio;
+		SkillDetailUIData.mTargeting.mIsIndirect = StaticSkillData->mIsIndirect;
+		SkillDetailUIData.mTargeting.mIsPenetration = StaticSkillData->mIsPenetration;
+	}
+
+	mCombatUIModel->SetSkillDetail(SkillDetailUIData);
+}
+
 void ACombatGameMode::PushEquipmentUIData() const
 {
 	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
@@ -661,4 +764,3 @@ void ACombatGameMode::PushPlayerMetaUIData() const
 
 	mCombatUIModel->SetPlayerMeta(PlayerMetaUIData);
 }
-

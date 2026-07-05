@@ -1,12 +1,14 @@
 ﻿#include "SRPGFramework/SRPGCommandHandler.h"
 
+#include "Blueprint/SlateBlueprintLibrary.h"
+#include "InputCoreTypes.h"
 #include "ObjectView.h"
 
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Actor/TileMap/TileMapModel.h"
 #include "Actor/BoardActor/BoardActorModel.h"
 
-void ISRPGCommandHandler::GetTileActorUnderCursor(UWorld* World, ECollisionChannel Channel, OUT AActor*& Actor, OUT FTileIndex& TileIndex)
+void ISRPGCommandHandler::GetTileActorUnderCursor(UWorld* World, ECollisionChannel Channel, OUT AActor*& Actor, OUT FTileIndex& TileIndex, const FVector2D& ScreenPosition)
 {
 	check(World != nullptr);
 
@@ -22,7 +24,28 @@ void ISRPGCommandHandler::GetTileActorUnderCursor(UWorld* World, ECollisionChann
 	if (PlayerController != nullptr)
 	{
 		FHitResult HitResult;
-		if (PlayerController->GetHitResultUnderCursor(Channel, false, HitResult) == true)
+
+		// PC: 마우스 커서 지점을 트레이스한다.
+		bool bHit = PlayerController->GetHitResultUnderCursor(Channel, false, HitResult);
+
+		// 모바일: 마우스 커서가 없어 위 트레이스가 실패한다.
+		if (bHit == false)
+		{
+			// 1) 손가락 추적(터치 다운 시점): 엔진이 실제 터치 위치를 직접 추적하므로 DPI/역투영 보정이 필요 없다(정석).
+			bHit = PlayerController->GetHitResultUnderFinger(ETouchIndex::Touch1, Channel, false, HitResult);
+
+			// 2) 폴백: 손가락 추적이 비어있으면, 커맨드가 실어온 화면 좌표로 직접 트레이스한다.
+			//    GetHitResultAtScreenPosition은 뷰포트 픽셀을 기대하므로 Slate 절대좌표를 뷰포트 픽셀로 변환해 넘긴다(고DPI 어긋남 방지).
+			if (bHit == false && ScreenPosition.X >= 0.0 && ScreenPosition.Y >= 0.0)
+			{
+				FVector2D ViewportPixel = FVector2D::ZeroVector;
+				FVector2D ViewportDPIScaled = FVector2D::ZeroVector;
+				USlateBlueprintLibrary::AbsoluteToViewport(World, ScreenPosition, OUT ViewportPixel, OUT ViewportDPIScaled);
+				bHit = PlayerController->GetHitResultAtScreenPosition(ViewportPixel, Channel, false, HitResult);
+			}
+		}
+
+		if (bHit == true)
 		{
 			Actor = HitResult.GetActor();
 			if (Actor == CombatModel->GetTileMap()->GetView<AActor>())

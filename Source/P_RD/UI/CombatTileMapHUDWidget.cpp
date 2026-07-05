@@ -91,6 +91,7 @@ void UCombatTileMapHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 	}
 
 	UpdateShakeToRoll(InDeltaTime);
+	UpdateTopBarBackdrop();
 	UpdateSkillPress(InDeltaTime);
 }
 
