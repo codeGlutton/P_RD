@@ -1,36 +1,36 @@
 #include "UI/FrontendMapWidget.h"
 
+#include "Blueprint/WidgetLayoutLibrary.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
-#include "Components/HorizontalBox.h"
-#include "Components/HorizontalBoxSlot.h"
 #include "Components/Image.h"
 #include "Components/ScrollBox.h"
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
-#include "Components/VerticalBox.h"
-#include "Components/VerticalBoxSlot.h"
 #include "Engine/GameViewportClient.h"
-#include "Engine/Texture2D.h"
 #include "Engine/World.h"
 #include "GameMode/RoomGameModeBase.h"
-#include "Styling/SlateBrush.h"
-#include "Styling/SlateTypes.h"
 #include "UI/FrontendMapGraphWidgets.h"
 #include "UI/ViewportZOrderType.h"
 
 namespace
 {
+	/*
+	 * 아래 수치들은 시안 마커(Map_NodeArea/Map_NodeMetrics/Map_ColPitch)가 WBP에 없을 때만 쓰는 폴백이다.
+	 * 배치 경계/간격의 정본은 concept_worldmap_claude02.json -> 빌더 -> WBP 마커다. C++ 하드코딩 금지.
+	 */
 	constexpr float MapGraphFallbackWidth = 1280.f;
-	constexpr float MapGraphAspectHeightOverWidth = 1.5f;
-	constexpr float MapNodeWidth = 96.f;
-	constexpr float MapNodeHeight = 96.f;
-	const TCHAR* const StageMapBackgroundTexturePath = TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Map/T_StageMap_Background_Parchment.T_StageMap_Background_Parchment");
-	const TCHAR* const MapBackButtonTexturePath = TEXT("/Game/SVN/OutSideAsset/AICreation/Title/UI_Button_Back_ImageGen.UI_Button_Back_ImageGen");
-	const TCHAR* const MapEnterButtonTexturePath = TEXT("/Game/SVN/OutSideAsset/AICreation/Title/UI_Button_Enter_ImageGen.UI_Button_Enter_ImageGen");
+	constexpr float MapGraphFallbackAspect = 1.5f;
+	constexpr float MapNodeFallbackSize = 96.f;
+	constexpr float MapRowPitchFallback = 176.f;
+	constexpr float MapColPitchMaxFallback = 240.f;
+	constexpr float MapNodeAreaLeftFracFallback = 0.10f;
+	constexpr float MapNodeAreaRightFracFallback = 0.90f;
+	constexpr float MapNodeAreaTopPxFallback = 96.f;
+	constexpr float MapNodeAreaBottomPxFallback = 168.f;
 
 	const FLinearColor PanelDarkColor(0.215f, 0.240f, 0.260f, 1.f);
 	const FLinearColor AccentFillColor(0.255f, 0.565f, 0.590f, 1.f);
@@ -40,39 +40,6 @@ namespace
 	const FSlateColor ReadyColor(FLinearColor(0.53f, 0.86f, 0.88f, 1.f));
 	const FSlateColor LockedColor(FLinearColor(0.52f, 0.54f, 0.55f, 1.f));
 	const FLinearColor TransparentPanelColor(0.f, 0.f, 0.f, 0.f);
-
-	void ApplyTextureButtonStyle(UButton* Button, const TCHAR* TexturePath)
-	{
-		if (Button == nullptr || TexturePath == nullptr)
-		{
-			return;
-		}
-
-		UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, TexturePath);
-		if (Texture == nullptr)
-		{
-			return;
-		}
-
-		FSlateBrush NormalBrush;
-		NormalBrush.DrawAs = ESlateBrushDrawType::Image;
-		NormalBrush.ImageSize = FVector2D(Texture->GetSizeX(), Texture->GetSizeY());
-		NormalBrush.SetResourceObject(Texture);
-		NormalBrush.TintColor = FSlateColor(FLinearColor::White);
-
-		FSlateBrush DisabledBrush = NormalBrush;
-		DisabledBrush.TintColor = FSlateColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.44f));
-
-		FButtonStyle Style = Button->GetStyle();
-		Style.SetNormal(NormalBrush);
-		Style.SetHovered(NormalBrush);
-		Style.SetPressed(NormalBrush);
-		Style.SetDisabled(DisabledBrush);
-		Style.SetNormalPadding(FMargin(0.0f));
-		Style.SetPressedPadding(FMargin(0.0f));
-		Button->SetStyle(Style);
-		Button->SetBackgroundColor(FLinearColor::White);
-	}
 
 	FText FrontendMapText(const TCHAR* Key)
 	{
@@ -322,40 +289,6 @@ namespace
 			GetRoomDebugTypeText(Room.mType));
 	}
 
-	FVector2D GetMapRoomNodeCenter(const TArray<FMapRoomView>& Rooms, const FMapRoomView& Room, const FVector2D& GraphSize)
-	{
-		/*
-		 * Stage의 row/column을 현재 화면 폭에 맞춘 지도 캔버스 좌표로 변환한다.
-		 * X는 column 진행, Y는 row 진행을 뒤집어서 "위쪽이 다음 진행 방향"처럼 보이게 배치한다.
-		 *
-		 * mPositionOffsetRate는 같은 행의 노드가 너무 기계적으로 보이지 않도록 DataAsset/Stage 생성 결과에서 내려오는 작은 보정값이다.
-		 * 최종 노드가 캔버스 밖으로 나가지 않게 마지막에 Clamp한다.
-		 */
-		int32 MaxRow = 0;
-		int32 MaxColumn = 0;
-		for (const FMapRoomView& Candidate : Rooms)
-		{
-			MaxRow = FMath::Max(MaxRow, Candidate.mRow);
-			MaxColumn = FMath::Max(MaxColumn, Candidate.mColumn);
-		}
-
-		const float SidePadding = FMath::Max(84.f, GraphSize.X * 0.115f);
-		const float TopPadding = FMath::Max(112.f, GraphSize.Y * 0.065f);
-		const float GraphRight = GraphSize.X - SidePadding;
-		const float GraphBottom = GraphSize.Y - TopPadding;
-		const float X = MaxColumn <= 0
-			? GraphSize.X * 0.5f
-			: SidePadding + (StaticCast<float>(Room.mColumn) / StaticCast<float>(MaxColumn)) * (GraphRight - SidePadding);
-		const float Y = MaxRow <= 0
-			? GraphSize.Y * 0.5f
-			: TopPadding + (StaticCast<float>(MaxRow - Room.mRow) / StaticCast<float>(MaxRow)) * (GraphBottom - TopPadding);
-
-		const FVector2D Offset(Room.mPositionOffsetRate.X * 18.f, Room.mPositionOffsetRate.Y * 18.f);
-		return FVector2D(
-			FMath::Clamp(X + Offset.X, MapNodeWidth * 0.5f, GraphSize.X - MapNodeWidth * 0.5f),
-			FMath::Clamp(Y + Offset.Y, MapNodeHeight * 0.5f, GraphSize.Y - MapNodeHeight * 0.5f));
-	}
-
 	const FMapRoomView* FindMapRoom(const TArray<FMapRoomView>& Rooms, int32 RowIndex, int32 ColumnIndex)
 	{
 		/*
@@ -392,9 +325,7 @@ void UFrontendMapWidget::NativeConstruct()
 	Super::NativeConstruct();
 	ValidateDesignerBindings();
 	BindEvents();
-	ApplyMapButtonStyles();
-	EnsureMapBackground();
-	EnsureIconLegend();
+	// 배경/범례/버튼 스킨은 WBP(시안 빌더) 소유가 됐다 — C++ 런타임 생성/스타일링을 하지 않는다.
 	ConfigureMapGraphLayout();
 	RefreshLocalizedTextCache();
 	HideUnusedMapTextSurfaces();
@@ -418,6 +349,30 @@ void UFrontendMapWidget::NativeDestruct()
 	mMapLinePool.Reset();
 	mMapNodePool.Reset();
 	Super::NativeDestruct();
+}
+
+void UFrontendMapWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+
+	/*
+	 * 뷰포트가 바뀌면(창 리사이즈/회전) 그래프 폭·높이와 노드 배치가 낡은 값으로 남는다.
+	 * 몇 프레임 안정된 뒤 전체 리프레시로 다시 깐다(라이브 리사이즈 재배치).
+	 */
+	FVector2D ViewportSize = FVector2D::ZeroVector;
+	if (UGameViewportClient* ViewportClient = GetWorld() != nullptr ? GetWorld()->GetGameViewport() : nullptr)
+	{
+		ViewportClient->GetViewportSize(OUT ViewportSize);
+	}
+	if (!ViewportSize.Equals(mLastViewportSize, 0.5f))
+	{
+		mLastViewportSize = ViewportSize;
+		mResizeRefreshCountdown = 3;
+	}
+	else if (mResizeRefreshCountdown > 0 && --mResizeRefreshCountdown == 0)
+	{
+		RefreshMap();
+	}
 }
 
 FReply UFrontendMapWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
@@ -586,12 +541,6 @@ void UFrontendMapWidget::UnbindEvents()
 	}
 }
 
-void UFrontendMapWidget::ApplyMapButtonStyles() const
-{
-	ApplyTextureButtonStyle(CloseButton, MapBackButtonTexturePath);
-	ApplyTextureButtonStyle(EnterRoomButton, MapEnterButtonTexturePath);
-}
-
 FFrontendMapLinePoolEntry* UFrontendMapWidget::AcquireMapLineWidget(int32 LineIndex)
 {
 	/*
@@ -651,7 +600,7 @@ FFrontendMapNodePoolEntry* UFrontendMapWidget::AcquireMapNodeWidget(int32 NodeIn
 			if (UCanvasPanelSlot* NodeSlot = MapGraphCanvas->AddChildToCanvas(NewEntry.mNodeWidget))
 			{
 				NodeSlot->SetAutoSize(false);
-				NodeSlot->SetSize(FVector2D(MapNodeWidth, MapNodeHeight));
+				NodeSlot->SetSize(GetMapNodeSize());
 				NodeSlot->SetZOrder(1);
 			}
 		}
@@ -704,7 +653,6 @@ void UFrontendMapWidget::HideUnusedMapGraphWidgets(int32 UsedLineCount, int32 Us
 bool UFrontendMapWidget::RefreshMap()
 {
 	RefreshLocalizedTextCache();
-	ConfigureMapGraphLayout();
 	HideUnusedMapTextSurfaces();
 	mEnterRequested = false;
 
@@ -727,6 +675,15 @@ bool UFrontendMapWidget::RefreshMap()
 	{
 		UE_LOG(LogRD, Warning, TEXT("FrontendMapWidget: RoomGameMode is not available. WorldMap data must be provided by RoomGameMode."));
 	}
+
+	// 그래프 높이는 행 수 x 행 간격이므로, 데이터를 읽은 뒤에 레이아웃을 확정한다.
+	int32 MaxRowIndex = 0;
+	for (const FMapRoomView& Room : Rooms)
+	{
+		MaxRowIndex = FMath::Max(MaxRowIndex, Room.mRow);
+	}
+	mCachedRowCount = bHasRooms ? MaxRowIndex + 1 : 0;
+	ConfigureMapGraphLayout();
 
 	if (!bHasRooms)
 	{
@@ -753,6 +710,21 @@ bool UFrontendMapWidget::RefreshMap()
 	for (const FMapRoomView& Room : Rooms)
 	{
 		NodeCenters.Add(FIntPoint(Room.mRow, Room.mColumn), GetMapRoomNodeCenter(Rooms, Room, GraphSize));
+	}
+
+	// 현재 위치 = 방문(Cleared) 경로의 마지막 행. 선택된 경로에서는 행마다 방문 방이 하나뿐이다.
+	FIntPoint CurrentCoord(INDEX_NONE, INDEX_NONE);
+	FIntPoint SelectedCoord(INDEX_NONE, INDEX_NONE);
+	for (const FMapRoomView& Room : Rooms)
+	{
+		if (Room.mState == EMapRoomState::Cleared && (CurrentCoord.X == INDEX_NONE || Room.mRow > CurrentCoord.X))
+		{
+			CurrentCoord = FIntPoint(Room.mRow, Room.mColumn);
+		}
+		if (Room.mSelected)
+		{
+			SelectedCoord = FIntPoint(Room.mRow, Room.mColumn);
+		}
 	}
 
 	int32 UsedLineCount = 0;
@@ -787,18 +759,18 @@ bool UFrontendMapWidget::RefreshMap()
 			}
 
 			UFrontendMapLineWidget* ConnectionLine = LineEntry->mLineWidget;
-			ConnectionLine->SetLineColor(Room.mState != EMapRoomState::Locked
-				? FLinearColor(0.445f, 0.760f, 0.780f, 0.92f)
-				: FLinearColor(0.250f, 0.300f, 0.320f, 0.58f));
+			// 실선=열린 길 / 점선=잠긴 길 — 텍스처/틴트 모두 시안(WBP 클래스 디폴트) 소유.
+			ConnectionLine->SetLineStyle(Room.mState != EMapRoomState::Locked);
 
 			FWidgetTransform LineTransform;
 			LineTransform.Angle = FMath::RadiansToDegrees(FMath::Atan2(Delta.Y, Delta.X));
 			ConnectionLine->SetRenderTransform(LineTransform);
 
+			const float LineThickness = ConnectionLine->GetLineThickness();
 			if (UCanvasPanelSlot* LineSlot = Cast<UCanvasPanelSlot>(ConnectionLine->Slot))
 			{
-				LineSlot->SetSize(FVector2D(Length, 4.f));
-				LineSlot->SetPosition(*FromCenter - FVector2D(0.f, 2.f));
+				LineSlot->SetSize(FVector2D(Length, LineThickness));
+				LineSlot->SetPosition(*FromCenter - FVector2D(0.f, LineThickness * 0.5f));
 				LineSlot->SetZOrder(0);
 			}
 		}
@@ -839,22 +811,26 @@ bool UFrontendMapWidget::RefreshMap()
 			GetMapRoomTypeColor(Room.mType),
 			GetMapRoomTextColor(Room),
 			FSlateColor(FLinearColor(0.f, 0.f, 0.f, 0.f)),
-			Room.mType);
+			Room.mType,
+			Room.mState,
+			FIntPoint(Room.mRow, Room.mColumn) == CurrentCoord);
 		if (bShouldFocusRoom)
 		{
 			FocusMapNodeWidget = NodeWidget;
 		}
 
-		const FVector2D Center = GetMapRoomNodeCenter(Rooms, Room, GraphSize);
+		const FVector2D NodeSize = GetMapNodeSize();
+		const FVector2D Center = NodeCenters.FindChecked(FIntPoint(Room.mRow, Room.mColumn));
 		if (UCanvasPanelSlot* NodeSlot = Cast<UCanvasPanelSlot>(NodeWidget->Slot))
 		{
-			NodeSlot->SetSize(FVector2D(MapNodeWidth, MapNodeHeight));
-			NodeSlot->SetPosition(Center - FVector2D(MapNodeWidth * 0.5f, MapNodeHeight * 0.5f));
+			NodeSlot->SetSize(NodeSize);
+			NodeSlot->SetPosition(Center - NodeSize * 0.5f);
 			NodeSlot->SetZOrder(1);
 		}
 	}
 
 	HideUnusedMapGraphWidgets(UsedLineCount, UsedNodeCount);
+	UpdateOverlayMarkers(NodeCenters, CurrentCoord, SelectedCoord);
 
 	if (bHasSelectedRoom)
 	{
@@ -1020,8 +996,9 @@ void UFrontendMapWidget::HideUnusedMapTextSurfaces() const
 	 */
 	if (MapTitleText != nullptr)
 	{
-		MapTitleText->SetText(FText::GetEmpty());
-		MapTitleText->SetVisibility(ESlateVisibility::Collapsed);
+		// 새 시안은 상단 제목을 표시한다. 위치/폰트/중앙정렬은 빌더가 WBP 슬롯에 세팅한다.
+		MapTitleText->SetText(mMapText);
+		MapTitleText->SetVisibility(ESlateVisibility::HitTestInvisible);
 	}
 	if (MapPreviewPanel != nullptr)
 	{
@@ -1044,14 +1021,11 @@ void UFrontendMapWidget::HideUnusedMapTextSurfaces() const
 	}
 	if (CloseButtonText != nullptr)
 	{
-		CloseButtonText->SetText(FText::GetEmpty());
-		CloseButtonText->SetVisibility(ESlateVisibility::Collapsed);
+		// 프레임 텍스처에는 문구가 없다 — 클래스 선택과 동일하게 라벨을 버튼 위에 표시한다.
+		CloseButtonText->SetText(mCloseText);
+		CloseButtonText->SetVisibility(ESlateVisibility::HitTestInvisible);
 	}
-	if (EnterButtonText != nullptr)
-	{
-		EnterButtonText->SetText(FText::GetEmpty());
-		EnterButtonText->SetVisibility(ESlateVisibility::Collapsed);
-	}
+	// EnterButtonText는 SetEnterButtonVisible/SetEnterButtonText가 모드에 따라 관리한다(여기서 끄지 않는다).
 	if (MapLegendScroll != nullptr)
 	{
 		MapLegendScroll->SetVisibility(ESlateVisibility::Collapsed);
@@ -1126,8 +1100,122 @@ FVector2D UFrontendMapWidget::GetMapGraphContentSize() const
 		GraphWidth = MapGraphFallbackWidth;
 	}
 
-	GraphWidth = FMath::Clamp(GraphWidth, 720.f, 2200.f);
-	return FVector2D(GraphWidth, GraphWidth * MapGraphAspectHeightOverWidth);
+	// 좌/우 꽉 채움: 상한 클램프 없이 뷰포트 폭을 그대로 쓴다(하한만 안전 확보).
+	GraphWidth = FMath::Max(GraphWidth, 320.f);
+
+	// 높이 정본 = 상하 여백 + 노드 + (행 수 - 1) x 행 간격. 행이 적으면 스크롤이 짧아질 뿐 간격은 일정하다.
+	float LeftFrac = 0.f;
+	float RightFrac = 0.f;
+	float TopPx = 0.f;
+	float BottomPx = 0.f;
+	GetNodeAreaLayout(OUT LeftFrac, OUT RightFrac, OUT TopPx, OUT BottomPx);
+
+	float GraphHeight = GraphWidth * MapGraphFallbackAspect;
+	if (mCachedRowCount > 0)
+	{
+		GraphHeight = TopPx + BottomPx + GetMapNodeSize().Y
+			+ StaticCast<float>(FMath::Max(0, mCachedRowCount - 1)) * GetMapRowPitch();
+	}
+
+	// 화면보다 짧으면 양피지가 끊겨 보이므로 최소 한 화면은 채운다.
+	if (MapScrollBox != nullptr)
+	{
+		const float ViewportHeight = MapScrollBox->GetCachedGeometry().GetLocalSize().Y;
+		if (ViewportHeight > 64.f)
+		{
+			GraphHeight = FMath::Max(GraphHeight, ViewportHeight);
+		}
+	}
+	return FVector2D(GraphWidth, GraphHeight);
+}
+
+FVector2D UFrontendMapWidget::GetMapNodeSize() const
+{
+	const float Size = (Map_NodeMetrics != nullptr && Map_NodeMetrics->GetWidthOverride() > 1.f)
+		? Map_NodeMetrics->GetWidthOverride()
+		: MapNodeFallbackSize;
+	return FVector2D(Size, Size);
+}
+
+float UFrontendMapWidget::GetMapRowPitch() const
+{
+	return (Map_NodeMetrics != nullptr && Map_NodeMetrics->GetHeightOverride() > 1.f)
+		? Map_NodeMetrics->GetHeightOverride()
+		: MapRowPitchFallback;
+}
+
+float UFrontendMapWidget::GetMapColPitchMax() const
+{
+	return (Map_ColPitch != nullptr && Map_ColPitch->GetWidthOverride() > 1.f)
+		? Map_ColPitch->GetWidthOverride()
+		: MapColPitchMaxFallback;
+}
+
+void UFrontendMapWidget::GetNodeAreaLayout(float& OutLeftFrac, float& OutRightFrac, float& OutTopPx, float& OutBottomPx) const
+{
+	// 시안 마커: 앵커 X 분수 = 좌우 경계, 오프셋 Top/Bottom = 상하 여백(px). 에디터에서 박스를 옮기면 여기로 반영된다.
+	OutLeftFrac = MapNodeAreaLeftFracFallback;
+	OutRightFrac = MapNodeAreaRightFracFallback;
+	OutTopPx = MapNodeAreaTopPxFallback;
+	OutBottomPx = MapNodeAreaBottomPxFallback;
+
+	if (Map_NodeArea == nullptr)
+	{
+		return;
+	}
+	const UCanvasPanelSlot* AreaSlot = Cast<UCanvasPanelSlot>(Map_NodeArea->Slot);
+	if (AreaSlot == nullptr)
+	{
+		return;
+	}
+	const FAnchors Anchors = AreaSlot->GetAnchors();
+	if (Anchors.Maximum.X > Anchors.Minimum.X)
+	{
+		OutLeftFrac = Anchors.Minimum.X;
+		OutRightFrac = Anchors.Maximum.X;
+	}
+	const FMargin Offsets = AreaSlot->GetOffsets();
+	OutTopPx = FMath::Max(0.f, Offsets.Top);
+	OutBottomPx = FMath::Max(0.f, Offsets.Bottom);
+}
+
+FVector2D UFrontendMapWidget::GetMapRoomNodeCenter(const TArray<FMapRoomView>& Rooms, const FMapRoomView& Room, const FVector2D& GraphSize) const
+{
+	/*
+	 * Stage row/column -> 캔버스 좌표. 배치 경계/간격의 정본은 시안 마커다:
+	 * - X: Map_NodeArea 좌우 분수 안에서 열을 분배하되, 열 간격이 Map_ColPitch 상한을 넘지 않게 중앙으로 모은다(간격 과대 방지).
+	 * - Y: 아래(시작)에서 위(보스)로, 행 간격 Map_NodeMetrics 고정.
+	 * mPositionOffsetRate는 기계적 배열을 깨는 지터, 마지막에 캔버스 밖으로 못 나가게 Clamp.
+	 */
+	int32 MaxColumn = 0;
+	for (const FMapRoomView& Candidate : Rooms)
+	{
+		MaxColumn = FMath::Max(MaxColumn, Candidate.mColumn);
+	}
+
+	float LeftFrac = 0.f;
+	float RightFrac = 0.f;
+	float TopPx = 0.f;
+	float BottomPx = 0.f;
+	GetNodeAreaLayout(OUT LeftFrac, OUT RightFrac, OUT TopPx, OUT BottomPx);
+	const FVector2D NodeSize = GetMapNodeSize();
+
+	const float AreaLeft = GraphSize.X * LeftFrac + NodeSize.X * 0.5f;
+	const float AreaRight = GraphSize.X * RightFrac - NodeSize.X * 0.5f;
+	const float AvailWidth = FMath::Max(0.f, AreaRight - AreaLeft);
+	const float ColPitch = MaxColumn <= 0
+		? 0.f
+		: FMath::Min(GetMapColPitchMax(), AvailWidth / StaticCast<float>(MaxColumn));
+	const float X = GraphSize.X * 0.5f
+		+ (StaticCast<float>(Room.mColumn) - StaticCast<float>(MaxColumn) * 0.5f) * ColPitch;
+
+	const float BottomCenterY = GraphSize.Y - BottomPx - NodeSize.Y * 0.5f;
+	const float Y = BottomCenterY - StaticCast<float>(Room.mRow) * GetMapRowPitch();
+
+	const FVector2D Offset(Room.mPositionOffsetRate.X * 18.f, Room.mPositionOffsetRate.Y * 18.f);
+	return FVector2D(
+		FMath::Clamp(X + Offset.X, NodeSize.X * 0.5f, GraphSize.X - NodeSize.X * 0.5f),
+		FMath::Clamp(Y + Offset.Y, NodeSize.Y * 0.5f, GraphSize.Y - NodeSize.Y * 0.5f));
 }
 
 void UFrontendMapWidget::ConfigureMapGraphLayout() const
@@ -1136,10 +1224,19 @@ void UFrontendMapWidget::ConfigureMapGraphLayout() const
 	 * 지도 그래프는 ScrollBox 안의 세로 긴 Canvas로 다룬다.
 	 * 가로는 현재 ScrollBox/Viewport 폭에 맞추고, 높이만 길게 잡아 위아래 스크롤로 탐색한다.
 	 */
-	ApplyMapBackgroundLayout();
-	ApplyIconLegendLayout();
-
 	const FVector2D GraphSize = GetMapGraphContentSize();
+	UpdateGraphDecorLayout(GraphSize);
+
+	// 범례 반응형 축소: 로그 실측상 고정 크기(429x599)가 좁은 화면(폭 1110)에서 39%를 덮는다.
+	// 디자인 폭 / 기준 폭 비율로 통째로 줄이되(우측 중앙 피벗 - 오른쪽에 붙은 채 축소), 하한은 시안이 정한다.
+	if (Map_LegendGroup != nullptr && mLegendRefWidth > KINDA_SMALL_NUMBER)
+	{
+		const float LegendScale = FMath::Clamp(GraphSize.X / mLegendRefWidth, mLegendMinScale, 1.f);
+		Map_LegendGroup->SetRenderTransformPivot(FVector2D(1.f, 0.5f));
+		FWidgetTransform LegendTransform;
+		LegendTransform.Scale = FVector2D(LegendScale, LegendScale);
+		Map_LegendGroup->SetRenderTransform(LegendTransform);
+	}
 	if (MapGraphSize != nullptr)
 	{
 		MapGraphSize->SetWidthOverride(GraphSize.X);
@@ -1153,10 +1250,19 @@ void UFrontendMapWidget::ConfigureMapGraphLayout() const
 		if (UCanvasPanelSlot* ScrollSlot = Cast<UCanvasPanelSlot>(MapScrollBox->Slot))
 		{
 			ScrollSlot->SetAnchors(FAnchors(0.0f, 0.0f, 1.0f, 1.0f));
-			ScrollSlot->SetOffsets(FMargin(0.0f));
+			// 탑바 인셋: 위 영역을 비워 전투 HUD 탑바가 보이고 눌리게 한다.
+			ScrollSlot->SetOffsets(FMargin(0.0f, FMath::Max(0.f, mTopUIInset), 0.0f, 0.0f));
 			ScrollSlot->SetAlignment(FVector2D::ZeroVector);
 			ScrollSlot->SetAutoSize(false);
 			ScrollSlot->SetZOrder(0);
+		}
+	}
+	if (Map_Scrim != nullptr)
+	{
+		if (UCanvasPanelSlot* ScrimSlot = Cast<UCanvasPanelSlot>(Map_Scrim->Slot))
+		{
+			ScrimSlot->SetAnchors(FAnchors(0.0f, 0.0f, 1.0f, 1.0f));
+			ScrimSlot->SetOffsets(FMargin(0.0f, FMath::Max(0.f, mTopUIInset), 0.0f, 0.0f));
 		}
 	}
 	if (MapGraphCanvas != nullptr)
@@ -1165,198 +1271,93 @@ void UFrontendMapWidget::ConfigureMapGraphLayout() const
 	}
 }
 
-void UFrontendMapWidget::EnsureMapBackground()
+void UFrontendMapWidget::UpdateGraphDecorLayout(const FVector2D& GraphSize) const
 {
-	if (WidgetTree == nullptr)
+	/*
+	 * 양피지 몸통/두루마리 로드는 WBP(시안 빌더) 소유다.
+	 * 그래프 콘텐츠 높이가 행 수에 따라 매번 달라지므로, C++은 슬롯 치수만 콘텐츠에 동기한다.
+	 */
+	if (Map_ParchmentBody != nullptr)
 	{
-		return;
-	}
-
-	if (mMapBackgroundImage == nullptr)
-	{
-		mMapBackgroundImage = Cast<UImage>(WidgetTree->FindWidget(TEXT("MapBackgroundImage")));
-	}
-
-	UCanvasPanel* RootCanvas = Cast<UCanvasPanel>(WidgetTree->RootWidget);
-	UCanvasPanel* TargetCanvas = MapGraphCanvas != nullptr ? MapGraphCanvas.Get() : RootCanvas;
-	if (mMapBackgroundImage == nullptr && TargetCanvas != nullptr)
-	{
-		mMapBackgroundImage = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("MapBackgroundImage"));
-	}
-
-	if (mMapBackgroundImage == nullptr || TargetCanvas == nullptr)
-	{
-		return;
-	}
-
-	if (mMapBackgroundImage->GetParent() != TargetCanvas)
-	{
-		mMapBackgroundImage->RemoveFromParent();
-		TargetCanvas->AddChildToCanvas(mMapBackgroundImage);
-	}
-
-	if (UTexture2D* BackgroundTexture = LoadObject<UTexture2D>(nullptr, StageMapBackgroundTexturePath))
-	{
-		mMapBackgroundImage->SetBrushFromTexture(BackgroundTexture, false);
-	}
-	mMapBackgroundImage->SetColorAndOpacity(FLinearColor::White);
-	mMapBackgroundImage->SetVisibility(ESlateVisibility::HitTestInvisible);
-	ApplyMapBackgroundLayout();
-}
-
-void UFrontendMapWidget::ApplyMapBackgroundLayout() const
-{
-	if (mMapBackgroundImage == nullptr)
-	{
-		return;
-	}
-
-	UCanvasPanelSlot* BackgroundSlot = Cast<UCanvasPanelSlot>(mMapBackgroundImage->Slot);
-	if (BackgroundSlot == nullptr)
-	{
-		return;
-	}
-
-	BackgroundSlot->SetAlignment(FVector2D::ZeroVector);
-	BackgroundSlot->SetAutoSize(false);
-	BackgroundSlot->SetZOrder(-200);
-	if (mMapBackgroundImage->GetParent() == MapGraphCanvas)
-	{
-		const FVector2D GraphSize = GetMapGraphContentSize();
-		BackgroundSlot->SetAnchors(FAnchors(0.0f, 0.0f));
-		BackgroundSlot->SetPosition(FVector2D::ZeroVector);
-		BackgroundSlot->SetSize(GraphSize);
-		return;
-	}
-
-	BackgroundSlot->SetAnchors(FAnchors(0.0f, 0.0f, 1.0f, 1.0f));
-	BackgroundSlot->SetOffsets(FMargin(0.0f));
-}
-
-namespace
-{
-	// 범례용 타입→아이콘 텍스처 경로(노드와 동일 자산). FrontendMapGraphWidgets.cpp의 MapNodeIconPath와 같은 경로.
-	const TCHAR* LegendIconTexturePath(ERoomType RoomType)
-	{
-		switch (RoomType)
+		if (UCanvasPanelSlot* BodySlot = Cast<UCanvasPanelSlot>(Map_ParchmentBody->Slot))
 		{
-		case ERoomType::Treasure:     return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Treasure.T_MapNode_Treasure");
-		case ERoomType::Shop:         return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Shop.T_MapNode_Shop");
-		case ERoomType::Monster:      return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Monster.T_MapNode_Monster");
-		case ERoomType::EliteMonster: return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Elite.T_MapNode_Elite");
-		case ERoomType::BossMonster:  return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Boss.T_MapNode_Boss");
-		default:                      return nullptr;
+			BodySlot->SetAnchors(FAnchors(0.f, 0.f));
+			BodySlot->SetAlignment(FVector2D::ZeroVector);
+			BodySlot->SetAutoSize(false);
+			BodySlot->SetPosition(FVector2D::ZeroVector);
+			BodySlot->SetSize(GraphSize);
+			BodySlot->SetZOrder(-200);
+		}
+		Map_ParchmentBody->SetVisibility(ESlateVisibility::HitTestInvisible);
+	}
+
+	if (Map_ScrollRodTop != nullptr)
+	{
+		if (UCanvasPanelSlot* RodSlot = Cast<UCanvasPanelSlot>(Map_ScrollRodTop->Slot))
+		{
+			const float RodHeight = RodSlot->GetSize().Y;   // 높이는 시안(빌더) 소유
+			RodSlot->SetAnchors(FAnchors(0.f, 0.f));
+			RodSlot->SetAlignment(FVector2D::ZeroVector);
+			RodSlot->SetAutoSize(false);
+			RodSlot->SetPosition(FVector2D::ZeroVector);
+			RodSlot->SetSize(FVector2D(GraphSize.X, RodHeight));
+			RodSlot->SetZOrder(-190);
+		}
+	}
+
+	if (Map_ScrollRodBottom != nullptr)
+	{
+		if (UCanvasPanelSlot* RodSlot = Cast<UCanvasPanelSlot>(Map_ScrollRodBottom->Slot))
+		{
+			const float RodHeight = RodSlot->GetSize().Y;
+			RodSlot->SetAnchors(FAnchors(0.f, 0.f));
+			RodSlot->SetAlignment(FVector2D::ZeroVector);
+			RodSlot->SetAutoSize(false);
+			RodSlot->SetPosition(FVector2D(0.f, GraphSize.Y - RodHeight));
+			RodSlot->SetSize(FVector2D(GraphSize.X, RodHeight));
+			RodSlot->SetZOrder(-190);
 		}
 	}
 }
 
-void UFrontendMapWidget::EnsureIconLegend()
+void UFrontendMapWidget::UpdateOverlayMarkers(const TMap<FIntPoint, FVector2D>& NodeCenters, const FIntPoint& CurrentCoord, const FIntPoint& SelectedCoord) const
 {
-	if (WidgetTree == nullptr)
+	// 현재 위치 마커: 시안 크기(슬롯) 유지, 현재 노드 머리 위에 얹는다.
+	if (Map_CurrentMarker != nullptr)
 	{
-		return;
-	}
-
-	HideUnusedMapTextSurfaces();
-
-	UCanvasPanel* RootCanvas = Cast<UCanvasPanel>(WidgetTree->RootWidget);
-	if (RootCanvas == nullptr)
-	{
-		return;
-	}
-
-	// 최초 1회만 범례 패널/행을 만든다(이후 재사용). 우측 고정으로 스크롤과 무관하게 항상 보인다.
-	if (mIconLegendPanel == nullptr)
-	{
-		mIconLegendPanel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("RuntimeMapIconLegendPanel"));
-		if (mIconLegendPanel == nullptr)
+		const FVector2D* CurrentCenter = NodeCenters.Find(CurrentCoord);
+		UCanvasPanelSlot* MarkerSlot = Cast<UCanvasPanelSlot>(Map_CurrentMarker->Slot);
+		if (CurrentCenter != nullptr && MarkerSlot != nullptr)
 		{
-			return;
+			const FVector2D MarkerSize = MarkerSlot->GetSize();
+			MarkerSlot->SetPosition(FVector2D(
+				CurrentCenter->X - MarkerSize.X * 0.5f,
+				CurrentCenter->Y - GetMapNodeSize().Y * 0.5f - MarkerSize.Y));
+			MarkerSlot->SetZOrder(6);
+			Map_CurrentMarker->SetVisibility(ESlateVisibility::HitTestInvisible);
 		}
-		mIconLegendPanel->SetBrushColor(FLinearColor(0.05f, 0.06f, 0.07f, 0.88f));
-		mIconLegendPanel->SetPadding(FMargin(16.f, 14.f, 16.f, 14.f));
-
-		mIconLegendList = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
-		mIconLegendPanel->SetContent(mIconLegendList);
-		RootCanvas->AddChildToCanvas(mIconLegendPanel);
-
-		UTextBlock* Title = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
-		Title->SetText(NSLOCTEXT("FrontendMap", "IconLegendTitle", "범례"));
-		Title->SetColorAndOpacity(FSlateColor(FLinearColor(0.96f, 0.93f, 0.80f, 1.f)));
-		FSlateFontInfo TitleFont = Title->GetFont();
-		TitleFont.Size = 20;
-		Title->SetFont(TitleFont);
-		if (UVerticalBoxSlot* TitleSlot = mIconLegendList->AddChildToVerticalBox(Title))
+		else
 		{
-			TitleSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 10.f));
-			TitleSlot->SetHorizontalAlignment(HAlign_Center);
-		}
-
-		struct FLegendRow { ERoomType Type; const TCHAR* Label; };
-		const FLegendRow Rows[] = {
-			{ ERoomType::Monster,      TEXT("전투") },
-			{ ERoomType::EliteMonster, TEXT("엘리트") },
-			{ ERoomType::BossMonster,  TEXT("보스") },
-			{ ERoomType::Shop,         TEXT("상점") },
-			{ ERoomType::Treasure,     TEXT("보물") },
-		};
-		for (const FLegendRow& Row : Rows)
-		{
-			UHorizontalBox* RowBox = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
-
-			USizeBox* IconBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass());
-			IconBox->SetWidthOverride(46.f);
-			IconBox->SetHeightOverride(46.f);
-			UImage* IconImage = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass());
-			const TCHAR* IconPath = LegendIconTexturePath(Row.Type);
-			UTexture2D* IconTex = (IconPath != nullptr) ? LoadObject<UTexture2D>(nullptr, IconPath) : nullptr;
-			if (IconTex != nullptr)
-			{
-				IconImage->SetBrushFromTexture(IconTex, false);
-				IconImage->SetDesiredSizeOverride(FVector2D(46.f, 46.f));
-			}
-			IconBox->SetContent(IconImage);
-			if (UHorizontalBoxSlot* IconSlot = RowBox->AddChildToHorizontalBox(IconBox))
-			{
-				IconSlot->SetVerticalAlignment(VAlign_Center);
-			}
-
-			UTextBlock* LabelText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
-			LabelText->SetText(FText::FromString(Row.Label));
-			LabelText->SetColorAndOpacity(FSlateColor(FLinearColor(0.92f, 0.95f, 0.96f, 1.f)));
-			FSlateFontInfo LabelFont = LabelText->GetFont();
-			LabelFont.Size = 17;
-			LabelText->SetFont(LabelFont);
-			if (UHorizontalBoxSlot* LabelSlot = RowBox->AddChildToHorizontalBox(LabelText))
-			{
-				LabelSlot->SetVerticalAlignment(VAlign_Center);
-				LabelSlot->SetPadding(FMargin(12.f, 0.f, 0.f, 0.f));
-			}
-
-			if (UVerticalBoxSlot* RowSlot = mIconLegendList->AddChildToVerticalBox(RowBox))
-			{
-				RowSlot->SetPadding(FMargin(0.f, 5.f, 0.f, 5.f));
-			}
+			Map_CurrentMarker->SetVisibility(ESlateVisibility::Collapsed);
 		}
 	}
 
-	mIconLegendPanel->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	ApplyIconLegendLayout();
+	// 선택 글로우: 선택된 노드 뒤(선과 같은 층)에서 강조한다.
+	if (Map_SelectGlow != nullptr)
+	{
+		const FVector2D* SelectedCenter = NodeCenters.Find(SelectedCoord);
+		UCanvasPanelSlot* GlowSlot = Cast<UCanvasPanelSlot>(Map_SelectGlow->Slot);
+		if (SelectedCenter != nullptr && GlowSlot != nullptr)
+		{
+			const FVector2D GlowSize = GlowSlot->GetSize();
+			GlowSlot->SetPosition(*SelectedCenter - GlowSize * 0.5f);
+			GlowSlot->SetZOrder(0);
+			Map_SelectGlow->SetVisibility(ESlateVisibility::HitTestInvisible);
+		}
+		else
+		{
+			Map_SelectGlow->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
 }
 
-void UFrontendMapWidget::ApplyIconLegendLayout() const
-{
-	if (mIconLegendPanel == nullptr)
-	{
-		return;
-	}
-
-	if (UCanvasPanelSlot* LegendSlot = Cast<UCanvasPanelSlot>(mIconLegendPanel->Slot))
-	{
-		LegendSlot->SetAnchors(FAnchors(1.0f, 0.5f));
-		LegendSlot->SetAlignment(FVector2D(1.0f, 0.5f));
-		LegendSlot->SetPosition(FVector2D(-40.0f, 20.0f));
-		LegendSlot->SetAutoSize(true);   // 제목 + 5행에 맞춰 자동 크기
-		LegendSlot->SetZOrder(50);
-	}
-}
