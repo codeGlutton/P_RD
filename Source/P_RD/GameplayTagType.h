@@ -37,7 +37,7 @@ namespace AnimationTags
 
 	/* 애니메이션 이벤트 타입 태그들 */
 
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Event_);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Event_Hit);
 }
 
 /**

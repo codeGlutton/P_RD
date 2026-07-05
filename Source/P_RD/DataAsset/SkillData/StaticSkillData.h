@@ -52,6 +52,12 @@ public:
     UPROPERTY(Category = "Motion", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ReceiveMotionTag"))
     FGameplayTag mReceiveMotionTag;
 
+    /**
+     * @brief 상대 방향으로 자동 회원 전환 여부
+     */
+    UPROPERTY(Category = "Motion", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "AutoRotateTowardTarget"))
+    bool mAutoRotateTowardTarget = true;
+
 public:
     // @brief 자신, 지정 범위 포함 여부 타겟 필터링
     UPROPERTY(Category = "Filter", EditAnywhere, BlueprintReadWrite, meta = (Bitmask, BitmaskEnum = "/Script/P_RD.ETargetIndexFilter", DisplayName = "TargetIndexFilter"))

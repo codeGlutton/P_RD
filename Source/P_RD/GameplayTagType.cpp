@@ -4,8 +4,16 @@ namespace InputTags
 {
 }
 
-namespace EventTags
+namespace AnimationTags
 {
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_GetBuff,							"Animation.Montage.GetBuff");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_GetDebuff,							"Animation.Montage.GetDebuff");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_GetDefense,						"Animation.Montage.GetDefense");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Slash,							"Animation.Montage.Hit.Slash");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Stab,							"Animation.Montage.Hit.Stab");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Smash,							"Animation.Montage.Hit.Smash");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Event_Hit,									"Animation.Event.Hit");
 }
 
 namespace AbilityTags

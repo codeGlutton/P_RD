@@ -82,10 +82,10 @@ void AUnit::BindModel(UObjectModel* Model)
 	IActorView::BindModel(Model);
 	mUnitModel = Cast<UUnitModel>(Model);
 
-	// 이동스텝 연출 요청 구독
+	// 연출 요청 구독
 	if (mUnitModel.IsValid())
 	{
-		mUnitModel->OnStartMoveStep.AddUObject(this, &AUnit::OnStartMoveStep);
+		// 초기 배치 연출 요청 구독
 		mUnitModel->OnPlaceTileTransform.AddLambda([this](const FTileTransform& TileTransform, const FTransform& Transform) {
 			FVector UnitLocation = Transform.GetLocation() + FVector(0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
 			FTransform UnitTransform = Transform;
@@ -94,18 +94,47 @@ void AUnit::BindModel(UObjectModel* Model)
 			SetActorTransform(UnitTransform);
 			});
 
-		mUnitModel->OnPlayApplyAnimationUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> MotionEndBarrier, TSharedPtr<FPresentationBarrier> MotionTriggerBarrier, FGameplayTag ApplyMotionTag) {
+		// 이동 연출 요청 구독
+		mUnitModel->OnStartMoveStep.AddUObject(this, &AUnit::OnStartMoveStep);
+		
+		// 스킬 Effect 타격 연출 구독
+		mUnitModel->OnPlayApplyAnimationUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> MotionEndBarrier, TSharedPtr<FPresentationBarrier> MotionTriggerBarrier, FGameplayTag ApplyMotionTag, ETileActorDirection LocalDirection) {
 			if (mMeshComp != nullptr)
 			{
 				UBoardActorAnimInstance* BoardActorAnimInst = Cast<UBoardActorAnimInstance>(mMeshComp->GetAnimInstance());
 				if (BoardActorAnimInst != nullptr)
 				{
-					FOnTriggerEndAnimationEvent OnTriggerEndAnimationEvent;
-					OnTriggerEndAnimationEvent.AddLambda([MotionEndBarrier](FGameplayTag Tag, UAnimMontage* EndAnim, bool IsInterrupted) {
-						});
-					BoardActorAnimInst->PlayMontageUsingTag(ApplyMotionTag, MoveTemp(OnTriggerEndAnimationEvent));
+					/* 스킬 연출 유지를 위한 Barrier */
 
-					BoardActorAnimInst->RegisterEventOnMontage();
+					FOnTriggerEndAnimationEvent OnTriggerEndAnimationEvent;
+					OnTriggerEndAnimationEvent.AddLambda([MotionEndBarrier](FGameplayTag Tag, ETileActorDirection LocalDir, UAnimMontage* EndAnim, bool IsInterrupted) {
+						});
+					BoardActorAnimInst->PlayMontageUsingTag(ApplyMotionTag, LocalDirection, MoveTemp(OnTriggerEndAnimationEvent));
+
+					/* 피격 적용 대기를 위한 Barrier */
+
+					FBoardActorAnimationEvent HitEvent;
+					HitEvent.OnTriggerAnimationEvent.AddLambda([MotionTriggerBarrier](FGameplayTag Tag, ETileActorDirection LocalDir, UAnimMontage* EndAnim) {
+						});
+					HitEvent.mIsOneTimeEvent = true;
+					BoardActorAnimInst->RegisterTagEventOnMontage(AnimationTags::Animation_Event_Hit, MoveTemp(HitEvent));
+				}
+			}
+			});
+
+		// 스킬 Effect 피격 연출 구독
+		mUnitModel->OnPlayReceiveAnimationUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> MotionEndBarrier, FGameplayTag ReceiveMotionTag, ETileActorDirection LocalDirection) {
+			if (mMeshComp != nullptr)
+			{
+				UBoardActorAnimInstance* BoardActorAnimInst = Cast<UBoardActorAnimInstance>(mMeshComp->GetAnimInstance());
+				if (BoardActorAnimInst != nullptr)
+				{
+					/* 스킬 연출 유지를 위한 Barrier */
+
+					FOnTriggerEndAnimationEvent OnTriggerEndAnimationEvent;
+					OnTriggerEndAnimationEvent.AddLambda([MotionEndBarrier](FGameplayTag Tag, ETileActorDirection LocalDir, UAnimMontage* EndAnim, bool IsInterrupted) {
+						});
+					BoardActorAnimInst->PlayMontageUsingTag(ReceiveMotionTag, LocalDirection, MoveTemp(OnTriggerEndAnimationEvent));
 				}
 			}
 			});

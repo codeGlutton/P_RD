@@ -19,7 +19,7 @@ struct FPresentationBarrier;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlaceTileTransform, const FTileTransform& /* TileTransform */, const FTransform& /* Transform */);
 
-DECLARE_MULTICAST_DELEGATE_FourParams(FOnPlayApplyAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, TSharedPtr<FPresentationBarrier> /*MotionTriggerBarrier*/, FGameplayTag /*ApplyMotionTag*/, ETileActorDirection /*Direction*/);
+DECLARE_MULTICAST_DELEGATE_FourParams(FOnPlayApplyAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, TSharedPtr<FPresentationBarrier> /*MotionTriggerBarrier*/, FGameplayTag /*ApplyMotionTag*/, ETileActorDirection /*LocalDirection*/);
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnPlayReceiveAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, FGameplayTag /*ReceiveMotionTag*/, ETileActorDirection /*Direction*/);
 
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnStartMoveStep, const FTileTransform& /* NextTileTransform */, const FTransform& /* TargetWorldTransform */, TSharedPtr<FPresentationBarrier> /* Barrier */);

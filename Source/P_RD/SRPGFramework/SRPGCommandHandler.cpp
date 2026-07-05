@@ -6,9 +6,10 @@
 
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Actor/TileMap/TileMapModel.h"
+
 #include "Actor/BoardActor/BoardActorModel.h"
 
-void ISRPGCommandHandler::GetTileActorUnderCursor(UWorld* World, ECollisionChannel Channel, OUT AActor*& Actor, OUT FTileIndex& TileIndex, const FVector2D& ScreenPosition)
+void ISRPGCommandHandler::GetTileActorUnderCursor(UWorld* World, ECollisionChannel Channel, const FVector2D& ScreenPosition, OUT AActor*& Actor, OUT FTileIndex& TileIndex)
 {
 	check(World != nullptr);
 
@@ -63,4 +64,9 @@ void ISRPGCommandHandler::GetTileActorUnderCursor(UWorld* World, ECollisionChann
 			}
 		}
 	}
+}
+
+void ISRPGCommandHandler::GetTileActorUnderCursor(UWorld* World, ECollisionChannel Channel, OUT AActor*& Actor, OUT FTileIndex& TileIndex)
+{
+	GetTileActorUnderCursor(World, Channel, FVector2D(-1.0, -1.0), OUT Actor, OUT TileIndex);
 }

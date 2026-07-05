@@ -1,68 +1,87 @@
 ﻿#include "Animation/BoardActorAnimInstance.h"
 
-bool UBoardActorAnimInstance::PlayMontageUsingTag(const FGameplayTag& MontageTag)
+void UBoardActorAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
-	if (PlayMontageUsingTag_Internal(MontageTag) == false)
+	Super::NativeUpdateAnimation(DeltaSeconds);
+
+	if (IsPlayingMontageUsingTag() == true)
+	{
+		mUseAdditiveMontage = mTagAnimMontageSets[mActiveMontageTag].mIsAdditive;
+	}
+	else
+	{
+		mUseAdditiveMontage = false;
+	}
+
+	// TODO : 속도 수집
+	// TODO : 생존 상태 수집
+}
+
+bool UBoardActorAnimInstance::PlayMontageUsingTag(const FGameplayTag& MontageTag, ETileActorDirection LocalDirection)
+{
+	if (PlayMontageUsingTag_Internal(MontageTag, LocalDirection) == false)
 	{
 		return false;
 	}
 
 	FOnMontageEnded EndDelegate;
 	EndDelegate.BindUObject(this, &UBoardActorAnimInstance::OnEndMontageUsingTag);
-	Montage_SetEndDelegate(EndDelegate, mAnimMontageTags[mActiveMontageTag]);
+	Montage_SetEndDelegate(EndDelegate, GetPlayingMontageUsingTag());
 	return true;
 }
 
-bool UBoardActorAnimInstance::PlayMontageUsingTag(const FGameplayTag& MontageTag, FOnTriggerEndAnimationEvent&& EndEvent)
+bool UBoardActorAnimInstance::PlayMontageUsingTag(const FGameplayTag& MontageTag, ETileActorDirection LocalDirection, FOnTriggerEndAnimationEvent&& EndEvent)
 {
-	if (PlayMontageUsingTag_Internal(MontageTag) == false)
+	if (PlayMontageUsingTag_Internal(MontageTag, LocalDirection) == false)
 	{
 		return false;
 	}
 
 	FOnMontageEnded EndDelegate;
 	EndDelegate.BindWeakLambda(this, [this, Callback = MoveTemp(EndEvent)](UAnimMontage* EndAnim, bool IsInterrupted) {
-		Callback.Broadcast(mActiveMontageTag, EndAnim, IsInterrupted);
+		Callback.Broadcast(mActiveMontageTag, mActiveMontageDir, EndAnim, IsInterrupted);
 		OnEndMontageUsingTag(EndAnim, IsInterrupted);
 		});
-	Montage_SetEndDelegate(EndDelegate, mAnimMontageTags[mActiveMontageTag]);
+	Montage_SetEndDelegate(EndDelegate, GetPlayingMontageUsingTag());
 	return true;
 }
 
-bool UBoardActorAnimInstance::PlayMontageUsingTag_Internal(const FGameplayTag& MontageTag)
+bool UBoardActorAnimInstance::PlayMontageUsingTag_Internal(const FGameplayTag& MontageTag, ETileActorDirection LocalDirection)
 {
-	if (mAnimMontageTags.Contains(MontageTag) == false)
+	if (mTagAnimMontageSets.Contains(MontageTag) == false)
 	{
 		// 존재하지 않는 애님 몽타쥬
 		return false;
 	}
 
-	TObjectPtr<UAnimMontage>& TargetAnimMontage = mAnimMontageTags[MontageTag];
+	TObjectPtr<UAnimMontage>& TargetAnimMontage = mTagAnimMontageSets[MontageTag].mAnimMontages[StaticCast<int32>(LocalDirection)];
 	if (TargetAnimMontage == nullptr)
 	{
 		// nullptr 애님 몽타쥬
 		return false;
 	}
 
-	if (Montage_Play(mAnimMontageTags[MontageTag]) <= 0.f)
+	if (Montage_Play(TargetAnimMontage) <= 0.f)
 	{
 		// 애님 몽타쥬 실행 시간이 0초 이하
 		return false;
 	}
 
 	mActiveMontageTag = MontageTag;
+	mActiveMontageDir = LocalDirection;
 	return true;
 }
 
 void UBoardActorAnimInstance::OnEndMontageUsingTag(UAnimMontage* EndAnim, bool IsInterrupted)
 {
 	mActiveMontageTag = FGameplayTag::EmptyTag;
+	mActiveMontageDir = ETileActorDirection::Count;
 	mActiveMontageEvents.Reset();
 }
 
-bool UBoardActorAnimInstance::RegisterEventOnMontage(const FGameplayTag& EventTag, FBoardActorAnimationEvent&& Event)
+bool UBoardActorAnimInstance::RegisterTagEventOnMontage(const FGameplayTag& EventTag, FBoardActorAnimationEvent&& Event)
 {
-	if (mActiveMontageTag.IsValid() == false)
+	if (IsPlayingMontageUsingTag() == false)
 	{
 		// 태그 기반 몽타쥬 실행 중이 아님
 		return false;
@@ -73,9 +92,9 @@ bool UBoardActorAnimInstance::RegisterEventOnMontage(const FGameplayTag& EventTa
 	return true;
 }
 
-bool UBoardActorAnimInstance::TriggerMontageEvent(const FGameplayTag& EventTag)
+bool UBoardActorAnimInstance::TriggerMontageTagEvent(const FGameplayTag& EventTag)
 {
-	if (mActiveMontageTag.IsValid() == false)
+	if (IsPlayingMontageUsingTag() == false)
 	{
 		// 태그 기반 몽타쥬 실행 중이 아님
 		return false;
@@ -90,20 +109,20 @@ bool UBoardActorAnimInstance::TriggerMontageEvent(const FGameplayTag& EventTag)
 	FBoardActorAnimationEvent& TargetEvent = mActiveMontageEvents[EventTag];
 	if (TargetEvent.OnTriggerAnimationEvent.IsBound() == true)
 	{
-		TargetEvent.OnTriggerAnimationEvent.Broadcast(mActiveMontageTag, mAnimMontageTags[mActiveMontageTag]);
+		TargetEvent.OnTriggerAnimationEvent.Broadcast(mActiveMontageTag, mActiveMontageDir, GetPlayingMontageUsingTag());
 	}
 
 	if (TargetEvent.mIsOneTimeEvent == true)
 	{
-		UnregisterEventOnMontage(EventTag);
+		UnregisterTagEventOnMontage(EventTag);
 	}
 
 	return true;
 }
 
-bool UBoardActorAnimInstance::UnregisterEventOnMontage(const FGameplayTag& EventTag)
+bool UBoardActorAnimInstance::UnregisterTagEventOnMontage(const FGameplayTag& EventTag)
 {
-	if (mActiveMontageTag.IsValid() == false)
+	if (IsPlayingMontageUsingTag() == false)
 	{
 		// 태그 기반 몽타쥬 실행 중이 아님
 		return false;
@@ -117,6 +136,16 @@ bool UBoardActorAnimInstance::UnregisterEventOnMontage(const FGameplayTag& Event
 
 	mActiveMontageEvents.Remove(EventTag);
 	return true;
+}
+
+bool UBoardActorAnimInstance::IsPlayingMontageUsingTag() const
+{
+	return mActiveMontageTag.IsValid() == true && mActiveMontageDir != ETileActorDirection::Count;
+}
+
+UAnimMontage* UBoardActorAnimInstance::GetPlayingMontageUsingTag() const
+{
+	return mTagAnimMontageSets[mActiveMontageTag].mAnimMontages[StaticCast<int32>(mActiveMontageDir)];
 }
 
 

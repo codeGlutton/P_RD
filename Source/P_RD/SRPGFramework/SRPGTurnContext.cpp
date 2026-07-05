@@ -75,7 +75,7 @@ ESRPGCommandResult USRPGDetailInfoPopupCommandHandler::HandleCommand(const TInst
 		{
 			AActor* HitActor = nullptr;
 			FTileIndex TileIndex = FTileIndex::Invalid;
-			GetTileActorUnderCursor(GetWorld(), RDTraceChannels::TileAnyTrace, OUT HitActor, OUT TileIndex, WorldTraceCommand.mScreenPosition);
+			GetTileActorUnderCursor(GetWorld(), RDTraceChannels::TileAnyTrace, WorldTraceCommand.mScreenPosition, OUT HitActor, OUT TileIndex);
 
 			IBoardSelectionTarget* SelectionTarget = Cast<IBoardSelectionTarget>(HitActor);
 			if (SelectionTarget != nullptr && SelectionTarget->IsSelectable() == true)

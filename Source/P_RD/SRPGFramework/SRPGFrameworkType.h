@@ -11,7 +11,7 @@
 #include "SRPGFrameworkType.generated.h"
 
 /**
- * @brief 타일에 배치된 액터가 바라보는 방향
+ * @brief 타일 내에서 바라보는 방향
  */
 UENUM(BlueprintType)
 enum class ETileActorDirection : uint8
@@ -19,8 +19,21 @@ enum class ETileActorDirection : uint8
     Forward = 0,
     Right,
     Backward,
-    Left
+    Left,
+    Count UMETA(Hidden)
 };
+
+inline ETileActorDirection TileMapToLocalDirection(ETileActorDirection TileMapDirection, ETileActorDirection FacingTileMapDirection)
+{
+    const int32 LocalDir = (static_cast<int32>(TileMapDirection) - static_cast<int32>(FacingTileMapDirection) + 4) % 4;
+    return static_cast<ETileActorDirection>(LocalDir);
+}
+
+inline ETileActorDirection LocalToTileMapDirection(ETileActorDirection LocalDirection, ETileActorDirection FacingTileMapDirection)
+{
+    const int32 TileMapDir = (static_cast<int32>(LocalDirection) + static_cast<int32>(FacingTileMapDirection)) % 4;
+    return static_cast<ETileActorDirection>(TileMapDir);
+}
 
 /**
  * @brief 타일 맵 상 인덱스 좌표

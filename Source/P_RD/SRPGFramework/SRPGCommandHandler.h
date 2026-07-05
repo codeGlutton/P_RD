@@ -48,11 +48,12 @@ protected:
 	 * 커서가 어떤 타일 액터를 가리키는지 알아오는 함수. 대상이 없는 경우 FTileIndex::Invalid를 반환
 	 * @param World 월드 객체
 	 * @param Channel 검사할 트래이스 채널명
+	 * @param ScreenPosition 트레이스할 화면 좌표(픽셀). (-1,-1)이면 PC 마우스 커서를 사용. 모바일 터치는 커서가 없으므로 이 좌표로 트레이스한다.
 	 * @param Actor 측정된 액터
 	 * @param TileIndex 부딧친 대상의 타일의 인덱스 값
-	 * @param ScreenPosition 트레이스할 화면 좌표(픽셀). (-1,-1)이면 PC 마우스 커서를 사용. 모바일 터치는 커서가 없으므로 이 좌표로 트레이스한다.
 	 */
-	static void GetTileActorUnderCursor(UWorld* World, ECollisionChannel Channel, OUT AActor*& Actor, OUT FTileIndex& TileIndex, const FVector2D& ScreenPosition = FVector2D(-1.0, -1.0));
+	static void GetTileActorUnderCursor(UWorld* World, ECollisionChannel Channel, const FVector2D& ScreenPosition, OUT AActor*& Actor, OUT FTileIndex& TileIndex);
+	static void GetTileActorUnderCursor(UWorld* World, ECollisionChannel Channel, OUT AActor*& Actor, OUT FTileIndex& TileIndex);
 
 public:
 	static constexpr int8 HIGHEST_PRIORITY = INT8_MAX;
