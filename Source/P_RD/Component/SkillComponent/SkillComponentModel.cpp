@@ -158,6 +158,20 @@ void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillInd
 		Passive->CommitPassive(DynamicPassiveData);
 	}
 
+	/*
+	 * 모션 레이어가 하나도 없는(미저작) 스킬은 시전을 무동작으로 즉시 종료한다.
+	 * PlayMotionLayer/Trigger/EndMotionLayer가 전부 mSkillMotionLayers[mMotionIndex]를 인덱싱하므로,
+	 * 빈 배열이면 [0] 접근에서 out-of-bounds 크래시가 난다. 실제 효과가 필요하면 DA에
+	 * mSkillMotionLayers(+효과 레이어)를 채워야 한다.
+	 */
+	const UStaticSkillData* ActiveSkillData = mSkillEntries[SkillIndex].mData;
+	if (ActiveSkillData == nullptr || ActiveSkillData->mSkillMotionLayers.Num() == 0)
+	{
+		UE_LOG(LogRD, Warning, TEXT("스킬(index %d)에 모션 레이어가 없어 시전을 건너뜁니다 — DA에 mSkillMotionLayers 미설정"), SkillIndex);
+		DeactivateSkill();
+		return;
+	}
+
 	PlayMotionLayer();
 }
 

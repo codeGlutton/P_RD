@@ -18,8 +18,12 @@ class UStaticObstacleSpawnData;
 struct FPresentationBarrier;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlaceTileTransform, const FTileTransform& /* TileTransform */, const FTransform& /* Transform */);
+
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnPlayApplyAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, TSharedPtr<FPresentationBarrier> /*MotionTriggerBarrier*/, FGameplayTag /*ApplyMotionTag*/, ETileActorDirection /*Direction*/);
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnPlayReceiveAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, FGameplayTag /*ReceiveMotionTag*/, ETileActorDirection /*Direction*/);
+
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnStartMoveStep, const FTileTransform& /* NextTileTransform */, const FTransform& /* TargetWorldTransform */, TSharedPtr<FPresentationBarrier> /* Barrier */);
+
 
 /**
  * @brief  보드에 올라가는 액터 데이터 모델 클래스
@@ -122,6 +126,13 @@ public:
 	 * @brief 타일 트랜스폼이 즉시 변경되었을 때, 뷰에게 전달하는 대리자
 	 */
 	FOnPlaceTileTransform OnPlaceTileTransform;
+
+	/**
+	 * @brief 이동 스텝 시작 시 뷰에게 한 칸 이동 연출을 요청하는 대리자
+	 * @details 뷰는 배리어를 잡고 애니메이션 연출, 끝나면 다음 스텝 진행을 알림.
+	 *          시뮬레이션모드에서는 구독자가 없어서 배리어가 즉시 소멸하므로 로직만 동작.
+	 */
+	FOnStartMoveStep OnStartMoveStep;
 
 	/**
 	 * @brief 능동적 행동을 전달하는 대리자

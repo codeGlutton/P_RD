@@ -74,8 +74,7 @@ public:
 	bool ApplyRolledDices(const TArray<int32>& RolledFaceIndices);
 
 	/**
-	 * @brief UIModel의 조작 의도(OnCombatCommand)를 위 진입점으로 라우팅한다.
-	 * @details 위젯은 게임모드를 직접 모른다 — Request*로 의도만 쏘고, 여기서 커맨드 발행 진입점에 연결한다.
+	 * @brief UIModel에서 올라온 버튼 입력을 전투 명령으로 보낸다.
 	 */
 	UFUNCTION()
 	void HandleCombatCommand(ECombatInputType Type, int32 IntPayload);
@@ -84,20 +83,31 @@ public:
 	UFUNCTION()
 	void HandleApplyDiceResults(const TArray<int32>& RolledFaceIndices);
 
+	/**
+	 * @brief 전장 탭을 조준/시전 입력으로 처리한다.
+	 *
+	 * @details
+	 * 플레이어 턴이 아닐 때는 입력을 무시한다.
+	 */
+	UFUNCTION()
+	void HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLongPress);
+
 public:
 	/**
-	 * @brief 터치 입력 아래의 월드 액터를 검사하여 이벤트를 실행한다.
+	 * @brief 터치/클릭 지점의 월드 액터를 검사하여 이벤트를 실행한다.
+	 * @param ScreenPosition 입력 지점의 화면 좌표(픽셀). 모바일 터치는 커서가 없으므로 이 좌표로 트레이스한다.
 	 * @return 이벤트 성공 여부
 	 */
 	UFUNCTION(Category = UI, BlueprintCallable)
-	bool ResolveWorldTouchEvent();
+	bool ResolveWorldTouchEvent(FVector2D ScreenPosition);
 
 	/**
-	 * @brief 긴 터치 입력 아래의 월드 액터를 검사하여 이벤트를 실행한다.
+	 * @brief 긴 터치/클릭 지점의 월드 액터를 검사하여 이벤트를 실행한다.
+	 * @param ScreenPosition 입력 지점의 화면 좌표(픽셀). 모바일 터치는 커서가 없으므로 이 좌표로 트레이스한다.
 	 * @return 이벤트 성공 여부
 	 */
 	UFUNCTION(Category = UI, BlueprintCallable)
-	bool ResolveWorldLongPressEvent();
+	bool ResolveWorldLongPressEvent(FVector2D ScreenPosition);
 
 protected:
 	void OnRegisterUnit(UUnitModel* Unit);
@@ -111,6 +121,14 @@ protected:
 	void PushDiceUIData() const;
 	void PushSelectedDiceUIData() const;
 	void PushSkillUIData() const;
+
+	/**
+	 * @brief 길게 누른 스킬의 상세 정보를 UIModel에 넣는다.
+	 *
+	 * @details
+	 * 이름, 설명, 아이콘, 코스트, 범위 정보를 채운다.
+	 */
+	void PushSkillDetailUIData(int32 SkillIndex) const;
 	void PushEquipmentUIData() const;
 	void PushPlayerMetaUIData() const;
 

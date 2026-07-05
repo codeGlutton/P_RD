@@ -19,7 +19,7 @@ enum class ECameraControlState : uint8
 struct FCameraEmphasisState
 {
 	FVector		Position;
-	float		ZoomDelta;
+	float		Zoom;
 };
 
 class UCameraComponent;
@@ -59,9 +59,10 @@ public:
 public:
 	/*
 	* @brief 줌 속력
+	* @note 사용처가 불확실하여 우선 주석 처리
 	*/
-	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "ZoomSpeed", AllowPrivateAccess = "true"))
-	float mZoomSpeed = 1.f;
+	//UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "ZoomSpeed", AllowPrivateAccess = "true"))
+	//float mZoomSpeed = 1.f;
 
 	/*
 	* @brief 최대 OrthoWidth, 또는 최소 확대
@@ -172,8 +173,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	UCameraComponent* GetCameraComponent();
 
-	UFUNCTION(BlueprintCallable)
-	void SetZoomSpeed(float ZoomSpeed);
+	//UFUNCTION(BlueprintCallable)
+	//void SetZoomSpeed(float ZoomSpeed);
 
 	UFUNCTION(BlueprintCallable)
 	void SetMaxOrthoWidth(float MaxOrthoWidth);
@@ -193,7 +194,7 @@ public:
 public:
 
 	/*
-	* @brief 줌 값을 받으면 즉시 카메라를 Zoom합니다
+	* @brief ZoomDelta 값을 받으면 즉시 카메라를 해당 값만큼 Zoom 합니다
 	*
 	* @param ZoomDelta 만큼 즉시 Zoom 합니다
 	*/
@@ -201,12 +202,21 @@ public:
 	void ZoomCamera_Instant(float ZoomDelta);
 
 	/*
+	* @brief ZoomDelta과 ViewPort 위치 값을 받으면 해당 위치로 Zoom하며 ViewPortPos에 맞는 위치로 이동합니다
+	*
+	* @param ZoomDelta 만큼 즉시 Zoom 합니다
+	* @param ViewPortPos를 WorldPos로 변환하고 즉시 이동합니다.
+	*/
+	UFUNCTION(BlueprintCallable)
+	void ZoomCamera_InstantAndMoveToViewportPosition_Instant(float ZoomDelta, FVector2D ViewPortPos);
+
+	/*
 	* @brief 줌 값을 받아서 일정 시간동안 카메라를 Zoom합니다
 	*
 	* @param ZoomDelta 만큼 일정 시간동안  Zoom 합니다
 	*/
 	UFUNCTION(BlueprintCallable)
-	void ZoomCamera_Smooth(float ZoomDelta);
+	void ZoomCamera_Smooth(float TargetZoom);
 
 	/*
 	* @brief 줌 값을 받아서 카메라를 Zoom합니다.
@@ -215,7 +225,7 @@ public:
 	* @param ViewPortPos위치로 카메라를 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void ZoomCameraAndMoveToViewportPosition(float ZoomDelta, FVector2D ViewPortPos);
+	void ZoomCamera_SmoothAndMoveToViewportPosition_Smooth(float ZoomDelta, FVector2D ViewPortPos);
 
 	/*
 	* @brief 줌 값을 받아서 카메라를 Zoom합니다.
@@ -224,7 +234,7 @@ public:
 	* @param ViewPortPos위치로 카메라를 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void ZoomCameraAndMoveToWorldPosition(float ZoomDelta, FVector WorldPosition);
+	void ZoomCamera_SmoothAndMoveToWorldPosition_Smooth(float ZoomDelta, FVector WorldPosition);
 
 	/*
 	* @brief MoveToViewportPosition로 카메라의 시선을 옮긴다.
@@ -233,7 +243,7 @@ public:
 	* @param MoveToViewportPosition에서 Ray를 쏜 다음 충돌한 위치로 카메라의 시선 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void MoveToViewportPosition(FVector2D ViewPortPos);
+	void MoveToViewportPosition_Smooth(FVector2D ViewPortPos);
 
 	/*
 	* @brief WorldPosition로 카메라의 시선을 옮긴다.
@@ -242,7 +252,7 @@ public:
 	* @param WorldPosition 위치로 카메라의 시선 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void MoveToWorldPosition(FVector WorldPosition);
+	void MoveToWorldPosition_Smooth(FVector WorldPosition);
 
 	/*
 	* @brief MoveToViewportPosition로 카메라의 시선을 옮긴다.
@@ -251,13 +261,19 @@ public:
 	* @param MoveToViewportPosition에서 Ray를 쏜 다음 충돌한 위치로 카메라의 시선 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void DragMoveToViewportPosition(FVector2D PreViewPortPos, FVector2D CurViewPortPos);
+	void DragMoveToViewportPosition_Instant(FVector2D PreViewPortPos, FVector2D CurViewPortPos);
 
 
 private:
-	void MoveStep();
+	/* 
+	* @brief 이동 시 매 틱마다 호출하는 함수
+	*/
+	void MoveSmooth();
 
-	void ZoomStep();
+	/*
+	* @brief 줌 시 매 틱마다 호출하는 함수
+	*/
+	void ZoomSmooth();
 
 
 public:
@@ -269,7 +285,7 @@ public:
 	* @param ZoomDelta 만큼 Zoom 합니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void StartEmphasisToWorldPositionWithZoomDelta(float ZoomDelta, FVector WorldPosition);
+	void StartEmphasisToWorldPositionWithZoomDelta(float TargetZoom, FVector WorldPosition);
 
 	/*
 	* @brief ViewPortPosition로 카메라의 시선을 옮기고 ZoomDelta만큼 Zoom 합니다.
@@ -278,7 +294,7 @@ public:
 	* @param ZoomDelta 만큼 Zoom 합니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void StartEmphasisToViewPortPositionWithZoomDelta(float ZoomDelta, FVector2D ViewPortPos);
+	void StartEmphasisToViewPortPositionWithZoomDelta(float TargetZoom, FVector2D ViewPortPos);
 
 	/*
 	* @brief WorldPosition로 카메라의 시선을 옮기고 Zoom값을 mEmphasisZoom로 변경합니다.

@@ -14,7 +14,7 @@ DECLARE_DELEGATE(FOnFinishPresentation);
 /**
  * @brief  연출 완료 시기를 연장해주는 배리어 객체 정의 헤더. 해당 객체가 소멸 시 연출 완료로 인식
  */
-struct FPresentationBarrier
+struct P_RD_API FPresentationBarrier
 {
 public:
 	static TSharedPtr<FPresentationBarrier> Make(FOnFinishPresentation OnFinishPresentation);

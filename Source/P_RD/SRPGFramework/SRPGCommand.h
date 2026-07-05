@@ -53,6 +53,14 @@ public:
 	UPROPERTY(Category = Input, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsLongPress"))
 	bool mIsLongPress = false;
 
+	/**
+	 * @brief 입력 지점의 화면 좌표(픽셀).
+	 * @details 모바일은 마우스 커서가 없어 커서 트레이스가 실패하므로, 이 좌표로 직접 월드 트레이스한다.
+	 *          (-1, -1) = 미지정 → PC 마우스 커서를 사용한다.
+	 */
+	UPROPERTY(Category = Input, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ScreenPosition"))
+	FVector2D mScreenPosition = FVector2D(-1.0, -1.0);
+
 public:
 	FOnShowTargetDetailPanelUI OnShowTargetDetailPanelUI;
 };

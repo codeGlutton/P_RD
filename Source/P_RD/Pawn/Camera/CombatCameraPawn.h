@@ -17,11 +17,15 @@ class USceneComponent;
 
 struct FTouchState
 {
-	float LocationX;
-	float LocationY;
 	bool bIsCurrentlyPressed = false;
+	FVector2D StartTouchPos;
+	FVector2D PreTouchPos;
+	FVector2D CurTouchPos;
+
 };
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnDragging, const TArray<FTouchState>&);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnPinching, const TArray<FTouchState>&);
 
 UCLASS()
 class P_RD_API ACombatCameraPawn : public APawn
@@ -56,18 +60,29 @@ public:
 	UPROPERTY(Category = CameraMovement, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CameraMovementComponent", AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraMovementComponent> mCameraMovementComponent;
 
-	//@brief 이전 틱의 Touch 위치와 상태 변수
-	FTouchState mPreTouchState1;
+	// ========================================
+	// Touch 상태 관련 변수
 
-	//@brief 이전 틱의 Touch 위치와 상태 변수
-	FTouchState mPreTouchState2;
 
-	// ==============================================
-	// 테스트용 변수
-	bool mFirstTouch;
-	bool mSecondTouch;
-	FVector2D mPreFirstTouch;
-	FVector2D mPreSecondTouch;
+	/*
+	* @brief 카메라 조작 시 손떨림 방지 변수
+	*/
+	float mImageStabilization = 3.f;
+
+	/*
+	* @brief 터치 관련 상태 저장
+	*/
+	TArray<FTouchState> mTouchStates;
+
+	/*
+	* @brief Draggin 제스쳐 사용 시 호출할 카메라 행동 대리자
+	*/
+	FOnDragging OnDragging;
+	
+	/* 
+	* @brief Pinching 제스쳐 사용 시 호출할 카메라 행동 대리자
+	*/
+	FOnPinching OnPinching;
 
 
 public:
@@ -77,24 +92,44 @@ public:
 	UFUNCTION(BlueprintCallable)
 	UCameraMovementComponent* GetCameraMovementComponent();
 
+	/* 콘솔 치트 (개발 전용) */
+public:
+	/**
+	 * @brief 플레이어 유닛을 지정 타일까지 경로 이동 — 콘솔에서 "RDMoveTo X Y"
+	 * @details
+	 * 이동 빌드 UI(MOVE 버튼·이동 포인트)를 건너뛰고,
+	 * 확정 경로를 실은 이동 커맨드를 직접 발행해
+	 * MoveAction부터 뷰 연출까지 실제 파이프라인으로 검증.
+	 * 전투에서 빙의되는 폰이라 exec 라우팅이 보장되어 여기 둠.
+	 * @note
+	 * UFUNCTION(Exec) 때문에 전처리기에 못 넣고, cpp에서 전처리
+	 * -> 릴리즈에서는 빈 함수로 동작
+	 */
+	UFUNCTION(Exec)
+	void RDMoveTo(int32 X, int32 Y);
+
 private:
-	// @brief 터치 한 위치로 카메라의 시선을 이동 시키는 함수
-	void TouchMoveKey(const FInputActionValue& Value);
+	/*
+	* @brief Drag 중인지 나타내는 함수
+	* @return true 시 드래그 중, false 시 드래그 아님
+	*/
+	bool IsDrag();
 
-	// @brief 지속적으로 Zoom을 하는 함수
-	void ZoomKey(const FInputActionValue& Value);
-	
-	// @brief 틱 상태를 false로 되돌립니다.
-	void ZoomEndKey(const FInputActionValue& Value);
+	/*
+	* @brief Pinch 중인지 나타내는 함수
+	* @return true 시 Pinch 중, false 시 Pinch 아님
+	*/
+	bool IsPinch();
 
-	// @brief 틱 상태를 false로 되돌립니다.
-	void TouchTragMoveKey(const FInputActionValue& Value);
+private:
 
-	// ==================================================
-	// Zoom 테스트
-	void FirstTouchStart(const FInputActionValue& Value);
-	void FirstTouchCompleted(const FInputActionValue& Value);
+	/*
+	* @brief Drag 중 카메라가 시행할 행동 
+	*/
+	void Dragging(const TArray<FTouchState>& TouchState);
 
-	void SecondTouchStart(const FInputActionValue& Value);
-	void SecondTouchCompleted(const FInputActionValue& Value);
+	/*
+	* @brief Pinch 중 카메라가 시행할 행동
+	*/
+	void Pinching(const TArray<FTouchState>& TouchState);
 };
