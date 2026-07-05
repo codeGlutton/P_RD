@@ -132,7 +132,9 @@ void ACombatGameMode::InitializeRoom()
 	CombatModel->OnUnregisterUnitUI.AddUObject(this, &ACombatGameMode::OnUnregisterUnit);
 
 	CombatModel->OnShowDicePanelAnyTurnUI.AddWeakLambda(this, [this](const USRPGTurnContext* TurnContext) {
-		// mCombatUIModel->NotifyDiceRollPresentationRequested(TurnContext);
+		// 턴 시작 주사위 준비(DicePrepare) 시점 — 굴림 오버레이를 열라고 UI에 통지한다.
+		// (첫 턴은 전투 입장 연출이 따로 열지만, 2턴째부터는 이 통지가 없으면 굴림 UI가 영영 안 열린다)
+		mCombatUIModel->NotifyDiceRollRequested();
 		});
 
 	CombatModel->OnBeginCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier) {
@@ -144,6 +146,11 @@ void ACombatGameMode::InitializeRoom()
 		// OnEndCombatUI.Broadcast(Barrier, Result); 연출은 연결고리가 아직 없음
 		});
 	CombatModel->OnBeginAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext) {
+		// 플레이어 턴 시작 = 새 라운드("N번째 턴"). 적 턴은 같은 라운드에 묶는다. 증가 후 push해야 첫 턴부터 1로 표시된다.
+		if (TurnContext != nullptr && TurnContext->GetOwner() != nullptr && TurnContext->GetOwner()->IsPlayerUnitModel() == true)
+		{
+			++mCombatRound;
+		}
 		PushTurnUIData();
 		PushUnitUIData();
 		PushDiceUIData();
@@ -433,8 +440,32 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
 		});
-	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
+	const int32 FloatingLogUnitId = Unit->GetModelId(); // 플로팅 로그 표시 대상(FUnitUI.mUnitId와 같은 id 공간)
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).AddWeakLambda(this, [this, FloatingLogUnitId](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
+
+		// 머리 위 전투 로그: HP 증감을 유닛 위 플로팅 텍스트로 통지(피해=빨강 -N, 회복=초록 +N).
+		const float HPDelta = Data.mNewValue - Data.mOldValue;
+		if (FMath::IsNearlyZero(HPDelta) == false && mCombatUIModel != nullptr)
+		{
+			// HP 변화 아이콘(하트). 첫 로드 이후엔 엔진 캐시에 있어 재로드 비용이 없다.
+			static const FSoftObjectPath HPIconPath(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ClassSelect/T_icon_hp.T_icon_hp"));
+			UTexture2D* HPIcon = Cast<UTexture2D>(HPIconPath.TryLoad());
+
+			const FText FloatingText = FText::FromString(FString::Printf(TEXT("%+d"), FMath::RoundToInt(HPDelta)));
+			const FLinearColor FloatingColor = HPDelta < 0.0f
+				? FLinearColor(1.0f, 0.25f, 0.2f, 1.0f)
+				: FLinearColor(0.35f, 1.0f, 0.4f, 1.0f);
+			mCombatUIModel->NotifyCombatFloatingLog(FloatingLogUnitId, FloatingText, FloatingColor, HPIcon);
+
+			// 이번 변화로 쓰러졌으면 사망 로그도 띄운다.
+			if (Data.mNewValue <= 0.0f && Data.mOldValue > 0.0f)
+			{
+				mCombatUIModel->NotifyCombatFloatingLog(FloatingLogUnitId,
+					NSLOCTEXT("CombatGameMode", "FloatingLogDown", "쓰러짐"),
+					FLinearColor(0.75f, 0.75f, 0.75f, 1.0f), nullptr);
+			}
+		}
 		});
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
@@ -492,7 +523,7 @@ void ACombatGameMode::PushTurnUIData() const
 	TurnUI.mCurrentUnitId = TurnContext->GetOwner()->GetModelId();
 	// 페이즈의 단일 소유자는 SetBuildPhase(빌드 이벤트) — 턴 스냅샷 push가 진행 중 페이즈를 덮지 않게 보존한다.
 	TurnUI.mPhase = mCombatUIModel->GetTurnUI().mPhase;
-	TurnUI.mRound = 0; // TODO : 라운드 수
+	TurnUI.mRound = mCombatRound; // 플레이어 턴 시작마다 게임모드가 센 라운드("N번째 턴" 표시용)
 	for (const TObjectPtr<UUnitModel>& UnitModel : UnitModels)
 	{
 		TurnUI.mTurnOrderUnitIds.Add(UnitModel->GetModelId());

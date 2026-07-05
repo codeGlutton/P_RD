@@ -170,3 +170,15 @@ void UCombatUIModel::NotifyActionResolved()
 {
 	OnActionResolved.Broadcast();
 }
+
+/** @brief 유닛 머리 위 플로팅 로그(HP 증감 등)를 구독 위젯에 알린다. */
+void UCombatUIModel::NotifyCombatFloatingLog(int32 UnitId, const FText& Text, const FLinearColor& Color, UTexture2D* Icon)
+{
+	OnCombatFloatingLog.Broadcast(UnitId, Text, Color, Icon);
+}
+
+/** @brief 턴 시작 주사위 굴림 오버레이 열기를 구독 위젯에 알린다. */
+void UCombatUIModel::NotifyDiceRollRequested()
+{
+	OnDiceRollRequested.Broadcast();
+}
