@@ -7,6 +7,7 @@
 
 #include "Pawn/Enemy/EnemyUnitModel.h"
 #include "Setting/GameTeamType.h"
+#include "AttributeSet/UnitAttributeSet.h"
 
 #include "Component/SkillComponent/SkillComponentModel.h"
 #include "DataAsset/UnitSpawnData/StaticEnemyUnitSpawnData.h"
@@ -15,6 +16,9 @@
 UEnemyUnitModel::UEnemyUnitModel()
 {
 	UUnitModel::SetGenericTeamId(EGameTeamType::Enemy);
+
+	// 적 스탯 세트 생성 — 속성 컴포넌트가 자식 AttributeSet을 자동 수집해 스탯 커브 초기화 대상이 된다(플레이어와 동일 패턴).
+	mUnitAttributeSet = CreateDefaultSubobject<UUnitAttributeSet>(TEXT("UnitAttributeSet"));
 }
 
 void UEnemyUnitModel::PostInitializeComponentModels()
