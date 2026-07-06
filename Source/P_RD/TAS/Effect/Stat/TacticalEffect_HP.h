@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   TacticalEffect_HP.h
  * @brief  체력(HP) 가감 이펙트 정의 헤더
  * @author 이문환
@@ -26,4 +26,8 @@ class P_RD_API UTacticalEffect_HP : public UTacticalEffect
 
 public:
 	UTacticalEffect_HP();
+
+	/* UTacticalEffect 상속 */
+public:
+	void OnExecuted(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const override;
 };

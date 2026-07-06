@@ -175,10 +175,12 @@ public:
 	USRPGTurnContext* GetTurnContext(const UUnitModel* Owner);
 	TArray<TObjectPtr<USRPGTurnContext>> GetTurnContexts(const UUnitModel* Owner);
 	UTileMapModel* GetTileMap();
-	TArray<TObjectPtr<UUnitModel>>& GetUnits();
-	// @brief 등록된 플레이어 유닛 반환 (적 AI가 표적 좌표를 얻는 용도)
-	UUnitModel* GetPlayerUnit() const { return mPlayerUnit; }
-	TArray<TObjectPtr<UBoardActorModel>>& GetObstacles();
+
+	UUnitModel* GetPlayerUnit() const;
+	const TArray<TObjectPtr<UUnitModel>>& GetUnits() const;
+	const TArray<TObjectPtr<UBoardActorModel>>& GetObstacles() const;
+
+	int32 GetRoundCount() const;
 
 	/* 시뮬 함수 */
 public:
@@ -255,6 +257,7 @@ protected:
 	UPROPERTY(Category = Combat, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatResult"))
 	ESRPGCombatResult mCombatResult;
 
+protected:
 	// @brief 등록된 턴 객체들
 	TCircularDoubleLinkedList<int32> mTurnContextOrder;
 	TCircularDoubleLinkedList<int32>::TCircularDoubleLinkedListNode* mCurTurnContextOrder = nullptr;
@@ -264,12 +267,17 @@ protected:
 	UPROPERTY(Category = Turn, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "TurnContextMap"))
 	TMap<int32, TObjectPtr<USRPGTurnContext>> mTurnContextMap;
 
+protected:
 	// @brief 미뤄진 턴 제거 요청
 	UPROPERTY(Category = Turn, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PendingTurnRequests"))
 	TArray<FSRPGTurnUnregisterRequest> mPendingTurnRequests;
 	// @brief 액션 큐 처리용 헤드 인덱스
 	UPROPERTY(Category = Turn, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "HeadRequestIndex"))
 	int32 mHeadRequestIndex = 0;
+
+protected:
+	UPROPERTY(Category = Round, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "RoundCount"))
+	int32 mRoundCount = 0;
 
 protected:
 	// @brief 배치된 타일맵

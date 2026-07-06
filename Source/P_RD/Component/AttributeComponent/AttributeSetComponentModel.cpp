@@ -468,7 +468,7 @@ FActiveTacticalEffectHandle UAttributeSetComponentModel::ApplyTacticalEffectSpec
 
 	UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
 	check(TacticalFrameworkModel != nullptr);
-	TacticalFrameworkModel->SetCurrentAppliedGE(OurCopyOfSpec); // 현재 적용 스펙을 프레임워크에 등록
+	TacticalFrameworkModel->SetCurrentAppliedTE(OurCopyOfSpec); // 현재 적용 스펙을 프레임워크에 등록
 
 	// 순간형이면 즉시 모디파이어를 실행해 BaseValue에 영구 반영
 	if (Spec.mEffectClass->mDurationPolicy == ETacticalEffectDurationType::Instant)

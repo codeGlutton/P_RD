@@ -173,9 +173,7 @@ public:
 	UPROPERTY(Category = "Attribute", EditDefaultsOnly, meta = (DisplayName = "Attribute"))
 	FTacticalAttribute mAttribute;
 
-	// @brief 적용 연산 종류(구 EGameplayModOp 대체). Aggregator가 이 op 값을 mMods[op] 배열 인덱스로 사용하므로
-	//        ETacticalModOp의 정수값은 구 enum과 동일하게 유지된다(직렬화/리다이렉트 호환).
-	//        기본값 Additive(=0, AddBase의 하위호환 별칭)는 단순 합산 연산을 의미한다.
+	// @brief 적용 연산 종류(구 EGameplayModOp 대체)
 	UPROPERTY(Category = "Attribute", EditDefaultsOnly, meta = (DisplayName = "ModifierOp"))
 	TEnumAsByte<ETacticalModOp::Type> mModifierOp = ETacticalModOp::Additive;
 
@@ -186,8 +184,9 @@ public:
 
 /**
  * @brief  속성값 및 태그를 변경하는 객체
- * @details GAS의 UGameplayEffect를 대체하는 자체 Effect 정의(정적 데이터 자산).
- *          모디파이어 목록/지속 정책/스태킹 규칙/부여 태그를 기술하며, 적용 시 FTacticalEffectSpec으로 인스턴스화된다.
+ * @details 
+ * GAS의 UGameplayEffect를 대체하는 자체 Effect 정의(정적 데이터 자산).
+ * 모디파이어 목록/지속 정책/스태킹 규칙/부여 태그를 기술하며, 적용 시 FTacticalEffectSpec으로 인스턴스화된다.
  */
 UCLASS(Blueprintable, BlueprintType)
 class P_RD_API UTacticalEffect : public UObject
@@ -197,31 +196,31 @@ class P_RD_API UTacticalEffect : public UObject
 public:
 	/**
 	 * @brief 현재 활성 Effect 상태에서 이 Spec을 적용할 수 있는지 판정한다(스태킹/조건 검사).
-	 * @param ActiveGEContainer 대상의 활성 Effect 컨테이너
-	 * @param GESpec 적용하려는 Effect Spec
+	 * @param ActiveTEContainer 대상의 활성 Effect 컨테이너
+	 * @param TESpec 적용하려는 Effect Spec
 	 * @return 적용 가능하면 true
 	 */
-	bool CanApply(const FActiveTacticalEffectsContainer& ActiveGEContainer, const FTacticalEffectSpec& GESpec) const;
+	virtual bool CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const;
 
 	/**
 	 * @brief Effect가 활성 컨테이너에 추가될 때 호출되는 훅(Infinite/지속형 진입 처리).
-	 * @param ActiveGEContainer 활성 Effect 컨테이너
-	 * @param ActiveGE 새로 추가된 활성 Effect
+	 * @param ActiveTEContainer 활성 Effect 컨테이너
+	 * @param ActiveTE 새로 추가된 활성 Effect
 	 * @return 추가가 유효하게 처리되면 true
 	 */
-	bool OnAddedToActiveContainer(FActiveTacticalEffectsContainer& ActiveGEContainer, FActiveTacticalEffect& ActiveGE) const;
+	virtual bool OnAddedToActiveContainer(FActiveTacticalEffectsContainer& ActiveTEContainer, FActiveTacticalEffect& ActiveTE) const;
 	/**
 	 * @brief Effect의 모디파이어 연산을 대상 속성에 실제로 실행(적용)한다.
-	 * @param ActiveGEContainer 활성 Effect 컨테이너
-	 * @param GESpec 실행할 Effect Spec
+	 * @param ActiveTEContainer 활성 Effect 컨테이너
+	 * @param TESpec 실행할 Effect Spec
 	 */
-	void OnExecuted(FActiveTacticalEffectsContainer& ActiveGEContainer, FTacticalEffectSpec& GESpec) const;
+	virtual void OnExecuted(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const;
 	/**
 	 * @brief Effect 적용 진입점(지속 정책에 따라 즉시 실행 또는 활성 컨테이너 등록으로 분기).
-	 * @param ActiveGEContainer 활성 Effect 컨테이너
-	 * @param GESpec 적용할 Effect Spec
+	 * @param ActiveTEContainer 활성 Effect 컨테이너
+	 * @param TESpec 적용할 Effect Spec
 	 */
-	void OnApplied(FActiveTacticalEffectsContainer& ActiveGEContainer, FTacticalEffectSpec& GESpec) const;
+	virtual void OnApplied(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const;
 
 public:
 	/** @brief 이 Effect를 식별하기 위한 에셋 태그 캐시를 반환한다. @return 에셋 태그 컨테이너 */

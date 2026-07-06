@@ -51,6 +51,14 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleCommand(const TInstancedStruct<FS
     {
         /* 이동 빌드 진입 시 외부에서 넘어온 이동 포인트를 받아 도달 범위 계산 */
 
+        if (mMoveBuildPhase != ESRPGMoveBuildPhase::None)
+        {
+            MarkActionCompleted(ESRPGActionResult::Cancelled);
+            SetBuildPhase(ESRPGMoveBuildPhase::None);
+            Result = ESRPGCommandResult::Handled;
+            return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
+        }
+
         UPlayerUnitModel* PlayerUnitModel = Cast<UPlayerUnitModel>(mInstigator);
         checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 모델 nullptr"));
         UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnitModel->GetAttributeComponentModel();
@@ -64,10 +72,7 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleCommand(const TInstancedStruct<FS
         // 커맨드 델리깃을 복사해서 페이즈가 바뀔 때 통지
         OnChangeMoveBuildPhase = MoveSelectCommand.OnChangeMoveBuildPhase;
 
-        if (mMoveBuildPhase == ESRPGMoveBuildPhase::None)
-        {
-            EnterMoveBuild();
-        }
+        EnterMoveBuild();
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
     case ESRPGCommandType::WorldTrace:
