@@ -51,8 +51,9 @@ void FSkillEffectLayer_Attack::CommitEffect(IBoardCombatTarget* OwnerActorModel,
         EffectHandle = AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
     }
 
-    // TODO : 약화 등의 패시브 효과 적용
-    const float TotalAttack = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackFactorAttribute());
+    // 약화
+    const bool IsOwnerWeakness = AttributeSetComponentModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_Debuff_Weakness);
+    const float WeaknessRatio = IsOwnerWeakness == true ? 0.75f : 1.f;
 
     /* 데미지 적용 */
     for (const IBoardCombatTarget* OtherCombatTarget : OtherCombatTargets)
@@ -60,7 +61,13 @@ void FSkillEffectLayer_Attack::CommitEffect(IBoardCombatTarget* OwnerActorModel,
         UAttributeSetComponentModel* OtherAttributeSetComponentModel = OtherCombatTarget->GetAttributeComponentModel();
         checkf(OtherAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
-        const float TotalDefense = OtherAttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefenseAttribute());
+        // 취약
+        const bool IsTargetVulnerability = OtherAttributeSetComponentModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_Debuff_Vulnerability);
+        const float VulnerabilityRatio = IsTargetVulnerability == true ? 1.5f : 1.f;
+        
+        // 최종 공격력과 방어력
+        const int32 TotalAttack = FMath::Floor(VulnerabilityRatio * WeaknessRatio * AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackFactorAttribute()));
+        const int32 TotalDefense = FMath::Floor(OtherAttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefenseAttribute()));
 
         /* 방어력 까기 */
         {

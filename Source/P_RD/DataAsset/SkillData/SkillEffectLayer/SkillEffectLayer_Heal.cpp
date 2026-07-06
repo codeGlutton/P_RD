@@ -1,7 +1,7 @@
-﻿#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_GetMove.h"
-#include "TAS/Effect/Stat/TacticalEffect_MovementPoint.h"
-#include "TAS/Effect/Stat/TacticalEffect_MovementFactor.h"
-#include "TAS/Effect/Stat/TacticalEffect_Movement.h"
+﻿#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Heal.h"
+#include "TAS/Effect/Stat/TacticalEffect_HealPoint.h"
+#include "TAS/Effect/Stat/TacticalEffect_HealFactor.h"
+#include "TAS/Effect/Stat/TacticalEffect_HP.h"
 
 #include "Actor/ActorModel.h"
 #include "Actor/BoardActor/BoardCombatTarget.h"
@@ -10,15 +10,15 @@
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
-void FSkillEffectLayer_GetMove::ClearPointEffect(IBoardCombatTarget* ActorModel) const
+void FSkillEffectLayer_Heal::ClearPointEffect(IBoardCombatTarget* ActorModel) const
 {
     UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
-    AttributeSetComponentModel->ApplyModToAttribute(UUnitAttributeSet::GetMovementPointAttribute(), ETacticalModOp::Override, 0.f);
+    AttributeSetComponentModel->ApplyModToAttribute(UUnitAttributeSet::GetHealPointAttribute(), ETacticalModOp::Override, 0.f);
 }
 
-void FSkillEffectLayer_GetMove::ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const
+void FSkillEffectLayer_Heal::ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const
 {
     UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
@@ -27,12 +27,12 @@ void FSkillEffectLayer_GetMove::ApplyPointEffect(IBoardCombatTarget* ActorModel,
     EffectContext->SetInstigator(Cast<UActorModel>(ActorModel));
     EffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
 
-    TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_MovementPoint::StaticClass(), EffectContext);
-    EffectSpec->mDynamicMagnitude = mDefaultMoveGain + DiceSum * mDiceRatio;
+    TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_HealPoint::StaticClass(), EffectContext);
+    EffectSpec->mDynamicMagnitude = mDefaultHealGain + DiceSum * mDiceRatio;
     AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
 }
 
-void FSkillEffectLayer_GetMove::CommitEffect(IBoardCombatTarget* OwnerActorModel, const TArray<FTileIndex>& TargetTileIndexes, const TArray<IBoardCombatTarget*>& OtherCombatTargets, float DiceSum) const
+void FSkillEffectLayer_Heal::CommitEffect(IBoardCombatTarget* OwnerActorModel, const TArray<FTileIndex>& TargetTileIndexes, const TArray<IBoardCombatTarget*>& OtherCombatTargets, float DiceSum) const
 {
     UAttributeSetComponentModel* AttributeSetComponentModel = OwnerActorModel->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
@@ -45,28 +45,24 @@ void FSkillEffectLayer_GetMove::CommitEffect(IBoardCombatTarget* OwnerActorModel
 
     /* 포인트를 Factor에 임시 추가 */
     {
-        TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_MovementFactor::StaticClass(), EffectContext);
-        EffectSpec->mDynamicMagnitude = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMovementPointAttribute());
+        TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_HealFactor::StaticClass(), EffectContext);
+        EffectSpec->mDynamicMagnitude = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetHealPointAttribute());
         EffectHandle = AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
     }
 
-    // 민첩성
-    const bool IsOwnerAgility = AttributeSetComponentModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_Buff_Agility);
-    const float AgilityRatio = IsOwnerAgility == true ? 1.5f : 1.f;
+    const float TotalHeal = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetHealFactorAttribute());
+    const float HealDiff = FMath::Floor(TotalHeal);
 
-    const float TotalMove = AgilityRatio * AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMovementFactorAttribute());
-    const float MoveDiff = FMath::Floor(TotalMove);
-
-    if (MoveDiff > 0.f)
+    if (HealDiff > 0.f)
     {
-        /* 이동 증가 적용 */
+        /* 힐 적용 */
         for (const IBoardCombatTarget* OtherCombatTarget : OtherCombatTargets)
         {
             UAttributeSetComponentModel* OtherAttributeSetComponentModel = OtherCombatTarget->GetAttributeComponentModel();
             checkf(OtherAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
-            TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_Movement::StaticClass(), EffectContext);
-            EffectSpec->mDynamicMagnitude = MoveDiff;
+            TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_HP::StaticClass(), EffectContext);
+            EffectSpec->mDynamicMagnitude = HealDiff;
             AttributeSetComponentModel->ApplyTacticalEffectSpecToTarget(*EffectSpec, OtherAttributeSetComponentModel);
         }
     }

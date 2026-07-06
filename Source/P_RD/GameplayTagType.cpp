@@ -9,6 +9,8 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_GetBuff,							"Animation.Montage.GetBuff");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_GetDebuff,							"Animation.Montage.GetDebuff");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_GetDefense,						"Animation.Montage.GetDefense");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_GetMovement,						"Animation.Montage.GetMovement");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Heal,								"Animation.Montage.Heal");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Slash,							"Animation.Montage.Hit.Slash");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Stab,							"Animation.Montage.Hit.Stab");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Smash,							"Animation.Montage.Hit.Smash");
@@ -47,6 +49,8 @@ namespace EffectTags
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect,							"GameplayEffect.StatusEffect");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Buff,					"GameplayEffect.StatusEffect.Buff");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Buff_Agility,			"GameplayEffect.StatusEffect.Buff.Agility");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Buff_Fortification,		"GameplayEffect.StatusEffect.Buff.Fortification");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Debuff,					"GameplayEffect.StatusEffect.Debuff");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Debuff_Weakness,			"GameplayEffect.StatusEffect.Debuff.Weakness");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Debuff_Vulnerability,	"GameplayEffect.StatusEffect.Debuff.Vulnerability");

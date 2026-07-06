@@ -1,20 +1,20 @@
 ﻿/*****************************************************************//**
- * @file   SkillEffectLayer_GetMove.h
- * @brief  하나의 스킬 모션 내에서 적용하는 기동력 습득 효과 단위 구현 헤더
+ * @file   SkillEffectLayer_Heal.h
+ * @brief  하나의 스킬 모션 내에서 적용하는 힐 효과 단위 구현 헤더
  * @author 모호재
- * @date   2026-07-03
+ * @date   2026-07-06
  *********************************************************************/
 
 #pragma once
 
 #include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer.h"
-#include "SkillEffectLayer_GetMove.generated.h"
+#include "SkillEffectLayer_Heal.generated.h"
 
 /**
- * @brief  하나의 스킬 모션 내에서 적용하는 기동력 습득 효과 단위
+ * @brief  하나의 스킬 모션 내에서 적용하는 힐 효과 단위
  */
 USTRUCT(BlueprintType)
-struct P_RD_API FSkillEffectLayer_GetMove : public FSkillEffectLayer
+struct P_RD_API FSkillEffectLayer_Heal : public FSkillEffectLayer
 {
 	GENERATED_BODY()
 
@@ -26,8 +26,8 @@ public:
 	void CommitEffect(IBoardCombatTarget* ActorModel, const TArray<FTileIndex>& TargetTileIndexes, const TArray<IBoardCombatTarget*>& OtherCombatTargets, float DiceSum) const override;
 
 public:
-	UPROPERTY(Category = "Move", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DefaultMoveGain"))
-	float mDefaultMoveGain = 0.f;
-	UPROPERTY(Category = "Move", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceRatio"))
+	UPROPERTY(Category = "Heal", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DefaultHealGain"))
+	float mDefaultHealGain = 0.f;
+	UPROPERTY(Category = "Heal", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceRatio"))
 	float mDiceRatio = 0.f;
 };

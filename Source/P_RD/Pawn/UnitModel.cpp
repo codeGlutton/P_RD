@@ -15,6 +15,8 @@
 #include "TAS/Passive/PassiveActivateContext.h"
 #include "TAS/Passive/DynamicPassiveData.h"
 
+#include "AttributeSet/UnitAttributeSet.h"
+
 UUnitModel::UUnitModel() : mTeamId(EGameTeamType::AllNeutral)
 {
 	mAttributeCompModel = CreateDefaultSubobject<UAttributeSetComponentModel>(TEXT("AttributeSetComponentModel"));
@@ -91,10 +93,18 @@ void UUnitModel::OnEndRoom()
 		Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnEndRoom, PassiveContext, OUT DynamicPassiveData);
 		Passive->CommitPassive(DynamicPassiveData);
 	}
+
+	// 모두 제거
+	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetDefenseAttribute(), ETacticalModOp::Override, 0.f);
+	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetMovementAttribute(), ETacticalModOp::Override, 0.f);
+	mAttributeCompModel->RemoveLooseGameplayTags(FGameplayTagContainer(EffectTags::GameplayEffect_StatusEffect), INT_MAX);
 }
 
 void UUnitModel::OnBeginTurn()
 {
+	// 방어도 제거
+	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetDefenseAttribute(), ETacticalModOp::Override, 0.f);
+
 	// 턴 시작 패시브 처리
 	TArray<UTacticalPassive*> Passives = mPassiveCompModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartTurn);
 
@@ -133,6 +143,9 @@ void UUnitModel::OnEndTurn()
 		Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnEndTurn, PassiveContext, OUT DynamicPassiveData);
 		Passive->CommitPassive(DynamicPassiveData);
 	}
+
+	// 이동력 제거
+	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetMovementAttribute(), ETacticalModOp::Override, 0.f);
 }
 
 void UUnitModel::SetGenericTeamId(const FGenericTeamId& TeamID)
