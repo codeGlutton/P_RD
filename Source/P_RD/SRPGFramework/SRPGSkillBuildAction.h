@@ -10,6 +10,7 @@
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGAction.h"
 #include "SRPGFramework/SRPGCommand.h"
+#include "Simulation/Logger/EventLog.h"
 #include "SRPGSkillBuildAction.generated.h"
 
 class USRPGSkillBuildAction;
@@ -18,6 +19,7 @@ class UTileMapModel;
 class UDiceModel;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangeSkillBuildPhase, const USRPGSkillBuildAction* /*Action*/, ESRPGSkillBuildPhase /*Phase*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnPostSimulateSkillAction, const TArray<FSRPGTurnEventLog>& /*EventLogs*/);
 
 USTRUCT(BlueprintType)
 struct FSRPGSkillSelectCommand : public FSRPGCommand
@@ -29,6 +31,7 @@ public:
 
 public:
 	FOnChangeSkillBuildPhase OnChangeSkillBuildPhase;
+	FOnPostSimulateSkillAction OnPostSimulateSkillAction;
 
 public:
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillIndex"))
@@ -100,6 +103,7 @@ private:
 
 protected:
 	FOnChangeSkillBuildPhase OnChangeSkillBuildPhase;
+	FOnPostSimulateSkillAction OnPostSimulateSkillAction;
 
 protected:
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceIndex"))

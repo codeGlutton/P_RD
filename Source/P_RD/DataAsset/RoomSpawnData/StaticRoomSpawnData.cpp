@@ -10,12 +10,12 @@ EDataValidationResult UStaticRoomSpawnData::IsDataValid(FDataValidationContext& 
 	EDataValidationResult SuperResult = Super::IsDataValid(Context);
 	EDataValidationResult ThisResult = EDataValidationResult::Valid;
 
-	if (mBackgroundMap == nullptr)
+	if (mBackgroundMap.ToSoftObjectPath().IsValid() == false)
 	{
 		Context.AddError(FText::FromString(TEXT("배경 맵 미지정")));
 		ThisResult = EDataValidationResult::Invalid;
 	}
-	if (mGameModeBase == nullptr)
+	if (mGameModeBase.ToSoftObjectPath().IsValid() == false)
 	{
 		Context.AddError(FText::FromString(TEXT("게임 모드 미지정")));
 		ThisResult = EDataValidationResult::Invalid;

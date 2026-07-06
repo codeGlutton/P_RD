@@ -64,6 +64,7 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
         const FSRPGSkillSelectCommand& SkillSelectCommand = Command.Get<FSRPGSkillSelectCommand>();
 
         OnChangeSkillBuildPhase = SkillSelectCommand.OnChangeSkillBuildPhase;
+        OnPostSimulateSkillAction = SkillSelectCommand.OnPostSimulateSkillAction;
         if (SkillSelectCommand.mSkillIndex != mSelectedSkillIndex)
         {
             /* 다르면 변경 */
@@ -304,7 +305,7 @@ void USRPGSkillBuildAction::SetTargetTile(const FTileIndex& TargetIndex)
 
     TArray<FSRPGTurnEventLog> TurnEventLogs = SimulationSubsystem->SimulateUntilNextAction(MoveTemp(SkillCastCommand));
     
-    // TurnEventLogs를 UI에게 전달
+    OnPostSimulateSkillAction.Broadcast(TurnEventLogs);
 }
 
 void USRPGSkillBuildAction::BuildSkill()
