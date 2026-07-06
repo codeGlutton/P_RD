@@ -68,9 +68,9 @@ public:
 
 	/* Effect 적용 시 최상위 객체 추적 */
 public:
-	void PushCurrentAppliedGE(const FTacticalEffectSpec* Spec, UAttributeSetComponentModel* Model);
-	void SetCurrentAppliedGE(const FTacticalEffectSpec* Spec);
-	void PopCurrentAppliedGE();
+	void PushCurrentAppliedTE(const FTacticalEffectSpec* Spec, UAttributeSetComponentModel* Model);
+	void SetCurrentAppliedTE(const FTacticalEffectSpec* Spec);
+	void PopCurrentAppliedTE();
 
 	/* Aggregator 배칭 */
 public:
