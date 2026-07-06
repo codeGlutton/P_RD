@@ -314,16 +314,22 @@ private:
 
 	/* ── 전투 플로팅 로그(유닛 머리 위) + 턴 라운드 배너 (CombatTileMapHUDWidget_CombatLog.cpp) ── */
 
-	/** @brief HP 증감 등 전투 이벤트를 유닛 머리 위 [아이콘+]텍스트로 스폰한다(OnCombatFloatingLog 구독). */
+	/** @brief 전투 이벤트 플로팅 로그 요청을 순차 재생 큐에 넣는다(OnCombatFloatingLog 구독). */
 	UFUNCTION()
-	void HandleCombatFloatingLog(int32 UnitId, FText Text, FLinearColor Color, UTexture2D* Icon);
+	void HandleCombatFloatingLog(FCombatFloatingLogRequest Request);
 
 	/** @brief 턴 시작 주사위 굴림 요청(OnDiceRollRequested 구독) — 굴림 오버레이를 연다. 구현: _DiceRoll.cpp */
 	UFUNCTION()
 	void HandleCombatDiceRollRequested();
 
+	/** @brief 대기 중인 플로팅 로그 큐에서 다음 로그를 일정 간격으로 스폰한다. */
+	void UpdateFloatingCombatLogQueue(float InDeltaTime);
+
 	/** @brief 플로팅 로그들을 상승+페이드시키고 수명이 다하면 제거한다(매 프레임). */
 	void UpdateFloatingCombatLogs(float InDeltaTime);
+
+	/** @brief 월드 좌표 기준으로 플로팅 로그 위젯을 실제 생성한다. */
+	void SpawnFloatingCombatLogAtWorld(const FCombatFloatingLogRequest& Request);
 
 	/** @brief 라운드가 실제로 바뀌었을 때만 중앙 배너("N번째 턴")를 띄운다. Turn 도메인 갱신 시 호출. */
 	void RefreshTurnRoundBanner();
@@ -456,14 +462,28 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UProgressBar>> mUnitHpBars;
 
-	/** @brief 머리 위 플로팅 전투 로그 한 건. 위젯 수명은 RootCanvas가 쥔다(여긴 추적용). */
+	/** @brief 순차 재생 대기 중인 플로팅 전투 로그 한 건. */
+	struct FQueuedFloatingCombatLogEntry
+	{
+		FCombatFloatingLogRequest mRequest;
+		int32 mArrivalOrder = 0;
+	};
+
+	/** @brief 월드 위치 기준 플로팅 전투 로그 한 건. 위젯 수명은 RootCanvas가 쥔다(여긴 추적용). */
 	struct FFloatingCombatLogEntry
 	{
 		TObjectPtr<UWidget> mRoot;                    // 캔버스에 붙은 루트(아이콘+텍스트 박스 또는 텍스트 단일)
-		FVector mWorldLocation = FVector::ZeroVector; // 스폰 시점 유닛 위치 스냅샷(HP바와 같은 소스)
+		FVector mWorldLocation = FVector::ZeroVector; // 스폰 시점 월드 위치 스냅샷
 		float mElapsed = 0.0f;
 	};
+	TArray<FQueuedFloatingCombatLogEntry> mPendingFloatingCombatLogs;
 	TArray<FFloatingCombatLogEntry> mFloatingCombatLogs;
+
+	/** @brief 같은 Sequence일 때 수신 순서를 유지하기 위한 내부 순번. */
+	int32 mNextFloatingCombatLogArrivalOrder = 0;
+
+	/** @brief 다음 플로팅 로그를 큐에서 꺼내기까지 남은 시간. */
+	float mFloatingCombatLogQueueCooldown = 0.0f;
 
 	/** @brief 턴 라운드 배너 텍스트(중앙 상단, 라운드가 바뀔 때 잠깐 표시) */
 	UPROPERTY(Transient)

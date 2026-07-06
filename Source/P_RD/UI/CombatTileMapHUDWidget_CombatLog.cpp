@@ -18,24 +18,81 @@
 namespace
 {
 	constexpr float FloatingLogLifetime = 1.2f;       // 플로팅 로그 표시 수명(초)
+	constexpr float FloatingLogQueueInterval = 0.28f; // 순차 로그 간 표시 간격(초)
 	constexpr float FloatingLogRiseSpeed = 46.0f;     // 초당 상승 픽셀
 	constexpr float FloatingLogBaseOffsetY = -96.0f;  // 머리 위 HP바(-70)보다 위에서 시작
 	constexpr float FloatingLogFadePortion = 0.6f;    // 수명의 이 비율 이후부터 페이드아웃
 	constexpr float TurnBannerLifetime = 1.6f;        // 배너 표시 수명(초)
 	constexpr float TurnBannerFadePortion = 0.55f;    // 배너 페이드 시작 비율
+
+	FLinearColor ResolveFloatingLogColor(EFloatingLogColorType ColorType)
+	{
+		switch (ColorType)
+		{
+		case EFloatingLogColorType::Damage:
+			return FLinearColor(1.0f, 0.25f, 0.2f, 1.0f);
+		case EFloatingLogColorType::Heal:
+			return FLinearColor(0.35f, 1.0f, 0.4f, 1.0f);
+		case EFloatingLogColorType::Buff:
+			return FLinearColor(0.45f, 0.75f, 1.0f, 1.0f);
+		case EFloatingLogColorType::Debuff:
+			return FLinearColor(0.75f, 0.45f, 1.0f, 1.0f);
+		case EFloatingLogColorType::Warning:
+			return FLinearColor(1.0f, 0.8f, 0.2f, 1.0f);
+		case EFloatingLogColorType::Move:
+			return FLinearColor(0.85f, 0.85f, 0.85f, 1.0f);
+		case EFloatingLogColorType::Neutral:
+		default:
+			return FLinearColor::White;
+		}
+	}
+
+	UTexture2D* ResolveFloatingLogIcon(EFloatingLogIconType IconType)
+	{
+		// None은 아이콘 없음(텍스트만). 나머지 아이콘 종류는 임시로 전부 HP(하트) 텍스처로 연결한다.
+		// Poison/Fire/Shield/Move 전용 아이콘 에셋이 준비되면 case를 분리해 경로만 갈아끼우면 됨.
+		if (IconType == EFloatingLogIconType::None)
+		{
+			return nullptr;
+		}
+
+		return LoadObject<UTexture2D>(
+			nullptr,
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ClassSelect/T_icon_hp.T_icon_hp"));
+	}
 }
 
-void UCombatTileMapHUDWidget::HandleCombatFloatingLog(int32 UnitId, FText Text, FLinearColor Color, UTexture2D* Icon)
+void UCombatTileMapHUDWidget::HandleCombatFloatingLog(FCombatFloatingLogRequest Request)
 {
-	if (RootCanvas == nullptr || WidgetTree == nullptr || mCombatUIModel == nullptr)
+	FQueuedFloatingCombatLogEntry Entry;
+	Entry.mRequest = Request;
+	Entry.mArrivalOrder = mNextFloatingCombatLogArrivalOrder++;
+	mPendingFloatingCombatLogs.Add(Entry);
+}
+
+void UCombatTileMapHUDWidget::UpdateFloatingCombatLogQueue(float InDeltaTime)
+{
+	if (mPendingFloatingCombatLogs.Num() == 0)
+	{
+		mFloatingCombatLogQueueCooldown = 0.0f;
+		return;
+	}
+
+	mFloatingCombatLogQueueCooldown -= InDeltaTime;
+	if (mFloatingCombatLogQueueCooldown > 0.0f)
 	{
 		return;
 	}
 
-	// 대상 유닛의 월드 위치(HP바와 같은 소스)를 스폰 시점에 스냅샷. 유닛을 못 찾으면 표시 생략.
-	const FUnitUI* TargetUnit = mCombatUIModel->GetUnitUIs().FindByPredicate(
-		[UnitId](const FUnitUI& Candidate) { return Candidate.mUnitId == UnitId; });
-	if (TargetUnit == nullptr)
+	const FCombatFloatingLogRequest Request = mPendingFloatingCombatLogs[0].mRequest;
+	mPendingFloatingCombatLogs.RemoveAt(0);
+	SpawnFloatingCombatLogAtWorld(Request);
+	mFloatingCombatLogQueueCooldown = FloatingLogQueueInterval;
+}
+
+void UCombatTileMapHUDWidget::SpawnFloatingCombatLogAtWorld(const FCombatFloatingLogRequest& Request)
+{
+	if (RootCanvas == nullptr || WidgetTree == nullptr)
 	{
 		return;
 	}
@@ -49,6 +106,7 @@ void UCombatTileMapHUDWidget::HandleCombatFloatingLog(int32 UnitId, FText Text, 
 	}
 	LogBox->SetVisibility(ESlateVisibility::HitTestInvisible);
 
+	UTexture2D* Icon = ResolveFloatingLogIcon(Request.mIconType);
 	if (Icon != nullptr)
 	{
 		if (UImage* LogIcon = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass()))
@@ -64,8 +122,8 @@ void UCombatTileMapHUDWidget::HandleCombatFloatingLog(int32 UnitId, FText Text, 
 	}
 
 	LogText->SetJustification(ETextJustify::Center);
-	LogText->SetText(Text);
-	LogText->SetColorAndOpacity(FSlateColor(Color));
+	LogText->SetText(Request.mText);
+	LogText->SetColorAndOpacity(FSlateColor(ResolveFloatingLogColor(Request.mColorType)));
 	// 기본 폰트에서 크기만 키운다(전투 화면 위에서 읽히는 최소 크기).
 	FSlateFontInfo LogFont = LogText->GetFont();
 	LogFont.Size = 22;
@@ -84,11 +142,11 @@ void UCombatTileMapHUDWidget::HandleCombatFloatingLog(int32 UnitId, FText Text, 
 
 	FFloatingCombatLogEntry Entry;
 	Entry.mRoot = LogBox;
-	Entry.mWorldLocation = TargetUnit->mWorldLocation;
+	Entry.mWorldLocation = Request.mWorldLocation;
 	Entry.mElapsed = 0.0f;
 	mFloatingCombatLogs.Add(Entry);
 
-	// 같은 유닛에 로그가 연달아 뜰 때(예: 데미지+쓰러짐) 겹치지 않게, 기존 로그를 한 칸씩 위로 민다.
+	// 같은 위치에 로그가 연달아 뜰 때(예: 데미지+쓰러짐) 겹치지 않게, 기존 로그를 한 칸씩 위로 민다.
 	for (int32 LogIndex = 0; LogIndex < mFloatingCombatLogs.Num() - 1; ++LogIndex)
 	{
 		FFloatingCombatLogEntry& Existing = mFloatingCombatLogs[LogIndex];

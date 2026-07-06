@@ -34,7 +34,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatActionResolved);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatCommand, ECombatInputType, Type, int32, IntPayload);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatWorldTouch, FVector2D, ScreenPosition, bool, bLongPress);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnApplyDiceResults, const TArray<int32>&, RolledFaceIndices);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnCombatFloatingLog, int32, UnitId, FText, Text, FLinearColor, Color, UTexture2D*, Icon);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatFloatingLog, FCombatFloatingLogRequest, Request);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatDiceRollRequested);
 
 /** @brief 전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다. */
@@ -57,7 +57,7 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
 	FOnCombatActionResolved OnActionResolved;
 
-	/** @brief 전투 이벤트(HP 증감 등)를 유닛 머리 위 플로팅 텍스트로 띄우라는 알림. UnitId는 FUnitUI.mUnitId와 같은 id 공간. */
+	/** @brief 전투 이벤트(HP 증감 등)를 지정 월드 위치에 플로팅 텍스트로 띄우라는 알림. HUD가 순차 큐로 재생한다. */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
 	FOnCombatFloatingLog OnCombatFloatingLog;
 
@@ -140,8 +140,11 @@ public:
 	/** @brief 스킬/액션 빌드가 끝났음을 UI에 알린다(OnActionResolved). 게임플레이가 확정/취소 시 호출. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyActionResolved();
 
-	/** @brief 유닛 머리 위 플로팅 로그 표시를 요청한다(OnCombatFloatingLog). Icon은 선택(널이면 텍스트만). 게임플레이가 HP 증감 등 이벤트 시 호출. */
-	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyCombatFloatingLog(int32 UnitId, const FText& Text, const FLinearColor& Color, UTexture2D* Icon = nullptr);
+	/** @brief 월드 위치 기준 플로팅 로그 한 건을 요청한다. HUD가 IconType/ColorType을 실제 표현으로 변환한다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyCombatFloatingLog(const FCombatFloatingLogRequest& Request);
+
+	/** @brief 여러 플로팅 로그를 한 번에 요청한다. Sequence 기준으로 브로드캐스트하면 HUD가 수신 순서대로 순차 재생한다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyCombatFloatingLogs(const TArray<FCombatFloatingLogRequest>& Requests);
 
 	/** @brief 턴 시작 주사위 굴림 오버레이 열기를 요청한다(OnDiceRollRequested). 게임플레이가 DicePrepare 시점에 호출. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyDiceRollRequested();

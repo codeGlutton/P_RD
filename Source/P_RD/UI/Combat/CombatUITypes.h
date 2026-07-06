@@ -46,6 +46,53 @@ enum class ECombatBuildPhaseUI : uint8
 	Preview          // [거울] ESRPGSkillBuildPhase::Preview
 };
 
+/** @brief 플로팅 로그에 붙일 아이콘 종류. 실제 Texture2D 선택은 HUD가 담당한다. */
+UENUM(BlueprintType)
+enum class EFloatingLogIconType : uint8
+{
+	None,
+	HP,
+	Poison,
+	Fire,
+	Shield,
+	Move
+};
+
+/** @brief 플로팅 로그 색상 의미. 실제 FLinearColor 선택은 HUD가 담당한다. */
+UENUM(BlueprintType)
+enum class EFloatingLogColorType : uint8
+{
+	Neutral,
+	Damage,
+	Heal,
+	Buff,
+	Debuff,
+	Warning,
+	Move
+};
+
+/** @brief 월드 좌표 기준으로 순차 재생할 전투 플로팅 로그 한 건. */
+USTRUCT(BlueprintType)
+struct FCombatFloatingLogRequest
+{
+	GENERATED_BODY()
+
+	/** @brief 로그를 띄울 월드 좌표. 유닛 위/타일 위 판단은 호출자가 끝낸 뒤 전달한다. */
+	UPROPERTY(BlueprintReadWrite) FVector mWorldLocation = FVector::ZeroVector;
+
+	/** @brief 화면에 표시할 문구. */
+	UPROPERTY(BlueprintReadWrite) FText mText;
+
+	/** @brief HUD가 실제 Texture2D로 변환할 아이콘 의미값. */
+	UPROPERTY(BlueprintReadWrite) EFloatingLogIconType mIconType = EFloatingLogIconType::None;
+
+	/** @brief HUD가 실제 색상으로 변환할 색상 의미값. */
+	UPROPERTY(BlueprintReadWrite) EFloatingLogColorType mColorType = EFloatingLogColorType::Neutral;
+
+	/** @brief 낮은 값부터 순차 표시한다. 같은 값이면 수신 순서를 따른다. */
+	UPROPERTY(BlueprintReadWrite) int32 mSequence = 0;
+};
+
 /** @brief 주사위 한 칸을 그릴 때 필요한 표시값입니다. */
 // 어댑터가 UDiceData를 이 struct로 변환한다. 희귀도는 UI가 바로 쓸 수 있게 색/문구로 변환해 담는다.
 // UI 필요값:
