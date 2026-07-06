@@ -23,7 +23,6 @@ ACombatCameraPawn::ACombatCameraPawn()
 	PrimaryActorTick.bCanEverTick = true;
 
 	mSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("DefaultSceneComponent"));
-	mSceneComponent->SetRelativeRotation(FRotator(-30, 0, 0));
 	RootComponent = mSceneComponent;
 
 	//mSpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
@@ -39,7 +38,10 @@ ACombatCameraPawn::ACombatCameraPawn()
 	mCameraMovementComponent->SetCameraComponent(mCameraComponent);
 	//mCameraMovementComponent->SetSpringArmComponent(mSpringArmComponent);
 
-
+	// 카메라 회전은 컨트롤러 회전을 그대로 따라감
+	bUseControllerRotationPitch = true;
+	bUseControllerRotationYaw = true;
+	bUseControllerRotationRoll = true;
 }
 
 // Called when the game starts or when spawned
