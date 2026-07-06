@@ -102,8 +102,18 @@ void USRPGMoveAction::StartStep(int32 StepIndex)
             OnStepPresentationFinished();
             }));
     
+    // 이번 스텝 도착 후 최종 목적지까지 남은 경로 거리 계산
+    // -> 제동거리에 들어가면 감속할 때 사용
+    float RemainingPathDistance = 0.0f;
+    for (int32 i = StepIndex; i < mPathTileIndexes.Num() - 1; ++i)
+    {
+        RemainingPathDistance += FVector::Dist(
+            TileMap->TileToWorldLocation(mPathTileIndexes[i]),
+            TileMap->TileToWorldLocation(mPathTileIndexes[i + 1]));
+    }
+
     // OnStartMoveStep을 구독하고 있던 뷰가 이동 시작 (뷰의 물리적 위치 변경)
-    mInstigator->OnStartMoveStep.Broadcast(NextTransform, TileMap->TileToWorldTransform(NextTransform), Barrier);
+    mInstigator->OnStartMoveStep.Broadcast(NextTransform, TileMap->TileToWorldTransform(NextTransform), Barrier, RemainingPathDistance);
 }
 
 void USRPGMoveAction::CompleteStep()
