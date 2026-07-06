@@ -5,6 +5,8 @@
 
 #include "RDUserWidget.generated.h"
 
+class UButton;
+
 /**
  * @brief UI 열기 애니메이션이 끝났을 때 호출되는 콜백
  *
@@ -162,6 +164,48 @@ protected:
 	 * @return RemoveFromParent()로 제거해야 하면 true
 	 */
 	virtual bool ShouldRemoveFromParentOnClose() const;
+
+	/**
+	 * @brief 위젯 초기화 시 이 트리 안의 모든 버튼에 공용 클릭 사운드 + 누름 스케일 효과를 1회 배선한다.
+	 * @details 모든 화면 위젯이 이 베이스를 상속하므로, 여기서 처리하면 프로젝트 전역 버튼에 일괄 적용된다.
+	 */
+	virtual void NativeOnInitialized() override;
+
+private:
+	/** @brief 이 위젯 트리의 버튼들을 찾아 클릭 사운드/누름 효과를 설정하고 이벤트를 연결한다. */
+	void SetupCommonButtonFeedback();
+
+	/**
+	 * @brief 버튼과 짝지어진 "보이는" 동반 위젯(프레임 이미지/텍스트)을 이름 규칙으로 찾는다.
+	 * @details 타이틀처럼 버튼이 투명 히트영역이고 실제 시각요소가 같은 위치의 형제 위젯인 경우를 위해서다.
+	 *          규칙: 버튼명 "<Base>__<Profile>" 에 대해, 같은 트리에서 "<Base>...__<Profile>"로 시작/끝나는 Image/Text 형제.
+	 *          접미사(__프로필)가 없으면 버튼명으로 시작하는 Image/Text를 짝으로 본다. 없으면 빈 배열(무해).
+	 */
+	void CollectButtonCompanions(const UButton* Button, TArray<UWidget*>& OutCompanions) const;
+
+	/** @brief 현재 눌림 상태로 어둡게/축소된 동반 위젯들을 원래대로 복원하고 캐시를 비운다. */
+	void RestoreActivePressCompanions();
+
+	/** @brief 아무 버튼이나 눌리는 순간: 눌린 버튼을 살짝 축소해 "눌리는 느낌"을 준다. */
+	UFUNCTION()
+	void HandleAnyButtonPressed();
+
+	/** @brief 버튼에서 손을 떼는 순간: 모든 관리 버튼의 스케일을 원래대로 되돌린다. */
+	UFUNCTION()
+	void HandleAnyButtonReleased();
+
+	/** @brief 누름 피드백 대상으로 캐시해 둔 버튼들(이 위젯 트리 소속). */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UButton>> mFeedbackButtons;
+
+	/** @brief 각 버튼의 원래 배경색(멀티플라이어). 누르면 이 값을 어둡게, 떼면 이 값으로 복원한다. mFeedbackButtons와 인덱스 대응. */
+	TArray<FLinearColor> mFeedbackButtonBaseColors;
+
+	/** @brief 지금 눌려서 어둡게/축소된 동반 위젯들(한 번에 한 버튼). 떼면 복원 후 비운다. 트리가 소유하므로 약참조. */
+	TArray<TWeakObjectPtr<UWidget>> mActivePressCompanions;
+
+	/** @brief mActivePressCompanions의 원래 색(복원용). 인덱스 대응. */
+	TArray<FLinearColor> mActivePressCompanionBaseColors;
 
 protected:
 	/**

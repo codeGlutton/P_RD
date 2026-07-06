@@ -12,6 +12,7 @@
 
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
+#include "Singleton/InstanceSubsystem/TitleBgmSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/TitleMenuWidget.h"
 #include "UI/CharacterSelectWidget.h"
@@ -215,6 +216,16 @@ void AFrontendGameMode::BeginRoom()
 	checkf(TitleHUD != nullptr, TEXT("타이틀 HUD 위젯 nullptr"));
 	TitleHUD->OpenUI();
 
+	/* 타이틀 진입과 함께 BGM 시작. 캐릭터 선택까지 이 곡을 유지하고, 스테이지 전환 시 정지한다. */
+
+	if (UGameInstance* GameInstance = GetGameInstance())
+	{
+		if (UTitleBgmSubsystem* TitleBgm = GameInstance->GetSubsystem<UTitleBgmSubsystem>())
+		{
+			TitleBgm->StartTitleBgm();
+		}
+	}
+
 	/* 터치 세팅 */
 
 	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
@@ -270,6 +281,16 @@ bool AFrontendGameMode::StartNewRun(const FPrimaryAssetId& PlayerUnitId, int32 D
 	}
 
 	checkf(CreateRunData(PlayerUnitId, Difficulty) == true, TEXT("런 데이터 생성 오류"));
+
+	/* 캐릭터 선택 확정 -> 스테이지로 넘어가므로 타이틀 BGM 정지(프론트엔드 구간 종료). */
+	if (UGameInstance* GameInstance = GetGameInstance())
+	{
+		if (UTitleBgmSubsystem* TitleBgm = GameInstance->GetSubsystem<UTitleBgmSubsystem>())
+		{
+			TitleBgm->StopTitleBgm();
+		}
+	}
+
 	checkf(PreloadAndTransitionRoomAsync(EStageLevelType::Stage1) == true, TEXT("스테이지 1 처음 방으로 전환 실패"));
 	return true;
 }
@@ -326,6 +347,15 @@ bool AFrontendGameMode::ContinueRunFromTitle()
 	 * 여기서부터는 기존 방 전환 공통 흐름을 사용한다.
 	 * 플레이어/스테이지/방 에셋 프리로드, 페이드/로딩 UI, 실제 레벨 전환 순서는 RDGameModeBase와 RoomTransitionSubsystem이 처리한다.
 	 */
+	/* 이어하기 -> 스테이지로 넘어가므로 타이틀 BGM 정지(프론트엔드 구간 종료). */
+	if (UGameInstance* GameInstance = GetGameInstance())
+	{
+		if (UTitleBgmSubsystem* TitleBgm = GameInstance->GetSubsystem<UTitleBgmSubsystem>())
+		{
+			TitleBgm->StopTitleBgm();
+		}
+	}
+
 	checkf(PreloadAndTransitionRoomAsync(CurrentRowIndex, CurrentColumnIndex) == true, TEXT("이어하기 방 전환 실패"));
 	return true;
 }
