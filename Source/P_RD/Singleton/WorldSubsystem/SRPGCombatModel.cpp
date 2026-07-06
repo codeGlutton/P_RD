@@ -579,6 +579,8 @@ void USRPGCombatModel::NotifyRoundStartIfNeeded()
 {
 	if (mTurnContextOrder.IsEmpty() == false && mCurTurnContextOrder == mTurnContextOrder.GetHead())
 	{
+		++mRoundCount;
+
 		for (const TObjectPtr<UUnitModel>& Unit : mUnits)
 		{
 			Unit->OnBeginRound();
@@ -672,14 +674,24 @@ UTileMapModel* USRPGCombatModel::GetTileMap()
 	return mTileMap;
 }
 
-TArray<TObjectPtr<UUnitModel>>& USRPGCombatModel::GetUnits()
+UUnitModel* USRPGCombatModel::GetPlayerUnit() const
+{
+	return mPlayerUnit;
+}
+
+const TArray<TObjectPtr<UUnitModel>>& USRPGCombatModel::GetUnits() const
 {
 	return mUnits;
 }
 
-TArray<TObjectPtr<UBoardActorModel>>& USRPGCombatModel::GetObstacles()
+const TArray<TObjectPtr<UBoardActorModel>>& USRPGCombatModel::GetObstacles() const
 {
 	return mObstacles;
+}
+
+int32 USRPGCombatModel::GetRoundCount() const
+{
+	return mRoundCount;
 }
 
 void USRPGCombatModel::ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand, bool NeedEndCurrentAction)

@@ -147,10 +147,7 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
 
     IActorView* ActorView = Cast<IActorView>(TargetActor);
     const bool IsContactedTileMap = ActorView != nullptr && ActorView->GetModel() == TileMap;
-    // 적 등 유닛이 선 타일을 클릭하면 TileOnlyTrace가 유닛에 막혀 TargetActor가 타일맵이 아니게 된다.
-    // 하지만 GetTileActorUnderCursor가 그 유닛의 타일을 이미 돌려주므로, 유효 타일이면 그대로 처리한다
-    // (적이 선 칸을 공격/조준 가능하게). 타일맵 격자 밖 클릭만 Invalid로 남아 한단계 취소로 간다.
-    const bool IsContactedBoard = IsContactedTileMap || TargetTileIndex != FTileIndex::Invalid;
+    const bool IsContactedBoard = IsContactedTileMap == true || TargetTileIndex != FTileIndex::Invalid;
     if (IsContactedBoard == true)
     {
         if (TargetTileIndex == FTileIndex::Invalid)
@@ -210,9 +207,6 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
                 if (CanSelectTargetTile(TargetTileIndex) == true)
                 {
                     ResetTargetTile();
-                    // 프리뷰에서 다른 칸을 찍으면 위 Preview case가 [[fallthrough]]로 여기 들어오는데
-                    // 그때 페이즈가 아직 Preview라 SetTargetTile 전제(AimSelection, checkf)에 걸린다.
-                    // 재조준은 조준 단계부터 다시이므로 페이즈를 먼저 되돌린다. (프리뷰 재조준 크래시 수정)
                     SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
                     SetTargetTile(TargetTileIndex);
                     RefreshEffectTileHighlights();
