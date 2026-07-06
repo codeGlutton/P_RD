@@ -322,6 +322,10 @@ private:
 	UFUNCTION()
 	void HandleCombatFloatingLogMotionFinished(int32 MotionIndex);
 
+	/** @brief 현재 떠 있는(그리고 대기 중인) 플로팅 로그를 전부 즉시 제거한다(OnCombatFloatingLogsCleared 구독). */
+	UFUNCTION()
+	void HandleCombatFloatingLogsCleared();
+
 	/** @brief 턴 시작 주사위 굴림 요청(OnDiceRollRequested 구독) — 굴림 오버레이를 연다. 구현: _DiceRoll.cpp */
 	UFUNCTION()
 	void HandleCombatDiceRollRequested();
@@ -483,6 +487,8 @@ private:
 		FVector mWorldLocation = FVector::ZeroVector; // 스폰 시점 월드 위치 스냅샷
 		int32 mMotionIndex = INDEX_NONE;              // 같은 액션의 MotionEventLogs 배열 기준 인덱스
 		float mElapsed = 0.0f;
+		bool mIsPreview = false;                      // true면 자동 소멸 안 함(MotionFinished/Clear로만 제거)
+		float mStackOffsetY = 0.0f;                   // 미리보기 겹침 방지용 세로 쌓기 오프셋
 	};
 	TArray<FQueuedFloatingCombatLogEntry> mPendingFloatingCombatLogs;
 	TArray<FFloatingCombatLogEntry> mFloatingCombatLogs;

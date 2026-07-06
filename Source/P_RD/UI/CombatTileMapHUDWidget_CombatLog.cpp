@@ -22,6 +22,7 @@ namespace
 	constexpr float FloatingLogRiseSpeed = 46.0f;     // 초당 상승 픽셀
 	constexpr float FloatingLogBaseOffsetY = -96.0f;  // 머리 위 HP바(-70)보다 위에서 시작
 	constexpr float FloatingLogFadePortion = 0.6f;    // 수명의 이 비율 이후부터 페이드아웃
+	constexpr float FloatingLogPreviewRowSpacing = 30.0f; // 미리보기 로그가 같은 위치에 겹칠 때 위로 쌓는 간격(px)
 	constexpr float TurnBannerLifetime = 1.6f;        // 배너 표시 수명(초)
 	constexpr float TurnBannerFadePortion = 0.55f;    // 배너 페이드 시작 비율
 
@@ -64,6 +65,13 @@ namespace
 
 void UCombatTileMapHUDWidget::HandleCombatFloatingLog(FCombatFloatingLogRequest Request)
 {
+	// 미리보기 로그는 스태거 없이 즉시 띄운다(조준 시 목록이 한꺼번에 나열돼야 하므로).
+	if (Request.mIsPreview == true)
+	{
+		SpawnFloatingCombatLogAtWorld(Request);
+		return;
+	}
+
 	FQueuedFloatingCombatLogEntry Entry;
 	Entry.mRequest = Request;
 	Entry.mArrivalOrder = mNextFloatingCombatLogArrivalOrder++;
@@ -73,6 +81,24 @@ void UCombatTileMapHUDWidget::HandleCombatFloatingLog(FCombatFloatingLogRequest 
 void UCombatTileMapHUDWidget::HandleCombatFloatingLogMotionFinished(int32 MotionIndex)
 {
 	RemoveFloatingCombatLogsByMotionIndex(MotionIndex);
+}
+
+void UCombatTileMapHUDWidget::HandleCombatFloatingLogsCleared()
+{
+	// 아직 안 뜬 대기분을 먼저 비운다(다음 프레임에 되살아나지 않게).
+	mPendingFloatingCombatLogs.Reset();
+	mFloatingCombatLogQueueCooldown = 0.0f;
+	mNextFloatingCombatLogArrivalOrder = 0;
+
+	// 이미 화면에 떠 있는 로그 위젯을 캔버스에서 즉시 떼어낸다.
+	for (FFloatingCombatLogEntry& Entry : mFloatingCombatLogs)
+	{
+		if (Entry.mRoot != nullptr)
+		{
+			Entry.mRoot->RemoveFromParent();
+		}
+	}
+	mFloatingCombatLogs.Reset();
 }
 
 void UCombatTileMapHUDWidget::UpdateFloatingCombatLogQueue(float InDeltaTime)
@@ -150,15 +176,34 @@ void UCombatTileMapHUDWidget::SpawnFloatingCombatLogAtWorld(const FCombatFloatin
 	Entry.mWorldLocation = Request.mWorldLocation;
 	Entry.mMotionIndex = Request.mMotionIndex;
 	Entry.mElapsed = 0.0f;
+	Entry.mIsPreview = Request.mIsPreview;
+
+	if (Request.mIsPreview == true)
+	{
+		// 미리보기는 상승/페이드가 없으므로, 같은 위치에 이미 뜬 미리보기 수만큼 위로 고정 오프셋을 준다.
+		int32 StackCount = 0;
+		for (const FFloatingCombatLogEntry& Existing : mFloatingCombatLogs)
+		{
+			if (Existing.mIsPreview == true && Existing.mWorldLocation.Equals(Request.mWorldLocation, 1.0f))
+			{
+				++StackCount;
+			}
+		}
+		Entry.mStackOffsetY = StackCount * FloatingLogPreviewRowSpacing;
+	}
 	mFloatingCombatLogs.Add(Entry);
 
-	// 같은 위치에 로그가 연달아 뜰 때(예: 데미지+쓰러짐) 겹치지 않게, 기존 로그를 한 칸씩 위로 민다.
-	for (int32 LogIndex = 0; LogIndex < mFloatingCombatLogs.Num() - 1; ++LogIndex)
+	// (실행 로그 전용) 같은 위치에 로그가 연달아 뜰 때(예: 데미지+쓰러짐) 겹치지 않게 기존 로그를 위로 민다.
+	// 미리보기는 위 StackOffset으로 처리하므로 여기서 건드리지 않는다.
+	if (Request.mIsPreview == false)
 	{
-		FFloatingCombatLogEntry& Existing = mFloatingCombatLogs[LogIndex];
-		if (Existing.mWorldLocation.Equals(Entry.mWorldLocation, 1.0f))
+		for (int32 LogIndex = 0; LogIndex < mFloatingCombatLogs.Num() - 1; ++LogIndex)
 		{
-			Existing.mElapsed = FMath::Max(Existing.mElapsed, 0.35f);
+			FFloatingCombatLogEntry& Existing = mFloatingCombatLogs[LogIndex];
+			if (Existing.mIsPreview == false && Existing.mWorldLocation.Equals(Entry.mWorldLocation, 1.0f))
+			{
+				Existing.mElapsed = FMath::Max(Existing.mElapsed, 0.35f);
+			}
 		}
 	}
 }
@@ -178,7 +223,8 @@ void UCombatTileMapHUDWidget::UpdateFloatingCombatLogs(float InDeltaTime)
 		Entry.mElapsed += InDeltaTime;
 
 		UWidget* LogRoot = Entry.mRoot;
-		if (LogRoot == nullptr || Entry.mElapsed >= FloatingLogLifetime)
+		// 미리보기 로그는 수명으로 사라지지 않는다(MotionFinished/Clear로만). 실행 로그만 수명 만료 시 제거.
+		if (LogRoot == nullptr || (Entry.mIsPreview == false && Entry.mElapsed >= FloatingLogLifetime))
 		{
 			if (LogRoot != nullptr)
 			{
@@ -202,11 +248,21 @@ void UCombatTileMapHUDWidget::UpdateFloatingCombatLogs(float InDeltaTime)
 
 		if (UCanvasPanelSlot* LogSlot = Cast<UCanvasPanelSlot>(LogRoot->Slot))
 		{
-			LogSlot->SetPosition(ScreenPosition
-				+ FVector2D(0.0f, FloatingLogBaseOffsetY - FloatingLogRiseSpeed * Entry.mElapsed));
+			// 미리보기: 고정 위치(겹치면 위로 쌓기) / 실행: 시간에 따라 상승.
+			const float OffsetY = Entry.mIsPreview == true
+				? (FloatingLogBaseOffsetY - Entry.mStackOffsetY)
+				: (FloatingLogBaseOffsetY - FloatingLogRiseSpeed * Entry.mElapsed);
+			LogSlot->SetPosition(ScreenPosition + FVector2D(0.0f, OffsetY));
 		}
 
-		// 수명 후반부에 서서히 사라진다.
+		// 미리보기는 페이드 없이 계속 또렷하게(모션 종료/클리어로만 사라짐).
+		if (Entry.mIsPreview == true)
+		{
+			LogRoot->SetRenderOpacity(1.0f);
+			continue;
+		}
+
+		// (실행 로그) 수명 후반부에 서서히 사라진다.
 		const float FadeStart = FloatingLogLifetime * FloatingLogFadePortion;
 		const float Opacity = Entry.mElapsed <= FadeStart
 			? 1.0f

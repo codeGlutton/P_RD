@@ -94,6 +94,9 @@ struct FCombatFloatingLogRequest
 
 	/** @brief 같은 액션의 MotionEventLogs 배열 기준 인덱스. INDEX_NONE이면 수명 시간으로만 자동 제거한다. */
 	UPROPERTY(BlueprintReadWrite) int32 mMotionIndex = INDEX_NONE;
+
+	/** @brief true면 미리보기 로그 — 수명으로 자동 소멸하지 않고, 모션 종료(MotionFinished)나 전체 클리어로만 사라진다. */
+	UPROPERTY(BlueprintReadWrite) bool mIsPreview = false;
 };
 
 /** @brief 주사위 한 칸을 그릴 때 필요한 표시값입니다. */

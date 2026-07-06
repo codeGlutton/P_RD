@@ -67,6 +67,8 @@ void UCombatTileMapHUDWidget::BindCombatUIModel(UCombatUIModel* InUIModel)
 		mCombatUIModel->OnCombatFloatingLog.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLog);
 		// 모션 연출 종료 시 해당 모션에 묶인 플로팅 로그를 정리한다.
 		mCombatUIModel->OnCombatFloatingLogMotionFinished.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogMotionFinished);
+		// 시뮬레이션 전환/취소 시 현재 떠 있는 플로팅 로그를 한 번에 걷어낸다.
+		mCombatUIModel->OnCombatFloatingLogsCleared.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogsCleared);
 		// 턴 시작 주사위 굴림 요청 시 굴림 오버레이를 자동으로 연다(2턴째부터의 진행 멈춤 해소).
 		mCombatUIModel->OnDiceRollRequested.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatDiceRollRequested);
 		// 이미 어댑터가 push해 둔 현재 값을 즉시 반영(구독 전 발생분 보강).

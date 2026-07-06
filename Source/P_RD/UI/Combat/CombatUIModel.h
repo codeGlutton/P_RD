@@ -36,6 +36,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatWorldTouch, FVector2D, Scr
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnApplyDiceResults, const TArray<int32>&, RolledFaceIndices);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatFloatingLog, FCombatFloatingLogRequest, Request);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatFloatingLogMotionFinished, int32, MotionIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatFloatingLogsCleared);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatDiceRollRequested);
 
 /** @brief 전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다. */
@@ -65,6 +66,10 @@ public:
 	/** @brief 애니메이션 모션 하나가 끝났으니 해당 MotionIndex의 플로팅 로그를 정리하라는 알림. */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
 	FOnCombatFloatingLogMotionFinished OnCombatFloatingLogMotionFinished;
+
+	/** @brief 현재 떠 있는(그리고 대기 중인) 플로팅 로그를 전부 지우라는 알림. 시뮬레이션 전환/취소로 미리보기 목록을 통째로 버릴 때 쓴다. */
+	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
+	FOnCombatFloatingLogsCleared OnCombatFloatingLogsCleared;
 
 	/** @brief 턴 시작 주사위 굴림 오버레이를 열라는 알림(프레임워크 OnShowDicePanelAnyTurnUI 중계). 첫 턴 이후에도 굴림 UI가 자동으로 뜨게 한다. */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
@@ -153,6 +158,9 @@ public:
 
 	/** @brief 같은 액션의 MotionEventLogs 배열에서 MotionIndex번째 모션 연출이 끝났음을 알린다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyCombatFloatingLogMotionFinished(int32 MotionIndex);
+
+	/** @brief 현재/대기 중인 플로팅 로그를 전부 지운다. 시뮬레이션이 다른 것으로 넘어가 미리보기 목록을 통째로 버릴 때 호출. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyCombatFloatingLogsCleared();
 
 	/** @brief 턴 시작 주사위 굴림 오버레이 열기를 요청한다(OnDiceRollRequested). 게임플레이가 DicePrepare 시점에 호출. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyDiceRollRequested();

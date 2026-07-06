@@ -220,6 +220,12 @@ void UCombatUIModel::NotifyCombatFloatingLogMotionFinished(int32 MotionIndex)
 	OnCombatFloatingLogMotionFinished.Broadcast(MotionIndex);
 }
 
+/** @brief 현재/대기 중인 플로팅 로그를 전부 지우라고 구독 위젯에 알린다. */
+void UCombatUIModel::NotifyCombatFloatingLogsCleared()
+{
+	OnCombatFloatingLogsCleared.Broadcast();
+}
+
 /** @brief 턴 시작 주사위 굴림 오버레이 열기를 구독 위젯에 알린다. */
 void UCombatUIModel::NotifyDiceRollRequested()
 {
