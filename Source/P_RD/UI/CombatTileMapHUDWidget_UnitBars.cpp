@@ -1,5 +1,6 @@
 #include "UI/CombatTileMapHUDWidget.h"
 
+#include "GameFramework/Actor.h"   // FUnitUI.mViewActor->GetActorLocation() (HP바 라이브 투영)
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/CanvasPanel.h"
@@ -82,9 +83,13 @@ void UCombatTileMapHUDWidget::UpdateUnitHpBars()
 			: FLinearColor(0.90f, 0.30f, 0.28f, 1.0f));
 
 		// 유닛 월드 위치를 화면(위젯) 좌표로 투영. 화면 밖이면 숨긴다.
+		// 이동을 매 프레임 따라가도록 뷰 액터의 라이브 위치를 우선 투영(유효 시). 없으면 스냅샷(mWorldLocation) 폴백.
+		const FVector ProjectLocation = Unit.mViewActor.IsValid()
+			? Unit.mViewActor->GetActorLocation()
+			: Unit.mWorldLocation;
 		FVector2D ScreenPosition;
 		const bool bOnScreen = UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(
-			PlayerController, Unit.mWorldLocation, ScreenPosition, false);
+			PlayerController, ProjectLocation, ScreenPosition, false);
 		if (bOnScreen == false)
 		{
 			HpBar->SetVisibility(ESlateVisibility::Collapsed);
