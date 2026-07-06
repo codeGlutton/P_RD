@@ -205,3 +205,30 @@ void ACombatCameraPawn::RDMoveTo(int32 X, int32 Y)
 #endif
 }
 
+void ACombatCameraPawn::RDRotate(int32 Direction)
+{
+	// 치트는 출시 빌드에서 본문만 비움 (UFUNCTION 선언은 전처리 제외 불가)
+#if !UE_BUILD_SHIPPING
+	// 전투 모델·타일맵·플레이어 유닛 확보 (전투 중이 아니면 무시)
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+	UUnitModel* PlayerUnit = CombatModel != nullptr ? CombatModel->GetPlayerUnit() : nullptr;
+	if (TileMap == nullptr || PlayerUnit == nullptr)
+	{
+		UE_LOG(LogSRPGCombat, Warning, TEXT("RDRotate: 전투 진행 중이 아니라 무시"));
+		return;
+	}
+
+	// 방향 인덱스 검증 (0=Forward 1=Right 2=Backward 3=Left)
+	if (Direction < 0 || Direction >= static_cast<int32>(ETileActorDirection::Count))
+	{
+		UE_LOG(LogSRPGCombat, Warning, TEXT("RDRotate: 잘못된 방향 %d (0~3)"), Direction);
+		return;
+	}
+
+	// 배리어 없이 즉발 요청 — 뷰는 내부 무통지 배리어로 회전을 완주
+	TileMap->RotateActor(static_cast<ETileActorDirection>(Direction), PlayerUnit);
+	UE_LOG(LogSRPGCombat, Log, TEXT("RDRotate: 방향 %d로 전환 요청"), Direction);
+#endif
+}
+

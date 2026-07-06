@@ -46,6 +46,72 @@ enum class ECombatBuildPhaseUI : uint8
 	Preview          // [거울] ESRPGSkillBuildPhase::Preview
 };
 
+/**
+ * @brief 플로팅 로그 아이콘의 "의미". 실제 어떤 Texture2D를 쓸지는 HUD(ResolveFloatingLogIcon)가 고른다.
+ * @details 게임플레이는 "이건 HP다 / 독이다"라는 의미만 정하고 그림은 UI가 정한다(디자인 요소는 UI 소관).
+ *          None은 아이콘 없이 텍스트만 띄운다.
+ */
+UENUM(BlueprintType)
+enum class EFloatingLogIconType : uint8
+{
+	None,   // 아이콘 없음(텍스트만)
+	HP,     // 체력
+	Poison, // 중독
+	Fire,   // 화염
+	Shield, // 방어/실드
+	Move    // 이동
+};
+
+/**
+ * @brief 플로팅 로그 색의 "의미". 실제 FLinearColor(어떤 빨강/초록…)는 HUD(ResolveFloatingLogColor)가 고른다.
+ * @details 아이콘과 마찬가지로 게임플레이는 의미(피해/회복/버프…)만 넘긴다. 실제 색상 톤은 UI가 정한다.
+ */
+UENUM(BlueprintType)
+enum class EFloatingLogColorType : uint8
+{
+	Neutral, // 중립(흰색)
+	Damage,  // 피해
+	Heal,    // 회복
+	Buff,    // 강화
+	Debuff,  // 약화
+	Warning, // 경고(쓰러짐 등)
+	Move     // 이동
+};
+
+/**
+ * @brief 플로팅 로그 한 건을 "어디에 / 무엇을 / 어떻게 다룰지" 담아 게임플레이가 UI로 넘기는 요청.
+ * @details 게임플레이가 채워 CombatUIModel::NotifyCombatFloatingLog(s)로 보내면 HUD가 그린다.
+ *          - 위치는 호출자가 정한다(유닛 위/타일 위 판별을 UI가 하지 않는다) → mWorldLocation.
+ *          - 아이콘/색은 "의미(enum)"로만 준다 → 실제 텍스처·색은 HUD가 매핑.
+ *          - mIsPreview + mMotionIndex 조합으로 "조준 미리보기 → 모션 종료 시 쳐내기"가 굴러간다.
+ */
+USTRUCT(BlueprintType)
+struct FCombatFloatingLogRequest
+{
+	GENERATED_BODY()
+
+	/** @brief 로그를 띄울 월드 좌표. 유닛 위/타일 위 판단은 호출자가 끝낸 뒤 전달한다. */
+	UPROPERTY(BlueprintReadWrite) FVector mWorldLocation = FVector::ZeroVector;
+
+	/** @brief 화면에 표시할 문구. */
+	UPROPERTY(BlueprintReadWrite) FText mText;
+
+	/** @brief HUD가 실제 Texture2D로 변환할 아이콘 의미값. */
+	UPROPERTY(BlueprintReadWrite) EFloatingLogIconType mIconType = EFloatingLogIconType::None;
+
+	/** @brief HUD가 실제 색상으로 변환할 색상 의미값. */
+	UPROPERTY(BlueprintReadWrite) EFloatingLogColorType mColorType = EFloatingLogColorType::Neutral;
+
+	/** @brief 낮은 값부터 순차 표시한다. 같은 값이면 수신 순서를 따른다. */
+	UPROPERTY(BlueprintReadWrite) int32 mSequence = 0;
+
+	/** @brief 같은 액션의 MotionEventLogs 배열 기준 인덱스. INDEX_NONE이면 수명 시간으로만 자동 제거한다. */
+	UPROPERTY(BlueprintReadWrite) int32 mMotionIndex = INDEX_NONE;
+
+	/** @brief true면 미리보기 로그 — 수명으로 자동 소멸하지 않고, 모션 종료(MotionFinished)나 전체 클리어로만 사라진다. */
+	UPROPERTY(BlueprintReadWrite) bool mIsPreview = false;
+};
+
 /** @brief 주사위 한 칸을 그릴 때 필요한 표시값입니다. */
 // 어댑터가 UDiceData를 이 struct로 변환한다. 희귀도는 UI가 바로 쓸 수 있게 색/문구로 변환해 담는다.
 // UI 필요값:

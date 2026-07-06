@@ -1,5 +1,6 @@
 ﻿#include "Actor/TileMap/TileMapModel.h"
 #include "Actor/BoardActor/BoardActorModel.h"
+#include "Singleton/WorldSubsystem/PresentationBarrier.h"
 #include "Algo/Reverse.h"
 
 namespace
@@ -845,6 +846,25 @@ bool UTileMapModel::CanPlace(const FTileIndex& TileIndex, const UBoardActorModel
 
 	// 막혔어도 막는 액터를 교체할 수 있으면 배치 가능
 	return GetReplaceableActors(TileIndex, Incoming).Num() > 0;
+}
+
+void UTileMapModel::RotateActor(ETileActorDirection Direction, UBoardActorModel* Actor, TSharedPtr<FPresentationBarrier> Barrier)
+{
+	checkf(Actor != nullptr, TEXT("Actor가 nullptr"));
+
+	// 같은 방향이면 바로 리턴
+	FTileTransform NewTransform = Actor->GetTileTransform();
+	if (NewTransform.mDirection == Direction)
+	{
+		return;
+	}
+
+	// 논리 방향 즉시 갱신
+	NewTransform.mDirection = Direction;
+	Actor->SetTileTransform(NewTransform);
+
+	// 뷰에 회전 연출 요청
+	Actor->OnRotate.Broadcast(TileToWorldTransform(NewTransform).Rotator(), Barrier);
 }
 
 void UTileMapModel::StartActorMovement(const FTileTransform& NextTransform, UBoardActorModel* Actor)

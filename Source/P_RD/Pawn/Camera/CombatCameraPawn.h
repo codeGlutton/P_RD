@@ -108,6 +108,17 @@ public:
 	UFUNCTION(Exec)
 	void RDMoveTo(int32 X, int32 Y);
 
+	/**
+	 * @brief 플레이어 유닛의 방향 전환 — 콘솔에서 "RDRotate D" (0=Forward 1=Right 2=Backward 3=Left)
+	 * @details
+	 * RotateActor 논리 갱신부터 뷰 회전 연출까지 실제 파이프라인으로 검증.
+	 * @note
+	 * UFUNCTION(Exec) 때문에 전처리기에 못 넣고, cpp에서 전처리
+	 * -> 릴리즈에서는 빈 함수로 동작
+	 */
+	UFUNCTION(Exec)
+	void RDRotate(int32 Direction);
+
 private:
 	/*
 	* @brief Drag 중인지 나타내는 함수

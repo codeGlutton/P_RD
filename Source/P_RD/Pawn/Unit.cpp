@@ -96,6 +96,8 @@ void AUnit::BindModel(UObjectModel* Model)
 
 		// 이동 연출 요청 구독
 		mUnitModel->OnStartMoveStep.AddUObject(this, &AUnit::OnStartMoveStep);
+		// 방향 전환 연출 요청 구독
+		mUnitModel->OnRotate.AddUObject(this, &AUnit::OnRotate);
 		
 		// 스킬 Effect 타격 연출 구독
 		mUnitModel->OnPlayApplyAnimationUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> MotionEndBarrier, TSharedPtr<FPresentationBarrier> MotionTriggerBarrier, FGameplayTag ApplyMotionTag, ETileActorDirection LocalDirection) {
@@ -148,6 +150,7 @@ void AUnit::UnbindModel(UObjectModel* Model)
 	if (mUnitModel.IsValid())
 	{
 		mUnitModel->OnStartMoveStep.RemoveAll(this);
+		mUnitModel->OnRotate.RemoveAll(this);
 	}
 	mUnitModel.Reset();
 
@@ -183,6 +186,22 @@ void AUnit::OnStartMoveStep(const FTileTransform& NextTileTransform, const FTran
 	{
 		RootComponent->SetMobility(EComponentMobility::Movable);
 	}
+
+	// 틱 시작
+	SetActorTickEnabled(true);
+}
+
+void AUnit::OnRotate(const FRotator& TargetWorldRotation, TSharedPtr<FPresentationBarrier> Barrier)
+{
+	// 목표를 "현재 위치 + 새 회전"으로 잡아서 Tick에서 처리하도록 설정
+	mMoveTargetTransform = FTransform(TargetWorldRotation, GetActorLocation());
+	// 인자로 들어온 배리어가 nullptr이면
+	// -> Tick이 배리어를 요구하므로 빈 배리어를 만들어서 처리
+	mMoveBarrier = Barrier.IsValid()
+		? Barrier
+		: FPresentationBarrier::Make(FOnFinishPresentation());
+	// 제자리 회전이므로 남은 경로 거리는 0
+	mRemainingPathDistance = 0.0f;
 
 	// 틱 시작
 	SetActorTickEnabled(true);

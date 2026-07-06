@@ -171,10 +171,59 @@ void UCombatUIModel::NotifyActionResolved()
 	OnActionResolved.Broadcast();
 }
 
-/** @brief 유닛 머리 위 플로팅 로그(HP 증감 등)를 구독 위젯에 알린다. */
-void UCombatUIModel::NotifyCombatFloatingLog(int32 UnitId, const FText& Text, const FLinearColor& Color, UTexture2D* Icon)
+/** @brief 월드 위치 기준 플로팅 로그 한 건을 구독 위젯에 알린다. */
+void UCombatUIModel::NotifyCombatFloatingLog(const FCombatFloatingLogRequest& Request)
 {
-	OnCombatFloatingLog.Broadcast(UnitId, Text, Color, Icon);
+	OnCombatFloatingLog.Broadcast(Request);
+}
+
+/** @brief 월드 위치 기준 플로팅 로그 여러 건을 구독 위젯에 알린다. */
+void UCombatUIModel::NotifyCombatFloatingLogs(const TArray<FCombatFloatingLogRequest>& Requests)
+{
+	struct FIndexedFloatingLogRequest
+	{
+		const FCombatFloatingLogRequest* Request = nullptr;
+		int32 InputIndex = 0;
+	};
+
+	TArray<FIndexedFloatingLogRequest> SortedRequests;
+	SortedRequests.Reserve(Requests.Num());
+	for (int32 RequestIndex = 0; RequestIndex < Requests.Num(); ++RequestIndex)
+	{
+		SortedRequests.Add(FIndexedFloatingLogRequest{ &Requests[RequestIndex], RequestIndex });
+	}
+	SortedRequests.Sort([](const FIndexedFloatingLogRequest& Lhs, const FIndexedFloatingLogRequest& Rhs) {
+		if (Lhs.Request->mSequence != Rhs.Request->mSequence)
+		{
+			return Lhs.Request->mSequence < Rhs.Request->mSequence;
+		}
+		return Lhs.InputIndex < Rhs.InputIndex;
+		});
+
+	for (const FIndexedFloatingLogRequest& SortedRequest : SortedRequests)
+	{
+		if (SortedRequest.Request != nullptr)
+		{
+			NotifyCombatFloatingLog(*SortedRequest.Request);
+		}
+	}
+}
+
+/** @brief 특정 모션 인덱스에 묶인 플로팅 로그를 정리하라고 구독 위젯에 알린다. */
+void UCombatUIModel::NotifyCombatFloatingLogMotionFinished(int32 MotionIndex)
+{
+	if (MotionIndex == INDEX_NONE)
+	{
+		return;
+	}
+
+	OnCombatFloatingLogMotionFinished.Broadcast(MotionIndex);
+}
+
+/** @brief 현재/대기 중인 플로팅 로그를 전부 지우라고 구독 위젯에 알린다. */
+void UCombatUIModel::NotifyCombatFloatingLogsCleared()
+{
+	OnCombatFloatingLogsCleared.Broadcast();
 }
 
 /** @brief 턴 시작 주사위 굴림 오버레이 열기를 구독 위젯에 알린다. */

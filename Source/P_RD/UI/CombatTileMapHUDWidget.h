@@ -314,16 +314,33 @@ private:
 
 	/* ── 전투 플로팅 로그(유닛 머리 위) + 턴 라운드 배너 (CombatTileMapHUDWidget_CombatLog.cpp) ── */
 
-	/** @brief HP 증감 등 전투 이벤트를 유닛 머리 위 [아이콘+]텍스트로 스폰한다(OnCombatFloatingLog 구독). */
+	/** @brief 전투 이벤트 플로팅 로그 요청을 순차 재생 큐에 넣는다(OnCombatFloatingLog 구독). */
 	UFUNCTION()
-	void HandleCombatFloatingLog(int32 UnitId, FText Text, FLinearColor Color, UTexture2D* Icon);
+	void HandleCombatFloatingLog(FCombatFloatingLogRequest Request);
+
+	/** @brief 모션 연출 종료 알림을 받아 해당 MotionIndex에 묶인 플로팅 로그를 제거한다. */
+	UFUNCTION()
+	void HandleCombatFloatingLogMotionFinished(int32 MotionIndex);
+
+	/** @brief 현재 떠 있는(그리고 대기 중인) 플로팅 로그를 전부 즉시 제거한다(OnCombatFloatingLogsCleared 구독). */
+	UFUNCTION()
+	void HandleCombatFloatingLogsCleared();
 
 	/** @brief 턴 시작 주사위 굴림 요청(OnDiceRollRequested 구독) — 굴림 오버레이를 연다. 구현: _DiceRoll.cpp */
 	UFUNCTION()
 	void HandleCombatDiceRollRequested();
 
+	/** @brief 대기 중인 플로팅 로그 큐에서 다음 로그를 일정 간격으로 스폰한다. */
+	void UpdateFloatingCombatLogQueue(float InDeltaTime);
+
 	/** @brief 플로팅 로그들을 상승+페이드시키고 수명이 다하면 제거한다(매 프레임). */
 	void UpdateFloatingCombatLogs(float InDeltaTime);
+
+	/** @brief 월드 좌표 기준으로 플로팅 로그 위젯을 실제 생성한다. */
+	void SpawnFloatingCombatLogAtWorld(const FCombatFloatingLogRequest& Request);
+
+	/** @brief 대기/표시 중인 플로팅 로그에서 MotionIndex가 같은 항목을 모두 제거한다. */
+	void RemoveFloatingCombatLogsByMotionIndex(int32 MotionIndex);
 
 	/** @brief 라운드가 실제로 바뀌었을 때만 중앙 배너("N번째 턴")를 띄운다. Turn 도메인 갱신 시 호출. */
 	void RefreshTurnRoundBanner();
@@ -456,14 +473,40 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UProgressBar>> mUnitHpBars;
 
-	/** @brief 머리 위 플로팅 전투 로그 한 건. 위젯 수명은 RootCanvas가 쥔다(여긴 추적용). */
+	/**
+	 * @brief 아직 화면에 안 뜬 "대기 큐"의 한 칸(실행 로그 전용). 스폰 전이라 원본 요청만 들고 있다.
+	 * @details 실행 로그가 몰릴 때 여기 쌓였다가 UpdateFloatingCombatLogQueue가 간격을 두고 하나씩 꺼내 스폰한다.
+	 *          (미리보기 로그는 큐를 안 타고 즉시 스폰되므로 여기 들어오지 않는다.)
+	 */
+	struct FQueuedFloatingCombatLogEntry
+	{
+		FCombatFloatingLogRequest mRequest;   // 스폰 때 그대로 쓸 원본 요청
+		int32 mArrivalOrder = 0;              // 같은 Sequence일 때 수신 순서를 지키기 위한 순번
+	};
+
+	/**
+	 * @brief 지금 화면에 떠 있는(추적 중인) 로그 한 건. 위젯 수명은 RootCanvas가 쥐고, 여긴 위치/수명 추적용 메타만 든다.
+	 * @details UpdateFloatingCombatLogs가 매 프레임 이 목록을 돌며 월드→스크린 재배치 + (실행)상승·페이드·소멸을 처리한다.
+	 */
 	struct FFloatingCombatLogEntry
 	{
 		TObjectPtr<UWidget> mRoot;                    // 캔버스에 붙은 루트(아이콘+텍스트 박스 또는 텍스트 단일)
-		FVector mWorldLocation = FVector::ZeroVector; // 스폰 시점 유닛 위치 스냅샷(HP바와 같은 소스)
-		float mElapsed = 0.0f;
+		FVector mWorldLocation = FVector::ZeroVector; // 스폰 시점 월드 위치 스냅샷(이 위에 투영해 그린다)
+		int32 mMotionIndex = INDEX_NONE;              // 속한 모션 인덱스. 그 모션 종료 시 이 값으로 묶어서 함께 제거
+		float mElapsed = 0.0f;                        // 스폰 후 누적 시간(실행 로그의 상승/페이드/수명 판단용)
+		bool mIsPreview = false;                      // true면 자동 소멸 안 함(MotionFinished/Clear로만 제거)
+		float mStackOffsetY = 0.0f;                   // 미리보기 겹침 방지용 세로 쌓기 오프셋(px, 위로 +)
 	};
+	/** @brief 스폰 대기 큐(실행 로그). HandleCombatFloatingLog가 넣고, UpdateFloatingCombatLogQueue가 하나씩 꺼낸다. */
+	TArray<FQueuedFloatingCombatLogEntry> mPendingFloatingCombatLogs;
+	/** @brief 화면에 떠 있는 로그 목록. SpawnFloatingCombatLogAtWorld가 등록, UpdateFloatingCombatLogs가 갱신/제거. */
 	TArray<FFloatingCombatLogEntry> mFloatingCombatLogs;
+
+	/** @brief 같은 Sequence일 때 수신 순서를 유지하기 위한 내부 순번. */
+	int32 mNextFloatingCombatLogArrivalOrder = 0;
+
+	/** @brief 다음 플로팅 로그를 큐에서 꺼내기까지 남은 시간. */
+	float mFloatingCombatLogQueueCooldown = 0.0f;
 
 	/** @brief 턴 라운드 배너 텍스트(중앙 상단, 라운드가 바뀔 때 잠깐 표시) */
 	UPROPERTY(Transient)
