@@ -150,7 +150,6 @@ bool FTacticalModifierInfo::operator==(const FTacticalModifierInfo& Other) const
 		return false;
 	}
 
-	// mModifierOp 는 ETacticalModOp(구 EGameplayModOp 치환). 같은 어트리뷰트라도 연산 종류가 다르면 다른 모디파이어.
 	if (mModifierOp != Other.mModifierOp)
 	{
 		return false;
@@ -173,16 +172,17 @@ bool FTacticalModifierInfo::operator!=(const FTacticalModifierInfo& Other) const
  * @brief 이 이펙트를 대상 컨테이너에 적용 가능한지 판정한다.
  *        구 GAS 에서는 GameplayEffectComponent 들이 각자 적용 가능 여부를 검사했으나,
  *        GAS 폐기(PR #191 라인)로 해당 컴포넌트 루프는 주석 처리되었고 현재는 항상 허용한다.
- * @param ActiveGEContainer 대상이 보유한 활성 이펙트 컨테이너.
- * @param GESpec 적용을 시도하는 이펙트 스펙.
+ * @param ActiveTEContainer 대상이 보유한 활성 이펙트 컨테이너.
+ * @param TESpec 적용을 시도하는 이펙트 스펙.
  * @return 적용 가능하면 true(현재 구현은 항상 true).
  */
-bool UTacticalEffect::CanApply(const FActiveTacticalEffectsContainer& ActiveGEContainer, const FTacticalEffectSpec& GESpec) const
+bool UTacticalEffect::CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const
 {
-	// [구 GAS 잔재] GameplayEffectComponent 기반 적용 검사 - GAS 폐기로 비활성.
+	// GameplayEffectComponent 기반 적용 검사 
+	// - GEComponent도 구현해둘까 고민중 by Mohojae
 	/*for (const UGameplayEffectComponent* GEComponent : GEComponents)
 	{
-		if (GEComponent && !GEComponent->CanGameplayEffectApply(ActiveGEContainer, GESpec))
+		if (GEComponent && !GEComponent->CanGameplayEffectApply(ActiveTEContainer, TESpec))
 		{
 			return false;
 		}
@@ -194,19 +194,20 @@ bool UTacticalEffect::CanApply(const FActiveTacticalEffectsContainer& ActiveGECo
 /**
  * @brief 이펙트가 활성 컨테이너에 추가될 때 호출되는 콜백. 추가된 이펙트의 활성 유지 여부를 반환한다.
  *        구 GAS 의 GameplayEffectComponent 활성화 훅을 대체하나, GAS 폐기로 컴포넌트 루프는 비활성.
- * @param ActiveGEContainer 이펙트가 추가되는 활성 이펙트 컨테이너.
- * @param ActiveGE 새로 추가된 활성 이펙트 인스턴스.
+ * @param ActiveTEContainer 이펙트가 추가되는 활성 이펙트 컨테이너.
+ * @param ActiveTE 새로 추가된 활성 이펙트 인스턴스.
  * @return 이펙트가 활성으로 유지되어야 하면 true(현재 구현은 항상 true).
  */
-bool UTacticalEffect::OnAddedToActiveContainer(FActiveTacticalEffectsContainer& ActiveGEContainer, FActiveTacticalEffect& ActiveGE) const
+bool UTacticalEffect::OnAddedToActiveContainer(FActiveTacticalEffectsContainer& ActiveTEContainer, FActiveTacticalEffect& ActiveTE) const
 {
 	bool ShouldBeActive = true;
-	// [구 GAS 잔재] GameplayEffectComponent 추가 콜백 - GAS 폐기로 비활성.
+	// GameplayEffectComponent 추가 콜백
+	// - GEComponent도 구현해둘까 고민중 by Mohojae
 	/*for (const UGameplayEffectComponent* GEComponent : GEComponents)
 	{
 		if (GEComponent)
 		{
-			bShouldBeActive = GEComponent->OnActiveGameplayEffectAdded(ActiveGEContainer, ActiveGE) && bShouldBeActive;
+			bShouldBeActive = GEComponent->OnActiveGameplayEffectAdded(ActiveTEContainer, ActiveTE) && bShouldBeActive;
 		}
 	}*/
 
@@ -216,17 +217,18 @@ bool UTacticalEffect::OnAddedToActiveContainer(FActiveTacticalEffectsContainer& 
 /**
  * @brief 이펙트가 즉시 실행(Instant/주기 실행)될 때 호출되는 콜백.
  *        구 GAS 의 GameplayEffectComponent 실행 훅 자리이나, GAS 폐기로 컴포넌트 루프는 비활성.
- * @param ActiveGEContainer 실행이 일어나는 활성 이펙트 컨테이너.
- * @param GESpec 실행 중인 이펙트 스펙.
+ * @param ActiveTEContainer 실행이 일어나는 활성 이펙트 컨테이너.
+ * @param TESpec 실행 중인 이펙트 스펙.
  */
-void UTacticalEffect::OnExecuted(FActiveTacticalEffectsContainer& ActiveGEContainer, FTacticalEffectSpec& GESpec) const
+void UTacticalEffect::OnExecuted(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const
 {
-	// [구 GAS 잔재] GameplayEffectComponent 실행 콜백 - GAS 폐기로 비활성.
+	// GameplayEffectComponent 실행 콜백
+	// - GEComponent도 구현해둘까 고민중 by Mohojae
 	/*for (const UGameplayEffectComponent* GEComponent : GEComponents)
 	{
 		if (GEComponent)
 		{
-			GEComponent->OnGameplayEffectExecuted(ActiveGEContainer, GESpec, PredictionKey);
+			GEComponent->OnGameplayEffectExecuted(ActiveTEContainer, TESpec);
 		}
 	}*/
 }
@@ -234,17 +236,18 @@ void UTacticalEffect::OnExecuted(FActiveTacticalEffectsContainer& ActiveGEContai
 /**
  * @brief 이펙트가 대상에 적용 완료될 때 호출되는 콜백.
  *        구 GAS 의 GameplayEffectComponent 적용 훅 자리이나, GAS 폐기로 컴포넌트 루프는 비활성.
- * @param ActiveGEContainer 적용이 일어나는 활성 이펙트 컨테이너.
- * @param GESpec 적용된 이펙트 스펙.
+ * @param ActiveTEContainer 적용이 일어나는 활성 이펙트 컨테이너.
+ * @param TESpec 적용된 이펙트 스펙.
  */
-void UTacticalEffect::OnApplied(FActiveTacticalEffectsContainer& ActiveGEContainer, FTacticalEffectSpec& GESpec) const
+void UTacticalEffect::OnApplied(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const
 {
-	// [구 GAS 잔재] GameplayEffectComponent 적용 콜백 - GAS 폐기로 비활성.
+	// GameplayEffectComponent 적용 콜백
+	// - GEComponent도 구현해둘까 고민중 by Mohojae
 	/*for (const UGameplayEffectComponent* GEComponent : GEComponents)
 	{
 		if (GEComponent)
 		{
-			GEComponent->OnGameplayEffectApplied(ActiveGEContainer, GESpec, PredictionKey);
+			GEComponent->OnGameplayEffectApplied(ActiveTEContainer, TESpec);
 		}
 	}*/
 }

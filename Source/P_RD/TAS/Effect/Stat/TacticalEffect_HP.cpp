@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   TacticalEffect_HP.cpp
  * @brief  체력(HP) 가감 이펙트 구현
  * @author 이문환
@@ -6,9 +6,10 @@
  *********************************************************************/
 
 #include "TAS/Effect/Stat/TacticalEffect_HP.h"
-
-// HP 속성 캡처용. GetHPAttribute()로 모디파이어 대상 속성을 지정한다.
 #include "AttributeSet/UnitAttributeSet.h"
+#include "Simulation/Logger/EventLogger.h"
+
+#include "TAS/Effect/TacticalEffectContext.h"
 
 /**
  * @brief 체력(HP) 이펙트의 기본 생성자
@@ -29,4 +30,16 @@ UTacticalEffect_HP::UTacticalEffect_HP()
 	Info.mModifierMagnitude = 1.f;
 
 	mModifiers.Add(Info);
+}
+
+void UTacticalEffect_HP::OnExecuted(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const
+{
+	Super::OnExecuted(ActiveTEContainer, TESpec);
+
+	FSRPGAttributeEffectEventLog Log;
+	Log.mEffectAttribute = UUnitAttributeSet::GetHPAttribute();
+	Log.mMagnitude = TESpec.mModifierValues[0];
+
+	const UActorModel* Instigator = TESpec.GetContext()->GetInstigator();
+	GetWorldEventLogger(Instigator)->LogAttributeEffect(Instigator->GetModelId(), Instigator->GetClass(), Log);
 }

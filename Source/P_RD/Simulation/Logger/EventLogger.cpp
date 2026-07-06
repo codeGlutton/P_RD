@@ -129,7 +129,12 @@ void USimulationEventLogger::EndMotionLog()
 
 void USimulationEventLogger::LogTagEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTagEffectEventLog& Log)
 {
-	checkf(mCurrentMotionEventLog != nullptr, TEXT("모션 로그 시작 없이 태그 변경 기록 오류"));
+	if (mCurrentMotionEventLog == nullptr)
+	{
+		UE_LOG(LogEventLogger, Log, TEXT("모션 외 범위에서의 잘못된 로그 요청으로 무시"));
+		return;
+	}
+
 	checkf(Log.IsValid() == true, TEXT("태그 변경 로그 불량"));
 
 	FSRPGBoardActorEventLog& BoardActorLog = mCurrentMotionEventLog->mBoardActorEventLogs[TargetActorID];
@@ -151,7 +156,12 @@ void USimulationEventLogger::LogTagEffect(int32 TargetActorID, UClass* BoardActo
 
 void USimulationEventLogger::LogAttributeEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGAttributeEffectEventLog& Log)
 {
-	checkf(mCurrentMotionEventLog != nullptr, TEXT("모션 로그 시작 없이 속성 변경 기록 오류"));
+	if (mCurrentMotionEventLog == nullptr)
+	{
+		UE_LOG(LogEventLogger, Log, TEXT("모션 외 범위에서의 잘못된 로그 요청으로 무시"));
+		return;
+	}
+
 	checkf(Log.IsValid() == true, TEXT("속성 변경 로그 불량"));
 
 	FSRPGBoardActorEventLog& BoardActorLog = mCurrentMotionEventLog->mBoardActorEventLogs[TargetActorID];
@@ -173,7 +183,12 @@ void USimulationEventLogger::LogAttributeEffect(int32 TargetActorID, UClass* Boa
 
 void USimulationEventLogger::LogTileEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTileEffectEventLog& Log)
 {
-	checkf(mCurrentMotionEventLog != nullptr, TEXT("모션 로그 시작 없이 속성 변경 기록 오류"));
+	if (mCurrentMotionEventLog == nullptr)
+	{
+		UE_LOG(LogEventLogger, Log, TEXT("모션 외 범위에서의 잘못된 로그 요청으로 무시"));
+		return;
+	}
+
 	checkf(Log.IsValid() == true, TEXT("타일 위치 변경 로그 불량"));
 
 	FSRPGBoardActorEventLog& BoardActorLog = mCurrentMotionEventLog->mBoardActorEventLogs[TargetActorID];

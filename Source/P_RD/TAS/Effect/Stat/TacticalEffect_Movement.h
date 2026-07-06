@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   TacticalEffect_Movement.h
  * @brief  Movement 이펙트 정의 헤더
  * @author 이문환
@@ -20,4 +20,8 @@ class P_RD_API UTacticalEffect_Movement : public UTacticalEffect
 
 public:
 	UTacticalEffect_Movement();
+
+	/* UTacticalEffect 상속 */
+public:
+	void OnExecuted(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const override;
 };
