@@ -80,6 +80,7 @@ private:
 	// @brief 진행 중인 이동스텝의 연출 배리어
 	TSharedPtr<FPresentationBarrier> mMoveBarrier;
 
+private:
 	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CapsuleComp", AllowPrivateAccess = "true"))
 	TObjectPtr<UCapsuleComponent> mCapsuleComp;
 
