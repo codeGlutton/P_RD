@@ -5,4 +5,6 @@
 
 void ACombatPlayerController::BeginPlay()
 {
+	Super::BeginPlay();
+
 }

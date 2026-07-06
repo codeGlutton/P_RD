@@ -34,6 +34,7 @@ protected:
 	/**
 	 * @brief 배치된 보드 액터 (소유권은 외부 컨텍스트/팩토리, 약참조)
 	 */
+	UPROPERTY(Category = BoardActor, VisibleAnywhere, meta = (DisplayName = "BoardActors"))
 	TArray<TWeakObjectPtr<UBoardActorModel>> mBoardActors;
 };
 
