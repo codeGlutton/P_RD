@@ -34,8 +34,8 @@ class UMockEnemyUnitModel : public UEnemyUnitModel
 public:
 	UMockEnemyUnitModel()
 	{
-		// MovementPoint 사용할 수 있도록 UUnitAttributeSet 설정
-		mUnitAttributeSet = CreateDefaultSubobject<UUnitAttributeSet>(TEXT("UnitAttributeSet"));
+		// UnitAttributeSet은 이제 부모(UEnemyUnitModel) 생성자가 동일한 이름("UnitAttributeSet")으로 만든다.
+		// 여기서 중복 생성/선언하면 UHT 섀도잉 에러 — 상속분을 그대로 사용한다.
 	}
 
 	/**
@@ -54,10 +54,6 @@ public:
 		mMoveTendency = Tendency;
 	}
 
-private:
-	// @brief 테스트용 어트리뷰트 세트 (MovementPoint 사용)
-	UPROPERTY()
-	TObjectPtr<UUnitAttributeSet> mUnitAttributeSet;
 };
 
 /**

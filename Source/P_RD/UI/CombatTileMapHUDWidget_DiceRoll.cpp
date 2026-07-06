@@ -450,3 +450,20 @@ void UCombatTileMapHUDWidget::DismissIntroDiceRoll()
 	mIntroDiceAlignTimer = 0.0f;
 	SetDiceRollVisibility(ESlateVisibility::Collapsed);
 }
+
+/**
+ * @brief 턴 시작 주사위 굴림 요청(OnDiceRollRequested) 수신 — 굴림 오버레이를 연다.
+ * @details 첫 턴은 전투 입장 연출이 열지만, 2턴째부터는 이 경로가 유일한 자동 열림이다.
+ *          이미 굴리는 중이거나 결과 확인 대기 중이면 중복 시작하지 않는다.
+ */
+void UCombatTileMapHUDWidget::HandleCombatDiceRollRequested()
+{
+	if (mIntroDiceRollActive == true || mIntroDiceResultWaitingForDismiss == true)
+	{
+		return;
+	}
+
+	// 바로 굴리지 않고 "TAP TO ROLL" 대기 상태로만 연다 — 굴리는 맛(터치로 굴림)은 기획 확정 사항(06/15 회의).
+	// 실제 굴림은 유저 탭(HandleDiceRollInputButtonClicked)이나 흔들기에서 StartIntroDiceRoll로 이어진다.
+	PrepareIntroDiceRoll();
+}

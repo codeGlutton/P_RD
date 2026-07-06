@@ -225,6 +225,9 @@ void USRPGTurnContext::EndTurn()
 			--mLifeCount;
 		}
 		mReservedActions.Empty();
+		// 큐를 비우면 소비 인덱스도 함께 되돌려야 한다. 이 컨텍스트는 다음 턴에 재사용되므로, 인덱스가 남아 있으면
+		// 새로 등록된 액션이 mReservedActions.Num() > mHeadActionIndex 조건을 통과하지 못해 영원히 시작되지 않는다.
+		mHeadActionIndex = 0;
 
 		// 핸들러 등록 해제
 		USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);

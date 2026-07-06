@@ -26,12 +26,16 @@ enum class ECombatInputType : uint8
 	LongPressEquip    // payload = SlotIndex (장비 상세)
 };
 
+class UTexture2D;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatUIChanged, ECombatUIDomain, Domain);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatQueueNodeResolved, FCombatQueueNode, Node);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatActionResolved);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatCommand, ECombatInputType, Type, int32, IntPayload);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatWorldTouch, FVector2D, ScreenPosition, bool, bLongPress);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnApplyDiceResults, const TArray<int32>&, RolledFaceIndices);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnCombatFloatingLog, int32, UnitId, FText, Text, FLinearColor, Color, UTexture2D*, Icon);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatDiceRollRequested);
 
 /** @brief 전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다. */
 UCLASS(BlueprintType)
@@ -52,6 +56,14 @@ public:
 	/** @brief 스킬/액션이 확정·취소되어 빌드가 끝났음을 알림. 위젯은 스킬/주사위 선택 강조를 푼다. */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
 	FOnCombatActionResolved OnActionResolved;
+
+	/** @brief 전투 이벤트(HP 증감 등)를 유닛 머리 위 플로팅 텍스트로 띄우라는 알림. UnitId는 FUnitUI.mUnitId와 같은 id 공간. */
+	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
+	FOnCombatFloatingLog OnCombatFloatingLog;
+
+	/** @brief 턴 시작 주사위 굴림 오버레이를 열라는 알림(프레임워크 OnShowDicePanelAnyTurnUI 중계). 첫 턴 이후에도 굴림 UI가 자동으로 뜨게 한다. */
+	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
+	FOnCombatDiceRollRequested OnDiceRollRequested;
 
 	/* ───────── 게임플레이가 구독하는 입력(의도) ───────── */
 	// UI는 Request*()로 의도만 보낸다. 게임플레이가 아래 델리게이트를 구독해 실제 처리해야 한다.
@@ -127,6 +139,12 @@ public:
 
 	/** @brief 스킬/액션 빌드가 끝났음을 UI에 알린다(OnActionResolved). 게임플레이가 확정/취소 시 호출. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyActionResolved();
+
+	/** @brief 유닛 머리 위 플로팅 로그 표시를 요청한다(OnCombatFloatingLog). Icon은 선택(널이면 텍스트만). 게임플레이가 HP 증감 등 이벤트 시 호출. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyCombatFloatingLog(int32 UnitId, const FText& Text, const FLinearColor& Color, UTexture2D* Icon = nullptr);
+
+	/** @brief 턴 시작 주사위 굴림 오버레이 열기를 요청한다(OnDiceRollRequested). 게임플레이가 DicePrepare 시점에 호출. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyDiceRollRequested();
 
 	/* ───────── 위젯이 읽는다 ───────── */
 public:
