@@ -63,6 +63,11 @@ protected:
 		TSharedPtr<FPresentationBarrier> Barrier,
 		float RemainingPathDistance);
 
+	// @brief 방향 전환 요청을 수신해서 제자리 회전 시작
+	virtual void OnRotate(
+		const FRotator& TargetWorldRotation,
+		TSharedPtr<FPresentationBarrier> Barrier);
+
 public:
 	UCapsuleComponent* GetCapsuleComponent() const;
 	USkeletalMeshComponent* GetMesh() const;
