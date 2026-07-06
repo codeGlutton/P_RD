@@ -155,13 +155,19 @@ void AUnit::UnbindModel(UObjectModel* Model)
 	mMoveBarrier.Reset();
 	// 이동이 멈추면 틱도 비활성화
 	SetActorTickEnabled(false);
+	// 이동 중 해제될 수 있으므로 속도 상태도 초기화
+	mCurrentMoveSpeed = 0.0f;
+	mCurrentMoveVelocity = FVector::ZeroVector;
 }
 
-void AUnit::OnStartMoveStep(const FTileTransform& NextTileTransform, const FTransform& TargetWorldTransform, TSharedPtr<FPresentationBarrier> Barrier)
+void AUnit::OnStartMoveStep(const FTileTransform& NextTileTransform, const FTransform& TargetWorldTransform, TSharedPtr<FPresentationBarrier> Barrier, float RemainingPathDistance)
 {
 	// 목표타일의 월드트랜스폼과 배리어 보관
 	mMoveTargetTransform = TargetWorldTransform;
 	mMoveBarrier = Barrier;
+	// 목표 이후 남은 거리 저장 (제동거리 계산에 사용)
+	mRemainingPathDistance = RemainingPathDistance;
+	// @note 현재 속도(mCurrentMoveSpeed)는 초기화하지 않음 (중간에 멈칫하지 않게)
 
 	// 타일 월드트랜스폼의 Z축은 타일 바닥이 기준이므로 액터의 중심이 타일 바닥에 파묻힘
 	// 액터의 캡슐 중심만큼 더해서 바닥을 딛고 있도록 변경
@@ -193,11 +199,43 @@ void AUnit::Tick(float DeltaSeconds)
 		return;
 	}
 
-	// 위치: 현재벡터를, 현재위치에서 다음위치로 지정한 속도만큼 이동한 값 계산
+	// 목표 속도 결정
+	// - 기본은 최대속도
+	// - 제동거리에 들어가면 감속하면서 느려짐
+	const FVector CurrentLocation = GetActorLocation();
+	const float RemainingDistance = FVector::Dist(CurrentLocation, mMoveTargetTransform.GetLocation());
+
+	// 남은 거리에서 멈출 수 있는 속도 계산
+	float TargetSpeed = mMaxMoveSpeed;
+	if (mDeceleration > 0.0f)
+	{
+		// 제동 기준 거리 = 이번 스텝 남은 거리 + 이후 경로 거리 (최종 목적지 기준으로 감속)
+		// 목표가 많이 남으면 아래 BrakeSpeed가 최고속도보다 커지므로 최고속도로 순항하고
+		// 목표가 가까워져서 제동거리 안에 들어가면 BrakeSpeed가 최고속도보다 낮아지므로 BrakeSpeed로 느려짐
+		const float BrakeDistance = RemainingDistance + mRemainingPathDistance;
+		// @details
+		// 등가속도 공식은 `v^2 = v0^2 + 2as` 인데,
+		// 최종속도 v=0 이 되면서 멈추는 거니까 이 공식은 `0 = v0^2 + 2as`
+		// 이때 감속하니까 가속도는 -가 되고 2as를 좌변으로 넘기면 `2as = v0^2`
+		// 따라서 `v0 = sqrt(2as)`
+		const float BrakeSpeed = FMath::Sqrt(2.0f * mDeceleration * BrakeDistance);
+		TargetSpeed = FMath::Min(TargetSpeed, BrakeSpeed);
+	}
+
+	// 현재 속도를 목표 속도로 가감속 (올릴 땐 가속도, 내릴 땐 감속도 사용)
+	// 해당 가감속도가 0이면 즉시 목표 속도 도달
+	const float InterpRate = (TargetSpeed < mCurrentMoveSpeed)
+		? mDeceleration
+		: mAcceleration;
+	mCurrentMoveSpeed = (InterpRate > 0.0f)
+		? FMath::FInterpConstantTo(mCurrentMoveSpeed, TargetSpeed, DeltaSeconds, InterpRate)
+		: TargetSpeed;
+
+	// 위치: 현재벡터를, 현재위치에서 다음위치로 현재 속도만큼 이동한 값 계산
 	const FVector NewLocation = FMath::VInterpConstantTo(
-		GetActorLocation(),
+		CurrentLocation,
 		mMoveTargetTransform.GetLocation(),
-		DeltaSeconds, mMoveSpeed);
+		DeltaSeconds, mCurrentMoveSpeed);
 	// 회전: 현재회전을, 다음 타일을 바라보도록 지정한 각도만큼 변경한 값 계산
 	const FRotator NewRotation = FMath::RInterpConstantTo(
 		GetActorRotation(),
@@ -205,10 +243,23 @@ void AUnit::Tick(float DeltaSeconds)
 		DeltaSeconds, mRotationSpeed);
 	SetActorLocationAndRotation(NewLocation, NewRotation);
 
+	// 현재 속도 저장
+	// 애니메이션이 GetVelocity()로 읽어서 활용 가능
+	mCurrentMoveVelocity
+		= (DeltaSeconds > 0.0f)  // 혹시 0으로 나누는 경우를 방지
+		? (NewLocation - CurrentLocation) / DeltaSeconds
+		: FVector::ZeroVector;
+
 	// 위치와 회전이 모두 목표와 일치하면 -> 해당 타일에 도착
 	if (NewLocation.Equals(mMoveTargetTransform.GetLocation()) &&
 		NewRotation.Equals(mMoveTargetTransform.Rotator()))
 	{
+		// 최종 목적지 도착이면 정지 상태로 초기화 (다음 이동은 0부터 다시 가속)
+		if (mRemainingPathDistance <= KINDA_SMALL_NUMBER)
+		{
+			mCurrentMoveSpeed = 0.0f;
+			mCurrentMoveVelocity = FVector::ZeroVector;
+		}
 		// 도착했으면 틱 해제
 		SetActorTickEnabled(false);
 		// 베리어 해제
@@ -216,6 +267,13 @@ void AUnit::Tick(float DeltaSeconds)
 		// -> StartStep(NextTile) 해서 타일간 이동 반복
 		mMoveBarrier.Reset();
 	}
+}
+
+FVector AUnit::GetVelocity() const
+{
+	// 이동을 무브먼트컴포넌트 없이 직접 하므로
+	// Tick()에서 계산해서 저장한 현재 속도를 반환
+	return mCurrentMoveVelocity;
 }
 
 UCapsuleComponent* AUnit::GetCapsuleComponent() const
