@@ -91,6 +91,9 @@ struct FCombatFloatingLogRequest
 
 	/** @brief 낮은 값부터 순차 표시한다. 같은 값이면 수신 순서를 따른다. */
 	UPROPERTY(BlueprintReadWrite) int32 mSequence = 0;
+
+	/** @brief 같은 액션의 MotionEventLogs 배열 기준 인덱스. INDEX_NONE이면 수명 시간으로만 자동 제거한다. */
+	UPROPERTY(BlueprintReadWrite) int32 mMotionIndex = INDEX_NONE;
 };
 
 /** @brief 주사위 한 칸을 그릴 때 필요한 표시값입니다. */

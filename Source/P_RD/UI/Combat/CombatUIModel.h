@@ -35,6 +35,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatCommand, ECombatInputType,
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatWorldTouch, FVector2D, ScreenPosition, bool, bLongPress);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnApplyDiceResults, const TArray<int32>&, RolledFaceIndices);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatFloatingLog, FCombatFloatingLogRequest, Request);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatFloatingLogMotionFinished, int32, MotionIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatDiceRollRequested);
 
 /** @brief 전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다. */
@@ -60,6 +61,10 @@ public:
 	/** @brief 전투 이벤트(HP 증감 등)를 지정 월드 위치에 플로팅 텍스트로 띄우라는 알림. HUD가 순차 큐로 재생한다. */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
 	FOnCombatFloatingLog OnCombatFloatingLog;
+
+	/** @brief 애니메이션 모션 하나가 끝났으니 해당 MotionIndex의 플로팅 로그를 정리하라는 알림. */
+	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
+	FOnCombatFloatingLogMotionFinished OnCombatFloatingLogMotionFinished;
 
 	/** @brief 턴 시작 주사위 굴림 오버레이를 열라는 알림(프레임워크 OnShowDicePanelAnyTurnUI 중계). 첫 턴 이후에도 굴림 UI가 자동으로 뜨게 한다. */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
@@ -145,6 +150,9 @@ public:
 
 	/** @brief 여러 플로팅 로그를 한 번에 요청한다. Sequence 기준으로 브로드캐스트하면 HUD가 수신 순서대로 순차 재생한다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyCombatFloatingLogs(const TArray<FCombatFloatingLogRequest>& Requests);
+
+	/** @brief 같은 액션의 MotionEventLogs 배열에서 MotionIndex번째 모션 연출이 끝났음을 알린다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyCombatFloatingLogMotionFinished(int32 MotionIndex);
 
 	/** @brief 턴 시작 주사위 굴림 오버레이 열기를 요청한다(OnDiceRollRequested). 게임플레이가 DicePrepare 시점에 호출. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyDiceRollRequested();

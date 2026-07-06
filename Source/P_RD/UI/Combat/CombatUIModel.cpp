@@ -209,6 +209,17 @@ void UCombatUIModel::NotifyCombatFloatingLogs(const TArray<FCombatFloatingLogReq
 	}
 }
 
+/** @brief 특정 모션 인덱스에 묶인 플로팅 로그를 정리하라고 구독 위젯에 알린다. */
+void UCombatUIModel::NotifyCombatFloatingLogMotionFinished(int32 MotionIndex)
+{
+	if (MotionIndex == INDEX_NONE)
+	{
+		return;
+	}
+
+	OnCombatFloatingLogMotionFinished.Broadcast(MotionIndex);
+}
+
 /** @brief 턴 시작 주사위 굴림 오버레이 열기를 구독 위젯에 알린다. */
 void UCombatUIModel::NotifyDiceRollRequested()
 {

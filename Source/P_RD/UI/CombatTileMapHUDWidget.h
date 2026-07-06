@@ -318,6 +318,10 @@ private:
 	UFUNCTION()
 	void HandleCombatFloatingLog(FCombatFloatingLogRequest Request);
 
+	/** @brief 모션 연출 종료 알림을 받아 해당 MotionIndex에 묶인 플로팅 로그를 제거한다. */
+	UFUNCTION()
+	void HandleCombatFloatingLogMotionFinished(int32 MotionIndex);
+
 	/** @brief 턴 시작 주사위 굴림 요청(OnDiceRollRequested 구독) — 굴림 오버레이를 연다. 구현: _DiceRoll.cpp */
 	UFUNCTION()
 	void HandleCombatDiceRollRequested();
@@ -330,6 +334,9 @@ private:
 
 	/** @brief 월드 좌표 기준으로 플로팅 로그 위젯을 실제 생성한다. */
 	void SpawnFloatingCombatLogAtWorld(const FCombatFloatingLogRequest& Request);
+
+	/** @brief 대기/표시 중인 플로팅 로그에서 MotionIndex가 같은 항목을 모두 제거한다. */
+	void RemoveFloatingCombatLogsByMotionIndex(int32 MotionIndex);
 
 	/** @brief 라운드가 실제로 바뀌었을 때만 중앙 배너("N번째 턴")를 띄운다. Turn 도메인 갱신 시 호출. */
 	void RefreshTurnRoundBanner();
@@ -474,6 +481,7 @@ private:
 	{
 		TObjectPtr<UWidget> mRoot;                    // 캔버스에 붙은 루트(아이콘+텍스트 박스 또는 텍스트 단일)
 		FVector mWorldLocation = FVector::ZeroVector; // 스폰 시점 월드 위치 스냅샷
+		int32 mMotionIndex = INDEX_NONE;              // 같은 액션의 MotionEventLogs 배열 기준 인덱스
 		float mElapsed = 0.0f;
 	};
 	TArray<FQueuedFloatingCombatLogEntry> mPendingFloatingCombatLogs;

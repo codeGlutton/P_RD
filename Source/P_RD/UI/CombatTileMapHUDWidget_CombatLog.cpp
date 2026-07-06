@@ -70,6 +70,11 @@ void UCombatTileMapHUDWidget::HandleCombatFloatingLog(FCombatFloatingLogRequest 
 	mPendingFloatingCombatLogs.Add(Entry);
 }
 
+void UCombatTileMapHUDWidget::HandleCombatFloatingLogMotionFinished(int32 MotionIndex)
+{
+	RemoveFloatingCombatLogsByMotionIndex(MotionIndex);
+}
+
 void UCombatTileMapHUDWidget::UpdateFloatingCombatLogQueue(float InDeltaTime)
 {
 	if (mPendingFloatingCombatLogs.Num() == 0)
@@ -143,6 +148,7 @@ void UCombatTileMapHUDWidget::SpawnFloatingCombatLogAtWorld(const FCombatFloatin
 	FFloatingCombatLogEntry Entry;
 	Entry.mRoot = LogBox;
 	Entry.mWorldLocation = Request.mWorldLocation;
+	Entry.mMotionIndex = Request.mMotionIndex;
 	Entry.mElapsed = 0.0f;
 	mFloatingCombatLogs.Add(Entry);
 
@@ -206,6 +212,37 @@ void UCombatTileMapHUDWidget::UpdateFloatingCombatLogs(float InDeltaTime)
 			? 1.0f
 			: 1.0f - (Entry.mElapsed - FadeStart) / (FloatingLogLifetime - FadeStart);
 		LogRoot->SetRenderOpacity(FMath::Clamp(Opacity, 0.0f, 1.0f));
+	}
+}
+
+void UCombatTileMapHUDWidget::RemoveFloatingCombatLogsByMotionIndex(int32 MotionIndex)
+{
+	if (MotionIndex == INDEX_NONE)
+	{
+		return;
+	}
+
+	for (int32 LogIndex = mPendingFloatingCombatLogs.Num() - 1; LogIndex >= 0; --LogIndex)
+	{
+		if (mPendingFloatingCombatLogs[LogIndex].mRequest.mMotionIndex == MotionIndex)
+		{
+			mPendingFloatingCombatLogs.RemoveAt(LogIndex);
+		}
+	}
+
+	for (int32 LogIndex = mFloatingCombatLogs.Num() - 1; LogIndex >= 0; --LogIndex)
+	{
+		FFloatingCombatLogEntry& Entry = mFloatingCombatLogs[LogIndex];
+		if (Entry.mMotionIndex != MotionIndex)
+		{
+			continue;
+		}
+
+		if (Entry.mRoot != nullptr)
+		{
+			Entry.mRoot->RemoveFromParent();
+		}
+		mFloatingCombatLogs.RemoveAt(LogIndex);
 	}
 }
 
