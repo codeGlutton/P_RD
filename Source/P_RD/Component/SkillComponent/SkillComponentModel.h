@@ -114,6 +114,8 @@ public:
 
 protected:
 	void PlayMotionLayer();
+	// @brief 모션 레이어의 애니메이션 재생 (자동 회전이 필요한 경우, 회전 연출 완료 후 호출됨)
+	void PlayMotionLayerAnimation(ETileActorDirection LocalDirectionToTarget);
 	void TriggerMotionLayer();
 	void EndMotionLayer();
 	void DeactivateSkill();

@@ -288,16 +288,41 @@ void USkillComponentModel::PlayMotionLayer()
 
 	/* 애니메이션 시작 */
 
-	ETileActorDirection LocalDirectionToTarget;
+	// 자동 회전
 	if (MotionLayer.mAutoRotateTowardTarget == true)
 	{
-		LocalDirectionToTarget = ETileActorDirection::Forward;
-		// TODO : 회전 처리
+		// 회전이 끝나면 베리어가 소멸하면서 PlayMotionLayerAnimation() 함수 호출.
+		// 이때 방향은 로컬방향이라서 Forward는 정면을 향하고 있음
+		TSharedPtr<FPresentationBarrier> RotateBarrier = FPresentationBarrier::Make(
+			FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+				PlayMotionLayerAnimation(ETileActorDirection::Forward);
+				}));
+		
+		// 타일맵의 절대적 방향으로 회전
+		mActiveSkillContext.mMapModel->RotateActor(mActiveSkillContext.mMotionTileMapDir, OwnerUnitModel, RotateBarrier);
 	}
+	// 자동 회전 안 함
 	else
 	{
-		LocalDirectionToTarget = TileMapToLocalDirection(mActiveSkillContext.mMotionTileMapDir, OwnerUnitModel->GetTileTransform().mDirection);
+		// 회전하지 않으므로 즉시 모션 시작
+		PlayMotionLayerAnimation(TileMapToLocalDirection(mActiveSkillContext.mMotionTileMapDir, OwnerUnitModel->GetTileTransform().mDirection));
 	}
+}
+
+void USkillComponentModel::PlayMotionLayerAnimation(ETileActorDirection LocalDirectionToTarget)
+{
+	checkf(mSkillEntries.IsValidIndex(mActiveSkillContext.mSkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
+
+	FSkillEntry& SkillEntry = mSkillEntries[mActiveSkillContext.mSkillIndex];
+	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
+
+	const UStaticSkillData* SkillData = SkillEntry.mData;
+	checkf(SkillData != nullptr, TEXT("빈 스킬 시전 오류"));
+
+	UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
+	checkf(OwnerUnitModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
+
+	const FSkillMotionLayer& MotionLayer = SkillData->mSkillMotionLayers[mActiveSkillContext.mMotionIndex];
 
 	auto MotionEndBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
 		EndMotionLayer();
@@ -307,7 +332,7 @@ void USkillComponentModel::PlayMotionLayer()
 		}));
 
 	mActiveSkillContext.mMotionEndBarrier = MotionEndBarrier;
-	
+
 	OwnerUnitModel->OnPlayApplyAnimationUI.Broadcast(MotionEndBarrier, MotionTriggerBarrier, MotionLayer.mApplyMotionTag, LocalDirectionToTarget);
 	OnPlayMotionLayerUI.Broadcast(MotionEndBarrier, MotionTriggerBarrier, MotionLayer.mApplyMotionTag, LocalDirectionToTarget);
 }

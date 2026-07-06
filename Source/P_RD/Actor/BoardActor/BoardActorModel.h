@@ -24,6 +24,8 @@ DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnPlayReceiveAnimationUI, TSharedPtr<FPr
 
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnStartMoveStep, const FTileTransform& /* NextTileTransform */, const FTransform& /* TargetWorldTransform */, TSharedPtr<FPresentationBarrier> /* Barrier */, float /* RemainingPathDistance */);
 
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnRotate, const FRotator& /* TargetWorldRotation */, TSharedPtr<FPresentationBarrier> /* Barrier */);
+
 
 /**
  * @brief  보드에 올라가는 액터 데이터 모델 클래스
@@ -133,6 +135,13 @@ public:
 	 *          시뮬레이션모드에서는 구독자가 없어서 배리어가 즉시 소멸하므로 로직만 동작.
 	 */
 	FOnStartMoveStep OnStartMoveStep;
+
+	/**
+	 * @brief 방향 전환 시 뷰에게 제자리 회전 연출을 요청하는 대리자
+	 * @details 뷰는 배리어를 잡고 회전 보간, 끝나면 배리어를 놓아 완료를 알림.
+	 *          시뮬레이션모드에서는 구독자가 없어서 배리어가 즉시 소멸하므로 로직만 동작.
+	 */
+	FOnRotate OnRotate;
 
 	/**
 	 * @brief 능동적 행동을 전달하는 대리자

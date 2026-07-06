@@ -15,6 +15,7 @@
 #include "TileMapModel.generated.h"
 
 class UBoardActorModel;
+struct FPresentationBarrier;
 
 /**
  * @brief  SRPG의 타일
@@ -298,6 +299,18 @@ public:
 	 * @return 배치 가능 여부 (맵 범위 밖은 불가)
 	 */
 	bool CanPlace(const FTileIndex& TileIndex, const UBoardActorModel* Incoming) const;
+
+	/**
+	 * 액터가 바라보는 방향 변경 함수
+	 * @details
+	 * 이동 없이 방향만 바꾼다.
+	 * 논리 방향은 즉시 갱신되고, 뷰에는 OnRotate로 회전 연출을 요청.
+	 * @param Direction 바꿀 방향 (타일맵 기준 4방향)
+	 * @param Actor 방향을 바꿀 액터
+	 * @param Barrier 회전 연출 완료를 기다릴 배리어. (nullptr이면 즉각 완료)
+	 * @pre Actor가 타일맵에 배치되어 있어야 한다
+	 */
+	void RotateActor(ETileActorDirection Direction, UBoardActorModel* Actor, TSharedPtr<FPresentationBarrier> Barrier = nullptr);
 
 	/**
 	 * 액터 움직임 시작 함수
