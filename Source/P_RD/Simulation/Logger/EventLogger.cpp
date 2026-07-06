@@ -137,7 +137,7 @@ void USimulationEventLogger::LogTagEffect(int32 TargetActorID, UClass* BoardActo
 
 	checkf(Log.IsValid() == true, TEXT("태그 변경 로그 불량"));
 
-	FSRPGBoardActorEventLog& BoardActorLog = mCurrentMotionEventLog->mBoardActorEventLogs[TargetActorID];
+	FSRPGBoardActorEventLog& BoardActorLog = mCurrentMotionEventLog->mBoardActorEventLogs.FindOrAdd(TargetActorID);
 	BoardActorLog.mTargetActorID = TargetActorID;
 	BoardActorLog.mBoardActorModelClass = BoardActorModelClass;
 
@@ -164,7 +164,7 @@ void USimulationEventLogger::LogAttributeEffect(int32 TargetActorID, UClass* Boa
 
 	checkf(Log.IsValid() == true, TEXT("속성 변경 로그 불량"));
 
-	FSRPGBoardActorEventLog& BoardActorLog = mCurrentMotionEventLog->mBoardActorEventLogs[TargetActorID];
+	FSRPGBoardActorEventLog& BoardActorLog = mCurrentMotionEventLog->mBoardActorEventLogs.FindOrAdd(TargetActorID);
 	BoardActorLog.mTargetActorID = TargetActorID;
 	BoardActorLog.mBoardActorModelClass = BoardActorModelClass;
 
@@ -191,7 +191,7 @@ void USimulationEventLogger::LogTileEffect(int32 TargetActorID, UClass* BoardAct
 
 	checkf(Log.IsValid() == true, TEXT("타일 위치 변경 로그 불량"));
 
-	FSRPGBoardActorEventLog& BoardActorLog = mCurrentMotionEventLog->mBoardActorEventLogs[TargetActorID];
+	FSRPGBoardActorEventLog& BoardActorLog = mCurrentMotionEventLog->mBoardActorEventLogs.FindOrAdd(TargetActorID);
 	BoardActorLog.mTargetActorID = TargetActorID;
 	BoardActorLog.mBoardActorModelClass = BoardActorModelClass;
 
