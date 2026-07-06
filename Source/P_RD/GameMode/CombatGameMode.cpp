@@ -435,61 +435,8 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
 		});
-	const int32 FloatingLogUnitId = Unit->GetModelId(); // 플로팅 로그 표시 대상(FUnitUI.mUnitId와 같은 id 공간)
-	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).AddWeakLambda(this, [this, Unit, FloatingLogUnitId](const FTacticalAttributeChangeData& Data) {
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
-
-		/** HP 증감을 유닛 월드 위치 위에 플로팅 로그로 통지한다(피해=Damage 색, 회복=Heal 색). */
-		const float HPDelta = Data.mNewValue - Data.mOldValue;
-		if (FMath::IsNearlyZero(HPDelta) == false && mCombatUIModel != nullptr)
-		{
-			FVector FloatingLogWorldLocation = FVector::ZeroVector;
-			bool bHasFloatingLogWorldLocation = false;
-			if (Unit != nullptr)
-			{
-				if (const AActor* UnitViewActor = Unit->GetView<AActor>())
-				{
-					FloatingLogWorldLocation = UnitViewActor->GetActorLocation();
-					bHasFloatingLogWorldLocation = true;
-				}
-			}
-			if (bHasFloatingLogWorldLocation == false)
-			{
-				const FUnitUI* TargetUnitUI = mCombatUIModel->GetUnitUIs().FindByPredicate(
-					[FloatingLogUnitId](const FUnitUI& Candidate) { return Candidate.mUnitId == FloatingLogUnitId; });
-				if (TargetUnitUI != nullptr)
-				{
-					FloatingLogWorldLocation = TargetUnitUI->mWorldLocation;
-					bHasFloatingLogWorldLocation = true;
-				}
-			}
-			if (bHasFloatingLogWorldLocation == false)
-			{
-				return;
-			}
-
-			FCombatFloatingLogRequest FloatingLogRequest;
-			FloatingLogRequest.mWorldLocation = FloatingLogWorldLocation;
-			FloatingLogRequest.mText = FText::FromString(FString::Printf(TEXT("%+d"), FMath::RoundToInt(HPDelta)));
-			FloatingLogRequest.mIconType = EFloatingLogIconType::HP;
-			FloatingLogRequest.mColorType = HPDelta < 0.0f
-				? EFloatingLogColorType::Damage
-				: EFloatingLogColorType::Heal;
-			FloatingLogRequest.mSequence = 0;
-			mCombatUIModel->NotifyCombatFloatingLog(FloatingLogRequest);
-
-			/** 이번 변화로 유닛이 쓰러졌으면 사망 로그를 이어서 띄운다. */
-			if (Data.mNewValue <= 0.0f && Data.mOldValue > 0.0f)
-			{
-				FCombatFloatingLogRequest DownLogRequest;
-				DownLogRequest.mWorldLocation = FloatingLogWorldLocation;
-				DownLogRequest.mText = NSLOCTEXT("CombatGameMode", "FloatingLogDown", "쓰러짐");
-				DownLogRequest.mIconType = EFloatingLogIconType::None;
-				DownLogRequest.mColorType = EFloatingLogColorType::Warning;
-				DownLogRequest.mSequence = 1;
-				mCombatUIModel->NotifyCombatFloatingLog(DownLogRequest);
-			}
-		}
 		});
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
