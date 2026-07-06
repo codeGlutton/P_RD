@@ -22,7 +22,7 @@ FScopeCurrentTacticalEffectBeingApplied::FScopeCurrentTacticalEffectBeingApplied
 	UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(mWorld);
 	check(TacticalFrameworkModel != nullptr);
 
-	TacticalFrameworkModel->PushCurrentAppliedGE(Spec, Model);
+	TacticalFrameworkModel->PushCurrentAppliedTE(Spec, Model);
 }
 
 FScopeCurrentTacticalEffectBeingApplied::~FScopeCurrentTacticalEffectBeingApplied()
@@ -30,7 +30,7 @@ FScopeCurrentTacticalEffectBeingApplied::~FScopeCurrentTacticalEffectBeingApplie
 	UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(mWorld);
 	check(TacticalFrameworkModel != nullptr);
 
-	TacticalFrameworkModel->PopCurrentAppliedGE();
+	TacticalFrameworkModel->PopCurrentAppliedTE();
 }
 
 void UTacticalFrameworkModel::Initialize()
@@ -113,15 +113,15 @@ void UTacticalFrameworkModel::GlobalPreTacticalEffectSpecApply(FTacticalEffectSp
 {
 }
 
-void UTacticalFrameworkModel::PushCurrentAppliedGE(const FTacticalEffectSpec* Spec, UAttributeSetComponentModel* Model)
+void UTacticalFrameworkModel::PushCurrentAppliedTE(const FTacticalEffectSpec* Spec, UAttributeSetComponentModel* Model)
 {
 }
 
-void UTacticalFrameworkModel::SetCurrentAppliedGE(const FTacticalEffectSpec* Spec)
+void UTacticalFrameworkModel::SetCurrentAppliedTE(const FTacticalEffectSpec* Spec)
 {
 }
 
-void UTacticalFrameworkModel::PopCurrentAppliedGE()
+void UTacticalFrameworkModel::PopCurrentAppliedTE()
 {
 }
 
