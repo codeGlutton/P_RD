@@ -18,9 +18,12 @@ class UStaticObstacleSpawnData;
 struct FPresentationBarrier;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlaceTileTransform, const FTileTransform& /* TileTransform */, const FTransform& /* Transform */);
-DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnPlayApplyAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, TSharedPtr<FPresentationBarrier> /*MotionTriggerBarrier*/, FGameplayTag /*ApplyMotionTag*/);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlayReceiveAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, FGameplayTag /*ReceiveMotionTag*/);
+
+DECLARE_MULTICAST_DELEGATE_FourParams(FOnPlayApplyAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, TSharedPtr<FPresentationBarrier> /*MotionTriggerBarrier*/, FGameplayTag /*ApplyMotionTag*/, ETileActorDirection /*LocalDirection*/);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnPlayReceiveAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, FGameplayTag /*ReceiveMotionTag*/, ETileActorDirection /*Direction*/);
+
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnStartMoveStep, const FTileTransform& /* NextTileTransform */, const FTransform& /* TargetWorldTransform */, TSharedPtr<FPresentationBarrier> /* Barrier */);
+
 
 /**
  * @brief  보드에 올라가는 액터 데이터 모델 클래스
@@ -110,9 +113,6 @@ public:
 	 */
 	virtual void OnBeginRound();
 	virtual void OnEndRound();
-
-public:
-	void PlayAnimationUsingTag(FGameplayTag Tag);
 
 private:
 	/**

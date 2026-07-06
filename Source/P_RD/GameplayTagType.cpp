@@ -4,15 +4,21 @@ namespace InputTags
 {
 }
 
-namespace EventTags
+namespace AnimationTags
 {
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_GetBuff,							"Animation.Montage.GetBuff");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_GetDebuff,							"Animation.Montage.GetDebuff");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_GetDefense,						"Animation.Montage.GetDefense");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Slash,							"Animation.Montage.Hit.Slash");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Stab,							"Animation.Montage.Hit.Stab");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Smash,							"Animation.Montage.Hit.Smash");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Event_Hit,									"Animation.Event.Hit");
 }
 
 namespace AbilityTags
 {
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_LevelUp,								"GameplayAbility.LevelUp");
-
-	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Skill,								"GameplayAbility.Skill");
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartRoom,					"GameplayAbility.Passive.OnStartRoom");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnEndRoom,					"GameplayAbility.Passive.OnEndRoom");
@@ -34,7 +40,6 @@ namespace EffectTags
 {
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_Cost,									"GameplayEffect.Cost");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_Cost_PassiveStack,					"GameplayEffect.Cost.PassiveStack");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_Cooldown,								"GameplayEffect.Cooldown");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_ActorState_Dead,						"GameplayEffect.ActorState.Dead");
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect,							"GameplayEffect.StatusEffect");

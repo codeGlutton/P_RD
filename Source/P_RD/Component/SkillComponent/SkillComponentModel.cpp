@@ -48,6 +48,7 @@ void FActiveSkillContext::Clear()
 	mMapModel = nullptr;
 	mDiceSum = 0;
 	mSelfTileIndex = FTileIndex::Invalid;
+	mTargetTileIndex = FTileIndex::Invalid;
 	mEffectTileIndexes.Reset();
 
 	mSkillIndex = INDEX_NONE;
@@ -56,6 +57,7 @@ void FActiveSkillContext::Clear()
 	mTargetTileIndexes.Reset();
 	mOtherCombatTargets.Reset();
 
+	mMotionTileMapDir = ETileActorDirection::Forward;
 	mMotionEndBarrier = nullptr;
 }
 
@@ -135,6 +137,7 @@ void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillInd
 	mActiveSkillContext.mDiceSum = DiceSum;
 	mActiveSkillContext.mMapModel = MapModel;
 	mActiveSkillContext.mSelfTileIndex = OwnerUnitModel->GetTileTransform().mIndex;
+	mActiveSkillContext.mTargetTileIndex = TargetIndex;
 	mActiveSkillContext.mEffectTileIndexes = GetEffectTiles(MapModel, SkillIndex, TargetIndex, DiceSum);
 	mActiveSkillContext.mSkillIndex = SkillIndex;
 	mActiveSkillContext.mMotionIndex = 0;
@@ -203,6 +206,11 @@ void USkillComponentModel::PlayMotionLayer()
 
 	mActiveSkillContext.mTargetTileIndexes = MotionLayer.FilterTileIndexes(mActiveSkillContext.mSelfTileIndex, mActiveSkillContext.mEffectTileIndexes);
 	mActiveSkillContext.mOtherCombatTargets = MotionLayer.FilterCombatTargets(mActiveSkillContext.mMapModel.Get(), OwnerCombatTarget, mActiveSkillContext.mTargetTileIndexes);
+	mActiveSkillContext.mMotionTileMapDir = mActiveSkillContext.mMapModel->TileDeltaToDirection(
+		mActiveSkillContext.mSelfTileIndex,
+		mActiveSkillContext.mTargetTileIndex,
+		OwnerUnitModel->GetTileTransform().mDirection
+	);
 
 	/* Effect 기본 값부터 참고용으로 적용 */
 
@@ -280,6 +288,17 @@ void USkillComponentModel::PlayMotionLayer()
 
 	/* 애니메이션 시작 */
 
+	ETileActorDirection LocalDirectionToTarget;
+	if (MotionLayer.mAutoRotateTowardTarget == true)
+	{
+		LocalDirectionToTarget = ETileActorDirection::Forward;
+		// TODO : 회전 처리
+	}
+	else
+	{
+		LocalDirectionToTarget = TileMapToLocalDirection(mActiveSkillContext.mMotionTileMapDir, OwnerUnitModel->GetTileTransform().mDirection);
+	}
+
 	auto MotionEndBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
 		EndMotionLayer();
 		}));
@@ -288,9 +307,9 @@ void USkillComponentModel::PlayMotionLayer()
 		}));
 
 	mActiveSkillContext.mMotionEndBarrier = MotionEndBarrier;
-
-	OwnerUnitModel->OnPlayApplyAnimationUI.Broadcast(MotionEndBarrier, MotionTriggerBarrier, MotionLayer.mApplyMotionTag);
-	OnPlayMotionLayerUI.Broadcast(MotionEndBarrier, MotionTriggerBarrier, MotionLayer.mApplyMotionTag);
+	
+	OwnerUnitModel->OnPlayApplyAnimationUI.Broadcast(MotionEndBarrier, MotionTriggerBarrier, MotionLayer.mApplyMotionTag, LocalDirectionToTarget);
+	OnPlayMotionLayerUI.Broadcast(MotionEndBarrier, MotionTriggerBarrier, MotionLayer.mApplyMotionTag, LocalDirectionToTarget);
 }
 
 void USkillComponentModel::TriggerMotionLayer()
@@ -328,7 +347,8 @@ void USkillComponentModel::TriggerMotionLayer()
 		UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
 		checkf(OtherActorModel != nullptr, TEXT("스킬을 받은 타겟이 유효하지 않음"));
 
-		OtherActorModel->OnPlayReceiveAnimationUI.Broadcast(mActiveSkillContext.mMotionEndBarrier.Pin(), MotionLayer.mReceiveMotionTag);
+		ETileActorDirection LocalDirectionToTarget = TileMapToLocalDirection(mActiveSkillContext.mMotionTileMapDir, OtherActorModel->GetTileTransform().mDirection);
+		OtherActorModel->OnPlayReceiveAnimationUI.Broadcast(mActiveSkillContext.mMotionEndBarrier.Pin(), MotionLayer.mReceiveMotionTag, LocalDirectionToTarget);
 	}
 
 	/* 이펙트 피격 후 패시브 적용 (선택적) */

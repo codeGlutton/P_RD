@@ -20,10 +20,24 @@ namespace InputTags
 }
 
 /**
- * @brief 이벤트 전달 시 사용되는 태그를 정의하는 namespace 영역
+ * @brief 애니메이션 이벤트 전달 시 사용되는 태그를 정의하는 namespace 영역
  */
-namespace EventTags
+namespace AnimationTags
 {
+	/* 몽타쥬 애니메이션 타입 태그들 */
+
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_GetBuff);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_GetDebuff);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_GetDefense);
+
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Hit_Slash);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Hit_Stab);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Hit_Smash);
+
+
+	/* 애니메이션 이벤트 타입 태그들 */
+
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Event_Hit);
 }
 
 /**
@@ -34,10 +48,6 @@ namespace AbilityTags
 	/* 플레이어 핵심 능력 태그들 */
 
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_LevelUp);
-
-	/* 스킬 */
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Skill);
-
 
 	/* 패시브 능력 태그들 */
 
@@ -72,10 +82,6 @@ namespace EffectTags
 
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_Cost);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_Cost_PassiveStack);
-
-	/* 쿨다운 태그들 */
-
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_Cooldown);
 
 	/* 액터 상태 태그들 */
 

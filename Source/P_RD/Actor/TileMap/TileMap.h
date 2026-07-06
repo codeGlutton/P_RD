@@ -66,6 +66,13 @@ public:
 	 */
 	FVector TileToWorldLocation(const FTileIndex& TileIndex) const;
 
+	/**
+	 * @brief 타일 인덱스를 월드 위치로 변환
+	 * @param[in] Direction : 타일 방향
+	 * @return FVector : 해당 타일 중심의 월드 회전
+	 */
+	FRotator TileToWorldRotation(ETileActorDirection Direction) const;
+
 	/* 월드 → 타일 변환 */
 	/**
 	 * @brief 월드 위치를 타일 인덱스로 변환
