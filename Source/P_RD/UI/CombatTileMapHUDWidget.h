@@ -14,6 +14,7 @@ class ACombatDiceRollCaptureActor;
 struct FPresentationBarrier;
 enum class EWorldWidgetType : uint8;
 enum class ESRPGCombatResult : uint8;
+class UTexture2D;
 class UBorder;
 class UButton;
 class UCanvasPanel;
@@ -311,6 +312,25 @@ private:
 	/** @brief 각 유닛의 월드 위치를 화면에 투영해 HP바 위치/비율/색을 매 프레임 갱신한다. */
 	void UpdateUnitHpBars();
 
+	/* ── 전투 플로팅 로그(유닛 머리 위) + 턴 라운드 배너 (CombatTileMapHUDWidget_CombatLog.cpp) ── */
+
+	/** @brief HP 증감 등 전투 이벤트를 유닛 머리 위 [아이콘+]텍스트로 스폰한다(OnCombatFloatingLog 구독). */
+	UFUNCTION()
+	void HandleCombatFloatingLog(int32 UnitId, FText Text, FLinearColor Color, UTexture2D* Icon);
+
+	/** @brief 턴 시작 주사위 굴림 요청(OnDiceRollRequested 구독) — 굴림 오버레이를 연다. 구현: _DiceRoll.cpp */
+	UFUNCTION()
+	void HandleCombatDiceRollRequested();
+
+	/** @brief 플로팅 로그들을 상승+페이드시키고 수명이 다하면 제거한다(매 프레임). */
+	void UpdateFloatingCombatLogs(float InDeltaTime);
+
+	/** @brief 라운드가 실제로 바뀌었을 때만 중앙 배너("N번째 턴")를 띄운다. Turn 도메인 갱신 시 호출. */
+	void RefreshTurnRoundBanner();
+
+	/** @brief 턴 라운드 배너를 잠시 보여준 뒤 페이드아웃한다(매 프레임). */
+	void UpdateTurnRoundBanner(float InDeltaTime);
+
 	/** @brief 스킬 레일 입력 해제 시 탭/롱프레스 결과를 확정한다. */
 	UFUNCTION()
 	void HandleSkillButtonReleased();
@@ -435,6 +455,25 @@ private:
 	/** @brief 유닛 머리 위에 월드→스크린 투영으로 띄우는 HP바(유닛 뷰 순서와 1:1) */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UProgressBar>> mUnitHpBars;
+
+	/** @brief 머리 위 플로팅 전투 로그 한 건. 위젯 수명은 RootCanvas가 쥔다(여긴 추적용). */
+	struct FFloatingCombatLogEntry
+	{
+		TObjectPtr<UWidget> mRoot;                    // 캔버스에 붙은 루트(아이콘+텍스트 박스 또는 텍스트 단일)
+		FVector mWorldLocation = FVector::ZeroVector; // 스폰 시점 유닛 위치 스냅샷(HP바와 같은 소스)
+		float mElapsed = 0.0f;
+	};
+	TArray<FFloatingCombatLogEntry> mFloatingCombatLogs;
+
+	/** @brief 턴 라운드 배너 텍스트(중앙 상단, 라운드가 바뀔 때 잠깐 표시) */
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mTurnRoundBannerText;
+
+	/** @brief 배너 표시 경과 시간 */
+	float mTurnRoundBannerElapsed = 0.0f;
+
+	/** @brief 마지막으로 배너를 띄운 라운드(같은 라운드 내 턴 전환 반복 방지) */
+	int32 mLastShownTurnRound = 0;
 
 	/** @brief 보유 주사위를 그리는 투명 RenderTarget Image 위젯 */
 	UPROPERTY(Transient)

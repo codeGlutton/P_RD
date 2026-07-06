@@ -34,6 +34,8 @@ void UCombatTileMapHUDWidget::HandleCombatUIChanged(ECombatUIDomain Domain)
 		|| Domain == ECombatUIDomain::All)
 	{
 		RebuildTurnOrderBar();
+		// 라운드가 실제로 올랐을 때만 "N번째 턴" 배너를 띄운다(내부에서 중복 방지).
+		RefreshTurnRoundBanner();
 	}
 
 	// 유닛 수가 바뀌면 머리 위 HP바도 다시 만든다.

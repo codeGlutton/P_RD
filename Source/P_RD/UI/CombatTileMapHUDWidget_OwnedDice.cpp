@@ -48,6 +48,8 @@ void UCombatTileMapHUDWidget::BindCombatUIModel(UCombatUIModel* InUIModel)
 		mCombatUIModel->OnQueueNodeResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
 		mCombatUIModel->OnUIChanged.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatUIChanged);
 		mCombatUIModel->OnActionResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatActionResolved);
+		mCombatUIModel->OnCombatFloatingLog.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLog);
+		mCombatUIModel->OnDiceRollRequested.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatDiceRollRequested);
 	}
 
 	mCombatUIModel = InUIModel;
@@ -60,6 +62,10 @@ void UCombatTileMapHUDWidget::BindCombatUIModel(UCombatUIModel* InUIModel)
 		mCombatUIModel->OnUIChanged.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatUIChanged);
 		// 액션 확정/취소 시 스킬·주사위 선택 강조를 푼다.
 		mCombatUIModel->OnActionResolved.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatActionResolved);
+		// HP 증감 등 전투 이벤트를 유닛 머리 위 플로팅 텍스트로 띄운다.
+		mCombatUIModel->OnCombatFloatingLog.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLog);
+		// 턴 시작 주사위 굴림 요청 시 굴림 오버레이를 자동으로 연다(2턴째부터의 진행 멈춤 해소).
+		mCombatUIModel->OnDiceRollRequested.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatDiceRollRequested);
 		// 이미 어댑터가 push해 둔 현재 값을 즉시 반영(구독 전 발생분 보강).
 		RefreshCombatStatusBar();
 
