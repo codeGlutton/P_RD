@@ -33,6 +33,7 @@ void UEnemyUnitModel::PostInitializeComponentModels()
 	}
 
 	mMoveTendency = EnemySpawn->mMoveTendency;
+	mMovePoint = EnemySpawn->mMovePoint;
 
 	if (USkillComponentModel* SkillComp = GetSkillComponentModel())
 	{
@@ -57,4 +58,9 @@ int32 UEnemyUnitModel::GetDifficulty() const
 EMoveTendency UEnemyUnitModel::GetMoveTendency() const
 {
 	return mMoveTendency;
+}
+
+int32 UEnemyUnitModel::GetMovePoint() const
+{
+	return mMovePoint;
 }

@@ -37,6 +37,9 @@ public:
 	// @brief 이동 성향
 	EMoveTendency GetMoveTendency() const;
 
+	// @brief 이동포인트
+	int32 GetMovePoint() const;
+
 protected:
 	// @brief 초기 스텟에 반영되는 난이도 수치
 	// 스탯 커브의 레벨 축은 1부터 시작하고 초기화기가 (레벨-1) 인덱스로 조회하므로, 0(미설정)이면
@@ -56,4 +59,8 @@ protected:
 	// @brief 이동 성향
 	UPROPERTY(Category = AI, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MoveTendency"))
 	EMoveTendency mMoveTendency = EMoveTendency::HoldRange;
+
+	// @brief 이동포인트
+	UPROPERTY(Category = AI, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MovePoint"))
+	int32 mMovePoint = 5;
 };

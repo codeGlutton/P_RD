@@ -93,6 +93,19 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
         }
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
+    case ESRPGCommandType::MoveSelect:
+    {
+        /* 스킬 조준 중 이동을 누르면 스킬 빌드를 취소한다(기획: 스킬↔이동 전환 시 이전 것 취소).
+         * Ignored를 반환해, 라우터(USRPGActionCreationCommandHandler)가 이 MoveSelect로 이동 빌드를 새로 생성하게 둔다. */
+
+        ClearAllTileHighlights();
+        ResetTargetTile();
+        ResetDice();
+        ResetSkill();
+        MarkActionCompleted(ESRPGActionResult::Cancelled);
+        SetBuildPhase(ESRPGSkillBuildPhase::None);
+        return ESRPGCommandResult::Ignored;
+    }
     case ESRPGCommandType::DiceSelect:
     {
         /* 주사위 변경 시 타겟부터 재설정 */
@@ -149,11 +162,13 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
     IActorView* ActorView = Cast<IActorView>(TargetActor);
     const bool IsContactedTileMap = ActorView != nullptr && ActorView->GetModel() == TileMap;
     const bool IsContactedBoard = IsContactedTileMap == true || TargetTileIndex != FTileIndex::Invalid;
-    if (IsContactedBoard == true)
+    // 보드를 아예 벗어난 탭(IsContactedBoard=false)도 무효 타일과 똑같이 "타일 밖" 취소로 취급한다
+    // (기획: 스킬 조준 중 타일 밖을 누르면 취소). TargetTileIndex가 유효하면 정상 처리로 간다.
+    if (IsContactedBoard == true || TargetTileIndex == FTileIndex::Invalid)
     {
         if (TargetTileIndex == FTileIndex::Invalid)
         {
-            /* 한단계 취소작업 */
+            /* 한단계 취소작업 (무효 타일 또는 보드 밖 탭) */
 
             switch (mSkillBuildPhase)
             {
