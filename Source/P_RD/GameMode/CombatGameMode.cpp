@@ -15,6 +15,7 @@
 
 #include "UI/CombatTileMapHUDWidget.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "Simulation/Logger/EventLog.h"   // [로컬 테스트] FSRPGTurnEventLog 변환용
 
 #include "SRPGFramework/SRPGSkillBuildAction.h"
 #include "SRPGFramework/SRPGMoveBuildAction.h"
@@ -163,6 +164,9 @@ void ACombatGameMode::InitializeRoom()
 	CombatModel->OnEndAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action, ESRPGActionResult Result) {
 		// 액션이 끝나면 UI의 스킬/주사위 선택 표시를 지운다.
 		mCombatUIModel->NotifyActionResolved();
+		// [로컬 테스트] 실행이 끝나면 미리보기 플로팅 로그를 전부 지운다.
+		// (정밀 버전: 모션 종료마다 NotifyCombatFloatingLogMotionFinished(idx)로 애니메이션에 맞춰 하나씩 쳐내기 — 모호재님 몫)
+		mCombatUIModel->NotifyCombatFloatingLogsCleared();
 		// OnEndAnyTurnActionUI.Broadcast(Barrier, TurnContext, Action, Result); 연출은 연결고리가 아직 없음
 		});
 
@@ -342,6 +346,12 @@ bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().mSkillIndex = SkillIndex;
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnChangeSkillBuildPhase.AddWeakLambda(this, [this](const USRPGSkillBuildAction* Action, ESRPGSkillBuildPhase Phase) {
 		PushSkillBuildUIData(Phase);
+		});
+
+	// [로컬 테스트] 시뮬 결과 방송(OnPostSimulateSkillAction) 구독 → 플로팅 로그로 변환·전달.
+	// 이 "연결"은 원래 모호재님 담당(변환 규칙/타입·색·MotionFinished 쳐내기 확정). 여기선 파이프라인 확인용 최소 구현.
+	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnPostSimulateSkillAction.AddWeakLambda(this, [this](const TArray<FSRPGTurnEventLog>& TurnEventLogs) {
+		PushSimulationFloatingLogs(TurnEventLogs);
 		});
 
 	return CommandRouterModel->SummitCommand(SkillSelectCommand);
@@ -574,6 +584,86 @@ void ACombatGameMode::PushUnitUIData() const
 	}
 
 	mCombatUIModel->SetUnitUIs(UnitUIDatas);
+}
+
+void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>& TurnEventLogs) const
+{
+	// [로컬 테스트] 모호재님이 붙일 "연결"의 최소 구현. 시뮬 이벤트 로그를 플로팅 로그 요청으로 변환해 UI로 전달.
+	if (mCombatUIModel == nullptr)
+	{
+		return;
+	}
+
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	if (CombatModel == nullptr)
+	{
+		return;
+	}
+
+	// [로컬 테스트] 새 조준(재시뮬)마다 이전 미리보기 로그를 지우고 다시 그린다 — 스택 방지, 미리보기 갱신.
+	mCombatUIModel->NotifyCombatFloatingLogsCleared();
+
+	// 로그는 대상 액터 ID만 담으므로, 유닛 목록에서 ID로 찾아 월드 위치를 해석한다(위치는 호출자가 채우는 규약).
+	const TArray<TObjectPtr<UUnitModel>>& Units = CombatModel->GetUnits();
+	auto ResolveWorldLocation = [&Units](int32 ActorId, FVector& OutLocation) -> bool
+	{
+		for (const TObjectPtr<UUnitModel>& Unit : Units)
+		{
+			if (Unit != nullptr && Unit->GetModelId() == ActorId)
+			{
+				if (const AActor* View = Unit->GetView<AActor>())
+				{
+					OutLocation = View->GetActorLocation();
+					return true;
+				}
+			}
+		}
+		return false;
+	};
+
+	// TurnEventLog → ActionEventLog → MotionEventLog(배열 인덱스 = MotionIndex) → 대상 액터별 속성 변화(수치).
+	TArray<FCombatFloatingLogRequest> Requests;
+	int32 Sequence = 0;
+	for (const FSRPGTurnEventLog& TurnLog : TurnEventLogs)
+	{
+		for (const FSRPGActionEventLog& ActionLog : TurnLog.mActionEventLogs)
+		{
+			for (int32 MotionIndex = 0; MotionIndex < ActionLog.mMotionEventLogs.Num(); ++MotionIndex)
+			{
+				const FSRPGMotionEventLog& MotionLog = ActionLog.mMotionEventLogs[MotionIndex];
+				for (const TPair<int32, FSRPGBoardActorEventLog>& ActorPair : MotionLog.mBoardActorEventLogs)
+				{
+					FVector WorldLocation = FVector::ZeroVector;
+					ResolveWorldLocation(ActorPair.Key, WorldLocation);
+
+					for (const FSRPGAttributeEffectEventLog& AttrLog : ActorPair.Value.mAttributeEffectEventLogs)
+					{
+						if (FMath::IsNearlyZero(AttrLog.mMagnitude))
+						{
+							continue;
+						}
+
+						const int32 Amount = FMath::RoundToInt(AttrLog.mMagnitude);
+
+						FCombatFloatingLogRequest Request;
+						Request.mWorldLocation = WorldLocation;
+						Request.mText = FText::FromString(FString::Printf(TEXT("%+d"), Amount));
+						Request.mIconType = EFloatingLogIconType::HP;   // [테스트] 타입 매핑 확정 전 — 일단 HP 아이콘
+						Request.mColorType = (AttrLog.mMagnitude < 0.f) ? EFloatingLogColorType::Damage : EFloatingLogColorType::Heal;
+						Request.mSequence = Sequence++;
+						Request.mMotionIndex = MotionIndex;
+						Request.mIsPreview = true;   // [테스트] 미리보기 — 수명 자동소멸 X, 재조준/실행종료 클리어로만 사라짐(시뮬 동안 계속 떠 있음)
+						Requests.Add(Request);
+					}
+				}
+			}
+		}
+	}
+
+	if (Requests.Num() > 0)
+	{
+		mCombatUIModel->NotifyCombatFloatingLogs(Requests);
+	}
 }
 
 void ACombatGameMode::PushDiceUIData() const

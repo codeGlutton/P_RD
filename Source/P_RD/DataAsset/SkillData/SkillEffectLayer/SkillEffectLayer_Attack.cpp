@@ -60,6 +60,13 @@ void FSkillEffectLayer_Attack::CommitEffect(IBoardCombatTarget* OwnerActorModel,
         UAttributeSetComponentModel* OtherAttributeSetComponentModel = OtherCombatTarget->GetAttributeComponentModel();
         checkf(OtherAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
+        // [로컬 테스트] 데미지/방어 로그가 "맞는 쪽(타겟)"에 기록되도록, 타겟 대상 이펙트의 context instigator를 타겟으로 둔다.
+        // TacticalEffect_HP/Defense는 instigator를 LogAttributeEffect의 actorID로만 쓰므로 데미지 수치엔 영향 없음.
+        // (정식 수정은 로그가 instigator가 아닌 '영향받은 유닛'을 쓰도록 프레임워크에서 — 팀 확정 필요)
+        UTacticalEffectContext* TargetEffectContext = AttributeSetComponentModel->MakeEffectContext();
+        TargetEffectContext->SetInstigator(Cast<UActorModel>(const_cast<IBoardCombatTarget*>(OtherCombatTarget)));
+        TargetEffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
+
         const float TotalDefense = OtherAttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefenseAttribute());
 
         /* 방어력 까기 */
@@ -67,7 +74,7 @@ void FSkillEffectLayer_Attack::CommitEffect(IBoardCombatTarget* OwnerActorModel,
             const float DefenseDiff = -FMath::Min(TotalAttack, TotalDefense);
             if (DefenseDiff < 0)
             {
-                TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_Defense::StaticClass(), EffectContext);
+                TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_Defense::StaticClass(), TargetEffectContext);
                 EffectSpec->mDynamicMagnitude = DefenseDiff;
                 AttributeSetComponentModel->ApplyTacticalEffectSpecToTarget(*EffectSpec, OtherAttributeSetComponentModel);
             }
@@ -77,7 +84,7 @@ void FSkillEffectLayer_Attack::CommitEffect(IBoardCombatTarget* OwnerActorModel,
             const float HPDiff = TotalDefense - TotalAttack;
             if (HPDiff < 0)
             {
-                TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_HP::StaticClass(), EffectContext);
+                TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_HP::StaticClass(), TargetEffectContext);
                 EffectSpec->mDynamicMagnitude = HPDiff;
                 AttributeSetComponentModel->ApplyTacticalEffectSpecToTarget(*EffectSpec, OtherAttributeSetComponentModel);
             }

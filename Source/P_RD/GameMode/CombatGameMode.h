@@ -20,6 +20,7 @@ class UCombatUIModel;
 enum class ECombatInputType : uint8;
 
 struct FTacticalAttributeChangeData;
+struct FSRPGTurnEventLog;   // [로컬 테스트] 시뮬 이벤트 로그 → 플로팅 로그 변환용
 
 // RD Game Mode 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogCombatGameMode, Log, All)
@@ -130,6 +131,13 @@ protected:
 	void PushSkillDetailUIData(int32 SkillIndex) const;
 	void PushEquipmentUIData() const;
 	void PushPlayerMetaUIData() const;
+
+	/**
+	 * @brief [로컬 테스트] 스킬 시뮬 결과(TurnEventLogs)를 플로팅 로그 요청으로 변환해 UI로 전달한다.
+	 * @details 모호재님이 붙일 "연결(구독→변환→NotifyCombatFloatingLogs)"의 최소 구현 예시.
+	 *          속성 변화(수치)를 대상 유닛 월드위치에 띄운다. 타입/색/미리보기 규칙 확정은 별도.
+	 */
+	void PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>& TurnEventLogs) const;
 
 	/* 연출용 대리자 */
 public:
