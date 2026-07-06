@@ -5,7 +5,9 @@
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
+#include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Engine/Texture2D.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
 #include "UI/Combat/CombatUIModel.h"
@@ -252,9 +254,10 @@ void UCombatTileMapHUDWidget::RebuildEquipmentBar()
 	mEquipmentChips.Reset();
 	mEquipmentChipTexts.Reset();
 
-	// 디자이너 스킨(concept_02): 장비칸은 레거시라 만들지 않는다(기존 칩은 위에서 제거됨).
+	// 디자이너 스킨(concept_02): 레거시 칩(Border+Text) 대신 탑바 레벨 아래에 장비 아이콘을 그린다.
 	if (IsDesignerSkinActive())
 	{
+		RebuildEquipmentIcons();
 		return;
 	}
 
@@ -301,6 +304,50 @@ void UCombatTileMapHUDWidget::RebuildEquipmentBar()
 
 		mEquipmentChips.Add(Chip);
 		mEquipmentChipTexts.Add(Text);
+	}
+}
+
+void UCombatTileMapHUDWidget::RebuildEquipmentIcons()
+{
+	if (WidgetTree == nullptr || mCombatUIModel == nullptr)
+	{
+		return;
+	}
+
+	// 장비 슬롯은 WBP가 소유한 마커(HUD_M_equip_0..2)다. C++는 브러시/표시여부만 채운다.
+	// 위치·크기는 WBP가 소유 — 런타임 좌표 계산 없음(HUD_M_lv/hp/gold_value 값 마커와 동일 규칙).
+	static const TCHAR* const SlotMarkerNames[] = { TEXT("HUD_M_equip_0"), TEXT("HUD_M_equip_1"), TEXT("HUD_M_equip_2") };
+	const int32 MarkerCount = UE_ARRAY_COUNT(SlotMarkerNames);
+
+	const TArray<FEquipmentUI>& Equips = mCombatUIModel->GetEquipmentUIs();
+
+	// 마커 i ↔ 장비 슬롯 i(무기/장갑/신발) 직접 매핑. 장착된 슬롯만 그 아이콘을 띄우고, 빈 슬롯은 감춘다.
+	// (placeholder 없음 — 진짜 장착 장비 아이콘만 노출. 장착 0개면 3칸 모두 Collapsed.)
+	for (int32 MarkerIndex = 0; MarkerIndex < MarkerCount; ++MarkerIndex)
+	{
+		UImage* SlotImage = Cast<UImage>(WidgetTree->FindWidget(SlotMarkerNames[MarkerIndex]));
+		if (SlotImage == nullptr)
+		{
+			continue;   // 마커가 없는 스킨/구버전이면 조용히 건너뛴다.
+		}
+
+		UTexture2D* IconTex = nullptr;
+		if (Equips.IsValidIndex(MarkerIndex) == true
+			&& Equips[MarkerIndex].mIsEquipped == true
+			&& Equips[MarkerIndex].mIcon != nullptr)
+		{
+			IconTex = Equips[MarkerIndex].mIcon.Get();
+		}
+
+		if (IconTex != nullptr)
+		{
+			SlotImage->SetBrushFromTexture(IconTex, false);
+			SlotImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+		}
+		else
+		{
+			SlotImage->SetVisibility(ESlateVisibility::Collapsed);
+		}
 	}
 }
 
