@@ -54,11 +54,18 @@ void FActiveSkillContext::Clear()
 	mSkillIndex = INDEX_NONE;
 	mMotionIndex = INDEX_NONE;
 
+	mEndCallback.Clear();
+
 	mTargetTileIndexes.Reset();
 	mOtherCombatTargets.Reset();
 
 	mMotionTileMapDir = ETileActorDirection::Forward;
 	mMotionEndBarrier = nullptr;
+}
+
+bool FActiveSkillContext::IsValid() const
+{
+	return mMapModel != nullptr;
 }
 
 FSkillEntry::FSkillEntry(UStaticSkillData* Data) : mData(Data)
@@ -122,7 +129,7 @@ void USkillComponentModel::SetSkill(int32 SkillIndex, UStaticSkillData* SkillDat
 	OnChangeSkillUI.Broadcast(SkillIndex, SkillData, PreSkillData);
 }
 
-void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum)
+void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum, FOnEndSkill Callback)
 {
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
 
@@ -141,6 +148,7 @@ void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillInd
 	mActiveSkillContext.mEffectTileIndexes = GetEffectTiles(MapModel, SkillIndex, TargetIndex, DiceSum);
 	mActiveSkillContext.mSkillIndex = SkillIndex;
 	mActiveSkillContext.mMotionIndex = 0;
+	mActiveSkillContext.mEndCallback = MoveTemp(Callback);
 
 	/* 스킬 사용 시 패시브 발동 */
 
@@ -487,15 +495,17 @@ void USkillComponentModel::EndMotionLayer()
 
 void USkillComponentModel::DeactivateSkill()
 {
+	FSkillEntry& SkillEntry = mSkillEntries[mActiveSkillContext.mSkillIndex];
+	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
+
+	const UStaticSkillData* SkillData = SkillEntry.mData;
+	checkf(SkillData != nullptr, TEXT("빈 스킬 시전 오류"));
+
 	UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
 	checkf(OwnerUnitModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
 
 	UPassiveComponentModel* PassiveComponentModel = OwnerUnitModel->GetPassiveComponentModel();
 	checkf(PassiveComponentModel != nullptr, TEXT("패시브 컴포넌트 nullptr"));
-
-	/* 활성화 스킬 데이터 비우기 */
-
-	mActiveSkillContext.Clear();
 
 	/* 스킬 종료 시 패시브 발동 */
 
@@ -515,6 +525,19 @@ void USkillComponentModel::DeactivateSkill()
 		Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnEndUsingSkill, PassiveContext, OUT DynamicPassiveData);
 		Passive->CommitPassive(DynamicPassiveData);
 	}
+
+	/* 스킬 종료 콜백 */
+
+	mActiveSkillContext.mEndCallback.Broadcast(mActiveSkillContext.mSkillIndex, SkillData);
+
+	/* 활성화 스킬 데이터 비우기 */
+
+	mActiveSkillContext.Clear();
+}
+
+bool USkillComponentModel::IsAnySkillActivated() const
+{
+	return mActiveSkillContext.IsValid() == true;
 }
 
 TArray<FTileIndex> USkillComponentModel::GetAimableTiles(UTileMapModel* MapModel, int32 SkillIndex, int32 DiceSum) const

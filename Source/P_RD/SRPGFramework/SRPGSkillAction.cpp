@@ -59,13 +59,19 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
 
         UTileMapModel* TileMap = GetTileMap();
         checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
-        SkillCompModel->ActivateSkill(TileMap, SkillCastCommand.mSkillIndex, SkillCastCommand.mTargetIndex, SkillCastCommand.mDiceSum);
 
+        if (SkillCompModel->IsAnySkillActivated() == true)
         {
-            // TODO : 원래는 비동기 적으로 애니메이션 종료 타이밍을 알려줘서 끝내야함. 임시적으로 곧바로 종료
-
-            MarkActionCompleted(ESRPGActionResult::Succeeded);
+            // 이미 스킬 실행 중 무시
+            return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
         }
+
+        FOnEndSkill Callback;
+        Callback.AddWeakLambda(this, [this](int32 SkillIndex, const UStaticSkillData* PreSkillData) {
+            MarkActionCompleted(ESRPGActionResult::Succeeded);
+            });
+
+        SkillCompModel->ActivateSkill(TileMap, SkillCastCommand.mSkillIndex, SkillCastCommand.mTargetIndex, SkillCastCommand.mDiceSum, MoveTemp(Callback));
 
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
