@@ -109,6 +109,7 @@ private:
 	// @brief 이번 스텝 목표 도착 후 최종 목적지까지 남은 경로 거리 (cm). 0이면 이번 목표가 최종 목적지
 	float mRemainingPathDistance = 0.0f;
 
+private:
 	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CapsuleComp", AllowPrivateAccess = "true"))
 	TObjectPtr<UCapsuleComponent> mCapsuleComp;
 

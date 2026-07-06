@@ -13,7 +13,17 @@ void UBoardActorAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		mUseAdditiveMontage = false;
 	}
 
-	// TODO : 속도 수집
+	APawn* OwningPawn = Cast<APawn>(GetOwningActor());
+	if (OwningPawn != nullptr)
+	{
+		const FVector ForwardNorDir = OwningPawn->GetActorForwardVector();
+		const FVector RightNorDir = OwningPawn->GetActorRightVector();
+		const FVector Velocity = OwningPawn->GetVelocity();
+
+		mPawnVelocity.X = FVector::DotProduct(Velocity, ForwardNorDir);
+		mPawnVelocity.Y = FVector::DotProduct(Velocity, RightNorDir);
+	}
+
 	// TODO : 생존 상태 수집
 }
 
