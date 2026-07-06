@@ -146,11 +146,6 @@ void ACombatGameMode::InitializeRoom()
 		// OnEndCombatUI.Broadcast(Barrier, Result); 연출은 연결고리가 아직 없음
 		});
 	CombatModel->OnBeginAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext) {
-		// 플레이어 턴 시작 = 새 라운드("N번째 턴"). 적 턴은 같은 라운드에 묶는다. 증가 후 push해야 첫 턴부터 1로 표시된다.
-		if (TurnContext != nullptr && TurnContext->GetOwner() != nullptr && TurnContext->GetOwner()->IsPlayerUnitModel() == true)
-		{
-			++mCombatRound;
-		}
 		PushTurnUIData();
 		PushUnitUIData();
 		PushDiceUIData();
@@ -499,10 +494,6 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
 		});
-	// 스텝 시전 등으로 이동 예산(MovementPoint)이 바뀔 때도 MOVE 수치를 즉시 갱신한다(미구독 시 다음 턴까지 미반영).
-	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementPointAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
-		PushUnitUIData();
-		});
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefenseAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
 		});
@@ -523,9 +514,7 @@ void ACombatGameMode::OnUnregisterUnit(UUnitModel* Unit)
 
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).RemoveAll(this);
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).RemoveAll(this);
-	// 해제는 구독(OnRegisterUnit)과 같은 속성 쌍이어야 한다 — 다른 속성을 지우면 no-op이라 바인딩이 잔존한다.
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementAttribute()).RemoveAll(this);
-	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementPointAttribute()).RemoveAll(this);
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefenseAttribute()).RemoveAll(this);
 
 	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_StatusEffect, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
@@ -552,7 +541,7 @@ void ACombatGameMode::PushTurnUIData() const
 	TurnUI.mCurrentUnitId = TurnContext->GetOwner()->GetModelId();
 	// 페이즈의 단일 소유자는 SetBuildPhase(빌드 이벤트) — 턴 스냅샷 push가 진행 중 페이즈를 덮지 않게 보존한다.
 	TurnUI.mPhase = mCombatUIModel->GetTurnUI().mPhase;
-	TurnUI.mRound = mCombatRound; // 플레이어 턴 시작마다 게임모드가 센 라운드("N번째 턴" 표시용)
+	TurnUI.mRound = CombatModel->GetRoundCount();
 	for (const TObjectPtr<UUnitModel>& UnitModel : UnitModels)
 	{
 		TurnUI.mTurnOrderUnitIds.Add(UnitModel->GetModelId());

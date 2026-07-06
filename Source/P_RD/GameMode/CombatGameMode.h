@@ -16,7 +16,6 @@
 
 class USRPGTurnContext;
 class UUnitModel;
-class UCombatUIAdapter;
 class UCombatUIModel;
 enum class ECombatInputType : uint8;
 
@@ -144,19 +143,4 @@ public:
 public:
 	UPROPERTY(Category = "UI", VisibleAnywhere, DuplicateTransient, meta = (DisplayName = "CombatUIModel"))
 	TObjectPtr<UCombatUIModel> mCombatUIModel;
-
-protected:
-	/**
-	 * @brief 현재 라운드("몇 번째 턴") 카운터. 플레이어 턴 시작마다 1 증가한다(적 턴은 같은 라운드).
-	 * @details 턴 모델의 mTurnId는 등록 순번이라 라운드가 아니다 — 표시용 라운드는 UI 경계(게임모드)가 센다.
-	 *          게임모드는 방마다 새로 스폰되므로 방 진입 시 자연히 0에서 시작한다.
-	 */
-	UPROPERTY(Category = "UI", VisibleAnywhere, meta = (DisplayName = "CombatRound"))
-	int32 mCombatRound = 0;
-
-public:
-	/** @brief 전투 상태를 CombatUIModel로 push + HUD 입력 의도를 처리하는 임시 비GAS 어댑터(전투 수명 동안 보유). */
-    // TODO : 추후 삭제
-	UPROPERTY()
-	TObjectPtr<UCombatUIAdapter> mCombatUIAdapter;
 };

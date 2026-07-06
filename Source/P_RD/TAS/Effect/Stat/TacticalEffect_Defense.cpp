@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   TacticalEffect_Defense.cpp
  * @brief  Defense 이펙트 구현
  * @author 이문환
@@ -7,6 +7,9 @@
 
 #include "TAS/Effect/Stat/TacticalEffect_Defense.h"
 #include "AttributeSet/UnitAttributeSet.h"
+#include "Simulation/Logger/EventLogger.h"
+
+#include "TAS/Effect/TacticalEffectContext.h"
 
 UTacticalEffect_Defense::UTacticalEffect_Defense()
 {
@@ -20,4 +23,16 @@ UTacticalEffect_Defense::UTacticalEffect_Defense()
 	Info.mModifierMagnitude = 1.f;
 
 	mModifiers.Add(Info);
+}
+
+void UTacticalEffect_Defense::OnExecuted(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const
+{
+	Super::OnExecuted(ActiveTEContainer, TESpec);
+
+	FSRPGAttributeEffectEventLog Log;
+	Log.mEffectAttribute = UUnitAttributeSet::GetDefenseAttribute();
+	Log.mMagnitude = TESpec.mModifierValues[0];
+
+	const UActorModel* Instigator = TESpec.GetContext()->GetInstigator();
+	GetWorldEventLogger(Instigator)->LogAttributeEffect(Instigator->GetModelId(), Instigator->GetClass(), Log);
 }

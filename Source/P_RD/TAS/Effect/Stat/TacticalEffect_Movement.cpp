@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   TacticalEffect_Movement.cpp
  * @brief  Movement 이펙트 구현
  * @author 이문환
@@ -7,6 +7,9 @@
 
 #include "TAS/Effect/Stat/TacticalEffect_Movement.h"
 #include "AttributeSet/UnitAttributeSet.h"
+#include "Simulation/Logger/EventLogger.h"
+
+#include "TAS/Effect/TacticalEffectContext.h"
 
 UTacticalEffect_Movement::UTacticalEffect_Movement()
 {
@@ -20,4 +23,16 @@ UTacticalEffect_Movement::UTacticalEffect_Movement()
 	Info.mModifierMagnitude = 1.f;
 
 	mModifiers.Add(Info);
+}
+
+void UTacticalEffect_Movement::OnExecuted(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const
+{
+	Super::OnExecuted(ActiveTEContainer, TESpec);
+
+	FSRPGAttributeEffectEventLog Log;
+	Log.mEffectAttribute = UUnitAttributeSet::GetMovementAttribute();
+	Log.mMagnitude = TESpec.mModifierValues[0];
+
+	const UActorModel* Instigator = TESpec.GetContext()->GetInstigator();
+	GetWorldEventLogger(Instigator)->LogAttributeEffect(Instigator->GetModelId(), Instigator->GetClass(), Log);
 }
