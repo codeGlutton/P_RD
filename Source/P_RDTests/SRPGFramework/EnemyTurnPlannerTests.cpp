@@ -20,9 +20,7 @@
 #include "SRPGFramework/SRPGFrameworkType.h"   // FTileIndex, EAimPattern, EEffectPattern
 
 #include "Actor/TileMap/TileMapModel.h"
-#include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
-#include "AttributeSet/UnitAttributeSet.h"
 #include "DataAsset/SkillData/StaticAttackSkillData.h"
 
 #include "Engine/World.h"
@@ -98,8 +96,7 @@ namespace
 		Enemy->Initialize();
 		Enemy->BeginPlay();
 		Enemy->SetMoveTendency(Tendency);
-		Enemy->GetAttributeComponentModel()->SetAttributeBaseValue(
-			UUnitAttributeSet::GetMovementPointAttribute(), static_cast<float>(MoveRange));
+		Enemy->SetMovePoint(MoveRange);
 
 		// 스킬 추가: 일반공격 계열
 		UStaticAttackSkillData* Skill = NewObject<UStaticAttackSkillData>(World);

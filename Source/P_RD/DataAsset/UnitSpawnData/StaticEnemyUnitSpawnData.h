@@ -39,9 +39,12 @@ public:
 		return FPrimaryAssetId(UnitPrimaryAssetTypes::GetEnemyUnitType(), GetFName());
 	}
 
-public:
 	// @brief 기본 이동 성향: 멀어짐 / 사거리 유지(정지) / 붙음 중 택1
 	// @note 사거리는 스킬(추후 스킬+장비+패시브)에서 나오므로 여기엔 눈금값을 두지 않는다.
 	UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveTendency"))
 	EMoveTendency mMoveTendency = EMoveTendency::HoldRange;
+	
+	// @brief 이동포인트
+	UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MovePoint"))
+	int32 mMovePoint{ 5 };
 };

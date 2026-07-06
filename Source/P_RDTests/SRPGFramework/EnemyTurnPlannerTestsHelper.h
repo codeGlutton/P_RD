@@ -10,7 +10,7 @@
  *  파라미터로 넘길 최소한의 Mock 정의
  *
  *  Pre/PostInitializeComponentModels 함수는 빈 코드로 대체하고,
- *  MovementPoint를 얻어야 하니까 UnitAttributeSet만 붙임.
+ *  이동포인트는 모델의 mMovePoint를 코드로 세팅해서 사용.
  *********************************************************************/
 
 #pragma once
@@ -52,6 +52,12 @@ public:
 	void SetMoveTendency(EMoveTendency Tendency)
 	{
 		mMoveTendency = Tendency;
+	}
+
+	// @brief 이동포인트 설정
+	void SetMovePoint(int32 MovePoint)
+	{
+		mMovePoint = MovePoint;
 	}
 
 };
