@@ -106,6 +106,21 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
         SetBuildPhase(ESRPGSkillBuildPhase::None);
         return ESRPGCommandResult::Ignored;
     }
+    case ESRPGCommandType::TurnEnd:
+    {
+        /* 스킬 조준 중 엔드턴을 누르면 스킬 빌드를 먼저 취소한다.
+         * 취소 안 하면 이 빌드액션이 head로 살아있어 TurnEndAction이 뒤에 쌓이고,
+         * 이후 스킬을 확정하면 TurnEnd가 스킬보다 먼저 실행돼 턴이 끝나며 스킬이 버려진다(꼬임).
+         * Ignored를 반환해, 라우터(USRPGActionCreationCommandHandler)가 이 TurnEnd로 TurnEndAction을 정상 생성하게 둔다. */
+
+        ClearAllTileHighlights();
+        ResetTargetTile();
+        ResetDice();
+        ResetSkill();
+        MarkActionCompleted(ESRPGActionResult::Cancelled);
+        SetBuildPhase(ESRPGSkillBuildPhase::None);
+        return ESRPGCommandResult::Ignored;
+    }
     case ESRPGCommandType::DiceSelect:
     {
         /* 주사위 변경 시 타겟부터 재설정 */

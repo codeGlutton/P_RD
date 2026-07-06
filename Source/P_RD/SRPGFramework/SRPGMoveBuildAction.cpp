@@ -84,6 +84,15 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleCommand(const TInstancedStruct<FS
         SetBuildPhase(ESRPGMoveBuildPhase::None);
         return ESRPGCommandResult::Ignored;
     }
+    case ESRPGCommandType::TurnEnd:
+    {
+        /* 이동 조준 중 엔드턴을 누르면 이동 빌드를 먼저 취소한다(스킬 빌드와 동일한 꼬임 방지).
+         * Ignored를 반환해, 라우터가 이 TurnEnd로 TurnEndAction을 정상 생성하게 둔다. */
+
+        MarkActionCompleted(ESRPGActionResult::Cancelled);
+        SetBuildPhase(ESRPGMoveBuildPhase::None);
+        return ESRPGCommandResult::Ignored;
+    }
     case ESRPGCommandType::WorldTrace:
     {
         /* 월드 공간 터치 시 선택 위치에 따라서 결정 */
