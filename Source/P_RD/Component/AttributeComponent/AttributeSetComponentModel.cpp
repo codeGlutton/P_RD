@@ -511,7 +511,14 @@ void UAttributeSetComponentModel::ExecuteTacticalEffect(FTacticalEffectSpec& Spe
 FActiveTacticalEffectHandle UAttributeSetComponentModel::SetActiveTacticalEffect(FActiveTacticalEffectHandle&& ActiveHandle)
 {
     FActiveTacticalEffect* ActiveEffect = mActiveAttributeEffects.GetActiveTacticalEffect(ActiveHandle);
-    checkf(ActiveEffect != nullptr, TEXT("활성화할 Effect 미존재"));
+    // OnAddedToActiveContainer 훅이 효과를 정당하게 즉시 제거하는 경우 조회가 null일 수 있으므로,
+    // 크래시(checkf) 대신 무효 핸들을 반환하고 활성화를 스킵한다. 호출부는 반환값을 쓰지 않아 안전하다.
+    // (근본: 훅 실행 중 컨테이너 재할당으로 핸들이 무효화되던 문제는 InternalOnActiveTacticalEffectAdded에서
+    //  핸들을 훅 전에 캡처하도록 수정해 해결.)
+    if (ActiveEffect == nullptr)
+    {
+        return FActiveTacticalEffectHandle();
+    }
 
     FScopedActiveTacticalEffectLock ScopeLockActiveGameplayEffects(mActiveAttributeEffects); // 활성 이펙트 변경 락
     FScopedTacticalAggregatorOnDirtyBatch AggregatorOnDirtyBatcher(GetWorld());              // dirty 콜백을 배치로 묶어 중복 재계산 방지

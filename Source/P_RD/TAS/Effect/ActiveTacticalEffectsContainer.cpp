@@ -485,12 +485,17 @@ void FActiveTacticalEffectsContainer::InternalOnActiveTacticalEffectAdded(FActiv
     const UTacticalEffect* EffectDef = Effect.mSpec.mEffectClass;
     checkf(EffectDef != nullptr, TEXT("추가한 Effect Class가 nullptr"));
 
+    // 핸들은 훅 실행 "전"에 값으로 캡처한다.
+    // OnAddedToActiveContainer가 컨테이너(mTacticalEffects)에 효과를 추가/제거하면 배열이 재할당되어
+    // Effect 참조가 무효화(dangling)된다. 훅 뒤에 Effect.mHandle을 읽으면 쓰레기 핸들이 되어
+    // SetActiveTacticalEffect의 조회가 null → 크래시(턴 종료 시 상태이상 처리에서 실제 발생).
+    const FActiveTacticalEffectHandle EffectHandle = Effect.mHandle;
+
     EffectDef->OnAddedToActiveContainer(*this, Effect);
 
-    FActiveTacticalEffectHandle EffectHandle = Effect.mHandle;
     if (mOwner.IsValid() == true)
     {
-        mOwner->SetActiveTacticalEffect(MoveTemp(EffectHandle));
+        mOwner->SetActiveTacticalEffect(FActiveTacticalEffectHandle(EffectHandle));
     }
 }
 
