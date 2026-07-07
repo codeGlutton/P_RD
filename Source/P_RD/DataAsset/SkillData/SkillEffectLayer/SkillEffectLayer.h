@@ -22,9 +22,9 @@ public:
 	virtual ~FSkillEffectLayer() = default;
 
 public:
-	virtual void ClearPointEffect(IBoardCombatTarget* ActorModel) const PURE_VIRTUAL(FSkillEffectLayer::ClearPointEffect, return; );
+	virtual void ClearPointEffect(IBoardCombatTarget* ActorModel) const {}
 
 public:
-	virtual void ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const PURE_VIRTUAL(FSkillEffectLayer::ApplyPointEffect, return; );
+	virtual void ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const {}
 	virtual void CommitEffect(IBoardCombatTarget* ActorModel, const TArray<FTileIndex>& TargetTileIndexes, const TArray<IBoardCombatTarget*>& OtherCombatTargets, float DiceSum) const PURE_VIRTUAL(FSkillEffectLayer::CommitEffect, return; );
 };

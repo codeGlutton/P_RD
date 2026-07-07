@@ -135,50 +135,50 @@ const TArray<FPrimaryAssetId>& UPlayerUnitPersistData::GetDiceIds() const
  */
 void UPlayerUnitPersistData::SyncPlayerPersistData(UPlayerUnitModel* PlayerUnit)
 {
-	 checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
-	 UAttributeSetComponentModel* ASCModel = PlayerUnit->GetAttributeComponentModel();
-	 checkf(ASCModel != nullptr, TEXT("어빌리티 시스템 컴포넌트 nullptr"));
+	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
+	UAttributeSetComponentModel* ASCModel = PlayerUnit->GetAttributeComponentModel();
+	checkf(ASCModel != nullptr, TEXT("어빌리티 시스템 컴포넌트 nullptr"));
 
-	 // 최초 등록: 유닛의 현재 속성값을 저장본으로 캡처한 뒤 더 진행하지 않는다(복원 단계 건너뜀).
-	 if (mIsNewData == true)
-	 {
-	 	mIsNewData = false;
-	 }
-	 
-	 // 저장본 -> 유닛 복원. ETacticalModOp::Override(정수 3, 구 EGameplayModOp::Override 대체)는
-	 // 누적이 아닌 "덮어쓰기"라 저장된 절대값을 그대로 다시 세팅한다.
-	 // ※ ETacticalModOp 의 정수값을 구 enum과 동일하게 유지하는 이유: 직렬화 호환 / Aggregator의 op-값 배열 인덱싱 / CoreRedirect 매핑.
-	 ASCModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetMaxHPAttribute(), ETacticalModOp::Override, mMaxHP);
-	 ASCModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetHPAttribute(), ETacticalModOp::Override, mHP);
-	 ASCModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetExpAttribute(), ETacticalModOp::Override, mExp);
-	 ASCModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetMoneyAttribute(), ETacticalModOp::Override, mMoney);
-	 
-	 // (여러 방 내에서 유지되는 특수한 패시브 스택) Loose 게임플레이 태그를 개수(Pair.Value)만큼 다시 부여한다.
-	 for (auto& Pair : mTagCountMap)
-	 {
-		 ASCModel->AddLooseGameplayTag(Pair.Key, Pair.Value);
-	 }
+	// 최초 등록: 유닛의 현재 속성값을 저장본으로 캡처한 뒤 더 진행하지 않는다(복원 단계 건너뜀).
+	if (mIsNewData == true)
+	{
+		mIsNewData = false;
+	}
 
-	 // 플레이어 스킬 동기화
-	 USkillComponentModel* SkillComponentModel = PlayerUnit->GetSkillComponentModel();
-	 if (SkillComponentModel != nullptr)
-	 {
-		 SkillComponentModel->SetSkillFrom(GetSkillIds());
-	 }
+	// 저장본 -> 유닛 복원. ETacticalModOp::Override(정수 3, 구 EGameplayModOp::Override 대체)는
+	// 누적이 아닌 "덮어쓰기"라 저장된 절대값을 그대로 다시 세팅한다.
+	// ※ ETacticalModOp 의 정수값을 구 enum과 동일하게 유지하는 이유: 직렬화 호환 / Aggregator의 op-값 배열 인덱싱 / CoreRedirect 매핑.
+	ASCModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetMaxHPAttribute(), ETacticalModOp::Override, mMaxHP);
+	ASCModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetHPAttribute(), ETacticalModOp::Override, mHP);
+	ASCModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetExpAttribute(), ETacticalModOp::Override, mExp);
+	ASCModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetMoneyAttribute(), ETacticalModOp::Override, mMoney);
 
-	 // 플레이어 장비 동기화
-	 UEquipmentComponentModel* EquipmentComponentModel = PlayerUnit->GetEquipmentComponentModel();
-	 if (EquipmentComponentModel != nullptr)
-	 {
-		 EquipmentComponentModel->EquipFrom(GetEquipmentIds());
-	 }
+	// (여러 방 내에서 유지되는 특수한 패시브 스택) Loose 게임플레이 태그를 개수(Pair.Value)만큼 다시 부여한다.
+	for (auto& Pair : mTagCountMap)
+	{
+		ASCModel->AddLooseGameplayTag(Pair.Key, Pair.Value);
+	}
 
-	 // 플레이어 주사위 동기화
+	// 플레이어 스킬 동기화
+	USkillComponentModel* SkillComponentModel = PlayerUnit->GetSkillComponentModel();
+	if (SkillComponentModel != nullptr)
+	{
+		SkillComponentModel->SetSkillFrom(GetSkillIds());
+	}
+
+	// 플레이어 장비 동기화
+	UEquipmentComponentModel* EquipmentComponentModel = PlayerUnit->GetEquipmentComponentModel();
+	if (EquipmentComponentModel != nullptr)
+	{
+		EquipmentComponentModel->EquipFrom(GetEquipmentIds());
+	}
+
+	// 플레이어 주사위 동기화
 	UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
-	 if (DicePoolModel != nullptr)
-	 {
-		 DicePoolModel->BuildFromDiceIds(GetDiceIds());
-	 }
+	if (DicePoolModel != nullptr)
+	{
+		DicePoolModel->BuildFromDiceIds(GetDiceIds());
+	}
 }
 
 /**
@@ -205,6 +205,7 @@ void UPlayerUnitPersistData::BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit)
 	 ASCModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMoneyAttribute()).AddLambda([this](const FTacticalAttributeChangeData& Data) {
 	 	mMoney = Data.mNewValue;
 	 	});
+
 	 // 패시브 스택 비용 태그의 개수 변화를 추적: 현재 개수를 맵에 저장하되, 0이 되면 항목을 제거해 저장본을 깔끔히 유지한다.
 	 ASCModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_Cost_PassiveStack, EGameplayTagEventType::AnyCountChange).AddLambda([this](const FGameplayTag Tag, int32 Count) {
 	 	mTagCountMap[Tag] = Count;
@@ -214,7 +215,21 @@ void UPlayerUnitPersistData::BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit)
 	 	}
 	 	});
 
-	 // TODO: 스킬 변경 시 대리자에 바인딩. 이걸로 영구 데이터도 동기화
+	 // 플레이어 스킬 추적
+	 USkillComponentModel* SkillComponentModel = PlayerUnit->GetSkillComponentModel();
+	 checkf(SkillComponentModel != nullptr, TEXT("플레이어 스킬 컴포넌트 nullptr"));
+	 SkillComponentModel->OnChangeSkillUI.AddLambda([this](int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData) {
+		 if (mSkillIds.Num() < SkillIndex)
+		 {
+			 FPrimaryAssetId NextSkillId;
+			 if (NewSkillData != nullptr)
+			 {
+				 NextSkillId = NewSkillData->GetPrimaryAssetId();
+			 }
+			 mSkillIds[SkillIndex] = NextSkillId;
+		 }
+		 });
+
 	 // TODO: 장비 변경 시 대리자에 바인딩. 이걸로 영구 데이터도 동기화
 	 // TODO: 주사위 변경 시 대리자에 바인딩. 이걸로 영구 데이터도 동기화
 }
@@ -257,11 +272,16 @@ void URunPersistData::StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Diffic
 
 	// 스킬 기본 값 세팅
 	{
-		for (const TSoftObjectPtr<UStaticSkillData>& SkillSoft : PlayerData->mSkillDatas)
+		constexpr int32 PlayerSkillSlot = 6;
+		mSkillIds.Init(FPrimaryAssetId(), PlayerSkillSlot);
+
+		const int32 StaticSkillCount = PlayerData->mSkillDatas.Num();
+		for (int32 i = 0; i < StaticSkillCount; ++i)
 		{
+			const TSoftObjectPtr<UStaticSkillData>& SkillSoft = PlayerData->mSkillDatas[i];
 			if (const UStaticSkillData* SkillData = SkillSoft.LoadSynchronous())
 			{
-				mSkillIds.Add(SkillData->GetPrimaryAssetId());
+				mSkillIds[i] = SkillData->GetPrimaryAssetId();
 			}
 		}
 	}

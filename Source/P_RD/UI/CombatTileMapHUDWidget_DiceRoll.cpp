@@ -1,4 +1,4 @@
-#include "UI/CombatTileMapHUDWidget.h"
+﻿#include "UI/CombatTileMapHUDWidget.h"
 
 #include "Components/Border.h"
 #include "Components/Button.h"
@@ -76,12 +76,7 @@ void UCombatTileMapHUDWidget::PrepareIntroDiceRoll()
 /** @brief 대기 중인 입장 주사위 연출을 실제 굴림 상태로 전환한다. */
 void UCombatTileMapHUDWidget::StartIntroDiceRoll()
 {
-	if (mIntroDiceRollReady == false)
-	{
-		PrepareIntroDiceRoll();
-	}
-
-	if (mIntroDiceRollReady == false || mDiceUIs.IsEmpty() || mDiceRollPhysicsActor == nullptr)
+	if (mDiceUIs.IsEmpty() || mDiceRollPhysicsActor == nullptr)
 	{
 		SetDiceRollVisibility(ESlateVisibility::Collapsed);
 		return;

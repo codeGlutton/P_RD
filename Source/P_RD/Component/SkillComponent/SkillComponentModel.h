@@ -20,6 +20,7 @@ struct FPresentationBarrier;
 
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnChangeSkillUI, int32 /*SkillIndex*/, const UStaticSkillData* /*PreSkillData*/, const UStaticSkillData* /*NewSkillData*/);
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnPlayMotionLayerUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, TSharedPtr<FPresentationBarrier> /*MotionTriggerBarrier*/, FGameplayTag /*ApplyMotionTag*/, ETileActorDirection /*LocalDirection*/);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndSkill, int32 /*SkillIndex*/, const UStaticSkillData* /*PreSkillData*/);
 
 /**
  * @brief 한 슬롯에 장착된 스킬과 그로 인해 설치된 런타임 객체 추적
@@ -53,6 +54,7 @@ struct FActiveSkillContext
 
 public:
 	void Clear();
+	bool IsValid() const;
 
 	/* 스킬 임시 데이터 */
 public:
@@ -67,6 +69,9 @@ public:
 public:
 	int32 mSkillIndex = INDEX_NONE;
 	int32 mMotionIndex = INDEX_NONE;
+
+public:
+	FOnEndSkill mEndCallback;
 
 	/* 모션 임시 데이터 */
 public:
@@ -110,7 +115,7 @@ public:
 	* @param TargetIndex 타겟팅 타일
 	* @param DiceSum 주사위 눈금 합
 	*/
-	void ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum);
+	void ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum, FOnEndSkill Callback = FOnEndSkill());
 
 protected:
 	void PlayMotionLayer();
@@ -119,6 +124,9 @@ protected:
 	void TriggerMotionLayer();
 	void EndMotionLayer();
 	void DeactivateSkill();
+
+public:
+	bool IsAnySkillActivated() const;
 
 public:
 	TArray<FTileIndex> GetAimableTiles(UTileMapModel* MapModel, int32 SkillIndex, int32 DiceSum) const;
