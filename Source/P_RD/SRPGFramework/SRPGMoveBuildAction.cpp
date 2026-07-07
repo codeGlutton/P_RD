@@ -63,8 +63,6 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleCommand(const TInstancedStruct<FS
         checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 모델 nullptr"));
         UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnitModel->GetAttributeComponentModel();
         checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 모델 nullptr"));
-        // 최대 이동 가능 거리는 Movement 어트리뷰트로 설정
-        // 이동 후 SRPGMoveAction::OnEndAction()에서 실제 이동한 거리만큼 차감
         mMovePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMovementAttribute());
 
         const FSRPGMoveSelectCommand& MoveSelectCommand = Command.Get<FSRPGMoveSelectCommand>();

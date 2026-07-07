@@ -1,11 +1,36 @@
-#include "UI/CombatTileMapHUDWidget.h"
+﻿#include "UI/CombatTileMapHUDWidget.h"
 
 #include "Components/Button.h"
 #include "UI/Combat/CombatUIModel.h"
 
+#include "GameMode/CombatGameMode.h"
+
 UCombatTileMapHUDWidget::UCombatTileMapHUDWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+}
+
+void UCombatTileMapHUDWidget::NativeOnInitialized()
+{
+	Super::NativeOnInitialized();
+
+	UWorld* World = GetWorld();
+	if (World != nullptr)
+	{
+		ACombatGameMode* GameMode = World->GetAuthGameMode<ACombatGameMode>();
+		if (GameMode != nullptr)
+		{
+			BindCombatUIModel(GameMode->GetCombatUIModel());
+		}
+	}
+}
+
+void UCombatTileMapHUDWidget::OpenUI(FOnEndUIOpenAnimation Callback)
+{
+	Super::OpenUI(Callback);
+
+	// 이미 어댑터가 push해 둔 현재 값을 즉시 반영(구독 전 발생분 보강).
+	RefreshCombatStatusBar();
 }
 
 int32 UCombatTileMapHUDWidget::GetCombatDiceViewCount() const

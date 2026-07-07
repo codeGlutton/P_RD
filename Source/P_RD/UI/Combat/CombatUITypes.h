@@ -55,12 +55,20 @@ enum class ECombatBuildPhaseUI : uint8
 UENUM(BlueprintType)
 enum class EFloatingLogIconType : uint8
 {
-	None,   // 아이콘 없음(텍스트만)
-	HP,     // 체력
-	Poison, // 중독
-	Fire,   // 화염
-	Shield, // 방어/실드
-	Move    // 이동
+	None,				// 아이콘 없음(텍스트만)
+	HP,					// 체력
+
+	GetMove,			// 이동력 획득
+	GetDefense,			// 방어력 획득
+
+	Weakness,			// 약화 (디버프)
+	Vulnerability,		// 취약 (디버프)
+	Fortification,		// 요새화 (버프)
+	Agility,			// 신속 (버프)
+
+	Poison,				// 독
+	Fire,				// 화염
+	Move				// 이동
 };
 
 /**
@@ -73,8 +81,9 @@ enum class EFloatingLogColorType : uint8
 	Neutral, // 중립(흰색)
 	Damage,  // 피해
 	Heal,    // 회복
-	Buff,    // 강화
-	Debuff,  // 약화
+	PointUp, // 이동력이나 방어력등의 수치 증가
+	Buff,    // 버프
+	Debuff,  // 디버프
 	Warning, // 경고(쓰러짐 등)
 	Move     // 이동
 };

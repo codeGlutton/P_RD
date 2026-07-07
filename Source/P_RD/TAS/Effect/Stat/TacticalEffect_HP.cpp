@@ -40,6 +40,8 @@ void UTacticalEffect_HP::OnExecuted(FActiveTacticalEffectsContainer& ActiveTECon
 	Log.mEffectAttribute = UUnitAttributeSet::GetHPAttribute();
 	Log.mMagnitude = TESpec.mModifierValues[0];
 
-	const UActorModel* Instigator = TESpec.GetContext()->GetInstigator();
+	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
+	const UActorModel* Instigator = AttributeSetCompModelInstance->GetOwnerModel();
+
 	GetWorldEventLogger(Instigator)->LogAttributeEffect(Instigator->GetModelId(), Instigator->GetClass(), Log);
 }

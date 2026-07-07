@@ -33,6 +33,8 @@ void UTacticalEffect_Defense::OnExecuted(FActiveTacticalEffectsContainer& Active
 	Log.mEffectAttribute = UUnitAttributeSet::GetDefenseAttribute();
 	Log.mMagnitude = TESpec.mModifierValues[0];
 
-	const UActorModel* Instigator = TESpec.GetContext()->GetInstigator();
+	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
+	const UActorModel* Instigator = AttributeSetCompModelInstance->GetOwnerModel();
+
 	GetWorldEventLogger(Instigator)->LogAttributeEffect(Instigator->GetModelId(), Instigator->GetClass(), Log);
 }

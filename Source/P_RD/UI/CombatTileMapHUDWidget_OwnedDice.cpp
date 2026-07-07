@@ -1,4 +1,4 @@
-#include "UI/CombatTileMapHUDWidget.h"
+﻿#include "UI/CombatTileMapHUDWidget.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
@@ -37,7 +37,7 @@ namespace
 /** @brief 전투 뷰모델의 이벤트를 HUD 생명주기에 맞춰 구독하고 현재 스냅샷을 즉시 반영한다. */
 void UCombatTileMapHUDWidget::BindCombatUIModel(UCombatUIModel* InUIModel)
 {
-	if (mCombatUIModel == InUIModel)
+	if (mCombatUIModel == InUIModel || InUIModel == nullptr)
 	{
 		return;
 	}
@@ -71,8 +71,6 @@ void UCombatTileMapHUDWidget::BindCombatUIModel(UCombatUIModel* InUIModel)
 		mCombatUIModel->OnCombatFloatingLogsCleared.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogsCleared);
 		// 턴 시작 주사위 굴림 요청 시 굴림 오버레이를 자동으로 연다(2턴째부터의 진행 멈춤 해소).
 		mCombatUIModel->OnDiceRollRequested.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatDiceRollRequested);
-		// 이미 어댑터가 push해 둔 현재 값을 즉시 반영(구독 전 발생분 보강).
-		RefreshCombatStatusBar();
 
 		// 이 시점(BeginRoom, InitCombat 이후)엔 전투 모델이 준비돼 있다 — 승리 후 월드맵 흐름을 HUD가 구독한다.
 		BindVictoryFlowEvents();

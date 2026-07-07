@@ -33,6 +33,8 @@ void UTacticalEffect_MaxHP::OnExecuted(FActiveTacticalEffectsContainer& ActiveTE
 	Log.mEffectAttribute = UUnitAttributeSet::GetMaxHPAttribute();
 	Log.mMagnitude = TESpec.mModifierValues[0];
 
-	const UActorModel* Instigator = TESpec.GetContext()->GetInstigator();
+	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
+	const UActorModel* Instigator = AttributeSetCompModelInstance->GetOwnerModel();
+
 	GetWorldEventLogger(Instigator)->LogAttributeEffect(Instigator->GetModelId(), Instigator->GetClass(), Log);
 }

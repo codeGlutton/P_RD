@@ -18,8 +18,8 @@ void UTacticalEffect_Agility::OnExecuted(FActiveTacticalEffectsContainer& Active
 
 	const int32 TagCount = FMath::Floor(TESpec.mDynamicMagnitude);
 
-	const UActorModel* Instigator = TESpec.GetContext()->GetInstigator();
-	UAttributeSetComponentModel* AttributeSetCompModelInstance = TESpec.GetContext()->GetAttributeSetComponentModel();
+	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
+	const UActorModel* Instigator = AttributeSetCompModelInstance->GetOwnerModel();
 
 	AttributeSetCompModelInstance->AddLooseGameplayTag(EffectTags::GameplayEffect_StatusEffect_Buff_Agility, TagCount);
 

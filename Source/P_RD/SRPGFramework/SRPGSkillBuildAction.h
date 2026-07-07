@@ -20,6 +20,7 @@ class UDiceModel;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangeSkillBuildPhase, const USRPGSkillBuildAction* /*Action*/, ESRPGSkillBuildPhase /*Phase*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPostSimulateSkillAction, const TArray<FSRPGTurnEventLog>& /*EventLogs*/);
+DECLARE_MULTICAST_DELEGATE(FOnCancelSimulateSkillAction);
 
 USTRUCT(BlueprintType)
 struct FSRPGSkillSelectCommand : public FSRPGCommand
@@ -32,6 +33,7 @@ public:
 public:
 	FOnChangeSkillBuildPhase OnChangeSkillBuildPhase;
 	FOnPostSimulateSkillAction OnPostSimulateSkillAction;
+	FOnCancelSimulateSkillAction OnCancelSimulateSkillAction;
 
 public:
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillIndex"))
@@ -104,6 +106,7 @@ private:
 protected:
 	FOnChangeSkillBuildPhase OnChangeSkillBuildPhase;
 	FOnPostSimulateSkillAction OnPostSimulateSkillAction;
+	FOnCancelSimulateSkillAction OnCancelSimulateSkillAction;
 
 protected:
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceIndex"))

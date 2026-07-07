@@ -1,7 +1,6 @@
 ﻿#include "GameMode/CombatGameMode.h"
 
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
-#include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
 #include "Engine/AssetManager.h"
@@ -10,11 +9,12 @@
 
 #include "PCGStage/Room.h"
 
-#include "Simulation/Factory/ObjectModelFactory.h"
 #include "Pawn/Player/PlayerUnitModel.h"
 
-#include "UI/CombatTileMapHUDWidget.h"
+#include "UI/RDUserWidget.h"
 #include "UI/Combat/CombatUIModel.h"
+
+#include "Actor/ActorView.h"
 
 #include "SRPGFramework/SRPGSkillBuildAction.h"
 #include "SRPGFramework/SRPGMoveBuildAction.h"
@@ -31,6 +31,8 @@
 
 #include "DataAsset/EquipmentData/StaticEquipmentData.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
+
+#include "Actor/TileMap/TileMapModel.h"
 
 DEFINE_LOG_CATEGORY(LogCombatGameMode);
 
@@ -97,6 +99,60 @@ namespace
 			return NSLOCTEXT("CombatGameMode", "EquipmentSlotBoots", "BOOTS");
 		default:
 			return NSLOCTEXT("CombatGameMode", "EquipmentSlotEmpty", "EMPTY");
+		}
+	}
+
+	void ConvertFloatingLogUITypes(const FSRPGTileEffectEventLog& TileLog, OUT EFloatingLogIconType& IconType, OUT EFloatingLogColorType& ColorType)
+	{
+		IconType = EFloatingLogIconType::Move;
+		ColorType = EFloatingLogColorType::Move;
+		if (TileLog.mOccupancyState != ESRPGTileOccupancyState::Move)
+		{
+			// 스폰이나 죽음
+			ColorType = EFloatingLogColorType::Warning;
+		}
+	}
+
+	void ConvertFloatingLogUITypes(const FSRPGTagEffectEventLog& TagLog, OUT EFloatingLogIconType& IconType, OUT EFloatingLogColorType& ColorType)
+	{
+		if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_Buff_Agility))
+		{
+			IconType = EFloatingLogIconType::Agility;
+			ColorType = EFloatingLogColorType::Buff;
+		}
+		else if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_Buff_Fortification))
+		{
+			IconType = EFloatingLogIconType::Fortification;
+			ColorType = EFloatingLogColorType::Buff;
+		}
+		else if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_Debuff_Vulnerability))
+		{
+			IconType = EFloatingLogIconType::Vulnerability;
+			ColorType = EFloatingLogColorType::Debuff;
+		}
+		else if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_Debuff_Weakness))
+		{
+			IconType = EFloatingLogIconType::Weakness;
+			ColorType = EFloatingLogColorType::Debuff;
+		}
+	}
+
+	void ConvertFloatingLogUITypes(const FSRPGAttributeEffectEventLog& AttrLog, OUT EFloatingLogIconType& IconType, OUT EFloatingLogColorType& ColorType)
+	{
+		if (AttrLog.mEffectAttribute == UUnitAttributeSet::GetHPAttribute())
+		{
+			IconType = EFloatingLogIconType::HP;
+			ColorType = AttrLog.mMagnitude > 0.f ? EFloatingLogColorType::Heal : EFloatingLogColorType::Damage;
+		}
+		else if (AttrLog.mEffectAttribute == UUnitAttributeSet::GetMovementAttribute())
+		{
+			IconType = EFloatingLogIconType::GetMove;
+			ColorType = EFloatingLogColorType::PointUp;
+		}
+		else if (AttrLog.mEffectAttribute == UUnitAttributeSet::GetDefenseAttribute())
+		{
+			IconType = EFloatingLogIconType::GetDefense;
+			ColorType = EFloatingLogColorType::PointUp;
 		}
 	}
 }
@@ -199,7 +255,11 @@ void ACombatGameMode::InitializeRoom()
 	checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
 
 	SkillComponentModel->OnChangeSkillUI.AddWeakLambda(this, [this](int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData) {
-		PushSkillUIData();   // 스킬이 바뀌면 레일을 바로 다시 그린다.
+		PushSkillUIData();
+		});
+
+	SkillComponentModel->OnEndMotionLayerUI.AddWeakLambda(this, [this](int32 MotionIndex) {
+		mCombatUIModel->NotifyCombatFloatingLogMotionFinished(MotionIndex);
 		});
 
 	/* UI 조작 의도 라우팅 — 위젯 탭이 쏘는 Request*(OnCombatCommand)를 게임플레이 진입점에 연결 */
@@ -309,18 +369,14 @@ void ACombatGameMode::BeginRoom()
 {
 	Super::BeginRoom();
 
-	USRPGCombatSubsystem* CombatSubsystem = GetWorld()->GetSubsystem<USRPGCombatSubsystem>();
-	checkf(CombatSubsystem != nullptr, TEXT("전투 시스템 nullptr"));
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 시스템 모델 nullptr"));
 
 	if (UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())
 	{
-		if (UCombatTileMapHUDWidget* CombatHUD = WorldWidgetSubsystem->GetHUD<UCombatTileMapHUDWidget>())
+		if (URDUserWidget* CombatHUD = WorldWidgetSubsystem->GetHUD<URDUserWidget>())
 		{
-			// HUD가 게임모드 소유 뷰모델을 구독해야 Push*UIData가 화면에 반영된다(미바인딩이면 push 전체가 표시로 이어지지 않음).
-			CombatHUD->BindCombatUIModel(mCombatUIModel);
-			CombatHUD->OpenUI();                            // InitHUD로 생성만 된 HUD를 화면에 올림
+			CombatHUD->OpenUI();
 		}
 	}
 
@@ -342,6 +398,12 @@ bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().mSkillIndex = SkillIndex;
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnChangeSkillBuildPhase.AddWeakLambda(this, [this](const USRPGSkillBuildAction* Action, ESRPGSkillBuildPhase Phase) {
 		PushSkillBuildUIData(Phase);
+		});
+	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnPostSimulateSkillAction.AddWeakLambda(this, [this](const TArray<FSRPGTurnEventLog>& EventLogs) {
+		PushSimulationFloatingLogs(EventLogs);
+		});
+	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnCancelSimulateSkillAction.AddWeakLambda(this, [this]() {
+		mCombatUIModel->NotifyCombatFloatingLogsCleared();
 		});
 
 	return CommandRouterModel->SummitCommand(SkillSelectCommand);
@@ -472,6 +534,8 @@ void ACombatGameMode::OnUnregisterUnit(UUnitModel* Unit)
 
 void ACombatGameMode::PushTurnUIData() const
 {
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 
@@ -498,6 +562,8 @@ void ACombatGameMode::PushTurnUIData() const
 
 void ACombatGameMode::PushSkillBuildUIData(ESRPGSkillBuildPhase Phase) const
 {
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
 	switch (Phase)
 	{
 	case ESRPGSkillBuildPhase::None:
@@ -515,6 +581,8 @@ void ACombatGameMode::PushSkillBuildUIData(ESRPGSkillBuildPhase Phase) const
 
 void ACombatGameMode::PushMoveBuildUIData(ESRPGMoveBuildPhase Phase) const
 {
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
 	switch (Phase)
 	{
 	case ESRPGMoveBuildPhase::None:
@@ -532,6 +600,8 @@ void ACombatGameMode::PushMoveBuildUIData(ESRPGMoveBuildPhase Phase) const
 
 void ACombatGameMode::PushUnitUIData() const
 {
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 
@@ -556,11 +626,6 @@ void ACombatGameMode::PushUnitUIData() const
 		UnitUIData.mMaxHP = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMaxHPAttribute());
 		UnitUIData.mDefensePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefenseAttribute());
 		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMovementAttribute());
-		// MOVE 표시(RefreshMoveButton)는 mMovementPoint(현재 남은 이동력)를 읽는다. 이 대입이 없어 항상 0이었다.
-		// GetMove(스텝)는 이동 예산을 Movement 어트리뷰트에 남기고 MovementPoint는 모션 종료 시 0으로 리셋하므로,
-		// 표시는 Movement(=이번 턴 이동 스택)를 읽어야 실제 벌어둔 이동력이 보인다.
-		// [주의] MOVE 버튼의 실제 이동 범위(SRPGMoveBuildAction)는 아직 MovementPoint를 읽는다 — 어트리뷰트
-		//        정본(Movement vs MovementPoint) 통일은 Mo와 확정 필요. 여기선 표시만 실제 예산에 맞춘다.
 		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMovementAttribute());
 
 		UnitUIData.mStatusTags = AttributeSetComponentModel->GetOwnedGameplayTags(); // 모든 소유 태그가 아닌 고의적으로 넣은 태그만 해당
@@ -579,6 +644,8 @@ void ACombatGameMode::PushUnitUIData() const
 
 void ACombatGameMode::PushDiceUIData() const
 {
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
 	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
 	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
 
@@ -617,6 +684,8 @@ void ACombatGameMode::PushDiceUIData() const
 
 void ACombatGameMode::PushSelectedDiceUIData() const
 {
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
 	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
 	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
 
@@ -628,6 +697,8 @@ void ACombatGameMode::PushSelectedDiceUIData() const
 
 void ACombatGameMode::PushSkillUIData() const
 {
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
 	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
 	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
 
@@ -677,6 +748,8 @@ void ACombatGameMode::PushSkillUIData() const
  */
 void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 {
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
 	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
 	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
 
@@ -709,6 +782,8 @@ void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 
 void ACombatGameMode::PushEquipmentUIData() const
 {
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
 	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
 	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
 
@@ -747,6 +822,8 @@ void ACombatGameMode::PushEquipmentUIData() const
 
 void ACombatGameMode::PushPlayerMetaUIData() const
 {
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
 	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
 	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
 
@@ -760,4 +837,164 @@ void ACombatGameMode::PushPlayerMetaUIData() const
 	PlayerMetaUIData.mMaxExp = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMaxExpAttribute());
 
 	mCombatUIModel->SetPlayerMeta(PlayerMetaUIData);
+}
+
+void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>& TurnEventLogs) const
+{
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+
+	UTileMapModel* TileMapModel = CombatModel->GetTileMap();
+	checkf(TileMapModel != nullptr, TEXT("타일맵 모델 nullptr"));
+
+	/* 새로운 시뮬마다 이전 남은 로그 지우기 */
+
+	mCombatUIModel->NotifyCombatFloatingLogsCleared();
+
+	/* 모션 내 이벤트 로그 마다 UI 요청서 작성 함수 */
+
+	auto AddFloatingLogs = [](const FSRPGBoardActorEventLog& EventLog, const FVector& ViewActorLocation, const int32 MotionIndex, OUT int32& Sequence, OUT TArray<FCombatFloatingLogRequest>& Requests) {
+		
+		auto MakeLogRequest = [](int32 Amount, EFloatingLogIconType IconType, EFloatingLogColorType ColorType, const FVector& ViewLocation, int32 MotionIndex, int32 Sequence) -> FCombatFloatingLogRequest {
+			FCombatFloatingLogRequest Request;
+			Request.mWorldLocation = ViewLocation;
+			Request.mText = FText::FromString(FString::Printf(TEXT("%+d"), Amount));
+			Request.mIconType = IconType;
+			Request.mColorType = ColorType;
+			Request.mSequence = Sequence;
+			Request.mMotionIndex = MotionIndex;
+			Request.mIsPreview = true;
+			return Request;
+			};
+		
+		for (const FSRPGAttributeEffectEventLog& AttrLog : EventLog.mAttributeEffectEventLogs)
+		{
+			EFloatingLogIconType IconType = EFloatingLogIconType::None;
+			EFloatingLogColorType ColorType = EFloatingLogColorType::Neutral;
+			ConvertFloatingLogUITypes(AttrLog, OUT IconType, OUT ColorType);
+
+			Requests.Add(MakeLogRequest(
+				FMath::Floor(AttrLog.mMagnitude),
+				IconType,
+				ColorType,
+				ViewActorLocation,
+				MotionIndex,
+				Sequence++
+			));
+		}
+		for (const FSRPGTagEffectEventLog& TagLog : EventLog.mTagEffectEventLogs)
+		{
+			EFloatingLogIconType IconType = EFloatingLogIconType::None;
+			EFloatingLogColorType ColorType = EFloatingLogColorType::Neutral;
+			ConvertFloatingLogUITypes(TagLog, OUT IconType, OUT ColorType);
+
+			Requests.Add(MakeLogRequest(
+				TagLog.mCount,
+				IconType,
+				ColorType,
+				ViewActorLocation,
+				MotionIndex,
+				Sequence++
+			));
+		}
+		for (const FSRPGTileEffectEventLog& TileLog : EventLog.mTileEffectEventLogs)
+		{
+			EFloatingLogIconType IconType = EFloatingLogIconType::None;
+			EFloatingLogColorType ColorType = EFloatingLogColorType::Neutral;
+			ConvertFloatingLogUITypes(TileLog, OUT IconType, OUT ColorType);
+
+			// TODO : 
+			// 어디서 어디로 이동했다는 정보는 어떻게 알려야하나
+			/*Requests.Add(MakeLogRequest(
+				TagLog.mCount,
+				IconType,
+				ColorType,
+				ViewActorLocation,
+				MotionIndex,
+				Sequence++
+			));*/
+		}
+		};
+
+	/* 시뮬레이션 로그 탐색 시작 */
+
+	int32 Sequence = 0;
+	TArray<FCombatFloatingLogRequest> Requests;
+	TMap<int32, FVector> SpawnLocations;
+	for (const FSRPGTurnEventLog& TurnLog : TurnEventLogs)
+	{
+		for (const FSRPGActionEventLog& ActionLog : TurnLog.mActionEventLogs)
+		{
+			const int32 MotionNum = ActionLog.mMotionEventLogs.Num();
+			for (int32 MotionIndex = 0; MotionIndex < MotionNum; ++MotionIndex)
+			{
+				const FSRPGMotionEventLog& MotionLog = ActionLog.mMotionEventLogs[MotionIndex];
+
+				// 새롭게 태어난 액터는 임시로 위치만 등록
+				for (const auto& SpawnedBoardActorPositionPair : MotionLog.mSpawnedBoardActorPositions)
+				{
+					SpawnLocations.Add(SpawnedBoardActorPositionPair.Key, TileMapModel->TileToWorldLocation(SpawnedBoardActorPositionPair.Value));
+				}
+
+				// 생성 액터 탐색
+				for (const auto& SpawnLocationPair : SpawnLocations)
+				{
+					const FSRPGBoardActorEventLog* EventLog = MotionLog.mBoardActorEventLogs.Find(SpawnLocationPair.Key);
+					if (EventLog == nullptr)
+					{
+						continue;
+					}
+
+					AddFloatingLogs(*EventLog, SpawnLocationPair.Value, MotionIndex, OUT Sequence, OUT Requests);
+				}
+
+				// 유닛 탐색
+				const TArray<TObjectPtr<UUnitModel>>& Units = CombatModel->GetUnits();
+				for (const TObjectPtr<UUnitModel>& Unit : Units)
+				{
+					const FSRPGBoardActorEventLog* EventLog = MotionLog.mBoardActorEventLogs.Find(Unit->GetModelId());
+					if (EventLog == nullptr)
+					{
+						continue;
+					}
+
+					AActor* ViewActor = Unit->GetView<AActor>();
+					if (ViewActor == nullptr)
+					{
+						continue;
+					}
+
+					FVector ViewActorLocation = ViewActor->GetActorLocation();
+					AddFloatingLogs(*EventLog, ViewActorLocation, MotionIndex, OUT Sequence, OUT Requests);
+				}
+
+				// 장애물 탐색
+				const TArray<TObjectPtr<UBoardActorModel>>& Obstacles = CombatModel->GetObstacles();
+				for (const TObjectPtr<UBoardActorModel>& Obstacle : Obstacles)
+				{
+					const FSRPGBoardActorEventLog* EventLog = MotionLog.mBoardActorEventLogs.Find(Obstacle->GetModelId());
+					if (EventLog == nullptr)
+					{
+						continue;
+					}
+
+					AActor* ViewActor = Obstacle->GetView<AActor>();
+					if (ViewActor == nullptr)
+					{
+						continue;
+					}
+
+					FVector ViewActorLocation = ViewActor->GetActorLocation();
+					AddFloatingLogs(*EventLog, ViewActorLocation, MotionIndex, OUT Sequence, OUT Requests);
+				}
+			}
+		}
+	}
+
+	if (Requests.Num() > 0)
+	{
+		mCombatUIModel->NotifyCombatFloatingLogs(Requests);
+	}
 }

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "RDMinimal.h"
 #include "UI/DiceViewData.h"
@@ -38,6 +38,10 @@ class P_RD_API UCombatTileMapHUDWidget : public URDUserWidget
 
 public:
 	UCombatTileMapHUDWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+public:
+	void NativeOnInitialized() override;
+	void OpenUI(FOnEndUIOpenAnimation Callback) override;
 
 public:
 	/** @brief 전투 HUD가 현재 표시 중인 보유 주사위 개수를 반환한다. */

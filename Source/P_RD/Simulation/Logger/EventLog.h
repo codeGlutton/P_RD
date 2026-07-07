@@ -186,6 +186,10 @@ public:
 	// @brief 한 모션 내에 각 액터마다의 변화 로그
 	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BoardActorEventLogs"))
 	TMap<int32, FSRPGBoardActorEventLog>					mBoardActorEventLogs;
+
+	// @brief 한 모션 내에 각 액터마다의 변화 로그
+	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SpawnedBoardActorPositions"))
+	TMap<int32, FTileIndex>									mSpawnedBoardActorPositions;
 };
 
 /**

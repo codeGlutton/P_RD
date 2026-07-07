@@ -19,7 +19,8 @@ class UStaticSkillData;
 struct FPresentationBarrier;
 
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnChangeSkillUI, int32 /*SkillIndex*/, const UStaticSkillData* /*PreSkillData*/, const UStaticSkillData* /*NewSkillData*/);
-DECLARE_MULTICAST_DELEGATE_FourParams(FOnPlayMotionLayerUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, TSharedPtr<FPresentationBarrier> /*MotionTriggerBarrier*/, FGameplayTag /*ApplyMotionTag*/, ETileActorDirection /*LocalDirection*/);
+DECLARE_MULTICAST_DELEGATE_FiveParams(FOnPlayMotionLayerUI, int32 /*MotionIndex*/, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, TSharedPtr<FPresentationBarrier> /*MotionTriggerBarrier*/, FGameplayTag /*ApplyMotionTag*/, ETileActorDirection /*LocalDirection*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnEndMotionLayerUI, int32 /*MotionIndex*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndSkill, int32 /*SkillIndex*/, const UStaticSkillData* /*PreSkillData*/);
 
 /**
@@ -139,9 +140,13 @@ public:
 	FOnChangeSkillUI OnChangeSkillUI;
 
 	/**
-	 * @brief 모션 애니메이션 재생 요청 시 호출되는 대리자
+	 * @brief 모션 애니메이션 재생 시 호출되는 대리자
 	 */
 	FOnPlayMotionLayerUI OnPlayMotionLayerUI;
+	/**
+	 * @brief 모션 애니메이션 종료 시 호출되는 대리자
+	 */
+	FOnEndMotionLayerUI OnEndMotionLayerUI;
 
 protected:
 	UPROPERTY(Category = "Entry", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillEntries"))

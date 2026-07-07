@@ -198,6 +198,10 @@ void USimulationEventLogger::LogTileEffect(int32 TargetActorID, UClass* BoardAct
 	checkf(BoardActorLog.IsValid() == true, TEXT("보드 액터 로그 불량"));
 
 	BoardActorLog.mTileEffectEventLogs.Add(Log);
+	if (Log.mOccupancyState == ESRPGTileOccupancyState::Enter)
+	{
+		mCurrentMotionEventLog->mSpawnedBoardActorPositions.Add(TargetActorID, Log.mNextTileIndex);
+	}
 
 	UE_LOG(LogEventLogger, Log, TEXT("[%d][%s][(%d, %d) -> (%d, %d)] 타일 위치 이동"), TargetActorID, *EnumToString(Log.mOccupancyState), Log.mPreTileIndex.mX, Log.mPreTileIndex.mY, Log.mNextTileIndex.mX, Log.mNextTileIndex.mY);
 }
