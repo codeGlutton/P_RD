@@ -372,11 +372,34 @@ private:
 	/** @brief 스킬 레일을 누르고 있는 시간을 누적해 롱프레스 상세 표시를 판단한다. */
 	void UpdateSkillPress(float InDeltaTime);
 
+	/** @brief 장비 슬롯 투명 버튼이 눌렸을 때 공통 누름 상태로 진입한다(스킬과 동일 방식). */
+	UFUNCTION()
+	void HandleEquipButtonPressed(int32 SlotIndex);
+
+	/** @brief 장비 슬롯 입력 해제 시 누름 상태를 리셋한다. */
+	UFUNCTION()
+	void HandleEquipButtonReleased();
+
+	/** @brief 장비 슬롯 누름을 시작한다(오래 누르면 상세). */
+	void BeginEquipPress(int32 SlotIndex);
+
+	/** @brief 장비 슬롯 누름 시간을 누적해 롱프레스 상세 표시를 판단한다. */
+	void UpdateEquipPress(float InDeltaTime);
+
 	/** @brief 스킬을 선택한다. 다른 스킬로 바뀌면 주사위 배치 후보를 초기화한다. */
 	void SelectSkillForAssignment(int32 SkillIndex);
 
-	/** @brief 스킬 상세 카드를 표시한다. 현재는 API 연결 전 설명용 카드만 보여준다. */
+	/** @brief 스킬 상세(concept_09 오버레이)를 표시한다. */
 	void ShowSkillDetail(int32 SkillIndex);
+
+	/** @brief 유닛 상세(concept_09 오버레이)를 표시한다. */
+	void ShowUnitDetail(int32 UnitId);
+
+	/** @brief 장비 상세(concept_09 오버레이)를 표시한다. */
+	void ShowEquipmentDetail(int32 SlotIndex);
+
+	/** @brief concept_09 상세 오버레이 요소(스크림/프레임/아이콘/이름/타입/설명/닫기)의 표시 상태를 일괄 설정한다. */
+	void SetDetailOverlayVisible(bool bVisible) const;
 
 	/** @brief 스킬 상세 카드를 숨긴다. */
 	void HideSkillDetail() const;
@@ -600,6 +623,22 @@ private:
 	/** @brief 스킬 상세를 열기 위해 필요한 누름 시간. [합의필요] 모바일 손맛 기준으로 확정되면 설정화 대상. */
 	float mSkillLongPressThreshold = 0.45f;
 
+	/** @brief 장비 슬롯 위에 얹는 투명 롱프레스 감지 버튼(마커 HUD_M_equip_0..2 위치). */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<class UIndexedButtonWidget>> mEquipSlotButtons;
+
+	/** @brief 지금 누르고 있는 장비 슬롯 index(스킬과 동일한 press 누적 방식). */
+	int32 mPressedEquipSlot = INDEX_NONE;
+
+	/** @brief 현재 장비 슬롯 입력을 추적 중인지. */
+	bool mEquipPressing = false;
+
+	/** @brief 같은 누름에서 롱프레스 상세가 중복 발생하지 않게 막는 latch. */
+	bool mEquipDetailOpenedFromPress = false;
+
+	/** @brief 현재 장비 누름 누적 시간(NativeTick에서 증가). */
+	float mEquipPressElapsed = 0.0f;
+
 	/** @brief 입장 주사위가 실제 회전/정착 애니메이션을 재생 중인지 여부 */
 	bool mIntroDiceRollActive = false;
 
@@ -665,7 +704,30 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UButton> mDiceRollInputButton;
 
-	/** @brief 스킬 상세가 열린 동안 바깥 터치를 받는 투명 버튼 */
+	/** @brief 스킬 상세가 열린 동안 바깥 터치를 받는 투명 버튼(= concept_09 닫기 히트영역) */
 	UPROPERTY(Transient)
 	TObjectPtr<UButton> mSkillDetailDismissButton;
+
+	/* 공용 상세창 — 디자이너 WBP(WBP_CombatDetailOverlay)를 인스턴스화해 named widget에 데이터만 채운다.
+	 * 스킬/유닛/장비 상세가 같은 오버레이를 공유한다. 레이아웃/아트는 WBP가 소유, C++은 내용만 채운다. */
+
+	/** @brief WBP_CombatDetailOverlay 인스턴스(전체 화면). */
+	UPROPERTY(Transient)
+	TObjectPtr<UUserWidget> mDetailOverlay;
+
+	/** @brief 상세 아이콘(스킬 아이콘 / 유닛 초상화 / 장비 아이콘) — WBP의 DetailIconImage. */
+	UPROPERTY(Transient)
+	TObjectPtr<class UImage> mDetailIconImage;
+
+	/** @brief 상세 제목(이름) — WBP의 DetailTitleText. */
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mDetailTitleText;
+
+	/** @brief 상세 부제(타입/메타: 주사위·레벨·희귀도 등) — WBP의 DetailSubtitleText. */
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mDetailSubtitleText;
+
+	/** @brief 상세 본문(설명/패시브/키워드) — WBP의 DetailBodyText. */
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mDetailBodyText;
 };

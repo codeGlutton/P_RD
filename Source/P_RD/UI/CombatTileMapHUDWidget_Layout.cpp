@@ -144,31 +144,26 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 	{
 		RDUILayout::ApplyAnchoredSlot(mDiceAssignmentText, FAnchors(0.025f, 0.700f, 0.225f, 0.785f), 24);
 	}
-	RDUILayout::ApplyAnchoredSlot(mSkillDetailDismissButton, FAnchors(0.0f, 0.0f, 1.0f, 1.0f), CombatSkillDetailDismissZOrder);
-	if (mSkillDetailBackdropPanels.IsValidIndex(0))
+	// concept_09 상세는 HP바(z210)·스킬레일(z170)보다 위에 떠야 뒤 요소가 안 뚫려 보인다. → z245+로 올리고,
+	// 그 아래 풀뷰포트 회색 딤(주사위 배경과 동일)을 깔아 뒤 HUD를 덮는다. WBP는 전체 화면(내부 레이아웃/아트는 WBP 소유).
+	if (mSkillDetailBackdropPanels.IsValidIndex(0) && mSkillDetailBackdropPanels[0] != nullptr)
 	{
-		RDUILayout::ApplyAnchoredSlot(
-			mSkillDetailBackdropPanels[0],
-			FAnchors(0.0f, 0.0f, CombatSkillRailRight + CombatSkillDetailSafeGap, 1.0f),
-			CombatSkillDetailBackdropZOrder
-		);
+		RDUILayout::ApplyAnchoredSlot(mSkillDetailBackdropPanels[0], FAnchors(0.0f, 0.0f, 1.0f, 1.0f), 245);   // 풀뷰포트 회색 딤
 	}
-	// 스킬 상세 카드: 스킨이면 HUD_SkillDetail 마커(중앙 핀) 슬롯 상속, 레거시는 우측 사이드패널.
-	if (bSkin)
+	RDUILayout::ApplyAnchoredSlot(mDetailOverlay, FAnchors(0.0f, 0.0f, 1.0f, 1.0f), 246);            // 상세 WBP(패널/아트)
+	RDUILayout::ApplyAnchoredSlot(mSkillDetailDismissButton, FAnchors(0.0f, 0.0f, 1.0f, 1.0f), 248); // 아무 데나 탭 닫기
+
+	// 장비 슬롯 롱프레스 감지 버튼을 각 장비 마커(HUD_M_equip_i) 위에 얹는다(스킬 상세와 동일하게 마커 슬롯 상속).
+	static const TCHAR* const EquipMarkerNames[] = { TEXT("HUD_M_equip_0"), TEXT("HUD_M_equip_1"), TEXT("HUD_M_equip_2") };
+	for (int32 SlotIndex = 0; SlotIndex < mEquipSlotButtons.Num() && SlotIndex < UE_ARRAY_COUNT(EquipMarkerNames); ++SlotIndex)
 	{
-		RDUILayout::ApplyDesignerSlotData(
-			mSkillDetailPanel,
-			RDUILayout::GetDesignerSlotDataOr(WidgetTree, TEXT("HUD_SkillDetail"), FAnchors(0.315f, 0.215f, 0.685f, 0.585f), DesignSize),
-			CombatSkillDetailPanelZOrder
-		);
-	}
-	else
-	{
-		RDUILayout::ApplyAnchoredSlot(
-			mSkillDetailPanel,
-			FAnchors(CombatSkillRailRight + CombatSkillDetailSafeGap, 0.0f, 1.0f, 1.0f),
-			CombatSkillDetailPanelZOrder
-		);
+		if (mEquipSlotButtons[SlotIndex] != nullptr)
+		{
+			RDUILayout::ApplyDesignerSlotData(
+				mEquipSlotButtons[SlotIndex],
+				RDUILayout::GetDesignerSlotDataOr(WidgetTree, EquipMarkerNames[SlotIndex], FAnchors(0.02f, 0.10f, 0.06f, 0.14f), DesignSize),
+				40);
+		}
 	}
 	// 스킬 레일: 스킨이면 HUD_SkillRail 마커 슬롯 상속 세로 분배(렌더/입력 동일), 레거시는 기존 정규화 분배.
 	// 상세가 열려 있으면 레일 Z를 승격(현행 동작 유지) — 아이콘 +1, 라벨 +2로 3상태 렌더링 위계도 그대로다.
