@@ -215,6 +215,18 @@ void UCombatTileMapHUDWidget::RebuildUnitHpBars()
 
 void UCombatTileMapHUDWidget::UpdateUnitHpBars()
 {
+	// 지도(풀스크린) 열림 중에는 유닛 머리 위 HP바를 숨긴다 — 탑바만 남기는 뷰.
+	// 이 함수가 매 틱 HP바를 강제 표시(라인 283)하므로, SetCombatPlayControlsVisible에서 한 번 숨기는 것으로는
+	// 다음 틱에 되살아난다. 여기서 게이트해야 지도 뷰 동안 계속 숨겨진다.
+	if (mCombatControlsHidden)
+	{
+		for (FUnitHpBarWidget& Bar : mUnitHpBars)
+		{
+			if (Bar.mRoot != nullptr) { Bar.mRoot->SetVisibility(ESlateVisibility::Collapsed); }
+		}
+		return;
+	}
+
 	if (mCombatUIModel == nullptr)
 	{
 		return;

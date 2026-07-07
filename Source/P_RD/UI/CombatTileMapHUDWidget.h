@@ -329,6 +329,9 @@ private:
 	UFUNCTION()
 	void HandleWorldMapCloseRequested();
 
+	/** @brief 풀스크린 지도 뷰 동안 탑바를 제외한 전투 컨트롤(스킬레일/주사위/턴순서/이동·턴종료)을 숨김/복원한다. */
+	void SetCombatPlayControlsVisible(bool bVisible);
+
 	/** @brief 설정 패널 Back 요청을 승리 잠금 상태에 맞게 처리한다. */
 	UFUNCTION()
 	void HandleSettingsBackRequested();
@@ -661,6 +664,9 @@ private:
 
 	/** @brief 스킬 상세를 열기 위해 필요한 누름 시간. [합의필요] 모바일 손맛 기준으로 확정되면 설정화 대상. */
 	float mSkillLongPressThreshold = 0.45f;
+
+	/** @brief 풀스크린 지도 뷰가 열려 전투 컨트롤을 숨긴 상태. 켜져 있으면 RebuildTurnOrderBar 등이 컨트롤을 다시 만들지 않는다. */
+	bool mCombatControlsHidden = false;
 
 	/** @brief 장비 슬롯 위에 얹는 투명 롱프레스 감지 버튼(마커 HUD_M_equip_0..2 위치). */
 	UPROPERTY(Transient)

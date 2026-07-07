@@ -162,6 +162,12 @@ void UCombatTileMapHUDWidget::HandleCombatFloatingLogsCleared()
  */
 void UCombatTileMapHUDWidget::UpdateFloatingCombatLogQueue(float InDeltaTime)
 {
+	// 지도(풀스크린) 열림 중에는 새 플로팅 로그를 스폰하지 않는다(탑바만 남기는 뷰).
+	if (mCombatControlsHidden)
+	{
+		return;
+	}
+
 	if (mPendingFloatingCombatLogs.Num() == 0)
 	{
 		mFloatingCombatLogQueueCooldown = 0.0f;
@@ -287,6 +293,16 @@ void UCombatTileMapHUDWidget::UpdateFloatingCombatLogs(float InDeltaTime)
 {
 	if (mFloatingCombatLogs.Num() == 0)
 	{
+		return;
+	}
+
+	// 지도(풀스크린) 열림 중에는 떠 있는 로그를 숨긴다(수명/이동은 멈춤 — 지도 닫으면 재개).
+	if (mCombatControlsHidden)
+	{
+		for (FFloatingCombatLogEntry& Entry : mFloatingCombatLogs)
+		{
+			if (Entry.mRoot != nullptr) { Entry.mRoot->SetVisibility(ESlateVisibility::Collapsed); }
+		}
 		return;
 	}
 
