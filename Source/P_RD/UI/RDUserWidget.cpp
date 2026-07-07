@@ -1,5 +1,19 @@
 #include "UI/RDUserWidget.h"
 
+#include "Components/Button.h"
+#include "Components/Image.h"
+#include "Components/TextBlock.h"
+#include "Blueprint/WidgetTree.h"
+
+namespace
+{
+	// 눌렀을 때 버튼이 제자리에서 살짝 줄어드는 비율(보조 효과).
+	constexpr float ButtonPressScale = 0.94f;
+
+	// 눌렀을 때 배경색(멀티플라이어) RGB에 곱하는 값 — 어둡게 해서 눈에 띄게 한다(주 효과).
+	constexpr float ButtonPressColorMul = 0.6f;
+}
+
 /**
  * @brief 위젯 생성 직후에는 공통 OpenUI() 요청 전까지 보이지 않게 둔다.
  */
@@ -160,4 +174,190 @@ int32 URDUserWidget::GetViewportZOrder() const
 bool URDUserWidget::ShouldRemoveFromParentOnClose() const
 {
 	return mRemoveFromParentOnClose;
+}
+
+bool URDUserWidget::ShouldApplyButtonFeedback() const
+{
+	// 기본은 미적용. 타이틀/클래스 선택 등 프론트엔드 화면만 override로 켠다(전투/주사위엔 걸지 않는다).
+	return false;
+}
+
+void URDUserWidget::NativeOnInitialized()
+{
+	Super::NativeOnInitialized();
+
+	if (ShouldApplyButtonFeedback() == true)
+	{
+		SetupCommonButtonFeedback();
+	}
+}
+
+void URDUserWidget::SetupCommonButtonFeedback()
+{
+	mFeedbackButtons.Reset();
+	mFeedbackButtonBaseColors.Reset();
+
+	if (WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	// 이 위젯 트리 안의 모든 UButton을 순회한다(자식 UserWidget은 각자 이 베이스를 상속하므로 스스로 처리).
+	WidgetTree->ForEachWidget([this](UWidget* Widget)
+		{
+			UButton* Button = Cast<UButton>(Widget);
+			if (Button == nullptr)
+			{
+				return;
+			}
+
+			// 누름 피드백: 배경색을 어둡게(주 효과) + 살짝 축소(보조). 브러시 자체는 안 건드려 디자이너 스킨 보존.
+			// 원래 배경색을 저장해 뒀다가 떼면 그대로 복원한다(버튼별 커스텀 틴트도 안전).
+			Button->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+			Button->OnPressed.AddUniqueDynamic(this, &URDUserWidget::HandleAnyButtonPressed);
+			Button->OnReleased.AddUniqueDynamic(this, &URDUserWidget::HandleAnyButtonReleased);
+
+			mFeedbackButtons.Add(Button);
+			mFeedbackButtonBaseColors.Add(Button->GetBackgroundColor());
+		});
+}
+
+void URDUserWidget::CollectButtonCompanions(const UButton* Button, TArray<UWidget*>& OutCompanions) const
+{
+	if (Button == nullptr || WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	// 버튼명을 "<Base>__<Profile>"로 보고 Base/접미사를 분리한다(접미사 없으면 Base=전체, 접미사="").
+	const FString FullName = Button->GetName();
+	FString Base = FullName;
+	FString Suffix;
+	const int32 ProfileSep = FullName.Find(TEXT("__"), ESearchCase::CaseSensitive, ESearchDir::FromStart);
+	if (ProfileSep != INDEX_NONE)
+	{
+		Base = FullName.Left(ProfileSep);       // 예: "StartButton"
+		Suffix = FullName.Mid(ProfileSep);      // 예: "__base_16_9"
+	}
+
+	// 같은 트리에서 Base로 시작 + 같은 접미사로 끝나는 Image/Text 형제를 짝으로 모은다.
+	WidgetTree->ForEachWidget([&Base, &Suffix, Button, &OutCompanions](UWidget* Widget)
+		{
+			if (Widget == nullptr || Widget == Button)
+			{
+				return;
+			}
+			if (Widget->IsA<UImage>() == false && Widget->IsA<UTextBlock>() == false)
+			{
+				return;
+			}
+			const FString Name = Widget->GetName();
+			if (Name.StartsWith(Base) == true && Name.EndsWith(Suffix) == true)
+			{
+				OutCompanions.Add(Widget);
+			}
+		});
+}
+
+void URDUserWidget::HandleAnyButtonPressed()
+{
+	// OnPressed는 발신 버튼을 알려주지 않으므로, 실제로 눌린 버튼만 골라 처리한다(동시에 하나만 눌리는 게 보통).
+	for (int32 Index = 0; Index < mFeedbackButtons.Num(); ++Index)
+	{
+		UButton* Button = mFeedbackButtons[Index];
+		if (Button == nullptr || Button->IsPressed() == false)
+		{
+			continue;
+		}
+
+		// (1) 버튼 자체 — 버튼 브러시가 시각요소인 경우(클래스 선택 등)에 배경색을 어둡게 + 축소.
+		FLinearColor Pressed = mFeedbackButtonBaseColors.IsValidIndex(Index) ? mFeedbackButtonBaseColors[Index] : FLinearColor::White;
+		Pressed.R *= ButtonPressColorMul;
+		Pressed.G *= ButtonPressColorMul;
+		Pressed.B *= ButtonPressColorMul;   // 알파는 유지, RGB만 어둡게.
+		Button->SetBackgroundColor(Pressed);
+		Button->SetRenderScale(FVector2D(ButtonPressScale, ButtonPressScale));
+
+		// (2) 동반 시각 위젯 — 투명 버튼 위에 얹힌 프레임/텍스트(타이틀 등). 이쪽을 어둡게+축소해야 실제로 보인다.
+		//     이전 잔여가 있으면 먼저 복원 후 새로 적용(한 번에 한 버튼만 눌린다는 전제).
+		RestoreActivePressCompanions();
+		TArray<UWidget*> Companions;
+		CollectButtonCompanions(Button, Companions);
+		for (UWidget* Companion : Companions)
+		{
+			Companion->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+			Companion->SetRenderScale(FVector2D(ButtonPressScale, ButtonPressScale));
+
+			FLinearColor CompanionBase = FLinearColor::White;
+			if (UImage* Image = Cast<UImage>(Companion))
+			{
+				CompanionBase = Image->GetColorAndOpacity();
+				FLinearColor Dark = CompanionBase;
+				Dark.R *= ButtonPressColorMul;
+				Dark.G *= ButtonPressColorMul;
+				Dark.B *= ButtonPressColorMul;
+				Image->SetColorAndOpacity(Dark);
+			}
+			else if (UTextBlock* Text = Cast<UTextBlock>(Companion))
+			{
+				CompanionBase = Text->GetColorAndOpacity().GetSpecifiedColor();
+				FLinearColor Dark = CompanionBase;
+				Dark.R *= ButtonPressColorMul;
+				Dark.G *= ButtonPressColorMul;
+				Dark.B *= ButtonPressColorMul;
+				Text->SetColorAndOpacity(FSlateColor(Dark));
+			}
+
+			mActivePressCompanions.Add(Companion);
+			mActivePressCompanionBaseColors.Add(CompanionBase);
+		}
+
+		break;   // 한 번에 한 버튼만.
+	}
+}
+
+void URDUserWidget::HandleAnyButtonReleased()
+{
+	// 버튼 자체 복원.
+	for (int32 Index = 0; Index < mFeedbackButtons.Num(); ++Index)
+	{
+		UButton* Button = mFeedbackButtons[Index];
+		if (Button == nullptr)
+		{
+			continue;
+		}
+
+		const FLinearColor Base = mFeedbackButtonBaseColors.IsValidIndex(Index) ? mFeedbackButtonBaseColors[Index] : FLinearColor::White;
+		Button->SetBackgroundColor(Base);
+		Button->SetRenderScale(FVector2D(1.0f, 1.0f));
+	}
+
+	// 동반 위젯 복원.
+	RestoreActivePressCompanions();
+}
+
+void URDUserWidget::RestoreActivePressCompanions()
+{
+	for (int32 Index = 0; Index < mActivePressCompanions.Num(); ++Index)
+	{
+		UWidget* Companion = mActivePressCompanions[Index].Get();
+		if (Companion == nullptr)
+		{
+			continue;
+		}
+
+		const FLinearColor Base = mActivePressCompanionBaseColors.IsValidIndex(Index) ? mActivePressCompanionBaseColors[Index] : FLinearColor::White;
+		if (UImage* Image = Cast<UImage>(Companion))
+		{
+			Image->SetColorAndOpacity(Base);
+		}
+		else if (UTextBlock* Text = Cast<UTextBlock>(Companion))
+		{
+			Text->SetColorAndOpacity(FSlateColor(Base));
+		}
+		Companion->SetRenderScale(FVector2D(1.0f, 1.0f));
+	}
+
+	mActivePressCompanions.Reset();
+	mActivePressCompanionBaseColors.Reset();
 }

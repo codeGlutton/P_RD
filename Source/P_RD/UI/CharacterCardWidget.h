@@ -50,6 +50,9 @@ public:
 	FCharacterCardClickedDelegate OnCharacterCardClicked;
 
 protected:
+	/** @brief 클래스 선택 화면 카드 — 공용 버튼 누름 효과를 켠다(프론트엔드 한정). */
+	virtual bool ShouldApplyButtonFeedback() const override { return true; }
+
 	/** @brief WBP Button 바인딩을 검증하고 클릭 이벤트를 한 번만 연결한다. */
 	void NativeConstruct() override;
 
