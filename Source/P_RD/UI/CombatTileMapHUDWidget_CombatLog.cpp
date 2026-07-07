@@ -56,7 +56,7 @@ namespace
 
 	/**
 	 * @brief 색 의미(enum) → 실제 화면 색. "어떤 빨강이냐" 같은 디자인 값은 게임플레이가 아니라 여기서 정한다.
-	 * @param ColorType 게임플레이가 넘긴 의미값(Damage/Heal/Buff/Debuff/Warning/Move/Neutral).
+	 * @param ColorType 게임플레이가 넘긴 의미값(Damage/Heal/PointUp/Buff/Debuff/Warning/Move/Neutral).
 	 * @return 해당 의미에 대응하는 실제 색. 미지정(Neutral·그 외)은 흰색.
 	 */
 	FLinearColor ResolveFloatingLogColor(EFloatingLogColorType ColorType)
@@ -67,6 +67,8 @@ namespace
 			return FLinearColor(1.0f, 0.25f, 0.2f, 1.0f);
 		case EFloatingLogColorType::Heal:
 			return FLinearColor(0.35f, 1.0f, 0.4f, 1.0f);
+		case EFloatingLogColorType::PointUp:
+			return FLinearColor(0.3f, 0.9f, 0.95f, 1.0f);   // 이동력/방어력 등 수치 증가 — 청록(다른 색과 구분)
 		case EFloatingLogColorType::Buff:
 			return FLinearColor(0.45f, 0.75f, 1.0f, 1.0f);
 		case EFloatingLogColorType::Debuff:
@@ -83,23 +85,35 @@ namespace
 
 	/**
 	 * @brief 아이콘 의미(enum) → 실제 텍스처. None이면 아이콘 없이 텍스트만 띄운다.
-	 * @param IconType 게임플레이가 넘긴 의미값(HP/Poison/Fire/Shield/Move/None).
+	 * @param IconType 게임플레이가 넘긴 의미값(HP/GetMove/GetDefense/Weakness/Vulnerability/Fortification/Agility/Poison/Fire/Move/None).
 	 * @return 해당 텍스처. None이면 nullptr. (첫 로드 후 엔진 캐시에 남아 재로드 비용 없음)
-	 * @note 현재는 HP 하트 하나만 연결돼 있어 None을 뺀 모든 종류가 임시로 하트로 나온다.
-	 *       전용 에셋이 정해지면 종류별 case를 분리해 경로만 갈아끼우면 된다.
+	 * @note 현재 전용 아이콘 에셋이 없어 None을 뺀 모든 종류가 임시로 HP(하트)로 나온다.
+	 *       종류별 case는 아래 switch로 이미 분리해 뒀으니, 전용 에셋이 준비되면 각 case의 경로만 갈아끼우면 된다.
 	 */
 	UTexture2D* ResolveFloatingLogIcon(EFloatingLogIconType IconType)
 	{
-		// None은 아이콘 없음(텍스트만). 나머지 아이콘 종류는 임시로 전부 HP(하트) 텍스처로 연결한다.
-		// Poison/Fire/GetDefense/Move 전용 아이콘 에셋이 준비되면 case를 분리해 경로만 갈아끼우면 됨.
-		if (IconType == EFloatingLogIconType::None)
+		// 임시 공통 하트(전용 에셋 대기). 각 종류 전용 텍스처가 생기면 해당 case의 경로만 바꾸면 됨.
+		const TCHAR* const PlaceholderHeartPath = TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ClassSelect/T_icon_hp.T_icon_hp");
+
+		const TCHAR* IconPath = nullptr;
+		switch (IconType)
 		{
-			return nullptr;
+		case EFloatingLogIconType::None:
+			return nullptr;                       // 아이콘 없음(텍스트만)
+		case EFloatingLogIconType::HP:            IconPath = PlaceholderHeartPath; break; // 체력
+		case EFloatingLogIconType::GetMove:       IconPath = PlaceholderHeartPath; break; // 이동력 획득
+		case EFloatingLogIconType::GetDefense:    IconPath = PlaceholderHeartPath; break; // 방어력 획득
+		case EFloatingLogIconType::Weakness:      IconPath = PlaceholderHeartPath; break; // 약화(디버프)
+		case EFloatingLogIconType::Vulnerability: IconPath = PlaceholderHeartPath; break; // 취약(디버프)
+		case EFloatingLogIconType::Fortification: IconPath = PlaceholderHeartPath; break; // 요새화(버프)
+		case EFloatingLogIconType::Agility:       IconPath = PlaceholderHeartPath; break; // 신속(버프)
+		case EFloatingLogIconType::Poison:        IconPath = PlaceholderHeartPath; break; // 독
+		case EFloatingLogIconType::Fire:          IconPath = PlaceholderHeartPath; break; // 화염
+		case EFloatingLogIconType::Move:          IconPath = PlaceholderHeartPath; break; // 이동
+		default:                                  IconPath = PlaceholderHeartPath; break; // 미지정도 임시 하트
 		}
 
-		return LoadObject<UTexture2D>(
-			nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ClassSelect/T_icon_hp.T_icon_hp"));
+		return IconPath != nullptr ? LoadObject<UTexture2D>(nullptr, IconPath) : nullptr;
 	}
 }
 
