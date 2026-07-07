@@ -51,6 +51,9 @@ public:
 	void PrimeTitleBackgroundVideo();
 
 protected:
+	/** @brief 타이틀 화면 — 공용 버튼 누름 효과를 켠다(프론트엔드 한정). */
+	virtual bool ShouldApplyButtonFeedback() const override { return true; }
+
 	/** @brief 위젯이 화면에 올라올 때 버튼 이벤트와 하위 화면 이벤트를 연결함 */
 	// START, CONTINUE, SETTING 버튼을 이 위젯의 핸들러에 연결한다.
 	// AddUniqueDynamic을 사용하므로 같은 위젯이 다시 Construct 되어도 같은 델리게이트가 중복으로 붙지 않는다.
