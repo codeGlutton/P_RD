@@ -97,7 +97,7 @@ void UUnitModel::OnEndRoom()
 	// 모두 제거
 	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetDefenseAttribute(), ETacticalModOp::Override, 0.f);
 	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetMovementAttribute(), ETacticalModOp::Override, 0.f);
-	mAttributeCompModel->RemoveLooseGameplayTags(FGameplayTagContainer(EffectTags::GameplayEffect_StatusEffect), INT_MAX);
+	mAttributeCompModel->RemoveLooseGameplayTagsMatchingTag(EffectTags::GameplayEffect_StatusEffect, INT_MAX);
 }
 
 void UUnitModel::OnBeginTurn()
@@ -146,6 +146,8 @@ void UUnitModel::OnEndTurn()
 
 	// 이동력 제거
 	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetMovementAttribute(), ETacticalModOp::Override, 0.f);
+	// 턴제 상태이상 한 스택 감소
+	mAttributeCompModel->RemoveLooseGameplayTagsMatchingTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration, 1);
 }
 
 void UUnitModel::SetGenericTeamId(const FGenericTeamId& TeamID)

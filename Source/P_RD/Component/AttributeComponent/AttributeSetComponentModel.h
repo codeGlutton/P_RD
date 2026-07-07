@@ -406,6 +406,8 @@ public:
         SetTagMapCount(GameplayTag, NewCount);
     }
 
+    void RemoveLooseGameplayTagsMatchingTag(const FGameplayTag& GameplayTag, int32 Count = 1);
+
 public:
     /**
      * @brief 태그 카운트 변경 이벤트를 등록한다.

@@ -48,12 +48,14 @@ namespace EffectTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_ActorState_Dead,						"GameplayEffect.ActorState.Dead");
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect,							"GameplayEffect.StatusEffect");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Buff,					"GameplayEffect.StatusEffect.Buff");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Buff_Agility,			"GameplayEffect.StatusEffect.Buff.Agility");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Buff_Fortification,		"GameplayEffect.StatusEffect.Buff.Fortification");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Debuff,					"GameplayEffect.StatusEffect.Debuff");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Debuff_Weakness,			"GameplayEffect.StatusEffect.Debuff.Weakness");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Debuff_Vulnerability,	"GameplayEffect.StatusEffect.Debuff.Vulnerability");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite,				"GameplayEffect.StatusEffect.Infinite");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration,			"GameplayEffect.StatusEffect.TurnDuration");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Buff,					"GameplayEffect.StatusEffect.TurnDuration.Buff");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Buff_Agility,			"GameplayEffect.StatusEffect.TurnDuration.Buff.Agility");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification,		"GameplayEffect.StatusEffect.TurnDuration.Buff.Fortification");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Debuff,					"GameplayEffect.StatusEffect.TurnDuration.Debuff");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness,			"GameplayEffect.StatusEffect.TurnDuration.Debuff.Weakness");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability,	"GameplayEffect.StatusEffect.TurnDuration.Debuff.Vulnerability");
 }
 
 namespace CueTags

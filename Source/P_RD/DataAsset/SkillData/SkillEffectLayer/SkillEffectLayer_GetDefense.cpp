@@ -51,7 +51,7 @@ void FSkillEffectLayer_GetDefense::CommitEffect(IBoardCombatTarget* OwnerActorMo
     }
 
     // 민첩성
-    const bool IsOwnerFortification = AttributeSetComponentModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_Buff_Fortification);
+    const bool IsOwnerFortification = AttributeSetComponentModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification);
     const float FortificationRatio = IsOwnerFortification == true ? 1.25f : 1.f;
 
     const float TotalDefense = FortificationRatio * AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefenseFactorAttribute());

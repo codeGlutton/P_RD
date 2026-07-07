@@ -571,6 +571,21 @@ void UAttributeSetComponentModel::OnMagnitudeDependencyChange(FActiveTacticalEff
     mActiveAttributeEffects.OnMagnitudeDependencyChange(Handle, ChangedAggregator);
 }
 
+void UAttributeSetComponentModel::RemoveLooseGameplayTagsMatchingTag(const FGameplayTag& GameplayTag, int32 Count)
+{
+    // 모든 LooseGameplayTag 가져오기
+    const FGameplayTagContainer& OwnedTags = GetOwnedGameplayTags();
+
+    // 부모 태그 하위의 자식 태그들만 필터링
+    FGameplayTagContainer SubTags = OwnedTags.Filter(FGameplayTagContainer(GameplayTag));
+
+    // 필터링된 하위 태그들을 각각 원하는 스택 크기로 감소
+    if (SubTags.IsEmpty() == false)
+    {
+        RemoveLooseGameplayTags(SubTags, Count);
+    }
+}
+
 /**
  * @brief 특정 게임플레이 태그의 카운트 변화 이벤트를 등록한다(구독).
  * @param Tag 구독할 태그.

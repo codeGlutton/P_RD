@@ -115,22 +115,22 @@ namespace
 
 	void ConvertFloatingLogUITypes(const FSRPGTagEffectEventLog& TagLog, OUT EFloatingLogIconType& IconType, OUT EFloatingLogColorType& ColorType)
 	{
-		if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_Buff_Agility))
+		if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Agility))
 		{
 			IconType = EFloatingLogIconType::Agility;
 			ColorType = EFloatingLogColorType::Buff;
 		}
-		else if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_Buff_Fortification))
+		else if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification))
 		{
 			IconType = EFloatingLogIconType::Fortification;
 			ColorType = EFloatingLogColorType::Buff;
 		}
-		else if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_Debuff_Vulnerability))
+		else if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability))
 		{
 			IconType = EFloatingLogIconType::Vulnerability;
 			ColorType = EFloatingLogColorType::Debuff;
 		}
-		else if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_Debuff_Weakness))
+		else if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness))
 		{
 			IconType = EFloatingLogIconType::Weakness;
 			ColorType = EFloatingLogColorType::Debuff;

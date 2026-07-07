@@ -21,10 +21,10 @@ void UTacticalEffect_Weakness::OnExecuted(FActiveTacticalEffectsContainer& Activ
 	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
 	const UActorModel* Instigator = AttributeSetCompModelInstance->GetOwnerModel();
 
-	AttributeSetCompModelInstance->AddLooseGameplayTag(EffectTags::GameplayEffect_StatusEffect_Debuff_Weakness, TagCount);
+	AttributeSetCompModelInstance->AddLooseGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness, TagCount);
 
 	FSRPGTagEffectEventLog Log;
-	Log.mEffectTag = EffectTags::GameplayEffect_StatusEffect_Debuff_Weakness;
+	Log.mEffectTag = EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness;
 	Log.mCount = TagCount;
 
 	GetWorldEventLogger(Instigator)->LogTagEffect(Instigator->GetModelId(), Instigator->GetClass(), Log);

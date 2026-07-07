@@ -21,10 +21,10 @@ void UTacticalEffect_Fortification::OnExecuted(FActiveTacticalEffectsContainer& 
 	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
 	const UActorModel* Instigator = AttributeSetCompModelInstance->GetOwnerModel();
 
-	AttributeSetCompModelInstance->AddLooseGameplayTag(EffectTags::GameplayEffect_StatusEffect_Buff_Fortification, TagCount);
+	AttributeSetCompModelInstance->AddLooseGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification, TagCount);
 
 	FSRPGTagEffectEventLog Log;
-	Log.mEffectTag = EffectTags::GameplayEffect_StatusEffect_Buff_Fortification;
+	Log.mEffectTag = EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification;
 	Log.mCount = TagCount;
 
 	GetWorldEventLogger(Instigator)->LogTagEffect(Instigator->GetModelId(), Instigator->GetClass(), Log);

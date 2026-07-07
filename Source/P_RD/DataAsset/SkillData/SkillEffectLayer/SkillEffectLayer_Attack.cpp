@@ -52,7 +52,7 @@ void FSkillEffectLayer_Attack::CommitEffect(IBoardCombatTarget* OwnerActorModel,
     }
 
     // 약화
-    const bool IsOwnerWeakness = AttributeSetComponentModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_Debuff_Weakness);
+    const bool IsOwnerWeakness = AttributeSetComponentModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness);
     const float WeaknessRatio = IsOwnerWeakness == true ? 0.75f : 1.f;
 
     /* 데미지 적용 */
@@ -62,7 +62,7 @@ void FSkillEffectLayer_Attack::CommitEffect(IBoardCombatTarget* OwnerActorModel,
         checkf(OtherAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
         // 취약
-        const bool IsTargetVulnerability = OtherAttributeSetComponentModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_Debuff_Vulnerability);
+        const bool IsTargetVulnerability = OtherAttributeSetComponentModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability);
         const float VulnerabilityRatio = IsTargetVulnerability == true ? 1.5f : 1.f;
         
         // 최종 공격력과 방어력

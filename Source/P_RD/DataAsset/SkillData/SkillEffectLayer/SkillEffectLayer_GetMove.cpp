@@ -51,7 +51,7 @@ void FSkillEffectLayer_GetMove::CommitEffect(IBoardCombatTarget* OwnerActorModel
     }
 
     // 민첩성
-    const bool IsOwnerAgility = AttributeSetComponentModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_Buff_Agility);
+    const bool IsOwnerAgility = AttributeSetComponentModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Agility);
     const float AgilityRatio = IsOwnerAgility == true ? 1.5f : 1.f;
 
     const float TotalMove = AgilityRatio * AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMovementFactorAttribute());
