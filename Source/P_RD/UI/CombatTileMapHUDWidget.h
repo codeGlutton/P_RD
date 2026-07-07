@@ -240,6 +240,10 @@ private:
 	UFUNCTION()
 	void HandleCombatActionResolved();
 
+	/** @brief 보드 유닛 롱프레스로 게임플레이가 통지한 유닛 상세를 상세 오버레이로 연다(payload=UnitId). */
+	UFUNCTION()
+	void HandleUnitDetailRequested(int32 UnitId);
+
 	/** @brief 우측 MOVE 버튼 클릭 → 이동 모드 진입 의도(RequestMove). */
 	UFUNCTION()
 	void HandleMoveButtonClicked();
@@ -371,6 +375,9 @@ private:
 
 	/** @brief 스킬 레일을 누르고 있는 시간을 누적해 롱프레스 상세 표시를 판단한다. */
 	void UpdateSkillPress(float InDeltaTime);
+
+	/** @brief 월드(보드)를 누르고 있는 시간을 누적해 threshold 넘으면 RequestWorldTouch(pos,true)로 유닛 상세를 연다. */
+	void UpdateWorldPress(float InDeltaTime);
 
 	/** @brief 장비 슬롯 투명 버튼이 눌렸을 때 공통 누름 상태로 진입한다(스킬과 동일 방식). */
 	UFUNCTION()
@@ -622,6 +629,12 @@ private:
 
 	/** @brief 스킬 상세를 열기 위해 필요한 누름 시간. [합의필요] 모바일 손맛 기준으로 확정되면 설정화 대상. */
 	float mSkillLongPressThreshold = 0.45f;
+
+	/* ── 월드(보드) 롱프레스 감지 — 유닛 상세 진입점. 탭(false)은 즉시 보내고, threshold 넘게 누르면 롱프레스(true)도 보낸다. ── */
+	bool mWorldPressing = false;
+	bool mWorldLongPressFired = false;
+	float mWorldPressElapsed = 0.0f;
+	FVector2D mWorldPressScreenPos = FVector2D::ZeroVector;
 
 	/** @brief 장비 슬롯 위에 얹는 투명 롱프레스 감지 버튼(마커 HUD_M_equip_0..2 위치). */
 	UPROPERTY(Transient)

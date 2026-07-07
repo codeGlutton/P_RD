@@ -51,6 +51,7 @@ void UCombatTileMapHUDWidget::BindCombatUIModel(UCombatUIModel* InUIModel)
 		mCombatUIModel->OnCombatFloatingLog.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLog);
 		mCombatUIModel->OnCombatFloatingLogMotionFinished.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogMotionFinished);
 		mCombatUIModel->OnDiceRollRequested.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatDiceRollRequested);
+		mCombatUIModel->OnUnitDetailRequested.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleUnitDetailRequested);
 	}
 
 	mCombatUIModel = InUIModel;
@@ -71,6 +72,8 @@ void UCombatTileMapHUDWidget::BindCombatUIModel(UCombatUIModel* InUIModel)
 		mCombatUIModel->OnCombatFloatingLogsCleared.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogsCleared);
 		// 턴 시작 주사위 굴림 요청 시 굴림 오버레이를 자동으로 연다(2턴째부터의 진행 멈춤 해소).
 		mCombatUIModel->OnDiceRollRequested.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatDiceRollRequested);
+		// 보드 유닛 롱프레스 시 게임플레이가 채운 유닛 상세를 상세 오버레이로 연다.
+		mCombatUIModel->OnUnitDetailRequested.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleUnitDetailRequested);
 
 		// 이 시점(BeginRoom, InitCombat 이후)엔 전투 모델이 준비돼 있다 — 승리 후 월드맵 흐름을 HUD가 구독한다.
 		BindVictoryFlowEvents();

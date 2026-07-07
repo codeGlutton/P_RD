@@ -77,6 +77,11 @@ UObjectModel* AUnit::GetModel_Internal() const
 	return mUnitModel.Get();
 }
 
+int32 AUnit::GetSelectionModelId() const
+{
+	return mUnitModel.IsValid() ? mUnitModel->GetModelId() : INDEX_NONE;
+}
+
 void AUnit::BindModel(UObjectModel* Model)
 {
 	IActorView::BindModel(Model);

@@ -46,6 +46,11 @@ public:
 	// TODO: 나중에 무브먼트컴포넌트 사용하면 이 코드는 수정 요망
 	FVector GetVelocity() const override;
 
+	/* IBoardSelectionTarget 상속 */
+public:
+	// @brief 선택 대상(유닛)의 모델 ID를 돌려준다(유닛 상세 매칭용). 모델 없으면 INDEX_NONE.
+	int32 GetSelectionModelId() const override;
+
 	/* IActorView 상속 */
 public:
 	// @brief 이동 델리게이트 구독

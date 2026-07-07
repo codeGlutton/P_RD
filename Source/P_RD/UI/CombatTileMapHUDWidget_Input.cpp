@@ -23,6 +23,11 @@ FReply UCombatTileMapHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeome
 		if (mCombatUIModel != nullptr)
 		{
 			mCombatUIModel->RequestWorldTouch(ScreenPosition, false);
+			// 월드 롱프레스 감지 시작 — threshold 넘게 누르면 유닛 상세(RequestWorldTouch true). 탭은 위에서 이미 보냄.
+			mWorldPressing = true;
+			mWorldLongPressFired = false;
+			mWorldPressElapsed = 0.0f;
+			mWorldPressScreenPos = ScreenPosition;
 			return FReply::Handled();
 		}
 		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
@@ -34,6 +39,7 @@ FReply UCombatTileMapHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeome
 
 FReply UCombatTileMapHUDWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
+	mWorldPressing = false;   // 손을 뗐으니 월드 롱프레스 추적 종료(더 이상 롱프레스로 승격 안 함).
 	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton || mSkillPressing == false)
 	{
 		return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
@@ -66,6 +72,11 @@ FReply UCombatTileMapHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry
 		if (mCombatUIModel != nullptr)
 		{
 			mCombatUIModel->RequestWorldTouch(ScreenPosition, false);
+			// 월드 롱프레스 감지 시작 — threshold 넘게 누르면 유닛 상세(RequestWorldTouch true). 탭은 위에서 이미 보냄.
+			mWorldPressing = true;
+			mWorldLongPressFired = false;
+			mWorldPressElapsed = 0.0f;
+			mWorldPressScreenPos = ScreenPosition;
 			return FReply::Handled();
 		}
 		return Super::NativeOnTouchStarted(InGeometry, InGestureEvent);
@@ -77,6 +88,7 @@ FReply UCombatTileMapHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry
 
 FReply UCombatTileMapHUDWidget::NativeOnTouchEnded(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent)
 {
+	mWorldPressing = false;   // 손을 뗐으니 월드 롱프레스 추적 종료.
 	if (mSkillPressing == false)
 	{
 		return Super::NativeOnTouchEnded(InGeometry, InGestureEvent);
@@ -92,4 +104,23 @@ FReply UCombatTileMapHUDWidget::NativeOnTouchEnded(const FGeometry& InGeometry, 
 	mSkillPressElapsed = 0.0f;
 	mSkillDetailOpenedFromPress = false;
 	return FReply::Handled();
+}
+
+/** @brief 월드(보드) 롱프레스 누적. 탭은 다운에서 이미 보냈고, threshold를 넘기면 롱프레스(true)를 한 번 더 보내 유닛 상세를 연다. */
+void UCombatTileMapHUDWidget::UpdateWorldPress(float InDeltaTime)
+{
+	if (mWorldPressing == false || mWorldLongPressFired == true)
+	{
+		return;
+	}
+
+	mWorldPressElapsed += InDeltaTime;
+	if (mWorldPressElapsed >= mSkillLongPressThreshold)
+	{
+		if (mCombatUIModel != nullptr)
+		{
+			mCombatUIModel->RequestWorldTouch(mWorldPressScreenPos, true);   // 롱프레스 → 게임플레이 월드 트레이스 → 유닛 히트 시 상세.
+		}
+		mWorldLongPressFired = true;
+	}
 }

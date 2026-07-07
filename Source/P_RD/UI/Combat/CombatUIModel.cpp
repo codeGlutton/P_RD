@@ -84,6 +84,12 @@ void UCombatUIModel::SetUnitDetail(const FUnitDetailUI& Detail)
 	OnUIChanged.Broadcast(ECombatUIDomain::Unit);
 }
 
+/** @brief 유닛 상세 오버레이를 열라고 HUD에 알린다(월드 롱프레스 진입점). SetUnitDetail로 데이터를 먼저 채운 뒤 호출한다. */
+void UCombatUIModel::NotifyUnitDetailRequested(int32 UnitId)
+{
+	OnUnitDetailRequested.Broadcast(UnitId);
+}
+
 /** @brief 주사위 표시 스냅샷을 교체하고 Dice 도메인 갱신을 알린다. */
 void UCombatUIModel::SetDiceUIs(const TArray<FDiceSlotUI>& Dice)
 {

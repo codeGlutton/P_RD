@@ -129,6 +129,7 @@ protected:
 	 * 이름, 설명, 아이콘, 코스트, 범위 정보를 채운다.
 	 */
 	void PushSkillDetailUIData(int32 SkillIndex) const;
+	void PushUnitDetailUIData(int32 UnitId) const;
 	void PushEquipmentUIData() const;
 	void PushPlayerMetaUIData() const;
 

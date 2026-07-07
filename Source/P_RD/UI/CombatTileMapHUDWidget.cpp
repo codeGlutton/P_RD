@@ -121,6 +121,7 @@ void UCombatTileMapHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 	UpdateTopBarBackdrop();
 	UpdateSkillPress(InDeltaTime);
 	UpdateEquipPress(InDeltaTime);
+	UpdateWorldPress(InDeltaTime);   // 보드 롱프레스 → 유닛 상세 진입점.
 }
 
 void UCombatTileMapHUDWidget::ApplyOpenUI()

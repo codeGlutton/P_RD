@@ -29,4 +29,7 @@ public:
 
 public:
 	virtual UUserWidget* GetInfoPanel() const PURE_VIRTUAL(IBoardSelectionTarget::GetInfoPanel, return nullptr;)
+
+	/** @brief 선택 대상의 모델 ID(유닛 상세 매칭용). 유닛만 유효, 나머지는 INDEX_NONE. */
+	virtual int32 GetSelectionModelId() const { return INDEX_NONE; }
 };

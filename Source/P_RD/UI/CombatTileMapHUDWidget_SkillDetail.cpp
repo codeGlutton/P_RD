@@ -16,6 +16,12 @@ void UCombatTileMapHUDWidget::HandleSkillDetailDismissButtonClicked()
 	HideSkillDetail();
 }
 
+void UCombatTileMapHUDWidget::HandleUnitDetailRequested(int32 UnitId)
+{
+	// 게임플레이가 SetUnitDetail로 상세를 먼저 채운 뒤 통지하므로, 여기서는 채워진 상세를 오버레이로 열기만 한다.
+	ShowUnitDetail(UnitId);
+}
+
 void UCombatTileMapHUDWidget::SetDetailOverlayVisible(bool bVisible) const
 {
 	// 오버레이 WBP는 보이되 입력을 안 먹게(HitTestInvisible), 그 위 투명 버튼만 입력을 받아 "아무 데나 탭 = 닫기".

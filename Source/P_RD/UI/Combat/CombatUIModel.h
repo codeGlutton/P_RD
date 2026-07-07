@@ -38,6 +38,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatFloatingLog, FCombatFloatin
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatFloatingLogMotionFinished, int32, MotionIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatFloatingLogsCleared);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatDiceRollRequested);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUnitDetailRequested, int32, UnitId);
 
 /** @brief 전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다. */
 UCLASS(BlueprintType)
@@ -74,6 +75,10 @@ public:
 	/** @brief 턴 시작 주사위 굴림 오버레이를 열라는 알림(프레임워크 OnShowDicePanelAnyTurnUI 중계). 첫 턴 이후에도 굴림 UI가 자동으로 뜨게 한다. */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
 	FOnCombatDiceRollRequested OnDiceRollRequested;
+
+	/** @brief 유닛(보드) 롱프레스 상세 표시 요청 알림. HUD가 구독해 상세 오버레이를 연다(payload=UnitId). */
+	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
+	FOnUnitDetailRequested OnUnitDetailRequested;
 
 	/* ───────── 게임플레이가 구독하는 입력(의도) ───────── */
 	// UI는 Request*()로 의도만 보낸다. 게임플레이가 아래 델리게이트를 구독해 실제 처리해야 한다.
@@ -124,6 +129,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetUnitUIs(const TArray<FUnitUI>& Units);
 	/** @brief 유닛 롱프레스 상세(이름/레벨/초상화/패시브). [합의필요] UUnitData 연결. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetUnitDetail(const FUnitDetailUI& Detail);
+	/** @brief 유닛(월드 롱프레스) 상세를 열라고 HUD에 알린다. 상세 데이터는 SetUnitDetail로 먼저 채워둔다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyUnitDetailRequested(int32 UnitId);
 	/** @brief 보유 주사위(굴림값/면수/희귀도색/사용잠금/3D프리뷰 슬롯). [소스] APlayerUnit UDicePoolModel(진짜, 비GAS). */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetDiceUIs(const TArray<FDiceSlotUI>& Dice);
 	/** @brief 스킬에 올린 주사위 index들+합계. [소스] SRPGSkillBuildAction.mSelectedDices. */

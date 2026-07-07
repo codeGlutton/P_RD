@@ -15,6 +15,7 @@
 #include "UI/Combat/CombatUIModel.h"
 
 #include "Actor/ActorView.h"
+#include "Actor/BoardActor/BoardSelectionTarget.h"   // 월드 롱프레스 유닛 상세: IBoardSelectionTarget::GetSelectionModelId()
 
 #include "SRPGFramework/SRPGSkillBuildAction.h"
 #include "SRPGFramework/SRPGMoveBuildAction.h"
@@ -482,7 +483,18 @@ bool ACombatGameMode::ResolveWorldLongPressEvent(FVector2D ScreenPosition)
 	// 모바일 터치는 커서가 없으므로, 롱프레스 화면 좌표를 커맨드에 실어 월드 트레이스에 사용한다.
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mScreenPosition = ScreenPosition;
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().OnShowTargetDetailPanelUI.AddWeakLambda(this, [this](IBoardSelectionTarget* Target) {
-		// mCombatUIModel->NotifyTargetDetailPanelRequested(Target);
+		// 롱프레스가 보드 유닛을 히트하면, 그 유닛 상세 DTO를 채워 HUD에 상세 오버레이를 열라고 알린다.
+		if (Target == nullptr || mCombatUIModel == nullptr)
+		{
+			return;
+		}
+		const int32 UnitId = Target->GetSelectionModelId();
+		if (UnitId == INDEX_NONE)
+		{
+			return;
+		}
+		PushUnitDetailUIData(UnitId);
+		mCombatUIModel->NotifyUnitDetailRequested(UnitId);
 		});
 
 	return CommandRouterModel->SummitCommand(WorldTraceActionCommand);
@@ -778,6 +790,36 @@ void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 	}
 
 	mCombatUIModel->SetSkillDetail(SkillDetailUIData);
+}
+
+void ACombatGameMode::PushUnitDetailUIData(int32 UnitId) const
+{
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	if (CombatModel == nullptr)
+	{
+		return;
+	}
+
+	UUnitModel* FoundUnit = nullptr;
+	for (const TObjectPtr<UUnitModel>& Candidate : CombatModel->GetUnits())
+	{
+		if (Candidate != nullptr && Candidate->GetModelId() == UnitId)
+		{
+			FoundUnit = Candidate;
+			break;
+		}
+	}
+
+	FUnitDetailUI UnitDetailUIData;
+	UnitDetailUIData.mUnitId = UnitId;
+	if (FoundUnit != nullptr)
+	{
+		// [합의필요] 이름/레벨/초상화/패시브의 최종 소스(UUnitData)는 미확정. 드래프트는 확보 가능한 값만 채운다.
+		UnitDetailUIData.mName = FText::FromString(FoundUnit->IsPlayerUnitModel() ? TEXT("아군") : TEXT("적"));
+	}
+	mCombatUIModel->SetUnitDetail(UnitDetailUIData);
 }
 
 void ACombatGameMode::PushEquipmentUIData() const
