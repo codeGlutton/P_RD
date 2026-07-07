@@ -54,6 +54,9 @@ public:
 	FCharacterSelectStatusChangedDelegate OnStatusTextChanged;
 
 protected:
+	/** @brief 클래스 선택 화면 — 공용 버튼 누름 효과를 켠다(프론트엔드 한정). */
+	virtual bool ShouldApplyButtonFeedback() const override { return true; }
+
 	/** @brief WBP 바인딩/버튼 스타일/카드 목록을 현재 GameMode 상태에 맞춰 초기화한다. */
 	void NativeConstruct() override;
 
