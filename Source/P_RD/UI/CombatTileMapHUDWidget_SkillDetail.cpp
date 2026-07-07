@@ -1,8 +1,11 @@
 #include "UI/CombatTileMapHUDWidget.h"
 
+#include "Blueprint/UserWidget.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
+#include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Engine/Texture2D.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/CombatTileMapHUDWidgetPrivate.h"
 
@@ -13,94 +16,136 @@ void UCombatTileMapHUDWidget::HandleSkillDetailDismissButtonClicked()
 	HideSkillDetail();
 }
 
+void UCombatTileMapHUDWidget::SetDetailOverlayVisible(bool bVisible) const
+{
+	// 오버레이 WBP는 보이되 입력을 안 먹게(HitTestInvisible), 그 위 투명 버튼만 입력을 받아 "아무 데나 탭 = 닫기".
+	if (mDetailOverlay != nullptr)
+	{
+		mDetailOverlay->SetVisibility(bVisible ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	}
+	if (mSkillDetailDismissButton != nullptr)
+	{
+		mSkillDetailDismissButton->SetVisibility(bVisible ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	}
+
+	// 뒤 풀뷰포트 회색 딤(주사위 배경과 동일) — HP바/스킬레일 등 뒤 HUD를 덮는다.
+	if (mSkillDetailBackdropPanels.IsValidIndex(0) && mSkillDetailBackdropPanels[0] != nullptr)
+	{
+		mSkillDetailBackdropPanels[0]->SetVisibility(bVisible ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	}
+}
+
 void UCombatTileMapHUDWidget::ShowSkillDetail(int32 SkillIndex)
 {
-	if (mSkillDetailPanel == nullptr || mSkillDetailText == nullptr || SkillIndex == INDEX_NONE)
+	if (mCombatUIModel == nullptr || SkillIndex == INDEX_NONE)
 	{
 		return;
 	}
 
-	// 뷰모델 연결 시 상세 요청은 의도로 보내고, 상세 내용도 뷰모델이 준 값으로 그린다.
-	if (mCombatUIModel != nullptr)
-	{
-		mCombatUIModel->RequestLongPressSkill(SkillIndex);
+	mCombatUIModel->RequestLongPressSkill(SkillIndex);
+	const FSkillDetailUI& Detail = mCombatUIModel->GetSkillDetail();
 
-		const FSkillDetailUI& Detail = mCombatUIModel->GetSkillDetail();
-		if (Detail.mSkillIndex == SkillIndex && (Detail.mName.IsEmpty() == false || Detail.mDescription.IsEmpty() == false))
-		{
-			mSkillDetailText->SetText(FText::Format(
-				NSLOCTEXT("CombatTileMapHUDWidget", "SkillDetailFromUIModelFormat", "{0}\n{1}"),
-				Detail.mName, Detail.mDescription
-			));
-			if (mSkillDetailDismissButton != nullptr)
-			{
-				mSkillDetailDismissButton->SetVisibility(ESlateVisibility::Visible);
-			}
-			for (UBorder* BackdropPanel : mSkillDetailBackdropPanels)
-			{
-				if (BackdropPanel != nullptr)
-				{
-					BackdropPanel->SetVisibility(ESlateVisibility::HitTestInvisible);
-				}
-			}
-			mSkillDetailPanel->SetVisibility(ESlateVisibility::HitTestInvisible);
-			ApplyRuntimeWidgetLayout();
-			return;
-		}
+	if (mDetailIconImage != nullptr) { mDetailIconImage->SetBrushFromTexture(Detail.mIcon, false); }
+	if (mDetailTitleText != nullptr)
+	{
+		mDetailTitleText->SetText(Detail.mName.IsEmpty() ? GetOwnedSkillLabel(SkillIndex) : Detail.mName);
+	}
+	if (mDetailSubtitleText != nullptr)
+	{
+		mDetailSubtitleText->SetText(FText::Format(
+			NSLOCTEXT("CombatTileMapHUDWidget", "SkillDetailMeta", "SKILL · 주사위 {0}"),
+			FText::AsNumber(Detail.mDiceCost)));
+	}
+	if (mDetailBodyText != nullptr) { mDetailBodyText->SetText(Detail.mDescription); }
+
+	SetDetailOverlayVisible(true);
+	ApplyRuntimeWidgetLayout();
+}
+
+void UCombatTileMapHUDWidget::ShowUnitDetail(int32 UnitId)
+{
+	if (mCombatUIModel == nullptr || UnitId == INDEX_NONE)
+	{
+		return;
 	}
 
-	mSkillDetailText->SetText(FText::Format(
-		NSLOCTEXT("CombatTileMapHUDWidget", "SkillDetailTextFormat", "{0}\nSkill detail preview\nAPI connection pending"),
-		GetOwnedSkillLabel(SkillIndex)
-	));
-	if (mSkillDetailDismissButton != nullptr)
+	mCombatUIModel->RequestLongPressUnit(UnitId);
+	const FUnitDetailUI& Detail = mCombatUIModel->GetUnitDetail();
+
+	if (mDetailIconImage != nullptr) { mDetailIconImage->SetBrushFromTexture(Detail.mPortrait, false); }
+	if (mDetailTitleText != nullptr) { mDetailTitleText->SetText(Detail.mName); }
+	if (mDetailSubtitleText != nullptr)
 	{
-		mSkillDetailDismissButton->SetVisibility(ESlateVisibility::Visible);
+		mDetailSubtitleText->SetText(FText::Format(
+			NSLOCTEXT("CombatTileMapHUDWidget", "UnitDetailMeta", "UNIT · Lv.{0}"),
+			FText::AsNumber(Detail.mLevel)));
 	}
-	for (UBorder* BackdropPanel : mSkillDetailBackdropPanels)
+	if (mDetailBodyText != nullptr)
 	{
-		if (BackdropPanel != nullptr)
+		FString Joined;
+		for (const FText& Passive : Detail.mPassiveDescriptions)
 		{
-			BackdropPanel->SetVisibility(ESlateVisibility::HitTestInvisible);
+			if (Joined.IsEmpty() == false) { Joined += TEXT("\n"); }
+			Joined += Passive.ToString();
 		}
+		mDetailBodyText->SetText(FText::FromString(Joined));
 	}
-	mSkillDetailPanel->SetVisibility(ESlateVisibility::HitTestInvisible);
+
+	SetDetailOverlayVisible(true);
+	ApplyRuntimeWidgetLayout();
+}
+
+void UCombatTileMapHUDWidget::ShowEquipmentDetail(int32 SlotIndex)
+{
+	if (mCombatUIModel == nullptr || SlotIndex == INDEX_NONE)
+	{
+		return;
+	}
+
+	mCombatUIModel->RequestLongPressEquip(SlotIndex);
+
+	const FEquipmentUI* Equip = nullptr;
+	for (const FEquipmentUI& Candidate : mCombatUIModel->GetEquipmentUIs())
+	{
+		if (Candidate.mSlotIndex == SlotIndex) { Equip = &Candidate; break; }
+	}
+	if (Equip == nullptr) { return; }
+
+	if (mDetailIconImage != nullptr) { mDetailIconImage->SetBrushFromTexture(Equip->mIcon, false); }
+	if (mDetailTitleText != nullptr) { mDetailTitleText->SetText(Equip->mName); }
+	if (mDetailSubtitleText != nullptr)
+	{
+		mDetailSubtitleText->SetText(Equip->mIsEquipped
+			? NSLOCTEXT("CombatTileMapHUDWidget", "EquipDetailEquipped", "EQUIPMENT · 장착 중")
+			: NSLOCTEXT("CombatTileMapHUDWidget", "EquipDetail", "EQUIPMENT"));
+	}
+	if (mDetailBodyText != nullptr) { mDetailBodyText->SetText(FText::GetEmpty()); }
+
+	SetDetailOverlayVisible(true);
 	ApplyRuntimeWidgetLayout();
 }
 
 void UCombatTileMapHUDWidget::HideSkillDetail() const
 {
-	if (mSkillDetailDismissButton != nullptr)
-	{
-		mSkillDetailDismissButton->SetVisibility(ESlateVisibility::Collapsed);
-	}
-	if (mSkillDetailPanel != nullptr)
-	{
-		mSkillDetailPanel->SetVisibility(ESlateVisibility::Collapsed);
-	}
-	for (UBorder* BackdropPanel : mSkillDetailBackdropPanels)
-	{
-		if (BackdropPanel != nullptr)
-		{
-			BackdropPanel->SetVisibility(ESlateVisibility::Collapsed);
-		}
-	}
+	SetDetailOverlayVisible(false);
 	ApplyRuntimeWidgetLayout();
 }
 
 bool UCombatTileMapHUDWidget::IsSkillDetailVisible() const
 {
-	return mSkillDetailPanel != nullptr && mSkillDetailPanel->GetVisibility() != ESlateVisibility::Collapsed && mSkillDetailPanel->GetVisibility() != ESlateVisibility::Hidden;
+	return mDetailOverlay != nullptr
+		&& mDetailOverlay->GetVisibility() != ESlateVisibility::Collapsed
+		&& mDetailOverlay->GetVisibility() != ESlateVisibility::Hidden;
 }
 
 bool UCombatTileMapHUDWidget::IsScreenPositionInSkillDetailPanel(const FVector2D& ScreenPosition) const
 {
-	if (IsSkillDetailVisible() == false)
+	if (IsSkillDetailVisible() == false || mDetailOverlay == nullptr)
 	{
 		return false;
 	}
 
-	const FGeometry DetailGeometry = mSkillDetailPanel->GetCachedGeometry();
+	const FGeometry DetailGeometry = mDetailOverlay->GetCachedGeometry();
 	const FVector2D LocalPosition = DetailGeometry.AbsoluteToLocal(ScreenPosition);
 	const FVector2D LocalSize = DetailGeometry.GetLocalSize();
 	return LocalPosition.X >= 0.0f && LocalPosition.Y >= 0.0f && LocalPosition.X <= LocalSize.X && LocalPosition.Y <= LocalSize.Y;
