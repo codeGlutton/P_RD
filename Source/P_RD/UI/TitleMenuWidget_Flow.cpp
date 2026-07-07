@@ -2,6 +2,7 @@
 #include "UI/TitleMenuWidgetPrivate.h"
 
 #include "Components/Button.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Components/PanelWidget.h"
 #include "Components/TextBlock.h"
 #include "Components/Widget.h"
@@ -13,6 +14,53 @@ using namespace RDTitleMenu;
 
 namespace
 {
+	/** @brief 프로필 위젯의 실제 배치 캔버스 슬롯을 찾는다(텍스트는 런타임 _CenterOverlay로 감싸질 수 있으므로 그 부모 슬롯을 우선한다). */
+	UCanvasPanelSlot* FindProfileCanvasSlot(UUserWidget* Owner, const TCHAR* BaseName, const FName ProfileName)
+	{
+		if (Owner == nullptr)
+		{
+			return nullptr;
+		}
+
+		UWidget* Widget = Owner->GetWidgetFromName(MakeProfileWidgetName(BaseName, ProfileName));
+		if (Widget == nullptr)
+		{
+			return nullptr;
+		}
+
+		// TextBlock은 AlignMenuTextBlock에서 _CenterOverlay로 감싸지므로, 캔버스 슬롯을 가진 쪽(부모 Overlay)을 실제 배치 위젯으로 본다.
+		if (Cast<UCanvasPanelSlot>(Widget->Slot) == nullptr)
+		{
+			if (UPanelWidget* ParentWidget = Widget->GetParent())
+			{
+				if (ParentWidget->GetName().Contains(TEXT("_CenterOverlay")))
+				{
+					if (UCanvasPanelSlot* ParentCanvasSlot = Cast<UCanvasPanelSlot>(ParentWidget->Slot))
+					{
+						return ParentCanvasSlot;
+					}
+				}
+			}
+		}
+
+		return Cast<UCanvasPanelSlot>(Widget->Slot);
+	}
+
+	/** @brief ToBase 프로필 위젯의 세로 위치(Y)만 FromBase 프로필 위젯의 Y로 맞춘다(X/크기는 그대로). */
+	void CopyProfileWidgetPositionY(UUserWidget* Owner, const TCHAR* FromBase, const TCHAR* ToBase, const FName ProfileName)
+	{
+		UCanvasPanelSlot* FromSlot = FindProfileCanvasSlot(Owner, FromBase, ProfileName);
+		UCanvasPanelSlot* ToSlot = FindProfileCanvasSlot(Owner, ToBase, ProfileName);
+		if (FromSlot == nullptr || ToSlot == nullptr)
+		{
+			return;
+		}
+
+		FVector2D Position = ToSlot->GetPosition();
+		Position.Y = FromSlot->GetPosition().Y;
+		ToSlot->SetPosition(Position);
+	}
+
 	void SetWidgetAndGeneratedParentVisibility(UWidget* Widget, ESlateVisibility Visibility)
 	{
 		if (Widget == nullptr)
@@ -142,6 +190,19 @@ void UTitleMenuWidget::RefreshMainMenuState() const
 			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("SettingsButtonText"), ProfileName), ESlateVisibility::Visible);
 			SetNamedText(this, MakeProfileWidgetName(TEXT("SettingsButtonText"), ProfileName), mSettingsButtonText);
 			SetNamedButtonEnabled(this, MakeProfileWidgetName(TEXT("SettingsButton"), ProfileName), true);
+		}
+
+		// 세이브가 없어 CONTINUE가 숨겨지면, 캔버스 절대배치라 리플로우가 안 돼 NEW START만 위 슬롯에 홀로 떠 보인다.
+		// 이때 NEW START(프레임/버튼/텍스트)를 비어 있는 CONTINUE 슬롯 위치로 내려 SETTING/EXIT 묶음과 붙인다.
+		if (bCanContinueRun == false)
+		{
+			UTitleMenuWidget* MutableSelf = const_cast<UTitleMenuWidget*>(this);
+			for (const FName ProfileName : TitleLayoutProfiles)
+			{
+				CopyProfileWidgetPositionY(MutableSelf, TEXT("ContinueButtonFrameImage"), TEXT("StartButtonFrameImage"), ProfileName);
+				CopyProfileWidgetPositionY(MutableSelf, TEXT("ContinueButton"), TEXT("StartButton"), ProfileName);
+				CopyProfileWidgetPositionY(MutableSelf, TEXT("ContinueButtonText"), TEXT("StartButtonText"), ProfileName);
+			}
 		}
 
 		return;
