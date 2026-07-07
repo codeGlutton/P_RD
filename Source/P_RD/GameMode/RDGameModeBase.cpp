@@ -127,6 +127,15 @@ bool ARDGameModeBase::SetVoiceVolume(float Volume) const
 	return true;
 }
 
+bool ARDGameModeBase::SetUIVolume(float Volume) const
+{
+	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
+	GameProfileSubsystem->SetVolume(EGameVolumeType::UI, Volume);
+
+	return true;
+}
+
 bool ARDGameModeBase::SetLanguage(ELanguageType Language) const
 {
 	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
