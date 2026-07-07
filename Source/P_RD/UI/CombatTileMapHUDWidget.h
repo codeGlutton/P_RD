@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "RDMinimal.h"
 #include "UI/DiceViewData.h"
@@ -730,4 +730,15 @@ private:
 	/** @brief 상세 본문(설명/패시브/키워드) — WBP의 DetailBodyText. */
 	UPROPERTY(Transient)
 	TObjectPtr<UTextBlock> mDetailBodyText;
+
+	/** @brief WBP_CombatDetailOverlay 클래스 레퍼런스. 생성자에서 로드. */
+	UPROPERTY(Transient)
+	TSubclassOf<UUserWidget> mDetailOverlayClass;
+
+	/** @brief 플로팅 로그용 HP(하트) 아이콘 텍스처. 생성자에서 로드. */
+	UPROPERTY(Transient)
+	TObjectPtr<UTexture2D> mFloatingLogHpIconTexture;
+
+private:
+	UTexture2D* ResolveFloatingLogIcon(EFloatingLogIconType IconType) const;
 };

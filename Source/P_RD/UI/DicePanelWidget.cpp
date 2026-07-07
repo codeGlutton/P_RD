@@ -5,6 +5,8 @@
 UDicePanelWidget::UDicePanelWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+	// 이 에셋은 SVN 미연동 환경 등에서 파일이 없을 수 있으므로 LoadObject로 안전하게 로드합니다.
+	mDicePanelCardTexture = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Common/T_UI_Dice_Slot_Empty.T_UI_Dice_Slot_Empty"));
 }
 
 void UDicePanelWidget::NativeConstruct()

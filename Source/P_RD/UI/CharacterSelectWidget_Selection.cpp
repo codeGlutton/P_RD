@@ -1,4 +1,4 @@
-#include "UI/CharacterSelectWidget.h"
+﻿#include "UI/CharacterSelectWidget.h"
 
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/Button.h"
@@ -257,7 +257,7 @@ void UCharacterSelectWidget::SyncSelectedCharacterArt(EPlayerJobType JobType)
 			return;
 		}
 
-		if (UTexture2D* Illustration = GetOrLoadJobIllustration(ImageJob))
+		if (UTexture2D* Illustration = GetJobIllustration(ImageJob))
 		{
 			FitClassActionImageSlotToViewportWidthCrop(this, Image, Illustration);
 
@@ -294,7 +294,7 @@ void UCharacterSelectWidget::SyncSelectedCharacterArt(EPlayerJobType JobType)
 		return;
 	}
 
-	if (UTexture2D* Illustration = GetOrLoadJobIllustration(JobType))
+	if (UTexture2D* Illustration = GetJobIllustration(JobType))
 	{
 		FSlateBrush PortraitBrush;
 		PortraitBrush.DrawAs = ESlateBrushDrawType::Image;
@@ -320,30 +320,15 @@ void UCharacterSelectWidget::SyncSelectedCharacterArt(EPlayerJobType JobType)
 	}
 }
 
-/** @brief 직업별 일러스트 SoftObject를 필요 시 동기 로드하고 UPROPERTY 캐시에 보관한다. */
-UTexture2D* UCharacterSelectWidget::GetOrLoadJobIllustration(EPlayerJobType JobType)
+/** @brief 직업별 일러스트 가져오기 */
+UTexture2D* UCharacterSelectWidget::GetJobIllustration(EPlayerJobType JobType)
 {
-	if (const TObjectPtr<UTexture2D>* Cached = mJobIllustrationCache.Find(JobType))
-	{
-		if (*Cached != nullptr)
-		{
-			return *Cached;
-		}
-	}
-
-	const TSoftObjectPtr<UTexture2D>* Asset = mJobIllustrationAssets.Find(JobType);
+	const TObjectPtr<UTexture2D>* Asset = mJobIllustrationAssets.Find(JobType);
 	if (Asset == nullptr)
 	{
 		return nullptr;
 	}
-
-	// 타이틀 진입 직후 한 번만 일어나는 UI 로드라 동기 로드를 허용한다. 잦은 교체 UI가 되면 비동기 스트리밍으로 바꿔야 한다.
-	UTexture2D* Loaded = Asset->LoadSynchronous();
-	if (Loaded != nullptr)
-	{
-		mJobIllustrationCache.Add(JobType, Loaded);
-	}
-	return Loaded;
+	return *Asset;
 }
 
 /** @brief 안정 index로 후보 View를 찾는다; 배열 위치 직접 접근을 피해 WBP 카드 순서 변경에 견딘다. */

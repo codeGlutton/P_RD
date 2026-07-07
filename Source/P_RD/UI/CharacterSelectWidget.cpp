@@ -1,4 +1,4 @@
-#include "UI/CharacterSelectWidget.h"
+﻿#include "UI/CharacterSelectWidget.h"
 
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
@@ -26,11 +26,34 @@ UCharacterSelectWidget::UCharacterSelectWidget(const FObjectInitializer& ObjectI
 	RefreshLocalizedTextCache();
 	SetVisibility(ESlateVisibility::Visible);
 
+	static ConstructorHelpers::FObjectFinder<UTexture2D> ConfirmButtonTexture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ClassSelect/T_confirm_button_frame_normal.T_confirm_button_frame_normal"));
+	if (ConfirmButtonTexture.Succeeded() == true)
+	{
+		mConfirmButtonTexture = ConfirmButtonTexture.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<UTexture2D> BackButtonTexture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ClassSelect/T_back_button_frame_normal.T_back_button_frame_normal"));
+	if (BackButtonTexture.Succeeded() == true)
+	{
+		mBackButtonTexture = BackButtonTexture.Object;
+	}
+
 	// 직업별 일러스트 텍스처 기본값(SVN 임포트 uasset). 직업 enum(Archer)과 아트 이름(rogue)이 다를 수 있어 여기서 매핑.
 	// [합의필요] 아트 파일명이 직업명과 다를 수 있는 계약은 AssetRegistry/DataAsset로 이동할지 결정이 필요하다.
-	mJobIllustrationAssets.Add(EPlayerJobType::Knight, TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/SVN/OutSideAsset/AICreation/ClassSelect/class_illust_knight_v2.class_illust_knight_v2"))));
-	mJobIllustrationAssets.Add(EPlayerJobType::Archer, TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/SVN/OutSideAsset/AICreation/ClassSelect/class_illust_rogue_v2.class_illust_rogue_v2"))));
-	mJobIllustrationAssets.Add(EPlayerJobType::Mage, TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/SVN/OutSideAsset/AICreation/ClassSelect/class_illust_mage_v2.class_illust_mage_v2"))));
+	static ConstructorHelpers::FObjectFinder<UTexture2D> KnightIllustrationAssets(TEXT("/Game/SVN/OutSideAsset/AICreation/ClassSelect/class_illust_knight_v2.class_illust_knight_v2"));
+	if (KnightIllustrationAssets.Succeeded() == true)
+	{
+		mJobIllustrationAssets.Add(EPlayerJobType::Knight, KnightIllustrationAssets.Object);
+	}
+	static ConstructorHelpers::FObjectFinder<UTexture2D> ArcherIllustrationAssets(TEXT("/Game/SVN/OutSideAsset/AICreation/ClassSelect/class_illust_rogue_v2.class_illust_rogue_v2"));
+	if (ArcherIllustrationAssets.Succeeded() == true)
+	{
+		mJobIllustrationAssets.Add(EPlayerJobType::Archer, ArcherIllustrationAssets.Object);
+	}
+	static ConstructorHelpers::FObjectFinder<UTexture2D> MageIllustrationAssets(TEXT("/Game/SVN/OutSideAsset/AICreation/ClassSelect/class_illust_mage_v2.class_illust_mage_v2"));
+	if (MageIllustrationAssets.Succeeded() == true)
+	{
+		mJobIllustrationAssets.Add(EPlayerJobType::Mage, MageIllustrationAssets.Object);
+	}
 }
 
 /** @brief 타이틀 START로 진입할 때 중복 시작 게이트를 풀고 후보/상태를 새로 맞춘다. */
@@ -71,10 +94,10 @@ void UCharacterSelectWidget::ApplyButtonStyles() const
 	 * 버튼의 배치/텍스트/상호작용 대상은 WBP_CharacterSelect가 계속 소유한다.
 	 * 모바일에서는 hover/pressed 틴트가 눌린 상태처럼 남아 보일 수 있어 동일한 브러시를 사용한다.
 	 */
-	struct FButtonTexture { UButton* Button; const TCHAR* Path; };
+	struct FButtonTexture { UButton* Button; UTexture2D* Asset; };
 	const FButtonTexture Targets[] = {
-		{ mConfirmButton,    TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ClassSelect/T_confirm_button_frame_normal.T_confirm_button_frame_normal") },
-		{ mBackToMainButton, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ClassSelect/T_back_button_frame_normal.T_back_button_frame_normal") },
+		{ mConfirmButton,    mConfirmButtonTexture },
+		{ mBackToMainButton, mBackButtonTexture },
 	};
 
 	for (const FButtonTexture& Target : Targets)
@@ -83,7 +106,7 @@ void UCharacterSelectWidget::ApplyButtonStyles() const
 		{
 			continue;
 		}
-		UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, Target.Path);
+		UTexture2D* Texture = Target.Asset;
 		if (Texture == nullptr)
 		{
 			continue;

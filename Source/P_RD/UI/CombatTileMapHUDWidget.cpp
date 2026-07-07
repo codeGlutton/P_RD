@@ -1,13 +1,37 @@
-﻿#include "UI/CombatTileMapHUDWidget.h"
+#include "UI/CombatTileMapHUDWidget.h"
 
 #include "Components/Button.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "UObject/ConstructorHelpers.h"
 
 #include "GameMode/CombatGameMode.h"
 
 UCombatTileMapHUDWidget::UCombatTileMapHUDWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+	static ConstructorHelpers::FObjectFinder<UTexture2D> OwnedDiceFaceFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/Dice/T_DiceFace_Base.T_DiceFace_Base"));
+	if (OwnedDiceFaceFinder.Succeeded())
+	{
+		mOwnedDiceFaceTexture = OwnedDiceFaceFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> DiceRollBoardFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/DiceRoll/UI_DiceRoll_Board_StyleMatch.UI_DiceRoll_Board_StyleMatch"));
+	if (DiceRollBoardFinder.Succeeded())
+	{
+		mDiceRollBoardTexture = DiceRollBoardFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> FloatingLogHpIconFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ClassSelect/T_icon_hp.T_icon_hp"));
+	if (FloatingLogHpIconFinder.Succeeded())
+	{
+		mFloatingLogHpIconTexture = FloatingLogHpIconFinder.Object;
+	}
+
+	static ConstructorHelpers::FClassFinder<UUserWidget> DetailOverlayClassFinder(TEXT("/Game/UI/CombatDetail/WBP_CombatDetailOverlay"));
+	if (DetailOverlayClassFinder.Succeeded())
+	{
+		mDetailOverlayClass = DetailOverlayClassFinder.Class;
+	}
 }
 
 void UCombatTileMapHUDWidget::NativeOnInitialized()
