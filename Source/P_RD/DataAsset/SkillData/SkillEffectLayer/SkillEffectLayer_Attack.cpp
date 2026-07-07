@@ -11,6 +11,8 @@
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
+#include "Setting/GameBalanceSettings.h"
+
 void FSkillEffectLayer_Attack::ClearPointEffect(IBoardCombatTarget* ActorModel) const
 {
     UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
@@ -35,6 +37,9 @@ void FSkillEffectLayer_Attack::ApplyPointEffect(IBoardCombatTarget* ActorModel, 
 
 void FSkillEffectLayer_Attack::CommitEffect(IBoardCombatTarget* OwnerActorModel, const TArray<FTileIndex>& TargetTileIndexes, const TArray<IBoardCombatTarget*>& OtherCombatTargets, float DiceSum) const
 {
+    const UGameBalanceSettings* GameBalanceSettings = GetDefault<UGameBalanceSettings>();
+    checkf(GameBalanceSettings != nullptr, TEXT("게임 밸런스 세팅 nullptr"));
+
     UAttributeSetComponentModel* AttributeSetComponentModel = OwnerActorModel->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
@@ -53,7 +58,7 @@ void FSkillEffectLayer_Attack::CommitEffect(IBoardCombatTarget* OwnerActorModel,
 
     // 약화
     const bool IsOwnerWeakness = AttributeSetComponentModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness);
-    const float WeaknessRatio = IsOwnerWeakness == true ? 0.75f : 1.f;
+    const float WeaknessRatio = IsOwnerWeakness == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness] : 1.f;
 
     /* 데미지 적용 */
     for (const IBoardCombatTarget* OtherCombatTarget : OtherCombatTargets)
@@ -63,7 +68,7 @@ void FSkillEffectLayer_Attack::CommitEffect(IBoardCombatTarget* OwnerActorModel,
 
         // 취약
         const bool IsTargetVulnerability = OtherAttributeSetComponentModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability);
-        const float VulnerabilityRatio = IsTargetVulnerability == true ? 1.5f : 1.f;
+        const float VulnerabilityRatio = IsTargetVulnerability == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability] : 1.f;
         
         // 최종 공격력과 방어력
         const int32 TotalAttack = FMath::Floor(VulnerabilityRatio * WeaknessRatio * AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackFactorAttribute()));
