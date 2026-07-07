@@ -18,7 +18,7 @@
 #include "DataAsset/PassiveData/StaticPassiveData.h"
 #include "TAS/Passive/TacticalPassive.h"
 #include "TAS/Passive/TacticalPassive_AddStat.h"
-#include "TAS/Effect/Stat/TacticalEffect_AttackFactor.h"
+#include "TAS/Effect/Stat/TacticalEffect_AttackFactor_AddBase.h"
 
 namespace
 {
@@ -51,7 +51,7 @@ bool FEquipmentComponentModelTests::RunTest(const FString& Parameters)
 	// 패시브 DA (코드 구성): AddStat 패시브 + AttackPoint 이펙트 + 수치 5 + OnStartTurn 시점
 	UStaticPassiveData* PassiveData = NewObject<UStaticPassiveData>();
 	PassiveData->mPassiveClass = UTacticalPassive_AddStat::StaticClass();
-	PassiveData->mEffectClass = UTacticalEffect_AttackFactor::StaticClass();
+	PassiveData->mEffectClass = UTacticalEffect_AttackFactor_AddBase::StaticClass();
 	PassiveData->mMagnitude = 5.f;
 	PassiveData->mActivateTimingTag = StartTiming;
 

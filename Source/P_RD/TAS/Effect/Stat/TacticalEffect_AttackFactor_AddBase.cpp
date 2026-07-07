@@ -1,21 +1,21 @@
 ﻿/*****************************************************************//**
- * @file   TacticalEffect_MovementPoint.cpp
- * @brief  MovementPoint 이펙트 구현
+ * @file   TacticalEffect_AttackFactor_AddBase.cpp
+ * @brief  AttackFactor AddBase 이펙트 구현
  * @author 이문환
  * @date   2026-07-01
  *********************************************************************/
 
-#include "TAS/Effect/Stat/TacticalEffect_MovementPoint.h"
+#include "TAS/Effect/Stat/TacticalEffect_AttackFactor_AddBase.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
-UTacticalEffect_MovementPoint::UTacticalEffect_MovementPoint()
+UTacticalEffect_AttackFactor_AddBase::UTacticalEffect_AttackFactor_AddBase()
 {
-	// 일시적
-	mDurationPolicy = ETacticalEffectDurationType::Instant;
+	// 지속형
+	mDurationPolicy = ETacticalEffectDurationType::Infinite;
 	mStackingType = ETacticalEffectStackingType::None;
 
 	FTacticalModifierInfo Info;
-	Info.mAttribute = UUnitAttributeSet::GetMovementPointAttribute();
+	Info.mAttribute = UUnitAttributeSet::GetAttackFactorAttribute();
 	Info.mModifierOp = ETacticalModOp::AddBase;
 	Info.mModifierMagnitude = 1.f;
 

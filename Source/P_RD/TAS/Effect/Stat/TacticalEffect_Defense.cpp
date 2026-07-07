@@ -19,7 +19,7 @@ UTacticalEffect_Defense::UTacticalEffect_Defense()
 
 	FTacticalModifierInfo Info;
 	Info.mAttribute = UUnitAttributeSet::GetDefenseAttribute();
-	Info.mModifierOp = ETacticalModOp::Additive;
+	Info.mModifierOp = ETacticalModOp::AddBase;
 	Info.mModifierMagnitude = 1.f;
 
 	mModifiers.Add(Info);
