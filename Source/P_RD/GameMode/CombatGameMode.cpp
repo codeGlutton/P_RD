@@ -22,6 +22,12 @@
 #include "SRPGFramework/SRPGTurnEndAction.h"
 
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "Actor/ActorModel.h"                          // [테스트] Cast<UActorModel>(Unit) — 상태 부여 instigator
+#include "TAS/Effect/TacticalEffectContext.h"          // [테스트] MakeEffectContext / MakeOutgoingSpec / FTacticalEffectSpec
+#include "TAS/Effect/Tag/TacticalEffect_Fortification.h"
+#include "TAS/Effect/Tag/TacticalEffect_Agility.h"
+#include "TAS/Effect/Tag/TacticalEffect_Weakness.h"
+#include "TAS/Effect/Tag/TacticalEffect_Vulnerability.h"
 #include "Component/EquipmentComponent/EquipmentComponentModel.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
 #include "Dice/DicePoolModel.h"
@@ -512,6 +518,33 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 		PushUnitUIData();
 		});
 
+	// [테스트 전용] 실제 버프/디버프 스킬 배선 전까지, 등록 시 "진짜 TacticalEffect"로 TurnDuration 상태를 부여한다.
+	// 스킬이 하는 것과 동일 경로(MakeOutgoingSpec → ApplyTacticalEffectSpecToSelf)라 효과 수명주기·턴 감소가 정상 작동한다.
+	// 정식 PR엔 미포함(실제로는 스킬이 걸어야 함), draft(참고)에만 둔다.
+	{
+		UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
+		EffectContext->SetInstigator(Cast<UActorModel>(Unit));
+		EffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
+
+		auto ApplyTestStatus = [&](TSubclassOf<UTacticalEffect> EffectClass, float Magnitude)
+		{
+			TSharedPtr<FTacticalEffectSpec> Spec = AttributeSetComponentModel->MakeOutgoingSpec(EffectClass, EffectContext);
+			Spec->mDynamicMagnitude = Magnitude;
+			AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*Spec);
+		};
+
+		if (Unit->IsPlayerUnitModel())
+		{
+			ApplyTestStatus(UTacticalEffect_Fortification::StaticClass(), 3.0f);
+			ApplyTestStatus(UTacticalEffect_Agility::StaticClass(), 1.0f);
+		}
+		else
+		{
+			ApplyTestStatus(UTacticalEffect_Weakness::StaticClass(), 3.0f);
+			ApplyTestStatus(UTacticalEffect_Vulnerability::StaticClass(), 1.0f);
+		}
+	}
+
 	PushTurnUIData();
 	PushUnitUIData();
 }
@@ -629,6 +662,10 @@ void ACombatGameMode::PushUnitUIData() const
 		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMovementAttribute());
 
 		UnitUIData.mStatusTags = AttributeSetComponentModel->GetOwnedGameplayTags(); // 모든 소유 태그가 아닌 고의적으로 넣은 태그만 해당
+
+		// [주의] 상태이상 스택 수(GetTagCount)를 FUnitUI.mStatusEffects(신규 DTO)로 채우는 코드는
+		//        상태 DTO를 소유한 #297(feat/combat-ui-detail-status-dto) 위에 얹어야 컴파일된다.
+		//        develop 단독에는 mStatusEffects가 없어 이 드래프트에선 제외했다(PR 본문 스니펫 참고).
 
 		// 죽는 유닛 등 뷰가 이미 없는 경로에서도 push가 돌 수 있어 null 가드한다.
 		// mWorldLocation은 스냅샷 폴백, mViewActor는 이동을 매 프레임 따라가는 라이브 투영 소스(UnitBars).
