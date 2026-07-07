@@ -83,7 +83,6 @@ void UCombatTileMapHUDWidget::NativeDestruct()
 	{
 		mSkillDetailDismissButton->OnClicked.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleSkillDetailDismissButtonClicked);
 	}
-
 	if (mCombatUIModel != nullptr)
 	{
 		mCombatUIModel->OnQueueNodeResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
@@ -121,6 +120,7 @@ void UCombatTileMapHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 	UpdateShakeToRoll(InDeltaTime);
 	UpdateTopBarBackdrop();
 	UpdateSkillPress(InDeltaTime);
+	UpdateEquipPress(InDeltaTime);
 }
 
 void UCombatTileMapHUDWidget::ApplyOpenUI()
