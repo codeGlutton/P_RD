@@ -25,6 +25,30 @@ class UProgressBar;
 class UTextBlock;
 class UViewport;
 class UWidget;
+class UUserWidget;
+
+/** @brief 유닛 머리 위 HP바(WBP_CombatUnitHpBar) 한 개의 런타임 위젯 참조 묶음. */
+USTRUCT()
+struct FUnitHpBarWidget
+{
+	GENERATED_BODY()
+
+	// HUD RootCanvas에 붙는 WBP 인스턴스(월드→스크린 투영으로 위치 갱신 대상).
+	UPROPERTY(Transient) TObjectPtr<UUserWidget> mRoot;
+	// HP 채움 이미지(플레이어=초록/적=빨강 텍스처 교체 대상).
+	UPROPERTY(Transient) TObjectPtr<UImage> mFillImage;
+	// 채움을 % 만큼 "크롭"하기 위해 폭을 조절하는 클립 캔버스의 슬롯(런타임 생성).
+	UPROPERTY(Transient) TObjectPtr<UCanvasPanelSlot> mFillClipSlot;
+	// HP 숫자 텍스트.
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> mValueText;
+	// 채움 이미지의 원본(100%) 폭(디자인 값). 크롭 계산 기준.
+	float mFillFullWidth = 0.0f;
+
+	// 상태이상 칸(StatusIcon_01~05 / StatusCountText_01~05) + 초과 표시. Rebuild에서 캐시, Update에서 채운다.
+	UPROPERTY(Transient) TArray<TObjectPtr<UImage>> mStatusIcons;
+	UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> mStatusCountTexts;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> mStatusOverflowText;
+};
 
 /** @brief 전투 타일맵 HUD 와이어프레임 위젯 */
 // 현재는 실제 전투 API가 붙기 전의 UI 시안 단계다.
@@ -319,6 +343,13 @@ private:
 	/** @brief 각 유닛의 월드 위치를 화면에 투영해 HP바 위치/비율/색을 매 프레임 갱신한다. */
 	void UpdateUnitHpBars();
 
+	/** @brief HpFillImage를 ClipToBounds 캔버스로 감싸, 폭을 % 만큼 줄이면 우측이 잘리는 크롭 채움을 만든다. */
+	void SetupUnitHpBarFillClip(FUnitHpBarWidget& Bar);
+
+	/** @brief WBP의 상태 슬롯(StatusIcon_0N/StatusCountText_0N/Overflow)을 캐시하고 숨김으로 둔다.
+	 *         표시 배선(UpdateUnitHpBarStatus)은 #297(상태 DTO mStatusEffects) 머지 후 후속 PR에서 추가. */
+	void CacheUnitHpBarStatusSlots(FUnitHpBarWidget& Bar) const;
+
 	/* ── 전투 플로팅 로그(유닛 머리 위) + 턴 라운드 배너 (CombatTileMapHUDWidget_CombatLog.cpp) ── */
 
 	/** @brief 전투 이벤트 플로팅 로그 요청을 순차 재생 큐에 넣는다(OnCombatFloatingLog 구독). */
@@ -499,9 +530,17 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UButton> mNavSettingsButton;
 
-	/** @brief 유닛 머리 위에 월드→스크린 투영으로 띄우는 HP바(유닛 뷰 순서와 1:1) */
+	/** @brief 유닛 머리 위에 월드→스크린 투영으로 띄우는 HP바(WBP_CombatUnitHpBar 인스턴스, 유닛 뷰 순서와 1:1) */
 	UPROPERTY(Transient)
-	TArray<TObjectPtr<UProgressBar>> mUnitHpBars;
+	TArray<FUnitHpBarWidget> mUnitHpBars;
+
+	/** @brief HP바 WBP 클래스/채움 텍스처(빨강=적, 초록=아군) 지연 로드 캐시 */
+	UPROPERTY(Transient)
+	TSubclassOf<UUserWidget> mUnitHpBarWidgetClass;
+	UPROPERTY(Transient)
+	TObjectPtr<UTexture2D> mUnitHpFillRedTexture;
+	UPROPERTY(Transient)
+	TObjectPtr<UTexture2D> mUnitHpFillGreenTexture;
 
 	/**
 	 * @brief 아직 화면에 안 뜬 "대기 큐"의 한 칸(실행 로그 전용). 스폰 전이라 원본 요청만 들고 있다.

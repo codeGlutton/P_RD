@@ -32,6 +32,25 @@ UCombatTileMapHUDWidget::UCombatTileMapHUDWidget(const FObjectInitializer& Objec
 	{
 		mDetailOverlayClass = DetailOverlayClassFinder.Class;
 	}
+
+	// 유닛 머리 위 HP바 WBP 및 채움 텍스처(빨강=적, 초록=아군)를 하드 레퍼런스로 프리로드한다(#300 컨벤션 — ini 강제쿡 대신).
+	static ConstructorHelpers::FClassFinder<UUserWidget> UnitHpBarClassFinder(TEXT("/Game/UI/CombatHUD/UnitHpBar/WBP_CombatUnitHpBar"));
+	if (UnitHpBarClassFinder.Succeeded())
+	{
+		mUnitHpBarWidgetClass = UnitHpBarClassFinder.Class;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> UnitHpFillRedFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_CombatHUD_UnitHpBar_Fill_Red.T_CombatHUD_UnitHpBar_Fill_Red"));
+	if (UnitHpFillRedFinder.Succeeded())
+	{
+		mUnitHpFillRedTexture = UnitHpFillRedFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> UnitHpFillGreenFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_CombatHUD_UnitHpBar_Fill_Green.T_CombatHUD_UnitHpBar_Fill_Green"));
+	if (UnitHpFillGreenFinder.Succeeded())
+	{
+		mUnitHpFillGreenTexture = UnitHpFillGreenFinder.Object;
+	}
 }
 
 void UCombatTileMapHUDWidget::NativeOnInitialized()
