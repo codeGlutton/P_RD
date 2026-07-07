@@ -342,7 +342,7 @@ void USkillComponentModel::PlayMotionLayerAnimation(ETileActorDirection LocalDir
 	mActiveSkillContext.mMotionEndBarrier = MotionEndBarrier;
 
 	OwnerUnitModel->OnPlayApplyAnimationUI.Broadcast(MotionEndBarrier, MotionTriggerBarrier, MotionLayer.mApplyMotionTag, LocalDirectionToTarget);
-	OnPlayMotionLayerUI.Broadcast(MotionEndBarrier, MotionTriggerBarrier, MotionLayer.mApplyMotionTag, LocalDirectionToTarget);
+	OnPlayMotionLayerUI.Broadcast(mActiveSkillContext.mMotionIndex, MotionEndBarrier, MotionTriggerBarrier, MotionLayer.mApplyMotionTag, LocalDirectionToTarget);
 }
 
 void USkillComponentModel::TriggerMotionLayer()
@@ -479,6 +479,7 @@ void USkillComponentModel::EndMotionLayer()
 	/* 모션 로그 종료 */
 	
 	GetWorldEventLogger(this)->EndMotionLog();
+	OnEndMotionLayerUI.Broadcast(mActiveSkillContext.mMotionIndex);
 
 	/* 종료 판정 */
 

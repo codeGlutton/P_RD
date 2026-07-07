@@ -12,6 +12,7 @@
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "SRPGFramework/SRPGCommand.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
+#include "Simulation/Logger/EventLog.h"
 #include "CombatGameMode.generated.h"
 
 class USRPGTurnContext;
@@ -130,6 +131,8 @@ protected:
 	void PushSkillDetailUIData(int32 SkillIndex) const;
 	void PushEquipmentUIData() const;
 	void PushPlayerMetaUIData() const;
+
+	void PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>& TurnEventLogs) const;
 
 	/* 연출용 대리자 */
 public:

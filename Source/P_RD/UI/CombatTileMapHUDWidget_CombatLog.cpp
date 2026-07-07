@@ -1,4 +1,4 @@
-#include "UI/CombatTileMapHUDWidget.h"
+﻿#include "UI/CombatTileMapHUDWidget.h"
 
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Blueprint/WidgetTree.h"
@@ -91,7 +91,7 @@ namespace
 	UTexture2D* ResolveFloatingLogIcon(EFloatingLogIconType IconType)
 	{
 		// None은 아이콘 없음(텍스트만). 나머지 아이콘 종류는 임시로 전부 HP(하트) 텍스처로 연결한다.
-		// Poison/Fire/Shield/Move 전용 아이콘 에셋이 준비되면 case를 분리해 경로만 갈아끼우면 됨.
+		// Poison/Fire/GetDefense/Move 전용 아이콘 에셋이 준비되면 case를 분리해 경로만 갈아끼우면 됨.
 		if (IconType == EFloatingLogIconType::None)
 		{
 			return nullptr;

@@ -65,6 +65,7 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
 
         OnChangeSkillBuildPhase = SkillSelectCommand.OnChangeSkillBuildPhase;
         OnPostSimulateSkillAction = SkillSelectCommand.OnPostSimulateSkillAction;
+        OnCancelSimulateSkillAction = SkillSelectCommand.OnCancelSimulateSkillAction;
         if (SkillSelectCommand.mSkillIndex != mSelectedSkillIndex)
         {
             /* 다르면 변경 */
@@ -94,24 +95,9 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
     case ESRPGCommandType::MoveSelect:
-    {
-        /* 스킬 조준 중 이동을 누르면 스킬 빌드를 취소한다(기획: 스킬↔이동 전환 시 이전 것 취소).
-         * Ignored를 반환해, 라우터(USRPGActionCreationCommandHandler)가 이 MoveSelect로 이동 빌드를 새로 생성하게 둔다. */
-
-        ClearAllTileHighlights();
-        ResetTargetTile();
-        ResetDice();
-        ResetSkill();
-        MarkActionCompleted(ESRPGActionResult::Cancelled);
-        SetBuildPhase(ESRPGSkillBuildPhase::None);
-        return ESRPGCommandResult::Ignored;
-    }
     case ESRPGCommandType::TurnEnd:
     {
-        /* 스킬 조준 중 엔드턴을 누르면 스킬 빌드를 먼저 취소한다.
-         * 취소 안 하면 이 빌드액션이 head로 살아있어 TurnEndAction이 뒤에 쌓이고,
-         * 이후 스킬을 확정하면 TurnEnd가 스킬보다 먼저 실행돼 턴이 끝나며 스킬이 버려진다(꼬임).
-         * Ignored를 반환해, 라우터(USRPGActionCreationCommandHandler)가 이 TurnEnd로 TurnEndAction을 정상 생성하게 둔다. */
+        /* 다른 동작 요구 시 취소 */
 
         ClearAllTileHighlights();
         ResetTargetTile();
@@ -334,7 +320,6 @@ void USRPGSkillBuildAction::SetTargetTile(const FTileIndex& TargetIndex)
     SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDiceSum = DicePoolModel->GetSelectedDiceSum();
 
     TArray<FSRPGTurnEventLog> TurnEventLogs = SimulationSubsystem->SimulateUntilNextAction(MoveTemp(SkillCastCommand));
-    
     OnPostSimulateSkillAction.Broadcast(TurnEventLogs);
 }
 
@@ -444,6 +429,11 @@ bool USRPGSkillBuildAction::CanSelectTargetTile(const FTileIndex& Index) const
 
 void USRPGSkillBuildAction::SetBuildPhase(ESRPGSkillBuildPhase BuildPhase)
 {
+    if (BuildPhase != ESRPGSkillBuildPhase::Build && mSkillBuildPhase == ESRPGSkillBuildPhase::Preview)
+    {
+        OnCancelSimulateSkillAction.Broadcast();
+    }
+
     mSkillBuildPhase = BuildPhase;
     OnChangeSkillBuildPhase.Broadcast(this, BuildPhase);
 }

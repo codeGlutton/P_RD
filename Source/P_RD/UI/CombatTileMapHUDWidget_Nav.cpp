@@ -1,8 +1,7 @@
-#include "UI/CombatTileMapHUDWidget.h"
+﻿#include "UI/CombatTileMapHUDWidget.h"
 
 #include "Components/Image.h"
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
-#include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
@@ -34,13 +33,7 @@ void UCombatTileMapHUDWidget::BindVictoryFlowEvents()
 {
 	mVictoryWorldMapLocked = false;
 
-	USRPGCombatSubsystem* CombatSubsystem = GetWorld() != nullptr ? GetWorld()->GetSubsystem<USRPGCombatSubsystem>() : nullptr;
-	if (CombatSubsystem == nullptr)
-	{
-		return;
-	}
-
-	USRPGCombatModel* CombatModel = CombatSubsystem->GetModel<USRPGCombatModel>();
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	if (CombatModel == nullptr)
 	{
 		return;
