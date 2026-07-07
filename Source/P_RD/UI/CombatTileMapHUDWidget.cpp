@@ -18,7 +18,7 @@ void UCombatTileMapHUDWidget::NativeOnInitialized()
 	if (World != nullptr)
 	{
 		ACombatGameMode* GameMode = World->GetAuthGameMode<ACombatGameMode>();
-		if (World != nullptr)
+		if (GameMode != nullptr)
 		{
 			BindCombatUIModel(GameMode->GetCombatUIModel());
 		}
