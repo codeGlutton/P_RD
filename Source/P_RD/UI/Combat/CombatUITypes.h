@@ -12,6 +12,7 @@
 
 class UTexture2D;
 class UTexture;
+class AActor;   // FUnitUI.mViewActor(HP바 라이브 투영, 약참조)
 
 /** @brief 무엇이 바뀌어 UI를 갱신해야 하는지 도메인 구분(부분 갱신용). */
 // UI 필요값: Set*() 호출 뒤 어떤 패널만 다시 그릴지 알려주는 최소 단위다.
@@ -174,7 +175,12 @@ struct FUnitUI
 	UPROPERTY(BlueprintReadOnly) FTileIndex mTile;
 
 	// 머리 위 HP바를 월드→스크린 투영으로 띄우기 위한 유닛 월드 위치. 어댑터가 채우고 UI는 투영만 한다.
+	// (스냅샷 — 뷰 액터가 없을 때의 폴백. 이동 중 갱신 안 됨)
 	UPROPERTY(BlueprintReadOnly) FVector mWorldLocation = FVector::ZeroVector;
+
+	// 머리 위 HP바가 이동을 매 프레임 따라가도록 하는 라이브 투영 소스(약참조, 투영 전용).
+	// 어댑터가 유닛 뷰 액터를 채우고, UI는 유효하면 이 액터의 현재 GetActorLocation()을 투영한다(스냅샷보다 우선).
+	UPROPERTY() TWeakObjectPtr<AActor> mViewActor;
 
 	// 머리 위 버프/디버프 아이콘용. enum 대신 태그로 받아 UI가 게임플레이 상태 enum에 의존하지 않게 한다.
 	UPROPERTY(BlueprintReadOnly) FGameplayTagContainer mStatusTags;
