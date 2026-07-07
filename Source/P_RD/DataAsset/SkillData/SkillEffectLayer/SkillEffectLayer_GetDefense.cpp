@@ -10,6 +10,8 @@
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
+#include "Setting/GameBalanceSettings.h"
+
 void FSkillEffectLayer_GetDefense::ClearPointEffect(IBoardCombatTarget* ActorModel) const
 {
     UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
@@ -34,6 +36,9 @@ void FSkillEffectLayer_GetDefense::ApplyPointEffect(IBoardCombatTarget* ActorMod
 
 void FSkillEffectLayer_GetDefense::CommitEffect(IBoardCombatTarget* OwnerActorModel, const TArray<FTileIndex>& TargetTileIndexes, const TArray<IBoardCombatTarget*>& OtherCombatTargets, float DiceSum) const
 {
+    const UGameBalanceSettings* GameBalanceSettings = GetDefault<UGameBalanceSettings>();
+    checkf(GameBalanceSettings != nullptr, TEXT("게임 밸런스 세팅 nullptr"));
+
     UAttributeSetComponentModel* AttributeSetComponentModel = OwnerActorModel->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
@@ -51,8 +56,8 @@ void FSkillEffectLayer_GetDefense::CommitEffect(IBoardCombatTarget* OwnerActorMo
     }
 
     // 민첩성
-    const bool IsOwnerFortification = AttributeSetComponentModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_Buff_Fortification);
-    const float FortificationRatio = IsOwnerFortification == true ? 1.25f : 1.f;
+    const bool IsOwnerFortification = AttributeSetComponentModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification);
+    const float FortificationRatio = IsOwnerFortification == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification] : 1.f;
 
     const float TotalDefense = FortificationRatio * AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefenseFactorAttribute());
     const float DefenseDiff = FMath::Floor(TotalDefense);

@@ -10,6 +10,8 @@
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
+#include "Setting/GameBalanceSettings.h"
+
 void FSkillEffectLayer_GetMove::ClearPointEffect(IBoardCombatTarget* ActorModel) const
 {
     UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
@@ -34,6 +36,9 @@ void FSkillEffectLayer_GetMove::ApplyPointEffect(IBoardCombatTarget* ActorModel,
 
 void FSkillEffectLayer_GetMove::CommitEffect(IBoardCombatTarget* OwnerActorModel, const TArray<FTileIndex>& TargetTileIndexes, const TArray<IBoardCombatTarget*>& OtherCombatTargets, float DiceSum) const
 {
+    const UGameBalanceSettings* GameBalanceSettings = GetDefault<UGameBalanceSettings>();
+    checkf(GameBalanceSettings != nullptr, TEXT("게임 밸런스 세팅 nullptr"));
+
     UAttributeSetComponentModel* AttributeSetComponentModel = OwnerActorModel->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
@@ -51,8 +56,8 @@ void FSkillEffectLayer_GetMove::CommitEffect(IBoardCombatTarget* OwnerActorModel
     }
 
     // 민첩성
-    const bool IsOwnerAgility = AttributeSetComponentModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_Buff_Agility);
-    const float AgilityRatio = IsOwnerAgility == true ? 1.5f : 1.f;
+    const bool IsOwnerAgility = AttributeSetComponentModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Agility);
+    const float AgilityRatio = IsOwnerAgility == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Agility] : 1.f;
 
     const float TotalMove = AgilityRatio * AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMovementFactorAttribute());
     const float MoveDiff = FMath::Floor(TotalMove);
