@@ -1,14 +1,14 @@
-/*****************************************************************//**
- * @file   TacticalEffect_HealFactor.cpp
- * @brief  HealFactor 이펙트 구현
+﻿/*****************************************************************//**
+ * @file   TacticalEffect_HealFactor_Override.cpp
+ * @brief  HealFactor Override 이펙트 구현
  * @author 이문환
- * @date   2026-07-01
+ * @date   2026-07-07
  *********************************************************************/
 
-#include "TAS/Effect/Stat/TacticalEffect_HealFactor.h"
+#include "TAS/Effect/Stat/TacticalEffect_HealFactor_Override.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
-UTacticalEffect_HealFactor::UTacticalEffect_HealFactor()
+UTacticalEffect_HealFactor_Override::UTacticalEffect_HealFactor_Override()
 {
 	// 지속형
 	mDurationPolicy = ETacticalEffectDurationType::Infinite;
@@ -16,7 +16,7 @@ UTacticalEffect_HealFactor::UTacticalEffect_HealFactor()
 
 	FTacticalModifierInfo Info;
 	Info.mAttribute = UUnitAttributeSet::GetHealFactorAttribute();
-	Info.mModifierOp = ETacticalModOp::Additive;
+	Info.mModifierOp = ETacticalModOp::Override;
 	Info.mModifierMagnitude = 1.f;
 
 	mModifiers.Add(Info);

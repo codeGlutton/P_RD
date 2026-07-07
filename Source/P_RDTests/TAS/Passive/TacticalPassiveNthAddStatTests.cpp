@@ -16,7 +16,7 @@
 #include "TAS/Passive/DynamicPassiveData_NthCounter.h"
 #include "TAS/Passive/PassiveActivateContext.h"
 #include "DataAsset/PassiveData/StaticPassiveData.h"
-#include "TAS/Effect/Stat/TacticalEffect_AttackFactor.h"
+#include "TAS/Effect/Stat/TacticalEffect_AttackFactor_AddBase.h"
 #include "Actor/BoardActor/BoardCombatTarget.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
@@ -26,7 +26,7 @@ namespace
 	UTacticalPassive_NthAddStat* MakeNthAddStat()
 	{
 		UStaticPassiveData* Data = NewObject<UStaticPassiveData>();
-		Data->mEffectClass = UTacticalEffect_AttackFactor::StaticClass();
+		Data->mEffectClass = UTacticalEffect_AttackFactor_AddBase::StaticClass();
 		Data->mMagnitude = 50.f;
 		Data->mThreshold = 3;
 
