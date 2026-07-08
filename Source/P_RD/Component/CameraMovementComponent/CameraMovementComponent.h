@@ -70,8 +70,8 @@ public:
 	* OrthoWidth 최대 값
 	* 커질수록 화면이 더 많이 축소할 수 있다.
 	*/
-	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MaxZoom", AllowPrivateAccess = "true"))
-	float mMaxOrthoWidth = 10000.f;
+	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MaxZoom", AllowPrivateAccess = "true"))
+	float mMaxOrthoWidth = 2000.f;
 
 	/*
 	* @brief 최소 OrthoWidth, 또는 최대 확대
@@ -79,7 +79,7 @@ public:
 	* OrthoWidth 최소 값
 	* 작을수록 화면이 더 많이 확대할 수 있다.
 	*/
-	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MinZoom", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MinZoom", AllowPrivateAccess = "true"))
 	float mMinOrthoWidth = 100.f;
 
 	/*
@@ -87,10 +87,10 @@ public:
 	* @details
 	* 터치로 이동 시 걸리는 시간
 	*/
-	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "ZoomDuration", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SmoothZoomDuration", AllowPrivateAccess = "true"))
 	float mZoomDuration = 0.2f; // 이동에 걸릴 시간
 
-	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "ZoomExp", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SmoothZoomExp", AllowPrivateAccess = "true"))
 	float mZoomExp = 2.f;
 
 	FTimerHandle mTimerHandle_Zoom;		// Zoom 로직에 쓸 타이머 핸들
@@ -106,7 +106,7 @@ public:
 	* @details
 	* 해당 위치를 중심으로 클램핑 박스가 설정됩니다.
 	*/
-	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveClampingBoxCenter", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = CameraMove, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveClampingBoxCenter", AllowPrivateAccess = "true"))
 	FVector mMoveClampingBoxCenter = FVector(0, 0, 0);
 	
 	/*
@@ -115,21 +115,21 @@ public:
 	* 박스 크기로 해당 카메라는 해당 위치를 벗어나지 못합니다.
 	* Z축은 사용하지 않습니다.
 	*/
-	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveClampingBox", AllowPrivateAccess = "true"))
-	FVector2D mMoveClampingBox = FVector2D(3000, 3000);
+	UPROPERTY(Category = CameraMove, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveClampingBox", AllowPrivateAccess = "true"))
+	FVector2D mMoveClampingBox = FVector2D(10000, 10000);
 
 	/*
 	* @brief 이동 시 걸리는 시간
 	* @details
 	* 터치로 이동 시 걸리는 시간
 	*/
-	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveDuration", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = CameraMove, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SmoothMoveDuration", AllowPrivateAccess = "true"))
 	float mMoveDuration = 0.2f; // 이동에 걸릴 시간
 
 	/*
 	* @brief 가속도 강도
 	*/
-	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveExp", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = CameraMove, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SmoothMoveExp", AllowPrivateAccess = "true"))
 	float mMoveExp = 2.f;
 
 	FTimerHandle mTimerHandle_Move;		// 이동 로직에 쓸 타이머 핸들
@@ -146,13 +146,13 @@ private:
 	* @brief 강조 시 변경되는 설정되는 줌값
 	* @details
 	*/
-	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "강조 시 줌 값", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Emphasis, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "강조 시 줌 값", AllowPrivateAccess = "true"))
 	float				mEmphasisZoom = 500;
 
 	/*
 	* @brief 현재 강조 상태
 	*/
-	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "현재 강조 상태", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Emphasis, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "현재 강조 상태", AllowPrivateAccess = "true"))
 
 	ECameraControlState mCamerControlState;
 
