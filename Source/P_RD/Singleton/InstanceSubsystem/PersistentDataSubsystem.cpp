@@ -10,6 +10,7 @@ void UPersistentDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	mOptionPersistData = NewObject<UOptionPersistData>(this);
 
 	mOptionPersistData->MakeCaches();
+	mOptionPersistData->SetLanguage(mOptionPersistData->GetLanguage());
 }
 
 const UUserPersistData* UPersistentDataSubsystem::GetUserPersistData() const

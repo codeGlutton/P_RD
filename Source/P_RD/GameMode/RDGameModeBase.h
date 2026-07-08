@@ -98,6 +98,9 @@ public:
 	bool SetUIVolume(float Volume) const;
 
 	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetFpsLimit(int32 FpsLimit) const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
 	bool SetLanguage(ELanguageType Language) const;
 
 protected:
