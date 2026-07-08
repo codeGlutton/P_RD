@@ -57,9 +57,13 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 protected:
+
 	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "CameraComponent", AllowPrivateAccess = "true"))
 	TWeakObjectPtr<UCameraComponent> mCameraComponent;
 
+	/*
+	* @breif 카메라 조작을 위한 카메라판 입니다.
+	*/
 	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "CameraPlane", AllowPrivateAccess = "true"))
 	TWeakObjectPtr<ACombatCameraPlane> mCameraPlane;
 

@@ -30,7 +30,8 @@ void UCameraMovementComponent::BeginPlay()
 	mMoveClampingBoxCenter = GetOwner()->GetActorLocation();
 	mMoveClampingBoxCenter.Z = 0.f;
 
-	// Plane을 생성합니다.
+	// ACombatCameraPlane을 생성합니다.
+	// ACombatCameraPlane은 카메라 조작을 위해서 반드시 필요한 액터입니다
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = GetOwner();
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -49,6 +50,7 @@ void UCameraMovementComponent::BeginPlay()
 
 void UCameraMovementComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	// 카메라가 제거 될 때 판도 같이 제거합니다.
 	if (mCameraPlane.IsValid())
 	{
 		mCameraPlane->Destroy();
