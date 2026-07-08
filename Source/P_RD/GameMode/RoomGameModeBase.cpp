@@ -12,6 +12,9 @@
 
 #include "Setting/RDWorldSettings.h"
 
+#include "Engine/AssetManager.h"
+#include "DataAsset/RoomSpawnData/StaticRoomSpawnData.h"
+
 DEFINE_LOG_CATEGORY(LogRoomGameMode);
 
 /**
@@ -217,6 +220,16 @@ void ARoomGameModeBase::InitializeCommonRoom()
 
 	// 플레이어 복원
 	RestorePlayerUnit();
+
+	const FRoom& CurRoom = GetRunPersistData()->GetCurrentRoom();
+
+	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
+	checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
+	UStaticRoomSpawnData* StaticRoomData = AssetManager->GetPrimaryAssetObject<UStaticRoomSpawnData>(CurRoom.mStaticRoomSpawnDataId);
+	checkf(StaticRoomData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
+
+	TSoftObjectPtr<USoundBase> MainBGMSoftPtr = StaticRoomData->mOverrideBGM;
+	SetMainBGM(MainBGMSoftPtr.LoadSynchronous());
 }
 
 /**

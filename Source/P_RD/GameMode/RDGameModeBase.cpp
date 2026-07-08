@@ -10,6 +10,8 @@
 #include "UI/FadeInOutWidget.h"
 #include "UI/RDUserWidget.h"
 
+#include "Components/AudioComponent.h"
+
 DEFINE_LOG_CATEGORY(LogRDGameMode);
 
 ARDGameModeBase::ARDGameModeBase()
@@ -31,17 +33,17 @@ void ARDGameModeBase::BeginPlay()
 		WorldWidgetSubsystem->InitWorldWidget(WorldWidgetType);
 	}
 
+	/* 전용 방 로직 */
+	
+	InitializeRoom();
+	WorldWidgetSubsystem->InitHUD(mHUDClass);
+
 	/* 페이드 인 애니메이션 실행 */
 
 	if (mShowFadeInUIOnTransition == true)
 	{
 		StartFadeInUIForRoomTransition();
 	}
-
-	/* 전용 방 로직 */
-	
-	InitializeRoom();
-	WorldWidgetSubsystem->InitHUD(mHUDClass);
 
 	BeginRoom();
 }
@@ -168,6 +170,12 @@ void ARDGameModeBase::StartFadeInUI(FOnEndFadeInAnimation OnEndFadeInAnimation) 
 
 	FadeInOutWidget->OpenUI();
 	FadeInOutWidget->StartFadeIn(MoveTemp(OnEndFadeInAnimation));
+
+	if (mMainBGM != nullptr)
+	{
+		mBgmComponent = UGameplayStatics::SpawnSound2D(GetWorld(), mMainBGM, 0.f);
+		mBgmComponent->FadeIn(mBGMFadeInDuration);
+	}
 }
 
 /**
@@ -192,8 +200,34 @@ void ARDGameModeBase::StartFadeOutUI(FOnEndFadeOutAnimation OnEndFadeOutAnimatio
 	UFadeInOutWidget* FadeInOutWidget = WorldWidgetSubsystem->GetWorldWidget<UFadeInOutWidget>(EWorldWidgetType::FadeInOut);
 	checkf(FadeInOutWidget != nullptr, TEXT("페이드 인 앤 아웃 위젯 nullptr 오류"));
 
+	auto TryToExecuteFadeOutCallback = [Callback = MoveTemp(OnEndFadeOutAnimation), FadeInOutWidget](const ARDGameModeBase* GameMode) {
+		if (EnumHasAllFlags(GameMode->mFadeOutStateFlag, ERDFadeOutStateFlag::ReadyToCallback) == false)
+		{
+			return;
+		}
+		GameMode->mFadeOutStateFlag = ERDFadeOutStateFlag::None;
+		Callback.ExecuteIfBound(FadeInOutWidget);
+		};
+
 	FadeInOutWidget->OpenUI();
-	FadeInOutWidget->StartFadeOut(MoveTemp(OnEndFadeOutAnimation));
+	FadeInOutWidget->StartFadeOut(FOnEndFadeOutAnimation::CreateWeakLambda(this, [this, TryToExecuteFadeOutCallback](UFadeInOutWidget* Widget) {
+		EnumAddFlags(mFadeOutStateFlag, ERDFadeOutStateFlag::FadeAnimationEnded);
+		TryToExecuteFadeOutCallback(this);
+		}));
+
+	if (mBgmComponent != nullptr && mBgmComponent->IsPlaying() == true)
+	{
+		mBgmComponent->OnAudioFinishedNative.AddWeakLambda(this, [this, TryToExecuteFadeOutCallback](UAudioComponent* AudioComponent) {
+			EnumAddFlags(mFadeOutStateFlag, ERDFadeOutStateFlag::FadeBGMEnded);
+			TryToExecuteFadeOutCallback(this);
+			});
+		mBgmComponent->FadeOut(mBGMFadeOutDuration, 0.f);
+	}
+	else
+	{
+		EnumAddFlags(mFadeOutStateFlag, ERDFadeOutStateFlag::FadeBGMEnded);
+		TryToExecuteFadeOutCallback(this);
+	}
 }
 
 /**
@@ -517,3 +551,12 @@ void ARDGameModeBase::ClearRunPersistData()
 
 	GameProfileSubsystem->EndRun();
 }
+
+void ARDGameModeBase::SetMainBGM(USoundBase* BGM, bool IsOverride)
+{
+	if (mMainBGM == nullptr || IsOverride == true)
+	{
+		mMainBGM = BGM;
+	}
+}
+

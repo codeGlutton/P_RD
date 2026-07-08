@@ -122,14 +122,9 @@ protected:
 	void PushSelectedDiceUIData() const;
 	void PushSkillUIData() const;
 
-	/**
-	 * @brief 길게 누른 스킬의 상세 정보를 UIModel에 넣는다.
-	 *
-	 * @details
-	 * 이름, 설명, 아이콘, 코스트, 범위 정보를 채운다.
-	 */
 	void PushSkillDetailUIData(int32 SkillIndex) const;
 	void PushEquipmentUIData() const;
+	void PushEquipmentDetailUIData(int32 EquipmentIndex) const;
 	void PushPlayerMetaUIData() const;
 
 	void PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>& TurnEventLogs) const;

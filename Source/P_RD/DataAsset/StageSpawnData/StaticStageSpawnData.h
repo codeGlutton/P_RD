@@ -35,4 +35,17 @@ public:
 	TSoftObjectPtr<UTexture2D> mBackgroundPanel;
 	UPROPERTY(Category = "UI", EditAnywhere, meta = (DisplayName = "RoomIcons", ArraySizeEnum = "ERoomType", AssetBundles = "UI"))
 	TSoftObjectPtr<UTexture2D> mRoomIcons[static_cast<uint8>(ERoomType::Count)];
+
+public:
+	UPROPERTY(Category = "Sound", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BossMonsterRoomBGM", AssetBundles = "World"))
+	TSoftObjectPtr<USoundBase> mBossMonsterRoomBGM;
+
+	UPROPERTY(Category = "Sound", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MonsterRoomBGM", AssetBundles = "World"))
+	TSoftObjectPtr<USoundBase> mMonsterRoomBGM;
+
+	UPROPERTY(Category = "Sound", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ShopRoomBGM", AssetBundles = "World"))
+	TSoftObjectPtr<USoundBase> mShopRoomBGM;
+
+	UPROPERTY(Category = "Sound", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TreasureRoomBGM", AssetBundles = "World"))
+	TSoftObjectPtr<USoundBase> mTreasureRoomBGM;
 };

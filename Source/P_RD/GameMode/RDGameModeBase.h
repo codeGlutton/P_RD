@@ -26,6 +26,20 @@ struct FRoomTransitionExecuteParams;
 DECLARE_LOG_CATEGORY_EXTERN(LogRDGameMode, Log, All)
 
 /**
+ * @brief RD 게임모드 상태 플래그
+ */
+enum class ERDFadeOutStateFlag : uint8
+{
+	None = 0,
+
+	FadeBGMEnded = 1 << 0,
+	FadeAnimationEnded = 1 << 1,
+
+	ReadyToCallback = FadeBGMEnded | FadeAnimationEnded,
+};
+ENUM_CLASS_FLAGS(ERDFadeOutStateFlag);
+
+/**
  * @brief  RD 프로젝트 게임 모드 베이스
  */
 UCLASS(abstract)
@@ -181,6 +195,9 @@ protected:
 	void ClearRunPersistData();
 
 protected:
+	void SetMainBGM(USoundBase* BGM, bool IsOverride = true);
+
+protected:
 	UPROPERTY(Category = "UI", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "HUDClass"))
 	TSubclassOf<UUserWidget> mHUDClass;
 	UPROPERTY(Category = "UI", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "WorldWidgets"))
@@ -199,4 +216,17 @@ protected:
 	bool mShowLoadingNotifyUIOnTransition = false;
 	// @brief 다음 방 전환 전, 추가적인 작업을 대기해야하는지 여부
 	bool mWaitExternalWorkOnTransition = false;
+
+protected:
+	float mBGMFadeInDuration = 1.5f;
+	float mBGMFadeOutDuration = 1.5f;
+
+private:
+	UPROPERTY(Transient)
+	mutable TObjectPtr<UAudioComponent> mBgmComponent = nullptr;
+	UPROPERTY(Transient)
+	TObjectPtr<USoundBase> mMainBGM = nullptr;
+
+protected:
+	mutable ERDFadeOutStateFlag mFadeOutStateFlag = ERDFadeOutStateFlag::None;
 };
