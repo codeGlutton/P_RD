@@ -46,7 +46,7 @@ void UMockInventoryDriver::Start(UInventoryUIModel* UIModel)
 	Inv.mHP = 24.f;
 	Inv.mMaxHP = 30.f;
 
-	const int32 FaceCounts[] = { 6, 6, 4, 8, 12, 20 };
+	const int32 FaceCounts[] = { 2, 4, 6, 8, 12, 20 };
 	for (int32 i = 0; i < 6; ++i)
 	{
 		Inv.mDice.Add(MakeItem(EInventoryItemKind::Dice, i, FString::Printf(TEXT("Dice %d"), i + 1), FString::Printf(TEXT("d%d"), FaceCounts[i])));

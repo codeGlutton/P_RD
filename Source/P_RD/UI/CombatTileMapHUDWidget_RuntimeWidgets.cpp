@@ -128,7 +128,8 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		if (DiceRollStatusText != nullptr)
 		{
 			DiceRollStatusText->SetJustification(ETextJustify::Center);
-			DiceRollStatusText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "IntroDiceRolling", "ROLLING DICE"));
+			DiceRollStatusText->SetText(FText::GetEmpty());
+			DiceRollStatusText->SetVisibility(ESlateVisibility::Collapsed);
 			DiceRollStatusText->SetColorAndOpacity(FSlateColor(FLinearColor(0.82f, 1.0f, 0.96f, 1.0f)));
 			RootCanvas->AddChildToCanvas(DiceRollStatusText);   // 오버레이는 풀뷰포트 RootCanvas 기준
 		}

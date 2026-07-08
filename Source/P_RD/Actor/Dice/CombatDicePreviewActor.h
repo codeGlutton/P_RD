@@ -169,6 +169,9 @@ private:
 	TArray<TObjectPtr<UTextRenderComponent>> mFaceTexts;
 
 	UPROPERTY(Transient)
+	TArray<TObjectPtr<UTextRenderComponent>> mFaceTextStrokes;
+
+	UPROPERTY(Transient)
 	TObjectPtr<UFont> mDiceNumberFont;
 
 	// 현재 만들어진 주사위의 면 수(안착/숫자 계산에 사용).
