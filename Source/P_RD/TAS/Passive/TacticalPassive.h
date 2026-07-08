@@ -181,7 +181,7 @@ protected:
 	 * 대상 속성·연산(op)·지속정책(Infinite/Instant)은 이 이펙트가 정의하고,
 	 * 패시브 계산은 크기(magnitude)만 공급한다.
 	 * (이펙트의 기본 modifier 크기는 1로 두고, 계산된 값을 배율 mDynamicMagnitude로 주입)
-	 * 미설정이면 NotifyPassive가 이펙트 적용을 건너뜀.
+	 * 미설정이거나 모디파이어가 없는 태그형 이펙트는 NotifyPassive가 이펙트를 적용하지 않음.
 	 */
 	UPROPERTY(Category = "Passive", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "Effect"))
 	TSubclassOf<UTacticalEffect> mEffectClass;

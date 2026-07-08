@@ -79,6 +79,13 @@ void UTacticalPassive::NotifyPassive(
 		return;
 	}
 
+	// 모디파이어가 없는 태그형 이펙트는 패시브 적용 대상이 아니므로 적용하지 않음
+	const UTacticalEffect* EffectCDO = mEffectClass.GetDefaultObject();
+	if (EffectCDO == nullptr || EffectCDO->mModifiers.Num() == 0)
+	{
+		return;
+	}
+
 	// 소유자(시전 주체)의 속성 컴포넌트 획득. 대상과 무관하게 1회만 조회.
 	IBoardCombatTarget* OwnerTarget = Cast<IBoardCombatTarget>(Ctx.mOwner.Get());
 	if (OwnerTarget == nullptr)
@@ -91,16 +98,22 @@ void UTacticalPassive::NotifyPassive(
 		return;
 	}
 
-	// 대상 속성·연산은 이펙트가 정의. 첫 modifier 속성의 변화량을 크기로 사용(단일 modifier 가정).
-	const UTacticalEffect* EffectCDO = mEffectClass.GetDefaultObject();
-	if (EffectCDO == nullptr)
-	{
-		return;
-	}
+	/**
+	 * @brief 모디파이어가 여러개일 때 첫번째 모디파이어의 변화량을 mDynamicMagnitude로 사용
+	 * @details
+	 * - 예를들어, 이펙트가 `공격력+a, 방어력+b`를 올려주는 모디파이어들을 갖고 있다고 가정.
+	 * - 공격력 모디파이어의 mModifierMagnitude=1.0f -> 변화량을 그대로 적용
+	 * - 방어력 모디파이어의 mModifierMagnitude=0.5f -> 변화량의 절반만 적용
+	 * - 결과적으로 mDynamicMagnitude=10.0f 일때, 이펙트 결과는 `공격력+10, 방어력+5`로 들어감
+	 * - 이펙트에 주입할 수 있는 변화량은 mDynamicMagnitude 하나니까,
+	 *   이 값은 첫번째 모디파이어의 변화량으로 대표하겠다는 뜻이고,
+	 *   각각의 모디파이어에 다른 값을 넣고싶다면 모디파이어의 mModifierMagnitude 계수를 조정하면 됨.
+	 */
 	const float* Magnitude = TargetDelta.mAttributes.Find(EffectCDO->mModifiers[0].mAttribute);
 	if (Magnitude == nullptr || FMath::IsNearlyZero(*Magnitude))
 	{
-		// 기여가 없으면(예: 임계 미달 N번째) 이펙트 적용 안 함
+		// 변화량이 0이면 굳이 이펙트 적용할 필요가 없으므로 바로 리턴
+		// @note 이펙트 적용을 안하니까 이펙트 핸들을 갖지 않으므로 딱히 부작용은 없음
 		return;
 	}
 
