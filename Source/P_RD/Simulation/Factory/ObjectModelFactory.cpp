@@ -118,7 +118,11 @@ void UGameObjectModelFactory::OnPostCreateNewModel(UObjectModel* Model, const FT
 		const TSoftClassPtr<AActor>& ViewClass = WorldModelViewMappings->mViewClass;
 		if (ViewClass != nullptr)
 		{
-			TScriptInterface<IActorView> View = GetWorld()->SpawnActor(ViewClass.LoadSynchronous(), &ViewTransform);
+			// 스폰 위치에 지형지물이 있어도 무시하고 스폰하기 위해서 AlwaysSpawn 파라미터 추가
+			// -> 어차피 타일맵 위치로 이동할 것이므로 스폰 안 할 이유가 없음
+			FActorSpawnParameters SpawnParameters;
+			SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			TScriptInterface<IActorView> View = GetWorld()->SpawnActor(ViewClass.LoadSynchronous(), &ViewTransform, SpawnParameters);
 			if (View != nullptr)
 			{
 				View->BindModel(Model);
@@ -134,7 +138,7 @@ void UGameObjectModelFactory::OnPreRemoveModel(UObjectModel* Model)
 	if (View != nullptr)
 	{
 		View->UnbindModel(Model);
-		
+
 		AActor* ViewActor = Cast<AActor>(View);
 		if (ViewActor != nullptr)
 		{
