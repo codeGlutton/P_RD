@@ -1,10 +1,17 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿/*****************************************************************//**
+ * @file   CameraMovementComponent.h
+ * @brief  카메라 조작 로직 컴포넌트
+ * @author 김준형
+ * @date   2026-06-29
+ *********************************************************************/
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "CameraMovementComponent.generated.h"
+
+class ACombatCameraPlane;
 
 
 // @brief 카메라 강조 Handle
@@ -43,20 +50,24 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-public:
+protected:
 	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "CameraComponent", AllowPrivateAccess = "true"))
 	TWeakObjectPtr<UCameraComponent> mCameraComponent;
+
+	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "CameraPlane", AllowPrivateAccess = "true"))
+	TWeakObjectPtr<ACombatCameraPlane> mCameraPlane;
 
 	//UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SpringArmComponent", AllowPrivateAccess = "true"))
 	//TObjectPtr<USpringArmComponent> mSpringArmComponent;
 
 
-public:
+protected:
 	/*
 	* @brief 줌 속력
 	* @note 사용처가 불확실하여 우선 주석 처리
@@ -99,7 +110,7 @@ public:
 	float mEndZoom;						// 끝 Zoom
 	float mCurrentZoomAlpha = 0.0f;		// Zoom 로직 진행도
 
-public:
+protected:
 	/* 클램핑 박스 제한*/
 	/*
 	* @brief 클램핑 박스 중앙 위치
@@ -139,7 +150,7 @@ public:
 	float mCurrentMoveAlpha = 0.0f;		// 이동 진행도
 	
 
-private:
+protected:
 	/* 강조 */
 
 	/*
