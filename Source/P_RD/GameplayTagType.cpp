@@ -14,6 +14,9 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Slash,										"Animation.Montage.Hit.Slash");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Stab,										"Animation.Montage.Hit.Stab");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Smash,										"Animation.Montage.Hit.Smash");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_DeBuff,									"Animation.Montage.Hit.DeBuff");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Buff,										"Animation.Montage.Hit.Buff");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Spell,										"Animation.Montage.Hit.Spell");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Attack_Slash,									"Animation.Montage.Attack.Slash");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Attack_Stab,									"Animation.Montage.Attack.Stab");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Attack_Smash,									"Animation.Montage.Attack.Smash");
