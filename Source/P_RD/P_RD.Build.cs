@@ -32,6 +32,9 @@ public class P_RD : ModuleRules
             "Slate",
             "SlateCore",
 
+            /* VFX */
+            "Niagara",
+
             /* Gameplay Tag Modules */
             "GameplayTags",				// 게임플레이 태그 시스템
 

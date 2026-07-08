@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 #include "Animation/AnimNotifies/AnimNotify.h"
+#include "Animation/Notify/EventTriggerPayload.h"
 #include "AnimNotify_EventTrigger.generated.h"
 
 /**
@@ -33,4 +34,7 @@ public:
 protected:
 	UPROPERTY(Category = "Event", EditAnywhere, meta = (DisplayName = "TargetEventTag", ToolTip = "호출할 이벤트 태그"))
 	FGameplayTag mTargetEventTag;
+
+	UPROPERTY(Category = "Event", EditAnywhere, meta = (DisplayName = "EventPayload", ToolTip = "같이 전달할 페이로드"))
+	TInstancedStruct<FEventTriggerPayload> mEventPayload;
 };

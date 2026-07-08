@@ -12,7 +12,9 @@
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "BoardActorAnimInstance.generated.h"
 
-DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnTriggerAnimationEvent, FGameplayTag /*Tag*/, ETileActorDirection /*LocalDir*/, UAnimMontage* /*EndAnim*/);
+struct FEventTriggerPayload;
+
+DECLARE_MULTICAST_DELEGATE_FourParams(FOnTriggerAnimationEvent, FGameplayTag /*Tag*/, ETileActorDirection /*LocalDir*/, UAnimMontage* /*EndAnim*/, const FEventTriggerPayload* /*Payload*/);
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnTriggerEndAnimationEvent, FGameplayTag /*Tag*/, ETileActorDirection /*LocalDir*/, UAnimMontage* /*EndAnim*/, bool /*IsInterrupted*/);
 
 UENUM(BlueprintType)
@@ -78,7 +80,7 @@ protected:
 
 public:
 	bool RegisterTagEventOnMontage(const FGameplayTag& EventTag, FBoardActorAnimationEvent&& Event);
-	bool TriggerMontageTagEvent(const FGameplayTag& EventTag);
+	bool TriggerMontageTagEvent(const FGameplayTag& EventTag, const FEventTriggerPayload* Payload);
 	bool UnregisterTagEventOnMontage(const FGameplayTag& EventTag);
 
 public:
