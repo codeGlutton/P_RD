@@ -1,4 +1,4 @@
-﻿#include "UI/CombatTileMapHUDWidget.h"
+#include "UI/CombatTileMapHUDWidget.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
@@ -7,7 +7,6 @@
 #include "Components/TextBlock.h"
 #include "GameMode/RDGameModeBase.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
-#include "Actor/Dice/CombatDiceCaptureActor.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/CombatTileMapHUDWidgetPrivate.h"
 #include "UI/IndexedButtonWidget.h"
@@ -16,10 +15,6 @@ using namespace RDCombatHUD;
 
 namespace
 {
-	// 보유 주사위 카드의 2D 면 텍스처. 3D 캡처(주사위별 SceneCapture+RT)를 쓰지 않고
-	// 면 판만 그린다 - 값 판독성(큰 숫자)과 모바일 비용(캡처 7개 제거) 모두를 위해서다.
-	const TCHAR* const OwnedDiceFaceTexturePath = TEXT("/Game/SVN/OutSideAsset/AICreation/Dice/T_DiceFace_Base.T_DiceFace_Base");
-
 	/** @brief 보유 주사위 값 텍스트를 크고 진하게(볼드) 맞춘다 - 면 판 위에서 한눈에 읽히게. */
 	void SetOwnedDiceValueFont(UTextBlock* Text, int32 Size)
 	{
@@ -138,7 +133,7 @@ void UCombatTileMapHUDWidget::RefreshDiceViewsFromRunData()
 	}
 }
 
-/** @brief 보유 주사위 카드의 위젯/캡처 액터 배열을 mDiceUIs와 1:1로 다시 맞춘다. */
+/** @brief 보유 주사위 카드의 2D 면판/입력 위젯 배열을 mDiceUIs와 1:1로 다시 맞춘다. */
 void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 {
 	if (RootCanvas == nullptr || WidgetTree == nullptr)
@@ -175,6 +170,7 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 		}
 	}
 	mOwnedDiceImages.Reset();
+	// 이전 빌드에서 생성된 3D 캡처 액터가 남아 있으면 정리만 한다. 보유 주사위는 더 이상 캡처하지 않는다.
 	DestroyDiceCaptureActors(mOwnedDicePreviewActors);
 	mOwnedDiceCardWidgets.Reset();
 	mOwnedDiceTypeTexts.Reset();
@@ -201,19 +197,10 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 		OwnedDiceCard->SetButtonIndex(DiceIndex);
 		OwnedDiceCard->OnIndexedClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleOwnedDiceCardClicked);
 
-		// 주사위 종류 라벨(동전/d4/d6 등).
-		UTextBlock* OwnedDiceTypeText = WidgetTree->ConstructWidget<UTextBlock>(
-			UTextBlock::StaticClass(),
-			FName(*FString::Printf(TEXT("OwnedDiceType_%d"), DiceIndex))
-		);
-		if (OwnedDiceTypeText != nullptr)
-		{
-			OwnedDiceTypeText->SetVisibility(ESlateVisibility::HitTestInvisible);
-			OwnedDiceTypeText->SetJustification(ETextJustify::Center);
-			OwnedDiceTypeText->SetColorAndOpacity(FSlateColor(FLinearColor(0.95f, 1.0f, 0.85f, 1.0f)));
-		}
+		// 주사위 종류 라벨(d6/d20)은 보유 주사위 카드에서는 보여주지 않는다.
+		UTextBlock* OwnedDiceTypeText = nullptr;
 
-		// 굴림 값 텍스트: 2D 면 판 중앙에 크고 진하게.
+		// 보유 주사위는 2D 면판 위 중앙 숫자만 갱신한다.
 		UTextBlock* OwnedDiceValueText = WidgetTree->ConstructWidget<UTextBlock>(
 			UTextBlock::StaticClass(),
 			FName(*FString::Printf(TEXT("OwnedDiceValue_%d"), DiceIndex))
@@ -222,7 +209,7 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 		{
 			OwnedDiceValueText->SetVisibility(ESlateVisibility::HitTestInvisible);
 			OwnedDiceValueText->SetJustification(ETextJustify::Center);
-			SetOwnedDiceValueFont(OwnedDiceValueText, 30);
+			SetOwnedDiceValueFont(OwnedDiceValueText, 36);
 		}
 
 		// 스킨 활성 시 DesignCanvas에 붙여 레터박스 스킨(주사위 트레이 아트)과 함께 움직이게 한다.
@@ -240,7 +227,6 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 		}
 
 		mOwnedDiceImages.Add(OwnedDiceImage);
-		mOwnedDicePreviewActors.Add(nullptr);
 		mOwnedDiceCardWidgets.Add(OwnedDiceCard);
 		mOwnedDiceTypeTexts.Add(OwnedDiceTypeText);
 		mOwnedDiceValueTexts.Add(OwnedDiceValueText);
@@ -250,7 +236,7 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 	RefreshOwnedDiceCards();
 }
 
-/** @brief 보유 주사위 카드의 숫자/색/선택/사용 상태를 현재 전투 스냅샷 기준으로 갱신한다. */
+/** @brief 보유 주사위 카드의 2D 면판 숫자/색/선택/사용 상태를 현재 전투 스냅샷 기준으로 갱신한다. */
 void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 {
 	for (int32 DiceIndex = 0; DiceIndex < mDiceUIs.Num(); ++DiceIndex)
@@ -262,15 +248,13 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 
 		const FDiceViewData& DiceView = mDiceUIs[DiceIndex];
 
-		// 종류 라벨 갱신: 2면은 "동전", 그 외는 "d{면수}"(d4/d6/.../d20).
+		// 종류 라벨(d6/d20 등)은 보유 주사위 카드에서 항상 숨긴다.
 		if (mOwnedDiceTypeTexts.IsValidIndex(DiceIndex))
 		{
 			if (UTextBlock* OwnedDiceTypeText = mOwnedDiceTypeTexts[DiceIndex])
 			{
-				const FString TypeLabel = DiceView.mFaceCount == 2
-					? TEXT("동전")
-					: FString::Printf(TEXT("d%d"), DiceView.mFaceCount);
-				OwnedDiceTypeText->SetText(FText::FromString(TypeLabel));
+				OwnedDiceTypeText->SetText(FText::GetEmpty());
+				OwnedDiceTypeText->SetVisibility(ESlateVisibility::Collapsed);
 			}
 		}
 
@@ -283,42 +267,36 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 		);
 
 		FLinearColor DiceColor = DiceView.mIsRolled ? RarityColor : PendingColor;
-		float DiceScale = DiceView.mIsRolled ? 0.80f : 0.72f;
 		if (DiceView.mIsSelected)
 		{
 			DiceColor = FLinearColor(1.0f, 0.82f, 0.30f, 1.0f);
-			DiceScale = 1.02f;
 		}
 		if (DiceView.mIsUsed)
 		{
 			// 이번 턴에 쓴 주사위: 어둡게 비활성 표시.
 			DiceColor = FLinearColor(0.28f, 0.28f, 0.30f, 0.5f);
-			DiceScale = 0.64f;
 		}
 
-		// 2D 면 판: 3D 캡처 대신 면 텍스처에 상태색(레어도/선택/사용)을 틴트로 얹는다.
 		if (mOwnedDiceImages.IsValidIndex(DiceIndex))
 		{
 			if (UImage* OwnedDiceImage = mOwnedDiceImages[DiceIndex])
 			{
-				if (mOwnedDiceFaceTexture == nullptr)
-				{
-					mOwnedDiceFaceTexture = LoadObject<UTexture2D>(nullptr, OwnedDiceFaceTexturePath);
-				}
 				if (mOwnedDiceFaceTexture != nullptr)
 				{
 					OwnedDiceImage->SetBrushFromTexture(mOwnedDiceFaceTexture, false);
 				}
 				OwnedDiceImage->SetColorAndOpacity(DiceColor);
-				OwnedDiceImage->SetRenderScale(FVector2D(DiceScale, DiceScale));
+				OwnedDiceImage->SetRenderScale(FVector2D::UnitVector);
+				OwnedDiceImage->SetRenderOpacity(DiceView.mIsUsed ? 0.42f : 1.0f);
+				OwnedDiceImage->SetVisibility(ESlateVisibility::HitTestInvisible);
 			}
 		}
 
-		// 굴림 값: 면 판 중앙에 크고 진하게. 안 굴렸으면 물음표, 사용했으면 흐리게.
 		if (mOwnedDiceValueTexts.IsValidIndex(DiceIndex))
 		{
 			if (UTextBlock* OwnedDiceValueText = mOwnedDiceValueTexts[DiceIndex])
 			{
+				OwnedDiceValueText->SetVisibility(ESlateVisibility::HitTestInvisible);
 				OwnedDiceValueText->SetText(DiceView.mIsRolled
 					? FText::AsNumber(DiceView.mResultValue)
 					: NSLOCTEXT("CombatTileMapHUDWidget", "OwnedDiceNotRolled", "?"));

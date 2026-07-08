@@ -45,7 +45,13 @@ void UCombatTileMapHUDWidget::ShowSkillDetail(int32 SkillIndex)
 	mCombatUIModel->RequestLongPressSkill(SkillIndex);
 	const FSkillDetailUI& Detail = mCombatUIModel->GetSkillDetail();
 
-	if (mDetailIconImage != nullptr) { mDetailIconImage->SetBrushFromTexture(Detail.mIcon, false); }
+	if (mDetailIconImage != nullptr)
+	{
+		mDetailIconImage->SetBrushFromTexture(Detail.mIcon, false);
+		// WBP 기본 틴트(위젯 색상/브러시 틴트) 제거 → 아이콘이 원색으로(teal 덮임 방지).
+		mDetailIconImage->SetColorAndOpacity(FLinearColor::White);
+		mDetailIconImage->SetBrushTintColor(FSlateColor(FLinearColor::White));
+	}
 	if (mDetailTitleText != nullptr)
 	{
 		mDetailTitleText->SetText(Detail.mName.IsEmpty() ? GetOwnedSkillLabel(SkillIndex) : Detail.mName);
@@ -72,7 +78,12 @@ void UCombatTileMapHUDWidget::ShowUnitDetail(int32 UnitId)
 	mCombatUIModel->RequestLongPressUnit(UnitId);
 	const FUnitDetailUI& Detail = mCombatUIModel->GetUnitDetail();
 
-	if (mDetailIconImage != nullptr) { mDetailIconImage->SetBrushFromTexture(Detail.mPortrait, false); }
+	if (mDetailIconImage != nullptr)
+	{
+		mDetailIconImage->SetBrushFromTexture(Detail.mPortrait, false);
+		mDetailIconImage->SetColorAndOpacity(FLinearColor::White);
+		mDetailIconImage->SetBrushTintColor(FSlateColor(FLinearColor::White));
+	}
 	if (mDetailTitleText != nullptr) { mDetailTitleText->SetText(Detail.mName); }
 	if (mDetailSubtitleText != nullptr)
 	{
@@ -111,7 +122,12 @@ void UCombatTileMapHUDWidget::ShowEquipmentDetail(int32 SlotIndex)
 	}
 	if (Equip == nullptr) { return; }
 
-	if (mDetailIconImage != nullptr) { mDetailIconImage->SetBrushFromTexture(Equip->mIcon, false); }
+	if (mDetailIconImage != nullptr)
+	{
+		mDetailIconImage->SetBrushFromTexture(Equip->mIcon, false);
+		mDetailIconImage->SetColorAndOpacity(FLinearColor::White);
+		mDetailIconImage->SetBrushTintColor(FSlateColor(FLinearColor::White));
+	}
 	if (mDetailTitleText != nullptr) { mDetailTitleText->SetText(Equip->mName); }
 	if (mDetailSubtitleText != nullptr)
 	{

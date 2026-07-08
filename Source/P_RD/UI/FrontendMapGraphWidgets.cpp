@@ -1,27 +1,13 @@
 #include "UI/FrontendMapGraphWidgets.h"
 
+#include "UObject/ConstructorHelpers.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
 
-namespace
-{
-	/** @brief 방 타입별 맵 노드 토큰 텍스처 경로(작업용 이미지에서 SVN으로 임포트). None이면 nullptr. */
-	const TCHAR* MapNodeIconPath(ERoomType RoomType)
-	{
-		switch (RoomType)
-		{
-		case ERoomType::Treasure:     return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Treasure.T_MapNode_Treasure");
-		case ERoomType::Shop:         return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Shop.T_MapNode_Shop");
-		case ERoomType::Monster:      return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Monster.T_MapNode_Monster");
-		case ERoomType::EliteMonster: return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Elite.T_MapNode_Elite");
-		case ERoomType::BossMonster:  return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Boss.T_MapNode_Boss");
-		default:                      return nullptr;
-		}
-	}
-}
+
 
 void UFrontendMapNodeButton::SetNodeCoordinates(int32 InRowIndex, int32 InColumnIndex)
 {
@@ -93,23 +79,37 @@ float UFrontendMapLineWidget::GetLineThickness() const
 	return FMath::Max(1.f, mLineThickness);
 }
 
+UFrontendMapNodeWidget::UFrontendMapNodeWidget(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+	static ConstructorHelpers::FObjectFinder<UTexture2D> TreasureFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Treasure.T_MapNode_Treasure"));
+	if (TreasureFinder.Succeeded()) mFallbackIconTreasure = TreasureFinder.Object;
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> ShopFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Shop.T_MapNode_Shop"));
+	if (ShopFinder.Succeeded()) mFallbackIconShop = ShopFinder.Object;
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> MonsterFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Monster.T_MapNode_Monster"));
+	if (MonsterFinder.Succeeded()) mFallbackIconMonster = MonsterFinder.Object;
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> EliteFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Elite.T_MapNode_Elite"));
+	if (EliteFinder.Succeeded()) mFallbackIconElite = EliteFinder.Object;
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> BossFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Boss.T_MapNode_Boss"));
+	if (BossFinder.Succeeded()) mFallbackIconBoss = BossFinder.Object;
+}
+
 UTexture2D* UFrontendMapNodeWidget::GetTypeIconTexture(ERoomType RoomType) const
 {
-	// 시안 빌더가 주입한 클래스 디폴트가 정본, 하드코딩 경로는 빌더 미실행 시 폴백.
+	// 시안 빌더가 주입한 클래스 디폴트가 정본, 하드코딩 경로는 빌더 미실행 시 폴백(생성자에서 로드한 텍스처로 대체).
 	UTexture2D* Icon = nullptr;
 	switch (RoomType)
 	{
-	case ERoomType::Treasure:     Icon = mIconTreasureTexture; break;
-	case ERoomType::Shop:         Icon = mIconShopTexture; break;
-	case ERoomType::Monster:      Icon = mIconMonsterTexture; break;
-	case ERoomType::EliteMonster: Icon = mIconEliteTexture; break;
-	case ERoomType::BossMonster:  Icon = mIconBossTexture; break;
+	case ERoomType::Treasure:     Icon = mIconTreasureTexture ? mIconTreasureTexture.Get() : mFallbackIconTreasure.Get(); break;
+	case ERoomType::Shop:         Icon = mIconShopTexture ? mIconShopTexture.Get() : mFallbackIconShop.Get(); break;
+	case ERoomType::Monster:      Icon = mIconMonsterTexture ? mIconMonsterTexture.Get() : mFallbackIconMonster.Get(); break;
+	case ERoomType::EliteMonster: Icon = mIconEliteTexture ? mIconEliteTexture.Get() : mFallbackIconElite.Get(); break;
+	case ERoomType::BossMonster:  Icon = mIconBossTexture ? mIconBossTexture.Get() : mFallbackIconBoss.Get(); break;
 	default: break;
-	}
-	if (Icon == nullptr)
-	{
-		const TCHAR* IconPath = MapNodeIconPath(RoomType);
-		Icon = (IconPath != nullptr) ? LoadObject<UTexture2D>(nullptr, IconPath) : nullptr;
 	}
 	return Icon;
 }

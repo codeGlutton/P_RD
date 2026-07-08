@@ -25,7 +25,7 @@ UTacticalEffect_HP::UTacticalEffect_HP()
 	// 사용할 속성: HP
 	Info.mAttribute = UUnitAttributeSet::GetHPAttribute();
 	// 연산 종류: 기존값에 합산할 거니까 Additive
-	Info.mModifierOp = ETacticalModOp::Additive;
+	Info.mModifierOp = ETacticalModOp::AddBase;
 	// 크기: 1.f로 고정 (패시브가 mDynamicMagnitude 설정한 값이 실제 크기가 됨)
 	Info.mModifierMagnitude = 1.f;
 

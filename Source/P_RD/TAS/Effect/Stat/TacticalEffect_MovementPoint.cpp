@@ -16,7 +16,7 @@ UTacticalEffect_MovementPoint::UTacticalEffect_MovementPoint()
 
 	FTacticalModifierInfo Info;
 	Info.mAttribute = UUnitAttributeSet::GetMovementPointAttribute();
-	Info.mModifierOp = ETacticalModOp::Additive;
+	Info.mModifierOp = ETacticalModOp::AddBase;
 	Info.mModifierMagnitude = 1.f;
 
 	mModifiers.Add(Info);

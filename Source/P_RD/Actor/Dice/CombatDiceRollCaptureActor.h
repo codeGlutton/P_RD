@@ -70,8 +70,8 @@ private:
 	UProceduralMeshComponent* CreatePhysicsBody(int32 DiceIndex, int32 FaceCount);
 	void ResetDiceBodyPose(UProceduralMeshComponent* PhysicsBody, int32 DiceIndex, int32 DiceCount, FRandomStream& Stream) const;
 	void ConstrainDiceToTable(UProceduralMeshComponent* PhysicsBody) const;
+	void ApplyRollRattleKicks(float PreviousRollElapsed);
 	void SyncVisualDiceToPhysics();
-	bool AreAllDiceSleeping() const;
 	int32 GetSettledFaceOrdinal(int32 DiceIndex) const;
 	int32 GetSettledFaceValue(int32 DiceIndex) const;
 	void UpdateAlign(float DeltaSeconds);
@@ -118,6 +118,7 @@ private:
 	TObjectPtr<UMaterialInstanceDynamic> mCaptureMaterial;
 
 	float mRollElapsed = 0.0f;
+	int32 mRollSeed = 0;
 	bool mRollActive = false;
 	bool mRollComplete = false;
 
@@ -128,9 +129,8 @@ private:
 	TArray<FTransform> mAlignTargetTransforms;
 
 	static constexpr float PhysicsDiceRadius = 44.0f;
-	// "다다닥" 빠른 손맛: 최소 굴림 시간/강제 종료 시간을 짧게 잡아 빨리 멈추고 결과를 띄운다.
-	static constexpr float RollCompleteMinSeconds = 0.38f;
-	static constexpr float RollForceCompleteSeconds = 1.60f;
+	// 파바바박 손맛: sleep 조기 종료 없이 이 시간까지 물리를 유지한 뒤 결과를 확정한다.
+	static constexpr float RollForceCompleteSeconds = 2.30f;
 	static constexpr float AlignDurationSeconds = 0.50f;
 	static constexpr float AlignRowSpacing = 66.0f;
 };

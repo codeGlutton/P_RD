@@ -155,6 +155,20 @@ struct FDiceSlotUI
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture> mPreviewTexture = nullptr;
 };
 
+/** @brief 유닛 머리 위 HP바에 표시할 상태이상 한 칸(버프/디버프 아이콘 + 스택 수). */
+// UI 필요값:
+// - mTag: 어떤 상태이상인지(요새화/신속/약화/취약 …). UI는 태그로만 받고 게임플레이 enum에 의존하지 않는다.
+// - mStackCount: 스택 수(StatusCountText 표시). 어댑터가 AttributeSet의 GetTagCount로 채운다.
+// [모호재 #290] 이 값을 채우는 곳은 PushUnitUIData(태그 순회 + GetTagCount). 태그→아이콘 텍스처 매핑은 UI(DataTable)가 소유.
+USTRUCT(BlueprintType)
+struct FStatusEffectUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) FGameplayTag mTag;
+	UPROPERTY(BlueprintReadOnly) int32 mStackCount = 0;
+};
+
 /** @brief 유닛 한 기를 HUD에 그릴 때 필요한 표시값(HP바·스탯·위치). */
 // UI 필요값:
 // - mUnitId/mIsPlayer: 플레이어/적 구분, 터치 타겟, 상세창 요청 payload에 필요하다.
@@ -193,6 +207,10 @@ struct FUnitUI
 
 	// 머리 위 버프/디버프 아이콘용. enum 대신 태그로 받아 UI가 게임플레이 상태 enum에 의존하지 않게 한다.
 	UPROPERTY(BlueprintReadOnly) FGameplayTagContainer mStatusTags;
+
+	// 머리 위 HP바 상태이상 칸(태그 + 스택 수). HP바가 GetUnitUIs()로 매 프레임 읽어 아이콘/개수를 채운다.
+	// (mStatusTags는 집합만이라 스택 수가 없어서, 개수까지 표시하려면 이 배열을 쓴다.)
+	UPROPERTY(BlueprintReadOnly) TArray<FStatusEffectUI> mStatusEffects;
 };
 
 /** @brief 적/유닛을 길게 눌렀을 때 띄우는 상세 정보(초상화·이름·레벨·패시브 등). */
@@ -342,6 +360,29 @@ struct FEquipmentUI
 	UPROPERTY(BlueprintReadOnly) FText mName;
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
 	UPROPERTY(BlueprintReadOnly) bool mIsEquipped = false;
+	UPROPERTY(BlueprintReadOnly) FLinearColor mRarityColor = FLinearColor::White;
+};
+
+/** @brief 장비 슬롯 롱프레스 상세(공용 상세창 표시용). 목록 칩(FEquipmentUI)과 달리 설명 등 상세 필드를 포함한다. */
+// UI 필요값:
+// - mSlotIndex: 어느 슬롯의 상세인지(요청 payload와 매칭).
+// - mItemId: 실제 아이템 데이터 식별자.
+// - mName/mIcon: 상세 패널 제목/아이콘.
+// - mIsEquipped: 장착 상태 부제("장착 중").
+// - mDescription: 상세 본문(목록 DTO에는 없는 필드).
+// - mRarityColor: 희귀도 강조색.
+// [모호재 #290] 이 DTO를 채우는 PushEquipmentDetailUIData(게임플레이 장비모델→값)는 GameMode에서 구현 필요.
+USTRUCT(BlueprintType)
+struct FEquipmentDetailUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) int32 mSlotIndex = INDEX_NONE;
+	UPROPERTY(BlueprintReadOnly) FPrimaryAssetId mItemId;
+	UPROPERTY(BlueprintReadOnly) FText mName;
+	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
+	UPROPERTY(BlueprintReadOnly) bool mIsEquipped = false;
+	UPROPERTY(BlueprintReadOnly) FText mDescription;
 	UPROPERTY(BlueprintReadOnly) FLinearColor mRarityColor = FLinearColor::White;
 };
 

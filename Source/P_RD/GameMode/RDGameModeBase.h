@@ -81,6 +81,9 @@ public:
 	bool SetVoiceVolume(float Volume) const;
 
 	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetUIVolume(float Volume) const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
 	bool SetLanguage(ELanguageType Language) const;
 
 protected:

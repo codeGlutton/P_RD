@@ -20,6 +20,7 @@ enum class EGameVolumeType : uint8
 	BGM,
 	SFX,
 	Voice,
+	UI,
 	Count,
 };
 

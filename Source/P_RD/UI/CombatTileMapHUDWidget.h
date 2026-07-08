@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "RDMinimal.h"
 #include "UI/DiceViewData.h"
@@ -25,6 +25,30 @@ class UProgressBar;
 class UTextBlock;
 class UViewport;
 class UWidget;
+class UUserWidget;
+
+/** @brief 유닛 머리 위 HP바(WBP_CombatUnitHpBar) 한 개의 런타임 위젯 참조 묶음. */
+USTRUCT()
+struct FUnitHpBarWidget
+{
+	GENERATED_BODY()
+
+	// HUD RootCanvas에 붙는 WBP 인스턴스(월드→스크린 투영으로 위치 갱신 대상).
+	UPROPERTY(Transient) TObjectPtr<UUserWidget> mRoot;
+	// HP 채움 이미지(플레이어=초록/적=빨강 텍스처 교체 대상).
+	UPROPERTY(Transient) TObjectPtr<UImage> mFillImage;
+	// 채움을 % 만큼 "크롭"하기 위해 폭을 조절하는 클립 캔버스의 슬롯(런타임 생성).
+	UPROPERTY(Transient) TObjectPtr<UCanvasPanelSlot> mFillClipSlot;
+	// HP 숫자 텍스트.
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> mValueText;
+	// 채움 이미지의 원본(100%) 폭(디자인 값). 크롭 계산 기준.
+	float mFillFullWidth = 0.0f;
+
+	// 상태이상 칸(StatusIcon_01~05 / StatusCountText_01~05) + 초과 표시. Rebuild에서 캐시, Update에서 채운다.
+	UPROPERTY(Transient) TArray<TObjectPtr<UImage>> mStatusIcons;
+	UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> mStatusCountTexts;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> mStatusOverflowText;
+};
 
 /** @brief 전투 타일맵 HUD 와이어프레임 위젯 */
 // 현재는 실제 전투 API가 붙기 전의 UI 시안 단계다.
@@ -160,13 +184,13 @@ private:
 	/** @brief 보유 스킬의 표시 이름을 뷰모델에서 읽는다(없으면 빈 텍스트 - 시안 라벨 폴백 없음). */
 	FText GetOwnedSkillLabel(int32 SkillIndex) const;
 
-	/** @brief 보유 주사위 3D 표시 위젯을 현재 주사위 개수에 맞춰 다시 만든다. */
+	/** @brief 보유 주사위 2D 면판 위젯을 현재 주사위 개수에 맞춰 다시 만든다. */
 	void RebuildOwnedDiceCards();
 
 	/** @brief WBP 스킬 레일 위에 투명 입력 버튼을 얹어 짧은 탭과 롱프레스를 받는다. */
 	void EnsureSkillInputButtons();
 
-	/** @brief 보유 주사위 3D 표시의 숫자/색/선택 상태를 현재 굴림 상태에 맞게 갱신한다. */
+	/** @brief 보유 주사위 2D 면판의 숫자/색/선택 상태를 현재 굴림 상태에 맞게 갱신한다. */
 	void RefreshOwnedDiceCards();
 
 	/** @brief 전투 진입 주사위 굴림을 바로 시작하지 않고 터치 대기 상태로 준비한다. */
@@ -305,6 +329,9 @@ private:
 	UFUNCTION()
 	void HandleWorldMapCloseRequested();
 
+	/** @brief 풀스크린 지도 뷰 동안 탑바를 제외한 전투 컨트롤(스킬레일/주사위/턴순서/이동·턴종료)을 숨김/복원한다. */
+	void SetCombatPlayControlsVisible(bool bVisible);
+
 	/** @brief 설정 패널 Back 요청을 승리 잠금 상태에 맞게 처리한다. */
 	UFUNCTION()
 	void HandleSettingsBackRequested();
@@ -318,6 +345,13 @@ private:
 
 	/** @brief 각 유닛의 월드 위치를 화면에 투영해 HP바 위치/비율/색을 매 프레임 갱신한다. */
 	void UpdateUnitHpBars();
+
+	/** @brief HpFillImage를 ClipToBounds 캔버스로 감싸, 폭을 % 만큼 줄이면 우측이 잘리는 크롭 채움을 만든다. */
+	void SetupUnitHpBarFillClip(FUnitHpBarWidget& Bar);
+
+	/** @brief WBP의 상태 슬롯(StatusIcon_0N/StatusCountText_0N/Overflow)을 캐시하고 숨김으로 둔다.
+	 *         표시 배선(UpdateUnitHpBarStatus)은 #297(상태 DTO mStatusEffects) 머지 후 후속 PR에서 추가. */
+	void CacheUnitHpBarStatusSlots(FUnitHpBarWidget& Bar) const;
 
 	/* ── 전투 플로팅 로그(유닛 머리 위) + 턴 라운드 배너 (CombatTileMapHUDWidget_CombatLog.cpp) ── */
 
@@ -499,9 +533,17 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UButton> mNavSettingsButton;
 
-	/** @brief 유닛 머리 위에 월드→스크린 투영으로 띄우는 HP바(유닛 뷰 순서와 1:1) */
+	/** @brief 유닛 머리 위에 월드→스크린 투영으로 띄우는 HP바(WBP_CombatUnitHpBar 인스턴스, 유닛 뷰 순서와 1:1) */
 	UPROPERTY(Transient)
-	TArray<TObjectPtr<UProgressBar>> mUnitHpBars;
+	TArray<FUnitHpBarWidget> mUnitHpBars;
+
+	/** @brief HP바 WBP 클래스/채움 텍스처(빨강=적, 초록=아군) 지연 로드 캐시 */
+	UPROPERTY(Transient)
+	TSubclassOf<UUserWidget> mUnitHpBarWidgetClass;
+	UPROPERTY(Transient)
+	TObjectPtr<UTexture2D> mUnitHpFillRedTexture;
+	UPROPERTY(Transient)
+	TObjectPtr<UTexture2D> mUnitHpFillGreenTexture;
 
 	/**
 	 * @brief 아직 화면에 안 뜬 "대기 큐"의 한 칸(실행 로그 전용). 스폰 전이라 원본 요청만 들고 있다.
@@ -548,11 +590,11 @@ private:
 	/** @brief 마지막으로 배너를 띄운 라운드(같은 라운드 내 턴 전환 반복 방지) */
 	int32 mLastShownTurnRound = 0;
 
-	/** @brief 보유 주사위를 그리는 투명 RenderTarget Image 위젯 */
+	/** @brief 보유 주사위 2D 면판 Image 위젯 */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UImage>> mOwnedDiceImages;
 
-	/** @brief 보유 주사위 RenderTarget을 만드는 3D 주사위 액터 */
+	/** @brief 이전 3D 보유 주사위 프리뷰가 남았을 때 정리하기 위한 레거시 캡처 액터 배열 */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<ACombatDiceCaptureActor>> mOwnedDicePreviewActors;
 
@@ -560,11 +602,11 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UIndexedButtonWidget>> mOwnedDiceCardWidgets;
 
-	/** @brief 주사위 종류 라벨(d2/d4/d6/d8/d10/d12/d20) */
+	/** @brief 레거시 주사위 종류 라벨(d2/d4/d6/d8/d10/d12/d20). 현재 보유 주사위 카드에서는 숨긴다. */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UTextBlock>> mOwnedDiceTypeTexts;
 
-	/** @brief 보유 주사위 카드의 굴림 값 텍스트(2D 면 표시 - 크고 진한 숫자). */
+	/** @brief 보유 주사위 2D 면판 중앙에 표시하는 굴림 값 텍스트. */
 	TArray<TObjectPtr<UTextBlock>> mOwnedDiceValueTexts;
 
 	/** @brief 보유 주사위 2D 면 판 텍스처(카드 공용, 지연 로드 캐시). */
@@ -622,6 +664,9 @@ private:
 
 	/** @brief 스킬 상세를 열기 위해 필요한 누름 시간. [합의필요] 모바일 손맛 기준으로 확정되면 설정화 대상. */
 	float mSkillLongPressThreshold = 0.45f;
+
+	/** @brief 풀스크린 지도 뷰가 열려 전투 컨트롤을 숨긴 상태. 켜져 있으면 RebuildTurnOrderBar 등이 컨트롤을 다시 만들지 않는다. */
+	bool mCombatControlsHidden = false;
 
 	/** @brief 장비 슬롯 위에 얹는 투명 롱프레스 감지 버튼(마커 HUD_M_equip_0..2 위치). */
 	UPROPERTY(Transient)
@@ -730,4 +775,15 @@ private:
 	/** @brief 상세 본문(설명/패시브/키워드) — WBP의 DetailBodyText. */
 	UPROPERTY(Transient)
 	TObjectPtr<UTextBlock> mDetailBodyText;
+
+	/** @brief WBP_CombatDetailOverlay 클래스 레퍼런스. 생성자에서 로드. */
+	UPROPERTY(Transient)
+	TSubclassOf<UUserWidget> mDetailOverlayClass;
+
+	/** @brief 플로팅 로그용 HP(하트) 아이콘 텍스처. 생성자에서 로드. */
+	UPROPERTY(Transient)
+	TObjectPtr<UTexture2D> mFloatingLogHpIconTexture;
+
+private:
+	UTexture2D* ResolveFloatingLogIcon(EFloatingLogIconType IconType) const;
 };

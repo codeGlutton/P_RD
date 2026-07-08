@@ -1,4 +1,4 @@
-#include "UI/CombatTileMapHUDWidget.h"
+﻿#include "UI/CombatTileMapHUDWidget.h"
 
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetTree.h"
@@ -12,9 +12,6 @@
 
 namespace
 {
-	// 주사위 판(물리 굴림) 보드/그림자 텍스처. 20260626 디스크에 이미 존재.
-	const TCHAR* const DiceRollBoardTexturePath = TEXT("/Game/SVN/OutSideAsset/AICreation/DiceRoll/UI_DiceRoll_Board_StyleMatch.UI_DiceRoll_Board_StyleMatch");
-
 	template <typename T>
 	T* FindNamedWidget(const UWidgetTree* InWidgetTree, const TCHAR* WidgetName)
 	{
@@ -67,10 +64,6 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 
 
 	// --- 주사위 판(물리 굴림) 보드/배경/캡처 위젯 (20260622 이식). 위치는 ApplyRuntimeWidgetLayout에서 잡는다. ---
-	if (mDiceRollBoardTexture == nullptr)
-	{
-		mDiceRollBoardTexture = LoadObject<UTexture2D>(nullptr, DiceRollBoardTexturePath);
-	}
 	if (mDiceRollBackdropPanel == nullptr)
 	{
 		mDiceRollBackdropPanel = FindNamedWidget<UBorder>(WidgetTree, TEXT("DiceRollBackdropPanel"));
@@ -135,7 +128,8 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		if (DiceRollStatusText != nullptr)
 		{
 			DiceRollStatusText->SetJustification(ETextJustify::Center);
-			DiceRollStatusText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "IntroDiceRolling", "ROLLING DICE"));
+			DiceRollStatusText->SetText(FText::GetEmpty());
+			DiceRollStatusText->SetVisibility(ESlateVisibility::Collapsed);
 			DiceRollStatusText->SetColorAndOpacity(FSlateColor(FLinearColor(0.82f, 1.0f, 0.96f, 1.0f)));
 			RootCanvas->AddChildToCanvas(DiceRollStatusText);   // 오버레이는 풀뷰포트 RootCanvas 기준
 		}
@@ -227,21 +221,17 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 
 	// 공용 상세창: 디자이너 WBP(WBP_CombatDetailOverlay)를 인스턴스화하고 named widget만 캐시한다.
 	// 레이아웃/아트(스크림·프레임·배치)는 WBP가 소유, C++은 아이콘/제목/부제/본문 내용만 채운다.
-	if (mDetailOverlay == nullptr)
+	if (mDetailOverlay == nullptr && mDetailOverlayClass != nullptr)
 	{
-		UClass* OverlayClass = LoadClass<UUserWidget>(nullptr, TEXT("/Game/UI/CombatDetail/WBP_CombatDetailOverlay.WBP_CombatDetailOverlay_C"));
-		if (OverlayClass != nullptr)
+		mDetailOverlay = CreateWidget<UUserWidget>(this, mDetailOverlayClass);
+		if (mDetailOverlay != nullptr)
 		{
-			mDetailOverlay = CreateWidget<UUserWidget>(this, OverlayClass);
-			if (mDetailOverlay != nullptr)
-			{
-				mDetailIconImage = Cast<UImage>(mDetailOverlay->GetWidgetFromName(TEXT("DetailIconImage")));
-				mDetailTitleText = Cast<UTextBlock>(mDetailOverlay->GetWidgetFromName(TEXT("DetailTitleText")));
-				mDetailSubtitleText = Cast<UTextBlock>(mDetailOverlay->GetWidgetFromName(TEXT("DetailSubtitleText")));
-				mDetailBodyText = Cast<UTextBlock>(mDetailOverlay->GetWidgetFromName(TEXT("DetailBodyText")));
-				mDetailOverlay->SetVisibility(ESlateVisibility::Collapsed);
-				RootCanvas->AddChildToCanvas(mDetailOverlay);   // 풀뷰포트 RootCanvas — 스킨/HP바 위로 뜨게.
-			}
+			mDetailIconImage = Cast<UImage>(mDetailOverlay->GetWidgetFromName(TEXT("DetailIconImage")));
+			mDetailTitleText = Cast<UTextBlock>(mDetailOverlay->GetWidgetFromName(TEXT("DetailTitleText")));
+			mDetailSubtitleText = Cast<UTextBlock>(mDetailOverlay->GetWidgetFromName(TEXT("DetailSubtitleText")));
+			mDetailBodyText = Cast<UTextBlock>(mDetailOverlay->GetWidgetFromName(TEXT("DetailBodyText")));
+			mDetailOverlay->SetVisibility(ESlateVisibility::Collapsed);
+			RootCanvas->AddChildToCanvas(mDetailOverlay);   // 풀뷰포트 RootCanvas — 스킨/HP바 위로 뜨게.
 		}
 	}
 

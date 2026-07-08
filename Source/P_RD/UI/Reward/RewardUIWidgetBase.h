@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 /** @brief 전투 보상 화면 WBP가 상속하는 베이스입니다. 보상 뷰모델에 묶여 표시·입력만 담당합니다. */
 // @file RewardUIWidgetBase.h
@@ -74,6 +74,9 @@ private:
 	/** @brief '받기' 버튼에 타이틀/캐릭터선택과 동일한 다크판타지 버튼 텍스처를 입힌다(위젯 생성 아님 — 스타일만). */
 	void ApplyClaimButtonStyle() const;
 
+private:
+	UTexture2D* GetRewardIcon(ERewardChoiceKind Kind) const;
+
 protected:
 	// ---- WBP BindWidget (이름은 create_reward_wbp.py 위젯명과 일치). C++은 값/브러시만 설정. ----
 	UPROPERTY(meta = (BindWidgetOptional))
@@ -113,4 +116,18 @@ protected:
 	/** @brief 현재 바인딩된 보상 상태 소유자; 위젯은 이 객체를 소유하지 않고 구독만 한다. */
 	UPROPERTY(BlueprintReadOnly, Category = "Reward|UI", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<URewardUIModel> mUIModel;
+
+protected:
+	UPROPERTY(BlueprintReadOnly, Category = "Reward|UI")
+	TObjectPtr<UTexture2D> mEquipmentIcon;
+	UPROPERTY(BlueprintReadOnly, Category = "Reward|UI")
+	TObjectPtr<UTexture2D> mSkillIcon;
+	UPROPERTY(BlueprintReadOnly, Category = "Reward|UI")
+	TObjectPtr<UTexture2D> mGoldIcon;
+	UPROPERTY(BlueprintReadOnly, Category = "Reward|UI")
+	TObjectPtr<UTexture2D> mDiceIcon;
+
+protected:
+	UPROPERTY(BlueprintReadOnly, Category = "Reward|UI")
+	TObjectPtr<UTexture2D> mCloseButtonTexture;
 };

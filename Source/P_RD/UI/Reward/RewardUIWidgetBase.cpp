@@ -1,5 +1,6 @@
 #include "UI/Reward/RewardUIWidgetBase.h"
 
+#include "UObject/ConstructorHelpers.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
@@ -10,19 +11,6 @@
 
 namespace
 {
-	/** @brief 종류별 기본(폴백) 아이콘 경로. 어댑터가 mIcon을 채우면 그걸 쓰고, 없을 때만 사용. */
-	const TCHAR* RewardKindIconPath(ERewardChoiceKind Kind)
-	{
-		switch (Kind)
-		{
-		case ERewardChoiceKind::Equipment: return TEXT("/Game/SVN/InSideAsset/UI/Tex/Items/T_Equip_SwordCommon.T_Equip_SwordCommon");
-		case ERewardChoiceKind::Skill:     return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Magic.T_Reward_Magic");
-		case ERewardChoiceKind::Gold:      return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Stat_Gold.T_Stat_Gold");
-		case ERewardChoiceKind::Dice:
-		default:                           return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Dice_Common.T_Dice_Common");
-		}
-	}
-
 	/** @brief 기존 BindWidget Image 의 브러시 텍스처/크기만 갈아끼운다(위젯 생성 아님 — 데이터 설정). */
 	void SetImageTexture(UImage* Image, UTexture2D* Tex, float Size)
 	{
@@ -42,6 +30,18 @@ URewardUIWidgetBase::URewardUIWidgetBase(const FObjectInitializer& ObjectInitial
 	: Super(ObjectInitializer)
 {
 	mViewportZOrder = StaticCast<int32>(EViewportZOrderType::PopUp);
+
+	// 아래 에셋들은 SVN 미연동 환경 등에서 파일이 없을 수 있으므로 LoadObject로 안전하게 로드합니다.
+	mEquipmentIcon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/InSideAsset/UI/Tex/Items/T_Equip_SwordCommon.T_Equip_SwordCommon"));
+	mSkillIcon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Magic.T_Reward_Magic"));
+	mGoldIcon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Stat_Gold.T_Stat_Gold"));
+	mDiceIcon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Dice_Common.T_Dice_Common"));
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> CloseButtonTexture(TEXT("/Game/SVN/OutSideAsset/AICreation/Title/UI_Button_Start_DarkFantasy_Base.UI_Button_Start_DarkFantasy_Base"));
+	if (CloseButtonTexture.Succeeded() == true)
+	{
+		mCloseButtonTexture = CloseButtonTexture.Object;
+	}
 }
 
 /** @brief 받기 버튼 클릭을 연결하고, BindUIModel이 먼저 됐다면 들어온 값을 즉시 그린다. */
@@ -66,8 +66,7 @@ void URewardUIWidgetBase::ApplyClaimButtonStyle() const
 	{
 		return;
 	}
-	UTexture2D* Texture = LoadObject<UTexture2D>(nullptr,
-		TEXT("/Game/SVN/OutSideAsset/AICreation/Title/UI_Button_Start_DarkFantasy_Base.UI_Button_Start_DarkFantasy_Base"));
+	UTexture2D* Texture = mCloseButtonTexture;
 	if (Texture == nullptr)
 	{
 		return;
@@ -86,6 +85,18 @@ void URewardUIWidgetBase::ApplyClaimButtonStyle() const
 	Style.SetNormalPadding(FMargin(0.f));
 	Style.SetPressedPadding(FMargin(0.f));
 	mCloseButton->SetStyle(Style);
+}
+
+UTexture2D* URewardUIWidgetBase::GetRewardIcon(ERewardChoiceKind Kind) const
+{
+	switch (Kind)
+	{
+	case ERewardChoiceKind::Equipment: return mEquipmentIcon;
+	case ERewardChoiceKind::Skill:     return mSkillIcon;
+	case ERewardChoiceKind::Gold:      return mGoldIcon;
+	case ERewardChoiceKind::Dice:
+	default:                           return mDiceIcon;
+	}
 }
 
 void URewardUIWidgetBase::HandleCloseClicked()
@@ -207,7 +218,7 @@ void URewardUIWidgetBase::RefreshItem()
 	if (mItemIcon != nullptr)
 	{
 		UTexture2D* Tex = (Item.mIcon != nullptr)
-			? Item.mIcon.Get() : LoadObject<UTexture2D>(nullptr, RewardKindIconPath(Item.mKind));
+			? Item.mIcon.Get() : GetRewardIcon(Item.mKind);
 		SetImageTexture(mItemIcon, Tex, 78.f);   // 리스트 행 아이콘 크기
 	}
 	if (mItemName != nullptr)

@@ -1,13 +1,56 @@
-﻿#include "UI/CombatTileMapHUDWidget.h"
+#include "UI/CombatTileMapHUDWidget.h"
 
 #include "Components/Button.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "UObject/ConstructorHelpers.h"
 
 #include "GameMode/CombatGameMode.h"
 
 UCombatTileMapHUDWidget::UCombatTileMapHUDWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+	static ConstructorHelpers::FObjectFinder<UTexture2D> OwnedDiceFaceFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/Dice/T_DiceFace_Base.T_DiceFace_Base"));
+	if (OwnedDiceFaceFinder.Succeeded())
+	{
+		mOwnedDiceFaceTexture = OwnedDiceFaceFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> DiceRollBoardFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/DiceRoll/UI_DiceRoll_Board_StyleMatch.UI_DiceRoll_Board_StyleMatch"));
+	if (DiceRollBoardFinder.Succeeded())
+	{
+		mDiceRollBoardTexture = DiceRollBoardFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> FloatingLogHpIconFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ClassSelect/T_icon_hp.T_icon_hp"));
+	if (FloatingLogHpIconFinder.Succeeded())
+	{
+		mFloatingLogHpIconTexture = FloatingLogHpIconFinder.Object;
+	}
+
+	static ConstructorHelpers::FClassFinder<UUserWidget> DetailOverlayClassFinder(TEXT("/Game/UI/CombatDetail/WBP_CombatDetailOverlay"));
+	if (DetailOverlayClassFinder.Succeeded())
+	{
+		mDetailOverlayClass = DetailOverlayClassFinder.Class;
+	}
+
+	// 유닛 머리 위 HP바 WBP 및 채움 텍스처(빨강=적, 초록=아군)를 하드 레퍼런스로 프리로드한다(#300 컨벤션 — ini 강제쿡 대신).
+	static ConstructorHelpers::FClassFinder<UUserWidget> UnitHpBarClassFinder(TEXT("/Game/UI/CombatHUD/UnitHpBar/WBP_CombatUnitHpBar"));
+	if (UnitHpBarClassFinder.Succeeded())
+	{
+		mUnitHpBarWidgetClass = UnitHpBarClassFinder.Class;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> UnitHpFillRedFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_CombatHUD_UnitHpBar_Fill_Red.T_CombatHUD_UnitHpBar_Fill_Red"));
+	if (UnitHpFillRedFinder.Succeeded())
+	{
+		mUnitHpFillRedTexture = UnitHpFillRedFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> UnitHpFillGreenFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_CombatHUD_UnitHpBar_Fill_Green.T_CombatHUD_UnitHpBar_Fill_Green"));
+	if (UnitHpFillGreenFinder.Succeeded())
+	{
+		mUnitHpFillGreenTexture = UnitHpFillGreenFinder.Object;
+	}
 }
 
 void UCombatTileMapHUDWidget::NativeOnInitialized()
@@ -106,7 +149,6 @@ void UCombatTileMapHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 		ApplyAspectVariantSlots(ViewportSize);
 	}
 
-	RefreshOwnedDiceCards();
 	UpdateUnitHpBars();   // 유닛 머리 위 HP바를 월드→스크린 투영으로 매 프레임 따라가게 한다.
 	UpdateFloatingCombatLogQueue(InDeltaTime); // 대기 중인 전투 로그를 순서대로 하나씩 스폰한다.
 	UpdateFloatingCombatLogs(InDeltaTime); // 머리 위 전투 로그(HP 증감 텍스트) 상승+페이드.

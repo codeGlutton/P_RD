@@ -134,6 +134,8 @@ class P_RD_API UFrontendMapNodeWidget : public URDUserWidget
 	GENERATED_BODY()
 
 public:
+	UFrontendMapNodeWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
 	/** @brief WBP 노드에 표시할 좌표와 시각 상태를 넣음 */
 	void SetNodeVisual(
 		int32 InRowIndex,
@@ -221,6 +223,21 @@ private:
 	/** @brief 잠긴 방 아이콘 곱색(시안 nodeStyle.lockedIconTint) — 잠김의 주역은 링, 이 틴트는 보조 */
 	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	FLinearColor mLockedIconTint = FLinearColor(0.8f, 0.8f, 0.8f, 1.f);
+
+	UPROPERTY(Transient)
+	TObjectPtr<UTexture2D> mFallbackIconTreasure;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UTexture2D> mFallbackIconShop;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UTexture2D> mFallbackIconMonster;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UTexture2D> mFallbackIconElite;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UTexture2D> mFallbackIconBoss;
 
 	int32 mRowIndex = INDEX_NONE;
 	int32 mColumnIndex = INDEX_NONE;

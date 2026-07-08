@@ -6,23 +6,7 @@
 #include "UI/DicePanelLayoutPolicy.h"
 #include "UI/UIRuntimeLayout.h"
 
-namespace
-{
-	const TCHAR* const DicePanelCardTexturePath = TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Common/T_UI_Dice_Slot_Empty.T_UI_Dice_Slot_Empty");
 
-	UTexture2D* LoadDicePanelCardTexture()
-	{
-		static TWeakObjectPtr<UTexture2D> CachedTexture;
-		if (CachedTexture.IsValid())
-		{
-			return CachedTexture.Get();
-		}
-
-		UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, DicePanelCardTexturePath);
-		CachedTexture = Texture;
-		return Texture;
-	}
-}
 
 void UDicePanelWidget::ApplyDicePanelLayout()
 {
@@ -42,9 +26,9 @@ void UDicePanelWidget::ApplyDicePanelLayout()
 		if (mDicePanelCardBorders.IsValidIndex(DiceIndex) && mDicePanelCardBorders[DiceIndex] != nullptr)
 		{
 			mDicePanelCardBorders[DiceIndex]->SetVisibility(DiceIndex < DiceCount ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-			if (UTexture2D* CardTexture = LoadDicePanelCardTexture())
+			if (mDicePanelCardTexture != nullptr)
 			{
-				mDicePanelCardBorders[DiceIndex]->SetBrushFromTexture(CardTexture);
+				mDicePanelCardBorders[DiceIndex]->SetBrushFromTexture(mDicePanelCardTexture);
 			}
 			mDicePanelCardBorders[DiceIndex]->SetBrushColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.96f));
 		}

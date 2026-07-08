@@ -1,6 +1,6 @@
 ﻿#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Heal.h"
 #include "TAS/Effect/Stat/TacticalEffect_HealPoint.h"
-#include "TAS/Effect/Stat/TacticalEffect_HealFactor.h"
+#include "TAS/Effect/Stat/TacticalEffect_HealFactor_AddBase.h"
 #include "TAS/Effect/Stat/TacticalEffect_HP.h"
 
 #include "Actor/ActorModel.h"
@@ -45,7 +45,7 @@ void FSkillEffectLayer_Heal::CommitEffect(IBoardCombatTarget* OwnerActorModel, c
 
     /* 포인트를 Factor에 임시 추가 */
     {
-        TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_HealFactor::StaticClass(), EffectContext);
+        TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_HealFactor_AddBase::StaticClass(), EffectContext);
         EffectSpec->mDynamicMagnitude = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetHealPointAttribute());
         EffectHandle = AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
     }
