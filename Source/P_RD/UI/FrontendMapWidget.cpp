@@ -313,7 +313,9 @@ namespace
 UFrontendMapWidget::UFrontendMapWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	mViewportZOrder = StaticCast<int32>(EViewportZOrderType::PopUp);
+	// 탑바 HUD(z=-10)보다 아래로 깔아, 지도를 풀스크린으로 채워도 탑바가 그 위에 뜨게 한다.
+	// (탑바는 알약/배너/버튼 개별 요소라 투명 부분으로 지도가 비친다. 프론트 지도엔 탑바 외 HUD가 없어 깔끔.)
+	mViewportZOrder = -20;
 	RefreshLocalizedTextCache();
 }
 
@@ -1250,8 +1252,10 @@ void UFrontendMapWidget::ConfigureMapGraphLayout() const
 		if (UCanvasPanelSlot* ScrollSlot = Cast<UCanvasPanelSlot>(MapScrollBox->Slot))
 		{
 			ScrollSlot->SetAnchors(FAnchors(0.0f, 0.0f, 1.0f, 1.0f));
-			// 탑바 인셋: 위 영역을 비워 전투 HUD 탑바가 보이고 눌리게 한다.
-			ScrollSlot->SetOffsets(FMargin(0.0f, FMath::Max(0.f, mTopUIInset), 0.0f, 0.0f));
+			// 탑바 인셋 0: 지도를 화면 전체로 깔고, 전투 HUD 탑바(z=-10)가 지도(z=-20) 위에 겹쳐 뜨게 한다.
+			// WBP Class Defaults가 concept 시안 값(mTopUIInset)을 주입하지만, "탑바 아래 인셋"이 아니라 "겹침"이
+			// 확정 기획이라 여기서 0으로 강제한다 — WBP 저장 의존 제거(패키징에도 항상 반영).
+			ScrollSlot->SetOffsets(FMargin(0.0f, 0.0f, 0.0f, 0.0f));
 			ScrollSlot->SetAlignment(FVector2D::ZeroVector);
 			ScrollSlot->SetAutoSize(false);
 			ScrollSlot->SetZOrder(0);
@@ -1262,7 +1266,7 @@ void UFrontendMapWidget::ConfigureMapGraphLayout() const
 		if (UCanvasPanelSlot* ScrimSlot = Cast<UCanvasPanelSlot>(Map_Scrim->Slot))
 		{
 			ScrimSlot->SetAnchors(FAnchors(0.0f, 0.0f, 1.0f, 1.0f));
-			ScrimSlot->SetOffsets(FMargin(0.0f, FMath::Max(0.f, mTopUIInset), 0.0f, 0.0f));
+			ScrimSlot->SetOffsets(FMargin(0.0f, 0.0f, 0.0f, 0.0f));   // 위와 동일: 탑바 인셋 0(겹침 설계, WBP 의존 제거).
 		}
 	}
 	if (MapGraphCanvas != nullptr)

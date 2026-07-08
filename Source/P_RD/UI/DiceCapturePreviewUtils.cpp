@@ -24,7 +24,7 @@ FVector RDDiceCapturePreview::GetCombatPreviewLocation(int32 GroupIndex, int32 D
 
 float RDDiceCapturePreview::GetCombatPreviewDiceScale()
 {
-	return 1.12f;
+	return 1.14f;
 }
 
 void RDDiceCapturePreview::ApplyCaptureBrush(UImage* DiceImage, ACombatDiceCaptureActor* DiceActor, FVector2D BrushSize)

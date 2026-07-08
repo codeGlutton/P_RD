@@ -353,6 +353,12 @@ void UCombatTileMapHUDWidget::RebuildEquipmentIcons()
 
 void UCombatTileMapHUDWidget::RebuildTurnOrderBar()
 {
+	// 풀스크린 지도 뷰 동안엔 턴 순서를 다시 만들지 않는다(만들면 숨긴 칩이 되살아나 지도 위에 뜬다). 지도 닫힐 때 복원된다.
+	if (mCombatControlsHidden)
+	{
+		return;
+	}
+
 	for (UBorder* Chip : mTurnOrderChips)
 	{
 		if (Chip != nullptr) { Chip->RemoveFromParent(); }

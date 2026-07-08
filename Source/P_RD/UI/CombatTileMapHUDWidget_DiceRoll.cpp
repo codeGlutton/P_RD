@@ -66,10 +66,7 @@ void UCombatTileMapHUDWidget::PrepareIntroDiceRoll()
 	SetDiceRollVisibility(ESlateVisibility::HitTestInvisible);
 	if (DiceRollStatusText != nullptr)
 	{
-		DiceRollStatusText->SetText(FText::Format(
-			NSLOCTEXT("CombatTileMapHUDWidget", "IntroDiceReadyAllFormat", "TAP TO ROLL\n{0} DICE"),
-			FText::AsNumber(mDiceUIs.Num())
-		));
+		DiceRollStatusText->SetText(FText::GetEmpty());
 	}
 }
 
@@ -105,10 +102,7 @@ void UCombatTileMapHUDWidget::StartIntroDiceRoll()
 	SetDiceRollVisibility(ESlateVisibility::HitTestInvisible);
 	if (DiceRollStatusText != nullptr)
 	{
-		DiceRollStatusText->SetText(FText::Format(
-			NSLOCTEXT("CombatTileMapHUDWidget", "IntroDiceRollingAllFormat", "ROLLING DICE\n{0} DICE"),
-			FText::AsNumber(mDiceUIs.Num())
-		));
+		DiceRollStatusText->SetText(FText::GetEmpty());
 	}
 }
 
@@ -137,29 +131,6 @@ void UCombatTileMapHUDWidget::UpdateIntroDiceRoll(float InDeltaTime)
 			mIntroDiceResultsApplied = true;
 		}
 
-		// 결과 숫자 문자열(공용 빌더). 정렬된 주사위 줄과 맞추기 위해 값 오름차순으로 표시한다.
-		auto BuildResultText = [this]() -> FString
-		{
-			TArray<int32> SortedValues;
-			SortedValues.Reserve(mDiceUIs.Num());
-			for (const FDiceViewData& DiceView : mDiceUIs)
-			{
-				SortedValues.Add(DiceView.mResultValue);
-			}
-			SortedValues.Sort();
-
-			FString ResultText;
-			for (int32 Index = 0; Index < SortedValues.Num(); ++Index)
-			{
-				if (Index > 0)
-				{
-					ResultText += TEXT(" / ");
-				}
-				ResultText += FString::FromInt(SortedValues[Index]);
-			}
-			return ResultText;
-		};
-
 		// 정렬까지 끝났으면 탭 대기 상태 유지(아무것도 더 안 함).
 		if (mIntroDiceAligned == true)
 		{
@@ -171,10 +142,7 @@ void UCombatTileMapHUDWidget::UpdateIntroDiceRoll(float InDeltaTime)
 		{
 			if (DiceRollStatusText != nullptr)
 			{
-				DiceRollStatusText->SetText(FText::Format(
-					NSLOCTEXT("CombatTileMapHUDWidget", "IntroDiceResultAllFormat", "DICE RESULT\n{0}"),
-					FText::FromString(BuildResultText())
-				));
+				DiceRollStatusText->SetText(FText::GetEmpty());
 			}
 
 			mIntroDiceAlignTimer += InDeltaTime;
@@ -199,10 +167,7 @@ void UCombatTileMapHUDWidget::UpdateIntroDiceRoll(float InDeltaTime)
 		mIntroDiceResultWaitingForDismiss = true;
 		if (DiceRollStatusText != nullptr)
 		{
-			DiceRollStatusText->SetText(FText::Format(
-				NSLOCTEXT("CombatTileMapHUDWidget", "IntroDiceResultDismissAllFormat", "DICE RESULT\n{0}\nTAP TO CLOSE"),
-				FText::FromString(BuildResultText())
-			));
+			DiceRollStatusText->SetText(FText::GetEmpty());
 		}
 		return;
 	}
@@ -361,7 +326,8 @@ void UCombatTileMapHUDWidget::SetDiceRollCombatLayerSuppressed(bool bSuppressed)
 
 	SetWidgetArrayVisibility(mOwnedDiceImages, ESlateVisibility::HitTestInvisible);
 	SetWidgetArrayVisibility(mOwnedDiceCardWidgets, ESlateVisibility::Visible);
-	SetWidgetArrayVisibility(mOwnedDiceTypeTexts, ESlateVisibility::HitTestInvisible);
+	SetWidgetArrayVisibility(mOwnedDiceTypeTexts, ESlateVisibility::Collapsed);
+	SetWidgetArrayVisibility(mOwnedDiceValueTexts, ESlateVisibility::HitTestInvisible);
 	SetWidgetArrayVisibility(mSkillInputButtons, ESlateVisibility::Visible);
 	SetWidgetArrayVisibility(mEquipmentChips, ESlateVisibility::HitTestInvisible);
 	SetWidgetArrayVisibility(mEquipmentChipTexts, ESlateVisibility::HitTestInvisible);
@@ -399,13 +365,8 @@ void UCombatTileMapHUDWidget::SetDiceRollVisibility(ESlateVisibility NewVisibili
 
 	if (DiceRollStatusText != nullptr)
 	{
-		// 오버레이가 보이면 상태 문구(TAP TO ROLL / DICE RESULT / TAP TO CLOSE)도 같이 노출한다.
-		// 실제 문구는 호출부(Prepare/Start/Update)가 이 뒤에 채운다. 클릭은 입력 버튼이 받으므로 HitTestInvisible.
-		DiceRollStatusText->SetVisibility(bVisible ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-		if (bVisible == false)
-		{
-			DiceRollStatusText->SetText(FText::GetEmpty());
-		}
+		DiceRollStatusText->SetVisibility(ESlateVisibility::Collapsed);
+		DiceRollStatusText->SetText(FText::GetEmpty());
 	}
 
 	if (mDiceRollInputButton != nullptr)
@@ -458,7 +419,7 @@ void UCombatTileMapHUDWidget::HandleCombatDiceRollRequested()
 		return;
 	}
 
-	// 바로 굴리지 않고 "TAP TO ROLL" 대기 상태로만 연다 — 굴리는 맛(터치로 굴림)은 기획 확정 사항(06/15 회의).
+	// 바로 굴리지 않고 터치 대기 상태로만 연다 — 굴리는 맛(터치로 굴림)은 기획 확정 사항(06/15 회의).
 	// 실제 굴림은 유저 탭(HandleDiceRollInputButtonClicked)이나 흔들기에서 StartIntroDiceRoll로 이어진다.
 	PrepareIntroDiceRoll();
 }

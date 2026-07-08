@@ -184,13 +184,13 @@ private:
 	/** @brief 보유 스킬의 표시 이름을 뷰모델에서 읽는다(없으면 빈 텍스트 - 시안 라벨 폴백 없음). */
 	FText GetOwnedSkillLabel(int32 SkillIndex) const;
 
-	/** @brief 보유 주사위 3D 표시 위젯을 현재 주사위 개수에 맞춰 다시 만든다. */
+	/** @brief 보유 주사위 2D 면판 위젯을 현재 주사위 개수에 맞춰 다시 만든다. */
 	void RebuildOwnedDiceCards();
 
 	/** @brief WBP 스킬 레일 위에 투명 입력 버튼을 얹어 짧은 탭과 롱프레스를 받는다. */
 	void EnsureSkillInputButtons();
 
-	/** @brief 보유 주사위 3D 표시의 숫자/색/선택 상태를 현재 굴림 상태에 맞게 갱신한다. */
+	/** @brief 보유 주사위 2D 면판의 숫자/색/선택 상태를 현재 굴림 상태에 맞게 갱신한다. */
 	void RefreshOwnedDiceCards();
 
 	/** @brief 전투 진입 주사위 굴림을 바로 시작하지 않고 터치 대기 상태로 준비한다. */
@@ -328,6 +328,9 @@ private:
 	/** @brief 월드맵 닫기 요청을 승리 잠금 상태에 맞게 처리한다. */
 	UFUNCTION()
 	void HandleWorldMapCloseRequested();
+
+	/** @brief 풀스크린 지도 뷰 동안 탑바를 제외한 전투 컨트롤(스킬레일/주사위/턴순서/이동·턴종료)을 숨김/복원한다. */
+	void SetCombatPlayControlsVisible(bool bVisible);
 
 	/** @brief 설정 패널 Back 요청을 승리 잠금 상태에 맞게 처리한다. */
 	UFUNCTION()
@@ -587,11 +590,11 @@ private:
 	/** @brief 마지막으로 배너를 띄운 라운드(같은 라운드 내 턴 전환 반복 방지) */
 	int32 mLastShownTurnRound = 0;
 
-	/** @brief 보유 주사위를 그리는 투명 RenderTarget Image 위젯 */
+	/** @brief 보유 주사위 2D 면판 Image 위젯 */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UImage>> mOwnedDiceImages;
 
-	/** @brief 보유 주사위 RenderTarget을 만드는 3D 주사위 액터 */
+	/** @brief 이전 3D 보유 주사위 프리뷰가 남았을 때 정리하기 위한 레거시 캡처 액터 배열 */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<ACombatDiceCaptureActor>> mOwnedDicePreviewActors;
 
@@ -599,11 +602,11 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UIndexedButtonWidget>> mOwnedDiceCardWidgets;
 
-	/** @brief 주사위 종류 라벨(d2/d4/d6/d8/d10/d12/d20) */
+	/** @brief 레거시 주사위 종류 라벨(d2/d4/d6/d8/d10/d12/d20). 현재 보유 주사위 카드에서는 숨긴다. */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UTextBlock>> mOwnedDiceTypeTexts;
 
-	/** @brief 보유 주사위 카드의 굴림 값 텍스트(2D 면 표시 - 크고 진한 숫자). */
+	/** @brief 보유 주사위 2D 면판 중앙에 표시하는 굴림 값 텍스트. */
 	TArray<TObjectPtr<UTextBlock>> mOwnedDiceValueTexts;
 
 	/** @brief 보유 주사위 2D 면 판 텍스처(카드 공용, 지연 로드 캐시). */
@@ -661,6 +664,9 @@ private:
 
 	/** @brief 스킬 상세를 열기 위해 필요한 누름 시간. [합의필요] 모바일 손맛 기준으로 확정되면 설정화 대상. */
 	float mSkillLongPressThreshold = 0.45f;
+
+	/** @brief 풀스크린 지도 뷰가 열려 전투 컨트롤을 숨긴 상태. 켜져 있으면 RebuildTurnOrderBar 등이 컨트롤을 다시 만들지 않는다. */
+	bool mCombatControlsHidden = false;
 
 	/** @brief 장비 슬롯 위에 얹는 투명 롱프레스 감지 버튼(마커 HUD_M_equip_0..2 위치). */
 	UPROPERTY(Transient)
