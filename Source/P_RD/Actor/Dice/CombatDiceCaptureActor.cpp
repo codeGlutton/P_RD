@@ -11,8 +11,10 @@ ACombatDiceCaptureActor::ACombatDiceCaptureActor()
 {
 	mSceneCaptureComponent = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("DiceSceneCapture"));
 	mSceneCaptureComponent->SetupAttachment(GetRootComponent());
-	mSceneCaptureComponent->SetRelativeLocation(FVector(-320.0f, 0.0f, 26.0f));
+	mSceneCaptureComponent->SetRelativeLocation(FVector(-360.0f, 0.0f, 0.0f));
 	mSceneCaptureComponent->SetRelativeRotation(FRotator::ZeroRotator);
+	mSceneCaptureComponent->ProjectionType = ECameraProjectionMode::Orthographic;
+	mSceneCaptureComponent->OrthoWidth = 285.0f;
 	mSceneCaptureComponent->FOVAngle = 50.0f;
 	mSceneCaptureComponent->CaptureSource = SCS_SceneColorHDR;
 	mSceneCaptureComponent->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;

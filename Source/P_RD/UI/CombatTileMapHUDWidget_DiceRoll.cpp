@@ -327,7 +327,6 @@ void UCombatTileMapHUDWidget::SetDiceRollCombatLayerSuppressed(bool bSuppressed)
 	SetWidgetArrayVisibility(mOwnedDiceImages, ESlateVisibility::HitTestInvisible);
 	SetWidgetArrayVisibility(mOwnedDiceCardWidgets, ESlateVisibility::Visible);
 	SetWidgetArrayVisibility(mOwnedDiceTypeTexts, ESlateVisibility::Collapsed);
-	SetWidgetArrayVisibility(mOwnedDiceValueTexts, ESlateVisibility::HitTestInvisible);
 	SetWidgetArrayVisibility(mSkillInputButtons, ESlateVisibility::Visible);
 	SetWidgetArrayVisibility(mEquipmentChips, ESlateVisibility::HitTestInvisible);
 	SetWidgetArrayVisibility(mEquipmentChipTexts, ESlateVisibility::HitTestInvisible);

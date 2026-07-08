@@ -1,20 +1,23 @@
 #include "Actor/Dice/CombatDicePreviewActor.h"
 
 #include "Components/TextRenderComponent.h"
-#include "Materials/MaterialInstanceDynamic.h"
-#include "ProceduralMeshComponent.h"
 #include "Actor/Dice/CombatDicePreviewActorPrivate.h"
 #include "Actor/Dice/DicePolyhedron.h"
 
 namespace
 {
-	constexpr float FaceCoverInset = 1.08f;
-	constexpr float FaceCoverLift = 0.030f;
 	constexpr float FaceTextLift = 0.060f;
 	constexpr float FaceTextStrokeLift = 0.058f;
 	constexpr float FaceTextStrokeOffset = 0.0065f;
 	constexpr int32 FaceTextStrokeCount = 4;
-	constexpr float FaceUvPadding = 0.0f;
+	const FColor FaceTextDefaultColor(24, 24, 30, 230);
+	const FColor FaceTextDefaultStrokeColor(12, 12, 18, 190);
+	const FColor FaceTextDimColor(132, 132, 144, 128);
+	const FColor FaceTextDimStrokeColor(120, 120, 132, 80);
+	const FColor FaceTextHighlightColor(4, 4, 8, 255);
+	const FColor FaceTextHighlightStrokeColor(0, 0, 0, 240);
+	constexpr float MinFaceTextScale = 0.65f;
+	constexpr float MaxFaceTextScale = 2.20f;
 
 	FVector MakeFaceRightVector(const RDDicePolyhedron::FDiceFace& Face)
 	{
@@ -24,137 +27,6 @@ namespace
 			Right = FVector::CrossProduct(FVector::YAxisVector, Face.mNormal).GetSafeNormal();
 		}
 		return Right;
-	}
-
-	float GetPolygonSignedArea(const TArray<FVector2D>& Points)
-	{
-		float Area = 0.0f;
-		for (int32 Index = 0; Index < Points.Num(); ++Index)
-		{
-			const FVector2D& Current = Points[Index];
-			const FVector2D& Next = Points[(Index + 1) % Points.Num()];
-			Area += Current.X * Next.Y - Next.X * Current.Y;
-		}
-		return Area * 0.5f;
-	}
-
-	int32 FindFixedUvAnchorIndex(const TArray<FVector2D>& PlaneCoords)
-	{
-		int32 AnchorIndex = 0;
-		float BestUp = -TNumericLimits<float>::Max();
-		float BestLeft = TNumericLimits<float>::Max();
-		float BestCenter = TNumericLimits<float>::Max();
-
-		for (int32 Index = 0; Index < PlaneCoords.Num(); ++Index)
-		{
-			const FVector2D& Coord = PlaneCoords[Index];
-			const bool bBetterUp = Coord.Y > BestUp + KINDA_SMALL_NUMBER;
-			const bool bSameUp = FMath::IsNearlyEqual(Coord.Y, BestUp, 0.01f);
-			const float AbsRight = FMath::Abs(Coord.X);
-			const bool bBetterTie =
-				PlaneCoords.Num() == 4
-					? Coord.X < BestLeft
-					: AbsRight < BestCenter;
-
-			if (bBetterUp || (bSameUp && bBetterTie))
-			{
-				AnchorIndex = Index;
-				BestUp = Coord.Y;
-				BestLeft = Coord.X;
-				BestCenter = AbsRight;
-			}
-		}
-
-		return AnchorIndex;
-	}
-
-	FVector2D MakeFixedFaceUV(int32 VertexCount, int32 CanonicalIndex)
-	{
-		const float StartAngle = VertexCount == 4 ? 3.0f * PI * 0.25f : PI * 0.5f;
-		const auto MakeUnitPoint = [StartAngle, VertexCount](int32 Index)
-		{
-			const float Angle = StartAngle + (2.0f * PI * static_cast<float>(Index) / static_cast<float>(VertexCount));
-			return FVector2D(FMath::Cos(Angle), FMath::Sin(Angle));
-		};
-
-		FVector2D Min(TNumericLimits<float>::Max(), TNumericLimits<float>::Max());
-		FVector2D Max(-TNumericLimits<float>::Max(), -TNumericLimits<float>::Max());
-		for (int32 Index = 0; Index < VertexCount; ++Index)
-		{
-			const FVector2D Point = MakeUnitPoint(Index);
-			Min.X = FMath::Min(Min.X, Point.X);
-			Min.Y = FMath::Min(Min.Y, Point.Y);
-			Max.X = FMath::Max(Max.X, Point.X);
-			Max.Y = FMath::Max(Max.Y, Point.Y);
-		}
-
-		const FVector2D Point = MakeUnitPoint(CanonicalIndex);
-		const float U = (Point.X - Min.X) / FMath::Max(Max.X - Min.X, KINDA_SMALL_NUMBER);
-		const float V = 1.0f - ((Point.Y - Min.Y) / FMath::Max(Max.Y - Min.Y, KINDA_SMALL_NUMBER));
-		const float PaddedRange = 1.0f - FaceUvPadding * 2.0f;
-		return FVector2D(
-			FaceUvPadding + U * PaddedRange,
-			FaceUvPadding + V * PaddedRange);
-	}
-
-	void BuildFaceCoverSection(
-		const RDDicePolyhedron::FDicePolyhedron& Poly,
-		const RDDicePolyhedron::FDiceFace& Face,
-		float DiceRadius,
-		TArray<FVector>& OutVertices,
-		TArray<int32>& OutTriangles,
-		TArray<FVector>& OutNormals,
-		TArray<FVector2D>& OutUVs,
-		TArray<FLinearColor>& OutVertexColors,
-		TArray<FProcMeshTangent>& OutTangents)
-	{
-		const int32 VertexCount = Face.mVertexIndices.Num();
-		OutVertices.Reset(VertexCount);
-		OutTriangles.Reset(FMath::Max(0, VertexCount - 2) * 3);
-		OutNormals.Reset(VertexCount);
-		OutUVs.Reset(VertexCount);
-		OutVertexColors.Reset(VertexCount);
-		OutTangents.Reset(VertexCount);
-
-		if (VertexCount < 3)
-		{
-			return;
-		}
-
-		const FVector Right = MakeFaceRightVector(Face);
-		TArray<FVector2D> PlaneCoords;
-		PlaneCoords.Reserve(VertexCount);
-
-		for (const int32 VertexIndex : Face.mVertexIndices)
-		{
-			const FVector Delta = Poly.mVertices[VertexIndex] - Face.mCenter;
-			const float RightCoord = static_cast<float>(FVector::DotProduct(Delta, Right));
-			const float UpCoord = static_cast<float>(FVector::DotProduct(Delta, Face.mUp));
-			PlaneCoords.Add(FVector2D(RightCoord, UpCoord));
-		}
-
-		const int32 AnchorIndex = FindFixedUvAnchorIndex(PlaneCoords);
-		const bool bLocalCounterClockwise = GetPolygonSignedArea(PlaneCoords) >= 0.0f;
-		for (int32 LocalIndex = 0; LocalIndex < VertexCount; ++LocalIndex)
-		{
-			const int32 VertexIndex = Face.mVertexIndices[LocalIndex];
-			const FVector CoveredVertex = Face.mCenter + (Poly.mVertices[VertexIndex] - Face.mCenter) * FaceCoverInset;
-			const int32 CanonicalIndex = bLocalCounterClockwise
-				? (LocalIndex - AnchorIndex + VertexCount) % VertexCount
-				: (AnchorIndex - LocalIndex + VertexCount) % VertexCount;
-			OutVertices.Add(CoveredVertex * DiceRadius + Face.mNormal * (DiceRadius * FaceCoverLift));
-			OutNormals.Add(Face.mNormal);
-			OutUVs.Add(MakeFixedFaceUV(VertexCount, CanonicalIndex));
-			OutVertexColors.Add(FLinearColor::White);
-			OutTangents.Add(FProcMeshTangent(Right, false));
-		}
-
-		for (int32 TriangleIndex = 1; TriangleIndex < VertexCount - 1; ++TriangleIndex)
-		{
-			OutTriangles.Add(0);
-			OutTriangles.Add(TriangleIndex + 1);
-			OutTriangles.Add(TriangleIndex);
-		}
 	}
 }
 
@@ -177,16 +49,6 @@ void ACombatDicePreviewActor::RebuildFaceTexts(int32 FaceCount)
 		}
 	}
 	mFaceTextStrokes.Reset();
-	for (UProceduralMeshComponent* FaceMesh : mFaceMeshes)
-	{
-		if (FaceMesh != nullptr)
-		{
-			FaceMesh->DestroyComponent();
-		}
-	}
-	mFaceMeshes.Reset();
-	mFaceMaterials.Reset();
-
 	const RDDicePolyhedron::FDicePolyhedron& Poly = RDDicePolyhedron::Get(FaceCount);
 
 	// 주사위 종류당 숫자 크기를 하나로 통일(면마다 들쭉날쭉하지 않게). 가장 작은 면에도 들어가게 최소 내접반지름 기준.
@@ -203,51 +65,13 @@ void ACombatDicePreviewActor::RebuildFaceTexts(int32 FaceCount)
 		}
 	}
 	// 주사위 간에도 너무 차이나지 않게 클램프.
-	const float UniformTextSize = FMath::Clamp(MinInradius * DiceRadius * 1.48f, 24.0f, 48.0f);
+	mBaseFaceTextWorldSize = FMath::Clamp(MinInradius * DiceRadius * 1.48f, 24.0f, 48.0f);
+	const float UniformTextSize = mBaseFaceTextWorldSize * mFaceTextScale;
 
 	for (int32 FaceIndex = 0; FaceIndex < Poly.GetValueFaceCount(); ++FaceIndex)
 	{
 		const RDDicePolyhedron::FDiceFace& Face = Poly.GetValueFace(FaceIndex);
 		const float TextWorldSize = UniformTextSize;
-		if (mFaceMaterialTemplate != nullptr)
-		{
-			UProceduralMeshComponent* FaceMesh = NewObject<UProceduralMeshComponent>(this);
-			if (FaceMesh != nullptr)
-			{
-				FaceMesh->SetupAttachment(mDiceRoot);
-				FaceMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-				FaceMesh->SetCastShadow(false);
-				FaceMesh->SetCanEverAffectNavigation(false);
-				FaceMesh->RegisterComponent();
-
-				TArray<FVector> Vertices;
-				TArray<int32> Triangles;
-				TArray<FVector> Normals;
-				TArray<FVector2D> UVs;
-				TArray<FLinearColor> VertexColors;
-				TArray<FProcMeshTangent> Tangents;
-				BuildFaceCoverSection(Poly, Face, DiceRadius, Vertices, Triangles, Normals, UVs, VertexColors, Tangents);
-				FaceMesh->CreateMeshSection_LinearColor(0, Vertices, Triangles, Normals, UVs, VertexColors, Tangents, false);
-
-				UMaterialInstanceDynamic* FaceMaterial = UMaterialInstanceDynamic::Create(mFaceMaterialTemplate, this);
-				if (FaceMaterial != nullptr)
-				{
-					FaceMesh->SetMaterial(0, FaceMaterial);
-				}
-				mFaceMaterials.Add(FaceMaterial);
-				mFaceMeshes.Add(FaceMesh);
-			}
-			else
-			{
-				mFaceMaterials.Add(nullptr);
-				mFaceMeshes.Add(nullptr);
-			}
-		}
-		else
-		{
-			mFaceMaterials.Add(nullptr);
-			mFaceMeshes.Add(nullptr);
-		}
 
 		const FVector BaseTextLocation = Face.mCenter * DiceRadius + Face.mNormal * (DiceRadius * FaceTextLift);
 		const FVector StrokeBaseLocation = Face.mCenter * DiceRadius + Face.mNormal * (DiceRadius * FaceTextStrokeLift);
@@ -276,7 +100,7 @@ void ACombatDicePreviewActor::RebuildFaceTexts(int32 FaceCount)
 			FaceTextStroke->RegisterComponent();
 			FaceTextStroke->SetHorizontalAlignment(EHorizTextAligment::EHTA_Center);
 			FaceTextStroke->SetVerticalAlignment(EVerticalTextAligment::EVRTA_TextCenter);
-			FaceTextStroke->SetTextRenderColor(FColor(12, 12, 18));
+			FaceTextStroke->SetTextRenderColor(FaceTextDefaultStrokeColor);
 			FaceTextStroke->SetWorldSize(TextWorldSize);
 			FaceTextStroke->SetCastShadow(false);
 			if (mDiceNumberFont != nullptr)
@@ -299,7 +123,7 @@ void ACombatDicePreviewActor::RebuildFaceTexts(int32 FaceCount)
 		FaceText->RegisterComponent();
 		FaceText->SetHorizontalAlignment(EHorizTextAligment::EHTA_Center);
 		FaceText->SetVerticalAlignment(EVerticalTextAligment::EVRTA_TextCenter);
-		FaceText->SetTextRenderColor(FColor(24, 24, 30));   // 밝은 주사위에 대비되는 진한 숫자
+		FaceText->SetTextRenderColor(FaceTextDefaultColor);   // 밝은 주사위에 대비되는 진한 숫자
 		FaceText->SetWorldSize(TextWorldSize);
 		FaceText->SetCastShadow(false);
 		if (mDiceNumberFont != nullptr)
@@ -314,6 +138,8 @@ void ACombatDicePreviewActor::RebuildFaceTexts(int32 FaceCount)
 
 		mFaceTexts.Add(FaceText);
 	}
+
+	ApplyFaceTextStyles();
 }
 
 void ACombatDicePreviewActor::SetFaceText(int32 FaceIndex, const FText& FaceText)
@@ -331,6 +157,83 @@ void ACombatDicePreviewActor::SetFaceText(int32 FaceIndex, const FText& FaceText
 		if (mFaceTextStrokes.IsValidIndex(StrokeIndex) && mFaceTextStrokes[StrokeIndex] != nullptr)
 		{
 			mFaceTextStrokes[StrokeIndex]->SetText(FaceText);
+		}
+	}
+}
+
+void ACombatDicePreviewActor::SetHighlightedFace(int32 FaceOrdinal)
+{
+	mHighlightedFaceOrdinal = FaceOrdinal > 0 ? FaceOrdinal : INDEX_NONE;
+	ApplyFaceTextStyles();
+}
+
+void ACombatDicePreviewActor::ClearHighlightedFace()
+{
+	mHighlightedFaceOrdinal = INDEX_NONE;
+	ApplyFaceTextStyles();
+}
+
+void ACombatDicePreviewActor::SetHideNonHighlightedFaceTexts(bool bHide)
+{
+	mHideNonHighlightedFaceTexts = bHide;
+	ApplyFaceTextStyles();
+}
+
+void ACombatDicePreviewActor::SetFaceTextScale(float NewScale)
+{
+	mFaceTextScale = FMath::Clamp(NewScale, MinFaceTextScale, MaxFaceTextScale);
+	ApplyFaceTextScale();
+}
+
+void ACombatDicePreviewActor::ApplyFaceTextScale()
+{
+	const float TextWorldSize = mBaseFaceTextWorldSize * mFaceTextScale;
+	for (UTextRenderComponent* FaceText : mFaceTexts)
+	{
+		if (FaceText != nullptr)
+		{
+			FaceText->SetWorldSize(TextWorldSize);
+		}
+	}
+	for (UTextRenderComponent* FaceTextStroke : mFaceTextStrokes)
+	{
+		if (FaceTextStroke != nullptr)
+		{
+			FaceTextStroke->SetWorldSize(TextWorldSize);
+		}
+	}
+}
+
+void ACombatDicePreviewActor::ApplyFaceTextStyles()
+{
+	const bool bHasHighlight = mHighlightedFaceOrdinal != INDEX_NONE;
+	for (int32 FaceIndex = 0; FaceIndex < mFaceTexts.Num(); ++FaceIndex)
+	{
+		const bool bHighlighted = bHasHighlight && mHighlightedFaceOrdinal == FaceIndex + 1;
+		const bool bHideDimText = mHideNonHighlightedFaceTexts && (bHasHighlight == false || bHighlighted == false);
+		const FColor MainColor = bHasHighlight
+			? (bHighlighted ? FaceTextHighlightColor : FaceTextDimColor)
+			: FaceTextDefaultColor;
+		const FColor StrokeColor = bHasHighlight
+			? (bHighlighted ? FaceTextHighlightStrokeColor : FaceTextDimStrokeColor)
+			: FaceTextDefaultStrokeColor;
+
+		if (mFaceTexts[FaceIndex] != nullptr)
+		{
+			mFaceTexts[FaceIndex]->SetVisibility(bHideDimText == false, false);
+			mFaceTexts[FaceIndex]->SetTextRenderColor(MainColor);
+		}
+
+		const bool bShowStroke = bHideDimText == false && (bHasHighlight == false || bHighlighted == true);
+		const int32 StrokeStartIndex = FaceIndex * FaceTextStrokeCount;
+		for (int32 StrokeOffsetIndex = 0; StrokeOffsetIndex < FaceTextStrokeCount; ++StrokeOffsetIndex)
+		{
+			const int32 StrokeIndex = StrokeStartIndex + StrokeOffsetIndex;
+			if (mFaceTextStrokes.IsValidIndex(StrokeIndex) && mFaceTextStrokes[StrokeIndex] != nullptr)
+			{
+				mFaceTextStrokes[StrokeIndex]->SetVisibility(bShowStroke, false);
+				mFaceTextStrokes[StrokeIndex]->SetTextRenderColor(StrokeColor);
+			}
 		}
 	}
 }

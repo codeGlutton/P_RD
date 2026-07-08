@@ -365,7 +365,6 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 	ToggleWidgets(mOwnedDiceImages, DisplayVis);
 	ToggleWidgets(mOwnedDiceCardWidgets, InputVis);
 	ToggleWidgets(mOwnedDiceTypeTexts, DisplayVis);
-	ToggleWidgets(mOwnedDiceValueTexts, DisplayVis);
 	ToggleWidgets(mTurnOrderChips, DisplayVis);
 	ToggleWidgets(mTurnOrderChipTexts, DisplayVis);
 	ToggleWidgets(mEquipmentChips, DisplayVis);
