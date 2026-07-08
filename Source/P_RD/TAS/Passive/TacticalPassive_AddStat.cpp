@@ -13,7 +13,7 @@
 bool UTacticalPassive_AddStat::EvaluateActivate(
 	const FPassiveActivateContext& Ctx,
 	TInstancedStruct<FDynamicPassiveData>& PassiveState,
-	FBoardCombatTargetSnapshotData& TargetDelta)
+	float& OutMagnitude)
 {
 	// 데이터/이펙트가 없으면 적용 안 함 (Ctx/PassiveState 미사용 - 무상태)
 	if (mStaticData == nullptr || mEffectClass == nullptr)
@@ -21,13 +21,8 @@ bool UTacticalPassive_AddStat::EvaluateActivate(
 		return false;
 	}
 
-	// 이펙트가 정의한 속성에 데이터 수치(mMagnitude)를 그대로 누적
-	const UTacticalEffect* EffectCDO = mEffectClass.GetDefaultObject();
-	if (EffectCDO == nullptr || EffectCDO->mModifiers.Num() == 0)
-	{
-		return false;
-	}
-	TargetDelta.mAttributes.FindOrAdd(EffectCDO->mModifiers[0].mAttribute) += mStaticData->mMagnitude;
+	// DA의 매그니튜드 값을 그대로 사용
+	OutMagnitude = mStaticData->mMagnitude;
 
 	// 적용한다고 회신
 	return true;

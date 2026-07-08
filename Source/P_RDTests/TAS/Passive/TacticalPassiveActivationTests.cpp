@@ -6,6 +6,8 @@
  *  - 즉시형: AddStat + HP(Instant), OnEndTurn 발동 (해제 없음)
  *  - 주기형: AddStat + AttackFactor(Infinite), OnStartTurn 발동 / OnEndTurn 해제
  *  - 스택형: NthAddStat + AttackFactor, OnStartUsingSkill 발동 / OnEndUsingSkill 해제, 매 3타 발동
+ *  - 태그형: AddStat + Vulnerability(Instant, 모디파이어 없음), OnEndTurn 발동, Magnitude가 태그 카운트로 부여
+ *  - 태그 지속형: AddStat + GrantedTags 목 이펙트(Infinite), OnStartTurn 발동 / OnEndTurn 해제 시 태그 회수
  * @author 이문환
  * @date   2026-07-01
  *********************************************************************/
@@ -22,6 +24,8 @@
 #include "DataAsset/PassiveData/StaticPassiveData.h"
 #include "TAS/Effect/Stat/TacticalEffect_HP.h"
 #include "TAS/Effect/Stat/TacticalEffect_AttackFactor_AddBase.h"
+#include "TAS/Effect/Tag/TacticalEffect_Vulnerability.h"
+#include "GameplayTagType.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "AttributeSet/UnitAttributeSet.h"
 #include "Singleton/WorldSubsystem/SimulationSubsystem.h"
@@ -308,6 +312,101 @@ bool FPassiveMultiTargetBuffTest::RunTest(const FString& Parameters)
 	DriveTiming(Passive, OnEndTurn, Ctx);
 	TestEqual(TEXT("OnEndTurn 해제: 타겟1 AttackFactor는 10으로 감소"), TargetComp1->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackFactorAttribute()), 10.f);
 	TestEqual(TEXT("OnEndTurn 해제: 타겟2 AttackFactor는 10으로 감소"), TargetComp2->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackFactorAttribute()), 10.f);
+
+	return true;
+}
+
+/**
+ * @brief 태그형 테스트
+ * AddStat + Vulnerability(Instant, 모디파이어 없음), OnEndTurn 발동 (해제 없음)
+ * Magnitude가 태그 카운트로 부여되는지 검증
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FPassiveAddTagTest,
+	"P_RD.TAS.Passive.AddTag",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
+)
+
+bool FPassiveAddTagTest::RunTest(const FString& Parameters)
+{
+	UMockBoardActorModel* Actor = MakeMockActor(*this);
+	if (Actor == nullptr)
+	{
+		return false;
+	}
+	UAttributeSetComponentModel* Comp = Actor->GetAttributeComponentModel();
+
+	// 검증 대상 태그: 취약
+	const FGameplayTag VulnerabilityTag = EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability;
+	TestFalse(TEXT("적용 전: 취약 태그 없음"), Comp->HasMatchingGameplayTag(VulnerabilityTag));
+
+	const FGameplayTag OnStartTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartTurn"));
+	const FGameplayTag OnEndTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndTurn"));
+	// 패시브 값 설정: 취약 3 (태그형 이펙트는 Magnitude가 태그 카운트로 들어감)
+	UStaticPassiveData* Data = MakePassiveData(UTacticalEffect_Vulnerability::StaticClass(), 3.f, OnEndTurn, FGameplayTag(), 0);
+
+	UTacticalPassive_AddStat* Passive = NewObject<UTacticalPassive_AddStat>();
+	Passive->SetStaticData(Data);
+
+	FPassiveActivateContext Ctx;
+	Ctx.mOwner = Actor;
+	Ctx.mTargets.Add(Actor);
+
+	// 타이밍 불일치: 발동 안 함
+	DriveTiming(Passive, OnStartTurn, Ctx);
+	TestFalse(TEXT("타이밍태그가 없으므로 발동 안 함: 취약 태그 없음"), Comp->HasMatchingGameplayTag(VulnerabilityTag));
+
+	// OnEndTurn에 발동: 취약 태그 3개 부여
+	DriveTiming(Passive, OnEndTurn, Ctx);
+	TestTrue(TEXT("OnEndTurn에 발동 함: 취약 태그 보유"), Comp->HasMatchingGameplayTag(VulnerabilityTag));
+	TestEqual(TEXT("취약 태그 카운트는 3"), Comp->GetTagCount(VulnerabilityTag), 3);
+
+	return true;
+}
+
+/**
+ * @brief 태그 지속형 테스트
+ * AddStat + GrantedTags 목 이펙트(Infinite), OnStartTurn 발동 / OnEndTurn 해제
+ * 핸들 해제 시 부여 태그가 회수되는지(패시브 해제 계약) 검증
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FPassiveGrantedTagBuffTest,
+	"P_RD.TAS.Passive.GrantedTagBuff",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
+)
+
+bool FPassiveGrantedTagBuffTest::RunTest(const FString& Parameters)
+{
+	UMockBoardActorModel* Actor = MakeMockActor(*this);
+	if (Actor == nullptr)
+	{
+		return false;
+	}
+	UAttributeSetComponentModel* Comp = Actor->GetAttributeComponentModel();
+
+	// 검증 대상 태그: 취약 (목 이펙트의 GrantedTags)
+	const FGameplayTag VulnerabilityTag = EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability;
+	TestFalse(TEXT("적용 전: 취약 태그 없음"), Comp->HasMatchingGameplayTag(VulnerabilityTag));
+
+	const FGameplayTag OnStartTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartTurn"));
+	const FGameplayTag OnEndTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndTurn"));
+	// 패시브 값 설정: GrantedTags는 카운트 고정(+1)이라 Magnitude는 0 검사만 통과하면 됨
+	UStaticPassiveData* Data = MakePassiveData(UMockGrantedTagTacticalEffect::StaticClass(), 1.f, OnStartTurn, OnEndTurn, 0);
+
+	UTacticalPassive_AddStat* Passive = NewObject<UTacticalPassive_AddStat>();
+	Passive->SetStaticData(Data);
+
+	FPassiveActivateContext Ctx;
+	Ctx.mOwner = Actor;
+	Ctx.mTargets.Add(Actor);
+
+	// 발동 테스트: OnStartTurn에 취약 태그 부여
+	DriveTiming(Passive, OnStartTurn, Ctx);
+	TestTrue(TEXT("OnStartTurn에 발동 함: 취약 태그 보유"), Comp->HasMatchingGameplayTag(VulnerabilityTag));
+
+	// 해제 테스트: OnEndTurn에 핸들 제거와 함께 취약 태그 회수
+	DriveTiming(Passive, OnEndTurn, Ctx);
+	TestFalse(TEXT("OnEndTurn에 해제 함: 취약 태그 회수"), Comp->HasMatchingGameplayTag(VulnerabilityTag));
 
 	return true;
 }

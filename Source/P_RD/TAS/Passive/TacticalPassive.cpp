@@ -29,15 +29,15 @@ void UTacticalPassive::ActivatePassive(
 			return;
 		}
 
-		// 발동 시 대상에게 가할 기여값을 담을 내부 중간 버퍼
-		FBoardCombatTargetSnapshotData Contribution;
+		// 발동 시 대상에게 가할 기여값(크기)
+		float ContributionMagnitude = 0.f;
 
 		// 내부상태로 적용 여부를 판단하고 다음 상태를 PassiveState에 기록
 		// 여기서는 아직 내부상태가 변경되진 않음 (CommitPassive 해야 변경됨)
-		if (EvaluateActivate(Ctx, PassiveState, Contribution))
+		if (EvaluateActivate(Ctx, PassiveState, ContributionMagnitude))
 		{
 			// 계산된 수치를 이펙트로 적용
-			NotifyPassive(Ctx, Contribution);
+			NotifyPassive(Ctx, ContributionMagnitude);
 		}
 	}
 	// 해제 시점이면: 적용 중인 이펙트를 제거 (핸들 없으면 내부에서 no-op)
@@ -71,10 +71,17 @@ void UTacticalPassive::InitializeFromData()
 
 void UTacticalPassive::NotifyPassive(
 	const FPassiveActivateContext& Ctx,
-	FBoardCombatTargetSnapshotData& TargetDelta)
+	const float Magnitude)
 {
 	// 적용할 이펙트가 없으면(계산 전용/무상태 등) 적용하지 않음
 	if (mEffectClass == nullptr)
+	{
+		return;
+	}
+
+	// 기여가 없으면(변화량 0) 굳이 이펙트 적용할 필요가 없으므로 바로 리턴
+	// @note 이펙트 적용을 안하니까 이펙트 핸들을 갖지 않으므로 딱히 부작용은 없음
+	if (FMath::IsNearlyZero(Magnitude))
 	{
 		return;
 	}
@@ -88,19 +95,6 @@ void UTacticalPassive::NotifyPassive(
 	UAttributeSetComponentModel* OwnerComp = OwnerTarget->GetAttributeComponentModel();
 	if (OwnerComp == nullptr)
 	{
-		return;
-	}
-
-	// 대상 속성·연산은 이펙트가 정의. 첫 modifier 속성의 변화량을 크기로 사용(단일 modifier 가정).
-	const UTacticalEffect* EffectCDO = mEffectClass.GetDefaultObject();
-	if (EffectCDO == nullptr)
-	{
-		return;
-	}
-	const float* Magnitude = TargetDelta.mAttributes.Find(EffectCDO->mModifiers[0].mAttribute);
-	if (Magnitude == nullptr || FMath::IsNearlyZero(*Magnitude))
-	{
-		// 기여가 없으면(예: 임계 미달 N번째) 이펙트 적용 안 함
 		return;
 	}
 
@@ -139,12 +133,10 @@ void UTacticalPassive::NotifyPassive(
 		EffectContext->SetAbility(this);
 
 		TSharedPtr<FTacticalEffectSpec> Spec = OwnerComp->MakeOutgoingSpec(mEffectClass, EffectContext);
-		Spec->mDynamicMagnitude = *Magnitude;
+		Spec->mDynamicMagnitude = Magnitude;
 
 		mActiveHandles.Add(OwnerComp->ApplyTacticalEffectSpecToTarget(*Spec, TargetComp));
 	}
-
-	// TODO: TargetDelta.mTags(발동 여부형 변화) 적용 경로는 미정. 정해지면 추가.
 }
 
 void UTacticalPassive::DeactivatePassive()
