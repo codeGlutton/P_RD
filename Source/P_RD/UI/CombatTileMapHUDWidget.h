@@ -773,10 +773,17 @@ private:
 	UPROPERTY(Transient)
 	TSubclassOf<UUserWidget> mDetailOverlayClass;
 
-	/** @brief 플로팅 로그용 HP(하트) 아이콘 텍스처. 생성자에서 로드. */
-	UPROPERTY(Transient)
-	TObjectPtr<UTexture2D> mFloatingLogHpIconTexture;
+	/** @brief 플로팅 로그 종류별 아이콘 텍스처(생성자에서 로드). HP는 피해/회복 색으로 갈린다. */
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconHpDamage;
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconHpRecovery;
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconGetMove;
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconGetDefense;
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconAgility;
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconFortification;
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconVulnerability;
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconWeakness;
 
 private:
-	UTexture2D* ResolveFloatingLogIcon(EFloatingLogIconType IconType) const;
+	/** @brief 로그 의미(아이콘 종류+색) → 실제 텍스처. HP는 색(Damage/Heal)으로 피해/회복 아이콘을 가른다. 미준비 종류는 nullptr. */
+	UTexture2D* ResolveFloatingLogIcon(EFloatingLogIconType IconType, EFloatingLogColorType ColorType) const;
 };

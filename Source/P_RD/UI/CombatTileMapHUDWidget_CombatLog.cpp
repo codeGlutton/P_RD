@@ -83,22 +83,29 @@ namespace
 }
 
 /**
- * @brief 아이콘 의미(enum) → 실제 텍스처. None이면 아이콘 없이 텍스트만 띄운다.
- * @param IconType 게임플레이가 넘긴 의미값(HP/Poison/Fire/Shield/Move/None).
- * @return 해당 텍스처. None이면 nullptr. (첫 로드 후 엔진 캐시에 남아 재로드 비용 없음)
- * @note 현재는 HP 하트 하나만 연결돼 있어 None을 뺀 모든 종류가 임시로 하트로 나온다.
- *       전용 에셋이 정해지면 종류별 case를 분리해 경로만 갈아끼우면 된다.
+ * @brief 아이콘 의미(종류+색) → 실제 텍스처. None이면 아이콘 없이 텍스트만 띄운다.
+ * @param IconType 게임플레이가 넘긴 아이콘 종류(HP/GetMove/GetDefense/Agility/Fortification/Vulnerability/Weakness 등).
+ * @param ColorType 색 의미. HP는 이 값으로 피해(Damage)/회복(Heal) 아이콘을 가른다.
+ * @return 해당 텍스처. None이거나 전용 아이콘이 아직 없는 종류(Poison/Fire/Move)면 nullptr.
+ * @note StatusIcons 8종 연결됨. Poison/Fire/Move는 발행 배선도 아직 없어 아이콘이 준비돼도 지금은 안 뜬다.
  */
-UTexture2D* UCombatTileMapHUDWidget::ResolveFloatingLogIcon(EFloatingLogIconType IconType) const
+UTexture2D* UCombatTileMapHUDWidget::ResolveFloatingLogIcon(EFloatingLogIconType IconType, EFloatingLogColorType ColorType) const
 {
-	// None은 아이콘 없음(텍스트만). 나머지 아이콘 종류는 임시로 전부 HP(하트) 텍스처로 연결한다.
-	// Poison/Fire/GetDefense/Move 전용 아이콘 에셋이 준비되면 case를 분리해 경로만 갈아끼우면 됨.
-	if (IconType == EFloatingLogIconType::None)
+	switch (IconType)
 	{
+	case EFloatingLogIconType::HP:
+		// HP는 색으로 피해/회복을 가른다(Heal=회복, 그 외=피해).
+		return ColorType == EFloatingLogColorType::Heal ? mLogIconHpRecovery : mLogIconHpDamage;
+	case EFloatingLogIconType::GetMove:       return mLogIconGetMove;
+	case EFloatingLogIconType::GetDefense:    return mLogIconGetDefense;
+	case EFloatingLogIconType::Agility:       return mLogIconAgility;
+	case EFloatingLogIconType::Fortification: return mLogIconFortification;
+	case EFloatingLogIconType::Vulnerability: return mLogIconVulnerability;
+	case EFloatingLogIconType::Weakness:      return mLogIconWeakness;
+	default:
+		// None + 아직 전용 아이콘이 없는 Poison/Fire/Move는 아이콘 없이 텍스트만 띄운다.
 		return nullptr;
 	}
-
-	return mFloatingLogHpIconTexture;
 }
 
 /**
@@ -211,7 +218,7 @@ void UCombatTileMapHUDWidget::SpawnFloatingCombatLogAtWorld(const FCombatFloatin
 	}
 	LogBox->SetVisibility(ESlateVisibility::HitTestInvisible);
 
-	UTexture2D* Icon = ResolveFloatingLogIcon(Request.mIconType);
+	UTexture2D* Icon = ResolveFloatingLogIcon(Request.mIconType, Request.mColorType);
 	if (Icon != nullptr)
 	{
 		if (UImage* LogIcon = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass()))
