@@ -15,18 +15,25 @@
 
 namespace
 {
-	constexpr float TableHalfDepth = 198.0f;
-	constexpr float TableHalfWidth = 250.0f;
+	// 주사위가 돌아다니는 판 안쪽 영역(클램프 바운즈). 세로(Depth)는 캡처 세로가 좁아서 작게 잡아야 영역을 안 벗어난다.
+	constexpr float TableHalfDepth = 120.0f;
+	constexpr float TableHalfWidth = 210.0f;
 	constexpr float TableFloorZ = 0.0f;
 	// 벽을 충분히 높여 주사위가 튀어서 판 밖으로 넘어가지 못하게 한다.
 	constexpr float TableWallHeight = 320.0f;
 	constexpr float TableWallThickness = 42.0f;
 	constexpr float DiceTableVisibleMarginX = 28.0f;
 	constexpr float DiceTableVisibleMarginY = 38.0f;
-	constexpr float DiceAlignFrameMargin = 56.0f;
+	// 클램프용 시각 반지름: 물리 반경(30) × 최대 크기보정(~1.45배) ≈ 44. 커진 비주얼도 판 밖으로 안 삐지게 한다.
+	constexpr float VisualClampRadius = 44.0f;
+	constexpr float DiceAlignFrameMargin = 20.0f;   // 정렬 행 가장자리 여백(작을수록 행이 넓어져 주사위가 안 줄고 들어감)
 	constexpr float DiceAlignLocalX = -18.0f;
-	constexpr float RollRattleKickInterval = 0.105f;
-	constexpr float RollRattleKickEndSeconds = 2.18f;
+	// 정지 감지 기반 굴림 종료(고정 시간 강제 대신). 실제로 멈추면 바로 끝낸다 — UEDice/dice-box 방식.
+	constexpr float RollMinSeconds = 0.30f;            // 이 시간 전엔 완료 판정 안 함(즉시 멈춤 방지)
+	constexpr float RollStillHoldSeconds = 0.045f;     // 임계 속도 이하가 이만큼 연속 유지되면 정지로 본다
+	constexpr float RollMaxSeconds = 2.20f;            // 안전 캡: 이 시간엔 무조건 강제 완료
+	constexpr float RollStillLinearThreshold = 22.0f;  // 정지 판정 선속도 임계(cm/s) — 높이면 더 일찍 멈춤
+	constexpr float RollStillAngularThreshold = 74.0f; // 정지 판정 각속도 임계(deg/s)
 
 	void ClampToVisibleDiceBoard(float DiceRadius, FVector& LocalLocation, FVector& LocalVelocity, bool& bClamped)
 	{
@@ -126,42 +133,6 @@ namespace
 		}
 	}
 
-	void ApplyRattleKickToBody(
-		UProceduralMeshComponent* PhysicsBody,
-		const FTransform& ActorTransform,
-		int32 RollSeed,
-		int32 DiceIndex,
-		int32 KickIndex)
-	{
-		if (PhysicsBody == nullptr || PhysicsBody->IsSimulatingPhysics() == false)
-		{
-			return;
-		}
-
-		FRandomStream Stream(RollSeed + DiceIndex * 7919 + KickIndex * 104729);
-		const float Side = ((DiceIndex + KickIndex) % 2 == 0) ? 1.0f : -1.0f;
-		const float Forward = ((DiceIndex * 3 + KickIndex) % 4 < 2) ? 1.0f : -1.0f;
-		FVector LocalImpulse(
-			Forward * Stream.FRandRange(42.0f, 92.0f),
-			Side * Stream.FRandRange(82.0f, 142.0f),
-			Stream.FRandRange(34.0f, 64.0f));
-
-		const FVector LocalVelocity = ActorTransform.InverseTransformVectorNoScale(PhysicsBody->GetPhysicsLinearVelocity());
-		if (FVector2D(LocalVelocity.X, LocalVelocity.Y).Size() < 130.0f)
-		{
-			LocalImpulse.X += Forward * Stream.FRandRange(54.0f, 104.0f);
-			LocalImpulse.Y += Side * Stream.FRandRange(72.0f, 122.0f);
-		}
-
-		const FVector LocalAngularImpulse(
-			Stream.FRandRange(-4400.0f, 4400.0f),
-			Stream.FRandRange(-5400.0f, 5400.0f),
-			Side * Stream.FRandRange(6200.0f, 9400.0f));
-
-		PhysicsBody->WakeAllRigidBodies();
-		PhysicsBody->AddImpulse(ActorTransform.TransformVectorNoScale(LocalImpulse), NAME_None, true);
-		PhysicsBody->AddAngularImpulseInDegrees(ActorTransform.TransformVectorNoScale(LocalAngularImpulse), NAME_None, true);
-	}
 }
 
 ACombatDiceRollCaptureActor::ACombatDiceRollCaptureActor()
@@ -186,7 +157,7 @@ void ACombatDiceRollCaptureActor::InitializeSceneComponents()
 	mSceneCaptureComponent->SetRelativeLocation(FVector(-40.0f, 0.0f, 620.0f));
 	mSceneCaptureComponent->SetRelativeRotation(FRotator(-88.0f, 0.0f, 0.0f));
 	mSceneCaptureComponent->ProjectionType = ECameraProjectionMode::Orthographic;
-	mSceneCaptureComponent->OrthoWidth = 560.0f;
+	mSceneCaptureComponent->OrthoWidth = 430.0f;   // 줌인: 좁아진 판 영역을 가득 잡아 주사위를 크게(눈으로 튜닝)
 	mSceneCaptureComponent->FOVAngle = 36.0f;
 	mSceneCaptureComponent->CaptureSource = SCS_SceneColorHDR;
 	mSceneCaptureComponent->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
@@ -414,7 +385,9 @@ void ACombatDiceRollCaptureActor::ConfigureDice(const TArray<FCombatDiceRollPhys
 
 		VisualActor->SetDiceType(DiceSpec.mFaceCount);
 		VisualActor->SetFaceData(DiceSpec.mFaceValues, DiceSpec.mFaceTextures);
+		VisualActor->SetDiceMaterialVariant(DiceIndex);
 		VisualActor->SetDiceColor(DiceSpec.mDiceColor);
+		VisualActor->ClearHighlightedFace();
 		VisualActor->SetBackdropVisible(false);
 		VisualActor->SetPreviewLightingEnabled(false);
 		VisualActor->SetDiceVisibleInSceneCaptureOnly(true);
@@ -501,10 +474,10 @@ UProceduralMeshComponent* ACombatDiceRollCaptureActor::CreatePhysicsBody(int32 D
 	PhysicsBody->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	PhysicsBody->SetCollisionObjectType(ECC_PhysicsBody);
 	PhysicsBody->SetCollisionResponseToAllChannels(ECR_Block);
-	// "파바바바박" 손맛: 감쇠를 더 낮춰 강제 종료 시점까지 계속 튀고 텀블하게 한다.
-	// 위치는 매 틱 하드클램프로 판 안에 강제되므로(ClampToVisibleDiceBoard) 임펄스를 키워도 이탈하지 않는다.
-	PhysicsBody->SetLinearDamping(0.08f);
-	PhysicsBody->SetAngularDamping(0.10f);
+	// 감쇠를 높여, 한 번 세게 던져도 몇 번 텀블한 뒤 빠르고 깔끔하게 멈추게 한다(UEDice 1.0 / dice-box 0.4 참고).
+	// 낮은 감쇠+반복 킥이 "정신 사나운" 원인이었음 → 킥 제거 + 감쇠 상향으로 "진짜 같지만 정돈된" 굴림.
+	PhysicsBody->SetLinearDamping(1.35f);
+	PhysicsBody->SetAngularDamping(1.85f);
 	PhysicsBody->SetMassOverrideInKg(NAME_None, 0.075f, true);
 	PhysicsBody->BodyInstance.bUseCCD = true;
 	PhysicsBody->SetSimulatePhysics(false);
@@ -525,9 +498,12 @@ void ACombatDiceRollCaptureActor::ResetDiceBodyPose(UProceduralMeshComponent* Ph
 	const int32 ColumnCount = FMath::Min(3, FMath::Max(1, DiceCount));
 	const int32 RowIndex = DiceIndex / ColumnCount;
 	const int32 ColumnIndex = DiceIndex % ColumnCount;
-	const float RowWidth = StaticCast<float>(ColumnCount - 1) * 88.0f;
-	const float LocalY = StaticCast<float>(ColumnIndex) * 88.0f - RowWidth * 0.5f + Stream.FRandRange(-10.0f, 10.0f);
-	const float LocalX = -118.0f + StaticCast<float>(RowIndex) * 76.0f + Stream.FRandRange(-12.0f, 12.0f);
+	const int32 RowCount = FMath::DivideAndRoundUp(DiceCount, ColumnCount);
+	const int32 RowDiceCount = FMath::Min(ColumnCount, DiceCount - RowIndex * ColumnCount);
+	const float RowWidth = StaticCast<float>(FMath::Max(0, RowDiceCount - 1)) * 88.0f;
+	const float RowDepth = StaticCast<float>(FMath::Max(0, RowCount - 1)) * 76.0f;
+	const float LocalY = StaticCast<float>(ColumnIndex) * 88.0f - RowWidth * 0.5f + Stream.FRandRange(-8.0f, 8.0f);
+	const float LocalX = DiceAlignLocalX + StaticCast<float>(RowIndex) * 76.0f - RowDepth * 0.5f + Stream.FRandRange(-9.0f, 9.0f);
 	const float LocalZ = TableFloorZ + PhysicsDiceRadius + 42.0f + StaticCast<float>((DiceIndex * 2) % 5) * 9.0f;
 	const FVector LocalLocation(LocalX, LocalY, LocalZ);
 	const FRotator LocalRotation(
@@ -560,18 +536,18 @@ void ACombatDiceRollCaptureActor::StartRoll(int32 RollSeed)
 		PhysicsBody->SetSimulatePhysics(true);
 		PhysicsBody->WakeAllRigidBodies();
 
-		// "따다다다당": 시작부터 서로 다른 레인으로 쏴서 핀볼/마블처럼 벽과 주사위끼리 계속 부딪히게 한다.
-		// 위치는 매 틱 하드클램프로 강제 포함되므로 큰 임펄스에도 판을 벗어나지 않는다.
+		// 한 번 세게 던지고 끝(반복 킥 없음). 서로 다른 레인+스핀으로 텀블시키되, 높은 감쇠가 몇 번 구른 뒤 정리한다.
+		// 위치는 매 틱 하드클램프로 판 안에 강제되므로 이탈하지 않는다.
 		const float Side = (DiceIndex % 2 == 0) ? 1.0f : -1.0f;
 		const float Forward = (DiceIndex % 3 == 0) ? -1.0f : 1.0f;
 		const FVector LocalImpulse(
-			Forward * Stream.FRandRange(72.0f, 126.0f),
-			-Side * Stream.FRandRange(140.0f, 220.0f),
-			Stream.FRandRange(44.0f, 76.0f));
+			Forward * Stream.FRandRange(55.0f, 92.0f),
+			-Side * Stream.FRandRange(90.0f, 150.0f),
+			Stream.FRandRange(40.0f, 66.0f));
 		const FVector LocalAngularImpulse(
-			Stream.FRandRange(-4800.0f, 4800.0f),
-			Stream.FRandRange(-6200.0f, 6200.0f),
-			Side * Stream.FRandRange(7200.0f, 10800.0f));
+			Stream.FRandRange(-2800.0f, 2800.0f),
+			Stream.FRandRange(-3400.0f, 3400.0f),
+			Side * Stream.FRandRange(3800.0f, 6200.0f));
 
 		PhysicsBody->AddImpulse(GetActorTransform().TransformVectorNoScale(LocalImpulse), NAME_None, true);
 		PhysicsBody->AddAngularImpulseInDegrees(GetActorTransform().TransformVectorNoScale(LocalAngularImpulse), NAME_None, true);
@@ -579,11 +555,19 @@ void ACombatDiceRollCaptureActor::StartRoll(int32 RollSeed)
 
 	mRollSeed = RollSeed;
 	mRollElapsed = 0.0f;
+	mRollStillElapsed = 0.0f;
 	mRollActive = true;
 	mRollComplete = false;
 	mAligning = false;
 	mAlignComplete = false;
 	mAlignElapsed = 0.0f;
+	for (ACombatDicePreviewActor* VisualActor : mVisualDiceActors)
+	{
+		if (IsValid(VisualActor))
+		{
+			VisualActor->ClearHighlightedFace();
+		}
+	}
 	SyncVisualDiceToPhysics();
 	CaptureDice();
 }
@@ -603,17 +587,26 @@ void ACombatDiceRollCaptureActor::Tick(float DeltaSeconds)
 		return;
 	}
 
-	const float PreviousRollElapsed = mRollElapsed;
 	mRollElapsed += DeltaSeconds;
 	for (UProceduralMeshComponent* PhysicsBody : mPhysicsDiceBodies)
 	{
 		ConstrainDiceToTable(PhysicsBody);
 	}
-	ApplyRollRattleKicks(PreviousRollElapsed);
 	SyncVisualDiceToPhysics();
 	CaptureDice();
 
-	if (mRollElapsed >= RollForceCompleteSeconds)
+	// 정지 감지: 모든 주사위가 임계 속도 이하로 RollStillHold만큼 연속 유지되면 완료(실제로 멈춘 순간 종료).
+	// 최소 시간 전엔 완료하지 않고, 최대 시간(안전 캡)엔 강제 완료한다.
+	if (mRollElapsed >= RollMinSeconds && AreAllDiceStill())
+	{
+		mRollStillElapsed += DeltaSeconds;
+	}
+	else
+	{
+		mRollStillElapsed = 0.0f;
+	}
+
+	if (mRollStillElapsed >= RollStillHoldSeconds || mRollElapsed >= RollMaxSeconds)
 	{
 		mRollActive = false;
 		mRollComplete = true;
@@ -627,30 +620,32 @@ void ACombatDiceRollCaptureActor::Tick(float DeltaSeconds)
 			}
 		}
 		SyncVisualDiceToPhysics();
+		for (int32 DiceIndex = 0; DiceIndex < mVisualDiceActors.Num(); ++DiceIndex)
+		{
+			if (ACombatDicePreviewActor* VisualActor = mVisualDiceActors[DiceIndex])
+			{
+				VisualActor->SetHighlightedFace(GetSettledFaceOrdinal(DiceIndex));
+			}
+		}
 		CaptureDice();
 	}
 }
 
-void ACombatDiceRollCaptureActor::ApplyRollRattleKicks(float PreviousRollElapsed)
+bool ACombatDiceRollCaptureActor::AreAllDiceStill()
 {
-	if (PreviousRollElapsed >= RollRattleKickEndSeconds)
+	for (UProceduralMeshComponent* PhysicsBody : mPhysicsDiceBodies)
 	{
-		return;
+		if (PhysicsBody == nullptr || PhysicsBody->IsSimulatingPhysics() == false)
+		{
+			continue;
+		}
+		if (PhysicsBody->GetPhysicsLinearVelocity().Size() > RollStillLinearThreshold
+			|| PhysicsBody->GetPhysicsAngularVelocityInDegrees().Size() > RollStillAngularThreshold)
+		{
+			return false;
+		}
 	}
-
-	const float ClampedCurrentElapsed = FMath::Min(mRollElapsed, RollRattleKickEndSeconds);
-	const int32 PreviousKickIndex = FMath::FloorToInt(PreviousRollElapsed / RollRattleKickInterval);
-	const int32 CurrentKickIndex = FMath::FloorToInt(ClampedCurrentElapsed / RollRattleKickInterval);
-	if (CurrentKickIndex <= PreviousKickIndex)
-	{
-		return;
-	}
-
-	const FTransform ActorTransform = GetActorTransform();
-	for (int32 DiceIndex = 0; DiceIndex < mPhysicsDiceBodies.Num(); ++DiceIndex)
-	{
-		ApplyRattleKickToBody(mPhysicsDiceBodies[DiceIndex], ActorTransform, mRollSeed, DiceIndex, CurrentKickIndex);
-	}
+	return true;
 }
 
 void ACombatDiceRollCaptureActor::ConstrainDiceToTable(UProceduralMeshComponent* PhysicsBody) const
@@ -666,7 +661,7 @@ void ACombatDiceRollCaptureActor::ConstrainDiceToTable(UProceduralMeshComponent*
 	bool bClamped = false;
 
 	const float SafeZ = TableFloorZ + PhysicsDiceRadius + 2.0f;
-	ClampToVisibleDiceBoard(PhysicsDiceRadius, LocalLocation, LocalVelocity, bClamped);
+	ClampToVisibleDiceBoard(VisualClampRadius, LocalLocation, LocalVelocity, bClamped);
 
 	if (LocalLocation.Z < SafeZ)
 	{
@@ -789,6 +784,7 @@ void ACombatDiceRollCaptureActor::StartAlign()
 		? FMath::Min(AlignRowSpacing, AvailableRowWidth / StaticCast<float>(SpacingCount))
 		: AlignRowSpacing;
 	const float RowWidth = StaticCast<float>(SpacingCount) * DynamicRowSpacing;
+	// 정렬 주사위는 굴림과 동일한 크기로 둔다(축소 없음). 행 폭(DiceAlignFrameMargin)으로 겹침을 조절한다.
 	const FVector VisualScale(PhysicsDiceRadius / 96.0f);
 
 	for (int32 Slot = 0; Slot < DiceCount; ++Slot)
@@ -811,6 +807,10 @@ void ACombatDiceRollCaptureActor::StartAlign()
 
 		mAlignStartTransforms[DiceIndex] = StartTransform;
 		mAlignTargetTransforms[DiceIndex] = TargetTransform;
+		if (mVisualDiceActors.IsValidIndex(DiceIndex) && IsValid(mVisualDiceActors[DiceIndex]))
+		{
+			mVisualDiceActors[DiceIndex]->SetHighlightedFace(GetSettledFaceOrdinal(DiceIndex));
+		}
 	}
 
 	mAlignElapsed = 0.0f;

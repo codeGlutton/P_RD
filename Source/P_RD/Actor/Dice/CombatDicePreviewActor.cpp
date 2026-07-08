@@ -2,8 +2,26 @@
 
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
+#include "Materials/MaterialInterface.h"
 #include "Actor/Dice/CombatDicePreviewActorPrivate.h"
 #include "Actor/Dice/DicePolyhedron.h"
+
+namespace
+{
+	void ApplyMaterialToEverySlot(UStaticMeshComponent* MeshComponent, UMaterialInterface* Material)
+	{
+		if (MeshComponent == nullptr || Material == nullptr)
+		{
+			return;
+		}
+
+		const int32 MaterialSlotCount = FMath::Max(1, MeshComponent->GetNumMaterials());
+		for (int32 SlotIndex = 0; SlotIndex < MaterialSlotCount; ++SlotIndex)
+		{
+			MeshComponent->SetMaterial(SlotIndex, Material);
+		}
+	}
+}
 
 ACombatDicePreviewActor::ACombatDicePreviewActor()
 {
@@ -14,7 +32,6 @@ ACombatDicePreviewActor::ACombatDicePreviewActor()
 	LoadDiceNumberFont();
 	LoadDiceMeshes();
 	InitializeMaterials();
-	LoadDefaultFaceTextures();
 	// 메시/숫자 생성(RegisterComponent 등 런타임 작업)은 BeginPlay/SetDiceType에서 — 생성자(CDO)에서 하면 크래시.
 }
 
@@ -33,6 +50,7 @@ void ACombatDicePreviewActor::SetDiceType(int32 FaceCount)
 {
 	mCurrentFaceCount = FaceCount;
 	ApplyDiceMesh(FaceCount);
+	ApplyDiceBodyMaterialPreset();
 	RebuildFaceTexts(FaceCount);
 
 	// 기본 숫자 1..N(런타임에 SetFaceValues로 갱신).
@@ -43,7 +61,6 @@ void ACombatDicePreviewActor::SetDiceType(int32 FaceCount)
 		DefaultValues.Add(Index + 1);
 	}
 	SetFaceValues(DefaultValues);
-	SetFaceTextures(mFaceTextureOverrides);
 
 	OnDiceRebuilt();   // 캡처 액터가 새 컴포넌트를 캡처 목록에 다시 등록/촬영
 }
@@ -68,6 +85,28 @@ void ACombatDicePreviewActor::ApplyDiceMesh(int32 FaceCount)
 		// 바운딩 반지름을 DiceRadius로 맞춰 주사위 종류별 크기 통일(FBX 임포트 스케일과 무관하게).
 		const float MeshRadius = static_cast<float>(Mesh->GetBounds().SphereRadius);
 		const float Scale = (MeshRadius > KINDA_SMALL_NUMBER) ? (DiceRadius / MeshRadius) : 1.0f;
+
+		// 외접구(코너까지) 기준 정규화는 뾰족한 주사위(d4/d6)의 몸통을 작게 만든다.
+		// 종류별 보정 배율로 체감 크기를 맞춘다(눈으로 튜닝하는 값).
+		float SizeCorrection = 1.0f;
+		switch (FaceCount)
+		{
+		case 4:  SizeCorrection = 1.45f; break;
+		case 6:  SizeCorrection = 1.15f; break;
+		case 8:  SizeCorrection = 1.18f; break;
+		case 10: SizeCorrection = 1.10f; break;
+		case 12: SizeCorrection = 0.92f; break;
+		case 20: SizeCorrection = 0.85f; break;
+		default: break;
+		}
+
+		// 보정은 부모(mDiceRoot)에 걸어 몸통·면 텍스처판·숫자가 함께 스케일되게 한다.
+		// (몸통 메시에만 걸면 면판/숫자가 원래 반경에 남아 커진 몸통 속에 파묻힌다.)
+		if (mDiceRoot != nullptr)
+		{
+			mDiceRoot->SetRelativeScale3D(FVector(SizeCorrection));
+		}
+
 		const FVector MeshScale = FaceCount == 2
 			? FVector(Scale * 1.06f, Scale * 1.06f, Scale * 0.24f)
 			: FVector(Scale);
@@ -93,11 +132,11 @@ void ACombatDicePreviewActor::ApplyDiceMesh(int32 FaceCount)
 
 	if (mDiceMaterial != nullptr)
 	{
-		mDiceMesh->SetMaterial(0, mDiceMaterial);
+		ApplyMaterialToEverySlot(mDiceMesh, mDiceMaterial);
 	}
 	if (mCoinRimMesh != nullptr && mCoinRimMaterial != nullptr)
 	{
-		mCoinRimMesh->SetMaterial(0, mCoinRimMaterial);
+		ApplyMaterialToEverySlot(mCoinRimMesh, mCoinRimMaterial);
 	}
 }
 

@@ -5,9 +5,51 @@
 #include "Engine/Texture.h"
 #include "UObject/ConstructorHelpers.h"
 
+namespace
+{
+	struct FDiceBodyMaterialPreset
+	{
+		FLinearColor mBaseColor;
+		float mMetallic = 0.0f;
+		float mSpecular = 0.52f;
+		float mRoughness = 0.36f;
+		float mEmissiveStrength = 0.06f;
+	};
+
+	const FDiceBodyMaterialPreset& GetDiceBodyMaterialPreset(int32 VariantIndex)
+	{
+		static const FDiceBodyMaterialPreset Presets[] = {
+			{ FLinearColor(0.91f, 0.86f, 0.73f, 1.0f), 0.00f, 0.52f, 0.38f, 0.06f }, // warm satin
+			{ FLinearColor(0.80f, 0.89f, 0.96f, 1.0f), 0.00f, 0.68f, 0.22f, 0.04f }, // cool glossy
+			{ FLinearColor(0.92f, 0.78f, 0.46f, 1.0f), 0.35f, 0.62f, 0.30f, 0.04f }, // soft brass
+			{ FLinearColor(0.74f, 0.88f, 0.79f, 1.0f), 0.00f, 0.45f, 0.58f, 0.05f }, // matte jade
+			{ FLinearColor(0.92f, 0.72f, 0.69f, 1.0f), 0.00f, 0.56f, 0.34f, 0.05f }, // rose ceramic
+			{ FLinearColor(0.70f, 0.73f, 0.84f, 1.0f), 0.00f, 0.40f, 0.62f, 0.03f }, // slate stone
+		};
+
+		const int32 PresetIndex = FMath::Abs(VariantIndex) % UE_ARRAY_COUNT(Presets);
+		return Presets[PresetIndex];
+	}
+
+	int32 GetDefaultVariantForFaceCount(int32 FaceCount)
+	{
+		switch (FaceCount)
+		{
+		case 2:  return 1;
+		case 4:  return 3;
+		case 6:  return 0;
+		case 8:  return 4;
+		case 10: return 2;
+		case 12: return 5;
+		case 20: return 2;
+		default: return 0;
+		}
+	}
+}
+
 void ACombatDicePreviewActor::InitializeMaterials()
 {
-	// 주사위 몸체: 자발광 보강 머티리얼(어두운 면도 검게 죽지 않게). 'Color'를 SetDiceColor로 갱신.
+	// 주사위 몸체: 무늬 없이 재질감만 보이게 쓰는 본체 머티리얼. 'Color'를 SetDiceColor로 갱신.
 	// 메시 적용은 ApplyDiceMesh에서 mDiceMesh->SetMaterial(0, ...)로.
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> DiceBodyMaterialFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/Dice/M_DiceBody.M_DiceBody"));
 	if (DiceBodyMaterialFinder.Succeeded())
@@ -15,7 +57,7 @@ void ACombatDicePreviewActor::InitializeMaterials()
 		mDiceMaterial = UMaterialInstanceDynamic::Create(DiceBodyMaterialFinder.Object, this);
 		if (mDiceMaterial != nullptr)
 		{
-			mDiceMaterial->SetVectorParameterValue(TEXT("Color"), FLinearColor(0.92f, 0.90f, 0.84f, 1.0f));
+			ApplyDiceBodyMaterialPreset();
 		}
 	}
 
@@ -38,56 +80,27 @@ void ACombatDicePreviewActor::InitializeMaterials()
 		}
 	}
 
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> DiceFaceMaterialFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/Dice/M_DiceFace.M_DiceFace"));
-	if (DiceFaceMaterialFinder.Succeeded())
-	{
-		mFaceMaterialTemplate = DiceFaceMaterialFinder.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UTexture> DefaultFaceTextureFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/Dice/T_DiceFace_Base.T_DiceFace_Base"));
-	if (DefaultFaceTextureFinder.Succeeded())
-	{
-		mDefaultFaceTexture = DefaultFaceTextureFinder.Object;
-	}
+	// Material-only pass: 면별 장식/테두리 텍스처 레이어는 존재하지 않는다. 숫자만 TextRender로 얹는다.
 }
 
-void ACombatDicePreviewActor::LoadDefaultFaceTextures()
+void ACombatDicePreviewActor::ApplyDiceBodyMaterialPreset()
 {
-	struct FDefaultFaceTextureEntry
+	if (mDiceMaterial == nullptr)
 	{
-		int32 mFaceCount;
-		UTexture* mTexture;
-	};
-
-	static ConstructorHelpers::FObjectFinder<UTexture> D2FaceTextureFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/Dice/T_DiceFace_D2.T_DiceFace_D2"));
-	static ConstructorHelpers::FObjectFinder<UTexture> D4FaceTextureFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/Dice/T_DiceFace_D4.T_DiceFace_D4"));
-	static ConstructorHelpers::FObjectFinder<UTexture> D6FaceTextureFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/Dice/T_DiceFace_D6.T_DiceFace_D6"));
-	static ConstructorHelpers::FObjectFinder<UTexture> D8FaceTextureFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/Dice/T_DiceFace_D8.T_DiceFace_D8"));
-	static ConstructorHelpers::FObjectFinder<UTexture> D12FaceTextureFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/Dice/T_DiceFace_D12.T_DiceFace_D12"));
-	static ConstructorHelpers::FObjectFinder<UTexture> D20FaceTextureFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/Dice/T_DiceFace_D20.T_DiceFace_D20"));
-
-	const FDefaultFaceTextureEntry Entries[] = {
-		{ 2, D2FaceTextureFinder.Succeeded() ? D2FaceTextureFinder.Object : mDefaultFaceTexture },
-		{ 4, D4FaceTextureFinder.Succeeded() ? D4FaceTextureFinder.Object : mDefaultFaceTexture },
-		{ 6, D6FaceTextureFinder.Succeeded() ? D6FaceTextureFinder.Object : mDefaultFaceTexture },
-		{ 8, D8FaceTextureFinder.Succeeded() ? D8FaceTextureFinder.Object : mDefaultFaceTexture },
-		{ 12, D12FaceTextureFinder.Succeeded() ? D12FaceTextureFinder.Object : mDefaultFaceTexture },
-		{ 20, D20FaceTextureFinder.Succeeded() ? D20FaceTextureFinder.Object : mDefaultFaceTexture },
-	};
-
-	for (const FDefaultFaceTextureEntry& Entry : Entries)
-	{
-		FRDCombatDiceFaceTextureSet& TextureSet = mDefaultFaceTexturesByCount.FindOrAdd(Entry.mFaceCount);
-		TArray<TObjectPtr<UTexture>>& Textures = TextureSet.mTextures;
-		if (Textures.Num() > 0)
-		{
-			continue;
-		}
-
-		Textures.Reserve(Entry.mFaceCount);
-		for (int32 FaceIndex = 0; FaceIndex < Entry.mFaceCount; ++FaceIndex)
-		{
-			Textures.Add(Entry.mTexture);
-		}
+		return;
 	}
+
+	const int32 VariantIndex = mDiceMaterialVariantIndex != INDEX_NONE
+		? mDiceMaterialVariantIndex
+		: GetDefaultVariantForFaceCount(mCurrentFaceCount);
+	const FDiceBodyMaterialPreset& Preset = GetDiceBodyMaterialPreset(VariantIndex);
+	const float TintWeight = mCurrentFaceCount == 2 ? 0.22f : 0.26f;
+	const FLinearColor BodyColor = FMath::Lerp(Preset.mBaseColor, mDiceTintColor, TintWeight);
+
+	mDiceMaterial->SetVectorParameterValue(TEXT("Color"), BodyColor);
+	// 현재 M_DiceBody가 노출하지 않는 파라미터는 무시된다. 노출되면 각 variant의 질감 차이까지 동작한다.
+	mDiceMaterial->SetScalarParameterValue(TEXT("Metallic"), Preset.mMetallic);
+	mDiceMaterial->SetScalarParameterValue(TEXT("Specular"), Preset.mSpecular);
+	mDiceMaterial->SetScalarParameterValue(TEXT("Roughness"), Preset.mRoughness);
+	mDiceMaterial->SetScalarParameterValue(TEXT("EmissiveStrength"), Preset.mEmissiveStrength);
 }

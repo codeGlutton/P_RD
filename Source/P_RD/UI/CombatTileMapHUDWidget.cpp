@@ -9,12 +9,6 @@
 UCombatTileMapHUDWidget::UCombatTileMapHUDWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	static ConstructorHelpers::FObjectFinder<UTexture2D> OwnedDiceFaceFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/Dice/T_DiceFace_Base.T_DiceFace_Base"));
-	if (OwnedDiceFaceFinder.Succeeded())
-	{
-		mOwnedDiceFaceTexture = OwnedDiceFaceFinder.Object;
-	}
-
 	static ConstructorHelpers::FObjectFinder<UTexture2D> DiceRollBoardFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/DiceRoll/UI_DiceRoll_Board_StyleMatch.UI_DiceRoll_Board_StyleMatch"));
 	if (DiceRollBoardFinder.Succeeded())
 	{
