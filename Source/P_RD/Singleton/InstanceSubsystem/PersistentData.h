@@ -249,6 +249,7 @@ public:
 	void SetVolume(EGameVolumeType VolumeType, float Volume);
 	void SetLanguage(ELanguageType LanguageType);
 	void SetResolution(const FIntPoint& Resolution);
+	void SetFpsLimit(int32 FpsLimit);
 
 	void ApplyCurrentOptions();
 
@@ -256,6 +257,7 @@ public:
 	float GetVolume(EGameVolumeType VolumeType) const;
 	ELanguageType GetLanguage() const;
 	const FIntPoint& GetResolution() const;
+	int32 GetFpsLimit() const;
 
 public:
 	bool IsActive() const;
@@ -271,6 +273,10 @@ protected:
 protected:
 	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "Resolution"))
 	FIntPoint mResolution = FIntPoint::ZeroValue;
+
+protected:
+	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "FpsLimit"))
+	int32 mFpsLimit = 60;
 
 	/* 캐싱 */
 private:

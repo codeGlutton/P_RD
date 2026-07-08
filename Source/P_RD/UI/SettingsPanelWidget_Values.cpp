@@ -4,6 +4,8 @@
 #include "Components/Slider.h"
 #include "GameMode/RDGameModeBase.h"
 
+#include "Singleton/InstanceSubsystem/PersistentData.h"
+#include "Singleton/InstanceSubsystem/PersistentDataSubsystem.h"
 #include "Singleton/InstanceSubsystem/PersistentDataType.h"
 
 void USettingsPanelWidget::ApplyValueModel(const FSettingsPanelValueModel& ValueModel)
@@ -40,6 +42,28 @@ void USettingsPanelWidget::ApplyValueModel(const FSettingsPanelValueModel& Value
 		EffectsCheckBox->SetIsChecked(mValueModel.mEffectsEnabled);
 	}
 	mIsApplyingValueModel = false;
+	SyncText();
+}
+
+void USettingsPanelWidget::RefreshValueModelFromCurrentOptions()
+{
+	FSettingsPanelValueModel CurrentValueModel = mValueModel;
+	if (const UGameInstance* GameInstance = GetGameInstance())
+	{
+		if (const UPersistentDataSubsystem* PersistentDataSubsystem = GameInstance->GetSubsystem<UPersistentDataSubsystem>())
+		{
+			if (const UOptionPersistData* OptionData = PersistentDataSubsystem->GetOptionPersistData())
+			{
+				CurrentValueModel.mMasterVolume = OptionData->GetVolume(EGameVolumeType::Master);
+				CurrentValueModel.mBgmVolume = OptionData->GetVolume(EGameVolumeType::BGM);
+				CurrentValueModel.mSfxVolume = OptionData->GetVolume(EGameVolumeType::SFX);
+				CurrentValueModel.mUiVolume = OptionData->GetVolume(EGameVolumeType::UI);
+				CurrentValueModel.mUseKoreanLanguage = OptionData->GetLanguage() == ELanguageType::KOREAN;
+				CurrentValueModel.mFpsLimit = OptionData->GetFpsLimit();
+			}
+		}
+	}
+	ApplyValueModel(CurrentValueModel);
 }
 
 FSettingsPanelValueModel USettingsPanelWidget::GetValueModel() const
@@ -65,7 +89,7 @@ void USettingsPanelWidget::HandleResetButtonClicked()
 	{
 		GameModeBase->ResetFromOptionPanel();
 	}
-	ApplyValueModel(FSettingsPanelValueModel());
+	RefreshValueModelFromCurrentOptions();
 }
 
 /**
@@ -171,6 +195,10 @@ void USettingsPanelWidget::HandleUiVolumeChanged(float Value)
 	if (mIsApplyingValueModel == false)
 	{
 		OnUiVolumeChanged.Broadcast(mValueModel.mUiVolume);
+		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+		{
+			GameModeBase->SetUIVolume(mValueModel.mUiVolume);
+		}
 	}
 }
 
@@ -235,6 +263,10 @@ void USettingsPanelWidget::HandleFpsThirtyButtonClicked()
 	if (mIsApplyingValueModel == false)
 	{
 		OnFpsLimitRequested.Broadcast(mValueModel.mFpsLimit);
+		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+		{
+			GameModeBase->SetFpsLimit(mValueModel.mFpsLimit);
+		}
 	}
 }
 
@@ -245,6 +277,10 @@ void USettingsPanelWidget::HandleFpsSixtyButtonClicked()
 	if (mIsApplyingValueModel == false)
 	{
 		OnFpsLimitRequested.Broadcast(mValueModel.mFpsLimit);
+		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+		{
+			GameModeBase->SetFpsLimit(mValueModel.mFpsLimit);
+		}
 	}
 }
 
@@ -265,6 +301,7 @@ void USettingsPanelWidget::HandleLanguageKoreanButtonClicked()
 		{
 			GameModeBase->SetLanguage(ELanguageType::KOREAN);
 		}
+		SyncText();
 	}
 }
 
@@ -279,6 +316,7 @@ void USettingsPanelWidget::HandleLanguageEnglishButtonClicked()
 		{
 			GameModeBase->SetLanguage(ELanguageType::ENGLISH);
 		}
+		SyncText();
 	}
 }
 

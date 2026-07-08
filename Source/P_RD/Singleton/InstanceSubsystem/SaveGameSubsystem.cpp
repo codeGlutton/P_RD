@@ -209,6 +209,7 @@ bool USaveGameSubsystem::LoadOption() const
 {
 	if (UGameplayStatics::DoesSaveGameExist(OPTION_SLOT_NAME, 0) == false)
 	{
+		GetOptionMutableData()->ApplyCurrentOptions();
 		return false;
 	}
 
@@ -241,6 +242,7 @@ void USaveGameSubsystem::LoadOptionAsync(FAsyncLoadGameFromSlotDelegate Callback
 		}
 		else
 		{
+			GetOptionMutableData()->ApplyCurrentOptions();
 			UE_LOG(LogSave, Log, TEXT("옵션 데이터 세이브 파일 미발견으로 로드 실패"));
 		}
 		MovedCallback.ExecuteIfBound(SlotName, UserIndex, LoadedSaveGame);

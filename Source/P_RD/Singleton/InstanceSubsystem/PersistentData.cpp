@@ -20,6 +20,8 @@
 #include "FunctionLibrary/RandomStreamFunctionLibrary.h"
 
 #include "Setting/GamePlaySettings.h"
+#include "Engine/Engine.h"
+#include "Internationalization/TextLocalizationManager.h"
 #include "Sound/SoundClass.h"
 
 /**
@@ -562,6 +564,7 @@ void UOptionPersistData::ClearOption()
 	mVolumes = CDO->mVolumes;
 	mLanguageType = CDO->mLanguageType;
 	mResolution = CDO->mResolution;
+	mFpsLimit = CDO->mFpsLimit;
 
 	ApplyCurrentOptions();
 }
@@ -576,6 +579,13 @@ void UOptionPersistData::SetVolume(EGameVolumeType VolumeType, float Volume)
 	Volume = FMath::Clamp(Volume, 0.f, 1.f);
 
 	mVolumes[StaticCast<int32>(VolumeType)] = Volume;
+	if (mOptionPersistDataCache.mSoundMixObject == nullptr
+		|| mOptionPersistDataCache.mSoundClassObjects.IsValidIndex(StaticCast<int32>(VolumeType)) == false
+		|| mOptionPersistDataCache.mSoundClassObjects[StaticCast<int32>(VolumeType)] == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OptionPersistData: sound option asset missing for volume type %d"), StaticCast<int32>(VolumeType));
+		return;
+	}
 	UGameplayStatics::SetSoundMixClassOverride(
 		GetWorld(),																	// 월드 컨텍스트
 		mOptionPersistDataCache.mSoundMixObject,									// 적용할 SoundMix
@@ -611,6 +621,19 @@ void UOptionPersistData::SetLanguage(ELanguageType LanguageType)
 
 	mLanguageType = LanguageType;
 	FInternationalization::Get().SetCurrentCulture(LanguageStr);
+
+	FTextLocalizationManager& LocalizationManager = FTextLocalizationManager::Get();
+#if WITH_EDITOR
+	if (GIsEditor)
+	{
+		LocalizationManager.EnableGameLocalizationPreview(LanguageStr);
+		LocalizationManager.WaitForAsyncTasks();
+		return;
+	}
+#endif
+
+	LocalizationManager.RefreshResources();
+	LocalizationManager.WaitForAsyncTasks();
 }
 
 /**
@@ -621,6 +644,16 @@ void UOptionPersistData::SetLanguage(ELanguageType LanguageType)
 void UOptionPersistData::SetResolution(const FIntPoint& Resolution)
 {
 	// TODO
+}
+
+/** @brief FPS 제한을 지원 값(30/60)으로 보정하고 런타임 최대 FPS에 즉시 반영한다. */
+void UOptionPersistData::SetFpsLimit(int32 FpsLimit)
+{
+	mFpsLimit = FpsLimit <= 30 ? 30 : 60;
+	if (GEngine != nullptr)
+	{
+		GEngine->SetMaxFPS(static_cast<float>(mFpsLimit));
+	}
 }
 
 /**
@@ -636,6 +669,7 @@ void UOptionPersistData::ApplyCurrentOptions()
 	}
 	SetLanguage(mLanguageType);
 	SetResolution(mResolution);
+	SetFpsLimit(mFpsLimit);
 }
 
 /**
@@ -658,6 +692,12 @@ ELanguageType UOptionPersistData::GetLanguage() const
 const FIntPoint& UOptionPersistData::GetResolution() const
 {
 	return mResolution;
+}
+
+/** @brief 현재 FPS 제한 값을 반환한다. @return 30 또는 60 */
+int32 UOptionPersistData::GetFpsLimit() const
+{
+	return mFpsLimit;
 }
 
 /** @brief 옵션 데이터 활성 여부. 옵션은 항상 유효하므로 언제나 true. @return 항상 true */

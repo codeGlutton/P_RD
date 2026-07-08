@@ -1,6 +1,12 @@
 #include "UI/SettingsPanelWidget.h"
 
+#include "Blueprint/WidgetTree.h"
+#include "Components/Button.h"
+#include "Components/ContentWidget.h"
+#include "Components/PanelWidget.h"
 #include "Components/TextBlock.h"
+
+#define LOCTEXT_NAMESPACE "SettingsPanelWidget_Text"
 
 /**
  * @brief 외부 처리 흐름이 결정한 상태 문구를 표시한다.
@@ -28,129 +34,210 @@ void USettingsPanelWidget::SetStatusText(const FText& Text) const
  */
 void USettingsPanelWidget::SyncText() const
 {
+	const TFunction<UTextBlock*(UWidget*)> FindFirstTextBlock = [&FindFirstTextBlock](UWidget* Root) -> UTextBlock*
+	{
+		if (Root == nullptr)
+		{
+			return nullptr;
+		}
+		if (UTextBlock* TextBlock = Cast<UTextBlock>(Root))
+		{
+			return TextBlock;
+		}
+		if (UContentWidget* ContentWidget = Cast<UContentWidget>(Root))
+		{
+			if (UTextBlock* TextBlock = FindFirstTextBlock(ContentWidget->GetContent()))
+			{
+				return TextBlock;
+			}
+		}
+		if (UPanelWidget* PanelWidget = Cast<UPanelWidget>(Root))
+		{
+			const int32 ChildCount = PanelWidget->GetChildrenCount();
+			for (int32 ChildIndex = 0; ChildIndex < ChildCount; ++ChildIndex)
+			{
+				if (UTextBlock* TextBlock = FindFirstTextBlock(PanelWidget->GetChildAt(ChildIndex)))
+				{
+					return TextBlock;
+				}
+			}
+		}
+		return nullptr;
+	};
+	const auto SetNamedText = [this, &FindFirstTextBlock](const TCHAR* WidgetName, const FText& InText)
+	{
+		if (WidgetTree == nullptr)
+		{
+			return;
+		}
+		if (UTextBlock* TextBlock = FindFirstTextBlock(WidgetTree->FindWidget(WidgetName)))
+		{
+			TextBlock->SetText(InText);
+		}
+	};
+
 	if (SettingsTitleText != nullptr)
 	{
-		SettingsTitleText->SetText(NSLOCTEXT("SettingsPanelWidget", "TitleText", "Settings"));
+		SettingsTitleText->SetText(LOCTEXT("Settings", "Settings"));
 	}
+	SetNamedText(TEXT("SettingsTitleText"), LOCTEXT("Settings", "Settings"));
+	SetNamedText(TEXT("Set_sec_graphics_text"), LOCTEXT("Graphics", "Graphics"));
+	SetNamedText(TEXT("Set_sec_display_text"), LOCTEXT("Graphics", "Graphics"));
+	SetNamedText(TEXT("Set_sec_audio_text"), LOCTEXT("Volume", "Volume"));
+	SetNamedText(TEXT("Set_sec_volume_text"), LOCTEXT("Volume", "Volume"));
+	SetNamedText(TEXT("Set_sec_gameplay_text"), LOCTEXT("Gameplay", "Gameplay"));
+	SetNamedText(TEXT("Set_row_fps_label"), LOCTEXT("FPS", "FPS"));
+	SetNamedText(TEXT("FpsThirtyButton"), LOCTEXT("30", "30"));
+	SetNamedText(TEXT("FpsSixtyButton"), LOCTEXT("60", "60"));
+	SetNamedText(TEXT("Set_row_quality_label"), LOCTEXT("Quality", "Quality"));
+	SetNamedText(TEXT("QualityRow_Label"), LOCTEXT("Quality", "Quality"));
+	SetNamedText(TEXT("QualityLowButton"), LOCTEXT("Low", "Low"));
+	SetNamedText(TEXT("QualityMidButton"), LOCTEXT("Mid", "Mid"));
+	SetNamedText(TEXT("QualityHighButton"), LOCTEXT("High", "High"));
+	SetNamedText(TEXT("LowQualityButton"), LOCTEXT("Low", "Low"));
+	SetNamedText(TEXT("MediumQualityButton"), LOCTEXT("Mid", "Mid"));
+	SetNamedText(TEXT("HighQualityButton"), LOCTEXT("High", "High"));
+	SetNamedText(TEXT("Set_row_screen_shake_label"), LOCTEXT("Screen Shake", "Screen Shake"));
+	SetNamedText(TEXT("ScreenShakeRow_Label"), LOCTEXT("Screen Shake", "Screen Shake"));
+	SetNamedText(TEXT("Set_row_effects_label"), LOCTEXT("Effects", "Effects"));
+	SetNamedText(TEXT("Set_row_effects_text"), LOCTEXT("Effects", "Effects"));
+	SetNamedText(TEXT("EffectsRow_Label"), LOCTEXT("Effects", "Effects"));
+	SetNamedText(TEXT("Set_row_language_label"), LOCTEXT("Language", "Language"));
+	SetNamedText(TEXT("LanguageRow_Label"), LOCTEXT("Language", "Language"));
+	// 언어 이름은 번역하지 않는다 — 각 언어를 그 언어 자체 이름으로 보여줘야 사용자가 자기 언어를 알아본다.
+	SetNamedText(TEXT("LanguageKoreanButton"), FText::FromString(TEXT("한국어")));
+	SetNamedText(TEXT("LanguageEnglishButton"), FText::FromString(TEXT("English")));
+	SetNamedText(TEXT("Set_row_master_label"), LOCTEXT("Master", "Master"));
+	SetNamedText(TEXT("MasterVolumeRow_Label"), LOCTEXT("Master", "Master"));
+	SetNamedText(TEXT("Set_row_bgm_label"), LOCTEXT("BGM", "BGM"));
+	SetNamedText(TEXT("BGMVolumeRow_Label"), LOCTEXT("BGM", "BGM"));
+	SetNamedText(TEXT("Set_row_sfx_label"), LOCTEXT("SFX", "SFX"));
+	SetNamedText(TEXT("SFXVolumeRow_Label"), LOCTEXT("SFX", "SFX"));
+	SetNamedText(TEXT("Set_row_ui_label"), LOCTEXT("UI", "UI"));
+	SetNamedText(TEXT("UIVolumeRow_Label"), LOCTEXT("UI", "UI"));
+	SetNamedText(TEXT("BackButton"), LOCTEXT("Back", "Back"));
+	SetNamedText(TEXT("SaveAndExitButton"), LOCTEXT("Save and Exit", "Save and Exit"));
+	SetNamedText(TEXT("AbandonRunButton"), LOCTEXT("Abandon Run", "Abandon Run"));
+	SetNamedText(TEXT("ResetButton"), LOCTEXT("Reset", "Reset"));
 	if (BackButtonText != nullptr)
 	{
-		BackButtonText->SetText(NSLOCTEXT("SettingsPanelWidget", "BackText", "Back"));
+		BackButtonText->SetText(LOCTEXT("Back", "Back"));
 	}
 	if (SaveAndExitButtonText != nullptr)
 	{
-		SaveAndExitButtonText->SetText(NSLOCTEXT("SettingsPanelWidget", "SaveAndExitText", "Save and Exit"));
+		SaveAndExitButtonText->SetText(LOCTEXT("Save and Exit", "Save and Exit"));
 	}
 	if (AbandonRunButtonText != nullptr)
 	{
-		AbandonRunButtonText->SetText(NSLOCTEXT("SettingsPanelWidget", "AbandonRunText", "Abandon Run"));
+		AbandonRunButtonText->SetText(LOCTEXT("Abandon Run", "Abandon Run"));
 	}
 	if (ResetButtonText != nullptr)
 	{
-		ResetButtonText->SetText(NSLOCTEXT("SettingsPanelWidget", "ResetText", "Reset"));
+		ResetButtonText->SetText(LOCTEXT("Reset", "Reset"));
 	}
 	if (AudioSectionHeader != nullptr)
 	{
-		AudioSectionHeader->SetText(NSLOCTEXT("SettingsPanelWidget", "AudioSectionText", "Audio"));
+		AudioSectionHeader->SetText(LOCTEXT("Audio", "Audio"));
 	}
 	if (MasterVolumeRow_Label != nullptr)
 	{
-		MasterVolumeRow_Label->SetText(NSLOCTEXT("SettingsPanelWidget", "MasterVolumeText", "Master"));
+		MasterVolumeRow_Label->SetText(LOCTEXT("Master", "Master"));
 	}
 	if (BGMVolumeRow_Label != nullptr)
 	{
-		BGMVolumeRow_Label->SetText(NSLOCTEXT("SettingsPanelWidget", "BGMVolumeText", "BGM"));
+		BGMVolumeRow_Label->SetText(LOCTEXT("BGM", "BGM"));
 	}
 	if (SFXVolumeRow_Label != nullptr)
 	{
-		SFXVolumeRow_Label->SetText(NSLOCTEXT("SettingsPanelWidget", "SFXVolumeText", "SFX"));
+		SFXVolumeRow_Label->SetText(LOCTEXT("SFX", "SFX"));
 	}
 	if (UIVolumeRow_Label != nullptr)
 	{
-		UIVolumeRow_Label->SetText(NSLOCTEXT("SettingsPanelWidget", "UIVolumeText", "UI"));
+		UIVolumeRow_Label->SetText(LOCTEXT("UI", "UI"));
 	}
 	if (DisplaySectionHeader != nullptr)
 	{
-		DisplaySectionHeader->SetText(NSLOCTEXT("SettingsPanelWidget", "DisplaySectionText", "Display"));
+		DisplaySectionHeader->SetText(LOCTEXT("Display", "Display"));
 	}
 	if (BrightnessRow_Label != nullptr)
 	{
-		BrightnessRow_Label->SetText(NSLOCTEXT("SettingsPanelWidget", "BrightnessText", "Brightness"));
+		BrightnessRow_Label->SetText(LOCTEXT("Brightness", "Brightness"));
 	}
 	if (ScreenShakeRow_Label != nullptr)
 	{
-		ScreenShakeRow_Label->SetText(NSLOCTEXT("SettingsPanelWidget", "ScreenShakeText", "Screen Shake"));
+		ScreenShakeRow_Label->SetText(LOCTEXT("Screen Shake", "Screen Shake"));
 	}
 	if (VibrationRow_Label != nullptr)
 	{
-		VibrationRow_Label->SetText(NSLOCTEXT("SettingsPanelWidget", "VibrationText", "Vibration"));
+		VibrationRow_Label->SetText(LOCTEXT("Vibration", "Vibration"));
 	}
 	if (QualityRow_Label != nullptr)
 	{
-		QualityRow_Label->SetText(NSLOCTEXT("SettingsPanelWidget", "QualityText", "Quality"));
+		QualityRow_Label->SetText(LOCTEXT("Quality", "Quality"));
 	}
 	if (GameplaySectionHeader != nullptr)
 	{
-		GameplaySectionHeader->SetText(NSLOCTEXT("SettingsPanelWidget", "GameplaySectionText", "Gameplay"));
+		GameplaySectionHeader->SetText(LOCTEXT("Gameplay", "Gameplay"));
 	}
 	if (FastModeRow_Label != nullptr)
 	{
-		FastModeRow_Label->SetText(NSLOCTEXT("SettingsPanelWidget", "FastModeText", "Fast Mode"));
+		FastModeRow_Label->SetText(LOCTEXT("Fast Mode", "Fast Mode"));
 	}
 	if (SkipAnimationRow_Label != nullptr)
 	{
-		SkipAnimationRow_Label->SetText(NSLOCTEXT("SettingsPanelWidget", "SkipAnimationText", "Skip Animation"));
+		SkipAnimationRow_Label->SetText(LOCTEXT("Skip Animation", "Skip Animation"));
 	}
 	if (AutoEndTurnRow_Label != nullptr)
 	{
-		AutoEndTurnRow_Label->SetText(NSLOCTEXT("SettingsPanelWidget", "AutoEndTurnText", "Auto End Turn"));
+		AutoEndTurnRow_Label->SetText(LOCTEXT("Auto End Turn", "Auto End Turn"));
 	}
 	if (InfoSectionHeader != nullptr)
 	{
-		InfoSectionHeader->SetText(NSLOCTEXT("SettingsPanelWidget", "InfoSectionText", "Info"));
+		InfoSectionHeader->SetText(LOCTEXT("Info", "Info"));
 	}
 	if (CreditsRow_Label != nullptr)
 	{
-		CreditsRow_Label->SetText(NSLOCTEXT("SettingsPanelWidget", "CreditsText", "Credits"));
+		CreditsRow_Label->SetText(LOCTEXT("Credits", "Credits"));
 	}
 	if (LicenseRow_Label != nullptr)
 	{
-		LicenseRow_Label->SetText(NSLOCTEXT("SettingsPanelWidget", "LicenseText", "License"));
+		LicenseRow_Label->SetText(LOCTEXT("License", "License"));
 	}
 	if (CreditsOpenButtonText != nullptr)
 	{
-		CreditsOpenButtonText->SetText(NSLOCTEXT("SettingsPanelWidget", "CreditsOpenText", "Open"));
+		CreditsOpenButtonText->SetText(LOCTEXT("Open", "Open"));
 	}
 	if (LicenseOpenButtonText != nullptr)
 	{
-		LicenseOpenButtonText->SetText(NSLOCTEXT("SettingsPanelWidget", "LicenseOpenText", "Open"));
+		LicenseOpenButtonText->SetText(LOCTEXT("Open", "Open"));
 	}
 	if (LowQualityButtonText != nullptr)
 	{
-		LowQualityButtonText->SetText(NSLOCTEXT("SettingsPanelWidget", "LowQualityText", "LOW"));
+		LowQualityButtonText->SetText(LOCTEXT("LOW", "LOW"));
 	}
 	if (MediumQualityButtonText != nullptr)
 	{
-		MediumQualityButtonText->SetText(NSLOCTEXT("SettingsPanelWidget", "MediumQualityText", "MID"));
+		MediumQualityButtonText->SetText(LOCTEXT("MID", "MID"));
 	}
 	if (HighQualityButtonText != nullptr)
 	{
-		HighQualityButtonText->SetText(NSLOCTEXT("SettingsPanelWidget", "HighQualityText", "HIGH"));
+		HighQualityButtonText->SetText(LOCTEXT("HIGH", "HIGH"));
 	}
 	if (AbandonConfirmTitleText != nullptr)
 	{
-		AbandonConfirmTitleText->SetText(NSLOCTEXT("SettingsPanelWidget", "AbandonConfirmTitle", "Abandon this run?"));
+		AbandonConfirmTitleText->SetText(LOCTEXT("Abandon this run?", "Abandon this run?"));
 	}
 	if (AbandonConfirmBodyText != nullptr)
 	{
-		AbandonConfirmBodyText->SetText(NSLOCTEXT("SettingsPanelWidget", "AbandonConfirmBody", "Abandoning resets the current run and returns to the title."));
+		AbandonConfirmBodyText->SetText(LOCTEXT("Abandoning resets the current run and returns to the title.", "Abandoning resets the current run and returns to the title."));
 	}
 	if (ConfirmAbandonButtonText != nullptr)
 	{
-		ConfirmAbandonButtonText->SetText(NSLOCTEXT("SettingsPanelWidget", "ConfirmAbandonText", "Abandon"));
+		ConfirmAbandonButtonText->SetText(LOCTEXT("Abandon", "Abandon"));
 	}
 	if (CancelAbandonButtonText != nullptr)
 	{
-		CancelAbandonButtonText->SetText(NSLOCTEXT("SettingsPanelWidget", "CancelText", "Cancel"));
+		CancelAbandonButtonText->SetText(LOCTEXT("Cancel", "Cancel"));
 	}
 }
 
@@ -172,3 +259,5 @@ void USettingsPanelWidget::ValidateDesignerBindings() const
 		UE_LOG(LogRD, Warning, TEXT("SettingsPanelWidget: BackButton is not connected."));
 	}
 }
+
+#undef LOCTEXT_NAMESPACE
