@@ -93,7 +93,7 @@ void UTacticalPassive::NotifyPassive(
 
 	// 대상 속성·연산은 이펙트가 정의. 첫 modifier 속성의 변화량을 크기로 사용(단일 modifier 가정).
 	const UTacticalEffect* EffectCDO = mEffectClass.GetDefaultObject();
-	if (EffectCDO == nullptr || EffectCDO->mModifiers.Num() == 0)
+	if (EffectCDO == nullptr)
 	{
 		return;
 	}
