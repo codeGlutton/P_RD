@@ -24,39 +24,7 @@ void ACombatDicePreviewActor::SetFaceValues(const TArray<int32>& NewFaceValues)
 
 void ACombatDicePreviewActor::SetFaceTextures(const TArray<TObjectPtr<UTexture>>& NewFaceTextures)
 {
-	mFaceTextureOverrides = NewFaceTextures;
-
-	for (int32 FaceIndex = 0; FaceIndex < mFaceMaterials.Num(); ++FaceIndex)
-	{
-		UMaterialInstanceDynamic* FaceMaterial = mFaceMaterials[FaceIndex];
-		if (FaceMaterial == nullptr)
-		{
-			continue;
-		}
-
-		UTexture* FaceTexture = ResolveFaceTexture(FaceIndex, NewFaceTextures);
-		FaceMaterial->SetTextureParameterValue(TEXT("FaceTexture"), FaceTexture);
-	}
-}
-
-UTexture* ACombatDicePreviewActor::ResolveFaceTexture(int32 FaceIndex, const TArray<TObjectPtr<UTexture>>& NewFaceTextures) const
-{
-	UTexture* FaceTexture = NewFaceTextures.IsValidIndex(FaceIndex) ? NewFaceTextures[FaceIndex].Get() : nullptr;
-	if (FaceTexture != nullptr)
-	{
-		return FaceTexture;
-	}
-
-	if (const FRDCombatDiceFaceTextureSet* DefaultTextureSet = mDefaultFaceTexturesByCount.Find(mCurrentFaceCount))
-	{
-		const TArray<TObjectPtr<UTexture>>& DefaultTextures = DefaultTextureSet->mTextures;
-		if (DefaultTextures.IsValidIndex(FaceIndex) && DefaultTextures[FaceIndex] != nullptr)
-		{
-			return DefaultTextures[FaceIndex].Get();
-		}
-	}
-
-	return mDefaultFaceTexture;
+	// Material-only dice: face textures are intentionally ignored.
 }
 
 void ACombatDicePreviewActor::SetFaceData(const TArray<int32>& NewFaceValues, const TArray<TObjectPtr<UTexture>>& NewFaceTextures)
@@ -118,14 +86,10 @@ void ACombatDicePreviewActor::SetPreviewLightingEnabled(bool bEnabled)
 
 void ACombatDicePreviewActor::SetDiceColor(const FLinearColor& NewColor)
 {
+	mDiceTintColor = NewColor;
 	if (mDiceMaterial != nullptr)
 	{
-		// 어두운 숫자 가독성을 위해 몸체는 늘 밝게 유지하고, 상태 색(희귀도/사용 등)은 은은하게만 섞는다.
-		const FLinearColor BodyBaseColor = mCurrentFaceCount == 2
-			? FLinearColor(0.94f, 0.92f, 0.84f, 1.0f)
-			: FLinearColor::White;
-		const FLinearColor BodyColor = FMath::Lerp(NewColor, BodyBaseColor, 0.55f);
-		mDiceMaterial->SetVectorParameterValue(TEXT("Color"), BodyColor);
+		ApplyDiceBodyMaterialPreset();
 	}
 	if (mCoinRimMaterial != nullptr)
 	{
@@ -134,6 +98,12 @@ void ACombatDicePreviewActor::SetDiceColor(const FLinearColor& NewColor)
 			: FLinearColor::Transparent;
 		mCoinRimMaterial->SetVectorParameterValue(TEXT("Color"), RimColor);
 	}
+}
+
+void ACombatDicePreviewActor::SetDiceMaterialVariant(int32 VariantIndex)
+{
+	mDiceMaterialVariantIndex = VariantIndex;
+	ApplyDiceBodyMaterialPreset();
 }
 
 void ACombatDicePreviewActor::SetBackdropVisible(bool bVisible)

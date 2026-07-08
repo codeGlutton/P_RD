@@ -184,13 +184,13 @@ private:
 	/** @brief 보유 스킬의 표시 이름을 뷰모델에서 읽는다(없으면 빈 텍스트 - 시안 라벨 폴백 없음). */
 	FText GetOwnedSkillLabel(int32 SkillIndex) const;
 
-	/** @brief 보유 주사위 2D 면판 위젯을 현재 주사위 개수에 맞춰 다시 만든다. */
+	/** @brief 보유 주사위 3D 캡처 위젯을 현재 주사위 개수에 맞춰 다시 만든다. */
 	void RebuildOwnedDiceCards();
 
 	/** @brief WBP 스킬 레일 위에 투명 입력 버튼을 얹어 짧은 탭과 롱프레스를 받는다. */
 	void EnsureSkillInputButtons();
 
-	/** @brief 보유 주사위 2D 면판의 숫자/색/선택 상태를 현재 굴림 상태에 맞게 갱신한다. */
+	/** @brief 보유 주사위 3D 캡처의 숫자/색/선택 상태를 현재 굴림 상태에 맞게 갱신한다. */
 	void RefreshOwnedDiceCards();
 
 	/** @brief 전투 진입 주사위 굴림을 바로 시작하지 않고 터치 대기 상태로 준비한다. */
@@ -590,11 +590,11 @@ private:
 	/** @brief 마지막으로 배너를 띄운 라운드(같은 라운드 내 턴 전환 반복 방지) */
 	int32 mLastShownTurnRound = 0;
 
-	/** @brief 보유 주사위 2D 면판 Image 위젯 */
+	/** @brief 보유 주사위 3D 캡처 RenderTarget Image 위젯 */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UImage>> mOwnedDiceImages;
 
-	/** @brief 이전 3D 보유 주사위 프리뷰가 남았을 때 정리하기 위한 레거시 캡처 액터 배열 */
+	/** @brief 보유 주사위 RenderTarget을 만드는 3D 주사위 액터 */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<ACombatDiceCaptureActor>> mOwnedDicePreviewActors;
 
@@ -605,13 +605,6 @@ private:
 	/** @brief 레거시 주사위 종류 라벨(d2/d4/d6/d8/d10/d12/d20). 현재 보유 주사위 카드에서는 숨긴다. */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UTextBlock>> mOwnedDiceTypeTexts;
-
-	/** @brief 보유 주사위 2D 면판 중앙에 표시하는 굴림 값 텍스트. */
-	TArray<TObjectPtr<UTextBlock>> mOwnedDiceValueTexts;
-
-	/** @brief 보유 주사위 2D 면 판 텍스처(카드 공용, 지연 로드 캐시). */
-	UPROPERTY(Transient)
-	TObjectPtr<UTexture2D> mOwnedDiceFaceTexture;
 
 	/** @brief 중립 상태로 표시하는 런타임 스킬 레일 배경 */
 	UPROPERTY(Transient)
@@ -703,7 +696,7 @@ private:
 	float mIntroDiceRollElapsed = 0.0f;
 
 	/** @brief 굴림 완료 후 정렬을 시작하기까지의 대기 간격(결과를 잠깐 보여주는 시간). */
-	float mIntroDiceAlignDelay = 0.55f;
+	float mIntroDiceAlignDelay = 0.12f;
 
 	/** @brief 정렬 시작 전 대기 누적 시간. */
 	float mIntroDiceAlignTimer = 0.0f;

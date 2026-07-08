@@ -118,6 +118,16 @@ public:
 	void ApplyValueModel(const FSettingsPanelValueModel& ValueModel);
 
 	/**
+	 * @brief 현재 저장/프로필 옵션 값을 읽어 설정 패널 입력 상태에 다시 반영한다.
+	 *
+	 * @details
+	 * 설정창이 열릴 때 저장된 볼륨, 언어, FPS 제한을 화면에 맞추는 진입점이다.
+	 * 값 적용 중 발생하는 슬라이더/체크박스 콜백은 외부 이벤트로 다시 나가지 않는다.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "UI|Settings")
+	void RefreshValueModelFromCurrentOptions();
+
+	/**
 	 * @brief 패널이 마지막으로 받은/입력한 설정 값 묶음을 반환한다.
 	 */
 	UFUNCTION(BlueprintPure, Category = "UI|Settings")

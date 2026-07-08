@@ -70,7 +70,7 @@ private:
 	UProceduralMeshComponent* CreatePhysicsBody(int32 DiceIndex, int32 FaceCount);
 	void ResetDiceBodyPose(UProceduralMeshComponent* PhysicsBody, int32 DiceIndex, int32 DiceCount, FRandomStream& Stream) const;
 	void ConstrainDiceToTable(UProceduralMeshComponent* PhysicsBody) const;
-	void ApplyRollRattleKicks(float PreviousRollElapsed);
+	bool AreAllDiceStill();
 	void SyncVisualDiceToPhysics();
 	int32 GetSettledFaceOrdinal(int32 DiceIndex) const;
 	int32 GetSettledFaceValue(int32 DiceIndex) const;
@@ -118,6 +118,7 @@ private:
 	TObjectPtr<UMaterialInstanceDynamic> mCaptureMaterial;
 
 	float mRollElapsed = 0.0f;
+	float mRollStillElapsed = 0.0f;   // 모든 주사위가 임계 속도 이하로 연속 정지한 시간(정지 감지용)
 	int32 mRollSeed = 0;
 	bool mRollActive = false;
 	bool mRollComplete = false;
@@ -128,9 +129,7 @@ private:
 	TArray<FTransform> mAlignStartTransforms;
 	TArray<FTransform> mAlignTargetTransforms;
 
-	static constexpr float PhysicsDiceRadius = 44.0f;
-	// 파바바박 손맛: sleep 조기 종료 없이 이 시간까지 물리를 유지한 뒤 결과를 확정한다.
-	static constexpr float RollForceCompleteSeconds = 2.30f;
-	static constexpr float AlignDurationSeconds = 0.50f;
-	static constexpr float AlignRowSpacing = 66.0f;
+	static constexpr float PhysicsDiceRadius = 30.0f;   // 주사위 크기(작을수록 판을 덜 채우고 영역 안 벗어남)
+	static constexpr float AlignDurationSeconds = 0.28f;
+	static constexpr float AlignRowSpacing = 94.0f;   // 주사위 지름(≈88)보다 넓게 — 정렬 시 겹침 방지
 };

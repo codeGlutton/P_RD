@@ -138,6 +138,15 @@ bool ARDGameModeBase::SetUIVolume(float Volume) const
 	return true;
 }
 
+bool ARDGameModeBase::SetFpsLimit(int32 FpsLimit) const
+{
+	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
+	GameProfileSubsystem->SetFpsLimit(FpsLimit);
+
+	return true;
+}
+
 bool ARDGameModeBase::SetLanguage(ELanguageType Language) const
 {
 	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();

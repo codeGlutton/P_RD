@@ -17,12 +17,13 @@ namespace
 {
 	// 주사위 판(물리 굴림) 보드/배경/캡처 위치 상수 (20260622 이식). 화면 정규화(0~1).
 	constexpr float DiceRollOverlayTop = 0.045f;
-	constexpr float DiceRollBoardLeft = 0.185f;
-	constexpr float DiceRollBoardTop = 0.275f;
-	constexpr float DiceRollBoardRight = 0.815f;
-	constexpr float DiceRollBoardBottom = 0.770f;
-	constexpr float DiceRollPhysicsTop = 0.325f;
-	constexpr float DiceRollPhysicsBottom = 0.695f;
+	// 판을 상/하로 꽉 채운다(세로 13~96%, 탑바 아래부터 바닥 근처까지). 눈으로 튜닝하는 값.
+	constexpr float DiceRollBoardLeft = 0.04f;
+	constexpr float DiceRollBoardTop = 0.13f;
+	constexpr float DiceRollBoardRight = 0.96f;
+	constexpr float DiceRollBoardBottom = 0.96f;
+	constexpr float DiceRollPhysicsTop = 0.19f;
+	constexpr float DiceRollPhysicsBottom = 0.89f;
 	constexpr float DiceRollStatusTop = 0.710f;
 	constexpr float DiceRollStatusBottom = 0.770f;
 	constexpr int32 DiceRollBackdropZOrder = 300;
@@ -44,30 +45,6 @@ namespace
 		return SquareSlot;
 	}
 
-	void ApplyCenteredDesignerTextSlot(UTextBlock* Text, const FAnchorData& SlotData, int32 ZOrder)
-	{
-		RDUILayout::ApplyDesignerSlotData(Text, SlotData, ZOrder);
-		if (UCanvasPanelSlot* CanvasSlot = RDUILayout::GetCanvasSlot(Text))
-		{
-			CanvasSlot->SetAutoSize(true);
-			CanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));
-			CanvasSlot->SetPosition(FVector2D(
-				SlotData.Offsets.Left + SlotData.Offsets.Right * 0.5f,
-				SlotData.Offsets.Top + SlotData.Offsets.Bottom * 0.5f));
-		}
-	}
-
-	void ApplyCenteredAnchorTextSlot(UTextBlock* Text, const FAnchors& Anchors, int32 ZOrder)
-	{
-		const FVector2D Center(
-			(Anchors.Minimum.X + Anchors.Maximum.X) * 0.5f,
-			(Anchors.Minimum.Y + Anchors.Maximum.Y) * 0.5f);
-		RDUILayout::ApplyFixedSlot(Text, FAnchors(Center.X, Center.Y), FVector2D(0.5f, 0.5f), FVector2D::ZeroVector, FVector2D::UnitVector, ZOrder);
-		if (UCanvasPanelSlot* CanvasSlot = RDUILayout::GetCanvasSlot(Text))
-		{
-			CanvasSlot->SetAutoSize(true);
-		}
-	}
 }
 
 void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
@@ -104,7 +81,7 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 		}
 		if (mDiceRollPhysicsImage != nullptr)
 		{
-			RDUILayout::ApplyAnchoredSlot(mDiceRollPhysicsImage, FAnchors(0.245f, DiceRollPhysicsTop, 0.755f, DiceRollPhysicsBottom), DiceRollPhysicsZOrder);
+			RDUILayout::ApplyAnchoredSlot(mDiceRollPhysicsImage, FAnchors(0.10f, DiceRollPhysicsTop, 0.90f, DiceRollPhysicsBottom), DiceRollPhysicsZOrder);
 		}
 		// 상태 문구는 보드 하단, 입력 버튼은 오버레이 전체(탭/흔들기 어디서나 받기).
 		RDUILayout::ApplyAnchoredSlot(DiceRollStatusText, FAnchors(0.365f, DiceRollStatusTop, 0.635f, DiceRollStatusBottom), DiceRollStatusZOrder);
@@ -131,10 +108,6 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 				{
 					mOwnedDiceTypeTexts[DiceIndex]->SetVisibility(ESlateVisibility::Collapsed);
 				}
-			}
-			if (mOwnedDiceValueTexts.IsValidIndex(DiceIndex))
-			{
-				ApplyCenteredDesignerTextSlot(mOwnedDiceValueTexts[DiceIndex], DiceImageSlot, 25);
 			}
 		}
 	}
@@ -163,10 +136,6 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 				{
 					mOwnedDiceTypeTexts[DiceIndex]->SetVisibility(ESlateVisibility::Collapsed);
 				}
-			}
-			if (mOwnedDiceValueTexts.IsValidIndex(DiceIndex))
-			{
-				ApplyCenteredAnchorTextSlot(mOwnedDiceValueTexts[DiceIndex], DiceImageAnchors, 25);
 			}
 		}
 	}

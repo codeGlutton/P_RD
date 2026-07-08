@@ -63,7 +63,7 @@ struct P_RD_API FSettingsPanelValueModel
 	int32 mFpsLimit = 60;         // FPS 제한(30/60) (수신 시스템 미구현 - 값/이벤트만)
 
 	UPROPERTY(Category = "Settings", EditAnywhere, BlueprintReadWrite)
-	bool mUseKoreanLanguage = true;   // 언어(한국어=true / English=false)
+	bool mUseKoreanLanguage = false;   // 언어(한국어=true / English=false)
 };
 
 // 설정 입력이 바뀌면 위젯이 올려보내는 이벤트들. 받는 쪽(타이틀/탑바/게임모드)이 실제 적용.

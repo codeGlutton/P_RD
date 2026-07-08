@@ -6,25 +6,14 @@
 class UStaticMeshComponent;
 class UStaticMesh;
 class UMaterialInstanceDynamic;
-class UMaterialInterface;
 class UTextRenderComponent;
 class UPointLightComponent;
 class UFont;
 class UTexture;
-class UProceduralMeshComponent;
 
 namespace RDDicePolyhedron { struct FDicePolyhedron; }
 
 #include "CombatDicePreviewActor.generated.h"
-
-USTRUCT()
-struct FRDCombatDiceFaceTextureSet
-{
-	GENERATED_BODY()
-
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<UTexture>> mTextures;
-};
 
 /**
  * @brief 전투 HUD의 주사위 굴림 연출에만 쓰는 3D 미리보기 액터
@@ -85,6 +74,15 @@ public:
 	/** @brief 주사위 몸체 색(희귀도/상태 구분)을 적용한다. */
 	void SetDiceColor(const FLinearColor& NewColor);
 
+	/** @brief 테스트용 몸체 재질 변형을 적용한다. 실제 질감 차이는 M_DiceBody가 해당 파라미터를 열면 반영된다. */
+	void SetDiceMaterialVariant(int32 VariantIndex);
+
+	/** @brief 결과/선택 면 숫자만 진하게, 나머지 숫자는 흐리게 표시한다. FaceOrdinal은 1-base. */
+	void SetHighlightedFace(int32 FaceOrdinal);
+	void ClearHighlightedFace();
+	void SetHideNonHighlightedFaceTexts(bool bHide);
+	void SetFaceTextScale(float NewScale);
+
 	/** @brief Viewport 배경판 표시 여부를 바꾼다. */
 	void SetBackdropVisible(bool bVisible);
 
@@ -94,7 +92,7 @@ private:
 	void LoadDiceNumberFont();
 	void LoadDiceMeshes();
 	void InitializeMaterials();
-	void LoadDefaultFaceTextures();
+	void ApplyDiceBodyMaterialPreset();
 
 	/** @brief 면 수에 맞는 블랭크 스태틱메시로 교체하고 크기를 맞춘다. */
 	void ApplyDiceMesh(int32 FaceCount);
@@ -104,9 +102,8 @@ private:
 
 	/** @brief 지정 면의 TextRender 숫자를 바꾼다(1-base). */
 	void SetFaceText(int32 FaceIndex, const FText& FaceText);
-
-	/** @brief 명시 텍스처가 없으면 현재 면 수에 맞는 기본 커버 텍스처를 반환한다. */
-	UTexture* ResolveFaceTexture(int32 FaceIndex, const TArray<TObjectPtr<UTexture>>& NewFaceTextures) const;
+	void ApplyFaceTextScale();
+	void ApplyFaceTextStyles();
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Dice")
@@ -148,24 +145,6 @@ private:
 	TMap<int32, TObjectPtr<UStaticMesh>> mDiceMeshAssets;
 
 	UPROPERTY(Transient)
-	TObjectPtr<UMaterialInterface> mFaceMaterialTemplate;
-
-	UPROPERTY(Transient)
-	TObjectPtr<UTexture> mDefaultFaceTexture;
-
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<UMaterialInstanceDynamic>> mFaceMaterials;
-
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<UProceduralMeshComponent>> mFaceMeshes;
-
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<UTexture>> mFaceTextureOverrides;
-
-	UPROPERTY(Transient)
-	TMap<int32, FRDCombatDiceFaceTextureSet> mDefaultFaceTexturesByCount;
-
-	UPROPERTY(Transient)
 	TArray<TObjectPtr<UTextRenderComponent>> mFaceTexts;
 
 	UPROPERTY(Transient)
@@ -176,6 +155,12 @@ private:
 
 	// 현재 만들어진 주사위의 면 수(안착/숫자 계산에 사용).
 	int32 mCurrentFaceCount = 6;
+	int32 mHighlightedFaceOrdinal = INDEX_NONE;
+	int32 mDiceMaterialVariantIndex = INDEX_NONE;
+	FLinearColor mDiceTintColor = FLinearColor::White;
+	float mFaceTextScale = 1.0f;
+	float mBaseFaceTextWorldSize = 32.0f;
+	bool mHideNonHighlightedFaceTexts = false;
 
 	// 메시 바운딩 반지름을 이 값으로 맞춰 주사위 종류별 크기를 통일한다.
 	static constexpr float DiceRadius = 96.0f;

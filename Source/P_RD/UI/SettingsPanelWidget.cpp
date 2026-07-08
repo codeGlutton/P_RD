@@ -145,7 +145,7 @@ void USettingsPanelWidget::NativeConstruct()
 
 	/* WBP가 가진 임시 표시 상태를 C++ 기본 표시 정책으로 정리한다. */
 
-	SyncText();
+	RefreshValueModelFromCurrentOptions();
 	ApplyModeVisibility();
 	HideAbandonConfirm();
 }
@@ -446,6 +446,30 @@ void USettingsPanelWidget::NativeDestruct()
 	if (VibrationCheckBox != nullptr)
 	{
 		VibrationCheckBox->OnCheckStateChanged.RemoveDynamic(this, &USettingsPanelWidget::HandleVibrationChanged);
+	}
+	if (MasterVolumeSlider != nullptr)
+	{
+		MasterVolumeSlider->OnValueChanged.RemoveDynamic(this, &USettingsPanelWidget::HandleMasterVolumeChanged);
+	}
+	if (FpsThirtyButton != nullptr)
+	{
+		FpsThirtyButton->OnClicked.RemoveDynamic(this, &USettingsPanelWidget::HandleFpsThirtyButtonClicked);
+	}
+	if (FpsSixtyButton != nullptr)
+	{
+		FpsSixtyButton->OnClicked.RemoveDynamic(this, &USettingsPanelWidget::HandleFpsSixtyButtonClicked);
+	}
+	if (LanguageKoreanButton != nullptr)
+	{
+		LanguageKoreanButton->OnClicked.RemoveDynamic(this, &USettingsPanelWidget::HandleLanguageKoreanButtonClicked);
+	}
+	if (LanguageEnglishButton != nullptr)
+	{
+		LanguageEnglishButton->OnClicked.RemoveDynamic(this, &USettingsPanelWidget::HandleLanguageEnglishButtonClicked);
+	}
+	if (EffectsCheckBox != nullptr)
+	{
+		EffectsCheckBox->OnCheckStateChanged.RemoveDynamic(this, &USettingsPanelWidget::HandleEffectsChanged);
 	}
 
 	Super::NativeDestruct();
