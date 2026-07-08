@@ -4,6 +4,9 @@
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Blueprint/WidgetTree.h"
+#include "Styling/SlateTypes.h"
+#include "Sound/SoundBase.h"
+#include "UObject/ConstructorHelpers.h"
 
 namespace
 {
@@ -21,6 +24,13 @@ URDUserWidget::URDUserWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	SetVisibility(ESlateVisibility::Collapsed);
+
+	// 공용 버튼 클릭 사운드(SVN uasset)를 하드레퍼런스로 프리로드 → 쿡 보장(#300 컨벤션, 문자열 소프트로드 대신).
+	static ConstructorHelpers::FObjectFinder<USoundBase> ButtonPressSoundFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/Audio/UISFX/SFX_UI_Click_Scratch003.SFX_UI_Click_Scratch003"));
+	if (ButtonPressSoundFinder.Succeeded())
+	{
+		mCommonButtonPressSound = ButtonPressSoundFinder.Object;
+	}
 }
 
 /**
@@ -202,13 +212,23 @@ void URDUserWidget::SetupCommonButtonFeedback()
 		return;
 	}
 
+	USoundBase* PressSound = mCommonButtonPressSound;
+
 	// 이 위젯 트리 안의 모든 UButton을 순회한다(자식 UserWidget은 각자 이 베이스를 상속하므로 스스로 처리).
-	WidgetTree->ForEachWidget([this](UWidget* Widget)
+	WidgetTree->ForEachWidget([this, PressSound](UWidget* Widget)
 		{
 			UButton* Button = Cast<UButton>(Widget);
 			if (Button == nullptr)
 			{
 				return;
+			}
+
+			// 클릭 사운드: 스타일의 PressedSlateSound에만 주입한다. 브러시/색은 그대로 둬 디자이너 스킨을 보존한다.
+			if (PressSound != nullptr)
+			{
+				FButtonStyle Style = Button->GetStyle();
+				Style.PressedSlateSound.SetResourceObject(PressSound);
+				Button->SetStyle(Style);
 			}
 
 			// 누름 피드백: 배경색을 어둡게(주 효과) + 살짝 축소(보조). 브러시 자체는 안 건드려 디자이너 스킨 보존.
