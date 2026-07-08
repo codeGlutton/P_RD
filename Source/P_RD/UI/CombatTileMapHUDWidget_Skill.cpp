@@ -4,6 +4,8 @@
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/CombatTileMapHUDWidgetPrivate.h"
 
+#define LOCTEXT_NAMESPACE "CombatTileMapHUDWidget_Skill"
+
 using namespace RDCombatHUD;
 
 void UCombatTileMapHUDWidget::HandleEndTurnButtonClicked()
@@ -43,7 +45,7 @@ void UCombatTileMapHUDWidget::RefreshDiceAssignmentText() const
 	if (SelectedCount > 0 && mSelectedSkillIndex != INDEX_NONE)
 	{
 		mDiceAssignmentText->SetText(FText::Format(
-			NSLOCTEXT("CombatTileMapHUDWidget", "DiceAssignmentReadyFormat", "DICE x{0} PLACED (SUM {1})\nTap dice to add or remove"),
+			LOCTEXT("DICE x{0} PLACED (SUM {1})\nTap dice to add or remove", "DICE x{0} PLACED (SUM {1})\nTap dice to add or remove"),
 			FText::AsNumber(SelectedCount), FText::AsNumber(SelectedSum)
 		));
 		return;
@@ -52,7 +54,7 @@ void UCombatTileMapHUDWidget::RefreshDiceAssignmentText() const
 	if (SelectedCount > 0)
 	{
 		mDiceAssignmentText->SetText(FText::Format(
-			NSLOCTEXT("CombatTileMapHUDWidget", "DiceAssignmentDiceOnlyFormat", "SELECT SKILL FIRST\nDICE x{0} (SUM {1}) waiting"),
+			LOCTEXT("SELECT SKILL FIRST\nDICE x{0} (SUM {1}) waiting", "SELECT SKILL FIRST\nDICE x{0} (SUM {1}) waiting"),
 			FText::AsNumber(SelectedCount), FText::AsNumber(SelectedSum)
 		));
 		return;
@@ -61,7 +63,7 @@ void UCombatTileMapHUDWidget::RefreshDiceAssignmentText() const
 	if (mSelectedSkillIndex != INDEX_NONE)
 	{
 		mDiceAssignmentText->SetText(FText::Format(
-			NSLOCTEXT("CombatTileMapHUDWidget", "DiceAssignmentSkillOnlyFormat", "{0}\nTap a rolled die"),
+			LOCTEXT("{0}\nTap a rolled die", "{0}\nTap a rolled die"),
 			GetOwnedSkillLabel(mSelectedSkillIndex)
 		));
 		return;
@@ -71,3 +73,5 @@ void UCombatTileMapHUDWidget::RefreshDiceAssignmentText() const
 	mDiceAssignmentText->SetText(FText::GetEmpty());
 	mDiceAssignmentText->SetVisibility(ESlateVisibility::Collapsed);
 }
+
+#undef LOCTEXT_NAMESPACE

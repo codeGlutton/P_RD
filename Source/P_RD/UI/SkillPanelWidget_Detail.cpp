@@ -10,6 +10,8 @@
 #include "UI/UIRuntimeLayout.h"
 #include "UI/PanelRootWidgetUtils.h"
 
+#define LOCTEXT_NAMESPACE "SkillPanelWidget_Detail"
+
 namespace
 {
 	using RDPanelWidgetUtils::FindOrCreateRootWidget;
@@ -20,19 +22,19 @@ namespace
 		switch (SkillIndex)
 		{
 		case 0:
-			return NSLOCTEXT("SkillPanelWidget", "SkillPanelBasicAttack", "BASIC");
+			return LOCTEXT("BASIC", "BASIC");
 		case 1:
-			return NSLOCTEXT("SkillPanelWidget", "SkillPanelSkill1", "SKILL 1");
+			return LOCTEXT("SKILL 1", "SKILL 1");
 		case 2:
-			return NSLOCTEXT("SkillPanelWidget", "SkillPanelSkill2", "SKILL 2");
+			return LOCTEXT("SKILL 2", "SKILL 2");
 		case 3:
-			return NSLOCTEXT("SkillPanelWidget", "SkillPanelSkill3", "SKILL 3");
+			return LOCTEXT("SKILL 3", "SKILL 3");
 		case 4:
-			return NSLOCTEXT("SkillPanelWidget", "SkillPanelSkill4", "SKILL 4");
+			return LOCTEXT("SKILL 4", "SKILL 4");
 		case 5:
-			return NSLOCTEXT("SkillPanelWidget", "SkillPanelStep", "STEP");
+			return LOCTEXT("STEP", "STEP");
 		default:
-			return NSLOCTEXT("SkillPanelWidget", "SkillPanelUnknown", "SKILL");
+			return LOCTEXT("SKILL", "SKILL");
 		}
 	}
 
@@ -127,7 +129,7 @@ void USkillPanelWidget::EnsureSkillDetailWidgets()
 		mSkillDetailBackButton = FindOrCreateRootWidget<UButton>(WidgetTree, mRootCanvas, TEXT("SkillDetailBackButton"));
 		if (mSkillDetailBackButton != nullptr)
 		{
-			FindOrCreateSkillButtonText(WidgetTree, mSkillDetailBackButton, TEXT("SkillDetailBackButtonText"), NSLOCTEXT("SkillPanelWidget", "SkillDetailBackText", "BACK"));
+			FindOrCreateSkillButtonText(WidgetTree, mSkillDetailBackButton, TEXT("SkillDetailBackButtonText"), LOCTEXT("BACK", "BACK"));
 			mSkillDetailBackButton->SetBackgroundColor(RDPanelNavigationStyle::GetBackButtonColor());
 			mSkillDetailBackButton->OnClicked.AddUniqueDynamic(this, &USkillPanelWidget::HandleSkillDetailBackButtonClicked);
 		}
@@ -212,7 +214,7 @@ void USkillPanelWidget::RefreshSkillDetailWidgets()
 	if (mSkillDetailTitleText != nullptr)
 	{
 		mSkillDetailTitleText->SetText(FText::Format(
-			NSLOCTEXT("SkillPanelWidget", "SkillDetailTitleFormat", "{0} / {1}"),
+			LOCTEXT("{0} / {1}", "{0} / {1}"),
 			FText::AsNumber(mDetailSkillIndex + 1),
 			FText::AsNumber(RDSkillPanel::ItemCount)
 		));
@@ -220,7 +222,7 @@ void USkillPanelWidget::RefreshSkillDetailWidgets()
 	if (mSkillDetailBodyText != nullptr)
 	{
 		mSkillDetailBodyText->SetText(FText::Format(
-			NSLOCTEXT("SkillPanelWidget", "SkillDetailBodyFormat", "{0}\nSkill detail preview\nAPI connection pending"),
+			LOCTEXT("{0}\nSkill detail preview\nAPI connection pending", "{0}\nSkill detail preview\nAPI connection pending"),
 			GetSkillPanelLabel(mDetailSkillIndex)
 		));
 	}
@@ -253,3 +255,5 @@ void USkillPanelWidget::HandleSkillDetailNextButtonClicked()
 {
 	MoveSkillDetail(1);
 }
+
+#undef LOCTEXT_NAMESPACE

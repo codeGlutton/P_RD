@@ -8,6 +8,8 @@
 #include "Components/TextBlock.h"
 #include "Components/Widget.h"
 
+#define LOCTEXT_NAMESPACE "DicePanelWidget_Visuals"
+
 namespace
 {
 	bool ShouldShowPip(TCHAR PipName, int32 ResultValue)
@@ -37,7 +39,7 @@ void UDicePanelWidget::RefreshDicePanelWidgets()
 	if (UTextBlock* CarouselTitleText = FindDiceText(TEXT("CarouselTitleText")))
 	{
 		CarouselTitleText->SetText(FText::Format(
-			NSLOCTEXT("DicePanelWidget", "DicePanelTitleFormat", "DICE {0}"),
+			LOCTEXT("DICE {0}", "DICE {0}"),
 			FText::AsNumber(mDicePanelViews.Num())
 		));
 	}
@@ -214,3 +216,5 @@ FText UDicePanelWidget::BuildDiceFaceText(const FDiceViewData& DiceView) const
 
 	return NSLOCTEXT("DicePanelWidget", "DiceNotRolledText", "...");
 }
+
+#undef LOCTEXT_NAMESPACE

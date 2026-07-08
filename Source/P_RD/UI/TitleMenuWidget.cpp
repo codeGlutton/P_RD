@@ -84,7 +84,7 @@ UTitleMenuWidget::UTitleMenuWidget(const FObjectInitializer& ObjectInitializer)
 	, mStartButtonText(NSLOCTEXT("TitleMenuWidget", "StartText", "START"))
 	, mNewStartButtonText(NSLOCTEXT("TitleMenuWidget", "NewStartText", "NEW START"))
 	, mContinueButtonText(NSLOCTEXT("TitleMenuWidget", "ContinueText", "CONTINUE"))
-	, mSettingsButtonText(NSLOCTEXT("TitleMenuWidget", "SettingsText", "SETTING"))
+	, mSettingsButtonText(NSLOCTEXT("TitleMenuWidget", "SettingsText", "SETTINGS"))
 	, mMainOnlyStatusText(NSLOCTEXT("TitleMenuWidget", "MainOnlyStatusText", "Title main screen only"))
 	, mLastLoggedTitleLayoutViewportSize(FVector2D::ZeroVector)
 {
@@ -162,8 +162,10 @@ void UTitleMenuWidget::NativeDestruct()
 /** @brief 생성자/에디터 기본값으로 준비된 문구를 실제 WBP TextBlock에 반영한다. */
 // WBP는 레이아웃과 폰트/색을 담당하고, C++은 버튼 의미에 맞는 텍스트만 넣는다.
 // 텍스트 동기화를 한 함수로 모아두면 저장 슬롯/불러오기 버튼이 추가될 때 문구 갱신 지점이 분산되지 않는다.
-void UTitleMenuWidget::SyncMainText() const
+void UTitleMenuWidget::SyncMainText()
 {
+	// 타이틀 문구는 생성자에서 NSLOCTEXT로 초기화되어 현재 컬처(en/ko)에 맞춰 자동 번역된다.
+	// 여기서는 그 문구를 실제 WBP TextBlock에 밀어넣기만 하며, 언어 판별/스위치는 로컬라이제이션 시스템이 담당한다.
 	if (TitleText != nullptr)
 	{
 		TitleText->SetText(mTitleText);
@@ -184,11 +186,18 @@ void UTitleMenuWidget::SyncMainText() const
 		SettingsButtonText->SetText(mSettingsButtonText);
 	}
 
+	const FText ExitButtonLabel = NSLOCTEXT("TitleMenuWidget", "ExitText", "EXIT");
 	for (const FName ProfileName : TitleLayoutProfiles)
 	{
 		SetProfileText(this, TEXT("StartButtonText"), ProfileName, mStartButtonText);
 		SetProfileText(this, TEXT("ContinueButtonText"), ProfileName, mContinueButtonText);
 		SetProfileText(this, TEXT("SettingsButtonText"), ProfileName, mSettingsButtonText);
+		SetProfileText(this, TEXT("ExitButtonText"), ProfileName, ExitButtonLabel);
+	}
+
+	if (UTextBlock* ExitButtonText = Cast<UTextBlock>(GetWidgetFromName(TEXT("ExitButtonText"))))
+	{
+		ExitButtonText->SetText(ExitButtonLabel);
 	}
 }
 

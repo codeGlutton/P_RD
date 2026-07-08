@@ -12,6 +12,8 @@
 #include "UI/Inventory/InventoryUIModel.h"
 #include "UI/ViewportZOrderType.h"
 
+#define LOCTEXT_NAMESPACE "InventoryUIWidgetBase"
+
 namespace
 {
 	/** @brief 인벤토리 항목 종류별 기본 아이콘 텍스처 경로(SVN 임포트). */
@@ -53,23 +55,23 @@ void UInventoryUIWidgetBase::NativeConstruct()
 	}
 	if (mCloseButtonText != nullptr)
 	{
-		mCloseButtonText->SetText(NSLOCTEXT("InventoryUI", "Close", "닫기"));
+		mCloseButtonText->SetText(LOCTEXT("Close", "Close"));
 	}
 	if (mTitleText != nullptr)
 	{
-		mTitleText->SetText(NSLOCTEXT("InventoryUI", "Title", "인벤토리"));
+		mTitleText->SetText(LOCTEXT("Inventory", "Inventory"));
 	}
 	if (mDiceLabel != nullptr)
 	{
-		mDiceLabel->SetText(NSLOCTEXT("InventoryUI", "Dice", "주사위"));
+		mDiceLabel->SetText(LOCTEXT("Dice", "Dice"));
 	}
 	if (mSkillLabel != nullptr)
 	{
-		mSkillLabel->SetText(NSLOCTEXT("InventoryUI", "Skill", "스킬"));
+		mSkillLabel->SetText(LOCTEXT("Skills", "Skills"));
 	}
 	if (mEquipLabel != nullptr)
 	{
-		mEquipLabel->SetText(NSLOCTEXT("InventoryUI", "Equip", "장비"));
+		mEquipLabel->SetText(LOCTEXT("Equipment", "Equipment"));
 	}
 
 	RefreshView();
@@ -184,8 +186,12 @@ void UInventoryUIWidgetBase::RefreshView()
 
 	if (mMetaText != nullptr)
 	{
-		mMetaText->SetText(FText::FromString(FString::Printf(
-			TEXT("골드 %d    Lv %d    HP %.0f / %.0f"), Inv.mGold, Inv.mLevel, Inv.mHP, Inv.mMaxHP)));
+		mMetaText->SetText(FText::Format(
+			LOCTEXT("Gold {0}    Lv {1}    HP {2} / {3}", "Gold {0}    Lv {1}    HP {2} / {3}"),
+			FText::AsNumber(Inv.mGold),
+			FText::AsNumber(Inv.mLevel),
+			FText::AsNumber(FMath::RoundToInt(Inv.mHP)),
+			FText::AsNumber(FMath::RoundToInt(Inv.mMaxHP))));
 	}
 
 	FillSection(mDiceBox, Inv.mDice);
@@ -199,3 +205,5 @@ void UInventoryUIWidgetBase::NativeDestruct()
 	UnbindUIModel();
 	Super::NativeDestruct();
 }
+
+#undef LOCTEXT_NAMESPACE

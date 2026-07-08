@@ -78,7 +78,7 @@ private:
 	/** @brief 타이틀 메인 화면의 텍스트를 현재 설정값으로 채움 */
 	// 생성자에서 정한 기본 문구나 WBP/에디터에서 바꾼 문구를 실제 TextBlock에 반영한다.
 	// 텍스트 적용을 한 곳에 모아 두면 나중에 로컬라이징이나 옵션 설정을 붙일 때 바꾸는 위치가 줄어든다.
-	void SyncMainText() const;
+	void SyncMainText();
 
 	/** @brief 현재 화면비에 맞는 타이틀 레이아웃 프로필을 WidgetSwitcher에서 선택한다. */
 	void RefreshResponsiveTitleLayout(const FVector2D& ViewportSize);

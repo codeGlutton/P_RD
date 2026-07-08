@@ -9,6 +9,8 @@
 #include "UI/PanelNavigationStyle.h"
 #include "UI/PanelRootWidgetUtils.h"
 
+#define LOCTEXT_NAMESPACE "DicePanelWidget_Controls"
+
 namespace
 {
 	using RDPanelWidgetUtils::FindOrCreateRootWidget;
@@ -149,7 +151,7 @@ void UDicePanelWidget::EnsureDiceCarouselControlWidgets()
 		mDiceCarouselBackButton = FindOrCreateRootWidget<UButton>(WidgetTree, mRootCanvas, TEXT("DiceCarouselBackButton"));
 		if (mDiceCarouselBackButton != nullptr)
 		{
-			FindOrCreateButtonText(WidgetTree, mDiceCarouselBackButton, TEXT("DiceCarouselBackButtonText"), NSLOCTEXT("DicePanelWidget", "DiceCarouselBackText", "BACK"));
+			FindOrCreateButtonText(WidgetTree, mDiceCarouselBackButton, TEXT("DiceCarouselBackButtonText"), LOCTEXT("BACK", "BACK"));
 			mDiceCarouselBackButton->SetBackgroundColor(RDPanelNavigationStyle::GetBackButtonColor());
 			mDiceCarouselBackButton->OnClicked.AddUniqueDynamic(this, &UDicePanelWidget::HandleDiceCarouselBackButtonClicked);
 		}
@@ -205,7 +207,7 @@ void UDicePanelWidget::RefreshDiceCarouselControlWidgets()
 	if (mDiceCarouselTitleText != nullptr)
 	{
 		mDiceCarouselTitleText->SetText(FText::Format(
-			NSLOCTEXT("DicePanelWidget", "DiceCarouselTitleFormat", "DICE {0} / {1}"),
+			LOCTEXT("DICE {0} / {1}", "DICE {0} / {1}"),
 			FText::AsNumber(mSelectedDicePanelIndex + 1),
 			FText::AsNumber(mDicePanelViews.Num())
 		));
@@ -213,7 +215,7 @@ void UDicePanelWidget::RefreshDiceCarouselControlWidgets()
 	if (mDiceCarouselFaceText != nullptr)
 	{
 		mDiceCarouselFaceText->SetText(FText::Format(
-			NSLOCTEXT("DicePanelWidget", "DiceCarouselFaceFormat", "RESULT {0} / d{1}"),
+			LOCTEXT("RESULT {0} / d{1}", "RESULT {0} / d{1}"),
 			BuildDiceFaceText(DiceView),
 			FText::AsNumber(DiceView.mFaceCount)
 		));
@@ -266,4 +268,6 @@ void UDicePanelWidget::RefreshDiceCarouselFaceButtonStyles()
 		}
 	}
 }
+
+#undef LOCTEXT_NAMESPACE
 
