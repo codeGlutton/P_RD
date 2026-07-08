@@ -1,4 +1,4 @@
-﻿#include "UI/CombatTileMapHUDWidget.h"
+#include "UI/CombatTileMapHUDWidget.h"
 
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Blueprint/WidgetTree.h"
@@ -80,27 +80,25 @@ namespace
 			return FLinearColor::White;
 		}
 	}
+}
 
-	/**
-	 * @brief 아이콘 의미(enum) → 실제 텍스처. None이면 아이콘 없이 텍스트만 띄운다.
-	 * @param IconType 게임플레이가 넘긴 의미값(HP/Poison/Fire/Shield/Move/None).
-	 * @return 해당 텍스처. None이면 nullptr. (첫 로드 후 엔진 캐시에 남아 재로드 비용 없음)
-	 * @note 현재는 HP 하트 하나만 연결돼 있어 None을 뺀 모든 종류가 임시로 하트로 나온다.
-	 *       전용 에셋이 정해지면 종류별 case를 분리해 경로만 갈아끼우면 된다.
-	 */
-	UTexture2D* ResolveFloatingLogIcon(EFloatingLogIconType IconType)
+/**
+ * @brief 아이콘 의미(enum) → 실제 텍스처. None이면 아이콘 없이 텍스트만 띄운다.
+ * @param IconType 게임플레이가 넘긴 의미값(HP/Poison/Fire/Shield/Move/None).
+ * @return 해당 텍스처. None이면 nullptr. (첫 로드 후 엔진 캐시에 남아 재로드 비용 없음)
+ * @note 현재는 HP 하트 하나만 연결돼 있어 None을 뺀 모든 종류가 임시로 하트로 나온다.
+ *       전용 에셋이 정해지면 종류별 case를 분리해 경로만 갈아끼우면 된다.
+ */
+UTexture2D* UCombatTileMapHUDWidget::ResolveFloatingLogIcon(EFloatingLogIconType IconType) const
+{
+	// None은 아이콘 없음(텍스트만). 나머지 아이콘 종류는 임시로 전부 HP(하트) 텍스처로 연결한다.
+	// Poison/Fire/GetDefense/Move 전용 아이콘 에셋이 준비되면 case를 분리해 경로만 갈아끼우면 됨.
+	if (IconType == EFloatingLogIconType::None)
 	{
-		// None은 아이콘 없음(텍스트만). 나머지 아이콘 종류는 임시로 전부 HP(하트) 텍스처로 연결한다.
-		// Poison/Fire/GetDefense/Move 전용 아이콘 에셋이 준비되면 case를 분리해 경로만 갈아끼우면 됨.
-		if (IconType == EFloatingLogIconType::None)
-		{
-			return nullptr;
-		}
-
-		return LoadObject<UTexture2D>(
-			nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ClassSelect/T_icon_hp.T_icon_hp"));
+		return nullptr;
 	}
+
+	return mFloatingLogHpIconTexture;
 }
 
 /**

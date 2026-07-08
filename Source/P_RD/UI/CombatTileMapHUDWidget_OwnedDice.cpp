@@ -1,4 +1,4 @@
-﻿#include "UI/CombatTileMapHUDWidget.h"
+#include "UI/CombatTileMapHUDWidget.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
@@ -16,10 +16,6 @@ using namespace RDCombatHUD;
 
 namespace
 {
-	// 보유 주사위 카드의 2D 면 텍스처. 3D 캡처(주사위별 SceneCapture+RT)를 쓰지 않고
-	// 면 판만 그린다 - 값 판독성(큰 숫자)과 모바일 비용(캡처 7개 제거) 모두를 위해서다.
-	const TCHAR* const OwnedDiceFaceTexturePath = TEXT("/Game/SVN/OutSideAsset/AICreation/Dice/T_DiceFace_Base.T_DiceFace_Base");
-
 	/** @brief 보유 주사위 값 텍스트를 크고 진하게(볼드) 맞춘다 - 면 판 위에서 한눈에 읽히게. */
 	void SetOwnedDiceValueFont(UTextBlock* Text, int32 Size)
 	{
@@ -301,10 +297,6 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 		{
 			if (UImage* OwnedDiceImage = mOwnedDiceImages[DiceIndex])
 			{
-				if (mOwnedDiceFaceTexture == nullptr)
-				{
-					mOwnedDiceFaceTexture = LoadObject<UTexture2D>(nullptr, OwnedDiceFaceTexturePath);
-				}
 				if (mOwnedDiceFaceTexture != nullptr)
 				{
 					OwnedDiceImage->SetBrushFromTexture(mOwnedDiceFaceTexture, false);
