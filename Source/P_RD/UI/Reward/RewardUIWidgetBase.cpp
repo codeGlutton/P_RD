@@ -9,6 +9,8 @@
 #include "UI/Reward/RewardUIModel.h"
 #include "UI/ViewportZOrderType.h"
 
+#define LOCTEXT_NAMESPACE "RewardUIWidgetBase"
+
 namespace
 {
 	/** @brief 기존 BindWidget Image 의 브러시 텍스처/크기만 갈아끼운다(위젯 생성 아님 — 데이터 설정). */
@@ -174,19 +176,19 @@ void URewardUIWidgetBase::RefreshSummary()
 	}
 	if (mGoldValue != nullptr)
 	{
-		mGoldValue->SetText(FText::FromString(FString::Printf(TEXT("+%d"), Reward.mGoldGained)));
+		mGoldValue->SetText(FText::Format(LOCTEXT("+{0}", "+{0}"), FText::AsNumber(Reward.mGoldGained)));
 	}
 	if (mGoldSub != nullptr)
 	{
-		mGoldSub->SetText(FText::FromString(FString::Printf(TEXT("보유 %d"), Reward.mGoldBalance)));
+		mGoldSub->SetText(FText::Format(LOCTEXT("Owned {0}", "Owned {0}"), FText::AsNumber(Reward.mGoldBalance)));
 	}
 	if (mExpValue != nullptr)
 	{
-		mExpValue->SetText(FText::FromString(FString::Printf(TEXT("+%d"), Reward.mExpGained)));
+		mExpValue->SetText(FText::Format(LOCTEXT("+{0}", "+{0}"), FText::AsNumber(Reward.mExpGained)));
 	}
 	if (mExpSub != nullptr)
 	{
-		mExpSub->SetText(FText::FromString(FString::Printf(TEXT("Lv %d"), Reward.mLevelAfter)));
+		mExpSub->SetText(FText::Format(LOCTEXT("Lv {0}", "Lv {0}"), FText::AsNumber(Reward.mLevelAfter)));
 	}
 }
 
@@ -237,3 +239,5 @@ void URewardUIWidgetBase::NativeDestruct()
 	UnbindUIModel();
 	Super::NativeDestruct();
 }
+
+#undef LOCTEXT_NAMESPACE
