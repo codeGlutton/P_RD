@@ -45,6 +45,9 @@ public:
 	UPROPERTY(Category = "Background", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BackgroundMap", AssetBundles = "World"))
 	TSoftObjectPtr<UWorld> mBackgroundMap;
 
+    UPROPERTY(Category = "Sound", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "OverrideBGM", AssetBundles = "World"))
+    TSoftObjectPtr<USoundBase> mOverrideBGM;
+
 public:
     UPROPERTY(Category = "Logic", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "GameModeBase", AssetBundles = "World"))
     TSoftClassPtr<AGameModeBase> mGameModeBase;

@@ -5,6 +5,7 @@
 
 #include "Engine/AssetManager.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
+#include "DataAsset/StageSpawnData/StaticStageSpawnData.h"
 #include "DataAsset/RoomSpawnData/StaticCombatRoomSpawnData.h"
 
 #include "PCGStage/Room.h"
@@ -166,13 +167,6 @@ void ACombatGameMode::InitializeRoom()
 {
 	Super::InitializeRoom();
 
-	const FRoom& CurRoom = GetRunPersistData()->GetCurrentRoom();
-
-	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
-	checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
-	UStaticCombatRoomSpawnData* StaticRoomData = AssetManager->GetPrimaryAssetObject<UStaticCombatRoomSpawnData>(CurRoom.mStaticRoomSpawnDataId);
-	checkf(StaticRoomData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
-
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 
@@ -269,6 +263,19 @@ void ACombatGameMode::InitializeRoom()
 	// 월드 탭을 전투 명령으로 넘겨 조준/시전을 진행한다.
 	mCombatUIModel->OnCombatWorldTouch.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatWorldTouch);
 
+	const FStage& CurStage = GetRunPersistData()->GetStage();
+	const FRoom& CurRoom = GetRunPersistData()->GetCurrentRoom();
+
+	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
+	checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
+	UStaticStageSpawnData* StaticStageData = AssetManager->GetPrimaryAssetObject<UStaticStageSpawnData>(CurStage.mStaticStageSpawnDataId);
+	checkf(StaticStageData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
+	UStaticCombatRoomSpawnData* StaticRoomData = AssetManager->GetPrimaryAssetObject<UStaticCombatRoomSpawnData>(CurRoom.mStaticRoomSpawnDataId);
+	checkf(StaticRoomData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
+
+	TSoftObjectPtr<USoundBase> MainBGMSoftPtr = CurRoom.mType == ERoomType::BossMonster ? StaticStageData->mBossMonsterRoomBGM : StaticStageData->mMonsterRoomBGM;
+	SetMainBGM(MainBGMSoftPtr.LoadSynchronous(), false);
+
 	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModel());
 }
 
@@ -301,7 +308,8 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 	case ECombatInputType::Cancel:
 	case ECombatInputType::LongPressUnit:
 	case ECombatInputType::LongPressEquip:
-		// 아직 연결할 기능이 없다.
+		// 길게 누른 장비의 상세 정보를 UIModel에 채운다.
+		PushEquipmentDetailUIData(IntPayload);
 		break;
 	}
 }
@@ -818,6 +826,11 @@ void ACombatGameMode::PushEquipmentUIData() const
 	}
 
 	mCombatUIModel->SetEquipmentUIs(EquipmentUIDatas);
+}
+
+void ACombatGameMode::PushEquipmentDetailUIData(int32 EquipmentIndex) const
+{
+	// TODO
 }
 
 void ACombatGameMode::PushPlayerMetaUIData() const

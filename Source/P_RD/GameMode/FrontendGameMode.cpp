@@ -195,6 +195,20 @@ AFrontendGameMode::AFrontendGameMode()
 	mWaitExternalWorkOnTransition = false;
 }
 
+void AFrontendGameMode::InitializeCommonRoom()
+{
+	Super::InitializeCommonRoom();
+
+	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
+	checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
+	const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
+	checkf(GamePlaySettings != nullptr, TEXT("게임 플레이 세팅 CDO nullptr"));
+
+	TObjectPtr<UStaticFrontendRoomSpawnData> FrontendRoomSpawnData = AssetManager->GetPrimaryAssetObject<UStaticFrontendRoomSpawnData>(GamePlaySettings->mFrontendRoomId);
+	TSoftObjectPtr<USoundBase> MainBGMSoftPtr = FrontendRoomSpawnData->mOverrideBGM;
+	SetMainBGM(MainBGMSoftPtr.LoadSynchronous());
+}
+
 /** @brief 프론트엔드 방 진입 후 타이틀 HUD를 공통 UI 생명주기로 연다. */
 // RDUserWidget 기반 HUD는 InitHUD()에서 생성되더라도 자동으로 화면에 표시되지 않는다.
 // 실제 표시 시점은 GameMode가 방 진입 준비를 끝낸 뒤 OpenUI()로 명시한다.
