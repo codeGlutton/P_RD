@@ -14,15 +14,10 @@
 bool UTacticalPassive_NthAddStat::EvaluateActivate(
 	const FPassiveActivateContext& Ctx,
 	TInstancedStruct<FDynamicPassiveData>& PassiveState,
-	FBoardCombatTargetSnapshotData& TargetDelta)
+	float& OutMagnitude)
 {
 	// 데이터/이펙트가 없으면 적용 안 함
 	if (mStaticData == nullptr || mEffectClass == nullptr)
-	{
-		return false;
-	}
-	const UTacticalEffect* EffectCDO = mEffectClass.GetDefaultObject();
-	if (EffectCDO == nullptr || EffectCDO->mModifiers.Num() == 0)
 	{
 		return false;
 	}
@@ -51,7 +46,8 @@ bool UTacticalPassive_NthAddStat::EvaluateActivate(
 	const bool bTriggered = (Ordinal >= mStaticData->mThreshold);
 	if (bTriggered)
 	{
-		TargetDelta.mAttributes.FindOrAdd(EffectCDO->mModifiers[0].mAttribute) += mStaticData->mMagnitude;
+		// DA의 매그니튜드 값을 그대로 사용
+		OutMagnitude = mStaticData->mMagnitude;
 	}
 
 	// 다음 내부상태 기록: 발동했으면 리셋해야 하니까 0, 아니면 증가

@@ -209,6 +209,7 @@ bool USaveGameSubsystem::LoadOption() const
 {
 	if (UGameplayStatics::DoesSaveGameExist(OPTION_SLOT_NAME, 0) == false)
 	{
+		GetOptionMutableData()->ApplyCurrentOptions();
 		return false;
 	}
 
@@ -220,7 +221,6 @@ bool USaveGameSubsystem::LoadOption() const
 	UE_LOG(LogSave, Log, TEXT("옵션 데이터 세이브 파일 로드"));
 
 	GetOptionMutableData()->ApplyCurrentOptions();
-
 	return true;
 }
 
@@ -236,13 +236,12 @@ void USaveGameSubsystem::LoadOptionAsync(FAsyncLoadGameFromSlotDelegate Callback
 			DeserializeObject(mOptionSaveGame->mData, OUT GetOptionMutableData());
 			ClearOption();
 			UE_LOG(LogSave, Log, TEXT("옵션 데이터 세이브 파일 비동기 로드 완료"));
-
-			GetOptionMutableData()->ApplyCurrentOptions();
 		}
 		else
 		{
 			UE_LOG(LogSave, Log, TEXT("옵션 데이터 세이브 파일 미발견으로 로드 실패"));
 		}
+		GetOptionMutableData()->ApplyCurrentOptions();
 		MovedCallback.ExecuteIfBound(SlotName, UserIndex, LoadedSaveGame);
 		}));
 }

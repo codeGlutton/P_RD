@@ -24,7 +24,7 @@ void UAnimNotify_EventTrigger::Notify(USkeletalMeshComponent* MeshComp, UAnimSeq
 		UBoardActorAnimInstance* BoardActorAnimInst = Cast<UBoardActorAnimInstance>(MeshComp->GetAnimInstance());
 		if (BoardActorAnimInst != nullptr)
 		{
-			BoardActorAnimInst->TriggerMontageTagEvent(mTargetEventTag);
+			BoardActorAnimInst->TriggerMontageTagEvent(mTargetEventTag, mEventPayload.GetPtr());
 		}
 	}
 }

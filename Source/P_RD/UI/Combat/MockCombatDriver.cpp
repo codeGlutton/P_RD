@@ -2,6 +2,8 @@
 
 #include "UI/Combat/CombatUIModel.h"
 
+#define LOCTEXT_NAMESPACE "MockCombatDriver"
+
 /** @brief UIModel에 mock 전투 스냅샷을 채우고 UI 입력 델리게이트가 왕복하는지 검증한다. */
 void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 {
@@ -42,7 +44,11 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 	// 가짜 주사위 6개. 면 수 배열은 지원 폴리헤드런(d2/d4/d6/d8/d12/d20) UI 슬롯 검증용 fixture다.
 	mDice.Reset();
 	const FLinearColor RarityColors[] = { FLinearColor(0.86f, 0.98f, 0.94f, 1.f), FLinearColor(0.55f, 0.72f, 1.f, 1.f), FLinearColor(0.82f, 0.58f, 1.f, 1.f) };
-	const TCHAR* RarityTexts[] = { TEXT("Common"), TEXT("Rare"), TEXT("Epic") };
+	const FText RarityTexts[] = {
+		LOCTEXT("Common", "Common"),
+		LOCTEXT("Rare", "Rare"),
+		LOCTEXT("Epic", "Epic"),
+	};
 	const int32 FaceCounts[] = { 2, 4, 6, 8, 12, 20 };
 	for (int32 i = 0; i < 6; ++i)
 	{
@@ -58,7 +64,7 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 		}
 		const int32 Tier = i % 3;
 		Die.mRarityColor = RarityColors[Tier];
-		Die.mRarityText = FText::FromString(RarityTexts[Tier]);
+		Die.mRarityText = RarityTexts[Tier];
 		mDice.Add(Die);
 	}
 	RebuildDicePush();
@@ -69,7 +75,9 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 	{
 		FSkillUI Skill;
 		Skill.mSkillIndex = i;
-		Skill.mName = FText::FromString(FString::Printf(TEXT("Skill %d"), i + 1));
+		Skill.mName = FText::Format(
+			LOCTEXT("Skill {0}", "Skill {0}"),
+			FText::AsNumber(i + 1));
 		Skill.mDiceCost = 1 + (i % 3);
 		Skill.mIsUsable = true;
 		Skills.Add(Skill);
@@ -90,7 +98,9 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 	{
 		FEquipmentUI Equip;
 		Equip.mSlotIndex = i;
-		Equip.mName = FText::FromString(FString::Printf(TEXT("Equip %d"), i + 1));
+		Equip.mName = FText::Format(
+			LOCTEXT("Equip {0}", "Equip {0}"),
+			FText::AsNumber(i + 1));
 		Equip.mIsEquipped = (i == 0);
 		Equipment.Add(Equip);
 	}
@@ -168,9 +178,11 @@ void UMockCombatDriver::HandleCommand(ECombatInputType Type, int32 IntPayload)
 			// HP/스탯은 FUnitDetailUI가 더 이상 보관하지 않는다 — UI가 mUnitId로 FUnitUI를 찾아 읽는다.
 			FUnitDetailUI Detail;
 			Detail.mUnitId = IntPayload;
-			Detail.mName = FText::FromString(FString::Printf(TEXT("Enemy %d"), IntPayload));
+			Detail.mName = FText::Format(
+				LOCTEXT("Enemy {0}", "Enemy {0}"),
+				FText::AsNumber(IntPayload));
 			Detail.mLevel = 1;
-			Detail.mPassiveDescriptions = { FText::FromString(TEXT("(mock passive)")) };
+			Detail.mPassiveDescriptions = { LOCTEXT("(mock passive)", "(mock passive)") };
 			mUIModel->SetUnitDetail(Detail);
 		}
 		break;
@@ -203,7 +215,7 @@ void UMockCombatDriver::PushMockPreview()
 
 	FCombatQueueNode Status;
 	Status.mSourceUnitId = 0; Status.mTargetUnitId = 1; Status.mAmount = 0;
-	Status.mLabel = FText::FromString(TEXT("Stun"));
+	Status.mLabel = LOCTEXT("Stun", "Stun");
 	Queue.Add(Status);
 
 	FCombatQueueNode Heal;
@@ -222,3 +234,5 @@ void UMockCombatDriver::PlayNextQueueNode()
 		mUIModel->ResolveFrontQueueNode();
 	}
 }
+
+#undef LOCTEXT_NAMESPACE

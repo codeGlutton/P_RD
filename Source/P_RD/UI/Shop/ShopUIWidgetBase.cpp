@@ -12,6 +12,8 @@
 #include "UI/Shop/ShopUIModel.h"
 #include "UI/ViewportZOrderType.h"
 
+#define LOCTEXT_NAMESPACE "ShopUIWidgetBase"
+
 namespace
 {
 	/** @brief 상점 항목 종류별 기본 아이콘 텍스처 경로(SVN 임포트). */
@@ -56,11 +58,11 @@ void UShopUIWidgetBase::NativeConstruct()
 	}
 	if (mCloseButtonText != nullptr)
 	{
-		mCloseButtonText->SetText(NSLOCTEXT("ShopUI", "Leave", "나가기"));
+		mCloseButtonText->SetText(LOCTEXT("Leave", "Leave"));
 	}
 	if (mTitleText != nullptr)
 	{
-		mTitleText->SetText(NSLOCTEXT("ShopUI", "Title", "상점"));
+		mTitleText->SetText(LOCTEXT("Shop", "Shop"));
 	}
 
 	RefreshView();
@@ -140,7 +142,9 @@ void UShopUIWidgetBase::RefreshView()
 
 	if (mGoldText != nullptr)
 	{
-		mGoldText->SetText(FText::FromString(FString::Printf(TEXT("보유 골드 %d"), Shop.mGold)));
+		mGoldText->SetText(FText::Format(
+			LOCTEXT("Gold {0}", "Gold {0}"),
+			FText::AsNumber(Shop.mGold)));
 	}
 
 	if (mItemBox == nullptr)
@@ -185,8 +189,8 @@ void UShopUIWidgetBase::RefreshView()
 		if (UTextBlock* Price = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass()))
 		{
 			const FText PriceText = Item.mIsSoldOut
-				? NSLOCTEXT("ShopUI", "SoldOut", "품절")
-				: FText::FromString(FString::Printf(TEXT("%d G"), Item.mPrice));
+				? LOCTEXT("Sold Out", "Sold Out")
+				: FText::Format(LOCTEXT("{0} G", "{0} G"), FText::AsNumber(Item.mPrice));
 			Price->SetText(PriceText);
 			Price->SetJustification(ETextJustify::Center);
 			Price->SetColorAndOpacity(FSlateColor(Item.mIsAffordable && !Item.mIsSoldOut
@@ -211,3 +215,5 @@ void UShopUIWidgetBase::NativeDestruct()
 	UnbindUIModel();
 	Super::NativeDestruct();
 }
+
+#undef LOCTEXT_NAMESPACE

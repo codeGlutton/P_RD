@@ -1,0 +1,1296 @@
+﻿# Game Korean translation.
+# Fill out your copyright notice in the Description page of Project Settings.
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: Game\n"
+"POT-Creation-Date: 2026-07-08 04:55\n"
+"PO-Revision-Date: 2026-07-08 04:55\n"
+"Language-Team: \n"
+"Language: ko\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. Key:	TempEquipSlot
+#. SourceLocation:	Source/P_RD/Combat/CombatUIAdapter.cpp(694)
+#: Source/P_RD/Combat/CombatUIAdapter.cpp(694)
+msgctxt "CombatUIAdapter,TempEquipSlot"
+msgid "EQ{0}"
+msgstr "장비{0}"
+
+#. Key:	GLOVES
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(101)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(101)
+msgctxt "CombatGameMode,GLOVES"
+msgid "GLOVES"
+msgstr "장갑"
+
+#. Key:	BOOTS
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(103)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(103)
+msgctxt "CombatGameMode,BOOTS"
+msgid "BOOTS"
+msgstr "신발"
+
+#. Key:	EMPTY
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(105)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(105)
+msgctxt "CombatGameMode,EMPTY"
+msgid "EMPTY"
+msgstr "비어 있음"
+
+#. Key:	Ally
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(820)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(820)
+msgctxt "CombatGameMode,Ally"
+msgid "Ally"
+msgstr "아군"
+
+#. Key:	Enemy
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(821)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(821)
+msgctxt "CombatGameMode,Enemy"
+msgid "Enemy"
+msgstr "적"
+
+#. Key:	WEAPON
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(99)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(99)
+msgctxt "CombatGameMode,WEAPON"
+msgid "WEAPON"
+msgstr "무기"
+
+#. Key:	This character is not ready.
+#. SourceLocation:	Source/P_RD/GameMode/FrontendGameMode.cpp(129)
+#: Source/P_RD/GameMode/FrontendGameMode.cpp(129)
+msgctxt "FrontendGameMode,This character is not ready."
+msgid "This character is not ready."
+msgstr "준비 중인 캐릭터입니다"
+
+#. Key:	HP {0} / Dice {1} / Gold {2}
+#. SourceLocation:	Source/P_RD/GameMode/FrontendGameMode.cpp(398)
+#: Source/P_RD/GameMode/FrontendGameMode.cpp(398)
+msgctxt "FrontendGameMode,HP {0} / Dice {1} / Gold {2}"
+msgid "HP {0} / Dice {1} / Gold {2}"
+msgstr "HP {0} / 주사위 {1} / 골드 {2}"
+
+#. Key:	Knight
+#. SourceLocation:	Source/P_RD/GameMode/FrontendGameMode.cpp(57)
+#: Source/P_RD/GameMode/FrontendGameMode.cpp(57)
+msgctxt "FrontendGameMode,Knight"
+msgid "Knight"
+msgstr "기사"
+
+#. Key:	Player
+#. SourceLocation:	Source/P_RD/GameMode/FrontendGameMode.cpp(574)
+#: Source/P_RD/GameMode/FrontendGameMode.cpp(574)
+msgctxt "FrontendGameMode,Player"
+msgid "Player"
+msgstr "플레이어"
+
+#. Key:	Archer
+#. SourceLocation:	Source/P_RD/GameMode/FrontendGameMode.cpp(59)
+#: Source/P_RD/GameMode/FrontendGameMode.cpp(59)
+msgctxt "FrontendGameMode,Archer"
+msgid "Archer"
+msgstr "도적"
+
+#. Key:	Mage
+#. SourceLocation:	Source/P_RD/GameMode/FrontendGameMode.cpp(61)
+#: Source/P_RD/GameMode/FrontendGameMode.cpp(61)
+msgctxt "FrontendGameMode,Mage"
+msgid "Mage"
+msgstr "마법사"
+
+#. Key:	Unknown
+#. SourceLocation:	Source/P_RD/GameMode/FrontendGameMode.cpp(63)
+#: Source/P_RD/GameMode/FrontendGameMode.cpp(63)
+msgctxt "FrontendGameMode,Unknown"
+msgid "Unknown"
+msgstr "알 수 없음"
+
+#. Key:	Shield tank · melee
+#. SourceLocation:	Source/P_RD/GameMode/FrontendGameMode.cpp(73)
+#: Source/P_RD/GameMode/FrontendGameMode.cpp(73)
+msgctxt "FrontendGameMode,Shield tank · melee"
+msgid "Shield tank · melee"
+msgstr "방패 탱커 · 근접"
+
+#. Key:	Ambush assassin · agile
+#. SourceLocation:	Source/P_RD/GameMode/FrontendGameMode.cpp(75)
+#: Source/P_RD/GameMode/FrontendGameMode.cpp(75)
+msgctxt "FrontendGameMode,Ambush assassin · agile"
+msgid "Ambush assassin · agile"
+msgstr "기습 암살자 · 민첩"
+
+#. Key:	Dice caster · ranged
+#. SourceLocation:	Source/P_RD/GameMode/FrontendGameMode.cpp(77)
+#: Source/P_RD/GameMode/FrontendGameMode.cpp(77)
+msgctxt "FrontendGameMode,Dice caster · ranged"
+msgid "Dice caster · ranged"
+msgstr "주문 술사 · 원거리"
+
+#. Key:	KnightDescription
+#. SourceLocation:	Source/P_RD/GameMode/FrontendGameMode.cpp(89)
+#: Source/P_RD/GameMode/FrontendGameMode.cpp(89)
+msgctxt "FrontendGameMode,KnightDescription"
+msgid "A melee guardian who holds the front line with heavy armor and a shield.\nHigh HP lets him endure enemy attacks."
+msgstr "두꺼운 갑옷과 방패로 전열을 지키는 근접 수호자.\n높은 체력으로 적의 공격을 버틴다."
+
+#. Key:	ArcherDescription
+#. SourceLocation:	Source/P_RD/GameMode/FrontendGameMode.cpp(91)
+#: Source/P_RD/GameMode/FrontendGameMode.cpp(91)
+msgctxt "FrontendGameMode,ArcherDescription"
+msgid "A nimble assassin who strikes from the shadows.\nFast follow-up attacks bring enemies down."
+msgstr "그림자에서 기습하는 민첩한 암살자.\n빠른 연속 공격으로 적을 무너뜨린다."
+
+#. Key:	MageDescription
+#. SourceLocation:	Source/P_RD/GameMode/FrontendGameMode.cpp(93)
+#: Source/P_RD/GameMode/FrontendGameMode.cpp(93)
+msgctxt "FrontendGameMode,MageDescription"
+msgid "A ranged spellcaster who deals area damage with dice magic.\nPowerful, but fragile."
+msgstr "주사위 마법으로 광역 피해를 주는 원거리 술사.\n강력하지만 체력이 낮다."
+
+#. Key:	Monster
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(127)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(127)
+msgctxt "RoomGameModeBase,Monster"
+msgid "Monster"
+msgstr "몬스터"
+
+#. Key:	Elite
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(129)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(129)
+msgctxt "RoomGameModeBase,Elite"
+msgid "Elite"
+msgstr "정예"
+
+#. Key:	Boss
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(131)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(131)
+msgctxt "RoomGameModeBase,Boss"
+msgid "Boss"
+msgstr "보스"
+
+#. Key:	Shop
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(133)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(133)
+msgctxt "RoomGameModeBase,Shop"
+msgid "Shop"
+msgstr "상점"
+
+#. Key:	Treasure
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(135)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(135)
+msgctxt "RoomGameModeBase,Treasure"
+msgid "Treasure"
+msgstr "보물"
+
+#. Key:	Unknown
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(137)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(137)
+msgctxt "RoomGameModeBase,Unknown"
+msgid "Unknown"
+msgstr "알 수 없음"
+
+#. Key:	Row {0}, Column {1}. Next routes: {2}
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(148)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(148)
+msgctxt "RoomGameModeBase,Row {0}\\, Column {1}. Next routes: {2}"
+msgid "Row {0}, Column {1}. Next routes: {2}"
+msgstr "{0}행 {1}열. 다음 경로: {2}"
+
+#. Key:	Routes: {0}
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(161)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(161)
+msgctxt "RoomGameModeBase,Routes: {0}"
+msgid "Routes: {0}"
+msgstr "경로: {0}"
+
+#. Key:	Start
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(379)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(379)
+msgctxt "RoomGameModeBase,Start"
+msgid "Start"
+msgstr "시작"
+
+#. Key:	CloseButtonText
+#. SourceLocation:	Source/P_RD/UI/CarouselPanelWidget_Binding.cpp(85)
+#: Source/P_RD/UI/CarouselPanelWidget_Binding.cpp(85)
+msgctxt "CarouselPanelWidget,CloseButtonText"
+msgid "X"
+msgstr ""
+
+#. Key:	Confirm
+#. SourceLocation:	Source/P_RD/UI/CharacterSelectWidgetPrivate.cpp(14)
+#: Source/P_RD/UI/CharacterSelectWidgetPrivate.cpp(14)
+msgctxt "CharacterSelectWidgetPrivate,Confirm"
+msgid "Confirm"
+msgstr "확인"
+
+#. Key:	Back
+#. SourceLocation:	Source/P_RD/UI/CharacterSelectWidgetPrivate.cpp(18)
+#: Source/P_RD/UI/CharacterSelectWidgetPrivate.cpp(18)
+msgctxt "CharacterSelectWidgetPrivate,Back"
+msgid "Back"
+msgstr "뒤로가기"
+
+#. Key:	Loading
+#. SourceLocation:	Source/P_RD/UI/CharacterSelectWidgetPrivate.cpp(26)
+#: Source/P_RD/UI/CharacterSelectWidgetPrivate.cpp(26)
+msgctxt "CharacterSelectWidgetPrivate,Loading"
+msgid "Loading"
+msgstr "로딩 중"
+
+#. Key:	Failed
+#. SourceLocation:	Source/P_RD/UI/CharacterSelectWidgetPrivate.cpp(30)
+#: Source/P_RD/UI/CharacterSelectWidgetPrivate.cpp(30)
+msgctxt "CharacterSelectWidgetPrivate,Failed"
+msgid "Failed"
+msgstr "실패"
+
+#. Key:	No character data
+#. SourceLocation:	Source/P_RD/UI/CharacterSelectWidgetPrivate.cpp(34)
+#: Source/P_RD/UI/CharacterSelectWidgetPrivate.cpp(34)
+msgctxt "CharacterSelectWidgetPrivate,No character data"
+msgid "No character data"
+msgstr "캐릭터 데이터가 없습니다"
+
+#. Key:	Character Select
+#. SourceLocation:	Source/P_RD/UI/CharacterSelectWidgetPrivate.cpp(38)
+#: Source/P_RD/UI/CharacterSelectWidgetPrivate.cpp(38)
+msgctxt "CharacterSelectWidgetPrivate,Character Select"
+msgid "Character Select"
+msgstr "캐릭터 선택"
+
+#. Key:	{0} selected
+#. SourceLocation:	Source/P_RD/UI/CharacterSelectWidgetPrivate.cpp(42)
+#: Source/P_RD/UI/CharacterSelectWidgetPrivate.cpp(42)
+msgctxt "CharacterSelectWidgetPrivate,{0} selected"
+msgid "{0} selected"
+msgstr "{0} 선택됨"
+
+#. Key:	This character is not available
+#. SourceLocation:	Source/P_RD/UI/CharacterSelectWidgetPrivate.cpp(46)
+#: Source/P_RD/UI/CharacterSelectWidgetPrivate.cpp(46)
+msgctxt "CharacterSelectWidgetPrivate,This character is not available"
+msgid "This character is not available"
+msgstr "아직 사용할 수 없는 캐릭터입니다"
+
+#. Key:	No portrait
+#. SourceLocation:	Source/P_RD/UI/CharacterSelectWidgetPrivate.cpp(50)
+#: Source/P_RD/UI/CharacterSelectWidgetPrivate.cpp(50)
+msgctxt "CharacterSelectWidgetPrivate,No portrait"
+msgid "No portrait"
+msgstr "초상화 없음"
+
+#. Key:	HP {0} / Dice {1} / Gold {2}
+#. SourceLocation:	Source/P_RD/UI/CharacterSelectWidgetPrivate.cpp(54)
+#: Source/P_RD/UI/CharacterSelectWidgetPrivate.cpp(54)
+msgctxt "CharacterSelectWidgetPrivate,HP {0} / Dice {1} / Gold {2}"
+msgid "HP {0} / Dice {1} / Gold {2}"
+msgstr "HP {0} / 주사위 {1} / 골드 {2}"
+
+#. Key:	Loading
+#. SourceLocation:	Source/P_RD/UI/CinematicWidget.cpp(205)
+#: Source/P_RD/UI/CinematicWidget.cpp(205)
+msgctxt "CinematicWidget,Loading"
+msgid "Loading"
+msgstr "로딩 중"
+
+#. Key:	Equip {0}
+#. SourceLocation:	Source/P_RD/UI/Combat/MockCombatDriver.cpp(102)
+#: Source/P_RD/UI/Combat/MockCombatDriver.cpp(102)
+msgctxt "MockCombatDriver,Equip {0}"
+msgid "Equip {0}"
+msgstr "장비 {0}"
+
+#. Key:	Enemy {0}
+#. SourceLocation:	Source/P_RD/UI/Combat/MockCombatDriver.cpp(182)
+#: Source/P_RD/UI/Combat/MockCombatDriver.cpp(182)
+msgctxt "MockCombatDriver,Enemy {0}"
+msgid "Enemy {0}"
+msgstr "적 {0}"
+
+#. Key:	(mock passive)
+#. SourceLocation:	Source/P_RD/UI/Combat/MockCombatDriver.cpp(185)
+#: Source/P_RD/UI/Combat/MockCombatDriver.cpp(185)
+msgctxt "MockCombatDriver,(mock passive)"
+msgid "(mock passive)"
+msgstr "(목업 패시브)"
+
+#. Key:	Stun
+#. SourceLocation:	Source/P_RD/UI/Combat/MockCombatDriver.cpp(218)
+#: Source/P_RD/UI/Combat/MockCombatDriver.cpp(218)
+msgctxt "MockCombatDriver,Stun"
+msgid "Stun"
+msgstr "기절"
+
+#. Key:	Common
+#. SourceLocation:	Source/P_RD/UI/Combat/MockCombatDriver.cpp(48)
+#: Source/P_RD/UI/Combat/MockCombatDriver.cpp(48)
+msgctxt "MockCombatDriver,Common"
+msgid "Common"
+msgstr "일반"
+
+#. Key:	Rare
+#. SourceLocation:	Source/P_RD/UI/Combat/MockCombatDriver.cpp(49)
+#: Source/P_RD/UI/Combat/MockCombatDriver.cpp(49)
+msgctxt "MockCombatDriver,Rare"
+msgid "Rare"
+msgstr "희귀"
+
+#. Key:	Epic
+#. SourceLocation:	Source/P_RD/UI/Combat/MockCombatDriver.cpp(50)
+#: Source/P_RD/UI/Combat/MockCombatDriver.cpp(50)
+msgctxt "MockCombatDriver,Epic"
+msgid "Epic"
+msgstr "영웅"
+
+#. Key:	Skill {0}
+#. SourceLocation:	Source/P_RD/UI/Combat/MockCombatDriver.cpp(79)
+#: Source/P_RD/UI/Combat/MockCombatDriver.cpp(79)
+msgctxt "MockCombatDriver,Skill {0}"
+msgid "Skill {0}"
+msgstr "스킬 {0}"
+
+#. Key:	Turn {0}
+#. SourceLocation:	Source/P_RD/UI/CombatTileMapHUDWidget_CombatLog.cpp(446)
+#: Source/P_RD/UI/CombatTileMapHUDWidget_CombatLog.cpp(446)
+msgctxt "CombatTileMapHUDWidget_CombatLog,Turn {0}"
+msgid "Turn {0}"
+msgstr "{0}번째 턴"
+
+#. Key:	Victory!
+#. SourceLocation:	Source/P_RD/UI/CombatTileMapHUDWidget_Nav.cpp(252)
+#: Source/P_RD/UI/CombatTileMapHUDWidget_Nav.cpp(252)
+msgctxt "CombatTileMapHUDWidget_Nav,Victory!"
+msgid "Victory!"
+msgstr "승리했습니다!"
+
+#. Key:	DICE x{0} PLACED (SUM {1})
+Tap dice to add or remove
+#. SourceLocation:	Source/P_RD/UI/CombatTileMapHUDWidget_Skill.cpp(48)
+#: Source/P_RD/UI/CombatTileMapHUDWidget_Skill.cpp(48)
+msgctxt "CombatTileMapHUDWidget_Skill,DICE x{0} PLACED (SUM {1})\nTap dice to add or remove"
+msgid "DICE x{0} PLACED (SUM {1})\nTap dice to add or remove"
+msgstr "주사위 {0}개 배치됨 (합 {1})\n주사위를 탭해 추가/제거"
+
+#. Key:	SELECT SKILL FIRST
+DICE x{0} (SUM {1}) waiting
+#. SourceLocation:	Source/P_RD/UI/CombatTileMapHUDWidget_Skill.cpp(57)
+#: Source/P_RD/UI/CombatTileMapHUDWidget_Skill.cpp(57)
+msgctxt "CombatTileMapHUDWidget_Skill,SELECT SKILL FIRST\nDICE x{0} (SUM {1}) waiting"
+msgid "SELECT SKILL FIRST\nDICE x{0} (SUM {1}) waiting"
+msgstr "스킬 먼저 선택\n주사위 {0}개 (합 {1}) 대기 중"
+
+#. Key:	{0}
+Tap a rolled die
+#. SourceLocation:	Source/P_RD/UI/CombatTileMapHUDWidget_Skill.cpp(66)
+#: Source/P_RD/UI/CombatTileMapHUDWidget_Skill.cpp(66)
+msgctxt "CombatTileMapHUDWidget_Skill,{0}\nTap a rolled die"
+msgid "{0}\nTap a rolled die"
+msgstr "{0}\n굴린 주사위를 탭하세요"
+
+#. Key:	EQUIPMENT · Equipped
+#. SourceLocation:	Source/P_RD/UI/CombatTileMapHUDWidget_SkillDetail.cpp(143)
+#: Source/P_RD/UI/CombatTileMapHUDWidget_SkillDetail.cpp(143)
+msgctxt "CombatTileMapHUDWidget_SkillDetail,EQUIPMENT · Equipped"
+msgid "EQUIPMENT · Equipped"
+msgstr "장비 · 장착 중"
+
+#. Key:	EQUIPMENT
+#. SourceLocation:	Source/P_RD/UI/CombatTileMapHUDWidget_SkillDetail.cpp(144)
+#: Source/P_RD/UI/CombatTileMapHUDWidget_SkillDetail.cpp(144)
+msgctxt "CombatTileMapHUDWidget_SkillDetail,EQUIPMENT"
+msgid "EQUIPMENT"
+msgstr "장비"
+
+#. Key:	SKILL · Dice {0}
+#. SourceLocation:	Source/P_RD/UI/CombatTileMapHUDWidget_SkillDetail.cpp(70)
+#: Source/P_RD/UI/CombatTileMapHUDWidget_SkillDetail.cpp(70)
+msgctxt "CombatTileMapHUDWidget_SkillDetail,SKILL · Dice {0}"
+msgid "SKILL · Dice {0}"
+msgstr "스킬 · 주사위 {0}"
+
+#. Key:	UNIT · Lv.{0}
+#. SourceLocation:	Source/P_RD/UI/CombatTileMapHUDWidget_SkillDetail.cpp(99)
+#: Source/P_RD/UI/CombatTileMapHUDWidget_SkillDetail.cpp(99)
+msgctxt "CombatTileMapHUDWidget_SkillDetail,UNIT · Lv.{0}"
+msgid "UNIT · Lv.{0}"
+msgstr "유닛 · Lv.{0}"
+
+#. Key:	Lv {0}    HP {1}/{2}    GOLD {3}
+#. SourceLocation:	Source/P_RD/UI/CombatTileMapHUDWidget_Status.cpp(101)
+#: Source/P_RD/UI/CombatTileMapHUDWidget_Status.cpp(101)
+msgctxt "CombatTileMapHUDWidget_Status,Lv {0}    HP {1}/{2}    GOLD {3}"
+msgid "Lv {0}    HP {1}/{2}    GOLD {3}"
+msgstr "Lv {0}    HP {1}/{2}    골드 {3}"
+
+#. Key:	SkinHP
+#. SourceLocation:	Source/P_RD/UI/CombatTileMapHUDWidget_Status.cpp(146)
+#: Source/P_RD/UI/CombatTileMapHUDWidget_Status.cpp(146)
+msgctxt "CombatTileMapHUDWidget,SkinHP"
+msgid "{0}/{1}"
+msgstr ""
+
+#. Key:	END
+TURN
+#. SourceLocation:	Source/P_RD/UI/CombatTileMapHUDWidget_Status.cpp(149)
+#: Source/P_RD/UI/CombatTileMapHUDWidget_Status.cpp(149)
+msgctxt "CombatTileMapHUDWidget_Status,END\nTURN"
+msgid "END\nTURN"
+msgstr "턴\n종료"
+
+#. Key:	MOVE
+{0}
+#. SourceLocation:	Source/P_RD/UI/CombatTileMapHUDWidget_Status.cpp(183)
+#: Source/P_RD/UI/CombatTileMapHUDWidget_Status.cpp(183)
+msgctxt "CombatTileMapHUDWidget_Status,MOVE\n{0}"
+msgid "MOVE\n{0}"
+msgstr "이동\n{0}"
+
+#. Key:	EQ{0}
+#. SourceLocation:	Source/P_RD/UI/CombatTileMapHUDWidget_Status.cpp(296)
+#: Source/P_RD/UI/CombatTileMapHUDWidget_Status.cpp(296)
+msgctxt "CombatTileMapHUDWidget_Status,EQ{0}"
+msgid "EQ{0}"
+msgstr "장비{0}"
+
+#. Key:	Me
+#. SourceLocation:	Source/P_RD/UI/CombatTileMapHUDWidget_Status.cpp(454)
+#: Source/P_RD/UI/CombatTileMapHUDWidget_Status.cpp(454)
+msgctxt "CombatTileMapHUDWidget_Status,Me"
+msgid "Me"
+msgstr "나"
+
+#. Key:	Enemy {0}
+#. SourceLocation:	Source/P_RD/UI/CombatTileMapHUDWidget_Status.cpp(455)
+#: Source/P_RD/UI/CombatTileMapHUDWidget_Status.cpp(455)
+msgctxt "CombatTileMapHUDWidget_Status,Enemy {0}"
+msgid "Enemy {0}"
+msgstr "적 {0}"
+
+#. Key:	DiceCarouselPreviousText
+#. SourceLocation:	Source/P_RD/UI/DicePanelWidget_Controls.cpp(132)
+#: Source/P_RD/UI/DicePanelWidget_Controls.cpp(132)
+msgctxt "DicePanelWidget,DiceCarouselPreviousText"
+msgid "<"
+msgstr ""
+
+#. Key:	DiceCarouselNextText
+#. SourceLocation:	Source/P_RD/UI/DicePanelWidget_Controls.cpp(143)
+#: Source/P_RD/UI/DicePanelWidget_Controls.cpp(143)
+msgctxt "DicePanelWidget,DiceCarouselNextText"
+msgid ">"
+msgstr ""
+
+#. Key:	BACK
+#. SourceLocation:	Source/P_RD/UI/DicePanelWidget_Controls.cpp(154)
+#: Source/P_RD/UI/DicePanelWidget_Controls.cpp(154)
+msgctxt "DicePanelWidget_Controls,BACK"
+msgid "BACK"
+msgstr "뒤로"
+
+#. Key:	DICE {0} / {1}
+#. SourceLocation:	Source/P_RD/UI/DicePanelWidget_Controls.cpp(210)
+#: Source/P_RD/UI/DicePanelWidget_Controls.cpp(210)
+msgctxt "DicePanelWidget_Controls,DICE {0} / {1}"
+msgid "DICE {0} / {1}"
+msgstr "주사위 {0} / {1}"
+
+#. Key:	RESULT {0} / d{1}
+#. SourceLocation:	Source/P_RD/UI/DicePanelWidget_Controls.cpp(218)
+#: Source/P_RD/UI/DicePanelWidget_Controls.cpp(218)
+msgctxt "DicePanelWidget_Controls,RESULT {0} / d{1}"
+msgid "RESULT {0} / d{1}"
+msgstr "결과 {0} / d{1}"
+
+#. Key:	DiceNotRolledText
+#. SourceLocation:	Source/P_RD/UI/DicePanelWidget_Visuals.cpp(217)
+#: Source/P_RD/UI/DicePanelWidget_Visuals.cpp(217)
+msgctxt "DicePanelWidget,DiceNotRolledText"
+msgid "..."
+msgstr ""
+
+#. Key:	DICE {0}
+#. SourceLocation:	Source/P_RD/UI/DicePanelWidget_Visuals.cpp(42)
+#: Source/P_RD/UI/DicePanelWidget_Visuals.cpp(42)
+msgctxt "DicePanelWidget_Visuals,DICE {0}"
+msgid "DICE {0}"
+msgstr "주사위 {0}"
+
+#. Key:	Rare
+#. SourceLocation:	Source/P_RD/UI/DiceViewData.cpp(56)
+#: Source/P_RD/UI/DiceViewData.cpp(56)
+msgctxt "DiceViewData,Rare"
+msgid "Rare"
+msgstr "희귀"
+
+#. Key:	Epic
+#. SourceLocation:	Source/P_RD/UI/DiceViewData.cpp(58)
+#: Source/P_RD/UI/DiceViewData.cpp(58)
+msgctxt "DiceViewData,Epic"
+msgid "Epic"
+msgstr "영웅"
+
+#. Key:	Common
+#. SourceLocation:	Source/P_RD/UI/DiceViewData.cpp(61)
+#: Source/P_RD/UI/DiceViewData.cpp(61)
+msgctxt "DiceViewData,Common"
+msgid "Common"
+msgstr "일반"
+
+#. Key:	DONE
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(102)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(102)
+msgctxt "FrontendMapWidget,DONE"
+msgid "DONE"
+msgstr "완료"
+
+#. Key:	LOCK
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(106)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(106)
+msgctxt "FrontendMapWidget,LOCK"
+msgid "LOCK"
+msgstr "잠김"
+
+#. Key:	{0}-{1}
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(114)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(114)
+msgctxt "FrontendMapWidget,{0}-{1}"
+msgid "{0}-{1}"
+msgstr "{0}-{1}"
+
+#. Key:	{0}-{1} {2}
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(118)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(118)
+msgctxt "FrontendMapWidget,{0}-{1} {2}"
+msgid "{0}-{1} {2}"
+msgstr "{0}-{1} {2}"
+
+#. Key:	Start point
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(122)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(122)
+msgctxt "FrontendMapWidget,Start point"
+msgid "Start point"
+msgstr "시작 지점"
+
+#. Key:	Start
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(126)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(126)
+msgctxt "FrontendMapWidget,Start"
+msgid "Start"
+msgstr "시작"
+
+#. Key:	Selected
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(130)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(130)
+msgctxt "FrontendMapWidget,Selected"
+msgid "Selected"
+msgstr "선택됨"
+
+#. Key:	Ready
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(134)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(134)
+msgctxt "FrontendMapWidget,Ready"
+msgid "Ready"
+msgstr "입장 가능"
+
+#. Key:	Visited
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(138)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(138)
+msgctxt "FrontendMapWidget,Visited"
+msgid "Visited"
+msgstr "방문 완료"
+
+#. Key:	Locked
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(142)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(142)
+msgctxt "FrontendMapWidget,Locked"
+msgid "Locked"
+msgstr "잠김"
+
+#. Key:	Select a room
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(146)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(146)
+msgctxt "FrontendMapWidget,Select a room"
+msgid "Select a room"
+msgstr "방을 선택하세요"
+
+#. Key:	MON
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(279)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(279)
+msgctxt "FrontendMapWidget,MON"
+msgid "MON"
+msgstr "일반"
+
+#. Key:	ELITE
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(281)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(281)
+msgctxt "FrontendMapWidget,ELITE"
+msgid "ELITE"
+msgstr "정예"
+
+#. Key:	BOSS
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(283)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(283)
+msgctxt "FrontendMapWidget,BOSS"
+msgid "BOSS"
+msgstr "보스"
+
+#. Key:	SHOP
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(285)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(285)
+msgctxt "FrontendMapWidget,SHOP"
+msgid "SHOP"
+msgstr "상점"
+
+#. Key:	TRS
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(287)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(287)
+msgctxt "FrontendMapWidget,TRS"
+msgid "TRS"
+msgstr "보물"
+
+#. Key:	MAP
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(70)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(70)
+msgctxt "FrontendMapWidget,MAP"
+msgid "MAP"
+msgstr "지도"
+
+#. Key:	BACK
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(74)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(74)
+msgctxt "FrontendMapWidget,BACK"
+msgid "BACK"
+msgstr "뒤로"
+
+#. Key:	ENTER
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(78)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(78)
+msgctxt "FrontendMapWidget,ENTER"
+msgid "ENTER"
+msgstr "입장"
+
+#. Key:	Loading
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(82)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(82)
+msgctxt "FrontendMapWidget,Loading"
+msgid "Loading"
+msgstr "로딩 중"
+
+#. Key:	Map is not ready
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(86)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(86)
+msgctxt "FrontendMapWidget,Map is not ready"
+msgid "Map is not ready"
+msgstr "지도가 준비되지 않았습니다"
+
+#. Key:	START
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(90)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(90)
+msgctxt "FrontendMapWidget,START"
+msgid "START"
+msgstr "시작"
+
+#. Key:	SELECT
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(94)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(94)
+msgctxt "FrontendMapWidget,SELECT"
+msgid "SELECT"
+msgstr "선택"
+
+#. Key:	READY
+#. SourceLocation:	Source/P_RD/UI/FrontendMapWidget.cpp(98)
+#: Source/P_RD/UI/FrontendMapWidget.cpp(98)
+msgctxt "FrontendMapWidget,READY"
+msgid "READY"
+msgstr "가능"
+
+#. Key:	Gold {0}    Lv {1}    HP {2} / {3}
+#. SourceLocation:	Source/P_RD/UI/Inventory/InventoryUIWidgetBase.cpp(190)
+#: Source/P_RD/UI/Inventory/InventoryUIWidgetBase.cpp(190)
+msgctxt "InventoryUIWidgetBase,Gold {0}    Lv {1}    HP {2} / {3}"
+msgid "Gold {0}    Lv {1}    HP {2} / {3}"
+msgstr "골드 {0}    Lv {1}    HP {2} / {3}"
+
+#. Key:	Close
+#. SourceLocation:	Source/P_RD/UI/Inventory/InventoryUIWidgetBase.cpp(58)
+#: Source/P_RD/UI/Inventory/InventoryUIWidgetBase.cpp(58)
+msgctxt "InventoryUIWidgetBase,Close"
+msgid "Close"
+msgstr "닫기"
+
+#. Key:	Inventory
+#. SourceLocation:	Source/P_RD/UI/Inventory/InventoryUIWidgetBase.cpp(62)
+#: Source/P_RD/UI/Inventory/InventoryUIWidgetBase.cpp(62)
+msgctxt "InventoryUIWidgetBase,Inventory"
+msgid "Inventory"
+msgstr "인벤토리"
+
+#. Key:	Dice
+#. SourceLocation:	Source/P_RD/UI/Inventory/InventoryUIWidgetBase.cpp(66)
+#: Source/P_RD/UI/Inventory/InventoryUIWidgetBase.cpp(66)
+msgctxt "InventoryUIWidgetBase,Dice"
+msgid "Dice"
+msgstr "주사위"
+
+#. Key:	Skills
+#. SourceLocation:	Source/P_RD/UI/Inventory/InventoryUIWidgetBase.cpp(70)
+#: Source/P_RD/UI/Inventory/InventoryUIWidgetBase.cpp(70)
+msgctxt "InventoryUIWidgetBase,Skills"
+msgid "Skills"
+msgstr "스킬"
+
+#. Key:	Equipment
+#. SourceLocation:	Source/P_RD/UI/Inventory/InventoryUIWidgetBase.cpp(74)
+#: Source/P_RD/UI/Inventory/InventoryUIWidgetBase.cpp(74)
+msgctxt "InventoryUIWidgetBase,Equipment"
+msgid "Equipment"
+msgstr "장비"
+
+#. Key:	Dice {0}
+#. SourceLocation:	Source/P_RD/UI/Inventory/MockInventoryDriver.cpp(57)
+#: Source/P_RD/UI/Inventory/MockInventoryDriver.cpp(57)
+msgctxt "MockInventoryDriver,Dice {0}"
+msgid "Dice {0}"
+msgstr "주사위 {0}"
+
+#. Key:	d{0}
+#. SourceLocation:	Source/P_RD/UI/Inventory/MockInventoryDriver.cpp(58)
+#: Source/P_RD/UI/Inventory/MockInventoryDriver.cpp(58)
+msgctxt "MockInventoryDriver,d{0}"
+msgid "d{0}"
+msgstr "d{0}"
+
+#. Key:	Skill {0}
+#. SourceLocation:	Source/P_RD/UI/Inventory/MockInventoryDriver.cpp(65)
+#: Source/P_RD/UI/Inventory/MockInventoryDriver.cpp(65)
+msgctxt "MockInventoryDriver,Skill {0}"
+msgid "Skill {0}"
+msgstr "스킬 {0}"
+
+#. Key:	Dice 1
+#. SourceLocation:	Source/P_RD/UI/Inventory/MockInventoryDriver.cpp(66)
+#: Source/P_RD/UI/Inventory/MockInventoryDriver.cpp(66)
+msgctxt "MockInventoryDriver,Dice 1"
+msgid "Dice 1"
+msgstr "주사위 1"
+
+#. Key:	Equip {0}
+#. SourceLocation:	Source/P_RD/UI/Inventory/MockInventoryDriver.cpp(73)
+#: Source/P_RD/UI/Inventory/MockInventoryDriver.cpp(73)
+msgctxt "MockInventoryDriver,Equip {0}"
+msgid "Equip {0}"
+msgstr "장비 {0}"
+
+#. Key:	Equipped
+#. SourceLocation:	Source/P_RD/UI/Inventory/MockInventoryDriver.cpp(74)
+#: Source/P_RD/UI/Inventory/MockInventoryDriver.cpp(74)
+msgctxt "MockInventoryDriver,Equipped"
+msgid "Equipped"
+msgstr "장착"
+
+#. Key:	DefaultIndicatorText
+#. SourceLocation:	Source/P_RD/UI/LoadingNotifyWidget.cpp(143)
+#: Source/P_RD/UI/LoadingNotifyWidget.cpp(143)
+msgctxt "LoadingNotifyWidget,DefaultIndicatorText"
+msgid "●"
+msgstr ""
+
+#. Key:	Loading
+#. SourceLocation:	Source/P_RD/UI/LoadingNotifyWidget.cpp(192)
+#: Source/P_RD/UI/LoadingNotifyWidget.cpp(192)
+msgctxt "LoadingNotifyWidget,Loading"
+msgid "Loading"
+msgstr "로딩 중"
+
+#. Key:	Complete
+#. SourceLocation:	Source/P_RD/UI/LoadingNotifyWidget.cpp(195)
+#: Source/P_RD/UI/LoadingNotifyWidget.cpp(195)
+msgctxt "LoadingNotifyWidget,Complete"
+msgid "Complete"
+msgstr "로딩 완료"
+
+#. Key:	(mock reward)
+#. SourceLocation:	Source/P_RD/UI/Reward/MockRewardDriver.cpp(45)
+#: Source/P_RD/UI/Reward/MockRewardDriver.cpp(45)
+msgctxt "MockRewardDriver,(mock reward)"
+msgid "(mock reward)"
+msgstr "(목업 보상)"
+
+#. Key:	+{0}
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardUIWidgetBase.cpp(179)
+#: Source/P_RD/UI/Reward/RewardUIWidgetBase.cpp(179)
+msgctxt "RewardUIWidgetBase,+{0}"
+msgid "+{0}"
+msgstr "+{0}"
+
+#. Key:	Owned {0}
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardUIWidgetBase.cpp(183)
+#: Source/P_RD/UI/Reward/RewardUIWidgetBase.cpp(183)
+msgctxt "RewardUIWidgetBase,Owned {0}"
+msgid "Owned {0}"
+msgstr "보유 {0}"
+
+#. Key:	Lv {0}
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardUIWidgetBase.cpp(191)
+#: Source/P_RD/UI/Reward/RewardUIWidgetBase.cpp(191)
+msgctxt "RewardUIWidgetBase,Lv {0}"
+msgid "Lv {0}"
+msgstr "Lv {0}"
+
+#. Key:	Screen Shake
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(100)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(100)
+msgctxt "SettingsPanelWidget_Text,Screen Shake"
+msgid "Screen Shake"
+msgstr "화면 흔들림"
+
+#. Key:	Effects
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(102)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(102)
+msgctxt "SettingsPanelWidget_Text,Effects"
+msgid "Effects"
+msgstr "이펙트"
+
+#. Key:	Language
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(105)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(105)
+msgctxt "SettingsPanelWidget_Text,Language"
+msgid "Language"
+msgstr "언어"
+
+#. Key:	Master
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(110)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(110)
+msgctxt "SettingsPanelWidget_Text,Master"
+msgid "Master"
+msgstr "전체"
+
+#. Key:	BGM
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(112)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(112)
+msgctxt "SettingsPanelWidget_Text,BGM"
+msgid "BGM"
+msgstr "배경음"
+
+#. Key:	SFX
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(114)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(114)
+msgctxt "SettingsPanelWidget_Text,SFX"
+msgid "SFX"
+msgstr "효과음"
+
+#. Key:	UI
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(116)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(116)
+msgctxt "SettingsPanelWidget_Text,UI"
+msgid "UI"
+msgstr "UI"
+
+#. Key:	Back
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(118)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(118)
+msgctxt "SettingsPanelWidget_Text,Back"
+msgid "Back"
+msgstr "뒤로가기"
+
+#. Key:	Save and Exit
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(119)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(119)
+msgctxt "SettingsPanelWidget_Text,Save and Exit"
+msgid "Save and Exit"
+msgstr "저장 후 나가기"
+
+#. Key:	Abandon Run
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(120)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(120)
+msgctxt "SettingsPanelWidget_Text,Abandon Run"
+msgid "Abandon Run"
+msgstr "런 포기"
+
+#. Key:	Reset
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(121)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(121)
+msgctxt "SettingsPanelWidget_Text,Reset"
+msgid "Reset"
+msgstr "초기화"
+
+#. Key:	Audio
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(140)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(140)
+msgctxt "SettingsPanelWidget_Text,Audio"
+msgid "Audio"
+msgstr "오디오"
+
+#. Key:	Display
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(160)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(160)
+msgctxt "SettingsPanelWidget_Text,Display"
+msgid "Display"
+msgstr "화면"
+
+#. Key:	Brightness
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(164)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(164)
+msgctxt "SettingsPanelWidget_Text,Brightness"
+msgid "Brightness"
+msgstr "밝기"
+
+#. Key:	Vibration
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(172)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(172)
+msgctxt "SettingsPanelWidget_Text,Vibration"
+msgid "Vibration"
+msgstr "진동"
+
+#. Key:	Fast Mode
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(184)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(184)
+msgctxt "SettingsPanelWidget_Text,Fast Mode"
+msgid "Fast Mode"
+msgstr "빠른 모드"
+
+#. Key:	Skip Animation
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(188)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(188)
+msgctxt "SettingsPanelWidget_Text,Skip Animation"
+msgid "Skip Animation"
+msgstr "연출 스킵"
+
+#. Key:	Auto End Turn
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(192)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(192)
+msgctxt "SettingsPanelWidget_Text,Auto End Turn"
+msgid "Auto End Turn"
+msgstr "자동 턴 종료"
+
+#. Key:	Info
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(196)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(196)
+msgctxt "SettingsPanelWidget_Text,Info"
+msgid "Info"
+msgstr "정보"
+
+#. Key:	Credits
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(200)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(200)
+msgctxt "SettingsPanelWidget_Text,Credits"
+msgid "Credits"
+msgstr "크레딧"
+
+#. Key:	License
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(204)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(204)
+msgctxt "SettingsPanelWidget_Text,License"
+msgid "License"
+msgstr "라이선스"
+
+#. Key:	Open
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(208)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(208)
+msgctxt "SettingsPanelWidget_Text,Open"
+msgid "Open"
+msgstr "열기"
+
+#. Key:	LOW
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(216)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(216)
+msgctxt "SettingsPanelWidget_Text,LOW"
+msgid "LOW"
+msgstr "낮음"
+
+#. Key:	MID
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(220)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(220)
+msgctxt "SettingsPanelWidget_Text,MID"
+msgid "MID"
+msgstr "보통"
+
+#. Key:	HIGH
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(224)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(224)
+msgctxt "SettingsPanelWidget_Text,HIGH"
+msgid "HIGH"
+msgstr "높음"
+
+#. Key:	Abandon this run?
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(228)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(228)
+msgctxt "SettingsPanelWidget_Text,Abandon this run?"
+msgid "Abandon this run?"
+msgstr "이 런을 포기할까요?"
+
+#. Key:	Abandoning resets the current run and returns to the title.
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(232)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(232)
+msgctxt "SettingsPanelWidget_Text,Abandoning resets the current run and returns to the title."
+msgid "Abandoning resets the current run and returns to the title."
+msgstr "현재 런을 포기하고 타이틀로 돌아갑니다."
+
+#. Key:	Abandon
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(236)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(236)
+msgctxt "SettingsPanelWidget_Text,Abandon"
+msgid "Abandon"
+msgstr "포기"
+
+#. Key:	Cancel
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(240)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(240)
+msgctxt "SettingsPanelWidget_Text,Cancel"
+msgid "Cancel"
+msgstr "취소"
+
+#. Key:	Settings
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(81)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(81)
+msgctxt "SettingsPanelWidget_Text,Settings"
+msgid "Settings"
+msgstr "설정"
+
+#. Key:	Graphics
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(84)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(84)
+msgctxt "SettingsPanelWidget_Text,Graphics"
+msgid "Graphics"
+msgstr "그래픽"
+
+#. Key:	Volume
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(86)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(86)
+msgctxt "SettingsPanelWidget_Text,Volume"
+msgid "Volume"
+msgstr "음량"
+
+#. Key:	Gameplay
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(88)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(88)
+msgctxt "SettingsPanelWidget_Text,Gameplay"
+msgid "Gameplay"
+msgstr "게임플레이"
+
+#. Key:	FPS
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(89)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(89)
+msgctxt "SettingsPanelWidget_Text,FPS"
+msgid "FPS"
+msgstr "FPS"
+
+#. Key:	30
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(90)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(90)
+msgctxt "SettingsPanelWidget_Text,30"
+msgid "30"
+msgstr "30"
+
+#. Key:	60
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(91)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(91)
+msgctxt "SettingsPanelWidget_Text,60"
+msgid "60"
+msgstr "60"
+
+#. Key:	Quality
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(92)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(92)
+msgctxt "SettingsPanelWidget_Text,Quality"
+msgid "Quality"
+msgstr "품질"
+
+#. Key:	Low
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(94)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(94)
+msgctxt "SettingsPanelWidget_Text,Low"
+msgid "Low"
+msgstr "낮음"
+
+#. Key:	Mid
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(95)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(95)
+msgctxt "SettingsPanelWidget_Text,Mid"
+msgid "Mid"
+msgstr "보통"
+
+#. Key:	High
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(96)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(96)
+msgctxt "SettingsPanelWidget_Text,High"
+msgid "High"
+msgstr "높음"
+
+#. Key:	Gold {0}
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(146)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(146)
+msgctxt "ShopUIWidgetBase,Gold {0}"
+msgid "Gold {0}"
+msgstr "보유 골드 {0}"
+
+#. Key:	Sold Out
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(192)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(192)
+msgctxt "ShopUIWidgetBase,Sold Out"
+msgid "Sold Out"
+msgstr "품절"
+
+#. Key:	{0} G
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(193)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(193)
+msgctxt "ShopUIWidgetBase,{0} G"
+msgid "{0} G"
+msgstr "{0} G"
+
+#. Key:	Leave
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(61)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(61)
+msgctxt "ShopUIWidgetBase,Leave"
+msgid "Leave"
+msgstr "나가기"
+
+#. Key:	Shop
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(65)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(65)
+msgctxt "ShopUIWidgetBase,Shop"
+msgid "Shop"
+msgstr "상점"
+
+#. Key:	SkillDetailPreviousText
+#. SourceLocation:	Source/P_RD/UI/SkillPanelWidget_Detail.cpp(110)
+#: Source/P_RD/UI/SkillPanelWidget_Detail.cpp(110)
+msgctxt "SkillPanelWidget,SkillDetailPreviousText"
+msgid "<"
+msgstr ""
+
+#. Key:	SkillDetailNextText
+#. SourceLocation:	Source/P_RD/UI/SkillPanelWidget_Detail.cpp(121)
+#: Source/P_RD/UI/SkillPanelWidget_Detail.cpp(121)
+msgctxt "SkillPanelWidget,SkillDetailNextText"
+msgid ">"
+msgstr ""
+
+#. Key:	BACK
+#. SourceLocation:	Source/P_RD/UI/SkillPanelWidget_Detail.cpp(132)
+#: Source/P_RD/UI/SkillPanelWidget_Detail.cpp(132)
+msgctxt "SkillPanelWidget_Detail,BACK"
+msgid "BACK"
+msgstr "뒤로"
+
+#. Key:	{0} / {1}
+#. SourceLocation:	Source/P_RD/UI/SkillPanelWidget_Detail.cpp(217)
+#: Source/P_RD/UI/SkillPanelWidget_Detail.cpp(217)
+msgctxt "SkillPanelWidget_Detail,{0} / {1}"
+msgid "{0} / {1}"
+msgstr "{0} / {1}"
+
+#. Key:	{0}
+Skill detail preview
+API connection pending
+#. SourceLocation:	Source/P_RD/UI/SkillPanelWidget_Detail.cpp(225)
+#: Source/P_RD/UI/SkillPanelWidget_Detail.cpp(225)
+msgctxt "SkillPanelWidget_Detail,{0}\nSkill detail preview\nAPI connection pending"
+msgid "{0}\nSkill detail preview\nAPI connection pending"
+msgstr "{0}\n스킬 상세 미리보기\nAPI 연결 대기 중"
+
+#. Key:	BASIC
+#. SourceLocation:	Source/P_RD/UI/SkillPanelWidget_Detail.cpp(25)
+#: Source/P_RD/UI/SkillPanelWidget_Detail.cpp(25)
+msgctxt "SkillPanelWidget_Detail,BASIC"
+msgid "BASIC"
+msgstr "기본"
+
+#. Key:	SKILL 1
+#. SourceLocation:	Source/P_RD/UI/SkillPanelWidget_Detail.cpp(27)
+#: Source/P_RD/UI/SkillPanelWidget_Detail.cpp(27)
+msgctxt "SkillPanelWidget_Detail,SKILL 1"
+msgid "SKILL 1"
+msgstr "스킬 1"
+
+#. Key:	SKILL 2
+#. SourceLocation:	Source/P_RD/UI/SkillPanelWidget_Detail.cpp(29)
+#: Source/P_RD/UI/SkillPanelWidget_Detail.cpp(29)
+msgctxt "SkillPanelWidget_Detail,SKILL 2"
+msgid "SKILL 2"
+msgstr "스킬 2"
+
+#. Key:	SKILL 3
+#. SourceLocation:	Source/P_RD/UI/SkillPanelWidget_Detail.cpp(31)
+#: Source/P_RD/UI/SkillPanelWidget_Detail.cpp(31)
+msgctxt "SkillPanelWidget_Detail,SKILL 3"
+msgid "SKILL 3"
+msgstr "스킬 3"
+
+#. Key:	SKILL 4
+#. SourceLocation:	Source/P_RD/UI/SkillPanelWidget_Detail.cpp(33)
+#: Source/P_RD/UI/SkillPanelWidget_Detail.cpp(33)
+msgctxt "SkillPanelWidget_Detail,SKILL 4"
+msgid "SKILL 4"
+msgstr "스킬 4"
+
+#. Key:	STEP
+#. SourceLocation:	Source/P_RD/UI/SkillPanelWidget_Detail.cpp(35)
+#: Source/P_RD/UI/SkillPanelWidget_Detail.cpp(35)
+msgctxt "SkillPanelWidget_Detail,STEP"
+msgid "STEP"
+msgstr "이동"
+
+#. Key:	SKILL
+#. SourceLocation:	Source/P_RD/UI/SkillPanelWidget_Detail.cpp(37)
+#: Source/P_RD/UI/SkillPanelWidget_Detail.cpp(37)
+msgctxt "SkillPanelWidget_Detail,SKILL"
+msgid "SKILL"
+msgstr "스킬"
+
+#. Key:	ExitText
+#. SourceLocation:	Source/P_RD/UI/TitleMenuWidget.cpp(189)
+#: Source/P_RD/UI/TitleMenuWidget.cpp(189)
+msgctxt "TitleMenuWidget,ExitText"
+msgid "EXIT"
+msgstr "종료"
+
+#. Key:	TitleText
+#. SourceLocation:	Source/P_RD/UI/TitleMenuWidget.cpp(83)
+#: Source/P_RD/UI/TitleMenuWidget.cpp(83)
+msgctxt "TitleMenuWidget,TitleText"
+msgid "Rogue The Dice"
+msgstr ""
+
+#. Key:	StartText
+#. SourceLocation:	Source/P_RD/UI/TitleMenuWidget.cpp(84)
+#: Source/P_RD/UI/TitleMenuWidget.cpp(84)
+msgctxt "TitleMenuWidget,StartText"
+msgid "START"
+msgstr "시작"
+
+#. Key:	NewStartText
+#. SourceLocation:	Source/P_RD/UI/TitleMenuWidget.cpp(85)
+#: Source/P_RD/UI/TitleMenuWidget.cpp(85)
+msgctxt "TitleMenuWidget,NewStartText"
+msgid "NEW START"
+msgstr "새로 시작"
+
+#. Key:	ContinueText
+#. SourceLocation:	Source/P_RD/UI/TitleMenuWidget.cpp(86)
+#: Source/P_RD/UI/TitleMenuWidget.cpp(86)
+msgctxt "TitleMenuWidget,ContinueText"
+msgid "CONTINUE"
+msgstr "이어하기"
+
+#. Key:	SettingsText
+#. SourceLocation:	Source/P_RD/UI/TitleMenuWidget.cpp(87)
+#: Source/P_RD/UI/TitleMenuWidget.cpp(87)
+msgctxt "TitleMenuWidget,SettingsText"
+msgid "SETTINGS"
+msgstr "설정"
+
+#. Key:	MainOnlyStatusText
+#. SourceLocation:	Source/P_RD/UI/TitleMenuWidget.cpp(88)
+#: Source/P_RD/UI/TitleMenuWidget.cpp(88)
+msgctxt "TitleMenuWidget,MainOnlyStatusText"
+msgid "Title main screen only"
+msgstr "타이틀 메인 화면에서만 사용할 수 있습니다"
+

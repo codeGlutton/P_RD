@@ -18,6 +18,8 @@
 #include "Widgets/SOverlay.h"
 #include "Widgets/Text/STextBlock.h"
 
+#define LOCTEXT_NAMESPACE "CinematicWidget"
+
 namespace
 {
 	/**
@@ -200,7 +202,7 @@ TSharedRef<SWidget> UCinematicWidget::RebuildWidget()
 				.Padding(FMargin(0.0f, 0.0f, 0.0f, 96.0f))
 				[
 					SAssignNew(mLoadingWaitText, STextBlock)
-					.Text(NSLOCTEXT("CinematicWidget", "LoadingWaitText", "로딩중"))
+					.Text(LOCTEXT("Loading", "Loading"))
 					.Font(FCoreStyle::GetDefaultFontStyle(TEXT("Bold"), 32))
 					.ColorAndOpacity(FLinearColor::Transparent)   // 처음엔 투명 → 페이드 진행도에 맞춰 점점 보이게 함
 					.Justification(ETextJustify::Center)
@@ -311,3 +313,5 @@ void UCinematicWidget::PlayCloseUIAnimation_Implementation()
 
 	StartFadeToBlack(ECinematicFadePurpose::Close);   // 닫기 목적의 페이드 아웃 시작
 }
+
+#undef LOCTEXT_NAMESPACE

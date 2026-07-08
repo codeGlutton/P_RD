@@ -3,6 +3,8 @@
 #include "DataAsset/DiceData/StaticDiceData.h"
 #include "Engine/AssetManager.h"
 
+#define LOCTEXT_NAMESPACE "DiceViewData"
+
 ERarityType RDUIDice::ResolveDiceRarity(const FPrimaryAssetId& DiceId)
 {
 	if (UAssetManager* AssetManager = UAssetManager::GetIfInitialized())
@@ -51,11 +53,13 @@ FText RDUIDice::GetDiceRarityText(ERarityType RarityType)
 	switch (RarityType)
 	{
 	case ERarityType::Rare:
-		return NSLOCTEXT("RDUIDice", "DiceRarityRare", "Rare");
+		return LOCTEXT("Rare", "Rare");
 	case ERarityType::Epic:
-		return NSLOCTEXT("RDUIDice", "DiceRarityEpic", "Epic");
+		return LOCTEXT("Epic", "Epic");
 	case ERarityType::Common:
 	default:
-		return NSLOCTEXT("RDUIDice", "DiceRarityCommon", "Common");
+		return LOCTEXT("Common", "Common");
 	}
 }
+
+#undef LOCTEXT_NAMESPACE

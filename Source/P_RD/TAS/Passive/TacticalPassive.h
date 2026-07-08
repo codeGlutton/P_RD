@@ -125,13 +125,13 @@ protected:
 	 *
 	 * @param Ctx          소유자/대상 및 스냅샷
 	 * @param PassiveState [in,out] 패시브 내부 상태
-	 * @param TargetDelta  [out] 적용 시 대상에게 가할 수치 변화
+	 * @param OutMagnitude [out] 적용 시 대상에게 가할 수치 변화
 	 * @return 이펙트를 적용하면 true, 스킵이면 false
 	 */
 	virtual bool EvaluateActivate(
 		IN const FPassiveActivateContext& Ctx,
 		IN OUT TInstancedStruct<FDynamicPassiveData>& PassiveState,
-		OUT FBoardCombatTargetSnapshotData& TargetDelta)
+		OUT float& OutMagnitude)
 		PURE_VIRTUAL(UTacticalPassive::EvaluateActivate, return false;);
 
 	/**
@@ -142,11 +142,11 @@ protected:
 	 * 달라지면 베이스에서 이 함수만 교체하면 되고, 서브클래스는 영향 없음.
 	 *
 	 * @param Ctx         소유자/대상 및 현재 스냅샷
-	 * @param TargetDelta [in,out] 계산된 수치 변화
+	 * @param Magnitude [in,out] 계산된 수치 변화
 	 */
 	virtual void NotifyPassive(
 		IN const FPassiveActivateContext& Ctx,
-		IN OUT FBoardCombatTargetSnapshotData& TargetDelta);
+		IN float Magnitude);
 
 	/**
 	 * @brief 수량 조건 판정
@@ -178,10 +178,9 @@ protected:
 	 * @brief 이 패시브가 적용할 이펙트
 	 *
 	 * @details
-	 * 대상 속성·연산(op)·지속정책(Infinite/Instant)은 이 이펙트가 정의하고,
-	 * 패시브 계산은 크기(magnitude)만 공급한다.
-	 * (이펙트의 기본 modifier 크기는 1로 두고, 계산된 값을 배율 mDynamicMagnitude로 주입)
-	 * 미설정이면 NotifyPassive가 이펙트 적용을 건너뜀.
+	 * - 대상 속성, 연산(op), 지속정책(Infinite/Instant)은 이 이펙트가 정의하고,
+	 *   패시브 계산은 크기(magnitude)만 공급한다.
+	 * - 모디파이어가 없는 태그형 이펙트는 태그의 값을 크기로 사용
 	 */
 	UPROPERTY(Category = "Passive", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "Effect"))
 	TSubclassOf<UTacticalEffect> mEffectClass;

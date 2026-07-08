@@ -60,11 +60,11 @@ bool FTacticalPassiveNthAddStatCalcTests::RunTest(const FString& Parameters)
 	auto Step = [&]() -> bool
 	{
 		FPassiveActivateContext Ctx;
-		FBoardCombatTargetSnapshotData Delta;
+		float Magnitude = 0.f;
 
 		// friend는 서브클래스 override에 적용 안 되므로 베이스 타입으로 호출
 		UTacticalPassive* Base = Passive;
-		const bool bApplied = Base->EvaluateActivate(Ctx, Running, Delta);
+		const bool bApplied = Base->EvaluateActivate(Ctx, Running, Magnitude);
 
 		// 임계 도달 회차만 적용(true, 보너스 적용), 그 외 false
 		return bApplied;
