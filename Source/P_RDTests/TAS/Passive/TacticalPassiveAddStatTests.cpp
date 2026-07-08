@@ -42,24 +42,19 @@ bool FTacticalPassiveAddStatTests::RunTest(const FString& Parameters)
 
 	// 입력/출력 준비 (AddStat은 Ctx/State 미사용)
 	FPassiveActivateContext Ctx;
-	FBoardCombatTargetSnapshotData TargetDelta;
+	float Magnitude = 0.f;
 	TInstancedStruct<FDynamicPassiveData> State;
 
 	// 계산만 검증 (적용/이펙트는 별도 효과 테스트).
 	// EvaluateActivate는 protected이고 friend는 서브클래스 override에 적용 안 되므로 베이스 타입으로 호출.
 	UTacticalPassive* Base = Passive;
-	const bool bApplied = Base->EvaluateActivate(Ctx, State, TargetDelta);
+	const bool bApplied = Base->EvaluateActivate(Ctx, State, Magnitude);
 
 	// 무상태 고정 가산은 시점이 오면 항상 적용
 	TestTrue(TEXT("적용(true) 반환"), bApplied);
 
-	// AttackFactor 델타가 수치만큼 누적됐는지 확인
-	const float* Value = TargetDelta.mAttributes.Find(UUnitAttributeSet::GetAttackFactorAttribute());
-	TestNotNull(TEXT("AttackFactor 델타 존재"), Value);
-	if (Value != nullptr)
-	{
-		TestEqual(TEXT("AttackFactor 델타 == 수치"), *Value, 10.f);
-	}
+	// 기여값이 데이터 수치만큼 출력됐는지 확인
+	TestEqual(TEXT("기여값 == 수치"), Magnitude, 10.f);
 
 	return true;
 }

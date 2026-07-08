@@ -28,7 +28,7 @@ protected:
 	virtual bool EvaluateActivate(
 		IN const FPassiveActivateContext& Ctx,
 		IN OUT TInstancedStruct<FDynamicPassiveData>& PassiveState,
-		OUT FBoardCombatTargetSnapshotData& TargetDelta) override;
+		OUT float& OutMagnitude) override;
 
 public:
 	virtual void CommitPassive(

@@ -21,6 +21,8 @@
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "AttributeSet/UnitAttributeSet.h"
 #include "TAS/Passive/TacticalPassive_AddStat.h"
+#include "TAS/Effect/TacticalEffect.h"
+#include "GameplayTagType.h"
 #include "PassiveTestsHelper.generated.h"
 
 /**
@@ -57,6 +59,31 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UUnitAttributeSet> mUnitAttributeSet;
+};
+
+/**
+ * @brief 태그 지속형(발동/해제) 테스트용 목 이펙트
+ *
+ * @details
+ *  Infinite + GrantedTags 방식: 활성 리스트에 등록되어 핸들이 남고,
+ *  핸들 제거 시 부여 태그(취약)도 함께 회수됨.
+ *  프로덕션에는 아직 이런 이펙트가 없어서 패시브의 해제 계약 검증용으로만 사용.
+ */
+UCLASS()
+class UMockGrantedTagTacticalEffect : public UTacticalEffect
+{
+	GENERATED_BODY()
+
+public:
+	UMockGrantedTagTacticalEffect()
+	{
+		// 지속형: 활성 리스트 등록 → 핸들로 해제 가능
+		mDurationPolicy = ETacticalEffectDurationType::Infinite;
+		mStackingType = ETacticalEffectStackingType::None;
+
+		// 활성 중 부여 태그: 취약 (모디파이어 없음 = 순수 태그형)
+		mCachedGrantedTags.AddTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability);
+	}
 };
 
 /**
