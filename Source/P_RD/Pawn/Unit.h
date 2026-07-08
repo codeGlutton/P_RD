@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 
+#include "SRPGFramework/SRPGFrameworkType.h"
 #include "Actor/ActorView.h"
 #include "Actor/BoardActor/BoardSelectionTarget.h"
 #include "GameFramework/Pawn.h"
@@ -23,6 +24,8 @@ class USkeletalMeshComponent;
 class UFloatingPawnMovement;
 class UCapsuleComponent;
 class UArrowComponent;
+
+struct FApplyNiagaraSpawnData;
 
 /**
  * @brief  턴을 소유할 수 있는 베이스 폰 클래스
@@ -56,6 +59,7 @@ public:
 protected:
 	UObjectModel* GetModel_Internal() const override;
 
+protected:
 	// @brief 이동 시작 요청을 수신해서 이동 시작
 	virtual void OnStartMoveStep(
 		const FTileTransform& NextTileTransform,
@@ -67,6 +71,9 @@ protected:
 	virtual void OnRotate(
 		const FRotator& TargetWorldRotation,
 		TSharedPtr<FPresentationBarrier> Barrier);
+
+protected:
+	void SpawnHitVFX(const FApplyNiagaraSpawnData& NiagaraSpawnData, ETileActorDirection LocalDirection) const;
 
 public:
 	UCapsuleComponent* GetCapsuleComponent() const;

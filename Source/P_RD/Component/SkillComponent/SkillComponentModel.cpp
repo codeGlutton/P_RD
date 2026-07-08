@@ -18,6 +18,8 @@
 #include "Simulation/Logger/EventLog.h"
 #include "Simulation/Logger/EventLogger.h"
 
+#include "Animation/Notify/EventTriggerPayload.h"
+
 namespace
 {
 	UStaticSkillData* LoadStaticSkillData(const FPrimaryAssetId& SkillId)
@@ -61,6 +63,7 @@ void FActiveSkillContext::Clear()
 
 	mMotionTileMapDir = ETileActorDirection::Forward;
 	mMotionEndBarrier = nullptr;
+	mIsMotionTriggered = false;
 }
 
 bool FActiveSkillContext::IsValid() const
@@ -219,6 +222,7 @@ void USkillComponentModel::PlayMotionLayer()
 		mActiveSkillContext.mTargetTileIndex,
 		OwnerUnitModel->GetTileTransform().mDirection
 	);
+	mActiveSkillContext.mIsMotionTriggered = false;
 
 	/* Effect 기본 값부터 참고용으로 적용 */
 
@@ -335,18 +339,26 @@ void USkillComponentModel::PlayMotionLayerAnimation(ETileActorDirection LocalDir
 	auto MotionEndBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
 		EndMotionLayer();
 		}));
-	auto MotionTriggerBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this, MotionEndBarrier]() {
-		TriggerMotionLayer();
-		}));
+
+	FOnRequestReceiveAnimation TriggerCallback;
+	TriggerCallback.BindWeakLambda(this, [this](const FApplyEventTriggerPayload* Payload) {
+		TriggerMotionLayer(Payload);
+		});
 
 	mActiveSkillContext.mMotionEndBarrier = MotionEndBarrier;
 
-	OwnerUnitModel->OnPlayApplyAnimationUI.Broadcast(MotionEndBarrier, MotionTriggerBarrier, MotionLayer.mApplyMotionTag, LocalDirectionToTarget);
-	OnPlayMotionLayerUI.Broadcast(mActiveSkillContext.mMotionIndex, MotionEndBarrier, MotionTriggerBarrier, MotionLayer.mApplyMotionTag, LocalDirectionToTarget);
+	OwnerUnitModel->OnPlayApplyAnimationUI.Broadcast(MotionEndBarrier, MoveTemp(TriggerCallback), MotionLayer.mApplyMotionTag, LocalDirectionToTarget);
+	OnPlayMotionLayerUI.Broadcast(mActiveSkillContext.mMotionIndex, MotionEndBarrier, MotionLayer.mApplyMotionTag, LocalDirectionToTarget);
 }
 
-void USkillComponentModel::TriggerMotionLayer()
+void USkillComponentModel::TriggerMotionLayer(const FApplyEventTriggerPayload* Payload)
 {
+	if (mActiveSkillContext.mIsMotionTriggered == true)
+	{
+		return;
+	}
+	mActiveSkillContext.mIsMotionTriggered = true;
+
 	checkf(mSkillEntries.IsValidIndex(mActiveSkillContext.mSkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
 
 	FSkillEntry& SkillEntry = mSkillEntries[mActiveSkillContext.mSkillIndex];
@@ -381,7 +393,7 @@ void USkillComponentModel::TriggerMotionLayer()
 		checkf(OtherActorModel != nullptr, TEXT("스킬을 받은 타겟이 유효하지 않음"));
 
 		ETileActorDirection LocalDirectionToTarget = TileMapToLocalDirection(mActiveSkillContext.mMotionTileMapDir, OtherActorModel->GetTileTransform().mDirection);
-		OtherActorModel->OnPlayReceiveAnimationUI.Broadcast(mActiveSkillContext.mMotionEndBarrier.Pin(), MotionLayer.mReceiveMotionTag, LocalDirectionToTarget);
+		OtherActorModel->OnPlayReceiveAnimationUI.Broadcast(mActiveSkillContext.mMotionEndBarrier.Pin(), Payload, MotionLayer.mReceiveMotionTag, LocalDirectionToTarget);
 	}
 
 	/* 이펙트 피격 후 패시브 적용 (선택적) */

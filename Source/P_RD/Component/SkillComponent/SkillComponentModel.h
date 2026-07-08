@@ -17,9 +17,10 @@ class IBoardCombatTarget;
 class UStaticSkillData;
 
 struct FPresentationBarrier;
+struct FApplyEventTriggerPayload;
 
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnChangeSkillUI, int32 /*SkillIndex*/, const UStaticSkillData* /*PreSkillData*/, const UStaticSkillData* /*NewSkillData*/);
-DECLARE_MULTICAST_DELEGATE_FiveParams(FOnPlayMotionLayerUI, int32 /*MotionIndex*/, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, TSharedPtr<FPresentationBarrier> /*MotionTriggerBarrier*/, FGameplayTag /*ApplyMotionTag*/, ETileActorDirection /*LocalDirection*/);
+DECLARE_MULTICAST_DELEGATE_FourParams(FOnPlayMotionLayerUI, int32 /*MotionIndex*/, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, FGameplayTag /*ApplyMotionTag*/, ETileActorDirection /*LocalDirection*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnEndMotionLayerUI, int32 /*MotionIndex*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndSkill, int32 /*SkillIndex*/, const UStaticSkillData* /*PreSkillData*/);
 
@@ -82,6 +83,7 @@ public:
 public:
 	ETileActorDirection mMotionTileMapDir = ETileActorDirection::Forward;
 	TWeakPtr<FPresentationBarrier> mMotionEndBarrier = nullptr;
+	bool mIsMotionTriggered = false;
 };
 
 /**
@@ -122,7 +124,7 @@ protected:
 	void PlayMotionLayer();
 	// @brief 모션 레이어의 애니메이션 재생 (자동 회전이 필요한 경우, 회전 연출 완료 후 호출됨)
 	void PlayMotionLayerAnimation(ETileActorDirection LocalDirectionToTarget);
-	void TriggerMotionLayer();
+	void TriggerMotionLayer(const FApplyEventTriggerPayload* Payload);
 	void EndMotionLayer();
 	void DeactivateSkill();
 

@@ -1,4 +1,5 @@
 ﻿#include "Animation/BoardActorAnimInstance.h"
+#include "Animation/Notify/EventTriggerPayload.h"
 
 void UBoardActorAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
@@ -102,7 +103,7 @@ bool UBoardActorAnimInstance::RegisterTagEventOnMontage(const FGameplayTag& Even
 	return true;
 }
 
-bool UBoardActorAnimInstance::TriggerMontageTagEvent(const FGameplayTag& EventTag)
+bool UBoardActorAnimInstance::TriggerMontageTagEvent(const FGameplayTag& EventTag, const FEventTriggerPayload* Payload)
 {
 	if (IsPlayingMontageUsingTag() == false)
 	{
@@ -119,7 +120,7 @@ bool UBoardActorAnimInstance::TriggerMontageTagEvent(const FGameplayTag& EventTa
 	FBoardActorAnimationEvent& TargetEvent = mActiveMontageEvents[EventTag];
 	if (TargetEvent.OnTriggerAnimationEvent.IsBound() == true)
 	{
-		TargetEvent.OnTriggerAnimationEvent.Broadcast(mActiveMontageTag, mActiveMontageDir, GetPlayingMontageUsingTag());
+		TargetEvent.OnTriggerAnimationEvent.Broadcast(mActiveMontageTag, mActiveMontageDir, GetPlayingMontageUsingTag(), Payload);
 	}
 
 	if (TargetEvent.mIsOneTimeEvent == true)
