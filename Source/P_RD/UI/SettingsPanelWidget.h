@@ -55,6 +55,9 @@ public:
 	 */
 	USettingsPanelWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+	/** @brief 설정창도 프론트엔드 UI라 공용 버튼 클릭 사운드/누름 효과를 적용한다(타이틀/클래스선택과 동일). */
+	virtual bool ShouldApplyButtonFeedback() const override { return true; }
+
 	/**
 	 * @brief 패널 모드를 바꾸고 모드별 영역 표시를 다시 맞춘다.
 	 *
