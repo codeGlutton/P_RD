@@ -78,6 +78,7 @@ void FActiveTacticalEffectsContainer::RegisterWithOwnerModel(UAttributeSetCompon
     {
         mOwner = Owner;
     }
+    mPendingTacticalEffectTail = &mPendingTacticalEffectHead;
 }
 
 /**
@@ -120,20 +121,6 @@ void FActiveTacticalEffectsContainer::IncrementLock()
  */
 void FActiveTacticalEffectsContainer::DecrementLock()
 {
-    /*
-     * [방어 가드] 락 카운트 불균형(Increment 없이 Decrement) 감지.
-     * 공격 스킬 시전(Defense+HP 연속 순간형 적용) 중 본 함수의 지연 flush에서 null 역참조 크래시가
-     * 실측됨(2026-07-05, Android GameThread SIGSEGV) — 손상 상태로 flush에 진입하지 않도록 기록 후 복구한다.
-     * 근본 원인(지연 리스트 사슬이 끊기는 경위)은 추적 중 — 가드 발동 시 [TASDBG] 로그가 상태를 남긴다.
-     */
-    if (mScopedLockCount <= 0)
-    {
-        UE_LOG(LogTemp, Error, TEXT("[TASDBG] DecrementLock: 락 불균형! count=%d(감소 전) head=%p pendingRemove=%d effects=%d"),
-            mScopedLockCount, mPendingTacticalEffectHead, mPendingRemoveCount, mTacticalEffects.Num());
-        mScopedLockCount = 0;
-        return;
-    }
-
     if (--mScopedLockCount == 0)
     {
         /* 추가 작업 */
@@ -144,14 +131,6 @@ void FActiveTacticalEffectsContainer::DecrementLock()
 
         while (CurPendingEffect != EndPendingEffect)
         {
-            // [방어 가드] 지연 사슬이 End 도달 전에 끊긴 손상 상태(실측: 이 순회에서 null 역참조 SIGSEGV).
-            // 크래시 대신 상태를 기록하고 flush를 중단한다.
-            if (CurPendingEffect == nullptr)
-            {
-                UE_LOG(LogTemp, Error, TEXT("[TASDBG] DecrementLock: pending 사슬 끊김! head=%p end=%p pendingRemove=%d effects=%d"),
-                    mPendingTacticalEffectHead, EndPendingEffect, mPendingRemoveCount, mTacticalEffects.Num());
-                break;
-            }
             if (CurPendingEffect->mIsPendingRemove == false)
             {
                 /* 추가가 미루어진 이펙트 추가 */
