@@ -32,6 +32,42 @@ namespace
 	// 입장 굴림 오버레이는 모달이다 — 입력 레이어가 스킬 입력(CombatSkillInputZOrder=1000)보다 위에 있어야
 	// 오버레이 위 아무 곳이나 탭해 닫을 수 있고, 닫기 전엔 스킬/주사위 클릭이 새어 들어가지 않는다.
 	constexpr int32 DiceRollInputZOrder = RDCombatHUD::CombatSkillInputZOrder + 100;
+
+	FAnchorData MakeCenteredSquareSlot(const FAnchorData& CellSlot)
+	{
+		FAnchorData SquareSlot = CellSlot;
+		const float SquareSize = FMath::Min(CellSlot.Offsets.Right, CellSlot.Offsets.Bottom);
+		SquareSlot.Offsets.Left += (CellSlot.Offsets.Right - SquareSize) * 0.5f;
+		SquareSlot.Offsets.Top += (CellSlot.Offsets.Bottom - SquareSize) * 0.5f;
+		SquareSlot.Offsets.Right = SquareSize;
+		SquareSlot.Offsets.Bottom = SquareSize;
+		return SquareSlot;
+	}
+
+	void ApplyCenteredDesignerTextSlot(UTextBlock* Text, const FAnchorData& SlotData, int32 ZOrder)
+	{
+		RDUILayout::ApplyDesignerSlotData(Text, SlotData, ZOrder);
+		if (UCanvasPanelSlot* CanvasSlot = RDUILayout::GetCanvasSlot(Text))
+		{
+			CanvasSlot->SetAutoSize(true);
+			CanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+			CanvasSlot->SetPosition(FVector2D(
+				SlotData.Offsets.Left + SlotData.Offsets.Right * 0.5f,
+				SlotData.Offsets.Top + SlotData.Offsets.Bottom * 0.5f));
+		}
+	}
+
+	void ApplyCenteredAnchorTextSlot(UTextBlock* Text, const FAnchors& Anchors, int32 ZOrder)
+	{
+		const FVector2D Center(
+			(Anchors.Minimum.X + Anchors.Maximum.X) * 0.5f,
+			(Anchors.Minimum.Y + Anchors.Maximum.Y) * 0.5f);
+		RDUILayout::ApplyFixedSlot(Text, FAnchors(Center.X, Center.Y), FVector2D(0.5f, 0.5f), FVector2D::ZeroVector, FVector2D::UnitVector, ZOrder);
+		if (UCanvasPanelSlot* CanvasSlot = RDUILayout::GetCanvasSlot(Text))
+		{
+			CanvasSlot->SetAutoSize(true);
+		}
+	}
 }
 
 void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
@@ -83,26 +119,22 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 		for (int32 DiceIndex = 0; DiceIndex < OwnedDiceCount; ++DiceIndex)
 		{
 			const FAnchorData CellSlot = RDUILayout::MakeVerticalSubSlot(TraySlot, DiceIndex, FMath::Max(OwnedDiceCount, 1), 10.8f);   // 0.010*1080
-			RDUILayout::ApplyDesignerSlotData(mOwnedDiceImages[DiceIndex], CellSlot, 22);
+			const FAnchorData DiceImageSlot = MakeCenteredSquareSlot(CellSlot);
+			RDUILayout::ApplyDesignerSlotData(mOwnedDiceImages[DiceIndex], DiceImageSlot, 22);
 			if (mOwnedDiceCardWidgets.IsValidIndex(DiceIndex))
 			{
 				RDUILayout::ApplyDesignerSlotData(mOwnedDiceCardWidgets[DiceIndex], CellSlot, 23);
 			}
-			// 종류 라벨(d6/d20 등): 셀 하단 28% 스트립. Z를 더 높여 면 판 위로 보이게 한다.
 			if (mOwnedDiceTypeTexts.IsValidIndex(DiceIndex))
 			{
-				FAnchorData LabelSlot = CellSlot;
-				const float CellHeightPx = CellSlot.Offsets.Bottom;
-				LabelSlot.Offsets.Top += CellHeightPx * 0.72f;
-				LabelSlot.Offsets.Bottom = CellHeightPx * 0.28f;
-				RDUILayout::ApplyDesignerSlotData(mOwnedDiceTypeTexts[DiceIndex], LabelSlot, 24);
+				if (mOwnedDiceTypeTexts[DiceIndex] != nullptr)
+				{
+					mOwnedDiceTypeTexts[DiceIndex]->SetVisibility(ESlateVisibility::Collapsed);
+				}
 			}
-			// 굴림 값: 면 판(상단 72%) 중앙에 크고 진하게.
 			if (mOwnedDiceValueTexts.IsValidIndex(DiceIndex))
 			{
-				FAnchorData ValueSlot = CellSlot;
-				ValueSlot.Offsets.Bottom = CellSlot.Offsets.Bottom * 0.72f;
-				RDUILayout::ApplyDesignerSlotData(mOwnedDiceValueTexts[DiceIndex], ValueSlot, 25);
+				ApplyCenteredDesignerTextSlot(mOwnedDiceValueTexts[DiceIndex], DiceImageSlot, 25);
 			}
 		}
 	}
@@ -116,20 +148,25 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 			const float Top = 0.790f + StaticCast<float>(RowIndex) * 0.122f;
 			const float CellWidth = 0.060f;
 			const float CellHeight = 0.118f;
-			RDUILayout::ApplyAnchoredSlot(mOwnedDiceImages[DiceIndex], FAnchors(Left, Top, Left + CellWidth, Top + CellHeight), 22);
+			const float DiceSize = FMath::Min(CellWidth, CellHeight);
+			const float DiceLeft = Left + (CellWidth - DiceSize) * 0.5f;
+			const float DiceTop = Top + (CellHeight - DiceSize) * 0.5f;
+			const FAnchors DiceImageAnchors(DiceLeft, DiceTop, DiceLeft + DiceSize, DiceTop + DiceSize);
+			RDUILayout::ApplyAnchoredSlot(mOwnedDiceImages[DiceIndex], DiceImageAnchors, 22);
 			if (mOwnedDiceCardWidgets.IsValidIndex(DiceIndex))
 			{
 				RDUILayout::ApplyAnchoredSlot(mOwnedDiceCardWidgets[DiceIndex], FAnchors(Left, Top, Left + CellWidth, Top + CellHeight), 23);
 			}
-			// 종류 라벨(d6/d20 등): 카드 하단에 얇게 깔고 Z를 더 높여 프리뷰 위로 보이게 한다.
 			if (mOwnedDiceTypeTexts.IsValidIndex(DiceIndex))
 			{
-				const float LabelTop = Top + CellHeight * 0.72f;
-				RDUILayout::ApplyAnchoredSlot(mOwnedDiceTypeTexts[DiceIndex], FAnchors(Left, LabelTop, Left + CellWidth, Top + CellHeight), 24);
+				if (mOwnedDiceTypeTexts[DiceIndex] != nullptr)
+				{
+					mOwnedDiceTypeTexts[DiceIndex]->SetVisibility(ESlateVisibility::Collapsed);
+				}
 			}
 			if (mOwnedDiceValueTexts.IsValidIndex(DiceIndex))
 			{
-				RDUILayout::ApplyAnchoredSlot(mOwnedDiceValueTexts[DiceIndex], FAnchors(Left, Top, Left + CellWidth, Top + CellHeight * 0.72f), 25);
+				ApplyCenteredAnchorTextSlot(mOwnedDiceValueTexts[DiceIndex], DiceImageAnchors, 25);
 			}
 		}
 	}
@@ -144,31 +181,26 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 	{
 		RDUILayout::ApplyAnchoredSlot(mDiceAssignmentText, FAnchors(0.025f, 0.700f, 0.225f, 0.785f), 24);
 	}
-	RDUILayout::ApplyAnchoredSlot(mSkillDetailDismissButton, FAnchors(0.0f, 0.0f, 1.0f, 1.0f), CombatSkillDetailDismissZOrder);
-	if (mSkillDetailBackdropPanels.IsValidIndex(0))
+	// concept_09 상세는 HP바(z210)·스킬레일(z170)보다 위에 떠야 뒤 요소가 안 뚫려 보인다. → z245+로 올리고,
+	// 그 아래 풀뷰포트 회색 딤(주사위 배경과 동일)을 깔아 뒤 HUD를 덮는다. WBP는 전체 화면(내부 레이아웃/아트는 WBP 소유).
+	if (mSkillDetailBackdropPanels.IsValidIndex(0) && mSkillDetailBackdropPanels[0] != nullptr)
 	{
-		RDUILayout::ApplyAnchoredSlot(
-			mSkillDetailBackdropPanels[0],
-			FAnchors(0.0f, 0.0f, CombatSkillRailRight + CombatSkillDetailSafeGap, 1.0f),
-			CombatSkillDetailBackdropZOrder
-		);
+		RDUILayout::ApplyAnchoredSlot(mSkillDetailBackdropPanels[0], FAnchors(0.0f, 0.0f, 1.0f, 1.0f), 245);   // 풀뷰포트 회색 딤
 	}
-	// 스킬 상세 카드: 스킨이면 HUD_SkillDetail 마커(중앙 핀) 슬롯 상속, 레거시는 우측 사이드패널.
-	if (bSkin)
+	RDUILayout::ApplyAnchoredSlot(mDetailOverlay, FAnchors(0.0f, 0.0f, 1.0f, 1.0f), 246);            // 상세 WBP(패널/아트)
+	RDUILayout::ApplyAnchoredSlot(mSkillDetailDismissButton, FAnchors(0.0f, 0.0f, 1.0f, 1.0f), 248); // 아무 데나 탭 닫기
+
+	// 장비 슬롯 롱프레스 감지 버튼을 각 장비 마커(HUD_M_equip_i) 위에 얹는다(스킬 상세와 동일하게 마커 슬롯 상속).
+	static const TCHAR* const EquipMarkerNames[] = { TEXT("HUD_M_equip_0"), TEXT("HUD_M_equip_1"), TEXT("HUD_M_equip_2") };
+	for (int32 SlotIndex = 0; SlotIndex < mEquipSlotButtons.Num() && SlotIndex < UE_ARRAY_COUNT(EquipMarkerNames); ++SlotIndex)
 	{
-		RDUILayout::ApplyDesignerSlotData(
-			mSkillDetailPanel,
-			RDUILayout::GetDesignerSlotDataOr(WidgetTree, TEXT("HUD_SkillDetail"), FAnchors(0.315f, 0.215f, 0.685f, 0.585f), DesignSize),
-			CombatSkillDetailPanelZOrder
-		);
-	}
-	else
-	{
-		RDUILayout::ApplyAnchoredSlot(
-			mSkillDetailPanel,
-			FAnchors(CombatSkillRailRight + CombatSkillDetailSafeGap, 0.0f, 1.0f, 1.0f),
-			CombatSkillDetailPanelZOrder
-		);
+		if (mEquipSlotButtons[SlotIndex] != nullptr)
+		{
+			RDUILayout::ApplyDesignerSlotData(
+				mEquipSlotButtons[SlotIndex],
+				RDUILayout::GetDesignerSlotDataOr(WidgetTree, EquipMarkerNames[SlotIndex], FAnchors(0.02f, 0.10f, 0.06f, 0.14f), DesignSize),
+				40);
+		}
 	}
 	// 스킬 레일: 스킨이면 HUD_SkillRail 마커 슬롯 상속 세로 분배(렌더/입력 동일), 레거시는 기존 정규화 분배.
 	// 상세가 열려 있으면 레일 Z를 승격(현행 동작 유지) — 아이콘 +1, 라벨 +2로 3상태 렌더링 위계도 그대로다.

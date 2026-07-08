@@ -1,6 +1,6 @@
 ﻿#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_GetDefense.h"
 #include "TAS/Effect/Stat/TacticalEffect_DefensePoint.h"
-#include "TAS/Effect/Stat/TacticalEffect_DefenseFactor.h"
+#include "TAS/Effect/Stat/TacticalEffect_DefenseFactor_AddBase.h"
 #include "TAS/Effect/Stat/TacticalEffect_Defense.h"
 
 #include "Actor/ActorModel.h"
@@ -50,7 +50,7 @@ void FSkillEffectLayer_GetDefense::CommitEffect(IBoardCombatTarget* OwnerActorMo
 
     /* 포인트를 Factor에 임시 추가 */
     {
-        TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_DefenseFactor::StaticClass(), EffectContext);
+        TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_DefenseFactor_AddBase::StaticClass(), EffectContext);
         EffectSpec->mDynamicMagnitude = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefensePointAttribute());
         EffectHandle = AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
     }

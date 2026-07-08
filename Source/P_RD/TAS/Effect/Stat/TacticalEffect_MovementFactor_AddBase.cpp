@@ -1,14 +1,14 @@
 /*****************************************************************//**
- * @file   TacticalEffect_MovementFactor.cpp
- * @brief  MovementFactor 이펙트 구현
+ * @file   TacticalEffect_MovementFactor_AddBase.cpp
+ * @brief  MovementFactor AddBase 이펙트 구현
  * @author 이문환
  * @date   2026-07-01
  *********************************************************************/
 
-#include "TAS/Effect/Stat/TacticalEffect_MovementFactor.h"
+#include "TAS/Effect/Stat/TacticalEffect_MovementFactor_AddBase.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
-UTacticalEffect_MovementFactor::UTacticalEffect_MovementFactor()
+UTacticalEffect_MovementFactor_AddBase::UTacticalEffect_MovementFactor_AddBase()
 {
 	// 지속형
 	mDurationPolicy = ETacticalEffectDurationType::Infinite;
@@ -16,7 +16,7 @@ UTacticalEffect_MovementFactor::UTacticalEffect_MovementFactor()
 
 	FTacticalModifierInfo Info;
 	Info.mAttribute = UUnitAttributeSet::GetMovementFactorAttribute();
-	Info.mModifierOp = ETacticalModOp::Additive;
+	Info.mModifierOp = ETacticalModOp::AddBase;
 	Info.mModifierMagnitude = 1.f;
 
 	mModifiers.Add(Info);

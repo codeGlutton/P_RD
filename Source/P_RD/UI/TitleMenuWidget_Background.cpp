@@ -367,12 +367,6 @@ void UTitleMenuWidget::FitTitleBackgroundVideoToViewport() const
 		VideoSize = FVector2D(1280.0f, 1280.0f);
 	}
 
-	const FVector2D ViewportSize = ResolveTitleMenuViewportSize(this);
-	if (ViewportSize.X <= 0.0f || ViewportSize.Y <= 0.0f)
-	{
-		return;
-	}
-
 	// WBP_TitleMenu has a SafeZone/SafeCanvas for interactive controls, but the video
 	// background must use the real root canvas so tablet safe margins do not become
 	// visible side bars.
@@ -405,21 +399,36 @@ void UTitleMenuWidget::FitTitleBackgroundVideoToViewport() const
 		}
 	}
 
-	// "cover" 핏 계산: 영상과 뷰포트의 가로세로비를 비교해, 짧은 쪽을 화면에 꽉 채우고 긴 쪽은 넘치게 둔다.
+	// 핏 기준 크기: 영상이 실제로 붙어 있는 "그 캔버스의 로컬 크기"를 최우선으로 쓴다.
+	// SetSize/SetPosition은 캔버스 로컬 좌표계라, 스크린 px(ResolveTitleMenuViewportSize)를 그대로 슬롯 크기로 주면
+	// UMG DPI 스케일이 1이 아니거나 세이프존이 있을 때 로컬 크기와 어긋나 좌/우가 덜 채워질 수 있다.
+	// 캔버스 로컬 크기를 쓰면 그 캔버스를 좌표계 그대로 정확히 덮는다.
+	FVector2D FitSize = RootCanvas != nullptr ? RootCanvas->GetCachedGeometry().GetLocalSize() : FVector2D::ZeroVector;
+	if (FitSize.X <= 0.0f || FitSize.Y <= 0.0f)
+	{
+		// 아직 캔버스 지오메트리가 안 잡혔으면(첫 프레임 등) 스크린 기준 추정치로 폴백한다.
+		FitSize = ResolveTitleMenuViewportSize(this);
+	}
+	if (FitSize.X <= 0.0f || FitSize.Y <= 0.0f)
+	{
+		return;
+	}
+
+	// "cover" 핏 계산: 영상과 캔버스의 가로세로비를 비교해, 짧은 쪽을 꽉 채우고 긴 쪽은 넘치게(잘리게) 둔다.
 	const float VideoAspect = VideoSize.X / VideoSize.Y;
-	const float ViewportAspect = ViewportSize.X / ViewportSize.Y;
+	const float ViewportAspect = FitSize.X / FitSize.Y;
 	FVector2D TargetSize;
 	if (ViewportAspect < VideoAspect)
 	{
-		// 화면이 영상보다 세로로 길쭉함 → 세로를 꽉 채우고, 가로는 비율대로 넘치게(좌우가 잘림).
-		TargetSize.Y = ViewportSize.Y;
-		TargetSize.X = ViewportSize.Y * VideoAspect;
+		// 캔버스가 영상보다 세로로 길쭉함 → 세로를 꽉 채우고, 가로는 비율대로 넘치게(좌우가 잘림).
+		TargetSize.Y = FitSize.Y;
+		TargetSize.X = FitSize.Y * VideoAspect;
 	}
 	else
 	{
-		// 화면이 영상보다 가로로 넓음 → 가로를 꽉 채우고, 세로는 비율대로 넘치게(상하가 잘림 = 상하크롭).
-		TargetSize.X = ViewportSize.X;
-		TargetSize.Y = ViewportSize.X / VideoAspect;
+		// 캔버스가 영상보다 가로로 넓음 → 가로를 꽉 채우고, 세로는 비율대로 넘치게(상하가 잘림 = 상하크롭).
+		TargetSize.X = FitSize.X;
+		TargetSize.Y = FitSize.X / VideoAspect;
 	}
 
 	TitleBackgroundImage->SetDesiredSizeOverride(TargetSize);

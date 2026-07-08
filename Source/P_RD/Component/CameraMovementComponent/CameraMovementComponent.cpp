@@ -25,6 +25,10 @@ void UCameraMovementComponent::BeginPlay()
 
 	// ...
 	
+	// 초기 시작 위치를 중심으로 설정합니다.
+	mMoveClampingBoxCenter = GetOwner()->GetActorLocation();
+	mMoveClampingBoxCenter.Z = 0.f;
+
 }
 
 
@@ -53,7 +57,8 @@ void UCameraMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	//==============================
 	// 이동 제한 범위를 보여줍니다.
 	// @note 수학 공식 이상함. 하지만 현재 각도에서는 우선 원하는 제한 범위가 나오므로 후 순위
-	FVector Center = mMoveClampingBoxCenter + FMath::Sin(FMath::Abs(FMath::DegreesToRadians(GetOwner()->GetActorRotation().Pitch))) * GetOwner()->GetActorLocation().Z;
+	// FVector Center = mMoveClampingBoxCenter + FMath::Sin(FMath::Abs(FMath::DegreesToRadians(GetOwner()->GetActorRotation().Pitch))) * GetOwner()->GetActorLocation().Z;
+	FVector Center = mMoveClampingBoxCenter;
 	FVector Extent = FVector(mMoveClampingBox /2, 0);
 	FQuat Rotation = FQuat();
 

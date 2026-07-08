@@ -21,7 +21,7 @@
 #include "TAS/Passive/DynamicPassiveData.h"
 #include "DataAsset/PassiveData/StaticPassiveData.h"
 #include "TAS/Effect/Stat/TacticalEffect_HP.h"
-#include "TAS/Effect/Stat/TacticalEffect_AttackFactor.h"
+#include "TAS/Effect/Stat/TacticalEffect_AttackFactor_AddBase.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "AttributeSet/UnitAttributeSet.h"
 #include "Singleton/WorldSubsystem/SimulationSubsystem.h"
@@ -186,7 +186,7 @@ bool FPassiveInfiniteBuffTest::RunTest(const FString& Parameters)
 	const FGameplayTag OnStartTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartTurn"));
 	const FGameplayTag OnEndTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndTurn"));
 	// 패시브 값 설정: AttackFactor +5
-	UStaticPassiveData* Data = MakePassiveData(UTacticalEffect_AttackFactor::StaticClass(), 5.f, OnStartTurn, OnEndTurn, 0);
+	UStaticPassiveData* Data = MakePassiveData(UTacticalEffect_AttackFactor_AddBase::StaticClass(), 5.f, OnStartTurn, OnEndTurn, 0);
 
 	UTacticalPassive_AddStat* Passive = NewObject<UTacticalPassive_AddStat>();
 	Passive->SetStaticData(Data);
@@ -231,7 +231,7 @@ bool FPassiveStackTest::RunTest(const FString& Parameters)
 	const FGameplayTag OnStartUsingSkill = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartUsingSkill"));
 	const FGameplayTag OnEndUsingSkill = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndUsingSkill"));
 	// 패시브 값 설정: AttackFactor +5, 임계치 3(매 3번째에만 패시브 효과 발동)
-	UStaticPassiveData* Data = MakePassiveData(UTacticalEffect_AttackFactor::StaticClass(), 5.f, OnStartUsingSkill, OnEndUsingSkill, 3);
+	UStaticPassiveData* Data = MakePassiveData(UTacticalEffect_AttackFactor_AddBase::StaticClass(), 5.f, OnStartUsingSkill, OnEndUsingSkill, 3);
 
 	UTacticalPassive_NthAddStat* Passive = NewObject<UTacticalPassive_NthAddStat>();
 	Passive->SetStaticData(Data);
@@ -288,7 +288,7 @@ bool FPassiveMultiTargetBuffTest::RunTest(const FString& Parameters)
 	const FGameplayTag OnStartTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartTurn"));
 	const FGameplayTag OnEndTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndTurn"));
 	// 패시브 값 설정: AttackFactor +5
-	UStaticPassiveData* Data = MakePassiveData(UTacticalEffect_AttackFactor::StaticClass(), 5.f, OnStartTurn, OnEndTurn, 0);
+	UStaticPassiveData* Data = MakePassiveData(UTacticalEffect_AttackFactor_AddBase::StaticClass(), 5.f, OnStartTurn, OnEndTurn, 0);
 
 	UTacticalPassive_AddStat* Passive = NewObject<UTacticalPassive_AddStat>();
 	Passive->SetStaticData(Data);
@@ -348,7 +348,7 @@ bool FPassiveQuantifierMultiTargetBuffTest::RunTest(const FString& Parameters)
 		TargetComp2->SetAttributeBaseValue(UUnitAttributeSet::GetAttackFactorAttribute(), 10.f);
 
 		// 값: AttackFactor +5, 수량조건 지정, 발동 시점 OnStartTurn (해제 없음)
-		UStaticPassiveData* Data = MakePassiveData(UTacticalEffect_AttackFactor::StaticClass(), 5.f, OnStartTurn, FGameplayTag(), 0);
+		UStaticPassiveData* Data = MakePassiveData(UTacticalEffect_AttackFactor_AddBase::StaticClass(), 5.f, OnStartTurn, FGameplayTag(), 0);
 		Data->mTargetQuantifier = Quantifier;
 
 		UMockConditionAddStatPassive* Passive = NewObject<UMockConditionAddStatPassive>();

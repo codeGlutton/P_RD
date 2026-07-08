@@ -16,7 +16,7 @@ UTacticalEffect_HealPoint::UTacticalEffect_HealPoint()
 
 	FTacticalModifierInfo Info;
 	Info.mAttribute = UUnitAttributeSet::GetHealPointAttribute();
-	Info.mModifierOp = ETacticalModOp::Additive;
+	Info.mModifierOp = ETacticalModOp::AddBase;
 	Info.mModifierMagnitude = 1.f;
 
 	mModifiers.Add(Info);

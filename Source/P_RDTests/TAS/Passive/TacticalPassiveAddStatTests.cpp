@@ -14,7 +14,7 @@
 #include "TAS/Passive/TacticalPassive_AddStat.h"
 #include "TAS/Passive/PassiveActivateContext.h"
 #include "DataAsset/PassiveData/StaticPassiveData.h"
-#include "TAS/Effect/Stat/TacticalEffect_AttackFactor.h"
+#include "TAS/Effect/Stat/TacticalEffect_AttackFactor_AddBase.h"
 #include "Actor/BoardActor/BoardCombatTarget.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
@@ -29,7 +29,7 @@ bool FTacticalPassiveAddStatTests::RunTest(const FString& Parameters)
 {
 	// 데이터 구동 패시브 구성 (EffectClass=AttackFactor → 속성 AttackFactor, Magnitude=10)
 	UStaticPassiveData* Data = NewObject<UStaticPassiveData>();
-	Data->mEffectClass = UTacticalEffect_AttackFactor::StaticClass();
+	Data->mEffectClass = UTacticalEffect_AttackFactor_AddBase::StaticClass();
 	Data->mMagnitude = 10.f;
 
 	UTacticalPassive_AddStat* Passive = NewObject<UTacticalPassive_AddStat>();

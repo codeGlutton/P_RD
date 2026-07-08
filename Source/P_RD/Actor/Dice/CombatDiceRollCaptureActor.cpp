@@ -21,40 +21,42 @@ namespace
 	// 벽을 충분히 높여 주사위가 튀어서 판 밖으로 넘어가지 못하게 한다.
 	constexpr float TableWallHeight = 320.0f;
 	constexpr float TableWallThickness = 42.0f;
-	constexpr float DiceTableVisibleMarginX = 44.0f;
-	constexpr float DiceTableVisibleMarginY = 56.0f;
+	constexpr float DiceTableVisibleMarginX = 28.0f;
+	constexpr float DiceTableVisibleMarginY = 38.0f;
 	constexpr float DiceAlignFrameMargin = 56.0f;
 	constexpr float DiceAlignLocalX = -18.0f;
+	constexpr float RollRattleKickInterval = 0.105f;
+	constexpr float RollRattleKickEndSeconds = 2.18f;
 
 	void ClampToVisibleDiceBoard(float DiceRadius, FVector& LocalLocation, FVector& LocalVelocity, bool& bClamped)
 	{
 		const float SafeX = FMath::Max(DiceRadius, TableHalfDepth - DiceRadius - DiceTableVisibleMarginX);
 		const float SafeY = FMath::Max(DiceRadius, TableHalfWidth - DiceRadius - DiceTableVisibleMarginY);
 
-		// 벽 반사계수↑(0.24→0.52): 판 안에서 통통 튀며 리코셰하는 "빠바박" 손맛.
+		// 벽 반사계수↑: 판 안에서 리코셰를 크게 만들어 "따다다다당" 손맛을 낸다.
 		if (LocalLocation.X < -SafeX)
 		{
 			LocalLocation.X = -SafeX;
-			LocalVelocity.X = FMath::Abs(LocalVelocity.X) * 0.52f;
+			LocalVelocity.X = FMath::Abs(LocalVelocity.X) * 0.76f;
 			bClamped = true;
 		}
 		else if (LocalLocation.X > SafeX)
 		{
 			LocalLocation.X = SafeX;
-			LocalVelocity.X = -FMath::Abs(LocalVelocity.X) * 0.52f;
+			LocalVelocity.X = -FMath::Abs(LocalVelocity.X) * 0.76f;
 			bClamped = true;
 		}
 
 		if (LocalLocation.Y < -SafeY)
 		{
 			LocalLocation.Y = -SafeY;
-			LocalVelocity.Y = FMath::Abs(LocalVelocity.Y) * 0.52f;
+			LocalVelocity.Y = FMath::Abs(LocalVelocity.Y) * 0.76f;
 			bClamped = true;
 		}
 		else if (LocalLocation.Y > SafeY)
 		{
 			LocalLocation.Y = SafeY;
-			LocalVelocity.Y = -FMath::Abs(LocalVelocity.Y) * 0.52f;
+			LocalVelocity.Y = -FMath::Abs(LocalVelocity.Y) * 0.76f;
 			bClamped = true;
 		}
 
@@ -74,8 +76,8 @@ namespace
 				const float NewAbsY = CornerStartY + (AbsY - CornerStartY) * Scale;
 				LocalLocation.X = FMath::Sign(LocalLocation.X) * NewAbsX;
 				LocalLocation.Y = FMath::Sign(LocalLocation.Y) * NewAbsY;
-				LocalVelocity.X *= 0.40f;
-				LocalVelocity.Y *= 0.40f;
+				LocalVelocity.X *= 0.72f;
+				LocalVelocity.Y *= 0.72f;
 				bClamped = true;
 			}
 		}
@@ -122,6 +124,43 @@ namespace
 				OutTriangles.Add(Face.mVertexIndices[TriangleIndex + 1]);
 			}
 		}
+	}
+
+	void ApplyRattleKickToBody(
+		UProceduralMeshComponent* PhysicsBody,
+		const FTransform& ActorTransform,
+		int32 RollSeed,
+		int32 DiceIndex,
+		int32 KickIndex)
+	{
+		if (PhysicsBody == nullptr || PhysicsBody->IsSimulatingPhysics() == false)
+		{
+			return;
+		}
+
+		FRandomStream Stream(RollSeed + DiceIndex * 7919 + KickIndex * 104729);
+		const float Side = ((DiceIndex + KickIndex) % 2 == 0) ? 1.0f : -1.0f;
+		const float Forward = ((DiceIndex * 3 + KickIndex) % 4 < 2) ? 1.0f : -1.0f;
+		FVector LocalImpulse(
+			Forward * Stream.FRandRange(42.0f, 92.0f),
+			Side * Stream.FRandRange(82.0f, 142.0f),
+			Stream.FRandRange(34.0f, 64.0f));
+
+		const FVector LocalVelocity = ActorTransform.InverseTransformVectorNoScale(PhysicsBody->GetPhysicsLinearVelocity());
+		if (FVector2D(LocalVelocity.X, LocalVelocity.Y).Size() < 130.0f)
+		{
+			LocalImpulse.X += Forward * Stream.FRandRange(54.0f, 104.0f);
+			LocalImpulse.Y += Side * Stream.FRandRange(72.0f, 122.0f);
+		}
+
+		const FVector LocalAngularImpulse(
+			Stream.FRandRange(-4400.0f, 4400.0f),
+			Stream.FRandRange(-5400.0f, 5400.0f),
+			Side * Stream.FRandRange(6200.0f, 9400.0f));
+
+		PhysicsBody->WakeAllRigidBodies();
+		PhysicsBody->AddImpulse(ActorTransform.TransformVectorNoScale(LocalImpulse), NAME_None, true);
+		PhysicsBody->AddAngularImpulseInDegrees(ActorTransform.TransformVectorNoScale(LocalAngularImpulse), NAME_None, true);
 	}
 }
 
@@ -462,11 +501,11 @@ UProceduralMeshComponent* ACombatDiceRollCaptureActor::CreatePhysicsBody(int32 D
 	PhysicsBody->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	PhysicsBody->SetCollisionObjectType(ECC_PhysicsBody);
 	PhysicsBody->SetCollisionResponseToAllChannels(ECR_Block);
-	// "빠바박" 손맛: 감쇠/질량을 더 낮춰 가볍고 오래 튀며 세게 텀블하게 한다.
+	// "파바바바박" 손맛: 감쇠를 더 낮춰 강제 종료 시점까지 계속 튀고 텀블하게 한다.
 	// 위치는 매 틱 하드클램프로 판 안에 강제되므로(ClampToVisibleDiceBoard) 임펄스를 키워도 이탈하지 않는다.
-	PhysicsBody->SetLinearDamping(0.48f);
-	PhysicsBody->SetAngularDamping(0.52f);
-	PhysicsBody->SetMassOverrideInKg(NAME_None, 0.11f, true);
+	PhysicsBody->SetLinearDamping(0.08f);
+	PhysicsBody->SetAngularDamping(0.10f);
+	PhysicsBody->SetMassOverrideInKg(NAME_None, 0.075f, true);
 	PhysicsBody->BodyInstance.bUseCCD = true;
 	PhysicsBody->SetSimulatePhysics(false);
 	return PhysicsBody;
@@ -483,13 +522,13 @@ void ACombatDiceRollCaptureActor::ResetDiceBodyPose(UProceduralMeshComponent* Ph
 	PhysicsBody->SetPhysicsLinearVelocity(FVector::ZeroVector);
 	PhysicsBody->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
 
-	const int32 ColumnCount = FMath::Min(4, FMath::Max(1, DiceCount));
+	const int32 ColumnCount = FMath::Min(3, FMath::Max(1, DiceCount));
 	const int32 RowIndex = DiceIndex / ColumnCount;
 	const int32 ColumnIndex = DiceIndex % ColumnCount;
-	const float RowWidth = StaticCast<float>(ColumnCount - 1) * 66.0f;
-	const float LocalY = StaticCast<float>(ColumnIndex) * 66.0f - RowWidth * 0.5f;
-	const float LocalX = -74.0f + StaticCast<float>(RowIndex) * 52.0f + Stream.FRandRange(-8.0f, 8.0f);
-	const float LocalZ = TableFloorZ + PhysicsDiceRadius + 24.0f + StaticCast<float>(DiceIndex % 3) * 7.0f;
+	const float RowWidth = StaticCast<float>(ColumnCount - 1) * 88.0f;
+	const float LocalY = StaticCast<float>(ColumnIndex) * 88.0f - RowWidth * 0.5f + Stream.FRandRange(-10.0f, 10.0f);
+	const float LocalX = -118.0f + StaticCast<float>(RowIndex) * 76.0f + Stream.FRandRange(-12.0f, 12.0f);
+	const float LocalZ = TableFloorZ + PhysicsDiceRadius + 42.0f + StaticCast<float>((DiceIndex * 2) % 5) * 9.0f;
 	const FVector LocalLocation(LocalX, LocalY, LocalZ);
 	const FRotator LocalRotation(
 		Stream.FRandRange(-42.0f, 42.0f),
@@ -521,22 +560,24 @@ void ACombatDiceRollCaptureActor::StartRoll(int32 RollSeed)
 		PhysicsBody->SetSimulatePhysics(true);
 		PhysicsBody->WakeAllRigidBodies();
 
-		// "빠바박": 발사/좌우(Y)/수직(Z)을 모두 키워 세게 흩뿌리고 튀게 한다. 벽 반사계수가 커져 판 안에서 리코셰한다.
+		// "따다다다당": 시작부터 서로 다른 레인으로 쏴서 핀볼/마블처럼 벽과 주사위끼리 계속 부딪히게 한다.
 		// 위치는 매 틱 하드클램프로 강제 포함되므로 큰 임펄스에도 판을 벗어나지 않는다.
 		const float Side = (DiceIndex % 2 == 0) ? 1.0f : -1.0f;
+		const float Forward = (DiceIndex % 3 == 0) ? -1.0f : 1.0f;
 		const FVector LocalImpulse(
-			Stream.FRandRange(32.0f, 56.0f),
-			-Side * Stream.FRandRange(58.0f, 96.0f),
-			Stream.FRandRange(14.0f, 28.0f));
+			Forward * Stream.FRandRange(72.0f, 126.0f),
+			-Side * Stream.FRandRange(140.0f, 220.0f),
+			Stream.FRandRange(44.0f, 76.0f));
 		const FVector LocalAngularImpulse(
-			Stream.FRandRange(-1500.0f, 1500.0f),
-			Stream.FRandRange(-2100.0f, 2100.0f),
-			Side * Stream.FRandRange(2150.0f, 3100.0f));
+			Stream.FRandRange(-4800.0f, 4800.0f),
+			Stream.FRandRange(-6200.0f, 6200.0f),
+			Side * Stream.FRandRange(7200.0f, 10800.0f));
 
 		PhysicsBody->AddImpulse(GetActorTransform().TransformVectorNoScale(LocalImpulse), NAME_None, true);
 		PhysicsBody->AddAngularImpulseInDegrees(GetActorTransform().TransformVectorNoScale(LocalAngularImpulse), NAME_None, true);
 	}
 
+	mRollSeed = RollSeed;
 	mRollElapsed = 0.0f;
 	mRollActive = true;
 	mRollComplete = false;
@@ -562,15 +603,17 @@ void ACombatDiceRollCaptureActor::Tick(float DeltaSeconds)
 		return;
 	}
 
+	const float PreviousRollElapsed = mRollElapsed;
 	mRollElapsed += DeltaSeconds;
 	for (UProceduralMeshComponent* PhysicsBody : mPhysicsDiceBodies)
 	{
 		ConstrainDiceToTable(PhysicsBody);
 	}
+	ApplyRollRattleKicks(PreviousRollElapsed);
 	SyncVisualDiceToPhysics();
 	CaptureDice();
 
-	if ((mRollElapsed >= RollCompleteMinSeconds && AreAllDiceSleeping()) || mRollElapsed >= RollForceCompleteSeconds)
+	if (mRollElapsed >= RollForceCompleteSeconds)
 	{
 		mRollActive = false;
 		mRollComplete = true;
@@ -585,6 +628,28 @@ void ACombatDiceRollCaptureActor::Tick(float DeltaSeconds)
 		}
 		SyncVisualDiceToPhysics();
 		CaptureDice();
+	}
+}
+
+void ACombatDiceRollCaptureActor::ApplyRollRattleKicks(float PreviousRollElapsed)
+{
+	if (PreviousRollElapsed >= RollRattleKickEndSeconds)
+	{
+		return;
+	}
+
+	const float ClampedCurrentElapsed = FMath::Min(mRollElapsed, RollRattleKickEndSeconds);
+	const int32 PreviousKickIndex = FMath::FloorToInt(PreviousRollElapsed / RollRattleKickInterval);
+	const int32 CurrentKickIndex = FMath::FloorToInt(ClampedCurrentElapsed / RollRattleKickInterval);
+	if (CurrentKickIndex <= PreviousKickIndex)
+	{
+		return;
+	}
+
+	const FTransform ActorTransform = GetActorTransform();
+	for (int32 DiceIndex = 0; DiceIndex < mPhysicsDiceBodies.Num(); ++DiceIndex)
+	{
+		ApplyRattleKickToBody(mPhysicsDiceBodies[DiceIndex], ActorTransform, mRollSeed, DiceIndex, CurrentKickIndex);
 	}
 }
 
@@ -606,8 +671,10 @@ void ACombatDiceRollCaptureActor::ConstrainDiceToTable(UProceduralMeshComponent*
 	if (LocalLocation.Z < SafeZ)
 	{
 		LocalLocation.Z = SafeZ;
-		// 바닥 충돌: 하강 속도가 충분하면 위로 튕겨 "빠바박", 미미하면 정착시킨다(무한 바운스/미정착 방지).
-		LocalVelocity.Z = (LocalVelocity.Z < -60.0f) ? -LocalVelocity.Z * 0.50f : FMath::Max(0.0f, LocalVelocity.Z) * 0.25f;
+		// 바닥 충돌: 작은 침투도 짧게 튕겨 올려 "따다다다당" 리듬을 유지한다.
+		LocalVelocity.Z = (LocalVelocity.Z < -40.0f)
+			? -LocalVelocity.Z * 0.78f + 12.0f
+			: FMath::Max(28.0f, FMath::Max(0.0f, LocalVelocity.Z) * 0.35f);
 		bClamped = true;
 	}
 
@@ -644,18 +711,6 @@ void ACombatDiceRollCaptureActor::SyncVisualDiceToPhysics()
 			FVector(PhysicsDiceRadius / 96.0f));
 		VisualActor->SetDiceWorldTransform(VisualDiceTransform);
 	}
-}
-
-bool ACombatDiceRollCaptureActor::AreAllDiceSleeping() const
-{
-	for (const UProceduralMeshComponent* PhysicsBody : mPhysicsDiceBodies)
-	{
-		if (PhysicsBody != nullptr && PhysicsBody->RigidBodyIsAwake())
-		{
-			return false;
-		}
-	}
-	return mPhysicsDiceBodies.Num() > 0;
 }
 
 int32 ACombatDiceRollCaptureActor::GetSettledFaceOrdinal(int32 DiceIndex) const

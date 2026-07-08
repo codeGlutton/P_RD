@@ -135,6 +135,13 @@ void UCombatUIModel::SetEquipmentUIs(const TArray<FEquipmentUI>& Equipment)
 	OnUIChanged.Broadcast(ECombatUIDomain::Equipment);
 }
 
+/** @brief 장비 롱프레스 상세 스냅샷을 교체하고 Equipment 도메인을 갱신한다. */
+void UCombatUIModel::SetEquipmentDetail(const FEquipmentDetailUI& Detail)
+{
+	mEquipmentDetail = Detail;
+	OnUIChanged.Broadcast(ECombatUIDomain::Equipment);
+}
+
 /** @brief 골드/레벨/경험치 메타 스냅샷을 교체하고 Meta 도메인을 갱신한다. */
 void UCombatUIModel::SetPlayerMeta(const FPlayerMetaUI& Meta)
 {

@@ -16,7 +16,7 @@ UTacticalEffect_DefensePoint::UTacticalEffect_DefensePoint()
 
 	FTacticalModifierInfo Info;
 	Info.mAttribute = UUnitAttributeSet::GetDefensePointAttribute();
-	Info.mModifierOp = ETacticalModOp::Additive;
+	Info.mModifierOp = ETacticalModOp::AddBase;
 	Info.mModifierMagnitude = 1.f;
 
 	mModifiers.Add(Info);

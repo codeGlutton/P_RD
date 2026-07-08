@@ -50,9 +50,8 @@ void UCharacterSelectWidget::HandleConfirmButtonClicked()
 	}
 
 	// 여기서부터는 중복 Confirm/Back 입력을 막고 GameMode의 방 전환 요청 결과만 기다린다.
+	// 확정 버튼 라벨은 그대로 두고(기획: "Loading" 문구 노출 삭제) 버튼만 비활성화해 재입력을 막는다.
 	mStartRequested = true;
-	SetConfirmButtonText(mLoadingStatusText);
-	SetStatusText(mLoadingStatusText);
 	if (mConfirmButton != nullptr)
 	{
 		mConfirmButton->SetIsEnabled(false);

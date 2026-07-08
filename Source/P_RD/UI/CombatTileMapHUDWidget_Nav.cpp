@@ -1,6 +1,11 @@
 ﻿#include "UI/CombatTileMapHUDWidget.h"
 
+#include "Components/Border.h"
+#include "Components/Button.h"
+#include "Components/CanvasPanel.h"
 #include "Components/Image.h"
+#include "Components/TextBlock.h"
+#include "UI/IndexedButtonWidget.h"
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
@@ -129,6 +134,7 @@ void UCombatTileMapHUDWidget::ToggleWorldMap()
 	if (WorldMapWidget->IsOpened())
 	{
 		WorldMapWidget->CloseUI();
+		SetCombatPlayControlsVisible(true);   // 지도 닫힘 → 전투 컨트롤 복원.
 		return;
 	}
 
@@ -138,6 +144,7 @@ void UCombatTileMapHUDWidget::ToggleWorldMap()
 	WorldMapWidget->ClearMapStatusOverride();
 	WorldMapWidget->OpenUI();
 	WorldMapWidget->RefreshMap();
+	SetCombatPlayControlsVisible(false);   // 지도 열림 → 탑바만 남기고 전투 컨트롤 숨김(풀스크린 지도 뷰).
 }
 
 /**
@@ -322,6 +329,91 @@ void UCombatTileMapHUDWidget::HandleWorldMapCloseRequested()
 	}
 
 	CloseWorldWidget(EWorldWidgetType::WorldMap);
+	SetCombatPlayControlsVisible(true);   // 지도 닫힘(BACK 등) → 전투 컨트롤 복원.
+}
+
+/**
+ * @brief 월드맵(풀스크린 지도 뷰)이 열려 있는 동안 탑바를 제외한 전투 컨트롤을 숨긴다.
+ * @details 지도는 탑바 아래 레이어(z=-20)라, 안 숨기면 스킬레일/주사위/턴순서/이동·턴종료가 지도 위에 뜬다.
+ *          숨김/복원 대상: 런타임 컨트롤 위젯 배열 + 전투 컨트롤 스킨 마커(이름 접두사). 탑바 요소(알약/배너/내비)는 유지.
+ */
+void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
+{
+	mCombatControlsHidden = !bVisible;   // 지도 열린 동안 RebuildTurnOrderBar 등이 컨트롤을 다시 만들지 않게 막는다.
+
+	// 지도는 HUD(z=-10)보다 아래(z=-20)에 깔린다. HUD 루트는 평소 Visible(빈 타일맵 탭까지 받으려고)이라
+	// 화면 전체 입력을 먼저 삼켜서, 지도의 드래그 스크롤이 안 먹는다. 지도 열림 동안엔 루트를 SelfHitTestInvisible로
+	// 바꿔 탑바 버튼(자식)만 남기고 나머지 입력을 아래 지도로 흘려보낸다. 닫으면 다시 Visible로 되돌린다.
+	SetVisibility(bVisible ? ESlateVisibility::Visible : ESlateVisibility::SelfHitTestInvisible);
+
+	const ESlateVisibility DisplayVis = bVisible ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed;
+	const ESlateVisibility InputVis = bVisible ? ESlateVisibility::Visible : ESlateVisibility::Collapsed;
+
+	auto ToggleWidgets = [](const auto& Widgets, ESlateVisibility Vis)
+	{
+		for (const auto& Widget : Widgets)
+		{
+			if (Widget != nullptr) { Widget->SetVisibility(Vis); }
+		}
+	};
+
+	// 런타임 컨트롤: 스킬 레일 / 보유 주사위 / 턴 순서 칩 / 장비 칩.
+	ToggleWidgets(mSkillRailPanels, DisplayVis);
+	ToggleWidgets(mSkillRailTexts, DisplayVis);
+	ToggleWidgets(mSkillRailIcons, DisplayVis);
+	ToggleWidgets(mSkillInputButtons, InputVis);
+	ToggleWidgets(mOwnedDiceImages, DisplayVis);
+	ToggleWidgets(mOwnedDiceCardWidgets, InputVis);
+	ToggleWidgets(mOwnedDiceTypeTexts, DisplayVis);
+	ToggleWidgets(mOwnedDiceValueTexts, DisplayVis);
+	ToggleWidgets(mTurnOrderChips, DisplayVis);
+	ToggleWidgets(mTurnOrderChipTexts, DisplayVis);
+	ToggleWidgets(mEquipmentChips, DisplayVis);
+	ToggleWidgets(mEquipmentChipTexts, DisplayVis);
+	ToggleWidgets(mEquipSlotButtons, InputVis);
+
+	if (mMoveButton != nullptr) { mMoveButton->SetVisibility(InputVis); }
+	if (EndTurnButton != nullptr) { EndTurnButton->SetVisibility(InputVis); }
+
+	// mDiceRollInputButton은 "탭해서 굴리기" 입력영역이라 입장 주사위 오버레이가 실제로 떠 있을 때만 존재해야 한다.
+	// 복원(bVisible)에서 무조건 Visible로 켜면 오버레이가 없는데도 유령 버튼이 살아나, 지도 닫은 직후 탭이 이 버튼에
+	// 꽂혀 StartIntroDiceRoll이 불린다(=주사위 재굴림 버그). 오버레이 상태로 게이트해 그 경로를 끊는다.
+	if (mDiceRollInputButton != nullptr)
+	{
+		const bool bDiceOverlayActive = mIntroDiceRollReady || mIntroDiceRollActive || mIntroDiceResultWaitingForDismiss;
+		mDiceRollInputButton->SetVisibility(
+			bVisible && bDiceOverlayActive ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	}
+
+	// WBP 스킨 마커(프레임 아트) — 전투 컨트롤 이름 접두사만 숨긴다(탑바 요소는 건드리지 않는다).
+	if (DesignCanvas != nullptr)
+	{
+		static const TArray<FString> ControlPrefixes = {
+			TEXT("R_skill_rail"), TEXT("R_btn_move"), TEXT("R_btn_end_turn"), TEXT("R_turn_order"),
+			TEXT("HUD_SkillRail"), TEXT("HUD_DiceTray"), TEXT("HUD_Move"), TEXT("HUD_EndTurn"), TEXT("HUD_TurnOrder"),
+			TEXT("HUD_M_dice"), TEXT("HUD_M_turn"), TEXT("HUD_M_equip"), TEXT("HUD_M_btn_move"), TEXT("HUD_M_btn_end")
+		};
+		const int32 ChildCount = DesignCanvas->GetChildrenCount();
+		for (int32 ChildIndex = 0; ChildIndex < ChildCount; ++ChildIndex)
+		{
+			UWidget* Child = DesignCanvas->GetChildAt(ChildIndex);
+			if (Child == nullptr) { continue; }
+			const FString ChildName = Child->GetName();
+			for (const FString& Prefix : ControlPrefixes)
+			{
+				if (ChildName.StartsWith(Prefix))
+				{
+					Child->SetVisibility(DisplayVis);
+					break;
+				}
+			}
+		}
+	}
+
+	if (bVisible)
+	{
+		RebuildTurnOrderBar();   // 지도 닫힘 → 그동안 스킵된 턴 순서를 현재 상태로 다시 그린다.
+	}
 }
 
 /**

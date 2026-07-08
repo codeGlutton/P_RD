@@ -22,10 +22,11 @@ FVector RDDicePanelLayout::GetPreviewActorLocation(int32 DiceIndex)
 	return FVector(0.0f, 42000.0f + StaticCast<float>(DiceIndex) * 420.0f, 30000.0f);
 }
 
-/** @brief Carousel 선택 주사위는 더 크게 캡처해 상세 모드의 중심 카드 밀도를 맞춘다. */
+/** @brief 패널/보유 주사위 캡처의 면 크기 차이가 나지 않게 공통 스케일로 맞춘다. */
 float RDDicePanelLayout::GetPreviewDiceScale(bool bSelected)
 {
-	return bSelected ? 1.34f : 1.10f;
+	(void)bSelected;
+	return 1.14f;
 }
 
 /** @brief 슬롯별 기본 회전을 달리해 overview에서 모든 주사위가 같은 면만 보이지 않게 한다. */

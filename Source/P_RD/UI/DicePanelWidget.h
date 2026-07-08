@@ -298,4 +298,8 @@ private:
 	/** @brief 캐러셀에서 전체 주사위 목록으로 돌아가는 버튼 */
 	UPROPERTY(Transient)
 	TObjectPtr<UButton> mDiceCarouselBackButton;
+
+	/** @brief 카드 배경 텍스처. 생성자에서 로드. */
+	UPROPERTY(Transient)
+	TObjectPtr<UTexture2D> mDicePanelCardTexture;
 };

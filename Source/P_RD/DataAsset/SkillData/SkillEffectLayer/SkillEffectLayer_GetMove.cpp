@@ -1,6 +1,6 @@
 ﻿#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_GetMove.h"
 #include "TAS/Effect/Stat/TacticalEffect_MovementPoint.h"
-#include "TAS/Effect/Stat/TacticalEffect_MovementFactor.h"
+#include "TAS/Effect/Stat/TacticalEffect_MovementFactor_AddBase.h"
 #include "TAS/Effect/Stat/TacticalEffect_Movement.h"
 
 #include "Actor/ActorModel.h"
@@ -50,7 +50,7 @@ void FSkillEffectLayer_GetMove::CommitEffect(IBoardCombatTarget* OwnerActorModel
 
     /* 포인트를 Factor에 임시 추가 */
     {
-        TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_MovementFactor::StaticClass(), EffectContext);
+        TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_MovementFactor_AddBase::StaticClass(), EffectContext);
         EffectSpec->mDynamicMagnitude = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMovementPointAttribute());
         EffectHandle = AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
     }

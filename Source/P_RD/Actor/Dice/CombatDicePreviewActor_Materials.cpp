@@ -53,20 +53,41 @@ void ACombatDicePreviewActor::InitializeMaterials()
 
 void ACombatDicePreviewActor::LoadDefaultFaceTextures()
 {
-	static const int32 SupportedFaceCounts[] = { 2, 4, 6, 8, 12, 20 };
-	for (const int32 FaceCount : SupportedFaceCounts)
+	struct FDefaultFaceTextureEntry
 	{
-		FRDCombatDiceFaceTextureSet& TextureSet = mDefaultFaceTexturesByCount.FindOrAdd(FaceCount);
+		int32 mFaceCount;
+		UTexture* mTexture;
+	};
+
+	static ConstructorHelpers::FObjectFinder<UTexture> D2FaceTextureFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/Dice/T_DiceFace_D2.T_DiceFace_D2"));
+	static ConstructorHelpers::FObjectFinder<UTexture> D4FaceTextureFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/Dice/T_DiceFace_D4.T_DiceFace_D4"));
+	static ConstructorHelpers::FObjectFinder<UTexture> D6FaceTextureFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/Dice/T_DiceFace_D6.T_DiceFace_D6"));
+	static ConstructorHelpers::FObjectFinder<UTexture> D8FaceTextureFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/Dice/T_DiceFace_D8.T_DiceFace_D8"));
+	static ConstructorHelpers::FObjectFinder<UTexture> D12FaceTextureFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/Dice/T_DiceFace_D12.T_DiceFace_D12"));
+	static ConstructorHelpers::FObjectFinder<UTexture> D20FaceTextureFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/Dice/T_DiceFace_D20.T_DiceFace_D20"));
+
+	const FDefaultFaceTextureEntry Entries[] = {
+		{ 2, D2FaceTextureFinder.Succeeded() ? D2FaceTextureFinder.Object : mDefaultFaceTexture },
+		{ 4, D4FaceTextureFinder.Succeeded() ? D4FaceTextureFinder.Object : mDefaultFaceTexture },
+		{ 6, D6FaceTextureFinder.Succeeded() ? D6FaceTextureFinder.Object : mDefaultFaceTexture },
+		{ 8, D8FaceTextureFinder.Succeeded() ? D8FaceTextureFinder.Object : mDefaultFaceTexture },
+		{ 12, D12FaceTextureFinder.Succeeded() ? D12FaceTextureFinder.Object : mDefaultFaceTexture },
+		{ 20, D20FaceTextureFinder.Succeeded() ? D20FaceTextureFinder.Object : mDefaultFaceTexture },
+	};
+
+	for (const FDefaultFaceTextureEntry& Entry : Entries)
+	{
+		FRDCombatDiceFaceTextureSet& TextureSet = mDefaultFaceTexturesByCount.FindOrAdd(Entry.mFaceCount);
 		TArray<TObjectPtr<UTexture>>& Textures = TextureSet.mTextures;
 		if (Textures.Num() > 0)
 		{
 			continue;
 		}
 
-		Textures.Reserve(FaceCount);
-		for (int32 FaceIndex = 0; FaceIndex < FaceCount; ++FaceIndex)
+		Textures.Reserve(Entry.mFaceCount);
+		for (int32 FaceIndex = 0; FaceIndex < Entry.mFaceCount; ++FaceIndex)
 		{
-			Textures.Add(mDefaultFaceTexture);
+			Textures.Add(Entry.mTexture);
 		}
 	}
 }

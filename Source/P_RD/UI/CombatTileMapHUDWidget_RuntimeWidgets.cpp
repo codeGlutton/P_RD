@@ -1,6 +1,8 @@
-#include "UI/CombatTileMapHUDWidget.h"
+﻿#include "UI/CombatTileMapHUDWidget.h"
 
+#include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetTree.h"
+#include "UI/IndexedButtonWidget.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
@@ -10,9 +12,6 @@
 
 namespace
 {
-	// 주사위 판(물리 굴림) 보드/그림자 텍스처. 20260626 디스크에 이미 존재.
-	const TCHAR* const DiceRollBoardTexturePath = TEXT("/Game/SVN/OutSideAsset/AICreation/DiceRoll/UI_DiceRoll_Board_StyleMatch.UI_DiceRoll_Board_StyleMatch");
-
 	template <typename T>
 	T* FindNamedWidget(const UWidgetTree* InWidgetTree, const TCHAR* WidgetName)
 	{
@@ -65,10 +64,6 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 
 
 	// --- 주사위 판(물리 굴림) 보드/배경/캡처 위젯 (20260622 이식). 위치는 ApplyRuntimeWidgetLayout에서 잡는다. ---
-	if (mDiceRollBoardTexture == nullptr)
-	{
-		mDiceRollBoardTexture = LoadObject<UTexture2D>(nullptr, DiceRollBoardTexturePath);
-	}
 	if (mDiceRollBackdropPanel == nullptr)
 	{
 		mDiceRollBackdropPanel = FindNamedWidget<UBorder>(WidgetTree, TEXT("DiceRollBackdropPanel"));
@@ -133,7 +128,8 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		if (DiceRollStatusText != nullptr)
 		{
 			DiceRollStatusText->SetJustification(ETextJustify::Center);
-			DiceRollStatusText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "IntroDiceRolling", "ROLLING DICE"));
+			DiceRollStatusText->SetText(FText::GetEmpty());
+			DiceRollStatusText->SetVisibility(ESlateVisibility::Collapsed);
 			DiceRollStatusText->SetColorAndOpacity(FSlateColor(FLinearColor(0.82f, 1.0f, 0.96f, 1.0f)));
 			RootCanvas->AddChildToCanvas(DiceRollStatusText);   // 오버레이는 풀뷰포트 RootCanvas 기준
 		}
@@ -178,7 +174,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 			mSkillDetailDismissButton->SetBackgroundColor(FLinearColor(0.0f, 0.0f, 0.0f, 0.01f));
 			mSkillDetailDismissButton->SetVisibility(ESlateVisibility::Collapsed);
 			mSkillDetailDismissButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleSkillDetailDismissButtonClicked);
-			TargetRootCanvas->AddChildToCanvas(mSkillDetailDismissButton);
+			RootCanvas->AddChildToCanvas(mSkillDetailDismissButton);   // 풀뷰포트 RootCanvas — 상세 위 아무 데나 탭 닫기.
 		}
 	}
 
@@ -188,8 +184,9 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		mSkillDetailText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("SkillDetailText"));
 		if (mSkillDetailPanel != nullptr && mSkillDetailText != nullptr)
 		{
-			mSkillDetailPanel->SetBrushColor(FLinearColor(0.025f, 0.042f, 0.048f, 0.96f));
-			mSkillDetailPanel->SetPadding(FMargin(32.0f, 28.0f));
+			// concept_09: 패널 배경은 프레임 이미지가 담당 → 설명 Border는 가독성용 옅은 딤만.
+			mSkillDetailPanel->SetBrushColor(FLinearColor(0.02f, 0.03f, 0.035f, 0.32f));
+			mSkillDetailPanel->SetPadding(FMargin(18.0f, 14.0f));
 			mSkillDetailPanel->AddChild(mSkillDetailText);
 			mSkillDetailText->SetJustification(ETextJustify::Left);
 			mSkillDetailText->SetColorAndOpacity(FSlateColor(FLinearColor(0.88f, 1.0f, 0.96f, 1.0f)));
@@ -213,10 +210,51 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 				continue;
 			}
 
-			BackdropPanel->SetBrushColor(FLinearColor(0.015f, 0.020f, 0.025f, 0.78f));
+			// 상세 오버레이 뒤 풀뷰포트 딤 — 주사위 굴림 배경(mDiceRollBackdropPanel)과 "완전 동일한" 색/알파.
+			// 주사위 딤과 동일하게 RootCanvas(풀뷰포트)에 붙인다. DesignCanvas(스킨)에 붙이면 RootCanvas의 HP바를 못 덮는다.
+			BackdropPanel->SetBrushColor(FLinearColor(0.010f, 0.014f, 0.020f, 0.80f));
 			BackdropPanel->SetVisibility(ESlateVisibility::Collapsed);
-			TargetRootCanvas->AddChildToCanvas(BackdropPanel);
+			RootCanvas->AddChildToCanvas(BackdropPanel);
 			mSkillDetailBackdropPanels.Add(BackdropPanel);
+		}
+	}
+
+	// 공용 상세창: 디자이너 WBP(WBP_CombatDetailOverlay)를 인스턴스화하고 named widget만 캐시한다.
+	// 레이아웃/아트(스크림·프레임·배치)는 WBP가 소유, C++은 아이콘/제목/부제/본문 내용만 채운다.
+	if (mDetailOverlay == nullptr && mDetailOverlayClass != nullptr)
+	{
+		mDetailOverlay = CreateWidget<UUserWidget>(this, mDetailOverlayClass);
+		if (mDetailOverlay != nullptr)
+		{
+			mDetailIconImage = Cast<UImage>(mDetailOverlay->GetWidgetFromName(TEXT("DetailIconImage")));
+			mDetailTitleText = Cast<UTextBlock>(mDetailOverlay->GetWidgetFromName(TEXT("DetailTitleText")));
+			mDetailSubtitleText = Cast<UTextBlock>(mDetailOverlay->GetWidgetFromName(TEXT("DetailSubtitleText")));
+			mDetailBodyText = Cast<UTextBlock>(mDetailOverlay->GetWidgetFromName(TEXT("DetailBodyText")));
+			mDetailOverlay->SetVisibility(ESlateVisibility::Collapsed);
+			RootCanvas->AddChildToCanvas(mDetailOverlay);   // 풀뷰포트 RootCanvas — 스킨/HP바 위로 뜨게.
+		}
+	}
+
+	// 장비 슬롯 롱프레스 감지용 투명 버튼(마커 HUD_M_equip_0..2 위에 얹는다). 위치는 Layout에서 마커 슬롯으로 지정.
+	// 장비 아이콘은 WBP 마커라 입력을 못 받으므로, 이 버튼의 press/release로 스킬과 동일하게 롱프레스를 감지한다.
+	if (mEquipSlotButtons.Num() == 0)
+	{
+		for (int32 SlotIndex = 0; SlotIndex < 3; ++SlotIndex)
+		{
+			UIndexedButtonWidget* EquipButton = WidgetTree->ConstructWidget<UIndexedButtonWidget>(
+				UIndexedButtonWidget::StaticClass(),
+				FName(*FString::Printf(TEXT("EquipSlotButton_%d"), SlotIndex)));
+			if (EquipButton == nullptr)
+			{
+				continue;
+			}
+			EquipButton->SetButtonIndex(SlotIndex);
+			EquipButton->SetBackgroundColor(FLinearColor(0.0f, 0.0f, 0.0f, 0.01f));   // 거의 투명(입력만 받음).
+			EquipButton->OnIndexedPressed.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleEquipButtonPressed);
+			EquipButton->OnReleased.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleEquipButtonReleased);
+			EquipButton->SetVisibility(ESlateVisibility::Visible);
+			TargetRootCanvas->AddChildToCanvas(EquipButton);
+			mEquipSlotButtons.Add(EquipButton);
 		}
 	}
 

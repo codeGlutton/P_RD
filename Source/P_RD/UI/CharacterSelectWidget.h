@@ -1,4 +1,4 @@
-// @file CharacterSelectWidget.h
+﻿// @file CharacterSelectWidget.h
 // @brief 캐릭터 선택 화면 위젯 정의 헤더
 // @date 2026-06-04
 
@@ -116,7 +116,7 @@ private:
 
 	/** @brief 직업별 SVN 일러스트 PNG를 런타임 로드한다. 한 번 로드한 텍스처는 캐시해 재사용한다. */
 	// [합의필요] SVN 임포트 uasset 경로 계약은 아트 교체/패키징 규칙과 함께 갱신되어야 한다.
-	UTexture2D* GetOrLoadJobIllustration(EPlayerJobType JobType);
+	UTexture2D* GetJobIllustration(EPlayerJobType JobType);
 
 	/** @brief 선택된 PlayerUnitId로 새 Run 생성을 요청하고 첫 방 전환 시작 여부만 돌려준다. */
 	bool BeginFirstRoomEntryWithSelectedCharacter();
@@ -217,11 +217,14 @@ private:
 
 	/** @brief 직업별 일러스트 텍스처(SVN 임포트 uasset) 참조. 기본값은 생성자에서 지정, WBP에서 덮어쓸 수 있다. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Select|Art", meta = (AllowPrivateAccess = true))
-	TMap<EPlayerJobType, TSoftObjectPtr<UTexture2D>> mJobIllustrationAssets;
+	TMap<EPlayerJobType, TObjectPtr<UTexture2D>> mJobIllustrationAssets;
 
-	/** @brief 직업별 런타임 일러스트 텍스처 캐시. GC 방지를 위해 UPROPERTY로 들고 있는다. */
-	UPROPERTY(Transient)
-	TMap<EPlayerJobType, TObjectPtr<UTexture2D>> mJobIllustrationCache;
+	/** @brief 확인 버튼용 배경 프레임 텍스처 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Select|Art", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UTexture2D> mConfirmButtonTexture;
+	/** @brief 뒤로가기 버튼용 배경 프레임 텍스처 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Select|Art", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UTexture2D> mBackButtonTexture;
 
 	/** @brief FrontendGameMode가 마지막으로 내려준 후보 View 목록; UI는 이 배열을 직접 계산하지 않는다. */
 	TArray<FFrontendCharacterOption> mCharacterOptions;
