@@ -9,6 +9,7 @@
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
+#include "Styling/SlateTypes.h"
 
 namespace
 {
@@ -16,6 +17,26 @@ namespace
 	T* FindNamedWidget(const UWidgetTree* InWidgetTree, const TCHAR* WidgetName)
 	{
 		return InWidgetTree != nullptr ? Cast<T>(InWidgetTree->FindWidget(FName(WidgetName))) : nullptr;
+	}
+
+	void ConfigureInvisibleButton(UButton* Button)
+	{
+		if (Button == nullptr)
+		{
+			return;
+		}
+
+		FSlateBrush EmptyBrush;
+		EmptyBrush.DrawAs = ESlateBrushDrawType::NoDrawType;
+
+		FButtonStyle InvisibleStyle;
+		InvisibleStyle.SetNormal(EmptyBrush);
+		InvisibleStyle.SetHovered(EmptyBrush);
+		InvisibleStyle.SetPressed(EmptyBrush);
+		InvisibleStyle.SetDisabled(EmptyBrush);
+
+		Button->SetStyle(InvisibleStyle);
+		Button->SetBackgroundColor(FLinearColor::Transparent);
 	}
 }
 
@@ -151,6 +172,74 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 	{
 		mDiceRollInputButton->SetBackgroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.01f));
 		mDiceRollInputButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleDiceRollInputButtonClicked);
+	}
+
+	if (mTurnChangeBackdropPanel == nullptr)
+	{
+		mTurnChangeBackdropPanel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("TurnChangeBackdropPanel"));
+		if (mTurnChangeBackdropPanel != nullptr)
+		{
+			RootCanvas->AddChildToCanvas(mTurnChangeBackdropPanel);
+		}
+	}
+	if (mTurnChangeBackdropPanel != nullptr)
+	{
+		mTurnChangeBackdropPanel->SetBrushColor(FLinearColor(0.004f, 0.006f, 0.010f, 0.86f));
+		mTurnChangeBackdropPanel->SetVisibility(ESlateVisibility::Collapsed);
+	}
+
+	if (mTurnChangeInputBlocker == nullptr)
+	{
+		mTurnChangeInputBlocker = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("TurnChangeInputBlocker"));
+		if (mTurnChangeInputBlocker != nullptr)
+		{
+			RootCanvas->AddChildToCanvas(mTurnChangeInputBlocker);
+		}
+	}
+	if (mTurnChangeInputBlocker != nullptr)
+	{
+		ConfigureInvisibleButton(mTurnChangeInputBlocker);
+		mTurnChangeInputBlocker->SetVisibility(ESlateVisibility::Collapsed);
+	}
+
+	if (mTurnChangeVideoImage == nullptr)
+	{
+		mTurnChangeVideoImage = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("TurnChangeVideoImage"));
+		if (mTurnChangeVideoImage != nullptr)
+		{
+			RootCanvas->AddChildToCanvas(mTurnChangeVideoImage);
+		}
+	}
+	if (mTurnChangeVideoImage != nullptr)
+	{
+		mTurnChangeVideoImage->SetColorAndOpacity(FLinearColor::White);
+		mTurnChangeVideoImage->SetRenderOpacity(1.0f);
+		mTurnChangeVideoImage->SetVisibility(ESlateVisibility::Collapsed);
+	}
+
+	if (mTurnChangeTurnTextPanel == nullptr)
+	{
+		mTurnChangeTurnTextPanel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("TurnChangeTurnTextPanel"));
+		mTurnChangeTurnText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("TurnChangeTurnText"));
+		if (mTurnChangeTurnTextPanel != nullptr && mTurnChangeTurnText != nullptr)
+		{
+			mTurnChangeTurnTextPanel->SetBrushColor(FLinearColor::Transparent);
+			mTurnChangeTurnTextPanel->SetHorizontalAlignment(HAlign_Center);
+			mTurnChangeTurnTextPanel->SetVerticalAlignment(VAlign_Center);
+			mTurnChangeTurnTextPanel->SetVisibility(ESlateVisibility::Collapsed);
+			mTurnChangeTurnTextPanel->AddChild(mTurnChangeTurnText);
+
+			mTurnChangeTurnText->SetJustification(ETextJustify::Center);
+			mTurnChangeTurnText->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.90f, 0.48f, 1.0f)));
+			mTurnChangeTurnText->SetShadowOffset(FVector2D(3.0f, 4.0f));
+			mTurnChangeTurnText->SetShadowColorAndOpacity(FLinearColor(0.02f, 0.01f, 0.0f, 0.85f));
+			FSlateFontInfo TurnFont = mTurnChangeTurnText->GetFont();
+			TurnFont.Size = 104;
+			mTurnChangeTurnText->SetFont(TurnFont);
+			mTurnChangeTurnText->SetText(FText::GetEmpty());
+
+			RootCanvas->AddChildToCanvas(mTurnChangeTurnTextPanel);
+		}
 	}
 
 	if (mDiceAssignmentText == nullptr)

@@ -172,6 +172,7 @@ void UCombatTileMapHUDWidget::ToggleSettingsPanel()
 		}
 
 		SettingsPanelWidget->CloseUI();
+		RestoreCombatControlsIfHidden();   // 지도에서 연 설정을 닫으면 전투로 복귀하므로 숨겨진 전투 컨트롤 복원.
 		return;
 	}
 
@@ -203,6 +204,7 @@ void UCombatTileMapHUDWidget::ToggleFloatingPanel(EWorldWidgetType WorldWidgetTy
 	if (FloatingPanel->IsOpened())
 	{
 		FloatingPanel->CloseUI();
+		RestoreCombatControlsIfHidden();   // 지도에서 연 주사위/스킬 패널을 닫아도 전투 컨트롤이 복원되게.
 		return;
 	}
 
@@ -256,6 +258,7 @@ void UCombatTileMapHUDWidget::OpenWorldMapAfterPlayerWin(TSharedPtr<FPresentatio
 		Barrier.Reset();
 	}));
 	WorldMapWidget->RefreshMap();
+	SetCombatPlayControlsVisible(false);   // 승리 후 자동 지도도 MAP 버튼 지도와 동일하게 내비/룸 배너만 남긴다.
 }
 
 /**
@@ -304,9 +307,9 @@ void UCombatTileMapHUDWidget::UpdateTopBarBackdrop() const
 		return;
 	}
 
-	const URDUserWidget* WorldMapWidget = GetToggleableWorldWidget(EWorldWidgetType::WorldMap);
-	const bool bWorldMapOpened = WorldMapWidget != nullptr && WorldMapWidget->IsOpened();
-	const ESlateVisibility Desired = bWorldMapOpened ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed;
+	// 월드맵은 지도 자체가 풀스크린 배경이므로 탑바 뒤 별도 색상판을 올리지 않는다.
+	// 이전처럼 여기서 배경판을 켜면 지도 상단에 파란 띠가 남는다.
+	const ESlateVisibility Desired = ESlateVisibility::Collapsed;
 	if (TopBar_Backdrop->GetVisibility() != Desired)
 	{
 		TopBar_Backdrop->SetVisibility(Desired);
@@ -335,7 +338,8 @@ void UCombatTileMapHUDWidget::HandleWorldMapCloseRequested()
 /**
  * @brief 월드맵(풀스크린 지도 뷰)이 열려 있는 동안 탑바를 제외한 전투 컨트롤을 숨긴다.
  * @details 지도는 탑바 아래 레이어(z=-20)라, 안 숨기면 스킬레일/주사위/턴순서/이동·턴종료가 지도 위에 뜬다.
- *          숨김/복원 대상: 런타임 컨트롤 위젯 배열 + 전투 컨트롤 스킨 마커(이름 접두사). 탑바 요소(알약/배너/내비)는 유지.
+ *          숨김/복원 대상: 런타임 컨트롤 위젯 배열 + 전투 컨트롤/상태 알약 스킨 마커(이름 접두사).
+ *          내비/룸 배너만 유지하고, 턴순서와 Lv/Gold/HP 알약은 지도 위에서 숨긴다.
  */
 void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 {
@@ -371,6 +375,8 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 	ToggleWidgets(mEquipmentChipTexts, DisplayVis);
 	ToggleWidgets(mEquipSlotButtons, InputVis);
 
+	// mCombatStatusBarText는 항상 Collapsed(Lv/HP/Gold는 WBP HUD_M_* 라벨이 표시)이므로 여기서 손대지 않는다.
+	// 복원 시 Visible로 켜면 Lv/Gold/HP 필과 같은 좌상단 위치라 빈 텍스트가 필 위에 겹친다.
 	if (mMoveButton != nullptr) { mMoveButton->SetVisibility(InputVis); }
 	if (EndTurnButton != nullptr) { EndTurnButton->SetVisibility(InputVis); }
 
@@ -384,7 +390,8 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 			bVisible && bDiceOverlayActive ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 	}
 
-	// WBP 스킨 마커(프레임 아트) — 전투 컨트롤 이름 접두사만 숨긴다(탑바 요소는 건드리지 않는다).
+	// WBP 스킨 마커(프레임 아트) — 지도 위에서는 내비/룸 배너 + 상단 상태바(Lv/Gold/HP)를 남기고 전투 컨트롤만 숨긴다.
+	// (상태바 프리픽스 R_top_status_bar/HUD_M_lv_value/HUD_M_hp_value/HUD_M_gold_value는 제외 → 지도에서도 표시)
 	if (DesignCanvas != nullptr)
 	{
 		static const TArray<FString> ControlPrefixes = {
@@ -427,4 +434,18 @@ void UCombatTileMapHUDWidget::HandleSettingsBackRequested()
 	}
 
 	CloseWorldWidget(EWorldWidgetType::InGameSettings);
+	RestoreCombatControlsIfHidden();   // 설정 Back으로 나가도 전투로 복귀하므로 숨겨진 전투 컨트롤 복원.
+}
+
+/**
+ * @brief 지도/설정/주사위/스킬을 닫고 전투로 돌아올 때, 지도 뷰에서 숨겨졌던 전투 컨트롤을 복원한다.
+ * @details 복원이 지도탭 토글에만 묶여 있으면 지도→설정→설정닫기처럼 지도를 거치지 않고 닫는 경로에서
+ *          mCombatControlsHidden이 true로 남아 전투 UI가 되살아나지 않는다. 이 헬퍼로 모든 닫기 경로를 통일한다.
+ */
+void UCombatTileMapHUDWidget::RestoreCombatControlsIfHidden()
+{
+	if (mCombatControlsHidden)
+	{
+		SetCombatPlayControlsVisible(true);
+	}
 }

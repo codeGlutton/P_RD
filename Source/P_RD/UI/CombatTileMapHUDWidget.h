@@ -5,6 +5,7 @@
 #include "UI/Combat/CombatUITypes.h"
 #include "UI/RDUserWidget.h"
 #include "Components/CanvasPanelSlot.h"   // FAnchorData (폴드 변형 베이스 슬롯 캐시)
+#include "Styling/SlateBrush.h"
 #include "Widgets/Layout/Anchors.h"
 
 #include "CombatTileMapHUDWidget.generated.h"
@@ -205,9 +206,6 @@ private:
 	/** @brief 굴림 연출의 현재 프레임을 계산한다. */
 	void UpdateIntroDiceRoll(float InDeltaTime);
 
-	/** @brief 굴림 대기 상태에서 기기 가속도(흔들기)를 감지해 자동으로 굴림을 시작한다. */
-	void UpdateShakeToRoll(float InDeltaTime);
-
 	/** @brief 주사위 팝업이 떠 있는 동안 전투 HUD 조작층을 숨기거나 되돌린다. */
 	void SetDiceRollCombatLayerSuppressed(bool bSuppressed);
 
@@ -290,11 +288,11 @@ private:
 	URDUserWidget* GetToggleableWorldWidget(EWorldWidgetType WorldWidgetType) const;
 
 	/**
-	 * @brief 탑바 배경판(TopBar_Backdrop)을 월드맵 열림 상태와 동기한다.
+	 * @brief 탑바 배경판(TopBar_Backdrop)을 현재 지도/전투 HUD 연출 규칙에 맞춰 숨김 상태로 유지한다.
 	 *
 	 * @details
 	 * 월드맵이 열리는 경로가 여러 갈래(내비 토글/승리 강제/복원)라 개별 훅 대신 틱에서 상태를 본다.
-	 * 배경판은 지도 위젯이 아니라 HUD 소유다 — 지도 팝업은 탑바보다 위층이라 탑바 뒤 배경을 가질 수 없다.
+	 * 지도 자체가 풀스크린 배경이므로 이 배경판을 켜면 지도 위 상단에 색상 띠가 생긴다.
 	 */
 	void UpdateTopBarBackdrop() const;
 
@@ -331,6 +329,9 @@ private:
 
 	/** @brief 풀스크린 지도 뷰 동안 탑바를 제외한 전투 컨트롤(스킬레일/주사위/턴순서/이동·턴종료)을 숨김/복원한다. */
 	void SetCombatPlayControlsVisible(bool bVisible);
+
+	/** @brief 지도/설정/패널을 닫고 전투로 복귀할 때 숨겨졌던 전투 컨트롤을 복원한다(모든 닫기 경로 공통). */
+	void RestoreCombatControlsIfHidden();
 
 	/** @brief 설정 패널 Back 요청을 승리 잠금 상태에 맞게 처리한다. */
 	UFUNCTION()
@@ -370,6 +371,33 @@ private:
 	/** @brief 턴 시작 주사위 굴림 요청(OnDiceRollRequested 구독) — 굴림 오버레이를 연다. 구현: _DiceRoll.cpp */
 	UFUNCTION()
 	void HandleCombatDiceRollRequested();
+
+	/** @brief 턴 전환 영상 안내를 재생하고, 필요하면 종료 뒤 주사위 팝업을 연다. */
+	bool PlayTurnChangeIntro(bool bOpenDiceAfterIntro);
+
+	/** @brief 턴 전환 영상 안내를 닫고 대기 중인 후속 UI(주사위)를 이어간다. */
+	void FinishTurnChangeIntro();
+
+	/** @brief 턴 전환 알파 텍스처 에셋 프레임들을 준비한다. */
+	bool EnsureTurnChangeFrameTextures();
+
+	/** @brief 턴 전환 영상 안내 위젯들을 보이거나 숨긴다. */
+	void SetTurnChangeIntroVisibility(bool bVisible) const;
+
+	/** @brief 중앙 원에 표시할 현재 턴 수를 계산한다. */
+	int32 GetTurnChangeDisplayNumber() const;
+
+	/** @brief 턴 전환 텍스처 에셋의 /Game 패키지 경로를 만든다. */
+	FString ResolveTurnChangeFrameAssetPath(int32 FrameIndex) const;
+
+	/** @brief 턴 전환 텍스처 에셋을 로드한다. */
+	UTexture2D* LoadTurnChangeFrameTexture(const FString& FrameAssetPath) const;
+
+	/** @brief 현재 경과 시간에 맞춰 턴 전환 프레임을 넘긴다. */
+	void UpdateTurnChangeIntro(float InDeltaTime);
+
+	/** @brief 지정한 턴 전환 프레임을 Image Brush에 반영한다. */
+	void ApplyTurnChangeFrame(int32 FrameIndex);
 
 	/** @brief 대기 중인 플로팅 로그 큐에서 다음 로그를 일정 간격으로 스폰한다. */
 	void UpdateFloatingCombatLogQueue(float InDeltaTime);
@@ -584,6 +612,51 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UTextBlock> mTurnRoundBannerText;
 
+	/** @brief 턴 전환 영상 안내의 풀스크린 딤 배경 */
+	UPROPERTY(Transient)
+	TObjectPtr<UBorder> mTurnChangeBackdropPanel;
+
+	/** @brief 턴 전환 알파 텍스처 에셋 프레임을 그리는 Image */
+	UPROPERTY(Transient)
+	TObjectPtr<UImage> mTurnChangeVideoImage;
+
+	/** @brief 턴 전환 안내 중 입력이 전투 HUD로 새지 않게 막는 투명 레이어 */
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mTurnChangeInputBlocker;
+
+	/** @brief 영상 중앙 원 안에 턴 수를 정렬하는 투명 패널 */
+	UPROPERTY(Transient)
+	TObjectPtr<UBorder> mTurnChangeTurnTextPanel;
+
+	/** @brief 영상 중앙 원 안에 표시할 턴 수 텍스트 */
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mTurnChangeTurnText;
+
+	/** @brief 턴 전환 알파 텍스처 에셋 프레임 캐시 */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UTexture2D>> mTurnChangeFrameTextures;
+
+	/** @brief mTurnChangeVideoImage에 물릴 현재 텍스처 프레임 브러시 */
+	FSlateBrush mTurnChangeFrameBrush;
+
+	/** @brief 턴 전환 안내 누적 시간 */
+	float mTurnChangeIntroElapsed = 0.0f;
+
+	/** @brief 현재 표시 중인 턴 전환 프레임 index */
+	int32 mTurnChangeCurrentFrameIndex = INDEX_NONE;
+
+	/** @brief 턴 전환 안내가 현재 재생 중인지 여부 */
+	bool mTurnChangeIntroPlaying = false;
+
+	/** @brief 턴 전환 안내 종료 직후 주사위 팝업을 열어야 하는지 여부 */
+	bool mPendingDiceRollAfterTurnIntro = false;
+
+	/** @brief HUD가 열린 직후 첫 턴 전환 안내를 지연 재생해야 하는지 여부 */
+	bool mPendingInitialTurnChangeIntro = false;
+
+	/** @brief 첫 턴 전환 안내 지연 재생까지 남은 시간 */
+	float mPendingInitialTurnChangeIntroDelay = 0.0f;
+
 	/** @brief 배너 표시 경과 시간 */
 	float mTurnRoundBannerElapsed = 0.0f;
 
@@ -706,21 +779,6 @@ private:
 
 	/** @brief 정렬이 끝나 탭으로 닫기를 기다리는 상태인지. */
 	bool mIntroDiceAligned = false;
-
-	/** @brief 직전 프레임의 기기 가속도(흔들기 감지용 기준값). */
-	FVector mLastShakeAcceleration = FVector::ZeroVector;
-
-	/** @brief 가속도 기준값이 한 번이라도 채워졌는지(첫 프레임 오탐 방지). */
-	bool mHasShakeBaseline = false;
-
-	/** @brief 흔들기 한 번에 한 번만 굴리도록 남은 쿨다운(초). */
-	float mShakeRollCooldown = 0.0f;
-
-	/** @brief 흔들기로 인정할 가속도 변화량 임계값(기기 단위). 작을수록 민감. */
-	float mShakeTriggerThreshold = 2.6f;
-
-	/** @brief 모션 입력 활성화를 한 번만 요청하기 위한 플래그. */
-	bool mMotionControlsRequested = false;
 
 	/** @brief 선택된 주사위/스킬 배치 상태를 보여주는 안내 문구 */
 	UPROPERTY(Transient)
