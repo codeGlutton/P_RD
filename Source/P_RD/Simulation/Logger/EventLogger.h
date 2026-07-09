@@ -69,6 +69,17 @@ public:
 
 public:
 	TArray<FSRPGTurnEventLog> PopSRPGLogs() override;
+
+protected:
+	TArray<FSRPGTurnEventLog> mTurnEventLogs;
+
+protected:
+	FSRPGTurnEventLog* mCurrentTurnEventLog = nullptr;
+	FSRPGActionEventLog* mCurrentActionEventLog = nullptr;
+	FSRPGMotionEventLog* mCurrentMotionEventLog = nullptr;
+
+	int32 mActiveTurnSourceUnitID = INDEX_NONE;
+	TSubclassOf<UObject> mActiveTurnActorModelClass = nullptr;
 };
 
 /**
