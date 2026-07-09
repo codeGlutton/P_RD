@@ -6,7 +6,6 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Components/Widget.h"
-#include "GameFramework/PlayerController.h"
 #include "Actor/Dice/CombatDiceCaptureActor.h"
 #include "Actor/Dice/CombatDiceRollCaptureActor.h"
 #include "UI/Combat/CombatUIModel.h"
@@ -174,58 +173,6 @@ void UCombatTileMapHUDWidget::UpdateIntroDiceRoll(float InDeltaTime)
 
 	// 물리 캡처 액터가 없으면(스폰 실패 등) 이번 입장 연출은 종료 상태로 둔다.
 	mIntroDiceRollActive = false;
-}
-
-/** @brief 굴림 대기 상태에서 기기를 흔들면(가속도 급변) 자동으로 굴림을 시작한다. */
-void UCombatTileMapHUDWidget::UpdateShakeToRoll(float InDeltaTime)
-{
-	if (mShakeRollCooldown > 0.0f)
-	{
-		mShakeRollCooldown = FMath::Max(0.0f, mShakeRollCooldown - InDeltaTime);
-	}
-
-	// 굴릴 준비가 됐고(터치 대기), 아직 굴리는 중이 아닐 때만 흔들기를 받는다.
-	if (mIntroDiceRollReady == false || mIntroDiceRollActive == true || mIntroDiceResultWaitingForDismiss == true)
-	{
-		mHasShakeBaseline = false;   // 대기 구간을 벗어나면 기준값을 리셋해 복귀 시 첫 프레임 오탐을 막는다.
-		return;
-	}
-
-	APlayerController* PlayerController = GetOwningPlayer();
-	if (PlayerController == nullptr)
-	{
-		return;
-	}
-
-	// 모바일 가속도 입력을 한 번만 켠다(에디터/PC에서는 0 벡터라 자연히 트리거되지 않음).
-	if (mMotionControlsRequested == false)
-	{
-		PlayerController->SetMotionControlsEnabled(true);
-		mMotionControlsRequested = true;
-	}
-
-	FVector Tilt = FVector::ZeroVector;
-	FVector RotationRate = FVector::ZeroVector;
-	FVector Gravity = FVector::ZeroVector;
-	FVector Acceleration = FVector::ZeroVector;
-	PlayerController->GetInputMotionState(Tilt, RotationRate, Gravity, Acceleration);
-
-	if (mHasShakeBaseline == false)
-	{
-		mLastShakeAcceleration = Acceleration;
-		mHasShakeBaseline = true;
-		return;
-	}
-
-	// 가속도의 프레임 간 급변(저크)을 흔들기로 본다 — 중력 성분이 빠진 순수 흔드는 힘만 잡힌다.
-	const float Jerk = (Acceleration - mLastShakeAcceleration).Size();
-	mLastShakeAcceleration = Acceleration;
-
-	if (Jerk >= mShakeTriggerThreshold && mShakeRollCooldown <= 0.0f)
-	{
-		mShakeRollCooldown = 1.0f;   // 한 번 흔들면 한 번만 굴리게 한다.
-		StartIntroDiceRoll();
-	}
 }
 
 /** @brief 결과 연출이 끝난 시점에 보유 주사위 카드 상태를 한 번만 Rolled로 전환한다. */
@@ -413,12 +360,12 @@ void UCombatTileMapHUDWidget::DismissIntroDiceRoll()
  */
 void UCombatTileMapHUDWidget::HandleCombatDiceRollRequested()
 {
-	if (mIntroDiceRollActive == true || mIntroDiceResultWaitingForDismiss == true)
+	if (mIntroDiceRollActive == true || mIntroDiceRollReady == true || mIntroDiceResultWaitingForDismiss == true)
 	{
 		return;
 	}
 
-	// 바로 굴리지 않고 터치 대기 상태로만 연다 — 굴리는 맛(터치로 굴림)은 기획 확정 사항(06/15 회의).
-	// 실제 굴림은 유저 탭(HandleDiceRollInputButtonClicked)이나 흔들기에서 StartIntroDiceRoll로 이어진다.
-	PrepareIntroDiceRoll();
+	// 턴 안내 영상이 끝난 뒤 터치 대기 상태로 연다 — 굴리는 맛(터치로 굴림)은 기획 확정 사항(06/15 회의).
+	// 실제 굴림은 유저 탭(HandleDiceRollInputButtonClicked)에서 StartIntroDiceRoll로 이어진다.
+	PlayTurnChangeIntro(true);
 }
