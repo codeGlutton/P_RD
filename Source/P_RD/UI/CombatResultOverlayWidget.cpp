@@ -120,7 +120,7 @@ TSharedRef<SWidget> UCombatResultOverlayWidget::RebuildWidget()
 				.OnClicked_UObject(this, &UCombatResultOverlayWidget::HandleConfirmClicked)
 				[
 					SNew(STextBlock)
-					.Text(LOCTEXT("Continue", "CONTINUE"))
+					.Text(LOCTEXT("DefeatReturn", "돌아가기"))
 					.Font(FCoreStyle::GetDefaultFontStyle(TEXT("Bold"), 26))
 					.ColorAndOpacity(TextColor)
 					.Justification(ETextJustify::Center)

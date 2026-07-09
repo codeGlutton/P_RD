@@ -262,6 +262,15 @@ private:
 	/** @brief 룸 이름 마커에 현재 방 표시 이름('일반'/'엘리트'/'보스')을 채운다(전투 진입 시 1회). */
 	void RefreshRoomNameLabel() const;
 
+	/** @brief LV 칸 위에 투명 터치 버튼을 1회 생성한다 — 꾹 누르는 동안 레벨 대신 경험치(cur/max)를 보여주기 위함. */
+	void EnsureLevelTouchButton();
+
+	/** @brief LV 칸 눌림 시작 — 경험치 표시로 전환. */
+	UFUNCTION() void HandleLevelTouchPressed();
+
+	/** @brief LV 칸 눌림 해제 — 레벨 표시로 복귀. */
+	UFUNCTION() void HandleLevelTouchReleased();
+
 	/** @brief 골드 칸 표시값을 갱신한다. 증가면 코인 사운드와 함께 차르륵 카운트업, 감소/최초는 즉시 반영. */
 	// 카운트업 상태는 표시 캐시(mutable)라 const 갱신 경로(RefreshSkinValueLabels)에서 불러도 된다.
 	void UpdateGoldValueLabel(int32 NewGold) const;
@@ -338,7 +347,11 @@ private:
 	void HandleEndCombatUI(TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result);
 
 	/** @brief 승패 결과 영상을 열고, 영상 종료 뒤 보상/계속 버튼 흐름으로 이어간다. */
+	// 판정 직후 바로가 아니라 짧은 텀(딜레이) 후 StartCombatResultCinematic으로 실제 연출을 시작한다.
 	void BeginCombatResultPresentation(TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result);
+
+	/** @brief 텀(딜레이) 후 실제 결과 연출 시작 — 징글 재생 + 결과 영상 오픈. */
+	void StartCombatResultCinematic();
 
 	/** @brief 결과 영상/오버레이 위젯 인스턴스를 준비한다. */
 	void EnsureCombatResultWidgets();
@@ -414,6 +427,9 @@ private:
 	TSharedPtr<FPresentationBarrier> mCombatResultBarrier;
 	// 턴 시작 배너를 재생하는 동안 잡아두는 배리어 — 배너가 끝나면(FinishTurnChangeIntro) 놓아 실제 턴 실행을 진행시킨다.
 	TSharedPtr<FPresentationBarrier> mTurnChangeBarrier;
+
+	/** @brief 승패 판정 → 결과 영상 시작 사이의 텀 타이머. */
+	FTimerHandle mCombatResultStartDelayTimerHandle;
 	TMap<FName, ESlateVisibility> mCombatResultRoomNameVisibilities;
 	ESRPGCombatResult mCombatResult = ESRPGCombatResult::PlayerLose;
 	bool mCombatResultFlowActive = false;
@@ -609,6 +625,25 @@ private:
 	TObjectPtr<USoundBase> mVictoryJingleSound;
 	UPROPERTY(Transient)
 	TObjectPtr<USoundBase> mDefeatJingleSound;
+
+	/** @brief 지도 열기 사운드(책장 넘김). 월드맵이 실제로 열릴 때 1회. */
+	UPROPERTY(Transient)
+	TObjectPtr<USoundBase> mMapOpenSound;
+
+	/** @brief 스킬-주사위 배치에서 주사위를 고를 때 나는 나무 주사위 사운드. */
+	UPROPERTY(Transient)
+	TObjectPtr<USoundBase> mDiceChooseSound;
+
+	/** @brief 보상에서 경험치를 받았을 때 상승음. */
+	UPROPERTY(Transient)
+	TObjectPtr<USoundBase> mExpGainSound;
+
+	/** @brief LV 칸 위 투명 터치 버튼(런타임 생성). 누르는 동안 경험치를 보여준다. */
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mLevelTouchButton;
+
+	/** @brief LV 칸을 누르는 중인가 — true면 LV 자리에 경험치(cur/max)를 그린다. */
+	bool mLevelValueTouched = false;
 
 	// 골드 카운트업 상태 3종은 '화면 표시 캐시'라 mutable — const 그리기 경로에서 갱신해도 논리 상태 불변.
 	/** @brief 골드 칸에 현재 표시 중인 값. INDEX_NONE이면 아직 최초 표시 전(카운트업 없이 즉시 그림). */

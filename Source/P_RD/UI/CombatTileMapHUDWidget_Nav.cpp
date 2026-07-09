@@ -5,6 +5,7 @@
 #include "Components/CanvasPanel.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Kismet/GameplayStatics.h"   // 지도 열기 사운드 재생
 #include "UI/IndexedButtonWidget.h"
 #include "GameMode/CombatGameMode.h"   // 라운드 시작 배리어(OnBeginAnyRoundUI) 구독용
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
@@ -55,7 +56,6 @@ void UCombatTileMapHUDWidget::BindVictoryFlowEvents()
 	// 라운드 시작 배너: 게임모드가 데이터(mRound) 갱신 후 재방송하는 OnBeginAnyRoundUI를 구독한다.
 	// 배리어를 붙잡고 배너를 재생 → 배너 종료 시(FinishTurnChangeIntro) 배리어를 놓아 그 라운드 첫 턴이 진행된다.
 	// (프레임워크가 아직 OnBeginAnyRoundUI를 방송하지 않으면 이 핸들러는 호출되지 않음 = 기존 동작 유지)
-	ACombatGameMode* CombatGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ACombatGameMode>() : nullptr;
 	if (CombatGameMode != nullptr)
 	{
 		CombatGameMode->OnBeginAnyRoundUI.RemoveAll(this);
@@ -162,6 +162,12 @@ void UCombatTileMapHUDWidget::ToggleWorldMap()
 		WorldMapWidget->CloseUI();
 		SetCombatPlayControlsVisible(true);   // 지도 닫힘 → 전투 컨트롤 복원.
 		return;
+	}
+
+	// 여기부터는 지도가 실제로 '열리는' 경로 — 책장 넘김 사운드를 1회 재생한다(닫을 땐 안 냄).
+	if (mMapOpenSound != nullptr)
+	{
+		UGameplayStatics::PlaySound2D(this, mMapOpenSound);
 	}
 
 	CloseFloatingPanels(EWorldWidgetType::WorldMap);

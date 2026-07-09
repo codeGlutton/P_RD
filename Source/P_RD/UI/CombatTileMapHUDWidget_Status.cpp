@@ -143,8 +143,14 @@ void UCombatTileMapHUDWidget::RefreshSkinValueLabels() const
 	};
 	// 빌드는 빈 TextBlock(color/font/slot만)으로 마커를 심는다(Android 직렬화 안전). 내용/정렬은 여기서 채운다.
 	// END TURN 라벨은 정적이지만 동일하게 C++가 설정(CDO에 FText를 넣지 않기 위함).
+	// LV 칸은 꾹 누르는 동안(mLevelValueTouched) 레벨 대신 경험치(현재/최대)를 보여준다.
+	const FText LevelSlotText = mLevelValueTouched
+		? FText::Format(NSLOCTEXT("CombatTileMapHUDWidget", "SkinExpHold", "{0}/{1}"),
+			FText::AsNumber(FMath::RoundToInt(Meta.mExp)), FText::AsNumber(FMath::RoundToInt(Meta.mMaxExp)))
+		: FText::AsNumber(Meta.mLevel);
+
 	const FSkinValueBinding Bindings[] = {
-		{ TEXT("HUD_M_lv_value"), FText::AsNumber(Meta.mLevel) },
+		{ TEXT("HUD_M_lv_value"), LevelSlotText },
 		{ TEXT("HUD_M_hp_value"), FText::Format(NSLOCTEXT("CombatTileMapHUDWidget", "SkinHP", "{0}/{1}"),
 			FText::AsNumber(FMath::RoundToInt(PlayerHP)), FText::AsNumber(FMath::RoundToInt(PlayerMaxHP))) },
 		{ TEXT("HUD_M_btn_end_turn_label"), NSLOCTEXT("CombatTileMapHUDWidget", "EndTurnLabel", "END\nTURN") },
@@ -187,6 +193,68 @@ void UCombatTileMapHUDWidget::RefreshRoomNameLabel() const
 			RoomNameText->SetText(RoomDisplayName);
 		}
 	}
+}
+
+void UCombatTileMapHUDWidget::EnsureLevelTouchButton()
+{
+	if (mLevelTouchButton != nullptr || WidgetTree == nullptr || IsDesignerSkinActive() == false)
+	{
+		return;
+	}
+
+	// LV 값 마커의 캔버스 슬롯 지오메트리를 그대로 복사해, 같은 자리에 투명 버튼을 얹는다(레이아웃은 여전히 WBP 소유).
+	UTextBlock* LevelText = Cast<UTextBlock>(WidgetTree->FindWidget(TEXT("HUD_M_lv_value")));
+	UCanvasPanelSlot* LevelSlot = LevelText != nullptr ? Cast<UCanvasPanelSlot>(LevelText->Slot) : nullptr;
+	UCanvasPanel* ParentCanvas = LevelText != nullptr ? Cast<UCanvasPanel>(LevelText->GetParent()) : nullptr;
+	if (LevelSlot == nullptr || ParentCanvas == nullptr)
+	{
+		return;
+	}
+
+	UButton* TouchButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("HUD_LevelTouchButton"));
+	if (TouchButton == nullptr)
+	{
+		return;
+	}
+
+	// 배경 없는 순수 터치 영역(브러시 NoDraw) — 눌림 시각 효과는 텍스트 전환 자체가 대신한다.
+	FSlateBrush TransparentBrush;
+	TransparentBrush.DrawAs = ESlateBrushDrawType::NoDrawType;
+	TransparentBrush.TintColor = FSlateColor(FLinearColor::Transparent);
+	FButtonStyle TransparentStyle;
+	TransparentStyle.SetNormal(TransparentBrush);
+	TransparentStyle.SetHovered(TransparentBrush);
+	TransparentStyle.SetPressed(TransparentBrush);
+	TransparentStyle.SetDisabled(TransparentBrush);
+	TransparentStyle.SetNormalPadding(FMargin(0.0f));
+	TransparentStyle.SetPressedPadding(FMargin(0.0f));
+	TouchButton->SetStyle(TransparentStyle);
+
+	TouchButton->OnPressed.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleLevelTouchPressed);
+	TouchButton->OnReleased.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleLevelTouchReleased);
+
+	if (UCanvasPanelSlot* ButtonSlot = ParentCanvas->AddChildToCanvas(TouchButton))
+	{
+		ButtonSlot->SetAnchors(LevelSlot->GetAnchors());
+		ButtonSlot->SetOffsets(LevelSlot->GetOffsets());
+		ButtonSlot->SetAlignment(LevelSlot->GetAlignment());
+		ButtonSlot->SetAutoSize(LevelSlot->GetAutoSize());
+		ButtonSlot->SetZOrder(LevelSlot->GetZOrder() + 1);
+	}
+
+	mLevelTouchButton = TouchButton;
+}
+
+void UCombatTileMapHUDWidget::HandleLevelTouchPressed()
+{
+	mLevelValueTouched = true;
+	RefreshSkinValueLabels();
+}
+
+void UCombatTileMapHUDWidget::HandleLevelTouchReleased()
+{
+	mLevelValueTouched = false;
+	RefreshSkinValueLabels();
 }
 
 void UCombatTileMapHUDWidget::UpdateGoldValueLabel(int32 NewGold) const
@@ -419,15 +487,6 @@ void UCombatTileMapHUDWidget::RebuildEquipmentIcons()
 	{
 		UWidget* RawMarker = WidgetTree->FindWidget(SlotMarkerNames[MarkerIndex]);
 		UImage* SlotImage = Cast<UImage>(RawMarker);
-
-		// [진단] 마커 실제 종류 + Image 캐스트 성공 여부 + 그 슬롯의 장착/아이콘 상태를 찍는다.
-		const bool bHasData = Equips.IsValidIndex(MarkerIndex);
-		UE_LOG(LogTemp, Warning, TEXT("[EquipDbg] %s: 실제위젯=%s, UImage캐스트=%s | 장착=%s, 아이콘=%s"),
-			SlotMarkerNames[MarkerIndex],
-			RawMarker != nullptr ? *RawMarker->GetClass()->GetName() : TEXT("못찾음(null)"),
-			SlotImage != nullptr ? TEXT("성공") : TEXT("실패(Image아님)"),
-			(bHasData && Equips[MarkerIndex].mIsEquipped) ? TEXT("O") : TEXT("X"),
-			(bHasData && Equips[MarkerIndex].mIcon != nullptr) ? TEXT("O") : TEXT("X(null)"));
 
 		if (SlotImage == nullptr)
 		{

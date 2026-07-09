@@ -7,6 +7,7 @@
 #include "Components/TextBlock.h"
 #include "Actor/Dice/CombatDiceCaptureActor.h"
 #include "GameMode/RDGameModeBase.h"
+#include "Kismet/GameplayStatics.h"   // 주사위 선택 사운드 재생
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/CombatTileMapHUDWidgetPrivate.h"
@@ -416,6 +417,11 @@ void UCombatTileMapHUDWidget::HandleOwnedDiceCardClicked(int32 DiceIndex)
 	// 갱신된 선택은 FDiceSlotUI.mIsSelected로 되돌아와(RefreshDiceViewsFromRunData) 여러 칸이 동시에 강조된다.
 	if (mCombatUIModel != nullptr)
 	{
+		// 스킬에 얹을 주사위를 고르는 유효 입력에만 나무 주사위 사운드를 낸다.
+		if (mDiceChooseSound != nullptr)
+		{
+			UGameplayStatics::PlaySound2D(this, mDiceChooseSound);
+		}
 		mCombatUIModel->RequestToggleDice(DiceIndex);
 	}
 
