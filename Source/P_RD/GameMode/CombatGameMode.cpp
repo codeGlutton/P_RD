@@ -883,10 +883,17 @@ void ACombatGameMode::PushEquipmentDetailUIData(int32 EquipmentIndex) const
 
 	const EEquipmentType EquipSlotType = StaticCast<EEquipmentType>(EquipmentIndex);
 	const FEquippedEntry* EquippedEntry = EquipmentComponentModel->GetEquipped(EquipSlotType);
-	checkf(EquippedEntry != nullptr, TEXT("선택한 장비 nullptr"));
+	if (EquippedEntry == nullptr)
+	{
+		// 빈 슬롯(장착 안 됨)을 롱프레스한 경우: 상세를 띄우지 않고 조용히 반환(크래시 방지).
+		return;
+	}
 
 	const UStaticEquipmentData* StaticEquipmentData = EquippedEntry->mData.Get();
-	checkf(StaticEquipmentData != nullptr, TEXT("선택한 장비 정적 데이터 nullptr"));
+	if (StaticEquipmentData == nullptr)
+	{
+		return;
+	}
 
 	FEquipmentDetailUI EquipmentDetailUIData;
 	EquipmentDetailUIData.mSlotIndex = EquipmentIndex;
