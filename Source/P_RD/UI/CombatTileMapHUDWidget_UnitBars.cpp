@@ -171,7 +171,7 @@ void UCombatTileMapHUDWidget::RebuildUnitHpBars()
 		// 라이브 트리에 붙인 뒤 UMG WidgetTree를 재부모화하면 Slate 트리와 어긋나 렌더 크래시가 난다.
 		NewBar.mFillImage = Cast<UImage>(NewBar.mRoot->GetWidgetFromName(TEXT("HpFillImage")));
 		NewBar.mValueText = Cast<UTextBlock>(NewBar.mRoot->GetWidgetFromName(TEXT("HpValueText")));
-		CacheUnitHpBarStatusSlots(NewBar);   // 상태칸 캐시+숨김. 표시 배선은 #297(상태 DTO) 머지 후 후속 PR.
+		CacheUnitHpBarStatusSlots(NewBar);   // 상태칸 캐시+숨김. 실제 표시는 UpdateUnitHpBarStatus에서 DTO로 매 프레임 채운다.
 		SetupUnitHpBarFillClip(NewBar);
 
 		// HP 숫자: 크게 + 외곽선(두껍게/대비) + 바(채움) 폭에 맞춰 가운데 정렬 → 작아도 잘 보이게.
@@ -340,16 +340,19 @@ void UCombatTileMapHUDWidget::UpdateUnitHpBarStatus(FUnitHpBarWidget& Bar, const
 			IconImage->SetBrushResourceObject(Icon);
 			IconImage->SetVisibility(ESlateVisibility::HitTestInvisible);
 		}
-		if (UTextBlock* CountText = Bar.mStatusCountTexts[Shown])
+		if (Bar.mStatusCountTexts.IsValidIndex(Shown))
 		{
-			if (Status.mStackCount > 1)
+			if (UTextBlock* CountText = Bar.mStatusCountTexts[Shown])
 			{
-				CountText->SetText(FText::AsNumber(Status.mStackCount));
-				CountText->SetVisibility(ESlateVisibility::HitTestInvisible);
-			}
-			else
-			{
-				CountText->SetVisibility(ESlateVisibility::Collapsed);
+				if (Status.mStackCount > 1)
+				{
+					CountText->SetText(FText::AsNumber(Status.mStackCount));
+					CountText->SetVisibility(ESlateVisibility::HitTestInvisible);
+				}
+				else
+				{
+					CountText->SetVisibility(ESlateVisibility::Collapsed);
+				}
 			}
 		}
 		++Shown;
@@ -359,6 +362,9 @@ void UCombatTileMapHUDWidget::UpdateUnitHpBarStatus(FUnitHpBarWidget& Bar, const
 	for (int32 SlotIndex = Shown; SlotIndex < SlotCount; ++SlotIndex)
 	{
 		if (UImage* IconImage = Bar.mStatusIcons[SlotIndex]) { IconImage->SetVisibility(ESlateVisibility::Collapsed); }
+	}
+	for (int32 SlotIndex = Shown; SlotIndex < Bar.mStatusCountTexts.Num(); ++SlotIndex)
+	{
 		if (UTextBlock* CountText = Bar.mStatusCountTexts[SlotIndex]) { CountText->SetVisibility(ESlateVisibility::Collapsed); }
 	}
 

@@ -149,6 +149,14 @@ namespace
 		}
 	}
 
+	bool IsUnitHpBarStatusEffectTag(const FGameplayTag& StatusTag)
+	{
+		return StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Agility)
+			|| StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification)
+			|| StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability)
+			|| StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness);
+	}
+
 	void ConvertFloatingLogUITypes(const FSRPGAttributeEffectEventLog& AttrLog, OUT EFloatingLogIconType& IconType, OUT EFloatingLogColorType& ColorType)
 	{
 		if (AttrLog.mEffectAttribute == UUnitAttributeSet::GetHPAttribute())
@@ -652,11 +660,16 @@ void ACombatGameMode::PushUnitUIData() const
 
 		UnitUIData.mStatusTags = AttributeSetComponentModel->GetOwnedGameplayTags(); // 모든 소유 태그가 아닌 고의적으로 넣은 태그만 해당
 
-		// HP바 밑 상태이상 칸용: 소유 상태 태그를 순회하며 (태그 + 스택 수)로 채운다.
-		// 아이콘 매핑/표시는 HUD(UpdateUnitHpBarStatus)가 소유. 스택 수는 GetTagCount로 읽는다.
+		// HP바 밑 상태이상 칸용: 부모/분류 태그는 제외하고, 실제 표시 대상 상태만 (태그 + 스택 수)로 채운다.
+		// 텍스처 선택은 HUD(UpdateUnitHpBarStatus)가 소유하고, 스택 수는 태그 컨테이너의 누적 카운트에서 읽는다.
 		UnitUIData.mStatusEffects.Reset();
 		for (const FGameplayTag& StatusTag : UnitUIData.mStatusTags)
 		{
+			if (IsUnitHpBarStatusEffectTag(StatusTag) == false)
+			{
+				continue;
+			}
+
 			FStatusEffectUI StatusEffect;
 			StatusEffect.mTag = StatusTag;
 			StatusEffect.mStackCount = AttributeSetComponentModel->GetTagCount(StatusTag);
