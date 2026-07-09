@@ -72,7 +72,7 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 
 	// 목적지 결정 (이동 성향 기반)
 	bool CanCast = false;
-	const FTileIndex Dest = ChooseDestination(Origin, PlayerTile, MoveRange, AimRange, Skill, TileMap, Enemy->GetMoveTendency(), OUT CanCast);
+	const FTileIndex Dest = ChooseDestination(Origin, PlayerTile, MoveRange, AimRange, Skill, TileMap, Enemy->GetMoveTendency(), Enemy, OUT CanCast);
 
 	/**
 	 * @brief 이동커맨드 생성 여부 판단 및 생성
@@ -125,6 +125,7 @@ FTileIndex USRPGEnemyTurnPlanner::ChooseDestination(
 	const UStaticSkillData* Skill,
 	const UTileMapModel* TileMap,
 	EMoveTendency Tendency,
+	const UBoardActorModel* Self,
 	OUT bool& OutCanCast)
 {
 	// 도달 가능한 모든 타일 집합 (현재 위치한 타일도 포함)
@@ -132,10 +133,12 @@ FTileIndex USRPGEnemyTurnPlanner::ChooseDestination(
 	Candidates.Add(Origin);
 
 	// 이동 후 플레이어를 조준 가능한 타일만 추림
+	// @note 자기 자신(Self)은 이동으로 자리를 비울 예정이므로 시야 차폐에서 제외.
+	//       제외하지 않으면 직선 후퇴 타일이 전부 자기 몸에 막혀 제자리 사격이 됨.
 	TArray<FTileIndex> Feasible;
 	for (const FTileIndex& Candidate : Candidates)
 	{
-		TArray<FTileIndex> Aimable = TileMap->GetAimableTiles(Candidate, AimRange, Skill->mAimPattern, Skill->mCanAimBoardActor, Skill->mIsIndirect);
+		TArray<FTileIndex> Aimable = TileMap->GetAimableTiles(Candidate, AimRange, Skill->mAimPattern, Skill->mCanAimBoardActor, Skill->mIsIndirect, /*Incoming*/nullptr, /*IgnoreBlocker*/Self);
 		if (Aimable.Contains(PlayerTile) == true)
 		{
 			Feasible.Add(Candidate);

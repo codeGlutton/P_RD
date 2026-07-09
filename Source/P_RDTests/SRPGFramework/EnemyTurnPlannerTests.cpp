@@ -3,6 +3,7 @@
  * @brief  USRPGEnemyTurnPlanner 유닛테스트
  * @details
  * 이동성향 3종(MoveClose/HoldRange/MoveAway) × 조준 가능/불가 2가지 엮어서 6가지 케이스 테스트.
+ * 추가로 직사 스킬 일직선 후퇴 시 자기 차폐로 제자리 사격하던 회귀 케이스(Case1-3) 포함.
  * @note
  * 장애물은 아직 구현체가 없어서 제외. 나중에 구현체가 나오면 유닛테스트에 추가 필요
  * @author 이문환
@@ -73,6 +74,7 @@ namespace
 
 	// @brief 적 유닛의 한 턴을 계획해 커맨드 목록 반환
 	// @param KeepAlive SkillComponent가 약참조라 GC 안당하도록 붙잡아두는 장치
+	// @param AimPattern 스킬 조준 패턴 (Cross/Star 직사는 시야 검사 경로를 태움)
 	TArray<TInstancedStruct<FSRPGCommand>> Plan(
 		UWorld* World,
 		TArray<UObject*>& KeepAlive,
@@ -82,7 +84,8 @@ namespace
 		int32 TileMapWidth,
 		int32 TileMapHeight,
 		FTileIndex EnemyIndex,
-		FTileIndex PlayerIndex)
+		FTileIndex PlayerIndex,
+		EAimPattern AimPattern = EAimPattern::Square)
 	{
 		// 타일맵 생성
 		UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
@@ -100,7 +103,7 @@ namespace
 
 		// 스킬 추가: 일반공격 계열
 		UStaticAttackSkillData* Skill = NewObject<UStaticAttackSkillData>(World);
-		Skill->mAimPattern = EAimPattern::Square;
+		Skill->mAimPattern = AimPattern;
 		Skill->mAimRangeDefaultValue = AimRange;
 		Skill->mCanAimBoardActor = true;
 		Skill->mIsIndirect = false;
@@ -223,6 +226,33 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 			FTileIndex(0, 1),
 			FTileIndex(9, 1));
 		CheckApproachNoCast(*this, Commands, TEXT("Case1-2"), FTileIndex(4, 1));
+	}
+
+	/**
+	 * Case1-3: 원거리(MoveAway) / 직사(Cross) / 플레이어와 일직선
+	 *   -> 후퇴 타일의 시야가 자기 자신에게 막히면 안 됨 (제자리 사격 회귀 방지)
+	 * 맵 (8x1): E(1,0) P(0,0)
+	 *   -> 사거리 최대 지점인 (4,0)으로 후퇴 후 스킬 사용
+	 */
+	AddInfo(TEXT("=== Case1-3: 원거리(MoveAway) / 직사 / 일직선 후퇴 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::MoveAway,
+			6, 4, 8, 1,
+			FTileIndex(1, 0),
+			FTileIndex(0, 0),
+			EAimPattern::Cross);
+		CheckTail(*this, Commands, TEXT("Case1-3"));
+		const FSRPGMoveCommand* Move = FindMoveCommand(Commands);
+		if (TestTrue(TEXT("[Case1-3] 이동커맨드 존재(제자리 사격이면 실패)"), Move != nullptr) &&
+			TestTrue(TEXT("[Case1-3] 경로 2칸 이상"), Move->mPathTileIndexes.Num() >= 2))
+		{
+			// 이동 경로 확인
+			const FTileIndex Dest = Move->mPathTileIndexes.Last();
+			TestTrue(TEXT("[Case1-3] 출발지=(1,0)"), Move->mPathTileIndexes[0] == FTileIndex(1, 0));
+			TestTrue(TEXT("[Case1-3] 목적지=(4,0)"), Dest == FTileIndex(4, 0));
+		}
+		TestTrue(TEXT("[Case1-3] 스킬커맨드 존재"), FindCast(Commands) != nullptr);
 	}
 
 	/**
