@@ -22,56 +22,13 @@ void UCombatTileMapHUDWidget::HandleEndTurnButtonClicked()
 
 void UCombatTileMapHUDWidget::RefreshDiceAssignmentText() const
 {
-	if (mDiceAssignmentText == nullptr)
+	// 주사위 배치 안내 문구("Tap a rolled die" 등) 영역은 표시하지 않기로 함(20260710 요청).
+	// 배치 상태는 주사위 색(진행중=노랑/완료=초록/미배치=회색)이 이미 전달한다.
+	if (mDiceAssignmentText != nullptr)
 	{
-		return;
+		mDiceAssignmentText->SetText(FText::GetEmpty());
+		mDiceAssignmentText->SetVisibility(ESlateVisibility::Collapsed);
 	}
-
-	// 실제 배치 상태일 때만 보이게 한다(유휴 안내문구는 표시하지 않음).
-	mDiceAssignmentText->SetVisibility(ESlateVisibility::HitTestInvisible);
-
-	// 선택된 주사위는 여러 개일 수 있다 — 개수와 합을 DTO(mIsSelected)에서 집계해 표시한다.
-	int32 SelectedCount = 0;
-	int32 SelectedSum = 0;
-	for (const FDiceViewData& DiceView : mDiceUIs)
-	{
-		if (DiceView.mIsSelected)
-		{
-			++SelectedCount;
-			SelectedSum += DiceView.mResultValue;
-		}
-	}
-
-	if (SelectedCount > 0 && mSelectedSkillIndex != INDEX_NONE)
-	{
-		mDiceAssignmentText->SetText(FText::Format(
-			LOCTEXT("DICE x{0} PLACED (SUM {1})\nTap dice to add or remove", "DICE x{0} PLACED (SUM {1})\nTap dice to add or remove"),
-			FText::AsNumber(SelectedCount), FText::AsNumber(SelectedSum)
-		));
-		return;
-	}
-
-	if (SelectedCount > 0)
-	{
-		mDiceAssignmentText->SetText(FText::Format(
-			LOCTEXT("SELECT SKILL FIRST\nDICE x{0} (SUM {1}) waiting", "SELECT SKILL FIRST\nDICE x{0} (SUM {1}) waiting"),
-			FText::AsNumber(SelectedCount), FText::AsNumber(SelectedSum)
-		));
-		return;
-	}
-
-	if (mSelectedSkillIndex != INDEX_NONE)
-	{
-		mDiceAssignmentText->SetText(FText::Format(
-			LOCTEXT("{0}\nTap a rolled die", "{0}\nTap a rolled die"),
-			GetOwnedSkillLabel(mSelectedSkillIndex)
-		));
-		return;
-	}
-
-	// 유휴 상태: 안내 문구 없이 비워 두고 접는다("SELECT SKILL then tap a die" 삭제).
-	mDiceAssignmentText->SetText(FText::GetEmpty());
-	mDiceAssignmentText->SetVisibility(ESlateVisibility::Collapsed);
 }
 
 #undef LOCTEXT_NAMESPACE
