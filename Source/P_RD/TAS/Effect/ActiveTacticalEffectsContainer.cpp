@@ -224,7 +224,15 @@ void FActiveTacticalEffectsContainer::CleanupAttributeAggregator(const FTactical
  */
 void FActiveTacticalEffectsContainer::OnAttributeAggregatorDirty(FTacticalAggregator* Aggregator, FTacticalAttribute Attribute)
 {
-    checkf(mAttributeAggregatorMap.FindChecked(Attribute).Get() == Aggregator, TEXT("속성에 대한 계산 객체가 동일하지 않음"));
+    // 전투 종료(패배 포함) 일괄 정리 중에는 CleanupAttributeAggregator로 맵에서 빠진 Aggregator가
+    // 뒤늦게 dirty를 쏠 수 있다. 이때 FindChecked는 assert로 즉사(패배 시 크래시 실측)하므로,
+    // 스테일 통지는 무시하고 반환한다. 정리 중이 아닌데 불일치하면 로직 오류이므로 경고만 남긴다.
+    const TSharedPtr<FTacticalAggregator>* RegisteredAggregator = mAttributeAggregatorMap.Find(Attribute);
+    if (RegisteredAggregator == nullptr || RegisteredAggregator->Get() != Aggregator)
+    {
+        UE_LOG(LogAttributeSetComp, Warning, TEXT("[%s] 맵에 없는(정리된) Aggregator의 dirty 통지 무시"), *Attribute.GetName());
+        return;
+    }
 
     const float NewCurrentValue = Aggregator->Evaluate();
     const float OldCurrentValue = mOwner->GetAttributeCurrentValue(Attribute);
