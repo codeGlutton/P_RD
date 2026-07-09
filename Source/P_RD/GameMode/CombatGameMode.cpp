@@ -144,14 +144,6 @@ namespace
 		}
 	}
 
-	bool IsUnitHpBarStatusEffectTag(const FGameplayTag& StatusTag)
-	{
-		return StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Agility)
-			|| StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification)
-			|| StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability)
-			|| StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness);
-	}
-
 	void ConvertFloatingLogUITypes(const FSRPGAttributeEffectEventLog& AttrLog, OUT EFloatingLogIconType& IconType, OUT EFloatingLogColorType& ColorType)
 	{
 		if (AttrLog.mEffectAttribute == UUnitAttributeSet::GetHPAttribute())
@@ -662,7 +654,7 @@ void ACombatGameMode::PushUnitUIData() const
 		UnitUIData.mStatusEffects.Reset();
 		for (const FGameplayTag& StatusTag : UnitUIData.mStatusTags)
 		{
-			if (IsUnitHpBarStatusEffectTag(StatusTag) == false)
+			if (StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect) == false)
 			{
 				continue;
 			}
