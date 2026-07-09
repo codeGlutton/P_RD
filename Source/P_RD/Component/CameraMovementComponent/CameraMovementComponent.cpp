@@ -3,6 +3,7 @@
 
 #include "Component/CameraMovementComponent/CameraMovementComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Pawn/Camera/CombatCameraPlane.h"
 #include "GameFramework/SpringArmComponent.h"
 
 // @note checkf(Camera) 할 것
@@ -29,6 +30,33 @@ void UCameraMovementComponent::BeginPlay()
 	mMoveClampingBoxCenter = GetOwner()->GetActorLocation();
 	mMoveClampingBoxCenter.Z = 0.f;
 
+	// ACombatCameraPlane을 생성합니다.
+	// ACombatCameraPlane은 카메라 조작을 위해서 반드시 필요한 액터입니다
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = GetOwner();
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	FVector SpawnPos = GetOwner()->GetActorLocation();
+	SpawnPos.Z = -500;
+
+	mCameraPlane = GetWorld()->SpawnActor<ACombatCameraPlane>(
+		ACombatCameraPlane::StaticClass(),
+		SpawnPos,
+		FRotator::ZeroRotator,
+		SpawnParams
+	);
+
+}
+
+void UCameraMovementComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	// 카메라가 제거 될 때 판도 같이 제거합니다.
+	if (mCameraPlane.IsValid())
+	{
+		mCameraPlane->Destroy();
+		mCameraPlane = nullptr;
+	}
+	Super::EndPlay(EndPlayReason);
 }
 
 
@@ -150,18 +178,22 @@ void UCameraMovementComponent::ZoomCamera_InstantAndMoveToViewportPosition_Insta
 	FVector StartTrace = WorldLocation; // 시작 지점
 	FVector EndTrace = StartTrace + (WorldDirection * 100000.0f);
 
-	// 채널 설정 (ECC_Visibility 등)
+	// CameraMove Channel을 가진 오브젝트와 충돌 체크를 진행합니다.
+	FCollisionObjectQueryParams ObjectParams;
+	ObjectParams.AddObjectTypesToQuery(ECC_GameTraceChannel3); 
+
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(GetOwner()); // 자기 자신은 충돌에서 제외
 
-	bool bViewPortHit = GetWorld()->LineTraceSingleByChannel(
+	bool bViewPortHit = GetWorld()->LineTraceSingleByObjectType(
 		ViewPortHitResult,
 		StartTrace,
 		EndTrace,
-		ECC_Visibility, // 충돌 채널
+		ObjectParams,
 		QueryParams
 	);
 
+	// 충돌되지 않았다면 취소
 	if (!bViewPortHit)
 		return;
 
@@ -182,11 +214,11 @@ void UCameraMovementComponent::ZoomCamera_InstantAndMoveToViewportPosition_Insta
 	StartTrace = WorldLocation; // 시작 지점
 	EndTrace = StartTrace + (WorldDirection * 100000.0f);
 
-	bViewPortHit = GetWorld()->LineTraceSingleByChannel(
+	bViewPortHit = GetWorld()->LineTraceSingleByObjectType(
 		ViewPortHitResult,
 		StartTrace,
 		EndTrace,
-		ECC_Visibility, // 충돌 채널
+		ObjectParams,
 		QueryParams
 	);
 
@@ -259,15 +291,18 @@ void UCameraMovementComponent::MoveToViewportPosition_Smooth(FVector2D ViewPortP
 	FVector StartTrace = WorldLocation; // 시작 지점
 	FVector EndTrace = StartTrace + (WorldDirection * 100000.0f);
 
-	// 채널 설정 (ECC_Visibility 등)
+	// CameraMove Channel을 가진 오브젝트와 충돌 체크를 진행합니다.
+	FCollisionObjectQueryParams ObjectParams;
+	ObjectParams.AddObjectTypesToQuery(ECC_GameTraceChannel3);
+
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(GetOwner()); // 자기 자신은 충돌에서 제외
 
-	bool bViewPortHit = GetWorld()->LineTraceSingleByChannel(
+	bool bViewPortHit = GetWorld()->LineTraceSingleByObjectType(
 		ViewPortHitResult,
 		StartTrace,
 		EndTrace,
-		ECC_Visibility, // 충돌 채널
+		ObjectParams, // 충돌 채널
 		QueryParams
 	);
 
@@ -320,15 +355,18 @@ void UCameraMovementComponent::DragMoveToViewportPosition_Instant(FVector2D PreV
 	FVector StartTrace = PreWorldLocation; // 시작 지점
 	FVector EndTrace = StartTrace + (PreWorldDirection * 100000.0f);
 
-	// 채널 설정 (ECC_Visibility 등)
+	// CameraMove Channel을 가진 오브젝트와 충돌 체크를 진행합니다.
+	FCollisionObjectQueryParams ObjectParams;
+	ObjectParams.AddObjectTypesToQuery(ECC_GameTraceChannel3);
+
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(GetOwner()); // 자기 자신은 충돌에서 제외
 
-	bool bViewPortHit = GetWorld()->LineTraceSingleByChannel(
+	bool bViewPortHit = GetWorld()->LineTraceSingleByObjectType(
 		ViewPortHitResult,
 		StartTrace,
 		EndTrace,
-		ECC_Visibility, // 충돌 채널
+		ObjectParams, // 충돌 채널
 		QueryParams
 	);
 
@@ -347,13 +385,13 @@ void UCameraMovementComponent::DragMoveToViewportPosition_Instant(FVector2D PreV
 
 	// 채널 설정 (ECC_Visibility 등)
 	//QueryParams;
-	QueryParams.AddIgnoredActor(GetOwner()); // 자기 자신은 충돌에서 제외
+	//QueryParams.AddIgnoredActor(GetOwner()); // 자기 자신은 충돌에서 제외
 
-	bViewPortHit = GetWorld()->LineTraceSingleByChannel(
+	bViewPortHit = GetWorld()->LineTraceSingleByObjectType(
 		ViewPortHitResult,
 		StartTrace,
 		EndTrace,
-		ECC_Visibility, // 충돌 채널
+		ObjectParams, // 충돌 채널
 		QueryParams
 	);
 

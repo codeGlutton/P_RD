@@ -6,6 +6,7 @@
 #include "RDUserWidget.generated.h"
 
 class UButton;
+class USoundBase;
 
 /**
  * @brief UI 열기 애니메이션이 끝났을 때 호출되는 콜백
@@ -213,6 +214,10 @@ private:
 
 	/** @brief mActivePressCompanions의 원래 색(복원용). 인덱스 대응. */
 	TArray<FLinearColor> mActivePressCompanionBaseColors;
+
+	/** @brief 공용 버튼 클릭 사운드(생성자에서 하드레퍼런스 로드). 버튼 스타일 PressedSlateSound에 주입한다. */
+	UPROPERTY(Transient)
+	TObjectPtr<USoundBase> mCommonButtonPressSound;
 
 protected:
 	/**

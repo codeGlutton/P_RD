@@ -4,6 +4,7 @@
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Materials/MaterialInterface.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Algo/Reverse.h"
 
@@ -52,7 +53,7 @@ ATileMap::ATileMap()
 
 	// 하이라이트 표시용 머티리얼: PerInstanceCustomData(RGBA)를 읽어 타일 색에 합성한다.
 	// M_TileTransparent는 반투명이라 타일맵이 배경에 깔릴 때 바닥이 비치고, 남색 바탕이 없어 하이라이트 색 구분이 잘 된다.
-	// 없으면 엔진 기본 머티리얼로 렌더되어 하이라이트(Aim/Select/Effect)가 안 보인다. (경로 화살표/마커도 아래에서 이 머티리얼 재사용)
+	// 없으면 엔진 기본 머티리얼로 렌더되어 하이라이트(Aim/Select/Effect)가 안 보인다.
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> TileTransparentMatFinder(TEXT("/Game/SVN/InSideAsset/Material/M_TileTransparent.M_TileTransparent"));
 	if (TileTransparentMatFinder.Succeeded())
 	{
@@ -69,6 +70,12 @@ ATileMap::ATileMap()
 
 	// 영향 범위: 빨간색 (아래 레이어 ↔ 자기 색을 펄스로 보간)
 	mEffectStyle.mColor = FLinearColor(1.0f, 0.1f, 0.1f, 0.6f);
+
+	// 기본 타일 구분색
+	mTileBaseStyle.mColor = FLinearColor(0.05f, 0.05f, 0.05f, 0.25f);
+
+	// 테두리 기본값: 짙은 회색 (머티리얼에 BorderColor/BorderWidth 파라미터가 있어야 표시됨)
+	mTileBorderStyle.mColor = FLinearColor(0.2f, 0.2f, 0.2f, 0.8f);
 
 	// 경로 화살표/도착 마커 컴포넌트 생성 (장식용 — 타일 트레이스 방해 않도록 충돌 없음)
 	mPathArrowComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("PathArrow"));
@@ -97,16 +104,18 @@ ATileMap::ATileMap()
 		mPathEndComponent->SetStaticMesh(mPathEndMesh);
 	}
 
-	// 화살표/마커도 타일과 동일한 반투명 하이라이트 머티리얼(custom data RGBA 합성) 재사용 — SetMovePath에서 컴포넌트에 적용
-	if (TileTransparentMatFinder.Succeeded())
+	// 화살표/마커는 전용 발광 머티리얼(custom data RGBA + EmissiveBoost) 사용 — SetMovePath에서 컴포넌트에 적용
+	// 타일 머티리얼(M_TileTransparent)과 분리해 타일 쪽 테두리 파라미터의 영향 없이 블룸으로 도드라지게 함
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> PathIndicatorMatFinder(TEXT("/Game/SVN/InSideAsset/Material/M_PathIndicator.M_PathIndicator"));
+	if (PathIndicatorMatFinder.Succeeded())
 	{
-		mPathArrowMaterial = TileTransparentMatFinder.Object;
-		mPathEndMaterial = TileTransparentMatFinder.Object;
+		mPathArrowMaterial = PathIndicatorMatFinder.Object;
+		mPathEndMaterial = PathIndicatorMatFinder.Object;
 	}
 
-	// 경로 색 기본값: 화살표 호박색 반투명, 도착 마커 녹색 반투명
-	mPathArrowStyle.mColor = FLinearColor(0.9f, 0.7f, 0.2f, 0.9f);
-	mPathEndStyle.mColor = FLinearColor(0.1f, 1.0f, 0.3f, 0.9f);
+	// 경로 화살표와 도착지 화살표 기본 값
+	mPathArrowStyle.mColor = FLinearColor(0.9f, 0.45f, 0.0f, 0.95f);
+	mPathEndStyle.mColor = FLinearColor(0.9f, 0.45f, 0.0f, 0.95f);
 
 	// 생성자에서 만든 기본 모델에 표시 델리깃을 임시 바인딩 (런타임 모델 매핑 시 재호출)
 	BindModelDelegates();
@@ -199,6 +208,47 @@ void ATileMap::BeginPlay()
 #endif
 }
 
+#if WITH_EDITOR
+void ATileMap::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	// 구조체 내부(mColor 등) 편집도 소유 멤버 이름으로 판별
+	const FName MemberName = PropertyChangedEvent.MemberProperty != nullptr ?
+		PropertyChangedEvent.MemberProperty->GetFName() : PropertyChangedEvent.GetPropertyName();
+
+	// 배치 계열: 그리드 인스턴스 재생성 + 배치된 액터 위치 재통지 (크기가 바뀌면 테두리 cm→UV 환산도 함께 갱신됨)
+	if (MemberName == GET_MEMBER_NAME_CHECKED(ATileMap, mTileSize) ||
+		MemberName == GET_MEMBER_NAME_CHECKED(ATileMap, mTileVisualScale) ||
+		MemberName == GET_MEMBER_NAME_CHECKED(ATileMap, mTileMesh) ||
+		MemberName == GET_MEMBER_NAME_CHECKED(ATileMap, mTileMaterial))
+	{
+		RefreshTileVisuals();
+		if (mModel != nullptr)
+		{
+			mModel->RefreshActorPlacements();
+		}
+	}
+	// 색 계열: 전 타일 표시만 재합성 (배치 불변)
+	else if (MemberName == GET_MEMBER_NAME_CHECKED(ATileMap, mTileBaseStyle) ||
+		MemberName == GET_MEMBER_NAME_CHECKED(ATileMap, mAimStyle) ||
+		MemberName == GET_MEMBER_NAME_CHECKED(ATileMap, mSelectStyle) ||
+		MemberName == GET_MEMBER_NAME_CHECKED(ATileMap, mEffectStyle))
+	{
+		for (int32 Index = 0; Index < mHighlights.Num(); ++Index)
+		{
+			RefreshTileCustomData(Index);
+		}
+	}
+	// 테두리 계열: MID 파라미터만 갱신
+	else if (MemberName == GET_MEMBER_NAME_CHECKED(ATileMap, mTileBorderStyle) ||
+		MemberName == GET_MEMBER_NAME_CHECKED(ATileMap, mTileBorderWidth))
+	{
+		ApplyBorderParameters();
+	}
+}
+#endif
+
 void ATileMap::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
@@ -224,18 +274,28 @@ void ATileMap::RebuildTileInstances()
 	// 강조 표시 상태도 같은 크기로 초기화 (전부 None)
 	mHighlights.Init(ETileHighlightFlag::None, FMath::Max(0, mModel->GetWidth() * mModel->GetHeight()));
 
+	// 시각 요소(인스턴스/머티리얼/타일 색) 재생성
+	RefreshTileVisuals();
+}
+
+void ATileMap::RefreshTileVisuals()
+{
 	// 컴포넌트가 없으면 처리 불가
 	if (mTileMeshComponent == nullptr)
 	{
 		return;
 	}
 
-	// 에디터에서 교체된 메시/머티리얼 반영
+	// 에디터에서 교체된 메시 반영
 	mTileMeshComponent->SetStaticMesh(mTileMesh);
+
+	// 테두리 파라미터를 원본 에셋 수정 없이 푸시하기 위한 타일 전용 MID 생성 후 적용
 	if (mTileMaterial != nullptr)
 	{
-		mTileMeshComponent->SetMaterial(0, mTileMaterial);
+		mTileMID = UMaterialInstanceDynamic::Create(mTileMaterial, this);
+		mTileMeshComponent->SetMaterial(0, mTileMID);
 	}
+	ApplyBorderParameters();
 
 	// 타일별 하이라이트 RGBA를 담을 custom data 슬롯 4개 (0=R,1=G,2=B,3=A)
 	mTileMeshComponent->SetNumCustomDataFloats(4);
@@ -264,6 +324,29 @@ void ATileMap::RebuildTileInstances()
 			mTileMeshComponent->AddInstance(InstanceTransform, /*bWorldSpace=*/false);
 		}
 	}
+
+	// 새 인스턴스에 기본 구분색과 하이라이트를 다시 칠함
+	for (int32 Index = 0; Index < mHighlights.Num(); ++Index)
+	{
+		RefreshTileCustomData(Index);
+	}
+}
+
+void ATileMap::ApplyBorderParameters()
+{
+	// 테두리 정보가 없으면 바로 리턴
+	if (mTileMID == nullptr)
+	{
+		return;
+	}
+
+	// 타일은 mTileVisualScale만큼 축소/확대 되므로
+	// cm 단위로 설정한 테두리 굵기도 실제 그려지는 타일판 크기에 맞춰 재계산
+	const float TileVisualSize = mTileSize * mTileVisualScale;
+	const float BorderWidthUV = TileVisualSize > 0.0f ? FMath::Clamp(mTileBorderWidth / TileVisualSize, 0.0f, 0.5f) : 0.0f;
+
+	mTileMID->SetVectorParameterValue(TEXT("BorderColor"), mTileBorderStyle.mColor);
+	mTileMID->SetScalarParameterValue(TEXT("BorderWidth"), BorderWidthUV);
 }
 
 float ATileMap::GetTileSize() const
@@ -348,8 +431,8 @@ void ATileMap::RefreshTileCustomData(int32 LinearIndex)
 		return FLinearColor(C.R * C.A, C.G * C.A, C.B * C.A, C.A);
 	};
 
-	// 최종색 (기본=타일만 보이는 투명)
-	FLinearColor Accum(0.0f, 0.0f, 0.0f, 0.0f);
+	// 최종색 (기본=머티리얼 바탕 위에 기본 구분색만 얹은 상태)
+	FLinearColor Accum = Premultiply(mTileBaseStyle);
 
 	if (bHasSelect)
 	{
@@ -359,8 +442,8 @@ void ATileMap::RefreshTileCustomData(int32 LinearIndex)
 	else if (bHasEffect)
 	{
 		// 펄스: [아래 레이어 표시] ↔ [Effect 자기 색] 크로스페이드 (둘 다 타일 위)
-		// 저점 = Aim 있으면 Aim 색, 없으면 타일(투명) / 고점 = Effect 색
-		const FLinearColor Low  = bHasAim ? Premultiply(mAimStyle) : FLinearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		// 저점 = Aim 있으면 Aim 색, 없으면 기본 구분색 / 고점 = Effect 색
+		const FLinearColor Low  = bHasAim ? Premultiply(mAimStyle) : Premultiply(mTileBaseStyle);
 		const FLinearColor High = Premultiply(mEffectStyle);
 
 		// 펄스 파동(0~1)으로 저점↔고점 보간
