@@ -158,6 +158,111 @@ void UCombatTileMapHUDWidget::RefreshSkinValueLabels() const
 	}
 }
 
+/** @brief 스크린 좌표가 LV 값 마커 위인가 — 렌더된 마커의 캐시 지오메트리로 판정(스킬 레일 판정과 동일 방식).
+    마커(TextBlock)가 작아 누르기 어려우므로 사방 여유(패딩)를 더해 판정한다. */
+bool UCombatTileMapHUDWidget::IsScreenPositionOverLevelValue(const FVector2D& ScreenPosition) const
+{
+	if (WidgetTree == nullptr || IsDesignerSkinActive() == false)
+	{
+		return false;
+	}
+
+	const UWidget* LevelText = WidgetTree->FindWidget(TEXT("HUD_M_lv_value"));
+	if (LevelText == nullptr || LevelText->IsVisible() == false)
+	{
+		return false;
+	}
+
+	const FGeometry& LevelGeometry = LevelText->GetCachedGeometry();
+	if (LevelGeometry.GetLocalSize().X <= 0.0f || LevelGeometry.GetLocalSize().Y <= 0.0f)
+	{
+		return false;
+	}
+
+	// 절대(스크린) 좌표 기준 사각형에 터치 여유 패딩을 더한다.
+	constexpr float TouchPadding = 24.0f;
+	const FVector2D TopLeft = LevelGeometry.GetAbsolutePosition();
+	const FVector2D BottomRight = TopLeft + LevelGeometry.GetAbsoluteSize();
+	return ScreenPosition.X >= TopLeft.X - TouchPadding && ScreenPosition.X <= BottomRight.X + TouchPadding
+		&& ScreenPosition.Y >= TopLeft.Y - TouchPadding && ScreenPosition.Y <= BottomRight.Y + TouchPadding;
+}
+
+void UCombatTileMapHUDWidget::EnsureExpHoldPanel()
+{
+	if (mExpHoldPanel != nullptr || WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	// LV 마커의 캔버스 슬롯을 기준으로 '마커 바로 아래'에 회색 패널을 놓는다(손가락이 LV를 덮어도 보이는 위치).
+	UTextBlock* LevelText = Cast<UTextBlock>(WidgetTree->FindWidget(TEXT("HUD_M_lv_value")));
+	UCanvasPanelSlot* LevelSlot = LevelText != nullptr ? Cast<UCanvasPanelSlot>(LevelText->Slot) : nullptr;
+	UCanvasPanel* ParentCanvas = LevelText != nullptr ? Cast<UCanvasPanel>(LevelText->GetParent()) : nullptr;
+	if (LevelSlot == nullptr || ParentCanvas == nullptr)
+	{
+		return;
+	}
+
+	UBorder* Panel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("HUD_ExpHoldPanel"));
+	UTextBlock* PanelText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("HUD_ExpHoldText"));
+	if (Panel == nullptr || PanelText == nullptr)
+	{
+		return;
+	}
+
+	// 반투명 회색 배경 + 흰 글자(윤곽선). 표시 전까지는 접어 둔다.
+	Panel->SetBrushColor(FLinearColor(0.10f, 0.10f, 0.12f, 0.88f));
+	Panel->SetPadding(FMargin(12.0f, 6.0f));
+	Panel->SetVisibility(ESlateVisibility::Collapsed);
+
+	FSlateFontInfo PanelFont = PanelText->GetFont();
+	PanelFont.Size = 20;
+	PanelFont.OutlineSettings.OutlineSize = 2;
+	PanelFont.OutlineSettings.OutlineColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.9f);
+	PanelText->SetFont(PanelFont);
+	PanelText->SetJustification(ETextJustify::Center);
+	PanelText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+	Panel->SetContent(PanelText);
+
+	if (UCanvasPanelSlot* PanelSlot = ParentCanvas->AddChildToCanvas(Panel))
+	{
+		const FMargin LevelOffsets = LevelSlot->GetOffsets();
+		PanelSlot->SetAnchors(LevelSlot->GetAnchors());
+		PanelSlot->SetAlignment(FVector2D(0.5f, 0.0f));
+		// LV 마커 가로 중앙 기준, 마커 아래(높이+10px)에서 시작. 크기는 내용에 맞춤.
+		PanelSlot->SetAutoSize(true);
+		PanelSlot->SetPosition(FVector2D(
+			LevelOffsets.Left + LevelOffsets.Right * 0.5f,
+			LevelOffsets.Top + LevelOffsets.Bottom + 10.0f));
+		PanelSlot->SetZOrder(60);   // 탑바 요소들 위에 뜨는 임시 팝업.
+	}
+
+	mExpHoldPanel = Panel;
+	mExpHoldText = PanelText;
+}
+
+void UCombatTileMapHUDWidget::SetExpHoldPanelVisible(bool bVisible)
+{
+	if (bVisible)
+	{
+		EnsureExpHoldPanel();
+	}
+	if (mExpHoldPanel == nullptr)
+	{
+		return;
+	}
+
+	if (bVisible && mExpHoldText != nullptr && mCombatUIModel != nullptr)
+	{
+		const FPlayerMetaUI& Meta = mCombatUIModel->GetPlayerMeta();
+		mExpHoldText->SetText(FText::Format(
+			NSLOCTEXT("CombatTileMapHUDWidget", "ExpHoldPanel", "EXP {0}/{1}"),
+			FText::AsNumber(FMath::RoundToInt(Meta.mExp)), FText::AsNumber(FMath::RoundToInt(Meta.mMaxExp))));
+	}
+
+	mExpHoldPanel->SetVisibility(bVisible ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+}
+
 void UCombatTileMapHUDWidget::RefreshMoveButton() const
 {
 	// MOVE 라벨은 WBP TextBlock(HUD_M_btn_move_label)이 소유한다. C++는 이동력 수치만 채운다.

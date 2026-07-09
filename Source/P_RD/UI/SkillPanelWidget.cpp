@@ -60,5 +60,6 @@ int32 USkillPanelWidget::GetCarouselItemDisplayCount() const
 
 void USkillPanelWidget::HandleCarouselSelectionChanged(int32 PreviousIndex, int32 NewIndex)
 {
-	ShowSkillDetail(NewIndex);
+	// 스킬 설명(상세 모드)은 표시하지 않기로 함(20260710 요청) — 선택 변경 시 목록 상태만 유지한다.
+	// 상세가 다시 필요해지면 ShowSkillDetail(NewIndex) 호출을 복원하면 된다.
 }

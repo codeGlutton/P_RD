@@ -249,6 +249,15 @@ private:
 	/** @brief 디자이너 스킨 시, concept value 칸(HUD_M_lv/hp/gold_value 앵커)에 Lv/HP/Gold 텍스트를 칸 크기에 맞춰 그린다. */
 	void RefreshSkinValueLabels() const;
 
+	/** @brief 스크린 좌표가 LV 값 마커(HUD_M_lv_value) 위인지 지오메트리로 판정한다(스킬 레일 판정과 동일 방식). */
+	bool IsScreenPositionOverLevelValue(const FVector2D& ScreenPosition) const;
+
+	/** @brief LV 꾹 누름 동안 표시할 경험치 회색 패널을 1회 생성한다(LV 마커 아래 — 손가락에 안 가리는 위치). */
+	void EnsureExpHoldPanel();
+
+	/** @brief 경험치 패널 표시/숨김. 표시 시 현재 메타(mExp/mMaxExp)로 텍스트를 채운다. */
+	void SetExpHoldPanelVisible(bool bVisible);
+
 	/** @brief 장비 슬롯 칩(탑바 좌측 하단)을 뷰모델 장비 뷰로 다시 만든다. */
 	void RebuildEquipmentBar();
 
@@ -518,6 +527,15 @@ private:
 	/** @brief 팝업 보드 Texture2D */
 	UPROPERTY(Transient)
 	TObjectPtr<UTexture2D> mDiceRollBoardTexture;
+
+	/** @brief LV 칸을 누르는 중인가 — true인 동안 LV 아래 경험치 회색 패널을 띄운다. */
+	bool mLevelValueTouched = false;
+
+	/** @brief LV 꾹 누름 동안 뜨는 경험치 회색 패널(런타임 생성, LV 마커 아래). */
+	UPROPERTY(Transient)
+	TObjectPtr<UBorder> mExpHoldPanel;
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mExpHoldText;
 
 	/** @brief 여러 주사위를 하나의 숨겨진 물리 테이블에서 굴리는 캡처 액터 */
 	UPROPERTY(Transient)

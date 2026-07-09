@@ -11,6 +11,15 @@ FReply UCombatTileMapHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeome
 	}
 
 	const FVector2D ScreenPosition = InMouseEvent.GetScreenSpacePosition();
+
+	// LV 칸 누름: 누르는 동안 LV 아래 회색 패널로 경험치를 보여준다(손가락이 LV를 가려도 보이게). 월드 터치로 넘기지 않는다.
+	if (IsScreenPositionOverLevelValue(ScreenPosition))
+	{
+		mLevelValueTouched = true;
+		SetExpHoldPanelVisible(true);
+		return FReply::Handled();
+	}
+
 	const bool bClosedSkillDetail = HideSkillDetailIfClickedOutside(ScreenPosition);
 	const int32 SkillIndex = FindSkillRailIndexAtScreenPosition(ScreenPosition);
 	if (SkillIndex == INDEX_NONE)
@@ -34,7 +43,20 @@ FReply UCombatTileMapHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeome
 
 FReply UCombatTileMapHUDWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton || mSkillPressing == false)
+	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton)
+	{
+		return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+	}
+
+	// LV 칸에서 손을 떼면 경험치 패널을 닫는다.
+	if (mLevelValueTouched)
+	{
+		mLevelValueTouched = false;
+		SetExpHoldPanelVisible(false);
+		return FReply::Handled();
+	}
+
+	if (mSkillPressing == false)
 	{
 		return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
 	}
@@ -54,6 +76,15 @@ FReply UCombatTileMapHUDWidget::NativeOnMouseButtonUp(const FGeometry& InGeometr
 FReply UCombatTileMapHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent)
 {
 	const FVector2D ScreenPosition = InGestureEvent.GetScreenSpacePosition();
+
+	// LV 칸 누름: 누르는 동안 LV 아래 회색 패널로 경험치를 보여준다(손가락이 LV를 가려도 보이게). 월드 터치로 넘기지 않는다.
+	if (IsScreenPositionOverLevelValue(ScreenPosition))
+	{
+		mLevelValueTouched = true;
+		SetExpHoldPanelVisible(true);
+		return FReply::Handled();
+	}
+
 	const bool bClosedSkillDetail = HideSkillDetailIfClickedOutside(ScreenPosition);
 	const int32 SkillIndex = FindSkillRailIndexAtScreenPosition(ScreenPosition);
 	if (SkillIndex == INDEX_NONE)
@@ -77,6 +108,14 @@ FReply UCombatTileMapHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry
 
 FReply UCombatTileMapHUDWidget::NativeOnTouchEnded(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent)
 {
+	// LV 칸에서 손을 떼면 경험치 패널을 닫는다.
+	if (mLevelValueTouched)
+	{
+		mLevelValueTouched = false;
+		SetExpHoldPanelVisible(false);
+		return FReply::Handled();
+	}
+
 	if (mSkillPressing == false)
 	{
 		return Super::NativeOnTouchEnded(InGeometry, InGestureEvent);
