@@ -3,6 +3,8 @@
  * @brief  USRPGEnemyTurnPlanner 유닛테스트
  * @details
  * 이동성향 3종(MoveClose/HoldRange/MoveAway) × 조준 가능/불가 2가지 엮어서 6가지 케이스 테스트.
+ * 추가로 직사 스킬 일직선 후퇴 시 자기 차폐로 제자리 사격하던 회귀 케이스(Case1-3),
+ * 다중 스킬 랜덤 선택 케이스(Case4-1) 포함.
  * @note
  * 장애물은 아직 구현체가 없어서 제외. 나중에 구현체가 나오면 유닛테스트에 추가 필요
  * @author 이문환
@@ -71,8 +73,26 @@ namespace
 		return nullptr;
 	}
 
+	// @brief 테스트용 일반공격 스킬 생성 (KeepAlive에 등록해 GC 방지)
+	UStaticAttackSkillData* MakeSkill(UWorld* World, TArray<UObject*>& KeepAlive, EAimPattern AimPattern, int32 AimRange)
+	{
+		UStaticAttackSkillData* Skill = NewObject<UStaticAttackSkillData>(World);
+		Skill->mAimPattern = AimPattern;
+		Skill->mAimRangeDefaultValue = AimRange;
+		Skill->mCanAimBoardActor = true;
+		Skill->mIsIndirect = false;
+		Skill->mEffectPattern = EEffectPattern::Single;
+		Skill->mEffectAreaDefaultValue = 0;
+		Skill->mIsPenetration = false;
+		Skill->AddToRoot();
+		KeepAlive.Add(Skill);
+		return Skill;
+	}
+
 	// @brief 적 유닛의 한 턴을 계획해 커맨드 목록 반환
 	// @param KeepAlive SkillComponent가 약참조라 GC 안당하도록 붙잡아두는 장치
+	// @param AimPattern 스킬 조준 패턴 (Cross/Star 직사는 시야 검사 경로를 태움)
+	// @param SecondSkillAimRange 슬롯 1에 장착할 Square 스킬의 사거리 (0이면 미장착. 스킬 랜덤 선택 검증용)
 	TArray<TInstancedStruct<FSRPGCommand>> Plan(
 		UWorld* World,
 		TArray<UObject*>& KeepAlive,
@@ -82,7 +102,9 @@ namespace
 		int32 TileMapWidth,
 		int32 TileMapHeight,
 		FTileIndex EnemyIndex,
-		FTileIndex PlayerIndex)
+		FTileIndex PlayerIndex,
+		EAimPattern AimPattern = EAimPattern::Square,
+		int32 SecondSkillAimRange = 0)
 	{
 		// 타일맵 생성
 		UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
@@ -99,24 +121,22 @@ namespace
 		Enemy->SetMovePoint(MoveRange);
 
 		// 스킬 추가: 일반공격 계열
-		UStaticAttackSkillData* Skill = NewObject<UStaticAttackSkillData>(World);
-		Skill->mAimPattern = EAimPattern::Square;
-		Skill->mAimRangeDefaultValue = AimRange;
-		Skill->mCanAimBoardActor = true;
-		Skill->mIsIndirect = false;
-		Skill->mEffectPattern = EEffectPattern::Single;
-		Skill->mEffectAreaDefaultValue = 0;
-		Skill->mIsPenetration = false;
-		Skill->AddToRoot();
-		KeepAlive.Add(Skill);
-		Enemy->GetSkillComponentModel()->SetSkill(0, Skill);
+		Enemy->GetSkillComponentModel()->SetSkill(0, MakeSkill(World, KeepAlive, AimPattern, AimRange));
+		// 두 번째 스킬(옵션): 스킬 랜덤 선택 검증용
+		if (SecondSkillAimRange > 0)
+		{
+			Enemy->GetSkillComponentModel()->SetSkill(1, MakeSkill(World, KeepAlive, EAimPattern::Square, SecondSkillAimRange));
+		}
 
 		// 플레이어유닛과 적유닛 배치
 		TileMap->PlaceActor(FTileTransform(PlayerIndex), Player);
 		TileMap->PlaceActor(FTileTransform(EnemyIndex), Enemy);
 
+		// 스킬 랜덤 선택용 고정 시드 스트림 (테스트 결정성 보장)
+		const FRandomStream Stream(20260710);
+
 		// AI 돌려서(ㅋㅋ) 적유닛의 예상커맨드 획득
-		return USRPGEnemyTurnPlanner::PlanTurn(Enemy, Player, TileMap);
+		return USRPGEnemyTurnPlanner::PlanTurn(Enemy, Player, TileMap, Stream);
 	}
 
 	// @brief 커맨드가 비어있지 않고, 마지막은 항상 턴 종료인 지 검증
@@ -226,6 +246,33 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	}
 
 	/**
+	 * Case1-3: 원거리(MoveAway) / 직사(Cross) / 플레이어와 일직선
+	 *   -> 후퇴 타일의 시야가 자기 자신에게 막히면 안 됨 (제자리 사격 회귀 방지)
+	 * 맵 (8x1): E(1,0) P(0,0)
+	 *   -> 사거리 최대 지점인 (4,0)으로 후퇴 후 스킬 사용
+	 */
+	AddInfo(TEXT("=== Case1-3: 원거리(MoveAway) / 직사 / 일직선 후퇴 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::MoveAway,
+			6, 4, 8, 1,
+			FTileIndex(1, 0),
+			FTileIndex(0, 0),
+			EAimPattern::Cross);
+		CheckTail(*this, Commands, TEXT("Case1-3"));
+		const FSRPGMoveCommand* Move = FindMoveCommand(Commands);
+		if (TestTrue(TEXT("[Case1-3] 이동커맨드 존재(제자리 사격이면 실패)"), Move != nullptr) &&
+			TestTrue(TEXT("[Case1-3] 경로 2칸 이상"), Move->mPathTileIndexes.Num() >= 2))
+		{
+			// 이동 경로 확인
+			const FTileIndex Dest = Move->mPathTileIndexes.Last();
+			TestTrue(TEXT("[Case1-3] 출발지=(1,0)"), Move->mPathTileIndexes[0] == FTileIndex(1, 0));
+			TestTrue(TEXT("[Case1-3] 목적지=(4,0)"), Dest == FTileIndex(4, 0));
+		}
+		TestTrue(TEXT("[Case1-3] 스킬커맨드 존재"), FindCast(Commands) != nullptr);
+	}
+
+	/**
 	 * Case2-1: 등거리(HoldRange) / 조준 가능
 	 *   -> 현재위치에서 조준되므로 이동없음 + 스킬사용
 	 * 맵 (6x3): E(2,1) P(3,1)
@@ -294,6 +341,30 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 			FTileIndex(0, 1),
 			FTileIndex(9, 1));
 		CheckApproachNoCast(*this, Commands, TEXT("Case3-2"), FTileIndex(4, 1));
+	}
+
+	/**
+	 * Case4-1: 다중 스킬 / 둘 다 조준 가능
+	 *   -> 장착된 스킬 중 하나가 랜덤 선택되어 시전 (어느 쪽이든 유효 슬롯이어야 함)
+	 * 맵 (6x3): E(2,1) P(3,1), 슬롯0 사거리1 + 슬롯1 사거리2 (둘 다 제자리에서 조준 가능)
+	 *   -> 이동커맨드 없고, 스킬 인덱스는 0 또는 1
+	 */
+	AddInfo(TEXT("=== Case4-1: 다중 스킬 / 랜덤 선택 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::HoldRange,
+			3, 1, 6, 3,
+			FTileIndex(2, 1),
+			FTileIndex(3, 1),
+			EAimPattern::Square,
+			/*SecondSkillAimRange*/2);
+		CheckTail(*this, Commands, TEXT("Case4-1"));
+		TestTrue(TEXT("[Case4-1] 이동커맨드 없음(현재위치에서 스킬 사용 가능)"), FindMoveCommand(Commands) == nullptr);
+		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
+		if (TestTrue(TEXT("[Case4-1] 스킬커맨드 존재"), Cast != nullptr))
+		{
+			TestTrue(TEXT("[Case4-1] 스킬 인덱스는 장착 슬롯(0 또는 1)"), Cast->mSkillIndex == 0 || Cast->mSkillIndex == 1);
+		}
 	}
 
 	// GC 안당하려고 KeepAlive에 마달아놨던 SkillComponent 연결 해제 -> GC 대상

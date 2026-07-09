@@ -19,7 +19,8 @@
 TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	UEnemyUnitModel* Enemy,
 	UUnitModel* Player,
-	const UTileMapModel* TileMap)
+	const UTileMapModel* TileMap,
+	const FRandomStream& EventStream)
 {
 	TArray<TInstancedStruct<FSRPGCommand>> Commands;
 	{
@@ -49,15 +50,33 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		return Commands;
 	}
 
-	// 사거리를 알기 위해 스킬 정보 조회 (슬롯 0의 시그니처 스킬 사용)
+	// 장착된 스킬 슬롯 인덱스 수집
 	// @note 스킬 슬롯은 고정 크기로 미리 확보되므로, 개수가 아니라 슬롯의 데이터 유무로 판단
-	const int32 SkillIndex = 0;
 	const TArray<FSkillEntry>& Skills = SkillComp->GetSkills();
-	const UStaticSkillData* Skill = Skills.IsValidIndex(SkillIndex) ? Skills[SkillIndex].mData : nullptr;
-	// 슬롯이 비어있으면(스킬 미장착) 할 게 없으므로 턴 종료
-	if (Skill == nullptr)
+	TArray<int32> EquippedIndexes;
+	for (int32 Index = 0; Index < Skills.Num(); ++Index)
+	{
+		if (Skills[Index].mData != nullptr)
+		{
+			EquippedIndexes.Add(Index);
+		}
+	}
+	// 모든 슬롯이 비어있으면(스킬 미장착) 할 게 없으므로 턴 종료
+	if (EquippedIndexes.Num() == 0)
 	{
 		return Commands;
+	}
+
+	// 사용할 스킬을 랜덤으로 하나 선택. 이후 이동/시전 판단은 이 스킬의 사거리 기준
+	// @note 시뮬/라이브 동일 결과 보장을 위해 반드시 룸의 이벤트 스트림에서 뽑아야 함
+	const int32 SkillIndex = EquippedIndexes[EventStream.RandRange(0, EquippedIndexes.Num() - 1)];
+	const UStaticSkillData* Skill = Skills[SkillIndex].mData;
+
+	// 스킬이 여러 개일 때만 어떤 스킬이 뽑혔는지 확인용 로그
+	if (EquippedIndexes.Num() >= 2)
+	{
+		UE_LOG(LogRD, Log, TEXT("적 AI 스킬 랜덤 선택: %s(ID=%d), 후보 %d개 중 슬롯 %d (%s)"),
+			*GetNameSafe(Enemy), Enemy->GetModelId(), EquippedIndexes.Num(), SkillIndex, *GetNameSafe(Skill));
 	}
 
 	const FTileIndex Origin = Enemy->GetTileTransform().mIndex;
@@ -72,7 +91,7 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 
 	// 목적지 결정 (이동 성향 기반)
 	bool CanCast = false;
-	const FTileIndex Dest = ChooseDestination(Origin, PlayerTile, MoveRange, AimRange, Skill, TileMap, Enemy->GetMoveTendency(), OUT CanCast);
+	const FTileIndex Dest = ChooseDestination(Origin, PlayerTile, MoveRange, AimRange, Skill, TileMap, Enemy->GetMoveTendency(), Enemy, OUT CanCast);
 
 	/**
 	 * @brief 이동커맨드 생성 여부 판단 및 생성
@@ -125,6 +144,7 @@ FTileIndex USRPGEnemyTurnPlanner::ChooseDestination(
 	const UStaticSkillData* Skill,
 	const UTileMapModel* TileMap,
 	EMoveTendency Tendency,
+	const UBoardActorModel* Self,
 	OUT bool& OutCanCast)
 {
 	// 도달 가능한 모든 타일 집합 (현재 위치한 타일도 포함)
@@ -132,10 +152,12 @@ FTileIndex USRPGEnemyTurnPlanner::ChooseDestination(
 	Candidates.Add(Origin);
 
 	// 이동 후 플레이어를 조준 가능한 타일만 추림
+	// @note 자기 자신(Self)은 이동으로 자리를 비울 예정이므로 시야 차폐에서 제외.
+	//       제외하지 않으면 직선 후퇴 타일이 전부 자기 몸에 막혀 제자리 사격이 됨.
 	TArray<FTileIndex> Feasible;
 	for (const FTileIndex& Candidate : Candidates)
 	{
-		TArray<FTileIndex> Aimable = TileMap->GetAimableTiles(Candidate, AimRange, Skill->mAimPattern, Skill->mCanAimBoardActor, Skill->mIsIndirect);
+		TArray<FTileIndex> Aimable = TileMap->GetAimableTiles(Candidate, AimRange, Skill->mAimPattern, Skill->mCanAimBoardActor, Skill->mIsIndirect, /*Incoming*/nullptr, /*IgnoreBlocker*/Self);
 		if (Aimable.Contains(PlayerTile) == true)
 		{
 			Feasible.Add(Candidate);

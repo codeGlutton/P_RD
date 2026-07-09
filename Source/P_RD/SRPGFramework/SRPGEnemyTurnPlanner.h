@@ -16,6 +16,7 @@ class UEnemyUnitModel;
 class UUnitModel;
 class UTileMapModel;
 class UStaticSkillData;
+class UBoardActorModel;
 enum class EMoveTendency : uint8; // StaticEnemyUnitSpawnData.h
 
 /**
@@ -36,20 +37,23 @@ public:
 	 * @param Enemy 행동할 적 유닛
 	 * @param Player 표적이 될 플레이어 유닛
 	 * @param TileMap 타일맵 모델 (도달/조준/효과 범위 계산)
+	 * @param EventStream 스킬 랜덤 선택용 스트림 (시뮬/라이브 동일 결과 보장을 위해 룸의 이벤트 스트림 사용)
 	 * @return 커맨드 목록
 	 */
 	static TArray<TInstancedStruct<FSRPGCommand>> PlanTurn(
 		UEnemyUnitModel* Enemy,
 		UUnitModel* Player,
-		const UTileMapModel* TileMap);
+		const UTileMapModel* TileMap,
+		const FRandomStream& EventStream);
 
 private:
 	/**
 	 * @brief 이동 성향에 따라 목적지 타일을 선택
 	 * @details
 	 * 이동가능한 타일들 중에서 플레이어를 조준 가능한 타일을 탐색. (이 타일들을 Feasible이라고 가정)
-	 * Feasible 타일들 중에서 이동성향에 따라 최선의 타일 선택. 
+	 * Feasible 타일들 중에서 이동성향에 따라 최선의 타일 선택.
 	 * Feasible 타일이 없으면 이동성향에 맞춰서 플레이어에 접근하고. 스킬 사용은 생략
+	 * @note Self는 이동 후 위치를 평가할 때 자기 자신이 시야를 막지 않도록 차폐 예외로 전달
 	 */
 	static FTileIndex ChooseDestination(
 		const FTileIndex& Origin,
@@ -59,6 +63,7 @@ private:
 		const UStaticSkillData* Skill,
 		const UTileMapModel* TileMap,
 		EMoveTendency Tendency,
+		const UBoardActorModel* Self,
 		OUT bool& OutCanCast);
 
 	/**

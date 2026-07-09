@@ -244,6 +244,7 @@ public:
 	 * @param[in] bIncludeOccupied : 점유된 타일(장애물/유닛)을 조준 가능으로 포함할지
 	 * @param[in] bIndirect : 곡사 여부 (장애물/유닛 너머 조준 가능한지)
 	 * @param[in] Incoming : 교체할 액터. 교체가 없을 경우는 nullptr
+	 * @param[in] IgnoreBlocker : 시야 차폐에서 제외할 액터 (이동 후 위치 평가처럼 자리를 비울 예정인 유닛). 없으면 nullptr
 	 * @return TArray<FTileIndex> : 조준 가능한 타일 좌표 목록 (맵 밖 좌표 제외)
 	 */
 	TArray<FTileIndex> GetAimableTiles(
@@ -252,7 +253,8 @@ public:
 		EAimPattern Pattern,
 		bool bIncludeOccupied,
 		bool bIndirect,
-		const UBoardActorModel* Incoming = nullptr
+		const UBoardActorModel* Incoming = nullptr,
+		const UBoardActorModel* IgnoreBlocker = nullptr
 	) const;
 
 	/**
@@ -530,9 +532,10 @@ private:
 	 * 시야를 막는 액터(Obstacle 또는 Unit)가 하나라도 있으면 막힌 것으로 본다.
 	 * @param[in] From 시작 좌표
 	 * @param[in] To   목표 좌표
+	 * @param[in] IgnoreBlocker 차폐 판정에서 제외할 액터 (자리를 비울 예정인 유닛 등). 없으면 nullptr
 	 * @return 시야가 확보되면 true, 중간이 막히면 false
 	 */
-	bool HasLineOfSight(const FTileIndex& From, const FTileIndex& To) const;
+	bool HasLineOfSight(const FTileIndex& From, const FTileIndex& To, const UBoardActorModel* IgnoreBlocker = nullptr) const;
 
 	/**
 	 * @brief 타일에 액터 등록 (mBoardActors에 추가)

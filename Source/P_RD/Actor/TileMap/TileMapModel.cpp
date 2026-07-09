@@ -382,7 +382,7 @@ void UTileMapModel::RasterizeLine(const FTileIndex& From, const FTileIndex& To, 
 	BresenhamLine(From, To, Out);
 }
 
-bool UTileMapModel::HasLineOfSight(const FTileIndex& From, const FTileIndex& To) const
+bool UTileMapModel::HasLineOfSight(const FTileIndex& From, const FTileIndex& To, const UBoardActorModel* IgnoreBlocker) const
 {
 	// From→To 직선이 지나는 칸들을 래스터화 (첫 원소=From, 마지막 원소=To 보장)
 	TArray<FTileIndex> LineTiles;
@@ -392,9 +392,13 @@ bool UTileMapModel::HasLineOfSight(const FTileIndex& From, const FTileIndex& To)
 	for (int32 Index = 1; Index < LineTiles.Num() - 1; ++Index)
 	{
 		// 중간 칸에 시야를 막는 액터(Obstacle 또는 Unit)가 있으면 시야가 막힘(=LoS:false)
-		if (GetActorsOnTile(LineTiles[Index], ETileLayerFlag::Obstacle | ETileLayerFlag::Unit).Num() > 0)
+		for (const UBoardActorModel* Actor : GetActorsOnTile(LineTiles[Index], ETileLayerFlag::Obstacle | ETileLayerFlag::Unit))
 		{
-			return false;
+			// 무시 대상(자리를 비울 예정인 유닛 등)은 차폐로 치지 않음
+			if (Actor != IgnoreBlocker)
+			{
+				return false;
+			}
 		}
 	}
 
@@ -640,7 +644,7 @@ void UTileMapModel::ClearTileHighlight(ETileHighlightFlag Flag)
  * - 1단계에서는 패턴에 따라 후보타일을 수집하고
  * - 2단계에서는 각각의 후보타일에 대해서 장애물 막힘, 타겟 가능, 교체 가능 여부 검사해서 최종 판단
  */
-TArray<FTileIndex> UTileMapModel::GetAimableTiles(const FTileIndex& Origin, int32 Range, EAimPattern Pattern, bool bIncludeOccupied, bool bIndirect, const UBoardActorModel* Incoming) const
+TArray<FTileIndex> UTileMapModel::GetAimableTiles(const FTileIndex& Origin, int32 Range, EAimPattern Pattern, bool bIncludeOccupied, bool bIndirect, const UBoardActorModel* Incoming, const UBoardActorModel* IgnoreBlocker) const
 {
 	TArray<FTileIndex> Result;
 
@@ -704,7 +708,7 @@ TArray<FTileIndex> UTileMapModel::GetAimableTiles(const FTileIndex& Origin, int3
 		const FTileIndex& Candidate = Result[Index];
 
 		// 직사인데 시야가 막히면 조준 불가
-		if (bApplyLineOfSight && !HasLineOfSight(Origin, Candidate))
+		if (bApplyLineOfSight && !HasLineOfSight(Origin, Candidate, IgnoreBlocker))
 		{
 			Result.RemoveAt(Index);
 			continue;
