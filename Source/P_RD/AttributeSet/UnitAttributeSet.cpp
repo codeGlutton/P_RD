@@ -1,5 +1,7 @@
 ﻿#include "AttributeSet/UnitAttributeSet.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "TAS/Effect/TacticalEffectContext.h"
+#include "TAS/Effect/Tag/TacticalEffect_Dead.h"
 
 /**
  * @file   UnitAttributeSet.cpp
@@ -73,6 +75,18 @@ void UUnitAttributeSet::PostAttributeChange(const FTacticalAttribute& Attribute,
 			// (정수값 3은 구 GAS와 동일하게 유지되므로 직렬화/배열 인덱싱/CoreRedirect 호환이 보장된다.)
 			ASC->ApplyModToAttribute(GetHPAttribute(), ETacticalModOp::Override, NewValue);
 		}
+	}
+
+	if (Attribute == GetHPAttribute() && OldValue > 0.f && NewValue <= 0.f)
+	{
+		UAttributeSetComponentModel* ASC = GetOwningAttributeSetComponentModel();
+
+		UTacticalEffectContext* EffectContext = ASC->MakeEffectContext();
+		EffectContext->SetInstigator(GetOwningActor());
+		EffectContext->SetAttributeSetComponentModel(ASC);
+
+		TSharedPtr<FTacticalEffectSpec> InfiniteEffect = ASC->MakeOutgoingSpec(UTacticalEffect_Dead::StaticClass(), EffectContext);
+		FActiveTacticalEffectHandle ActiveHandle = ASC->ApplyTacticalEffectSpecToSelf(*InfiniteEffect);
 	}
 }
 

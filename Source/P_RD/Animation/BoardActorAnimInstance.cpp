@@ -1,6 +1,10 @@
 ﻿#include "Animation/BoardActorAnimInstance.h"
 #include "Animation/Notify/EventTriggerPayload.h"
 
+#include "ObjectView.h"
+#include "ObjectModel.h"
+#include "Actor/BoardActor/BoardCombatTarget.h"
+
 void UBoardActorAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);
@@ -24,8 +28,6 @@ void UBoardActorAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		mPawnVelocity.X = FVector::DotProduct(Velocity, ForwardNorDir);
 		mPawnVelocity.Y = FVector::DotProduct(Velocity, RightNorDir);
 	}
-
-	// TODO : 생존 상태 수집
 }
 
 bool UBoardActorAnimInstance::PlayMontageUsingTag(const FGameplayTag& MontageTag, ETileActorDirection LocalDirection)
@@ -159,5 +161,28 @@ UAnimMontage* UBoardActorAnimInstance::GetPlayingMontageUsingTag() const
 	return mTagAnimMontageSets[mActiveMontageTag].mAnimMontages[StaticCast<int32>(mActiveMontageDir)];
 }
 
+void UCombatTargetAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
+{
+	Super::NativeUpdateAnimation(DeltaSeconds);
+
+	IObjectView* ObjectView = Cast<IObjectView>(GetOwningActor());
+	if (ObjectView != nullptr)
+	{
+		UObjectModel* ObjectModel = ObjectView->GetModel();
+		if (ObjectModel != nullptr)
+		{
+			IBoardCombatTarget* OwningCombatTarget = Cast<IBoardCombatTarget>(ObjectModel);
+			if (OwningCombatTarget != nullptr)
+			{
+				mCombatTargetAliveState = OwningCombatTarget->IsDead() == true ? ECombatTargetAliveState::Dead : ECombatTargetAliveState::Alive;
+			}
+		}
+	}
+}
+
+void UUnitAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
+{
+	Super::NativeUpdateAnimation(DeltaSeconds);
+}
 
 
