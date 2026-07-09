@@ -182,7 +182,7 @@ void ARDGameModeBase::StartFadeInUI(FOnEndFadeInAnimation OnEndFadeInAnimation) 
 
 	if (mMainBGM != nullptr)
 	{
-		mBgmComponent = UGameplayStatics::SpawnSound2D(GetWorld(), mMainBGM, 0.f);
+		mBgmComponent = UGameplayStatics::SpawnSound2D(GetWorld(), mMainBGM, 1.f);
 		mBgmComponent->FadeIn(mBGMFadeInDuration);
 	}
 }
