@@ -80,9 +80,7 @@ public:
 	USkeletalMeshComponent* GetMesh() const;
 	UFloatingPawnMovement* GetCharacterMovement() const;
 
-#if WITH_EDITORONLY_DATA
 	UArrowComponent* GetArrowComponent() const;
-#endif
 
 protected:
 	// @brief 최대 이동 속도 (cm/초)
@@ -126,10 +124,8 @@ private:
 	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MovementComp", AllowPrivateAccess = "true"))
 	TObjectPtr<UFloatingPawnMovement> mMovementComp;
 
-#if WITH_EDITORONLY_DATA
 	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "ArrowComp", AllowPrivateAccess = "true"))
 	TObjectPtr<UArrowComponent> mArrowComp;
-#endif
 
 protected:
 	TWeakObjectPtr<UUnitModel> mUnitModel;

@@ -26,9 +26,7 @@ AUnit::AUnit()
 	mCapsuleComp = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComp"));
 	mMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
 	mMovementComp = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("MovementComp"));
-#if WITH_EDITORONLY_DATA
 	mArrowComp = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowComp"));
-#endif
 
 	if (mCapsuleComp != nullptr)
 	{
@@ -63,7 +61,6 @@ AUnit::AUnit()
 		mMovementComp->UpdatedComponent = mCapsuleComp;
 	}
 
-#if WITH_EDITORONLY_DATA
 	if (mArrowComp != nullptr)
 	{
 		mArrowComp->ArrowColor = FColor(150, 200, 255);
@@ -72,7 +69,6 @@ AUnit::AUnit()
 		mArrowComp->bIsScreenSizeScaled = true;
 		mArrowComp->SetSimulatePhysics(false);
 	}
-#endif
 }
 
 UObjectModel* AUnit::GetModel_Internal() const
@@ -372,9 +368,7 @@ UFloatingPawnMovement* AUnit::GetCharacterMovement() const
 	return mMovementComp;
 }
 
-#if WITH_EDITORONLY_DATA
 UArrowComponent* AUnit::GetArrowComponent() const
 {
 	return mArrowComp;
 }
-#endif
