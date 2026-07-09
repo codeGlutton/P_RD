@@ -10,17 +10,16 @@
 #include "GameMode/RoomGameModeBase.h"
 #include "DataAsset/EquipmentData/EquipmentType.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
-#include "SRPGFramework/SRPGCommand.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Simulation/Logger/EventLog.h"
 #include "CombatGameMode.generated.h"
 
 class USRPGTurnContext;
 class UUnitModel;
+class IBoardSelectionTarget;
+
 class UCombatUIModel;
 enum class ECombatInputType : uint8;
-
-struct FTacticalAttributeChangeData;
 
 // RD Game Mode 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogCombatGameMode, Log, All)
@@ -121,6 +120,8 @@ protected:
 	void PushDiceUIData() const;
 	void PushSelectedDiceUIData() const;
 	void PushSkillUIData() const;
+
+	void PushCombatTargetDetailUIData(IBoardSelectionTarget* Target) const;
 
 	void PushSkillDetailUIData(int32 SkillIndex) const;
 	void PushEquipmentUIData() const;

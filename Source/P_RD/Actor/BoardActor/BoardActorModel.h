@@ -53,6 +53,9 @@ public:
 
 	FName GetBoardActorKeyName() const;
 	const FText& GetBoardActorDisplayName() const;
+	virtual int32 GetBoardActorLevel() const;
+	UTexture2D* GetBoardActorIcon() const;
+	UTexture2D* GetBoardActorPortrait() const;
 
 public:
 	/**

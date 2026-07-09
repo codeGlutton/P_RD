@@ -25,18 +25,21 @@ class P_RD_API UEnemyUnitModel : public UUnitModel
 public:
 	UEnemyUnitModel();
 
-	// @brief 스폰 데이터에서 스킬 데이터를 얻어서 스킬 컴포넌트에 적재
+	/* UUnitModel 상속 */
+public:
 	void PostInitializeComponentModels() override;
 
+public:
+	int32 GetBoardActorLevel() const override;
+
+public:
 	// @brief 난이도
 	int32 GetDifficulty() const override;
-	
 	// @brief 플레이어유닛 여부
 	bool IsPlayerUnitModel() const override { return false; }
 
 	// @brief 이동 성향
 	EMoveTendency GetMoveTendency() const;
-
 	// @brief 이동포인트
 	int32 GetMovePoint() const;
 

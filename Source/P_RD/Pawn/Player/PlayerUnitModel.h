@@ -33,12 +33,14 @@ class P_RD_API UPlayerUnitModel : public UUnitModel
 	GENERATED_BODY()
 
 public:
-	/** @brief 플레이어 유닛 서브오브젝트를 생성한다; 런 데이터 주입은 GameMode/Subsystem 단계에서 따로 수행된다. */
 	UPlayerUnitModel();
 
 	/* UUnitModel 상속 */
 public:
 	void PostInitializeComponentModels() override;
+
+public:
+	int32 GetBoardActorLevel() const override;
 
 public:
 	EPlayerJobType GetPlayerJobType() const;

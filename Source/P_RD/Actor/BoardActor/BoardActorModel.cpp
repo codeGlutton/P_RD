@@ -8,14 +8,47 @@ void UBoardActorModel::SetStaticSpawnData(UStaticObstacleSpawnData* StaticSpawnD
 
 FName UBoardActorModel::GetBoardActorKeyName() const
 {
-	checkf(mStaticSpawnData != nullptr, TEXT("스폰 데이터 nullptr"));
+	if (mStaticSpawnData == nullptr)
+	{
+		UE_LOG(LogRD, Log, TEXT("보드 액터의 스폰 데이터 nullptr"));
+		return FName();
+	}
 	return mStaticSpawnData->GetKeyName();
 }
 
 const FText& UBoardActorModel::GetBoardActorDisplayName() const
 {
-	checkf(mStaticSpawnData != nullptr, TEXT("스폰 데이터 nullptr"));
+	if (mStaticSpawnData == nullptr)
+	{
+		UE_LOG(LogRD, Log, TEXT("보드 액터의 스폰 데이터 nullptr"));
+		return FText::GetEmpty();
+	}
 	return mStaticSpawnData->mDisplayName;
+}
+
+int32 UBoardActorModel::GetBoardActorLevel() const
+{
+	return INDEX_NONE;
+}
+
+UTexture2D* UBoardActorModel::GetBoardActorIcon() const
+{
+	if (mStaticSpawnData == nullptr)
+	{
+		UE_LOG(LogRD, Log, TEXT("보드 액터의 스폰 데이터 nullptr"));
+		return nullptr;
+	}
+	return mStaticSpawnData->mIcon.LoadSynchronous();
+}
+
+UTexture2D* UBoardActorModel::GetBoardActorPortrait() const
+{
+	if (mStaticSpawnData == nullptr)
+	{
+		UE_LOG(LogRD, Log, TEXT("보드 액터의 스폰 데이터 nullptr"));
+		return nullptr;
+	}
+	return mStaticSpawnData->mPortrait.LoadSynchronous();
 }
 
 const FTileTransform& UBoardActorModel::GetTileTransform() const
