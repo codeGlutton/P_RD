@@ -46,6 +46,7 @@ URewardUIWidgetBase::URewardUIWidgetBase(const FObjectInitializer& ObjectInitial
 	mGoldIcon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Stat_Gold.T_Stat_Gold"));
 	mDiceIcon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Dice_Common.T_Dice_Common"));
 	mRewardGoldIconTexture = LoadObject<UTexture2D>(nullptr, TEXT("/Game/UI/RewardV4_11/Tex/T_reward_v4_gold_icon.T_reward_v4_gold_icon"));
+	mRewardExpIconTexture = LoadObject<UTexture2D>(nullptr, TEXT("/Game/UI/RewardV4_11/Tex/T_reward_v4_exp_icon.T_reward_v4_exp_icon"));
 	mRewardRowWidgetClass = LoadClass<URewardRowWidgetBase>(nullptr, TEXT("/Game/BP/UI/WBP_RewardRow.WBP_RewardRow_C"));
 }
 
@@ -250,12 +251,14 @@ void URewardUIWidgetBase::RefreshRows()
 	}
 	if (Reward.mExpGained != 0)
 	{
+		// 경험치 행은 전용 아이콘(없으면 골드 아이콘 폴백).
+		UTexture2D* ExpIcon = mRewardExpIconTexture != nullptr ? mRewardExpIconTexture.Get() : SummaryIcon;
 		AddRow(
 			ERewardClaimKind::Exp,
 			INDEX_NONE,
 			FText::Format(LOCTEXT("ExpRewardValue", "경험치 +{0}"), FText::AsNumber(Reward.mExpGained)),
 			FText::GetEmpty(),
-			SummaryIcon);
+			ExpIcon);
 	}
 
 	const TArray<FRewardChoiceUI>& Items = mUIModel->GetRewardChoices();

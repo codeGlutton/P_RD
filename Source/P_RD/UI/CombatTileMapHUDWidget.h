@@ -6,6 +6,7 @@
 #include "UI/RDUserWidget.h"
 #include "UI/Reward/RewardUITypes.h"
 #include "Components/CanvasPanelSlot.h"   // FAnchorData (폴드 변형 베이스 슬롯 캐시)
+#include "Engine/TimerHandle.h"           // FTimerHandle (골드 카운트업 타이머)
 #include "Styling/SlateBrush.h"
 #include "Widgets/Layout/Anchors.h"
 
@@ -28,6 +29,7 @@ class UImage;
 class UProgressBar;
 class URewardUIModel;
 class URewardUIWidgetBase;
+class USoundBase;
 class UTextBlock;
 class UViewport;
 class UWidget;
@@ -259,6 +261,16 @@ private:
 
 	/** @brief 룸 이름 마커에 현재 방 표시 이름('일반'/'엘리트'/'보스')을 채운다(전투 진입 시 1회). */
 	void RefreshRoomNameLabel() const;
+
+	/** @brief 골드 칸 표시값을 갱신한다. 증가면 코인 사운드와 함께 차르륵 카운트업, 감소/최초는 즉시 반영. */
+	// 카운트업 상태는 표시 캐시(mutable)라 const 갱신 경로(RefreshSkinValueLabels)에서 불러도 된다.
+	void UpdateGoldValueLabel(int32 NewGold) const;
+
+	/** @brief 카운트업 타이머 틱 — 남은 차이에 비례해 감속하며 목표 골드로 수렴한다. */
+	void TickGoldCountUp() const;
+
+	/** @brief HUD_M_gold_value 마커 TextBlock에 골드 숫자를 그린다. */
+	void SetGoldValueLabelText(int32 Gold) const;
 
 	/** @brief 장비 슬롯 칩(탑바 좌측 하단)을 뷰모델 장비 뷰로 다시 만든다. */
 	void RebuildEquipmentBar();
@@ -587,6 +599,26 @@ private:
 	/** @brief 유닛 HP바 왼쪽 방어도 아이콘 텍스처(생성자 프리로드). */
 	UPROPERTY(Transient)
 	TObjectPtr<UTexture2D> mUnitDefenseIconTexture;
+
+	/** @brief 골드 획득 코인 사운드(카운트업 시작 시 1회). 생성자에서 하드레퍼런스 프리로드(#300 컨벤션). */
+	UPROPERTY(Transient)
+	TObjectPtr<USoundBase> mCoinGainSound;
+
+	/** @brief 승리/패배 결과 징글. 결과 연출 시작과 동시에 1회 재생한다. */
+	UPROPERTY(Transient)
+	TObjectPtr<USoundBase> mVictoryJingleSound;
+	UPROPERTY(Transient)
+	TObjectPtr<USoundBase> mDefeatJingleSound;
+
+	// 골드 카운트업 상태 3종은 '화면 표시 캐시'라 mutable — const 그리기 경로에서 갱신해도 논리 상태 불변.
+	/** @brief 골드 칸에 현재 표시 중인 값. INDEX_NONE이면 아직 최초 표시 전(카운트업 없이 즉시 그림). */
+	mutable int32 mDisplayedGold = INDEX_NONE;
+
+	/** @brief 카운트업이 수렴할 목표 골드. */
+	mutable int32 mGoldCountUpTarget = 0;
+
+	/** @brief 골드 카운트업 반복 타이머. */
+	mutable FTimerHandle mGoldCountUpTimerHandle;
 
 	/** @brief 여러 주사위를 하나의 숨겨진 물리 테이블에서 굴리는 캡처 액터 */
 	UPROPERTY(Transient)

@@ -4,6 +4,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/Widget.h"
 #include "GameMode/CombatGameMode.h"
+#include "Kismet/GameplayStatics.h"   // 승리/패배 결과 징글 재생
 #include "Setting/GamePlaySettings.h"
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
@@ -25,6 +26,13 @@ void UCombatTileMapHUDWidget::BeginCombatResultPresentation(TSharedPtr<FPresenta
 	mCombatResult = Result;
 	mCombatResultBarrier = MoveTemp(Barrier);
 	mVictoryWorldMapLocked = false;
+
+	// 결과 징글: 승리/패배에 맞는 짧은 음악을 결과 연출 시작과 동시에 1회 재생한다.
+	USoundBase* ResultJingle = Result == ESRPGCombatResult::PlayerWin ? mVictoryJingleSound.Get() : mDefeatJingleSound.Get();
+	if (ResultJingle != nullptr)
+	{
+		UGameplayStatics::PlaySound2D(this, ResultJingle);
+	}
 
 	EnsureCombatResultWidgets();
 	SetCombatResultViewActive(true);

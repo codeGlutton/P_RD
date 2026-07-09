@@ -23,6 +23,23 @@ UCombatTileMapHUDWidget::UCombatTileMapHUDWidget(const FObjectInitializer& Objec
 		mUnitDefenseIconTexture = UnitDefenseIconFinder.Object;
 	}
 
+	// 골드 카운트업 코인 사운드 + 승리/패배 결과 징글(SVN uasset)을 하드레퍼런스로 프리로드 → 쿡 보장(#300 컨벤션).
+	static ConstructorHelpers::FObjectFinder<USoundBase> CoinGainSoundFinder(TEXT("/Game/SVN/OutSideAsset/SFX/OpenGameArt_CC0/Coin/SFX_CoinGain_OGA_CC0_11.SFX_CoinGain_OGA_CC0_11"));
+	if (CoinGainSoundFinder.Succeeded())
+	{
+		mCoinGainSound = CoinGainSoundFinder.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<USoundBase> VictoryJingleFinder(TEXT("/Game/SVN/OutSideAsset/Music/OpenGameArt/Jingle/BGM_Jingle_Victory_Fupi_CC0.BGM_Jingle_Victory_Fupi_CC0"));
+	if (VictoryJingleFinder.Succeeded())
+	{
+		mVictoryJingleSound = VictoryJingleFinder.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<USoundBase> DefeatJingleFinder(TEXT("/Game/SVN/OutSideAsset/Music/OpenGameArt/Jingle/BGM_Jingle_Defeat_Spuispuin_CCBY4.BGM_Jingle_Defeat_Spuispuin_CCBY4"));
+	if (DefeatJingleFinder.Succeeded())
+	{
+		mDefeatJingleSound = DefeatJingleFinder.Object;
+	}
+
 	// 플로팅 로그 종류별 아이콘 (SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons). HP는 피해/회복으로 갈린다.
 #define RD_LOAD_LOGICON(Member, Path) \
 	{ static ConstructorHelpers::FObjectFinder<UTexture2D> Finder(TEXT(Path)); if (Finder.Succeeded()) { Member = Finder.Object; } }

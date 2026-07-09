@@ -9,6 +9,8 @@
 #include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
 #include "GameMode/CombatGameMode.h"  // 룸 이름 라벨(GetCurrentRoomDisplayName)
+#include "Kismet/GameplayStatics.h"   // 골드 카운트업 코인 사운드 재생
+#include "TimerManager.h"             // 골드 카운트업 반복 타이머
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
 #include "UI/Combat/CombatUIModel.h"
@@ -157,6 +159,8 @@ void UCombatTileMapHUDWidget::RefreshSkinValueLabels() const
 		}
 	}
 
+	// 골드 칸은 즉시 그리지 않고 카운트업 경로로 — 증가 시 코인 사운드와 함께 차르륵 올라간다.
+	UpdateGoldValueLabel(Meta.mGold);
 }
 
 void UCombatTileMapHUDWidget::RefreshRoomNameLabel() const
@@ -182,6 +186,68 @@ void UCombatTileMapHUDWidget::RefreshRoomNameLabel() const
 		{
 			RoomNameText->SetText(RoomDisplayName);
 		}
+	}
+}
+
+void UCombatTileMapHUDWidget::UpdateGoldValueLabel(int32 NewGold) const
+{
+	// 최초 표시(전투 진입)나 감소는 연출 없이 즉시 반영한다 — 차르륵은 '획득' 연출.
+	if (mDisplayedGold == INDEX_NONE || NewGold < mDisplayedGold)
+	{
+		if (GetWorld() != nullptr)
+		{
+			GetWorld()->GetTimerManager().ClearTimer(mGoldCountUpTimerHandle);
+		}
+		mDisplayedGold = NewGold;
+		SetGoldValueLabelText(NewGold);
+		return;
+	}
+
+	if (NewGold == mDisplayedGold || GetWorld() == nullptr)
+	{
+		return;
+	}
+
+	// 증가: 목표만 갱신하고 30Hz 반복 타이머로 수렴시킨다. 이미 도는 중이면 목표만 늘어난다.
+	mGoldCountUpTarget = NewGold;
+	if (GetWorld()->GetTimerManager().IsTimerActive(mGoldCountUpTimerHandle) == false)
+	{
+		if (mCoinGainSound != nullptr)
+		{
+			UGameplayStatics::PlaySound2D(this, mCoinGainSound);
+		}
+		GetWorld()->GetTimerManager().SetTimer(
+			mGoldCountUpTimerHandle,
+			FTimerDelegate::CreateUObject(this, &UCombatTileMapHUDWidget::TickGoldCountUp),
+			0.033f, true);
+	}
+}
+
+void UCombatTileMapHUDWidget::TickGoldCountUp() const
+{
+	// 남은 차이의 ~18%씩(최소 1) 올려 자연스럽게 감속하며 0.5~0.8초 안에 목표에 붙는다.
+	const int32 Remaining = mGoldCountUpTarget - mDisplayedGold;
+	const int32 Step = FMath::Max(1, FMath::RoundToInt(StaticCast<float>(Remaining) * 0.18f));
+	mDisplayedGold = FMath::Min(mDisplayedGold + Step, mGoldCountUpTarget);
+	SetGoldValueLabelText(mDisplayedGold);
+
+	if (mDisplayedGold >= mGoldCountUpTarget && GetWorld() != nullptr)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(mGoldCountUpTimerHandle);
+	}
+}
+
+void UCombatTileMapHUDWidget::SetGoldValueLabelText(int32 Gold) const
+{
+	if (WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	if (UTextBlock* GoldText = Cast<UTextBlock>(WidgetTree->FindWidget(TEXT("HUD_M_gold_value"))))
+	{
+		GoldText->SetText(FText::AsNumber(Gold));
+		GoldText->SetJustification(ETextJustify::Center);
 	}
 }
 

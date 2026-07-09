@@ -6,38 +6,52 @@ import unreal
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE_WAV = ROOT / "Content" / "Audio" / "SFX" / "S_CoinGain_Rattle_01.wav"
+SOURCE_DIR = ROOT / "Content" / "Audio" / "SFX"
+SOURCE_WAVS = [
+    SOURCE_DIR / "S_CoinGain_Rattle_01.wav",
+    *[SOURCE_DIR / f"S_CoinGain_Rattle_Alt_{index:02d}.wav" for index in range(1, 11)],
+]
 DESTINATION_PATH = "/Game/Audio/SFX"
-DESTINATION_NAME = "S_CoinGain_Rattle_01"
 
 
 def main() -> None:
-    if not SOURCE_WAV.exists():
-        raise RuntimeError(f"Missing source WAV: {SOURCE_WAV}")
+    missing = [path for path in SOURCE_WAVS if not path.exists()]
+    if missing:
+        raise RuntimeError(f"Missing source WAVs: {missing}")
 
-    task = unreal.AssetImportTask()
-    task.filename = str(SOURCE_WAV)
-    task.destination_path = DESTINATION_PATH
-    task.destination_name = DESTINATION_NAME
-    task.automated = True
-    task.replace_existing = True
-    task.save = True
+    tasks = []
+    for source_wav in SOURCE_WAVS:
+        task = unreal.AssetImportTask()
+        task.filename = str(source_wav)
+        task.destination_path = DESTINATION_PATH
+        task.destination_name = source_wav.stem
+        task.automated = True
+        task.replace_existing = True
+        task.save = True
+        tasks.append(task)
 
     asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
-    asset_tools.import_asset_tasks([task])
+    asset_tools.import_asset_tasks(tasks)
 
-    imported_paths = list(task.imported_object_paths)
-    if not imported_paths:
-        raise RuntimeError("Unreal did not report an imported asset path.")
+    missing_imports = []
+    for task in tasks:
+        imported_paths = list(task.imported_object_paths)
+        if not imported_paths:
+            missing_imports.append(task.destination_name)
 
-    asset_path = f"{DESTINATION_PATH}/{DESTINATION_NAME}"
-    asset = unreal.EditorAssetLibrary.load_asset(asset_path)
-    if not asset:
-        raise RuntimeError(f"Could not load imported asset: {asset_path}")
+        asset_path = f"{DESTINATION_PATH}/{task.destination_name}"
+        asset = unreal.EditorAssetLibrary.load_asset(asset_path)
+        if not asset:
+            missing_imports.append(asset_path)
+            continue
 
-    unreal.EditorAssetLibrary.save_loaded_asset(asset)
+        unreal.EditorAssetLibrary.save_loaded_asset(asset)
+
+    if missing_imports:
+        raise RuntimeError(f"Unreal did not import all requested audio assets: {missing_imports}")
+
     unreal.EditorAssetLibrary.save_directory(DESTINATION_PATH)
-    unreal.log(f"Imported coin gain rattle SoundWave: {asset_path}")
+    unreal.log(f"Imported {len(tasks)} coin gain rattle SoundWaves to {DESTINATION_PATH}")
 
 
 if __name__ == "__main__":

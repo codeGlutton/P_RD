@@ -5,6 +5,19 @@
 #include "Engine/Texture2D.h"
 #include "Input/Reply.h"
 #include "InputCoreTypes.h"
+#include "Kismet/GameplayStatics.h"
+#include "UObject/ConstructorHelpers.h"
+
+URewardRowWidgetBase::URewardRowWidgetBase(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+	// RDUserWidget 공용 버튼 클릭음과 같은 음원(SVN uasset)을 하드레퍼런스로 프리로드 → 쿡 보장(#300 컨벤션).
+	static ConstructorHelpers::FObjectFinder<USoundBase> RowClickSoundFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/Audio/UISFX/SFX_UI_Click_Scratch003.SFX_UI_Click_Scratch003"));
+	if (RowClickSoundFinder.Succeeded())
+	{
+		mRowClickSound = RowClickSoundFinder.Object;
+	}
+}
 
 void URewardRowWidgetBase::SetRewardRow(const FText& MainText, const FText& SubText, UTexture2D* IconTexture)
 {
@@ -80,6 +93,11 @@ FReply URewardRowWidgetBase::NativeOnMouseButtonUp(const FGeometry& InGeometry, 
 	if (mIsPressed && mIsClaimed == false && InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
 	{
 		mIsPressed = false;
+		// 행은 UButton이 아니라 스타일 사운드가 없으므로 여기서 공용 클릭음을 직접 재생한다.
+		if (mRowClickSound != nullptr)
+		{
+			UGameplayStatics::PlaySound2D(this, mRowClickSound);
+		}
 		OnRewardRowClicked.Broadcast(mRewardRowIndex);
 		return FReply::Handled();
 	}

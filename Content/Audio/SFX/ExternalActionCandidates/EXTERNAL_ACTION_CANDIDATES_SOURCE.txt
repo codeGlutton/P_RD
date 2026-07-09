@@ -1,0 +1,31 @@
+External UI/action sound candidates
+
+These files were downloaded from existing third-party asset sources, then copied
+and format-converted to 48 kHz, 16-bit stereo WAV for Unreal import convenience.
+No synthesized replacement audio was created in this folder.
+
+Selected files:
+- Map open
+  - S_MapOpen_Ext_01_Kenney_BookOpen.wav: Kenney "RPG Audio", source file bookOpen.ogg.
+  - S_MapOpen_Ext_02_Kenney_Scroll003.wav: Kenney "Interface Sounds", source file scroll_003.ogg.
+- XP gain
+  - S_XPGain_Ext_01_Kenney_PowerUp7.wav: Kenney "Digital Audio", source file powerUp7.ogg.
+  - S_XPGain_Ext_02_Kenney_HighUp.wav: Kenney "Digital Audio", source file highUp.ogg.
+- Skill select
+  - S_SkillSelect_Ext_01_Kenney_Select003.wav: Kenney "Interface Sounds", source file select_003.ogg.
+  - S_SkillSelect_Ext_02_Kenney_Confirmation003.wav: Kenney "Interface Sounds", source file confirmation_003.ogg.
+- Dice choose
+  - S_DiceChoose_Ext_01_Kenney_DieGrab1.wav: Kenney "Casino Audio", source file dieGrab1.ogg.
+  - S_DiceChoose_Ext_02_Kenney_DieShuffle1.wav: Kenney "Casino Audio", source file dieShuffle1.ogg.
+
+Original OGG files are kept in:
+Content/Audio/SFX/ExternalActionCandidates/Original
+
+License/source notes:
+- Kenney Sound Pack
+  Source index: https://gamesounds.xyz/?dir=Kenney%27s+Sound+Pack
+  Original publisher: Kenney, https://kenney.nl
+  License: Creative Commons Zero (CC0)
+  License page note: free for personal, educational, and commercial projects; credit not mandatory.
+- Kenney support/license reference:
+  https://kenney.nl/support

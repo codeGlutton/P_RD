@@ -9,6 +9,7 @@
 #include "RewardRowWidgetBase.generated.h"
 
 class UImage;
+class USoundBase;
 class UTextBlock;
 class UTexture2D;
 
@@ -20,6 +21,9 @@ class P_RD_API URewardRowWidgetBase : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	/** @brief 공용 버튼 클릭 사운드를 프리로드한다(행은 UButton이 아니라 마우스 입력이라 스타일 주입 경로를 못 탄다). */
+	URewardRowWidgetBase(const FObjectInitializer& ObjectInitializer);
+
 	UFUNCTION(BlueprintCallable, Category = "Reward|Row")
 	void SetRewardRow(const FText& MainText, const FText& SubText, UTexture2D* IconTexture);
 
@@ -53,6 +57,10 @@ protected:
 	TObjectPtr<UTextBlock> mRewardSubText;
 
 private:
+	/** @brief 행 클릭 시 재생할 공용 클릭 사운드(RDUserWidget 버튼과 동일 음원). */
+	UPROPERTY(Transient)
+	TObjectPtr<USoundBase> mRowClickSound;
+
 	int32 mRewardRowIndex = INDEX_NONE;
 	bool mIsClaimed = false;
 	bool mIsPressed = false;
