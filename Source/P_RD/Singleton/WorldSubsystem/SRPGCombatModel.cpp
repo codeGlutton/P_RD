@@ -488,12 +488,12 @@ void USRPGCombatModel::UnregisterUnit(UUnitModel* Unit)
 	if (Unit->IsPlayerUnitModel() == false)
 	{
 		FTimerHandle Handle;
-		GetWorld()->GetTimerManager().SetTimer(Handle, [Unit]() {
+		/*GetWorld()->GetTimerManager().SetTimer(Handle, [Unit, Factory]() {
 			if (Unit != nullptr)
 			{
 				Unit->Destroy();
 			}
-			}, 3.f, false);
+			}, 3.f, false);*/
 	}
 
 	OnUnregisterUnitUI.Broadcast(Unit);
