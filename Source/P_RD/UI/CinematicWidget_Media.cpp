@@ -85,14 +85,6 @@ void UCinematicWidget::EnsureCinematicMediaObjects()
  */
 bool UCinematicWidget::PlayCinematicVideo()
 {
-	// [미디어 크래시 테스트] 인트로 시네마틱 영상 재생 끔 → false 반환으로 폴백 타이머 진행.
-	// Adreno Vulkan BitmapRenderer 파이프라인 생성 실패가 크래시 원인인지 확인용(volatile로 dead-code 경고 회피).
-	static volatile bool bDisableIntroCinematicForCrashTest = true;
-	if (bDisableIntroCinematicForCrashTest)
-	{
-		return false;
-	}
-
 	EnsureCinematicMediaObjects();
 
 	if (mCinematicMediaPlayer == nullptr || mCinematicMediaSource == nullptr)

@@ -37,13 +37,6 @@ namespace
  */
 void UTitleBackgroundVideoSubsystem::PreloadTitleBackgroundVideo(const FString& RelativeContentPath)
 {
-	// [미디어 크래시 테스트] 타이틀 배경 영상 재생 끔(volatile로 dead-code 경고 회피).
-	static volatile bool bDisableTitleVideoForCrashTest = true;
-	if (bDisableTitleVideoForCrashTest)
-	{
-		return;
-	}
-
 	// 빈 경로면 게임 설정의 기본 영상을 사용.
 	const FString RequestedPath = RelativeContentPath.IsEmpty()
 		? GetDefaultTitleBackgroundVideoPath()

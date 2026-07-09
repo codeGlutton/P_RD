@@ -301,13 +301,6 @@ void UTitleMenuWidget::ApplyTitleBackgroundVideoBrush()
 /** @brief 파일 존재와 MediaSource 열기까지 책임지고, 실패해도 타이틀 UI 자체는 유지한다. */
 void UTitleMenuWidget::PlayTitleBackgroundVideo()
 {
-	// [미디어 크래시 테스트] 타이틀 배경 영상 재생 끔(volatile로 dead-code 경고 회피).
-	static volatile bool bDisableTitleVideoForCrashTest = true;
-	if (bDisableTitleVideoForCrashTest)
-	{
-		return;
-	}
-
 	EnsureTitleBackgroundMediaObjects();
 
 	if (mBackgroundRuntime.mUsesSharedMedia)
