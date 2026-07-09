@@ -10,6 +10,7 @@
 #include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "GameplayTagType.h"   // EffectTags::GameplayEffect_StatusEffect_* (상태이상 태그→아이콘 매핑)
 
 namespace
 {
@@ -292,6 +293,87 @@ void UCombatTileMapHUDWidget::UpdateUnitHpBars()
 		{
 			RootSlot->SetPosition(ScreenPosition + FVector2D(0.0f, UnitHpBarHeadOffsetY));   // 유닛 머리 위로 띄운다.
 		}
+
+		// HP바 밑 상태이상 아이콘/개수 갱신(온스크린 확정된 바에만).
+		UpdateUnitHpBarStatus(Bar, Unit);
+
 		Bar.mRoot->SetVisibility(ESlateVisibility::HitTestInvisible);
+	}
+}
+
+/** @brief 상태이상 태그 → 아이콘 텍스처. 로그용 아이콘(mLogIcon*)을 재사용한다. 전용 아이콘 없는 태그는 nullptr. */
+UTexture2D* UCombatTileMapHUDWidget::ResolveStatusIcon(const FGameplayTag& StatusTag) const
+{
+	if (StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Agility))        { return mLogIconAgility; }
+	if (StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification))  { return mLogIconFortification; }
+	if (StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability)) { return mLogIconVulnerability; }
+	if (StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness))     { return mLogIconWeakness; }
+	return nullptr;
+}
+
+/**
+ * @brief 유닛 HP바 밑 상태이상 칸(StatusIcon_01~05 + 개수 + 오버플로)을 DTO(mStatusEffects)로 채운다.
+ * @details 아이콘 있는 상태만 앞 슬롯부터 채우고, 5칸 초과분은 StatusOverflowText에 "+N". 스택 2 이상만 개수 표시.
+ */
+void UCombatTileMapHUDWidget::UpdateUnitHpBarStatus(FUnitHpBarWidget& Bar, const FUnitUI& Unit) const
+{
+	const int32 SlotCount = Bar.mStatusIcons.Num();
+
+	int32 Shown = 0;
+	int32 Iconable = 0;
+	for (const FStatusEffectUI& Status : Unit.mStatusEffects)
+	{
+		UTexture2D* Icon = ResolveStatusIcon(Status.mTag);
+		if (Icon == nullptr)
+		{
+			continue;   // 전용 아이콘 없는 상태는 표시 생략.
+		}
+		++Iconable;
+
+		if (Shown >= SlotCount)
+		{
+			continue;   // 슬롯 초과분은 아래 오버플로로만 집계.
+		}
+
+		if (UImage* IconImage = Bar.mStatusIcons[Shown])
+		{
+			IconImage->SetBrushResourceObject(Icon);
+			IconImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+		}
+		if (UTextBlock* CountText = Bar.mStatusCountTexts[Shown])
+		{
+			if (Status.mStackCount > 1)
+			{
+				CountText->SetText(FText::AsNumber(Status.mStackCount));
+				CountText->SetVisibility(ESlateVisibility::HitTestInvisible);
+			}
+			else
+			{
+				CountText->SetVisibility(ESlateVisibility::Collapsed);
+			}
+		}
+		++Shown;
+	}
+
+	// 채우지 못한 뒤쪽 슬롯 숨김.
+	for (int32 SlotIndex = Shown; SlotIndex < SlotCount; ++SlotIndex)
+	{
+		if (UImage* IconImage = Bar.mStatusIcons[SlotIndex]) { IconImage->SetVisibility(ESlateVisibility::Collapsed); }
+		if (UTextBlock* CountText = Bar.mStatusCountTexts[SlotIndex]) { CountText->SetVisibility(ESlateVisibility::Collapsed); }
+	}
+
+	// 5칸 초과 상태 개수를 "+N"으로.
+	if (Bar.mStatusOverflowText != nullptr)
+	{
+		const int32 Overflow = Iconable - SlotCount;
+		if (Overflow > 0)
+		{
+			Bar.mStatusOverflowText->SetText(FText::FromString(FString::Printf(TEXT("+%d"), Overflow)));
+			Bar.mStatusOverflowText->SetVisibility(ESlateVisibility::HitTestInvisible);
+		}
+		else
+		{
+			Bar.mStatusOverflowText->SetVisibility(ESlateVisibility::Collapsed);
+		}
 	}
 }

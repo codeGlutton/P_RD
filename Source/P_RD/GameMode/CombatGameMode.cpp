@@ -652,6 +652,17 @@ void ACombatGameMode::PushUnitUIData() const
 
 		UnitUIData.mStatusTags = AttributeSetComponentModel->GetOwnedGameplayTags(); // 모든 소유 태그가 아닌 고의적으로 넣은 태그만 해당
 
+		// HP바 밑 상태이상 칸용: 소유 상태 태그를 순회하며 (태그 + 스택 수)로 채운다.
+		// 아이콘 매핑/표시는 HUD(UpdateUnitHpBarStatus)가 소유. 스택 수는 GetTagCount로 읽는다.
+		UnitUIData.mStatusEffects.Reset();
+		for (const FGameplayTag& StatusTag : UnitUIData.mStatusTags)
+		{
+			FStatusEffectUI StatusEffect;
+			StatusEffect.mTag = StatusTag;
+			StatusEffect.mStackCount = AttributeSetComponentModel->GetTagCount(StatusTag);
+			UnitUIData.mStatusEffects.Add(StatusEffect);
+		}
+
 		// 죽는 유닛 등 뷰가 이미 없는 경로에서도 push가 돌 수 있어 null 가드한다.
 		// mWorldLocation은 스냅샷 폴백, mViewActor는 이동을 매 프레임 따라가는 라이브 투영 소스(UnitBars).
 		if (AActor* UnitViewActor = UnitModel->GetView<AActor>())
