@@ -37,12 +37,14 @@ public:
 	 * @param Enemy 행동할 적 유닛
 	 * @param Player 표적이 될 플레이어 유닛
 	 * @param TileMap 타일맵 모델 (도달/조준/효과 범위 계산)
+	 * @param EventStream 스킬 랜덤 선택용 스트림 (시뮬/라이브 동일 결과 보장을 위해 룸의 이벤트 스트림 사용)
 	 * @return 커맨드 목록
 	 */
 	static TArray<TInstancedStruct<FSRPGCommand>> PlanTurn(
 		UEnemyUnitModel* Enemy,
 		UUnitModel* Player,
-		const UTileMapModel* TileMap);
+		const UTileMapModel* TileMap,
+		const FRandomStream& EventStream);
 
 private:
 	/**

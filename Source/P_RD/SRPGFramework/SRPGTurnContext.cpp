@@ -15,6 +15,7 @@
 #include "Actor/BoardActor/BoardSelectionTarget.h"
 #include "Pawn/UnitModel.h"
 #include "Pawn/Enemy/EnemyUnitModel.h"
+#include "FunctionLibrary/RandomStreamFunctionLibrary.h"
 
 int8 USRPGActionCreationCommandHandler::GetCommandPriority() const
 {
@@ -183,7 +184,8 @@ void USRPGTurnContext::BeginTurn()
 			UTileMapModel* TileMap = CombatModel->GetTileMap();
 
 			// PlanTurn에서 Command 리스트를 리턴하면 순서대로 라우터에 전달
-			for (TInstancedStruct<FSRPGCommand>& Command : USRPGEnemyTurnPlanner::PlanTurn(Enemy, Player, TileMap))
+			// @note 스킬 랜덤 선택은 시뮬/라이브 동일 결과를 위해 룸의 이벤트 스트림 사용
+			for (TInstancedStruct<FSRPGCommand>& Command : USRPGEnemyTurnPlanner::PlanTurn(Enemy, Player, TileMap, URandomStreamFunctionLibrary::GetEventStream(this)))
 			{
 				CommandRouterModel->SummitCommand(Command);
 			}
