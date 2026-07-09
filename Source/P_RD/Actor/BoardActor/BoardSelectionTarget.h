@@ -26,7 +26,4 @@ class P_RD_API IBoardSelectionTarget
 
 public:
 	virtual bool IsSelectable() const;
-
-public:
-	virtual UUserWidget* GetInfoPanel() const PURE_VIRTUAL(IBoardSelectionTarget::GetInfoPanel, return nullptr;)
 };

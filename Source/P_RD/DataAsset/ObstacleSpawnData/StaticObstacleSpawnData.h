@@ -50,6 +50,8 @@ public:
     TSoftClassPtr<AActor> mViewClass;
 
 public:
+    UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Portrait", AssetBundles = "UI"))
+    TSoftObjectPtr<UTexture2D> mPortrait;
     UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Icon", AssetBundles = "UI"))
     TSoftObjectPtr<UTexture2D> mIcon;
     UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DisplayName"))

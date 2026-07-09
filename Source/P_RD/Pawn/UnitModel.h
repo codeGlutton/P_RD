@@ -22,8 +22,6 @@ class USkillComponentModel;
 class UPassiveComponentModel;
 class UEquipmentComponentModel;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUnitDied, UUnitModel*, Model);
-
 /**
  * @brief  턴을 소유할 수 있는 베이스 폰 클래스 모델
  */
@@ -67,10 +65,6 @@ public:
 public:
 	virtual int32 GetDifficulty() const PURE_VIRTUAL(UUnitModel::GetDifficulty, return 0;)
 	virtual bool IsPlayerUnitModel() const PURE_VIRTUAL(UUnitModel::IsPlayerUnit, return false;)
-
-public:
-	UPROPERTY(Category = Event, BlueprintAssignable)
-	FOnUnitDied OnUnitDied;
 
 private:
 	UPROPERTY(Category = Attribute, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "AttributeCompModel"))

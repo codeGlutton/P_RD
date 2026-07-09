@@ -243,7 +243,7 @@ public:
 			return false;
 		}
 
-		if (NodeToInsertBefore == nullptr || NodeToInsertBefore == HeadNode)
+		if (NodeToInsertBefore == nullptr)
 		{
 			return AddHead(NewNode);
 		}

@@ -33,10 +33,10 @@ void USimulationSubsystem::PostInitialize()
 		mSimulationRoomContext.mRoomInstance = nullptr;
 
 		mSimulationRoomContext.mModelFactory = NewObject<USimulationObjectModelFactory>(this);
-		mSimulationRoomContext.mModelFactory->SetContext(mGameRoomContext);
+		mSimulationRoomContext.mModelFactory->SetContext(mSimulationRoomContext);
 
 		mSimulationRoomContext.mEventLogger = NewObject<USimulationEventLogger>(this);
-		mSimulationRoomContext.mEventLogger->SetContext(mGameRoomContext);
+		mSimulationRoomContext.mEventLogger->SetContext(mSimulationRoomContext);
 	}
 
 	Cast<UGameObjectModelFactory>(mGameRoomContext.mModelFactory)->RegisterSubsystemModels();

@@ -26,6 +26,7 @@ class USRPGTurnContext;
 class USRPGAction;
 
 class UBoardActorModel;
+class IBoardCombatTarget;
 class UUnitModel;
 class UTileMapModel;
 
@@ -98,6 +99,7 @@ public:
 	void OnEndCurrentTurn(USRPGTurnContext* TurnContext, ESRPGTurnResult TurnResult);
 
 protected:
+	void ClearDeadActors();
 	void EvaluateCombatEndState();
 
 	/* 등록 및 해제 함수 */
@@ -156,10 +158,6 @@ protected:
 	void AdvanceTurn(bool IsInitialRound = false);
 	void NotifyRoundStartIfNeeded();
 	void NotifyRoundEndIfNeeded();
-
-protected:
-	UFUNCTION()
-	void OnUnitDied(UUnitModel* UnitModel);
 
 	/* 액션 함수 */
 public:
@@ -284,15 +282,20 @@ protected:
 	UPROPERTY(Category = TileMap, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "TileMap"))
 	TObjectPtr<UTileMapModel> mTileMap;
 
-	// @brief 등록된 Player 유닛
-	UPROPERTY(Category = BoardActor, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PlayerUnit"))
-	TObjectPtr<UUnitModel> mPlayerUnit;
 	// @brief 모든 등록 유닛 (플레이어 포함)
 	UPROPERTY(Category = BoardActor, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "Units"))
 	TArray<TObjectPtr<UUnitModel>> mUnits;
-	// @brief 모든 등록 장애물
+	// @brief 모든 등록 장애물 (타격 가능한 장애물들 포함)
 	UPROPERTY(Category = BoardActor, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "Obstacles"))
 	TArray<TObjectPtr<UBoardActorModel>> mObstacles;
+
+protected:
+	// @brief 등록된 Player 유닛
+	UPROPERTY(Category = BoardActor, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PlayerUnit"))
+	TObjectPtr<UUnitModel> mPlayerUnit;
+	// @brief 모든 타격 가능 장애물
+	UPROPERTY(Category = BoardActor, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatTargets"))
+	TArray<TScriptInterface<IBoardCombatTarget>> mCombatTargetObstacles;
 
 protected:
 	// @brief 플레이어 턴 진입 시, 중단해야될 필요가 있는지

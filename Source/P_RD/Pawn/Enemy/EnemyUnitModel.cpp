@@ -50,6 +50,11 @@ void UEnemyUnitModel::PostInitializeComponentModels()
 	}
 }
 
+int32 UEnemyUnitModel::GetBoardActorLevel() const
+{
+	return GetDifficulty();
+}
+
 int32 UEnemyUnitModel::GetDifficulty() const
 {
 	return mDifficulty;

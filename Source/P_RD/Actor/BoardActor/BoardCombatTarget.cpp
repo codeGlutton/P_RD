@@ -3,7 +3,7 @@
 
 bool IBoardCombatTarget::IsTargetable() const
 {
-	return true;
+	return IsDead() == false;
 }
 
 bool IBoardCombatTarget::IsDead() const
