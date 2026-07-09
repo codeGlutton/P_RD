@@ -142,11 +142,6 @@ namespace
 			IconType = EFloatingLogIconType::Weakness;
 			ColorType = EFloatingLogColorType::Debuff;
 		}
-		else if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_ActorState_Dead))
-		{
-			IconType = EFloatingLogIconType::None;
-			ColorType = EFloatingLogColorType::Warning;
-		}
 	}
 
 	bool IsUnitHpBarStatusEffectTag(const FGameplayTag& StatusTag)
