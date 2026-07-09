@@ -11,8 +11,10 @@ class UMaterialInterface;
 class UPointLightComponent;
 class UProceduralMeshComponent;
 class USceneCaptureComponent2D;
+class USoundBase;
 class UStaticMesh;
 class UStaticMeshComponent;
+class UPrimitiveComponent;
 class UTexture;
 class UTextureRenderTarget2D;
 
@@ -65,13 +67,27 @@ protected:
 private:
 	void InitializeSceneComponents();
 	void InitializeCaptureMaterial();
+	void InitializeAudioAssets();
 	void ClearDice();
 	void BuildTableCollision();
+	void EnsureImpactEffectComponents();
+	void ResetImpactEffects();
 	UProceduralMeshComponent* CreatePhysicsBody(int32 DiceIndex, int32 FaceCount);
-	void ResetDiceBodyPose(UProceduralMeshComponent* PhysicsBody, int32 DiceIndex, int32 DiceCount, FRandomStream& Stream) const;
+	void ResetDiceBodyPose(UProceduralMeshComponent* PhysicsBody, int32 DiceIndex, int32 DiceCount, int32 FaceCount, FRandomStream& Stream) const;
 	void ConstrainDiceToTable(UProceduralMeshComponent* PhysicsBody) const;
+	void ApplyRollTimeDamping(UProceduralMeshComponent* PhysicsBody, float DeltaSeconds) const;
+	void ApplyCoinRollStabilization(UProceduralMeshComponent* PhysicsBody, int32 DiceIndex, float DeltaSeconds) const;
 	bool AreAllDiceStill();
 	void SyncVisualDiceToPhysics();
+	void TriggerImpactEffect(const FVector& WorldLocation, float Strength);
+	void UpdateImpactEffects(float DeltaSeconds);
+	UFUNCTION()
+	void HandlePhysicsBodyHit(
+		UPrimitiveComponent* HitComponent,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		FVector NormalImpulse,
+		const FHitResult& Hit);
 	int32 GetSettledFaceOrdinal(int32 DiceIndex) const;
 	int32 GetSettledFaceValue(int32 DiceIndex) const;
 	void UpdateAlign(float DeltaSeconds);
@@ -115,11 +131,32 @@ private:
 	TObjectPtr<UMaterialInterface> mCaptureMaterialTemplate;
 
 	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInterface> mImpactMaterialTemplate;
+
+	UPROPERTY(Transient)
 	TObjectPtr<UMaterialInstanceDynamic> mCaptureMaterial;
+
+	UPROPERTY(Transient)
+	TObjectPtr<USoundBase> mRollSound;
+
+	UPROPERTY(Transient)
+	TObjectPtr<USoundBase> mImpactSound;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UProceduralMeshComponent>> mImpactEffectComponents;
+
+	TArray<float> mImpactEffectAges;
+	TArray<float> mImpactEffectDurations;
+	TArray<float> mImpactEffectBaseSizes;
 
 	float mRollElapsed = 0.0f;
 	float mRollStillElapsed = 0.0f;   // 모든 주사위가 임계 속도 이하로 연속 정지한 시간(정지 감지용)
+	float mLastCollisionBoostTime = -1000.0f;
+	float mLastImpactEffectTime = -1000.0f;
+	float mLastImpactSoundTime = -1000.0f;
 	int32 mRollSeed = 0;
+	int32 mCollisionBoostsUsed = 0;
+	int32 mImpactEffectCursor = 0;
 	bool mRollActive = false;
 	bool mRollComplete = false;
 

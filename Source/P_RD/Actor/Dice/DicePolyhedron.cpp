@@ -80,17 +80,24 @@ namespace RDDicePolyhedron
 		{
 			FDicePolyhedron P;
 			constexpr int32 SegmentCount = 32;
-			constexpr float HalfThickness = 0.16f;
+			constexpr float HalfThickness = 0.045f;
+			constexpr float FaceRadius = 0.94f;
+			constexpr float RimRadius = 1.0f;
 
 			for (int32 Segment = 0; Segment < SegmentCount; ++Segment)
 			{
 				const float Angle = FMath::DegreesToRadians(360.0f * static_cast<float>(Segment) / static_cast<float>(SegmentCount));
-				P.mVertices.Add(FVector(FMath::Cos(Angle), FMath::Sin(Angle), HalfThickness));
+				P.mVertices.Add(FVector(FMath::Cos(Angle) * FaceRadius, FMath::Sin(Angle) * FaceRadius, HalfThickness));
 			}
 			for (int32 Segment = 0; Segment < SegmentCount; ++Segment)
 			{
 				const float Angle = FMath::DegreesToRadians(360.0f * static_cast<float>(Segment) / static_cast<float>(SegmentCount));
-				P.mVertices.Add(FVector(FMath::Cos(Angle), FMath::Sin(Angle), -HalfThickness));
+				P.mVertices.Add(FVector(FMath::Cos(Angle) * FaceRadius, FMath::Sin(Angle) * FaceRadius, -HalfThickness));
+			}
+			for (int32 Segment = 0; Segment < SegmentCount; ++Segment)
+			{
+				const float Angle = FMath::DegreesToRadians(360.0f * static_cast<float>(Segment) / static_cast<float>(SegmentCount));
+				P.mVertices.Add(FVector(FMath::Cos(Angle) * RimRadius, FMath::Sin(Angle) * RimRadius, 0.0f));
 			}
 
 			TArray<int32> Top;
@@ -114,7 +121,10 @@ namespace RDDicePolyhedron
 			for (int32 Segment = 0; Segment < SegmentCount; ++Segment)
 			{
 				const int32 Next = (Segment + 1) % SegmentCount;
-				AddFace(P, { Segment, Next, SegmentCount + Next, SegmentCount + Segment }, false);
+				const int32 Rim = SegmentCount * 2 + Segment;
+				const int32 RimNext = SegmentCount * 2 + Next;
+				AddFace(P, { Segment, Next, RimNext, Rim }, false);
+				AddFace(P, { Rim, RimNext, SegmentCount + Next, SegmentCount + Segment }, false);
 			}
 
 			Finalize(P);
