@@ -9,6 +9,9 @@ namespace
 	constexpr float FaceTextLift = 0.060f;
 	constexpr float FaceTextStrokeLift = 0.058f;
 	constexpr float FaceTextStrokeOffset = 0.0065f;
+	constexpr float CoinFaceTextLift = 0.185f;
+	constexpr float CoinFaceTextStrokeLift = 0.178f;
+	constexpr float CoinFaceTextStrokeOffset = 0.0105f;
 	constexpr int32 FaceTextStrokeCount = 4;
 	const FColor FaceTextDefaultColor(24, 24, 30, 230);
 	const FColor FaceTextDefaultStrokeColor(12, 12, 18, 190);
@@ -66,17 +69,24 @@ void ACombatDicePreviewActor::RebuildFaceTexts(int32 FaceCount)
 	}
 	// 주사위 간에도 너무 차이나지 않게 클램프.
 	mBaseFaceTextWorldSize = FMath::Clamp(MinInradius * DiceRadius * 1.48f, 24.0f, 48.0f);
+	if (FaceCount == 2)
+	{
+		mBaseFaceTextWorldSize = 44.0f;
+	}
 	const float UniformTextSize = mBaseFaceTextWorldSize * mFaceTextScale;
 
 	for (int32 FaceIndex = 0; FaceIndex < Poly.GetValueFaceCount(); ++FaceIndex)
 	{
 		const RDDicePolyhedron::FDiceFace& Face = Poly.GetValueFace(FaceIndex);
 		const float TextWorldSize = UniformTextSize;
+		const float TextLift = FaceCount == 2 ? CoinFaceTextLift : FaceTextLift;
+		const float StrokeLift = FaceCount == 2 ? CoinFaceTextStrokeLift : FaceTextStrokeLift;
+		const float CurrentStrokeOffset = FaceCount == 2 ? CoinFaceTextStrokeOffset : FaceTextStrokeOffset;
 
-		const FVector BaseTextLocation = Face.mCenter * DiceRadius + Face.mNormal * (DiceRadius * FaceTextLift);
-		const FVector StrokeBaseLocation = Face.mCenter * DiceRadius + Face.mNormal * (DiceRadius * FaceTextStrokeLift);
+		const FVector BaseTextLocation = Face.mCenter * DiceRadius + Face.mNormal * (DiceRadius * TextLift);
+		const FVector StrokeBaseLocation = Face.mCenter * DiceRadius + Face.mNormal * (DiceRadius * StrokeLift);
 		const FVector Right = MakeFaceRightVector(Face);
-		const float StrokeOffset = DiceRadius * FaceTextStrokeOffset;
+		const float StrokeOffset = DiceRadius * CurrentStrokeOffset;
 		const FRotator TextRotation = RDCombatDicePreview::MakeFaceTextRotation(Face.mNormal, Face.mUp);
 		const FText DefaultText = FText::AsNumber(FaceIndex + 1);
 		const FVector StrokeDirections[FaceTextStrokeCount] =
@@ -103,6 +113,7 @@ void ACombatDicePreviewActor::RebuildFaceTexts(int32 FaceCount)
 			FaceTextStroke->SetTextRenderColor(FaceTextDefaultStrokeColor);
 			FaceTextStroke->SetWorldSize(TextWorldSize);
 			FaceTextStroke->SetCastShadow(false);
+			FaceTextStroke->SetTranslucentSortPriority(FaceCount == 2 ? 64 : 8);
 			if (mDiceNumberFont != nullptr)
 			{
 				FaceTextStroke->SetFont(mDiceNumberFont);
@@ -126,6 +137,7 @@ void ACombatDicePreviewActor::RebuildFaceTexts(int32 FaceCount)
 		FaceText->SetTextRenderColor(FaceTextDefaultColor);   // 밝은 주사위에 대비되는 진한 숫자
 		FaceText->SetWorldSize(TextWorldSize);
 		FaceText->SetCastShadow(false);
+		FaceText->SetTranslucentSortPriority(FaceCount == 2 ? 65 : 9);
 		if (mDiceNumberFont != nullptr)
 		{
 			FaceText->SetFont(mDiceNumberFont);

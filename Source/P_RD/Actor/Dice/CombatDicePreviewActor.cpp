@@ -104,23 +104,23 @@ void ACombatDicePreviewActor::ApplyDiceMesh(int32 FaceCount)
 		// (몸통 메시에만 걸면 면판/숫자가 원래 반경에 남아 커진 몸통 속에 파묻힌다.)
 		if (mDiceRoot != nullptr)
 		{
-			mDiceRoot->SetRelativeScale3D(FVector(SizeCorrection));
+			mDiceRoot->SetRelativeScale3D(FaceCount == 2 ? FVector(0.96f) : FVector(SizeCorrection));
 		}
 
 		const FVector MeshScale = FaceCount == 2
-			? FVector(Scale * 1.06f, Scale * 1.06f, Scale * 0.24f)
+			? FVector(Scale * 1.08f, Scale * 1.08f, Scale * 0.105f)
 			: FVector(Scale);
 		mDiceMesh->SetRelativeScale3D(MeshScale);
 
 		if (mCoinRimMesh != nullptr)
 		{
-			const bool bShowCoinRim = FaceCount == 2;
+			const bool bShowCoinRim = false;
 			mCoinRimMesh->SetStaticMesh(bShowCoinRim ? Mesh : nullptr);
 			mCoinRimMesh->SetVisibility(bShowCoinRim);
 			if (bShowCoinRim)
 			{
-				mCoinRimMesh->SetRelativeLocation(FVector(0.0f, 0.0f, -Scale * 0.9f));
-				mCoinRimMesh->SetRelativeScale3D(FVector(Scale * 1.16f, Scale * 1.16f, Scale * 0.22f));
+				mCoinRimMesh->SetRelativeLocation(FVector(0.0f, 0.0f, -Scale * 3.2f));
+				mCoinRimMesh->SetRelativeScale3D(FVector(Scale * 1.12f, Scale * 1.12f, Scale * 0.08f));
 			}
 		}
 	}
