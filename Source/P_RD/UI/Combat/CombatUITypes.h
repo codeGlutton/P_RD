@@ -159,7 +159,7 @@ struct FDiceSlotUI
 // UI 필요값:
 // - mTag: 어떤 상태이상인지(요새화/신속/약화/취약 …). UI는 태그로만 받고 게임플레이 enum에 의존하지 않는다.
 // - mStackCount: 스택 수(StatusCountText 표시). 어댑터가 AttributeSet의 GetTagCount로 채운다.
-// [모호재 #290] 이 값을 채우는 곳은 PushUnitUIData(태그 순회 + GetTagCount). 태그→아이콘 텍스처 매핑은 UI(DataTable)가 소유.
+// [모호재 #290] 이 값을 채우는 곳은 PushUnitUIData(태그 순회 + GetTagCount). 태그→아이콘 텍스처 매핑은 HUD가 소유.
 USTRUCT(BlueprintType)
 struct FStatusEffectUI
 {
