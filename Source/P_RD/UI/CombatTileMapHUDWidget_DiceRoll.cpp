@@ -365,7 +365,7 @@ void UCombatTileMapHUDWidget::HandleCombatDiceRollRequested()
 		return;
 	}
 
-	// 턴 안내 영상이 끝난 뒤 터치 대기 상태로 연다 — 굴리는 맛(터치로 굴림)은 기획 확정 사항(06/15 회의).
-	// 실제 굴림은 유저 탭(HandleDiceRollInputButtonClicked)에서 StartIntroDiceRoll로 이어진다.
-	PlayTurnChangeIntro(true);
+	// 배너는 라운드 시작(OnBeginAnyRoundUI 배리어)에서 이미 재생됐다 — 여기선 주사위 오버레이만 터치 대기 상태로 연다.
+	// 굴리는 맛(터치로 굴림)은 기획 확정 사항(06/15 회의). 실제 굴림은 유저 탭(HandleDiceRollInputButtonClicked)에서 StartIntroDiceRoll로 이어진다.
+	PrepareIntroDiceRoll();
 }

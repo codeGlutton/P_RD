@@ -637,6 +637,18 @@ void USRPGCombatModel::NotifyRoundStartIfNeeded()
 		{
 			Obstacle->OnBeginRound();
 		}
+
+		// TODO(프레임워크 소유자): 라운드 시작 연출 배리어 연결 지점.
+		//   OnBeginAnyRoundUI(계약)는 이미 선언돼 있고 게임모드/HUD가 구독 중이다(라운드 배너 게이팅).
+		//   여기서 배리어를 만들어 방송하면 배너가 살아난다. 단, 이 함수는 AdvanceTurn이 곧바로 BeginTurn을 호출하므로
+		//   "첫 턴 지연"까지 하려면 AdvanceTurn을 아래처럼 재구성해야 한다(턴의 BeginTurn 배리어와 대칭):
+		//
+		//   TSharedPtr<FPresentationBarrier> RoundBarrier = FPresentationBarrier::Make(
+		//       FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+		//           mTurnContextMap[mCurTurnContextOrder->GetValue()]->BeginTurn();   // 배너 종료 후 그 라운드 첫 턴
+		//       }));
+		//   OnBeginAnyRoundUI.Broadcast(RoundBarrier, mRoundCount);
+		//   → 그리고 AdvanceTurn 끝의 무조건 BeginTurn() 호출을 "라운드 시작이면 배리어에 위임"으로 분기.
 	}
 }
 
