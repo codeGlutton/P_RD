@@ -86,7 +86,7 @@ protected:
 	* 커질수록 화면이 더 많이 축소할 수 있다.
 	*/
 	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MaxZoom", AllowPrivateAccess = "true"))
-	float mMaxOrthoWidth = 2000.f;
+	float mMaxOrthoWidth = 2500.f;
 
 	/*
 	* @brief 최소 OrthoWidth, 또는 최대 확대

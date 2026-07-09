@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/SceneComponent.h"
 #include "Actor/ActorView.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "Actor/TileMap/TileMapModel.h"
@@ -193,7 +194,7 @@ protected:
 	 * @brief 타일 한 칸의 월드 크기 (cm)
 	 */
 	UPROPERTY(EditAnywhere, Category = "SRPG", meta = (DisplayName = "Tile Size", ClampMin = "1.0"))
-	float mTileSize = 140.0f;
+	float mTileSize = 250.0f;
 
 	/* 시각화 */
 
@@ -403,4 +404,9 @@ private:
 	 *          싱글캐스트라 재호출 시 기존 바인딩을 덮어쓴다. (좌표 변환 델리깃 바인딩도 추후 이 자리로 합칠 것)
 	 */
 	void BindModelDelegates();
+
+	/**
+	 * @brief 타일맵뷰 트랜스폼 변경 시 유닛뷰 위치도 변경
+	 */
+	void OnRootTransformUpdated(USceneComponent* UpdatedComponent, EUpdateTransformFlags UpdateTransformFlags, ETeleportType Teleport);
 };
