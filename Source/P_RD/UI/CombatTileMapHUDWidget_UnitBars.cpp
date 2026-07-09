@@ -199,6 +199,22 @@ void UCombatTileMapHUDWidget::RebuildUnitHpBars()
 		NewBar.mRoot->SetRenderTransformPivot(FVector2D(0.5f, 1.0f));
 		NewBar.mRoot->SetRenderScale(FVector2D(UnitHpBarRenderScale, UnitHpBarRenderScale));
 
+		// [Adreno Vulkan RHIThread 크래시 방지] 위 렌더 스케일(변환)이 걸린 HP바 서브트리 안에 ClipToBounds 위젯이 있으면
+		// 모바일 Vulkan에서 스텐실-클립 파이프라인이 없어 vkCmdBindPipeline(null)로 렌더 스레드가 즉사한다(실측).
+		// (기존 대응은 채움 크롭의 클립만 슬롯폭으로 우회 — 변환은 남아있음.) 변환 서브트리의 나머지 클립도 강제로 끈다.
+		// 솔리드 채움/아이콘/텍스트라 클립이 없어도 시각 차이는 거의 없다.
+		NewBar.mRoot->SetClipping(EWidgetClipping::Inherit);
+		if (UWidgetTree* BarWidgetTree = NewBar.mRoot->WidgetTree)
+		{
+			BarWidgetTree->ForEachWidget([](UWidget* ChildWidget)
+			{
+				if (ChildWidget != nullptr && ChildWidget->GetClipping() == EWidgetClipping::ClipToBounds)
+				{
+					ChildWidget->SetClipping(EWidgetClipping::Inherit);
+				}
+			});
+		}
+
 		// 트리 확정 후 라이브 캔버스에 붙인다.
 		RootCanvas->AddChildToCanvas(NewBar.mRoot);
 		if (UCanvasPanelSlot* RootSlot = Cast<UCanvasPanelSlot>(NewBar.mRoot->Slot))
