@@ -651,6 +651,9 @@ private:
 	/** @brief 턴 전환 안내 종료 직후 주사위 팝업을 열어야 하는지 여부 */
 	bool mPendingDiceRollAfterTurnIntro = false;
 
+	/** @brief 라운드 시작 배너를 재생하는 동안 잡아두는 배리어 — 배너가 끝나면(FinishTurnChangeIntro) 놓아 그 라운드 첫 턴을 진행시킨다. */
+	TSharedPtr<FPresentationBarrier> mRoundChangeBarrier;
+
 	/** @brief HUD가 열린 직후 첫 턴 전환 안내를 지연 재생해야 하는지 여부 */
 	bool mPendingInitialTurnChangeIntro = false;
 
