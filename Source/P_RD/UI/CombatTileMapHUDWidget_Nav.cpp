@@ -1,6 +1,7 @@
 ﻿#include "UI/CombatTileMapHUDWidget.h"
 
 #include "Components/Border.h"
+#include "Kismet/GameplayStatics.h"   // 지도 열기 사운드 재생
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
 #include "Components/Image.h"
@@ -158,6 +159,12 @@ void UCombatTileMapHUDWidget::ToggleWorldMap()
 		return;
 	}
 
+	// 여기부터는 지도가 실제로 '열리는' 경로 — 책장 넘김 사운드를 1회 재생한다(닫을 땐 안 냄).
+	if (mMapOpenSound != nullptr)
+	{
+		UGameplayStatics::PlaySound2D(this, mMapOpenSound);
+	}
+
 	CloseFloatingPanels(EWorldWidgetType::WorldMap);
 	WorldMapWidget->OnCloseRequested.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleWorldMapCloseRequested);
 	WorldMapWidget->SetRoomSelectionEnabled(false);
@@ -261,6 +268,12 @@ void UCombatTileMapHUDWidget::OpenWorldMapAfterPlayerWin(TSharedPtr<FPresentatio
 	if (WorldMapWidget == nullptr)
 	{
 		return;
+	}
+
+	// 승리 후 자동으로 열리는 지도에도 MAP 버튼과 동일한 열림 사운드를 낸다.
+	if (mMapOpenSound != nullptr)
+	{
+		UGameplayStatics::PlaySound2D(this, mMapOpenSound);
 	}
 
 	CloseWorldWidget(EWorldWidgetType::InGameSettings);

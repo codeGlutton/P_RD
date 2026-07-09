@@ -15,6 +15,28 @@ UCombatTileMapHUDWidget::UCombatTileMapHUDWidget(const FObjectInitializer& Objec
 		mDiceRollBoardTexture = DiceRollBoardFinder.Object;
 	}
 
+	// 전투 UI 사운드(SVN uasset)를 하드레퍼런스로 프리로드 → 쿡 보장(#300 컨벤션).
+	static ConstructorHelpers::FObjectFinder<USoundBase> CoinGainSoundFinder(TEXT("/Game/SVN/OutSideAsset/SFX/OpenGameArt_CC0/Coin/SFX_CoinGain_OGA_CC0_11.SFX_CoinGain_OGA_CC0_11"));
+	if (CoinGainSoundFinder.Succeeded())
+	{
+		mCoinGainSound = CoinGainSoundFinder.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<USoundBase> MapOpenSoundFinder(TEXT("/Game/SVN/OutSideAsset/SFX/OpenGameArt_CC0/UI/SFX_MapOpen_OGA_CC0_BookFlip3.SFX_MapOpen_OGA_CC0_BookFlip3"));
+	if (MapOpenSoundFinder.Succeeded())
+	{
+		mMapOpenSound = MapOpenSoundFinder.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<USoundBase> DiceChooseSoundFinder(TEXT("/Game/SVN/OutSideAsset/SFX/OpenGameArt_CC0/UI/SFX_DiceChoose_OGA_CC0_WoodDice2.SFX_DiceChoose_OGA_CC0_WoodDice2"));
+	if (DiceChooseSoundFinder.Succeeded())
+	{
+		mDiceChooseSound = DiceChooseSoundFinder.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<USoundBase> SkillSelectSoundFinder(TEXT("/Game/SVN/OutSideAsset/SFX/OpenGameArt_CC0/UI/SFX_SkillSelect_OGA_CC0_QuickslotClear.SFX_SkillSelect_OGA_CC0_QuickslotClear"));
+	if (SkillSelectSoundFinder.Succeeded())
+	{
+		mSkillSelectSound = SkillSelectSoundFinder.Object;
+	}
+
 	// 플로팅 로그 종류별 아이콘 (SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons). HP는 피해/회복으로 갈린다.
 #define RD_LOAD_LOGICON(Member, Path) \
 	{ static ConstructorHelpers::FObjectFinder<UTexture2D> Finder(TEXT(Path)); if (Finder.Succeeded()) { Member = Finder.Object; } }
