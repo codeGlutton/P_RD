@@ -12,7 +12,6 @@
 
 #include "Tool/CircularList.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
-
 #include "SRPGFramework/SRPGTurnContext.h"
 
 #include "SRPGCombatModel.generated.h"
@@ -44,8 +43,6 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowDicePanelAnyTurnUI, const USRPGTurnCo
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnBeginCombatUI, TSharedPtr<FPresentationBarrier> /*Barrier*/)
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndCombatUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, ESRPGCombatResult /*Result*/)
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBeginAnyTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/)
-// 라운드 시작 연출용 계약. 배리어를 잡고 있으면 그 라운드의 첫 턴 실행을 지연시킨다(FOnBeginAnyTurnUI와 대칭).
-// 방송 지점(AdvanceTurn 라운드 시작 + 첫 턴 지연)은 프레임워크 소유자 몫 — 아래 NotifyRoundStartIfNeeded의 TODO 참고.
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBeginAnyRoundUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, int32 /*RoundCount*/)
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnEndAnyTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, ESRPGTurnResult /*Result*/)
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnBeginAnyTurnActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, const USRPGAction* /*Action*/)
@@ -159,7 +156,7 @@ protected:
 
 protected:
 	void AdvanceTurn(bool IsInitialRound = false);
-	void NotifyRoundStartIfNeeded();
+	void NotifyRoundStartIfNeeded(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier);
 	void NotifyRoundEndIfNeeded();
 
 	/* 액션 함수 */
@@ -172,10 +169,11 @@ public:
 	bool PushAction(USRPGAction* Action);
 
 public:
-	USRPGTurnContext* GetCurrentTurnContext();
-	USRPGTurnContext* GetTurnContext(const UUnitModel* Owner);
-	TArray<TObjectPtr<USRPGTurnContext>> GetTurnContexts(const UUnitModel* Owner);
-	UTileMapModel* GetTileMap();
+	USRPGTurnContext* GetCurrentTurnContext() const;
+	USRPGTurnContext* GetTurnContext(const UUnitModel* Owner) const;
+	TArray<TObjectPtr<USRPGTurnContext>> GetTurnContexts(const UUnitModel* Owner) const;
+	TArray<TObjectPtr<USRPGTurnContext>> GetOrderedTurnContexts() const;
+	UTileMapModel* GetTileMap() const;
 
 	UUnitModel* GetPlayerUnit() const;
 	const TArray<TObjectPtr<UUnitModel>>& GetUnits() const;
