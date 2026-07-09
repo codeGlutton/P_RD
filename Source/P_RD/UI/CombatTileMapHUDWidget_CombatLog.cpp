@@ -22,9 +22,9 @@
  *  좌표는 머리 위 HP바와 똑같은 "월드→스크린 투영"이라 카메라가 움직여도 대상 위에 붙어 다닌다.
  *
  *  ## 로그 두 종류 (mIsPreview로 갈림)
- *  - **실행 로그(mIsPreview=false)** : "-12" 같은 순간 연출(juice). 뜨면 위로 떠오르며 FloatingLogLifetime(1.2s) 뒤
- *    자동 소멸. 여러 개가 몰리면 대기 큐(mPendingFloatingCombatLogs)에 쌓였다 FloatingLogQueueInterval 간격으로
- *    하나씩 스폰(같은 프레임에 다 뜨지 않게).
+ *  - **실행 로그(mIsPreview=false)** : 위젯 레이어는 "-12" 같은 순간 연출(juice)을 지원한다. 다만 현재 CombatGameMode는
+ *    액션 종료 로그를 UI로 보내지 않고 소비만 하므로, 실제 전투 흐름에서는 조준 미리보기 로그만 표시된다.
+ *    다시 쓰게 되면 대기 큐(mPendingFloatingCombatLogs)에 쌓였다 FloatingLogQueueInterval 간격으로 하나씩 스폰된다.
  *  - **미리보기 로그(mIsPreview=true)** : 조준 시 결과를 미리 보여주는 목록. 자동 소멸하지 않고 고정 자리에 떠 있다가,
  *    그 로그가 속한 모션이 끝나거나(MotionFinished) 전체 클리어될 때만 사라진다. 스태거 없이 즉시 뜬다.
  *
