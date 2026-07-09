@@ -321,6 +321,12 @@ void USRPGTurnContext::EvaluateTurnEndState(bool ForceAbort)
 
 void USRPGTurnContext::EnqueueAction(USRPGAction* NewAction)
 {
+	const bool IsPlayingInPlayAction = mReservedActions.Num() > mHeadActionIndex && mReservedActions[mHeadActionIndex]->GetActionType() == ESRPGActionType::InPlayAction;
+	if (IsPlayingInPlayAction == true && NewAction->GetActionType() == ESRPGActionType::BuildAction)
+	{
+		return;
+	}
+
 	NewAction->OnBeginActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGAction* Action) {
 		OnBeginAnyActionUI.Broadcast(Barrier, this, Action);
 		});

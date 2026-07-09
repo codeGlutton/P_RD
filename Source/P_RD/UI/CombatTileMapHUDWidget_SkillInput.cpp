@@ -1,4 +1,4 @@
-#include "UI/CombatTileMapHUDWidget.h"
+﻿#include "UI/CombatTileMapHUDWidget.h"
 
 #include "UI/Combat/CombatUIModel.h"
 
@@ -78,19 +78,9 @@ void UCombatTileMapHUDWidget::SelectSkillForAssignment(int32 SkillIndex)
 		return;
 	}
 
-	if (mSelectedSkillIndex != SkillIndex)
-	{
-		ClearOwnedDiceSelectionHighlight();
-	}
-	mSelectedSkillIndex = SkillIndex;
-
 	// 뷰모델 연결 시 선택은 의도로만 보낸다(실행/검증은 게임플레이). 시각 강조는 로컬 유지.
 	if (mCombatUIModel != nullptr)
 	{
 		mCombatUIModel->RequestSelectSkill(SkillIndex);
 	}
-
-	RefreshSkillRailWidgets();
-	RefreshOwnedDiceCards();
-	RefreshDiceAssignmentText();
 }

@@ -18,6 +18,7 @@ class UStaticSkillData;
 class UTileMapModel;
 class UDiceModel;
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnSelectSkill, int32 /*SkillIndex*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangeSkillBuildPhase, const USRPGSkillBuildAction* /*Action*/, ESRPGSkillBuildPhase /*Phase*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPostSimulateSkillAction, const TArray<FSRPGTurnEventLog>& /*EventLogs*/);
 DECLARE_MULTICAST_DELEGATE(FOnCancelSimulateSkillAction);
@@ -31,6 +32,7 @@ public:
 	FSRPGSkillSelectCommand();
 
 public:
+	FOnSelectSkill OnSelectSkill;
 	FOnChangeSkillBuildPhase OnChangeSkillBuildPhase;
 	FOnPostSimulateSkillAction OnPostSimulateSkillAction;
 	FOnCancelSimulateSkillAction OnCancelSimulateSkillAction;
@@ -104,6 +106,7 @@ private:
 	UTileMapModel* GetTileMap() const;
 
 protected:
+	FOnSelectSkill OnSelectSkill;
 	FOnChangeSkillBuildPhase OnChangeSkillBuildPhase;
 	FOnPostSimulateSkillAction OnPostSimulateSkillAction;
 	FOnCancelSimulateSkillAction OnCancelSimulateSkillAction;

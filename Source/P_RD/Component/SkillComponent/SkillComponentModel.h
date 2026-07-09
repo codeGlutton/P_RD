@@ -43,10 +43,6 @@ public:
 	// @brief 장착된 고정 스킬 데이터
 	UPROPERTY(Category = "Static", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Data"))
 	TObjectPtr<UStaticSkillData> mData = nullptr;
-
-	// @brief 현재 선택된 스킬 여부
-	UPROPERTY(Category = "Runtime", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsSelected"))
-	bool mIsSelected = false;
 };
 
 USTRUCT(BlueprintType)

@@ -63,6 +63,7 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
 
         const FSRPGSkillSelectCommand& SkillSelectCommand = Command.Get<FSRPGSkillSelectCommand>();
 
+        OnSelectSkill = SkillSelectCommand.OnSelectSkill;
         OnChangeSkillBuildPhase = SkillSelectCommand.OnChangeSkillBuildPhase;
         OnPostSimulateSkillAction = SkillSelectCommand.OnPostSimulateSkillAction;
         OnCancelSimulateSkillAction = SkillSelectCommand.OnCancelSimulateSkillAction;
@@ -264,6 +265,8 @@ void USRPGSkillBuildAction::SetSkill(int32 SkillIndex)
         mSelectedSkillIndex = SkillIndex;
         mSelectedSkill = StaticSkillDataSoftObj.Get();
     }
+
+    OnSelectSkill.Broadcast(mSelectedSkillIndex);
 }
 
 void USRPGSkillBuildAction::ChangeDices(int32 RequestedDiceIndex)
@@ -353,6 +356,8 @@ void USRPGSkillBuildAction::ResetSkill()
     mReachableTileIndexes.Empty();
     mSelectedSkill = nullptr;
     mSelectedSkillIndex = INDEX_NONE;
+
+    OnSelectSkill.Broadcast(mSelectedSkillIndex);
 }
 
 void USRPGSkillBuildAction::ResetDice()

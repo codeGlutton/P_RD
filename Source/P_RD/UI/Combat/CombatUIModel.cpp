@@ -1,4 +1,4 @@
-#include "UI/Combat/CombatUIModel.h"
+﻿#include "UI/Combat/CombatUIModel.h"
 
 // ───────── UI → gameplay : 의도만 브로드캐스트 (실행은 게임플레이가) ─────────
 
@@ -103,6 +103,13 @@ void UCombatUIModel::SetSelectedDice(const TArray<int32>& SelectedIndices, int32
 void UCombatUIModel::SetSkillUIs(const TArray<FSkillUI>& Skills)
 {
 	mSkillUIs = Skills;
+	OnUIChanged.Broadcast(ECombatUIDomain::Skill);
+}
+
+/** @brief 선택된 스킬 index를 교체한다. */
+void UCombatUIModel::SetSelectedSkill(int32 SelectedIndex)
+{
+	mSelectedSkillIndex = SelectedIndex;
 	OnUIChanged.Broadcast(ECombatUIDomain::Skill);
 }
 

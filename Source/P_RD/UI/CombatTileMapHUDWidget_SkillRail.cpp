@@ -1,4 +1,4 @@
-#include "UI/CombatTileMapHUDWidget.h"
+﻿#include "UI/CombatTileMapHUDWidget.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
@@ -90,6 +90,13 @@ void UCombatTileMapHUDWidget::RebuildSkillRailWidgets()
  * WBP에는 빈 프레임(크롬)만 있으므로 "가리기(검은 커버)"가 필요 없다. 데이터 소스는 FSkillUI 단일. */
 void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 {
+	int32 SkillIndex = mCombatUIModel != nullptr ? mCombatUIModel->GetSelectedSkillIndex() : INDEX_NONE;
+	if (mSelectedSkillIndex != SkillIndex)
+	{
+		ClearOwnedDiceSelectionHighlight();
+	}
+	mSelectedSkillIndex = SkillIndex;
+
 	const TArray<FSkillUI>* Skills = mCombatUIModel != nullptr ? &mCombatUIModel->GetSkillUIs() : nullptr;
 
 	for (int32 RailSlotIndex = 0; RailSlotIndex < mSkillRailPanels.Num(); ++RailSlotIndex)

@@ -194,7 +194,6 @@ void ACombatGameMode::InitializeRoom()
 
 	CombatModel->OnShowDicePanelAnyTurnUI.AddWeakLambda(this, [this](const USRPGTurnContext* TurnContext) {
 		// 턴 시작 주사위 준비(DicePrepare) 시점 — 굴림 오버레이를 열라고 UI에 통지한다.
-		// (첫 턴은 전투 입장 연출이 따로 열지만, 2턴째부터는 이 통지가 없으면 굴림 UI가 영영 안 열린다)
 		mCombatUIModel->NotifyDiceRollRequested();
 		});
 
@@ -274,9 +273,8 @@ void ACombatGameMode::InitializeRoom()
 
 	/* UI 조작 의도 라우팅 — 위젯 탭이 쏘는 Request*(OnCombatCommand)를 게임플레이 진입점에 연결 */
 
-	mCombatUIModel->OnCombatCommand.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatCommand);
 	mCombatUIModel->OnApplyDiceResults.AddUniqueDynamic(this, &ACombatGameMode::HandleApplyDiceResults);
-	// 월드 탭을 전투 명령으로 넘겨 조준/시전을 진행한다.
+	mCombatUIModel->OnCombatCommand.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatCommand);
 	mCombatUIModel->OnCombatWorldTouch.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatWorldTouch);
 
 	const FStage& CurStage = GetRunPersistData()->GetStage();
@@ -418,6 +416,9 @@ bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 	TInstancedStruct<FSRPGCommand> SkillSelectCommand;
 	SkillSelectCommand.InitializeAs<FSRPGSkillSelectCommand>();
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().mSkillIndex = SkillIndex;
+	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnSelectSkill.AddWeakLambda(this, [this](int32 SkillIndex) {
+		PushSelectedSkillUIData(SkillIndex);
+		});
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnChangeSkillBuildPhase.AddWeakLambda(this, [this](const USRPGSkillBuildAction* Action, ESRPGSkillBuildPhase Phase) {
 		PushSkillBuildUIData(Phase);
 		});
@@ -760,6 +761,13 @@ void ACombatGameMode::PushSkillUIData() const
 	}
 
 	mCombatUIModel->SetSkillUIs(SkillUIDatas);
+}
+
+void ACombatGameMode::PushSelectedSkillUIData(int32 SkillIndex) const
+{
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
+	mCombatUIModel->SetSelectedSkill(SkillIndex);
 }
 
 void ACombatGameMode::PushCombatTargetDetailUIData(IBoardSelectionTarget* Target) const
