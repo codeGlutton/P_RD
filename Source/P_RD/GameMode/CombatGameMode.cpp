@@ -142,19 +142,6 @@ namespace
 			IconType = EFloatingLogIconType::Weakness;
 			ColorType = EFloatingLogColorType::Debuff;
 		}
-		else if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_ActorState_Dead))
-		{
-			IconType = EFloatingLogIconType::None;
-			ColorType = EFloatingLogColorType::Warning;
-		}
-	}
-
-	bool IsUnitHpBarStatusEffectTag(const FGameplayTag& StatusTag)
-	{
-		return StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Agility)
-			|| StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification)
-			|| StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability)
-			|| StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness);
 	}
 
 	void ConvertFloatingLogUITypes(const FSRPGAttributeEffectEventLog& AttrLog, OUT EFloatingLogIconType& IconType, OUT EFloatingLogColorType& ColorType)
@@ -202,7 +189,6 @@ void ACombatGameMode::InitializeRoom()
 
 	CombatModel->OnShowDicePanelAnyTurnUI.AddWeakLambda(this, [this](const USRPGTurnContext* TurnContext) {
 		// 턴 시작 주사위 준비(DicePrepare) 시점 — 굴림 오버레이를 열라고 UI에 통지한다.
-		// (첫 턴은 전투 입장 연출이 따로 열지만, 2턴째부터는 이 통지가 없으면 굴림 UI가 영영 안 열린다)
 		mCombatUIModel->NotifyDiceRollRequested();
 		});
 
@@ -289,9 +275,8 @@ void ACombatGameMode::InitializeRoom()
 
 	/* UI 조작 의도 라우팅 — 위젯 탭이 쏘는 Request*(OnCombatCommand)를 게임플레이 진입점에 연결 */
 
-	mCombatUIModel->OnCombatCommand.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatCommand);
 	mCombatUIModel->OnApplyDiceResults.AddUniqueDynamic(this, &ACombatGameMode::HandleApplyDiceResults);
-	// 월드 탭을 전투 명령으로 넘겨 조준/시전을 진행한다.
+	mCombatUIModel->OnCombatCommand.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatCommand);
 	mCombatUIModel->OnCombatWorldTouch.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatWorldTouch);
 
 	const FStage& CurStage = GetRunPersistData()->GetStage();
@@ -433,6 +418,9 @@ bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 	TInstancedStruct<FSRPGCommand> SkillSelectCommand;
 	SkillSelectCommand.InitializeAs<FSRPGSkillSelectCommand>();
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().mSkillIndex = SkillIndex;
+	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnSelectSkill.AddWeakLambda(this, [this](int32 SkillIndex) {
+		PushSelectedSkillUIData(SkillIndex);
+		});
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnChangeSkillBuildPhase.AddWeakLambda(this, [this](const USRPGSkillBuildAction* Action, ESRPGSkillBuildPhase Phase) {
 		PushSkillBuildUIData(Phase);
 		});
@@ -672,7 +660,7 @@ void ACombatGameMode::PushUnitUIData() const
 		UnitUIData.mStatusEffects.Reset();
 		for (const FGameplayTag& StatusTag : UnitUIData.mStatusTags)
 		{
-			if (IsUnitHpBarStatusEffectTag(StatusTag) == false)
+			if (StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect) == false)
 			{
 				continue;
 			}
@@ -791,6 +779,13 @@ void ACombatGameMode::PushSkillUIData() const
 	}
 
 	mCombatUIModel->SetSkillUIs(SkillUIDatas);
+}
+
+void ACombatGameMode::PushSelectedSkillUIData(int32 SkillIndex) const
+{
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
+	mCombatUIModel->SetSelectedSkill(SkillIndex);
 }
 
 void ACombatGameMode::PushCombatTargetDetailUIData(IBoardSelectionTarget* Target) const
@@ -957,7 +952,7 @@ void ACombatGameMode::PushPlayerMetaUIData() const
 	mCombatUIModel->SetPlayerMeta(PlayerMetaUIData);
 }
 
-void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>& TurnEventLogs, bool bIsPreview) const
+void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>& TurnEventLogs, bool IsPreview) const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
@@ -969,24 +964,24 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 
 	/* 새로운 시뮬마다 이전 남은 로그 지우기 */
 
-	if (bIsPreview == true)
+	if (IsPreview == true)
 	{
 		mCombatUIModel->NotifyCombatFloatingLogsCleared();
 	}
 
 	/* 모션 내 이벤트 로그 마다 UI 요청서 작성 함수 */
 
-	auto AddFloatingLogs = [bIsPreview](const FSRPGBoardActorEventLog& EventLog, const FVector& ViewActorLocation, const int32 MotionIndex, OUT int32& Sequence, OUT TArray<FCombatFloatingLogRequest>& Requests) {
+	auto AddFloatingLogs = [IsPreview](const FSRPGBoardActorEventLog& EventLog, const FVector& ViewActorLocation, const int32 MotionIndex, OUT int32& Sequence, OUT TArray<FCombatFloatingLogRequest>& Requests) {
 		
-		auto MakeLogRequest = [bIsPreview](int32 Amount, EFloatingLogIconType IconType, EFloatingLogColorType ColorType, const FVector& ViewLocation, int32 MotionIndex, int32 Sequence) -> FCombatFloatingLogRequest {
+		auto MakeLogRequest = [IsPreview](int32 Amount, EFloatingLogIconType IconType, EFloatingLogColorType ColorType, const FVector& ViewLocation, int32 MotionIndex, int32 Sequence) -> FCombatFloatingLogRequest {
 			FCombatFloatingLogRequest Request;
 			Request.mWorldLocation = ViewLocation;
 			Request.mText = FText::FromString(FString::Printf(TEXT("%+d"), Amount));
 			Request.mIconType = IconType;
 			Request.mColorType = ColorType;
 			Request.mSequence = Sequence;
-			Request.mMotionIndex = bIsPreview == true ? MotionIndex : INDEX_NONE;
-			Request.mIsPreview = bIsPreview;
+			Request.mMotionIndex = IsPreview == true ? MotionIndex : INDEX_NONE;
+			Request.mIsPreview = IsPreview;
 			return Request;
 			};
 		

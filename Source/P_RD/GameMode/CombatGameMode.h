@@ -120,6 +120,7 @@ protected:
 	void PushDiceUIData() const;
 	void PushSelectedDiceUIData() const;
 	void PushSkillUIData() const;
+	void PushSelectedSkillUIData(int32 SkillIndex) const;
 
 	void PushCombatTargetDetailUIData(IBoardSelectionTarget* Target) const;
 
@@ -128,7 +129,7 @@ protected:
 	void PushEquipmentDetailUIData(int32 EquipmentIndex) const;
 	void PushPlayerMetaUIData() const;
 
-	void PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>& TurnEventLogs, bool bIsPreview = true) const;
+	void PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>& TurnEventLogs, bool IsPreview = true) const;
 
 	/* 연출용 대리자 */
 public:

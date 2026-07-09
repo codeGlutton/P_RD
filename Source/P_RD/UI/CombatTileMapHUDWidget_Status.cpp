@@ -1,4 +1,4 @@
-#include "UI/CombatTileMapHUDWidget.h"
+﻿#include "UI/CombatTileMapHUDWidget.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
@@ -58,6 +58,7 @@ void UCombatTileMapHUDWidget::HandleCombatUIChanged(ECombatUIDomain Domain)
 	{
 		RefreshSkillRailWidgets();
 		RefreshDiceAssignmentText();
+		RefreshOwnedDiceCards();
 	}
 }
 
