@@ -225,9 +225,12 @@ void ACombatGameMode::InitializeRoom()
 	CombatModel->OnEndAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action, ESRPGActionResult Result) {
 		// 액션이 끝나면 UI의 스킬/주사위 선택 표시를 지운다.
 		mCombatUIModel->NotifyActionResolved();
+		// [비활성화] 실행 후 잠깐 떴다 사라지는 레거시 실행 로그(mIsPreview=false). 조준 프리뷰 로그만 쓰기로 함.
+		// 로그는 여전히 소비(Pop)해 다음 시뮬에 쌓이지 않게 비운다.
 		if (UEventLogger* EventLogger = GetWorldEventLogger(this))
 		{
-			PushSimulationFloatingLogs(EventLogger->PopSRPGLogs(), false);
+			EventLogger->PopSRPGLogs();
+			// PushSimulationFloatingLogs(EventLogger->PopSRPGLogs(), false);   // 레거시 실행 로그 비활성화
 		}
 		// OnEndAnyTurnActionUI.Broadcast(Barrier, TurnContext, Action, Result); 연출은 연결고리가 아직 없음
 		});
