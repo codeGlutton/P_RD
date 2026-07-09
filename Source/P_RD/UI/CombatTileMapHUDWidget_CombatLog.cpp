@@ -409,48 +409,21 @@ void UCombatTileMapHUDWidget::RemoveFloatingCombatLogsByMotionIndex(int32 Motion
 
 void UCombatTileMapHUDWidget::RefreshTurnRoundBanner()
 {
-	if (mCombatUIModel == nullptr || RootCanvas == nullptr || WidgetTree == nullptr)
+	if (mTurnRoundBannerText != nullptr)
 	{
-		return;
+		mTurnRoundBannerText->SetText(FText::GetEmpty());
+		mTurnRoundBannerText->SetVisibility(ESlateVisibility::Collapsed);
 	}
 
-	// 라운드가 실제로 바뀔 때만 배너를 띄운다. 같은 라운드 안의 턴 전환/스냅샷 push에는 반응하지 않는다.
-	const int32 Round = mCombatUIModel->GetTurnUI().mRound;
-	if (Round <= 0 || Round == mLastShownTurnRound)
+	if (mCombatUIModel != nullptr)
 	{
-		return;
-	}
-	mLastShownTurnRound = Round;
-
-	if (mTurnRoundBannerText == nullptr)
-	{
-		mTurnRoundBannerText = WidgetTree->ConstructWidget<UTextBlock>(
-			UTextBlock::StaticClass(), TEXT("TurnRoundBannerText"));
-		if (mTurnRoundBannerText == nullptr)
+		const int32 Round = mCombatUIModel->GetTurnUI().mRound;
+		if (Round > 0)
 		{
-			return;
-		}
-		mTurnRoundBannerText->SetVisibility(ESlateVisibility::HitTestInvisible);
-		mTurnRoundBannerText->SetJustification(ETextJustify::Center);
-		mTurnRoundBannerText->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.92f, 0.62f, 1.0f)));
-		FSlateFontInfo BannerFont = mTurnRoundBannerText->GetFont();
-		BannerFont.Size = 34;
-		mTurnRoundBannerText->SetFont(BannerFont);
-
-		if (UCanvasPanelSlot* BannerSlot = RootCanvas->AddChildToCanvas(mTurnRoundBannerText))
-		{
-			BannerSlot->SetAutoSize(true);
-			BannerSlot->SetAnchors(FAnchors(0.5f, 0.2f)); // 중앙 상단(탑바 아래)
-			BannerSlot->SetAlignment(FVector2D(0.5f, 0.5f));
-			BannerSlot->SetPosition(FVector2D::ZeroVector);
-			BannerSlot->SetZOrder(31);
+			mLastShownTurnRound = Round;
 		}
 	}
 
-	mTurnRoundBannerText->SetText(FText::Format(
-		NSLOCTEXT("CombatTileMapHUDWidget", "TurnRoundBanner", "{0}번째 턴"), FText::AsNumber(Round)));
-	mTurnRoundBannerText->SetRenderOpacity(1.0f);
-	mTurnRoundBannerText->SetVisibility(ESlateVisibility::HitTestInvisible);
 	mTurnRoundBannerElapsed = 0.0f;
 }
 

@@ -6,6 +6,11 @@
 
 #include "GameMode/CombatGameMode.h"
 
+namespace
+{
+	constexpr float InitialTurnChangeIntroDelaySeconds = 0.35f;
+}
+
 UCombatTileMapHUDWidget::UCombatTileMapHUDWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
@@ -159,8 +164,24 @@ void UCombatTileMapHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 	{
 		UpdateIntroDiceRoll(InDeltaTime);
 	}
+	if (mTurnChangeIntroPlaying)
+	{
+		UpdateTurnChangeIntro(InDeltaTime);
+	}
+	if (mPendingInitialTurnChangeIntro == true)
+	{
+		mPendingInitialTurnChangeIntroDelay = FMath::Max(0.0f, mPendingInitialTurnChangeIntroDelay - InDeltaTime);
+		if (mPendingInitialTurnChangeIntroDelay <= 0.0f
+			&& mTurnChangeIntroPlaying == false
+			&& mIntroDiceRollActive == false
+			&& mIntroDiceRollReady == false
+			&& mIntroDiceResultWaitingForDismiss == false)
+		{
+			mPendingInitialTurnChangeIntro = false;
+			PlayTurnChangeIntro(true);
+		}
+	}
 
-	UpdateShakeToRoll(InDeltaTime);
 	UpdateTopBarBackdrop();
 	UpdateSkillPress(InDeltaTime);
 	UpdateEquipPress(InDeltaTime);
@@ -189,7 +210,8 @@ void UCombatTileMapHUDWidget::ApplyOpenUI()
 	 * 버튼 밖(월드) 탭만 루트가 받아 좌표를 전달한다. (SelfHitTestInvisible이면 월드 탭이 통과돼버림)
 	 */
 	SetVisibility(ESlateVisibility::Visible);
-	PrepareIntroDiceRoll();
+	mPendingInitialTurnChangeIntro = true;
+	mPendingInitialTurnChangeIntroDelay = InitialTurnChangeIntroDelaySeconds;
 }
 
 int32 UCombatTileMapHUDWidget::GetViewportZOrder() const
