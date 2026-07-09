@@ -22,12 +22,18 @@ void UObjectModel::PostBindView(TScriptInterface<IObjectView> View)
 
 void UObjectModel::FinishCreating(const FTransform& ViewTransform)
 {
-	GetWorldModelFactory(this)->FinishCreatingModel(this, ViewTransform);
+	if (mIsPendingDestroy == false && IsValid(GetOuter()) == true)
+	{
+		GetWorldModelFactory(this)->FinishCreatingModel(this, ViewTransform);
+	}
 }
 
 void UObjectModel::Destroy()
 {
-	GetWorldModelFactory(this)->DestroyModel(this);
+	if (mIsPendingDestroy == false && IsValid(GetOuter()) == true)
+	{
+		GetWorldModelFactory(this)->DestroyModel(this);
+	}
 }
 
 IObjectView* UObjectModel::GetView() const
