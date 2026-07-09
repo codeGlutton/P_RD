@@ -8,7 +8,7 @@ void UBoardActorModel::SetStaticSpawnData(UStaticObstacleSpawnData* StaticSpawnD
 
 FName UBoardActorModel::GetBoardActorKeyName() const
 {
-	if (mStaticSpawnData != nullptr)
+	if (mStaticSpawnData == nullptr)
 	{
 		UE_LOG(LogRD, Log, TEXT("보드 액터의 스폰 데이터 nullptr"));
 		return FName();
@@ -18,7 +18,7 @@ FName UBoardActorModel::GetBoardActorKeyName() const
 
 const FText& UBoardActorModel::GetBoardActorDisplayName() const
 {
-	if (mStaticSpawnData != nullptr)
+	if (mStaticSpawnData == nullptr)
 	{
 		UE_LOG(LogRD, Log, TEXT("보드 액터의 스폰 데이터 nullptr"));
 		return FText::GetEmpty();
@@ -33,7 +33,7 @@ int32 UBoardActorModel::GetBoardActorLevel() const
 
 UTexture2D* UBoardActorModel::GetBoardActorIcon() const
 {
-	if (mStaticSpawnData != nullptr)
+	if (mStaticSpawnData == nullptr)
 	{
 		UE_LOG(LogRD, Log, TEXT("보드 액터의 스폰 데이터 nullptr"));
 		return nullptr;
@@ -43,7 +43,7 @@ UTexture2D* UBoardActorModel::GetBoardActorIcon() const
 
 UTexture2D* UBoardActorModel::GetBoardActorPortrait() const
 {
-	if (mStaticSpawnData != nullptr)
+	if (mStaticSpawnData == nullptr)
 	{
 		UE_LOG(LogRD, Log, TEXT("보드 액터의 스폰 데이터 nullptr"));
 		return nullptr;
