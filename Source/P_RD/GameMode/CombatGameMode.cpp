@@ -136,6 +136,11 @@ namespace
 			IconType = EFloatingLogIconType::Weakness;
 			ColorType = EFloatingLogColorType::Debuff;
 		}
+		else if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_ActorState_Dead))
+		{
+			IconType = EFloatingLogIconType::None;
+			ColorType = EFloatingLogColorType::Warning;
+		}
 	}
 
 	void ConvertFloatingLogUITypes(const FSRPGAttributeEffectEventLog& AttrLog, OUT EFloatingLogIconType& IconType, OUT EFloatingLogColorType& ColorType)

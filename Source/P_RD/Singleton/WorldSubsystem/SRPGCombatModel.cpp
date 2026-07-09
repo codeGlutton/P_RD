@@ -11,10 +11,14 @@
 #include "Actor/TileMap/TileMapModel.h"
 #include "Pawn/UnitModel.h"
 
+#include "Actor/BoardActor/BoardCombatTarget.h"
+
 #include "DataAsset/RoomSpawnData/StaticCombatRoomSpawnData.h"
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
 #include "DataAsset/UnitSpawnData/StaticEnemyUnitSpawnData.h"
 #include "DataAsset/ObstacleSpawnData/StaticObstacleSpawnData.h"
+
+#include "TimerManager.h"
 
 DEFINE_LOG_CATEGORY(LogSRPGCombat)
 
@@ -99,7 +103,7 @@ void USRPGCombatModel::BeginCombat()
 		// 전투 종료 알림
 		for (TObjectPtr<UUnitModel>& Unit : mUnits)
 		{
-			StaticCast<UBoardActorModel*>(Unit.Get())->OnBeginRoom();
+			Unit->OnBeginRoom();
 		}
 		for (TObjectPtr<UBoardActorModel>& Obstacle : mObstacles)
 		{
@@ -122,7 +126,7 @@ void USRPGCombatModel::EndCombat()
 	// 전투 종료 알림
 	for (TObjectPtr<UUnitModel>& Unit : mUnits)
 	{
-		StaticCast<UBoardActorModel*>(Unit.Get())->OnEndRoom();
+		Unit->OnEndRoom();
 	}
 	for (TObjectPtr<UBoardActorModel>& Obstacle : mObstacles)
 	{
@@ -141,6 +145,7 @@ void USRPGCombatModel::EndCombat()
 
 void USRPGCombatModel::EvaluateCombatStates()
 {
+	ClearDeadActors();
 	EvaluateCombatEndState();
 	if (mCurTurnContextOrder != nullptr)
 	{
@@ -177,6 +182,38 @@ void USRPGCombatModel::OnEndCurrentTurn(USRPGTurnContext* TurnContext, ESRPGTurn
 	AdvanceTurn();
 }
 
+void USRPGCombatModel::ClearDeadActors()
+{
+	checkf(mPlayerUnit != nullptr, TEXT("플레이어 미동록 오류"));
+
+	TArray<TObjectPtr<UUnitModel>> DeadUnits;
+	TArray<TScriptInterface<IBoardCombatTarget>> DeadObstacles;
+
+	for (const TObjectPtr<UUnitModel>& Unit : mUnits)
+	{
+		if (Unit->IsDead() == true)
+		{
+			DeadUnits.Add(Unit);
+		}
+	}
+	for (const TScriptInterface<IBoardCombatTarget>& Obstacle : mCombatTargetObstacles)
+	{
+		if (Obstacle->IsDead() == true)
+		{
+			DeadObstacles.Add(Obstacle);
+		}
+	}
+
+	for (const TObjectPtr<UUnitModel>& DeadUnit : DeadUnits)
+	{
+		UnregisterTurns(DeadUnit);
+	}
+	for (const TScriptInterface<IBoardCombatTarget>& DeadObstacle : DeadObstacles)
+	{
+		UnregisterObstacle(Cast<UBoardActorModel>(DeadObstacle.GetObject()));
+	}
+}
+
 void USRPGCombatModel::EvaluateCombatEndState()
 {
 	checkf(mPlayerUnit != nullptr, TEXT("플레이어 미동록 오류"));
@@ -199,9 +236,6 @@ void USRPGCombatModel::EvaluateCombatEndState()
 
 	/* 적군이 모두 죽어 전투가 종료되는가? */
 
-    // TODO : (추후 삭제 필요) 적 미배치 방(테스트 등)에서 "생존 적 0 == 즉시 승리"로 빠져 입장하자마자 승리 처리되는 것을 막는다.
-    const bool NeedToPreventToEndCombatForDebug = true;
-
 	bool AnyEnemyAlive = false;
 	for (const TObjectPtr<UUnitModel>& Unit : mUnits)
 	{
@@ -214,7 +248,7 @@ void USRPGCombatModel::EvaluateCombatEndState()
 		}
 	}
 
-	if (NeedToPreventToEndCombatForDebug == true && AnyEnemyAlive == false)
+	if (AnyEnemyAlive == false)
 	{
 		mCombatResult = ESRPGCombatResult::PlayerWin;
 		mCombatPhase = ESRPGCombatRoomPhase::CombatAbort;
@@ -328,8 +362,8 @@ int32 USRPGCombatModel::UnregisterTurnsImmediately(UUnitModel* Owner)
 			// 현재 진행 중인 턴을 삭제하게 되어 노드 전환이 필요한지 여부
 			const bool NeedToChangeTurnContext = mTurnContextMap[mCurTurnContextOrder->GetValue()] == CurTurnContext;
 
-			NextNode = mTurnContextOrder.RemoveNode(CurNode);
 			mTurnContextMap.Remove(CurNode->GetValue());
+			NextNode = mTurnContextOrder.RemoveNode(CurNode);
 			if (NeedToChangeTurnContext == true)
 			{
 				mCurTurnContextOrder = NextNode;
@@ -355,12 +389,12 @@ void USRPGCombatModel::FlushPendingTurnRequests()
 		FSRPGTurnUnregisterRequest& Request = mPendingTurnRequests[mHeadRequestIndex];
 
 		USRPGTurnContext* TargetTurnContext = Request.mTargetTurnContext;
+		UUnitModel* TargetOwner = Request.mTargetOwner;
 		if (TargetTurnContext != nullptr)
 		{
 			UnregisterTurnImmediately(TargetTurnContext);
 		}
-		UUnitModel* TargetOwner = Request.mTargetOwner;
-		if (TargetOwner != nullptr)
+		else if (TargetOwner != nullptr)
 		{
 			UnregisterTurnsImmediately(TargetOwner);
 		}
@@ -386,7 +420,6 @@ void USRPGCombatModel::RegisterEnemyUnit(FEnemyUnitPlacementData& EnemyPlacement
 	UUnitModel* EnemyUnit = GetWorldModelFactory(this)->NewModelDeferred<UUnitModel>(EnemyModelClass);
 	EnemyUnit->SetStaticSpawnData(EnemyUnitSpawnData);
 	EnemyUnit->FinishCreating(mTileMap->TileToWorldTransform(EnemyPlacementData.mTransform));
-	EnemyUnit->OnUnitDied.AddDynamic(this, &USRPGCombatModel::OnUnitDied);
 
 	checkf(mTileMap->CanPlace(EnemyPlacementData.mTransform.mIndex, EnemyUnit), TEXT("액터 배치 불가능"));
 	
@@ -400,7 +433,7 @@ void USRPGCombatModel::RegisterEnemyUnit(FEnemyUnitPlacementData& EnemyPlacement
 
 	if (mCombatPhase == ESRPGCombatRoomPhase::CombatPlay)
 	{
-		StaticCast<UBoardActorModel*>(EnemyUnit)->OnBeginRoom();
+		EnemyUnit->OnBeginRoom();
 	}
 
 	OnRegisterUnitUI.Broadcast(EnemyUnit);
@@ -422,6 +455,10 @@ void USRPGCombatModel::RegisterObstacle(FObstaclePlacementData& ObstaclePlacemen
 	checkf(mTileMap->CanPlace(ObstaclePlacementData.mTransform.mIndex, Obstacle), TEXT("액터 배치 불가능"));
 
 	mObstacles.Push(Obstacle);
+	if (ObstacleModelClass->ImplementsInterface(UBoardCombatTarget::StaticClass()) == true)
+	{
+		mCombatTargetObstacles.Push(Obstacle);
+	}
 
 	// 타일 위에 배치
 	mTileMap->PlaceActor(ObstaclePlacementData.mTransform, Obstacle);
@@ -440,13 +477,24 @@ void USRPGCombatModel::UnregisterUnit(UUnitModel* Unit)
 
 	if (mCombatPhase == ESRPGCombatRoomPhase::CombatPlay)
 	{
-		StaticCast<UBoardActorModel*>(Unit)->OnEndRoom();
+		Unit->OnEndRoom();
 	}
 
 	// 타일 위에서 제거
 	mTileMap->RemoveActor(Unit);
 
 	mUnits.RemoveSingleSwap(Unit);
+
+	if (Unit->IsPlayerUnitModel() == false)
+	{
+		FTimerHandle Handle;
+		GetWorld()->GetTimerManager().SetTimer(Handle, [Unit]() {
+			if (Unit != nullptr)
+			{
+				Unit->Destroy();
+			}
+			}, 3.f, false);
+	}
 
 	OnUnregisterUnitUI.Broadcast(Unit);
 }
@@ -464,6 +512,10 @@ void USRPGCombatModel::UnregisterObstacle(UBoardActorModel* Obstacle)
 	mTileMap->RemoveActor(Obstacle);
 
 	mObstacles.RemoveSingleSwap(Obstacle);
+	if (Obstacle->GetClass()->ImplementsInterface(UBoardCombatTarget::StaticClass()) == true)
+	{
+		mCombatTargetObstacles.RemoveSingleSwap(Obstacle);
+	}
 
 	OnUnregisterObstacleUI.Broadcast(Obstacle);
 }
@@ -497,8 +549,6 @@ void USRPGCombatModel::RegisterPlayerUnit(UUnitModel* PlayerUnit, const FTileTra
 	checkf(mTileMap != nullptr, TEXT("타일맵 미존재"));
 	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
 
-	PlayerUnit->OnUnitDied.AddDynamic(this, &USRPGCombatModel::OnUnitDied);
-
 	// 타일 위에 배치
 	mTileMap->PlaceActor(Transform, PlayerUnit);
 
@@ -510,7 +560,7 @@ void USRPGCombatModel::RegisterPlayerUnit(UUnitModel* PlayerUnit, const FTileTra
 
 	if (mCombatPhase == ESRPGCombatRoomPhase::CombatPlay)
 	{
-		StaticCast<UBoardActorModel*>(PlayerUnit)->OnBeginRoom();
+		PlayerUnit->OnBeginRoom();
 	}
 
 	OnRegisterUnitUI.Broadcast(PlayerUnit);
@@ -605,12 +655,6 @@ void USRPGCombatModel::NotifyRoundEndIfNeeded()
 			Obstacle->OnEndRound();
 		}
 	}
-}
-
-void USRPGCombatModel::OnUnitDied(UUnitModel* UnitModel)
-{
-	UnregisterTurns(UnitModel);
-	EvaluateCombatStates();
 }
 
 bool USRPGCombatModel::PushAction(USRPGAction* Action)

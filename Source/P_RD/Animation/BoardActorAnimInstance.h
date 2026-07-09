@@ -17,13 +17,6 @@ struct FEventTriggerPayload;
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnTriggerAnimationEvent, FGameplayTag /*Tag*/, ETileActorDirection /*LocalDir*/, UAnimMontage* /*EndAnim*/, const FEventTriggerPayload* /*Payload*/);
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnTriggerEndAnimationEvent, FGameplayTag /*Tag*/, ETileActorDirection /*LocalDir*/, UAnimMontage* /*EndAnim*/, bool /*IsInterrupted*/);
 
-UENUM(BlueprintType)
-enum class EPawnAliveState : uint8
-{
-	Alive,
-	Dead,
-};
-
 /**
  * @brief 방향 별 애님 몽타쥬 묶음
  */
@@ -103,6 +96,38 @@ protected:
 	UPROPERTY(Category = Animation, EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "DefaultIdleAnim"))
 	TObjectPtr<UAnimSequenceBase> mDefaultIdleAnim;
 
+	/* 계산 값 */
+protected:
+	UPROPERTY(Category = Data, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "UseAdditiveMontage"))
+	bool mUseAdditiveMontage = false;
+
+protected:
+	UPROPERTY(Category = Data, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PawnVelocity"))
+	FVector2D mPawnVelocity = FVector2D::ZeroVector;
+	UPROPERTY(Category = Data, EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "MinWalkSquareVelocity"))
+	float mMinWalkSquareVelocity = 10.f;
+};
+
+UENUM(BlueprintType)
+enum class ECombatTargetAliveState : uint8
+{
+	Alive,
+	Dead,
+};
+
+/**
+ * @brief  전투 대상의 애님 인스턴스
+ */
+UCLASS()
+class P_RD_API UCombatTargetAnimInstance : public UBoardActorAnimInstance
+{
+	GENERATED_BODY()
+
+	/* UBoardActorAnimInstance 상속 */
+public:
+	void NativeUpdateAnimation(float DeltaSeconds) override;
+
+	/* 애니메이션 등록 */
 protected:
 	UPROPERTY(Category = Animation, EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "DefaultAppearAnim"))
 	TObjectPtr<UAnimSequenceBase> mDefaultAppearAnim;
@@ -112,14 +137,20 @@ protected:
 
 	/* 계산 값 */
 protected:
-	UPROPERTY(Category = Data, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "UseAdditiveMontage"))
-	bool mUseAdditiveMontage = false;
-	UPROPERTY(Category = Data, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PawnAliveState"))
-	EPawnAliveState mPawnAliveState = EPawnAliveState::Alive;
-
-protected:
-	UPROPERTY(Category = Data, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PawnVelocity"))
-	FVector2D mPawnVelocity = FVector2D::ZeroVector;
-	UPROPERTY(Category = Data, EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "MinWalkSquareVelocity"))
-	float mMinWalkSquareVelocity = 10.f;
+	UPROPERTY(Category = Data, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatTargetAliveState"))
+	ECombatTargetAliveState mCombatTargetAliveState = ECombatTargetAliveState::Alive;
 };
+
+/**
+ * @brief  유닛의 애님 인스턴스
+ */
+UCLASS()
+class P_RD_API UUnitAnimInstance : public UCombatTargetAnimInstance
+{
+	GENERATED_BODY()
+
+	/* UCombatTargetAnimInstance 상속 */
+public:
+	void NativeUpdateAnimation(float DeltaSeconds) override;
+};
+

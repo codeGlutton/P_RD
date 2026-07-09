@@ -14,6 +14,8 @@
 
 class UAttributeSetComponentModel;
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnChangeCombatTargetAliveState, bool /*IsAlive*/);
+
 /**
  * @brief 타격 가능 보드 액터들에 대한 스냅샷
  */
