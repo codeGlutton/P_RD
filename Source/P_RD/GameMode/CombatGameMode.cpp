@@ -227,7 +227,8 @@ void ACombatGameMode::InitializeRoom()
 		mCombatUIModel->NotifyActionResolved();
 		if (UEventLogger* EventLogger = GetWorldEventLogger(this))
 		{
-			PushSimulationFloatingLogs(EventLogger->PopSRPGLogs(), false);
+			// 액션 실행 로그는 UI로 띄우지 않고 소비만 해서, 다음 조준 프리뷰에 섞이지 않게 한다.
+			EventLogger->PopSRPGLogs();
 		}
 		// OnEndAnyTurnActionUI.Broadcast(Barrier, TurnContext, Action, Result); 연출은 연결고리가 아직 없음
 		});
