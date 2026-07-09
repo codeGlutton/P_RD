@@ -29,7 +29,7 @@ void UMockRewardDriver::Start(URewardUIModel* UIModel)
 	Reward.mMaxExp = 100.f;
 	mUIModel->SetReward(Reward);
 
-	// 가짜 3택1 선택지(다이스/스킬/장비). 회의 결론대로 3자택일. 밸런스 데이터 아님.
+	// 가짜 보상 항목 목록(다이스/스킬/장비). 밸런스 데이터 아님.
 	TArray<FRewardChoiceUI> Choices;
 	const ERewardChoiceKind Kinds[] = { ERewardChoiceKind::Dice, ERewardChoiceKind::Skill, ERewardChoiceKind::Equipment };
 	// mock fixture 이름은 실제 게임 콘텐츠가 아니라 개발용 더미다(실데이터는 DataAsset/API로 대체).
@@ -55,7 +55,7 @@ void UMockRewardDriver::HandleClaimed()
 	UE_LOG(LogRD, Display, TEXT("MockRewardDriver: reward claimed"));
 }
 
-/** @brief 3택1 선택 이벤트가 UIModel을 통해 되돌아왔는지만 확인한다. */
+/** @brief 보상 항목 선택 이벤트가 UIModel을 통해 되돌아왔는지만 확인한다. */
 void UMockRewardDriver::HandleChosen(int32 ChoiceIndex)
 {
 	UE_LOG(LogRD, Display, TEXT("MockRewardDriver: reward choice %d"), ChoiceIndex);

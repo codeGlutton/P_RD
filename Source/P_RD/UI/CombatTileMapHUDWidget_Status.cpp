@@ -351,7 +351,18 @@ void UCombatTileMapHUDWidget::RebuildEquipmentIcons()
 	// 모델이 아직 없을 때도 마커를 전부 감춰서 WBP에 박힌 기본 브러시(임시 하트)가 새어 나오지 않게 한다.
 	for (int32 MarkerIndex = 0; MarkerIndex < MarkerCount; ++MarkerIndex)
 	{
-		UImage* SlotImage = Cast<UImage>(WidgetTree->FindWidget(SlotMarkerNames[MarkerIndex]));
+		UWidget* RawMarker = WidgetTree->FindWidget(SlotMarkerNames[MarkerIndex]);
+		UImage* SlotImage = Cast<UImage>(RawMarker);
+
+		// [진단] 마커 실제 종류 + Image 캐스트 성공 여부 + 그 슬롯의 장착/아이콘 상태를 찍는다.
+		const bool bHasData = Equips.IsValidIndex(MarkerIndex);
+		UE_LOG(LogTemp, Warning, TEXT("[EquipDbg] %s: 실제위젯=%s, UImage캐스트=%s | 장착=%s, 아이콘=%s"),
+			SlotMarkerNames[MarkerIndex],
+			RawMarker != nullptr ? *RawMarker->GetClass()->GetName() : TEXT("못찾음(null)"),
+			SlotImage != nullptr ? TEXT("성공") : TEXT("실패(Image아님)"),
+			(bHasData && Equips[MarkerIndex].mIsEquipped) ? TEXT("O") : TEXT("X"),
+			(bHasData && Equips[MarkerIndex].mIcon != nullptr) ? TEXT("O") : TEXT("X(null)"));
+
 		if (SlotImage == nullptr)
 		{
 			continue;   // 마커가 없는 스킨/구버전이면 조용히 건너뛴다.

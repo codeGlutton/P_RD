@@ -22,7 +22,17 @@ void URewardUIModel::RequestChooseReward(int32 ChoiceIndex)
 	OnRewardChosen.Broadcast(ChoiceIndex);
 }
 
-/** @brief 3택1 선택지 목록을 저장하고 선택지 갱신 알림을 보낸다(보통 3개). */
+void URewardUIModel::RequestClaimReward(ERewardClaimKind ClaimKind, int32 ChoiceIndex)
+{
+	OnRewardClaimRequested.Broadcast(ClaimKind, ChoiceIndex);
+
+	if (ClaimKind == ERewardClaimKind::Choice)
+	{
+		OnRewardChosen.Broadcast(ChoiceIndex);
+	}
+}
+
+/** @brief 룸 보상 항목 목록을 저장하고 보상 갱신 알림을 보낸다. */
 void URewardUIModel::SetRewardChoices(const TArray<FRewardChoiceUI>& Choices)
 {
 	mChoices = Choices;

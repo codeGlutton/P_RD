@@ -26,7 +26,7 @@ private:
 	/** @brief Mock에서는 Claim 신호가 왕복했는지만 로그로 확인한다. */
 	UFUNCTION() void HandleClaimed();
 
-	/** @brief Mock에서는 3택1 선택 신호가 왕복했는지만 로그로 확인한다. */
+	/** @brief Mock에서는 보상 항목 선택 신호가 왕복했는지만 로그로 확인한다. */
 	UFUNCTION() void HandleChosen(int32 ChoiceIndex);
 
 	/** @brief 테스트 중 UIModel이 GC되지 않게 들고 있는 참조; Mock이 실제 소유자는 아니다. */

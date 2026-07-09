@@ -12,6 +12,21 @@ void UPersistentDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	mOptionPersistData->MakeCaches();
 }
 
+UUserPersistData* UPersistentDataSubsystem::GetUserPersistData()
+{
+	return mUserPersistData;
+}
+
+URunPersistData* UPersistentDataSubsystem::GetRunPersistData()
+{
+	return mRunPersistData;
+}
+
+UOptionPersistData* UPersistentDataSubsystem::GetOptionPersistData()
+{
+	return mOptionPersistData;
+}
+
 const UUserPersistData* UPersistentDataSubsystem::GetUserPersistData() const
 {
 	return mUserPersistData;

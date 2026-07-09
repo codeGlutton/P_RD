@@ -35,6 +35,7 @@
 #include "AttributeSet/UnitAttributeSet.h"
 
 #include "DataAsset/EquipmentData/StaticEquipmentData.h"
+#include "DataAsset/DiceData/StaticDiceData.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
 #include "Simulation/Logger/EventLogger.h"
 
@@ -109,6 +110,42 @@ namespace
 		}
 	}
 
+	const FMonsterRoom* GetMonsterRewardRoom(const FRoom& Room)
+	{
+		switch (Room.mType)
+		{
+		case ERoomType::Monster:
+		case ERoomType::EliteMonster:
+		case ERoomType::BossMonster:
+			return &static_cast<const FMonsterRoom&>(Room);
+		default:
+			return nullptr;
+		}
+	}
+
+	template <typename AssetType>
+	const AssetType* LoadPrimaryAssetData(const FPrimaryAssetId& AssetId)
+	{
+		if (AssetId.IsValid() == false)
+		{
+			return nullptr;
+		}
+
+		UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
+		if (AssetManager == nullptr)
+		{
+			return nullptr;
+		}
+
+		if (const AssetType* LoadedAsset = AssetManager->GetPrimaryAssetObject<AssetType>(AssetId))
+		{
+			return LoadedAsset;
+		}
+
+		const FSoftObjectPath AssetPath = AssetManager->GetPrimaryAssetPath(AssetId);
+		return Cast<AssetType>(AssetPath.TryLoad());
+	}
+
 	void ConvertFloatingLogUITypes(const FSRPGTileEffectEventLog& TileLog, OUT EFloatingLogIconType& IconType, OUT EFloatingLogColorType& ColorType)
 	{
 		IconType = EFloatingLogIconType::Move;
@@ -172,6 +209,10 @@ ACombatGameMode::ACombatGameMode()
 void ACombatGameMode::InitializeRoom()
 {
 	Super::InitializeRoom();
+	mCombatRewardClaimed = false;
+	mCombatRewardGoldClaimed = false;
+	mCombatRewardExpClaimed = false;
+	mCombatRewardChoiceClaimedIndices.Reset();
 
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
@@ -198,7 +239,7 @@ void ACombatGameMode::InitializeRoom()
 		});
 	CombatModel->OnEndCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result) {
 		PushPlayerMetaUIData();
-		// OnEndCombatUI.Broadcast(Barrier, Result); 연출은 연결고리가 아직 없음
+		OnEndCombatUI.Broadcast(Barrier, Result);
 		});
 	CombatModel->OnBeginAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext) {
 		PushTurnUIData();
@@ -207,7 +248,8 @@ void ACombatGameMode::InitializeRoom()
 		PushSelectedDiceUIData();
 		PushSkillUIData();
 		PushEquipmentUIData();
-		// OnBeginAnyTurnUI.Broadcast(Barrier, TurnContext); 연출은 연결고리가 아직 없음
+		// 턴 시작 연출: 배리어를 HUD로 넘겨 턴 배너가 끝날 때까지 실제 턴 실행을 대기시킨다.
+		OnBeginAnyTurnUI.Broadcast(Barrier, TurnContext);
 		});
 	// 라운드 시작 연출: 데이터(mRound) 먼저 갱신 후 배리어를 HUD로 중계한다(순서 보장 위해 게임모드가 재방송).
 	// 프레임워크가 OnBeginAnyRoundUI를 방송하기 전까지 이 람다는 호출되지 않는다(휴면). 방송 배선은 SRPGCombatModel TODO 참고.
@@ -225,6 +267,8 @@ void ACombatGameMode::InitializeRoom()
 	CombatModel->OnEndAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action, ESRPGActionResult Result) {
 		// 액션이 끝나면 UI의 스킬/주사위 선택 표시를 지운다.
 		mCombatUIModel->NotifyActionResolved();
+		// [비활성화] 실행 후 잠깐 떴다 사라지는 레거시 실행 로그(mIsPreview=false). 프리뷰(조준)만 쓰기로 함.
+		// 로그는 여전히 소비(Pop)해 쌓이지 않게 비운다.
 		if (UEventLogger* EventLogger = GetWorldEventLogger(this))
 		{
 			// 액션 실행 로그는 UI로 띄우지 않고 소비만 해서, 다음 조준 프리뷰에 섞이지 않게 한다.
@@ -667,7 +711,6 @@ void ACombatGameMode::PushUnitUIData() const
 			{
 				continue;
 			}
-
 			FStatusEffectUI StatusEffect;
 			StatusEffect.mTag = StatusTag;
 			StatusEffect.mStackCount = AttributeSetComponentModel->GetTagCount(StatusTag);
@@ -953,6 +996,237 @@ void ACombatGameMode::PushPlayerMetaUIData() const
 	PlayerMetaUIData.mMaxExp = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMaxExpAttribute());
 
 	mCombatUIModel->SetPlayerMeta(PlayerMetaUIData);
+}
+
+FRewardUI ACombatGameMode::MakeCombatRewardUI() const
+{
+	FRewardUI RewardUI;
+	RewardUI.mTitle = NSLOCTEXT("CombatGameMode", "VictoryRewardTitle", "VICTORY REWARD");
+
+	const URunPersistData* RunPersistData = GetRunPersistData();
+	if (RunPersistData != nullptr)
+	{
+		if (const FMonsterRoom* CurrentRoom = GetMonsterRewardRoom(RunPersistData->GetCurrentRoom()))
+		{
+			RewardUI.mGoldGained = CurrentRoom->mRewardMoney;
+			RewardUI.mExpGained = CurrentRoom->mRewardExp;
+		}
+	}
+
+	const UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
+	const UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnitModel != nullptr ? PlayerUnitModel->GetAttributeComponentModel() : nullptr;
+	if (AttributeSetComponentModel != nullptr)
+	{
+		const float CurrentGold = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMoneyAttribute());
+		const float CurrentExp = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute());
+		const float MaxExp = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMaxExpAttribute());
+
+		RewardUI.mGoldBalance = FMath::RoundToInt(CurrentGold) + RewardUI.mGoldGained;
+		RewardUI.mExpBefore = CurrentExp;
+		RewardUI.mExpAfter = CurrentExp + StaticCast<float>(RewardUI.mExpGained);
+		RewardUI.mMaxExp = MaxExp;
+	}
+
+	if (PlayerUnitModel != nullptr)
+	{
+		const int32 PlayerLevel = PlayerUnitModel->GetPlayerLevel();
+		RewardUI.mLevelBefore = PlayerLevel;
+		RewardUI.mLevelAfter = PlayerLevel;
+	}
+
+	return RewardUI;
+}
+
+TArray<FRewardChoiceUI> ACombatGameMode::MakeCombatRewardChoicesUI() const
+{
+	TArray<FRewardChoiceUI> Choices;
+
+	const URunPersistData* RunPersistData = GetRunPersistData();
+	if (RunPersistData == nullptr)
+	{
+		return Choices;
+	}
+
+	const FRoom& CurrentRoom = RunPersistData->GetCurrentRoom();
+	auto AddEquipmentReward = [&Choices](const FPrimaryAssetId& EquipmentId)
+	{
+		if (EquipmentId.IsValid() == false)
+		{
+			return;
+		}
+
+		FRewardChoiceUI Choice;
+		Choice.mChoiceIndex = Choices.Num();
+		Choice.mKind = ERewardChoiceKind::Equipment;
+		Choice.mSourceAssetId = EquipmentId;
+		Choice.mName = FText::FromName(EquipmentId.PrimaryAssetName);
+
+		if (const UStaticEquipmentData* EquipmentData = LoadPrimaryAssetData<UStaticEquipmentData>(EquipmentId))
+		{
+			Choice.mName = EquipmentData->mName.IsEmpty() ? Choice.mName : EquipmentData->mName;
+			Choice.mDescription = EquipmentData->mDescription;
+			Choice.mIcon = EquipmentData->mIcon.LoadSynchronous();
+			Choice.mRarityColor = GetRarityColor(EquipmentData->mRarityType);
+		}
+
+		Choices.Add(Choice);
+	};
+
+	auto AddDiceReward = [&Choices](const FPrimaryAssetId& DiceId)
+	{
+		if (DiceId.IsValid() == false)
+		{
+			return;
+		}
+
+		FRewardChoiceUI Choice;
+		Choice.mChoiceIndex = Choices.Num();
+		Choice.mKind = ERewardChoiceKind::Dice;
+		Choice.mSourceAssetId = DiceId;
+		Choice.mName = FText::FromName(DiceId.PrimaryAssetName);
+
+		if (const UStaticDiceData* DiceData = LoadPrimaryAssetData<UStaticDiceData>(DiceId))
+		{
+			Choice.mDescription = FText::Format(
+				NSLOCTEXT("CombatGameMode", "DiceRewardDescription", "d{0}"),
+				FText::AsNumber(DiceData->mFaceCount));
+			Choice.mRarityColor = GetRarityColor(DiceData->mRarityType);
+
+			for (const FStaticDiceFaceData& FaceData : DiceData->mFaces)
+			{
+				if (FaceData.mTexture.IsNull() == false)
+				{
+					Choice.mIcon = FaceData.mTexture.LoadSynchronous();
+					break;
+				}
+			}
+		}
+
+		Choices.Add(Choice);
+	};
+
+	switch (CurrentRoom.mType)
+	{
+	case ERoomType::EliteMonster:
+		AddEquipmentReward(static_cast<const FEliteMonsterRoom&>(CurrentRoom).mRewardEquipmentDataId);
+		break;
+	case ERoomType::BossMonster:
+		AddDiceReward(static_cast<const FBossMonsterRoom&>(CurrentRoom).mRewardDiceDataId);
+		break;
+	default:
+		break;
+	}
+
+	return Choices;
+}
+
+bool ACombatGameMode::ClaimCombatReward()
+{
+	if (mCombatRewardClaimed)
+	{
+		return false;
+	}
+
+	bool bClaimedAny = false;
+	bClaimedAny |= ClaimCombatReward(ERewardClaimKind::Gold, INDEX_NONE);
+	bClaimedAny |= ClaimCombatReward(ERewardClaimKind::Exp, INDEX_NONE);
+
+	for (const FRewardChoiceUI& Choice : MakeCombatRewardChoicesUI())
+	{
+		bClaimedAny |= ClaimCombatReward(ERewardClaimKind::Choice, Choice.mChoiceIndex);
+	}
+
+	mCombatRewardClaimed = true;
+	return bClaimedAny;
+}
+
+bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 ChoiceIndex)
+{
+	URunPersistData* RunPersistData = GetRunPersistData();
+	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
+	UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnitModel != nullptr ? PlayerUnitModel->GetAttributeComponentModel() : nullptr;
+	if (RunPersistData == nullptr)
+	{
+		return false;
+	}
+
+	const FRoom& CurrentRoomData = RunPersistData->GetCurrentRoom();
+	const FMonsterRoom* CurrentRoom = GetMonsterRewardRoom(CurrentRoomData);
+
+	if (ClaimKind == ERewardClaimKind::Gold)
+	{
+		if (mCombatRewardGoldClaimed || CurrentRoom == nullptr || AttributeSetComponentModel == nullptr || CurrentRoom->mRewardMoney == 0)
+		{
+			mCombatRewardGoldClaimed = true;
+			return false;
+		}
+
+		AttributeSetComponentModel->ApplyModToAttribute(
+			UPlayerUnitAttributeSet::GetMoneyAttribute(),
+			ETacticalModOp::AddBase,
+			StaticCast<float>(CurrentRoom->mRewardMoney));
+
+		mCombatRewardGoldClaimed = true;
+		PushPlayerMetaUIData();
+		return true;
+	}
+
+	if (ClaimKind == ERewardClaimKind::Exp)
+	{
+		if (mCombatRewardExpClaimed || CurrentRoom == nullptr || AttributeSetComponentModel == nullptr || CurrentRoom->mRewardExp == 0)
+		{
+			mCombatRewardExpClaimed = true;
+			return false;
+		}
+
+		AttributeSetComponentModel->ApplyModToAttribute(
+			UPlayerUnitAttributeSet::GetExpAttribute(),
+			ETacticalModOp::AddBase,
+			StaticCast<float>(CurrentRoom->mRewardExp));
+
+		mCombatRewardExpClaimed = true;
+		PushPlayerMetaUIData();
+		return true;
+	}
+
+	if (ClaimKind != ERewardClaimKind::Choice || ChoiceIndex == INDEX_NONE || mCombatRewardChoiceClaimedIndices.Contains(ChoiceIndex))
+	{
+		return false;
+	}
+
+	const TArray<FRewardChoiceUI> Choices = MakeCombatRewardChoicesUI();
+	const FRewardChoiceUI* FoundChoice = Choices.FindByPredicate([ChoiceIndex](const FRewardChoiceUI& Choice)
+	{
+		return Choice.mChoiceIndex == ChoiceIndex;
+	});
+	if (FoundChoice == nullptr)
+	{
+		return false;
+	}
+
+	bool bClaimed = false;
+	switch (FoundChoice->mKind)
+	{
+	case ERewardChoiceKind::Equipment:
+		bClaimed = RunPersistData->AddRewardEquipment(FoundChoice->mSourceAssetId);
+		break;
+	case ERewardChoiceKind::Dice:
+		bClaimed = RunPersistData->AddRewardDice(FoundChoice->mSourceAssetId);
+		break;
+	case ERewardChoiceKind::Skill:
+		bClaimed = RunPersistData->AddRewardSkill(FoundChoice->mSourceAssetId);
+		break;
+	case ERewardChoiceKind::Gold:
+	default:
+		break;
+	}
+
+	if (bClaimed)
+	{
+		mCombatRewardChoiceClaimedIndices.Add(ChoiceIndex);
+	}
+
+	return bClaimed;
 }
 
 void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>& TurnEventLogs, bool IsPreview) const

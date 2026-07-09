@@ -38,15 +38,16 @@
 void UCombatTileMapHUDWidget::BindVictoryFlowEvents()
 {
 	mVictoryWorldMapLocked = false;
+	mCombatResultFlowActive = false;
 
-	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
-	if (CombatModel == nullptr)
+	ACombatGameMode* CombatGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ACombatGameMode>() : nullptr;
+	if (CombatGameMode == nullptr)
 	{
 		return;
 	}
 
-	CombatModel->OnEndCombatUI.RemoveAll(this);
-	CombatModel->OnEndCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result)
+	CombatGameMode->OnEndCombatUI.RemoveAll(this);
+	CombatGameMode->OnEndCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result)
 	{
 		HandleEndCombatUI(MoveTemp(Barrier), Result);
 	});
@@ -138,6 +139,11 @@ void UCombatTileMapHUDWidget::CloseFloatingPanels(EWorldWidgetType ExceptWorldWi
  */
 void UCombatTileMapHUDWidget::ToggleWorldMap()
 {
+	if (mCombatResultFlowActive)
+	{
+		return;
+	}
+
 	UFrontendMapWidget* WorldMapWidget = Cast<UFrontendMapWidget>(GetToggleableWorldWidget(EWorldWidgetType::WorldMap));
 	if (WorldMapWidget == nullptr)
 	{
@@ -176,6 +182,11 @@ void UCombatTileMapHUDWidget::ToggleWorldMap()
  */
 void UCombatTileMapHUDWidget::ToggleSettingsPanel()
 {
+	if (mCombatResultFlowActive)
+	{
+		return;
+	}
+
 	USettingsPanelWidget* SettingsPanelWidget = Cast<USettingsPanelWidget>(GetToggleableWorldWidget(EWorldWidgetType::InGameSettings));
 	if (SettingsPanelWidget == nullptr)
 	{
@@ -214,6 +225,11 @@ void UCombatTileMapHUDWidget::ToggleSettingsPanel()
  */
 void UCombatTileMapHUDWidget::ToggleFloatingPanel(EWorldWidgetType WorldWidgetType, const TCHAR* DebugName)
 {
+	if (mCombatResultFlowActive)
+	{
+		return;
+	}
+
 	URDUserWidget* FloatingPanel = GetToggleableWorldWidget(WorldWidgetType);
 	if (FloatingPanel == nullptr)
 	{
@@ -233,17 +249,16 @@ void UCombatTileMapHUDWidget::ToggleFloatingPanel(EWorldWidgetType WorldWidgetTy
 }
 
 /**
- * @brief 플레이어 승리 결과를 다음 방 선택 월드맵 표시로 연결한다.
+ * @brief 전투 결과를 승패 영상 연출로 연결한다.
  */
 void UCombatTileMapHUDWidget::HandleEndCombatUI(TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result)
 {
-	if (Result != ESRPGCombatResult::PlayerWin)
+	if (Result != ESRPGCombatResult::PlayerWin && Result != ESRPGCombatResult::PlayerLose)
 	{
 		return;
 	}
 
-	mVictoryWorldMapLocked = true;
-	OpenWorldMapAfterPlayerWin(MoveTemp(Barrier));
+	BeginCombatResultPresentation(MoveTemp(Barrier), Result);
 }
 
 /**
@@ -260,6 +275,7 @@ void UCombatTileMapHUDWidget::OpenWorldMapAfterPlayerWin(TSharedPtr<FPresentatio
 	UFrontendMapWidget* WorldMapWidget = Cast<UFrontendMapWidget>(GetToggleableWorldWidget(EWorldWidgetType::WorldMap));
 	if (WorldMapWidget == nullptr)
 	{
+		Barrier.Reset();
 		return;
 	}
 
@@ -268,7 +284,7 @@ void UCombatTileMapHUDWidget::OpenWorldMapAfterPlayerWin(TSharedPtr<FPresentatio
 	CloseWorldWidget(EWorldWidgetType::SkillPanel);
 	WorldMapWidget->OnCloseRequested.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleWorldMapCloseRequested);
 	WorldMapWidget->SetRoomSelectionEnabled(true);
-	WorldMapWidget->SetMapStatusOverride(NSLOCTEXT("CombatTileMapHUDWidget", "VictoryMapStatus", "승리했습니다!"));
+	WorldMapWidget->ClearMapStatusOverride();
 	WorldMapWidget->OpenUI(FOnEndUIOpenAnimation::CreateWeakLambda(WorldMapWidget, [Barrier](UUserWidget* OpenedWidget) mutable
 	{
 		if (UFrontendMapWidget* OpenedWorldMapWidget = Cast<UFrontendMapWidget>(OpenedWidget))

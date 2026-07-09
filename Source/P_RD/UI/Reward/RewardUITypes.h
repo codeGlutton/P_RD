@@ -3,7 +3,7 @@
 /** @brief 전투 보상 화면이 게임플레이에서 받는 '뷰 데이터' 정의입니다. */
 // @file RewardUITypes.h
 // 전투 뷰모델과 같은 원칙: UI는 게임플레이 객체를 직접 알지 않고 표시값만 받아 그린다.
-// 지금은 보상 종류 중 '돈(골드)'과 '경험치'만 담는다. 아이템/주사위 보상은 이후 같은 패턴으로 확장한다.
+// 돈(골드), 경험치, 룸이 지급하는 항목 보상을 같은 패턴으로 표시한다.
 // 카운트업/레벨업 막대 연출을 UI가 스스로 할 수 있게 '전/후' 값을 함께 준다(게임플레이는 결과만 알려줌).
 
 #include "RDMinimal.h"
@@ -40,7 +40,7 @@ struct FRewardUI
 };
 
 /** @brief 보상 항목 한 칸의 종류. UI가 게임플레이 데이터 타입을 직접 모르게 어댑터가 변환해 넣는다. */
-// 기획(방 별 보상 체계): 보상은 방 타입이 결정한다 — 엘리트=장비, 보스=주사위, 보물=장비. (3택1 아님)
+// 기획(방 별 보상 체계): 보상은 방 타입이 결정한다 — 엘리트=장비, 보스=주사위, 보물=장비. (고정 개수 아님)
 UENUM(BlueprintType)
 enum class ERewardChoiceKind : uint8
 {
@@ -48,6 +48,15 @@ enum class ERewardChoiceKind : uint8
 	Skill,
 	Equipment,
 	Gold
+};
+
+/** @brief UI에서 클릭한 보상 행이 어떤 실제 지급 항목인지 구분한다. */
+UENUM(BlueprintType)
+enum class ERewardClaimKind : uint8
+{
+	Gold,
+	Exp,
+	Choice
 };
 
 /** @brief 그 방이 지급하는 보상 항목 하나를 그리기 위한 표시값입니다(획득 = Claim, 선택 아님). */
@@ -59,7 +68,7 @@ enum class ERewardChoiceKind : uint8
 // - mIcon: 프레임+희귀도 내장 아이템 아이콘(어댑터가 실제 아이템 아이콘을 넣음).
 // - mDescription: 보조 한 줄 — 장비=장착 부위/효과, 주사위=종류·면, 스킬=설명.
 // - mRarityColor: 희귀도(아이콘에 틴트가 필요할 때만 사용; 보통 아이콘 프레임에 내장).
-// [합의필요] 최종 소스 = 방 보상 롤 결과(게임플레이). 현재 Mock.
+// 최종 소스 = 방 보상 롤 결과(게임플레이).
 USTRUCT(BlueprintType)
 struct FRewardChoiceUI
 {
@@ -67,6 +76,7 @@ struct FRewardChoiceUI
 
 	UPROPERTY(BlueprintReadOnly) int32 mChoiceIndex = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) ERewardChoiceKind mKind = ERewardChoiceKind::Dice;
+	UPROPERTY(BlueprintReadOnly) FPrimaryAssetId mSourceAssetId;
 	UPROPERTY(BlueprintReadOnly) FText mName;
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
 	UPROPERTY(BlueprintReadOnly) FText mDescription;

@@ -4,6 +4,7 @@
 #include "UI/DiceViewData.h"
 #include "UI/Combat/CombatUITypes.h"
 #include "UI/RDUserWidget.h"
+#include "UI/Reward/RewardUITypes.h"
 #include "Components/CanvasPanelSlot.h"   // FAnchorData (폴드 변형 베이스 슬롯 캐시)
 #include "Styling/SlateBrush.h"
 #include "Widgets/Layout/Anchors.h"
@@ -20,9 +21,13 @@ class UBorder;
 class UButton;
 class UCanvasPanel;
 class UCombatUIModel;
+class UCombatResultOverlayWidget;
+class UCinematicWidget;
 class UIndexedButtonWidget;
 class UImage;
 class UProgressBar;
+class URewardUIModel;
+class URewardUIWidgetBase;
 class UTextBlock;
 class UViewport;
 class UWidget;
@@ -320,6 +325,38 @@ private:
 	/** @brief 플레이어 승리 결과를 다음 방 선택 월드맵 표시로 연결한다. */
 	void HandleEndCombatUI(TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result);
 
+	/** @brief 승패 결과 영상을 열고, 영상 종료 뒤 보상/계속 버튼 흐름으로 이어간다. */
+	void BeginCombatResultPresentation(TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result);
+
+	/** @brief 결과 영상/오버레이 위젯 인스턴스를 준비한다. */
+	void EnsureCombatResultWidgets();
+
+	/** @brief 승패 영상 재생이 끝났을 때 결과별 후속 UI를 연다. */
+	void HandleCombatResultVideoFinished(UCinematicWidget* CinematicWidget);
+
+	/** @brief 승리 보상 수령 버튼 처리. */
+	UFUNCTION()
+	void HandleCombatResultRewardConfirmed();
+
+	/** @brief 보상 행 클릭 지급 요청 처리. */
+	UFUNCTION()
+	void HandleCombatRewardClaimRequested(ERewardClaimKind ClaimKind, int32 ChoiceIndex);
+
+	/** @brief 패배 계속 버튼 처리. */
+	void HandleCombatResultContinueConfirmed();
+
+	/** @brief 결과 영상 위젯을 닫고 후속 콜백을 실행한다. */
+	void CloseCombatResultCinematic(FSimpleDelegate Callback);
+
+	/** @brief 결과 영상 표시 중 지도탭과 같은 HUD 숨김 상태를 적용/해제한다. */
+	void SetCombatResultViewActive(bool bActive, bool bRestoreCombatControls = true);
+
+	/** @brief 결과 영상 중 룸 이름 클러스터만 숨기고, 종료 시 원래 표시 상태를 복원한다. */
+	void SetRoomNameClusterVisible(bool bVisible);
+
+	/** @brief 결과 타입에 맞는 mp4 설정 경로를 반환한다. */
+	FString GetCombatResultVideoPath(ESRPGCombatResult Result) const;
+
 	/** @brief 승리 후 다음 방 선택이 가능한 상태로 월드맵을 연다(OpenUI 완료 시 barrier 해제). */
 	void OpenWorldMapAfterPlayerWin(TSharedPtr<FPresentationBarrier> Barrier);
 
@@ -346,6 +383,28 @@ private:
 	/** @brief 지도 열림 동안 탑바 뒤 월드 비침을 가리는 배경판(시안 빌더가 WBP에 생성, 초기 Collapsed) */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UImage> TopBar_Backdrop;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UCinematicWidget> mCombatResultCinematicWidget;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UCombatResultOverlayWidget> mCombatResultOverlayWidget;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI|Reward")
+	TSubclassOf<URewardUIWidgetBase> mRewardWidgetClass;
+
+	UPROPERTY(Transient)
+	TObjectPtr<URewardUIWidgetBase> mCombatRewardWidget;
+
+	UPROPERTY(Transient)
+	TObjectPtr<URewardUIModel> mCombatRewardUIModel;
+
+	TSharedPtr<FPresentationBarrier> mCombatResultBarrier;
+	// 턴 시작 배너를 재생하는 동안 잡아두는 배리어 — 배너가 끝나면(FinishTurnChangeIntro) 놓아 실제 턴 실행을 진행시킨다.
+	TSharedPtr<FPresentationBarrier> mTurnChangeBarrier;
+	TMap<FName, ESlateVisibility> mCombatResultRoomNameVisibilities;
+	ESRPGCombatResult mCombatResult = ESRPGCombatResult::PlayerLose;
+	bool mCombatResultFlowActive = false;
 
 	/** @brief 뷰모델의 유닛 수에 맞춰 머리 위 HP바 위젯을 다시 만든다. */
 	void RebuildUnitHpBars();

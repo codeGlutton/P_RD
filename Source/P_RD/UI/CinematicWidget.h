@@ -47,6 +47,15 @@ public:
 	 */
 	void PlayCinematic(FOnEndCinematicAnimation Callback = FOnEndCinematicAnimation());
 
+	/** @brief 기본 인트로 경로 대신 재생할 Content 상대/절대 mp4 경로를 지정한다. */
+	void SetCinematicVideoPath(const FString& InVideoPath);
+
+	/** @brief 재생 종료 시 마지막 프레임을 유지할지 설정한다. */
+	void SetHoldLastFrameOnFinish(bool bInHoldLastFrameOnFinish);
+
+	/** @brief 이 시네마틱 위젯의 뷰포트 ZOrder를 지정한다. */
+	void SetCinematicViewportZOrder(int32 InViewportZOrder);
+
 	/** @brief 시네마틱을 즉시 종료 처리하고 등록된 종료 콜백을 발생시킨다(중복 호출 방지됨). */
 	UFUNCTION(BlueprintCallable, Category = "UI|Cinematic")
 	void FinishCinematic();
@@ -119,6 +128,12 @@ private:
 
 	/** @brief 진행 중인 시네마틱 미디어 재생을 정지한다. */
 	void StopCinematicMedia();
+
+	/** @brief 재생 완료 경로에서 마지막 프레임 유지 옵션을 적용한 뒤 종료 콜백을 실행한다. */
+	void FinishCinematicPlayback();
+
+	/** @brief 지원되는 플랫폼에서는 종료 직전 프레임으로 되돌려 정지한다. */
+	void HoldCinematicLastFrame();
 
 	/**
 	 * @brief 영상 종료 이벤트 미수신 대비 폴백 타이머를 시작한다.
@@ -215,6 +230,9 @@ private:
 	/** @brief 현재 페이드의 목적(완료 후 동작 분기 기준). */
 	ECinematicFadePurpose mFadePurpose = ECinematicFadePurpose::None;
 
+	/** @brief 비어 있으면 인트로 기본 설정 경로를 사용한다. */
+	FString mOverrideCinematicVideoPath;
+
 	/** @brief 페이드 시작 후 누적 경과 시간(초). 불투명도 보간에 사용. */
 	float mFadeElapsedTime = 0.0f;
 
@@ -223,4 +241,7 @@ private:
 
 	/** @brief 종료 처리가 이미 수행됐는지 여부. 종료 콜백 중복 발생을 막는다. */
 	bool mCinematicFinished = false;
+
+	/** @brief 재생 완료 후 CloseUI 전까지 마지막 프레임을 유지한다. */
+	bool mHoldLastFrameOnFinish = false;
 };

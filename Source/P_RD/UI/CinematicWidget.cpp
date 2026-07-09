@@ -133,6 +133,25 @@ UCinematicWidget::UCinematicWidget(const FObjectInitializer& ObjectInitializer)
 	mRemoveFromParentOnClose = true;   // 닫기 애니메이션 종료 후 위젯을 뷰포트에서 자동 제거
 }
 
+void UCinematicWidget::SetCinematicVideoPath(const FString& InVideoPath)
+{
+	mOverrideCinematicVideoPath = InVideoPath;
+}
+
+void UCinematicWidget::SetHoldLastFrameOnFinish(bool bInHoldLastFrameOnFinish)
+{
+	mHoldLastFrameOnFinish = bInHoldLastFrameOnFinish;
+	if (mCinematicMediaTexture != nullptr)
+	{
+		mCinematicMediaTexture->AutoClear = !mHoldLastFrameOnFinish;
+	}
+}
+
+void UCinematicWidget::SetCinematicViewportZOrder(int32 InViewportZOrder)
+{
+	mViewportZOrder = InViewportZOrder;
+}
+
 /**
  * @brief Slate 위젯 트리를 구성한다(검은 배경 + cover 영상 이미지 + 로딩 대기 레이어).
  * @details 미디어 오브젝트를 확보하고 영상 원본 해상도를 읽어 브러시를 세팅한 뒤,

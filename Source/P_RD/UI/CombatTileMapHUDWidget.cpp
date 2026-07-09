@@ -2,6 +2,7 @@
 
 #include "Components/Button.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "UI/Reward/RewardUIWidgetBase.h"
 #include "UObject/ConstructorHelpers.h"
 
 #include "GameMode/CombatGameMode.h"
@@ -46,6 +47,12 @@ UCombatTileMapHUDWidget::UCombatTileMapHUDWidget(const FObjectInitializer& Objec
 	if (UnitHpBarClassFinder.Succeeded())
 	{
 		mUnitHpBarWidgetClass = UnitHpBarClassFinder.Class;
+	}
+
+	static ConstructorHelpers::FClassFinder<URewardUIWidgetBase> RewardWidgetClassFinder(TEXT("/Game/BP/UI/WBP_Reward"));
+	if (RewardWidgetClassFinder.Succeeded())
+	{
+		mRewardWidgetClass = RewardWidgetClassFinder.Class;
 	}
 
 	static ConstructorHelpers::FObjectFinder<UTexture2D> UnitHpFillRedFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_CombatHUD_UnitHpBar_Fill_Red.T_CombatHUD_UnitHpBar_Fill_Red"));
