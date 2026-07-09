@@ -187,8 +187,8 @@ private:
 	/** @brief 열 간격 상한(시안 마커 Map_ColPitch 폭, 폴백 240) — 열이 적을 때 중앙으로 모아 간격 과대를 막는다. */
 	float GetMapColPitchMax() const;
 
-	/** @brief 노드 배치 경계(시안 마커 Map_NodeArea): 좌우는 앵커 분수, 상하는 px 오프셋. */
-	void GetNodeAreaLayout(float& OutLeftFrac, float& OutRightFrac, float& OutTopPx, float& OutBottomPx) const;
+	/** @brief 노드 배치 경계(시안 마커 Map_NodeArea): 좌우는 앵커 분수, 상하는 px 오프셋. 화면 폭이 있으면 범례/좌우 장식 안전 여백을 반영한다. */
+	void GetNodeAreaLayout(float& OutLeftFrac, float& OutRightFrac, float& OutTopPx, float& OutBottomPx, float InGraphWidth = 0.f) const;
 
 	/** @brief Stage row/column을 시안 경계/간격 기반 캔버스 좌표로 변환한다. */
 	FVector2D GetMapRoomNodeCenter(const TArray<FMapRoomView>& Rooms, const FMapRoomView& Room, const FVector2D& GraphSize) const;
