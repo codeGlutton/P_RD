@@ -34,6 +34,11 @@ UObjectModel* UObjectModelFactory::NewModelDeferred_Internal(const UClass* Class
 
 void UObjectModelFactory::FinishCreatingModel(UObjectModel* Model, const FTransform& ViewTransform)
 {
+	if (Model->GetOuter() != mRoomContext->mRoomInstance)
+	{
+		return;
+	}
+
 	Model->Initialize();
 
 	UActorModel* ActorModel = Cast<UActorModel>(Model);
@@ -46,6 +51,11 @@ void UObjectModelFactory::FinishCreatingModel(UObjectModel* Model, const FTransf
 
 void UObjectModelFactory::DestroyModel(UObjectModel* Model)
 {
+	if (Model->GetOuter() != mRoomContext->mRoomInstance)
+	{
+		return;
+	}
+
 	const int32 ModelId = Model->GetModelId();
 
 	bool IsFound = mRoomContext->mRoomInstance->mAliveWorldModels.Contains(ModelId);
