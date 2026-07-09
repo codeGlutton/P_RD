@@ -160,7 +160,7 @@ FTransform UTileMapModel::TileToWorldTransform(const FTileTransform& TileTransfo
 {
 	// 뷰가 바인딩돼 있으면 뷰에 질의, 아니면(심 등) 항등 변환 (Invalid 값이 따로 없으니까)
 	return
-		mTileToWorldTransformDelegate.IsBound() ? 
+		mTileToWorldTransformDelegate.IsBound() ?
 			mTileToWorldTransformDelegate.Execute(TileTransform) :
 			FTransform::Identity;
 }
@@ -177,7 +177,7 @@ FVector UTileMapModel::TileToWorldLocation(const FTileIndex& TileIndex) const
 FTileIndex UTileMapModel::WorldToTileIndex(const FVector& WorldLocation) const
 {
 	// 뷰가 바인딩돼 있으면 뷰에 질의, 아니면(심 등) 무효 좌표
-	return 
+	return
 		mWorldToTileIndexDelegate.IsBound() ?
 			mWorldToTileIndexDelegate.Execute(WorldLocation) :
 			FTileIndex::Invalid;
@@ -934,4 +934,20 @@ void UTileMapModel::RemoveActor(UBoardActorModel* Actor)
 
 	// 논리 좌표 무효화
 	Actor->SetTileTransform(FTileTransform::Invalid);
+}
+
+void UTileMapModel::RefreshActorPlacements()
+{
+	// 모든 타일의 보드 액터를 순회하며 현재 논리 좌표를 새 기준으로 변환해 브로드캐스팅
+	for (const FTile& Tile : mTiles)
+	{
+		for (const TWeakObjectPtr<UBoardActorModel>& Actor : Tile.mBoardActors)
+		{
+			if (Actor.IsValid())
+			{
+				const FTileTransform& TileTransform = Actor->GetTileTransform();
+				Actor->OnPlaceTileTransform.Broadcast(TileTransform, TileToWorldTransform(TileTransform));
+			}
+		}
+	}
 }
