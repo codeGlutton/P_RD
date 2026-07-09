@@ -31,6 +31,14 @@ namespace
 	constexpr float MapNodeAreaRightFracFallback = 0.90f;
 	constexpr float MapNodeAreaTopPxFallback = 96.f;
 	constexpr float MapNodeAreaBottomPxFallback = 168.f;
+	constexpr float MapNodeAreaNarrowLeftSafeFrac = 0.14f;
+	constexpr float MapNodeAreaMinLeftSafePx = 120.f;
+	constexpr float MapNodeAreaMaxLeftSafePx = 190.f;
+	constexpr float MapNodeAreaNarrowRightInsetFrac = 0.055f;
+	constexpr float MapNodeAreaMinRightInsetPx = 48.f;
+	constexpr float MapNodeAreaMaxRightInsetPx = 96.f;
+	constexpr float MapNodeAreaMinUsableWidthPx = 260.f;
+	constexpr float MapNodeLegendGapPx = 36.f;
 
 	const FLinearColor PanelDarkColor(0.215f, 0.240f, 0.260f, 1.f);
 	const FLinearColor AccentFillColor(0.255f, 0.565f, 0.590f, 1.f);
@@ -40,6 +48,13 @@ namespace
 	const FSlateColor ReadyColor(FLinearColor(0.53f, 0.86f, 0.88f, 1.f));
 	const FSlateColor LockedColor(FLinearColor(0.52f, 0.54f, 0.55f, 1.f));
 	const FLinearColor TransparentPanelColor(0.f, 0.f, 0.f, 0.f);
+
+	float GetFrontendMapLegendScale(float GraphWidth, float LegendRefWidth, float LegendMinScale)
+	{
+		return LegendRefWidth > KINDA_SMALL_NUMBER
+			? FMath::Clamp(GraphWidth / LegendRefWidth, LegendMinScale, 1.f)
+			: 1.f;
+	}
 
 	FText FrontendMapText(const TCHAR* Key)
 	{
@@ -308,7 +323,7 @@ namespace
  * @details
  * 선/노드 WBP 클래스는 WBP_FrontendMap Class Defaults에서 지정한다.
  * C++은 특정 WBP 경로를 직접 알지 않고, 런타임에는 지정된 클래스가 없을 때 경고만 남긴다.
- * 월드맵은 탑바에서 OpenUI()로 열리는 팝업이므로 일반 HUD보다 위에 표시한다.
+ * 월드맵은 탑바에서 OpenUI()로 열리지만, 프론트 지도에서는 탑바 HUD 아래에 깔아 전체 배경처럼 표시한다.
  */
 UFrontendMapWidget::UFrontendMapWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -1110,7 +1125,7 @@ FVector2D UFrontendMapWidget::GetMapGraphContentSize() const
 	float RightFrac = 0.f;
 	float TopPx = 0.f;
 	float BottomPx = 0.f;
-	GetNodeAreaLayout(OUT LeftFrac, OUT RightFrac, OUT TopPx, OUT BottomPx);
+	GetNodeAreaLayout(OUT LeftFrac, OUT RightFrac, OUT TopPx, OUT BottomPx, GraphWidth);
 
 	float GraphHeight = GraphWidth * MapGraphFallbackAspect;
 	if (mCachedRowCount > 0)
@@ -1153,7 +1168,7 @@ float UFrontendMapWidget::GetMapColPitchMax() const
 		: MapColPitchMaxFallback;
 }
 
-void UFrontendMapWidget::GetNodeAreaLayout(float& OutLeftFrac, float& OutRightFrac, float& OutTopPx, float& OutBottomPx) const
+void UFrontendMapWidget::GetNodeAreaLayout(float& OutLeftFrac, float& OutRightFrac, float& OutTopPx, float& OutBottomPx, float InGraphWidth) const
 {
 	// 시안 마커: 앵커 X 분수 = 좌우 경계, 오프셋 Top/Bottom = 상하 여백(px). 에디터에서 박스를 옮기면 여기로 반영된다.
 	OutLeftFrac = MapNodeAreaLeftFracFallback;
@@ -1179,6 +1194,52 @@ void UFrontendMapWidget::GetNodeAreaLayout(float& OutLeftFrac, float& OutRightFr
 	const FMargin Offsets = AreaSlot->GetOffsets();
 	OutTopPx = FMath::Max(0.f, Offsets.Top);
 	OutBottomPx = FMath::Max(0.f, Offsets.Bottom);
+
+	if (InGraphWidth <= 64.f)
+	{
+		return;
+	}
+
+	float LeftPx = OutLeftFrac * InGraphWidth;
+	float RightPx = OutRightFrac * InGraphWidth;
+
+	const float DecorLeftSafePx = FMath::Clamp(InGraphWidth * MapNodeAreaNarrowLeftSafeFrac, MapNodeAreaMinLeftSafePx, MapNodeAreaMaxLeftSafePx);
+	const float DecorRightInsetPx = FMath::Clamp(InGraphWidth * MapNodeAreaNarrowRightInsetFrac, MapNodeAreaMinRightInsetPx, MapNodeAreaMaxRightInsetPx);
+	LeftPx = FMath::Max(LeftPx, DecorLeftSafePx);
+	RightPx = FMath::Min(RightPx, InGraphWidth - DecorRightInsetPx);
+
+	if (Map_LegendGroup != nullptr)
+	{
+		if (const UCanvasPanelSlot* LegendSlot = Cast<UCanvasPanelSlot>(Map_LegendGroup->Slot))
+		{
+			const FAnchors LegendAnchors = LegendSlot->GetAnchors();
+			if (FMath::IsNearlyEqual(LegendAnchors.Minimum.X, LegendAnchors.Maximum.X))
+			{
+				const FVector2D LegendSize = LegendSlot->GetSize();
+				const FVector2D LegendPosition = LegendSlot->GetPosition();
+				const FVector2D LegendAlignment = LegendSlot->GetAlignment();
+				const float LegendSlotLeft = InGraphWidth * LegendAnchors.Minimum.X + LegendPosition.X - LegendSize.X * LegendAlignment.X;
+				const float LegendSlotRight = LegendSlotLeft + LegendSize.X;
+				const float LegendScale = GetFrontendMapLegendScale(InGraphWidth, mLegendRefWidth, mLegendMinScale);
+				const float LegendVisualLeft = LegendSlotRight - LegendSize.X * LegendScale;
+				const float RightBeforeLegendPx = LegendVisualLeft - MapNodeLegendGapPx;
+				if (RightBeforeLegendPx > LeftPx + MapNodeAreaMinUsableWidthPx)
+				{
+					RightPx = FMath::Min(RightPx, RightBeforeLegendPx);
+				}
+			}
+		}
+	}
+
+	if (RightPx < LeftPx + MapNodeAreaMinUsableWidthPx)
+	{
+		const float CenterPx = FMath::Clamp((LeftPx + RightPx) * 0.5f, MapNodeAreaMinUsableWidthPx * 0.5f, InGraphWidth - MapNodeAreaMinUsableWidthPx * 0.5f);
+		LeftPx = CenterPx - MapNodeAreaMinUsableWidthPx * 0.5f;
+		RightPx = CenterPx + MapNodeAreaMinUsableWidthPx * 0.5f;
+	}
+
+	OutLeftFrac = FMath::Clamp(LeftPx / InGraphWidth, 0.f, 1.f);
+	OutRightFrac = FMath::Clamp(RightPx / InGraphWidth, OutLeftFrac, 1.f);
 }
 
 FVector2D UFrontendMapWidget::GetMapRoomNodeCenter(const TArray<FMapRoomView>& Rooms, const FMapRoomView& Room, const FVector2D& GraphSize) const
@@ -1187,7 +1248,7 @@ FVector2D UFrontendMapWidget::GetMapRoomNodeCenter(const TArray<FMapRoomView>& R
 	 * Stage row/column -> 캔버스 좌표. 배치 경계/간격의 정본은 시안 마커다:
 	 * - X: Map_NodeArea 좌우 분수 안에서 열을 분배하되, 열 간격이 Map_ColPitch 상한을 넘지 않게 중앙으로 모은다(간격 과대 방지).
 	 * - Y: 아래(시작)에서 위(보스)로, 행 간격 Map_NodeMetrics 고정.
-	 * mPositionOffsetRate는 기계적 배열을 깨는 지터, 마지막에 캔버스 밖으로 못 나가게 Clamp.
+	 * mPositionOffsetRate는 기계적 배열을 깨는 지터, 마지막에 Map_NodeArea 안으로 Clamp한다.
 	 */
 	int32 MaxColumn = 0;
 	for (const FMapRoomView& Candidate : Rooms)
@@ -1199,25 +1260,39 @@ FVector2D UFrontendMapWidget::GetMapRoomNodeCenter(const TArray<FMapRoomView>& R
 	float RightFrac = 0.f;
 	float TopPx = 0.f;
 	float BottomPx = 0.f;
-	GetNodeAreaLayout(OUT LeftFrac, OUT RightFrac, OUT TopPx, OUT BottomPx);
+	GetNodeAreaLayout(OUT LeftFrac, OUT RightFrac, OUT TopPx, OUT BottomPx, GraphSize.X);
 	const FVector2D NodeSize = GetMapNodeSize();
 
-	const float AreaLeft = GraphSize.X * LeftFrac + NodeSize.X * 0.5f;
-	const float AreaRight = GraphSize.X * RightFrac - NodeSize.X * 0.5f;
-	const float AvailWidth = FMath::Max(0.f, AreaRight - AreaLeft);
+	const float NodeHalfX = NodeSize.X * 0.5f;
+	const float NodeHalfY = NodeSize.Y * 0.5f;
+
+	const float GraphMinX = NodeHalfX;
+	const float GraphMaxX = FMath::Max(GraphMinX, GraphSize.X - NodeHalfX);
+	const float AreaMinX = FMath::Clamp(GraphSize.X * LeftFrac + NodeHalfX, GraphMinX, GraphMaxX);
+	const float AreaMaxX = FMath::Clamp(GraphSize.X * RightFrac - NodeHalfX, GraphMinX, GraphMaxX);
+	const float ClampMinX = FMath::Min(AreaMinX, AreaMaxX);
+	const float ClampMaxX = FMath::Max(AreaMinX, AreaMaxX);
+	const float AreaCenterX = (ClampMinX + ClampMaxX) * 0.5f;
+	const float AvailWidth = FMath::Max(0.f, ClampMaxX - ClampMinX);
 	const float ColPitch = MaxColumn <= 0
 		? 0.f
 		: FMath::Min(GetMapColPitchMax(), AvailWidth / StaticCast<float>(MaxColumn));
-	const float X = GraphSize.X * 0.5f
+	const float X = AreaCenterX
 		+ (StaticCast<float>(Room.mColumn) - StaticCast<float>(MaxColumn) * 0.5f) * ColPitch;
 
-	const float BottomCenterY = GraphSize.Y - BottomPx - NodeSize.Y * 0.5f;
-	const float Y = BottomCenterY - StaticCast<float>(Room.mRow) * GetMapRowPitch();
+	const float GraphMinY = NodeHalfY;
+	const float GraphMaxY = FMath::Max(GraphMinY, GraphSize.Y - NodeHalfY);
+	const float AreaTopY = FMath::Clamp(TopPx + NodeHalfY, GraphMinY, GraphMaxY);
+	const float AreaBottomY = FMath::Clamp(GraphSize.Y - BottomPx - NodeHalfY, GraphMinY, GraphMaxY);
+	const float ClampMinY = FMath::Min(AreaTopY, AreaBottomY);
+	const float ClampMaxY = FMath::Max(AreaTopY, AreaBottomY);
+
+	const float Y = ClampMaxY - StaticCast<float>(Room.mRow) * GetMapRowPitch();
 
 	const FVector2D Offset(Room.mPositionOffsetRate.X * 18.f, Room.mPositionOffsetRate.Y * 18.f);
 	return FVector2D(
-		FMath::Clamp(X + Offset.X, NodeSize.X * 0.5f, GraphSize.X - NodeSize.X * 0.5f),
-		FMath::Clamp(Y + Offset.Y, NodeSize.Y * 0.5f, GraphSize.Y - NodeSize.Y * 0.5f));
+		FMath::Clamp(X + Offset.X, ClampMinX, ClampMaxX),
+		FMath::Clamp(Y + Offset.Y, ClampMinY, ClampMaxY));
 }
 
 void UFrontendMapWidget::ConfigureMapGraphLayout() const
@@ -1233,7 +1308,7 @@ void UFrontendMapWidget::ConfigureMapGraphLayout() const
 	// 디자인 폭 / 기준 폭 비율로 통째로 줄이되(우측 중앙 피벗 - 오른쪽에 붙은 채 축소), 하한은 시안이 정한다.
 	if (Map_LegendGroup != nullptr && mLegendRefWidth > KINDA_SMALL_NUMBER)
 	{
-		const float LegendScale = FMath::Clamp(GraphSize.X / mLegendRefWidth, mLegendMinScale, 1.f);
+		const float LegendScale = GetFrontendMapLegendScale(GraphSize.X, mLegendRefWidth, mLegendMinScale);
 		Map_LegendGroup->SetRenderTransformPivot(FVector2D(1.f, 0.5f));
 		FWidgetTransform LegendTransform;
 		LegendTransform.Scale = FVector2D(LegendScale, LegendScale);
