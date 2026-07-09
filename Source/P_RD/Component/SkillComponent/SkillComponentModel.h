@@ -17,12 +17,15 @@ class IBoardCombatTarget;
 class UStaticSkillData;
 
 struct FPresentationBarrier;
+struct FActiveSkillContext;
 struct FApplyEventTriggerPayload;
 
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnChangeSkillUI, int32 /*SkillIndex*/, const UStaticSkillData* /*PreSkillData*/, const UStaticSkillData* /*NewSkillData*/);
+
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlaySkillUI, const FActiveSkillContext& /*Context*/, const UStaticSkillData* /*SkillData*/);
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnPlayMotionLayerUI, int32 /*MotionIndex*/, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, FGameplayTag /*ApplyMotionTag*/, ETileActorDirection /*LocalDirection*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnEndMotionLayerUI, int32 /*MotionIndex*/);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndSkill, int32 /*SkillIndex*/, const UStaticSkillData* /*PreSkillData*/);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndSkillUI, const FActiveSkillContext& /*Context*/, const UStaticSkillData* /*SkillData*/);
 
 /**
  * @brief 한 슬롯에 장착된 스킬과 그로 인해 설치된 런타임 객체 추적
@@ -69,7 +72,7 @@ public:
 	int32 mMotionIndex = INDEX_NONE;
 
 public:
-	FOnEndSkill mEndCallback;
+	FOnEndSkillUI mEndCallback;
 
 	/* 모션 임시 데이터 */
 public:
@@ -114,7 +117,7 @@ public:
 	* @param TargetIndex 타겟팅 타일
 	* @param DiceSum 주사위 눈금 합
 	*/
-	void ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum, FOnEndSkill Callback = FOnEndSkill());
+	void ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum, FOnEndSkillUI Callback = FOnEndSkillUI());
 
 protected:
 	void PlayMotionLayer();
@@ -138,6 +141,10 @@ public:
 	FOnChangeSkillUI OnChangeSkillUI;
 
 	/**
+	 * @brief 스킬 실행 시 호출되는 대리자
+	 */
+	FOnPlaySkillUI OnPlaySkillUI;
+	/**
 	 * @brief 모션 애니메이션 재생 시 호출되는 대리자
 	 */
 	FOnPlayMotionLayerUI OnPlayMotionLayerUI;
@@ -145,6 +152,10 @@ public:
 	 * @brief 모션 애니메이션 종료 시 호출되는 대리자
 	 */
 	FOnEndMotionLayerUI OnEndMotionLayerUI;
+	/**
+	 * @brief 스킬 종료 시 호출되는 대리자
+	 */
+	FOnEndSkillUI OnEndSkillUI;
 
 protected:
 	UPROPERTY(Category = "Entry", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillEntries"))

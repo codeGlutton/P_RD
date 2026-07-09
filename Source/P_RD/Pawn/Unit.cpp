@@ -85,13 +85,7 @@ void AUnit::BindModel(UObjectModel* Model)
 	if (mUnitModel.IsValid())
 	{
 		// 초기 배치 연출 요청 구독
-		mUnitModel->OnPlaceTileTransform.AddLambda([this](const FTileTransform& TileTransform, const FTransform& Transform) {
-			FVector UnitLocation = Transform.GetLocation() + FVector(0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
-			FTransform UnitTransform = Transform;
-			UnitTransform.SetLocation(UnitLocation);
-
-			SetActorTransform(UnitTransform);
-			});
+		mUnitModel->OnPlaceTileTransform.AddUObject(this, &AUnit::OnPlaceTileTransform);
 
 		// 이동 연출 요청 구독
 		mUnitModel->OnStartMoveStep.AddUObject(this, &AUnit::OnStartMoveStep);
@@ -174,6 +168,15 @@ void AUnit::UnbindModel(UObjectModel* Model)
 	// 이동 중 해제될 수 있으므로 속도 상태도 초기화
 	mCurrentMoveSpeed = 0.0f;
 	mCurrentMoveVelocity = FVector::ZeroVector;
+}
+
+void AUnit::OnPlaceTileTransform(const FTileTransform& TileTransform, const FTransform& Transform)
+{
+	FVector UnitLocation = Transform.GetLocation() + FVector(0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+	FTransform UnitTransform = Transform;
+	UnitTransform.SetLocation(UnitLocation);
+
+	SetActorTransform(UnitTransform);
 }
 
 void AUnit::OnStartMoveStep(const FTileTransform& NextTileTransform, const FTransform& TargetWorldTransform, TSharedPtr<FPresentationBarrier> Barrier, float RemainingPathDistance)

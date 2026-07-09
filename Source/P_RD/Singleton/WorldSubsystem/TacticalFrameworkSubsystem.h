@@ -31,6 +31,6 @@ protected:
 	UObjectModel* GetModel_Internal() const override;
 
 protected:
-	UPROPERTY(Category = Model, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "mFrameworkModel"))
+	UPROPERTY(Category = Model, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "FrameworkModel"))
 	TWeakObjectPtr<UTacticalFrameworkModel> mFrameworkModel;
 };

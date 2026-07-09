@@ -1,6 +1,7 @@
 ﻿#include "Component/SkillComponent/SkillComponentModel.h"
 
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
+#include "Singleton/WorldSubsystem/WorldCameraModel.h"
 
 #include "Engine/AssetManager.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
@@ -19,6 +20,8 @@
 #include "Simulation/Logger/EventLogger.h"
 
 #include "Animation/Notify/EventTriggerPayload.h"
+
+#include "Setting/GamePlaySettings.h"
 
 namespace
 {
@@ -132,9 +135,15 @@ void USkillComponentModel::SetSkill(int32 SkillIndex, UStaticSkillData* SkillDat
 	OnChangeSkillUI.Broadcast(SkillIndex, SkillData, PreSkillData);
 }
 
-void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum, FOnEndSkill Callback)
+void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum, FOnEndSkillUI Callback)
 {
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
+
+	FSkillEntry& SkillEntry = mSkillEntries[SkillIndex];
+	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
+
+	const UStaticSkillData* SkillData = SkillEntry.mData;
+	checkf(SkillData != nullptr, TEXT("빈 스킬 시전 오류"));
 
 	UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
 	checkf(OwnerUnitModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
@@ -152,6 +161,40 @@ void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillInd
 	mActiveSkillContext.mSkillIndex = SkillIndex;
 	mActiveSkillContext.mMotionIndex = 0;
 	mActiveSkillContext.mEndCallback = MoveTemp(Callback);
+
+	/* 스킬 실행 콜백 */
+
+	OnPlaySkillUI.Broadcast(mActiveSkillContext, SkillData);
+
+	/* 카메라 줌인 */
+
+	FVector MinTileLocation;
+	FVector MaxTileLocation;
+	FVector ZoomInLocation = MapModel->TileToWorldLocation(mActiveSkillContext.mSelfTileIndex);
+	MinTileLocation = MaxTileLocation = ZoomInLocation;
+
+	for (const FTileIndex& EffectTileIndex : mActiveSkillContext.mEffectTileIndexes)
+	{
+		const FVector TileLocation = MapModel->TileToWorldLocation(EffectTileIndex);
+		ZoomInLocation += TileLocation;
+
+		MinTileLocation.X = FMath::Min(MinTileLocation.X, TileLocation.X);
+		MinTileLocation.Y = FMath::Min(MinTileLocation.Y, TileLocation.Y);
+		MaxTileLocation.X = FMath::Max(MaxTileLocation.X, TileLocation.X);
+		MaxTileLocation.Y = FMath::Max(MaxTileLocation.Y, TileLocation.Y);
+	}
+	ZoomInLocation /= (1 + mActiveSkillContext.mEffectTileIndexes.Num());
+
+	const float ZoomInSize = FMath::Max(MaxTileLocation.X - MinTileLocation.X, MaxTileLocation.Y - MinTileLocation.Y);
+
+	UWorldCameraModel* WorldCameraModel = GetWorldSubsystemModel<UWorldCameraModel>(this);
+	checkf(WorldCameraModel != nullptr, TEXT("월드 카메라 모델 nullptr"));
+
+	const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
+	checkf(GamePlaySettings != nullptr, TEXT("게임 플레이 세팅 nullptr"));
+
+	const float FinalZoomInSize = FMath::Clamp(GamePlaySettings->mSkillZoomDefaultSize + ZoomInSize * GamePlaySettings->mSkillZoomSizeRatio, GamePlaySettings->mSkillMinZoomSize, GamePlaySettings->mSkillMaxZoomSize);
+	WorldCameraModel->RequestZoomInMainCamera(ZoomInLocation, FinalZoomInSize);
 
 	/* 스킬 사용 시 패시브 발동 */
 
@@ -172,14 +215,9 @@ void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillInd
 		Passive->CommitPassive(DynamicPassiveData);
 	}
 
-	/*
-	 * 모션 레이어가 하나도 없는(미저작) 스킬은 시전을 무동작으로 즉시 종료한다.
-	 * PlayMotionLayer/Trigger/EndMotionLayer가 전부 mSkillMotionLayers[mMotionIndex]를 인덱싱하므로,
-	 * 빈 배열이면 [0] 접근에서 out-of-bounds 크래시가 난다. 실제 효과가 필요하면 DA에
-	 * mSkillMotionLayers(+효과 레이어)를 채워야 한다.
-	 */
-	const UStaticSkillData* ActiveSkillData = mSkillEntries[SkillIndex].mData;
-	if (ActiveSkillData == nullptr || ActiveSkillData->mSkillMotionLayers.Num() == 0)
+	
+	// 모션 레이어가 하나도 없는(미저작) 스킬은 시전을 무동작으로 즉시 종료
+	if (SkillData->mSkillMotionLayers.Num() == 0)
 	{
 		UE_LOG(LogRD, Warning, TEXT("스킬(index %d)에 모션 레이어가 없어 시전을 건너뜁니다 — DA에 mSkillMotionLayers 미설정"), SkillIndex);
 		DeactivateSkill();
@@ -540,9 +578,17 @@ void USkillComponentModel::DeactivateSkill()
 		Passive->CommitPassive(DynamicPassiveData);
 	}
 
+	/* 카메라 줌아웃 */
+
+	UWorldCameraModel* WorldCameraModel = GetWorldSubsystemModel<UWorldCameraModel>(this);
+	checkf(WorldCameraModel != nullptr, TEXT("월드 카메라 모델 nullptr"));
+
+	WorldCameraModel->RequestZoomOutMainCamera();
+
 	/* 스킬 종료 콜백 */
 
-	mActiveSkillContext.mEndCallback.Broadcast(mActiveSkillContext.mSkillIndex, SkillData);
+	mActiveSkillContext.mEndCallback.Broadcast(mActiveSkillContext, SkillData);
+	OnEndSkillUI.Broadcast(mActiveSkillContext, SkillData);
 
 	/* 활성화 스킬 데이터 비우기 */
 

@@ -48,6 +48,9 @@ DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnEndAnyTurnUI, TSharedPtr<FPresentation
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnBeginAnyTurnActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, const USRPGAction* /*Action*/)
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnEndAnyTurnActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, const USRPGAction* /*Action*/, ESRPGActionResult /*Result*/)
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnZoomInToActorsUI, const TArray<FTileIndex>& /*ActorTileIndexes*/);
+DECLARE_MULTICAST_DELEGATE(FOnZoomOutFromActorsUI);
+
 USTRUCT(BlueprintType)
 struct FSRPGTurnUnregisterRequest
 {
@@ -152,6 +155,7 @@ protected:
 	void SpawnTileMap();
 	void RegisterPlayerUnit(UUnitModel* PlayerUnit, const FTileTransform& Transform);
 	void RegisterEnemyUnits(TArray<FEnemyUnitPlacementData>& EnemyPlacementDatas);
+	void RegisterUnit(UUnitModel* Unit, const FTileTransform& Transform);
 	void RegisterObstacles(TArray<FObstaclePlacementData>& ObstaclePlacementDatas);
 
 protected:
@@ -253,6 +257,16 @@ public:
 	 * Broadcast시 전달될 Barrier 스마트 포인터 카운팅이 0이 되기 전까지, 로직은 일시정지
 	 */
 	FOnEndAnyTurnActionUI OnEndAnyTurnActionUI;
+
+public:
+	/**
+	 * @brief 액터들 줌인 요청 시
+	 */
+	FOnZoomInToActorsUI OnZoomInToActorsUI;
+	/**
+	 * @brief 액터들 줌아웃 요청 시
+	 */
+	FOnZoomOutFromActorsUI OnZoomOutFromActorsUI;
 
 protected:
 	// @brief 현재 전투 방 상태

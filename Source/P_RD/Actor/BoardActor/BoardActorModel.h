@@ -20,14 +20,13 @@ struct FApplyEventTriggerPayload;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlaceTileTransform, const FTileTransform& /* TileTransform */, const FTransform& /* Transform */);
 
-DECLARE_DELEGATE_OneParam(FOnRequestReceiveAnimation, const FApplyEventTriggerPayload* /*Payload*/);
-
-DECLARE_MULTICAST_DELEGATE_FourParams(FOnPlayApplyAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, FOnRequestReceiveAnimation /*TriggerCallback*/, FGameplayTag /*ApplyMotionTag*/, ETileActorDirection /*LocalDirection*/);
-DECLARE_MULTICAST_DELEGATE_FourParams(FOnPlayReceiveAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, const FApplyEventTriggerPayload* /*Payload*/, FGameplayTag /*ReceiveMotionTag*/, ETileActorDirection /*LocalDirection*/);
-
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnStartMoveStep, const FTileTransform& /* NextTileTransform */, const FTransform& /* TargetWorldTransform */, TSharedPtr<FPresentationBarrier> /* Barrier */, float /* RemainingPathDistance */);
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnRotate, const FRotator& /* TargetWorldRotation */, TSharedPtr<FPresentationBarrier> /* Barrier */);
+
+DECLARE_DELEGATE_OneParam(FOnRequestReceiveAnimation, const FApplyEventTriggerPayload* /*Payload*/);
+DECLARE_MULTICAST_DELEGATE_FourParams(FOnPlayApplyAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, FOnRequestReceiveAnimation /*TriggerCallback*/, FGameplayTag /*ApplyMotionTag*/, ETileActorDirection /*LocalDirection*/);
+DECLARE_MULTICAST_DELEGATE_FourParams(FOnPlayReceiveAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, const FApplyEventTriggerPayload* /*Payload*/, FGameplayTag /*ReceiveMotionTag*/, ETileActorDirection /*LocalDirection*/);
 
 
 /**

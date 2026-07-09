@@ -60,6 +60,9 @@ protected:
 	UObjectModel* GetModel_Internal() const override;
 
 protected:
+	// @brief 배치 요청을 수신
+	virtual void OnPlaceTileTransform(const FTileTransform& TileTransform, const FTransform& Transform);
+
 	// @brief 이동 시작 요청을 수신해서 이동 시작
 	virtual void OnStartMoveStep(
 		const FTileTransform& NextTileTransform,

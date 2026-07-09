@@ -421,22 +421,7 @@ void USRPGCombatModel::RegisterEnemyUnit(FEnemyUnitPlacementData& EnemyPlacement
 	EnemyUnit->SetStaticSpawnData(EnemyUnitSpawnData);
 	EnemyUnit->FinishCreating(mTileMap->TileToWorldTransform(EnemyPlacementData.mTransform));
 
-	checkf(mTileMap->CanPlace(EnemyPlacementData.mTransform.mIndex, EnemyUnit), TEXT("액터 배치 불가능"));
-	
-	mUnits.Push(EnemyUnit);
-
-	// 타일 위에 배치
-	mTileMap->PlaceActor(EnemyPlacementData.mTransform, EnemyUnit);
-
-	// 턴 등록
-	RegisterTurn(EnemyUnit);
-
-	if (mCombatPhase == ESRPGCombatRoomPhase::CombatPlay)
-	{
-		EnemyUnit->OnBeginRoom();
-	}
-
-	OnRegisterUnitUI.Broadcast(EnemyUnit);
+	RegisterUnit(EnemyUnit, EnemyPlacementData.mTransform);
 }
 
 void USRPGCombatModel::RegisterObstacle(FObstaclePlacementData& ObstaclePlacementData)
@@ -547,21 +532,8 @@ void USRPGCombatModel::RegisterPlayerUnit(UUnitModel* PlayerUnit, const FTileTra
 	checkf(mTileMap != nullptr, TEXT("타일맵 미존재"));
 	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
 
-	// 타일 위에 배치
-	mTileMap->PlaceActor(Transform, PlayerUnit);
-
 	mPlayerUnit = PlayerUnit;
-	mUnits.Push(PlayerUnit);
-
-	// 턴 등록
-	RegisterTurn(PlayerUnit);
-
-	if (mCombatPhase == ESRPGCombatRoomPhase::CombatPlay)
-	{
-		PlayerUnit->OnBeginRoom();
-	}
-
-	OnRegisterUnitUI.Broadcast(PlayerUnit);
+	RegisterUnit(PlayerUnit, Transform);
 }
 
 void USRPGCombatModel::RegisterEnemyUnits(TArray<FEnemyUnitPlacementData>& EnemyPlacementDatas)
@@ -585,6 +557,25 @@ void USRPGCombatModel::RegisterEnemyUnits(TArray<FEnemyUnitPlacementData>& Enemy
 			RegisterEnemyUnit(*Data);
 		}
 	}
+}
+
+void USRPGCombatModel::RegisterUnit(UUnitModel* Unit, const FTileTransform& Transform)
+{
+	mUnits.Push(Unit);
+
+	// 타일 위에 배치
+	checkf(mTileMap->CanPlace(Transform.mIndex, Unit), TEXT("액터 배치 불가능"));
+	mTileMap->PlaceActor(Transform, Unit);
+
+	// 턴 등록
+	RegisterTurn(Unit);
+
+	if (mCombatPhase == ESRPGCombatRoomPhase::CombatPlay)
+	{
+		Unit->OnBeginRoom();
+	}
+
+	OnRegisterUnitUI.Broadcast(Unit);
 }
 
 void USRPGCombatModel::RegisterObstacles(TArray<FObstaclePlacementData>& ObstaclePlacementDatas)
