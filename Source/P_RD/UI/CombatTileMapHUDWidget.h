@@ -350,9 +350,14 @@ private:
 	/** @brief HpFillImage를 ClipToBounds 캔버스로 감싸, 폭을 % 만큼 줄이면 우측이 잘리는 크롭 채움을 만든다. */
 	void SetupUnitHpBarFillClip(FUnitHpBarWidget& Bar);
 
-	/** @brief WBP의 상태 슬롯(StatusIcon_0N/StatusCountText_0N/Overflow)을 캐시하고 숨김으로 둔다.
-	 *         표시 배선(UpdateUnitHpBarStatus)은 #297(상태 DTO mStatusEffects) 머지 후 후속 PR에서 추가. */
+	/** @brief WBP의 상태 슬롯(StatusIcon_0N/StatusCountText_0N/Overflow)을 캐시하고 숨김으로 둔다. */
 	void CacheUnitHpBarStatusSlots(FUnitHpBarWidget& Bar) const;
+
+	/** @brief 유닛 HP바 밑 상태이상 칸을 DTO(mStatusEffects)로 채운다(아이콘/스택수/오버플로). UpdateUnitHpBars에서 매 프레임 호출. */
+	void UpdateUnitHpBarStatus(FUnitHpBarWidget& Bar, const FUnitUI& Unit) const;
+
+	/** @brief 상태이상 태그 → 아이콘 텍스처(로그용 mLogIcon* 재사용). 전용 아이콘 없는 태그는 nullptr. */
+	UTexture2D* ResolveStatusIcon(const FGameplayTag& StatusTag) const;
 
 	/* ── 전투 플로팅 로그(유닛 머리 위) + 턴 라운드 배너 (CombatTileMapHUDWidget_CombatLog.cpp) ── */
 

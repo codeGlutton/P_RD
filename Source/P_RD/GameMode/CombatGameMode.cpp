@@ -149,6 +149,14 @@ namespace
 		}
 	}
 
+	bool IsUnitHpBarStatusEffectTag(const FGameplayTag& StatusTag)
+	{
+		return StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Agility)
+			|| StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification)
+			|| StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability)
+			|| StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness);
+	}
+
 	void ConvertFloatingLogUITypes(const FSRPGAttributeEffectEventLog& AttrLog, OUT EFloatingLogIconType& IconType, OUT EFloatingLogColorType& ColorType)
 	{
 		if (AttrLog.mEffectAttribute == UUnitAttributeSet::GetHPAttribute())
@@ -653,6 +661,22 @@ void ACombatGameMode::PushUnitUIData() const
 		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMovementAttribute());
 
 		UnitUIData.mStatusTags = AttributeSetComponentModel->GetOwnedGameplayTags(); // 모든 소유 태그가 아닌 고의적으로 넣은 태그만 해당
+
+		// HP바 밑 상태이상 칸용: 부모/분류 태그는 제외하고, 실제 표시 대상 상태만 (태그 + 스택 수)로 채운다.
+		// 텍스처 선택은 HUD(UpdateUnitHpBarStatus)가 소유하고, 스택 수는 태그 컨테이너의 누적 카운트에서 읽는다.
+		UnitUIData.mStatusEffects.Reset();
+		for (const FGameplayTag& StatusTag : UnitUIData.mStatusTags)
+		{
+			if (IsUnitHpBarStatusEffectTag(StatusTag) == false)
+			{
+				continue;
+			}
+
+			FStatusEffectUI StatusEffect;
+			StatusEffect.mTag = StatusTag;
+			StatusEffect.mStackCount = AttributeSetComponentModel->GetTagCount(StatusTag);
+			UnitUIData.mStatusEffects.Add(StatusEffect);
+		}
 
 		// 죽는 유닛 등 뷰가 이미 없는 경로에서도 push가 돌 수 있어 null 가드한다.
 		// mWorldLocation은 스냅샷 폴백, mViewActor는 이동을 매 프레임 따라가는 라이브 투영 소스(UnitBars).
