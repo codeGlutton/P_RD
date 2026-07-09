@@ -188,6 +188,8 @@ struct FUnitUI
 
 	UPROPERTY(BlueprintReadOnly) int32 mUnitId = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) bool mIsPlayer = false;
+	/** @brief 유닛 초상화(DA mPortrait). 턴 순서 칩 등 상시 UI 표시용 — 없으면 텍스트 폴백. */
+	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mPortrait;
 	UPROPERTY(BlueprintReadOnly) float mHP = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mMaxHP = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mDamagePoint = 0.f;

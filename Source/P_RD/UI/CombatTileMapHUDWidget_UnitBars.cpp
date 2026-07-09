@@ -1,6 +1,7 @@
 #include "UI/CombatTileMapHUDWidget.h"
 
 #include "GameFramework/Actor.h"   // FUnitUI.mViewActor->GetActorLocation() (HP바 라이브 투영)
+#include "Camera/PlayerCameraManager.h"   // 카메라 줌(OrthoWidth) 비례 HP바 스케일
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Blueprint/WidgetTree.h"
@@ -18,6 +19,8 @@ namespace
 
 	// ▼▼▼ HP바 머리위 표시 크기 조절: 이 값만 바꾸면 됨(1.0=WBP 원본 360x68, 0.35=35%). ▼▼▼
 	constexpr float UnitHpBarRenderScale = 0.35f;
+	// 줌 배율 기준이 되는 직교 카메라 폭(CombatCameraPawn 기본 OrthoWidth). 이 값일 때 배율 1.0.
+	constexpr float UnitHpBarBaseOrthoWidth = 2000.0f;
 
 	// 머리 위 HP바가 유닛 머리에서 얼마나 위로 뜰지(뷰포트 픽셀). 크기 바꾸면 같이 조절.
 	constexpr float UnitHpBarHeadOffsetY = -60.0f;
@@ -195,6 +198,55 @@ void UCombatTileMapHUDWidget::RebuildUnitHpBars()
 			}
 		}
 
+		// HP바 왼쪽 방어도 표시(아이콘 + 수치). WBP 내부 캔버스에 런타임 생성 — 트리 수술 규칙에 따라
+		// 반드시 AddChildToCanvas(라이브 부착) 전에 만든다. 방어도 0이면 Update에서 숨긴다.
+		if (UWidgetTree* BarTree = NewBar.mRoot->WidgetTree)
+		{
+			if (UCanvasPanel* BarCanvas = Cast<UCanvasPanel>(BarTree->RootWidget))
+			{
+				if (mUnitDefenseIconTexture != nullptr)
+				{
+					if (UImage* DefenseIcon = BarTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("DefenseIcon")))
+					{
+						DefenseIcon->SetBrushFromTexture(mUnitDefenseIconTexture, false);
+						DefenseIcon->SetVisibility(ESlateVisibility::Collapsed);
+						if (UCanvasPanelSlot* IconSlot = BarCanvas->AddChildToCanvas(DefenseIcon))
+						{
+							// WBP 실측(채움 x=20,y=8,w=323,h=53) 기준, 바 왼쪽 바깥에 세로 중앙 정렬.
+							IconSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+							IconSlot->SetAlignment(FVector2D(1.0f, 0.5f));
+							IconSlot->SetPosition(FVector2D(14.0f, 34.0f));
+							IconSlot->SetSize(FVector2D(64.0f, 64.0f));
+							IconSlot->SetAutoSize(false);
+						}
+						NewBar.mDefenseIcon = DefenseIcon;
+					}
+				}
+				if (UTextBlock* DefenseText = BarTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("DefenseValueText")))
+				{
+					FSlateFontInfo DefenseFont = DefenseText->GetFont();
+					DefenseFont.Size = 26;
+					DefenseFont.OutlineSettings.OutlineSize = 3;
+					DefenseFont.OutlineSettings.OutlineColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.9f);
+					DefenseText->SetFont(DefenseFont);
+					DefenseText->SetJustification(ETextJustify::Center);
+					DefenseText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+					DefenseText->SetVisibility(ESlateVisibility::Collapsed);
+					if (UCanvasPanelSlot* TextSlot = BarCanvas->AddChildToCanvas(DefenseText))
+					{
+						// 아이콘(방패) 위 중앙에 수치를 겹쳐 그린다.
+						TextSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+						TextSlot->SetAlignment(FVector2D(1.0f, 0.5f));
+						TextSlot->SetPosition(FVector2D(10.0f, 34.0f));
+						TextSlot->SetSize(FVector2D(56.0f, 40.0f));
+						TextSlot->SetAutoSize(false);
+						TextSlot->SetZOrder(1);
+					}
+					NewBar.mDefenseText = DefenseText;
+				}
+			}
+		}
+
 		// 크기 축소: 렌더 스케일을 하단 중앙 피벗으로 적용해, 축소해도 바 밑변이 투영 지점(머리 위)에 고정되게 한다.
 		NewBar.mRoot->SetRenderTransformPivot(FVector2D(0.5f, 1.0f));
 		NewBar.mRoot->SetRenderScale(FVector2D(UnitHpBarRenderScale, UnitHpBarRenderScale));
@@ -255,6 +307,19 @@ void UCombatTileMapHUDWidget::UpdateUnitHpBars()
 		return;
 	}
 
+	// 카메라 줌(직교 OrthoWidth)에 비례해 HP바 크기를 키운다 — 줌인하면 유닛과 함께 바도 커진다.
+	// 기준 OrthoWidth(2000) 대비 배율, 과도한 확대/축소는 클램프.
+	float ZoomScale = 1.0f;
+	if (PlayerController->PlayerCameraManager != nullptr)
+	{
+		const float CurrentOrthoWidth = PlayerController->PlayerCameraManager->GetCameraCacheView().OrthoWidth;
+		if (CurrentOrthoWidth > KINDA_SMALL_NUMBER)
+		{
+			ZoomScale = FMath::Clamp(UnitHpBarBaseOrthoWidth / CurrentOrthoWidth, 0.6f, 3.0f);
+		}
+	}
+	const FVector2D BarRenderScale(UnitHpBarRenderScale * ZoomScale, UnitHpBarRenderScale * ZoomScale);
+
 	const TArray<FUnitUI>& Units = mCombatUIModel->GetUnitUIs();
 	for (int32 BarIndex = 0; BarIndex < mUnitHpBars.Num(); ++BarIndex)
 	{
@@ -291,6 +356,21 @@ void UCombatTileMapHUDWidget::UpdateUnitHpBars()
 			Bar.mValueText->SetText(FText::AsNumber(FMath::RoundToInt(Unit.mHP)));
 		}
 
+		// 방어도: 0보다 클 때만 HP바 왼쪽에 아이콘+수치 표시.
+		const int32 DefensePoint = FMath::RoundToInt(Unit.mDefensePoint);
+		const ESlateVisibility DefenseVisibility = DefensePoint > 0
+			? ESlateVisibility::HitTestInvisible
+			: ESlateVisibility::Collapsed;
+		if (Bar.mDefenseIcon != nullptr)
+		{
+			Bar.mDefenseIcon->SetVisibility(DefenseVisibility);
+		}
+		if (Bar.mDefenseText != nullptr)
+		{
+			Bar.mDefenseText->SetText(FText::AsNumber(DefensePoint));
+			Bar.mDefenseText->SetVisibility(DefenseVisibility);
+		}
+
 		// 유닛 월드 위치를 화면(위젯) 좌표로 투영. 화면 밖이면 숨긴다.
 		// 이동을 매 프레임 따라가도록 뷰 액터의 라이브 위치를 우선 투영(유효 시). 없으면 스냅샷(mWorldLocation) 폴백.
 		const FVector ProjectLocation = Unit.mViewActor.IsValid()
@@ -309,6 +389,9 @@ void UCombatTileMapHUDWidget::UpdateUnitHpBars()
 		{
 			RootSlot->SetPosition(ScreenPosition + FVector2D(0.0f, UnitHpBarHeadOffsetY));   // 유닛 머리 위로 띄운다.
 		}
+
+		// 줌 배율 반영(하단 중앙 피벗이라 커져도 밑변이 머리 위 투영점에 고정).
+		Bar.mRoot->SetRenderScale(BarRenderScale);
 
 		// HP바 밑 상태이상 아이콘/개수 갱신(온스크린 확정된 바에만).
 		UpdateUnitHpBarStatus(Bar, Unit);

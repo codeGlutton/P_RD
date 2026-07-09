@@ -108,6 +108,10 @@ public:
 	UFUNCTION(Category = UI, BlueprintCallable)
 	bool ResolveWorldLongPressEvent(FVector2D ScreenPosition);
 
+public:
+	/** @brief 현재 전투 방의 표시 이름('일반'/'엘리트'/'보스'). HUD 룸 이름 라벨용. */
+	FText GetCurrentRoomDisplayName() const;
+
 protected:
 	void OnRegisterUnit(UUnitModel* Unit);
 	void OnUnregisterUnit(UUnitModel* Unit);

@@ -623,6 +623,12 @@ void ACombatGameMode::PushMoveBuildUIData(ESRPGMoveBuildPhase Phase) const
 	}
 }
 
+FText ACombatGameMode::GetCurrentRoomDisplayName() const
+{
+	const URunPersistData* RunPersistData = GetRunPersistData();
+	return RunPersistData != nullptr ? RunPersistData->GetCurrentRoom().GetDisplayName() : FText::GetEmpty();
+}
+
 void ACombatGameMode::PushUnitUIData() const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
@@ -646,6 +652,7 @@ void ACombatGameMode::PushUnitUIData() const
 
 		UnitUIData.mIsPlayer = UnitModel->IsPlayerUnitModel();
 		UnitUIData.mUnitId = UnitModel->GetModelId();
+		UnitUIData.mPortrait = UnitModel->GetBoardActorPortrait();   // 턴 순서 칩 등 상시 UI용(없으면 nullptr → 텍스트 폴백).
 		UnitUIData.mTile = UnitModel->GetTileTransform().mIndex;
 		UnitUIData.mHP = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute());
 		UnitUIData.mMaxHP = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMaxHPAttribute());

@@ -8,6 +8,7 @@
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
+#include "GameMode/CombatGameMode.h"  // 룸 이름 라벨(GetCurrentRoomDisplayName)
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
 #include "UI/Combat/CombatUIModel.h"
@@ -144,7 +145,6 @@ void UCombatTileMapHUDWidget::RefreshSkinValueLabels() const
 		{ TEXT("HUD_M_lv_value"), FText::AsNumber(Meta.mLevel) },
 		{ TEXT("HUD_M_hp_value"), FText::Format(NSLOCTEXT("CombatTileMapHUDWidget", "SkinHP", "{0}/{1}"),
 			FText::AsNumber(FMath::RoundToInt(PlayerHP)), FText::AsNumber(FMath::RoundToInt(PlayerMaxHP))) },
-		{ TEXT("HUD_M_gold_value"), FText::AsNumber(Meta.mGold) },
 		{ TEXT("HUD_M_btn_end_turn_label"), NSLOCTEXT("CombatTileMapHUDWidget", "EndTurnLabel", "END\nTURN") },
 	};
 
@@ -154,6 +154,33 @@ void UCombatTileMapHUDWidget::RefreshSkinValueLabels() const
 		{
 			ValueText->SetText(Binding.Text);
 			ValueText->SetJustification(ETextJustify::Center);
+		}
+	}
+
+}
+
+void UCombatTileMapHUDWidget::RefreshRoomNameLabel() const
+{
+	if (WidgetTree == nullptr || GetWorld() == nullptr)
+	{
+		return;
+	}
+
+	const ACombatGameMode* CombatGameMode = GetWorld()->GetAuthGameMode<ACombatGameMode>();
+	if (CombatGameMode == nullptr)
+	{
+		return;
+	}
+
+	const FText RoomDisplayName = CombatGameMode->GetCurrentRoomDisplayName();
+
+	// 룸 이름 자리 후보 두 마커 중 TextBlock인 것에 채운다(스킨/구버전에 따라 이름이 다름).
+	static const TCHAR* const RoomNameMarkers[] = { TEXT("HUD_M_room_name_text"), TEXT("R_room_name_room_name_7") };
+	for (const TCHAR* MarkerName : RoomNameMarkers)
+	{
+		if (UTextBlock* RoomNameText = Cast<UTextBlock>(WidgetTree->FindWidget(FName(MarkerName))))
+		{
+			RoomNameText->SetText(RoomDisplayName);
 		}
 	}
 }
@@ -310,7 +337,7 @@ void UCombatTileMapHUDWidget::RebuildEquipmentBar()
 
 void UCombatTileMapHUDWidget::RebuildEquipmentIcons()
 {
-	if (WidgetTree == nullptr || mCombatUIModel == nullptr)
+	if (WidgetTree == nullptr)
 	{
 		return;
 	}
@@ -320,10 +347,8 @@ void UCombatTileMapHUDWidget::RebuildEquipmentIcons()
 	static const TCHAR* const SlotMarkerNames[] = { TEXT("HUD_M_equip_0"), TEXT("HUD_M_equip_1"), TEXT("HUD_M_equip_2") };
 	const int32 MarkerCount = UE_ARRAY_COUNT(SlotMarkerNames);
 
-	const TArray<FEquipmentUI>& Equips = mCombatUIModel->GetEquipmentUIs();
-
 	// 마커 i ↔ 장비 슬롯 i(무기/장갑/신발) 직접 매핑. 장착된 슬롯만 그 아이콘을 띄우고, 빈 슬롯은 감춘다.
-	// (placeholder 없음 — 진짜 장착 장비 아이콘만 노출. 장착 0개면 3칸 모두 Collapsed.)
+	// 모델이 아직 없을 때도 마커를 전부 감춰서 WBP에 박힌 기본 브러시(임시 하트)가 새어 나오지 않게 한다.
 	for (int32 MarkerIndex = 0; MarkerIndex < MarkerCount; ++MarkerIndex)
 	{
 		UImage* SlotImage = Cast<UImage>(WidgetTree->FindWidget(SlotMarkerNames[MarkerIndex]));
@@ -333,11 +358,15 @@ void UCombatTileMapHUDWidget::RebuildEquipmentIcons()
 		}
 
 		UTexture2D* IconTex = nullptr;
-		if (Equips.IsValidIndex(MarkerIndex) == true
-			&& Equips[MarkerIndex].mIsEquipped == true
-			&& Equips[MarkerIndex].mIcon != nullptr)
+		if (mCombatUIModel != nullptr)
 		{
-			IconTex = Equips[MarkerIndex].mIcon.Get();
+			const TArray<FEquipmentUI>& Equips = mCombatUIModel->GetEquipmentUIs();
+			if (Equips.IsValidIndex(MarkerIndex) == true
+				&& Equips[MarkerIndex].mIsEquipped == true
+				&& Equips[MarkerIndex].mIcon != nullptr)
+			{
+				IconTex = Equips[MarkerIndex].mIcon.Get();
+			}
 		}
 
 		if (IconTex != nullptr)
@@ -424,7 +453,30 @@ void UCombatTileMapHUDWidget::RebuildTurnOrderBar()
 	const float ChipHeightPx = ChipHeight * 1080.0f;
 	const float GapPx = Gap * 1920.0f;
 	const float TopPx = Top * 1080.0f + mFoldTurnOrderDeltaY;   // 폴드 변형이면 턴 스트립과 함께 내려간다.
-	const float TotalPx = StaticCast<float>(Order.Num()) * ChipWidthPx + StaticCast<float>(Order.Num() - 1) * GapPx;
+
+	// 칩 폭: 초상화가 있으면 원본 비율(가로/세로)로 높이에 맞춘 폭, 없으면 기존 고정폭 — 초상화가 눌리거나 늘어나지 않게.
+	TArray<float> ChipWidthsPx;
+	ChipWidthsPx.Reserve(Order.Num());
+	for (int32 SlotIndex = 0; SlotIndex < Order.Num(); ++SlotIndex)
+	{
+		float SlotWidthPx = ChipWidthPx;
+		for (const FUnitUI& Unit : Units)
+		{
+			if (Unit.mUnitId == Order[SlotIndex] && Unit.mPortrait != nullptr && Unit.mPortrait->GetSizeY() > 0)
+			{
+				SlotWidthPx = ChipHeightPx
+					* (StaticCast<float>(Unit.mPortrait->GetSizeX()) / StaticCast<float>(Unit.mPortrait->GetSizeY()));
+				break;
+			}
+		}
+		ChipWidthsPx.Add(SlotWidthPx);
+	}
+	float TotalPx = StaticCast<float>(Order.Num() - 1) * GapPx;
+	for (const float SlotWidthPx : ChipWidthsPx)
+	{
+		TotalPx += SlotWidthPx;
+	}
+	float ChipCursorX = -TotalPx * 0.5f;   // 스킨 배치: 중앙 정렬 시작점에서 칩 폭만큼 전진.
 
 	int32 EnemyOrdinal = 0;
 	for (int32 SlotIndex = 0; SlotIndex < Order.Num(); ++SlotIndex)
@@ -451,16 +503,42 @@ void UCombatTileMapHUDWidget::RebuildTurnOrderBar()
 		Chip->SetBrushColor(BrushColor);
 		Chip->SetPadding(FMargin(2.0f, 1.0f));
 
-		// "나" / "적N" — 소스 인코딩에 흔들리지 않게 UTF-8 바이트를 명시 변환.
-		const FText Label = bPlayer
-			? FText::FromString(UTF8_TO_TCHAR("\xEB\x82\x98"))
-			: FText::Format(FText::FromString(UTF8_TO_TCHAR("\xEC\xA0\x81{0}")), FText::AsNumber(++EnemyOrdinal));
-		Text->SetJustification(ETextJustify::Center);
-		Text->SetText(Label);
-		Text->SetColorAndOpacity(FSlateColor(FLinearColor(0.98f, 1.0f, 0.94f, 1.0f)));
-		SetChipFontSize(Text, 13);
+		// 초상화가 있으면 초상화 이미지, 없으면 "나"/"적N" 텍스트 폴백.
+		UTexture2D* Portrait = nullptr;
+		for (const FUnitUI& Unit : Units)
+		{
+			if (Unit.mUnitId == Id)
+			{
+				Portrait = Unit.mPortrait;
+				break;
+			}
+		}
+		if (bPlayer == false)
+		{
+			++EnemyOrdinal;   // 폴백 라벨 번호는 초상화 유무와 무관하게 순서를 유지한다.
+		}
 
-		Chip->AddChild(Text);
+		if (Portrait != nullptr)
+		{
+			if (UImage* PortraitImage = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass()))
+			{
+				PortraitImage->SetBrushFromTexture(Portrait, false);
+				PortraitImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+				Chip->AddChild(PortraitImage);
+			}
+		}
+		else
+		{
+			// "나" / "적N" — 소스 인코딩에 흔들리지 않게 UTF-8 바이트를 명시 변환.
+			const FText Label = bPlayer
+				? FText::FromString(UTF8_TO_TCHAR("\xEB\x82\x98"))
+				: FText::Format(FText::FromString(UTF8_TO_TCHAR("\xEC\xA0\x81{0}")), FText::AsNumber(EnemyOrdinal));
+			Text->SetJustification(ETextJustify::Center);
+			Text->SetText(Label);
+			Text->SetColorAndOpacity(FSlateColor(FLinearColor(0.98f, 1.0f, 0.94f, 1.0f)));
+			SetChipFontSize(Text, 13);
+			Chip->AddChild(Text);
+		}
 		Canvas->AddChildToCanvas(Chip);
 
 		if (bChipSkin)
@@ -468,7 +546,8 @@ void UCombatTileMapHUDWidget::RebuildTurnOrderBar()
 			FAnchorData ChipSlot;
 			ChipSlot.Anchors = FAnchors(0.5f, 0.0f, 0.5f, 0.0f);
 			ChipSlot.Alignment = FVector2D::ZeroVector;
-			ChipSlot.Offsets = FMargin(-TotalPx * 0.5f + StaticCast<float>(SlotIndex) * (ChipWidthPx + GapPx), TopPx, ChipWidthPx, ChipHeightPx);
+			ChipSlot.Offsets = FMargin(ChipCursorX, TopPx, ChipWidthsPx[SlotIndex], ChipHeightPx);
+			ChipCursorX += ChipWidthsPx[SlotIndex] + GapPx;
 			RDUILayout::ApplyDesignerSlotData(Chip, ChipSlot, 32);
 		}
 		else
