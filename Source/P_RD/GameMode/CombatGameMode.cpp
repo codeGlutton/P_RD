@@ -919,7 +919,7 @@ void ACombatGameMode::PushPlayerMetaUIData() const
 	mCombatUIModel->SetPlayerMeta(PlayerMetaUIData);
 }
 
-void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>& TurnEventLogs, bool bIsPreview) const
+void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>& TurnEventLogs, bool IsPreview) const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
@@ -931,24 +931,24 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 
 	/* 새로운 시뮬마다 이전 남은 로그 지우기 */
 
-	if (bIsPreview == true)
+	if (IsPreview == true)
 	{
 		mCombatUIModel->NotifyCombatFloatingLogsCleared();
 	}
 
 	/* 모션 내 이벤트 로그 마다 UI 요청서 작성 함수 */
 
-	auto AddFloatingLogs = [bIsPreview](const FSRPGBoardActorEventLog& EventLog, const FVector& ViewActorLocation, const int32 MotionIndex, OUT int32& Sequence, OUT TArray<FCombatFloatingLogRequest>& Requests) {
+	auto AddFloatingLogs = [IsPreview](const FSRPGBoardActorEventLog& EventLog, const FVector& ViewActorLocation, const int32 MotionIndex, OUT int32& Sequence, OUT TArray<FCombatFloatingLogRequest>& Requests) {
 		
-		auto MakeLogRequest = [bIsPreview](int32 Amount, EFloatingLogIconType IconType, EFloatingLogColorType ColorType, const FVector& ViewLocation, int32 MotionIndex, int32 Sequence) -> FCombatFloatingLogRequest {
+		auto MakeLogRequest = [IsPreview](int32 Amount, EFloatingLogIconType IconType, EFloatingLogColorType ColorType, const FVector& ViewLocation, int32 MotionIndex, int32 Sequence) -> FCombatFloatingLogRequest {
 			FCombatFloatingLogRequest Request;
 			Request.mWorldLocation = ViewLocation;
 			Request.mText = FText::FromString(FString::Printf(TEXT("%+d"), Amount));
 			Request.mIconType = IconType;
 			Request.mColorType = ColorType;
 			Request.mSequence = Sequence;
-			Request.mMotionIndex = bIsPreview == true ? MotionIndex : INDEX_NONE;
-			Request.mIsPreview = bIsPreview;
+			Request.mMotionIndex = IsPreview == true ? MotionIndex : INDEX_NONE;
+			Request.mIsPreview = IsPreview;
 			return Request;
 			};
 		
