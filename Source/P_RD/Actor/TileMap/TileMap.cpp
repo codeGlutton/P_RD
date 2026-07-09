@@ -182,8 +182,17 @@ void ATileMap::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
 
-	// 배치/스폰/프로퍼티 변경 시점에 그리드 인스턴스 재생성
-	RebuildTileInstances();
+	// 게임 월드(PIE/런타임)에선 프로퍼티 편집/이동이 컨스트럭션을 재실행하는데,
+	// 이때 저장소(mTiles=배치된 유닛 등록)를 날리지 않도록 그리드 시각만 갱신 (저장소 빌드는 BindModel이 담당)
+	// 에디터(비게임)에선 크기/그리드 편집 반영을 위해 저장소까지 재생성
+	if (GetWorld() != nullptr && GetWorld()->IsGameWorld())
+	{
+		RefreshTileVisuals();
+	}
+	else
+	{
+		RebuildTileInstances();
+	}
 
 #if WITH_EDITOR
 	// [에디터 전용] 에디터 뷰포트에서 디버그 경로 미리보기 — 좌표 변경 즉시 반영 (펄스 애니메이션은 틱이 도는 PIE에서만)
@@ -200,6 +209,12 @@ void ATileMap::OnConstruction(const FTransform& Transform)
 void ATileMap::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// 타일맵뷰의 트랜스폼이 변경되면 유닛뷰들의 위치도 재조정하기 위해 이벤트 구독
+	if (RootComponent != nullptr)
+	{
+		RootComponent->TransformUpdated.AddUObject(this, &ATileMap::OnRootTransformUpdated);
+	}
 
 #if WITH_EDITOR
 	// [에디터 전용] 토글이 켜진 인스턴스에서만 PIE 시작 시 디버그 경로를 그려 펄스 검증 (패키징 빌드에선 제거됨)
@@ -248,6 +263,15 @@ void ATileMap::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEven
 	}
 }
 #endif
+
+void ATileMap::OnRootTransformUpdated(USceneComponent* UpdatedComponent, EUpdateTransformFlags UpdateTransformFlags, ETeleportType Teleport)
+{
+	// 타일맵뷰 트랜스폼이 변경되면 유닛뷰들의 위치도 조정
+	if (mModel != nullptr)
+	{
+		mModel->RefreshActorPlacements();
+	}
+}
 
 void ATileMap::Tick(float DeltaSeconds)
 {
