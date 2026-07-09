@@ -30,7 +30,7 @@ ACombatCameraPawn::ACombatCameraPawn()
 
 	mCameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
 	mCameraComponent->ProjectionMode = ECameraProjectionMode::Orthographic;
-	mCameraComponent->OrthoWidth = 1024.0f;
+	mCameraComponent->OrthoWidth = 2000.0f;
 	//mCameraComponent->bCameraMeshHiddenInGame = false;
 	mCameraComponent->SetupAttachment(mSceneComponent);
 
