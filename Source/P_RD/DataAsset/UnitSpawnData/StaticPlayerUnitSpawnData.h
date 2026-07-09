@@ -39,8 +39,4 @@ public:
 public:
 	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceDatas", AssetBundles = "PAD"))
 	TArray<TSoftObjectPtr<UStaticDiceData>> mDiceDatas;
-
-public:
-	UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Portrait", AssetBundles = "UI"))
-	TSoftObjectPtr<UTexture2D> mPortrait;
 };

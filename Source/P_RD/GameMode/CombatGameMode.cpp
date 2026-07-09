@@ -17,6 +17,8 @@
 
 #include "Actor/ActorView.h"
 
+#include "SRPGFramework/SRPGCommand.h"
+
 #include "SRPGFramework/SRPGSkillBuildAction.h"
 #include "SRPGFramework/SRPGMoveBuildAction.h"
 #include "SRPGFramework/SRPGDiceRollAction.h"
@@ -24,15 +26,18 @@
 
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Component/EquipmentComponent/EquipmentComponentModel.h"
+#include "Component/PassiveComponent/PassiveComponentModel.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
 #include "Dice/DicePoolModel.h"
 #include "Dice/DiceModel.h"
 
+#include "TAS/Passive/TacticalPassive.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
 #include "DataAsset/EquipmentData/StaticEquipmentData.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
 
+#include "Actor/BoardActor/BoardSelectionTarget.h"
 #include "Actor/TileMap/TileMapModel.h"
 
 DEFINE_LOG_CATEGORY(LogCombatGameMode);
@@ -310,8 +315,6 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		// 길게 누른 스킬의 상세 정보를 UIModel에 채운다.
 		PushSkillDetailUIData(IntPayload);
 		break;
-	case ECombatInputType::Cancel:
-	case ECombatInputType::LongPressUnit:
 	case ECombatInputType::LongPressEquip:
 		// 길게 누른 장비의 상세 정보를 UIModel에 채운다.
 		PushEquipmentDetailUIData(IntPayload);
@@ -495,7 +498,7 @@ bool ACombatGameMode::ResolveWorldLongPressEvent(FVector2D ScreenPosition)
 	// 모바일 터치는 커서가 없으므로, 롱프레스 화면 좌표를 커맨드에 실어 월드 트레이스에 사용한다.
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mScreenPosition = ScreenPosition;
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().OnShowTargetDetailPanelUI.AddWeakLambda(this, [this](IBoardSelectionTarget* Target) {
-		// mCombatUIModel->NotifyTargetDetailPanelRequested(Target);
+		PushCombatTargetDetailUIData(Target);
 		});
 
 	return CommandRouterModel->SummitCommand(WorldTraceActionCommand);
@@ -753,6 +756,35 @@ void ACombatGameMode::PushSkillUIData() const
 	mCombatUIModel->SetSkillUIs(SkillUIDatas);
 }
 
+void ACombatGameMode::PushCombatTargetDetailUIData(IBoardSelectionTarget* Target) const
+{
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
+	IObjectView* ObjectView = Cast<IObjectView>(Target);
+	checkf(ObjectView != nullptr, TEXT("선택한 오브젝트 뷰 nullptr"));
+
+	UBoardActorModel* BoardActorModel = ObjectView->GetModel<UBoardActorModel>();
+	checkf(BoardActorModel != nullptr, TEXT("선택한 보드 액터 모델 nullptr"));
+
+	FUnitDetailUI UnitDetailUIData;
+	UnitDetailUIData.mUnitId = BoardActorModel->GetModelId();
+	UnitDetailUIData.mName = BoardActorModel->GetBoardActorDisplayName();
+	UnitDetailUIData.mLevel = BoardActorModel->GetBoardActorLevel();
+	UnitDetailUIData.mPortrait = BoardActorModel->GetBoardActorPortrait();
+	
+	UUnitModel* UnitModel = ObjectView->GetModel<UUnitModel>();
+	if (UnitModel != nullptr)
+	{
+		UPassiveComponentModel* PassiveComponentModel = UnitModel->GetPassiveComponentModel();
+		checkf(PassiveComponentModel != nullptr, TEXT("선택한 유닛 모델의 패시브 컴포넌트 nullptr"));
+		for (const TObjectPtr<UTacticalPassive>& Passive : PassiveComponentModel->GetPassives())
+		{
+			UnitDetailUIData.mPassiveDescriptions.Add(Passive->GetStaticData()->mDescription);
+		}
+	}
+	mCombatUIModel->SetUnitDetail(UnitDetailUIData);
+}
+
 /**
  * @brief 길게 누른 스킬의 상세 정보를 UIModel에 넣는다.
  *
@@ -835,7 +867,31 @@ void ACombatGameMode::PushEquipmentUIData() const
 
 void ACombatGameMode::PushEquipmentDetailUIData(int32 EquipmentIndex) const
 {
-	// TODO
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
+	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
+	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
+
+	UEquipmentComponentModel* EquipmentComponentModel = PlayerUnitModel->GetEquipmentComponentModel();
+	checkf(EquipmentComponentModel != nullptr, TEXT("장비 컴포넌트 nullptr"));
+
+	const EEquipmentType EquipSlotType = StaticCast<EEquipmentType>(EquipmentIndex);
+	const FEquippedEntry* EquippedEntry = EquipmentComponentModel->GetEquipped(EquipSlotType);
+	checkf(EquippedEntry != nullptr, TEXT("선택한 장비 nullptr"));
+
+	const UStaticEquipmentData* StaticEquipmentData = EquippedEntry->mData.Get();
+	checkf(StaticEquipmentData != nullptr, TEXT("선택한 장비 정적 데이터 nullptr"));
+
+	FEquipmentDetailUI EquipmentDetailUIData;
+	EquipmentDetailUIData.mSlotIndex = EquipmentIndex;
+	EquipmentDetailUIData.mItemId = StaticEquipmentData->GetPrimaryAssetId();
+	EquipmentDetailUIData.mName = StaticEquipmentData->mName;
+	EquipmentDetailUIData.mIcon = StaticEquipmentData->mIcon.LoadSynchronous();
+	EquipmentDetailUIData.mIsEquipped = true;
+	EquipmentDetailUIData.mDescription = StaticEquipmentData->mDescription;
+	EquipmentDetailUIData.mRarityColor = GetRarityColor(StaticEquipmentData->mRarityType);
+
+	mCombatUIModel->SetEquipmentDetail(EquipmentDetailUIData);
 }
 
 void ACombatGameMode::PushPlayerMetaUIData() const
