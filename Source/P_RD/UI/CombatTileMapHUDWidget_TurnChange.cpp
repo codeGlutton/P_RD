@@ -6,6 +6,7 @@
 #include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "Singleton/WorldSubsystem/PresentationBarrier.h"   // mRoundChangeBarrier.Reset() 시 소멸자(=라운드 첫 턴 진행) 실행
 
 namespace
 {
@@ -44,7 +45,6 @@ bool UCombatTileMapHUDWidget::PlayTurnChangeIntro(bool bOpenDiceAfterIntro)
 	}
 
 	mPendingDiceRollAfterTurnIntro = bOpenDiceAfterIntro;
-	mPendingInitialTurnChangeIntro = false;
 	mTurnChangeIntroPlaying = true;
 	mTurnChangeIntroElapsed = 0.0f;
 	mTurnChangeCurrentFrameIndex = INDEX_NONE;
@@ -86,6 +86,11 @@ void UCombatTileMapHUDWidget::FinishTurnChangeIntro()
 	{
 		PrepareIntroDiceRoll();
 	}
+
+	// 라운드 시작 배너로 잡아둔 배리어가 있으면 여기서 놓는다 → 마지막 참조 소멸 시 프레임워크가 그 라운드의 첫 턴을 진행한다.
+	// (라운드가 아닌 경로로 배너가 떴다면 mRoundChangeBarrier는 비어 있어 Reset()은 무해한 no-op.)
+	// HUD 상태 정리 뒤 마지막에 놓아 재진입을 피한다.
+	mRoundChangeBarrier.Reset();
 }
 
 bool UCombatTileMapHUDWidget::EnsureTurnChangeFrameTextures()

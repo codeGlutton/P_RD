@@ -135,6 +135,7 @@ public:
 	FOnBeginCombatUI OnBeginCombatUI;
 	FOnEndCombatUI OnEndCombatUI;
 	FOnBeginAnyTurnUI OnBeginAnyTurnUI;
+	FOnBeginAnyRoundUI OnBeginAnyRoundUI;   // 라운드 시작 연출(배리어)을 HUD로 중계
 	FOnEndAnyTurnUI OnEndAnyTurnUI;
 	FOnBeginAnyTurnActionUI OnBeginAnyTurnActionUI;
 	FOnEndAnyTurnActionUI OnEndAnyTurnActionUI;
