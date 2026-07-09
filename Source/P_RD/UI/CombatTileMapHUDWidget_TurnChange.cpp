@@ -45,7 +45,6 @@ bool UCombatTileMapHUDWidget::PlayTurnChangeIntro(bool bOpenDiceAfterIntro)
 	}
 
 	mPendingDiceRollAfterTurnIntro = bOpenDiceAfterIntro;
-	mPendingInitialTurnChangeIntro = false;
 	mTurnChangeIntroPlaying = true;
 	mTurnChangeIntroElapsed = 0.0f;
 	mTurnChangeCurrentFrameIndex = INDEX_NONE;
