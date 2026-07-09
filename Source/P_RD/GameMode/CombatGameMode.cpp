@@ -985,6 +985,11 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 			EFloatingLogColorType ColorType = EFloatingLogColorType::Neutral;
 			ConvertFloatingLogUITypes(AttrLog, OUT IconType, OUT ColorType);
 
+			if (IconType == EFloatingLogIconType::None && ColorType == EFloatingLogColorType::Neutral)
+			{
+				continue;
+			}
+
 			Requests.Add(MakeLogRequest(
 				FMath::Floor(AttrLog.mMagnitude),
 				IconType,
@@ -1000,6 +1005,11 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 			EFloatingLogColorType ColorType = EFloatingLogColorType::Neutral;
 			ConvertFloatingLogUITypes(TagLog, OUT IconType, OUT ColorType);
 
+			if (IconType == EFloatingLogIconType::None && ColorType == EFloatingLogColorType::Neutral)
+			{
+				continue;
+			}
+
 			Requests.Add(MakeLogRequest(
 				TagLog.mCount,
 				IconType,
@@ -1014,6 +1024,11 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 			EFloatingLogIconType IconType = EFloatingLogIconType::None;
 			EFloatingLogColorType ColorType = EFloatingLogColorType::Neutral;
 			ConvertFloatingLogUITypes(TileLog, OUT IconType, OUT ColorType);
+
+			if (IconType == EFloatingLogIconType::None && ColorType == EFloatingLogColorType::Neutral)
+			{
+				continue;
+			}
 
 			// TODO : 
 			// 어디서 어디로 이동했다는 정보는 어떻게 알려야하나
