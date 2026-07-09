@@ -337,6 +337,7 @@ void USkillComponentModel::PlayMotionLayerAnimation(ETileActorDirection LocalDir
 	const FSkillMotionLayer& MotionLayer = SkillData->mSkillMotionLayers[mActiveSkillContext.mMotionIndex];
 
 	auto MotionEndBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+		TriggerMotionLayer(nullptr);
 		EndMotionLayer();
 		}));
 
