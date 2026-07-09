@@ -94,12 +94,12 @@ public:
 
 public:
     UPROPERTY(Config, Category = Camera, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillZoomDefaultSize"))
-    float mSkillZoomDefaultSize = 1000.f;
+    float mSkillZoomDefaultSize = 1250.f;
     UPROPERTY(Config, Category = Camera, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillZoomSizeRatio"))
-    float mSkillZoomSizeRatio = 1.f;
+    float mSkillZoomSizeRatio = 0.5f;
 
     UPROPERTY(Config, Category = Camera, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillMinZoomSize"))
-    float mSkillMinZoomSize = 1000.f;
+    float mSkillMinZoomSize = 1250.f;
     UPROPERTY(Config, Category = Camera, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillMaxZoomSize"))
     float mSkillMaxZoomSize = 2000.f;
 };
