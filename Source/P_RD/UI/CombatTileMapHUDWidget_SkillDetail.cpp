@@ -113,14 +113,15 @@ void UCombatTileMapHUDWidget::ShowEquipmentDetail(int32 SlotIndex)
 		return;
 	}
 
-	mCombatUIModel->RequestLongPressEquip(SlotIndex);
-
+	// 빈 슬롯(장착 안 됨)은 상세를 열지 않는다 — 명령/상세 push를 아예 트리거하지 않아 크래시를 막는다.
 	const FEquipmentUI* Equip = nullptr;
 	for (const FEquipmentUI& Candidate : mCombatUIModel->GetEquipmentUIs())
 	{
 		if (Candidate.mSlotIndex == SlotIndex) { Equip = &Candidate; break; }
 	}
-	if (Equip == nullptr) { return; }
+	if (Equip == nullptr || Equip->mIsEquipped == false) { return; }
+
+	mCombatUIModel->RequestLongPressEquip(SlotIndex);
 
 	if (mDetailIconImage != nullptr)
 	{
