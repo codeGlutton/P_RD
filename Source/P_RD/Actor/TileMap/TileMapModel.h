@@ -335,6 +335,13 @@ public:
 	void PlaceActor(const FTileTransform& NextTransform, UBoardActorModel* Actor);
 	void RemoveActor(UBoardActorModel* Actor);
 
+	/**
+	 * @brief 배치된 모든 보드 액터의 월드 트랜스폼을 뷰에 재통지
+	 * @details 타일 크기 등 뷰의 좌표 기준이 바뀌었을 때 현재 논리 좌표를 다시 변환해
+	 *          OnPlaceTileTransform으로 방송. 논리 좌표(점유 타일)는 변경 없음.
+	 */
+	void RefreshActorPlacements();
+
 	/* 타일 액터 조회 */
 	/**
 	 * @brief 타일에 있는 액터들을 레이어로 필터해 반환 (코어)

@@ -19,6 +19,7 @@
 class UInstancedStaticMeshComponent;
 class UStaticMesh;
 class UMaterialInterface;
+class UMaterialInstanceDynamic;
 
 /**
  * @brief  타일맵 액터
@@ -34,21 +35,27 @@ public:
 	// @brief 에디터 배치/스폰 시 타일 그리드 인스턴스 재생성
 	virtual void OnConstruction(const FTransform& Transform) override;
 
-	// @brief 게임 시작 처리 (에디터 전용 디버그 경로 표시 토글 포함)
-	virtual void BeginPlay() override;
-
 	// @brief 매 프레임 Effect 하이라이트 펄스 갱신
 	virtual void Tick(float DeltaSeconds) override;
 
+#if WITH_EDITOR
+	// @brief [에디터 전용] 디테일 편집 즉시 반영 — 배치 계열은 그리드 재생성+액터 재배치, 색/테두리 계열은 표시만 갱신
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+
 	/* IActorView 상속 */
-public:
 	// @brief 런타임 모델을 뷰에 바인딩 (모델 교체 + 델리깃 재바인딩 + 그리드 재생성)
-	void BindModel(UObjectModel* Model) override;
+	virtual void BindModel(UObjectModel* Model) override;
+
 	// @brief 모델 바인딩 해제 (델리깃 정리)
-	void UnbindModel(UObjectModel* Model) override;
+	virtual void UnbindModel(UObjectModel* Model) override;
+
 protected:
+    // @brief 게임 시작 처리 (에디터 전용 디버그 경로 표시 토글 포함)
+    virtual void BeginPlay() override;
+
 	// @brief 보유 모델 반환 (IObjectView::GetModel 용)
-	UObjectModel* GetModel_Internal() const override;
+	virtual UObjectModel* GetModel_Internal() const override;
 
 public:
 	/* 타일 → 월드 변환 */
@@ -186,7 +193,7 @@ protected:
 	 * @brief 타일 한 칸의 월드 크기 (cm)
 	 */
 	UPROPERTY(EditAnywhere, Category = "SRPG", meta = (DisplayName = "Tile Size", ClampMin = "1.0"))
-	float mTileSize = 100.0f;
+	float mTileSize = 140.0f;
 
 	/* 시각화 */
 
@@ -212,7 +219,25 @@ protected:
 	 * @brief 타일 시각 크기 비율 (1.0 미만이면 타일 사이에 틈이 생겨 격자선처럼 보임)
 	 */
 	UPROPERTY(EditAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Tile Visual Scale", ClampMin = "0.1", ClampMax = "1.0"))
-	float mTileVisualScale = 0.95f;
+	float mTileVisualScale = 0.9f;
+
+	/**
+	 * @brief 하이라이트 없는 기본 타일에 얹는 구분색 (머티리얼 바탕 위에 알파만큼 Mix, 알파 0이면 바탕만 보임)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Tile Base Style"))
+	FTileHighlightStyle mTileBaseStyle;
+
+	/**
+	 * @brief 타일 테두리 색
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Tile Border Style"))
+	FTileHighlightStyle mTileBorderStyle;
+
+	/**
+	 * @brief 타일 테두리 굵기 (cm 단위)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Tile Border Width", ClampMin = "0.0"))
+	float mTileBorderWidth = 3.0f;
 
 	/**
 	 * @brief 경로 중간 화살표를 그리는 인스턴스드 메시 컴포넌트
@@ -316,9 +341,26 @@ protected:
 
 private:
 	/**
-	 * @brief 현재 Width/Height/TileSize에 맞춰 타일 인스턴스를 모두 재생성
+	 * @brief 현재 Width/Height/TileSize에 맞춰 타일 저장소와 인스턴스를 모두 재생성
+	 * @warning 모델의 타일 저장소를 초기화해 배치(점유) 정보가 사라짐 — 런타임 시각 갱신은 RefreshTileVisuals 사용
 	 */
 	void RebuildTileInstances();
+
+	/**
+	 * @brief 타일 저장소는 건드리지 않고 그리드 인스턴스·머티리얼·타일 색만 재생성 (런타임 시각 갱신용)
+	 */
+	void RefreshTileVisuals();
+
+	/**
+	 * @brief 테두리 색/굵기를 타일 MID 파라미터(BorderColor/BorderWidth)로 푸시 (굵기 cm → UV 비율 환산)
+	 */
+	void ApplyBorderParameters();
+
+	/**
+	 * @brief 타일 그리드 전용 다이나믹 머티리얼 (테두리 파라미터 푸시 통로 — 원본 에셋을 쓰는 경로 화살표/마커는 영향 없음)
+	 */
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInstanceDynamic> mTileMID;
 
 	/**
 	 * @brief 한 타일의 강조 상태(mHighlights)를 스타일로 합성해 ISM custom data에 기록
