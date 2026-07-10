@@ -619,12 +619,6 @@ void ACombatGameMode::PushMoveBuildUIData(ESRPGMoveBuildPhase Phase) const
 	}
 }
 
-FText ACombatGameMode::GetCurrentRoomDisplayName() const
-{
-	const URunPersistData* RunPersistData = GetRunPersistData();
-	return RunPersistData != nullptr ? RunPersistData->GetCurrentRoom().GetDisplayName() : FText::GetEmpty();
-}
-
 void ACombatGameMode::PushUnitUIData() const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));

@@ -465,6 +465,12 @@ bool ARoomGameModeBase::GetRunControlState(OUT int32& RowIndex, OUT int32& Colum
 	return true;
 }
 
+FText ARoomGameModeBase::GetCurrentRoomDisplayName() const
+{
+	const URunPersistData* RunPersistData = GetRunPersistData();
+	return RunPersistData != nullptr ? RunPersistData->GetCurrentRoom().GetDisplayName() : FText::GetEmpty();
+}
+
 /**
  * @brief 선택된 다음 방 좌표를 실제 프리로드/전환 요청으로 확정한다.
  *
