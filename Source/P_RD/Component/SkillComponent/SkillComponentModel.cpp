@@ -74,6 +74,37 @@ bool FActiveSkillContext::IsValid() const
 	return mMapModel != nullptr;
 }
 
+void FActiveSkillContext::SetOtherCombatTargets(const TArray<IBoardCombatTarget*>& CombatTargets)
+{
+	mOtherCombatTargets.Reset(CombatTargets.Num());
+	for (IBoardCombatTarget* CombatTarget : CombatTargets)
+	{
+		UBoardActorModel* ActorModel = Cast<UBoardActorModel>(CombatTarget);
+		if (::IsValid(ActorModel))
+		{
+			mOtherCombatTargets.Add(ActorModel);
+		}
+	}
+}
+
+TArray<IBoardCombatTarget*> FActiveSkillContext::ResolveOtherCombatTargets() const
+{
+	TArray<IBoardCombatTarget*> Result;
+	Result.Reserve(mOtherCombatTargets.Num());
+	for (const TWeakObjectPtr<UBoardActorModel>& TargetPtr : mOtherCombatTargets)
+	{
+		UBoardActorModel* ActorModel = TargetPtr.Get();
+		if (::IsValid(ActorModel))
+		{
+			if (IBoardCombatTarget* CombatTarget = Cast<IBoardCombatTarget>(ActorModel))
+			{
+				Result.Add(CombatTarget);
+			}
+		}
+	}
+	return Result;
+}
+
 FSkillEntry::FSkillEntry(UStaticSkillData* Data) : mData(Data)
 {
 }
@@ -248,13 +279,17 @@ void USkillComponentModel::PlayMotionLayer()
 
 	/* 모션 로그 시작 */
 
-	GetWorldEventLogger(this)->BeginMotionLog();
+	if (UEventLogger* EventLogger = GetWorldEventLogger(this))
+	{
+		EventLogger->BeginMotionLog();
+	}
 	const FSkillMotionLayer& MotionLayer = SkillData->mSkillMotionLayers[mActiveSkillContext.mMotionIndex];
 
 	/* 활성화 모션 데이터 채우기 */
 
 	mActiveSkillContext.mTargetTileIndexes = MotionLayer.FilterTileIndexes(mActiveSkillContext.mSelfTileIndex, mActiveSkillContext.mEffectTileIndexes);
-	mActiveSkillContext.mOtherCombatTargets = MotionLayer.FilterCombatTargets(mActiveSkillContext.mMapModel.Get(), OwnerCombatTarget, mActiveSkillContext.mTargetTileIndexes);
+	mActiveSkillContext.SetOtherCombatTargets(MotionLayer.FilterCombatTargets(mActiveSkillContext.mMapModel.Get(), OwnerCombatTarget, mActiveSkillContext.mTargetTileIndexes));
+	const TArray<IBoardCombatTarget*> OtherCombatTargets = mActiveSkillContext.ResolveOtherCombatTargets();
 	mActiveSkillContext.mMotionTileMapDir = mActiveSkillContext.mMapModel->TileDeltaToDirection(
 		mActiveSkillContext.mSelfTileIndex,
 		mActiveSkillContext.mTargetTileIndex,
@@ -281,11 +316,14 @@ void USkillComponentModel::PlayMotionLayer()
 		PassiveContext.mOwnerSnapshot = &OwnerSnapshot;
 
 		TArray<FBoardCombatTargetSnapshotData> OtherSnapshots;
-		OtherSnapshots.Reserve(mActiveSkillContext.mOtherCombatTargets.Num());
-		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mOtherCombatTargets)
+		OtherSnapshots.Reserve(OtherCombatTargets.Num());
+		for (IBoardCombatTarget* OtherCombatTarget : OtherCombatTargets)
 		{
 			UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
-			checkf(OtherActorModel != nullptr, TEXT("스킬을 받는 타겟이 유효하지 않음"));
+			if (IsValid(OtherActorModel) == false)
+			{
+				continue;
+			}
 			OtherSnapshots.Add(OtherCombatTarget->MakeSnapshotData());
 
 			PassiveContext.mTargets.Add(OtherActorModel);
@@ -305,10 +343,13 @@ void USkillComponentModel::PlayMotionLayer()
 	{
 		FBoardCombatTargetSnapshotData OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
 
-		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mOtherCombatTargets)
+		for (IBoardCombatTarget* OtherCombatTarget : OtherCombatTargets)
 		{
 			UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
-			checkf(OtherActorModel != nullptr, TEXT("스킬을 받는 타겟이 유효하지 않음"));
+			if (IsValid(OtherActorModel) == false)
+			{
+				continue;
+			}
 
 			UPassiveComponentModel* OtherPassiveComponentModel = OtherActorModel->FindComponentModelByClass<UPassiveComponentModel>();
 			if (OtherPassiveComponentModel == nullptr)
@@ -421,15 +462,21 @@ void USkillComponentModel::TriggerMotionLayer(const FApplyEventTriggerPayload* P
 
 	for (const TInstancedStruct<FSkillEffectLayer>& EffectLayer : MotionLayer.mSkillEffectLayers)
 	{
-		EffectLayer.Get().CommitEffect(OwnerCombatTarget, mActiveSkillContext.mTargetTileIndexes, mActiveSkillContext.mOtherCombatTargets, mActiveSkillContext.mDiceSum);
+		// 앞선 Effect가 대상을 제거할 수 있으므로 레이어마다 약참조를 다시 해석한다.
+		const TArray<IBoardCombatTarget*> CurrentTargets = mActiveSkillContext.ResolveOtherCombatTargets();
+		EffectLayer.Get().CommitEffect(OwnerCombatTarget, mActiveSkillContext.mTargetTileIndexes, CurrentTargets, mActiveSkillContext.mDiceSum);
 	}
+	const TArray<IBoardCombatTarget*> OtherCombatTargets = mActiveSkillContext.ResolveOtherCombatTargets();
 
 	/* 피격 애니메이션 적용 */
 
-	for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mOtherCombatTargets)
+	for (IBoardCombatTarget* OtherCombatTarget : OtherCombatTargets)
 	{
 		UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
-		checkf(OtherActorModel != nullptr, TEXT("스킬을 받은 타겟이 유효하지 않음"));
+		if (IsValid(OtherActorModel) == false)
+		{
+			continue;
+		}
 
 		ETileActorDirection LocalDirectionToTarget = TileMapToLocalDirection(mActiveSkillContext.mMotionTileMapDir, OtherActorModel->GetTileTransform().mDirection);
 		OtherActorModel->OnPlayReceiveAnimationUI.Broadcast(mActiveSkillContext.mMotionEndBarrier.Pin(), Payload, MotionLayer.mReceiveMotionTag, LocalDirectionToTarget);
@@ -440,10 +487,13 @@ void USkillComponentModel::TriggerMotionLayer(const FApplyEventTriggerPayload* P
 	{
 		FBoardCombatTargetSnapshotData OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
 
-		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mOtherCombatTargets)
+		for (IBoardCombatTarget* OtherCombatTarget : OtherCombatTargets)
 		{
 			UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
-			checkf(OtherActorModel != nullptr, TEXT("스킬을 받은 타겟이 유효하지 않음"));
+			if (IsValid(OtherActorModel) == false)
+			{
+				continue;
+			}
 
 			UPassiveComponentModel* OtherPassiveComponentModel = OtherActorModel->FindComponentModelByClass<UPassiveComponentModel>();
 			if (OtherPassiveComponentModel == nullptr)
@@ -482,11 +532,14 @@ void USkillComponentModel::TriggerMotionLayer(const FApplyEventTriggerPayload* P
 		PassiveContext.mOwnerSnapshot = &OwnerSnapshot;
 
 		TArray<FBoardCombatTargetSnapshotData> OtherSnapshots;
-		OtherSnapshots.Reserve(mActiveSkillContext.mOtherCombatTargets.Num());
-		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mOtherCombatTargets)
+		OtherSnapshots.Reserve(OtherCombatTargets.Num());
+		for (IBoardCombatTarget* OtherCombatTarget : OtherCombatTargets)
 		{
 			UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
-			checkf(OtherActorModel != nullptr, TEXT("스킬을 받는 타겟이 유효하지 않음"));
+			if (IsValid(OtherActorModel) == false)
+			{
+				continue;
+			}
 			OtherSnapshots.Add(OtherCombatTarget->MakeSnapshotData());
 
 			PassiveContext.mTargets.Add(OtherActorModel);
@@ -529,7 +582,10 @@ void USkillComponentModel::EndMotionLayer()
 
 	/* 모션 로그 종료 */
 	
-	GetWorldEventLogger(this)->EndMotionLog();
+	if (UEventLogger* EventLogger = GetWorldEventLogger(this))
+	{
+		EventLogger->EndMotionLog();
+	}
 	OnEndMotionLayerUI.Broadcast(mActiveSkillContext.mMotionIndex);
 
 	/* 종료 판정 */

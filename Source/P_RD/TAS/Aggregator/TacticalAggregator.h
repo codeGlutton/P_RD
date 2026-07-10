@@ -35,6 +35,8 @@ public:
 protected:
     // @brief 배치 대상 월드
     TObjectPtr<UWorld> mWorld = nullptr;
+    // @brief 실제로 배치를 시작한 경우에만 소멸자에서 종료한다.
+    bool mDidBegin = false;
 };
 
 /**

@@ -30,6 +30,7 @@ public:
 
 private:
 	TObjectPtr<UWorld> mWorld;
+	bool mDidPush = false;
 };
 
 /**
@@ -97,5 +98,6 @@ protected:
 	/* 임시 데이터 */
 protected:
 	int32 mGlobalBatchCount;
-	TSet<FTacticalAggregator*> mDirtyAggregators;
+	// 배치 도중 Aggregator가 제거되어도 댕글링 포인터를 순회하지 않도록 약참조로 보관한다.
+	TArray<TWeakPtr<FTacticalAggregator>> mDirtyAggregators;
 };

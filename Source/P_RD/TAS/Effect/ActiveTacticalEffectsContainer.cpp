@@ -129,13 +129,15 @@ void FActiveTacticalEffectsContainer::DecrementLock()
         FActiveTacticalEffect* CurPendingEffect = mPendingTacticalEffectHead;
         FActiveTacticalEffect* EndPendingEffect = *mPendingTacticalEffectTail;
 
-        while (CurPendingEffect != EndPendingEffect)
-        {
-            if (CurPendingEffect->mIsPendingRemove == false)
+		while (CurPendingEffect != nullptr && CurPendingEffect != EndPendingEffect)
+		{
+			FActiveTacticalEffect* NextPendingEffect = CurPendingEffect->mPendingNext;
+			if (CurPendingEffect->mIsPendingRemove == false)
             {
                 /* 추가가 미루어진 이펙트 추가 */
 
-                mTacticalEffects.Add(MoveTemp(*CurPendingEffect));
+				const int32 AddedIndex = mTacticalEffects.Add(MoveTemp(*CurPendingEffect));
+				mTacticalEffects[AddedIndex].mPendingNext = nullptr;
             }
             else
             {
@@ -144,10 +146,12 @@ void FActiveTacticalEffectsContainer::DecrementLock()
                 // 추가되기도 전에 제거 표시된 노드는 본 배열로 옮기지 않고, 예약 제거 카운트만 상쇄한다.
                 mPendingRemoveCount--;
             }
-            CurPendingEffect = CurPendingEffect->mPendingNext;
-        }
-        // 지연 리스트를 다시 빈 상태로 되돌린다(노드 메모리는 재사용을 위해 유지).
-        mPendingTacticalEffectTail = &mPendingTacticalEffectHead;
+			delete CurPendingEffect;
+			CurPendingEffect = NextPendingEffect;
+		}
+		// 반복자가 모두 해제된 시점이므로 지연 노드를 해제하고 완전히 빈 상태로 되돌린다.
+		mPendingTacticalEffectHead = nullptr;
+		mPendingTacticalEffectTail = &mPendingTacticalEffectHead;
 
         /* 제거 작업 */
 
@@ -317,7 +321,11 @@ FActiveTacticalEffect* FActiveTacticalEffectsContainer::ApplyTacticalEffectSpec(
 	// 적용 과정 동안 배열 변동을 막기 위해 Scope Lock을 건다(추가는 필요 시 지연 처리됨).
 	TACTICAL_EFFECT_SCOPE_LOCK();
 
-	checkf(Spec.mEffectClass != nullptr, TEXT("적용하려는 Effect 클래스가 없음"));
+	if (IsValid(Spec.mEffectClass.Get()) == false || IsValid(Spec.GetContext()) == false || mOwner.IsValid() == false)
+	{
+		FoundExistingStackableGE = false;
+		return nullptr;
+	}
 	FoundExistingStackableGE = false;
 
 	FActiveTacticalEffect* AppliedActiveEffect = nullptr;
@@ -404,7 +412,7 @@ FActiveTacticalEffect* FActiveTacticalEffectsContainer::ApplyTacticalEffectSpec(
  */
 void FActiveTacticalEffectsContainer::ExecuteActiveEffectsFrom(FTacticalEffectSpec& Spec)
 {
-    if (mOwner.IsValid() == false)
+    if (mOwner.IsValid() == false || IsValid(Spec.mEffectClass.Get()) == false || IsValid(Spec.GetContext()) == false)
     {
         return;
     }
@@ -416,7 +424,11 @@ void FActiveTacticalEffectsContainer::ExecuteActiveEffectsFrom(FTacticalEffectSp
 
     bool ModifierSuccessfullyExecuted = false;
 
-    check(SpecToUse.mModifierValues.Num() == SpecToUse.mEffectClass->mModifiers.Num());
+    if (SpecToUse.mModifierValues.Num() != SpecToUse.mEffectClass->mModifiers.Num())
+    {
+        UE_LOG(LogAttributeSetComp, Warning, TEXT("Effect 실행 건너뜀: Modifier 정의와 계산값 개수가 다름"));
+        return;
+    }
     for (int32 ModIdx = 0; ModIdx < SpecToUse.mModifierValues.Num(); ++ModIdx)
     {
         const FTacticalModifierInfo& ModDef = SpecToUse.mEffectClass->mModifiers[ModIdx];
@@ -915,6 +927,10 @@ FActiveTacticalEffect* FActiveTacticalEffectsContainer::FindStackableActiveTacti
 {
 	FActiveTacticalEffect* FoundStackableEffect = nullptr;
 	const UTacticalEffect* EffectClass = Spec.mEffectClass;
+	if (IsValid(EffectClass) == false || IsValid(Spec.GetContext()) == false)
+	{
+		return nullptr;
+	}
 	ETacticalEffectStackingType StackingType = EffectClass->mStackingType;
 
 	if ((StackingType != ETacticalEffectStackingType::None) && (EffectClass->mDurationPolicy != ETacticalEffectDurationType::Instant))

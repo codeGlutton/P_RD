@@ -17,20 +17,26 @@ DEFINE_LOG_CATEGORY(LogTacticalFramework)
 FScopeCurrentTacticalEffectBeingApplied::FScopeCurrentTacticalEffectBeingApplied(UWorld* World, const FTacticalEffectSpec* Spec, UAttributeSetComponentModel* Model)
 {
 	mWorld = World;
-	check(mWorld != nullptr);
-
 	UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(mWorld);
-	check(TacticalFrameworkModel != nullptr);
-
-	TacticalFrameworkModel->PushCurrentAppliedTE(Spec, Model);
+	if (TacticalFrameworkModel != nullptr)
+	{
+		TacticalFrameworkModel->PushCurrentAppliedTE(Spec, Model);
+		mDidPush = true;
+	}
 }
 
 FScopeCurrentTacticalEffectBeingApplied::~FScopeCurrentTacticalEffectBeingApplied()
 {
-	UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(mWorld);
-	check(TacticalFrameworkModel != nullptr);
+	if (mDidPush == false)
+	{
+		return;
+	}
 
-	TacticalFrameworkModel->PopCurrentAppliedTE();
+	UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(mWorld);
+	if (TacticalFrameworkModel != nullptr)
+	{
+		TacticalFrameworkModel->PopCurrentAppliedTE();
+	}
 }
 
 void UTacticalFrameworkModel::Initialize()
@@ -132,26 +138,50 @@ void UTacticalFrameworkModel::BeginAggregatorDirtyBatch()
 
 void UTacticalFrameworkModel::EndAggregatorDirtyBatch()
 {
+	if (mGlobalBatchCount <= 0)
+	{
+		UE_LOG(LogTacticalFramework, Warning, TEXT("Aggregator dirty batch 카운트 불일치"));
+		mGlobalBatchCount = 0;
+		return;
+	}
+
 	--mGlobalBatchCount;
 	if (mGlobalBatchCount == 0)
 	{
-		TSet<FTacticalAggregator*> LocalSet(MoveTemp(mDirtyAggregators));
-		for (FTacticalAggregator* Agg : LocalSet)
+		TArray<TWeakPtr<FTacticalAggregator>> LocalAggregators = MoveTemp(mDirtyAggregators);
+		mDirtyAggregators.Reset();
+		for (const TWeakPtr<FTacticalAggregator>& WeakAggregator : LocalAggregators)
 		{
-			Agg->BroadcastOnDirty();
+			if (TSharedPtr<FTacticalAggregator> Aggregator = WeakAggregator.Pin())
+			{
+				Aggregator->BroadcastOnDirty();
+			}
 		}
-		LocalSet.Empty();
 	}
 }
 
 void UTacticalFrameworkModel::AddAggregatorDirty(FTacticalAggregator* Aggregator)
 {
-	mDirtyAggregators.Add(Aggregator);
+	if (Aggregator == nullptr)
+	{
+		return;
+	}
+
+	const bool AlreadyQueued = mDirtyAggregators.ContainsByPredicate([Aggregator](const TWeakPtr<FTacticalAggregator>& WeakAggregator) {
+		return WeakAggregator.Pin().Get() == Aggregator;
+		});
+	if (AlreadyQueued == false)
+	{
+		mDirtyAggregators.Add(Aggregator->AsShared());
+	}
 }
 
 int32 UTacticalFrameworkModel::RemoveAggregatorDirty(FTacticalAggregator* Aggregator)
 {
-	return mDirtyAggregators.Remove(Aggregator);
+	return mDirtyAggregators.RemoveAll([Aggregator](const TWeakPtr<FTacticalAggregator>& WeakAggregator) {
+		const TSharedPtr<FTacticalAggregator> Pinned = WeakAggregator.Pin();
+		return Pinned.IsValid() == false || Pinned.Get() == Aggregator;
+		});
 }
 
 int32 UTacticalFrameworkModel::GetGlobalBatchCount() const

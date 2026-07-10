@@ -11,11 +11,19 @@ FActiveTacticalEffectHandle::FActiveTacticalEffectHandle(int32 Index, UWorld* Wo
 
 FActiveTacticalEffectHandle FActiveTacticalEffectHandle::GenerateNewHandle(UWorld* World, UAttributeSetComponentModel* OwningModel)
 {
-    static int32 MaxHandleIndex = 0;
-    FActiveTacticalEffectHandle NewHandle(MaxHandleIndex++, World);
+    if (::IsValid(World) == false || ::IsValid(OwningModel) == false)
+    {
+        return FActiveTacticalEffectHandle();
+    }
 
+    static int32 MaxHandleIndex = 0;
     UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(World);
-    checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
+    if (TacticalFrameworkModel == nullptr)
+    {
+        return FActiveTacticalEffectHandle();
+    }
+
+    FActiveTacticalEffectHandle NewHandle(MaxHandleIndex++, World);
 
     TWeakObjectPtr<UAttributeSetComponentModel> WeakPtr(OwningModel);
     TacticalFrameworkModel->mEffectOwningModelMap.Add(NewHandle, WeakPtr);
@@ -26,15 +34,19 @@ FActiveTacticalEffectHandle FActiveTacticalEffectHandle::GenerateNewHandle(UWorl
 void FActiveTacticalEffectHandle::ResetGlobalHandleMap(UWorld* World)
 {
     UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(World);
-    checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
-
-    TacticalFrameworkModel->mEffectOwningModelMap.Reset();
+    if (TacticalFrameworkModel != nullptr)
+    {
+        TacticalFrameworkModel->mEffectOwningModelMap.Reset();
+    }
 }
 
 UAttributeSetComponentModel* FActiveTacticalEffectHandle::GetOwningAttributeSetComponentModel() const
 {
     UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(mWorld.Get());
-    checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
+    if (TacticalFrameworkModel == nullptr)
+    {
+        return nullptr;
+    }
 
     TWeakObjectPtr<UAttributeSetComponentModel>* Ptr = TacticalFrameworkModel->mEffectOwningModelMap.Find(*this);
     if (Ptr != nullptr)
@@ -47,9 +59,10 @@ UAttributeSetComponentModel* FActiveTacticalEffectHandle::GetOwningAttributeSetC
 void FActiveTacticalEffectHandle::RemoveFromGlobalMap()
 {
     UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(mWorld.Get());
-    checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
-
-    TacticalFrameworkModel->mEffectOwningModelMap.Remove(*this);
+    if (TacticalFrameworkModel != nullptr)
+    {
+        TacticalFrameworkModel->mEffectOwningModelMap.Remove(*this);
+    }
 }
 
 FActiveTacticalEffect::FActiveTacticalEffect(FActiveTacticalEffectHandle Handle, const FTacticalEffectSpec& Spec) :

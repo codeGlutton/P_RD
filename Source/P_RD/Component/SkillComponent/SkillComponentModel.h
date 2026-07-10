@@ -14,6 +14,7 @@
 
 class UTileMapModel;
 class IBoardCombatTarget;
+class UBoardActorModel;
 class UStaticSkillData;
 
 struct FPresentationBarrier;
@@ -56,6 +57,8 @@ struct FActiveSkillContext
 public:
 	void Clear();
 	bool IsValid() const;
+	void SetOtherCombatTargets(const TArray<IBoardCombatTarget*>& CombatTargets);
+	TArray<IBoardCombatTarget*> ResolveOtherCombatTargets() const;
 
 	/* 스킬 임시 데이터 */
 public:
@@ -77,7 +80,8 @@ public:
 	/* 모션 임시 데이터 */
 public:
 	TArray<FTileIndex> mTargetTileIndexes;
-	TArray<IBoardCombatTarget*> mOtherCombatTargets;
+	// 애니메이션 재생 동안 대상이 제거될 수 있으므로 UObject 수명을 추적하는 약참조로 보관한다.
+	TArray<TWeakObjectPtr<UBoardActorModel>> mOtherCombatTargets;
 
 public:
 	ETileActorDirection mMotionTileMapDir = ETileActorDirection::Forward;

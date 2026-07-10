@@ -148,7 +148,10 @@ void USRPGTurnContext::BeginTurn()
 		}
 
 		// 로그 작성
-		GetWorldEventLogger(this)->BeginTurnLog(mOwner->GetModelId(), mOwner->GetClass());
+		if (UEventLogger* EventLogger = GetWorldEventLogger(this))
+		{
+			EventLogger->BeginTurnLog(mOwner->GetModelId(), mOwner->GetClass());
+		}
 
 		// 유닛 턴 시작 단계
 		mOwner->OnBeginTurn();
@@ -218,7 +221,10 @@ void USRPGTurnContext::EndTurn()
 	mOwner->OnEndTurn();
 
 	// 로그 작성
-	GetWorldEventLogger(this)->EndTurnLog();
+	if (UEventLogger* EventLogger = GetWorldEventLogger(this))
+	{
+		EventLogger->EndTurnLog();
+	}
 
 	// 턴 종료 연출
 	TSharedPtr<FPresentationBarrier> PresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
@@ -405,8 +411,11 @@ void USRPGTurnContext::ForcedClearActions()
 		}
 
 		// 로그 작성
-		GetWorldEventLogger(this)->BeginTurnLog(mOwner->GetModelId(), mOwner->GetClass());
-		GetWorldEventLogger(this)->BeginActionLog(mOwner->GetTileTransform().mIndex);
+		if (UEventLogger* EventLogger = GetWorldEventLogger(this))
+		{
+			EventLogger->BeginTurnLog(mOwner->GetModelId(), mOwner->GetClass());
+			EventLogger->BeginActionLog(mOwner->GetTileTransform().mIndex);
+		}
 
 		// 현재 액션 종료 요청
 		mReservedActions[mHeadActionIndex]->MarkActionCompleted(ESRPGActionResult::Cancelled);

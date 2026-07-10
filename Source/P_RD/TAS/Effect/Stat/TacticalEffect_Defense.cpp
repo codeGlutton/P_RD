@@ -28,13 +28,26 @@ UTacticalEffect_Defense::UTacticalEffect_Defense()
 void UTacticalEffect_Defense::OnExecuted(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const
 {
 	Super::OnExecuted(ActiveTEContainer, TESpec);
+	if (TESpec.mModifierValues.IsValidIndex(0) == false)
+	{
+		return;
+	}
 
 	FSRPGAttributeEffectEventLog Log;
 	Log.mEffectAttribute = UUnitAttributeSet::GetDefenseAttribute();
 	Log.mMagnitude = TESpec.mModifierValues[0];
 
 	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
-	const UActorModel* Instigator = AttributeSetCompModelInstance->GetOwnerModel();
-
-	GetWorldEventLogger(Instigator)->LogAttributeEffect(Instigator->GetModelId(), Instigator->GetClass(), Log);
+	if (IsValid(AttributeSetCompModelInstance) == false)
+	{
+		return;
+	}
+	const UActorModel* Target = AttributeSetCompModelInstance->GetOwnerModel();
+	if (IsValid(Target))
+	{
+		if (UEventLogger* EventLogger = GetWorldEventLogger(Target))
+		{
+			EventLogger->LogAttributeEffect(Target->GetModelId(), Target->GetClass(), Log);
+		}
+	}
 }

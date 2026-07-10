@@ -41,7 +41,10 @@ void USRPGAction::BeginAction()
 		CommandRouterModel->RegisterCommandHandler(this);
 
 		// 로그 작성
-		GetWorldEventLogger(this)->BeginActionLog(mInstigator->GetTileTransform().mIndex);
+		if (UEventLogger* EventLogger = GetWorldEventLogger(this))
+		{
+			EventLogger->BeginActionLog(mInstigator->GetTileTransform().mIndex);
+		}
 
 		// 예약된 초기화 커맨드 시작
 		if (mInitializeCommand.IsValid() == true)
@@ -75,7 +78,10 @@ void USRPGAction::EndAction()
 	OnEndAction();
 
 	// 로그 작성
-	GetWorldEventLogger(this)->EndActionLog();
+	if (UEventLogger* EventLogger = GetWorldEventLogger(this))
+	{
+		EventLogger->EndActionLog();
+	}
 
 	// 핸들러 등록 해제
 	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);

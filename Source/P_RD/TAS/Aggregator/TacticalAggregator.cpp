@@ -45,12 +45,12 @@
 FScopedTacticalAggregatorOnDirtyBatch::FScopedTacticalAggregatorOnDirtyBatch(UWorld* World) :
     mWorld(World)
 {
-    check(mWorld);
-
     UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(mWorld);
-    checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
-
-    TacticalFrameworkModel->BeginAggregatorDirtyBatch();
+    if (TacticalFrameworkModel != nullptr)
+    {
+        TacticalFrameworkModel->BeginAggregatorDirtyBatch();
+        mDidBegin = true;
+    }
 }
 
 /**
@@ -58,12 +58,16 @@ FScopedTacticalAggregatorOnDirtyBatch::FScopedTacticalAggregatorOnDirtyBatch(UWo
  */
 FScopedTacticalAggregatorOnDirtyBatch::~FScopedTacticalAggregatorOnDirtyBatch()
 {
-    check(mWorld);
+    if (mDidBegin == false)
+    {
+        return;
+    }
 
     UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(mWorld);
-    checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
-
-    TacticalFrameworkModel->EndAggregatorDirtyBatch();
+    if (TacticalFrameworkModel != nullptr)
+    {
+        TacticalFrameworkModel->EndAggregatorDirtyBatch();
+    }
 }
 
 /**
@@ -74,14 +78,14 @@ FScopedTacticalAggregatorOnDirtyBatch::~FScopedTacticalAggregatorOnDirtyBatch()
  */
 FTacticalAggregator::~FTacticalAggregator()
 {
-    if (mOwner != nullptr)
-    {
-        UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(mOwner->GetWorld());
-        checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
-
-        int32 NumRemoved = TacticalFrameworkModel->RemoveAggregatorDirty(this);
-        ensure(NumRemoved == 0);
-    }
+	if (mOwner.IsValid())
+	{
+		UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(mOwner->GetWorld());
+		if (TacticalFrameworkModel != nullptr)
+		{
+			TacticalFrameworkModel->RemoveAggregatorDirty(this);
+		}
+	}
 }
 
 /**
@@ -178,8 +182,15 @@ void FTacticalAggregator::ExecModOnBaseValue(TEnumAsByte<ETacticalModOp::Type> M
  */
 void FTacticalAggregator::AddAggregatorMod(float EvaluatedData, TEnumAsByte<ETacticalModOp::Type> ModifierOp, FActiveTacticalEffectHandle ActiveHandle)
 {
-    // mMods[op]: op enum 정수값을 그대로 배열 인덱스로 사용 → enum 값 연속성/호환성이 필수.
-    TArray<FTacticalAggregatorMod>& ModList = mMods[ModifierOp];
+	const int32 ModifierOpIndex = static_cast<int32>(ModifierOp.GetValue());
+	if (ModifierOpIndex < 0 || ModifierOpIndex >= ETacticalModOp::Max)
+	{
+		UE_LOG(LogAttributeSetComp, Warning, TEXT("유효하지 않은 Tactical ModifierOp(%d) 등록 무시"), ModifierOpIndex);
+		return;
+	}
+
+	// mMods[op]: op enum 정수값을 그대로 배열 인덱스로 사용 → enum 값 연속성/호환성이 필수.
+	TArray<FTacticalAggregatorMod>& ModList = mMods[ModifierOpIndex];
 
     int32 NewIdx = ModList.AddUninitialized();
     FTacticalAggregatorMod& NewMod = ModList[NewIdx];
@@ -348,11 +359,15 @@ float FTacticalAggregator::MultiplyMods(const TArray<FTacticalAggregatorMod>& Mo
  */
 void FTacticalAggregator::BroadcastOnDirty()
 {
+    if (mOwner.IsValid() == false)
+    {
+        return;
+    }
+
     UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(mOwner->GetWorld());
-    checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
 
     // 배치가 열려 있고 알릴 대상이 있으면 즉시 전파를 보류하고 대기열에만 등록한다.
-    if (TacticalFrameworkModel->GetGlobalBatchCount() > 0 && (mDependentEffects.Num() > 0 || OnDirty.IsBound()))
+    if (TacticalFrameworkModel != nullptr && TacticalFrameworkModel->GetGlobalBatchCount() > 0 && (mDependentEffects.Num() > 0 || OnDirty.IsBound()))
     {
         TacticalFrameworkModel->AddAggregatorDirty(this);
         return;

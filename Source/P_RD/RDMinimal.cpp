@@ -3,12 +3,18 @@
 
 UObjectModel* GetWorldSubsystemModel(const UObject* WorldContextObject, UClass* Class)
 {
-    if (WorldContextObject == nullptr)
-    {
-        return nullptr;
-    }
+	if (IsValid(WorldContextObject) == false || Class == nullptr)
+	{
+		return nullptr;
+	}
 
-    USimulationSubsystem* SimulationSubsystem =  WorldContextObject->GetWorld()->GetSubsystem<USimulationSubsystem>();
+	UWorld* World = WorldContextObject->GetWorld();
+	if (IsValid(World) == false)
+	{
+		return nullptr;
+	}
+
+	USimulationSubsystem* SimulationSubsystem = World->GetSubsystem<USimulationSubsystem>();
     if (SimulationSubsystem == nullptr)
     {
         return nullptr;
@@ -19,12 +25,18 @@ UObjectModel* GetWorldSubsystemModel(const UObject* WorldContextObject, UClass* 
 
 UObjectModelFactory* GetWorldModelFactory(const UObject* WorldContextObject)
 {
-    if (WorldContextObject == nullptr)
-    {
-        return nullptr;
-    }
+	if (IsValid(WorldContextObject) == false)
+	{
+		return nullptr;
+	}
 
-    USimulationSubsystem* SimulationSubsystem = WorldContextObject->GetWorld()->GetSubsystem<USimulationSubsystem>();
+	UWorld* World = WorldContextObject->GetWorld();
+	if (IsValid(World) == false)
+	{
+		return nullptr;
+	}
+
+	USimulationSubsystem* SimulationSubsystem = World->GetSubsystem<USimulationSubsystem>();
     if (SimulationSubsystem == nullptr)
     {
         return nullptr;
@@ -35,12 +47,18 @@ UObjectModelFactory* GetWorldModelFactory(const UObject* WorldContextObject)
 
 UEventLogger* GetWorldEventLogger(const UObject* WorldContextObject)
 {
-    if (WorldContextObject == nullptr)
-    {
-        return nullptr;
-    }
+	if (IsValid(WorldContextObject) == false)
+	{
+		return nullptr;
+	}
 
-    USimulationSubsystem* SimulationSubsystem = WorldContextObject->GetWorld()->GetSubsystem<USimulationSubsystem>();
+	UWorld* World = WorldContextObject->GetWorld();
+	if (IsValid(World) == false)
+	{
+		return nullptr;
+	}
+
+	USimulationSubsystem* SimulationSubsystem = World->GetSubsystem<USimulationSubsystem>();
     if (SimulationSubsystem == nullptr)
     {
         return nullptr;

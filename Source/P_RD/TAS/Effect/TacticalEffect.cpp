@@ -50,12 +50,17 @@ FTacticalEffectSpec::FTacticalEffectSpec(const FTacticalEffectSpec& Other, UTact
 void FTacticalEffectSpec::Initialize(const UTacticalEffect* Class, UTacticalEffectContext* EffectContext)
 {
 	mEffectClass = Class;
-	check(mEffectClass != nullptr);
+	SetContext(EffectContext);
+	if (IsValid(mEffectClass.Get()) == false)
+	{
+		mIsInfinite = false;
+		mModifierValues.Reset();
+		return;
+	}
 
 	// 지속 정책이 Infinite 이면 영구 이펙트로 표시(스택/주기 처리 분기에서 사용).
 	mIsInfinite = mEffectClass->mDurationPolicy == ETacticalEffectDurationType::Infinite;
 
-	SetContext(EffectContext);
 	// 모디파이어 개수만큼 평가 결과 값 버퍼를 미리 확보(인덱스가 mModifiers 와 1:1 대응).
 	mModifierValues.SetNum(mEffectClass->mModifiers.Num());
 }
@@ -103,6 +108,17 @@ UTacticalEffectContext* FTacticalEffectSpec::GetContext() const
  */
 void FTacticalEffectSpec::CalculateModifierMagnitudes()
 {
+	if (IsValid(mEffectClass.Get()) == false)
+	{
+		mModifierValues.Reset();
+		return;
+	}
+
+	if (mModifierValues.Num() != mEffectClass->mModifiers.Num())
+	{
+		mModifierValues.SetNum(mEffectClass->mModifiers.Num());
+	}
+
 	for (int32 ModIdx = 0; ModIdx < mModifierValues.Num(); ++ModIdx)
 	{
 		const FTacticalModifierInfo& ModDef = mEffectClass->mModifiers[ModIdx];
@@ -120,7 +136,11 @@ void FTacticalEffectSpec::CalculateModifierMagnitudes()
  */
 float FTacticalEffectSpec::GetModifierMagnitude(int32 ModifierIdx) const
 {
-	check(mModifierValues.IsValidIndex(ModifierIdx) && mEffectClass != nullptr && mEffectClass->mModifiers.IsValidIndex(ModifierIdx));
+	if (mModifierValues.IsValidIndex(ModifierIdx) == false || IsValid(mEffectClass.Get()) == false || mEffectClass->mModifiers.IsValidIndex(ModifierIdx) == false)
+	{
+		UE_LOG(LogAttributeSetComp, Warning, TEXT("Effect ModifierMagnitude 조회 실패: 유효하지 않은 인덱스(%d)"), ModifierIdx);
+		return 0.f;
+	}
 
 	// CalculateModifierMagnitudes 가 캐시한 스택 1개 기준 단일 크기.
 	const float SingleEvaluatedMagnitude = mModifierValues[ModifierIdx];

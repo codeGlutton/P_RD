@@ -19,7 +19,11 @@ void UTacticalEffect_Agility::OnExecuted(FActiveTacticalEffectsContainer& Active
 	const int32 TagCount = FMath::Floor(TESpec.mDynamicMagnitude);
 
 	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
-	const UActorModel* Instigator = AttributeSetCompModelInstance->GetOwnerModel();
+	if (IsValid(AttributeSetCompModelInstance) == false)
+	{
+		return;
+	}
+	const UActorModel* Target = AttributeSetCompModelInstance->GetOwnerModel();
 
 	AttributeSetCompModelInstance->AddLooseGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Agility, TagCount);
 
@@ -27,5 +31,11 @@ void UTacticalEffect_Agility::OnExecuted(FActiveTacticalEffectsContainer& Active
 	Log.mEffectTag = EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Agility;
 	Log.mCount = TagCount;
 
-	GetWorldEventLogger(Instigator)->LogTagEffect(Instigator->GetModelId(), Instigator->GetClass(), Log);
+	if (IsValid(Target))
+	{
+		if (UEventLogger* EventLogger = GetWorldEventLogger(Target))
+		{
+			EventLogger->LogTagEffect(Target->GetModelId(), Target->GetClass(), Log);
+		}
+	}
 }

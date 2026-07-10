@@ -17,7 +17,11 @@ void UTacticalEffect_Dead::OnExecuted(FActiveTacticalEffectsContainer& ActiveTEC
 	Super::OnExecuted(ActiveTEContainer, TESpec);
 
 	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
-	const UActorModel* Instigator = AttributeSetCompModelInstance->GetOwnerModel();
+	if (IsValid(AttributeSetCompModelInstance) == false)
+	{
+		return;
+	}
+	const UActorModel* Target = AttributeSetCompModelInstance->GetOwnerModel();
 
 	AttributeSetCompModelInstance->AddLooseGameplayTag(EffectTags::GameplayEffect_ActorState_Dead, 1);
 
@@ -25,5 +29,11 @@ void UTacticalEffect_Dead::OnExecuted(FActiveTacticalEffectsContainer& ActiveTEC
 	Log.mEffectTag = EffectTags::GameplayEffect_ActorState_Dead;
 	Log.mCount = 1;
 
-	GetWorldEventLogger(Instigator)->LogTagEffect(Instigator->GetModelId(), Instigator->GetClass(), Log);
+	if (IsValid(Target))
+	{
+		if (UEventLogger* EventLogger = GetWorldEventLogger(Target))
+		{
+			EventLogger->LogTagEffect(Target->GetModelId(), Target->GetClass(), Log);
+		}
+	}
 }

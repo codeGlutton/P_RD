@@ -15,6 +15,7 @@
 #include "AttributeSet/UnitAttributeSet.h"
 #include "TAS/Effect/TacticalEffect.h"
 #include "TAS/Effect/TacticalEffectContext.h"
+#include "TAS/Effect/Stat/TacticalEffect_HP.h"
 #include "Singleton/WorldSubsystem/SimulationSubsystem.h"
 #include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
 #include "Simulation/RoomInstance.h"
@@ -188,7 +189,96 @@ bool FTacticalAttributeTests::RunTest(const FString& Parameters)
     TestFalse(TEXT("CompModel에서 GrantedTag가 제거되어야 합니다."), CompModel->HasMatchingGameplayTag(GrantedTag));
 
     // ----------------------------------------------------
-    // 8. 환경 정리 (Clean up)
+    // 8. 테스트 케이스 6: 손상된 Spec/Context/ModifierOp 방어 검증
+    // ----------------------------------------------------
+    AddInfo(TEXT("=== 테스트 케이스 6: 잘못된 Effect 입력 방어 검증 ==="));
+    const float MaxHPBeforeInvalidEffects = CompModel->GetAttributeBaseValue(UUnitAttributeSet::GetMaxHPAttribute());
+
+    FTacticalEffectSpec EmptySpec;
+    const FActiveTacticalEffectHandle EmptySpecHandle = CompModel->ApplyTacticalEffectSpecToSelf(EmptySpec);
+    TestFalse(TEXT("빈 Spec은 무효 핸들을 반환해야 합니다."), EmptySpecHandle.IsValid());
+
+    const UTacticalEffect* InstantEffectCDO = UTestInstantTacticalEffect::StaticClass()->GetDefaultObject<UTacticalEffect>();
+    FTacticalEffectSpec MissingContextSpec(InstantEffectCDO, nullptr);
+    const FActiveTacticalEffectHandle MissingContextHandle = CompModel->ApplyTacticalEffectSpecToSelf(MissingContextSpec);
+    TestFalse(TEXT("Context가 없는 Spec은 무효 핸들을 반환해야 합니다."), MissingContextHandle.IsValid());
+
+    UTacticalEffect* InvalidOpEffect = NewObject<UTacticalEffect>(MockActorModel);
+    InvalidOpEffect->mDurationPolicy = ETacticalEffectDurationType::Instant;
+    InvalidOpEffect->mStackingType = ETacticalEffectStackingType::None;
+    FTacticalModifierInfo InvalidModifier;
+    InvalidModifier.mAttribute = UUnitAttributeSet::GetMaxHPAttribute();
+    InvalidModifier.mModifierOp = static_cast<ETacticalModOp::Type>(ETacticalModOp::Max);
+    InvalidModifier.mModifierMagnitude = 1000.f;
+    InvalidOpEffect->mModifiers.Add(InvalidModifier);
+
+    UTacticalEffectContext* InvalidOpContext = CompModel->MakeEffectContext();
+    InvalidOpContext->SetAttributeSetComponentModel(CompModel);
+    FTacticalEffectSpec InvalidOpSpec(InvalidOpEffect, InvalidOpContext);
+    const FActiveTacticalEffectHandle InvalidOpHandle = CompModel->ApplyTacticalEffectSpecToSelf(InvalidOpSpec);
+    TestFalse(TEXT("범위를 벗어난 ModifierOp는 무효 핸들을 반환해야 합니다."), InvalidOpHandle.IsValid());
+    TestEqual(TEXT("잘못된 Effect 입력은 속성값을 변경하지 않아야 합니다."), CompModel->GetAttributeBaseValue(UUnitAttributeSet::GetMaxHPAttribute()), MaxHPBeforeInvalidEffects);
+
+    // ----------------------------------------------------
+    // 9. 테스트 케이스 7: HP 이펙트 중첩 실행과 사망 태그 검증
+    // ----------------------------------------------------
+    AddInfo(TEXT("=== 테스트 케이스 7: HP 이펙트 도중 사망 이펙트 중첩 실행 검증 ==="));
+    CompModel->SetAttributeBaseValue(UUnitAttributeSet::GetMaxHPAttribute(), 100.f);
+    CompModel->SetAttributeBaseValue(UUnitAttributeSet::GetHPAttribute(), 10.f);
+
+    UTacticalEffectContext* DamageContext = CompModel->MakeEffectContext();
+    DamageContext->SetAttributeSetComponentModel(CompModel);
+    TSharedPtr<FTacticalEffectSpec> DamageSpec = CompModel->MakeOutgoingSpec(UTacticalEffect_HP::StaticClass(), DamageContext);
+    DamageSpec->mDynamicMagnitude = -20.f;
+    CompModel->ApplyTacticalEffectSpecToSelf(*DamageSpec);
+
+    TestEqual(TEXT("치명 피해 후 HP는 0이어야 합니다."), CompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute()), 0.f);
+    TestTrue(TEXT("치명 피해의 중첩 이펙트 실행 후 사망 태그가 있어야 합니다."), CompModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_ActorState_Dead));
+
+    // ----------------------------------------------------
+    // 10. 테스트 케이스 8: Dirty 배치 콜백 중 다음 Aggregator 제거 검증
+    // ----------------------------------------------------
+    AddInfo(TEXT("=== 테스트 케이스 8: Dirty 배치 중 Aggregator 제거 안전성 검증 ==="));
+    UTacticalEffectContext* FirstDirtyContext = CompModel->MakeEffectContext();
+    FirstDirtyContext->SetAttributeSetComponentModel(CompModel);
+    TSharedPtr<FTacticalEffectSpec> FirstDirtySpec = CompModel->MakeOutgoingSpec(UTestInfiniteTacticalEffect::StaticClass(), FirstDirtyContext);
+    const FActiveTacticalEffectHandle FirstDirtyHandle = CompModel->ApplyTacticalEffectSpecToSelf(*FirstDirtySpec);
+
+    UTacticalEffect* SecondDirtyEffect = NewObject<UTacticalEffect>(MockActorModel);
+    SecondDirtyEffect->mDurationPolicy = ETacticalEffectDurationType::Infinite;
+    SecondDirtyEffect->mStackingType = ETacticalEffectStackingType::None;
+    FTacticalModifierInfo SecondDirtyModifier;
+    SecondDirtyModifier.mAttribute = UUnitAttributeSet::GetMaxHPAttribute();
+    SecondDirtyModifier.mModifierOp = ETacticalModOp::AddBase;
+    SecondDirtyModifier.mModifierMagnitude = 1.f;
+    SecondDirtyEffect->mModifiers.Add(SecondDirtyModifier);
+
+    UTacticalEffectContext* SecondDirtyContext = CompModel->MakeEffectContext();
+    SecondDirtyContext->SetAttributeSetComponentModel(CompModel);
+    FTacticalEffectSpec SecondDirtySpec(SecondDirtyEffect, SecondDirtyContext);
+    const FActiveTacticalEffectHandle SecondDirtyHandle = CompModel->ApplyTacticalEffectSpecToSelf(SecondDirtySpec);
+
+    bool bFirstDirtyBroadcasted = false;
+    bool bSecondEffectRemovedInCallback = false;
+    const FDelegateHandle DirtyCallbackHandle = CompModel->GetTacticalAttributeValueChangeDelegate(UUnitAttributeSet::GetDefensePointAttribute()).AddLambda(
+        [CompModel, &bFirstDirtyBroadcasted, &bSecondEffectRemovedInCallback, SecondDirtyHandle](const FTacticalAttributeChangeData&)
+    {
+        bFirstDirtyBroadcasted = true;
+        bSecondEffectRemovedInCallback = CompModel->RemoveActiveTacticalEffect(SecondDirtyHandle);
+    });
+
+    FrameworkModel->BeginAggregatorDirtyBatch();
+    CompModel->SetAttributeBaseValue(UUnitAttributeSet::GetDefensePointAttribute(), CompModel->GetAttributeBaseValue(UUnitAttributeSet::GetDefensePointAttribute()) + 1.f);
+    CompModel->SetAttributeBaseValue(UUnitAttributeSet::GetMaxHPAttribute(), CompModel->GetAttributeBaseValue(UUnitAttributeSet::GetMaxHPAttribute()) + 1.f);
+    FrameworkModel->EndAggregatorDirtyBatch();
+
+    TestTrue(TEXT("첫 Aggregator의 Dirty 콜백이 실행되어야 합니다."), bFirstDirtyBroadcasted);
+    TestTrue(TEXT("앞선 콜백에서 다음 Aggregator의 Effect가 안전하게 제거되어야 합니다."), bSecondEffectRemovedInCallback);
+    CompModel->GetTacticalAttributeValueChangeDelegate(UUnitAttributeSet::GetDefensePointAttribute()).Remove(DirtyCallbackHandle);
+    CompModel->RemoveActiveTacticalEffect(FirstDirtyHandle);
+
+    // ----------------------------------------------------
+    // 11. 환경 정리 (Clean up)
     // ----------------------------------------------------
     MockActorModel->EndPlay();
     MockActorModel->Uninitialize();

@@ -131,7 +131,7 @@ const UTacticalAttributeSet* UAttributeSetComponentModel::GetAttributeSet_Intern
             return Set;
         }
     }
-    return nullptr;
+	return nullptr;
 }
 
 /**
@@ -351,9 +351,14 @@ void UAttributeSetComponentModel::ApplyModToAttribute(const FTacticalAttribute& 
  */
 UTacticalEffectContext* UAttributeSetComponentModel::MakeEffectContext() const
 {
-    UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
-    check(TacticalFrameworkModel != nullptr);
-    UTacticalEffectContext* Context = TacticalFrameworkModel->AllocTacticalEffectContext();
+	UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
+	UTacticalEffectContext* Context = TacticalFrameworkModel != nullptr
+		? TacticalFrameworkModel->AllocTacticalEffectContext()
+		: NewObject<UTacticalEffectContext>(const_cast<UAttributeSetComponentModel*>(this));
+	if (IsValid(Context) == false)
+	{
+		return nullptr;
+	}
 
     Context->SetInstigator(GetOwnerModel());
 
@@ -364,7 +369,7 @@ UTacticalEffectContext* UAttributeSetComponentModel::MakeEffectContext() const
  * @brief 지정 이펙트 클래스로부터 적용용 이펙트 스펙을 생성한다.
  * @param EffectClass 스펙으로 만들 이펙트 클래스.
  * @param Context 사용할 컨텍스트. nullptr이면 내부에서 새로 생성한다.
- * @return 생성된 이펙트 스펙. EffectClass가 null이면 nullptr.
+ * @return 생성된 이펙트 스펙. 입력이 유효하지 않으면 적용 단계에서 거부되는 빈 스펙.
  */
 TSharedPtr<FTacticalEffectSpec> UAttributeSetComponentModel::MakeOutgoingSpec(TSubclassOf<UTacticalEffect> EffectClass, UTacticalEffectContext* Context) const
 {
@@ -373,15 +378,18 @@ TSharedPtr<FTacticalEffectSpec> UAttributeSetComponentModel::MakeOutgoingSpec(TS
         Context = MakeEffectContext();
     }
 
-    if (EffectClass != nullptr)
-    {
-        UTacticalEffect* Effect = EffectClass->GetDefaultObject<UTacticalEffect>();
+	if (EffectClass != nullptr && IsValid(Context))
+	{
+		UTacticalEffect* Effect = EffectClass->GetDefaultObject<UTacticalEffect>();
+		if (IsValid(Effect))
+		{
+			return MakeShared<FTacticalEffectSpec>(Effect, Context);
+		}
+	}
 
-        TSharedPtr<FTacticalEffectSpec> NewSpec = MakeShared<FTacticalEffectSpec>(Effect, Context);
-        return NewSpec;
-    }
-
-    return nullptr;
+	// 기존 호출부가 곧바로 Spec 필드를 채우는 경우에도 nullptr 역참조가 나지 않도록
+	// 적용 단계에서 거부되는 빈 Spec을 반환한다.
+	return MakeShared<FTacticalEffectSpec>();
 }
 
 /**
@@ -392,8 +400,8 @@ TSharedPtr<FTacticalEffectSpec> UAttributeSetComponentModel::MakeOutgoingSpec(TS
  */
 FActiveTacticalEffectHandle UAttributeSetComponentModel::ApplyTacticalEffectSpecToTarget(const FTacticalEffectSpec& Spec, UAttributeSetComponentModel* Target)
 {
-    FActiveTacticalEffectHandle ReturnHandle;
-    if (Target != nullptr)
+	FActiveTacticalEffectHandle ReturnHandle;
+	if (IsValid(Target))
     {
         ReturnHandle = Target->ApplyTacticalEffectSpecToSelf(Spec);
     }
@@ -409,6 +417,25 @@ FActiveTacticalEffectHandle UAttributeSetComponentModel::ApplyTacticalEffectSpec
  */
 FActiveTacticalEffectHandle UAttributeSetComponentModel::ApplyTacticalEffectSpecToSelf(const FTacticalEffectSpec& Spec)
 {
+	if (IsValid(Spec.mEffectClass.Get()) == false)
+	{
+		UE_LOG(LogAttributeSetComp, Warning, TEXT("Effect 적용 건너뜀: EffectClass가 유효하지 않음"));
+		return FActiveTacticalEffectHandle();
+	}
+
+	if (IsValid(Spec.GetContext()) == false)
+	{
+		UE_LOG(LogAttributeSetComp, Warning, TEXT("[%s] Effect 적용 건너뜀: Context가 유효하지 않음"), *GetNameSafe(Spec.mEffectClass.Get()));
+		return FActiveTacticalEffectHandle();
+	}
+
+	UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
+	if (TacticalFrameworkModel == nullptr)
+	{
+		UE_LOG(LogAttributeSetComp, Warning, TEXT("[%s] Effect 적용 건너뜀: TacticalFrameworkModel 없음"), *GetNameSafe(Spec.mEffectClass.Get()));
+		return FActiveTacticalEffectHandle();
+	}
+
 	// 이펙트 적용 중 활성 이펙트 컨테이너 변경을 방지하는 스코프 락
 	FScopedActiveTacticalEffectLock ScopeLock(mActiveAttributeEffects);
 	// "현재 적용 중인 이펙트" 컨텍스트를 스코프 동안 설정(중첩 적용 추적용)
@@ -425,8 +452,10 @@ FActiveTacticalEffectHandle UAttributeSetComponentModel::ApplyTacticalEffectSpec
 	// 모디파이어가 가리키는 속성이 하나라도 무효면 적용 중단
 	for (const FTacticalModifierInfo& Mod : Spec.mEffectClass->mModifiers)
 	{
-		if (Mod.mAttribute.IsValid() == false)
+		const int32 ModifierOp = static_cast<int32>(Mod.mModifierOp.GetValue());
+		if (Mod.mAttribute.IsValid() == false || ModifierOp < 0 || ModifierOp >= ETacticalModOp::Max)
 		{
+			UE_LOG(LogAttributeSetComp, Warning, TEXT("[%s] Effect 적용 건너뜀: 유효하지 않은 Attribute 또는 ModifierOp(%d)"), *GetNameSafe(Spec.mEffectClass.Get()), ModifierOp);
 			return FActiveTacticalEffectHandle();
 		}
 	}
@@ -459,15 +488,11 @@ FActiveTacticalEffectHandle UAttributeSetComponentModel::ApplyTacticalEffectSpec
 			StackSpec = MakeUnique<FTacticalEffectSpec>(Spec);
 			OurCopyOfSpec = StackSpec.Get();
 
-			UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
-			check(TacticalFrameworkModel != nullptr);
 			// 전역 사전 처리 훅(시전자 기반 동적 모디파이어 캡처 등)
 			TacticalFrameworkModel->GlobalPreTacticalEffectSpecApply(*OurCopyOfSpec, this);
 		}
 	}
 
-	UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
-	check(TacticalFrameworkModel != nullptr);
 	TacticalFrameworkModel->SetCurrentAppliedTE(OurCopyOfSpec); // 현재 적용 스펙을 프레임워크에 등록
 
 	// 순간형이면 즉시 모디파이어를 실행해 BaseValue에 영구 반영
@@ -479,7 +504,7 @@ FActiveTacticalEffectHandle UAttributeSetComponentModel::ApplyTacticalEffectSpec
 	Spec.mEffectClass->OnApplied(mActiveAttributeEffects, *OurCopyOfSpec); // 이펙트별 적용 후처리 콜백
 
     // 시전자 측 컴포넌트를 컨텍스트에서 얻어 "자신에게 적용됨" 통지
-    UAttributeSetComponentModel* InstigatorASCModel = Spec.GetContext()->GetAttributeSetComponentModel();
+	UAttributeSetComponentModel* InstigatorASCModel = OurCopyOfSpec->GetContext()->GetAttributeSetComponentModel();
     OnTacticalEffectAppliedToSelf(InstigatorASCModel, *OurCopyOfSpec, MyHandle);
 
 	// 시전자가 존재하면 시전자 측에 "대상에게 적용됨" 통지(시전자 관점 콜백)
@@ -511,7 +536,11 @@ void UAttributeSetComponentModel::ExecuteTacticalEffect(FTacticalEffectSpec& Spe
 FActiveTacticalEffectHandle UAttributeSetComponentModel::SetActiveTacticalEffect(FActiveTacticalEffectHandle&& ActiveHandle)
 {
     FActiveTacticalEffect* ActiveEffect = mActiveAttributeEffects.GetActiveTacticalEffect(ActiveHandle);
-    checkf(ActiveEffect != nullptr, TEXT("활성화할 Effect 미존재"));
+    if (ActiveEffect == nullptr)
+    {
+        UE_LOG(LogAttributeSetComp, Warning, TEXT("Effect 활성화 건너뜀: 핸들에 대응하는 Effect가 없음"));
+        return FActiveTacticalEffectHandle();
+    }
 
     FScopedActiveTacticalEffectLock ScopeLockActiveGameplayEffects(mActiveAttributeEffects); // 활성 이펙트 변경 락
     FScopedTacticalAggregatorOnDirtyBatch AggregatorOnDirtyBatcher(GetWorld());              // dirty 콜백을 배치로 묶어 중복 재계산 방지
