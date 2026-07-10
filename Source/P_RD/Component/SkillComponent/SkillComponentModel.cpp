@@ -184,6 +184,7 @@ void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillInd
 		MaxTileLocation.Y = FMath::Max(MaxTileLocation.Y, TileLocation.Y);
 	}
 	ZoomInLocation /= (1 + mActiveSkillContext.mEffectTileIndexes.Num());
+	ZoomInLocation.Z = OwnerUnitModel->GetWorldTransform().GetLocation().Z;
 
 	const float ZoomInSize = FMath::Max(MaxTileLocation.X - MinTileLocation.X, MaxTileLocation.Y - MinTileLocation.Y);
 

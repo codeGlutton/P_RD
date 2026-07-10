@@ -88,6 +88,11 @@ public:
 	 */
 	bool GetRunControlState(OUT int32& RowIndex, OUT int32& ColumnIndex, OUT int32& PlayerLevel, OUT int32& Difficulty) const;
 
+	/*
+	 * @brief 현재 전투 방의 표시 이름('일반'/'엘리트'/'보스'). HUD 룸 이름 라벨용. 
+	 */
+	FText GetCurrentRoomDisplayName() const;
+
 protected:
 	bool PreloadAndTransitionSelectedRoomAsync();
 

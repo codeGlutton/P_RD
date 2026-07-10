@@ -18,6 +18,8 @@ class UStaticObstacleSpawnData;
 struct FPresentationBarrier;
 struct FApplyEventTriggerPayload;
 
+DECLARE_DELEGATE_RetVal(const FTransform&, FOnGetBoardActorWorldTransform);
+
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlaceTileTransform, const FTileTransform& /* TileTransform */, const FTransform& /* Transform */);
 
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnStartMoveStep, const FTileTransform& /* NextTileTransform */, const FTransform& /* TargetWorldTransform */, TSharedPtr<FPresentationBarrier> /* Barrier */, float /* RemainingPathDistance */);
@@ -57,6 +59,12 @@ public:
 	UTexture2D* GetBoardActorPortrait() const;
 
 public:
+	/**
+	 * @brief 타일 트랜스폼 반환
+	 * @return 타일 트랜스폼
+	 */
+	const FTransform& GetWorldTransform() const;
+
 	/**
 	 * @brief 타일 트랜스폼 반환
 	 * @return 타일 트랜스폼
@@ -129,6 +137,11 @@ private:
 	void SetTileTransform(const FTileTransform& Transform);
 
 public:
+	/**
+	 * @brief 뷰 좌표 질의 델리깃
+	 */
+	FOnGetBoardActorWorldTransform OnGetBoardActorWorldTransform;
+
 	/**
 	 * @brief 타일 트랜스폼이 즉시 변경되었을 때, 뷰에게 전달하는 대리자
 	 */

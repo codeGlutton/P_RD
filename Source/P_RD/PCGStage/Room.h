@@ -26,7 +26,11 @@ public:
 public:
 	virtual void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const;
 
-	/** @brief 방 표시 이름 — 타입에서 파생('일반'/'엘리트'/'보스'/'상점'/'보물'). 세이브에 안 남는 파생값이라 필드 대신 함수. */
+public:
+	/*
+	 * @brief 방 표시 이름 반환 
+	 * @return 방 타입에 따른 이름
+	 */
 	FText GetDisplayName() const;
 
 public:

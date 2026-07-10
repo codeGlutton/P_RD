@@ -51,6 +51,15 @@ UTexture2D* UBoardActorModel::GetBoardActorPortrait() const
 	return mStaticSpawnData->mPortrait.LoadSynchronous();
 }
 
+const FTransform& UBoardActorModel::GetWorldTransform() const
+{
+	if (OnGetBoardActorWorldTransform.IsBound() == false)
+	{
+		return FTransform::Identity;
+	}
+	return OnGetBoardActorWorldTransform.Execute();
+}
+
 const FTileTransform& UBoardActorModel::GetTileTransform() const
 {
 	// 멤버에 저장된 타일 트랜스폼 반환
