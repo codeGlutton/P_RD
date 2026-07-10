@@ -231,6 +231,27 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 /** @brief 보유 주사위 카드의 3D 캡처 숫자/색/선택/사용 상태를 현재 전투 스냅샷 기준으로 갱신한다. */
 void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 {
+	// 배치 완료 판정: 선택된 스킬의 요구 주사위 수(mDiceCost)만큼 선택됐는가.
+	// 완료 시 배치된 주사위=초록/나머지=회색, 미완료 시 배치된 주사위=노란색(기존)으로 칠한다.
+	int32 SelectedDiceCount = 0;
+	for (const FDiceViewData& CountView : mDiceUIs)
+	{
+		if (CountView.mIsSelected)
+		{
+			++SelectedDiceCount;
+		}
+	}
+	int32 RequiredDiceCost = 0;
+	if (mSelectedSkillIndex != INDEX_NONE && mCombatUIModel != nullptr)
+	{
+		const TArray<FSkillUI>& SkillUIs = mCombatUIModel->GetSkillUIs();
+		if (SkillUIs.IsValidIndex(mSelectedSkillIndex))
+		{
+			RequiredDiceCost = SkillUIs[mSelectedSkillIndex].mDiceCost;
+		}
+	}
+	const bool bDiceAssignmentComplete = RequiredDiceCost > 0 && SelectedDiceCount >= RequiredDiceCost;
+
 	for (int32 DiceIndex = 0; DiceIndex < mDiceUIs.Num(); ++DiceIndex)
 	{
 		if (mDiceUIs.IsValidIndex(DiceIndex) == false)
@@ -261,7 +282,15 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 		FLinearColor DiceColor = DiceView.mIsRolled ? RarityColor : PendingColor;
 		if (DiceView.mIsSelected)
 		{
-			DiceColor = FLinearColor(1.0f, 0.82f, 0.30f, 1.0f);
+			// 배치 진행 중=노란색, 요구 개수만큼 배치 완료=초록색.
+			DiceColor = bDiceAssignmentComplete
+				? FLinearColor(0.35f, 1.0f, 0.40f, 1.0f)
+				: FLinearColor(1.0f, 0.82f, 0.30f, 1.0f);
+		}
+		else if (bDiceAssignmentComplete)
+		{
+			// 배치가 끝났으면 남은(미배치) 주사위는 회색으로 가라앉힌다.
+			DiceColor = FLinearColor(0.45f, 0.45f, 0.48f, 0.9f);
 		}
 		if (DiceView.mIsUsed)
 		{
@@ -329,9 +358,18 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 		{
 			if (UIndexedButtonWidget* OwnedDiceCardWidget = mOwnedDiceCardWidgets[DiceIndex])
 			{
-				FLinearColor CardColor = DiceView.mIsSelected
-					? FLinearColor(1.0f, 0.78f, 0.20f, 0.34f)
-					: FLinearColor(1.0f, 1.0f, 1.0f, 0.01f);
+				// 카드 오버레이도 주사위 색 규칙을 따른다: 완료+배치=초록, 진행중+배치=노랑, 완료+미배치=회색.
+				FLinearColor CardColor = FLinearColor(1.0f, 1.0f, 1.0f, 0.01f);
+				if (DiceView.mIsSelected)
+				{
+					CardColor = bDiceAssignmentComplete
+						? FLinearColor(0.25f, 0.95f, 0.35f, 0.34f)
+						: FLinearColor(1.0f, 0.78f, 0.20f, 0.34f);
+				}
+				else if (bDiceAssignmentComplete)
+				{
+					CardColor = FLinearColor(0.35f, 0.35f, 0.38f, 0.30f);
+				}
 				if (DiceView.mIsUsed)
 				{
 					CardColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.60f);   // 쓴 주사위: 어두운 오버레이
