@@ -721,6 +721,7 @@ bool UFrontendMapWidget::RefreshMap()
 	FText SelectedRoomState;
 	FSlateColor SelectedRoomStateColor = MutedColor;
 	UWidget* FocusMapNodeWidget = nullptr;
+	UWidget* CurrentRoomNodeWidget = nullptr;   // 진입 가능 방이 없을 때(전투 승리 직후 등) 스크롤 폴백 대상.
 	const FVector2D GraphSize = GetMapGraphContentSize();
 
 	TMap<FIntPoint, FVector2D> NodeCenters;
@@ -835,6 +836,10 @@ bool UFrontendMapWidget::RefreshMap()
 		{
 			FocusMapNodeWidget = NodeWidget;
 		}
+		if (FIntPoint(Room.mRow, Room.mColumn) == CurrentCoord)
+		{
+			CurrentRoomNodeWidget = NodeWidget;
+		}
 
 		const FVector2D NodeSize = GetMapNodeSize();
 		const FVector2D Center = NodeCenters.FindChecked(FIntPoint(Room.mRow, Room.mColumn));
@@ -871,9 +876,14 @@ bool UFrontendMapWidget::RefreshMap()
 	{
 		MapScrollBox->ScrollToEnd();
 	}
-	else if (FocusMapNodeWidget != nullptr && MapScrollBox != nullptr)
+	else if (MapScrollBox != nullptr)
 	{
-		MapScrollBox->ScrollWidgetIntoView(FocusMapNodeWidget, false, EDescendantScrollDestination::Center, 48.f);
+		// 진입 가능/선택 노드가 없으면(전투 승리 직후 잠금 지도 등) 현재 위치 노드로 스크롤한다 — 최상단에 머무르지 않게.
+		UWidget* ScrollTargetWidget = FocusMapNodeWidget != nullptr ? FocusMapNodeWidget : CurrentRoomNodeWidget;
+		if (ScrollTargetWidget != nullptr)
+		{
+			MapScrollBox->ScrollWidgetIntoView(ScrollTargetWidget, false, EDescendantScrollDestination::Center, 48.f);
+		}
 	}
 	return true;
 }
