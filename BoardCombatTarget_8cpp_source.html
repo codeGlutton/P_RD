@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/Actor/BoardActor/BoardCombatTarget.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('BoardCombatTarget_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">BoardCombatTarget.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="BoardCombatTarget_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="BoardCombatTarget_8h.html">Actor/BoardActor/BoardCombatTarget.h</a>&quot;</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#include &quot;<a class="code" href="AttributeSetComponentModel_8h.html">Component/AttributeComponent/AttributeSetComponentModel.h</a>&quot;</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
+<div class="foldopen" id="foldopen00004" data-start="{" data-end="}">
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno"><a class="line" href="classIBoardCombatTarget.html#a30bed0cd8d6956a89e43e51adbff31e5">    4</a></span><span class="keywordtype">bool</span> <a class="code hl_function" href="classIBoardCombatTarget.html#a30bed0cd8d6956a89e43e51adbff31e5">IBoardCombatTarget::IsTargetable</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span>    <span class="keywordflow">return</span> <a class="code hl_function" href="classIBoardCombatTarget.html#a0a81c8adea3dc71117998a06aeadaa57">IsDead</a>() == <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span>}</div>
+</div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
+<div class="foldopen" id="foldopen00009" data-start="{" data-end="}">
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno"><a class="line" href="classIBoardCombatTarget.html#a0a81c8adea3dc71117998a06aeadaa57">    9</a></span><span class="keywordtype">bool</span> <a class="code hl_function" href="classIBoardCombatTarget.html#a0a81c8adea3dc71117998a06aeadaa57">IBoardCombatTarget::IsDead</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span>    <span class="keywordflow">return</span> <a class="code hl_function" href="classIBoardCombatTarget.html#ae3dcc568440a10025f0f34aaf1a1e5bb">GetAttributeComponentModel</a>()-&gt;<a class="code hl_function" href="classUAttributeSetComponentModel.html#a4af9293e7fba43b40540170eed80cc4d">HasMatchingGameplayTag</a>(EffectTags::GameplayEffect_ActorState_Dead);</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>}</div>
+</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
+<div class="foldopen" id="foldopen00014" data-start="{" data-end="}">
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno"><a class="line" href="classIBoardCombatTarget.html#a4ecc98a31b27bc6afc16f98e0b06f396">   14</a></span><a class="code hl_struct" href="structFBoardCombatTargetSnapshotData.html">FBoardCombatTargetSnapshotData</a> <a class="code hl_function" href="classIBoardCombatTarget.html#a4ecc98a31b27bc6afc16f98e0b06f396">IBoardCombatTarget::MakeSnapshotData</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>    <a class="code hl_struct" href="structFBoardCombatTargetSnapshotData.html">FBoardCombatTargetSnapshotData</a> Snapshot;</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    <a class="code hl_function" href="classIBoardCombatTarget.html#ae3dcc568440a10025f0f34aaf1a1e5bb">GetAttributeComponentModel</a>()-&gt;<a class="code hl_function" href="classUAttributeSetComponentModel.html#a09d3e0a45d1d50dc5325cf343ba0beed">CaptureAllStates</a>(OUT Snapshot);</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span> </div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    <span class="keywordflow">return</span> Snapshot;</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>}</div>
+</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span> </div>
+<div class="foldopen" id="foldopen00022" data-start="{" data-end="}">
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno"><a class="line" href="classIBoardCombatTarget.html#a37f2df32b66d63fe9cd3609943684c97">   22</a></span>ETeamAttitude::Type <a class="code hl_function" href="classIBoardCombatTarget.html#a37f2df32b66d63fe9cd3609943684c97">IBoardCombatTarget::GetTeamAttitudeTowards</a>(<span class="keyword">const</span> UObject&amp; Other)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    <span class="keyword">const</span> <a class="code hl_class" href="classIBoardCombatTarget.html">IBoardCombatTarget</a>* BoardCombatTarget = Cast&lt;const IBoardCombatTarget&gt;(&amp;Other);</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    <span class="keywordflow">if</span> (BoardCombatTarget != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    {</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>        <span class="keywordflow">return</span> FGenericTeamId::GetAttitude(<a class="code hl_function" href="classIBoardCombatTarget.html#aba6a6d5f31be0ec175ff0c7007236f29">GetGenericTeamId</a>(), BoardCombatTarget-&gt;<a class="code hl_function" href="classIBoardCombatTarget.html#aba6a6d5f31be0ec175ff0c7007236f29">GetGenericTeamId</a>());</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    }</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    <span class="keywordflow">return</span> ETeamAttitude::Neutral;</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>}</div>
+</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span> </div>
+<div class="ttc" id="aAttributeSetComponentModel_8h_html"><div class="ttname"><a href="AttributeSetComponentModel_8h.html">AttributeSetComponentModel.h</a></div><div class="ttdoc">속성 컴포넌트 모델 정의 헤더</div></div>
+<div class="ttc" id="aBoardCombatTarget_8h_html"><div class="ttname"><a href="BoardCombatTarget_8h.html">BoardCombatTarget.h</a></div><div class="ttdoc">SRPG 타일에 타격 가능한 모델 인터페이스 정의 헤더</div></div>
+<div class="ttc" id="aclassIBoardCombatTarget_html"><div class="ttname"><a href="classIBoardCombatTarget.html">IBoardCombatTarget</a></div><div class="ttdoc">SRPG 타일에 타격 가능한 모델</div><div class="ttdef"><b>Definition</b> <a href="BoardCombatTarget_8h_source.html#l00083">BoardCombatTarget.h:84</a></div></div>
+<div class="ttc" id="aclassIBoardCombatTarget_html_a0a81c8adea3dc71117998a06aeadaa57"><div class="ttname"><a href="classIBoardCombatTarget.html#a0a81c8adea3dc71117998a06aeadaa57">IBoardCombatTarget::IsDead</a></div><div class="ttdeci">virtual bool IsDead() const</div><div class="ttdef"><b>Definition</b> <a href="BoardCombatTarget_8cpp_source.html#l00009">BoardCombatTarget.cpp:9</a></div></div>
+<div class="ttc" id="aclassIBoardCombatTarget_html_a30bed0cd8d6956a89e43e51adbff31e5"><div class="ttname"><a href="classIBoardCombatTarget.html#a30bed0cd8d6956a89e43e51adbff31e5">IBoardCombatTarget::IsTargetable</a></div><div class="ttdeci">virtual bool IsTargetable() const</div><div class="ttdef"><b>Definition</b> <a href="BoardCombatTarget_8cpp_source.html#l00004">BoardCombatTarget.cpp:4</a></div></div>
+<div class="ttc" id="aclassIBoardCombatTarget_html_a37f2df32b66d63fe9cd3609943684c97"><div class="ttname"><a href="classIBoardCombatTarget.html#a37f2df32b66d63fe9cd3609943684c97">IBoardCombatTarget::GetTeamAttitudeTowards</a></div><div class="ttdeci">virtual ETeamAttitude::Type GetTeamAttitudeTowards(const UObject &amp;Other) const</div><div class="ttdef"><b>Definition</b> <a href="BoardCombatTarget_8cpp_source.html#l00022">BoardCombatTarget.cpp:22</a></div></div>
+<div class="ttc" id="aclassIBoardCombatTarget_html_a4ecc98a31b27bc6afc16f98e0b06f396"><div class="ttname"><a href="classIBoardCombatTarget.html#a4ecc98a31b27bc6afc16f98e0b06f396">IBoardCombatTarget::MakeSnapshotData</a></div><div class="ttdeci">FBoardCombatTargetSnapshotData MakeSnapshotData() const</div><div class="ttdef"><b>Definition</b> <a href="BoardCombatTarget_8cpp_source.html#l00014">BoardCombatTarget.cpp:14</a></div></div>
+<div class="ttc" id="aclassIBoardCombatTarget_html_aba6a6d5f31be0ec175ff0c7007236f29"><div class="ttname"><a href="classIBoardCombatTarget.html#aba6a6d5f31be0ec175ff0c7007236f29">IBoardCombatTarget::GetGenericTeamId</a></div><div class="ttdeci">virtual FGenericTeamId GetGenericTeamId() const =0</div></div>
+<div class="ttc" id="aclassIBoardCombatTarget_html_ae3dcc568440a10025f0f34aaf1a1e5bb"><div class="ttname"><a href="classIBoardCombatTarget.html#ae3dcc568440a10025f0f34aaf1a1e5bb">IBoardCombatTarget::GetAttributeComponentModel</a></div><div class="ttdeci">virtual UAttributeSetComponentModel * GetAttributeComponentModel() const =0</div></div>
+<div class="ttc" id="aclassUAttributeSetComponentModel_html_a09d3e0a45d1d50dc5325cf343ba0beed"><div class="ttname"><a href="classUAttributeSetComponentModel.html#a09d3e0a45d1d50dc5325cf343ba0beed">UAttributeSetComponentModel::CaptureAllStates</a></div><div class="ttdeci">void CaptureAllStates(FBoardCombatTargetSnapshotData &amp;Snapshot) const</div><div class="ttdoc">현재 모든 속성/상태를 스냅샷에 캡처한다(세이브/전투 상태 기록 용도).</div><div class="ttdef"><b>Definition</b> <a href="AttributeSetComponentModel_8cpp_source.html#l00213">AttributeSetComponentModel.cpp:213</a></div></div>
+<div class="ttc" id="aclassUAttributeSetComponentModel_html_a4af9293e7fba43b40540170eed80cc4d"><div class="ttname"><a href="classUAttributeSetComponentModel.html#a4af9293e7fba43b40540170eed80cc4d">UAttributeSetComponentModel::HasMatchingGameplayTag</a></div><div class="ttdeci">bool HasMatchingGameplayTag(FGameplayTag TagToCheck) const override</div><div class="ttdoc">(IGameplayTagAssetInterface) 단일 태그(부모 포함)를 보유하는지 검사한다.</div><div class="ttdef"><b>Definition</b> <a href="AttributeSetComponentModel_8h_source.html#l00273">AttributeSetComponentModel.h:273</a></div></div>
+<div class="ttc" id="astructFBoardCombatTargetSnapshotData_html"><div class="ttname"><a href="structFBoardCombatTargetSnapshotData.html">FBoardCombatTargetSnapshotData</a></div><div class="ttdoc">타격 가능 보드 액터들에 대한 스냅샷</div><div class="ttdef"><b>Definition</b> <a href="BoardCombatTarget_8h_source.html#l00023">BoardCombatTarget.h:24</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_b0f6477e5460f689b7d3a9cfbd931fdd.html">Actor</a></li><li class="navelem"><a class="el" href="dir_4c28eedfed141ab03f450632bb2d6e19.html">BoardActor</a></li><li class="navelem"><a class="el" href="BoardCombatTarget_8cpp.html">BoardCombatTarget.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

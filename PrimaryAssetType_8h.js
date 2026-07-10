@@ -4,6 +4,8 @@ var PrimaryAssetType_8h =
     [ "DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX", "PrimaryAssetType_8h.html#a93fdd87600a874d44e2c47ce6bd66733", null ],
     [ "DECLARE_PRIMARY_ASSET_TYPE", "PrimaryAssetType_8h.html#a4eb65e49a6475295623f081ec38901cf", null ],
     [ "DECLARE_PRIMARY_ASSET_TYPE", "PrimaryAssetType_8h.html#ae028b8632ba5bf3429e19c87dd0509f1", null ],
+    [ "DECLARE_PRIMARY_ASSET_TYPE", "PrimaryAssetType_8h.html#a11f75b80ad860ee6accc4c99f10d86a4", null ],
+    [ "DECLARE_PRIMARY_ASSET_TYPE", "PrimaryAssetType_8h.html#a9c352df36e716e802d5f4956e668d592", null ],
     [ "DECLARE_PRIMARY_ASSET_TYPE", "PrimaryAssetType_8h.html#a8798cbfc59955abad3182b30a17f2dc5", null ],
     [ "DECLARE_PRIMARY_ASSET_TYPE", "PrimaryAssetType_8h.html#af940916e1fad5b691aba385e12d7848a", null ],
     [ "DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX", "PrimaryAssetType_8h.html#a3de8be89c0625af75537b8901cd495ac", null ],

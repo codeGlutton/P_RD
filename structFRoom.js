@@ -3,6 +3,7 @@ var structFRoom =
     [ "FRoom", "structFRoom.html#a91653561964ba4be4a5dc025bd3b222a", null ],
     [ "~FRoom", "structFRoom.html#a775b0eb46c0831fd8d301e0a97184a3e", null ],
     [ "CollectAssetIds", "structFRoom.html#a29f234f47221ceee0a2e20dacc0dd8d7", null ],
+    [ "GetDisplayName", "structFRoom.html#a384d10078a84f1f5f01f24d64c9821b6", null ],
     [ "mColumn", "structFRoom.html#aeb84846765cefc35a684c5a75d29271e", null ],
     [ "mNextRoomColumns", "structFRoom.html#a3a0efee2f7515c9275039eb3be9eb976", null ],
     [ "mPositionOffsetRate", "structFRoom.html#a47dcdd84e642ef3a1f2a6d3bc3f05260", null ],

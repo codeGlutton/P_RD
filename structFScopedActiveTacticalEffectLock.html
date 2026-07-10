@@ -1,0 +1,176 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: FScopedActiveTacticalEffectLock 구조체 참조</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('structFScopedActiveTacticalEffectLock.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Public 멤버 함수</a> &#124;
+<a href="structFScopedActiveTacticalEffectLock-members.html">모든 멤버 목록</a>  </div>
+  <div class="headertitle"><div class="title">FScopedActiveTacticalEffectLock 구조체 참조</div></div>
+</div><!--header-->
+<div class="contents">
+
+<p>새로운 이펙트의 추가와 기존 이펙트의 삭제를 지연하기 위한 스코프 락 객체  
+ <a href="structFScopedActiveTacticalEffectLock.html#details">더 자세히 ...</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Public 멤버 함수</h2></td></tr>
+<tr class="memitem:a43c3271ae4a361144db96792920519c9" id="r_a43c3271ae4a361144db96792920519c9"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFScopedActiveTacticalEffectLock.html#a43c3271ae4a361144db96792920519c9">FScopedActiveTacticalEffectLock</a> (<a class="el" href="structFActiveTacticalEffectsContainer.html">FActiveTacticalEffectsContainer</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Container</a>)</td></tr>
+<tr class="memdesc:a43c3271ae4a361144db96792920519c9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scope 진입 시 컨테이너 Lock을 증가시키는 RAII 가드 생성자. Lock이 걸린 동안에는 mTacticalEffects 배열을 직접 추가/삭제하지 않고 지연(pending)시켜, 이펙트 배열을 순회하는 도중 배열이 재할당/이동되어 참조가 깨지는 것을 막는다.  <br /></td></tr>
+<tr class="separator:a43c3271ae4a361144db96792920519c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae0553ed55036432c61501e557f287c2e" id="r_ae0553ed55036432c61501e557f287c2e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFScopedActiveTacticalEffectLock.html#ae0553ed55036432c61501e557f287c2e">~FScopedActiveTacticalEffectLock</a> ()</td></tr>
+<tr class="memdesc:ae0553ed55036432c61501e557f287c2e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scope 이탈 시 Lock을 감소시키는 소멸자. Lock 카운트가 0이 되면 그동안 미뤄둔 추가/제거 작업이 DecrementLock 내부에서 일괄 처리된다.  <br /></td></tr>
+<tr class="separator:ae0553ed55036432c61501e557f287c2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
+<div class="textblock"><p>순회 중(반복자 사용 중)에 배열을 직접 수정하면 반복자가 무효화되므로, 이 스코프가 살아 있는 동안의 추가/삭제는 보류(pending) 처리되고 스코프가 끝나는 시점(소멸자)에 일괄 반영된다. RAII 패턴. </p>
+
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00047">47</a> 번째 라인에서 정의되었습니다.</p>
+</div><h2 class="groupheader">생성자 &amp; 소멸자 문서화</h2>
+<a id="a43c3271ae4a361144db96792920519c9" name="a43c3271ae4a361144db96792920519c9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a43c3271ae4a361144db96792920519c9">&#9670;&#160;</a></span>FScopedActiveTacticalEffectLock()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FScopedActiveTacticalEffectLock::FScopedActiveTacticalEffectLock </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structFActiveTacticalEffectsContainer.html">FActiveTacticalEffectsContainer</a> &amp;&#160;</td>
+          <td class="paramname"><em>Container</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">Container</td><td>Lock을 적용할 대상 컨테이너. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00028">28</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ae0553ed55036432c61501e557f287c2e" name="ae0553ed55036432c61501e557f287c2e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae0553ed55036432c61501e557f287c2e">&#9670;&#160;</a></span>~FScopedActiveTacticalEffectLock()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FScopedActiveTacticalEffectLock::~FScopedActiveTacticalEffectLock </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00038">38</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<hr/>이 구조체에 대한 문서화 페이지는 다음의 파일들로부터 생성되었습니다.:<ul>
+<li>/home/runner/work/P_RD/P_RD/Source/P_RD/TAS/Effect/<a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a></li>
+<li>/home/runner/work/P_RD/P_RD/Source/P_RD/TAS/Effect/<a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a></li>
+</ul>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="structFScopedActiveTacticalEffectLock.html">FScopedActiveTacticalEffectLock</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

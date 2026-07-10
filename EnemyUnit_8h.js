@@ -1,4 +1,4 @@
 var EnemyUnit_8h =
 [
-    [ "AEnemyUnit", "classAEnemyUnit.html", "classAEnemyUnit" ]
+    [ "AEnemyUnit", "classAEnemyUnit.html", null ]
 ];

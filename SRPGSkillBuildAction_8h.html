@@ -97,26 +97,114 @@ $(document).ready(function(){initNavTree('SRPGSkillBuildAction_8h.html',''); ini
 </div><!--header-->
 <div class="contents">
 
+<p>스킬 생성 액션 객체 구현 헤더  
+<a href="#details">더 자세히 ...</a></p>
+
 <p><a href="SRPGSkillBuildAction_8h_source.html">이 파일의 소스 코드 페이지로 가기</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 클래스</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGSkillSelectCommand.html">FSRPGSkillSelectCommand</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGCDiceSelectCommand.html">FSRPGCDiceSelectCommand</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGDiceSelectCommand.html">FSRPGDiceSelectCommand</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGSkillBuildAction.html">FSRPGSkillBuildAction</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">스킬 생성 액션 객체  <a href="structFSRPGSkillBuildAction.html#details">더 자세히 ...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGSkillBuildAction.html">USRPGSkillBuildAction</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">스킬 생성 액션 객체  <a href="classUSRPGSkillBuildAction.html#details">더 자세히 ...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 함수</h2></td></tr>
-<tr class="memitem:ae247dffeb07dbc9e833797aa1ded4d82" id="r_ae247dffeb07dbc9e833797aa1ded4d82"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="SRPGSkillBuildAction_8h.html#ae247dffeb07dbc9e833797aa1ded4d82">DECLARE_MULTICAST_DELEGATE_TwoParams</a> (FOnChangeSkillBuildPhase, const <a class="el" href="structFSRPGSkillBuildAction.html">FSRPGSkillBuildAction</a> &amp;, <a class="el" href="SRPGFrameworkType_8h.html#a7a25848def872c63a744016efb0b665c">ESRPGSkillBuildPhase</a>)</td></tr>
-<tr class="separator:ae247dffeb07dbc9e833797aa1ded4d82"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac4131fdd580fcd55f2f1bdb5e78067cc" id="r_ac4131fdd580fcd55f2f1bdb5e78067cc"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="SRPGSkillBuildAction_8h.html#ac4131fdd580fcd55f2f1bdb5e78067cc">DECLARE_MULTICAST_DELEGATE_OneParam</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnSelectSkill</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>)</td></tr>
+<tr class="separator:ac4131fdd580fcd55f2f1bdb5e78067cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2a1d08170819ddbf98f638d0c57ff8d2" id="r_a2a1d08170819ddbf98f638d0c57ff8d2"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="SRPGSkillBuildAction_8h.html#a2a1d08170819ddbf98f638d0c57ff8d2">DECLARE_MULTICAST_DELEGATE_TwoParams</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnChangeSkillBuildPhase</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGSkillBuildAction.html">USRPGSkillBuildAction</a> *, <a class="el" href="SRPGFrameworkType_8h.html#a7a25848def872c63a744016efb0b665c">ESRPGSkillBuildPhase</a>)</td></tr>
+<tr class="separator:a2a1d08170819ddbf98f638d0c57ff8d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a66e56311aa86b7fc954316eb4cdb5229" id="r_a66e56311aa86b7fc954316eb4cdb5229"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="SRPGSkillBuildAction_8h.html#a66e56311aa86b7fc954316eb4cdb5229">DECLARE_MULTICAST_DELEGATE_OneParam</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnPostSimulateSkillAction</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFSRPGTurnEventLog.html">FSRPGTurnEventLog</a> &gt; &amp;)</td></tr>
+<tr class="separator:a66e56311aa86b7fc954316eb4cdb5229"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc1d4ee87da7b6c2b795209abab4a8e2" id="r_abc1d4ee87da7b6c2b795209abab4a8e2"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="SRPGSkillBuildAction_8h.html#abc1d4ee87da7b6c2b795209abab4a8e2">DECLARE_MULTICAST_DELEGATE</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnCancelSimulateSkillAction</a>)</td></tr>
+<tr class="separator:abc1d4ee87da7b6c2b795209abab4a8e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">함수 문서화</h2>
-<a id="ae247dffeb07dbc9e833797aa1ded4d82" name="ae247dffeb07dbc9e833797aa1ded4d82"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae247dffeb07dbc9e833797aa1ded4d82">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE_TwoParams()</h2>
+<a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
+<div class="textblock"><dl class="section author"><dt>작성자</dt><dd>모호재 </dd></dl>
+<dl class="section date"><dt>날짜</dt><dd>2026-06-04 </dd></dl>
+
+<p class="definition"><a class="el" href="SRPGSkillBuildAction_8h_source.html">SRPGSkillBuildAction.h</a> 파일에서 정의되었습니다.</p>
+</div><h2 class="groupheader">함수 문서화</h2>
+<a id="abc1d4ee87da7b6c2b795209abab4a8e2" name="abc1d4ee87da7b6c2b795209abab4a8e2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abc1d4ee87da7b6c2b795209abab4a8e2">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">DECLARE_MULTICAST_DELEGATE </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnCancelSimulateSkillAction</a>&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a66e56311aa86b7fc954316eb4cdb5229" name="a66e56311aa86b7fc954316eb4cdb5229"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a66e56311aa86b7fc954316eb4cdb5229">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE_OneParam() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">DECLARE_MULTICAST_DELEGATE_OneParam </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnPostSimulateSkillAction</a>&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFSRPGTurnEventLog.html">FSRPGTurnEventLog</a> &gt; &amp;&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ac4131fdd580fcd55f2f1bdb5e78067cc" name="ac4131fdd580fcd55f2f1bdb5e78067cc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac4131fdd580fcd55f2f1bdb5e78067cc">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE_OneParam() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">DECLARE_MULTICAST_DELEGATE_OneParam </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnSelectSkill</a>&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a2a1d08170819ddbf98f638d0c57ff8d2" name="a2a1d08170819ddbf98f638d0c57ff8d2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2a1d08170819ddbf98f638d0c57ff8d2">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE_TwoParams()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -124,13 +212,13 @@ $(document).ready(function(){initNavTree('SRPGSkillBuildAction_8h.html',''); ini
         <tr>
           <td class="memname">DECLARE_MULTICAST_DELEGATE_TwoParams </td>
           <td>(</td>
-          <td class="paramtype">FOnChangeSkillBuildPhase&#160;</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnChangeSkillBuildPhase</a>&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structFSRPGSkillBuildAction.html">FSRPGSkillBuildAction</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGSkillBuildAction.html">USRPGSkillBuildAction</a> *&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>

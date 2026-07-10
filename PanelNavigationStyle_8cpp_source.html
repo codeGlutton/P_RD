@@ -1,0 +1,189 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/UI/PanelNavigationStyle.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('PanelNavigationStyle_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">PanelNavigationStyle.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="PanelNavigationStyle_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="PanelNavigationStyle_8h.html">UI/PanelNavigationStyle.h</a>&quot;</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment">/*</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment"> * 패널(설정/주사위/스킬 등) 네비게이션의 공통 색 팔레트를 한곳에 모은다.</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="comment"> * 왜 함수로 한곳에 두는가:</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="comment"> * - 같은 색을 여러 위젯이 코드로 만들면 톤을 바꿀 때 전부 찾아다녀야 한다.</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="comment"> *   여기 함수만 고치면 모든 패널 색이 일관되게 바뀐다(디자인 토큰 역할).</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="comment"> * - 머티리얼/에디터 에셋이 아니라 코드 값인 이유: 패널 위젯 상당수가 런타임에</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="comment"> *   ConstructWidget로 생성돼 디자이너 에셋에 색을 미리 박아둘 수 없기 때문.</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="comment"> * 팔레트 컨셉: 바탕은 옅은 민트(차분한 배경), 되돌리기/선택 계열은 따뜻한 앰버(주목·구분).</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="comment">// 일반 버튼 글자색: 밝은 버튼 위에서 읽히도록 거의 검정에 가까운 짙은 톤.</span></div>
+<div class="foldopen" id="foldopen00016" data-start="{" data-end="}">
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno"><a class="line" href="namespaceRDPanelNavigationStyle.html#a7baf945f11ffe0a1cbe65d23e92ac389">   16</a></span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FLinearColor</a> <a class="code hl_function" href="namespaceRDPanelNavigationStyle.html#a7baf945f11ffe0a1cbe65d23e92ac389">RDPanelNavigationStyle::GetButtonTextColor</a>()</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>{</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FLinearColor</a>(0.05f, 0.08f, 0.08f, 1.0f);</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>}</div>
+</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span> </div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="comment">// 선택된 버튼 글자색: 앰버 강조 배경 위에서도 대비가 유지되도록 더 짙게.</span></div>
+<div class="foldopen" id="foldopen00022" data-start="{" data-end="}">
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno"><a class="line" href="namespaceRDPanelNavigationStyle.html#a6b33a1a2686501f8b1cc595a633d5036">   22</a></span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FLinearColor</a> <a class="code hl_function" href="namespaceRDPanelNavigationStyle.html#a6b33a1a2686501f8b1cc595a633d5036">RDPanelNavigationStyle::GetSelectedButtonTextColor</a>()</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>{</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FLinearColor</a>(0.05f, 0.05f, 0.04f, 1.0f);</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>}</div>
+</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span> </div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="comment">// 패널 본문 글자색: 어두운 패널 배경 위라 밝은 민트 톤으로 가독성 확보.</span></div>
+<div class="foldopen" id="foldopen00028" data-start="{" data-end="}">
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno"><a class="line" href="namespaceRDPanelNavigationStyle.html#a7630564c9898c87ecfaff4ca130c7faa">   28</a></span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FLinearColor</a> <a class="code hl_function" href="namespaceRDPanelNavigationStyle.html#a7630564c9898c87ecfaff4ca130c7faa">RDPanelNavigationStyle::GetPanelTextColor</a>()</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>{</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FLinearColor</a>(0.86f, 1.0f, 0.94f, 1.0f);</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>}</div>
+</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="comment">// 옵션(토글류) 버튼: 바탕 민트, 알파를 살짝 낮춰 네비 버튼보다 덜 강조.</span></div>
+<div class="foldopen" id="foldopen00034" data-start="{" data-end="}">
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno"><a class="line" href="namespaceRDPanelNavigationStyle.html#a13850563fe6f5c1647b364e8188a8775">   34</a></span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FLinearColor</a> <a class="code hl_function" href="namespaceRDPanelNavigationStyle.html#a13850563fe6f5c1647b364e8188a8775">RDPanelNavigationStyle::GetOptionButtonColor</a>()</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>{</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FLinearColor</a>(0.80f, 0.96f, 0.90f, 0.86f);</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>}</div>
+</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span> </div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span><span class="comment">// 화면 이동(네비게이션) 버튼: 같은 민트지만 알파를 높여 더 또렷하게.</span></div>
+<div class="foldopen" id="foldopen00040" data-start="{" data-end="}">
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno"><a class="line" href="namespaceRDPanelNavigationStyle.html#a6ca08878d81181a07d80a2db603b37dc">   40</a></span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FLinearColor</a> <a class="code hl_function" href="namespaceRDPanelNavigationStyle.html#a6ca08878d81181a07d80a2db603b37dc">RDPanelNavigationStyle::GetNavigationButtonColor</a>()</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>{</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FLinearColor</a>(0.80f, 0.96f, 0.90f, 0.94f);</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>}</div>
+</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="comment">// 뒤로가기/취소: 진행 계열과 한눈에 구분되도록 따뜻한 앰버.</span></div>
+<div class="foldopen" id="foldopen00046" data-start="{" data-end="}">
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno"><a class="line" href="namespaceRDPanelNavigationStyle.html#ab95ec8761726b428050c110f02b4d62c">   46</a></span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FLinearColor</a> <a class="code hl_function" href="namespaceRDPanelNavigationStyle.html#ab95ec8761726b428050c110f02b4d62c">RDPanelNavigationStyle::GetBackButtonColor</a>()</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>{</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>    <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FLinearColor</a>(0.94f, 0.84f, 0.56f, 0.96f);</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>}</div>
+</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span> </div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span><span class="comment">// 현재 선택 항목 강조: 뒤로가기와 같은 앰버 계열로 &quot;활성&quot; 상태를 표시.</span></div>
+<div class="foldopen" id="foldopen00052" data-start="{" data-end="}">
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno"><a class="line" href="namespaceRDPanelNavigationStyle.html#a69a85e2e2f52f1a9768cfb3557973bfd">   52</a></span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FLinearColor</a> <a class="code hl_function" href="namespaceRDPanelNavigationStyle.html#a69a85e2e2f52f1a9768cfb3557973bfd">RDPanelNavigationStyle::GetSelectedButtonColor</a>()</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>{</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FLinearColor</a>(0.94f, 0.84f, 0.56f, 0.98f);</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>}</div>
+</div>
+<div class="ttc" id="aPanelNavigationStyle_8h_html"><div class="ttname"><a href="PanelNavigationStyle_8h.html">PanelNavigationStyle.h</a></div><div class="ttdoc">메뉴 패널들이 같이 쓰는 색 모음입니다.</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="anamespaceRDPanelNavigationStyle_html_a13850563fe6f5c1647b364e8188a8775"><div class="ttname"><a href="namespaceRDPanelNavigationStyle.html#a13850563fe6f5c1647b364e8188a8775">RDPanelNavigationStyle::GetOptionButtonColor</a></div><div class="ttdeci">P_RD_API FLinearColor GetOptionButtonColor()</div><div class="ttdoc">설정 옵션 버튼의 배경색입니다.</div><div class="ttdef"><b>Definition</b> <a href="PanelNavigationStyle_8cpp_source.html#l00034">PanelNavigationStyle.cpp:34</a></div></div>
+<div class="ttc" id="anamespaceRDPanelNavigationStyle_html_a69a85e2e2f52f1a9768cfb3557973bfd"><div class="ttname"><a href="namespaceRDPanelNavigationStyle.html#a69a85e2e2f52f1a9768cfb3557973bfd">RDPanelNavigationStyle::GetSelectedButtonColor</a></div><div class="ttdeci">P_RD_API FLinearColor GetSelectedButtonColor()</div><div class="ttdoc">선택 강조된 버튼의 배경색입니다.</div><div class="ttdef"><b>Definition</b> <a href="PanelNavigationStyle_8cpp_source.html#l00052">PanelNavigationStyle.cpp:52</a></div></div>
+<div class="ttc" id="anamespaceRDPanelNavigationStyle_html_a6b33a1a2686501f8b1cc595a633d5036"><div class="ttname"><a href="namespaceRDPanelNavigationStyle.html#a6b33a1a2686501f8b1cc595a633d5036">RDPanelNavigationStyle::GetSelectedButtonTextColor</a></div><div class="ttdeci">P_RD_API FLinearColor GetSelectedButtonTextColor()</div><div class="ttdoc">현재 선택된 버튼의 글자색입니다.</div><div class="ttdef"><b>Definition</b> <a href="PanelNavigationStyle_8cpp_source.html#l00022">PanelNavigationStyle.cpp:22</a></div></div>
+<div class="ttc" id="anamespaceRDPanelNavigationStyle_html_a6ca08878d81181a07d80a2db603b37dc"><div class="ttname"><a href="namespaceRDPanelNavigationStyle.html#a6ca08878d81181a07d80a2db603b37dc">RDPanelNavigationStyle::GetNavigationButtonColor</a></div><div class="ttdeci">P_RD_API FLinearColor GetNavigationButtonColor()</div><div class="ttdoc">화면 이동(네비게이션) 버튼의 배경색입니다.</div><div class="ttdef"><b>Definition</b> <a href="PanelNavigationStyle_8cpp_source.html#l00040">PanelNavigationStyle.cpp:40</a></div></div>
+<div class="ttc" id="anamespaceRDPanelNavigationStyle_html_a7630564c9898c87ecfaff4ca130c7faa"><div class="ttname"><a href="namespaceRDPanelNavigationStyle.html#a7630564c9898c87ecfaff4ca130c7faa">RDPanelNavigationStyle::GetPanelTextColor</a></div><div class="ttdeci">P_RD_API FLinearColor GetPanelTextColor()</div><div class="ttdoc">패널 본문 텍스트색입니다.</div><div class="ttdef"><b>Definition</b> <a href="PanelNavigationStyle_8cpp_source.html#l00028">PanelNavigationStyle.cpp:28</a></div></div>
+<div class="ttc" id="anamespaceRDPanelNavigationStyle_html_a7baf945f11ffe0a1cbe65d23e92ac389"><div class="ttname"><a href="namespaceRDPanelNavigationStyle.html#a7baf945f11ffe0a1cbe65d23e92ac389">RDPanelNavigationStyle::GetButtonTextColor</a></div><div class="ttdeci">P_RD_API FLinearColor GetButtonTextColor()</div><div class="ttdoc">일반 버튼의 글자색입니다.</div><div class="ttdef"><b>Definition</b> <a href="PanelNavigationStyle_8cpp_source.html#l00016">PanelNavigationStyle.cpp:16</a></div></div>
+<div class="ttc" id="anamespaceRDPanelNavigationStyle_html_ab95ec8761726b428050c110f02b4d62c"><div class="ttname"><a href="namespaceRDPanelNavigationStyle.html#ab95ec8761726b428050c110f02b4d62c">RDPanelNavigationStyle::GetBackButtonColor</a></div><div class="ttdeci">P_RD_API FLinearColor GetBackButtonColor()</div><div class="ttdoc">뒤로 가기 버튼의 배경색입니다.</div><div class="ttdef"><b>Definition</b> <a href="PanelNavigationStyle_8cpp_source.html#l00046">PanelNavigationStyle.cpp:46</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_18e329638b0f3372047d81882ea0cdaf.html">UI</a></li><li class="navelem"><a class="el" href="PanelNavigationStyle_8cpp.html">PanelNavigationStyle.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

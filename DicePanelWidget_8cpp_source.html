@@ -100,182 +100,133 @@ $(document).ready(function(){initNavTree('DicePanelWidget_8cpp_source.html','');
 <div class="contents">
 <a href="DicePanelWidget_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="DicePanelWidget_8h.html">UI/DicePanelWidget.h</a>&quot;</span></div>
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
-<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &quot;Components/Widget.h&quot;</span></div>
-<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &quot;InputCoreTypes.h&quot;</span></div>
-<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span> </div>
-<div class="foldopen" id="foldopen00006" data-start="{" data-end="}">
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno"><a class="line" href="classUDicePanelWidget.html#a5866b4f741cc7292e16e12b0658c8dbe">    6</a></span><a class="code hl_function" href="classUDicePanelWidget.html#a5866b4f741cc7292e16e12b0658c8dbe">UDicePanelWidget::UDicePanelWidget</a>(<span class="keyword">const</span> FObjectInitializer&amp; ObjectInitializer)</div>
-<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span>    : Super(ObjectInitializer)</div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span>{</div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span>}</div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &quot;Components/Button.h&quot;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span> </div>
+<div class="foldopen" id="foldopen00005" data-start="{" data-end="}">
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno"><a class="line" href="classUDicePanelWidget.html#a5866b4f741cc7292e16e12b0658c8dbe">    5</a></span><a class="code hl_function" href="classUDicePanelWidget.html#a5866b4f741cc7292e16e12b0658c8dbe">UDicePanelWidget::UDicePanelWidget</a>(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FObjectInitializer</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ObjectInitializer</a>)</div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span>    : <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Super</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ObjectInitializer</a>)</div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span>{</div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span>    <span class="comment">// 이 에셋은 SVN 미연동 환경 등에서 파일이 없을 수 있으므로 LoadObject로 안전하게 로드합니다.</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span>    mDicePanelCardTexture = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">LoadObject&lt;UTexture2D&gt;</a>(<span class="keyword">nullptr</span>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;/Game/SVN/OutSideAsset/AICreation/UI/Common/T_UI_Dice_Slot_Empty.T_UI_Dice_Slot_Empty&quot;</span>));</div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>}</div>
 </div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
-<div class="foldopen" id="foldopen00018" data-start="{" data-end="}">
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno"><a class="line" href="classUDicePanelWidget.html#a9eeb0e1760fef0054ccdce4e0894d3ec">   18</a></span>FReply <a class="code hl_function" href="classUDicePanelWidget.html#a9eeb0e1760fef0054ccdce4e0894d3ec">UDicePanelWidget::NativeOnMouseButtonDown</a>(<span class="keyword">const</span> FGeometry&amp; InGeometry, <span class="keyword">const</span> FPointerEvent&amp; InMouseEvent)</div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>{</div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    <span class="keywordflow">if</span> (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton)</div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    {</div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>        <span class="keywordflow">return</span> Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);</div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    }</div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    <span class="keywordflow">if</span> (!StartDiceDrag(InMouseEvent.GetScreenSpacePosition()))</div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    {</div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>        <span class="keywordflow">return</span> Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);</div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    }</div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> </div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    <span class="keywordflow">return</span> FReply::Handled().CaptureMouse(TakeWidget());</div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>}</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span> </div>
+<div class="foldopen" id="foldopen00012" data-start="{" data-end="}">
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno"><a class="line" href="classUDicePanelWidget.html#aee7eaea24e8aec5f993565bff38bd981">   12</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUDicePanelWidget.html#aee7eaea24e8aec5f993565bff38bd981">UDicePanelWidget::NativeConstruct</a>()</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>{</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    Super::NativeConstruct();</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>}</div>
 </div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span> </div>
+<div class="foldopen" id="foldopen00017" data-start="{" data-end="}">
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno"><a class="line" href="classUDicePanelWidget.html#a3624b2e0f2e4173ecb277b024d679ce9">   17</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUDicePanelWidget.html#a3624b2e0f2e4173ecb277b024d679ce9">UDicePanelWidget::NativeDestruct</a>()</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>{</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    <span class="keywordflow">if</span> (mDiceCarouselPreviousButton != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    {</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>        mDiceCarouselPreviousButton-&gt;OnClicked.RemoveDynamic(<span class="keyword">this</span>, &amp;UDicePanelWidget::HandleDiceCarouselPreviousButtonClicked);</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    }</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    <span class="keywordflow">if</span> (mDiceCarouselNextButton != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    {</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>        mDiceCarouselNextButton-&gt;OnClicked.RemoveDynamic(<span class="keyword">this</span>, &amp;UDicePanelWidget::HandleDiceCarouselNextButtonClicked);</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    }</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    <span class="keywordflow">if</span> (mDiceCarouselBackButton != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    {</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>        mDiceCarouselBackButton-&gt;OnClicked.RemoveDynamic(<span class="keyword">this</span>, &amp;UDicePanelWidget::HandleDiceCarouselBackButtonClicked);</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    }</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    UnbindDiceCarouselFaceButtons();</div>
 <div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
-<div class="foldopen" id="foldopen00040" data-start="{" data-end="}">
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno"><a class="line" href="classUDicePanelWidget.html#a1f963dce5cbcab6de207833e2626e65b">   40</a></span>FReply <a class="code hl_function" href="classUDicePanelWidget.html#a1f963dce5cbcab6de207833e2626e65b">UDicePanelWidget::NativeOnMouseButtonUp</a>(<span class="keyword">const</span> FGeometry&amp; InGeometry, <span class="keyword">const</span> FPointerEvent&amp; InMouseEvent)</div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>{</div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    <span class="keywordflow">if</span> (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton)</div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>    {</div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>        <span class="keywordflow">return</span> Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);</div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>    }</div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span> </div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>    <span class="keywordflow">if</span> (!mDraggingDice)</div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>    {</div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>        <span class="keywordflow">return</span> Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);</div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    }</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    DestroyDicePanelCaptureActors();</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    Super::NativeDestruct();</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>}</div>
+</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span> </div>
+<div class="foldopen" id="foldopen00038" data-start="{" data-end="}">
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno"><a class="line" href="classUDicePanelWidget.html#a3da6974524a13d23179e50dd16d04144">   38</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUDicePanelWidget.html#a3da6974524a13d23179e50dd16d04144">UDicePanelWidget::NativeTick</a>(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGeometry</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MyGeometry</a>, <span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InDeltaTime</a>)</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>{</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>    Super::NativeTick(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MyGeometry</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InDeltaTime</a>);</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span> </div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    TickDicePanelFaceRotation(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InDeltaTime</a>);</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    <span class="keywordflow">if</span> (mPendingDicePanelCaptureIndex != <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">INDEX_NONE</a>)</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>    {</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>        <span class="keyword">const</span> <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CaptureIndex</a> = mPendingDicePanelCaptureIndex;</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>        mPendingDicePanelCaptureIndex = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">INDEX_NONE</a>;</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>        CaptureDicePanelPreviewActor(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CaptureIndex</a>);</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    }</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>}</div>
+</div>
 <div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span> </div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    FinishDiceDrag();</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    <span class="keywordflow">return</span> FReply::Handled().ReleaseMouseCapture();</div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>}</div>
-</div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span> </div>
-<div class="foldopen" id="foldopen00063" data-start="{" data-end="}">
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno"><a class="line" href="classUDicePanelWidget.html#a2738d0333e2343bfc64ab845ddc18eb9">   63</a></span>FReply <a class="code hl_function" href="classUDicePanelWidget.html#a2738d0333e2343bfc64ab845ddc18eb9">UDicePanelWidget::NativeOnMouseMove</a>(<span class="keyword">const</span> FGeometry&amp; InGeometry, <span class="keyword">const</span> FPointerEvent&amp; InMouseEvent)</div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>{</div>
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    <span class="keywordflow">if</span> (!mDraggingDice)</div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>    {</div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>        <span class="keywordflow">return</span> Super::NativeOnMouseMove(InGeometry, InMouseEvent);</div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>    }</div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span> </div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>    UpdateDiceDrag(InMouseEvent.GetScreenSpacePosition());</div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>    <span class="keywordflow">return</span> FReply::Handled();</div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>}</div>
-</div>
+<div class="foldopen" id="foldopen00052" data-start="{" data-end="}">
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno"><a class="line" href="classUDicePanelWidget.html#ae85f0d9484994a60a01cc0e953b829ec">   52</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUDicePanelWidget.html#ae85f0d9484994a60a01cc0e953b829ec">UDicePanelWidget::ApplyOpenUI</a>()</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>{</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    RefreshDicePanelViews();</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    mDicePanelCarouselActivated = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    mSelectedDicePanelIndex = mDicePanelViews.IsEmpty() ? <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">INDEX_NONE</a> : 0;</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    mPressedDicePanelIndex = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">INDEX_NONE</a>;</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>    mDicePanelPressPosition = FVector2D::ZeroVector;</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    mPendingDicePanelCaptureIndex = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">INDEX_NONE</a>;</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>    mDicePanelPreviewRotations.SetNum(DicePanelSlotCount);</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>    mDicePanelTargetPreviewRotations.SetNum(DicePanelSlotCount);</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    mDicePanelPreviewRotationAnimations.SetNum(DicePanelSlotCount);</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>    mDicePanelSelectedFaceValues.SetNum(DicePanelSlotCount);</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>    <span class="keywordflow">for</span> (<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceIndex</a> = 0; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceIndex</a> &lt; DicePanelSlotCount; ++<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceIndex</a>)</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    {</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>        mDicePanelPreviewRotations[<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceIndex</a>] = GetDicePanelIdleRotation(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceIndex</a>).Quaternion();</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>        mDicePanelTargetPreviewRotations[<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceIndex</a>] = mDicePanelPreviewRotations[<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceIndex</a>];</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>        mDicePanelPreviewRotationAnimations[<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceIndex</a>] = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>        mDicePanelSelectedFaceValues[<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceIndex</a>] = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">INDEX_NONE</a>;</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>    }</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span> </div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    Super::ApplyOpenUI();</div>
 <div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span> </div>
-<div class="foldopen" id="foldopen00077" data-start="{" data-end="}">
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno"><a class="line" href="classUDicePanelWidget.html#a0b6e8f2ccc52f195eafd4b0b0995fcc6">   77</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUDicePanelWidget.html#a0b6e8f2ccc52f195eafd4b0b0995fcc6">UDicePanelWidget::NativeOnMouseLeave</a>(<span class="keyword">const</span> FPointerEvent&amp; InMouseEvent)</div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>{</div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    FinishDiceDrag();</div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    Super::NativeOnMouseLeave(InMouseEvent);</div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>}</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>    <span class="comment">/*</span></div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span><span class="comment">     * 기존 WBP의 2D 카드 슬롯은 숨기고, 루트 캔버스 위에 3D 주사위 캡처 이미지를 새로 올린다.</span></div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span><span class="comment">     * 2D 숫자 카드용 크기/터치 판정에 그대로 끼워 넣으면 주사위가 잘리거나 입력이 어긋나기 때문이다.</span></div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="comment">     */</span></div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    EnsureDicePanelPreviewWidgets();</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    EnsureDiceCarouselControlWidgets();</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    RefreshDicePanelWidgets();</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>    RefreshDiceCarouselControlWidgets();</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>}</div>
 </div>
-<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span> </div>
-<div class="foldopen" id="foldopen00086" data-start="{" data-end="}">
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno"><a class="line" href="classUDicePanelWidget.html#aa337fc915857117fe7f66efb34a0bfc3">   86</a></span>FReply <a class="code hl_function" href="classUDicePanelWidget.html#aa337fc915857117fe7f66efb34a0bfc3">UDicePanelWidget::NativeOnTouchStarted</a>(<span class="keyword">const</span> FGeometry&amp; InGeometry, <span class="keyword">const</span> FPointerEvent&amp; InGestureEvent)</div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>{</div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>    <span class="keywordflow">if</span> (!StartDiceDrag(InGestureEvent.GetScreenSpacePosition()))</div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    {</div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>        <span class="keywordflow">return</span> Super::NativeOnTouchStarted(InGeometry, InGestureEvent);</div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>    }</div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span> </div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>    <span class="keywordflow">return</span> FReply::Handled();</div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>}</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span> </div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span><span class="comment">// 부모 캐러셀의 2D 카드 회전을 쓰면 3D 주사위가 아니라 이미지 사각형이 기울어져 보인다.</span></div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span><span class="comment">// 그래서 이 패널에서는 캐러셀 카드 각도는 0으로 고정하고, 실제 주사위 액터 회전만 별도로 갱신한다.</span></div>
+<div class="foldopen" id="foldopen00087" data-start="{" data-end="}">
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno"><a class="line" href="classUDicePanelWidget.html#affd7e5daf9c67334b2a0538f9c141508">   87</a></span><span class="keywordtype">float</span> <a class="code hl_function" href="classUDicePanelWidget.html#affd7e5daf9c67334b2a0538f9c141508">UDicePanelWidget::GetCarouselItemAngle</a>(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ItemIndex</a>)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    <span class="keywordflow">return</span> 0.0f;</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>}</div>
 </div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span> </div>
-<div class="foldopen" id="foldopen00099" data-start="{" data-end="}">
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno"><a class="line" href="classUDicePanelWidget.html#a6cb64576760aa506c78537fd49057183">   99</a></span>FReply <a class="code hl_function" href="classUDicePanelWidget.html#a6cb64576760aa506c78537fd49057183">UDicePanelWidget::NativeOnTouchMoved</a>(<span class="keyword">const</span> FGeometry&amp; InGeometry, <span class="keyword">const</span> FPointerEvent&amp; InGestureEvent)</div>
-<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>{</div>
-<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>    <span class="keywordflow">if</span> (!mDraggingDice)</div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>    {</div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>        <span class="keywordflow">return</span> Super::NativeOnTouchMoved(InGeometry, InGestureEvent);</div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    }</div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span> </div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>    UpdateDiceDrag(InGestureEvent.GetScreenSpacePosition());</div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    <span class="keywordflow">return</span> FReply::Handled();</div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>}</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span> </div>
+<div class="foldopen" id="foldopen00092" data-start="{" data-end="}">
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno"><a class="line" href="classUDicePanelWidget.html#a0fa39054e921f5a37093265b18e01a66">   92</a></span><a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="classUDicePanelWidget.html#a0fa39054e921f5a37093265b18e01a66">UDicePanelWidget::GetCarouselItemDisplayCount</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>    <span class="keywordflow">return</span> FMath::Min(mDicePanelViews.Num(), DicePanelSlotCount);</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>}</div>
 </div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span> </div>
-<div class="foldopen" id="foldopen00113" data-start="{" data-end="}">
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno"><a class="line" href="classUDicePanelWidget.html#ac02ae8f76e3c7261c2d263421ea7e051">  113</a></span>FReply <a class="code hl_function" href="classUDicePanelWidget.html#ac02ae8f76e3c7261c2d263421ea7e051">UDicePanelWidget::NativeOnTouchEnded</a>(<span class="keyword">const</span> FGeometry&amp; InGeometry, <span class="keyword">const</span> FPointerEvent&amp; InGestureEvent)</div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>{</div>
-<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>    <span class="keywordflow">if</span> (!mDraggingDice)</div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>    {</div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>        <span class="keywordflow">return</span> Super::NativeOnTouchEnded(InGeometry, InGestureEvent);</div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>    }</div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span> </div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    FinishDiceDrag();</div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>    <span class="keywordflow">return</span> FReply::Handled();</div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>}</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span> </div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span><span class="comment">// 현재 선택 index에 따라 큰 주사위/좌우 주사위 배치가 달라지므로,</span></div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span><span class="comment">// 선택 변경 시 런타임 Image 위치와 RenderTarget 캡처를 함께 갱신한다.</span></div>
+<div class="foldopen" id="foldopen00100" data-start="{" data-end="}">
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno"><a class="line" href="classUDicePanelWidget.html#ae8c97d7201ce78b013664c648330ec46">  100</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUDicePanelWidget.html#ae8c97d7201ce78b013664c648330ec46">UDicePanelWidget::HandleCarouselSelectionChanged</a>(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PreviousIndex</a>, <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewIndex</a>)</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>{</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>    RefreshDicePanelWidgets();</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>    RefreshDicePanelPreviewActors();</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>}</div>
 </div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span> </div>
-<div class="foldopen" id="foldopen00131" data-start="{" data-end="}">
-<div class="line"><a id="l00131" name="l00131"></a><span class="lineno"><a class="line" href="classUDicePanelWidget.html#affd7e5daf9c67334b2a0538f9c141508">  131</a></span><span class="keywordtype">float</span> <a class="code hl_function" href="classUDicePanelWidget.html#affd7e5daf9c67334b2a0538f9c141508">UDicePanelWidget::GetCarouselItemAngle</a>(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> ItemIndex)<span class="keyword"> const</span></div>
-<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span><span class="keyword"></span>{</div>
-<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>    <span class="keywordflow">return</span> ItemIndex == <a class="code hl_function" href="classUCarouselPanelWidget.html#a0dcca97b8f1b82315c0866110eadcbd2">GetSelectedCarouselIndex</a>() ? mDiceAngle : 0.0f;</div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>}</div>
-</div>
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span> </div>
-<div class="foldopen" id="foldopen00143" data-start="{" data-end="}">
-<div class="line"><a id="l00143" name="l00143"></a><span class="lineno"><a class="line" href="classUDicePanelWidget.html#ae8c97d7201ce78b013664c648330ec46">  143</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUDicePanelWidget.html#ae8c97d7201ce78b013664c648330ec46">UDicePanelWidget::HandleCarouselSelectionChanged</a>(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> PreviousIndex, <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> NewIndex)</div>
-<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>{</div>
-<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>    mDiceAngle = 0.0f;</div>
-<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>}</div>
-</div>
-<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span> </div>
-<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span><span class="keywordtype">bool</span> UDicePanelWidget::StartDiceDrag(<span class="keyword">const</span> FVector2D&amp; ScreenPosition)</div>
-<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>{</div>
-<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>    <span class="keywordflow">if</span> (!<a class="code hl_function" href="classUCarouselPanelWidget.html#af2cdd16271c4b67c447691b92ff113bf">IsCarouselActivated</a>() || !<a class="code hl_function" href="classUCarouselPanelWidget.html#a8fd88cec08f9ddf29d4b3595dabc258e">IsPointerOverSelectedCarouselItem</a>(ScreenPosition))</div>
-<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>    {</div>
-<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>    }</div>
-<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span> </div>
-<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>    mDraggingDice = <span class="keyword">true</span>;</div>
-<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>    mLastPointerPosition = ScreenPosition;</div>
-<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>}</div>
-<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span> </div>
-<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span><span class="keywordtype">void</span> UDicePanelWidget::UpdateDiceDrag(<span class="keyword">const</span> FVector2D&amp; ScreenPosition)</div>
-<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>{</div>
-<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>    <span class="keywordflow">if</span> (!mDraggingDice)</div>
-<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>    {</div>
-<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>        <span class="keywordflow">return</span>;</div>
-<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>    }</div>
-<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span> </div>
-<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>    <span class="keyword">const</span> FVector2D Delta = ScreenPosition - mLastPointerPosition;</div>
-<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>    <span class="keywordflow">if</span> (!Delta.IsNearlyZero())</div>
-<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>    {</div>
-<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>        mDiceAngle = FMath::Fmod(mDiceAngle + Delta.X * 1.25f + Delta.Y * 0.85f, 360.0f);</div>
-<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>        ApplyDiceRotation();</div>
-<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>    }</div>
-<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span> </div>
-<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>    mLastPointerPosition = ScreenPosition;</div>
-<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>}</div>
-<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span> </div>
-<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span><span class="keywordtype">void</span> UDicePanelWidget::FinishDiceDrag()</div>
-<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>{</div>
-<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>    mDraggingDice = <span class="keyword">false</span>;</div>
-<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>}</div>
-<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span> </div>
-<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span><span class="keywordtype">void</span> UDicePanelWidget::ApplyDiceRotation()<span class="keyword"> const</span></div>
-<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span><span class="keyword"></span>{</div>
-<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>    <span class="keywordflow">if</span> (UWidget* SelectedItem = <a class="code hl_function" href="classUCarouselPanelWidget.html#ac31594045ae5f8570d4891bc7d978eda">GetSelectedCarouselItem</a>())</div>
-<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>    {</div>
-<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>        SelectedItem-&gt;SetRenderTransformPivot(FVector2D(0.5f, 0.5f));</div>
-<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>        SelectedItem-&gt;SetRenderTransformAngle(mDiceAngle);</div>
-<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>    }</div>
-<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>}</div>
-<div class="ttc" id="aDicePanelWidget_8h_html"><div class="ttname"><a href="DicePanelWidget_8h.html">DicePanelWidget.h</a></div><div class="ttdoc">인게임 탑바 주사위 버튼으로 여는 임시 주사위 패널.</div></div>
+<div class="ttc" id="aDicePanelWidget_8h_html"><div class="ttname"><a href="DicePanelWidget_8h.html">DicePanelWidget.h</a></div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
 <div class="ttc" id="aRoomTransitionSubsystem_8h_html_ada104807b93ac7cd59dac80d98ba857b"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a></div><div class="ttdeci">int32</div><div class="ttdef"><b>Definition</b> <a href="RoomTransitionSubsystem_8h_source.html#l00021">RoomTransitionSubsystem.h:21</a></div></div>
-<div class="ttc" id="aclassUCarouselPanelWidget_html_a0dcca97b8f1b82315c0866110eadcbd2"><div class="ttname"><a href="classUCarouselPanelWidget.html#a0dcca97b8f1b82315c0866110eadcbd2">UCarouselPanelWidget::GetSelectedCarouselIndex</a></div><div class="ttdeci">int32 GetSelectedCarouselIndex() const</div><div class="ttdoc">현재 선택된 카드 인덱스를 반환한다.</div><div class="ttdef"><b>Definition</b> <a href="CarouselPanelWidget_8cpp_source.html#l00169">CarouselPanelWidget.cpp:169</a></div></div>
-<div class="ttc" id="aclassUCarouselPanelWidget_html_a8fd88cec08f9ddf29d4b3595dabc258e"><div class="ttname"><a href="classUCarouselPanelWidget.html#a8fd88cec08f9ddf29d4b3595dabc258e">UCarouselPanelWidget::IsPointerOverSelectedCarouselItem</a></div><div class="ttdeci">bool IsPointerOverSelectedCarouselItem(const FVector2D &amp;ScreenPosition) const</div><div class="ttdoc">지정 화면 좌표가 현재 선택된 카드 위인지 확인한다.</div><div class="ttdef"><b>Definition</b> <a href="CarouselPanelWidget_8cpp_source.html#l00189">CarouselPanelWidget.cpp:189</a></div></div>
-<div class="ttc" id="aclassUCarouselPanelWidget_html_ac31594045ae5f8570d4891bc7d978eda"><div class="ttname"><a href="classUCarouselPanelWidget.html#ac31594045ae5f8570d4891bc7d978eda">UCarouselPanelWidget::GetSelectedCarouselItem</a></div><div class="ttdeci">UWidget * GetSelectedCarouselItem() const</div><div class="ttdoc">현재 선택된 카드 위젯을 반환한다.</div><div class="ttdef"><b>Definition</b> <a href="CarouselPanelWidget_8cpp_source.html#l00177">CarouselPanelWidget.cpp:177</a></div></div>
-<div class="ttc" id="aclassUCarouselPanelWidget_html_af2cdd16271c4b67c447691b92ff113bf"><div class="ttname"><a href="classUCarouselPanelWidget.html#af2cdd16271c4b67c447691b92ff113bf">UCarouselPanelWidget::IsCarouselActivated</a></div><div class="ttdeci">bool IsCarouselActivated() const</div><div class="ttdoc">사용자가 카드를 선택해 원형 캐러셀 배치로 전환된 상태인지 확인한다.</div><div class="ttdef"><b>Definition</b> <a href="CarouselPanelWidget_8cpp_source.html#l00161">CarouselPanelWidget.cpp:161</a></div></div>
-<div class="ttc" id="aclassUDicePanelWidget_html_a0b6e8f2ccc52f195eafd4b0b0995fcc6"><div class="ttname"><a href="classUDicePanelWidget.html#a0b6e8f2ccc52f195eafd4b0b0995fcc6">UDicePanelWidget::NativeOnMouseLeave</a></div><div class="ttdeci">void NativeOnMouseLeave(const FPointerEvent &amp;InMouseEvent) override</div><div class="ttdoc">포인터가 패널 밖으로 나가면 드래그 상태를 정리한다.</div><div class="ttdef"><b>Definition</b> <a href="DicePanelWidget_8cpp_source.html#l00077">DicePanelWidget.cpp:77</a></div></div>
-<div class="ttc" id="aclassUDicePanelWidget_html_a1f963dce5cbcab6de207833e2626e65b"><div class="ttname"><a href="classUDicePanelWidget.html#a1f963dce5cbcab6de207833e2626e65b">UDicePanelWidget::NativeOnMouseButtonUp</a></div><div class="ttdeci">FReply NativeOnMouseButtonUp(const FGeometry &amp;InGeometry, const FPointerEvent &amp;InMouseEvent) override</div><div class="ttdoc">PC/에디터 마우스 뗌으로 선택 주사위 드래그를 종료한다.</div><div class="ttdef"><b>Definition</b> <a href="DicePanelWidget_8cpp_source.html#l00040">DicePanelWidget.cpp:40</a></div></div>
-<div class="ttc" id="aclassUDicePanelWidget_html_a2738d0333e2343bfc64ab845ddc18eb9"><div class="ttname"><a href="classUDicePanelWidget.html#a2738d0333e2343bfc64ab845ddc18eb9">UDicePanelWidget::NativeOnMouseMove</a></div><div class="ttdeci">FReply NativeOnMouseMove(const FGeometry &amp;InGeometry, const FPointerEvent &amp;InMouseEvent) override</div><div class="ttdoc">PC/에디터 마우스 이동량을 선택 주사위 회전으로 반영한다.</div><div class="ttdef"><b>Definition</b> <a href="DicePanelWidget_8cpp_source.html#l00063">DicePanelWidget.cpp:63</a></div></div>
-<div class="ttc" id="aclassUDicePanelWidget_html_a5866b4f741cc7292e16e12b0658c8dbe"><div class="ttname"><a href="classUDicePanelWidget.html#a5866b4f741cc7292e16e12b0658c8dbe">UDicePanelWidget::UDicePanelWidget</a></div><div class="ttdeci">UDicePanelWidget(const FObjectInitializer &amp;ObjectInitializer=FObjectInitializer::Get())</div><div class="ttdoc">주사위 패널 기본 객체를 생성한다.</div><div class="ttdef"><b>Definition</b> <a href="DicePanelWidget_8cpp_source.html#l00006">DicePanelWidget.cpp:6</a></div></div>
-<div class="ttc" id="aclassUDicePanelWidget_html_a6cb64576760aa506c78537fd49057183"><div class="ttname"><a href="classUDicePanelWidget.html#a6cb64576760aa506c78537fd49057183">UDicePanelWidget::NativeOnTouchMoved</a></div><div class="ttdeci">FReply NativeOnTouchMoved(const FGeometry &amp;InGeometry, const FPointerEvent &amp;InGestureEvent) override</div><div class="ttdoc">모바일 터치 이동량을 선택 주사위 회전으로 반영한다.</div><div class="ttdef"><b>Definition</b> <a href="DicePanelWidget_8cpp_source.html#l00099">DicePanelWidget.cpp:99</a></div></div>
-<div class="ttc" id="aclassUDicePanelWidget_html_a9eeb0e1760fef0054ccdce4e0894d3ec"><div class="ttname"><a href="classUDicePanelWidget.html#a9eeb0e1760fef0054ccdce4e0894d3ec">UDicePanelWidget::NativeOnMouseButtonDown</a></div><div class="ttdeci">FReply NativeOnMouseButtonDown(const FGeometry &amp;InGeometry, const FPointerEvent &amp;InMouseEvent) override</div><div class="ttdoc">PC/에디터 마우스 누름으로 선택 주사위 드래그를 시작한다.</div><div class="ttdef"><b>Definition</b> <a href="DicePanelWidget_8cpp_source.html#l00018">DicePanelWidget.cpp:18</a></div></div>
-<div class="ttc" id="aclassUDicePanelWidget_html_aa337fc915857117fe7f66efb34a0bfc3"><div class="ttname"><a href="classUDicePanelWidget.html#aa337fc915857117fe7f66efb34a0bfc3">UDicePanelWidget::NativeOnTouchStarted</a></div><div class="ttdeci">FReply NativeOnTouchStarted(const FGeometry &amp;InGeometry, const FPointerEvent &amp;InGestureEvent) override</div><div class="ttdoc">모바일 터치 시작으로 선택 주사위 드래그를 시작한다.</div><div class="ttdef"><b>Definition</b> <a href="DicePanelWidget_8cpp_source.html#l00086">DicePanelWidget.cpp:86</a></div></div>
-<div class="ttc" id="aclassUDicePanelWidget_html_ac02ae8f76e3c7261c2d263421ea7e051"><div class="ttname"><a href="classUDicePanelWidget.html#ac02ae8f76e3c7261c2d263421ea7e051">UDicePanelWidget::NativeOnTouchEnded</a></div><div class="ttdeci">FReply NativeOnTouchEnded(const FGeometry &amp;InGeometry, const FPointerEvent &amp;InGestureEvent) override</div><div class="ttdoc">모바일 터치 종료로 선택 주사위 드래그를 끝낸다.</div><div class="ttdef"><b>Definition</b> <a href="DicePanelWidget_8cpp_source.html#l00113">DicePanelWidget.cpp:113</a></div></div>
-<div class="ttc" id="aclassUDicePanelWidget_html_ae8c97d7201ce78b013664c648330ec46"><div class="ttname"><a href="classUDicePanelWidget.html#ae8c97d7201ce78b013664c648330ec46">UDicePanelWidget::HandleCarouselSelectionChanged</a></div><div class="ttdeci">void HandleCarouselSelectionChanged(int32 PreviousIndex, int32 NewIndex) override</div><div class="ttdoc">선택 카드가 바뀌면 이전 카드의 임시 회전 상태를 초기화한다.</div><div class="ttdef"><b>Definition</b> <a href="DicePanelWidget_8cpp_source.html#l00143">DicePanelWidget.cpp:143</a></div></div>
-<div class="ttc" id="aclassUDicePanelWidget_html_affd7e5daf9c67334b2a0538f9c141508"><div class="ttname"><a href="classUDicePanelWidget.html#affd7e5daf9c67334b2a0538f9c141508">UDicePanelWidget::GetCarouselItemAngle</a></div><div class="ttdeci">float GetCarouselItemAngle(int32 ItemIndex) const override</div><div class="ttdoc">선택된 카드에만 현재 주사위 회전 각도를 반환한다.</div><div class="ttdef"><b>Definition</b> <a href="DicePanelWidget_8cpp_source.html#l00131">DicePanelWidget.cpp:131</a></div></div>
+<div class="ttc" id="aclassUDicePanelWidget_html_a0fa39054e921f5a37093265b18e01a66"><div class="ttname"><a href="classUDicePanelWidget.html#a0fa39054e921f5a37093265b18e01a66">UDicePanelWidget::GetCarouselItemDisplayCount</a></div><div class="ttdeci">int32 GetCarouselItemDisplayCount() const override</div><div class="ttdoc">WBP 목업 6개가 아니라 현재 보유 주사위 개수만 캐러셀 카드로 사용한다.</div><div class="ttdef"><b>Definition</b> <a href="DicePanelWidget_8cpp_source.html#l00092">DicePanelWidget.cpp:92</a></div></div>
+<div class="ttc" id="aclassUDicePanelWidget_html_a3624b2e0f2e4173ecb277b024d679ce9"><div class="ttname"><a href="classUDicePanelWidget.html#a3624b2e0f2e4173ecb277b024d679ce9">UDicePanelWidget::NativeDestruct</a></div><div class="ttdeci">void NativeDestruct() override</div><div class="ttdoc">런타임 캐러셀 버튼 이벤트를 해제한다.</div><div class="ttdef"><b>Definition</b> <a href="DicePanelWidget_8cpp_source.html#l00017">DicePanelWidget.cpp:17</a></div></div>
+<div class="ttc" id="aclassUDicePanelWidget_html_a3da6974524a13d23179e50dd16d04144"><div class="ttname"><a href="classUDicePanelWidget.html#a3da6974524a13d23179e50dd16d04144">UDicePanelWidget::NativeTick</a></div><div class="ttdeci">void NativeTick(const FGeometry &amp;MyGeometry, float InDeltaTime) override</div><div class="ttdoc">예약된 선택 주사위 캡처만 처리한다.</div><div class="ttdef"><b>Definition</b> <a href="DicePanelWidget_8cpp_source.html#l00038">DicePanelWidget.cpp:38</a></div></div>
+<div class="ttc" id="aclassUDicePanelWidget_html_a5866b4f741cc7292e16e12b0658c8dbe"><div class="ttname"><a href="classUDicePanelWidget.html#a5866b4f741cc7292e16e12b0658c8dbe">UDicePanelWidget::UDicePanelWidget</a></div><div class="ttdeci">UDicePanelWidget(const FObjectInitializer &amp;ObjectInitializer=FObjectInitializer::Get())</div><div class="ttdoc">주사위 패널 기본 객체를 생성한다.</div><div class="ttdef"><b>Definition</b> <a href="DicePanelWidget_8cpp_source.html#l00005">DicePanelWidget.cpp:5</a></div></div>
+<div class="ttc" id="aclassUDicePanelWidget_html_ae85f0d9484994a60a01cc0e953b829ec"><div class="ttname"><a href="classUDicePanelWidget.html#ae85f0d9484994a60a01cc0e953b829ec">UDicePanelWidget::ApplyOpenUI</a></div><div class="ttdeci">void ApplyOpenUI() override</div><div class="ttdoc">패널이 열릴 때 현재 Run의 보유 주사위와 전투 HUD의 굴림 결과를 다시 읽는다.</div><div class="ttdef"><b>Definition</b> <a href="DicePanelWidget_8cpp_source.html#l00052">DicePanelWidget.cpp:52</a></div></div>
+<div class="ttc" id="aclassUDicePanelWidget_html_ae8c97d7201ce78b013664c648330ec46"><div class="ttname"><a href="classUDicePanelWidget.html#ae8c97d7201ce78b013664c648330ec46">UDicePanelWidget::HandleCarouselSelectionChanged</a></div><div class="ttdeci">void HandleCarouselSelectionChanged(int32 PreviousIndex, int32 NewIndex) override</div><div class="ttdoc">선택 카드가 바뀌면 상세 카드 배치를 다시 적용한다.</div><div class="ttdef"><b>Definition</b> <a href="DicePanelWidget_8cpp_source.html#l00100">DicePanelWidget.cpp:100</a></div></div>
+<div class="ttc" id="aclassUDicePanelWidget_html_aee7eaea24e8aec5f993565bff38bd981"><div class="ttname"><a href="classUDicePanelWidget.html#aee7eaea24e8aec5f993565bff38bd981">UDicePanelWidget::NativeConstruct</a></div><div class="ttdeci">void NativeConstruct() override</div><div class="ttdoc">WBP 기본 Construct 흐름을 유지한다.</div><div class="ttdef"><b>Definition</b> <a href="DicePanelWidget_8cpp_source.html#l00012">DicePanelWidget.cpp:12</a></div></div>
+<div class="ttc" id="aclassUDicePanelWidget_html_affd7e5daf9c67334b2a0538f9c141508"><div class="ttname"><a href="classUDicePanelWidget.html#affd7e5daf9c67334b2a0538f9c141508">UDicePanelWidget::GetCarouselItemAngle</a></div><div class="ttdeci">float GetCarouselItemAngle(int32 ItemIndex) const override</div><div class="ttdoc">카드 자체는 기울이지 않고, 카드 안의 3D 주사위 액터만 회전시킨다.</div><div class="ttdef"><b>Definition</b> <a href="DicePanelWidget_8cpp_source.html#l00087">DicePanelWidget.cpp:87</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

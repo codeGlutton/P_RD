@@ -7,6 +7,7 @@ var structFFrontendCharacterOption =
     [ "mGold", "structFFrontendCharacterOption.html#a6bd9cd018cc4e50c388189fbb17f9d25", null ],
     [ "mIcon", "structFFrontendCharacterOption.html#aee7fffb89a249f118d2ba0f937c1f8ab", null ],
     [ "mIndex", "structFFrontendCharacterOption.html#a434dcfafbf2f69dabb30d2892e69de0a", null ],
+    [ "mJobType", "structFFrontendCharacterOption.html#a960659f9b4c65d9747e8d65acafa7211", null ],
     [ "mMaxHP", "structFFrontendCharacterOption.html#a945a113603931ab2c03ca3ac212b7fdf", null ],
     [ "mPlayerUnitId", "structFFrontendCharacterOption.html#a20a1f3c77cd3620eed77c931671cc7b3", null ],
     [ "mPortrait", "structFFrontendCharacterOption.html#a7866d88be6b9c0fb866d75ad543c0729", null ],

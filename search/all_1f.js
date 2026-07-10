@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['사용법_0',['사용법',['../priamry_asset_type_page.html#primary_asset_type_use_section',1,'사용법'],['../gas_tag_page.html#tag_use_section',1,'사용법']]],
-  ['사용_20시_1',['사용 시',['../priamry_asset_type_page.html#use_primary_asset_type_step2',1,'사용 시'],['../gas_tag_page.html#use_tag_step2',1,'사용 시']]]
+  ['↔_20게임플레이_20경계_20view_20model_20계약_0',['↔ 게임플레이 경계 view model 계약',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Reward_2README.html',1,'전투 보상 화면 UI ↔ 게임플레이 경계 (View-Model 계약)'],['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2README.html',1,'전투 UI ↔ 게임플레이 경계 (View-Model 계약)']]],
+  ['↔_20게임플레이_20api_20계약_1',['전투 UI ↔ 게임플레이 API 계약',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2UI__API__CONTRACT.html',1,'']]]
 ];

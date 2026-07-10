@@ -1,0 +1,125 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/Component/AttributeComponent/AttributeSetComponentModel.cpp 파일 참조</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('AttributeSetComponentModel_8cpp.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">AttributeSetComponentModel.cpp 파일 참조</div></div>
+</div><!--header-->
+<div class="contents">
+
+<p>유닛(ActorModel)에 부착되어 속성(Attribute)과 전술 이펙트(TacticalEffect)를 총괄하는 컴포넌트 모델 구현부. GAS의 UAbilitySystemComponent에 대응하는 자체 구현이다.  
+<a href="#details">더 자세히 ...</a></p>
+
+<p><a href="AttributeSetComponentModel_8cpp_source.html">이 파일의 소스 코드 페이지로 가기</a></p>
+<a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
+<div class="textblock"><p>[PR #191 마이그레이션 맥락] 본 PR은 효과 모디파이어의 "연산 종류" enum을 GAS의 EGameplayModOp에서 자체 enum인 <a class="el" href="namespaceETacticalModOp.html" title="속성 수정자(Modifier) 연산 종류 — 구 GAS의 EGameplayModOp를 대체하는 자체 enum.">ETacticalModOp</a>(<a class="el" href="TacticalEffectType_8h.html" title="Effect 연관 타입들 정의 헤더">TacticalEffectType.h</a>)로 치환한다(GAS 폐기 작업의 일부). 본 파일에서 직접 영향을 받는 지점은 ApplyModToAttribute()의 시그니처로, 매개변수 타입이 TEnumAsByte&lt;EGameplayModOp::Type&gt; → TEnumAsByte&lt;ETacticalModOp::Type&gt;로 교체되었다.</p>
+<p>[<a class="el" href="namespaceETacticalModOp.html" title="속성 수정자(Modifier) 연산 종류 — 구 GAS의 EGameplayModOp를 대체하는 자체 enum.">ETacticalModOp</a> 정수값을 구 EGameplayModOp와 동일하게 유지하는 이유 3가지] (1) 직렬화 호환: 기존 에셋/세이브에 정수로 박힌 op 값을 그대로 보존한다. (2) 배열 인덱싱 호환: Aggregator가 mMods[ETacticalModOp::Max]처럼 op 정수값으로 모디파이어 배열을 인덱싱하므로 값이 바뀌면 인덱스가 깨진다. (3) CoreRedirect 호환: DefaultEngine.ini의 CoreRedirect가 구 enum 이름을 새 enum 이름으로 매핑하므로, 값까지 같아야 무손실 치환이 된다.</p>
+<p>[<a class="el" href="namespaceETacticalModOp.html" title="속성 수정자(Modifier) 연산 종류 — 구 GAS의 EGameplayModOp를 대체하는 자체 enum.">ETacticalModOp</a> 연산 종류와 수식]</p><ul>
+<li>AddBase(0) : 합산. 기본값에 더한다. (별칭 Additive=0)</li>
+<li>MultiplyAdditive(1) : 배율 가산. 곱셈 계수를 누적 합산한다. (별칭 Multiplicitive=1)</li>
+<li>DivideAdditive(2) : 나눗셈 가산. 나눗셈 계수를 누적 합산한다. (별칭 Division=2)</li>
+<li>Override(3) : 덮어쓰기. 이전 값을 무시하고 교체한다. (별칭 Override=3)</li>
+<li>MultiplyCompound(4) : 거듭제곱 곱. 스택 수만큼 거듭제곱으로 곱한다.</li>
+<li>AddFinal(5) : 최종 합산. 모든 계산 후 마지막에 더한다.</li>
+<li>Max(6) : 무효/연산 개수(배열 크기 인덱스로 사용). ※ 항등값/스택 누적 수식은 <a class="el" href="namespaceTacticalEffectUtilities.html" title="구 GAS의 GameplayEffectUtilities를 대체하는 모디파이어 연산 보조 함수 모음.">TacticalEffectUtilities</a>(<a class="el" href="TacticalEffectType_8cpp.html" title="전술 이펙트 모디파이어 &quot;연산 종류&quot;(ETacticalModOp) 유틸리티 구현.">TacticalEffectType.cpp</a>)의 GetModifierBiasByModifierOp(곱셈계열=1, 합산계열=0)와 ComputeStackedModifierMagnitude(MultiplyCompound는 거듭제곱)에서 처리한다. </li>
+</ul>
+
+<p class="definition"><a class="el" href="AttributeSetComponentModel_8cpp_source.html">AttributeSetComponentModel.cpp</a> 파일에서 정의되었습니다.</p>
+</div></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_6cd1626ba92a5a6057b71e6a2a6ef174.html">Component</a></li><li class="navelem"><a class="el" href="dir_50285ada7087a6b6b7e8db3e7ee5f202.html">AttributeComponent</a></li><li class="navelem"><a class="el" href="AttributeSetComponentModel_8cpp.html">AttributeSetComponentModel.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

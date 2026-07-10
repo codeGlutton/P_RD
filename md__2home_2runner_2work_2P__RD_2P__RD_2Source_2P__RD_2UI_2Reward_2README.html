@@ -1,0 +1,147 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: 전투 보상 화면 UI ↔ 게임플레이 경계 (View-Model 계약)</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Reward_2README.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div><div class="header">
+  <div class="headertitle"><div class="title">전투 보상 화면 UI ↔ 게임플레이 경계 (View-Model 계약)</div></div>
+</div><!--header-->
+<div class="contents">
+<div class="textblock"><p><a class="anchor" id="autotoc_md41"></a> 전투 뷰모델(<code>UI/Combat</code>)과 같은 패턴. 보상 화면은 **<code><a class="el" href="classURewardUIModel.html" title="보상 화면 뷰모델. 전투 종료 시 게임플레이가 하나 만들어 보상 위젯에 물린다.">URewardUIModel</a></code> 하나**로만 게임플레이와 만난다. <b>현재 범위: 돈(골드) · 경험치만.</b> 아이템/주사위 보상은 이후 같은 패턴으로 도메인 추가.</p>
+<div class="fragment"><div class="line">[게임플레이] 전투 종료 → 보상 계산</div>
+<div class="line">      │ SetReward(FRewardUI)              ▲ OnRewardClaimed (받기 의도)</div>
+<div class="line">      ▼                                       │</div>
+<div class="line">            ┌────────  URewardUIModel  ────────┐</div>
+<div class="line">            └─────────────────────────────────────┘</div>
+<div class="line">      │ GetReward() / OnUIChanged</div>
+<div class="line">      ▼</div>
+<div class="line">[UI] URewardUIWidgetBase 상속 WBP — 돈/경험치 카운트업·막대 연출 + 받기 버튼</div>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md42"></a>
+구성</h1>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">파일   </th><th class="markdownTableHeadNone">역할    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code><a class="el" href="RewardUITypes_8h.html">RewardUITypes.h</a></code>   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFRewardUI.html" title="전투 결과 보상 한 건의 표시값(돈·경험치).">FRewardUI</a></code> — 돈(번 양·잔액) + 경험치(번 양·레벨 전/후·막대 전/후·최대)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code><a class="el" href="RewardUIModel_8h.html">RewardUIModel.h</a>/.cpp</code>   </td><td class="markdownTableBodyNone">경계. <code>SetReward</code>/<code>GetReward</code>+<code>OnUIChanged</code>(읽기) · <code>RequestClaim</code>→<code>OnRewardClaimed</code>(주기)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code><a class="el" href="RewardUIWidgetBase_8h.html">RewardUIWidgetBase.h</a>/.cpp</code>   </td><td class="markdownTableBodyNone">WBP 베이스. <code>BindUIModel</code> 후 <code>OnRewardRefreshed</code>만 구현, 버튼은 <code>Claim()</code>    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code><a class="el" href="MockRewardDriver_8h.html">MockRewardDriver.h</a>/.cpp</code>   </td><td class="markdownTableBodyNone">게임플레이 없이 가짜 보상 push + 받기 로그 — UI 선개발/테스트   </td></tr>
+</table>
+<h1><a class="anchor" id="autotoc_md43"></a>
+박용수(UI) 사용법</h1>
+<ol type="1">
+<li>WBP를 <code><a class="el" href="classURewardUIWidgetBase.html">URewardUIWidgetBase</a></code> 상속으로 만든다.</li>
+<li><code>BindUIModel(VM)</code> 호출.</li>
+<li><code><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OnRewardRefreshed()</a></code>에서 <code>VM-&gt;GetReward()</code>를 읽어 돈/경험치 카운트업·막대 채움(전→후) 연출.</li>
+<li>'받기' 버튼 → <code>Claim()</code>.</li>
+<li>게임플레이 전이라도 <code>UMockRewardDriver::Start(VM)</code>로 표시·연출·받기 테스트.</li>
+</ol>
+<h1><a class="anchor" id="autotoc_md44"></a>
+모호재(게임플레이) 사용법</h1>
+<p>Mock 자리에 어댑터만(위젯 무수정): 전투 종료 시 보상 계산 → <code>VM-&gt;SetReward(...)</code>(<code>PersistentData</code>의 골드/경험치 전/후), <code>VM-&gt;OnRewardClaimed</code> 구독해 다음 화면(맵)으로 전환.</p>
+<h1><a class="anchor" id="autotoc_md45"></a>
+확장 메모</h1>
+<ul>
+<li>아이템/주사위 보상: <code><a class="el" href="structFRewardUI.html" title="전투 결과 보상 한 건의 표시값(돈·경험치).">FRewardUI</a></code>에 배열 도메인 추가 + 선택 의도(<code>RequestPick(index)</code>)만 늘리면 됨(지금은 미구현).</li>
+<li>레벨업 다단계: 현재 <code>mLevelBefore/After</code> + 한 막대(<code>mExpBefore→After</code>/<code>mMaxExp</code>). 다중 레벨업 연출이 필요하면 단계 배열로 확장. </li>
+</ul>
+</div></div><!-- contents -->
+</div><!-- PageDoc -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

@@ -112,98 +112,187 @@ URunPersistData에 대한 상속 다이어그램 : </div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public 멤버 함수</h2></td></tr>
-<tr class="memitem:a0353c4ad706297d0e67c0de5d992b9e2" id="r_a0353c4ad706297d0e67c0de5d992b9e2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a0353c4ad706297d0e67c0de5d992b9e2">StartRun</a> (const FPrimaryAssetId &amp;PlayerUnitId, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> Difficulty)</td></tr>
+<tr class="memitem:a0353c4ad706297d0e67c0de5d992b9e2" id="r_a0353c4ad706297d0e67c0de5d992b9e2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a0353c4ad706297d0e67c0de5d992b9e2">StartRun</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PlayerUnitId</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Difficulty</a>)</td></tr>
+<tr class="memdesc:a0353c4ad706297d0e67c0de5d992b9e2"><td class="mdescLeft">&#160;</td><td class="mdescRight">새 런을 시작한다. 직전 런 상태를 초기화하고, 난수 스트림을 시드하며, 선택 캐릭터의 고정 주사위를 런 보유 목록으로 펼친다.  <br /></td></tr>
 <tr class="separator:a0353c4ad706297d0e67c0de5d992b9e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8caedfbe19b3a57967af27c2cb225e23" id="r_a8caedfbe19b3a57967af27c2cb225e23"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a8caedfbe19b3a57967af27c2cb225e23">ClearRun</a> ()</td></tr>
+<tr class="memitem:a8caedfbe19b3a57967af27c2cb225e23" id="r_a8caedfbe19b3a57967af27c2cb225e23"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a8caedfbe19b3a57967af27c2cb225e23">ClearRun</a> ()</td></tr>
+<tr class="memdesc:a8caedfbe19b3a57967af27c2cb225e23"><td class="mdescLeft">&#160;</td><td class="mdescRight">런 영속 데이터를 초기 상태로 되돌린다(레벨/난이도 리셋, 보유 목록·태그·스테이지·로그 비우기). 새 런 시작 직전에 직전 런 잔여 상태를 제거하기 위한 용도.  <br /></td></tr>
 <tr class="separator:a8caedfbe19b3a57967af27c2cb225e23"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0963ca32bdfe465010e54eeb40afaba3" id="r_a0963ca32bdfe465010e54eeb40afaba3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a0963ca32bdfe465010e54eeb40afaba3">MakeStageAsync</a> (<a class="el" href="StageLevelType_8h.html#ae0b1317897a714ca0969cdc80dfd5d95">EStageLevelType</a> Type, FOnCreateStage OnCreateStage)</td></tr>
+<tr class="memitem:a0963ca32bdfe465010e54eeb40afaba3" id="r_a0963ca32bdfe465010e54eeb40afaba3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a0963ca32bdfe465010e54eeb40afaba3">MakeStageAsync</a> (<a class="el" href="StageLevelType_8h.html#ae0b1317897a714ca0969cdc80dfd5d95">EStageLevelType</a> Type, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnCreateStage</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OnCreateStage</a>)</td></tr>
+<tr class="memdesc:a0963ca32bdfe465010e54eeb40afaba3"><td class="mdescLeft">&#160;</td><td class="mdescRight">지정한 스테이지 레벨 타입에 맞는 스테이지를 비동기로 생성한다. 밸런스 세팅 데이터테이블을 비동기 로드한 뒤, 행에서 빌더 파라미터를 찾아 결정론적 빌드 스트림으로 <a class="el" href="structFStage.html" title="스테이지 객체">FStage</a> 를 생성하고 콜백으로 결과를 넘긴다.  <br /></td></tr>
 <tr class="separator:a0963ca32bdfe465010e54eeb40afaba3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae239526ad4dea556014ff56b99cd3716" id="r_ae239526ad4dea556014ff56b99cd3716"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#ae239526ad4dea556014ff56b99cd3716">SetCurrentRoomIndex</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> RowIndex, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> ColumnIndex)</td></tr>
+<tr class="memitem:ae239526ad4dea556014ff56b99cd3716" id="r_ae239526ad4dea556014ff56b99cd3716"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#ae239526ad4dea556014ff56b99cd3716">SetCurrentRoomIndex</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RowIndex</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ColumnIndex</a>)</td></tr>
+<tr class="memdesc:ae239526ad4dea556014ff56b99cd3716"><td class="mdescLeft">&#160;</td><td class="mdescRight">현재 진행 중인 방을 스테이지 격자 좌표로 지정한다.  <br /></td></tr>
 <tr class="separator:ae239526ad4dea556014ff56b99cd3716"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae03ade7d30a947f203d0f94789a35271" id="r_ae03ade7d30a947f203d0f94789a35271"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#ae03ade7d30a947f203d0f94789a35271">CollectAssetIds</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> RowIndex, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> ColumnIndex, OUT TArray&lt; FPrimaryAssetId &gt; &amp;PlayerIds, OUT FPrimaryAssetId &amp;StageId, OUT FPrimaryAssetId &amp;RoomId, OUT TArray&lt; FPrimaryAssetId &gt; &amp;AdditionalAssetIds) const</td></tr>
+<tr class="memitem:ae03ade7d30a947f203d0f94789a35271" id="r_ae03ade7d30a947f203d0f94789a35271"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#ae03ade7d30a947f203d0f94789a35271">CollectAssetIds</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RowIndex</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ColumnIndex</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &gt; &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PlayerIds</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">StageId</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RoomId</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &gt; &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AdditionalAssetIds</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:ae03ade7d30a947f203d0f94789a35271"><td class="mdescLeft">&#160;</td><td class="mdescRight">지정한 방을 로드하기 위해 필요한 모든 에셋 식별자를 수집한다. 플레이어/스킬/장비/주사위 식별자와 스테이지/방 및 방 부가 에셋 식별자를 OUT 인자로 채운다.  <br /></td></tr>
 <tr class="separator:ae03ade7d30a947f203d0f94789a35271"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7e10a9d5c290e11eb2135b0f79134fce" id="r_a7e10a9d5c290e11eb2135b0f79134fce"><td class="memItemLeft" align="right" valign="top">const FRandomStream &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a7e10a9d5c290e11eb2135b0f79134fce">GetStageBuildStream</a> () const</td></tr>
+<tr class="memitem:a7e10a9d5c290e11eb2135b0f79134fce" id="r_a7e10a9d5c290e11eb2135b0f79134fce"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FRandomStream</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a7e10a9d5c290e11eb2135b0f79134fce">GetStageBuildStream</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:a7e10a9d5c290e11eb2135b0f79134fce"><td class="mdescLeft">&#160;</td><td class="mdescRight">스테이지 생성에 쓰이는 결정론적 난수 스트림을 반환한다.  <br /></td></tr>
 <tr class="separator:a7e10a9d5c290e11eb2135b0f79134fce"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7e90088757e57fceb26ec4828a8cd6c0" id="r_a7e90088757e57fceb26ec4828a8cd6c0"><td class="memItemLeft" align="right" valign="top">const FRandomStream &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a7e90088757e57fceb26ec4828a8cd6c0">GetEventStream</a> () const</td></tr>
+<tr class="memitem:a7e90088757e57fceb26ec4828a8cd6c0" id="r_a7e90088757e57fceb26ec4828a8cd6c0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FRandomStream</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a7e90088757e57fceb26ec4828a8cd6c0">GetEventStream</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:a7e90088757e57fceb26ec4828a8cd6c0"><td class="mdescLeft">&#160;</td><td class="mdescRight">이벤트 발생에 쓰이는 결정론적 난수 스트림을 반환한다.  <br /></td></tr>
 <tr class="separator:a7e90088757e57fceb26ec4828a8cd6c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a47ad9617ae8e0ea005f21a0ea0be6fd5" id="r_a47ad9617ae8e0ea005f21a0ea0be6fd5"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structFStage.html">FStage</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a47ad9617ae8e0ea005f21a0ea0be6fd5">GetStage</a> () const</td></tr>
+<tr class="memitem:a47ad9617ae8e0ea005f21a0ea0be6fd5" id="r_a47ad9617ae8e0ea005f21a0ea0be6fd5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFStage.html">FStage</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a47ad9617ae8e0ea005f21a0ea0be6fd5">GetStage</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:a47ad9617ae8e0ea005f21a0ea0be6fd5"><td class="mdescLeft">&#160;</td><td class="mdescRight">현재 런의 스테이지를 반환한다.  <br /></td></tr>
 <tr class="separator:a47ad9617ae8e0ea005f21a0ea0be6fd5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a82171525aef1dc00a58490be8c8c3d20" id="r_a82171525aef1dc00a58490be8c8c3d20"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structFRoom.html">FRoom</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a82171525aef1dc00a58490be8c8c3d20">GetRoom</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> RowIndex, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> ColumnIndex) const</td></tr>
+<tr class="memitem:a82171525aef1dc00a58490be8c8c3d20" id="r_a82171525aef1dc00a58490be8c8c3d20"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFRoom.html">FRoom</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a82171525aef1dc00a58490be8c8c3d20">GetRoom</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RowIndex</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ColumnIndex</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:a82171525aef1dc00a58490be8c8c3d20"><td class="mdescLeft">&#160;</td><td class="mdescRight">스테이지 격자 좌표로 특정 방을 반환한다.  <br /></td></tr>
 <tr class="separator:a82171525aef1dc00a58490be8c8c3d20"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1c8ff8ab98ca85a1f4e6682f20c136df" id="r_a1c8ff8ab98ca85a1f4e6682f20c136df"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structFRoom.html">FRoom</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a1c8ff8ab98ca85a1f4e6682f20c136df">GetStartRoom</a> () const</td></tr>
+<tr class="memitem:a1c8ff8ab98ca85a1f4e6682f20c136df" id="r_a1c8ff8ab98ca85a1f4e6682f20c136df"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFRoom.html">FRoom</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a1c8ff8ab98ca85a1f4e6682f20c136df">GetStartRoom</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:a1c8ff8ab98ca85a1f4e6682f20c136df"><td class="mdescLeft">&#160;</td><td class="mdescRight">스테이지의 시작 방을 반환한다.  <br /></td></tr>
 <tr class="separator:a1c8ff8ab98ca85a1f4e6682f20c136df"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6f73d43dbb224184fadb13ae85ed79cd" id="r_a6f73d43dbb224184fadb13ae85ed79cd"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structFRoom.html">FRoom</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a6f73d43dbb224184fadb13ae85ed79cd">GetCurrentRoom</a> () const</td></tr>
+<tr class="memitem:a6f73d43dbb224184fadb13ae85ed79cd" id="r_a6f73d43dbb224184fadb13ae85ed79cd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFRoom.html">FRoom</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a6f73d43dbb224184fadb13ae85ed79cd">GetCurrentRoom</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:a6f73d43dbb224184fadb13ae85ed79cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">현재 진행 중인 방을 반환한다.  <br /></td></tr>
 <tr class="separator:a6f73d43dbb224184fadb13ae85ed79cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adda222009d47b7e850b8d697ddef1895" id="r_adda222009d47b7e850b8d697ddef1895"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#adda222009d47b7e850b8d697ddef1895">GetCurrentRoomIndex</a> (OUT <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> &amp;RowIndex, OUT <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> &amp;ColumnIndex) const</td></tr>
+<tr class="memitem:adda222009d47b7e850b8d697ddef1895" id="r_adda222009d47b7e850b8d697ddef1895"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#adda222009d47b7e850b8d697ddef1895">GetCurrentRoomIndex</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RowIndex</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ColumnIndex</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:adda222009d47b7e850b8d697ddef1895"><td class="mdescLeft">&#160;</td><td class="mdescRight">현재 진행 중인 방의 격자 좌표를 OUT 인자로 반환한다.  <br /></td></tr>
 <tr class="separator:adda222009d47b7e850b8d697ddef1895"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae091bb9a010c0aa791a238ba528b108d" id="r_ae091bb9a010c0aa791a238ba528b108d"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structFRunLog.html">FRunLog</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#ae091bb9a010c0aa791a238ba528b108d">GetRunLog</a> () const</td></tr>
+<tr class="memitem:a3e4978e2280a0afa82170695b86446b7" id="r_a3e4978e2280a0afa82170695b86446b7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a3e4978e2280a0afa82170695b86446b7">AddRewardSkill</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SkillId</a>)</td></tr>
+<tr class="separator:a3e4978e2280a0afa82170695b86446b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4c7790a2e5e10db8814dec7ed7cf402c" id="r_a4c7790a2e5e10db8814dec7ed7cf402c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a4c7790a2e5e10db8814dec7ed7cf402c">AddRewardEquipment</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EquipmentId</a>)</td></tr>
+<tr class="separator:a4c7790a2e5e10db8814dec7ed7cf402c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a776a618a860c4dd4866437d2e8806f3a" id="r_a776a618a860c4dd4866437d2e8806f3a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a776a618a860c4dd4866437d2e8806f3a">AddRewardDice</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceId</a>)</td></tr>
+<tr class="separator:a776a618a860c4dd4866437d2e8806f3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae091bb9a010c0aa791a238ba528b108d" id="r_ae091bb9a010c0aa791a238ba528b108d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FRunLog</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#ae091bb9a010c0aa791a238ba528b108d">GetRunLog</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:ae091bb9a010c0aa791a238ba528b108d"><td class="mdescLeft">&#160;</td><td class="mdescRight">이번 런의 누적 로그를 반환한다.  <br /></td></tr>
 <tr class="separator:ae091bb9a010c0aa791a238ba528b108d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6043e07ae2c230fce051bfc2bc9e313d" id="r_a6043e07ae2c230fce051bfc2bc9e313d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a6043e07ae2c230fce051bfc2bc9e313d">IsActive</a> () const</td></tr>
+<tr class="memitem:a6043e07ae2c230fce051bfc2bc9e313d" id="r_a6043e07ae2c230fce051bfc2bc9e313d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a6043e07ae2c230fce051bfc2bc9e313d">IsActive</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:a6043e07ae2c230fce051bfc2bc9e313d"><td class="mdescLeft">&#160;</td><td class="mdescRight">런이 활성 상태인지(유효한 스테이지가 존재하는지) 여부를 반환한다.  <br /></td></tr>
 <tr class="separator:a6043e07ae2c230fce051bfc2bc9e313d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classUPlayerUnitPersistData"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classUPlayerUnitPersistData')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classUPlayerUnitPersistData.html">UPlayerUnitPersistData</a>(으)로부터 상속된 Public 멤버 함수</td></tr>
-<tr class="memitem:a4ecfac35d5f9098e7ec5c8c49748153e inherit pub_methods_classUPlayerUnitPersistData" id="r_a4ecfac35d5f9098e7ec5c8c49748153e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a4ecfac35d5f9098e7ec5c8c49748153e">RegisterPlayerUnit</a> (<a class="el" href="classAPlayerUnit.html">APlayerUnit</a> *PlayerUnit)</td></tr>
-<tr class="separator:a4ecfac35d5f9098e7ec5c8c49748153e inherit pub_methods_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a21adb042512cd50b6efd9c2f7642ca51 inherit pub_methods_classUPlayerUnitPersistData" id="r_a21adb042512cd50b6efd9c2f7642ca51"><td class="memItemLeft" align="right" valign="top">const FPrimaryAssetId &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a21adb042512cd50b6efd9c2f7642ca51">GetPlayerUnitId</a> () const</td></tr>
+<tr class="memitem:ad3f9e455c5bd60ad2b8760cc0cc2cd23 inherit pub_methods_classUPlayerUnitPersistData" id="r_ad3f9e455c5bd60ad2b8760cc0cc2cd23"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#ad3f9e455c5bd60ad2b8760cc0cc2cd23">RegisterPlayerUnit</a> (<a class="el" href="classUPlayerUnitModel.html">UPlayerUnitModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PlayerUnit</a>)</td></tr>
+<tr class="memdesc:ad3f9e455c5bd60ad2b8760cc0cc2cd23 inherit pub_methods_classUPlayerUnitPersistData"><td class="mdescLeft">&#160;</td><td class="mdescRight">스폰된 플레이어 유닛을 영속 데이터에 등록한다. 영속 데이터 ↔ 유닛 속성을 양방향으로 연결한다:  <br /></td></tr>
+<tr class="separator:ad3f9e455c5bd60ad2b8760cc0cc2cd23 inherit pub_methods_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a21adb042512cd50b6efd9c2f7642ca51 inherit pub_methods_classUPlayerUnitPersistData" id="r_a21adb042512cd50b6efd9c2f7642ca51"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a21adb042512cd50b6efd9c2f7642ca51">GetPlayerUnitId</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:a21adb042512cd50b6efd9c2f7642ca51 inherit pub_methods_classUPlayerUnitPersistData"><td class="mdescLeft">&#160;</td><td class="mdescRight">등록된 플레이어 유닛의 PrimaryAssetId 를 반환한다.  <br /></td></tr>
 <tr class="separator:a21adb042512cd50b6efd9c2f7642ca51 inherit pub_methods_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aae34d9536507706e59861eabfd06040e inherit pub_methods_classUPlayerUnitPersistData" id="r_aae34d9536507706e59861eabfd06040e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#aae34d9536507706e59861eabfd06040e">GetPlayerLevel</a> () const</td></tr>
+<tr class="memitem:aae34d9536507706e59861eabfd06040e inherit pub_methods_classUPlayerUnitPersistData" id="r_aae34d9536507706e59861eabfd06040e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#aae34d9536507706e59861eabfd06040e">GetPlayerLevel</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:aae34d9536507706e59861eabfd06040e inherit pub_methods_classUPlayerUnitPersistData"><td class="mdescLeft">&#160;</td><td class="mdescRight">현재 플레이어 레벨을 반환한다.  <br /></td></tr>
 <tr class="separator:aae34d9536507706e59861eabfd06040e inherit pub_methods_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a928b7a3bdb9f6f7a6a2a6978ab62092f inherit pub_methods_classUPlayerUnitPersistData" id="r_a928b7a3bdb9f6f7a6a2a6978ab62092f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a928b7a3bdb9f6f7a6a2a6978ab62092f">GetDifficulty</a> () const</td></tr>
+<tr class="memitem:a928b7a3bdb9f6f7a6a2a6978ab62092f inherit pub_methods_classUPlayerUnitPersistData" id="r_a928b7a3bdb9f6f7a6a2a6978ab62092f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a928b7a3bdb9f6f7a6a2a6978ab62092f">GetDifficulty</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:a928b7a3bdb9f6f7a6a2a6978ab62092f inherit pub_methods_classUPlayerUnitPersistData"><td class="mdescLeft">&#160;</td><td class="mdescRight">현재 런의 난이도를 반환한다.  <br /></td></tr>
 <tr class="separator:a928b7a3bdb9f6f7a6a2a6978ab62092f inherit pub_methods_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acf132f27b7aa119a53f15f256c56d5a1 inherit pub_methods_classUPlayerUnitPersistData" id="r_acf132f27b7aa119a53f15f256c56d5a1"><td class="memItemLeft" align="right" valign="top">const TArray&lt; FPrimaryAssetId &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#acf132f27b7aa119a53f15f256c56d5a1">GetSkillIds</a> () const</td></tr>
+<tr class="memitem:acf132f27b7aa119a53f15f256c56d5a1 inherit pub_methods_classUPlayerUnitPersistData" id="r_acf132f27b7aa119a53f15f256c56d5a1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#acf132f27b7aa119a53f15f256c56d5a1">GetSkillIds</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:acf132f27b7aa119a53f15f256c56d5a1 inherit pub_methods_classUPlayerUnitPersistData"><td class="mdescLeft">&#160;</td><td class="mdescRight">보유 스킬 식별자 목록을 반환한다.  <br /></td></tr>
 <tr class="separator:acf132f27b7aa119a53f15f256c56d5a1 inherit pub_methods_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4baaff7f5a70e707496d69c8e1e50ab9 inherit pub_methods_classUPlayerUnitPersistData" id="r_a4baaff7f5a70e707496d69c8e1e50ab9"><td class="memItemLeft" align="right" valign="top">const TArray&lt; FPrimaryAssetId &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a4baaff7f5a70e707496d69c8e1e50ab9">GetEquipmentIds</a> () const</td></tr>
+<tr class="memitem:a4baaff7f5a70e707496d69c8e1e50ab9 inherit pub_methods_classUPlayerUnitPersistData" id="r_a4baaff7f5a70e707496d69c8e1e50ab9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a4baaff7f5a70e707496d69c8e1e50ab9">GetEquipmentIds</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:a4baaff7f5a70e707496d69c8e1e50ab9 inherit pub_methods_classUPlayerUnitPersistData"><td class="mdescLeft">&#160;</td><td class="mdescRight">보유 장비 식별자 목록을 반환한다.  <br /></td></tr>
 <tr class="separator:a4baaff7f5a70e707496d69c8e1e50ab9 inherit pub_methods_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4da37890ca8e399297851a390ab01e20 inherit pub_methods_classUPlayerUnitPersistData" id="r_a4da37890ca8e399297851a390ab01e20"><td class="memItemLeft" align="right" valign="top">const TArray&lt; FPrimaryAssetId &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a4da37890ca8e399297851a390ab01e20">GetDiceIds</a> () const</td></tr>
+<tr class="memitem:a4da37890ca8e399297851a390ab01e20 inherit pub_methods_classUPlayerUnitPersistData" id="r_a4da37890ca8e399297851a390ab01e20"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a4da37890ca8e399297851a390ab01e20">GetDiceIds</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:a4da37890ca8e399297851a390ab01e20 inherit pub_methods_classUPlayerUnitPersistData"><td class="mdescLeft">&#160;</td><td class="mdescRight">보유 주사위 식별자 목록을 반환한다.  <br /></td></tr>
 <tr class="separator:a4da37890ca8e399297851a390ab01e20 inherit pub_methods_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
 Protected 속성</h2></td></tr>
-<tr class="memitem:a152ab025ffa90042005e0d7abc121e88" id="r_a152ab025ffa90042005e0d7abc121e88"><td class="memItemLeft" align="right" valign="top">FRandomStream&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a152ab025ffa90042005e0d7abc121e88">mStageBuildStream</a></td></tr>
+<tr class="memitem:a152ab025ffa90042005e0d7abc121e88" id="r_a152ab025ffa90042005e0d7abc121e88"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FRandomStream</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a152ab025ffa90042005e0d7abc121e88">mStageBuildStream</a></td></tr>
 <tr class="separator:a152ab025ffa90042005e0d7abc121e88"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afa276439bc0b3abc99092a698bef5267" id="r_afa276439bc0b3abc99092a698bef5267"><td class="memItemLeft" align="right" valign="top">FRandomStream&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#afa276439bc0b3abc99092a698bef5267">mEventStream</a></td></tr>
+<tr class="memitem:afa276439bc0b3abc99092a698bef5267" id="r_afa276439bc0b3abc99092a698bef5267"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FRandomStream</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#afa276439bc0b3abc99092a698bef5267">mEventStream</a></td></tr>
 <tr class="separator:afa276439bc0b3abc99092a698bef5267"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9a235c762b7b8ee314b442930c746957" id="r_a9a235c762b7b8ee314b442930c746957"><td class="memItemLeft" align="right" valign="top">TInstancedStruct&lt; <a class="el" href="structFStage.html">FStage</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a9a235c762b7b8ee314b442930c746957">mStage</a></td></tr>
+<tr class="memitem:a9a235c762b7b8ee314b442930c746957" id="r_a9a235c762b7b8ee314b442930c746957"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt; <a class="el" href="structFStage.html">FStage</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a9a235c762b7b8ee314b442930c746957">mStage</a></td></tr>
 <tr class="separator:a9a235c762b7b8ee314b442930c746957"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a64e41cbe38cd98340dc1ad0ce71fb83e" id="r_a64e41cbe38cd98340dc1ad0ce71fb83e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFRunLog.html">FRunLog</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a64e41cbe38cd98340dc1ad0ce71fb83e">mRunLog</a></td></tr>
+<tr class="memitem:a64e41cbe38cd98340dc1ad0ce71fb83e" id="r_a64e41cbe38cd98340dc1ad0ce71fb83e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FRunLog</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURunPersistData.html#a64e41cbe38cd98340dc1ad0ce71fb83e">mRunLog</a></td></tr>
 <tr class="separator:a64e41cbe38cd98340dc1ad0ce71fb83e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_attribs_classUPlayerUnitPersistData"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classUPlayerUnitPersistData')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classUPlayerUnitPersistData.html">UPlayerUnitPersistData</a>(으)로부터 상속된 Protected 속성</td></tr>
-<tr class="memitem:ae67f4c3010bdd5989d1ced6de674e7a8 inherit pro_attribs_classUPlayerUnitPersistData" id="r_ae67f4c3010bdd5989d1ced6de674e7a8"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#ae67f4c3010bdd5989d1ced6de674e7a8">mIsNewData</a> = true</td></tr>
+<tr class="memitem:ae67f4c3010bdd5989d1ced6de674e7a8 inherit pro_attribs_classUPlayerUnitPersistData" id="r_ae67f4c3010bdd5989d1ced6de674e7a8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#ae67f4c3010bdd5989d1ced6de674e7a8">mIsNewData</a> = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">true</a></td></tr>
 <tr class="separator:ae67f4c3010bdd5989d1ced6de674e7a8 inherit pro_attribs_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0b0c0cee179d17ed691e196ce72c55e4 inherit pro_attribs_classUPlayerUnitPersistData" id="r_a0b0c0cee179d17ed691e196ce72c55e4"><td class="memItemLeft" align="right" valign="top">FPrimaryAssetId&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a0b0c0cee179d17ed691e196ce72c55e4">mPlayerUnitId</a></td></tr>
+<tr class="memitem:a0b0c0cee179d17ed691e196ce72c55e4 inherit pro_attribs_classUPlayerUnitPersistData" id="r_a0b0c0cee179d17ed691e196ce72c55e4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a0b0c0cee179d17ed691e196ce72c55e4">mPlayerUnitId</a></td></tr>
 <tr class="separator:a0b0c0cee179d17ed691e196ce72c55e4 inherit pro_attribs_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa0bfab95d87ee18274066dcd7b37389e inherit pro_attribs_classUPlayerUnitPersistData" id="r_aa0bfab95d87ee18274066dcd7b37389e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#aa0bfab95d87ee18274066dcd7b37389e">mPlayerLevel</a></td></tr>
+<tr class="memitem:aa0bfab95d87ee18274066dcd7b37389e inherit pro_attribs_classUPlayerUnitPersistData" id="r_aa0bfab95d87ee18274066dcd7b37389e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#aa0bfab95d87ee18274066dcd7b37389e">mPlayerLevel</a> = 1</td></tr>
 <tr class="separator:aa0bfab95d87ee18274066dcd7b37389e inherit pro_attribs_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae83912fceadd0765d2416ea9b16b5d27 inherit pro_attribs_classUPlayerUnitPersistData" id="r_ae83912fceadd0765d2416ea9b16b5d27"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#ae83912fceadd0765d2416ea9b16b5d27">mDifficulty</a></td></tr>
+<tr class="memitem:ae83912fceadd0765d2416ea9b16b5d27 inherit pro_attribs_classUPlayerUnitPersistData" id="r_ae83912fceadd0765d2416ea9b16b5d27"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#ae83912fceadd0765d2416ea9b16b5d27">mDifficulty</a> = 1</td></tr>
 <tr class="separator:ae83912fceadd0765d2416ea9b16b5d27 inherit pro_attribs_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa21483cf2124fc6a9a9a9bc7a561a906 inherit pro_attribs_classUPlayerUnitPersistData" id="r_aa21483cf2124fc6a9a9a9bc7a561a906"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#aa21483cf2124fc6a9a9a9bc7a561a906">mMaxHP</a></td></tr>
+<tr class="memitem:aa21483cf2124fc6a9a9a9bc7a561a906 inherit pro_attribs_classUPlayerUnitPersistData" id="r_aa21483cf2124fc6a9a9a9bc7a561a906"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#aa21483cf2124fc6a9a9a9bc7a561a906">mMaxHP</a> = 0.<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a></td></tr>
 <tr class="separator:aa21483cf2124fc6a9a9a9bc7a561a906 inherit pro_attribs_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afbcebcaead2219df1646d346e076bb82 inherit pro_attribs_classUPlayerUnitPersistData" id="r_afbcebcaead2219df1646d346e076bb82"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#afbcebcaead2219df1646d346e076bb82">mHP</a></td></tr>
+<tr class="memitem:afbcebcaead2219df1646d346e076bb82 inherit pro_attribs_classUPlayerUnitPersistData" id="r_afbcebcaead2219df1646d346e076bb82"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#afbcebcaead2219df1646d346e076bb82">mHP</a> = 0.<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a></td></tr>
 <tr class="separator:afbcebcaead2219df1646d346e076bb82 inherit pro_attribs_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a29fdc5ee7d3cdea50753f93345900284 inherit pro_attribs_classUPlayerUnitPersistData" id="r_a29fdc5ee7d3cdea50753f93345900284"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a29fdc5ee7d3cdea50753f93345900284">mExp</a></td></tr>
+<tr class="memitem:a29fdc5ee7d3cdea50753f93345900284 inherit pro_attribs_classUPlayerUnitPersistData" id="r_a29fdc5ee7d3cdea50753f93345900284"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a29fdc5ee7d3cdea50753f93345900284">mExp</a> = 0.<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a></td></tr>
 <tr class="separator:a29fdc5ee7d3cdea50753f93345900284 inherit pro_attribs_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a91eb95502543b56740deb930347b1414 inherit pro_attribs_classUPlayerUnitPersistData" id="r_a91eb95502543b56740deb930347b1414"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a91eb95502543b56740deb930347b1414">mMoney</a></td></tr>
+<tr class="memitem:a91eb95502543b56740deb930347b1414 inherit pro_attribs_classUPlayerUnitPersistData" id="r_a91eb95502543b56740deb930347b1414"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a91eb95502543b56740deb930347b1414">mMoney</a> = 0.<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a></td></tr>
 <tr class="separator:a91eb95502543b56740deb930347b1414 inherit pro_attribs_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3bb2733e0987ffaf945e9ed72a5b499f inherit pro_attribs_classUPlayerUnitPersistData" id="r_a3bb2733e0987ffaf945e9ed72a5b499f"><td class="memItemLeft" align="right" valign="top">TMap&lt; FGameplayTag, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a3bb2733e0987ffaf945e9ed72a5b499f">mTagCountMap</a></td></tr>
+<tr class="memitem:a3bb2733e0987ffaf945e9ed72a5b499f inherit pro_attribs_classUPlayerUnitPersistData" id="r_a3bb2733e0987ffaf945e9ed72a5b499f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TMap</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGameplayTag</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a3bb2733e0987ffaf945e9ed72a5b499f">mTagCountMap</a></td></tr>
 <tr class="separator:a3bb2733e0987ffaf945e9ed72a5b499f inherit pro_attribs_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a57f1d07f0c63ed6e1e1b034257b459d4 inherit pro_attribs_classUPlayerUnitPersistData" id="r_a57f1d07f0c63ed6e1e1b034257b459d4"><td class="memItemLeft" align="right" valign="top">TArray&lt; FPrimaryAssetId &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a57f1d07f0c63ed6e1e1b034257b459d4">mSkillIds</a></td></tr>
+<tr class="memitem:a57f1d07f0c63ed6e1e1b034257b459d4 inherit pro_attribs_classUPlayerUnitPersistData" id="r_a57f1d07f0c63ed6e1e1b034257b459d4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a57f1d07f0c63ed6e1e1b034257b459d4">mSkillIds</a></td></tr>
 <tr class="separator:a57f1d07f0c63ed6e1e1b034257b459d4 inherit pro_attribs_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abd458210b1e9e372141d9bb80e061d24 inherit pro_attribs_classUPlayerUnitPersistData" id="r_abd458210b1e9e372141d9bb80e061d24"><td class="memItemLeft" align="right" valign="top">TArray&lt; FPrimaryAssetId &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#abd458210b1e9e372141d9bb80e061d24">mEquipmentIds</a></td></tr>
+<tr class="memitem:abd458210b1e9e372141d9bb80e061d24 inherit pro_attribs_classUPlayerUnitPersistData" id="r_abd458210b1e9e372141d9bb80e061d24"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#abd458210b1e9e372141d9bb80e061d24">mEquipmentIds</a></td></tr>
 <tr class="separator:abd458210b1e9e372141d9bb80e061d24 inherit pro_attribs_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a474056e23a89eb7a93405cdc6ea90a7b inherit pro_attribs_classUPlayerUnitPersistData" id="r_a474056e23a89eb7a93405cdc6ea90a7b"><td class="memItemLeft" align="right" valign="top">TArray&lt; FPrimaryAssetId &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a474056e23a89eb7a93405cdc6ea90a7b">mDiceIds</a></td></tr>
+<tr class="memitem:a474056e23a89eb7a93405cdc6ea90a7b inherit pro_attribs_classUPlayerUnitPersistData" id="r_a474056e23a89eb7a93405cdc6ea90a7b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a474056e23a89eb7a93405cdc6ea90a7b">mDiceIds</a></td></tr>
 <tr class="separator:a474056e23a89eb7a93405cdc6ea90a7b inherit pro_attribs_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="inherited" name="inherited"></a>
 추가로 상속된 멤버들</h2></td></tr>
 <tr class="inherit_header pro_methods_classUPlayerUnitPersistData"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classUPlayerUnitPersistData')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classUPlayerUnitPersistData.html">UPlayerUnitPersistData</a>(으)로부터 상속된 Protected 멤버 함수</td></tr>
-<tr class="memitem:ab94a323868a16846e97baeb8ce910766 inherit pro_methods_classUPlayerUnitPersistData" id="r_ab94a323868a16846e97baeb8ce910766"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#ab94a323868a16846e97baeb8ce910766">SyncPlayerPersistData</a> (<a class="el" href="classAPlayerUnit.html">APlayerUnit</a> *PlayerUnit)</td></tr>
-<tr class="separator:ab94a323868a16846e97baeb8ce910766 inherit pro_methods_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a89f3631616153539b626cc22f29b4b14 inherit pro_methods_classUPlayerUnitPersistData" id="r_a89f3631616153539b626cc22f29b4b14"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a89f3631616153539b626cc22f29b4b14">BindPlayerUnitEvent</a> (<a class="el" href="classAPlayerUnit.html">APlayerUnit</a> *PlayerUnit)</td></tr>
-<tr class="separator:a89f3631616153539b626cc22f29b4b14 inherit pro_methods_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9f50e55c9f6074b116837fa5c212ead4 inherit pro_methods_classUPlayerUnitPersistData" id="r_a9f50e55c9f6074b116837fa5c212ead4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#a9f50e55c9f6074b116837fa5c212ead4">SyncPlayerPersistData</a> (<a class="el" href="classUPlayerUnitModel.html">UPlayerUnitModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PlayerUnit</a>)</td></tr>
+<tr class="memdesc:a9f50e55c9f6074b116837fa5c212ead4 inherit pro_methods_classUPlayerUnitPersistData"><td class="mdescLeft">&#160;</td><td class="mdescRight">영속 스탯(최대 체력/체력/경험치/돈)을 유닛 어트리뷰트와 동기화한다.  <br /></td></tr>
+<tr class="separator:a9f50e55c9f6074b116837fa5c212ead4 inherit pro_methods_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae5b82886e84878c7cfee4b9e84712620 inherit pro_methods_classUPlayerUnitPersistData" id="r_ae5b82886e84878c7cfee4b9e84712620"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUPlayerUnitPersistData.html#ae5b82886e84878c7cfee4b9e84712620">BindPlayerUnitEvent</a> (<a class="el" href="classUPlayerUnitModel.html">UPlayerUnitModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PlayerUnit</a>)</td></tr>
+<tr class="memdesc:ae5b82886e84878c7cfee4b9e84712620 inherit pro_methods_classUPlayerUnitPersistData"><td class="mdescLeft">&#160;</td><td class="mdescRight">유닛 속성/태그의 변경 이벤트를 영속 데이터(mMaxHP/mHP/mExp/mMoney/mTagCountMap)에 반영하도록 델리게이트를 바인딩한다. 이로써 전투/이동 중 유닛에서 발생한 스탯·태그 변화가 자동으로 저장본에 누적되어, 이후 SyncPlayerPersistData 의 복원 단계에서 동일한 값을 그대로 되돌릴 수 있다.  <br /></td></tr>
+<tr class="separator:ae5b82886e84878c7cfee4b9e84712620 inherit pro_methods_classUPlayerUnitPersistData"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock">
-<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00139">139</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00141">141</a> 번째 라인에서 정의되었습니다.</p>
 </div><h2 class="groupheader">멤버 함수 문서화</h2>
+<a id="a776a618a860c4dd4866437d2e8806f3a" name="a776a618a860c4dd4866437d2e8806f3a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a776a618a860c4dd4866437d2e8806f3a">&#9670;&#160;</a></span>AddRewardDice()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> URunPersistData::AddRewardDice </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &amp;&#160;</td>
+          <td class="paramname"><em>DiceId</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00368">368</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a4c7790a2e5e10db8814dec7ed7cf402c" name="a4c7790a2e5e10db8814dec7ed7cf402c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4c7790a2e5e10db8814dec7ed7cf402c">&#9670;&#160;</a></span>AddRewardEquipment()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> URunPersistData::AddRewardEquipment </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &amp;&#160;</td>
+          <td class="paramname"><em>EquipmentId</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00356">356</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a3e4978e2280a0afa82170695b86446b7" name="a3e4978e2280a0afa82170695b86446b7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3e4978e2280a0afa82170695b86446b7">&#9670;&#160;</a></span>AddRewardSkill()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> URunPersistData::AddRewardSkill </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &amp;&#160;</td>
+          <td class="paramname"><em>SkillId</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00335">335</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
 <a id="a8caedfbe19b3a57967af27c2cb225e23" name="a8caedfbe19b3a57967af27c2cb225e23"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8caedfbe19b3a57967af27c2cb225e23">&#9670;&#160;</a></span>ClearRun()</h2>
 
@@ -211,7 +300,7 @@ Protected 속성</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void URunPersistData::ClearRun </td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> URunPersistData::ClearRun </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -219,7 +308,7 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00149">149</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00319">319</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -230,7 +319,7 @@ Protected 속성</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void URunPersistData::CollectAssetIds </td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> URunPersistData::CollectAssetIds </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td>
           <td class="paramname"><em>RowIndex</em>, </td>
@@ -244,25 +333,25 @@ Protected 속성</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">OUT TArray&lt; FPrimaryAssetId &gt; &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>PlayerIds</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">OUT FPrimaryAssetId &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &amp;&#160;</td>
           <td class="paramname"><em>StageId</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">OUT FPrimaryAssetId &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &amp;&#160;</td>
           <td class="paramname"><em>RoomId</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">OUT TArray&lt; FPrimaryAssetId &gt; &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>AdditionalAssetIds</em>&#160;</td>
         </tr>
         <tr>
@@ -272,8 +361,19 @@ Protected 속성</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">RowIndex</td><td>대상 방의 행 인덱스 </td></tr>
+    <tr><td class="paramname">ColumnIndex</td><td>대상 방의 열 인덱스 </td></tr>
+    <tr><td class="paramname">PlayerIds</td><td>[out] 플레이어 유닛 + 보유 스킬/장비/주사위 식별자 누적 배열 </td></tr>
+    <tr><td class="paramname">StageId</td><td>[out] 스테이지 스폰 데이터 식별자 </td></tr>
+    <tr><td class="paramname">RoomId</td><td>[out] 방 스폰 데이터 식별자 </td></tr>
+    <tr><td class="paramname">AdditionalAssetIds</td><td>[out] 방이 추가로 요구하는 부가 에셋 식별자 배열 </td></tr>
+  </table>
+  </dd>
+</dl>
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00192">192</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00429">429</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -284,15 +384,16 @@ Protected 속성</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="structFRoom.html">FRoom</a> &amp; URunPersistData::GetCurrentRoom </td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFRoom.html">FRoom</a> &amp; URunPersistData::GetCurrentRoom </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
+<dl class="section return"><dt>반환값</dt><dd>현재 방(읽기 전용) </dd></dl>
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00228">228</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00476">476</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -303,15 +404,15 @@ Protected 속성</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void URunPersistData::GetCurrentRoomIndex </td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> URunPersistData::GetCurrentRoomIndex </td>
           <td>(</td>
-          <td class="paramtype">OUT <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> &amp;&#160;</td>
           <td class="paramname"><em>RowIndex</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">OUT <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> &amp;&#160;</td>
           <td class="paramname"><em>ColumnIndex</em>&#160;</td>
         </tr>
         <tr>
@@ -321,8 +422,15 @@ Protected 속성</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">RowIndex</td><td>[out] 현재 방 행 인덱스 </td></tr>
+    <tr><td class="paramname">ColumnIndex</td><td>[out] 현재 방 열 인덱스 </td></tr>
+  </table>
+  </dd>
+</dl>
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00233">233</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00486">486</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -333,15 +441,16 @@ Protected 속성</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const FRandomStream &amp; URunPersistData::GetEventStream </td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FRandomStream</a> &amp; URunPersistData::GetEventStream </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
+<dl class="section return"><dt>반환값</dt><dd>이벤트 스트림 </dd></dl>
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00208">208</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00447">447</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -352,7 +461,7 @@ Protected 속성</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="structFRoom.html">FRoom</a> &amp; URunPersistData::GetRoom </td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFRoom.html">FRoom</a> &amp; URunPersistData::GetRoom </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td>
           <td class="paramname"><em>RowIndex</em>, </td>
@@ -370,8 +479,16 @@ Protected 속성</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">RowIndex</td><td>행 인덱스 </td></tr>
+    <tr><td class="paramname">ColumnIndex</td><td>열 인덱스 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>반환값</dt><dd>해당 좌표의 방(읽기 전용) </dd></dl>
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00218">218</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00464">464</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -382,15 +499,16 @@ Protected 속성</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="structFRunLog.html">FRunLog</a> &amp; URunPersistData::GetRunLog </td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FRunLog</a> &amp; URunPersistData::GetRunLog </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
+<dl class="section return"><dt>반환값</dt><dd>런 로그(읽기 전용) </dd></dl>
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00239">239</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00493">493</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -401,15 +519,16 @@ Protected 속성</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="structFStage.html">FStage</a> &amp; URunPersistData::GetStage </td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFStage.html">FStage</a> &amp; URunPersistData::GetStage </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
+<dl class="section return"><dt>반환값</dt><dd>스테이지(읽기 전용) </dd></dl>
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00213">213</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00453">453</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -420,15 +539,16 @@ Protected 속성</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const FRandomStream &amp; URunPersistData::GetStageBuildStream </td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FRandomStream</a> &amp; URunPersistData::GetStageBuildStream </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
+<dl class="section return"><dt>반환값</dt><dd>스테이지 빌드 스트림 </dd></dl>
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00203">203</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00441">441</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -439,15 +559,16 @@ Protected 속성</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="structFRoom.html">FRoom</a> &amp; URunPersistData::GetStartRoom </td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFRoom.html">FRoom</a> &amp; URunPersistData::GetStartRoom </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
+<dl class="section return"><dt>반환값</dt><dd>시작 방(읽기 전용) </dd></dl>
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00223">223</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00470">470</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -458,15 +579,16 @@ Protected 속성</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">bool URunPersistData::IsActive </td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> URunPersistData::IsActive </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
+<dl class="section return"><dt>반환값</dt><dd>스테이지 유효 시 true </dd></dl>
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00244">244</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00499">499</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -477,7 +599,7 @@ Protected 속성</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void URunPersistData::MakeStageAsync </td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> URunPersistData::MakeStageAsync </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="StageLevelType_8h.html#ae0b1317897a714ca0969cdc80dfd5d95">EStageLevelType</a>&#160;</td>
           <td class="paramname"><em>Type</em>, </td>
@@ -485,7 +607,7 @@ Protected 속성</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">FOnCreateStage&#160;</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnCreateStage</a>&#160;</td>
           <td class="paramname"><em>OnCreateStage</em>&#160;</td>
         </tr>
         <tr>
@@ -495,8 +617,15 @@ Protected 속성</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">Type</td><td>생성할 스테이지의 레벨 타입(밸런스 테이블 행 키) </td></tr>
+    <tr><td class="paramname">OnCreateStage</td><td>생성 완료 시 호출될 델리게이트(생성된 <a class="el" href="structFStage.html" title="스테이지 객체">FStage</a> 전달) </td></tr>
+  </table>
+  </dd>
+</dl>
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00165">165</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00387">387</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -507,7 +636,7 @@ Protected 속성</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void URunPersistData::SetCurrentRoomIndex </td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> URunPersistData::SetCurrentRoomIndex </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td>
           <td class="paramname"><em>RowIndex</em>, </td>
@@ -525,8 +654,15 @@ Protected 속성</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">RowIndex</td><td>행 인덱스 </td></tr>
+    <tr><td class="paramname">ColumnIndex</td><td>열 인덱스 </td></tr>
+  </table>
+  </dd>
+</dl>
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00187">187</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00414">414</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -537,9 +673,9 @@ Protected 속성</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void URunPersistData::StartRun </td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> URunPersistData::StartRun </td>
           <td>(</td>
-          <td class="paramtype">const FPrimaryAssetId &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> &amp;&#160;</td>
           <td class="paramname"><em>PlayerUnitId</em>, </td>
         </tr>
         <tr>
@@ -555,8 +691,15 @@ Protected 속성</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">PlayerUnitId</td><td>이번 런에 사용할 플레이어 유닛의 PrimaryAssetId </td></tr>
+    <tr><td class="paramname">Difficulty</td><td>이번 런의 난이도 </td></tr>
+  </table>
+  </dd>
+</dl>
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00137">137</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00245">245</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -571,31 +714,7 @@ Protected 속성</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">FRandomStream URunPersistData::mEventStream</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00174">174</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="a64e41cbe38cd98340dc1ad0ce71fb83e" name="a64e41cbe38cd98340dc1ad0ce71fb83e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a64e41cbe38cd98340dc1ad0ce71fb83e">&#9670;&#160;</a></span>mRunLog</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structFRunLog.html">FRunLog</a> URunPersistData::mRunLog</td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FRandomStream</a> URunPersistData::mEventStream</td>
         </tr>
       </table>
   </td>
@@ -609,6 +728,30 @@ Protected 속성</h2></td></tr>
 
 </div>
 </div>
+<a id="a64e41cbe38cd98340dc1ad0ce71fb83e" name="a64e41cbe38cd98340dc1ad0ce71fb83e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a64e41cbe38cd98340dc1ad0ce71fb83e">&#9670;&#160;</a></span>mRunLog</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FRunLog</a> URunPersistData::mRunLog</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00190">190</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
 <a id="a9a235c762b7b8ee314b442930c746957" name="a9a235c762b7b8ee314b442930c746957"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a9a235c762b7b8ee314b442930c746957">&#9670;&#160;</a></span>mStage</h2>
 
@@ -619,7 +762,7 @@ Protected 속성</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">TInstancedStruct&lt;<a class="el" href="structFStage.html">FStage</a>&gt; URunPersistData::mStage</td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt;<a class="el" href="structFStage.html">FStage</a>&gt; URunPersistData::mStage</td>
         </tr>
       </table>
   </td>
@@ -629,7 +772,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00178">178</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00186">186</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -643,7 +786,7 @@ Protected 속성</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">FRandomStream URunPersistData::mStageBuildStream</td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FRandomStream</a> URunPersistData::mStageBuildStream</td>
         </tr>
       </table>
   </td>
@@ -653,7 +796,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00172">172</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00180">180</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

@@ -1,0 +1,329 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RDTests/TAS/TacticalAttributeTests.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('TacticalAttributeTests_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">TacticalAttributeTests.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="TacticalAttributeTests_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*****************************************************************/</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;<a class="code" href="P__RDTests_8h.html">P_RDTests.h</a>&quot;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;Misc/AutomationTest.h&quot;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &quot;<a class="code" href="TASAttributeTestsHelper_8h.html">TASAttributeTestsHelper.h</a>&quot;</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &quot;<a class="code" href="AttributeSetComponentModel_8h.html">Component/AttributeComponent/AttributeSetComponentModel.h</a>&quot;</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor">#include &quot;<a class="code" href="AttributeSetMinimal_8h.html">AttributeSet/AttributeSetMinimal.h</a>&quot;</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="preprocessor">#include &quot;<a class="code" href="UnitAttributeSet_8h.html">AttributeSet/UnitAttributeSet.h</a>&quot;</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="preprocessor">#include &quot;<a class="code" href="TacticalEffect_8h.html">TAS/Effect/TacticalEffect.h</a>&quot;</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="preprocessor">#include &quot;<a class="code" href="TacticalEffectContext_8h.html">TAS/Effect/TacticalEffectContext.h</a>&quot;</span></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="preprocessor">#include &quot;<a class="code" href="SimulationSubsystem_8h.html">Singleton/WorldSubsystem/SimulationSubsystem.h</a>&quot;</span></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="preprocessor">#include &quot;<a class="code" href="TacticalFrameworkModel_8h.html">Singleton/WorldSubsystem/TacticalFrameworkModel.h</a>&quot;</span></div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="preprocessor">#include &quot;<a class="code" href="RoomInstance_8h.html">Simulation/RoomInstance.h</a>&quot;</span></div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="preprocessor">#include &quot;Engine/World.h&quot;</span></div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="preprocessor">#include &quot;Engine/Engine.h&quot;</span></div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span> </div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="keyword">static</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UWorld</a>* GetAnyGameWorld()</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>{</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GEngine</a> == <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    {</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>        <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    }</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <span class="keywordflow">for</span> (<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FWorldContext</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Context</a> : <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GEngine</a>-&gt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldContexts</a>())</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    {</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>        <span class="keywordflow">if</span> ((<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Context</a>.WorldType == EWorldType::PIE || <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Context</a>.WorldType == EWorldType::Game) &amp;&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Context</a>.World() != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>        {</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>            <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Context</a>.World();</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>        }</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>    }</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>}</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
+<div class="foldopen" id="foldopen00044" data-start="{" data-end="}">
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno"><a class="line" href="TacticalAttributeTests_8cpp.html#a5af06342845f2648e5dd27262637c95f">   44</a></span><a class="code hl_function" href="TacticalAttributeTests_8cpp.html#a5af06342845f2648e5dd27262637c95f">IMPLEMENT_SIMPLE_AUTOMATION_TEST</a>(</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FTacticalAttributeTests</a>,</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    <span class="stringliteral">&quot;P_RD.TAS.AttributeSetComponentModel&quot;</span>,</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>)</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span> </div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="keywordtype">bool</span> FTacticalAttributeTests::RunTest(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Parameters</a>)</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>{</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    <span class="comment">// ----------------------------------------------------</span></div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    <span class="comment">// 1. 에디터에 이미 존재하는 활성화된 GWorld 환경 사용</span></div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    <span class="comment">// ----------------------------------------------------</span></div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UWorld</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">World</a> = GetAnyGameWorld();</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">World</a> == <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    {</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">World</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GWorld</a>;</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    }</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">World</a> == <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>    {</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AddError</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;유효한 UWorld를 찾는 데 실패했습니다.&quot;</span>));</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>    }</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span> </div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>    <a class="code hl_class" href="classUSimulationSubsystem.html">USimulationSubsystem</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SimSubsystem</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">World</a>-&gt;GetSubsystem&lt;<a class="code hl_class" href="classUSimulationSubsystem.html">USimulationSubsystem</a>&gt;();</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestNotNull</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;USimulationSubsystem이 초기화되어야 합니다.&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SimSubsystem</a>) == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>    {</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>    }</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span> </div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    <a class="code hl_class" href="classURoomInstance.html">URoomInstance</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RoomInstance</a> = <a class="code hl_function" href="classFSimulationSubsystemTestAccessor.html#a3c39363ef2ad041552812d690c3360ee">FSimulationSubsystemTestAccessor::GetRoomInstance</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SimSubsystem</a>);</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestNotNull</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;RoomInstance가 초기화되어야 합니다.&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RoomInstance</a>) == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>    {</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>    }</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span> </div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    <span class="comment">// UTacticalFrameworkModel 모크 등록 (기존 등록 상태가 없을 때만 등록)</span></div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    <a class="code hl_class" href="classUTacticalFrameworkModel.html">UTacticalFrameworkModel</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FrameworkModel</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Cast&lt;UTacticalFrameworkModel&gt;</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RoomInstance</a>-&gt;mAliveSubsystemModels.FindRef(UTacticalFrameworkModel::StaticClass()));</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FrameworkModel</a> == <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>    {</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FrameworkModel</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewObject&lt;UTacticalFrameworkModel&gt;</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RoomInstance</a>);</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RoomInstance</a>-&gt;mAliveSubsystemModels.Add(UTacticalFrameworkModel::StaticClass(), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FrameworkModel</a>);</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    }</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span> </div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>    <span class="comment">// ----------------------------------------------------</span></div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>    <span class="comment">// 2. 모델 및 속성 컴포넌트 모델 생성 &amp; 초기화</span></div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>    <span class="comment">// ----------------------------------------------------</span></div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    <a class="code hl_class" href="classUTASActorModelMock.html">UTASActorModelMock</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MockActorModel</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewObject&lt;UTASActorModelMock&gt;</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">World</a>);</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MockActorModel</a>-&gt;<a class="code hl_function" href="classUObjectModel.html#a70d0e1b06e1aef4b0d5193e742b77c4b">Initialize</a>();</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MockActorModel</a>-&gt;BeginPlay();</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span> </div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>    <a class="code hl_class" href="classUAttributeSetComponentModel.html">UAttributeSetComponentModel</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MockActorModel</a>-&gt;GetAttributeComponent();</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestNotNull</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;AttributeSetComponentModel이 유효해야 합니다.&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>) == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>    {</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>    }</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span> </div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>    <span class="comment">// AttributeSet이 정상 부착되었는지 확인</span></div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestTrue</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;UUnitAttributeSet이 등록되어야 합니다.&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;HasAttributeSetForAttribute(UUnitAttributeSet::GetHPAttribute()));</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span> </div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>    <span class="comment">// ----------------------------------------------------</span></div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>    <span class="comment">// 3. 테스트 케이스 1: 기본 속성 변경 검증 (HP 및 MaxHP 초기화)</span></div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    <span class="comment">// ----------------------------------------------------</span></div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AddInfo</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;=== 테스트 케이스 1: 기본값 및 현재값 초기화 검증 ===&quot;</span>));</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;SetAttributeBaseValue(UUnitAttributeSet::GetMaxHPAttribute(), 100.f);</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;SetAttributeBaseValue(UUnitAttributeSet::GetHPAttribute(), 100.f);</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;기본 MaxHP는 100.f이어야 합니다.&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;GetAttributeBaseValue(UUnitAttributeSet::GetMaxHPAttribute()), 100.f);</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;현재 MaxHP는 100.f이어야 합니다.&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;GetAttributeCurrentValue(UUnitAttributeSet::GetMaxHPAttribute()), 100.f);</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;기본 HP는 100.f이어야 합니다.&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;GetAttributeBaseValue(UUnitAttributeSet::GetHPAttribute()), 100.f);</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;현재 HP는 100.f이어야 합니다.&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute()), 100.f);</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span> </div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>    <span class="comment">// ----------------------------------------------------</span></div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>    <span class="comment">// 4. 테스트 케이스 2: Instant Effect 적용 검증 (MaxHP 데미지 차감 -20)</span></div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>    <span class="comment">// ----------------------------------------------------</span></div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AddInfo</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;=== 테스트 케이스 2: Instant 이펙트 적용 검증 ===&quot;</span>));</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span> </div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>    <a class="code hl_class" href="classUTacticalEffectContext.html">UTacticalEffectContext</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectContext1</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;MakeEffectContext();</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectContext1</a>-&gt;SetInstigator(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MockActorModel</a>);</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectContext1</a>-&gt;SetAttributeSetComponentModel(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>);</div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span> </div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedPtr&lt;FTacticalEffectSpec&gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InstantSpec</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;MakeOutgoingSpec(UTestInstantTacticalEffect::StaticClass(), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectContext1</a>);</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InstantSpec</a>-&gt;mDynamicMagnitude = -20.f;</div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;ApplyTacticalEffectSpecToSelf(*<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InstantSpec</a>);</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span> </div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>    <span class="comment">// Instant Effect는 베이스 값과 현재 값을 모두 영구적으로 변화시킴</span></div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Instant HP 변경 후, 기본 MaxHP는 80.f이어야 합니다.&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;GetAttributeBaseValue(UUnitAttributeSet::GetMaxHPAttribute()), 80.f);</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Instant HP 변경 후, 현재 MaxHP는 80.f이어야 합니다.&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;GetAttributeCurrentValue(UUnitAttributeSet::GetMaxHPAttribute()), 80.f);</div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span> </div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>    <span class="comment">// ----------------------------------------------------</span></div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>    <span class="comment">// 5. 테스트 케이스 3: Infinite Effect 적용 및 해제 검증 (DefensePoint +30)</span></div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>    <span class="comment">// ----------------------------------------------------</span></div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AddInfo</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;=== 테스트 케이스 3: Infinite 이펙트 적용 및 제거 검증 ===&quot;</span>));</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;SetAttributeBaseValue(UUnitAttributeSet::GetDefensePointAttribute(), 10.f);</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;기본 방어력은 10.f이어야 합니다.&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;GetAttributeBaseValue(UUnitAttributeSet::GetDefensePointAttribute()), 10.f);</div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span> </div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>    <a class="code hl_class" href="classUTacticalEffectContext.html">UTacticalEffectContext</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectContext2</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;MakeEffectContext();</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectContext2</a>-&gt;SetInstigator(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MockActorModel</a>);</div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectContext2</a>-&gt;SetAttributeSetComponentModel(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>);</div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span> </div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedPtr&lt;FTacticalEffectSpec&gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InfiniteEffect</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;MakeOutgoingSpec(UTestInfiniteTacticalEffect::StaticClass(), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectContext2</a>);</div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InfiniteEffect</a>-&gt;mDynamicMagnitude = 30.f;</div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>    <a class="code hl_struct" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ActiveHandle</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;ApplyTacticalEffectSpecToSelf(*<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InfiniteEffect</a>);</div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span> </div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestTrue</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;ActiveHandle이 유효해야 합니다.&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ActiveHandle</a>.IsValid());</div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>    <span class="comment">// Infinite Effect는 베이스 값은 그대로 두고 현재 값만 변화시킴 (Aggregator에 가산)</span></div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;기본 방어력은 10.f로 유지되어야 합니다.&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;GetAttributeBaseValue(UUnitAttributeSet::GetDefensePointAttribute()), 10.f);</div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;현재 방어력은 40.f이어야 합니다. (기본 10 + 모디파이어 30)&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;GetAttributeCurrentValue(UUnitAttributeSet::GetDefensePointAttribute()), 40.f);</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span> </div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>    <span class="comment">// 이펙트 제거 후 원래대로 복원되는지 확인</span></div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;RemoveActiveTacticalEffect(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ActiveHandle</a>);</div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Infinite 이펙트 제거 후, 현재 방어력은 10.f로 복구되어야 합니다.&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;GetAttributeCurrentValue(UUnitAttributeSet::GetDefensePointAttribute()), 10.f);</div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span> </div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>    <span class="comment">// ----------------------------------------------------</span></div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>    <span class="comment">// 6. 테스트 케이스 4: Loose Tag 부여 및 해제 검증</span></div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>    <span class="comment">// ----------------------------------------------------</span></div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AddInfo</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;=== 테스트 케이스 4: Loose 태그 추가 및 제거 검증 ===&quot;</span>));</div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>    <span class="comment">// 테스트에 사용할 태그 등록</span></div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGameplayTag</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestTagA</a> = AbilityTags::GameplayAbility_LevelUp;</div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span> </div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestFalse</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;초기에는 TestTagA를 가지고 있지 않아야 합니다.&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;HasMatchingGameplayTag(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestTagA</a>));</div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span> </div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;AddLooseGameplayTag(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestTagA</a>);</div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestTrue</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;태그 추가 후에는 TestTagA를 가지고 있어야 합니다.&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;HasMatchingGameplayTag(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestTagA</a>));</div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;TestTagA의 개수는 1이어야 합니다.&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;GetTagCount(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestTagA</a>), 1);</div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span> </div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;RemoveLooseGameplayTag(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestTagA</a>);</div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestFalse</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;태그 제거 후에는 TestTagA를 가지고 있지 않아야 합니다.&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;HasMatchingGameplayTag(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestTagA</a>));</div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span> </div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>    <span class="comment">// ----------------------------------------------------</span></div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>    <span class="comment">// 7. 테스트 케이스 5: Effect를 통한 Granted Tag 부여 및 해제 검증</span></div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>    <span class="comment">// ----------------------------------------------------</span></div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AddInfo</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;=== 테스트 케이스 5: Infinite 이펙트에 의한 Granted 태그 부여 검증 ===&quot;</span>));</div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGameplayTag</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GrantedTag</a> = AbilityTags::GameplayAbility_Passive_OnEndApplyingEffect;</div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span> </div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>    <a class="code hl_class" href="classUTacticalEffectContext.html">UTacticalEffectContext</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectContext3</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;MakeEffectContext();</div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectContext3</a>-&gt;SetInstigator(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MockActorModel</a>);</div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectContext3</a>-&gt;SetAttributeSetComponentModel(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>);</div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span> </div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedPtr&lt;FTacticalEffectSpec&gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TagSpec</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;MakeOutgoingSpec(UTestInfiniteTagEffect::StaticClass(), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectContext3</a>);</div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>    <a class="code hl_struct" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TagActiveHandle</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;ApplyTacticalEffectSpecToSelf(*<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TagSpec</a>);</div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span> </div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestTrue</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;CompModel에 GrantedTag가 활성화되어야 합니다.&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;HasMatchingGameplayTag(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GrantedTag</a>));</div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;GrantedTag의 개수는 1이어야 합니다.&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;GetTagCount(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GrantedTag</a>), 1);</div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span> </div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;RemoveActiveTacticalEffect(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TagActiveHandle</a>);</div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestFalse</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;CompModel에서 GrantedTag가 제거되어야 합니다.&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;HasMatchingGameplayTag(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GrantedTag</a>));</div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span> </div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>    <span class="comment">// ----------------------------------------------------</span></div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>    <span class="comment">// 8. 환경 정리 (Clean up)</span></div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>    <span class="comment">// ----------------------------------------------------</span></div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MockActorModel</a>-&gt;EndPlay();</div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MockActorModel</a>-&gt;<a class="code hl_function" href="classUObjectModel.html#ad0d2f6b590764a1fbb09a1175b9e03d8">Uninitialize</a>();</div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span> </div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CompModel</a>-&gt;MarkAsGarbage();</div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MockActorModel</a>-&gt;MarkAsGarbage();</div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span> </div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RoomInstance</a> != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>    {</div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RoomInstance</a>-&gt;mAliveSubsystemModels.Remove(UTacticalFrameworkModel::StaticClass());</div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FrameworkModel</a>-&gt;MarkAsGarbage();</div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>    }</div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span> </div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span>}</div>
+</div>
+<div class="ttc" id="aAttributeSetComponentModel_8h_html"><div class="ttname"><a href="AttributeSetComponentModel_8h.html">AttributeSetComponentModel.h</a></div><div class="ttdoc">속성 컴포넌트 모델 정의 헤더</div></div>
+<div class="ttc" id="aAttributeSetMinimal_8h_html"><div class="ttname"><a href="AttributeSetMinimal_8h.html">AttributeSetMinimal.h</a></div><div class="ttdoc">AttributeSet 활용 영역에서 사용되는 포함 헤더</div></div>
+<div class="ttc" id="aP__RDTests_8h_html"><div class="ttname"><a href="P__RDTests_8h.html">P_RDTests.h</a></div><div class="ttdoc">P_RD 자동화 테스트 모듈 헤더</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aRoomInstance_8h_html"><div class="ttname"><a href="RoomInstance_8h.html">RoomInstance.h</a></div><div class="ttdoc">방 내 루트 객체가 되는 객체 헤더</div></div>
+<div class="ttc" id="aSimulationSubsystem_8h_html"><div class="ttname"><a href="SimulationSubsystem_8h.html">SimulationSubsystem.h</a></div><div class="ttdoc">시뮬레이션을 처리하는 서브시스템 정의 헤더</div></div>
+<div class="ttc" id="aTASAttributeTestsHelper_8h_html"><div class="ttname"><a href="TASAttributeTestsHelper_8h.html">TASAttributeTestsHelper.h</a></div><div class="ttdoc">TAS Attribute 테스트를 위한 Mock 모델 정의 헤더</div></div>
+<div class="ttc" id="aTacticalAttributeTests_8cpp_html_a5af06342845f2648e5dd27262637c95f"><div class="ttname"><a href="TacticalAttributeTests_8cpp.html#a5af06342845f2648e5dd27262637c95f">IMPLEMENT_SIMPLE_AUTOMATION_TEST</a></div><div class="ttdeci">IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTacticalAttributeTests, &quot;P_RD.TAS.AttributeSetComponentModel&quot;, EAutomationTestFlags::EditorContext|EAutomationTestFlags::ProductFilter) bool FTacticalAttributeTests</div><div class="ttdef"><b>Definition</b> <a href="TacticalAttributeTests_8cpp_source.html#l00044">TacticalAttributeTests.cpp:44</a></div></div>
+<div class="ttc" id="aTacticalEffectContext_8h_html"><div class="ttname"><a href="TacticalEffectContext_8h.html">TacticalEffectContext.h</a></div><div class="ttdoc">이펙트 적용 시 참고되는 공용 메타 데이터 구현 헤더</div></div>
+<div class="ttc" id="aTacticalEffect_8h_html"><div class="ttname"><a href="TacticalEffect_8h.html">TacticalEffect.h</a></div><div class="ttdoc">속성값 및 태그를 변경하는 객체 정의 헤더</div></div>
+<div class="ttc" id="aTacticalFrameworkModel_8h_html"><div class="ttname"><a href="TacticalFrameworkModel_8h.html">TacticalFrameworkModel.h</a></div><div class="ttdoc">TAS의 글로벌 서브시스템 모델 정의 헤더</div></div>
+<div class="ttc" id="aUnitAttributeSet_8h_html"><div class="ttname"><a href="UnitAttributeSet_8h.html">UnitAttributeSet.h</a></div><div class="ttdoc">SRPGUnit에 대한 Attribute Set 정의 헤더</div></div>
+<div class="ttc" id="aclassFSimulationSubsystemTestAccessor_html_a3c39363ef2ad041552812d690c3360ee"><div class="ttname"><a href="classFSimulationSubsystemTestAccessor.html#a3c39363ef2ad041552812d690c3360ee">FSimulationSubsystemTestAccessor::GetRoomInstance</a></div><div class="ttdeci">static URoomInstance * GetRoomInstance(USimulationSubsystem *Subsystem)</div><div class="ttdoc">Subsystem이 보유한 현재 방 컨텍스트의 RoomInstance를 꺼낸다.</div><div class="ttdef"><b>Definition</b> <a href="TASAttributeTestsHelper_8h_source.html#l00051">TASAttributeTestsHelper.h:51</a></div></div>
+<div class="ttc" id="aclassUAttributeSetComponentModel_html"><div class="ttname"><a href="classUAttributeSetComponentModel.html">UAttributeSetComponentModel</a></div><div class="ttdoc">한 유닛(액터)이 보유하는 모든 TacticalAttributeSet, 활성 Effect, 게임플레이 태그 카운트를 관리하는 컴포넌트 모델.</div><div class="ttdef"><b>Definition</b> <a href="AttributeSetComponentModel_8h_source.html#l00032">AttributeSetComponentModel.h:33</a></div></div>
+<div class="ttc" id="aclassUObjectModel_html_a70d0e1b06e1aef4b0d5193e742b77c4b"><div class="ttname"><a href="classUObjectModel.html#a70d0e1b06e1aef4b0d5193e742b77c4b">UObjectModel::Initialize</a></div><div class="ttdeci">virtual void Initialize()</div><div class="ttdef"><b>Definition</b> <a href="ObjectModel_8cpp_source.html#l00006">ObjectModel.cpp:6</a></div></div>
+<div class="ttc" id="aclassUObjectModel_html_ad0d2f6b590764a1fbb09a1175b9e03d8"><div class="ttname"><a href="classUObjectModel.html#ad0d2f6b590764a1fbb09a1175b9e03d8">UObjectModel::Uninitialize</a></div><div class="ttdeci">virtual void Uninitialize()</div><div class="ttdef"><b>Definition</b> <a href="ObjectModel_8cpp_source.html#l00012">ObjectModel.cpp:12</a></div></div>
+<div class="ttc" id="aclassURoomInstance_html"><div class="ttname"><a href="classURoomInstance.html">URoomInstance</a></div><div class="ttdoc">방 내 루트 객체가 되는 객체 헤더</div><div class="ttdef"><b>Definition</b> <a href="RoomInstance_8h_source.html#l00031">RoomInstance.h:32</a></div></div>
+<div class="ttc" id="aclassUSimulationSubsystem_html"><div class="ttname"><a href="classUSimulationSubsystem.html">USimulationSubsystem</a></div><div class="ttdoc">SRPG 시뮬레이션을 처리하는 서브시스템</div><div class="ttdef"><b>Definition</b> <a href="SimulationSubsystem_8h_source.html#l00032">SimulationSubsystem.h:33</a></div></div>
+<div class="ttc" id="aclassUTASActorModelMock_html"><div class="ttname"><a href="classUTASActorModelMock.html">UTASActorModelMock</a></div><div class="ttdoc">Attribute 테스트용 ActorModel Mock</div><div class="ttdef"><b>Definition</b> <a href="TASAttributeTestsHelper_8h_source.html#l00090">TASAttributeTestsHelper.h:91</a></div></div>
+<div class="ttc" id="aclassUTacticalEffectContext_html"><div class="ttname"><a href="classUTacticalEffectContext.html">UTacticalEffectContext</a></div><div class="ttdoc">이펙트 적용 시 참고되는 공용 메타 데이터 구현 헤더</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffectContext_8h_source.html#l00025">TacticalEffectContext.h:26</a></div></div>
+<div class="ttc" id="aclassUTacticalFrameworkModel_html"><div class="ttname"><a href="classUTacticalFrameworkModel.html">UTacticalFrameworkModel</a></div><div class="ttdoc">SRPG 유저 명령을 전달하는 서브시스템 모델</div><div class="ttdef"><b>Definition</b> <a href="TacticalFrameworkModel_8h_source.html#l00039">TacticalFrameworkModel.h:40</a></div></div>
+<div class="ttc" id="astructFActiveTacticalEffectHandle_html"><div class="ttname"><a href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a></div><div class="ttdoc">활성화된 이펙트를 쉽게 탐색하기 위한 핸들</div><div class="ttdef"><b>Definition</b> <a href="ActiveTacticalEffect_8h_source.html#l00039">ActiveTacticalEffect.h:40</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_b774e7ec51d4a1271b160947af725bd0.html">P_RDTests</a></li><li class="navelem"><a class="el" href="dir_6684453943089c7b75a5ae8906ea97f2.html">TAS</a></li><li class="navelem"><a class="el" href="TacticalAttributeTests_8cpp.html">TacticalAttributeTests.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

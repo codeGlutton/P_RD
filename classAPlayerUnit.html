@@ -91,9 +91,6 @@ $(document).ready(function(){initNavTree('classAPlayerUnit.html',''); initResiza
 
 <div class="header">
   <div class="summary">
-<a href="#pub-methods">Public 멤버 함수</a> &#124;
-<a href="#pro-methods">Protected 멤버 함수</a> &#124;
-<a href="#pro-attribs">Protected 속성</a> &#124;
 <a href="classAPlayerUnit-members.html">모든 멤버 목록</a>  </div>
   <div class="headertitle"><div class="title">APlayerUnit 클래스 참조</div></div>
 </div><!--header-->
@@ -107,346 +104,74 @@ APlayerUnit에 대한 상속 다이어그램 : </div>
  <div class="center">
   <img src="classAPlayerUnit.png" usemap="#APlayerUnit_map" alt=""/>
   <map id="APlayerUnit_map" name="APlayerUnit_map">
-<area href="classAUnit.html" title="SRPG에서 사용되는 베이스 폰 클래스" alt="AUnit" shape="rect" coords="366,112,539,136"/>
-<area href="classITileActor.html" title="SRPG 타일에 배치 가능한 객체 인터페이스" alt="ITileActor" shape="rect" coords="366,56,539,80"/>
-<area href="classITileTargetable.html" title="SRPG 타일에 타격 가능한 객체" alt="ITileTargetable" shape="rect" coords="549,56,722,80"/>
-<area href="classITileSelectable.html" title="SRPG 타일에 선택 가능하여 디테일 정보를 볼 수 있는 객체" alt="ITileSelectable" shape="rect" coords="732,56,905,80"/>
-<area href="classAKnightPlayerUnit.html" title="SRPG에서 사용되는 플레이어 폰 베이스 클래스" alt="AKnightPlayerUnit" shape="rect" coords="366,224,539,248"/>
+<area href="classAUnit.html" title="턴을 소유할 수 있는 베이스 폰 클래스" alt="AUnit" shape="rect" coords="147,112,284,136"/>
+<area href="classIActorView.html" title="액터 시뮬레이션 뷰의 인터페이스" alt="IActorView" shape="rect" coords="147,56,284,80"/>
+<area href="classIBoardSelectionTarget.html" title="SRPG 타일에 선택 가능하여 디테일 정보를 볼 수 있는 객체" alt="IBoardSelectionTarget" shape="rect" coords="294,56,431,80"/>
+<area href="classIObjectView.html" title="시뮬레이션 뷰의 최상위 인터페이스" alt="IObjectView" shape="rect" coords="147,0,284,24"/>
   </map>
 </div></div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
-Public 멤버 함수</h2></td></tr>
-<tr class="memitem:abc10c24e719c83f7e06a4d37c16c1b75" id="r_abc10c24e719c83f7e06a4d37c16c1b75"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAPlayerUnit.html#abc10c24e719c83f7e06a4d37c16c1b75">APlayerUnit</a> ()</td></tr>
-<tr class="separator:abc10c24e719c83f7e06a4d37c16c1b75"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2c598d9a7aa2ec476d3bdb42eb0042d2" id="r_a2c598d9a7aa2ec476d3bdb42eb0042d2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAPlayerUnit.html#a2c598d9a7aa2ec476d3bdb42eb0042d2">PostInitializeComponents</a> () override</td></tr>
-<tr class="separator:a2c598d9a7aa2ec476d3bdb42eb0042d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ade1e9d0eca7bc9e7f6675b7412a81955" id="r_ade1e9d0eca7bc9e7f6675b7412a81955"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAPlayerUnit.html#ade1e9d0eca7bc9e7f6675b7412a81955">OnConstruction</a> (const FTransform &amp;Transform) override</td></tr>
-<tr class="separator:ade1e9d0eca7bc9e7f6675b7412a81955"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6d9591d716ebdc88a3914b102f8440b6" id="r_a6d9591d716ebdc88a3914b102f8440b6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="PlayerJobType_8h.html#a11db6eae2577258d153e9122c9bba255">EPlayerJobType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAPlayerUnit.html#a6d9591d716ebdc88a3914b102f8440b6">GetPlayerJobType</a> () const</td></tr>
-<tr class="separator:a6d9591d716ebdc88a3914b102f8440b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa74587d8e9131b8053d9fec7b10c2208" id="r_aa74587d8e9131b8053d9fec7b10c2208"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAPlayerUnit.html#aa74587d8e9131b8053d9fec7b10c2208">GetPlayerLevel</a> () const</td></tr>
-<tr class="separator:aa74587d8e9131b8053d9fec7b10c2208"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1783cac8667b961b145afa0180e81da6" id="r_a1783cac8667b961b145afa0180e81da6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAPlayerUnit.html#a1783cac8667b961b145afa0180e81da6">GetDifficulty</a> () const override</td></tr>
-<tr class="separator:a1783cac8667b961b145afa0180e81da6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae23998e48e125e5d182095e52ca08ac0" id="r_ae23998e48e125e5d182095e52ca08ac0"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAPlayerUnit.html#ae23998e48e125e5d182095e52ca08ac0">IsPlayerUnit</a> () const override</td></tr>
-<tr class="separator:ae23998e48e125e5d182095e52ca08ac0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="inherited" name="inherited"></a>
+추가로 상속된 멤버들</h2></td></tr>
 <tr class="inherit_header pub_methods_classAUnit"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classAUnit')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classAUnit.html">AUnit</a>(으)로부터 상속된 Public 멤버 함수</td></tr>
 <tr class="memitem:ab48ba5fd44c9d3d9ec916a71a12756ef inherit pub_methods_classAUnit" id="r_ab48ba5fd44c9d3d9ec916a71a12756ef"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#ab48ba5fd44c9d3d9ec916a71a12756ef">AUnit</a> ()</td></tr>
 <tr class="separator:ab48ba5fd44c9d3d9ec916a71a12756ef inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad5ba10ffa643fb37acc83efd91e27379 inherit pub_methods_classAUnit" id="r_ad5ba10ffa643fb37acc83efd91e27379"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#ad5ba10ffa643fb37acc83efd91e27379">PostInitializeComponents</a> () override</td></tr>
-<tr class="separator:ad5ba10ffa643fb37acc83efd91e27379 inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acd68c2c06131259eabcf7b939140150c inherit pub_methods_classAUnit" id="r_acd68c2c06131259eabcf7b939140150c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#acd68c2c06131259eabcf7b939140150c">OnConstruction</a> (const FTransform &amp;Transform) override</td></tr>
-<tr class="separator:acd68c2c06131259eabcf7b939140150c inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a507fd8fd11540d68e653330668eca844 inherit pub_methods_classAUnit" id="r_a507fd8fd11540d68e653330668eca844"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a507fd8fd11540d68e653330668eca844">SetGenericTeamId</a> (const FGenericTeamId &amp;TeamID) override</td></tr>
-<tr class="separator:a507fd8fd11540d68e653330668eca844 inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4f9ab0e3ebd733b14a0e31840b62f208 inherit pub_methods_classAUnit" id="r_a4f9ab0e3ebd733b14a0e31840b62f208"><td class="memItemLeft" align="right" valign="top">FGenericTeamId&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a4f9ab0e3ebd733b14a0e31840b62f208">GetGenericTeamId</a> () const override</td></tr>
-<tr class="separator:a4f9ab0e3ebd733b14a0e31840b62f208 inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a13f26f5cb3cffd9a7fc1d792f7be885b inherit pub_methods_classAUnit" id="r_a13f26f5cb3cffd9a7fc1d792f7be885b"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structFTileTransform.html">FTileTransform</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a13f26f5cb3cffd9a7fc1d792f7be885b">GetTileTransform</a> () const override</td></tr>
-<tr class="separator:a13f26f5cb3cffd9a7fc1d792f7be885b inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1c3d67160153e89968aeecf179a85477 inherit pub_methods_classAUnit" id="r_a1c3d67160153e89968aeecf179a85477"><td class="memItemLeft" align="right" valign="top"><a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3">ETileLayerFlag</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a1c3d67160153e89968aeecf179a85477">GetTileLayerFlags</a> () const override</td></tr>
-<tr class="separator:a1c3d67160153e89968aeecf179a85477 inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b707a4bdadb00fc315a4e94817117cc inherit pub_methods_classAUnit" id="r_a4b707a4bdadb00fc315a4e94817117cc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3">ETileLayerFlag</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a4b707a4bdadb00fc315a4e94817117cc">GetBlockLayerFlags</a> () const override</td></tr>
-<tr class="memdesc:a4b707a4bdadb00fc315a4e94817117cc inherit pub_methods_classAUnit"><td class="mdescLeft">&#160;</td><td class="mdescRight">액터의 레이어 타입을 반환  <br /></td></tr>
-<tr class="separator:a4b707a4bdadb00fc315a4e94817117cc inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aabf191425d87ad59487903ca48f51663 inherit pub_methods_classAUnit" id="r_aabf191425d87ad59487903ca48f51663"><td class="memItemLeft" align="right" valign="top">UAbilitySystemComponent *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#aabf191425d87ad59487903ca48f51663">GetAbilitySystemComponent</a> () const override</td></tr>
-<tr class="separator:aabf191425d87ad59487903ca48f51663 inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab6e84390ef52ff4bfa139a558e005efc inherit pub_methods_classAUnit" id="r_ab6e84390ef52ff4bfa139a558e005efc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTileTargetSnapshotTargetData.html">FTileTargetSnapshotTargetData</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#ab6e84390ef52ff4bfa139a558e005efc">MakeSnapshotTargetData</a> () const override</td></tr>
-<tr class="separator:ab6e84390ef52ff4bfa139a558e005efc inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aad69cbeec454e7d48b97f5791f0533d8 inherit pub_methods_classAUnit" id="r_aad69cbeec454e7d48b97f5791f0533d8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classUSkillComponent.html">USkillComponent</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#aad69cbeec454e7d48b97f5791f0533d8">GetSkillComponent</a> () const</td></tr>
-<tr class="separator:aad69cbeec454e7d48b97f5791f0533d8 inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6408da2ac3d280e1633821a80e5e06e5 inherit pub_methods_classAUnit" id="r_a6408da2ac3d280e1633821a80e5e06e5"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a6408da2ac3d280e1633821a80e5e06e5">OnBeginRoom</a> ()</td></tr>
-<tr class="separator:a6408da2ac3d280e1633821a80e5e06e5 inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaa6c60e74e2cd89fd1c4a301b21b51dd inherit pub_methods_classAUnit" id="r_aaa6c60e74e2cd89fd1c4a301b21b51dd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#aaa6c60e74e2cd89fd1c4a301b21b51dd">SetStaticSpawnData</a> (const <a class="el" href="classUStaticUnitSpawnData.html">UStaticUnitSpawnData</a> *StaticUnitSpawnData)</td></tr>
-<tr class="separator:aaa6c60e74e2cd89fd1c4a301b21b51dd inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae4b8af526f3581f1cf145c285d0cbfa4 inherit pub_methods_classAUnit" id="r_ae4b8af526f3581f1cf145c285d0cbfa4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classUUnitAttributeSet.html">UUnitAttributeSet</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#ae4b8af526f3581f1cf145c285d0cbfa4">GetUnitAttributeSet</a> () const</td></tr>
-<tr class="separator:ae4b8af526f3581f1cf145c285d0cbfa4 inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3b3717d94a6e529e841d3bf6fcfa2279 inherit pub_methods_classAUnit" id="r_a3b3717d94a6e529e841d3bf6fcfa2279"><td class="memItemLeft" align="right" valign="top">FName&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a3b3717d94a6e529e841d3bf6fcfa2279">GetUnitKeyName</a> () const</td></tr>
-<tr class="separator:a3b3717d94a6e529e841d3bf6fcfa2279 inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aac9ce714d604c866e86becf05021b6f8 inherit pub_methods_classAUnit" id="r_aac9ce714d604c866e86becf05021b6f8"><td class="memItemLeft" align="right" valign="top">const FText &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#aac9ce714d604c866e86becf05021b6f8">GetUnitDisplayName</a> () const</td></tr>
-<tr class="separator:aac9ce714d604c866e86becf05021b6f8 inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_methods_classITileActor"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classITileActor')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classITileActor.html">ITileActor</a>(으)로부터 상속된 Public 멤버 함수</td></tr>
-<tr class="memitem:a99bde397c7d004fd66fb44d5419cab37 inherit pub_methods_classITileActor" id="r_a99bde397c7d004fd66fb44d5419cab37"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3">ETileLayerFlag</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#a99bde397c7d004fd66fb44d5419cab37">GetReplaceLayerFlags</a> () const</td></tr>
-<tr class="separator:a99bde397c7d004fd66fb44d5419cab37 inherit pub_methods_classITileActor"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acbf4fb0ab1dcfad6941db7c536f5665b inherit pub_methods_classITileActor" id="r_acbf4fb0ab1dcfad6941db7c536f5665b"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#acbf4fb0ab1dcfad6941db7c536f5665b">GetOverlayLayerPriority</a> () const</td></tr>
-<tr class="separator:acbf4fb0ab1dcfad6941db7c536f5665b inherit pub_methods_classITileActor"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_methods_classITileTargetable"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classITileTargetable')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classITileTargetable.html">ITileTargetable</a>(으)로부터 상속된 Public 멤버 함수</td></tr>
-<tr class="memitem:a857c3b201dc13f9c79aeb1e6a4819f91 inherit pub_methods_classITileTargetable" id="r_a857c3b201dc13f9c79aeb1e6a4819f91"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileTargetable.html#a857c3b201dc13f9c79aeb1e6a4819f91">IsTargetable</a> () const</td></tr>
-<tr class="separator:a857c3b201dc13f9c79aeb1e6a4819f91 inherit pub_methods_classITileTargetable"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeb95e005bac4352990e7defca6a69f77 inherit pub_methods_classITileTargetable" id="r_aeb95e005bac4352990e7defca6a69f77"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileTargetable.html#aeb95e005bac4352990e7defca6a69f77">IsDead</a> () const</td></tr>
-<tr class="separator:aeb95e005bac4352990e7defca6a69f77 inherit pub_methods_classITileTargetable"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_methods_classITileSelectable"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classITileSelectable')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classITileSelectable.html">ITileSelectable</a>(으)로부터 상속된 Public 멤버 함수</td></tr>
-<tr class="memitem:a0e037cc1e8c45dd0e79e5261cd807058 inherit pub_methods_classITileSelectable" id="r_a0e037cc1e8c45dd0e79e5261cd807058"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileSelectable.html#a0e037cc1e8c45dd0e79e5261cd807058">IsSelectable</a> () const</td></tr>
-<tr class="separator:a0e037cc1e8c45dd0e79e5261cd807058 inherit pub_methods_classITileSelectable"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
-Protected 멤버 함수</h2></td></tr>
-<tr class="memitem:a984ab039b646649e7e8410457eb499dd" id="r_a984ab039b646649e7e8410457eb499dd"><td class="memItemLeft" align="right" valign="top">UUserWidget *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAPlayerUnit.html#a984ab039b646649e7e8410457eb499dd">GetInfoPanel</a> () const override</td></tr>
-<tr class="separator:a984ab039b646649e7e8410457eb499dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8b8f127ee2f659172bd0811b12164cbf inherit pub_methods_classAUnit" id="r_a8b8f127ee2f659172bd0811b12164cbf"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a8b8f127ee2f659172bd0811b12164cbf">Tick</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DeltaSeconds</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
+<tr class="separator:a8b8f127ee2f659172bd0811b12164cbf inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16c3837372791ed236d452746765d8d7 inherit pub_methods_classAUnit" id="r_a16c3837372791ed236d452746765d8d7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a16c3837372791ed236d452746765d8d7">GetVelocity</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
+<tr class="separator:a16c3837372791ed236d452746765d8d7 inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa346601992e161491b81b559051064f0 inherit pub_methods_classAUnit" id="r_aa346601992e161491b81b559051064f0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#aa346601992e161491b81b559051064f0">BindModel</a> (<a class="el" href="classUObjectModel.html">UObjectModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Model</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
+<tr class="separator:aa346601992e161491b81b559051064f0 inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a476b40c761bc93cfc5549afb5c21810a inherit pub_methods_classAUnit" id="r_a476b40c761bc93cfc5549afb5c21810a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a476b40c761bc93cfc5549afb5c21810a">UnbindModel</a> (<a class="el" href="classUObjectModel.html">UObjectModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Model</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
+<tr class="separator:a476b40c761bc93cfc5549afb5c21810a inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afdd5e16d0976f5e86d630cfed556f290 inherit pub_methods_classAUnit" id="r_afdd5e16d0976f5e86d630cfed556f290"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UCapsuleComponent</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#afdd5e16d0976f5e86d630cfed556f290">GetCapsuleComponent</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:afdd5e16d0976f5e86d630cfed556f290 inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa12b0ce05c9b5ee8f1dbb0101e66a7de inherit pub_methods_classAUnit" id="r_aa12b0ce05c9b5ee8f1dbb0101e66a7de"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">USkeletalMeshComponent</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#aa12b0ce05c9b5ee8f1dbb0101e66a7de">GetMesh</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:aa12b0ce05c9b5ee8f1dbb0101e66a7de inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a14e0efb88559e46a88e15f57726d2e11 inherit pub_methods_classAUnit" id="r_a14e0efb88559e46a88e15f57726d2e11"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFloatingPawnMovement</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a14e0efb88559e46a88e15f57726d2e11">GetCharacterMovement</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a14e0efb88559e46a88e15f57726d2e11 inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9a57c3a6bf109098c76499808ff8fb79 inherit pub_methods_classAUnit" id="r_a9a57c3a6bf109098c76499808ff8fb79"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UArrowComponent</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a9a57c3a6bf109098c76499808ff8fb79">GetArrowComponent</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a9a57c3a6bf109098c76499808ff8fb79 inherit pub_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_classIActorView"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classIActorView')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classIActorView.html">IActorView</a>(으)로부터 상속된 Public 멤버 함수</td></tr>
+<tr class="memitem:a2c93c9fb63b1c0b71c06109afa366e5c inherit pub_methods_classIActorView" id="r_a2c93c9fb63b1c0b71c06109afa366e5c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIActorView.html#a2c93c9fb63b1c0b71c06109afa366e5c">BindModel</a> (<a class="el" href="classUObjectModel.html">UObjectModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Model</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
+<tr class="separator:a2c93c9fb63b1c0b71c06109afa366e5c inherit pub_methods_classIActorView"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85d5d46d7663da170c8c6ed0dfaf0c0c inherit pub_methods_classIActorView" id="r_a85d5d46d7663da170c8c6ed0dfaf0c0c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIActorView.html#a85d5d46d7663da170c8c6ed0dfaf0c0c">UnbindModel</a> (<a class="el" href="classUObjectModel.html">UObjectModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Model</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
+<tr class="separator:a85d5d46d7663da170c8c6ed0dfaf0c0c inherit pub_methods_classIActorView"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_classIObjectView"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classIObjectView')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classIObjectView.html">IObjectView</a>(으)로부터 상속된 Public 멤버 함수</td></tr>
+<tr class="memitem:a2296f66b2422dc09c403424607a3d79e inherit pub_methods_classIObjectView" id="r_a2296f66b2422dc09c403424607a3d79e"><td class="memTemplParams" colspan="2">template&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">typename</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">T</a>  = UObjectModel&gt; </td></tr>
+<tr class="memitem:a2296f66b2422dc09c403424607a3d79e inherit pub_methods_classIObjectView"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">T</a> *&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classIObjectView.html#a2296f66b2422dc09c403424607a3d79e">GetModel</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a2296f66b2422dc09c403424607a3d79e inherit pub_methods_classIObjectView"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_classIBoardSelectionTarget"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classIBoardSelectionTarget')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classIBoardSelectionTarget.html">IBoardSelectionTarget</a>(으)로부터 상속된 Public 멤버 함수</td></tr>
+<tr class="memitem:a290c26286b21174d23e0f7da2bd3f79e inherit pub_methods_classIBoardSelectionTarget" id="r_a290c26286b21174d23e0f7da2bd3f79e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIBoardSelectionTarget.html#a290c26286b21174d23e0f7da2bd3f79e">IsSelectable</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a290c26286b21174d23e0f7da2bd3f79e inherit pub_methods_classIBoardSelectionTarget"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_methods_classAUnit"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classAUnit')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classAUnit.html">AUnit</a>(으)로부터 상속된 Protected 멤버 함수</td></tr>
-<tr class="memitem:a0d213a382244a71fe5de30e21457fa29 inherit pro_methods_classAUnit" id="r_a0d213a382244a71fe5de30e21457fa29"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a0d213a382244a71fe5de30e21457fa29">SetTileTransform</a> (const <a class="el" href="structFTileTransform.html">FTileTransform</a> &amp;Transform) override</td></tr>
-<tr class="separator:a0d213a382244a71fe5de30e21457fa29 inherit pro_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pro_methods_classITileActor"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classITileActor')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classITileActor.html">ITileActor</a>(으)로부터 상속된 Protected 멤버 함수</td></tr>
-<tr class="memitem:acf80b1eb309d0d850e2d1bd8d01c3efb inherit pro_methods_classITileActor" id="r_acf80b1eb309d0d850e2d1bd8d01c3efb"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#acf80b1eb309d0d850e2d1bd8d01c3efb">OnBeginTileOverlap</a> (<a class="el" href="structFTile.html">FTile</a> *CurTile, <a class="el" href="classITileActor.html">ITileActor</a> *Other)</td></tr>
-<tr class="memdesc:acf80b1eb309d0d850e2d1bd8d01c3efb inherit pro_methods_classITileActor"><td class="mdescLeft">&#160;</td><td class="mdescRight">오버랩 시작 시 실행될 함수  <br /></td></tr>
-<tr class="separator:acf80b1eb309d0d850e2d1bd8d01c3efb inherit pro_methods_classITileActor"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab75d7b77d0fb7933d829878426da7898 inherit pro_methods_classITileActor" id="r_ab75d7b77d0fb7933d829878426da7898"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#ab75d7b77d0fb7933d829878426da7898">OnEndTileOverlap</a> (<a class="el" href="structFTile.html">FTile</a> *CurTile, <a class="el" href="classITileActor.html">ITileActor</a> *Other)</td></tr>
-<tr class="memdesc:ab75d7b77d0fb7933d829878426da7898 inherit pro_methods_classITileActor"><td class="mdescLeft">&#160;</td><td class="mdescRight">오버랩 종료 시 실행될 함수  <br /></td></tr>
-<tr class="separator:ab75d7b77d0fb7933d829878426da7898 inherit pro_methods_classITileActor"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae02e2c43eefb0c014344d558e7a1763e inherit pro_methods_classITileActor" id="r_ae02e2c43eefb0c014344d558e7a1763e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#ae02e2c43eefb0c014344d558e7a1763e">OnReplaced</a> (<a class="el" href="structFTile.html">FTile</a> *CurTile, <a class="el" href="classITileActor.html">ITileActor</a> *Other)</td></tr>
-<tr class="memdesc:ae02e2c43eefb0c014344d558e7a1763e inherit pro_methods_classITileActor"><td class="mdescLeft">&#160;</td><td class="mdescRight">다른 액터에게 교체되어 타일에서 밀려날 때 실행될 함수  <br /></td></tr>
-<tr class="separator:ae02e2c43eefb0c014344d558e7a1763e inherit pro_methods_classITileActor"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af9e46607347550a6660034f4a324d9cb inherit pro_methods_classITileActor" id="r_af9e46607347550a6660034f4a324d9cb"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#af9e46607347550a6660034f4a324d9cb">OnBeginRound</a> ()</td></tr>
-<tr class="separator:af9e46607347550a6660034f4a324d9cb inherit pro_methods_classITileActor"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a58e4617c818eac827e1256a6ba56785f inherit pro_methods_classITileActor" id="r_a58e4617c818eac827e1256a6ba56785f"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#a58e4617c818eac827e1256a6ba56785f">OnEndRound</a> ()</td></tr>
-<tr class="separator:a58e4617c818eac827e1256a6ba56785f inherit pro_methods_classITileActor"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a260c983dbadeb5c9f96459326a2d1c63 inherit pro_methods_classITileActor" id="r_a260c983dbadeb5c9f96459326a2d1c63"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#a260c983dbadeb5c9f96459326a2d1c63">OnBeginTurn</a> ()</td></tr>
-<tr class="separator:a260c983dbadeb5c9f96459326a2d1c63 inherit pro_methods_classITileActor"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afd3632b6724d718746ee4fa532f453bd inherit pro_methods_classITileActor" id="r_afd3632b6724d718746ee4fa532f453bd"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classITileActor.html#afd3632b6724d718746ee4fa532f453bd">OnEndTurn</a> ()</td></tr>
-<tr class="separator:afd3632b6724d718746ee4fa532f453bd inherit pro_methods_classITileActor"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
-Protected 속성</h2></td></tr>
-<tr class="memitem:a923e0d77eb8ab7b4a66fde60546f4236" id="r_a923e0d77eb8ab7b4a66fde60546f4236"><td class="memItemLeft" align="right" valign="top"><a class="el" href="PlayerJobType_8h.html#a11db6eae2577258d153e9122c9bba255">EPlayerJobType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAPlayerUnit.html#a923e0d77eb8ab7b4a66fde60546f4236">mJobType</a></td></tr>
-<tr class="separator:a923e0d77eb8ab7b4a66fde60546f4236"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a81eae606e91d0c70b94a26debfe4e1d2 inherit pro_methods_classAUnit" id="r_a81eae606e91d0c70b94a26debfe4e1d2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classUObjectModel.html">UObjectModel</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a81eae606e91d0c70b94a26debfe4e1d2">GetModel_Internal</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
+<tr class="separator:a81eae606e91d0c70b94a26debfe4e1d2 inherit pro_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9aedf1ad623bc385c96ab7ce9691a5be inherit pro_methods_classAUnit" id="r_a9aedf1ad623bc385c96ab7ce9691a5be"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a9aedf1ad623bc385c96ab7ce9691a5be">OnPlaceTileTransform</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTileTransform.html">FTileTransform</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TileTransform</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FTransform</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transform</a>)</td></tr>
+<tr class="separator:a9aedf1ad623bc385c96ab7ce9691a5be inherit pro_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a37958fcce0bdbd000f5b56c8fb23cb53 inherit pro_methods_classAUnit" id="r_a37958fcce0bdbd000f5b56c8fb23cb53"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a37958fcce0bdbd000f5b56c8fb23cb53">OnStartMoveStep</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTileTransform.html">FTileTransform</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NextTileTransform</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FTransform</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TargetWorldTransform</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedPtr</a>&lt; <a class="el" href="structFPresentationBarrier.html">FPresentationBarrier</a> &gt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Barrier</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RemainingPathDistance</a>)</td></tr>
+<tr class="separator:a37958fcce0bdbd000f5b56c8fb23cb53 inherit pro_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1296d5cdae470e2690942a61fe07fc62 inherit pro_methods_classAUnit" id="r_a1296d5cdae470e2690942a61fe07fc62"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a1296d5cdae470e2690942a61fe07fc62">OnRotate</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FRotator</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TargetWorldRotation</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedPtr</a>&lt; <a class="el" href="structFPresentationBarrier.html">FPresentationBarrier</a> &gt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Barrier</a>)</td></tr>
+<tr class="separator:a1296d5cdae470e2690942a61fe07fc62 inherit pro_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8e871ba8517be28182ede19d3e93107f inherit pro_methods_classAUnit" id="r_a8e871ba8517be28182ede19d3e93107f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a8e871ba8517be28182ede19d3e93107f">SpawnHitVFX</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFApplyNiagaraSpawnData.html">FApplyNiagaraSpawnData</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NiagaraSpawnData</a>, <a class="el" href="SRPGFrameworkType_8h.html#a65d7d650fd31653784aa4047aef8db1f">ETileActorDirection</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">LocalDirection</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a8e871ba8517be28182ede19d3e93107f inherit pro_methods_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_attribs_classAUnit"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classAUnit')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classAUnit.html">AUnit</a>(으)로부터 상속된 Protected 속성</td></tr>
-<tr class="memitem:a03a98842a6b96f01cede904a3c29ab12 inherit pro_attribs_classAUnit" id="r_a03a98842a6b96f01cede904a3c29ab12"><td class="memItemLeft" align="right" valign="top">TObjectPtr&lt; <a class="el" href="classUUnitAttributeSet.html">UUnitAttributeSet</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a03a98842a6b96f01cede904a3c29ab12">mUnitAttributeSet</a></td></tr>
-<tr class="separator:a03a98842a6b96f01cede904a3c29ab12 inherit pro_attribs_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7e7964f90737bc96583cb8b4c9d57a33 inherit pro_attribs_classAUnit" id="r_a7e7964f90737bc96583cb8b4c9d57a33"><td class="memItemLeft" align="right" valign="top">TObjectPtr&lt; const <a class="el" href="classUStaticUnitSpawnData.html">UStaticUnitSpawnData</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a7e7964f90737bc96583cb8b4c9d57a33">mStaticUnitSpawnData</a></td></tr>
-<tr class="separator:a7e7964f90737bc96583cb8b4c9d57a33 inherit pro_attribs_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="inherited" name="inherited"></a>
-추가로 상속된 멤버들</h2></td></tr>
-<tr class="inherit_header pub_attribs_classAUnit"><td colspan="2" onclick="javascript:toggleInherit('pub_attribs_classAUnit')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classAUnit.html">AUnit</a>(으)로부터 상속된 Public 속성</td></tr>
-<tr class="memitem:a69359169f412f3221236d7f67fc07c6e inherit pub_attribs_classAUnit" id="r_a69359169f412f3221236d7f67fc07c6e"><td class="memItemLeft" align="right" valign="top">FOnUnitDied&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a69359169f412f3221236d7f67fc07c6e">OnUnitDied</a></td></tr>
-<tr class="separator:a69359169f412f3221236d7f67fc07c6e inherit pub_attribs_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab0e40fa016c396770ecb540c4bfafbf4 inherit pro_attribs_classAUnit" id="r_ab0e40fa016c396770ecb540c4bfafbf4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#ab0e40fa016c396770ecb540c4bfafbf4">mMaxMoveSpeed</a> = 300.0f</td></tr>
+<tr class="separator:ab0e40fa016c396770ecb540c4bfafbf4 inherit pro_attribs_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a756a46e92175c9167724d7b125cfa658 inherit pro_attribs_classAUnit" id="r_a756a46e92175c9167724d7b125cfa658"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a756a46e92175c9167724d7b125cfa658">mAcceleration</a> = 600.0f</td></tr>
+<tr class="separator:a756a46e92175c9167724d7b125cfa658 inherit pro_attribs_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeb9bc14c467623bf7432a216c3c42012 inherit pro_attribs_classAUnit" id="r_aeb9bc14c467623bf7432a216c3c42012"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#aeb9bc14c467623bf7432a216c3c42012">mDeceleration</a> = 300.0f</td></tr>
+<tr class="separator:aeb9bc14c467623bf7432a216c3c42012 inherit pro_attribs_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa82f8849b2bdf9c6d8ae540fb1b47eff inherit pro_attribs_classAUnit" id="r_aa82f8849b2bdf9c6d8ae540fb1b47eff"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#aa82f8849b2bdf9c6d8ae540fb1b47eff">mRotationSpeed</a> = 360.0f</td></tr>
+<tr class="separator:aa82f8849b2bdf9c6d8ae540fb1b47eff inherit pro_attribs_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5880adad83e756be59396698b3658f23 inherit pro_attribs_classAUnit" id="r_a5880adad83e756be59396698b3658f23"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TWeakObjectPtr</a>&lt; <a class="el" href="classUUnitModel.html">UUnitModel</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAUnit.html#a5880adad83e756be59396698b3658f23">mUnitModel</a></td></tr>
+<tr class="separator:a5880adad83e756be59396698b3658f23 inherit pro_attribs_classAUnit"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock">
-<p class="definition"><a class="el" href="PlayerUnit_8h_source.html">PlayerUnit.h</a> 파일의 <a class="el" href="PlayerUnit_8h_source.html#l00023">23</a> 번째 라인에서 정의되었습니다.</p>
-</div><h2 class="groupheader">생성자 &amp; 소멸자 문서화</h2>
-<a id="abc10c24e719c83f7e06a4d37c16c1b75" name="abc10c24e719c83f7e06a4d37c16c1b75"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abc10c24e719c83f7e06a4d37c16c1b75">&#9670;&#160;</a></span>APlayerUnit()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">APlayerUnit::APlayerUnit </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="PlayerUnit_8cpp_source.html">PlayerUnit.cpp</a> 파일의 <a class="el" href="PlayerUnit_8cpp_source.html#l00010">10</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<h2 class="groupheader">멤버 함수 문서화</h2>
-<a id="a1783cac8667b961b145afa0180e81da6" name="a1783cac8667b961b145afa0180e81da6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1783cac8667b961b145afa0180e81da6">&#9670;&#160;</a></span>GetDifficulty()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> APlayerUnit::GetDifficulty </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="PlayerUnit_8cpp_source.html">PlayerUnit.cpp</a> 파일의 <a class="el" href="PlayerUnit_8cpp_source.html#l00059">59</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="a984ab039b646649e7e8410457eb499dd" name="a984ab039b646649e7e8410457eb499dd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a984ab039b646649e7e8410457eb499dd">&#9670;&#160;</a></span>GetInfoPanel()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">UUserWidget * APlayerUnit::GetInfoPanel </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="PlayerUnit_8cpp_source.html">PlayerUnit.cpp</a> 파일의 <a class="el" href="PlayerUnit_8cpp_source.html#l00041">41</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="a6d9591d716ebdc88a3914b102f8440b6" name="a6d9591d716ebdc88a3914b102f8440b6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6d9591d716ebdc88a3914b102f8440b6">&#9670;&#160;</a></span>GetPlayerJobType()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="PlayerJobType_8h.html#a11db6eae2577258d153e9122c9bba255">EPlayerJobType</a> APlayerUnit::GetPlayerJobType </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="PlayerUnit_8cpp_source.html">PlayerUnit.cpp</a> 파일의 <a class="el" href="PlayerUnit_8cpp_source.html#l00046">46</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="aa74587d8e9131b8053d9fec7b10c2208" name="aa74587d8e9131b8053d9fec7b10c2208"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa74587d8e9131b8053d9fec7b10c2208">&#9670;&#160;</a></span>GetPlayerLevel()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> APlayerUnit::GetPlayerLevel </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="PlayerUnit_8cpp_source.html">PlayerUnit.cpp</a> 파일의 <a class="el" href="PlayerUnit_8cpp_source.html#l00051">51</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="ae23998e48e125e5d182095e52ca08ac0" name="ae23998e48e125e5d182095e52ca08ac0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae23998e48e125e5d182095e52ca08ac0">&#9670;&#160;</a></span>IsPlayerUnit()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool APlayerUnit::IsPlayerUnit </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="PlayerUnit_8cpp_source.html">PlayerUnit.cpp</a> 파일의 <a class="el" href="PlayerUnit_8cpp_source.html#l00067">67</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="ade1e9d0eca7bc9e7f6675b7412a81955" name="ade1e9d0eca7bc9e7f6675b7412a81955"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ade1e9d0eca7bc9e7f6675b7412a81955">&#9670;&#160;</a></span>OnConstruction()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void APlayerUnit::OnConstruction </td>
-          <td>(</td>
-          <td class="paramtype">const FTransform &amp;&#160;</td>
-          <td class="paramname"><em>Transform</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="PlayerUnit_8cpp_source.html">PlayerUnit.cpp</a> 파일의 <a class="el" href="PlayerUnit_8cpp_source.html#l00029">29</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="a2c598d9a7aa2ec476d3bdb42eb0042d2" name="a2c598d9a7aa2ec476d3bdb42eb0042d2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2c598d9a7aa2ec476d3bdb42eb0042d2">&#9670;&#160;</a></span>PostInitializeComponents()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void APlayerUnit::PostInitializeComponents </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="PlayerUnit_8cpp_source.html">PlayerUnit.cpp</a> 파일의 <a class="el" href="PlayerUnit_8cpp_source.html#l00017">17</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<h2 class="groupheader">멤버 데이터 문서화</h2>
-<a id="a923e0d77eb8ab7b4a66fde60546f4236" name="a923e0d77eb8ab7b4a66fde60546f4236"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a923e0d77eb8ab7b4a66fde60546f4236">&#9670;&#160;</a></span>mJobType</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="PlayerJobType_8h.html#a11db6eae2577258d153e9122c9bba255">EPlayerJobType</a> APlayerUnit::mJobType</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="PlayerUnit_8h_source.html">PlayerUnit.h</a> 파일의 <a class="el" href="PlayerUnit_8h_source.html#l00051">51</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<hr/>이 클래스에 대한 문서화 페이지는 다음의 파일들로부터 생성되었습니다.:<ul>
+<p class="definition"><a class="el" href="PlayerUnit_8h_source.html">PlayerUnit.h</a> 파일의 <a class="el" href="PlayerUnit_8h_source.html#l00018">18</a> 번째 라인에서 정의되었습니다.</p>
+</div><hr/>이 클래스에 대한 문서화 페이지는 다음의 파일로부터 생성되었습니다.:<ul>
 <li>/home/runner/work/P_RD/P_RD/Source/P_RD/Pawn/Player/<a class="el" href="PlayerUnit_8h_source.html">PlayerUnit.h</a></li>
-<li>/home/runner/work/P_RD/P_RD/Source/P_RD/Pawn/Player/<a class="el" href="PlayerUnit_8cpp_source.html">PlayerUnit.cpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

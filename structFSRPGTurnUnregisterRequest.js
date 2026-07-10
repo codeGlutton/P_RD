@@ -1,5 +1,5 @@
 var structFSRPGTurnUnregisterRequest =
 [
-    [ "mTargetOwner", "structFSRPGTurnUnregisterRequest.html#a93d86d30dd54d9d999c50fdd5835a8fa", null ],
-    [ "mTargetTurnContext", "structFSRPGTurnUnregisterRequest.html#ab2c952aac75ad705b9283622a7b3dd8a", null ]
+    [ "mTargetOwner", "structFSRPGTurnUnregisterRequest.html#a7323591dd7c4acbedca7c2cf3f07e544", null ],
+    [ "mTargetTurnContext", "structFSRPGTurnUnregisterRequest.html#a4b898fc9ee9952d57d274ff45164e825", null ]
 ];

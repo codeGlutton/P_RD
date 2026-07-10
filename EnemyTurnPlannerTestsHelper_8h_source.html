@@ -1,0 +1,219 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RDTests/SRPGFramework/EnemyTurnPlannerTestsHelper.h 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('EnemyTurnPlannerTestsHelper_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">EnemyTurnPlannerTestsHelper.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="EnemyTurnPlannerTestsHelper_8h.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*****************************************************************/</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span> </div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="preprocessor">#include &quot;CoreMinimal.h&quot;</span></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="preprocessor">#include &quot;<a class="code" href="EnemyUnitModel_8h.html">Pawn/Enemy/EnemyUnitModel.h</a>&quot;</span></div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="preprocessor">#include &quot;<a class="code" href="UnitModel_8h.html">Pawn/UnitModel.h</a>&quot;</span></div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="preprocessor">#include &quot;<a class="code" href="UnitAttributeSet_8h.html">AttributeSet/UnitAttributeSet.h</a>&quot;</span></div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="preprocessor">#include &quot;<a class="code" href="StaticEnemyUnitSpawnData_8h.html">DataAsset/UnitSpawnData/StaticEnemyUnitSpawnData.h</a>&quot;</span> <span class="comment">// EMoveTendency</span></div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="preprocessor">#include &quot;EnemyTurnPlannerTestsHelper.generated.h&quot;</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UCLASS</a>()</div>
+<div class="foldopen" id="foldopen00030" data-start="{" data-end="};">
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno"><a class="line" href="classUMockEnemyUnitModel.html">   30</a></span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> <a class="code hl_class" href="classUMockEnemyUnitModel.html">UMockEnemyUnitModel</a> : <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">public</a> <a class="code hl_class" href="classUEnemyUnitModel.html">UEnemyUnitModel</a></div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>{</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GENERATED_BODY</a>()</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span> </div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="keyword">public</span>:</div>
+<div class="foldopen" id="foldopen00035" data-start="{" data-end="}">
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno"><a class="line" href="classUMockEnemyUnitModel.html#a5b1c2f1d521868aaafbfe2528b23ecea">   35</a></span>    <a class="code hl_function" href="classUMockEnemyUnitModel.html#a5b1c2f1d521868aaafbfe2528b23ecea">UMockEnemyUnitModel</a>()</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    {</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>        <span class="comment">// UnitAttributeSet은 이제 부모(UEnemyUnitModel) 생성자가 동일한 이름(&quot;UnitAttributeSet&quot;)으로 만든다.</span></div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>        <span class="comment">// 여기서 중복 생성/선언하면 UHT 섀도잉 에러 — 상속분을 그대로 사용한다.</span></div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    }</div>
+</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span> </div>
+<div class="foldopen" id="foldopen00044" data-start="{" data-end="}">
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno"><a class="line" href="classUMockEnemyUnitModel.html#a901ed393ac82a6ff5a2e0e9e0af14d6f">   44</a></span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classUMockEnemyUnitModel.html#a901ed393ac82a6ff5a2e0e9e0af14d6f">PreInitializeComponentModels</a>()<span class="keyword"> override</span></div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="keyword">    </span>{</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    }</div>
+</div>
+<div class="foldopen" id="foldopen00047" data-start="{" data-end="}">
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno"><a class="line" href="classUMockEnemyUnitModel.html#aad76ff5d009fbfa92deab06cd769cb6a">   47</a></span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classUMockEnemyUnitModel.html#aad76ff5d009fbfa92deab06cd769cb6a">PostInitializeComponentModels</a>()<span class="keyword"> override</span></div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="keyword">    </span>{</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    }</div>
+</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span> </div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    <span class="comment">// @brief 이동성향 설정</span></div>
+<div class="foldopen" id="foldopen00052" data-start="{" data-end="}">
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno"><a class="line" href="classUMockEnemyUnitModel.html#a1230273510572af3549db01f3114e77e">   52</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classUMockEnemyUnitModel.html#a1230273510572af3549db01f3114e77e">SetMoveTendency</a>(<a class="code hl_enumeration" href="StaticEnemyUnitSpawnData_8h.html#a7135a23ea6268df741a187ed61968309">EMoveTendency</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Tendency</a>)</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    {</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>        mMoveTendency = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Tendency</a>;</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    }</div>
+</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span> </div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    <span class="comment">// @brief 이동포인트 설정</span></div>
+<div class="foldopen" id="foldopen00058" data-start="{" data-end="}">
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno"><a class="line" href="classUMockEnemyUnitModel.html#afa203a88d236610c1b7ea0b9e8a3e8de">   58</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classUMockEnemyUnitModel.html#afa203a88d236610c1b7ea0b9e8a3e8de">SetMovePoint</a>(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MovePoint</a>)</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    {</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>        mMovePoint = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MovePoint</a>;</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>    }</div>
+</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span> </div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>};</div>
+</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span> </div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UCLASS</a>()</div>
+<div class="foldopen" id="foldopen00070" data-start="{" data-end="};">
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno"><a class="line" href="classUMockPlayerUnitModel.html">   70</a></span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> <a class="code hl_class" href="classUMockPlayerUnitModel.html">UMockPlayerUnitModel</a> : <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">public</a> <a class="code hl_class" href="classUUnitModel.html">UUnitModel</a></div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>{</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GENERATED_BODY</a>()</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span> </div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="keyword">public</span>:</div>
+<div class="foldopen" id="foldopen00078" data-start="{" data-end="}">
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno"><a class="line" href="classUMockPlayerUnitModel.html#a13257b01b1ea591a09b3577137ea27f6">   78</a></span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classUMockPlayerUnitModel.html#a13257b01b1ea591a09b3577137ea27f6">PreInitializeComponentModels</a>()<span class="keyword"> override</span></div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span><span class="keyword">    </span>{</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    }</div>
+</div>
+<div class="foldopen" id="foldopen00081" data-start="{" data-end="}">
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno"><a class="line" href="classUMockPlayerUnitModel.html#acdb2f070531781e90fd7f2d344fdac1f">   81</a></span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classUMockPlayerUnitModel.html#acdb2f070531781e90fd7f2d344fdac1f">PostInitializeComponentModels</a>()<span class="keyword"> override</span></div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span><span class="keyword">    </span>{</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>    }</div>
+</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    </div>
+<div class="foldopen" id="foldopen00085" data-start="{" data-end="}">
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno"><a class="line" href="classUMockPlayerUnitModel.html#a066d208938e1585d4bcc648248fad76f">   85</a></span>    <span class="keyword">virtual</span> <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="classUMockPlayerUnitModel.html#a066d208938e1585d4bcc648248fad76f">GetDifficulty</a>()<span class="keyword"> const override</span></div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span><span class="keyword">    </span>{</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>        <span class="keywordflow">return</span> 0;</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>    }</div>
+</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    </div>
+<div class="foldopen" id="foldopen00090" data-start="{" data-end="}">
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno"><a class="line" href="classUMockPlayerUnitModel.html#a7545cdf13ea3b39de3608fd9b28379ae">   90</a></span>    <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code hl_function" href="classUMockPlayerUnitModel.html#a7545cdf13ea3b39de3608fd9b28379ae">IsPlayerUnitModel</a>()<span class="keyword"> const override</span></div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span><span class="keyword">    </span>{</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>        <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>    }</div>
+</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>};</div>
+</div>
+<div class="ttc" id="aEnemyUnitModel_8h_html"><div class="ttname"><a href="EnemyUnitModel_8h.html">EnemyUnitModel.h</a></div><div class="ttdoc">적 베이스 유닛 모델 정의 헤더</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_ada104807b93ac7cd59dac80d98ba857b"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a></div><div class="ttdeci">int32</div><div class="ttdef"><b>Definition</b> <a href="RoomTransitionSubsystem_8h_source.html#l00021">RoomTransitionSubsystem.h:21</a></div></div>
+<div class="ttc" id="aStaticEnemyUnitSpawnData_8h_html"><div class="ttname"><a href="StaticEnemyUnitSpawnData_8h.html">StaticEnemyUnitSpawnData.h</a></div><div class="ttdoc">적 유닛 생성 시 사용되는 정적 Primary Data Asset 구현 헤더</div></div>
+<div class="ttc" id="aStaticEnemyUnitSpawnData_8h_html_a7135a23ea6268df741a187ed61968309"><div class="ttname"><a href="StaticEnemyUnitSpawnData_8h.html#a7135a23ea6268df741a187ed61968309">EMoveTendency</a></div><div class="ttdeci">EMoveTendency</div><div class="ttdoc">적의 이동 성향 (이동 여부와 목적지를 정하는 기준)</div><div class="ttdef"><b>Definition</b> <a href="StaticEnemyUnitSpawnData_8h_source.html#l00021">StaticEnemyUnitSpawnData.h:22</a></div></div>
+<div class="ttc" id="aUnitAttributeSet_8h_html"><div class="ttname"><a href="UnitAttributeSet_8h.html">UnitAttributeSet.h</a></div><div class="ttdoc">SRPGUnit에 대한 Attribute Set 정의 헤더</div></div>
+<div class="ttc" id="aUnitModel_8h_html"><div class="ttname"><a href="UnitModel_8h.html">UnitModel.h</a></div><div class="ttdoc">턴을 소유할 수 있는 베이스 폰 클래스 모델 정의 파일</div></div>
+<div class="ttc" id="aclassUEnemyUnitModel_html"><div class="ttname"><a href="classUEnemyUnitModel.html">UEnemyUnitModel</a></div><div class="ttdoc">적 베이스 유닛 모델</div><div class="ttdef"><b>Definition</b> <a href="EnemyUnitModel_8h_source.html#l00021">EnemyUnitModel.h:22</a></div></div>
+<div class="ttc" id="aclassUMockEnemyUnitModel_html"><div class="ttname"><a href="classUMockEnemyUnitModel.html">UMockEnemyUnitModel</a></div><div class="ttdoc">적유닛 Mock</div><div class="ttdef"><b>Definition</b> <a href="EnemyTurnPlannerTestsHelper_8h_source.html#l00030">EnemyTurnPlannerTestsHelper.h:31</a></div></div>
+<div class="ttc" id="aclassUMockEnemyUnitModel_html_a1230273510572af3549db01f3114e77e"><div class="ttname"><a href="classUMockEnemyUnitModel.html#a1230273510572af3549db01f3114e77e">UMockEnemyUnitModel::SetMoveTendency</a></div><div class="ttdeci">void SetMoveTendency(EMoveTendency Tendency)</div><div class="ttdef"><b>Definition</b> <a href="EnemyTurnPlannerTestsHelper_8h_source.html#l00052">EnemyTurnPlannerTestsHelper.h:52</a></div></div>
+<div class="ttc" id="aclassUMockEnemyUnitModel_html_a5b1c2f1d521868aaafbfe2528b23ecea"><div class="ttname"><a href="classUMockEnemyUnitModel.html#a5b1c2f1d521868aaafbfe2528b23ecea">UMockEnemyUnitModel::UMockEnemyUnitModel</a></div><div class="ttdeci">UMockEnemyUnitModel()</div><div class="ttdef"><b>Definition</b> <a href="EnemyTurnPlannerTestsHelper_8h_source.html#l00035">EnemyTurnPlannerTestsHelper.h:35</a></div></div>
+<div class="ttc" id="aclassUMockEnemyUnitModel_html_a901ed393ac82a6ff5a2e0e9e0af14d6f"><div class="ttname"><a href="classUMockEnemyUnitModel.html#a901ed393ac82a6ff5a2e0e9e0af14d6f">UMockEnemyUnitModel::PreInitializeComponentModels</a></div><div class="ttdeci">virtual void PreInitializeComponentModels() override</div><div class="ttdef"><b>Definition</b> <a href="EnemyTurnPlannerTestsHelper_8h_source.html#l00044">EnemyTurnPlannerTestsHelper.h:44</a></div></div>
+<div class="ttc" id="aclassUMockEnemyUnitModel_html_aad76ff5d009fbfa92deab06cd769cb6a"><div class="ttname"><a href="classUMockEnemyUnitModel.html#aad76ff5d009fbfa92deab06cd769cb6a">UMockEnemyUnitModel::PostInitializeComponentModels</a></div><div class="ttdeci">virtual void PostInitializeComponentModels() override</div><div class="ttdef"><b>Definition</b> <a href="EnemyTurnPlannerTestsHelper_8h_source.html#l00047">EnemyTurnPlannerTestsHelper.h:47</a></div></div>
+<div class="ttc" id="aclassUMockEnemyUnitModel_html_afa203a88d236610c1b7ea0b9e8a3e8de"><div class="ttname"><a href="classUMockEnemyUnitModel.html#afa203a88d236610c1b7ea0b9e8a3e8de">UMockEnemyUnitModel::SetMovePoint</a></div><div class="ttdeci">void SetMovePoint(int32 MovePoint)</div><div class="ttdef"><b>Definition</b> <a href="EnemyTurnPlannerTestsHelper_8h_source.html#l00058">EnemyTurnPlannerTestsHelper.h:58</a></div></div>
+<div class="ttc" id="aclassUMockPlayerUnitModel_html"><div class="ttname"><a href="classUMockPlayerUnitModel.html">UMockPlayerUnitModel</a></div><div class="ttdoc">플레이어유닛 Mock</div><div class="ttdef"><b>Definition</b> <a href="EnemyTurnPlannerTestsHelper_8h_source.html#l00070">EnemyTurnPlannerTestsHelper.h:71</a></div></div>
+<div class="ttc" id="aclassUMockPlayerUnitModel_html_a066d208938e1585d4bcc648248fad76f"><div class="ttname"><a href="classUMockPlayerUnitModel.html#a066d208938e1585d4bcc648248fad76f">UMockPlayerUnitModel::GetDifficulty</a></div><div class="ttdeci">virtual int32 GetDifficulty() const override</div><div class="ttdef"><b>Definition</b> <a href="EnemyTurnPlannerTestsHelper_8h_source.html#l00085">EnemyTurnPlannerTestsHelper.h:85</a></div></div>
+<div class="ttc" id="aclassUMockPlayerUnitModel_html_a13257b01b1ea591a09b3577137ea27f6"><div class="ttname"><a href="classUMockPlayerUnitModel.html#a13257b01b1ea591a09b3577137ea27f6">UMockPlayerUnitModel::PreInitializeComponentModels</a></div><div class="ttdeci">virtual void PreInitializeComponentModels() override</div><div class="ttdef"><b>Definition</b> <a href="EnemyTurnPlannerTestsHelper_8h_source.html#l00078">EnemyTurnPlannerTestsHelper.h:78</a></div></div>
+<div class="ttc" id="aclassUMockPlayerUnitModel_html_a7545cdf13ea3b39de3608fd9b28379ae"><div class="ttname"><a href="classUMockPlayerUnitModel.html#a7545cdf13ea3b39de3608fd9b28379ae">UMockPlayerUnitModel::IsPlayerUnitModel</a></div><div class="ttdeci">virtual bool IsPlayerUnitModel() const override</div><div class="ttdef"><b>Definition</b> <a href="EnemyTurnPlannerTestsHelper_8h_source.html#l00090">EnemyTurnPlannerTestsHelper.h:90</a></div></div>
+<div class="ttc" id="aclassUMockPlayerUnitModel_html_acdb2f070531781e90fd7f2d344fdac1f"><div class="ttname"><a href="classUMockPlayerUnitModel.html#acdb2f070531781e90fd7f2d344fdac1f">UMockPlayerUnitModel::PostInitializeComponentModels</a></div><div class="ttdeci">virtual void PostInitializeComponentModels() override</div><div class="ttdef"><b>Definition</b> <a href="EnemyTurnPlannerTestsHelper_8h_source.html#l00081">EnemyTurnPlannerTestsHelper.h:81</a></div></div>
+<div class="ttc" id="aclassUUnitModel_html"><div class="ttname"><a href="classUUnitModel.html">UUnitModel</a></div><div class="ttdoc">턴을 소유할 수 있는 베이스 폰 클래스 모델</div><div class="ttdef"><b>Definition</b> <a href="UnitModel_8h_source.html#l00029">UnitModel.h:30</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_b774e7ec51d4a1271b160947af725bd0.html">P_RDTests</a></li><li class="navelem"><a class="el" href="dir_bd3f48f8240a8820ccd2a3b254525392.html">SRPGFramework</a></li><li class="navelem"><a class="el" href="EnemyTurnPlannerTestsHelper_8h.html">EnemyTurnPlannerTestsHelper.h</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

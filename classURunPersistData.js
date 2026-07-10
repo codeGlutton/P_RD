@@ -1,5 +1,8 @@
 var classURunPersistData =
 [
+    [ "AddRewardDice", "classURunPersistData.html#a776a618a860c4dd4866437d2e8806f3a", null ],
+    [ "AddRewardEquipment", "classURunPersistData.html#a4c7790a2e5e10db8814dec7ed7cf402c", null ],
+    [ "AddRewardSkill", "classURunPersistData.html#a3e4978e2280a0afa82170695b86446b7", null ],
     [ "ClearRun", "classURunPersistData.html#a8caedfbe19b3a57967af27c2cb225e23", null ],
     [ "CollectAssetIds", "classURunPersistData.html#ae03ade7d30a947f203d0f94789a35271", null ],
     [ "GetCurrentRoom", "classURunPersistData.html#a6f73d43dbb224184fadb13ae85ed79cd", null ],

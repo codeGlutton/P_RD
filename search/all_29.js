@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['어디서_20검사하는가_0',['Q 턴 종료는 어디서 검사하는가?',['../srpg_framework_page.html#srpg_framework_subsystem_step4',1,'']]],
-  ['어떻게_20처리하는가_1',['Q 초기 턴 순서 배치는 어떻게 처리하는가?',['../srpg_framework_page.html#srpg_framework_subsystem_step1',1,'']]]
+  ['공격_20스킬_20순서_20상세_20예시_0',['공격 스킬 순서 상세 예시',['../srpg_framework_page.html#srpg_framework_turn_step1',1,'']]]
 ];

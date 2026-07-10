@@ -103,39 +103,41 @@ $(document).ready(function(){initNavTree('PresentationBarrier_8h_source.html',''
 <div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
 <div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;<a class="code" href="RDMinimal_8h.html">RDMinimal.h</a>&quot;</span></div>
 <div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span> </div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno"><a class="line" href="PresentationBarrier_8h.html#a4897a2d9bba599476cc1db97640a773f">   12</a></span><a class="code hl_function" href="PresentationBarrier_8h.html#a4897a2d9bba599476cc1db97640a773f">DECLARE_DELEGATE</a>(FOnFinishPresentation);</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno"><a class="line" href="PresentationBarrier_8h.html#a4897a2d9bba599476cc1db97640a773f">   12</a></span><a class="code hl_function" href="PresentationBarrier_8h.html#a4897a2d9bba599476cc1db97640a773f">DECLARE_DELEGATE</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnFinishPresentation</a>);</div>
 <div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
 <div class="foldopen" id="foldopen00017" data-start="{" data-end="};">
-<div class="line"><a id="l00017" name="l00017"></a><span class="lineno"><a class="line" href="structFPresentationBarrier.html">   17</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structFPresentationBarrier.html">FPresentationBarrier</a></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno"><a class="line" href="structFPresentationBarrier.html">   17</a></span><span class="keyword">struct </span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">P_RD_API</a> <a class="code hl_struct" href="structFPresentationBarrier.html">FPresentationBarrier</a></div>
 <div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>{</div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno"><a class="line" href="structFPresentationBarrier.html#abf1a26a92f051e7775198d092e080054">   19</a></span>    <span class="keyword">friend</span> <span class="keyword">class </span><a class="code hl_class" href="classUPresentationSyncSubsystem.html">UPresentationSyncSubsystem</a>;</div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span> </div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="keyword">protected</span>:</div>
-<div class="foldopen" id="foldopen00022" data-start="{" data-end="}">
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno"><a class="line" href="structFPresentationBarrier.html#ab93f7c92ca2874881fe6b0d432182da8">   22</a></span>    <a class="code hl_function" href="structFPresentationBarrier.html#ab93f7c92ca2874881fe6b0d432182da8">FPresentationBarrier</a>(FOnFinishPresentation Delegate) :</div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>        <a class="code hl_variable" href="structFPresentationBarrier.html#a646724731d87da239dbe0cbf696b913c">OnFinishPresentation</a>(Delegate)</div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    {</div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    }</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    <span class="keyword">static</span> <a class="code hl_variable" href="SRPGCombatModel_8h.html#a989ac07b6b9603d8bf4ec5d89ef5e2e9">TSharedPtr&lt;FPresentationBarrier&gt;</a> Make(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnFinishPresentation</a> OnFinishPresentation);</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span> </div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="keyword">protected</span>:</div>
+<div class="foldopen" id="foldopen00023" data-start="{" data-end="}">
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno"><a class="line" href="structFPresentationBarrier.html#ab93f7c92ca2874881fe6b0d432182da8">   23</a></span>    <a class="code hl_function" href="structFPresentationBarrier.html#ab93f7c92ca2874881fe6b0d432182da8">FPresentationBarrier</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnFinishPresentation</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Delegate</a>) :</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>        OnFinishPresentation(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Delegate</a>)</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    {</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    }</div>
 </div>
-<div class="foldopen" id="foldopen00026" data-start="{" data-end="}">
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno"><a class="line" href="structFPresentationBarrier.html#aaf1725a913fbce973e73f1812ffb34ee">   26</a></span>    <a class="code hl_function" href="structFPresentationBarrier.html#aaf1725a913fbce973e73f1812ffb34ee">~FPresentationBarrier</a>()</div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    {</div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>        <a class="code hl_variable" href="structFPresentationBarrier.html#a646724731d87da239dbe0cbf696b913c">OnFinishPresentation</a>.ExecuteIfBound();</div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    }</div>
+<div class="foldopen" id="foldopen00027" data-start="{" data-end="}">
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno"><a class="line" href="structFPresentationBarrier.html#aaf1725a913fbce973e73f1812ffb34ee">   27</a></span>    <a class="code hl_function" href="structFPresentationBarrier.html#aaf1725a913fbce973e73f1812ffb34ee">~FPresentationBarrier</a>()</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    {</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>        OnFinishPresentation.ExecuteIfBound();</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    }</div>
 </div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span> </div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="keyword">protected</span>:</div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno"><a class="line" href="structFPresentationBarrier.html#a646724731d87da239dbe0cbf696b913c">   32</a></span>    FOnFinishPresentation <a class="code hl_variable" href="structFPresentationBarrier.html#a646724731d87da239dbe0cbf696b913c">OnFinishPresentation</a>;</div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>};</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span> </div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno"><a class="line" href="structFPresentationBarrier.html#a646724731d87da239dbe0cbf696b913c">   33</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnFinishPresentation</a> <a class="code hl_variable" href="structFPresentationBarrier.html#a646724731d87da239dbe0cbf696b913c">OnFinishPresentation</a>;</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>};</div>
 </div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span> </div>
 <div class="ttc" id="aPresentationBarrier_8h_html_a4897a2d9bba599476cc1db97640a773f"><div class="ttname"><a href="PresentationBarrier_8h.html#a4897a2d9bba599476cc1db97640a773f">DECLARE_DELEGATE</a></div><div class="ttdeci">DECLARE_DELEGATE(FOnFinishPresentation)</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
 <div class="ttc" id="aRDMinimal_8h_html"><div class="ttname"><a href="RDMinimal_8h.html">RDMinimal.h</a></div><div class="ttdoc">RD 프로젝트 전 영역에서 사용되는 최소한의 포함 헤더</div></div>
-<div class="ttc" id="aclassUPresentationSyncSubsystem_html"><div class="ttname"><a href="classUPresentationSyncSubsystem.html">UPresentationSyncSubsystem</a></div><div class="ttdoc">연출 동기화 서브시스템</div><div class="ttdef"><b>Definition</b> <a href="PresentationSyncSubsystem_8h_source.html#l00019">PresentationSyncSubsystem.h:20</a></div></div>
+<div class="ttc" id="aSRPGCombatModel_8h_html_a989ac07b6b9603d8bf4ec5d89ef5e2e9"><div class="ttname"><a href="SRPGCombatModel_8h.html#a989ac07b6b9603d8bf4ec5d89ef5e2e9">TSharedPtr&lt; FPresentationBarrier &gt;</a></div><div class="ttdeci">TSharedPtr&lt; FPresentationBarrier &gt;</div><div class="ttdef"><b>Definition</b> <a href="SRPGCombatModel_8h_source.html#l00043">SRPGCombatModel.h:44</a></div></div>
 <div class="ttc" id="astructFPresentationBarrier_html"><div class="ttname"><a href="structFPresentationBarrier.html">FPresentationBarrier</a></div><div class="ttdoc">연출 완료 시기를 연장해주는 배리어 객체 정의 헤더. 해당 객체가 소멸 시 연출 완료로 인식</div><div class="ttdef"><b>Definition</b> <a href="PresentationBarrier_8h_source.html#l00017">PresentationBarrier.h:18</a></div></div>
-<div class="ttc" id="astructFPresentationBarrier_html_a646724731d87da239dbe0cbf696b913c"><div class="ttname"><a href="structFPresentationBarrier.html#a646724731d87da239dbe0cbf696b913c">FPresentationBarrier::OnFinishPresentation</a></div><div class="ttdeci">FOnFinishPresentation OnFinishPresentation</div><div class="ttdef"><b>Definition</b> <a href="PresentationBarrier_8h_source.html#l00032">PresentationBarrier.h:32</a></div></div>
-<div class="ttc" id="astructFPresentationBarrier_html_aaf1725a913fbce973e73f1812ffb34ee"><div class="ttname"><a href="structFPresentationBarrier.html#aaf1725a913fbce973e73f1812ffb34ee">FPresentationBarrier::~FPresentationBarrier</a></div><div class="ttdeci">~FPresentationBarrier()</div><div class="ttdef"><b>Definition</b> <a href="PresentationBarrier_8h_source.html#l00026">PresentationBarrier.h:26</a></div></div>
-<div class="ttc" id="astructFPresentationBarrier_html_ab93f7c92ca2874881fe6b0d432182da8"><div class="ttname"><a href="structFPresentationBarrier.html#ab93f7c92ca2874881fe6b0d432182da8">FPresentationBarrier::FPresentationBarrier</a></div><div class="ttdeci">FPresentationBarrier(FOnFinishPresentation Delegate)</div><div class="ttdef"><b>Definition</b> <a href="PresentationBarrier_8h_source.html#l00022">PresentationBarrier.h:22</a></div></div>
+<div class="ttc" id="astructFPresentationBarrier_html_a646724731d87da239dbe0cbf696b913c"><div class="ttname"><a href="structFPresentationBarrier.html#a646724731d87da239dbe0cbf696b913c">FPresentationBarrier::OnFinishPresentation</a></div><div class="ttdeci">FOnFinishPresentation OnFinishPresentation</div><div class="ttdef"><b>Definition</b> <a href="PresentationBarrier_8h_source.html#l00033">PresentationBarrier.h:33</a></div></div>
+<div class="ttc" id="astructFPresentationBarrier_html_aaf1725a913fbce973e73f1812ffb34ee"><div class="ttname"><a href="structFPresentationBarrier.html#aaf1725a913fbce973e73f1812ffb34ee">FPresentationBarrier::~FPresentationBarrier</a></div><div class="ttdeci">~FPresentationBarrier()</div><div class="ttdef"><b>Definition</b> <a href="PresentationBarrier_8h_source.html#l00027">PresentationBarrier.h:27</a></div></div>
+<div class="ttc" id="astructFPresentationBarrier_html_ab93f7c92ca2874881fe6b0d432182da8"><div class="ttname"><a href="structFPresentationBarrier.html#ab93f7c92ca2874881fe6b0d432182da8">FPresentationBarrier::FPresentationBarrier</a></div><div class="ttdeci">FPresentationBarrier(FOnFinishPresentation Delegate)</div><div class="ttdef"><b>Definition</b> <a href="PresentationBarrier_8h_source.html#l00023">PresentationBarrier.h:23</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

@@ -1,0 +1,185 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/UI/Inventory/InventoryUITypes.h 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('InventoryUITypes_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">InventoryUITypes.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="InventoryUITypes_8h.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">// @file InventoryUITypes.h</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment">// @brief 인벤토리(런 상태 확인) 화면 UI에 표시할 뷰 데이터입니다.</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment">// @date 2026-06-18</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span> </div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &quot;<a class="code" href="RDMinimal_8h.html">RDMinimal.h</a>&quot;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &quot;InventoryUITypes.generated.h&quot;</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="keyword">class </span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UTexture2D</a>;</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span> </div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="comment">// UI는 게임플레이 데이터 클래스를 직접 모르고, 어댑터가 종류를 이 enum으로 변환해 넣는다.</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UENUM</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintType</a>)</div>
+<div class="foldopen" id="foldopen00015" data-start="{" data-end="};">
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno"><a class="line" href="InventoryUITypes_8h.html#afead12b4525d804c16536167c1bf57ae">   15</a></span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">enum</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> <a class="code hl_enumeration" href="InventoryUITypes_8h.html#afead12b4525d804c16536167c1bf57ae">EInventoryItemKind</a> : <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">uint8</a></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>{</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    <a class="code hl_enumvalue" href="InventoryUITypes_8h.html#afead12b4525d804c16536167c1bf57aeaa5b6cdb9de0f896d38fbfd5a5f044841">Dice</a>,</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    <a class="code hl_enumvalue" href="InventoryUITypes_8h.html#afead12b4525d804c16536167c1bf57aea88bb766f0cc321759ed2eeb0bc06be5d">Skill</a>,</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    <a class="code hl_enumvalue" href="InventoryUITypes_8h.html#afead12b4525d804c16536167c1bf57aea9ccda2d50a1ee1b73ee1f048eb397aa8">Equipment</a></div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>};</div>
+</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span> </div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="comment">// 요약 화면이라 면 텍스처 같은 상세는 담지 않는다(상세는 롱프레스로 별도 요청).</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="comment">// UI 필요값:</span></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="comment">// - mKind: 다이스/스킬/장비 구분(슬롯 아이콘·배치 결정).</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="comment">// - mItemIndex: 롱프레스 상세 요청 payload(같은 종류 배열 기준 index).</span></div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="comment">// - mName/mIcon: 슬롯 기본 표시.</span></div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="comment">// - mRarityColor: 희귀도 테두리/배경(어댑터가 enum→색 변환).</span></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="comment">// - mDetailText: 다이스면 &quot;d20&quot;, 장비면 슬롯명 등 보조 한 줄.</span></div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">USTRUCT</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintType</a>)</div>
+<div class="foldopen" id="foldopen00031" data-start="{" data-end="};">
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno"><a class="line" href="structFInventoryItemUI.html">   31</a></span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">struct</a> <a class="code hl_struct" href="structFInventoryItemUI.html">FInventoryItemUI</a></div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>{</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GENERATED_BODY</a>()</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno"><a class="line" href="structFInventoryItemUI.html#aafecc74c5649750ee06ad0e69ff5c672">   35</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>) <a class="code hl_enumeration" href="InventoryUITypes_8h.html#afead12b4525d804c16536167c1bf57ae">EInventoryItemKind</a> mKind = <a class="code hl_enumeration" href="InventoryUITypes_8h.html#afead12b4525d804c16536167c1bf57ae">EInventoryItemKind</a>::<a class="code hl_enumvalue" href="InventoryUITypes_8h.html#afead12b4525d804c16536167c1bf57aeaa5b6cdb9de0f896d38fbfd5a5f044841">Dice</a>;</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno"><a class="line" href="structFInventoryItemUI.html#ab552d41db75a6f415fba0167f56db202">   36</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>) <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> mItemIndex = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">INDEX_NONE</a>;</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno"><a class="line" href="structFInventoryItemUI.html#a06d876ead6704de4df720eb41c77cf60">   37</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FText</a> mName;</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno"><a class="line" href="structFInventoryItemUI.html#a882b805321bbb3ad5341fae0903c4212">   38</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UTexture2D</a>&gt; mIcon = <span class="keywordtype">nullptr</span>;</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno"><a class="line" href="structFInventoryItemUI.html#ad93026f54f19c25b2bc9bb2da5aed617">   39</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FLinearColor</a> mRarityColor = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FLinearColor</a>::<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">White</a>;</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno"><a class="line" href="structFInventoryItemUI.html#a35bbf3c46c150e5b598d57d8f460c3d5">   40</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FText</a> mDetailText;</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>};</div>
+</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span> </div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="comment">// 읽기 전용 요약 화면이다 — 플레이어 메타(골드/레벨/체력) + 보유 다이스/스킬/장비 목록.</span></div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="comment">// UI 필요값:</span></div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span><span class="comment">// - mGold/mLevel/mHP/mMaxHP: 상단 메타 표시.</span></div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="comment">// - mDice/mSkills/mEquipment: 종류별 보유 목록 그리드.</span></div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="comment">// [합의필요] 최종 소스 = URunPersistData(보유 다이스 ids) + UDiceModel/USkillData/장비 + UUnitData(HP/Gold).</span></div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">USTRUCT</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintType</a>)</div>
+<div class="foldopen" id="foldopen00050" data-start="{" data-end="};">
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno"><a class="line" href="structFInventoryUI.html">   50</a></span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">struct</a> <a class="code hl_struct" href="structFInventoryUI.html">FInventoryUI</a></div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>{</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GENERATED_BODY</a>()</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span> </div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno"><a class="line" href="structFInventoryUI.html#ae80db74fd4558d7469946dad620dfc10">   54</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>) <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> mGold = 0;</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno"><a class="line" href="structFInventoryUI.html#a9688685a29cb3c46a0ce9d6d2c9038e1">   55</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>) <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> mLevel = 0;</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno"><a class="line" href="structFInventoryUI.html#a37d7b2f0a7313d680bedd3460a29e645">   56</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>) <span class="keywordtype">float</span> mHP = 0.<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a>;</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno"><a class="line" href="structFInventoryUI.html#a36c5f5a5625e7f2ece58e317177ffa86">   57</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>) <span class="keywordtype">float</span> mMaxHP = 0.<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a>;</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span> </div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno"><a class="line" href="structFInventoryUI.html#a4e6db8d61555512df23774cb947b6d2d">   59</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="code hl_struct" href="structFInventoryItemUI.html">FInventoryItemUI</a>&gt; mDice;</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno"><a class="line" href="structFInventoryUI.html#a4d2ed31129f0ae96a8f4c3a07876553a">   60</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="code hl_struct" href="structFInventoryItemUI.html">FInventoryItemUI</a>&gt; mSkills;</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno"><a class="line" href="structFInventoryUI.html#a037c0ef17d977a919fc25f401efc7c3e">   61</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="code hl_struct" href="structFInventoryItemUI.html">FInventoryItemUI</a>&gt; mEquipment;</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>};</div>
+</div>
+<div class="ttc" id="aInventoryUITypes_8h_html_afead12b4525d804c16536167c1bf57ae"><div class="ttname"><a href="InventoryUITypes_8h.html#afead12b4525d804c16536167c1bf57ae">EInventoryItemKind</a></div><div class="ttdeci">EInventoryItemKind</div><div class="ttdoc">인벤토리 항목 종류. 같은 슬롯 위젯을 종류별로 구분해 그리기 위한 값입니다.</div><div class="ttdef"><b>Definition</b> <a href="InventoryUITypes_8h_source.html#l00015">InventoryUITypes.h:16</a></div></div>
+<div class="ttc" id="aInventoryUITypes_8h_html_afead12b4525d804c16536167c1bf57aea88bb766f0cc321759ed2eeb0bc06be5d"><div class="ttname"><a href="InventoryUITypes_8h.html#afead12b4525d804c16536167c1bf57aea88bb766f0cc321759ed2eeb0bc06be5d">EInventoryItemKind::Skill</a></div><div class="ttdeci">@ Skill</div></div>
+<div class="ttc" id="aInventoryUITypes_8h_html_afead12b4525d804c16536167c1bf57aea9ccda2d50a1ee1b73ee1f048eb397aa8"><div class="ttname"><a href="InventoryUITypes_8h.html#afead12b4525d804c16536167c1bf57aea9ccda2d50a1ee1b73ee1f048eb397aa8">EInventoryItemKind::Equipment</a></div><div class="ttdeci">@ Equipment</div></div>
+<div class="ttc" id="aInventoryUITypes_8h_html_afead12b4525d804c16536167c1bf57aeaa5b6cdb9de0f896d38fbfd5a5f044841"><div class="ttname"><a href="InventoryUITypes_8h.html#afead12b4525d804c16536167c1bf57aeaa5b6cdb9de0f896d38fbfd5a5f044841">EInventoryItemKind::Dice</a></div><div class="ttdeci">@ Dice</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aRDMinimal_8h_html"><div class="ttname"><a href="RDMinimal_8h.html">RDMinimal.h</a></div><div class="ttdoc">RD 프로젝트 전 영역에서 사용되는 최소한의 포함 헤더</div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_ada104807b93ac7cd59dac80d98ba857b"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a></div><div class="ttdeci">int32</div><div class="ttdef"><b>Definition</b> <a href="RoomTransitionSubsystem_8h_source.html#l00021">RoomTransitionSubsystem.h:21</a></div></div>
+<div class="ttc" id="astructFInventoryItemUI_html"><div class="ttname"><a href="structFInventoryItemUI.html">FInventoryItemUI</a></div><div class="ttdoc">인벤토리 한 칸(보유 다이스/스킬/장비 공통)을 그리기 위한 표시값입니다.</div><div class="ttdef"><b>Definition</b> <a href="InventoryUITypes_8h_source.html#l00031">InventoryUITypes.h:32</a></div></div>
+<div class="ttc" id="astructFInventoryUI_html"><div class="ttname"><a href="structFInventoryUI.html">FInventoryUI</a></div><div class="ttdoc">인벤토리(현재 런 상태) 화면 전체 표시값입니다.</div><div class="ttdef"><b>Definition</b> <a href="InventoryUITypes_8h_source.html#l00050">InventoryUITypes.h:51</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_18e329638b0f3372047d81882ea0cdaf.html">UI</a></li><li class="navelem"><a class="el" href="dir_cc600e346a51f0741f587217bc148ecd.html">Inventory</a></li><li class="navelem"><a class="el" href="InventoryUITypes_8h.html">InventoryUITypes.h</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

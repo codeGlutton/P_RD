@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/GAS/Attribute/UnitAttributeSet.h 소스 파일</title>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/AttributeSet/UnitAttributeSet.h 소스 파일</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -101,92 +101,133 @@ $(document).ready(function(){initNavTree('UnitAttributeSet_8h_source.html',''); 
 <a href="UnitAttributeSet_8h.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*****************************************************************/</span></div>
 <div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#pragma once</span></div>
 <div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;<a class="code" href="GASMinimal_8h.html">GAS/GASMinimal.h</a>&quot;</span></div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;AttributeSet.h&quot;</span></div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &quot;UnitAttributeSet.generated.h&quot;</span></div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>UCLASS()</div>
-<div class="foldopen" id="foldopen00019" data-start="{" data-end="};">
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html">   19</a></span>class P_RD_API <a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a> : public UAttributeSet</div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>{</div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    GENERATED_BODY()</div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    </div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    <a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a>();</div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span> </div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    <span class="comment">/* UAttributeSet 상속 */</span></div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    <span class="keywordtype">void</span> PreAttributeChange(<span class="keyword">const</span> FGameplayAttribute&amp; Attribute, <span class="keywordtype">float</span>&amp; NewValue) <span class="keyword">override</span>;</div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    <span class="keywordtype">void</span> PostAttributeChange(<span class="keyword">const</span> FGameplayAttribute&amp; Attribute, <span class="keywordtype">float</span> OldValue, <span class="keywordtype">float</span> NewValue) <span class="keyword">override</span>;</div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span> </div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    <a class="code hl_define" href="GASMinimal_8h.html#a557ad7abc436418aee5d00d667d37f02">ATTRIBUTE_ACCESSORS</a>(<a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a>, MaxHP)</div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    <a class="code hl_define" href="GASMinimal_8h.html#a557ad7abc436418aee5d00d667d37f02">ATTRIBUTE_ACCESSORS</a>(<a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a>, HP)</div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <a class="code hl_define" href="GASMinimal_8h.html#a557ad7abc436418aee5d00d667d37f02">ATTRIBUTE_ACCESSORS</a>(<a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a>, SkillPoint)</div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    <a class="code hl_define" href="GASMinimal_8h.html#a557ad7abc436418aee5d00d667d37f02">ATTRIBUTE_ACCESSORS</a>(<a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a>, DamagePoint)</div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    <a class="code hl_define" href="GASMinimal_8h.html#a557ad7abc436418aee5d00d667d37f02">ATTRIBUTE_ACCESSORS</a>(<a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a>, DefensePoint)</div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    <a class="code hl_define" href="GASMinimal_8h.html#a557ad7abc436418aee5d00d667d37f02">ATTRIBUTE_ACCESSORS</a>(<a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a>, MovementPoint)</div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span> </div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span><span class="keyword">protected</span>:</div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>    UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)</div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#a251f288bb945b292a04da22fe47f2c98">   41</a></span>    FGameplayAttributeData MaxHP;</div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)</div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#aee768987c07c56dd94cf82f968e3ce2e">   43</a></span>    FGameplayAttributeData HP;</div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;<a class="code" href="AttributeSetMinimal_8h.html">AttributeSet/AttributeSetMinimal.h</a>&quot;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;<a class="code" href="AttributeSetComponentModel_8h.html">Component/AttributeComponent/AttributeSetComponentModel.h</a>&quot;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &quot;UnitAttributeSet.generated.h&quot;</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>UCLASS()</div>
+<div class="foldopen" id="foldopen00018" data-start="{" data-end="};">
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html">   18</a></span>class P_RD_API <a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a> : public <a class="code hl_class" href="classUTacticalAttributeSet.html">UTacticalAttributeSet</a></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>{</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    GENERATED_BODY()</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    </div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    <a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a>();</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    <span class="comment">/* UTacticalAttributeSet 상속 */</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    <span class="keywordtype">void</span> PreAttributeChange(<span class="keyword">const</span> <a class="code hl_struct" href="structFTacticalAttribute.html">FTacticalAttribute</a>&amp; Attribute, <span class="keywordtype">float</span>&amp; NewValue) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    <span class="keywordtype">void</span> PostAttributeChange(<span class="keyword">const</span> <a class="code hl_struct" href="structFTacticalAttribute.html">FTacticalAttribute</a>&amp; Attribute, <span class="keywordtype">float</span> OldValue, <span class="keywordtype">float</span> NewValue) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> </div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    <a class="code hl_define" href="TacticalAttributeSet_8h.html#a3f46fa43c1c74bb85260d663ce2128a3">TACTICAL_ATTRIBUTE_ACCESSORS_BASIC</a>(<a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a>, MaxHP)</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    <a class="code hl_define" href="TacticalAttributeSet_8h.html#a3f46fa43c1c74bb85260d663ce2128a3">TACTICAL_ATTRIBUTE_ACCESSORS_BASIC</a>(<a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a>, <a class="code hl_enumvalue" href="CombatUITypes_8h.html#accc3119da6754ad413c171ed3fd54a4cae6fc8ce107f2bdf0955f021a391514ce">HP</a>)</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    <a class="code hl_define" href="TacticalAttributeSet_8h.html#a3f46fa43c1c74bb85260d663ce2128a3">TACTICAL_ATTRIBUTE_ACCESSORS_BASIC</a>(<a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a>, Defense)</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <a class="code hl_define" href="TacticalAttributeSet_8h.html#a3f46fa43c1c74bb85260d663ce2128a3">TACTICAL_ATTRIBUTE_ACCESSORS_BASIC</a>(<a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a>, Movement)</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span> </div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    <a class="code hl_define" href="TacticalAttributeSet_8h.html#a3f46fa43c1c74bb85260d663ce2128a3">TACTICAL_ATTRIBUTE_ACCESSORS_BASIC</a>(<a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a>, AttackPoint)</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    <a class="code hl_define" href="TacticalAttributeSet_8h.html#a3f46fa43c1c74bb85260d663ce2128a3">TACTICAL_ATTRIBUTE_ACCESSORS_BASIC</a>(<a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a>, HealPoint)</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    <a class="code hl_define" href="TacticalAttributeSet_8h.html#a3f46fa43c1c74bb85260d663ce2128a3">TACTICAL_ATTRIBUTE_ACCESSORS_BASIC</a>(<a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a>, DefensePoint)</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    <a class="code hl_define" href="TacticalAttributeSet_8h.html#a3f46fa43c1c74bb85260d663ce2128a3">TACTICAL_ATTRIBUTE_ACCESSORS_BASIC</a>(<a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a>, MovementPoint)</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span> </div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    <a class="code hl_define" href="TacticalAttributeSet_8h.html#a3f46fa43c1c74bb85260d663ce2128a3">TACTICAL_ATTRIBUTE_ACCESSORS_BASIC</a>(<a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a>, AttackFactor)</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    <a class="code hl_define" href="TacticalAttributeSet_8h.html#a3f46fa43c1c74bb85260d663ce2128a3">TACTICAL_ATTRIBUTE_ACCESSORS_BASIC</a>(<a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a>, HealFactor)</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>    <a class="code hl_define" href="TacticalAttributeSet_8h.html#a3f46fa43c1c74bb85260d663ce2128a3">TACTICAL_ATTRIBUTE_ACCESSORS_BASIC</a>(<a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a>, DefenseFactor)</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    <a class="code hl_define" href="TacticalAttributeSet_8h.html#a3f46fa43c1c74bb85260d663ce2128a3">TACTICAL_ATTRIBUTE_ACCESSORS_BASIC</a>(<a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a>, MovementFactor)</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span> </div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    <span class="comment">/* Instant로 즉각 적용되는 Attribute 값 */</span></div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>    <span class="comment">// @brief 최대 체력</span></div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#a95dad8f6955c9b9fc677cfe0ef203cae">   50</a></span>    <a class="code hl_struct" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> MaxHP;</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    <span class="comment">// @brief 현재 체력</span></div>
 <div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#a5722cc3c9d4b962552d0f4ff36f95898">   53</a></span>    FGameplayAttributeData SkillPoint;</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#a0e76be2875daee23581bdd03012d0976">   53</a></span>    <a class="code hl_struct" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> <a class="code hl_enumvalue" href="CombatUITypes_8h.html#accc3119da6754ad413c171ed3fd54a4cae6fc8ce107f2bdf0955f021a391514ce">HP</a>;</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span> </div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    <span class="comment">// @brief 이번 턴 동안 유지되는 방어 스택</span></div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#abf44c856cd52e53ae52732223de14cc0">   57</a></span>    <a class="code hl_struct" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> Defense;</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>    <span class="comment">// @brief 이번 턴 동안 유지되는 움직임 스택</span></div>
 <div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)</div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#af9b60f9b987447a559b1eb4c60bf838d">   60</a></span>    FGameplayAttributeData DamagePoint;</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#ac581dad6175cc82a12f22d0c81bac44f">   60</a></span>    <a class="code hl_struct" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> Movement;</div>
 <div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span> </div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    <span class="comment">// @brief 턴 동안만 유지되는 방어 포인트</span></div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>    UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)</div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#af132a4b9c402d0b46f9dfb352e9c3ce4">   64</a></span>    FGameplayAttributeData DefensePoint;</div>
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    <span class="comment">// @brief 턴 동안만 유지되는 움직임 포인트</span></div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>    UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)</div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#adb1c70092961d827172867ed1b953f4c">   67</a></span>    FGameplayAttributeData MovementPoint;</div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>};</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    <span class="comment">/* 임시적으로 패시브들이 스냅샷 참고하라고 넣어두는 기본 값 */</span></div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>protected:</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>    <span class="comment">// @brief 스킬 모션 동안만 유지되는 기본 공격 포인트 (스킬 기본 공격량과 주사위 계수 합산 값)</span></div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#a55cc29dd975a5b1699a9f1579d03537b">   66</a></span>    <a class="code hl_struct" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> AttackPoint;</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    <span class="comment">// @brief 스킬 모션 동안만 유지되는 기본 회복 포인트 (스킬 기본 회복량과 주사위 계수 합산 값)</span></div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>    UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#add3cac52f3ac3e4b84a8d5d644eac25f">   69</a></span>    <a class="code hl_struct" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> HealPoint;</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>    <span class="comment">// @brief 스킬 모션 동안만 유지되는 기본 방어 획득 포인트 (스킬 기본 방어 획득량과 주사위 계수 합산 값)</span></div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>    UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#a653a531bb92015b81e5995a80650a8a8">   72</a></span>    <a class="code hl_struct" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> DefensePoint;</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>    <span class="comment">// @brief 스킬 모션 동안만 유지되는 기본 움직임 획득 포인트 (스킬 기본 움직임 획득량과 주사위 계수 합산 값)</span></div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>    UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#ab598e8dcebe1e4e642f8f30029f42730">   75</a></span>    <a class="code hl_struct" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> MovementPoint;</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span> </div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    <span class="comment">/* 특정 기간적으로 추가되는 반영 스텟들 */</span></div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>protected:</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    <span class="comment">// @brief 추가 공격력 값 (ex 버프, 장비, 특정 기간 동안의 패시브 반영)</span></div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#a50494f545249e7d4b2ecd6a2bb11cb03">   81</a></span>    <a class="code hl_struct" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> AttackFactor;</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    <span class="comment">// @brief 추가 회복력 값 (ex 버프, 장비, 특정 기간 동안의 패시브 반영)</span></div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>    UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#a07d0478f2f38bed2f982a94f3879f772">   84</a></span>    <a class="code hl_struct" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> HealFactor;</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>    <span class="comment">// @brief 추가 방어휙득력 값 (ex 버프, 장비, 특정 기간 동안의 패시브 반영)</span></div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>    UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#a9526b59923efcc3a8d01363222bc1500">   87</a></span>    <a class="code hl_struct" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> DefenseFactor;</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>    <span class="comment">// @brief 추가 이동휙득력 값 (ex 버프, 장비, 특정 기간 동안의 패시브 반영)</span></div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#ae8d11dcb6604ea0ef3f01b7437ba8dab">   90</a></span>    <a class="code hl_struct" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> MovementFactor;</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>};</div>
 </div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span> </div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>UCLASS()</div>
-<div class="foldopen" id="foldopen00074" data-start="{" data-end="};">
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno"><a class="line" href="classUPlayerUnitAttributeSet.html">   74</a></span>class P_RD_API <a class="code hl_class" href="classUPlayerUnitAttributeSet.html">UPlayerUnitAttributeSet</a> : public <a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a></div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>{</div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>    GENERATED_BODY()</div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    </div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    <a class="code hl_class" href="classUPlayerUnitAttributeSet.html">UPlayerUnitAttributeSet</a>();</div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span> </div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>    <span class="comment">/* UAttributeSet 상속 */</span></div>
-<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>    <span class="keywordtype">void</span> PreAttributeChange(<span class="keyword">const</span> FGameplayAttribute&amp; Attribute, <span class="keywordtype">float</span>&amp; NewValue) <span class="keyword">override</span>;</div>
-<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    <span class="keywordtype">void</span> PostAttributeChange(<span class="keyword">const</span> FGameplayAttribute&amp; Attribute, <span class="keywordtype">float</span> OldValue, <span class="keywordtype">float</span> NewValue) <span class="keyword">override</span>;</div>
-<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span> </div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>    <a class="code hl_define" href="GASMinimal_8h.html#a557ad7abc436418aee5d00d667d37f02">ATTRIBUTE_ACCESSORS</a>(<a class="code hl_class" href="classUPlayerUnitAttributeSet.html">UPlayerUnitAttributeSet</a>, MaxExp)</div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>    <a class="code hl_define" href="GASMinimal_8h.html#a557ad7abc436418aee5d00d667d37f02">ATTRIBUTE_ACCESSORS</a>(<a class="code hl_class" href="classUPlayerUnitAttributeSet.html">UPlayerUnitAttributeSet</a>, Exp)</div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    <a class="code hl_define" href="GASMinimal_8h.html#a557ad7abc436418aee5d00d667d37f02">ATTRIBUTE_ACCESSORS</a>(<a class="code hl_class" href="classUPlayerUnitAttributeSet.html">UPlayerUnitAttributeSet</a>, Money)</div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span> </div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span><span class="keyword">protected</span>:</div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>    UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)</div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno"><a class="line" href="classUPlayerUnitAttributeSet.html#a7093d688f92697f557ebdb4e7c1f7e38">   93</a></span>    FGameplayAttributeData MaxExp;</div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>    UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)</div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno"><a class="line" href="classUPlayerUnitAttributeSet.html#a92e9947a05ac9f7120680f526e5fb455">   95</a></span>    FGameplayAttributeData Exp;</div>
-<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>    </div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>    UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)</div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno"><a class="line" href="classUPlayerUnitAttributeSet.html#a6bb146cc7a3fc3b0fdafb683c7ed3709">   98</a></span>    FGameplayAttributeData Money;</div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>};</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span> </div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>UCLASS()</div>
+<div class="foldopen" id="foldopen00097" data-start="{" data-end="};">
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno"><a class="line" href="classUPlayerUnitAttributeSet.html">   97</a></span>class P_RD_API <a class="code hl_class" href="classUPlayerUnitAttributeSet.html">UPlayerUnitAttributeSet</a> : public <a class="code hl_class" href="classUUnitAttributeSet.html">UUnitAttributeSet</a></div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>{</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>    GENERATED_BODY()</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>    </div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>    <a class="code hl_class" href="classUPlayerUnitAttributeSet.html">UPlayerUnitAttributeSet</a>();</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span> </div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    <span class="comment">/* UTacticalAttributeSet 상속 */</span></div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>    <span class="keywordtype">void</span> PreAttributeChange(<span class="keyword">const</span> <a class="code hl_struct" href="structFTacticalAttribute.html">FTacticalAttribute</a>&amp; Attribute, <span class="keywordtype">float</span>&amp; NewValue) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    <span class="keywordtype">void</span> PostAttributeChange(<span class="keyword">const</span> <a class="code hl_struct" href="structFTacticalAttribute.html">FTacticalAttribute</a>&amp; Attribute, <span class="keywordtype">float</span> OldValue, <span class="keywordtype">float</span> NewValue) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>    <a class="code hl_define" href="TacticalAttributeSet_8h.html#a3f46fa43c1c74bb85260d663ce2128a3">TACTICAL_ATTRIBUTE_ACCESSORS_BASIC</a>(<a class="code hl_class" href="classUPlayerUnitAttributeSet.html">UPlayerUnitAttributeSet</a>, MaxExp)</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>    <a class="code hl_define" href="TacticalAttributeSet_8h.html#a3f46fa43c1c74bb85260d663ce2128a3">TACTICAL_ATTRIBUTE_ACCESSORS_BASIC</a>(<a class="code hl_class" href="classUPlayerUnitAttributeSet.html">UPlayerUnitAttributeSet</a>, <a class="code hl_enumvalue" href="RewardUITypes_8h.html#abdc22ba12c67d0e130c6eb499d1d5bd7acad39a154bffb61175f674d6eefaf6d0">Exp</a>)</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    <a class="code hl_define" href="TacticalAttributeSet_8h.html#a3f46fa43c1c74bb85260d663ce2128a3">TACTICAL_ATTRIBUTE_ACCESSORS_BASIC</a>(<a class="code hl_class" href="classUPlayerUnitAttributeSet.html">UPlayerUnitAttributeSet</a>, Money)</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span> </div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>    UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno"><a class="line" href="classUPlayerUnitAttributeSet.html#a3a61ac162e21585e8fc177f40a363119">  116</a></span>    <a class="code hl_struct" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> MaxExp;</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>    UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno"><a class="line" href="classUPlayerUnitAttributeSet.html#acbc5831e12c0e3ed1c8b1c75acd8776a">  118</a></span>    <a class="code hl_struct" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> <a class="code hl_enumvalue" href="RewardUITypes_8h.html#abdc22ba12c67d0e130c6eb499d1d5bd7acad39a154bffb61175f674d6eefaf6d0">Exp</a>;</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>    </div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno"><a class="line" href="classUPlayerUnitAttributeSet.html#afbb7afc3a5ca5a08dd1b9988a80ea805">  121</a></span>    <a class="code hl_struct" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> Money;</div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>};</div>
 </div>
-<div class="ttc" id="aGASMinimal_8h_html"><div class="ttname"><a href="GASMinimal_8h.html">GASMinimal.h</a></div><div class="ttdoc">GAS 활용 영역에서 사용되는 포함 헤더</div></div>
-<div class="ttc" id="aGASMinimal_8h_html_a557ad7abc436418aee5d00d667d37f02"><div class="ttname"><a href="GASMinimal_8h.html#a557ad7abc436418aee5d00d667d37f02">ATTRIBUTE_ACCESSORS</a></div><div class="ttdeci">#define ATTRIBUTE_ACCESSORS(ClassName, PropertyName)</div><div class="ttdoc">Gameplay Attribute의 Get/Set 등의 접근 함수 자동 정의 매크로</div><div class="ttdef"><b>Definition</b> <a href="GASMinimal_8h_source.html#l00034">GASMinimal.h:34</a></div></div>
-<div class="ttc" id="aclassUPlayerUnitAttributeSet_html"><div class="ttname"><a href="classUPlayerUnitAttributeSet.html">UPlayerUnitAttributeSet</a></div><div class="ttdoc">Player가 조작하는 SRPG Unit에 대한 Attribute Set 정의</div><div class="ttdef"><b>Definition</b> <a href="UnitAttributeSet_8h_source.html#l00074">UnitAttributeSet.h:75</a></div></div>
-<div class="ttc" id="aclassUUnitAttributeSet_html"><div class="ttname"><a href="classUUnitAttributeSet.html">UUnitAttributeSet</a></div><div class="ttdoc">SRPG Unit에 대한 Attribute Set 정의</div><div class="ttdef"><b>Definition</b> <a href="UnitAttributeSet_8h_source.html#l00019">UnitAttributeSet.h:20</a></div></div>
+<div class="ttc" id="aAttributeSetComponentModel_8h_html"><div class="ttname"><a href="AttributeSetComponentModel_8h.html">AttributeSetComponentModel.h</a></div><div class="ttdoc">속성 컴포넌트 모델 정의 헤더</div></div>
+<div class="ttc" id="aAttributeSetMinimal_8h_html"><div class="ttname"><a href="AttributeSetMinimal_8h.html">AttributeSetMinimal.h</a></div><div class="ttdoc">AttributeSet 활용 영역에서 사용되는 포함 헤더</div></div>
+<div class="ttc" id="aCombatUITypes_8h_html_accc3119da6754ad413c171ed3fd54a4cae6fc8ce107f2bdf0955f021a391514ce"><div class="ttname"><a href="CombatUITypes_8h.html#accc3119da6754ad413c171ed3fd54a4cae6fc8ce107f2bdf0955f021a391514ce">EFloatingLogIconType::HP</a></div><div class="ttdeci">@ HP</div></div>
+<div class="ttc" id="aRewardUITypes_8h_html_abdc22ba12c67d0e130c6eb499d1d5bd7acad39a154bffb61175f674d6eefaf6d0"><div class="ttname"><a href="RewardUITypes_8h.html#abdc22ba12c67d0e130c6eb499d1d5bd7acad39a154bffb61175f674d6eefaf6d0">ERewardClaimKind::Exp</a></div><div class="ttdeci">@ Exp</div></div>
+<div class="ttc" id="aTacticalAttributeSet_8h_html_a3f46fa43c1c74bb85260d663ce2128a3"><div class="ttname"><a href="TacticalAttributeSet_8h.html#a3f46fa43c1c74bb85260d663ce2128a3">TACTICAL_ATTRIBUTE_ACCESSORS_BASIC</a></div><div class="ttdeci">#define TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(ClassName, PropertyName)</div><div class="ttdef"><b>Definition</b> <a href="TacticalAttributeSet_8h_source.html#l00295">TacticalAttributeSet.h:295</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitAttributeSet_html"><div class="ttname"><a href="classUPlayerUnitAttributeSet.html">UPlayerUnitAttributeSet</a></div><div class="ttdoc">Player가 조작하는 SRPG Unit에 대한 Attribute Set 정의</div><div class="ttdef"><b>Definition</b> <a href="UnitAttributeSet_8h_source.html#l00097">UnitAttributeSet.h:98</a></div></div>
+<div class="ttc" id="aclassUTacticalAttributeSet_html"><div class="ttname"><a href="classUTacticalAttributeSet.html">UTacticalAttributeSet</a></div><div class="ttdef"><b>Definition</b> <a href="TacticalAttributeSet_8h_source.html#l00181">TacticalAttributeSet.h:182</a></div></div>
+<div class="ttc" id="aclassUUnitAttributeSet_html"><div class="ttname"><a href="classUUnitAttributeSet.html">UUnitAttributeSet</a></div><div class="ttdoc">SRPG Unit에 대한 Attribute Set 정의</div><div class="ttdef"><b>Definition</b> <a href="UnitAttributeSet_8h_source.html#l00018">UnitAttributeSet.h:19</a></div></div>
+<div class="ttc" id="astructFTacticalAttributeData_html"><div class="ttname"><a href="structFTacticalAttributeData.html">FTacticalAttributeData</a></div><div class="ttdef"><b>Definition</b> <a href="TacticalAttributeSet_8h_source.html#l00041">TacticalAttributeSet.h:42</a></div></div>
+<div class="ttc" id="astructFTacticalAttribute_html"><div class="ttname"><a href="structFTacticalAttribute.html">FTacticalAttribute</a></div><div class="ttdef"><b>Definition</b> <a href="TacticalAttributeSet_8h_source.html#l00074">TacticalAttributeSet.h:75</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_52e018a2ea224e6f27385fcdfacd6da6.html">GAS</a></li><li class="navelem"><a class="el" href="dir_179f6e5caaef98f9049f1dd1bed1aa77.html">Attribute</a></li><li class="navelem"><a class="el" href="UnitAttributeSet_8h.html">UnitAttributeSet.h</a></li>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_dabcf9a26b38b8cd1c7418bd266895b3.html">AttributeSet</a></li><li class="navelem"><a class="el" href="UnitAttributeSet_8h.html">UnitAttributeSet.h</a></li>
     <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
   </ul>
 </div>

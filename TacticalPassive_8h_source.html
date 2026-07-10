@@ -1,0 +1,207 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/TAS/Passive/TacticalPassive.h 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('TacticalPassive_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">TacticalPassive.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="TacticalPassive_8h.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*****************************************************************/</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;<a class="code" href="RDMinimal_8h.html">RDMinimal.h</a>&quot;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;<a class="code" href="DynamicPassiveData_8h.html">TAS/Passive/DynamicPassiveData.h</a>&quot;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &quot;<a class="code" href="ActiveTacticalEffect_8h.html">TAS/Effect/ActiveTacticalEffect.h</a>&quot;</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &quot;TacticalPassive.generated.h&quot;</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="keyword">struct </span><a class="code hl_struct" href="structFPassiveActivateContext.html">FPassiveActivateContext</a>;</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="keyword">struct </span><a class="code hl_struct" href="structFBoardCombatTargetSnapshotData.html">FBoardCombatTargetSnapshotData</a>;</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="keyword">class </span><a class="code hl_class" href="classUTacticalEffect.html">UTacticalEffect</a>;</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="keyword">class </span><a class="code hl_class" href="classUStaticPassiveData.html">UStaticPassiveData</a>;</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span> </div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UCLASS</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Abstract</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Blueprintable</a>)</div>
+<div class="foldopen" id="foldopen00034" data-start="{" data-end="};">
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno"><a class="line" href="classUTacticalPassive.html">   34</a></span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">P_RD_API</a> <a class="code hl_class" href="classUTacticalPassive.html">UTacticalPassive</a> : <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">public</a> UObject</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>{</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GENERATED_BODY</a>()</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span> </div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    </div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno"><a class="line" href="classUTacticalPassive.html#a44a4e21651393b6c7658c441a0440055">   42</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">friend</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> FPassiveComponentModelTests;</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>    </div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno"><a class="line" href="classUTacticalPassive.html#ad19df3b8d089bff1db92aadbb80be612">   44</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">friend</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> FTacticalPassiveAddStatTests;</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno"><a class="line" href="classUTacticalPassive.html#a12ce59a04b6825657aed057a0a018e9d">   45</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">friend</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> FTacticalPassiveNthAddStatCalcTests;</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno"><a class="line" href="classUTacticalPassive.html#ad2fe1150e112cb8f6663c80ea78e67e9">   46</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">friend</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> FTacticalPassiveNthAddStatCommitTests;</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">public</a>:</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    <span class="keywordtype">void</span> ActivatePassive(</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGameplayTag</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TimingTag</a>,</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="code hl_struct" href="structFPassiveActivateContext.html">FPassiveActivateContext</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Ctx</a>,</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt;<a class="code hl_struct" href="structFDynamicPassiveData.html">FDynamicPassiveData</a>&gt;&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PassiveState</a>);</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span> </div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno"><a class="line" href="classUTacticalPassive.html#a7da968e1006e2642bd232ea320a51f32">   80</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <span class="keywordtype">void</span> CommitPassive(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt;<a class="code hl_struct" href="structFDynamicPassiveData.html">FDynamicPassiveData</a>&gt;&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PassiveState</a>) {}</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span> </div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>    <span class="keywordtype">void</span> DeactivatePassive();</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span> </div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno"><a class="line" href="classUTacticalPassive.html#ac7f77c63d989d9cd5f4ca77d2e26dd1a">   95</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classUTacticalPassive.html#ac7f77c63d989d9cd5f4ca77d2e26dd1a">HasTimingTag</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGameplayTag</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Tag</a>)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Tag</a> == <a class="code hl_variable" href="classUStaticPassiveData.html#ab9193c444c8a79ae3fca8e3455adaf80">mActivateTimingTag</a> || <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Tag</a> == <a class="code hl_variable" href="classUStaticPassiveData.html#aebeafb910e3e03d5fb060d6a6724fa1f">mDeactivateTimingTag</a>; }</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span> </div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    <span class="keywordtype">void</span> SetStaticData(<a class="code hl_class" href="classUStaticPassiveData.html">UStaticPassiveData</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InStaticData</a>);</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span> </div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>    <span class="comment">// 주입된 정적 데이터 (클래스 구동 패시브는 null)</span></div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno"><a class="line" href="classUTacticalPassive.html#a606bb42782b8bc4958e43aefff4a2e48">  107</a></span>    <a class="code hl_class" href="classUStaticPassiveData.html">UStaticPassiveData</a>* <a class="code hl_function" href="classUTacticalPassive.html#a606bb42782b8bc4958e43aefff4a2e48">GetStaticData</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> mStaticData; }</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> InitializeFromData();</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span> </div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno"><a class="line" href="classUTacticalPassive.html#a9d2e223c13db554cb052008abefa4b0b">  131</a></span>    <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code hl_variable" href="classUTacticalPassive.html#a9d2e223c13db554cb052008abefa4b0b">EvaluateActivate</a>(</div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <span class="keyword">const</span> <a class="code hl_struct" href="structFPassiveActivateContext.html">FPassiveActivateContext</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Ctx</a>,</div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct&lt;FDynamicPassiveData&gt;</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PassiveState</a>,</div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <span class="keywordtype">float</span>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OutMagnitude</a>)</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PURE_VIRTUAL</a>(<a class="code hl_variable" href="classUTacticalPassive.html#a9d2e223c13db554cb052008abefa4b0b">UTacticalPassive::EvaluateActivate</a>, <span class="keywordflow">return</span> <span class="keyword">false</span>;);</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span> </div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> NotifyPassive(</div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <span class="keyword">const</span> <a class="code hl_struct" href="structFPassiveActivateContext.html">FPassiveActivateContext</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Ctx</a>,</div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Magnitude</a>);</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span> </div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>    <span class="keywordtype">bool</span> PassesTargetQuantifier(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <span class="keyword">const</span> <a class="code hl_struct" href="structFPassiveActivateContext.html">FPassiveActivateContext</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Ctx</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span> </div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno"><a class="line" href="classUTacticalPassive.html#af483707f95aa64940cfc731b3e5b1888">  175</a></span>    <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code hl_function" href="classUTacticalPassive.html#af483707f95aa64940cfc731b3e5b1888">IsTargetQualified</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <span class="keyword">const</span> <a class="code hl_struct" href="structFBoardCombatTargetSnapshotData.html">FBoardCombatTargetSnapshotData</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Snapshot</a>)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> <span class="keyword">true</span>; }</div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span> </div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Category</a> = <span class="stringliteral">&quot;Passive&quot;</span>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EditDefaultsOnly</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">meta</a> = (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DisplayName</a> = <span class="stringliteral">&quot;Effect&quot;</span>))</div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno"><a class="line" href="classUTacticalPassive.html#a53bdb9fad72ad4b8eae028c3563f401c">  186</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSubclassOf</a>&lt;<a class="code hl_class" href="classUTacticalEffect.html">UTacticalEffect</a>&gt; <a class="code hl_variable" href="classUStaticPassiveData.html#afb56815f198be77f43a785d9d79cd4c1">mEffectClass</a>;</div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span> </div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno"><a class="line" href="classUTacticalPassive.html#aace8dbb065db3fd78cc6a6f822a93f1e">  195</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="code hl_struct" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a>&gt; mActiveHandles;</div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span> </div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Category</a> = &quot;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Passive</a>&quot;, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EditDefaultsOnly</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">meta</a> = (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DisplayName</a> = &quot;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ActivateTiming</a>&quot;))</div>
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno"><a class="line" href="classUTacticalPassive.html#a280c92d317c10e37f9fced76c62f0d92">  206</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGameplayTag</a> <a class="code hl_variable" href="classUStaticPassiveData.html#ab9193c444c8a79ae3fca8e3455adaf80">mActivateTimingTag</a>;</div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span> </div>
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Category</a> = &quot;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Passive</a>&quot;, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EditDefaultsOnly</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">meta</a> = (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DisplayName</a> = &quot;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DeactivateTiming</a>&quot;))</div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno"><a class="line" href="classUTacticalPassive.html#a7c3bfd1d0ae3c06922fe8dbfe632f929">  216</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGameplayTag</a> <a class="code hl_variable" href="classUStaticPassiveData.html#aebeafb910e3e03d5fb060d6a6724fa1f">mDeactivateTimingTag</a>;</div>
+<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span> </div>
+<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Category</a> = &quot;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Passive</a>&quot;, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VisibleAnywhere</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">meta</a> = (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DisplayName</a> = &quot;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">State</a>&quot;))</div>
+<div class="line"><a id="l00225" name="l00225"></a><span class="lineno"><a class="line" href="classUTacticalPassive.html#ab57b0b1fcf1131a722bf0219e7fcd4c5">  225</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt;<a class="code hl_struct" href="structFDynamicPassiveData.html">FDynamicPassiveData</a>&gt; mState;</div>
+<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span> </div>
+<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Category</a> = &quot;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Passive</a>&quot;, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VisibleAnywhere</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">meta</a> = (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DisplayName</a> = &quot;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">StaticData</a>&quot;))</div>
+<div class="line"><a id="l00234" name="l00234"></a><span class="lineno"><a class="line" href="classUTacticalPassive.html#a57a643c0ecaacb70f39fae43e093b836">  234</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="code hl_class" href="classUStaticPassiveData.html">UStaticPassiveData</a>&gt; mStaticData = <span class="keywordtype">nullptr</span>;</div>
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>};</div>
+</div>
+<div class="ttc" id="aActiveTacticalEffect_8h_html"><div class="ttname"><a href="ActiveTacticalEffect_8h.html">ActiveTacticalEffect.h</a></div><div class="ttdoc">현재 활성화 이펙트 정의 헤더</div></div>
+<div class="ttc" id="aDynamicPassiveData_8h_html"><div class="ttname"><a href="DynamicPassiveData_8h.html">DynamicPassiveData.h</a></div><div class="ttdoc">패시브 런타임 상태를 저장하는 베이스 struct</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aRDMinimal_8h_html"><div class="ttname"><a href="RDMinimal_8h.html">RDMinimal.h</a></div><div class="ttdoc">RD 프로젝트 전 영역에서 사용되는 최소한의 포함 헤더</div></div>
+<div class="ttc" id="aclassUStaticPassiveData_html"><div class="ttname"><a href="classUStaticPassiveData.html">UStaticPassiveData</a></div><div class="ttdef"><b>Definition</b> <a href="StaticPassiveData_8h_source.html#l00045">StaticPassiveData.h:46</a></div></div>
+<div class="ttc" id="aclassUStaticPassiveData_html_ab9193c444c8a79ae3fca8e3455adaf80"><div class="ttname"><a href="classUStaticPassiveData.html#ab9193c444c8a79ae3fca8e3455adaf80">UStaticPassiveData::mActivateTimingTag</a></div><div class="ttdeci">FGameplayTag mActivateTimingTag</div><div class="ttdoc">패시브 발동 시점 (단일)</div><div class="ttdef"><b>Definition</b> <a href="StaticPassiveData_8h_source.html#l00071">StaticPassiveData.h:71</a></div></div>
+<div class="ttc" id="aclassUStaticPassiveData_html_aebeafb910e3e03d5fb060d6a6724fa1f"><div class="ttname"><a href="classUStaticPassiveData.html#aebeafb910e3e03d5fb060d6a6724fa1f">UStaticPassiveData::mDeactivateTimingTag</a></div><div class="ttdeci">FGameplayTag mDeactivateTimingTag</div><div class="ttdoc">패시브 해제 시점 (단일)</div><div class="ttdef"><b>Definition</b> <a href="StaticPassiveData_8h_source.html#l00080">StaticPassiveData.h:80</a></div></div>
+<div class="ttc" id="aclassUStaticPassiveData_html_afb56815f198be77f43a785d9d79cd4c1"><div class="ttname"><a href="classUStaticPassiveData.html#afb56815f198be77f43a785d9d79cd4c1">UStaticPassiveData::mEffectClass</a></div><div class="ttdeci">TSoftClassPtr&lt; UTacticalEffect &gt; mEffectClass</div><div class="ttdoc">적용할 이펙트 &quot;종류&quot; 클래스</div><div class="ttdef"><b>Definition</b> <a href="StaticPassiveData_8h_source.html#l00119">StaticPassiveData.h:119</a></div></div>
+<div class="ttc" id="aclassUTacticalEffect_html"><div class="ttname"><a href="classUTacticalEffect.html">UTacticalEffect</a></div><div class="ttdoc">속성값 및 태그를 변경하는 객체</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffect_8h_source.html#l00192">TacticalEffect.h:193</a></div></div>
+<div class="ttc" id="aclassUTacticalPassive_html"><div class="ttname"><a href="classUTacticalPassive.html">UTacticalPassive</a></div><div class="ttdoc">패시브 베이스 클래스</div><div class="ttdef"><b>Definition</b> <a href="TacticalPassive_8h_source.html#l00034">TacticalPassive.h:35</a></div></div>
+<div class="ttc" id="aclassUTacticalPassive_html_a606bb42782b8bc4958e43aefff4a2e48"><div class="ttname"><a href="classUTacticalPassive.html#a606bb42782b8bc4958e43aefff4a2e48">UTacticalPassive::GetStaticData</a></div><div class="ttdeci">UStaticPassiveData * GetStaticData() const</div><div class="ttdef"><b>Definition</b> <a href="TacticalPassive_8h_source.html#l00107">TacticalPassive.h:107</a></div></div>
+<div class="ttc" id="aclassUTacticalPassive_html_a9d2e223c13db554cb052008abefa4b0b"><div class="ttname"><a href="classUTacticalPassive.html#a9d2e223c13db554cb052008abefa4b0b">UTacticalPassive::EvaluateActivate</a></div><div class="ttdeci">virtual bool EvaluateActivate(IN const FPassiveActivateContext &amp;Ctx, IN OUT TInstancedStruct&lt; FDynamicPassiveData &gt; &amp;PassiveState, OUT float &amp;OutMagnitude) PURE_VIRTUAL(UTacticalPassive</div><div class="ttdoc">발동 시점에서 적용 여부 결정 + 다음 상태 계산 + 기여값 산출</div><div class="ttdef"><b>Definition</b> <a href="TacticalPassive_8h_source.html#l00131">TacticalPassive.h:131</a></div></div>
+<div class="ttc" id="aclassUTacticalPassive_html_ac7f77c63d989d9cd5f4ca77d2e26dd1a"><div class="ttname"><a href="classUTacticalPassive.html#ac7f77c63d989d9cd5f4ca77d2e26dd1a">UTacticalPassive::HasTimingTag</a></div><div class="ttdeci">bool HasTimingTag(FGameplayTag Tag) const</div><div class="ttdoc">패시브가 해당 타이밍태그를 갖고 있는 지 회신</div><div class="ttdef"><b>Definition</b> <a href="TacticalPassive_8h_source.html#l00095">TacticalPassive.h:95</a></div></div>
+<div class="ttc" id="aclassUTacticalPassive_html_af483707f95aa64940cfc731b3e5b1888"><div class="ttname"><a href="classUTacticalPassive.html#af483707f95aa64940cfc731b3e5b1888">UTacticalPassive::IsTargetQualified</a></div><div class="ttdeci">virtual bool IsTargetQualified(IN const FBoardCombatTargetSnapshotData *Snapshot) const</div><div class="ttdoc">자격 조건 판정</div><div class="ttdef"><b>Definition</b> <a href="TacticalPassive_8h_source.html#l00175">TacticalPassive.h:175</a></div></div>
+<div class="ttc" id="astructFActiveTacticalEffectHandle_html"><div class="ttname"><a href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a></div><div class="ttdoc">활성화된 이펙트를 쉽게 탐색하기 위한 핸들</div><div class="ttdef"><b>Definition</b> <a href="ActiveTacticalEffect_8h_source.html#l00039">ActiveTacticalEffect.h:40</a></div></div>
+<div class="ttc" id="astructFBoardCombatTargetSnapshotData_html"><div class="ttname"><a href="structFBoardCombatTargetSnapshotData.html">FBoardCombatTargetSnapshotData</a></div><div class="ttdoc">타격 가능 보드 액터들에 대한 스냅샷</div><div class="ttdef"><b>Definition</b> <a href="BoardCombatTarget_8h_source.html#l00023">BoardCombatTarget.h:24</a></div></div>
+<div class="ttc" id="astructFDynamicPassiveData_html"><div class="ttname"><a href="structFDynamicPassiveData.html">FDynamicPassiveData</a></div><div class="ttdoc">패시브 런타임 상태 베이스</div><div class="ttdef"><b>Definition</b> <a href="DynamicPassiveData_8h_source.html#l00022">DynamicPassiveData.h:23</a></div></div>
+<div class="ttc" id="astructFPassiveActivateContext_html"><div class="ttname"><a href="structFPassiveActivateContext.html">FPassiveActivateContext</a></div><div class="ttdoc">패시브 계산 입력 컨텍스트</div><div class="ttdef"><b>Definition</b> <a href="PassiveActivateContext_8h_source.html#l00025">PassiveActivateContext.h:26</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_2931332fe30aa418bc02be414a0905e5.html">TAS</a></li><li class="navelem"><a class="el" href="dir_9fe6ca4ae197b06c813a876a5075299e.html">Passive</a></li><li class="navelem"><a class="el" href="TacticalPassive_8h.html">TacticalPassive.h</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

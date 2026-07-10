@@ -1,5 +1,5 @@
 var classUPlayerUnitRestorationSubsystem =
 [
-    [ "RegisterPlayerUnit", "classUPlayerUnitRestorationSubsystem.html#a3755639423e759b27a9b169650891e32", null ],
-    [ "SpawnPlayerUnit", "classUPlayerUnitRestorationSubsystem.html#a30b247f45700c145f2fbf84e46a0f3c5", null ]
+    [ "RegisterPlayerUnit", "classUPlayerUnitRestorationSubsystem.html#a131f732110bf14fef76cda32a79fa96a", null ],
+    [ "SpawnPlayerUnit", "classUPlayerUnitRestorationSubsystem.html#a77bcc6b21b2f6c96a077274e2075c253", null ]
 ];

@@ -93,185 +93,468 @@ $(document).ready(function(){initNavTree('functions_m.html',''); initResizable()
 <div class="textblock">다음은 모든 클래스 멤버들의 목록입니다. 각 멤버들은 해당 멤버가 속해 있는 클래스에 대한 링크를 가지고 있습니다. :</div>
 
 <h3><a id="index_m" name="index_m"></a>- m -</h3><ul>
-<li>mAbilityActive&#160;:&#160;<a class="el" href="classUGameplayAbility__SkillBase.html#a390e5dee32093c07e6896e16a2f55ed2">UGameplayAbility_SkillBase</a></li>
-<li>mAbilitySystemComp&#160;:&#160;<a class="el" href="classUSkillComponent.html#a090530d611df84f942304dda3a5969c7">USkillComponent</a></li>
-<li>mAcquiredDices&#160;:&#160;<a class="el" href="structFRunLog.html#a1b886b2af8312372b6177b1b51856bc3">FRunLog</a></li>
-<li>mAcquiredEquipment&#160;:&#160;<a class="el" href="structFRunLog.html#abb5246749dfc814d27e0f93e9d81f19e">FRunLog</a></li>
-<li>mAcquiredSkills&#160;:&#160;<a class="el" href="structFRunLog.html#ac3b32225f6561afb4621ebfab969b31d">FRunLog</a></li>
-<li>mActionCommandType&#160;:&#160;<a class="el" href="structFSRPGActionCommand.html#aaeff5b071cb09b7f920a6a8e7ed264c2">FSRPGActionCommand</a></li>
-<li>mActionPhase&#160;:&#160;<a class="el" href="structFSRPGAction.html#a780d8c505258fd6a8e9a1795c311ca44">FSRPGAction</a></li>
-<li>mActionResult&#160;:&#160;<a class="el" href="structFSRPGAction.html#aff57ac0af9529d488448e23953643492">FSRPGAction</a></li>
-<li>mActions&#160;:&#160;<a class="el" href="structFSRPGTurnContext.html#aa1dadced925adb8f06e08b826f9e0ec6">FSRPGTurnContext</a></li>
-<li>mActionType&#160;:&#160;<a class="el" href="structFSRPGAction.html#acd60b8ec46ff251abcb4ddbdcebf8e8d">FSRPGAction</a></li>
-<li>mActors&#160;:&#160;<a class="el" href="structFTile.html#af39e45c2c5e44993c02b90a2ac2838d5">FTile</a></li>
-<li>mAimDefaultRange&#160;:&#160;<a class="el" href="classUStaticSkillData.html#a94640bf44fe9c29ac6e8ccc06ceeade2">UStaticSkillData</a></li>
+<li>mAbilityInstance&#160;:&#160;<a class="el" href="classUTacticalEffectContext.html#aed6519d6193e850867605df09b393826">UTacticalEffectContext</a></li>
+<li>mAcceleration&#160;:&#160;<a class="el" href="classAUnit.html#a756a46e92175c9167724d7b125cfa658">AUnit</a></li>
+<li>mActionEventLogs&#160;:&#160;<a class="el" href="structFSRPGTurnEventLog.html#a31038fb3f40a4ded0e62cf66c31b169b">FSRPGTurnEventLog</a></li>
+<li>mActionPhase&#160;:&#160;<a class="el" href="classUSRPGAction.html#a1e99a99fd7c74e6931553fac56c0a450">USRPGAction</a></li>
+<li>mActionResult&#160;:&#160;<a class="el" href="classUSRPGAction.html#a026fdb6719166cf95652dc553f94e51d">USRPGAction</a></li>
+<li>mActions&#160;:&#160;<a class="el" href="classUInputData.html#ae4d2de3e99b630c77f05511640f3f65f">UInputData</a></li>
+<li>mActionType&#160;:&#160;<a class="el" href="classUSRPGAction.html#a095cb3a3cc4898237b1a02501ab98131">USRPGAction</a></li>
+<li>mActivateTimingTag&#160;:&#160;<a class="el" href="classUStaticPassiveData.html#ab9193c444c8a79ae3fca8e3455adaf80">UStaticPassiveData</a>, <a class="el" href="classUTacticalPassive.html#a280c92d317c10e37f9fced76c62f0d92">UTacticalPassive</a></li>
+<li>mActiveAttributeEffects&#160;:&#160;<a class="el" href="classUAttributeSetComponentModel.html#a45de522efe12bd5281a68387e96ab31b">UAttributeSetComponentModel</a></li>
+<li>mActiveEffect&#160;:&#160;<a class="el" href="structFTacticalEffectRemovalInfo.html#a1424c20e179ec0b6b6309a6db8fd5053">FTacticalEffectRemovalInfo</a></li>
+<li>mActiveHandle&#160;:&#160;<a class="el" href="structFTacticalAggregatorMod.html#a31da5150b1e18afd1c88ce02ae66406c">FTacticalAggregatorMod</a></li>
+<li>mActiveHandles&#160;:&#160;<a class="el" href="classUTacticalPassive.html#aace8dbb065db3fd78cc6a6f822a93f1e">UTacticalPassive</a></li>
+<li>mActiveMontageDir&#160;:&#160;<a class="el" href="classUBoardActorAnimInstance.html#a588b52ad1950fce1040b0305f1319284">UBoardActorAnimInstance</a></li>
+<li>mActiveMontageEvents&#160;:&#160;<a class="el" href="classUBoardActorAnimInstance.html#a5d1a9a252e236fddd843b8be85a49a06">UBoardActorAnimInstance</a></li>
+<li>mActiveMontageTag&#160;:&#160;<a class="el" href="classUBoardActorAnimInstance.html#aa57a53d07b54a8eb61583c262e9617d5">UBoardActorAnimInstance</a></li>
+<li>mActiveSkillContext&#160;:&#160;<a class="el" href="classUSkillComponentModel.html#a0dfb7446a9b023361d270756c72574c3">USkillComponentModel</a></li>
+<li>mActiveTurnActorModelClass&#160;:&#160;<a class="el" href="classUGameEventLogger.html#ae5f6de759d9c7d692e4c47986a80c1be">UGameEventLogger</a></li>
+<li>mActiveTurnSourceUnitID&#160;:&#160;<a class="el" href="classUGameEventLogger.html#a5808890342e8517f48c9c5d9432cb7cc">UGameEventLogger</a></li>
+<li>mActor&#160;:&#160;<a class="el" href="structFCombatUnitState.html#a8866ab5bcef9b1173d41da1a2ea73a04">FCombatUnitState</a></li>
 <li>mAimPattern&#160;:&#160;<a class="el" href="classUStaticSkillData.html#af99429a043e4f32ddb5dea7fe70551b0">UStaticSkillData</a></li>
-<li>mAimRatioRange&#160;:&#160;<a class="el" href="classUStaticSkillData.html#a2ef626d923f70bc8990dfb747e726cfb">UStaticSkillData</a></li>
+<li>mAimRangeDefaultValue&#160;:&#160;<a class="el" href="classUStaticSkillData.html#aafae1587717325f15e7105bb9a254fc8">UStaticSkillData</a></li>
+<li>mAimRangeRatio&#160;:&#160;<a class="el" href="classUStaticSkillData.html#a7d8fe7e260e40c1c565f06c9c7c1a144">UStaticSkillData</a></li>
 <li>mAimStyle&#160;:&#160;<a class="el" href="classATileMap.html#a3b93f5833d356a010e45c8768fbd744f">ATileMap</a></li>
-<li>mAimTileIndexes&#160;:&#160;<a class="el" href="structFSRPGSkillBuildAction.html#ad2e52c9ab3ea21af79e3c942219e8e26">FSRPGSkillBuildAction</a></li>
-<li>Make()&#160;:&#160;<a class="el" href="structFStageBuilder.html#a3147b462af0e7a436113d3149d1060b0">FStageBuilder</a></li>
+<li>Make()&#160;:&#160;<a class="el" href="structFPresentationBarrier.html#aeab97bf607babcf488b1344110ee7ba4">FPresentationBarrier</a>, <a class="el" href="structFStageBuilder.html#a3147b462af0e7a436113d3149d1060b0">FStageBuilder</a></li>
+<li>MakeCaches()&#160;:&#160;<a class="el" href="classUOptionPersistData.html#a3d8123d50a0cde171266a7a4e0c4c488">UOptionPersistData</a></li>
+<li>MakeCombatRewardChoicesUI()&#160;:&#160;<a class="el" href="classACombatGameMode.html#ac0ac24d0cb02f34ce7acff7a68cefcab">ACombatGameMode</a></li>
+<li>MakeCombatRewardUI()&#160;:&#160;<a class="el" href="classACombatGameMode.html#a5c189d60cb58c51e20f6cbb78d3da9fe">ACombatGameMode</a></li>
+<li>MakeEffectContext()&#160;:&#160;<a class="el" href="classUAttributeSetComponentModel.html#a7dcb5665837dfca1ee76bb5cc744cc7a">UAttributeSetComponentModel</a></li>
 <li>MakeNextRoutes()&#160;:&#160;<a class="el" href="structFStageBuilder.html#a095ecead7b36355d623e4ad65a453510">FStageBuilder</a></li>
-<li>MakePresentationBarrier()&#160;:&#160;<a class="el" href="classUPresentationSyncSubsystem.html#a4bc7677b22380883994bfb68a56338ff">UPresentationSyncSubsystem</a></li>
-<li>MakeSnapshotTargetData()&#160;:&#160;<a class="el" href="classAUnit.html#ab6e84390ef52ff4bfa139a558e005efc">AUnit</a>, <a class="el" href="classITileTargetable.html#ae744c256a9c2ea2e46cb0cea3d1ba31e">ITileTargetable</a></li>
-<li>MakeSnapshotTargetDataHandle()&#160;:&#160;<a class="el" href="classUGASTargetFunctionLibrary.html#ae43850cfa2bcf27f41f2c391b834fb89">UGASTargetFunctionLibrary</a></li>
+<li>MakeOption()&#160;:&#160;<a class="el" href="classUOptionPersistData.html#a8c5bf9ba09da4c9bdb5181a6b3d2e695">UOptionPersistData</a></li>
+<li>MakeOutgoingSpec()&#160;:&#160;<a class="el" href="classUAttributeSetComponentModel.html#a518e3f256d80cf410aed06ce44166af6">UAttributeSetComponentModel</a></li>
+<li>MakeSnapshotData()&#160;:&#160;<a class="el" href="classIBoardCombatTarget.html#a4ecc98a31b27bc6afc16f98e0b06f396">IBoardCombatTarget</a></li>
 <li>MakeStageAndPreloadRoomAsync()&#160;:&#160;<a class="el" href="classURoomTransitionSubsystem.html#a92db21741ea7fbd9bf956a5bf2feb593">URoomTransitionSubsystem</a></li>
 <li>MakeStageAsync()&#160;:&#160;<a class="el" href="classURunPersistData.html#a0963ca32bdfe465010e54eeb40afaba3">URunPersistData</a></li>
 <li>MakeStartRoutes()&#160;:&#160;<a class="el" href="structFStageBuilder.html#a2fd01e7eb1c5fdbb72d9912944fcfb57">FStageBuilder</a></li>
 <li>MakeUser()&#160;:&#160;<a class="el" href="classUGameProfileSubsystem.html#a3a4c583b1d61636dbcb423c68d68febc">UGameProfileSubsystem</a>, <a class="el" href="classUUserPersistData.html#aab45efb12accf4ac389d36301d593046">UUserPersistData</a></li>
-<li>mAnimationTag&#160;:&#160;<a class="el" href="structFSkillAnimLayer.html#a0bce31441b55d4f8d8b35bdf6ab47872">FSkillAnimLayer</a></li>
+<li>mAliveSubsystemModels&#160;:&#160;<a class="el" href="classURoomInstance.html#af48c37387cf2a9cbb403f6e3dca8f26b">URoomInstance</a></li>
+<li>mAliveWorldModels&#160;:&#160;<a class="el" href="classURoomInstance.html#acccc07b6aff1429245e215a7303fd58d">URoomInstance</a></li>
+<li>mAmount&#160;:&#160;<a class="el" href="structFCombatQueueNode.html#ac57e788b551ddbd9ce18bfabf3a52073">FCombatQueueNode</a></li>
+<li>mAngle&#160;:&#160;<a class="el" href="structFCarouselItemLayout.html#a07ef006034dc9fed5278b2b4043d9f99">FCarouselItemLayout</a></li>
+<li>mAnimMontages&#160;:&#160;<a class="el" href="structFTagMontageAnimationSet.html#a537091d9d32ee204751990e964348d53">FTagMontageAnimationSet</a></li>
+<li>mApplyMotionTag&#160;:&#160;<a class="el" href="structFSkillMotionLayer.html#aa29e78985a103761285dea4abdc5bf8b">FSkillMotionLayer</a></li>
+<li>MarkActionCompleted()&#160;:&#160;<a class="el" href="classUSRPGAction.html#a26b2038792fceb285a63a6f45572db66">USRPGAction</a></li>
+<li>MarkDiceSelected()&#160;:&#160;<a class="el" href="classUDicePoolModel.html#af8098a8b118c42bc78b190e14da325ef">UDicePoolModel</a></li>
+<li>MarkDiceUnselected()&#160;:&#160;<a class="el" href="classUDicePoolModel.html#a66fe9ce4153caa1ed7c7eacf06ac8473">UDicePoolModel</a></li>
+<li>MarkDiceUsed()&#160;:&#160;<a class="el" href="classUDicePoolModel.html#a4eada4002837dbc8834fc8e28bb55513">UDicePoolModel</a></li>
 <li>MarkExternalReady()&#160;:&#160;<a class="el" href="classURoomTransitionSubsystem.html#a98c805c5a705f6dcfe44c614de3f035b">URoomTransitionSubsystem</a></li>
 <li>MarkExternalReadyForTransition()&#160;:&#160;<a class="el" href="classARDGameModeBase.html#ab9937f02317796f6dbd72140b3b21372">ARDGameModeBase</a></li>
-<li>mAttitudes&#160;:&#160;<a class="el" href="structFUnitTeamRelation.html#a9a577ed9f5ef463f203d9d8d0b7e810f">FUnitTeamRelation</a></li>
-<li>MaxExp&#160;:&#160;<a class="el" href="classUPlayerUnitAttributeSet.html#a7093d688f92697f557ebdb4e7c1f7e38">UPlayerUnitAttributeSet</a></li>
-<li>MaxHP&#160;:&#160;<a class="el" href="classUUnitAttributeSet.html#a251f288bb945b292a04da22fe47f2c98">UUnitAttributeSet</a></li>
+<li>MarkSelectedDiceAsUsed()&#160;:&#160;<a class="el" href="classUDicePoolModel.html#a73cef4941a6723a29d5220e40f61ec50">UDicePoolModel</a></li>
+<li>mAttached&#160;:&#160;<a class="el" href="structFApplyNiagaraSpawnData.html#a2e3c32ec4fbeb3d1ab74ca4b3c5e9878">FApplyNiagaraSpawnData</a></li>
+<li>mAttitudes&#160;:&#160;<a class="el" href="structFGameTeamRelation.html#ad0dd8592aa7b3ce7052073434028ac2c">FGameTeamRelation</a></li>
+<li>mAttribute&#160;:&#160;<a class="el" href="structFTacticalAttributeChangeData.html#af0af041c0ceff7da2cfea3e066576db8">FTacticalAttributeChangeData</a>, <a class="el" href="structFTacticalEffectModifiedAttribute.html#a88fe85c4713955e33056999949c864f3">FTacticalEffectModifiedAttribute</a>, <a class="el" href="structFTacticalModifierEvaluatedData.html#a44ff910494deb6a686d3895a37f63d9b">FTacticalModifierEvaluatedData</a>, <a class="el" href="structFTacticalModifierInfo.html#a914a41573eb099abe61ff7a530fd481b">FTacticalModifierInfo</a></li>
+<li>mAttributeEffectEventLogs&#160;:&#160;<a class="el" href="structFSRPGBoardActorEventLog.html#ac93b04ae81f2cadb801e08e2a99cb034">FSRPGBoardActorEventLog</a></li>
+<li>mAttributeName&#160;:&#160;<a class="el" href="structFTacticalAttribute.html#a7dd7c1df21e20e138456a484b2e1b10e">FTacticalAttribute</a></li>
+<li>mAttributes&#160;:&#160;<a class="el" href="structFBoardCombatTargetSnapshotData.html#abb01317c04ada7b11e2e82940b2ef9d5">FBoardCombatTargetSnapshotData</a></li>
+<li>mAttributeSetCompModelInstance&#160;:&#160;<a class="el" href="classUTacticalEffectContext.html#abb72cb96bee19aa76716f8b6950fa7c9">UTacticalEffectContext</a></li>
+<li>mAutoRotateTowardTarget&#160;:&#160;<a class="el" href="structFSkillMotionLayer.html#a00d77f9a61481444aff0d7a505752427">FSkillMotionLayer</a></li>
+<li>MaxExp&#160;:&#160;<a class="el" href="classUPlayerUnitAttributeSet.html#a3a61ac162e21585e8fc177f40a363119">UPlayerUnitAttributeSet</a></li>
+<li>MaxHP&#160;:&#160;<a class="el" href="classUUnitAttributeSet.html#a95dad8f6955c9b9fc677cfe0ef203cae">UUnitAttributeSet</a></li>
+<li>MaxItemCount&#160;:&#160;<a class="el" href="structFCarouselLayoutPolicy.html#aeefbf645580c103933ba42afcd3b2b5e">FCarouselLayoutPolicy</a></li>
 <li>mBackgroundMap&#160;:&#160;<a class="el" href="classUStaticRoomSpawnData.html#a5c6ca027857bebe6da86be5b20116442">UStaticRoomSpawnData</a></li>
 <li>mBackgroundPanel&#160;:&#160;<a class="el" href="classUStaticStageSpawnData.html#a024f2b498d1373320de47d4afacc0682">UStaticStageSpawnData</a></li>
-<li>mBlendMode&#160;:&#160;<a class="el" href="structFTileHighlightStyle.html#a0062cef7005e82c75db22da7df3a37d0">FTileHighlightStyle</a></li>
+<li>mBaseValue&#160;:&#160;<a class="el" href="structFTacticalAttributeData.html#ac6e45c7081596e4fab16fa856d3b8afa">FTacticalAttributeData</a></li>
+<li>mBGMFadeInDuration&#160;:&#160;<a class="el" href="classARDGameModeBase.html#a9aaacd2dd88e1334ba1bb31a431daa6d">ARDGameModeBase</a></li>
+<li>mBGMFadeOutDuration&#160;:&#160;<a class="el" href="classARDGameModeBase.html#a34ab29fdc5b548cd42201f07beb6a6ef">ARDGameModeBase</a></li>
+<li>mBgmVolume&#160;:&#160;<a class="el" href="structFSettingsPanelValueModel.html#a9e6752af28f6ce4df12d38bc49ee2fcb">FSettingsPanelValueModel</a></li>
+<li>mBlockLayerFlags&#160;:&#160;<a class="el" href="classUBoardActorModel.html#aade86e3f8465a0968ad2496b3084ae2f">UBoardActorModel</a></li>
+<li>mBoardActorEventLogs&#160;:&#160;<a class="el" href="structFSRPGMotionEventLog.html#ab9d69c4cbe22b0d975db3e462d11c19d">FSRPGMotionEventLog</a></li>
+<li>mBoardActorModelClass&#160;:&#160;<a class="el" href="structFSRPGBoardActorEventLog.html#a15c6145a7aa3d06d944c1728cbf615b6">FSRPGBoardActorEventLog</a></li>
+<li>mBoardActors&#160;:&#160;<a class="el" href="structFTile.html#a2c4b0c9d3e77fa9a1b04e81c837a8f6f">FTile</a></li>
+<li>mBossMonsterRoomBGM&#160;:&#160;<a class="el" href="classUStaticStageSpawnData.html#a48953512838884cd58a682a55fe3ed42">UStaticStageSpawnData</a></li>
 <li>mBossRewardExp&#160;:&#160;<a class="el" href="structFGlobalStageBuildSetting.html#ae88df8c94c7d46657ee0bbf9b32fb4fb">FGlobalStageBuildSetting</a></li>
 <li>mBossRewardMoney&#160;:&#160;<a class="el" href="structFGlobalStageBuildSetting.html#a3a8a7aa07e633a34ff1040c2d74d2169">FGlobalStageBuildSetting</a></li>
 <li>mBottomShopColumnOffset&#160;:&#160;<a class="el" href="structFGlobalStageBuildSetting.html#ab896a9a4d05c633daa849f2a67d28050">FGlobalStageBuildSetting</a></li>
-<li>mBuffState&#160;:&#160;<a class="el" href="structFTileTargetSnapshotTargetData.html#aea1aa90bdbe4f2ebd165e3171b3613f7">FTileTargetSnapshotTargetData</a></li>
 <li>mBuildStream&#160;:&#160;<a class="el" href="structFStageBuilder.html#a1ab9766d16e6114aab2d51520ce4e466">FStageBuilder</a></li>
-<li>mCalculationResult&#160;:&#160;<a class="el" href="structFSRPGSkillBuildAction.html#aa1917f0e2e3d5efd4bf917af32fd15aa">FSRPGSkillBuildAction</a>, <a class="el" href="structFSRPGSkillCastCommand.html#ac9daddc5b89892081edd3f3c13aba103">FSRPGSkillCastCommand</a></li>
+<li>mCachedAssetTags&#160;:&#160;<a class="el" href="classUTacticalEffect.html#a151194cd694a656fdbe353c57de47732">UTacticalEffect</a></li>
+<li>mCachedGrantedTags&#160;:&#160;<a class="el" href="classUTacticalEffect.html#a03f6793d854cebbb8b4d279ae5a8c122">UTacticalEffect</a></li>
+<li>mCameraComponent&#160;:&#160;<a class="el" href="classACombatCameraPawn.html#acfe24960f7632a522c2e9b89131c3235">ACombatCameraPawn</a>, <a class="el" href="classUCameraMovementComponent.html#acc7b5a1b99cfd17134a22ebe2f7f5b9c">UCameraMovementComponent</a></li>
+<li>mCameraMovementComponent&#160;:&#160;<a class="el" href="classACombatCameraPawn.html#a4d8b0afc76a2bfe6c520f4b92f6a75df">ACombatCameraPawn</a></li>
+<li>mCameraPlane&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#a5ced3bf860679fb26fed54a79bc1b2c0">UCameraMovementComponent</a></li>
+<li>mCamerControlState&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#a7f0a88bf5b057c5048bd7771c6b3aca9">UCameraMovementComponent</a></li>
 <li>mCanAbandonRun&#160;:&#160;<a class="el" href="structFRunControlView.html#a135d26b90a2e55db33cd2b09e9b3e232">FRunControlView</a></li>
-<li>mCanAimObstacle&#160;:&#160;<a class="el" href="classUStaticSkillData.html#a33d10376d2a43eccba286bbd6ce9ef17">UStaticSkillData</a></li>
+<li>mCanAimBoardActor&#160;:&#160;<a class="el" href="classUStaticSkillData.html#a63a725457724caaab191d4f6b0b7f159">UStaticSkillData</a></li>
 <li>mCanEnter&#160;:&#160;<a class="el" href="structFMapRoomView.html#ae354f8b912efdbf462aa711b0b88c6b3">FMapRoomView</a></li>
 <li>mCanSaveRun&#160;:&#160;<a class="el" href="structFRunControlView.html#abc81fc5e79db95a8defc6405152be57a">FRunControlView</a></li>
-<li>mClass&#160;:&#160;<a class="el" href="classUStaticObstacleSpawnData.html#a5004c45de3af33be550f7f52945c3328">UStaticObstacleSpawnData</a>, <a class="el" href="classUStaticUnitSpawnData.html#abb8781f0be51a49a69765bf12d7e90d5">UStaticUnitSpawnData</a></li>
+<li>mCardAnchors&#160;:&#160;<a class="el" href="structFDicePanelSlotLayout.html#ad8a80c890b3ebdef7b3fd99388e266e3">FDicePanelSlotLayout</a></li>
+<li>mCardZOrder&#160;:&#160;<a class="el" href="structFDicePanelSlotLayout.html#a07e1a67ae7e92fa61f469b4daff1dfd5">FDicePanelSlotLayout</a></li>
+<li>mCenter&#160;:&#160;<a class="el" href="structRDDicePolyhedron_1_1FDiceFace.html#a5c743c5e3ab55c9df664973f93e9477a">RDDicePolyhedron::FDiceFace</a></li>
+<li>mChoiceIndex&#160;:&#160;<a class="el" href="structFRewardChoiceUI.html#a6af8b0a642f5959f9cc066a8e6b28fbb">FRewardChoiceUI</a>, <a class="el" href="structFRewardClaimRow.html#a7afacc610748d007adc5ef9dd47365d1">FRewardClaimRow</a></li>
+<li>mClaimed&#160;:&#160;<a class="el" href="structFRewardClaimRow.html#aae10c652749458fa57e5a63235f8b519">FRewardClaimRow</a></li>
+<li>mClearTileHighlightDelegate&#160;:&#160;<a class="el" href="classUTileMapModel.html#a58dc56a8ab000fa5bf9c78df22b696e4">UTileMapModel</a></li>
+<li>mCloseButton&#160;:&#160;<a class="el" href="classUInventoryUIWidgetBase.html#a6f618f26a6846b635cc30ceab67dd076">UInventoryUIWidgetBase</a>, <a class="el" href="classURewardUIWidgetBase.html#ae8358021f64a7abf9cbd71b905af8f83">URewardUIWidgetBase</a>, <a class="el" href="classUShopUIWidgetBase.html#af886b44283e4c5c14a630f76d5e86573">UShopUIWidgetBase</a></li>
+<li>mCloseButtonText&#160;:&#160;<a class="el" href="classUInventoryUIWidgetBase.html#a4523cec7ddde5b37456c932f4f55e985">UInventoryUIWidgetBase</a>, <a class="el" href="classUShopUIWidgetBase.html#a199fce26f51c15c8fccfb16ce8baef90">UShopUIWidgetBase</a></li>
 <li>mColor&#160;:&#160;<a class="el" href="structFTileHighlightStyle.html#a0eb0e66ad5a012a24c095f9f647e9a8d">FTileHighlightStyle</a></li>
+<li>mColorType&#160;:&#160;<a class="el" href="structFCombatFloatingLogRequest.html#a53b40309225ca5cb59524c6693602acb">FCombatFloatingLogRequest</a></li>
 <li>mColumn&#160;:&#160;<a class="el" href="structFMapRoomView.html#a1807c7a2cbf031171c69e23d05f9e4cb">FMapRoomView</a>, <a class="el" href="structFRoom.html#aeb84846765cefc35a684c5a75d29271e">FRoom</a>, <a class="el" href="structFRunControlView.html#add5f902193892c40b2f6bae95dc2eba4">FRunControlView</a></li>
 <li>mColumnCount&#160;:&#160;<a class="el" href="structFStageBuilderParams.html#a321c09f83b247f5cf4c635fc35a12927">FStageBuilderParams</a></li>
+<li>mCombatDefeatVideoPath&#160;:&#160;<a class="el" href="classUGamePlaySettings.html#ae8e63177979c702a4deba539f1c7474f">UGamePlaySettings</a></li>
 <li>mCombatGameMode&#160;:&#160;<a class="el" href="classUGamePlaySettings.html#aec8a0e38ed9058d1951cecbf752ae8fa">UGamePlaySettings</a></li>
-<li>mCombatPhase&#160;:&#160;<a class="el" href="classUSRPGCombatSubsystem.html#ae9674a74b753da68e5a81e870c87d8d6">USRPGCombatSubsystem</a></li>
-<li>mCombatResult&#160;:&#160;<a class="el" href="classUSRPGCombatSubsystem.html#ab8663b876161eee375bf70f02921bb42">USRPGCombatSubsystem</a></li>
-<li>mConsumesTurn&#160;:&#160;<a class="el" href="structFSRPGAction.html#a3a75ffd139b5ae0921313c3febffcf24">FSRPGAction</a></li>
+<li>mCombatModel&#160;:&#160;<a class="el" href="classUSRPGCombatSubsystem.html#af2c9a16822144322e1de4e513d29c66f">USRPGCombatSubsystem</a></li>
+<li>mCombatPhase&#160;:&#160;<a class="el" href="classUSRPGCombatModel.html#aff174e1616cbc1b8499c15cf9502c21e">USRPGCombatModel</a></li>
+<li>mCombatResult&#160;:&#160;<a class="el" href="classUSRPGCombatModel.html#accd57b0baefe50cb2c97a7cc402744e6">USRPGCombatModel</a></li>
+<li>mCombatTargetAliveState&#160;:&#160;<a class="el" href="classUCombatTargetAnimInstance.html#a4ddb63500476303161086532230abaf7">UCombatTargetAnimInstance</a></li>
+<li>mCombatTargetObstacles&#160;:&#160;<a class="el" href="classUSRPGCombatModel.html#a09696267ee20df3fbb7d6f860a4861b7">USRPGCombatModel</a></li>
+<li>mCombatUIModel&#160;:&#160;<a class="el" href="classACombatGameMode.html#a3b553758bec9bd46187d4da0879c836b">ACombatGameMode</a></li>
+<li>mCombatVictoryVideoPath&#160;:&#160;<a class="el" href="classUGamePlaySettings.html#aebceabeae982dea36220a3c3510502be">UGamePlaySettings</a></li>
+<li>mCommandHandlers&#160;:&#160;<a class="el" href="classUSRPGCommandRouterModel.html#a80c0505509974b79cedf33476e00d9aa">USRPGCommandRouterModel</a></li>
+<li>mCommandType&#160;:&#160;<a class="el" href="structFSRPGCommand.html#aae6e8620996ef472c47b6e15a3277d56">FSRPGCommand</a></li>
+<li>mComponentModels&#160;:&#160;<a class="el" href="classUActorModel.html#ae73f26c9e827d08a25d32f069a29ebca">UActorModel</a></li>
+<li>mConditionTag&#160;:&#160;<a class="el" href="structFPassiveCondition.html#a959d22b179fe0b0b6864c39434e4dac8">FPassiveCondition</a></li>
+<li>mConsumesTurn&#160;:&#160;<a class="el" href="classUSRPGAction.html#a87f16d6b3b5fb0c48ed977e31dfb9dea">USRPGAction</a></li>
+<li>mContext&#160;:&#160;<a class="el" href="classUInputData.html#a94c6b2d9039188b1935a45098e7d562e">UInputData</a></li>
+<li>mCopiedEventStream&#160;:&#160;<a class="el" href="structFRoomCopyData.html#ae3d430306a8e72aaa557c5c3915017f1">FRoomCopyData</a></li>
+<li>mCount&#160;:&#160;<a class="el" href="structFDynamicPassiveData__NthCounter.html#a979729808a82d9713a1e3b18cd3302fa">FDynamicPassiveData_NthCounter</a>, <a class="el" href="structFSRPGTagEffectEventLog.html#a9c3ff07419b00c7b11f01fb95872e5db">FSRPGTagEffectEventLog</a>, <a class="el" href="structFTacticalTagCountItem.html#a9f953b523904e62970cb241cc2ae43f1">FTacticalTagCountItem</a></li>
 <li>mCurColumn&#160;:&#160;<a class="el" href="structFStage.html#af1507e43f23bcaa36f93382999fddfb6">FStage</a></li>
+<li>mCurLocation&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#a8809f43ef08fcdac92df06999663fbe3">UCameraMovementComponent</a></li>
+<li>mCurrentActionEventLog&#160;:&#160;<a class="el" href="classUGameEventLogger.html#ad049375bcd6dbd4decdb5de0406e834a">UGameEventLogger</a>, <a class="el" href="classUSimulationEventLogger.html#a832aefea5dd06c7c07cb5d59cb551163">USimulationEventLogger</a></li>
+<li>mCurrentMotionEventLog&#160;:&#160;<a class="el" href="classUGameEventLogger.html#a0cfeef2b9b53feb37beedaa042fbee27">UGameEventLogger</a>, <a class="el" href="classUSimulationEventLogger.html#a99371b58d047e71e1aca1ab6c674b705">USimulationEventLogger</a></li>
+<li>mCurrentMoveAlpha&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#a37db8b6acabe0d55272992d3fd658cb4">UCameraMovementComponent</a></li>
+<li>mCurrentRoomContext&#160;:&#160;<a class="el" href="classUSimulationSubsystem.html#aa0e28f9ce1a34ccbd555dea20db1cd8d">USimulationSubsystem</a></li>
+<li>mCurrentStepIndex&#160;:&#160;<a class="el" href="classUSRPGMoveAction.html#a6951b42a6ffd6724a9c23706e06cb0a1">USRPGMoveAction</a></li>
+<li>mCurrentTurnEventLog&#160;:&#160;<a class="el" href="classUGameEventLogger.html#a4265607f0edf210a256005649f451900">UGameEventLogger</a>, <a class="el" href="classUSimulationEventLogger.html#a0e6d64f546847e12d5710a5e36eadfbc">USimulationEventLogger</a></li>
+<li>mCurrentUnitId&#160;:&#160;<a class="el" href="structFTurnUI.html#ad61f8eae92f4a9092c42e1f5b290179e">FTurnUI</a></li>
+<li>mCurrentValue&#160;:&#160;<a class="el" href="structFTacticalAttributeData.html#a2a3cb2f8793986227dd620da97c7471b">FTacticalAttributeData</a></li>
+<li>mCurrentZoomAlpha&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#abf48f9156139a51001db909de2a3bb85">UCameraMovementComponent</a></li>
 <li>mCurRow&#160;:&#160;<a class="el" href="structFStage.html#ab83fe223734e7ac4b0bbd464215dce65">FStage</a></li>
-<li>mCurTurnContextNode&#160;:&#160;<a class="el" href="classUSRPGCombatSubsystem.html#af53214c12461d7f6b937f8b159f016d8">USRPGCombatSubsystem</a></li>
-<li>mDamagePoint&#160;:&#160;<a class="el" href="structFTileTargetSnapshotTargetData.html#ad7050dd1245eae51edd8eb75a8503d07">FTileTargetSnapshotTargetData</a></li>
-<li>mData&#160;:&#160;<a class="el" href="classUBinarySaveGame.html#a19ceed0aa94e6243183aa87ad32d17d2">UBinarySaveGame</a></li>
-<li>mDebuffState&#160;:&#160;<a class="el" href="structFTileTargetSnapshotTargetData.html#a50aad3872ffa29e1e1f94be6ffbc4c19">FTileTargetSnapshotTargetData</a></li>
+<li>mCurTurnContextOrder&#160;:&#160;<a class="el" href="classUSRPGCombatModel.html#aae6ef86de1700bff637cdf7ed05a2733">USRPGCombatModel</a></li>
+<li>mCurZoom&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#ac772cf5c3345ba1a81003823e4f2875e">UCameraMovementComponent</a></li>
+<li>mDamagePoint&#160;:&#160;<a class="el" href="structFUnitUI.html#a59fb97c7ac66e7b93dc02128fd5ede3e">FUnitUI</a></li>
+<li>mData&#160;:&#160;<a class="el" href="structFEquippedEntry.html#aaed453d418db07c5d799626311669904">FEquippedEntry</a>, <a class="el" href="structFSkillEntry.html#aae14372835a30f83cf1afbe344545d12">FSkillEntry</a>, <a class="el" href="classUBinarySaveGame.html#a19ceed0aa94e6243183aa87ad32d17d2">UBinarySaveGame</a></li>
+<li>mDeactivateTimingTag&#160;:&#160;<a class="el" href="classUStaticPassiveData.html#aebeafb910e3e03d5fb060d6a6724fa1f">UStaticPassiveData</a>, <a class="el" href="classUTacticalPassive.html#a7c3bfd1d0ae3c06922fe8dbfe632f929">UTacticalPassive</a></li>
+<li>mDeceleration&#160;:&#160;<a class="el" href="classAUnit.html#aeb9bc14c467623bf7432a216c3c42012">AUnit</a></li>
+<li>mDefaultAppearAnim&#160;:&#160;<a class="el" href="classUCombatTargetAnimInstance.html#a16ef8d624be0f1f2b7ef4852f55456b5">UCombatTargetAnimInstance</a></li>
 <li>mDefaultBackgroundMap&#160;:&#160;<a class="el" href="classUGamePlaySettings.html#a9b8c1436bc45b23f2c4a66dc17c19a43">UGamePlaySettings</a></li>
-<li>mDefensePoint&#160;:&#160;<a class="el" href="structFTileTargetSnapshotTargetData.html#ad9df204aa792843432996b21a298ed73">FTileTargetSnapshotTargetData</a></li>
-<li>mDescription&#160;:&#160;<a class="el" href="structFFrontendCharacterOption.html#ad764a4aeaf1046cc6a81dc825b76fae8">FFrontendCharacterOption</a>, <a class="el" href="structFMapRoomView.html#ae4258720ce3ffdef1872869ed6df0cda">FMapRoomView</a>, <a class="el" href="classUStaticObstacleSpawnData.html#ae60fe547d9b21115b8a6f7be170adf83">UStaticObstacleSpawnData</a>, <a class="el" href="classUStaticSkillData.html#aed2561d30472380b218fe71d89fe6dea">UStaticSkillData</a>, <a class="el" href="classUStaticUnitSpawnData.html#ab4c35c256d476d0a25ea03e76525ad90">UStaticUnitSpawnData</a></li>
-<li>mDice&#160;:&#160;<a class="el" href="structFFrontendCharacterOption.html#a03de2dd703065baa6e9dec7176805974">FFrontendCharacterOption</a></li>
+<li>mDefaultDamage&#160;:&#160;<a class="el" href="structFSkillEffectLayer__Attack.html#a4853114fe276c69e17923cc9b084e1c7">FSkillEffectLayer_Attack</a></li>
+<li>mDefaultDeathAnim&#160;:&#160;<a class="el" href="classUCombatTargetAnimInstance.html#a59f4b2048647cf30d466b1200b222762">UCombatTargetAnimInstance</a></li>
+<li>mDefaultDefenseGain&#160;:&#160;<a class="el" href="structFSkillEffectLayer__GetDefense.html#a2e9c788df9e3e13bd46f5fd3287615cb">FSkillEffectLayer_GetDefense</a></li>
+<li>mDefaultHealGain&#160;:&#160;<a class="el" href="structFSkillEffectLayer__Heal.html#a3ca3fd5b87eaa7bf97942848f1c8d29e">FSkillEffectLayer_Heal</a></li>
+<li>mDefaultIdleAnim&#160;:&#160;<a class="el" href="classUBoardActorAnimInstance.html#a08c7c15b25e2f839224dda55bd59999d">UBoardActorAnimInstance</a></li>
+<li>mDefaultMoveGain&#160;:&#160;<a class="el" href="structFSkillEffectLayer__GetMove.html#a921e3b205ba385a0fb47f3cd89fbcea6">FSkillEffectLayer_GetMove</a></li>
+<li>mDefaultTagGain&#160;:&#160;<a class="el" href="structFSkillEffectLayer__Agility.html#a12bc60610df4ce42b8178d8f51ccac08">FSkillEffectLayer_Agility</a>, <a class="el" href="structFSkillEffectLayer__Fortification.html#a13620f649dd4272c10ddad5d4f538097">FSkillEffectLayer_Fortification</a>, <a class="el" href="structFSkillEffectLayer__Vulnerability.html#a85dcf94a10c16e933bbc12178be74636">FSkillEffectLayer_Vulnerability</a>, <a class="el" href="structFSkillEffectLayer__Weakness.html#a29f2b2ff93325da4e42c6b8b89e34f74">FSkillEffectLayer_Weakness</a></li>
+<li>mDefaultWalkAnim&#160;:&#160;<a class="el" href="classUBoardActorAnimInstance.html#ad81a0c586c639cca6683fe5515df86e2">UBoardActorAnimInstance</a></li>
+<li>mDefenseIcon&#160;:&#160;<a class="el" href="structFUnitHpBarWidget.html#a5ca9222cb2a0947fc14bda3fe7941346">FUnitHpBarWidget</a></li>
+<li>mDefensePoint&#160;:&#160;<a class="el" href="structFUnitUI.html#a8a9ee214bcc3d72bd5932d3cf751eb96">FUnitUI</a></li>
+<li>mDefenseText&#160;:&#160;<a class="el" href="structFUnitHpBarWidget.html#aee96e99a7001dd8360b03e569c1b5efb">FUnitHpBarWidget</a></li>
+<li>mDescription&#160;:&#160;<a class="el" href="structFEquipmentDetailUI.html#aeeb160d6bd67ff9cf4f6283dda0769bb">FEquipmentDetailUI</a>, <a class="el" href="structFFrontendCharacterOption.html#ad764a4aeaf1046cc6a81dc825b76fae8">FFrontendCharacterOption</a>, <a class="el" href="structFMapRoomView.html#ae4258720ce3ffdef1872869ed6df0cda">FMapRoomView</a>, <a class="el" href="structFRewardChoiceUI.html#a21a88600f4d9f332b35eeff41c0ec468">FRewardChoiceUI</a>, <a class="el" href="structFShopItemUI.html#ac8636a1fb7b0a092e6ca0457dd4b3c65">FShopItemUI</a>, <a class="el" href="structFSkillDetailUI.html#a2e6d89d583fea1f1505de2ca56f87dc1">FSkillDetailUI</a>, <a class="el" href="classUStaticEquipmentData.html#aaddc410a4b2835c37dc842f4ee55abc9">UStaticEquipmentData</a>, <a class="el" href="classUStaticObstacleSpawnData.html#ae60fe547d9b21115b8a6f7be170adf83">UStaticObstacleSpawnData</a>, <a class="el" href="classUStaticPassiveData.html#a65c737ca47c27b06140cad731975b9bb">UStaticPassiveData</a>, <a class="el" href="classUStaticSkillData.html#aed2561d30472380b218fe71d89fe6dea">UStaticSkillData</a></li>
+<li>mDetailText&#160;:&#160;<a class="el" href="structFInventoryItemUI.html#a35bbf3c46c150e5b598d57d8f460c3d5">FInventoryItemUI</a></li>
+<li>mDice&#160;:&#160;<a class="el" href="structFFrontendCharacterOption.html#a03de2dd703065baa6e9dec7176805974">FFrontendCharacterOption</a>, <a class="el" href="structFInventoryUI.html#a4e6db8d61555512df23774cb947b6d2d">FInventoryUI</a></li>
 <li>mDiceAssetIds&#160;:&#160;<a class="el" href="structFStageBuilder.html#ab20217a696a5c5537237abd93e290a03">FStageBuilder</a></li>
-<li>mDiceCost&#160;:&#160;<a class="el" href="classUGameplayAbility__SkillBase.html#ab2377e1cfd85bd7632ce32c3ec162485">UGameplayAbility_SkillBase</a></li>
-<li>mDiceCostClass&#160;:&#160;<a class="el" href="classUGameplayAbility__SkillBase.html#a4f4ae266d4780ff67a63b2a420e49dc6">UGameplayAbility_SkillBase</a></li>
-<li>mDiceCount&#160;:&#160;<a class="el" href="classUStaticSkillData.html#a6c1df6b2afca3150d69c11e0cf709c31">UStaticSkillData</a></li>
+<li>mDiceBox&#160;:&#160;<a class="el" href="classUInventoryUIWidgetBase.html#a5d49621484998187b82afbe2036b8929">UInventoryUIWidgetBase</a></li>
+<li>mDiceColor&#160;:&#160;<a class="el" href="structFCombatDiceRollPhysicsSpec.html#ab1d2f5ff2d027933557fab6f1853ff16">FCombatDiceRollPhysicsSpec</a></li>
+<li>mDiceCost&#160;:&#160;<a class="el" href="structFSkillDetailUI.html#a931b0e266aa1553aa677609b3fc0a404">FSkillDetailUI</a>, <a class="el" href="structFSkillUI.html#a771005aad80bb1f57e50877589b97471">FSkillUI</a></li>
 <li>mDiceDatas&#160;:&#160;<a class="el" href="classUStaticPlayerUnitSpawnData.html#a29c82cb8a5ecb1bbdb942658fc42787d">UStaticPlayerUnitSpawnData</a></li>
-<li>mDiceDots&#160;:&#160;<a class="el" href="classUGameplayAbility__SkillBase.html#ac76c69515f91efa9afa14096f8c7322f">UGameplayAbility_SkillBase</a></li>
-<li>mDiceDotsClass&#160;:&#160;<a class="el" href="classUGameplayAbility__SkillBase.html#a1e77ae0877c47bfea2f204fd12e9e438">UGameplayAbility_SkillBase</a></li>
+<li>mDiceIcon&#160;:&#160;<a class="el" href="classURewardUIWidgetBase.html#a435b81f77ca17bc3c5b6fcb1d4cd2965">URewardUIWidgetBase</a></li>
+<li>mDiceId&#160;:&#160;<a class="el" href="structFDiceSlotUI.html#a4edc7ca421bc2383c4c1781e3a4da186">FDiceSlotUI</a>, <a class="el" href="structFDiceViewData.html#a63e44e0df3a7fd372f4976a20421dff8">FDiceViewData</a></li>
 <li>mDiceIds&#160;:&#160;<a class="el" href="classUPlayerUnitPersistData.html#a474056e23a89eb7a93405cdc6ea90a7b">UPlayerUnitPersistData</a></li>
-<li>mDiceIndex&#160;:&#160;<a class="el" href="structFSRPGCDiceSelectCommand.html#a83c62f781ae8a21f5fdb94cec91a8d1d">FSRPGCDiceSelectCommand</a></li>
+<li>mDiceIndex&#160;:&#160;<a class="el" href="structFSRPGDiceSelectCommand.html#a3724767a2bddc7478d75e0a76f6fed9e">FSRPGDiceSelectCommand</a></li>
+<li>mDiceLabel&#160;:&#160;<a class="el" href="classUInventoryUIWidgetBase.html#aeadf3aeba05282cf31afb263adedb5dd">UInventoryUIWidgetBase</a></li>
 <li>mDiceRarityRate&#160;:&#160;<a class="el" href="structFStageBuilderParams.html#a01fbf40acbaa5a74229aee106e197550">FStageBuilderParams</a></li>
-<li>mDifficulty&#160;:&#160;<a class="el" href="classAEnemyUnit.html#a4ff7cfba1c218507b899490844578a24">AEnemyUnit</a>, <a class="el" href="structFEnemyUnitPlacementData.html#a2eacb31be353261f8ffb6869dfa06815">FEnemyUnitPlacementData</a>, <a class="el" href="structFRunControlView.html#a13010f5c19299499f9f8c4b2145213f0">FRunControlView</a>, <a class="el" href="classUPlayerUnitPersistData.html#ae83912fceadd0765d2416ea9b16b5d27">UPlayerUnitPersistData</a></li>
+<li>mDiceRatio&#160;:&#160;<a class="el" href="structFSkillEffectLayer__Agility.html#acf6f00f8d930835f84b7bf366a81e7d1">FSkillEffectLayer_Agility</a>, <a class="el" href="structFSkillEffectLayer__Attack.html#a0e42836c72076c8701cd83fb17c0d2bf">FSkillEffectLayer_Attack</a>, <a class="el" href="structFSkillEffectLayer__Fortification.html#a3f9a0427301966c80cb797ebc4da186b">FSkillEffectLayer_Fortification</a>, <a class="el" href="structFSkillEffectLayer__GetDefense.html#a88db2bd9b3032e9f4236c7b0d71578b5">FSkillEffectLayer_GetDefense</a>, <a class="el" href="structFSkillEffectLayer__GetMove.html#a4075e7a6db487ba4d81a0a53d7993796">FSkillEffectLayer_GetMove</a>, <a class="el" href="structFSkillEffectLayer__Heal.html#af4fd76330b8e52405d1b4c49dbfb32b1">FSkillEffectLayer_Heal</a>, <a class="el" href="structFSkillEffectLayer__Vulnerability.html#a739451ceaeae8c763a3f574f23186b86">FSkillEffectLayer_Vulnerability</a>, <a class="el" href="structFSkillEffectLayer__Weakness.html#aa69757b6ec1f5882f8913629e80f0bc0">FSkillEffectLayer_Weakness</a></li>
+<li>mDiceSum&#160;:&#160;<a class="el" href="structFActiveSkillContext.html#acc539557688b1de183e59d7702fe120f">FActiveSkillContext</a>, <a class="el" href="structFSRPGSkillCastCommand.html#a21dd0a162d11599e0cb450b108b827fd">FSRPGSkillCastCommand</a></li>
+<li>mDifficulty&#160;:&#160;<a class="el" href="structFEnemyUnitPlacementData.html#a2eacb31be353261f8ffb6869dfa06815">FEnemyUnitPlacementData</a>, <a class="el" href="structFRunControlView.html#a13010f5c19299499f9f8c4b2145213f0">FRunControlView</a>, <a class="el" href="classUEnemyUnitModel.html#ae885da147bf57860381404888b4b28e6">UEnemyUnitModel</a>, <a class="el" href="classUPlayerUnitPersistData.html#ae83912fceadd0765d2416ea9b16b5d27">UPlayerUnitPersistData</a></li>
 <li>mDirection&#160;:&#160;<a class="el" href="structFTileTransform.html#a756e710c792ea973e121d03c74809959">FTileTransform</a></li>
+<li>mDirtyAggregators&#160;:&#160;<a class="el" href="classUTacticalFrameworkModel.html#a31f3af322e4b62cc020b28f30749650a">UTacticalFrameworkModel</a></li>
+<li>mDirtyCount&#160;:&#160;<a class="el" href="structFTacticalAggregator.html#a89d25a90dc0af87ba0a3ea46f6e34d24">FTacticalAggregator</a></li>
 <li>mDisabledReason&#160;:&#160;<a class="el" href="structFFrontendCharacterOption.html#a56102c372a621d2d94313210a28243ab">FFrontendCharacterOption</a></li>
-<li>mDisplayName&#160;:&#160;<a class="el" href="structFFrontendCharacterOption.html#a6a4404c1630692920c67488ed22cf8fb">FFrontendCharacterOption</a>, <a class="el" href="classUStaticUnitSpawnData.html#a6651a0661f8512caa7ef953be1a8df8e">UStaticUnitSpawnData</a></li>
-<li>mEffect&#160;:&#160;<a class="el" href="structFUnitCommitResult.html#adc7a4abf3a301fc03898119abdb972a3">FUnitCommitResult</a></li>
-<li>mEffectCommitResult&#160;:&#160;<a class="el" href="structFSkillCommitResult.html#afb91853e22053bcac7301115883bc77d">FSkillCommitResult</a></li>
-<li>mEffectDefaultArea&#160;:&#160;<a class="el" href="classUStaticSkillData.html#a00b19351143ac882363b0b6e406fc7f1">UStaticSkillData</a></li>
+<li>mDisplayName&#160;:&#160;<a class="el" href="structFFrontendCharacterOption.html#a6a4404c1630692920c67488ed22cf8fb">FFrontendCharacterOption</a>, <a class="el" href="classUStaticObstacleSpawnData.html#af9a7128a31b48298fe7ff750304dbeca">UStaticObstacleSpawnData</a></li>
+<li>mDurationPolicy&#160;:&#160;<a class="el" href="classUTacticalEffect.html#afd0b3c03544e82acb3aa9413929353f9">UTacticalEffect</a></li>
+<li>mDynamicMagnitude&#160;:&#160;<a class="el" href="structFTacticalEffectSpec.html#aec00ea16d58291783f956f4252ab8760">FTacticalEffectSpec</a></li>
+<li>mEffectAreaDefaultValue&#160;:&#160;<a class="el" href="classUStaticSkillData.html#a93864272a7dc17a579b2b244e4b5cd3f">UStaticSkillData</a></li>
+<li>mEffectAreaRatio&#160;:&#160;<a class="el" href="classUStaticSkillData.html#a69dea9cb37bd394476fae30afed91486">UStaticSkillData</a></li>
+<li>mEffectAttribute&#160;:&#160;<a class="el" href="structFSRPGAttributeEffectEventLog.html#af5231749f7aaf76e268d9d4dc86879fb">FSRPGAttributeEffectEventLog</a></li>
+<li>mEffectCauser&#160;:&#160;<a class="el" href="classUTacticalEffectContext.html#aa6f006bdb4a6256b5de4cdfa7579c9c5">UTacticalEffectContext</a></li>
+<li>mEffectClass&#160;:&#160;<a class="el" href="structFTacticalEffectSpec.html#a6b9c6dd20a49136944fbf3a292c6b701">FTacticalEffectSpec</a>, <a class="el" href="classUStaticPassiveData.html#afb56815f198be77f43a785d9d79cd4c1">UStaticPassiveData</a>, <a class="el" href="classUTacticalPassive.html#a53bdb9fad72ad4b8eae028c3563f401c">UTacticalPassive</a></li>
+<li>mEffectContext&#160;:&#160;<a class="el" href="structFTacticalEffectRemovalInfo.html#a6f5c7fb9795787edf64d1bf505547333">FTacticalEffectRemovalInfo</a></li>
+<li>mEffectOwningModelMap&#160;:&#160;<a class="el" href="classUTacticalFrameworkModel.html#ad9b18c3b9ac4f68c483885b5133fe76d">UTacticalFrameworkModel</a></li>
 <li>mEffectPattern&#160;:&#160;<a class="el" href="classUStaticSkillData.html#aad031a08af5c13beb045fdaa7bc11f26">UStaticSkillData</a></li>
-<li>mEffectRatioArea&#160;:&#160;<a class="el" href="classUStaticSkillData.html#adb233c85052ef39f58cfbc63386b13ca">UStaticSkillData</a></li>
+<li>mEffectRatios&#160;:&#160;<a class="el" href="structFGlobalStatusEffectSetting.html#aeb544becfcf2c218e505ead66ce708fc">FGlobalStatusEffectSetting</a></li>
+<li>mEffectsEnabled&#160;:&#160;<a class="el" href="structFSettingsPanelValueModel.html#a402675c90f7fb53dbdcc912fcfc50cb6">FSettingsPanelValueModel</a></li>
+<li>mEffectSpec&#160;:&#160;<a class="el" href="structFTacticalEffectModCallbackData.html#ab6dafaa50b8715d201060858204a1c41">FTacticalEffectModCallbackData</a></li>
 <li>mEffectStyle&#160;:&#160;<a class="el" href="classATileMap.html#a4ec71523161e487911cb7b5e4450d6c3">ATileMap</a></li>
-<li>mEffectTileIndexes&#160;:&#160;<a class="el" href="structFSRPGSkillBuildAction.html#a003262abce20b09fafeb9a82bc5c1526">FSRPGSkillBuildAction</a></li>
+<li>mEffectTag&#160;:&#160;<a class="el" href="structFSRPGTagEffectEventLog.html#a2053d09c43043621c1e528b8de96c45d">FSRPGTagEffectEventLog</a></li>
+<li>mEffectTileIndexes&#160;:&#160;<a class="el" href="structFActiveSkillContext.html#aa9fc224895c57c962c033d45042f9b32">FActiveSkillContext</a>, <a class="el" href="classUSRPGSkillBuildAction.html#aacdadd60d3f04ce152ebd7f28eb088df">USRPGSkillBuildAction</a></li>
 <li>mEliteRewardExp&#160;:&#160;<a class="el" href="structFGlobalStageBuildSetting.html#a64c7d57572a126775ddc7a6718ae0553">FGlobalStageBuildSetting</a></li>
 <li>mEliteRewardMoney&#160;:&#160;<a class="el" href="structFGlobalStageBuildSetting.html#aa76eb70615c670f9dc6b983e3dc1bfb3">FGlobalStageBuildSetting</a></li>
+<li>mEmphasisZoom&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#abc104687d1c77e9fa507fb442b79a4ed">UCameraMovementComponent</a></li>
+<li>mEndCallback&#160;:&#160;<a class="el" href="structFActiveSkillContext.html#a2eee9c4a2db370c46040fc83e51f3a04">FActiveSkillContext</a></li>
+<li>mEndLocation&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#a7be14c09b7623c8dbfbe4b7bc9050311">UCameraMovementComponent</a></li>
+<li>mEndZoom&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#a266126a9ff3ab0baabcd6cc22a2e5cc3">UCameraMovementComponent</a></li>
 <li>mEnemyUnitPlacementDatas&#160;:&#160;<a class="el" href="classUStaticCombatRoomSpawnData.html#ab08b5617c48119e5ddbf690f042f0072">UStaticCombatRoomSpawnData</a></li>
+<li>mEquipBox&#160;:&#160;<a class="el" href="classUInventoryUIWidgetBase.html#a062ef564906f21b2bddf3231ab97f596">UInventoryUIWidgetBase</a></li>
+<li>mEquipLabel&#160;:&#160;<a class="el" href="classUInventoryUIWidgetBase.html#a21b4a03c032c23e834b7ac52c6a4794f">UInventoryUIWidgetBase</a></li>
+<li>mEquipment&#160;:&#160;<a class="el" href="structFInventoryUI.html#a037c0ef17d977a919fc25f401efc7c3e">FInventoryUI</a></li>
 <li>mEquipmentAssetIds&#160;:&#160;<a class="el" href="structFStageBuilder.html#a609d9bae90c6a4515baaaa8cbffccc79">FStageBuilder</a></li>
 <li>mEquipmentDatas&#160;:&#160;<a class="el" href="classUStaticUnitSpawnData.html#a9f40da353d06edfb9dac3a397edc57d0">UStaticUnitSpawnData</a></li>
+<li>mEquipmentIcon&#160;:&#160;<a class="el" href="classURewardUIWidgetBase.html#a0d4ba22b19e3832611797a422e043b3e">URewardUIWidgetBase</a></li>
 <li>mEquipmentIds&#160;:&#160;<a class="el" href="classUPlayerUnitPersistData.html#abd458210b1e9e372141d9bb80e061d24">UPlayerUnitPersistData</a></li>
 <li>mEquipmentRarityRate&#160;:&#160;<a class="el" href="structFStageBuilderParams.html#a7e307c9d3217ed5a631633bbd2c7167f">FStageBuilderParams</a></li>
+<li>mEvaluatedData&#160;:&#160;<a class="el" href="structFTacticalEffectModCallbackData.html#a4df4c29a322ce5dc04065c568150009b">FTacticalEffectModCallbackData</a></li>
+<li>mEvaluatedMagnitude&#160;:&#160;<a class="el" href="structFTacticalAggregatorMod.html#aa94a8bc2a3a5d9fd0bbcd35034350fcb">FTacticalAggregatorMod</a></li>
+<li>mEventLogger&#160;:&#160;<a class="el" href="structFRoomContext.html#a2690e5eb9f35a2686ef5a878744995e0">FRoomContext</a></li>
+<li>mEventPayload&#160;:&#160;<a class="el" href="classUAnimNotify__EventTrigger.html#a719102d0c8b4b8c1adfa645c0d2b9694">UAnimNotify_EventTrigger</a></li>
+<li>mEventSet&#160;:&#160;<a class="el" href="structFActiveTacticalEffect.html#a252887023d73fbbd99160addc7728215">FActiveTacticalEffect</a></li>
 <li>mEventStream&#160;:&#160;<a class="el" href="classURunPersistData.html#afa276439bc0b3abc99092a698bef5267">URunPersistData</a></li>
-<li>mExp&#160;:&#160;<a class="el" href="classUPlayerUnitPersistData.html#a29fdc5ee7d3cdea50753f93345900284">UPlayerUnitPersistData</a></li>
+<li>mEventStreamPtr&#160;:&#160;<a class="el" href="classURoomInstance.html#a32db74382154bd84f50c1ad51c84e3ca">URoomInstance</a></li>
+<li>mExp&#160;:&#160;<a class="el" href="structFPlayerMetaUI.html#a89ed09bdd7e1ecd20392b240b82ac13b">FPlayerMetaUI</a>, <a class="el" href="classUPlayerUnitPersistData.html#a29fdc5ee7d3cdea50753f93345900284">UPlayerUnitPersistData</a></li>
+<li>mExpAfter&#160;:&#160;<a class="el" href="structFRewardUI.html#abb45aa3401e2ed01716d24ad590c4320">FRewardUI</a></li>
+<li>mExpBefore&#160;:&#160;<a class="el" href="structFRewardUI.html#a492407caa8fae784a271d1e8cf997825">FRewardUI</a></li>
+<li>mExpGained&#160;:&#160;<a class="el" href="structFRewardUI.html#a3307d92b58eabe28621f2f17fd82b13e">FRewardUI</a></li>
+<li>mFaceCount&#160;:&#160;<a class="el" href="structFCombatDiceRollPhysicsSpec.html#ab2303679509587573693663794632cd5">FCombatDiceRollPhysicsSpec</a>, <a class="el" href="structFDiceSlotUI.html#ab858c7c0adf47fbd2b6db7bab5fea91b">FDiceSlotUI</a>, <a class="el" href="structFDiceViewData.html#a9ade0faca5739363dda967cd934ce918">FDiceViewData</a>, <a class="el" href="classUStaticDiceData.html#a2efaa54ca8cb198042c5980d00fd4ea5">UStaticDiceData</a></li>
+<li>mFaces&#160;:&#160;<a class="el" href="structRDDicePolyhedron_1_1FDicePolyhedron.html#a9083224477c28edf07ccc87e80ae1ade">RDDicePolyhedron::FDicePolyhedron</a>, <a class="el" href="classUStaticDiceData.html#ad2dad0493262fa9b23976725e87757f3">UStaticDiceData</a></li>
+<li>mFaceTextures&#160;:&#160;<a class="el" href="structFCombatDiceRollPhysicsSpec.html#aeac7b93484514a80ea197a96883e38d3">FCombatDiceRollPhysicsSpec</a>, <a class="el" href="structFDiceSlotUI.html#a729198b860dd41dae0d38dba75d6c0b2">FDiceSlotUI</a>, <a class="el" href="structFDiceViewData.html#ae6a0bf406088148a6f1c07c457bb263d">FDiceViewData</a></li>
+<li>mFaceValues&#160;:&#160;<a class="el" href="structFCombatDiceRollPhysicsSpec.html#ad54aea4b0fe776e93683eee1af500526">FCombatDiceRollPhysicsSpec</a>, <a class="el" href="structFDiceSlotUI.html#a0249963a8667f810806921d4478755ac">FDiceSlotUI</a>, <a class="el" href="structFDiceViewData.html#ad9d6c2e22e414e5ba66ea28d9ed299c8">FDiceViewData</a></li>
+<li>mFactorInStackCount&#160;:&#160;<a class="el" href="classUTacticalEffect.html#a0b332d08e546a38858f6d79878d1ef14">UTacticalEffect</a></li>
+<li>mFadeOutStateFlag&#160;:&#160;<a class="el" href="classARDGameModeBase.html#a46778b0b7671b5d31513727136e81121">ARDGameModeBase</a></li>
+<li>mFillClipSlot&#160;:&#160;<a class="el" href="structFUnitHpBarWidget.html#a3d0ae6481e6dcacb6918f16f3ce9bf4a">FUnitHpBarWidget</a></li>
+<li>mFillFullWidth&#160;:&#160;<a class="el" href="structFUnitHpBarWidget.html#a3bdaf683633a8c4ffd7ae4b7edb0b2c8">FUnitHpBarWidget</a></li>
+<li>mFillImage&#160;:&#160;<a class="el" href="structFUnitHpBarWidget.html#a3e28b3fae2af8795064a13e0f532c91c">FUnitHpBarWidget</a></li>
+<li>mFpsLimit&#160;:&#160;<a class="el" href="structFSettingsPanelValueModel.html#a2774218e18cf609b02f0ff2d5e8d5aff">FSettingsPanelValueModel</a>, <a class="el" href="classUOptionPersistData.html#ac97b4ccacc7420344c363ddbbb14332a">UOptionPersistData</a></li>
+<li>mFrameworkModel&#160;:&#160;<a class="el" href="classUTacticalFrameworkSubsystem.html#a1be66371ad66861068d40ff75044d358">UTacticalFrameworkSubsystem</a></li>
 <li>mFrontendGameMode&#160;:&#160;<a class="el" href="classUGamePlaySettings.html#af3f9113046fa55f1dc2f96fa2aa09ee3">UGamePlaySettings</a></li>
 <li>mFrontendRoomId&#160;:&#160;<a class="el" href="classUGamePlaySettings.html#a5a1e39809565329c7cb6d20b4d9e17a1">UGamePlaySettings</a></li>
 <li>mGameModeBase&#160;:&#160;<a class="el" href="classUStaticRoomSpawnData.html#a72f142a9c2a7364f235589ff4be24337">UStaticRoomSpawnData</a></li>
-<li>mGameplayEffect&#160;:&#160;<a class="el" href="structFSkillEffectLayer.html#a58fd3399539a0adb9b895ea3224f3338">FSkillEffectLayer</a></li>
-<li>mGameplayEffectDefaultValue&#160;:&#160;<a class="el" href="structFSkillEffectLayer.html#aab617e57983e92ef4b8d6a79dafef7c6">FSkillEffectLayer</a></li>
-<li>mGameplayEffectRatioValue&#160;:&#160;<a class="el" href="structFSkillEffectLayer.html#a691745b99812551fc623b280c3ca5b08">FSkillEffectLayer</a></li>
+<li>mGameRoomContext&#160;:&#160;<a class="el" href="classUSimulationSubsystem.html#a042a923714062024d9ae7232b49b37b6">USimulationSubsystem</a></li>
+<li>mGlobalAttributeSetInitter&#160;:&#160;<a class="el" href="classUTacticalFrameworkModel.html#a652006033b52ab5378104354ea747a3e">UTacticalFrameworkModel</a></li>
+<li>mGlobalBatchCount&#160;:&#160;<a class="el" href="classUTacticalFrameworkModel.html#a7a7f0205bdd17933a5a03e8a090d23ce">UTacticalFrameworkModel</a></li>
+<li>mGlobalInitCurveTable&#160;:&#160;<a class="el" href="classUTacticalFrameworkModel.html#a10e1de9b425d0c002c311cbb46140c5f">UTacticalFrameworkModel</a></li>
 <li>mGlobalSetting&#160;:&#160;<a class="el" href="structFStageBuilder.html#a68b6797e0c806f4197acebc06e2d645f">FStageBuilder</a></li>
 <li>mGlobalStageBuildSetting&#160;:&#160;<a class="el" href="classUGameBalanceSettings.html#a9d050005f0430acf97e275ab23845e11">UGameBalanceSettings</a></li>
-<li>mGold&#160;:&#160;<a class="el" href="structFFrontendCharacterOption.html#a6bd9cd018cc4e50c388189fbb17f9d25">FFrontendCharacterOption</a></li>
+<li>mGlobalStatusEffectSetting&#160;:&#160;<a class="el" href="classUGameBalanceSettings.html#ab8dfa27cda936ba104062cea561de3a4">UGameBalanceSettings</a></li>
+<li>mGold&#160;:&#160;<a class="el" href="structFFrontendCharacterOption.html#a6bd9cd018cc4e50c388189fbb17f9d25">FFrontendCharacterOption</a>, <a class="el" href="structFInventoryUI.html#ae80db74fd4558d7469946dad620dfc10">FInventoryUI</a>, <a class="el" href="structFPlayerMetaUI.html#a5336d6a984c2315e72eba23886307f2a">FPlayerMetaUI</a>, <a class="el" href="structFRoomPlayerSummaryUI.html#a70d065cc7897e479ec0d359077495fcf">FRoomPlayerSummaryUI</a>, <a class="el" href="structFShopUI.html#a331321d5a3ca932febf447ca0e169856">FShopUI</a></li>
+<li>mGoldBalance&#160;:&#160;<a class="el" href="structFRewardUI.html#afd6c3fffb93092d2f578cc870c603e6d">FRewardUI</a></li>
+<li>mGoldGained&#160;:&#160;<a class="el" href="structFRewardUI.html#a9e8187432c9e77b9157fdd075d245e59">FRewardUI</a></li>
+<li>mGoldIcon&#160;:&#160;<a class="el" href="classURewardUIWidgetBase.html#a2f5a910f90178e415b98f73f19266a4e">URewardUIWidgetBase</a></li>
+<li>mGoldText&#160;:&#160;<a class="el" href="classUShopUIWidgetBase.html#a32ed325256d64ad5685cf30597badb93">UShopUIWidgetBase</a></li>
+<li>mHandle&#160;:&#160;<a class="el" href="structFActiveTacticalEffect.html#aa3f9e355131a0da8233045cd4e40e67d">FActiveTacticalEffect</a>, <a class="el" href="structFTacticalModifierEvaluatedData.html#a6bf3b3ca6bca870450687785e30f0949">FTacticalModifierEvaluatedData</a></li>
 <li>mHasActiveRun&#160;:&#160;<a class="el" href="structFRunControlView.html#ac8cc50e09c9e957694465f7d24baadb4">FRunControlView</a></li>
-<li>mHeight&#160;:&#160;<a class="el" href="classATileMap.html#a22d4041acc9c8e7d894ba79934bfd7f5">ATileMap</a></li>
-<li>mHighlight&#160;:&#160;<a class="el" href="structFTile.html#a39994d0e7bd46da09e40ad9dd0449625">FTile</a></li>
-<li>mHP&#160;:&#160;<a class="el" href="structFTileTargetSnapshotTargetData.html#a0518ebd40e40381e861bc03705d85fcc">FTileTargetSnapshotTargetData</a>, <a class="el" href="classUPlayerUnitPersistData.html#afbcebcaead2219df1646d346e076bb82">UPlayerUnitPersistData</a></li>
+<li>mHeadActionIndex&#160;:&#160;<a class="el" href="classUSRPGTurnContext.html#a0f115aacc1e7322cb367652c7bfc7ae4">USRPGTurnContext</a></li>
+<li>mHeadRequestIndex&#160;:&#160;<a class="el" href="classUSRPGCombatModel.html#a2d4ee3fe5f2c082dd07aa0bd0333b968">USRPGCombatModel</a></li>
+<li>mHeight&#160;:&#160;<a class="el" href="classUTileMapModel.html#a76adede25289665f926bb8797ef1168b">UTileMapModel</a></li>
+<li>mHitRange&#160;:&#160;<a class="el" href="structFSkillTargetingUI.html#a0c4b71c075de3344b3e6b04a7d90d0f7">FSkillTargetingUI</a></li>
+<li>mHitRangeRatio&#160;:&#160;<a class="el" href="structFSkillTargetingUI.html#aa6e8d505d4004224ad5fa8b7e96abfd2">FSkillTargetingUI</a></li>
+<li>mHitShape&#160;:&#160;<a class="el" href="structFSkillTargetingUI.html#aebad6373458f65fde60bb05a90901856">FSkillTargetingUI</a></li>
+<li>mHP&#160;:&#160;<a class="el" href="structFCombatUnitState.html#a4214462e3de0448b1f09f60aecf526be">FCombatUnitState</a>, <a class="el" href="structFInventoryUI.html#a37d7b2f0a7313d680bedd3460a29e645">FInventoryUI</a>, <a class="el" href="structFRoomPlayerSummaryUI.html#ad5a0b650ba0e3ed5aedd29dec32a4351">FRoomPlayerSummaryUI</a>, <a class="el" href="structFUnitUI.html#a69203db37732b8932a13fa900078e085">FUnitUI</a>, <a class="el" href="classUPlayerUnitPersistData.html#afbcebcaead2219df1646d346e076bb82">UPlayerUnitPersistData</a></li>
 <li>mHUD&#160;:&#160;<a class="el" href="classUWorldWidgetSubsystem.html#aa66bf836caad56f07cddd41edc95c261">UWorldWidgetSubsystem</a></li>
 <li>mHUDClass&#160;:&#160;<a class="el" href="classARDGameModeBase.html#a5bdfcee8ef2e7e2d26b584919b3cd5dc">ARDGameModeBase</a></li>
-<li>mIcon&#160;:&#160;<a class="el" href="structFFrontendCharacterOption.html#aee7fffb89a249f118d2ba0f937c1f8ab">FFrontendCharacterOption</a>, <a class="el" href="classUStaticSkillData.html#af76c5559cab1d07119aefffa399d7a8d">UStaticSkillData</a>, <a class="el" href="classUStaticUnitSpawnData.html#aeb7f517fd4aa4fdcb44a5b71574dfa08">UStaticUnitSpawnData</a></li>
+<li>mIcon&#160;:&#160;<a class="el" href="structFEquipmentDetailUI.html#a82593f9364d57a1cfd7c862314f1687c">FEquipmentDetailUI</a>, <a class="el" href="structFEquipmentUI.html#aa4e186ae7557671e44100c50421f8cf0">FEquipmentUI</a>, <a class="el" href="structFFrontendCharacterOption.html#aee7fffb89a249f118d2ba0f937c1f8ab">FFrontendCharacterOption</a>, <a class="el" href="structFInventoryItemUI.html#a882b805321bbb3ad5341fae0903c4212">FInventoryItemUI</a>, <a class="el" href="structFRewardChoiceUI.html#a857c2b79900dca872e25ea2af2064838">FRewardChoiceUI</a>, <a class="el" href="structFShopItemUI.html#ac1b82513eb56c8a2a4d7d71e1f1279e8">FShopItemUI</a>, <a class="el" href="structFSkillDetailUI.html#adb9537a96c467c69295bba4c22bee983">FSkillDetailUI</a>, <a class="el" href="structFSkillUI.html#a169a03b71290686a234ecdddb56fe0bd">FSkillUI</a>, <a class="el" href="classUStaticEquipmentData.html#a237a68c4b8a37d9021ca32e8ddab2e8f">UStaticEquipmentData</a>, <a class="el" href="classUStaticObstacleSpawnData.html#a821733379c36c88e513415ee2d43ab88">UStaticObstacleSpawnData</a>, <a class="el" href="classUStaticPassiveData.html#a068b1cf40696445ef660c59d75e0ee44">UStaticPassiveData</a>, <a class="el" href="classUStaticSkillData.html#af76c5559cab1d07119aefffa399d7a8d">UStaticSkillData</a></li>
+<li>mIconType&#160;:&#160;<a class="el" href="structFCombatFloatingLogRequest.html#a11fc1eb7c3448877723069aa421343dc">FCombatFloatingLogRequest</a></li>
+<li>mId&#160;:&#160;<a class="el" href="structFCombatUnitState.html#ad3f0d2608d282b20759ea87c5550069a">FCombatUnitState</a></li>
+<li>mImageAnchors&#160;:&#160;<a class="el" href="structFDicePanelSlotLayout.html#a8eb8d930e528c67f9554c1388235e315">FDicePanelSlotLayout</a></li>
+<li>mImageStabilization&#160;:&#160;<a class="el" href="classACombatCameraPawn.html#a2586e9b95ee10f9e99724493117e23f7">ACombatCameraPawn</a></li>
+<li>mImageZOrder&#160;:&#160;<a class="el" href="structFDicePanelSlotLayout.html#a68e12e1a7b8e8d50e6aad21eb6bf897d">FDicePanelSlotLayout</a></li>
 <li>mIndex&#160;:&#160;<a class="el" href="structFFrontendCharacterOption.html#a434dcfafbf2f69dabb30d2892e69de0a">FFrontendCharacterOption</a>, <a class="el" href="structFTileTransform.html#a03d9bfdf9a62b9f63cf92abcb390b850">FTileTransform</a></li>
-<li>mInstigator&#160;:&#160;<a class="el" href="structFSRPGAction.html#a15d1e909b520d0caeef1d0b913fc5a45">FSRPGAction</a></li>
+<li>mInitializeCommand&#160;:&#160;<a class="el" href="classUSRPGAction.html#adb8f1cac1cb6878f2d6b6da85da2fec4">USRPGAction</a></li>
+<li>mInitializeCurveTable&#160;:&#160;<a class="el" href="classUGameBalanceSettings.html#a28d0ec2f627b0eaa1401cc99cded1016">UGameBalanceSettings</a></li>
+<li>mInstalledPassives&#160;:&#160;<a class="el" href="structFEquippedEntry.html#a1fa46f03f12314d18754baf63cb7d1b3">FEquippedEntry</a></li>
+<li>mInstigator&#160;:&#160;<a class="el" href="classUSRPGAction.html#ad31eb6a6aa12673b8cbc0bb2a9f00c4a">USRPGAction</a>, <a class="el" href="classUTacticalEffectContext.html#ae070463df31f69a9c5f45beb7ec25eb2">UTacticalEffectContext</a></li>
+<li>mIntroCinematicVideoPath&#160;:&#160;<a class="el" href="classUGamePlaySettings.html#a3b31b0be0928143203ad597dfc6912a9">UGamePlaySettings</a></li>
+<li>mIsActive&#160;:&#160;<a class="el" href="structFDynamicPassiveData.html#aa6e53d2f63bf5a0cd12225ac2ddbd1cb">FDynamicPassiveData</a></li>
+<li>mIsAdditive&#160;:&#160;<a class="el" href="structFTagMontageAnimationSet.html#af17e2a25c90af7b2e9a619052718afc5">FTagMontageAnimationSet</a></li>
+<li>mIsAffordable&#160;:&#160;<a class="el" href="structFShopItemUI.html#a3f623843f1e0f55079a3807826821774">FShopItemUI</a></li>
 <li>mIsAtStageStart&#160;:&#160;<a class="el" href="structFRunControlView.html#a8a1ffd86fd1ffd7b615401ae9e59ab56">FRunControlView</a></li>
-<li>mIsIndirect&#160;:&#160;<a class="el" href="classUStaticSkillData.html#a1205ddc5660812c133b7847019960591">UStaticSkillData</a></li>
+<li>mIsEquipped&#160;:&#160;<a class="el" href="structFEquipmentDetailUI.html#a8fbf6f85a9729200508d769534415350">FEquipmentDetailUI</a>, <a class="el" href="structFEquipmentUI.html#a610c95f700f339c0d1371d0ee7e626d2">FEquipmentUI</a></li>
+<li>mIsIndirect&#160;:&#160;<a class="el" href="structFSkillTargetingUI.html#a73bb34b605e5a083dd17330e80ceb25c">FSkillTargetingUI</a>, <a class="el" href="classUStaticSkillData.html#a1205ddc5660812c133b7847019960591">UStaticSkillData</a></li>
+<li>mIsInfinite&#160;:&#160;<a class="el" href="structFTacticalEffectSpec.html#a8ef9545ac6d5abfc2c54972a64cd0173">FTacticalEffectSpec</a></li>
 <li>mIsLoadedIds&#160;:&#160;<a class="el" href="structFStageBuilder.html#a830efd2f365fe1d129498d61cda7d58e">FStageBuilder</a></li>
 <li>mIsLongPress&#160;:&#160;<a class="el" href="structFSRPGWorldTraceCommand.html#adc3d7ae7a47416ede7f8ddbd9a20cac7">FSRPGWorldTraceCommand</a></li>
+<li>mIsMotionTriggered&#160;:&#160;<a class="el" href="structFActiveSkillContext.html#a01fe4dd8ca4ad77eea5fd523a1e79f49">FActiveSkillContext</a></li>
 <li>mIsNewData&#160;:&#160;<a class="el" href="classUPlayerUnitPersistData.html#ae67f4c3010bdd5989d1ced6de674e7a8">UPlayerUnitPersistData</a></li>
-<li>mIsPenetration&#160;:&#160;<a class="el" href="classUStaticSkillData.html#a763669cb2984be78219093d52c258bae">UStaticSkillData</a></li>
+<li>mIsOneTimeEvent&#160;:&#160;<a class="el" href="structFBoardActorAnimationEvent.html#a600cb4bccd92a2bcbf6b48cae27c0f51">FBoardActorAnimationEvent</a></li>
+<li>mIsPendingRemove&#160;:&#160;<a class="el" href="structFActiveTacticalEffect.html#a9c37550eefcfe9b1c3ac82cba0495416">FActiveTacticalEffect</a></li>
+<li>mIsPenetration&#160;:&#160;<a class="el" href="structFSkillTargetingUI.html#a8c1db2e4c0a926eecb078f014424741e">FSkillTargetingUI</a>, <a class="el" href="classUStaticSkillData.html#a763669cb2984be78219093d52c258bae">UStaticSkillData</a></li>
+<li>mIsPlayer&#160;:&#160;<a class="el" href="structFCombatUnitState.html#a0c63ffaac6e05d9b1e6e71faf6028b3d">FCombatUnitState</a>, <a class="el" href="structFUnitUI.html#aab73ae692bbd91ff5c9d9c7964428f74">FUnitUI</a></li>
+<li>mIsPreview&#160;:&#160;<a class="el" href="structFCombatFloatingLogRequest.html#a8d57b773149fd7baca8fbc0944acc918">FCombatFloatingLogRequest</a></li>
+<li>mIsRolled&#160;:&#160;<a class="el" href="structFDiceSlotUI.html#a8f9a1777aa05f94e03a798a86b3bcb88">FDiceSlotUI</a>, <a class="el" href="structFDiceViewData.html#a5f358591836c0289e9506fc5b7ab6cbc">FDiceViewData</a></li>
+<li>mIsSelected&#160;:&#160;<a class="el" href="structFDiceSlotUI.html#a68bf85cfc13228444564bf92a7a18ba7">FDiceSlotUI</a>, <a class="el" href="structFDiceViewData.html#abffa60d5c8ff49fcb6a58382a8038bd4">FDiceViewData</a></li>
+<li>mIsSoldOut&#160;:&#160;<a class="el" href="structFShopItemUI.html#a597bfe5c1ff9d1267054951fc8ec1eef">FShopItemUI</a></li>
 <li>mIsStartPoint&#160;:&#160;<a class="el" href="structFMapRoomView.html#a0038a45ad8ca52a3b6ae392ea121a837">FMapRoomView</a></li>
-<li>mJobType&#160;:&#160;<a class="el" href="classAPlayerUnit.html#a923e0d77eb8ab7b4a66fde60546f4236">APlayerUnit</a>, <a class="el" href="classUStaticPlayerUnitSpawnData.html#aff9a92c7fc91d13f3bbc3d0f11570fd3">UStaticPlayerUnitSpawnData</a></li>
-<li>mKilledEnemyUnits&#160;:&#160;<a class="el" href="structFRunLog.html#aa3d771ef05af9a7926def88e8ca3957e">FRunLog</a></li>
+<li>mIsUsable&#160;:&#160;<a class="el" href="structFSkillUI.html#ae1cb8948bb8c995832a4a19bc64affc9">FSkillUI</a></li>
+<li>mIsUsed&#160;:&#160;<a class="el" href="structFDiceSlotUI.html#a6f8ad6a199e3d2329065cf7c9c908f1c">FDiceSlotUI</a>, <a class="el" href="structFDiceViewData.html#abb537fae6db1ce9bb60fb1a9aeef1785">FDiceViewData</a></li>
+<li>mIsValid&#160;:&#160;<a class="el" href="structFTacticalModifierEvaluatedData.html#a236e3d70b32befe2b29213b2c454268b">FTacticalModifierEvaluatedData</a></li>
+<li>mItemBox&#160;:&#160;<a class="el" href="classUShopUIWidgetBase.html#a9d5defbe6a2f66aa077688eed2e9e4e3">UShopUIWidgetBase</a></li>
+<li>mItemId&#160;:&#160;<a class="el" href="structFEquipmentDetailUI.html#a9125b5d830a0ab7aa2ef505b77a80f44">FEquipmentDetailUI</a>, <a class="el" href="structFEquipmentUI.html#a1855a50b7089c1bde23e88f835b47689">FEquipmentUI</a></li>
+<li>mItemIndex&#160;:&#160;<a class="el" href="structFInventoryItemUI.html#ab552d41db75a6f415fba0167f56db202">FInventoryItemUI</a></li>
+<li>mItems&#160;:&#160;<a class="el" href="structFShopUI.html#a454491e907d0013a7f03b901728ee683">FShopUI</a></li>
+<li>mJobType&#160;:&#160;<a class="el" href="structFFrontendCharacterOption.html#a960659f9b4c65d9747e8d65acafa7211">FFrontendCharacterOption</a>, <a class="el" href="classUStaticPlayerUnitSpawnData.html#aff9a92c7fc91d13f3bbc3d0f11570fd3">UStaticPlayerUnitSpawnData</a></li>
+<li>mKind&#160;:&#160;<a class="el" href="structFInventoryItemUI.html#aafecc74c5649750ee06ad0e69ff5c672">FInventoryItemUI</a>, <a class="el" href="structFRewardChoiceUI.html#af8a69402c3de7ed24947c80f3b3b393b">FRewardChoiceUI</a>, <a class="el" href="structFRewardClaimRow.html#a88aa2c85b843c1b054069cc162b056f4">FRewardClaimRow</a>, <a class="el" href="structFShopItemUI.html#a309df59624e6a0e5734c87a02247b264">FShopItemUI</a></li>
 <li>mKnownDiceIds&#160;:&#160;<a class="el" href="structFUserLog.html#af92a9fcae8aaa8ff080e447d903f49df">FUserLog</a></li>
 <li>mKnownEnemyUnitIds&#160;:&#160;<a class="el" href="structFUserLog.html#a7825c719b29056a1102073ae5e79cb19">FUserLog</a></li>
 <li>mKnownEquipmentIds&#160;:&#160;<a class="el" href="structFUserLog.html#ad202dedeb7059d77dc4462c75c99f3b0">FUserLog</a></li>
 <li>mKnownSkillIds&#160;:&#160;<a class="el" href="structFUserLog.html#a8c0305d682a8679451511f3023e9f3e2">FUserLog</a></li>
-<li>mLifeCount&#160;:&#160;<a class="el" href="structFSRPGTurnContext.html#aa6ca42f345f18dee6f7d3569a69261f7">FSRPGTurnContext</a></li>
+<li>mLabel&#160;:&#160;<a class="el" href="structFCombatQueueNode.html#abc8a6a64b23ec5a7d7e7cc9bfa56715d">FCombatQueueNode</a></li>
+<li>mLanguageType&#160;:&#160;<a class="el" href="classUOptionPersistData.html#acaf6e792e231a6b590248760efede7e9">UOptionPersistData</a></li>
+<li>mLevel&#160;:&#160;<a class="el" href="structFInventoryUI.html#a9688685a29cb3c46a0ce9d6d2c9038e1">FInventoryUI</a>, <a class="el" href="structFPlayerMetaUI.html#add4cd01faf62240e6f98c3bdd5dc137f">FPlayerMetaUI</a>, <a class="el" href="structFRoomPlayerSummaryUI.html#a1ad299a30d25568e38fdfee03b572f70">FRoomPlayerSummaryUI</a>, <a class="el" href="structFUnitDetailUI.html#aff4c4f326a681af155885b2423d4117b">FUnitDetailUI</a></li>
+<li>mLevelAfter&#160;:&#160;<a class="el" href="structFRewardUI.html#acdd8845d7144c20449c49530b36681d2">FRewardUI</a></li>
+<li>mLevelBefore&#160;:&#160;<a class="el" href="structFRewardUI.html#a763dff156d265377e834549fe0fe9868">FRewardUI</a></li>
+<li>mLifeCount&#160;:&#160;<a class="el" href="classUSRPGTurnContext.html#a49819c801accfc532cd69b858fb338a7">USRPGTurnContext</a></li>
 <li>mLineWidget&#160;:&#160;<a class="el" href="structFFrontendMapLinePoolEntry.html#ad2d3f57d5325d1a315f0efe634fb94eb">FFrontendMapLinePoolEntry</a></li>
+<li>mMagnitude&#160;:&#160;<a class="el" href="structFSRPGAttributeEffectEventLog.html#a5f5fe65c234d21489c51fb838a3850e4">FSRPGAttributeEffectEventLog</a>, <a class="el" href="structFTacticalModifierEvaluatedData.html#a054e29baef4f4261000cb72aa2f7eac2">FTacticalModifierEvaluatedData</a>, <a class="el" href="classUStaticPassiveData.html#a24ce7d9eb98224ac2c2e88f7bfec6b47">UStaticPassiveData</a></li>
 <li>mMainCameraPoint&#160;:&#160;<a class="el" href="classARDWorldSettings.html#a7f5f68d324e9a43251a572670616f024">ARDWorldSettings</a></li>
-<li>mMaxHP&#160;:&#160;<a class="el" href="structFFrontendCharacterOption.html#a945a113603931ab2c03ca3ac212b7fdf">FFrontendCharacterOption</a>, <a class="el" href="structFTileTargetSnapshotTargetData.html#aea434ce073e65c754d655fda3a745be4">FTileTargetSnapshotTargetData</a>, <a class="el" href="classUPlayerUnitPersistData.html#aa21483cf2124fc6a9a9a9bc7a561a906">UPlayerUnitPersistData</a></li>
+<li>mMapModel&#160;:&#160;<a class="el" href="structFActiveSkillContext.html#a76b91e6c23df911b313e24f5eef7fa8f">FActiveSkillContext</a></li>
+<li>mMasterVolume&#160;:&#160;<a class="el" href="structFSettingsPanelValueModel.html#a1c3fbc86d86cda27a7c2795e36fd1290">FSettingsPanelValueModel</a></li>
+<li>mMaxExp&#160;:&#160;<a class="el" href="structFPlayerMetaUI.html#aa570906f8f20156b99679aaa7ebb30c8">FPlayerMetaUI</a>, <a class="el" href="structFRewardUI.html#a6cb277eddfcfc7c945b647740afa082e">FRewardUI</a></li>
+<li>mMaxHP&#160;:&#160;<a class="el" href="structFCombatUnitState.html#af1a604b4773432b99f0963a9bea3bf9b">FCombatUnitState</a>, <a class="el" href="structFFrontendCharacterOption.html#a945a113603931ab2c03ca3ac212b7fdf">FFrontendCharacterOption</a>, <a class="el" href="structFInventoryUI.html#a36c5f5a5625e7f2ece58e317177ffa86">FInventoryUI</a>, <a class="el" href="structFRoomPlayerSummaryUI.html#a2d9e41d001e48ccbeead57e170817c21">FRoomPlayerSummaryUI</a>, <a class="el" href="structFUnitUI.html#a394ad4ee628dcf53787efaca52acec44">FUnitUI</a>, <a class="el" href="classUPlayerUnitPersistData.html#aa21483cf2124fc6a9a9a9bc7a561a906">UPlayerUnitPersistData</a></li>
+<li>mMaxMovementPoint&#160;:&#160;<a class="el" href="structFUnitUI.html#ae9f156377646bf73bbe29bf3a763f352">FUnitUI</a></li>
+<li>mMaxMovePoint&#160;:&#160;<a class="el" href="structFCombatUnitState.html#a6c28e2623aff3e4a65ec1c9a14ba5a9a">FCombatUnitState</a></li>
+<li>mMaxMoveSpeed&#160;:&#160;<a class="el" href="classAUnit.html#ab0e40fa016c396770ecb540c4bfafbf4">AUnit</a></li>
+<li>mMaxOrthoWidth&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#ac7452236a91eff21d6fdc823375de3d7">UCameraMovementComponent</a></li>
 <li>mMaxPathCount&#160;:&#160;<a class="el" href="structFStageBuilderParams.html#a0cca6ae4235bae0b4152bd2d1a560392">FStageBuilderParams</a></li>
 <li>mMaxStartPointCount&#160;:&#160;<a class="el" href="structFStageBuilderParams.html#a49fed4201f0bd974647bfd96d0a52ba7">FStageBuilderParams</a></li>
+<li>mMediaPlayer&#160;:&#160;<a class="el" href="structFTitleMenuBackgroundRuntimeAssets.html#a07478582b2fb7bf7030612034c25e0f0">FTitleMenuBackgroundRuntimeAssets</a></li>
+<li>mMediaSource&#160;:&#160;<a class="el" href="structFTitleMenuBackgroundRuntimeAssets.html#ae87e955caf5becdc3d7fcdda780e693a">FTitleMenuBackgroundRuntimeAssets</a></li>
+<li>mMediaTexture&#160;:&#160;<a class="el" href="structFTitleMenuBackgroundRuntimeAssets.html#adeecdeb7f84ce7d28c639eb27d791a25">FTitleMenuBackgroundRuntimeAssets</a></li>
+<li>mMetaText&#160;:&#160;<a class="el" href="classUInventoryUIWidgetBase.html#a894b37ea41f143704e6f5c811e298e03">UInventoryUIWidgetBase</a></li>
+<li>mMinOrthoWidth&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#a8333bc08c75ee88d5b7e0b9f9506d2cb">UCameraMovementComponent</a></li>
 <li>mMinStartPointCount&#160;:&#160;<a class="el" href="structFStageBuilderParams.html#a9349cc0c872c0fd309f8dd246f6d0a92">FStageBuilderParams</a></li>
+<li>mMinWalkSquareVelocity&#160;:&#160;<a class="el" href="classUBoardActorAnimInstance.html#a532afb536eec1b96144782c676ea254b">UBoardActorAnimInstance</a></li>
+<li>mModel&#160;:&#160;<a class="el" href="classATileMap.html#a540d558bdeec021e6432d45ca59d274e">ATileMap</a>, <a class="el" href="structFTacticalEffectModCallbackData.html#af53143020699c146c5aa3f6ebab01978">FTacticalEffectModCallbackData</a></li>
+<li>mModelClass&#160;:&#160;<a class="el" href="structFSubsystemModelViewMapping.html#a56cc3979d66b08d501ed92c56e9c4b2e">FSubsystemModelViewMapping</a>, <a class="el" href="structFWorldModelViewMapping.html#a27810a9198cb24793d818f5fb4773d66">FWorldModelViewMapping</a>, <a class="el" href="classUStaticObstacleSpawnData.html#a696bfc542713f058c8e3bf91451a424d">UStaticObstacleSpawnData</a></li>
+<li>mModelFactory&#160;:&#160;<a class="el" href="structFRoomContext.html#a2fb9e52aec16429eb067f3d62d706276">FRoomContext</a></li>
+<li>mModelId&#160;:&#160;<a class="el" href="classUObjectModel.html#a75d4cd2e58251b4d2def69ced0f439e2">UObjectModel</a></li>
+<li>mModelMaxId&#160;:&#160;<a class="el" href="classURoomInstance.html#aa9d3ab78097b18f88fdabc92e619d3e2">URoomInstance</a></li>
+<li>mModifierMagnitude&#160;:&#160;<a class="el" href="structFTacticalModifierInfo.html#aba90d215fac06b302675bea77f1d874f">FTacticalModifierInfo</a></li>
+<li>mModifierOp&#160;:&#160;<a class="el" href="structFTacticalModifierEvaluatedData.html#a9775f58572cf57e570e27cd3781ee510">FTacticalModifierEvaluatedData</a>, <a class="el" href="structFTacticalModifierInfo.html#a7377dca83111be42999c27c17704e5a0">FTacticalModifierInfo</a></li>
+<li>mModifiers&#160;:&#160;<a class="el" href="classUTacticalEffect.html#a780737f8be18ff8a2cb746f4d08c8c96">UTacticalEffect</a></li>
+<li>mModifierValues&#160;:&#160;<a class="el" href="structFTacticalEffectSpec.html#a6e414d2251681bb977e614620350931f">FTacticalEffectSpec</a></li>
 <li>mMoney&#160;:&#160;<a class="el" href="classUPlayerUnitPersistData.html#a91eb95502543b56740deb930347b1414">UPlayerUnitPersistData</a></li>
 <li>mMonsterRewardExp&#160;:&#160;<a class="el" href="structFGlobalStageBuildSetting.html#a2e8f2ed7a015ba6f1d5b5be2966964c5">FGlobalStageBuildSetting</a></li>
 <li>mMonsterRewardMoney&#160;:&#160;<a class="el" href="structFGlobalStageBuildSetting.html#a7e7af1c4e284f0e40174f5d98ced5845">FGlobalStageBuildSetting</a></li>
-<li>mMovementPoint&#160;:&#160;<a class="el" href="structFTileTargetSnapshotTargetData.html#abb0be6bd74d4913716628ef3e3464105">FTileTargetSnapshotTargetData</a></li>
-<li>mName&#160;:&#160;<a class="el" href="classUStaticObstacleSpawnData.html#ad92f7446d45459fc02e01ed2b25fa0bd">UStaticObstacleSpawnData</a>, <a class="el" href="classUStaticSkillData.html#aa5dd1e4f823533a6081e4d027e1f483a">UStaticSkillData</a></li>
+<li>mMonsterRoomBGM&#160;:&#160;<a class="el" href="classUStaticStageSpawnData.html#afbbdb146ecce7da5f7778edc65908795">UStaticStageSpawnData</a></li>
+<li>mMotionEndBarrier&#160;:&#160;<a class="el" href="structFActiveSkillContext.html#ab066e473f90b68fc8816f623b7325411">FActiveSkillContext</a></li>
+<li>mMotionEventLogs&#160;:&#160;<a class="el" href="structFSRPGActionEventLog.html#ab140c02571b2c04140c23a9801f6e29f">FSRPGActionEventLog</a></li>
+<li>mMotionIndex&#160;:&#160;<a class="el" href="structFActiveSkillContext.html#ae6a77fe84f0da912371fbff250ac05e0">FActiveSkillContext</a>, <a class="el" href="structFCombatFloatingLogRequest.html#ac38881ddd1f8426c387f320963908f75">FCombatFloatingLogRequest</a></li>
+<li>mMotionTileMapDir&#160;:&#160;<a class="el" href="structFActiveSkillContext.html#ab4aef0a3f60a6c498860b42936f8e22b">FActiveSkillContext</a></li>
+<li>mMoveBuildPhase&#160;:&#160;<a class="el" href="classUSRPGMoveBuildAction.html#aad626d524edb92da5e8125e1849ad35b">USRPGMoveBuildAction</a></li>
+<li>mMoveClampingBox&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#ac3a0807b1a2f5d76d04d32fb2622a9e2">UCameraMovementComponent</a></li>
+<li>mMoveClampingBoxCenter&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#a0fe6facb2bbeaa3ad068b13828342bfd">UCameraMovementComponent</a></li>
+<li>mMoveDuration&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#adcc8396a03253fb040ecb8d136484423">UCameraMovementComponent</a></li>
+<li>mMoveExp&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#a073392c9bab3535b421a3eb2d029e929">UCameraMovementComponent</a></li>
+<li>mMovementPoint&#160;:&#160;<a class="el" href="structFUnitUI.html#ae333da8583eb163d77dd83dd60a0cb0b">FUnitUI</a></li>
+<li>mMovePoint&#160;:&#160;<a class="el" href="structFCombatUnitState.html#adb26103793e30d42d844b72ecd0bbf8d">FCombatUnitState</a>, <a class="el" href="classUEnemyUnitModel.html#ae11e27cd56fd1d03f8eb1f15f65f5997">UEnemyUnitModel</a>, <a class="el" href="classUSRPGMoveBuildAction.html#aef4ca7877bb161dede17dbb0e09866a6">USRPGMoveBuildAction</a>, <a class="el" href="classUStaticEnemyUnitSpawnData.html#a225416912216592c4f175cf235521061">UStaticEnemyUnitSpawnData</a></li>
+<li>mMoveTendency&#160;:&#160;<a class="el" href="classUEnemyUnitModel.html#ab18324c73dcaf6ba1eb9db92a77ba157">UEnemyUnitModel</a>, <a class="el" href="classUStaticEnemyUnitSpawnData.html#afd4f332ea9db733f399dfb0ae4d92415">UStaticEnemyUnitSpawnData</a></li>
+<li>mName&#160;:&#160;<a class="el" href="structFEquipmentDetailUI.html#a9c2be2a2c2ad91be43d582fde230a72f">FEquipmentDetailUI</a>, <a class="el" href="structFEquipmentUI.html#ab4a41ad50e2fdbf1c420ab28de14994a">FEquipmentUI</a>, <a class="el" href="structFInventoryItemUI.html#a06d876ead6704de4df720eb41c77cf60">FInventoryItemUI</a>, <a class="el" href="structFRewardChoiceUI.html#a866f02e745eef2560f1dbc40c0df163d">FRewardChoiceUI</a>, <a class="el" href="structFShopItemUI.html#a42a201f033c0aced67c314c17c7c1b5f">FShopItemUI</a>, <a class="el" href="structFSkillDetailUI.html#a74b98ac9c396aab8609c6d5423844b37">FSkillDetailUI</a>, <a class="el" href="structFSkillUI.html#ac639e251891e097edd0b544e928f479b">FSkillUI</a>, <a class="el" href="structFUnitDetailUI.html#ac0ce9e6d679eab7792b7b3ffe17785a4">FUnitDetailUI</a>, <a class="el" href="classUStaticEquipmentData.html#a303c4846d93effdb067f73c0aad00c6d">UStaticEquipmentData</a>, <a class="el" href="classUStaticSkillData.html#aa5dd1e4f823533a6081e4d027e1f483a">UStaticSkillData</a></li>
 <li>mNamingRuleSets&#160;:&#160;<a class="el" href="classUAssetNamingConventionSettings.html#a1e48733e73794842083b16e9a72e4bc4">UAssetNamingConventionSettings</a></li>
 <li>mNeedInGameRoom&#160;:&#160;<a class="el" href="structFRoomTransitionRequest.html#ae391fd4b33e0fd5d8daf8a66cd6155a8">FRoomTransitionRequest</a></li>
+<li>mNewValue&#160;:&#160;<a class="el" href="structFTacticalAttributeChangeData.html#ad8d414f6983123e34e979df26d40bdac">FTacticalAttributeChangeData</a></li>
 <li>mNextRoomColumns&#160;:&#160;<a class="el" href="structFMapRoomView.html#ae6e84429f71503dc11212a2a29b1ffe2">FMapRoomView</a>, <a class="el" href="structFRoom.html#a3a0efee2f7515c9275039eb3be9eb976">FRoom</a></li>
+<li>mNextTileIndex&#160;:&#160;<a class="el" href="structFSRPGTileEffectEventLog.html#a3e1b25bca152fc47f363fe692aa31bb8">FSRPGTileEffectEventLog</a></li>
+<li>mNiagaraSpawnDatas&#160;:&#160;<a class="el" href="structFApplyEventTriggerPayload.html#aeb9c119c571ea9c649ca35e7100deadd">FApplyEventTriggerPayload</a></li>
+<li>mNiagaraSystem&#160;:&#160;<a class="el" href="structFApplyNiagaraSpawnData.html#a1a0a352ade055fbf19d78f44e93edd0b">FApplyNiagaraSpawnData</a></li>
 <li>mNodeWidget&#160;:&#160;<a class="el" href="structFFrontendMapNodePoolEntry.html#a480609290d6fd5fdecba1b4c0dbcba3b">FFrontendMapNodePoolEntry</a></li>
+<li>mNormal&#160;:&#160;<a class="el" href="structRDDicePolyhedron_1_1FDiceFace.html#a62daec8e52048cc4f08b2e011a290a92">RDDicePolyhedron::FDiceFace</a></li>
 <li>mObstaclePlacementDatas&#160;:&#160;<a class="el" href="classUStaticCombatRoomSpawnData.html#a6526a060e0ba758164930a3d85aa9ea3">UStaticCombatRoomSpawnData</a></li>
-<li>mObstacles&#160;:&#160;<a class="el" href="classUSRPGCombatSubsystem.html#a212f527375a7372676bd204660c09cf0">USRPGCombatSubsystem</a></li>
-<li>Money&#160;:&#160;<a class="el" href="classUPlayerUnitAttributeSet.html#a6bb146cc7a3fc3b0fdafb683c7ed3709">UPlayerUnitAttributeSet</a></li>
-<li>MovementPoint&#160;:&#160;<a class="el" href="classUUnitAttributeSet.html#adb1c70092961d827172867ed1b953f4c">UUnitAttributeSet</a></li>
-<li>mOwner&#160;:&#160;<a class="el" href="structFSRPGTurnContext.html#ae12dae34e6e52a0de4b099046256050c">FSRPGTurnContext</a></li>
+<li>mObstacles&#160;:&#160;<a class="el" href="classUSRPGCombatModel.html#a75f7c4aa06804c6bfb51b3dd398f25e7">USRPGCombatModel</a></li>
+<li>mOccupancyState&#160;:&#160;<a class="el" href="structFSRPGTileEffectEventLog.html#a0d1981473f1133789bc3869815141e2c">FSRPGTileEffectEventLog</a></li>
+<li>mOldValue&#160;:&#160;<a class="el" href="structFTacticalAttributeChangeData.html#adf3ffd6752d5a38862d3aeaa32efd0e3">FTacticalAttributeChangeData</a></li>
+<li>Money&#160;:&#160;<a class="el" href="classUPlayerUnitAttributeSet.html#afbb7afc3a5ca5a08dd1b9988a80ea805">UPlayerUnitAttributeSet</a></li>
+<li>mOpacity&#160;:&#160;<a class="el" href="structFCarouselItemLayout.html#a8de22adc935e288ffc9fc78bb4ed346f">FCarouselItemLayout</a></li>
+<li>mOptionPersistData&#160;:&#160;<a class="el" href="classUPersistentDataSubsystem.html#a5436e977eedfa3770a17d9ebac199af4">UPersistentDataSubsystem</a></li>
+<li>mOptionSaveGame&#160;:&#160;<a class="el" href="classUSaveGameSubsystem.html#a442c44b24dd82f5e6df06fa1b1eacce4">USaveGameSubsystem</a></li>
+<li>mOtherCombatTargets&#160;:&#160;<a class="el" href="structFActiveSkillContext.html#a7ba216bd71a0e07ec9a7fe55c2d438ae">FActiveSkillContext</a></li>
+<li>Movement&#160;:&#160;<a class="el" href="classUUnitAttributeSet.html#ac581dad6175cc82a12f22d0c81bac44f">UUnitAttributeSet</a></li>
+<li>MovementFactor&#160;:&#160;<a class="el" href="classUUnitAttributeSet.html#ae8d11dcb6604ea0ef3f01b7437ba8dab">UUnitAttributeSet</a></li>
+<li>MovementPoint&#160;:&#160;<a class="el" href="classUUnitAttributeSet.html#ab598e8dcebe1e4e642f8f30029f42730">UUnitAttributeSet</a></li>
+<li>mOverlayLayerPriority&#160;:&#160;<a class="el" href="classUBoardActorModel.html#a3e208a1b865c4bfd5f6a9ae498ae03a1">UBoardActorModel</a></li>
+<li>mOverrideBGM&#160;:&#160;<a class="el" href="classUStaticRoomSpawnData.html#ab905fa8f781fadc33b4802d4a3d1ae87">UStaticRoomSpawnData</a></li>
+<li>MoveToViewportPosition_Smooth()&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#a9787f87e6a7b31b3c29c3c262ab52c6f">UCameraMovementComponent</a></li>
+<li>MoveToWorldPosition_Smooth()&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#a18d493816017b4bb7b46f3d4aa4f2fa2">UCameraMovementComponent</a></li>
+<li>mOwner&#160;:&#160;<a class="el" href="structFActiveTacticalEffectsContainer.html#aeb7d3d9e1c4250f44e18a1f1e6a8c3cb">FActiveTacticalEffectsContainer</a>, <a class="el" href="structFPassiveActivateContext.html#ae4c4c451b94645f1fbf82e50095f637e">FPassiveActivateContext</a>, <a class="el" href="structFTacticalAggregator.html#a198d4335cfcda95461668452562414a7">FTacticalAggregator</a>, <a class="el" href="classUSRPGTurnContext.html#ae47f8adf4a6175fea58aa4241a5286d4">USRPGTurnContext</a></li>
+<li>mOwnerSnapshot&#160;:&#160;<a class="el" href="structFPassiveActivateContext.html#a731f199f1cedca0f60308065c9e599f7">FPassiveActivateContext</a></li>
 <li>mParams&#160;:&#160;<a class="el" href="structFStageBuilder.html#af077f19f19ded216eb6f319b2dac932b">FStageBuilder</a></li>
-<li>mParent&#160;:&#160;<a class="el" href="structFSRPGAction.html#ac347d86d630a5b74a34323cb89dcccf3">FSRPGAction</a>, <a class="el" href="structFSRPGTurnContext.html#a23147adc17ce659a7ffa3d3b8f4bd9e0">FSRPGTurnContext</a></li>
-<li>mPassive&#160;:&#160;<a class="el" href="structFUnitCommitResult.html#afeb9ed4697184c40e3b829e8788cdcb4">FUnitCommitResult</a></li>
-<li>mPendingTurnRequests&#160;:&#160;<a class="el" href="classUSRPGCombatSubsystem.html#a5feb4cded3a835ba21e817b2a8c0fbbf">USRPGCombatSubsystem</a></li>
+<li>mParent&#160;:&#160;<a class="el" href="classUSRPGAction.html#addf3df2c2cc12fa0b3bd080251e87a62">USRPGAction</a>, <a class="el" href="classUSRPGActionCreationCommandHandler.html#a823dfa6df11ba952c4e4c725ac679b70">USRPGActionCreationCommandHandler</a>, <a class="el" href="classUSRPGDetailInfoPopupCommandHandler.html#a12a3b3fd8c857aa7b4ef54b7d4cd87f9">USRPGDetailInfoPopupCommandHandler</a>, <a class="el" href="classUSRPGTurnContext.html#a0e66e7118431843ce81b0409919ecd35">USRPGTurnContext</a></li>
+<li>mPassiveClass&#160;:&#160;<a class="el" href="classUStaticPassiveData.html#af3f7c11e1570ebc58e2129384a742bda">UStaticPassiveData</a></li>
+<li>mPassiveDescriptions&#160;:&#160;<a class="el" href="structFUnitDetailUI.html#adacc37ba4f44b6bf867bb01a1caf64c4">FUnitDetailUI</a></li>
+<li>mPassives&#160;:&#160;<a class="el" href="classUPassiveComponentModel.html#a1f9949e63a7860eb39c2385949758beb">UPassiveComponentModel</a></li>
+<li>mPassiveTriggerCondition&#160;:&#160;<a class="el" href="classUStaticPassiveData.html#acbe24c3e07c8e1a9f590c8b9d0e370c2">UStaticPassiveData</a></li>
+<li>mPathArrowComponent&#160;:&#160;<a class="el" href="classATileMap.html#ae338a9cb88bc3a37652bd3bfe2aa79ef">ATileMap</a></li>
+<li>mPathArrowMaterial&#160;:&#160;<a class="el" href="classATileMap.html#a45f1e66fb79e3ab4f579ffbd77911905">ATileMap</a></li>
+<li>mPathArrowMesh&#160;:&#160;<a class="el" href="classATileMap.html#acfa89354578c007d8b3128d96becc9a6">ATileMap</a></li>
+<li>mPathArrowScale&#160;:&#160;<a class="el" href="classATileMap.html#a6e366cc71744faf08760cbc9a939ac96">ATileMap</a></li>
+<li>mPathArrowStyle&#160;:&#160;<a class="el" href="classATileMap.html#a42a6892622f42af9111155740c97df2d">ATileMap</a></li>
+<li>mPathEndComponent&#160;:&#160;<a class="el" href="classATileMap.html#aee6e25dc15cf80a560675f7b38795471">ATileMap</a></li>
+<li>mPathEndMaterial&#160;:&#160;<a class="el" href="classATileMap.html#add5d830e588e9fc3a12adba8e761ae0f">ATileMap</a></li>
+<li>mPathEndMesh&#160;:&#160;<a class="el" href="classATileMap.html#a0d1bba9afcec62ff4692abd97aad9273">ATileMap</a></li>
+<li>mPathEndStyle&#160;:&#160;<a class="el" href="classATileMap.html#acbb886d518b2364fb99c53e1e195bafd">ATileMap</a></li>
+<li>mPathFlowCycles&#160;:&#160;<a class="el" href="classATileMap.html#a288834df1a7aee66391d55707b3e8dbd">ATileMap</a></li>
+<li>mPathHeightOffset&#160;:&#160;<a class="el" href="classATileMap.html#a1e7b5bb9126154d08ca82f70c7ee529f">ATileMap</a></li>
+<li>mPathPulseMaxBrightness&#160;:&#160;<a class="el" href="classATileMap.html#a6821e3fa6dc9addc9cac785ad3aff638">ATileMap</a></li>
+<li>mPathPulseMinBrightness&#160;:&#160;<a class="el" href="classATileMap.html#a4f51a7bbe3f0a7c881e1d72690f44aed">ATileMap</a></li>
+<li>mPathPulsePeriod&#160;:&#160;<a class="el" href="classATileMap.html#ad83c1342b203fedb42a225b7c22826b7">ATileMap</a></li>
+<li>mPathTileIndexes&#160;:&#160;<a class="el" href="structFSRPGMoveCommand.html#adfed2c1f15dc29ba99ae1d51c5de72f1">FSRPGMoveCommand</a>, <a class="el" href="classUSRPGMoveAction.html#aa683db1a76bd80bbdf0742315db180e5">USRPGMoveAction</a>, <a class="el" href="classUSRPGMoveBuildAction.html#aea2767c4c811ea47dafa0569f2923ab5">USRPGMoveBuildAction</a></li>
+<li>mPawnVelocity&#160;:&#160;<a class="el" href="classUBoardActorAnimInstance.html#aacaf472a350b8b0f3a1e828e77bdbd33">UBoardActorAnimInstance</a></li>
+<li>mPendingNext&#160;:&#160;<a class="el" href="structFActiveTacticalEffect.html#a82a615468e9205924162822440966a68">FActiveTacticalEffect</a></li>
+<li>mPendingTurnRequests&#160;:&#160;<a class="el" href="classUSRPGCombatModel.html#ac031c0a316e7e54ec9ce2084c82e6d62">USRPGCombatModel</a></li>
+<li>mPhase&#160;:&#160;<a class="el" href="structFTurnUI.html#ac6016a6d7ab97fcd8b77474815099b47">FTurnUI</a></li>
+<li>mPlaneMesh&#160;:&#160;<a class="el" href="classACombatCameraPlane.html#a8278ec7440f3395de1d3f5d02b18ed39">ACombatCameraPlane</a></li>
 <li>mPlayableUnits&#160;:&#160;<a class="el" href="classUStaticFrontendRoomSpawnData.html#a282c4f35acac34e9e228c4639a4b5d29">UStaticFrontendRoomSpawnData</a></li>
-<li>mPlayerLevel&#160;:&#160;<a class="el" href="structFRunControlView.html#ae1650b682ef6ce1f156d21484c3353a7">FRunControlView</a>, <a class="el" href="classUPlayerUnitPersistData.html#aa0bfab95d87ee18274066dcd7b37389e">UPlayerUnitPersistData</a></li>
+<li>mPlayerLevel&#160;:&#160;<a class="el" href="structFRunControlView.html#ae1650b682ef6ce1f156d21484c3353a7">FRunControlView</a>, <a class="el" href="classUPlayerUnitModel.html#aa376dcc732fac3a4477301d159a5f0ae">UPlayerUnitModel</a>, <a class="el" href="classUPlayerUnitPersistData.html#aa0bfab95d87ee18274066dcd7b37389e">UPlayerUnitPersistData</a></li>
 <li>mPlayerTransform&#160;:&#160;<a class="el" href="classUStaticCombatRoomSpawnData.html#aa1714aa70892adc8d588146db3ae84f1">UStaticCombatRoomSpawnData</a></li>
-<li>mPlayerUnit&#160;:&#160;<a class="el" href="classARoomGameModeBase.html#a5852c32bd49a4a65a3ff0ccad4d0ba29">ARoomGameModeBase</a>, <a class="el" href="classUSRPGCombatSubsystem.html#ababab81f26bddce634985c09c5100194">USRPGCombatSubsystem</a></li>
+<li>mPlayerUnit&#160;:&#160;<a class="el" href="classARoomGameModeBase.html#ae5a4f38f07528c06b38f1a58d7cb8210">ARoomGameModeBase</a>, <a class="el" href="classUSRPGCombatModel.html#a2fc8cec5557c796915ed806eaec30694">USRPGCombatModel</a></li>
 <li>mPlayerUnitId&#160;:&#160;<a class="el" href="structFFrontendCharacterOption.html#a20a1f3c77cd3620eed77c931671cc7b3">FFrontendCharacterOption</a>, <a class="el" href="classUPlayerUnitPersistData.html#a0b0c0cee179d17ed691e196ce72c55e4">UPlayerUnitPersistData</a></li>
-<li>mPortrait&#160;:&#160;<a class="el" href="structFFrontendCharacterOption.html#a7866d88be6b9c0fb866d75ad543c0729">FFrontendCharacterOption</a>, <a class="el" href="classUStaticObstacleSpawnData.html#a78fc43d60082146e999cb1aacdf59d20">UStaticObstacleSpawnData</a>, <a class="el" href="classUStaticPlayerUnitSpawnData.html#a6968255874cd579bd72e791460d808da">UStaticPlayerUnitSpawnData</a></li>
+<li>mPortrait&#160;:&#160;<a class="el" href="structFFrontendCharacterOption.html#a7866d88be6b9c0fb866d75ad543c0729">FFrontendCharacterOption</a>, <a class="el" href="structFUnitDetailUI.html#aa43c6f988fe45b5f6f1f5e9c0596c245">FUnitDetailUI</a>, <a class="el" href="structFUnitUI.html#a6c0af307a5486c24d8e84f2c82c95b70">FUnitUI</a>, <a class="el" href="classUStaticObstacleSpawnData.html#a78fc43d60082146e999cb1aacdf59d20">UStaticObstacleSpawnData</a></li>
+<li>mPosition&#160;:&#160;<a class="el" href="structFCarouselItemLayout.html#ab207f066ddd7bbfe24d27edde1a35c63">FCarouselItemLayout</a></li>
 <li>mPositionOffsetRate&#160;:&#160;<a class="el" href="structFMapRoomView.html#a382a07e28f9cd830cb189cf9dc5b28c6">FMapRoomView</a>, <a class="el" href="structFRoom.html#a47dcdd84e642ef3a1f2a6d3bc3f05260">FRoom</a></li>
+<li>mPreDefaultState&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#a1f8dc9e9102f5fe101c37f43bb73d0dc">UCameraMovementComponent</a></li>
 <li>mPrefix&#160;:&#160;<a class="el" href="structFAssetNamingRule.html#aab663a5a49922a561dd424509ebbb1fe">FAssetNamingRule</a></li>
 <li>mPreRoomColumns&#160;:&#160;<a class="el" href="structFRoomEdge.html#ae01b8d96859a88ea7af62a1b771360aa">FRoomEdge</a></li>
-<li>mPrice&#160;:&#160;<a class="el" href="classUStaticSkillData.html#aa3febf7dbaa2157148e57ea7b7dadc9b">UStaticSkillData</a></li>
-<li>mPriority&#160;:&#160;<a class="el" href="structFAssetNamingRuleSet.html#a720d2af30ef09d596e4dfaffefd89567">FAssetNamingRuleSet</a>, <a class="el" href="structFTileHighlightStyle.html#ad6f1eb87b02a60925094832bb7d7bae0">FTileHighlightStyle</a></li>
-<li>mPulseIntensity&#160;:&#160;<a class="el" href="classATileMap.html#aeca6aa6e7c1fa45bf7238770c441ddde">ATileMap</a></li>
+<li>mPreTileIndex&#160;:&#160;<a class="el" href="structFSRPGTileEffectEventLog.html#aa0f99f248eddd43adfaebab43dbe75d6">FSRPGTileEffectEventLog</a></li>
+<li>mPreviewTexture&#160;:&#160;<a class="el" href="structFDiceSlotUI.html#af319efb2e5655b5c5cf6a2607805e358">FDiceSlotUI</a></li>
+<li>mPrice&#160;:&#160;<a class="el" href="structFShopItemUI.html#ae54da07c7893b41f1c866b490f9b7ce5">FShopItemUI</a>, <a class="el" href="classUStaticEquipmentData.html#ac2472587700c9fbddec02c0d2a730f93">UStaticEquipmentData</a>, <a class="el" href="classUStaticSkillData.html#aa3febf7dbaa2157148e57ea7b7dadc9b">UStaticSkillData</a></li>
+<li>mPriority&#160;:&#160;<a class="el" href="structFAssetNamingRuleSet.html#a720d2af30ef09d596e4dfaffefd89567">FAssetNamingRuleSet</a></li>
+<li>mProperty&#160;:&#160;<a class="el" href="structFTacticalAttributeSetInitterDiscreteLevels_1_1FAttributeDefaultValueList_1_1FOffsetValuePair.html#a15f75187e6a0a9e0c971963e7110d27b">FTacticalAttributeSetInitterDiscreteLevels::FAttributeDefaultValueList::FOffsetValuePair</a></li>
 <li>mPulsePeriod&#160;:&#160;<a class="el" href="classATileMap.html#ac8010d54070e164f44a9a8a44784674c">ATileMap</a></li>
-<li>mRarityType&#160;:&#160;<a class="el" href="classUStaticDiceData.html#ae97d14c1f03efbc3f0f8dd382a8f0bd7">UStaticDiceData</a>, <a class="el" href="classUStaticEquipmentData.html#a4eb0b3d72b76acfe930d824363ee7b5a">UStaticEquipmentData</a>, <a class="el" href="classUStaticSkillData.html#aacaf8f595aacf5e1af7d7d210fd90d06">UStaticSkillData</a></li>
+<li>mQualifyHPBelow&#160;:&#160;<a class="el" href="classUMockConditionAddStatPassive.html#a3113cdd07d713a4dcf6b9d3c10e218a3">UMockConditionAddStatPassive</a></li>
+<li>mQualityLevel&#160;:&#160;<a class="el" href="structFSettingsPanelValueModel.html#a905b370da3cdabfb4f23c6d0a1a3c263">FSettingsPanelValueModel</a></li>
+<li>mRarityColor&#160;:&#160;<a class="el" href="structFDiceSlotUI.html#a6bffc06abd73e9e2382d186fd0a4253b">FDiceSlotUI</a>, <a class="el" href="structFEquipmentDetailUI.html#a423b57c903cdbe85bc001c57a23ddb59">FEquipmentDetailUI</a>, <a class="el" href="structFEquipmentUI.html#a7feedc745860d4e1a135efa00cf879b7">FEquipmentUI</a>, <a class="el" href="structFInventoryItemUI.html#ad93026f54f19c25b2bc9bb2da5aed617">FInventoryItemUI</a>, <a class="el" href="structFRewardChoiceUI.html#a2b22ba5f2cf12c7e86711dd887bc5bdd">FRewardChoiceUI</a>, <a class="el" href="structFShopItemUI.html#aeb24f9c5efee5d0c695a28553c6e20fc">FShopItemUI</a></li>
+<li>mRarityText&#160;:&#160;<a class="el" href="structFDiceSlotUI.html#a745954b518b6cd8e11699116d28f0ae3">FDiceSlotUI</a></li>
+<li>mRarityType&#160;:&#160;<a class="el" href="structFDiceViewData.html#a465222920fef11eff9a0b4f5a37a9207">FDiceViewData</a>, <a class="el" href="classUStaticDiceData.html#ae97d14c1f03efbc3f0f8dd382a8f0bd7">UStaticDiceData</a>, <a class="el" href="classUStaticEquipmentData.html#a4eb0b3d72b76acfe930d824363ee7b5a">UStaticEquipmentData</a>, <a class="el" href="classUStaticSkillData.html#aacaf8f595aacf5e1af7d7d210fd90d06">UStaticSkillData</a></li>
+<li>mReachableTileIndexes&#160;:&#160;<a class="el" href="classUSRPGMoveBuildAction.html#add8b26dadf959754fc2889562be0ddc2">USRPGMoveBuildAction</a>, <a class="el" href="classUSRPGSkillBuildAction.html#a953ccae68819504cc5b8297a0d9677ad">USRPGSkillBuildAction</a></li>
+<li>mReceiveMotionTag&#160;:&#160;<a class="el" href="structFSkillMotionLayer.html#a9e58f84d19ea8dbf25d9768ed4e11172">FSkillMotionLayer</a></li>
+<li>mRelativeTransform&#160;:&#160;<a class="el" href="structFApplyNiagaraSpawnData.html#ac29c091fe87cff7d9067f257cceaf8e3">FApplyNiagaraSpawnData</a></li>
 <li>mRemoveFromParentOnClose&#160;:&#160;<a class="el" href="classURDUserWidget.html#aab4c4ee1e763fa6b1807a6febfad8050">URDUserWidget</a></li>
-<li>mReservedCommands&#160;:&#160;<a class="el" href="structFSRPGAction.html#aa8bff6a0e5d7cf99c445d9185124e197">FSRPGAction</a></li>
+<li>mReplaceLayerFlags&#160;:&#160;<a class="el" href="classUBoardActorModel.html#a04f16dd10b3c5e6ba3afa8d068eddd8f">UBoardActorModel</a></li>
+<li>mRequestedAction&#160;:&#160;<a class="el" href="structFSRPGCommand.html#a1bfe0da246224afeacf2cedac901058b">FSRPGCommand</a></li>
+<li>mRequiredDiceCount&#160;:&#160;<a class="el" href="classUStaticSkillData.html#a0b2d6d630b078f2015bd506871d92d91">UStaticSkillData</a></li>
+<li>mReservedActions&#160;:&#160;<a class="el" href="classUSRPGTurnContext.html#ac7a03cc804ecb696de0e3eb13e3ad893">USRPGTurnContext</a></li>
+<li>mResolution&#160;:&#160;<a class="el" href="classUOptionPersistData.html#adabc8ad9c58c58eddcc757a115d17777">UOptionPersistData</a></li>
+<li>mResultValue&#160;:&#160;<a class="el" href="structFDiceSlotUI.html#ae42d14388fd8d006dc64b0d0c0289491">FDiceSlotUI</a>, <a class="el" href="structFDiceViewData.html#a61c40c427f37e9da06e36895d26da647">FDiceViewData</a></li>
 <li>mRewardDiceDataId&#160;:&#160;<a class="el" href="structFBossMonsterRoom.html#a7f9281009745b6a41ca7b4a914d1efdc">FBossMonsterRoom</a></li>
 <li>mRewardEquipmentDataId&#160;:&#160;<a class="el" href="structFEliteMonsterRoom.html#affe07f7aeaaf9d552c29fa64a0cb5693">FEliteMonsterRoom</a>, <a class="el" href="structFTreasureRoom.html#a570e2ddaa568a1fd14485be66cc55000">FTreasureRoom</a></li>
 <li>mRewardExp&#160;:&#160;<a class="el" href="structFMonsterRoom.html#aac8d29d1b7acb6df0df891f21965a811">FMonsterRoom</a></li>
+<li>mRewardExpIconTexture&#160;:&#160;<a class="el" href="classURewardUIWidgetBase.html#aa01f4157fe36ddfd1a2939bed3bece96">URewardUIWidgetBase</a></li>
+<li>mRewardGoldIconTexture&#160;:&#160;<a class="el" href="classURewardUIWidgetBase.html#abb38a5b34dcc07b6373d19f4209b9823">URewardUIWidgetBase</a></li>
+<li>mRewardIcon&#160;:&#160;<a class="el" href="classURewardRowWidgetBase.html#ac23b39bac237f9c701d077407ac30d67">URewardRowWidgetBase</a></li>
+<li>mRewardMainText&#160;:&#160;<a class="el" href="classURewardRowWidgetBase.html#acad92e247809917a541c46429b614d60">URewardRowWidgetBase</a></li>
 <li>mRewardMoney&#160;:&#160;<a class="el" href="structFMonsterRoom.html#af0db3ace14c8f475d887e3f82fe6b7be">FMonsterRoom</a></li>
+<li>mRewardRowPadding&#160;:&#160;<a class="el" href="classURewardUIWidgetBase.html#ab7da21f24497f0eb3cdad8cb1380508b">URewardUIWidgetBase</a></li>
+<li>mRewardRowsBox&#160;:&#160;<a class="el" href="classURewardUIWidgetBase.html#adcb1522e80db2ab4a91629fda6f834ee">URewardUIWidgetBase</a></li>
+<li>mRewardRowWidgetClass&#160;:&#160;<a class="el" href="classURewardUIWidgetBase.html#afbec309359cf52a2c046ef50963f9673">URewardUIWidgetBase</a></li>
+<li>mRewardSingleText&#160;:&#160;<a class="el" href="classURewardRowWidgetBase.html#a2bc56db6f43dd3552bf6ad60765ed1e5">URewardRowWidgetBase</a></li>
+<li>mRewardSubText&#160;:&#160;<a class="el" href="classURewardRowWidgetBase.html#afb89ea782cff4209828983d13e7e1579">URewardRowWidgetBase</a></li>
 <li>mRoleText&#160;:&#160;<a class="el" href="structFFrontendCharacterOption.html#a5cc04795c20c206a59f570c6d1ea49c5">FFrontendCharacterOption</a></li>
+<li>mRolledFaceIndex&#160;:&#160;<a class="el" href="structFDiceSlotUI.html#a29e728d21618e53fdde71d3f36a78ee9">FDiceSlotUI</a>, <a class="el" href="structFDiceViewData.html#a2e768dedcba8ab4e8e64f1c669595376">FDiceViewData</a></li>
+<li>mRolledFaceIndices&#160;:&#160;<a class="el" href="structFSRPGDiceRollCommand.html#a9f03fda6cfa4300e44b62c6a99df79c4">FSRPGDiceRollCommand</a></li>
 <li>mRoomAssetIds&#160;:&#160;<a class="el" href="structFStageBuilder.html#aa553f8aa392afafb1c3b36050ddfa599">FStageBuilder</a></li>
 <li>mRoomBuildRate&#160;:&#160;<a class="el" href="structFStageBuilderParams.html#a11cb1a398e12d090f8d759077acd3576">FStageBuilderParams</a></li>
 <li>mRoomColumnIndex&#160;:&#160;<a class="el" href="structFRoomTransitionRequest.html#a6dce4b7a57398467d89eb81d78b4ca0b">FRoomTransitionRequest</a></li>
+<li>mRoomContext&#160;:&#160;<a class="el" href="classUEventLogger.html#afb3adab0d2c4d69d570a0e012dc3faac">UEventLogger</a>, <a class="el" href="classUObjectModelFactory.html#a631325dfe612d8535e066ba178e24207">UObjectModelFactory</a></li>
 <li>mRoomIcons&#160;:&#160;<a class="el" href="classUStaticStageSpawnData.html#a5d0f6585bcec4a751cf28ffd36e503cc">UStaticStageSpawnData</a></li>
+<li>mRoomInstance&#160;:&#160;<a class="el" href="structFRoomContext.html#a2de2b7565bf4f6c6314086c5e71722ca">FRoomContext</a></li>
 <li>mRoomRowIndex&#160;:&#160;<a class="el" href="structFRoomTransitionRequest.html#a7b8e70c4395f47442355557ffabc9d2b">FRoomTransitionRequest</a></li>
 <li>mRoomRows&#160;:&#160;<a class="el" href="structFStage.html#ac2736b2368baaed56af8634422b70d7f">FStage</a></li>
 <li>mRooms&#160;:&#160;<a class="el" href="structFRoomRow.html#a4ee49d67458fc8c338bbb4f9f9fd5da3">FRoomRow</a></li>
 <li>mRoomStartPoint&#160;:&#160;<a class="el" href="classARDWorldSettings.html#a2601409023450f47bd077a2d283db730">ARDWorldSettings</a></li>
+<li>mRoot&#160;:&#160;<a class="el" href="structFUnitHpBarWidget.html#ae4918c4d429ec332be56df70c194b878">FUnitHpBarWidget</a></li>
+<li>mRotationSpeed&#160;:&#160;<a class="el" href="classAUnit.html#aa82f8849b2bdf9c6d8ae540fb1b47eff">AUnit</a></li>
+<li>mRound&#160;:&#160;<a class="el" href="structFTurnUI.html#af947c08b5769dd34f20bc84511c11af4">FTurnUI</a></li>
+<li>mRoundCount&#160;:&#160;<a class="el" href="classUSRPGCombatModel.html#a7e31ff94b2a81094b1c50e1c1c0c91cf">USRPGCombatModel</a></li>
+<li>mRouterModel&#160;:&#160;<a class="el" href="classUSRPGCommandRouterSubsystem.html#a6beab9578023331de3e6be61143975e3">USRPGCommandRouterSubsystem</a></li>
 <li>mRow&#160;:&#160;<a class="el" href="structFMapRoomView.html#af531b3830211cae778b3e7afe88f0f8e">FMapRoomView</a>, <a class="el" href="structFRoom.html#a91424a5f4bbb82d32929cc2598928eaa">FRoom</a>, <a class="el" href="structFRunControlView.html#a5cecfe909793f9bdc54ec7b634163b42">FRunControlView</a></li>
 <li>mRowCount&#160;:&#160;<a class="el" href="structFStageBuilderParams.html#a6e7bf4dc91d6588e2727f8c249bd67d2">FStageBuilderParams</a></li>
+<li>mRowIconFrame&#160;:&#160;<a class="el" href="classURewardRowWidgetBase.html#a0e29242233b4a256205ba64cc84a0cf0">URewardRowWidgetBase</a></li>
 <li>mRules&#160;:&#160;<a class="el" href="structFAssetNamingRuleSet.html#a46a0b3dec7ee3f75df4e799922b459aa">FAssetNamingRuleSet</a></li>
 <li>mRunCount&#160;:&#160;<a class="el" href="structFUserLog.html#a9b3fe4ec11cf4a95f3dbcfb9b97b38e0">FUserLog</a></li>
 <li>mRunCountPerUnit&#160;:&#160;<a class="el" href="structFUserLog.html#a7a376f62bcd9bf972f4e27db663ddbd6">FUserLog</a></li>
@@ -280,92 +563,211 @@ $(document).ready(function(){initNavTree('functions_m.html',''); initResizable()
 <li>mRunSaveGame&#160;:&#160;<a class="el" href="classUSaveGameSubsystem.html#a7422ab6576f413218c38db88a1839b4e">USaveGameSubsystem</a></li>
 <li>mSaleEquipmentDataIds&#160;:&#160;<a class="el" href="structFShopRoom.html#ab5c3b14933ddb6d95b84da6f9c53ba4a">FShopRoom</a></li>
 <li>mSaleSkillDataIds&#160;:&#160;<a class="el" href="structFShopRoom.html#ac9fd96afe57872850d7927d4c18482e5">FShopRoom</a></li>
+<li>mScale&#160;:&#160;<a class="el" href="structFCarouselItemLayout.html#a0dd10fba4bf6cf696d87ab810dbd8dc2">FCarouselItemLayout</a></li>
+<li>mSceneComponent&#160;:&#160;<a class="el" href="classACombatCameraPawn.html#a5f8a2ea07f161acb9d69ef0303765cb4">ACombatCameraPawn</a></li>
+<li>mScreenPosition&#160;:&#160;<a class="el" href="structFSRPGWorldTraceCommand.html#ab77a96e8c721c038e433abb743b2faab">FSRPGWorldTraceCommand</a></li>
+<li>mScreenShakeEnabled&#160;:&#160;<a class="el" href="structFSettingsPanelValueModel.html#a96096c028c7237f8c4d319813d615d38">FSettingsPanelValueModel</a></li>
 <li>mSelectable&#160;:&#160;<a class="el" href="structFFrontendCharacterOption.html#ae78b8677b17ef02313a6e176c187e68c">FFrontendCharacterOption</a>, <a class="el" href="structFMapRoomView.html#a42642e0552be138e424c8bede73f1449">FMapRoomView</a></li>
 <li>mSelected&#160;:&#160;<a class="el" href="structFMapRoomView.html#a530ab2423dfb3e1d6709805c99f6c051">FMapRoomView</a></li>
-<li>mSelectedDices&#160;:&#160;<a class="el" href="structFSRPGSkillBuildAction.html#af543fe8b525f58f004d073e5d5e3e3e8">FSRPGSkillBuildAction</a></li>
-<li>mSelectedDiceSum&#160;:&#160;<a class="el" href="structFSRPGSkillBuildAction.html#a8917b6027678d5289213eb7151c81c2c">FSRPGSkillBuildAction</a></li>
 <li>mSelectedRoomColumn&#160;:&#160;<a class="el" href="classARoomGameModeBase.html#a6f150eb36b81f4e365f88b57bf2c3b4a">ARoomGameModeBase</a></li>
 <li>mSelectedRoomRow&#160;:&#160;<a class="el" href="classARoomGameModeBase.html#a624871fb5255affd6c84d46e63d87425">ARoomGameModeBase</a></li>
-<li>mSelectedSkill&#160;:&#160;<a class="el" href="structFSRPGSkillBuildAction.html#a0f16fdc5d9500d76e2bed280b750bd66">FSRPGSkillBuildAction</a></li>
-<li>mSelectedSkillIndex&#160;:&#160;<a class="el" href="structFSRPGSkillBuildAction.html#ae914ad2b0c38e4a0ab8f2f7baf20a672">FSRPGSkillBuildAction</a></li>
+<li>mSelectedSkill&#160;:&#160;<a class="el" href="classUSRPGSkillBuildAction.html#af1bf7c5675075daf44c0c708f8a818b4">USRPGSkillBuildAction</a></li>
+<li>mSelectedSkillIndex&#160;:&#160;<a class="el" href="classUSRPGSkillBuildAction.html#abba734cf7d1fd4a2d997b07bb98c1524">USRPGSkillBuildAction</a></li>
+<li>mSelectRange&#160;:&#160;<a class="el" href="structFSkillTargetingUI.html#ae400008c46722f833a985f1c0a5ee9ba">FSkillTargetingUI</a></li>
+<li>mSelectRangeRatio&#160;:&#160;<a class="el" href="structFSkillTargetingUI.html#a72c5986924b954949cf7ced10e1f458d">FSkillTargetingUI</a></li>
+<li>mSelectShape&#160;:&#160;<a class="el" href="structFSkillTargetingUI.html#a286e48d8beac96ad09a099999946a8a4">FSkillTargetingUI</a></li>
 <li>mSelectStyle&#160;:&#160;<a class="el" href="classATileMap.html#a22669d808894c15663029f6f9e1240f4">ATileMap</a></li>
+<li>mSelfTileIndex&#160;:&#160;<a class="el" href="structFActiveSkillContext.html#a2842f2bc44a88ae9c1adc9fa43ba252a">FActiveSkillContext</a></li>
+<li>mSequence&#160;:&#160;<a class="el" href="structFCombatFloatingLogRequest.html#abe9531726f88784df6f82b08557d8cf7">FCombatFloatingLogRequest</a></li>
+<li>mSetMovePathDelegate&#160;:&#160;<a class="el" href="classUTileMapModel.html#a8c2b56d82bacbba36b54e47adf2bd6c4">UTileMapModel</a></li>
+<li>mSetTileHighlightDelegate&#160;:&#160;<a class="el" href="classUTileMapModel.html#a27456baf096375ece3e5fa6784df7fc8">UTileMapModel</a></li>
+<li>mSfxVolume&#160;:&#160;<a class="el" href="structFSettingsPanelValueModel.html#a428ad412583bf5beb4a261600aefef36">FSettingsPanelValueModel</a></li>
 <li>mShopGameMode&#160;:&#160;<a class="el" href="classUGamePlaySettings.html#aaabc7afc1f2fcd36fb6d7e062d5b403e">UGamePlaySettings</a></li>
 <li>mShopOwnerClass&#160;:&#160;<a class="el" href="classUStaticShopRoomSpawnData.html#a19dd8126401ad8ac94c87e3c47c6e227">UStaticShopRoomSpawnData</a></li>
+<li>mShopRoomBGM&#160;:&#160;<a class="el" href="classUStaticStageSpawnData.html#a69d685a507789e8ba6e84101b5dc3105">UStaticStageSpawnData</a></li>
+<li>mShouldTerminateAfterAction&#160;:&#160;<a class="el" href="classUSRPGTurnContext.html#aaf4b1306c42f440e08bcba5ea4a7568b">USRPGTurnContext</a></li>
+<li>mShouldTerminateBeforePlayerTurnStart&#160;:&#160;<a class="el" href="classUSRPGCombatModel.html#a6c1001043c918bceaf0b4bae88d2d6ae">USRPGCombatModel</a></li>
+<li>mShowCard&#160;:&#160;<a class="el" href="structFDicePanelSlotLayout.html#a69802089ec2e0be1982fbb650cc01b90">FDicePanelSlotLayout</a></li>
 <li>mShowFadeInUIOnTransition&#160;:&#160;<a class="el" href="classARDGameModeBase.html#afbfd426dbbd4f49ecc00a6be26c7e13a">ARDGameModeBase</a></li>
 <li>mShowFadeOutUIOnTransition&#160;:&#160;<a class="el" href="classARDGameModeBase.html#a8096b0169868f9a25e73c1e94b940848">ARDGameModeBase</a></li>
 <li>mShowLoadingNotifyUIOnTransition&#160;:&#160;<a class="el" href="classARDGameModeBase.html#a8c08ed30d38d88a6a32f8ea80f85c2f3">ARDGameModeBase</a></li>
-<li>mSkillAnimLayers&#160;:&#160;<a class="el" href="classUStaticSkillData.html#adf23e6ab364ee983da125d77931423b3">UStaticSkillData</a></li>
+<li>mSimulationRoomContext&#160;:&#160;<a class="el" href="classUSimulationSubsystem.html#ad7e4feb4284522669e1ac22003497667">USimulationSubsystem</a></li>
+<li>mSimulationState&#160;:&#160;<a class="el" href="classUSimulationSubsystem.html#a3dcc9d80fde432f55cc5d25e9d54a39b">USimulationSubsystem</a></li>
+<li>mSize&#160;:&#160;<a class="el" href="structFCarouselItemLayout.html#a8115e3f4e9278c3df79a05597c3b7309">FCarouselItemLayout</a></li>
 <li>mSkillAssetIds&#160;:&#160;<a class="el" href="structFStageBuilder.html#acad028e4dcd690f47b0e99f0db4f5f99">FStageBuilder</a></li>
-<li>mSkillBuildPhase&#160;:&#160;<a class="el" href="structFSRPGSkillBuildAction.html#ae2d7123b134e8881b5159dd9e8a5434f">FSRPGSkillBuildAction</a></li>
-<li>mSkillData&#160;:&#160;<a class="el" href="classUSkillComponent.html#a2ae46fe4bbd881419b659d8eeff41f9a">USkillComponent</a></li>
+<li>mSkillBox&#160;:&#160;<a class="el" href="classUInventoryUIWidgetBase.html#a12841c9b1f87f431d03627898968b283">UInventoryUIWidgetBase</a></li>
+<li>mSkillBuildPhase&#160;:&#160;<a class="el" href="classUSRPGSkillBuildAction.html#a50107c67bd401e5652edc50429db1012">USRPGSkillBuildAction</a></li>
 <li>mSkillDatas&#160;:&#160;<a class="el" href="classUStaticUnitSpawnData.html#afd69af32ecac08f1143ef8aca17fb5e1">UStaticUnitSpawnData</a></li>
-<li>mSkillEffectLayers&#160;:&#160;<a class="el" href="structFSkillAnimLayer.html#a20f72bffd8fcdbc0943be4783f9ad6ff">FSkillAnimLayer</a></li>
+<li>mSkillEffectLayers&#160;:&#160;<a class="el" href="structFSkillMotionLayer.html#a40d1031ab90022f386e91bd69e1782be">FSkillMotionLayer</a></li>
+<li>mSkillEntries&#160;:&#160;<a class="el" href="classUSkillComponentModel.html#a2dc6123bff0ad77beb7ede14a033d905">USkillComponentModel</a></li>
+<li>mSkillIcon&#160;:&#160;<a class="el" href="classURewardUIWidgetBase.html#acb1f35cc8ca95ad2c868c1d187b2f8a5">URewardUIWidgetBase</a></li>
 <li>mSkillIds&#160;:&#160;<a class="el" href="classUPlayerUnitPersistData.html#a57f1d07f0c63ed6e1e1b034257b459d4">UPlayerUnitPersistData</a></li>
-<li>mSkillIndex&#160;:&#160;<a class="el" href="structFSRPGSkillSelectCommand.html#a7474ea65015ebe8fbdc8747ed7072ae0">FSRPGSkillSelectCommand</a></li>
-<li>mSkillPoint&#160;:&#160;<a class="el" href="structFTileTargetSnapshotTargetData.html#a49a77ee297cdef9e57837f84110c042f">FTileTargetSnapshotTargetData</a></li>
+<li>mSkillIndex&#160;:&#160;<a class="el" href="structFActiveSkillContext.html#a7d4c138faa58a6ff5b518ddc359a0a1a">FActiveSkillContext</a>, <a class="el" href="structFSkillDetailUI.html#a4a78b85ab1027827c02439ab005b8cd9">FSkillDetailUI</a>, <a class="el" href="structFSkillUI.html#a4b519f966f61412813a895d086bb489a">FSkillUI</a>, <a class="el" href="structFSRPGSkillCastCommand.html#aa68982411bcfb56cc89312f642daf656">FSRPGSkillCastCommand</a>, <a class="el" href="structFSRPGSkillSelectCommand.html#a7474ea65015ebe8fbdc8747ed7072ae0">FSRPGSkillSelectCommand</a></li>
+<li>mSkillLabel&#160;:&#160;<a class="el" href="classUInventoryUIWidgetBase.html#a363b36be44bbdd936327b86778a8c7ec">UInventoryUIWidgetBase</a></li>
+<li>mSkillMaxZoomSize&#160;:&#160;<a class="el" href="classUGamePlaySettings.html#a9523c174fd919898e25124232c57e67c">UGamePlaySettings</a></li>
+<li>mSkillMinZoomSize&#160;:&#160;<a class="el" href="classUGamePlaySettings.html#af8f8c171bd8ee3c16d1d463c83ed5aca">UGamePlaySettings</a></li>
+<li>mSkillMotionLayers&#160;:&#160;<a class="el" href="classUStaticSkillData.html#afa89b023bb21df6697d8fa910f272977">UStaticSkillData</a></li>
+<li>mSkillPoint&#160;:&#160;<a class="el" href="structFUnitUI.html#a21d86b32a8176ebcf49dac557f4e51a8">FUnitUI</a></li>
 <li>mSkillRarityRate&#160;:&#160;<a class="el" href="structFStageBuilderParams.html#afd76398f651a79cc444188f54325225c">FStageBuilderParams</a></li>
-<li>mSkillType&#160;:&#160;<a class="el" href="classUStaticSkillData.html#aacbd9c00746ff524c894f83fff17989e">UStaticSkillData</a></li>
+<li>mSkills&#160;:&#160;<a class="el" href="structFInventoryUI.html#a4d2ed31129f0ae96a8f4c3a07876553a">FInventoryUI</a></li>
+<li>mSkillZoomDefaultSize&#160;:&#160;<a class="el" href="classUGamePlaySettings.html#a0d0c3a06de0992720050b95874aa4463">UGamePlaySettings</a></li>
+<li>mSkillZoomSizeRatio&#160;:&#160;<a class="el" href="classUGamePlaySettings.html#ae94d5e32f50b21695d10b0902360dc81">UGamePlaySettings</a></li>
+<li>mSlotIndex&#160;:&#160;<a class="el" href="structFEquipmentDetailUI.html#aff0418a0f31ee99d509dd17728681226">FEquipmentDetailUI</a>, <a class="el" href="structFEquipmentUI.html#a5ee7b271a92f5a26ca687776a4db1914">FEquipmentUI</a>, <a class="el" href="structFShopItemUI.html#a9e519204a7836e9e9b12ac1eeddae58c">FShopItemUI</a></li>
+<li>mSocketName&#160;:&#160;<a class="el" href="structFApplyNiagaraSpawnData.html#a18ec3dc2df1fbe19bf516b8dbffbefaa">FApplyNiagaraSpawnData</a></li>
+<li>mSoundClasses&#160;:&#160;<a class="el" href="classUGamePlaySettings.html#adfe6fbb54a008e01d1bfdce1c4d9cbc4">UGamePlaySettings</a></li>
+<li>mSoundClassObjects&#160;:&#160;<a class="el" href="structFOptionPersistDataCache.html#a35ad35af20229d08f8e62994af35d9a4">FOptionPersistDataCache</a></li>
+<li>mSoundMixObject&#160;:&#160;<a class="el" href="structFOptionPersistDataCache.html#a9970781bb375cc29cb74c78c0377140f">FOptionPersistDataCache</a></li>
+<li>mSourceAssetId&#160;:&#160;<a class="el" href="structFRewardChoiceUI.html#a772316f78ab7fb98762f238e70da5999">FRewardChoiceUI</a></li>
+<li>mSourceObject&#160;:&#160;<a class="el" href="classUTacticalEffectContext.html#a261faaaf7c5d5d4799eb1d16dd7ae03a">UTacticalEffectContext</a></li>
+<li>mSourceTileIndex&#160;:&#160;<a class="el" href="structFSRPGActionEventLog.html#aa489399bb229fd21dd9463092fe335e6">FSRPGActionEventLog</a></li>
+<li>mSourceUnitId&#160;:&#160;<a class="el" href="structFCombatQueueNode.html#aae1e1cde1a6b96cab8feb70186e797a6">FCombatQueueNode</a></li>
+<li>mSourceUnitID&#160;:&#160;<a class="el" href="structFSRPGTurnEventLog.html#a05294019cf14de76945b809a31cb7434">FSRPGTurnEventLog</a></li>
 <li>mSpawnData&#160;:&#160;<a class="el" href="structFEnemyUnitPlacementData.html#adc42714c7e27151338f0744ced42667f">FEnemyUnitPlacementData</a>, <a class="el" href="structFObstaclePlacementData.html#a0652101431e1ea86bde92e78498a5538">FObstaclePlacementData</a></li>
+<li>mSpawnedAttributes&#160;:&#160;<a class="el" href="classUAttributeSetComponentModel.html#a673e5a38c5aab8aa0626fe99289bad28">UAttributeSetComponentModel</a></li>
+<li>mSpawnedBoardActorPositions&#160;:&#160;<a class="el" href="structFSRPGMotionEventLog.html#a7639f905bee08b468339cba6a63ee420">FSRPGMotionEventLog</a></li>
+<li>mSpec&#160;:&#160;<a class="el" href="structFActiveTacticalEffect.html#a385418d3cde4c9fb1a9c57455930c4e6">FActiveTacticalEffect</a></li>
+<li>mStackCount&#160;:&#160;<a class="el" href="structFStatusEffectUI.html#a2e8e1fca4405de3917bb5e9d4d49b7e3">FStatusEffectUI</a>, <a class="el" href="structFTacticalAggregatorMod.html#a24c26dfee4cdb2a65591a64e15aa9c0f">FTacticalAggregatorMod</a>, <a class="el" href="structFTacticalEffectRemovalInfo.html#a6aad32a5a2d50faa10dbf7c6efe3bd67">FTacticalEffectRemovalInfo</a></li>
+<li>mStackingType&#160;:&#160;<a class="el" href="classUTacticalEffect.html#a433a0f90e1fd45083813d68683d75c8d">UTacticalEffect</a></li>
 <li>mStage&#160;:&#160;<a class="el" href="classURunPersistData.html#a9a235c762b7b8ee314b442930c746957">URunPersistData</a></li>
 <li>mStageBuildSettingTable&#160;:&#160;<a class="el" href="classUGameBalanceSettings.html#a0b0ea92f22f8c8bb738e2f933a8aef54">UGameBalanceSettings</a></li>
 <li>mStageBuildStream&#160;:&#160;<a class="el" href="classURunPersistData.html#a152ab025ffa90042005e0d7abc121e88">URunPersistData</a></li>
 <li>mStageLevel&#160;:&#160;<a class="el" href="structFStage.html#ae980d5e1a02e22eb5343326160948b1f">FStage</a>, <a class="el" href="structFStageBuilderParams.html#a51d7c55e2b2080348a934a23562f54bc">FStageBuilderParams</a>, <a class="el" href="classUStaticCombatRoomSpawnData.html#ae37da6bce1e7a88f44ac939ed6872256">UStaticCombatRoomSpawnData</a>, <a class="el" href="classUStaticShopRoomSpawnData.html#a64a99b43ef8329d8989d8be756774f8a">UStaticShopRoomSpawnData</a>, <a class="el" href="classUStaticTreasureRoomSpawnData.html#a90d9750085481665ab8de44d3d3108c2">UStaticTreasureRoomSpawnData</a></li>
 <li>mStageName&#160;:&#160;<a class="el" href="classUStaticStageSpawnData.html#a9b8dd29a11ce3a52fd4a646d9729f212">UStaticStageSpawnData</a></li>
 <li>mStartColumn&#160;:&#160;<a class="el" href="structFStage.html#a611559a460b93c7a9527c7b01588857b">FStage</a></li>
-<li>mState&#160;:&#160;<a class="el" href="structFMapRoomView.html#a405e938c49c19e82487f95303bec1bcb">FMapRoomView</a></li>
+<li>mStartLocation&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#a97baee1bd3c4cc824ba65a38c3fb98c4">UCameraMovementComponent</a></li>
+<li>mStartZoom&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#a089095c90bc54ae85c76e0bf09a8e188">UCameraMovementComponent</a></li>
+<li>mState&#160;:&#160;<a class="el" href="structFMapRoomView.html#a405e938c49c19e82487f95303bec1bcb">FMapRoomView</a>, <a class="el" href="classUTacticalPassive.html#ab57b0b1fcf1131a722bf0219e7fcd4c5">UTacticalPassive</a></li>
+<li>mStatEffect&#160;:&#160;<a class="el" href="structFEquippedEntry.html#a1c705acd17fe32d20f28b6ff948aa98d">FEquippedEntry</a></li>
+<li>mStatEffectHandle&#160;:&#160;<a class="el" href="structFEquippedEntry.html#a9420a305c49809bb363b60b861cf0d98">FEquippedEntry</a></li>
 <li>mStateFlag&#160;:&#160;<a class="el" href="classAIntroGameMode.html#a679cf752afcde20b6b176c3caf5626f5">AIntroGameMode</a></li>
-<li>mStateTree&#160;:&#160;<a class="el" href="classUStaticEnemyUnitSpawnData.html#af70e8c42a669fe435517f8c0d1384d59">UStaticEnemyUnitSpawnData</a></li>
+<li>mStaticData&#160;:&#160;<a class="el" href="classUTacticalPassive.html#a57a643c0ecaacb70f39fae43e093b836">UTacticalPassive</a></li>
+<li>mStaticPassiveData&#160;:&#160;<a class="el" href="classUStaticEquipmentData.html#a70d4e7ba5f13fc65c6caf7a6170f2ef5">UStaticEquipmentData</a></li>
 <li>mStaticRoomSpawnDataId&#160;:&#160;<a class="el" href="structFRoom.html#ad2099eb8a12d52a0741f47dd9682b887">FRoom</a></li>
+<li>mStaticSpawnData&#160;:&#160;<a class="el" href="classUBoardActorModel.html#a59ffe9a5ed8b6dcc7f5b77b20189a147">UBoardActorModel</a></li>
 <li>mStaticStageSpawnDataId&#160;:&#160;<a class="el" href="structFStage.html#a87352cfaceaaec5b8f7edebe4a387d9d">FStage</a>, <a class="el" href="structFStageBuilderParams.html#a5f192b127e2ad703a0c779f40e6fb2ea">FStageBuilderParams</a></li>
-<li>mStaticUnitSpawnData&#160;:&#160;<a class="el" href="classAUnit.html#a7e7964f90737bc96583cb8b4c9d57a33">AUnit</a></li>
+<li>mStatModifiers&#160;:&#160;<a class="el" href="classUStaticEquipmentData.html#aa19b08b1227fab03f4028f12fa148627">UStaticEquipmentData</a></li>
 <li>mStatSummary&#160;:&#160;<a class="el" href="structFFrontendCharacterOption.html#a54b44defd1df12dbedc6d4ff52ad6cfa">FFrontendCharacterOption</a></li>
+<li>mStatusCountTexts&#160;:&#160;<a class="el" href="structFUnitHpBarWidget.html#a7b86a5ae971f1b89ed39fb65cc3957c8">FUnitHpBarWidget</a></li>
+<li>mStatusEffects&#160;:&#160;<a class="el" href="structFUnitUI.html#a740bddd07356d23dfd51df8e1531e561">FUnitUI</a></li>
+<li>mStatusIcons&#160;:&#160;<a class="el" href="structFUnitHpBarWidget.html#a552636c6f4df80574a8409917b8033a1">FUnitHpBarWidget</a></li>
+<li>mStatusOverflowText&#160;:&#160;<a class="el" href="structFUnitHpBarWidget.html#a8c5b288534a63a80ced5fc908f5624d4">FUnitHpBarWidget</a></li>
+<li>mStatusTags&#160;:&#160;<a class="el" href="structFUnitUI.html#aa331a25920e4ef7150cc80f48771e0d6">FUnitUI</a></li>
+<li>mSubsystemModelViewMappings&#160;:&#160;<a class="el" href="classUGamePlaySettings.html#a5b7f67b2bfe0fd6eeb08a8331802a605">UGamePlaySettings</a></li>
 <li>mSVNContentDir&#160;:&#160;<a class="el" href="classUSVNSettings.html#ac8795b4e7569277ef8b86e6b833713fe">USVNSettings</a></li>
+<li>mTacticalTagCountContainer&#160;:&#160;<a class="el" href="classUAttributeSetComponentModel.html#a187b6234223881314a77c4fd70fc2e19">UAttributeSetComponentModel</a></li>
+<li>mTag&#160;:&#160;<a class="el" href="structFStatusEffectUI.html#af1c413c0f6843eeb9fbb5b0223defe39">FStatusEffectUI</a>, <a class="el" href="structFTacticalEffectModifiedTag.html#a0e56a6fbcb43e91e3222d45b898ad6d0">FTacticalEffectModifiedTag</a>, <a class="el" href="structFTacticalTagCountItem.html#a7531a0f1d1e6e203a51a11f89e4606a5">FTacticalTagCountItem</a></li>
+<li>mTagAnimMontageSets&#160;:&#160;<a class="el" href="classUBoardActorAnimInstance.html#ae6955b66b822b2aa54f777895f701ed6">UBoardActorAnimInstance</a></li>
 <li>mTagCountMap&#160;:&#160;<a class="el" href="classUPlayerUnitPersistData.html#a3bb2733e0987ffaf945e9ed72a5b499f">UPlayerUnitPersistData</a></li>
+<li>mTagEffectEventLogs&#160;:&#160;<a class="el" href="structFSRPGBoardActorEventLog.html#aae3980ac5dfebb1d51964e15ce892c0f">FSRPGBoardActorEventLog</a></li>
+<li>mTags&#160;:&#160;<a class="el" href="structFBoardCombatTargetSnapshotData.html#a80a3cdc5863890eb9a679baeac16fe13">FBoardCombatTargetSnapshotData</a>, <a class="el" href="structFCombatQueueNode.html#a211d9aa600db7bc2cb990083fe014f9f">FCombatQueueNode</a></li>
+<li>mTargetActorID&#160;:&#160;<a class="el" href="structFSRPGBoardActorEventLog.html#a8a9678e28612e9e5a8bccfc3f86fe481">FSRPGBoardActorEventLog</a></li>
 <li>mTargetContentFolderPaths&#160;:&#160;<a class="el" href="classUAssetNamingConventionSettings.html#a94c1bed2d89b2e1024e578a824d69bd1">UAssetNamingConventionSettings</a></li>
-<li>mTargetFilter&#160;:&#160;<a class="el" href="structFSkillEffectLayer.html#aea1d6747092a8d38d2317d35cb53a47d">FSkillEffectLayer</a></li>
-<li>mTargetIndex&#160;:&#160;<a class="el" href="structFSRPGSkillBuildAction.html#adc04f40615802114d7253fbc6f20ca1e">FSRPGSkillBuildAction</a></li>
-<li>mTargetOwner&#160;:&#160;<a class="el" href="structFSRPGTurnUnregisterRequest.html#a93d86d30dd54d9d999c50fdd5835a8fa">FSRPGTurnUnregisterRequest</a></li>
-<li>mTargetScope&#160;:&#160;<a class="el" href="structFSkillEffectLayer.html#a66ff67dc095fcbac11891241b071650b">FSkillEffectLayer</a></li>
-<li>mTargetTurnContext&#160;:&#160;<a class="el" href="structFSRPGTurnUnregisterRequest.html#ab2c952aac75ad705b9283622a7b3dd8a">FSRPGTurnUnregisterRequest</a></li>
-<li>mTeamRelations&#160;:&#160;<a class="el" href="classUGamePlaySettings.html#a1cd44eff27b36bc4e137ea3b0f3f2fd5">UGamePlaySettings</a></li>
-<li>mTileActor&#160;:&#160;<a class="el" href="structFTileActorCommitResult.html#a6267dc2f471725f2409191bff0717797">FTileActorCommitResult</a></li>
-<li>mTileCommitResult&#160;:&#160;<a class="el" href="structFEffectCommitResult.html#a34c4eb156b9009312c13305745931898">FEffectCommitResult</a></li>
-<li>mTileMap&#160;:&#160;<a class="el" href="classUSRPGCombatSubsystem.html#a48bb0d1eed5015e1a450cc8949a888c8">USRPGCombatSubsystem</a></li>
+<li>mTargetEventTag&#160;:&#160;<a class="el" href="classUAnimNotify__EventTrigger.html#a76751802e3ca96bee93ddacc21388abb">UAnimNotify_EventTrigger</a></li>
+<li>mTargetIndex&#160;:&#160;<a class="el" href="structFSRPGSkillCastCommand.html#a50d091ac93da9462ca9105da74af87cc">FSRPGSkillCastCommand</a>, <a class="el" href="classUSRPGMoveBuildAction.html#aa12877f3d51a43c4d734d0bea7fb3026">USRPGMoveBuildAction</a>, <a class="el" href="classUSRPGSkillBuildAction.html#a343b854ff8e0cbe54071a0027cd70b48">USRPGSkillBuildAction</a></li>
+<li>mTargetIndexFilter&#160;:&#160;<a class="el" href="structFSkillMotionLayer.html#ae77743f3f03ed05e2eefc3e86d7d608a">FSkillMotionLayer</a></li>
+<li>mTargeting&#160;:&#160;<a class="el" href="structFSkillDetailUI.html#a229f3f97560cc8715625a29913f1f4e7">FSkillDetailUI</a>, <a class="el" href="structFSkillUI.html#ac7ab6004dc271182add79c48ccc24d68">FSkillUI</a></li>
+<li>mTargetOwner&#160;:&#160;<a class="el" href="structFSRPGTurnUnregisterRequest.html#a7323591dd7c4acbedca7c2cf3f07e544">FSRPGTurnUnregisterRequest</a></li>
+<li>mTargetQuantifier&#160;:&#160;<a class="el" href="classUStaticPassiveData.html#ad0e3313c3fb41b3c9d3bf995cfe0bc7d">UStaticPassiveData</a></li>
+<li>mTargets&#160;:&#160;<a class="el" href="structFPassiveActivateContext.html#a797627b12aa8bc560fda01f0e94491a6">FPassiveActivateContext</a></li>
+<li>mTargetSnapshots&#160;:&#160;<a class="el" href="structFPassiveActivateContext.html#a3452d82c39d607045ea1399ac82114b1">FPassiveActivateContext</a></li>
+<li>mTargetTileIndex&#160;:&#160;<a class="el" href="structFActiveSkillContext.html#af41741912cbe1a7b3e9a0929ac3ec486">FActiveSkillContext</a></li>
+<li>mTargetTileIndexes&#160;:&#160;<a class="el" href="structFActiveSkillContext.html#af9996139396ce408585985e7ecb453a6">FActiveSkillContext</a></li>
+<li>mTargetTurnContext&#160;:&#160;<a class="el" href="structFSRPGTurnUnregisterRequest.html#a4b898fc9ee9952d57d274ff45164e825">FSRPGTurnUnregisterRequest</a></li>
+<li>mTargetUnitId&#160;:&#160;<a class="el" href="structFCombatQueueNode.html#a2cf3d5cbf109ac447e20277a5a656210">FCombatQueueNode</a></li>
+<li>mTeamAttitudeFilter&#160;:&#160;<a class="el" href="structFSkillMotionLayer.html#a730d3c303121a6a1d9b0ba7ce652af3f">FSkillMotionLayer</a></li>
+<li>mTeamRelations&#160;:&#160;<a class="el" href="classUGamePlaySettings.html#adc2c86c245afaebc21796fc5b883bd72">UGamePlaySettings</a></li>
+<li>mText&#160;:&#160;<a class="el" href="structFCombatFloatingLogRequest.html#a88c513e639137277a36cb44bb1fbdf32">FCombatFloatingLogRequest</a></li>
+<li>mTexture&#160;:&#160;<a class="el" href="structFStaticDiceFaceData.html#ae4c5a707419e3e02710d937c7534a5ae">FStaticDiceFaceData</a></li>
+<li>mThreshold&#160;:&#160;<a class="el" href="classUStaticPassiveData.html#af69273cd04337ed80f0fd16677b8dcd7">UStaticPassiveData</a></li>
+<li>mThresholdValue&#160;:&#160;<a class="el" href="structFPassiveCondition.html#ae038ed8c5e34ed066ac3dff2789bc29f">FPassiveCondition</a></li>
+<li>mTile&#160;:&#160;<a class="el" href="structFCombatUnitState.html#a9b86374e2b2123b528ae470aeec909b4">FCombatUnitState</a>, <a class="el" href="structFUnitUI.html#a87ee8de683acc90a96c0d1da6ed79110">FUnitUI</a></li>
+<li>mTileBaseStyle&#160;:&#160;<a class="el" href="classATileMap.html#aeede319d4d4c89215f6591b0930c9577">ATileMap</a></li>
+<li>mTileBorderStyle&#160;:&#160;<a class="el" href="classATileMap.html#a32738e7e6aaa18c8883abf7a88bdc812">ATileMap</a></li>
+<li>mTileBorderWidth&#160;:&#160;<a class="el" href="classATileMap.html#a13956b09afc195f93de9fef8d88f779d">ATileMap</a></li>
+<li>mTileEffectEventLogs&#160;:&#160;<a class="el" href="structFSRPGBoardActorEventLog.html#adf43e9fce1ea41607627eda514e78e65">FSRPGBoardActorEventLog</a></li>
+<li>mTileLayerFlags&#160;:&#160;<a class="el" href="classUBoardActorModel.html#a0c77c192549f8933d4a14e2ed8069369">UBoardActorModel</a></li>
+<li>mTileMap&#160;:&#160;<a class="el" href="classUSRPGCombatModel.html#a4c706e2574434dc5d67a0d539d5fa4dd">USRPGCombatModel</a></li>
 <li>mTileMaterial&#160;:&#160;<a class="el" href="classATileMap.html#acf40130a4f009f6ed34e6403c06662ff">ATileMap</a></li>
 <li>mTileMesh&#160;:&#160;<a class="el" href="classATileMap.html#a3ce380ac5a2fce334555e09b7ca7753e">ATileMap</a></li>
 <li>mTileMeshComponent&#160;:&#160;<a class="el" href="classATileMap.html#acb40f4e6eae1d8e41d101fb79204b913">ATileMap</a></li>
+<li>mTiles&#160;:&#160;<a class="el" href="classUTileMapModel.html#a2ea724e38a94aed7c7fb260143ff569e">UTileMapModel</a></li>
 <li>mTileSize&#160;:&#160;<a class="el" href="classATileMap.html#a9ca2d5e153f0564f4de1ff50fce2843a">ATileMap</a></li>
+<li>mTileToWorldLocationDelegate&#160;:&#160;<a class="el" href="classUTileMapModel.html#ac0c680a44b0870ee95b148a9861eba8f">UTileMapModel</a></li>
+<li>mTileToWorldTransformDelegate&#160;:&#160;<a class="el" href="classUTileMapModel.html#a38ec391e9bd0bcf8686b0a9f99f26257">UTileMapModel</a></li>
 <li>mTileVisualScale&#160;:&#160;<a class="el" href="classATileMap.html#a652e79e7a6f50b1e70d91841d87161d7">ATileMap</a></li>
-<li>mTitle&#160;:&#160;<a class="el" href="structFMapRoomView.html#a6f43c665fdc9a82c1e8463de6589432d">FMapRoomView</a></li>
+<li>mTimerHandle_Move&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#a37c3218aeb1bb781db939d01b11ae78b">UCameraMovementComponent</a></li>
+<li>mTimerHandle_Zoom&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#a4ed84214d82132a50ab6c48e5eb43c44">UCameraMovementComponent</a></li>
+<li>mTitle&#160;:&#160;<a class="el" href="structFMapRoomView.html#a6f43c665fdc9a82c1e8463de6589432d">FMapRoomView</a>, <a class="el" href="structFRewardUI.html#a6700527b998e5129555b7550114c5b6e">FRewardUI</a></li>
+<li>mTitleBackgroundVideoPath&#160;:&#160;<a class="el" href="classUGamePlaySettings.html#a347fd25ed270b3e7088e475d1489ab25">UGamePlaySettings</a></li>
+<li>mTitleText&#160;:&#160;<a class="el" href="classUInventoryUIWidgetBase.html#a44da3987fa30c7caaee9256e860d1d14">UInventoryUIWidgetBase</a>, <a class="el" href="classUShopUIWidgetBase.html#ac6ce639f3d78fe3b74fda963cd722e39">UShopUIWidgetBase</a></li>
 <li>mTopShopColumnOffset&#160;:&#160;<a class="el" href="structFGlobalStageBuildSetting.html#a76986f18b6393a7c0ab85746660784e3">FGlobalStageBuildSetting</a></li>
+<li>mTotalMagnitude&#160;:&#160;<a class="el" href="structFTacticalEffectModifiedAttribute.html#a30437fd725c7366d2c3d78a17fe954e0">FTacticalEffectModifiedAttribute</a>, <a class="el" href="structFTacticalEffectModifiedTag.html#a4f2be3238c71c394a2bba41f3965e3b8">FTacticalEffectModifiedTag</a></li>
+<li>mTouchStates&#160;:&#160;<a class="el" href="classACombatCameraPawn.html#a23469ed9678ab6a68de45ceaf635699b">ACombatCameraPawn</a></li>
 <li>mTransform&#160;:&#160;<a class="el" href="structFEnemyUnitPlacementData.html#a5c16f8275c6d73071142ab5561b40bb0">FEnemyUnitPlacementData</a>, <a class="el" href="structFObstaclePlacementData.html#ad11567b16081b0635cb82b9051fae7dd">FObstaclePlacementData</a></li>
 <li>mTreasureBoxClass&#160;:&#160;<a class="el" href="classUStaticTreasureRoomSpawnData.html#a9e8f57e602932a9e65369a2285e30175">UStaticTreasureRoomSpawnData</a></li>
 <li>mTreasureColumnInterval&#160;:&#160;<a class="el" href="structFGlobalStageBuildSetting.html#af0821b880604582d0c5f4e2c00af05f4">FGlobalStageBuildSetting</a></li>
 <li>mTreasureGameMode&#160;:&#160;<a class="el" href="classUGamePlaySettings.html#aa85096aa5ee60aea3937f7b3e3e0bd29">UGamePlaySettings</a></li>
 <li>mTreasureRewardMoney&#160;:&#160;<a class="el" href="structFGlobalStageBuildSetting.html#aff1eddce44b1bfa80bc9ef9cdf929264">FGlobalStageBuildSetting</a></li>
-<li>mTurnContexts&#160;:&#160;<a class="el" href="classUSRPGCombatSubsystem.html#a58c5576eeaa75b85a2ac3d399dc745d9">USRPGCombatSubsystem</a></li>
-<li>mTurnPhase&#160;:&#160;<a class="el" href="structFSRPGTurnContext.html#ae46f66500b18cf14c4154d5a1fe81fa5">FSRPGTurnContext</a></li>
+<li>mTreasureRoomBGM&#160;:&#160;<a class="el" href="classUStaticStageSpawnData.html#af66b49d23fff3fbeccc70ee9740ae693">UStaticStageSpawnData</a></li>
+<li>mTurnContextMap&#160;:&#160;<a class="el" href="classUSRPGCombatModel.html#a14074260f7b2050aa03eba40b8df33c8">USRPGCombatModel</a></li>
+<li>mTurnContextMaxIndex&#160;:&#160;<a class="el" href="classUSRPGCombatModel.html#a033c31c9f1166860498f592ce15324ba">USRPGCombatModel</a></li>
+<li>mTurnContextOrder&#160;:&#160;<a class="el" href="classUSRPGCombatModel.html#aa6c8e1dac0bb3a020388ef3fc17af1d1">USRPGCombatModel</a></li>
+<li>mTurnDefaultCommandHandlers&#160;:&#160;<a class="el" href="classUSRPGTurnContext.html#a2755c0dc6ceef14c8f6664757c32be6d">USRPGTurnContext</a></li>
+<li>mTurnEventLogs&#160;:&#160;<a class="el" href="classUGameEventLogger.html#a51467258152db19c5d3631d72ad8c2bc">UGameEventLogger</a>, <a class="el" href="classUSimulationEventLogger.html#a3c48e3e9f2a2263b4f8076f43e7e49df">USimulationEventLogger</a></li>
+<li>mTurnId&#160;:&#160;<a class="el" href="classUSRPGTurnContext.html#af39b7395d3f077fef5522a76b367f584">USRPGTurnContext</a></li>
+<li>mTurnOrderUnitIds&#160;:&#160;<a class="el" href="structFTurnUI.html#a6c5e556c1e8609e8e69cae3f753b1fdf">FTurnUI</a></li>
+<li>mTurnPhase&#160;:&#160;<a class="el" href="classUSRPGTurnContext.html#a8649a7915b48509a8f644891973f581f">USRPGTurnContext</a></li>
 <li>mTurnPriority&#160;:&#160;<a class="el" href="structFEnemyUnitPlacementData.html#a920d2c3d5edb88a52adf360fd580610f">FEnemyUnitPlacementData</a></li>
-<li>mTurnResult&#160;:&#160;<a class="el" href="structFSRPGTurnContext.html#a65400380cceef61e927971427f8b0b60">FSRPGTurnContext</a></li>
+<li>mTurnResult&#160;:&#160;<a class="el" href="classUSRPGTurnContext.html#ae14014f0f4909409468677677206448b">USRPGTurnContext</a></li>
 <li>mType&#160;:&#160;<a class="el" href="structFMapRoomView.html#a21314255489450d772914b538b86e6c8">FMapRoomView</a>, <a class="el" href="structFRoom.html#a0ab8e199a64dba4411a8b540f8fbc7cc">FRoom</a></li>
-<li>mUnitAttributeSet&#160;:&#160;<a class="el" href="classAUnit.html#a03a98842a6b96f01cede904a3c29ab12">AUnit</a></li>
-<li>mUnitCommitResult&#160;:&#160;<a class="el" href="structFTileActorCommitResult.html#aa4388a93dd3b5bef84c27052a6a06bbc">FTileActorCommitResult</a></li>
-<li>mUnits&#160;:&#160;<a class="el" href="classUSRPGCombatSubsystem.html#a262719a1dcfecb67ba886faede0a41b2">USRPGCombatSubsystem</a></li>
+<li>mUIModel&#160;:&#160;<a class="el" href="classUCombatUIWidgetBase.html#aa6f77c23912de9c60da66b0403978f35">UCombatUIWidgetBase</a>, <a class="el" href="classUInventoryUIWidgetBase.html#a808b8071fc7ee6c71ac18bf58a15397e">UInventoryUIWidgetBase</a>, <a class="el" href="classURewardUIWidgetBase.html#a9b51eadfe809153ca54922bbe2add7a5">URewardUIWidgetBase</a>, <a class="el" href="classUShopUIWidgetBase.html#ae173c1c7df91f9c7cf0d5dfc319be2e0">UShopUIWidgetBase</a></li>
+<li>mUiVolume&#160;:&#160;<a class="el" href="structFSettingsPanelValueModel.html#a6317be7bbf52180147f1dcd2e573d695">FSettingsPanelValueModel</a></li>
+<li>MultiplyMods()&#160;:&#160;<a class="el" href="structFTacticalAggregator.html#af500687ed91599e11a576ec1d2c3d006">FTacticalAggregator</a></li>
+<li>mUnitActorModelClass&#160;:&#160;<a class="el" href="structFSRPGTurnEventLog.html#a1febf546b4b269d04e51a85614d93e40">FSRPGTurnEventLog</a></li>
+<li>mUnitAttributeSet&#160;:&#160;<a class="el" href="classUEnemyUnitModel.html#ab1cc5324af1a940966d01c7c98f4d95d">UEnemyUnitModel</a></li>
+<li>mUnitId&#160;:&#160;<a class="el" href="structFUnitDetailUI.html#a07c519be9eaf317013ada79ac07aec31">FUnitDetailUI</a>, <a class="el" href="structFUnitUI.html#a37a751721454ef8920aedfc46e961fe8">FUnitUI</a></li>
+<li>mUnitModel&#160;:&#160;<a class="el" href="classAUnit.html#a5880adad83e756be59396698b3658f23">AUnit</a></li>
+<li>mUnits&#160;:&#160;<a class="el" href="classUSRPGCombatModel.html#a68b398495887861bedf1a7c0dd2f902f">USRPGCombatModel</a></li>
+<li>mUp&#160;:&#160;<a class="el" href="structRDDicePolyhedron_1_1FDiceFace.html#afd2835b51ade09c56e4034fbc7f79a40">RDDicePolyhedron::FDiceFace</a></li>
+<li>mUseAdditiveMontage&#160;:&#160;<a class="el" href="classUBoardActorAnimInstance.html#ac7b02006d76a184e775ec189165d4d01">UBoardActorAnimInstance</a></li>
+<li>mUseKoreanLanguage&#160;:&#160;<a class="el" href="structFSettingsPanelValueModel.html#a8b2f217321df3d2bf64609bad953ca14">FSettingsPanelValueModel</a></li>
 <li>mUserLog&#160;:&#160;<a class="el" href="classUUserPersistData.html#a498fe458681926a27f8ee4ab1c77122e">UUserPersistData</a></li>
 <li>mUserName&#160;:&#160;<a class="el" href="classUUserPersistData.html#a62a0af66e9447d2a8336bc65c396f76d">UUserPersistData</a></li>
 <li>mUserPersistData&#160;:&#160;<a class="el" href="classUPersistentDataSubsystem.html#a7697c454e9c29eac2396534ad23f501e">UPersistentDataSubsystem</a></li>
 <li>mUserSaveGame&#160;:&#160;<a class="el" href="classUSaveGameSubsystem.html#a8fc5d54e2637371d9ce9b6c548f8aacf">USaveGameSubsystem</a></li>
+<li>mUsesSharedMedia&#160;:&#160;<a class="el" href="structFTitleMenuBackgroundRuntimeAssets.html#ae2a2e74d893bd71b41c6a0c5c33b699d">FTitleMenuBackgroundRuntimeAssets</a></li>
+<li>mValue&#160;:&#160;<a class="el" href="structFStaticDiceFaceData.html#aff65b21d12fae3b2fea0c788f1171ff6">FStaticDiceFaceData</a>, <a class="el" href="structFTacticalAttributeSetInitterDiscreteLevels_1_1FAttributeDefaultValueList_1_1FOffsetValuePair.html#a303a63ecc44a1c089c59cfdd8deda949">FTacticalAttributeSetInitterDiscreteLevels::FAttributeDefaultValueList::FOffsetValuePair</a></li>
+<li>mValueFaceIndices&#160;:&#160;<a class="el" href="structRDDicePolyhedron_1_1FDicePolyhedron.html#ac84a6770c2b245da4753c6e3eb7fcd1b">RDDicePolyhedron::FDicePolyhedron</a></li>
+<li>mValueText&#160;:&#160;<a class="el" href="structFUnitHpBarWidget.html#a96ab5a7cd1fd784ee70b673b92def9af">FUnitHpBarWidget</a></li>
+<li>mVertexIndices&#160;:&#160;<a class="el" href="structRDDicePolyhedron_1_1FDiceFace.html#a5eb365da3d433bcf4388c75fdc28984e">RDDicePolyhedron::FDiceFace</a></li>
+<li>mVertices&#160;:&#160;<a class="el" href="structRDDicePolyhedron_1_1FDicePolyhedron.html#ac41413b670bfde7ca12dbd06e6d4c0d2">RDDicePolyhedron::FDicePolyhedron</a></li>
+<li>mVibrationEnabled&#160;:&#160;<a class="el" href="structFSettingsPanelValueModel.html#a0f0d37205c32015c196c32c58be0e652">FSettingsPanelValueModel</a></li>
+<li>mVideoBrush&#160;:&#160;<a class="el" href="structFTitleMenuBackgroundRuntimeAssets.html#a310da322f48e9740aef45d7ef75b1a4a">FTitleMenuBackgroundRuntimeAssets</a></li>
+<li>mVideoNativeSize&#160;:&#160;<a class="el" href="structFTitleMenuBackgroundRuntimeAssets.html#a8e6167c11d53c2169f249f4a57fac686">FTitleMenuBackgroundRuntimeAssets</a></li>
+<li>mView&#160;:&#160;<a class="el" href="classUObjectModel.html#adceab5f34e04d308936e5cf147032f85">UObjectModel</a></li>
+<li>mViewActor&#160;:&#160;<a class="el" href="structFUnitUI.html#a440b8caf53e7f667f2c608502862ff0f">FUnitUI</a></li>
+<li>mViewClass&#160;:&#160;<a class="el" href="structFSubsystemModelViewMapping.html#a2ea35b61a79faaa4547cc89e7e4a46b9">FSubsystemModelViewMapping</a>, <a class="el" href="structFWorldModelViewMapping.html#a61a8ab4ede53f0a96c02cd8d7d00f53b">FWorldModelViewMapping</a>, <a class="el" href="classUStaticObstacleSpawnData.html#a4dafe2af3bf1d78b570d64a3c2f620c1">UStaticObstacleSpawnData</a></li>
 <li>mViewportZOrder&#160;:&#160;<a class="el" href="classURDUserWidget.html#ae62d782bb431f6a764b2aae9a0e3d3f8">URDUserWidget</a></li>
+<li>mVisible&#160;:&#160;<a class="el" href="structFCarouselItemLayout.html#a964ab07ef00f5c74347276f8abbd99b2">FCarouselItemLayout</a></li>
 <li>mVisited&#160;:&#160;<a class="el" href="structFMapRoomView.html#a86345a5fbdf74b7758c6b4fc80185e24">FMapRoomView</a></li>
+<li>mVolumes&#160;:&#160;<a class="el" href="classUOptionPersistData.html#a3d47945018c230dfe9f216eed76dd294">UOptionPersistData</a></li>
 <li>mWaitExternalWorkOnTransition&#160;:&#160;<a class="el" href="classARDGameModeBase.html#a924bd93b7009c5367b5286791cf82801">ARDGameModeBase</a></li>
 <li>mWasNextRoomPreloadRequested&#160;:&#160;<a class="el" href="classARDGameModeBase.html#a8d6bf3433470121a19b56b878527f587">ARDGameModeBase</a></li>
 <li>mWasSelected&#160;:&#160;<a class="el" href="structFRoom.html#a27406e13b42c987eb3f4fe6e8bc24c78">FRoom</a></li>
 <li>mWeights&#160;:&#160;<a class="el" href="structFRarityRate.html#a1d5ac1d3e105a7fdbe1d695fd46bb580">FRarityRate</a>, <a class="el" href="structFRoomBuildRate.html#aeeb0417249620e87ca623c7366873dd1">FRoomBuildRate</a></li>
-<li>mWidth&#160;:&#160;<a class="el" href="classATileMap.html#a83e09d2fa0b282497800e4867362c435">ATileMap</a></li>
+<li>mWidth&#160;:&#160;<a class="el" href="classUTileMapModel.html#a5afc6ea1e713dcb1c3f84f431224f2df">UTileMapModel</a></li>
+<li>mWorld&#160;:&#160;<a class="el" href="structFScopedTacticalAggregatorOnDirtyBatch.html#a57b92db8d36b3cfbeffe80145d53b906">FScopedTacticalAggregatorOnDirtyBatch</a></li>
+<li>mWorldCameraModel&#160;:&#160;<a class="el" href="classUWorldCameraSubsystem.html#a2a1805c2e91e9ddde1d5b74f61ac803c">UWorldCameraSubsystem</a></li>
+<li>mWorldLocation&#160;:&#160;<a class="el" href="structFCombatFloatingLogRequest.html#ae32739325d6170394140510d539bc21b">FCombatFloatingLogRequest</a>, <a class="el" href="structFUnitUI.html#a2cc5d9cdd07b2faab8ee732e312e414d">FUnitUI</a></li>
+<li>mWorldModelViewMappings&#160;:&#160;<a class="el" href="classUGamePlaySettings.html#a1ce4e601b9595c758b1fd09b45e2a905">UGamePlaySettings</a></li>
+<li>mWorldToTileIndexDelegate&#160;:&#160;<a class="el" href="classUTileMapModel.html#a0ea7e666414b1b2365386142cc403e9b">UTileMapModel</a></li>
 <li>mWorldWidgetClasses&#160;:&#160;<a class="el" href="classUGamePlaySettings.html#a27792886c7229de522cd85b17a959c41">UGamePlaySettings</a></li>
 <li>mWorldWidgets&#160;:&#160;<a class="el" href="classARDGameModeBase.html#ae71d0190b0be104ddbd8df1c970c3009">ARDGameModeBase</a>, <a class="el" href="classUWorldWidgetSubsystem.html#a7d0d92e05efefc0cb6381f3310edb4fd">UWorldWidgetSubsystem</a></li>
 <li>mX&#160;:&#160;<a class="el" href="structFTileIndex.html#a4c88e6810e0e88b9b25aa1e25944caa9">FTileIndex</a></li>
 <li>mY&#160;:&#160;<a class="el" href="structFTileIndex.html#a93b045617bfb164a8a081881292e39ff">FTileIndex</a></li>
+<li>mZoomDuration&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#a2f9fb0186e889c06b1007be38e2b4310">UCameraMovementComponent</a></li>
+<li>mZoomExp&#160;:&#160;<a class="el" href="classUCameraMovementComponent.html#ae8738e7ccab37ebd7bb8150474739429">UCameraMovementComponent</a></li>
+<li>mZOrder&#160;:&#160;<a class="el" href="structFCarouselItemLayout.html#a095000cda8960058421b1a6a83dbfda4">FCarouselItemLayout</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

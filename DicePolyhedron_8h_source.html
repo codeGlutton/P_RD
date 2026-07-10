@@ -1,0 +1,157 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/Actor/Dice/DicePolyhedron.h 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('DicePolyhedron_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">DicePolyhedron.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="DicePolyhedron_8h.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*****************************************************************/</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &quot;<a class="code" href="RDMinimal_8h.html">RDMinimal.h</a>&quot;</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceRDDicePolyhedron.html">RDDicePolyhedron</a></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>{</div>
+<div class="foldopen" id="foldopen00018" data-start="{" data-end="};">
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno"><a class="line" href="structRDDicePolyhedron_1_1FDiceFace.html">   18</a></span>    <span class="keyword">struct </span><a class="code hl_struct" href="structRDDicePolyhedron_1_1FDiceFace.html">FDiceFace</a></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    {</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno"><a class="line" href="structRDDicePolyhedron_1_1FDiceFace.html#a5eb365da3d433bcf4388c75fdc28984e">   20</a></span>        TArray&lt;int32&gt; <a class="code hl_variable" href="structRDDicePolyhedron_1_1FDiceFace.html#a5eb365da3d433bcf4388c75fdc28984e">mVertexIndices</a>;            <span class="comment">// 면을 이루는 정점 인덱스(바깥쪽 CCW로 정렬됨)</span></div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno"><a class="line" href="structRDDicePolyhedron_1_1FDiceFace.html#a5c743c5e3ab55c9df664973f93e9477a">   21</a></span>        FVector <a class="code hl_variable" href="structRDDicePolyhedron_1_1FDiceFace.html#a5c743c5e3ab55c9df664973f93e9477a">mCenter</a> = FVector::ZeroVector;   <span class="comment">// 면 중심(정점 평균)</span></div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno"><a class="line" href="structRDDicePolyhedron_1_1FDiceFace.html#a62daec8e52048cc4f08b2e011a290a92">   22</a></span>        FVector <a class="code hl_variable" href="structRDDicePolyhedron_1_1FDiceFace.html#a62daec8e52048cc4f08b2e011a290a92">mNormal</a> = FVector::ZeroVector;   <span class="comment">// 바깥 법선(단위)</span></div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno"><a class="line" href="structRDDicePolyhedron_1_1FDiceFace.html#afd2835b51ade09c56e4034fbc7f79a40">   23</a></span>        FVector <a class="code hl_variable" href="structRDDicePolyhedron_1_1FDiceFace.html#afd2835b51ade09c56e4034fbc7f79a40">mUp</a> = FVector::ZeroVector;        <span class="comment">// 면 평면 내 &#39;위&#39; 방향(숫자 정렬용, 단위)</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    };</div>
+</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span> </div>
+<div class="foldopen" id="foldopen00027" data-start="{" data-end="};">
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno"><a class="line" href="structRDDicePolyhedron_1_1FDicePolyhedron.html">   27</a></span>    <span class="keyword">struct </span><a class="code hl_struct" href="structRDDicePolyhedron_1_1FDicePolyhedron.html">FDicePolyhedron</a></div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    {</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno"><a class="line" href="structRDDicePolyhedron_1_1FDicePolyhedron.html#ac41413b670bfde7ca12dbd06e6d4c0d2">   29</a></span>        TArray&lt;FVector&gt; <a class="code hl_variable" href="structRDDicePolyhedron_1_1FDicePolyhedron.html#ac41413b670bfde7ca12dbd06e6d4c0d2">mVertices</a>;</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno"><a class="line" href="structRDDicePolyhedron_1_1FDicePolyhedron.html#a9083224477c28edf07ccc87e80ae1ade">   30</a></span>        TArray&lt;FDiceFace&gt; <a class="code hl_variable" href="structRDDicePolyhedron_1_1FDicePolyhedron.html#a9083224477c28edf07ccc87e80ae1ade">mFaces</a>;</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno"><a class="line" href="structRDDicePolyhedron_1_1FDicePolyhedron.html#ac84a6770c2b245da4753c6e3eb7fcd1b">   31</a></span>        TArray&lt;int32&gt; <a class="code hl_variable" href="structRDDicePolyhedron_1_1FDicePolyhedron.html#ac84a6770c2b245da4753c6e3eb7fcd1b">mValueFaceIndices</a>;</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno"><a class="line" href="structRDDicePolyhedron_1_1FDicePolyhedron.html#a414692d751cc9dbc7aa6fc8dd6555ab3">   33</a></span>        <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="structRDDicePolyhedron_1_1FDicePolyhedron.html#a414692d751cc9dbc7aa6fc8dd6555ab3">GetValueFaceCount</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> <a class="code hl_variable" href="structRDDicePolyhedron_1_1FDicePolyhedron.html#ac84a6770c2b245da4753c6e3eb7fcd1b">mValueFaceIndices</a>.Num(); }</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno"><a class="line" href="structRDDicePolyhedron_1_1FDicePolyhedron.html#ae5ecb5b4fbb7554ad09216de3078f4be">   34</a></span>        <span class="keyword">const</span> <a class="code hl_struct" href="structRDDicePolyhedron_1_1FDiceFace.html">FDiceFace</a>&amp; <a class="code hl_function" href="structRDDicePolyhedron_1_1FDicePolyhedron.html#ae5ecb5b4fbb7554ad09216de3078f4be">GetValueFace</a>(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> ValueFaceIndex)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> <a class="code hl_variable" href="structRDDicePolyhedron_1_1FDicePolyhedron.html#a9083224477c28edf07ccc87e80ae1ade">mFaces</a>[<a class="code hl_variable" href="structRDDicePolyhedron_1_1FDicePolyhedron.html#ac84a6770c2b245da4753c6e3eb7fcd1b">mValueFaceIndices</a>[ValueFaceIndex]]; }</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    };</div>
+</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span> </div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>    <span class="keyword">const</span> FDicePolyhedron&amp; <a class="code hl_function" href="namespaceRDDicePolyhedron.html#abff3e20c8fc74f0d688af2affcb68d74">Get</a>(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> FaceCount);</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>}</div>
+<div class="ttc" id="aRDMinimal_8h_html"><div class="ttname"><a href="RDMinimal_8h.html">RDMinimal.h</a></div><div class="ttdoc">RD 프로젝트 전 영역에서 사용되는 최소한의 포함 헤더</div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_ada104807b93ac7cd59dac80d98ba857b"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a></div><div class="ttdeci">int32</div><div class="ttdef"><b>Definition</b> <a href="RoomTransitionSubsystem_8h_source.html#l00021">RoomTransitionSubsystem.h:21</a></div></div>
+<div class="ttc" id="anamespaceRDDicePolyhedron_html"><div class="ttname"><a href="namespaceRDDicePolyhedron.html">RDDicePolyhedron</a></div><div class="ttdef"><b>Definition</b> <a href="CombatDicePreviewActor_8h_source.html#l00014">CombatDicePreviewActor.h:14</a></div></div>
+<div class="ttc" id="anamespaceRDDicePolyhedron_html_abff3e20c8fc74f0d688af2affcb68d74"><div class="ttname"><a href="namespaceRDDicePolyhedron.html#abff3e20c8fc74f0d688af2affcb68d74">RDDicePolyhedron::Get</a></div><div class="ttdeci">const FDicePolyhedron &amp; Get(int32 FaceCount)</div><div class="ttdoc">면 수에 해당하는 다면체를 돌려준다(최초 1회 생성 후 캐시).</div><div class="ttdef"><b>Definition</b> <a href="DicePolyhedron_8cpp_source.html#l00262">DicePolyhedron.cpp:262</a></div></div>
+<div class="ttc" id="astructRDDicePolyhedron_1_1FDiceFace_html"><div class="ttname"><a href="structRDDicePolyhedron_1_1FDiceFace.html">RDDicePolyhedron::FDiceFace</a></div><div class="ttdoc">다면체 한 면. 메시 삼각화 + 면 숫자 배치/안착에 필요한 정보.</div><div class="ttdef"><b>Definition</b> <a href="DicePolyhedron_8h_source.html#l00018">DicePolyhedron.h:19</a></div></div>
+<div class="ttc" id="astructRDDicePolyhedron_1_1FDiceFace_html_a5c743c5e3ab55c9df664973f93e9477a"><div class="ttname"><a href="structRDDicePolyhedron_1_1FDiceFace.html#a5c743c5e3ab55c9df664973f93e9477a">RDDicePolyhedron::FDiceFace::mCenter</a></div><div class="ttdeci">FVector mCenter</div><div class="ttdef"><b>Definition</b> <a href="DicePolyhedron_8h_source.html#l00021">DicePolyhedron.h:21</a></div></div>
+<div class="ttc" id="astructRDDicePolyhedron_1_1FDiceFace_html_a5eb365da3d433bcf4388c75fdc28984e"><div class="ttname"><a href="structRDDicePolyhedron_1_1FDiceFace.html#a5eb365da3d433bcf4388c75fdc28984e">RDDicePolyhedron::FDiceFace::mVertexIndices</a></div><div class="ttdeci">TArray&lt; int32 &gt; mVertexIndices</div><div class="ttdef"><b>Definition</b> <a href="DicePolyhedron_8h_source.html#l00020">DicePolyhedron.h:20</a></div></div>
+<div class="ttc" id="astructRDDicePolyhedron_1_1FDiceFace_html_a62daec8e52048cc4f08b2e011a290a92"><div class="ttname"><a href="structRDDicePolyhedron_1_1FDiceFace.html#a62daec8e52048cc4f08b2e011a290a92">RDDicePolyhedron::FDiceFace::mNormal</a></div><div class="ttdeci">FVector mNormal</div><div class="ttdef"><b>Definition</b> <a href="DicePolyhedron_8h_source.html#l00022">DicePolyhedron.h:22</a></div></div>
+<div class="ttc" id="astructRDDicePolyhedron_1_1FDiceFace_html_afd2835b51ade09c56e4034fbc7f79a40"><div class="ttname"><a href="structRDDicePolyhedron_1_1FDiceFace.html#afd2835b51ade09c56e4034fbc7f79a40">RDDicePolyhedron::FDiceFace::mUp</a></div><div class="ttdeci">FVector mUp</div><div class="ttdef"><b>Definition</b> <a href="DicePolyhedron_8h_source.html#l00023">DicePolyhedron.h:23</a></div></div>
+<div class="ttc" id="astructRDDicePolyhedron_1_1FDicePolyhedron_html"><div class="ttname"><a href="structRDDicePolyhedron_1_1FDicePolyhedron.html">RDDicePolyhedron::FDicePolyhedron</a></div><div class="ttdoc">다면체 전체(정점 + 면 목록).</div><div class="ttdef"><b>Definition</b> <a href="DicePolyhedron_8h_source.html#l00027">DicePolyhedron.h:28</a></div></div>
+<div class="ttc" id="astructRDDicePolyhedron_1_1FDicePolyhedron_html_a414692d751cc9dbc7aa6fc8dd6555ab3"><div class="ttname"><a href="structRDDicePolyhedron_1_1FDicePolyhedron.html#a414692d751cc9dbc7aa6fc8dd6555ab3">RDDicePolyhedron::FDicePolyhedron::GetValueFaceCount</a></div><div class="ttdeci">int32 GetValueFaceCount() const</div><div class="ttdef"><b>Definition</b> <a href="DicePolyhedron_8h_source.html#l00033">DicePolyhedron.h:33</a></div></div>
+<div class="ttc" id="astructRDDicePolyhedron_1_1FDicePolyhedron_html_a9083224477c28edf07ccc87e80ae1ade"><div class="ttname"><a href="structRDDicePolyhedron_1_1FDicePolyhedron.html#a9083224477c28edf07ccc87e80ae1ade">RDDicePolyhedron::FDicePolyhedron::mFaces</a></div><div class="ttdeci">TArray&lt; FDiceFace &gt; mFaces</div><div class="ttdef"><b>Definition</b> <a href="DicePolyhedron_8h_source.html#l00030">DicePolyhedron.h:30</a></div></div>
+<div class="ttc" id="astructRDDicePolyhedron_1_1FDicePolyhedron_html_ac41413b670bfde7ca12dbd06e6d4c0d2"><div class="ttname"><a href="structRDDicePolyhedron_1_1FDicePolyhedron.html#ac41413b670bfde7ca12dbd06e6d4c0d2">RDDicePolyhedron::FDicePolyhedron::mVertices</a></div><div class="ttdeci">TArray&lt; FVector &gt; mVertices</div><div class="ttdef"><b>Definition</b> <a href="DicePolyhedron_8h_source.html#l00029">DicePolyhedron.h:29</a></div></div>
+<div class="ttc" id="astructRDDicePolyhedron_1_1FDicePolyhedron_html_ac84a6770c2b245da4753c6e3eb7fcd1b"><div class="ttname"><a href="structRDDicePolyhedron_1_1FDicePolyhedron.html#ac84a6770c2b245da4753c6e3eb7fcd1b">RDDicePolyhedron::FDicePolyhedron::mValueFaceIndices</a></div><div class="ttdeci">TArray&lt; int32 &gt; mValueFaceIndices</div><div class="ttdef"><b>Definition</b> <a href="DicePolyhedron_8h_source.html#l00031">DicePolyhedron.h:31</a></div></div>
+<div class="ttc" id="astructRDDicePolyhedron_1_1FDicePolyhedron_html_ae5ecb5b4fbb7554ad09216de3078f4be"><div class="ttname"><a href="structRDDicePolyhedron_1_1FDicePolyhedron.html#ae5ecb5b4fbb7554ad09216de3078f4be">RDDicePolyhedron::FDicePolyhedron::GetValueFace</a></div><div class="ttdeci">const FDiceFace &amp; GetValueFace(int32 ValueFaceIndex) const</div><div class="ttdef"><b>Definition</b> <a href="DicePolyhedron_8h_source.html#l00034">DicePolyhedron.h:34</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_b0f6477e5460f689b7d3a9cfbd931fdd.html">Actor</a></li><li class="navelem"><a class="el" href="dir_d52b2b06cf2eab3d9c945e6b4eab9da9.html">Dice</a></li><li class="navelem"><a class="el" href="DicePolyhedron_8h.html">DicePolyhedron.h</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

@@ -91,7 +91,6 @@ $(document).ready(function(){initNavTree('structFTile.html',''); initResizable()
 
 <div class="header">
   <div class="summary">
-<a href="#pro-methods">Protected 멤버 함수</a> &#124;
 <a href="#pro-attribs">Protected 속성</a> &#124;
 <a href="#friends">Friends</a> &#124;
 <a href="structFTile-members.html">모든 멤버 목록</a>  </div>
@@ -102,64 +101,24 @@ $(document).ready(function(){initNavTree('structFTile.html',''); initResizable()
 <p>SRPG의 타일  
  <a href="structFTile.html#details">더 자세히 ...</a></p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
-Protected 멤버 함수</h2></td></tr>
-<tr class="memitem:ad5e90662a0bf46f640d6b34cb466e6cf" id="r_ad5e90662a0bf46f640d6b34cb466e6cf"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFTile.html#ad5e90662a0bf46f640d6b34cb466e6cf">IsBlocked</a> (const <a class="el" href="classITileActor.html">ITileActor</a> *Incoming) const</td></tr>
-<tr class="memdesc:ad5e90662a0bf46f640d6b34cb466e6cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">진입 액터가 이 타일에 막히는지 판정 (타일 위 액터들과 비교)  <br /></td></tr>
-<tr class="separator:ad5e90662a0bf46f640d6b34cb466e6cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
 Protected 속성</h2></td></tr>
-<tr class="memitem:af39e45c2c5e44993c02b90a2ac2838d5" id="r_af39e45c2c5e44993c02b90a2ac2838d5"><td class="memItemLeft" align="right" valign="top">TArray&lt; TScriptInterface&lt; <a class="el" href="classITileActor.html">ITileActor</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFTile.html#af39e45c2c5e44993c02b90a2ac2838d5">mActors</a></td></tr>
-<tr class="memdesc:af39e45c2c5e44993c02b90a2ac2838d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">배치된 액터  <br /></td></tr>
-<tr class="separator:af39e45c2c5e44993c02b90a2ac2838d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a39994d0e7bd46da09e40ad9dd0449625" id="r_a39994d0e7bd46da09e40ad9dd0449625"><td class="memItemLeft" align="right" valign="top"><a class="el" href="TileHighlight_8h.html#afa8f0977bfa9d4ffd2ae4ccbfedf2410">ETileHighlightFlag</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFTile.html#a39994d0e7bd46da09e40ad9dd0449625">mHighlight</a> = <a class="el" href="TileHighlight_8h.html#afa8f0977bfa9d4ffd2ae4ccbfedf2410a6adf97f83acf6453d4a6a4b1070f3754">ETileHighlightFlag::None</a></td></tr>
-<tr class="memdesc:a39994d0e7bd46da09e40ad9dd0449625"><td class="mdescLeft">&#160;</td><td class="mdescRight">강조 표시 상태 (Aim/Select/Effect 비트 조합)  <br /></td></tr>
-<tr class="separator:a39994d0e7bd46da09e40ad9dd0449625"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c4b0c9d3e77fa9a1b04e81c837a8f6f" id="r_a2c4b0c9d3e77fa9a1b04e81c837a8f6f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TWeakObjectPtr</a>&lt; <a class="el" href="classUBoardActorModel.html">UBoardActorModel</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFTile.html#a2c4b0c9d3e77fa9a1b04e81c837a8f6f">mBoardActors</a></td></tr>
+<tr class="memdesc:a2c4b0c9d3e77fa9a1b04e81c837a8f6f"><td class="mdescLeft">&#160;</td><td class="mdescRight">배치된 보드 액터 (소유권은 외부 컨텍스트/팩토리, 약참조)  <br /></td></tr>
+<tr class="separator:a2c4b0c9d3e77fa9a1b04e81c837a8f6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="friends" name="friends"></a>
 Friends</h2></td></tr>
-<tr class="memitem:ab34036198989c6349ca369e027238a21" id="r_ab34036198989c6349ca369e027238a21"><td class="memItemLeft" align="right" valign="top">class&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFTile.html#ab34036198989c6349ca369e027238a21">ATileMap</a></td></tr>
-<tr class="memdesc:ab34036198989c6349ca369e027238a21"><td class="mdescLeft">&#160;</td><td class="mdescRight">ATileMap이 타일 내부 액터 목록/블로킹 정보에 접근  <br /></td></tr>
+<tr class="memitem:ab34036198989c6349ca369e027238a21" id="r_ab34036198989c6349ca369e027238a21"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFTile.html#ab34036198989c6349ca369e027238a21">ATileMap</a></td></tr>
+<tr class="memdesc:ab34036198989c6349ca369e027238a21"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일맵 뷰/모델이 타일 내부 액터 목록/블로킹 정보에 접근 (전환기 동안 양쪽)  <br /></td></tr>
 <tr class="separator:ab34036198989c6349ca369e027238a21"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aac45e1901fc48ec5e24f49489e110418" id="r_aac45e1901fc48ec5e24f49489e110418"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFTile.html#aac45e1901fc48ec5e24f49489e110418">UTileMapModel</a></td></tr>
+<tr class="separator:aac45e1901fc48ec5e24f49489e110418"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock">
-<p class="definition"><a class="el" href="Tile_8h_source.html">Tile.h</a> 파일의 <a class="el" href="Tile_8h_source.html#l00021">21</a> 번째 라인에서 정의되었습니다.</p>
-</div><h2 class="groupheader">멤버 함수 문서화</h2>
-<a id="ad5e90662a0bf46f640d6b34cb466e6cf" name="ad5e90662a0bf46f640d6b34cb466e6cf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad5e90662a0bf46f640d6b34cb466e6cf">&#9670;&#160;</a></span>IsBlocked()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool FTile::IsBlocked </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="classITileActor.html">ITileActor</a> *&#160;</td>
-          <td class="paramname"><em>Incoming</em></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<ul>
-<li>기존 액터가 블록하는 레이어가 있음</li>
-<li>진입 액터의 레이어가 이에 해당하면 블록 </li>
-</ul>
-
-<p class="definition"><a class="el" href="Tile_8cpp_source.html">Tile.cpp</a> 파일의 <a class="el" href="Tile_8cpp_source.html#l00004">4</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<h2 class="groupheader">Friend, 그리고 관련된 함수 문서화</h2>
+<p class="definition"><a class="el" href="TileMapModel_8h_source.html">TileMapModel.h</a> 파일의 <a class="el" href="TileMapModel_8h_source.html#l00024">24</a> 번째 라인에서 정의되었습니다.</p>
+</div><h2 class="groupheader">Friend, 그리고 관련된 함수 문서화</h2>
 <a id="ab34036198989c6349ca369e027238a21" name="ab34036198989c6349ca369e027238a21"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab34036198989c6349ca369e027238a21">&#9670;&#160;</a></span>ATileMap</h2>
 
@@ -170,7 +129,7 @@ Friends</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">friend class <a class="el" href="classATileMap.html">ATileMap</a></td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">friend</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> <a class="el" href="classATileMap.html">ATileMap</a></td>
         </tr>
       </table>
   </td>
@@ -180,13 +139,37 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="Tile_8h_source.html">Tile.h</a> 파일의 <a class="el" href="Tile_8h_source.html#l00028">28</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMapModel_8h_source.html">TileMapModel.h</a> 파일의 <a class="el" href="TileMapModel_8h_source.html#l00031">31</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="aac45e1901fc48ec5e24f49489e110418" name="aac45e1901fc48ec5e24f49489e110418"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aac45e1901fc48ec5e24f49489e110418">&#9670;&#160;</a></span>UTileMapModel</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">friend</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> <a class="el" href="classUTileMapModel.html">UTileMapModel</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMapModel_8h_source.html">TileMapModel.h</a> 파일의 <a class="el" href="TileMapModel_8h_source.html#l00032">32</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
 <h2 class="groupheader">멤버 데이터 문서화</h2>
-<a id="af39e45c2c5e44993c02b90a2ac2838d5" name="af39e45c2c5e44993c02b90a2ac2838d5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af39e45c2c5e44993c02b90a2ac2838d5">&#9670;&#160;</a></span>mActors</h2>
+<a id="a2c4b0c9d3e77fa9a1b04e81c837a8f6f" name="a2c4b0c9d3e77fa9a1b04e81c837a8f6f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2c4b0c9d3e77fa9a1b04e81c837a8f6f">&#9670;&#160;</a></span>mBoardActors</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -195,32 +178,7 @@ Friends</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">TArray&lt;TScriptInterface&lt;<a class="el" href="classITileActor.html">ITileActor</a>&gt; &gt; FTile::mActors</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<dl class="section warning"><dt>경고</dt><dd>UObject 참조라 GC 추적용 UPROPERTY 필수이므로 삭제 금지 </dd></dl>
-
-<p class="definition"><a class="el" href="Tile_8h_source.html">Tile.h</a> 파일의 <a class="el" href="Tile_8h_source.html#l00044">44</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="a39994d0e7bd46da09e40ad9dd0449625" name="a39994d0e7bd46da09e40ad9dd0449625"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a39994d0e7bd46da09e40ad9dd0449625">&#9670;&#160;</a></span>mHighlight</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="TileHighlight_8h.html#afa8f0977bfa9d4ffd2ae4ccbfedf2410">ETileHighlightFlag</a> FTile::mHighlight = <a class="el" href="TileHighlight_8h.html#afa8f0977bfa9d4ffd2ae4ccbfedf2410a6adf97f83acf6453d4a6a4b1070f3754">ETileHighlightFlag::None</a></td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TWeakObjectPtr</a>&lt;<a class="el" href="classUBoardActorModel.html">UBoardActorModel</a>&gt; &gt; FTile::mBoardActors</td>
         </tr>
       </table>
   </td>
@@ -230,13 +188,12 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="Tile_8h_source.html">Tile.h</a> 파일의 <a class="el" href="Tile_8h_source.html#l00049">49</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMapModel_8h_source.html">TileMapModel.h</a> 파일의 <a class="el" href="TileMapModel_8h_source.html#l00039">39</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<hr/>이 구조체에 대한 문서화 페이지는 다음의 파일들로부터 생성되었습니다.:<ul>
-<li>/home/runner/work/P_RD/P_RD/Source/P_RD/Actor/TileMap/<a class="el" href="Tile_8h_source.html">Tile.h</a></li>
-<li>/home/runner/work/P_RD/P_RD/Source/P_RD/Actor/TileMap/<a class="el" href="Tile_8cpp_source.html">Tile.cpp</a></li>
+<hr/>이 구조체에 대한 문서화 페이지는 다음의 파일로부터 생성되었습니다.:<ul>
+<li>/home/runner/work/P_RD/P_RD/Source/P_RD/Actor/TileMap/<a class="el" href="TileMapModel_8h_source.html">TileMapModel.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

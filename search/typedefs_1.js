@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['tconstiterator_0',['TConstIterator',['../classTCircularDoubleLinkedList.html#ad99ae0fdbdf7e171e8a789d4a0176b54',1,'TCircularDoubleLinkedList']]],
-  ['titerator_1',['TIterator',['../classTCircularDoubleLinkedList.html#a1422c817dba058b83cd8e7cc512be066',1,'TCircularDoubleLinkedList']]]
+  ['iterator_0',['Iterator',['../structFActiveTacticalEffectsContainer.html#a214bb29cc7ec2c4a2f2dbe85815e6249',1,'FActiveTacticalEffectsContainer']]]
 ];

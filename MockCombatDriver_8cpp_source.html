@@ -1,0 +1,386 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/UI/Combat/MockCombatDriver.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('MockCombatDriver_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">MockCombatDriver.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="MockCombatDriver_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="MockCombatDriver_8h.html">UI/Combat/MockCombatDriver.h</a>&quot;</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &quot;<a class="code" href="CombatUIModel_8h.html">UI/Combat/CombatUIModel.h</a>&quot;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span> </div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno"><a class="line" href="MockCombatDriver_8cpp.html#a0de3ae51f3a629a8e5d113f1b9390da7">    5</a></span><span class="preprocessor">#define LOCTEXT_NAMESPACE &quot;MockCombatDriver&quot;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
+<div class="foldopen" id="foldopen00008" data-start="{" data-end="}">
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno"><a class="line" href="classUMockCombatDriver.html#a4ca8422ff32f63afe8570819813c0e47">    8</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUMockCombatDriver.html#a4ca8422ff32f63afe8570819813c0e47">UMockCombatDriver::Start</a>(<a class="code hl_class" href="classUCombatUIModel.html">UCombatUIModel</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UIModel</a>)</div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span>{</div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UIModel</a> == <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span>    {</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>        <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>    }</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    mUIModel = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UIModel</a>;</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>    <span class="comment">// 위젯이 보낸 입력(의도)을 받아 흉내낸다.</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    mUIModel-&gt;OnCombatCommand.AddDynamic(<span class="keyword">this</span>, &amp;UMockCombatDriver::HandleCommand);</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    mUIModel-&gt;OnCombatWorldTouch.AddDynamic(<span class="keyword">this</span>, &amp;UMockCombatDriver::HandleWorldTouch);</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span> </div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    <span class="comment">// 가짜 유닛: 플레이어 1 + 적 2</span></div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;FUnitUI&gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Units</a>;</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    {</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>        <a class="code hl_struct" href="structFUnitUI.html">FUnitUI</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Player</a>;</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Player</a>.mUnitId = 0;</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Player</a>.mIsPlayer = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Player</a>.mHP = 30.f; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Player</a>.mMaxHP = 30.f;</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Player</a>.mDamagePoint = 5.f; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Player</a>.mDefensePoint = 2.f; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Player</a>.mMovementPoint = 0.f; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Player</a>.mSkillPoint = 0.f;</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Player</a>.mTile = <a class="code hl_struct" href="structFTileIndex.html">FTileIndex</a>(4, 8);</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Units</a>.Add(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Player</a>);</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span> </div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>        <span class="keywordflow">for</span> (<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a> = 0; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a> &lt; 2; ++<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a>)</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>        {</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>            <a class="code hl_struct" href="structFUnitUI.html">FUnitUI</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Enemy</a>;</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Enemy</a>.mUnitId = 1 + <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a>;</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Enemy</a>.mIsPlayer = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Enemy</a>.mHP = 12.f; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Enemy</a>.mMaxHP = 12.f;</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Enemy</a>.mDamagePoint = 4.f; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Enemy</a>.mDefensePoint = 1.f;</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Enemy</a>.mTile = <a class="code hl_struct" href="structFTileIndex.html">FTileIndex</a>(3 + <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a>, 3);</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Units</a>.Add(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Enemy</a>);</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>        }</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    }</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    mUIModel-&gt;SetUnitUIs(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Units</a>);</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    <span class="comment">// 가짜 주사위 6개. 면 수 배열은 지원 폴리헤드런(d2/d4/d6/d8/d12/d20) UI 슬롯 검증용 fixture다.</span></div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>    mDice.Reset();</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FLinearColor</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RarityColors</a>[] = { <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FLinearColor</a>(0.86f, 0.98f, 0.94f, 1.f), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FLinearColor</a>(0.55f, 0.72f, 1.f, 1.f), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FLinearColor</a>(0.82f, 0.58f, 1.f, 1.f) };</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>    <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FText</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RarityTexts</a>[] = {</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">LOCTEXT</a>(<span class="stringliteral">&quot;Common&quot;</span>, <span class="stringliteral">&quot;Common&quot;</span>),</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">LOCTEXT</a>(<span class="stringliteral">&quot;Rare&quot;</span>, <span class="stringliteral">&quot;Rare&quot;</span>),</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">LOCTEXT</a>(<span class="stringliteral">&quot;Epic&quot;</span>, <span class="stringliteral">&quot;Epic&quot;</span>),</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    };</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    <span class="keyword">const</span> <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FaceCounts</a>[] = { 2, 4, 6, 8, 12, 20 };</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    <span class="keywordflow">for</span> (<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a> = 0; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a> &lt; 6; ++<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a>)</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    {</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>        <a class="code hl_struct" href="structFDiceSlotUI.html">FDiceSlotUI</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Die</a>;</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Die</a>.mResultValue = 0;</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Die</a>.mRolledFaceIndex = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">INDEX_NONE</a>;</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Die</a>.mIsRolled = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Die</a>.mFaceCount = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FaceCounts</a>[<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a>];</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>        <span class="keywordflow">for</span> (<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FaceIndex</a> = 0; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FaceIndex</a> &lt; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Die</a>.mFaceCount; ++<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FaceIndex</a>)</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>        {</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Die</a>.mFaceValues.Add(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FaceIndex</a> + 1);</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Die</a>.mFaceTextures.Add(<span class="keyword">nullptr</span>);</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>        }</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>        <span class="keyword">const</span> <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Tier</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a> % 3;</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Die</a>.mRarityColor = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RarityColors</a>[<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Tier</a>];</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Die</a>.mRarityText = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RarityTexts</a>[<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Tier</a>];</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>        mDice.Add(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Die</a>);</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>    }</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>    RebuildDicePush();</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span> </div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    <span class="comment">// 가짜 스킬 6개</span></div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;FSkillUI&gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Skills</a>;</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>    <span class="keywordflow">for</span> (<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a> = 0; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a> &lt; 6; ++<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a>)</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>    {</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>        <a class="code hl_struct" href="structFSkillUI.html">FSkillUI</a> <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a88bb766f0cc321759ed2eeb0bc06be5d">Skill</a>;</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>        <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a88bb766f0cc321759ed2eeb0bc06be5d">Skill</a>.<a class="code hl_variable" href="structFSkillUI.html#a4b519f966f61412813a895d086bb489a">mSkillIndex</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a>;</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>        <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a88bb766f0cc321759ed2eeb0bc06be5d">Skill</a>.mName = FText::Format(</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">LOCTEXT</a>(<span class="stringliteral">&quot;Skill {0}&quot;</span>, <span class="stringliteral">&quot;Skill {0}&quot;</span>),</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>            FText::AsNumber(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a> + 1));</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>        <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a88bb766f0cc321759ed2eeb0bc06be5d">Skill</a>.mDiceCost = 1 + (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a> % 3);</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>        <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a88bb766f0cc321759ed2eeb0bc06be5d">Skill</a>.mIsUsable = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Skills</a>.Add(<a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a88bb766f0cc321759ed2eeb0bc06be5d">Skill</a>);</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    }</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>    mUIModel-&gt;SetSkillUIs(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Skills</a>);</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span> </div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>    <span class="comment">// 가짜 턴</span></div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>    <a class="code hl_struct" href="structFTurnUI.html">FTurnUI</a> <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a6b12be2513bab07567150f54467bc568">Turn</a>;</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a6b12be2513bab07567150f54467bc568">Turn</a>.<a class="code hl_variable" href="structFTurnUI.html#ad61f8eae92f4a9092c42e1f5b290179e">mCurrentUnitId</a> = 0;</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>    <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a6b12be2513bab07567150f54467bc568">Turn</a>.mRound = 1;</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>    <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a6b12be2513bab07567150f54467bc568">Turn</a>.mPhase = <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a1aca2f63285a1936bd0464bb8aa1ef05a6adf97f83acf6453d4a6a4b1070f3754">ECombatBuildPhaseUI::None</a>;</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>    <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a6b12be2513bab07567150f54467bc568">Turn</a>.mTurnOrderUnitIds = { 0, 1, 2 };</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>    mUIModel-&gt;SetTurnUI(<a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a6b12be2513bab07567150f54467bc568">Turn</a>);</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span> </div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>    <span class="comment">// 가짜 장비 3슬롯</span></div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;FEquipmentUI&gt;</a> <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a9ccda2d50a1ee1b73ee1f048eb397aa8">Equipment</a>;</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>    <span class="keywordflow">for</span> (<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a> = 0; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a> &lt; 3; ++<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a>)</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>    {</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>        <a class="code hl_struct" href="structFEquipmentUI.html">FEquipmentUI</a> Equip;</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>        Equip.<a class="code hl_variable" href="structFEquipmentUI.html#a5ee7b271a92f5a26ca687776a4db1914">mSlotIndex</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a>;</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>        Equip.<a class="code hl_variable" href="structFEquipmentUI.html#ab4a41ad50e2fdbf1c420ab28de14994a">mName</a> = FText::Format(</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">LOCTEXT</a>(<span class="stringliteral">&quot;Equip {0}&quot;</span>, <span class="stringliteral">&quot;Equip {0}&quot;</span>),</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>            FText::AsNumber(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a> + 1));</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>        Equip.<a class="code hl_variable" href="structFEquipmentUI.html#a610c95f700f339c0d1371d0ee7e626d2">mIsEquipped</a> = (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a> == 0);</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>        <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a9ccda2d50a1ee1b73ee1f048eb397aa8">Equipment</a>.Add(Equip);</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>    }</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    mUIModel-&gt;SetEquipmentUIs(<a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a9ccda2d50a1ee1b73ee1f048eb397aa8">Equipment</a>);</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>    <span class="comment">// 가짜 플레이어 메타(돈/경험치/레벨)</span></div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>    <a class="code hl_struct" href="structFPlayerMetaUI.html">FPlayerMetaUI</a> <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81ab6755d218d5f4e1cef9cce9cc39aeda9">Meta</a>;</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>    <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81ab6755d218d5f4e1cef9cce9cc39aeda9">Meta</a>.<a class="code hl_variable" href="structFPlayerMetaUI.html#a5336d6a984c2315e72eba23886307f2a">mGold</a> = 120;</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81ab6755d218d5f4e1cef9cce9cc39aeda9">Meta</a>.mLevel = 3;</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>    <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81ab6755d218d5f4e1cef9cce9cc39aeda9">Meta</a>.mExp = 40.f; <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81ab6755d218d5f4e1cef9cce9cc39aeda9">Meta</a>.mMaxExp = 100.f;</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>    mUIModel-&gt;SetPlayerMeta(<a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81ab6755d218d5f4e1cef9cce9cc39aeda9">Meta</a>);</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>}</div>
+</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span> </div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span><span class="keywordtype">void</span> UMockCombatDriver::RebuildDicePush()</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>{</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    <span class="keywordflow">for</span> (<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a> = 0; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a> &lt; mDice.Num(); ++<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a>)</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>    {</div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>        mDice[<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a>].mIsSelected = mSelectedDice.Contains(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">i</a>);</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>    }</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    <span class="keywordflow">if</span> (mUIModel != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>    {</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>        mUIModel-&gt;SetDiceUIs(mDice);</div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span> </div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>        <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Sum</a> = 0;</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>        <span class="keywordflow">for</span> (<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Index</a> : mSelectedDice)</div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>        {</div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>            <span class="keywordflow">if</span> (mDice.IsValidIndex(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Index</a>))</div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>            {</div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>                <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Sum</a> += mDice[<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Index</a>].mResultValue;</div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>            }</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>        }</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>        mUIModel-&gt;SetSelectedDice(mSelectedDice, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Sum</a>);</div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>    }</div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>}</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span> </div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span><span class="keywordtype">void</span> UMockCombatDriver::HandleCommand(<a class="code hl_enumeration" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94">ECombatInputType</a> Type, <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IntPayload</a>)</div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>{</div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>    <span class="keywordflow">switch</span> (Type)</div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>    {</div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>    <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94a7ea8a47351af9f9bb1f93c79c59604a1">ECombatInputType::RollDice</a>:</div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>        <span class="keywordflow">for</span> (<a class="code hl_struct" href="structFDiceSlotUI.html">FDiceSlotUI</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Die</a> : mDice)</div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>        {</div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>            <span class="keyword">const</span> <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FaceCount</a> = FMath::Max(1, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Die</a>.mFaceValues.Num());</div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Die</a>.mRolledFaceIndex = FMath::RandRange(0, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FaceCount</a> - 1);</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Die</a>.mResultValue = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Die</a>.mFaceValues.IsValidIndex(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Die</a>.mRolledFaceIndex)</div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>                ? <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Die</a>.mFaceValues[<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Die</a>.mRolledFaceIndex]</div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>                : <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Die</a>.mRolledFaceIndex + 1;</div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Die</a>.mIsRolled = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>        }</div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>        RebuildDicePush();</div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>        <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span> </div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>    <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94abf14eb2e740ad6081a6a60b9cb293a32">ECombatInputType::ToggleDice</a>:</div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>        <span class="keywordflow">if</span> (mSelectedDice.Contains(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IntPayload</a>))</div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>        {</div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>            mSelectedDice.Remove(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IntPayload</a>);</div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>        }</div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>        <span class="keywordflow">else</span> <span class="keywordflow">if</span> (mDice.IsValidIndex(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IntPayload</a>))</div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>        {</div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>            mSelectedDice.Add(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IntPayload</a>);</div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>        }</div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>        RebuildDicePush();</div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>        <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span> </div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>    <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94aea4788705e6873b424c65e91c2846b19">ECombatInputType::Cancel</a>:</div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>        mSelectedDice.Reset();</div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>        RebuildDicePush();</div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>        <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span> </div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>    <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94a97d0350ecb921334df4360586239b985">ECombatInputType::LongPressUnit</a>:</div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>        <span class="keywordflow">if</span> (mUIModel != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>        {</div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>            <span class="comment">// HP/스탯은 FUnitDetailUI가 더 이상 보관하지 않는다 — UI가 mUnitId로 FUnitUI를 찾아 읽는다.</span></div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>            <a class="code hl_struct" href="structFUnitDetailUI.html">FUnitDetailUI</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Detail</a>;</div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Detail</a>.mUnitId = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IntPayload</a>;</div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Detail</a>.mName = FText::Format(</div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>                <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">LOCTEXT</a>(<span class="stringliteral">&quot;Enemy {0}&quot;</span>, <span class="stringliteral">&quot;Enemy {0}&quot;</span>),</div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>                FText::AsNumber(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IntPayload</a>));</div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Detail</a>.mLevel = 1;</div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Detail</a>.mPassiveDescriptions = { <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">LOCTEXT</a>(<span class="stringliteral">&quot;(mock passive)&quot;</span>, <span class="stringliteral">&quot;(mock passive)&quot;</span>) };</div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>            mUIModel-&gt;SetUnitDetail(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Detail</a>);</div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>        }</div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>        <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span> </div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>    <span class="keywordflow">default</span>:</div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UE_LOG</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">LogRD</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Display</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;MockCombatDriver: command %d (payload %d)&quot;</span>), <span class="keyword">static_cast&lt;</span><a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a><span class="keyword">&gt;</span>(Type), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IntPayload</a>);</div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>        <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>    }</div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>}</div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span> </div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span><span class="keywordtype">void</span> UMockCombatDriver::HandleWorldTouch(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector2D</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ScreenPosition</a>, <span class="keywordtype">bool</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bLongPress</a>)</div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>{</div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UE_LOG</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">LogRD</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Display</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;MockCombatDriver: world touch (%.0f,%.0f) long=%d&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ScreenPosition</a>.X, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ScreenPosition</a>.Y, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bLongPress</a> ? 1 : 0);</div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>}</div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span> </div>
+<div class="foldopen" id="foldopen00203" data-start="{" data-end="}">
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno"><a class="line" href="classUMockCombatDriver.html#a529ff65eb2e2290159559396de12a76b">  203</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUMockCombatDriver.html#a529ff65eb2e2290159559396de12a76b">UMockCombatDriver::PushMockPreview</a>()</div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span>{</div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>    <span class="keywordflow">if</span> (mUIModel == <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span>    {</div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span>        <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>    }</div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;FCombatQueueNode&gt;</a> <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a722ad2d05ecf4868b00c5484b82fd808">Queue</a>;</div>
+<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span> </div>
+<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>    <a class="code hl_struct" href="structFCombatQueueNode.html">FCombatQueueNode</a> <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a0e27a8cfb35dfac2dd7e0458f3065087ab9f24e83531326204197015b2f43a93f">Damage</a>;</div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>    <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a0e27a8cfb35dfac2dd7e0458f3065087ab9f24e83531326204197015b2f43a93f">Damage</a>.<a class="code hl_variable" href="structFCombatQueueNode.html#aae1e1cde1a6b96cab8feb70186e797a6">mSourceUnitId</a> = 0; <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a0e27a8cfb35dfac2dd7e0458f3065087ab9f24e83531326204197015b2f43a93f">Damage</a>.mTargetUnitId = 1; <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a0e27a8cfb35dfac2dd7e0458f3065087ab9f24e83531326204197015b2f43a93f">Damage</a>.mAmount = 7;</div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>    <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a0e27a8cfb35dfac2dd7e0458f3065087ab9f24e83531326204197015b2f43a93f">Damage</a>.mLabel = FText::FromString(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;-7&quot;</span>));</div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span>    <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a722ad2d05ecf4868b00c5484b82fd808">Queue</a>.Add(<a class="code hl_enumvalue" href="CombatUITypes_8h.html#a0e27a8cfb35dfac2dd7e0458f3065087ab9f24e83531326204197015b2f43a93f">Damage</a>);</div>
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span> </div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>    <a class="code hl_struct" href="structFCombatQueueNode.html">FCombatQueueNode</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Status</a>;</div>
+<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Status</a>.mSourceUnitId = 0; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Status</a>.mTargetUnitId = 1; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Status</a>.mAmount = 0;</div>
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Status</a>.mLabel = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">LOCTEXT</a>(<span class="stringliteral">&quot;Stun&quot;</span>, <span class="stringliteral">&quot;Stun&quot;</span>);</div>
+<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>    <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a722ad2d05ecf4868b00c5484b82fd808">Queue</a>.Add(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Status</a>);</div>
+<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span> </div>
+<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>    <a class="code hl_struct" href="structFCombatQueueNode.html">FCombatQueueNode</a> <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a0e27a8cfb35dfac2dd7e0458f3065087af357105e6becc3076a3da9b43465051a">Heal</a>;</div>
+<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>    <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a0e27a8cfb35dfac2dd7e0458f3065087af357105e6becc3076a3da9b43465051a">Heal</a>.<a class="code hl_variable" href="structFCombatQueueNode.html#aae1e1cde1a6b96cab8feb70186e797a6">mSourceUnitId</a> = 0; <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a0e27a8cfb35dfac2dd7e0458f3065087af357105e6becc3076a3da9b43465051a">Heal</a>.mTargetUnitId = 0; <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a0e27a8cfb35dfac2dd7e0458f3065087af357105e6becc3076a3da9b43465051a">Heal</a>.mAmount = 3;</div>
+<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>    <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a0e27a8cfb35dfac2dd7e0458f3065087af357105e6becc3076a3da9b43465051a">Heal</a>.mLabel = FText::FromString(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;+3&quot;</span>));</div>
+<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span>    <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a722ad2d05ecf4868b00c5484b82fd808">Queue</a>.Add(<a class="code hl_enumvalue" href="CombatUITypes_8h.html#a0e27a8cfb35dfac2dd7e0458f3065087af357105e6becc3076a3da9b43465051a">Heal</a>);</div>
+<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span> </div>
+<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>    mUIModel-&gt;SetActionQueue(<a class="code hl_enumvalue" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a722ad2d05ecf4868b00c5484b82fd808">Queue</a>);</div>
+<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>}</div>
+</div>
+<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span> </div>
+<div class="foldopen" id="foldopen00230" data-start="{" data-end="}">
+<div class="line"><a id="l00230" name="l00230"></a><span class="lineno"><a class="line" href="classUMockCombatDriver.html#a7ac61cbca4db58a741e6b97861365fb4">  230</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUMockCombatDriver.html#a7ac61cbca4db58a741e6b97861365fb4">UMockCombatDriver::PlayNextQueueNode</a>()</div>
+<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span>{</div>
+<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>    <span class="keywordflow">if</span> (mUIModel != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>    {</div>
+<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>        mUIModel-&gt;ResolveFrontQueueNode();</div>
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>    }</div>
+<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span>}</div>
+</div>
+<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span> </div>
+<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span><span class="preprocessor">#undef LOCTEXT_NAMESPACE</span></div>
+<div class="ttc" id="aCombatUIModel_8h_html"><div class="ttname"><a href="CombatUIModel_8h.html">CombatUIModel.h</a></div></div>
+<div class="ttc" id="aCombatUIModel_8h_html_ae94ae9ff6ce2880635df7bcd3bb54d94"><div class="ttname"><a href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94">ECombatInputType</a></div><div class="ttdeci">ECombatInputType</div><div class="ttdoc">전투 UI와 게임플레이를 잇는 단일 뷰모델 계약입니다.</div><div class="ttdef"><b>Definition</b> <a href="CombatUIModel_8h_source.html#l00016">CombatUIModel.h:17</a></div></div>
+<div class="ttc" id="aCombatUIModel_8h_html_ae94ae9ff6ce2880635df7bcd3bb54d94a7ea8a47351af9f9bb1f93c79c59604a1"><div class="ttname"><a href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94a7ea8a47351af9f9bb1f93c79c59604a1">ECombatInputType::RollDice</a></div><div class="ttdeci">@ RollDice</div></div>
+<div class="ttc" id="aCombatUIModel_8h_html_ae94ae9ff6ce2880635df7bcd3bb54d94a97d0350ecb921334df4360586239b985"><div class="ttname"><a href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94a97d0350ecb921334df4360586239b985">ECombatInputType::LongPressUnit</a></div><div class="ttdeci">@ LongPressUnit</div></div>
+<div class="ttc" id="aCombatUIModel_8h_html_ae94ae9ff6ce2880635df7bcd3bb54d94abf14eb2e740ad6081a6a60b9cb293a32"><div class="ttname"><a href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94abf14eb2e740ad6081a6a60b9cb293a32">ECombatInputType::ToggleDice</a></div><div class="ttdeci">@ ToggleDice</div></div>
+<div class="ttc" id="aCombatUIModel_8h_html_ae94ae9ff6ce2880635df7bcd3bb54d94aea4788705e6873b424c65e91c2846b19"><div class="ttname"><a href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94aea4788705e6873b424c65e91c2846b19">ECombatInputType::Cancel</a></div><div class="ttdeci">@ Cancel</div></div>
+<div class="ttc" id="aCombatUITypes_8h_html_a0e27a8cfb35dfac2dd7e0458f3065087ab9f24e83531326204197015b2f43a93f"><div class="ttname"><a href="CombatUITypes_8h.html#a0e27a8cfb35dfac2dd7e0458f3065087ab9f24e83531326204197015b2f43a93f">EFloatingLogColorType::Damage</a></div><div class="ttdeci">@ Damage</div></div>
+<div class="ttc" id="aCombatUITypes_8h_html_a0e27a8cfb35dfac2dd7e0458f3065087af357105e6becc3076a3da9b43465051a"><div class="ttname"><a href="CombatUITypes_8h.html#a0e27a8cfb35dfac2dd7e0458f3065087af357105e6becc3076a3da9b43465051a">EFloatingLogColorType::Heal</a></div><div class="ttdeci">@ Heal</div></div>
+<div class="ttc" id="aCombatUITypes_8h_html_a1aca2f63285a1936bd0464bb8aa1ef05a6adf97f83acf6453d4a6a4b1070f3754"><div class="ttname"><a href="CombatUITypes_8h.html#a1aca2f63285a1936bd0464bb8aa1ef05a6adf97f83acf6453d4a6a4b1070f3754">ECombatBuildPhaseUI::None</a></div><div class="ttdeci">@ None</div></div>
+<div class="ttc" id="aCombatUITypes_8h_html_a561fae8bc960f9ccf6d920135ecfaa81a6b12be2513bab07567150f54467bc568"><div class="ttname"><a href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a6b12be2513bab07567150f54467bc568">ECombatUIDomain::Turn</a></div><div class="ttdeci">@ Turn</div></div>
+<div class="ttc" id="aCombatUITypes_8h_html_a561fae8bc960f9ccf6d920135ecfaa81a722ad2d05ecf4868b00c5484b82fd808"><div class="ttname"><a href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a722ad2d05ecf4868b00c5484b82fd808">ECombatUIDomain::Queue</a></div><div class="ttdeci">@ Queue</div></div>
+<div class="ttc" id="aCombatUITypes_8h_html_a561fae8bc960f9ccf6d920135ecfaa81a88bb766f0cc321759ed2eeb0bc06be5d"><div class="ttname"><a href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a88bb766f0cc321759ed2eeb0bc06be5d">ECombatUIDomain::Skill</a></div><div class="ttdeci">@ Skill</div></div>
+<div class="ttc" id="aCombatUITypes_8h_html_a561fae8bc960f9ccf6d920135ecfaa81a9ccda2d50a1ee1b73ee1f048eb397aa8"><div class="ttname"><a href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81a9ccda2d50a1ee1b73ee1f048eb397aa8">ECombatUIDomain::Equipment</a></div><div class="ttdeci">@ Equipment</div></div>
+<div class="ttc" id="aCombatUITypes_8h_html_a561fae8bc960f9ccf6d920135ecfaa81ab6755d218d5f4e1cef9cce9cc39aeda9"><div class="ttname"><a href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81ab6755d218d5f4e1cef9cce9cc39aeda9">ECombatUIDomain::Meta</a></div><div class="ttdeci">@ Meta</div></div>
+<div class="ttc" id="aMockCombatDriver_8h_html"><div class="ttname"><a href="MockCombatDriver_8h.html">MockCombatDriver.h</a></div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_ada104807b93ac7cd59dac80d98ba857b"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a></div><div class="ttdeci">int32</div><div class="ttdef"><b>Definition</b> <a href="RoomTransitionSubsystem_8h_source.html#l00021">RoomTransitionSubsystem.h:21</a></div></div>
+<div class="ttc" id="aclassUCombatUIModel_html"><div class="ttname"><a href="classUCombatUIModel.html">UCombatUIModel</a></div><div class="ttdoc">전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다.</div><div class="ttdef"><b>Definition</b> <a href="CombatUIModel_8h_source.html#l00044">CombatUIModel.h:45</a></div></div>
+<div class="ttc" id="aclassUMockCombatDriver_html_a4ca8422ff32f63afe8570819813c0e47"><div class="ttname"><a href="classUMockCombatDriver.html#a4ca8422ff32f63afe8570819813c0e47">UMockCombatDriver::Start</a></div><div class="ttdeci">void Start(UCombatUIModel *UIModel)</div><div class="ttdoc">뷰모델에 가짜 초기 상태를 채우고 입력 델리게이트를 구독한다.</div><div class="ttdef"><b>Definition</b> <a href="MockCombatDriver_8cpp_source.html#l00008">MockCombatDriver.cpp:8</a></div></div>
+<div class="ttc" id="aclassUMockCombatDriver_html_a529ff65eb2e2290159559396de12a76b"><div class="ttname"><a href="classUMockCombatDriver.html#a529ff65eb2e2290159559396de12a76b">UMockCombatDriver::PushMockPreview</a></div><div class="ttdeci">void PushMockPreview()</div><div class="ttdoc">가짜 예측 큐(데미지·상태이상·힐 3노드)를 만들어 밀어넣는다.</div><div class="ttdef"><b>Definition</b> <a href="MockCombatDriver_8cpp_source.html#l00203">MockCombatDriver.cpp:203</a></div></div>
+<div class="ttc" id="aclassUMockCombatDriver_html_a7ac61cbca4db58a741e6b97861365fb4"><div class="ttname"><a href="classUMockCombatDriver.html#a7ac61cbca4db58a741e6b97861365fb4">UMockCombatDriver::PlayNextQueueNode</a></div><div class="ttdeci">void PlayNextQueueNode()</div><div class="ttdoc">큐 맨 앞 노드를 하나 재생(처리)한다. 연속 공격 재생을 흉내낸다.</div><div class="ttdef"><b>Definition</b> <a href="MockCombatDriver_8cpp_source.html#l00230">MockCombatDriver.cpp:230</a></div></div>
+<div class="ttc" id="astructFCombatQueueNode_html"><div class="ttname"><a href="structFCombatQueueNode.html">FCombatQueueNode</a></div><div class="ttdoc">행동/시뮬레이션 결과 큐의 한 노드이며 애니메이션 한 단위에 해당합니다.</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00335">CombatUITypes.h:336</a></div></div>
+<div class="ttc" id="astructFCombatQueueNode_html_aae1e1cde1a6b96cab8feb70186e797a6"><div class="ttname"><a href="structFCombatQueueNode.html#aae1e1cde1a6b96cab8feb70186e797a6">FCombatQueueNode::mSourceUnitId</a></div><div class="ttdeci">int32 mSourceUnitId</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00341">CombatUITypes.h:341</a></div></div>
+<div class="ttc" id="astructFDiceSlotUI_html"><div class="ttname"><a href="structFDiceSlotUI.html">FDiceSlotUI</a></div><div class="ttdoc">주사위 한 칸을 그릴 때 필요한 표시값입니다.</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00136">CombatUITypes.h:137</a></div></div>
+<div class="ttc" id="astructFEquipmentUI_html"><div class="ttname"><a href="structFEquipmentUI.html">FEquipmentUI</a></div><div class="ttdoc">장비 슬롯 하나(전투 중 표시·상세). 인벤토리/장착 변경은 의도(Request)로만 보낸다.</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00356">CombatUITypes.h:357</a></div></div>
+<div class="ttc" id="astructFEquipmentUI_html_a5ee7b271a92f5a26ca687776a4db1914"><div class="ttname"><a href="structFEquipmentUI.html#a5ee7b271a92f5a26ca687776a4db1914">FEquipmentUI::mSlotIndex</a></div><div class="ttdeci">int32 mSlotIndex</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00360">CombatUITypes.h:360</a></div></div>
+<div class="ttc" id="astructFEquipmentUI_html_a610c95f700f339c0d1371d0ee7e626d2"><div class="ttname"><a href="structFEquipmentUI.html#a610c95f700f339c0d1371d0ee7e626d2">FEquipmentUI::mIsEquipped</a></div><div class="ttdeci">bool mIsEquipped</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00364">CombatUITypes.h:364</a></div></div>
+<div class="ttc" id="astructFEquipmentUI_html_ab4a41ad50e2fdbf1c420ab28de14994a"><div class="ttname"><a href="structFEquipmentUI.html#ab4a41ad50e2fdbf1c420ab28de14994a">FEquipmentUI::mName</a></div><div class="ttdeci">FText mName</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00362">CombatUITypes.h:362</a></div></div>
+<div class="ttc" id="astructFPlayerMetaUI_html"><div class="ttname"><a href="structFPlayerMetaUI.html">FPlayerMetaUI</a></div><div class="ttdoc">플레이어 메타 정보(전투 HUD 상단/보상에 쓰는 돈·경험치·레벨).</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00398">CombatUITypes.h:399</a></div></div>
+<div class="ttc" id="astructFPlayerMetaUI_html_a5336d6a984c2315e72eba23886307f2a"><div class="ttname"><a href="structFPlayerMetaUI.html#a5336d6a984c2315e72eba23886307f2a">FPlayerMetaUI::mGold</a></div><div class="ttdeci">int32 mGold</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00402">CombatUITypes.h:402</a></div></div>
+<div class="ttc" id="astructFSkillUI_html"><div class="ttname"><a href="structFSkillUI.html">FSkillUI</a></div><div class="ttdoc">스킬 레일에 그릴 스킬 한 칸.</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00292">CombatUITypes.h:293</a></div></div>
+<div class="ttc" id="astructFSkillUI_html_a4b519f966f61412813a895d086bb489a"><div class="ttname"><a href="structFSkillUI.html#a4b519f966f61412813a895d086bb489a">FSkillUI::mSkillIndex</a></div><div class="ttdeci">int32 mSkillIndex</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00297">CombatUITypes.h:297</a></div></div>
+<div class="ttc" id="astructFTileIndex_html"><div class="ttname"><a href="structFTileIndex.html">FTileIndex</a></div><div class="ttdoc">타일 맵 상 인덱스 좌표</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00042">SRPGFrameworkType.h:43</a></div></div>
+<div class="ttc" id="astructFTurnUI_html"><div class="ttname"><a href="structFTurnUI.html">FTurnUI</a></div><div class="ttdoc">현재 턴/라운드/페이즈 상태.</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00416">CombatUITypes.h:417</a></div></div>
+<div class="ttc" id="astructFTurnUI_html_ad61f8eae92f4a9092c42e1f5b290179e"><div class="ttname"><a href="structFTurnUI.html#ad61f8eae92f4a9092c42e1f5b290179e">FTurnUI::mCurrentUnitId</a></div><div class="ttdeci">int32 mCurrentUnitId</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00421">CombatUITypes.h:421</a></div></div>
+<div class="ttc" id="astructFUnitDetailUI_html"><div class="ttname"><a href="structFUnitDetailUI.html">FUnitDetailUI</a></div><div class="ttdoc">적/유닛을 길게 눌렀을 때 띄우는 상세 정보(초상화·이름·레벨·패시브 등).</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00228">CombatUITypes.h:229</a></div></div>
+<div class="ttc" id="astructFUnitUI_html"><div class="ttname"><a href="structFUnitUI.html">FUnitUI</a></div><div class="ttdoc">유닛 한 기를 HUD에 그릴 때 필요한 표시값(HP바·스탯·위치).</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00185">CombatUITypes.h:186</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_18e329638b0f3372047d81882ea0cdaf.html">UI</a></li><li class="navelem"><a class="el" href="dir_c03fad49ae08ebf88456b3b7860f433d.html">Combat</a></li><li class="navelem"><a class="el" href="MockCombatDriver_8cpp.html">MockCombatDriver.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

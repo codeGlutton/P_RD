@@ -100,39 +100,8 @@ $(document).ready(function(){initNavTree('StaticUnitSpawnData_8cpp_source.html',
 <div class="contents">
 <a href="StaticUnitSpawnData_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="StaticUnitSpawnData_8h.html">DataAsset/UnitSpawnData/StaticUnitSpawnData.h</a>&quot;</span></div>
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
-<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#if WITH_EDITOR</span></div>
-<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &quot;Misc/DataValidation.h&quot;</span></div>
-<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
-<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#if WITH_EDITOR</span></div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span>EDataValidationResult UStaticUnitSpawnData::IsDataValid(FDataValidationContext&amp; Context)<span class="keyword"> const</span></div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="keyword"></span>{</div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>    EDataValidationResult SuperResult = Super::IsDataValid(Context);</div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span>    EDataValidationResult ThisResult = EDataValidationResult::Valid;</div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classUStaticUnitSpawnData.html#abb8781f0be51a49a69765bf12d7e90d5">mClass</a> == <span class="keyword">nullptr</span> || <a class="code hl_variable" href="classUStaticUnitSpawnData.html#a6651a0661f8512caa7ef953be1a8df8e">mDisplayName</a>.IsEmpty() == <span class="keyword">true</span>)</div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    {</div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>        Context.AddError(FText::FromString(TEXT(<span class="stringliteral">&quot;액터 클래스 혹은 이름 미지정&quot;</span>)));</div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>        ThisResult = EDataValidationResult::Invalid;</div>
-<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    }</div>
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span> </div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    <span class="keywordflow">return</span> CombineDataValidationResults(SuperResult, ThisResult);</div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>}</div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span> </div>
-<div class="foldopen" id="foldopen00023" data-start="{" data-end="}">
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno"><a class="line" href="classUStaticUnitSpawnData.html#ab7337ff9b336dbde19989d214a92a04c">   23</a></span>FName <a class="code hl_function" href="classUStaticUnitSpawnData.html#ab7337ff9b336dbde19989d214a92a04c">UStaticUnitSpawnData::GetKeyName</a>()<span class="keyword"> const</span></div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="keyword"></span>{</div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    FString Key = <a class="code hl_variable" href="classUStaticUnitSpawnData.html#a6651a0661f8512caa7ef953be1a8df8e">mDisplayName</a>.ToString();</div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    Key.RemoveSpacesInline();</div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    <span class="keywordflow">return</span> *Key;</div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>}</div>
-</div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> </div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
 <div class="ttc" id="aStaticUnitSpawnData_8h_html"><div class="ttname"><a href="StaticUnitSpawnData_8h.html">StaticUnitSpawnData.h</a></div><div class="ttdoc">유닛 생성 시 사용되는 정적 Primary Data Asset 구현 헤더</div></div>
-<div class="ttc" id="aclassUStaticUnitSpawnData_html_a6651a0661f8512caa7ef953be1a8df8e"><div class="ttname"><a href="classUStaticUnitSpawnData.html#a6651a0661f8512caa7ef953be1a8df8e">UStaticUnitSpawnData::mDisplayName</a></div><div class="ttdeci">FText mDisplayName</div><div class="ttdef"><b>Definition</b> <a href="StaticUnitSpawnData_8h_source.html#l00049">StaticUnitSpawnData.h:49</a></div></div>
-<div class="ttc" id="aclassUStaticUnitSpawnData_html_ab7337ff9b336dbde19989d214a92a04c"><div class="ttname"><a href="classUStaticUnitSpawnData.html#ab7337ff9b336dbde19989d214a92a04c">UStaticUnitSpawnData::GetKeyName</a></div><div class="ttdeci">FName GetKeyName() const</div><div class="ttdef"><b>Definition</b> <a href="StaticUnitSpawnData_8cpp_source.html#l00023">StaticUnitSpawnData.cpp:23</a></div></div>
-<div class="ttc" id="aclassUStaticUnitSpawnData_html_abb8781f0be51a49a69765bf12d7e90d5"><div class="ttname"><a href="classUStaticUnitSpawnData.html#abb8781f0be51a49a69765bf12d7e90d5">UStaticUnitSpawnData::mClass</a></div><div class="ttdeci">TSoftClassPtr&lt; AUnit &gt; mClass</div><div class="ttdef"><b>Definition</b> <a href="StaticUnitSpawnData_8h_source.html#l00037">StaticUnitSpawnData.h:37</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

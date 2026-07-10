@@ -1,4 +1,4 @@
 var ShopGameMode_8h =
 [
-    [ "AShopGameMode", "classAShopGameMode.html", null ]
+    [ "AShopGameMode", "classAShopGameMode.html", "classAShopGameMode" ]
 ];

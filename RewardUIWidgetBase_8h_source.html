@@ -1,0 +1,252 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/UI/Reward/RewardUIWidgetBase.h 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('RewardUIWidgetBase_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">RewardUIWidgetBase.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="RewardUIWidgetBase_8h.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment">// @file RewardUIWidgetBase.h</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="comment">// 레이아웃은 WBP가 만든다. 보상 줄은 WBP_RewardRow를 반복 생성하고 C++은 값/아이콘만 넣는다.</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &quot;<a class="code" href="RDMinimal_8h.html">RDMinimal.h</a>&quot;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &quot;<a class="code" href="RDUserWidget_8h.html">UI/RDUserWidget.h</a>&quot;</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &quot;<a class="code" href="RewardUITypes_8h.html">UI/Reward/RewardUITypes.h</a>&quot;</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;RewardUIWidgetBase.generated.h&quot;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="keyword">class </span>UButton;</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="keyword">class </span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UImage</a>;</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="keyword">class </span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UTextBlock</a>;</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="keyword">class </span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UTexture2D</a>;</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="keyword">class </span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UVerticalBox</a>;</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="keyword">class </span><a class="code hl_class" href="classURewardRowWidgetBase.html">URewardRowWidgetBase</a>;</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="keyword">class </span><a class="code hl_class" href="classURewardUIModel.html">URewardUIModel</a>;</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span> </div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno"><a class="line" href="RewardUIWidgetBase_8h.html#a7739cca33002b928ab9fe3b8c65d01d3">   22</a></span><a class="code hl_function" href="RewardUIWidgetBase_8h.html#a7739cca33002b928ab9fe3b8c65d01d3">DECLARE_DYNAMIC_MULTICAST_DELEGATE</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnRewardClosed</a>);</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span> </div>
+<div class="foldopen" id="foldopen00024" data-start="{" data-end="};">
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno"><a class="line" href="structFRewardClaimRow.html">   24</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structFRewardClaimRow.html">FRewardClaimRow</a></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>{</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno"><a class="line" href="structFRewardClaimRow.html#a88aa2c85b843c1b054069cc162b056f4">   26</a></span>    <a class="code hl_enumeration" href="RewardUITypes_8h.html#abdc22ba12c67d0e130c6eb499d1d5bd7">ERewardClaimKind</a> <a class="code hl_variable" href="structFRewardClaimRow.html#a88aa2c85b843c1b054069cc162b056f4">mKind</a> = <a class="code hl_enumvalue" href="RewardUITypes_8h.html#abdc22ba12c67d0e130c6eb499d1d5bd7a9768feb3fdb1f267b06093bc572952dd">ERewardClaimKind::Gold</a>;</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno"><a class="line" href="structFRewardClaimRow.html#a7afacc610748d007adc5ef9dd47365d1">   27</a></span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_variable" href="structFRewardClaimRow.html#a7afacc610748d007adc5ef9dd47365d1">mChoiceIndex</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">INDEX_NONE</a>;</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno"><a class="line" href="structFRewardClaimRow.html#aae10c652749458fa57e5a63235f8b519">   28</a></span>    <span class="keywordtype">bool</span> <a class="code hl_variable" href="structFRewardClaimRow.html#aae10c652749458fa57e5a63235f8b519">mClaimed</a> = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>};</div>
+</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span> </div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UCLASS</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Abstract</a>)</div>
+<div class="foldopen" id="foldopen00032" data-start="{" data-end="};">
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno"><a class="line" href="classURewardUIWidgetBase.html">   32</a></span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">P_RD_API</a> <a class="code hl_class" href="classURewardUIWidgetBase.html">URewardUIWidgetBase</a> : <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">public</a> <a class="code hl_class" href="classURDUserWidget.html">URDUserWidget</a></div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>{</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GENERATED_BODY</a>()</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span> </div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    <a class="code hl_class" href="classURewardUIWidgetBase.html">URewardUIWidgetBase</a>(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FObjectInitializer</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ObjectInitializer</a>);</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span> </div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintCallable</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Category</a> = <span class="stringliteral">&quot;Reward|UI&quot;</span>)</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    <span class="keywordtype">void</span> BindUIModel(<a class="code hl_class" href="classURewardUIModel.html">URewardUIModel</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InUIModel</a>);</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintPure</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Category</a> = <span class="stringliteral">&quot;Reward|UI&quot;</span>)</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno"><a class="line" href="classURewardUIWidgetBase.html#ae6c026a8347389739f1d18abda3f44a8">   46</a></span>    <a class="code hl_class" href="classURewardUIModel.html">URewardUIModel</a>* GetUIModel()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> mUIModel; }</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintCallable</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Category</a> = <span class="stringliteral">&quot;Reward|UI&quot;</span>)</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> Claim();</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span> </div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    <span class="comment">// 지급 성공 판정은 게임플레이(ClaimCombatReward)가 한다. 위젯은 스스로 받았다고 표시하지 않고 이 통지만 반영한다.</span></div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    <span class="keywordtype">void</span> NotifyRewardClaimed(<a class="code hl_enumeration" href="RewardUITypes_8h.html#abdc22ba12c67d0e130c6eb499d1d5bd7">ERewardClaimKind</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ClaimKind</a>, <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ChoiceIndex</a>);</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span> </div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintAssignable</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Category</a> = &quot;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Reward</a>|<a class="code hl_enumvalue" href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273a71ff71526d15db86eb50fcac245d183b">UI</a>&quot;)</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno"><a class="line" href="classURewardUIWidgetBase.html#a458467c66217ae533d6ad444ae9023a5">   58</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnRewardClosed</a> OnClosed;</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span> </div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">protected</a>:</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <span class="keywordtype">void</span> NativeConstruct() <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a>;</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span> </div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <span class="keywordtype">void</span> NativeDestruct() <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a>;</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span> </div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">private</a>:</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>() <span class="keywordtype">void</span> HandleCloseClicked();</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span> </div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>() <span class="keywordtype">void</span> HandleUIChanged();</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span> </div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>() <span class="keywordtype">void</span> HandleChoicesChanged();</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span> </div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>() <span class="keywordtype">void</span> HandleRewardRowClicked(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RewardRowIndex</a>);</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span> </div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>    <span class="keywordtype">void</span> UnbindUIModel();</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span> </div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    <span class="keywordtype">void</span> RefreshSummary();</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span> </div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>    <span class="keywordtype">void</span> RefreshRows();</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span> </div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>    <span class="keywordtype">void</span> ApplyTransparentCloseButtonStyle() <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a>;</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span> </div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>    <span class="keywordtype">void</span> UpdateCloseButtonVisibility() <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a>;</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span> </div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>    <span class="keywordtype">bool</span> AreAllRewardRowsClaimed() <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a>;</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span> </div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">private</a>:</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UTexture2D</a>* GetRewardIcon(<a class="code hl_enumeration" href="RewardUITypes_8h.html#afbeb202d9da1936d1a1bfe63e0aea540">ERewardChoiceKind</a> Kind) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a>;</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span> </div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">protected</a>:</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>    <span class="comment">// ---- WBP BindWidget (WBP_Reward의 위젯명과 일치). ----</span></div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">meta</a> = (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BindWidgetOptional</a>))</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno"><a class="line" href="classURewardUIWidgetBase.html#adcb1522e80db2ab4a91629fda6f834ee">  103</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UVerticalBox</a>&gt; mRewardRowsBox;</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span> </div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">meta</a> = (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BindWidgetOptional</a>))</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno"><a class="line" href="classURewardUIWidgetBase.html#ae8358021f64a7abf9cbd71b905af8f83">  106</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;UButton&gt; mCloseButton;</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span> </div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Category</a> = &quot;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Reward</a>|<a class="code hl_enumvalue" href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273a71ff71526d15db86eb50fcac245d183b">UI</a>&quot;, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">meta</a> = (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AllowPrivateAccess</a> = &quot;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">true</a>&quot;))</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno"><a class="line" href="classURewardUIWidgetBase.html#a9b51eadfe809153ca54922bbe2add7a5">  110</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="code hl_class" href="classURewardUIModel.html">URewardUIModel</a>&gt; mUIModel;</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span> </div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">protected</a>:</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Category</a> = &quot;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Reward</a>|<a class="code hl_enumvalue" href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273a71ff71526d15db86eb50fcac245d183b">UI</a>&quot;)</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno"><a class="line" href="classURewardUIWidgetBase.html#a0d4ba22b19e3832611797a422e043b3e">  114</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UTexture2D</a>&gt; mEquipmentIcon;</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Category</a> = &quot;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Reward</a>|<a class="code hl_enumvalue" href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273a71ff71526d15db86eb50fcac245d183b">UI</a>&quot;)</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno"><a class="line" href="classURewardUIWidgetBase.html#acb1f35cc8ca95ad2c868c1d187b2f8a5">  116</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UTexture2D</a>&gt; mSkillIcon;</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Category</a> = &quot;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Reward</a>|<a class="code hl_enumvalue" href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273a71ff71526d15db86eb50fcac245d183b">UI</a>&quot;)</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno"><a class="line" href="classURewardUIWidgetBase.html#a2f5a910f90178e415b98f73f19266a4e">  118</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UTexture2D</a>&gt; mGoldIcon;</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Category</a> = &quot;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Reward</a>|<a class="code hl_enumvalue" href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273a71ff71526d15db86eb50fcac245d183b">UI</a>&quot;)</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno"><a class="line" href="classURewardUIWidgetBase.html#a435b81f77ca17bc3c5b6fcb1d4cd2965">  120</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UTexture2D</a>&gt; mDiceIcon;</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span> </div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Category</a> = &quot;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Reward</a>|<a class="code hl_enumvalue" href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273a71ff71526d15db86eb50fcac245d183b">UI</a>&quot;)</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno"><a class="line" href="classURewardUIWidgetBase.html#abb38a5b34dcc07b6373d19f4209b9823">  123</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UTexture2D</a>&gt; mRewardGoldIconTexture;</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span> </div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Category</a> = &quot;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Reward</a>|<a class="code hl_enumvalue" href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273a71ff71526d15db86eb50fcac245d183b">UI</a>&quot;)</div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno"><a class="line" href="classURewardUIWidgetBase.html#aa01f4157fe36ddfd1a2939bed3bece96">  127</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UTexture2D</a>&gt; mRewardExpIconTexture;</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span> </div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EditAnywhere</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Category</a> = &quot;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Reward</a>|<a class="code hl_enumvalue" href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273a71ff71526d15db86eb50fcac245d183b">UI</a>&quot;)</div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno"><a class="line" href="classURewardUIWidgetBase.html#afbec309359cf52a2c046ef50963f9673">  131</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSubclassOf</a>&lt;<a class="code hl_class" href="classURewardRowWidgetBase.html">URewardRowWidgetBase</a>&gt; mRewardRowWidgetClass;</div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span> </div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EditAnywhere</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintReadOnly</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Category</a> = &quot;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Reward</a>|<a class="code hl_enumvalue" href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273a71ff71526d15db86eb50fcac245d183b">UI</a>&quot;)</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno"><a class="line" href="classURewardUIWidgetBase.html#ab7da21f24497f0eb3cdad8cb1380508b">  135</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FMargin</a> mRewardRowPadding = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FMargin</a>(0.0<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a>, 0.0<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a>, 0.0<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a>, 24.0<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a>);</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span> </div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">private</a>:</div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="code hl_struct" href="structFRewardClaimRow.html">FRewardClaimRow</a>&gt; mRewardClaimRows;</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span> </div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="code hl_class" href="classURewardRowWidgetBase.html">URewardRowWidgetBase</a>&gt;&gt; mRewardRowWidgets;</div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>};</div>
+</div>
+<div class="ttc" id="aPersistentDataType_8h_html_a537f7a730a17b9fdf67192d2aba02273a71ff71526d15db86eb50fcac245d183b"><div class="ttname"><a href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273a71ff71526d15db86eb50fcac245d183b">EGameVolumeType::UI</a></div><div class="ttdeci">@ UI</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aRDMinimal_8h_html"><div class="ttname"><a href="RDMinimal_8h.html">RDMinimal.h</a></div><div class="ttdoc">RD 프로젝트 전 영역에서 사용되는 최소한의 포함 헤더</div></div>
+<div class="ttc" id="aRDUserWidget_8h_html"><div class="ttname"><a href="RDUserWidget_8h.html">RDUserWidget.h</a></div></div>
+<div class="ttc" id="aRewardUITypes_8h_html"><div class="ttname"><a href="RewardUITypes_8h.html">RewardUITypes.h</a></div></div>
+<div class="ttc" id="aRewardUITypes_8h_html_abdc22ba12c67d0e130c6eb499d1d5bd7"><div class="ttname"><a href="RewardUITypes_8h.html#abdc22ba12c67d0e130c6eb499d1d5bd7">ERewardClaimKind</a></div><div class="ttdeci">ERewardClaimKind</div><div class="ttdoc">UI에서 클릭한 보상 행이 어떤 실제 지급 항목인지 구분한다.</div><div class="ttdef"><b>Definition</b> <a href="RewardUITypes_8h_source.html#l00055">RewardUITypes.h:56</a></div></div>
+<div class="ttc" id="aRewardUITypes_8h_html_abdc22ba12c67d0e130c6eb499d1d5bd7a9768feb3fdb1f267b06093bc572952dd"><div class="ttname"><a href="RewardUITypes_8h.html#abdc22ba12c67d0e130c6eb499d1d5bd7a9768feb3fdb1f267b06093bc572952dd">ERewardClaimKind::Gold</a></div><div class="ttdeci">@ Gold</div></div>
+<div class="ttc" id="aRewardUITypes_8h_html_afbeb202d9da1936d1a1bfe63e0aea540"><div class="ttname"><a href="RewardUITypes_8h.html#afbeb202d9da1936d1a1bfe63e0aea540">ERewardChoiceKind</a></div><div class="ttdeci">ERewardChoiceKind</div><div class="ttdoc">보상 항목 한 칸의 종류. UI가 게임플레이 데이터 타입을 직접 모르게 어댑터가 변환해 넣는다.</div><div class="ttdef"><b>Definition</b> <a href="RewardUITypes_8h_source.html#l00045">RewardUITypes.h:46</a></div></div>
+<div class="ttc" id="aRewardUIWidgetBase_8h_html_a7739cca33002b928ab9fe3b8c65d01d3"><div class="ttname"><a href="RewardUIWidgetBase_8h.html#a7739cca33002b928ab9fe3b8c65d01d3">DECLARE_DYNAMIC_MULTICAST_DELEGATE</a></div><div class="ttdeci">DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRewardClosed)</div><div class="ttdoc">'받기'로 보상 화면이 닫혔음을 알린다(승리 흐름이 이걸 받아 다음 단계=월드맵을 연다).</div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_ada104807b93ac7cd59dac80d98ba857b"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a></div><div class="ttdeci">int32</div><div class="ttdef"><b>Definition</b> <a href="RoomTransitionSubsystem_8h_source.html#l00021">RoomTransitionSubsystem.h:21</a></div></div>
+<div class="ttc" id="aclassURDUserWidget_html"><div class="ttname"><a href="classURDUserWidget.html">URDUserWidget</a></div><div class="ttdoc">RD 프로젝트 UMG 위젯의 공통 베이스 클래스</div><div class="ttdef"><b>Definition</b> <a href="RDUserWidget_8h_source.html#l00051">RDUserWidget.h:52</a></div></div>
+<div class="ttc" id="aclassURewardRowWidgetBase_html"><div class="ttname"><a href="classURewardRowWidgetBase.html">URewardRowWidgetBase</a></div><div class="ttdef"><b>Definition</b> <a href="RewardRowWidgetBase_8h_source.html#l00019">RewardRowWidgetBase.h:20</a></div></div>
+<div class="ttc" id="aclassURewardUIModel_html"><div class="ttname"><a href="classURewardUIModel.html">URewardUIModel</a></div><div class="ttdoc">보상 화면 뷰모델. 전투 종료 시 게임플레이가 하나 만들어 보상 위젯에 물린다.</div><div class="ttdef"><b>Definition</b> <a href="RewardUIModel_8h_source.html#l00025">RewardUIModel.h:26</a></div></div>
+<div class="ttc" id="aclassURewardUIWidgetBase_html"><div class="ttname"><a href="classURewardUIWidgetBase.html">URewardUIWidgetBase</a></div><div class="ttdef"><b>Definition</b> <a href="RewardUIWidgetBase_8h_source.html#l00032">RewardUIWidgetBase.h:33</a></div></div>
+<div class="ttc" id="astructFRewardClaimRow_html"><div class="ttname"><a href="structFRewardClaimRow.html">FRewardClaimRow</a></div><div class="ttdef"><b>Definition</b> <a href="RewardUIWidgetBase_8h_source.html#l00024">RewardUIWidgetBase.h:25</a></div></div>
+<div class="ttc" id="astructFRewardClaimRow_html_a7afacc610748d007adc5ef9dd47365d1"><div class="ttname"><a href="structFRewardClaimRow.html#a7afacc610748d007adc5ef9dd47365d1">FRewardClaimRow::mChoiceIndex</a></div><div class="ttdeci">int32 mChoiceIndex</div><div class="ttdef"><b>Definition</b> <a href="RewardUIWidgetBase_8h_source.html#l00027">RewardUIWidgetBase.h:27</a></div></div>
+<div class="ttc" id="astructFRewardClaimRow_html_a88aa2c85b843c1b054069cc162b056f4"><div class="ttname"><a href="structFRewardClaimRow.html#a88aa2c85b843c1b054069cc162b056f4">FRewardClaimRow::mKind</a></div><div class="ttdeci">ERewardClaimKind mKind</div><div class="ttdef"><b>Definition</b> <a href="RewardUIWidgetBase_8h_source.html#l00026">RewardUIWidgetBase.h:26</a></div></div>
+<div class="ttc" id="astructFRewardClaimRow_html_aae10c652749458fa57e5a63235f8b519"><div class="ttname"><a href="structFRewardClaimRow.html#aae10c652749458fa57e5a63235f8b519">FRewardClaimRow::mClaimed</a></div><div class="ttdeci">bool mClaimed</div><div class="ttdef"><b>Definition</b> <a href="RewardUIWidgetBase_8h_source.html#l00028">RewardUIWidgetBase.h:28</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_18e329638b0f3372047d81882ea0cdaf.html">UI</a></li><li class="navelem"><a class="el" href="dir_91cd74c64b5ce0e64425702b97795106.html">Reward</a></li><li class="navelem"><a class="el" href="RewardUIWidgetBase_8h.html">RewardUIWidgetBase.h</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

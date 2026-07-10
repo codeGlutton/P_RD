@@ -1,0 +1,215 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: 전투 UI ↔ 게임플레이 API 계약</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2UI__API__CONTRACT.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div><div class="header">
+  <div class="headertitle"><div class="title">전투 UI ↔ 게임플레이 API 계약</div></div>
+</div><!--header-->
+<div class="contents">
+<div class="textblock"><p><a class="anchor" id="autotoc_md24"></a> </p><blockquote class="doxtable">
+<p>&zwj;작성: 박용수(UI/Dice) · 기준 코드: <code><a class="el" href="classUCombatUIModel.html" title="전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다.">UCombatUIModel</a></code> / <code><a class="el" href="CombatUITypes_8h.html">CombatUITypes.h</a></code> 회의(2026-06-15) 합의 = <b>데이터/비주얼 분리 + MVVM</b>. UI는 게임플레이 객체(<code>UUnitData</code>/<code>UDiceData</code>/<code><a class="el" href="classATileMap.html" title="타일맵 액터">ATileMap</a></code>…)를 <b>직접 알지 않고</b>, 이 문서의 뷰 타입과 <code><a class="el" href="classUCombatUIModel.html" title="전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다.">UCombatUIModel</a></code> 계약만으로 동작한다. </p>
+</blockquote>
+<p>전투 UI와 게임플레이는 **<code><a class="el" href="classUCombatUIModel.html" title="전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다.">UCombatUIModel</a></code> 한 곳**에서만 만난다. 권장 소유 위치는 <code><a class="el" href="classUSRPGCombatSubsystem.html" title="SRPG 턴제 전투를 제어하기 위한 서브 시스템">USRPGCombatSubsystem</a></code>(전투 수명)이며, 실제 HUD 배선은 후속 PR에서 붙인다.</p>
+<p>원칙 3줄:</p><ul>
+<li><b>UI는 상태·RNG가 없다.</b> 진실은 게임플레이. UI는 VM의 캐시를 읽어 그리기만.</li>
+<li><b>UI는 행동을 실행하지 않는다.</b> 탭/터치는 "의도"만 보내고(<code>Request*</code>), 게임플레이가 입력 델리게이트를 구독해 실제 처리.</li>
+<li><b>게임플레이가 리팩토링돼도 이 계약만 지키면 UI는 무수정.</b> 게임플레이 미연결 시 <code>MockCombatDriver</code>가 같은 <code>Set*</code>로 가짜 데이터를 밀어 UI 선개발 가능.</li>
+</ul>
+<hr  />
+<h1><a class="anchor" id="autotoc_md26"></a>
+A. 게임플레이가 UI에 &lt;strong&gt;줘야 하는 것&lt;/strong&gt; (gameplay → UI, &lt;tt&gt;Set*&lt;/tt&gt;)</h1>
+<p>게임플레이/어댑터가 표시값을 <code>Set*()</code>로 push → VM이 <code>OnUIChanged(도메인)</code> 발신 → 위젯이 해당 도메인만 다시 그림. <b>UI는 이걸 못 만들어내므로 게임플레이가 반드시 공급해야 한다.</b></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">도메인   </th><th class="markdownTableHeadNone">Set 함수   </th><th class="markdownTableHeadNone">뷰 타입   </th><th class="markdownTableHeadNone">게임플레이가 채워야 할 핵심 필드    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Unit   </td><td class="markdownTableBodyNone"><code>SetUnitUIs(TArray&lt;<a class="el" href="structFUnitUI.html" title="유닛 한 기를 HUD에 그릴 때 필요한 표시값(HP바·스탯·위치).">FUnitUI</a>&gt;)</code>   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFUnitUI.html" title="유닛 한 기를 HUD에 그릴 때 필요한 표시값(HP바·스탯·위치).">FUnitUI</a></code>   </td><td class="markdownTableBodyNone"><code>mUnitId, mIsPlayer, mHP/mMaxHP, mMovementPoint/mMaxMovementPoint, mTile</code>(<a class="el" href="classATileMap.html" title="타일맵 액터">ATileMap</a> 점유 거울값 — 권위는 타일맵 파트.mOccupantUnitId), <code>mWorldLocation</code>(머리위 HP바 투영용), <code>mStatusTags</code>(버프/디버프, enum 아닌 태그)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Unit(상세)   </td><td class="markdownTableBodyNone"><code>SetUnitDetail(FUnitDetailUI)</code>   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFUnitDetailUI.html" title="적/유닛을 길게 눌렀을 때 띄우는 상세 정보(초상화·이름·레벨·패시브 등).">FUnitDetailUI</a></code>   </td><td class="markdownTableBodyNone">롱프레스 시 <code>mName, mLevel, mPortrait, mPassiveDescriptions</code>만(HP/스탯은 중복 보관 X — UI가 <code>mUnitId</code>로 FUnitUI에서 읽음)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Dice   </td><td class="markdownTableBodyNone"><code>SetDiceUIs(TArray&lt;<a class="el" href="structFDiceSlotUI.html" title="주사위 한 칸을 그릴 때 필요한 표시값입니다.">FDiceSlotUI</a>&gt;)</code>   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFDiceSlotUI.html" title="주사위 한 칸을 그릴 때 필요한 표시값입니다.">FDiceSlotUI</a></code>   </td><td class="markdownTableBodyNone"><code>mDiceId, mResultValue</code>(0=미굴림), <code>mIsRolled, mIsSelected, mIsUsed</code>(이번 턴 잠금), <code>mRarityColor/mRarityText</code>(어댑터가 미리 색/문구로 변환), <code>mPreviewTexture</code>(3D 프리뷰용 슬롯, 캡처 계층은 후속)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Dice(선택)   </td><td class="markdownTableBodyNone"><code>SetSelectedDice(TArray&lt;int32&gt;, int32 Sum)</code>   </td><td class="markdownTableBodyNone">—   </td><td class="markdownTableBodyNone">스킬 빌드에 올린 주사위 인덱스들 + 합계    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Skill   </td><td class="markdownTableBodyNone"><code>SetSkillUIs(TArray&lt;<a class="el" href="structFSkillUI.html" title="스킬 레일에 그릴 스킬 한 칸.">FSkillUI</a>&gt;)</code>   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFSkillUI.html" title="스킬 레일에 그릴 스킬 한 칸.">FSkillUI</a></code>   </td><td class="markdownTableBodyNone"><code>mSkillIndex, mName, mIcon, mDiceCost, mIsUsable, mTargeting</code>(사거리/형태 조준 가이드 = StaticSkillData Select*/Hit* 미러)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Skill(상세)   </td><td class="markdownTableBodyNone"><code>SetSkillDetail(FSkillDetailUI)</code>   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFSkillDetailUI.html" title="스킬을 길게 눌렀을 때의 상세창 내용.">FSkillDetailUI</a></code>   </td><td class="markdownTableBodyNone">롱프레스 시 <code>mDescription, mTargeting</code>(풀스펙 사거리/타격범위/곡사·관통) 등    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Turn   </td><td class="markdownTableBodyNone"><code>SetTurnUI(FTurnUI)</code>   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFTurnUI.html" title="현재 턴/라운드/페이즈 상태.">FTurnUI</a></code>   </td><td class="markdownTableBodyNone"><code>mCurrentUnitId, mRound, mPhase</code>(=<code>ECombatBuildPhaseUI</code>, <b>UI 전용</b>: AimSelection/Preview만 develop <code>ESRPGSkillBuildPhase</code>와 매핑, SkillSelected/DiceSelect는 어댑터 파생), <code>mTurnOrderUnitIds</code>    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Equipment   </td><td class="markdownTableBodyNone"><code>SetEquipmentUIs(TArray&lt;<a class="el" href="structFEquipmentUI.html" title="장비 슬롯 하나(전투 중 표시·상세). 인벤토리/장착 변경은 의도(Request)로만 보낸다.">FEquipmentUI</a>&gt;)</code>   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFEquipmentUI.html" title="장비 슬롯 하나(전투 중 표시·상세). 인벤토리/장착 변경은 의도(Request)로만 보낸다.">FEquipmentUI</a></code>   </td><td class="markdownTableBodyNone"><code>mSlotIndex, mItemId, mName, mIcon, mIsEquipped, mRarityColor</code>    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Meta   </td><td class="markdownTableBodyNone"><code>SetPlayerMeta(FPlayerMetaUI)</code>   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFPlayerMetaUI.html" title="플레이어 메타 정보(전투 HUD 상단/보상에 쓰는 돈·경험치·레벨).">FPlayerMetaUI</a></code>   </td><td class="markdownTableBodyNone"><code>mGold, mLevel, mExp/mMaxExp</code> (상단 상태바·보상)   </td></tr>
+</table>
+<h2><a class="anchor" id="autotoc_md27"></a>
+예측/연출 큐 (게임플레이 → UI)</h2>
+<ul>
+<li><code>SetActionQueue(TArray&lt;<a class="el" href="structFCombatQueueNode.html" title="행동/시뮬레이션 결과 큐의 한 노드이며 애니메이션 한 단위에 해당합니다.">FCombatQueueNode</a>&gt;)</code> — 행동/예측 결과를 큐로 통째 전달.</li>
+<li><code>ResolveFrontQueueNode()</code> — 게임플레이가 애니 한 단위를 처리할 때마다 호출 → 맨 앞 노드 비우고 <code>OnQueueNodeResolved(Node)</code> 발신 → UI가 머리 위 숫자 등 1단위 재생.</li>
+<li><code><a class="el" href="structFCombatQueueNode.html" title="행동/시뮬레이션 결과 큐의 한 노드이며 애니메이션 한 단위에 해당합니다.">FCombatQueueNode</a></code> = <code>mTags</code>(Combat.Damage/Status/Heal/Push…), <code>mSourceUnitId, mTargetUnitId, mAmount, mLabel</code>. <b>여러 효과를 타입 폭발 없이 태그로 묶어</b> 한 노드 = 애니 한 단위.</li>
+</ul>
+<h2><a class="anchor" id="autotoc_md28"></a>
+빌드 종료 통지</h2>
+<ul>
+<li><code>NotifyActionResolved()</code> — 스킬/액션이 확정·취소돼 빌드가 끝났을 때 호출 → <code>OnActionResolved</code> → UI가 스킬/주사위 <b>선택 강조 해제</b>.</li>
+</ul>
+<hr  />
+<h1><a class="anchor" id="autotoc_md30"></a>
+B. UI가 게임플레이에 &lt;strong&gt;요구하는 것&lt;/strong&gt; (UI → gameplay, &lt;tt&gt;Request*&lt;/tt&gt; = 의도만)</h1>
+<p>위젯의 탭/터치는 <code>Request*()</code>로 의도만 보냄. VM이 <code>OnCombatCommand</code>/<code>OnCombatWorldTouch</code> 발신 → <b>게임플레이가 구독해 실제 처리</b>. UI는 결과를 직접 만들지 않고, 처리 결과는 위 A의 <code>Set*</code>/큐로 되돌려 받는다.</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">UI 동작   </th><th class="markdownTableHeadNone">Request 함수   </th><th class="markdownTableHeadNone">게임플레이가 받는 신호   </th><th class="markdownTableHeadNone">payload    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">스킬 선택   </td><td class="markdownTableBodyNone"><code>RequestSelectSkill(SkillIndex)</code>   </td><td class="markdownTableBodyNone"><code>OnCombatCommand(SelectSkill, idx)</code>   </td><td class="markdownTableBodyNone">SkillIndex    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">주사위 올림/내림   </td><td class="markdownTableBodyNone"><code>RequestToggleDice(DiceIndex)</code>   </td><td class="markdownTableBodyNone"><code>OnCombatCommand(ToggleDice, idx)</code>   </td><td class="markdownTableBodyNone">DiceIndex    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">주사위 굴림   </td><td class="markdownTableBodyNone"><code>RequestRollDice()</code>   </td><td class="markdownTableBodyNone"><code>OnCombatCommand(RollDice, INDEX_NONE)</code>   </td><td class="markdownTableBodyNone">없음    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">이동 모드   </td><td class="markdownTableBodyNone"><code>RequestMove()</code>   </td><td class="markdownTableBodyNone"><code>OnCombatCommand(Move, INDEX_NONE)</code>   </td><td class="markdownTableBodyNone">없음    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">턴 종료   </td><td class="markdownTableBodyNone"><code>RequestEndTurn()</code>   </td><td class="markdownTableBodyNone"><code>OnCombatCommand(EndTurn, INDEX_NONE)</code>   </td><td class="markdownTableBodyNone">없음    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">취소(딴 데 탭)   </td><td class="markdownTableBodyNone"><code>RequestCancel()</code>   </td><td class="markdownTableBodyNone"><code>OnCombatCommand(Cancel, INDEX_NONE)</code>   </td><td class="markdownTableBodyNone">없음    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">스킬 상세   </td><td class="markdownTableBodyNone"><code>RequestLongPressSkill(SkillIndex)</code>   </td><td class="markdownTableBodyNone"><code>OnCombatCommand(LongPressSkill, idx)</code>   </td><td class="markdownTableBodyNone">SkillIndex    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">적 정보   </td><td class="markdownTableBodyNone"><code>RequestLongPressUnit(UnitId)</code>   </td><td class="markdownTableBodyNone"><code>OnCombatCommand(LongPressUnit, id)</code>   </td><td class="markdownTableBodyNone">UnitId    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">장비 상세   </td><td class="markdownTableBodyNone"><code>RequestLongPressEquip(SlotIndex)</code>   </td><td class="markdownTableBodyNone"><code>OnCombatCommand(LongPressEquip, idx)</code>   </td><td class="markdownTableBodyNone">SlotIndex    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><b>월드 터치</b>(타일/유닛/취소)   </td><td class="markdownTableBodyNone"><code>RequestWorldTouch(ScreenPos, bLongPress)</code>   </td><td class="markdownTableBodyNone"><code>OnCombatWorldTouch(ScreenPos, bLongPress)</code>   </td><td class="markdownTableBodyNone">스크린 좌표 + 롱프레스 여부   </td></tr>
+</table>
+<blockquote class="doxtable">
+<p>&zwj;월드 터치 해석(스크린→타일)은 게임플레이가 수행: <code>DeprojectScreenPositionToWorld</code> → 타일맵 평면 교차 → <code><a class="el" href="classATileMap.html#a65f8825776aa024cbf94d3198613f966" title="월드 위치를 타일 인덱스로 변환">ATileMap::WorldToTileIndex</a></code> + <code>IsValidIndex</code>(맵 밖이면 취소). UI는 스크린 좌표만 넘긴다. </p>
+</blockquote>
+<h1><a class="anchor" id="autotoc_md31"></a>
+&lt;/blockquote&gt;</h1>
+<h1><a class="anchor" id="autotoc_md32"></a>
+C. UI가 &lt;strong&gt;구독하는 알림&lt;/strong&gt; (게임플레이가 발신 → UI가 다시 그림)</h1>
+<ul>
+<li><code>OnUIChanged(ECombatUIDomain)</code> — 바뀐 도메인만 부분 갱신.</li>
+<li><code>OnQueueNodeResolved(FCombatQueueNode)</code> — 큐 1노드 재생.</li>
+<li><code>OnActionResolved()</code> — 선택 강조 해제.</li>
+</ul>
+<hr  />
+<h1><a class="anchor" id="autotoc_md34"></a>
+D. 게임플레이(모호재/김준형) 측 연결 지점 — 무엇을 어디에 물릴지</h1>
+<p>현재는 비GAS <b>임시 어댑터</b>(<code><a class="el" href="classUCombatUIAdapter.html" title="전투 HUD 표시값과 BASIC/STEP/MOVE 액션을 임시로 연결하는 비GAS 어댑터입니다.">UCombatUIAdapter</a></code>)가 A의 <code>Set*</code>를 채우고 B의 입력을 처리한다(플레이스홀더·가상 적 포함). 다이스 데이터는 <code><a class="el" href="classAPlayerUnit.html" title="플레이어 베이스 유닛">APlayerUnit</a></code>의 <code>UDiceComponent</code>/<code>UDiceData</code>가 소유하고, 어댑터가 이를 <code><a class="el" href="structFDiceSlotUI.html" title="주사위 한 칸을 그릴 때 필요한 표시값입니다.">FDiceSlotUI</a></code>로 변환한다. 실제 게임플레이 연결 시 어댑터 자리를 다음으로 대체:</p>
+<ul>
+<li><b>유닛/메타/턴 값</b>(A) ← <code>UUnitData</code>(GAS 폐기 후 일반 런타임 데이터)·<code><a class="el" href="classURunPersistData.html" title="이번 런의 영구적 데이터">URunPersistData</a></code>. 현재 HP/Gold는 플레이스홀더.</li>
+<li><b>다이스</b>(A.Dice / B.Roll·Toggle) ← <code>UDiceData</code>(굴림/보유/사용/index 소유) = 회의의 <b>DiceComponent</b>. 굴림값은 <code>SRPGSkillBuildAction</code>(develop, 스킬에 주사위 적용)로 전달.</li>
+<li><b>스킬 빌드 페이즈</b>(A.Turn.mPhase, <code>ECombatBuildPhaseUI</code>=UI 전용) ← AimSelection/Preview만 develop <code>ESRPGSkillBuildPhase</code>와 매핑, SkillSelected/DiceSelect는 어댑터가 <code>SRPGSkillBuildAction</code> 상태(mSelectedSkillIndex/mSelectedDices)에서 파생. <code><a class="el" href="classACombatGameMode.html#aba5443150d0d970d0b78d47e85426a27">ACombatGameMode::SelectSkill</a></code>/<code>OnChangeSkillBuildPhase</code>와 연동.</li>
+<li><b>데미지/큐</b>(A.Queue) ← <code>UCombatCalculatorFunctionLibrary::CalculateSkillResult</code>의 결과 델타(<code>FSkillCommitResult</code>)를 <code><a class="el" href="structFCombatQueueNode.html" title="행동/시뮬레이션 결과 큐의 한 노드이며 애니메이션 한 단위에 해당합니다.">FCombatQueueNode</a></code>로 변환해 <code>SetActionQueue</code> → 애니 단위마다 <code>ResolveFrontQueueNode</code>.</li>
+<li><b>턴 이벤트</b> ← develop <code><a class="el" href="classUSRPGCombatSubsystem.html" title="SRPG 턴제 전투를 제어하기 위한 서브 시스템">USRPGCombatSubsystem</a></code> Begin/EndTurn 이벤트에 "쓴 주사위 리셋"·턴 표시 갱신 훅.</li>
+</ul>
+<hr  />
+<h1><a class="anchor" id="autotoc_md36"></a>
+E. 아직 안 정해진 것 (게임플레이와 합의 필요)</h1>
+<ul>
+<li>큐 노드 묶음 단위(한 노드+태그 vs 효과별 분리) — 회의 미확정.</li>
+<li>적 정보 표시 = 작은 팝업 ❌ → <b>크게 뜨는 정보 패널</b>(회의 합의) 로 <code><a class="el" href="structFUnitDetailUI.html" title="적/유닛을 길게 눌렀을 때 띄우는 상세 정보(초상화·이름·레벨·패시브 등).">FUnitDetailUI</a></code> 소비.</li>
+<li>주사위 최대 개수 제한 여부(보유 다이스 레이아웃에 영향).</li>
+<li><code>mPhase</code>의 AimSelection/Preview ↔ develop <code>ESRPGSkillBuildPhase</code> 매핑값 확정(SkillSelected/DiceSelect는 UI 파생이라 매핑 대상 아님).</li>
+<li>스킬 <code>mTargeting</code>(SelectShape/HitShape) ↔ develop 최종 SelectType/HitType enum 매핑 확정.</li>
+<li><b>예측 1급화(후속 PR)</b>: <code><a class="el" href="structFCombatQueueNode.html" title="행동/시뮬레이션 결과 큐의 한 노드이며 애니메이션 한 단위에 해당합니다.">FCombatQueueNode</a></code>의 예측 vs 실제 구분 플래그, AoE 다중대상 동시표시, 주사위 토글 시 예측 재계산 루프 — 김준형 예측 API(Mock-up 후) 일정에 맞춰 별도 처리. </li>
+</ul>
+</div></div><!-- contents -->
+</div><!-- PageDoc -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

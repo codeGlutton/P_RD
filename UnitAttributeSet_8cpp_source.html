@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/GAS/Attribute/UnitAttributeSet.cpp 소스 파일</title>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/AttributeSet/UnitAttributeSet.cpp 소스 파일</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -98,92 +98,131 @@ $(document).ready(function(){initNavTree('UnitAttributeSet_8cpp_source.html','')
   <div class="headertitle"><div class="title">UnitAttributeSet.cpp</div></div>
 </div><!--header-->
 <div class="contents">
-<a href="UnitAttributeSet_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="UnitAttributeSet_8h.html">GAS/Attribute/UnitAttributeSet.h</a>&quot;</span></div>
-<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
-<div class="foldopen" id="foldopen00003" data-start="{" data-end="}">
-<div class="line"><a id="l00003" name="l00003"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#ab3b9b2078f700168a3f31941a242bcce">    3</a></span><a class="code hl_function" href="classUUnitAttributeSet.html#ab3b9b2078f700168a3f31941a242bcce">UUnitAttributeSet::UUnitAttributeSet</a>() : MaxHP(FLT_MAX)</div>
-<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span>{</div>
-<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span>}</div>
+<a href="UnitAttributeSet_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="UnitAttributeSet_8h.html">AttributeSet/UnitAttributeSet.h</a>&quot;</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#include &quot;<a class="code" href="AttributeSetComponentModel_8h.html">Component/AttributeComponent/AttributeSetComponentModel.h</a>&quot;</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &quot;<a class="code" href="TacticalEffectContext_8h.html">TAS/Effect/TacticalEffectContext.h</a>&quot;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &quot;<a class="code" href="TacticalEffect__Dead_8h.html">TAS/Effect/Tag/TacticalEffect_Dead.h</a>&quot;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span> </div>
+<div class="foldopen" id="foldopen00035" data-start="{" data-end="}">
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#ab3b9b2078f700168a3f31941a242bcce">   35</a></span><a class="code hl_function" href="classUUnitAttributeSet.html#ab3b9b2078f700168a3f31941a242bcce">UUnitAttributeSet::UUnitAttributeSet</a>() : MaxHP(FLT_MAX)</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>{</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>}</div>
 </div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
-<div class="foldopen" id="foldopen00007" data-start="{" data-end="}">
-<div class="line"><a id="l00007" name="l00007"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#a0e3b068a3228762da1e6854e87638066">    7</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUUnitAttributeSet.html#a0e3b068a3228762da1e6854e87638066">UUnitAttributeSet::PreAttributeChange</a>(<span class="keyword">const</span> FGameplayAttribute&amp; Attribute, <span class="keywordtype">float</span>&amp; NewValue)</div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span>{</div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span>    <span class="comment">/* 체력 변경 시, 체력 초과 방지 */</span></div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>    <span class="keywordflow">if</span> (Attribute == GetHPAttribute())</div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span>    {</div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>        NewValue = FMath::Clamp(NewValue, 0.f, GetMaxHP());</div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>    }</div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>    Super::PreAttributeChange(Attribute, NewValue);</div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>}</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span> </div>
+<div class="foldopen" id="foldopen00044" data-start="{" data-end="}">
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#a07da152dd0c562b39e5469233a8fd917">   44</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUUnitAttributeSet.html#a07da152dd0c562b39e5469233a8fd917">UUnitAttributeSet::PreAttributeChange</a>(<span class="keyword">const</span> <a class="code hl_struct" href="structFTacticalAttribute.html">FTacticalAttribute</a>&amp; Attribute, <span class="keywordtype">float</span>&amp; NewValue)</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>{</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    <span class="comment">/* 체력 변경 시, 체력 초과 방지 */</span></div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>    <span class="keywordflow">if</span> (Attribute == GetHPAttribute())</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>    {</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>        <span class="comment">// HP는 [0, MaxHP] 범위로 클램프 — 음수(과다 피해) 및 MaxHP 초과(과다 회복)를 모두 차단한다.</span></div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>        NewValue = FMath::Clamp(NewValue, 0.f, GetMaxHP());</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    }</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span> </div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    Super::PreAttributeChange(Attribute, NewValue);</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>}</div>
 </div>
-<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span> </div>
-<div class="foldopen" id="foldopen00018" data-start="{" data-end="}">
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#a4f64d2a613b0c5f19d3180f8a15d5050">   18</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUUnitAttributeSet.html#a4f64d2a613b0c5f19d3180f8a15d5050">UUnitAttributeSet::PostAttributeChange</a>(<span class="keyword">const</span> FGameplayAttribute&amp; Attribute, <span class="keywordtype">float</span> OldValue, <span class="keywordtype">float</span> NewValue)</div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>{</div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    Super::PostAttributeChange(Attribute, OldValue, NewValue);</div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span> </div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    <span class="comment">/* 체력 최댓값 변경 시, 체력 초과 방지 */</span></div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    <span class="keywordflow">if</span> (Attribute == GetMaxHPAttribute())</div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    {</div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>        <span class="keywordflow">if</span> (GetHP() &gt; NewValue)</div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>        {</div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>            UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();</div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>            ASC-&gt;ApplyModToAttribute(GetHPAttribute(), EGameplayModOp::Override, NewValue);</div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>        }</div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    }</div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>}</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span> </div>
+<div class="foldopen" id="foldopen00062" data-start="{" data-end="}">
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno"><a class="line" href="classUUnitAttributeSet.html#a0ebaa30e444bb23212b627ea486586a8">   62</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUUnitAttributeSet.html#a0ebaa30e444bb23212b627ea486586a8">UUnitAttributeSet::PostAttributeChange</a>(<span class="keyword">const</span> <a class="code hl_struct" href="structFTacticalAttribute.html">FTacticalAttribute</a>&amp; Attribute, <span class="keywordtype">float</span> OldValue, <span class="keywordtype">float</span> NewValue)</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>{</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>    Super::PostAttributeChange(Attribute, OldValue, NewValue);</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span> </div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>    <span class="comment">/* 체력 최댓값 변경 시, 체력 초과 방지 */</span></div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    <span class="keywordflow">if</span> (Attribute == GetMaxHPAttribute())</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>    {</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>        <span class="comment">// MaxHP가 줄어들어 현재 HP가 새 상한을 넘어선 경우에만 HP를 끌어내린다.</span></div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>        <span class="keywordflow">if</span> (GetHP() &gt; NewValue)</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>        {</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>            <a class="code hl_class" href="classUAttributeSetComponentModel.html">UAttributeSetComponentModel</a>* ASC = <a class="code hl_function" href="classUTacticalAttributeSet.html#a235227a727b29bad6a4d4574733b63bd">GetOwningAttributeSetComponentModel</a>();</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>            <span class="comment">// [PR #191 enum 치환 지점] 구 EGameplayModOp::Override -&gt; ETacticalModOp::Override(정수값 3).</span></div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>            <span class="comment">// Override는 &quot;덮어쓰기&quot; 연산이므로, 기존 HP를 무시하고 새 MaxHP 값(NewValue)으로 강제 설정한다.</span></div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>            <span class="comment">// (정수값 3은 구 GAS와 동일하게 유지되므로 직렬화/배열 인덱싱/CoreRedirect 호환이 보장된다.)</span></div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>            ASC-&gt;<a class="code hl_function" href="classUAttributeSetComponentModel.html#aff57414b4fc7663fddd49d202cf924f5">ApplyModToAttribute</a>(GetHPAttribute(), <a class="code hl_enumvalue" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4daa60c6b7cabf4e650f3959412d9636aa6">ETacticalModOp::Override</a>, NewValue);</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>        }</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    }</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span> </div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    <span class="keywordflow">if</span> (Attribute == GetHPAttribute() &amp;&amp; OldValue &gt; 0.f &amp;&amp; NewValue &lt;= 0.f)</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>    {</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>        <a class="code hl_class" href="classUAttributeSetComponentModel.html">UAttributeSetComponentModel</a>* ASC = <a class="code hl_function" href="classUTacticalAttributeSet.html#a235227a727b29bad6a4d4574733b63bd">GetOwningAttributeSetComponentModel</a>();</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span> </div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>        <a class="code hl_class" href="classUTacticalEffectContext.html">UTacticalEffectContext</a>* EffectContext = ASC-&gt;<a class="code hl_function" href="classUAttributeSetComponentModel.html#a7dcb5665837dfca1ee76bb5cc744cc7a">MakeEffectContext</a>();</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>        EffectContext-&gt;<a class="code hl_function" href="classUTacticalEffectContext.html#a8697eaeecf56cf0fd8bf5883bcbafafd">SetInstigator</a>(<a class="code hl_function" href="classUTacticalAttributeSet.html#ae9cd9cb07999d1172135af3d9a6b59ba">GetOwningActor</a>());</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>        EffectContext-&gt;<a class="code hl_function" href="classUTacticalEffectContext.html#a082b7b78240f61eac7d448a4182a3330">SetAttributeSetComponentModel</a>(ASC);</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span> </div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>        TSharedPtr&lt;FTacticalEffectSpec&gt; InfiniteEffect = ASC-&gt;<a class="code hl_function" href="classUAttributeSetComponentModel.html#a518e3f256d80cf410aed06ce44166af6">MakeOutgoingSpec</a>(UTacticalEffect_Dead::StaticClass(), EffectContext);</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>        <a class="code hl_struct" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a> ActiveHandle = ASC-&gt;<a class="code hl_function" href="classUAttributeSetComponentModel.html#a0965ec9d16cca8f26e038f4321f54443">ApplyTacticalEffectSpecToSelf</a>(*InfiniteEffect);</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>    }</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>}</div>
 </div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
-<div class="foldopen" id="foldopen00033" data-start="{" data-end="}">
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno"><a class="line" href="classUPlayerUnitAttributeSet.html#a35491d25ba60b9151592926edd3ee315">   33</a></span><a class="code hl_function" href="classUPlayerUnitAttributeSet.html#a35491d25ba60b9151592926edd3ee315">UPlayerUnitAttributeSet::UPlayerUnitAttributeSet</a>()</div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>{</div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>}</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span> </div>
+<div class="foldopen" id="foldopen00096" data-start="{" data-end="}">
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno"><a class="line" href="classUPlayerUnitAttributeSet.html#a35491d25ba60b9151592926edd3ee315">   96</a></span><a class="code hl_function" href="classUPlayerUnitAttributeSet.html#a35491d25ba60b9151592926edd3ee315">UPlayerUnitAttributeSet::UPlayerUnitAttributeSet</a>()</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>{</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>}</div>
 </div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span> </div>
-<div class="foldopen" id="foldopen00037" data-start="{" data-end="}">
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno"><a class="line" href="classUPlayerUnitAttributeSet.html#a9ba5945c7c05afc4ae1bd5ccec4488b5">   37</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUPlayerUnitAttributeSet.html#a9ba5945c7c05afc4ae1bd5ccec4488b5">UPlayerUnitAttributeSet::PreAttributeChange</a>(<span class="keyword">const</span> FGameplayAttribute&amp; Attribute, <span class="keywordtype">float</span>&amp; NewValue)</div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>{</div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    <span class="comment">/* 경험치 감소 시, 마이너스 방지 */</span></div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>    <span class="keywordflow">if</span> (Attribute == GetExpAttribute())</div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    {</div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>        NewValue = FMath::Max(NewValue, 0.f);</div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>    }</div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>    Super::PreAttributeChange(Attribute, NewValue);</div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>}</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span> </div>
+<div class="foldopen" id="foldopen00105" data-start="{" data-end="}">
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno"><a class="line" href="classUPlayerUnitAttributeSet.html#a5e15121cefa974bb61610dec7ff037d6">  105</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUPlayerUnitAttributeSet.html#a5e15121cefa974bb61610dec7ff037d6">UPlayerUnitAttributeSet::PreAttributeChange</a>(<span class="keyword">const</span> <a class="code hl_struct" href="structFTacticalAttribute.html">FTacticalAttribute</a>&amp; Attribute, <span class="keywordtype">float</span>&amp; NewValue)</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>{</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    <span class="comment">/* 경험치 감소 시, 마이너스 방지 */</span></div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>    <span class="keywordflow">if</span> (Attribute == GetExpAttribute())</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>    {</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>        <span class="comment">// Exp 하한을 0으로 고정 — 경험치 차감 효과가 누적되어 음수가 되는 것을 방지한다.</span></div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>        NewValue = FMath::Max(NewValue, 0.f);</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    }</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span> </div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>    Super::PreAttributeChange(Attribute, NewValue);</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>}</div>
 </div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
-<div class="foldopen" id="foldopen00048" data-start="{" data-end="}">
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno"><a class="line" href="classUPlayerUnitAttributeSet.html#aa4d17b88ca3447a953e33052552acb4e">   48</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUPlayerUnitAttributeSet.html#aa4d17b88ca3447a953e33052552acb4e">UPlayerUnitAttributeSet::PostAttributeChange</a>(<span class="keyword">const</span> FGameplayAttribute&amp; Attribute, <span class="keywordtype">float</span> OldValue, <span class="keywordtype">float</span> NewValue)</div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>{</div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    Super::PostAttributeChange(Attribute, OldValue, NewValue);</div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span> </div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    <span class="comment">/* 경험치 초과 시, 레벨 증가 */</span></div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    <span class="keywordflow">if</span> (Attribute == GetExpAttribute())</div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    {</div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>        <span class="keywordflow">if</span> (NewValue &gt;= GetMaxExp())</div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>        {</div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>            UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();</div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>            ASC-&gt;TryActivateAbilitiesByTag(FGameplayTagContainer(AbilityTags::GameplayAbility_LevelUp));</div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>        }</div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>    }</div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>}</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span> </div>
+<div class="foldopen" id="foldopen00123" data-start="{" data-end="}">
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno"><a class="line" href="classUPlayerUnitAttributeSet.html#a89ec6cd6d39564d967ab0e385a291475">  123</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUPlayerUnitAttributeSet.html#a89ec6cd6d39564d967ab0e385a291475">UPlayerUnitAttributeSet::PostAttributeChange</a>(<span class="keyword">const</span> <a class="code hl_struct" href="structFTacticalAttribute.html">FTacticalAttribute</a>&amp; Attribute, <span class="keywordtype">float</span> OldValue, <span class="keywordtype">float</span> NewValue)</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>{</div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>    Super::PostAttributeChange(Attribute, OldValue, NewValue);</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span> </div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>    <span class="comment">/* 경험치 초과 시, 레벨 증가 */</span></div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>    <span class="keywordflow">if</span> (Attribute == GetExpAttribute())</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>    {</div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>        <span class="comment">// 현재 Exp가 레벨업 임계치(MaxExp) 이상이면 레벨업 처리 진입.</span></div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>        <span class="keywordflow">if</span> (NewValue &gt;= GetMaxExp())</div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>        {</div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>            <a class="code hl_class" href="classUAttributeSetComponentModel.html">UAttributeSetComponentModel</a>* ASC = <a class="code hl_function" href="classUTacticalAttributeSet.html#a235227a727b29bad6a4d4574733b63bd">GetOwningAttributeSetComponentModel</a>();</div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span> </div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>            <span class="comment">// TODO : 레벨업 시도 (ASC를 통해 Level 증가 및 Exp 초기화 모디파이어 적용 예정)</span></div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>        }</div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>    }</div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>}</div>
 </div>
+<div class="ttc" id="aAttributeSetComponentModel_8h_html"><div class="ttname"><a href="AttributeSetComponentModel_8h.html">AttributeSetComponentModel.h</a></div><div class="ttdoc">속성 컴포넌트 모델 정의 헤더</div></div>
+<div class="ttc" id="aTacticalEffectContext_8h_html"><div class="ttname"><a href="TacticalEffectContext_8h.html">TacticalEffectContext.h</a></div><div class="ttdoc">이펙트 적용 시 참고되는 공용 메타 데이터 구현 헤더</div></div>
+<div class="ttc" id="aTacticalEffect__Dead_8h_html"><div class="ttname"><a href="TacticalEffect__Dead_8h.html">TacticalEffect_Dead.h</a></div><div class="ttdoc">Dead 이펙트 정의 헤더</div></div>
 <div class="ttc" id="aUnitAttributeSet_8h_html"><div class="ttname"><a href="UnitAttributeSet_8h.html">UnitAttributeSet.h</a></div><div class="ttdoc">SRPGUnit에 대한 Attribute Set 정의 헤더</div></div>
-<div class="ttc" id="aclassUPlayerUnitAttributeSet_html_a35491d25ba60b9151592926edd3ee315"><div class="ttname"><a href="classUPlayerUnitAttributeSet.html#a35491d25ba60b9151592926edd3ee315">UPlayerUnitAttributeSet::UPlayerUnitAttributeSet</a></div><div class="ttdeci">UPlayerUnitAttributeSet()</div><div class="ttdef"><b>Definition</b> <a href="UnitAttributeSet_8cpp_source.html#l00033">UnitAttributeSet.cpp:33</a></div></div>
-<div class="ttc" id="aclassUPlayerUnitAttributeSet_html_a9ba5945c7c05afc4ae1bd5ccec4488b5"><div class="ttname"><a href="classUPlayerUnitAttributeSet.html#a9ba5945c7c05afc4ae1bd5ccec4488b5">UPlayerUnitAttributeSet::PreAttributeChange</a></div><div class="ttdeci">void PreAttributeChange(const FGameplayAttribute &amp;Attribute, float &amp;NewValue) override</div><div class="ttdef"><b>Definition</b> <a href="UnitAttributeSet_8cpp_source.html#l00037">UnitAttributeSet.cpp:37</a></div></div>
-<div class="ttc" id="aclassUPlayerUnitAttributeSet_html_aa4d17b88ca3447a953e33052552acb4e"><div class="ttname"><a href="classUPlayerUnitAttributeSet.html#aa4d17b88ca3447a953e33052552acb4e">UPlayerUnitAttributeSet::PostAttributeChange</a></div><div class="ttdeci">void PostAttributeChange(const FGameplayAttribute &amp;Attribute, float OldValue, float NewValue) override</div><div class="ttdef"><b>Definition</b> <a href="UnitAttributeSet_8cpp_source.html#l00048">UnitAttributeSet.cpp:48</a></div></div>
-<div class="ttc" id="aclassUUnitAttributeSet_html_a0e3b068a3228762da1e6854e87638066"><div class="ttname"><a href="classUUnitAttributeSet.html#a0e3b068a3228762da1e6854e87638066">UUnitAttributeSet::PreAttributeChange</a></div><div class="ttdeci">void PreAttributeChange(const FGameplayAttribute &amp;Attribute, float &amp;NewValue) override</div><div class="ttdef"><b>Definition</b> <a href="UnitAttributeSet_8cpp_source.html#l00007">UnitAttributeSet.cpp:7</a></div></div>
-<div class="ttc" id="aclassUUnitAttributeSet_html_a4f64d2a613b0c5f19d3180f8a15d5050"><div class="ttname"><a href="classUUnitAttributeSet.html#a4f64d2a613b0c5f19d3180f8a15d5050">UUnitAttributeSet::PostAttributeChange</a></div><div class="ttdeci">void PostAttributeChange(const FGameplayAttribute &amp;Attribute, float OldValue, float NewValue) override</div><div class="ttdef"><b>Definition</b> <a href="UnitAttributeSet_8cpp_source.html#l00018">UnitAttributeSet.cpp:18</a></div></div>
-<div class="ttc" id="aclassUUnitAttributeSet_html_ab3b9b2078f700168a3f31941a242bcce"><div class="ttname"><a href="classUUnitAttributeSet.html#ab3b9b2078f700168a3f31941a242bcce">UUnitAttributeSet::UUnitAttributeSet</a></div><div class="ttdeci">UUnitAttributeSet()</div><div class="ttdef"><b>Definition</b> <a href="UnitAttributeSet_8cpp_source.html#l00003">UnitAttributeSet.cpp:3</a></div></div>
+<div class="ttc" id="aclassUAttributeSetComponentModel_html"><div class="ttname"><a href="classUAttributeSetComponentModel.html">UAttributeSetComponentModel</a></div><div class="ttdoc">한 유닛(액터)이 보유하는 모든 TacticalAttributeSet, 활성 Effect, 게임플레이 태그 카운트를 관리하는 컴포넌트 모델.</div><div class="ttdef"><b>Definition</b> <a href="AttributeSetComponentModel_8h_source.html#l00032">AttributeSetComponentModel.h:33</a></div></div>
+<div class="ttc" id="aclassUAttributeSetComponentModel_html_a0965ec9d16cca8f26e038f4321f54443"><div class="ttname"><a href="classUAttributeSetComponentModel.html#a0965ec9d16cca8f26e038f4321f54443">UAttributeSetComponentModel::ApplyTacticalEffectSpecToSelf</a></div><div class="ttdeci">virtual FActiveTacticalEffectHandle ApplyTacticalEffectSpecToSelf(const FTacticalEffectSpec &amp;Spec)</div><div class="ttdoc">Effect Spec을 자기 자신에게 적용한다.</div><div class="ttdef"><b>Definition</b> <a href="AttributeSetComponentModel_8cpp_source.html#l00410">AttributeSetComponentModel.cpp:410</a></div></div>
+<div class="ttc" id="aclassUAttributeSetComponentModel_html_a518e3f256d80cf410aed06ce44166af6"><div class="ttname"><a href="classUAttributeSetComponentModel.html#a518e3f256d80cf410aed06ce44166af6">UAttributeSetComponentModel::MakeOutgoingSpec</a></div><div class="ttdeci">virtual TSharedPtr&lt; FTacticalEffectSpec &gt; MakeOutgoingSpec(TSubclassOf&lt; UTacticalEffect &gt; EffectClass, UTacticalEffectContext *Context) const</div><div class="ttdoc">주어진 Effect 클래스로부터 외부에 적용할 Spec을 생성한다.</div><div class="ttdef"><b>Definition</b> <a href="AttributeSetComponentModel_8cpp_source.html#l00369">AttributeSetComponentModel.cpp:369</a></div></div>
+<div class="ttc" id="aclassUAttributeSetComponentModel_html_a7dcb5665837dfca1ee76bb5cc744cc7a"><div class="ttname"><a href="classUAttributeSetComponentModel.html#a7dcb5665837dfca1ee76bb5cc744cc7a">UAttributeSetComponentModel::MakeEffectContext</a></div><div class="ttdeci">virtual UTacticalEffectContext * MakeEffectContext() const</div><div class="ttdoc">새 Effect Context를 생성한다(적용 주체/인과 정보를 담는 컨테이너).</div><div class="ttdef"><b>Definition</b> <a href="AttributeSetComponentModel_8cpp_source.html#l00352">AttributeSetComponentModel.cpp:352</a></div></div>
+<div class="ttc" id="aclassUAttributeSetComponentModel_html_aff57414b4fc7663fddd49d202cf924f5"><div class="ttname"><a href="classUAttributeSetComponentModel.html#aff57414b4fc7663fddd49d202cf924f5">UAttributeSetComponentModel::ApplyModToAttribute</a></div><div class="ttdeci">void ApplyModToAttribute(const FTacticalAttribute &amp;Attribute, TEnumAsByte&lt; ETacticalModOp::Type &gt; ModifierOp, float ModifierMagnitude)</div><div class="ttdoc">단일 모디파이어를 속성에 즉시 적용한다.</div><div class="ttdef"><b>Definition</b> <a href="AttributeSetComponentModel_8cpp_source.html#l00343">AttributeSetComponentModel.cpp:343</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitAttributeSet_html_a35491d25ba60b9151592926edd3ee315"><div class="ttname"><a href="classUPlayerUnitAttributeSet.html#a35491d25ba60b9151592926edd3ee315">UPlayerUnitAttributeSet::UPlayerUnitAttributeSet</a></div><div class="ttdeci">UPlayerUnitAttributeSet()</div><div class="ttdoc">플레이어 전용 어트리뷰트 셋 기본 생성자.</div><div class="ttdef"><b>Definition</b> <a href="UnitAttributeSet_8cpp_source.html#l00096">UnitAttributeSet.cpp:96</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitAttributeSet_html_a5e15121cefa974bb61610dec7ff037d6"><div class="ttname"><a href="classUPlayerUnitAttributeSet.html#a5e15121cefa974bb61610dec7ff037d6">UPlayerUnitAttributeSet::PreAttributeChange</a></div><div class="ttdeci">void PreAttributeChange(const FTacticalAttribute &amp;Attribute, float &amp;NewValue) override</div><div class="ttdoc">플레이어 어트리뷰트 반영 직전 보정. Exp가 음수로 내려가는 것을 막는다.</div><div class="ttdef"><b>Definition</b> <a href="UnitAttributeSet_8cpp_source.html#l00105">UnitAttributeSet.cpp:105</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitAttributeSet_html_a89ec6cd6d39564d967ab0e385a291475"><div class="ttname"><a href="classUPlayerUnitAttributeSet.html#a89ec6cd6d39564d967ab0e385a291475">UPlayerUnitAttributeSet::PostAttributeChange</a></div><div class="ttdeci">void PostAttributeChange(const FTacticalAttribute &amp;Attribute, float OldValue, float NewValue) override</div><div class="ttdoc">플레이어 어트리뷰트 반영 직후 처리. Exp가 MaxExp에 도달하면 레벨업을 트리거한다.</div><div class="ttdef"><b>Definition</b> <a href="UnitAttributeSet_8cpp_source.html#l00123">UnitAttributeSet.cpp:123</a></div></div>
+<div class="ttc" id="aclassUTacticalAttributeSet_html_a235227a727b29bad6a4d4574733b63bd"><div class="ttname"><a href="classUTacticalAttributeSet.html#a235227a727b29bad6a4d4574733b63bd">UTacticalAttributeSet::GetOwningAttributeSetComponentModel</a></div><div class="ttdeci">UAttributeSetComponentModel * GetOwningAttributeSetComponentModel() const</div><div class="ttdef"><b>Definition</b> <a href="TacticalAttributeSet_8cpp_source.html#l00374">TacticalAttributeSet.cpp:374</a></div></div>
+<div class="ttc" id="aclassUTacticalAttributeSet_html_ae9cd9cb07999d1172135af3d9a6b59ba"><div class="ttname"><a href="classUTacticalAttributeSet.html#ae9cd9cb07999d1172135af3d9a6b59ba">UTacticalAttributeSet::GetOwningActor</a></div><div class="ttdeci">UActorModel * GetOwningActor() const</div><div class="ttdef"><b>Definition</b> <a href="TacticalAttributeSet_8cpp_source.html#l00369">TacticalAttributeSet.cpp:369</a></div></div>
+<div class="ttc" id="aclassUTacticalEffectContext_html"><div class="ttname"><a href="classUTacticalEffectContext.html">UTacticalEffectContext</a></div><div class="ttdoc">이펙트 적용 시 참고되는 공용 메타 데이터 구현 헤더</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffectContext_8h_source.html#l00025">TacticalEffectContext.h:26</a></div></div>
+<div class="ttc" id="aclassUTacticalEffectContext_html_a082b7b78240f61eac7d448a4182a3330"><div class="ttname"><a href="classUTacticalEffectContext.html#a082b7b78240f61eac7d448a4182a3330">UTacticalEffectContext::SetAttributeSetComponentModel</a></div><div class="ttdeci">void SetAttributeSetComponentModel(const UAttributeSetComponentModel *Model)</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffectContext_8cpp_source.html#l00033">TacticalEffectContext.cpp:33</a></div></div>
+<div class="ttc" id="aclassUTacticalEffectContext_html_a8697eaeecf56cf0fd8bf5883bcbafafd"><div class="ttname"><a href="classUTacticalEffectContext.html#a8697eaeecf56cf0fd8bf5883bcbafafd">UTacticalEffectContext::SetInstigator</a></div><div class="ttdeci">void SetInstigator(UActorModel *Instigator)</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffectContext_8cpp_source.html#l00013">TacticalEffectContext.cpp:13</a></div></div>
+<div class="ttc" id="aclassUUnitAttributeSet_html_a07da152dd0c562b39e5469233a8fd917"><div class="ttname"><a href="classUUnitAttributeSet.html#a07da152dd0c562b39e5469233a8fd917">UUnitAttributeSet::PreAttributeChange</a></div><div class="ttdeci">void PreAttributeChange(const FTacticalAttribute &amp;Attribute, float &amp;NewValue) override</div><div class="ttdoc">어트리뷰트 값이 실제로 반영되기 &quot;직전&quot;에 호출되어 NewValue를 보정한다.</div><div class="ttdef"><b>Definition</b> <a href="UnitAttributeSet_8cpp_source.html#l00044">UnitAttributeSet.cpp:44</a></div></div>
+<div class="ttc" id="aclassUUnitAttributeSet_html_a0ebaa30e444bb23212b627ea486586a8"><div class="ttname"><a href="classUUnitAttributeSet.html#a0ebaa30e444bb23212b627ea486586a8">UUnitAttributeSet::PostAttributeChange</a></div><div class="ttdeci">void PostAttributeChange(const FTacticalAttribute &amp;Attribute, float OldValue, float NewValue) override</div><div class="ttdoc">어트리뷰트 값이 반영된 &quot;직후&quot;에 호출되어 파생 효과를 처리한다.</div><div class="ttdef"><b>Definition</b> <a href="UnitAttributeSet_8cpp_source.html#l00062">UnitAttributeSet.cpp:62</a></div></div>
+<div class="ttc" id="aclassUUnitAttributeSet_html_ab3b9b2078f700168a3f31941a242bcce"><div class="ttname"><a href="classUUnitAttributeSet.html#ab3b9b2078f700168a3f31941a242bcce">UUnitAttributeSet::UUnitAttributeSet</a></div><div class="ttdeci">UUnitAttributeSet()</div><div class="ttdoc">기본 생성자. MaxHP를 FLT_MAX로 초기화하여, 별도 데이터로 덮어쓰기 전까지는 PreAttributeChange의 HP 클램프 상한이 사실상 무제한이 되도록 한다.</div><div class="ttdef"><b>Definition</b> <a href="UnitAttributeSet_8cpp_source.html#l00035">UnitAttributeSet.cpp:35</a></div></div>
+<div class="ttc" id="anamespaceETacticalModOp_html_ab00d942643ba92aefd4d59fa25e5cd4daa60c6b7cabf4e650f3959412d9636aa6"><div class="ttname"><a href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4daa60c6b7cabf4e650f3959412d9636aa6">ETacticalModOp::Override</a></div><div class="ttdeci">@ Override</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffectType_8h_source.html#l00103">TacticalEffectType.h:103</a></div></div>
+<div class="ttc" id="astructFActiveTacticalEffectHandle_html"><div class="ttname"><a href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a></div><div class="ttdoc">활성화된 이펙트를 쉽게 탐색하기 위한 핸들</div><div class="ttdef"><b>Definition</b> <a href="ActiveTacticalEffect_8h_source.html#l00039">ActiveTacticalEffect.h:40</a></div></div>
+<div class="ttc" id="astructFTacticalAttribute_html"><div class="ttname"><a href="structFTacticalAttribute.html">FTacticalAttribute</a></div><div class="ttdef"><b>Definition</b> <a href="TacticalAttributeSet_8h_source.html#l00074">TacticalAttributeSet.h:75</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_52e018a2ea224e6f27385fcdfacd6da6.html">GAS</a></li><li class="navelem"><a class="el" href="dir_179f6e5caaef98f9049f1dd1bed1aa77.html">Attribute</a></li><li class="navelem"><a class="el" href="UnitAttributeSet_8cpp.html">UnitAttributeSet.cpp</a></li>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_dabcf9a26b38b8cd1c7418bd266895b3.html">AttributeSet</a></li><li class="navelem"><a class="el" href="UnitAttributeSet_8cpp.html">UnitAttributeSet.cpp</a></li>
     <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
   </ul>
 </div>

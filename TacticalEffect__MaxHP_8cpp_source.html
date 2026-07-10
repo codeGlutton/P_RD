@@ -1,0 +1,169 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/TAS/Effect/Stat/TacticalEffect_MaxHP.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('TacticalEffect__MaxHP_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">TacticalEffect_MaxHP.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="TacticalEffect__MaxHP_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*****************************************************************/</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &quot;<a class="code" href="TacticalEffect__MaxHP_8h.html">TAS/Effect/Stat/TacticalEffect_MaxHP.h</a>&quot;</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &quot;<a class="code" href="UnitAttributeSet_8h.html">AttributeSet/UnitAttributeSet.h</a>&quot;</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;<a class="code" href="EventLogger_8h.html">Simulation/Logger/EventLogger.h</a>&quot;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span> </div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &quot;<a class="code" href="TacticalEffectContext_8h.html">TAS/Effect/TacticalEffectContext.h</a>&quot;</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
+<div class="foldopen" id="foldopen00014" data-start="{" data-end="}">
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno"><a class="line" href="classUTacticalEffect__MaxHP.html#ab08e7c4df69e8db5535c7137c97aa3bd">   14</a></span><a class="code hl_function" href="classUTacticalEffect__MaxHP.html#ab08e7c4df69e8db5535c7137c97aa3bd">UTacticalEffect_MaxHP::UTacticalEffect_MaxHP</a>()</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>{</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>    <span class="comment">// 즉시형</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    <a class="code hl_variable" href="classUTacticalEffect.html#afd0b3c03544e82acb3aa9413929353f9">mDurationPolicy</a> = <a class="code hl_enumvalue" href="TacticalEffectType_8h.html#a9a0e4bd42177847be28fb73cdc48c72ba54828f327f31abd59f2f459c0247756d">ETacticalEffectDurationType::Instant</a>;</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    <a class="code hl_variable" href="classUTacticalEffect.html#a433a0f90e1fd45083813d68683d75c8d">mStackingType</a> = ETacticalEffectStackingType::None;</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span> </div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    <a class="code hl_struct" href="structFTacticalModifierInfo.html">FTacticalModifierInfo</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Info</a>;</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Info</a>.mAttribute = UUnitAttributeSet::GetMaxHPAttribute();</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Info</a>.mModifierOp = ETacticalModOp::AddBase;</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Info</a>.mModifierMagnitude = 1.f;</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    <a class="code hl_variable" href="classUTacticalEffect.html#a780737f8be18ff8a2cb746f4d08c8c96">mModifiers</a>.Add(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Info</a>);</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>}</div>
+</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span> </div>
+<div class="foldopen" id="foldopen00028" data-start="{" data-end="}">
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno"><a class="line" href="classUTacticalEffect__MaxHP.html#aaeee68c551bb9480303f912843ad8d00">   28</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUTacticalEffect__MaxHP.html#aaeee68c551bb9480303f912843ad8d00">UTacticalEffect_MaxHP::OnExecuted</a>(<a class="code hl_struct" href="structFActiveTacticalEffectsContainer.html">FActiveTacticalEffectsContainer</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ActiveTEContainer</a>, <a class="code hl_struct" href="structFTacticalEffectSpec.html">FTacticalEffectSpec</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TESpec</a>)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    Super::OnExecuted(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ActiveTEContainer</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TESpec</a>);</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span> </div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    <a class="code hl_struct" href="structFSRPGAttributeEffectEventLog.html">FSRPGAttributeEffectEventLog</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Log</a>;</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Log</a>.mEffectAttribute = UUnitAttributeSet::GetMaxHPAttribute();</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Log</a>.mMagnitude = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TESpec</a>.mModifierValues[0];</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span> </div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    <a class="code hl_class" href="classUAttributeSetComponentModel.html">UAttributeSetComponentModel</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetCompModelInstance</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ActiveTEContainer</a>.mOwner.Get();</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    <span class="keyword">const</span> <a class="code hl_class" href="classUActorModel.html">UActorModel</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Instigator</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetCompModelInstance</a>-&gt;GetOwnerModel();</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span> </div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#a94d7f6f0e8f79153c764078984e14f66">GetWorldEventLogger</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Instigator</a>)-&gt;<a class="code hl_variable" href="classUEventLogger.html#a26fe30fde8417e236752016a17856dec">LogAttributeEffect</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Instigator</a>-&gt;<a class="code hl_function" href="classUObjectModel.html#a2e50e7079ee175afb26af92641d179cc">GetModelId</a>(), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Instigator</a>-&gt;GetClass(), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Log</a>);</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>}</div>
+</div>
+<div class="ttc" id="aEventLogger_8h_html"><div class="ttname"><a href="EventLogger_8h.html">EventLogger.h</a></div><div class="ttdoc">시뮬레이션 결과 기록용 로거 헤더</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_a94d7f6f0e8f79153c764078984e14f66"><div class="ttname"><a href="RDMinimal_8cpp.html#a94d7f6f0e8f79153c764078984e14f66">GetWorldEventLogger</a></div><div class="ttdeci">UEventLogger * GetWorldEventLogger(const UObject *WorldContextObject)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00036">RDMinimal.cpp:36</a></div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aTacticalEffectContext_8h_html"><div class="ttname"><a href="TacticalEffectContext_8h.html">TacticalEffectContext.h</a></div><div class="ttdoc">이펙트 적용 시 참고되는 공용 메타 데이터 구현 헤더</div></div>
+<div class="ttc" id="aTacticalEffectType_8h_html_a9a0e4bd42177847be28fb73cdc48c72ba54828f327f31abd59f2f459c0247756d"><div class="ttname"><a href="TacticalEffectType_8h.html#a9a0e4bd42177847be28fb73cdc48c72ba54828f327f31abd59f2f459c0247756d">ETacticalEffectDurationType::Instant</a></div><div class="ttdeci">@ Instant</div></div>
+<div class="ttc" id="aTacticalEffect__MaxHP_8h_html"><div class="ttname"><a href="TacticalEffect__MaxHP_8h.html">TacticalEffect_MaxHP.h</a></div><div class="ttdoc">MaxHP 이펙트 정의 헤더</div></div>
+<div class="ttc" id="aUnitAttributeSet_8h_html"><div class="ttname"><a href="UnitAttributeSet_8h.html">UnitAttributeSet.h</a></div><div class="ttdoc">SRPGUnit에 대한 Attribute Set 정의 헤더</div></div>
+<div class="ttc" id="aclassUActorModel_html"><div class="ttname"><a href="classUActorModel.html">UActorModel</a></div><div class="ttdoc">액터 데이터 모델 클래스</div><div class="ttdef"><b>Definition</b> <a href="ActorModel_8h_source.html#l00022">ActorModel.h:23</a></div></div>
+<div class="ttc" id="aclassUAttributeSetComponentModel_html"><div class="ttname"><a href="classUAttributeSetComponentModel.html">UAttributeSetComponentModel</a></div><div class="ttdoc">한 유닛(액터)이 보유하는 모든 TacticalAttributeSet, 활성 Effect, 게임플레이 태그 카운트를 관리하는 컴포넌트 모델.</div><div class="ttdef"><b>Definition</b> <a href="AttributeSetComponentModel_8h_source.html#l00032">AttributeSetComponentModel.h:33</a></div></div>
+<div class="ttc" id="aclassUEventLogger_html_a26fe30fde8417e236752016a17856dec"><div class="ttname"><a href="classUEventLogger.html#a26fe30fde8417e236752016a17856dec">UEventLogger::LogAttributeEffect</a></div><div class="ttdeci">virtual void LogAttributeEffect(int32 TargetActorID, UClass *BoardActorModelClass, const FSRPGAttributeEffectEventLog &amp;Log) PURE_VIRTUAL(UEventLogger</div><div class="ttdef"><b>Definition</b> <a href="EventLogger_8h_source.html#l00038">EventLogger.h:38</a></div></div>
+<div class="ttc" id="aclassUObjectModel_html_a2e50e7079ee175afb26af92641d179cc"><div class="ttname"><a href="classUObjectModel.html#a2e50e7079ee175afb26af92641d179cc">UObjectModel::GetModelId</a></div><div class="ttdeci">int32 GetModelId() const</div><div class="ttdef"><b>Definition</b> <a href="ObjectModel_8cpp_source.html#l00044">ObjectModel.cpp:44</a></div></div>
+<div class="ttc" id="aclassUTacticalEffect__MaxHP_html_aaeee68c551bb9480303f912843ad8d00"><div class="ttname"><a href="classUTacticalEffect__MaxHP.html#aaeee68c551bb9480303f912843ad8d00">UTacticalEffect_MaxHP::OnExecuted</a></div><div class="ttdeci">void OnExecuted(FActiveTacticalEffectsContainer &amp;ActiveTEContainer, FTacticalEffectSpec &amp;TESpec) const override</div><div class="ttdoc">Effect의 모디파이어 연산을 대상 속성에 실제로 실행(적용)한다.</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffect__MaxHP_8cpp_source.html#l00028">TacticalEffect_MaxHP.cpp:28</a></div></div>
+<div class="ttc" id="aclassUTacticalEffect__MaxHP_html_ab08e7c4df69e8db5535c7137c97aa3bd"><div class="ttname"><a href="classUTacticalEffect__MaxHP.html#ab08e7c4df69e8db5535c7137c97aa3bd">UTacticalEffect_MaxHP::UTacticalEffect_MaxHP</a></div><div class="ttdeci">UTacticalEffect_MaxHP()</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffect__MaxHP_8cpp_source.html#l00014">TacticalEffect_MaxHP.cpp:14</a></div></div>
+<div class="ttc" id="aclassUTacticalEffect_html_a433a0f90e1fd45083813d68683d75c8d"><div class="ttname"><a href="classUTacticalEffect.html#a433a0f90e1fd45083813d68683d75c8d">UTacticalEffect::mStackingType</a></div><div class="ttdeci">ETacticalEffectStackingType mStackingType</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffect_8h_source.html#l00250">TacticalEffect.h:250</a></div></div>
+<div class="ttc" id="aclassUTacticalEffect_html_a780737f8be18ff8a2cb746f4d08c8c96"><div class="ttname"><a href="classUTacticalEffect.html#a780737f8be18ff8a2cb746f4d08c8c96">UTacticalEffect::mModifiers</a></div><div class="ttdeci">TArray&lt; FTacticalModifierInfo &gt; mModifiers</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffect_8h_source.html#l00241">TacticalEffect.h:241</a></div></div>
+<div class="ttc" id="aclassUTacticalEffect_html_afd0b3c03544e82acb3aa9413929353f9"><div class="ttname"><a href="classUTacticalEffect.html#afd0b3c03544e82acb3aa9413929353f9">UTacticalEffect::mDurationPolicy</a></div><div class="ttdeci">ETacticalEffectDurationType mDurationPolicy</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffect_8h_source.html#l00246">TacticalEffect.h:246</a></div></div>
+<div class="ttc" id="astructFActiveTacticalEffectsContainer_html"><div class="ttname"><a href="structFActiveTacticalEffectsContainer.html">FActiveTacticalEffectsContainer</a></div><div class="ttdoc">현재 활성화 이펙트들과 그에 따른 결과를 보유한 객체</div><div class="ttdef"><b>Definition</b> <a href="ActiveTacticalEffectsContainer_8h_source.html#l00217">ActiveTacticalEffectsContainer.h:218</a></div></div>
+<div class="ttc" id="astructFSRPGAttributeEffectEventLog_html"><div class="ttname"><a href="structFSRPGAttributeEffectEventLog.html">FSRPGAttributeEffectEventLog</a></div><div class="ttdoc">속성값을 변경시키는 이펙트 이벤트 로그</div><div class="ttdef"><b>Definition</b> <a href="EventLog_8h_source.html#l00027">EventLog.h:28</a></div></div>
+<div class="ttc" id="astructFTacticalEffectSpec_html"><div class="ttname"><a href="structFTacticalEffectSpec.html">FTacticalEffectSpec</a></div><div class="ttdoc">어떤 Effect를 어떤 방식으로 누가 적용시키는지에 대한 런타임 정보 객체</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffect_8h_source.html#l00065">TacticalEffect.h:66</a></div></div>
+<div class="ttc" id="astructFTacticalModifierInfo_html"><div class="ttname"><a href="structFTacticalModifierInfo.html">FTacticalModifierInfo</a></div><div class="ttdoc">단일 속성 수정자(모디파이어)의 정적 정의.</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffect_8h_source.html#l00161">TacticalEffect.h:162</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_2931332fe30aa418bc02be414a0905e5.html">TAS</a></li><li class="navelem"><a class="el" href="dir_80b541583085c98647deca5095addce4.html">Effect</a></li><li class="navelem"><a class="el" href="dir_cf1f547a4faca5264c3d2f3e880391e0.html">Stat</a></li><li class="navelem"><a class="el" href="TacticalEffect__MaxHP_8cpp.html">TacticalEffect_MaxHP.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

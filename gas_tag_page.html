@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>P_RD: GAS 태그 매크로</title>
+<title>P_RD: Gameplay 태그 매크로</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -90,7 +90,7 @@ $(document).ready(function(){initNavTree('gas_tag_page.html',''); initResizable(
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">GAS 태그 매크로</div></div>
+  <div class="headertitle"><div class="title">Gameplay 태그 매크로</div></div>
 </div><!--header-->
 <div class="contents">
 <div class="toc"><h3>목차</h3>
@@ -120,16 +120,17 @@ $(document).ready(function(){initNavTree('gas_tag_page.html',''); initResizable(
 <hr  />
  <h2><a class="anchor" id="create_tag_step1"></a>
 생성 시</h2>
-<div class="fragment"><div class="line">UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player_Combat_Roll);</div>
-</div><!-- fragment --><p> 기본적으로 GASInclude.h 에 작성합니다.<br  />
+<div class="fragment"><div class="line">UE_DECLARE_GAMEPLAY_TAG_EXTERN(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Player_Combat_Roll</a>);</div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+</div><!-- fragment --><p> 기본적으로 <a class="el" href="GameplayTagType_8h.html">GameplayTagType.h</a> 에 작성합니다.<br  />
 적절한 namespace 내부에 UE_DECLARE_GAMEPLAY_TAG_EXTERN([Tag이름]_[Tag이름]_[Tag이름]) 선언합니다.<br  />
- </p><div class="fragment"><div class="line">UE_DEFINE_GAMEPLAY_TAG(Player_Combat_Roll, <span class="stringliteral">&quot;Player.Combat.Roll&quot;</span>);</div>
-</div><!-- fragment --><p> 기본적으로 GASInclude.cpp 에 작성합니다.<br  />
+ </p><div class="fragment"><div class="line">UE_DEFINE_GAMEPLAY_TAG(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Player_Combat_Roll</a>, <span class="stringliteral">&quot;Player.Combat.Roll&quot;</span>);</div>
+</div><!-- fragment --><p> 기본적으로 <a class="el" href="GameplayTagType_8cpp.html">GameplayTagType.cpp</a> 에 작성합니다.<br  />
 적절한 namespace 내부에 UE_DEFINE_GAMEPLAY_TAG([Tag이름]_[Tag이름]_[Tag이름], "[Tag이름].[Tag이름].[Tag이름]") 선언합니다.<br  />
  </p>
 <h2><a class="anchor" id="use_tag_step2"></a>
 사용 시</h2>
-<div class="fragment"><div class="line">ActivationBlockedTags.AddTag(PlayerCombatTags::Player_State_Rolling);</div>
+<div class="fragment"><div class="line"><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ActivationBlockedTags</a>.AddTag(PlayerCombatTags::Player_State_Rolling);</div>
 </div><!-- fragment --><p> [namespace 명]::[Tag이름]_[Tag이름]_[Tag이름] 로 태그를 지정합니다.<br  />
 </p>
 </div></div><!-- contents -->

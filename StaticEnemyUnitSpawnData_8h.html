@@ -91,7 +91,8 @@ $(document).ready(function(){initNavTree('StaticEnemyUnitSpawnData_8h.html','');
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">클래스</a>  </div>
+<a href="#nested-classes">클래스</a> &#124;
+<a href="#enum-members">열거형 타입</a>  </div>
   <div class="headertitle"><div class="title">StaticEnemyUnitSpawnData.h 파일 참조</div></div>
 </div><!--header-->
 <div class="contents">
@@ -106,13 +107,53 @@ $(document).ready(function(){initNavTree('StaticEnemyUnitSpawnData_8h.html','');
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUStaticEnemyUnitSpawnData.html">UStaticEnemyUnitSpawnData</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">적 유닛 생성 시 사용되는 정적 Primary Data Asset  <a href="classUStaticEnemyUnitSpawnData.html#details">더 자세히 ...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
+열거형 타입</h2></td></tr>
+<tr class="memitem:a7135a23ea6268df741a187ed61968309" id="r_a7135a23ea6268df741a187ed61968309"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="StaticEnemyUnitSpawnData_8h.html#a7135a23ea6268df741a187ed61968309">EMoveTendency</a> : uint8 { <a class="el" href="StaticEnemyUnitSpawnData_8h.html#a7135a23ea6268df741a187ed61968309aa3f80d8f0f1b4ffa8c475f5d60ea5635">UMETA</a> =(DisplayName = "MoveAway", ToolTip = "사거리를 유지하며 플레이어와 최대한 멀어짐")
+, <a class="el" href="StaticEnemyUnitSpawnData_8h.html#a7135a23ea6268df741a187ed61968309aa3f80d8f0f1b4ffa8c475f5d60ea5635">UMETA</a> =(DisplayName = "HoldRange", ToolTip = "사거리 안에 들면 정지 (밖이면 사거리 안까지만 이동)")
+, <a class="el" href="StaticEnemyUnitSpawnData_8h.html#a7135a23ea6268df741a187ed61968309aa3f80d8f0f1b4ffa8c475f5d60ea5635">UMETA</a> =(DisplayName = "MoveClose", ToolTip = "플레이어에게 최대한 붙음")
+ }</td></tr>
+<tr class="memdesc:a7135a23ea6268df741a187ed61968309"><td class="mdescLeft">&#160;</td><td class="mdescRight">적의 이동 성향 (이동 여부와 목적지를 정하는 기준)  <a href="StaticEnemyUnitSpawnData_8h.html#a7135a23ea6268df741a187ed61968309">더 자세히 ...</a><br /></td></tr>
+<tr class="separator:a7135a23ea6268df741a187ed61968309"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock"><dl class="section author"><dt>작성자</dt><dd>모호재 </dd></dl>
 <dl class="section date"><dt>날짜</dt><dd>2026-05-20 </dd></dl>
 
 <p class="definition"><a class="el" href="StaticEnemyUnitSpawnData_8h_source.html">StaticEnemyUnitSpawnData.h</a> 파일에서 정의되었습니다.</p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">열거형 타입 문서화</h2>
+<a id="a7135a23ea6268df741a187ed61968309" name="a7135a23ea6268df741a187ed61968309"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7135a23ea6268df741a187ed61968309">&#9670;&#160;</a></span>EMoveTendency</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">enum</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> <a class="el" href="StaticEnemyUnitSpawnData_8h.html#a7135a23ea6268df741a187ed61968309">EMoveTendency</a> : <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">uint8</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>수치는 "0.45가 유지인가 접근인가"처럼 경계가 모호해, 명확한 3분류로 택1한다. 추후 AI 고도화 시엔 이 enum을 시드로 float bias를 산출해 상황(아군 배치·피아 HP 등)과 합쳐 계산할 수 있다. </p>
+<table class="fieldtable">
+<tr><th colspan="2">열거형 멤버</th></tr><tr><td class="fieldname"><a id="a7135a23ea6268df741a187ed61968309aa3f80d8f0f1b4ffa8c475f5d60ea5635" name="a7135a23ea6268df741a187ed61968309aa3f80d8f0f1b4ffa8c475f5d60ea5635"></a>UMETA&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a7135a23ea6268df741a187ed61968309aa3f80d8f0f1b4ffa8c475f5d60ea5635" name="a7135a23ea6268df741a187ed61968309aa3f80d8f0f1b4ffa8c475f5d60ea5635"></a>UMETA&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a7135a23ea6268df741a187ed61968309aa3f80d8f0f1b4ffa8c475f5d60ea5635" name="a7135a23ea6268df741a187ed61968309aa3f80d8f0f1b4ffa8c475f5d60ea5635"></a>UMETA&#160;</td><td class="fielddoc"></td></tr>
+</table>
+
+<p class="definition"><a class="el" href="StaticEnemyUnitSpawnData_8h_source.html">StaticEnemyUnitSpawnData.h</a> 파일의 <a class="el" href="StaticEnemyUnitSpawnData_8h_source.html#l00021">21</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

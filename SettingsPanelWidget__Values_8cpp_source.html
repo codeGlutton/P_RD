@@ -1,0 +1,412 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/UI/SettingsPanelWidget_Values.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('SettingsPanelWidget__Values_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">SettingsPanelWidget_Values.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="SettingsPanelWidget__Values_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="SettingsPanelWidget_8h.html">UI/SettingsPanelWidget.h</a>&quot;</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &quot;Components/CheckBox.h&quot;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &quot;Components/Slider.h&quot;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &quot;<a class="code" href="RDGameModeBase_8h.html">GameMode/RDGameModeBase.h</a>&quot;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &quot;<a class="code" href="PersistentData_8h.html">Singleton/InstanceSubsystem/PersistentData.h</a>&quot;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &quot;<a class="code" href="PersistentDataSubsystem_8h.html">Singleton/InstanceSubsystem/PersistentDataSubsystem.h</a>&quot;</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &quot;<a class="code" href="PersistentDataType_8h.html">Singleton/InstanceSubsystem/PersistentDataType.h</a>&quot;</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
+<div class="foldopen" id="foldopen00011" data-start="{" data-end="}">
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno"><a class="line" href="classUSettingsPanelWidget.html#acbfa081c9e9fd76643139dcda95f4ff2">   11</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUSettingsPanelWidget.html#acbfa081c9e9fd76643139dcda95f4ff2">USettingsPanelWidget::ApplyValueModel</a>(<span class="keyword">const</span> <a class="code hl_struct" href="structFSettingsPanelValueModel.html">FSettingsPanelValueModel</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ValueModel</a>)</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>{</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>    mValueModel = <a class="code hl_function" href="namespaceRDSettingsPanel.html#adb205610f5dbdb791d4f2b0c751c61e9">RDSettingsPanel::SanitizeValueModel</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ValueModel</a>);</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>    mIsApplyingValueModel = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>    <span class="keywordflow">if</span> (BgmVolumeSlider != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    {</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>        BgmVolumeSlider-&gt;SetValue(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a9e6752af28f6ce4df12d38bc49ee2fcb">mBgmVolume</a>);</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    }</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    <span class="keywordflow">if</span> (SfxVolumeSlider != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    {</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>        SfxVolumeSlider-&gt;SetValue(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a428ad412583bf5beb4a261600aefef36">mSfxVolume</a>);</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    }</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    <span class="keywordflow">if</span> (UiVolumeSlider != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    {</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>        UiVolumeSlider-&gt;SetValue(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a6317be7bbf52180147f1dcd2e573d695">mUiVolume</a>);</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    }</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    <span class="keywordflow">if</span> (ScreenShakeCheckBox != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    {</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>        ScreenShakeCheckBox-&gt;SetIsChecked(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a96096c028c7237f8c4d319813d615d38">mScreenShakeEnabled</a>);</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    }</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    <span class="keywordflow">if</span> (VibrationCheckBox != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    {</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>        VibrationCheckBox-&gt;SetIsChecked(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a0f0d37205c32015c196c32c58be0e652">mVibrationEnabled</a>);</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    }</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    <span class="keywordflow">if</span> (MasterVolumeSlider != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    {</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>        MasterVolumeSlider-&gt;SetValue(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a1c3fbc86d86cda27a7c2795e36fd1290">mMasterVolume</a>);</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    }</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>    <span class="keywordflow">if</span> (EffectsCheckBox != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    {</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>        EffectsCheckBox-&gt;SetIsChecked(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a402675c90f7fb53dbdcc912fcfc50cb6">mEffectsEnabled</a>);</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>    }</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    mIsApplyingValueModel = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>    SyncText();</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>}</div>
+</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
+<div class="foldopen" id="foldopen00048" data-start="{" data-end="}">
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno"><a class="line" href="classUSettingsPanelWidget.html#a2da9647e0b6ea014f87314482bb81082">   48</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUSettingsPanelWidget.html#a2da9647e0b6ea014f87314482bb81082">USettingsPanelWidget::RefreshValueModelFromCurrentOptions</a>()</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>{</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    <a class="code hl_struct" href="structFSettingsPanelValueModel.html">FSettingsPanelValueModel</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CurrentValueModel</a> = mValueModel;</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    <span class="keywordflow">if</span> (<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UGameInstance</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameInstance</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetGameInstance</a>())</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    {</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>        <span class="keywordflow">if</span> (<span class="keyword">const</span> <a class="code hl_class" href="classUPersistentDataSubsystem.html">UPersistentDataSubsystem</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PersistentDataSubsystem</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameInstance</a>-&gt;GetSubsystem&lt;<a class="code hl_class" href="classUPersistentDataSubsystem.html">UPersistentDataSubsystem</a>&gt;())</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>        {</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>            <span class="keywordflow">if</span> (<span class="keyword">const</span> <a class="code hl_class" href="classUOptionPersistData.html">UOptionPersistData</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OptionData</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PersistentDataSubsystem</a>-&gt;GetOptionPersistData())</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>            {</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>                <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CurrentValueModel</a>.mMasterVolume = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OptionData</a>-&gt;GetVolume(<a class="code hl_enumvalue" href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273af03bde11d261f185cbacfa32c1c6538c">EGameVolumeType::Master</a>);</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>                <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CurrentValueModel</a>.mBgmVolume = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OptionData</a>-&gt;GetVolume(<a class="code hl_enumvalue" href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273a7cabb490f03302bbd6f4055c16c80f13">EGameVolumeType::BGM</a>);</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>                <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CurrentValueModel</a>.mSfxVolume = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OptionData</a>-&gt;GetVolume(<a class="code hl_enumvalue" href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273ada101052f6ba998ab41d571a6fff1708">EGameVolumeType::SFX</a>);</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>                <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CurrentValueModel</a>.mUiVolume = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OptionData</a>-&gt;GetVolume(<a class="code hl_enumvalue" href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273a71ff71526d15db86eb50fcac245d183b">EGameVolumeType::UI</a>);</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>                <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CurrentValueModel</a>.mUseKoreanLanguage = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OptionData</a>-&gt;GetLanguage() == <a class="code hl_enumvalue" href="PersistentDataType_8h.html#aa4937652ff7daea43d51193d6c47b468adcd90939dc8ad7a417313c5726cf732f">ELanguageType::KOREAN</a>;</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>                <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CurrentValueModel</a>.mFpsLimit = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OptionData</a>-&gt;GetFpsLimit();</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>            }</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>        }</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    }</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>    <a class="code hl_function" href="classUSettingsPanelWidget.html#acbfa081c9e9fd76643139dcda95f4ff2">ApplyValueModel</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CurrentValueModel</a>);</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>}</div>
+</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span> </div>
+<div class="foldopen" id="foldopen00069" data-start="{" data-end="}">
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno"><a class="line" href="classUSettingsPanelWidget.html#aa0dcffa17780fd60ff74302b5c4f1880">   69</a></span><a class="code hl_struct" href="structFSettingsPanelValueModel.html">FSettingsPanelValueModel</a> <a class="code hl_function" href="classUSettingsPanelWidget.html#aa0dcffa17780fd60ff74302b5c4f1880">USettingsPanelWidget::GetValueModel</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>    <span class="keywordflow">return</span> mValueModel;</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>}</div>
+</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span> </div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span><span class="keywordtype">void</span> USettingsPanelWidget::HandleResetButtonClicked()</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>{</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>    <a class="code hl_variable" href="classUSettingsPanelWidget.html#a6350c325c37b7facdfb6d5d884f2ad2d">OnResetRequested</a>.Broadcast();</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    <span class="comment">// 전용 수신자가 생기기 전까지의 기본 적용: 옵션을 CDO 기본값으로 되돌리고</span></div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>    <span class="comment">// (ResetOptions -&gt; ClearOption -&gt; ApplyCurrentOptions로 볼륨/언어/해상도 즉시 재적용),</span></div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>    <span class="comment">// 패널 UI도 기본 값 모델로 갱신한다(ApplyValueModel은 콜백 가드로 이벤트 재발신 없음).</span></div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>    <span class="comment">// 초기화도 커밋 행위다 — 되돌린 옵션을 즉시 디스크에 저장한다.</span></div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>    <span class="keywordflow">if</span> (<a class="code hl_class" href="classARDGameModeBase.html">ARDGameModeBase</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameModeBase</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorld</a>()-&gt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetAuthGameMode&lt;ARDGameModeBase&gt;</a>())</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    {</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameModeBase</a>-&gt;ResetFromOptionPanel();</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>    }</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>    <a class="code hl_function" href="classUSettingsPanelWidget.html#a2da9647e0b6ea014f87314482bb81082">RefreshValueModelFromCurrentOptions</a>();</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>}</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span> </div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span><span class="keywordtype">void</span> USettingsPanelWidget::HandleLowQualityButtonClicked()</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>{</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a905b370da3cdabfb4f23c6d0a1a3c263">mQualityLevel</a> = <a class="code hl_enumvalue" href="SettingsPanelTypes_8h.html#a3dbb2d338709a1bf43128b2755ace596a28d0edd045e05cf5af64e35ae0c4c6ef">ESettingsQualityLevel::Low</a>;</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>    <span class="keywordflow">if</span> (mIsApplyingValueModel == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>    {</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>        <a class="code hl_variable" href="classUSettingsPanelWidget.html#a765104bdf43d045da51ecb850d21e845">OnQualityRequested</a>.Broadcast(<a class="code hl_function" href="namespaceRDSettingsPanel.html#a5c670eaf8d5fe401caf92d9142a811d8">RDSettingsPanel::ToQualityRequestValue</a>(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a905b370da3cdabfb4f23c6d0a1a3c263">mQualityLevel</a>));</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>    }</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>}</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span> </div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span><span class="keywordtype">void</span> USettingsPanelWidget::HandleMediumQualityButtonClicked()</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>{</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a905b370da3cdabfb4f23c6d0a1a3c263">mQualityLevel</a> = <a class="code hl_enumvalue" href="SettingsPanelTypes_8h.html#a3dbb2d338709a1bf43128b2755ace596a87f8a6ab85c9ced3702b4ea641ad4bb5">ESettingsQualityLevel::Medium</a>;</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>    <span class="keywordflow">if</span> (mIsApplyingValueModel == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>    {</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>        <a class="code hl_variable" href="classUSettingsPanelWidget.html#a765104bdf43d045da51ecb850d21e845">OnQualityRequested</a>.Broadcast(<a class="code hl_function" href="namespaceRDSettingsPanel.html#a5c670eaf8d5fe401caf92d9142a811d8">RDSettingsPanel::ToQualityRequestValue</a>(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a905b370da3cdabfb4f23c6d0a1a3c263">mQualityLevel</a>));</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    }</div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>}</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span> </div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span><span class="keywordtype">void</span> USettingsPanelWidget::HandleHighQualityButtonClicked()</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>{</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>    mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a905b370da3cdabfb4f23c6d0a1a3c263">mQualityLevel</a> = <a class="code hl_enumvalue" href="SettingsPanelTypes_8h.html#a3dbb2d338709a1bf43128b2755ace596a655d20c1ca69519ca647684edbb2db35">ESettingsQualityLevel::High</a>;</div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>    <span class="keywordflow">if</span> (mIsApplyingValueModel == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>    {</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>        <a class="code hl_variable" href="classUSettingsPanelWidget.html#a765104bdf43d045da51ecb850d21e845">OnQualityRequested</a>.Broadcast(<a class="code hl_function" href="namespaceRDSettingsPanel.html#a5c670eaf8d5fe401caf92d9142a811d8">RDSettingsPanel::ToQualityRequestValue</a>(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a905b370da3cdabfb4f23c6d0a1a3c263">mQualityLevel</a>));</div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>    }</div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>}</div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span> </div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span><span class="keywordtype">void</span> USettingsPanelWidget::HandleBgmVolumeChanged(<span class="keywordtype">float</span> Value)</div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>{</div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>    mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a9e6752af28f6ce4df12d38bc49ee2fcb">mBgmVolume</a> = <a class="code hl_function" href="namespaceRDSettingsPanel.html#a6fbe1c6b8d1217dbc172567d3b6199dc">RDSettingsPanel::NormalizeVolumeValue</a>(Value);</div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>    <span class="keywordflow">if</span> (mIsApplyingValueModel == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>    {</div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>        <a class="code hl_variable" href="classUSettingsPanelWidget.html#ab6d19a16c9038e76549bcb2039a10591">OnBgmVolumeChanged</a>.Broadcast(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a9e6752af28f6ce4df12d38bc49ee2fcb">mBgmVolume</a>);</div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>        <span class="comment">// 전용 오디오 정책 시스템이 생기기 전까지 프로필 서브시스템으로 기본 적용한다(Master와 동일 패턴).</span></div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>        <span class="keywordflow">if</span> (<a class="code hl_class" href="classARDGameModeBase.html">ARDGameModeBase</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameModeBase</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorld</a>()-&gt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetAuthGameMode&lt;ARDGameModeBase&gt;</a>())</div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>        {</div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameModeBase</a>-&gt;SetBGMVolume(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a9e6752af28f6ce4df12d38bc49ee2fcb">mBgmVolume</a>);</div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>        }</div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>    }</div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>}</div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span> </div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span><span class="keywordtype">void</span> USettingsPanelWidget::HandleSfxVolumeChanged(<span class="keywordtype">float</span> Value)</div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>{</div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>    mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a428ad412583bf5beb4a261600aefef36">mSfxVolume</a> = <a class="code hl_function" href="namespaceRDSettingsPanel.html#a6fbe1c6b8d1217dbc172567d3b6199dc">RDSettingsPanel::NormalizeVolumeValue</a>(Value);</div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>    <span class="keywordflow">if</span> (mIsApplyingValueModel == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>    {</div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>        <a class="code hl_variable" href="classUSettingsPanelWidget.html#a04386ef231e662861b458eafbce21885">OnSfxVolumeChanged</a>.Broadcast(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a428ad412583bf5beb4a261600aefef36">mSfxVolume</a>);</div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>        <span class="comment">// 전용 오디오 정책 시스템이 생기기 전까지 프로필 서브시스템으로 기본 적용한다(Master와 동일 패턴).</span></div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>        <span class="keywordflow">if</span> (<a class="code hl_class" href="classARDGameModeBase.html">ARDGameModeBase</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameModeBase</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorld</a>()-&gt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetAuthGameMode&lt;ARDGameModeBase&gt;</a>())</div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>        {</div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameModeBase</a>-&gt;SetSFXVolume(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a428ad412583bf5beb4a261600aefef36">mSfxVolume</a>);</div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>        }</div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>    }</div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>}</div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span> </div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span><span class="keywordtype">void</span> USettingsPanelWidget::HandleUiVolumeChanged(<span class="keywordtype">float</span> Value)</div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>{</div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>    mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a6317be7bbf52180147f1dcd2e573d695">mUiVolume</a> = <a class="code hl_function" href="namespaceRDSettingsPanel.html#a6fbe1c6b8d1217dbc172567d3b6199dc">RDSettingsPanel::NormalizeVolumeValue</a>(Value);</div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>    <span class="keywordflow">if</span> (mIsApplyingValueModel == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>    {</div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>        <a class="code hl_variable" href="classUSettingsPanelWidget.html#a21b581ca92bd71a196d69f15e520a6ee">OnUiVolumeChanged</a>.Broadcast(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a6317be7bbf52180147f1dcd2e573d695">mUiVolume</a>);</div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>        <span class="keywordflow">if</span> (<a class="code hl_class" href="classARDGameModeBase.html">ARDGameModeBase</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameModeBase</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorld</a>()-&gt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetAuthGameMode&lt;ARDGameModeBase&gt;</a>())</div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>        {</div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameModeBase</a>-&gt;SetUIVolume(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a6317be7bbf52180147f1dcd2e573d695">mUiVolume</a>);</div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>        }</div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>    }</div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>}</div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span> </div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span><span class="keywordtype">void</span> USettingsPanelWidget::HandleScreenShakeChanged(<span class="keywordtype">bool</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bChecked</a>)</div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>{</div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span>    mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a96096c028c7237f8c4d319813d615d38">mScreenShakeEnabled</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bChecked</a>;</div>
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span>    <span class="keywordflow">if</span> (mIsApplyingValueModel == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>    {</div>
+<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>        <a class="code hl_variable" href="classUSettingsPanelWidget.html#a2562cf4ecdf8c81759abfb2730567b04">OnScreenShakeChanged</a>.Broadcast(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a96096c028c7237f8c4d319813d615d38">mScreenShakeEnabled</a>);</div>
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>    }</div>
+<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>}</div>
+<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span> </div>
+<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span><span class="keywordtype">void</span> USettingsPanelWidget::HandleVibrationChanged(<span class="keywordtype">bool</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bChecked</a>)</div>
+<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>{</div>
+<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span>    mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a0f0d37205c32015c196c32c58be0e652">mVibrationEnabled</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bChecked</a>;</div>
+<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span>    <span class="keywordflow">if</span> (mIsApplyingValueModel == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>    {</div>
+<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>        <a class="code hl_variable" href="classUSettingsPanelWidget.html#a81ebebe542ca79140d693c0d933a537e">OnVibrationChanged</a>.Broadcast(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a0f0d37205c32015c196c32c58be0e652">mVibrationEnabled</a>);</div>
+<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>    }</div>
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>}</div>
+<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span> </div>
+<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span><span class="keywordtype">void</span> USettingsPanelWidget::HandleMasterVolumeChanged(<span class="keywordtype">float</span> Value)</div>
+<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span>{</div>
+<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span>    mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a1c3fbc86d86cda27a7c2795e36fd1290">mMasterVolume</a> = <a class="code hl_function" href="namespaceRDSettingsPanel.html#a6fbe1c6b8d1217dbc172567d3b6199dc">RDSettingsPanel::NormalizeVolumeValue</a>(Value);</div>
+<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span>    <span class="keywordflow">if</span> (mIsApplyingValueModel == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>    {</div>
+<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>        <a class="code hl_variable" href="classUSettingsPanelWidget.html#aaf7e820ae776c91840c0aaf57b111741">OnMasterVolumeChanged</a>.Broadcast(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a1c3fbc86d86cda27a7c2795e36fd1290">mMasterVolume</a>);</div>
+<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span>        <span class="comment">// 전용 오디오 정책 시스템이 생기기 전까지 프로필 서브시스템으로 기본 적용한다(Master와 동일 패턴).</span></div>
+<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span>        <span class="keywordflow">if</span> (<a class="code hl_class" href="classARDGameModeBase.html">ARDGameModeBase</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameModeBase</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorld</a>()-&gt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetAuthGameMode&lt;ARDGameModeBase&gt;</a>())</div>
+<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>        {</div>
+<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameModeBase</a>-&gt;SetMasterVolume(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a1c3fbc86d86cda27a7c2795e36fd1290">mMasterVolume</a>);</div>
+<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span>        }</div>
+<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>    }</div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>}</div>
+<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span> </div>
+<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span><span class="keywordtype">void</span> USettingsPanelWidget::HandleFpsThirtyButtonClicked()</div>
+<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span>{</div>
+<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span>    mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a2774218e18cf609b02f0ff2d5e8d5aff">mFpsLimit</a> = 30;</div>
+<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>    <span class="keywordflow">if</span> (mIsApplyingValueModel == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>    {</div>
+<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>        <a class="code hl_variable" href="classUSettingsPanelWidget.html#a76e38abb33e4f64f881dae924aacf5d2">OnFpsLimitRequested</a>.Broadcast(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a2774218e18cf609b02f0ff2d5e8d5aff">mFpsLimit</a>);</div>
+<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>        <span class="keywordflow">if</span> (<a class="code hl_class" href="classARDGameModeBase.html">ARDGameModeBase</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameModeBase</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorld</a>()-&gt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetAuthGameMode&lt;ARDGameModeBase&gt;</a>())</div>
+<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span>        {</div>
+<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameModeBase</a>-&gt;SetFpsLimit(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a2774218e18cf609b02f0ff2d5e8d5aff">mFpsLimit</a>);</div>
+<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>        }</div>
+<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span>    }</div>
+<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span>}</div>
+<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span> </div>
+<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span><span class="keywordtype">void</span> USettingsPanelWidget::HandleFpsSixtyButtonClicked()</div>
+<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>{</div>
+<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span>    mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a2774218e18cf609b02f0ff2d5e8d5aff">mFpsLimit</a> = 60;</div>
+<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span>    <span class="keywordflow">if</span> (mIsApplyingValueModel == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span>    {</div>
+<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span>        <a class="code hl_variable" href="classUSettingsPanelWidget.html#a76e38abb33e4f64f881dae924aacf5d2">OnFpsLimitRequested</a>.Broadcast(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a2774218e18cf609b02f0ff2d5e8d5aff">mFpsLimit</a>);</div>
+<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span>        <span class="keywordflow">if</span> (<a class="code hl_class" href="classARDGameModeBase.html">ARDGameModeBase</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameModeBase</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorld</a>()-&gt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetAuthGameMode&lt;ARDGameModeBase&gt;</a>())</div>
+<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span>        {</div>
+<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameModeBase</a>-&gt;SetFpsLimit(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a2774218e18cf609b02f0ff2d5e8d5aff">mFpsLimit</a>);</div>
+<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span>        }</div>
+<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span>    }</div>
+<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span>}</div>
+<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span> </div>
+<div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span><span class="keywordtype">void</span> USettingsPanelWidget::HandleLanguageKoreanButtonClicked()</div>
+<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span>{</div>
+<div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span>    mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a8b2f217321df3d2bf64609bad953ca14">mUseKoreanLanguage</a> = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00297" name="l00297"></a><span class="lineno">  297</span>    <span class="keywordflow">if</span> (mIsApplyingValueModel == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span>    {</div>
+<div class="line"><a id="l00299" name="l00299"></a><span class="lineno">  299</span>        <a class="code hl_variable" href="classUSettingsPanelWidget.html#a251961df9214d7213d275cb719761b85">OnLanguageRequested</a>.Broadcast(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">StaticCast&lt;int32&gt;</a>(<a class="code hl_enumvalue" href="PersistentDataType_8h.html#aa4937652ff7daea43d51193d6c47b468adcd90939dc8ad7a417313c5726cf732f">ELanguageType::KOREAN</a>));</div>
+<div class="line"><a id="l00300" name="l00300"></a><span class="lineno">  300</span>        <span class="keywordflow">if</span> (<a class="code hl_class" href="classARDGameModeBase.html">ARDGameModeBase</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameModeBase</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorld</a>()-&gt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetAuthGameMode&lt;ARDGameModeBase&gt;</a>())</div>
+<div class="line"><a id="l00301" name="l00301"></a><span class="lineno">  301</span>        {</div>
+<div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameModeBase</a>-&gt;SetLanguage(<a class="code hl_enumvalue" href="PersistentDataType_8h.html#aa4937652ff7daea43d51193d6c47b468adcd90939dc8ad7a417313c5726cf732f">ELanguageType::KOREAN</a>);</div>
+<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span>        }</div>
+<div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span>        SyncText();</div>
+<div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span>    }</div>
+<div class="line"><a id="l00306" name="l00306"></a><span class="lineno">  306</span>}</div>
+<div class="line"><a id="l00307" name="l00307"></a><span class="lineno">  307</span> </div>
+<div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span><span class="keywordtype">void</span> USettingsPanelWidget::HandleLanguageEnglishButtonClicked()</div>
+<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span>{</div>
+<div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span>    mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a8b2f217321df3d2bf64609bad953ca14">mUseKoreanLanguage</a> = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span>    <span class="keywordflow">if</span> (mIsApplyingValueModel == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span>    {</div>
+<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span>        <a class="code hl_variable" href="classUSettingsPanelWidget.html#a251961df9214d7213d275cb719761b85">OnLanguageRequested</a>.Broadcast(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">StaticCast&lt;int32&gt;</a>(<a class="code hl_enumvalue" href="PersistentDataType_8h.html#aa4937652ff7daea43d51193d6c47b468a11040bd29db4ec9964af9fd3f9a24f17">ELanguageType::ENGLISH</a>));</div>
+<div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span>        <span class="keywordflow">if</span> (<a class="code hl_class" href="classARDGameModeBase.html">ARDGameModeBase</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameModeBase</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorld</a>()-&gt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetAuthGameMode&lt;ARDGameModeBase&gt;</a>())</div>
+<div class="line"><a id="l00316" name="l00316"></a><span class="lineno">  316</span>        {</div>
+<div class="line"><a id="l00317" name="l00317"></a><span class="lineno">  317</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameModeBase</a>-&gt;SetLanguage(<a class="code hl_enumvalue" href="PersistentDataType_8h.html#aa4937652ff7daea43d51193d6c47b468a11040bd29db4ec9964af9fd3f9a24f17">ELanguageType::ENGLISH</a>);</div>
+<div class="line"><a id="l00318" name="l00318"></a><span class="lineno">  318</span>        }</div>
+<div class="line"><a id="l00319" name="l00319"></a><span class="lineno">  319</span>        SyncText();</div>
+<div class="line"><a id="l00320" name="l00320"></a><span class="lineno">  320</span>    }</div>
+<div class="line"><a id="l00321" name="l00321"></a><span class="lineno">  321</span>}</div>
+<div class="line"><a id="l00322" name="l00322"></a><span class="lineno">  322</span> </div>
+<div class="line"><a id="l00324" name="l00324"></a><span class="lineno">  324</span><span class="keywordtype">void</span> USettingsPanelWidget::HandleEffectsChanged(<span class="keywordtype">bool</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bChecked</a>)</div>
+<div class="line"><a id="l00325" name="l00325"></a><span class="lineno">  325</span>{</div>
+<div class="line"><a id="l00326" name="l00326"></a><span class="lineno">  326</span>    mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a402675c90f7fb53dbdcc912fcfc50cb6">mEffectsEnabled</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bChecked</a>;</div>
+<div class="line"><a id="l00327" name="l00327"></a><span class="lineno">  327</span>    <span class="keywordflow">if</span> (mIsApplyingValueModel == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00328" name="l00328"></a><span class="lineno">  328</span>    {</div>
+<div class="line"><a id="l00329" name="l00329"></a><span class="lineno">  329</span>        <a class="code hl_variable" href="classUSettingsPanelWidget.html#a29dd2016411e9f6000049b1f85ef814c">OnEffectsChanged</a>.Broadcast(mValueModel.<a class="code hl_variable" href="structFSettingsPanelValueModel.html#a402675c90f7fb53dbdcc912fcfc50cb6">mEffectsEnabled</a>);</div>
+<div class="line"><a id="l00330" name="l00330"></a><span class="lineno">  330</span>    }</div>
+<div class="line"><a id="l00331" name="l00331"></a><span class="lineno">  331</span>}</div>
+<div class="ttc" id="aPersistentDataSubsystem_8h_html"><div class="ttname"><a href="PersistentDataSubsystem_8h.html">PersistentDataSubsystem.h</a></div><div class="ttdoc">영구적 플레이 데이터 Subsystem 구현 헤더</div></div>
+<div class="ttc" id="aPersistentDataType_8h_html"><div class="ttname"><a href="PersistentDataType_8h.html">PersistentDataType.h</a></div><div class="ttdoc">영구적 플레이 데이터 연관 타입들 구현 헤더</div></div>
+<div class="ttc" id="aPersistentDataType_8h_html_a537f7a730a17b9fdf67192d2aba02273a71ff71526d15db86eb50fcac245d183b"><div class="ttname"><a href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273a71ff71526d15db86eb50fcac245d183b">EGameVolumeType::UI</a></div><div class="ttdeci">@ UI</div></div>
+<div class="ttc" id="aPersistentDataType_8h_html_a537f7a730a17b9fdf67192d2aba02273a7cabb490f03302bbd6f4055c16c80f13"><div class="ttname"><a href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273a7cabb490f03302bbd6f4055c16c80f13">EGameVolumeType::BGM</a></div><div class="ttdeci">@ BGM</div></div>
+<div class="ttc" id="aPersistentDataType_8h_html_a537f7a730a17b9fdf67192d2aba02273ada101052f6ba998ab41d571a6fff1708"><div class="ttname"><a href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273ada101052f6ba998ab41d571a6fff1708">EGameVolumeType::SFX</a></div><div class="ttdeci">@ SFX</div></div>
+<div class="ttc" id="aPersistentDataType_8h_html_a537f7a730a17b9fdf67192d2aba02273af03bde11d261f185cbacfa32c1c6538c"><div class="ttname"><a href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273af03bde11d261f185cbacfa32c1c6538c">EGameVolumeType::Master</a></div><div class="ttdeci">@ Master</div></div>
+<div class="ttc" id="aPersistentDataType_8h_html_aa4937652ff7daea43d51193d6c47b468a11040bd29db4ec9964af9fd3f9a24f17"><div class="ttname"><a href="PersistentDataType_8h.html#aa4937652ff7daea43d51193d6c47b468a11040bd29db4ec9964af9fd3f9a24f17">ELanguageType::ENGLISH</a></div><div class="ttdeci">@ ENGLISH</div></div>
+<div class="ttc" id="aPersistentDataType_8h_html_aa4937652ff7daea43d51193d6c47b468adcd90939dc8ad7a417313c5726cf732f"><div class="ttname"><a href="PersistentDataType_8h.html#aa4937652ff7daea43d51193d6c47b468adcd90939dc8ad7a417313c5726cf732f">ELanguageType::KOREAN</a></div><div class="ttdeci">@ KOREAN</div></div>
+<div class="ttc" id="aPersistentData_8h_html"><div class="ttname"><a href="PersistentData_8h.html">PersistentData.h</a></div><div class="ttdoc">영구적 플레이 데이터 구현 헤더</div></div>
+<div class="ttc" id="aRDGameModeBase_8h_html"><div class="ttname"><a href="RDGameModeBase_8h.html">RDGameModeBase.h</a></div><div class="ttdoc">RD 프로젝트 게임 모드 베이스 정의 헤더</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aSettingsPanelTypes_8h_html_a3dbb2d338709a1bf43128b2755ace596a28d0edd045e05cf5af64e35ae0c4c6ef"><div class="ttname"><a href="SettingsPanelTypes_8h.html#a3dbb2d338709a1bf43128b2755ace596a28d0edd045e05cf5af64e35ae0c4c6ef">ESettingsQualityLevel::Low</a></div><div class="ttdeci">@ Low</div></div>
+<div class="ttc" id="aSettingsPanelTypes_8h_html_a3dbb2d338709a1bf43128b2755ace596a655d20c1ca69519ca647684edbb2db35"><div class="ttname"><a href="SettingsPanelTypes_8h.html#a3dbb2d338709a1bf43128b2755ace596a655d20c1ca69519ca647684edbb2db35">ESettingsQualityLevel::High</a></div><div class="ttdeci">@ High</div></div>
+<div class="ttc" id="aSettingsPanelTypes_8h_html_a3dbb2d338709a1bf43128b2755ace596a87f8a6ab85c9ced3702b4ea641ad4bb5"><div class="ttname"><a href="SettingsPanelTypes_8h.html#a3dbb2d338709a1bf43128b2755ace596a87f8a6ab85c9ced3702b4ea641ad4bb5">ESettingsQualityLevel::Medium</a></div><div class="ttdeci">@ Medium</div></div>
+<div class="ttc" id="aSettingsPanelWidget_8h_html"><div class="ttname"><a href="SettingsPanelWidget_8h.html">SettingsPanelWidget.h</a></div><div class="ttdoc">타이틀과 인게임에서 함께 쓰는 설정 패널 위젯.</div></div>
+<div class="ttc" id="aclassARDGameModeBase_html"><div class="ttname"><a href="classARDGameModeBase.html">ARDGameModeBase</a></div><div class="ttdoc">RD 프로젝트 게임 모드 베이스</div><div class="ttdef"><b>Definition</b> <a href="RDGameModeBase_8h_source.html#l00046">RDGameModeBase.h:47</a></div></div>
+<div class="ttc" id="aclassUOptionPersistData_html"><div class="ttname"><a href="classUOptionPersistData.html">UOptionPersistData</a></div><div class="ttdoc">옵션의 영구적 데이터</div><div class="ttdef"><b>Definition</b> <a href="PersistentData_8h_source.html#l00239">PersistentData.h:240</a></div></div>
+<div class="ttc" id="aclassUPersistentDataSubsystem_html"><div class="ttname"><a href="classUPersistentDataSubsystem.html">UPersistentDataSubsystem</a></div><div class="ttdoc">영구적 플레이 데이터 Subsystem</div><div class="ttdef"><b>Definition</b> <a href="PersistentDataSubsystem_8h_source.html#l00023">PersistentDataSubsystem.h:24</a></div></div>
+<div class="ttc" id="aclassUSettingsPanelWidget_html_a04386ef231e662861b458eafbce21885"><div class="ttname"><a href="classUSettingsPanelWidget.html#a04386ef231e662861b458eafbce21885">USettingsPanelWidget::OnSfxVolumeChanged</a></div><div class="ttdeci">FSettingsPanelFloatEvent OnSfxVolumeChanged</div><div class="ttdoc">효과음 볼륨 슬라이더 값 변경 이벤트. 전달 값은 슬라이더의 현재 값이다.</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelWidget_8h_source.html#l00216">SettingsPanelWidget.h:216</a></div></div>
+<div class="ttc" id="aclassUSettingsPanelWidget_html_a21b581ca92bd71a196d69f15e520a6ee"><div class="ttname"><a href="classUSettingsPanelWidget.html#a21b581ca92bd71a196d69f15e520a6ee">USettingsPanelWidget::OnUiVolumeChanged</a></div><div class="ttdeci">FSettingsPanelFloatEvent OnUiVolumeChanged</div><div class="ttdoc">UI 볼륨 슬라이더 값 변경 이벤트. 전달 값은 슬라이더의 현재 값이다.</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelWidget_8h_source.html#l00220">SettingsPanelWidget.h:220</a></div></div>
+<div class="ttc" id="aclassUSettingsPanelWidget_html_a251961df9214d7213d275cb719761b85"><div class="ttname"><a href="classUSettingsPanelWidget.html#a251961df9214d7213d275cb719761b85">USettingsPanelWidget::OnLanguageRequested</a></div><div class="ttdeci">FSettingsPanelIntEvent OnLanguageRequested</div><div class="ttdoc">언어 선택 요청 이벤트. 전달 값은 ELanguageType 정수(0=한국어, 1=English).</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelWidget_8h_source.html#l00248">SettingsPanelWidget.h:248</a></div></div>
+<div class="ttc" id="aclassUSettingsPanelWidget_html_a2562cf4ecdf8c81759abfb2730567b04"><div class="ttname"><a href="classUSettingsPanelWidget.html#a2562cf4ecdf8c81759abfb2730567b04">USettingsPanelWidget::OnScreenShakeChanged</a></div><div class="ttdeci">FSettingsPanelBoolEvent OnScreenShakeChanged</div><div class="ttdoc">화면 흔들림 체크 상태 변경 이벤트. true면 흔들림 허용, false면 비활성 요청이다.</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelWidget_8h_source.html#l00224">SettingsPanelWidget.h:224</a></div></div>
+<div class="ttc" id="aclassUSettingsPanelWidget_html_a29dd2016411e9f6000049b1f85ef814c"><div class="ttname"><a href="classUSettingsPanelWidget.html#a29dd2016411e9f6000049b1f85ef814c">USettingsPanelWidget::OnEffectsChanged</a></div><div class="ttdeci">FSettingsPanelBoolEvent OnEffectsChanged</div><div class="ttdoc">전투 이펙트 표시 체크 상태 변경 이벤트. 수신 시스템이 아직 없다(값 전달만).</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelWidget_8h_source.html#l00244">SettingsPanelWidget.h:244</a></div></div>
+<div class="ttc" id="aclassUSettingsPanelWidget_html_a2da9647e0b6ea014f87314482bb81082"><div class="ttname"><a href="classUSettingsPanelWidget.html#a2da9647e0b6ea014f87314482bb81082">USettingsPanelWidget::RefreshValueModelFromCurrentOptions</a></div><div class="ttdeci">void RefreshValueModelFromCurrentOptions()</div><div class="ttdoc">현재 저장/프로필 옵션 값을 읽어 설정 패널 입력 상태에 다시 반영한다.</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelWidget__Values_8cpp_source.html#l00048">SettingsPanelWidget_Values.cpp:48</a></div></div>
+<div class="ttc" id="aclassUSettingsPanelWidget_html_a6350c325c37b7facdfb6d5d884f2ad2d"><div class="ttname"><a href="classUSettingsPanelWidget.html#a6350c325c37b7facdfb6d5d884f2ad2d">USettingsPanelWidget::OnResetRequested</a></div><div class="ttdeci">FSettingsPanelEvent OnResetRequested</div><div class="ttdoc">설정 초기화 버튼이 눌렸을 때 외부 흐름으로 알리는 이벤트</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelWidget_8h_source.html#l00208">SettingsPanelWidget.h:208</a></div></div>
+<div class="ttc" id="aclassUSettingsPanelWidget_html_a765104bdf43d045da51ecb850d21e845"><div class="ttname"><a href="classUSettingsPanelWidget.html#a765104bdf43d045da51ecb850d21e845">USettingsPanelWidget::OnQualityRequested</a></div><div class="ttdeci">FSettingsPanelIntEvent OnQualityRequested</div><div class="ttdoc">그래픽 품질 선택 요청 이벤트. 현재 버튼 매핑은 0=낮음, 1=중간, 2=높음이다.</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelWidget_8h_source.html#l00232">SettingsPanelWidget.h:232</a></div></div>
+<div class="ttc" id="aclassUSettingsPanelWidget_html_a76e38abb33e4f64f881dae924aacf5d2"><div class="ttname"><a href="classUSettingsPanelWidget.html#a76e38abb33e4f64f881dae924aacf5d2">USettingsPanelWidget::OnFpsLimitRequested</a></div><div class="ttdeci">FSettingsPanelIntEvent OnFpsLimitRequested</div><div class="ttdoc">FPS 제한 선택 요청 이벤트. 전달 값은 30 또는 60. 수신 시스템이 아직 없다(값 전달만).</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelWidget_8h_source.html#l00240">SettingsPanelWidget.h:240</a></div></div>
+<div class="ttc" id="aclassUSettingsPanelWidget_html_a81ebebe542ca79140d693c0d933a537e"><div class="ttname"><a href="classUSettingsPanelWidget.html#a81ebebe542ca79140d693c0d933a537e">USettingsPanelWidget::OnVibrationChanged</a></div><div class="ttdeci">FSettingsPanelBoolEvent OnVibrationChanged</div><div class="ttdoc">진동 체크 상태 변경 이벤트. true면 진동 허용, false면 비활성 요청이다.</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelWidget_8h_source.html#l00228">SettingsPanelWidget.h:228</a></div></div>
+<div class="ttc" id="aclassUSettingsPanelWidget_html_aa0dcffa17780fd60ff74302b5c4f1880"><div class="ttname"><a href="classUSettingsPanelWidget.html#aa0dcffa17780fd60ff74302b5c4f1880">USettingsPanelWidget::GetValueModel</a></div><div class="ttdeci">FSettingsPanelValueModel GetValueModel() const</div><div class="ttdoc">패널이 마지막으로 받은/입력한 설정 값 묶음을 반환한다.</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelWidget__Values_8cpp_source.html#l00069">SettingsPanelWidget_Values.cpp:69</a></div></div>
+<div class="ttc" id="aclassUSettingsPanelWidget_html_aaf7e820ae776c91840c0aaf57b111741"><div class="ttname"><a href="classUSettingsPanelWidget.html#aaf7e820ae776c91840c0aaf57b111741">USettingsPanelWidget::OnMasterVolumeChanged</a></div><div class="ttdeci">FSettingsPanelFloatEvent OnMasterVolumeChanged</div><div class="ttdoc">전체(마스터) 볼륨 슬라이더 값 변경 이벤트.</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelWidget_8h_source.html#l00236">SettingsPanelWidget.h:236</a></div></div>
+<div class="ttc" id="aclassUSettingsPanelWidget_html_ab6d19a16c9038e76549bcb2039a10591"><div class="ttname"><a href="classUSettingsPanelWidget.html#ab6d19a16c9038e76549bcb2039a10591">USettingsPanelWidget::OnBgmVolumeChanged</a></div><div class="ttdeci">FSettingsPanelFloatEvent OnBgmVolumeChanged</div><div class="ttdoc">BGM 볼륨 슬라이더 값 변경 이벤트. 전달 값은 슬라이더의 현재 값이다.</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelWidget_8h_source.html#l00212">SettingsPanelWidget.h:212</a></div></div>
+<div class="ttc" id="aclassUSettingsPanelWidget_html_acbfa081c9e9fd76643139dcda95f4ff2"><div class="ttname"><a href="classUSettingsPanelWidget.html#acbfa081c9e9fd76643139dcda95f4ff2">USettingsPanelWidget::ApplyValueModel</a></div><div class="ttdeci">void ApplyValueModel(const FSettingsPanelValueModel &amp;ValueModel)</div><div class="ttdoc">외부 설정 시스템에서 전달한 현재 설정 값을 패널 입력 위젯에 반영한다.</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelWidget__Values_8cpp_source.html#l00011">SettingsPanelWidget_Values.cpp:11</a></div></div>
+<div class="ttc" id="anamespaceRDSettingsPanel_html_a5c670eaf8d5fe401caf92d9142a811d8"><div class="ttname"><a href="namespaceRDSettingsPanel.html#a5c670eaf8d5fe401caf92d9142a811d8">RDSettingsPanel::ToQualityRequestValue</a></div><div class="ttdeci">P_RD_API int32 ToQualityRequestValue(ESettingsQualityLevel QualityLevel)</div><div class="ttdoc">품질 enum을 요청용 정수(0/1/2)로 바꾼다.</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelTypes_8cpp_source.html#l00011">SettingsPanelTypes.cpp:11</a></div></div>
+<div class="ttc" id="anamespaceRDSettingsPanel_html_a6fbe1c6b8d1217dbc172567d3b6199dc"><div class="ttname"><a href="namespaceRDSettingsPanel.html#a6fbe1c6b8d1217dbc172567d3b6199dc">RDSettingsPanel::NormalizeVolumeValue</a></div><div class="ttdeci">P_RD_API float NormalizeVolumeValue(float Value)</div><div class="ttdoc">볼륨 값을 0~1 범위로 자른다(슬라이더가 범위를 넘겨도 안전).</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelTypes_8cpp_source.html#l00005">SettingsPanelTypes.cpp:5</a></div></div>
+<div class="ttc" id="anamespaceRDSettingsPanel_html_adb205610f5dbdb791d4f2b0c751c61e9"><div class="ttname"><a href="namespaceRDSettingsPanel.html#adb205610f5dbdb791d4f2b0c751c61e9">RDSettingsPanel::SanitizeValueModel</a></div><div class="ttdeci">P_RD_API FSettingsPanelValueModel SanitizeValueModel(const FSettingsPanelValueModel &amp;ValueModel)</div><div class="ttdoc">값 모델 전체를 안전 범위로 정리한다(모든 볼륨 0~1 클램프).</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelTypes_8cpp_source.html#l00017">SettingsPanelTypes.cpp:17</a></div></div>
+<div class="ttc" id="astructFSettingsPanelValueModel_html"><div class="ttname"><a href="structFSettingsPanelValueModel.html">FSettingsPanelValueModel</a></div><div class="ttdoc">설정 화면이 보여주고 편집하는 실제 값들(볼륨/진동/화면흔들림/품질).</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelTypes_8h_source.html#l00034">SettingsPanelTypes.h:35</a></div></div>
+<div class="ttc" id="astructFSettingsPanelValueModel_html_a0f0d37205c32015c196c32c58be0e652"><div class="ttname"><a href="structFSettingsPanelValueModel.html#a0f0d37205c32015c196c32c58be0e652">FSettingsPanelValueModel::mVibrationEnabled</a></div><div class="ttdeci">bool mVibrationEnabled</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelTypes_8h_source.html#l00051">SettingsPanelTypes.h:51</a></div></div>
+<div class="ttc" id="astructFSettingsPanelValueModel_html_a1c3fbc86d86cda27a7c2795e36fd1290"><div class="ttname"><a href="structFSettingsPanelValueModel.html#a1c3fbc86d86cda27a7c2795e36fd1290">FSettingsPanelValueModel::mMasterVolume</a></div><div class="ttdeci">float mMasterVolume</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelTypes_8h_source.html#l00057">SettingsPanelTypes.h:57</a></div></div>
+<div class="ttc" id="astructFSettingsPanelValueModel_html_a2774218e18cf609b02f0ff2d5e8d5aff"><div class="ttname"><a href="structFSettingsPanelValueModel.html#a2774218e18cf609b02f0ff2d5e8d5aff">FSettingsPanelValueModel::mFpsLimit</a></div><div class="ttdeci">int32 mFpsLimit</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelTypes_8h_source.html#l00063">SettingsPanelTypes.h:63</a></div></div>
+<div class="ttc" id="astructFSettingsPanelValueModel_html_a402675c90f7fb53dbdcc912fcfc50cb6"><div class="ttname"><a href="structFSettingsPanelValueModel.html#a402675c90f7fb53dbdcc912fcfc50cb6">FSettingsPanelValueModel::mEffectsEnabled</a></div><div class="ttdeci">bool mEffectsEnabled</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelTypes_8h_source.html#l00060">SettingsPanelTypes.h:60</a></div></div>
+<div class="ttc" id="astructFSettingsPanelValueModel_html_a428ad412583bf5beb4a261600aefef36"><div class="ttname"><a href="structFSettingsPanelValueModel.html#a428ad412583bf5beb4a261600aefef36">FSettingsPanelValueModel::mSfxVolume</a></div><div class="ttdeci">float mSfxVolume</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelTypes_8h_source.html#l00042">SettingsPanelTypes.h:42</a></div></div>
+<div class="ttc" id="astructFSettingsPanelValueModel_html_a6317be7bbf52180147f1dcd2e573d695"><div class="ttname"><a href="structFSettingsPanelValueModel.html#a6317be7bbf52180147f1dcd2e573d695">FSettingsPanelValueModel::mUiVolume</a></div><div class="ttdeci">float mUiVolume</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelTypes_8h_source.html#l00045">SettingsPanelTypes.h:45</a></div></div>
+<div class="ttc" id="astructFSettingsPanelValueModel_html_a8b2f217321df3d2bf64609bad953ca14"><div class="ttname"><a href="structFSettingsPanelValueModel.html#a8b2f217321df3d2bf64609bad953ca14">FSettingsPanelValueModel::mUseKoreanLanguage</a></div><div class="ttdeci">bool mUseKoreanLanguage</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelTypes_8h_source.html#l00066">SettingsPanelTypes.h:66</a></div></div>
+<div class="ttc" id="astructFSettingsPanelValueModel_html_a905b370da3cdabfb4f23c6d0a1a3c263"><div class="ttname"><a href="structFSettingsPanelValueModel.html#a905b370da3cdabfb4f23c6d0a1a3c263">FSettingsPanelValueModel::mQualityLevel</a></div><div class="ttdeci">ESettingsQualityLevel mQualityLevel</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelTypes_8h_source.html#l00054">SettingsPanelTypes.h:54</a></div></div>
+<div class="ttc" id="astructFSettingsPanelValueModel_html_a96096c028c7237f8c4d319813d615d38"><div class="ttname"><a href="structFSettingsPanelValueModel.html#a96096c028c7237f8c4d319813d615d38">FSettingsPanelValueModel::mScreenShakeEnabled</a></div><div class="ttdeci">bool mScreenShakeEnabled</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelTypes_8h_source.html#l00048">SettingsPanelTypes.h:48</a></div></div>
+<div class="ttc" id="astructFSettingsPanelValueModel_html_a9e6752af28f6ce4df12d38bc49ee2fcb"><div class="ttname"><a href="structFSettingsPanelValueModel.html#a9e6752af28f6ce4df12d38bc49ee2fcb">FSettingsPanelValueModel::mBgmVolume</a></div><div class="ttdeci">float mBgmVolume</div><div class="ttdef"><b>Definition</b> <a href="SettingsPanelTypes_8h_source.html#l00039">SettingsPanelTypes.h:39</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_18e329638b0f3372047d81882ea0cdaf.html">UI</a></li><li class="navelem"><a class="el" href="SettingsPanelWidget__Values_8cpp.html">SettingsPanelWidget_Values.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

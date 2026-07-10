@@ -1,0 +1,262 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/Actor/Dice/CombatDicePreviewActor_State.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('CombatDicePreviewActor__State_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">CombatDicePreviewActor_State.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="CombatDicePreviewActor__State_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="CombatDicePreviewActor_8h.html">Actor/Dice/CombatDicePreviewActor.h</a>&quot;</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &quot;Components/PointLightComponent.h&quot;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &quot;Components/PrimitiveComponent.h&quot;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &quot;Components/StaticMeshComponent.h&quot;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &quot;Engine/Texture.h&quot;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &quot;Materials/MaterialInstanceDynamic.h&quot;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
+<div class="foldopen" id="foldopen00009" data-start="{" data-end="}">
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno"><a class="line" href="classACombatDicePreviewActor.html#a99d255a0060954a057c0a1bdda3ba765">    9</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classACombatDicePreviewActor.html#a99d255a0060954a057c0a1bdda3ba765">ACombatDicePreviewActor::SetDiceRotation</a>(<span class="keyword">const</span> FRotator&amp; NewRotation)</div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>{</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span>    <span class="keywordflow">if</span> (mDiceRoot != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>    {</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>        mDiceRoot-&gt;SetRelativeRotation(NewRotation);</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    }</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>}</div>
+</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span> </div>
+<div class="foldopen" id="foldopen00017" data-start="{" data-end="}">
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno"><a class="line" href="classACombatDicePreviewActor.html#a23eb34fc639b7c62dfa927a6a491a3ae">   17</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classACombatDicePreviewActor.html#a23eb34fc639b7c62dfa927a6a491a3ae">ACombatDicePreviewActor::SetFaceValues</a>(<span class="keyword">const</span> TArray&lt;int32&gt;&amp; NewFaceValues)</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>{</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    <span class="keywordflow">for</span> (<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> FaceIndex = 0; FaceIndex &lt; NewFaceValues.Num(); ++FaceIndex)</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    {</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>        SetFaceText(FaceIndex + 1, FText::AsNumber(NewFaceValues[FaceIndex]));</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    }</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>}</div>
+</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
+<div class="foldopen" id="foldopen00025" data-start="{" data-end="}">
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno"><a class="line" href="classACombatDicePreviewActor.html#a4940a0a82a7fe505f1ba82dff97f0c56">   25</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classACombatDicePreviewActor.html#a4940a0a82a7fe505f1ba82dff97f0c56">ACombatDicePreviewActor::SetFaceTextures</a>(<span class="keyword">const</span> TArray&lt;TObjectPtr&lt;UTexture&gt;&gt;&amp; NewFaceTextures)</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>{</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    <span class="comment">// Material-only dice: face textures are intentionally ignored.</span></div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>}</div>
+</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> </div>
+<div class="foldopen" id="foldopen00030" data-start="{" data-end="}">
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno"><a class="line" href="classACombatDicePreviewActor.html#a9d4d3e0cf4420d715fd13b3dbcdc2bb5">   30</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classACombatDicePreviewActor.html#a9d4d3e0cf4420d715fd13b3dbcdc2bb5">ACombatDicePreviewActor::SetFaceData</a>(<span class="keyword">const</span> TArray&lt;int32&gt;&amp; NewFaceValues, <span class="keyword">const</span> TArray&lt;TObjectPtr&lt;UTexture&gt;&gt;&amp; NewFaceTextures)</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>{</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    <a class="code hl_function" href="classACombatDicePreviewActor.html#a23eb34fc639b7c62dfa927a6a491a3ae">SetFaceValues</a>(NewFaceValues);</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    <a class="code hl_function" href="classACombatDicePreviewActor.html#a4940a0a82a7fe505f1ba82dff97f0c56">SetFaceTextures</a>(NewFaceTextures);</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>}</div>
+</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span> </div>
+<div class="foldopen" id="foldopen00036" data-start="{" data-end="}">
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno"><a class="line" href="classACombatDicePreviewActor.html#a626f76bd4a8874ca1412378501b41698">   36</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classACombatDicePreviewActor.html#a626f76bd4a8874ca1412378501b41698">ACombatDicePreviewActor::SettleToFace</a>(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> FaceValue)</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>{</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    <span class="keywordflow">if</span> (mDiceRoot != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    {</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>        mDiceRoot-&gt;SetRelativeRotation(<a class="code hl_function" href="classACombatDicePreviewActor.html#acc3f03e3a2f246d5ed45a9ced6f8e91a">GetSettledFaceRotation</a>(FaceValue));</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    }</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>}</div>
+</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
+<div class="foldopen" id="foldopen00044" data-start="{" data-end="}">
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno"><a class="line" href="classACombatDicePreviewActor.html#a97585784ef5d5875f018fddc0ac41c15">   44</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classACombatDicePreviewActor.html#a97585784ef5d5875f018fddc0ac41c15">ACombatDicePreviewActor::SetDiceWorldTransform</a>(<span class="keyword">const</span> FTransform&amp; NewTransform)</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>{</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    <span class="keywordflow">if</span> (mDiceRoot != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>    {</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>        mDiceRoot-&gt;SetWorldTransform(NewTransform);</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    }</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>}</div>
+</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span> </div>
+<div class="foldopen" id="foldopen00052" data-start="{" data-end="}">
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno"><a class="line" href="classACombatDicePreviewActor.html#aade90e9642ae43bc07d9b6e72fa73524">   52</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classACombatDicePreviewActor.html#aade90e9642ae43bc07d9b6e72fa73524">ACombatDicePreviewActor::SetDiceVisibleInSceneCaptureOnly</a>(<span class="keywordtype">bool</span> bSceneCaptureOnly)</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>{</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    TArray&lt;UPrimitiveComponent*&gt; PrimitiveComponents;</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    GetComponents(PrimitiveComponents);</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    <span class="keywordflow">for</span> (UPrimitiveComponent* PrimitiveComponent : PrimitiveComponents)</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    {</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>        <span class="keywordflow">if</span> (PrimitiveComponent != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>        {</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>            PrimitiveComponent-&gt;SetVisibleInSceneCaptureOnly(bSceneCaptureOnly);</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>        }</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    }</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>}</div>
+</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span> </div>
+<div class="foldopen" id="foldopen00065" data-start="{" data-end="}">
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno"><a class="line" href="classACombatDicePreviewActor.html#ae59a69622e7e27c757d77dfa84b9d96a">   65</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classACombatDicePreviewActor.html#ae59a69622e7e27c757d77dfa84b9d96a">ACombatDicePreviewActor::SetPreviewLightingEnabled</a>(<span class="keywordtype">bool</span> bEnabled)</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>{</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    <span class="keywordflow">if</span> (mFrontFillLight != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>    {</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>        mFrontFillLight-&gt;SetVisibility(bEnabled);</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>        mFrontFillLight-&gt;SetHiddenInGame(!bEnabled);</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>        mFrontFillLight-&gt;SetIntensity(bEnabled ? 4200.0f : 0.0f);</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    }</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>    <span class="keywordflow">if</span> (mSideFillLight != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>    {</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>        mSideFillLight-&gt;SetVisibility(bEnabled);</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>        mSideFillLight-&gt;SetHiddenInGame(!bEnabled);</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>        mSideFillLight-&gt;SetIntensity(bEnabled ? 2600.0f : 0.0f);</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    }</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    <span class="keywordflow">if</span> (mTopFillLight != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    {</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>        mTopFillLight-&gt;SetVisibility(bEnabled);</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>        mTopFillLight-&gt;SetHiddenInGame(!bEnabled);</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>        mTopFillLight-&gt;SetIntensity(bEnabled ? 1900.0f : 0.0f);</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    }</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>}</div>
+</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span> </div>
+<div class="foldopen" id="foldopen00087" data-start="{" data-end="}">
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno"><a class="line" href="classACombatDicePreviewActor.html#adb24b12645c3fefcaddba20c7bb1558f">   87</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classACombatDicePreviewActor.html#adb24b12645c3fefcaddba20c7bb1558f">ACombatDicePreviewActor::SetDiceColor</a>(<span class="keyword">const</span> FLinearColor&amp; NewColor)</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>{</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    mDiceTintColor = NewColor;</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>    <span class="keywordflow">if</span> (mDiceMaterial != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>    {</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>        ApplyDiceBodyMaterialPreset();</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>    }</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>    <span class="keywordflow">if</span> (mCoinRimMaterial != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>    {</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>        <span class="keyword">const</span> FLinearColor RimColor = mCurrentFaceCount == 2</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>            ? FMath::Lerp(NewColor, FLinearColor(0.48f, 0.50f, 0.52f, 1.0f), 0.72f)</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>            : FLinearColor::Transparent;</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>        mCoinRimMaterial-&gt;SetVectorParameterValue(TEXT(<span class="stringliteral">&quot;Color&quot;</span>), RimColor);</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>    }</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>}</div>
+</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span> </div>
+<div class="foldopen" id="foldopen00103" data-start="{" data-end="}">
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno"><a class="line" href="classACombatDicePreviewActor.html#aeb56326245c241b6e4171723cc3bb297">  103</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classACombatDicePreviewActor.html#aeb56326245c241b6e4171723cc3bb297">ACombatDicePreviewActor::SetDiceMaterialVariant</a>(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> VariantIndex)</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>{</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>    mDiceMaterialVariantIndex = VariantIndex;</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>    ApplyDiceBodyMaterialPreset();</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>}</div>
+</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
+<div class="foldopen" id="foldopen00109" data-start="{" data-end="}">
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno"><a class="line" href="classACombatDicePreviewActor.html#af2190fe6112c2d471b852ff980ff74eb">  109</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classACombatDicePreviewActor.html#af2190fe6112c2d471b852ff980ff74eb">ACombatDicePreviewActor::SetBackdropVisible</a>(<span class="keywordtype">bool</span> bVisible)</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>{</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>    <span class="keywordflow">if</span> (mBackdropMesh != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    {</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>        mBackdropMesh-&gt;SetVisibility(bVisible);</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>    }</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>}</div>
+</div>
+<div class="ttc" id="aCombatDicePreviewActor_8h_html"><div class="ttname"><a href="CombatDicePreviewActor_8h.html">CombatDicePreviewActor.h</a></div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_ada104807b93ac7cd59dac80d98ba857b"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a></div><div class="ttdeci">int32</div><div class="ttdef"><b>Definition</b> <a href="RoomTransitionSubsystem_8h_source.html#l00021">RoomTransitionSubsystem.h:21</a></div></div>
+<div class="ttc" id="aclassACombatDicePreviewActor_html_a23eb34fc639b7c62dfa927a6a491a3ae"><div class="ttname"><a href="classACombatDicePreviewActor.html#a23eb34fc639b7c62dfa927a6a491a3ae">ACombatDicePreviewActor::SetFaceValues</a></div><div class="ttdeci">void SetFaceValues(const TArray&lt; int32 &gt; &amp;NewFaceValues)</div><div class="ttdoc">각 면에 표시할 숫자를 갱신한다(부족한 면은 기존 값 유지).</div><div class="ttdef"><b>Definition</b> <a href="CombatDicePreviewActor__State_8cpp_source.html#l00017">CombatDicePreviewActor_State.cpp:17</a></div></div>
+<div class="ttc" id="aclassACombatDicePreviewActor_html_a4940a0a82a7fe505f1ba82dff97f0c56"><div class="ttname"><a href="classACombatDicePreviewActor.html#a4940a0a82a7fe505f1ba82dff97f0c56">ACombatDicePreviewActor::SetFaceTextures</a></div><div class="ttdeci">void SetFaceTextures(const TArray&lt; TObjectPtr&lt; UTexture &gt; &gt; &amp;NewFaceTextures)</div><div class="ttdoc">각 면에 덮을 텍스처를 갱신한다(nullptr이면 기본 면 텍스처).</div><div class="ttdef"><b>Definition</b> <a href="CombatDicePreviewActor__State_8cpp_source.html#l00025">CombatDicePreviewActor_State.cpp:25</a></div></div>
+<div class="ttc" id="aclassACombatDicePreviewActor_html_a626f76bd4a8874ca1412378501b41698"><div class="ttname"><a href="classACombatDicePreviewActor.html#a626f76bd4a8874ca1412378501b41698">ACombatDicePreviewActor::SettleToFace</a></div><div class="ttdeci">void SettleToFace(int32 FaceValue)</div><div class="ttdoc">지정한 눈이 정면에 보이도록 정지 자세를 맞춘다.</div><div class="ttdef"><b>Definition</b> <a href="CombatDicePreviewActor__State_8cpp_source.html#l00036">CombatDicePreviewActor_State.cpp:36</a></div></div>
+<div class="ttc" id="aclassACombatDicePreviewActor_html_a97585784ef5d5875f018fddc0ac41c15"><div class="ttname"><a href="classACombatDicePreviewActor.html#a97585784ef5d5875f018fddc0ac41c15">ACombatDicePreviewActor::SetDiceWorldTransform</a></div><div class="ttdeci">void SetDiceWorldTransform(const FTransform &amp;NewTransform)</div><div class="ttdoc">물리 바디 등 외부 Transform을 시각 주사위 전체에 적용한다.</div><div class="ttdef"><b>Definition</b> <a href="CombatDicePreviewActor__State_8cpp_source.html#l00044">CombatDicePreviewActor_State.cpp:44</a></div></div>
+<div class="ttc" id="aclassACombatDicePreviewActor_html_a99d255a0060954a057c0a1bdda3ba765"><div class="ttname"><a href="classACombatDicePreviewActor.html#a99d255a0060954a057c0a1bdda3ba765">ACombatDicePreviewActor::SetDiceRotation</a></div><div class="ttdeci">void SetDiceRotation(const FRotator &amp;NewRotation)</div><div class="ttdoc">주사위 연출 중 회전값을 적용한다.</div><div class="ttdef"><b>Definition</b> <a href="CombatDicePreviewActor__State_8cpp_source.html#l00009">CombatDicePreviewActor_State.cpp:9</a></div></div>
+<div class="ttc" id="aclassACombatDicePreviewActor_html_a9d4d3e0cf4420d715fd13b3dbcdc2bb5"><div class="ttname"><a href="classACombatDicePreviewActor.html#a9d4d3e0cf4420d715fd13b3dbcdc2bb5">ACombatDicePreviewActor::SetFaceData</a></div><div class="ttdeci">void SetFaceData(const TArray&lt; int32 &gt; &amp;NewFaceValues, const TArray&lt; TObjectPtr&lt; UTexture &gt; &gt; &amp;NewFaceTextures)</div><div class="ttdoc">각 면의 숫자/텍스처를 한 번에 갱신한다.</div><div class="ttdef"><b>Definition</b> <a href="CombatDicePreviewActor__State_8cpp_source.html#l00030">CombatDicePreviewActor_State.cpp:30</a></div></div>
+<div class="ttc" id="aclassACombatDicePreviewActor_html_aade90e9642ae43bc07d9b6e72fa73524"><div class="ttname"><a href="classACombatDicePreviewActor.html#aade90e9642ae43bc07d9b6e72fa73524">ACombatDicePreviewActor::SetDiceVisibleInSceneCaptureOnly</a></div><div class="ttdeci">void SetDiceVisibleInSceneCaptureOnly(bool bSceneCaptureOnly)</div><div class="ttdoc">메인 카메라에는 숨기고 SceneCapture에서만 보이도록 Primitive 표시 상태를 바꾼다.</div><div class="ttdef"><b>Definition</b> <a href="CombatDicePreviewActor__State_8cpp_source.html#l00052">CombatDicePreviewActor_State.cpp:52</a></div></div>
+<div class="ttc" id="aclassACombatDicePreviewActor_html_acc3f03e3a2f246d5ed45a9ced6f8e91a"><div class="ttname"><a href="classACombatDicePreviewActor.html#acc3f03e3a2f246d5ed45a9ced6f8e91a">ACombatDicePreviewActor::GetSettledFaceRotation</a></div><div class="ttdeci">FRotator GetSettledFaceRotation(int32 FaceValue) const</div><div class="ttdoc">지정한 눈이 정면에 보이는 정지 회전값을 반환한다(현재 주사위 종류 기준).</div><div class="ttdef"><b>Definition</b> <a href="CombatDicePreviewActor_8cpp_source.html#l00143">CombatDicePreviewActor.cpp:143</a></div></div>
+<div class="ttc" id="aclassACombatDicePreviewActor_html_adb24b12645c3fefcaddba20c7bb1558f"><div class="ttname"><a href="classACombatDicePreviewActor.html#adb24b12645c3fefcaddba20c7bb1558f">ACombatDicePreviewActor::SetDiceColor</a></div><div class="ttdeci">void SetDiceColor(const FLinearColor &amp;NewColor)</div><div class="ttdoc">주사위 몸체 색(희귀도/상태 구분)을 적용한다.</div><div class="ttdef"><b>Definition</b> <a href="CombatDicePreviewActor__State_8cpp_source.html#l00087">CombatDicePreviewActor_State.cpp:87</a></div></div>
+<div class="ttc" id="aclassACombatDicePreviewActor_html_ae59a69622e7e27c757d77dfa84b9d96a"><div class="ttname"><a href="classACombatDicePreviewActor.html#ae59a69622e7e27c757d77dfa84b9d96a">ACombatDicePreviewActor::SetPreviewLightingEnabled</a></div><div class="ttdeci">void SetPreviewLightingEnabled(bool bEnabled)</div><div class="ttdoc">여러 주사위를 한 장면에서 캡처할 때 개별 프리뷰 라이트 중첩을 막는다.</div><div class="ttdef"><b>Definition</b> <a href="CombatDicePreviewActor__State_8cpp_source.html#l00065">CombatDicePreviewActor_State.cpp:65</a></div></div>
+<div class="ttc" id="aclassACombatDicePreviewActor_html_aeb56326245c241b6e4171723cc3bb297"><div class="ttname"><a href="classACombatDicePreviewActor.html#aeb56326245c241b6e4171723cc3bb297">ACombatDicePreviewActor::SetDiceMaterialVariant</a></div><div class="ttdeci">void SetDiceMaterialVariant(int32 VariantIndex)</div><div class="ttdoc">테스트용 몸체 재질 변형을 적용한다. 실제 질감 차이는 M_DiceBody가 해당 파라미터를 열면 반영된다.</div><div class="ttdef"><b>Definition</b> <a href="CombatDicePreviewActor__State_8cpp_source.html#l00103">CombatDicePreviewActor_State.cpp:103</a></div></div>
+<div class="ttc" id="aclassACombatDicePreviewActor_html_af2190fe6112c2d471b852ff980ff74eb"><div class="ttname"><a href="classACombatDicePreviewActor.html#af2190fe6112c2d471b852ff980ff74eb">ACombatDicePreviewActor::SetBackdropVisible</a></div><div class="ttdeci">void SetBackdropVisible(bool bVisible)</div><div class="ttdoc">Viewport 배경판 표시 여부를 바꾼다.</div><div class="ttdef"><b>Definition</b> <a href="CombatDicePreviewActor__State_8cpp_source.html#l00109">CombatDicePreviewActor_State.cpp:109</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_b0f6477e5460f689b7d3a9cfbd931fdd.html">Actor</a></li><li class="navelem"><a class="el" href="dir_d52b2b06cf2eab3d9c945e6b4eab9da9.html">Dice</a></li><li class="navelem"><a class="el" href="CombatDicePreviewActor__State_8cpp.html">CombatDicePreviewActor_State.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

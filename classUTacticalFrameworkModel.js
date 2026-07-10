@@ -1,0 +1,25 @@
+var classUTacticalFrameworkModel =
+[
+    [ "AddAggregatorDirty", "classUTacticalFrameworkModel.html#af3b3c077e6740f04bd407ae06f9ca95b", null ],
+    [ "AllocAttributeSetInitter", "classUTacticalFrameworkModel.html#a5ae8f0b9d75b6e7f4e20afc5ce66ec6a", null ],
+    [ "AllocTacticalEffectContext", "classUTacticalFrameworkModel.html#aaa7bf3fa0c870975ce05f1861a34784f", null ],
+    [ "BeginAggregatorDirtyBatch", "classUTacticalFrameworkModel.html#ad38791a11095dafde6ace0ac25fd397c", null ],
+    [ "EndAggregatorDirtyBatch", "classUTacticalFrameworkModel.html#ac7d85ee81a18796173f5d419651c62aa", null ],
+    [ "GetAttributeSetInitter", "classUTacticalFrameworkModel.html#a12e78ebd1d44b446a8623e60511bc16a", null ],
+    [ "GetGlobalBatchCount", "classUTacticalFrameworkModel.html#af20b3f892132e1f71f28206932556c4f", null ],
+    [ "GetGlobalInitCurveTable", "classUTacticalFrameworkModel.html#a9ece3f75fd4e6b3eb9eb7e0cf61d8914", null ],
+    [ "GlobalPreTacticalEffectSpecApply", "classUTacticalFrameworkModel.html#a468f63a159cb9c89f219ab1aea78e6f2", null ],
+    [ "Initialize", "classUTacticalFrameworkModel.html#aeeda0b2acc41849d2272db3268cc5238", null ],
+    [ "PopCurrentAppliedTE", "classUTacticalFrameworkModel.html#a8960d1385f8b5b604c0a19d4c6e16a2f", null ],
+    [ "PushCurrentAppliedTE", "classUTacticalFrameworkModel.html#abbd9b87cf80592da8a3b61f40de93552", null ],
+    [ "ReloadAttributeDefaults", "classUTacticalFrameworkModel.html#aa0f84013476308a7fda3e390b725e287", null ],
+    [ "RemoveAggregatorDirty", "classUTacticalFrameworkModel.html#aa4ee938a37d21ef2d305f87c7d1f38b4", null ],
+    [ "SetCurrentAppliedTE", "classUTacticalFrameworkModel.html#a85c7cf4808b03e29f15e1381c27d9805", null ],
+    [ "Uninitialize", "classUTacticalFrameworkModel.html#adcea9cfeb7e271c4d6f77e2425fefb36", null ],
+    [ "FActiveTacticalEffectHandle", "classUTacticalFrameworkModel.html#a9d628bba5d4165886ea1867e8a020142", null ],
+    [ "mDirtyAggregators", "classUTacticalFrameworkModel.html#a31f3af322e4b62cc020b28f30749650a", null ],
+    [ "mEffectOwningModelMap", "classUTacticalFrameworkModel.html#ad9b18c3b9ac4f68c483885b5133fe76d", null ],
+    [ "mGlobalAttributeSetInitter", "classUTacticalFrameworkModel.html#a652006033b52ab5378104354ea747a3e", null ],
+    [ "mGlobalBatchCount", "classUTacticalFrameworkModel.html#a7a7f0205bdd17933a5a03e8a090d23ce", null ],
+    [ "mGlobalInitCurveTable", "classUTacticalFrameworkModel.html#a10e1de9b425d0c002c311cbb46140c5f", null ]
+];

@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['순서도_0',['단일 턴에 대한 순서도',['../srpg_framework_page.html#srpg_framework_turn_image_section',1,'']]],
-  ['순서_20배치는_20어떻게_20처리하는가_1',['Q 초기 턴 순서 배치는 어떻게 처리하는가?',['../srpg_framework_page.html#srpg_framework_subsystem_step1',1,'']]],
-  ['순서_20상세_20예시_2',['공격 스킬 순서 상세 예시',['../srpg_framework_page.html#srpg_framework_turn_step1',1,'']]]
+  ['것_0',['미합의/맞출 것',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2README.html#autotoc_md23',1,'']]],
+  ['것_20게임플레이와_20합의_20필요_1',['E. 아직 안 정해진 것 (게임플레이와 합의 필요)',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2UI__API__CONTRACT.html#autotoc_md36',1,'']]],
+  ['것_20strong_20gameplay_20→_20ui_20tt_20set_20tt_2',['A. 게임플레이가 UI에 &lt;strong&gt;줘야 하는 것&lt;/strong&gt; (gameplay → UI, &lt;tt&gt;Set*&lt;/tt&gt;)',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2UI__API__CONTRACT.html#autotoc_md26',1,'']]],
+  ['것_20strong_20ui_20→_20gameplay_20tt_20request_20tt_20의도만_3',['B. UI가 게임플레이에 &lt;strong&gt;요구하는 것&lt;/strong&gt; (UI → gameplay, &lt;tt&gt;Request*&lt;/tt&gt; = 의도만)',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2UI__API__CONTRACT.html#autotoc_md30',1,'']]]
 ];

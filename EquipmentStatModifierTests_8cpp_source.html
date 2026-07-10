@@ -1,0 +1,258 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RDTests/Component/EquipmentComponent/EquipmentStatModifierTests.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('EquipmentStatModifierTests_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">EquipmentStatModifierTests.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="EquipmentStatModifierTests_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*****************************************************************/</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;<a class="code" href="P__RDTests_8h.html">P_RDTests.h</a>&quot;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &quot;Misc/AutomationTest.h&quot;</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor">#include &quot;<a class="code" href="TASAttributeTestsHelper_8h.html">TAS/TASAttributeTestsHelper.h</a>&quot;</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="preprocessor">#include &quot;<a class="code" href="EquipmentComponentModel_8h.html">Component/EquipmentComponent/EquipmentComponentModel.h</a>&quot;</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="preprocessor">#include &quot;<a class="code" href="AttributeSetComponentModel_8h.html">Component/AttributeComponent/AttributeSetComponentModel.h</a>&quot;</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="preprocessor">#include &quot;<a class="code" href="StaticWeaponEquipmentData_8h.html">DataAsset/EquipmentData/StaticWeaponEquipmentData.h</a>&quot;</span></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="preprocessor">#include &quot;<a class="code" href="UnitAttributeSet_8h.html">AttributeSet/UnitAttributeSet.h</a>&quot;</span></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="preprocessor">#include &quot;<a class="code" href="TacticalEffect_8h.html">TAS/Effect/TacticalEffect.h</a>&quot;</span></div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="preprocessor">#include &quot;<a class="code" href="SimulationSubsystem_8h.html">Singleton/WorldSubsystem/SimulationSubsystem.h</a>&quot;</span></div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="preprocessor">#include &quot;<a class="code" href="TacticalFrameworkModel_8h.html">Singleton/WorldSubsystem/TacticalFrameworkModel.h</a>&quot;</span></div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="preprocessor">#include &quot;<a class="code" href="RoomInstance_8h.html">Simulation/RoomInstance.h</a>&quot;</span></div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="preprocessor">#include &quot;Engine/World.h&quot;</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="preprocessor">#include &quot;Engine/Engine.h&quot;</span></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span> </div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="keyword">namespace</span></div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>{</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    <span class="comment">// 활성 PIE/Game 월드 탐색 (없으면 호출측이 GWorld로 폴백)</span></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UWorld</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FindAnyGameWorld</a>()</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    {</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>        <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GEngine</a> == <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>        {</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>            <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>        }</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>        <span class="keywordflow">for</span> (<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FWorldContext</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Context</a> : <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GEngine</a>-&gt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldContexts</a>())</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>        {</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>            <span class="keywordflow">if</span> ((<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Context</a>.WorldType == EWorldType::PIE || <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Context</a>.WorldType == EWorldType::Game) &amp;&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Context</a>.World() != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>            {</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>                <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Context</a>.World();</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>            }</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>        }</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>        <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>    }</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>}</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span> </div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span><span class="comment">// 장비 스탯(mStatModifiers) 장착 시 적용, 해제 시 원복 검증</span></div>
+<div class="foldopen" id="foldopen00047" data-start="{" data-end="}">
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno"><a class="line" href="EquipmentStatModifierTests_8cpp.html#afffce1a425b9979bcb55d5d15f8bdea6">   47</a></span><a class="code hl_function" href="EquipmentStatModifierTests_8cpp.html#afffce1a425b9979bcb55d5d15f8bdea6">IMPLEMENT_SIMPLE_AUTOMATION_TEST</a>(</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>    FEquipmentStatModifierTests,</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    <span class="stringliteral">&quot;P_RD.Component.EquipmentStatModifier&quot;</span>,</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>)</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span> </div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><span class="keywordtype">bool</span> FEquipmentStatModifierTests::RunTest(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Parameters</a>)</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>{</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    <span class="comment">// 라이브 월드 확보 (TAS 속성 테스트와 동일 환경)</span></div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UWorld</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">World</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FindAnyGameWorld</a>();</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">World</a> == <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>    {</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">World</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GWorld</a>;</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>    }</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestNotNull</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;유효한 월드&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">World</a>) == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    {</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>    }</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span> </div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>    <span class="comment">// 시뮬레이션 서브시스템 + 룸 인스턴스 확보</span></div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    <a class="code hl_class" href="classUSimulationSubsystem.html">USimulationSubsystem</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SimSubsystem</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">World</a>-&gt;GetSubsystem&lt;<a class="code hl_class" href="classUSimulationSubsystem.html">USimulationSubsystem</a>&gt;();</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestNotNull</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;SimulationSubsystem&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SimSubsystem</a>) == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>    {</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>    }</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    <a class="code hl_class" href="classURoomInstance.html">URoomInstance</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RoomInstance</a> = <a class="code hl_function" href="classFSimulationSubsystemTestAccessor.html#a3c39363ef2ad041552812d690c3360ee">FSimulationSubsystemTestAccessor::GetRoomInstance</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SimSubsystem</a>);</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestNotNull</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;RoomInstance&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RoomInstance</a>) == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>    {</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>    }</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span> </div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    <span class="comment">// 전략 프레임워크 모델 등록 (없을 때만 모크 등록 — 이펙트 컨텍스트/적용에 필요)</span></div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    <a class="code hl_class" href="classUTacticalFrameworkModel.html">UTacticalFrameworkModel</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FrameworkModel</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Cast&lt;UTacticalFrameworkModel&gt;</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RoomInstance</a>-&gt;mAliveSubsystemModels.FindRef(UTacticalFrameworkModel::StaticClass()));</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FrameworkModel</a> == <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>    {</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FrameworkModel</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewObject&lt;UTacticalFrameworkModel&gt;</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RoomInstance</a>);</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RoomInstance</a>-&gt;mAliveSubsystemModels.Add(UTacticalFrameworkModel::StaticClass(), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FrameworkModel</a>);</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    }</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span> </div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>    <span class="comment">// 속성 컴포넌트 모크 (UUnitAttributeSet 부착)</span></div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>    <a class="code hl_class" href="classUTASActorModelMock.html">UTASActorModelMock</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MockActorModel</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewObject&lt;UTASActorModelMock&gt;</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">World</a>);</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MockActorModel</a>-&gt;<a class="code hl_function" href="classUObjectModel.html#a70d0e1b06e1aef4b0d5193e742b77c4b">Initialize</a>();</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MockActorModel</a>-&gt;BeginPlay();</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>    <a class="code hl_class" href="classUAttributeSetComponentModel.html">UAttributeSetComponentModel</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttrComp</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MockActorModel</a>-&gt;GetAttributeComponent();</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestNotNull</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;AttributeSetComponentModel&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttrComp</a>) == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>    {</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>    }</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span> </div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>    <span class="comment">// 공격력 기본값 10 세팅 (현재값도 10으로 전파됨)</span></div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>    <span class="keyword">const</span> <a class="code hl_struct" href="structFTacticalAttribute.html">FTacticalAttribute</a> AttackPoint = UUnitAttributeSet::GetAttackPointAttribute();</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttrComp</a>-&gt;SetAttributeBaseValue(AttackPoint, 10.f);</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;기본 공격력 10&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttrComp</a>-&gt;GetAttributeCurrentValue(AttackPoint), 10.f);</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span> </div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>    <span class="comment">// 무기 DA (코드 구성): 공격력 +5 고유 스탯</span></div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>    <a class="code hl_class" href="classUStaticWeaponEquipmentData.html">UStaticWeaponEquipmentData</a>* <a class="code hl_enumvalue" href="EquipmentType_8h.html#a70899f415d345fbaf3bd81b9ff18cc2ba18c83669920215a818638ad0e5421e4b">Weapon</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewObject&lt;UStaticWeaponEquipmentData&gt;</a>();</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>    <a class="code hl_struct" href="structFTacticalModifierInfo.html">FTacticalModifierInfo</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Mod</a>;</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Mod</a>.mAttribute = AttackPoint;</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Mod</a>.mModifierOp = <a class="code hl_enumvalue" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4dada51b427eda00cb729fa322f001f0732">ETacticalModOp::Additive</a>;</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Mod</a>.mModifierMagnitude = 5.f;</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    <a class="code hl_enumvalue" href="EquipmentType_8h.html#a70899f415d345fbaf3bd81b9ff18cc2ba18c83669920215a818638ad0e5421e4b">Weapon</a>-&gt;mStatModifiers.Add(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Mod</a>);</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>    <span class="comment">// 장착: 스탯 이펙트가 자신에게 적용 (패시브 컴포넌트는 불필요 → nullptr)</span></div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>    <a class="code hl_class" href="classUEquipmentComponentModel.html">UEquipmentComponentModel</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EquipComp</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewObject&lt;UEquipmentComponentModel&gt;</a>();</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>    <span class="keyword">const</span> <span class="keywordtype">bool</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bEquipped</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EquipComp</a>-&gt;EquipInternal(<a class="code hl_enumvalue" href="EquipmentType_8h.html#a70899f415d345fbaf3bd81b9ff18cc2ba18c83669920215a818638ad0e5421e4b">Weapon</a>, <span class="keyword">nullptr</span>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttrComp</a>);</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestTrue</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;장착 성공&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bEquipped</a>);</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;장착 후 공격력 15 (기본 10 + 스탯 5)&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttrComp</a>-&gt;GetAttributeCurrentValue(AttackPoint), 15.f);</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span> </div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>    <span class="comment">// 스탯 이펙트 핸들이 유효해야 함</span></div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>    <span class="keyword">const</span> <a class="code hl_struct" href="structFEquippedEntry.html">FEquippedEntry</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Entry</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EquipComp</a>-&gt;GetEquipped(<a class="code hl_enumvalue" href="EquipmentType_8h.html#a70899f415d345fbaf3bd81b9ff18cc2ba18c83669920215a818638ad0e5421e4b">EEquipmentType::Weapon</a>);</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestNotNull</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;무기 슬롯 점유&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Entry</a>))</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>    {</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestTrue</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;스탯 이펙트 핸들 유효&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Entry</a>-&gt;mStatEffectHandle.IsValid());</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    }</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span> </div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>    <span class="comment">// 해제: 스탯이 원복돼야 함</span></div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>    <span class="keyword">const</span> <span class="keywordtype">bool</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bUnequipped</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EquipComp</a>-&gt;UnequipInternal(<a class="code hl_enumvalue" href="EquipmentType_8h.html#a70899f415d345fbaf3bd81b9ff18cc2ba18c83669920215a818638ad0e5421e4b">EEquipmentType::Weapon</a>, <span class="keyword">nullptr</span>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttrComp</a>);</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestTrue</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;해제 성공&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bUnequipped</a>);</div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;해제 후 공격력 10 원복&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttrComp</a>-&gt;GetAttributeCurrentValue(AttackPoint), 10.f);</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span> </div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>}</div>
+</div>
+<div class="ttc" id="aAttributeSetComponentModel_8h_html"><div class="ttname"><a href="AttributeSetComponentModel_8h.html">AttributeSetComponentModel.h</a></div><div class="ttdoc">속성 컴포넌트 모델 정의 헤더</div></div>
+<div class="ttc" id="aEquipmentComponentModel_8h_html"><div class="ttname"><a href="EquipmentComponentModel_8h.html">EquipmentComponentModel.h</a></div><div class="ttdoc">장비를 장착·관리하고 패시브 설치/해제를 중계하는 컴포넌트 모델</div></div>
+<div class="ttc" id="aEquipmentStatModifierTests_8cpp_html_afffce1a425b9979bcb55d5d15f8bdea6"><div class="ttname"><a href="EquipmentStatModifierTests_8cpp.html#afffce1a425b9979bcb55d5d15f8bdea6">IMPLEMENT_SIMPLE_AUTOMATION_TEST</a></div><div class="ttdeci">IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEquipmentStatModifierTests, &quot;P_RD.Component.EquipmentStatModifier&quot;, EAutomationTestFlags::EditorContext|EAutomationTestFlags::ProductFilter) bool FEquipmentStatModifierTests</div><div class="ttdef"><b>Definition</b> <a href="EquipmentStatModifierTests_8cpp_source.html#l00047">EquipmentStatModifierTests.cpp:47</a></div></div>
+<div class="ttc" id="aEquipmentType_8h_html_a70899f415d345fbaf3bd81b9ff18cc2ba18c83669920215a818638ad0e5421e4b"><div class="ttname"><a href="EquipmentType_8h.html#a70899f415d345fbaf3bd81b9ff18cc2ba18c83669920215a818638ad0e5421e4b">EEquipmentType::Weapon</a></div><div class="ttdeci">@ Weapon</div></div>
+<div class="ttc" id="aP__RDTests_8h_html"><div class="ttname"><a href="P__RDTests_8h.html">P_RDTests.h</a></div><div class="ttdoc">P_RD 자동화 테스트 모듈 헤더</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aRoomInstance_8h_html"><div class="ttname"><a href="RoomInstance_8h.html">RoomInstance.h</a></div><div class="ttdoc">방 내 루트 객체가 되는 객체 헤더</div></div>
+<div class="ttc" id="aSimulationSubsystem_8h_html"><div class="ttname"><a href="SimulationSubsystem_8h.html">SimulationSubsystem.h</a></div><div class="ttdoc">시뮬레이션을 처리하는 서브시스템 정의 헤더</div></div>
+<div class="ttc" id="aStaticWeaponEquipmentData_8h_html"><div class="ttname"><a href="StaticWeaponEquipmentData_8h.html">StaticWeaponEquipmentData.h</a></div><div class="ttdoc">무기 장비 생성 시 사용되는 정적 Primary Data Asset 구현 헤더</div></div>
+<div class="ttc" id="aTASAttributeTestsHelper_8h_html"><div class="ttname"><a href="TASAttributeTestsHelper_8h.html">TASAttributeTestsHelper.h</a></div><div class="ttdoc">TAS Attribute 테스트를 위한 Mock 모델 정의 헤더</div></div>
+<div class="ttc" id="aTacticalEffect_8h_html"><div class="ttname"><a href="TacticalEffect_8h.html">TacticalEffect.h</a></div><div class="ttdoc">속성값 및 태그를 변경하는 객체 정의 헤더</div></div>
+<div class="ttc" id="aTacticalFrameworkModel_8h_html"><div class="ttname"><a href="TacticalFrameworkModel_8h.html">TacticalFrameworkModel.h</a></div><div class="ttdoc">TAS의 글로벌 서브시스템 모델 정의 헤더</div></div>
+<div class="ttc" id="aUnitAttributeSet_8h_html"><div class="ttname"><a href="UnitAttributeSet_8h.html">UnitAttributeSet.h</a></div><div class="ttdoc">SRPGUnit에 대한 Attribute Set 정의 헤더</div></div>
+<div class="ttc" id="aclassFSimulationSubsystemTestAccessor_html_a3c39363ef2ad041552812d690c3360ee"><div class="ttname"><a href="classFSimulationSubsystemTestAccessor.html#a3c39363ef2ad041552812d690c3360ee">FSimulationSubsystemTestAccessor::GetRoomInstance</a></div><div class="ttdeci">static URoomInstance * GetRoomInstance(USimulationSubsystem *Subsystem)</div><div class="ttdoc">Subsystem이 보유한 현재 방 컨텍스트의 RoomInstance를 꺼낸다.</div><div class="ttdef"><b>Definition</b> <a href="TASAttributeTestsHelper_8h_source.html#l00051">TASAttributeTestsHelper.h:51</a></div></div>
+<div class="ttc" id="aclassUAttributeSetComponentModel_html"><div class="ttname"><a href="classUAttributeSetComponentModel.html">UAttributeSetComponentModel</a></div><div class="ttdoc">한 유닛(액터)이 보유하는 모든 TacticalAttributeSet, 활성 Effect, 게임플레이 태그 카운트를 관리하는 컴포넌트 모델.</div><div class="ttdef"><b>Definition</b> <a href="AttributeSetComponentModel_8h_source.html#l00032">AttributeSetComponentModel.h:33</a></div></div>
+<div class="ttc" id="aclassUEquipmentComponentModel_html"><div class="ttname"><a href="classUEquipmentComponentModel.html">UEquipmentComponentModel</a></div><div class="ttdoc">장비 보유·장착 컴포넌트 모델</div><div class="ttdef"><b>Definition</b> <a href="EquipmentComponentModel_8h_source.html#l00062">EquipmentComponentModel.h:63</a></div></div>
+<div class="ttc" id="aclassUObjectModel_html_a70d0e1b06e1aef4b0d5193e742b77c4b"><div class="ttname"><a href="classUObjectModel.html#a70d0e1b06e1aef4b0d5193e742b77c4b">UObjectModel::Initialize</a></div><div class="ttdeci">virtual void Initialize()</div><div class="ttdef"><b>Definition</b> <a href="ObjectModel_8cpp_source.html#l00006">ObjectModel.cpp:6</a></div></div>
+<div class="ttc" id="aclassURoomInstance_html"><div class="ttname"><a href="classURoomInstance.html">URoomInstance</a></div><div class="ttdoc">방 내 루트 객체가 되는 객체 헤더</div><div class="ttdef"><b>Definition</b> <a href="RoomInstance_8h_source.html#l00031">RoomInstance.h:32</a></div></div>
+<div class="ttc" id="aclassUSimulationSubsystem_html"><div class="ttname"><a href="classUSimulationSubsystem.html">USimulationSubsystem</a></div><div class="ttdoc">SRPG 시뮬레이션을 처리하는 서브시스템</div><div class="ttdef"><b>Definition</b> <a href="SimulationSubsystem_8h_source.html#l00032">SimulationSubsystem.h:33</a></div></div>
+<div class="ttc" id="aclassUStaticWeaponEquipmentData_html"><div class="ttname"><a href="classUStaticWeaponEquipmentData.html">UStaticWeaponEquipmentData</a></div><div class="ttdoc">무기 장비 생성 시 사용되는 정적 Primary Data Asset</div><div class="ttdef"><b>Definition</b> <a href="StaticWeaponEquipmentData_8h_source.html#l00018">StaticWeaponEquipmentData.h:19</a></div></div>
+<div class="ttc" id="aclassUTASActorModelMock_html"><div class="ttname"><a href="classUTASActorModelMock.html">UTASActorModelMock</a></div><div class="ttdoc">Attribute 테스트용 ActorModel Mock</div><div class="ttdef"><b>Definition</b> <a href="TASAttributeTestsHelper_8h_source.html#l00090">TASAttributeTestsHelper.h:91</a></div></div>
+<div class="ttc" id="aclassUTacticalFrameworkModel_html"><div class="ttname"><a href="classUTacticalFrameworkModel.html">UTacticalFrameworkModel</a></div><div class="ttdoc">SRPG 유저 명령을 전달하는 서브시스템 모델</div><div class="ttdef"><b>Definition</b> <a href="TacticalFrameworkModel_8h_source.html#l00039">TacticalFrameworkModel.h:40</a></div></div>
+<div class="ttc" id="anamespaceETacticalModOp_html_ab00d942643ba92aefd4d59fa25e5cd4dada51b427eda00cb729fa322f001f0732"><div class="ttname"><a href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4dada51b427eda00cb729fa322f001f0732">ETacticalModOp::Additive</a></div><div class="ttdeci">@ Additive</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffectType_8h_source.html#l00099">TacticalEffectType.h:99</a></div></div>
+<div class="ttc" id="astructFEquippedEntry_html"><div class="ttname"><a href="structFEquippedEntry.html">FEquippedEntry</a></div><div class="ttdoc">한 슬롯에 장착된 장비와 그로 인해 설치된 런타임 객체 추적</div><div class="ttdef"><b>Definition</b> <a href="EquipmentComponentModel_8h_source.html#l00026">EquipmentComponentModel.h:27</a></div></div>
+<div class="ttc" id="astructFTacticalAttribute_html"><div class="ttname"><a href="structFTacticalAttribute.html">FTacticalAttribute</a></div><div class="ttdef"><b>Definition</b> <a href="TacticalAttributeSet_8h_source.html#l00074">TacticalAttributeSet.h:75</a></div></div>
+<div class="ttc" id="astructFTacticalModifierInfo_html"><div class="ttname"><a href="structFTacticalModifierInfo.html">FTacticalModifierInfo</a></div><div class="ttdoc">단일 속성 수정자(모디파이어)의 정적 정의.</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffect_8h_source.html#l00161">TacticalEffect.h:162</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_b774e7ec51d4a1271b160947af725bd0.html">P_RDTests</a></li><li class="navelem"><a class="el" href="dir_07d424110a99a2f8d415dfdba963a35d.html">Component</a></li><li class="navelem"><a class="el" href="dir_8b5edf2f469f628f9fd98727c6e5ae61.html">EquipmentComponent</a></li><li class="navelem"><a class="el" href="EquipmentStatModifierTests_8cpp.html">EquipmentStatModifierTests.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

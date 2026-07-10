@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['확장성이_20있는가_0',['Q 턴 추가 및 삭제 확장성이 있는가?',['../srpg_framework_page.html#srpg_framework_subsystem_step2',1,'']]]
+  ['두_20종류_20mispreview로_20갈림_0',['로그 두 종류 (mIsPreview로 갈림)',['../CombatTileMapHUDWidget__CombatLog_8cpp.html#autotoc_md38',1,'']]]
 ];

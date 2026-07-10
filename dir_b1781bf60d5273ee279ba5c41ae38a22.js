@@ -6,6 +6,8 @@ var dir_b1781bf60d5273ee279ba5c41ae38a22 =
     [ "PersistentData.h", "PersistentData_8h.html", "PersistentData_8h" ],
     [ "PersistentDataSubsystem.cpp", "PersistentDataSubsystem_8cpp.html", null ],
     [ "PersistentDataSubsystem.h", "PersistentDataSubsystem_8h.html", "PersistentDataSubsystem_8h" ],
+    [ "PersistentDataType.cpp", "PersistentDataType_8cpp.html", null ],
+    [ "PersistentDataType.h", "PersistentDataType_8h.html", "PersistentDataType_8h" ],
     [ "PersistentDataWriter.cpp", "PersistentDataWriter_8cpp.html", null ],
     [ "PersistentDataWriter.h", "PersistentDataWriter_8h.html", "PersistentDataWriter_8h" ],
     [ "PlayerUnitRestorationSubsystem.cpp", "PlayerUnitRestorationSubsystem_8cpp.html", null ],
@@ -13,5 +15,7 @@ var dir_b1781bf60d5273ee279ba5c41ae38a22 =
     [ "RoomTransitionSubsystem.cpp", "RoomTransitionSubsystem_8cpp.html", null ],
     [ "RoomTransitionSubsystem.h", "RoomTransitionSubsystem_8h.html", "RoomTransitionSubsystem_8h" ],
     [ "SaveGameSubsystem.cpp", "SaveGameSubsystem_8cpp.html", null ],
-    [ "SaveGameSubsystem.h", "SaveGameSubsystem_8h.html", "SaveGameSubsystem_8h" ]
+    [ "SaveGameSubsystem.h", "SaveGameSubsystem_8h.html", "SaveGameSubsystem_8h" ],
+    [ "TitleBackgroundVideoSubsystem.cpp", "TitleBackgroundVideoSubsystem_8cpp.html", null ],
+    [ "TitleBackgroundVideoSubsystem.h", "TitleBackgroundVideoSubsystem_8h.html", "TitleBackgroundVideoSubsystem_8h" ]
 ];

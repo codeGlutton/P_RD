@@ -1,0 +1,214 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/Dice/DicePoolModel.h 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('DicePoolModel_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">DicePoolModel.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="DicePoolModel_8h.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">// @file DiceComponent.h</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment">// @brief 플레이어 유닛이 소유하는 런타임 주사위(UDiceModel) 묶음 컴포넌트</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment">// @date 2026-06-17</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span> </div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &quot;<a class="code" href="RDMinimal_8h.html">RDMinimal.h</a>&quot;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &quot;<a class="code" href="ComponentModel_8h.html">Component/ComponentModel.h</a>&quot;</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &quot;UObject/PrimaryAssetId.h&quot;</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;DicePoolModel.generated.h&quot;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="keyword">class </span><a class="code hl_class" href="classUDiceModel.html">UDiceModel</a>;</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno"><a class="line" href="DicePoolModel_8h.html#aca66c99bf952cf042e83eeb90f24af69">   15</a></span><a class="code hl_function" href="DicePoolModel_8h.html#aca66c99bf952cf042e83eeb90f24af69">DECLARE_MULTICAST_DELEGATE_OneParam</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnRollAllDicesUI</a>, <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UDiceModel&gt;</a>&gt;&amp; <span class="comment">/*Dices*/</span>);</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno"><a class="line" href="DicePoolModel_8h.html#ae6d3e8e950264489990114da6efd7a2c">   16</a></span><a class="code hl_function" href="DicePoolModel_8h.html#aca66c99bf952cf042e83eeb90f24af69">DECLARE_MULTICAST_DELEGATE_OneParam</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnUseDiceUI</a>, <span class="keyword">const</span> <a class="code hl_class" href="classUDiceModel.html">UDiceModel</a>* <span class="comment">/*Dice*/</span>);</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno"><a class="line" href="DicePoolModel_8h.html#ae9ea9587ecf02d54c251c340b6b51a44">   17</a></span><a class="code hl_function" href="DicePoolModel_8h.html#aca66c99bf952cf042e83eeb90f24af69">DECLARE_MULTICAST_DELEGATE_OneParam</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnResetAllDiceUI</a>, <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UDiceModel&gt;</a>&gt;&amp; <span class="comment">/*Dices*/</span>);</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span> </div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno"><a class="line" href="DicePoolModel_8h.html#a4636656610451164461622c15c355071">   19</a></span><a class="code hl_function" href="DicePoolModel_8h.html#aca66c99bf952cf042e83eeb90f24af69">DECLARE_MULTICAST_DELEGATE_OneParam</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnSelectedDiceUI</a>, <span class="keyword">const</span> <a class="code hl_class" href="classUDiceModel.html">UDiceModel</a>* <span class="comment">/*Dice*/</span>);</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno"><a class="line" href="DicePoolModel_8h.html#aeb1e55cbd35f938bbb6d6b48f98567a4">   20</a></span><a class="code hl_function" href="DicePoolModel_8h.html#aca66c99bf952cf042e83eeb90f24af69">DECLARE_MULTICAST_DELEGATE_OneParam</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnUnselectedDiceUI</a>, <span class="keyword">const</span> <a class="code hl_class" href="classUDiceModel.html">UDiceModel</a>* <span class="comment">/*Dice*/</span>);</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span> </div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="comment">// 주사위 풀은 플레이어 전용 메커닉이라 APlayerUnit이 소유한다(적은 주사위를 굴리지 않음).</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="comment">// 규칙: 컴포넌트 형식 Model이므로 UComponentModel(IObjectModel)을 상속한다.</span></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="comment">// 이 모델은 UI를 알지 않는다(단방향). UCombatUIAdapter가 GetDices()를 읽어 FDiceSlotUI로 변환해 push한다.</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="comment">// 보유 구성은 런 mDiceIds 기반이며, 굴림 난수는 추후 런 RandomStream 주입으로 결정론을 맞춘다.</span></div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UCLASS</a>()</div>
+<div class="foldopen" id="foldopen00028" data-start="{" data-end="};">
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno"><a class="line" href="classUDicePoolModel.html">   28</a></span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">P_RD_API</a> <a class="code hl_class" href="classUDicePoolModel.html">UDicePoolModel</a> : <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">public</a> <a class="code hl_class" href="classUComponentModel.html">UComponentModel</a></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>{</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GENERATED_BODY</a>()</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span> </div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <span class="keywordtype">void</span> BuildFromDiceIds(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;FPrimaryAssetId&gt;</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceIds</a>);</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span> </div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    <span class="keywordtype">void</span> RollAll(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FRandomStream</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Stream</a>);</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span> </div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>    <span class="keywordtype">void</span> ApplyRolledFaceIndices(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;int32&gt;</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RolledFaceIndices</a>);</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span> </div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>    <span class="keywordtype">void</span> MarkDiceSelected(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceIndex</a>);</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    <span class="keywordtype">void</span> MarkDiceUnselected(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceIndex</a>);</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    <span class="keywordtype">void</span> ResetSelected();</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span> </div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    <span class="keywordtype">void</span> MarkDiceUsed(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceIndex</a>);</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span> </div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    <span class="keywordtype">void</span> MarkSelectedDiceAsUsed();</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span> </div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>    <span class="keywordtype">void</span> ResetUsed();</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span> </div>
+<div class="foldopen" id="foldopen00061" data-start="{" data-end="}">
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno"><a class="line" href="classUDicePoolModel.html#a98c0ccdaeb9ed6507da05479cb92ded2">   61</a></span>    <span class="keyword">const</span> <a class="code hl_class" href="classUDiceModel.html">UDiceModel</a>* <a class="code hl_function" href="classUDicePoolModel.html#a98c0ccdaeb9ed6507da05479cb92ded2">GetDice</a>(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceIndex</a>)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span><span class="keyword">    </span>{ </div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>        <span class="keywordflow">if</span> (mDices.IsValidIndex(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceIndex</a>) == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>        {</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>            <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>        }</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>        <span class="keywordflow">return</span> mDices[<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceIndex</a>];</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>    }</div>
+</div>
+<div class="foldopen" id="foldopen00069" data-start="{" data-end="}">
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno"><a class="line" href="classUDicePoolModel.html#aad07ebc76dd4cb0f02e26d12fef25fce">   69</a></span>    <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;TObjectPtr&lt;UDiceModel&gt;</a>&gt;&amp; <a class="code hl_function" href="classUDicePoolModel.html#aad07ebc76dd4cb0f02e26d12fef25fce">GetDices</a>()<span class="keyword"> const </span></div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span><span class="keyword">    </span>{ </div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>        <span class="keywordflow">return</span> mDices; </div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    }</div>
+</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span> </div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;int32&gt;</a> GetSelectedDices() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span> </div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> GetRolledDiceValue(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceIndex</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span> </div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    <span class="keywordtype">bool</span> IsSelectedDice(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceIndex</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> GetSelectedDiceNum() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> GetSelectedDiceSum() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span> </div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno"><a class="line" href="classUDicePoolModel.html#a9095aa7f0afb03f4098623c5118a9054">   87</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnRollAllDicesUI</a> <a class="code hl_variable" href="classUDicePoolModel.html#a9095aa7f0afb03f4098623c5118a9054">OnRollAllDicesUI</a>;</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno"><a class="line" href="classUDicePoolModel.html#a9e19c6ced77a2dfb8f8b3383e75d59f1">   88</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnUseDiceUI</a> <a class="code hl_variable" href="classUDicePoolModel.html#a9e19c6ced77a2dfb8f8b3383e75d59f1">OnUseDiceUI</a>;</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno"><a class="line" href="classUDicePoolModel.html#abe487d74eb07725690a9cb7997f5c805">   89</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnResetAllDiceUI</a> <a class="code hl_variable" href="classUDicePoolModel.html#abe487d74eb07725690a9cb7997f5c805">OnResetAllDiceUI</a>;</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span> </div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno"><a class="line" href="classUDicePoolModel.html#a977048af84ccd07071c3f05f54e12459">   91</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnSelectedDiceUI</a> <a class="code hl_variable" href="classUDicePoolModel.html#a977048af84ccd07071c3f05f54e12459">OnSelectedDiceUI</a>;</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno"><a class="line" href="classUDicePoolModel.html#af5602ca46d1b6f59a0b0fe36f05db16a">   92</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnUnselectedDiceUI</a> <a class="code hl_variable" href="classUDicePoolModel.html#af5602ca46d1b6f59a0b0fe36f05db16a">OnUnselectedDiceUI</a>;</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span> </div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Category</a> = <span class="stringliteral">&quot;Entry&quot;</span>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VisibleAnywhere</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">meta</a> = (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DisplayName</a> = <span class="stringliteral">&quot;Dices&quot;</span>))</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="code hl_class" href="classUDiceModel.html">UDiceModel</a>&gt;&gt; mDices;</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>};</div>
+</div>
+<div class="ttc" id="aComponentModel_8h_html"><div class="ttname"><a href="ComponentModel_8h.html">ComponentModel.h</a></div><div class="ttdoc">보드 액터에 부착되는 컴포넌트 데이터 모델 클래스 정의 헤더</div></div>
+<div class="ttc" id="aDicePoolModel_8h_html_aca66c99bf952cf042e83eeb90f24af69"><div class="ttname"><a href="DicePoolModel_8h.html#aca66c99bf952cf042e83eeb90f24af69">DECLARE_MULTICAST_DELEGATE_OneParam</a></div><div class="ttdeci">DECLARE_MULTICAST_DELEGATE_OneParam(FOnRollAllDicesUI, const TArray&lt; TObjectPtr&lt; UDiceModel &gt; &gt; &amp;)</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aRDMinimal_8h_html"><div class="ttname"><a href="RDMinimal_8h.html">RDMinimal.h</a></div><div class="ttdoc">RD 프로젝트 전 영역에서 사용되는 최소한의 포함 헤더</div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_ada104807b93ac7cd59dac80d98ba857b"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a></div><div class="ttdeci">int32</div><div class="ttdef"><b>Definition</b> <a href="RoomTransitionSubsystem_8h_source.html#l00021">RoomTransitionSubsystem.h:21</a></div></div>
+<div class="ttc" id="aclassUComponentModel_html"><div class="ttname"><a href="classUComponentModel.html">UComponentModel</a></div><div class="ttdoc">액터에 부착되는 컴포넌트 데이터 모델 클래스</div><div class="ttdef"><b>Definition</b> <a href="ComponentModel_8h_source.html#l00021">ComponentModel.h:22</a></div></div>
+<div class="ttc" id="aclassUDiceModel_html"><div class="ttname"><a href="classUDiceModel.html">UDiceModel</a></div><div class="ttdoc">주사위 한 개의 가변 런타임 상태/로직을 담는 컴포넌트형 데이터 모델입니다.</div><div class="ttdef"><b>Definition</b> <a href="DiceModel_8h_source.html#l00022">DiceModel.h:23</a></div></div>
+<div class="ttc" id="aclassUDicePoolModel_html"><div class="ttname"><a href="classUDicePoolModel.html">UDicePoolModel</a></div><div class="ttdoc">플레이어가 보유한 런타임 주사위들을 소유하고 굴림/사용 상태를 관리하는 컴포넌트 모델입니다.</div><div class="ttdef"><b>Definition</b> <a href="DicePoolModel_8h_source.html#l00028">DicePoolModel.h:29</a></div></div>
+<div class="ttc" id="aclassUDicePoolModel_html_a9095aa7f0afb03f4098623c5118a9054"><div class="ttname"><a href="classUDicePoolModel.html#a9095aa7f0afb03f4098623c5118a9054">UDicePoolModel::OnRollAllDicesUI</a></div><div class="ttdeci">FOnRollAllDicesUI OnRollAllDicesUI</div><div class="ttdef"><b>Definition</b> <a href="DicePoolModel_8h_source.html#l00087">DicePoolModel.h:87</a></div></div>
+<div class="ttc" id="aclassUDicePoolModel_html_a977048af84ccd07071c3f05f54e12459"><div class="ttname"><a href="classUDicePoolModel.html#a977048af84ccd07071c3f05f54e12459">UDicePoolModel::OnSelectedDiceUI</a></div><div class="ttdeci">FOnSelectedDiceUI OnSelectedDiceUI</div><div class="ttdef"><b>Definition</b> <a href="DicePoolModel_8h_source.html#l00091">DicePoolModel.h:91</a></div></div>
+<div class="ttc" id="aclassUDicePoolModel_html_a98c0ccdaeb9ed6507da05479cb92ded2"><div class="ttname"><a href="classUDicePoolModel.html#a98c0ccdaeb9ed6507da05479cb92ded2">UDicePoolModel::GetDice</a></div><div class="ttdeci">const UDiceModel * GetDice(int32 DiceIndex) const</div><div class="ttdoc">보유 주사위 묶음(읽기 전용). UI 어댑터가 뷰 변환에 사용.</div><div class="ttdef"><b>Definition</b> <a href="DicePoolModel_8h_source.html#l00061">DicePoolModel.h:61</a></div></div>
+<div class="ttc" id="aclassUDicePoolModel_html_a9e19c6ced77a2dfb8f8b3383e75d59f1"><div class="ttname"><a href="classUDicePoolModel.html#a9e19c6ced77a2dfb8f8b3383e75d59f1">UDicePoolModel::OnUseDiceUI</a></div><div class="ttdeci">FOnUseDiceUI OnUseDiceUI</div><div class="ttdef"><b>Definition</b> <a href="DicePoolModel_8h_source.html#l00088">DicePoolModel.h:88</a></div></div>
+<div class="ttc" id="aclassUDicePoolModel_html_aad07ebc76dd4cb0f02e26d12fef25fce"><div class="ttname"><a href="classUDicePoolModel.html#aad07ebc76dd4cb0f02e26d12fef25fce">UDicePoolModel::GetDices</a></div><div class="ttdeci">const TArray&lt; TObjectPtr&lt; UDiceModel &gt; &gt; &amp; GetDices() const</div><div class="ttdef"><b>Definition</b> <a href="DicePoolModel_8h_source.html#l00069">DicePoolModel.h:69</a></div></div>
+<div class="ttc" id="aclassUDicePoolModel_html_abe487d74eb07725690a9cb7997f5c805"><div class="ttname"><a href="classUDicePoolModel.html#abe487d74eb07725690a9cb7997f5c805">UDicePoolModel::OnResetAllDiceUI</a></div><div class="ttdeci">FOnResetAllDiceUI OnResetAllDiceUI</div><div class="ttdef"><b>Definition</b> <a href="DicePoolModel_8h_source.html#l00089">DicePoolModel.h:89</a></div></div>
+<div class="ttc" id="aclassUDicePoolModel_html_af5602ca46d1b6f59a0b0fe36f05db16a"><div class="ttname"><a href="classUDicePoolModel.html#af5602ca46d1b6f59a0b0fe36f05db16a">UDicePoolModel::OnUnselectedDiceUI</a></div><div class="ttdeci">FOnUnselectedDiceUI OnUnselectedDiceUI</div><div class="ttdef"><b>Definition</b> <a href="DicePoolModel_8h_source.html#l00092">DicePoolModel.h:92</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_e9824583c838513764c509a429273746.html">Dice</a></li><li class="navelem"><a class="el" href="DicePoolModel_8h.html">DicePoolModel.h</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

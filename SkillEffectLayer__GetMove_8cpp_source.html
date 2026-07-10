@@ -1,0 +1,222 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_GetMove.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('SkillEffectLayer__GetMove_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">SkillEffectLayer_GetMove.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="SkillEffectLayer__GetMove_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="SkillEffectLayer__GetMove_8h.html">DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_GetMove.h</a>&quot;</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#include &quot;<a class="code" href="TacticalEffect__MovementPoint_8h.html">TAS/Effect/Stat/TacticalEffect_MovementPoint.h</a>&quot;</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &quot;<a class="code" href="TacticalEffect__MovementFactor__AddBase_8h.html">TAS/Effect/Stat/TacticalEffect_MovementFactor_AddBase.h</a>&quot;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &quot;<a class="code" href="TacticalEffect__Movement_8h.html">TAS/Effect/Stat/TacticalEffect_Movement.h</a>&quot;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span> </div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &quot;<a class="code" href="ActorModel_8h.html">Actor/ActorModel.h</a>&quot;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &quot;<a class="code" href="BoardCombatTarget_8h.html">Actor/BoardActor/BoardCombatTarget.h</a>&quot;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &quot;<a class="code" href="AttributeSetComponentModel_8h.html">Component/AttributeComponent/AttributeSetComponentModel.h</a>&quot;</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;<a class="code" href="TacticalEffectContext_8h.html">TAS/Effect/TacticalEffectContext.h</a>&quot;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;<a class="code" href="UnitAttributeSet_8h.html">AttributeSet/UnitAttributeSet.h</a>&quot;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &quot;<a class="code" href="GameBalanceSettings_8h.html">Setting/GameBalanceSettings.h</a>&quot;</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
+<div class="foldopen" id="foldopen00015" data-start="{" data-end="}">
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno"><a class="line" href="structFSkillEffectLayer__GetMove.html#a884efdacdd93a240af3e5ac0c052f035">   15</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="structFSkillEffectLayer__GetMove.html#a884efdacdd93a240af3e5ac0c052f035">FSkillEffectLayer_GetMove::ClearPointEffect</a>(<a class="code hl_class" href="classIBoardCombatTarget.html">IBoardCombatTarget</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ActorModel</a>)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    <a class="code hl_class" href="classUAttributeSetComponentModel.html">UAttributeSetComponentModel</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetComponentModel</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ActorModel</a>-&gt;GetAttributeComponentModel();</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">checkf</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetComponentModel</a> != <span class="keyword">nullptr</span>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;속성 컴포넌트 nullptr&quot;</span>));</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span> </div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetComponentModel</a>-&gt;ApplyModToAttribute(UUnitAttributeSet::GetMovementPointAttribute(), <a class="code hl_enumvalue" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4daa60c6b7cabf4e650f3959412d9636aa6">ETacticalModOp::Override</a>, 0.f);</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>}</div>
+</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span> </div>
+<div class="foldopen" id="foldopen00023" data-start="{" data-end="}">
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno"><a class="line" href="structFSkillEffectLayer__GetMove.html#aa1bb68c5a38e423ea86c3f4f991799ac">   23</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="structFSkillEffectLayer__GetMove.html#aa1bb68c5a38e423ea86c3f4f991799ac">FSkillEffectLayer_GetMove::ApplyPointEffect</a>(<a class="code hl_class" href="classIBoardCombatTarget.html">IBoardCombatTarget</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ActorModel</a>, <span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceSum</a>)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    <a class="code hl_class" href="classUAttributeSetComponentModel.html">UAttributeSetComponentModel</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetComponentModel</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ActorModel</a>-&gt;GetAttributeComponentModel();</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">checkf</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetComponentModel</a> != <span class="keyword">nullptr</span>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;속성 컴포넌트 nullptr&quot;</span>));</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span> </div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    <a class="code hl_class" href="classUTacticalEffectContext.html">UTacticalEffectContext</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectContext</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetComponentModel</a>-&gt;MakeEffectContext();</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectContext</a>-&gt;SetInstigator(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Cast&lt;UActorModel&gt;</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ActorModel</a>));</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectContext</a>-&gt;SetAttributeSetComponentModel(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetComponentModel</a>);</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span> </div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedPtr&lt;FTacticalEffectSpec&gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectSpec</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetComponentModel</a>-&gt;MakeOutgoingSpec(UTacticalEffect_MovementPoint::StaticClass(), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectContext</a>);</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectSpec</a>-&gt;mDynamicMagnitude = <a class="code hl_variable" href="structFSkillEffectLayer__GetMove.html#a921e3b205ba385a0fb47f3cd89fbcea6">mDefaultMoveGain</a> + <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceSum</a> * <a class="code hl_variable" href="structFSkillEffectLayer__GetMove.html#a4075e7a6db487ba4d81a0a53d7993796">mDiceRatio</a>;</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetComponentModel</a>-&gt;ApplyTacticalEffectSpecToSelf(*<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectSpec</a>);</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>}</div>
+</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span> </div>
+<div class="foldopen" id="foldopen00037" data-start="{" data-end="}">
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno"><a class="line" href="structFSkillEffectLayer__GetMove.html#ad47b4032866879a5412220e0f9755e8b">   37</a></span><span class="keywordtype">void</span> <a class="code hl_variable" href="structFSkillEffectLayer.html#a014919ec8d29b9f13b67472c08f21bc2">FSkillEffectLayer_GetMove::CommitEffect</a>(<a class="code hl_class" href="classIBoardCombatTarget.html">IBoardCombatTarget</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OwnerActorModel</a>, <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;FTileIndex&gt;</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TargetTileIndexes</a>, <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;IBoardCombatTarget*&gt;</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OtherCombatTargets</a>, <span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceSum</a>)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    <span class="keyword">const</span> <a class="code hl_class" href="classUGameBalanceSettings.html">UGameBalanceSettings</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameBalanceSettings</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetDefault&lt;UGameBalanceSettings&gt;</a>();</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">checkf</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameBalanceSettings</a> != <span class="keyword">nullptr</span>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;게임 밸런스 세팅 nullptr&quot;</span>));</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span> </div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    <a class="code hl_class" href="classUAttributeSetComponentModel.html">UAttributeSetComponentModel</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetComponentModel</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OwnerActorModel</a>-&gt;GetAttributeComponentModel();</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">checkf</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetComponentModel</a> != <span class="keyword">nullptr</span>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;속성 컴포넌트 nullptr&quot;</span>));</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>    <a class="code hl_class" href="classUTacticalEffectContext.html">UTacticalEffectContext</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectContext</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetComponentModel</a>-&gt;MakeEffectContext();</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectContext</a>-&gt;SetInstigator(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Cast&lt;UActorModel&gt;</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OwnerActorModel</a>));</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectContext</a>-&gt;SetAttributeSetComponentModel(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetComponentModel</a>);</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span> </div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    <a class="code hl_struct" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectHandle</a>;</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span> </div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    <span class="comment">/* 포인트를 Factor에 임시 추가 */</span></div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    {</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedPtr&lt;FTacticalEffectSpec&gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectSpec</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetComponentModel</a>-&gt;MakeOutgoingSpec(UTacticalEffect_MovementFactor_AddBase::StaticClass(), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectContext</a>);</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectSpec</a>-&gt;mDynamicMagnitude = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetComponentModel</a>-&gt;GetAttributeCurrentValue(UUnitAttributeSet::GetMovementPointAttribute());</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectHandle</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetComponentModel</a>-&gt;ApplyTacticalEffectSpecToSelf(*<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectSpec</a>);</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    }</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span> </div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>    <span class="comment">// 민첩성</span></div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    <span class="keyword">const</span> <span class="keywordtype">bool</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IsOwnerAgility</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetComponentModel</a>-&gt;HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Agility);</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>    <span class="keyword">const</span> <span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AgilityRatio</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IsOwnerAgility</a> == <span class="keyword">true</span> ? <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GameBalanceSettings</a>-&gt;mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Agility] : 1.f;</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span> </div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    <span class="keyword">const</span> <span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TotalMove</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AgilityRatio</a> * <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetComponentModel</a>-&gt;GetAttributeCurrentValue(UUnitAttributeSet::GetMovementFactorAttribute());</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>    <span class="keyword">const</span> <span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MoveDiff</a> = FMath::Floor(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TotalMove</a>);</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span> </div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MoveDiff</a> &gt; 0.f)</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>    {</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>        <span class="comment">/* 이동 증가 적용 */</span></div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>        <span class="keywordflow">for</span> (<span class="keyword">const</span> <a class="code hl_class" href="classIBoardCombatTarget.html">IBoardCombatTarget</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OtherCombatTarget</a> : <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OtherCombatTargets</a>)</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>        {</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>            <a class="code hl_class" href="classUAttributeSetComponentModel.html">UAttributeSetComponentModel</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OtherAttributeSetComponentModel</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OtherCombatTarget</a>-&gt;GetAttributeComponentModel();</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">checkf</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OtherAttributeSetComponentModel</a> != <span class="keyword">nullptr</span>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;속성 컴포넌트 nullptr&quot;</span>));</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span> </div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedPtr&lt;FTacticalEffectSpec&gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectSpec</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetComponentModel</a>-&gt;MakeOutgoingSpec(UTacticalEffect_Movement::StaticClass(), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectContext</a>);</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectSpec</a>-&gt;mDynamicMagnitude = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MoveDiff</a>;</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetComponentModel</a>-&gt;ApplyTacticalEffectSpecToTarget(*<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectSpec</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OtherAttributeSetComponentModel</a>);</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>        }</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    }</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span> </div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    <span class="comment">/* 포인트를 Factor에서 제거 */</span></div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    {</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttributeSetComponentModel</a>-&gt;RemoveActiveTacticalEffect(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EffectHandle</a>);</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    }</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>}</div>
+</div>
+<div class="ttc" id="aActorModel_8h_html"><div class="ttname"><a href="ActorModel_8h.html">ActorModel.h</a></div><div class="ttdoc">액터 데이터 모델 클래스 정의 헤더</div></div>
+<div class="ttc" id="aAttributeSetComponentModel_8h_html"><div class="ttname"><a href="AttributeSetComponentModel_8h.html">AttributeSetComponentModel.h</a></div><div class="ttdoc">속성 컴포넌트 모델 정의 헤더</div></div>
+<div class="ttc" id="aBoardCombatTarget_8h_html"><div class="ttname"><a href="BoardCombatTarget_8h.html">BoardCombatTarget.h</a></div><div class="ttdoc">SRPG 타일에 타격 가능한 모델 인터페이스 정의 헤더</div></div>
+<div class="ttc" id="aGameBalanceSettings_8h_html"><div class="ttname"><a href="GameBalanceSettings_8h.html">GameBalanceSettings.h</a></div><div class="ttdoc">게임 밸런스 설정 클래스 정의 헤더</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aSkillEffectLayer__GetMove_8h_html"><div class="ttname"><a href="SkillEffectLayer__GetMove_8h.html">SkillEffectLayer_GetMove.h</a></div><div class="ttdoc">하나의 스킬 모션 내에서 적용하는 기동력 습득 효과 단위 구현 헤더</div></div>
+<div class="ttc" id="aTacticalEffectContext_8h_html"><div class="ttname"><a href="TacticalEffectContext_8h.html">TacticalEffectContext.h</a></div><div class="ttdoc">이펙트 적용 시 참고되는 공용 메타 데이터 구현 헤더</div></div>
+<div class="ttc" id="aTacticalEffect__MovementFactor__AddBase_8h_html"><div class="ttname"><a href="TacticalEffect__MovementFactor__AddBase_8h.html">TacticalEffect_MovementFactor_AddBase.h</a></div><div class="ttdoc">MovementFactor AddBase 이펙트 정의 헤더</div></div>
+<div class="ttc" id="aTacticalEffect__MovementPoint_8h_html"><div class="ttname"><a href="TacticalEffect__MovementPoint_8h.html">TacticalEffect_MovementPoint.h</a></div><div class="ttdoc">MovementPoint 이펙트 정의 헤더</div></div>
+<div class="ttc" id="aTacticalEffect__Movement_8h_html"><div class="ttname"><a href="TacticalEffect__Movement_8h.html">TacticalEffect_Movement.h</a></div><div class="ttdoc">Movement 이펙트 정의 헤더</div></div>
+<div class="ttc" id="aUnitAttributeSet_8h_html"><div class="ttname"><a href="UnitAttributeSet_8h.html">UnitAttributeSet.h</a></div><div class="ttdoc">SRPGUnit에 대한 Attribute Set 정의 헤더</div></div>
+<div class="ttc" id="aclassIBoardCombatTarget_html"><div class="ttname"><a href="classIBoardCombatTarget.html">IBoardCombatTarget</a></div><div class="ttdoc">SRPG 타일에 타격 가능한 모델</div><div class="ttdef"><b>Definition</b> <a href="BoardCombatTarget_8h_source.html#l00083">BoardCombatTarget.h:84</a></div></div>
+<div class="ttc" id="aclassUAttributeSetComponentModel_html"><div class="ttname"><a href="classUAttributeSetComponentModel.html">UAttributeSetComponentModel</a></div><div class="ttdoc">한 유닛(액터)이 보유하는 모든 TacticalAttributeSet, 활성 Effect, 게임플레이 태그 카운트를 관리하는 컴포넌트 모델.</div><div class="ttdef"><b>Definition</b> <a href="AttributeSetComponentModel_8h_source.html#l00032">AttributeSetComponentModel.h:33</a></div></div>
+<div class="ttc" id="aclassUGameBalanceSettings_html"><div class="ttname"><a href="classUGameBalanceSettings.html">UGameBalanceSettings</a></div><div class="ttdoc">게임 밸런스 설정 클래스</div><div class="ttdef"><b>Definition</b> <a href="GameBalanceSettings_8h_source.html#l00019">GameBalanceSettings.h:20</a></div></div>
+<div class="ttc" id="aclassUTacticalEffectContext_html"><div class="ttname"><a href="classUTacticalEffectContext.html">UTacticalEffectContext</a></div><div class="ttdoc">이펙트 적용 시 참고되는 공용 메타 데이터 구현 헤더</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffectContext_8h_source.html#l00025">TacticalEffectContext.h:26</a></div></div>
+<div class="ttc" id="anamespaceETacticalModOp_html_ab00d942643ba92aefd4d59fa25e5cd4daa60c6b7cabf4e650f3959412d9636aa6"><div class="ttname"><a href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4daa60c6b7cabf4e650f3959412d9636aa6">ETacticalModOp::Override</a></div><div class="ttdeci">@ Override</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffectType_8h_source.html#l00103">TacticalEffectType.h:103</a></div></div>
+<div class="ttc" id="astructFActiveTacticalEffectHandle_html"><div class="ttname"><a href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a></div><div class="ttdoc">활성화된 이펙트를 쉽게 탐색하기 위한 핸들</div><div class="ttdef"><b>Definition</b> <a href="ActiveTacticalEffect_8h_source.html#l00039">ActiveTacticalEffect.h:40</a></div></div>
+<div class="ttc" id="astructFSkillEffectLayer__GetMove_html_a4075e7a6db487ba4d81a0a53d7993796"><div class="ttname"><a href="structFSkillEffectLayer__GetMove.html#a4075e7a6db487ba4d81a0a53d7993796">FSkillEffectLayer_GetMove::mDiceRatio</a></div><div class="ttdeci">float mDiceRatio</div><div class="ttdef"><b>Definition</b> <a href="SkillEffectLayer__GetMove_8h_source.html#l00032">SkillEffectLayer_GetMove.h:32</a></div></div>
+<div class="ttc" id="astructFSkillEffectLayer__GetMove_html_a884efdacdd93a240af3e5ac0c052f035"><div class="ttname"><a href="structFSkillEffectLayer__GetMove.html#a884efdacdd93a240af3e5ac0c052f035">FSkillEffectLayer_GetMove::ClearPointEffect</a></div><div class="ttdeci">void ClearPointEffect(IBoardCombatTarget *ActorModel) const override</div><div class="ttdef"><b>Definition</b> <a href="SkillEffectLayer__GetMove_8cpp_source.html#l00015">SkillEffectLayer_GetMove.cpp:15</a></div></div>
+<div class="ttc" id="astructFSkillEffectLayer__GetMove_html_a921e3b205ba385a0fb47f3cd89fbcea6"><div class="ttname"><a href="structFSkillEffectLayer__GetMove.html#a921e3b205ba385a0fb47f3cd89fbcea6">FSkillEffectLayer_GetMove::mDefaultMoveGain</a></div><div class="ttdeci">float mDefaultMoveGain</div><div class="ttdef"><b>Definition</b> <a href="SkillEffectLayer__GetMove_8h_source.html#l00030">SkillEffectLayer_GetMove.h:30</a></div></div>
+<div class="ttc" id="astructFSkillEffectLayer__GetMove_html_aa1bb68c5a38e423ea86c3f4f991799ac"><div class="ttname"><a href="structFSkillEffectLayer__GetMove.html#aa1bb68c5a38e423ea86c3f4f991799ac">FSkillEffectLayer_GetMove::ApplyPointEffect</a></div><div class="ttdeci">void ApplyPointEffect(IBoardCombatTarget *ActorModel, float DiceSum) const override</div><div class="ttdef"><b>Definition</b> <a href="SkillEffectLayer__GetMove_8cpp_source.html#l00023">SkillEffectLayer_GetMove.cpp:23</a></div></div>
+<div class="ttc" id="astructFSkillEffectLayer_html_a014919ec8d29b9f13b67472c08f21bc2"><div class="ttname"><a href="structFSkillEffectLayer.html#a014919ec8d29b9f13b67472c08f21bc2">FSkillEffectLayer::CommitEffect</a></div><div class="ttdeci">virtual void CommitEffect(IBoardCombatTarget *ActorModel, const TArray&lt; FTileIndex &gt; &amp;TargetTileIndexes, const TArray&lt; IBoardCombatTarget * &gt; &amp;OtherCombatTargets, float DiceSum) const PURE_VIRTUAL(FSkillEffectLayer</div><div class="ttdef"><b>Definition</b> <a href="SkillEffectLayer_8h_source.html#l00029">SkillEffectLayer.h:29</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_1f8f559340f3ccded65c91e626aea339.html">DataAsset</a></li><li class="navelem"><a class="el" href="dir_a4722c86db3ed5a1d5b848453efe25e8.html">SkillData</a></li><li class="navelem"><a class="el" href="dir_7ec36437637bbed52a68c60b91b2ecab.html">SkillEffectLayer</a></li><li class="navelem"><a class="el" href="SkillEffectLayer__GetMove_8cpp.html">SkillEffectLayer_GetMove.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

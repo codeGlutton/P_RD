@@ -1,4 +1,4 @@
 var TreasureGameMode_8h =
 [
-    [ "ATreasureGameMode", "classATreasureGameMode.html", null ]
+    [ "ATreasureGameMode", "classATreasureGameMode.html", "classATreasureGameMode" ]
 ];

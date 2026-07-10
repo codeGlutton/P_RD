@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['unitprimaryassettypes_0',['UnitPrimaryAssetTypes',['../namespaceUnitPrimaryAssetTypes.html',1,'']]]
+  ['skillprimaryassettypes_0',['SkillPrimaryAssetTypes',['../namespaceSkillPrimaryAssetTypes.html',1,'']]],
+  ['stageprimaryassettypes_1',['StagePrimaryAssetTypes',['../namespaceStagePrimaryAssetTypes.html',1,'']]]
 ];

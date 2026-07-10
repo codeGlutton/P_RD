@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/GAS/Attribute/UnitAttributeSet.cpp 파일 참조</title>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/AttributeSet/UnitAttributeSet.cpp 파일 참조</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -94,13 +94,22 @@ $(document).ready(function(){initNavTree('UnitAttributeSet_8cpp.html',''); initR
 </div><!--header-->
 <div class="contents">
 
+<p>유닛 어트리뷰트 셋 구현부. <a class="el" href="classUUnitAttributeSet.html" title="SRPG Unit에 대한 Attribute Set 정의">UUnitAttributeSet</a>(공통 유닛: HP/MaxHP 클램프)과 <a class="el" href="classUPlayerUnitAttributeSet.html" title="Player가 조작하는 SRPG Unit에 대한 Attribute Set 정의">UPlayerUnitAttributeSet</a>(플레이어: Exp 마이너스 방지/레벨업 훅)의 Pre/PostAttributeChange 콜백을 정의한다.  
+<a href="#details">더 자세히 ...</a></p>
+
 <p><a href="UnitAttributeSet_8cpp_source.html">이 파일의 소스 코드 페이지로 가기</a></p>
-</div><!-- contents -->
+<a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
+<div class="textblock"><p>[PR #191 마이그레이션 근거] 이 PR은 효과 모디파이어의 "연산 종류" enum을 GAS의 EGameplayModOp에서 자체 <a class="el" href="namespaceETacticalModOp.html" title="속성 수정자(Modifier) 연산 종류 — 구 GAS의 EGameplayModOp를 대체하는 자체 enum.">ETacticalModOp</a>(<a class="el" href="TacticalEffectType_8h.html" title="Effect 연관 타입들 정의 헤더">TacticalEffectType.h</a>)로 치환한다(GAS 폐기 작업의 일부). 본 파일에서는 PostAttributeChange의 ApplyModToAttribute 호출 인자가 EGameplayModOp::Override -&gt; <a class="el" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4daa60c6b7cabf4e650f3959412d9636aa6">ETacticalModOp::Override</a> 로 바뀐 것이 그 치환 지점이다.</p>
+<p>ETacticalModOp의 정수값은 구 EGameplayModOp와 "동일하게" 유지한다. 이유 3가지: (1) 직렬화 호환 : 기존 에셋/세이브에 박힌 op의 정수값을 그대로 보존한다. (2) 배열 인덱싱 : Aggregator가 mMods[ETacticalModOp::Max]처럼 op 값으로 배열을 인덱싱한다. (3) CoreRedirect : DefaultEngine.ini의 CoreRedirect가 구 enum 이름을 새 enum으로 매핑한다.</p>
+<p>연산 종류(정수값): AddBase(0)=합산, MultiplyAdditive(1)=배율 가산, DivideAdditive(2)=나눗셈 가산, Override(3)=덮어쓰기, MultiplyCompound(4)=거듭제곱 곱, AddFinal(5)=최종 합산, Max(6)=무효/개수. (+ 구 GAS 이름 하위호환 별칭: Additive=0 / Multiplicitive=1 / Division=2 / Override=3) </p>
+
+<p class="definition"><a class="el" href="UnitAttributeSet_8cpp_source.html">UnitAttributeSet.cpp</a> 파일에서 정의되었습니다.</p>
+</div></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_52e018a2ea224e6f27385fcdfacd6da6.html">GAS</a></li><li class="navelem"><a class="el" href="dir_179f6e5caaef98f9049f1dd1bed1aa77.html">Attribute</a></li><li class="navelem"><a class="el" href="UnitAttributeSet_8cpp.html">UnitAttributeSet.cpp</a></li>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_dabcf9a26b38b8cd1c7418bd266895b3.html">AttributeSet</a></li><li class="navelem"><a class="el" href="UnitAttributeSet_8cpp.html">UnitAttributeSet.cpp</a></li>
     <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
   </ul>
 </div>

@@ -1,0 +1,872 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/UI/CombatTileMapHUDWidget.h 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('CombatTileMapHUDWidget_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">CombatTileMapHUDWidget.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="CombatTileMapHUDWidget_8h.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &quot;<a class="code" href="RDMinimal_8h.html">RDMinimal.h</a>&quot;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &quot;<a class="code" href="DiceViewData_8h.html">UI/DiceViewData.h</a>&quot;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &quot;<a class="code" href="CombatUITypes_8h.html">UI/Combat/CombatUITypes.h</a>&quot;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &quot;<a class="code" href="RDUserWidget_8h.html">UI/RDUserWidget.h</a>&quot;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &quot;<a class="code" href="RewardUITypes_8h.html">UI/Reward/RewardUITypes.h</a>&quot;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &quot;Components/CanvasPanelSlot.h&quot;</span>   <span class="comment">// FAnchorData (폴드 변형 베이스 슬롯 캐시)</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &quot;Engine/TimerHandle.h&quot;</span>           <span class="comment">// FTimerHandle (골드 카운트업 타이머)</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;Styling/SlateBrush.h&quot;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;Widgets/Layout/Anchors.h&quot;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &quot;CombatTileMapHUDWidget.generated.h&quot;</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="keyword">class </span><a class="code hl_class" href="classACombatDiceCaptureActor.html">ACombatDiceCaptureActor</a>;</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="keyword">class </span><a class="code hl_class" href="classACombatDiceRollCaptureActor.html">ACombatDiceRollCaptureActor</a>;</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="keyword">struct </span><a class="code hl_struct" href="structFPresentationBarrier.html">FPresentationBarrier</a>;</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="keyword">enum class</span> <a class="code hl_enumeration" href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a> : <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">uint8</a>;</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="keyword">enum class</span> <a class="code hl_enumeration" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a> : <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">uint8</a>;</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="keyword">class </span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UTexture2D</a>;</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="keyword">class </span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UBorder</a>;</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="keyword">class </span>UButton;</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="keyword">class </span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UCanvasPanel</a>;</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="keyword">class </span><a class="code hl_class" href="classUCombatUIModel.html">UCombatUIModel</a>;</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="keyword">class </span><a class="code hl_class" href="classUCombatResultOverlayWidget.html">UCombatResultOverlayWidget</a>;</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="keyword">class </span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UCinematicWidget</a>;</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="keyword">class </span><a class="code hl_class" href="classUIndexedButtonWidget.html">UIndexedButtonWidget</a>;</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="keyword">class </span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UImage</a>;</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="keyword">class </span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UProgressBar</a>;</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="keyword">class </span><a class="code hl_class" href="classURewardUIModel.html">URewardUIModel</a>;</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="keyword">class </span><a class="code hl_class" href="classURewardUIWidgetBase.html">URewardUIWidgetBase</a>;</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="keyword">class </span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">USoundBase</a>;</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="keyword">class </span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UTextBlock</a>;</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="keyword">class </span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UViewport</a>;</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="keyword">class </span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UWidget</a>;</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span><span class="keyword">class </span>UUserWidget;</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span> </div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">USTRUCT</a>()</div>
+<div class="foldopen" id="foldopen00040" data-start="{" data-end="};">
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno"><a class="line" href="structFUnitHpBarWidget.html">   40</a></span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">struct</a> <a class="code hl_struct" href="structFUnitHpBarWidget.html">FUnitHpBarWidget</a></div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>{</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GENERATED_BODY</a>()</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    <span class="comment">// HUD RootCanvas에 붙는 WBP 인스턴스(월드→스크린 투영으로 위치 갱신 대상).</span></div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno"><a class="line" href="structFUnitHpBarWidget.html#ae4918c4d429ec332be56df70c194b878">   45</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;UUserWidget&gt; mRoot;</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    <span class="comment">// HP 채움 이미지(플레이어=초록/적=빨강 텍스처 교체 대상).</span></div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno"><a class="line" href="structFUnitHpBarWidget.html#a3e28b3fae2af8795064a13e0f532c91c">   47</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UImage</a>&gt; mFillImage;</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>    <span class="comment">// 채움을 % 만큼 &quot;크롭&quot;하기 위해 폭을 조절하는 클립 캔버스의 슬롯(런타임 생성).</span></div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno"><a class="line" href="structFUnitHpBarWidget.html#a3d0ae6481e6dcacb6918f16f3ce9bf4a">   49</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UCanvasPanelSlot</a>&gt; mFillClipSlot;</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    <span class="comment">// HP 숫자 텍스트.</span></div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno"><a class="line" href="structFUnitHpBarWidget.html#a96ab5a7cd1fd784ee70b673b92def9af">   51</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UTextBlock</a>&gt; mValueText;</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    <span class="comment">// HP바 왼쪽 방어도 아이콘/수치(런타임 생성). 방어도 0이면 숨긴다.</span></div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno"><a class="line" href="structFUnitHpBarWidget.html#a5ca9222cb2a0947fc14bda3fe7941346">   53</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UImage</a>&gt; mDefenseIcon;</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno"><a class="line" href="structFUnitHpBarWidget.html#aee96e99a7001dd8360b03e569c1b5efb">   54</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UTextBlock</a>&gt; mDefenseText;</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    <span class="comment">// 채움 이미지의 원본(100%) 폭(디자인 값). 크롭 계산 기준.</span></div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno"><a class="line" href="structFUnitHpBarWidget.html#a3bdaf683633a8c4ffd7ae4b7edb0b2c8">   56</a></span>    <span class="keywordtype">float</span> mFillFullWidth = 0.0<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a>;</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span> </div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>    <span class="comment">// 상태이상 칸(StatusIcon_01~05 / StatusCountText_01~05) + 초과 표시. Rebuild에서 캐시, Update에서 채운다.</span></div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno"><a class="line" href="structFUnitHpBarWidget.html#a552636c6f4df80574a8409917b8033a1">   59</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UImage</a>&gt;&gt; mStatusIcons;</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno"><a class="line" href="structFUnitHpBarWidget.html#a7b86a5ae971f1b89ed39fb65cc3957c8">   60</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UTextBlock</a>&gt;&gt; mStatusCountTexts;</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno"><a class="line" href="structFUnitHpBarWidget.html#a8c5b288534a63a80ced5fc908f5624d4">   61</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UTextBlock</a>&gt; mStatusOverflowText;</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>};</div>
+</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span> </div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span><span class="comment">// 현재는 실제 전투 API가 붙기 전의 UI 시안 단계다.</span></div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span><span class="comment">// 스킬 레일, 보유 주사위, 명령 버튼 배치와 함께 전투 진입 시 주사위가 굴러가는 3D 연출을 확인한다.</span></div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span><span class="comment">// 주사위 연출은 타일맵 월드에 액터를 직접 올리지 않고, UMG Viewport의 별도 미리보기 월드에서만 재생한다.</span></div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span><span class="comment">// 이렇게 해야 카메라/타일/유닛 배치와 독립적으로 &quot;화면 정면에서 주사위가 굴러 멈추는&quot; UI 연출을 만들 수 있다.</span></div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UCLASS</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlueprintType</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Blueprintable</a>)</div>
+<div class="foldopen" id="foldopen00070" data-start="{" data-end="};">
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno"><a class="line" href="classUCombatTileMapHUDWidget.html">   70</a></span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">P_RD_API</a> <a class="code hl_class" href="classUCombatTileMapHUDWidget.html">UCombatTileMapHUDWidget</a> : <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">public</a> <a class="code hl_class" href="classURDUserWidget.html">URDUserWidget</a></div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>{</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GENERATED_BODY</a>()</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span> </div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>    <a class="code hl_class" href="classUCombatTileMapHUDWidget.html">UCombatTileMapHUDWidget</a>(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FObjectInitializer</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ObjectInitializer</a> = FObjectInitializer::Get());</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span> </div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    <span class="keywordtype">void</span> NativeOnInitialized() <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    <span class="keywordtype">void</span> OpenUI(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndUIOpenAnimation</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Callback</a>) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span> </div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> GetCombatDiceViewCount() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span> </div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>    <span class="comment">// DicePanel은 실제 주사위 굴림을 다시 만들지 않고, 전투 HUD가 이미 굴린 결과를 읽어 같은 값을 보여준다.</span></div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>    <span class="comment">// 반환값이 false면 해당 index에 표시할 주사위가 없다는 뜻이다.</span></div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>    <span class="keywordtype">bool</span> GetCombatDiceView(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceIndex</a>, <a class="code hl_struct" href="structFDiceViewData.html">FDiceViewData</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OutDiceView</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span> </div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>    <span class="comment">// 연결되면 주사위 굴림 결과는 더 이상 HUD가 정하지 않고 뷰모델(게임플레이/Mock)에서 읽는다.</span></div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>    <span class="comment">// 미연결 상태에서는 기존 단독 동작(시안용 임시 굴림)을 그대로 유지해 회귀가 없다.</span></div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>    <span class="comment">// 게임플레이 어댑터가 준비되면 여기에 같은 뷰모델을 넘기면 된다(UI 무수정).</span></div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>    <span class="keywordtype">void</span> BindCombatUIModel(<a class="code hl_class" href="classUCombatUIModel.html">UCombatUIModel</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InUIModel</a>);</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span> </div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>    <span class="keywordtype">void</span> NativeConstruct() <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span> </div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>    <span class="keywordtype">void</span> NativeDestruct() <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span> </div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    <span class="keywordtype">void</span> NativeTick(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGeometry</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MyGeometry</a>, <span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InDeltaTime</a>) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span> </div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FReply</a> NativeOnMouseButtonDown(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGeometry</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InGeometry</a>, <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPointerEvent</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InMouseEvent</a>) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FReply</a> NativeOnMouseButtonUp(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGeometry</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InGeometry</a>, <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPointerEvent</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InMouseEvent</a>) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span> </div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FReply</a> NativeOnTouchStarted(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGeometry</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InGeometry</a>, <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPointerEvent</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InGestureEvent</a>) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span> </div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FReply</a> NativeOnTouchEnded(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGeometry</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InGeometry</a>, <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPointerEvent</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InGestureEvent</a>) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span> </div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>    <span class="keywordtype">void</span> ApplyOpenUI() <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span> </div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> GetViewportZOrder() <span class="keyword">const override</span>;</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span> </div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>    <span class="keywordtype">void</span> EnsureRuntimeWidgets();</div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span> </div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>    <span class="keywordtype">void</span> ApplyRuntimeWidgetLayout() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span> </div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>    <span class="keywordtype">void</span> ResolveDesignerSkin();</div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span> </div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>    <span class="keywordtype">bool</span> IsDesignerSkinActive()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> mDesignerSkinActive; }</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span> </div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UCanvasPanel</a>* GetSkinTargetCanvas()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> (IsDesignerSkinActive() &amp;&amp; DesignCanvas != <span class="keyword">nullptr</span>) ? DesignCanvas.Get() : RootCanvas.Get(); }</div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span> </div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FAnchors</a> GroupRect(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FName</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AnchorWidgetName</a>, <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FAnchors</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Fallback</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span> </div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FAnchors</a> GetSkillRailGroupRect() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span> </div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>    <span class="keywordtype">void</span> ApplyAspectVariantSlots(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector2D</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ViewportSize</a>);</div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span> </div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>    <span class="comment">// 뷰포트 크기가 바뀔 때만 NativeTick에서 호출한다. 타이틀 LayoutMetrics 로그와 같은 목적.</span></div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>    <span class="keywordtype">void</span> LogCombatLayoutMetrics(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector2D</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ViewportSize</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span> </div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FAnchors</a> GetSkillRailItemRect(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Index</a>, <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_enumvalue" href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273ae93f994f01c537c4e2f7d8528c3eb5e9">Count</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span> </div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> GetSkillDataIndexForRailSlot(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RailSlotIndex</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span> </div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>    <span class="keywordtype">void</span> EnsureDiceRollPhysicsActor();</div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span> </div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>    <span class="keywordtype">void</span> DestroyDiceRollPhysicsActor();</div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span> </div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>    <span class="keywordtype">void</span> ApplyDiceCaptureBrush(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UImage</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceImage</a>, <a class="code hl_class" href="classACombatDiceCaptureActor.html">ACombatDiceCaptureActor</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceActor</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector2D</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BrushSize</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span> </div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>    <a class="code hl_class" href="classACombatDiceCaptureActor.html">ACombatDiceCaptureActor</a>* SpawnDiceCaptureActor(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GroupIndex</a>, <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceIndex</a>, <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RenderTargetSize</a>);</div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span> </div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>    <span class="keywordtype">void</span> DestroyDiceCaptureActors(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;ACombatDiceCaptureActor&gt;</a>&gt;&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceActors</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span> </div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>    <span class="keywordtype">void</span> RefreshDiceViewsFromRunData();</div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span> </div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>    <span class="keywordtype">void</span> RebuildSkillRailWidgets();</div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span> </div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>    <span class="keywordtype">void</span> RefreshSkillRailWidgets();</div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span> </div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FText</a> GetOwnedSkillLabel(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SkillIndex</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span> </div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>    <span class="keywordtype">void</span> RebuildOwnedDiceCards();</div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span> </div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>    <span class="keywordtype">void</span> EnsureSkillInputButtons();</div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span> </div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>    <span class="keywordtype">void</span> RefreshOwnedDiceCards();</div>
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span> </div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>    <span class="keywordtype">void</span> PrepareIntroDiceRoll();</div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span> </div>
+<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>    <span class="keywordtype">void</span> StartIntroDiceRoll();</div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span> </div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span>    <span class="keywordtype">void</span> ApplyIntroDicePhysicsResults();</div>
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span> </div>
+<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>    <span class="keywordtype">void</span> UpdateIntroDiceRoll(<span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InDeltaTime</a>);</div>
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span> </div>
+<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>    <span class="keywordtype">void</span> SetDiceRollCombatLayerSuppressed(<span class="keywordtype">bool</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bSuppressed</a>);</div>
+<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span> </div>
+<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>    <span class="keywordtype">void</span> MarkAllDiceRolled();</div>
+<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span> </div>
+<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>    <span class="comment">// @param NewVisibility 적용할 표시 상태</span></div>
+<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>    <span class="keywordtype">void</span> SetDiceRollVisibility(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ESlateVisibility</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewVisibility</a>);</div>
+<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span> </div>
+<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span>    <span class="keywordtype">void</span> HandleDiceRollInputButtonClicked();</div>
+<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span> </div>
+<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>    <span class="keywordtype">void</span> DismissIntroDiceRoll();</div>
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span> </div>
+<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>    <span class="keywordtype">void</span> HandleSkillDetailDismissButtonClicked();</div>
+<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span> </div>
+<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span>    <span class="keywordtype">void</span> HandleEndTurnButtonClicked();</div>
+<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span> </div>
+<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span>    <span class="keywordtype">void</span> HandleOwnedDiceCardClicked(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DiceIndex</a>);</div>
+<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span> </div>
+<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>    <span class="keywordtype">void</span> HandleCombatQueueNodeResolved(<a class="code hl_struct" href="structFCombatQueueNode.html">FCombatQueueNode</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Node</a>);</div>
+<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span> </div>
+<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span>    <span class="keywordtype">void</span> HandleCombatUIChanged(<a class="code hl_enumeration" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81">ECombatUIDomain</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Domain</a>);</div>
+<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span> </div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>    <span class="keywordtype">void</span> RefreshCombatStatusBar() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span> </div>
+<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span>    <span class="keywordtype">void</span> RefreshSkinValueLabels() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span> </div>
+<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>    <span class="keywordtype">void</span> RefreshRoomNameLabel() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span> </div>
+<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>    <span class="keywordtype">bool</span> IsScreenPositionOverLevelValue(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector2D</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ScreenPosition</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span> </div>
+<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>    <span class="keywordtype">void</span> EnsureExpHoldPanel();</div>
+<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span> </div>
+<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>    <span class="keywordtype">void</span> SetExpHoldPanelVisible(<span class="keywordtype">bool</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bVisible</a>);</div>
+<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span> </div>
+<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>    <span class="comment">// 카운트업 상태는 표시 캐시(mutable)라 const 갱신 경로(RefreshSkinValueLabels)에서 불러도 된다.</span></div>
+<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span>    <span class="keywordtype">void</span> UpdateGoldValueLabel(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewGold</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span> </div>
+<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span>    <span class="keywordtype">void</span> TickGoldCountUp() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span> </div>
+<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span>    <span class="keywordtype">void</span> SetGoldValueLabelText(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_enumvalue" href="RewardUITypes_8h.html#afbeb202d9da1936d1a1bfe63e0aea540a9768feb3fdb1f267b06093bc572952dd">Gold</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span> </div>
+<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span>    <span class="keywordtype">void</span> RebuildEquipmentBar();</div>
+<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span> </div>
+<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span>    <span class="keywordtype">void</span> RebuildEquipmentIcons();</div>
+<div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span> </div>
+<div class="line"><a id="l00291" name="l00291"></a><span class="lineno">  291</span>    <span class="keywordtype">void</span> RebuildTurnOrderBar();</div>
+<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span> </div>
+<div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span>    <span class="keywordtype">void</span> HandleCombatActionResolved();</div>
+<div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span> </div>
+<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00299" name="l00299"></a><span class="lineno">  299</span>    <span class="keywordtype">void</span> HandleMoveButtonClicked();</div>
+<div class="line"><a id="l00300" name="l00300"></a><span class="lineno">  300</span> </div>
+<div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span>    <span class="keywordtype">void</span> RefreshMoveButton() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span> </div>
+<div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00306" name="l00306"></a><span class="lineno">  306</span>    <span class="keywordtype">void</span> HandleNavMapButtonClicked();</div>
+<div class="line"><a id="l00307" name="l00307"></a><span class="lineno">  307</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span>    <span class="keywordtype">void</span> HandleNavDiceButtonClicked();</div>
+<div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span>    <span class="keywordtype">void</span> HandleNavSkillButtonClicked();</div>
+<div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span>    <span class="keywordtype">void</span> HandleNavSettingsButtonClicked();</div>
+<div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span> </div>
+<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span>    <span class="comment">/* 패널 내비/승리 흐름 (레거시 탑바에서 이관, CombatTileMapHUDWidget_Nav.cpp) */</span></div>
+<div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span> </div>
+<div class="line"><a id="l00317" name="l00317"></a><span class="lineno">  317</span>    <span class="keywordtype">void</span> BindVictoryFlowEvents();</div>
+<div class="line"><a id="l00318" name="l00318"></a><span class="lineno">  318</span> </div>
+<div class="line"><a id="l00320" name="l00320"></a><span class="lineno">  320</span>    <a class="code hl_class" href="classURDUserWidget.html">URDUserWidget</a>* GetToggleableWorldWidget(<a class="code hl_enumeration" href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">WorldWidgetType</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00321" name="l00321"></a><span class="lineno">  321</span> </div>
+<div class="line"><a id="l00329" name="l00329"></a><span class="lineno">  329</span>    <span class="keywordtype">void</span> UpdateTopBarBackdrop() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00330" name="l00330"></a><span class="lineno">  330</span> </div>
+<div class="line"><a id="l00332" name="l00332"></a><span class="lineno">  332</span>    <span class="keywordtype">void</span> CloseWorldWidget(<a class="code hl_enumeration" href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">WorldWidgetType</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00333" name="l00333"></a><span class="lineno">  333</span> </div>
+<div class="line"><a id="l00335" name="l00335"></a><span class="lineno">  335</span>    <span class="keywordtype">void</span> CloseFloatingPanels(<a class="code hl_enumeration" href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ExceptWorldWidgetType</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00336" name="l00336"></a><span class="lineno">  336</span> </div>
+<div class="line"><a id="l00338" name="l00338"></a><span class="lineno">  338</span>    <span class="keywordtype">void</span> ToggleWorldMap();</div>
+<div class="line"><a id="l00339" name="l00339"></a><span class="lineno">  339</span> </div>
+<div class="line"><a id="l00341" name="l00341"></a><span class="lineno">  341</span>    <span class="keywordtype">void</span> ToggleSettingsPanel();</div>
+<div class="line"><a id="l00342" name="l00342"></a><span class="lineno">  342</span> </div>
+<div class="line"><a id="l00344" name="l00344"></a><span class="lineno">  344</span>    <span class="keywordtype">void</span> ToggleFloatingPanel(<a class="code hl_enumeration" href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">WorldWidgetType</a>, <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TCHAR</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DebugName</a>);</div>
+<div class="line"><a id="l00345" name="l00345"></a><span class="lineno">  345</span> </div>
+<div class="line"><a id="l00347" name="l00347"></a><span class="lineno">  347</span>    <span class="keywordtype">void</span> HandleEndCombatUI(<a class="code hl_variable" href="SRPGCombatModel_8h.html#a989ac07b6b9603d8bf4ec5d89ef5e2e9">TSharedPtr&lt;FPresentationBarrier&gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Barrier</a>, <a class="code hl_enumeration" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Result</a>);</div>
+<div class="line"><a id="l00348" name="l00348"></a><span class="lineno">  348</span> </div>
+<div class="line"><a id="l00350" name="l00350"></a><span class="lineno">  350</span>    <span class="comment">// 판정 직후 바로가 아니라 짧은 텀(딜레이) 후 StartCombatResultCinematic으로 실제 연출을 시작한다.</span></div>
+<div class="line"><a id="l00351" name="l00351"></a><span class="lineno">  351</span>    <span class="keywordtype">void</span> BeginCombatResultPresentation(<a class="code hl_variable" href="SRPGCombatModel_8h.html#a989ac07b6b9603d8bf4ec5d89ef5e2e9">TSharedPtr&lt;FPresentationBarrier&gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Barrier</a>, <a class="code hl_enumeration" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Result</a>);</div>
+<div class="line"><a id="l00352" name="l00352"></a><span class="lineno">  352</span> </div>
+<div class="line"><a id="l00354" name="l00354"></a><span class="lineno">  354</span>    <span class="keywordtype">void</span> StartCombatResultCinematic();</div>
+<div class="line"><a id="l00355" name="l00355"></a><span class="lineno">  355</span> </div>
+<div class="line"><a id="l00357" name="l00357"></a><span class="lineno">  357</span>    <span class="keywordtype">void</span> EnsureCombatResultWidgets();</div>
+<div class="line"><a id="l00358" name="l00358"></a><span class="lineno">  358</span> </div>
+<div class="line"><a id="l00360" name="l00360"></a><span class="lineno">  360</span>    <span class="keywordtype">void</span> HandleCombatResultVideoFinished(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UCinematicWidget</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CinematicWidget</a>);</div>
+<div class="line"><a id="l00361" name="l00361"></a><span class="lineno">  361</span> </div>
+<div class="line"><a id="l00363" name="l00363"></a><span class="lineno">  363</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00364" name="l00364"></a><span class="lineno">  364</span>    <span class="keywordtype">void</span> HandleCombatResultRewardConfirmed();</div>
+<div class="line"><a id="l00365" name="l00365"></a><span class="lineno">  365</span> </div>
+<div class="line"><a id="l00367" name="l00367"></a><span class="lineno">  367</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00368" name="l00368"></a><span class="lineno">  368</span>    <span class="keywordtype">void</span> HandleCombatRewardClaimRequested(<a class="code hl_enumeration" href="RewardUITypes_8h.html#abdc22ba12c67d0e130c6eb499d1d5bd7">ERewardClaimKind</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ClaimKind</a>, <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ChoiceIndex</a>);</div>
+<div class="line"><a id="l00369" name="l00369"></a><span class="lineno">  369</span> </div>
+<div class="line"><a id="l00371" name="l00371"></a><span class="lineno">  371</span>    <span class="keywordtype">void</span> HandleCombatResultContinueConfirmed();</div>
+<div class="line"><a id="l00372" name="l00372"></a><span class="lineno">  372</span> </div>
+<div class="line"><a id="l00374" name="l00374"></a><span class="lineno">  374</span>    <span class="keywordtype">void</span> CloseCombatResultCinematic(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FSimpleDelegate</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Callback</a>);</div>
+<div class="line"><a id="l00375" name="l00375"></a><span class="lineno">  375</span> </div>
+<div class="line"><a id="l00377" name="l00377"></a><span class="lineno">  377</span>    <span class="keywordtype">void</span> SetCombatResultViewActive(<span class="keywordtype">bool</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bActive</a>, <span class="keywordtype">bool</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bRestoreCombatControls</a> = <span class="keyword">true</span>);</div>
+<div class="line"><a id="l00378" name="l00378"></a><span class="lineno">  378</span> </div>
+<div class="line"><a id="l00380" name="l00380"></a><span class="lineno">  380</span>    <span class="keywordtype">void</span> SetRoomNameClusterVisible(<span class="keywordtype">bool</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bVisible</a>);</div>
+<div class="line"><a id="l00381" name="l00381"></a><span class="lineno">  381</span> </div>
+<div class="line"><a id="l00383" name="l00383"></a><span class="lineno">  383</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a> GetCombatResultVideoPath(<a class="code hl_enumeration" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Result</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00384" name="l00384"></a><span class="lineno">  384</span> </div>
+<div class="line"><a id="l00386" name="l00386"></a><span class="lineno">  386</span>    <span class="keywordtype">void</span> OpenWorldMapAfterPlayerWin(<a class="code hl_variable" href="SRPGCombatModel_8h.html#a989ac07b6b9603d8bf4ec5d89ef5e2e9">TSharedPtr&lt;FPresentationBarrier&gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Barrier</a>);</div>
+<div class="line"><a id="l00387" name="l00387"></a><span class="lineno">  387</span> </div>
+<div class="line"><a id="l00389" name="l00389"></a><span class="lineno">  389</span>    <span class="keywordtype">void</span> RestoreVictoryWorldMap();</div>
+<div class="line"><a id="l00390" name="l00390"></a><span class="lineno">  390</span> </div>
+<div class="line"><a id="l00392" name="l00392"></a><span class="lineno">  392</span>    <span class="keywordtype">void</span> CloseSettingsPanelAndRestoreVictoryWorldMap();</div>
+<div class="line"><a id="l00393" name="l00393"></a><span class="lineno">  393</span> </div>
+<div class="line"><a id="l00395" name="l00395"></a><span class="lineno">  395</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00396" name="l00396"></a><span class="lineno">  396</span>    <span class="keywordtype">void</span> HandleWorldMapCloseRequested();</div>
+<div class="line"><a id="l00397" name="l00397"></a><span class="lineno">  397</span> </div>
+<div class="line"><a id="l00399" name="l00399"></a><span class="lineno">  399</span>    <span class="keywordtype">void</span> SetCombatPlayControlsVisible(<span class="keywordtype">bool</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bVisible</a>);</div>
+<div class="line"><a id="l00400" name="l00400"></a><span class="lineno">  400</span> </div>
+<div class="line"><a id="l00402" name="l00402"></a><span class="lineno">  402</span>    <span class="keywordtype">void</span> RestoreCombatControlsIfHidden();</div>
+<div class="line"><a id="l00403" name="l00403"></a><span class="lineno">  403</span> </div>
+<div class="line"><a id="l00405" name="l00405"></a><span class="lineno">  405</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00406" name="l00406"></a><span class="lineno">  406</span>    <span class="keywordtype">void</span> HandleSettingsBackRequested();</div>
+<div class="line"><a id="l00407" name="l00407"></a><span class="lineno">  407</span> </div>
+<div class="line"><a id="l00409" name="l00409"></a><span class="lineno">  409</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">meta</a> = (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BindWidgetOptional</a>))</div>
+<div class="line"><a id="l00410" name="l00410"></a><span class="lineno">  410</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UImage&gt;</a> TopBar_Backdrop;</div>
+<div class="line"><a id="l00411" name="l00411"></a><span class="lineno">  411</span> </div>
+<div class="line"><a id="l00412" name="l00412"></a><span class="lineno">  412</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00413" name="l00413"></a><span class="lineno">  413</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UCinematicWidget&gt;</a> mCombatResultCinematicWidget;</div>
+<div class="line"><a id="l00414" name="l00414"></a><span class="lineno">  414</span> </div>
+<div class="line"><a id="l00415" name="l00415"></a><span class="lineno">  415</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00416" name="l00416"></a><span class="lineno">  416</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UCombatResultOverlayWidget&gt;</a> mCombatResultOverlayWidget;</div>
+<div class="line"><a id="l00417" name="l00417"></a><span class="lineno">  417</span> </div>
+<div class="line"><a id="l00418" name="l00418"></a><span class="lineno">  418</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EditDefaultsOnly</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Category</a> = <span class="stringliteral">&quot;UI|Reward&quot;</span>)</div>
+<div class="line"><a id="l00419" name="l00419"></a><span class="lineno">  419</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSubclassOf&lt;URewardUIWidgetBase&gt;</a> mRewardWidgetClass;</div>
+<div class="line"><a id="l00420" name="l00420"></a><span class="lineno">  420</span> </div>
+<div class="line"><a id="l00421" name="l00421"></a><span class="lineno">  421</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00422" name="l00422"></a><span class="lineno">  422</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;URewardUIWidgetBase&gt;</a> mCombatRewardWidget;</div>
+<div class="line"><a id="l00423" name="l00423"></a><span class="lineno">  423</span> </div>
+<div class="line"><a id="l00424" name="l00424"></a><span class="lineno">  424</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00425" name="l00425"></a><span class="lineno">  425</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;URewardUIModel&gt;</a> mCombatRewardUIModel;</div>
+<div class="line"><a id="l00426" name="l00426"></a><span class="lineno">  426</span> </div>
+<div class="line"><a id="l00427" name="l00427"></a><span class="lineno">  427</span>    <a class="code hl_variable" href="SRPGCombatModel_8h.html#a989ac07b6b9603d8bf4ec5d89ef5e2e9">TSharedPtr&lt;FPresentationBarrier&gt;</a> mCombatResultBarrier;</div>
+<div class="line"><a id="l00428" name="l00428"></a><span class="lineno">  428</span>    <span class="comment">// 턴 시작 배너를 재생하는 동안 잡아두는 배리어 — 배너가 끝나면(FinishTurnChangeIntro) 놓아 실제 턴 실행을 진행시킨다.</span></div>
+<div class="line"><a id="l00429" name="l00429"></a><span class="lineno">  429</span>    <a class="code hl_variable" href="SRPGCombatModel_8h.html#a989ac07b6b9603d8bf4ec5d89ef5e2e9">TSharedPtr&lt;FPresentationBarrier&gt;</a> mTurnChangeBarrier;</div>
+<div class="line"><a id="l00430" name="l00430"></a><span class="lineno">  430</span> </div>
+<div class="line"><a id="l00432" name="l00432"></a><span class="lineno">  432</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FTimerHandle</a> mCombatResultStartDelayTimerHandle;</div>
+<div class="line"><a id="l00433" name="l00433"></a><span class="lineno">  433</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TMap&lt;FName, ESlateVisibility&gt;</a> mCombatResultRoomNameVisibilities;</div>
+<div class="line"><a id="l00434" name="l00434"></a><span class="lineno">  434</span>    <a class="code hl_enumeration" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a> mCombatResult = ESRPGCombatResult::PlayerLose;</div>
+<div class="line"><a id="l00435" name="l00435"></a><span class="lineno">  435</span>    <span class="keywordtype">bool</span> mCombatResultFlowActive = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00436" name="l00436"></a><span class="lineno">  436</span> </div>
+<div class="line"><a id="l00438" name="l00438"></a><span class="lineno">  438</span>    <span class="keywordtype">void</span> RebuildUnitHpBars();</div>
+<div class="line"><a id="l00439" name="l00439"></a><span class="lineno">  439</span> </div>
+<div class="line"><a id="l00441" name="l00441"></a><span class="lineno">  441</span>    <span class="keywordtype">void</span> UpdateUnitHpBars();</div>
+<div class="line"><a id="l00442" name="l00442"></a><span class="lineno">  442</span> </div>
+<div class="line"><a id="l00444" name="l00444"></a><span class="lineno">  444</span>    <span class="keywordtype">void</span> SetupUnitHpBarFillClip(<a class="code hl_struct" href="structFUnitHpBarWidget.html">FUnitHpBarWidget</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Bar</a>);</div>
+<div class="line"><a id="l00445" name="l00445"></a><span class="lineno">  445</span> </div>
+<div class="line"><a id="l00447" name="l00447"></a><span class="lineno">  447</span>    <span class="keywordtype">void</span> CacheUnitHpBarStatusSlots(<a class="code hl_struct" href="structFUnitHpBarWidget.html">FUnitHpBarWidget</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Bar</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00448" name="l00448"></a><span class="lineno">  448</span> </div>
+<div class="line"><a id="l00450" name="l00450"></a><span class="lineno">  450</span>    <span class="keywordtype">void</span> UpdateUnitHpBarStatus(<a class="code hl_struct" href="structFUnitHpBarWidget.html">FUnitHpBarWidget</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Bar</a>, <span class="keyword">const</span> <a class="code hl_struct" href="structFUnitUI.html">FUnitUI</a>&amp; <a class="code hl_enumvalue" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3a19c562a36aeb455d09534f93b4f5236f">Unit</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00451" name="l00451"></a><span class="lineno">  451</span> </div>
+<div class="line"><a id="l00453" name="l00453"></a><span class="lineno">  453</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UTexture2D</a>* ResolveStatusIcon(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGameplayTag</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">StatusTag</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00454" name="l00454"></a><span class="lineno">  454</span> </div>
+<div class="line"><a id="l00455" name="l00455"></a><span class="lineno">  455</span>    <span class="comment">/* ── 전투 플로팅 로그(유닛 머리 위) + 턴 라운드 배너 (CombatTileMapHUDWidget_CombatLog.cpp) ── */</span></div>
+<div class="line"><a id="l00456" name="l00456"></a><span class="lineno">  456</span> </div>
+<div class="line"><a id="l00458" name="l00458"></a><span class="lineno">  458</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00459" name="l00459"></a><span class="lineno">  459</span>    <span class="keywordtype">void</span> HandleCombatFloatingLog(<a class="code hl_struct" href="structFCombatFloatingLogRequest.html">FCombatFloatingLogRequest</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Request</a>);</div>
+<div class="line"><a id="l00460" name="l00460"></a><span class="lineno">  460</span> </div>
+<div class="line"><a id="l00462" name="l00462"></a><span class="lineno">  462</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00463" name="l00463"></a><span class="lineno">  463</span>    <span class="keywordtype">void</span> HandleCombatFloatingLogMotionFinished(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MotionIndex</a>);</div>
+<div class="line"><a id="l00464" name="l00464"></a><span class="lineno">  464</span> </div>
+<div class="line"><a id="l00466" name="l00466"></a><span class="lineno">  466</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00467" name="l00467"></a><span class="lineno">  467</span>    <span class="keywordtype">void</span> HandleCombatFloatingLogsCleared();</div>
+<div class="line"><a id="l00468" name="l00468"></a><span class="lineno">  468</span> </div>
+<div class="line"><a id="l00470" name="l00470"></a><span class="lineno">  470</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00471" name="l00471"></a><span class="lineno">  471</span>    <span class="keywordtype">void</span> HandleCombatDiceRollRequested();</div>
+<div class="line"><a id="l00472" name="l00472"></a><span class="lineno">  472</span> </div>
+<div class="line"><a id="l00474" name="l00474"></a><span class="lineno">  474</span>    <span class="keywordtype">bool</span> PlayTurnChangeIntro(<span class="keywordtype">bool</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bOpenDiceAfterIntro</a>);</div>
+<div class="line"><a id="l00475" name="l00475"></a><span class="lineno">  475</span> </div>
+<div class="line"><a id="l00477" name="l00477"></a><span class="lineno">  477</span>    <span class="keywordtype">void</span> FinishTurnChangeIntro();</div>
+<div class="line"><a id="l00478" name="l00478"></a><span class="lineno">  478</span> </div>
+<div class="line"><a id="l00480" name="l00480"></a><span class="lineno">  480</span>    <span class="keywordtype">bool</span> EnsureTurnChangeFrameTextures();</div>
+<div class="line"><a id="l00481" name="l00481"></a><span class="lineno">  481</span> </div>
+<div class="line"><a id="l00483" name="l00483"></a><span class="lineno">  483</span>    <span class="keywordtype">void</span> SetTurnChangeIntroVisibility(<span class="keywordtype">bool</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bVisible</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00484" name="l00484"></a><span class="lineno">  484</span> </div>
+<div class="line"><a id="l00486" name="l00486"></a><span class="lineno">  486</span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> GetTurnChangeDisplayNumber() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00487" name="l00487"></a><span class="lineno">  487</span> </div>
+<div class="line"><a id="l00489" name="l00489"></a><span class="lineno">  489</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a> ResolveTurnChangeFrameAssetPath(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FrameIndex</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00490" name="l00490"></a><span class="lineno">  490</span> </div>
+<div class="line"><a id="l00492" name="l00492"></a><span class="lineno">  492</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UTexture2D</a>* LoadTurnChangeFrameTexture(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FrameAssetPath</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00493" name="l00493"></a><span class="lineno">  493</span> </div>
+<div class="line"><a id="l00495" name="l00495"></a><span class="lineno">  495</span>    <span class="keywordtype">void</span> UpdateTurnChangeIntro(<span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InDeltaTime</a>);</div>
+<div class="line"><a id="l00496" name="l00496"></a><span class="lineno">  496</span> </div>
+<div class="line"><a id="l00498" name="l00498"></a><span class="lineno">  498</span>    <span class="keywordtype">void</span> ApplyTurnChangeFrame(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FrameIndex</a>);</div>
+<div class="line"><a id="l00499" name="l00499"></a><span class="lineno">  499</span> </div>
+<div class="line"><a id="l00501" name="l00501"></a><span class="lineno">  501</span>    <span class="keywordtype">void</span> UpdateFloatingCombatLogQueue(<span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InDeltaTime</a>);</div>
+<div class="line"><a id="l00502" name="l00502"></a><span class="lineno">  502</span> </div>
+<div class="line"><a id="l00504" name="l00504"></a><span class="lineno">  504</span>    <span class="keywordtype">void</span> UpdateFloatingCombatLogs(<span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InDeltaTime</a>);</div>
+<div class="line"><a id="l00505" name="l00505"></a><span class="lineno">  505</span> </div>
+<div class="line"><a id="l00507" name="l00507"></a><span class="lineno">  507</span>    <span class="keywordtype">void</span> SpawnFloatingCombatLogAtWorld(<span class="keyword">const</span> <a class="code hl_struct" href="structFCombatFloatingLogRequest.html">FCombatFloatingLogRequest</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Request</a>);</div>
+<div class="line"><a id="l00508" name="l00508"></a><span class="lineno">  508</span> </div>
+<div class="line"><a id="l00510" name="l00510"></a><span class="lineno">  510</span>    <span class="keywordtype">void</span> RemoveFloatingCombatLogsByMotionIndex(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MotionIndex</a>);</div>
+<div class="line"><a id="l00511" name="l00511"></a><span class="lineno">  511</span> </div>
+<div class="line"><a id="l00513" name="l00513"></a><span class="lineno">  513</span>    <span class="keywordtype">void</span> RefreshTurnRoundBanner();</div>
+<div class="line"><a id="l00514" name="l00514"></a><span class="lineno">  514</span> </div>
+<div class="line"><a id="l00516" name="l00516"></a><span class="lineno">  516</span>    <span class="keywordtype">void</span> UpdateTurnRoundBanner(<span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InDeltaTime</a>);</div>
+<div class="line"><a id="l00517" name="l00517"></a><span class="lineno">  517</span> </div>
+<div class="line"><a id="l00519" name="l00519"></a><span class="lineno">  519</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00520" name="l00520"></a><span class="lineno">  520</span>    <span class="keywordtype">void</span> HandleSkillButtonReleased();</div>
+<div class="line"><a id="l00521" name="l00521"></a><span class="lineno">  521</span> </div>
+<div class="line"><a id="l00523" name="l00523"></a><span class="lineno">  523</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00524" name="l00524"></a><span class="lineno">  524</span>    <span class="keywordtype">void</span> HandleSkillButtonPressed(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SkillIndex</a>);</div>
+<div class="line"><a id="l00525" name="l00525"></a><span class="lineno">  525</span> </div>
+<div class="line"><a id="l00527" name="l00527"></a><span class="lineno">  527</span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> FindSkillRailIndexAtScreenPosition(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector2D</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ScreenPosition</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00528" name="l00528"></a><span class="lineno">  528</span> </div>
+<div class="line"><a id="l00530" name="l00530"></a><span class="lineno">  530</span>    <span class="keywordtype">void</span> BeginSkillPress(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SkillIndex</a>);</div>
+<div class="line"><a id="l00531" name="l00531"></a><span class="lineno">  531</span> </div>
+<div class="line"><a id="l00533" name="l00533"></a><span class="lineno">  533</span>    <span class="keywordtype">void</span> UpdateSkillPress(<span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InDeltaTime</a>);</div>
+<div class="line"><a id="l00534" name="l00534"></a><span class="lineno">  534</span> </div>
+<div class="line"><a id="l00536" name="l00536"></a><span class="lineno">  536</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00537" name="l00537"></a><span class="lineno">  537</span>    <span class="keywordtype">void</span> HandleEquipButtonPressed(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SlotIndex</a>);</div>
+<div class="line"><a id="l00538" name="l00538"></a><span class="lineno">  538</span> </div>
+<div class="line"><a id="l00540" name="l00540"></a><span class="lineno">  540</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UFUNCTION</a>()</div>
+<div class="line"><a id="l00541" name="l00541"></a><span class="lineno">  541</span>    <span class="keywordtype">void</span> HandleEquipButtonReleased();</div>
+<div class="line"><a id="l00542" name="l00542"></a><span class="lineno">  542</span> </div>
+<div class="line"><a id="l00544" name="l00544"></a><span class="lineno">  544</span>    <span class="keywordtype">void</span> BeginEquipPress(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SlotIndex</a>);</div>
+<div class="line"><a id="l00545" name="l00545"></a><span class="lineno">  545</span> </div>
+<div class="line"><a id="l00547" name="l00547"></a><span class="lineno">  547</span>    <span class="keywordtype">void</span> UpdateEquipPress(<span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InDeltaTime</a>);</div>
+<div class="line"><a id="l00548" name="l00548"></a><span class="lineno">  548</span> </div>
+<div class="line"><a id="l00550" name="l00550"></a><span class="lineno">  550</span>    <span class="keywordtype">void</span> SelectSkillForAssignment(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SkillIndex</a>);</div>
+<div class="line"><a id="l00551" name="l00551"></a><span class="lineno">  551</span> </div>
+<div class="line"><a id="l00553" name="l00553"></a><span class="lineno">  553</span>    <span class="keywordtype">void</span> ShowSkillDetail(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SkillIndex</a>);</div>
+<div class="line"><a id="l00554" name="l00554"></a><span class="lineno">  554</span> </div>
+<div class="line"><a id="l00556" name="l00556"></a><span class="lineno">  556</span>    <span class="keywordtype">void</span> ShowUnitDetail(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UnitId</a>);</div>
+<div class="line"><a id="l00557" name="l00557"></a><span class="lineno">  557</span> </div>
+<div class="line"><a id="l00559" name="l00559"></a><span class="lineno">  559</span>    <span class="keywordtype">void</span> ShowEquipmentDetail(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SlotIndex</a>);</div>
+<div class="line"><a id="l00560" name="l00560"></a><span class="lineno">  560</span> </div>
+<div class="line"><a id="l00562" name="l00562"></a><span class="lineno">  562</span>    <span class="keywordtype">void</span> SetDetailOverlayVisible(<span class="keywordtype">bool</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bVisible</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00563" name="l00563"></a><span class="lineno">  563</span> </div>
+<div class="line"><a id="l00565" name="l00565"></a><span class="lineno">  565</span>    <span class="keywordtype">void</span> HideSkillDetail() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00566" name="l00566"></a><span class="lineno">  566</span> </div>
+<div class="line"><a id="l00568" name="l00568"></a><span class="lineno">  568</span>    <span class="keywordtype">bool</span> IsSkillDetailVisible() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00569" name="l00569"></a><span class="lineno">  569</span> </div>
+<div class="line"><a id="l00571" name="l00571"></a><span class="lineno">  571</span>    <span class="keywordtype">bool</span> IsScreenPositionInSkillDetailPanel(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector2D</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ScreenPosition</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00572" name="l00572"></a><span class="lineno">  572</span> </div>
+<div class="line"><a id="l00574" name="l00574"></a><span class="lineno">  574</span>    <span class="keywordtype">bool</span> HideSkillDetailIfClickedOutside(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector2D</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ScreenPosition</a>);</div>
+<div class="line"><a id="l00575" name="l00575"></a><span class="lineno">  575</span> </div>
+<div class="line"><a id="l00577" name="l00577"></a><span class="lineno">  577</span>    <span class="keywordtype">void</span> RefreshDiceAssignmentText() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00578" name="l00578"></a><span class="lineno">  578</span> </div>
+<div class="line"><a id="l00580" name="l00580"></a><span class="lineno">  580</span>    <span class="keywordtype">void</span> ClearOwnedDiceSelectionHighlight();</div>
+<div class="line"><a id="l00581" name="l00581"></a><span class="lineno">  581</span> </div>
+<div class="line"><a id="l00582" name="l00582"></a><span class="lineno">  582</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00584" name="l00584"></a><span class="lineno">  584</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">meta</a> = (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BindWidgetOptional</a>))</div>
+<div class="line"><a id="l00585" name="l00585"></a><span class="lineno">  585</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UCanvasPanel&gt;</a> RootCanvas;</div>
+<div class="line"><a id="l00586" name="l00586"></a><span class="lineno">  586</span> </div>
+<div class="line"><a id="l00588" name="l00588"></a><span class="lineno">  588</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">meta</a> = (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BindWidgetOptional</a>))</div>
+<div class="line"><a id="l00589" name="l00589"></a><span class="lineno">  589</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UCanvasPanel&gt;</a> DesignCanvas;</div>
+<div class="line"><a id="l00590" name="l00590"></a><span class="lineno">  590</span> </div>
+<div class="line"><a id="l00592" name="l00592"></a><span class="lineno">  592</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">meta</a> = (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BindWidgetOptional</a>))</div>
+<div class="line"><a id="l00593" name="l00593"></a><span class="lineno">  593</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTextBlock&gt;</a> DiceRollStatusText;</div>
+<div class="line"><a id="l00594" name="l00594"></a><span class="lineno">  594</span> </div>
+<div class="line"><a id="l00596" name="l00596"></a><span class="lineno">  596</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">meta</a> = (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BindWidgetOptional</a>))</div>
+<div class="line"><a id="l00597" name="l00597"></a><span class="lineno">  597</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UButton&gt;</a> EndTurnButton;</div>
+<div class="line"><a id="l00598" name="l00598"></a><span class="lineno">  598</span> </div>
+<div class="line"><a id="l00600" name="l00600"></a><span class="lineno">  600</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">meta</a> = (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BindWidgetOptional</a>))</div>
+<div class="line"><a id="l00601" name="l00601"></a><span class="lineno">  601</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UBorder&gt;</a> mDiceRollBackdropPanel;</div>
+<div class="line"><a id="l00602" name="l00602"></a><span class="lineno">  602</span> </div>
+<div class="line"><a id="l00604" name="l00604"></a><span class="lineno">  604</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">meta</a> = (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BindWidgetOptional</a>))</div>
+<div class="line"><a id="l00605" name="l00605"></a><span class="lineno">  605</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UImage&gt;</a> mDiceRollPhysicsImage;</div>
+<div class="line"><a id="l00606" name="l00606"></a><span class="lineno">  606</span> </div>
+<div class="line"><a id="l00608" name="l00608"></a><span class="lineno">  608</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">meta</a> = (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BindWidgetOptional</a>))</div>
+<div class="line"><a id="l00609" name="l00609"></a><span class="lineno">  609</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UImage&gt;</a> mDiceRollBoardImage;</div>
+<div class="line"><a id="l00610" name="l00610"></a><span class="lineno">  610</span> </div>
+<div class="line"><a id="l00612" name="l00612"></a><span class="lineno">  612</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00613" name="l00613"></a><span class="lineno">  613</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTexture2D&gt;</a> mDiceRollBoardTexture;</div>
+<div class="line"><a id="l00614" name="l00614"></a><span class="lineno">  614</span> </div>
+<div class="line"><a id="l00616" name="l00616"></a><span class="lineno">  616</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00617" name="l00617"></a><span class="lineno">  617</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTexture2D&gt;</a> mUnitDefenseIconTexture;</div>
+<div class="line"><a id="l00618" name="l00618"></a><span class="lineno">  618</span> </div>
+<div class="line"><a id="l00620" name="l00620"></a><span class="lineno">  620</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00621" name="l00621"></a><span class="lineno">  621</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;USoundBase&gt;</a> mCoinGainSound;</div>
+<div class="line"><a id="l00622" name="l00622"></a><span class="lineno">  622</span> </div>
+<div class="line"><a id="l00624" name="l00624"></a><span class="lineno">  624</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00625" name="l00625"></a><span class="lineno">  625</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;USoundBase&gt;</a> mVictoryJingleSound;</div>
+<div class="line"><a id="l00626" name="l00626"></a><span class="lineno">  626</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00627" name="l00627"></a><span class="lineno">  627</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;USoundBase&gt;</a> mDefeatJingleSound;</div>
+<div class="line"><a id="l00628" name="l00628"></a><span class="lineno">  628</span> </div>
+<div class="line"><a id="l00630" name="l00630"></a><span class="lineno">  630</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00631" name="l00631"></a><span class="lineno">  631</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;USoundBase&gt;</a> mMapOpenSound;</div>
+<div class="line"><a id="l00632" name="l00632"></a><span class="lineno">  632</span> </div>
+<div class="line"><a id="l00634" name="l00634"></a><span class="lineno">  634</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00635" name="l00635"></a><span class="lineno">  635</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;USoundBase&gt;</a> mDiceChooseSound;</div>
+<div class="line"><a id="l00636" name="l00636"></a><span class="lineno">  636</span> </div>
+<div class="line"><a id="l00638" name="l00638"></a><span class="lineno">  638</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00639" name="l00639"></a><span class="lineno">  639</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;USoundBase&gt;</a> mSkillSelectSound;</div>
+<div class="line"><a id="l00640" name="l00640"></a><span class="lineno">  640</span> </div>
+<div class="line"><a id="l00642" name="l00642"></a><span class="lineno">  642</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00643" name="l00643"></a><span class="lineno">  643</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;USoundBase&gt;</a> mExpGainSound;</div>
+<div class="line"><a id="l00644" name="l00644"></a><span class="lineno">  644</span> </div>
+<div class="line"><a id="l00646" name="l00646"></a><span class="lineno">  646</span>    <span class="keywordtype">bool</span> mLevelValueTouched = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00647" name="l00647"></a><span class="lineno">  647</span> </div>
+<div class="line"><a id="l00649" name="l00649"></a><span class="lineno">  649</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00650" name="l00650"></a><span class="lineno">  650</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UBorder&gt;</a> mExpHoldPanel;</div>
+<div class="line"><a id="l00651" name="l00651"></a><span class="lineno">  651</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00652" name="l00652"></a><span class="lineno">  652</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTextBlock&gt;</a> mExpHoldText;</div>
+<div class="line"><a id="l00653" name="l00653"></a><span class="lineno">  653</span> </div>
+<div class="line"><a id="l00654" name="l00654"></a><span class="lineno">  654</span>    <span class="comment">// 골드 카운트업 상태 3종은 &#39;화면 표시 캐시&#39;라 mutable — const 그리기 경로에서 갱신해도 논리 상태 불변.</span></div>
+<div class="line"><a id="l00656" name="l00656"></a><span class="lineno">  656</span>    <span class="keyword">mutable</span> <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> mDisplayedGold = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">INDEX_NONE</a>;</div>
+<div class="line"><a id="l00657" name="l00657"></a><span class="lineno">  657</span> </div>
+<div class="line"><a id="l00659" name="l00659"></a><span class="lineno">  659</span>    <span class="keyword">mutable</span> <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> mGoldCountUpTarget = 0;</div>
+<div class="line"><a id="l00660" name="l00660"></a><span class="lineno">  660</span> </div>
+<div class="line"><a id="l00662" name="l00662"></a><span class="lineno">  662</span>    <span class="keyword">mutable</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FTimerHandle</a> mGoldCountUpTimerHandle;</div>
+<div class="line"><a id="l00663" name="l00663"></a><span class="lineno">  663</span> </div>
+<div class="line"><a id="l00665" name="l00665"></a><span class="lineno">  665</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00666" name="l00666"></a><span class="lineno">  666</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;ACombatDiceRollCaptureActor&gt;</a> mDiceRollPhysicsActor;</div>
+<div class="line"><a id="l00667" name="l00667"></a><span class="lineno">  667</span> </div>
+<div class="line"><a id="l00669" name="l00669"></a><span class="lineno">  669</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;FDiceViewData&gt;</a> mDiceUIs;</div>
+<div class="line"><a id="l00670" name="l00670"></a><span class="lineno">  670</span> </div>
+<div class="line"><a id="l00672" name="l00672"></a><span class="lineno">  672</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00673" name="l00673"></a><span class="lineno">  673</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UCombatUIModel&gt;</a> mCombatUIModel;</div>
+<div class="line"><a id="l00674" name="l00674"></a><span class="lineno">  674</span> </div>
+<div class="line"><a id="l00676" name="l00676"></a><span class="lineno">  676</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00677" name="l00677"></a><span class="lineno">  677</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTextBlock&gt;</a> mCombatFeedText;</div>
+<div class="line"><a id="l00678" name="l00678"></a><span class="lineno">  678</span> </div>
+<div class="line"><a id="l00680" name="l00680"></a><span class="lineno">  680</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00681" name="l00681"></a><span class="lineno">  681</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTextBlock&gt;</a> mCombatStatusBarText;</div>
+<div class="line"><a id="l00682" name="l00682"></a><span class="lineno">  682</span> </div>
+<div class="line"><a id="l00684" name="l00684"></a><span class="lineno">  684</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00685" name="l00685"></a><span class="lineno">  685</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;TObjectPtr&lt;UBorder&gt;</a>&gt; mEquipmentChips;</div>
+<div class="line"><a id="l00686" name="l00686"></a><span class="lineno">  686</span> </div>
+<div class="line"><a id="l00687" name="l00687"></a><span class="lineno">  687</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00688" name="l00688"></a><span class="lineno">  688</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;TObjectPtr&lt;UTextBlock&gt;</a>&gt; mEquipmentChipTexts;</div>
+<div class="line"><a id="l00689" name="l00689"></a><span class="lineno">  689</span> </div>
+<div class="line"><a id="l00691" name="l00691"></a><span class="lineno">  691</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00692" name="l00692"></a><span class="lineno">  692</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;TObjectPtr&lt;UBorder&gt;</a>&gt; mTurnOrderChips;</div>
+<div class="line"><a id="l00693" name="l00693"></a><span class="lineno">  693</span> </div>
+<div class="line"><a id="l00694" name="l00694"></a><span class="lineno">  694</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00695" name="l00695"></a><span class="lineno">  695</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;TObjectPtr&lt;UTextBlock&gt;</a>&gt; mTurnOrderChipTexts;</div>
+<div class="line"><a id="l00696" name="l00696"></a><span class="lineno">  696</span> </div>
+<div class="line"><a id="l00698" name="l00698"></a><span class="lineno">  698</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00699" name="l00699"></a><span class="lineno">  699</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UButton&gt;</a> mMoveButton;</div>
+<div class="line"><a id="l00700" name="l00700"></a><span class="lineno">  700</span> </div>
+<div class="line"><a id="l00702" name="l00702"></a><span class="lineno">  702</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00703" name="l00703"></a><span class="lineno">  703</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UButton&gt;</a> mNavMapButton;</div>
+<div class="line"><a id="l00704" name="l00704"></a><span class="lineno">  704</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00705" name="l00705"></a><span class="lineno">  705</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UButton&gt;</a> mNavDiceButton;</div>
+<div class="line"><a id="l00706" name="l00706"></a><span class="lineno">  706</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00707" name="l00707"></a><span class="lineno">  707</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UButton&gt;</a> mNavSkillButton;</div>
+<div class="line"><a id="l00708" name="l00708"></a><span class="lineno">  708</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00709" name="l00709"></a><span class="lineno">  709</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UButton&gt;</a> mNavSettingsButton;</div>
+<div class="line"><a id="l00710" name="l00710"></a><span class="lineno">  710</span> </div>
+<div class="line"><a id="l00712" name="l00712"></a><span class="lineno">  712</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00713" name="l00713"></a><span class="lineno">  713</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;FUnitHpBarWidget&gt;</a> mUnitHpBars;</div>
+<div class="line"><a id="l00714" name="l00714"></a><span class="lineno">  714</span> </div>
+<div class="line"><a id="l00716" name="l00716"></a><span class="lineno">  716</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00717" name="l00717"></a><span class="lineno">  717</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSubclassOf&lt;UUserWidget&gt;</a> mUnitHpBarWidgetClass;</div>
+<div class="line"><a id="l00718" name="l00718"></a><span class="lineno">  718</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00719" name="l00719"></a><span class="lineno">  719</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTexture2D&gt;</a> mUnitHpFillRedTexture;</div>
+<div class="line"><a id="l00720" name="l00720"></a><span class="lineno">  720</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00721" name="l00721"></a><span class="lineno">  721</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTexture2D&gt;</a> mUnitHpFillGreenTexture;</div>
+<div class="line"><a id="l00722" name="l00722"></a><span class="lineno">  722</span> </div>
+<div class="line"><a id="l00728" name="l00728"></a><span class="lineno">  728</span>    <span class="keyword">struct </span>FQueuedFloatingCombatLogEntry</div>
+<div class="line"><a id="l00729" name="l00729"></a><span class="lineno">  729</span>    {</div>
+<div class="line"><a id="l00730" name="l00730"></a><span class="lineno">  730</span>        <a class="code hl_struct" href="structFCombatFloatingLogRequest.html">FCombatFloatingLogRequest</a> mRequest;   <span class="comment">// 스폰 때 그대로 쓸 원본 요청</span></div>
+<div class="line"><a id="l00731" name="l00731"></a><span class="lineno">  731</span>        <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> mArrivalOrder = 0;              <span class="comment">// 같은 Sequence일 때 수신 순서를 지키기 위한 순번</span></div>
+<div class="line"><a id="l00732" name="l00732"></a><span class="lineno">  732</span>    };</div>
+<div class="line"><a id="l00733" name="l00733"></a><span class="lineno">  733</span> </div>
+<div class="line"><a id="l00738" name="l00738"></a><span class="lineno">  738</span>    <span class="keyword">struct </span>FFloatingCombatLogEntry</div>
+<div class="line"><a id="l00739" name="l00739"></a><span class="lineno">  739</span>    {</div>
+<div class="line"><a id="l00740" name="l00740"></a><span class="lineno">  740</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UWidget&gt;</a> mRoot;                    <span class="comment">// 캔버스에 붙은 루트(아이콘+텍스트 박스 또는 텍스트 단일)</span></div>
+<div class="line"><a id="l00741" name="l00741"></a><span class="lineno">  741</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector</a> mWorldLocation = FVector::ZeroVector; <span class="comment">// 스폰 시점 월드 위치 스냅샷(이 위에 투영해 그린다)</span></div>
+<div class="line"><a id="l00742" name="l00742"></a><span class="lineno">  742</span>        <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> mMotionIndex = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">INDEX_NONE</a>;              <span class="comment">// 속한 모션 인덱스. 그 모션 종료 시 이 값으로 묶어서 함께 제거</span></div>
+<div class="line"><a id="l00743" name="l00743"></a><span class="lineno">  743</span>        <span class="keywordtype">float</span> mElapsed = 0.0f;                        <span class="comment">// 스폰 후 누적 시간(실행 로그의 상승/페이드/수명 판단용)</span></div>
+<div class="line"><a id="l00744" name="l00744"></a><span class="lineno">  744</span>        <span class="keywordtype">bool</span> mIsPreview = <span class="keyword">false</span>;                      <span class="comment">// true면 자동 소멸 안 함(MotionFinished/Clear로만 제거)</span></div>
+<div class="line"><a id="l00745" name="l00745"></a><span class="lineno">  745</span>        <span class="keywordtype">float</span> mStackOffsetY = 0.0f;                   <span class="comment">// 미리보기 겹침 방지용 세로 쌓기 오프셋(px, 위로 +)</span></div>
+<div class="line"><a id="l00746" name="l00746"></a><span class="lineno">  746</span>        <span class="keywordtype">bool</span> mIsDismissing = <span class="keyword">false</span>;                   <span class="comment">// 모션 종료로 퇴장 중 — 오른쪽으로 흐르며 페이드아웃 후 제거</span></div>
+<div class="line"><a id="l00747" name="l00747"></a><span class="lineno">  747</span>        <span class="keywordtype">float</span> mDismissElapsed = 0.0f;                 <span class="comment">// 퇴장 연출 누적 시간</span></div>
+<div class="line"><a id="l00748" name="l00748"></a><span class="lineno">  748</span>    };</div>
+<div class="line"><a id="l00750" name="l00750"></a><span class="lineno">  750</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;FQueuedFloatingCombatLogEntry&gt;</a> mPendingFloatingCombatLogs;</div>
+<div class="line"><a id="l00752" name="l00752"></a><span class="lineno">  752</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;FFloatingCombatLogEntry&gt;</a> mFloatingCombatLogs;</div>
+<div class="line"><a id="l00753" name="l00753"></a><span class="lineno">  753</span> </div>
+<div class="line"><a id="l00755" name="l00755"></a><span class="lineno">  755</span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> mNextFloatingCombatLogArrivalOrder = 0;</div>
+<div class="line"><a id="l00756" name="l00756"></a><span class="lineno">  756</span> </div>
+<div class="line"><a id="l00758" name="l00758"></a><span class="lineno">  758</span>    <span class="keywordtype">float</span> mFloatingCombatLogQueueCooldown = 0.0f;</div>
+<div class="line"><a id="l00759" name="l00759"></a><span class="lineno">  759</span> </div>
+<div class="line"><a id="l00761" name="l00761"></a><span class="lineno">  761</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00762" name="l00762"></a><span class="lineno">  762</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTextBlock&gt;</a> mTurnRoundBannerText;</div>
+<div class="line"><a id="l00763" name="l00763"></a><span class="lineno">  763</span> </div>
+<div class="line"><a id="l00765" name="l00765"></a><span class="lineno">  765</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00766" name="l00766"></a><span class="lineno">  766</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UBorder&gt;</a> mTurnChangeBackdropPanel;</div>
+<div class="line"><a id="l00767" name="l00767"></a><span class="lineno">  767</span> </div>
+<div class="line"><a id="l00769" name="l00769"></a><span class="lineno">  769</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00770" name="l00770"></a><span class="lineno">  770</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UImage&gt;</a> mTurnChangeVideoImage;</div>
+<div class="line"><a id="l00771" name="l00771"></a><span class="lineno">  771</span> </div>
+<div class="line"><a id="l00773" name="l00773"></a><span class="lineno">  773</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00774" name="l00774"></a><span class="lineno">  774</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UButton&gt;</a> mTurnChangeInputBlocker;</div>
+<div class="line"><a id="l00775" name="l00775"></a><span class="lineno">  775</span> </div>
+<div class="line"><a id="l00777" name="l00777"></a><span class="lineno">  777</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00778" name="l00778"></a><span class="lineno">  778</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UBorder&gt;</a> mTurnChangeTurnTextPanel;</div>
+<div class="line"><a id="l00779" name="l00779"></a><span class="lineno">  779</span> </div>
+<div class="line"><a id="l00781" name="l00781"></a><span class="lineno">  781</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00782" name="l00782"></a><span class="lineno">  782</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTextBlock&gt;</a> mTurnChangeTurnText;</div>
+<div class="line"><a id="l00783" name="l00783"></a><span class="lineno">  783</span> </div>
+<div class="line"><a id="l00785" name="l00785"></a><span class="lineno">  785</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00786" name="l00786"></a><span class="lineno">  786</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;TObjectPtr&lt;UTexture2D&gt;</a>&gt; mTurnChangeFrameTextures;</div>
+<div class="line"><a id="l00787" name="l00787"></a><span class="lineno">  787</span> </div>
+<div class="line"><a id="l00789" name="l00789"></a><span class="lineno">  789</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FSlateBrush</a> mTurnChangeFrameBrush;</div>
+<div class="line"><a id="l00790" name="l00790"></a><span class="lineno">  790</span> </div>
+<div class="line"><a id="l00792" name="l00792"></a><span class="lineno">  792</span>    <span class="keywordtype">float</span> mTurnChangeIntroElapsed = 0.0f;</div>
+<div class="line"><a id="l00793" name="l00793"></a><span class="lineno">  793</span> </div>
+<div class="line"><a id="l00795" name="l00795"></a><span class="lineno">  795</span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> mTurnChangeCurrentFrameIndex = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">INDEX_NONE</a>;</div>
+<div class="line"><a id="l00796" name="l00796"></a><span class="lineno">  796</span> </div>
+<div class="line"><a id="l00798" name="l00798"></a><span class="lineno">  798</span>    <span class="keywordtype">bool</span> mTurnChangeIntroPlaying = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00799" name="l00799"></a><span class="lineno">  799</span> </div>
+<div class="line"><a id="l00801" name="l00801"></a><span class="lineno">  801</span>    <span class="keywordtype">bool</span> mPendingDiceRollAfterTurnIntro = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00802" name="l00802"></a><span class="lineno">  802</span> </div>
+<div class="line"><a id="l00804" name="l00804"></a><span class="lineno">  804</span>    <a class="code hl_variable" href="SRPGCombatModel_8h.html#a989ac07b6b9603d8bf4ec5d89ef5e2e9">TSharedPtr&lt;FPresentationBarrier&gt;</a> mRoundChangeBarrier;</div>
+<div class="line"><a id="l00805" name="l00805"></a><span class="lineno">  805</span> </div>
+<div class="line"><a id="l00807" name="l00807"></a><span class="lineno">  807</span>    <span class="keywordtype">float</span> mTurnRoundBannerElapsed = 0.0f;</div>
+<div class="line"><a id="l00808" name="l00808"></a><span class="lineno">  808</span> </div>
+<div class="line"><a id="l00810" name="l00810"></a><span class="lineno">  810</span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> mLastShownTurnRound = 0;</div>
+<div class="line"><a id="l00811" name="l00811"></a><span class="lineno">  811</span> </div>
+<div class="line"><a id="l00813" name="l00813"></a><span class="lineno">  813</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00814" name="l00814"></a><span class="lineno">  814</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;TObjectPtr&lt;UImage&gt;</a>&gt; mOwnedDiceImages;</div>
+<div class="line"><a id="l00815" name="l00815"></a><span class="lineno">  815</span> </div>
+<div class="line"><a id="l00817" name="l00817"></a><span class="lineno">  817</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00818" name="l00818"></a><span class="lineno">  818</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;TObjectPtr&lt;ACombatDiceCaptureActor&gt;</a>&gt; mOwnedDicePreviewActors;</div>
+<div class="line"><a id="l00819" name="l00819"></a><span class="lineno">  819</span> </div>
+<div class="line"><a id="l00821" name="l00821"></a><span class="lineno">  821</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00822" name="l00822"></a><span class="lineno">  822</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;TObjectPtr&lt;UIndexedButtonWidget&gt;</a>&gt; mOwnedDiceCardWidgets;</div>
+<div class="line"><a id="l00823" name="l00823"></a><span class="lineno">  823</span> </div>
+<div class="line"><a id="l00825" name="l00825"></a><span class="lineno">  825</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00826" name="l00826"></a><span class="lineno">  826</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;TObjectPtr&lt;UTextBlock&gt;</a>&gt; mOwnedDiceTypeTexts;</div>
+<div class="line"><a id="l00827" name="l00827"></a><span class="lineno">  827</span> </div>
+<div class="line"><a id="l00829" name="l00829"></a><span class="lineno">  829</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00830" name="l00830"></a><span class="lineno">  830</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;TObjectPtr&lt;UBorder&gt;</a>&gt; mSkillRailPanels;</div>
+<div class="line"><a id="l00831" name="l00831"></a><span class="lineno">  831</span> </div>
+<div class="line"><a id="l00833" name="l00833"></a><span class="lineno">  833</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00834" name="l00834"></a><span class="lineno">  834</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;TObjectPtr&lt;UTextBlock&gt;</a>&gt; mSkillRailTexts;</div>
+<div class="line"><a id="l00835" name="l00835"></a><span class="lineno">  835</span> </div>
+<div class="line"><a id="l00837" name="l00837"></a><span class="lineno">  837</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00838" name="l00838"></a><span class="lineno">  838</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;TObjectPtr&lt;UImage&gt;</a>&gt; mSkillRailIcons;</div>
+<div class="line"><a id="l00839" name="l00839"></a><span class="lineno">  839</span> </div>
+<div class="line"><a id="l00841" name="l00841"></a><span class="lineno">  841</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00842" name="l00842"></a><span class="lineno">  842</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;TObjectPtr&lt;UIndexedButtonWidget&gt;</a>&gt; mSkillInputButtons;</div>
+<div class="line"><a id="l00843" name="l00843"></a><span class="lineno">  843</span> </div>
+<div class="line"><a id="l00845" name="l00845"></a><span class="lineno">  845</span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> mSelectedSkillIndex = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">INDEX_NONE</a>;</div>
+<div class="line"><a id="l00846" name="l00846"></a><span class="lineno">  846</span> </div>
+<div class="line"><a id="l00848" name="l00848"></a><span class="lineno">  848</span>    <span class="keywordtype">bool</span> mVictoryWorldMapLocked = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00849" name="l00849"></a><span class="lineno">  849</span> </div>
+<div class="line"><a id="l00851" name="l00851"></a><span class="lineno">  851</span>    <span class="keywordtype">bool</span> mDesignerSkinActive = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00852" name="l00852"></a><span class="lineno">  852</span> </div>
+<div class="line"><a id="l00854" name="l00854"></a><span class="lineno">  854</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector2D</a> mLastLoggedLayoutViewportSize = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector2D</a>(-1.0f, -1.0f);</div>
+<div class="line"><a id="l00855" name="l00855"></a><span class="lineno">  855</span> </div>
+<div class="line"><a id="l00857" name="l00857"></a><span class="lineno">  857</span>    <span class="keywordtype">bool</span> mFoldVariantActive = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00858" name="l00858"></a><span class="lineno">  858</span> </div>
+<div class="line"><a id="l00860" name="l00860"></a><span class="lineno">  860</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TMap&lt;FName, FAnchorData&gt;</a> mAspectVariantBaseSlots;</div>
+<div class="line"><a id="l00861" name="l00861"></a><span class="lineno">  861</span> </div>
+<div class="line"><a id="l00863" name="l00863"></a><span class="lineno">  863</span>    <span class="keywordtype">float</span> mFoldTurnOrderDeltaY = 0.0f;</div>
+<div class="line"><a id="l00864" name="l00864"></a><span class="lineno">  864</span> </div>
+<div class="line"><a id="l00866" name="l00866"></a><span class="lineno">  866</span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> mPressedSkillIndex = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">INDEX_NONE</a>;</div>
+<div class="line"><a id="l00867" name="l00867"></a><span class="lineno">  867</span> </div>
+<div class="line"><a id="l00869" name="l00869"></a><span class="lineno">  869</span>    <span class="keywordtype">bool</span> mSkillPressing = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00870" name="l00870"></a><span class="lineno">  870</span> </div>
+<div class="line"><a id="l00872" name="l00872"></a><span class="lineno">  872</span>    <span class="keywordtype">bool</span> mSkillDetailOpenedFromPress = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00873" name="l00873"></a><span class="lineno">  873</span> </div>
+<div class="line"><a id="l00875" name="l00875"></a><span class="lineno">  875</span>    <span class="keywordtype">float</span> mSkillPressElapsed = 0.0f;</div>
+<div class="line"><a id="l00876" name="l00876"></a><span class="lineno">  876</span> </div>
+<div class="line"><a id="l00878" name="l00878"></a><span class="lineno">  878</span>    <span class="keywordtype">float</span> mSkillLongPressThreshold = 0.45f;</div>
+<div class="line"><a id="l00879" name="l00879"></a><span class="lineno">  879</span> </div>
+<div class="line"><a id="l00881" name="l00881"></a><span class="lineno">  881</span>    <span class="keywordtype">bool</span> mCombatControlsHidden = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00882" name="l00882"></a><span class="lineno">  882</span> </div>
+<div class="line"><a id="l00884" name="l00884"></a><span class="lineno">  884</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00885" name="l00885"></a><span class="lineno">  885</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;TObjectPtr&lt;class UIndexedButtonWidget&gt;</a>&gt; mEquipSlotButtons;</div>
+<div class="line"><a id="l00886" name="l00886"></a><span class="lineno">  886</span> </div>
+<div class="line"><a id="l00888" name="l00888"></a><span class="lineno">  888</span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> mPressedEquipSlot = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">INDEX_NONE</a>;</div>
+<div class="line"><a id="l00889" name="l00889"></a><span class="lineno">  889</span> </div>
+<div class="line"><a id="l00891" name="l00891"></a><span class="lineno">  891</span>    <span class="keywordtype">bool</span> mEquipPressing = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00892" name="l00892"></a><span class="lineno">  892</span> </div>
+<div class="line"><a id="l00894" name="l00894"></a><span class="lineno">  894</span>    <span class="keywordtype">bool</span> mEquipDetailOpenedFromPress = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00895" name="l00895"></a><span class="lineno">  895</span> </div>
+<div class="line"><a id="l00897" name="l00897"></a><span class="lineno">  897</span>    <span class="keywordtype">float</span> mEquipPressElapsed = 0.0f;</div>
+<div class="line"><a id="l00898" name="l00898"></a><span class="lineno">  898</span> </div>
+<div class="line"><a id="l00900" name="l00900"></a><span class="lineno">  900</span>    <span class="keywordtype">bool</span> mIntroDiceRollActive = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00901" name="l00901"></a><span class="lineno">  901</span> </div>
+<div class="line"><a id="l00903" name="l00903"></a><span class="lineno">  903</span>    <span class="keywordtype">bool</span> mIntroDiceRollReady = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00904" name="l00904"></a><span class="lineno">  904</span> </div>
+<div class="line"><a id="l00906" name="l00906"></a><span class="lineno">  906</span>    <span class="keywordtype">bool</span> mIntroDiceResultWaitingForDismiss = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00907" name="l00907"></a><span class="lineno">  907</span> </div>
+<div class="line"><a id="l00909" name="l00909"></a><span class="lineno">  909</span>    <span class="keywordtype">bool</span> mIntroDiceResultsApplied = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00910" name="l00910"></a><span class="lineno">  910</span> </div>
+<div class="line"><a id="l00912" name="l00912"></a><span class="lineno">  912</span>    <span class="keywordtype">bool</span> mIntroDiceRollResultsResolved = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00913" name="l00913"></a><span class="lineno">  913</span> </div>
+<div class="line"><a id="l00915" name="l00915"></a><span class="lineno">  915</span>    <span class="keywordtype">float</span> mIntroDiceRollElapsed = 0.0f;</div>
+<div class="line"><a id="l00916" name="l00916"></a><span class="lineno">  916</span> </div>
+<div class="line"><a id="l00918" name="l00918"></a><span class="lineno">  918</span>    <span class="keywordtype">float</span> mIntroDiceAlignDelay = 0.12f;</div>
+<div class="line"><a id="l00919" name="l00919"></a><span class="lineno">  919</span> </div>
+<div class="line"><a id="l00921" name="l00921"></a><span class="lineno">  921</span>    <span class="keywordtype">float</span> mIntroDiceAlignTimer = 0.0f;</div>
+<div class="line"><a id="l00922" name="l00922"></a><span class="lineno">  922</span> </div>
+<div class="line"><a id="l00924" name="l00924"></a><span class="lineno">  924</span>    <span class="keywordtype">bool</span> mIntroDiceAligning = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00925" name="l00925"></a><span class="lineno">  925</span> </div>
+<div class="line"><a id="l00927" name="l00927"></a><span class="lineno">  927</span>    <span class="keywordtype">bool</span> mIntroDiceAligned = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00928" name="l00928"></a><span class="lineno">  928</span> </div>
+<div class="line"><a id="l00930" name="l00930"></a><span class="lineno">  930</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00931" name="l00931"></a><span class="lineno">  931</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTextBlock&gt;</a> mDiceAssignmentText;</div>
+<div class="line"><a id="l00932" name="l00932"></a><span class="lineno">  932</span> </div>
+<div class="line"><a id="l00934" name="l00934"></a><span class="lineno">  934</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00935" name="l00935"></a><span class="lineno">  935</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UBorder&gt;</a> mSkillDetailPanel;</div>
+<div class="line"><a id="l00936" name="l00936"></a><span class="lineno">  936</span> </div>
+<div class="line"><a id="l00938" name="l00938"></a><span class="lineno">  938</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00939" name="l00939"></a><span class="lineno">  939</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTextBlock&gt;</a> mSkillDetailText;</div>
+<div class="line"><a id="l00940" name="l00940"></a><span class="lineno">  940</span> </div>
+<div class="line"><a id="l00942" name="l00942"></a><span class="lineno">  942</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00943" name="l00943"></a><span class="lineno">  943</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;TObjectPtr&lt;UBorder&gt;</a>&gt; mSkillDetailBackdropPanels;</div>
+<div class="line"><a id="l00944" name="l00944"></a><span class="lineno">  944</span> </div>
+<div class="line"><a id="l00946" name="l00946"></a><span class="lineno">  946</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00947" name="l00947"></a><span class="lineno">  947</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UButton&gt;</a> mDiceRollInputButton;</div>
+<div class="line"><a id="l00948" name="l00948"></a><span class="lineno">  948</span> </div>
+<div class="line"><a id="l00950" name="l00950"></a><span class="lineno">  950</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00951" name="l00951"></a><span class="lineno">  951</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UButton&gt;</a> mSkillDetailDismissButton;</div>
+<div class="line"><a id="l00952" name="l00952"></a><span class="lineno">  952</span> </div>
+<div class="line"><a id="l00953" name="l00953"></a><span class="lineno">  953</span>    <span class="comment">/* 공용 상세창 — 디자이너 WBP(WBP_CombatDetailOverlay)를 인스턴스화해 named widget에 데이터만 채운다.</span></div>
+<div class="line"><a id="l00954" name="l00954"></a><span class="lineno">  954</span><span class="comment">     * 스킬/유닛/장비 상세가 같은 오버레이를 공유한다. 레이아웃/아트는 WBP가 소유, C++은 내용만 채운다. */</span></div>
+<div class="line"><a id="l00955" name="l00955"></a><span class="lineno">  955</span> </div>
+<div class="line"><a id="l00957" name="l00957"></a><span class="lineno">  957</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00958" name="l00958"></a><span class="lineno">  958</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UUserWidget&gt;</a> mDetailOverlay;</div>
+<div class="line"><a id="l00959" name="l00959"></a><span class="lineno">  959</span> </div>
+<div class="line"><a id="l00961" name="l00961"></a><span class="lineno">  961</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00962" name="l00962"></a><span class="lineno">  962</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;class UImage&gt;</a> mDetailIconImage;</div>
+<div class="line"><a id="l00963" name="l00963"></a><span class="lineno">  963</span> </div>
+<div class="line"><a id="l00965" name="l00965"></a><span class="lineno">  965</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00966" name="l00966"></a><span class="lineno">  966</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTextBlock&gt;</a> mDetailTitleText;</div>
+<div class="line"><a id="l00967" name="l00967"></a><span class="lineno">  967</span> </div>
+<div class="line"><a id="l00969" name="l00969"></a><span class="lineno">  969</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00970" name="l00970"></a><span class="lineno">  970</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTextBlock&gt;</a> mDetailSubtitleText;</div>
+<div class="line"><a id="l00971" name="l00971"></a><span class="lineno">  971</span> </div>
+<div class="line"><a id="l00973" name="l00973"></a><span class="lineno">  973</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00974" name="l00974"></a><span class="lineno">  974</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTextBlock&gt;</a> mDetailBodyText;</div>
+<div class="line"><a id="l00975" name="l00975"></a><span class="lineno">  975</span> </div>
+<div class="line"><a id="l00977" name="l00977"></a><span class="lineno">  977</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>)</div>
+<div class="line"><a id="l00978" name="l00978"></a><span class="lineno">  978</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSubclassOf&lt;UUserWidget&gt;</a> mDetailOverlayClass;</div>
+<div class="line"><a id="l00979" name="l00979"></a><span class="lineno">  979</span> </div>
+<div class="line"><a id="l00981" name="l00981"></a><span class="lineno">  981</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTexture2D&gt;</a> mLogIconHpDamage;</div>
+<div class="line"><a id="l00982" name="l00982"></a><span class="lineno">  982</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTexture2D&gt;</a> mLogIconHpRecovery;</div>
+<div class="line"><a id="l00983" name="l00983"></a><span class="lineno">  983</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTexture2D&gt;</a> mLogIconGetMove;</div>
+<div class="line"><a id="l00984" name="l00984"></a><span class="lineno">  984</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTexture2D&gt;</a> mLogIconGetDefense;</div>
+<div class="line"><a id="l00985" name="l00985"></a><span class="lineno">  985</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTexture2D&gt;</a> mLogIconAgility;</div>
+<div class="line"><a id="l00986" name="l00986"></a><span class="lineno">  986</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTexture2D&gt;</a> mLogIconFortification;</div>
+<div class="line"><a id="l00987" name="l00987"></a><span class="lineno">  987</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTexture2D&gt;</a> mLogIconVulnerability;</div>
+<div class="line"><a id="l00988" name="l00988"></a><span class="lineno">  988</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transient</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UTexture2D&gt;</a> mLogIconWeakness;</div>
+<div class="line"><a id="l00989" name="l00989"></a><span class="lineno">  989</span> </div>
+<div class="line"><a id="l00990" name="l00990"></a><span class="lineno">  990</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00992" name="l00992"></a><span class="lineno">  992</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UTexture2D</a>* ResolveFloatingLogIcon(<a class="code hl_enumeration" href="CombatUITypes_8h.html#accc3119da6754ad413c171ed3fd54a4c">EFloatingLogIconType</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IconType</a>, <a class="code hl_enumeration" href="CombatUITypes_8h.html#a0e27a8cfb35dfac2dd7e0458f3065087">EFloatingLogColorType</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ColorType</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00993" name="l00993"></a><span class="lineno">  993</span>};</div>
+</div>
+<div class="ttc" id="aCombatUITypes_8h_html"><div class="ttname"><a href="CombatUITypes_8h.html">CombatUITypes.h</a></div></div>
+<div class="ttc" id="aCombatUITypes_8h_html_a0e27a8cfb35dfac2dd7e0458f3065087"><div class="ttname"><a href="CombatUITypes_8h.html#a0e27a8cfb35dfac2dd7e0458f3065087">EFloatingLogColorType</a></div><div class="ttdeci">EFloatingLogColorType</div><div class="ttdoc">플로팅 로그 색의 &quot;의미&quot;. 실제 FLinearColor(어떤 빨강/초록…)는 HUD(ResolveFloatingLogColor)가 고른다.</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00079">CombatUITypes.h:80</a></div></div>
+<div class="ttc" id="aCombatUITypes_8h_html_a561fae8bc960f9ccf6d920135ecfaa81"><div class="ttname"><a href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81">ECombatUIDomain</a></div><div class="ttdeci">ECombatUIDomain</div><div class="ttdoc">무엇이 바뀌어 UI를 갱신해야 하는지 도메인 구분(부분 갱신용).</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00021">CombatUITypes.h:22</a></div></div>
+<div class="ttc" id="aCombatUITypes_8h_html_accc3119da6754ad413c171ed3fd54a4c"><div class="ttname"><a href="CombatUITypes_8h.html#accc3119da6754ad413c171ed3fd54a4c">EFloatingLogIconType</a></div><div class="ttdeci">EFloatingLogIconType</div><div class="ttdoc">플로팅 로그 아이콘의 &quot;의미&quot;. 실제 어떤 Texture2D를 쓸지는 HUD(ResolveFloatingLogIcon)가 고른다.</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00056">CombatUITypes.h:57</a></div></div>
+<div class="ttc" id="aDiceViewData_8h_html"><div class="ttname"><a href="DiceViewData_8h.html">DiceViewData.h</a></div></div>
+<div class="ttc" id="aPersistentDataType_8h_html_a537f7a730a17b9fdf67192d2aba02273ae93f994f01c537c4e2f7d8528c3eb5e9"><div class="ttname"><a href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273ae93f994f01c537c4e2f7d8528c3eb5e9">EGameVolumeType::Count</a></div><div class="ttdeci">@ Count</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aRDMinimal_8h_html"><div class="ttname"><a href="RDMinimal_8h.html">RDMinimal.h</a></div><div class="ttdoc">RD 프로젝트 전 영역에서 사용되는 최소한의 포함 헤더</div></div>
+<div class="ttc" id="aRDUserWidget_8h_html"><div class="ttname"><a href="RDUserWidget_8h.html">RDUserWidget.h</a></div></div>
+<div class="ttc" id="aRewardUITypes_8h_html"><div class="ttname"><a href="RewardUITypes_8h.html">RewardUITypes.h</a></div></div>
+<div class="ttc" id="aRewardUITypes_8h_html_abdc22ba12c67d0e130c6eb499d1d5bd7"><div class="ttname"><a href="RewardUITypes_8h.html#abdc22ba12c67d0e130c6eb499d1d5bd7">ERewardClaimKind</a></div><div class="ttdeci">ERewardClaimKind</div><div class="ttdoc">UI에서 클릭한 보상 행이 어떤 실제 지급 항목인지 구분한다.</div><div class="ttdef"><b>Definition</b> <a href="RewardUITypes_8h_source.html#l00055">RewardUITypes.h:56</a></div></div>
+<div class="ttc" id="aRewardUITypes_8h_html_afbeb202d9da1936d1a1bfe63e0aea540a9768feb3fdb1f267b06093bc572952dd"><div class="ttname"><a href="RewardUITypes_8h.html#afbeb202d9da1936d1a1bfe63e0aea540a9768feb3fdb1f267b06093bc572952dd">ERewardChoiceKind::Gold</a></div><div class="ttdeci">@ Gold</div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_ada104807b93ac7cd59dac80d98ba857b"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a></div><div class="ttdeci">int32</div><div class="ttdef"><b>Definition</b> <a href="RoomTransitionSubsystem_8h_source.html#l00021">RoomTransitionSubsystem.h:21</a></div></div>
+<div class="ttc" id="aSRPGCombatModel_8h_html_a989ac07b6b9603d8bf4ec5d89ef5e2e9"><div class="ttname"><a href="SRPGCombatModel_8h.html#a989ac07b6b9603d8bf4ec5d89ef5e2e9">TSharedPtr&lt; FPresentationBarrier &gt;</a></div><div class="ttdeci">TSharedPtr&lt; FPresentationBarrier &gt;</div><div class="ttdef"><b>Definition</b> <a href="SRPGCombatModel_8h_source.html#l00043">SRPGCombatModel.h:44</a></div></div>
+<div class="ttc" id="aSRPGFrameworkType_8h_html_a87b752dc898e3139c35ae662b79156ae"><div class="ttname"><a href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a></div><div class="ttdeci">ESRPGCombatResult</div><div class="ttdoc">전투 결과를 나타내는 열거형</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00167">SRPGFrameworkType.h:168</a></div></div>
+<div class="ttc" id="aTileLayer_8h_html_a61ff5e934720f6e71d4d011bf7d5e6c3a19c562a36aeb455d09534f93b4f5236f"><div class="ttname"><a href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3a19c562a36aeb455d09534f93b4f5236f">ETileLayerFlag::Unit</a></div><div class="ttdeci">@ Unit</div></div>
+<div class="ttc" id="aWorldWidgetType_8h_html_a47caf39c2b520cec40c346f17a44069f"><div class="ttname"><a href="WorldWidgetType_8h.html#a47caf39c2b520cec40c346f17a44069f">EWorldWidgetType</a></div><div class="ttdeci">EWorldWidgetType</div><div class="ttdoc">특정한 소유자 없이 월드에 소속된 Widget 타입</div><div class="ttdef"><b>Definition</b> <a href="WorldWidgetType_8h_source.html#l00017">WorldWidgetType.h:18</a></div></div>
+<div class="ttc" id="aclassACombatDiceCaptureActor_html"><div class="ttname"><a href="classACombatDiceCaptureActor.html">ACombatDiceCaptureActor</a></div><div class="ttdoc">3D 주사위를 투명 RenderTarget으로 캡처하는 프리뷰 액터</div><div class="ttdef"><b>Definition</b> <a href="CombatDiceCaptureActor_8h_source.html#l00022">CombatDiceCaptureActor.h:23</a></div></div>
+<div class="ttc" id="aclassACombatDiceRollCaptureActor_html"><div class="ttname"><a href="classACombatDiceRollCaptureActor.html">ACombatDiceRollCaptureActor</a></div><div class="ttdoc">여러 주사위를 하나의 숨겨진 물리 테이블에서 굴리고 RenderTarget으로 캡처하는 액터.</div><div class="ttdef"><b>Definition</b> <a href="CombatDiceRollCaptureActor_8h_source.html#l00038">CombatDiceRollCaptureActor.h:39</a></div></div>
+<div class="ttc" id="aclassUCombatResultOverlayWidget_html"><div class="ttname"><a href="classUCombatResultOverlayWidget.html">UCombatResultOverlayWidget</a></div><div class="ttdoc">전투 결과 영상 위에 띄우는 최소 C++ 오버레이.</div><div class="ttdef"><b>Definition</b> <a href="CombatResultOverlayWidget_8h_source.html#l00023">CombatResultOverlayWidget.h:24</a></div></div>
+<div class="ttc" id="aclassUCombatTileMapHUDWidget_html"><div class="ttname"><a href="classUCombatTileMapHUDWidget.html">UCombatTileMapHUDWidget</a></div><div class="ttdoc">전투 타일맵 HUD 와이어프레임 위젯</div><div class="ttdef"><b>Definition</b> <a href="CombatTileMapHUDWidget_8h_source.html#l00070">CombatTileMapHUDWidget.h:71</a></div></div>
+<div class="ttc" id="aclassUCombatUIModel_html"><div class="ttname"><a href="classUCombatUIModel.html">UCombatUIModel</a></div><div class="ttdoc">전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다.</div><div class="ttdef"><b>Definition</b> <a href="CombatUIModel_8h_source.html#l00044">CombatUIModel.h:45</a></div></div>
+<div class="ttc" id="aclassUIndexedButtonWidget_html"><div class="ttname"><a href="classUIndexedButtonWidget.html">UIndexedButtonWidget</a></div><div class="ttdoc">여러 개 생성되는 버튼이 자기 번호를 같이 알려주게 만든 UButton입니다.</div><div class="ttdef"><b>Definition</b> <a href="IndexedButtonWidget_8h_source.html#l00033">IndexedButtonWidget.h:34</a></div></div>
+<div class="ttc" id="aclassURDUserWidget_html"><div class="ttname"><a href="classURDUserWidget.html">URDUserWidget</a></div><div class="ttdoc">RD 프로젝트 UMG 위젯의 공통 베이스 클래스</div><div class="ttdef"><b>Definition</b> <a href="RDUserWidget_8h_source.html#l00051">RDUserWidget.h:52</a></div></div>
+<div class="ttc" id="aclassURewardUIModel_html"><div class="ttname"><a href="classURewardUIModel.html">URewardUIModel</a></div><div class="ttdoc">보상 화면 뷰모델. 전투 종료 시 게임플레이가 하나 만들어 보상 위젯에 물린다.</div><div class="ttdef"><b>Definition</b> <a href="RewardUIModel_8h_source.html#l00025">RewardUIModel.h:26</a></div></div>
+<div class="ttc" id="aclassURewardUIWidgetBase_html"><div class="ttname"><a href="classURewardUIWidgetBase.html">URewardUIWidgetBase</a></div><div class="ttdef"><b>Definition</b> <a href="RewardUIWidgetBase_8h_source.html#l00032">RewardUIWidgetBase.h:33</a></div></div>
+<div class="ttc" id="astructFCombatFloatingLogRequest_html"><div class="ttname"><a href="structFCombatFloatingLogRequest.html">FCombatFloatingLogRequest</a></div><div class="ttdoc">플로팅 로그 한 건을 &quot;어디에 / 무엇을 / 어떻게 다룰지&quot; 담아 게임플레이가 UI로 넘기는 요청.</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00099">CombatUITypes.h:100</a></div></div>
+<div class="ttc" id="astructFCombatQueueNode_html"><div class="ttname"><a href="structFCombatQueueNode.html">FCombatQueueNode</a></div><div class="ttdoc">행동/시뮬레이션 결과 큐의 한 노드이며 애니메이션 한 단위에 해당합니다.</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00335">CombatUITypes.h:336</a></div></div>
+<div class="ttc" id="astructFDiceViewData_html"><div class="ttname"><a href="structFDiceViewData.html">FDiceViewData</a></div><div class="ttdoc">주사위 한 칸을 화면에 그릴 때 필요한 값입니다.</div><div class="ttdef"><b>Definition</b> <a href="DiceViewData_8h_source.html#l00014">DiceViewData.h:15</a></div></div>
+<div class="ttc" id="astructFPresentationBarrier_html"><div class="ttname"><a href="structFPresentationBarrier.html">FPresentationBarrier</a></div><div class="ttdoc">연출 완료 시기를 연장해주는 배리어 객체 정의 헤더. 해당 객체가 소멸 시 연출 완료로 인식</div><div class="ttdef"><b>Definition</b> <a href="PresentationBarrier_8h_source.html#l00017">PresentationBarrier.h:18</a></div></div>
+<div class="ttc" id="astructFUnitHpBarWidget_html"><div class="ttname"><a href="structFUnitHpBarWidget.html">FUnitHpBarWidget</a></div><div class="ttdoc">유닛 머리 위 HP바(WBP_CombatUnitHpBar) 한 개의 런타임 위젯 참조 묶음.</div><div class="ttdef"><b>Definition</b> <a href="CombatTileMapHUDWidget_8h_source.html#l00040">CombatTileMapHUDWidget.h:41</a></div></div>
+<div class="ttc" id="astructFUnitUI_html"><div class="ttname"><a href="structFUnitUI.html">FUnitUI</a></div><div class="ttdoc">유닛 한 기를 HUD에 그릴 때 필요한 표시값(HP바·스탯·위치).</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00185">CombatUITypes.h:186</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_18e329638b0f3372047d81882ea0cdaf.html">UI</a></li><li class="navelem"><a class="el" href="CombatTileMapHUDWidget_8h.html">CombatTileMapHUDWidget.h</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

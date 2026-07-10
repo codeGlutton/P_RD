@@ -1,0 +1,179 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: 전투 UI ↔ 게임플레이 경계 (View-Model 계약)</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2README.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div><div class="header">
+  <div class="headertitle"><div class="title">전투 UI ↔ 게임플레이 경계 (View-Model 계약)</div></div>
+</div><!--header-->
+<div class="contents">
+<div class="textblock"><p><a class="anchor" id="autotoc_md17"></a> 데이터/비주얼 분리 구조에 맞춰, 전투 UI와 게임플레이는 **<code><a class="el" href="classUCombatUIModel.html" title="전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다.">UCombatUIModel</a></code> 하나**로만 만난다. 게임플레이가 리팩토링돼도 이 계약만 지키면 위젯은 안 바뀐다.</p>
+<div class="fragment"><div class="line">[게임플레이] UnitData/DiceData/SkillBuildAction …</div>
+<div class="line">      │ Set*()  (읽기 데이터 push)        ▲ OnCombatCommand/WorldTouch  (의도 구독)</div>
+<div class="line">      ▼                                    │</div>
+<div class="line">            ┌──────────  UCombatUIModel  ──────────┐</div>
+<div class="line">            │  read 캐시 · 입력 델리게이트 · 행동 큐  │</div>
+<div class="line">            └────────────────────────────────────────┘</div>
+<div class="line">      │ Get*() / OnUIChanged / OnQueueNodeResolved</div>
+<div class="line">      ▼</div>
+<div class="line">[UI] UCombatUIWidgetBase 상속 WBP들 (HUD / DicePanel / SkillPanel) — 표시·입력만</div>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md18"></a>
+구성</h1>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">파일   </th><th class="markdownTableHeadNone">역할    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code><a class="el" href="CombatUITypes_8h.html">CombatUITypes.h</a></code>   </td><td class="markdownTableBodyNone">표시용 struct + 행동 1단위 큐 노드 <code><a class="el" href="structFCombatQueueNode.html" title="행동/시뮬레이션 결과 큐의 한 노드이며 애니메이션 한 단위에 해당합니다.">FCombatQueueNode</a></code>    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code><a class="el" href="CombatUIModel_8h.html">CombatUIModel.h</a>/.cpp</code>   </td><td class="markdownTableBodyNone">경계 허브. <b>읽기</b>(<code>Set*</code>/<code>Get*</code>+<code>OnUIChanged</code>) · <b>주기</b>(<code>Request*</code>→<code>OnCombatCommand</code>/<code>OnCombatWorldTouch</code>) · <b>큐</b>(<code>SetActionQueue</code>/<code>ResolveFrontQueueNode</code>→<code>OnQueueNodeResolved</code>)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code><a class="el" href="CombatUIWidgetBase_8h.html">CombatUIWidgetBase.h</a>/.cpp</code>   </td><td class="markdownTableBodyNone">위젯 베이스. <code>BindUIModel()</code> 후 <code>OnUIRefreshed</code>/<code>OnQueueNodePlayed</code>만 구현    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code><a class="el" href="MockCombatDriver_8h.html">MockCombatDriver.h</a>/.cpp</code>   </td><td class="markdownTableBodyNone">게임플레이 없이 가짜 데이터로 UI를 먼저 만들고 테스트하는 개발용   </td></tr>
+</table>
+<h2><a class="anchor" id="autotoc_md19"></a>
+다루는 도메인 (&lt;tt&gt;ECombatUIDomain&lt;/tt&gt;)</h2>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">도메인   </th><th class="markdownTableHeadNone">struct   </th><th class="markdownTableHeadNone">push   </th><th class="markdownTableHeadNone">read    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Unit   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFUnitUI.html" title="유닛 한 기를 HUD에 그릴 때 필요한 표시값(HP바·스탯·위치).">FUnitUI</a></code>(HP·스탯·위치·<code>mStatusTags</code>) / <code><a class="el" href="structFUnitDetailUI.html" title="적/유닛을 길게 눌렀을 때 띄우는 상세 정보(초상화·이름·레벨·패시브 등).">FUnitDetailUI</a></code>   </td><td class="markdownTableBodyNone"><code>SetUnitUIs</code>/<code>SetUnitDetail</code>   </td><td class="markdownTableBodyNone"><code>GetUnitUIs</code>/<code>GetUnitDetail</code>    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Dice   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFDiceSlotUI.html" title="주사위 한 칸을 그릴 때 필요한 표시값입니다.">FDiceSlotUI</a></code>(값·희귀도·선택·**<code>mPreviewTexture</code> 3D 프리뷰 슬롯**)   </td><td class="markdownTableBodyNone"><code>SetDiceUIs</code>/<code>SetSelectedDice</code>   </td><td class="markdownTableBodyNone"><code>GetDiceUIs</code>/<code>GetSelectedDice*</code>    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Skill   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFSkillUI.html" title="스킬 레일에 그릴 스킬 한 칸.">FSkillUI</a></code> / <code><a class="el" href="structFSkillDetailUI.html" title="스킬을 길게 눌렀을 때의 상세창 내용.">FSkillDetailUI</a></code>   </td><td class="markdownTableBodyNone"><code>SetSkillUIs</code>/<code>SetSkillDetail</code>   </td><td class="markdownTableBodyNone"><code>GetSkillUIs</code>/<code>GetSkillDetail</code>    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Turn   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFTurnUI.html" title="현재 턴/라운드/페이즈 상태.">FTurnUI</a></code>(라운드·페이즈·순서)   </td><td class="markdownTableBodyNone"><code>SetTurnUI</code>   </td><td class="markdownTableBodyNone"><code>GetTurnUI</code>    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Equipment   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFEquipmentUI.html" title="장비 슬롯 하나(전투 중 표시·상세). 인벤토리/장착 변경은 의도(Request)로만 보낸다.">FEquipmentUI</a></code>   </td><td class="markdownTableBodyNone"><code>SetEquipmentUIs</code>   </td><td class="markdownTableBodyNone"><code>GetEquipmentUIs</code>    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Meta   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFPlayerMetaUI.html" title="플레이어 메타 정보(전투 HUD 상단/보상에 쓰는 돈·경험치·레벨).">FPlayerMetaUI</a></code>(돈·경험치·레벨)   </td><td class="markdownTableBodyNone"><code>SetPlayerMeta</code>   </td><td class="markdownTableBodyNone"><code>GetPlayerMeta</code>    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Queue   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFCombatQueueNode.html" title="행동/시뮬레이션 결과 큐의 한 노드이며 애니메이션 한 단위에 해당합니다.">FCombatQueueNode</a></code>   </td><td class="markdownTableBodyNone"><code>SetActionQueue</code>/<code>ResolveFrontQueueNode</code>   </td><td class="markdownTableBodyNone"><code>GetActionQueue</code>   </td></tr>
+</table>
+<blockquote class="doxtable">
+<p>&zwj;다이스의 3D 굴림 프리뷰는 아직 캡처 계층이 붙지 않았다. 이후 비주얼 캡처가 렌더타깃을 만들면, 어댑터가 그 텍스처를 <code><a class="el" href="structFDiceSlotUI.html#af319efb2e5655b5c5cf6a2607805e358">FDiceSlotUI.mPreviewTexture</a></code>로 넣고 UI는 표시만 한다. </p>
+</blockquote>
+<h1><a class="anchor" id="autotoc_md20"></a>
+박용수(UI) 사용법</h1>
+<ol type="1">
+<li>WBP를 <code><a class="el" href="classUCombatUIWidgetBase.html">UCombatUIWidgetBase</a></code> 상속으로 만든다.</li>
+<li><code>BindUIModel(VM)</code> 호출.</li>
+<li><code>OnUIRefreshed(Domain)</code>에서 <code>VM-&gt;GetDiceUIs()</code> 등을 읽어 자기 화면을 그린다.</li>
+<li>탭/터치 → <code>VM-&gt;RequestSelectSkill(i)</code> / <code>RequestToggleDice(i)</code> / <code>RequestRollDice()</code> / <code>RequestWorldTouch(pos,long)</code> …</li>
+<li><code>OnQueueNodePlayed(Node)</code>에서 머리 위 숫자·효과를 띄운다.</li>
+<li>게임플레이 전이라도 <code>UMockCombatDriver::Start(VM)</code>로 굴림·선택·예측 큐 재생까지 테스트.</li>
+</ol>
+<h1><a class="anchor" id="autotoc_md21"></a>
+모호재(게임플레이) 사용법</h1>
+<p>Mock 자리에 **어댑터**만 구현(위젯 무수정):</p><ul>
+<li>상태가 바뀌면 <code>VM-&gt;SetUnitUIs/SetDiceUIs/SetSkillUIs/SetTurnUI()</code>.</li>
+<li>행동/예측 결과를 <code>VM-&gt;SetActionQueue(Queue)</code>로 주고, 애니 한 단위 끝날 때마다 <code>VM-&gt;ResolveFrontQueueNode()</code>.</li>
+<li><code>VM-&gt;OnCombatCommand</code>/<code>OnCombatWorldTouch</code>를 구독해 입력(의도)을 처리.</li>
+</ul>
+<h1><a class="anchor" id="autotoc_md22"></a>
+범위 — 이건 '전투' 뷰모델</h1>
+<p>전투 화면(HUD/Dice/Skill/Tile/Equip)만 담당. 아래는 **전투 밖 UI**라 별도 뷰모델로 같은 패턴 반복: 타이틀·캐릭터선택·프론트엔드맵(방 이동)·설정·**전투 보상/획득**·인벤토리. (이미 대부분 WBP로 존재 → 필요할 때 뷰모델로 감싸면 됨.)</p>
+<h1><a class="anchor" id="autotoc_md23"></a>
+미합의/맞출 것</h1>
+<ul>
+<li><b>큐 노드 묶음 방식</b>: 한 행동의 효과(데미지·상태이상·힐)를 "한 노드+태그(`mTags`)"로 묶음(현재) vs 분리 — 회의 미확정.</li>
+<li>게임플레이 타입(<code>FSRPGSkillBuildPhase</code>,<code>UDiceData</code>,장비/메타 소스 <code>PersistentData</code>)과의 실제 매핑은 어댑터에서. </li>
+</ul>
+</div></div><!-- contents -->
+</div><!-- PageDoc -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

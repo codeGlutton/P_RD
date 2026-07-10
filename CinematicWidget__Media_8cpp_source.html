@@ -1,0 +1,347 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/UI/CinematicWidget_Media.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('CinematicWidget__Media_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">CinematicWidget_Media.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="CinematicWidget__Media_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span> </div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="comment">// 이 파일: 인트로 MP4 영상 재생 담당. MediaPlayer/MediaTexture/FileMediaSource를 만들어</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="comment">//          영상을 Slate 이미지에 그리고, 영상 열림→재생 / 실패·종료→FinishCinematic 으로 처리한다.</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="comment">//          파일은 SVN로 동기화되는 mp4를 디스크에서 직접 연다(없으면 경고만 + 폴백 타이머로 진행).</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;<a class="code" href="CinematicWidget_8h.html">UI/CinematicWidget.h</a>&quot;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span> </div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &quot;FileMediaSource.h&quot;</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &quot;MediaPlayer.h&quot;</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor">#include &quot;MediaTexture.h&quot;</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="preprocessor">#include &quot;Misc/FileHelper.h&quot;</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="preprocessor">#include &quot;<a class="code" href="GamePlaySettings_8h.html">Setting/GamePlaySettings.h</a>&quot;</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="preprocessor">#include &quot;<a class="code" href="UITextureLoader_8h.html">UI/UITextureLoader.h</a>&quot;</span></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span> </div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="keyword">namespace</span></div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>{</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TCHAR</a>* <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FallbackIntroCinematicVideoPath</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;SVN/OutSideAsset/AICreation/hero_loading_intro4_1280_3s.mp4&quot;</span>);</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span> </div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetIntroCinematicVideoPath</a>()</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    {</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>        <span class="keyword">const</span> <a class="code hl_class" href="classUGamePlaySettings.html">UGamePlaySettings</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GamePlaySettings</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetDefault&lt;UGamePlaySettings&gt;</a>();</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>        <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GamePlaySettings</a> != <span class="keyword">nullptr</span> &amp;&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GamePlaySettings</a>-&gt;mIntroCinematicVideoPath.IsEmpty() == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>        {</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>            <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GamePlaySettings</a>-&gt;mIntroCinematicVideoPath;</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>        }</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span> </div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>        <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FallbackIntroCinematicVideoPath</a>);</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    }</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>}</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span><span class="keywordtype">void</span> UCinematicWidget::EnsureCinematicMediaObjects()</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>{</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a> == <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>    {</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewObject&lt;UMediaPlayer&gt;</a>(<span class="keyword">this</span>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;IntroCinematicMediaPlayer&quot;</span>));</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="preprocessor">#if PLATFORM_WINDOWS || PLATFORM_MAC</span></div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;SetDesiredPlayerName(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FName</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;ElectraProtron&quot;</span>)));</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="preprocessor">#elif PLATFORM_ANDROID</span></div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>        <span class="comment">// Electra가 자동 선택되면 본 프로젝트의 로컬 H.264 mp4를 &quot;No playable streams&quot;로 거부한다(5.7 실측).</span></div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>        <span class="comment">// OS MediaPlayer 경로(AndroidMedia)가 로컬 파일 재생에 검증돼 있어 명시 지정한다.</span></div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;SetDesiredPlayerName(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FName</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;AndroidMedia&quot;</span>)));</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;SetLooping(<span class="keyword">false</span>); <span class="comment">// 인트로는 1회 재생 후 종료(루프 X)</span></div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>        <span class="comment">// 열림/실패/종료 이벤트를 바인딩해 재생 시작·폴백·다음 단계 전환을 제어한다(AddUnique로 중복 바인딩 방지).</span></div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;OnMediaOpened.AddUniqueDynamic(<span class="keyword">this</span>, &amp;UCinematicWidget::HandleCinematicMediaOpened);</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;OnMediaOpenFailed.AddUniqueDynamic(<span class="keyword">this</span>, &amp;UCinematicWidget::HandleCinematicMediaOpenFailed);</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;OnEndReached.AddUniqueDynamic(<span class="keyword">this</span>, &amp;UCinematicWidget::HandleCinematicMediaEndReached);</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    }</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span> </div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaTexture</a> == <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>    {</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaTexture</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewObject&lt;UMediaTexture&gt;</a>(<span class="keyword">this</span>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;IntroCinematicMediaTexture&quot;</span>));</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaTexture</a>-&gt;ClearColor = FLinearColor::Black;  <span class="comment">// 첫 프레임 도착 전·클리어 시 검은 화면으로 채움</span></div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaTexture</a>-&gt;SetMediaPlayer(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>); <span class="comment">// 텍스처가 이 플레이어의 출력 프레임을 받게 연결</span></div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaTexture</a>-&gt;UpdateResource();                 <span class="comment">// 렌더 리소스 즉시 갱신(연결 직후 유효 텍스처 보장)</span></div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    }</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaTexture</a> != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    {</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaTexture</a>-&gt;AutoClear = !<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mHoldLastFrameOnFinish</a>;</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>    }</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span> </div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaSource</a> == <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    {</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaSource</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewObject&lt;UFileMediaSource&gt;</a>(<span class="keyword">this</span>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;IntroCinematicMediaSource&quot;</span>));</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaSource</a>-&gt;PrecacheFile = <span class="keyword">true</span>; <span class="comment">// 디스크 파일을 미리 캐시해 재생 시작 끊김(stutter)을 줄임</span></div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>    }</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span> </div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicVideoBrush</a>.SetResourceObject(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaTexture</a>); <span class="comment">// 브러시의 그리기 리소스를 미디어 텍스처로 지정</span></div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>}</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span> </div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span><span class="keywordtype">bool</span> UCinematicWidget::PlayCinematicVideo()</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>{</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EnsureCinematicMediaObjects</a>();</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span> </div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a> == <span class="keyword">nullptr</span> || <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaSource</a> == <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>    {</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>; <span class="comment">// 미디어 오브젝트 생성 실패 시 재생 불가</span></div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>    }</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span> </div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>    <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VideoPath</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ResolveCinematicVideoPath</a>(); <span class="comment">// 상대 경로면 Content 기준 절대 경로로 변환</span></div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>    <span class="keywordflow">if</span> (FPaths::FileExists(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VideoPath</a>) == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>    {</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UE_LOG</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">LogRD</a>, <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a0e27a8cfb35dfac2dd7e0458f3065087a0eaadb4fcb48a0a0ed7bc9868be9fbaa">Warning</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Intro cinematic file missing: %s&quot;</span>), *<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VideoPath</a>);</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>; <span class="comment">// mp4가 디스크에 없으면 호출측이 폴백 타이머로 진행하도록 false 반환</span></div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>    }</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span> </div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>    <span class="comment">// cover 비율 기준이 되는 영상 실제 해상도를 파일에서 미리 확정한다(미디어 텍스처/플레이어 해상도는 첫 프레임 전까지 0이라 폴백 시 정사각이 16:9로 눌림).</span></div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicVideoNativeSize</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ReadCinematicVideoFileDimensions</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VideoPath</a>);</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicVideoNativeSize</a>.X &gt; 0.0f &amp;&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicVideoNativeSize</a>.Y &gt; 0.0f)</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>    {</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicVideoBrush</a>.ImageSize = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicVideoNativeSize</a>; <span class="comment">// 브러시 이미지 크기를 원본 해상도로 맞춰 비율 보존</span></div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    }</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;Rewind();                    <span class="comment">// 이전 재생 위치를 처음으로 되돌림</span></div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;Close();                     <span class="comment">// 기존 열린 소스를 닫아 깨끗한 상태에서 다시 open</span></div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaSource</a>-&gt;SetFilePath(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VideoPath</a>);      <span class="comment">// 열 대상 파일 경로 지정</span></div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;OpenSource(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaSource</a>); <span class="comment">// 비동기 open 시작(성공 발행 여부 반환)</span></div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>}</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span> </div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector2D</a> UCinematicWidget::ReadCinematicVideoFileDimensions(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VideoPath</a>)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;uint8&gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Bytes</a>;</div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>    <span class="keywordflow">if</span> (FFileHelper::LoadFileToArray(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Bytes</a>, *<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VideoPath</a>) == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>    {</div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>        <span class="keywordflow">return</span> FVector2D::ZeroVector; <span class="comment">// 파일 로드 실패 → 해상도 미상(폴백 경로에서 처리)</span></div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>    }</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span> </div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>    <span class="keyword">const</span> <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NumBytes</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Bytes</a>.Num();</div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>    <span class="comment">// MP4 박스 헤더의 길이/해상도 필드는 모두 빅엔디안 32비트라 4바이트를 묶어 uint32로 읽는 헬퍼.</span></div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>    <span class="keyword">auto</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ReadBigEndian32</a> = [&amp;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Bytes</a>](<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Offset</a>) -&gt; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">uint32</a></div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>    {</div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>        <span class="keywordflow">return</span> (<span class="keyword">static_cast&lt;</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">uint32</a><span class="keyword">&gt;</span>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Bytes</a>[<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Offset</a>]) &lt;&lt; 24)</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>            | (<span class="keyword">static_cast&lt;</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">uint32</a><span class="keyword">&gt;</span>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Bytes</a>[<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Offset</a> + 1]) &lt;&lt; 16)</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>            | (<span class="keyword">static_cast&lt;</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">uint32</a><span class="keyword">&gt;</span>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Bytes</a>[<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Offset</a> + 2]) &lt;&lt; 8)</div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>            | <span class="keyword">static_cast&lt;</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">uint32</a><span class="keyword">&gt;</span>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Bytes</a>[<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Offset</a> + 3]);</div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>    };</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span> </div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>    <span class="comment">// 바이트 스트림 전체를 훑어 &#39;tkhd&#39; 4바이트 시그니처를 탐색(인덱스 4부터: 앞 4바이트는 박스 크기 자리).</span></div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>    <span class="keywordflow">for</span> (<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Index</a> = 4; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Index</a> + 4 &lt;= <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NumBytes</a>; ++<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Index</a>)</div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>    {</div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>        <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Bytes</a>[<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Index</a>] != <span class="charliteral">&#39;t&#39;</span> || <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Bytes</a>[<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Index</a> + 1] != <span class="charliteral">&#39;k&#39;</span> || <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Bytes</a>[<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Index</a> + 2] != <span class="charliteral">&#39;h&#39;</span> || <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Bytes</a>[<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Index</a> + 3] != <span class="charliteral">&#39;d&#39;</span>)</div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>        {</div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>            <span class="keywordflow">continue</span>; <span class="comment">// &#39;tkhd&#39; 가 아니면 다음 바이트로</span></div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>        }</div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span> </div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>        <span class="comment">// 박스 크기(4바이트)는 타입(&#39;tkhd&#39;) 바로 앞에 온다. 박스 끝 = (타입앞) + 크기.</span></div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>        <span class="keyword">const</span> <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BoxStart</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Index</a> - 4;</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>        <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">uint32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BoxSize</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ReadBigEndian32</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BoxStart</a>);</div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>        <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">int64</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BoxEnd</a> = <span class="keyword">static_cast&lt;</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">int64</a><span class="keyword">&gt;</span>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BoxStart</a>) + <span class="keyword">static_cast&lt;</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">int64</a><span class="keyword">&gt;</span>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BoxSize</a>);</div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>        <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BoxSize &lt; 32 || BoxEnd &gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NumBytes</a>)</div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>        {</div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>            <span class="keywordflow">continue</span>; <span class="comment">// 박스 길이가 비정상이거나 버퍼를 넘어가면 잘못된 매치로 보고 스킵</span></div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>        }</div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span> </div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>        <span class="comment">// 표시 해상도는 박스 끝 직전 8바이트(width 4 + height 4)에 16.16 고정소수로 저장 → 65536으로 나눠 실수화.</span></div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>        <span class="keyword">const</span> <span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Width</a> = <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ReadBigEndian32</a>(<span class="keyword">static_cast&lt;</span><a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a><span class="keyword">&gt;</span>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BoxEnd</a>) - 8)) / 65536.0f;</div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>        <span class="keyword">const</span> <span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Height</a> = <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ReadBigEndian32</a>(<span class="keyword">static_cast&lt;</span><a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a><span class="keyword">&gt;</span>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BoxEnd</a>) - 4)) / 65536.0f;</div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>        <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Width</a> &gt; 0.0f &amp;&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Height</a> &gt; 0.0f)</div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>        {</div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>            <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector2D</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Width</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Height</a>); <span class="comment">// 첫 양수 해상도(=비디오 트랙) 발견 시 즉시 반환</span></div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>        }</div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>    }</div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span> </div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>    <span class="keywordflow">return</span> FVector2D::ZeroVector; <span class="comment">// tkhd 미발견(또는 모두 0) → 해상도 미상</span></div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>}</div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span> </div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span><span class="keywordtype">void</span> UCinematicWidget::StopCinematicMedia()</div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>{</div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a> != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>    {</div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>        <span class="comment">// Close()가 유발할 수 있는 종료 콜백이 this로 재진입하지 않도록 먼저 모든 바인딩을 해제한다.</span></div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;OnMediaOpened.RemoveAll(<span class="keyword">this</span>);</div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;OnMediaOpenFailed.RemoveAll(<span class="keyword">this</span>);</div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;OnEndReached.RemoveAll(<span class="keyword">this</span>);</div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;Close(); <span class="comment">// 재생 중지 및 미디어 핸들 해제</span></div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>    }</div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>}</div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span> </div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a> UCinematicWidget::ResolveCinematicVideoPath()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>    <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CinematicVideoPath</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mOverrideCinematicVideoPath</a>.IsEmpty() ? <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetIntroCinematicVideoPath</a>() : <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mOverrideCinematicVideoPath</a>;</div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>    <span class="keywordflow">return</span> <a class="code hl_function" href="namespaceRDUITexture.html#ac4be609d363c2ec733ffb63ad260c15f">RDUITexture::ResolveContentFilePath</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CinematicVideoPath</a>);</div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>}</div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span> </div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span><span class="keywordtype">void</span> UCinematicWidget::HandleCinematicMediaOpened(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OpenedUrl</a>)</div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>{</div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a> != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span>    {</div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;Play(); <span class="comment">// open 완료 시점에 비로소 재생 시작</span></div>
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span> </div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span>        <span class="comment">// 영상 실제 해상도를 한 번 확보해 cover 비율 기준으로 쓴다.</span></div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>        <span class="comment">// (미디어 텍스처 GetWidth/Height는 첫 프레임 디코드 전까지 0/부정확할 수 있어, 폴백 시 정사각(640x640) 영상이 16:9로 눌릴 수 있다.)</span></div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>        <span class="keyword">const</span> <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VideoTrack</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;GetSelectedTrack(EMediaPlayerTrack::Video);           <span class="comment">// 선택된 비디오 트랙 인덱스</span></div>
+<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>        <span class="keyword">const</span> <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VideoFormat</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;GetTrackFormat(EMediaPlayerTrack::Video, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VideoTrack</a>); <span class="comment">// 해당 트랙의 포맷 인덱스</span></div>
+<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>        <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FIntPoint</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VideoDimensions</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;GetVideoTrackDimensions(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VideoTrack</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VideoFormat</a>); <span class="comment">// 트랙 포맷의 실제 픽셀 해상도</span></div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>        <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VideoDimensions</a>.X &gt; 0 &amp;&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VideoDimensions</a>.Y &gt; 0)</div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>        {</div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicVideoNativeSize</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector2D</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VideoDimensions</a>.X, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VideoDimensions</a>.Y); <span class="comment">// 파일 파싱 값을 트랙 실측값으로 갱신</span></div>
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicVideoBrush</a>.ImageSize = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicVideoNativeSize</a>;                  <span class="comment">// 브러시 이미지 크기를 실해상도에 맞춰 비율 보존</span></div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>        }</div>
+<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span> </div>
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>        <span class="keyword">const</span> <span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MediaDurationSeconds</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">StaticCast&lt;float&gt;</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;GetDuration().GetTotalSeconds());</div>
+<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>        <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MediaDurationSeconds</a> &gt; 0.0f)</div>
+<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>        {</div>
+<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">StartDefaultCinematicTimer</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MediaDurationSeconds</a> + 1.0f); <span class="comment">// 길이를 알면 (영상길이+1초) 후 강제 종료 보장(OnEndReached 누락 대비)</span></div>
+<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>        }</div>
+<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>        <span class="keywordflow">else</span></div>
+<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span>        {</div>
+<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">StartDefaultCinematicTimer</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mDefaultCinematicDuration</a>); <span class="comment">// 길이 미상이면 기본 재생 시간으로 폴백 타이머 설정</span></div>
+<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>        }</div>
+<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>    }</div>
+<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>}</div>
+<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span> </div>
+<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span><span class="keywordtype">void</span> UCinematicWidget::HandleCinematicMediaOpenFailed(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FailedUrl</a>)</div>
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>{</div>
+<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UE_LOG</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">LogRD</a>, <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a0e27a8cfb35dfac2dd7e0458f3065087a0eaadb4fcb48a0a0ed7bc9868be9fbaa">Warning</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Intro cinematic media open failed: %s&quot;</span>), *<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FailedUrl</a>);</div>
+<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FinishCinematic</a>(); <span class="comment">// 재생 불가 시 멈추지 않고 곧장 인트로 종료 처리</span></div>
+<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>}</div>
+<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span> </div>
+<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span><span class="keywordtype">void</span> UCinematicWidget::HandleCinematicMediaEndReached()</div>
+<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span>{</div>
+<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FinishCinematicPlayback</a>(); <span class="comment">// 정상 종료 → 마지막 프레임 유지 옵션 적용 후 다음 단계로 전환</span></div>
+<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span>}</div>
+<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span> </div>
+<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span><span class="keywordtype">void</span> UCinematicWidget::FinishCinematicPlayback()</div>
+<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>{</div>
+<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mHoldLastFrameOnFinish</a>)</div>
+<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span>    {</div>
+<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">HoldCinematicLastFrame</a>();</div>
+<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>    }</div>
+<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FinishCinematic</a>();</div>
+<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span>}</div>
+<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span> </div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span><span class="keywordtype">void</span> UCinematicWidget::HoldCinematicLastFrame()</div>
+<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span>{</div>
+<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a> == <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span>    {</div>
+<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span>        <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span>    }</div>
+<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span> </div>
+<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>    <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FTimespan</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Duration</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;GetDuration();</div>
+<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>    <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FTimespan</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FrameSafetyOffset</a> = FTimespan::FromMilliseconds(33);</div>
+<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Duration</a> &gt; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FrameSafetyOffset</a> &amp;&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;SupportsSeeking())</div>
+<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span>    {</div>
+<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;Seek(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Duration</a> - <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FrameSafetyOffset</a>);</div>
+<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>    }</div>
+<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;Pause();</div>
+<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">mCinematicMediaPlayer</a>-&gt;SetRate(0.0f);</div>
+<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>}</div>
+<div class="ttc" id="aCinematicWidget_8h_html"><div class="ttname"><a href="CinematicWidget_8h.html">CinematicWidget.h</a></div><div class="ttdoc">시네마틱 UI 베이스</div></div>
+<div class="ttc" id="aCombatUITypes_8h_html_a0e27a8cfb35dfac2dd7e0458f3065087a0eaadb4fcb48a0a0ed7bc9868be9fbaa"><div class="ttname"><a href="CombatUITypes_8h.html#a0e27a8cfb35dfac2dd7e0458f3065087a0eaadb4fcb48a0a0ed7bc9868be9fbaa">EFloatingLogColorType::Warning</a></div><div class="ttdeci">@ Warning</div></div>
+<div class="ttc" id="aGamePlaySettings_8h_html"><div class="ttname"><a href="GamePlaySettings_8h.html">GamePlaySettings.h</a></div><div class="ttdoc">게임 플레이 연관 설정 객체 정의 헤더</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_ada104807b93ac7cd59dac80d98ba857b"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a></div><div class="ttdeci">int32</div><div class="ttdef"><b>Definition</b> <a href="RoomTransitionSubsystem_8h_source.html#l00021">RoomTransitionSubsystem.h:21</a></div></div>
+<div class="ttc" id="aUITextureLoader_8h_html"><div class="ttname"><a href="UITextureLoader_8h.html">UITextureLoader.h</a></div><div class="ttdoc">UI 미디어 경로 헬퍼</div></div>
+<div class="ttc" id="aclassUGamePlaySettings_html"><div class="ttname"><a href="classUGamePlaySettings.html">UGamePlaySettings</a></div><div class="ttdoc">게임 플레이 연관 설정</div><div class="ttdef"><b>Definition</b> <a href="GamePlaySettings_8h_source.html#l00026">GamePlaySettings.h:27</a></div></div>
+<div class="ttc" id="anamespaceRDUITexture_html_ac4be609d363c2ec733ffb63ad260c15f"><div class="ttname"><a href="namespaceRDUITexture.html#ac4be609d363c2ec733ffb63ad260c15f">RDUITexture::ResolveContentFilePath</a></div><div class="ttdeci">FString ResolveContentFilePath(const FString &amp;RelativeContentPath)</div><div class="ttdoc">mp4 등 raw 미디어의 Content 상대경로를 MediaPlayer가 열 수 있는 디스크 절대경로로 변환한다.</div><div class="ttdef"><b>Definition</b> <a href="UITextureLoader_8cpp_source.html#l00006">UITextureLoader.cpp:6</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_18e329638b0f3372047d81882ea0cdaf.html">UI</a></li><li class="navelem"><a class="el" href="CinematicWidget__Media_8cpp.html">CinematicWidget_Media.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

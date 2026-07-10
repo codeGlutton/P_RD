@@ -1,0 +1,174 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/Component/PassiveComponent/PassiveComponentModel.h 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('PassiveComponentModel_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">PassiveComponentModel.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="PassiveComponentModel_8h.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*****************************************************************/</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;<a class="code" href="RDMinimal_8h.html">RDMinimal.h</a>&quot;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;<a class="code" href="ComponentModel_8h.html">Component/ComponentModel.h</a>&quot;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &quot;PassiveComponentModel.generated.h&quot;</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="keyword">class </span><a class="code hl_class" href="classUTacticalPassive.html">UTacticalPassive</a>;</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="keyword">class </span><a class="code hl_class" href="classUStaticPassiveData.html">UStaticPassiveData</a>;</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span> </div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="comment">// 패시브 추가/제거 알림 (대상 패시브 인스턴스 전달)</span></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno"><a class="line" href="PassiveComponentModel_8h.html#a409cc6f1fffb0176e4aaec09132f9f1c">   18</a></span><a class="code hl_function" href="PassiveComponentModel_8h.html#a409cc6f1fffb0176e4aaec09132f9f1c">DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnPassiveChanged</a>, <a class="code hl_class" href="classUTacticalPassive.html">UTacticalPassive</a>*, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Passive</a>);</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span> </div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UCLASS</a>()</div>
+<div class="foldopen" id="foldopen00032" data-start="{" data-end="};">
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno"><a class="line" href="classUPassiveComponentModel.html">   32</a></span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">P_RD_API</a> <a class="code hl_class" href="classUPassiveComponentModel.html">UPassiveComponentModel</a> : <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">public</a> <a class="code hl_class" href="classUComponentModel.html">UComponentModel</a></div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>{</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GENERATED_BODY</a>()</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span> </div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> Initialize() <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> Uninitialize() <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span> </div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    <a class="code hl_class" href="classUTacticalPassive.html">UTacticalPassive</a>* AddPassive(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSubclassOf&lt;UTacticalPassive&gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PassiveClass</a>);</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>    <a class="code hl_class" href="classUTacticalPassive.html">UTacticalPassive</a>* AddPassiveFromData(<a class="code hl_class" href="classUStaticPassiveData.html">UStaticPassiveData</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">StaticData</a>);</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span> </div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    <span class="keywordtype">bool</span> RemovePassive(<a class="code hl_class" href="classUTacticalPassive.html">UTacticalPassive</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Passive</a>);</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span> </div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;UTacticalPassive*&gt;</a> GetPassivesByTiming(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGameplayTag</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TriggerTiming</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span> </div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>    <span class="comment">// 보유한 패시브 전체 반환</span></div>
+<div class="foldopen" id="foldopen00076" data-start="{" data-end="}">
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno"><a class="line" href="classUPassiveComponentModel.html#ad9382d01b8a65e7db5d796ed2a35f831">   76</a></span>    <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;TObjectPtr&lt;UTacticalPassive&gt;</a>&gt;&amp; <a class="code hl_function" href="classUPassiveComponentModel.html#ad9382d01b8a65e7db5d796ed2a35f831">GetPassives</a>()<span class="keyword"> const </span></div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="keyword">    </span>{ </div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>        <span class="keywordflow">return</span> mPassives; </div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    }</div>
+</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span> </div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    <span class="comment">// 패시브 추가 알림</span></div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno"><a class="line" href="classUPassiveComponentModel.html#a58bf3abff3ea9e9536642d0081ac1664">   83</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnPassiveChanged</a> <a class="code hl_variable" href="classUPassiveComponentModel.html#a58bf3abff3ea9e9536642d0081ac1664">OnPassiveAdded</a>;</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    <span class="comment">// 패시브 제거 알림</span></div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno"><a class="line" href="classUPassiveComponentModel.html#a935418aa1432ceb97580203bed062f94">   85</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnPassiveChanged</a> <a class="code hl_variable" href="classUPassiveComponentModel.html#a935418aa1432ceb97580203bed062f94">OnPassiveRemoved</a>;</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span> </div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>    <span class="comment">// 보유한 패시브 인스턴스 목록</span></div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UPROPERTY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VisibleAnywhere</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">meta</a> = (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DisplayName</a> = <span class="stringliteral">&quot;Passives&quot;</span>))</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno"><a class="line" href="classUPassiveComponentModel.html#a1f9949e63a7860eb39c2385949758beb">   90</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="code hl_class" href="classUTacticalPassive.html">UTacticalPassive</a>&gt;&gt; mPassives;</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>};</div>
+</div>
+<div class="ttc" id="aComponentModel_8h_html"><div class="ttname"><a href="ComponentModel_8h.html">ComponentModel.h</a></div><div class="ttdoc">보드 액터에 부착되는 컴포넌트 데이터 모델 클래스 정의 헤더</div></div>
+<div class="ttc" id="aPassiveComponentModel_8h_html_a409cc6f1fffb0176e4aaec09132f9f1c"><div class="ttname"><a href="PassiveComponentModel_8h.html#a409cc6f1fffb0176e4aaec09132f9f1c">DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam</a></div><div class="ttdeci">DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPassiveChanged, UTacticalPassive *, Passive)</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aRDMinimal_8h_html"><div class="ttname"><a href="RDMinimal_8h.html">RDMinimal.h</a></div><div class="ttdoc">RD 프로젝트 전 영역에서 사용되는 최소한의 포함 헤더</div></div>
+<div class="ttc" id="aclassUComponentModel_html"><div class="ttname"><a href="classUComponentModel.html">UComponentModel</a></div><div class="ttdoc">액터에 부착되는 컴포넌트 데이터 모델 클래스</div><div class="ttdef"><b>Definition</b> <a href="ComponentModel_8h_source.html#l00021">ComponentModel.h:22</a></div></div>
+<div class="ttc" id="aclassUPassiveComponentModel_html"><div class="ttname"><a href="classUPassiveComponentModel.html">UPassiveComponentModel</a></div><div class="ttdoc">패시브 보유 컴포넌트 모델</div><div class="ttdef"><b>Definition</b> <a href="PassiveComponentModel_8h_source.html#l00032">PassiveComponentModel.h:33</a></div></div>
+<div class="ttc" id="aclassUPassiveComponentModel_html_a58bf3abff3ea9e9536642d0081ac1664"><div class="ttname"><a href="classUPassiveComponentModel.html#a58bf3abff3ea9e9536642d0081ac1664">UPassiveComponentModel::OnPassiveAdded</a></div><div class="ttdeci">FOnPassiveChanged OnPassiveAdded</div><div class="ttdef"><b>Definition</b> <a href="PassiveComponentModel_8h_source.html#l00083">PassiveComponentModel.h:83</a></div></div>
+<div class="ttc" id="aclassUPassiveComponentModel_html_a935418aa1432ceb97580203bed062f94"><div class="ttname"><a href="classUPassiveComponentModel.html#a935418aa1432ceb97580203bed062f94">UPassiveComponentModel::OnPassiveRemoved</a></div><div class="ttdeci">FOnPassiveChanged OnPassiveRemoved</div><div class="ttdef"><b>Definition</b> <a href="PassiveComponentModel_8h_source.html#l00085">PassiveComponentModel.h:85</a></div></div>
+<div class="ttc" id="aclassUPassiveComponentModel_html_ad9382d01b8a65e7db5d796ed2a35f831"><div class="ttname"><a href="classUPassiveComponentModel.html#ad9382d01b8a65e7db5d796ed2a35f831">UPassiveComponentModel::GetPassives</a></div><div class="ttdeci">const TArray&lt; TObjectPtr&lt; UTacticalPassive &gt; &gt; &amp; GetPassives() const</div><div class="ttdef"><b>Definition</b> <a href="PassiveComponentModel_8h_source.html#l00076">PassiveComponentModel.h:76</a></div></div>
+<div class="ttc" id="aclassUStaticPassiveData_html"><div class="ttname"><a href="classUStaticPassiveData.html">UStaticPassiveData</a></div><div class="ttdef"><b>Definition</b> <a href="StaticPassiveData_8h_source.html#l00045">StaticPassiveData.h:46</a></div></div>
+<div class="ttc" id="aclassUTacticalPassive_html"><div class="ttname"><a href="classUTacticalPassive.html">UTacticalPassive</a></div><div class="ttdoc">패시브 베이스 클래스</div><div class="ttdef"><b>Definition</b> <a href="TacticalPassive_8h_source.html#l00034">TacticalPassive.h:35</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_6cd1626ba92a5a6057b71e6a2a6ef174.html">Component</a></li><li class="navelem"><a class="el" href="dir_c880e79caf70f995a821c054ee8ee3de.html">PassiveComponent</a></li><li class="navelem"><a class="el" href="PassiveComponentModel_8h.html">PassiveComponentModel.h</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

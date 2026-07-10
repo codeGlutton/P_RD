@@ -1,14 +1,14 @@
 var classUPlayerUnitPersistData =
 [
-    [ "BindPlayerUnitEvent", "classUPlayerUnitPersistData.html#a89f3631616153539b626cc22f29b4b14", null ],
+    [ "BindPlayerUnitEvent", "classUPlayerUnitPersistData.html#ae5b82886e84878c7cfee4b9e84712620", null ],
     [ "GetDiceIds", "classUPlayerUnitPersistData.html#a4da37890ca8e399297851a390ab01e20", null ],
     [ "GetDifficulty", "classUPlayerUnitPersistData.html#a928b7a3bdb9f6f7a6a2a6978ab62092f", null ],
     [ "GetEquipmentIds", "classUPlayerUnitPersistData.html#a4baaff7f5a70e707496d69c8e1e50ab9", null ],
     [ "GetPlayerLevel", "classUPlayerUnitPersistData.html#aae34d9536507706e59861eabfd06040e", null ],
     [ "GetPlayerUnitId", "classUPlayerUnitPersistData.html#a21adb042512cd50b6efd9c2f7642ca51", null ],
     [ "GetSkillIds", "classUPlayerUnitPersistData.html#acf132f27b7aa119a53f15f256c56d5a1", null ],
-    [ "RegisterPlayerUnit", "classUPlayerUnitPersistData.html#a4ecfac35d5f9098e7ec5c8c49748153e", null ],
-    [ "SyncPlayerPersistData", "classUPlayerUnitPersistData.html#ab94a323868a16846e97baeb8ce910766", null ],
+    [ "RegisterPlayerUnit", "classUPlayerUnitPersistData.html#ad3f9e455c5bd60ad2b8760cc0cc2cd23", null ],
+    [ "SyncPlayerPersistData", "classUPlayerUnitPersistData.html#a9f50e55c9f6074b116837fa5c212ead4", null ],
     [ "mDiceIds", "classUPlayerUnitPersistData.html#a474056e23a89eb7a93405cdc6ea90a7b", null ],
     [ "mDifficulty", "classUPlayerUnitPersistData.html#ae83912fceadd0765d2416ea9b16b5d27", null ],
     [ "mEquipmentIds", "classUPlayerUnitPersistData.html#abd458210b1e9e372141d9bb80e061d24", null ],

@@ -1,0 +1,145 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/TAS/Passive/TacticalPassive_AddStat.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('TacticalPassive__AddStat_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">TacticalPassive_AddStat.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="TacticalPassive__AddStat_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*****************************************************************/</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &quot;<a class="code" href="TacticalPassive__AddStat_8h.html">TAS/Passive/TacticalPassive_AddStat.h</a>&quot;</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &quot;<a class="code" href="TacticalEffect_8h.html">TAS/Effect/TacticalEffect.h</a>&quot;</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;<a class="code" href="BoardCombatTarget_8h.html">Actor/BoardActor/BoardCombatTarget.h</a>&quot;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;<a class="code" href="StaticPassiveData_8h.html">DataAsset/PassiveData/StaticPassiveData.h</a>&quot;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
+<div class="foldopen" id="foldopen00013" data-start="{" data-end="}">
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno"><a class="line" href="classUTacticalPassive__AddStat.html#a718d05be2a669de071098e478ee97e5e">   13</a></span><span class="keywordtype">bool</span> <a class="code hl_variable" href="classUTacticalPassive.html#a9d2e223c13db554cb052008abefa4b0b">UTacticalPassive_AddStat::EvaluateActivate</a>(</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    <span class="keyword">const</span> <a class="code hl_struct" href="structFPassiveActivateContext.html">FPassiveActivateContext</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Ctx</a>,</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct&lt;FDynamicPassiveData&gt;</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PassiveState</a>,</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>    <span class="keywordtype">float</span>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OutMagnitude</a>)</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>{</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    <span class="comment">// 데이터/이펙트가 없으면 적용 안 함 (Ctx/PassiveState 미사용 - 무상태)</span></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classUTacticalPassive.html#a57a643c0ecaacb70f39fae43e093b836">mStaticData</a> == <span class="keyword">nullptr</span> || <a class="code hl_variable" href="classUTacticalPassive.html#a53bdb9fad72ad4b8eae028c3563f401c">mEffectClass</a> == <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    {</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    }</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span> </div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    <span class="comment">// DA의 매그니튜드 값을 그대로 사용</span></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OutMagnitude</a> = <a class="code hl_variable" href="classUTacticalPassive.html#a57a643c0ecaacb70f39fae43e093b836">mStaticData</a>-&gt;mMagnitude;</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span> </div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    <span class="comment">// 적용한다고 회신</span></div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>}</div>
+</div>
+<div class="ttc" id="aBoardCombatTarget_8h_html"><div class="ttname"><a href="BoardCombatTarget_8h.html">BoardCombatTarget.h</a></div><div class="ttdoc">SRPG 타일에 타격 가능한 모델 인터페이스 정의 헤더</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aStaticPassiveData_8h_html"><div class="ttname"><a href="StaticPassiveData_8h.html">StaticPassiveData.h</a></div></div>
+<div class="ttc" id="aTacticalEffect_8h_html"><div class="ttname"><a href="TacticalEffect_8h.html">TacticalEffect.h</a></div><div class="ttdoc">속성값 및 태그를 변경하는 객체 정의 헤더</div></div>
+<div class="ttc" id="aTacticalPassive__AddStat_8h_html"><div class="ttname"><a href="TacticalPassive__AddStat_8h.html">TacticalPassive_AddStat.h</a></div><div class="ttdoc">데이터 구동 고정 스탯 가산 패시브 (무상태)</div></div>
+<div class="ttc" id="aclassUTacticalPassive_html_a53bdb9fad72ad4b8eae028c3563f401c"><div class="ttname"><a href="classUTacticalPassive.html#a53bdb9fad72ad4b8eae028c3563f401c">UTacticalPassive::mEffectClass</a></div><div class="ttdeci">TSubclassOf&lt; UTacticalEffect &gt; mEffectClass</div><div class="ttdoc">이 패시브가 적용할 이펙트</div><div class="ttdef"><b>Definition</b> <a href="TacticalPassive_8h_source.html#l00186">TacticalPassive.h:186</a></div></div>
+<div class="ttc" id="aclassUTacticalPassive_html_a57a643c0ecaacb70f39fae43e093b836"><div class="ttname"><a href="classUTacticalPassive.html#a57a643c0ecaacb70f39fae43e093b836">UTacticalPassive::mStaticData</a></div><div class="ttdeci">TObjectPtr&lt; UStaticPassiveData &gt; mStaticData</div><div class="ttdoc">이 패시브의 정적 설정 데이터 (데이터 구동 시 주입)</div><div class="ttdef"><b>Definition</b> <a href="TacticalPassive_8h_source.html#l00234">TacticalPassive.h:234</a></div></div>
+<div class="ttc" id="aclassUTacticalPassive_html_a9d2e223c13db554cb052008abefa4b0b"><div class="ttname"><a href="classUTacticalPassive.html#a9d2e223c13db554cb052008abefa4b0b">UTacticalPassive::EvaluateActivate</a></div><div class="ttdeci">virtual bool EvaluateActivate(IN const FPassiveActivateContext &amp;Ctx, IN OUT TInstancedStruct&lt; FDynamicPassiveData &gt; &amp;PassiveState, OUT float &amp;OutMagnitude) PURE_VIRTUAL(UTacticalPassive</div><div class="ttdoc">발동 시점에서 적용 여부 결정 + 다음 상태 계산 + 기여값 산출</div><div class="ttdef"><b>Definition</b> <a href="TacticalPassive_8h_source.html#l00131">TacticalPassive.h:131</a></div></div>
+<div class="ttc" id="astructFPassiveActivateContext_html"><div class="ttname"><a href="structFPassiveActivateContext.html">FPassiveActivateContext</a></div><div class="ttdoc">패시브 계산 입력 컨텍스트</div><div class="ttdef"><b>Definition</b> <a href="PassiveActivateContext_8h_source.html#l00025">PassiveActivateContext.h:26</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_2931332fe30aa418bc02be414a0905e5.html">TAS</a></li><li class="navelem"><a class="el" href="dir_9fe6ca4ae197b06c813a876a5075299e.html">Passive</a></li><li class="navelem"><a class="el" href="TacticalPassive__AddStat_8cpp.html">TacticalPassive_AddStat.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

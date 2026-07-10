@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['초기_20턴_20순서_20배치는_20어떻게_20처리하는가_0',['Q 초기 턴 순서 배치는 어떻게 처리하는가?',['../srpg_framework_page.html#srpg_framework_subsystem_step1',1,'']]]
+  ['김준형_20측_20연결_20지점_20—_20무엇을_20어디에_20물릴지_0',['D. 게임플레이(모호재/김준형) 측 연결 지점 — 무엇을 어디에 물릴지',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2UI__API__CONTRACT.html#autotoc_md34',1,'']]]
 ];

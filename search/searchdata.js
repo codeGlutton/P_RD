@@ -1,17 +1,17 @@
 var indexSectionsWithContent =
 {
-  0: "abcdefghiklmnopqrstuvw~객검공단대매및배사삭상생수순스시싱액어예있종처초추큐태턴프필항확흐",
+  0: "12345abcdefghiklmnopqrstuvwz~—→↔갈객건검것게결경계공관구그기김누다단대데도동두로맞매메모무물뭘미및박발배범보뷰비빌사삭상생소수순스시싱아안알액어연예요의이인일있전정종줘지처초추측컨컴큐태턴통파프필하한합항화확흐💡🔄",
   1: "afitu",
-  2: "acdeirsu",
-  3: "abcdefgiklprstuvw",
-  4: "abcdefghilmnoprstuvw~",
-  5: "cdehimnoprstuv",
-  6: "st",
+  2: "acdeiorstu",
+  3: "abcdefgilmoprstuvw",
+  4: "abcdefghilmnoprstuvwz~",
+  5: "abcdeghilmnoprstuvz",
+  6: "cit",
   7: "et",
-  8: "abcdefgiklmnoprstuw",
-  9: "afitu",
-  10: "abd",
-  11: "agpst매태프흐"
+  8: "abcdefghiklmnopqrstuvw",
+  9: "abefgiotu",
+  10: "bdlrt",
+  11: "agmpstuv↔게경계매보전태프화흐"
 };
 
 var indexSectionNames =

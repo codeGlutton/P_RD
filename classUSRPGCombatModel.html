@@ -1,0 +1,1977 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: USRPGCombatModel 클래스 참조</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('classUSRPGCombatModel.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Public 멤버 함수</a> &#124;
+<a href="#pub-attribs">Public 속성</a> &#124;
+<a href="#pro-methods">Protected 멤버 함수</a> &#124;
+<a href="#pro-attribs">Protected 속성</a> &#124;
+<a href="classUSRPGCombatModel-members.html">모든 멤버 목록</a>  </div>
+  <div class="headertitle"><div class="title">USRPGCombatModel 클래스 참조</div></div>
+</div><!--header-->
+<div class="contents">
+
+<p>SRPG 턴제 전투를 제어하기 위한 서브 시스템 모델  
+ <a href="classUSRPGCombatModel.html#details">더 자세히 ...</a></p>
+<div class="dynheader">
+USRPGCombatModel에 대한 상속 다이어그램 : </div>
+<div class="dyncontent">
+ <div class="center">
+  <img src="classUSRPGCombatModel.png" usemap="#USRPGCombatModel_map" alt=""/>
+  <map id="USRPGCombatModel_map" name="USRPGCombatModel_map">
+<area href="classUObjectModel.html" title="시뮬레이션 데이터 모델의 최상위 인터페이스" alt="UObjectModel" shape="rect" coords="0,56,136,80"/>
+  </map>
+</div></div>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Public 멤버 함수</h2></td></tr>
+<tr class="memitem:afab5a3d7b41b22f0be4d29b96afb661e" id="r_afab5a3d7b41b22f0be4d29b96afb661e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#afab5a3d7b41b22f0be4d29b96afb661e">Serialize</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FArchive</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Ar</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
+<tr class="separator:afab5a3d7b41b22f0be4d29b96afb661e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a50243f0aef6ed03dc36d919247602487" id="r_a50243f0aef6ed03dc36d919247602487"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a50243f0aef6ed03dc36d919247602487">Tick</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DeltaTime</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
+<tr class="separator:a50243f0aef6ed03dc36d919247602487"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26bb83456bd202531ba6bb686d6511eb" id="r_a26bb83456bd202531ba6bb686d6511eb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a26bb83456bd202531ba6bb686d6511eb">IsTickable</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
+<tr class="separator:a26bb83456bd202531ba6bb686d6511eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a59ae3b08aab1944b37dfe55d834b8b6f" id="r_a59ae3b08aab1944b37dfe55d834b8b6f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TStatId</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a59ae3b08aab1944b37dfe55d834b8b6f">GetStatId</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
+<tr class="separator:a59ae3b08aab1944b37dfe55d834b8b6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4989f9610a9712f26049c43160826cfa" id="r_a4989f9610a9712f26049c43160826cfa"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a4989f9610a9712f26049c43160826cfa">InitCombat</a> (<a class="el" href="classUStaticCombatRoomSpawnData.html">UStaticCombatRoomSpawnData</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RoomSpawnData</a>, <a class="el" href="classUUnitModel.html">UUnitModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PlayerUnit</a>)</td></tr>
+<tr class="separator:a4989f9610a9712f26049c43160826cfa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4a5213ba8b27688e32b7791c34b3124c" id="r_a4a5213ba8b27688e32b7791c34b3124c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a4a5213ba8b27688e32b7791c34b3124c">BeginCombat</a> ()</td></tr>
+<tr class="separator:a4a5213ba8b27688e32b7791c34b3124c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa5c3c2fd1b8843ca4658b425fbfa04cf" id="r_aa5c3c2fd1b8843ca4658b425fbfa04cf"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#aa5c3c2fd1b8843ca4658b425fbfa04cf">EndCombat</a> ()</td></tr>
+<tr class="separator:aa5c3c2fd1b8843ca4658b425fbfa04cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab94ce5bdf4f46234cc6dc7a8e98b744d" id="r_ab94ce5bdf4f46234cc6dc7a8e98b744d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#ab94ce5bdf4f46234cc6dc7a8e98b744d">EvaluateCombatStates</a> ()</td></tr>
+<tr class="separator:ab94ce5bdf4f46234cc6dc7a8e98b744d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0d678ce7fc68b429d6235b559117473e" id="r_a0d678ce7fc68b429d6235b559117473e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a0d678ce7fc68b429d6235b559117473e">OnEndCurrentTurn</a> (<a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TurnContext</a>, <a class="el" href="SRPGFrameworkType_8h.html#abccb523bb2e60227f32f65436247eb08">ESRPGTurnResult</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TurnResult</a>)</td></tr>
+<tr class="separator:a0d678ce7fc68b429d6235b559117473e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9fcf99041218c5efede7f76fec92c273" id="r_a9fcf99041218c5efede7f76fec92c273"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a9fcf99041218c5efede7f76fec92c273">RegisterTurn</a> (<a class="el" href="classUUnitModel.html">UUnitModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Owner</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">LifeCount</a>=<a class="el" href="classUSRPGTurnContext.html#a949bb21600c30ff8dd859b2726b459db">USRPGTurnContext::PERMENENT_TURN</a>)</td></tr>
+<tr class="separator:a9fcf99041218c5efede7f76fec92c273"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a99b97000845a41e7539f8cf989afc429" id="r_a99b97000845a41e7539f8cf989afc429"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a99b97000845a41e7539f8cf989afc429">RegisterEnemyUnit</a> (<a class="el" href="structFEnemyUnitPlacementData.html">FEnemyUnitPlacementData</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EnemyPlacementData</a>)</td></tr>
+<tr class="separator:a99b97000845a41e7539f8cf989afc429"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afc70c4bdf54696dbd541d783904c035b" id="r_afc70c4bdf54696dbd541d783904c035b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#afc70c4bdf54696dbd541d783904c035b">RegisterObstacle</a> (<a class="el" href="structFObstaclePlacementData.html">FObstaclePlacementData</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ObstaclePlacementDatas</a>)</td></tr>
+<tr class="separator:afc70c4bdf54696dbd541d783904c035b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af315eed5e402eaf8f4416ee877f0b666" id="r_af315eed5e402eaf8f4416ee877f0b666"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#af315eed5e402eaf8f4416ee877f0b666">UnregisterUnit</a> (<a class="el" href="classUUnitModel.html">UUnitModel</a> *<a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3a19c562a36aeb455d09534f93b4f5236f">Unit</a>)</td></tr>
+<tr class="separator:af315eed5e402eaf8f4416ee877f0b666"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a906fc2c67403edd7f5d29119c0a33db7" id="r_a906fc2c67403edd7f5d29119c0a33db7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a906fc2c67403edd7f5d29119c0a33db7">UnregisterObstacle</a> (<a class="el" href="classUBoardActorModel.html">UBoardActorModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Obstcle</a>)</td></tr>
+<tr class="separator:a906fc2c67403edd7f5d29119c0a33db7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a907361663be01b881f02c268caf728fd" id="r_a907361663be01b881f02c268caf728fd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a907361663be01b881f02c268caf728fd">PushAction</a> (<a class="el" href="classUSRPGAction.html">USRPGAction</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Action</a>)</td></tr>
+<tr class="separator:a907361663be01b881f02c268caf728fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a695f59499a343d6b293d6aef58c74751" id="r_a695f59499a343d6b293d6aef58c74751"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a695f59499a343d6b293d6aef58c74751">GetCurrentTurnContext</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a695f59499a343d6b293d6aef58c74751"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1ab172a26e88821ee0b379864428b2f3" id="r_a1ab172a26e88821ee0b379864428b2f3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a1ab172a26e88821ee0b379864428b2f3">GetTurnContext</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUUnitModel.html">UUnitModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Owner</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a1ab172a26e88821ee0b379864428b2f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5911a4ef50f237a5e1f492fa882f8306" id="r_a5911a4ef50f237a5e1f492fa882f8306"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a5911a4ef50f237a5e1f492fa882f8306">GetTurnContexts</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUUnitModel.html">UUnitModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Owner</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a5911a4ef50f237a5e1f492fa882f8306"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa2d0a5b744512c93a5c6182ea30d43be" id="r_aa2d0a5b744512c93a5c6182ea30d43be"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#aa2d0a5b744512c93a5c6182ea30d43be">GetOrderedTurnContexts</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:aa2d0a5b744512c93a5c6182ea30d43be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6d67b257ee0b56095666f2d2cfda4bf8" id="r_a6d67b257ee0b56095666f2d2cfda4bf8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classUTileMapModel.html">UTileMapModel</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a6d67b257ee0b56095666f2d2cfda4bf8">GetTileMap</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a6d67b257ee0b56095666f2d2cfda4bf8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1a512a541a8b0f207d829a879cd30a63" id="r_a1a512a541a8b0f207d829a879cd30a63"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classUUnitModel.html">UUnitModel</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a1a512a541a8b0f207d829a879cd30a63">GetPlayerUnit</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a1a512a541a8b0f207d829a879cd30a63"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace805e65e7430926f6ac5a6110f1b2a6" id="r_ace805e65e7430926f6ac5a6110f1b2a6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="classUUnitModel.html">UUnitModel</a> &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#ace805e65e7430926f6ac5a6110f1b2a6">GetUnits</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:ace805e65e7430926f6ac5a6110f1b2a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acbb67034ed63fe47cdec58daf2e47cf2" id="r_acbb67034ed63fe47cdec58daf2e47cf2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="classUBoardActorModel.html">UBoardActorModel</a> &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#acbb67034ed63fe47cdec58daf2e47cf2">GetObstacles</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:acbb67034ed63fe47cdec58daf2e47cf2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a79dbfa7826942074039a459b9338a786" id="r_a79dbfa7826942074039a459b9338a786"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a79dbfa7826942074039a459b9338a786">GetRoundCount</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a79dbfa7826942074039a459b9338a786"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a619b09ce043b0592f1ddab6f3ddd4a20" id="r_a619b09ce043b0592f1ddab6f3ddd4a20"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a619b09ce043b0592f1ddab6f3ddd4a20">ForcedAdvanceUntilNextAction</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt; <a class="el" href="structFSRPGCommand.html">FSRPGCommand</a> &gt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NextCommand</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NeedEndCurrentAction</a>)</td></tr>
+<tr class="separator:a619b09ce043b0592f1ddab6f3ddd4a20"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a919bd5c35799b385b35d7a56b2fb4237" id="r_a919bd5c35799b385b35d7a56b2fb4237"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a919bd5c35799b385b35d7a56b2fb4237">ForcedAdvanceUntilNextPlayerTurn</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NeedEndCurrentAction</a>)</td></tr>
+<tr class="separator:a919bd5c35799b385b35d7a56b2fb4237"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_classUObjectModel"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classUObjectModel')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classUObjectModel.html">UObjectModel</a>(으)로부터 상속된 Public 멤버 함수</td></tr>
+<tr class="memitem:a70d0e1b06e1aef4b0d5193e742b77c4b inherit pub_methods_classUObjectModel" id="r_a70d0e1b06e1aef4b0d5193e742b77c4b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUObjectModel.html#a70d0e1b06e1aef4b0d5193e742b77c4b">Initialize</a> ()</td></tr>
+<tr class="separator:a70d0e1b06e1aef4b0d5193e742b77c4b inherit pub_methods_classUObjectModel"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0d2f6b590764a1fbb09a1175b9e03d8 inherit pub_methods_classUObjectModel" id="r_ad0d2f6b590764a1fbb09a1175b9e03d8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUObjectModel.html#ad0d2f6b590764a1fbb09a1175b9e03d8">Uninitialize</a> ()</td></tr>
+<tr class="separator:ad0d2f6b590764a1fbb09a1175b9e03d8 inherit pub_methods_classUObjectModel"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac5c1edc6e647d1029ff2b1ca7e20c877 inherit pub_methods_classUObjectModel" id="r_ac5c1edc6e647d1029ff2b1ca7e20c877"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUObjectModel.html#ac5c1edc6e647d1029ff2b1ca7e20c877">PostBindView</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TScriptInterface</a>&lt; <a class="el" href="classIObjectView.html">IObjectView</a> &gt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">View</a>)</td></tr>
+<tr class="separator:ac5c1edc6e647d1029ff2b1ca7e20c877 inherit pub_methods_classUObjectModel"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3bd7cf1ad5ad3142935bbd5408620e76 inherit pub_methods_classUObjectModel" id="r_a3bd7cf1ad5ad3142935bbd5408620e76"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUObjectModel.html#a3bd7cf1ad5ad3142935bbd5408620e76">FinishCreating</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FTransform</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ViewTransform</a>=FTransform::Identity)</td></tr>
+<tr class="separator:a3bd7cf1ad5ad3142935bbd5408620e76 inherit pub_methods_classUObjectModel"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a11bdf0c1c1ee3c40421c856577aaaa47 inherit pub_methods_classUObjectModel" id="r_a11bdf0c1c1ee3c40421c856577aaaa47"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUObjectModel.html#a11bdf0c1c1ee3c40421c856577aaaa47">Destroy</a> ()</td></tr>
+<tr class="separator:a11bdf0c1c1ee3c40421c856577aaaa47 inherit pub_methods_classUObjectModel"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa1d4d4a3ea66fd0fd7f4344ae28e328d inherit pub_methods_classUObjectModel" id="r_aa1d4d4a3ea66fd0fd7f4344ae28e328d"><td class="memTemplParams" colspan="2">template&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">typename</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">T</a> &gt; </td></tr>
+<tr class="memitem:aa1d4d4a3ea66fd0fd7f4344ae28e328d inherit pub_methods_classUObjectModel"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">T</a> *&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classUObjectModel.html#aa1d4d4a3ea66fd0fd7f4344ae28e328d">GetView</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:aa1d4d4a3ea66fd0fd7f4344ae28e328d inherit pub_methods_classUObjectModel"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85fdd82fe3ecb556f19338b9ecb2abd8 inherit pub_methods_classUObjectModel" id="r_a85fdd82fe3ecb556f19338b9ecb2abd8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIObjectView.html">IObjectView</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUObjectModel.html#a85fdd82fe3ecb556f19338b9ecb2abd8">GetView</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a85fdd82fe3ecb556f19338b9ecb2abd8 inherit pub_methods_classUObjectModel"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e50e7079ee175afb26af92641d179cc inherit pub_methods_classUObjectModel" id="r_a2e50e7079ee175afb26af92641d179cc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUObjectModel.html#a2e50e7079ee175afb26af92641d179cc">GetModelId</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a2e50e7079ee175afb26af92641d179cc inherit pub_methods_classUObjectModel"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
+Public 속성</h2></td></tr>
+<tr class="memitem:a6db4f320e4b67b2308d1f64eb8904e45" id="r_a6db4f320e4b67b2308d1f64eb8904e45"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnRegisterUnitUI</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a6db4f320e4b67b2308d1f64eb8904e45">OnRegisterUnitUI</a></td></tr>
+<tr class="memdesc:a6db4f320e4b67b2308d1f64eb8904e45"><td class="mdescLeft">&#160;</td><td class="mdescRight">유닛 등록 시 알림 대리자  <br /></td></tr>
+<tr class="separator:a6db4f320e4b67b2308d1f64eb8904e45"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac37d90a0ab0d076b9f3af06bb81806d6" id="r_ac37d90a0ab0d076b9f3af06bb81806d6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnUnregisterUnitUI</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#ac37d90a0ab0d076b9f3af06bb81806d6">OnUnregisterUnitUI</a></td></tr>
+<tr class="memdesc:ac37d90a0ab0d076b9f3af06bb81806d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">유닛 해제 시 알림 대리자  <br /></td></tr>
+<tr class="separator:ac37d90a0ab0d076b9f3af06bb81806d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afaa5b63cee3d856c1b4215444d6bbf2c" id="r_afaa5b63cee3d856c1b4215444d6bbf2c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnRegisterObstacleUI</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#afaa5b63cee3d856c1b4215444d6bbf2c">OnRegisterObstacleUI</a></td></tr>
+<tr class="memdesc:afaa5b63cee3d856c1b4215444d6bbf2c"><td class="mdescLeft">&#160;</td><td class="mdescRight">장애물 등록 시 알림 대리자  <br /></td></tr>
+<tr class="separator:afaa5b63cee3d856c1b4215444d6bbf2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e691d8d51364f0e020f199154fd66ee" id="r_a3e691d8d51364f0e020f199154fd66ee"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnUnregisterObstacleUI</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a3e691d8d51364f0e020f199154fd66ee">OnUnregisterObstacleUI</a></td></tr>
+<tr class="memdesc:a3e691d8d51364f0e020f199154fd66ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">장애물 해제 시 알림 대리자  <br /></td></tr>
+<tr class="separator:a3e691d8d51364f0e020f199154fd66ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aef3555adb7c9f89f9df009aac33c6f35" id="r_aef3555adb7c9f89f9df009aac33c6f35"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnShowDicePanelAnyTurnUI</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#aef3555adb7c9f89f9df009aac33c6f35">OnShowDicePanelAnyTurnUI</a></td></tr>
+<tr class="memdesc:aef3555adb7c9f89f9df009aac33c6f35"><td class="mdescLeft">&#160;</td><td class="mdescRight">주사위 굴리기 패널 실행 타이밍 대리자  <br /></td></tr>
+<tr class="separator:aef3555adb7c9f89f9df009aac33c6f35"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a72b068349985e374f671fce7977b0226" id="r_a72b068349985e374f671fce7977b0226"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnBeginCombatUI</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a72b068349985e374f671fce7977b0226">OnBeginCombatUI</a></td></tr>
+<tr class="memdesc:a72b068349985e374f671fce7977b0226"><td class="mdescLeft">&#160;</td><td class="mdescRight">전투 시작 시 뜰 UI  <br /></td></tr>
+<tr class="separator:a72b068349985e374f671fce7977b0226"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc6c4fdd19c742f0da7530b1562bfd00" id="r_abc6c4fdd19c742f0da7530b1562bfd00"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndCombatUI</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#abc6c4fdd19c742f0da7530b1562bfd00">OnEndCombatUI</a></td></tr>
+<tr class="memdesc:abc6c4fdd19c742f0da7530b1562bfd00"><td class="mdescLeft">&#160;</td><td class="mdescRight">전투 종료 시 뜰 UI  <br /></td></tr>
+<tr class="separator:abc6c4fdd19c742f0da7530b1562bfd00"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a958f1ddd6673583c4fdaad9403076c31" id="r_a958f1ddd6673583c4fdaad9403076c31"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnBeginAnyTurnUI</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a958f1ddd6673583c4fdaad9403076c31">OnBeginAnyTurnUI</a></td></tr>
+<tr class="memdesc:a958f1ddd6673583c4fdaad9403076c31"><td class="mdescLeft">&#160;</td><td class="mdescRight">턴 시작 시 뜰 UI  <br /></td></tr>
+<tr class="separator:a958f1ddd6673583c4fdaad9403076c31"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afdb0d11d0142815ca2e10de2072e686b" id="r_afdb0d11d0142815ca2e10de2072e686b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnBeginAnyRoundUI</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#afdb0d11d0142815ca2e10de2072e686b">OnBeginAnyRoundUI</a></td></tr>
+<tr class="memdesc:afdb0d11d0142815ca2e10de2072e686b"><td class="mdescLeft">&#160;</td><td class="mdescRight">라운드 시작 시 뜰 UI (라운드당 1회)  <br /></td></tr>
+<tr class="separator:afdb0d11d0142815ca2e10de2072e686b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad9b46efb00bd0b9ee321bb87d4639524" id="r_ad9b46efb00bd0b9ee321bb87d4639524"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndAnyTurnUI</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#ad9b46efb00bd0b9ee321bb87d4639524">OnEndAnyTurnUI</a></td></tr>
+<tr class="memdesc:ad9b46efb00bd0b9ee321bb87d4639524"><td class="mdescLeft">&#160;</td><td class="mdescRight">턴 종료 시 뜰 UI  <br /></td></tr>
+<tr class="separator:ad9b46efb00bd0b9ee321bb87d4639524"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc75d5cda18fa383119a4af966d02def" id="r_abc75d5cda18fa383119a4af966d02def"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnBeginAnyTurnActionUI</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#abc75d5cda18fa383119a4af966d02def">OnBeginAnyTurnActionUI</a></td></tr>
+<tr class="memdesc:abc75d5cda18fa383119a4af966d02def"><td class="mdescLeft">&#160;</td><td class="mdescRight">액션 시작 시 뜰 UI  <br /></td></tr>
+<tr class="separator:abc75d5cda18fa383119a4af966d02def"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8a28ac9b27bc5c1e9202a0f9222fafde" id="r_a8a28ac9b27bc5c1e9202a0f9222fafde"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndAnyTurnActionUI</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a8a28ac9b27bc5c1e9202a0f9222fafde">OnEndAnyTurnActionUI</a></td></tr>
+<tr class="memdesc:a8a28ac9b27bc5c1e9202a0f9222fafde"><td class="mdescLeft">&#160;</td><td class="mdescRight">액션 종료 시 뜰 UI  <br /></td></tr>
+<tr class="separator:a8a28ac9b27bc5c1e9202a0f9222fafde"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a52d5cc0bae75781068a5da85402051eb" id="r_a52d5cc0bae75781068a5da85402051eb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnZoomInToActorsUI</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a52d5cc0bae75781068a5da85402051eb">OnZoomInToActorsUI</a></td></tr>
+<tr class="memdesc:a52d5cc0bae75781068a5da85402051eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">액터들 줌인 요청 시  <br /></td></tr>
+<tr class="separator:a52d5cc0bae75781068a5da85402051eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19af31614379176ee2b019a26a38876d" id="r_a19af31614379176ee2b019a26a38876d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnZoomOutFromActorsUI</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a19af31614379176ee2b019a26a38876d">OnZoomOutFromActorsUI</a></td></tr>
+<tr class="memdesc:a19af31614379176ee2b019a26a38876d"><td class="mdescLeft">&#160;</td><td class="mdescRight">액터들 줌아웃 요청 시  <br /></td></tr>
+<tr class="separator:a19af31614379176ee2b019a26a38876d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
+Protected 멤버 함수</h2></td></tr>
+<tr class="memitem:a916375a9267533569d6fe2b80b973f88" id="r_a916375a9267533569d6fe2b80b973f88"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a916375a9267533569d6fe2b80b973f88">ClearDeadActors</a> ()</td></tr>
+<tr class="separator:a916375a9267533569d6fe2b80b973f88"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a766a4765ef46cbd05571650d01aa72d9" id="r_a766a4765ef46cbd05571650d01aa72d9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a766a4765ef46cbd05571650d01aa72d9">EvaluateCombatEndState</a> ()</td></tr>
+<tr class="separator:a766a4765ef46cbd05571650d01aa72d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a79478c9371e2c4fd3e1819ad5643c156" id="r_a79478c9371e2c4fd3e1819ad5643c156"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a79478c9371e2c4fd3e1819ad5643c156">UnregisterTurn</a> (<a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TurnContext</a>)</td></tr>
+<tr class="separator:a79478c9371e2c4fd3e1819ad5643c156"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5221e6c913e9fb47064ab6c02a511b2e" id="r_a5221e6c913e9fb47064ab6c02a511b2e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a5221e6c913e9fb47064ab6c02a511b2e">UnregisterTurns</a> (<a class="el" href="classUUnitModel.html">UUnitModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Owner</a>)</td></tr>
+<tr class="separator:a5221e6c913e9fb47064ab6c02a511b2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae60beee84a0fb3b31820d4e4a513416a" id="r_ae60beee84a0fb3b31820d4e4a513416a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#ae60beee84a0fb3b31820d4e4a513416a">UnregisterTurnImmediately</a> (<a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TurnContext</a>)</td></tr>
+<tr class="separator:ae60beee84a0fb3b31820d4e4a513416a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1b99a90e64632a090313e3d117fd7b55" id="r_a1b99a90e64632a090313e3d117fd7b55"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a1b99a90e64632a090313e3d117fd7b55">UnregisterTurnsImmediately</a> (<a class="el" href="classUUnitModel.html">UUnitModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Owner</a>)</td></tr>
+<tr class="separator:a1b99a90e64632a090313e3d117fd7b55"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a38b442ff68b081981596d08f88221c3d" id="r_a38b442ff68b081981596d08f88221c3d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a38b442ff68b081981596d08f88221c3d">FlushPendingTurnRequests</a> ()</td></tr>
+<tr class="separator:a38b442ff68b081981596d08f88221c3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf0f6882e593f95861cf94fdcdb74387" id="r_abf0f6882e593f95861cf94fdcdb74387"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#abf0f6882e593f95861cf94fdcdb74387">SpawnTileMap</a> ()</td></tr>
+<tr class="separator:abf0f6882e593f95861cf94fdcdb74387"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac17d00e1d3c1fa2f481171a9c1b8cda0" id="r_ac17d00e1d3c1fa2f481171a9c1b8cda0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#ac17d00e1d3c1fa2f481171a9c1b8cda0">RegisterPlayerUnit</a> (<a class="el" href="classUUnitModel.html">UUnitModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PlayerUnit</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTileTransform.html">FTileTransform</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transform</a>)</td></tr>
+<tr class="separator:ac17d00e1d3c1fa2f481171a9c1b8cda0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d5519473e40f31584273c2a305a50cb" id="r_a4d5519473e40f31584273c2a305a50cb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a4d5519473e40f31584273c2a305a50cb">RegisterEnemyUnits</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFEnemyUnitPlacementData.html">FEnemyUnitPlacementData</a> &gt; &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EnemyPlacementDatas</a>)</td></tr>
+<tr class="separator:a4d5519473e40f31584273c2a305a50cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa5332b33d2a53b7450b8aea6238202f" id="r_afa5332b33d2a53b7450b8aea6238202f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#afa5332b33d2a53b7450b8aea6238202f">RegisterUnit</a> (<a class="el" href="classUUnitModel.html">UUnitModel</a> *<a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3a19c562a36aeb455d09534f93b4f5236f">Unit</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTileTransform.html">FTileTransform</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Transform</a>)</td></tr>
+<tr class="separator:afa5332b33d2a53b7450b8aea6238202f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad7bc5970af835c8445a00808156d73ce" id="r_ad7bc5970af835c8445a00808156d73ce"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#ad7bc5970af835c8445a00808156d73ce">RegisterObstacles</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFObstaclePlacementData.html">FObstaclePlacementData</a> &gt; &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ObstaclePlacementDatas</a>)</td></tr>
+<tr class="separator:ad7bc5970af835c8445a00808156d73ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7bd502c6d386729b397a21c207210868" id="r_a7bd502c6d386729b397a21c207210868"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a7bd502c6d386729b397a21c207210868">AdvanceTurn</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IsInitialRound</a>=<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">false</a>)</td></tr>
+<tr class="separator:a7bd502c6d386729b397a21c207210868"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4559e70370b1fc9fe489ec7b241285c9" id="r_a4559e70370b1fc9fe489ec7b241285c9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a4559e70370b1fc9fe489ec7b241285c9">NotifyRoundStartIfNeeded</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedPtr</a>&lt; <a class="el" href="structFPresentationBarrier.html">FPresentationBarrier</a> &gt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RoundPresentationBarrier</a>)</td></tr>
+<tr class="separator:a4559e70370b1fc9fe489ec7b241285c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a15c28565dbc340bfa6555c747befb264" id="r_a15c28565dbc340bfa6555c747befb264"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a15c28565dbc340bfa6555c747befb264">NotifyRoundEndIfNeeded</a> ()</td></tr>
+<tr class="separator:a15c28565dbc340bfa6555c747befb264"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
+Protected 속성</h2></td></tr>
+<tr class="memitem:aff174e1616cbc1b8499c15cf9502c21e" id="r_aff174e1616cbc1b8499c15cf9502c21e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="SRPGFrameworkType_8h.html#a3beb135022a1ac44d4eb6e24b409b844">ESRPGCombatRoomPhase</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#aff174e1616cbc1b8499c15cf9502c21e">mCombatPhase</a> = ESRPGCombatRoomPhase::None</td></tr>
+<tr class="separator:aff174e1616cbc1b8499c15cf9502c21e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:accd57b0baefe50cb2c97a7cc402744e6" id="r_accd57b0baefe50cb2c97a7cc402744e6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#accd57b0baefe50cb2c97a7cc402744e6">mCombatResult</a></td></tr>
+<tr class="separator:accd57b0baefe50cb2c97a7cc402744e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa6c8e1dac0bb3a020388ef3fc17af1d1" id="r_aa6c8e1dac0bb3a020388ef3fc17af1d1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classTCircularDoubleLinkedList.html">TCircularDoubleLinkedList</a>&lt; <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#aa6c8e1dac0bb3a020388ef3fc17af1d1">mTurnContextOrder</a></td></tr>
+<tr class="separator:aa6c8e1dac0bb3a020388ef3fc17af1d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aae6ef86de1700bff637cdf7ed05a2733" id="r_aae6ef86de1700bff637cdf7ed05a2733"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classTCircularDoubleLinkedList.html">TCircularDoubleLinkedList</a>&lt; <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> &gt;::TCircularDoubleLinkedListNode *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#aae6ef86de1700bff637cdf7ed05a2733">mCurTurnContextOrder</a> = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">nullptr</a></td></tr>
+<tr class="separator:aae6ef86de1700bff637cdf7ed05a2733"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a033c31c9f1166860498f592ce15324ba" id="r_a033c31c9f1166860498f592ce15324ba"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a033c31c9f1166860498f592ce15324ba">mTurnContextMaxIndex</a> = 0</td></tr>
+<tr class="separator:a033c31c9f1166860498f592ce15324ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a14074260f7b2050aa03eba40b8df33c8" id="r_a14074260f7b2050aa03eba40b8df33c8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TMap</a>&lt; <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a14074260f7b2050aa03eba40b8df33c8">mTurnContextMap</a></td></tr>
+<tr class="separator:a14074260f7b2050aa03eba40b8df33c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac031c0a316e7e54ec9ce2084c82e6d62" id="r_ac031c0a316e7e54ec9ce2084c82e6d62"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFSRPGTurnUnregisterRequest.html">FSRPGTurnUnregisterRequest</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#ac031c0a316e7e54ec9ce2084c82e6d62">mPendingTurnRequests</a></td></tr>
+<tr class="separator:ac031c0a316e7e54ec9ce2084c82e6d62"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d4ee3fe5f2c082dd07aa0bd0333b968" id="r_a2d4ee3fe5f2c082dd07aa0bd0333b968"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a2d4ee3fe5f2c082dd07aa0bd0333b968">mHeadRequestIndex</a> = 0</td></tr>
+<tr class="separator:a2d4ee3fe5f2c082dd07aa0bd0333b968"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e31ff94b2a81094b1c50e1c1c0c91cf" id="r_a7e31ff94b2a81094b1c50e1c1c0c91cf"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a7e31ff94b2a81094b1c50e1c1c0c91cf">mRoundCount</a> = 0</td></tr>
+<tr class="separator:a7e31ff94b2a81094b1c50e1c1c0c91cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4c706e2574434dc5d67a0d539d5fa4dd" id="r_a4c706e2574434dc5d67a0d539d5fa4dd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="classUTileMapModel.html">UTileMapModel</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a4c706e2574434dc5d67a0d539d5fa4dd">mTileMap</a></td></tr>
+<tr class="separator:a4c706e2574434dc5d67a0d539d5fa4dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a68b398495887861bedf1a7c0dd2f902f" id="r_a68b398495887861bedf1a7c0dd2f902f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="classUUnitModel.html">UUnitModel</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a68b398495887861bedf1a7c0dd2f902f">mUnits</a></td></tr>
+<tr class="separator:a68b398495887861bedf1a7c0dd2f902f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a75f7c4aa06804c6bfb51b3dd398f25e7" id="r_a75f7c4aa06804c6bfb51b3dd398f25e7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="classUBoardActorModel.html">UBoardActorModel</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a75f7c4aa06804c6bfb51b3dd398f25e7">mObstacles</a></td></tr>
+<tr class="separator:a75f7c4aa06804c6bfb51b3dd398f25e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2fc8cec5557c796915ed806eaec30694" id="r_a2fc8cec5557c796915ed806eaec30694"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="classUUnitModel.html">UUnitModel</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a2fc8cec5557c796915ed806eaec30694">mPlayerUnit</a></td></tr>
+<tr class="separator:a2fc8cec5557c796915ed806eaec30694"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a09696267ee20df3fbb7d6f860a4861b7" id="r_a09696267ee20df3fbb7d6f860a4861b7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TScriptInterface</a>&lt; <a class="el" href="classIBoardCombatTarget.html">IBoardCombatTarget</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a09696267ee20df3fbb7d6f860a4861b7">mCombatTargetObstacles</a></td></tr>
+<tr class="separator:a09696267ee20df3fbb7d6f860a4861b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c1001043c918bceaf0b4bae88d2d6ae" id="r_a6c1001043c918bceaf0b4bae88d2d6ae"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html#a6c1001043c918bceaf0b4bae88d2d6ae">mShouldTerminateBeforePlayerTurnStart</a> = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">false</a></td></tr>
+<tr class="separator:a6c1001043c918bceaf0b4bae88d2d6ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_attribs_classUObjectModel"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classUObjectModel')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classUObjectModel.html">UObjectModel</a>(으)로부터 상속된 Protected 속성</td></tr>
+<tr class="memitem:adceab5f34e04d308936e5cf147032f85 inherit pro_attribs_classUObjectModel" id="r_adceab5f34e04d308936e5cf147032f85"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TWeakObjectPtr</a>&lt; UObject &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUObjectModel.html#adceab5f34e04d308936e5cf147032f85">mView</a></td></tr>
+<tr class="separator:adceab5f34e04d308936e5cf147032f85 inherit pro_attribs_classUObjectModel"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a75d4cd2e58251b4d2def69ced0f439e2 inherit pro_attribs_classUObjectModel" id="r_a75d4cd2e58251b4d2def69ced0f439e2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUObjectModel.html#a75d4cd2e58251b4d2def69ced0f439e2">mModelId</a></td></tr>
+<tr class="separator:a75d4cd2e58251b4d2def69ced0f439e2 inherit pro_attribs_classUObjectModel"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
+<div class="textblock">
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00070">70</a> 번째 라인에서 정의되었습니다.</p>
+</div><h2 class="groupheader">멤버 함수 문서화</h2>
+<a id="a7bd502c6d386729b397a21c207210868" name="a7bd502c6d386729b397a21c207210868"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7bd502c6d386729b397a21c207210868">&#9670;&#160;</a></span>AdvanceTurn()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::AdvanceTurn </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td>
+          <td class="paramname"><em>IsInitialRound</em> = <code><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">false</a></code></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00591">591</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a4a5213ba8b27688e32b7791c34b3124c" name="a4a5213ba8b27688e32b7791c34b3124c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4a5213ba8b27688e32b7791c34b3124c">&#9670;&#160;</a></span>BeginCombat()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::BeginCombat </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00094">94</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a916375a9267533569d6fe2b80b973f88" name="a916375a9267533569d6fe2b80b973f88"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a916375a9267533569d6fe2b80b973f88">&#9670;&#160;</a></span>ClearDeadActors()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::ClearDeadActors </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00185">185</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="aa5c3c2fd1b8843ca4658b425fbfa04cf" name="aa5c3c2fd1b8843ca4658b425fbfa04cf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa5c3c2fd1b8843ca4658b425fbfa04cf">&#9670;&#160;</a></span>EndCombat()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::EndCombat </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00121">121</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a766a4765ef46cbd05571650d01aa72d9" name="a766a4765ef46cbd05571650d01aa72d9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a766a4765ef46cbd05571650d01aa72d9">&#9670;&#160;</a></span>EvaluateCombatEndState()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::EvaluateCombatEndState </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00217">217</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ab94ce5bdf4f46234cc6dc7a8e98b744d" name="ab94ce5bdf4f46234cc6dc7a8e98b744d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab94ce5bdf4f46234cc6dc7a8e98b744d">&#9670;&#160;</a></span>EvaluateCombatStates()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::EvaluateCombatStates </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>현재 전투 상태를 측정하여, 전투가 종료되어야 할지. 턴이 종료되어야 할지 내부적으로 기록해두는 함수. ex) 현재 턴의 Owner가 죽은 경우, 턴이 종료되도록 유도 ex) 현재 턴의 Player가 죽은 경우, 턴과 전투가 순차적으로 종료되도록 유도 </p>
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00146">146</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a38b442ff68b081981596d08f88221c3d" name="a38b442ff68b081981596d08f88221c3d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a38b442ff68b081981596d08f88221c3d">&#9670;&#160;</a></span>FlushPendingTurnRequests()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::FlushPendingTurnRequests </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>미뤄두었던 턴 삭제를 처리하는 함수 </p>
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00385">385</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a619b09ce043b0592f1ddab6f3ddd4a20" name="a619b09ce043b0592f1ddab6f3ddd4a20"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a619b09ce043b0592f1ddab6f3ddd4a20">&#9670;&#160;</a></span>ForcedAdvanceUntilNextAction()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::ForcedAdvanceUntilNextAction </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt; <a class="el" href="structFSRPGCommand.html">FSRPGCommand</a> &gt;&#160;</td>
+          <td class="paramname"><em>NextCommand</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td>
+          <td class="paramname"><em>NeedEndCurrentAction</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00751">751</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a919bd5c35799b385b35d7a56b2fb4237" name="a919bd5c35799b385b35d7a56b2fb4237"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a919bd5c35799b385b35d7a56b2fb4237">&#9670;&#160;</a></span>ForcedAdvanceUntilNextPlayerTurn()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::ForcedAdvanceUntilNextPlayerTurn </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td>
+          <td class="paramname"><em>NeedEndCurrentAction</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00763">763</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a695f59499a343d6b293d6aef58c74751" name="a695f59499a343d6b293d6aef58c74751"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a695f59499a343d6b293d6aef58c74751">&#9670;&#160;</a></span>GetCurrentTurnContext()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> * USRPGCombatModel::GetCurrentTurnContext </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00669">669</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="acbb67034ed63fe47cdec58daf2e47cf2" name="acbb67034ed63fe47cdec58daf2e47cf2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acbb67034ed63fe47cdec58daf2e47cf2">&#9670;&#160;</a></span>GetObstacles()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="classUBoardActorModel.html">UBoardActorModel</a> &gt; &gt; &amp; USRPGCombatModel::GetObstacles </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00741">741</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="aa2d0a5b744512c93a5c6182ea30d43be" name="aa2d0a5b744512c93a5c6182ea30d43be"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa2d0a5b744512c93a5c6182ea30d43be">&#9670;&#160;</a></span>GetOrderedTurnContexts()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> &gt; &gt; USRPGCombatModel::GetOrderedTurnContexts </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00711">711</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a1a512a541a8b0f207d829a879cd30a63" name="a1a512a541a8b0f207d829a879cd30a63"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1a512a541a8b0f207d829a879cd30a63">&#9670;&#160;</a></span>GetPlayerUnit()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classUUnitModel.html">UUnitModel</a> * USRPGCombatModel::GetPlayerUnit </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00731">731</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a79dbfa7826942074039a459b9338a786" name="a79dbfa7826942074039a459b9338a786"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a79dbfa7826942074039a459b9338a786">&#9670;&#160;</a></span>GetRoundCount()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> USRPGCombatModel::GetRoundCount </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00746">746</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a59ae3b08aab1944b37dfe55d834b8b6f" name="a59ae3b08aab1944b37dfe55d834b8b6f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a59ae3b08aab1944b37dfe55d834b8b6f">&#9670;&#160;</a></span>GetStatId()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TStatId</a> USRPGCombatModel::GetStatId </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00073">73</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a6d67b257ee0b56095666f2d2cfda4bf8" name="a6d67b257ee0b56095666f2d2cfda4bf8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6d67b257ee0b56095666f2d2cfda4bf8">&#9670;&#160;</a></span>GetTileMap()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classUTileMapModel.html">UTileMapModel</a> * USRPGCombatModel::GetTileMap </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00726">726</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a1ab172a26e88821ee0b379864428b2f3" name="a1ab172a26e88821ee0b379864428b2f3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1ab172a26e88821ee0b379864428b2f3">&#9670;&#160;</a></span>GetTurnContext()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> * USRPGCombatModel::GetTurnContext </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUUnitModel.html">UUnitModel</a> *&#160;</td>
+          <td class="paramname"><em>Owner</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00678">678</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a5911a4ef50f237a5e1f492fa882f8306" name="a5911a4ef50f237a5e1f492fa882f8306"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5911a4ef50f237a5e1f492fa882f8306">&#9670;&#160;</a></span>GetTurnContexts()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> &gt; &gt; USRPGCombatModel::GetTurnContexts </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUUnitModel.html">UUnitModel</a> *&#160;</td>
+          <td class="paramname"><em>Owner</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00693">693</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ace805e65e7430926f6ac5a6110f1b2a6" name="ace805e65e7430926f6ac5a6110f1b2a6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ace805e65e7430926f6ac5a6110f1b2a6">&#9670;&#160;</a></span>GetUnits()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="classUUnitModel.html">UUnitModel</a> &gt; &gt; &amp; USRPGCombatModel::GetUnits </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00736">736</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a4989f9610a9712f26049c43160826cfa" name="a4989f9610a9712f26049c43160826cfa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4989f9610a9712f26049c43160826cfa">&#9670;&#160;</a></span>InitCombat()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::InitCombat </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classUStaticCombatRoomSpawnData.html">UStaticCombatRoomSpawnData</a> *&#160;</td>
+          <td class="paramname"><em>RoomSpawnData</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classUUnitModel.html">UUnitModel</a> *&#160;</td>
+          <td class="paramname"><em>PlayerUnit</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00078">78</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a26bb83456bd202531ba6bb686d6511eb" name="a26bb83456bd202531ba6bb686d6511eb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a26bb83456bd202531ba6bb686d6511eb">&#9670;&#160;</a></span>IsTickable()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> USRPGCombatModel::IsTickable </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00068">68</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a15c28565dbc340bfa6555c747befb264" name="a15c28565dbc340bfa6555c747befb264"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a15c28565dbc340bfa6555c747befb264">&#9670;&#160;</a></span>NotifyRoundEndIfNeeded()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::NotifyRoundEndIfNeeded </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00640">640</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a4559e70370b1fc9fe489ec7b241285c9" name="a4559e70370b1fc9fe489ec7b241285c9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4559e70370b1fc9fe489ec7b241285c9">&#9670;&#160;</a></span>NotifyRoundStartIfNeeded()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::NotifyRoundStartIfNeeded </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedPtr</a>&lt; <a class="el" href="structFPresentationBarrier.html">FPresentationBarrier</a> &gt;&#160;</td>
+          <td class="paramname"><em>RoundPresentationBarrier</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00621">621</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a0d678ce7fc68b429d6235b559117473e" name="a0d678ce7fc68b429d6235b559117473e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0d678ce7fc68b429d6235b559117473e">&#9670;&#160;</a></span>OnEndCurrentTurn()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::OnEndCurrentTurn </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> *&#160;</td>
+          <td class="paramname"><em>TurnContext</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="SRPGFrameworkType_8h.html#abccb523bb2e60227f32f65436247eb08">ESRPGTurnResult</a>&#160;</td>
+          <td class="paramname"><em>TurnResult</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>현재 턴이 종료되었을 시, 전투를 유지할지 처리하는 함수 </p><dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">TurnContext</td><td>종료된 현재 턴 객체 </td></tr>
+    <tr><td class="paramname">TurnResult</td><td>턴 종료 결과 타입 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00157">157</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a907361663be01b881f02c268caf728fd" name="a907361663be01b881f02c268caf728fd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a907361663be01b881f02c268caf728fd">&#9670;&#160;</a></span>PushAction()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> USRPGCombatModel::PushAction </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classUSRPGAction.html">USRPGAction</a> *&#160;</td>
+          <td class="paramname"><em>Action</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>유저 입력 처리 </p><dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">Action</td><td>추가할 액션 객체 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>반환값</dt><dd>액션 등록 여부 </dd></dl>
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00655">655</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a99b97000845a41e7539f8cf989afc429" name="a99b97000845a41e7539f8cf989afc429"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a99b97000845a41e7539f8cf989afc429">&#9670;&#160;</a></span>RegisterEnemyUnit()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::RegisterEnemyUnit </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structFEnemyUnitPlacementData.html">FEnemyUnitPlacementData</a> &amp;&#160;</td>
+          <td class="paramname"><em>EnemyPlacementData</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>새로운 적을 등록하는 함수. 해당 적 턴은 항상 최후방에 등록 </p><dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">EnemyPlacementData</td><td>적 배치 데이터 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00411">411</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a4d5519473e40f31584273c2a305a50cb" name="a4d5519473e40f31584273c2a305a50cb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4d5519473e40f31584273c2a305a50cb">&#9670;&#160;</a></span>RegisterEnemyUnits()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::RegisterEnemyUnits </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFEnemyUnitPlacementData.html">FEnemyUnitPlacementData</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>EnemyPlacementDatas</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00539">539</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="afc70c4bdf54696dbd541d783904c035b" name="afc70c4bdf54696dbd541d783904c035b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afc70c4bdf54696dbd541d783904c035b">&#9670;&#160;</a></span>RegisterObstacle()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::RegisterObstacle </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structFObstaclePlacementData.html">FObstaclePlacementData</a> &amp;&#160;</td>
+          <td class="paramname"><em>ObstaclePlacementDatas</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>새로운 장애물을 등록하는 함수 </p><dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">ObstaclePlacementDatas</td><td>장애물 배치 데이터 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00427">427</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ad7bc5970af835c8445a00808156d73ce" name="ad7bc5970af835c8445a00808156d73ce"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad7bc5970af835c8445a00808156d73ce">&#9670;&#160;</a></span>RegisterObstacles()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::RegisterObstacles </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFObstaclePlacementData.html">FObstaclePlacementData</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>ObstaclePlacementDatas</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00581">581</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ac17d00e1d3c1fa2f481171a9c1b8cda0" name="ac17d00e1d3c1fa2f481171a9c1b8cda0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac17d00e1d3c1fa2f481171a9c1b8cda0">&#9670;&#160;</a></span>RegisterPlayerUnit()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::RegisterPlayerUnit </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classUUnitModel.html">UUnitModel</a> *&#160;</td>
+          <td class="paramname"><em>PlayerUnit</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTileTransform.html">FTileTransform</a> &amp;&#160;</td>
+          <td class="paramname"><em>Transform</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00530">530</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a9fcf99041218c5efede7f76fec92c273" name="a9fcf99041218c5efede7f76fec92c273"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9fcf99041218c5efede7f76fec92c273">&#9670;&#160;</a></span>RegisterTurn()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> * USRPGCombatModel::RegisterTurn </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classUUnitModel.html">UUnitModel</a> *&#160;</td>
+          <td class="paramname"><em>Owner</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td>
+          <td class="paramname"><em>LifeCount</em> = <code><a class="el" href="classUSRPGTurnContext.html#a949bb21600c30ff8dd859b2726b459db">USRPGTurnContext::PERMENENT_TURN</a></code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>존재하는 유닛의 새로운 턴 등록 함수. 새로운 턴은 항상 라운드 최후방에 등록 </p><dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">Owner</td><td>유닛 객체 </td></tr>
+    <tr><td class="paramname">LifeCount</td><td>턴의 생명 주기. 해당 턴에 대해서 남은 실행 횟수를 의미 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>반환값</dt><dd>생성된 턴 컨텍스트 </dd></dl>
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00259">259</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="afa5332b33d2a53b7450b8aea6238202f" name="afa5332b33d2a53b7450b8aea6238202f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afa5332b33d2a53b7450b8aea6238202f">&#9670;&#160;</a></span>RegisterUnit()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::RegisterUnit </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classUUnitModel.html">UUnitModel</a> *&#160;</td>
+          <td class="paramname"><em>Unit</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTileTransform.html">FTileTransform</a> &amp;&#160;</td>
+          <td class="paramname"><em>Transform</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00562">562</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="afab5a3d7b41b22f0be4d29b96afb661e" name="afab5a3d7b41b22f0be4d29b96afb661e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afab5a3d7b41b22f0be4d29b96afb661e">&#9670;&#160;</a></span>Serialize()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::Serialize </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FArchive</a> &amp;&#160;</td>
+          <td class="paramname"><em>Ar</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00025">25</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="abf0f6882e593f95861cf94fdcdb74387" name="abf0f6882e593f95861cf94fdcdb74387"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abf0f6882e593f95861cf94fdcdb74387">&#9670;&#160;</a></span>SpawnTileMap()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::SpawnTileMap </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00506">506</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a50243f0aef6ed03dc36d919247602487" name="a50243f0aef6ed03dc36d919247602487"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a50243f0aef6ed03dc36d919247602487">&#9670;&#160;</a></span>Tick()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::Tick </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td>
+          <td class="paramname"><em>DeltaTime</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00060">60</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a906fc2c67403edd7f5d29119c0a33db7" name="a906fc2c67403edd7f5d29119c0a33db7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a906fc2c67403edd7f5d29119c0a33db7">&#9670;&#160;</a></span>UnregisterObstacle()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::UnregisterObstacle </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classUBoardActorModel.html">UBoardActorModel</a> *&#160;</td>
+          <td class="paramname"><em>Obstcle</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00485">485</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a79478c9371e2c4fd3e1819ad5643c156" name="a79478c9371e2c4fd3e1819ad5643c156"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a79478c9371e2c4fd3e1819ad5643c156">&#9670;&#160;</a></span>UnregisterTurn()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::UnregisterTurn </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> *&#160;</td>
+          <td class="paramname"><em>TurnContext</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>턴을 삭재하는 함수. 해당 턴이 현재 진행 중이면, Pending. 아니라면 즉시 제거. </p><dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">TurnContext</td><td>삭제할 TurnContext </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00295">295</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ae60beee84a0fb3b31820d4e4a513416a" name="ae60beee84a0fb3b31820d4e4a513416a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae60beee84a0fb3b31820d4e4a513416a">&#9670;&#160;</a></span>UnregisterTurnImmediately()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> USRPGCombatModel::UnregisterTurnImmediately </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> *&#160;</td>
+          <td class="paramname"><em>TurnContext</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00323">323</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a5221e6c913e9fb47064ab6c02a511b2e" name="a5221e6c913e9fb47064ab6c02a511b2e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5221e6c913e9fb47064ab6c02a511b2e">&#9670;&#160;</a></span>UnregisterTurns()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::UnregisterTurns </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classUUnitModel.html">UUnitModel</a> *&#160;</td>
+          <td class="paramname"><em>Owner</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Owner가 동일한 모든 턴을 삭재하는 함수. 해당 턴이 현재 진행 중이면, Pending. 아니라면 즉시 제거. </p><dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">Owner</td><td>삭제한 Owner </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00309">309</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a1b99a90e64632a090313e3d117fd7b55" name="a1b99a90e64632a090313e3d117fd7b55"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1b99a90e64632a090313e3d117fd7b55">&#9670;&#160;</a></span>UnregisterTurnsImmediately()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> USRPGCombatModel::UnregisterTurnsImmediately </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classUUnitModel.html">UUnitModel</a> *&#160;</td>
+          <td class="paramname"><em>Owner</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00349">349</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="af315eed5e402eaf8f4416ee877f0b666" name="af315eed5e402eaf8f4416ee877f0b666"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af315eed5e402eaf8f4416ee877f0b666">&#9670;&#160;</a></span>UnregisterUnit()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USRPGCombatModel::UnregisterUnit </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classUUnitModel.html">UUnitModel</a> *&#160;</td>
+          <td class="paramname"><em>Unit</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a> 파일의 <a class="el" href="SRPGCombatModel_8cpp_source.html#l00459">459</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<h2 class="groupheader">멤버 데이터 문서화</h2>
+<a id="aff174e1616cbc1b8499c15cf9502c21e" name="aff174e1616cbc1b8499c15cf9502c21e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff174e1616cbc1b8499c15cf9502c21e">&#9670;&#160;</a></span>mCombatPhase</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="SRPGFrameworkType_8h.html#a3beb135022a1ac44d4eb6e24b409b844">ESRPGCombatRoomPhase</a> USRPGCombatModel::mCombatPhase = ESRPGCombatRoomPhase::None</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00274">274</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="accd57b0baefe50cb2c97a7cc402744e6" name="accd57b0baefe50cb2c97a7cc402744e6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#accd57b0baefe50cb2c97a7cc402744e6">&#9670;&#160;</a></span>mCombatResult</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a> USRPGCombatModel::mCombatResult</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00277">277</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a09696267ee20df3fbb7d6f860a4861b7" name="a09696267ee20df3fbb7d6f860a4861b7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a09696267ee20df3fbb7d6f860a4861b7">&#9670;&#160;</a></span>mCombatTargetObstacles</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TScriptInterface</a>&lt;<a class="el" href="classIBoardCombatTarget.html">IBoardCombatTarget</a>&gt; &gt; USRPGCombatModel::mCombatTargetObstacles</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00319">319</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="aae6ef86de1700bff637cdf7ed05a2733" name="aae6ef86de1700bff637cdf7ed05a2733"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aae6ef86de1700bff637cdf7ed05a2733">&#9670;&#160;</a></span>mCurTurnContextOrder</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classTCircularDoubleLinkedList.html">TCircularDoubleLinkedList</a>&lt;<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&gt;::TCircularDoubleLinkedListNode* USRPGCombatModel::mCurTurnContextOrder = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">nullptr</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00282">282</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a2d4ee3fe5f2c082dd07aa0bd0333b968" name="a2d4ee3fe5f2c082dd07aa0bd0333b968"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2d4ee3fe5f2c082dd07aa0bd0333b968">&#9670;&#160;</a></span>mHeadRequestIndex</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> USRPGCombatModel::mHeadRequestIndex = 0</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00295">295</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a75f7c4aa06804c6bfb51b3dd398f25e7" name="a75f7c4aa06804c6bfb51b3dd398f25e7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a75f7c4aa06804c6bfb51b3dd398f25e7">&#9670;&#160;</a></span>mObstacles</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="el" href="classUBoardActorModel.html">UBoardActorModel</a>&gt; &gt; USRPGCombatModel::mObstacles</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00311">311</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ac031c0a316e7e54ec9ce2084c82e6d62" name="ac031c0a316e7e54ec9ce2084c82e6d62"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac031c0a316e7e54ec9ce2084c82e6d62">&#9670;&#160;</a></span>mPendingTurnRequests</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="el" href="structFSRPGTurnUnregisterRequest.html">FSRPGTurnUnregisterRequest</a>&gt; USRPGCombatModel::mPendingTurnRequests</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00292">292</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a2fc8cec5557c796915ed806eaec30694" name="a2fc8cec5557c796915ed806eaec30694"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2fc8cec5557c796915ed806eaec30694">&#9670;&#160;</a></span>mPlayerUnit</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="el" href="classUUnitModel.html">UUnitModel</a>&gt; USRPGCombatModel::mPlayerUnit</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00316">316</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a7e31ff94b2a81094b1c50e1c1c0c91cf" name="a7e31ff94b2a81094b1c50e1c1c0c91cf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7e31ff94b2a81094b1c50e1c1c0c91cf">&#9670;&#160;</a></span>mRoundCount</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> USRPGCombatModel::mRoundCount = 0</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00299">299</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a6c1001043c918bceaf0b4bae88d2d6ae" name="a6c1001043c918bceaf0b4bae88d2d6ae"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6c1001043c918bceaf0b4bae88d2d6ae">&#9670;&#160;</a></span>mShouldTerminateBeforePlayerTurnStart</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> USRPGCombatModel::mShouldTerminateBeforePlayerTurnStart = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">false</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00323">323</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a4c706e2574434dc5d67a0d539d5fa4dd" name="a4c706e2574434dc5d67a0d539d5fa4dd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4c706e2574434dc5d67a0d539d5fa4dd">&#9670;&#160;</a></span>mTileMap</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="el" href="classUTileMapModel.html">UTileMapModel</a>&gt; USRPGCombatModel::mTileMap</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00304">304</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a14074260f7b2050aa03eba40b8df33c8" name="a14074260f7b2050aa03eba40b8df33c8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a14074260f7b2050aa03eba40b8df33c8">&#9670;&#160;</a></span>mTurnContextMap</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TMap</a>&lt;<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a>&gt; &gt; USRPGCombatModel::mTurnContextMap</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00287">287</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a033c31c9f1166860498f592ce15324ba" name="a033c31c9f1166860498f592ce15324ba"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a033c31c9f1166860498f592ce15324ba">&#9670;&#160;</a></span>mTurnContextMaxIndex</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> USRPGCombatModel::mTurnContextMaxIndex = 0</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00285">285</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="aa6c8e1dac0bb3a020388ef3fc17af1d1" name="aa6c8e1dac0bb3a020388ef3fc17af1d1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa6c8e1dac0bb3a020388ef3fc17af1d1">&#9670;&#160;</a></span>mTurnContextOrder</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classTCircularDoubleLinkedList.html">TCircularDoubleLinkedList</a>&lt;<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&gt; USRPGCombatModel::mTurnContextOrder</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00281">281</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a68b398495887861bedf1a7c0dd2f902f" name="a68b398495887861bedf1a7c0dd2f902f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a68b398495887861bedf1a7c0dd2f902f">&#9670;&#160;</a></span>mUnits</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="el" href="classUUnitModel.html">UUnitModel</a>&gt; &gt; USRPGCombatModel::mUnits</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00308">308</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="afdb0d11d0142815ca2e10de2072e686b" name="afdb0d11d0142815ca2e10de2072e686b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afdb0d11d0142815ca2e10de2072e686b">&#9670;&#160;</a></span>OnBeginAnyRoundUI</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnBeginAnyRoundUI</a> USRPGCombatModel::OnBeginAnyRoundUI</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>OnBeginAnyTurnUI와 동일한 배리어 규약. 방송 지점은 프레임워크 소유자가 AdvanceTurn 라운드 시작부에 연결한다(NotifyRoundStartIfNeeded TODO). </p>
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00241">241</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="abc75d5cda18fa383119a4af966d02def" name="abc75d5cda18fa383119a4af966d02def"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abc75d5cda18fa383119a4af966d02def">&#9670;&#160;</a></span>OnBeginAnyTurnActionUI</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnBeginAnyTurnActionUI</a> USRPGCombatModel::OnBeginAnyTurnActionUI</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Broadcast시 전달될 Barrier 스마트 포인터 카운팅이 0이 되기 전까지, 로직은 일시정지 </p>
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00253">253</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a958f1ddd6673583c4fdaad9403076c31" name="a958f1ddd6673583c4fdaad9403076c31"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a958f1ddd6673583c4fdaad9403076c31">&#9670;&#160;</a></span>OnBeginAnyTurnUI</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnBeginAnyTurnUI</a> USRPGCombatModel::OnBeginAnyTurnUI</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Broadcast시 전달될 Barrier 스마트 포인터 카운팅이 0이 되기 전까지, 로직은 일시정지 </p>
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00235">235</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a72b068349985e374f671fce7977b0226" name="a72b068349985e374f671fce7977b0226"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a72b068349985e374f671fce7977b0226">&#9670;&#160;</a></span>OnBeginCombatUI</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnBeginCombatUI</a> USRPGCombatModel::OnBeginCombatUI</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Broadcast시 전달될 Barrier 스마트 포인터 카운팅이 0이 되기 전까지, 로직은 일시정지 </p>
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00223">223</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a8a28ac9b27bc5c1e9202a0f9222fafde" name="a8a28ac9b27bc5c1e9202a0f9222fafde"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8a28ac9b27bc5c1e9202a0f9222fafde">&#9670;&#160;</a></span>OnEndAnyTurnActionUI</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndAnyTurnActionUI</a> USRPGCombatModel::OnEndAnyTurnActionUI</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Broadcast시 전달될 Barrier 스마트 포인터 카운팅이 0이 되기 전까지, 로직은 일시정지 </p>
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00259">259</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ad9b46efb00bd0b9ee321bb87d4639524" name="ad9b46efb00bd0b9ee321bb87d4639524"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad9b46efb00bd0b9ee321bb87d4639524">&#9670;&#160;</a></span>OnEndAnyTurnUI</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndAnyTurnUI</a> USRPGCombatModel::OnEndAnyTurnUI</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Broadcast시 전달될 Barrier 스마트 포인터 카운팅이 0이 되기 전까지, 로직은 일시정지 </p>
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00247">247</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="abc6c4fdd19c742f0da7530b1562bfd00" name="abc6c4fdd19c742f0da7530b1562bfd00"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abc6c4fdd19c742f0da7530b1562bfd00">&#9670;&#160;</a></span>OnEndCombatUI</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndCombatUI</a> USRPGCombatModel::OnEndCombatUI</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Broadcast시 전달될 Barrier 스마트 포인터 카운팅이 0이 되기 전까지, 로직은 일시정지 </p>
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00229">229</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="afaa5b63cee3d856c1b4215444d6bbf2c" name="afaa5b63cee3d856c1b4215444d6bbf2c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afaa5b63cee3d856c1b4215444d6bbf2c">&#9670;&#160;</a></span>OnRegisterObstacleUI</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnRegisterObstacleUI</a> USRPGCombatModel::OnRegisterObstacleUI</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00205">205</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a6db4f320e4b67b2308d1f64eb8904e45" name="a6db4f320e4b67b2308d1f64eb8904e45"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6db4f320e4b67b2308d1f64eb8904e45">&#9670;&#160;</a></span>OnRegisterUnitUI</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnRegisterUnitUI</a> USRPGCombatModel::OnRegisterUnitUI</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00197">197</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="aef3555adb7c9f89f9df009aac33c6f35" name="aef3555adb7c9f89f9df009aac33c6f35"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aef3555adb7c9f89f9df009aac33c6f35">&#9670;&#160;</a></span>OnShowDicePanelAnyTurnUI</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnShowDicePanelAnyTurnUI</a> USRPGCombatModel::OnShowDicePanelAnyTurnUI</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00215">215</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a3e691d8d51364f0e020f199154fd66ee" name="a3e691d8d51364f0e020f199154fd66ee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3e691d8d51364f0e020f199154fd66ee">&#9670;&#160;</a></span>OnUnregisterObstacleUI</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnUnregisterObstacleUI</a> USRPGCombatModel::OnUnregisterObstacleUI</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00209">209</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ac37d90a0ab0d076b9f3af06bb81806d6" name="ac37d90a0ab0d076b9f3af06bb81806d6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac37d90a0ab0d076b9f3af06bb81806d6">&#9670;&#160;</a></span>OnUnregisterUnitUI</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnUnregisterUnitUI</a> USRPGCombatModel::OnUnregisterUnitUI</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00201">201</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a52d5cc0bae75781068a5da85402051eb" name="a52d5cc0bae75781068a5da85402051eb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a52d5cc0bae75781068a5da85402051eb">&#9670;&#160;</a></span>OnZoomInToActorsUI</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnZoomInToActorsUI</a> USRPGCombatModel::OnZoomInToActorsUI</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00265">265</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a19af31614379176ee2b019a26a38876d" name="a19af31614379176ee2b019a26a38876d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a19af31614379176ee2b019a26a38876d">&#9670;&#160;</a></span>OnZoomOutFromActorsUI</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnZoomOutFromActorsUI</a> USRPGCombatModel::OnZoomOutFromActorsUI</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00269">269</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<hr/>이 클래스에 대한 문서화 페이지는 다음의 파일들로부터 생성되었습니다.:<ul>
+<li>/home/runner/work/P_RD/P_RD/Source/P_RD/Singleton/WorldSubsystem/<a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a></li>
+<li>/home/runner/work/P_RD/P_RD/Source/P_RD/Singleton/WorldSubsystem/<a class="el" href="SRPGCombatModel_8cpp_source.html">SRPGCombatModel.cpp</a></li>
+</ul>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="classUSRPGCombatModel.html">USRPGCombatModel</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

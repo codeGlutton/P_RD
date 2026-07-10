@@ -1,0 +1,257 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/TAS/Aggregator/TacticalAggregator.h 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('TacticalAggregator_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">TacticalAggregator.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="TacticalAggregator_8h.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*****************************************************************/</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;<a class="code" href="AttributeSetMinimal_8h.html">AttributeSet/AttributeSetMinimal.h</a>&quot;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;<a class="code" href="ActiveTacticalEffect_8h.html">TAS/Effect/ActiveTacticalEffect.h</a>&quot;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="comment">// @brief Aggregator를 보유/갱신하는 이펙트 컨테이너 (friend 접근용 전방 선언)</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="keyword">struct </span><a class="code hl_struct" href="structFActiveTacticalEffectsContainer.html">FActiveTacticalEffectsContainer</a>;</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="comment">// @brief TAS 프레임워크 모델 (friend 접근용 전방 선언)</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="keyword">class </span><a class="code hl_class" href="classUTacticalFrameworkModel.html">UTacticalFrameworkModel</a>;</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span> </div>
+<div class="foldopen" id="foldopen00024" data-start="{" data-end="};">
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno"><a class="line" href="structFScopedTacticalAggregatorOnDirtyBatch.html">   24</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structFScopedTacticalAggregatorOnDirtyBatch.html">FScopedTacticalAggregatorOnDirtyBatch</a></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>{</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    <a class="code hl_struct" href="structFScopedTacticalAggregatorOnDirtyBatch.html">FScopedTacticalAggregatorOnDirtyBatch</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UWorld</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">World</a>);</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    <a class="code hl_function" href="structFScopedTacticalAggregatorOnDirtyBatch.html#a7d62b5377c99d7791f44841124219cdc">~FScopedTacticalAggregatorOnDirtyBatch</a>();</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    <span class="comment">// @brief 배치 대상 월드</span></div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno"><a class="line" href="structFScopedTacticalAggregatorOnDirtyBatch.html#a57b92db8d36b3cfbeffe80145d53b906">   37</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr&lt;UWorld&gt;</a> <a class="code hl_variable" href="structFScopedTacticalAggregatorOnDirtyBatch.html#a57b92db8d36b3cfbeffe80145d53b906">mWorld</a> = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>};</div>
+</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span> </div>
+<div class="foldopen" id="foldopen00046" data-start="{" data-end="};">
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno"><a class="line" href="structFTacticalAggregatorMod.html">   46</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structFTacticalAggregatorMod.html">FTacticalAggregatorMod</a></div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>{</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    <span class="comment">// @brief 평가된 값. 스펙/속성으로부터 계산된 이 모디파이어의 적용 크기(magnitude).</span></div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno"><a class="line" href="structFTacticalAggregatorMod.html#aa94a8bc2a3a5d9fd0bbcd35034350fcb">   50</a></span>    <span class="keywordtype">float</span> <a class="code hl_variable" href="structFTacticalAggregatorMod.html#aa94a8bc2a3a5d9fd0bbcd35034350fcb">mEvaluatedMagnitude</a> = 0.f;</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    <span class="comment">// @brief 스택 갯수. 중첩(stack) 수. ComputeStackedModifierMagnitude에서 크기 스케일에 사용.</span></div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno"><a class="line" href="structFTacticalAggregatorMod.html#a24c26dfee4cdb2a65591a64e15aa9c0f">   52</a></span>    <span class="keywordtype">float</span> <a class="code hl_variable" href="structFTacticalAggregatorMod.html#a24c26dfee4cdb2a65591a64e15aa9c0f">mStackCount</a> = 0.f;</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span> </div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    <span class="comment">// @brief 활성화 핸들. 이 모디파이어를 만들어낸 활성 이펙트 인스턴스를 역참조하는 키.</span></div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno"><a class="line" href="structFTacticalAggregatorMod.html#a31da5150b1e18afd1c88ce02ae66406c">   55</a></span>    <a class="code hl_struct" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a> <a class="code hl_variable" href="structFTacticalAggregatorMod.html#a31da5150b1e18afd1c88ce02ae66406c">mActiveHandle</a>;</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>};</div>
+</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span> </div>
+<div class="foldopen" id="foldopen00070" data-start="{" data-end="};">
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno"><a class="line" href="structFTacticalAggregator.html">   70</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structFTacticalAggregator.html">FTacticalAggregator</a> : <span class="keyword">public</span> TSharedFromThis&lt;FTacticalAggregator&gt;</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>{</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    <span class="comment">// @brief 모디파이어 추가/제거 등 내부 상태를 직접 다루는 컨테이너에 friend 접근 허용</span></div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno"><a class="line" href="structFTacticalAggregator.html#a46087a66e590b688fdbcebfe5c0a1b85">   73</a></span>    <span class="keyword">friend</span> <span class="keyword">struct </span><a class="code hl_struct" href="structFActiveTacticalEffectsContainer.html">FActiveTacticalEffectsContainer</a>;</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>    <span class="comment">// @brief 프레임워크 모델에 friend 접근 허용</span></div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno"><a class="line" href="structFTacticalAggregator.html#a5b4645f7a70d56e2062c5926d30eb76a">   75</a></span>    <span class="keyword">friend</span> <span class="keyword">class </span><a class="code hl_class" href="classUTacticalFrameworkModel.html">UTacticalFrameworkModel</a>;</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span> </div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    <span class="comment">// @brief 이 Aggregator의 평가값이 변경되었을 때 발화하는 멀티캐스트 델리게이트 타입</span></div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno"><a class="line" href="structFTacticalAggregator.html#a128ccdff5f615f2f3905813245d941ee">   78</a></span>    <a class="code hl_function" href="structFTacticalAggregator.html#a128ccdff5f615f2f3905813245d941ee">DECLARE_MULTICAST_DELEGATE_OneParam</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnAttributeAggregatorDirty</a>, <a class="code hl_struct" href="structFTacticalAggregator.html">FTacticalAggregator</a>*);</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span> </div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span><span class="keyword">public</span>:</div>
+<div class="foldopen" id="foldopen00086" data-start="{" data-end="}">
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno"><a class="line" href="structFTacticalAggregator.html#a1316660ced3f76e3112115c93fc94c3c">   86</a></span>    <a class="code hl_function" href="structFTacticalAggregator.html#a1316660ced3f76e3112115c93fc94c3c">FTacticalAggregator</a>(<a class="code hl_class" href="classUAttributeSetComponentModel.html">UAttributeSetComponentModel</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Owner</a>, <span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InBaseValue</a> = 0.f) :</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>        <a class="code hl_variable" href="structFTacticalAggregator.html#a198d4335cfcda95461668452562414a7">mOwner</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Owner</a>),</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>        <a class="code hl_variable" href="structFTacticalAggregator.html#a89d25a90dc0af87ba0a3ea46f6e34d24">mDirtyCount</a>(0),</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>        mBaseValue(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InBaseValue</a>)</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>    {</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>    }</div>
+</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span> </div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>    <a class="code hl_function" href="structFTacticalAggregator.html#a71c5d8fd6154a12db56353145116fd95">~FTacticalAggregator</a>();</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span> </div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>    <span class="comment">/* 계산 함수 */</span></div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>    <span class="keywordtype">float</span> <a class="code hl_function" href="structFTacticalAggregator.html#a4063228f791913f002ee927e833cbeaa">GetAttributeBaseValue</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structFTacticalAggregator.html#a7795d11fbf7eddc972a969a1832a556a">SetAttributeBaseValue</a>(<span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BaseValue</a>, <span class="keywordtype">bool</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BroadcastDirtyEvent</a> = <span class="keyword">true</span>);</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>    <span class="keyword">static</span> <span class="keywordtype">float</span> <a class="code hl_function" href="structFTacticalAggregator.html#ada20ae78668a0f147af5705d00274b84">StaticExecModOnBaseValue</a>(<span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BaseValue</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEnumAsByte&lt;ETacticalModOp::Type&gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ModifierOp</a>, <span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EvaluatedMagnitude</a>);</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structFTacticalAggregator.html#a5af5aa7fd0eb38a787c9bb6466ff60a8">ExecModOnBaseValue</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEnumAsByte&lt;ETacticalModOp::Type&gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ModifierOp</a>, <span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EvaluatedMagnitude</a>);</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span> </div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structFTacticalAggregator.html#a63c894a923ae86694bfaca7349ef152f">AddAggregatorMod</a>(<span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EvaluatedData</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEnumAsByte&lt;ETacticalModOp::Type&gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ModifierOp</a>, <a class="code hl_struct" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ActiveHandle</a> = <a class="code hl_struct" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a>());</div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structFTacticalAggregator.html#ad113ece537f51d266257f95cd69c0e84">RemoveAggregatorMod</a>(<a class="code hl_struct" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ActiveHandle</a>);</div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structFTacticalAggregator.html#aa173e0ec2d542b28d92d62fe251cc58a">UpdateAggregatorMod</a>(<a class="code hl_struct" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ActiveHandle</a>, <span class="keyword">const</span> <a class="code hl_struct" href="structFTacticalAttribute.html">FTacticalAttribute</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Attribute</a>, <span class="keyword">const</span> <a class="code hl_struct" href="structFTacticalEffectSpec.html">FTacticalEffectSpec</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Spec</a>, <a class="code hl_struct" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InHandle</a>);</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span> </div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>    <span class="keywordtype">float</span> <a class="code hl_function" href="structFTacticalAggregator.html#a3e98f366cd03d0f0d01bf2998f5c2efd">Evaluate</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>    <span class="keywordtype">float</span> <a class="code hl_function" href="structFTacticalAggregator.html#a761f5febabdb70f492f43d233b1efb79">EvaluateWithBase</a>(<span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BaseValue</a>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span> </div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>    <span class="comment">/* 헬퍼 함수 */</span></div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>    <span class="keyword">static</span> <span class="keywordtype">float</span> <a class="code hl_function" href="structFTacticalAggregator.html#aaa879ccacd6a481fffcfc2a165f2ad1a">SumMods</a>(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;FTacticalAggregatorMod&gt;</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Mods</a>, <span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Bias</a>);</div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>    <span class="keyword">static</span> <span class="keywordtype">float</span> <a class="code hl_function" href="structFTacticalAggregator.html#af500687ed91599e11a576ec1d2c3d006">MultiplyMods</a>(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;FTacticalAggregatorMod&gt;</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Mods</a>);</div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span> </div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>    <span class="comment">/* 업데이트 함수 */</span></div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>    <span class="comment">// @brief 값 변경을 OnDirty로 전파한다(배치 가드 활성 시 즉시 발화하지 않고 누적될 수 있음).</span></div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>    <span class="keywordtype">void</span> BroadcastOnDirty();</div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span> </div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>    <span class="comment">// @brief 이 Aggregator를 소유한 속성 셋 컴포넌트 모델(약참조)</span></div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno"><a class="line" href="structFTacticalAggregator.html#a198d4335cfcda95461668452562414a7">  188</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TWeakObjectPtr&lt;UAttributeSetComponentModel&gt;</a> <a class="code hl_variable" href="structFTacticalAggregator.html#a198d4335cfcda95461668452562414a7">mOwner</a>;</div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span> </div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>    <span class="comment">// @brief 값이 변경됨을 알리는 대리자</span></div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno"><a class="line" href="structFTacticalAggregator.html#a97c7b38ec4b7f0ece7b18fb5cf3108a7">  192</a></span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnAttributeAggregatorDirty</a> <a class="code hl_variable" href="structFTacticalAggregator.html#a97c7b38ec4b7f0ece7b18fb5cf3108a7">OnDirty</a>;</div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>    <span class="comment">// @brief 재귀적 호출 방지용 카운팅</span></div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno"><a class="line" href="structFTacticalAggregator.html#a89d25a90dc0af87ba0a3ea46f6e34d24">  194</a></span>    <a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="code hl_variable" href="structFTacticalAggregator.html#a89d25a90dc0af87ba0a3ea46f6e34d24">mDirtyCount</a> = 0;</div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span> </div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>    <span class="comment">// @brief 베이스 값</span></div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>    <span class="keywordtype">float</span> mBaseValue = 0.f;</div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>    <span class="comment">// @brief 각 연산자에 따른 결과값들.</span></div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>    <span class="comment">//        배열 길이 ETacticalModOp::Max(=6)이며, op 정수값을 그대로 인덱스로 사용한다.</span></div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>    <span class="comment">//        예) mMods[ETacticalModOp::AddBase], mMods[ETacticalModOp::MultiplyAdditive] ...</span></div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>    <span class="comment">//        op 정수값을 구 EGameplayModOp와 동일하게 유지하는 이유가 바로 이 인덱싱 때문이다(헤더 참고).</span></div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;FTacticalAggregatorMod&gt;</a> mMods[ETacticalModOp::Max];</div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span>    <span class="comment">// @brief 해당 값에 영향을 받는 외부 이펙트들</span></div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;FActiveTacticalEffectHandle&gt;</a> mDependentEffects;</div>
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span>};</div>
+</div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span> </div>
+<div class="ttc" id="aActiveTacticalEffect_8h_html"><div class="ttname"><a href="ActiveTacticalEffect_8h.html">ActiveTacticalEffect.h</a></div><div class="ttdoc">현재 활성화 이펙트 정의 헤더</div></div>
+<div class="ttc" id="aAttributeSetMinimal_8h_html"><div class="ttname"><a href="AttributeSetMinimal_8h.html">AttributeSetMinimal.h</a></div><div class="ttdoc">AttributeSet 활용 영역에서 사용되는 포함 헤더</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_ada104807b93ac7cd59dac80d98ba857b"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a></div><div class="ttdeci">int32</div><div class="ttdef"><b>Definition</b> <a href="RoomTransitionSubsystem_8h_source.html#l00021">RoomTransitionSubsystem.h:21</a></div></div>
+<div class="ttc" id="aclassUAttributeSetComponentModel_html"><div class="ttname"><a href="classUAttributeSetComponentModel.html">UAttributeSetComponentModel</a></div><div class="ttdoc">한 유닛(액터)이 보유하는 모든 TacticalAttributeSet, 활성 Effect, 게임플레이 태그 카운트를 관리하는 컴포넌트 모델.</div><div class="ttdef"><b>Definition</b> <a href="AttributeSetComponentModel_8h_source.html#l00032">AttributeSetComponentModel.h:33</a></div></div>
+<div class="ttc" id="aclassUTacticalFrameworkModel_html"><div class="ttname"><a href="classUTacticalFrameworkModel.html">UTacticalFrameworkModel</a></div><div class="ttdoc">SRPG 유저 명령을 전달하는 서브시스템 모델</div><div class="ttdef"><b>Definition</b> <a href="TacticalFrameworkModel_8h_source.html#l00039">TacticalFrameworkModel.h:40</a></div></div>
+<div class="ttc" id="astructFActiveTacticalEffectHandle_html"><div class="ttname"><a href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a></div><div class="ttdoc">활성화된 이펙트를 쉽게 탐색하기 위한 핸들</div><div class="ttdef"><b>Definition</b> <a href="ActiveTacticalEffect_8h_source.html#l00039">ActiveTacticalEffect.h:40</a></div></div>
+<div class="ttc" id="astructFActiveTacticalEffectsContainer_html"><div class="ttname"><a href="structFActiveTacticalEffectsContainer.html">FActiveTacticalEffectsContainer</a></div><div class="ttdoc">현재 활성화 이펙트들과 그에 따른 결과를 보유한 객체</div><div class="ttdef"><b>Definition</b> <a href="ActiveTacticalEffectsContainer_8h_source.html#l00217">ActiveTacticalEffectsContainer.h:218</a></div></div>
+<div class="ttc" id="astructFScopedTacticalAggregatorOnDirtyBatch_html"><div class="ttname"><a href="structFScopedTacticalAggregatorOnDirtyBatch.html">FScopedTacticalAggregatorOnDirtyBatch</a></div><div class="ttdoc">Dirty 브로드캐스트를 일괄 처리(batch)하기 위한 RAII 스코프 가드.</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8h_source.html#l00024">TacticalAggregator.h:25</a></div></div>
+<div class="ttc" id="astructFScopedTacticalAggregatorOnDirtyBatch_html_a57b92db8d36b3cfbeffe80145d53b906"><div class="ttname"><a href="structFScopedTacticalAggregatorOnDirtyBatch.html#a57b92db8d36b3cfbeffe80145d53b906">FScopedTacticalAggregatorOnDirtyBatch::mWorld</a></div><div class="ttdeci">TObjectPtr&lt; UWorld &gt; mWorld</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8h_source.html#l00037">TacticalAggregator.h:37</a></div></div>
+<div class="ttc" id="astructFScopedTacticalAggregatorOnDirtyBatch_html_a7d62b5377c99d7791f44841124219cdc"><div class="ttname"><a href="structFScopedTacticalAggregatorOnDirtyBatch.html#a7d62b5377c99d7791f44841124219cdc">FScopedTacticalAggregatorOnDirtyBatch::~FScopedTacticalAggregatorOnDirtyBatch</a></div><div class="ttdeci">~FScopedTacticalAggregatorOnDirtyBatch()</div><div class="ttdoc">배치 스코프 종료. 누적된 Dirty를 일괄 발화한다.</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8cpp_source.html#l00059">TacticalAggregator.cpp:59</a></div></div>
+<div class="ttc" id="astructFTacticalAggregatorMod_html"><div class="ttname"><a href="structFTacticalAggregatorMod.html">FTacticalAggregatorMod</a></div><div class="ttdoc">하나의 변화값(단일 모디파이어). Aggregator의 op별 버킷(mMods[op])에 담기는 원소.</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8h_source.html#l00046">TacticalAggregator.h:47</a></div></div>
+<div class="ttc" id="astructFTacticalAggregatorMod_html_a24c26dfee4cdb2a65591a64e15aa9c0f"><div class="ttname"><a href="structFTacticalAggregatorMod.html#a24c26dfee4cdb2a65591a64e15aa9c0f">FTacticalAggregatorMod::mStackCount</a></div><div class="ttdeci">float mStackCount</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8h_source.html#l00052">TacticalAggregator.h:52</a></div></div>
+<div class="ttc" id="astructFTacticalAggregatorMod_html_a31da5150b1e18afd1c88ce02ae66406c"><div class="ttname"><a href="structFTacticalAggregatorMod.html#a31da5150b1e18afd1c88ce02ae66406c">FTacticalAggregatorMod::mActiveHandle</a></div><div class="ttdeci">FActiveTacticalEffectHandle mActiveHandle</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8h_source.html#l00055">TacticalAggregator.h:55</a></div></div>
+<div class="ttc" id="astructFTacticalAggregatorMod_html_aa94a8bc2a3a5d9fd0bbcd35034350fcb"><div class="ttname"><a href="structFTacticalAggregatorMod.html#aa94a8bc2a3a5d9fd0bbcd35034350fcb">FTacticalAggregatorMod::mEvaluatedMagnitude</a></div><div class="ttdeci">float mEvaluatedMagnitude</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8h_source.html#l00050">TacticalAggregator.h:50</a></div></div>
+<div class="ttc" id="astructFTacticalAggregator_html"><div class="ttname"><a href="structFTacticalAggregator.html">FTacticalAggregator</a></div><div class="ttdoc">하나의 속성(Attribute)에 적용되는 모든 변화(모디파이어)를 누적하고 최종값을 계산하는 객체.</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8h_source.html#l00070">TacticalAggregator.h:71</a></div></div>
+<div class="ttc" id="astructFTacticalAggregator_html_a128ccdff5f615f2f3905813245d941ee"><div class="ttname"><a href="structFTacticalAggregator.html#a128ccdff5f615f2f3905813245d941ee">FTacticalAggregator::DECLARE_MULTICAST_DELEGATE_OneParam</a></div><div class="ttdeci">DECLARE_MULTICAST_DELEGATE_OneParam(FOnAttributeAggregatorDirty, FTacticalAggregator *)</div></div>
+<div class="ttc" id="astructFTacticalAggregator_html_a1316660ced3f76e3112115c93fc94c3c"><div class="ttname"><a href="structFTacticalAggregator.html#a1316660ced3f76e3112115c93fc94c3c">FTacticalAggregator::FTacticalAggregator</a></div><div class="ttdeci">FTacticalAggregator(UAttributeSetComponentModel *Owner, float InBaseValue=0.f)</div><div class="ttdoc">생성자.</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8h_source.html#l00086">TacticalAggregator.h:86</a></div></div>
+<div class="ttc" id="astructFTacticalAggregator_html_a198d4335cfcda95461668452562414a7"><div class="ttname"><a href="structFTacticalAggregator.html#a198d4335cfcda95461668452562414a7">FTacticalAggregator::mOwner</a></div><div class="ttdeci">TWeakObjectPtr&lt; UAttributeSetComponentModel &gt; mOwner</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8h_source.html#l00188">TacticalAggregator.h:188</a></div></div>
+<div class="ttc" id="astructFTacticalAggregator_html_a3e98f366cd03d0f0d01bf2998f5c2efd"><div class="ttname"><a href="structFTacticalAggregator.html#a3e98f366cd03d0f0d01bf2998f5c2efd">FTacticalAggregator::Evaluate</a></div><div class="ttdeci">float Evaluate() const</div><div class="ttdoc">현재 BaseValue와 누적된 모든 모디파이어를 적용해 최종 속성값을 계산한다.</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8cpp_source.html#l00248">TacticalAggregator.cpp:248</a></div></div>
+<div class="ttc" id="astructFTacticalAggregator_html_a4063228f791913f002ee927e833cbeaa"><div class="ttname"><a href="structFTacticalAggregator.html#a4063228f791913f002ee927e833cbeaa">FTacticalAggregator::GetAttributeBaseValue</a></div><div class="ttdeci">float GetAttributeBaseValue() const</div><div class="ttdoc">모디파이어 적용 전 기준값(Base)을 반환한다.</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8cpp_source.html#l00091">TacticalAggregator.cpp:91</a></div></div>
+<div class="ttc" id="astructFTacticalAggregator_html_a5af5aa7fd0eb38a787c9bb6466ff60a8"><div class="ttname"><a href="structFTacticalAggregator.html#a5af5aa7fd0eb38a787c9bb6466ff60a8">FTacticalAggregator::ExecModOnBaseValue</a></div><div class="ttdeci">void ExecModOnBaseValue(TEnumAsByte&lt; ETacticalModOp::Type &gt; ModifierOp, float EvaluatedMagnitude)</div><div class="ttdoc">자신의 BaseValue에 단일 모디파이어를 직접 적용(in-place)한다.</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8cpp_source.html#l00164">TacticalAggregator.cpp:164</a></div></div>
+<div class="ttc" id="astructFTacticalAggregator_html_a63c894a923ae86694bfaca7349ef152f"><div class="ttname"><a href="structFTacticalAggregator.html#a63c894a923ae86694bfaca7349ef152f">FTacticalAggregator::AddAggregatorMod</a></div><div class="ttdeci">void AddAggregatorMod(float EvaluatedData, TEnumAsByte&lt; ETacticalModOp::Type &gt; ModifierOp, FActiveTacticalEffectHandle ActiveHandle=FActiveTacticalEffectHandle())</div><div class="ttdoc">모디파이어를 해당 op 버킷(mMods[ModifierOp])에 추가한다.</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8cpp_source.html#l00179">TacticalAggregator.cpp:179</a></div></div>
+<div class="ttc" id="astructFTacticalAggregator_html_a71c5d8fd6154a12db56353145116fd95"><div class="ttname"><a href="structFTacticalAggregator.html#a71c5d8fd6154a12db56353145116fd95">FTacticalAggregator::~FTacticalAggregator</a></div><div class="ttdeci">~FTacticalAggregator()</div><div class="ttdoc">소멸 시 자신이 프레임워크 모델의 Dirty 대기열에 남아 있지 않도록 정리한다.</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8cpp_source.html#l00075">TacticalAggregator.cpp:75</a></div></div>
+<div class="ttc" id="astructFTacticalAggregator_html_a761f5febabdb70f492f43d233b1efb79"><div class="ttname"><a href="structFTacticalAggregator.html#a761f5febabdb70f492f43d233b1efb79">FTacticalAggregator::EvaluateWithBase</a></div><div class="ttdeci">float EvaluateWithBase(float BaseValue) const</div><div class="ttdoc">외부에서 지정한 Base를 출발점으로 모디파이어를 적용해 평가한다.</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8cpp_source.html#l00274">TacticalAggregator.cpp:274</a></div></div>
+<div class="ttc" id="astructFTacticalAggregator_html_a7795d11fbf7eddc972a969a1832a556a"><div class="ttname"><a href="structFTacticalAggregator.html#a7795d11fbf7eddc972a969a1832a556a">FTacticalAggregator::SetAttributeBaseValue</a></div><div class="ttdeci">void SetAttributeBaseValue(float BaseValue, bool BroadcastDirtyEvent=true)</div><div class="ttdoc">기준값(Base)을 설정한다.</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8cpp_source.html#l00101">TacticalAggregator.cpp:101</a></div></div>
+<div class="ttc" id="astructFTacticalAggregator_html_a89d25a90dc0af87ba0a3ea46f6e34d24"><div class="ttname"><a href="structFTacticalAggregator.html#a89d25a90dc0af87ba0a3ea46f6e34d24">FTacticalAggregator::mDirtyCount</a></div><div class="ttdeci">int32 mDirtyCount</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8h_source.html#l00194">TacticalAggregator.h:194</a></div></div>
+<div class="ttc" id="astructFTacticalAggregator_html_a97c7b38ec4b7f0ece7b18fb5cf3108a7"><div class="ttname"><a href="structFTacticalAggregator.html#a97c7b38ec4b7f0ece7b18fb5cf3108a7">FTacticalAggregator::OnDirty</a></div><div class="ttdeci">FOnAttributeAggregatorDirty OnDirty</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8h_source.html#l00192">TacticalAggregator.h:192</a></div></div>
+<div class="ttc" id="astructFTacticalAggregator_html_aa173e0ec2d542b28d92d62fe251cc58a"><div class="ttname"><a href="structFTacticalAggregator.html#aa173e0ec2d542b28d92d62fe251cc58a">FTacticalAggregator::UpdateAggregatorMod</a></div><div class="ttdeci">void UpdateAggregatorMod(FActiveTacticalEffectHandle ActiveHandle, const FTacticalAttribute &amp;Attribute, const FTacticalEffectSpec &amp;Spec, FActiveTacticalEffectHandle InHandle)</div><div class="ttdoc">기존 모디파이어를 새 속성/스펙 기준으로 재평가하여 갱신한다.</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8cpp_source.html#l00226">TacticalAggregator.cpp:226</a></div></div>
+<div class="ttc" id="astructFTacticalAggregator_html_aaa879ccacd6a481fffcfc2a165f2ad1a"><div class="ttname"><a href="structFTacticalAggregator.html#aaa879ccacd6a481fffcfc2a165f2ad1a">FTacticalAggregator::SumMods</a></div><div class="ttdeci">static float SumMods(const TArray&lt; FTacticalAggregatorMod &gt; &amp;Mods, float Bias)</div><div class="ttdoc">합산계열(AddBase/AddFinal) 버킷의 magnitude 총합을 계산한다.</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8cpp_source.html#l00310">TacticalAggregator.cpp:310</a></div></div>
+<div class="ttc" id="astructFTacticalAggregator_html_ad113ece537f51d266257f95cd69c0e84"><div class="ttname"><a href="structFTacticalAggregator.html#ad113ece537f51d266257f95cd69c0e84">FTacticalAggregator::RemoveAggregatorMod</a></div><div class="ttdeci">void RemoveAggregatorMod(FActiveTacticalEffectHandle ActiveHandle)</div><div class="ttdoc">주어진 핸들에 해당하는 모디파이어를 모든 op 버킷에서 제거한다.</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8cpp_source.html#l00201">TacticalAggregator.cpp:201</a></div></div>
+<div class="ttc" id="astructFTacticalAggregator_html_ada20ae78668a0f147af5705d00274b84"><div class="ttname"><a href="structFTacticalAggregator.html#ada20ae78668a0f147af5705d00274b84">FTacticalAggregator::StaticExecModOnBaseValue</a></div><div class="ttdeci">static float StaticExecModOnBaseValue(float BaseValue, TEnumAsByte&lt; ETacticalModOp::Type &gt; ModifierOp, float EvaluatedMagnitude)</div><div class="ttdoc">단일 모디파이어를 BaseValue에 즉시 적용한 결과를 계산하는 정적 헬퍼. op별 연산 수식:</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8cpp_source.html#l00122">TacticalAggregator.cpp:122</a></div></div>
+<div class="ttc" id="astructFTacticalAggregator_html_af500687ed91599e11a576ec1d2c3d006"><div class="ttname"><a href="structFTacticalAggregator.html#af500687ed91599e11a576ec1d2c3d006">FTacticalAggregator::MultiplyMods</a></div><div class="ttdeci">static float MultiplyMods(const TArray&lt; FTacticalAggregatorMod &gt; &amp;Mods)</div><div class="ttdoc">곱셈계열(MultiplyAdditive/MultiplyCompound 등) 버킷의 배율 곱을 계산한다. 배율은 (1 + magnitude) 형태로 누적 곱해진다(항등값 1에서 시작)...</div><div class="ttdef"><b>Definition</b> <a href="TacticalAggregator_8cpp_source.html#l00329">TacticalAggregator.cpp:329</a></div></div>
+<div class="ttc" id="astructFTacticalAttribute_html"><div class="ttname"><a href="structFTacticalAttribute.html">FTacticalAttribute</a></div><div class="ttdef"><b>Definition</b> <a href="TacticalAttributeSet_8h_source.html#l00074">TacticalAttributeSet.h:75</a></div></div>
+<div class="ttc" id="astructFTacticalEffectSpec_html"><div class="ttname"><a href="structFTacticalEffectSpec.html">FTacticalEffectSpec</a></div><div class="ttdoc">어떤 Effect를 어떤 방식으로 누가 적용시키는지에 대한 런타임 정보 객체</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffect_8h_source.html#l00065">TacticalEffect.h:66</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_2931332fe30aa418bc02be414a0905e5.html">TAS</a></li><li class="navelem"><a class="el" href="dir_6511dd990fb9e50639635bbc08381276.html">Aggregator</a></li><li class="navelem"><a class="el" href="TacticalAggregator_8h.html">TacticalAggregator.h</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

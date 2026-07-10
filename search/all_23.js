@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['수동_20추가인가_0',['Q 액션 큐는 항상 수동 추가인가?',['../srpg_framework_page.html#srpg_framework_subsystem_step3',1,'']]]
+  ['검사하는가_0',['Q 턴 종료는 어디서 검사하는가?',['../srpg_framework_page.html#srpg_framework_subsystem_step4',1,'']]]
 ];
