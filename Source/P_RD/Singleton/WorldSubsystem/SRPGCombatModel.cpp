@@ -421,22 +421,7 @@ void USRPGCombatModel::RegisterEnemyUnit(FEnemyUnitPlacementData& EnemyPlacement
 	EnemyUnit->SetStaticSpawnData(EnemyUnitSpawnData);
 	EnemyUnit->FinishCreating(mTileMap->TileToWorldTransform(EnemyPlacementData.mTransform));
 
-	checkf(mTileMap->CanPlace(EnemyPlacementData.mTransform.mIndex, EnemyUnit), TEXT("액터 배치 불가능"));
-	
-	mUnits.Push(EnemyUnit);
-
-	// 타일 위에 배치
-	mTileMap->PlaceActor(EnemyPlacementData.mTransform, EnemyUnit);
-
-	// 턴 등록
-	RegisterTurn(EnemyUnit);
-
-	if (mCombatPhase == ESRPGCombatRoomPhase::CombatPlay)
-	{
-		EnemyUnit->OnBeginRoom();
-	}
-
-	OnRegisterUnitUI.Broadcast(EnemyUnit);
+	RegisterUnit(EnemyUnit, EnemyPlacementData.mTransform);
 }
 
 void USRPGCombatModel::RegisterObstacle(FObstaclePlacementData& ObstaclePlacementData)
@@ -547,21 +532,8 @@ void USRPGCombatModel::RegisterPlayerUnit(UUnitModel* PlayerUnit, const FTileTra
 	checkf(mTileMap != nullptr, TEXT("타일맵 미존재"));
 	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
 
-	// 타일 위에 배치
-	mTileMap->PlaceActor(Transform, PlayerUnit);
-
 	mPlayerUnit = PlayerUnit;
-	mUnits.Push(PlayerUnit);
-
-	// 턴 등록
-	RegisterTurn(PlayerUnit);
-
-	if (mCombatPhase == ESRPGCombatRoomPhase::CombatPlay)
-	{
-		PlayerUnit->OnBeginRoom();
-	}
-
-	OnRegisterUnitUI.Broadcast(PlayerUnit);
+	RegisterUnit(PlayerUnit, Transform);
 }
 
 void USRPGCombatModel::RegisterEnemyUnits(TArray<FEnemyUnitPlacementData>& EnemyPlacementDatas)
@@ -587,6 +559,25 @@ void USRPGCombatModel::RegisterEnemyUnits(TArray<FEnemyUnitPlacementData>& Enemy
 	}
 }
 
+void USRPGCombatModel::RegisterUnit(UUnitModel* Unit, const FTileTransform& Transform)
+{
+	mUnits.Push(Unit);
+
+	// 타일 위에 배치
+	checkf(mTileMap->CanPlace(Transform.mIndex, Unit), TEXT("액터 배치 불가능"));
+	mTileMap->PlaceActor(Transform, Unit);
+
+	// 턴 등록
+	RegisterTurn(Unit);
+
+	if (mCombatPhase == ESRPGCombatRoomPhase::CombatPlay)
+	{
+		Unit->OnBeginRoom();
+	}
+
+	OnRegisterUnitUI.Broadcast(Unit);
+}
+
 void USRPGCombatModel::RegisterObstacles(TArray<FObstaclePlacementData>& ObstaclePlacementDatas)
 {
 	checkf(mTileMap != nullptr, TEXT("타일맵 미존재"));
@@ -601,13 +592,14 @@ void USRPGCombatModel::AdvanceTurn(bool IsInitialRound)
 {
 	if (IsInitialRound == false)
 	{
+		// 밀려있던 턴 구성 변경 요청안들 처리
+		FlushPendingTurnRequests();
+		
 		// 라운드 종료 시 이벤트 처리
 		NotifyRoundEndIfNeeded();
 
-		// 다음 턴 진행
+		// 턴 변경
 		mCurTurnContextOrder = mCurTurnContextOrder->GetNextNode();
-		// 밀려있던 턴 구성 변경 요청안들 처리
-		FlushPendingTurnRequests();
 	}
 
 	// 강제 중단
@@ -617,13 +609,16 @@ void USRPGCombatModel::AdvanceTurn(bool IsInitialRound)
 		return;
 	}
 
-	// 라운드 시작 시 이벤트 처리
-	NotifyRoundStartIfNeeded();
+	auto PresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+		// 다음 턴 시작
+		mTurnContextMap[mCurTurnContextOrder->GetValue()]->BeginTurn();
+		}));
 
-	mTurnContextMap[mCurTurnContextOrder->GetValue()]->BeginTurn();
+	// 라운드 시작 시 이벤트 처리
+	NotifyRoundStartIfNeeded(PresentationBarrier);
 }
 
-void USRPGCombatModel::NotifyRoundStartIfNeeded()
+void USRPGCombatModel::NotifyRoundStartIfNeeded(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier)
 {
 	if (mTurnContextOrder.IsEmpty() == false && mCurTurnContextOrder == mTurnContextOrder.GetHead())
 	{
@@ -638,17 +633,7 @@ void USRPGCombatModel::NotifyRoundStartIfNeeded()
 			Obstacle->OnBeginRound();
 		}
 
-		// TODO(프레임워크 소유자): 라운드 시작 연출 배리어 연결 지점.
-		//   OnBeginAnyRoundUI(계약)는 이미 선언돼 있고 게임모드/HUD가 구독 중이다(라운드 배너 게이팅).
-		//   여기서 배리어를 만들어 방송하면 배너가 살아난다. 단, 이 함수는 AdvanceTurn이 곧바로 BeginTurn을 호출하므로
-		//   "첫 턴 지연"까지 하려면 AdvanceTurn을 아래처럼 재구성해야 한다(턴의 BeginTurn 배리어와 대칭):
-		//
-		//   TSharedPtr<FPresentationBarrier> RoundBarrier = FPresentationBarrier::Make(
-		//       FOnFinishPresentation::CreateWeakLambda(this, [this]() {
-		//           mTurnContextMap[mCurTurnContextOrder->GetValue()]->BeginTurn();   // 배너 종료 후 그 라운드 첫 턴
-		//       }));
-		//   OnBeginAnyRoundUI.Broadcast(RoundBarrier, mRoundCount);
-		//   → 그리고 AdvanceTurn 끝의 무조건 BeginTurn() 호출을 "라운드 시작이면 배리어에 위임"으로 분기.
+		OnBeginAnyRoundUI.Broadcast(RoundPresentationBarrier, mRoundCount);
 	}
 }
 
@@ -681,7 +666,7 @@ bool USRPGCombatModel::PushAction(USRPGAction* Action)
 	return true;
 }
 
-USRPGTurnContext* USRPGCombatModel::GetCurrentTurnContext()
+USRPGTurnContext* USRPGCombatModel::GetCurrentTurnContext() const
 {
 	if (mCurTurnContextOrder == nullptr)
 	{
@@ -690,7 +675,7 @@ USRPGTurnContext* USRPGCombatModel::GetCurrentTurnContext()
 	return mTurnContextMap[mCurTurnContextOrder->GetValue()];
 }
 
-USRPGTurnContext* USRPGCombatModel::GetTurnContext(const UUnitModel* Owner)
+USRPGTurnContext* USRPGCombatModel::GetTurnContext(const UUnitModel* Owner) const
 {
 	auto* HeadNode = mTurnContextOrder.GetHead();
 	const int32 TurnCount = mTurnContextOrder.Num();
@@ -705,25 +690,40 @@ USRPGTurnContext* USRPGCombatModel::GetTurnContext(const UUnitModel* Owner)
 	return nullptr;
 }
 
-TArray<TObjectPtr<USRPGTurnContext>> USRPGCombatModel::GetTurnContexts(const UUnitModel* Owner)
+TArray<TObjectPtr<USRPGTurnContext>> USRPGCombatModel::GetTurnContexts(const UUnitModel* Owner) const
 {
 	TArray<TObjectPtr<USRPGTurnContext>> Contexts;
 
-	auto* HeadNode = mTurnContextOrder.GetHead();
+	auto* CurNode = mTurnContextOrder.GetHead();
 	const int32 TurnCount = mTurnContextOrder.Num();
 	for (int32 i = 0; i < TurnCount; ++i)
 	{
-		if (mTurnContextMap[mCurTurnContextOrder->GetValue()]->GetOwner() == Owner)
+		if (mTurnContextMap[CurNode->GetValue()]->GetOwner() == Owner)
 		{
-			Contexts.Push(mTurnContextMap[mCurTurnContextOrder->GetValue()]);
+			Contexts.Push(mTurnContextMap[CurNode->GetValue()]);
 		}
-		HeadNode = HeadNode->GetNextNode();
+		CurNode = CurNode->GetNextNode();
 	}
 
 	return Contexts;
 }
 
-UTileMapModel* USRPGCombatModel::GetTileMap()
+TArray<TObjectPtr<USRPGTurnContext>> USRPGCombatModel::GetOrderedTurnContexts() const
+{
+	TArray<TObjectPtr<USRPGTurnContext>> Contexts;
+
+	auto* CurNode = mCurTurnContextOrder;
+	const int32 TurnCount = mTurnContextOrder.Num();
+	for (int32 i = 0; i < TurnCount; ++i)
+	{
+		Contexts.Push(mTurnContextMap[CurNode->GetValue()]);
+		CurNode = CurNode->GetNextNode();
+	}
+
+	return Contexts;
+}
+
+UTileMapModel* USRPGCombatModel::GetTileMap() const
 {
 	return mTileMap;
 }

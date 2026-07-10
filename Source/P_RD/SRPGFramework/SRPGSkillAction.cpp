@@ -66,8 +66,8 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
             return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
         }
 
-        FOnEndSkill Callback;
-        Callback.AddWeakLambda(this, [this](int32 SkillIndex, const UStaticSkillData* PreSkillData) {
+        FOnEndSkillUI Callback;
+        Callback.AddWeakLambda(this, [this](const FActiveSkillContext& Context, const UStaticSkillData* PreSkillData) {
             MarkActionCompleted(ESRPGActionResult::Succeeded);
             });
 

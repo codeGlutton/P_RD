@@ -564,23 +564,19 @@ void ACombatGameMode::PushTurnUIData() const
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 
-	const TArray<TObjectPtr<UUnitModel>>& UnitModels = CombatModel->GetUnits();
-
-	// 마지막 턴 노드가 제거된 직후(OnUnregisterUnit 경로)에는 현재 턴이 없을 수 있다 — 그때는 push를 생략한다.
-	USRPGTurnContext* TurnContext = CombatModel->GetCurrentTurnContext();
-	if (TurnContext == nullptr)
+	const TArray<TObjectPtr<USRPGTurnContext>> TurnContexts = CombatModel->GetOrderedTurnContexts();
+	if (TurnContexts.IsEmpty() == true)
 	{
 		return;
 	}
 
 	FTurnUI TurnUI;
-	TurnUI.mCurrentUnitId = TurnContext->GetOwner()->GetModelId();
-	// 페이즈의 단일 소유자는 SetBuildPhase(빌드 이벤트) — 턴 스냅샷 push가 진행 중 페이즈를 덮지 않게 보존한다.
+	TurnUI.mCurrentUnitId = TurnContexts[0]->GetOwner()->GetModelId();
 	TurnUI.mPhase = mCombatUIModel->GetTurnUI().mPhase;
 	TurnUI.mRound = CombatModel->GetRoundCount();
-	for (const TObjectPtr<UUnitModel>& UnitModel : UnitModels)
+	for (const TObjectPtr<USRPGTurnContext> TurnContext : TurnContexts)
 	{
-		TurnUI.mTurnOrderUnitIds.Add(UnitModel->GetModelId());
+		TurnUI.mTurnOrderUnitIds.Add(TurnContext->GetOwner()->GetModelId());
 	}
 	mCombatUIModel->SetTurnUI(TurnUI);
 }
@@ -991,6 +987,11 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 			EFloatingLogColorType ColorType = EFloatingLogColorType::Neutral;
 			ConvertFloatingLogUITypes(AttrLog, OUT IconType, OUT ColorType);
 
+			if (IconType == EFloatingLogIconType::None && ColorType == EFloatingLogColorType::Neutral)
+			{
+				continue;
+			}
+
 			Requests.Add(MakeLogRequest(
 				FMath::Floor(AttrLog.mMagnitude),
 				IconType,
@@ -1006,6 +1007,11 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 			EFloatingLogColorType ColorType = EFloatingLogColorType::Neutral;
 			ConvertFloatingLogUITypes(TagLog, OUT IconType, OUT ColorType);
 
+			if (IconType == EFloatingLogIconType::None && ColorType == EFloatingLogColorType::Neutral)
+			{
+				continue;
+			}
+
 			Requests.Add(MakeLogRequest(
 				TagLog.mCount,
 				IconType,
@@ -1020,6 +1026,11 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 			EFloatingLogIconType IconType = EFloatingLogIconType::None;
 			EFloatingLogColorType ColorType = EFloatingLogColorType::Neutral;
 			ConvertFloatingLogUITypes(TileLog, OUT IconType, OUT ColorType);
+
+			if (IconType == EFloatingLogIconType::None && ColorType == EFloatingLogColorType::Neutral)
+			{
+				continue;
+			}
 
 			// TODO : 
 			// 어디서 어디로 이동했다는 정보는 어떻게 알려야하나
