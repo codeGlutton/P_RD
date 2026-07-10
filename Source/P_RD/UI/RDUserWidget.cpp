@@ -196,10 +196,8 @@ void URDUserWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 
-	if (ShouldApplyButtonFeedback() == true)
-	{
-		SetupCommonButtonFeedback();
-	}
+	// 클릭 사운드는 모든 화면의 모든 버튼에 공통 적용한다. 시각 피드백(어둡게/축소)만 화면별 opt-in.
+	SetupCommonButtonFeedback();
 }
 
 void URDUserWidget::SetupCommonButtonFeedback()
@@ -213,9 +211,10 @@ void URDUserWidget::SetupCommonButtonFeedback()
 	}
 
 	USoundBase* PressSound = mCommonButtonPressSound;
+	const bool bApplyPressVisual = ShouldApplyButtonFeedback();
 
 	// 이 위젯 트리 안의 모든 UButton을 순회한다(자식 UserWidget은 각자 이 베이스를 상속하므로 스스로 처리).
-	WidgetTree->ForEachWidget([this, PressSound](UWidget* Widget)
+	WidgetTree->ForEachWidget([this, PressSound, bApplyPressVisual](UWidget* Widget)
 		{
 			UButton* Button = Cast<UButton>(Widget);
 			if (Button == nullptr)
@@ -229,6 +228,12 @@ void URDUserWidget::SetupCommonButtonFeedback()
 				FButtonStyle Style = Button->GetStyle();
 				Style.PressedSlateSound.SetResourceObject(PressSound);
 				Button->SetStyle(Style);
+			}
+
+			// 누름 시각 피드백은 opt-in 화면(타이틀/클래스 선택 등)만 — 전투/주사위엔 걸지 않는다.
+			if (bApplyPressVisual == false)
+			{
+				return;
 			}
 
 			// 누름 피드백: 배경색을 어둡게(주 효과) + 살짝 축소(보조). 브러시 자체는 안 건드려 디자이너 스킨 보존.

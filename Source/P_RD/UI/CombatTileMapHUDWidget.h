@@ -4,7 +4,9 @@
 #include "UI/DiceViewData.h"
 #include "UI/Combat/CombatUITypes.h"
 #include "UI/RDUserWidget.h"
+#include "UI/Reward/RewardUITypes.h"
 #include "Components/CanvasPanelSlot.h"   // FAnchorData (폴드 변형 베이스 슬롯 캐시)
+#include "Engine/TimerHandle.h"           // FTimerHandle (골드 카운트업 타이머)
 #include "Styling/SlateBrush.h"
 #include "Widgets/Layout/Anchors.h"
 
@@ -20,9 +22,14 @@ class UBorder;
 class UButton;
 class UCanvasPanel;
 class UCombatUIModel;
+class UCombatResultOverlayWidget;
+class UCinematicWidget;
 class UIndexedButtonWidget;
 class UImage;
 class UProgressBar;
+class URewardUIModel;
+class URewardUIWidgetBase;
+class USoundBase;
 class UTextBlock;
 class UViewport;
 class UWidget;
@@ -255,6 +262,25 @@ private:
 	/** @brief 룸 이름 마커에 현재 방 표시 이름('일반'/'엘리트'/'보스')을 채운다(전투 진입 시 1회). */
 	void RefreshRoomNameLabel() const;
 
+	/** @brief 스크린 좌표가 LV 값 마커(HUD_M_lv_value) 위인지 지오메트리로 판정한다. */
+	bool IsScreenPositionOverLevelValue(const FVector2D& ScreenPosition) const;
+
+	/** @brief LV 꾹 누름 동안 표시할 경험치 회색 패널을 LV 마커 아래에 생성한다. */
+	void EnsureExpHoldPanel();
+
+	/** @brief 경험치 패널 표시/숨김. 표시 시 현재 경험치 값을 채운다. */
+	void SetExpHoldPanelVisible(bool bVisible);
+
+	/** @brief 골드 칸 표시값을 갱신한다. 증가면 코인 사운드와 함께 차르륵 카운트업, 감소/최초는 즉시 반영. */
+	// 카운트업 상태는 표시 캐시(mutable)라 const 갱신 경로(RefreshSkinValueLabels)에서 불러도 된다.
+	void UpdateGoldValueLabel(int32 NewGold) const;
+
+	/** @brief 카운트업 타이머 틱 — 남은 차이에 비례해 감속하며 목표 골드로 수렴한다. */
+	void TickGoldCountUp() const;
+
+	/** @brief HUD_M_gold_value 마커 TextBlock에 골드 숫자를 그린다. */
+	void SetGoldValueLabelText(int32 Gold) const;
+
 	/** @brief 장비 슬롯 칩(탑바 좌측 하단)을 뷰모델 장비 뷰로 다시 만든다. */
 	void RebuildEquipmentBar();
 
@@ -320,6 +346,42 @@ private:
 	/** @brief 플레이어 승리 결과를 다음 방 선택 월드맵 표시로 연결한다. */
 	void HandleEndCombatUI(TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result);
 
+	/** @brief 승패 결과 영상을 열고, 영상 종료 뒤 보상/계속 버튼 흐름으로 이어간다. */
+	// 판정 직후 바로가 아니라 짧은 텀(딜레이) 후 StartCombatResultCinematic으로 실제 연출을 시작한다.
+	void BeginCombatResultPresentation(TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result);
+
+	/** @brief 텀(딜레이) 후 실제 결과 연출 시작 — 징글 재생 + 결과 영상 오픈. */
+	void StartCombatResultCinematic();
+
+	/** @brief 결과 영상/오버레이 위젯 인스턴스를 준비한다. */
+	void EnsureCombatResultWidgets();
+
+	/** @brief 승패 영상 재생이 끝났을 때 결과별 후속 UI를 연다. */
+	void HandleCombatResultVideoFinished(UCinematicWidget* CinematicWidget);
+
+	/** @brief 승리 보상 수령 버튼 처리. */
+	UFUNCTION()
+	void HandleCombatResultRewardConfirmed();
+
+	/** @brief 보상 행 클릭 지급 요청 처리. */
+	UFUNCTION()
+	void HandleCombatRewardClaimRequested(ERewardClaimKind ClaimKind, int32 ChoiceIndex);
+
+	/** @brief 패배 계속 버튼 처리. */
+	void HandleCombatResultContinueConfirmed();
+
+	/** @brief 결과 영상 위젯을 닫고 후속 콜백을 실행한다. */
+	void CloseCombatResultCinematic(FSimpleDelegate Callback);
+
+	/** @brief 결과 영상 표시 중 지도탭과 같은 HUD 숨김 상태를 적용/해제한다. */
+	void SetCombatResultViewActive(bool bActive, bool bRestoreCombatControls = true);
+
+	/** @brief 결과 영상 중 룸 이름 클러스터만 숨기고, 종료 시 원래 표시 상태를 복원한다. */
+	void SetRoomNameClusterVisible(bool bVisible);
+
+	/** @brief 결과 타입에 맞는 mp4 설정 경로를 반환한다. */
+	FString GetCombatResultVideoPath(ESRPGCombatResult Result) const;
+
 	/** @brief 승리 후 다음 방 선택이 가능한 상태로 월드맵을 연다(OpenUI 완료 시 barrier 해제). */
 	void OpenWorldMapAfterPlayerWin(TSharedPtr<FPresentationBarrier> Barrier);
 
@@ -346,6 +408,31 @@ private:
 	/** @brief 지도 열림 동안 탑바 뒤 월드 비침을 가리는 배경판(시안 빌더가 WBP에 생성, 초기 Collapsed) */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UImage> TopBar_Backdrop;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UCinematicWidget> mCombatResultCinematicWidget;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UCombatResultOverlayWidget> mCombatResultOverlayWidget;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI|Reward")
+	TSubclassOf<URewardUIWidgetBase> mRewardWidgetClass;
+
+	UPROPERTY(Transient)
+	TObjectPtr<URewardUIWidgetBase> mCombatRewardWidget;
+
+	UPROPERTY(Transient)
+	TObjectPtr<URewardUIModel> mCombatRewardUIModel;
+
+	TSharedPtr<FPresentationBarrier> mCombatResultBarrier;
+	// 턴 시작 배너를 재생하는 동안 잡아두는 배리어 — 배너가 끝나면(FinishTurnChangeIntro) 놓아 실제 턴 실행을 진행시킨다.
+	TSharedPtr<FPresentationBarrier> mTurnChangeBarrier;
+
+	/** @brief 승패 판정 → 결과 영상 시작 사이의 텀 타이머. */
+	FTimerHandle mCombatResultStartDelayTimerHandle;
+	TMap<FName, ESlateVisibility> mCombatResultRoomNameVisibilities;
+	ESRPGCombatResult mCombatResult = ESRPGCombatResult::PlayerLose;
+	bool mCombatResultFlowActive = false;
 
 	/** @brief 뷰모델의 유닛 수에 맞춰 머리 위 HP바 위젯을 다시 만든다. */
 	void RebuildUnitHpBars();
@@ -528,6 +615,51 @@ private:
 	/** @brief 유닛 HP바 왼쪽 방어도 아이콘 텍스처(생성자 프리로드). */
 	UPROPERTY(Transient)
 	TObjectPtr<UTexture2D> mUnitDefenseIconTexture;
+
+	/** @brief 골드 획득 코인 사운드(카운트업 시작 시 1회). 생성자에서 하드레퍼런스 프리로드(#300 컨벤션). */
+	UPROPERTY(Transient)
+	TObjectPtr<USoundBase> mCoinGainSound;
+
+	/** @brief 승리/패배 결과 징글. 결과 연출 시작과 동시에 1회 재생한다. */
+	UPROPERTY(Transient)
+	TObjectPtr<USoundBase> mVictoryJingleSound;
+	UPROPERTY(Transient)
+	TObjectPtr<USoundBase> mDefeatJingleSound;
+
+	/** @brief 지도 열기 사운드(책장 넘김). 월드맵이 실제로 열릴 때 1회. */
+	UPROPERTY(Transient)
+	TObjectPtr<USoundBase> mMapOpenSound;
+
+	/** @brief 스킬-주사위 배치에서 주사위를 고를 때 나는 나무 주사위 사운드. */
+	UPROPERTY(Transient)
+	TObjectPtr<USoundBase> mDiceChooseSound;
+
+	/** @brief 스킬 레일에서 유효한 스킬을 선택할 때 재생하는 사운드. */
+	UPROPERTY(Transient)
+	TObjectPtr<USoundBase> mSkillSelectSound;
+
+	/** @brief 보상에서 경험치를 받았을 때 상승음. */
+	UPROPERTY(Transient)
+	TObjectPtr<USoundBase> mExpGainSound;
+
+	/** @brief LV 칸을 누르는 중인가 — true인 동안 LV 아래 경험치 패널을 표시한다. */
+	bool mLevelValueTouched = false;
+
+	/** @brief LV 꾹 누름 동안 표시되는 경험치 회색 패널과 텍스트. */
+	UPROPERTY(Transient)
+	TObjectPtr<UBorder> mExpHoldPanel;
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mExpHoldText;
+
+	// 골드 카운트업 상태 3종은 '화면 표시 캐시'라 mutable — const 그리기 경로에서 갱신해도 논리 상태 불변.
+	/** @brief 골드 칸에 현재 표시 중인 값. INDEX_NONE이면 아직 최초 표시 전(카운트업 없이 즉시 그림). */
+	mutable int32 mDisplayedGold = INDEX_NONE;
+
+	/** @brief 카운트업이 수렴할 목표 골드. */
+	mutable int32 mGoldCountUpTarget = 0;
+
+	/** @brief 골드 카운트업 반복 타이머. */
+	mutable FTimerHandle mGoldCountUpTimerHandle;
 
 	/** @brief 여러 주사위를 하나의 숨겨진 물리 테이블에서 굴리는 캡처 액터 */
 	UPROPERTY(Transient)

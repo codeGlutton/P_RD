@@ -545,6 +545,22 @@ const UUserPersistData* ARDGameModeBase::GetUserPersistData() const
 	return PersistentDataSubsystem->GetUserPersistData();
 }
 
+UUserPersistData* ARDGameModeBase::GetUserPersistData()
+{
+	UPersistentDataSubsystem* PersistentDataSubsystem = GetGameInstance()->GetSubsystem<UPersistentDataSubsystem>();
+	checkf(PersistentDataSubsystem != nullptr, TEXT("영구 데이터 서브시스템 nullptr"));
+
+	return PersistentDataSubsystem->GetUserPersistData();
+}
+
+URunPersistData* ARDGameModeBase::GetRunPersistData()
+{
+	UPersistentDataSubsystem* PersistentDataSubsystem = GetGameInstance()->GetSubsystem<UPersistentDataSubsystem>();
+	checkf(PersistentDataSubsystem != nullptr, TEXT("영구 데이터 서브시스템 nullptr"));
+
+	return PersistentDataSubsystem->GetRunPersistData();
+}
+
 const URunPersistData* ARDGameModeBase::GetRunPersistData() const
 {
 	UPersistentDataSubsystem* PersistentDataSubsystem = GetGameInstance()->GetSubsystem<UPersistentDataSubsystem>();

@@ -191,6 +191,8 @@ private:
 	void OnPreTransition(int32 RoomRowIndex, int32 RoomColumnIndex);
 
 public:
+	UUserPersistData* GetUserPersistData();
+	URunPersistData* GetRunPersistData();
 	const UUserPersistData* GetUserPersistData() const;
 	const URunPersistData* GetRunPersistData() const;
 

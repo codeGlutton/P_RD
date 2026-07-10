@@ -284,10 +284,16 @@ void UTileMapModel::AppendBlockableRay(const FTileIndex& Origin, const FTileInde
 	}
 }
 
-bool UTileMapModel::IsOccupied(const FTileIndex& TileIndex) const
+bool UTileMapModel::IsOccupied(const FTileIndex& TileIndex, const UBoardActorModel* IgnoreBlocker) const
 {
 	// 장애물 또는 유닛이 있으면 점유로 판정
-	return GetActorsOnTile(TileIndex, ETileLayerFlag::Obstacle | ETileLayerFlag::Unit).Num() > 0;
+	for (const UBoardActorModel* Actor : GetActorsOnTile(TileIndex, ETileLayerFlag::Obstacle | ETileLayerFlag::Unit))
+	{
+		// 무시 대상(자리를 비울 예정인 유닛 등)은 점유로 치지 않음
+		if (Actor != IgnoreBlocker)
+			return true;
+	}
+	return false;
 }
 
 void UTileMapModel::AppendSquareTiles(const FTileIndex& Center, const int32 Radius, TArray<FTileIndex>& Out) const
@@ -507,6 +513,57 @@ TArray<FTileIndex> UTileMapModel::GetReachableTiles(const FTileIndex& Origin, in
 	}
 
 	return Result;
+}
+
+TArray<int32> UTileMapModel::GetDistanceField(const FTileIndex& Target, const UBoardActorModel* IgnoreBlocker) const
+{
+	// 칸별 최단 경로 거리
+	TArray<int32> Distance;
+	Distance.Init(-1, mWidth * mHeight);
+
+	// 목표가 맵 밖이면 도달 불가
+	const int32 TargetLinear = TileIndexToLinearIndex(Target);
+	if (TargetLinear == INDEX_NONE)
+		return Distance;
+
+	// 목표 칸 자신은 점유(유닛 등)여도 거리 0의 시작점으로 허용
+	Distance[TargetLinear] = 0;
+
+	// BFS 큐: 가까운 칸부터 한 겹씩 확장
+	TArray<FTileIndex> Frontier;
+	Frontier.Add(Target);
+
+	for (int32 Head = 0; Head < Frontier.Num(); ++Head)
+	{
+		const FTileIndex Current = Frontier[Head];
+		const int32 NextDistance = Distance[TileIndexToLinearIndex(Current)] + 1;
+
+		// 직교 4방향 이웃 검사
+		for (const FTileIndex& Step : Orthogonal4)
+		{
+			const FTileIndex Next(Current.mX + Step.mX, Current.mY + Step.mY);
+
+			// 맵 밖이면 제외 (INDEX_NONE)
+			const int32 LinearIndex = TileIndexToLinearIndex(Next);
+			if (LinearIndex == INDEX_NONE)
+				continue;
+
+			// 이미 방문한 칸은 건너뜀 (BFS라 먼저 방문한 경로가 최단)
+			if (Distance[LinearIndex] != -1)
+				continue;
+
+			// 장애물/유닛이 점유한 칸은 통과/도착 불가
+			// 무시 대상 액터만 있으면 통과 가능
+			if (IsOccupied(Next, IgnoreBlocker))
+				continue;
+
+			// 거리 확정 후 큐에 추가
+			Distance[LinearIndex] = NextDistance;
+			Frontier.Add(Next);
+		}
+	}
+
+	return Distance;
 }
 
 /**
@@ -771,7 +828,8 @@ TArray<FTileIndex> UTileMapModel::GetEffectTiles(const FTileIndex& Caster, const
 
 			// Target(클릭 지점)을 시작으로 그 방향으로 뻗음 — 빔 길이는 Target 포함 총 Size칸
 			// (Target은 상단에서 이미 추가했으므로 너머로 Size-1칸만 더 뻗음)
-			if (Step.mX != 0 || Step.mY != 0)
+			// 비관통 빔이 점유 칸을 직접 조준한 경우 거기서 맞고 멈춤 — 너머로 뻗지 않음
+			if ((Step.mX != 0 || Step.mY != 0) && (bPenetrate || !IsOccupied(Target)))
 				AppendBlockableRay(Target, Step, Size - 1, bPenetrate, Result);
 		}
 		break;

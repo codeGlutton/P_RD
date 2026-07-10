@@ -6,7 +6,7 @@ void UCinematicWidget::StartDefaultCinematicTimer(float DurationSeconds)
 {
 	if (DurationSeconds <= 0.0f)
 	{
-		FinishCinematic();
+		FinishCinematicPlayback();
 		return;
 	}
 
@@ -21,7 +21,7 @@ void UCinematicWidget::StartDefaultCinematicTimer(float DurationSeconds)
 		mDefaultCinematicTimerHandle,
 		FTimerDelegate::CreateWeakLambda(this, [this]()
 		{
-			FinishCinematic();
+			FinishCinematicPlayback();
 		}),
 		DurationSeconds,
 		false

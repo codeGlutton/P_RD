@@ -165,6 +165,11 @@ public:
 	void GetCurrentRoomIndex(OUT int32& RowIndex, OUT int32& ColumnIndex) const;
 
 public:
+	bool AddRewardSkill(const FPrimaryAssetId& SkillId);
+	bool AddRewardEquipment(const FPrimaryAssetId& EquipmentId);
+	bool AddRewardDice(const FPrimaryAssetId& DiceId);
+
+public:
 	const FRunLog& GetRunLog() const;
 
 public:

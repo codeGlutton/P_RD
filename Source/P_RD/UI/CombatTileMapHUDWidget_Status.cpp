@@ -2,13 +2,14 @@
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
-#include "Components/Button.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
 #include "GameMode/CombatGameMode.h"  // 룸 이름 라벨(GetCurrentRoomDisplayName)
+#include "Kismet/GameplayStatics.h"   // 골드 카운트업 코인 사운드 재생
+#include "TimerManager.h"             // 골드 카운트업 반복 타이머
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
 #include "UI/Combat/CombatUIModel.h"
@@ -157,6 +158,8 @@ void UCombatTileMapHUDWidget::RefreshSkinValueLabels() const
 		}
 	}
 
+	// 골드 칸은 즉시 그리지 않고 카운트업 경로로 — 증가 시 코인 사운드와 함께 차르륵 올라간다.
+	UpdateGoldValueLabel(Meta.mGold);
 }
 
 void UCombatTileMapHUDWidget::RefreshRoomNameLabel() const
@@ -182,6 +185,167 @@ void UCombatTileMapHUDWidget::RefreshRoomNameLabel() const
 		{
 			RoomNameText->SetText(RoomDisplayName);
 		}
+	}
+}
+
+bool UCombatTileMapHUDWidget::IsScreenPositionOverLevelValue(const FVector2D& ScreenPosition) const
+{
+	if (WidgetTree == nullptr || IsDesignerSkinActive() == false)
+	{
+		return false;
+	}
+
+	const UWidget* LevelText = WidgetTree->FindWidget(TEXT("HUD_M_lv_value"));
+	if (LevelText == nullptr || LevelText->IsVisible() == false)
+	{
+		return false;
+	}
+
+	const FGeometry& LevelGeometry = LevelText->GetCachedGeometry();
+	if (LevelGeometry.GetLocalSize().X <= 0.0f || LevelGeometry.GetLocalSize().Y <= 0.0f)
+	{
+		return false;
+	}
+
+	constexpr float TouchPadding = 24.0f;
+	const FVector2D TopLeft = LevelGeometry.GetAbsolutePosition();
+	const FVector2D BottomRight = TopLeft + LevelGeometry.GetAbsoluteSize();
+	return ScreenPosition.X >= TopLeft.X - TouchPadding && ScreenPosition.X <= BottomRight.X + TouchPadding
+		&& ScreenPosition.Y >= TopLeft.Y - TouchPadding && ScreenPosition.Y <= BottomRight.Y + TouchPadding;
+}
+
+void UCombatTileMapHUDWidget::EnsureExpHoldPanel()
+{
+	if (mExpHoldPanel != nullptr || WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	UTextBlock* LevelText = Cast<UTextBlock>(WidgetTree->FindWidget(TEXT("HUD_M_lv_value")));
+	UCanvasPanelSlot* LevelSlot = LevelText != nullptr ? Cast<UCanvasPanelSlot>(LevelText->Slot) : nullptr;
+	UCanvasPanel* ParentCanvas = LevelText != nullptr ? Cast<UCanvasPanel>(LevelText->GetParent()) : nullptr;
+	if (LevelSlot == nullptr || ParentCanvas == nullptr)
+	{
+		return;
+	}
+
+	UBorder* Panel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("HUD_ExpHoldPanel"));
+	UTextBlock* PanelText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("HUD_ExpHoldText"));
+	if (Panel == nullptr || PanelText == nullptr)
+	{
+		return;
+	}
+
+	Panel->SetBrushColor(FLinearColor(0.10f, 0.10f, 0.12f, 0.88f));
+	Panel->SetPadding(FMargin(12.0f, 6.0f));
+	Panel->SetVisibility(ESlateVisibility::Collapsed);
+
+	FSlateFontInfo PanelFont = PanelText->GetFont();
+	PanelFont.Size = 20;
+	PanelFont.OutlineSettings.OutlineSize = 2;
+	PanelFont.OutlineSettings.OutlineColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.9f);
+	PanelText->SetFont(PanelFont);
+	PanelText->SetJustification(ETextJustify::Center);
+	PanelText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+	Panel->SetContent(PanelText);
+
+	if (UCanvasPanelSlot* PanelSlot = ParentCanvas->AddChildToCanvas(Panel))
+	{
+		const FMargin LevelOffsets = LevelSlot->GetOffsets();
+		PanelSlot->SetAnchors(LevelSlot->GetAnchors());
+		PanelSlot->SetAlignment(FVector2D(0.5f, 0.0f));
+		PanelSlot->SetAutoSize(true);
+		PanelSlot->SetPosition(FVector2D(
+			LevelOffsets.Left + LevelOffsets.Right * 0.5f,
+			LevelOffsets.Top + LevelOffsets.Bottom + 10.0f));
+		PanelSlot->SetZOrder(60);
+	}
+
+	mExpHoldPanel = Panel;
+	mExpHoldText = PanelText;
+}
+
+void UCombatTileMapHUDWidget::SetExpHoldPanelVisible(bool bVisible)
+{
+	if (bVisible)
+	{
+		EnsureExpHoldPanel();
+	}
+	if (mExpHoldPanel == nullptr)
+	{
+		return;
+	}
+
+	if (bVisible && mExpHoldText != nullptr && mCombatUIModel != nullptr)
+	{
+		const FPlayerMetaUI& Meta = mCombatUIModel->GetPlayerMeta();
+		mExpHoldText->SetText(FText::Format(
+			NSLOCTEXT("CombatTileMapHUDWidget", "ExpHoldPanel", "EXP {0}/{1}"),
+			FText::AsNumber(FMath::RoundToInt(Meta.mExp)), FText::AsNumber(FMath::RoundToInt(Meta.mMaxExp))));
+	}
+
+	mExpHoldPanel->SetVisibility(bVisible ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+}
+
+void UCombatTileMapHUDWidget::UpdateGoldValueLabel(int32 NewGold) const
+{
+	// 최초 표시(전투 진입)나 감소는 연출 없이 즉시 반영한다 — 차르륵은 '획득' 연출.
+	if (mDisplayedGold == INDEX_NONE || NewGold < mDisplayedGold)
+	{
+		if (GetWorld() != nullptr)
+		{
+			GetWorld()->GetTimerManager().ClearTimer(mGoldCountUpTimerHandle);
+		}
+		mDisplayedGold = NewGold;
+		SetGoldValueLabelText(NewGold);
+		return;
+	}
+
+	if (NewGold == mDisplayedGold || GetWorld() == nullptr)
+	{
+		return;
+	}
+
+	// 증가: 목표만 갱신하고 30Hz 반복 타이머로 수렴시킨다. 이미 도는 중이면 목표만 늘어난다.
+	mGoldCountUpTarget = NewGold;
+	if (GetWorld()->GetTimerManager().IsTimerActive(mGoldCountUpTimerHandle) == false)
+	{
+		if (mCoinGainSound != nullptr)
+		{
+			UGameplayStatics::PlaySound2D(this, mCoinGainSound);
+		}
+		GetWorld()->GetTimerManager().SetTimer(
+			mGoldCountUpTimerHandle,
+			FTimerDelegate::CreateUObject(this, &UCombatTileMapHUDWidget::TickGoldCountUp),
+			0.033f, true);
+	}
+}
+
+void UCombatTileMapHUDWidget::TickGoldCountUp() const
+{
+	// 남은 차이의 ~18%씩(최소 1) 올려 자연스럽게 감속하며 0.5~0.8초 안에 목표에 붙는다.
+	const int32 Remaining = mGoldCountUpTarget - mDisplayedGold;
+	const int32 Step = FMath::Max(1, FMath::RoundToInt(StaticCast<float>(Remaining) * 0.18f));
+	mDisplayedGold = FMath::Min(mDisplayedGold + Step, mGoldCountUpTarget);
+	SetGoldValueLabelText(mDisplayedGold);
+
+	if (mDisplayedGold >= mGoldCountUpTarget && GetWorld() != nullptr)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(mGoldCountUpTimerHandle);
+	}
+}
+
+void UCombatTileMapHUDWidget::SetGoldValueLabelText(int32 Gold) const
+{
+	if (WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	if (UTextBlock* GoldText = Cast<UTextBlock>(WidgetTree->FindWidget(TEXT("HUD_M_gold_value"))))
+	{
+		GoldText->SetText(FText::AsNumber(Gold));
+		GoldText->SetJustification(ETextJustify::Center);
 	}
 }
 
@@ -351,7 +515,9 @@ void UCombatTileMapHUDWidget::RebuildEquipmentIcons()
 	// 모델이 아직 없을 때도 마커를 전부 감춰서 WBP에 박힌 기본 브러시(임시 하트)가 새어 나오지 않게 한다.
 	for (int32 MarkerIndex = 0; MarkerIndex < MarkerCount; ++MarkerIndex)
 	{
-		UImage* SlotImage = Cast<UImage>(WidgetTree->FindWidget(SlotMarkerNames[MarkerIndex]));
+		UWidget* RawMarker = WidgetTree->FindWidget(SlotMarkerNames[MarkerIndex]);
+		UImage* SlotImage = Cast<UImage>(RawMarker);
+
 		if (SlotImage == nullptr)
 		{
 			continue;   // 마커가 없는 스킨/구버전이면 조용히 건너뛴다.

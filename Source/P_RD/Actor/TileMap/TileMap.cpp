@@ -655,8 +655,8 @@ void ATileMap::ClearMovePath()
 
 /**
  * @details
- * - 색을 프리멀티플라이드(알파 곱한 RGB + 커버리지 알파)로 custom data에 기록 — 화살표 머티리얼이 타일 하이라이트와 동일 합성 사용 가정
- * - 알파만 펄스(0↔색알파)시키고, 화살표는 인스턴스 순서마다 위상차를 줘 경로를 따라 흐르게 함
+ * - 색에 밝기를 곱해서 최종 색을 계산
+ * - 밝기만 하한<->상한 사이를 오가고, 화살표는 순서대로 위상차를 줘서 흐르는 느낌이 들게 처리
  */
 void ATileMap::RefreshPathPulse()
 {
@@ -667,15 +667,15 @@ void ATileMap::RefreshPathPulse()
 	const int32 Span = FMath::Max(1, mPathLength - 1);
 	const float PhasePerTile = 2.0f * PI * mPathFlowCycles / Span;
 
-	// 한 인스턴스에 펄스 색을 프리멀티로 기록하는 헬퍼
-	auto WriteInstance = [](UInstancedStaticMeshComponent* Component, int32 InstanceIndex, const FLinearColor& Color, float Wave)
+	// 한 인스턴스에 펄스 색을 기록하는 헬퍼
+	auto WriteInstance = [this](UInstancedStaticMeshComponent* Component, int32 InstanceIndex, const FLinearColor& Color, float Wave)
 	{
-		// 알파만 펄스(0↔색알파), RGB는 알파 곱한 프리멀티
-		const float A = Color.A * Wave;
-		Component->SetCustomDataValue(InstanceIndex, 0, Color.R * A);
-		Component->SetCustomDataValue(InstanceIndex, 1, Color.G * A);
-		Component->SetCustomDataValue(InstanceIndex, 2, Color.B * A);
-		Component->SetCustomDataValue(InstanceIndex, 3, A, /*bMarkRenderStateDirty=*/true);
+		// 펄스를 상한/하한 값으로 변환해서 색에 곱하면 최종 색이 나옴
+		const float Brightness = FMath::Lerp(mPathPulseMinBrightness, mPathPulseMaxBrightness, Wave);
+		Component->SetCustomDataValue(InstanceIndex, 0, Color.R * Brightness);
+		Component->SetCustomDataValue(InstanceIndex, 1, Color.G * Brightness);
+		Component->SetCustomDataValue(InstanceIndex, 2, Color.B * Brightness);
+		Component->SetCustomDataValue(InstanceIndex, 3, 1.0f, /*bMarkRenderStateDirty=*/true);
 	};
 
 	// 화살표: 인스턴스 순서(=경로 순서)마다 위상차를 줘 흐르게

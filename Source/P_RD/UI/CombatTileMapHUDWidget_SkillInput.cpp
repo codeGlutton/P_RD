@@ -1,5 +1,6 @@
 ﻿#include "UI/CombatTileMapHUDWidget.h"
 
+#include "Kismet/GameplayStatics.h"
 #include "UI/Combat/CombatUIModel.h"
 
 /** @brief 스킬 버튼 해제 시 짧은 탭은 선택, 롱프레스는 상세 표시로 소모한다. */
@@ -54,7 +55,9 @@ void UCombatTileMapHUDWidget::BeginSkillPress(int32 SkillIndex)
 	mSkillPressElapsed = 0.0f;
 }
 
-/** @brief NativeTick에서 누름 시간을 누적해 탭/롱프레스 분기를 프레임 독립적으로 처리한다. */
+/** @brief NativeTick에서 누름 시간을 누적한다. */
+// 스킬 설명(상세 오버레이)은 표시하지 않기로 함(20260710 요청) — 길게 눌러도 탭과 동일하게 해제 시 선택만 한다.
+// 상세가 다시 필요해지면 임계 초과 시 ShowSkillDetail(mPressedSkillIndex) + mSkillDetailOpenedFromPress=true 를 복원하면 된다.
 void UCombatTileMapHUDWidget::UpdateSkillPress(float InDeltaTime)
 {
 	if (mSkillPressing == false || mSkillDetailOpenedFromPress == true)
@@ -63,11 +66,6 @@ void UCombatTileMapHUDWidget::UpdateSkillPress(float InDeltaTime)
 	}
 
 	mSkillPressElapsed += InDeltaTime;
-	if (mSkillPressElapsed >= mSkillLongPressThreshold)
-	{
-		ShowSkillDetail(mPressedSkillIndex);
-		mSkillDetailOpenedFromPress = true;
-	}
 }
 
 /** @brief 스킬 선택은 UI 강조와 의도 전달까지만 담당하고, 스킬 유효성/실행은 전투 계층에 맡긴다. */
@@ -81,6 +79,10 @@ void UCombatTileMapHUDWidget::SelectSkillForAssignment(int32 SkillIndex)
 	// 뷰모델 연결 시 선택은 의도로만 보낸다(실행/검증은 게임플레이). 시각 강조는 로컬 유지.
 	if (mCombatUIModel != nullptr)
 	{
+		if (mSkillSelectSound != nullptr)
+		{
+			UGameplayStatics::PlaySound2D(this, mSkillSelectSound);
+		}
 		mCombatUIModel->RequestSelectSkill(SkillIndex);
 	}
 }

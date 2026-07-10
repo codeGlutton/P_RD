@@ -467,7 +467,17 @@ void UTitleMenuWidget::StopTitleBackgroundVideo()
 	{
 		mBackgroundRuntime.mMediaPlayer->OnMediaOpened.RemoveAll(this);
 		mBackgroundRuntime.mMediaPlayer->OnMediaOpenFailed.RemoveAll(this);
-		if (mBackgroundRuntime.mUsesSharedMedia == false)
+		if (mBackgroundRuntime.mUsesSharedMedia)
+		{
+			if (UGameInstance* GameInstance = GetGameInstance())
+			{
+				if (UTitleBackgroundVideoSubsystem* VideoSubsystem = GameInstance->GetSubsystem<UTitleBackgroundVideoSubsystem>())
+				{
+					VideoSubsystem->StopTitleBackgroundVideo();
+				}
+			}
+		}
+		else
 		{
 			mBackgroundRuntime.mMediaPlayer->Close();
 		}
