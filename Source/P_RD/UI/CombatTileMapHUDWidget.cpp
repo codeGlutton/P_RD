@@ -2,6 +2,7 @@
 
 #include "Components/Button.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "UI/CombatTutorialGuide.h"
 #include "UObject/ConstructorHelpers.h"
 
 #include "GameMode/CombatGameMode.h"
@@ -105,6 +106,15 @@ void UCombatTileMapHUDWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 	EnsureRuntimeWidgets();
+	if (mTutorialGuide == nullptr)
+	{
+		mTutorialGuide = NewObject<UCombatTutorialGuide>(this);
+		mTutorialGuide->Initialize(this);
+	}
+	else
+	{
+		mTutorialGuide->BindCombatUIModel(mCombatUIModel);
+	}
 
 	if (EndTurnButton != nullptr)
 	{
@@ -138,6 +148,10 @@ void UCombatTileMapHUDWidget::NativeDestruct()
 	{
 		mCombatUIModel->OnQueueNodeResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
 	}
+	if (mTutorialGuide != nullptr)
+	{
+		mTutorialGuide->BindCombatUIModel(nullptr);
+	}
 
 	DestroyDiceCaptureActors(mOwnedDicePreviewActors);
 
@@ -158,6 +172,10 @@ void UCombatTileMapHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 	}
 
 	UpdateUnitHpBars();   // 유닛 머리 위 HP바를 월드→스크린 투영으로 매 프레임 따라가게 한다.
+	if (mTutorialGuide != nullptr)
+	{
+		mTutorialGuide->Tick();
+	}
 	UpdateFloatingCombatLogQueue(InDeltaTime); // 대기 중인 전투 로그를 순서대로 하나씩 스폰한다.
 	UpdateFloatingCombatLogs(InDeltaTime); // 머리 위 전투 로그(HP 증감 텍스트) 상승+페이드.
 	UpdateTurnRoundBanner(InDeltaTime);    // "N번째 턴" 배너 페이드.

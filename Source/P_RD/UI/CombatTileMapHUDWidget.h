@@ -20,6 +20,7 @@ class UBorder;
 class UButton;
 class UCanvasPanel;
 class UCombatUIModel;
+class UCombatTutorialGuide;
 class UIndexedButtonWidget;
 class UImage;
 class UProgressBar;
@@ -63,6 +64,7 @@ UCLASS(BlueprintType, Blueprintable)
 class P_RD_API UCombatTileMapHUDWidget : public URDUserWidget
 {
 	GENERATED_BODY()
+	friend class UCombatTutorialGuide;
 
 public:
 	UCombatTileMapHUDWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
@@ -504,6 +506,10 @@ private:
 	/** @brief 주사위 연출 안내 문구 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> DiceRollStatusText;
+
+	/** 첫 전투 전용 안내 상태/오버레이/입력을 소유하는 독립 객체. */
+	UPROPERTY(Transient)
+	TObjectPtr<UCombatTutorialGuide> mTutorialGuide;
 
 	/** @brief 턴 종료 버튼 */
 	UPROPERTY(meta = (BindWidgetOptional))

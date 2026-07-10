@@ -4,6 +4,7 @@
 
 #include "Engine/AssetManager.h"
 #include "DataAsset/PrimaryAssetType.h"
+#include "Setting/GamePlaySettings.h"
 
 #include "FunctionLibrary/RandomStreamFunctionLibrary.h"
 
@@ -247,6 +248,18 @@ void FStageBuilder::CreateStartRoom(OUT FStage& Stage) const
 	const int32 ColumnCount = mParams.mColumnCount;
 	const int32 StartColumn = Stage.mStartColumn = ColumnCount / 2;
 	FRoom& StartRoom = CreateRoom(ERoomType::Monster, 0, StartColumn, Stage.mRoomRows[0].mRooms[StartColumn]);
+
+	// 새 Run의 첫 전투만 튜토리얼 룸으로 고정한다. 설정이나 에셋이 빠진 개발 환경에서는
+	// CreateRoom()이 뽑은 기존 랜덤 몬스터 방을 그대로 사용해 스테이지 생성이 막히지 않게 한다.
+	if (mParams.mStageLevel == EStageLevelType::Stage1)
+	{
+		const FPrimaryAssetId TutorialRoomId = GetDefault<UGamePlaySettings>()->mTutorialRoomId;
+		UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
+		if (TutorialRoomId.IsValid() && AssetManager != nullptr && AssetManager->GetPrimaryAssetPath(TutorialRoomId).IsValid())
+		{
+			StartRoom.mStaticRoomSpawnDataId = TutorialRoomId;
+		}
+	}
 
 	Stage.mCurRow = 0;
 	Stage.mCurColumn = StartColumn;

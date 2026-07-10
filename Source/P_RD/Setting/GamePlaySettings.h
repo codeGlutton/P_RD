@@ -64,6 +64,10 @@ public:
     UPROPERTY(Config, Category = Room, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "FrontendRoomId"))
     FPrimaryAssetId mFrontendRoomId;
 
+    /** 새 Run의 Stage 1 시작 방으로 사용할 튜토리얼 룸. 비어 있거나 찾을 수 없으면 기존 랜덤 시작 방을 사용한다. */
+    UPROPERTY(Config, Category = Room, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TutorialRoomId"))
+    FPrimaryAssetId mTutorialRoomId;
+
     UPROPERTY(Config, Category = Room, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "DefaultBackgroundMap"))
     TSoftObjectPtr<UWorld> mDefaultBackgroundMap;
 
