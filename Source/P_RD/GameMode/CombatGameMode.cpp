@@ -618,7 +618,7 @@ void ACombatGameMode::PushTurnUIData() const
 	TurnUI.mCurrentUnitId = TurnContexts[0]->GetOwner()->GetModelId();
 	TurnUI.mPhase = mCombatUIModel->GetTurnUI().mPhase;
 	TurnUI.mRound = CombatModel->GetRoundCount();
-	for (const TObjectPtr<USRPGTurnContext> TurnContext : TurnContexts)
+	for (const TObjectPtr<USRPGTurnContext>& TurnContext : TurnContexts)
 	{
 		TurnUI.mTurnOrderUnitIds.Add(TurnContext->GetOwner()->GetModelId());
 	}
