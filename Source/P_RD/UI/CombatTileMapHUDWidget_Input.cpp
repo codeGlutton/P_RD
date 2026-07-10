@@ -11,6 +11,13 @@ FReply UCombatTileMapHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeome
 	}
 
 	const FVector2D ScreenPosition = InMouseEvent.GetScreenSpacePosition();
+	if (IsScreenPositionOverLevelValue(ScreenPosition))
+	{
+		mLevelValueTouched = true;
+		SetExpHoldPanelVisible(true);
+		return FReply::Handled().CaptureMouse(TakeWidget());
+	}
+
 	const bool bClosedSkillDetail = HideSkillDetailIfClickedOutside(ScreenPosition);
 	const int32 SkillIndex = FindSkillRailIndexAtScreenPosition(ScreenPosition);
 	if (SkillIndex == INDEX_NONE)
@@ -34,7 +41,19 @@ FReply UCombatTileMapHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeome
 
 FReply UCombatTileMapHUDWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton || mSkillPressing == false)
+	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton)
+	{
+		return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+	}
+
+	if (mLevelValueTouched)
+	{
+		mLevelValueTouched = false;
+		SetExpHoldPanelVisible(false);
+		return FReply::Handled().ReleaseMouseCapture();
+	}
+
+	if (mSkillPressing == false)
 	{
 		return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
 	}
@@ -54,6 +73,13 @@ FReply UCombatTileMapHUDWidget::NativeOnMouseButtonUp(const FGeometry& InGeometr
 FReply UCombatTileMapHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent)
 {
 	const FVector2D ScreenPosition = InGestureEvent.GetScreenSpacePosition();
+	if (IsScreenPositionOverLevelValue(ScreenPosition))
+	{
+		mLevelValueTouched = true;
+		SetExpHoldPanelVisible(true);
+		return FReply::Handled();
+	}
+
 	const bool bClosedSkillDetail = HideSkillDetailIfClickedOutside(ScreenPosition);
 	const int32 SkillIndex = FindSkillRailIndexAtScreenPosition(ScreenPosition);
 	if (SkillIndex == INDEX_NONE)
@@ -77,6 +103,13 @@ FReply UCombatTileMapHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry
 
 FReply UCombatTileMapHUDWidget::NativeOnTouchEnded(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent)
 {
+	if (mLevelValueTouched)
+	{
+		mLevelValueTouched = false;
+		SetExpHoldPanelVisible(false);
+		return FReply::Handled();
+	}
+
 	if (mSkillPressing == false)
 	{
 		return Super::NativeOnTouchEnded(InGeometry, InGestureEvent);

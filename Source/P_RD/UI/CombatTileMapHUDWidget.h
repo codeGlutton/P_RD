@@ -262,14 +262,14 @@ private:
 	/** @brief 룸 이름 마커에 현재 방 표시 이름('일반'/'엘리트'/'보스')을 채운다(전투 진입 시 1회). */
 	void RefreshRoomNameLabel() const;
 
-	/** @brief LV 칸 위에 투명 터치 버튼을 1회 생성한다 — 꾹 누르는 동안 레벨 대신 경험치(cur/max)를 보여주기 위함. */
-	void EnsureLevelTouchButton();
+	/** @brief 스크린 좌표가 LV 값 마커(HUD_M_lv_value) 위인지 지오메트리로 판정한다. */
+	bool IsScreenPositionOverLevelValue(const FVector2D& ScreenPosition) const;
 
-	/** @brief LV 칸 눌림 시작 — 경험치 표시로 전환. */
-	UFUNCTION() void HandleLevelTouchPressed();
+	/** @brief LV 꾹 누름 동안 표시할 경험치 회색 패널을 LV 마커 아래에 생성한다. */
+	void EnsureExpHoldPanel();
 
-	/** @brief LV 칸 눌림 해제 — 레벨 표시로 복귀. */
-	UFUNCTION() void HandleLevelTouchReleased();
+	/** @brief 경험치 패널 표시/숨김. 표시 시 현재 경험치 값을 채운다. */
+	void SetExpHoldPanelVisible(bool bVisible);
 
 	/** @brief 골드 칸 표시값을 갱신한다. 증가면 코인 사운드와 함께 차르륵 카운트업, 감소/최초는 즉시 반영. */
 	// 카운트업 상태는 표시 캐시(mutable)라 const 갱신 경로(RefreshSkinValueLabels)에서 불러도 된다.
@@ -634,16 +634,22 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<USoundBase> mDiceChooseSound;
 
+	/** @brief 스킬 레일에서 유효한 스킬을 선택할 때 재생하는 사운드. */
+	UPROPERTY(Transient)
+	TObjectPtr<USoundBase> mSkillSelectSound;
+
 	/** @brief 보상에서 경험치를 받았을 때 상승음. */
 	UPROPERTY(Transient)
 	TObjectPtr<USoundBase> mExpGainSound;
 
-	/** @brief LV 칸 위 투명 터치 버튼(런타임 생성). 누르는 동안 경험치를 보여준다. */
-	UPROPERTY(Transient)
-	TObjectPtr<UButton> mLevelTouchButton;
-
-	/** @brief LV 칸을 누르는 중인가 — true면 LV 자리에 경험치(cur/max)를 그린다. */
+	/** @brief LV 칸을 누르는 중인가 — true인 동안 LV 아래 경험치 패널을 표시한다. */
 	bool mLevelValueTouched = false;
+
+	/** @brief LV 꾹 누름 동안 표시되는 경험치 회색 패널과 텍스트. */
+	UPROPERTY(Transient)
+	TObjectPtr<UBorder> mExpHoldPanel;
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mExpHoldText;
 
 	// 골드 카운트업 상태 3종은 '화면 표시 캐시'라 mutable — const 그리기 경로에서 갱신해도 논리 상태 불변.
 	/** @brief 골드 칸에 현재 표시 중인 값. INDEX_NONE이면 아직 최초 표시 전(카운트업 없이 즉시 그림). */
