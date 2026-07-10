@@ -529,7 +529,7 @@ void UUserPersistData::ClearUser()
 void UUserPersistData::UpdateLog(const FPrimaryAssetId& PlayerUnitId, const FRunLog& RunLog)
 {
 	++mUserLog.mRunCount;
-	++mUserLog.mRunCountPerUnit[PlayerUnitId];
+	++mUserLog.mRunCountPerUnit.FindOrAdd(PlayerUnitId);
 
 	for (auto& UnitPair : RunLog.mKilledEnemyUnits)
 	{
