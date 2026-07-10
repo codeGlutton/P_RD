@@ -181,8 +181,8 @@ FTileIndex USRPGEnemyTurnPlanner::ChooseDestination(
 		{
 			// 조준 가능한 타일이 없음 -> 어느 타일에서도 플레이어를 조준할 수 없음 -> 스킬 시전 불가능 설정
 			OutCanCast = false;
-			// '도달' 가능한 타일들 중에서 플레이어와 가장 가까운 타일 선택
-			return PickByPlayerDistance(Candidates, Origin, PlayerTile, /*Closest*/true);
+			// '도달' 가능한 타일들 중에서 경로 거리 기준으로 플레이어와 가장 가까워지는 타일 선택
+			return PickApproachTile(Candidates, Origin, PlayerTile, TileMap, Self);
 		}
 	case EMoveTendency::MoveAway:
 		// 1) 조준 가능한 타일이 있다면
@@ -197,8 +197,8 @@ FTileIndex USRPGEnemyTurnPlanner::ChooseDestination(
 		{
 			// 조준 가능한 타일이 없음 -> 어느 타일에서도 플레이어를 조준할 수 없음 -> 스킬 시전 불가능 설정
 			OutCanCast = false;
-			// '도달' 가능한 타일들 중에서 플레이어와 가장 가까운 타일 선택 -> 다음번에 조준 가능성을 높임
-			return PickByPlayerDistance(Candidates, Origin, PlayerTile, /*Closest*/true);
+			// '도달' 가능한 타일들 중에서 경로 거리 기준으로 플레이어와 가장 가까워지는 타일 선택 -> 다음번에 조준 가능성을 높임
+			return PickApproachTile(Candidates, Origin, PlayerTile, TileMap, Self);
 		}
 	case EMoveTendency::HoldRange:
 	default:
@@ -214,11 +214,11 @@ FTileIndex USRPGEnemyTurnPlanner::ChooseDestination(
 			OutCanCast = true;
 			return PickByMoveCost(Feasible, Origin);
 		}
-		// 3) 조준할 수 있는 타일이 없다면 -> 도달 가능한 타일들 중에서 플레이어와 가장 가까운 타일이 최선
+		// 3) 조준할 수 있는 타일이 없다면 -> 도달 가능한 타일들 중에서 경로 거리 기준으로 가장 가까워지는 타일이 최선
 		else
 		{
 			OutCanCast = false;
-			return PickByPlayerDistance(Candidates, Origin, PlayerTile, /*Closest*/true);
+			return PickApproachTile(Candidates, Origin, PlayerTile, TileMap, Self);
 		}
 	}
 }
@@ -293,6 +293,63 @@ FTileIndex USRPGEnemyTurnPlanner::PickByMoveCost(
 		if (HasBest == false || MoveCost < BestMoveCost)
 		{
 			Best = Tile;
+			BestMoveCost = MoveCost;
+			HasBest = true;
+		}
+	}
+	return Best;
+}
+
+FTileIndex USRPGEnemyTurnPlanner::PickApproachTile(
+	const TArray<FTileIndex>& Tiles,
+	const FTileIndex& Origin,
+	const FTileIndex& PlayerTile,
+	const UTileMapModel* TileMap,
+	const UBoardActorModel* Self)
+{
+	// 플레이어 기준 경로 거리 표 (자기 자신은 자리를 비울 예정이므로 통과 판정에서 제외)
+	const TArray<int32> DistanceField = TileMap->GetDistanceField(PlayerTile, Self);
+
+	FTileIndex Best = Origin;
+	bool HasBest = false;
+	int32 BestPathDist = 0;
+	int32 BestMoveCost = 0;
+	for (const FTileIndex& Tile : Tiles)
+	{
+		// 해당 타일과 플레이어 사이의 경로 거리
+		const int32 Linear = TileMap->TileIndexToLinearIndex(Tile);
+		const int32 RawDist = (Linear != INDEX_NONE) ? DistanceField[Linear] : INDEX_NONE;
+		const int32 PathDist = (RawDist >= 0) ? RawDist : TNumericLimits<int32>::Max();
+		// 해당 타일과 적 사이의 거리
+		const int32 MoveCost = TileDistance(Tile, Origin);
+
+		bool Better = false;
+
+		/**
+		 * 최선 타일 선택
+		 */
+		// 1) 아직 최선 타일이 없으면 이 타일이 바로 최선!
+		if (HasBest == false)
+		{
+			Better = true;
+		}
+		// 2) 최선 타일이 있다면, 1순위 비교: 경로 거리가 가까우면 최선
+		else if (PathDist != BestPathDist)
+		{
+			Better = (PathDist < BestPathDist);
+		}
+		// 3) 1순위가 같다면, 2순위 비교
+		else
+		{
+			// 2순위는 이동거리가 작으면 최선 (동률이면 제자리 우선 -> 의미 없는 이동 방지)
+			Better = (MoveCost < BestMoveCost);
+		}
+
+		// 신규 최선 타일이 있다면 그걸 최선으로 설정해서 리턴할 때 사용
+		if (Better == true)
+		{
+			Best = Tile;
+			BestPathDist = PathDist;
 			BestMoveCost = MoveCost;
 			HasBest = true;
 		}

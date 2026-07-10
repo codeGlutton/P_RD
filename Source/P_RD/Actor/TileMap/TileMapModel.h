@@ -205,6 +205,18 @@ public:
 	TArray<FTileIndex> FindPath(const FTileIndex& Start, const FTileIndex& Goal) const;
 
 	/**
+	 * @brief 목표지점을 기준으로 모든 타일의 경로거리를 계산
+	 * @details
+	 * 장애물이나 유닛 등으로 인해 스킬 사용이 안될 시 플레이어에게 접근해야 하는데,
+	 * GetReachableTiles()로는 잡히지 않는 우회하는 비용도 계산해서 표를 작성한 후,
+	 * 가장 비용이 적은 타일로 이동
+	 * @param[in] Target : 거리 기준이 되는 목표 좌표
+	 * @param[in] IgnoreBlocker : 통과 판정에서 제외할 액터 (자리를 비울 예정인 유닛 등). 없으면 nullptr
+	 * @return TArray<int32> : 칸별 최단 거리 (크기 Width*Height, 인덱스는 TileIndexToLinearIndex 규칙, 도달 불가면 -1)
+	 */
+	TArray<int32> GetDistanceField(const FTileIndex& Target, const UBoardActorModel* IgnoreBlocker = nullptr) const;
+
+	/**
 	 * @brief 시작→목표 경로를 계산해 뷰에 표시 요청 (FindPath + 뷰 표시 델리깃 호출)
 	 * @details 미바인딩(심 복제본)이면 아무 일도 하지 않는다. 경로가 없으면 빈 경로라 표시 해제와 같다.
 	 * @param[in] Start : 시작 좌표
@@ -485,12 +497,13 @@ private:
 	/**
 	 * @brief 타일에 장애물 또는 유닛이 있는 지 검사
 	 * @details
-	 * 이동범위(통과·도착 차단)와 영향범위(직선 차단) 계산에 쓰인다.
+	 * 이동범위(통과/도착 차단)와 영향범위(직선 차단) 계산에 쓰인다.
 	 * CanPlace()와 달리 비교하는 액터가 없으므로 교체가 없으며 단순 물리적인 방해만 판정한다.
 	 * @param[in] TileIndex 검사할 좌표
+	 * @param[in] IgnoreBlocker 점유 판정에서 제외할 액터 (자리를 비울 예정인 유닛 등). 없으면 nullptr
 	 * @return 장애물/유닛이 있으면 true, 없거나 맵 밖이면 false
 	 */
-	bool IsOccupied(const FTileIndex& TileIndex) const;
+	bool IsOccupied(const FTileIndex& TileIndex, const UBoardActorModel* IgnoreBlocker = nullptr) const;
 
 	/**
 	 * @brief 중심 기준 반지름 이내의 모든 타일 수집

@@ -4,6 +4,7 @@
  * @details
  * 이동성향 3종(MoveClose/HoldRange/MoveAway) × 조준 가능/불가 2가지 엮어서 6가지 케이스 테스트.
  * 추가로 직사 스킬 일직선 후퇴 시 자기 차폐로 제자리 사격하던 회귀 케이스(Case1-3),
+ * 다른 몹에 막혀 조준 불가일 때 우회 접근하지 않고 제자리에 서던 회귀 케이스(Case3-3),
  * 다중 스킬 랜덤 선택 케이스(Case4-1) 포함.
  * @note
  * 장애물은 아직 구현체가 없어서 제외. 나중에 구현체가 나오면 유닛테스트에 추가 필요
@@ -93,6 +94,7 @@ namespace
 	// @param KeepAlive SkillComponent가 약참조라 GC 안당하도록 붙잡아두는 장치
 	// @param AimPattern 스킬 조준 패턴 (Cross/Star 직사는 시야 검사 경로를 태움)
 	// @param SecondSkillAimRange 슬롯 1에 장착할 Square 스킬의 사거리 (0이면 미장착. 스킬 랜덤 선택 검증용)
+	// @param BlockerIndex 길/시야를 막는 제3의 유닛 배치 좌표 (Invalid면 미배치. 우회 접근 검증용)
 	TArray<TInstancedStruct<FSRPGCommand>> Plan(
 		UWorld* World,
 		TArray<UObject*>& KeepAlive,
@@ -104,7 +106,8 @@ namespace
 		FTileIndex EnemyIndex,
 		FTileIndex PlayerIndex,
 		EAimPattern AimPattern = EAimPattern::Square,
-		int32 SecondSkillAimRange = 0)
+		int32 SecondSkillAimRange = 0,
+		FTileIndex BlockerIndex = FTileIndex::Invalid)
 	{
 		// 타일맵 생성
 		UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
@@ -131,6 +134,13 @@ namespace
 		// 플레이어유닛과 적유닛 배치
 		TileMap->PlaceActor(FTileTransform(PlayerIndex), Player);
 		TileMap->PlaceActor(FTileTransform(EnemyIndex), Enemy);
+
+		// 차단 유닛(옵션): 길/시야를 막는 제3의 유닛 (Unit 레이어 점유만 필요하니 플레이어 Mock 재사용)
+		if (TileMap->IsValidIndex(BlockerIndex))
+		{
+			UMockPlayerUnitModel* Blocker = NewObject<UMockPlayerUnitModel>(World);
+			TileMap->PlaceActor(FTileTransform(BlockerIndex), Blocker);
+		}
 
 		// 스킬 랜덤 선택용 고정 시드 스트림 (테스트 결정성 보장)
 		const FRandomStream Stream(20260710);
@@ -341,6 +351,26 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 			FTileIndex(0, 1),
 			FTileIndex(9, 1));
 		CheckApproachNoCast(*this, Commands, TEXT("Case3-2"), FTileIndex(4, 1));
+	}
+
+	/**
+	 * Case3-3: 근거리(MoveClose) / 다른 몹이 앞을 막아 조준 불가 (제자리 멈춤 회귀 방지)
+	 *   -> 맨해튼 거리로는 가까워지는 칸이 없어도, 우회 경로로 실제 가까워지는 칸으로 이동해야 함
+	 * 맵 (8x2): P(0,1) M(1,1) E(2,1), 이동력 2, 직사(Cross) 사거리 4
+	 *   -> 어느 도달 칸에서도 조준 불가 (열 정렬 칸은 이동력 밖, 행 정렬 칸은 M에 차폐)
+	 *   -> 경로 거리 기준 최선인 (1,0)으로 우회 접근, 스킬 없음
+	 */
+	AddInfo(TEXT("=== Case3-3: 근거리(MoveClose) / 몹에 막힘 / 우회 접근 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::MoveClose,
+			2, 4, 8, 2,
+			FTileIndex(2, 1),
+			FTileIndex(0, 1),
+			EAimPattern::Cross,
+			/*SecondSkillAimRange*/0,
+			/*BlockerIndex*/FTileIndex(1, 1));
+		CheckApproachNoCast(*this, Commands, TEXT("Case3-3"), FTileIndex(1, 0));
 	}
 
 	/**

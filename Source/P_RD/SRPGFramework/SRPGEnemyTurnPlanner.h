@@ -87,6 +87,28 @@ private:
 		const TArray<FTileIndex>& Tiles,
 		const FTileIndex& Origin);
 
+	/**
+	 * @brief 조준 가능한 타일이 없을 때 플레이어에게 실제로 가까워지는 타일 선택
+	 * @details
+	 * 기존 거리 계산 방식은 다른 유닛을 우회하는 비용이 안 잡혀서,
+	 * 앞이 막히면 제자리가 비용이 가장 작으니까 이동을 안 하는 문제가 있음.
+	 * 
+	 * 플레이어 기준으로 거리표(GetDistanceField)를 작성해서 다음과 같이 판단.
+	 * 1순위: 경로 거리 최소
+	 * 2순위: 이동 거리 최소
+	 * @param Tiles 도달 가능한 타일 목록 (Origin 포함)
+	 * @param Origin 적 타일
+	 * @param PlayerTile 플레이어 타일
+	 * @param TileMap 타일맵 모델
+	 * @param Self 거리장 통과 판정에서 제외할 자기 자신 (자리를 비울 예정이므로)
+	 */
+	static FTileIndex PickApproachTile(
+		const TArray<FTileIndex>& Tiles,
+		const FTileIndex& Origin,
+		const FTileIndex& PlayerTile,
+		const UTileMapModel* TileMap,
+		const UBoardActorModel* Self);
+
 	// @brief 타일 사이의 거리를 맨해튼 방식으로 계산 (이동은 맨해튼식으로 하니까)
 	static int32 TileDistance(const FTileIndex& A, const FTileIndex& B);
 };
