@@ -98,7 +98,7 @@ private:
 	UTexture2D* GetRewardIcon(ERewardChoiceKind Kind) const;
 
 protected:
-	// ---- WBP BindWidget (이름은 build_reward_wbp_v4_11.py 위젯명과 일치). ----
+	// ---- WBP BindWidget (WBP_Reward의 위젯명과 일치). ----
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UVerticalBox> mRewardRowsBox;
 
