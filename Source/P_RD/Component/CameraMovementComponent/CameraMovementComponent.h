@@ -103,7 +103,7 @@ protected:
 	* 터치로 이동 시 걸리는 시간
 	*/
 	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SmoothZoomDuration", AllowPrivateAccess = "true"))
-	float mZoomDuration = 0.2f; // 이동에 걸릴 시간
+	float mZoomDuration = 0.75f; // 이동에 걸릴 시간
 
 	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SmoothZoomExp", AllowPrivateAccess = "true"))
 	float mZoomExp = 2.f;
@@ -139,7 +139,7 @@ protected:
 	* 터치로 이동 시 걸리는 시간
 	*/
 	UPROPERTY(Category = CameraMove, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SmoothMoveDuration", AllowPrivateAccess = "true"))
-	float mMoveDuration = 0.2f; // 이동에 걸릴 시간
+	float mMoveDuration = 0.75f; // 이동에 걸릴 시간
 
 	/*
 	* @brief 가속도 강도
