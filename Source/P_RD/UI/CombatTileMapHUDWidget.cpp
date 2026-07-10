@@ -15,6 +15,13 @@ UCombatTileMapHUDWidget::UCombatTileMapHUDWidget(const FObjectInitializer& Objec
 		mDiceRollBoardTexture = DiceRollBoardFinder.Object;
 	}
 
+	// 유닛 HP바 왼쪽 방어도 아이콘(SVN uasset) 하드레퍼런스 프리로드 → 쿡 보장(#300 컨벤션).
+	static ConstructorHelpers::FObjectFinder<UTexture2D> UnitDefenseIconFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_UnitHpBar_Defense_Icon.T_UnitHpBar_Defense_Icon"));
+	if (UnitDefenseIconFinder.Succeeded())
+	{
+		mUnitDefenseIconTexture = UnitDefenseIconFinder.Object;
+	}
+
 	// 플로팅 로그 종류별 아이콘 (SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons). HP는 피해/회복으로 갈린다.
 #define RD_LOAD_LOGICON(Member, Path) \
 	{ static ConstructorHelpers::FObjectFinder<UTexture2D> Finder(TEXT(Path)); if (Finder.Succeeded()) { Member = Finder.Object; } }
@@ -177,6 +184,7 @@ void UCombatTileMapHUDWidget::ApplyOpenUI()
 	RefreshDiceViewsFromRunData();
 	RebuildOwnedDiceCards();
 	RefreshCombatStatusBar();   // 위젯 생성 이후에 뷰모델 값(Lv/HP/Gold)을 상단 상태바에 채운다.
+	RefreshRoomNameLabel();     // 룸 이름('일반'/'엘리트'/'보스')을 룸 이름 마커에 채운다.
 	RebuildEquipmentBar();      // 탑바 좌측 하단 장비 칩.
 	RebuildTurnOrderBar();      // 탑바 가운데 하단 턴 순서 칩.
 	RebuildUnitHpBars();        // 유닛 수에 맞춰 머리 위 HP바를 만든다.

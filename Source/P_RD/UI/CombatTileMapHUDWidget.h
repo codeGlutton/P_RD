@@ -42,6 +42,9 @@ struct FUnitHpBarWidget
 	UPROPERTY(Transient) TObjectPtr<UCanvasPanelSlot> mFillClipSlot;
 	// HP 숫자 텍스트.
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mValueText;
+	// HP바 왼쪽 방어도 아이콘/수치(런타임 생성). 방어도 0이면 숨긴다.
+	UPROPERTY(Transient) TObjectPtr<UImage> mDefenseIcon;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDefenseText;
 	// 채움 이미지의 원본(100%) 폭(디자인 값). 크롭 계산 기준.
 	float mFillFullWidth = 0.0f;
 
@@ -248,6 +251,9 @@ private:
 
 	/** @brief 디자이너 스킨 시, concept value 칸(HUD_M_lv/hp/gold_value 앵커)에 Lv/HP/Gold 텍스트를 칸 크기에 맞춰 그린다. */
 	void RefreshSkinValueLabels() const;
+
+	/** @brief 룸 이름 마커에 현재 방 표시 이름('일반'/'엘리트'/'보스')을 채운다(전투 진입 시 1회). */
+	void RefreshRoomNameLabel() const;
 
 	/** @brief 장비 슬롯 칩(탑바 좌측 하단)을 뷰모델 장비 뷰로 다시 만든다. */
 	void RebuildEquipmentBar();
@@ -518,6 +524,10 @@ private:
 	/** @brief 팝업 보드 Texture2D */
 	UPROPERTY(Transient)
 	TObjectPtr<UTexture2D> mDiceRollBoardTexture;
+
+	/** @brief 유닛 HP바 왼쪽 방어도 아이콘 텍스처(생성자 프리로드). */
+	UPROPERTY(Transient)
+	TObjectPtr<UTexture2D> mUnitDefenseIconTexture;
 
 	/** @brief 여러 주사위를 하나의 숨겨진 물리 테이블에서 굴리는 캡처 액터 */
 	UPROPERTY(Transient)
