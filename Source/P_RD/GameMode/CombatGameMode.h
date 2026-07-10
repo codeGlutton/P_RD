@@ -12,6 +12,7 @@
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Simulation/Logger/EventLog.h"
+#include "UI/Reward/RewardUITypes.h"
 #include "CombatGameMode.generated.h"
 
 class USRPGTurnContext;
@@ -82,6 +83,18 @@ public:
 	UFUNCTION()
 	void HandleApplyDiceResults(const TArray<int32>& RolledFaceIndices);
 
+	/** @brief 현재 전투 방 보상 표시값을 만든다. */
+	FRewardUI MakeCombatRewardUI() const;
+
+	/** @brief 현재 전투 방의 장비/주사위 등 룸 보상 목록을 만든다. */
+	TArray<FRewardChoiceUI> MakeCombatRewardChoicesUI() const;
+
+	/** @brief 현재 전투 방 보상을 플레이어 속성에 지급한다. */
+	bool ClaimCombatReward();
+
+	/** @brief UI에서 클릭한 보상 행 하나만 플레이어에게 지급한다. */
+	bool ClaimCombatReward(ERewardClaimKind ClaimKind, int32 ChoiceIndex);
+
 	/**
 	 * @brief 전장 탭을 조준/시전 입력으로 처리한다.
 	 *
@@ -144,4 +157,10 @@ public:
 public:
 	UPROPERTY(Category = "UI", VisibleAnywhere, DuplicateTransient, meta = (DisplayName = "CombatUIModel"))
 	TObjectPtr<UCombatUIModel> mCombatUIModel;
+
+private:
+	bool mCombatRewardClaimed = false;
+	bool mCombatRewardGoldClaimed = false;
+	bool mCombatRewardExpClaimed = false;
+	TSet<int32> mCombatRewardChoiceClaimedIndices;
 };

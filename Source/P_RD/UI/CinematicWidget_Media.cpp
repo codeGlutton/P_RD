@@ -59,10 +59,13 @@ void UCinematicWidget::EnsureCinematicMediaObjects()
 	if (mCinematicMediaTexture == nullptr)
 	{
 		mCinematicMediaTexture = NewObject<UMediaTexture>(this, TEXT("IntroCinematicMediaTexture"));
-		mCinematicMediaTexture->AutoClear = true;                  // 재생 종료/전환 시 잔상 없이 자동 클리어
 		mCinematicMediaTexture->ClearColor = FLinearColor::Black;  // 첫 프레임 도착 전·클리어 시 검은 화면으로 채움
 		mCinematicMediaTexture->SetMediaPlayer(mCinematicMediaPlayer); // 텍스처가 이 플레이어의 출력 프레임을 받게 연결
 		mCinematicMediaTexture->UpdateResource();                 // 렌더 리소스 즉시 갱신(연결 직후 유효 텍스처 보장)
+	}
+	if (mCinematicMediaTexture != nullptr)
+	{
+		mCinematicMediaTexture->AutoClear = !mHoldLastFrameOnFinish;
 	}
 
 	if (mCinematicMediaSource == nullptr)
@@ -185,7 +188,7 @@ void UCinematicWidget::StopCinematicMedia()
  */
 FString UCinematicWidget::ResolveCinematicVideoPath() const
 {
-	const FString CinematicVideoPath = GetIntroCinematicVideoPath();
+	const FString CinematicVideoPath = mOverrideCinematicVideoPath.IsEmpty() ? GetIntroCinematicVideoPath() : mOverrideCinematicVideoPath;
 	return RDUITexture::ResolveContentFilePath(CinematicVideoPath);
 }
 
@@ -239,5 +242,31 @@ void UCinematicWidget::HandleCinematicMediaOpenFailed(FString FailedUrl)
  */
 void UCinematicWidget::HandleCinematicMediaEndReached()
 {
-	FinishCinematic(); // 정상 종료 → 다음 단계로 전환
+	FinishCinematicPlayback(); // 정상 종료 → 마지막 프레임 유지 옵션 적용 후 다음 단계로 전환
+}
+
+void UCinematicWidget::FinishCinematicPlayback()
+{
+	if (mHoldLastFrameOnFinish)
+	{
+		HoldCinematicLastFrame();
+	}
+	FinishCinematic();
+}
+
+void UCinematicWidget::HoldCinematicLastFrame()
+{
+	if (mCinematicMediaPlayer == nullptr)
+	{
+		return;
+	}
+
+	const FTimespan Duration = mCinematicMediaPlayer->GetDuration();
+	const FTimespan FrameSafetyOffset = FTimespan::FromMilliseconds(33);
+	if (Duration > FrameSafetyOffset && mCinematicMediaPlayer->SupportsSeeking())
+	{
+		mCinematicMediaPlayer->Seek(Duration - FrameSafetyOffset);
+	}
+	mCinematicMediaPlayer->Pause();
+	mCinematicMediaPlayer->SetRate(0.0f);
 }

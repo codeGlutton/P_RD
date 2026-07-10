@@ -34,6 +34,9 @@ public:
 	void Initialize(FSubsystemCollectionBase& Collection) override;
 
 public:
+	UUserPersistData* GetUserPersistData();
+	URunPersistData* GetRunPersistData();
+	UOptionPersistData* GetOptionPersistData();
 	const UUserPersistData* GetUserPersistData() const;
 	const URunPersistData* GetRunPersistData() const;
 	const UOptionPersistData* GetOptionPersistData() const;

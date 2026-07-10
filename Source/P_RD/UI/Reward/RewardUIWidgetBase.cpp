@@ -1,30 +1,37 @@
 #include "UI/Reward/RewardUIWidgetBase.h"
 
-#include "UObject/ConstructorHelpers.h"
-#include "Components/Border.h"
+#include "Blueprint/UserWidget.h"
 #include "Components/Button.h"
-#include "Components/Image.h"
-#include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
 #include "Engine/Texture2D.h"
 #include "UI/Reward/RewardUIModel.h"
+#include "UI/Reward/RewardRowWidgetBase.h"
 #include "UI/ViewportZOrderType.h"
 
 #define LOCTEXT_NAMESPACE "RewardUIWidgetBase"
 
 namespace
 {
-	/** @brief 기존 BindWidget Image 의 브러시 텍스처/크기만 갈아끼운다(위젯 생성 아님 — 데이터 설정). */
-	void SetImageTexture(UImage* Image, UTexture2D* Tex, float Size)
+	FText MakeRewardChoiceText(const FRewardChoiceUI& Item)
 	{
-		if (Image == nullptr || Tex == nullptr)
+		if (Item.mName.IsEmpty() == false)
 		{
-			return;
+			return Item.mName;
 		}
-		FSlateBrush Brush;
-		Brush.SetResourceObject(Tex);
-		Brush.SetImageSize(FVector2D(Size, Size));
-		Brush.DrawAs = ESlateBrushDrawType::Image;
-		Image->SetBrush(Brush);
+
+		switch (Item.mKind)
+		{
+		case ERewardChoiceKind::Equipment:
+			return LOCTEXT("RewardChoiceEquipment", "장비");
+		case ERewardChoiceKind::Skill:
+			return LOCTEXT("RewardChoiceSkill", "스킬");
+		case ERewardChoiceKind::Gold:
+			return LOCTEXT("RewardChoiceGold", "골드");
+		case ERewardChoiceKind::Dice:
+		default:
+			return LOCTEXT("RewardChoiceDice", "주사위");
+		}
 	}
 }
 
@@ -38,12 +45,9 @@ URewardUIWidgetBase::URewardUIWidgetBase(const FObjectInitializer& ObjectInitial
 	mSkillIcon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Magic.T_Reward_Magic"));
 	mGoldIcon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Stat_Gold.T_Stat_Gold"));
 	mDiceIcon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Dice_Common.T_Dice_Common"));
-
-	static ConstructorHelpers::FObjectFinder<UTexture2D> CloseButtonTexture(TEXT("/Game/SVN/OutSideAsset/AICreation/Title/UI_Button_Start_DarkFantasy_Base.UI_Button_Start_DarkFantasy_Base"));
-	if (CloseButtonTexture.Succeeded() == true)
-	{
-		mCloseButtonTexture = CloseButtonTexture.Object;
-	}
+	mRewardGoldIconTexture = LoadObject<UTexture2D>(nullptr, TEXT("/Game/UI/RewardV4_11/Tex/T_reward_v4_gold_icon.T_reward_v4_gold_icon"));
+	mRewardExpIconTexture = LoadObject<UTexture2D>(nullptr, TEXT("/Game/UI/RewardV4_11/Tex/T_reward_v4_exp_icon.T_reward_v4_exp_icon"));
+	mRewardRowWidgetClass = LoadClass<URewardRowWidgetBase>(nullptr, TEXT("/Game/BP/UI/WBP_RewardRow.WBP_RewardRow_C"));
 }
 
 /** @brief 받기 버튼 클릭을 연결하고, BindUIModel이 먼저 됐다면 들어온 값을 즉시 그린다. */
@@ -54,51 +58,11 @@ void URewardUIWidgetBase::NativeConstruct()
 	if (mCloseButton != nullptr)
 	{
 		mCloseButton->OnClicked.AddUniqueDynamic(this, &URewardUIWidgetBase::HandleCloseClicked);
+		ApplyTransparentCloseButtonStyle();
 	}
 
-	ApplyClaimButtonStyle();
-	RefreshSummary();
-	RefreshItem();
-}
-
-/** @details WBP가 배치한 '받기' 버튼 인스턴스의 스타일 브러시만 갈아끼운다(타이틀/캐릭터선택과 동일 자산). */
-void URewardUIWidgetBase::ApplyClaimButtonStyle() const
-{
-	if (mCloseButton == nullptr)
-	{
-		return;
-	}
-	UTexture2D* Texture = mCloseButtonTexture;
-	if (Texture == nullptr)
-	{
-		return;
-	}
-
-	FSlateBrush NormalBrush;
-	NormalBrush.DrawAs = ESlateBrushDrawType::Image;
-	NormalBrush.ImageSize = FVector2D(static_cast<float>(Texture->GetSizeX()), static_cast<float>(Texture->GetSizeY()));
-	NormalBrush.SetResourceObject(Texture);
-
-	FButtonStyle Style = mCloseButton->GetStyle();
-	Style.SetNormal(NormalBrush);
-	Style.SetHovered(NormalBrush);
-	Style.SetPressed(NormalBrush);
-	Style.SetDisabled(NormalBrush);
-	Style.SetNormalPadding(FMargin(0.f));
-	Style.SetPressedPadding(FMargin(0.f));
-	mCloseButton->SetStyle(Style);
-}
-
-UTexture2D* URewardUIWidgetBase::GetRewardIcon(ERewardChoiceKind Kind) const
-{
-	switch (Kind)
-	{
-	case ERewardChoiceKind::Equipment: return mEquipmentIcon;
-	case ERewardChoiceKind::Skill:     return mSkillIcon;
-	case ERewardChoiceKind::Gold:      return mGoldIcon;
-	case ERewardChoiceKind::Dice:
-	default:                           return mDiceIcon;
-	}
+	RefreshRows();
+	UpdateCloseButtonVisibility();
 }
 
 void URewardUIWidgetBase::HandleCloseClicked()
@@ -126,8 +90,7 @@ void URewardUIWidgetBase::BindUIModel(URewardUIModel* InUIModel)
 	{
 		mUIModel->OnUIChanged.AddDynamic(this, &URewardUIWidgetBase::HandleUIChanged);
 		mUIModel->OnChoicesChanged.AddDynamic(this, &URewardUIWidgetBase::HandleChoicesChanged);
-		RefreshSummary();
-		RefreshItem();
+		RefreshRows();
 	}
 }
 
@@ -153,84 +116,199 @@ void URewardUIWidgetBase::UnbindUIModel()
 
 void URewardUIWidgetBase::HandleUIChanged()
 {
-	RefreshSummary();
+	RefreshRows();
 }
 
 void URewardUIWidgetBase::HandleChoicesChanged()
 {
-	RefreshItem();
+	RefreshRows();
 }
 
-/** @brief 제목 + 골드/경험치 값을 칩 텍스트에 반영(아이콘은 WBP 고정). */
+void URewardUIWidgetBase::ApplyTransparentCloseButtonStyle() const
+{
+	if (mCloseButton == nullptr)
+	{
+		return;
+	}
+
+	FSlateBrush TransparentBrush;
+	TransparentBrush.DrawAs = ESlateBrushDrawType::NoDrawType;
+	TransparentBrush.TintColor = FSlateColor(FLinearColor::Transparent);
+
+	FButtonStyle TransparentStyle;
+	TransparentStyle.SetNormal(TransparentBrush);
+	TransparentStyle.SetHovered(TransparentBrush);
+	TransparentStyle.SetPressed(TransparentBrush);
+	TransparentStyle.SetDisabled(TransparentBrush);
+	TransparentStyle.SetNormalPadding(FMargin(0.0f));
+	TransparentStyle.SetPressedPadding(FMargin(0.0f));
+	mCloseButton->SetStyle(TransparentStyle);
+}
+
+void URewardUIWidgetBase::UpdateCloseButtonVisibility() const
+{
+	if (mCloseButton == nullptr)
+	{
+		return;
+	}
+
+	// 보상 행이 하나도 없으면(=아직 데이터가 오기 전) 닫기를 숨긴다. 행이 있고 전부 받았을 때만 닫기를 노출한다.
+	const bool bCanClose = mUIModel != nullptr && mRewardClaimRows.Num() > 0 && AreAllRewardRowsClaimed();
+	mCloseButton->SetVisibility(bCanClose ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+}
+
+bool URewardUIWidgetBase::AreAllRewardRowsClaimed() const
+{
+	for (const FRewardClaimRow& ClaimRow : mRewardClaimRows)
+	{
+		if (ClaimRow.mClaimed == false)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
 void URewardUIWidgetBase::RefreshSummary()
 {
-	if (mUIModel == nullptr)
-	{
-		return;
-	}
-	const FRewardUI& Reward = mUIModel->GetReward();
+	RefreshRows();
+}
 
-	if (mTitleText != nullptr && !Reward.mTitle.IsEmpty())
+UTexture2D* URewardUIWidgetBase::GetRewardIcon(ERewardChoiceKind Kind) const
+{
+	switch (Kind)
 	{
-		mTitleText->SetText(Reward.mTitle);
-	}
-	if (mGoldValue != nullptr)
-	{
-		mGoldValue->SetText(FText::Format(LOCTEXT("+{0}", "+{0}"), FText::AsNumber(Reward.mGoldGained)));
-	}
-	if (mGoldSub != nullptr)
-	{
-		mGoldSub->SetText(FText::Format(LOCTEXT("Owned {0}", "Owned {0}"), FText::AsNumber(Reward.mGoldBalance)));
-	}
-	if (mExpValue != nullptr)
-	{
-		mExpValue->SetText(FText::Format(LOCTEXT("+{0}", "+{0}"), FText::AsNumber(Reward.mExpGained)));
-	}
-	if (mExpSub != nullptr)
-	{
-		mExpSub->SetText(FText::Format(LOCTEXT("Lv {0}", "Lv {0}"), FText::AsNumber(Reward.mLevelAfter)));
+	case ERewardChoiceKind::Equipment:
+		return mEquipmentIcon != nullptr ? mEquipmentIcon.Get() : mRewardGoldIconTexture.Get();
+	case ERewardChoiceKind::Skill:
+		return mSkillIcon != nullptr ? mSkillIcon.Get() : mRewardGoldIconTexture.Get();
+	case ERewardChoiceKind::Gold:
+		return mGoldIcon != nullptr ? mGoldIcon.Get() : mRewardGoldIconTexture.Get();
+	case ERewardChoiceKind::Dice:
+	default:
+		return mDiceIcon != nullptr ? mDiceIcon.Get() : mRewardGoldIconTexture.Get();
 	}
 }
 
-/** @brief 그 방의 보상 항목(0~1개)을 항목 카드에 반영하거나 카드를 숨긴다. */
-void URewardUIWidgetBase::RefreshItem()
+void URewardUIWidgetBase::RefreshRows()
 {
-	if (mUIModel == nullptr)
+	mRewardClaimRows.Reset();
+	mRewardRowWidgets.Reset();
+
+	if (mUIModel == nullptr || mRewardRowsBox == nullptr)
 	{
+		UpdateCloseButtonVisibility();
 		return;
 	}
-	const TArray<FRewardChoiceUI>& Items = mUIModel->GetRewardChoices();
 
-	if (Items.Num() == 0)
+	mRewardRowsBox->ClearChildren();
+
+	auto AddRow = [this](ERewardClaimKind ClaimKind, int32 ChoiceIndex, const FText& MainText, const FText& SubText, UTexture2D* IconTexture)
 	{
-		// 항목 없는 방(일반 적): 카드 숨김.
-		if (mItemCard != nullptr)
+		if (mRewardRowWidgetClass == nullptr)
 		{
-			mItemCard->SetVisibility(ESlateVisibility::Collapsed);
+			mRewardRowWidgetClass = LoadClass<URewardRowWidgetBase>(nullptr, TEXT("/Game/BP/UI/WBP_RewardRow.WBP_RewardRow_C"));
 		}
+		if (mRewardRowWidgetClass == nullptr)
+		{
+			UE_LOG(LogRD, Warning, TEXT("WBP_RewardRow 클래스를 찾지 못해 보상 행을 생성하지 못했습니다."));
+			return;
+		}
+
+		URewardRowWidgetBase* RowWidget = CreateWidget<URewardRowWidgetBase>(GetWorld(), mRewardRowWidgetClass);
+		if (RowWidget == nullptr)
+		{
+			return;
+		}
+
+		const int32 RewardRowIndex = mRewardClaimRows.Add(FRewardClaimRow{ ClaimKind, ChoiceIndex, false });
+
+		RowWidget->SetRewardRow(MainText, SubText, IconTexture);
+		RowWidget->SetRewardIndex(RewardRowIndex);
+		RowWidget->OnRewardRowClicked.AddUniqueDynamic(this, &URewardUIWidgetBase::HandleRewardRowClicked);
+		mRewardRowWidgets.Add(RowWidget);
+
+		if (UVerticalBoxSlot* RowSlot = mRewardRowsBox->AddChildToVerticalBox(RowWidget))
+		{
+			RowSlot->SetHorizontalAlignment(HAlign_Center);
+			RowSlot->SetVerticalAlignment(VAlign_Center);
+			RowSlot->SetPadding(mRewardRowPadding);
+		}
+	};
+
+	const FRewardUI& Reward = mUIModel->GetReward();
+	UTexture2D* SummaryIcon = mGoldIcon != nullptr ? mGoldIcon.Get() : mRewardGoldIconTexture.Get();
+
+	if (Reward.mGoldGained != 0)
+	{
+		AddRow(
+			ERewardClaimKind::Gold,
+			INDEX_NONE,
+			FText::Format(LOCTEXT("GoldRewardValue", "골드 +{0}"), FText::AsNumber(Reward.mGoldGained)),
+			FText::GetEmpty(),
+			SummaryIcon);
+	}
+	if (Reward.mExpGained != 0)
+	{
+		// 경험치 행은 전용 아이콘(없으면 골드 아이콘 폴백).
+		UTexture2D* ExpIcon = mRewardExpIconTexture != nullptr ? mRewardExpIconTexture.Get() : SummaryIcon;
+		AddRow(
+			ERewardClaimKind::Exp,
+			INDEX_NONE,
+			FText::Format(LOCTEXT("ExpRewardValue", "경험치 +{0}"), FText::AsNumber(Reward.mExpGained)),
+			FText::GetEmpty(),
+			ExpIcon);
+	}
+
+	const TArray<FRewardChoiceUI>& Items = mUIModel->GetRewardChoices();
+	for (const FRewardChoiceUI& Item : Items)
+	{
+		UTexture2D* IconTexture = Item.mIcon != nullptr ? Item.mIcon.Get() : GetRewardIcon(Item.mKind);
+		AddRow(ERewardClaimKind::Choice, Item.mChoiceIndex, MakeRewardChoiceText(Item), Item.mDescription, IconTexture);
+	}
+
+	UpdateCloseButtonVisibility();
+}
+
+void URewardUIWidgetBase::HandleRewardRowClicked(int32 RewardRowIndex)
+{
+	if (mRewardClaimRows.IsValidIndex(RewardRowIndex) == false || mRewardClaimRows[RewardRowIndex].mClaimed)
+	{
 		return;
 	}
 
-	const FRewardChoiceUI& Item = Items[0];
-	if (mItemCard != nullptr)
+	// 지급 의도만 게임플레이로 보낸다. 실제 지급 성공 여부와 행 제거는 게임플레이 확정(NotifyRewardClaimed)이 결정한다.
+	// RequestClaimReward는 동기적으로 게임플레이를 거쳐 NotifyRewardClaimed까지 재진입할 수 있으므로,
+	// 값을 복사해 호출하고 이후 이 행 인덱스를 다시 건드리지 않는다(재진입 중 배열 상태 변경 대비).
+	const FRewardClaimRow ClaimRow = mRewardClaimRows[RewardRowIndex];
+	if (mUIModel != nullptr)
 	{
-		// 행 배경은 WBP가 정한 어두운 톤 그대로 둔다(다른 행과 통일). 희귀도는 아이콘 프레임이 표현.
-		mItemCard->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		mUIModel->RequestClaimReward(ClaimRow.mKind, ClaimRow.mChoiceIndex);
 	}
-	if (mItemIcon != nullptr)
+}
+
+/** @brief 게임플레이가 지급을 확정한 보상 행을 목록에서 제거한다. VerticalBox에서 빠지면 아래 행이 자동으로 위로 올라온다. */
+void URewardUIWidgetBase::NotifyRewardClaimed(ERewardClaimKind ClaimKind, int32 ChoiceIndex)
+{
+	for (int32 RowIndex = 0; RowIndex < mRewardClaimRows.Num(); ++RowIndex)
 	{
-		UTexture2D* Tex = (Item.mIcon != nullptr)
-			? Item.mIcon.Get() : GetRewardIcon(Item.mKind);
-		SetImageTexture(mItemIcon, Tex, 78.f);   // 리스트 행 아이콘 크기
+		FRewardClaimRow& ClaimRow = mRewardClaimRows[RowIndex];
+		if (ClaimRow.mClaimed || ClaimRow.mKind != ClaimKind || ClaimRow.mChoiceIndex != ChoiceIndex)
+		{
+			continue;
+		}
+
+		// 행 인덱스(=위젯 클릭 시 넘어오는 값) 정렬을 유지하려고 배열은 줄이지 않고, 표시 위젯만 박스에서 제거한다.
+		ClaimRow.mClaimed = true;
+		if (mRewardRowWidgets.IsValidIndex(RowIndex) && mRewardRowWidgets[RowIndex] != nullptr)
+		{
+			mRewardRowWidgets[RowIndex]->RemoveFromParent();
+		}
+		break;
 	}
-	if (mItemName != nullptr)
-	{
-		mItemName->SetText(Item.mName);
-	}
-	if (mItemDetail != nullptr)
-	{
-		mItemDetail->SetText(Item.mDescription);
-	}
+
+	UpdateCloseButtonVisibility();
 }
 
 /** @brief 위젯 생명주기 종료 시 UIModel 델리게이트를 먼저 끊고 부모 정리를 따른다. */

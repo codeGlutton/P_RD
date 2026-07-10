@@ -42,6 +42,9 @@ public:
 	 */
 	void PreloadTitleBackgroundVideo(const FString& RelativeContentPath);
 
+	/** @brief 타이틀 화면을 벗어날 때 공유 미디어 재생/디코더를 닫는다. */
+	void StopTitleBackgroundVideo();
+
 	/** @brief 위젯이 브러시/머티리얼 입력으로 쓸 미디어 플레이어 접근자(아직 안 열렸으면 nullptr 가능). */
 	UMediaPlayer* GetMediaPlayer() const { return mMediaPlayer; }
 

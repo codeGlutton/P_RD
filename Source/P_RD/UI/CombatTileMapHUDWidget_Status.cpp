@@ -9,6 +9,8 @@
 #include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
 #include "GameMode/CombatGameMode.h"  // 룸 이름 라벨(GetCurrentRoomDisplayName)
+#include "Kismet/GameplayStatics.h"   // 골드 카운트업 코인 사운드 재생
+#include "TimerManager.h"             // 골드 카운트업 반복 타이머
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
 #include "UI/Combat/CombatUIModel.h"
@@ -141,8 +143,14 @@ void UCombatTileMapHUDWidget::RefreshSkinValueLabels() const
 	};
 	// 빌드는 빈 TextBlock(color/font/slot만)으로 마커를 심는다(Android 직렬화 안전). 내용/정렬은 여기서 채운다.
 	// END TURN 라벨은 정적이지만 동일하게 C++가 설정(CDO에 FText를 넣지 않기 위함).
+	// LV 칸은 꾹 누르는 동안(mLevelValueTouched) 레벨 대신 경험치(현재/최대)를 보여준다.
+	const FText LevelSlotText = mLevelValueTouched
+		? FText::Format(NSLOCTEXT("CombatTileMapHUDWidget", "SkinExpHold", "{0}/{1}"),
+			FText::AsNumber(FMath::RoundToInt(Meta.mExp)), FText::AsNumber(FMath::RoundToInt(Meta.mMaxExp)))
+		: FText::AsNumber(Meta.mLevel);
+
 	const FSkinValueBinding Bindings[] = {
-		{ TEXT("HUD_M_lv_value"), FText::AsNumber(Meta.mLevel) },
+		{ TEXT("HUD_M_lv_value"), LevelSlotText },
 		{ TEXT("HUD_M_hp_value"), FText::Format(NSLOCTEXT("CombatTileMapHUDWidget", "SkinHP", "{0}/{1}"),
 			FText::AsNumber(FMath::RoundToInt(PlayerHP)), FText::AsNumber(FMath::RoundToInt(PlayerMaxHP))) },
 		{ TEXT("HUD_M_btn_end_turn_label"), NSLOCTEXT("CombatTileMapHUDWidget", "EndTurnLabel", "END\nTURN") },
@@ -157,6 +165,8 @@ void UCombatTileMapHUDWidget::RefreshSkinValueLabels() const
 		}
 	}
 
+	// 골드 칸은 즉시 그리지 않고 카운트업 경로로 — 증가 시 코인 사운드와 함께 차르륵 올라간다.
+	UpdateGoldValueLabel(Meta.mGold);
 }
 
 void UCombatTileMapHUDWidget::RefreshRoomNameLabel() const
@@ -182,6 +192,130 @@ void UCombatTileMapHUDWidget::RefreshRoomNameLabel() const
 		{
 			RoomNameText->SetText(RoomDisplayName);
 		}
+	}
+}
+
+void UCombatTileMapHUDWidget::EnsureLevelTouchButton()
+{
+	if (mLevelTouchButton != nullptr || WidgetTree == nullptr || IsDesignerSkinActive() == false)
+	{
+		return;
+	}
+
+	// LV 값 마커의 캔버스 슬롯 지오메트리를 그대로 복사해, 같은 자리에 투명 버튼을 얹는다(레이아웃은 여전히 WBP 소유).
+	UTextBlock* LevelText = Cast<UTextBlock>(WidgetTree->FindWidget(TEXT("HUD_M_lv_value")));
+	UCanvasPanelSlot* LevelSlot = LevelText != nullptr ? Cast<UCanvasPanelSlot>(LevelText->Slot) : nullptr;
+	UCanvasPanel* ParentCanvas = LevelText != nullptr ? Cast<UCanvasPanel>(LevelText->GetParent()) : nullptr;
+	if (LevelSlot == nullptr || ParentCanvas == nullptr)
+	{
+		return;
+	}
+
+	UButton* TouchButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("HUD_LevelTouchButton"));
+	if (TouchButton == nullptr)
+	{
+		return;
+	}
+
+	// 배경 없는 순수 터치 영역(브러시 NoDraw) — 눌림 시각 효과는 텍스트 전환 자체가 대신한다.
+	FSlateBrush TransparentBrush;
+	TransparentBrush.DrawAs = ESlateBrushDrawType::NoDrawType;
+	TransparentBrush.TintColor = FSlateColor(FLinearColor::Transparent);
+	FButtonStyle TransparentStyle;
+	TransparentStyle.SetNormal(TransparentBrush);
+	TransparentStyle.SetHovered(TransparentBrush);
+	TransparentStyle.SetPressed(TransparentBrush);
+	TransparentStyle.SetDisabled(TransparentBrush);
+	TransparentStyle.SetNormalPadding(FMargin(0.0f));
+	TransparentStyle.SetPressedPadding(FMargin(0.0f));
+	TouchButton->SetStyle(TransparentStyle);
+
+	TouchButton->OnPressed.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleLevelTouchPressed);
+	TouchButton->OnReleased.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleLevelTouchReleased);
+
+	if (UCanvasPanelSlot* ButtonSlot = ParentCanvas->AddChildToCanvas(TouchButton))
+	{
+		ButtonSlot->SetAnchors(LevelSlot->GetAnchors());
+		ButtonSlot->SetOffsets(LevelSlot->GetOffsets());
+		ButtonSlot->SetAlignment(LevelSlot->GetAlignment());
+		ButtonSlot->SetAutoSize(LevelSlot->GetAutoSize());
+		ButtonSlot->SetZOrder(LevelSlot->GetZOrder() + 1);
+	}
+
+	mLevelTouchButton = TouchButton;
+}
+
+void UCombatTileMapHUDWidget::HandleLevelTouchPressed()
+{
+	mLevelValueTouched = true;
+	RefreshSkinValueLabels();
+}
+
+void UCombatTileMapHUDWidget::HandleLevelTouchReleased()
+{
+	mLevelValueTouched = false;
+	RefreshSkinValueLabels();
+}
+
+void UCombatTileMapHUDWidget::UpdateGoldValueLabel(int32 NewGold) const
+{
+	// 최초 표시(전투 진입)나 감소는 연출 없이 즉시 반영한다 — 차르륵은 '획득' 연출.
+	if (mDisplayedGold == INDEX_NONE || NewGold < mDisplayedGold)
+	{
+		if (GetWorld() != nullptr)
+		{
+			GetWorld()->GetTimerManager().ClearTimer(mGoldCountUpTimerHandle);
+		}
+		mDisplayedGold = NewGold;
+		SetGoldValueLabelText(NewGold);
+		return;
+	}
+
+	if (NewGold == mDisplayedGold || GetWorld() == nullptr)
+	{
+		return;
+	}
+
+	// 증가: 목표만 갱신하고 30Hz 반복 타이머로 수렴시킨다. 이미 도는 중이면 목표만 늘어난다.
+	mGoldCountUpTarget = NewGold;
+	if (GetWorld()->GetTimerManager().IsTimerActive(mGoldCountUpTimerHandle) == false)
+	{
+		if (mCoinGainSound != nullptr)
+		{
+			UGameplayStatics::PlaySound2D(this, mCoinGainSound);
+		}
+		GetWorld()->GetTimerManager().SetTimer(
+			mGoldCountUpTimerHandle,
+			FTimerDelegate::CreateUObject(this, &UCombatTileMapHUDWidget::TickGoldCountUp),
+			0.033f, true);
+	}
+}
+
+void UCombatTileMapHUDWidget::TickGoldCountUp() const
+{
+	// 남은 차이의 ~18%씩(최소 1) 올려 자연스럽게 감속하며 0.5~0.8초 안에 목표에 붙는다.
+	const int32 Remaining = mGoldCountUpTarget - mDisplayedGold;
+	const int32 Step = FMath::Max(1, FMath::RoundToInt(StaticCast<float>(Remaining) * 0.18f));
+	mDisplayedGold = FMath::Min(mDisplayedGold + Step, mGoldCountUpTarget);
+	SetGoldValueLabelText(mDisplayedGold);
+
+	if (mDisplayedGold >= mGoldCountUpTarget && GetWorld() != nullptr)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(mGoldCountUpTimerHandle);
+	}
+}
+
+void UCombatTileMapHUDWidget::SetGoldValueLabelText(int32 Gold) const
+{
+	if (WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	if (UTextBlock* GoldText = Cast<UTextBlock>(WidgetTree->FindWidget(TEXT("HUD_M_gold_value"))))
+	{
+		GoldText->SetText(FText::AsNumber(Gold));
+		GoldText->SetJustification(ETextJustify::Center);
 	}
 }
 
@@ -351,7 +485,9 @@ void UCombatTileMapHUDWidget::RebuildEquipmentIcons()
 	// 모델이 아직 없을 때도 마커를 전부 감춰서 WBP에 박힌 기본 브러시(임시 하트)가 새어 나오지 않게 한다.
 	for (int32 MarkerIndex = 0; MarkerIndex < MarkerCount; ++MarkerIndex)
 	{
-		UImage* SlotImage = Cast<UImage>(WidgetTree->FindWidget(SlotMarkerNames[MarkerIndex]));
+		UWidget* RawMarker = WidgetTree->FindWidget(SlotMarkerNames[MarkerIndex]);
+		UImage* SlotImage = Cast<UImage>(RawMarker);
+
 		if (SlotImage == nullptr)
 		{
 			continue;   // 마커가 없는 스킨/구버전이면 조용히 건너뛴다.

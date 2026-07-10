@@ -2,6 +2,7 @@
 
 #include "Components/Button.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "UI/Reward/RewardUIWidgetBase.h"
 #include "UObject/ConstructorHelpers.h"
 
 #include "GameMode/CombatGameMode.h"
@@ -22,6 +23,37 @@ UCombatTileMapHUDWidget::UCombatTileMapHUDWidget(const FObjectInitializer& Objec
 		mUnitDefenseIconTexture = UnitDefenseIconFinder.Object;
 	}
 
+	// 골드 카운트업 코인 사운드 + 승리/패배 결과 징글(SVN uasset)을 하드레퍼런스로 프리로드 → 쿡 보장(#300 컨벤션).
+	static ConstructorHelpers::FObjectFinder<USoundBase> CoinGainSoundFinder(TEXT("/Game/SVN/OutSideAsset/SFX/OpenGameArt_CC0/Coin/SFX_CoinGain_OGA_CC0_11.SFX_CoinGain_OGA_CC0_11"));
+	if (CoinGainSoundFinder.Succeeded())
+	{
+		mCoinGainSound = CoinGainSoundFinder.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<USoundBase> VictoryJingleFinder(TEXT("/Game/SVN/OutSideAsset/Music/OpenGameArt/Jingle/BGM_Jingle_Victory_Fupi_CC0.BGM_Jingle_Victory_Fupi_CC0"));
+	if (VictoryJingleFinder.Succeeded())
+	{
+		mVictoryJingleSound = VictoryJingleFinder.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<USoundBase> DefeatJingleFinder(TEXT("/Game/SVN/OutSideAsset/Music/OpenGameArt/Jingle/BGM_Jingle_Defeat_Spuispuin_CCBY4.BGM_Jingle_Defeat_Spuispuin_CCBY4"));
+	if (DefeatJingleFinder.Succeeded())
+	{
+		mDefeatJingleSound = DefeatJingleFinder.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<USoundBase> MapOpenSoundFinder(TEXT("/Game/SVN/OutSideAsset/SFX/OpenGameArt_CC0/UI/SFX_MapOpen_OGA_CC0_BookFlip3.SFX_MapOpen_OGA_CC0_BookFlip3"));
+	if (MapOpenSoundFinder.Succeeded())
+	{
+		mMapOpenSound = MapOpenSoundFinder.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<USoundBase> DiceChooseSoundFinder(TEXT("/Game/SVN/OutSideAsset/SFX/OpenGameArt_CC0/UI/SFX_DiceChoose_OGA_CC0_WoodDice2.SFX_DiceChoose_OGA_CC0_WoodDice2"));
+	if (DiceChooseSoundFinder.Succeeded())
+	{
+		mDiceChooseSound = DiceChooseSoundFinder.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<USoundBase> ExpGainSoundFinder(TEXT("/Game/SVN/OutSideAsset/SFX/OpenGameArt_CC0/UI/SFX_XPGain_OGA_CC0_Rise03.SFX_XPGain_OGA_CC0_Rise03"));
+	if (ExpGainSoundFinder.Succeeded())
+	{
+		mExpGainSound = ExpGainSoundFinder.Object;
+	}
 	// 플로팅 로그 종류별 아이콘 (SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons). HP는 피해/회복으로 갈린다.
 #define RD_LOAD_LOGICON(Member, Path) \
 	{ static ConstructorHelpers::FObjectFinder<UTexture2D> Finder(TEXT(Path)); if (Finder.Succeeded()) { Member = Finder.Object; } }
@@ -46,6 +78,12 @@ UCombatTileMapHUDWidget::UCombatTileMapHUDWidget(const FObjectInitializer& Objec
 	if (UnitHpBarClassFinder.Succeeded())
 	{
 		mUnitHpBarWidgetClass = UnitHpBarClassFinder.Class;
+	}
+
+	static ConstructorHelpers::FClassFinder<URewardUIWidgetBase> RewardWidgetClassFinder(TEXT("/Game/BP/UI/WBP_Reward"));
+	if (RewardWidgetClassFinder.Succeeded())
+	{
+		mRewardWidgetClass = RewardWidgetClassFinder.Class;
 	}
 
 	static ConstructorHelpers::FObjectFinder<UTexture2D> UnitHpFillRedFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_CombatHUD_UnitHpBar_Fill_Red.T_CombatHUD_UnitHpBar_Fill_Red"));
@@ -185,6 +223,7 @@ void UCombatTileMapHUDWidget::ApplyOpenUI()
 	RebuildOwnedDiceCards();
 	RefreshCombatStatusBar();   // 위젯 생성 이후에 뷰모델 값(Lv/HP/Gold)을 상단 상태바에 채운다.
 	RefreshRoomNameLabel();     // 룸 이름('일반'/'엘리트'/'보스')을 룸 이름 마커에 채운다.
+	EnsureLevelTouchButton();   // LV 칸 위 투명 터치 버튼(꾹 누르면 경험치 표시) — 스킨 마커가 생긴 뒤 1회.
 	RebuildEquipmentBar();      // 탑바 좌측 하단 장비 칩.
 	RebuildTurnOrderBar();      // 탑바 가운데 하단 턴 순서 칩.
 	RebuildUnitHpBars();        // 유닛 수에 맞춰 머리 위 HP바를 만든다.

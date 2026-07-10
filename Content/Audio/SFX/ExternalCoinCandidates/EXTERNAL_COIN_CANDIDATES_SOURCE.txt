@@ -1,0 +1,36 @@
+External coin gain candidates
+
+These files were downloaded from existing third-party asset sources, then copied
+and format-converted to 48 kHz, 16-bit stereo WAV for Unreal import convenience.
+No synthesized replacement audio was created in this folder.
+
+Selected files:
+- S_CoinGain_Ext_01_SN_Coin01.wav: OpenGameArt "12 Coin Sound Effects", source file coin.1.ogg.
+- S_CoinGain_Ext_02_SN_Coin03.wav: OpenGameArt "12 Coin Sound Effects", source file coin.3.ogg.
+- S_CoinGain_Ext_03_SN_Coin05.wav: OpenGameArt "12 Coin Sound Effects", source file coin.5.ogg.
+- S_CoinGain_Ext_04_SN_Coin08.wav: OpenGameArt "12 Coin Sound Effects", source file coin.8.ogg.
+- S_CoinGain_Ext_05_SN_Coin09.wav: OpenGameArt "12 Coin Sound Effects", source file coin.9.ogg.
+- S_CoinGain_Ext_06_SN_Coin11.wav: OpenGameArt "12 Coin Sound Effects", source file coin.11.ogg.
+- S_CoinGain_Ext_07_Rubberduck_ItemCoins02.wav: OpenGameArt "80 CC0 RPG SFX", source file item_coins_02.ogg.
+- S_CoinGain_Ext_08_Rubberduck_ItemCoins04.wav: OpenGameArt "80 CC0 RPG SFX", source file item_coins_04.ogg.
+- S_CoinGain_Ext_09_Kenney_HandleCoins.wav: Kenney "RPG Audio", source file handleCoins.ogg.
+- S_CoinGain_Ext_10_Kenney_ChipsHandle1.wav: Kenney "Casino Audio", source file chipsHandle1.ogg.
+
+Original OGG files are kept in:
+Content/Audio/SFX/ExternalCoinCandidates/Original
+
+License/source notes:
+- OpenGameArt "12 Coin Sound Effects"
+  Source: https://opengameart.org/content/12-coin-sound-effects
+  Author: StarNinjas
+  License: CC0
+  Page note: "made by rumbling them in my hand"
+- OpenGameArt "80 CC0 RPG SFX"
+  Source: https://opengameart.org/content/80-cc0-rpg-sfx
+  Author: rubberduck
+  License: CC0
+- Kenney Sound Pack
+  Source index: https://gamesounds.xyz/?dir=Kenney%27s+Sound+Pack
+  Original publisher: Kenney, https://kenney.nl
+  License: Creative Commons Zero (CC0)
+  License page note: free for personal, educational, and commercial projects; credit not mandatory.

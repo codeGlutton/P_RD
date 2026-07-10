@@ -267,7 +267,8 @@ void URunPersistData::StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Diffic
 	// 플레이어 기본 속성 세팅
 	{
 		mMaxHP = PlayerData->GetDefaultAttributeValue(GetWorld(), UPlayerUnitAttributeSet::StaticClass(), UPlayerUnitAttributeSet::GetMaxHPAttribute(), mPlayerLevel);
-		mHP = mMaxHP;
+		const float DefaultHP = PlayerData->GetDefaultAttributeValue(GetWorld(), UPlayerUnitAttributeSet::StaticClass(), UPlayerUnitAttributeSet::GetHPAttribute(), mPlayerLevel);
+		mHP = DefaultHP > 0.0f ? FMath::Min(DefaultHP, mMaxHP) : mMaxHP;
 		mExp = 0.f;
 		mMoney = PlayerData->GetDefaultAttributeValue(GetWorld(), UPlayerUnitAttributeSet::StaticClass(), UPlayerUnitAttributeSet::GetMoneyAttribute(), mPlayerLevel);
 	}
@@ -329,6 +330,51 @@ void URunPersistData::ClearRun()
 	mStage.Reset();
 
 	mRunLog.Clear();
+}
+
+bool URunPersistData::AddRewardSkill(const FPrimaryAssetId& SkillId)
+{
+	if (SkillId.IsValid() == false)
+	{
+		return false;
+	}
+
+	const int32 EmptySkillSlotIndex = mSkillIds.IndexOfByPredicate([](const FPrimaryAssetId& CurrentSkillId)
+	{
+		return CurrentSkillId.IsValid() == false;
+	});
+	if (EmptySkillSlotIndex == INDEX_NONE)
+	{
+		return false;
+	}
+
+	mSkillIds[EmptySkillSlotIndex] = SkillId;
+	++mRunLog.mAcquiredSkills.FindOrAdd(SkillId);
+	return true;
+}
+
+bool URunPersistData::AddRewardEquipment(const FPrimaryAssetId& EquipmentId)
+{
+	if (EquipmentId.IsValid() == false)
+	{
+		return false;
+	}
+
+	mEquipmentIds.Add(EquipmentId);
+	++mRunLog.mAcquiredEquipment.FindOrAdd(EquipmentId);
+	return true;
+}
+
+bool URunPersistData::AddRewardDice(const FPrimaryAssetId& DiceId)
+{
+	if (DiceId.IsValid() == false)
+	{
+		return false;
+	}
+
+	mDiceIds.Add(DiceId);
+	++mRunLog.mAcquiredDices.FindOrAdd(DiceId);
+	return true;
 }
 
 /**
