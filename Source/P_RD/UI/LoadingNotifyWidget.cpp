@@ -9,6 +9,8 @@
 #include "TimerManager.h"
 #include "UI/ViewportZOrderType.h"
 
+#define LOCTEXT_NAMESPACE "LoadingNotifyWidget"
+
 /**
  * 로딩 알림 위젯은 전환 알림 레이어를 소유한다.
  *
@@ -187,10 +189,10 @@ void ULoadingNotifyWidget::SetLoadingState(ELoadingNotifyState NewState)
 	switch (NewState)
 	{
 	case ELoadingNotifyState::Loading:
-		mLoadingStatusText->SetText(NSLOCTEXT("LoadingNotifyWidget", "LoadingText", "로딩중"));
+		mLoadingStatusText->SetText(LOCTEXT("Loading", "Loading"));
 		break;
 	case ELoadingNotifyState::Completed:
-		mLoadingStatusText->SetText(NSLOCTEXT("LoadingNotifyWidget", "LoadingCompletedText", "로딩완료"));
+		mLoadingStatusText->SetText(LOCTEXT("Complete", "Complete"));
 		break;
 	default:
 		mLoadingStatusText->SetText(FText::GetEmpty());
@@ -242,3 +244,5 @@ void ULoadingNotifyWidget::FinishCompletedState()
 	SetLoadingState(ELoadingNotifyState::None);
 	FinishCloseUI();
 }
+
+#undef LOCTEXT_NAMESPACE

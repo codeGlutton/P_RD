@@ -2,6 +2,7 @@
 .vs/
 
 # IDE / Editor tools
+.agents/
 .idea/
 .claude/
 .vsconfig
@@ -83,5 +84,21 @@ DerivedDataCache/*
 # SVN
 /Content/SVN/
 
+# Imported resource assets are stored in SVN, not Git.
+/Content/Audio/
+/Content/**/T_*.uasset
+/Content/**/S_*.uasset
+
 # Doxygen Preiview Output
 /Doxygen/Preview/Output
+
+# AI 이미지 생성 산출물(빌드 미참조, SVN/외부에서 관리)
+GeneratedImages/
+
+# gdep 툴 로컬 데이터 / 파이썬 캐시 (커밋 금지)
+/.gdep/
+__pycache__/
+*.pyc
+
+# 이전에 사용하던 파일
+.svnrev

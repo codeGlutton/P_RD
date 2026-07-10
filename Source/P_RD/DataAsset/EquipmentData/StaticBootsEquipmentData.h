@@ -24,4 +24,6 @@ public:
 	{
 		return FPrimaryAssetId(EquipmentPrimaryAssetTypes::GetBootsType(mRarityType), GetFName());
 	}
+
+	virtual EEquipmentType GetEquipmentType() const override { return EEquipmentType::Boots; }
 };

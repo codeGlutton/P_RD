@@ -1,241 +1,171 @@
+/**
+ * @file TitleMenuWidget.cpp
+ * @brief 타이틀 메인 메뉴 위젯 구현. WBP 바인딩 연결, 메뉴 텍스트 동기화, 배경 영상 시작/종료/뷰포트 핏을 담당한다.
+ * @details
+ *  - 타이틀 아트/레이아웃은 WBP_TitleMenu가 보유하고, 이 C++ 클래스는 버튼 이벤트 배선과 화면 전환만 담당한다.
+ *  - 배경 영상(루프 mp4) 관련 핏 로직은 *_Background.cpp 파일에 분리되어 있다.
+ * @author 박용수
+ * @date 2026-06-26
+ */
 #include "UI/TitleMenuWidget.h"
+#include "UI/TitleMenuWidgetPrivate.h"
 
+#include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
+#include "Components/Image.h"
+#include "Components/Overlay.h"
+#include "Components/OverlaySlot.h"
+#include "Components/PanelWidget.h"
+#include "Components/ScaleBox.h"
+#include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
-#include "GameMode/FrontendGameMode.h"
-#include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
-#include "UI/CharacterSelectWidget.h"
+#include "Engine/Texture2D.h"
 #include "UI/SettingsPanelWidget.h"
+
+using namespace RDTitleMenu;
 
 namespace
 {
-	constexpr int32 TitleMainScreenIndex = 0;
+	constexpr float TitleLayoutLogViewportThreshold = 12.0f;
+
+	void SetProfileText(const UUserWidget* Owner, const TCHAR* BaseName, const FName ProfileName, const FText& Text)
+	{
+		if (Owner == nullptr)
+		{
+			return;
+		}
+
+		if (UTextBlock* TextBlock = Cast<UTextBlock>(const_cast<UUserWidget*>(Owner)->GetWidgetFromName(MakeProfileWidgetName(BaseName, ProfileName))))
+		{
+			TextBlock->SetText(Text);
+		}
+	}
+
+	FString FormatVec2(const FVector2D& Value)
+	{
+		return FString::Printf(TEXT("%.1f,%.1f"), Value.X, Value.Y);
+	}
+
+	FString DescribeWidgetGeometry(const UWidget* Widget)
+	{
+		if (Widget == nullptr)
+		{
+			return TEXT("missing");
+		}
+
+		const FGeometry Geometry = Widget->GetCachedGeometry();
+		const FVector2D AbsolutePosition = Geometry.LocalToAbsolute(FVector2D::ZeroVector);
+		return FString::Printf(
+			TEXT("%s local=%s abs=%s desired=%s"),
+			*Widget->GetName(),
+			*FormatVec2(Geometry.GetLocalSize()),
+			*FormatVec2(AbsolutePosition),
+			*FormatVec2(Widget->GetDesiredSize()));
+	}
 }
 
+/**
+ * @brief 타이틀 메인 메뉴 UI 위젯.
+ * @details
+ *  방 진입 직후 보이는 메인 화면으로, START/CONTINUE/SETTING 버튼과 캐릭터 선택 화면 전환,
+ *  배경 영상(UMediaTexture) 표시를 담당한다. 화면 전환(메인↔캐릭터)과 하위 위젯의 "뒤로 가기"
+ *  요청 처리 책임이 이 클래스에 모여 있다.
+ */
+/**
+ * @brief 생성자. 버튼/타이틀 텍스트의 기본 문구와 기본 Visibility를 설정한다.
+ * @param ObjectInitializer UObject 생성 초기화 인자(Super로 전달).
+ */
 UTitleMenuWidget::UTitleMenuWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 	, mTitleText(NSLOCTEXT("TitleMenuWidget", "TitleText", "Rogue The Dice"))
 	, mStartButtonText(NSLOCTEXT("TitleMenuWidget", "StartText", "START"))
 	, mNewStartButtonText(NSLOCTEXT("TitleMenuWidget", "NewStartText", "NEW START"))
 	, mContinueButtonText(NSLOCTEXT("TitleMenuWidget", "ContinueText", "CONTINUE"))
-	, mSettingsButtonText(NSLOCTEXT("TitleMenuWidget", "SettingsText", "SETTING"))
+	, mSettingsButtonText(NSLOCTEXT("TitleMenuWidget", "SettingsText", "SETTINGS"))
 	, mMainOnlyStatusText(NSLOCTEXT("TitleMenuWidget", "MainOnlyStatusText", "Title main screen only"))
-	, mCharacterSelectUnavailableText(NSLOCTEXT("TitleMenuWidget", "CharacterSelectUnavailableText", "Character select widget is not ready"))
+	, mLastLoggedTitleLayoutViewportSize(FVector2D::ZeroVector)
 {
 	/*
 	 * 타이틀 HUD는 방 진입 직후 바로 보이는 메인 UI다.
 	 * 기본 Visibility를 Visible로 맞춰두되, 실제 AddToViewport/표시 생명주기는 RDUserWidget::OpenUI()가 처리한다.
 	 */
 	SetVisibility(ESlateVisibility::Visible);
+
+	// 타이틀 아트(로고/버튼 텍스처)와 배치는 이제 WBP_TitleMenu가 보유한다.
+	// C++ 생성자는 버튼/타이틀 텍스트 기본 문구만 정한다(위 초기화 리스트).
 }
 
-/**
- * @brief 캐릭터 선택 화면이 GameMode 기준 후보 목록을 다시 읽게 한다.
- *
- * @details
- * 타이틀 메뉴는 캐릭터 데이터를 직접 만들지 않는다.
- * CharacterSelectWidget에게 갱신 요청만 전달해, 캐릭터 카드 구성 책임이 해당 위젯에 남도록 한다.
- */
-void UTitleMenuWidget::RefreshCharacterOptionsFromGameMode()
+/** @brief 외부(예: GameMode)에서 타이틀 진입 시 배경 영상을 미리 시작시키기 위한 진입점. */
+// 실제 시작 로직은 StartTitleBackgroundVideo()(*_Background.cpp)에 위임해 핏/재생 책임을 한곳에 둔다.
+void UTitleMenuWidget::PrimeTitleBackgroundVideo()
 {
-	if (CharacterSelectWidget != nullptr)
-	{
-		CharacterSelectWidget->RefreshCharacterOptionsFromGameMode();
-	}
+	StartTitleBackgroundVideo();
 }
 
-/**
- * @brief GameMode가 요청한 타이틀 내부 화면 전환을 실제 WBP 화면 전환으로 수행한다.
- *
- * @details
- * AFrontendGameMode::RequestCharacterSelectFromTitle()은 런 생성 대신 이 함수를 통해 캐릭터 선택 화면만 연다.
- * 이렇게 하면 START 버튼 입력 경로와 GameMode API 경로가 모두 ShowCharacterScreen()으로 합쳐진다.
- */
-void UTitleMenuWidget::OpenCharacterSelectFromTitle()
-{
-	ShowCharacterScreen();
-}
-
-/**
- * @brief WBP 바인딩을 검증하고 타이틀 화면에서 필요한 버튼/하위 위젯 이벤트를 연결한다.
- *
- * @details
- * WBP_TitleMenu는 StartScreen과 CharacterScreen을 ScreenSwitcher 안에 직접 배치한다.
- * C++은 해당 화면을 새로 만들지 않고, BindWidget으로 들어온 인스턴스를 연결만 한다.
- *
- * 왜 여기서 공용 설정 패널/캐릭터 선택 이벤트까지 연결하는가:
- * 각 하위 위젯은 "뒤로 가기"나 "닫기 요청"만 외부로 알린다.
- * 실제로 타이틀 메인 화면으로 돌아갈지는 바깥 화면 전환을 알고 있는 TitleMenuWidget이 결정한다.
- */
+/** @brief WBP 바인딩을 검증하고 타이틀 화면에서 필요한 버튼/하위 위젯 이벤트를 연결한다. */
+// WBP_TitleMenu는 START/CONTINUE/SETTING 버튼과 배경 영상을 가진 타이틀 HUD다.
+// 캐릭터 선택 화면은 GameMode가 여는 별도 WorldWidget이므로, 이 위젯은 START 요청만 GameMode에 전달한다.
 void UTitleMenuWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
 	ValidateDesignerBindings();
+	StartTitleBackgroundVideo();
 
-	if (StartButton != nullptr)
-	{
-		StartButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleStartButtonClicked);
-	}
-
-	if (ContinueButton != nullptr)
-	{
-		ContinueButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleContinueButtonClicked);
-	}
-
-	if (SettingsButton != nullptr)
-	{
-		SettingsButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
-	}
+	BindMainMenuButtons();
 
 	if (USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel())
 	{
 		TitleSettingsPanel->OnBackRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsPanelBackRequested);
 	}
 
-	if (CharacterSelectWidget != nullptr)
-	{
-		CharacterSelectWidget->OnBackToMainRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleCharacterBackToMainRequested);
-	}
-
 	SyncMainText();
+	AlignMainMenuTextBlocks();
 	RefreshMainMenuState();
-	ShowMainScreen();
+	RefreshResponsiveTitleLayout(GetCachedGeometry().GetLocalSize());
 	SetStatusText(FText::GetEmpty());
 }
 
 /**
- * @brief Construct에서 붙인 이벤트를 제거해 재Construct 시 중복 호출을 막는다.
- *
- * @details
- * UUserWidget은 OpenUI/CloseUI나 레벨 전환 과정에서 다시 Construct될 수 있다.
- * AddUniqueDynamic을 사용하더라도 명시적으로 해제해두면 WBP 교체/하위 위젯 재생성 시 이벤트 잔류를 피할 수 있다.
+ * @brief 매 프레임 배경 영상 브러시를 현재 뷰포트 비율에 맞춰 재계산한다.
+ * @param MyGeometry 위젯의 현재 지오메트리.
+ * @param InDeltaTime 직전 프레임과의 시간 간격(초).
  */
+// 창 크기/해상도 변경에 즉시 반응하도록 Tick마다 좌우맞춤+상하크롭 핏을 갱신한다(*_Background.cpp).
+void UTitleMenuWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+	FitTitleBackgroundVideoToViewport();
+	RefreshResponsiveTitleLayout(MyGeometry.GetLocalSize());
+}
+
+/** @brief Construct에서 붙인 이벤트를 제거해 재Construct 시 중복 호출을 막는다. */
+// UUserWidget은 OpenUI/CloseUI나 레벨 전환 과정에서 다시 Construct될 수 있다.
+// AddUniqueDynamic을 사용하더라도 명시적으로 해제해두면 WBP 교체/하위 위젯 재생성 시 이벤트 잔류를 피할 수 있다.
 void UTitleMenuWidget::NativeDestruct()
 {
-	if (StartButton != nullptr)
-	{
-		StartButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleStartButtonClicked);
-	}
+	StopTitleBackgroundVideo();
 
-	if (ContinueButton != nullptr)
-	{
-		ContinueButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleContinueButtonClicked);
-	}
-
-	if (SettingsButton != nullptr)
-	{
-		SettingsButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
-	}
+	UnbindMainMenuButtons();
 
 	if (USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel())
 	{
 		TitleSettingsPanel->OnBackRequested.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsPanelBackRequested);
 	}
 
-	if (CharacterSelectWidget != nullptr)
-	{
-		CharacterSelectWidget->OnBackToMainRequested.RemoveDynamic(this, &UTitleMenuWidget::HandleCharacterBackToMainRequested);
-	}
-
 	Super::NativeDestruct();
 }
 
-/**
- * @brief ScreenSwitcher의 표시 대상을 바꾼다.
- *
- * @details
- * 하위 위젯들이 ScreenSwitcher를 직접 만지지 않게 하기 위한 공통 진입점이다.
- * Screen이 nullptr인 경우에는 타이틀 메인 화면으로 돌려, WBP 연결 누락 시에도 사용자가 빈 화면에 갇히지 않게 한다.
- */
-void UTitleMenuWidget::ShowScreen(UWidget* Screen) const
+/** @brief 생성자/에디터 기본값으로 준비된 문구를 실제 WBP TextBlock에 반영한다. */
+// WBP는 레이아웃과 폰트/색을 담당하고, C++은 버튼 의미에 맞는 텍스트만 넣는다.
+// 텍스트 동기화를 한 함수로 모아두면 저장 슬롯/불러오기 버튼이 추가될 때 문구 갱신 지점이 분산되지 않는다.
+void UTitleMenuWidget::SyncMainText()
 {
-	if (ScreenSwitcher == nullptr || Screen == nullptr)
-	{
-		if (ScreenSwitcher != nullptr && Screen == nullptr)
-		{
-			ScreenSwitcher->SetActiveWidgetIndex(TitleMainScreenIndex);
-		}
-		return;
-	}
-
-	ScreenSwitcher->SetActiveWidget(Screen);
-}
-
-/**
- * @brief 타이틀 메인 화면으로 복귀한다.
- *
- * @details
- * 캐릭터 선택이나 공용 설정 패널의 Back/Close 요청은 모두 이 함수로 모인다.
- * 타이틀의 "현재 화면" 정책을 한 곳에서 관리하기 위한 래퍼다.
- */
-void UTitleMenuWidget::ShowMainScreen() const
-{
-	ShowScreen(StartScreen);
-}
-
-/**
- * @brief 캐릭터 선택 화면을 열고 캐릭터 카드 상태를 초기화한다.
- *
- * @details
- * CharacterSelectWidget이 준비되어 있으면 OpenCharacterSelect()를 호출해 GameMode에서 캐릭터 후보를 다시 받아온다.
- * 위젯 연결이 빠진 경우에는 캐릭터 화면 슬롯으로 넘어가되 상태 문구를 남겨 WBP 바인딩 문제를 찾을 수 있게 한다.
- */
-void UTitleMenuWidget::ShowCharacterScreen()
-{
-	if (CharacterSelectWidget == nullptr)
-	{
-		SetStatusText(mCharacterSelectUnavailableText);
-		ShowScreen(CharacterScreen);
-		return;
-	}
-
-	CharacterSelectWidget->OpenCharacterSelect();
-	ShowScreen(CharacterScreen);
-}
-
-/**
- * @brief 타이틀에서 공용 설정 패널을 Title 모드로 열어 보여준다.
- *
- * @details
- * 설정 기능은 타이틀과 인게임에서 같은 WBP_SettingsPanel 월드 위젯을 공유한다.
- * 타이틀에서는 저장 후 종료/포기하기 같은 런 액션이 보이면 안 되므로 PanelMode를 Title로 바꾸고 Run 액션 상태를 비활성화한다.
- *
- * 왜 타이틀 내부 ScreenSwitcher로 보여주지 않는가:
- * 설정 패널은 HUD 하위 화면이 아니라 공용 팝업이다. InGameSettings 월드 위젯을 OpenUI()로 열어야
- * 타이틀/인게임 모두 AddToViewport, ZOrder, Back/Close 처리 규칙을 같은 경로로 검증할 수 있다.
- */
-void UTitleMenuWidget::OpenSettingsPanel()
-{
-	USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel();
-	if (TitleSettingsPanel == nullptr)
-	{
-		ShowMainScreen();
-		SetStatusText(mMainOnlyStatusText);
-		return;
-	}
-
-	TitleSettingsPanel->OnBackRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsPanelBackRequested);
-	TitleSettingsPanel->SetPanelMode(ESettingsPanelMode::Title);
-	TitleSettingsPanel->RefreshPanelState(false, false);
-	TitleSettingsPanel->HideAbandonConfirm();
-	TitleSettingsPanel->SetStatusText(FText::GetEmpty());
-
-	ShowMainScreen();
-	TitleSettingsPanel->OpenUI();
-	SetStatusText(FText::GetEmpty());
-}
-
-/**
- * @brief 생성자/에디터 기본값으로 준비된 문구를 실제 WBP TextBlock에 반영한다.
- *
- * @details
- * WBP는 레이아웃과 폰트/색을 담당하고, C++은 버튼 의미에 맞는 텍스트만 넣는다.
- * 텍스트 동기화를 한 함수로 모아두면 저장 슬롯/불러오기 버튼이 추가될 때 문구 갱신 지점이 분산되지 않는다.
- */
-void UTitleMenuWidget::SyncMainText() const
-{
+	// 타이틀 문구는 생성자에서 NSLOCTEXT로 초기화되어 현재 컬처(en/ko)에 맞춰 자동 번역된다.
+	// 여기서는 그 문구를 실제 WBP TextBlock에 밀어넣기만 하며, 언어 판별/스위치는 로컬라이제이션 시스템이 담당한다.
 	if (TitleText != nullptr)
 	{
 		TitleText->SetText(mTitleText);
@@ -256,92 +186,332 @@ void UTitleMenuWidget::SyncMainText() const
 		SettingsButtonText->SetText(mSettingsButtonText);
 	}
 
+	const FText ExitButtonLabel = NSLOCTEXT("TitleMenuWidget", "ExitText", "EXIT");
+	for (const FName ProfileName : TitleLayoutProfiles)
+	{
+		SetProfileText(this, TEXT("StartButtonText"), ProfileName, mStartButtonText);
+		SetProfileText(this, TEXT("ContinueButtonText"), ProfileName, mContinueButtonText);
+		SetProfileText(this, TEXT("SettingsButtonText"), ProfileName, mSettingsButtonText);
+		SetProfileText(this, TEXT("ExitButtonText"), ProfileName, ExitButtonLabel);
+	}
+
+	if (UTextBlock* ExitButtonText = Cast<UTextBlock>(GetWidgetFromName(TEXT("ExitButtonText"))))
+	{
+		ExitButtonText->SetText(ExitButtonLabel);
+	}
 }
 
-/**
- * @brief 현재 활성 Run 여부에 따라 START/NEW START/CONTINUE 버튼 상태를 갱신한다.
- *
- * @details
- * 세이브 데이터 로드는 Intro 단계에서 끝난다는 전제를 사용한다.
- * 타이틀은 디스크를 다시 읽지 않고, FrontendGameMode가 현재 RunPersistData 요약을 만들 수 있는지만 본다.
- *
- * 활성 Run이 없으면 Continue는 숨기고 START 문구를 보여준다.
- * 활성 Run이 있으면 Continue를 보여주고, 새로 시작은 NEW START 문구로 바꿔 기존 런과 별도 행동임을 드러낸다.
- */
-void UTitleMenuWidget::RefreshMainMenuState() const
+/** @brief 화면비에 따라 WBP 안의 프로필별 레이아웃 캔버스 중 하나만 활성화한다. */
+void UTitleMenuWidget::RefreshResponsiveTitleLayout(const FVector2D& ViewportSize)
 {
-	const bool bCanContinueRun = CanContinueRun();
+	if (TitleLayoutSwitcher == nullptr)
+	{
+		return;
+	}
 
+	const FName DesiredProfileName = SelectTitleLayoutProfile(ViewportSize);
+	if (DesiredProfileName.IsNone() || DesiredProfileName == mActiveTitleLayoutProfileName)
+	{
+		const bool bViewportChangedEnoughForLog =
+			FMath::Abs(ViewportSize.X - mLastLoggedTitleLayoutViewportSize.X) >= TitleLayoutLogViewportThreshold ||
+			FMath::Abs(ViewportSize.Y - mLastLoggedTitleLayoutViewportSize.Y) >= TitleLayoutLogViewportThreshold;
+		const bool bProfileChangedForLog = DesiredProfileName != mLastLoggedTitleLayoutProfileName;
+		if (DesiredProfileName.IsNone() || (bViewportChangedEnoughForLog == false && bProfileChangedForLog == false))
+		{
+			return;
+		}
+
+		LogResponsiveTitleLayoutMetrics(
+			ViewportSize,
+			DesiredProfileName,
+			TitleLayoutSwitcher->GetActiveWidget(),
+			TitleLayoutSwitcher->GetActiveWidgetIndex());
+		mLastLoggedTitleLayoutProfileName = DesiredProfileName;
+		mLastLoggedTitleLayoutViewportSize = ViewportSize;
+		return;
+	}
+
+	const FName DesiredScaleBoxWidgetName(*FString::Printf(TEXT("TitleLayoutScaleBox_%s"), *DesiredProfileName.ToString()));
+	const FName LegacyLayoutWidgetName(*FString::Printf(TEXT("TitleLayout_%s"), *DesiredProfileName.ToString()));
+	for (int32 WidgetIndex = 0; WidgetIndex < TitleLayoutSwitcher->GetNumWidgets(); ++WidgetIndex)
+	{
+		const UWidget* LayoutWidget = TitleLayoutSwitcher->GetWidgetAtIndex(WidgetIndex);
+		if (LayoutWidget != nullptr && LayoutWidget->GetFName() == DesiredScaleBoxWidgetName)
+		{
+			TitleLayoutSwitcher->SetActiveWidgetIndex(WidgetIndex);
+			mActiveTitleLayoutProfileName = DesiredProfileName;
+			LogResponsiveTitleLayoutMetrics(ViewportSize, DesiredProfileName, LayoutWidget, WidgetIndex);
+			mLastLoggedTitleLayoutProfileName = DesiredProfileName;
+			mLastLoggedTitleLayoutViewportSize = ViewportSize;
+			return;
+		}
+	}
+
+	for (int32 WidgetIndex = 0; WidgetIndex < TitleLayoutSwitcher->GetNumWidgets(); ++WidgetIndex)
+	{
+		const UWidget* LayoutWidget = TitleLayoutSwitcher->GetWidgetAtIndex(WidgetIndex);
+		if (LayoutWidget != nullptr && LayoutWidget->GetFName() == LegacyLayoutWidgetName)
+		{
+			TitleLayoutSwitcher->SetActiveWidgetIndex(WidgetIndex);
+			mActiveTitleLayoutProfileName = DesiredProfileName;
+			LogResponsiveTitleLayoutMetrics(ViewportSize, DesiredProfileName, LayoutWidget, WidgetIndex);
+			mLastLoggedTitleLayoutProfileName = DesiredProfileName;
+			mLastLoggedTitleLayoutViewportSize = ViewportSize;
+			return;
+		}
+	}
+
+	UE_LOG(
+		LogRD,
+		Warning,
+		TEXT("TitleMenuWidget LayoutMetrics: no layout widget for profile=%s viewport=%s aspect=%.3f expected=%s legacy=%s switcherChildren=%d"),
+		*DesiredProfileName.ToString(),
+		*FormatVec2(ViewportSize),
+		ViewportSize.Y > 0.0f ? ViewportSize.X / ViewportSize.Y : 0.0f,
+		*DesiredScaleBoxWidgetName.ToString(),
+		*LegacyLayoutWidgetName.ToString(),
+		TitleLayoutSwitcher->GetNumWidgets());
+}
+
+/** @brief 타이틀 반응형 레이아웃의 실제 선택/스케일/위젯 위치를 비교 가능한 로그로 남긴다. */
+void UTitleMenuWidget::LogResponsiveTitleLayoutMetrics(const FVector2D& ViewportSize, const FName ProfileName, const UWidget* ActiveLayoutWidget, const int32 ActiveWidgetIndex) const
+{
+	const FString ProfileString = ProfileName.ToString();
+	const UWidget* MutableSizeBoxWidget = const_cast<UTitleMenuWidget*>(this)->GetWidgetFromName(FName(*FString::Printf(TEXT("TitleLayoutSizeBox_%s"), *ProfileString)));
+	const USizeBox* ProfileSizeBox = Cast<USizeBox>(MutableSizeBoxWidget);
+	const UWidget* ProfileCanvas = const_cast<UTitleMenuWidget*>(this)->GetWidgetFromName(FName(*FString::Printf(TEXT("TitleLayoutCanvas_%s"), *ProfileString)));
+	const UWidget* LogoWidget = const_cast<UTitleMenuWidget*>(this)->GetWidgetFromName(MakeProfileWidgetName(TEXT("TitleLogoImage"), ProfileName));
+	const UWidget* StartButtonWidget = const_cast<UTitleMenuWidget*>(this)->GetWidgetFromName(MakeProfileWidgetName(TEXT("StartButton"), ProfileName));
+	const UWidget* VersionTextWidget = const_cast<UTitleMenuWidget*>(this)->GetWidgetFromName(MakeProfileWidgetName(TEXT("VersionText"), ProfileName));
+
+	FVector2D DesignSize = FVector2D::ZeroVector;
+	if (ProfileSizeBox != nullptr)
+	{
+		DesignSize.X = ProfileSizeBox->IsWidthOverride() ? ProfileSizeBox->GetWidthOverride() : ProfileSizeBox->GetDesiredSize().X;
+		DesignSize.Y = ProfileSizeBox->IsHeightOverride() ? ProfileSizeBox->GetHeightOverride() : ProfileSizeBox->GetDesiredSize().Y;
+	}
+
+	float CalculatedScale = 0.0f;
+	FVector2D FittedSize = FVector2D::ZeroVector;
+	FVector2D LetterboxInset = FVector2D::ZeroVector;
+	if (ViewportSize.X > 0.0f && ViewportSize.Y > 0.0f && DesignSize.X > 0.0f && DesignSize.Y > 0.0f)
+	{
+		CalculatedScale = FMath::Min(ViewportSize.X / DesignSize.X, ViewportSize.Y / DesignSize.Y);
+		FittedSize = DesignSize * CalculatedScale;
+		LetterboxInset = (ViewportSize - FittedSize) * 0.5f;
+	}
+
+	UE_LOG(
+		LogRD,
+		Display,
+		TEXT("TitleMenuWidget LayoutMetrics: viewport=%s aspect=%.3f profile=%s activeIndex=%d active=%s design=%s scale=%.4f fitted=%s inset=%s switcher=%s activeGeom=%s sizeBox=%s canvas=%s"),
+		*FormatVec2(ViewportSize),
+		ViewportSize.Y > 0.0f ? ViewportSize.X / ViewportSize.Y : 0.0f,
+		*ProfileString,
+		ActiveWidgetIndex,
+		ActiveLayoutWidget != nullptr ? *ActiveLayoutWidget->GetName() : TEXT("missing"),
+		*FormatVec2(DesignSize),
+		CalculatedScale,
+		*FormatVec2(FittedSize),
+		*FormatVec2(LetterboxInset),
+		*DescribeWidgetGeometry(TitleLayoutSwitcher),
+		*DescribeWidgetGeometry(ActiveLayoutWidget),
+		*DescribeWidgetGeometry(ProfileSizeBox),
+		*DescribeWidgetGeometry(ProfileCanvas));
+
+	UE_LOG(
+		LogRD,
+		Display,
+		TEXT("TitleMenuWidget LayoutMetrics Widgets: profile=%s logo={%s} startButton={%s} versionText={%s}"),
+		*ProfileString,
+		*DescribeWidgetGeometry(LogoWidget),
+		*DescribeWidgetGeometry(StartButtonWidget),
+		*DescribeWidgetGeometry(VersionTextWidget));
+}
+
+/** @brief 현재 화면비를 타이틀 전용 레이아웃 프로필로 분류한다. */
+FName UTitleMenuWidget::SelectTitleLayoutProfile(const FVector2D& ViewportSize) const
+{
+	if (ViewportSize.X <= 0.0f || ViewportSize.Y <= 0.0f)
+	{
+		return NAME_None;
+	}
+
+	const float AspectRatio = ViewportSize.X / ViewportSize.Y;
+	if (AspectRatio <= 1.35f)
+	{
+		return TitleLayoutProfileFoldInner;
+	}
+	if (AspectRatio <= 1.70f)
+	{
+		return TitleLayoutProfileTablet16x10;
+	}
+	if (AspectRatio <= 1.95f)
+	{
+		return TitleLayoutProfileBase16x9;
+	}
+	if (AspectRatio <= 2.25f)
+	{
+		return TitleLayoutProfilePhoneWide;
+	}
+
+	return TitleLayoutProfilePhoneUltraWide;
+}
+
+/** @brief 레거시 단일 버튼과 프로필별 버튼을 같은 입력 핸들러에 연결한다. */
+void UTitleMenuWidget::BindMainMenuButtons()
+{
 	if (StartButton != nullptr)
 	{
-		StartButton->SetVisibility(ESlateVisibility::Visible);
-		StartButton->SetIsEnabled(true);
+		StartButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleStartButtonClicked);
 	}
-
-	if (StartButtonText != nullptr)
-	{
-		StartButtonText->SetText(bCanContinueRun ? mNewStartButtonText : mStartButtonText);
-	}
-
 	if (ContinueButton != nullptr)
 	{
-		ContinueButton->SetVisibility(bCanContinueRun ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-		ContinueButton->SetIsEnabled(bCanContinueRun);
+		ContinueButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleContinueButtonClicked);
 	}
-
-	if (ContinueButtonText != nullptr)
-	{
-		ContinueButtonText->SetText(mContinueButtonText);
-	}
-
 	if (SettingsButton != nullptr)
 	{
-		SettingsButton->SetVisibility(ESlateVisibility::Visible);
-		SettingsButton->SetIsEnabled(true);
+		SettingsButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
 	}
-}
 
-/**
- * @brief 현재 프론트엔드 GameMode가 이어가기 가능한 활성 Run을 갖는지 확인한다.
- *
- * @details
- * 여기서 SaveGame 파일을 직접 읽지는 않는다.
- * Intro에서 복구된 PersistentData에 활성 Run이 있는지만 확인해 CONTINUE 버튼 표시 여부를 정한다.
- * 현재 방 위치, 난이도, 레벨 같은 방 안 UI 표시는 실제 방에 들어간 뒤 RoomGameMode가 처리한다.
- */
-bool UTitleMenuWidget::CanContinueRun() const
-{
-	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
+	for (const FName ProfileName : TitleLayoutProfiles)
 	{
-		return FrontendGameMode->HasActiveRun();
+		if (UButton* ProfileStartButton = Cast<UButton>(GetWidgetFromName(MakeProfileWidgetName(TEXT("StartButton"), ProfileName))))
+		{
+			ProfileStartButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleStartButtonClicked);
+		}
+		if (UButton* ProfileContinueButton = Cast<UButton>(GetWidgetFromName(MakeProfileWidgetName(TEXT("ContinueButton"), ProfileName))))
+		{
+			ProfileContinueButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleContinueButtonClicked);
+		}
+		if (UButton* ProfileSettingsButton = Cast<UButton>(GetWidgetFromName(MakeProfileWidgetName(TEXT("SettingsButton"), ProfileName))))
+		{
+			ProfileSettingsButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
+		}
+	}
+}
+
+/** @brief Construct에서 연결한 레거시/프로필별 메뉴 버튼 입력을 모두 해제한다. */
+void UTitleMenuWidget::UnbindMainMenuButtons()
+{
+	if (StartButton != nullptr)
+	{
+		StartButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleStartButtonClicked);
+	}
+	if (ContinueButton != nullptr)
+	{
+		ContinueButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleContinueButtonClicked);
+	}
+	if (SettingsButton != nullptr)
+	{
+		SettingsButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
 	}
 
-	return false;
+	for (const FName ProfileName : TitleLayoutProfiles)
+	{
+		if (UButton* ProfileStartButton = Cast<UButton>(GetWidgetFromName(MakeProfileWidgetName(TEXT("StartButton"), ProfileName))))
+		{
+			ProfileStartButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleStartButtonClicked);
+		}
+		if (UButton* ProfileContinueButton = Cast<UButton>(GetWidgetFromName(MakeProfileWidgetName(TEXT("ContinueButton"), ProfileName))))
+		{
+			ProfileContinueButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleContinueButtonClicked);
+		}
+		if (UButton* ProfileSettingsButton = Cast<UButton>(GetWidgetFromName(MakeProfileWidgetName(TEXT("SettingsButton"), ProfileName))))
+		{
+			ProfileSettingsButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
+		}
+	}
 }
 
-/**
- * @brief 타이틀 설정에 사용할 공용 SettingsPanelWidget 월드 위젯을 찾는다.
- *
- * @details
- * 타이틀 WBP 안에 설정 패널을 직접 소유하지 않는다.
- * WorldWidgetSubsystem이 준비한 InGameSettings 월드 위젯만 받아와 OpenUI()/CloseUI() 생명주기를 통일한다.
- */
-USettingsPanelWidget* UTitleMenuWidget::GetTitleSettingsPanel() const
+/** @brief WBP 생성 단계에서 빠진 버튼 텍스트 가로/세로 중앙 정렬을 런타임에서 보정한다. */
+void UTitleMenuWidget::AlignMainMenuTextBlocks()
 {
-	UWorld* World = GetWorld();
-	UWorldWidgetSubsystem* WorldWidgetSubsystem = World != nullptr ? World->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
-	return WorldWidgetSubsystem != nullptr
-		? WorldWidgetSubsystem->GetWorldWidget<USettingsPanelWidget>(EWorldWidgetType::InGameSettings)
-		: nullptr;
+	AlignMenuTextBlock(StartButtonText);
+	AlignMenuTextBlock(ContinueButtonText);
+	AlignMenuTextBlock(SettingsButtonText);
+	AlignMenuTextBlock(Cast<UTextBlock>(GetWidgetFromName(TEXT("ExitButtonText"))));
+	AlignMenuTextBlock(Cast<UTextBlock>(GetWidgetFromName(TEXT("VersionText"))));
+
+	for (const FName ProfileName : TitleLayoutProfiles)
+	{
+		AlignMenuTextBlock(Cast<UTextBlock>(GetWidgetFromName(MakeProfileWidgetName(TEXT("StartButtonText"), ProfileName))));
+		AlignMenuTextBlock(Cast<UTextBlock>(GetWidgetFromName(MakeProfileWidgetName(TEXT("ContinueButtonText"), ProfileName))));
+		AlignMenuTextBlock(Cast<UTextBlock>(GetWidgetFromName(MakeProfileWidgetName(TEXT("SettingsButtonText"), ProfileName))));
+		AlignMenuTextBlock(Cast<UTextBlock>(GetWidgetFromName(MakeProfileWidgetName(TEXT("ExitButtonText"), ProfileName))));
+		AlignMenuTextBlock(Cast<UTextBlock>(GetWidgetFromName(MakeProfileWidgetName(TEXT("VersionText"), ProfileName))));
+	}
 }
 
-/**
- * @brief 현재 타이틀 화면에서 사용하지 않는 상태 문구 영역을 항상 숨긴다.
- *
- * @details
- * 새 타이틀 WBP는 별도 상태 텍스트를 사용하지 않는다.
- * 기존 C++ 호출부 호환을 위해 함수는 남겨두지만, 어떤 텍스트가 들어와도 화면에는 표시하지 않는다.
- */
+/** @brief CanvasPanel 직계 TextBlock을 같은 위치의 Overlay로 감싸 슬롯 VerticalAlignment를 줄 수 있게 한다. */
+void UTitleMenuWidget::AlignMenuTextBlock(UTextBlock* TextBlock)
+{
+	if (TextBlock == nullptr)
+	{
+		return;
+	}
+
+	TextBlock->SetJustification(ETextJustify::Center);
+
+	if (UOverlaySlot* ExistingOverlaySlot = Cast<UOverlaySlot>(TextBlock->Slot))
+	{
+		ExistingOverlaySlot->SetHorizontalAlignment(HAlign_Fill);
+		ExistingOverlaySlot->SetVerticalAlignment(VAlign_Center);
+		return;
+	}
+
+	UCanvasPanelSlot* SourceCanvasSlot = Cast<UCanvasPanelSlot>(TextBlock->Slot);
+	UPanelWidget* SourceParent = TextBlock->GetParent();
+	if (WidgetTree == nullptr || SourceCanvasSlot == nullptr || SourceParent == nullptr)
+	{
+		return;
+	}
+
+	const FAnchors Anchors = SourceCanvasSlot->GetAnchors();
+	const FMargin Offsets = SourceCanvasSlot->GetOffsets();
+	const FVector2D Alignment = SourceCanvasSlot->GetAlignment();
+	const int32 ZOrder = SourceCanvasSlot->GetZOrder();
+	const bool bAutoSize = SourceCanvasSlot->GetAutoSize();
+
+	const FName OverlayName = MakeUniqueObjectName(this, UOverlay::StaticClass(), *FString::Printf(TEXT("%s_CenterOverlay"), *TextBlock->GetName()));
+	UOverlay* CenterOverlay = WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass(), OverlayName);
+	if (CenterOverlay == nullptr)
+	{
+		return;
+	}
+
+	SourceParent->RemoveChild(TextBlock);
+	if (UCanvasPanel* CanvasParent = Cast<UCanvasPanel>(SourceParent))
+	{
+		UCanvasPanelSlot* OverlayCanvasSlot = CanvasParent->AddChildToCanvas(CenterOverlay);
+		if (OverlayCanvasSlot == nullptr)
+		{
+			return;
+		}
+
+		OverlayCanvasSlot->SetAnchors(Anchors);
+		OverlayCanvasSlot->SetOffsets(Offsets);
+		OverlayCanvasSlot->SetAlignment(Alignment);
+		OverlayCanvasSlot->SetAutoSize(bAutoSize);
+		OverlayCanvasSlot->SetZOrder(ZOrder);
+	}
+	else
+	{
+		SourceParent->AddChild(CenterOverlay);
+	}
+
+	UOverlaySlot* TextOverlaySlot = CenterOverlay->AddChildToOverlay(TextBlock);
+	if (TextOverlaySlot != nullptr)
+	{
+		TextOverlaySlot->SetHorizontalAlignment(HAlign_Fill);
+		TextOverlaySlot->SetVerticalAlignment(VAlign_Center);
+		TextOverlaySlot->SetPadding(FMargin(0.0f));
+	}
+}
+
+/** @brief 현재 타이틀 화면에서 사용하지 않는 상태 문구 영역을 항상 숨긴다. */
+// 새 타이틀 WBP는 별도 상태 텍스트를 사용하지 않는다.
+// 기존 C++ 호출부 호환을 위해 함수는 남겨두지만, 어떤 텍스트가 들어와도 화면에는 표시하지 않는다.
 void UTitleMenuWidget::SetStatusText(const FText& /*InText*/) const
 {
 	if (StatusText != nullptr)
@@ -351,68 +521,50 @@ void UTitleMenuWidget::SetStatusText(const FText& /*InText*/) const
 	}
 }
 
-/**
- * @brief WBP_TitleMenu가 C++이 기대하는 BindWidget 이름을 제공하는지 로그로 확인한다.
- *
- * @details
- * UI 담당자가 WBP 디자인을 고칠 때 가장 흔한 문제가 이름 변경으로 인한 BindWidget nullptr이다.
- * 여기서 누락된 이름을 한 번에 로그로 남겨야, 화면이 안 넘어가는 문제가 C++ 로직인지 WBP 연결 문제인지 빠르게 구분할 수 있다.
- */
+/** @brief BindWidget으로 들어와야 할 WBP 하위 위젯/버튼/텍스트가 모두 연결됐는지 검증하고 경고 로그를 남긴다. */
+// WBP 디자이너에서 위젯 이름을 잘못 바꾸거나 배치를 빠뜨리면 nullptr가 되므로,
+// NativeConstruct 초기에 각 바인딩을 점검해 어떤 위젯이 누락됐는지 명시적으로 로깅한다(배경 영상은 누락 시 스킵).
 void UTitleMenuWidget::ValidateDesignerBindings() const
 {
-	if (ScreenSwitcher == nullptr)
+	if (TitleLayoutSwitcher == nullptr)
 	{
-		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: ScreenSwitcher is not connected."));
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: TitleLayoutSwitcher is not connected. Legacy single title layout will be used if available."));
 	}
 
-	if (StartScreen == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: StartScreen is not connected."));
-	}
-
-	if (CharacterScreen == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: CharacterScreen is not connected."));
-	}
-
-	if (CharacterSelectWidget == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: CharacterSelectWidget is not connected. Place WBP_CharacterSelect inside WBP_TitleMenu."));
-	}
-
-	if (StartButton == nullptr)
+	const bool bUsesProfileLayouts = TitleLayoutSwitcher != nullptr;
+	if (bUsesProfileLayouts == false && StartButton == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: StartButton is not connected."));
 	}
 
-	if (ContinueButton == nullptr)
+	if (bUsesProfileLayouts == false && ContinueButton == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: ContinueButton is not connected."));
 	}
 
-	if (SettingsButton == nullptr)
+	if (bUsesProfileLayouts == false && SettingsButton == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: SettingsButton is not connected."));
 	}
 
-	if (TitleText == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: TitleText is not connected."));
-	}
-
-	if (StartButtonText == nullptr)
+	if (bUsesProfileLayouts == false && StartButtonText == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: StartButtonText is not connected."));
 	}
 
-	if (ContinueButtonText == nullptr)
+	if (bUsesProfileLayouts == false && ContinueButtonText == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: ContinueButtonText is not connected."));
 	}
 
-	if (SettingsButtonText == nullptr)
+	if (bUsesProfileLayouts == false && SettingsButtonText == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: SettingsButtonText is not connected."));
+	}
+
+	if (TitleBackgroundImage == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: TitleBackgroundImage is not connected. Background video will be skipped."));
 	}
 
 	if (GetTitleSettingsPanel() == nullptr)
@@ -420,81 +572,5 @@ void UTitleMenuWidget::ValidateDesignerBindings() const
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: InGameSettings world widget is not configured."));
 	}
 
-	SetStatusText(FText::GetEmpty());
-}
-
-/**
- * @brief START 버튼 입력을 GameMode의 새 런 시작 흐름으로 전달한다.
- *
- * @details
- * GameMode가 준비되어 있으면 RequestCharacterSelectFromTitle()을 통해 캐릭터 선택 화면을 열고,
- * 테스트/프리뷰처럼 GameMode가 없는 경우에는 WBP 화면 전환만 수행한다.
- */
-void UTitleMenuWidget::HandleStartButtonClicked()
-{
-	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
-	{
-		if (FrontendGameMode->RequestCharacterSelectFromTitle())
-		{
-			return;
-		}
-	}
-
-	ShowCharacterScreen();
-}
-
-/**
- * @brief CONTINUE 버튼 입력으로 현재 활성 Run의 방에 바로 들어간다.
- *
- * @details
- * 버튼은 RefreshMainMenuState()에서 활성 Run이 있을 때만 보이지만,
- * 클릭 순간에도 다시 검사해 Run 데이터가 비었거나 방 전환을 시작할 수 없으면 메인 화면으로 되돌린다.
- * 지도 조회/다음 방 선택은 방에 들어간 뒤 RoomGameMode가 준비한 WorldMap 위젯에서만 처리한다.
- */
-void UTitleMenuWidget::HandleContinueButtonClicked()
-{
-	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
-	{
-		if (FrontendGameMode->ContinueRunFromTitle())
-		{
-			return;
-		}
-	}
-
-	ShowMainScreen();
-	SetStatusText(mMainOnlyStatusText);
-}
-
-/**
- * @brief SETTING 버튼 입력으로 공용 설정 패널을 연다.
- */
-void UTitleMenuWidget::HandleSettingsButtonClicked()
-{
-	OpenSettingsPanel();
-}
-
-/**
- * @brief 설정 화면 Back 요청을 타이틀 메인 복귀로 처리한다.
- *
- * @details
- * 타이틀 설정도 공용 InGameSettings 월드 위젯으로 열리므로 CloseUI()까지 호출해 팝업 상태를 정리한다.
- */
-void UTitleMenuWidget::HandleSettingsPanelBackRequested()
-{
-	if (USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel())
-	{
-		TitleSettingsPanel->CloseUI();
-	}
-
-	ShowMainScreen();
-	SetStatusText(FText::GetEmpty());
-}
-
-/**
- * @brief 캐릭터 선택 화면의 Back 요청을 타이틀 메인 복귀로 처리한다.
- */
-void UTitleMenuWidget::HandleCharacterBackToMainRequested()
-{
-	ShowMainScreen();
 	SetStatusText(FText::GetEmpty());
 }

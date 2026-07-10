@@ -9,30 +9,36 @@
 
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGAction.h"
-#include "FunctionLibrary/CombatCalculator/CombatResult.h"
+#include "SRPGFramework/SRPGCommand.h"
+#include "SRPGSkillAction.generated.h"
 
+class UTileMapModel;
 struct FSRPGSkillAction;
 
-struct FSRPGSkillCastCommand : public FSRPGActionCreationCommand<FSRPGSkillAction>
+USTRUCT()
+struct FSRPGSkillCastCommand : public FSRPGCommand
 {
+	GENERATED_BODY()
+
 public:
 	FSRPGSkillCastCommand();
 
 public:
-	FSkillCommitResult mCalculationResult;
+	int32 mSkillIndex = 0;
+	FTileIndex mTargetIndex = FTileIndex::Invalid;
+	int32 mDiceSum = 0;
 };
 
 /**
  * @brief  사용자 입력에 따른 정해진 SRPG 행동 객체
  */
-struct FSRPGSkillAction : public FSRPGAction
+UCLASS()
+class USRPGSkillAction : public USRPGAction
 {
-	template<typename ActionType>
-	friend struct FSRPGActionCreationCommand;
-	using Super = FSRPGAction;
+	GENERATED_BODY()
 
 protected:
-	FSRPGSkillAction();
+	USRPGSkillAction();
 
 protected:
 	void OnBeginAction() override;
@@ -40,6 +46,11 @@ protected:
 	void OnEndAction() override;
 
 protected:
-	// TArray<FSRPGCalculatedData> mCalculateDatas;
+	ESRPGCommandResult HandleCommand(const TInstancedStruct<FSRPGCommand>& Command) override;
+
+	/* 헬퍼 */
+private:
+	// @brief 턴 컨텍스트 → 전투 모델 → 타일 맵 모델을 꺼내온다
+	UTileMapModel* GetTileMap() const;
 };
 

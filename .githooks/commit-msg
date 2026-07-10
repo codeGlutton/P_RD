@@ -1,0 +1,29 @@
+#!/bin/sh
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+SVN_PATH="$REPO_ROOT/Content/SVN"
+
+if [ ! -d "$SVN_PATH" ]; then
+  echo "SVN 폴더 없음: $SVN_PATH"
+  exit 1
+fi
+
+REV=$(svnversion "$SVN_PATH" 2>/dev/null)
+
+if [ -z "$REV" ]; then
+  echo "SVN revision 읽기 실패: $SVN_PATH"
+  exit 1
+fi
+
+MSG_FILE="$1"
+
+# 기존 SVN-REV 제거
+sed -i.bak '/^\[SVN-REV\]:/d' "$MSG_FILE"
+rm -f "${MSG_FILE}.bak"
+
+# 마지막에 추가
+printf "\n[SVN-REV]: %s\n" "$REV" >> "$MSG_FILE"
+
+echo "SVN revision 기록됨: $REV"
+
+exit 0

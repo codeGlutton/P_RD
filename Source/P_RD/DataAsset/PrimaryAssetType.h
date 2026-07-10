@@ -53,9 +53,17 @@ namespace RoomPrimaryAssetTypes
 }
 
 /**
- * @brief 유닛 Primary Asset Type들을 정의한 namespace 영역
+ * @brief 장애물 Primary Asset Type들을 정의한 namespace 영역
  * @details
  * 유닛 타입별로 등장하는 방을 나누어 설계
+ */
+namespace ObstaclePrimaryAssetTypes
+{
+	DECLARE_PRIMARY_ASSET_TYPE(Obstacle);
+}
+
+/**
+ * @brief 유닛 Primary Asset Type들을 정의한 namespace 영역
  */
 namespace UnitPrimaryAssetTypes
 {
@@ -82,6 +90,8 @@ namespace EquipmentPrimaryAssetTypes
  */
 namespace SkillPrimaryAssetTypes
 {
+	DECLARE_PRIMARY_ASSET_TYPE(Passive);
+
 	DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX(Attack, ERarityType, Rarity);
 	DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX(Spell, ERarityType, Rarity);
 }

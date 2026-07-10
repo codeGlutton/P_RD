@@ -10,6 +10,7 @@
 #include "RDMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "Blueprint/UserWidget.h"
+#include "Singleton/InstanceSubsystem/PersistentDataType.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
 #include "DataAsset/StageSpawnData/StageLevelType.h"
 #include "UI/FadeInOutWidget.h"
@@ -23,6 +24,20 @@ struct FRoomTransitionExecuteParams;
 
 // RD Game Mode 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogRDGameMode, Log, All)
+
+/**
+ * @brief RD 게임모드 상태 플래그
+ */
+enum class ERDFadeOutStateFlag : uint8
+{
+	None = 0,
+
+	FadeBGMEnded = 1 << 0,
+	FadeAnimationEnded = 1 << 1,
+
+	ReadyToCallback = FadeBGMEnded | FadeAnimationEnded,
+};
+ENUM_CLASS_FLAGS(ERDFadeOutStateFlag);
 
 /**
  * @brief  RD 프로젝트 게임 모드 베이스
@@ -59,6 +74,34 @@ public:
 	 */
 	UFUNCTION(Category = UI, BlueprintPure)
 	bool CanAbandonRun() const;
+
+public:
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool ResetFromOptionPanel() const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool BackFromOptionPanel() const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetMasterVolume(float Volume) const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetBGMVolume(float Volume) const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetSFXVolume(float Volume) const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetVoiceVolume(float Volume) const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetUIVolume(float Volume) const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetFpsLimit(int32 FpsLimit) const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetLanguage(ELanguageType Language) const;
 
 protected:
 	/**
@@ -148,11 +191,16 @@ private:
 	void OnPreTransition(int32 RoomRowIndex, int32 RoomColumnIndex);
 
 public:
+	UUserPersistData* GetUserPersistData();
+	URunPersistData* GetRunPersistData();
 	const UUserPersistData* GetUserPersistData() const;
 	const URunPersistData* GetRunPersistData() const;
 
 protected:
 	void ClearRunPersistData();
+
+protected:
+	void SetMainBGM(USoundBase* BGM, bool IsOverride = true);
 
 protected:
 	UPROPERTY(Category = "UI", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "HUDClass"))
@@ -173,4 +221,17 @@ protected:
 	bool mShowLoadingNotifyUIOnTransition = false;
 	// @brief 다음 방 전환 전, 추가적인 작업을 대기해야하는지 여부
 	bool mWaitExternalWorkOnTransition = false;
+
+protected:
+	float mBGMFadeInDuration = 1.5f;
+	float mBGMFadeOutDuration = 1.5f;
+
+private:
+	UPROPERTY(Transient)
+	mutable TObjectPtr<UAudioComponent> mBgmComponent = nullptr;
+	UPROPERTY(Transient)
+	TObjectPtr<USoundBase> mMainBGM = nullptr;
+
+protected:
+	mutable ERDFadeOutStateFlag mFadeOutStateFlag = ERDFadeOutStateFlag::None;
 };

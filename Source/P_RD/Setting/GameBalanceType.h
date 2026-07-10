@@ -45,3 +45,18 @@ public:
 	int32 mTreasureColumnInterval = 9;
 };
 
+/**
+ * @brief 전역 상태 이상 설정 값 객체
+ */
+USTRUCT(BlueprintType)
+struct FGlobalStatusEffectSetting
+{
+	GENERATED_BODY()
+
+public:
+	/**
+	 * @brief 상태이상을 적용 시에 어느정도로 배율을 적용할지
+	 */
+	UPROPERTY(Category = StatusEffect, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "EffectRatios"))
+	TMap<FGameplayTag, float> mEffectRatios;
+};

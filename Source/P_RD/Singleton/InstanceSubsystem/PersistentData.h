@@ -7,14 +7,16 @@
 
 #pragma once
 
-#include "GAS/GASMinimal.h"
+#include "RDMinimal.h"
+
 #include "PCGStage/Stage.h"
+#include "Singleton/InstanceSubsystem/PersistentDataType.h"
 
 #include "PersistentData.generated.h"
 
-DECLARE_DELEGATE_OneParam(FOnCreateStage, const FStage& /*NewStage*/)
+class UPlayerUnitModel;
 
-class APlayerUnit;
+DECLARE_DELEGATE_OneParam(FOnCreateStage, const FStage& /*NewStage*/)
 
 /**
  * @brief 한번의 런 동안 기록된 로그 데이터
@@ -51,7 +53,7 @@ public:
 
 public:
 	UPROPERTY(Category = Record, SaveGame, VisibleAnywhere, meta = (DisplayName = "RunCount"))
-	int32 mRunCount;
+	int32 mRunCount = 0;
 
 public:
 	UPROPERTY(Category = Record, SaveGame, VisibleAnywhere, meta = (DisplayName = "RunCountPerUnit"))
@@ -77,7 +79,7 @@ class P_RD_API UPlayerUnitPersistData : public UObject
 	GENERATED_BODY()
 
 public:
-	void RegisterPlayerUnit(APlayerUnit* PlayerUnit);
+	void RegisterPlayerUnit(UPlayerUnitModel* PlayerUnit);
 
 public:
 	const FPrimaryAssetId& GetPlayerUnitId() const;
@@ -90,8 +92,8 @@ public:
 	const TArray<FPrimaryAssetId>& GetDiceIds() const;
 
 protected:
-	void SyncPlayerPersistData(APlayerUnit* PlayerUnit);
-	void BindPlayerUnitEvent(APlayerUnit* PlayerUnit);
+	void SyncPlayerPersistData(UPlayerUnitModel* PlayerUnit);
+	void BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit);
 
 protected:
 	UPROPERTY(SaveGame)
@@ -101,21 +103,21 @@ protected:
 	UPROPERTY(Category = Player, SaveGame, VisibleAnywhere, meta = (DisplayName = "PlayerUnitId"))
 	FPrimaryAssetId mPlayerUnitId;
 	UPROPERTY(Category = Player, SaveGame, VisibleAnywhere, meta = (DisplayName = "PlayerLevel"))
-	int32 mPlayerLevel;
+	int32 mPlayerLevel = 1;
 	UPROPERTY(Category = Player, SaveGame, VisibleAnywhere, meta = (DisplayName = "Difficulty"))
-	int32 mDifficulty;
+	int32 mDifficulty = 1;
 
 protected:
 	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "MaxHP"))
-	float mMaxHP;
+	float mMaxHP = 0.f;
 	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "HP"))
-	float mHP;
+	float mHP = 0.f;
 
 	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "Exp"))
-	float mExp;
+	float mExp = 0.f;
 
 	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "Money"))
-	float mMoney;
+	float mMoney = 0.f;
 
 protected:
 	UPROPERTY(Category = Tag, SaveGame, VisibleAnywhere, meta = (DisplayName = "TagCountMap"))
@@ -144,6 +146,7 @@ public:
 	void StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty);
 	void ClearRun();
 
+public:
 	void MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCreateStage);
 	void SetCurrentRoomIndex(int32 RowIndex, int32 ColumnIndex);
 
@@ -160,6 +163,11 @@ public:
 	const FRoom& GetStartRoom() const;
 	const FRoom& GetCurrentRoom() const;
 	void GetCurrentRoomIndex(OUT int32& RowIndex, OUT int32& ColumnIndex) const;
+
+public:
+	bool AddRewardSkill(const FPrimaryAssetId& SkillId);
+	bool AddRewardEquipment(const FPrimaryAssetId& EquipmentId);
+	bool AddRewardDice(const FPrimaryAssetId& DiceId);
 
 public:
 	const FRunLog& GetRunLog() const;
@@ -210,4 +218,73 @@ protected:
 
 	UPROPERTY(Category = Log, SaveGame, VisibleAnywhere, meta = (DisplayName = "UserLog"))
 	FUserLog mUserLog;
+};
+
+USTRUCT()
+struct FOptionPersistDataCache
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	TObjectPtr<USoundMix> mSoundMixObject;
+	UPROPERTY()
+	TArray<TObjectPtr<USoundClass>> mSoundClassObjects;
+};
+
+/**
+ * @brief 옵션의 영구적 데이터
+ */
+UCLASS()
+class P_RD_API UOptionPersistData : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	UOptionPersistData();
+
+public:
+	void MakeCaches();
+
+public:
+	void MakeOption();
+	void ClearOption();
+
+public:
+	void SetVolume(EGameVolumeType VolumeType, float Volume);
+	void SetLanguage(ELanguageType LanguageType);
+	void SetResolution(const FIntPoint& Resolution);
+	void SetFpsLimit(int32 FpsLimit);
+
+	void ApplyCurrentOptions();
+
+public:
+	float GetVolume(EGameVolumeType VolumeType) const;
+	ELanguageType GetLanguage() const;
+	const FIntPoint& GetResolution() const;
+	int32 GetFpsLimit() const;
+
+public:
+	bool IsActive() const;
+
+protected:
+	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "Volumes"))
+	TArray<float> mVolumes;
+
+protected:
+	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "LanguageType"))
+	ELanguageType mLanguageType = ELanguageType::ENGLISH;
+
+protected:
+	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "Resolution"))
+	FIntPoint mResolution = FIntPoint::ZeroValue;
+
+protected:
+	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "FpsLimit"))
+	int32 mFpsLimit = 60;
+
+	/* 캐싱 */
+private:
+	UPROPERTY()
+	FOptionPersistDataCache mOptionPersistDataCache;
 };

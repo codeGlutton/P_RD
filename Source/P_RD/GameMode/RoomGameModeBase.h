@@ -15,7 +15,7 @@
  // Room Game Mode 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogRoomGameMode, Log, All)
 
-class AUnit;
+class UPlayerUnitModel;
 
 /**
  * @brief  방에 대한 베이스 GameMode
@@ -72,7 +72,7 @@ public:
 
 	/**
 	 * @brief 지도 첫 표시 위치 계산용 런 상태 View를 가져온다.
-	 * @param OutView TopMenuBar와 WorldMap이 표시만 할 Run 상태 View
+	 * @param OutView WorldMap이 표시만 할 Run 상태 View
 	 * @return 활성 런 상태를 만들 수 있으면 true
 	 */
 	UFUNCTION(Category = Room, BlueprintCallable)
@@ -88,6 +88,11 @@ public:
 	 */
 	bool GetRunControlState(OUT int32& RowIndex, OUT int32& ColumnIndex, OUT int32& PlayerLevel, OUT int32& Difficulty) const;
 
+	/*
+	 * @brief 현재 전투 방의 표시 이름('일반'/'엘리트'/'보스'). HUD 룸 이름 라벨용. 
+	 */
+	FText GetCurrentRoomDisplayName() const;
+
 protected:
 	bool PreloadAndTransitionSelectedRoomAsync();
 
@@ -101,11 +106,11 @@ private:
 	bool IsRoomSelectable(int32 RoomRow, int32 RoomColumn) const;
 
 public:
-	AUnit* GetPlayerUnit() const;
+	UPlayerUnitModel* GetPlayerUnitModel() const;
 
 protected:
 	UPROPERTY()
-	TWeakObjectPtr<AUnit> mPlayerUnit;
+	TWeakObjectPtr<UPlayerUnitModel> mPlayerUnit;
 
 protected:
 	int32 mSelectedRoomRow = INDEX_NONE;

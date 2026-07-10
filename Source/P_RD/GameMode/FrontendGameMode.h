@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   FrontendGameMode.h
  * @brief  프론트엔드 GameMode 정의 헤더
  * @author 박용수, 모호재
@@ -47,6 +47,7 @@ public:
 	AFrontendGameMode();
 
 protected:
+	void InitializeCommonRoom() override;
 	void BeginRoom() override;
 
 	/* UI 진입점 */
@@ -154,6 +155,9 @@ protected:
 	bool IsDifficultyValid(int32 Difficulty) const;
 
 private:
+	UFUNCTION()
+	void HandleCharacterSelectBackRequested();
+
 	bool OpenTitleCharacterSelect();
 	bool CreateRunData(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty);
 

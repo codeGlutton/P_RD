@@ -3,11 +3,14 @@
 #include "Singleton/InstanceSubsystem/PersistentDataSubsystem.h"
 #include "Singleton/InstanceSubsystem/RoomTransitionSubsystem.h"
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
+#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 
 #include "UI/FadeInOutWidget.h"
 #include "UI/RDUserWidget.h"
+
+#include "Components/AudioComponent.h"
 
 DEFINE_LOG_CATEGORY(LogRDGameMode);
 
@@ -30,17 +33,17 @@ void ARDGameModeBase::BeginPlay()
 		WorldWidgetSubsystem->InitWorldWidget(WorldWidgetType);
 	}
 
+	/* 전용 방 로직 */
+	
+	InitializeRoom();
+	WorldWidgetSubsystem->InitHUD(mHUDClass);
+
 	/* 페이드 인 애니메이션 실행 */
 
 	if (mShowFadeInUIOnTransition == true)
 	{
 		StartFadeInUIForRoomTransition();
 	}
-
-	/* 전용 방 로직 */
-	
-	InitializeRoom();
-	WorldWidgetSubsystem->InitHUD(mHUDClass);
 
 	BeginRoom();
 }
@@ -68,6 +71,91 @@ bool ARDGameModeBase::CanAbandonRun() const
 	return HasActiveRun() == true;
 }
 
+bool ARDGameModeBase::ResetFromOptionPanel() const
+{
+	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
+	GameProfileSubsystem->ResetOptions();
+
+	USaveGameSubsystem* SaveGameSubsystem = GetGameInstance()->GetSubsystem<USaveGameSubsystem>();
+	checkf(SaveGameSubsystem != nullptr, TEXT("세이브 서브시스템 nullptr 오류"));
+	SaveGameSubsystem->SaveOptionAsync(FAsyncSaveGameToSlotDelegate());
+
+	return true;
+}
+
+bool ARDGameModeBase::BackFromOptionPanel() const
+{
+	USaveGameSubsystem* SaveGameSubsystem = GetGameInstance()->GetSubsystem<USaveGameSubsystem>();
+	checkf(SaveGameSubsystem != nullptr, TEXT("세이브 서브시스템 nullptr 오류"));
+	SaveGameSubsystem->SaveOptionAsync(FAsyncSaveGameToSlotDelegate());
+
+	return true;
+}
+
+bool ARDGameModeBase::SetMasterVolume(float Volume) const
+{
+	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
+	GameProfileSubsystem->SetVolume(EGameVolumeType::Master, Volume);
+
+	return true;
+}
+
+bool ARDGameModeBase::SetBGMVolume(float Volume) const
+{
+	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
+	GameProfileSubsystem->SetVolume(EGameVolumeType::BGM, Volume);
+
+	return true;
+}
+
+bool ARDGameModeBase::SetSFXVolume(float Volume) const
+{
+	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
+	GameProfileSubsystem->SetVolume(EGameVolumeType::SFX, Volume);
+
+	return true;
+}
+
+bool ARDGameModeBase::SetVoiceVolume(float Volume) const
+{
+	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
+	GameProfileSubsystem->SetVolume(EGameVolumeType::Voice, Volume);
+
+	return true;
+}
+
+bool ARDGameModeBase::SetUIVolume(float Volume) const
+{
+	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
+	GameProfileSubsystem->SetVolume(EGameVolumeType::UI, Volume);
+
+	return true;
+}
+
+bool ARDGameModeBase::SetFpsLimit(int32 FpsLimit) const
+{
+	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
+	GameProfileSubsystem->SetFpsLimit(FpsLimit);
+
+	return true;
+}
+
+bool ARDGameModeBase::SetLanguage(ELanguageType Language) const
+{
+	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
+	GameProfileSubsystem->SetLanguage(Language);
+
+	return true;
+}
+
 /**
  * @brief 페이드 레이어를 열고 검은 화면에서 게임 화면으로 드러내는 페이드인을 시작한다.
  *
@@ -91,6 +179,12 @@ void ARDGameModeBase::StartFadeInUI(FOnEndFadeInAnimation OnEndFadeInAnimation) 
 
 	FadeInOutWidget->OpenUI();
 	FadeInOutWidget->StartFadeIn(MoveTemp(OnEndFadeInAnimation));
+
+	if (mMainBGM != nullptr)
+	{
+		mBgmComponent = UGameplayStatics::SpawnSound2D(GetWorld(), mMainBGM, 1.f);
+		mBgmComponent->FadeIn(mBGMFadeInDuration);
+	}
 }
 
 /**
@@ -115,8 +209,34 @@ void ARDGameModeBase::StartFadeOutUI(FOnEndFadeOutAnimation OnEndFadeOutAnimatio
 	UFadeInOutWidget* FadeInOutWidget = WorldWidgetSubsystem->GetWorldWidget<UFadeInOutWidget>(EWorldWidgetType::FadeInOut);
 	checkf(FadeInOutWidget != nullptr, TEXT("페이드 인 앤 아웃 위젯 nullptr 오류"));
 
+	auto TryToExecuteFadeOutCallback = [Callback = MoveTemp(OnEndFadeOutAnimation), FadeInOutWidget](const ARDGameModeBase* GameMode) {
+		if (EnumHasAllFlags(GameMode->mFadeOutStateFlag, ERDFadeOutStateFlag::ReadyToCallback) == false)
+		{
+			return;
+		}
+		GameMode->mFadeOutStateFlag = ERDFadeOutStateFlag::None;
+		Callback.ExecuteIfBound(FadeInOutWidget);
+		};
+
 	FadeInOutWidget->OpenUI();
-	FadeInOutWidget->StartFadeOut(MoveTemp(OnEndFadeOutAnimation));
+	FadeInOutWidget->StartFadeOut(FOnEndFadeOutAnimation::CreateWeakLambda(this, [this, TryToExecuteFadeOutCallback](UFadeInOutWidget* Widget) {
+		EnumAddFlags(mFadeOutStateFlag, ERDFadeOutStateFlag::FadeAnimationEnded);
+		TryToExecuteFadeOutCallback(this);
+		}));
+
+	if (mBgmComponent != nullptr && mBgmComponent->IsPlaying() == true)
+	{
+		mBgmComponent->OnAudioFinishedNative.AddWeakLambda(this, [this, TryToExecuteFadeOutCallback](UAudioComponent* AudioComponent) {
+			EnumAddFlags(mFadeOutStateFlag, ERDFadeOutStateFlag::FadeBGMEnded);
+			TryToExecuteFadeOutCallback(this);
+			});
+		mBgmComponent->FadeOut(mBGMFadeOutDuration, 0.f);
+	}
+	else
+	{
+		EnumAddFlags(mFadeOutStateFlag, ERDFadeOutStateFlag::FadeBGMEnded);
+		TryToExecuteFadeOutCallback(this);
+	}
 }
 
 /**
@@ -153,7 +273,10 @@ void ARDGameModeBase::StartFadeOutUIForRoomTransition()
 {
 	StartFadeOutUI(FOnEndFadeOutAnimation::CreateWeakLambda(this, [this](UFadeInOutWidget*)
 	{
-		checkf(MarkExternalReadyForTransition() == true, TEXT("외부 준비 상태 전달 오류"));
+		if (mWaitExternalWorkOnTransition == false)
+		{
+			checkf(MarkExternalReadyForTransition() == true, TEXT("외부 준비 상태 전달 오류"));
+		}
 	}));
 }
 
@@ -422,6 +545,22 @@ const UUserPersistData* ARDGameModeBase::GetUserPersistData() const
 	return PersistentDataSubsystem->GetUserPersistData();
 }
 
+UUserPersistData* ARDGameModeBase::GetUserPersistData()
+{
+	UPersistentDataSubsystem* PersistentDataSubsystem = GetGameInstance()->GetSubsystem<UPersistentDataSubsystem>();
+	checkf(PersistentDataSubsystem != nullptr, TEXT("영구 데이터 서브시스템 nullptr"));
+
+	return PersistentDataSubsystem->GetUserPersistData();
+}
+
+URunPersistData* ARDGameModeBase::GetRunPersistData()
+{
+	UPersistentDataSubsystem* PersistentDataSubsystem = GetGameInstance()->GetSubsystem<UPersistentDataSubsystem>();
+	checkf(PersistentDataSubsystem != nullptr, TEXT("영구 데이터 서브시스템 nullptr"));
+
+	return PersistentDataSubsystem->GetRunPersistData();
+}
+
 const URunPersistData* ARDGameModeBase::GetRunPersistData() const
 {
 	UPersistentDataSubsystem* PersistentDataSubsystem = GetGameInstance()->GetSubsystem<UPersistentDataSubsystem>();
@@ -437,3 +576,12 @@ void ARDGameModeBase::ClearRunPersistData()
 
 	GameProfileSubsystem->EndRun();
 }
+
+void ARDGameModeBase::SetMainBGM(USoundBase* BGM, bool IsOverride)
+{
+	if (mMainBGM == nullptr || IsOverride == true)
+	{
+		mMainBGM = BGM;
+	}
+}
+

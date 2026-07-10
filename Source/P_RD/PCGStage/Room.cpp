@@ -1,8 +1,23 @@
 ﻿#include "PCGStage/Room.h"
 
+#define LOCTEXT_NAMESPACE "Room"
+
 void FRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const
 {
 	RoomId = mStaticRoomSpawnDataId;
+}
+
+FText FRoom::GetDisplayName() const
+{
+	switch (mType)
+	{
+	case ERoomType::Monster:      return LOCTEXT("RoomNameMonster", "일반");
+	case ERoomType::EliteMonster: return LOCTEXT("RoomNameElite", "엘리트");
+	case ERoomType::BossMonster:  return LOCTEXT("RoomNameBoss", "보스");
+	case ERoomType::Shop:         return LOCTEXT("RoomNameShop", "상점");
+	case ERoomType::Treasure:     return LOCTEXT("RoomNameTreasure", "보물");
+	default:                      return FText::GetEmpty();
+	}
 }
 
 FTreasureRoom::FTreasureRoom()
@@ -58,3 +73,5 @@ void FBossMonsterRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<F
 
 	AdditionalAssetIds.Add(mRewardDiceDataId);
 }
+
+#undef LOCTEXT_NAMESPACE

@@ -1,10 +1,10 @@
 ﻿#include "Actor/TileMap/TileMap.h"
 #include "RDCollision.h"
-#include "SRPGFramework/TileActor.h"
 #include "Components/SceneComponent.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Materials/MaterialInterface.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Algo/Reverse.h"
 
@@ -24,22 +24,6 @@ namespace
 		default:							return 0.0f;
 		}
 	}
-
-	/**
-	 * @brief 직교 4방향 단위 스텝 (오른쪽/왼쪽/아래/위)
-	 */
-	const FTileIndex Orthogonal4[] =
-	{
-		FTileIndex(1, 0), FTileIndex(-1, 0), FTileIndex(0, 1), FTileIndex(0, -1)
-	};
-
-	/**
-	 * @brief 대각 4방향 단위 스텝 (우하/우상/좌하/좌상)
-	 */
-	const FTileIndex Diagonal4[] =
-	{
-		FTileIndex(1, 1), FTileIndex(1, -1), FTileIndex(-1, 1), FTileIndex(-1, -1)
-	};
 }
 
 ATileMap::ATileMap()
@@ -49,6 +33,9 @@ ATileMap::ATileMap()
 
 	// 루트 컴포넌트 생성 및 지정
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+
+	// 타일맵 데이터 모델 기본 인스턴스 생성 (에디터 프리뷰·널 안전, 런타임엔 MapModel로 교체)
+	mModel = CreateDefaultSubobject<UTileMapModel>(TEXT("Model"));
 
 	// 타일 그리드용 인스턴스드 메시 컴포넌트 생성 및 루트에 부착
 	mTileMeshComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("TileMesh"));
@@ -64,29 +51,226 @@ ATileMap::ATileMap()
 		mTileMeshComponent->SetStaticMesh(mTileMesh);
 	}
 
-	// 강조 스타일 기본값 (우선순위 Aim < Select < Effect)
-	// 조준 범위: 회색 반투명, 바닥에 깔림
+	// 하이라이트 표시용 머티리얼: PerInstanceCustomData(RGBA)를 읽어 타일 색에 합성한다.
+	// M_TileTransparent는 반투명이라 타일맵이 배경에 깔릴 때 바닥이 비치고, 남색 바탕이 없어 하이라이트 색 구분이 잘 된다.
+	// 없으면 엔진 기본 머티리얼로 렌더되어 하이라이트(Aim/Select/Effect)가 안 보인다.
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> TileTransparentMatFinder(TEXT("/Game/SVN/InSideAsset/Material/M_TileTransparent.M_TileTransparent"));
+	if (TileTransparentMatFinder.Succeeded())
+	{
+		mTileMaterial = TileTransparentMatFinder.Object;
+		mTileMeshComponent->SetMaterial(0, mTileMaterial);
+	}
+
+	// 강조 스타일 기본값 (모두 타일 위에 자기 알파로 Mix — 알파<1이라 타일이 비침)
+	// 조준 범위: 회색 반투명
 	mAimStyle.mColor = FLinearColor(0.5f, 0.5f, 0.5f, 0.5f);
-	mAimStyle.mBlendMode = ETileHighlightBlend::Mix;
-	mAimStyle.mPriority = 0;
 
-	// 선택 타일: 노란색, Aim 위에 덮어씀
-	mSelectStyle.mColor = FLinearColor(1.0f, 0.9f, 0.1f, 1.0f);
-	mSelectStyle.mBlendMode = ETileHighlightBlend::Overwrite;
-	mSelectStyle.mPriority = 1;
+	// 선택 타일: 노란색 (겹치면 최우선)
+	mSelectStyle.mColor = FLinearColor(1.0f, 0.9f, 0.1f, 0.8f);
 
-	// 영향 범위: 빨간색, 최상위에서 펄스로 섞임
+	// 영향 범위: 빨간색 (아래 레이어 ↔ 자기 색을 펄스로 보간)
 	mEffectStyle.mColor = FLinearColor(1.0f, 0.1f, 0.1f, 0.6f);
-	mEffectStyle.mBlendMode = ETileHighlightBlend::Mix;
-	mEffectStyle.mPriority = 2;
+
+	// 기본 타일 구분색
+	mTileBaseStyle.mColor = FLinearColor(0.05f, 0.05f, 0.05f, 0.25f);
+
+	// 테두리 기본값: 짙은 회색 (머티리얼에 BorderColor/BorderWidth 파라미터가 있어야 표시됨)
+	mTileBorderStyle.mColor = FLinearColor(0.2f, 0.2f, 0.2f, 0.8f);
+
+	// 경로 화살표/도착 마커 컴포넌트 생성 (장식용 — 타일 트레이스 방해 않도록 충돌 없음)
+	mPathArrowComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("PathArrow"));
+	mPathArrowComponent->SetupAttachment(RootComponent);
+	mPathArrowComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	mPathArrowComponent->SetNumCustomDataFloats(4);
+
+	mPathEndComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("PathEnd"));
+	mPathEndComponent->SetupAttachment(RootComponent);
+	mPathEndComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	mPathEndComponent->SetNumCustomDataFloats(4);
+
+	// 경로 중간 화살표 기본 메시: +X를 가리키는 Kenney 화살표 에셋 (방향 회전이 이 형상 기준이라 +X 향이어야 함)
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> ArrowMeshFinder(TEXT("/Game/SVN/OutSideAsset/Kenney/FactoryKit/SM_Kenney_FactoryKit_Arrow.SM_Kenney_FactoryKit_Arrow"));
+	if (ArrowMeshFinder.Succeeded())
+	{
+		mPathArrowMesh = ArrowMeshFinder.Object;
+		mPathArrowComponent->SetStaticMesh(mPathArrowMesh);
+	}
+
+	// 도착(끝) 타일 마커 기본 메시: Kenney 특수 인디케이터 화살표 에셋
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> EndMeshFinder(TEXT("/Game/SVN/OutSideAsset/Kenney/FactoryKit/SM_Kenney_FactoryKit_IndicatorSpecialArrow.SM_Kenney_FactoryKit_IndicatorSpecialArrow"));
+	if (EndMeshFinder.Succeeded())
+	{
+		mPathEndMesh = EndMeshFinder.Object;
+		mPathEndComponent->SetStaticMesh(mPathEndMesh);
+	}
+
+	// 화살표/마커는 전용 발광 머티리얼(custom data RGBA + EmissiveBoost) 사용 — SetMovePath에서 컴포넌트에 적용
+	// 타일 머티리얼(M_TileTransparent)과 분리해 타일 쪽 테두리 파라미터의 영향 없이 블룸으로 도드라지게 함
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> PathIndicatorMatFinder(TEXT("/Game/SVN/InSideAsset/Material/M_PathIndicator.M_PathIndicator"));
+	if (PathIndicatorMatFinder.Succeeded())
+	{
+		mPathArrowMaterial = PathIndicatorMatFinder.Object;
+		mPathEndMaterial = PathIndicatorMatFinder.Object;
+	}
+
+	// 경로 화살표와 도착지 화살표 기본 값
+	mPathArrowStyle.mColor = FLinearColor(0.9f, 0.45f, 0.0f, 0.95f);
+	mPathEndStyle.mColor = FLinearColor(0.9f, 0.45f, 0.0f, 0.95f);
+
+	// 생성자에서 만든 기본 모델에 표시 델리깃을 임시 바인딩 (런타임 모델 매핑 시 재호출)
+	BindModelDelegates();
+}
+
+void ATileMap::BindModelDelegates()
+{
+	// 모델이 없으면 바인딩 불가
+	if (mModel == nullptr)
+		return;
+
+	// 이동경로 표시 요청을 뷰의 SetMovePath로 연결 (싱글캐스트라 재호출 시 덮어씀)
+	mModel->mSetMovePathDelegate.BindUObject(this, &ATileMap::SetMovePath);
+
+	// 타일 강조 표시/해제 요청을 뷰의 SetTileHighlight/ClearTileHighlight로 연결
+	mModel->mSetTileHighlightDelegate.BindUObject(this, &ATileMap::SetTileHighlight);
+	mModel->mClearTileHighlightDelegate.BindUObject(this, &ATileMap::ClearTileHighlight);
+
+	// 좌표 변환 질의를 뷰의 컴포넌트 트랜스폼 기반 함수로 연결 (모델이 시각 정보가 필요한 변환을 질의)
+	mModel->mTileToWorldTransformDelegate.BindUObject(this, &ATileMap::TileToWorldTransform);
+	mModel->mTileToWorldLocationDelegate.BindUObject(this, &ATileMap::TileToWorldLocation);
+	mModel->mWorldToTileIndexDelegate.BindUObject(this, &ATileMap::WorldToTileIndex);
+}
+
+void ATileMap::BindModel(UObjectModel* Model)
+{
+	// 컴포넌트 뷰 바인딩 (기반 구현 — 현재 부착 컴포넌트 뷰는 없지만 일관성 유지)
+	IActorView::BindModel(Model);
+
+	// 런타임 모델을 뷰의 모델로 교체
+	mModel = Cast<UTileMapModel>(Model);
+
+	// 표시·좌표 델리깃을 교체된 모델에 재바인딩
+	BindModelDelegates();
+
+	// 모델 크기에 맞춰 그리드 인스턴스 재생성
+	RebuildTileInstances();
+}
+
+void ATileMap::UnbindModel(UObjectModel* Model)
+{
+	// 컴포넌트 뷰 해제 (기반 구현)
+	IActorView::UnbindModel(Model);
+
+	// 교체된 모델의 델리깃 정리 (싱글캐스트라 명시적으로 비움)
+	if (mModel != nullptr)
+	{
+		mModel->mSetMovePathDelegate.Unbind();
+		mModel->mSetTileHighlightDelegate.Unbind();
+		mModel->mClearTileHighlightDelegate.Unbind();
+		mModel->mTileToWorldTransformDelegate.Unbind();
+		mModel->mTileToWorldLocationDelegate.Unbind();
+		mModel->mWorldToTileIndexDelegate.Unbind();
+	}
+}
+
+UObjectModel* ATileMap::GetModel_Internal() const
+{
+	// IObjectView::GetModel 템플릿이 참조하는 보유 모델 반환
+	return mModel;
 }
 
 void ATileMap::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
 
-	// 배치/스폰/프로퍼티 변경 시점에 그리드 인스턴스 재생성
-	RebuildTileInstances();
+	// 게임 월드(PIE/런타임)에선 프로퍼티 편집/이동이 컨스트럭션을 재실행하는데,
+	// 이때 저장소(mTiles=배치된 유닛 등록)를 날리지 않도록 그리드 시각만 갱신 (저장소 빌드는 BindModel이 담당)
+	// 에디터(비게임)에선 크기/그리드 편집 반영을 위해 저장소까지 재생성
+	if (GetWorld() != nullptr && GetWorld()->IsGameWorld())
+	{
+		RefreshTileVisuals();
+	}
+	else
+	{
+		RebuildTileInstances();
+	}
+
+#if WITH_EDITOR
+	// [에디터 전용] 에디터 뷰포트에서 디버그 경로 미리보기 — 좌표 변경 즉시 반영 (펄스 애니메이션은 틱이 도는 PIE에서만)
+	if (GetWorld() != nullptr && !GetWorld()->IsGameWorld())
+	{
+		if (mDebugDrawPathOnBeginPlay && mModel != nullptr)
+			mModel->SetMovePath(mDebugPathStart, mDebugPathGoal);
+		else
+			ClearMovePath();
+	}
+#endif
+}
+
+void ATileMap::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// 타일맵뷰의 트랜스폼이 변경되면 유닛뷰들의 위치도 재조정하기 위해 이벤트 구독
+	if (RootComponent != nullptr)
+	{
+		RootComponent->TransformUpdated.AddUObject(this, &ATileMap::OnRootTransformUpdated);
+	}
+
+#if WITH_EDITOR
+	// [에디터 전용] 토글이 켜진 인스턴스에서만 PIE 시작 시 디버그 경로를 그려 펄스 검증 (패키징 빌드에선 제거됨)
+	if (mDebugDrawPathOnBeginPlay && mModel != nullptr)
+		mModel->SetMovePath(mDebugPathStart, mDebugPathGoal);
+#endif
+}
+
+#if WITH_EDITOR
+void ATileMap::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	// 구조체 내부(mColor 등) 편집도 소유 멤버 이름으로 판별
+	const FName MemberName = PropertyChangedEvent.MemberProperty != nullptr ?
+		PropertyChangedEvent.MemberProperty->GetFName() : PropertyChangedEvent.GetPropertyName();
+
+	// 배치 계열: 그리드 인스턴스 재생성 + 배치된 액터 위치 재통지 (크기가 바뀌면 테두리 cm→UV 환산도 함께 갱신됨)
+	if (MemberName == GET_MEMBER_NAME_CHECKED(ATileMap, mTileSize) ||
+		MemberName == GET_MEMBER_NAME_CHECKED(ATileMap, mTileVisualScale) ||
+		MemberName == GET_MEMBER_NAME_CHECKED(ATileMap, mTileMesh) ||
+		MemberName == GET_MEMBER_NAME_CHECKED(ATileMap, mTileMaterial))
+	{
+		RefreshTileVisuals();
+		if (mModel != nullptr)
+		{
+			mModel->RefreshActorPlacements();
+		}
+	}
+	// 색 계열: 전 타일 표시만 재합성 (배치 불변)
+	else if (MemberName == GET_MEMBER_NAME_CHECKED(ATileMap, mTileBaseStyle) ||
+		MemberName == GET_MEMBER_NAME_CHECKED(ATileMap, mAimStyle) ||
+		MemberName == GET_MEMBER_NAME_CHECKED(ATileMap, mSelectStyle) ||
+		MemberName == GET_MEMBER_NAME_CHECKED(ATileMap, mEffectStyle))
+	{
+		for (int32 Index = 0; Index < mHighlights.Num(); ++Index)
+		{
+			RefreshTileCustomData(Index);
+		}
+	}
+	// 테두리 계열: MID 파라미터만 갱신
+	else if (MemberName == GET_MEMBER_NAME_CHECKED(ATileMap, mTileBorderStyle) ||
+		MemberName == GET_MEMBER_NAME_CHECKED(ATileMap, mTileBorderWidth))
+	{
+		ApplyBorderParameters();
+	}
+}
+#endif
+
+void ATileMap::OnRootTransformUpdated(USceneComponent* UpdatedComponent, EUpdateTransformFlags UpdateTransformFlags, ETeleportType Teleport)
+{
+	// 타일맵뷰 트랜스폼이 변경되면 유닛뷰들의 위치도 조정
+	if (mModel != nullptr)
+	{
+		mModel->RefreshActorPlacements();
+	}
 }
 
 void ATileMap::Tick(float DeltaSeconds)
@@ -100,74 +284,42 @@ void ATileMap::Tick(float DeltaSeconds)
 		if (EnumHasAnyFlags(mHighlights[Index], ETileHighlightFlag::Effect))
 			RefreshTileCustomData(Index);
 	}
-}
 
-TScriptInterface<ITileActor> ATileMap::ToTileActorInterface(ITileActor* Actor)
-{
-	// TScriptInterface는 UObject 핸들이 필요하므로 _getUObject로 변환
-	return TScriptInterface<ITileActor>(Actor->_getUObject());
-}
-
-void ATileMap::RegisterActorToTile(FTile* Tile, ITileActor* Actor)
-{
-	// 타일 액터 목록에 추가
-	Tile->mActors.Add(ToTileActorInterface(Actor));
-}
-
-void ATileMap::UnregisterActorFromTile(FTile* Tile, ITileActor* Actor)
-{
-	// 타일 액터 목록에서 제거
-	Tile->mActors.Remove(ToTileActorInterface(Actor));
-}
-
-void ATileMap::NotifyBeginOverlap(FTile* Tile, ITileActor* Actor)
-{
-	// 같은 타일의 다른 액터들과 양방향 OnBegin 통지 (자기 제외)
-	for (const auto& Other : Tile->mActors)
-	{
-		if (Other.GetInterface() == Actor)
-		{
-			continue;
-		}
-		Actor->OnBeginTileOverlap(Tile, Other.GetInterface());
-		Other->OnBeginTileOverlap(Tile, Actor);
-	}
-}
-
-void ATileMap::NotifyEndOverlap(FTile* Tile, ITileActor* Actor)
-{
-	// 같은 타일의 다른 액터들과 양방향 OnEnd 통지 (자기 제외)
-	for (const auto& Other : Tile->mActors)
-	{
-		if (Other.GetInterface() == Actor)
-		{
-			continue;
-		}
-		Actor->OnEndTileOverlap(Tile, Other.GetInterface());
-		Other->OnEndTileOverlap(Tile, Actor);
-	}
+	// 경로 화살표/도착 마커 알파도 펄스 — 표시 중일 때만 갱신
+	if (mPathLength > 0)
+		RefreshPathPulse();
 }
 
 void ATileMap::RebuildTileInstances()
 {
-	// 타일 저장소를 현재 크기에 맞춰 기본 타일로 새로 채움
-	mTiles.Init(FTile(), FMath::Max(0, mWidth * mHeight));
+	// 타일 저장소를 현재 크기에 맞춰 기본 타일로 새로 채움 (모델 데이터 책임)
+	mModel->RebuildTiles();
 
 	// 강조 표시 상태도 같은 크기로 초기화 (전부 None)
-	mHighlights.Init(ETileHighlightFlag::None, FMath::Max(0, mWidth * mHeight));
+	mHighlights.Init(ETileHighlightFlag::None, FMath::Max(0, mModel->GetWidth() * mModel->GetHeight()));
 
+	// 시각 요소(인스턴스/머티리얼/타일 색) 재생성
+	RefreshTileVisuals();
+}
+
+void ATileMap::RefreshTileVisuals()
+{
 	// 컴포넌트가 없으면 처리 불가
 	if (mTileMeshComponent == nullptr)
 	{
 		return;
 	}
 
-	// 에디터에서 교체된 메시/머티리얼 반영
+	// 에디터에서 교체된 메시 반영
 	mTileMeshComponent->SetStaticMesh(mTileMesh);
+
+	// 테두리 파라미터를 원본 에셋 수정 없이 푸시하기 위한 타일 전용 MID 생성 후 적용
 	if (mTileMaterial != nullptr)
 	{
-		mTileMeshComponent->SetMaterial(0, mTileMaterial);
+		mTileMID = UMaterialInstanceDynamic::Create(mTileMaterial, this);
+		mTileMeshComponent->SetMaterial(0, mTileMID);
 	}
+	ApplyBorderParameters();
 
 	// 타일별 하이라이트 RGBA를 담을 custom data 슬롯 4개 (0=R,1=G,2=B,3=A)
 	mTileMeshComponent->SetNumCustomDataFloats(4);
@@ -176,7 +328,7 @@ void ATileMap::RebuildTileInstances()
 	mTileMeshComponent->ClearInstances();
 
 	// 메시가 없거나 크기가 비정상이면 빈 그리드로 둠
-	if (mTileMesh == nullptr || mWidth <= 0 || mHeight <= 0 || mTileSize <= 0.0f)
+	if (mTileMesh == nullptr || mModel->GetWidth() <= 0 || mModel->GetHeight() <= 0 || mTileSize <= 0.0f)
 	{
 		return;
 	}
@@ -186,9 +338,9 @@ void ATileMap::RebuildTileInstances()
 	const float InstanceScaleXY = (mTileSize / PlaneBaseSize) * mTileVisualScale;
 
 	// Width x Height 만큼 타일 인스턴스를 로컬 공간에 배치
-	for (int32 y = 0; y < mHeight; ++y)
+	for (int32 y = 0; y < mModel->GetHeight(); ++y)
 	{
-		for (int32 x = 0; x < mWidth; ++x)
+		for (int32 x = 0; x < mModel->GetWidth(); ++x)
 		{
 			// 타일 (x,y) 중심의 로컬 위치
 			const FVector LocalLocation(x * mTileSize, y * mTileSize, 0.0f);
@@ -196,16 +348,29 @@ void ATileMap::RebuildTileInstances()
 			mTileMeshComponent->AddInstance(InstanceTransform, /*bWorldSpace=*/false);
 		}
 	}
+
+	// 새 인스턴스에 기본 구분색과 하이라이트를 다시 칠함
+	for (int32 Index = 0; Index < mHighlights.Num(); ++Index)
+	{
+		RefreshTileCustomData(Index);
+	}
 }
 
-int32 ATileMap::GetWidth() const
+void ATileMap::ApplyBorderParameters()
 {
-	return mWidth;
-}
+	// 테두리 정보가 없으면 바로 리턴
+	if (mTileMID == nullptr)
+	{
+		return;
+	}
 
-int32 ATileMap::GetHeight() const
-{
-	return mHeight;
+	// 타일은 mTileVisualScale만큼 축소/확대 되므로
+	// cm 단위로 설정한 테두리 굵기도 실제 그려지는 타일판 크기에 맞춰 재계산
+	const float TileVisualSize = mTileSize * mTileVisualScale;
+	const float BorderWidthUV = TileVisualSize > 0.0f ? FMath::Clamp(mTileBorderWidth / TileVisualSize, 0.0f, 0.5f) : 0.0f;
+
+	mTileMID->SetVectorParameterValue(TEXT("BorderColor"), mTileBorderStyle.mColor);
+	mTileMID->SetScalarParameterValue(TEXT("BorderWidth"), BorderWidthUV);
 }
 
 float ATileMap::GetTileSize() const
@@ -213,71 +378,14 @@ float ATileMap::GetTileSize() const
 	return mTileSize;
 }
 
-bool ATileMap::IsValidIndex(const FTileIndex& TileIndex) const
-{
-	// 0 <= X < Width && 0 <= Y < Height 범위 검사
-	return TileIndex.mX >= 0 && TileIndex.mX < mWidth
-		&& TileIndex.mY >= 0 && TileIndex.mY < mHeight;
-}
-
-int32 ATileMap::TileIndexToLinearIndex(const FTileIndex& TileIndex) const
-{
-	// 범위 밖이면 무효
-	if (!IsValidIndex(TileIndex))
-	{
-		return INDEX_NONE;
-	}
-	// 행 우선(y*Width + x)으로 1차원 인덱스 계산
-	return TileIndex.mY * mWidth + TileIndex.mX;
-}
-
-const FTile* ATileMap::GetTile(const FTileIndex& TileIndex) const
-{
-	const int32 LinearIndex = TileIndexToLinearIndex(TileIndex);
-	// 맵 범위(INDEX_NONE) + mTiles 미초기화/크기 불일치(IsValidIndex)를 모두 방어
-	if (LinearIndex == INDEX_NONE || !mTiles.IsValidIndex(LinearIndex))
-	{
-		return nullptr;
-	}
-	return &mTiles[LinearIndex];
-}
-
-FTile* ATileMap::GetTile(const FTileIndex& TileIndex)
-{
-	// 로직 중복을 피하려 const 버전에 위임 후 반환값의 const만 제거
-	return const_cast<FTile*>(AsConst(*this).GetTile(TileIndex));
-}
-
-TArray<TScriptInterface<ITileActor>> ATileMap::GetActorsOnTile(const FTileIndex& TileIndex, ETileLayerFlag LayerFilter) const
-{
-	TArray<TScriptInterface<ITileActor>> Result;
-
-	// 타일 조회 (범위 밖이면 빈 배열)
-	const FTile* Tile = GetTile(TileIndex);
-	if (Tile == nullptr)
-	{
-		return Result;
-	}
-
-	// 레이어 필터에 걸리는 액터만 수집
-	for (const TScriptInterface<ITileActor>& Actor : Tile->mActors)
-	{
-		if (Actor && EnumHasAnyFlags(Actor->GetTileLayerFlags(), LayerFilter))
-		{
-			Result.Add(Actor);
-		}
-	}
-	return Result;
-}
-
 FTransform ATileMap::TileToWorldTransform(const FTileTransform& TileTransform) const
 {
 	// 월드 위치 획득
 	const FVector WorldLocation = TileToWorldLocation(TileTransform.mIndex);
-	// 타일맵의 YAW 회전을 타일에 적용 (그래야 같은 방향을 바라보니까)
-	const FQuat WorldRotation = GetActorQuat() * FRotator(0.0f, DirectionToYaw(TileTransform.mDirection), 0.0f).Quaternion();
-	// 타일맵의 스케일을 타일에 적용
-	return FTransform(WorldRotation, WorldLocation, GetActorScale3D());
+	// 타일맵 메시 컴포넌트의 YAW 회전을 타일에 적용 (그래야 같은 방향을 바라보니까)
+	const FQuat WorldRotation = mTileMeshComponent->GetComponentQuat() * FRotator(0.0f, DirectionToYaw(TileTransform.mDirection), 0.0f).Quaternion();
+	// 타일맵 메시 컴포넌트의 스케일을 타일에 적용
+	return FTransform(WorldRotation, WorldLocation, mTileMeshComponent->GetComponentScale());
 }
 
 FVector ATileMap::TileToWorldLocation(const FTileIndex& TileIndex) const
@@ -286,8 +394,15 @@ FVector ATileMap::TileToWorldLocation(const FTileIndex& TileIndex) const
 	// 메시 피벗이 중심인 엔진 Plane 기준이라 (X*TileSize, Y*TileSize)가 곧 타일 중심
 	// (피벗이 모서리인 커스텀 메시로 교체 시 이 가정이 깨지므로 양쪽 모두 보정 필요)
 	const FVector LocalLocation(TileIndex.mX * mTileSize, TileIndex.mY * mTileSize, 0.0f);
-	// 액터 트랜스폼(위치/회전/스케일)을 반영해 월드 위치로 변환
-	return GetActorTransform().TransformPosition(LocalLocation);
+	// 타일이 배치된 메시 컴포넌트 트랜스폼(위치/회전/스케일)을 반영해 월드 위치로 변환
+	return mTileMeshComponent->GetComponentTransform().TransformPosition(LocalLocation);
+}
+
+FRotator ATileMap::TileToWorldRotation(ETileActorDirection Direction) const
+{
+	// 타일맵 메시 컴포넌트의 YAW 회전을 타일에 적용
+	const FQuat WorldRotation = mTileMeshComponent->GetComponentQuat() * FRotator(0.0f, DirectionToYaw(Direction), 0.0f).Quaternion();
+	return WorldRotation.Rotator();
 }
 
 FTileIndex ATileMap::WorldToTileIndex(const FVector& WorldLocation) const
@@ -298,8 +413,8 @@ FTileIndex ATileMap::WorldToTileIndex(const FVector& WorldLocation) const
 		return FTileIndex::Invalid;
 	}
 
-	// 월드 좌표를 로컬 좌표로 변환
-	const FVector LocalLocation = GetActorTransform().InverseTransformPosition(WorldLocation);
+	// 월드 좌표를 타일이 배치된 메시 컴포넌트 로컬 좌표로 변환
+	const FVector LocalLocation = mTileMeshComponent->GetComponentTransform().InverseTransformPosition(WorldLocation);
 
 	// 로컬 좌표를 타일 크기로 나눈 뒤 반올림해 가장 가까운 타일 중심을 인덱스로 지정
 	// 예) 80 -> 80 / 100 = 0 -> 인덱스 0
@@ -310,380 +425,14 @@ FTileIndex ATileMap::WorldToTileIndex(const FVector& WorldLocation) const
 	);
 
 	// 맵 범위 밖이면 Invalid 반환
-	return IsValidIndex(TileIndex) ? TileIndex : FTileIndex::Invalid;
+	return mModel->IsValidIndex(TileIndex) ? TileIndex : FTileIndex::Invalid;
 }
 
 /**
  * @details
- * - 이동범위는 맨해튼 이동방식 사용 (대각선 이동 없음)
- * - 시작점에서부터 4방향으로 이동할 수 있는 타일을 조사한 후 배열에 추가
- * - 배열에 있는 타일을 기준으로 이동할 수 있는 옆 타일을 조사
- * - 이미 선택된 타일의 인덱스를 Distance[] 배열에서 관리해서 중복 선택 방지
- * - 최대이동거리만큼 반복
- */
-TArray<FTileIndex> ATileMap::GetReachableTiles(const FTileIndex& Origin, int32 MoveDistance) const
-{
-	TArray<FTileIndex> Result;
-
-	// 시작점이 맵 밖이거나 이동력이 없으면 도달 가능 타일 없음
-	if (!IsValidIndex(Origin) || MoveDistance <= 0)
-		return Result;
-
-	// 칸별 최단 도달 거리 기록 (-1=미방문), 1차원 인덱스로 접근
-	TArray<int32> Distance;
-	Distance.Init(-1, mWidth * mHeight);
-	Distance[TileIndexToLinearIndex(Origin)] = 0;
-
-	// BFS 큐: 가까운 칸부터 한 겹씩 확장 (인덱스로 순회해 pop 비용 회피)
-	TArray<FTileIndex> Frontier;
-	Frontier.Add(Origin);
-
-	for (int32 Head = 0; Head < Frontier.Num(); ++Head)
-	{
-		const FTileIndex Current = Frontier[Head];
-		const int32 CurrentDistance = Distance[TileIndexToLinearIndex(Current)];
-
-		// 이동력을 모두 쓴 칸에서는 더 뻗지 않음
-		if (CurrentDistance >= MoveDistance)
-			continue;
-
-		// 직교 4방향 이웃 검사
-		for (const FTileIndex& Step : Orthogonal4)
-		{
-			const FTileIndex Next(Current.mX + Step.mX, Current.mY + Step.mY);
-
-			// 맵 밖이면 제외 (INDEX_NONE)
-			const int32 LinearIndex = TileIndexToLinearIndex(Next);
-			if (LinearIndex == INDEX_NONE)
-				continue;
-
-			// 이미 방문한 칸은 건너뜀 (BFS라 먼저 방문한 경로가 최단)
-			if (Distance[LinearIndex] != -1)
-				continue;
-
-			// 장애물·유닛이 점유한 칸은 통과·도착 불가
-			// (확장 지점: 투명화 등 통과 규칙이 생기면 이 한 줄만 교체)
-			if (IsOccupied(Next))
-				continue;
-
-			// 거리 확정 후 결과·큐에 추가
-			Distance[LinearIndex] = CurrentDistance + 1;
-			Result.Add(Next);
-			Frontier.Add(Next);
-		}
-	}
-
-	return Result;
-}
-
-void ATileMap::AppendRayTiles(const FTileIndex& Origin, const FTileIndex& Step, int32 Range, TArray<FTileIndex>& Out) const
-{
-	// 원점에서 Step 방향으로 한 칸씩 전진하며 수집 (원점 자신은 제외)
-	FTileIndex Current = Origin;
-	for (int32 Distance = 0; Distance < Range; ++Distance)
-	{
-		// 다음 칸으로 전진
-		Current.mX += Step.mX;
-		Current.mY += Step.mY;
-
-		// 맵 밖으로 나가면 이 방향은 더 진행하지 않고 종료
-		if (!IsValidIndex(Current))
-			break;
-
-		// 맵 안의 칸만 후보로 누적
-		Out.Add(Current);
-	}
-}
-
-void ATileMap::AppendBlockableRay(const FTileIndex& Origin, const FTileIndex& Step, int32 Range, bool bPenetrate, TArray<FTileIndex>& Out) const
-{
-	// 원점에서 Step 방향으로 한 칸씩 전진하며 수집 (원점 자신은 제외)
-	FTileIndex Current = Origin;
-	for (int32 Distance = 0; Distance < Range; ++Distance)
-	{
-		// 다음 칸으로 전진
-		Current.mX += Step.mX;
-		Current.mY += Step.mY;
-
-		// 맵 밖으로 나가면 이 방향은 더 진행하지 않고 종료
-		if (!IsValidIndex(Current))
-			break;
-
-		// 이 칸은 영향에 포함 (점유 칸이면 "맞고 멈춤"이라 포함 후 종료)
-		Out.Add(Current);
-
-		// 관통하지 않는데 점유 칸이면 그 너머로는 진행하지 않음
-		if (!bPenetrate && IsOccupied(Current))
-			break;
-	}
-}
-
-bool ATileMap::IsOccupied(const FTileIndex& TileIndex) const
-{
-	// 장애물 또는 유닛이 있으면 점유로 판정
-	return GetActorsOnTile(TileIndex, ETileLayerFlag::Obstacle | ETileLayerFlag::Unit).Num() > 0;
-}
-
-void ATileMap::AppendSquareTiles(const FTileIndex& Center, const int32 Radius, TArray<FTileIndex>& Out) const
-{
-	// 중심 기준 [-Radius, Radius] 정사각형 격자를 순회한다.
-	for (int32 OffsetY = -Radius; OffsetY <= Radius; ++OffsetY)
-	{
-		for (int32 OffsetX = -Radius; OffsetX <= Radius; ++OffsetX)
-		{
-			// 중심 자신은 본체가 별도 처리하므로 제외 (중복 방지)
-			if (OffsetX == 0 && OffsetY == 0)
-				continue;
-
-            // ReSharper disable once CppTooWideScopeInitStatement
-            const FTileIndex Candidate(Center.mX + OffsetX, Center.mY + OffsetY);
-
-			// 맵 안의 칸만 누적 (장애물/시야는 보지 않음 — 하늘 낙하 개념)
-			if (IsValidIndex(Candidate))
-				Out.Add(Candidate);
-		}
-	}
-}
-
-void ATileMap::BresenhamLine(const FTileIndex& From, const FTileIndex& To, TArray<FTileIndex>& Out) const
-{
-	// 동점(2*Error == ±Delta) 처리가 진행 방향에 따라 다른 칸을 고르지 않도록,
-	// 항상 사전순(X 우선, 같으면 Y)으로 작은 쪽에서 큰 쪽으로만 그린다
-	const bool bSwapped = (To.mX < From.mX) || (To.mX == From.mX && To.mY < From.mY);
-	const FTileIndex& Start = bSwapped ? To : From;
-	const FTileIndex& End = bSwapped ? From : To;
-
-	// 이번 호출이 추가하는 구간의 시작 위치 (Out은 누적 배열이므로 이 구간만 뒤집어야 함)
-	const int32 FirstIndex = Out.Num();
-
-	// 시작점에서 끝점까지의 정수 좌표 (Start부터 한 칸씩 전진)
-	int32 X = Start.mX;
-	int32 Y = Start.mY;
-	const int32 X1 = End.mX;
-	const int32 Y1 = End.mY;
-
-	// 각 축별로 전체이동량과 전진방향 결정
-	const int32 DeltaX = FMath::Abs(X1 - X);
-	const int32 DeltaY = FMath::Abs(Y1 - Y);
-	const int32 StepX = (X < X1) ? 1 : -1;
-	const int32 StepY = (Y < Y1) ? 1 : -1;
-
-	// 직선에서 타일이 얼마나 멀리 있는 지 나타내는 오차 누적값 (dx - dy 기준)
-	// 이 오차를 줄이는 방향, 즉 직선과 가까운 방향으로 움직이는 게 기본 아이디어
-	// 단, dx - dy 이므로 x축으로 편향된 오차이므로, 오차가 클 수록 x축으로, 오차가 작을수록 y축으로 이동하는 압력이 세진다.
-	int32 Error = DeltaX - DeltaY;
-
-	while (true)
-	{
-		// 현재 칸 수집 (정규화된 방향이므로 Start가 첫 원소, End가 마지막 원소)
-		Out.Add(FTileIndex(X, Y));
-
-		// 끝점에 도달하면 종료
-		if (X == X1 && Y == Y1)
-			break;
-
-		// 오차에 따라 x축/y축 전진 결정
-		// 양쪽 동시에 넘으면 대각선 이동
-		// @note 나눗셈 계산을 생략하기 위해 x2 값과 비교
-		const int32 DoubleError = 2 * Error;
-
-		// x축으로 이동하는 게 이동하지 않는 것보다 오차를 줄여주는 경우 -> x축으로 이동
-		// @note 원래는 DeltaY의 절반을 기준으로 판단해야 하는데, 나눗셈을 피하기 위해 오차를 두 배 해서 비교한다.
-		if (DoubleError > -DeltaY)
-		{
-			// x축으로 이동하는 게 y축 오차를 줄여주니까 dy만큼 오차 감소
-			Error -= DeltaY;
-			X += StepX;
-		}
-		// y축으로 이동하는 게 이동하지 않는 것보다 오차를 줄여주는 경우 -> y축으로 이동
-		// @note 원래는 DeltaX의 절반을 기준으로 판단해야 하는데, 나눗셈을 피하기 위해 오차를 두 배 해서 비교한다.
-		if (DoubleError < DeltaX)
-		{
-			// y축으로 이동하면 그 다음부터는 x축 이동 압력이 커질 수 있도록 Error 수치 조정
-			Error += DeltaX;
-			Y += StepY;
-		}
-	}
-
-	// 뒤집어 그린 경우 이번에 추가한 구간만 반전해 "From이 첫 원소, To가 마지막 원소" 되도록 변경
-	if (bSwapped)
-		Algo::Reverse(MakeArrayView(Out.GetData() + FirstIndex, Out.Num() - FirstIndex));
-}
-
-void ATileMap::RasterizeLine(const FTileIndex& From, const FTileIndex& To, TArray<FTileIndex>& Out) const
-{
-	// 현재 래스터화 방식: Bresenham (Supercover 등으로 바꾸려면 이 호출만 교체)
-	BresenhamLine(From, To, Out);
-}
-
-bool ATileMap::HasLineOfSight(const FTileIndex& From, const FTileIndex& To) const
-{
-	// From→To 직선이 지나는 칸들을 래스터화 (첫 원소=From, 마지막 원소=To 보장)
-	TArray<FTileIndex> LineTiles;
-	RasterizeLine(From, To, LineTiles);
-
-	// 양 끝(From, To)을 제외한 중간 칸만 검사
-	for (int32 Index = 1; Index < LineTiles.Num() - 1; ++Index)
-	{
-		// 중간 칸에 시야를 막는 액터(Obstacle 또는 Unit)가 있으면 시야가 막힘(=LoS:false)
-		if (GetActorsOnTile(LineTiles[Index], ETileLayerFlag::Obstacle | ETileLayerFlag::Unit).Num() > 0)
-		{
-			return false;
-		}
-	}
-
-	// 시야를 막는 액터가 없음 (=LoS:true)
-	return true;
-}
-
-/**
- * @brief
- * - 1단계에서는 패턴에 따라 후보타일을 수집하고
- * - 2단계에서는 각각의 후보타일에 대해서 장애물 막힘, 타겟 가능, 교체 가능 여부 검사해서 최종 판단
- */
-TArray<FTileIndex> ATileMap::GetAimableTiles(const FTileIndex& Origin, int32 Range, EAimPattern Pattern, bool bIncludeOccupied, bool bIndirect, const ITileActor* Incoming) const
-{
-	TArray<FTileIndex> Result;
-
-	// 시작점이 맵 밖이면 조준 불가
-	if (!IsValidIndex(Origin))
-		return Result;
-
-    /*
-     * 페이즈1: 패턴에 따라 후보타일 수집
-     */
-
-	// Single은 기준 타일 한 칸만 (Range 무시). 그 외 패턴은 기준 타일 제외
-	if (Pattern == EAimPattern::Single)
-	{
-		Result.Add(Origin);
-	}
-	else
-	{
-		// Single 제외한 다른 패턴은 사거리가 없으면 후보타일도 없음
-		if (Range <= 0)
-			return Result;
-
-		// 패턴별 후보 타일 수집 (최종 필터링은 페이즈2에서 수행)
-		switch (Pattern)
-		{
-		case EAimPattern::Cross:
-			// 직교 4방향 직선
-			for (const FTileIndex& Step : Orthogonal4)
-				AppendRayTiles(Origin, Step, Range, Result);
-			break;
-
-		case EAimPattern::Star:
-			// 직교 + 대각 8방향 직선
-			for (const FTileIndex& Step : Orthogonal4)
-				AppendRayTiles(Origin, Step, Range, Result);
-			for (const FTileIndex& Step : Diagonal4)
-				AppendRayTiles(Origin, Step, Range, Result);
-			break;
-
-		case EAimPattern::Square:
-			// 중심 기준 사각형 범위 (하늘 낙하 개념 — 시야 무시)
-			AppendSquareTiles(Origin, Range, Result);
-			break;
-
-		default:
-			break;
-		}
-	}
-
-    /**
-     * 페이즈2: 각각의 타이레 대해서 장애물 막힘, 포함 여부, 교체 여부 판단해서 필터링
-     */
-
-	// 장애물 막힘 검사 여부: 직선패턴 AND 직사공격 (Square 공격은 하늘에서 내리는 공격이니까 장애물 무시)
-	const bool bApplyLineOfSight = !bIndirect && (Pattern == EAimPattern::Cross || Pattern == EAimPattern::Star);
-
-	// 후보를 시야/점유 조건으로 거름
-    // @note 인덱스를 뒤에서 앞으로 오면서 제거하면 배열 재할당 이슈 없음
-	for (int32 Index = Result.Num() - 1; Index >= 0; --Index)
-	{
-		const FTileIndex& Candidate = Result[Index];
-
-		// 직사인데 시야가 막히면 조준 불가
-		if (bApplyLineOfSight && !HasLineOfSight(Origin, Candidate))
-		{
-			Result.RemoveAt(Index);
-			continue;
-		}
-
-		// 점유 타일을 포함하지 않으면 조준 불가
-		if (!bIncludeOccupied && IsOccupied(Candidate))
-		    // Incoming으로 교체 불가능하면 조준 불가
-			if (!((Incoming != nullptr) && GetReplaceableActors(Candidate, Incoming).Num() > 0))
-				Result.RemoveAt(Index);
-	}
-
-	return Result;
-}
-
-TArray<FTileIndex> ATileMap::GetEffectTiles(const FTileIndex& Caster, const FTileIndex& Target, EEffectPattern Pattern, int32 Size, bool bPenetrate) const
-{
-	TArray<FTileIndex> Result;
-
-	// 영향 중심(Target)이 맵 밖이면 영향 없음
-	if (!IsValidIndex(Target))
-		return Result;
-
-	// 영향 중심은 모든 패턴에서 항상 포함 (광역도 중심은 맞음)
-	Result.Add(Target);
-
-	// Single이거나 범위가 없으면 중심 한 칸만 영향
-	if (Pattern == EEffectPattern::Single || Size <= 0)
-		return Result;
-
-	// 패턴별 영향 타일을 중심 둘레에 덧붙임 (직선은 관통 아니면 점유 칸에서 멈춤)
-	switch (Pattern)
-	{
-	case EEffectPattern::Cross:
-		// 중심에서 직교 4방향
-		for (const FTileIndex& Step : Orthogonal4)
-			AppendBlockableRay(Target, Step, Size, bPenetrate, Result);
-		break;
-
-	case EEffectPattern::Star:
-		// 중심에서 직교 + 대각 8방향
-		for (const FTileIndex& Step : Orthogonal4)
-			AppendBlockableRay(Target, Step, Size, bPenetrate, Result);
-		for (const FTileIndex& Step : Diagonal4)
-			AppendBlockableRay(Target, Step, Size, bPenetrate, Result);
-		break;
-
-	case EEffectPattern::Square:
-		// 중심 기준 사각형 범위 (하늘 낙하 개념 — 관통 무관)
-		AppendSquareTiles(Target, Size, Result);
-		break;
-
-	case EEffectPattern::Beam:
-		{
-			// 시전자→타겟 방향을 부호로 단위 스텝화 (8방향 중에 하나로 강제 매핑)
-			const FTileIndex Step(
-				FMath::Sign(Target.mX - Caster.mX),
-				FMath::Sign(Target.mY - Caster.mY)
-			);
-
-			// Target(클릭 지점)을 시작으로 그 방향으로 뻗음 — 빔 길이는 Target 포함 총 Size칸
-			// (Target은 상단에서 이미 추가했으므로 너머로 Size-1칸만 더 뻗음)
-			if (Step.mX != 0 || Step.mY != 0)
-				AppendBlockableRay(Target, Step, Size - 1, bPenetrate, Result);
-		}
-		break;
-
-	default:
-		break;
-	}
-
-	return Result;
-}
-
-/**
- * @details
- * - 우선순위 낮은 것부터 높은 것 순서로 타일에 칠할 색을 블랜딩
- * - 각각의 플래그의 속성에 따라 합성 또는 덮어쓰기 가능
+ * - 모든 강조는 타일 위에 자기 알파로 Mix (프리멀티플라이드 RGB + 커버리지 알파)
+ * - Select가 겹치면 최우선: 자기 색만 칠하고 Aim/Effect 무시
+ * - Effect는 [아래 레이어(Aim/타일)] ↔ [자기 색]을 펄스로 크로스페이드
  * - 알파까지 계산에 포함시켜서, 출력단에서 알파 합성을 따로 안해도 되게끔 최적화
  */
 void ATileMap::RefreshTileCustomData(int32 LinearIndex)
@@ -694,45 +443,42 @@ void ATileMap::RefreshTileCustomData(int32 LinearIndex)
 
 	const ETileHighlightFlag Flags = mHighlights[LinearIndex];
 
-	// 활성 레이어 수집 (스타일 + 펄스 여부)
-	struct FLayer { const FTileHighlightStyle* Style; bool bPulse; };
-	TArray<FLayer, TInlineAllocator<3>> ActiveLayers;
-	if (EnumHasAnyFlags(Flags, ETileHighlightFlag::Aim))    ActiveLayers.Add({ &mAimStyle, false });
-	if (EnumHasAnyFlags(Flags, ETileHighlightFlag::Select)) ActiveLayers.Add({ &mSelectStyle, false });
-	if (EnumHasAnyFlags(Flags, ETileHighlightFlag::Effect)) ActiveLayers.Add({ &mEffectStyle, true });
+	// 플래그 해석 (Select가 겹치면 최우선 → Effect 억제)
+	const bool bHasAim    = EnumHasAnyFlags(Flags, ETileHighlightFlag::Aim);
+	const bool bHasSelect = EnumHasAnyFlags(Flags, ETileHighlightFlag::Select);
+	const bool bHasEffect = EnumHasAnyFlags(Flags, ETileHighlightFlag::Effect) && !bHasSelect;
 
-	// 우선순위 오름차순 (낮음=바닥부터 깔림)
-	ActiveLayers.Sort([](const FLayer& A, const FLayer& B) { return A.Style->mPriority < B.Style->mPriority; });
-
-	// 펄스 계수: [1-Intensity, 1] 범위로 진동 (Effect 알파에 곱함)
-	const float Time = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
-	const float PulseWave = 0.5f - 0.5f * FMath::Cos(2.0f * PI * Time / mPulsePeriod);
-	const float PulseFactor = 1.0f - mPulseIntensity * PulseWave;
-
-	// 바닥부터 프리멀티플라이드(알파 곱해진) 색으로 합성
-	FLinearColor Accum(0.0f, 0.0f, 0.0f, 0.0f);
-	for (const FLayer& Layer : ActiveLayers)
+	// 스타일 색을 프리멀티플라이드(알파 곱한 RGB + 커버리지 알파)로 변환 — 타일 위 Mix용
+	auto Premultiply = [](const FTileHighlightStyle& Style)
 	{
-		FLinearColor C = Layer.Style->mColor;
-		if (Layer.bPulse)
-			C.A *= PulseFactor;   // Effect만 펄스로 알파 변조
+		const FLinearColor& C = Style.mColor;
+		return FLinearColor(C.R * C.A, C.G * C.A, C.B * C.A, C.A);
+	};
 
-		if (Layer.Style->mBlendMode == ETileHighlightBlend::Overwrite)
-		{
-			// 아래를 무시하고 덮어씀 (알파 곱한 값으로)
-			Accum.R = C.R * C.A;
-			Accum.G = C.G * C.A;
-			Accum.B = C.B * C.A;
-			Accum.A = C.A;
-		}
-		else
-		{
-			// Mix: 프리멀티플라이드 over 합성 (나눗셈 없이 덧셈만)
-			Accum.R = C.R * C.A + Accum.R * (1.0f - C.A);
-			Accum.G = C.G * C.A + Accum.G * (1.0f - C.A);
-			Accum.B = C.B * C.A + Accum.B * (1.0f - C.A);
-			Accum.A = C.A + Accum.A * (1.0f - C.A);
-		}
+	// 최종색 (기본=머티리얼 바탕 위에 기본 구분색만 얹은 상태)
+	FLinearColor Accum = Premultiply(mTileBaseStyle);
+
+	if (bHasSelect)
+	{
+		// 최우선: 선택 색만 칠함 (Aim/Effect 무시)
+		Accum = Premultiply(mSelectStyle);
+	}
+	else if (bHasEffect)
+	{
+		// 펄스: [아래 레이어 표시] ↔ [Effect 자기 색] 크로스페이드 (둘 다 타일 위)
+		// 저점 = Aim 있으면 Aim 색, 없으면 기본 구분색 / 고점 = Effect 색
+		const FLinearColor Low  = bHasAim ? Premultiply(mAimStyle) : Premultiply(mTileBaseStyle);
+		const FLinearColor High = Premultiply(mEffectStyle);
+
+		// 펄스 파동(0~1)으로 저점↔고점 보간
+		const float Time = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
+		const float PulseWave = 0.5f - 0.5f * FMath::Cos(2.0f * PI * Time / mPulsePeriod);
+		Accum = FMath::Lerp(Low, High, PulseWave);
+	}
+	else if (bHasAim)
+	{
+		// Aim만: 자기 색
+		Accum = Premultiply(mAimStyle);
 	}
 
 	// custom data 슬롯에 기록 (마지막 슬롯에서 렌더 상태 갱신)
@@ -762,7 +508,7 @@ void ATileMap::SetTileHighlight(const TArray<FTileIndex>& Tiles, ETileHighlightF
 	TSet<int32> NewOn;
 	for (const FTileIndex& Tile : Tiles)
 	{
-		const int32 Index = TileIndexToLinearIndex(Tile);
+		const int32 Index = mModel->TileIndexToLinearIndex(Tile);
 		if (Index != INDEX_NONE)
 			NewOn.Add(Index);
 	}
@@ -808,127 +554,150 @@ void ATileMap::ClearTileHighlight(ETileHighlightFlag Flag)
 	}
 }
 
-bool ATileMap::CanPlace(const FTileIndex& TileIndex, const ITileActor* Incoming) const
-{
-	// 막히지 않으면 즉시 배치 가능
-	if (IsBlocked(TileIndex, Incoming) == false)
-		return true;
+/* 좌표 유효성 (모델 위임) */
 
-	// 막혔어도 막는 액터를 교체할 수 있으면 배치 가능
-	return GetReplaceableActors(TileIndex, Incoming).Num() > 0;
+bool ATileMap::IsValidIndex(const FTileIndex& TileIndex) const
+{
+	// 모델로 위임
+	return mModel != nullptr && mModel->IsValidIndex(TileIndex);
 }
 
-bool ATileMap::IsBlocked(const FTileIndex& TileIndex, const ITileActor* Incoming) const
+float ATileMap::StepToYaw(const FTileIndex& Step)
 {
-	auto* Tile = GetTile(TileIndex);
-	// 맵 범위 밖은 블록된 것으로 간주
-	if (Tile == nullptr)
-	{
-		return true;
-	}
-
-	// 타일에 블록 당하는 지 체크
-	return Tile->IsBlocked(Incoming);
+	// +X 기준 방향 스텝을 yaw로 (atan2는 라디안 → 도). (1,0)=0°, (0,1)=90°, (-1,0)=180°, (0,-1)=-90°
+	return FMath::RadiansToDegrees(FMath::Atan2(static_cast<float>(Step.mY), static_cast<float>(Step.mX)));
 }
 
-TArray<TScriptInterface<ITileActor>> ATileMap::GetReplaceableActors(const FTileIndex& TileIndex, const ITileActor* Incoming) const
+void ATileMap::SetMovePath(const TArray<FTileIndex>& PathTiles)
 {
-	TArray<TScriptInterface<ITileActor>> Result;
+	// 기존 표시 제거 후 다시 그림
+	ClearMovePath();
 
-	// 진입 액터가 없으면 교체 대상 없음
-	if (Incoming == nullptr)
-		return Result;
+	// 경로가 비었으면 표시할 것 없음 (해제와 동일)
+	if (PathTiles.Num() == 0)
+		return;
 
-	// 타일 위 모든 액터를 받아서 교체 조건으로 거름
-	for (const TScriptInterface<ITileActor>& Actor : GetActorsOnTile(TileIndex, ETileLayerFlag::All))
+	// 에디터에서 교체된 메시/머티리얼 반영
+	if (mPathArrowComponent != nullptr)
 	{
-		if (Actor == nullptr)
-			continue;
-
-		// 기존 액터의 레이어가 진입 액터의 레이어와 다르면 제외
-		if (!EnumHasAnyFlags(Actor->GetTileLayerFlags(), Incoming->GetTileLayerFlags()))
-			continue;
-
-		// 기존 액터가 진입 액터의 교체를 허용하지 않으면 제외
-		if (!EnumHasAnyFlags(Actor->GetReplaceLayerFlags(), Incoming->GetTileLayerFlags()))
-			continue;
-
-		// 진입 액터의 우선순위가 낮으면 제외
-		if (Incoming->GetOverlayLayerPriority() < Actor->GetOverlayLayerPriority())
-			continue;
-
-		// 모든 조건을 충족하면 교체대상
-		Result.Add(Actor);
+		mPathArrowComponent->SetStaticMesh(mPathArrowMesh);
+		if (mPathArrowMaterial != nullptr)
+			mPathArrowComponent->SetMaterial(0, mPathArrowMaterial);
 	}
-	return Result;
+	if (mPathEndComponent != nullptr)
+	{
+		mPathEndComponent->SetStaticMesh(mPathEndMesh);
+		if (mPathEndMaterial != nullptr)
+			mPathEndComponent->SetMaterial(0, mPathEndMaterial);
+	}
+
+	// 화살표/마커 균일 스케일 (타일 크기에 맞춤)
+	const float ArrowScale = (mTileSize / 100.0f) * mPathArrowScale;
+
+	// 마지막을 제외한 각 타일에 '다음 타일을 향하는' 화살표 배치 (인스턴스 순서 = 경로 순서)
+	const int32 LastIndex = PathTiles.Num() - 1;
+	if (mPathArrowComponent != nullptr)
+	{
+		for (int32 Index = 0; Index < LastIndex; ++Index)
+		{
+			const FTileIndex& Tile = PathTiles[Index];
+			const FTileIndex& Next = PathTiles[Index + 1];
+
+			// 진행 방향 스텝 → yaw 회전
+			const FTileIndex Step(Next.mX - Tile.mX, Next.mY - Tile.mY);
+			const FRotator Rotation(0.0f, StepToYaw(Step), 0.0f);
+
+			// 타일 중심 로컬 위치 + Z 오프셋 (RebuildTileInstances의 배치식과 동일, bWorldSpace=false)
+			const FVector Location(Tile.mX * mTileSize, Tile.mY * mTileSize, mPathHeightOffset);
+			const FTransform InstanceTransform(Rotation, Location, FVector(ArrowScale));
+			mPathArrowComponent->AddInstance(InstanceTransform, /*bWorldSpace=*/false);
+		}
+	}
+
+	// 마지막(도착) 타일엔 도착 마커 배치 (인디케이터 메시가 방향성이 있어 진입 방향으로 회전)
+	if (mPathEndComponent != nullptr)
+	{
+		const FTileIndex& EndTile = PathTiles[LastIndex];
+
+		// 진입 방향 = 마지막 스텝(직전 타일 → 도착 타일), 마지막 화살표와 같은 방향을 가리킴
+		// 단일 타일 경로(직전 타일 없음)면 진입 방향이 없어 회전 없음(+X)
+		FRotator Rotation = FRotator::ZeroRotator;
+		if (LastIndex >= 1)
+		{
+			const FTileIndex& PrevTile = PathTiles[LastIndex - 1];
+			const FTileIndex Step(EndTile.mX - PrevTile.mX, EndTile.mY - PrevTile.mY);
+			Rotation = FRotator(0.0f, StepToYaw(Step), 0.0f);
+		}
+
+		const FVector Location(EndTile.mX * mTileSize, EndTile.mY * mTileSize, mPathHeightOffset);
+		const FTransform InstanceTransform(Rotation, Location, FVector(ArrowScale));
+		mPathEndComponent->AddInstance(InstanceTransform, /*bWorldSpace=*/false);
+	}
+
+	// 표시 중인 경로 길이 기록 (틱 펄스 대상 판단 + 도착 마커 위상 인덱스)
+	mPathLength = PathTiles.Num();
+
+	// 최초 1회 펄스 색 기록 (이후 틱마다 자동 갱신)
+	RefreshPathPulse();
 }
 
-void ATileMap::StartActorMovement(const FTileTransform& NextTransform, ITileActor* Actor)
+void ATileMap::ClearMovePath()
 {
-	checkf(Actor != nullptr, TEXT("Actor가 nullptr"));
-	checkf(IsBlocked(NextTransform.mIndex, Actor) == false, TEXT("배치할 수 없는 타일"));
+	// 화살표·도착 마커 인스턴스 모두 제거
+	if (mPathArrowComponent != nullptr)
+		mPathArrowComponent->ClearInstances();
+	if (mPathEndComponent != nullptr)
+		mPathEndComponent->ClearInstances();
 
-	// 이전 타일에서 이탈 오버랩 통지 후 해제 (좌표 전환 전에 현재 위치를 읽음)
-	FTile* PrevTile = GetTile(Actor->GetTileTransform().mIndex);
-	if (PrevTile != nullptr)
-	{
-		NotifyEndOverlap(PrevTile, Actor);
-		UnregisterActorFromTile(PrevTile, Actor);
-	}
-
-	// 논리 좌표 전환 (점유는 즉시, 진입 오버랩 통지는 이동 연출 완료 후 CompleteActorMovement에서)
-	Actor->SetTileTransform(NextTransform);
-	FTile* NextTile = GetTile(NextTransform.mIndex);
-	RegisterActorToTile(NextTile, Actor);
+	// 표시 중 경로 없음
+	mPathLength = 0;
 }
 
-void ATileMap::CompleteActorMovement(ITileActor* Actor)
+/**
+ * @details
+ * - 색에 밝기를 곱해서 최종 색을 계산
+ * - 밝기만 하한<->상한 사이를 오가고, 화살표는 순서대로 위상차를 줘서 흐르는 느낌이 들게 처리
+ */
+void ATileMap::RefreshPathPulse()
 {
-	checkf(Actor != nullptr, TEXT("Actor가 nullptr"));
+	const float Time = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
 
-	// 이동 연출 완료 후 도착 타일에서 진입 오버랩 통지 (Start에서 좌표는 이미 전환됨)
-	FTile* Tile = GetTile(Actor->GetTileTransform().mIndex);
-	if (Tile != nullptr)
+	// 칸당 위상 밀림(라디안) — 경로 전체에 고점 mPathFlowCycles개가 흐르도록 길이로 정규화 (길이 무관 일정한 흐름)
+	// Span은 시작~도착 타일 간격(mPathLength-1) 기준이라 화살표와 도착 마커가 같은 파동을 공유함
+	const int32 Span = FMath::Max(1, mPathLength - 1);
+	const float PhasePerTile = 2.0f * PI * mPathFlowCycles / Span;
+
+	// 한 인스턴스에 펄스 색을 기록하는 헬퍼
+	auto WriteInstance = [this](UInstancedStaticMeshComponent* Component, int32 InstanceIndex, const FLinearColor& Color, float Wave)
 	{
-		NotifyBeginOverlap(Tile, Actor);
-	}
-}
+		// 펄스를 상한/하한 값으로 변환해서 색에 곱하면 최종 색이 나옴
+		const float Brightness = FMath::Lerp(mPathPulseMinBrightness, mPathPulseMaxBrightness, Wave);
+		Component->SetCustomDataValue(InstanceIndex, 0, Color.R * Brightness);
+		Component->SetCustomDataValue(InstanceIndex, 1, Color.G * Brightness);
+		Component->SetCustomDataValue(InstanceIndex, 2, Color.B * Brightness);
+		Component->SetCustomDataValue(InstanceIndex, 3, 1.0f, /*bMarkRenderStateDirty=*/true);
+	};
 
-void ATileMap::PlaceActor(const FTileTransform& NextTransform, ITileActor* Actor)
-{
-	checkf(Actor != nullptr, TEXT("Actor가 nullptr"));
-	checkf(CanPlace(NextTransform.mIndex, Actor), TEXT("배치할 수 없는 타일"));
-
-	FTile* Tile = GetTile(NextTransform.mIndex);
-
-	// 교체 대상을 타일에서 밀어냄 (등록 해제 → 교체 통지 순서)
-	for (const TScriptInterface<ITileActor>& Victim : GetReplaceableActors(NextTransform.mIndex, Actor))
+	// 화살표: 인스턴스 순서(=경로 순서)마다 위상차를 줘 흐르게
+	if (mPathArrowComponent != nullptr)
 	{
-		RemoveActor(Victim.GetInterface());
-		Victim->OnReplaced(Tile, Actor);
-	}
-
-	// 논리 좌표 갱신
-	Actor->SetTileTransform(NextTransform);
-
-	// 다음 타일에 등록 후 진입 오버랩 통지 (등록 → Begin 순서)
-	RegisterActorToTile(Tile, Actor);
-	NotifyBeginOverlap(Tile, Actor);
-}
-
-void ATileMap::RemoveActor(ITileActor* Actor)
-{
-	checkf(Actor != nullptr, TEXT("Actor가 nullptr"));
-
-	// 현재 타일에서 이탈 오버랩 통지 후 해제 (End → 해제 순서)
-	if (FTile* Tile = GetTile(Actor->GetTileTransform().mIndex))
-	{
-		NotifyEndOverlap(Tile, Actor);
-		UnregisterActorFromTile(Tile, Actor);
+		const int32 Count = mPathArrowComponent->GetInstanceCount();
+		for (int32 Index = 0; Index < Count; ++Index)
+		{
+			const float Phase = 2.0f * PI * Time / mPathPulsePeriod - Index * PhasePerTile;
+			const float Wave = 0.5f - 0.5f * FMath::Cos(Phase);
+			WriteInstance(mPathArrowComponent, Index, mPathArrowStyle.mColor, Wave);
+		}
 	}
 
-	// 논리 좌표 무효화
-	Actor->SetTileTransform(FTileTransform::Invalid);
+	// 도착 마커: 경로 끝 인덱스의 위상으로 이어지게 (화살표 흐름의 다음 칸)
+	if (mPathEndComponent != nullptr && mPathEndComponent->GetInstanceCount() > 0)
+	{
+		const int32 EndPhaseIndex = FMath::Max(0, mPathLength - 1);
+		const float Phase = 2.0f * PI * Time / mPathPulsePeriod - EndPhaseIndex * PhasePerTile;
+		const float Wave = 0.5f - 0.5f * FMath::Cos(Phase);
+		WriteInstance(mPathEndComponent, 0, mPathEndStyle.mColor, Wave);
+	}
 }
 
 #if WITH_EDITOR
@@ -945,6 +714,14 @@ void ATileMap::DebugPaintTest()
 
 	// 영향 범위 (일부는 Aim/Select와 겹침, (3,2)는 Effect 단독)
 	SetTileHighlight({ FTileIndex(3, 1), FTileIndex(3, 2), FTileIndex(4, 1) }, ETileHighlightFlag::Effect);
+}
+
+void ATileMap::DebugPathTest()
+{
+	// 모델 경유로 전체 파이프라인 확인: FindPath → 표시 델리깃 → 뷰 SetMovePath
+	// (빈 에디터 맵이면 장애물이 없어 시작→목표 계단식 경로가 나온다)
+	if (mModel != nullptr)
+		mModel->SetMovePath(FTileIndex(1, 3), FTileIndex(4, 5));
 }
 #endif
 

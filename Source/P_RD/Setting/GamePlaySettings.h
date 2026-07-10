@@ -10,8 +10,12 @@
 #include "RDMinimal.h"
 #include "Engine/DeveloperSettings.h"
 
-#include "Setting/UnitTeamType.h"
+#include "ObjectModel.h"
+
+#include "Setting/GameTeamType.h"
+#include "Setting/ModelViewMapping.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
+#include "Singleton/InstanceSubsystem/PersistentDataType.h"
 
 #include "GamePlaySettings.generated.h"
 
@@ -51,11 +55,30 @@ public:
     TSubclassOf<UUserWidget> mWorldWidgetClasses[static_cast<uint8>(EWorldWidgetType::Count)];
 
 public:
+    UPROPERTY(Config, Category = Model, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SubsystemModelViewMappings", ConfigRestartRequired = true))
+    TSet<FSubsystemModelViewMapping> mSubsystemModelViewMappings;
+    UPROPERTY(Config, Category = Model, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "WorldModelViewMappings", ConfigRestartRequired = true))
+    TSet<FWorldModelViewMapping> mWorldModelViewMappings;
+
+public:
     UPROPERTY(Config, Category = Room, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "FrontendRoomId"))
     FPrimaryAssetId mFrontendRoomId;
 
     UPROPERTY(Config, Category = Room, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "DefaultBackgroundMap"))
     TSoftObjectPtr<UWorld> mDefaultBackgroundMap;
+
+public:
+    UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "IntroCinematicVideoPath"))
+    FString mIntroCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/hero_loading_intro4_1280_3s.mp4");
+
+    UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TitleBackgroundVideoPath"))
+    FString mTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/campfire_titleloop_idle_x3preview.mp4");
+
+    UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatVictoryVideoPath"))
+    FString mCombatVictoryVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Victory_01.mp4");
+
+    UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatDefeatVideoPath"))
+    FString mCombatDefeatVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Defeat_01.mp4");
 
 public:
     UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "FrontendGameMode", ConfigRestartRequired = true))
@@ -69,5 +92,20 @@ public:
 
 public:
     UPROPERTY(Config, Category = Team, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TeamRelations"))
-    TMap<TEnumAsByte<EUnitTeamType::Type>, FUnitTeamRelation> mTeamRelations;
+    TMap<TEnumAsByte<EGameTeamType::Type>, FGameTeamRelation> mTeamRelations;
+
+public:
+    UPROPERTY(Config, Category = Sound, EditAnywhere, meta = (DisplayName = "WorldWidgetClasses", ArraySizeEnum = "EGameVolumeType"))
+    TSoftObjectPtr<USoundClass> mSoundClasses[static_cast<uint8>(EGameVolumeType::Count)];
+
+public:
+    UPROPERTY(Config, Category = Camera, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillZoomDefaultSize"))
+    float mSkillZoomDefaultSize = 1250.f;
+    UPROPERTY(Config, Category = Camera, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillZoomSizeRatio"))
+    float mSkillZoomSizeRatio = 0.5f;
+
+    UPROPERTY(Config, Category = Camera, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillMinZoomSize"))
+    float mSkillMinZoomSize = 1250.f;
+    UPROPERTY(Config, Category = Camera, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillMaxZoomSize"))
+    float mSkillMaxZoomSize = 2000.f;
 };

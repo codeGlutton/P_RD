@@ -4,13 +4,16 @@
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/InstanceSubsystem/RoomTransitionSubsystem.h"
 #include "Singleton/InstanceSubsystem/PlayerUnitRestorationSubsystem.h"
-#include "Pawn/Player/PlayerUnit.h"
+#include "Pawn/Player/PlayerUnitModel.h"
 
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Blueprint/UserWidget.h"
 #include "UI/RDUserWidget.h"
 
 #include "Setting/RDWorldSettings.h"
+
+#include "Engine/AssetManager.h"
+#include "DataAsset/RoomSpawnData/StaticRoomSpawnData.h"
 
 DEFINE_LOG_CATEGORY(LogRoomGameMode);
 
@@ -24,9 +27,9 @@ DEFINE_LOG_CATEGORY(LogRoomGameMode);
  * 주요 흐름:
  * - InitializeCommonRoom(): 실제 방에 들어올 때 플레이어 유닛을 복원한다.
  * - RestorePlayerUnit(): PlayerUnitRestorationSubsystem으로 플레이어 유닛을 스폰/등록한다.
- * - BeginRoom(): 방에 들어오면 TopMenuBar를 OpenUI()로 열고 현재 Run 저장을 시작한다.
+ * - BeginRoom(): 방에 들어오면 현재 Run 저장을 시작한다.
  * - SaveRunWithUIAsync(): 방 전환 직후 현재 Run을 저장한다. SaveNotify는 아직 보조 UI 연결 지점으로만 남아 있다.
- * - GetRunControlView(): TopMenuBar와 WorldMap이 표시할 현재 Run 상태 DTO를 만든다.
+ * - GetRunControlView(): WorldMap이 표시할 현재 Run 상태 DTO를 만든다.
  * - GetRunControlState(): 구조체 대신 개별 값으로 Run 상태를 받아야 하는 호출부용 호환 API다.
  * - GetMapRoomViews(): 현재 Run의 Stage/Room 데이터를 월드맵 노드 표시용 FMapRoomView 배열로 변환한다.
  * - ResolveRoomState(): 각 방의 Locked/Ready/Selected/Cleared UI 상태를 계산한다.
@@ -39,7 +42,7 @@ DEFINE_LOG_CATEGORY(LogRoomGameMode);
  * - EnterSelectedRoom(): 이미 선택된 다음 방으로 입장 요청을 시작한다.
  * - PreloadAndTransitionSelectedRoomAsync(): 선택된 방 좌표를 최종 검증하고 프리로드/전환을 요청한다.
  * - AbandonRunFromRoom(): 방 안에서 Run을 포기하고 프론트엔드 방으로 돌아간다.
- * - GetPlayerUnit(): 방 안에서 복원된 플레이어 유닛 포인터를 제공한다.
+ * - GetPlayerUnitModel(): 방 안에서 복원된 플레이어 유닛 포인터를 제공한다.
  */
 namespace
 {
@@ -165,12 +168,11 @@ namespace
 ARoomGameModeBase::ARoomGameModeBase()
 {
 	/*
-	 * 실제 방에서는 TopMenuBar가 월드맵/설정/주사위/스킬 패널을 여는 공통 진입점이다.
-	 * 각 방 HUD에 팝업을 직접 넣지 않고 WorldWidgetSubsystem에 등록해두면,
-	 * 전투/상점/보물 방이 모두 같은 OpenUI/CloseUI 규칙을 공유한다.
+	 * 월드맵/설정/주사위/스킬 패널은 방 공통 팝업이다. 각 방 HUD에 팝업을 직접 넣지 않고
+	 * WorldWidgetSubsystem에 등록해두면 전투/상점/보물 방이 모두 같은 OpenUI/CloseUI 규칙을 공유한다.
+	 * (패널을 여는 진입점은 전투 HUD의 내비 버튼 — CombatTileMapHUDWidget_Nav.cpp)
 	 */
 	mWorldWidgets = { 
-		EWorldWidgetType::TopMenuBar, 
 		EWorldWidgetType::MsgNotify, 
 		EWorldWidgetType::SaveNotify,  
 		EWorldWidgetType::FadeInOut,  
@@ -218,31 +220,27 @@ void ARoomGameModeBase::InitializeCommonRoom()
 
 	// 플레이어 복원
 	RestorePlayerUnit();
+
+	const FRoom& CurRoom = GetRunPersistData()->GetCurrentRoom();
+
+	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
+	checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
+	UStaticRoomSpawnData* StaticRoomData = AssetManager->GetPrimaryAssetObject<UStaticRoomSpawnData>(CurRoom.mStaticRoomSpawnDataId);
+	checkf(StaticRoomData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
+
+	TSoftObjectPtr<USoundBase> MainBGMSoftPtr = StaticRoomData->mOverrideBGM;
+	SetMainBGM(MainBGMSoftPtr.LoadSynchronous());
 }
 
 /**
- * @brief 실제 방에 들어오면 TopMenuBar를 열고 현재 Run 저장을 시작한다.
+ * @brief 실제 방에 들어오면 현재 Run 저장을 시작한다.
  *
  * @details
- * TopMenuBar는 현재 방 UI, WorldMap, Settings, Dice, Skill 패널로 들어가는 인게임 공통 진입점이다.
- * 방에 입장한 직후 WorldWidgetSubsystem이 준비한 TopMenuBar를 OpenUI()로 표시하고,
- * 현재 Run 위치를 저장해 앱 종료나 다음 진입 때 이어하기가 가능하게 한다.
+ * 방 공통 팝업(WorldMap/Settings/Dice/Skill)은 WorldWidgetSubsystem이 준비하고, 여는 것은 HUD 내비 버튼이 담당한다.
  */
 void ARoomGameModeBase::BeginRoom()
 {
 	Super::BeginRoom();
-
-	/*
-	 * InitWorldWidget()은 위젯을 준비만 하고, 실제 표시 여부는 방 시작 흐름이 결정해야 한다.
-	 * 방 전용 초기화가 끝난 뒤 OpenUI()를 호출해야 탑바가 현재 방 정보를 읽고 올바른 상태로 보인다.
-	 */
-	if (UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())
-	{
-		if (URDUserWidget* TopMenuBar = WorldWidgetSubsystem->GetWorldWidget<URDUserWidget>(EWorldWidgetType::TopMenuBar))
-		{
-			TopMenuBar->OpenUI();
-		}
-	}
 
 	// 방 전환 즉시 저장
 	SaveRunWithUIAsync();
@@ -406,7 +404,7 @@ bool ARoomGameModeBase::GetMapRoomViews(TArray<FMapRoomView>& OutRooms) const
 }
 
 /**
- * @brief TopMenuBar와 WorldMap이 표시할 현재 Run 상태 DTO를 만든다.
+ * @brief WorldMap이 표시할 현재 Run 상태 DTO를 만든다.
  *
  * @details
  * 위젯이 URunPersistData를 직접 읽지 않도록,
@@ -416,7 +414,7 @@ bool ARoomGameModeBase::GetMapRoomViews(TArray<FMapRoomView>& OutRooms) const
 bool ARoomGameModeBase::GetRunControlView(FRunControlView& OutView) const
 {
 	/*
-	 * TopMenuBar와 FrontendMapWidget이 현재 런 요약을 표시할 때 쓰는 UI DTO다.
+	 * FrontendMapWidget이 현재 런 요약을 표시할 때 쓰는 UI DTO다.
 	 * 위젯이 URunPersistData를 직접 읽지 않게 하고, GameMode가 "화면에 보여줄 값"만 골라 내려준다.
 	 */
 	OutView = FRunControlView();
@@ -465,6 +463,12 @@ bool ARoomGameModeBase::GetRunControlState(OUT int32& RowIndex, OUT int32& Colum
 	PlayerLevel = RunView.mPlayerLevel;
 	Difficulty = RunView.mDifficulty;
 	return true;
+}
+
+FText ARoomGameModeBase::GetCurrentRoomDisplayName() const
+{
+	const URunPersistData* RunPersistData = GetRunPersistData();
+	return RunPersistData != nullptr ? RunPersistData->GetCurrentRoom().GetDisplayName() : FText::GetEmpty();
 }
 
 /**
@@ -547,7 +551,7 @@ void ARoomGameModeBase::RestorePlayerUnit()
 	UPlayerUnitRestorationSubsystem* PlayerUnitRestorationSubsystem = GetGameInstance()->GetSubsystem<UPlayerUnitRestorationSubsystem>();
 	checkf(PlayerUnitRestorationSubsystem != nullptr, TEXT("플레이어 유닛 복원 서브시스템 nullptr 오류"));
 
-	APlayerUnit* PlayerUnit = PlayerUnitRestorationSubsystem->SpawnPlayerUnit(GetWorld());
+	UPlayerUnitModel* PlayerUnit = PlayerUnitRestorationSubsystem->SpawnPlayerUnit(GetWorld());
 	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 스폰 오류"));
 
 	PlayerUnitRestorationSubsystem->RegisterPlayerUnit(PlayerUnit);
@@ -612,7 +616,7 @@ bool ARoomGameModeBase::IsRoomSelectable(int32 RoomRow, int32 RoomColumn) const
  * InitializeCommonRoom()에서 RestorePlayerUnit()이 성공하면 mPlayerUnit에 등록된다.
  * 전투/상점/보상 처리처럼 현재 플레이어 유닛이 필요한 시스템은 이 접근자를 통해 GameMode가 보관한 유닛을 조회한다.
  */
-AUnit* ARoomGameModeBase::GetPlayerUnit() const
+UPlayerUnitModel* ARoomGameModeBase::GetPlayerUnitModel() const
 {
 	return mPlayerUnit.Get();
 }

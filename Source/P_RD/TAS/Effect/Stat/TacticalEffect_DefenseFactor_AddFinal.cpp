@@ -1,0 +1,23 @@
+﻿/*****************************************************************//**
+ * @file   TacticalEffect_DefenseFactor_AddFinal.cpp
+ * @brief  DefenseFactor AddFinal 이펙트 구현
+ * @author 이문환
+ * @date   2026-07-07
+ *********************************************************************/
+
+#include "TAS/Effect/Stat/TacticalEffect_DefenseFactor_AddFinal.h"
+#include "AttributeSet/UnitAttributeSet.h"
+
+UTacticalEffect_DefenseFactor_AddFinal::UTacticalEffect_DefenseFactor_AddFinal()
+{
+	// 지속형
+	mDurationPolicy = ETacticalEffectDurationType::Infinite;
+	mStackingType = ETacticalEffectStackingType::None;
+
+	FTacticalModifierInfo Info;
+	Info.mAttribute = UUnitAttributeSet::GetDefenseFactorAttribute();
+	Info.mModifierOp = ETacticalModOp::AddFinal;
+	Info.mModifierMagnitude = 1.f;
+
+	mModifiers.Add(Info);
+}

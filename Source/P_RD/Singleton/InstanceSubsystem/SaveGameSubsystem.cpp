@@ -172,6 +172,91 @@ void USaveGameSubsystem::ClearRun() const
 	UE_LOG(LogSave, Log, TEXT("런 데이터 초기화"));
 }
 
+bool USaveGameSubsystem::SaveOption() const
+{
+	if (mOptionSaveGame == nullptr)
+	{
+		CreateOption();
+	}
+
+	SerializeObject(GetOptionMutableData(), OUT mOptionSaveGame->mData);
+	UGameplayStatics::SaveGameToSlot(mOptionSaveGame, OPTION_SLOT_NAME, 0);
+	ClearOption();
+
+	UE_LOG(LogSave, Log, TEXT("옵션 데이터 세이브 파일 저장"));
+
+	return true;
+}
+
+void USaveGameSubsystem::SaveOptionAsync(FAsyncSaveGameToSlotDelegate Callback) const
+{
+	if (mOptionSaveGame == nullptr)
+	{
+		CreateOption();
+	}
+
+	SerializeObject(GetOptionMutableData(), OUT mOptionSaveGame->mData);
+	UE_LOG(LogSave, Log, TEXT("옵션 데이터 세이브 파일 비동기 저장 시도"));
+	UGameplayStatics::AsyncSaveGameToSlot(mOptionSaveGame, OPTION_SLOT_NAME, 0, FAsyncSaveGameToSlotDelegate::CreateWeakLambda(this, [this, MovedCallback = MoveTemp(Callback)](const FString& SlotName, const int32 UserIndex, bool IsSuccess) {
+		ClearOption();
+
+		UE_LOG(LogSave, Log, TEXT("옵션 데이터 세이브 파일 비동기 저장 완료"));
+		MovedCallback.ExecuteIfBound(SlotName, UserIndex, IsSuccess);
+		}));
+}
+
+bool USaveGameSubsystem::LoadOption() const
+{
+	if (UGameplayStatics::DoesSaveGameExist(OPTION_SLOT_NAME, 0) == false)
+	{
+		GetOptionMutableData()->ApplyCurrentOptions();
+		return false;
+	}
+
+	mOptionSaveGame = Cast<UBinarySaveGame>(UGameplayStatics::LoadGameFromSlot(OPTION_SLOT_NAME, 0));
+	checkf(mOptionSaveGame != nullptr, TEXT("잘못된 세이브 파일 캐스팅"));
+	DeserializeObject(mOptionSaveGame->mData, OUT GetOptionMutableData());
+	ClearOption();
+
+	UE_LOG(LogSave, Log, TEXT("옵션 데이터 세이브 파일 로드"));
+
+	GetOptionMutableData()->ApplyCurrentOptions();
+	return true;
+}
+
+void USaveGameSubsystem::LoadOptionAsync(FAsyncLoadGameFromSlotDelegate Callback) const
+{
+	UE_LOG(LogSave, Log, TEXT("옵션 데이터 세이브 파일 비동기 로드 시도"));
+	UGameplayStatics::AsyncLoadGameFromSlot(OPTION_SLOT_NAME, 0, FAsyncLoadGameFromSlotDelegate::CreateWeakLambda(this, [this, MovedCallback = MoveTemp(Callback)](const FString& SlotName, const int32 UserIndex, USaveGame* LoadedSaveGame) {
+
+		if (LoadedSaveGame != nullptr)
+		{
+			mOptionSaveGame = Cast<UBinarySaveGame>(LoadedSaveGame);
+			checkf(mOptionSaveGame != nullptr, TEXT("잘못된 세이브 파일 캐스팅"));
+			DeserializeObject(mOptionSaveGame->mData, OUT GetOptionMutableData());
+			ClearOption();
+			UE_LOG(LogSave, Log, TEXT("옵션 데이터 세이브 파일 비동기 로드 완료"));
+		}
+		else
+		{
+			UE_LOG(LogSave, Log, TEXT("옵션 데이터 세이브 파일 미발견으로 로드 실패"));
+		}
+		GetOptionMutableData()->ApplyCurrentOptions();
+		MovedCallback.ExecuteIfBound(SlotName, UserIndex, LoadedSaveGame);
+		}));
+}
+
+void USaveGameSubsystem::ClearOption() const
+{
+	if (mOptionSaveGame == nullptr)
+	{
+		CreateOption();
+	}
+
+	mOptionSaveGame->mData.Empty();
+	UE_LOG(LogSave, Log, TEXT("옵션 데이터 초기화"));
+}
+
 void USaveGameSubsystem::CreateUser() const
 {
 	mUserSaveGame = Cast<UBinarySaveGame>(UGameplayStatics::CreateSaveGameObject(UBinarySaveGame::StaticClass()));
@@ -184,6 +269,13 @@ void USaveGameSubsystem::CreateRun() const
 	mRunSaveGame = Cast<UBinarySaveGame>(UGameplayStatics::CreateSaveGameObject(UBinarySaveGame::StaticClass()));
 	checkf(mRunSaveGame != nullptr, TEXT("런 데이터 저장 객체 생성 실패"));
 	UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 생성"));
+}
+
+void USaveGameSubsystem::CreateOption() const
+{
+	mOptionSaveGame = Cast<UBinarySaveGame>(UGameplayStatics::CreateSaveGameObject(UBinarySaveGame::StaticClass()));
+	checkf(mOptionSaveGame != nullptr, TEXT("옵션 데이터 저장 객체 생성 실패"));
+	UE_LOG(LogSave, Log, TEXT("옵션 데이터 세이브 파일 생성"));
 }
 
 void USaveGameSubsystem::SerializeObject(UObject* Object, OUT TArray<uint8>& Data) const

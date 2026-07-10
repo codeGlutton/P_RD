@@ -98,8 +98,8 @@ def make_svn_junction():
 def copy_pre_commit_file():
     unreal.log(f"3. Git에 사용된 SVN 리비전 넘버 남기기 자동화...")
 
-    src_file = unreal.Paths.project_dir() + ".githooks/pre-commit"
-    dest_file = unreal.Paths.project_dir() + ".git/hooks/pre-commit"
+    src_file = unreal.Paths.project_dir() + ".githooks/commit-msg"
+    dest_file = unreal.Paths.project_dir() + ".git/hooks/commit-msg"
 
     if os.path.exists(src_file) == True:
         unreal.log(f"Git SVN 버전 기록용 Hook 복제: {src_file} -> {dest_file}")

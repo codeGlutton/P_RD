@@ -11,7 +11,7 @@
 #include "SRPGFrameworkType.generated.h"
 
 /**
- * @brief 타일에 배치된 액터가 바라보는 방향
+ * @brief 타일 내에서 바라보는 방향
  */
 UENUM(BlueprintType)
 enum class ETileActorDirection : uint8
@@ -19,8 +19,21 @@ enum class ETileActorDirection : uint8
     Forward = 0,
     Right,
     Backward,
-    Left
+    Left,
+    Count UMETA(Hidden)
 };
+
+inline ETileActorDirection TileMapToLocalDirection(ETileActorDirection TileMapDirection, ETileActorDirection FacingTileMapDirection)
+{
+    const int32 LocalDir = (static_cast<int32>(TileMapDirection) - static_cast<int32>(FacingTileMapDirection) + 4) % 4;
+    return static_cast<ETileActorDirection>(LocalDir);
+}
+
+inline ETileActorDirection LocalToTileMapDirection(ETileActorDirection LocalDirection, ETileActorDirection FacingTileMapDirection)
+{
+    const int32 TileMapDir = (static_cast<int32>(LocalDirection) + static_cast<int32>(FacingTileMapDirection)) % 4;
+    return static_cast<ETileActorDirection>(TileMapDir);
+}
 
 /**
  * @brief 타일 맵 상 인덱스 좌표
@@ -43,6 +56,11 @@ public:
     bool operator!=(const FTileIndex& Other) const
     {
         return (*this == Other) == false;
+    }
+
+    friend uint32 GetTypeHash(const FTileIndex& Tile)
+    {
+        return HashCombine(GetTypeHash(Tile.mX), GetTypeHash(Tile.mY));
     }
 
     // @brief 가로(X) 방향 인덱스
@@ -112,49 +130,35 @@ enum class EEffectPattern : uint8
 };
 
 /**
- * @brief 스킬 대상 선정의 대상을 결정
- * 
- * @details
- * 영향 범위 외에 자신에게 영향 주는 스킬들이 있을 때 효과를 구분하기 위해 만든 열거형
- */
-UENUM(BlueprintType)
-enum class ETargetScope : uint8
-{
-    /** 대상 선정 기준: 시전자 본인 */
-    Caster UMETA(DisplayName = "Caster"),
-
-    /** 대상 선정 기준: 선택된 타일/대상 */
-    Target UMETA(DisplayName = "Target"),
-
-    /** 대상 선정 기준: 시전자와 타겟 모두 포함 */
-    Both   UMETA(DisplayName = "Both")
-};
-
-/**
- * @brief 대상 선정 시 특정 객체를 제외하기 위한 필터(Bitmask)입니다.
- * 
- * @details
- * 영향 범위 안에 특정 유닛들은 제외하고 싶을 때 사용하는 열거형
- * 
- * @note 
- * 여러 옵션을 조합하여 사용 가능합니다. 예: ExcludeSelf | ExcludeAlly
+ * @brief 효과 적용 시 특정 범위를 설정하기 위한 필터(Bitmask)입니다.
  */
 UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
-enum class ETargetFilter : uint8
+enum class ETargetIndexFilter : uint8
 {
-    /** 필터링을 적용하지 않습니다. */
-    None = 0 UMETA(DisplayName = "None"),
+    None = 0                                        UMETA(Hidden, ToolTip = "아무도 대상에 포함하지 않음"),
 
-    /** 시전자 본인을 대상에서 제외합니다. */
-    ExcludeSelf = 1 << 0 UMETA(DisplayName = "Exclude Self"),
+    IncludeSelfIndex = 1 << 0                       UMETA(ToolTip = "시전자 인덱스를 적용 대상에 포함"),
+    IncludeTargetIndexes = 1 << 1                   UMETA(ToolTip = "지정 타겟 인덱스들을 적용 대상에 포함"),
 
-    /** 아군을 대상에서 제외합니다. */
-    ExcludeAlly = 1 << 1 UMETA(DisplayName = "Exclude Ally"),
-
-    /** 적군을 대상에서 제외합니다. */
-    ExcludeEnemy = 1 << 2 UMETA(DisplayName = "Exclude Enemy")
+    All = IncludeSelfIndex | IncludeTargetIndexes   UMETA(ToolTip = "모든 대상을 포함"),
 };
-ENUM_CLASS_FLAGS(ETargetFilter);
+ENUM_CLASS_FLAGS(ETargetIndexFilter);
+
+/**
+ * @brief 효과 적용 시 특정 팀을 설정하기 위한 필터(Bitmask)입니다.
+ */
+UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
+enum class ETeamAttitudeFilter : uint8
+{
+    None = 0                                        UMETA(Hidden, ToolTip = "아무도 대상에 포함하지 않음"),
+
+    Friendly = 1 << 0                               UMETA(ToolTip = "동료를 적용 대상에 포함"),
+    Neutral = 1 << 1                                UMETA(ToolTip = "중립을 적용 대상에 포함"),
+    Hostile = 1 << 2                                UMETA(ToolTip = "적을 적용 대상에 포함"),
+
+    All = Friendly | Neutral | Hostile              UMETA(ToolTip = "모든 대상을 포함"),
+};
+ENUM_CLASS_FLAGS(ETeamAttitudeFilter)
 
 /**
  * @brief 전투 결과를 나타내는 열거형
@@ -237,25 +241,50 @@ enum class ESRPGActionPhase : uint8
     ActionEnd           UMETA(ToolTip = "액션 종료"),
 };
 
+/**
+ * @brief 스킬 빌드 액션 내 진행 단계 열거형
+ */
 UENUM(BlueprintType)
 enum class ESRPGSkillBuildPhase : uint8
 {
     None                UMETA(Hidden),
     AimSelection        UMETA(ToolTip = "대상 영역 선택"),
     Preview             UMETA(ToolTip = "프리뷰 표기"),
+    Build               UMETA(ToolTip = "빌드 성공"),
 };
 
+/**
+ * @brief 이동 빌드 액션 내 진행 단계 열거형
+ */
 UENUM(BlueprintType)
-enum class ESRPGActionCommandType : uint8
+enum class ESRPGMoveBuildPhase : uint8
+{
+    None                UMETA(Hidden),
+    DestSelection       UMETA(ToolTip = "도달 가능 목적지 선택"),
+    Preview             UMETA(ToolTip = "이동 경로 프리뷰 표기"),
+    Build               UMETA(ToolTip = "빌드 성공"),
+};
+
+/**
+ * @brief SRPG 명령 타입에 대한 열거형
+ */
+UENUM(BlueprintType)
+enum class ESRPGCommandType : uint8
 {
     None                UMETA(Hidden),
 
     WorldTrace          UMETA(ToolTip = "월드 공간 선택"),
 
+    DicePrepare         UMETA(ToolTip = "굴릴 주사위 준비"),
+    DiceRoll            UMETA(ToolTip = "주사위 굴리기"),
+
     SkillSelect         UMETA(ToolTip = "사용 스킬 결정"),
     DiceSelect          UMETA(ToolTip = "사용 주사위 결정"),
     SkillCast           UMETA(ToolTip = "스킬 사용"),
+
     MoveSelect          UMETA(ToolTip = "이동 시작"),
+    MoveCast            UMETA(ToolTip = "이동 사용"),
+
     TurnEnd             UMETA(ToolTip = "턴 종료"),
 };
 
@@ -263,7 +292,7 @@ enum class ESRPGActionCommandType : uint8
  * @brief 명령 처리 여부를 나타내는 열거형
  */
 UENUM(BlueprintType)
-enum class ESRPGActionCommandResult : uint8
+enum class ESRPGCommandResult : uint8
 {
     Handled             UMETA(ToolTip = "처리되어 커맨드가 소비됨"),
     Continue            UMETA(ToolTip = "처리했으나 계속됨"),
@@ -277,9 +306,9 @@ enum class ESRPGActionCommandResult : uint8
  * @param Rhs 계산 결과 B
  * @return 최종 결과
  */
-inline ESRPGActionCommandResult CombineSRPGActionCommandResult(ESRPGActionCommandResult Lhs, ESRPGActionCommandResult Rhs)
+inline ESRPGCommandResult CombineSRPGCommandResult(ESRPGCommandResult Lhs, ESRPGCommandResult Rhs)
 {
-    if (static_cast<uint8>(Lhs) < static_cast<uint8>(Lhs))
+    if (static_cast<uint8>(Lhs) < static_cast<uint8>(Rhs))
     {
         return Lhs;
     }

@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   P_RDTests.Build.cs
  * @brief  P_RD 프로젝트 자동화 테스트 모듈 빌드 설정
  * @details
@@ -26,8 +26,15 @@ public class P_RDTests : ModuleRules
             /* 테스트 대상 게임 모듈 */
             "P_RD",
 
+            /* Gameplay Tag Modules */
+            "GameplayTags",				// 게임플레이 태그 시스템
+
             /* GAS Plugin Modules */
-            "GameplayAbilities",
+            "GameplayTasks",			// GAS에서 비동기적인 작업을 생성하고 관리하는 모듈
+            "GameplayAbilities",		// GAS 프레임워크
+
+            /* AI Module (BoardCombatTarget가 참조하는 GenericTeamAgentInterface 등) */
+            "AIModule",
         });
 
         // 모듈 내 하위 폴더에서 루트 헤더를 참조할 수 있도록 경로 추가

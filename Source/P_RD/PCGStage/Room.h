@@ -27,6 +27,13 @@ public:
 	virtual void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const;
 
 public:
+	/*
+	 * @brief 방 표시 이름 반환 
+	 * @return 방 타입에 따른 이름
+	 */
+	FText GetDisplayName() const;
+
+public:
 	UPROPERTY(Category = Room, SaveGame, VisibleAnywhere, meta = (DisplayName = "Type"))
 	ERoomType mType = ERoomType::None;
 	UPROPERTY(Category = Room, SaveGame, VisibleAnywhere, meta = (DisplayName = "Row"))
@@ -40,7 +47,7 @@ public:
 	UPROPERTY(Category = UI, SaveGame, VisibleAnywhere, meta = (DisplayName = "IsSelected"))
 	bool mWasSelected = false;
 	UPROPERTY(Category = UI, SaveGame, VisibleAnywhere, meta = (DisplayName = "PositionOffsetRate"))
-	FVector2D mPositionOffsetRate;
+	FVector2D mPositionOffsetRate = FVector2D::ZeroVector;
 
 public:
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "PositionOffsetRate"))
@@ -100,9 +107,9 @@ public:
 
 public:
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardMoney"))
-	int32 mRewardMoney;
+	int32 mRewardMoney = 0;
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardExp"))
-	int32 mRewardExp;
+	int32 mRewardExp = 0;
 };
 
 /**

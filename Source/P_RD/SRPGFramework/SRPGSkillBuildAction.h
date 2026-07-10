@@ -1,5 +1,5 @@
 ﻿/*****************************************************************//**
- * @file   SRPGSkillBuildCommand.h
+ * @file   SRPGSkillBuildAction.h
  * @brief  스킬 생성 액션 객체 구현 헤더
  * @author 모호재
  * @date   2026-06-04
@@ -9,46 +9,62 @@
 
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGAction.h"
-#include "FunctionLibrary/CombatCalculator/CombatResult.h"
+#include "SRPGFramework/SRPGCommand.h"
+#include "Simulation/Logger/EventLog.h"
+#include "SRPGSkillBuildAction.generated.h"
 
-struct FSRPGSkillBuildAction;
-
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangeSkillBuildPhase, const FSRPGSkillBuildAction& /*Action*/, ESRPGSkillBuildPhase /*Phase*/);
-
+class USRPGSkillBuildAction;
 class UStaticSkillData;
+class UTileMapModel;
+class UDiceModel;
 
-struct FSRPGSkillSelectCommand : public FSRPGActionCreationCommand<FSRPGSkillBuildAction>
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnSelectSkill, int32 /*SkillIndex*/);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangeSkillBuildPhase, const USRPGSkillBuildAction* /*Action*/, ESRPGSkillBuildPhase /*Phase*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnPostSimulateSkillAction, const TArray<FSRPGTurnEventLog>& /*EventLogs*/);
+DECLARE_MULTICAST_DELEGATE(FOnCancelSimulateSkillAction);
+
+USTRUCT(BlueprintType)
+struct FSRPGSkillSelectCommand : public FSRPGCommand
 {
+	GENERATED_BODY()
+
 public:
 	FSRPGSkillSelectCommand();
 
 public:
+	FOnSelectSkill OnSelectSkill;
 	FOnChangeSkillBuildPhase OnChangeSkillBuildPhase;
+	FOnPostSimulateSkillAction OnPostSimulateSkillAction;
+	FOnCancelSimulateSkillAction OnCancelSimulateSkillAction;
 
 public:
+	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillIndex"))
 	int32 mSkillIndex = 0;
 };
 
-struct FSRPGCDiceSelectCommand : public FSRPGActionCommand
+USTRUCT(BlueprintType)
+struct FSRPGDiceSelectCommand : public FSRPGCommand
 {
-public:
-	FSRPGCDiceSelectCommand();
+	GENERATED_BODY()
 
 public:
+	FSRPGDiceSelectCommand();
+
+public:
+	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceIndex"))
 	int32 mDiceIndex = 0;
 };
 
 /**
  * @brief  스킬 생성 액션 객체
  */
-struct FSRPGSkillBuildAction : public FSRPGAction
+UCLASS()
+class USRPGSkillBuildAction : public USRPGAction
 {
-	template<typename ActionType>
-	friend struct FSRPGActionCreationCommand;
-	using Super = FSRPGAction;
+	GENERATED_BODY()
 
-protected:
-	FSRPGSkillBuildAction();
+public:
+	USRPGSkillBuildAction();
 
 	/* FSRPGAction 상속 */
 protected:
@@ -56,40 +72,60 @@ protected:
 	void OnEndAction() override;
 
 protected:
-	ESRPGActionCommandResult HandleCommand(TSharedPtr<const FSRPGActionCommand> Command) override;
+	ESRPGCommandResult HandleCommand(const TInstancedStruct<FSRPGCommand>& Command) override;
 
 protected:
-	ESRPGActionCommandResult HandleWorldTraceCommand(TSharedPtr<const FSRPGWorldTraceCommand> Command);
+	ESRPGCommandResult HandleWorldTraceCommand(const TInstancedStruct<FSRPGCommand>& Command);
 
 	/* 빌드 로직 처리 */
 private:
-	void ChangeDices(int32 RequestedDiceIndex);
-
 	void SetSkill(int32 SkillIndex);
-	void ResetSkill();
-	void SetTargetTile(const FTileIndex& TileIndex);
-	void ResetTargetTile();
+	void ChangeDices(int32 RequestedDiceIndex);
+	void SetTargetTile(const FTileIndex& TargetIndex);
 	void BuildSkill();
+
+private:
+	void ResetSkill();
+	void ResetDice();
+	void ResetTargetTile();
+
+private:
+	void ClearAllTileHighlights();
+	void RefreshAimableTileHighlights();
+	void RefreshEffectTileHighlights();
+
+private:
+	bool CanSelectTargetTile(const FTileIndex& Index) const;
 
 private:
 	void SetBuildPhase(ESRPGSkillBuildPhase BuildPhase);
 
-protected:
-	FOnChangeSkillBuildPhase OnChangeSkillBuildPhase;
+	/* 헬퍼 */
+private:
+	// @brief 턴 컨텍스트 → 전투 모델 → 타일 맵 모델을 꺼내온다
+	UTileMapModel* GetTileMap() const;
 
 protected:
+	FOnSelectSkill OnSelectSkill;
+	FOnChangeSkillBuildPhase OnChangeSkillBuildPhase;
+	FOnPostSimulateSkillAction OnPostSimulateSkillAction;
+	FOnCancelSimulateSkillAction OnCancelSimulateSkillAction;
+
+protected:
+	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceIndex"))
 	ESRPGSkillBuildPhase mSkillBuildPhase = ESRPGSkillBuildPhase::None;
 
 protected:
-	TArray<FTileIndex> mAimTileIndexes;
+	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ReachableTileIndexes"))
+	TArray<FTileIndex> mReachableTileIndexes;
+	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectedSkill"))
 	TObjectPtr<UStaticSkillData> mSelectedSkill;
+	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectedSkillIndex"))
 	int32 mSelectedSkillIndex = INDEX_NONE;
 
-	TArray<int32> mSelectedDices;
-	int32 mSelectedDiceSum = 0;
-
+	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectTileIndexes"))
 	TArray<FTileIndex> mEffectTileIndexes;
+	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TargetIndex"))
 	FTileIndex mTargetIndex = FTileIndex::Invalid;
-	FSkillCommitResult mCalculationResult;
 };
 

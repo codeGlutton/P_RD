@@ -16,7 +16,8 @@
 UENUM(BlueprintType)
 enum class EWorldWidgetType : uint8
 {
-	TopMenuBar = 0,
+	// 구 TopMenuBar 자리. enum 값 = DefaultGame.ini 배열 인덱스라 뒷항목이 밀리지 않게 예약으로 비워 둔다.
+	ReservedLegacySlot0 = 0 UMETA(Hidden),
 	MsgNotify,
 	SaveNotify,
 	
@@ -44,7 +45,7 @@ enum class EWorldWidgetType : uint8
 	 *
 	 * 왜 WorldWidget인가:
 	 * 설정은 화면마다 따로 만든 슬롯이 아니라 같은 팝업 생명주기로 열려야 한다.
-	 * WorldWidgetSubsystem에 두면 타이틀과 TopMenuBar가 모두 같은 OpenUI/CloseUI 경로를 공유할 수 있다.
+	 * WorldWidgetSubsystem에 두면 타이틀과 인게임 화면이 모두 같은 OpenUI/CloseUI 경로를 공유할 수 있다.
 	 */
 	InGameSettings,
 
@@ -73,6 +74,19 @@ enum class EWorldWidgetType : uint8
 	 * SkillPanel 위치가 바뀌면 ini의 [8] 매핑도 같이 조정해야 한다.
 	 */
 	SkillPanel,
+
+	/**
+	 * @brief 타이틀 START로 여는 독립 캐릭터 선택 오버레이
+	 *
+	 * @details
+	 * 캐릭터 선택은 더 이상 타이틀 HUD 안의 화면이 아니라 InGameSettings처럼 OpenUI()로 여는 독립 월드 위젯이다.
+	 * GameMode가 타이틀 HUD를 닫고 이 위젯을 열며, BACK 요청을 받아 다시 타이틀로 되돌린다.
+	 *
+	 * @note
+	 * Config/DefaultGame.ini의 mWorldWidgetClasses index와 이 enum 순서는 직접 대응한다.
+	 * 기존 [0..8] 인덱스가 밀리지 않게 항상 마지막 실제 값으로 두고, CharacterSelect는 [9] 매핑을 쓴다.
+	 */
+	CharacterSelect,
 
 	Count UMETA(Hidden),
 };

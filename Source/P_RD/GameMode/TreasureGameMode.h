@@ -17,4 +17,7 @@ UCLASS(abstract)
 class P_RD_API ATreasureGameMode : public ARoomGameModeBase
 {
 	GENERATED_BODY()
+
+protected:
+	void InitializeRoom() override;
 };

@@ -7,13 +7,14 @@
 
 #pragma once
 
-#include "GAS/GASMinimal.h"
+#include "RDMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 
 #include "PersistentDataSubsystem.generated.h"
 
 class UUserPersistData;
 class URunPersistData;
+class UOptionPersistData;
 
 /**
  * @brief  영구적 플레이 데이터 Subsystem
@@ -26,14 +27,19 @@ class P_RD_API UPersistentDataSubsystem : public UGameInstanceSubsystem
 public:
 	friend class IUserDataWriter;
 	friend class IRunDataWriter;
+	friend class IOptionDataWriter;
 
 	/* UGameInstanceSubsystem 상속 */
 public:
 	void Initialize(FSubsystemCollectionBase& Collection) override;
 
 public:
+	UUserPersistData* GetUserPersistData();
+	URunPersistData* GetRunPersistData();
+	UOptionPersistData* GetOptionPersistData();
 	const UUserPersistData* GetUserPersistData() const;
 	const URunPersistData* GetRunPersistData() const;
+	const UOptionPersistData* GetOptionPersistData() const;
 
 public:
 	// TODO : 삭제
@@ -45,4 +51,6 @@ protected:
 	TObjectPtr<UUserPersistData> mUserPersistData;
 	UPROPERTY(Category = Run, VisibleAnywhere, meta = (DisplayName = "RunPersistData"))
 	TObjectPtr<URunPersistData> mRunPersistData;
+	UPROPERTY(Category = Option, VisibleAnywhere, meta = (DisplayName = "OptionPersistData"))
+	TObjectPtr<UOptionPersistData> mOptionPersistData;
 };
