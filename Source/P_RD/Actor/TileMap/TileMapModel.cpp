@@ -771,7 +771,8 @@ TArray<FTileIndex> UTileMapModel::GetEffectTiles(const FTileIndex& Caster, const
 
 			// Target(클릭 지점)을 시작으로 그 방향으로 뻗음 — 빔 길이는 Target 포함 총 Size칸
 			// (Target은 상단에서 이미 추가했으므로 너머로 Size-1칸만 더 뻗음)
-			if (Step.mX != 0 || Step.mY != 0)
+			// 비관통 빔이 점유 칸을 직접 조준한 경우 거기서 맞고 멈춤 — 너머로 뻗지 않음
+			if ((Step.mX != 0 || Step.mY != 0) && (bPenetrate || !IsOccupied(Target)))
 				AppendBlockableRay(Target, Step, Size - 1, bPenetrate, Result);
 		}
 		break;
