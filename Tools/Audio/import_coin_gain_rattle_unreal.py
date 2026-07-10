@@ -6,12 +6,12 @@ import unreal
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE_DIR = ROOT / "Content" / "Audio" / "SFX"
+SOURCE_DIR = ROOT / "Content" / "SVN" / "OutSideAsset" / "SFX" / "DevelopmentCandidates"
 SOURCE_WAVS = [
     SOURCE_DIR / "S_CoinGain_Rattle_01.wav",
     *[SOURCE_DIR / f"S_CoinGain_Rattle_Alt_{index:02d}.wav" for index in range(1, 11)],
 ]
-DESTINATION_PATH = "/Game/Audio/SFX"
+DESTINATION_PATH = "/Game/SVN/OutSideAsset/SFX/DevelopmentCandidates"
 
 
 def main() -> None:

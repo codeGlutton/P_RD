@@ -12,8 +12,9 @@ DURATION_SECONDS = 0.95
 SEED = 20260710
 
 ROOT = Path(__file__).resolve().parents[2]
-OUTPUT_PATH = ROOT / "Content" / "Audio" / "SFX" / "S_CoinGain_Rattle_01.wav"
-SOURCE_NOTE_PATH = ROOT / "Content" / "Audio" / "SFX" / "S_CoinGain_Rattle_01_SOURCE.txt"
+OUTPUT_DIR = ROOT / "Content" / "SVN" / "OutSideAsset" / "SFX" / "DevelopmentCandidates"
+OUTPUT_PATH = OUTPUT_DIR / "S_CoinGain_Rattle_01.wav"
+SOURCE_NOTE_PATH = OUTPUT_DIR / "S_CoinGain_Rattle_01_SOURCE.txt"
 
 
 def equal_power_pan(pan: float) -> tuple[float, float]:

@@ -31,13 +31,13 @@ REQUIRED_ROW_WIDGETS = [
 ]
 
 REQUIRED_TEXTURES = [
-    "/Game/UI/RewardV4_11/Tex/T_reward_v4_bg",
-    "/Game/UI/RewardV4_11/Tex/T_reward_v4_panel_frame",
-    "/Game/UI/RewardV4_11/Tex/T_reward_v4_scrollbar_track",
-    "/Game/UI/RewardV4_11/Tex/T_reward_v4_scrollbar_thumb",
-    "/Game/UI/RewardV4_11/Tex/T_reward_v4_row_icon_frame",
-    "/Game/UI/RewardV4_11/Tex/T_reward_v4_gold_icon",
-    "/Game/UI/RewardV4_11/Tex/T_reward_v4_btn_frame_normal",
+    "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_bg",
+    "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_panel_frame",
+    "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_scrollbar_track",
+    "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_scrollbar_thumb",
+    "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_row_icon_frame",
+    "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_gold_icon",
+    "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_btn_frame_normal",
 ]
 
 

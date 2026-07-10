@@ -6,8 +6,8 @@ import unreal
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE_DIR = ROOT / "Content" / "Audio" / "SFX" / "ExternalSkillSelectCandidatesV3"
-DESTINATION_PATH = "/Game/Audio/SFX/ExternalSkillSelectCandidatesV3"
+SOURCE_DIR = ROOT / "Content" / "SVN" / "OutSideAsset" / "SFX" / "DevelopmentCandidates" / "ExternalSkillSelectCandidatesV3"
+DESTINATION_PATH = "/Game/SVN/OutSideAsset/SFX/DevelopmentCandidates/ExternalSkillSelectCandidatesV3"
 EXPECTED_WAV_COUNT = 12
 
 

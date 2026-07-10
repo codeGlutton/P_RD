@@ -6,8 +6,8 @@ import unreal
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE_DIR = ROOT / "Content" / "Audio" / "SFX" / "ExternalActionCandidates"
-DESTINATION_PATH = "/Game/Audio/SFX/ExternalActionCandidates"
+SOURCE_DIR = ROOT / "Content" / "SVN" / "OutSideAsset" / "SFX" / "DevelopmentCandidates" / "ExternalActionCandidates"
+DESTINATION_PATH = "/Game/SVN/OutSideAsset/SFX/DevelopmentCandidates/ExternalActionCandidates"
 
 
 def main() -> None:

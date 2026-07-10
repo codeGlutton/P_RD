@@ -45,8 +45,8 @@ URewardUIWidgetBase::URewardUIWidgetBase(const FObjectInitializer& ObjectInitial
 	mSkillIcon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Magic.T_Reward_Magic"));
 	mGoldIcon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Stat_Gold.T_Stat_Gold"));
 	mDiceIcon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Dice_Common.T_Dice_Common"));
-	mRewardGoldIconTexture = LoadObject<UTexture2D>(nullptr, TEXT("/Game/UI/RewardV4_11/Tex/T_reward_v4_gold_icon.T_reward_v4_gold_icon"));
-	mRewardExpIconTexture = LoadObject<UTexture2D>(nullptr, TEXT("/Game/UI/RewardV4_11/Tex/T_reward_v4_exp_icon.T_reward_v4_exp_icon"));
+	mRewardGoldIconTexture = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_gold_icon.T_reward_v4_gold_icon"));
+	mRewardExpIconTexture = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_exp_icon.T_reward_v4_exp_icon"));
 	mRewardRowWidgetClass = LoadClass<URewardRowWidgetBase>(nullptr, TEXT("/Game/BP/UI/WBP_RewardRow.WBP_RewardRow_C"));
 }
 

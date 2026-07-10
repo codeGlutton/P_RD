@@ -1,5 +1,0 @@
-S_CoinGain_Rattle_01.wav
-Generated procedurally from Tools/Audio/generate_coin_gain_rattle.py.
-No external audio samples, sound libraries, open-source assets, or commercial stock assets were used.
-Format: 48 kHz, 16-bit PCM stereo WAV.
-Deterministic seed: 20260710.

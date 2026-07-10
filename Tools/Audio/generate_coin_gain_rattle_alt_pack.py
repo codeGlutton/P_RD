@@ -12,7 +12,7 @@ SAMPLE_RATE = 48_000
 SEED = 20260710
 
 ROOT = Path(__file__).resolve().parents[2]
-OUTPUT_DIR = ROOT / "Content" / "Audio" / "SFX"
+OUTPUT_DIR = ROOT / "Content" / "SVN" / "OutSideAsset" / "SFX" / "DevelopmentCandidates"
 SOURCE_NOTE_PATH = OUTPUT_DIR / "S_CoinGain_Rattle_AltPack_SOURCE.txt"
 
 

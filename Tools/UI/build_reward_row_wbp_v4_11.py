@@ -7,7 +7,7 @@ ASSET_PATH = "/Game/BP/UI/WBP_RewardRow"
 ASSET_NAME = "WBP_RewardRow"
 ASSET_DIR = "/Game/BP/UI"
 PARENT_CLASS_PATH = "/Script/P_RD.RewardRowWidgetBase"
-TEXTURE_DIR = "/Game/UI/RewardV4_11/Tex"
+TEXTURE_DIR = "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex"
 
 TEXTURE_NAMES = {
     "D:/UnrealProjects/P_RD_develop_20260701_216/output/combat_ui_kit/uploads/nav_button_frame_normal_20260706_015417.png": "T_reward_v4_row_icon_frame",

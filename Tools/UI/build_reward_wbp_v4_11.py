@@ -9,7 +9,7 @@ ASSET_DIR = "/Game/BP/UI"
 PARENT_CLASS_PATH = "/Script/P_RD.RewardUIWidgetBase"
 
 CONCEPT_PATH = "D:/UnrealProjects/P_RD_develop_20260701_216/Start_CombatUIRectEditor/concept_reward_v4_11_center-list-scroll.json"
-TEXTURE_DIR = "/Game/UI/RewardV4_11/Tex"
+TEXTURE_DIR = "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex"
 
 TEXTURE_NAMES = {
     "D:/UnrealProjects/P_RD_CombatUI_Assets_/P_RD_CombatUI_Assets_nobg/15_Reward/00_Background/reward_bg.png": "T_reward_v4_bg",
