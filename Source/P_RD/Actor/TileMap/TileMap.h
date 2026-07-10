@@ -305,13 +305,13 @@ protected:
 	TObjectPtr<UMaterialInterface> mPathEndMaterial;
 
 	/**
-	 * @brief 경로 화살표 색·알파 (알파는 펄스 고점 기준)
+	 * @brief 경로 화살표 색 (불투명이라 알파값은 사용하지 않음)
 	 */
 	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path Arrow Style"))
 	FTileHighlightStyle mPathArrowStyle;
 
 	/**
-	 * @brief 도착 마커 색·알파 (알파는 펄스 고점 기준)
+	 * @brief 도착지 마커 색 (불투명이라 알파값은 사용하지 않음)
 	 */
 	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path End Style"))
 	FTileHighlightStyle mPathEndStyle;
@@ -327,6 +327,18 @@ protected:
 	 */
 	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path Flow Cycles", ClampMin = "0.0"))
 	float mPathFlowCycles = 1.0f;
+
+	/**
+	 * @brief 펄스 밝기 하한
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path Pulse Min Brightness", ClampMin = "0.0", ClampMax = "1.0"))
+	float mPathPulseMinBrightness = 0.1f;
+
+	/**
+	 * @brief 펄스 밝기 상한
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path Pulse Max Brightness", ClampMin = "0.0", ClampMax = "1.0"))
+	float mPathPulseMaxBrightness = 1.0f;
 
 	/**
 	 * @brief 화살표/마커 시각 크기 비율 (타일 크기 기준)
