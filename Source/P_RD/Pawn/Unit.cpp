@@ -84,6 +84,9 @@ void AUnit::BindModel(UObjectModel* Model)
 	// 연출 요청 구독
 	if (mUnitModel.IsValid())
 	{
+		// 위치 가져오기 구독
+		mUnitModel->OnGetBoardActorWorldTransform.BindUObject(this, &AUnit::GetActorTransform);
+
 		// 초기 배치 연출 요청 구독
 		mUnitModel->OnPlaceTileTransform.AddUObject(this, &AUnit::OnPlaceTileTransform);
 
