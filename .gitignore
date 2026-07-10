@@ -84,6 +84,11 @@ DerivedDataCache/*
 # SVN
 /Content/SVN/
 
+# Imported resource assets are stored in SVN, not Git.
+/Content/Audio/
+/Content/**/T_*.uasset
+/Content/**/S_*.uasset
+
 # Doxygen Preiview Output
 /Doxygen/Preview/Output
 
