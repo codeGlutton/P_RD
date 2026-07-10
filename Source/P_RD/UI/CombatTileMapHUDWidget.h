@@ -601,6 +601,8 @@ private:
 		float mElapsed = 0.0f;                        // 스폰 후 누적 시간(실행 로그의 상승/페이드/수명 판단용)
 		bool mIsPreview = false;                      // true면 자동 소멸 안 함(MotionFinished/Clear로만 제거)
 		float mStackOffsetY = 0.0f;                   // 미리보기 겹침 방지용 세로 쌓기 오프셋(px, 위로 +)
+		bool mIsDismissing = false;                   // 모션 종료로 퇴장 중 — 오른쪽으로 흐르며 페이드아웃 후 제거
+		float mDismissElapsed = 0.0f;                 // 퇴장 연출 누적 시간
 	};
 	/** @brief 스폰 대기 큐(실행 로그). HandleCombatFloatingLog가 넣고, UpdateFloatingCombatLogQueue가 하나씩 꺼낸다. */
 	TArray<FQueuedFloatingCombatLogEntry> mPendingFloatingCombatLogs;

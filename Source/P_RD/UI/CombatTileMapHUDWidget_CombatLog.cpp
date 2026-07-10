@@ -51,6 +51,8 @@ namespace
 	constexpr float FloatingLogBaseOffsetY = -96.0f;  // 머리 위 HP바(-70)보다 위에서 시작
 	constexpr float FloatingLogFadePortion = 0.6f;    // 수명의 이 비율 이후부터 페이드아웃
 	constexpr float FloatingLogPreviewRowSpacing = 30.0f; // 미리보기 로그가 같은 위치에 겹칠 때 위로 쌓는 간격(px)
+	constexpr float FloatingLogDismissDuration = 0.4f;    // 모션 종료 퇴장 연출 길이(초)
+	constexpr float FloatingLogDismissSlideSpeed = 140.0f;// 퇴장 시 초당 오른쪽 이동 픽셀
 	constexpr float TurnBannerLifetime = 1.6f;        // 배너 표시 수명(초)
 	constexpr float TurnBannerFadePortion = 0.55f;    // 배너 페이드 시작 비율
 
@@ -150,15 +152,22 @@ void UCombatTileMapHUDWidget::HandleCombatFloatingLogsCleared()
 	mFloatingCombatLogQueueCooldown = 0.0f;
 	mNextFloatingCombatLogArrivalOrder = 0;
 
-	// 이미 화면에 떠 있는 로그 위젯을 캔버스에서 즉시 떼어낸다.
-	for (FFloatingCombatLogEntry& Entry : mFloatingCombatLogs)
+	// 화면에 떠 있는 로그는 즉시 떼지 않고 퇴장 연출(오른쪽으로 흐르며 페이드아웃)로 보낸다.
+	// (연출이 끝나면 UpdateFloatingCombatLogs가 제거한다. 애니 종료 후 "뿅" 사라짐 방지.)
+	for (int32 LogIndex = mFloatingCombatLogs.Num() - 1; LogIndex >= 0; --LogIndex)
 	{
-		if (Entry.mRoot != nullptr)
+		FFloatingCombatLogEntry& Entry = mFloatingCombatLogs[LogIndex];
+		if (Entry.mRoot == nullptr)
 		{
-			Entry.mRoot->RemoveFromParent();
+			mFloatingCombatLogs.RemoveAt(LogIndex);
+			continue;
+		}
+		if (Entry.mIsDismissing == false)
+		{
+			Entry.mIsDismissing = true;
+			Entry.mDismissElapsed = 0.0f;
 		}
 	}
-	mFloatingCombatLogs.Reset();
 }
 
 /**
@@ -239,6 +248,9 @@ void UCombatTileMapHUDWidget::SpawnFloatingCombatLogAtWorld(const FCombatFloatin
 	// 기본 폰트에서 크기만 키운다(전투 화면 위에서 읽히는 최소 크기).
 	FSlateFontInfo LogFont = LogText->GetFont();
 	LogFont.Size = 22;
+	// 밝은 배경(모래/눈밭) 위에서도 읽히도록 검은 윤곽선을 두른다.
+	LogFont.OutlineSettings.OutlineSize = 2;
+	LogFont.OutlineSettings.OutlineColor = FLinearColor::Black;
 	LogText->SetFont(LogFont);
 	if (UHorizontalBoxSlot* TextSlot = LogBox->AddChildToHorizontalBox(LogText))
 	{
@@ -265,7 +277,9 @@ void UCombatTileMapHUDWidget::SpawnFloatingCombatLogAtWorld(const FCombatFloatin
 		int32 StackCount = 0;
 		for (const FFloatingCombatLogEntry& Existing : mFloatingCombatLogs)
 		{
-			if (Existing.mIsPreview == true && Existing.mWorldLocation.Equals(Request.mWorldLocation, 1.0f))
+			// 퇴장 중인 로그는 곧 사라지므로 쌓기 오프셋 계산에서 제외한다.
+			if (Existing.mIsPreview == true && Existing.mIsDismissing == false
+				&& Existing.mWorldLocation.Equals(Request.mWorldLocation, 1.0f))
 			{
 				++StackCount;
 			}
@@ -322,7 +336,8 @@ void UCombatTileMapHUDWidget::UpdateFloatingCombatLogs(float InDeltaTime)
 
 		UWidget* LogRoot = Entry.mRoot;
 		// 미리보기 로그는 수명으로 사라지지 않는다(MotionFinished/Clear로만). 실행 로그만 수명 만료 시 제거.
-		if (LogRoot == nullptr || (Entry.mIsPreview == false && Entry.mElapsed >= FloatingLogLifetime))
+		// 퇴장 연출 중이면 수명 만료보다 퇴장(슬라이드+페이드) 완료를 우선한다.
+		if (LogRoot == nullptr || (Entry.mIsPreview == false && Entry.mIsDismissing == false && Entry.mElapsed >= FloatingLogLifetime))
 		{
 			if (LogRoot != nullptr)
 			{
@@ -330,6 +345,18 @@ void UCombatTileMapHUDWidget::UpdateFloatingCombatLogs(float InDeltaTime)
 			}
 			mFloatingCombatLogs.RemoveAt(LogIndex);
 			continue;
+		}
+
+		// 퇴장 중(모션 종료)이면 오른쪽으로 흐르며 페이드아웃하고 연출이 끝나면 제거한다.
+		if (Entry.mIsDismissing == true)
+		{
+			Entry.mDismissElapsed += InDeltaTime;
+			if (Entry.mDismissElapsed >= FloatingLogDismissDuration)
+			{
+				LogRoot->RemoveFromParent();
+				mFloatingCombatLogs.RemoveAt(LogIndex);
+				continue;
+			}
 		}
 
 		// HP바와 같은 투영. 화면 밖이면 숨기되 수명은 계속 흘려보낸다.
@@ -344,13 +371,25 @@ void UCombatTileMapHUDWidget::UpdateFloatingCombatLogs(float InDeltaTime)
 		}
 		LogRoot->SetVisibility(ESlateVisibility::HitTestInvisible);
 
+		// 퇴장 중에는 진행률만큼 오른쪽으로 밀리는 X 오프셋이 붙는다.
+		const float DismissOffsetX = Entry.mIsDismissing == true
+			? FloatingLogDismissSlideSpeed * Entry.mDismissElapsed
+			: 0.0f;
+
 		if (UCanvasPanelSlot* LogSlot = Cast<UCanvasPanelSlot>(LogRoot->Slot))
 		{
 			// 미리보기: 고정 위치(겹치면 위로 쌓기) / 실행: 시간에 따라 상승.
 			const float OffsetY = Entry.mIsPreview == true
 				? (FloatingLogBaseOffsetY - Entry.mStackOffsetY)
 				: (FloatingLogBaseOffsetY - FloatingLogRiseSpeed * Entry.mElapsed);
-			LogSlot->SetPosition(ScreenPosition + FVector2D(0.0f, OffsetY));
+			LogSlot->SetPosition(ScreenPosition + FVector2D(DismissOffsetX, OffsetY));
+		}
+
+		// 퇴장 중에는 진행률에 따라 서서히 투명해진다(미리보기/실행 공통).
+		if (Entry.mIsDismissing == true)
+		{
+			LogRoot->SetRenderOpacity(FMath::Clamp(1.0f - Entry.mDismissElapsed / FloatingLogDismissDuration, 0.0f, 1.0f));
+			continue;
 		}
 
 		// 미리보기는 페이드 없이 계속 또렷하게(모션 종료/클리어로만 사라짐).
@@ -399,11 +438,16 @@ void UCombatTileMapHUDWidget::RemoveFloatingCombatLogsByMotionIndex(int32 Motion
 			continue;
 		}
 
+		// 뿅 사라지지 않고 퇴장 연출(오른쪽으로 흐르며 페이드아웃)로 넘긴다. 실제 제거는 UpdateFloatingCombatLogs가 한다.
 		if (Entry.mRoot != nullptr)
 		{
-			Entry.mRoot->RemoveFromParent();
+			Entry.mIsDismissing = true;
+			Entry.mDismissElapsed = 0.0f;
 		}
-		mFloatingCombatLogs.RemoveAt(LogIndex);
+		else
+		{
+			mFloatingCombatLogs.RemoveAt(LogIndex);
+		}
 	}
 }
 
