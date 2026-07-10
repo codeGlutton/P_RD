@@ -49,6 +49,11 @@ UCombatTileMapHUDWidget::UCombatTileMapHUDWidget(const FObjectInitializer& Objec
 	{
 		mDiceChooseSound = DiceChooseSoundFinder.Object;
 	}
+	static ConstructorHelpers::FObjectFinder<USoundBase> SkillSelectSoundFinder(TEXT("/Game/SVN/OutSideAsset/SFX/OpenGameArt_CC0/UI/SFX_SkillSelect_OGA_CC0_QuickslotClear.SFX_SkillSelect_OGA_CC0_QuickslotClear"));
+	if (SkillSelectSoundFinder.Succeeded())
+	{
+		mSkillSelectSound = SkillSelectSoundFinder.Object;
+	}
 	static ConstructorHelpers::FObjectFinder<USoundBase> ExpGainSoundFinder(TEXT("/Game/SVN/OutSideAsset/SFX/OpenGameArt_CC0/UI/SFX_XPGain_OGA_CC0_Rise03.SFX_XPGain_OGA_CC0_Rise03"));
 	if (ExpGainSoundFinder.Succeeded())
 	{
@@ -219,11 +224,12 @@ void UCombatTileMapHUDWidget::ApplyOpenUI()
 	Super::ApplyOpenUI();
 
 	EnsureRuntimeWidgets();
+	mLevelValueTouched = false;
+	SetExpHoldPanelVisible(false);
 	RefreshDiceViewsFromRunData();
 	RebuildOwnedDiceCards();
 	RefreshCombatStatusBar();   // 위젯 생성 이후에 뷰모델 값(Lv/HP/Gold)을 상단 상태바에 채운다.
 	RefreshRoomNameLabel();     // 룸 이름('일반'/'엘리트'/'보스')을 룸 이름 마커에 채운다.
-	EnsureLevelTouchButton();   // LV 칸 위 투명 터치 버튼(꾹 누르면 경험치 표시) — 스킨 마커가 생긴 뒤 1회.
 	RebuildEquipmentBar();      // 탑바 좌측 하단 장비 칩.
 	RebuildTurnOrderBar();      // 탑바 가운데 하단 턴 순서 칩.
 	RebuildUnitHpBars();        // 유닛 수에 맞춰 머리 위 HP바를 만든다.

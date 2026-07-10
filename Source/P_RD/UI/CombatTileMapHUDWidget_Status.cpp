@@ -2,7 +2,6 @@
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
-#include "Components/Button.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
@@ -143,14 +142,8 @@ void UCombatTileMapHUDWidget::RefreshSkinValueLabels() const
 	};
 	// 빌드는 빈 TextBlock(color/font/slot만)으로 마커를 심는다(Android 직렬화 안전). 내용/정렬은 여기서 채운다.
 	// END TURN 라벨은 정적이지만 동일하게 C++가 설정(CDO에 FText를 넣지 않기 위함).
-	// LV 칸은 꾹 누르는 동안(mLevelValueTouched) 레벨 대신 경험치(현재/최대)를 보여준다.
-	const FText LevelSlotText = mLevelValueTouched
-		? FText::Format(NSLOCTEXT("CombatTileMapHUDWidget", "SkinExpHold", "{0}/{1}"),
-			FText::AsNumber(FMath::RoundToInt(Meta.mExp)), FText::AsNumber(FMath::RoundToInt(Meta.mMaxExp)))
-		: FText::AsNumber(Meta.mLevel);
-
 	const FSkinValueBinding Bindings[] = {
-		{ TEXT("HUD_M_lv_value"), LevelSlotText },
+		{ TEXT("HUD_M_lv_value"), FText::AsNumber(Meta.mLevel) },
 		{ TEXT("HUD_M_hp_value"), FText::Format(NSLOCTEXT("CombatTileMapHUDWidget", "SkinHP", "{0}/{1}"),
 			FText::AsNumber(FMath::RoundToInt(PlayerHP)), FText::AsNumber(FMath::RoundToInt(PlayerMaxHP))) },
 		{ TEXT("HUD_M_btn_end_turn_label"), NSLOCTEXT("CombatTileMapHUDWidget", "EndTurnLabel", "END\nTURN") },
@@ -195,14 +188,39 @@ void UCombatTileMapHUDWidget::RefreshRoomNameLabel() const
 	}
 }
 
-void UCombatTileMapHUDWidget::EnsureLevelTouchButton()
+bool UCombatTileMapHUDWidget::IsScreenPositionOverLevelValue(const FVector2D& ScreenPosition) const
 {
-	if (mLevelTouchButton != nullptr || WidgetTree == nullptr || IsDesignerSkinActive() == false)
+	if (WidgetTree == nullptr || IsDesignerSkinActive() == false)
+	{
+		return false;
+	}
+
+	const UWidget* LevelText = WidgetTree->FindWidget(TEXT("HUD_M_lv_value"));
+	if (LevelText == nullptr || LevelText->IsVisible() == false)
+	{
+		return false;
+	}
+
+	const FGeometry& LevelGeometry = LevelText->GetCachedGeometry();
+	if (LevelGeometry.GetLocalSize().X <= 0.0f || LevelGeometry.GetLocalSize().Y <= 0.0f)
+	{
+		return false;
+	}
+
+	constexpr float TouchPadding = 24.0f;
+	const FVector2D TopLeft = LevelGeometry.GetAbsolutePosition();
+	const FVector2D BottomRight = TopLeft + LevelGeometry.GetAbsoluteSize();
+	return ScreenPosition.X >= TopLeft.X - TouchPadding && ScreenPosition.X <= BottomRight.X + TouchPadding
+		&& ScreenPosition.Y >= TopLeft.Y - TouchPadding && ScreenPosition.Y <= BottomRight.Y + TouchPadding;
+}
+
+void UCombatTileMapHUDWidget::EnsureExpHoldPanel()
+{
+	if (mExpHoldPanel != nullptr || WidgetTree == nullptr)
 	{
 		return;
 	}
 
-	// LV 값 마커의 캔버스 슬롯 지오메트리를 그대로 복사해, 같은 자리에 투명 버튼을 얹는다(레이아웃은 여전히 WBP 소유).
 	UTextBlock* LevelText = Cast<UTextBlock>(WidgetTree->FindWidget(TEXT("HUD_M_lv_value")));
 	UCanvasPanelSlot* LevelSlot = LevelText != nullptr ? Cast<UCanvasPanelSlot>(LevelText->Slot) : nullptr;
 	UCanvasPanel* ParentCanvas = LevelText != nullptr ? Cast<UCanvasPanel>(LevelText->GetParent()) : nullptr;
@@ -211,50 +229,62 @@ void UCombatTileMapHUDWidget::EnsureLevelTouchButton()
 		return;
 	}
 
-	UButton* TouchButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("HUD_LevelTouchButton"));
-	if (TouchButton == nullptr)
+	UBorder* Panel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("HUD_ExpHoldPanel"));
+	UTextBlock* PanelText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("HUD_ExpHoldText"));
+	if (Panel == nullptr || PanelText == nullptr)
 	{
 		return;
 	}
 
-	// 배경 없는 순수 터치 영역(브러시 NoDraw) — 눌림 시각 효과는 텍스트 전환 자체가 대신한다.
-	FSlateBrush TransparentBrush;
-	TransparentBrush.DrawAs = ESlateBrushDrawType::NoDrawType;
-	TransparentBrush.TintColor = FSlateColor(FLinearColor::Transparent);
-	FButtonStyle TransparentStyle;
-	TransparentStyle.SetNormal(TransparentBrush);
-	TransparentStyle.SetHovered(TransparentBrush);
-	TransparentStyle.SetPressed(TransparentBrush);
-	TransparentStyle.SetDisabled(TransparentBrush);
-	TransparentStyle.SetNormalPadding(FMargin(0.0f));
-	TransparentStyle.SetPressedPadding(FMargin(0.0f));
-	TouchButton->SetStyle(TransparentStyle);
+	Panel->SetBrushColor(FLinearColor(0.10f, 0.10f, 0.12f, 0.88f));
+	Panel->SetPadding(FMargin(12.0f, 6.0f));
+	Panel->SetVisibility(ESlateVisibility::Collapsed);
 
-	TouchButton->OnPressed.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleLevelTouchPressed);
-	TouchButton->OnReleased.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleLevelTouchReleased);
+	FSlateFontInfo PanelFont = PanelText->GetFont();
+	PanelFont.Size = 20;
+	PanelFont.OutlineSettings.OutlineSize = 2;
+	PanelFont.OutlineSettings.OutlineColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.9f);
+	PanelText->SetFont(PanelFont);
+	PanelText->SetJustification(ETextJustify::Center);
+	PanelText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+	Panel->SetContent(PanelText);
 
-	if (UCanvasPanelSlot* ButtonSlot = ParentCanvas->AddChildToCanvas(TouchButton))
+	if (UCanvasPanelSlot* PanelSlot = ParentCanvas->AddChildToCanvas(Panel))
 	{
-		ButtonSlot->SetAnchors(LevelSlot->GetAnchors());
-		ButtonSlot->SetOffsets(LevelSlot->GetOffsets());
-		ButtonSlot->SetAlignment(LevelSlot->GetAlignment());
-		ButtonSlot->SetAutoSize(LevelSlot->GetAutoSize());
-		ButtonSlot->SetZOrder(LevelSlot->GetZOrder() + 1);
+		const FMargin LevelOffsets = LevelSlot->GetOffsets();
+		PanelSlot->SetAnchors(LevelSlot->GetAnchors());
+		PanelSlot->SetAlignment(FVector2D(0.5f, 0.0f));
+		PanelSlot->SetAutoSize(true);
+		PanelSlot->SetPosition(FVector2D(
+			LevelOffsets.Left + LevelOffsets.Right * 0.5f,
+			LevelOffsets.Top + LevelOffsets.Bottom + 10.0f));
+		PanelSlot->SetZOrder(60);
 	}
 
-	mLevelTouchButton = TouchButton;
+	mExpHoldPanel = Panel;
+	mExpHoldText = PanelText;
 }
 
-void UCombatTileMapHUDWidget::HandleLevelTouchPressed()
+void UCombatTileMapHUDWidget::SetExpHoldPanelVisible(bool bVisible)
 {
-	mLevelValueTouched = true;
-	RefreshSkinValueLabels();
-}
+	if (bVisible)
+	{
+		EnsureExpHoldPanel();
+	}
+	if (mExpHoldPanel == nullptr)
+	{
+		return;
+	}
 
-void UCombatTileMapHUDWidget::HandleLevelTouchReleased()
-{
-	mLevelValueTouched = false;
-	RefreshSkinValueLabels();
+	if (bVisible && mExpHoldText != nullptr && mCombatUIModel != nullptr)
+	{
+		const FPlayerMetaUI& Meta = mCombatUIModel->GetPlayerMeta();
+		mExpHoldText->SetText(FText::Format(
+			NSLOCTEXT("CombatTileMapHUDWidget", "ExpHoldPanel", "EXP {0}/{1}"),
+			FText::AsNumber(FMath::RoundToInt(Meta.mExp)), FText::AsNumber(FMath::RoundToInt(Meta.mMaxExp))));
+	}
+
+	mExpHoldPanel->SetVisibility(bVisible ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 }
 
 void UCombatTileMapHUDWidget::UpdateGoldValueLabel(int32 NewGold) const

@@ -1,5 +1,6 @@
 ﻿#include "UI/CombatTileMapHUDWidget.h"
 
+#include "Kismet/GameplayStatics.h"
 #include "UI/Combat/CombatUIModel.h"
 
 /** @brief 스킬 버튼 해제 시 짧은 탭은 선택, 롱프레스는 상세 표시로 소모한다. */
@@ -78,6 +79,10 @@ void UCombatTileMapHUDWidget::SelectSkillForAssignment(int32 SkillIndex)
 	// 뷰모델 연결 시 선택은 의도로만 보낸다(실행/검증은 게임플레이). 시각 강조는 로컬 유지.
 	if (mCombatUIModel != nullptr)
 	{
+		if (mSkillSelectSound != nullptr)
+		{
+			UGameplayStatics::PlaySound2D(this, mSkillSelectSound);
+		}
 		mCombatUIModel->RequestSelectSkill(SkillIndex);
 	}
 }
