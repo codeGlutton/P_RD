@@ -4,7 +4,6 @@
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 
 #include "Pawn/UnitModel.h"
-#include "Component/SkillComponent/SkillComponentModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "AttributeSet/UnitAttributeSet.h"
 #include "Actor/TileMap/TileMapModel.h"
@@ -50,6 +49,18 @@ void USRPGMoveAction::OnBeginAction()
         return;
     }
 
+    // 코너링에 진입/진출 타일 정보가 필요하므로 전체 경로를 전달
+    {
+        UTileMapModel* TileMap = GetTileMap();
+        TArray<FVector> PathWorldLocations;
+        PathWorldLocations.Reserve(mPathTileIndexes.Num());
+        for (const FTileIndex& TileIndex : mPathTileIndexes)
+        {
+            PathWorldLocations.Add(TileMap->TileToWorldLocation(TileIndex));
+        }
+        mInstigator->OnStartMovePath.Broadcast(PathWorldLocations);
+    }
+
     // 1번 타일로 이동하는 것부터 시작 (0번은 현재 타일).
     // 해당 타일로 이동이 완료되면, 베리어가 끝나고 다시 다음 스텝으로 가는 걸 마지막 타일까지 반복.
     // 시뮬레이션모드에서는 베리어가 없으므로 즉각 다음 스텝으로 진행하므로 문제 없음
@@ -67,8 +78,7 @@ void USRPGMoveAction::OnEndAction()
         // 소모 이동 포인트 = 밟은 칸 수 (경로 칸 수 - 시작 타일)
         const int32 SpentPoint = mPathTileIndexes.Num() - 1;
 
-        // [로컬/임시] 이동력 차감. 정본 API(UseMovePoint)가 아직 미구현 스텁이라, MOVE 표시/범위와 같은
-        // Movement 어트리뷰트를 직접 차감해 카운터가 줄게 한다. [주의] 정본 차감 API가 생기면 교체(Mo).
+        // 이동력 차감
         if (UAttributeSetComponentModel* AttrComp = mInstigator->GetAttributeComponentModel())
         {
             AttrComp->ApplyModToAttribute(UUnitAttributeSet::GetMovementAttribute(), ETacticalModOp::Additive, -static_cast<float>(SpentPoint));
@@ -101,7 +111,7 @@ void USRPGMoveAction::StartStep(int32 StepIndex)
         FOnFinishPresentation::CreateWeakLambda(this, [this]() {
             OnStepPresentationFinished();
             }));
-    
+
     // 이번 스텝 도착 후 최종 목적지까지 남은 경로 거리 계산
     // -> 제동거리에 들어가면 감속할 때 사용
     float RemainingPathDistance = 0.0f;
