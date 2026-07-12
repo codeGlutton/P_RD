@@ -564,8 +564,9 @@ void FTacticalAttributeSetInitterDiscreteLevels::InitAttributeSetDefaults(UAttri
 		{
 			continue;
 		}
+
 		// 커브의 기본값 목록은 속성을 "선언한" 클래스 단위로 키가 잡힌다.
-		// 파생 AttributeSet(예: UPlayerUnitAttributeSet)은 베이스(UUnitAttributeSet)에서 상속한 속성도 가지므로,
+		// 파생 AttributeSet은 베이스에서 상속한 속성도 가지므로,
 		// 스폰된 셋의 클래스부터 UTacticalAttributeSet까지 거슬러 올라가며 각 단계의 기본값을 모두 적용한다.
 		for (UClass* SetClass = Set->GetClass();
 			SetClass != nullptr && SetClass->IsChildOf(UTacticalAttributeSet::StaticClass());

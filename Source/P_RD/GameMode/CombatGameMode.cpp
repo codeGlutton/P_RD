@@ -183,17 +183,17 @@ namespace
 
 	void ConvertFloatingLogUITypes(const FSRPGAttributeEffectEventLog& AttrLog, OUT EFloatingLogIconType& IconType, OUT EFloatingLogColorType& ColorType)
 	{
-		if (AttrLog.mEffectAttribute == UUnitAttributeSet::GetHPAttribute())
+		if (AttrLog.mEffectAttribute == UCombatTargetAttributeSet::GetHPAttribute())
 		{
 			IconType = EFloatingLogIconType::HP;
 			ColorType = AttrLog.mMagnitude > 0.f ? EFloatingLogColorType::Heal : EFloatingLogColorType::Damage;
 		}
-		else if (AttrLog.mEffectAttribute == UUnitAttributeSet::GetMovementAttribute())
+		else if (AttrLog.mEffectAttribute == UCombatTargetAttributeSet::GetMovementAttribute())
 		{
 			IconType = EFloatingLogIconType::GetMove;
 			ColorType = EFloatingLogColorType::PointUp;
 		}
-		else if (AttrLog.mEffectAttribute == UUnitAttributeSet::GetDefenseAttribute())
+		else if (AttrLog.mEffectAttribute == UCombatTargetAttributeSet::GetDefenseAttribute())
 		{
 			IconType = EFloatingLogIconType::GetDefense;
 			ColorType = EFloatingLogColorType::PointUp;
@@ -688,10 +688,10 @@ void ACombatGameMode::PushUnitUIData() const
 		UnitUIData.mUnitId = UnitModel->GetModelId();
 		UnitUIData.mPortrait = UnitModel->GetBoardActorPortrait();   // 턴 순서 칩 등 상시 UI용(없으면 nullptr → 텍스트 폴백).
 		UnitUIData.mTile = UnitModel->GetTileTransform().mIndex;
-		UnitUIData.mHP = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute());
-		UnitUIData.mMaxHP = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMaxHPAttribute());
-		UnitUIData.mDefensePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefenseAttribute());
-		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMovementAttribute());
+		UnitUIData.mHP = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetHPAttribute());
+		UnitUIData.mMaxHP = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMaxHPAttribute());
+		UnitUIData.mDefensePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetDefenseAttribute());
+		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementAttribute());
 		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMovementAttribute());
 
 		UnitUIData.mStatusTags = AttributeSetComponentModel->GetOwnedGameplayTags(); // 모든 소유 태그가 아닌 고의적으로 넣은 태그만 해당

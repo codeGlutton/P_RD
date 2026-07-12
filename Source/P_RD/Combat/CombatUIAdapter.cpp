@@ -106,11 +106,11 @@ void UCombatUIAdapter::Build(USRPGCombatSubsystem* InCombat, const URunPersistDa
 			if (UAttributeSetComponentModel* AttrComp = Unit->GetAttributeComponentModel())
 			{
 				bool bFound = false;
-				const float MaxHPValue = AttrComp->GetAttributeCurrentValue(UUnitAttributeSet::GetMaxHPAttribute(), bFound);
+				const float MaxHPValue = AttrComp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMaxHPAttribute(), bFound);
 				if (bFound)
 				{
 					RealMaxHP = MaxHPValue;
-					RealHP = AttrComp->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute(), bFound);
+					RealHP = AttrComp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetHPAttribute(), bFound);
 				}
 			}
 			if (RealMaxHP > 0.f && RealMaxHP < 100000.f)

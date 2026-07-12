@@ -6,7 +6,7 @@
  *********************************************************************/
 
 #include "TAS/Effect/Stat/TacticalEffect_MovementFactor_AddFinal.h"
-#include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 
 UTacticalEffect_MovementFactor_AddFinal::UTacticalEffect_MovementFactor_AddFinal()
 {
@@ -15,7 +15,7 @@ UTacticalEffect_MovementFactor_AddFinal::UTacticalEffect_MovementFactor_AddFinal
 	mStackingType = ETacticalEffectStackingType::None;
 
 	FTacticalModifierInfo Info;
-	Info.mAttribute = UUnitAttributeSet::GetMovementFactorAttribute();
+	Info.mAttribute = UCombatTargetAttributeSet::GetMovementFactorAttribute();
 	Info.mModifierOp = ETacticalModOp::AddFinal;
 	Info.mModifierMagnitude = 1.f;
 

@@ -9,7 +9,7 @@
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
 #include "TAS/Effect/TacticalEffectContext.h"
-#include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 
 #include "Setting/GameBalanceSettings.h"
 
@@ -18,7 +18,7 @@ void FSkillEffectLayer_Attack::ClearPointEffect(IBoardCombatTarget* ActorModel) 
     UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
-    AttributeSetComponentModel->ApplyModToAttribute(UUnitAttributeSet::GetAttackPointAttribute(), ETacticalModOp::Override, 0.f);
+    AttributeSetComponentModel->ApplyModToAttribute(UCombatTargetAttributeSet::GetAttackPointAttribute(), ETacticalModOp::Override, 0.f);
 }
 
 void FSkillEffectLayer_Attack::ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const
@@ -52,7 +52,7 @@ void FSkillEffectLayer_Attack::CommitEffect(IBoardCombatTarget* OwnerActorModel,
     /* 포인트를 Factor에 임시 추가 */
     {
         TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_AttackFactor_AddBase::StaticClass(), EffectContext);
-        EffectSpec->mDynamicMagnitude = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackPointAttribute());
+        EffectSpec->mDynamicMagnitude = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetAttackPointAttribute());
         EffectHandle = AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
     }
 
@@ -71,8 +71,8 @@ void FSkillEffectLayer_Attack::CommitEffect(IBoardCombatTarget* OwnerActorModel,
         const float VulnerabilityRatio = IsTargetVulnerability == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability] : 1.f;
         
         // 최종 공격력과 방어력
-        const int32 TotalAttack = FMath::Floor(VulnerabilityRatio * WeaknessRatio * AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackFactorAttribute()));
-        const int32 TotalDefense = FMath::Floor(OtherAttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefenseAttribute()));
+        const int32 TotalAttack = FMath::Floor(VulnerabilityRatio * WeaknessRatio * AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetAttackFactorAttribute()));
+        const int32 TotalDefense = FMath::Floor(OtherAttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetDefenseAttribute()));
 
         /* 방어력 까기 */
         {

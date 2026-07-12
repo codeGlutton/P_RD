@@ -8,7 +8,7 @@
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
 #include "TAS/Effect/TacticalEffectContext.h"
-#include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 
 #include "Setting/GameBalanceSettings.h"
 
@@ -17,7 +17,7 @@ void FSkillEffectLayer_GetDefense::ClearPointEffect(IBoardCombatTarget* ActorMod
     UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
-    AttributeSetComponentModel->ApplyModToAttribute(UUnitAttributeSet::GetDefensePointAttribute(), ETacticalModOp::Override, 0.f);
+    AttributeSetComponentModel->ApplyModToAttribute(UCombatTargetAttributeSet::GetDefensePointAttribute(), ETacticalModOp::Override, 0.f);
 }
 
 void FSkillEffectLayer_GetDefense::ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const
@@ -51,7 +51,7 @@ void FSkillEffectLayer_GetDefense::CommitEffect(IBoardCombatTarget* OwnerActorMo
     /* 포인트를 Factor에 임시 추가 */
     {
         TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_DefenseFactor_AddBase::StaticClass(), EffectContext);
-        EffectSpec->mDynamicMagnitude = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefensePointAttribute());
+        EffectSpec->mDynamicMagnitude = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetDefensePointAttribute());
         EffectHandle = AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
     }
 
@@ -59,7 +59,7 @@ void FSkillEffectLayer_GetDefense::CommitEffect(IBoardCombatTarget* OwnerActorMo
     const bool IsOwnerFortification = AttributeSetComponentModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification);
     const float FortificationRatio = IsOwnerFortification == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification] : 1.f;
 
-    const float TotalDefense = FortificationRatio * AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefenseFactorAttribute());
+    const float TotalDefense = FortificationRatio * AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetDefenseFactorAttribute());
     const float DefenseDiff = FMath::Floor(TotalDefense);
 
     if (DefenseDiff > 0.f)

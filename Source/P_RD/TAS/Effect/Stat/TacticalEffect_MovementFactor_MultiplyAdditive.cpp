@@ -6,7 +6,7 @@
  *********************************************************************/
 
 #include "TAS/Effect/Stat/TacticalEffect_MovementFactor_MultiplyAdditive.h"
-#include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 
 UTacticalEffect_MovementFactor_MultiplyAdditive::UTacticalEffect_MovementFactor_MultiplyAdditive()
 {
@@ -15,7 +15,7 @@ UTacticalEffect_MovementFactor_MultiplyAdditive::UTacticalEffect_MovementFactor_
 	mStackingType = ETacticalEffectStackingType::None;
 
 	FTacticalModifierInfo Info;
-	Info.mAttribute = UUnitAttributeSet::GetMovementFactorAttribute();
+	Info.mAttribute = UCombatTargetAttributeSet::GetMovementFactorAttribute();
 	Info.mModifierOp = ETacticalModOp::MultiplyAdditive;
 	Info.mModifierMagnitude = 1.f;
 

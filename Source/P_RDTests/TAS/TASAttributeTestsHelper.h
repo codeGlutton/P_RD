@@ -96,7 +96,7 @@ public:
 	{
 		// 어트리뷰트 컴포넌트 모델과 유닛 어트리뷰트 세트를 기본 서브오브젝트로 생성
 		mAttributeCompModel = CreateDefaultSubobject<UAttributeSetComponentModel>(TEXT("AttributeSetComponentModel"));
-		mUnitAttributeSet = CreateDefaultSubobject<UUnitAttributeSet>(TEXT("UnitAttributeSet"));
+		mUnitAttributeSet = CreateDefaultSubobject<UCombatTargetAttributeSet>(TEXT("UnitAttributeSet"));
 	}
 
 public:
@@ -116,7 +116,7 @@ public:
 
 private:
 	UPROPERTY(Category = Attribute, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "UnitAttributeSet"))
-	TObjectPtr<UUnitAttributeSet> mUnitAttributeSet;
+	TObjectPtr<UCombatTargetAttributeSet> mUnitAttributeSet;
 
 	UPROPERTY(Category = Attribute, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "AttributeCompModel"))
 	TObjectPtr<UAttributeSetComponentModel> mAttributeCompModel;
@@ -141,7 +141,7 @@ public:
 		mStackingType = ETacticalEffectStackingType::None;
 
 		FTacticalModifierInfo Info;
-		Info.mAttribute = UUnitAttributeSet::GetMaxHPAttribute();
+		Info.mAttribute = UCombatTargetAttributeSet::GetMaxHPAttribute();
 		// [PR #191] 구 EGameplayModOp::Additive -> ETacticalModOp::Additive 치환.
 		// Additive(=AddBase, 정수값 0)는 합산 연산. 정수값은 구 enum과 동일하게 유지된다.
 		Info.mModifierOp = ETacticalModOp::Additive;
@@ -170,7 +170,7 @@ public:
 		mStackingType = ETacticalEffectStackingType::None;
 
 		FTacticalModifierInfo Info;
-		Info.mAttribute = UUnitAttributeSet::GetDefensePointAttribute();
+		Info.mAttribute = UCombatTargetAttributeSet::GetDefensePointAttribute();
 		// [PR #191] 구 EGameplayModOp::Additive -> ETacticalModOp::Additive 치환(합산, 정수값 0).
 		Info.mModifierOp = ETacticalModOp::Additive;
 		Info.mModifierMagnitude = 1.f;

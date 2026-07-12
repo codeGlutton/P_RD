@@ -6,7 +6,7 @@
  *********************************************************************/
 
 #include "TAS/Effect/Stat/TacticalEffect_HP.h"
-#include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 #include "Simulation/Logger/EventLogger.h"
 
 #include "TAS/Effect/TacticalEffectContext.h"
@@ -23,7 +23,7 @@ UTacticalEffect_HP::UTacticalEffect_HP()
 
 	FTacticalModifierInfo Info;
 	// 사용할 속성: HP
-	Info.mAttribute = UUnitAttributeSet::GetHPAttribute();
+	Info.mAttribute = UCombatTargetAttributeSet::GetHPAttribute();
 	// 연산 종류: 기존값에 합산할 거니까 Additive
 	Info.mModifierOp = ETacticalModOp::AddBase;
 	// 크기: 1.f로 고정 (패시브가 mDynamicMagnitude 설정한 값이 실제 크기가 됨)
@@ -37,7 +37,7 @@ void UTacticalEffect_HP::OnExecuted(FActiveTacticalEffectsContainer& ActiveTECon
 	Super::OnExecuted(ActiveTEContainer, TESpec);
 
 	FSRPGAttributeEffectEventLog Log;
-	Log.mEffectAttribute = UUnitAttributeSet::GetHPAttribute();
+	Log.mEffectAttribute = UCombatTargetAttributeSet::GetHPAttribute();
 	Log.mMagnitude = TESpec.mModifierValues[0];
 
 	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();

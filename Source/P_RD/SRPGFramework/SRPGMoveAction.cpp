@@ -6,7 +6,7 @@
 #include "Pawn/UnitModel.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
-#include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 #include "Actor/TileMap/TileMapModel.h"
 
 FSRPGMoveCommand::FSRPGMoveCommand()
@@ -71,7 +71,7 @@ void USRPGMoveAction::OnEndAction()
         // Movement 어트리뷰트를 직접 차감해 카운터가 줄게 한다. [주의] 정본 차감 API가 생기면 교체(Mo).
         if (UAttributeSetComponentModel* AttrComp = mInstigator->GetAttributeComponentModel())
         {
-            AttrComp->ApplyModToAttribute(UUnitAttributeSet::GetMovementAttribute(), ETacticalModOp::Additive, -static_cast<float>(SpentPoint));
+            AttrComp->ApplyModToAttribute(UCombatTargetAttributeSet::GetMovementAttribute(), ETacticalModOp::Additive, -static_cast<float>(SpentPoint));
         }
     }
 }
