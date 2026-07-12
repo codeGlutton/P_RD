@@ -9,6 +9,7 @@
 #include "DataAsset/RoomSpawnData/StaticCombatRoomSpawnData.h"
 
 #include "PCGStage/Room.h"
+#include "Setting/RDWorldSettings.h"
 
 #include "Pawn/Player/PlayerUnitModel.h"
 
@@ -206,6 +207,22 @@ ACombatGameMode::ACombatGameMode()
 	mCombatUIModel = CreateDefaultSubobject<UCombatUIModel>(TEXT("CombatUIModel"));
 }
 
+void ACombatGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
+{
+	Super::InitGame(MapName, Options, ErrorMessage);
+
+	const FStage& CurStage = GetRunPersistData()->GetStage();
+	const FRoom& CurRoom = GetRunPersistData()->GetCurrentRoom();
+
+	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
+	checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
+	UStaticStageSpawnData* StaticStageData = AssetManager->GetPrimaryAssetObject<UStaticStageSpawnData>(CurStage.mStaticStageSpawnDataId);
+	checkf(StaticStageData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
+
+	TSoftObjectPtr<USoundBase> MainBGMSoftPtr = CurRoom.mType == ERoomType::BossMonster ? StaticStageData->mBossMonsterRoomBGM : StaticStageData->mMonsterRoomBGM;
+	SetMainBGM(MainBGMSoftPtr.LoadSynchronous(), false);
+}
+
 void ACombatGameMode::InitializeRoom()
 {
 	Super::InitializeRoom();
@@ -328,15 +345,18 @@ void ACombatGameMode::InitializeRoom()
 
 	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
 	checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
-	UStaticStageSpawnData* StaticStageData = AssetManager->GetPrimaryAssetObject<UStaticStageSpawnData>(CurStage.mStaticStageSpawnDataId);
-	checkf(StaticStageData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
 	UStaticCombatRoomSpawnData* StaticRoomData = AssetManager->GetPrimaryAssetObject<UStaticCombatRoomSpawnData>(CurRoom.mStaticRoomSpawnDataId);
 	checkf(StaticRoomData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
+	const ARDWorldSettings* WorldSettings = Cast<ARDWorldSettings>(GetWorld()->GetWorldSettings());
+	checkf(WorldSettings != nullptr, TEXT("RD 월드 세팅 nullptr"));
 
-	TSoftObjectPtr<USoundBase> MainBGMSoftPtr = CurRoom.mType == ERoomType::BossMonster ? StaticStageData->mBossMonsterRoomBGM : StaticStageData->mMonsterRoomBGM;
-	SetMainBGM(MainBGMSoftPtr.LoadSynchronous(), false);
-
-	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModel());
+	FTransform SpawnPointTransform = FTransform::Identity;
+	AActor* SettingPointActor = WorldSettings->GetRoomStartPoint(GetRoomSpawnSettingName());
+	if (SettingPointActor != nullptr)
+	{
+		SpawnPointTransform = SettingPointActor->GetActorTransform();
+	}
+	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModel(), SpawnPointTransform);
 }
 
 /**

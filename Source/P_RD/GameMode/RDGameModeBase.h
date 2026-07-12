@@ -199,6 +199,9 @@ public:
 protected:
 	void ClearRunPersistData();
 
+public:
+	USoundBase* GetMainBGM() const;
+
 protected:
 	void SetMainBGM(USoundBase* BGM, bool IsOverride = true);
 
