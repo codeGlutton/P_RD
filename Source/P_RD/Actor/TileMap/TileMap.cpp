@@ -83,17 +83,45 @@ ATileMap::ATileMap()
 	mPathArrowComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	mPathArrowComponent->SetNumCustomDataFloats(4);
 
+	// 경로 좌회전 화살표 컴포넌트 생성
+	mPathTurnLeftComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("PathTurnLeft"));
+	mPathTurnLeftComponent->SetupAttachment(RootComponent);
+	mPathTurnLeftComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	mPathTurnLeftComponent->SetNumCustomDataFloats(4);
+
+	// 경로 우회전 화살표 컴포넌트 생성
+	mPathTurnRightComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("PathTurnRight"));
+	mPathTurnRightComponent->SetupAttachment(RootComponent);
+	mPathTurnRightComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	mPathTurnRightComponent->SetNumCustomDataFloats(4);
+
 	mPathEndComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("PathEnd"));
 	mPathEndComponent->SetupAttachment(RootComponent);
 	mPathEndComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	mPathEndComponent->SetNumCustomDataFloats(4);
 
-	// 경로 중간 화살표 기본 메시: +X를 가리키는 Kenney 화살표 에셋 (방향 회전이 이 형상 기준이라 +X 향이어야 함)
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> ArrowMeshFinder(TEXT("/Game/SVN/OutSideAsset/Kenney/FactoryKit/SM_Kenney_FactoryKit_Arrow.SM_Kenney_FactoryKit_Arrow"));
+	// 경로 중간 화살표 기본 메시: +X를 가리키는 화살표 (방향 회전이 이 형상 기준이라 +X 향이어야 함)
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> ArrowMeshFinder(TEXT("/Game/SVN/OutSideAsset/Kenney/FactoryKit/SM_Kenney_FactoryKit_ArrowStraight.SM_Kenney_FactoryKit_ArrowStraight"));
 	if (ArrowMeshFinder.Succeeded())
 	{
 		mPathArrowMesh = ArrowMeshFinder.Object;
 		mPathArrowComponent->SetStaticMesh(mPathArrowMesh);
+	}
+
+	// 경로 좌회전 화살표 기본 메시 (+X로 진입해 -Y로 꺾이는 형상)
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> TurnLeftMeshFinder(TEXT("/Game/SVN/OutSideAsset/Kenney/FactoryKit/SM_Kenney_FactoryKit_ArrowTurnLeft.SM_Kenney_FactoryKit_ArrowTurnLeft"));
+	if (TurnLeftMeshFinder.Succeeded())
+	{
+		mPathTurnLeftMesh = TurnLeftMeshFinder.Object;
+		mPathTurnLeftComponent->SetStaticMesh(mPathTurnLeftMesh);
+	}
+
+	// 경로 우회전 화살표 기본 메시 (+X로 진입해 +Y로 꺾이는 형상)
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> TurnRightMeshFinder(TEXT("/Game/SVN/OutSideAsset/Kenney/FactoryKit/SM_Kenney_FactoryKit_ArrowTurnRight.SM_Kenney_FactoryKit_ArrowTurnRight"));
+	if (TurnRightMeshFinder.Succeeded())
+	{
+		mPathTurnRightMesh = TurnRightMeshFinder.Object;
+		mPathTurnRightComponent->SetStaticMesh(mPathTurnRightMesh);
 	}
 
 	// 도착(끝) 타일 마커 기본 메시: Kenney 특수 인디케이터 화살표 에셋
@@ -584,6 +612,18 @@ void ATileMap::SetMovePath(const TArray<FTileIndex>& PathTiles)
 		if (mPathArrowMaterial != nullptr)
 			mPathArrowComponent->SetMaterial(0, mPathArrowMaterial);
 	}
+	if (mPathTurnLeftComponent != nullptr)
+	{
+		mPathTurnLeftComponent->SetStaticMesh(mPathTurnLeftMesh);
+		if (mPathArrowMaterial != nullptr)
+			mPathTurnLeftComponent->SetMaterial(0, mPathArrowMaterial);
+	}
+	if (mPathTurnRightComponent != nullptr)
+	{
+		mPathTurnRightComponent->SetStaticMesh(mPathTurnRightMesh);
+		if (mPathArrowMaterial != nullptr)
+			mPathTurnRightComponent->SetMaterial(0, mPathArrowMaterial);
+	}
 	if (mPathEndComponent != nullptr)
 	{
 		mPathEndComponent->SetStaticMesh(mPathEndMesh);
@@ -594,24 +634,57 @@ void ATileMap::SetMovePath(const TArray<FTileIndex>& PathTiles)
 	// 화살표/마커 균일 스케일 (타일 크기에 맞춤)
 	const float ArrowScale = (mTileSize / 100.0f) * mPathArrowScale;
 
-	// 마지막을 제외한 각 타일에 '다음 타일을 향하는' 화살표 배치 (인스턴스 순서 = 경로 순서)
+	// 마지막을 제외한 각 타일에 화살표 배치
 	const int32 LastIndex = PathTiles.Num() - 1;
-	if (mPathArrowComponent != nullptr)
+	for (int32 Index = 0; Index < LastIndex; ++Index)
 	{
-		for (int32 Index = 0; Index < LastIndex; ++Index)
+		const FTileIndex& Tile = PathTiles[Index];
+		const FTileIndex& Next = PathTiles[Index + 1];
+
+		// 진출 방향 스텝
+		const FTileIndex OutStep(Next.mX - Tile.mX, Next.mY - Tile.mY);
+
+		// 기본은 직진 화살표
+		UInstancedStaticMeshComponent* Component = mPathArrowComponent;
+		TArray<int32>* Orders = &mPathArrowOrders;
+		float Yaw = StepToYaw(OutStep);
+
+		if (Index > 0)
 		{
-			const FTileIndex& Tile = PathTiles[Index];
-			const FTileIndex& Next = PathTiles[Index + 1];
+			// 진입/진출 방향의 벡터 외적 부호로 회전 판별
+            // 0: 직진
+		    // 양수: 우회전
+		    // 음수: 좌회전
+			const FTileIndex& Prev = PathTiles[Index - 1];
+			const FTileIndex InStep(Tile.mX - Prev.mX, Tile.mY - Prev.mY);
+			const int32 Cross = InStep.mX * OutStep.mY - InStep.mY * OutStep.mX;
 
-			// 진행 방향 스텝 → yaw 회전
-			const FTileIndex Step(Next.mX - Tile.mX, Next.mY - Tile.mY);
-			const FRotator Rotation(0.0f, StepToYaw(Step), 0.0f);
-
-			// 타일 중심 로컬 위치 + Z 오프셋 (RebuildTileInstances의 배치식과 동일, bWorldSpace=false)
-			const FVector Location(Tile.mX * mTileSize, Tile.mY * mTileSize, mPathHeightOffset);
-			const FTransform InstanceTransform(Rotation, Location, FVector(ArrowScale));
-			mPathArrowComponent->AddInstance(InstanceTransform, /*bWorldSpace=*/false);
+			// 회전 타일이면 회전 화살표로 교체
+		    // @note 회전 화살표 메시가 없으면 직진 화살표 사용 (회전 화살표 메시만 없는 경우는 없겠지만...)
+			if (Cross > 0 && mPathTurnRightMesh != nullptr)
+			{
+				Component = mPathTurnRightComponent;
+				Orders = &mPathTurnRightOrders;
+				Yaw = StepToYaw(InStep);
+			}
+			else if (Cross < 0 && mPathTurnLeftMesh != nullptr)
+			{
+				Component = mPathTurnLeftComponent;
+				Orders = &mPathTurnLeftOrders;
+				Yaw = StepToYaw(InStep);
+			}
 		}
+
+		if (Component == nullptr)
+			continue;
+
+		// 타일 중심 로컬 위치 + Z 오프셋에 배치 (바닥에서 아주 살짝 뜬 위치)
+		const FVector Location(Tile.mX * mTileSize, Tile.mY * mTileSize, mPathHeightOffset);
+		const FTransform InstanceTransform(FRotator(0.0f, Yaw, 0.0f), Location, FVector(ArrowScale));
+		Component->AddInstance(InstanceTransform, /*bWorldSpace=*/false);
+
+		// 펄스 위상용 경로 순번 기록 (이 순번과 시간 정보로 파도타기 응원 가능)
+		Orders->Add(Index);
 	}
 
 	// 마지막(도착) 타일엔 도착 마커 배치 (인디케이터 메시가 방향성이 있어 진입 방향으로 회전)
@@ -646,8 +719,17 @@ void ATileMap::ClearMovePath()
 	// 화살표·도착 마커 인스턴스 모두 제거
 	if (mPathArrowComponent != nullptr)
 		mPathArrowComponent->ClearInstances();
+	if (mPathTurnLeftComponent != nullptr)
+		mPathTurnLeftComponent->ClearInstances();
+	if (mPathTurnRightComponent != nullptr)
+		mPathTurnRightComponent->ClearInstances();
 	if (mPathEndComponent != nullptr)
 		mPathEndComponent->ClearInstances();
+
+	// 경로 순번 기록 제거
+	mPathArrowOrders.Reset();
+	mPathTurnLeftOrders.Reset();
+	mPathTurnRightOrders.Reset();
 
 	// 표시 중 경로 없음
 	mPathLength = 0;
@@ -678,15 +760,28 @@ void ATileMap::RefreshPathPulse()
 		Component->SetCustomDataValue(InstanceIndex, 3, 1.0f, /*bMarkRenderStateDirty=*/true);
 	};
 
-	// 화살표: 인스턴스 순서(=경로 순서)마다 위상차를 줘 흐르게
-	if (mPathArrowComponent != nullptr)
+	// 화살표: 경로 순번마다 위상차를 줘 흐르게 (직진/좌회전/우회전 컴포넌트 공통 처리)
+	const TPair<UInstancedStaticMeshComponent*, const TArray<int32>*> ArrowGroups[] =
 	{
-		const int32 Count = mPathArrowComponent->GetInstanceCount();
+		{ mPathArrowComponent, &mPathArrowOrders },
+		{ mPathTurnLeftComponent, &mPathTurnLeftOrders },
+		{ mPathTurnRightComponent, &mPathTurnRightOrders },
+	};
+	for (const auto& Group : ArrowGroups)
+	{
+		UInstancedStaticMeshComponent* Component = Group.Key;
+		const TArray<int32>& Orders = *Group.Value;
+		if (Component == nullptr)
+			continue;
+
+		const int32 Count = Component->GetInstanceCount();
 		for (int32 Index = 0; Index < Count; ++Index)
 		{
-			const float Phase = 2.0f * PI * Time / mPathPulsePeriod - Index * PhasePerTile;
+			// 순번 기록이 없으면(경로 재구성 전 등) 인스턴스 인덱스로 폴백
+			const int32 Order = Orders.IsValidIndex(Index) ? Orders[Index] : Index;
+			const float Phase = 2.0f * PI * Time / mPathPulsePeriod - Order * PhasePerTile;
 			const float Wave = 0.5f - 0.5f * FMath::Cos(Phase);
-			WriteInstance(mPathArrowComponent, Index, mPathArrowStyle.mColor, Wave);
+			WriteInstance(Component, Index, mPathArrowStyle.mColor, Wave);
 		}
 	}
 

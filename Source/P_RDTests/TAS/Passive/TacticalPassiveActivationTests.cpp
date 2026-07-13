@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   TacticalPassiveActivationTests.cpp
  * @brief  패시브 발동/해제 테스트
  * @details
@@ -139,8 +139,8 @@ bool FPassiveInstantHealTest::RunTest(const FString& Parameters)
 	UAttributeSetComponentModel* Comp = Actor->GetAttributeComponentModel();
 
 	// 최대체력, 현재체력 설정
-	Comp->SetAttributeBaseValue(UUnitAttributeSet::GetMaxHPAttribute(), 100.f);
-	Comp->SetAttributeBaseValue(UUnitAttributeSet::GetHPAttribute(), 50.f);
+	Comp->SetAttributeBaseValue(UCombatTargetAttributeSet::GetMaxHPAttribute(), 100.f);
+	Comp->SetAttributeBaseValue(UCombatTargetAttributeSet::GetHPAttribute(), 50.f);
 
 	const FGameplayTag OnStartTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartTurn"));
 	const FGameplayTag OnEndTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndTurn"));
@@ -156,11 +156,11 @@ bool FPassiveInstantHealTest::RunTest(const FString& Parameters)
 
 	// OnStartTurn에 발동 테스트: 반응 안해야 됨
 	DriveTiming(Passive, OnStartTurn, Ctx);
-	TestEqual(TEXT("타이밍태그가 없으므로 발동 안 함: 체력은 50 유지"), Comp->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute()), 50.f);
+	TestEqual(TEXT("타이밍태그가 없으므로 발동 안 함: 체력은 50 유지"), Comp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetHPAttribute()), 50.f);
 
 	// OnEndTurn에 발동 테스트: +5 즉시 회복 → HP 55
 	DriveTiming(Passive, OnEndTurn, Ctx);
-	TestEqual(TEXT("OnEndTurn에 발동 함: 체력은 55로 증가"), Comp->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute()), 55.f);
+	TestEqual(TEXT("OnEndTurn에 발동 함: 체력은 55로 증가"), Comp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetHPAttribute()), 55.f);
 
 	return true;
 }
@@ -185,7 +185,7 @@ bool FPassiveInfiniteBuffTest::RunTest(const FString& Parameters)
 	UAttributeSetComponentModel* Comp = Actor->GetAttributeComponentModel();
 
 	// 패시브 적용 전 AttackFactor 10
-	Comp->SetAttributeBaseValue(UUnitAttributeSet::GetAttackFactorAttribute(), 10.f);
+	Comp->SetAttributeBaseValue(UCombatTargetAttributeSet::GetAttackFactorAttribute(), 10.f);
 
 	const FGameplayTag OnStartTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartTurn"));
 	const FGameplayTag OnEndTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndTurn"));
@@ -201,11 +201,11 @@ bool FPassiveInfiniteBuffTest::RunTest(const FString& Parameters)
 
 	// 발동 테스트: OnStartTurn에 기본 AttackFactor에 패시브 AttackFactor +5 합산
 	DriveTiming(Passive, OnStartTurn, Ctx);
-	TestEqual(TEXT("OnStartTurn에 발동 함: AttackFactor는 15로 증가"), Comp->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackFactorAttribute()), 15.f);
+	TestEqual(TEXT("OnStartTurn에 발동 함: AttackFactor는 15로 증가"), Comp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetAttackFactorAttribute()), 15.f);
 
 	// 해제 테스트: OnEndTurn에 패시브 AttackFactor +5 감산
 	DriveTiming(Passive, OnEndTurn, Ctx);
-	TestEqual(TEXT("OnEndTurn에 해제 함: AttackFactor는 10으로 감소"), Comp->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackFactorAttribute()), 10.f);
+	TestEqual(TEXT("OnEndTurn에 해제 함: AttackFactor는 10으로 감소"), Comp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetAttackFactorAttribute()), 10.f);
 
 	return true;
 }
@@ -230,7 +230,7 @@ bool FPassiveStackTest::RunTest(const FString& Parameters)
 	UAttributeSetComponentModel* Comp = Actor->GetAttributeComponentModel();
 
 	// 패시브 적용 전 AttackFactor 10
-	Comp->SetAttributeBaseValue(UUnitAttributeSet::GetAttackFactorAttribute(), 10.f);
+	Comp->SetAttributeBaseValue(UCombatTargetAttributeSet::GetAttackFactorAttribute(), 10.f);
 
 	const FGameplayTag OnStartUsingSkill = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartUsingSkill"));
 	const FGameplayTag OnEndUsingSkill = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndUsingSkill"));
@@ -253,10 +253,10 @@ bool FPassiveStackTest::RunTest(const FString& Parameters)
 		const float ExpectedOnHit = bExpectFire ? 15.f : 10.f;
 
 		DriveTiming(Passive, OnStartUsingSkill, Ctx);
-		TestEqual(FString::Printf(TEXT("%d번째 타격 시작, 기대 AttackFactor %.0f"), Hit, ExpectedOnHit), Comp->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackFactorAttribute()), ExpectedOnHit);
+		TestEqual(FString::Printf(TEXT("%d번째 타격 시작, 기대 AttackFactor %.0f"), Hit, ExpectedOnHit), Comp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetAttackFactorAttribute()), ExpectedOnHit);
 
 		DriveTiming(Passive, OnEndUsingSkill, Ctx);
-		TestEqual(FString::Printf(TEXT("%d번째 타격 종료, 기대 AttackFactor 10"), Hit), Comp->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackFactorAttribute()), 10.f);
+		TestEqual(FString::Printf(TEXT("%d번째 타격 종료, 기대 AttackFactor 10"), Hit), Comp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetAttackFactorAttribute()), 10.f);
 	}
 
 	return true;
@@ -286,8 +286,8 @@ bool FPassiveMultiTargetBuffTest::RunTest(const FString& Parameters)
 	UAttributeSetComponentModel* TargetComp2 = Target2->GetAttributeComponentModel();
 
 	// 두 타겟 모두 적용 전 AttackFactor 10
-	TargetComp1->SetAttributeBaseValue(UUnitAttributeSet::GetAttackFactorAttribute(), 10.f);
-	TargetComp2->SetAttributeBaseValue(UUnitAttributeSet::GetAttackFactorAttribute(), 10.f);
+	TargetComp1->SetAttributeBaseValue(UCombatTargetAttributeSet::GetAttackFactorAttribute(), 10.f);
+	TargetComp2->SetAttributeBaseValue(UCombatTargetAttributeSet::GetAttackFactorAttribute(), 10.f);
 
 	const FGameplayTag OnStartTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartTurn"));
 	const FGameplayTag OnEndTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndTurn"));
@@ -305,13 +305,13 @@ bool FPassiveMultiTargetBuffTest::RunTest(const FString& Parameters)
 
 	// 발동 테스트: OnStartTurn에 두 타겟 모두 +5 (핸들 2개 적용)
 	DriveTiming(Passive, OnStartTurn, Ctx);
-	TestEqual(TEXT("OnStartTurn 발동: 타겟1 AttackFactor는 15로 증가"), TargetComp1->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackFactorAttribute()), 15.f);
-	TestEqual(TEXT("OnStartTurn 발동: 타겟2 AttackFactor는 15로 증가"), TargetComp2->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackFactorAttribute()), 15.f);
+	TestEqual(TEXT("OnStartTurn 발동: 타겟1 AttackFactor는 15로 증가"), TargetComp1->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetAttackFactorAttribute()), 15.f);
+	TestEqual(TEXT("OnStartTurn 발동: 타겟2 AttackFactor는 15로 증가"), TargetComp2->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetAttackFactorAttribute()), 15.f);
 
 	// 해제 테스트: OnEndTurn에 두 타겟 모두 -5 (핸들 2개 제거)
 	DriveTiming(Passive, OnEndTurn, Ctx);
-	TestEqual(TEXT("OnEndTurn 해제: 타겟1 AttackFactor는 10으로 감소"), TargetComp1->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackFactorAttribute()), 10.f);
-	TestEqual(TEXT("OnEndTurn 해제: 타겟2 AttackFactor는 10으로 감소"), TargetComp2->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackFactorAttribute()), 10.f);
+	TestEqual(TEXT("OnEndTurn 해제: 타겟1 AttackFactor는 10으로 감소"), TargetComp1->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetAttackFactorAttribute()), 10.f);
+	TestEqual(TEXT("OnEndTurn 해제: 타겟2 AttackFactor는 10으로 감소"), TargetComp2->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetAttackFactorAttribute()), 10.f);
 
 	return true;
 }
@@ -441,10 +441,10 @@ bool FPassiveQuantifierMultiTargetBuffTest::RunTest(const FString& Parameters)
 		UAttributeSetComponentModel* TargetComp2 = Target2->GetAttributeComponentModel();
 
 		// HP로 자격을 조절, AttackFactor는 기준 10
-		TargetComp1->SetAttributeBaseValue(UUnitAttributeSet::GetHPAttribute(), HP1);
-		TargetComp2->SetAttributeBaseValue(UUnitAttributeSet::GetHPAttribute(), HP2);
-		TargetComp1->SetAttributeBaseValue(UUnitAttributeSet::GetAttackFactorAttribute(), 10.f);
-		TargetComp2->SetAttributeBaseValue(UUnitAttributeSet::GetAttackFactorAttribute(), 10.f);
+		TargetComp1->SetAttributeBaseValue(UCombatTargetAttributeSet::GetHPAttribute(), HP1);
+		TargetComp2->SetAttributeBaseValue(UCombatTargetAttributeSet::GetHPAttribute(), HP2);
+		TargetComp1->SetAttributeBaseValue(UCombatTargetAttributeSet::GetAttackFactorAttribute(), 10.f);
+		TargetComp2->SetAttributeBaseValue(UCombatTargetAttributeSet::GetAttackFactorAttribute(), 10.f);
 
 		// 값: AttackFactor +5, 수량조건 지정, 발동 시점 OnStartTurn (해제 없음)
 		UStaticPassiveData* Data = MakePassiveData(UTacticalEffect_AttackFactor_AddBase::StaticClass(), 5.f, OnStartTurn, FGameplayTag(), 0);
@@ -467,7 +467,7 @@ bool FPassiveQuantifierMultiTargetBuffTest::RunTest(const FString& Parameters)
 		DriveTiming(Passive, OnStartTurn, Ctx);
 
 		// 발동했으면 15, 미발동이면 10
-		return TargetComp1->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackFactorAttribute());
+		return TargetComp1->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetAttackFactorAttribute());
 	};
 
 	// Any: 자격 1명(HP 40)이라도 있으면 발동

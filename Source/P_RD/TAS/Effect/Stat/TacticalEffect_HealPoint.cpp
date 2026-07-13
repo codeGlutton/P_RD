@@ -6,7 +6,7 @@
  *********************************************************************/
 
 #include "TAS/Effect/Stat/TacticalEffect_HealPoint.h"
-#include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 
 UTacticalEffect_HealPoint::UTacticalEffect_HealPoint()
 {
@@ -15,7 +15,7 @@ UTacticalEffect_HealPoint::UTacticalEffect_HealPoint()
 	mStackingType = ETacticalEffectStackingType::None;
 
 	FTacticalModifierInfo Info;
-	Info.mAttribute = UUnitAttributeSet::GetHealPointAttribute();
+	Info.mAttribute = UCombatTargetAttributeSet::GetHealPointAttribute();
 	Info.mModifierOp = ETacticalModOp::AddBase;
 	Info.mModifierMagnitude = 1.f;
 

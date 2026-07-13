@@ -6,7 +6,7 @@
  *********************************************************************/
 
 #include "TAS/Effect/Stat/TacticalEffect_HealFactor_AddFinal.h"
-#include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 
 UTacticalEffect_HealFactor_AddFinal::UTacticalEffect_HealFactor_AddFinal()
 {
@@ -15,7 +15,7 @@ UTacticalEffect_HealFactor_AddFinal::UTacticalEffect_HealFactor_AddFinal()
 	mStackingType = ETacticalEffectStackingType::None;
 
 	FTacticalModifierInfo Info;
-	Info.mAttribute = UUnitAttributeSet::GetHealFactorAttribute();
+	Info.mAttribute = UCombatTargetAttributeSet::GetHealFactorAttribute();
 	Info.mModifierOp = ETacticalModOp::AddFinal;
 	Info.mModifierMagnitude = 1.f;
 

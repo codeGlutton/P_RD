@@ -6,7 +6,7 @@
  *********************************************************************/
 
 #include "TAS/Effect/Stat/TacticalEffect_DefensePoint.h"
-#include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 
 UTacticalEffect_DefensePoint::UTacticalEffect_DefensePoint()
 {
@@ -15,7 +15,7 @@ UTacticalEffect_DefensePoint::UTacticalEffect_DefensePoint()
 	mStackingType = ETacticalEffectStackingType::None;
 
 	FTacticalModifierInfo Info;
-	Info.mAttribute = UUnitAttributeSet::GetDefensePointAttribute();
+	Info.mAttribute = UCombatTargetAttributeSet::GetDefensePointAttribute();
 	Info.mModifierOp = ETacticalModOp::AddBase;
 	Info.mModifierMagnitude = 1.f;
 

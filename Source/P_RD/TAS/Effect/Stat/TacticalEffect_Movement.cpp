@@ -6,7 +6,7 @@
  *********************************************************************/
 
 #include "TAS/Effect/Stat/TacticalEffect_Movement.h"
-#include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 #include "Simulation/Logger/EventLogger.h"
 
 #include "TAS/Effect/TacticalEffectContext.h"
@@ -18,7 +18,7 @@ UTacticalEffect_Movement::UTacticalEffect_Movement()
 	mStackingType = ETacticalEffectStackingType::None;
 
 	FTacticalModifierInfo Info;
-	Info.mAttribute = UUnitAttributeSet::GetMovementAttribute();
+	Info.mAttribute = UCombatTargetAttributeSet::GetMovementAttribute();
 	Info.mModifierOp = ETacticalModOp::AddBase;
 	Info.mModifierMagnitude = 1.f;
 
@@ -30,7 +30,7 @@ void UTacticalEffect_Movement::OnExecuted(FActiveTacticalEffectsContainer& Activ
 	Super::OnExecuted(ActiveTEContainer, TESpec);
 
 	FSRPGAttributeEffectEventLog Log;
-	Log.mEffectAttribute = UUnitAttributeSet::GetMovementAttribute();
+	Log.mEffectAttribute = UCombatTargetAttributeSet::GetMovementAttribute();
 	Log.mMagnitude = TESpec.mModifierValues[0];
 
 	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();

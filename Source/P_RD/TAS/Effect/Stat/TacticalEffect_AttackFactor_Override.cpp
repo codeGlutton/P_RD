@@ -6,7 +6,7 @@
  *********************************************************************/
 
 #include "TAS/Effect/Stat/TacticalEffect_AttackFactor_Override.h"
-#include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 
 UTacticalEffect_AttackFactor_Override::UTacticalEffect_AttackFactor_Override()
 {
@@ -15,7 +15,7 @@ UTacticalEffect_AttackFactor_Override::UTacticalEffect_AttackFactor_Override()
 	mStackingType = ETacticalEffectStackingType::None;
 
 	FTacticalModifierInfo Info;
-	Info.mAttribute = UUnitAttributeSet::GetAttackFactorAttribute();
+	Info.mAttribute = UCombatTargetAttributeSet::GetAttackFactorAttribute();
 	Info.mModifierOp = ETacticalModOp::Override;
 	Info.mModifierMagnitude = 1.f;
 

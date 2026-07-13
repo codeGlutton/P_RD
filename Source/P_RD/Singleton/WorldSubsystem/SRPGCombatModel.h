@@ -83,7 +83,7 @@ public:
 
 	/* 생명 주기 함수 */
 public:
-	void InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, UUnitModel* PlayerUnit);
+	void InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, UUnitModel* PlayerUnit, const FTransform& RoomStartTransform);
 	void BeginCombat();
 	void EndCombat();
 
@@ -152,7 +152,7 @@ public:
 	void UnregisterObstacle(UBoardActorModel* Obstcle);
 
 protected:
-	void SpawnTileMap();
+	void SpawnTileMap(const FTransform& RoomStartTransform);
 	void RegisterPlayerUnit(UUnitModel* PlayerUnit, const FTileTransform& Transform);
 	void RegisterEnemyUnits(TArray<FEnemyUnitPlacementData>& EnemyPlacementDatas);
 	void RegisterUnit(UUnitModel* Unit, const FTileTransform& Transform);

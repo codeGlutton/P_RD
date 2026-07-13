@@ -44,7 +44,12 @@ public:
 public:
 	UPROPERTY(Category = "Background", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BackgroundMap", AssetBundles = "World"))
 	TSoftObjectPtr<UWorld> mBackgroundMap;
+    UPROPERTY(Category = "Background", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "UseRandomSpawnSetting"))
+    bool mUseRandomSpawnSetting = true;
+    UPROPERTY(Category = "Background", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DefaultSpawnSettingName", EditCondition="mUseRandomSpawnSetting == false"))
+    FName mDefaultSpawnSettingName = NAME_None;
 
+public:
     UPROPERTY(Category = "Sound", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "OverrideBGM", AssetBundles = "World"))
     TSoftObjectPtr<USoundBase> mOverrideBGM;
 

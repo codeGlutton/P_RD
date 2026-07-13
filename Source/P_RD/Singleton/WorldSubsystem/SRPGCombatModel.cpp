@@ -6,7 +6,6 @@
 
 #include "SRPGFramework/SRPGCommand.h"
 #include "SRPGFramework/SRPGTurnEndAction.h"
-#include "Setting/RDWorldSettings.h"
 
 #include "Actor/TileMap/TileMapModel.h"
 #include "Pawn/UnitModel.h"
@@ -75,7 +74,7 @@ TStatId USRPGCombatModel::GetStatId() const
 	RETURN_QUICK_DECLARE_CYCLE_STAT(USRPGCombatModel, STATGROUP_Tickables);
 }
 
-void USRPGCombatModel::InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, UUnitModel* PlayerUnit)
+void USRPGCombatModel::InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, UUnitModel* PlayerUnit, const FTransform& RoomStartTransform)
 {
 	checkf(RoomSpawnData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
 	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
@@ -83,7 +82,7 @@ void USRPGCombatModel::InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, UUn
 	checkf(mCombatPhase == ESRPGCombatRoomPhase::None, TEXT("중복 초기화"));
 	mCombatPhase = ESRPGCombatRoomPhase::CombatInit;
 
-	SpawnTileMap();
+	SpawnTileMap(RoomStartTransform);
 	RegisterPlayerUnit(PlayerUnit, RoomSpawnData->mPlayerTransform);
 	RegisterEnemyUnits(RoomSpawnData->mEnemyUnitPlacementDatas);
 	RegisterObstacles(RoomSpawnData->mObstaclePlacementDatas);
@@ -503,23 +502,12 @@ void USRPGCombatModel::UnregisterObstacle(UBoardActorModel* Obstacle)
 	OnUnregisterObstacleUI.Broadcast(Obstacle);
 }
 
-void USRPGCombatModel::SpawnTileMap()
+void USRPGCombatModel::SpawnTileMap(const FTransform& RoomStartTransform)
 {
 	checkf(mTileMap == nullptr, TEXT("이미 타일 존재"));
 
-	FTransform TileMapViewSpawnTransform = FTransform::Identity;
-	ARDWorldSettings* WorldSettings = Cast<ARDWorldSettings>(GetWorld()->GetWorldSettings());
-	if (WorldSettings != nullptr)
-	{
-		AActor* SettingStartPoint = WorldSettings->GetRoomStartPoint();
-		if (SettingStartPoint != nullptr)
-		{
-			TileMapViewSpawnTransform = SettingStartPoint->GetTransform();
-		}
-	}
-
 	// 타일맵 스폰
-	mTileMap = GetWorldModelFactory(this)->NewModel<UTileMapModel>(TileMapViewSpawnTransform);
+	mTileMap = GetWorldModelFactory(this)->NewModel<UTileMapModel>(RoomStartTransform);
 
 	// 모델이 자기 타일 저장소(mTiles)를 직접 빌드한다.
 	// 기존엔 View(ATileMap)만 RebuildTiles를 호출해서, View 스폰/타이밍에 따라 모델 타일이 비어 있었고

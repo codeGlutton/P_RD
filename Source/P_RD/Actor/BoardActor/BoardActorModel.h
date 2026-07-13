@@ -22,6 +22,8 @@ DECLARE_DELEGATE_RetVal(const FTransform&, FOnGetBoardActorWorldTransform);
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlaceTileTransform, const FTileTransform& /* TileTransform */, const FTransform& /* Transform */);
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnStartMovePath, const TArray<FVector>& /* PathWorldLocations */);
+
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnStartMoveStep, const FTileTransform& /* NextTileTransform */, const FTransform& /* TargetWorldTransform */, TSharedPtr<FPresentationBarrier> /* Barrier */, float /* RemainingPathDistance */);
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnRotate, const FRotator& /* TargetWorldRotation */, TSharedPtr<FPresentationBarrier> /* Barrier */);
@@ -146,6 +148,12 @@ public:
 	 * @brief 타일 트랜스폼이 즉시 변경되었을 때, 뷰에게 전달하는 대리자
 	 */
 	FOnPlaceTileTransform OnPlaceTileTransform;
+
+	/**
+	 * @brief 이동 시작 시 전체 경로 전달
+	 * @details 코너링에 베지어곡선을 사용하려면 진입/진출 타일의 정보가 필요하므로 미리 전체 경로 정보 전달
+	 */
+	FOnStartMovePath OnStartMovePath;
 
 	/**
 	 * @brief 이동 스텝 시작 시 뷰에게 한 칸 이동 연출을 요청하는 대리자

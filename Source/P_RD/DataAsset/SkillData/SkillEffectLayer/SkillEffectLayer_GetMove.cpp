@@ -8,7 +8,7 @@
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
 #include "TAS/Effect/TacticalEffectContext.h"
-#include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 
 #include "Setting/GameBalanceSettings.h"
 
@@ -17,7 +17,7 @@ void FSkillEffectLayer_GetMove::ClearPointEffect(IBoardCombatTarget* ActorModel)
     UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
-    AttributeSetComponentModel->ApplyModToAttribute(UUnitAttributeSet::GetMovementPointAttribute(), ETacticalModOp::Override, 0.f);
+    AttributeSetComponentModel->ApplyModToAttribute(UCombatTargetAttributeSet::GetMovementPointAttribute(), ETacticalModOp::Override, 0.f);
 }
 
 void FSkillEffectLayer_GetMove::ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const
@@ -51,7 +51,7 @@ void FSkillEffectLayer_GetMove::CommitEffect(IBoardCombatTarget* OwnerActorModel
     /* 포인트를 Factor에 임시 추가 */
     {
         TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_MovementFactor_AddBase::StaticClass(), EffectContext);
-        EffectSpec->mDynamicMagnitude = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMovementPointAttribute());
+        EffectSpec->mDynamicMagnitude = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementPointAttribute());
         EffectHandle = AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
     }
 
@@ -59,7 +59,7 @@ void FSkillEffectLayer_GetMove::CommitEffect(IBoardCombatTarget* OwnerActorModel
     const bool IsOwnerAgility = AttributeSetComponentModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Agility);
     const float AgilityRatio = IsOwnerAgility == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Agility] : 1.f;
 
-    const float TotalMove = AgilityRatio * AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMovementFactorAttribute());
+    const float TotalMove = AgilityRatio * AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementFactorAttribute());
     const float MoveDiff = FMath::Floor(TotalMove);
 
     if (MoveDiff > 0.f)
