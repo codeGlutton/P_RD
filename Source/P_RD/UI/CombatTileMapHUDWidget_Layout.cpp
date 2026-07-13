@@ -94,7 +94,8 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 
 	RDUILayout::ApplyAnchoredSlot(mTurnChangeBackdropPanel, FAnchors(0.0f, 0.0f, 1.0f, 1.0f), TurnChangeBackdropZOrder);
 	RDUILayout::ApplyAnchoredSlot(mTurnChangeInputBlocker, FAnchors(0.0f, 0.0f, 1.0f, 1.0f), TurnChangeInputZOrder);
-	RDUILayout::ApplyAnchoredSlot(mTurnChangeVideoImage, FAnchors(0.140f, 0.155f, 0.860f, 0.845f), TurnChangeVideoZOrder);
+	// 832x448 원본 비율을 유지해 큰 세로 확대에서 생기던 흐림과 오버드로우를 줄인다.
+	RDUILayout::ApplyAnchoredSlot(mTurnChangeVideoImage, FAnchors(0.200f, 0.305f, 0.800f, 0.695f), TurnChangeVideoZOrder);
 	RDUILayout::ApplyAnchoredSlot(mTurnChangeTurnTextPanel, FAnchors(0.435f, 0.390f, 0.565f, 0.610f), TurnChangeTextZOrder);
 
 	// 보유 주사위: 스킨이면 HUD_DiceTray 마커 슬롯을 상속해 세로 분배, 아니면 기존 좌하단 3열 그리드.

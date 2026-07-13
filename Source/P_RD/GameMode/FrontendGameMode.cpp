@@ -520,7 +520,7 @@ bool AFrontendGameMode::OpenTitleCharacterSelect()
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
 	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr"));
 
-	UCharacterSelectWidget* CharacterSelectWidget = WorldWidgetSubsystem->GetWorldWidget<UCharacterSelectWidget>(EWorldWidgetType::CharacterSelect);
+	UCharacterSelectWidget* CharacterSelectWidget = WorldWidgetSubsystem->GetOrCreateWorldWidget<UCharacterSelectWidget>(EWorldWidgetType::CharacterSelect);
 	checkf(CharacterSelectWidget != nullptr, TEXT("캐릭터 선택 위젯이 준비가 안됨"));
 
 	CharacterSelectWidget->OnBackToMainRequested.AddUniqueDynamic(this, &AFrontendGameMode::HandleCharacterSelectBackRequested);
@@ -551,6 +551,7 @@ void AFrontendGameMode::HandleCharacterSelectBackRequested()
 	if (UTitleMenuWidget* TitleMenuWidget = WorldWidgetSubsystem->GetHUD<UTitleMenuWidget>())
 	{
 		TitleMenuWidget->OpenUI();
+		TitleMenuWidget->PrimeTitleBackgroundVideo();
 	}
 }
 

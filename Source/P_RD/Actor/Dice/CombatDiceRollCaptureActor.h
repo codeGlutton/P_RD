@@ -81,6 +81,7 @@ private:
 	void SyncVisualDiceToPhysics();
 	void TriggerImpactEffect(const FVector& WorldLocation, float Strength);
 	void UpdateImpactEffects(float DeltaSeconds);
+	void CaptureDiceThrottled(float DeltaSeconds);
 	UFUNCTION()
 	void HandlePhysicsBodyHit(
 		UPrimitiveComponent* HitComponent,
@@ -154,6 +155,7 @@ private:
 	float mLastCollisionBoostTime = -1000.0f;
 	float mLastImpactEffectTime = -1000.0f;
 	float mLastImpactSoundTime = -1000.0f;
+	float mCaptureElapsed = 0.0f;
 	int32 mRollSeed = 0;
 	int32 mCollisionBoostsUsed = 0;
 	int32 mImpactEffectCursor = 0;

@@ -28,6 +28,7 @@ class P_RD_API UWorldWidgetSubsystem : public UWorldSubsystem
 public:
 	void InitWidgets(UClass* HUDClass, const TArray<EWorldWidgetType>& WorldWidgetTypes);
 	void InitHUD(UClass* HUDClass);
+	void PrepareWorldWidget(EWorldWidgetType WorldWidgetType);
 	void InitWorldWidget(EWorldWidgetType WorldWidgetType);
 
 public:
@@ -47,6 +48,15 @@ public:
 		return Cast<T>(GetWorldWidget(Type));
 	}
 	UUserWidget* GetWorldWidget(EWorldWidgetType Type) const;
+
+	template<typename T>
+	T* GetOrCreateWorldWidget(EWorldWidgetType Type)
+	{
+		static_assert(TIsDerivedFrom<T, UUserWidget>::IsDerived);
+
+		return Cast<T>(GetOrCreateWorldWidget(Type));
+	}
+	UUserWidget* GetOrCreateWorldWidget(EWorldWidgetType Type);
 
 protected:
 	UPROPERTY(Category = UI, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "HUD"))

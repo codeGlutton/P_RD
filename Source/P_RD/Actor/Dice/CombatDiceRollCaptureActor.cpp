@@ -63,15 +63,16 @@ namespace
 	constexpr float DiceCollisionBoostLinearImpulse = 36.0f;
 	constexpr float DiceCollisionBoostLiftImpulse = 4.0f;
 	constexpr float DiceCollisionBoostAngularImpulse = 5200.0f;
-	constexpr int32 ImpactEffectPoolSize = 8;
+	constexpr int32 ImpactEffectPoolSize = 4;
 	constexpr float ImpactEffectDurationSeconds = 0.18f;
-	constexpr float ImpactEffectCooldownSeconds = 0.055f;
+	constexpr float ImpactEffectCooldownSeconds = 0.10f;
 	constexpr float ImpactEffectMinSpeed = 70.0f;
 	constexpr float ImpactEffectMinNormalImpulse = 1.0f;
 	constexpr float ImpactEffectMinSize = 10.0f;
 	constexpr float ImpactEffectMaxSize = 22.0f;
 	constexpr float ImpactEffectZOffset = 7.0f;
 	constexpr float ImpactSoundCooldownSeconds = 0.045f;
+	constexpr float CaptureIntervalSeconds = 1.0f / 30.0f;
 
 	void ClampToVisibleDiceBoard(float DiceRadius, FVector& LocalLocation, FVector& LocalVelocity, bool& bClamped)
 	{
@@ -252,7 +253,7 @@ namespace
 ACombatDiceRollCaptureActor::ACombatDiceRollCaptureActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	PrimaryActorTick.bStartWithTickEnabled = true;
+	PrimaryActorTick.bStartWithTickEnabled = false;
 
 	InitializeSceneComponents();
 	InitializeCaptureMaterial();
@@ -620,6 +621,7 @@ void ACombatDiceRollCaptureActor::ConfigureDice(const TArray<FCombatDiceRollPhys
 	mAlignStartTransforms.Reset();
 	mAlignTargetTransforms.Reset();
 	CaptureDice();
+	SetActorTickEnabled(false);
 }
 
 void ACombatDiceRollCaptureActor::ClearDice()
@@ -738,6 +740,12 @@ void ACombatDiceRollCaptureActor::ResetDiceBodyPose(UProceduralMeshComponent* Ph
 
 void ACombatDiceRollCaptureActor::StartRoll(int32 RollSeed)
 {
+	if (mRollActive || mAligning || mPhysicsDiceBodies.IsEmpty())
+	{
+		return;
+	}
+
+	SetActorTickEnabled(true);
 	FRandomStream Stream(RollSeed);
 	const int32 DiceCount = mPhysicsDiceBodies.Num();
 	SyncVisualDiceToPhysics();
@@ -799,6 +807,7 @@ void ACombatDiceRollCaptureActor::StartRoll(int32 RollSeed)
 
 	mRollSeed = RollSeed;
 	mRollElapsed = 0.0f;
+	mCaptureElapsed = 0.0f;
 	mRollStillElapsed = 0.0f;
 	mLastCollisionBoostTime = -1000.0f;
 	mCollisionBoostsUsed = 0;
@@ -1043,7 +1052,7 @@ void ACombatDiceRollCaptureActor::Tick(float DeltaSeconds)
 	}
 	SyncVisualDiceToPhysics();
 	UpdateImpactEffects(DeltaSeconds);
-	CaptureDice();
+	CaptureDiceThrottled(DeltaSeconds);
 
 	// 정지 감지: 모든 주사위가 임계 속도 이하로 RollStillHold만큼 연속 유지되면 완료(실제로 멈춘 순간 종료).
 	// 최소 시간 전엔 완료하지 않고, 최대 시간(안전 캡)엔 강제 완료한다.
@@ -1089,6 +1098,7 @@ void ACombatDiceRollCaptureActor::Tick(float DeltaSeconds)
 			}
 		}
 		CaptureDice();
+		SetActorTickEnabled(false);
 	}
 }
 
@@ -1335,6 +1345,13 @@ int32 ACombatDiceRollCaptureActor::GetSettledFaceValue(int32 DiceIndex) const
 
 void ACombatDiceRollCaptureActor::StartAlign()
 {
+	if (mAligning || mPhysicsDiceBodies.IsEmpty())
+	{
+		return;
+	}
+
+	SetActorTickEnabled(true);
+	mCaptureElapsed = 0.0f;
 	const int32 DiceCount = mPhysicsDiceBodies.Num();
 
 	// 결과 숫자 크기순(오름차순) 슬롯 배치: SortedDice[slot] = 그 슬롯에 놓일 주사위 index.
@@ -1416,14 +1433,27 @@ void ACombatDiceRollCaptureActor::UpdateAlign(float DeltaSeconds)
 	}
 
 	UpdateImpactEffects(DeltaSeconds);
-	CaptureDice();
+	CaptureDiceThrottled(DeltaSeconds);
 
 	if (RawAlpha >= 1.0f)
 	{
 		mAligning = false;
 		mAlignComplete = true;
 		CaptureDice();
+		SetActorTickEnabled(false);
 	}
+}
+
+void ACombatDiceRollCaptureActor::CaptureDiceThrottled(float DeltaSeconds)
+{
+	mCaptureElapsed += FMath::Max(0.0f, DeltaSeconds);
+	if (mCaptureElapsed < CaptureIntervalSeconds)
+	{
+		return;
+	}
+
+	mCaptureElapsed = FMath::Fmod(mCaptureElapsed, CaptureIntervalSeconds);
+	CaptureDice();
 }
 
 FQuat ACombatDiceRollCaptureActor::ComputeAlignedFaceUpQuat(int32 DiceIndex) const

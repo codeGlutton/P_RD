@@ -262,7 +262,7 @@ USettingsPanelWidget* UTitleMenuWidget::GetTitleSettingsPanel() const
 	UWorld* World = GetWorld();
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = World != nullptr ? World->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
 	return WorldWidgetSubsystem != nullptr
-		? WorldWidgetSubsystem->GetWorldWidget<USettingsPanelWidget>(EWorldWidgetType::InGameSettings)
+		? WorldWidgetSubsystem->GetOrCreateWorldWidget<USettingsPanelWidget>(EWorldWidgetType::InGameSettings)
 		: nullptr;
 }
 

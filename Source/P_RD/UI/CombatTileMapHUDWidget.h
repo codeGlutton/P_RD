@@ -318,6 +318,7 @@ private:
 
 	/** @brief 월드 서브시스템에 등록된 월드 위젯을 URDUserWidget으로 가져온다. */
 	URDUserWidget* GetToggleableWorldWidget(EWorldWidgetType WorldWidgetType) const;
+	URDUserWidget* GetOrCreateToggleableWorldWidget(EWorldWidgetType WorldWidgetType);
 
 	/**
 	 * @brief 탑바 배경판(TopBar_Backdrop)을 현재 지도/전투 HUD 연출 규칙에 맞춰 숨김 상태로 유지한다.
@@ -711,6 +712,9 @@ private:
 	/** @brief 유닛 머리 위에 월드→스크린 투영으로 띄우는 HP바(WBP_CombatUnitHpBar 인스턴스, 유닛 뷰 순서와 1:1) */
 	UPROPERTY(Transient)
 	TArray<FUnitHpBarWidget> mUnitHpBars;
+
+	/** @brief 월드 투영 HP바는 모바일에서 30Hz로만 갱신한다. */
+	float mUnitHpBarUpdateAccumulator = 0.0f;
 
 	/** @brief HP바 WBP 클래스/채움 텍스처(빨강=적, 초록=아군) 지연 로드 캐시 */
 	UPROPERTY(Transient)

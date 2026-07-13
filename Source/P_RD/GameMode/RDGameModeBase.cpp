@@ -30,7 +30,7 @@ void ARDGameModeBase::BeginPlay()
 	InitializeCommonRoom();
 	for (EWorldWidgetType WorldWidgetType : mWorldWidgets)
 	{
-		WorldWidgetSubsystem->InitWorldWidget(WorldWidgetType);
+		WorldWidgetSubsystem->PrepareWorldWidget(WorldWidgetType);
 	}
 
 	/* 전용 방 로직 */

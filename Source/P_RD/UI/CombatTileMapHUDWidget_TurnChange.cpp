@@ -10,10 +10,14 @@
 
 namespace
 {
-	constexpr int32 TurnChangeFrameCount = 33;
-	constexpr float TurnChangeFramesPerSecond = 16.0f;
+	constexpr int32 TurnChangeSourceFrameCount = 33;
+	constexpr int32 TurnChangeFrameStep = 3;
+	constexpr int32 TurnChangeFrameCount = (TurnChangeSourceFrameCount + TurnChangeFrameStep - 1) / TurnChangeFrameStep;
+	constexpr float TurnChangeSourceFramesPerSecond = 16.0f;
+	constexpr float TurnChangeFramesPerSecond = TurnChangeSourceFramesPerSecond / TurnChangeFrameStep;
+	constexpr float TurnChangeDurationSeconds = static_cast<float>(TurnChangeSourceFrameCount) / TurnChangeSourceFramesPerSecond;
 	const FVector2D TurnChangeFrameNativeSize(832.0f, 448.0f);
-	const TCHAR* const TurnChangeFrameAssetDirectory = TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/TurnChange/FramesBiRefNet");
+	const TCHAR* const TurnChangeFrameAssetDirectory = TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/TurnChange/FramesMobile");
 
 	int32 GetClampedFrameIndex(float ElapsedSeconds)
 	{
@@ -145,7 +149,8 @@ int32 UCombatTileMapHUDWidget::GetTurnChangeDisplayNumber() const
 
 FString UCombatTileMapHUDWidget::ResolveTurnChangeFrameAssetPath(int32 FrameIndex) const
 {
-	const FString AssetName = FString::Printf(TEXT("T_TurnChange_%03d"), FrameIndex + 1);
+	const int32 SourceFrameNumber = FrameIndex * TurnChangeFrameStep + 1;
+	const FString AssetName = FString::Printf(TEXT("T_TurnChange_%03d"), SourceFrameNumber);
 	return FString::Printf(
 		TEXT("%s/%s.%s"),
 		TurnChangeFrameAssetDirectory,
@@ -169,8 +174,7 @@ void UCombatTileMapHUDWidget::UpdateTurnChangeIntro(float InDeltaTime)
 {
 	mTurnChangeIntroElapsed += FMath::Max(0.0f, InDeltaTime);
 
-	const float TotalDuration = StaticCast<float>(TurnChangeFrameCount) / TurnChangeFramesPerSecond;
-	if (mTurnChangeIntroElapsed >= TotalDuration)
+	if (mTurnChangeIntroElapsed >= TurnChangeDurationSeconds)
 	{
 		FinishTurnChangeIntro();
 		return;

@@ -200,7 +200,12 @@ void UCombatTileMapHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 		ApplyAspectVariantSlots(ViewportSize);
 	}
 
-	UpdateUnitHpBars();   // 유닛 머리 위 HP바를 월드→스크린 투영으로 매 프레임 따라가게 한다.
+	mUnitHpBarUpdateAccumulator += InDeltaTime;
+	if (mUnitHpBarUpdateAccumulator >= (1.0f / 30.0f))
+	{
+		mUnitHpBarUpdateAccumulator = FMath::Fmod(mUnitHpBarUpdateAccumulator, 1.0f / 30.0f);
+		UpdateUnitHpBars();
+	}
 	UpdateFloatingCombatLogQueue(InDeltaTime); // 대기 중인 전투 로그를 순서대로 하나씩 스폰한다.
 	UpdateFloatingCombatLogs(InDeltaTime); // 머리 위 전투 로그(HP 증감 텍스트) 상승+페이드.
 	UpdateTurnRoundBanner(InDeltaTime);    // "N번째 턴" 배너 페이드.

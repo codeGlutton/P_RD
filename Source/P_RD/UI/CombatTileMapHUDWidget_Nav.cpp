@@ -92,6 +92,20 @@ URDUserWidget* UCombatTileMapHUDWidget::GetToggleableWorldWidget(EWorldWidgetTyp
 	return Cast<URDUserWidget>(WorldWidgetSubsystem->GetWorldWidget(WorldWidgetType));
 }
 
+URDUserWidget* UCombatTileMapHUDWidget::GetOrCreateToggleableWorldWidget(EWorldWidgetType WorldWidgetType)
+{
+	UWorld* World = GetWorld();
+	if (World == nullptr)
+	{
+		return nullptr;
+	}
+
+	UWorldWidgetSubsystem* WorldWidgetSubsystem = World->GetSubsystem<UWorldWidgetSubsystem>();
+	return WorldWidgetSubsystem != nullptr
+		? Cast<URDUserWidget>(WorldWidgetSubsystem->GetOrCreateWorldWidget(WorldWidgetType))
+		: nullptr;
+}
+
 /**
  * @brief 지정한 월드 위젯을 공통 CloseUI() 경로로 닫는다.
  */
@@ -144,7 +158,7 @@ void UCombatTileMapHUDWidget::ToggleWorldMap()
 		return;
 	}
 
-	UFrontendMapWidget* WorldMapWidget = Cast<UFrontendMapWidget>(GetToggleableWorldWidget(EWorldWidgetType::WorldMap));
+	UFrontendMapWidget* WorldMapWidget = Cast<UFrontendMapWidget>(GetOrCreateToggleableWorldWidget(EWorldWidgetType::WorldMap));
 	if (WorldMapWidget == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("CombatTileMapHUDWidget: WorldMap widget is not configured."));
@@ -193,7 +207,7 @@ void UCombatTileMapHUDWidget::ToggleSettingsPanel()
 		return;
 	}
 
-	USettingsPanelWidget* SettingsPanelWidget = Cast<USettingsPanelWidget>(GetToggleableWorldWidget(EWorldWidgetType::InGameSettings));
+	USettingsPanelWidget* SettingsPanelWidget = Cast<USettingsPanelWidget>(GetOrCreateToggleableWorldWidget(EWorldWidgetType::InGameSettings));
 	if (SettingsPanelWidget == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("CombatTileMapHUDWidget: InGameSettings widget is not configured."));
@@ -236,7 +250,7 @@ void UCombatTileMapHUDWidget::ToggleFloatingPanel(EWorldWidgetType WorldWidgetTy
 		return;
 	}
 
-	URDUserWidget* FloatingPanel = GetToggleableWorldWidget(WorldWidgetType);
+	URDUserWidget* FloatingPanel = GetOrCreateToggleableWorldWidget(WorldWidgetType);
 	if (FloatingPanel == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("CombatTileMapHUDWidget: %s widget is not configured."), DebugName);
@@ -278,7 +292,7 @@ void UCombatTileMapHUDWidget::HandleEndCombatUI(TSharedPtr<FPresentationBarrier>
  */
 void UCombatTileMapHUDWidget::OpenWorldMapAfterPlayerWin(TSharedPtr<FPresentationBarrier> Barrier)
 {
-	UFrontendMapWidget* WorldMapWidget = Cast<UFrontendMapWidget>(GetToggleableWorldWidget(EWorldWidgetType::WorldMap));
+	UFrontendMapWidget* WorldMapWidget = Cast<UFrontendMapWidget>(GetOrCreateToggleableWorldWidget(EWorldWidgetType::WorldMap));
 	if (WorldMapWidget == nullptr)
 	{
 		Barrier.Reset();

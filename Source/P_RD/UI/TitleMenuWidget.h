@@ -53,6 +53,7 @@ public:
 protected:
 	/** @brief 타이틀 화면 — 공용 버튼 누름 효과를 켠다(프론트엔드 한정). */
 	virtual bool ShouldApplyButtonFeedback() const override { return true; }
+	void ApplyCloseUI() override;
 
 	/** @brief 위젯이 화면에 올라올 때 버튼 이벤트와 하위 화면 이벤트를 연결함 */
 	// START, CONTINUE, SETTING 버튼을 이 위젯의 핸들러에 연결한다.

@@ -21,6 +21,7 @@ struct FTileTransform;
 struct FPresentationBarrier;
 
 class USkeletalMeshComponent;
+class UStaticMeshComponent;
 class UFloatingPawnMovement;
 class UCapsuleComponent;
 class UArrowComponent;
@@ -192,6 +193,9 @@ private:
 
 	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MeshComp", AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> mMeshComp;
+
+	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "BlobShadowComp", AllowPrivateAccess = "true"))
+	TObjectPtr<UStaticMeshComponent> mBlobShadowComp;
 
 	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MovementComp", AllowPrivateAccess = "true"))
 	TObjectPtr<UFloatingPawnMovement> mMovementComp;

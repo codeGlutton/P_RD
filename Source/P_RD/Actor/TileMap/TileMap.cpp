@@ -304,13 +304,27 @@ void ATileMap::OnRootTransformUpdated(USceneComponent* UpdatedComponent, EUpdate
 void ATileMap::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+	mPulseUpdateAccumulator += FMath::Max(0.0f, DeltaSeconds);
+	constexpr float PulseUpdateInterval = 1.0f / 15.0f;
+	if (mPulseUpdateAccumulator < PulseUpdateInterval)
+	{
+		return;
+	}
+	mPulseUpdateAccumulator = FMath::Fmod(mPulseUpdateAccumulator, PulseUpdateInterval);
 
-	// Effect 하이라이트는 알파가 시간에 따라 진동(펄스)하므로, 매 프레임 재합성
-	// Effect 플래그를 가진 타일만 갱신 (나머지는 정적이라 Set/Clear 때만 갱신됨)
+	// Effect 펄스 타일을 모두 쓴 뒤 렌더 상태는 한 번만 갱신한다.
+	bool bTileDataChanged = false;
 	for (int32 Index = 0; Index < mHighlights.Num(); ++Index)
 	{
 		if (EnumHasAnyFlags(mHighlights[Index], ETileHighlightFlag::Effect))
-			RefreshTileCustomData(Index);
+		{
+			RefreshTileCustomData(Index, false);
+			bTileDataChanged = true;
+		}
+	}
+	if (bTileDataChanged && mTileMeshComponent != nullptr)
+	{
+		mTileMeshComponent->MarkRenderStateDirty();
 	}
 
 	// 경로 화살표/도착 마커 알파도 펄스 — 표시 중일 때만 갱신
@@ -380,7 +394,11 @@ void ATileMap::RefreshTileVisuals()
 	// 새 인스턴스에 기본 구분색과 하이라이트를 다시 칠함
 	for (int32 Index = 0; Index < mHighlights.Num(); ++Index)
 	{
-		RefreshTileCustomData(Index);
+		RefreshTileCustomData(Index, false);
+	}
+	if (mHighlights.IsEmpty() == false)
+	{
+		mTileMeshComponent->MarkRenderStateDirty();
 	}
 }
 
@@ -463,7 +481,7 @@ FTileIndex ATileMap::WorldToTileIndex(const FVector& WorldLocation) const
  * - Effect는 [아래 레이어(Aim/타일)] ↔ [자기 색]을 펄스로 크로스페이드
  * - 알파까지 계산에 포함시켜서, 출력단에서 알파 합성을 따로 안해도 되게끔 최적화
  */
-void ATileMap::RefreshTileCustomData(int32 LinearIndex)
+void ATileMap::RefreshTileCustomData(int32 LinearIndex, bool bMarkRenderStateDirty)
 {
 	// 컴포넌트/인덱스 유효성 (인스턴스 인덱스 = 타일 1D 인덱스)
 	if (mTileMeshComponent == nullptr || !mHighlights.IsValidIndex(LinearIndex))
@@ -513,7 +531,7 @@ void ATileMap::RefreshTileCustomData(int32 LinearIndex)
 	mTileMeshComponent->SetCustomDataValue(LinearIndex, 0, Accum.R);
 	mTileMeshComponent->SetCustomDataValue(LinearIndex, 1, Accum.G);
 	mTileMeshComponent->SetCustomDataValue(LinearIndex, 2, Accum.B);
-	mTileMeshComponent->SetCustomDataValue(LinearIndex, 3, Accum.A, /*bMarkRenderStateDirty=*/true);
+	mTileMeshComponent->SetCustomDataValue(LinearIndex, 3, Accum.A, bMarkRenderStateDirty);
 }
 
 void ATileMap::SetTileHighlight(const TArray<FTileIndex>& Tiles, ETileHighlightFlag Flag)
@@ -541,7 +559,8 @@ void ATileMap::SetTileHighlight(const TArray<FTileIndex>& Tiles, ETileHighlightF
 			NewOn.Add(Index);
 	}
 
-	// 전체 타일 순회: ClearBits 끄고, 지정 타일이면 Flag 켜기
+	// 전체 타일 순회: 데이터를 모두 쓴 뒤 렌더 상태는 한 번만 갱신한다.
+	bool bTileDataChanged = false;
 	for (int32 Index = 0; Index < mHighlights.Num(); ++Index)
 	{
 		const ETileHighlightFlag Before = mHighlights[Index];
@@ -557,8 +576,13 @@ void ATileMap::SetTileHighlight(const TArray<FTileIndex>& Tiles, ETileHighlightF
 		if (After != Before)
 		{
 			mHighlights[Index] = After;
-			RefreshTileCustomData(Index);
+			RefreshTileCustomData(Index, false);
+			bTileDataChanged = true;
 		}
+	}
+	if (bTileDataChanged && mTileMeshComponent != nullptr)
+	{
+		mTileMeshComponent->MarkRenderStateDirty();
 	}
 }
 
@@ -567,7 +591,8 @@ void ATileMap::ClearTileHighlight(ETileHighlightFlag Flag)
 	if (Flag == ETileHighlightFlag::None)
 		return;
 
-	// 전체 타일에서 지정 비트만 끔 (캐스케이드 없음, 무관 비트는 보존)
+	// 전체 타일에서 지정 비트만 끈 뒤 렌더 상태는 한 번만 갱신한다.
+	bool bTileDataChanged = false;
 	for (int32 Index = 0; Index < mHighlights.Num(); ++Index)
 	{
 		const ETileHighlightFlag Before = mHighlights[Index];
@@ -577,8 +602,13 @@ void ATileMap::ClearTileHighlight(ETileHighlightFlag Flag)
 		if (After != Before)
 		{
 			mHighlights[Index] = After;
-			RefreshTileCustomData(Index);
+			RefreshTileCustomData(Index, false);
+			bTileDataChanged = true;
 		}
+	}
+	if (bTileDataChanged && mTileMeshComponent != nullptr)
+	{
+		mTileMeshComponent->MarkRenderStateDirty();
 	}
 }
 
@@ -757,7 +787,7 @@ void ATileMap::RefreshPathPulse()
 		Component->SetCustomDataValue(InstanceIndex, 0, Color.R * Brightness);
 		Component->SetCustomDataValue(InstanceIndex, 1, Color.G * Brightness);
 		Component->SetCustomDataValue(InstanceIndex, 2, Color.B * Brightness);
-		Component->SetCustomDataValue(InstanceIndex, 3, 1.0f, /*bMarkRenderStateDirty=*/true);
+		Component->SetCustomDataValue(InstanceIndex, 3, 1.0f, /*bMarkRenderStateDirty=*/false);
 	};
 
 	// 화살표: 경로 순번마다 위상차를 줘 흐르게 (직진/좌회전/우회전 컴포넌트 공통 처리)
@@ -783,6 +813,10 @@ void ATileMap::RefreshPathPulse()
 			const float Wave = 0.5f - 0.5f * FMath::Cos(Phase);
 			WriteInstance(Component, Index, mPathArrowStyle.mColor, Wave);
 		}
+		if (Count > 0)
+		{
+			Component->MarkRenderStateDirty();
+		}
 	}
 
 	// 도착 마커: 경로 끝 인덱스의 위상으로 이어지게 (화살표 흐름의 다음 칸)
@@ -792,6 +826,7 @@ void ATileMap::RefreshPathPulse()
 		const float Phase = 2.0f * PI * Time / mPathPulsePeriod - EndPhaseIndex * PhasePerTile;
 		const float Wave = 0.5f - 0.5f * FMath::Cos(Phase);
 		WriteInstance(mPathEndComponent, 0, mPathEndStyle.mColor, Wave);
+		mPathEndComponent->MarkRenderStateDirty();
 	}
 }
 

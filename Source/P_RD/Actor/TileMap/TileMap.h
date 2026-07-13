@@ -407,7 +407,7 @@ private:
 	 * 모든 색은 타일 위에 자기 알파로 Mix(프리멀티). 슬롯 0~2=알파 곱해진 RGB, 3=커버리지 알파.
 	 * @param[in] LinearIndex 타일/인스턴스 1차원 인덱스
 	 */
-	void RefreshTileCustomData(int32 LinearIndex);
+	void RefreshTileCustomData(int32 LinearIndex, bool bMarkRenderStateDirty = true);
 
 	/**
 	 * @brief 타일별 강조 표시 상태 (시각 전용 — 전투/시뮬레이션과 무관, FTile과 분리)
@@ -415,6 +415,9 @@ private:
 	 */
 	UPROPERTY()
 	TArray<ETileHighlightFlag> mHighlights;
+
+	/** @brief 하이라이트/경로 펄스를 15Hz로 묶어 갱신하기 위한 누적 시간. */
+	float mPulseUpdateAccumulator = 0.0f;
 
 	/**
 	 * @brief 현재 표시 중인 경로 타일 수 (틱 펄스 갱신 대상 판단 + 도착 마커 위상 인덱스용)

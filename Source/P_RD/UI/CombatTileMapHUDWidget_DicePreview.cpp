@@ -61,12 +61,14 @@ void UCombatTileMapHUDWidget::EnsureDiceRollPhysicsActor()
 		return;
 	}
 
-	mDiceRollPhysicsActor->InitializeCapture(this, 1536, 704);
+	constexpr int32 DiceCaptureWidth = 1024;
+	constexpr int32 DiceCaptureHeight = 512;
+	mDiceRollPhysicsActor->InitializeCapture(this, DiceCaptureWidth, DiceCaptureHeight);
 	if (mDiceRollPhysicsImage != nullptr && mDiceRollPhysicsActor->GetCaptureMaterial() != nullptr)
 	{
 		FSlateBrush DiceBrush = mDiceRollPhysicsImage->GetBrush();
 		DiceBrush.SetResourceObject(mDiceRollPhysicsActor->GetCaptureMaterial());
-		DiceBrush.ImageSize = FVector2D(1536.0f, 704.0f);
+		DiceBrush.ImageSize = FVector2D(DiceCaptureWidth, DiceCaptureHeight);
 		mDiceRollPhysicsImage->SetBrush(DiceBrush);
 		mDiceRollPhysicsImage->SetColorAndOpacity(FLinearColor::White);
 	}

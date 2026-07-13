@@ -105,6 +105,12 @@ void UTitleMenuWidget::PrimeTitleBackgroundVideo()
 	StartTitleBackgroundVideo();
 }
 
+void UTitleMenuWidget::ApplyCloseUI()
+{
+	StopTitleBackgroundVideo();
+	Super::ApplyCloseUI();
+}
+
 /** @brief WBP 바인딩을 검증하고 타이틀 화면에서 필요한 버튼/하위 위젯 이벤트를 연결한다. */
 // WBP_TitleMenu는 START/CONTINUE/SETTING 버튼과 배경 영상을 가진 타이틀 HUD다.
 // 캐릭터 선택 화면은 GameMode가 여는 별도 WorldWidget이므로, 이 위젯은 START 요청만 GameMode에 전달한다.

@@ -5,9 +5,12 @@
 #include "RDCollision.h"
 
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "GameFramework/FloatingPawnMovement.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/ArrowComponent.h"
+#include "Materials/MaterialInterface.h"
+#include "UObject/ConstructorHelpers.h"
 
 #include "Animation/BoardActorAnimInstance.h"
 #include "Animation/Notify/EventTriggerPayload.h"
@@ -27,6 +30,7 @@ AUnit::AUnit()
 
 	mCapsuleComp = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComp"));
 	mMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
+	mBlobShadowComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BlobShadowComp"));
 	mMovementComp = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("MovementComp"));
 	mArrowComp = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowComp"));
 
@@ -48,14 +52,43 @@ AUnit::AUnit()
 		mMeshComp->AlwaysLoadOnServer = true;
 		mMeshComp->bOwnerNoSee = false;
 		mMeshComp->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPose;
-		mMeshComp->bCastDynamicShadow = true;
-		mMeshComp->bAffectDynamicIndirectLighting = true;
+		mMeshComp->SetCastShadow(false);
+		mMeshComp->bCastDynamicShadow = false;
+		mMeshComp->bCastStaticShadow = false;
+		mMeshComp->bAffectDynamicIndirectLighting = false;
 		mMeshComp->PrimaryComponentTick.TickGroup = TG_PrePhysics;
 		mMeshComp->SetupAttachment(mCapsuleComp);
 		mMeshComp->SetGenerateOverlapEvents(false);
 		mMeshComp->SetCanEverAffectNavigation(false);
 		mMeshComp->SetCollisionProfileName(RDCollisionProfiles::BoardActor);
 		mMeshComp->SetRelativeRotation(FRotator(0., -90., 0.));
+	}
+
+	if (mBlobShadowComp != nullptr)
+	{
+		static ConstructorHelpers::FObjectFinder<UStaticMesh> BlobShadowMesh(
+			TEXT("/Engine/BasicShapes/Plane.Plane"));
+		static ConstructorHelpers::FObjectFinder<UMaterialInterface> BlobShadowMaterial(
+			TEXT("/Game/P_RD/Materials/M_MobileBlobShadow.M_MobileBlobShadow"));
+
+		if (BlobShadowMesh.Succeeded())
+		{
+			mBlobShadowComp->SetStaticMesh(BlobShadowMesh.Object);
+		}
+		if (BlobShadowMaterial.Succeeded())
+		{
+			mBlobShadowComp->SetMaterial(0, BlobShadowMaterial.Object);
+		}
+
+		mBlobShadowComp->SetupAttachment(mCapsuleComp);
+		mBlobShadowComp->SetRelativeLocation(FVector(0.0, 0.0, -87.0));
+		mBlobShadowComp->SetRelativeScale3D(FVector(0.75, 0.75, 1.0));
+		mBlobShadowComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		mBlobShadowComp->SetGenerateOverlapEvents(false);
+		mBlobShadowComp->SetCanEverAffectNavigation(false);
+		mBlobShadowComp->SetCastShadow(false);
+		mBlobShadowComp->SetReceivesDecals(false);
+		mBlobShadowComp->SetTranslucentSortPriority(-1);
 	}
 
 	if (mMovementComp != nullptr)
@@ -147,9 +180,16 @@ void AUnit::BindModel(UObjectModel* Model)
 				}
 				if (Payload != nullptr)
 				{
+					int32 SpawnedEffectCount = 0;
+					const int32 MaxEffectsPerHit = PLATFORM_ANDROID ? 2 : MAX_int32;
 					for (const FApplyNiagaraSpawnData& NiagaraSpawnData : Payload->mNiagaraSpawnDatas)
 					{
+						if (SpawnedEffectCount >= MaxEffectsPerHit)
+						{
+							break;
+						}
 						SpawnHitVFX(NiagaraSpawnData, LocalDirection);
+						++SpawnedEffectCount;
 					}
 				}
 			}
@@ -289,7 +329,7 @@ void AUnit::SpawnHitVFX(const FApplyNiagaraSpawnData& NiagaraSpawnData, ETileAct
 			FinalLocalTransform.GetScale3D(),
 			EAttachLocation::KeepRelativeOffset,
 			true,
-			ENCPoolMethod::None
+			ENCPoolMethod::AutoRelease
 		);
 	}
 	else
@@ -299,7 +339,11 @@ void AUnit::SpawnHitVFX(const FApplyNiagaraSpawnData& NiagaraSpawnData, ETileAct
 			NiagaraSpawnData.mNiagaraSystem,
 			FinalWorldTransform.GetLocation(),
 			FinalWorldTransform.Rotator(),
-			FinalWorldTransform.GetScale3D()
+			FinalWorldTransform.GetScale3D(),
+			true,
+			true,
+			ENCPoolMethod::AutoRelease,
+			true
 		);
 	}
 }
