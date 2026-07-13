@@ -83,13 +83,7 @@ public:
      * @param Owner       이 Aggregator가 속한 속성 셋 컴포넌트 모델
      * @param InBaseValue 모디파이어 적용 이전의 기준값(Base)
      */
-    FTacticalAggregator(UAttributeSetComponentModel* Owner, float InBaseValue = 0.f) :
-        mOwner(Owner),
-        mDirtyCount(0),
-        mBaseValue(InBaseValue)
-    {
-    }
-
+    FTacticalAggregator(UAttributeSetComponentModel* Owner, float InBaseValue = 0.f);
     ~FTacticalAggregator();
 
     /* 계산 함수 */

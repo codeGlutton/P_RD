@@ -11,9 +11,9 @@ bool IBoardCombatTarget::IsDead() const
 	return GetAttributeComponentModel()->HasMatchingGameplayTag(EffectTags::GameplayEffect_ActorState_Dead);
 }
 
-FBoardCombatTargetSnapshotData IBoardCombatTarget::MakeSnapshotData() const
+UBoardCombatTargetSnapshotData* IBoardCombatTarget::MakeSnapshotData() const
 {
-	FBoardCombatTargetSnapshotData Snapshot;
+	UBoardCombatTargetSnapshotData* Snapshot = NewObject<UBoardCombatTargetSnapshotData>(GetAttributeComponentModel());
 	GetAttributeComponentModel()->CaptureAllStates(OUT Snapshot);
 
 	return Snapshot;

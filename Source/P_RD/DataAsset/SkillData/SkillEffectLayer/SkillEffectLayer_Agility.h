@@ -19,7 +19,7 @@ struct P_RD_API FSkillEffectLayer_Agility : public FSkillEffectLayer
 	GENERATED_BODY()
 
 public:
-	void CommitEffect(IBoardCombatTarget* ActorModel, const TArray<FTileIndex>& TargetTileIndexes, const TArray<IBoardCombatTarget*>& OtherCombatTargets, float DiceSum) const override;
+	void CommitEffect(const FSkillEffectCommitParams& Params) const override;
 
 public:
 	UPROPERTY(Category = "Agility", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DefaultTagGain"))

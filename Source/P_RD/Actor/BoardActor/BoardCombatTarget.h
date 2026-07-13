@@ -10,6 +10,7 @@
 #include "AttributeSet/AttributeSetMinimal.h"
 #include "UObject/Interface.h"
 #include "GenericTeamAgentInterface.h"
+#include "SRPGFramework/SRPGFrameworkType.h"
 #include "BoardCombatTarget.generated.h"
 
 class UAttributeSetComponentModel;
@@ -19,56 +20,23 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnChangeCombatTargetAliveState, bool /*IsAl
 /**
  * @brief 타격 가능 보드 액터들에 대한 스냅샷
  */
-USTRUCT(Blueprintable)
-struct FBoardCombatTargetSnapshotData
+UCLASS(BlueprintType)
+class UBoardCombatTargetSnapshotData : public UObject
 {
 	GENERATED_BODY()
 
 public:
-	FBoardCombatTargetSnapshotData operator+(const FBoardCombatTargetSnapshotData& Other) const
-	{
-		FBoardCombatTargetSnapshotData Result = *this;
-
-		// Attributes 값 합산
-		for (const TPair<FTacticalAttribute, float>& Pair : Other.mAttributes)
-		{
-			Result.mAttributes.FindOrAdd(Pair.Key) += Pair.Value;
-		}
-
-		// Tags 값 합산
-		for (const TPair<FGameplayTag, int32>& Pair : Other.mTags)
-		{
-			Result.mTags.FindOrAdd(Pair.Key) += Pair.Value;
-		}
-
-		return Result;
-	}
-
-	FBoardCombatTargetSnapshotData& operator+=(const FBoardCombatTargetSnapshotData& Other)
-	{
-		// Attributes 값 합산
-		for (const TPair<FTacticalAttribute, float>& Pair : Other.mAttributes)
-		{
-			mAttributes.FindOrAdd(Pair.Key) += Pair.Value;
-		}
-
-		// Tags 값 합산
-		for (const TPair<FGameplayTag, int32>& Pair : Other.mTags)
-		{
-			mTags.FindOrAdd(Pair.Key) += Pair.Value;
-		}
-
-		return *this;
-	}
-
-public:
-	// @brief HP, Money, power 등의 "수치"가 중요한 변화
+	// @brief HP, Money, power 등의 "수치"
 	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
 	TMap<FTacticalAttribute, float> mAttributes;
 
-	// @brief 밀치기, 약화(타격 피해량 25퍼 감소), 취약(피격 피해량 50퍼 증가) 등의 "발동 여부"가 중요한 변화
+	// @brief 밀치기, 약화(타격 피해량 25퍼 감소), 취약(피격 피해량 50퍼 증가) 등의 "발동 여부"
 	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
 	TMap<FGameplayTag, int32> mTags;
+
+	// @brief 타일 위치
+	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
+	FTileTransform mTileTransform;
 };
 
 UINTERFACE(MinimalAPI)
@@ -106,7 +74,7 @@ public:
 	 * 현재 스탯 스냅샷을 찍어 타겟 정보로 반환하는 함수
 	 * @return 스냅샷 데이터
 	 */
-	FBoardCombatTargetSnapshotData MakeSnapshotData() const;
+	UBoardCombatTargetSnapshotData* MakeSnapshotData() const;
 
 public:
 	virtual void SetGenericTeamId(const FGenericTeamId& TeamID) = 0;

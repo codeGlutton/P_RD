@@ -28,6 +28,7 @@ public:
 	/* UUnitModel 상속 */
 public:
 	void PostInitializeComponentModels() override;
+	void OnBeginTurn() override;
 
 public:
 	int32 GetBoardActorLevel() const override;

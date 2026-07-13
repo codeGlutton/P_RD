@@ -1,11 +1,11 @@
 ﻿#include "TAS/Effect/ActiveTacticalEffectsContainer.h"
+#include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
 #include "TAS/Aggregator/TacticalAggregator.h"
 
 #include "TAS/Effect/TacticalEffectContext.h"
+#include "TAS/Calculation/TacticalEffectExecutionCalculation.h"
 
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
-
-#include "GameplayEffectExtension.h"
 
 /**
  * @file ActiveTacticalEffectsContainer.cpp
@@ -379,8 +379,15 @@ FActiveTacticalEffect* FActiveTacticalEffectsContainer::ApplyTacticalEffectSpec(
 		}
 	}
 
+    FTacticalEffectSpec& AppliedEffectSpec = AppliedActiveEffect->mSpec;
+
+    UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(mOwner.Get());
+    check(TacticalFrameworkModel != nullptr);
+
+    TacticalFrameworkModel->SetCurrentAppliedTE(&AppliedEffectSpec);
+    TacticalFrameworkModel->GlobalPreTacticalEffectSpecApply(AppliedEffectSpec, mOwner.Get());
+
 	// 적용된 Spec의 각 모디파이어 최종 크기를 미리 계산해 둔다.
-	FTacticalEffectSpec& AppliedEffectSpec = AppliedActiveEffect->mSpec;
 	AppliedEffectSpec.CalculateModifierMagnitudes();
 
 	if (ExistingStackableEffect != nullptr)
@@ -422,10 +429,44 @@ void FActiveTacticalEffectsContainer::ExecuteActiveEffectsFrom(FTacticalEffectSp
     {
         const FTacticalModifierInfo& ModDef = SpecToUse.mEffectClass->mModifiers[ModIdx];
 
-        // [PR #191 enum 치환] ModDef.mModifierOp는 ETacticalModOp(구 EGameplayModOp 대체). 평가 데이터에 그대로 실어
-        // InternalExecuteMod -> ApplyModToAttribute로 전달되며, 거기서 op별 연산식이 base 값에 적용된다.
         FTacticalModifierEvaluatedData EvalData(ModDef.mAttribute, ModDef.mModifierOp, SpecToUse.GetModifierMagnitude(ModIdx));
         ModifierSuccessfullyExecuted |= InternalExecuteMod(SpecToUse, EvalData);
+    }
+
+    /* 익스큐션 실행 */
+
+    for (const FTacticalEffectExecutionDefinition& CurExecDef : SpecToUse.mEffectClass->mExecutions)
+    {
+        if (CurExecDef.mCalculationClass != nullptr)
+        {
+            const UTacticalEffectExecutionCalculation* ExecCDO = CurExecDef.mCalculationClass->GetDefaultObject<UTacticalEffectExecutionCalculation>();
+            check(ExecCDO != nullptr);
+
+            // 계산기 실행
+            FTacticalEffectCustomExecutionParameters ExecutionParams(SpecToUse, mOwner.Get());
+            FTacticalEffectCustomExecutionOutput ExecutionOutput;
+            ExecCDO->Execute(ExecutionParams, ExecutionOutput);
+
+            // 수정자 결과 내뱉기
+            TArray<FTacticalModifierEvaluatedData>& OutModifiers = ExecutionOutput.GetOutputModifiersRef();
+
+            const bool ApplyStackCountToEmittedMods = ExecutionOutput.IsStackCountHandledManually() == false;
+            const int32 SpecStackCount = SpecToUse.GetStackCount();
+
+            const bool ApplyDynamicMagnitudeToEmittedMods = ExecutionOutput.IsDynamicMagnitudeHandledManually() == false;
+            const float DynamicMagnitude = ApplyDynamicMagnitudeToEmittedMods == true ? SpecToUse.mDynamicMagnitude : 1.f;
+
+            // 수정자 결과 처리
+            for (FTacticalModifierEvaluatedData& CurExecMod : OutModifiers)
+            {
+                // 스택 처리 필요시
+                if (ApplyStackCountToEmittedMods == true && SpecStackCount > 1)
+                {
+                    CurExecMod.mMagnitude = TacticalEffectUtilities::ComputeStackedModifierMagnitude(CurExecMod.mMagnitude * DynamicMagnitude, SpecStackCount, CurExecMod.mModifierOp);
+                }
+                ModifierSuccessfullyExecuted |= InternalExecuteMod(SpecToUse, CurExecMod);
+            }
+        }
     }
 
     Spec.mEffectClass->OnExecuted(*this, Spec);
@@ -472,6 +513,8 @@ void FActiveTacticalEffectsContainer::InternalOnActiveTacticalEffectAdded(FActiv
 {
     const UTacticalEffect* EffectDef = Effect.mSpec.mEffectClass;
     checkf(EffectDef != nullptr, TEXT("추가한 Effect Class가 nullptr"));
+
+    TACTICAL_EFFECT_SCOPE_LOCK();
 
     EffectDef->OnAddedToActiveContainer(*this, Effect);
 

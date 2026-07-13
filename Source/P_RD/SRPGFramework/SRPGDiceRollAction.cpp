@@ -69,13 +69,13 @@ ESRPGCommandResult USRPGDiceRollAction::HandleCommand(const TInstancedStruct<FSR
             TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartRollingDice);
             const int32 PassiveNum = Passives.Num();
 
-            FBoardCombatTargetSnapshotData PlayerUnitSnapshot = PlayerUnit->MakeSnapshotData();
+            UBoardCombatTargetSnapshotData* PlayerUnitSnapshot = PlayerUnit->MakeSnapshotData();
 
             FPassiveActivateContext PassiveContext;
             PassiveContext.mOwner = PlayerUnit;
-            PassiveContext.mOwnerSnapshot = &PlayerUnitSnapshot;
+            PassiveContext.mOwnerSnapshot = PlayerUnitSnapshot;
             PassiveContext.mTargets.Add(PlayerUnit);
-            PassiveContext.mTargetSnapshots.Add(&PlayerUnitSnapshot);
+            PassiveContext.mTargetSnapshots.Add(PlayerUnitSnapshot);
 
             for (UTacticalPassive*& Passive : Passives)
             {
@@ -101,13 +101,13 @@ ESRPGCommandResult USRPGDiceRollAction::HandleCommand(const TInstancedStruct<FSR
             TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndRollingDice);
             const int32 PassiveNum = Passives.Num();
 
-            FBoardCombatTargetSnapshotData PlayerUnitSnapshot = PlayerUnit->MakeSnapshotData();
+            UBoardCombatTargetSnapshotData* PlayerUnitSnapshot = PlayerUnit->MakeSnapshotData();
 
             FPassiveActivateContext PassiveContext;
             PassiveContext.mOwner = PlayerUnit;
-            PassiveContext.mOwnerSnapshot = &PlayerUnitSnapshot;
+            PassiveContext.mOwnerSnapshot = PlayerUnitSnapshot;
             PassiveContext.mTargets.Add(PlayerUnit);
-            PassiveContext.mTargetSnapshots.Add(&PlayerUnitSnapshot);
+            PassiveContext.mTargetSnapshots.Add(PlayerUnitSnapshot);
 
             for (UTacticalPassive*& Passive : Passives)
             {

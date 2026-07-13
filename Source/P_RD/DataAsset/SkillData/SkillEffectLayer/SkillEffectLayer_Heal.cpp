@@ -10,14 +10,6 @@
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "AttributeSet/CombatTargetAttributeSet.h"
 
-void FSkillEffectLayer_Heal::ClearPointEffect(IBoardCombatTarget* ActorModel) const
-{
-    UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
-    checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
-
-    AttributeSetComponentModel->ApplyModToAttribute(UCombatTargetAttributeSet::GetHealPointAttribute(), ETacticalModOp::Override, 0.f);
-}
-
 void FSkillEffectLayer_Heal::ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const
 {
     UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
@@ -32,13 +24,21 @@ void FSkillEffectLayer_Heal::ApplyPointEffect(IBoardCombatTarget* ActorModel, fl
     AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
 }
 
-void FSkillEffectLayer_Heal::CommitEffect(IBoardCombatTarget* OwnerActorModel, const TArray<FTileIndex>& TargetTileIndexes, const TArray<IBoardCombatTarget*>& OtherCombatTargets, float DiceSum) const
+void FSkillEffectLayer_Heal::ClearPointEffect(IBoardCombatTarget* ActorModel) const
 {
-    UAttributeSetComponentModel* AttributeSetComponentModel = OwnerActorModel->GetAttributeComponentModel();
+    UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
+    checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+    AttributeSetComponentModel->ApplyModToAttribute(UCombatTargetAttributeSet::GetHealPointAttribute(), ETacticalModOp::Override, 0.f);
+}
+
+FActiveTacticalEffectHandle FSkillEffectLayer_Heal::ApplyFactorEffect(IBoardCombatTarget* ActorModel) const
+{
+    UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
     UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
-    EffectContext->SetInstigator(Cast<UActorModel>(OwnerActorModel));
+    EffectContext->SetInstigator(Cast<UActorModel>(ActorModel));
     EffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
 
     FActiveTacticalEffectHandle EffectHandle;
@@ -50,13 +50,36 @@ void FSkillEffectLayer_Heal::CommitEffect(IBoardCombatTarget* OwnerActorModel, c
         EffectHandle = AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
     }
 
+    return EffectHandle;
+}
+
+void FSkillEffectLayer_Heal::ClearFactorEffect(IBoardCombatTarget* ActorModel, FActiveTacticalEffectHandle Handle) const
+{
+    UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
+    checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+    /* 포인트를 Factor에서 제거 */
+    {
+        AttributeSetComponentModel->RemoveActiveTacticalEffect(Handle);
+    }
+}
+
+void FSkillEffectLayer_Heal::CommitEffect(const FSkillEffectCommitParams& Params) const
+{
+    UAttributeSetComponentModel* AttributeSetComponentModel = Params.mInstigator->GetAttributeComponentModel();
+    checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+    UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
+    EffectContext->SetInstigator(Cast<UActorModel>(Params.mInstigator.GetObject()));
+    EffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
+
     const float TotalHeal = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetHealFactorAttribute());
     const float HealDiff = FMath::Floor(TotalHeal);
 
     if (HealDiff > 0.f)
     {
         /* 힐 적용 */
-        for (const IBoardCombatTarget* OtherCombatTarget : OtherCombatTargets)
+        for (const TScriptInterface<IBoardCombatTarget>& OtherCombatTarget : Params.mTargets)
         {
             UAttributeSetComponentModel* OtherAttributeSetComponentModel = OtherCombatTarget->GetAttributeComponentModel();
             checkf(OtherAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
@@ -65,10 +88,5 @@ void FSkillEffectLayer_Heal::CommitEffect(IBoardCombatTarget* OwnerActorModel, c
             EffectSpec->mDynamicMagnitude = HealDiff;
             AttributeSetComponentModel->ApplyTacticalEffectSpecToTarget(*EffectSpec, OtherAttributeSetComponentModel);
         }
-    }
-
-    /* 포인트를 Factor에서 제거 */
-    {
-        AttributeSetComponentModel->RemoveActiveTacticalEffect(EffectHandle);
     }
 }

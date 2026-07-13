@@ -178,7 +178,7 @@ bool UTacticalPassive::PassesTargetQuantifier(const FPassiveActivateContext& Ctx
 	for (int32 Index = 0; Index < TargetNum; ++Index)
 	{
 		// 스냅샷이 짝으로 있으면 넘기고, 없으면 스냅샷과 실제객체가 다르므로 nullptr
-		const FBoardCombatTargetSnapshotData* Snapshot =
+		const UBoardCombatTargetSnapshotData* Snapshot =
 			Ctx.mTargetSnapshots.IsValidIndex(Index) ? Ctx.mTargetSnapshots[Index] : nullptr;
 
 		if (IsTargetQualified(Snapshot))

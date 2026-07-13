@@ -454,15 +454,15 @@ bool FPassiveQuantifierMultiTargetBuffTest::RunTest(const FString& Parameters)
 		Passive->SetStaticData(Data);
 
 		// 자격 판정이 읽을 타겟 스냅샷 준비 (DriveTiming 동안 살아있어야 함)
-		FBoardCombatTargetSnapshotData Snapshot1 = Target1->MakeSnapshotData();
-		FBoardCombatTargetSnapshotData Snapshot2 = Target2->MakeSnapshotData();
+		UBoardCombatTargetSnapshotData* Snapshot1 = Target1->MakeSnapshotData();
+		UBoardCombatTargetSnapshotData* Snapshot2 = Target2->MakeSnapshotData();
 
 		FPassiveActivateContext Ctx;
 		Ctx.mOwner = Player;
 		Ctx.mTargets.Add(Target1);
 		Ctx.mTargets.Add(Target2);
-		Ctx.mTargetSnapshots.Add(&Snapshot1);
-		Ctx.mTargetSnapshots.Add(&Snapshot2);
+		Ctx.mTargetSnapshots.Add(Snapshot1);
+		Ctx.mTargetSnapshots.Add(Snapshot2);
 
 		DriveTiming(Passive, OnStartTurn, Ctx);
 

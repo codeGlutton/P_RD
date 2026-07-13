@@ -8,6 +8,7 @@
 #pragma once
 
 #include "TAS/Effect/TacticalEffect.h"
+#include "TAS/Calculation/TacticalEffectExecutionCalculation.h"
 #include "TacticalEffect_HP.generated.h"
 
 /**
@@ -31,3 +32,28 @@ public:
 public:
 	void OnExecuted(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const override;
 };
+
+/**
+ * @brief HP 데미지 계산기
+ */
+UCLASS()
+class UTacticalEffectExecutionCalculation_Attack : public UTacticalEffectExecutionCalculation
+{
+	GENERATED_BODY()
+
+public:
+	void Execute(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput) const override;
+};
+
+/**
+ * @brief HP 데미지 적용 이펙트
+ */
+UCLASS()
+class P_RD_API UTacticalEffect_Attack : public UTacticalEffect
+{
+	GENERATED_BODY()
+
+public:
+	UTacticalEffect_Attack();
+};
+

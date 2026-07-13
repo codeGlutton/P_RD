@@ -19,11 +19,15 @@ struct P_RD_API FSkillEffectLayer_GetDefense : public FSkillEffectLayer
 	GENERATED_BODY()
 
 public:
+	void ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const override;
 	void ClearPointEffect(IBoardCombatTarget* ActorModel) const override;
 
 public:
-	void ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const override;
-	void CommitEffect(IBoardCombatTarget* ActorModel, const TArray<FTileIndex>& TargetTileIndexes, const TArray<IBoardCombatTarget*>& OtherCombatTargets, float DiceSum) const override;
+	FActiveTacticalEffectHandle ApplyFactorEffect(IBoardCombatTarget* ActorModel) const override;
+	void ClearFactorEffect(IBoardCombatTarget* ActorModel, FActiveTacticalEffectHandle Handle) const override;
+
+public:
+	void CommitEffect(const FSkillEffectCommitParams& Params) const override;
 
 public:
 	UPROPERTY(Category = "Defense", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DefaultDefenseGain"))
