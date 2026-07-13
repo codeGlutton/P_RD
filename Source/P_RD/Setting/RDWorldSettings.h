@@ -11,6 +11,19 @@
 #include "GameFramework/WorldSettings.h"
 #include "RDWorldSettings.generated.h"
 
+USTRUCT(BlueprintType)
+struct FRoomSpawnSettings
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(Category = StartPoint, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "MainCameraPoint"))
+	TObjectPtr<AActor> mMainCameraPoint;
+
+	UPROPERTY(Category = StartPoint, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "RoomStartPoint"))
+	TObjectPtr<AActor> mRoomStartPoint;
+};
+
 /**
  * @brief  Rogue dice의 World Setting 클래스
  */
@@ -20,13 +33,13 @@ class P_RD_API ARDWorldSettings : public AWorldSettings
 	GENERATED_BODY()
 
 public:
-	AActor* GetMainCameraPoint() const;
-	AActor* GetRoomStartPoint() const;
+	FName GetRandomRoomSpawnSettingName(const FRandomStream& Stream) const;
+
+public:
+	AActor* GetMainCameraPoint(const FName& Name) const;
+	AActor* GetRoomStartPoint(const FName& Name) const;
 	
 protected:
-	UPROPERTY(Category = StartPoint, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "MainCameraPoint"))
-	TObjectPtr<AActor> mMainCameraPoint;
-
-	UPROPERTY(Category = StartPoint, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "RoomStartPoint"))
-	TObjectPtr<AActor> mRoomStartPoint;
+	UPROPERTY(Category = Room, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SpawnSettings"))
+	TMap<FName, FRoomSpawnSettings> mSpawnSettings;
 };

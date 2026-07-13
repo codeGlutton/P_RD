@@ -30,6 +30,7 @@ public:
 	
 	/* ARDGameModeBase 상속 */
 public:
+	void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	AActor* ChoosePlayerStart_Implementation(AController* Player) override;
 
 protected:
@@ -108,6 +109,12 @@ private:
 public:
 	UPlayerUnitModel* GetPlayerUnitModel() const;
 
+public:
+	const FName& GetRoomSpawnSettingName() const;
+
+protected:
+	void SetRoomSpawnSettingName(const FName& Name);
+
 protected:
 	UPROPERTY()
 	TWeakObjectPtr<UPlayerUnitModel> mPlayerUnit;
@@ -115,4 +122,7 @@ protected:
 protected:
 	int32 mSelectedRoomRow = INDEX_NONE;
 	int32 mSelectedRoomColumn = INDEX_NONE;
+
+private:
+	FName mSelectedRoomSpawnSettingName = NAME_None;
 };

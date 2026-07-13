@@ -6,7 +6,7 @@
  *********************************************************************/
 
 #include "TAS/Effect/Stat/TacticalEffect_MaxHP.h"
-#include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 #include "Simulation/Logger/EventLogger.h"
 
 #include "TAS/Effect/TacticalEffectContext.h"
@@ -18,7 +18,7 @@ UTacticalEffect_MaxHP::UTacticalEffect_MaxHP()
 	mStackingType = ETacticalEffectStackingType::None;
 
 	FTacticalModifierInfo Info;
-	Info.mAttribute = UUnitAttributeSet::GetMaxHPAttribute();
+	Info.mAttribute = UCombatTargetAttributeSet::GetMaxHPAttribute();
 	Info.mModifierOp = ETacticalModOp::AddBase;
 	Info.mModifierMagnitude = 1.f;
 
@@ -30,7 +30,7 @@ void UTacticalEffect_MaxHP::OnExecuted(FActiveTacticalEffectsContainer& ActiveTE
 	Super::OnExecuted(ActiveTEContainer, TESpec);
 
 	FSRPGAttributeEffectEventLog Log;
-	Log.mEffectAttribute = UUnitAttributeSet::GetMaxHPAttribute();
+	Log.mEffectAttribute = UCombatTargetAttributeSet::GetMaxHPAttribute();
 	Log.mMagnitude = TESpec.mModifierValues[0];
 
 	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();

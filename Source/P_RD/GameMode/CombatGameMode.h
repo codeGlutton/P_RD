@@ -46,6 +46,9 @@ class P_RD_API ACombatGameMode : public ARoomGameModeBase
 public:
 	ACombatGameMode();
 
+public:
+	void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
+
 protected:
 	void InitializeRoom() override;
 	void BeginRoom() override;

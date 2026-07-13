@@ -6,7 +6,7 @@
  *********************************************************************/
 
 #include "TAS/Effect/Stat/TacticalEffect_HealFactor_MultiplyCompound.h"
-#include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 
 UTacticalEffect_HealFactor_MultiplyCompound::UTacticalEffect_HealFactor_MultiplyCompound()
 {
@@ -15,7 +15,7 @@ UTacticalEffect_HealFactor_MultiplyCompound::UTacticalEffect_HealFactor_Multiply
 	mStackingType = ETacticalEffectStackingType::None;
 
 	FTacticalModifierInfo Info;
-	Info.mAttribute = UUnitAttributeSet::GetHealFactorAttribute();
+	Info.mAttribute = UCombatTargetAttributeSet::GetHealFactorAttribute();
 	Info.mModifierOp = ETacticalModOp::MultiplyCompound;
 	Info.mModifierMagnitude = 1.f;
 

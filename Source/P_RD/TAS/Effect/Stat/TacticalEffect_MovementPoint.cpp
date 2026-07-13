@@ -6,7 +6,7 @@
  *********************************************************************/
 
 #include "TAS/Effect/Stat/TacticalEffect_MovementPoint.h"
-#include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 
 UTacticalEffect_MovementPoint::UTacticalEffect_MovementPoint()
 {
@@ -15,7 +15,7 @@ UTacticalEffect_MovementPoint::UTacticalEffect_MovementPoint()
 	mStackingType = ETacticalEffectStackingType::None;
 
 	FTacticalModifierInfo Info;
-	Info.mAttribute = UUnitAttributeSet::GetMovementPointAttribute();
+	Info.mAttribute = UCombatTargetAttributeSet::GetMovementPointAttribute();
 	Info.mModifierOp = ETacticalModOp::AddBase;
 	Info.mModifierMagnitude = 1.f;
 

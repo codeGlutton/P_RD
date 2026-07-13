@@ -6,7 +6,7 @@
  *********************************************************************/
 
 #include "TAS/Effect/Stat/TacticalEffect_HealFactor_Override.h"
-#include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 
 UTacticalEffect_HealFactor_Override::UTacticalEffect_HealFactor_Override()
 {
@@ -15,7 +15,7 @@ UTacticalEffect_HealFactor_Override::UTacticalEffect_HealFactor_Override()
 	mStackingType = ETacticalEffectStackingType::None;
 
 	FTacticalModifierInfo Info;
-	Info.mAttribute = UUnitAttributeSet::GetHealFactorAttribute();
+	Info.mAttribute = UCombatTargetAttributeSet::GetHealFactorAttribute();
 	Info.mModifierOp = ETacticalModOp::Override;
 	Info.mModifierMagnitude = 1.f;
 

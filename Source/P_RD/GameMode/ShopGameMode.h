@@ -18,6 +18,6 @@ class P_RD_API AShopGameMode : public ARoomGameModeBase
 {
 	GENERATED_BODY()
 
-protected:
-	void InitializeRoom() override;
+public:
+	void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 };

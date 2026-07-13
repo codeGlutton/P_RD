@@ -8,14 +8,14 @@
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
 #include "TAS/Effect/TacticalEffectContext.h"
-#include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 
 void FSkillEffectLayer_Heal::ClearPointEffect(IBoardCombatTarget* ActorModel) const
 {
     UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
-    AttributeSetComponentModel->ApplyModToAttribute(UUnitAttributeSet::GetHealPointAttribute(), ETacticalModOp::Override, 0.f);
+    AttributeSetComponentModel->ApplyModToAttribute(UCombatTargetAttributeSet::GetHealPointAttribute(), ETacticalModOp::Override, 0.f);
 }
 
 void FSkillEffectLayer_Heal::ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const
@@ -46,11 +46,11 @@ void FSkillEffectLayer_Heal::CommitEffect(IBoardCombatTarget* OwnerActorModel, c
     /* 포인트를 Factor에 임시 추가 */
     {
         TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_HealFactor_AddBase::StaticClass(), EffectContext);
-        EffectSpec->mDynamicMagnitude = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetHealPointAttribute());
+        EffectSpec->mDynamicMagnitude = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetHealPointAttribute());
         EffectHandle = AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
     }
 
-    const float TotalHeal = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetHealFactorAttribute());
+    const float TotalHeal = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetHealFactorAttribute());
     const float HealDiff = FMath::Floor(TotalHeal);
 
     if (HealDiff > 0.f)

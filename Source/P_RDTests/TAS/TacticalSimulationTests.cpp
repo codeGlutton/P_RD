@@ -97,9 +97,9 @@ bool FTacticalSimulationTests::RunTest(const FString& Parameters)
     }
 
     // 기본 방어력 세팅
-    CompModel->SetAttributeBaseValue(UUnitAttributeSet::GetDefensePointAttribute(), 10.f);
-    TestEqual(TEXT("초기 기본 방어력은 10.f이어야 합니다."), CompModel->GetAttributeBaseValue(UUnitAttributeSet::GetDefensePointAttribute()), 10.f);
-    TestEqual(TEXT("초기 현재 방어력은 10.f이어야 합니다."), CompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefensePointAttribute()), 10.f);
+    CompModel->SetAttributeBaseValue(UCombatTargetAttributeSet::GetDefensePointAttribute(), 10.f);
+    TestEqual(TEXT("초기 기본 방어력은 10.f이어야 합니다."), CompModel->GetAttributeBaseValue(UCombatTargetAttributeSet::GetDefensePointAttribute()), 10.f);
+    TestEqual(TEXT("초기 현재 방어력은 10.f이어야 합니다."), CompModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetDefensePointAttribute()), 10.f);
 
     // 3. 무한 이펙트 적용 (방어력 +30)
     UTacticalEffectContext* EffectContext = CompModel->MakeEffectContext();
@@ -111,8 +111,8 @@ bool FTacticalSimulationTests::RunTest(const FString& Parameters)
     FActiveTacticalEffectHandle ActiveHandle = CompModel->ApplyTacticalEffectSpecToSelf(*InfiniteEffect);
 
     TestTrue(TEXT("ActiveHandle이 유효해야 합니다."), ActiveHandle.IsValid());
-    TestEqual(TEXT("기본 방어력은 10.f로 유지되어야 합니다."), CompModel->GetAttributeBaseValue(UUnitAttributeSet::GetDefensePointAttribute()), 10.f);
-    TestEqual(TEXT("현재 방어력은 40.f이어야 합니다. (기본 10 + 모디파이어 30)"), CompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefensePointAttribute()), 40.f);
+    TestEqual(TEXT("기본 방어력은 10.f로 유지되어야 합니다."), CompModel->GetAttributeBaseValue(UCombatTargetAttributeSet::GetDefensePointAttribute()), 10.f);
+    TestEqual(TEXT("현재 방어력은 40.f이어야 합니다. (기본 10 + 모디파이어 30)"), CompModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetDefensePointAttribute()), 40.f);
 
     // 4. 시뮬레이션 상태로 변경하여 복제 유도
     AddInfo(TEXT("=== 시뮬레이션 상태로 전환 (RoomInstance 복제) ==="));
@@ -142,8 +142,8 @@ bool FTacticalSimulationTests::RunTest(const FString& Parameters)
     }
 
     // 복제 직후 수치 일치 여부 확인
-    TestEqual(TEXT("[복제본] 기본 방어력은 10.f이어야 합니다."), ClonedCompModel->GetAttributeBaseValue(UUnitAttributeSet::GetDefensePointAttribute()), 10.f);
-    TestEqual(TEXT("[복제본] 현재 방어력은 40.f이어야 합니다."), ClonedCompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefensePointAttribute()), 40.f);
+    TestEqual(TEXT("[복제본] 기본 방어력은 10.f이어야 합니다."), ClonedCompModel->GetAttributeBaseValue(UCombatTargetAttributeSet::GetDefensePointAttribute()), 10.f);
+    TestEqual(TEXT("[복제본] 현재 방어력은 40.f이어야 합니다."), ClonedCompModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetDefensePointAttribute()), 40.f);
 
     // 5. 복제본에서 이펙트 해제 테스트
     AddInfo(TEXT("=== 복제된 모델에서 활성 이펙트 제거 ==="));
@@ -152,10 +152,10 @@ bool FTacticalSimulationTests::RunTest(const FString& Parameters)
 
     // 6. 결과 검증 (격리 여부 확인)
     // 복제본은 방어력이 원래 수치(10)로 복구되어야 함
-    TestEqual(TEXT("[복제본] 이펙트 제거 후, 방어력이 10.f로 복구되어야 합니다."), ClonedCompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefensePointAttribute()), 10.f);
+    TestEqual(TEXT("[복제본] 이펙트 제거 후, 방어력이 10.f로 복구되어야 합니다."), ClonedCompModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetDefensePointAttribute()), 10.f);
     
     // 원본은 여전히 방어력 버프가 유지되어 40이어야 함
-    TestEqual(TEXT("[원본] 방어력이 40.f로 유지되어야 합니다."), CompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefensePointAttribute()), 40.f);
+    TestEqual(TEXT("[원본] 방어력이 40.f로 유지되어야 합니다."), CompModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetDefensePointAttribute()), 40.f);
 
     // 7. 환경 정리
     AddInfo(TEXT("=== 게임 상태 복원 및 환경 정리 ==="));

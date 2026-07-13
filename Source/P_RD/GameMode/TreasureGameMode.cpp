@@ -4,9 +4,9 @@
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "DataAsset/StageSpawnData/StaticStageSpawnData.h"
 
-void ATreasureGameMode::InitializeRoom()
+void ATreasureGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
-	Super::InitializeRoom();
+	Super::InitGame(MapName, Options, ErrorMessage);
 
 	const FStage& CurStage = GetRunPersistData()->GetStage();
 

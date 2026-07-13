@@ -5,7 +5,7 @@
 
 #include "Pawn/UnitModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
-#include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 #include "Actor/TileMap/TileMapModel.h"
 
 FSRPGMoveCommand::FSRPGMoveCommand()
@@ -81,7 +81,7 @@ void USRPGMoveAction::OnEndAction()
         // 이동력 차감
         if (UAttributeSetComponentModel* AttrComp = mInstigator->GetAttributeComponentModel())
         {
-            AttrComp->ApplyModToAttribute(UUnitAttributeSet::GetMovementAttribute(), ETacticalModOp::Additive, -static_cast<float>(SpentPoint));
+            AttrComp->ApplyModToAttribute(UCombatTargetAttributeSet::GetMovementAttribute(), ETacticalModOp::Additive, -static_cast<float>(SpentPoint));
         }
     }
 }

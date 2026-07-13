@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   PassiveTestsHelper.h
  * @brief  패시브 발동/해제 경로 테스트용 공통 목업
  * @author 이문환
@@ -41,7 +41,7 @@ public:
 	{
 		// 실제 속성 컴포넌트 + 유닛 속성셋을 기본 서브오브젝트로 생성
 		mAttributeComponentModel = CreateDefaultSubobject<UAttributeSetComponentModel>(TEXT("AttributeSetComponentModel"));
-		mUnitAttributeSet = CreateDefaultSubobject<UUnitAttributeSet>(TEXT("UnitAttributeSet"));
+		mUnitAttributeSet = CreateDefaultSubobject<UCombatTargetAttributeSet>(TEXT("UnitAttributeSet"));
 	}
 
 	// 테스트 목이므로 컴포넌트 모델 초기화 단계는 비움
@@ -58,7 +58,7 @@ private:
 	TObjectPtr<UAttributeSetComponentModel> mAttributeComponentModel;
 
 	UPROPERTY()
-	TObjectPtr<UUnitAttributeSet> mUnitAttributeSet;
+	TObjectPtr<UCombatTargetAttributeSet> mUnitAttributeSet;
 };
 
 /**
@@ -108,7 +108,7 @@ protected:
 		{
 			return false;
 		}
-		const float* HP = Snapshot->mAttributes.Find(UUnitAttributeSet::GetHPAttribute());
+		const float* HP = Snapshot->mAttributes.Find(UCombatTargetAttributeSet::GetHPAttribute());
 		return (HP != nullptr) && (*HP < mQualifyHPBelow);
 	}
 };

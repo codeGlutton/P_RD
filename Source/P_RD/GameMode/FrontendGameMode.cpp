@@ -195,9 +195,9 @@ AFrontendGameMode::AFrontendGameMode()
 	mWaitExternalWorkOnTransition = false;
 }
 
-void AFrontendGameMode::InitializeCommonRoom()
+void AFrontendGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
-	Super::InitializeCommonRoom();
+	Super::InitGame(MapName, Options, ErrorMessage);
 
 	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
 	checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));

@@ -6,7 +6,7 @@
  *********************************************************************/
 
 #include "TAS/Effect/Stat/TacticalEffect_AttackFactor_DivideAdditive.h"
-#include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 
 UTacticalEffect_AttackFactor_DivideAdditive::UTacticalEffect_AttackFactor_DivideAdditive()
 {
@@ -15,7 +15,7 @@ UTacticalEffect_AttackFactor_DivideAdditive::UTacticalEffect_AttackFactor_Divide
 	mStackingType = ETacticalEffectStackingType::None;
 
 	FTacticalModifierInfo Info;
-	Info.mAttribute = UUnitAttributeSet::GetAttackFactorAttribute();
+	Info.mAttribute = UCombatTargetAttributeSet::GetAttackFactorAttribute();
 	Info.mModifierOp = ETacticalModOp::DivideAdditive;
 	Info.mModifierMagnitude = 1.f;
 

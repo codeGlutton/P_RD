@@ -577,6 +577,11 @@ void ARDGameModeBase::ClearRunPersistData()
 	GameProfileSubsystem->EndRun();
 }
 
+USoundBase* ARDGameModeBase::GetMainBGM() const
+{
+	return mMainBGM;
+}
+
 void ARDGameModeBase::SetMainBGM(USoundBase* BGM, bool IsOverride)
 {
 	if (mMainBGM == nullptr || IsOverride == true)
