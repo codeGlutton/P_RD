@@ -739,7 +739,9 @@ private:
 	{
 		TObjectPtr<UWidget> mRoot;                    // 캔버스에 붙은 루트(아이콘+텍스트 박스 또는 텍스트 단일)
 		FVector mWorldLocation = FVector::ZeroVector; // 스폰 시점 월드 위치 스냅샷(이 위에 투영해 그린다)
-		int32 mMotionIndex = INDEX_NONE;              // 속한 모션 인덱스. 그 모션 종료 시 이 값으로 묶어서 함께 제거
+		int32 mTurnIndex = INDEX_NONE;                // 요청이 속한 턴 인덱스. 후속 UI 연출에서 사용할 수 있도록 보존
+		int32 mActionIndex = INDEX_NONE;              // 요청이 속한 액션 인덱스. 후속 UI 연출에서 사용할 수 있도록 보존
+		int32 mMotionIndex = INDEX_NONE;              // 요청이 속한 모션 인덱스. 기존 모션 종료 처리에도 사용
 		float mElapsed = 0.0f;                        // 스폰 후 누적 시간(실행 로그의 상승/페이드/수명 판단용)
 		bool mIsPreview = false;                      // true면 자동 소멸 안 함(MotionFinished/Clear로만 제거)
 		float mStackOffsetY = 0.0f;                   // 미리보기 겹침 방지용 세로 쌓기 오프셋(px, 위로 +)
