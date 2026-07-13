@@ -1,22 +1,21 @@
 ﻿#include "UI/CharacterSelectWidget.h"
 
-#include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Engine/Texture2D.h"
-#include "Engine/GameViewportClient.h"
-#include "Engine/World.h"
 #include "GameMode/FrontendGameMode.h"
 #include "UI/CharacterSelectWidgetPrivate.h"
 
 namespace
 {
-	void FitClassActionImageSlotToViewportWidthCrop(const UCharacterSelectWidget* Owner, UImage* Image, const UTexture2D* Illustration)
+	void FitClassActionImageSlotToViewportCover(UImage* Image, const UTexture2D* Illustration,
+		const FVector2D& LogicalViewportSize)
 	{
-		if (Owner == nullptr || Image == nullptr || Illustration == nullptr)
+		if (Image == nullptr || Illustration == nullptr
+			|| LogicalViewportSize.X <= 1.0f || LogicalViewportSize.Y <= 1.0f)
 		{
 			return;
 		}
@@ -27,32 +26,132 @@ namespace
 			return;
 		}
 
-		const UWorld* World = Owner->GetWorld();
-		const UGameViewportClient* GameViewport = World != nullptr ? World->GetGameViewport() : nullptr;
-		FVector2D ViewportSize = FVector2D::ZeroVector;
-		if (GameViewport != nullptr)
-		{
-			GameViewport->GetViewportSize(OUT ViewportSize);
-		}
-		if (ViewportSize.X <= 0.0f || ViewportSize.Y <= 0.0f)
-		{
-			return;
-		}
-
-		const float ViewportScale = FMath::Max(UWidgetLayoutLibrary::GetViewportScale(Owner), KINDA_SMALL_NUMBER);
-		const FVector2D LogicalViewportSize = ViewportSize / ViewportScale;
-		const float IllustrationAspect = static_cast<float>(Illustration->GetSizeX()) / FMath::Max(1.0f, static_cast<float>(Illustration->GetSizeY()));
-		if (IllustrationAspect <= 0.0f)
+		const FVector2D IllustrationSize(
+			FMath::Max(1.0f, static_cast<float>(Illustration->GetSizeX())),
+			FMath::Max(1.0f, static_cast<float>(Illustration->GetSizeY())));
+		const float CoverScale = FMath::Max(
+			LogicalViewportSize.X / IllustrationSize.X,
+			LogicalViewportSize.Y / IllustrationSize.Y);
+		if (CoverScale <= 0.0f)
 		{
 			return;
 		}
 
-		const FVector2D TargetSize(LogicalViewportSize.X, LogicalViewportSize.X / IllustrationAspect);
+		const FVector2D TargetSize = IllustrationSize * CoverScale;
 
 		CanvasSlot->SetAnchors(FAnchors(0.5f, 0.5f));
 		CanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));
 		CanvasSlot->SetPosition(FVector2D::ZeroVector);
 		CanvasSlot->SetSize(TargetSize);
+	}
+}
+
+/** @brief 클래스 선택 화면을 배경 cover + 화면 안쪽 고정 조작 UI 구조로 다시 배치한다. */
+void UCharacterSelectWidget::RefreshResponsiveClassLayout(const FVector2D& LogicalViewportSize)
+{
+	if (LogicalViewportSize.X <= 1.0f || LogicalViewportSize.Y <= 1.0f)
+	{
+		return;
+	}
+	mLastResponsiveViewportSize = LogicalViewportSize;
+
+	struct FActionImageTarget
+	{
+		UImage* mImage;
+		EPlayerJobType mJobType;
+	};
+	const FActionImageTarget ActionImages[] = {
+		{ mKnightActionImage, EPlayerJobType::Knight },
+		{ mRogueActionImage, EPlayerJobType::Archer },
+		{ mMageActionImage, EPlayerJobType::Mage },
+	};
+	for (const FActionImageTarget& Target : ActionImages)
+	{
+		if (Target.mImage != nullptr && Target.mImage->GetVisibility() != ESlateVisibility::Collapsed)
+		{
+			FitClassActionImageSlotToViewportCover(
+				Target.mImage, GetJobIllustration(Target.mJobType), LogicalViewportSize);
+		}
+	}
+
+	auto GetBaseCanvasLayout = [this](UWidget* Widget) -> const FAnchorData*
+	{
+		UCanvasPanelSlot* CanvasSlot = Widget != nullptr ? Cast<UCanvasPanelSlot>(Widget->Slot) : nullptr;
+		if (CanvasSlot == nullptr)
+		{
+			return nullptr;
+		}
+
+		if (const FAnchorData* CachedLayout = mResponsiveBaseSlots.Find(Widget->GetFName()))
+		{
+			return CachedLayout;
+		}
+		return &mResponsiveBaseSlots.Add(Widget->GetFName(), CanvasSlot->GetLayout());
+	};
+
+	// 설명 패널은 640x360 원본 비율을 유지하되 화면 절반/높이 40%를 넘지 않는다.
+	UWidget* DescriptionFrame = GetWidgetFromName(TEXT("desc_frame"));
+	if (const FAnchorData* FrameBase = GetBaseCanvasLayout(DescriptionFrame))
+	{
+		const double DescriptionScale = FMath::Min3(
+			1.0,
+			(LogicalViewportSize.X * 0.50) / FMath::Max(1.0, static_cast<double>(FrameBase->Offsets.Right)),
+			(LogicalViewportSize.Y * 0.40) / FMath::Max(1.0, static_cast<double>(FrameBase->Offsets.Bottom)));
+		const FVector2D BaseOrigin(FrameBase->Offsets.Left, FrameBase->Offsets.Top);
+		const FVector2D TargetOrigin(48.0f, 48.0f);
+		static const TCHAR* const DescriptionWidgetNames[] = {
+			TEXT("desc_frame"),
+			TEXT("mSelectedCharacterNameText"), TEXT("mSelectedCharacterRoleText"),
+			TEXT("mSelectedCharacterDescriptionText"), TEXT("mSelectedCharacterStatText"),
+			TEXT("icon_hp"), TEXT("icon_dice"), TEXT("icon_gold"),
+			TEXT("mMaxHPStatValueText"), TEXT("mDiceStatValueText"), TEXT("mGoldStatValueText"),
+		};
+		for (const TCHAR* WidgetName : DescriptionWidgetNames)
+		{
+			UWidget* Widget = GetWidgetFromName(FName(WidgetName));
+			UCanvasPanelSlot* CanvasSlot = Widget != nullptr ? Cast<UCanvasPanelSlot>(Widget->Slot) : nullptr;
+			const FAnchorData* BaseLayout = GetBaseCanvasLayout(Widget);
+			if (CanvasSlot == nullptr || BaseLayout == nullptr)
+			{
+				continue;
+			}
+
+			FAnchorData ScaledLayout = *BaseLayout;
+			ScaledLayout.Offsets.Left = TargetOrigin.X
+				+ (BaseLayout->Offsets.Left - BaseOrigin.X) * DescriptionScale;
+			ScaledLayout.Offsets.Top = TargetOrigin.Y
+				+ (BaseLayout->Offsets.Top - BaseOrigin.Y) * DescriptionScale;
+			CanvasSlot->SetLayout(ScaledLayout);
+			Widget->SetRenderTransformPivot(FVector2D::ZeroVector);
+			Widget->SetRenderScale(FVector2D(DescriptionScale, DescriptionScale));
+		}
+	}
+
+	// 클래스 버튼 3개의 원본 외곽폭은 1142px. 좌우 48px 안쪽에서 전부 보일 때까지만 함께 축소한다.
+	constexpr float CardRowWidth = 1142.0f;
+	constexpr float CardSideMargin = 48.0f;
+	const double CardScale = FMath::Min(
+		1.0,
+		FMath::Max(1.0, LogicalViewportSize.X - static_cast<double>(CardSideMargin * 2.0f))
+			/ static_cast<double>(CardRowWidth));
+	static const TCHAR* const CardWrapperNames[] = {
+		TEXT("mCard_knight_wrap"), TEXT("mCard_mage_wrap"), TEXT("mCard_rogue_wrap")
+	};
+	for (const TCHAR* WidgetName : CardWrapperNames)
+	{
+		UWidget* CardWrapper = GetWidgetFromName(FName(WidgetName));
+		UCanvasPanelSlot* CanvasSlot = CardWrapper != nullptr ? Cast<UCanvasPanelSlot>(CardWrapper->Slot) : nullptr;
+		const FAnchorData* BaseLayout = GetBaseCanvasLayout(CardWrapper);
+		if (CanvasSlot == nullptr || BaseLayout == nullptr)
+		{
+			continue;
+		}
+
+		FAnchorData ScaledLayout = *BaseLayout;
+		ScaledLayout.Offsets.Left = BaseLayout->Offsets.Left * CardScale;
+		CanvasSlot->SetLayout(ScaledLayout);
+		CardWrapper->SetRenderTransformPivot(BaseLayout->Alignment);
+		CardWrapper->SetRenderScale(FVector2D(CardScale, CardScale));
 	}
 }
 
@@ -259,7 +358,8 @@ void UCharacterSelectWidget::SyncSelectedCharacterArt(EPlayerJobType JobType)
 
 		if (UTexture2D* Illustration = GetJobIllustration(ImageJob))
 		{
-			FitClassActionImageSlotToViewportWidthCrop(this, Image, Illustration);
+			FitClassActionImageSlotToViewportCover(
+				Image, Illustration, GetCachedGeometry().GetLocalSize());
 
 			FSlateBrush Brush;
 			Brush.DrawAs = ESlateBrushDrawType::Image;

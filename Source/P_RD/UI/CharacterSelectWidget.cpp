@@ -83,7 +83,21 @@ void UCharacterSelectWidget::NativeConstruct()
 	MakeButtonLabelInputTransparent(mBackToMainButtonText);
 	RefreshLocalizedTextCache();
 	RefreshCharacterOptions();
+	RefreshResponsiveClassLayout(GetCachedGeometry().GetLocalSize());
 	SetStatusText(mReadyStatusText);
+}
+
+/** @brief DPI 적용 뒤의 실제 논리 뷰포트 크기가 바뀔 때만 반응형 배치를 다시 계산한다. */
+void UCharacterSelectWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+
+	const FVector2D LogicalViewportSize = MyGeometry.GetLocalSize();
+	if (LogicalViewportSize.X > 1.0f && LogicalViewportSize.Y > 1.0f
+		&& LogicalViewportSize.Equals(mLastResponsiveViewportSize, 0.5f) == false)
+	{
+		RefreshResponsiveClassLayout(LogicalViewportSize);
+	}
 }
 
 /** @brief 캐릭터 선택 버튼 아트를 기존 WBP 버튼에 적용한다. */

@@ -338,10 +338,9 @@ FName UTitleMenuWidget::SelectTitleLayoutProfile(const FVector2D& ViewportSize) 
 	}
 
 	const float AspectRatio = ViewportSize.X / ViewportSize.Y;
-	if (AspectRatio <= 1.35f)
-	{
-		return TitleLayoutProfileFoldInner;
-	}
+	// 모바일은 landscape 고정이다. 1.35 경계에서 fold(2184x1968)와 tablet(1920x1200)이
+	// 바뀌면 거의 같은 창 크기에서도 전체 ScaleBox 배율이 약 39% 튄다. 좁은 가로 화면도
+	// tablet 프로필을 사용해 로고와 버튼의 최소 물리 크기를 유지한다.
 	if (AspectRatio <= 1.70f)
 	{
 		return TitleLayoutProfileTablet16x10;

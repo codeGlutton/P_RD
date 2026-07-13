@@ -5,6 +5,7 @@
 #pragma once
 
 #include "RDMinimal.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Frontend/CharacterSelectTypes.h"
 #include "UI/RDUserWidget.h"
 
@@ -63,6 +64,9 @@ protected:
 	/** @brief 화면 이탈 시 버튼/카드 델리게이트를 해제해 재Construct 중복 호출을 막는다. */
 	void NativeDestruct() override;
 
+	/** @brief 창 크기 변경 시 일러스트 cover와 고정폭 조작 UI를 현재 논리 뷰포트에 다시 맞춘다. */
+	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+
 	/** @brief 선택된 캐릭터 View 값만 BP 연출로 넘긴다; BP는 런 생성 로직을 호출하지 않는다. */
 	UFUNCTION(Category = "Character Select", BlueprintImplementableEvent)
 	void BP_OnSelectedCharacterChanged(const FFrontendCharacterOption& CharacterOption);
@@ -113,6 +117,9 @@ private:
 
 	/** @brief 선택 직업에 맞는 액션 일러스트만 보이고 구형 포트레이트 슬롯은 fallback으로 사용한다. */
 	void SyncSelectedCharacterArt(EPlayerJobType JobType);
+
+	/** @brief 클래스 선택 화면의 배경/설명/카드 줄을 현재 논리 뷰포트 안에 맞춘다. */
+	void RefreshResponsiveClassLayout(const FVector2D& LogicalViewportSize);
 
 	/** @brief 직업별 SVN 일러스트 PNG를 런타임 로드한다. 한 번 로드한 텍스처는 캐시해 재사용한다. */
 	// [합의필요] SVN 임포트 uasset 경로 계약은 아트 교체/패키징 규칙과 함께 갱신되어야 한다.
@@ -237,6 +244,10 @@ private:
 
 	/** @brief StartNewRun 요청 이후 Confirm/Back/카드 입력 재진입을 막는 단방향 게이트. */
 	bool mStartRequested = false;
+
+	/** @brief Canvas 원본 배치를 보존해 화면 크기가 다시 커졌을 때 정확히 복원한다. */
+	TMap<FName, FAnchorData> mResponsiveBaseSlots;
+	FVector2D mLastResponsiveViewportSize = FVector2D::ZeroVector;
 
 	FText mConfirmText;
 	FText mBackText;
