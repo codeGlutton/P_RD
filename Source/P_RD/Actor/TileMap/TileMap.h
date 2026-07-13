@@ -247,6 +247,18 @@ protected:
 	TObjectPtr<UInstancedStaticMeshComponent> mPathArrowComponent;
 
 	/**
+	 * @brief 경로 좌회전 화살표를 그리는 인스턴스드 메시 컴포넌트 (ISM은 메시 1개만 가능해 직진과 분리)
+	 */
+	UPROPERTY(VisibleAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Path Turn Left Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mPathTurnLeftComponent;
+
+	/**
+	 * @brief 경로 우회전 화살표를 그리는 인스턴스드 메시 컴포넌트 (ISM은 메시 1개만 가능해 직진과 분리)
+	 */
+	UPROPERTY(VisibleAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Path Turn Right Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mPathTurnRightComponent;
+
+	/**
 	 * @brief 도착(끝) 타일 마커를 그리는 인스턴스드 메시 컴포넌트
 	 */
 	UPROPERTY(VisibleAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Path End Component"))
@@ -287,10 +299,22 @@ protected:
 	TObjectPtr<UStaticMesh> mPathArrowMesh;
 
 	/**
-	 * @brief 화살표에 덮어쓸 머티리얼 (custom data RGBA 색을 읽는 하이라이트 머티리얼 권장, null이면 메시 기본)
+	 * @brief 화살표에 덮어쓸 머티리얼 (custom data RGBA 색을 읽는 하이라이트 머티리얼 권장, null이면 메시 기본, 회전 화살표와 공유)
 	 */
 	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path Arrow Material"))
 	TObjectPtr<UMaterialInterface> mPathArrowMaterial;
+
+	/**
+	 * @brief 경로 좌회전 화살표 메시 (+X 진입 기준, null이면 직진 화살표로 폴백)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path Turn Left Mesh"))
+	TObjectPtr<UStaticMesh> mPathTurnLeftMesh;
+
+	/**
+	 * @brief 경로 우회전 화살표 메시 (+X 진입 기준, null이면 직진 화살표로 폴백)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path Turn Right Mesh"))
+	TObjectPtr<UStaticMesh> mPathTurnRightMesh;
 
 	/**
 	 * @brief 도착(끝) 타일 마커 메시 (기본: Kenney SM_Kenney_FactoryKit_IndicatorSpecialArrow)
@@ -398,6 +422,24 @@ private:
 	 */
     UPROPERTY(Transient)
 	int32 mPathLength = 0;
+
+	/* 화살표 인스턴스별 경로 순번 (SetMovePath에서 재구성)
+	   경로 순번과 시간을 알면 파도타기 응원하듯이 어떤 타이밍에 어떤 색을 보여줘야할 지 알 수 있음 */
+
+	/**
+	 * @brief 직진 화살표 인스턴스별 경로 순번
+	 */
+	TArray<int32> mPathArrowOrders;
+
+	/**
+	 * @brief 좌회전 화살표 인스턴스별 경로 순번
+	 */
+	TArray<int32> mPathTurnLeftOrders;
+
+	/**
+	 * @brief 우회전 화살표 인스턴스별 경로 순번
+	 */
+	TArray<int32> mPathTurnRightOrders;
 
 	/**
 	 * @brief 경로 화살표/도착 마커의 펄스 알파를 매 프레임 재계산해 custom data에 기록
