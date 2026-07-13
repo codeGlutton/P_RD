@@ -9,7 +9,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/ArrowComponent.h"
 
-#include "Actor/BoardActor/Obstacle/ObstacleModel.cpp"
+#include "Actor/BoardActor/Obstacle/ObstacleModel.h"
 
 // Sets default values
 AObstacle::AObstacle()
@@ -21,7 +21,7 @@ AObstacle::AObstacle()
 	if (mCapsuleComp != nullptr)
 	{
 		mCapsuleComp->InitCapsuleSize(34.0f, 88.0f);
-		mCapsuleComp->SetCollisionProfileName(UCollisionProfile::Pawn_ProfileName);
+		mCapsuleComp->SetCollisionProfileName(UCollisionProfile::BlockAll_ProfileName);
 
 		mCapsuleComp->CanCharacterStepUpOn = ECB_No;
 		mCapsuleComp->SetShouldUpdatePhysicsVolume(true);
@@ -58,11 +58,23 @@ AObstacle::AObstacle()
 void AObstacle::BindModel(UObjectModel* Model)
 {
 	IActorView::BindModel(Model);
+
+	// 연출 요청 구독
+	if (mObstacleModel.IsValid())
+	{
+		// 위치 가져오기 구독
+		mObstacleModel->OnGetBoardActorWorldTransform.BindUObject(this, &AObstacle::GetActorTransform);
+
+		// 초기 배치 연출 요청 구독
+		mObstacleModel->OnPlaceTileTransform.AddUObject(this, &AObstacle::OnPlaceTileTransform);
+	}
+
 }
 
 void AObstacle::UnbindModel(UObjectModel* Model)
 {
 	IActorView::UnbindModel(Model);
+	mObstacleModel.Reset();
 }
 
 UObjectModel* AObstacle::GetModel_Internal() const
@@ -77,4 +89,19 @@ void AObstacle::OnPlaceTileTransform(const FTileTransform& TileTransform, const 
 	UnitTransform.SetLocation(UnitLocation);
 
 	SetActorTransform(UnitTransform);
+}
+
+UCapsuleComponent* AObstacle::GetCapsuleComponent() const
+{
+	return mCapsuleComp;
+}
+
+UStaticMeshComponent* AObstacle::GetMesh() const
+{
+	return mMeshComp;
+}
+
+UArrowComponent* AObstacle::GetArrowComponent() const
+{
+	return mArrowComp;
 }
