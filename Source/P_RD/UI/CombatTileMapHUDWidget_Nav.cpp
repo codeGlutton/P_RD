@@ -379,13 +379,13 @@ void UCombatTileMapHUDWidget::HandleWorldMapCloseRequested()
 
 /**
  * @brief 월드맵(풀스크린 지도 뷰)이 열려 있는 동안 탑바를 제외한 전투 컨트롤을 숨긴다.
- * @details 지도는 탑바 아래 레이어(z=-20)라, 안 숨기면 스킬레일/주사위/턴순서/이동·턴종료가 지도 위에 뜬다.
+ * @details 지도는 탑바 아래 레이어(z=-20)라, 안 숨기면 스킬레일/주사위/이동·턴종료가 지도 위에 뜬다.
  *          숨김/복원 대상: 런타임 컨트롤 위젯 배열 + 전투 컨트롤/상태 알약 스킨 마커(이름 접두사).
- *          내비/룸 배너만 유지하고, 턴순서와 Lv/Gold/HP 알약은 지도 위에서 숨긴다.
+ *          내비만 유지하고, Lv/Gold/HP 알약은 지도 위에서 숨긴다.
  */
 void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 {
-	mCombatControlsHidden = !bVisible;   // 지도 열린 동안 RebuildTurnOrderBar 등이 컨트롤을 다시 만들지 않게 막는다.
+	mCombatControlsHidden = !bVisible;
 
 	// 지도는 HUD(z=-10)보다 아래(z=-20)에 깔린다. HUD 루트는 평소 Visible(빈 타일맵 탭까지 받으려고)이라
 	// 화면 전체 입력을 먼저 삼켜서, 지도의 드래그 스크롤이 안 먹는다. 지도 열림 동안엔 루트를 SelfHitTestInvisible로
@@ -403,7 +403,7 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 		}
 	};
 
-	// 런타임 컨트롤: 스킬 레일 / 보유 주사위 / 턴 순서 칩 / 장비 칩.
+	// 런타임 컨트롤: 스킬 레일 / 보유 주사위 / 장비 칩.
 	ToggleWidgets(mSkillRailPanels, DisplayVis);
 	ToggleWidgets(mSkillRailTexts, DisplayVis);
 	ToggleWidgets(mSkillRailIcons, DisplayVis);
@@ -411,8 +411,6 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 	ToggleWidgets(mOwnedDiceImages, DisplayVis);
 	ToggleWidgets(mOwnedDiceCardWidgets, InputVis);
 	ToggleWidgets(mOwnedDiceTypeTexts, DisplayVis);
-	ToggleWidgets(mTurnOrderChips, DisplayVis);
-	ToggleWidgets(mTurnOrderChipTexts, DisplayVis);
 	ToggleWidgets(mEquipmentChips, DisplayVis);
 	ToggleWidgets(mEquipmentChipTexts, DisplayVis);
 	ToggleWidgets(mEquipSlotButtons, InputVis);
@@ -437,9 +435,9 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 	if (DesignCanvas != nullptr)
 	{
 		static const TArray<FString> ControlPrefixes = {
-			TEXT("R_skill_rail"), TEXT("R_btn_move"), TEXT("R_btn_end_turn"), TEXT("R_turn_order"),
-			TEXT("HUD_SkillRail"), TEXT("HUD_DiceTray"), TEXT("HUD_Move"), TEXT("HUD_EndTurn"), TEXT("HUD_TurnOrder"),
-			TEXT("HUD_M_dice"), TEXT("HUD_M_turn"), TEXT("HUD_M_equip"), TEXT("HUD_M_btn_move"), TEXT("HUD_M_btn_end")
+			TEXT("R_skill_rail"), TEXT("R_btn_move"), TEXT("R_btn_end_turn"),
+			TEXT("HUD_SkillRail"), TEXT("HUD_DiceTray"), TEXT("HUD_Move"), TEXT("HUD_EndTurn"),
+			TEXT("HUD_M_dice"), TEXT("HUD_M_equip"), TEXT("HUD_M_btn_move"), TEXT("HUD_M_btn_end")
 		};
 		const int32 ChildCount = DesignCanvas->GetChildrenCount();
 		for (int32 ChildIndex = 0; ChildIndex < ChildCount; ++ChildIndex)
@@ -458,10 +456,6 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 		}
 	}
 
-	if (bVisible)
-	{
-		RebuildTurnOrderBar();   // 지도 닫힘 → 그동안 스킵된 턴 순서를 현재 상태로 다시 그린다.
-	}
 }
 
 /**
