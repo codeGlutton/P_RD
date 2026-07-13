@@ -93,7 +93,8 @@ enum class EFloatingLogColorType : uint8
  * @details 게임플레이가 채워 CombatUIModel::NotifyCombatFloatingLog(s)로 보내면 HUD가 그린다.
  *          - 위치는 호출자가 정한다(유닛 위/타일 위 판별을 UI가 하지 않는다) → mWorldLocation.
  *          - 아이콘/색은 "의미(enum)"로만 준다 → 실제 텍스처·색은 HUD가 매핑.
- *          - mIsPreview + mMotionIndex 조합으로 "조준 미리보기 → 모션 종료 시 쳐내기"가 굴러간다.
+ *          - (mTurnIndex, mActionIndex, mMotionIndex)는 UI까지 그대로 전달해
+ *            후속 표시 그룹화나 재생 상관관계에 사용할 수 있도록 보존한다.
  */
 USTRUCT(BlueprintType)
 struct FCombatFloatingLogRequest
@@ -114,6 +115,12 @@ struct FCombatFloatingLogRequest
 
 	/** @brief 낮은 값부터 순차 표시한다. 같은 값이면 수신 순서를 따른다. */
 	UPROPERTY(BlueprintReadWrite) int32 mSequence = 0;
+
+	/** @brief TurnEventLogs 배열 기준 턴 인덱스. INDEX_NONE이면 특정 턴에 묶이지 않은 로그다. */
+	UPROPERTY(BlueprintReadWrite) int32 mTurnIndex = INDEX_NONE;
+
+	/** @brief 해당 턴의 ActionEventLogs 배열 기준 액션 인덱스. INDEX_NONE이면 특정 액션에 묶이지 않은 로그다. */
+	UPROPERTY(BlueprintReadWrite) int32 mActionIndex = INDEX_NONE;
 
 	/** @brief 같은 액션의 MotionEventLogs 배열 기준 인덱스. INDEX_NONE이면 수명 시간으로만 자동 제거한다. */
 	UPROPERTY(BlueprintReadWrite) int32 mMotionIndex = INDEX_NONE;

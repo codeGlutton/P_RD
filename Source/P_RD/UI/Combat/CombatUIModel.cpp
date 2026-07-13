@@ -99,6 +99,14 @@ void UCombatUIModel::SetSelectedDice(const TArray<int32>& SelectedIndices, int32
 	OnUIChanged.Broadcast(ECombatUIDomain::Dice);
 }
 
+void UCombatUIModel::SetDiceState(const TArray<FDiceSlotUI>& Dice, const TArray<int32>& SelectedIndices, int32 SelectedSum)
+{
+	mDiceUIs = Dice;
+	mSelectedDiceIndices = SelectedIndices;
+	mSelectedDiceSum = SelectedSum;
+	OnUIChanged.Broadcast(ECombatUIDomain::Dice);
+}
+
 /** @brief 스킬 레일 표시 스냅샷을 교체하고 Skill 도메인을 갱신한다. */
 void UCombatUIModel::SetSkillUIs(const TArray<FSkillUI>& Skills)
 {

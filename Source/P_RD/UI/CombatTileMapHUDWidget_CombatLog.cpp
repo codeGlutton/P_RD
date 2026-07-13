@@ -267,6 +267,8 @@ void UCombatTileMapHUDWidget::SpawnFloatingCombatLogAtWorld(const FCombatFloatin
 	FFloatingCombatLogEntry Entry;
 	Entry.mRoot = LogBox;
 	Entry.mWorldLocation = Request.mWorldLocation;
+	Entry.mTurnIndex = Request.mTurnIndex;
+	Entry.mActionIndex = Request.mActionIndex;
 	Entry.mMotionIndex = Request.mMotionIndex;
 	Entry.mElapsed = 0.0f;
 	Entry.mIsPreview = Request.mIsPreview;

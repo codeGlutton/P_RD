@@ -262,7 +262,6 @@ void ACombatGameMode::InitializeRoom()
 		PushTurnUIData();
 		PushUnitUIData();
 		PushDiceUIData();
-		PushSelectedDiceUIData();
 		PushSkillUIData();
 		PushEquipmentUIData();
 		// 턴 시작 연출: 배리어를 HUD로 넘겨 턴 배너가 끝날 때까지 실제 턴 실행을 대기시킨다.
@@ -313,12 +312,10 @@ void ACombatGameMode::InitializeRoom()
 		});
 
 	DicePoolModel->OnSelectedDiceUI.AddWeakLambda(this, [this](const UDiceModel* Dice) {
-		PushDiceUIData();   // 슬롯별 mIsSelected 강조도 함께 갱신(선택 토글은 이 이벤트로만 온다)
-		PushSelectedDiceUIData();
+		PushDiceUIData();
 		});
 	DicePoolModel->OnUnselectedDiceUI.AddWeakLambda(this, [this](const UDiceModel* Dice) {
 		PushDiceUIData();
-		PushSelectedDiceUIData();
 		});
 
 	/* 스킬 대리자 연결 */
@@ -780,7 +777,10 @@ void ACombatGameMode::PushDiceUIData() const
 		DiceSlotUIData.mRarityColor = GetRarityColor(DiceModel->GetRarity());
 	}
 
-	mCombatUIModel->SetDiceUIs(DiceSlotUIDatas);
+	mCombatUIModel->SetDiceState(
+		DiceSlotUIDatas,
+		DicePoolModel->GetSelectedDices(),
+		DicePoolModel->GetSelectedDiceSum());
 }
 
 void ACombatGameMode::PushSelectedDiceUIData() const
@@ -1262,15 +1262,17 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 
 	/* 모션 내 이벤트 로그 마다 UI 요청서 작성 함수 */
 
-	auto AddFloatingLogs = [IsPreview](const FSRPGBoardActorEventLog& EventLog, const FVector& ViewActorLocation, const int32 MotionIndex, OUT int32& Sequence, OUT TArray<FCombatFloatingLogRequest>& Requests) {
-		
-		auto MakeLogRequest = [IsPreview](int32 Amount, EFloatingLogIconType IconType, EFloatingLogColorType ColorType, const FVector& ViewLocation, int32 MotionIndex, int32 Sequence) -> FCombatFloatingLogRequest {
+	auto AddFloatingLogs = [IsPreview](const FSRPGBoardActorEventLog& EventLog, const FVector& ViewActorLocation, const int32 TurnIndex, const int32 ActionIndex, const int32 MotionIndex, OUT int32& Sequence, OUT TArray<FCombatFloatingLogRequest>& Requests) {
+
+		auto MakeLogRequest = [IsPreview, TurnIndex, ActionIndex, MotionIndex](int32 Amount, EFloatingLogIconType IconType, EFloatingLogColorType ColorType, const FVector& ViewLocation, int32 Sequence) -> FCombatFloatingLogRequest {
 			FCombatFloatingLogRequest Request;
 			Request.mWorldLocation = ViewLocation;
 			Request.mText = FText::FromString(FString::Printf(TEXT("%+d"), Amount));
 			Request.mIconType = IconType;
 			Request.mColorType = ColorType;
 			Request.mSequence = Sequence;
+			Request.mTurnIndex = IsPreview == true ? TurnIndex : INDEX_NONE;
+			Request.mActionIndex = IsPreview == true ? ActionIndex : INDEX_NONE;
 			Request.mMotionIndex = IsPreview == true ? MotionIndex : INDEX_NONE;
 			Request.mIsPreview = IsPreview;
 			return Request;
@@ -1292,7 +1294,6 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 				IconType,
 				ColorType,
 				ViewActorLocation,
-				MotionIndex,
 				Sequence++
 			));
 		}
@@ -1312,7 +1313,6 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 				IconType,
 				ColorType,
 				ViewActorLocation,
-				MotionIndex,
 				Sequence++
 			));
 		}
@@ -1334,7 +1334,6 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 				IconType,
 				ColorType,
 				ViewActorLocation,
-				MotionIndex,
 				Sequence++
 			));*/
 		}
@@ -1345,10 +1344,14 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 	int32 Sequence = 0;
 	TArray<FCombatFloatingLogRequest> Requests;
 	TMap<int32, FVector> SpawnLocations;
-	for (const FSRPGTurnEventLog& TurnLog : TurnEventLogs)
+	const int32 TurnNum = TurnEventLogs.Num();
+	for (int32 TurnIndex = 0; TurnIndex < TurnNum; ++TurnIndex)
 	{
-		for (const FSRPGActionEventLog& ActionLog : TurnLog.mActionEventLogs)
+		const FSRPGTurnEventLog& TurnLog = TurnEventLogs[TurnIndex];
+		const int32 ActionNum = TurnLog.mActionEventLogs.Num();
+		for (int32 ActionIndex = 0; ActionIndex < ActionNum; ++ActionIndex)
 		{
+			const FSRPGActionEventLog& ActionLog = TurnLog.mActionEventLogs[ActionIndex];
 			const int32 MotionNum = ActionLog.mMotionEventLogs.Num();
 			for (int32 MotionIndex = 0; MotionIndex < MotionNum; ++MotionIndex)
 			{
@@ -1369,7 +1372,7 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 						continue;
 					}
 
-					AddFloatingLogs(*EventLog, SpawnLocationPair.Value, MotionIndex, OUT Sequence, OUT Requests);
+					AddFloatingLogs(*EventLog, SpawnLocationPair.Value, TurnIndex, ActionIndex, MotionIndex, OUT Sequence, OUT Requests);
 				}
 
 				// 유닛 탐색
@@ -1389,7 +1392,7 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 					}
 
 					FVector ViewActorLocation = ViewActor->GetActorLocation();
-					AddFloatingLogs(*EventLog, ViewActorLocation, MotionIndex, OUT Sequence, OUT Requests);
+					AddFloatingLogs(*EventLog, ViewActorLocation, TurnIndex, ActionIndex, MotionIndex, OUT Sequence, OUT Requests);
 				}
 
 				// 장애물 탐색
@@ -1409,7 +1412,7 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 					}
 
 					FVector ViewActorLocation = ViewActor->GetActorLocation();
-					AddFloatingLogs(*EventLog, ViewActorLocation, MotionIndex, OUT Sequence, OUT Requests);
+					AddFloatingLogs(*EventLog, ViewActorLocation, TurnIndex, ActionIndex, MotionIndex, OUT Sequence, OUT Requests);
 				}
 			}
 		}

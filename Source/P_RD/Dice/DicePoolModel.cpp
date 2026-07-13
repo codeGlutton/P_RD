@@ -113,14 +113,18 @@ void UDicePoolModel::MarkDiceUnselected(int32 DiceIndex)
 /** @brief 스킬 취소 등으로 모든 주사위 선택을 해제한다(선택돼 있던 것만 UI에 알림). */
 void UDicePoolModel::ResetSelected()
 {
+	const UDiceModel* LastChangedDice = nullptr;
 	for (const TObjectPtr<UDiceModel>& Dice : mDices)
 	{
 		if (Dice != nullptr && Dice->IsSelected())
 		{
 			Dice->SetSelected(false);
-
-			OnUnselectedDiceUI.Broadcast(Dice);
+			LastChangedDice = Dice;
 		}
+	}
+	if (LastChangedDice != nullptr)
+	{
+		OnUnselectedDiceUI.Broadcast(LastChangedDice);
 	}
 }
 
@@ -142,14 +146,18 @@ void UDicePoolModel::MarkDiceUsed(int32 DiceIndex)
  */
 void UDicePoolModel::MarkSelectedDiceAsUsed()
 {
+	const UDiceModel* LastChangedDice = nullptr;
 	for (const TObjectPtr<UDiceModel>& Dice : mDices)
 	{
 		if (Dice != nullptr && Dice->IsSelected())
 		{
 			Dice->SetUsed(true);
-
-			OnUseDiceUI.Broadcast(Dice);
+			LastChangedDice = Dice;
 		}
+	}
+	if (LastChangedDice != nullptr)
+	{
+		OnUseDiceUI.Broadcast(LastChangedDice);
 	}
 }
 

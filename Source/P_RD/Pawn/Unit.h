@@ -125,19 +125,19 @@ public:
 protected:
 	// @brief 최대 이동 속도 (cm/초)
 	UPROPERTY(Category = Move, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MaxMoveSpeed"))
-	float mMaxMoveSpeed = 300.0f;
+	float mMaxMoveSpeed = 600.0f;
 
 	// @brief 가속도 (cm/초^2). 출발할 때 속도를 올리는 데 사용
 	UPROPERTY(Category = Move, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Acceleration", ClampMin = "0.0"))
-	float mAcceleration = 600.0f;
+	float mAcceleration = 900.0f;
 
 	// @brief 감속도 (cm/초^2). 도착할 때 속도를 내리는 데 사용. 낮을수록 제동거리가 길어져 부드럽게 멈춤
 	UPROPERTY(Category = Move, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Deceleration", ClampMin = "0.0"))
-	float mDeceleration = 300.0f;
+	float mDeceleration = 450.0f;
 
 	// @brief 코너에서 바라보는 방향이 바뀌는 회전 속도 (도/초)
 	UPROPERTY(Category = Move, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RotationSpeed"))
-	float mRotationSpeed = 360.0f;
+	float mRotationSpeed = 480.0f;
 
 	/**
 	 * @brief 코너 컷 비율 (코너 중점으로부터 타일 간격 대비 거리)
