@@ -191,13 +191,12 @@ void UCombatTileMapHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	// 뷰포트 크기가 바뀔 때만 레이아웃 진단 로그 + 화면비 변형(폴드 마커 기반, 마커 없으면 no-op)을 갱신한다.
+	// 뷰포트 크기가 바뀔 때만 레이아웃 진단 로그를 갱신한다.
 	const FVector2D ViewportSize = MyGeometry.GetLocalSize();
 	if (ViewportSize.Equals(mLastLoggedLayoutViewportSize, 0.5f) == false)
 	{
 		mLastLoggedLayoutViewportSize = ViewportSize;
 		LogCombatLayoutMetrics(ViewportSize);
-		ApplyAspectVariantSlots(ViewportSize);
 	}
 
 	UpdateUnitHpBars();   // 유닛 머리 위 HP바를 월드→스크린 투영으로 매 프레임 따라가게 한다.
@@ -229,9 +228,7 @@ void UCombatTileMapHUDWidget::ApplyOpenUI()
 	RefreshDiceViewsFromRunData();
 	RebuildOwnedDiceCards();
 	RefreshCombatStatusBar();   // 위젯 생성 이후에 뷰모델 값(Lv/HP/Gold)을 상단 상태바에 채운다.
-	RefreshRoomNameLabel();     // 룸 이름('일반'/'엘리트'/'보스')을 룸 이름 마커에 채운다.
 	RebuildEquipmentBar();      // 탑바 좌측 하단 장비 칩.
-	RebuildTurnOrderBar();      // 탑바 가운데 하단 턴 순서 칩.
 	RebuildUnitHpBars();        // 유닛 수에 맞춰 머리 위 HP바를 만든다.
 	ClearOwnedDiceSelectionHighlight();
 	mSelectedSkillIndex = INDEX_NONE;

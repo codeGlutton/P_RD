@@ -147,13 +147,6 @@ private:
 	/** @brief 스킬 레일 전체 영역(WBP HUD_SkillRail 또는 기존 상수 기반 Fallback). */
 	FAnchors GetSkillRailGroupRect() const;
 
-	/**
-	 * @brief 화면비 변형(폴드/좁은 가로): 배너·턴순서 클러스터를 fold 마커의 y델타로 이동/복원한다.
-	 * @details 컷(1.68)은 concept_02 responsive.fold_narrow와 동기. 폴드 마커가 없는 WBP에선 아무것도 안 한다.
-	 *          C++은 계산하지 않는다 — 마커(디자이너 데이터)와 베이스 슬롯 캐시 사이를 전환만 한다.
-	 */
-	void ApplyAspectVariantSlots(const FVector2D& ViewportSize);
-
 	/** @brief 전투 HUD 레이아웃 진단 로그(뷰포트/비율/스킨/HUD_* 그룹 rect). resize·1920x1080 하드코딩 점검용. */
 	// 뷰포트 크기가 바뀔 때만 NativeTick에서 호출한다. 타이틀 LayoutMetrics 로그와 같은 목적.
 	void LogCombatLayoutMetrics(const FVector2D& ViewportSize) const;
@@ -259,9 +252,6 @@ private:
 	/** @brief 디자이너 스킨 시, concept value 칸(HUD_M_lv/hp/gold_value 앵커)에 Lv/HP/Gold 텍스트를 칸 크기에 맞춰 그린다. */
 	void RefreshSkinValueLabels() const;
 
-	/** @brief 룸 이름 마커에 현재 방 표시 이름('일반'/'엘리트'/'보스')을 채운다(전투 진입 시 1회). */
-	void RefreshRoomNameLabel() const;
-
 	/** @brief 스크린 좌표가 LV 값 마커(HUD_M_lv_value) 위인지 지오메트리로 판정한다. */
 	bool IsScreenPositionOverLevelValue(const FVector2D& ScreenPosition) const;
 
@@ -286,9 +276,6 @@ private:
 
 	/** @brief 스킨 모드: 탑바 레벨 아래에 장착 장비 아이콘(최대 3)을 그린다. 위치·아이콘은 임시(디자이너 조정 예정). */
 	void RebuildEquipmentIcons();
-
-	/** @brief 턴 순서 칩(탑바 가운데 하단)을 다시 만든다(무조건 플레이어부터, 그 뒤 적). */
-	void RebuildTurnOrderBar();
 
 	/** @brief 스킬/액션이 확정·취소되면 스킬·주사위 선택 강조를 푼다. */
 	UFUNCTION()
@@ -376,9 +363,6 @@ private:
 	/** @brief 결과 영상 표시 중 지도탭과 같은 HUD 숨김 상태를 적용/해제한다. */
 	void SetCombatResultViewActive(bool bActive, bool bRestoreCombatControls = true);
 
-	/** @brief 결과 영상 중 룸 이름 클러스터만 숨기고, 종료 시 원래 표시 상태를 복원한다. */
-	void SetRoomNameClusterVisible(bool bVisible);
-
 	/** @brief 결과 타입에 맞는 mp4 설정 경로를 반환한다. */
 	FString GetCombatResultVideoPath(ESRPGCombatResult Result) const;
 
@@ -430,7 +414,6 @@ private:
 
 	/** @brief 승패 판정 → 결과 영상 시작 사이의 텀 타이머. */
 	FTimerHandle mCombatResultStartDelayTimerHandle;
-	TMap<FName, ESlateVisibility> mCombatResultRoomNameVisibilities;
 	ESRPGCombatResult mCombatResult = ESRPGCombatResult::PlayerLose;
 	bool mCombatResultFlowActive = false;
 
@@ -687,13 +670,6 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UTextBlock>> mEquipmentChipTexts;
 
-	/** @brief 턴 순서 칩(탑바 가운데 하단, 플레이어부터) 배경/문구 */
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<UBorder>> mTurnOrderChips;
-
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<UTextBlock>> mTurnOrderChipTexts;
-
 	/** @brief 우측 MOVE 명령 버튼(이동 모드 진입) */
 	UPROPERTY(Transient)
 	TObjectPtr<UButton> mMoveButton;
@@ -739,7 +715,9 @@ private:
 	{
 		TObjectPtr<UWidget> mRoot;                    // 캔버스에 붙은 루트(아이콘+텍스트 박스 또는 텍스트 단일)
 		FVector mWorldLocation = FVector::ZeroVector; // 스폰 시점 월드 위치 스냅샷(이 위에 투영해 그린다)
-		int32 mMotionIndex = INDEX_NONE;              // 속한 모션 인덱스. 그 모션 종료 시 이 값으로 묶어서 함께 제거
+		int32 mTurnIndex = INDEX_NONE;                // 요청이 속한 턴 인덱스. 후속 UI 연출에서 사용할 수 있도록 보존
+		int32 mActionIndex = INDEX_NONE;              // 요청이 속한 액션 인덱스. 후속 UI 연출에서 사용할 수 있도록 보존
+		int32 mMotionIndex = INDEX_NONE;              // 요청이 속한 모션 인덱스. 기존 모션 종료 처리에도 사용
 		float mElapsed = 0.0f;                        // 스폰 후 누적 시간(실행 로그의 상승/페이드/수명 판단용)
 		bool mIsPreview = false;                      // true면 자동 소멸 안 함(MotionFinished/Clear로만 제거)
 		float mStackOffsetY = 0.0f;                   // 미리보기 겹침 방지용 세로 쌓기 오프셋(px, 위로 +)
@@ -853,15 +831,6 @@ private:
 	/** @brief 마지막으로 레이아웃 진단 로그를 남긴 뷰포트 크기. 변할 때만 로그해 스팸을 막는다. */
 	FVector2D mLastLoggedLayoutViewportSize = FVector2D(-1.0f, -1.0f);
 
-	/** @brief 폴드(좁은 화면비) 변형이 현재 적용 중인지. */
-	bool mFoldVariantActive = false;
-
-	/** @brief 폴드 변형 대상 위젯의 베이스 슬롯 캐시(기준 화면비 복원용). */
-	TMap<FName, FAnchorData> mAspectVariantBaseSlots;
-
-	/** @brief 폴드에서 턴 칩 줄에 더할 y델타(디자인px, HUD_TurnOrderFold 마커에서 산출). */
-	float mFoldTurnOrderDeltaY = 0.0f;
-
 	/** @brief 지금 누르고 있는 스킬 index */
 	int32 mPressedSkillIndex = INDEX_NONE;
 
@@ -877,7 +846,7 @@ private:
 	/** @brief 스킬 상세를 열기 위해 필요한 누름 시간. [합의필요] 모바일 손맛 기준으로 확정되면 설정화 대상. */
 	float mSkillLongPressThreshold = 0.45f;
 
-	/** @brief 풀스크린 지도 뷰가 열려 전투 컨트롤을 숨긴 상태. 켜져 있으면 RebuildTurnOrderBar 등이 컨트롤을 다시 만들지 않는다. */
+	/** @brief 풀스크린 지도 뷰가 열려 전투 컨트롤을 숨긴 상태. */
 	bool mCombatControlsHidden = false;
 
 	/** @brief 장비 슬롯 위에 얹는 투명 롱프레스 감지 버튼(마커 HUD_M_equip_0..2 위치). */
