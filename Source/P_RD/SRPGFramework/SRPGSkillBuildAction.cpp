@@ -434,6 +434,11 @@ bool USRPGSkillBuildAction::CanSelectTargetTile(const FTileIndex& Index) const
 
 void USRPGSkillBuildAction::SetBuildPhase(ESRPGSkillBuildPhase BuildPhase)
 {
+	if (mSkillBuildPhase == BuildPhase)
+	{
+		return;
+	}
+
     if (BuildPhase != ESRPGSkillBuildPhase::Build && mSkillBuildPhase == ESRPGSkillBuildPhase::Preview)
     {
         OnCancelSimulateSkillAction.Broadcast();

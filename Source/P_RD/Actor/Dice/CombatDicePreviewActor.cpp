@@ -48,6 +48,11 @@ void ACombatDicePreviewActor::BeginPlay()
 
 void ACombatDicePreviewActor::SetDiceType(int32 FaceCount)
 {
+	if (mCurrentFaceCount == FaceCount && mFaceTexts.IsEmpty() == false)
+	{
+		return;
+	}
+
 	mCurrentFaceCount = FaceCount;
 	ApplyDiceMesh(FaceCount);
 	ApplyDiceBodyMaterialPreset();
