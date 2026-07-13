@@ -262,7 +262,6 @@ void ACombatGameMode::InitializeRoom()
 		PushTurnUIData();
 		PushUnitUIData();
 		PushDiceUIData();
-		PushSelectedDiceUIData();
 		PushSkillUIData();
 		PushEquipmentUIData();
 		// 턴 시작 연출: 배리어를 HUD로 넘겨 턴 배너가 끝날 때까지 실제 턴 실행을 대기시킨다.
@@ -313,12 +312,10 @@ void ACombatGameMode::InitializeRoom()
 		});
 
 	DicePoolModel->OnSelectedDiceUI.AddWeakLambda(this, [this](const UDiceModel* Dice) {
-		PushDiceUIData();   // 슬롯별 mIsSelected 강조도 함께 갱신(선택 토글은 이 이벤트로만 온다)
-		PushSelectedDiceUIData();
+		PushDiceUIData();
 		});
 	DicePoolModel->OnUnselectedDiceUI.AddWeakLambda(this, [this](const UDiceModel* Dice) {
 		PushDiceUIData();
-		PushSelectedDiceUIData();
 		});
 
 	/* 스킬 대리자 연결 */
@@ -780,7 +777,10 @@ void ACombatGameMode::PushDiceUIData() const
 		DiceSlotUIData.mRarityColor = GetRarityColor(DiceModel->GetRarity());
 	}
 
-	mCombatUIModel->SetDiceUIs(DiceSlotUIDatas);
+	mCombatUIModel->SetDiceState(
+		DiceSlotUIDatas,
+		DicePoolModel->GetSelectedDices(),
+		DicePoolModel->GetSelectedDiceSum());
 }
 
 void ACombatGameMode::PushSelectedDiceUIData() const

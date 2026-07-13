@@ -819,6 +819,9 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<ACombatDiceCaptureActor>> mOwnedDicePreviewActors;
 
+	/** @brief 변경되지 않은 보유 주사위는 3D 장면을 다시 캡처하지 않기 위한 시각 상태 해시. */
+	TArray<uint32> mOwnedDiceVisualHashes;
+
 	/** @brief 보유 주사위 선택 입력을 받는 투명 버튼 */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UIndexedButtonWidget>> mOwnedDiceCardWidgets;

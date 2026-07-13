@@ -183,6 +183,7 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 	}
 	mOwnedDiceImages.Reset();
 	DestroyDiceCaptureActors(mOwnedDicePreviewActors);
+	mOwnedDiceVisualHashes.Reset();
 	mOwnedDiceCardWidgets.Reset();
 	mOwnedDiceTypeTexts.Reset();
 
@@ -221,6 +222,7 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 		}
 		mOwnedDiceImages.Add(OwnedDiceImage);
 		mOwnedDicePreviewActors.Add(nullptr);
+		mOwnedDiceVisualHashes.Add(MAX_uint32);
 		mOwnedDiceCardWidgets.Add(OwnedDiceCard);
 		mOwnedDiceTypeTexts.Add(OwnedDiceTypeText);
 	}
@@ -261,6 +263,15 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 		}
 
 		const FDiceViewData& DiceView = mDiceUIs[DiceIndex];
+		uint32 VisualHash = GetTypeHash(DiceView.mFaceCount);
+		VisualHash = HashCombineFast(VisualHash, GetTypeHash(DiceView.mResultValue));
+		VisualHash = HashCombineFast(VisualHash, GetTypeHash(DiceView.mRolledFaceIndex));
+		VisualHash = HashCombineFast(VisualHash, GetTypeHash(DiceView.mIsRolled));
+		VisualHash = HashCombineFast(VisualHash, GetTypeHash(StaticCast<uint8>(DiceView.mRarityType)));
+		for (int32 FaceValue : DiceView.mFaceValues)
+		{
+			VisualHash = HashCombineFast(VisualHash, GetTypeHash(FaceValue));
+		}
 
 		// 종류 라벨(d6/d20 등)은 보유 주사위 카드에서 항상 숨긴다.
 		if (mOwnedDiceTypeTexts.IsValidIndex(DiceIndex))
@@ -280,24 +291,8 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 			0.58f
 		);
 
-		FLinearColor DiceColor = DiceView.mIsRolled ? RarityColor : PendingColor;
-		if (DiceView.mIsSelected)
-		{
-			// 배치 진행 중=노란색, 요구 개수만큼 배치 완료=초록색.
-			DiceColor = bDiceAssignmentComplete
-				? FLinearColor(0.35f, 1.0f, 0.40f, 1.0f)
-				: FLinearColor(1.0f, 0.82f, 0.30f, 1.0f);
-		}
-		else if (bDiceAssignmentComplete)
-		{
-			// 배치가 끝났으면 남은(미배치) 주사위는 회색으로 가라앉힌다.
-			DiceColor = FLinearColor(0.45f, 0.45f, 0.48f, 0.9f);
-		}
-		if (DiceView.mIsUsed)
-		{
-			// 이번 턴에 쓴 주사위: 어둡게 비활성 표시.
-			DiceColor = FLinearColor(0.28f, 0.28f, 0.30f, 0.5f);
-		}
+		// 3D 캡처는 굴림 결과가 바뀔 때만 갱신한다. 선택/배치/사용 표시는 아래 UMG 오버레이가 담당한다.
+		const FLinearColor CaptureDiceColor = DiceView.mIsRolled ? RarityColor : PendingColor;
 
 		if (mOwnedDicePreviewActors.IsValidIndex(DiceIndex) == false)
 		{
@@ -311,7 +306,9 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 		ACombatDiceCaptureActor* OwnedDiceActor = mOwnedDicePreviewActors.IsValidIndex(DiceIndex)
 			? mOwnedDicePreviewActors[DiceIndex].Get()
 			: nullptr;
-		if (OwnedDiceActor != nullptr)
+		const bool bVisualChanged = mOwnedDiceVisualHashes.IsValidIndex(DiceIndex) == false
+			|| mOwnedDiceVisualHashes[DiceIndex] != VisualHash;
+		if (OwnedDiceActor != nullptr && bVisualChanged)
 		{
 			const bool bHasRolledResult = DiceView.mIsRolled && DiceView.mResultValue > 0;
 			const int32 FaceOrdinal = bHasRolledResult ? GetDiceSettledFaceOrdinal(DiceView) : INDEX_NONE;
@@ -319,7 +316,7 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 			OwnedDiceActor->SetDiceType(DiceView.mFaceCount);
 			OwnedDiceActor->SetFaceData(DiceView.mFaceValues, DiceView.mFaceTextures);
 			OwnedDiceActor->SetDiceMaterialVariant(DiceIndex);
-			OwnedDiceActor->SetDiceColor(DiceColor);
+			OwnedDiceActor->SetDiceColor(CaptureDiceColor);
 			OwnedDiceActor->SetFaceTextScale(GetOwnedDiceCaptureTextScale(DiceView.mFaceCount));
 			OwnedDiceActor->SetActorScale3D(FVector(
 				RDDiceCapturePreview::GetCombatPreviewDiceScale() *
@@ -338,6 +335,10 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 				OwnedDiceActor->SettleToFace(1);
 			}
 			OwnedDiceActor->CaptureDice();
+		}
+		if (OwnedDiceActor != nullptr && mOwnedDiceVisualHashes.IsValidIndex(DiceIndex))
+		{
+			mOwnedDiceVisualHashes[DiceIndex] = VisualHash;
 		}
 
 		if (mOwnedDiceImages.IsValidIndex(DiceIndex))
@@ -423,6 +424,7 @@ void UCombatTileMapHUDWidget::HandleOwnedDiceCardClicked(int32 DiceIndex)
 			UGameplayStatics::PlaySound2D(this, mDiceChooseSound);
 		}
 		mCombatUIModel->RequestToggleDice(DiceIndex);
+		return;
 	}
 
 	RefreshOwnedDiceCards();
