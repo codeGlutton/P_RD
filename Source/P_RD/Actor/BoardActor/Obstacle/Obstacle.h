@@ -19,6 +19,7 @@ public:
 	AObstacle();
 
 	/* IActorView 상속 */
+public:
 	// @brief 이동 델리게이트 구독
 	void BindModel(UObjectModel* Model) override;
 	// @brief 이동 델리게이트 구독 해제

@@ -58,6 +58,7 @@ AObstacle::AObstacle()
 void AObstacle::BindModel(UObjectModel* Model)
 {
 	IActorView::BindModel(Model);
+	mObstacleModel = Cast<UObstacleModel>(Model);
 
 	// 연출 요청 구독
 	if (mObstacleModel.IsValid())

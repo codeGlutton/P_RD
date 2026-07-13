@@ -22,13 +22,4 @@ public:
 	/* UBoardActorModel 상속 */
 public:
 	void PostInitializeComponentModels() override;
-
-public:
-	/* IGenericTeamAgentInterface 상속 */
-	void SetGenericTeamId(const FGenericTeamId& TeamID);
-	FGenericTeamId GetGenericTeamId() const;
-
-private:
-	// @brief 팀 ID
-	FGenericTeamId mTeamId;
 };
