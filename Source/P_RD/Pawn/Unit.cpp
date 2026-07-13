@@ -14,6 +14,8 @@
 
 #include "NiagaraFunctionLibrary.h"
 
+#include "Algo/BinarySearch.h"
+
 AUnit::AUnit()
 {
 	AutoPossessAI = EAutoPossessAI::Disabled;
@@ -90,11 +92,13 @@ void AUnit::BindModel(UObjectModel* Model)
 		// 초기 배치 연출 요청 구독
 		mUnitModel->OnPlaceTileTransform.AddUObject(this, &AUnit::OnPlaceTileTransform);
 
+		// 이동 경로 통지 구독 (코너링을 포함한 폴리라인 생성용)
+		mUnitModel->OnStartMovePath.AddUObject(this, &AUnit::OnStartMovePath);
 		// 이동 연출 요청 구독
 		mUnitModel->OnStartMoveStep.AddUObject(this, &AUnit::OnStartMoveStep);
 		// 방향 전환 연출 요청 구독
 		mUnitModel->OnRotate.AddUObject(this, &AUnit::OnRotate);
-		
+
 		// 스킬 Effect 타격 연출 구독
 		mUnitModel->OnPlayApplyAnimationUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> MotionEndBarrier, FOnRequestReceiveAnimation TriggerCallback, FGameplayTag ApplyMotionTag, ETileActorDirection LocalDirection) {
 			if (mMeshComp != nullptr)
@@ -159,6 +163,7 @@ void AUnit::UnbindModel(UObjectModel* Model)
 
 	if (mUnitModel.IsValid())
 	{
+		mUnitModel->OnStartMovePath.RemoveAll(this);
 		mUnitModel->OnStartMoveStep.RemoveAll(this);
 		mUnitModel->OnRotate.RemoveAll(this);
 	}
@@ -171,6 +176,8 @@ void AUnit::UnbindModel(UObjectModel* Model)
 	// 이동 중 해제될 수 있으므로 속도 상태도 초기화
 	mCurrentMoveSpeed = 0.0f;
 	mCurrentMoveVelocity = FVector::ZeroVector;
+	// 이동 중 해제될 수 있으므로 폴리라인 이동상태도 초기화
+	ResetPolyLineState();
 }
 
 void AUnit::OnPlaceTileTransform(const FTileTransform& TileTransform, const FTransform& Transform)
@@ -180,6 +187,16 @@ void AUnit::OnPlaceTileTransform(const FTileTransform& TileTransform, const FTra
 	UnitTransform.SetLocation(UnitLocation);
 
 	SetActorTransform(UnitTransform);
+}
+
+void AUnit::OnStartMovePath(const TArray<FVector>& PathWorldLocations)
+{
+	// 경로 전체를 코너링 곡선을 포함한 폴리라인으로 재구성
+	BakePolyLinePoints(PathWorldLocations, mCornerCutRatio, mCornerTension, mPolyLinePoints, mPolyLineDistances, mStepMarkerDistances);
+
+	// 진행 상태 초기화
+	mCurrentMoveStep = 0;
+	mPolyLineTraveledDistance = 0.0f;
 }
 
 void AUnit::OnStartMoveStep(const FTileTransform& NextTileTransform, const FTransform& TargetWorldTransform, TSharedPtr<FPresentationBarrier> Barrier, float RemainingPathDistance)
@@ -206,12 +223,28 @@ void AUnit::OnStartMoveStep(const FTileTransform& NextTileTransform, const FTran
 		RootComponent->SetMobility(EComponentMobility::Movable);
 	}
 
+	// 폴리라인 이동모드면 경로 순번 진행
+	if (mPolyLinePoints.Num() >= 2)
+	{
+	    // 현재 스텝(타일) 증가 -> 다음 타일 관련된 작업 진행
+	    // @note 타일 하나에 여러 개의 점들이 포함될 수 있으므로 기준 타일을 설정하고 그 안에서 작업 진행
+		++mCurrentMoveStep;
+		// 경로 통지와 스텝 수가 어긋나면 폴리라인 이동을 포기하고 직선 이동모드로 폴백
+		if (mStepMarkerDistances.IsValidIndex(mCurrentMoveStep) == false)
+		{
+			ResetPolyLineState();
+		}
+	}
+
 	// 틱 시작
 	SetActorTickEnabled(true);
 }
 
 void AUnit::OnRotate(const FRotator& TargetWorldRotation, TSharedPtr<FPresentationBarrier> Barrier)
 {
+	// 제자리 회전은 직선이동모드로 처리하므로 폴리라인이동모드는 리셋
+	ResetPolyLineState();
+
 	// 목표를 "현재 위치 + 새 회전"으로 잡아서 Tick에서 처리하도록 설정
 	mMoveTargetTransform = FTransform(TargetWorldRotation, GetActorLocation());
 	// 인자로 들어온 배리어가 nullptr이면
@@ -279,6 +312,13 @@ void AUnit::Tick(float DeltaSeconds)
 	if (mMoveBarrier.IsValid() == false)
 	{
 		SetActorTickEnabled(false);
+		return;
+	}
+
+	// 폴리라인이 있으면 폴리라인이동모드로 처리
+	if (mPolyLinePoints.Num() >= 2)
+	{
+		TickPolyLine(DeltaSeconds);
 		return;
 	}
 
@@ -350,6 +390,292 @@ void AUnit::Tick(float DeltaSeconds)
 		// -> StartStep(NextTile) 해서 타일간 이동 반복
 		mMoveBarrier.Reset();
 	}
+}
+
+void AUnit::TickPolyLine(float DeltaSeconds)
+{
+	// 전체 길이와 남은 거리 (모든 거리는 폴리라인 시작점 기준)
+	const float TotalDistance = mPolyLineDistances.Last();
+	const float RemainingDistance = TotalDistance - mPolyLineTraveledDistance;
+
+	// 남은 거리에서 멈출 수 있는 속도 계산 (직선이동모드와 동일한 등가속도 공식)
+	float TargetSpeed = mMaxMoveSpeed;
+	if (mDeceleration > 0.0f)
+	{
+		const float BrakeSpeed = FMath::Sqrt(2.0f * mDeceleration * RemainingDistance);
+		TargetSpeed = FMath::Min(TargetSpeed, BrakeSpeed);
+	}
+
+	// 현재 속도를 목표 속도로 가감속 (올릴 땐 가속도, 내릴 땐 감속도 사용)
+	// 해당 가감속도가 0이면 즉시 목표 속도 도달
+	const float InterpRate = (TargetSpeed < mCurrentMoveSpeed)
+		? mDeceleration
+		: mAcceleration;
+	mCurrentMoveSpeed = (InterpRate > 0.0f)
+		? FMath::FInterpConstantTo(mCurrentMoveSpeed, TargetSpeed, DeltaSeconds, InterpRate)
+		: TargetSpeed;
+
+	/**
+	 * @brief 진행거리 갱신
+	 * @details
+	 *   진행거리를 계산하는 이유는, 진행거리를 알면
+	 *   -> 어느 지점을 지나고 있는 지 알 수 있고
+	 *   -> 그 지점에서의 접선(바라보는 방향)을 알 수 있으므로
+	 *   -> 보드액터를 '특정위치'에 '특정방향'을 바라보게 세울 수 있음
+	 */
+	mPolyLineTraveledDistance = FMath::Min(
+	    mPolyLineTraveledDistance + mCurrentMoveSpeed * DeltaSeconds,
+	    TotalDistance);
+
+	// 진행거리에 해당하는 폴리라인 위치/접선 계산
+	FVector SampleLocation = FVector::ZeroVector;
+	FVector SampleTangent = FVector::ZeroVector;
+	if (GetPolyLinePoint(mPolyLineTraveledDistance, SampleLocation, SampleTangent) == false)
+	{
+		// 폴리라인이 비정상이면 직선이동모드로 폴백
+		ResetPolyLineState();
+		return;
+	}
+
+	// 폴리라인은 타일 바닥 기준이므로 캡슐 반높이만큼 보정
+	if (mCapsuleComp != nullptr)
+	{
+		SampleLocation.Z += mCapsuleComp->GetScaledCapsuleHalfHeight();
+	}
+
+	// 이 타일에서의 기본 회전값
+	FRotator TargetRotation = mMoveTargetTransform.Rotator();
+	FVector FlatTangent = SampleTangent;
+    // 접선벡터에서 요 회전만 바꾸기 위해서 Z축은 0으로 설정
+	FlatTangent.Z = 0.0f;
+	if (RemainingDistance > KINDA_SMALL_NUMBER && FlatTangent.IsNearlyZero() == false)
+	{
+	    // 접선 벡터를 회전값으로 변환 -> 이 회전값만큼 액터가 회전한다
+		TargetRotation = FlatTangent.Rotation();
+	}
+
+	// 위치와 회전 적용
+	const FVector PreviousLocation = GetActorLocation();
+	const FRotator NewRotation = FMath::RInterpConstantTo(GetActorRotation(), TargetRotation, DeltaSeconds, mRotationSpeed);
+	SetActorLocationAndRotation(SampleLocation, NewRotation);
+
+	// 현재 속도 저장
+	// 애니메이션이 GetVelocity()로 읽어서 활용 가능
+	mCurrentMoveVelocity = (DeltaSeconds > 0.0f)
+		? (SampleLocation - PreviousLocation) / DeltaSeconds
+		: FVector::ZeroVector;
+
+	// 해당 타일을 지났는 지 판정
+	// @note
+	// FPS가 느리면 한 프레임에 여러 마커를 지날 수 있으므로 반복 처리
+	while (mMoveBarrier.IsValid()
+	    && mCurrentMoveStep < mStepMarkerDistances.Num() - 1
+	    && mPolyLineTraveledDistance >= mStepMarkerDistances[mCurrentMoveStep])
+	{
+		mMoveBarrier.Reset();
+	}
+
+	// (이유는 몰라도) 폴리라인이 리셋됐으면 바로 종료
+	if (mPolyLinePoints.Num() < 2)
+	{
+		return;
+	}
+
+	// 최종 지점 도착 + 회전 완료면 이동 종료
+	if (mMoveBarrier.IsValid() &&
+		mCurrentMoveStep >= mStepMarkerDistances.Num() - 1 &&
+		mPolyLineTraveledDistance >= TotalDistance &&
+		NewRotation.Equals(mMoveTargetTransform.Rotator()))
+	{
+		// 정지 상태로 초기화 (다음 이동은 0부터 다시 가속)
+		mCurrentMoveSpeed = 0.0f;
+		mCurrentMoveVelocity = FVector::ZeroVector;
+		ResetPolyLineState();
+		// 도착했으면 틱 해제
+		SetActorTickEnabled(false);
+		// 베리어 해제
+		// -> MoveAction의 OnStepPresentationFinished() 호출
+		// -> 마지막 스텝이므로 이동 완료 처리
+		mMoveBarrier.Reset();
+	}
+}
+
+bool AUnit::GetPolyLinePoint(float Distance, FVector& OutLocation, FVector& OutTangent) const
+{
+	// 폴리라인이 없거나 배열 크기가 어긋나면 실패
+	if (mPolyLinePoints.Num() < 2 || mPolyLinePoints.Num() != mPolyLineDistances.Num())
+	{
+		return false;
+	}
+
+	// 진행거리가 속한 선분 검색
+	// @details
+	// 누적거리 오름차순이므로 이진 탐색 사용
+	int32 SegmentEndIndex = Algo::UpperBound(mPolyLineDistances, Distance);
+	SegmentEndIndex = FMath::Clamp(SegmentEndIndex, 1, mPolyLinePoints.Num() - 1);
+	const int32 SegmentStartIndex = SegmentEndIndex - 1;
+
+	// 선분 시작점과 끝점 사이에서 진행거리가 차지하는 비율 (접선공식)
+	const float SegmentLength = mPolyLineDistances[SegmentEndIndex] - mPolyLineDistances[SegmentStartIndex];
+	const float Alpha = (SegmentLength > KINDA_SMALL_NUMBER)
+		? FMath::Clamp((Distance - mPolyLineDistances[SegmentStartIndex]) / SegmentLength, 0.0f, 1.0f)
+		: 1.0f;
+
+	// 위치: 선분 위 보간
+	// 접선: 선분의 단위 방향벡터
+	OutLocation = FMath::Lerp(mPolyLinePoints[SegmentStartIndex], mPolyLinePoints[SegmentEndIndex], Alpha);
+	OutTangent = (SegmentLength > KINDA_SMALL_NUMBER)
+		? (mPolyLinePoints[SegmentEndIndex] - mPolyLinePoints[SegmentStartIndex]) / SegmentLength
+		: FVector::ZeroVector;
+	return true;
+}
+
+void AUnit::ResetPolyLineState()
+{
+	// 폴리라인 관련 상태를 모두 비워서 직선이동모드로 전환
+	mPolyLinePoints.Reset();
+	mPolyLineDistances.Reset();
+	mStepMarkerDistances.Reset();
+	mCurrentMoveStep = 0;
+	mPolyLineTraveledDistance = 0.0f;
+}
+
+void AUnit::BakePolyLinePoints(
+	const TArray<FVector>& PathPoints,
+	float CornerCutRatio,
+	float CornerTension,
+	TArray<FVector>& OutPoints,
+	TArray<float>& OutDistances,
+	TArray<float>& OutStepMarkerDistances)
+{
+	OutPoints.Reset();
+	OutDistances.Reset();
+	OutStepMarkerDistances.Reset();
+
+	// 경로가 2칸 미만이면 폴리라인 불성립
+	if (PathPoints.Num() < 2)
+	{
+		return;
+	}
+
+	/**
+	 * @brief 코너당 베지어곡선 분할 수 (짝수 유지 - 중간 분할점을 도착 판정 지점으로 사용)
+     * @details
+     * 좀 더 부드러운 애니메이션을 원하면 더 잘게 분할하면 됨
+     * 포인트 계산이라 성능 영향은 별로 없을 듯
+     * @note
+     * 분할 수이지 점의 개수가 아님
+     */
+	constexpr int32 CornerSampleCount = 8;
+	const float CutRatio = FMath::Clamp(CornerCutRatio, 0.0f, 0.5f);
+	const float Tension = FMath::Clamp(CornerTension, 0.0f, 2.0f);
+
+	// 점을 추가하고 그 점까지의 누적거리를 반환하는 헬퍼
+	auto AppendPoint = [&OutPoints, &OutDistances](const FVector& Point) -> float
+	{
+	    // 이전 점과의 거리가 사실상 0이면
+	    // -> 추가할 의미가 없고
+	    // -> 0으로 나누기 하는 위험도 있으므로
+	    // 추가하지 않고 넘어감
+		if (OutPoints.Num() > 0 && FVector::DistSquared(OutPoints.Last(), Point) < KINDA_SMALL_NUMBER)
+		{
+			return OutDistances.Last();
+		}
+
+		const float Distance = (OutPoints.Num() > 0)
+			? OutDistances.Last() + FVector::Dist(OutPoints.Last(), Point)
+			: 0.0f;
+		OutPoints.Add(Point);
+		OutDistances.Add(Distance);
+		return Distance;
+	};
+
+	// 시작점 (시작 타일의 도착 판정 거리는 0)
+	OutStepMarkerDistances.Add(AppendPoint(PathPoints[0]));
+
+	// 경로의 중간 지점들(시작/도착 제외) 처리
+	// 직진이면 중점 그대로,
+	// 꺾이는 곳이면, 코너 컷(곡선의 시작과 끝) 후 베지어곡선 점들 추가
+	for (int32 i = 1; i < PathPoints.Num() - 1; ++i)
+	{
+		const FVector& PrevPoint = PathPoints[i - 1];    // 직전 타일 중점
+		const FVector& CornerPoint = PathPoints[i];      // 이번 타일 중점
+		const FVector& NextPoint = PathPoints[i + 1];    // 다음 타일 중점
+
+		// 진입 벡터(직전->이번), 진출 벡터(이번->다음)
+		const FVector InDelta = CornerPoint - PrevPoint;
+		const FVector OutDelta = NextPoint - CornerPoint;
+
+		// 코너 컷 거리 = 구간 길이 x 컷 비율
+		const float CutInDistance = InDelta.Size() * CutRatio;
+		const float CutOutDistance = OutDelta.Size() * CutRatio;
+
+		// 1) 직진: 진입/진출 방향이 같으면 커브 없이 중점 그대로 추가
+		const bool IsStraight =
+		    // 평행하고
+		    FVector::Parallel(InDelta.GetSafeNormal(), OutDelta.GetSafeNormal()) &&
+		    // 두 벡터의 사이각이 90도 이내(내적이 0보다 큰)면 -> 방향이 같음
+			FVector::DotProduct(InDelta, OutDelta) > 0.0f;
+		if (IsStraight || CutInDistance < KINDA_SMALL_NUMBER || CutOutDistance < KINDA_SMALL_NUMBER)
+		{
+			// 중점의 누적거리가 곧 이 타일의 도착 판정 거리
+			OutStepMarkerDistances.Add(AppendPoint(CornerPoint));
+			continue;
+		}
+
+		// 2) 코너: 커브 시작점/끝점을 구함
+		// 커브 시작점은 코너 중점에서 코너 컷 비율만큼 먼저 시작
+		const FVector CurveStart = CornerPoint - InDelta.GetSafeNormal() * CutInDistance;
+	    // 커브 끝점은 코너 중점에서 코너 컷 비율만큼 나중에 끝남
+		const FVector CurveEnd = CornerPoint + OutDelta.GetSafeNormal() * CutOutDistance;
+
+		// 베지어곡선의 컨트롤 포인트: 텐션에 따라 시작점과 끝점을 잇는 현의 중점과 코너 중점 사이에 위치
+		// 텐션 0 = 현의 중점 = 대각선 직진
+		// 텐션 1 = 코너 중점 = 표준 베지어
+		// 텐션 2 = 코너 중점 반대편 = 곡선이 코너 중점을 통과 (각진 코너링)
+		const FVector ChordMidPoint = (CurveStart + CurveEnd) * 0.5f;
+		const FVector ControlPoint = FMath::Lerp(ChordMidPoint, CornerPoint, Tension);
+
+		// 시작점과 끝점 사이를 베지어곡선을 n분할해서 만듦
+		float MarkerDistance = 0.0f;
+		AppendPoint(CurveStart);
+		for (int32 Sample = 1; Sample <= CornerSampleCount; ++Sample)
+		{
+		    // T는 1/8, 2/8, ... 8/8 식으로 변화
+			const float T = static_cast<float>(Sample) / CornerSampleCount;
+		    /*
+		     * @brief 베지어곡선상의 점 Point는 다음 두 지점을 잇는 선분의 T/8 지점이다.
+		     * @details
+		     *   기준이 되는 선분은 두 개가 고정이다.
+		     *   하나는 CurveStart에서 ControlPoint를 향하는 선분(진입선분)
+		     *   또 하나는 ControlPoint에서 CurveEnd를 향하는 선분(진출선분)
+		     *
+		     *   앞의 선분을 L1, 뒤의 선분을 L2라고 하면,
+		     *   첫번째 베지어곡선상의 점 S1은, L1의 1/8 지점과 L2의 1/8 지점을 잇는 선분의 1/8 지점
+		     *   두번째 베지어곡선상의 점 S2는, L1의 2/8 지점과 L2의 2/8 지점을 잇는 선분의 2/8 지점
+		     *   ...
+		     *   마지막 베지어곡선상의 점 S8은, L1의 8/8 지점(ControlPoint)과 L2의 8/8 지점(진출점) 을 잇는 선분의 8/8 지점(진출점)
+		     *   이런식으로 분할 개수만큼 반복한다.
+		     */
+			const FVector Point = FMath::Lerp(
+				FMath::Lerp(CurveStart, ControlPoint, T),
+				FMath::Lerp(ControlPoint, CurveEnd, T),
+				T);
+			const float Distance = AppendPoint(Point);
+
+			// 곡선의 중간 점을 이 타일의 도착 판정 거리로 기록
+		    // @note 그래서 분할 개수는 짝수로 하는 게 좋음
+			if (Sample == CornerSampleCount / 2)
+			{
+				MarkerDistance = Distance;
+			}
+		}
+		OutStepMarkerDistances.Add(MarkerDistance);
+	}
+
+	// 도착점 설정
+	// 마지막 타일의 도착 판정 거리이며 폴리라인 전체 길이와 동일함
+	OutStepMarkerDistances.Add(AppendPoint(PathPoints.Last()));
 }
 
 FVector AUnit::GetVelocity() const
