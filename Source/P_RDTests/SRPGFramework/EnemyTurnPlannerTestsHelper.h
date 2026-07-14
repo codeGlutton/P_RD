@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   EnemyTurnPlannerTestsHelper.h
  * @brief  USRPGEnemyTurnPlanner 테스트용 Mock 유닛모델 정의 헤더
  * @author 이문환
@@ -53,13 +53,6 @@ public:
 	{
 		mMoveTendency = Tendency;
 	}
-
-	// @brief 이동포인트 설정
-	void SetMovePoint(int32 MovePoint)
-	{
-		mMovePoint = MovePoint;
-	}
-
 };
 
 /**

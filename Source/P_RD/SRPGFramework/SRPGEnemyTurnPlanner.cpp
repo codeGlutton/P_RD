@@ -13,7 +13,7 @@
 
 #include "Pawn/Enemy/EnemyUnitModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
-#include "AttributeSet/CombatTargetAttributeSet.h"
+#include "AttributeSet/UnitAttributeSet.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
 #include "Actor/TileMap/TileMapModel.h"
@@ -52,6 +52,13 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		return Commands;
 	}
 
+	// 속성 컴포넌트 확인: 없으면 할 게 없으므로 턴 종료
+	UAttributeSetComponentModel* AttributeSetComp = Enemy->GetAttributeComponentModel();
+	if (AttributeSetComp == nullptr)
+	{
+		return Commands;
+	}
+
 	// 장착된 스킬 슬롯 인덱스 수집
 	// @note 스킬 슬롯은 고정 크기로 미리 확보되므로, 개수가 아니라 슬롯의 데이터 유무로 판단
 	const TArray<FSkillEntry>& Skills = SkillComp->GetSkills();
@@ -86,13 +93,16 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 
 	// 습득한 이동포인트만큼 이동 가능
 	const int32 MoveRange = FMath::Max(
-		Enemy->GetAttributeComponentModel()->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementAttribute()),
+		AttributeSetComp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementAttribute()),
 		0
 	);
 
+	// 주사위 합
+	const float DiceSum = AttributeSetComp->GetAttributeCurrentValue(UEnemyUnitAttributeSet::GetRechargeDiceSumAttribute());
+
 	// 조준거리
 	// @note 몹은 주사위가 없어 DiceSum=0 → 사거리는 기본값(mAimRangeDefaultValue) 그대로
-	const int32 AimRange = Skill->mAimRangeDefaultValue;
+	const int32 AimRange = Skill->mAimRangeDefaultValue + Skill->mAimRangeRatio * DiceSum;
 
 	// 목적지 결정 (이동 성향 기반)
 	bool CanCast = false;
@@ -131,10 +141,8 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		Cast.InitializeAs<FSRPGSkillCastCommand>();
 		FSRPGSkillCastCommand& CastRef = Cast.GetMutable<FSRPGSkillCastCommand>();
 		CastRef.mSkillIndex = SkillIndex;
-		// 타겟은 플레이어 위치
 		CastRef.mTargetIndex = PlayerTile;
-		// 몹은 주사위가 없다고 가정
-		CastRef.mDiceSum = 0;
+		CastRef.mDiceSum = DiceSum;
 		AddAction(MoveTemp(Cast));
 	}
 
