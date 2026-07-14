@@ -109,6 +109,9 @@ void UCombatTileMapHUDWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 
+	// 첫 라운드 배너에서 프레임 텍스처를 동기 로드하지 않도록 전투 진입 시점에 미리 올린다.
+	PreloadTurnChangeFrameTextures();
+
 	UWorld* World = GetWorld();
 	if (World != nullptr)
 	{
