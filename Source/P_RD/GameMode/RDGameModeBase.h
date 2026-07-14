@@ -101,6 +101,9 @@ public:
 	bool SetFpsLimit(int32 FpsLimit) const;
 
 	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetOverallQuality(EOverallQualityType QualityType) const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
 	bool SetLanguage(ELanguageType Language) const;
 
 protected:

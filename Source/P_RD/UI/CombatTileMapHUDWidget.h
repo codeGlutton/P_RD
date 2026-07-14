@@ -405,8 +405,6 @@ private:
 	TObjectPtr<URewardUIModel> mCombatRewardUIModel;
 
 	TSharedPtr<FPresentationBarrier> mCombatResultBarrier;
-	// 턴 시작 배너를 재생하는 동안 잡아두는 배리어 — 배너가 끝나면(FinishTurnChangeIntro) 놓아 실제 턴 실행을 진행시킨다.
-	TSharedPtr<FPresentationBarrier> mTurnChangeBarrier;
 
 	/** @brief 승패 판정 → 결과 영상 시작 사이의 텀 타이머. */
 	FTimerHandle mCombatResultStartDelayTimerHandle;
@@ -457,6 +455,9 @@ private:
 
 	/** @brief 턴 전환 알파 텍스처 에셋 프레임들을 준비한다. */
 	bool EnsureTurnChangeFrameTextures();
+
+	/** @brief 턴 전환 프레임 텍스처를 전투 진입 시 비동기 프리로드한다(첫 배너 동기 로드 히치 제거). */
+	void PreloadTurnChangeFrameTextures();
 
 	/** @brief 턴 전환 영상 안내 위젯들을 보이거나 숨긴다. */
 	void SetTurnChangeIntroVisibility(bool bVisible) const;
@@ -759,6 +760,9 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UTexture2D>> mTurnChangeFrameTextures;
 
+	/** @brief 턴 전환 프레임 비동기 프리로드 핸들(로드된 에셋을 배너 사용 전까지 붙잡는 핀). */
+	TSharedPtr<struct FStreamableHandle> mTurnChangeFramePreloadHandle;
+
 	/** @brief mTurnChangeVideoImage에 물릴 현재 텍스처 프레임 브러시 */
 	FSlateBrush mTurnChangeFrameBrush;
 
@@ -770,6 +774,14 @@ private:
 
 	/** @brief 턴 전환 안내가 현재 재생 중인지 여부 */
 	bool mTurnChangeIntroPlaying = false;
+
+	/**
+	 * @brief 턴 전환 배너 강제 종료 보험 타이머.
+	 * @details 정상 종료(FinishTurnChangeIntro)는 NativeTick의 경과시간 판정에만 의존하는데,
+	 *          배너 재생 중 HUD Tick이 멈추면(위젯 숨김 등) 라운드 배리어(mRoundChangeBarrier)가
+	 *          영영 안 풀려 그 라운드가 진행 불능이 된다. 재생시간+여유가 지나면 무조건 종료시킨다.
+	 */
+	FTimerHandle mTurnChangeSafetyTimerHandle;
 
 	/** @brief 턴 전환 안내 종료 직후 주사위 팝업을 열어야 하는지 여부 */
 	bool mPendingDiceRollAfterTurnIntro = false;

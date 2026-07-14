@@ -49,7 +49,9 @@ void UCombatTileMapHUDWidget::EnsureDiceRollPhysicsActor()
 		return;
 	}
 
-	mDiceRollPhysicsActor->InitializeCapture(this, 1536, 704);
+	// 캡처 해상도는 표시 크기(1536x704)의 절반 — 굴림 내내 반복되는 풀 씬 HDR 캡처의
+	// 픽셀 수(≈4.3MB RT)를 1/4로 줄인다. 표시 크기는 브러시 ImageSize가 그대로 유지한다.
+	mDiceRollPhysicsActor->InitializeCapture(this, 768, 352);
 	if (mDiceRollPhysicsImage != nullptr && mDiceRollPhysicsActor->GetCaptureMaterial() != nullptr)
 	{
 		FSlateBrush DiceBrush = mDiceRollPhysicsImage->GetBrush();

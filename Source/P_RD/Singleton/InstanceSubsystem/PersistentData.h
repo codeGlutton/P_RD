@@ -15,6 +15,7 @@
 #include "PersistentData.generated.h"
 
 class UPlayerUnitModel;
+class FViewport;
 
 DECLARE_DELEGATE_OneParam(FOnCreateStage, const FStage& /*NewStage*/)
 
@@ -253,7 +254,7 @@ public:
 public:
 	void SetVolume(EGameVolumeType VolumeType, float Volume);
 	void SetLanguage(ELanguageType LanguageType);
-	void SetResolution(const FIntPoint& Resolution);
+	void SetOverallQuality(EOverallQualityType QualityType);
 	void SetFpsLimit(int32 FpsLimit);
 
 	void ApplyCurrentOptions();
@@ -261,7 +262,7 @@ public:
 public:
 	float GetVolume(EGameVolumeType VolumeType) const;
 	ELanguageType GetLanguage() const;
-	const FIntPoint& GetResolution() const;
+	EOverallQualityType GetOverallQuality() const;
 	int32 GetFpsLimit() const;
 
 public:
@@ -276,15 +277,23 @@ protected:
 	ELanguageType mLanguageType = ELanguageType::ENGLISH;
 
 protected:
-	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "Resolution"))
-	FIntPoint mResolution = FIntPoint::ZeroValue;
+	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "OverallQuality"))
+	EOverallQualityType mOverallQuality = EOverallQualityType::Medium;
 
 protected:
 	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "FpsLimit"))
 	int32 mFpsLimit = 60;
 
+private:
+	void ApplyScreenPercentage() const;
+	void OnResizeViewport(FViewport* Viewport, uint32 Unused);
+
 	/* 캐싱 */
 private:
 	UPROPERTY()
 	FOptionPersistDataCache mOptionPersistDataCache;
+
+private:
+	// 뷰포트 생성/리사이즈(폴더블 접힘 전환 포함) 시 렌더 해상도 비율 재계산용 구독 핸들
+	FDelegateHandle mViewportResizedHandle;
 };

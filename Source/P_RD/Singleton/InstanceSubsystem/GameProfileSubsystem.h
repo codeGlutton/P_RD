@@ -33,7 +33,7 @@ public:
 public:
 	void SetVolume(EGameVolumeType VolumeType, float Volume) const;
 	void SetLanguage(ELanguageType LanguageType) const;
-	void SetResolution(const FIntPoint& Resolution) const;
+	void SetOverallQuality(EOverallQualityType QualityType) const;
 	void SetFpsLimit(int32 FpsLimit) const;
 	void ResetOptions() const;
 };

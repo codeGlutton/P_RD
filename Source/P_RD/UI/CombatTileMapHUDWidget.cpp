@@ -2,6 +2,7 @@
 
 #include "Actor/Dice/CombatDiceCaptureActor.h"   // NativeDestruct에서 공유 캡처 액터 파괴
 #include "Components/Button.h"
+#include "TimerManager.h"   // NativeDestruct에서 골드 카운트업/결과 딜레이 타이머 명시 정리
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Reward/RewardUIWidgetBase.h"
 #include "UObject/ConstructorHelpers.h"
@@ -109,6 +110,9 @@ void UCombatTileMapHUDWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 
+	// 첫 라운드 배너에서 프레임 텍스처를 동기 로드하지 않도록 전투 진입 시점에 미리 올린다.
+	PreloadTurnChangeFrameTextures();
+
 	UWorld* World = GetWorld();
 	if (World != nullptr)
 	{
@@ -180,7 +184,22 @@ void UCombatTileMapHUDWidget::NativeDestruct()
 	}
 	if (mCombatUIModel != nullptr)
 	{
+		// BindCombatUIModel이 구독하는 7종 전부를 대칭 해제한다(다이나믹 델리게이트의 약참조
+		// 시맨틱 덕에 해제 없이도 사고는 안 나지만, 안전성을 시맨틱에 기대지 않게 명시 정리).
 		mCombatUIModel->OnQueueNodeResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
+		mCombatUIModel->OnUIChanged.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatUIChanged);
+		mCombatUIModel->OnActionResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatActionResolved);
+		mCombatUIModel->OnCombatFloatingLog.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLog);
+		mCombatUIModel->OnCombatFloatingLogMotionFinished.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogMotionFinished);
+		mCombatUIModel->OnCombatFloatingLogsCleared.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogsCleared);
+		mCombatUIModel->OnDiceRollRequested.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatDiceRollRequested);
+	}
+
+	// UObject 바인딩 타이머라 파괴 후 발화하진 않지만, 핸들을 명시적으로 거둬 수명을 코드로 드러낸다.
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(mGoldCountUpTimerHandle);
+		World->GetTimerManager().ClearTimer(mCombatResultStartDelayTimerHandle);
 	}
 
 	if (IsValid(mOwnedDiceSharedCaptureActor))
@@ -188,6 +207,10 @@ void UCombatTileMapHUDWidget::NativeDestruct()
 		mOwnedDiceSharedCaptureActor->Destroy();
 	}
 	mOwnedDiceSharedCaptureActor = nullptr;
+
+	// 보유 주사위 캡처 액터와 달리 물리 굴림 캡처 액터는 정리가 빠져 있었다 — 위젯 재생성 시
+	// 은닉 위치(Y≈30000)에 SceneCapture+RenderTarget 액터가 누적되는 누수의 원인.
+	DestroyDiceRollPhysicsActor();
 
 	Super::NativeDestruct();
 }

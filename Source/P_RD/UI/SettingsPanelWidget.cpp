@@ -76,6 +76,21 @@ void USettingsPanelWidget::NativeConstruct()
 	}
 
 	/* 품질 버튼은 현재 패널의 임시 품질 번호를 외부 설정 정책으로 전달한다. */
+	/* 현재 WBP의 실제 버튼 이름은 Quality{Low/Mid/High}Button이라 BindWidgetOptional 멤버명({Low/Medium/High}QualityButton)에
+	   잡히지 않는다. WBP 리네임 없이 클릭이 연결되도록 대체 이름으로 한 번 더 찾는다(SyncText의 라벨 처리와 같은 이유). */
+
+	if (LowQualityButton == nullptr && WidgetTree != nullptr)
+	{
+		LowQualityButton = Cast<UButton>(WidgetTree->FindWidget(TEXT("QualityLowButton")));
+	}
+	if (MediumQualityButton == nullptr && WidgetTree != nullptr)
+	{
+		MediumQualityButton = Cast<UButton>(WidgetTree->FindWidget(TEXT("QualityMidButton")));
+	}
+	if (HighQualityButton == nullptr && WidgetTree != nullptr)
+	{
+		HighQualityButton = Cast<UButton>(WidgetTree->FindWidget(TEXT("QualityHighButton")));
+	}
 
 	if (LowQualityButton != nullptr)
 	{
