@@ -60,6 +60,7 @@ void USettingsPanelWidget::RefreshValueModelFromCurrentOptions()
 				CurrentValueModel.mUiVolume = OptionData->GetVolume(EGameVolumeType::UI);
 				CurrentValueModel.mUseKoreanLanguage = OptionData->GetLanguage() == ELanguageType::KOREAN;
 				CurrentValueModel.mFpsLimit = OptionData->GetFpsLimit();
+				CurrentValueModel.mQualityLevel = RDSettingsPanel::FromRenderResolutionHeight(OptionData->GetRenderResolutionHeight());
 			}
 		}
 	}
@@ -105,6 +106,11 @@ void USettingsPanelWidget::HandleLowQualityButtonClicked()
 	if (mIsApplyingValueModel == false)
 	{
 		OnQualityRequested.Broadcast(RDSettingsPanel::ToQualityRequestValue(mValueModel.mQualityLevel));
+		// 전용 수신자가 생기기 전까지의 기본 적용: 품질 단계를 목표 렌더 해상도(360p)로 바꿔 프로필에 반영한다(FPS와 동일 패턴).
+		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+		{
+			GameModeBase->SetRenderResolution(RDSettingsPanel::ToRenderResolutionHeight(mValueModel.mQualityLevel));
+		}
 	}
 }
 
@@ -121,6 +127,11 @@ void USettingsPanelWidget::HandleMediumQualityButtonClicked()
 	if (mIsApplyingValueModel == false)
 	{
 		OnQualityRequested.Broadcast(RDSettingsPanel::ToQualityRequestValue(mValueModel.mQualityLevel));
+		// 전용 수신자가 생기기 전까지의 기본 적용: 품질 단계를 목표 렌더 해상도(720p)로 바꿔 프로필에 반영한다(FPS와 동일 패턴).
+		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+		{
+			GameModeBase->SetRenderResolution(RDSettingsPanel::ToRenderResolutionHeight(mValueModel.mQualityLevel));
+		}
 	}
 }
 
@@ -137,6 +148,11 @@ void USettingsPanelWidget::HandleHighQualityButtonClicked()
 	if (mIsApplyingValueModel == false)
 	{
 		OnQualityRequested.Broadcast(RDSettingsPanel::ToQualityRequestValue(mValueModel.mQualityLevel));
+		// 전용 수신자가 생기기 전까지의 기본 적용: 품질 단계를 목표 렌더 해상도(1080p)로 바꿔 프로필에 반영한다(FPS와 동일 패턴).
+		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+		{
+			GameModeBase->SetRenderResolution(RDSettingsPanel::ToRenderResolutionHeight(mValueModel.mQualityLevel));
+		}
 	}
 }
 

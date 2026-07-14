@@ -55,6 +55,13 @@ void UGameProfileSubsystem::SetResolution(const FIntPoint& Resolution) const
 	UE_LOG(LogGameProfile, Log, TEXT("[%d x %d] 해상도 변경"), Resolution.X, Resolution.Y);
 }
 
+void UGameProfileSubsystem::SetRenderResolution(int32 ShortSideHeight) const
+{
+	GetOptionMutableData()->SetRenderResolution(ShortSideHeight);
+
+	UE_LOG(LogGameProfile, Log, TEXT("[%dp] 렌더 해상도 변경"), ShortSideHeight);
+}
+
 void UGameProfileSubsystem::SetFpsLimit(int32 FpsLimit) const
 {
 	GetOptionMutableData()->SetFpsLimit(FpsLimit);
