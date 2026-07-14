@@ -8,6 +8,66 @@
 
 #define LOCTEXT_NAMESPACE "SettingsPanelWidget_Text"
 
+namespace
+{
+	/** @brief 버튼 등 컨테이너 위젯 아래에서 첫 TextBlock을 찾는다(SyncText의 탐색과 동일 규칙). */
+	UTextBlock* FindFirstTextBlockIn(UWidget* Root)
+	{
+		if (Root == nullptr)
+		{
+			return nullptr;
+		}
+		if (UTextBlock* TextBlock = Cast<UTextBlock>(Root))
+		{
+			return TextBlock;
+		}
+		if (UContentWidget* ContentWidget = Cast<UContentWidget>(Root))
+		{
+			if (UTextBlock* TextBlock = FindFirstTextBlockIn(ContentWidget->GetContent()))
+			{
+				return TextBlock;
+			}
+		}
+		if (UPanelWidget* PanelWidget = Cast<UPanelWidget>(Root))
+		{
+			const int32 ChildCount = PanelWidget->GetChildrenCount();
+			for (int32 ChildIndex = 0; ChildIndex < ChildCount; ++ChildIndex)
+			{
+				if (UTextBlock* TextBlock = FindFirstTextBlockIn(PanelWidget->GetChildAt(ChildIndex)))
+				{
+					return TextBlock;
+				}
+			}
+		}
+		return nullptr;
+	}
+}
+
+void USettingsPanelWidget::UpdateGraphicsSelectionIndicators() const
+{
+	// 패널 프레임 골드 톤과 맞춘 선택 색. WBP에 선택 전용 위젯이 생기면 이 함수는 그것으로 대체한다.
+	const FSlateColor SelectedColor(FLinearColor(1.0f, 0.78f, 0.30f));
+	const FSlateColor UnselectedColor(FLinearColor::White);
+
+	const auto SetButtonLabelColor = [&SelectedColor, &UnselectedColor](UButton* Button, bool bSelected)
+	{
+		if (Button == nullptr)
+		{
+			return;
+		}
+		if (UTextBlock* Label = FindFirstTextBlockIn(Button))
+		{
+			Label->SetColorAndOpacity(bSelected ? SelectedColor : UnselectedColor);
+		}
+	};
+
+	SetButtonLabelColor(LowQualityButton, mValueModel.mQualityLevel == ESettingsQualityLevel::Low);
+	SetButtonLabelColor(MediumQualityButton, mValueModel.mQualityLevel == ESettingsQualityLevel::Medium);
+	SetButtonLabelColor(HighQualityButton, mValueModel.mQualityLevel == ESettingsQualityLevel::High);
+	SetButtonLabelColor(FpsThirtyButton, mValueModel.mFpsLimit == 30);
+	SetButtonLabelColor(FpsSixtyButton, mValueModel.mFpsLimit == 60);
+}
+
 /**
  * @brief 외부 처리 흐름이 결정한 상태 문구를 표시한다.
  *
@@ -91,12 +151,18 @@ void USettingsPanelWidget::SyncText() const
 	SetNamedText(TEXT("FpsSixtyButton"), LOCTEXT("60", "60"));
 	SetNamedText(TEXT("Set_row_quality_label"), LOCTEXT("Quality", "Quality"));
 	SetNamedText(TEXT("QualityRow_Label"), LOCTEXT("Quality", "Quality"));
-	SetNamedText(TEXT("QualityLowButton"), LOCTEXT("Low", "Low"));
-	SetNamedText(TEXT("QualityMidButton"), LOCTEXT("Mid", "Mid"));
-	SetNamedText(TEXT("QualityHighButton"), LOCTEXT("High", "High"));
-	SetNamedText(TEXT("LowQualityButton"), LOCTEXT("Low", "Low"));
-	SetNamedText(TEXT("MediumQualityButton"), LOCTEXT("Mid", "Mid"));
-	SetNamedText(TEXT("HighQualityButton"), LOCTEXT("High", "High"));
+	// 품질 라벨은 목표 렌더 해상도 표기(360p/720p/1080p)를 그대로 쓴다 — 실제 적용 값과 같은 매핑에서 만들어
+	// 라벨과 동작이 어긋나지 않게 하고, 해상도 표기는 언어와 무관하므로 번역하지 않는다.
+	const auto QualityLabelText = [](ESettingsQualityLevel QualityLevel)
+	{
+		return FText::FromString(FString::Printf(TEXT("%dp"), RDSettingsPanel::ToRenderResolutionHeight(QualityLevel)));
+	};
+	SetNamedText(TEXT("QualityLowButton"), QualityLabelText(ESettingsQualityLevel::Low));
+	SetNamedText(TEXT("QualityMidButton"), QualityLabelText(ESettingsQualityLevel::Medium));
+	SetNamedText(TEXT("QualityHighButton"), QualityLabelText(ESettingsQualityLevel::High));
+	SetNamedText(TEXT("LowQualityButton"), QualityLabelText(ESettingsQualityLevel::Low));
+	SetNamedText(TEXT("MediumQualityButton"), QualityLabelText(ESettingsQualityLevel::Medium));
+	SetNamedText(TEXT("HighQualityButton"), QualityLabelText(ESettingsQualityLevel::High));
 	SetNamedText(TEXT("Set_row_screen_shake_label"), LOCTEXT("Screen Shake", "Screen Shake"));
 	SetNamedText(TEXT("ScreenShakeRow_Label"), LOCTEXT("Screen Shake", "Screen Shake"));
 	SetNamedText(TEXT("Set_row_effects_label"), LOCTEXT("Effects", "Effects"));
@@ -213,15 +279,15 @@ void USettingsPanelWidget::SyncText() const
 	}
 	if (LowQualityButtonText != nullptr)
 	{
-		LowQualityButtonText->SetText(LOCTEXT("LOW", "LOW"));
+		LowQualityButtonText->SetText(QualityLabelText(ESettingsQualityLevel::Low));
 	}
 	if (MediumQualityButtonText != nullptr)
 	{
-		MediumQualityButtonText->SetText(LOCTEXT("MID", "MID"));
+		MediumQualityButtonText->SetText(QualityLabelText(ESettingsQualityLevel::Medium));
 	}
 	if (HighQualityButtonText != nullptr)
 	{
-		HighQualityButtonText->SetText(LOCTEXT("HIGH", "HIGH"));
+		HighQualityButtonText->SetText(QualityLabelText(ESettingsQualityLevel::High));
 	}
 	if (AbandonConfirmTitleText != nullptr)
 	{

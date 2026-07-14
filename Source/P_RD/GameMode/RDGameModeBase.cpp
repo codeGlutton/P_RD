@@ -147,6 +147,15 @@ bool ARDGameModeBase::SetFpsLimit(int32 FpsLimit) const
 	return true;
 }
 
+bool ARDGameModeBase::SetRenderResolution(int32 ShortSideHeight) const
+{
+	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
+	GameProfileSubsystem->SetRenderResolution(ShortSideHeight);
+
+	return true;
+}
+
 bool ARDGameModeBase::SetLanguage(ELanguageType Language) const
 {
 	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
