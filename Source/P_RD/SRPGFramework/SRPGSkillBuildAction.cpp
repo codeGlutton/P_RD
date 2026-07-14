@@ -133,6 +133,27 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
         }
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
+    case ESRPGCommandType::BuildConfirm:
+    {
+        // 대상/효과 프리뷰까지 완성된 경우에만 명시적 확정을 받는다.
+        if (mSkillBuildPhase == ESRPGSkillBuildPhase::Preview && BuildSkill())
+        {
+            SetBuildPhase(ESRPGSkillBuildPhase::Build);
+            MarkActionCompleted(ESRPGActionResult::Succeeded);
+        }
+        return ESRPGCommandResult::Handled;
+    }
+    case ESRPGCommandType::BuildCancel:
+    {
+        // 취소 버튼은 단계 뒤로가기가 아니라 현재 스킬 빌드 전체를 종료한다.
+        if (mSkillBuildPhase == ESRPGSkillBuildPhase::AimSelection
+            || mSkillBuildPhase == ESRPGSkillBuildPhase::Preview)
+        {
+            MarkActionCompleted(ESRPGActionResult::Cancelled);
+            SetBuildPhase(ESRPGSkillBuildPhase::None);
+        }
+        return ESRPGCommandResult::Handled;
+    }
     case ESRPGCommandType::WorldTrace:
     {
         /* 월드 공간 터치 시 선택 위치에 따라서 결정 */
@@ -205,17 +226,8 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
             {
             case ESRPGSkillBuildPhase::Preview:
             {
-                /* 확정 칸 클릭 시, 스킬 캐스팅 */
-
-                if (mTargetIndex == TargetTileIndex)
-                {
-                    BuildSkill();
-                    SetBuildPhase(ESRPGSkillBuildPhase::Build);
-                    MarkActionCompleted(ESRPGActionResult::Succeeded);
-
-                    Result = ESRPGCommandResult::Handled;
-                    break;
-                }
+                // 같은 타일을 다시 눌러도 실행하지 않는다. 타일 입력은 프리뷰 갱신까지만,
+                // 실제 시전은 BuildConfirm 명령 한 곳에서만 수행한다.
                 [[fallthrough]];
             }
             case ESRPGSkillBuildPhase::AimSelection:
@@ -326,7 +338,7 @@ void USRPGSkillBuildAction::SetTargetTile(const FTileIndex& TargetIndex)
     OnPostSimulateSkillAction.Broadcast(TurnEventLogs);
 }
 
-void USRPGSkillBuildAction::BuildSkill()
+bool USRPGSkillBuildAction::BuildSkill()
 {
     checkf(mSkillBuildPhase == ESRPGSkillBuildPhase::Preview, TEXT("스킬 빌드 순서 오류"));
 
@@ -335,9 +347,6 @@ void USRPGSkillBuildAction::BuildSkill()
 
     UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
     checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
-
-    // 확정
-    DicePoolModel->MarkSelectedDiceAsUsed();
 
     USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
     checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 서브시스템 모델 nullptr"));
@@ -348,7 +357,14 @@ void USRPGSkillBuildAction::BuildSkill()
     SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mTargetIndex = mTargetIndex;
     SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDiceSum = DicePoolModel->GetSelectedDiceSum();
 
-    CommandRouterModel->SummitCommand(SkillCastCommand);
+    // 실행 액션 등록이 실패하면 주사위를 소비하지 않고 프리뷰를 유지한다.
+    if (CommandRouterModel->SummitCommand(SkillCastCommand) == false)
+    {
+        return false;
+    }
+
+    DicePoolModel->MarkSelectedDiceAsUsed();
+    return true;
 }
 
 void USRPGSkillBuildAction::ResetSkill()

@@ -10,6 +10,30 @@
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "AttributeSet/CombatTargetAttributeSet.h"
 
+#include "Setting/GameBalanceSettings.h"
+
+int32 FSkillEffectLayer_GetMove::CalculateMoveGain(IBoardCombatTarget* ActorModel, float DiceSum) const
+{
+    const UGameBalanceSettings* GameBalanceSettings = GetDefault<UGameBalanceSettings>();
+    checkf(GameBalanceSettings != nullptr, TEXT("게임 밸런스 세팅 nullptr"));
+
+    UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
+    checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+    const float MovePoint = mDefaultMoveGain + DiceSum * mDiceRatio;
+    const float MovementFactor = AttributeSetComponentModel->EvaluateAttributeWithAdditionalModifier(
+        UCombatTargetAttributeSet::GetMovementFactorAttribute(), ETacticalModOp::AddBase, MovePoint);
+
+    const bool IsOwnerAgility = AttributeSetComponentModel->HasMatchingGameplayTag(
+        EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Agility);
+    const float AgilityRatio = IsOwnerAgility
+        ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[
+            EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Agility]
+        : 1.0f;
+
+    return FMath::Max(0, FMath::FloorToInt(AgilityRatio * MovementFactor));
+}
+
 void FSkillEffectLayer_GetMove::ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const
 {
     UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();

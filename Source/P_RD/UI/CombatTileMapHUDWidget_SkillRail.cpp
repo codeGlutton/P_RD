@@ -14,7 +14,9 @@ using namespace RDCombatHUD;
 
 void UCombatTileMapHUDWidget::RebuildSkillRailWidgets()
 {
-	if (RootCanvas == nullptr || WidgetTree == nullptr || mSkillRailPanels.Num() == CombatSkillSlotCount)
+	if (RootCanvas == nullptr || WidgetTree == nullptr
+		|| (mSkillRailPanels.Num() == CombatSkillSlotCount
+			&& (IsDesignerSkinActive() == false || mSkillDrawerHandleButton != nullptr)))
 	{
 		return;
 	}
@@ -43,6 +45,12 @@ void UCombatTileMapHUDWidget::RebuildSkillRailWidgets()
 	mSkillRailPanels.Reset();
 	mSkillRailIcons.Reset();
 	mSkillRailTexts.Reset();
+	if (mSkillDrawerHandleButton != nullptr)
+	{
+		mSkillDrawerHandleButton->RemoveFromParent();
+		mSkillDrawerHandleButton = nullptr;
+		mSkillDrawerHandleText = nullptr;
+	}
 
 	// 슬롯 6칸의 뼈대(패널/아이콘/라벨)만 만든다. 어떤 슬롯에 무엇이 보이는지는
 	// RefreshSkillRailWidgets가 보유 스킬 스냅샷(FSkillUI)만으로 결정한다(시안 라벨 폴백 없음).
@@ -67,11 +75,19 @@ void UCombatTileMapHUDWidget::RebuildSkillRailWidgets()
 
 		SkillRailPanel->SetPadding(GetCombatSkillRailPadding());
 		SkillRailIcon->SetVisibility(ESlateVisibility::HitTestInvisible);
-		SkillRailText->SetJustification(ETextJustify::Center);
-		SkillRailText->SetVisibility(ESlateVisibility::HitTestInvisible);
+		SkillRailText->SetJustification(ETextJustify::Left);
+		SkillRailText->SetClipping(EWidgetClipping::ClipToBounds);
+		FSlateFontInfo SkillNameFont = SkillRailText->GetFont();
+		// 360px 서랍 안에서 한글 7~8자 스킬명도 한 줄로 끝까지 보이게 한다.
+		SkillNameFont.Size = 26;
+		SkillNameFont.OutlineSettings.OutlineSize = 2;
+		SkillNameFont.OutlineSettings.OutlineColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.85f);
+		SkillRailText->SetFont(SkillNameFont);
+		SkillRailText->SetColorAndOpacity(FSlateColor(FLinearColor(0.94f, 0.98f, 0.92f, 1.0f)));
+		SkillRailText->SetVisibility(ESlateVisibility::Collapsed);
 
-		// 스킨 활성 시 DesignCanvas: 렌더/히트테스트가 같은 레터박스 좌표계를 쓴다.
-		// RootCanvas(뷰포트)에 붙이면 16:9가 아닐 때 레일만 따로 노는 정렬 버그가 생긴다.
+		// 스킨 활성 시 DesignCanvas: 렌더/히트테스트가 같은 Safe Area 비례 좌표계를 쓴다.
+		// RootCanvas(뷰포트)에 붙이면 디자인 스케일과 입력 영역이 서로 어긋난다.
 		UCanvasPanel* SkillRailCanvas = GetSkinTargetCanvas();
 		SkillRailCanvas->AddChildToCanvas(SkillRailPanel);
 		SkillRailCanvas->AddChildToCanvas(SkillRailIcon);
@@ -82,7 +98,31 @@ void UCombatTileMapHUDWidget::RebuildSkillRailWidgets()
 		mSkillRailTexts.Add(SkillRailText);
 	}
 
+	// 모바일 스킨에서만 아이콘 위치를 고정하고 이름 영역을 옆으로 여는 서랍 손잡이를 붙인다.
+	if (IsDesignerSkinActive())
+	{
+		mSkillDrawerHandleButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("SkillDrawerHandleButton"));
+		mSkillDrawerHandleText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("SkillDrawerHandleText"));
+		if (mSkillDrawerHandleButton != nullptr && mSkillDrawerHandleText != nullptr)
+		{
+			mSkillDrawerHandleButton->SetBackgroundColor(FLinearColor(0.10f, 0.18f, 0.22f, 0.96f));
+			mSkillDrawerHandleButton->SetTouchMethod(EButtonTouchMethod::PreciseTap);
+			mSkillDrawerHandleButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleSkillDrawerToggleClicked);
+
+			FSlateFontInfo HandleFont = mSkillDrawerHandleText->GetFont();
+			HandleFont.Size = 48;
+			HandleFont.OutlineSettings.OutlineSize = 2;
+			mSkillDrawerHandleText->SetFont(HandleFont);
+			mSkillDrawerHandleText->SetJustification(ETextJustify::Center);
+			mSkillDrawerHandleText->SetText(FText::FromString(TEXT(">")));
+			mSkillDrawerHandleText->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.88f, 0.42f, 1.0f)));
+			mSkillDrawerHandleButton->AddChild(mSkillDrawerHandleText);
+			GetSkinTargetCanvas()->AddChildToCanvas(mSkillDrawerHandleButton);
+		}
+	}
+
 	RefreshSkillRailWidgets();
+	ApplyRuntimeWidgetLayout();
 }
 
 /** @details 레일 고정 배치 - 맨 위 칸=기본 공격(평타), 맨 아래 칸=STEP, 중간 4칸=추가 스킬(시각 슬롯 매핑).
@@ -120,16 +160,9 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 			else
 			{
 				SkillRailPanel->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-				if (IsDesignerSkinActive())
-				{
-					// 스킨 모드: 비선택은 투명(프레임+아이콘만), 선택은 옅은 금색 틴트로만 강조.
-					SkillRailPanel->SetBrushColor(bSelected ? FLinearColor(1.0f, 0.95f, 0.55f, 0.30f) : FLinearColor(0.0f, 0.0f, 0.0f, 0.0f));
-				}
-				else
-				{
-					SkillRailPanel->SetBrushColor(GetCombatSkillRailBrushColor(bSelected));
-				}
-				SkillRailPanel->SetRenderScale(GetCombatSkillRailScale(bSelected));
+				// 기존 96px WBP 프레임 대신 모바일 행 전체를 런타임 배경으로 그린다.
+				SkillRailPanel->SetBrushColor(GetCombatSkillRailBrushColor(bSelected));
+				SkillRailPanel->SetRenderScale(FVector2D::UnitVector);
 			}
 		}
 
@@ -154,11 +187,51 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 		{
 			if (UTextBlock* SkillRailText = mSkillRailTexts[RailSlotIndex])
 			{
-				// 레일에는 아이콘만 보여준다 - 이름/코스트는 롱프레스 상세 카드가 담당한다.
-				SkillRailText->SetVisibility(ESlateVisibility::Collapsed);
+				SkillRailText->SetText(bOwned ? Skill->mName : FText::GetEmpty());
+				SkillRailText->SetRenderOpacity(DimOpacity * mSkillDrawerExpansion);
+				SkillRailText->SetVisibility(
+					bOwned && mSkillDrawerExpansion > KINDA_SMALL_NUMBER
+						? ESlateVisibility::HitTestInvisible
+						: ESlateVisibility::Collapsed);
 			}
 		}
 	}
+}
+
+void UCombatTileMapHUDWidget::HandleSkillDrawerToggleClicked()
+{
+	mSkillDrawerExpansionTarget = mSkillDrawerExpansionTarget > 0.5f ? 0.0f : 1.0f;
+	if (mSkillDrawerHandleText != nullptr)
+	{
+		mSkillDrawerHandleText->SetText(FText::FromString(
+			mSkillDrawerExpansionTarget > 0.5f ? TEXT("<") : TEXT(">")));
+	}
+}
+
+void UCombatTileMapHUDWidget::UpdateSkillDrawerAnimation(float InDeltaTime)
+{
+	// 지도·결과 화면에서 레일을 숨긴 동안 애니메이션 refresh가 자식들을 다시 표시하지 않게 한다.
+	if (mCombatControlsHidden)
+	{
+		return;
+	}
+
+	if (FMath::IsNearlyEqual(mSkillDrawerExpansion, mSkillDrawerExpansionTarget, 0.001f))
+	{
+		if (mSkillDrawerExpansion != mSkillDrawerExpansionTarget)
+		{
+			mSkillDrawerExpansion = mSkillDrawerExpansionTarget;
+			ApplyRuntimeWidgetLayout();
+			RefreshSkillRailWidgets();
+		}
+		return;
+	}
+
+	const float UnitsPerSecond = 1.0f / FMath::Max(MobileSkillDrawerAnimationSeconds, KINDA_SMALL_NUMBER);
+	mSkillDrawerExpansion = FMath::FInterpConstantTo(
+		mSkillDrawerExpansion, mSkillDrawerExpansionTarget, InDeltaTime, UnitsPerSecond);
+	ApplyRuntimeWidgetLayout();
+	RefreshSkillRailWidgets();
 }
 
 /** @details 시각 슬롯 규칙은 헤더 주석 참고. 반환 전에 보유 여부(FSkillUI 이름)까지 검증해 미보유면 INDEX_NONE. */

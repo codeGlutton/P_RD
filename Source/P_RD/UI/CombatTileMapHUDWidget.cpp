@@ -1,6 +1,8 @@
 ﻿#include "UI/CombatTileMapHUDWidget.h"
 
 #include "Components/Button.h"
+#include "Components/CanvasPanel.h"
+#include "Components/ScaleBox.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Reward/RewardUIWidgetBase.h"
 #include "UObject/ConstructorHelpers.h"
@@ -153,6 +155,10 @@ void UCombatTileMapHUDWidget::NativeConstruct()
 	{
 		EndTurnButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleEndTurnButtonClicked);
 	}
+	if (mCancelActionButton != nullptr)
+	{
+		mCancelActionButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCancelActionButtonClicked);
+	}
 	if (mDiceRollInputButton != nullptr)
 	{
 		mDiceRollInputButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleDiceRollInputButtonClicked);
@@ -169,6 +175,10 @@ void UCombatTileMapHUDWidget::NativeDestruct()
 	{
 		EndTurnButton->OnClicked.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleEndTurnButtonClicked);
 	}
+	if (mCancelActionButton != nullptr)
+	{
+		mCancelActionButton->OnClicked.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCancelActionButtonClicked);
+	}
 	if (mDiceRollInputButton != nullptr)
 	{
 		mDiceRollInputButton->OnClicked.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleDiceRollInputButtonClicked);
@@ -176,6 +186,10 @@ void UCombatTileMapHUDWidget::NativeDestruct()
 	if (mSkillDetailDismissButton != nullptr)
 	{
 		mSkillDetailDismissButton->OnClicked.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleSkillDetailDismissButtonClicked);
+	}
+	if (mSkillDrawerHandleButton != nullptr)
+	{
+		mSkillDrawerHandleButton->OnClicked.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleSkillDrawerToggleClicked);
 	}
 	if (mCombatUIModel != nullptr)
 	{
@@ -191,12 +205,22 @@ void UCombatTileMapHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	// 뷰포트 크기가 바뀔 때만 레이아웃 진단 로그를 갱신한다.
-	const FVector2D ViewportSize = MyGeometry.GetLocalSize();
+	// ScaleBox가 받은 Safe Area의 실제 가용 크기로 프로필을 고른다. DesignCanvas는 이 화면비에
+	// 맞춰 논리 높이가 달라지므로 화면비 판정에 다시 사용하면 안 된다.
+	FVector2D ViewportSize = MyGeometry.GetLocalSize();
+	if (mCombatDesignScaleBox != nullptr)
+	{
+		const FVector2D SafeAreaSize = mCombatDesignScaleBox->GetCachedGeometry().GetLocalSize();
+		if (SafeAreaSize.X > 1.0f && SafeAreaSize.Y > 1.0f)
+		{
+			ViewportSize = SafeAreaSize;
+		}
+	}
 	if (ViewportSize.Equals(mLastLoggedLayoutViewportSize, 0.5f) == false)
 	{
 		mLastLoggedLayoutViewportSize = ViewportSize;
 		LogCombatLayoutMetrics(ViewportSize);
+		ApplyAspectVariantSlots(ViewportSize);
 	}
 
 	UpdateUnitHpBars();   // 유닛 머리 위 HP바를 월드→스크린 투영으로 매 프레임 따라가게 한다.
@@ -214,6 +238,7 @@ void UCombatTileMapHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 	}
 
 	UpdateTopBarBackdrop();
+	UpdateSkillDrawerAnimation(InDeltaTime);
 	UpdateSkillPress(InDeltaTime);
 	UpdateEquipPress(InDeltaTime);
 }
@@ -228,6 +253,11 @@ void UCombatTileMapHUDWidget::ApplyOpenUI()
 	RefreshDiceViewsFromRunData();
 	RebuildOwnedDiceCards();
 	RefreshCombatStatusBar();   // 위젯 생성 이후에 뷰모델 값(Lv/HP/Gold)을 상단 상태바에 채운다.
+	if (IsDesignerSkinActive() == false)
+	{
+		RefreshRoomNameLabel();
+		RebuildTurnOrderBar();
+	}
 	RebuildEquipmentBar();      // 탑바 좌측 하단 장비 칩.
 	RebuildUnitHpBars();        // 유닛 수에 맞춰 머리 위 HP바를 만든다.
 	ClearOwnedDiceSelectionHighlight();
@@ -235,6 +265,7 @@ void UCombatTileMapHUDWidget::ApplyOpenUI()
 	HideSkillDetail();
 	RefreshSkillRailWidgets();
 	RefreshDiceAssignmentText();
+	RefreshActionControls();
 
 	/*
 	 * HUD 루트가 빈 영역(타일맵) 탭도 받아야 NativeOnTouchStarted에서 RequestWorldTouch로

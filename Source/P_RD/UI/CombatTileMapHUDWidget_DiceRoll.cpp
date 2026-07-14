@@ -2,6 +2,7 @@
 
 #include "Components/Border.h"
 #include "Components/Button.h"
+#include "Components/HorizontalBox.h"
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
@@ -261,7 +262,7 @@ void UCombatTileMapHUDWidget::SetDiceRollCombatLayerSuppressed(bool bSuppressed)
 		}
 	};
 
-	if (bSuppressed == true)
+	if (bSuppressed == true || mCombatControlsHidden)
 	{
 		RefreshDiceAssignmentText();
 		UpdateUnitHpBars();
@@ -269,7 +270,8 @@ void UCombatTileMapHUDWidget::SetDiceRollCombatLayerSuppressed(bool bSuppressed)
 	}
 
 	SetWidgetVisibility(EndTurnButton.Get(), ESlateVisibility::Visible);
-	SetWidgetVisibility(mMoveButton.Get(), ESlateVisibility::Visible);
+	SetWidgetVisibility(mCancelActionButton.Get(), ESlateVisibility::Visible);
+	SetWidgetVisibility(mOwnedDiceDockBox.Get(), ESlateVisibility::SelfHitTestInvisible);
 
 	SetWidgetArrayVisibility(mOwnedDiceImages, ESlateVisibility::HitTestInvisible);
 	SetWidgetArrayVisibility(mOwnedDiceCardWidgets, ESlateVisibility::Visible);
@@ -283,6 +285,7 @@ void UCombatTileMapHUDWidget::SetDiceRollCombatLayerSuppressed(bool bSuppressed)
 	// 슬롯별 정상 상태는 Refresh가 데이터 기준으로 다시 세운다.
 	RefreshSkillRailWidgets();
 
+	RefreshActionControls();
 	RefreshDiceAssignmentText();
 	UpdateUnitHpBars();
 }

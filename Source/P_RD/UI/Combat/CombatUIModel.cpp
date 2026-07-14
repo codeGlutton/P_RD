@@ -56,6 +56,12 @@ void UCombatUIModel::RequestCancel()
 	OnCombatCommand.Broadcast(ECombatInputType::Cancel, INDEX_NONE);
 }
 
+/** @brief 현재 스킬/이동 빌드 확정 의도를 전달한다. */
+void UCombatUIModel::RequestConfirm()
+{
+	OnCombatCommand.Broadcast(ECombatInputType::Confirm, INDEX_NONE);
+}
+
 /** @brief 장비 슬롯 상세 요청을 SlotIndex payload로 전달한다. */
 void UCombatUIModel::RequestLongPressEquip(int32 SlotIndex)
 {
@@ -140,6 +146,13 @@ void UCombatUIModel::SetTurnUI(const FTurnUI& Turn)
 void UCombatUIModel::SetBuildPhase(ECombatBuildPhaseUI Phase)
 {
 	mTurnUI.mPhase = Phase;
+	OnUIChanged.Broadcast(ECombatUIDomain::Turn);
+}
+
+/** @brief 이동 빌드의 계산된 이동 가능 거리를 갱신한다. */
+void UCombatUIModel::SetMoveRange(int32 MoveRange)
+{
+	mTurnUI.mMoveRange = FMath::Max(0, MoveRange);
 	OnUIChanged.Broadcast(ECombatUIDomain::Turn);
 }
 
@@ -231,15 +244,15 @@ void UCombatUIModel::NotifyCombatFloatingLogs(const TArray<FCombatFloatingLogReq
 	}
 }
 
-/** @brief 특정 모션 인덱스에 묶인 플로팅 로그를 정리하라고 구독 위젯에 알린다. */
-void UCombatUIModel::NotifyCombatFloatingLogMotionFinished(int32 MotionIndex)
+/** @brief 특정 (턴, 액션, 모션) 인덱스에 묶인 플로팅 로그를 정리하라고 구독 위젯에 알린다. */
+void UCombatUIModel::NotifyCombatFloatingLogMotionFinished(int32 TurnIndex, int32 ActionIndex, int32 MotionIndex)
 {
 	if (MotionIndex == INDEX_NONE)
 	{
 		return;
 	}
 
-	OnCombatFloatingLogMotionFinished.Broadcast(MotionIndex);
+	OnCombatFloatingLogMotionFinished.Broadcast(TurnIndex, ActionIndex, MotionIndex);
 }
 
 /** @brief 현재/대기 중인 플로팅 로그를 전부 지우라고 구독 위젯에 알린다. */

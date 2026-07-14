@@ -93,8 +93,7 @@ enum class EFloatingLogColorType : uint8
  * @details 게임플레이가 채워 CombatUIModel::NotifyCombatFloatingLog(s)로 보내면 HUD가 그린다.
  *          - 위치는 호출자가 정한다(유닛 위/타일 위 판별을 UI가 하지 않는다) → mWorldLocation.
  *          - 아이콘/색은 "의미(enum)"로만 준다 → 실제 텍스처·색은 HUD가 매핑.
- *          - (mTurnIndex, mActionIndex, mMotionIndex)는 UI까지 그대로 전달해
- *            후속 표시 그룹화나 재생 상관관계에 사용할 수 있도록 보존한다.
+ *          - mIsPreview + (mTurnIndex, mActionIndex, mMotionIndex) 조합으로 "조준 미리보기 → 모션 종료 시 쳐내기"가 굴러간다.
  */
 USTRUCT(BlueprintType)
 struct FCombatFloatingLogRequest
@@ -428,5 +427,7 @@ struct FTurnUI
 	UPROPERTY(BlueprintReadOnly) int32 mCurrentUnitId = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) int32 mRound = 0;
 	UPROPERTY(BlueprintReadOnly) ECombatBuildPhaseUI mPhase = ECombatBuildPhaseUI::None;
+	/** @brief 이동 빌드에서 선택 주사위로 계산된 현재 이동 가능 거리. 다른 빌드/유휴 상태는 0. */
+	UPROPERTY(BlueprintReadOnly) int32 mMoveRange = 0;
 	UPROPERTY(BlueprintReadOnly) TArray<int32> mTurnOrderUnitIds;
 };

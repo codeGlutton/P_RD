@@ -570,9 +570,11 @@ void USkillComponentModel::EndMotionLayer()
 	}
 
 	/* 모션 로그 종료 */
-	
-	GetWorldEventLogger(this)->EndMotionLog();
-	OnEndMotionLayerUI.Broadcast(mActiveSkillContext.mMotionIndex);
+
+	UEventLogger* EventLogger = GetWorldEventLogger(this);
+	EventLogger->EndMotionLog();
+	// 턴/액션 인덱스는 이벤트 로그(턴>액션>모션) 좌표계를 그대로 쓴다 — 미리보기 플로팅 로그의 인덱스와 같은 기준.
+	OnEndMotionLayerUI.Broadcast(EventLogger->GetCurrentTurnLogIndex(), EventLogger->GetCurrentActionLogIndex(), mActiveSkillContext.mMotionIndex);
 
 	/* 종료 판정 */
 

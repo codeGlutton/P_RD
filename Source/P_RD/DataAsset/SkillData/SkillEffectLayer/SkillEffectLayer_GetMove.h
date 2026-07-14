@@ -22,6 +22,9 @@ public:
 	void ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const override;
 	void ClearPointEffect(IBoardCombatTarget* ActorModel) const override;
 
+	/** @brief 실제 속성을 변경하지 않고 이 효과와 현재 이동 보정을 반영한 이동 가능 거리를 계산한다. */
+	int32 CalculateMoveGain(IBoardCombatTarget* ActorModel, float DiceSum) const;
+
 public:
 	FActiveTacticalEffectHandle ApplyFactorEffect(IBoardCombatTarget* ActorModel) const override;
 	void ClearFactorEffect(IBoardCombatTarget* ActorModel, FActiveTacticalEffectHandle Handle) const override;

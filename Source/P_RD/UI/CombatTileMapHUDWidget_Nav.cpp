@@ -3,6 +3,7 @@
 #include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
+#include "Components/HorizontalBox.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"   // 지도 열기 사운드 재생
@@ -385,7 +386,7 @@ void UCombatTileMapHUDWidget::HandleWorldMapCloseRequested()
  */
 void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 {
-	mCombatControlsHidden = !bVisible;
+	mCombatControlsHidden = !bVisible;   // 지도/결과 화면에서 비동기 UI 갱신이 전투 컨트롤을 되살리지 않게 막는다.
 
 	// 지도는 HUD(z=-10)보다 아래(z=-20)에 깔린다. HUD 루트는 평소 Visible(빈 타일맵 탭까지 받으려고)이라
 	// 화면 전체 입력을 먼저 삼켜서, 지도의 드래그 스크롤이 안 먹는다. 지도 열림 동안엔 루트를 SelfHitTestInvisible로
@@ -408,17 +409,22 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 	ToggleWidgets(mSkillRailTexts, DisplayVis);
 	ToggleWidgets(mSkillRailIcons, DisplayVis);
 	ToggleWidgets(mSkillInputButtons, InputVis);
+	if (mSkillDrawerHandleButton != nullptr) { mSkillDrawerHandleButton->SetVisibility(InputVis); }
 	ToggleWidgets(mOwnedDiceImages, DisplayVis);
 	ToggleWidgets(mOwnedDiceCardWidgets, InputVis);
 	ToggleWidgets(mOwnedDiceTypeTexts, DisplayVis);
+	if (mOwnedDiceDockBox != nullptr)
+	{
+		mOwnedDiceDockBox->SetVisibility(bVisible ? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
+	}
 	ToggleWidgets(mEquipmentChips, DisplayVis);
 	ToggleWidgets(mEquipmentChipTexts, DisplayVis);
 	ToggleWidgets(mEquipSlotButtons, InputVis);
 
 	// mCombatStatusBarText는 항상 Collapsed(Lv/HP/Gold는 WBP HUD_M_* 라벨이 표시)이므로 여기서 손대지 않는다.
 	// 복원 시 Visible로 켜면 Lv/Gold/HP 필과 같은 좌상단 위치라 빈 텍스트가 필 위에 겹친다.
-	if (mMoveButton != nullptr) { mMoveButton->SetVisibility(InputVis); }
 	if (EndTurnButton != nullptr) { EndTurnButton->SetVisibility(InputVis); }
+	if (mCancelActionButton != nullptr) { mCancelActionButton->SetVisibility(InputVis); }
 
 	// mDiceRollInputButton은 "탭해서 굴리기" 입력영역이라 입장 주사위 오버레이가 실제로 떠 있을 때만 존재해야 한다.
 	// 복원(bVisible)에서 무조건 Visible로 켜면 오버레이가 없는데도 유령 버튼이 살아나, 지도 닫은 직후 탭이 이 버튼에
@@ -430,14 +436,12 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 			bVisible && bDiceOverlayActive ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 	}
 
-	// WBP 스킨 마커(프레임 아트) — 지도 위에서는 내비/룸 배너 + 상단 상태바(Lv/Gold/HP)를 남기고 전투 컨트롤만 숨긴다.
+	// WBP 스킨 마커(프레임 아트) — 지도 위에서는 내비 + 상단 상태바(Lv/Gold/HP)를 남기고 전투 컨트롤만 숨긴다.
 	// (상태바 프리픽스 R_top_status_bar/HUD_M_lv_value/HUD_M_hp_value/HUD_M_gold_value는 제외 → 지도에서도 표시)
 	if (DesignCanvas != nullptr)
 	{
 		static const TArray<FString> ControlPrefixes = {
-			TEXT("R_skill_rail"), TEXT("R_btn_move"), TEXT("R_btn_end_turn"),
-			TEXT("HUD_SkillRail"), TEXT("HUD_DiceTray"), TEXT("HUD_Move"), TEXT("HUD_EndTurn"),
-			TEXT("HUD_M_dice"), TEXT("HUD_M_equip"), TEXT("HUD_M_btn_move"), TEXT("HUD_M_btn_end")
+			TEXT("R_btn_end_turn"), TEXT("HUD_EndTurn"), TEXT("HUD_M_equip"), TEXT("HUD_M_btn_end")
 		};
 		const int32 ChildCount = DesignCanvas->GetChildrenCount();
 		for (int32 ChildIndex = 0; ChildIndex < ChildCount; ++ChildIndex)
@@ -456,6 +460,16 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 		}
 	}
 
+	if (bVisible)
+	{
+		RefreshSkillRailWidgets();
+		RefreshActionControls();
+		RefreshDiceAssignmentText();
+		if (IsDesignerSkinActive() == false)
+		{
+			RebuildTurnOrderBar();
+		}
+	}
 }
 
 /**

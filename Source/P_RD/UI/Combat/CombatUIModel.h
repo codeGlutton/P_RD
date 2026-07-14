@@ -23,7 +23,8 @@ enum class ECombatInputType : uint8
 	Move,             // payload 없음(채운 무브포인트 소모)
 	EndTurn,          // payload 없음
 	Cancel,           // payload 없음(딴 데 탭 = 초기화)
-	LongPressEquip    // payload = SlotIndex (장비 상세)
+	LongPressEquip,   // payload = SlotIndex (장비 상세)
+	Confirm           // payload 없음(현재 스킬/이동 빌드 확정). 기존 enum 값을 보존하기 위해 끝에 추가
 };
 
 class UTexture2D;
@@ -35,7 +36,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatCommand, ECombatInputType,
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatWorldTouch, FVector2D, ScreenPosition, bool, bLongPress);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnApplyDiceResults, const TArray<int32>&, RolledFaceIndices);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatFloatingLog, FCombatFloatingLogRequest, Request);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatFloatingLogMotionFinished, int32, MotionIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnCombatFloatingLogMotionFinished, int32, TurnIndex, int32, ActionIndex, int32, MotionIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatFloatingLogsCleared);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatDiceRollRequested);
 
@@ -63,7 +64,7 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
 	FOnCombatFloatingLog OnCombatFloatingLog;
 
-	/** @brief 애니메이션 모션 하나가 끝났으니 해당 MotionIndex의 플로팅 로그를 정리하라는 알림. */
+	/** @brief 애니메이션 모션 하나가 끝났으니 해당 (TurnIndex, ActionIndex, MotionIndex)에 묶인 플로팅 로그를 정리하라는 알림. */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
 	FOnCombatFloatingLogMotionFinished OnCombatFloatingLogMotionFinished;
 
@@ -111,6 +112,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestEndTurn();
 	/** @brief 현재 스킬/주사위/타겟 선택 취소 의도. UI 강조 해제는 OnActionResolved로 되돌아온다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestCancel();
+	/** @brief 현재 스킬/이동 빌드의 프리뷰를 확정한다. 대상/목적지가 없으면 게임플레이가 거부한다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestConfirm();
 	/** @brief 장비 슬롯 상세 요청. SlotIndex는 FEquipmentUI.mSlotIndex와 같은 계약이다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestLongPressEquip(int32 SlotIndex);
 	/** @brief 화면 좌표와 롱프레스 여부만 넘긴다. 월드/타일 변환은 UIModel 바깥의 책임이다. */
@@ -141,6 +144,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetTurnUI(const FTurnUI& Turn);
 	/** @brief 조작 빌드 페이즈만 갱신(스킬/이동 빌드 공용). 턴 스냅샷 전체 교체 없이 페이즈 전환을 알릴 때 사용. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetBuildPhase(ECombatBuildPhaseUI Phase);
+	/** @brief 이동 빌드의 현재 이동 가능 거리만 갱신한다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetMoveRange(int32 MoveRange);
 	/** @brief 장비 슬롯(아이콘/이름/장착/희귀도). [합의필요] 장비 데이터 소스 미정, 현재 임시. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetEquipmentUIs(const TArray<FEquipmentUI>& Equipment);
 	/** @brief 장비 롱프레스 상세 스냅샷을 교체한다(GameMode의 PushEquipmentDetailUIData가 채워 밀어넣는다). */
@@ -163,8 +168,8 @@ public:
 	/** @brief 여러 플로팅 로그를 한 번에 요청한다. Sequence 기준으로 브로드캐스트하면 HUD가 수신 순서대로 순차 재생한다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyCombatFloatingLogs(const TArray<FCombatFloatingLogRequest>& Requests);
 
-	/** @brief 같은 액션의 MotionEventLogs 배열에서 MotionIndex번째 모션 연출이 끝났음을 알린다. */
-	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyCombatFloatingLogMotionFinished(int32 MotionIndex);
+	/** @brief TurnIndex번째 턴, ActionIndex번째 액션의 MotionEventLogs 배열에서 MotionIndex번째 모션 연출이 끝났음을 알린다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyCombatFloatingLogMotionFinished(int32 TurnIndex, int32 ActionIndex, int32 MotionIndex);
 
 	/** @brief 현재/대기 중인 플로팅 로그를 전부 지운다. 시뮬레이션이 다른 것으로 넘어가 미리보기 목록을 통째로 버릴 때 호출. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyCombatFloatingLogsCleared();
@@ -202,7 +207,7 @@ private:
 	/** @brief 스킬 레일 표시 스냅샷. SkillIndex payload와 같은 index 계약을 가진다. */
 	UPROPERTY(Transient) TArray<FSkillUI> mSkillUIs;
 	/** @brief 현재 선택한 스킬 index. index는 mSkillUIs 배열 기준이다. */
-	UPROPERTY(Transient) int32 mSelectedSkillIndex = 0;
+	UPROPERTY(Transient) int32 mSelectedSkillIndex = INDEX_NONE;
 	/** @brief 마지막 스킬 상세 스냅샷. */
 	UPROPERTY(Transient) FSkillDetailUI mSkillDetail;
 	/** @brief 아직 재생되지 않은 행동 결과 큐. ResolveFrontQueueNode()가 앞에서 하나씩 제거한다. */

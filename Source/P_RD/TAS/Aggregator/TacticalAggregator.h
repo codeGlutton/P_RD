@@ -148,6 +148,12 @@ public:
      * @return 평가된 최종값
      */
     float Evaluate() const;
+
+    /**
+     * @brief 현재 Aggregator 상태를 변경하지 않고 모디파이어 한 건을 더 적용한 값을 계산한다.
+     * @details 프리뷰/조준 범위처럼 실제 이펙트를 적용하면 안 되는 읽기 전용 예측에 사용한다.
+     */
+    float EvaluateWithAdditionalModifier(TEnumAsByte<ETacticalModOp::Type> ModifierOp, float EvaluatedMagnitude) const;
     /**
      * @brief 외부에서 지정한 Base를 출발점으로 모디파이어를 적용해 평가한다.
      * @param BaseValue 평가 기준이 될 베이스 값

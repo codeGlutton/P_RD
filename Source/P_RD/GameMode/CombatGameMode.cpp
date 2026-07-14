@@ -47,6 +47,9 @@ DEFINE_LOG_CATEGORY(LogCombatGameMode);
 
 namespace
 {
+	// 플레이어 스킬 데이터 배열에서 기본 이동이 차지하는 고정 슬롯.
+	constexpr int32 MovementSkillDataIndex = 1;
+
 	FLinearColor GetRarityColor(ERarityType RarityType)
 	{
 		switch (RarityType)
@@ -327,8 +330,8 @@ void ACombatGameMode::InitializeRoom()
 		PushSkillUIData();
 		});
 
-	SkillComponentModel->OnEndMotionLayerUI.AddWeakLambda(this, [this](int32 MotionIndex) {
-		mCombatUIModel->NotifyCombatFloatingLogMotionFinished(MotionIndex);
+	SkillComponentModel->OnEndMotionLayerUI.AddWeakLambda(this, [this](int32 TurnIndex, int32 ActionIndex, int32 MotionIndex) {
+		mCombatUIModel->NotifyCombatFloatingLogMotionFinished(TurnIndex, ActionIndex, MotionIndex);
 		});
 
 	/* UI 조작 의도 라우팅 — 위젯 탭이 쏘는 Request*(OnCombatCommand)를 게임플레이 진입점에 연결 */
@@ -377,6 +380,12 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		break;
 	case ECombatInputType::EndTurn:
 		EndTurn();
+		break;
+	case ECombatInputType::Confirm:
+		ConfirmAction();
+		break;
+	case ECombatInputType::Cancel:
+		CancelAction();
 		break;
 	case ECombatInputType::LongPressSkill:
 		// 길게 누른 스킬의 상세 정보를 UIModel에 채운다.
@@ -525,8 +534,9 @@ bool ACombatGameMode::SelectMove()
 
 	TInstancedStruct<FSRPGCommand> MoveSelectCommand;
 	MoveSelectCommand.InitializeAs<FSRPGMoveSelectCommand>();
+	MoveSelectCommand.GetMutable<FSRPGMoveSelectCommand>().mSkillIndex = MovementSkillDataIndex;
 	MoveSelectCommand.GetMutable<FSRPGMoveSelectCommand>().OnChangeMoveBuildPhase.AddWeakLambda(this, [this](const USRPGMoveBuildAction* Action, ESRPGMoveBuildPhase Phase) {
-		PushMoveBuildUIData(Phase);
+		PushMoveBuildUIData(Action, Phase);
 		});
 
 	return CommandRouterModel->SummitCommand(MoveSelectCommand);
@@ -541,6 +551,26 @@ bool ACombatGameMode::EndTurn()
 	DiceSelectCommand.InitializeAs<FSRPGTurnEndCommand>();
 
 	return CommandRouterModel->SummitCommand(DiceSelectCommand);
+}
+
+bool ACombatGameMode::ConfirmAction()
+{
+	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
+
+	TInstancedStruct<FSRPGCommand> ConfirmCommand;
+	ConfirmCommand.InitializeAs<FSRPGBuildConfirmCommand>();
+	return CommandRouterModel->SummitCommand(ConfirmCommand);
+}
+
+bool ACombatGameMode::CancelAction()
+{
+	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
+
+	TInstancedStruct<FSRPGCommand> CancelCommand;
+	CancelCommand.InitializeAs<FSRPGBuildCancelCommand>();
+	return CommandRouterModel->SummitCommand(CancelCommand);
 }
 
 bool ACombatGameMode::ResolveWorldTouchEvent(FVector2D ScreenPosition)
@@ -634,6 +664,7 @@ void ACombatGameMode::PushTurnUIData() const
 	FTurnUI TurnUI;
 	TurnUI.mCurrentUnitId = TurnContexts[0]->GetOwner()->GetModelId();
 	TurnUI.mPhase = mCombatUIModel->GetTurnUI().mPhase;
+	TurnUI.mMoveRange = mCombatUIModel->GetTurnUI().mMoveRange;
 	TurnUI.mRound = CombatModel->GetRoundCount();
 	for (const TObjectPtr<USRPGTurnContext>& TurnContext : TurnContexts)
 	{
@@ -645,6 +676,7 @@ void ACombatGameMode::PushTurnUIData() const
 void ACombatGameMode::PushSkillBuildUIData(ESRPGSkillBuildPhase Phase) const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+	mCombatUIModel->SetMoveRange(0);
 
 	switch (Phase)
 	{
@@ -661,7 +693,7 @@ void ACombatGameMode::PushSkillBuildUIData(ESRPGSkillBuildPhase Phase) const
 	}
 }
 
-void ACombatGameMode::PushMoveBuildUIData(ESRPGMoveBuildPhase Phase) const
+void ACombatGameMode::PushMoveBuildUIData(const USRPGMoveBuildAction* Action, ESRPGMoveBuildPhase Phase) const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
@@ -669,12 +701,18 @@ void ACombatGameMode::PushMoveBuildUIData(ESRPGMoveBuildPhase Phase) const
 	{
 	case ESRPGMoveBuildPhase::None:
 	case ESRPGMoveBuildPhase::Build:
+		mCombatUIModel->SetSelectedSkill(INDEX_NONE);
+		mCombatUIModel->SetMoveRange(0);
 		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::None);
 		break;
 	case ESRPGMoveBuildPhase::DestSelection:
+		mCombatUIModel->SetSelectedSkill(MovementSkillDataIndex);
+		mCombatUIModel->SetMoveRange(Action != nullptr ? Action->GetMovePoint() : 0);
 		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::AimSelection);
 		break;
 	case ESRPGMoveBuildPhase::Preview:
+		mCombatUIModel->SetSelectedSkill(MovementSkillDataIndex);
+		mCombatUIModel->SetMoveRange(Action != nullptr ? Action->GetMovePoint() : 0);
 		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::Preview);
 		break;
 	}
@@ -823,7 +861,9 @@ void ACombatGameMode::PushSkillUIData() const
 		UStaticSkillData* StaticSkillData = (SkillEntry.IsValid() == true) ? SkillEntry.mData.Get() : nullptr;
 		if (StaticSkillData != nullptr)
 		{
-			SkillUIData.mName = StaticSkillData->mName;
+			SkillUIData.mName = i == MovementSkillDataIndex
+				? NSLOCTEXT("CombatGameMode", "MovementSkillName", "이동")
+				: StaticSkillData->mName;
 			SkillUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 			SkillUIData.mDiceCost = StaticSkillData->mRequiredDiceCount;
 			SkillUIData.mIsUsable = true;
@@ -900,8 +940,13 @@ void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 	UStaticSkillData* StaticSkillData = (SkillEntry != nullptr && SkillEntry->IsValid() == true) ? SkillEntry->mData.Get() : nullptr;
 	if (StaticSkillData != nullptr)
 	{
-		SkillDetailUIData.mName = StaticSkillData->mName;
-		SkillDetailUIData.mDescription = StaticSkillData->mDescription;
+		const bool IsMovementSkill = SkillIndex == MovementSkillDataIndex;
+		SkillDetailUIData.mName = IsMovementSkill
+			? NSLOCTEXT("CombatGameMode", "MovementSkillName", "이동")
+			: StaticSkillData->mName;
+		SkillDetailUIData.mDescription = IsMovementSkill
+			? NSLOCTEXT("CombatGameMode", "MovementSkillDescription", "주사위를 1개 이상 선택해 이동 가능 거리를 정한 뒤 목적지를 선택합니다.")
+			: StaticSkillData->mDescription;
 		SkillDetailUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 		SkillDetailUIData.mDiceCost = StaticSkillData->mRequiredDiceCount;
 		SkillDetailUIData.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
@@ -1327,7 +1372,7 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 				continue;
 			}
 
-			// TODO : 
+			// TODO :
 			// 어디서 어디로 이동했다는 정보는 어떻게 알려야하나
 			/*Requests.Add(MakeLogRequest(
 				TagLog.mCount,

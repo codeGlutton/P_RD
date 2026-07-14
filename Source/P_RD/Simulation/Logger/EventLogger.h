@@ -41,6 +41,12 @@ public:
 public:
 	virtual TArray<FSRPGTurnEventLog> PopSRPGLogs() PURE_VIRTUAL(UEventLogger::PopSRPGLogs, return TArray<FSRPGTurnEventLog>(););
 
+public:
+	// @brief 현재 기록 중인 턴 로그의 TurnEventLogs 배열 인덱스. 열린 턴 로그가 없으면 INDEX_NONE
+	virtual int32 GetCurrentTurnLogIndex() const PURE_VIRTUAL(UEventLogger::GetCurrentTurnLogIndex, return INDEX_NONE;);
+	// @brief 현재 기록 중인 액션 로그의 ActionEventLogs 배열 인덱스. 열린 액션 로그가 없으면 INDEX_NONE
+	virtual int32 GetCurrentActionLogIndex() const PURE_VIRTUAL(UEventLogger::GetCurrentActionLogIndex, return INDEX_NONE;);
+
 protected:
 	FRoomContext* mRoomContext = nullptr;
 };
@@ -69,6 +75,10 @@ public:
 
 public:
 	TArray<FSRPGTurnEventLog> PopSRPGLogs() override;
+
+public:
+	int32 GetCurrentTurnLogIndex() const override;
+	int32 GetCurrentActionLogIndex() const override;
 
 protected:
 	TArray<FSRPGTurnEventLog> mTurnEventLogs;
@@ -106,6 +116,10 @@ public:
 
 public:
 	TArray<FSRPGTurnEventLog> PopSRPGLogs() override;
+
+public:
+	int32 GetCurrentTurnLogIndex() const override;
+	int32 GetCurrentActionLogIndex() const override;
 
 protected:
 	TArray<FSRPGTurnEventLog> mTurnEventLogs;

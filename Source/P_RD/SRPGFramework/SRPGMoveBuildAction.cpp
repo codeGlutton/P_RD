@@ -9,10 +9,13 @@
 #include "Pawn/Player/PlayerUnitModel.h"
 #include "Actor/TileMap/TileMapModel.h"
 
-#include "Component/AttributeComponent/AttributeSetComponentModel.h"
-#include "AttributeSet/UnitAttributeSet.h"
+#include "Component/SkillComponent/SkillComponentModel.h"
+#include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_GetMove.h"
+#include "Dice/DicePoolModel.h"
 
 #include "SRPGFramework/SRPGMoveAction.h"
+#include "SRPGFramework/SRPGSkillBuildAction.h"
 
 FSRPGMoveSelectCommand::FSRPGMoveSelectCommand()
 {
@@ -49,7 +52,7 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleCommand(const TInstancedStruct<FS
     {
     case ESRPGCommandType::MoveSelect:
     {
-        /* 이동 빌드 진입 시 외부에서 넘어온 이동 포인트를 받아 도달 범위 계산 */
+        /* 이동 스킬 선택 시 주사위가 비어 있는 상태로 빌드에 진입한다. */
 
         if (mMoveBuildPhase != ESRPGMoveBuildPhase::None)
         {
@@ -59,13 +62,9 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleCommand(const TInstancedStruct<FS
             return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
         }
 
-        UPlayerUnitModel* PlayerUnitModel = Cast<UPlayerUnitModel>(mInstigator);
-        checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 모델 nullptr"));
-        UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnitModel->GetAttributeComponentModel();
-        checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 모델 nullptr"));
-        mMovePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMovementAttribute());
-
         const FSRPGMoveSelectCommand& MoveSelectCommand = Command.Get<FSRPGMoveSelectCommand>();
+        mMovementSkillIndex = MoveSelectCommand.mSkillIndex;
+        mMovePoint = 0;
         // 커맨드 델리깃을 복사해서 페이즈가 바뀔 때 통지
         OnChangeMoveBuildPhase = MoveSelectCommand.OnChangeMoveBuildPhase;
 
@@ -95,6 +94,45 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleCommand(const TInstancedStruct<FS
         /* 월드 공간 터치 시 선택 위치에 따라서 결정 */
 
         return CombineSRPGCommandResult(HandleWorldTraceCommand(Command), Result);
+    }
+    case ESRPGCommandType::DiceSelect:
+    {
+        const FSRPGDiceSelectCommand& DiceSelectCommand = Command.Get<FSRPGDiceSelectCommand>();
+        const bool IsMoveBuildActive = mMoveBuildPhase == ESRPGMoveBuildPhase::DestSelection
+            || mMoveBuildPhase == ESRPGMoveBuildPhase::Preview;
+        if (DiceSelectCommand.mDiceIndex != INDEX_NONE && IsMoveBuildActive)
+        {
+            // 주사위가 바뀌면 기존 목적지/경로는 더 이상 유효하지 않다.
+            if (mMoveBuildPhase == ESRPGMoveBuildPhase::Preview)
+            {
+                ResetTargetTile();
+            }
+            ChangeDices(DiceSelectCommand.mDiceIndex);
+            mMovePoint = CalculateMovePoint();
+            RefreshReachableTiles();
+            // 같은 페이즈라도 거리 표시값이 바뀌었으므로 UI에 다시 알린다.
+            SetBuildPhase(ESRPGMoveBuildPhase::DestSelection);
+        }
+        return ESRPGCommandResult::Handled;
+    }
+    case ESRPGCommandType::BuildConfirm:
+    {
+        if (mMoveBuildPhase == ESRPGMoveBuildPhase::Preview && BuildMove())
+        {
+            SetBuildPhase(ESRPGMoveBuildPhase::Build);
+            MarkActionCompleted(ESRPGActionResult::Succeeded);
+        }
+        return ESRPGCommandResult::Handled;
+    }
+    case ESRPGCommandType::BuildCancel:
+    {
+        if (mMoveBuildPhase == ESRPGMoveBuildPhase::DestSelection
+            || mMoveBuildPhase == ESRPGMoveBuildPhase::Preview)
+        {
+            MarkActionCompleted(ESRPGActionResult::Cancelled);
+            SetBuildPhase(ESRPGMoveBuildPhase::None);
+        }
+        return ESRPGCommandResult::Handled;
     }
     }
 
@@ -156,16 +194,7 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleWorldTraceCommand(const TInstance
             {
             case ESRPGMoveBuildPhase::Preview:
             {
-                /* 확정 칸 클릭 시, 이동 발행 */
-
-                if (mTargetIndex == TargetTileIndex)
-                {
-                    BuildMove();
-                    MarkActionCompleted(ESRPGActionResult::Succeeded);
-                    SetBuildPhase(ESRPGMoveBuildPhase::Build);
-                    Result = ESRPGCommandResult::Handled;
-                    break;
-                }
+                // 같은 칸을 다시 눌러도 실행하지 않는다. 명시적 BuildConfirm만 이동을 확정한다.
                 [[fallthrough]];
             }
             case ESRPGMoveBuildPhase::DestSelection:
@@ -205,9 +234,18 @@ void USRPGMoveBuildAction::EnterMoveBuild()
 
 void USRPGMoveBuildAction::ResetMoveBuild()
 {
+    if (UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get()))
+    {
+        if (UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel())
+        {
+            DicePoolModel->ResetSelected();
+        }
+    }
+
     mReachableTileIndexes.Empty();
 
     mMovePoint = 0;
+    mMovementSkillIndex = INDEX_NONE;
 
     mPathTileIndexes.Empty();
     mTargetIndex = FTileIndex::Invalid;
@@ -217,6 +255,27 @@ void USRPGMoveBuildAction::ResetMoveBuild()
     TileMap->ClearMovePath();
 
     SetBuildPhase(ESRPGMoveBuildPhase::None);
+}
+
+void USRPGMoveBuildAction::ChangeDices(int32 RequestedDiceIndex)
+{
+    checkf(mMoveBuildPhase == ESRPGMoveBuildPhase::DestSelection, TEXT("이동 빌드 순서 오류"));
+
+    UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
+    checkf(PlayerUnit != nullptr, TEXT("주사위를 굴릴 수 있는 플레이어 유닛이 아님"));
+
+    UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
+    checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
+
+    if (DicePoolModel->IsSelectedDice(RequestedDiceIndex))
+    {
+        DicePoolModel->MarkDiceUnselected(RequestedDiceIndex);
+    }
+    else
+    {
+        // 이동은 요구 개수 상한이 없다. 굴려졌고 미사용인 주사위라면 여러 개를 계속 추가할 수 있다.
+        DicePoolModel->MarkDiceSelected(RequestedDiceIndex);
+    }
 }
 
 void USRPGMoveBuildAction::SetTargetTile(const FTileIndex& TileIndex)
@@ -260,9 +319,19 @@ void USRPGMoveBuildAction::ResetTargetTile()
     SetBuildPhase(ESRPGMoveBuildPhase::DestSelection);
 }
 
-void USRPGMoveBuildAction::BuildMove()
+bool USRPGMoveBuildAction::BuildMove()
 {
     checkf(mMoveBuildPhase == ESRPGMoveBuildPhase::Preview, TEXT("이동 빌드 순서 오류"));
+
+    UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
+    checkf(PlayerUnit != nullptr, TEXT("주사위를 굴릴 수 있는 플레이어 유닛이 아님"));
+    UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
+    checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
+
+    if (DicePoolModel->GetSelectedDiceNum() < 1 || mPathTileIndexes.Num() < 2)
+    {
+        return false;
+    }
 
     USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
     checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 서브시스템 모델 nullptr"));
@@ -272,8 +341,16 @@ void USRPGMoveBuildAction::BuildMove()
     TInstancedStruct<FSRPGCommand> MoveCastCommand;
     MoveCastCommand.InitializeAs<FSRPGMoveCommand>();
     MoveCastCommand.GetMutable<FSRPGMoveCommand>().mPathTileIndexes = mPathTileIndexes;
+    MoveCastCommand.GetMutable<FSRPGMoveCommand>().mConsumeMovementAttribute = false;
 
-    CommandRouterModel->SummitCommand(MoveCastCommand);
+    // 실행 액션 등록이 성공했을 때만 선택 주사위를 이번 턴 사용됨으로 잠근다.
+    if (CommandRouterModel->SummitCommand(MoveCastCommand) == false)
+    {
+        return false;
+    }
+
+    DicePoolModel->MarkSelectedDiceAsUsed();
+    return true;
 }
 
 void USRPGMoveBuildAction::SetBuildPhase(ESRPGMoveBuildPhase BuildPhase)
@@ -297,10 +374,52 @@ void USRPGMoveBuildAction::RefreshReachableTiles()
 {
     UTileMapModel* TileMap = GetTileMap();
 
-    // 이동 거리 = 외부에서 넘어온 이동 포인트 (사거리 계산은 빌드 밖에서 수행)
+    TileMap->ClearTileHighlight(ETileHighlightFlag::Aim);
+
+    // 이동 거리 = 선택 주사위 합에 이동 스킬 효과와 현재 이동 보정을 적용한 값.
     const int32 MoveRange = mMovePoint;
     mReachableTileIndexes = TileMap->GetReachableTiles(mInstigator->GetTileTransform().mIndex, MoveRange);
 
     // 도달 범위를 조준 강조로 표시 (이동 범위 = 조준 범위로 표현)
     TileMap->SetTileHighlight(mReachableTileIndexes, ETileHighlightFlag::Aim);
+}
+
+int32 USRPGMoveBuildAction::CalculateMovePoint() const
+{
+    UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
+    checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 모델 nullptr"));
+
+    UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
+    checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트 nullptr"));
+    if (DicePoolModel->GetSelectedDiceNum() < 1)
+    {
+        return 0;
+    }
+
+    USkillComponentModel* SkillComponentModel = PlayerUnit->GetSkillComponentModel();
+    checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
+    const FSkillEntry* MovementSkillEntry = SkillComponentModel->GetSkill(mMovementSkillIndex);
+    const UStaticSkillData* MovementSkill = MovementSkillEntry != nullptr ? MovementSkillEntry->mData.Get() : nullptr;
+    if (MovementSkill == nullptr)
+    {
+        UE_LOG(LogSRPGCombat, Warning, TEXT("이동 스킬 데이터를 찾지 못해 주사위 합을 이동 거리로 사용합니다."));
+        return DicePoolModel->GetSelectedDiceSum();
+    }
+
+    IBoardCombatTarget* CombatTarget = Cast<IBoardCombatTarget>(PlayerUnit);
+    checkf(CombatTarget != nullptr, TEXT("이동 유닛이 전투 타겟 인터페이스를 구현하지 않음"));
+    const float DiceSum = StaticCast<float>(DicePoolModel->GetSelectedDiceSum());
+    for (const FSkillMotionLayer& MotionLayer : MovementSkill->mSkillMotionLayers)
+    {
+        for (const TInstancedStruct<FSkillEffectLayer>& EffectLayer : MotionLayer.mSkillEffectLayers)
+        {
+            if (const FSkillEffectLayer_GetMove* MoveEffect = EffectLayer.GetPtr<FSkillEffectLayer_GetMove>())
+            {
+                return MoveEffect->CalculateMoveGain(CombatTarget, DiceSum);
+            }
+        }
+    }
+
+    UE_LOG(LogSRPGCombat, Warning, TEXT("이동 스킬에 GetMove 효과가 없어 주사위 합을 이동 거리로 사용합니다."));
+    return DicePoolModel->GetSelectedDiceSum();
 }

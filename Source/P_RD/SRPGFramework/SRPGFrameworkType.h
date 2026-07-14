@@ -286,6 +286,9 @@ enum class ESRPGCommandType : uint8
     MoveCast            UMETA(ToolTip = "이동 사용"),
 
     TurnEnd             UMETA(ToolTip = "턴 종료"),
+
+    BuildConfirm        UMETA(ToolTip = "행동 빌드 확정"),
+    BuildCancel         UMETA(ToolTip = "행동 빌드 취소"),
 };
 
 /**

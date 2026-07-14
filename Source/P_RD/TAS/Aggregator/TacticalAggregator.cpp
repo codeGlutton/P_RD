@@ -257,6 +257,60 @@ float FTacticalAggregator::Evaluate() const
     return EvaluateWithBase(mBaseValue);
 }
 
+float FTacticalAggregator::EvaluateWithAdditionalModifier(
+    TEnumAsByte<ETacticalModOp::Type> ModifierOp,
+    float EvaluatedMagnitude) const
+{
+    // 새 Override는 현재 모든 계산보다 우선한다. 기존 Override가 있으면 비-Override 추가값은 무시된다.
+    if (ModifierOp == ETacticalModOp::Override)
+    {
+        return EvaluatedMagnitude;
+    }
+    for (const FTacticalAggregatorMod& Mod : mMods[ETacticalModOp::Override])
+    {
+        return Mod.mEvaluatedMagnitude;
+    }
+
+    float Additive = SumMods(mMods[ETacticalModOp::AddBase],
+        TacticalEffectUtilities::GetModifierBiasByModifierOp(ETacticalModOp::AddBase));
+    float Multiplicative = SumMods(mMods[ETacticalModOp::MultiplyAdditive],
+        TacticalEffectUtilities::GetModifierBiasByModifierOp(ETacticalModOp::MultiplyAdditive));
+    float Division = SumMods(mMods[ETacticalModOp::DivideAdditive],
+        TacticalEffectUtilities::GetModifierBiasByModifierOp(ETacticalModOp::DivideAdditive));
+    float CompoundMultiply = MultiplyMods(mMods[ETacticalModOp::MultiplyCompound]);
+    float FinalAdd = SumMods(mMods[ETacticalModOp::AddFinal],
+        TacticalEffectUtilities::GetModifierBiasByModifierOp(ETacticalModOp::AddFinal));
+
+    switch (ModifierOp)
+    {
+    case ETacticalModOp::AddBase:
+        Additive += EvaluatedMagnitude;
+        break;
+    case ETacticalModOp::MultiplyAdditive:
+        Multiplicative += EvaluatedMagnitude
+            - TacticalEffectUtilities::GetModifierBiasByModifierOp(ETacticalModOp::MultiplyAdditive);
+        break;
+    case ETacticalModOp::DivideAdditive:
+        Division += EvaluatedMagnitude
+            - TacticalEffectUtilities::GetModifierBiasByModifierOp(ETacticalModOp::DivideAdditive);
+        break;
+    case ETacticalModOp::MultiplyCompound:
+        CompoundMultiply *= EvaluatedMagnitude;
+        break;
+    case ETacticalModOp::AddFinal:
+        FinalAdd += EvaluatedMagnitude;
+        break;
+    default:
+        break;
+    }
+
+    if (FMath::IsNearlyZero(Division))
+    {
+        Division = 1.0f;
+    }
+    return ((mBaseValue + Additive) * Multiplicative / Division * CompoundMultiply) + FinalAdd;
+}
+
 /**
  * @brief 주어진 베이스 값에 연산 종류별 모디파이어를 합성해 최종 값을 계산한다(핵심 수식).
  * @param BaseValue 모디파이어 적용 전 입력 베이스 값.

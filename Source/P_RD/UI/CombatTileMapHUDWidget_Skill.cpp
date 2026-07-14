@@ -1,5 +1,7 @@
 #include "UI/CombatTileMapHUDWidget.h"
 
+#include "Blueprint/WidgetTree.h"
+#include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/CombatTileMapHUDWidgetPrivate.h"
@@ -10,25 +12,102 @@ using namespace RDCombatHUD;
 
 void UCombatTileMapHUDWidget::HandleEndTurnButtonClicked()
 {
-	// 뷰모델 연결 시 턴 종료는 의도로 보낸다. 미연결 시 기존처럼 로그만.
 	if (mCombatUIModel != nullptr)
 	{
-		mCombatUIModel->RequestEndTurn();
+		const bool IsBuildActive = mCombatUIModel->GetTurnUI().mPhase != ECombatBuildPhaseUI::None;
+		if (IsBuildActive)
+		{
+			mCombatUIModel->RequestConfirm();
+		}
+		else
+		{
+			mCombatUIModel->RequestEndTurn();
+		}
 		return;
 	}
 
 	UE_LOG(LogRD, Log, TEXT("END TURN button clicked. Combat turn API is not connected yet."));
 }
 
+void UCombatTileMapHUDWidget::HandleCancelActionButtonClicked()
+{
+	if (mCombatUIModel != nullptr
+		&& mCombatUIModel->GetTurnUI().mPhase != ECombatBuildPhaseUI::None)
+	{
+		mCombatUIModel->RequestCancel();
+	}
+}
+
+void UCombatTileMapHUDWidget::RefreshActionControls() const
+{
+	const ECombatBuildPhaseUI Phase = mCombatUIModel != nullptr
+		? mCombatUIModel->GetTurnUI().mPhase
+		: ECombatBuildPhaseUI::None;
+	const bool IsBuildActive = Phase != ECombatBuildPhaseUI::None;
+	const bool CanConfirm = Phase == ECombatBuildPhaseUI::Preview;
+	const FText PrimaryLabel = IsBuildActive
+		? NSLOCTEXT("CombatTileMapHUDWidget", "ConfirmAction", "확정")
+		: NSLOCTEXT("CombatTileMapHUDWidget", "EndTurnLabel", "END\nTURN");
+
+	if (EndTurnButton != nullptr)
+	{
+		EndTurnButton->SetIsEnabled(IsBuildActive == false || CanConfirm);
+	}
+	if (mPrimaryActionButtonText != nullptr)
+	{
+		mPrimaryActionButtonText->SetText(PrimaryLabel);
+	}
+	if (WidgetTree != nullptr)
+	{
+		if (UTextBlock* SkinLabel = Cast<UTextBlock>(WidgetTree->FindWidget(TEXT("HUD_M_btn_end_turn_label"))))
+		{
+			SkinLabel->SetText(PrimaryLabel);
+			SkinLabel->SetJustification(ETextJustify::Center);
+			SkinLabel->SetColorAndOpacity(FSlateColor(CanConfirm || IsBuildActive == false
+				? FLinearColor::White
+				: FLinearColor(0.52f, 0.52f, 0.55f, 1.0f)));
+		}
+	}
+
+	if (mCancelActionButton != nullptr)
+	{
+		mCancelActionButton->SetVisibility(IsBuildActive && mCombatControlsHidden == false
+			? ESlateVisibility::Visible
+			: ESlateVisibility::Collapsed);
+		mCancelActionButton->SetIsEnabled(IsBuildActive);
+	}
+}
+
 void UCombatTileMapHUDWidget::RefreshDiceAssignmentText() const
 {
-	// 주사위 배치 안내 문구("Tap a rolled die" 등) 영역은 표시하지 않기로 함(20260710 요청).
-	// 배치 상태는 주사위 색(진행중=노랑/완료=초록/미배치=회색)이 이미 전달한다.
-	if (mDiceAssignmentText != nullptr)
+	if (mDiceAssignmentText == nullptr)
+	{
+		return;
+	}
+
+	const bool IsMovementBuild = mCombatUIModel != nullptr
+		&& mCombatUIModel->GetSelectedSkillIndex() == CombatMovementSkillDataIndex
+		&& mCombatUIModel->GetTurnUI().mPhase != ECombatBuildPhaseUI::None;
+	if (IsMovementBuild == false || mCombatControlsHidden)
 	{
 		mDiceAssignmentText->SetText(FText::GetEmpty());
 		mDiceAssignmentText->SetVisibility(ESlateVisibility::Collapsed);
+		return;
 	}
+
+	const int32 SelectedDiceCount = mCombatUIModel->GetSelectedDiceIndices().Num();
+	if (SelectedDiceCount < 1)
+	{
+		mDiceAssignmentText->SetText(
+			NSLOCTEXT("CombatTileMapHUDWidget", "MovementSelectDiceHint", "주사위를 1개 이상 선택"));
+	}
+	else
+	{
+		mDiceAssignmentText->SetText(FText::Format(
+			NSLOCTEXT("CombatTileMapHUDWidget", "MovementRangeHint", "이동 가능 거리 {0}칸"),
+			FText::AsNumber(mCombatUIModel->GetTurnUI().mMoveRange)));
+	}
+	mDiceAssignmentText->SetVisibility(ESlateVisibility::HitTestInvisible);
 }
 
 #undef LOCTEXT_NAMESPACE

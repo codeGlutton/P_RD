@@ -25,10 +25,14 @@ class UCombatUIModel;
 class UCombatResultOverlayWidget;
 class UCinematicWidget;
 class UIndexedButtonWidget;
+class UHorizontalBox;
 class UImage;
 class UProgressBar;
 class URewardUIModel;
 class URewardUIWidgetBase;
+class USafeZone;
+class UScaleBox;
+class USizeBox;
 class USoundBase;
 class UTextBlock;
 class UViewport;
@@ -128,6 +132,9 @@ private:
 	/** @brief 런타임으로 붙인 위젯들의 화면 위치를 모바일 화면 비율 기준으로 맞춘다. */
 	void ApplyRuntimeWidgetLayout() const;
 
+	/** @brief Concept02 정적 아트를 모바일 HUD 좌표로 확대·재배치하고 제거 대상은 숨긴다. */
+	void ApplyMobileSkinWidgetLayout() const;
+
 	/** @brief WBP에 디자이너 스킨(HUD_* 앵커 위젯)이 있는지 한 번 판별해 캐시한다. */
 	void ResolveDesignerSkin();
 
@@ -136,7 +143,7 @@ private:
 
 	/**
 	 * @brief 스킨 런타임 위젯이 붙을 캔버스.
-	 * 스킨 활성 시 DesignCanvas(1920x1080 디자인 좌표계, ScaleBox 레터박스) — 디자인 정규화 앵커가 스킨 아트와 정렬된다.
+	 * 스킨 활성 시 가변 높이 DesignCanvas(최소 1440x1080, 실제 Safe Area 종횡비) — 디자인 앵커가 화면 가장자리를 따른다.
 	 * 아니면 풀뷰포트 RootCanvas(레거시 뷰포트 정규화 상수용). 월드투영 HP바만 예외적으로 항상 RootCanvas를 쓴다.
 	 */
 	UCanvasPanel* GetSkinTargetCanvas() const { return (IsDesignerSkinActive() && DesignCanvas != nullptr) ? DesignCanvas.Get() : RootCanvas.Get(); }
@@ -146,6 +153,9 @@ private:
 
 	/** @brief 스킬 레일 전체 영역(WBP HUD_SkillRail 또는 기존 상수 기반 Fallback). */
 	FAnchors GetSkillRailGroupRect() const;
+
+	/** @brief 실제 Safe Area 종횡비에 맞춰 모바일 HUD의 논리 기준 크기와 폴드 레이아웃을 갱신한다. */
+	void ApplyAspectVariantSlots(const FVector2D& ViewportSize);
 
 	/** @brief 전투 HUD 레이아웃 진단 로그(뷰포트/비율/스킨/HUD_* 그룹 rect). resize·1920x1080 하드코딩 점검용. */
 	// 뷰포트 크기가 바뀔 때만 NativeTick에서 호출한다. 타이틀 LayoutMetrics 로그와 같은 목적.
@@ -184,6 +194,13 @@ private:
 
 	/** @brief 보유 스킬 스냅샷(FSkillUI) 기준으로 레일 슬롯 3상태(보유/사용불가/빈칸)를 다시 그린다. */
 	void RefreshSkillRailWidgets();
+
+	/** @brief 스킬 이름 서랍 손잡이 클릭 시 접힘/펼침 목표 상태를 전환한다. */
+	UFUNCTION()
+	void HandleSkillDrawerToggleClicked();
+
+	/** @brief 스킬 이름 서랍을 목표 폭까지 슬라이드시키고 레이아웃을 갱신한다. */
+	void UpdateSkillDrawerAnimation(float InDeltaTime);
 
 	/** @brief 보유 스킬의 표시 이름을 뷰모델에서 읽는다(없으면 빈 텍스트 - 시안 라벨 폴백 없음). */
 	FText GetOwnedSkillLabel(int32 SkillIndex) const;
@@ -234,6 +251,13 @@ private:
 	UFUNCTION()
 	void HandleEndTurnButtonClicked();
 
+	/** @brief 활성 이동/스킬 빌드를 전체 취소한다. */
+	UFUNCTION()
+	void HandleCancelActionButtonClicked();
+
+	/** @brief 빌드 페이즈에 따라 턴 종료 버튼을 확정으로 바꾸고 취소 버튼 상태를 갱신한다. */
+	void RefreshActionControls() const;
+
 	/** @brief 보유 주사위 카드를 누르면 배치 후보 주사위로 선택한다. */
 	UFUNCTION()
 	void HandleOwnedDiceCardClicked(int32 DiceIndex);
@@ -251,6 +275,9 @@ private:
 
 	/** @brief 디자이너 스킨 시, concept value 칸(HUD_M_lv/hp/gold_value 앵커)에 Lv/HP/Gold 텍스트를 칸 크기에 맞춰 그린다. */
 	void RefreshSkinValueLabels() const;
+
+	/** @brief 룸 이름 마커에 현재 방 표시 이름('일반'/'엘리트'/'보스')을 채운다(전투 진입 시 1회). */
+	void RefreshRoomNameLabel() const;
 
 	/** @brief 스크린 좌표가 LV 값 마커(HUD_M_lv_value) 위인지 지오메트리로 판정한다. */
 	bool IsScreenPositionOverLevelValue(const FVector2D& ScreenPosition) const;
@@ -277,16 +304,12 @@ private:
 	/** @brief 스킨 모드: 탑바 레벨 아래에 장착 장비 아이콘(최대 3)을 그린다. 위치·아이콘은 임시(디자이너 조정 예정). */
 	void RebuildEquipmentIcons();
 
+	/** @brief 턴 순서 칩(탑바 가운데 하단)을 다시 만든다(무조건 플레이어부터, 그 뒤 적). */
+	void RebuildTurnOrderBar();
+
 	/** @brief 스킬/액션이 확정·취소되면 스킬·주사위 선택 강조를 푼다. */
 	UFUNCTION()
 	void HandleCombatActionResolved();
-
-	/** @brief 우측 MOVE 버튼 클릭 → 이동 모드 진입 의도(RequestMove). */
-	UFUNCTION()
-	void HandleMoveButtonClicked();
-
-	/** @brief 우측 MOVE 버튼의 이동 가능 수치(현재/최대)를 갱신한다. */
-	void RefreshMoveButton() const;
 
 	/** @brief 내비 버튼 클릭(MAP/DICE/SKILL/SET)을 HUD 소유의 패널 토글로 연결한다. */
 	UFUNCTION()
@@ -363,6 +386,9 @@ private:
 	/** @brief 결과 영상 표시 중 지도탭과 같은 HUD 숨김 상태를 적용/해제한다. */
 	void SetCombatResultViewActive(bool bActive, bool bRestoreCombatControls = true);
 
+	/** @brief 결과 영상 중 룸 이름 클러스터만 숨기고, 종료 시 원래 표시 상태를 복원한다. */
+	void SetRoomNameClusterVisible(bool bVisible);
+
 	/** @brief 결과 타입에 맞는 mp4 설정 경로를 반환한다. */
 	FString GetCombatResultVideoPath(ESRPGCombatResult Result) const;
 
@@ -414,6 +440,7 @@ private:
 
 	/** @brief 승패 판정 → 결과 영상 시작 사이의 텀 타이머. */
 	FTimerHandle mCombatResultStartDelayTimerHandle;
+	TMap<FName, ESlateVisibility> mCombatResultRoomNameVisibilities;
 	ESRPGCombatResult mCombatResult = ESRPGCombatResult::PlayerLose;
 	bool mCombatResultFlowActive = false;
 
@@ -441,9 +468,9 @@ private:
 	UFUNCTION()
 	void HandleCombatFloatingLog(FCombatFloatingLogRequest Request);
 
-	/** @brief 모션 연출 종료 알림을 받아 해당 MotionIndex에 묶인 플로팅 로그를 제거한다. */
+	/** @brief 모션 연출 종료 알림을 받아 해당 (TurnIndex, ActionIndex, MotionIndex)에 묶인 플로팅 로그를 제거한다. */
 	UFUNCTION()
-	void HandleCombatFloatingLogMotionFinished(int32 MotionIndex);
+	void HandleCombatFloatingLogMotionFinished(int32 TurnIndex, int32 ActionIndex, int32 MotionIndex);
 
 	/** @brief 현재 떠 있는(그리고 대기 중인) 플로팅 로그를 전부 즉시 제거한다(OnCombatFloatingLogsCleared 구독). */
 	UFUNCTION()
@@ -489,8 +516,8 @@ private:
 	/** @brief 월드 좌표 기준으로 플로팅 로그 위젯을 실제 생성한다. */
 	void SpawnFloatingCombatLogAtWorld(const FCombatFloatingLogRequest& Request);
 
-	/** @brief 대기/표시 중인 플로팅 로그에서 MotionIndex가 같은 항목을 모두 제거한다. */
-	void RemoveFloatingCombatLogsByMotionIndex(int32 MotionIndex);
+	/** @brief 대기/표시 중인 플로팅 로그에서 (TurnIndex, ActionIndex, MotionIndex)가 일치하는 항목을 모두 제거한다. */
+	void RemoveFloatingCombatLogsByMotionIndex(int32 TurnIndex, int32 ActionIndex, int32 MotionIndex);
 
 	/** @brief 라운드가 실제로 바뀌었을 때만 중앙 배너("N번째 턴")를 띄운다. Turn 도메인 갱신 시 호출. */
 	void RefreshTurnRoundBanner();
@@ -571,6 +598,16 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UCanvasPanel> DesignCanvas;
 
+	/** @brief 노치·카메라 홀·제스처 영역을 피하도록 DesignCanvas를 감싸는 런타임 SafeZone. */
+	UPROPERTY(Transient)
+	TObjectPtr<USafeZone> mCombatSafeZone;
+
+	/** @brief 가변 Safe Area 안에 기준 해상도 HUD 전체를 비례 축소하는 래퍼. */
+	UPROPERTY(Transient)
+	TObjectPtr<UScaleBox> mCombatDesignScaleBox;
+	UPROPERTY(Transient)
+	TObjectPtr<USizeBox> mCombatDesignSizeBox;
+
 	/** @brief 주사위 연출 안내 문구 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> DiceRollStatusText;
@@ -578,6 +615,16 @@ private:
 	/** @brief 턴 종료 버튼 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UButton> EndTurnButton;
+
+	/** @brief WBP에 END TURN 라벨이 없는 폴백에서 주 버튼 안에 표시하는 동적 라벨. */
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mPrimaryActionButtonText;
+
+	/** @brief 이동/스킬 빌드 중에만 주 버튼 왼쪽에 나타나는 취소 버튼과 라벨. */
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mCancelActionButton;
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mCancelActionButtonText;
 
 	/** @brief 전투 진입 주사위 팝업 뒤에서 전투 HUD를 가리는 반투명 배경 */
 	UPROPERTY(meta = (BindWidgetOptional))
@@ -670,9 +717,12 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UTextBlock>> mEquipmentChipTexts;
 
-	/** @brief 우측 MOVE 명령 버튼(이동 모드 진입) */
+	/** @brief 턴 순서 칩(탑바 가운데 하단, 플레이어부터) 배경/문구 */
 	UPROPERTY(Transient)
-	TObjectPtr<UButton> mMoveButton;
+	TArray<TObjectPtr<UBorder>> mTurnOrderChips;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UTextBlock>> mTurnOrderChipTexts;
 
 	/** @brief 내비 투명 버튼(concept 아트 위 클릭영역). 런타임 생성, HUD 소유 패널 토글 호출. */
 	UPROPERTY(Transient)
@@ -715,9 +765,9 @@ private:
 	{
 		TObjectPtr<UWidget> mRoot;                    // 캔버스에 붙은 루트(아이콘+텍스트 박스 또는 텍스트 단일)
 		FVector mWorldLocation = FVector::ZeroVector; // 스폰 시점 월드 위치 스냅샷(이 위에 투영해 그린다)
-		int32 mTurnIndex = INDEX_NONE;                // 요청이 속한 턴 인덱스. 후속 UI 연출에서 사용할 수 있도록 보존
-		int32 mActionIndex = INDEX_NONE;              // 요청이 속한 액션 인덱스. 후속 UI 연출에서 사용할 수 있도록 보존
-		int32 mMotionIndex = INDEX_NONE;              // 요청이 속한 모션 인덱스. 기존 모션 종료 처리에도 사용
+		int32 mTurnIndex = INDEX_NONE;                // 속한 턴 인덱스(이벤트 로그 좌표계). 모션 종료 매칭에 함께 쓴다
+		int32 mActionIndex = INDEX_NONE;              // 속한 액션 인덱스(이벤트 로그 좌표계). 모션 종료 매칭에 함께 쓴다
+		int32 mMotionIndex = INDEX_NONE;              // 속한 모션 인덱스. 그 모션 종료 시 (턴, 액션, 모션)으로 묶어서 함께 제거
 		float mElapsed = 0.0f;                        // 스폰 후 누적 시간(실행 로그의 상승/페이드/수명 판단용)
 		bool mIsPreview = false;                      // true면 자동 소멸 안 함(MotionFinished/Clear로만 제거)
 		float mStackOffsetY = 0.0f;                   // 미리보기 겹침 방지용 세로 쌓기 오프셋(px, 위로 +)
@@ -791,6 +841,10 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UImage>> mOwnedDiceImages;
 
+	/** @brief 현재 도크 폭에 맞춰 동적으로 정사각형 크기를 바꾸는 주사위 셀. */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<USizeBox>> mOwnedDiceCellSizeBoxes;
+
 	/** @brief 보유 주사위 RenderTarget을 만드는 3D 주사위 액터 */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<ACombatDiceCaptureActor>> mOwnedDicePreviewActors;
@@ -805,6 +859,10 @@ private:
 	/** @brief 레거시 주사위 종류 라벨(d2/d4/d6/d8/d10/d12/d20). 현재 보유 주사위 카드에서는 숨긴다. */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UTextBlock>> mOwnedDiceTypeTexts;
+
+	/** @brief 모든 보유 주사위를 한 줄에 맞춰 보여주는 무스크롤 모바일 도크. */
+	UPROPERTY(Transient)
+	TObjectPtr<UHorizontalBox> mOwnedDiceDockBox;
 
 	/** @brief 중립 상태로 표시하는 런타임 스킬 레일 배경 */
 	UPROPERTY(Transient)
@@ -822,6 +880,16 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UIndexedButtonWidget>> mSkillInputButtons;
 
+	/** @brief 스킬 레일 우측의 이름 서랍 토글 손잡이와 화살표. */
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mSkillDrawerHandleButton;
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mSkillDrawerHandleText;
+
+	/** @brief 0=아이콘만, 1=아이콘+이름. Tick에서 목표값까지 보간한다. */
+	float mSkillDrawerExpansion = 0.0f;
+	float mSkillDrawerExpansionTarget = 0.0f;
+
 	/** @brief 현재 선택된 스킬 index */
 	int32 mSelectedSkillIndex = INDEX_NONE;
 
@@ -833,6 +901,12 @@ private:
 
 	/** @brief 마지막으로 레이아웃 진단 로그를 남긴 뷰포트 크기. 변할 때만 로그해 스팸을 막는다. */
 	FVector2D mLastLoggedLayoutViewportSize = FVector2D(-1.0f, -1.0f);
+
+	/** @brief 폴드(좁은 화면비) 변형이 현재 적용 중인지. */
+	bool mFoldVariantActive = false;
+
+	/** @brief ScaleBox 안에서 사용하는 현재 논리 HUD 기준 크기. 최소 폭을 지키며 Safe Area 종횡비와 일치한다. */
+	FVector2D mCombatHudReferenceSize = FVector2D(1920.0f, 1080.0f);
 
 	/** @brief 지금 누르고 있는 스킬 index */
 	int32 mPressedSkillIndex = INDEX_NONE;

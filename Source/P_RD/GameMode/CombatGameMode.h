@@ -16,6 +16,7 @@
 #include "CombatGameMode.generated.h"
 
 class USRPGTurnContext;
+class USRPGMoveBuildAction;
 class UUnitModel;
 class IBoardSelectionTarget;
 
@@ -72,6 +73,12 @@ public:
 
 	UFUNCTION(Category = UI, BlueprintCallable)
 	bool EndTurn();
+
+	UFUNCTION(Category = UI, BlueprintCallable)
+	bool ConfirmAction();
+
+	UFUNCTION(Category = UI, BlueprintCallable)
+	bool CancelAction();
 
 	/** @brief 물리 굴림 연출이 확정한 면 index들을 굴림 커맨드에 실어 발행한다("보이는 면 = 기록 숫자"). */
 	bool ApplyRolledDices(const TArray<int32>& RolledFaceIndices);
@@ -131,7 +138,7 @@ protected:
 protected:
 	void PushTurnUIData() const;
 	void PushSkillBuildUIData(ESRPGSkillBuildPhase Phase) const;
-	void PushMoveBuildUIData(ESRPGMoveBuildPhase Phase) const;
+	void PushMoveBuildUIData(const USRPGMoveBuildAction* Action, ESRPGMoveBuildPhase Phase) const;
 	void PushUnitUIData() const;
 	void PushDiceUIData() const;
 	void PushSelectedDiceUIData() const;

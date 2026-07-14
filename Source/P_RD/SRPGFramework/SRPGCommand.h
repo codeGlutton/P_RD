@@ -38,6 +38,26 @@ public:
 	TSubclassOf<USRPGAction> mRequestedAction = nullptr;
 };
 
+/** @brief 현재 활성 스킬/이동 빌드를 확정한다. 새 액션을 만들지 않고 활성 BuildAction이 소비한다. */
+USTRUCT(BlueprintType)
+struct FSRPGBuildConfirmCommand : public FSRPGCommand
+{
+	GENERATED_BODY()
+
+public:
+	FSRPGBuildConfirmCommand();
+};
+
+/** @brief 현재 활성 스킬/이동 빌드를 취소한다. 선택한 주사위는 사용 처리하지 않는다. */
+USTRUCT(BlueprintType)
+struct FSRPGBuildCancelCommand : public FSRPGCommand
+{
+	GENERATED_BODY()
+
+public:
+	FSRPGBuildCancelCommand();
+};
+
 /**
  * @brief  사용자 월드 입력 명령 객체
  */

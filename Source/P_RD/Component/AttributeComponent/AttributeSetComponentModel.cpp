@@ -286,6 +286,15 @@ float UAttributeSetComponentModel::GetAttributeCurrentValue(const FTacticalAttri
     return Attribute.GetNumericValue(FoundAttributeSet);
 }
 
+float UAttributeSetComponentModel::EvaluateAttributeWithAdditionalModifier(
+    const FTacticalAttribute& Attribute,
+    TEnumAsByte<ETacticalModOp::Type> ModifierOp,
+    float ModifierMagnitude) const
+{
+    return mActiveAttributeEffects.EvaluateAttributeWithAdditionalModifier(
+        Attribute, ModifierOp, ModifierMagnitude);
+}
+
 /**
  * @brief 속성의 현재값을 직접 덮어쓴다(내부용). 대상 AttributeSet이 반드시 존재해야 한다.
  * @param Attribute 대상 속성.

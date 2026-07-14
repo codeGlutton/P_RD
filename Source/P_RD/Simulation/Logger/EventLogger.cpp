@@ -208,6 +208,22 @@ TArray<FSRPGTurnEventLog> UGameEventLogger::PopSRPGLogs()
 	return MoveTemp(mTurnEventLogs);
 }
 
+int32 UGameEventLogger::GetCurrentTurnLogIndex() const
+{
+	// 열린 턴 로그는 항상 배열의 마지막 원소다(BeginActionLog가 Last를 가리키게 세팅).
+	return mCurrentTurnEventLog != nullptr ? mTurnEventLogs.Num() - 1 : INDEX_NONE;
+}
+
+int32 UGameEventLogger::GetCurrentActionLogIndex() const
+{
+	if (mCurrentTurnEventLog == nullptr || mCurrentActionEventLog == nullptr)
+	{
+		return INDEX_NONE;
+	}
+
+	return mCurrentTurnEventLog->mActionEventLogs.Num() - 1;
+}
+
 void USimulationEventLogger::BeginTurnLog(int32 SourceUnitID, UClass* UnitActorModelClass)
 {
 	FSRPGTurnEventLog TurnLog;
@@ -358,4 +374,20 @@ void USimulationEventLogger::LogTileEffect(int32 TargetActorID, UClass* BoardAct
 TArray<FSRPGTurnEventLog> USimulationEventLogger::PopSRPGLogs()
 {
 	return MoveTemp(mTurnEventLogs);
+}
+
+int32 USimulationEventLogger::GetCurrentTurnLogIndex() const
+{
+	// 열린 턴 로그는 항상 배열의 마지막 원소다(BeginTurnLog가 Last를 가리키게 세팅).
+	return mCurrentTurnEventLog != nullptr ? mTurnEventLogs.Num() - 1 : INDEX_NONE;
+}
+
+int32 USimulationEventLogger::GetCurrentActionLogIndex() const
+{
+	if (mCurrentTurnEventLog == nullptr || mCurrentActionEventLog == nullptr)
+	{
+		return INDEX_NONE;
+	}
+
+	return mCurrentTurnEventLog->mActionEventLogs.Num() - 1;
 }

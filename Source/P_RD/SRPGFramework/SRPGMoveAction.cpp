@@ -31,7 +31,9 @@ ESRPGCommandResult USRPGMoveAction::HandleCommand(const TInstancedStruct<FSRPGCo
     /* 생성 시 예약된 이동 명령에서 확정 경로를 수신 (빌드 액션이 실어 보낸 경로) */
     if (Command.Get().GetCommandType() == ESRPGCommandType::MoveCast)
     {
-        mPathTileIndexes = Command.Get<FSRPGMoveCommand>().mPathTileIndexes;
+        const FSRPGMoveCommand& MoveCommand = Command.Get<FSRPGMoveCommand>();
+        mPathTileIndexes = MoveCommand.mPathTileIndexes;
+        mConsumeMovementAttribute = MoveCommand.mConsumeMovementAttribute;
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
 
@@ -73,7 +75,9 @@ void USRPGMoveAction::OnEndAction()
 
     /* 이동을 정상 완료한 경우, 사용한 이동 포인트를 이동 유닛에게 차감 통지한다 */
 
-    if (mActionResult == ESRPGActionResult::Succeeded && mPathTileIndexes.Num() >= 2)
+    if (mConsumeMovementAttribute
+        && mActionResult == ESRPGActionResult::Succeeded
+        && mPathTileIndexes.Num() >= 2)
     {
         // 소모 이동 포인트 = 밟은 칸 수 (경로 칸 수 - 시작 타일)
         const int32 SpentPoint = mPathTileIndexes.Num() - 1;

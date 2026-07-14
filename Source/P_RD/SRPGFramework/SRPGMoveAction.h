@@ -26,6 +26,9 @@ public:
 public:
 	// @brief 시작→목표 순서의 경로 타일 목록(양 끝 포함)
 	TArray<FTileIndex> mPathTileIndexes;
+
+	// @brief 레거시 이동 포인트를 차감할지 여부. 주사위 확정 이동은 false로 보내 이중 소모를 막는다.
+	bool mConsumeMovementAttribute = true;
 };
 
 /**
@@ -72,4 +75,7 @@ protected:
 	// @brief 진행 중인 스텝 인덱스 (mPathTileIndexes 기준, 0은 시작 타일이라 1부터 시작)
 	UPROPERTY(Category = Move, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CurrentStepIndex"))
 	int32 mCurrentStepIndex = 0;
+
+	UPROPERTY(Category = Move, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "ConsumeMovementAttribute"))
+	bool mConsumeMovementAttribute = true;
 };

@@ -28,6 +28,9 @@ public:
 	FSRPGMoveSelectCommand();
 
 public:
+	/** @brief 이동 거리 계산에 사용할 플레이어 스킬 데이터 index. */
+	int32 mSkillIndex = INDEX_NONE;
+
 	FOnChangeMoveBuildPhase OnChangeMoveBuildPhase;
 };
 
@@ -50,6 +53,9 @@ class USRPGMoveBuildAction : public USRPGAction
 public:
 	USRPGMoveBuildAction();
 
+	/** @brief 현재 선택 주사위와 이동 효과를 반영한 이동 가능 거리. */
+	int32 GetMovePoint() const { return mMovePoint; }
+
 	/* FSRPGAction 상속 */
 protected:
 	void OnBeginAction() override;
@@ -65,9 +71,10 @@ protected:
 private:
 	void EnterMoveBuild();
 	void ResetMoveBuild();
+	void ChangeDices(int32 RequestedDiceIndex);
 	void SetTargetTile(const FTileIndex& TileIndex);
 	void ResetTargetTile();
-	void BuildMove();
+	bool BuildMove();
 
 private:
 	void SetBuildPhase(ESRPGMoveBuildPhase BuildPhase);
@@ -78,6 +85,8 @@ private:
 	UTileMapModel* GetTileMap() const;
 	// @brief 현재 이동 포인트 기준으로 도달 범위를 재계산하고 강조 갱신
 	void RefreshReachableTiles();
+	// @brief 선택 주사위 합과 이동 스킬의 GetMove 효과로 실제 이동 가능 거리를 계산한다.
+	int32 CalculateMovePoint() const;
 
 protected:
 	FOnChangeMoveBuildPhase OnChangeMoveBuildPhase;
@@ -90,9 +99,13 @@ protected:
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ReachableTileIndexes"))
 	TArray<FTileIndex> mReachableTileIndexes;
 
-	// @brief 이번 빌드에서 사용할 이동 포인트(외부에서 계산된 도달 거리, 분할 이동 시 남은 포인트)
+	// @brief 이번 빌드에서 선택한 주사위들로 계산된 이동 가능 거리
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MovePoint"))
 	int32 mMovePoint = 0;
+
+	// @brief 이동 효과 데이터를 읽을 플레이어 스킬 index
+	UPROPERTY(Category = Build, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MovementSkillIndex"))
+	int32 mMovementSkillIndex = INDEX_NONE;
 
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PathTileIndexes"))
 	TArray<FTileIndex> mPathTileIndexes;

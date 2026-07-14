@@ -7,6 +7,7 @@
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
+#include "GameMode/CombatGameMode.h"  // 룸 이름 라벨(GetCurrentRoomDisplayName)
 #include "Kismet/GameplayStatics.h"   // 골드 카운트업 코인 사운드 재생
 #include "TimerManager.h"             // 골드 카운트업 반복 타이머
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
@@ -25,17 +26,27 @@ void UCombatTileMapHUDWidget::HandleCombatUIChanged(ECombatUIDomain Domain)
 		RefreshCombatStatusBar();
 	}
 
+	if (Domain == ECombatUIDomain::Turn || Domain == ECombatUIDomain::All)
+	{
+		RefreshActionControls();
+		RefreshDiceAssignmentText();
+	}
+
 	// 장비 칩(탑바 좌측 하단): 장비 도메인.
 	if (Domain == ECombatUIDomain::Equipment || Domain == ECombatUIDomain::All)
 	{
 		RebuildEquipmentBar();
 	}
 
-	// 턴 변화 연출은 턴/유닛 도메인이 갱신될 때 다시 평가한다.
+	// 방 이름/턴 순서 HUD는 모바일 레이아웃에서 제거했다. 턴 변화 연출만 유지한다.
 	if (Domain == ECombatUIDomain::Turn
 		|| Domain == ECombatUIDomain::Unit
 		|| Domain == ECombatUIDomain::All)
 	{
+		if (IsDesignerSkinActive() == false)
+		{
+			RebuildTurnOrderBar();
+		}
 		// 라운드가 실제로 올랐을 때만 "N번째 턴" 배너를 띄운다(내부에서 중복 방지).
 		RefreshTurnRoundBanner();
 	}
@@ -50,7 +61,15 @@ void UCombatTileMapHUDWidget::HandleCombatUIChanged(ECombatUIDomain Domain)
 	if (Domain == ECombatUIDomain::Dice || Domain == ECombatUIDomain::All)
 	{
 		RefreshDiceViewsFromRunData();
-		RefreshOwnedDiceCards();
+		if (mOwnedDiceImages.Num() != mDiceUIs.Num())
+		{
+			RebuildOwnedDiceCards();
+		}
+		else
+		{
+			RefreshOwnedDiceCards();
+		}
+		RefreshDiceAssignmentText();
 	}
 
 	// 스킬: 보유 스킬 스냅샷이 바뀌면 레일 슬롯 상태(아이콘/라벨/빈칸 커버)를 다시 그린다.
@@ -107,7 +126,6 @@ void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const
 		mCombatStatusBarText->SetVisibility(ESlateVisibility::Collapsed);
 	}
 
-	RefreshMoveButton();
 	RefreshSkinValueLabels();
 }
 
@@ -139,12 +157,10 @@ void UCombatTileMapHUDWidget::RefreshSkinValueLabels() const
 		FText Text;
 	};
 	// 빌드는 빈 TextBlock(color/font/slot만)으로 마커를 심는다(Android 직렬화 안전). 내용/정렬은 여기서 채운다.
-	// END TURN 라벨은 정적이지만 동일하게 C++가 설정(CDO에 FText를 넣지 않기 위함).
 	const FSkinValueBinding Bindings[] = {
 		{ TEXT("HUD_M_lv_value"), FText::AsNumber(Meta.mLevel) },
 		{ TEXT("HUD_M_hp_value"), FText::Format(NSLOCTEXT("CombatTileMapHUDWidget", "SkinHP", "{0}/{1}"),
 			FText::AsNumber(FMath::RoundToInt(PlayerHP)), FText::AsNumber(FMath::RoundToInt(PlayerMaxHP))) },
-		{ TEXT("HUD_M_btn_end_turn_label"), NSLOCTEXT("CombatTileMapHUDWidget", "EndTurnLabel", "END\nTURN") },
 	};
 
 	for (const FSkinValueBinding& Binding : Bindings)
@@ -158,6 +174,33 @@ void UCombatTileMapHUDWidget::RefreshSkinValueLabels() const
 
 	// 골드 칸은 즉시 그리지 않고 카운트업 경로로 — 증가 시 코인 사운드와 함께 차르륵 올라간다.
 	UpdateGoldValueLabel(Meta.mGold);
+	RefreshActionControls();
+}
+
+void UCombatTileMapHUDWidget::RefreshRoomNameLabel() const
+{
+	if (WidgetTree == nullptr || GetWorld() == nullptr)
+	{
+		return;
+	}
+
+	const ACombatGameMode* CombatGameMode = GetWorld()->GetAuthGameMode<ACombatGameMode>();
+	if (CombatGameMode == nullptr)
+	{
+		return;
+	}
+
+	const FText RoomDisplayName = CombatGameMode->GetCurrentRoomDisplayName();
+
+	// 룸 이름 자리 후보 두 마커 중 TextBlock인 것에 채운다(스킨/구버전에 따라 이름이 다름).
+	static const TCHAR* const RoomNameMarkers[] = { TEXT("HUD_M_room_name_text"), TEXT("R_room_name_room_name_7") };
+	for (const TCHAR* MarkerName : RoomNameMarkers)
+	{
+		if (UTextBlock* RoomNameText = Cast<UTextBlock>(WidgetTree->FindWidget(FName(MarkerName))))
+		{
+			RoomNameText->SetText(RoomDisplayName);
+		}
+	}
 }
 
 bool UCombatTileMapHUDWidget::IsScreenPositionOverLevelValue(const FVector2D& ScreenPosition) const
@@ -321,41 +364,6 @@ void UCombatTileMapHUDWidget::SetGoldValueLabelText(int32 Gold) const
 	}
 }
 
-void UCombatTileMapHUDWidget::RefreshMoveButton() const
-{
-	// MOVE 라벨은 WBP TextBlock(HUD_M_btn_move_label)이 소유한다. C++는 이동력 수치만 채운다.
-	UTextBlock* MoveLabel = WidgetTree != nullptr ? Cast<UTextBlock>(WidgetTree->FindWidget(TEXT("HUD_M_btn_move_label"))) : nullptr;
-	if (MoveLabel == nullptr || mCombatUIModel == nullptr)
-	{
-		return;
-	}
-
-	int32 Move = 0;
-	for (const FUnitUI& Unit : mCombatUIModel->GetUnitUIs())
-	{
-		if (Unit.mIsPlayer)
-		{
-			Move = FMath::RoundToInt(Unit.mMovementPoint);
-			break;
-		}
-	}
-
-	// 남은 이동력만 표시한다 - 최대치는 플레이어 판단에 불필요해 노출하지 않는다.
-	MoveLabel->SetText(FText::Format(
-		NSLOCTEXT("CombatTileMapHUDWidget", "MoveCommandCount", "MOVE\n{0}"),
-		FText::AsNumber(Move)));
-	MoveLabel->SetJustification(ETextJustify::Center);
-}
-
-void UCombatTileMapHUDWidget::HandleMoveButtonClicked()
-{
-	// 이동 모드 진입 의도. 게임플레이가 이동 가능 타일을 표시하고, 타일 탭으로 이동시킨다.
-	if (mCombatUIModel != nullptr)
-	{
-		mCombatUIModel->RequestMove();
-	}
-}
-
 // [아키텍처 의도] 콘셉트 HUD의 상단 내비 버튼(MAP/DICE/SKILL/SET)은 HUD가 소유한 패널 토글
 // (CombatTileMapHUDWidget_Nav.cpp — 레거시 탑바에서 이관)을 직접 호출한다.
 // 패널 생명주기/상호배타/승리 후 월드맵 흐름의 단일 책임자가 HUD가 되고, 탑바 경유 위임은 제거됐다.
@@ -387,6 +395,7 @@ void UCombatTileMapHUDWidget::HandleCombatActionResolved()
 	RefreshSkillRailWidgets();
 	RefreshOwnedDiceCards();
 	RefreshDiceAssignmentText();
+	RefreshActionControls();
 }
 
 namespace
@@ -516,5 +525,189 @@ void UCombatTileMapHUDWidget::RebuildEquipmentIcons()
 		{
 			SlotImage->SetVisibility(ESlateVisibility::Collapsed);
 		}
+	}
+}
+
+void UCombatTileMapHUDWidget::RebuildTurnOrderBar()
+{
+	// 풀스크린 지도 뷰 동안엔 턴 순서를 다시 만들지 않는다(만들면 숨긴 칩이 되살아나 지도 위에 뜬다). 지도 닫힐 때 복원된다.
+	if (mCombatControlsHidden)
+	{
+		return;
+	}
+
+	for (UBorder* Chip : mTurnOrderChips)
+	{
+		if (Chip != nullptr) { Chip->RemoveFromParent(); }
+	}
+	for (UTextBlock* Text : mTurnOrderChipTexts)
+	{
+		if (Text != nullptr) { Text->RemoveFromParent(); }
+	}
+	mTurnOrderChips.Reset();
+	mTurnOrderChipTexts.Reset();
+	if (IsDesignerSkinActive())
+	{
+		return;   // 모바일 전투 HUD에서는 턴 순서를 상단에 상시 표시하지 않는다.
+	}
+
+	UCanvasPanel* Canvas = GetSkinTargetCanvas();   // 스킨 활성 시 DesignCanvas — 칩 줄이 레터박스 스킨과 함께 움직인다.
+	if (Canvas == nullptr || WidgetTree == nullptr || mCombatUIModel == nullptr)
+	{
+		return;
+	}
+
+	const TArray<FUnitUI>& Units = mCombatUIModel->GetUnitUIs();
+	const FTurnUI& Turn = mCombatUIModel->GetTurnUI();
+
+	int32 PlayerId = INDEX_NONE;
+	for (const FUnitUI& Unit : Units)
+	{
+		if (Unit.mIsPlayer) { PlayerId = Unit.mUnitId; break; }
+	}
+
+	// 순서는 무조건 플레이어(나)부터, 그 뒤 턴순서(없으면 유닛순서)에서 플레이어 제외.
+	TArray<int32> Order;
+	if (PlayerId != INDEX_NONE)
+	{
+		Order.Add(PlayerId);
+	}
+	if (Turn.mTurnOrderUnitIds.Num() > 0)
+	{
+		for (int32 Id : Turn.mTurnOrderUnitIds)
+		{
+			if (Id != PlayerId && !Order.Contains(Id)) { Order.Add(Id); }
+		}
+	}
+	else
+	{
+		for (const FUnitUI& Unit : Units)
+		{
+			if (Unit.mUnitId != PlayerId && !Order.Contains(Unit.mUnitId)) { Order.Add(Unit.mUnitId); }
+		}
+	}
+	if (Order.Num() == 0)
+	{
+		return;
+	}
+
+	// 전투 HUD 가운데 하단, 칩 줄을 가로 중앙 정렬.
+	const bool bChipSkin = IsDesignerSkinActive();
+	const float ChipWidth = 0.048f;
+	const float ChipHeight = 0.040f;
+	const float Gap = 0.007f;
+	const float Top = 0.108f;
+	const float Total = StaticCast<float>(Order.Num()) * ChipWidth + StaticCast<float>(Order.Num() - 1) * Gap;
+	const float Start = 0.5f - Total * 0.5f;
+	// 스킨(엣지 피닝): 중앙(0.5,0) 핀 + 디자인px 오프셋 — turn_order 요소의 center/top 핀을 따른다.
+	const float ChipWidthPx = ChipWidth * 1920.0f;
+	const float ChipHeightPx = ChipHeight * 1080.0f;
+	const float GapPx = Gap * 1920.0f;
+	const float TopPx = Top * 1080.0f;
+
+	// 칩 폭: 초상화가 있으면 원본 비율(가로/세로)로 높이에 맞춘 폭, 없으면 기존 고정폭 — 초상화가 눌리거나 늘어나지 않게.
+	TArray<float> ChipWidthsPx;
+	ChipWidthsPx.Reserve(Order.Num());
+	for (int32 SlotIndex = 0; SlotIndex < Order.Num(); ++SlotIndex)
+	{
+		float SlotWidthPx = ChipWidthPx;
+		for (const FUnitUI& Unit : Units)
+		{
+			if (Unit.mUnitId == Order[SlotIndex] && Unit.mPortrait != nullptr && Unit.mPortrait->GetSizeY() > 0)
+			{
+				SlotWidthPx = ChipHeightPx
+					* (StaticCast<float>(Unit.mPortrait->GetSizeX()) / StaticCast<float>(Unit.mPortrait->GetSizeY()));
+				break;
+			}
+		}
+		ChipWidthsPx.Add(SlotWidthPx);
+	}
+	float TotalPx = StaticCast<float>(Order.Num() - 1) * GapPx;
+	for (const float SlotWidthPx : ChipWidthsPx)
+	{
+		TotalPx += SlotWidthPx;
+	}
+	float ChipCursorX = -TotalPx * 0.5f;   // 스킨 배치: 중앙 정렬 시작점에서 칩 폭만큼 전진.
+
+	int32 EnemyOrdinal = 0;
+	for (int32 SlotIndex = 0; SlotIndex < Order.Num(); ++SlotIndex)
+	{
+		const int32 Id = Order[SlotIndex];
+		const bool bPlayer = (Id == PlayerId);
+		const bool bCurrent = (Id == Turn.mCurrentUnitId);
+
+		UBorder* Chip = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
+		UTextBlock* Text = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
+		if (Chip == nullptr || Text == nullptr)
+		{
+			continue;
+		}
+
+		FLinearColor BrushColor = bPlayer
+			? FLinearColor(0.10f, 0.34f, 0.22f, 0.92f)
+			: FLinearColor(0.34f, 0.12f, 0.10f, 0.90f);
+		if (bCurrent)
+		{
+			// 현재 턴 강조(밝게).
+			BrushColor = FMath::Lerp(BrushColor, FLinearColor(1.0f, 0.92f, 0.50f, 1.0f), 0.45f);
+		}
+		Chip->SetBrushColor(BrushColor);
+		Chip->SetPadding(FMargin(2.0f, 1.0f));
+
+		// 초상화가 있으면 초상화 이미지, 없으면 "나"/"적N" 텍스트 폴백.
+		UTexture2D* Portrait = nullptr;
+		for (const FUnitUI& Unit : Units)
+		{
+			if (Unit.mUnitId == Id)
+			{
+				Portrait = Unit.mPortrait;
+				break;
+			}
+		}
+		if (bPlayer == false)
+		{
+			++EnemyOrdinal;   // 폴백 라벨 번호는 초상화 유무와 무관하게 순서를 유지한다.
+		}
+
+		if (Portrait != nullptr)
+		{
+			if (UImage* PortraitImage = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass()))
+			{
+				PortraitImage->SetBrushFromTexture(Portrait, false);
+				PortraitImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+				Chip->AddChild(PortraitImage);
+			}
+		}
+		else
+		{
+			// "나" / "적N" — 소스 인코딩에 흔들리지 않게 UTF-8 바이트를 명시 변환.
+			const FText Label = bPlayer
+				? FText::FromString(UTF8_TO_TCHAR("\xEB\x82\x98"))
+				: FText::Format(FText::FromString(UTF8_TO_TCHAR("\xEC\xA0\x81{0}")), FText::AsNumber(EnemyOrdinal));
+			Text->SetJustification(ETextJustify::Center);
+			Text->SetText(Label);
+			Text->SetColorAndOpacity(FSlateColor(FLinearColor(0.98f, 1.0f, 0.94f, 1.0f)));
+			SetChipFontSize(Text, 13);
+			Chip->AddChild(Text);
+		}
+		Canvas->AddChildToCanvas(Chip);
+
+		if (bChipSkin)
+		{
+			FAnchorData ChipSlot;
+			ChipSlot.Anchors = FAnchors(0.5f, 0.0f, 0.5f, 0.0f);
+			ChipSlot.Alignment = FVector2D::ZeroVector;
+			ChipSlot.Offsets = FMargin(ChipCursorX, TopPx, ChipWidthsPx[SlotIndex], ChipHeightPx);
+			ChipCursorX += ChipWidthsPx[SlotIndex] + GapPx;
+			RDUILayout::ApplyDesignerSlotData(Chip, ChipSlot, 32);
+		}
+		else
+		{
+			const float Left = Start + StaticCast<float>(SlotIndex) * (ChipWidth + Gap);
+			RDUILayout::ApplyAnchoredSlot(Chip, FAnchors(Left, Top, Left + ChipWidth, Top + ChipHeight), 32);
+		}
+
+		mTurnOrderChips.Add(Chip);
+		mTurnOrderChipTexts.Add(Text);
 	}
 }

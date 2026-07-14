@@ -82,7 +82,7 @@ private:
 	void SetSkill(int32 SkillIndex);
 	void ChangeDices(int32 RequestedDiceIndex);
 	void SetTargetTile(const FTileIndex& TargetIndex);
-	void BuildSkill();
+	bool BuildSkill();
 
 private:
 	void ResetSkill();

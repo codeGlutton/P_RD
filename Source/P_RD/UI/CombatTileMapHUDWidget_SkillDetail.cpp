@@ -27,6 +27,11 @@ void UCombatTileMapHUDWidget::SetDetailOverlayVisible(bool bVisible) const
 	{
 		mSkillDetailDismissButton->SetVisibility(bVisible ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 	}
+	if (mSkillDrawerHandleButton != nullptr)
+	{
+		mSkillDrawerHandleButton->SetVisibility(
+			bVisible || mCombatControlsHidden ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
+	}
 
 	// 뒤 풀뷰포트 회색 딤(주사위 배경과 동일) — HP바/스킬레일 등 뒤 HUD를 덮는다.
 	if (mSkillDetailBackdropPanels.IsValidIndex(0) && mSkillDetailBackdropPanels[0] != nullptr)

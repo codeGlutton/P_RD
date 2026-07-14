@@ -151,6 +151,12 @@ public:
      */
     float GetAttributeCurrentValue(const FTacticalAttribute& Attribute) const;
 
+    /** @brief 실제 속성을 바꾸지 않고 모디파이어 한 건이 추가됐을 때의 현재값을 계산한다. */
+    float EvaluateAttributeWithAdditionalModifier(
+        const FTacticalAttribute& Attribute,
+        TEnumAsByte<ETacticalModOp::Type> ModifierOp,
+        float ModifierMagnitude) const;
+
 protected:
     /**
      * @brief (내부) 속성 현재값을 직접 갱신한다. 클램프 등 후처리를 거쳐 NewValue가 수정될 수 있다.

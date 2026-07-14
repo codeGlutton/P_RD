@@ -242,14 +242,69 @@ void UCombatTileMapHUDWidget::SetCombatResultViewActive(bool bActive, bool bRest
 		mCombatResultFlowActive = true;
 		CloseFloatingPanels(EWorldWidgetType::Count);
 		SetCombatPlayControlsVisible(false);
+		SetRoomNameClusterVisible(false);
 		return;
 	}
 
+	SetRoomNameClusterVisible(true);
 	if (bRestoreCombatControls)
 	{
 		SetCombatPlayControlsVisible(true);
 	}
 	mCombatResultFlowActive = false;
+}
+
+void UCombatTileMapHUDWidget::SetRoomNameClusterVisible(bool bVisible)
+{
+	if (WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	static const FName RoomNameWidgets[] = {
+		FName(TEXT("R_room_name_room_name_7")),
+		FName(TEXT("HUD_M_room_name_text"))
+	};
+
+	for (const FName WidgetName : RoomNameWidgets)
+	{
+		UWidget* Widget = WidgetTree->FindWidget(WidgetName);
+		if (Widget == nullptr)
+		{
+			continue;
+		}
+
+		// 모바일 스킨은 방 이름을 영구 제거한다. 구 WBP fallback은 결과 연출 전 visibility를 복원한다.
+		if (IsDesignerSkinActive())
+		{
+			Widget->SetVisibility(ESlateVisibility::Collapsed);
+			continue;
+		}
+
+		if (bVisible)
+		{
+			if (ESlateVisibility* PreviousVisibility = mCombatResultRoomNameVisibilities.Find(WidgetName))
+			{
+				Widget->SetVisibility(*PreviousVisibility);
+			}
+			else
+			{
+				Widget->SetVisibility(ESlateVisibility::HitTestInvisible);
+			}
+			continue;
+		}
+
+		if (mCombatResultRoomNameVisibilities.Contains(WidgetName) == false)
+		{
+			mCombatResultRoomNameVisibilities.Add(WidgetName, Widget->GetVisibility());
+		}
+		Widget->SetVisibility(ESlateVisibility::Collapsed);
+	}
+
+	if (bVisible)
+	{
+		mCombatResultRoomNameVisibilities.Reset();
+	}
 }
 
 FString UCombatTileMapHUDWidget::GetCombatResultVideoPath(ESRPGCombatResult Result) const

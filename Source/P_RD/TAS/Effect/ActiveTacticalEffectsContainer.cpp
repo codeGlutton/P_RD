@@ -793,6 +793,24 @@ float FActiveTacticalEffectsContainer::GetAttributeBaseValue(FTacticalAttribute 
     return BaseValue;
 }
 
+float FActiveTacticalEffectsContainer::EvaluateAttributeWithAdditionalModifier(
+    const FTacticalAttribute& Attribute,
+    TEnumAsByte<ETacticalModOp::Type> ModifierOp,
+    float ModifierMagnitude) const
+{
+    if (const TSharedPtr<FTacticalAggregator>* Aggregator = mAttributeAggregatorMap.Find(Attribute))
+    {
+        if (Aggregator->IsValid())
+        {
+            return (*Aggregator)->EvaluateWithAdditionalModifier(ModifierOp, ModifierMagnitude);
+        }
+    }
+
+    // 지속 모디파이어가 하나도 없는 속성은 BaseValue에 단일 연산을 적용한 값과 같다.
+    return FTacticalAggregator::StaticExecModOnBaseValue(
+        GetAttributeBaseValue(Attribute), ModifierOp, ModifierMagnitude);
+}
+
 /**
  * @brief 속성의 current 값을 설정하고, 등록된 변경 델리게이트가 있으면 변경 데이터를 브로드캐스트한다.
  * @param Attribute 대상 속성.

@@ -3,7 +3,12 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
+#include "Components/HorizontalBox.h"
+#include "Components/HorizontalBoxSlot.h"
 #include "Components/Image.h"
+#include "Components/Overlay.h"
+#include "Components/OverlaySlot.h"
+#include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Actor/Dice/CombatDiceCaptureActor.h"
 #include "GameMode/RDGameModeBase.h"
@@ -160,6 +165,22 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 		return;
 	}
 
+	if (mOwnedDiceDockBox == nullptr)
+	{
+		mOwnedDiceDockBox = WidgetTree->ConstructWidget<UHorizontalBox>(
+			UHorizontalBox::StaticClass(), TEXT("OwnedDiceDockBox"));
+		if (mOwnedDiceDockBox != nullptr)
+		{
+			mOwnedDiceDockBox->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			mOwnedDiceDockBox->SetClipping(EWidgetClipping::ClipToBounds);
+			GetSkinTargetCanvas()->AddChildToCanvas(mOwnedDiceDockBox);
+		}
+	}
+	if (mOwnedDiceDockBox != nullptr)
+	{
+		mOwnedDiceDockBox->ClearChildren();
+	}
+
 	for (UImage* OwnedDiceImage : mOwnedDiceImages)
 	{
 		if (OwnedDiceImage != nullptr)
@@ -182,6 +203,7 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 		}
 	}
 	mOwnedDiceImages.Reset();
+	mOwnedDiceCellSizeBoxes.Reset();
 	DestroyDiceCaptureActors(mOwnedDicePreviewActors);
 	mOwnedDiceVisualHashes.Reset();
 	mOwnedDiceCardWidgets.Reset();
@@ -190,6 +212,10 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 	const int32 DiceCount = mDiceUIs.Num();
 	for (int32 DiceIndex = 0; DiceIndex < DiceCount; ++DiceIndex)
 	{
+		USizeBox* DiceCellSizeBox = WidgetTree->ConstructWidget<USizeBox>(
+			USizeBox::StaticClass(), FName(*FString::Printf(TEXT("OwnedDiceCell_%d"), DiceIndex)));
+		UOverlay* DiceCellOverlay = WidgetTree->ConstructWidget<UOverlay>(
+			UOverlay::StaticClass(), FName(*FString::Printf(TEXT("OwnedDiceOverlay_%d"), DiceIndex)));
 		UImage* OwnedDiceImage = WidgetTree->ConstructWidget<UImage>(
 			UImage::StaticClass(),
 			FName(*FString::Printf(TEXT("OwnedDiceImage_%d"), DiceIndex))
@@ -198,29 +224,48 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 			UIndexedButtonWidget::StaticClass(),
 			FName(*FString::Printf(TEXT("OwnedDiceCard_%d"), DiceIndex))
 		);
-		if (OwnedDiceImage == nullptr || OwnedDiceCard == nullptr)
+		if (DiceCellSizeBox == nullptr || DiceCellOverlay == nullptr || OwnedDiceImage == nullptr || OwnedDiceCard == nullptr)
 		{
 			continue;
 		}
 
+		DiceCellSizeBox->SetWidthOverride(MobileDiceCellSizePx);
+		DiceCellSizeBox->SetHeightOverride(MobileDiceCellSizePx);
+		DiceCellSizeBox->SetContent(DiceCellOverlay);
 		OwnedDiceImage->SetVisibility(ESlateVisibility::HitTestInvisible);
 		OwnedDiceCard->SetBackgroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.01f));
+		OwnedDiceCard->SetTouchMethod(EButtonTouchMethod::DownAndUp);
 		OwnedDiceCard->SetButtonIndex(DiceIndex);
 		OwnedDiceCard->OnIndexedClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleOwnedDiceCardClicked);
 
 		// 주사위 종류 라벨(d6/d20)은 보유 주사위 카드에서는 보여주지 않는다.
 		UTextBlock* OwnedDiceTypeText = nullptr;
 
-		// 스킨 활성 시 DesignCanvas에 붙여 레터박스 스킨(주사위 트레이 아트)과 함께 움직이게 한다.
-		// RootCanvas(뷰포트)에 붙이면 16:9가 아닐 때 트레이만 따로 노는 정렬 버그가 생긴다.
-		UCanvasPanel* OwnedDiceCanvas = GetSkinTargetCanvas();
-		OwnedDiceCanvas->AddChildToCanvas(OwnedDiceImage);
-		OwnedDiceCanvas->AddChildToCanvas(OwnedDiceCard);
+		if (UOverlaySlot* ImageSlot = DiceCellOverlay->AddChildToOverlay(OwnedDiceImage))
+		{
+			ImageSlot->SetHorizontalAlignment(HAlign_Fill);
+			ImageSlot->SetVerticalAlignment(VAlign_Fill);
+		}
+		if (UOverlaySlot* ButtonSlot = DiceCellOverlay->AddChildToOverlay(OwnedDiceCard))
+		{
+			ButtonSlot->SetHorizontalAlignment(HAlign_Fill);
+			ButtonSlot->SetVerticalAlignment(VAlign_Fill);
+		}
 		if (OwnedDiceTypeText != nullptr)
 		{
-			OwnedDiceCanvas->AddChildToCanvas(OwnedDiceTypeText);
+			DiceCellOverlay->AddChildToOverlay(OwnedDiceTypeText);
+		}
+		if (mOwnedDiceDockBox != nullptr)
+		{
+			if (UHorizontalBoxSlot* CellSlot = mOwnedDiceDockBox->AddChildToHorizontalBox(DiceCellSizeBox))
+			{
+				CellSlot->SetPadding(FMargin(0.0f, 0.0f, DiceIndex + 1 < DiceCount ? MobileDiceCellGapPx : 0.0f, 0.0f));
+				CellSlot->SetHorizontalAlignment(HAlign_Left);
+				CellSlot->SetVerticalAlignment(VAlign_Center);
+			}
 		}
 		mOwnedDiceImages.Add(OwnedDiceImage);
+		mOwnedDiceCellSizeBoxes.Add(DiceCellSizeBox);
 		mOwnedDicePreviewActors.Add(nullptr);
 		mOwnedDiceVisualHashes.Add(MAX_uint32);
 		mOwnedDiceCardWidgets.Add(OwnedDiceCard);
@@ -253,7 +298,10 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 			RequiredDiceCost = SkillUIs[mSelectedSkillIndex].mDiceCost;
 		}
 	}
-	const bool bDiceAssignmentComplete = RequiredDiceCost > 0 && SelectedDiceCount >= RequiredDiceCost;
+	const bool bMovementAssignment = mSelectedSkillIndex == CombatMovementSkillDataIndex;
+	const bool bDiceAssignmentComplete = bMovementAssignment
+		? SelectedDiceCount >= 1
+		: RequiredDiceCost > 0 && SelectedDiceCount >= RequiredDiceCost;
 
 	for (int32 DiceIndex = 0; DiceIndex < mDiceUIs.Num(); ++DiceIndex)
 	{
@@ -368,7 +416,7 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 						? FLinearColor(0.25f, 0.95f, 0.35f, 0.34f)
 						: FLinearColor(1.0f, 0.78f, 0.20f, 0.34f);
 				}
-				else if (bDiceAssignmentComplete)
+				else if (bDiceAssignmentComplete && bMovementAssignment == false)
 				{
 					CardColor = FLinearColor(0.35f, 0.35f, 0.38f, 0.30f);
 				}

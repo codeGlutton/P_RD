@@ -280,6 +280,12 @@ public:
     // @brief 속성의 현재 기본값(Base)을 반환한다.
     float GetAttributeBaseValue(FTacticalAttribute Attribute) const;
 
+    /** @brief 실제 상태를 변경하지 않고 지정 모디파이어를 한 건 더 적용한 현재값을 계산한다. */
+    float EvaluateAttributeWithAdditionalModifier(
+        const FTacticalAttribute& Attribute,
+        TEnumAsByte<ETacticalModOp::Type> ModifierOp,
+        float ModifierMagnitude) const;
+
     /**
      * @brief  속성에 단일 모디파이어를 즉시 적용한다.
      * @details [PR #191 핵심 치환] 연산 종류 인자가 GAS의 EGameplayModOp →

@@ -34,7 +34,7 @@
  *   3. 갱신  UpdateFloatingCombatLogs(dt)           — 매 프레임 월드→스크린 재배치 + (실행)상승·페이드·수명소멸
  *   4. 제거  아래 3경로 중 하나
  *        - 자동      : 실행 로그가 수명(1.2s) 다함 (Update 안에서)
- *        - 모션 종료 : RemoveFloatingCombatLogsByMotionIndex(N) — 같은 mMotionIndex 로그를 통째로
+ *        - 모션 종료 : RemoveFloatingCombatLogsByMotionIndex(턴, 액션, 모션) — 같은 (턴, 액션, 모션) 로그를 통째로
  *        - 전체      : HandleCombatFloatingLogsCleared() — 시뮬 전환/취소 시 전부
  *
  *  ## 데이터 경계 (누가 뭘 정하나)
@@ -133,11 +133,13 @@ void UCombatTileMapHUDWidget::HandleCombatFloatingLog(FCombatFloatingLogRequest 
 
 /**
  * @brief [제거·모션] 한 모션 연출이 끝났으니 그 모션에 묶인 로그를 걷어낸다(OnCombatFloatingLogMotionFinished 구독).
- * @param MotionIndex 끝난 모션의 배열 인덱스. 같은 인덱스를 가진 로그가 여러 개여도 통째로 사라진다.
+ * @param TurnIndex   끝난 모션이 속한 턴의 배열 인덱스(이벤트 로그 좌표계). INDEX_NONE이면 턴 구분 없이 매칭한다.
+ * @param ActionIndex 끝난 모션이 속한 액션의 배열 인덱스. INDEX_NONE이면 액션 구분 없이 매칭한다.
+ * @param MotionIndex 끝난 모션의 배열 인덱스. 같은 (턴, 액션, 모션)을 가진 로그가 여러 개여도 통째로 사라진다.
  */
-void UCombatTileMapHUDWidget::HandleCombatFloatingLogMotionFinished(int32 MotionIndex)
+void UCombatTileMapHUDWidget::HandleCombatFloatingLogMotionFinished(int32 TurnIndex, int32 ActionIndex, int32 MotionIndex)
 {
-	RemoveFloatingCombatLogsByMotionIndex(MotionIndex);
+	RemoveFloatingCombatLogsByMotionIndex(TurnIndex, ActionIndex, MotionIndex);
 }
 
 /**
@@ -411,22 +413,36 @@ void UCombatTileMapHUDWidget::UpdateFloatingCombatLogs(float InDeltaTime)
 }
 
 /**
- * @brief 대기·표시 중인 로그에서 MotionIndex가 같은 항목을 모두 제거한다(모션 단위 쳐내기의 실제 구현).
- * @details 매칭을 개별 효과가 아니라 "모션 단위"로 한다 — 로그를 만들 때 실은 mMotionIndex와, "이 모션 끝났다"고
+ * @brief 대기·표시 중인 로그에서 (TurnIndex, ActionIndex, MotionIndex)가 일치하는 항목을 모두 제거한다(모션 단위 쳐내기의 실제 구현).
+ * @details 매칭을 개별 효과가 아니라 "모션 단위"로 한다 — 로그를 만들 때 실은 (턴, 액션, 모션) 인덱스와, "이 모션 끝났다"고
  *          알려온 인덱스를 비교해 그 묶음을 통째로 걷어낸다. 그래서 대상/효과종류/중복순번 같은 개별 식별자가 필요 없다.
- *          INDEX_NONE(모션에 안 묶인 실행 juice)은 대상이 아니라 여기서 즉시 반환한다.
+ *          모션은 정확히 일치해야 하며(INDEX_NONE인 실행 juice는 여기서 즉시 반환), 턴/액션은 어느 한쪽이
+ *          INDEX_NONE이면 "구분 없음"으로 보고 통과시킨다 — 인덱스를 못 실은 쪽이 있어도 기존 모션 단위 쳐내기가 유지된다.
+ * @param TurnIndex   제거할 턴 배열 인덱스(INDEX_NONE = 턴 구분 없이).
+ * @param ActionIndex 제거할 액션 배열 인덱스(INDEX_NONE = 액션 구분 없이).
  * @param MotionIndex 제거할 모션 배열 인덱스.
  */
-void UCombatTileMapHUDWidget::RemoveFloatingCombatLogsByMotionIndex(int32 MotionIndex)
+void UCombatTileMapHUDWidget::RemoveFloatingCombatLogsByMotionIndex(int32 TurnIndex, int32 ActionIndex, int32 MotionIndex)
 {
 	if (MotionIndex == INDEX_NONE)
 	{
 		return;
 	}
 
+	// 턴/액션은 어느 한쪽이 INDEX_NONE이면 매칭 통과(구분 없음), 둘 다 값이 있으면 정확히 일치해야 한다.
+	auto MatchesScope = [](int32 EntryIndex, int32 FinishedIndex) {
+		return EntryIndex == INDEX_NONE || FinishedIndex == INDEX_NONE || EntryIndex == FinishedIndex;
+		};
+	auto MatchesFinishedMotion = [&MatchesScope, TurnIndex, ActionIndex, MotionIndex](int32 EntryTurnIndex, int32 EntryActionIndex, int32 EntryMotionIndex) {
+		return EntryMotionIndex == MotionIndex
+			&& MatchesScope(EntryTurnIndex, TurnIndex)
+			&& MatchesScope(EntryActionIndex, ActionIndex);
+		};
+
 	for (int32 LogIndex = mPendingFloatingCombatLogs.Num() - 1; LogIndex >= 0; --LogIndex)
 	{
-		if (mPendingFloatingCombatLogs[LogIndex].mRequest.mMotionIndex == MotionIndex)
+		const FCombatFloatingLogRequest& PendingRequest = mPendingFloatingCombatLogs[LogIndex].mRequest;
+		if (MatchesFinishedMotion(PendingRequest.mTurnIndex, PendingRequest.mActionIndex, PendingRequest.mMotionIndex))
 		{
 			mPendingFloatingCombatLogs.RemoveAt(LogIndex);
 		}
@@ -435,7 +451,7 @@ void UCombatTileMapHUDWidget::RemoveFloatingCombatLogsByMotionIndex(int32 Motion
 	for (int32 LogIndex = mFloatingCombatLogs.Num() - 1; LogIndex >= 0; --LogIndex)
 	{
 		FFloatingCombatLogEntry& Entry = mFloatingCombatLogs[LogIndex];
-		if (Entry.mMotionIndex != MotionIndex)
+		if (MatchesFinishedMotion(Entry.mTurnIndex, Entry.mActionIndex, Entry.mMotionIndex) == false)
 		{
 			continue;
 		}

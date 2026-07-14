@@ -6,7 +6,11 @@
 #include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
+#include "Components/SafeZone.h"
+#include "Components/ScaleBox.h"
+#include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
 #include "Styling/SlateTypes.h"
@@ -72,7 +76,61 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		}
 		if (DesignerCanvasPanel != nullptr)
 		{
-			// 스킨 런타임 위젯(주사위/스킬/MOVE/값텍스트 등)은 DesignCanvas(1920x1080 디자인 좌표계)에 붙인다.
+			// 전투 스킨 전체를 Safe Area와 같은 종횡비의 기준 SizeBox에 넣고 비례 축소한다.
+			// 월드 투영 HP바와 모달 오버레이는 계속 RootCanvas 좌표를 사용한다.
+			if (mCombatSafeZone == nullptr)
+			{
+				mCombatSafeZone = WidgetTree->ConstructWidget<USafeZone>(USafeZone::StaticClass(), TEXT("CombatHudSafeZone"));
+			}
+			if (mCombatDesignScaleBox == nullptr)
+			{
+				mCombatDesignScaleBox = WidgetTree->ConstructWidget<UScaleBox>(
+					UScaleBox::StaticClass(), TEXT("CombatHudDesignScaleBox"));
+			}
+			if (mCombatDesignSizeBox == nullptr)
+			{
+				mCombatDesignSizeBox = WidgetTree->ConstructWidget<USizeBox>(
+					USizeBox::StaticClass(), TEXT("CombatHudDesignSizeBox"));
+			}
+
+			if (mCombatSafeZone != nullptr && mCombatDesignScaleBox != nullptr && mCombatDesignSizeBox != nullptr)
+			{
+				mCombatSafeZone->SetSidesToPad(true, true, true, true);
+				mCombatSafeZone->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+				mCombatDesignScaleBox->SetStretch(EStretch::ScaleToFit);
+				mCombatDesignScaleBox->SetStretchDirection(EStretchDirection::Both);
+				mCombatDesignScaleBox->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+				mCombatDesignSizeBox->SetWidthOverride(mCombatHudReferenceSize.X);
+				mCombatDesignSizeBox->SetHeightOverride(mCombatHudReferenceSize.Y);
+				mCombatDesignSizeBox->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
+				if (mCombatSafeZone->GetParent() == nullptr)
+				{
+					if (UCanvasPanelSlot* SafeSlot = RootCanvas->AddChildToCanvas(mCombatSafeZone))
+					{
+						SafeSlot->SetAnchors(FAnchors(0.0f, 0.0f, 1.0f, 1.0f));
+						SafeSlot->SetOffsets(FMargin(0.0f));
+						SafeSlot->SetZOrder(10);
+					}
+				}
+				if (mCombatDesignScaleBox->GetParent() != mCombatSafeZone)
+				{
+					mCombatDesignScaleBox->RemoveFromParent();
+					mCombatSafeZone->SetContent(mCombatDesignScaleBox);
+				}
+				if (mCombatDesignSizeBox->GetParent() != mCombatDesignScaleBox)
+				{
+					mCombatDesignSizeBox->RemoveFromParent();
+					mCombatDesignScaleBox->SetContent(mCombatDesignSizeBox);
+				}
+				if (DesignerCanvasPanel->GetParent() != mCombatDesignSizeBox)
+				{
+					DesignerCanvasPanel->RemoveFromParent();
+					mCombatDesignSizeBox->SetContent(DesignerCanvasPanel);
+				}
+			}
+
+			// 스킨 런타임 위젯(주사위/스킬/값텍스트 등)은 프로필 기준 DesignCanvas에 붙인다.
 			// 단 RootCanvas 멤버는 '풀뷰포트 루트'로 유지한다 — 월드투영 HP바(UnitBars.cpp)가 RootCanvas에
 			// ProjectWorldLocationToWidgetPosition의 뷰포트 픽셀을 그대로 넣기 때문. RootCanvas를 DesignCanvas로
 			// 덮으면 뷰포트 픽셀이 디자인 픽셀로 오해석돼 HP바가 유닛 머리에서 떨어진다.
@@ -247,10 +305,13 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		mDiceAssignmentText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("DiceAssignmentText"));
 		if (mDiceAssignmentText != nullptr)
 		{
-			mDiceAssignmentText->SetJustification(ETextJustify::Left);
+			mDiceAssignmentText->SetJustification(ETextJustify::Center);
 			mDiceAssignmentText->SetText(FText::GetEmpty());   // 유휴 안내문구 제거
 			mDiceAssignmentText->SetVisibility(ESlateVisibility::Collapsed);
 			mDiceAssignmentText->SetColorAndOpacity(FSlateColor(FLinearColor(0.90f, 1.0f, 0.96f, 0.96f)));
+			FSlateFontInfo Font = mDiceAssignmentText->GetFont();
+			Font.Size = 34;
+			mDiceAssignmentText->SetFont(Font);
 			TargetRootCanvas->AddChildToCanvas(mDiceAssignmentText);
 		}
 	}
@@ -372,21 +433,6 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		}
 	}
 
-	if (mMoveButton == nullptr)
-	{
-		mMoveButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("MoveCommandButton"));
-		if (mMoveButton != nullptr)
-		{
-			// 라벨은 WBP TextBlock(HUD_M_btn_move_label)이 소유한다(RefreshMoveButton이 SetText). 버튼은 투명 클릭영역.
-			// 디자이너 스킨이면 버튼 배경을 투명화해 WBP의 concept MOVE 프레임이 보이게 한다.
-			mMoveButton->SetBackgroundColor(IsDesignerSkinActive()
-				? FLinearColor(1.0f, 1.0f, 1.0f, 0.01f)
-				: FLinearColor(0.10f, 0.30f, 0.32f, 0.95f));
-			mMoveButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleMoveButtonClicked);
-			TargetRootCanvas->AddChildToCanvas(mMoveButton);
-		}
-	}
-
 	if (EndTurnButton == nullptr)
 	{
 		EndTurnButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("EndTurnButton"));
@@ -398,6 +444,50 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 				? FLinearColor(1.0f, 1.0f, 1.0f, 0.01f)
 				: FLinearColor(0.32f, 0.08f, 0.07f, 0.95f));
 			TargetRootCanvas->AddChildToCanvas(EndTurnButton);
+		}
+	}
+
+	// 구/단독 WBP에는 별도 END TURN TextBlock이 없을 수 있으므로 그 경우에만 버튼 내부 라벨을 만든다.
+	if (mPrimaryActionButtonText == nullptr
+		&& EndTurnButton != nullptr
+		&& EndTurnButton->GetContent() == nullptr
+		&& WidgetTree->FindWidget(TEXT("HUD_M_btn_end_turn_label")) == nullptr)
+	{
+		mPrimaryActionButtonText = WidgetTree->ConstructWidget<UTextBlock>(
+			UTextBlock::StaticClass(), TEXT("PrimaryActionButtonText"));
+		if (mPrimaryActionButtonText != nullptr)
+		{
+			mPrimaryActionButtonText->SetJustification(ETextJustify::Center);
+			mPrimaryActionButtonText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+			FSlateFontInfo Font = mPrimaryActionButtonText->GetFont();
+			Font.Size = 38;
+			mPrimaryActionButtonText->SetFont(Font);
+			EndTurnButton->AddChild(mPrimaryActionButtonText);
+		}
+	}
+
+	if (mCancelActionButton == nullptr)
+	{
+		mCancelActionButton = WidgetTree->ConstructWidget<UButton>(
+			UButton::StaticClass(), TEXT("CancelActionButton"));
+		if (mCancelActionButton != nullptr)
+		{
+			mCancelActionButton->SetBackgroundColor(FLinearColor(0.24f, 0.055f, 0.045f, 0.96f));
+			mCancelActionButton->SetVisibility(ESlateVisibility::Collapsed);
+			TargetRootCanvas->AddChildToCanvas(mCancelActionButton);
+
+			mCancelActionButtonText = WidgetTree->ConstructWidget<UTextBlock>(
+				UTextBlock::StaticClass(), TEXT("CancelActionButtonText"));
+			if (mCancelActionButtonText != nullptr)
+			{
+				mCancelActionButtonText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "CancelAction", "취소"));
+				mCancelActionButtonText->SetJustification(ETextJustify::Center);
+				mCancelActionButtonText->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.90f, 0.62f, 1.0f)));
+				FSlateFontInfo Font = mCancelActionButtonText->GetFont();
+				Font.Size = 38;
+				mCancelActionButtonText->SetFont(Font);
+				mCancelActionButton->AddChild(mCancelActionButtonText);
+			}
 		}
 	}
 
@@ -441,5 +531,9 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 	RebuildSkillRailWidgets();
 	EnsureSkillInputButtons();
 	RebuildEquipmentBar();    // 탑바 좌측 하단 장비 칩(뷰모델 미연결이면 비워 둠)
+	if (IsDesignerSkinActive() == false)
+	{
+		RebuildTurnOrderBar();  // 구 WBP fallback은 기존 턴 순서 HUD를 유지한다.
+	}
 	ApplyRuntimeWidgetLayout();
 }

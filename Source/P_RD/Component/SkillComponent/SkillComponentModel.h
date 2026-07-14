@@ -24,7 +24,7 @@ DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnChangeSkillUI, int32 /*SkillIndex*/, c
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlaySkillUI, const FActiveSkillContext& /*Context*/, const UStaticSkillData* /*SkillData*/);
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnPlayMotionLayerUI, int32 /*MotionIndex*/, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, FGameplayTag /*ApplyMotionTag*/, ETileActorDirection /*LocalDirection*/);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnEndMotionLayerUI, int32 /*MotionIndex*/);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnEndMotionLayerUI, int32 /*TurnIndex*/, int32 /*ActionIndex*/, int32 /*MotionIndex*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndSkillUI, const FActiveSkillContext& /*Context*/, const UStaticSkillData* /*SkillData*/);
 
 /**
