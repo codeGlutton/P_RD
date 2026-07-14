@@ -267,10 +267,10 @@ bool AFrontendGameMode::RequestCharacterSelectFromTitle()
 		return false;
 	}
 
-	const bool bCharacterSelectOpened = OpenTitleCharacterSelect();
-	checkf(bCharacterSelectOpened == true, TEXT("캐릭터 선택창 열기 오류"));
+	const bool IsCharacterSelectOpened = OpenTitleCharacterSelect();
+	checkf(IsCharacterSelectOpened == true, TEXT("캐릭터 선택창 열기 오류"));
 
-	return bCharacterSelectOpened;
+	return IsCharacterSelectOpened;
 }
 
 /** @brief 캐릭터 선택 Confirm 이후 새 Run을 만들고 Stage1 첫 방 입장을 시작한다. */
@@ -290,16 +290,16 @@ bool AFrontendGameMode::StartNewRun(const FPrimaryAssetId& PlayerUnitId, int32 D
 		return false;
 	}
 
-	const bool bRunDataCreated = CreateRunData(PlayerUnitId, Difficulty);
-	checkf(bRunDataCreated == true, TEXT("런 데이터 생성 오류"));
-	if (bRunDataCreated == false)
+	const bool IsRunDataCreated = CreateRunData(PlayerUnitId, Difficulty);
+	checkf(IsRunDataCreated == true, TEXT("런 데이터 생성 오류"));
+	if (IsRunDataCreated == false)
 	{
 		return false;
 	}
 
-	const bool bTransitionStarted = PreloadAndTransitionRoomAsync(EStageLevelType::Stage1);
-	checkf(bTransitionStarted == true, TEXT("스테이지 1 처음 방으로 전환 실패"));
-	return bTransitionStarted;
+	const bool IsTransitionStarted = PreloadAndTransitionRoomAsync(EStageLevelType::Stage1);
+	checkf(IsTransitionStarted == true, TEXT("스테이지 1 처음 방으로 전환 실패"));
+	return IsTransitionStarted;
 }
 
 /** @brief 타이틀 CONTINUE 입력으로 저장된 활성 Run의 현재 방 입장을 시작한다. */
@@ -354,9 +354,9 @@ bool AFrontendGameMode::ContinueRunFromTitle()
 	 * 여기서부터는 기존 방 전환 공통 흐름을 사용한다.
 	 * 플레이어/스테이지/방 에셋 프리로드, 페이드/로딩 UI, 실제 레벨 전환 순서는 RDGameModeBase와 RoomTransitionSubsystem이 처리한다.
 	 */
-	const bool bTransitionStarted = PreloadAndTransitionRoomAsync(CurrentRowIndex, CurrentColumnIndex);
-	checkf(bTransitionStarted == true, TEXT("이어하기 방 전환 실패"));
-	return bTransitionStarted;
+	const bool IsTransitionStarted = PreloadAndTransitionRoomAsync(CurrentRowIndex, CurrentColumnIndex);
+	checkf(IsTransitionStarted == true, TEXT("이어하기 방 전환 실패"));
+	return IsTransitionStarted;
 }
 
 /** @brief 타이틀/설정 화면에서 기존 활성 Run 포기를 처리한다. */
