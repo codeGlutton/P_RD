@@ -1,5 +1,6 @@
 ﻿#include "UI/CombatTileMapHUDWidget.h"
 
+#include "Actor/Dice/CombatDiceCaptureActor.h"   // NativeDestruct에서 공유 캡처 액터 파괴
 #include "Components/Button.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Reward/RewardUIWidgetBase.h"
@@ -182,7 +183,11 @@ void UCombatTileMapHUDWidget::NativeDestruct()
 		mCombatUIModel->OnQueueNodeResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
 	}
 
-	DestroyDiceCaptureActors(mOwnedDicePreviewActors);
+	if (IsValid(mOwnedDiceSharedCaptureActor))
+	{
+		mOwnedDiceSharedCaptureActor->Destroy();
+	}
+	mOwnedDiceSharedCaptureActor = nullptr;
 
 	Super::NativeDestruct();
 }

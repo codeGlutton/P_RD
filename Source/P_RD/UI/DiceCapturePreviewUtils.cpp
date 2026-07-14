@@ -1,6 +1,8 @@
 #include "UI/DiceCapturePreviewUtils.h"
 
 #include "Components/Image.h"
+#include "Engine/TextureRenderTarget2D.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Actor/Dice/CombatDiceCaptureActor.h"
 
 int32 RDDiceCapturePreview::GetDefaultRenderTargetSize()
@@ -39,6 +41,41 @@ void RDDiceCapturePreview::ApplyCaptureBrush(UImage* DiceImage, ACombatDiceCaptu
 	DiceBrush.ImageSize = BrushSize;
 	DiceImage->SetBrush(DiceBrush);
 	DiceImage->SetColorAndOpacity(FLinearColor::White);
+}
+
+void RDDiceCapturePreview::ApplyCaptureMaterialBrush(UImage* DiceImage, UMaterialInstanceDynamic* CaptureMaterial, FVector2D BrushSize)
+{
+	if (DiceImage == nullptr || CaptureMaterial == nullptr)
+	{
+		return;
+	}
+
+	FSlateBrush DiceBrush = DiceImage->GetBrush();
+	DiceBrush.SetResourceObject(CaptureMaterial);
+	DiceBrush.ImageSize = BrushSize;
+	DiceImage->SetBrush(DiceBrush);
+	DiceImage->SetColorAndOpacity(FLinearColor::White);
+}
+
+UTextureRenderTarget2D* RDDiceCapturePreview::CreateDiceRenderTarget(UObject* Outer, int32 RenderTargetSize)
+{
+	if (Outer == nullptr)
+	{
+		return nullptr;
+	}
+
+	// ACombatDiceCaptureActor::InitializeCapture의 RT 설정과 동일(투명 배경 유지용 RGBA8).
+	const int32 ClampedRenderTargetSize = FMath::Clamp(RenderTargetSize, 128, 1024);
+	UTextureRenderTarget2D* RenderTarget = NewObject<UTextureRenderTarget2D>(Outer);
+	if (RenderTarget != nullptr)
+	{
+		RenderTarget->RenderTargetFormat = RTF_RGBA8;
+		RenderTarget->ClearColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		RenderTarget->bAutoGenerateMips = false;
+		RenderTarget->InitAutoFormat(ClampedRenderTargetSize, ClampedRenderTargetSize);
+		RenderTarget->UpdateResourceImmediate(true);
+	}
+	return RenderTarget;
 }
 
 ACombatDiceCaptureActor* RDDiceCapturePreview::SpawnCaptureActor(UWorld* World, UObject* RenderTargetOuter, const FVector& PreviewLocation, int32 RenderTargetSize)

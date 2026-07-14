@@ -182,7 +182,10 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 		}
 	}
 	mOwnedDiceImages.Reset();
-	DestroyDiceCaptureActors(mOwnedDicePreviewActors);
+	// 다이별 상주는 표시용 RT/캡처 머티리얼뿐 — 배열을 비우면 이전 이미지 브러시와 함께 GC가 회수한다.
+	// (공유 캡처 액터는 재사용하므로 여기서 파괴하지 않는다.)
+	mOwnedDiceRenderTargets.Reset();
+	mOwnedDiceCaptureMaterials.Reset();
 	mOwnedDiceVisualHashes.Reset();
 	mOwnedDiceCardWidgets.Reset();
 	mOwnedDiceTypeTexts.Reset();
@@ -221,7 +224,8 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 			OwnedDiceCanvas->AddChildToCanvas(OwnedDiceTypeText);
 		}
 		mOwnedDiceImages.Add(OwnedDiceImage);
-		mOwnedDicePreviewActors.Add(nullptr);
+		mOwnedDiceRenderTargets.Add(nullptr);
+		mOwnedDiceCaptureMaterials.Add(nullptr);
 		mOwnedDiceVisualHashes.Add(MAX_uint32);
 		mOwnedDiceCardWidgets.Add(OwnedDiceCard);
 		mOwnedDiceTypeTexts.Add(OwnedDiceTypeText);
@@ -294,21 +298,31 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 		// 3D 캡처는 굴림 결과가 바뀔 때만 갱신한다. 선택/배치/사용 표시는 아래 UMG 오버레이가 담당한다.
 		const FLinearColor CaptureDiceColor = DiceView.mIsRolled ? RarityColor : PendingColor;
 
-		if (mOwnedDicePreviewActors.IsValidIndex(DiceIndex) == false)
+		// 캡처 카메라(SceneCapture+라이트 세트)는 공유 1대만 유지한다 — 다이별 액터 상주는
+		// 보유 개수만큼 무한 누적되는 메모리 리스크였다. 다이별로는 표시용 RT/머티리얼만 남긴다.
+		if (IsValid(mOwnedDiceSharedCaptureActor) == false)
 		{
-			mOwnedDicePreviewActors.SetNum(DiceIndex + 1);
-		}
-		if (IsValid(mOwnedDicePreviewActors[DiceIndex]) == false)
-		{
-			mOwnedDicePreviewActors[DiceIndex] = SpawnDiceCaptureActor(0, DiceIndex, OwnedDiceRenderTargetSize);
+			mOwnedDiceSharedCaptureActor = SpawnDiceCaptureActor(0, 0, OwnedDiceRenderTargetSize);
 		}
 
-		ACombatDiceCaptureActor* OwnedDiceActor = mOwnedDicePreviewActors.IsValidIndex(DiceIndex)
-			? mOwnedDicePreviewActors[DiceIndex].Get()
-			: nullptr;
+		if (mOwnedDiceRenderTargets.IsValidIndex(DiceIndex) == false)
+		{
+			mOwnedDiceRenderTargets.SetNum(DiceIndex + 1);
+		}
+		if (mOwnedDiceCaptureMaterials.IsValidIndex(DiceIndex) == false)
+		{
+			mOwnedDiceCaptureMaterials.SetNum(DiceIndex + 1);
+		}
+		if (mOwnedDiceRenderTargets[DiceIndex] == nullptr)
+		{
+			mOwnedDiceRenderTargets[DiceIndex] = RDDiceCapturePreview::CreateDiceRenderTarget(this, OwnedDiceRenderTargetSize);
+			mOwnedDiceCaptureMaterials[DiceIndex] = ACombatDiceCaptureActor::CreateCaptureMaterialFor(this, mOwnedDiceRenderTargets[DiceIndex]);
+		}
+
+		ACombatDiceCaptureActor* OwnedDiceActor = mOwnedDiceSharedCaptureActor.Get();
 		const bool bVisualChanged = mOwnedDiceVisualHashes.IsValidIndex(DiceIndex) == false
 			|| mOwnedDiceVisualHashes[DiceIndex] != VisualHash;
-		if (OwnedDiceActor != nullptr && bVisualChanged)
+		if (OwnedDiceActor != nullptr && bVisualChanged && mOwnedDiceRenderTargets[DiceIndex] != nullptr)
 		{
 			const bool bHasRolledResult = DiceView.mIsRolled && DiceView.mResultValue > 0;
 			const int32 FaceOrdinal = bHasRolledResult ? GetDiceSettledFaceOrdinal(DiceView) : INDEX_NONE;
@@ -334,9 +348,12 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 				OwnedDiceActor->ClearHighlightedFace();
 				OwnedDiceActor->SettleToFace(1);
 			}
-			OwnedDiceActor->CaptureDice();
+			OwnedDiceActor->CaptureDiceInto(mOwnedDiceRenderTargets[DiceIndex]);
 		}
-		if (OwnedDiceActor != nullptr && mOwnedDiceVisualHashes.IsValidIndex(DiceIndex))
+		// RT가 아직 없으면(생성 실패 등) 해시를 저장하지 않아 다음 갱신에서 재시도한다.
+		if (OwnedDiceActor != nullptr
+			&& mOwnedDiceRenderTargets.IsValidIndex(DiceIndex) && mOwnedDiceRenderTargets[DiceIndex] != nullptr
+			&& mOwnedDiceVisualHashes.IsValidIndex(DiceIndex))
 		{
 			mOwnedDiceVisualHashes[DiceIndex] = VisualHash;
 		}
@@ -345,9 +362,9 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 		{
 			if (UImage* OwnedDiceImage = mOwnedDiceImages[DiceIndex])
 			{
-				if (OwnedDiceActor != nullptr)
+				if (mOwnedDiceCaptureMaterials.IsValidIndex(DiceIndex) && mOwnedDiceCaptureMaterials[DiceIndex] != nullptr)
 				{
-					ApplyDiceCaptureBrush(OwnedDiceImage, OwnedDiceActor, FVector2D(OwnedDiceRenderTargetSize));
+					RDDiceCapturePreview::ApplyCaptureMaterialBrush(OwnedDiceImage, mOwnedDiceCaptureMaterials[DiceIndex], FVector2D(OwnedDiceRenderTargetSize));
 				}
 				OwnedDiceImage->SetColorAndOpacity(FLinearColor::White);
 				OwnedDiceImage->SetRenderScale(FVector2D::UnitVector);

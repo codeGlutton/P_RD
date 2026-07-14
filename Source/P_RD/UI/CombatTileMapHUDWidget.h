@@ -26,11 +26,13 @@ class UCombatResultOverlayWidget;
 class UCinematicWidget;
 class UIndexedButtonWidget;
 class UImage;
+class UMaterialInstanceDynamic;
 class UProgressBar;
 class URewardUIModel;
 class URewardUIWidgetBase;
 class USoundBase;
 class UTextBlock;
+class UTextureRenderTarget2D;
 class UViewport;
 class UWidget;
 class UUserWidget;
@@ -167,14 +169,8 @@ private:
 	/** @brief 입장 굴림용 물리 캡처 액터를 정리한다. */
 	void DestroyDiceRollPhysicsActor();
 
-	/** @brief 지정 Image에 주사위 RenderTarget을 연결한다. */
-	void ApplyDiceCaptureBrush(UImage* DiceImage, ACombatDiceCaptureActor* DiceActor, FVector2D BrushSize) const;
-
 	/** @brief 주사위 캡처 액터를 UI 전용 위치에 생성한다. */
 	ACombatDiceCaptureActor* SpawnDiceCaptureActor(int32 GroupIndex, int32 DiceIndex, int32 RenderTargetSize);
-
-	/** @brief 기존 주사위 캡처 액터들을 정리한다. */
-	void DestroyDiceCaptureActors(TArray<TObjectPtr<ACombatDiceCaptureActor>>& DiceActors) const;
 
 	/** @brief 현재 RunPersistData의 보유 주사위 목록을 전투 HUD 표시용 데이터로 변환한다. */
 	void RefreshDiceViewsFromRunData();
@@ -791,9 +787,21 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UImage>> mOwnedDiceImages;
 
-	/** @brief 보유 주사위 RenderTarget을 만드는 3D 주사위 액터 */
+	/**
+	 * @brief 보유 주사위 카드 캡처를 전담하는 공유 캡처 액터(항상 1대).
+	 * @details 다이별로 SceneCapture+라이트 액터를 상주시키면 보유 개수만큼 무한 누적되므로,
+	 *          카메라는 1대만 두고 다이를 순서대로 구성해 다이별 RT(mOwnedDiceRenderTargets)에 찍는다.
+	 */
 	UPROPERTY(Transient)
-	TArray<TObjectPtr<ACombatDiceCaptureActor>> mOwnedDicePreviewActors;
+	TObjectPtr<ACombatDiceCaptureActor> mOwnedDiceSharedCaptureActor;
+
+	/** @brief 다이별 표시용 투명 RenderTarget(256x256). 다이별 상주는 이것과 캡처 머티리얼뿐이다. */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UTextureRenderTarget2D>> mOwnedDiceRenderTargets;
+
+	/** @brief 다이별 캡처 머티리얼(RT 알파→UI 투명도). 카드 Image 브러시가 참조한다. */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UMaterialInstanceDynamic>> mOwnedDiceCaptureMaterials;
 
 	/** @brief 변경되지 않은 보유 주사위는 3D 장면을 다시 캡처하지 않기 위한 시각 상태 해시. */
 	TArray<uint32> mOwnedDiceVisualHashes;
