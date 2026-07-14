@@ -23,7 +23,7 @@ UEnemyUnitModel::UEnemyUnitModel()
 	UUnitModel::SetGenericTeamId(EGameTeamType::Enemy);
 
 	// 적 스탯 세트 생성 — 속성 컴포넌트가 자식 AttributeSet을 자동 수집해 스탯 커브 초기화 대상이 된다(플레이어와 동일 패턴).
-	mUnitAttributeSet = CreateDefaultSubobject<UUnitAttributeSet>(TEXT("UnitAttributeSet"));
+	mUnitAttributeSet = CreateDefaultSubobject<UEnemyUnitAttributeSet>(TEXT("EnemyUnitAttributeSet"));
 }
 
 void UEnemyUnitModel::PostInitializeComponentModels()
@@ -38,7 +38,6 @@ void UEnemyUnitModel::PostInitializeComponentModels()
 	}
 
 	mMoveTendency = EnemySpawn->mMoveTendency;
-	mMovePoint = EnemySpawn->mMovePoint;
 
 	if (USkillComponentModel* SkillComp = GetSkillComponentModel())
 	{
@@ -61,10 +60,13 @@ void UEnemyUnitModel::OnBeginTurn()
 
 	/* 자기 자신에게 MovePoint 부여 */
 
-	const int32 MovePoint = FMath::Max(mMovePoint, 0);
-
 	UAttributeSetComponentModel* OwingAttributeSetComponentModel = GetAttributeComponentModel();
 	checkf(OwingAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+	const int32 DefaultMovePoint = FMath::Max(
+		OwingAttributeSetComponentModel->GetAttributeCurrentValue(UEnemyUnitAttributeSet::GetRechargeMovementAttribute()), 
+		0
+	);
 
 	UTacticalEffectContext* EffectContext = OwingAttributeSetComponentModel->MakeEffectContext();
 	EffectContext->SetInstigator(this);
@@ -75,7 +77,7 @@ void UEnemyUnitModel::OnBeginTurn()
 		/* 기본 Move 만큼 Factor 부여 */
 
 		TSharedPtr<FTacticalEffectSpec> EffectSpec = OwingAttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_MovementFactor_AddBase::StaticClass(), EffectContext);
-		EffectSpec->mDynamicMagnitude = MovePoint;
+		EffectSpec->mDynamicMagnitude = DefaultMovePoint;
 		FactorHandle = OwingAttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
 	}
 
@@ -111,7 +113,3 @@ EMoveTendency UEnemyUnitModel::GetMoveTendency() const
 	return mMoveTendency;
 }
 
-int32 UEnemyUnitModel::GetMovePoint() const
-{
-	return mMovePoint;
-}

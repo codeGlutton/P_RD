@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   EnemyTurnPlannerTests.cpp
  * @brief  USRPGEnemyTurnPlanner 유닛테스트
  * @details
@@ -121,7 +121,8 @@ namespace
 		Enemy->Initialize();
 		Enemy->BeginPlay();
 		Enemy->SetMoveTendency(Tendency);
-		Enemy->SetMovePoint(MoveRange);
+		Enemy->GetAttributeComponentModel()->ApplyModToAttribute(UEnemyUnitAttributeSet::GetMovementAttribute(), ETacticalModOp::Override, MoveRange);
+		Enemy->GetAttributeComponentModel()->ApplyModToAttribute(UEnemyUnitAttributeSet::GetRechargeDiceSumAttribute(), ETacticalModOp::Override, 0);
 
 		// 스킬 추가: 일반공격 계열
 		Enemy->GetSkillComponentModel()->SetSkill(0, MakeSkill(World, KeepAlive, AimPattern, AimRange));

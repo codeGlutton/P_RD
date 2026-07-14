@@ -43,8 +43,4 @@ public:
 	// @note 사거리는 스킬(추후 스킬+장비+패시브)에서 나오므로 여기엔 눈금값을 두지 않는다.
 	UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveTendency"))
 	EMoveTendency mMoveTendency = EMoveTendency::HoldRange;
-	
-	// @brief 이동포인트
-	UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MovePoint"))
-	int32 mMovePoint{ 5 };
 };

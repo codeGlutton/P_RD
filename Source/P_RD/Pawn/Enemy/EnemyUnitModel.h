@@ -12,7 +12,7 @@
 #include "DataAsset/UnitSpawnData/StaticEnemyUnitSpawnData.h" // EMoveTendency
 #include "EnemyUnitModel.generated.h"
 
-class UUnitAttributeSet;
+class UEnemyUnitAttributeSet;
 
 /**
  * @brief 적 베이스 유닛 모델
@@ -41,8 +41,16 @@ public:
 
 	// @brief 이동 성향
 	EMoveTendency GetMoveTendency() const;
-	// @brief 이동포인트
-	int32 GetMovePoint() const;
+
+private:
+	/**
+	 * @brief 적 공통 AttributeSet (HP/방어 등).
+	 * @details 속성 컴포넌트는 오너 모델의 자식 UObject 중 AttributeSet을 자동 수집하므로, 생성자에서
+	 *          서브오브젝트로 만들어 두기만 하면 등록된다(플레이어와 동일 패턴). 이 서브오브젝트가 없으면
+	 *          수집되는 세트가 0개라 스탯 커브 초기화가 무경고로 건너뛰어지고 모든 스탯이 0으로 남는다.
+	 */
+	UPROPERTY(Category = AttributeSet, VisibleAnywhere, meta = (DisplayName = "UnitAttributeSet"))
+	TObjectPtr<UEnemyUnitAttributeSet> mUnitAttributeSet;
 
 protected:
 	// @brief 초기 스텟에 반영되는 난이도 수치
@@ -51,20 +59,7 @@ protected:
 	UPROPERTY(Category = Enemy, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "Difficulty"))
 	int32 mDifficulty = 1;
 
-	/**
-	 * @brief 적 공통 AttributeSet (HP/방어 등).
-	 * @details 속성 컴포넌트는 오너 모델의 자식 UObject 중 AttributeSet을 자동 수집하므로, 생성자에서
-	 *          서브오브젝트로 만들어 두기만 하면 등록된다(플레이어와 동일 패턴). 이 서브오브젝트가 없으면
-	 *          수집되는 세트가 0개라 스탯 커브 초기화가 무경고로 건너뛰어지고 모든 스탯이 0으로 남는다.
-	 */
-	UPROPERTY(Category = AttributeSet, VisibleAnywhere, meta = (DisplayName = "UnitAttributeSet"))
-	TObjectPtr<UUnitAttributeSet> mUnitAttributeSet;
-
 	// @brief 이동 성향
 	UPROPERTY(Category = AI, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MoveTendency"))
 	EMoveTendency mMoveTendency = EMoveTendency::HoldRange;
-
-	// @brief 이동포인트
-	UPROPERTY(Category = AI, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MovePoint"))
-	int32 mMovePoint = 5;
 };
