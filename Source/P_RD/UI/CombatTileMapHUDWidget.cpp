@@ -1,5 +1,6 @@
 ﻿#include "UI/CombatTileMapHUDWidget.h"
 
+#include "Actor/Dice/CombatDiceCaptureActor.h"   // NativeDestruct에서 공유 캡처 액터 파괴
 #include "Components/Button.h"
 #include "TimerManager.h"   // NativeDestruct에서 골드 카운트업/결과 딜레이 타이머 명시 정리
 #include "UI/Combat/CombatUIModel.h"
@@ -201,7 +202,12 @@ void UCombatTileMapHUDWidget::NativeDestruct()
 		World->GetTimerManager().ClearTimer(mCombatResultStartDelayTimerHandle);
 	}
 
-	DestroyDiceCaptureActors(mOwnedDicePreviewActors);
+	if (IsValid(mOwnedDiceSharedCaptureActor))
+	{
+		mOwnedDiceSharedCaptureActor->Destroy();
+	}
+	mOwnedDiceSharedCaptureActor = nullptr;
+
 	// 보유 주사위 캡처 액터와 달리 물리 굴림 캡처 액터는 정리가 빠져 있었다 — 위젯 재생성 시
 	// 은닉 위치(Y≈30000)에 SceneCapture+RenderTarget 액터가 누적되는 누수의 원인.
 	DestroyDiceRollPhysicsActor();
