@@ -316,6 +316,15 @@ private:
 	void SyncText() const;
 
 	/**
+	 * @brief 품질(360p/720p/1080p)·FPS(30/60) 버튼 라벨 색으로 현재 선택 상태를 표시한다.
+	 *
+	 * @details
+	 * WBP에 선택 상태 전용 위젯이 없어 라벨 색(선택=골드, 비선택=흰색)으로 표시한다.
+	 * 값 모델이 바뀌는 모든 경로(버튼 클릭, 패널 열 때 저장값 복원)에서 호출해 표시를 값과 일치시킨다.
+	 */
+	void UpdateGraphicsSelectionIndicators() const;
+
+	/**
 	 * @brief 타이틀/인게임 모드에 따라 런 액션 영역 표시를 전환한다.
 	 *
 	 * @details
