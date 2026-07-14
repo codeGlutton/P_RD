@@ -1,5 +1,6 @@
 #include "UI/CombatTileMapHUDWidget.h"
 
+#include "Engine/AssetManager.h"   // 턴 전환 프레임 비동기 프리로드(첫 배너 동기 로드 히치 제거)
 #include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
@@ -12,13 +13,17 @@ namespace
 {
 	constexpr int32 TurnChangeFrameCount = 33;
 	constexpr float TurnChangeFramesPerSecond = 16.0f;
+	// 원본 33장을 다 쓰지 않고 2장에 1장만 쓴다 — 로드 개수·상주 메모리 절반, 같은 fps라 재생은 2배 빨라진다(≈1.06s).
+	// (배너는 라운드 배리어를 잡아 게임 진행을 막으므로 짧을수록 턴 템포에 유리.)
+	constexpr int32 TurnChangeFrameStep = 2;
+	constexpr int32 TurnChangeUsedFrameCount = (TurnChangeFrameCount + TurnChangeFrameStep - 1) / TurnChangeFrameStep;
 	const FVector2D TurnChangeFrameNativeSize(832.0f, 448.0f);
 	const TCHAR* const TurnChangeFrameAssetDirectory = TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/TurnChange/FramesBiRefNet");
 
 	int32 GetClampedFrameIndex(float ElapsedSeconds)
 	{
 		const int32 FrameIndex = FMath::FloorToInt(ElapsedSeconds * TurnChangeFramesPerSecond);
-		return FMath::Clamp(FrameIndex, 0, TurnChangeFrameCount - 1);
+		return FMath::Clamp(FrameIndex, 0, TurnChangeUsedFrameCount - 1);
 	}
 }
 
@@ -95,16 +100,18 @@ void UCombatTileMapHUDWidget::FinishTurnChangeIntro()
 
 bool UCombatTileMapHUDWidget::EnsureTurnChangeFrameTextures()
 {
-	if (mTurnChangeFrameTextures.Num() == TurnChangeFrameCount)
+	if (mTurnChangeFrameTextures.Num() == TurnChangeUsedFrameCount)
 	{
 		return true;
 	}
 
+	// PreloadTurnChangeFrameTextures가 전투 진입 시 비동기로 미리 올려두므로,
+	// 여기 LoadObject는 보통 이미 로드된 에셋을 찾는 빠른 경로다(프리로드 전 첫 배너 폴백만 동기 로드).
 	mTurnChangeFrameTextures.Reset();
-	mTurnChangeFrameTextures.Reserve(TurnChangeFrameCount);
-	for (int32 FrameIndex = 0; FrameIndex < TurnChangeFrameCount; ++FrameIndex)
+	mTurnChangeFrameTextures.Reserve(TurnChangeUsedFrameCount);
+	for (int32 UsedIndex = 0; UsedIndex < TurnChangeUsedFrameCount; ++UsedIndex)
 	{
-		UTexture2D* FrameTexture = LoadTurnChangeFrameTexture(ResolveTurnChangeFrameAssetPath(FrameIndex));
+		UTexture2D* FrameTexture = LoadTurnChangeFrameTexture(ResolveTurnChangeFrameAssetPath(UsedIndex * TurnChangeFrameStep));
 		if (FrameTexture == nullptr)
 		{
 			mTurnChangeFrameTextures.Reset();
@@ -114,6 +121,24 @@ bool UCombatTileMapHUDWidget::EnsureTurnChangeFrameTextures()
 	}
 
 	return true;
+}
+
+void UCombatTileMapHUDWidget::PreloadTurnChangeFrameTextures()
+{
+	if (mTurnChangeFramePreloadHandle.IsValid() || mTurnChangeFrameTextures.Num() == TurnChangeUsedFrameCount)
+	{
+		return;
+	}
+
+	// 전투 진입(HUD 초기화) 시점에 비동기로 올려둔다 — 기존엔 첫 라운드 배너가 뜨는 순간
+	// 게임 스레드에서 프레임 텍스처를 동기 로드 루프로 읽어 확정적 히치가 있었다.
+	TArray<FSoftObjectPath> FramePaths;
+	FramePaths.Reserve(TurnChangeUsedFrameCount);
+	for (int32 UsedIndex = 0; UsedIndex < TurnChangeUsedFrameCount; ++UsedIndex)
+	{
+		FramePaths.Add(FSoftObjectPath(ResolveTurnChangeFrameAssetPath(UsedIndex * TurnChangeFrameStep)));
+	}
+	mTurnChangeFramePreloadHandle = UAssetManager::GetStreamableManager().RequestAsyncLoad(MoveTemp(FramePaths));
 }
 
 void UCombatTileMapHUDWidget::SetTurnChangeIntroVisibility(bool bVisible) const
@@ -169,7 +194,7 @@ void UCombatTileMapHUDWidget::UpdateTurnChangeIntro(float InDeltaTime)
 {
 	mTurnChangeIntroElapsed += FMath::Max(0.0f, InDeltaTime);
 
-	const float TotalDuration = StaticCast<float>(TurnChangeFrameCount) / TurnChangeFramesPerSecond;
+	const float TotalDuration = StaticCast<float>(TurnChangeUsedFrameCount) / TurnChangeFramesPerSecond;
 	if (mTurnChangeIntroElapsed >= TotalDuration)
 	{
 		FinishTurnChangeIntro();

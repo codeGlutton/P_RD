@@ -462,6 +462,9 @@ private:
 	/** @brief 턴 전환 알파 텍스처 에셋 프레임들을 준비한다. */
 	bool EnsureTurnChangeFrameTextures();
 
+	/** @brief 턴 전환 프레임 텍스처를 전투 진입 시 비동기 프리로드한다(첫 배너 동기 로드 히치 제거). */
+	void PreloadTurnChangeFrameTextures();
+
 	/** @brief 턴 전환 영상 안내 위젯들을 보이거나 숨긴다. */
 	void SetTurnChangeIntroVisibility(bool bVisible) const;
 
@@ -762,6 +765,9 @@ private:
 	/** @brief 턴 전환 알파 텍스처 에셋 프레임 캐시 */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UTexture2D>> mTurnChangeFrameTextures;
+
+	/** @brief 턴 전환 프레임 비동기 프리로드 핸들(로드된 에셋을 배너 사용 전까지 붙잡는 핀). */
+	TSharedPtr<struct FStreamableHandle> mTurnChangeFramePreloadHandle;
 
 	/** @brief mTurnChangeVideoImage에 물릴 현재 텍스처 프레임 브러시 */
 	FSlateBrush mTurnChangeFrameBrush;
