@@ -1,10 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-#include "Setting/GameTeamType.h"
-#include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
-#include "Singleton/WorldSubsystem/TacticalFrameworkSubsystem.h"
-
-#include "Actor/BoardActor/Obstacle/ObstacleModel.h"
+﻿#include "Actor/BoardActor/Obstacle/ObstacleModel.h"
 
 UObstacleModel::UObstacleModel()
 {

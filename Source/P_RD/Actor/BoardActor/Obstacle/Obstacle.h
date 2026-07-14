@@ -1,4 +1,9 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿/*****************************************************************//**
+ * @file   Obstacle.h
+ * @brief  장애물 액터 정의 헤더
+ * @author 김준형
+ * @date   2026-07-14
+ *********************************************************************/
 
 #pragma once
 
@@ -10,6 +15,9 @@
 
 class UObstacleModel;
 
+/**
+ * @brief  장애물 액터
+ */
 UCLASS(abstract)
 class P_RD_API AObstacle : public AActor, public IActorView
 {
@@ -49,5 +57,4 @@ private:
 
 protected:
 	TWeakObjectPtr<UObstacleModel> mObstacleModel;
-
 };
