@@ -183,6 +183,9 @@ void UCombatTileMapHUDWidget::NativeDestruct()
 	}
 
 	DestroyDiceCaptureActors(mOwnedDicePreviewActors);
+	// 보유 주사위 캡처 액터와 달리 물리 굴림 캡처 액터는 정리가 빠져 있었다 — 위젯 재생성 시
+	// 은닉 위치(Y≈30000)에 SceneCapture+RenderTarget 액터가 누적되는 누수의 원인.
+	DestroyDiceRollPhysicsActor();
 
 	Super::NativeDestruct();
 }
