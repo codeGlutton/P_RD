@@ -8,6 +8,66 @@
 
 #define LOCTEXT_NAMESPACE "SettingsPanelWidget_Text"
 
+namespace
+{
+	/** @brief 버튼 등 컨테이너 위젯 아래에서 첫 TextBlock을 찾는다(SyncText의 탐색과 동일 규칙). */
+	UTextBlock* FindFirstTextBlockIn(UWidget* Root)
+	{
+		if (Root == nullptr)
+		{
+			return nullptr;
+		}
+		if (UTextBlock* TextBlock = Cast<UTextBlock>(Root))
+		{
+			return TextBlock;
+		}
+		if (UContentWidget* ContentWidget = Cast<UContentWidget>(Root))
+		{
+			if (UTextBlock* TextBlock = FindFirstTextBlockIn(ContentWidget->GetContent()))
+			{
+				return TextBlock;
+			}
+		}
+		if (UPanelWidget* PanelWidget = Cast<UPanelWidget>(Root))
+		{
+			const int32 ChildCount = PanelWidget->GetChildrenCount();
+			for (int32 ChildIndex = 0; ChildIndex < ChildCount; ++ChildIndex)
+			{
+				if (UTextBlock* TextBlock = FindFirstTextBlockIn(PanelWidget->GetChildAt(ChildIndex)))
+				{
+					return TextBlock;
+				}
+			}
+		}
+		return nullptr;
+	}
+}
+
+void USettingsPanelWidget::UpdateGraphicsSelectionIndicators() const
+{
+	// 패널 프레임 골드 톤과 맞춘 선택 색. WBP에 선택 전용 위젯이 생기면 이 함수는 그것으로 대체한다.
+	const FSlateColor SelectedColor(FLinearColor(1.0f, 0.78f, 0.30f));
+	const FSlateColor UnselectedColor(FLinearColor::White);
+
+	const auto SetButtonLabelColor = [&SelectedColor, &UnselectedColor](UButton* Button, bool bSelected)
+	{
+		if (Button == nullptr)
+		{
+			return;
+		}
+		if (UTextBlock* Label = FindFirstTextBlockIn(Button))
+		{
+			Label->SetColorAndOpacity(bSelected ? SelectedColor : UnselectedColor);
+		}
+	};
+
+	SetButtonLabelColor(LowQualityButton, mValueModel.mQualityLevel == ESettingsQualityLevel::Low);
+	SetButtonLabelColor(MediumQualityButton, mValueModel.mQualityLevel == ESettingsQualityLevel::Medium);
+	SetButtonLabelColor(HighQualityButton, mValueModel.mQualityLevel == ESettingsQualityLevel::High);
+	SetButtonLabelColor(FpsThirtyButton, mValueModel.mFpsLimit == 30);
+	SetButtonLabelColor(FpsSixtyButton, mValueModel.mFpsLimit == 60);
+}
+
 /**
  * @brief 외부 처리 흐름이 결정한 상태 문구를 표시한다.
  *
