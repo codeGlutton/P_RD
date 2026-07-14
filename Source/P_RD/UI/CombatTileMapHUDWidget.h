@@ -775,6 +775,14 @@ private:
 	/** @brief 턴 전환 안내가 현재 재생 중인지 여부 */
 	bool mTurnChangeIntroPlaying = false;
 
+	/**
+	 * @brief 턴 전환 배너 강제 종료 보험 타이머.
+	 * @details 정상 종료(FinishTurnChangeIntro)는 NativeTick의 경과시간 판정에만 의존하는데,
+	 *          배너 재생 중 HUD Tick이 멈추면(위젯 숨김 등) 라운드 배리어(mRoundChangeBarrier)가
+	 *          영영 안 풀려 그 라운드가 진행 불능이 된다. 재생시간+여유가 지나면 무조건 종료시킨다.
+	 */
+	FTimerHandle mTurnChangeSafetyTimerHandle;
+
 	/** @brief 턴 전환 안내 종료 직후 주사위 팝업을 열어야 하는지 여부 */
 	bool mPendingDiceRollAfterTurnIntro = false;
 

@@ -5,6 +5,7 @@
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
+#include "TimerManager.h"   // 배너 강제 종료 보험 타이머(Tick 정지 시 배리어 soft-lock 방지)
 #include "UI/Combat/CombatUIModel.h"
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"   // mRoundChangeBarrier.Reset() 시 소멸자(=라운드 첫 턴 진행) 실행
 
@@ -62,6 +63,19 @@ bool UCombatTileMapHUDWidget::PlayTurnChangeIntro(bool bOpenDiceAfterIntro)
 
 	ApplyTurnChangeFrame(0);
 	SetTurnChangeIntroVisibility(true);
+
+	// 보험 타이머: 정상 종료는 NativeTick 경과시간 판정뿐이라, 배너 중 Tick이 멈추면
+	// 라운드 배리어가 영영 안 풀린다(soft-lock). 재생시간+1초가 지나면 무조건 종료시킨다.
+	// (타이머는 위젯 Tick과 무관하게 월드가 돌리고, 정상 종료가 먼저 오면 아래 Finish에서 지운다.)
+	if (UWorld* World = GetWorld())
+	{
+		const float SafetyDelay = StaticCast<float>(TurnChangeFrameCount) / TurnChangeFramesPerSecond + 1.0f;
+		World->GetTimerManager().SetTimer(
+			mTurnChangeSafetyTimerHandle,
+			FTimerDelegate::CreateUObject(this, &UCombatTileMapHUDWidget::FinishTurnChangeIntro),
+			SafetyDelay,
+			false);
+	}
 	return true;
 }
 
@@ -70,6 +84,11 @@ void UCombatTileMapHUDWidget::FinishTurnChangeIntro()
 	if (mTurnChangeIntroPlaying == false)
 	{
 		return;
+	}
+
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(mTurnChangeSafetyTimerHandle);
 	}
 
 	mTurnChangeIntroPlaying = false;
