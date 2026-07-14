@@ -36,6 +36,13 @@ void UCombatTileMapHUDWidget::HandleSkillButtonPressed(int32 SkillIndex)
 /** @brief 스킬 레일 입력의 시작점을 저장한다. INDEX_NONE은 히트 테스트 실패를 뜻하는 sentinel이다. */
 void UCombatTileMapHUDWidget::BeginSkillPress(int32 SkillIndex)
 {
+	// 이미 다른 손가락이 누르는 중이면 무시한다(먼저 누른 쪽 우선).
+	// 안 막으면 두 스킬 동시 누름에서 mPressedSkillIndex가 덮여, 먼저 뗀 손가락이 나중 스킬을 선택한다.
+	if (mSkillPressing == true)
+	{
+		return;
+	}
+
 	if (SkillIndex == INDEX_NONE)
 	{
 		return;

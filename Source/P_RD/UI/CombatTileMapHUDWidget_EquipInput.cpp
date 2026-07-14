@@ -20,6 +20,12 @@ void UCombatTileMapHUDWidget::HandleEquipButtonReleased()
 
 void UCombatTileMapHUDWidget::BeginEquipPress(int32 SlotIndex)
 {
+	// 이미 다른 손가락이 누르는 중이면 무시한다(먼저 누른 쪽 우선 — 스킬 레일과 동일 규칙).
+	if (mEquipPressing == true)
+	{
+		return;
+	}
+
 	mPressedEquipSlot = SlotIndex;
 	mEquipPressing = true;
 	mEquipDetailOpenedFromPress = false;

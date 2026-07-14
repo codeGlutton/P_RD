@@ -77,6 +77,35 @@ void ACombatDiceCaptureActor::CaptureDice() const
 	}
 }
 
+void ACombatDiceCaptureActor::CaptureDiceInto(UTextureRenderTarget2D* RenderTarget) const
+{
+	if (mSceneCaptureComponent == nullptr || RenderTarget == nullptr)
+	{
+		return;
+	}
+
+	mSceneCaptureComponent->TextureTarget = RenderTarget;
+	mSceneCaptureComponent->CaptureScene();
+	mSceneCaptureComponent->TextureTarget = mRenderTarget;
+}
+
+UMaterialInstanceDynamic* ACombatDiceCaptureActor::CreateCaptureMaterialFor(UObject* Outer, UTextureRenderTarget2D* RenderTarget)
+{
+	// 템플릿은 생성자(ConstructorHelpers)에서 로드돼 CDO에 들어 있다.
+	const ACombatDiceCaptureActor* DefaultActor = GetDefault<ACombatDiceCaptureActor>();
+	if (DefaultActor == nullptr || DefaultActor->mCaptureMaterialTemplate == nullptr || RenderTarget == nullptr)
+	{
+		return nullptr;
+	}
+
+	UMaterialInstanceDynamic* CaptureMaterial = UMaterialInstanceDynamic::Create(DefaultActor->mCaptureMaterialTemplate, Outer);
+	if (CaptureMaterial != nullptr)
+	{
+		CaptureMaterial->SetTextureParameterValue(TEXT("DiceCaptureTexture"), RenderTarget);
+	}
+	return CaptureMaterial;
+}
+
 UTextureRenderTarget2D* ACombatDiceCaptureActor::GetRenderTarget() const
 {
 	return mRenderTarget;

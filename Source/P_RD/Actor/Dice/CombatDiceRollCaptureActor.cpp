@@ -35,6 +35,9 @@ namespace
 	constexpr float RollMinSeconds = 0.72f;            // 초반 굴림은 보장하되 너무 빠른 구간은 짧게 둔다
 	constexpr float RollStillHoldSeconds = 0.130f;     // 임계 속도 이하가 이만큼 연속 유지되면 정지로 본다
 	constexpr float RollMaxSeconds = 3.35f;            // 안전 캡: 멈춤 감지가 우선이고, 아직 움직이면 조금 더 둔다
+	// 굴림/정렬 중 SceneCapture 재촬영 간격. 매 프레임(60fps) 풀 씬 HDR 캡처는 모바일 GPU 스파이크의
+	// 주범이라 30fps로 절반 스로틀한다. 물리 자체는 매 프레임 돌므로 최종 결과면은 영향 없다.
+	constexpr float RollCaptureIntervalSeconds = 1.0f / 30.0f;
 	constexpr float RollStillLinearThreshold = 12.0f;  // 정지 판정 선속도 임계(cm/s)
 	constexpr float RollStillAngularThreshold = 42.0f; // 정지 판정 각속도 임계(deg/s)
 	constexpr float RollMaxAngularVelocity = 16000.0f; // 눈금이 완전히 사라질 정도의 과속을 피한다
@@ -1043,7 +1046,13 @@ void ACombatDiceRollCaptureActor::Tick(float DeltaSeconds)
 	}
 	SyncVisualDiceToPhysics();
 	UpdateImpactEffects(DeltaSeconds);
-	CaptureDice();
+	// 재촬영은 30fps로 스로틀한다(굴림 종료 시의 확정 캡처는 아래에서 무조건 수행).
+	mCaptureAccumulatedSeconds += DeltaSeconds;
+	if (mCaptureAccumulatedSeconds >= RollCaptureIntervalSeconds)
+	{
+		mCaptureAccumulatedSeconds = FMath::Fmod(mCaptureAccumulatedSeconds, RollCaptureIntervalSeconds);
+		CaptureDice();
+	}
 
 	// 정지 감지: 모든 주사위가 임계 속도 이하로 RollStillHold만큼 연속 유지되면 완료(실제로 멈춘 순간 종료).
 	// 최소 시간 전엔 완료하지 않고, 최대 시간(안전 캡)엔 강제 완료한다.
@@ -1416,7 +1425,13 @@ void ACombatDiceRollCaptureActor::UpdateAlign(float DeltaSeconds)
 	}
 
 	UpdateImpactEffects(DeltaSeconds);
-	CaptureDice();
+	// 정렬 중 재촬영도 30fps 스로틀(정렬 완료 시의 확정 캡처는 아래에서 무조건 수행).
+	mCaptureAccumulatedSeconds += DeltaSeconds;
+	if (mCaptureAccumulatedSeconds >= RollCaptureIntervalSeconds)
+	{
+		mCaptureAccumulatedSeconds = FMath::Fmod(mCaptureAccumulatedSeconds, RollCaptureIntervalSeconds);
+		CaptureDice();
+	}
 
 	if (RawAlpha >= 1.0f)
 	{

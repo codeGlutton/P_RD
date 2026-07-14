@@ -32,6 +32,17 @@ public:
 	/** @brief 현재 주사위 상태를 RenderTarget에 즉시 다시 캡처한다. */
 	void CaptureDice() const;
 
+	/**
+	 * @brief 현재 주사위 상태를 지정 RenderTarget에 캡처한다(공유 캡처 액터용).
+	 * @details 한 액터가 여러 다이를 순서대로 구성해가며 다이별 RT에 찍을 때 쓴다.
+	 *          캡처 후 TextureTarget을 내부 RT로 복원해, 내부 캡처 경로(OnDiceRebuilt 등)가
+	 *          마지막 대상 RT를 엉뚱하게 덮지 않게 한다.
+	 */
+	void CaptureDiceInto(UTextureRenderTarget2D* RenderTarget) const;
+
+	/** @brief 지정 RT의 알파를 UI 투명도로 해석하는 캡처 머티리얼 인스턴스를 만든다(CDO 템플릿 사용). */
+	static UMaterialInstanceDynamic* CreateCaptureMaterialFor(UObject* Outer, UTextureRenderTarget2D* RenderTarget);
+
 	/** @brief UI Image brush에 연결할 RenderTarget을 반환한다. */
 	UTextureRenderTarget2D* GetRenderTarget() const;
 

@@ -77,7 +77,9 @@ FReply UCombatTileMapHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry
 	{
 		mLevelValueTouched = true;
 		SetExpHoldPanelVisible(true);
-		return FReply::Handled();
+		// 마우스 경로와 동일하게 포인터를 캡처한다 — 캡처가 없으면 누른 채 다른 버튼 위로 끌고 가 뗐을 때
+		// 해제 이벤트가 그 버튼으로 가버려 mLevelValueTouched가 끼고 경험치 패널이 화면에 남는다.
+		return FReply::Handled().CaptureMouse(TakeWidget());
 	}
 
 	const bool bClosedSkillDetail = HideSkillDetailIfClickedOutside(ScreenPosition);
@@ -98,7 +100,8 @@ FReply UCombatTileMapHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry
 	}
 
 	BeginSkillPress(SkillIndex);
-	return FReply::Handled();
+	// 마우스 경로(NativeOnMouseButtonDown)와 동일하게 캡처 — 레일 밖에서 뗀 해제도 이 위젯이 받는다.
+	return FReply::Handled().CaptureMouse(TakeWidget());
 }
 
 FReply UCombatTileMapHUDWidget::NativeOnTouchEnded(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent)
@@ -107,7 +110,7 @@ FReply UCombatTileMapHUDWidget::NativeOnTouchEnded(const FGeometry& InGeometry, 
 	{
 		mLevelValueTouched = false;
 		SetExpHoldPanelVisible(false);
-		return FReply::Handled();
+		return FReply::Handled().ReleaseMouseCapture();
 	}
 
 	if (mSkillPressing == false)
@@ -124,5 +127,5 @@ FReply UCombatTileMapHUDWidget::NativeOnTouchEnded(const FGeometry& InGeometry, 
 	mPressedSkillIndex = INDEX_NONE;
 	mSkillPressElapsed = 0.0f;
 	mSkillDetailOpenedFromPress = false;
-	return FReply::Handled();
+	return FReply::Handled().ReleaseMouseCapture();
 }

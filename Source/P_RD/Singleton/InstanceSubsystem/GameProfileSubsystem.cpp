@@ -48,18 +48,11 @@ void UGameProfileSubsystem::SetLanguage(ELanguageType LanguageType) const
 	UE_LOG(LogGameProfile, Log, TEXT("[%s] 언어 변경"), *EnumToString(LanguageType));
 }
 
-void UGameProfileSubsystem::SetResolution(const FIntPoint& Resolution) const
+void UGameProfileSubsystem::SetOverallQuality(EOverallQualityType QualityType) const
 {
-	GetOptionMutableData()->SetResolution(Resolution);
+	GetOptionMutableData()->SetOverallQuality(QualityType);
 
-	UE_LOG(LogGameProfile, Log, TEXT("[%d x %d] 해상도 변경"), Resolution.X, Resolution.Y);
-}
-
-void UGameProfileSubsystem::SetRenderResolution(int32 ShortSideHeight) const
-{
-	GetOptionMutableData()->SetRenderResolution(ShortSideHeight);
-
-	UE_LOG(LogGameProfile, Log, TEXT("[%dp] 렌더 해상도 변경"), ShortSideHeight);
+	UE_LOG(LogGameProfile, Log, TEXT("[%s] 퀄리티 변경"), *EnumToString(QualityType));
 }
 
 void UGameProfileSubsystem::SetFpsLimit(int32 FpsLimit) const
