@@ -64,6 +64,7 @@ void UCombatTileMapHUDWidget::BindCombatUIModel(UCombatUIModel* InUIModel)
 		mCombatUIModel->OnActionResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatActionResolved);
 		mCombatUIModel->OnCombatFloatingLog.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLog);
 		mCombatUIModel->OnCombatFloatingLogMotionFinished.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogMotionFinished);
+		mCombatUIModel->OnCombatFloatingLogsCleared.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogsCleared);
 		mCombatUIModel->OnDiceRollRequested.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatDiceRollRequested);
 	}
 

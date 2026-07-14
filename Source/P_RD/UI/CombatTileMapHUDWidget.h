@@ -409,8 +409,6 @@ private:
 	TObjectPtr<URewardUIModel> mCombatRewardUIModel;
 
 	TSharedPtr<FPresentationBarrier> mCombatResultBarrier;
-	// 턴 시작 배너를 재생하는 동안 잡아두는 배리어 — 배너가 끝나면(FinishTurnChangeIntro) 놓아 실제 턴 실행을 진행시킨다.
-	TSharedPtr<FPresentationBarrier> mTurnChangeBarrier;
 
 	/** @brief 승패 판정 → 결과 영상 시작 사이의 텀 타이머. */
 	FTimerHandle mCombatResultStartDelayTimerHandle;
