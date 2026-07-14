@@ -1,4 +1,5 @@
 #include "UI/CombatTileMapHUDWidget.h"
+#include "UI/CombatTutorialGuide.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
@@ -88,6 +89,10 @@ void UCombatTileMapHUDWidget::BindCombatUIModel(UCombatUIModel* InUIModel)
 
 		// 이 시점(BeginRoom, InitCombat 이후)엔 전투 모델이 준비돼 있다 — 승리 후 월드맵 흐름을 HUD가 구독한다.
 		BindVictoryFlowEvents();
+	}
+	if (mTutorialGuide != nullptr)
+	{
+		mTutorialGuide->BindCombatUIModel(mCombatUIModel);
 	}
 }
 

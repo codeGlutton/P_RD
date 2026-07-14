@@ -823,6 +823,7 @@ void ACombatGameMode::PushSkillUIData() const
 		UStaticSkillData* StaticSkillData = (SkillEntry.IsValid() == true) ? SkillEntry.mData.Get() : nullptr;
 		if (StaticSkillData != nullptr)
 		{
+			SkillUIData.mSkillId = StaticSkillData->GetPrimaryAssetId();
 			SkillUIData.mName = StaticSkillData->mName;
 			SkillUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 			SkillUIData.mDiceCost = StaticSkillData->mRequiredDiceCount;

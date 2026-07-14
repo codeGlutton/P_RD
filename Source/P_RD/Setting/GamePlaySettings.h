@@ -64,6 +64,20 @@ public:
     UPROPERTY(Config, Category = Room, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "FrontendRoomId"))
     FPrimaryAssetId mFrontendRoomId;
 
+    /** 첫 실행의 Stage 1 시작 방. 에셋을 찾지 못하면 원래 생성된 방을 유지한다. */
+    UPROPERTY(Config, Category = Tutorial, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TutorialRoomId"))
+    FPrimaryAssetId mTutorialRoomId;
+
+    /** 튜토리얼이 순서와 무관하게 찾는 핵심 스킬 식별자들. */
+    UPROPERTY(Config, Category = Tutorial, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TutorialAttackSkillId"))
+    FPrimaryAssetId mTutorialAttackSkillId;
+
+    UPROPERTY(Config, Category = Tutorial, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TutorialStepSkillId"))
+    FPrimaryAssetId mTutorialStepSkillId;
+
+    UPROPERTY(Config, Category = Tutorial, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TutorialDefenseSkillId"))
+    FPrimaryAssetId mTutorialDefenseSkillId;
+
     UPROPERTY(Config, Category = Room, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "DefaultBackgroundMap"))
     TSoftObjectPtr<UWorld> mDefaultBackgroundMap;
 

@@ -22,6 +22,7 @@ class UBorder;
 class UButton;
 class UCanvasPanel;
 class UCombatUIModel;
+class UCombatTutorialGuide;
 class UCombatResultOverlayWidget;
 class UCinematicWidget;
 class UIndexedButtonWidget;
@@ -33,6 +34,7 @@ class USoundBase;
 class UTextBlock;
 class UViewport;
 class UWidget;
+class UWidgetTree;
 class UUserWidget;
 
 /** @brief 유닛 머리 위 HP바(WBP_CombatUnitHpBar) 한 개의 런타임 위젯 참조 묶음. */
@@ -92,6 +94,17 @@ public:
 	// 미연결 상태에서는 기존 단독 동작(시안용 임시 굴림)을 그대로 유지해 회귀가 없다.
 	// 게임플레이 어댑터가 준비되면 여기에 같은 뷰모델을 넘기면 된다(UI 무수정).
 	void BindCombatUIModel(UCombatUIModel* InUIModel);
+
+	/** 튜토리얼은 실제 HUD 입력 위젯의 위치만 조회한다. 입력 실행 권한은 갖지 않는다. */
+	UCanvasPanel* GetTutorialOverlayCanvas() const;
+	UWidgetTree* GetTutorialWidgetTree() const;
+	UWidget* GetTutorialDiceRollAnchor() const;
+	UWidget* GetTutorialMoveAnchor() const;
+	UWidget* GetTutorialAvailableDiceAnchor() const;
+	UWidget* GetTutorialSkillAnchor(const FPrimaryAssetId& SkillId) const;
+	bool IsTutorialDiceRollReady() const;
+	bool IsTutorialDiceRollActive() const;
+	bool IsTutorialDiceResultWaitingForDismiss() const;
 
 protected:
 	/** @brief WBP 바인딩과 버튼 이벤트를 연결한다. */
@@ -577,6 +590,10 @@ private:
 	/** @brief 주사위 연출 안내 문구 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> DiceRollStatusText;
+
+	/** 첫 전투 안내의 상태와 오버레이. 일반 전투에서는 생성돼도 즉시 비활성 상태를 유지한다. */
+	UPROPERTY(Transient)
+	TObjectPtr<UCombatTutorialGuide> mTutorialGuide;
 
 	/** @brief 턴 종료 버튼 */
 	UPROPERTY(meta = (BindWidgetOptional))

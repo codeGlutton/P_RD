@@ -300,6 +300,8 @@ struct FSkillUI
 {
 	GENERATED_BODY()
 
+	// 배열 순서나 HUD 배치가 바뀌어도 같은 스킬을 찾을 수 있는 영구 식별자.
+	UPROPERTY(BlueprintReadOnly) FPrimaryAssetId mSkillId;
 	// UI payload로 왕복하는 index. 최종 스킬 데이터 연결 시 SkillId와 1:1 매핑되어야 한다.
 	UPROPERTY(BlueprintReadOnly) int32 mSkillIndex = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) FText mName;

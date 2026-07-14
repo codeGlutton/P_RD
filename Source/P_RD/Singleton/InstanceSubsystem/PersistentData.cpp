@@ -325,6 +325,7 @@ void URunPersistData::ClearRun()
 	mIsNewData = true;
 	mPlayerLevel = 1;
 	mDifficulty = 1;
+	mShouldRunTutorial = false;
 
 	mTagCountMap.Empty();
 	mSkillIds.Empty();
@@ -334,6 +335,16 @@ void URunPersistData::ClearRun()
 	mStage.Reset();
 
 	mRunLog.Clear();
+}
+
+void URunPersistData::SetTutorialEnabled(bool bEnabled)
+{
+	mShouldRunTutorial = bEnabled;
+}
+
+bool URunPersistData::ShouldRunTutorial() const
+{
+	return mShouldRunTutorial;
 }
 
 bool URunPersistData::AddRewardSkill(const FPrimaryAssetId& SkillId)
@@ -396,7 +407,7 @@ void URunPersistData::MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCrea
 	const UGameBalanceSettings* GameBalanceSetting = GetDefault<UGameBalanceSettings>();
 	checkf(GameBalanceSetting != nullptr, TEXT("밸런스 세팅 객체 nullptr"));
 
-	GameBalanceSetting->mStageBuildSettingTable.LoadAsync(FLoadSoftObjectPathAsyncDelegate::CreateLambda([this, Type, OnCreateStage = MoveTemp(OnCreateStage), GameBalanceSetting](const FSoftObjectPath& Path, UObject* Object) {
+	GameBalanceSetting->mStageBuildSettingTable.LoadAsync(FLoadSoftObjectPathAsyncDelegate::CreateLambda([this, Type, OnCreateStage = MoveTemp(OnCreateStage), GameBalanceSetting, AssetManager](const FSoftObjectPath& Path, UObject* Object) {
 		
 		const UDataTable* BalanceSetting = Cast<UDataTable>(Object);
 		checkf(BalanceSetting != nullptr, TEXT("스테이지 빌드 세팅 미존재 nullptr"));
@@ -405,6 +416,23 @@ void URunPersistData::MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCrea
 		const FRandomStream& BuildStream = URandomStreamFunctionLibrary::GetStageBuildStream(this);
 
 		mStage.InitializeAs<FStage>(FStageBuilder::Make(BuildStream, GameBalanceSetting->mGlobalStageBuildSetting, BuilderParams).Build());
+
+		// 튜토리얼 여부는 유저/런 저장값이 결정한다. StageBuilder 자체를 첫 실행 전용 규칙으로
+		// 오염시키지 않고, 완성된 Stage 1의 시작 방만 안전하게 교체한다.
+		if (Type == EStageLevelType::Stage1 && mShouldRunTutorial)
+		{
+			const FPrimaryAssetId TutorialRoomId = GetDefault<UGamePlaySettings>()->mTutorialRoomId;
+			FStage& NewStage = mStage.GetMutable();
+			const bool bHasStartRoom = NewStage.mRoomRows.IsValidIndex(0)
+				&& NewStage.mRoomRows[0].mRooms.IsValidIndex(NewStage.mStartColumn);
+			if (TutorialRoomId.IsValid() && AssetManager->GetPrimaryAssetPath(TutorialRoomId).IsValid() && bHasStartRoom)
+			{
+				if (FRoom* StartRoom = NewStage.mRoomRows[0].mRooms[NewStage.mStartColumn].GetMutablePtr<FRoom>())
+				{
+					StartRoom->mStaticRoomSpawnDataId = TutorialRoomId;
+				}
+			}
+		}
 		OnCreateStage.ExecuteIfBound(mStage.Get());
 
 		}));
@@ -521,6 +549,12 @@ void UUserPersistData::ClearUser()
 {
 	mUserName = FText();
 	mUserLog.Clear();
+	mTutorialCompleted = false;
+}
+
+void UUserPersistData::CompleteTutorial()
+{
+	mTutorialCompleted = true;
 }
 
 /**
@@ -563,6 +597,11 @@ const FText& UUserPersistData::GetUserName() const
 bool UUserPersistData::IsActive() const
 {
 	return mUserName.IsEmpty() == false;
+}
+
+bool UUserPersistData::IsTutorialCompleted() const
+{
+	return mTutorialCompleted;
 }
 
 /** @brief 유저 누적 로그(통계/도감)를 반환한다. @return 유저 로그(읽기 전용) */

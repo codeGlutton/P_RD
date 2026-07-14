@@ -146,6 +146,8 @@ class P_RD_API URunPersistData : public UPlayerUnitPersistData
 public:
 	void StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty);
 	void ClearRun();
+	void SetTutorialEnabled(bool bEnabled);
+	bool ShouldRunTutorial() const;
 
 public:
 	void MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCreateStage);
@@ -177,6 +179,13 @@ public:
 	bool IsActive() const;
 
 protected:
+	/** 이 런의 첫 전투에서 튜토리얼을 보여줄지 여부. 이어하기에도 유지된다. */
+	UPROPERTY(Category = Tutorial, SaveGame, VisibleAnywhere, meta = (DisplayName = "ShouldRunTutorial"))
+	bool mShouldRunTutorial = false;
+
+
+
+protected:
 	UPROPERTY(Category = Stream, SaveGame, VisibleAnywhere, meta = (DisplayName = "StageBuildStream"))
 	FRandomStream mStageBuildStream;
 	UPROPERTY(Category = Stream, SaveGame, VisibleAnywhere, meta = (DisplayName = "EventStream"))
@@ -203,6 +212,7 @@ public:
 	void MakeUser(const FText& Name);
 	void ClearUser();
 	void UpdateLog(const FPrimaryAssetId& PlayerUnitId, const FRunLog& RunLog);
+	void CompleteTutorial();
 
 public:
 	const FText& GetUserName() const;
@@ -212,6 +222,7 @@ public:
 
 public:
 	bool IsActive() const;
+	bool IsTutorialCompleted() const;
 
 protected:
 	UPROPERTY(Category = User, SaveGame, VisibleAnywhere, meta = (DisplayName = "UserName"))
@@ -219,6 +230,10 @@ protected:
 
 	UPROPERTY(Category = Log, SaveGame, VisibleAnywhere, meta = (DisplayName = "UserLog"))
 	FUserLog mUserLog;
+
+	/** 완료와 건너뛰기를 모두 포함한다. true면 새 런에서 튜토리얼 방을 강제하지 않는다. */
+	UPROPERTY(Category = Tutorial, SaveGame, VisibleAnywhere, meta = (DisplayName = "TutorialCompleted"))
+	bool mTutorialCompleted = false;
 };
 
 USTRUCT()

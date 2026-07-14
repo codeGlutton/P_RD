@@ -15,7 +15,9 @@ void UGameProfileSubsystem::StartRun(const FPrimaryAssetId& PlayerUnitId, int32 
 {
 	checkf(GetUserMutableData()->IsActive() == true, TEXT("유저 미존재 상태에서 새로운 런 생성 불가"));
 
-	GetRunMutableData()->StartRun(PlayerUnitId, Difficulty);
+	URunPersistData* RunMutableData = GetRunMutableData();
+	RunMutableData->StartRun(PlayerUnitId, Difficulty);
+	RunMutableData->SetTutorialEnabled(GetUserMutableData()->IsTutorialCompleted() == false);
 
 	UE_LOG(LogGameProfile, Log, TEXT("새로운 런 데이터 생성"));
 }

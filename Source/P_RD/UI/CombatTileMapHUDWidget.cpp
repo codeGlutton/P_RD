@@ -2,6 +2,8 @@
 
 #include "Components/Button.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "UI/CombatTutorialGuide.h"
+#include "UI/IndexedButtonWidget.h"
 #include "UI/Reward/RewardUIWidgetBase.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -143,11 +145,90 @@ bool UCombatTileMapHUDWidget::GetCombatDiceView(int32 DiceIndex, FDiceViewData& 
 	return true;
 }
 
+UCanvasPanel* UCombatTileMapHUDWidget::GetTutorialOverlayCanvas() const
+{
+	return RootCanvas.Get();
+}
+
+UWidgetTree* UCombatTileMapHUDWidget::GetTutorialWidgetTree() const
+{
+	return WidgetTree;
+}
+
+UWidget* UCombatTileMapHUDWidget::GetTutorialDiceRollAnchor() const
+{
+	return mDiceRollInputButton.Get();
+}
+
+UWidget* UCombatTileMapHUDWidget::GetTutorialMoveAnchor() const
+{
+	return mMoveButton.Get();
+}
+
+UWidget* UCombatTileMapHUDWidget::GetTutorialAvailableDiceAnchor() const
+{
+	for (int32 DiceIndex = 0; DiceIndex < mDiceUIs.Num(); ++DiceIndex)
+	{
+		if (mOwnedDiceCardWidgets.IsValidIndex(DiceIndex) && mOwnedDiceCardWidgets[DiceIndex] != nullptr
+			&& mDiceUIs[DiceIndex].mIsRolled && mDiceUIs[DiceIndex].mIsUsed == false
+			&& mDiceUIs[DiceIndex].mIsSelected == false)
+		{
+			return mOwnedDiceCardWidgets[DiceIndex].Get();
+		}
+	}
+	return nullptr;
+}
+
+UWidget* UCombatTileMapHUDWidget::GetTutorialSkillAnchor(const FPrimaryAssetId& SkillId) const
+{
+	if (mCombatUIModel == nullptr || SkillId.IsValid() == false)
+	{
+		return nullptr;
+	}
+
+	const TArray<FSkillUI>& Skills = mCombatUIModel->GetSkillUIs();
+	for (int32 RailSlotIndex = 0; RailSlotIndex < mSkillInputButtons.Num(); ++RailSlotIndex)
+	{
+		const int32 SkillIndex = GetSkillDataIndexForRailSlot(RailSlotIndex);
+		if (Skills.IsValidIndex(SkillIndex) && Skills[SkillIndex].mSkillId == SkillId
+			&& mSkillInputButtons.IsValidIndex(RailSlotIndex))
+		{
+			return mSkillInputButtons[RailSlotIndex].Get();
+		}
+	}
+	return nullptr;
+}
+
+bool UCombatTileMapHUDWidget::IsTutorialDiceRollReady() const
+{
+	return mIntroDiceRollReady;
+}
+
+bool UCombatTileMapHUDWidget::IsTutorialDiceRollActive() const
+{
+	return mIntroDiceRollActive;
+}
+
+bool UCombatTileMapHUDWidget::IsTutorialDiceResultWaitingForDismiss() const
+{
+	return mIntroDiceResultWaitingForDismiss;
+}
+
 void UCombatTileMapHUDWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
 	EnsureRuntimeWidgets();
+	if (mTutorialGuide == nullptr)
+	{
+		mTutorialGuide = NewObject<UCombatTutorialGuide>(this);
+		mTutorialGuide->Initialize(this);
+		mTutorialGuide->BindCombatUIModel(mCombatUIModel);
+	}
+	else
+	{
+		mTutorialGuide->BindCombatUIModel(mCombatUIModel);
+	}
 
 	if (EndTurnButton != nullptr)
 	{
@@ -181,6 +262,10 @@ void UCombatTileMapHUDWidget::NativeDestruct()
 	{
 		mCombatUIModel->OnQueueNodeResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
 	}
+	if (mTutorialGuide != nullptr)
+	{
+		mTutorialGuide->BindCombatUIModel(nullptr);
+	}
 
 	DestroyDiceCaptureActors(mOwnedDicePreviewActors);
 
@@ -200,6 +285,10 @@ void UCombatTileMapHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 	}
 
 	UpdateUnitHpBars();   // 유닛 머리 위 HP바를 월드→스크린 투영으로 매 프레임 따라가게 한다.
+	if (mTutorialGuide != nullptr)
+	{
+		mTutorialGuide->Tick(InDeltaTime);
+	}
 	UpdateFloatingCombatLogQueue(InDeltaTime); // 대기 중인 전투 로그를 순서대로 하나씩 스폰한다.
 	UpdateFloatingCombatLogs(InDeltaTime); // 머리 위 전투 로그(HP 증감 텍스트) 상승+페이드.
 	UpdateTurnRoundBanner(InDeltaTime);    // "N번째 턴" 배너 페이드.
