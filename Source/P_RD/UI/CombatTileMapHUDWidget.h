@@ -571,8 +571,9 @@ private:
 	/** @brief 스킬 상세(concept_09 오버레이)를 표시한다. */
 	void ShowSkillDetail(int32 SkillIndex);
 
-	/** @brief 유닛 상세(concept_09 오버레이)를 표시한다. */
-	void ShowUnitDetail(int32 UnitId);
+	/** @brief GameMode가 완성한 유닛 상세 DTO를 concept_09 오버레이에 표시한다. */
+	UFUNCTION()
+	void HandleCombatUnitDetailReady(FUnitDetailUI Detail);
 
 	/** @brief 장비 상세(concept_09 오버레이)를 표시한다. */
 	void ShowEquipmentDetail(int32 SlotIndex);

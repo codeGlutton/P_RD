@@ -1,7 +1,6 @@
 #include "UI/CombatTileMapHUDWidget.h"
 
 #include "InputCoreTypes.h"
-#include "UI/Combat/CombatUIModel.h"
 
 FReply UCombatTileMapHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
@@ -26,12 +25,7 @@ FReply UCombatTileMapHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeome
 		{
 			return FReply::Handled();
 		}
-		// 스킬 레일 밖 = 월드(타일/유닛) 영역. 뷰모델 연결 시 좌표만 넘기고 타일/유닛 판정은 게임플레이가.
-		if (mCombatUIModel != nullptr)
-		{
-			mCombatUIModel->RequestWorldTouch(ScreenPosition, false);
-			return FReply::Handled();
-		}
+		// 월드 입력은 CombatCameraPawn이 담당한다. Unhandled로 내려 포인터 입력이 Pawn까지 도달하게 한다.
 		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 	}
 
@@ -88,12 +82,7 @@ FReply UCombatTileMapHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry
 		{
 			return FReply::Handled();
 		}
-		// 스킬 레일 밖 = 월드(타일/유닛) 영역. 뷰모델 연결 시 좌표만 넘기고 타일/유닛 판정은 게임플레이가.
-		if (mCombatUIModel != nullptr)
-		{
-			mCombatUIModel->RequestWorldTouch(ScreenPosition, false);
-			return FReply::Handled();
-		}
+		// 월드 입력은 CombatCameraPawn이 담당한다. UI 컨트롤이 아닌 터치는 Pawn 입력으로 통과시킨다.
 		return Super::NativeOnTouchStarted(InGeometry, InGestureEvent);
 	}
 

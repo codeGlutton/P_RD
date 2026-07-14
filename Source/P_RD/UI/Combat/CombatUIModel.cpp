@@ -32,12 +32,6 @@ void UCombatUIModel::RequestLongPressSkill(int32 SkillIndex)
 	OnCombatCommand.Broadcast(ECombatInputType::LongPressSkill, SkillIndex);
 }
 
-/** @brief 유닛 상세 요청을 UnitId payload로 전달한다. */
-void UCombatUIModel::RequestLongPressUnit(int32 UnitId)
-{
-	OnCombatCommand.Broadcast(ECombatInputType::LongPressUnit, UnitId);
-}
-
 /** @brief MOVE 모드 진입 의도를 전달한다. */
 void UCombatUIModel::RequestMove()
 {
@@ -68,12 +62,6 @@ void UCombatUIModel::RequestLongPressEquip(int32 SlotIndex)
 	OnCombatCommand.Broadcast(ECombatInputType::LongPressEquip, SlotIndex);
 }
 
-/** @brief 월드 터치 스크린 좌표를 변환하지 않고 그대로 게임플레이 경계로 넘긴다. */
-void UCombatUIModel::RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress)
-{
-	OnCombatWorldTouch.Broadcast(ScreenPosition, bLongPress);
-}
-
 // ───────── gameplay → UI : 표시값을 캐시에 넣고 도메인 갱신을 알린다 ─────────
 
 /** @brief 유닛 표시 스냅샷을 교체하고 Unit 도메인 갱신만 알린다. */
@@ -83,11 +71,11 @@ void UCombatUIModel::SetUnitUIs(const TArray<FUnitUI>& Units)
 	OnUIChanged.Broadcast(ECombatUIDomain::Unit);
 }
 
-/** @brief 유닛 상세 스냅샷을 교체하고 Unit 도메인 갱신을 알린다. */
+/** @brief 유닛 상세 스냅샷을 교체하고 상세 패널 전용 알림을 보낸다. */
 void UCombatUIModel::SetUnitDetail(const FUnitDetailUI& Detail)
 {
 	mUnitDetail = Detail;
-	OnUIChanged.Broadcast(ECombatUIDomain::Unit);
+	OnUnitDetailReady.Broadcast(mUnitDetail);
 }
 
 /** @brief 주사위 표시 스냅샷을 교체하고 Dice 도메인 갱신을 알린다. */

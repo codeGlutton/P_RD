@@ -7,6 +7,8 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/SceneComponent.h"
 #include "Input/InputData.h"
+#include "InputCoreTypes.h"
+#include "GameMode/CombatGameMode.h"
 
 #if !UE_BUILD_SHIPPING
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
@@ -89,6 +91,8 @@ void ACombatCameraPawn::Tick(float DeltaTime)
 		}
 	}
 
+	UpdateWorldPressInput(PlayerController, DeltaTime);
+
 
 	// Pinch 중
 	if (IsPinch())
@@ -114,10 +118,173 @@ void ACombatCameraPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 
-	// 인자로 들어온 InputComponent를 EnhancedInputComponent로 형변환한다.
-	// 언리얼 오브젝트는 항상 Cast<Type>() 함수를 이용해서 형변환한다.
-	TObjectPtr<UEnhancedInputComponent>	Input =
-		Cast<UEnhancedInputComponent>(PlayerInputComponent);
+	if (PlayerInputComponent == nullptr)
+	{
+		return;
+	}
+
+	// EnhancedInputComponent는 UE 5.7에서 레거시 BindKey/BindTouch 오버로드를 막는다.
+	// 월드 포인터는 별도 InputAction 자산 없이 동작해야 하므로 기본 InputComponent에 바인딩한다.
+	// UMG 버튼이 입력을 Handled로 소비하면 여기까지 내려오지 않는다. 즉 월드에서 시작한 포인터만 추적한다.
+	PlayerInputComponent->BindTouch(IE_Pressed, this, &ACombatCameraPawn::HandleWorldTouchPressed);
+	PlayerInputComponent->BindTouch(IE_Released, this, &ACombatCameraPawn::HandleWorldTouchReleased);
+	PlayerInputComponent->BindKey(EKeys::LeftMouseButton, IE_Pressed, this, &ACombatCameraPawn::HandleWorldMousePressed);
+	PlayerInputComponent->BindKey(EKeys::LeftMouseButton, IE_Released, this, &ACombatCameraPawn::HandleWorldMouseReleased);
+}
+
+void ACombatCameraPawn::HandleWorldTouchPressed(ETouchIndex::Type FingerIndex, FVector Location)
+{
+	if (FingerIndex != ETouchIndex::Touch1)
+	{
+		CancelWorldPress();
+		return;
+	}
+
+	mWorldPointerSource = EWorldPointerSource::Touch;
+	mWorldTouchFingerIndex = FingerIndex;
+	mWorldPressGesture.Begin(FVector2D(Location.X, Location.Y));
+}
+
+void ACombatCameraPawn::HandleWorldTouchReleased(ETouchIndex::Type FingerIndex, FVector Location)
+{
+	if (mWorldPointerSource != EWorldPointerSource::Touch || FingerIndex != mWorldTouchFingerIndex)
+	{
+		return;
+	}
+
+	CompleteWorldPress(FVector2D(Location.X, Location.Y));
+}
+
+void ACombatCameraPawn::HandleWorldMousePressed()
+{
+	if (mWorldPointerSource != EWorldPointerSource::None)
+	{
+		return;
+	}
+
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	float MouseX = 0.0f;
+	float MouseY = 0.0f;
+	if (PlayerController == nullptr || PlayerController->GetMousePosition(MouseX, MouseY) == false)
+	{
+		return;
+	}
+
+	mWorldPointerSource = EWorldPointerSource::Mouse;
+	mWorldPressGesture.Begin(FVector2D(MouseX, MouseY));
+}
+
+void ACombatCameraPawn::HandleWorldMouseReleased()
+{
+	if (mWorldPointerSource != EWorldPointerSource::Mouse)
+	{
+		return;
+	}
+
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	float MouseX = 0.0f;
+	float MouseY = 0.0f;
+	if (PlayerController == nullptr || PlayerController->GetMousePosition(MouseX, MouseY) == false)
+	{
+		CancelWorldPress();
+		return;
+	}
+
+	CompleteWorldPress(FVector2D(MouseX, MouseY));
+}
+
+void ACombatCameraPawn::UpdateWorldPressInput(APlayerController* PlayerController, float DeltaTime)
+{
+	if (PlayerController == nullptr || mWorldPressGesture.IsActive() == false)
+	{
+		return;
+	}
+
+	FVector2D ScreenPosition = FVector2D::ZeroVector;
+	bool bStillPressed = false;
+
+	if (mWorldPointerSource == EWorldPointerSource::Touch)
+	{
+		const int32 TouchIndex = StaticCast<int32>(mWorldTouchFingerIndex);
+		if (mTouchStates.IsValidIndex(TouchIndex) == false || mTouchStates.IsValidIndex(1) == false)
+		{
+			CancelWorldPress();
+			return;
+		}
+
+		// 두 번째 손가락이 들어오면 핀치/카메라 제스처이므로 월드 탭을 취소한다.
+		if (mTouchStates[1].bIsCurrentlyPressed)
+		{
+			CancelWorldPress();
+			return;
+		}
+
+		ScreenPosition = mTouchStates[TouchIndex].CurTouchPos;
+		bStillPressed = mTouchStates[TouchIndex].bIsCurrentlyPressed;
+	}
+	else if (mWorldPointerSource == EWorldPointerSource::Mouse)
+	{
+		float MouseX = 0.0f;
+		float MouseY = 0.0f;
+		if (PlayerController->GetMousePosition(MouseX, MouseY) == false)
+		{
+			CancelWorldPress();
+			return;
+		}
+		ScreenPosition = FVector2D(MouseX, MouseY);
+		bStillPressed = PlayerController->IsInputKeyDown(EKeys::LeftMouseButton);
+	}
+	else
+	{
+		CancelWorldPress();
+		return;
+	}
+
+	// Slate가 해제 이벤트를 소비한 경우에도 물리 입력 상태로 누락 없이 종료한다.
+	if (bStillPressed == false)
+	{
+		CompleteWorldPress(ScreenPosition);
+		return;
+	}
+
+	const EWorldPressGestureResult Result = mWorldPressGesture.Update(
+		ScreenPosition,
+		DeltaTime,
+		mWorldLongPressThreshold,
+		mWorldPressMoveTolerance);
+	if (Result == EWorldPressGestureResult::LongPress)
+	{
+		SubmitWorldPress(ScreenPosition, true);
+	}
+	else if (mWorldPressGesture.IsActive() == false)
+	{
+		mWorldPointerSource = EWorldPointerSource::None;
+	}
+}
+
+void ACombatCameraPawn::CompleteWorldPress(const FVector2D& ScreenPosition)
+{
+	const EWorldPressGestureResult Result = mWorldPressGesture.End(ScreenPosition, mWorldPressMoveTolerance);
+	mWorldPointerSource = EWorldPointerSource::None;
+	if (Result == EWorldPressGestureResult::Tap)
+	{
+		SubmitWorldPress(ScreenPosition, false);
+	}
+}
+
+void ACombatCameraPawn::CancelWorldPress()
+{
+	mWorldPressGesture.Cancel();
+	mWorldPointerSource = EWorldPointerSource::None;
+}
+
+void ACombatCameraPawn::SubmitWorldPress(const FVector2D& ScreenPosition, bool bLongPress) const
+{
+	ACombatGameMode* CombatGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ACombatGameMode>() : nullptr;
+	if (CombatGameMode != nullptr)
+	{
+		CombatGameMode->HandleCombatWorldTouch(ScreenPosition, bLongPress);
+	}
 }
 
 UCameraComponent* ACombatCameraPawn::GetCameraComponent()

@@ -92,9 +92,8 @@ private:
 	UFUNCTION()
 	void HandleCombatCommand(ECombatInputType Type, int32 IntPayload);
 
-	/** @brief 화면 터치 좌표를 라인 트레이스로 타일 판정해 타겟/이동/취소를 처리한다. */
-	UFUNCTION()
-	void HandleWorldTouch(FVector2D ScreenPosition, bool bLongPress);
+	/** @brief 레거시 어댑터에서 화면 좌표를 타일로 판정해 타겟/이동/취소를 처리한다. */
+	void HandleWorldTouch(FVector2D ScreenPosition);
 
 	/** @brief 턴 종료 시 '쓴 주사위' 잠금을 해제한다(다음 턴 재사용 가능). Barrier는 붙잡지 않아 즉시 해제. */
 	void HandleEndAnyTurn(TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, ESRPGTurnResult Result);

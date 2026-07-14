@@ -33,9 +33,6 @@ private:
 	/** @brief UI Request* 입력을 mock 상태 변경으로 흉내낸다. 실제 게임플레이 명령 처리자가 아니다. */
 	UFUNCTION() void HandleCommand(ECombatInputType Type, int32 IntPayload);
 
-	/** @brief 월드 터치 계약이 UIModel을 통해 도달하는지만 로그로 확인한다. */
-	UFUNCTION() void HandleWorldTouch(FVector2D ScreenPosition, bool bLongPress);
-
 	/** @brief mDice 선택 상태와 합계를 다시 계산해 UIModel Dice 도메인으로 push한다. */
 	void RebuildDicePush();
 

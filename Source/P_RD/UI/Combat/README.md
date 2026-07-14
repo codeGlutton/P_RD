@@ -5,7 +5,7 @@
 
 ```
 [게임플레이] UnitData/DiceData/SkillBuildAction …
-      │ Set*()  (읽기 데이터 push)        ▲ OnCombatCommand/WorldTouch  (의도 구독)
+      │ Set*()  (읽기 데이터 push)        ▲ OnCombatCommand  (UI 의도 구독)
       ▼                                    │
             ┌──────────  UCombatUIModel  ──────────┐
             │  read 캐시 · 입력 델리게이트 · 행동 큐  │
@@ -19,7 +19,7 @@
 | 파일 | 역할 |
 |------|------|
 | `CombatUITypes.h` | 표시용 struct + 행동 1단위 큐 노드 `FCombatQueueNode` |
-| `CombatUIModel.h/.cpp` | 경계 허브. **읽기**(`Set*`/`Get*`+`OnUIChanged`) · **주기**(`Request*`→`OnCombatCommand`/`OnCombatWorldTouch`) · **큐**(`SetActionQueue`/`ResolveFrontQueueNode`→`OnQueueNodeResolved`) |
+| `CombatUIModel.h/.cpp` | 경계 허브. **읽기**(`Set*`/`Get*`+`OnUIChanged`) · **주기**(`Request*`→`OnCombatCommand`) · **큐**(`SetActionQueue`/`ResolveFrontQueueNode`→`OnQueueNodeResolved`) |
 | `CombatUIWidgetBase.h/.cpp` | 위젯 베이스. `BindUIModel()` 후 `OnUIRefreshed`/`OnQueueNodePlayed`만 구현 |
 | `MockCombatDriver.h/.cpp` | 게임플레이 없이 가짜 데이터로 UI를 먼저 만들고 테스트하는 개발용 |
 
@@ -41,7 +41,7 @@
 1. WBP를 `UCombatUIWidgetBase` 상속으로 만든다.
 2. `BindUIModel(VM)` 호출.
 3. `OnUIRefreshed(Domain)`에서 `VM->GetDiceUIs()` 등을 읽어 자기 화면을 그린다.
-4. 탭/터치 → `VM->RequestSelectSkill(i)` / `RequestToggleDice(i)` / `RequestRollDice()` / `RequestWorldTouch(pos,long)` …
+4. UI 버튼 → `VM->RequestSelectSkill(i)` / `RequestToggleDice(i)` / `RequestRollDice()` … (월드 탭/롱프레스는 `CombatCameraPawn` 담당)
 5. `OnQueueNodePlayed(Node)`에서 머리 위 숫자·효과를 띄운다.
 6. 게임플레이 전이라도 `UMockCombatDriver::Start(VM)`로 굴림·선택·예측 큐 재생까지 테스트.
 
@@ -49,7 +49,7 @@
 Mock 자리에 **어댑터**만 구현(위젯 무수정):
 - 상태가 바뀌면 `VM->SetUnitUIs/SetDiceUIs/SetSkillUIs/SetTurnUI()`.
 - 행동/예측 결과를 `VM->SetActionQueue(Queue)`로 주고, 애니 한 단위 끝날 때마다 `VM->ResolveFrontQueueNode()`.
-- `VM->OnCombatCommand`/`OnCombatWorldTouch`를 구독해 입력(의도)을 처리.
+- `VM->OnCombatCommand`를 구독해 UI 버튼 의도를 처리. 월드 입력은 `CombatCameraPawn`이 `CombatGameMode`에 직접 전달.
 
 ## 범위 — 이건 '전투' 뷰모델
 전투 화면(HUD/Dice/Skill/Tile/Equip)만 담당. 아래는 **전투 밖 UI**라 별도 뷰모델로 같은 패턴 반복:

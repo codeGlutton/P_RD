@@ -73,15 +73,12 @@ void UCombatTileMapHUDWidget::ShowSkillDetail(int32 SkillIndex)
 	ApplyRuntimeWidgetLayout();
 }
 
-void UCombatTileMapHUDWidget::ShowUnitDetail(int32 UnitId)
+void UCombatTileMapHUDWidget::HandleCombatUnitDetailReady(FUnitDetailUI Detail)
 {
-	if (mCombatUIModel == nullptr || UnitId == INDEX_NONE)
+	if (Detail.mUnitId == INDEX_NONE)
 	{
 		return;
 	}
-
-	mCombatUIModel->RequestLongPressUnit(UnitId);
-	const FUnitDetailUI& Detail = mCombatUIModel->GetUnitDetail();
 
 	if (mDetailIconImage != nullptr)
 	{

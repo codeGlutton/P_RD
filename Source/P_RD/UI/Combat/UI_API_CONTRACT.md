@@ -14,12 +14,12 @@
 
 ## A. 게임플레이가 UI에 **줘야 하는 것** (gameplay → UI, `Set*`)
 
-게임플레이/어댑터가 표시값을 `Set*()`로 push → VM이 `OnUIChanged(도메인)` 발신 → 위젯이 해당 도메인만 다시 그림. **UI는 이걸 못 만들어내므로 게임플레이가 반드시 공급해야 한다.**
+게임플레이/어댑터가 표시값을 `Set*()`로 push → VM이 `OnUIChanged(도메인)` 또는 상세 전용 알림을 발신 → 위젯이 해당 영역만 다시 그림. **UI는 이걸 못 만들어내므로 게임플레이가 반드시 공급해야 한다.**
 
 | 도메인 | Set 함수 | 뷰 타입 | 게임플레이가 채워야 할 핵심 필드 |
 |---|---|---|---|
 | Unit | `SetUnitUIs(TArray<FUnitUI>)` | `FUnitUI` | `mUnitId, mIsPlayer, mHP/mMaxHP, mMovementPoint/mMaxMovementPoint, mTile`(ATileMap 점유 거울값 — 권위는 타일맵 파트.mOccupantUnitId), `mWorldLocation`(머리위 HP바 투영용), `mStatusTags`(버프/디버프, enum 아닌 태그) |
-| Unit(상세) | `SetUnitDetail(FUnitDetailUI)` | `FUnitDetailUI` | 롱프레스 시 `mName, mLevel, mPortrait, mPassiveDescriptions`만(HP/스탯은 중복 보관 X — UI가 `mUnitId`로 FUnitUI에서 읽음) |
+| Unit(상세) | `SetUnitDetail(FUnitDetailUI)` → `OnUnitDetailReady` | `FUnitDetailUI` | GameMode 월드 트레이스가 `mName, mLevel, mPortrait, mPassiveDescriptions`를 채우고 UI는 받은 DTO만 표시 |
 | Dice | `SetDiceUIs(TArray<FDiceSlotUI>)` | `FDiceSlotUI` | `mDiceId, mResultValue`(0=미굴림), `mIsRolled, mIsSelected, mIsUsed`(이번 턴 잠금), `mRarityColor/mRarityText`(어댑터가 미리 색/문구로 변환), `mPreviewTexture`(3D 프리뷰용 슬롯, 캡처 계층은 후속) |
 | Dice(선택) | `SetSelectedDice(TArray<int32>, int32 Sum)` | — | 스킬 빌드에 올린 주사위 인덱스들 + 합계 |
 | Skill | `SetSkillUIs(TArray<FSkillUI>)` | `FSkillUI` | `mSkillIndex, mName, mIcon, mDiceCost, mIsUsable, mTargeting`(사거리/형태 조준 가이드 = StaticSkillData Select*/Hit* 미러) |
@@ -40,7 +40,7 @@
 
 ## B. UI가 게임플레이에 **요구하는 것** (UI → gameplay, `Request*` = 의도만)
 
-위젯의 탭/터치는 `Request*()`로 의도만 보냄. VM이 `OnCombatCommand`/`OnCombatWorldTouch` 발신 → **게임플레이가 구독해 실제 처리**. UI는 결과를 직접 만들지 않고, 처리 결과는 위 A의 `Set*`/큐로 되돌려 받는다.
+UI 버튼은 `Request*()`로 의도만 보낸다. 월드 탭/롱프레스는 UI 계약 밖에서 `CombatCameraPawn`이 구분하고 `CombatGameMode`에 직접 전달한다.
 
 | UI 동작 | Request 함수 | 게임플레이가 받는 신호 | payload |
 |---|---|---|---|
@@ -51,11 +51,10 @@
 | 턴 종료 | `RequestEndTurn()` | `OnCombatCommand(EndTurn, INDEX_NONE)` | 없음 |
 | 취소(딴 데 탭) | `RequestCancel()` | `OnCombatCommand(Cancel, INDEX_NONE)` | 없음 |
 | 스킬 상세 | `RequestLongPressSkill(SkillIndex)` | `OnCombatCommand(LongPressSkill, idx)` | SkillIndex |
-| 적 정보 | `RequestLongPressUnit(UnitId)` | `OnCombatCommand(LongPressUnit, id)` | UnitId |
 | 장비 상세 | `RequestLongPressEquip(SlotIndex)` | `OnCombatCommand(LongPressEquip, idx)` | SlotIndex |
-| **월드 터치**(타일/유닛/취소) | `RequestWorldTouch(ScreenPos, bLongPress)` | `OnCombatWorldTouch(ScreenPos, bLongPress)` | 스크린 좌표 + 롱프레스 여부 |
+| **월드 터치**(타일/유닛/취소) | UIModel 경유 없음 | `CombatCameraPawn` → `CombatGameMode::HandleCombatWorldTouch` | 스크린 좌표 + 롱프레스 여부 |
 
-> 월드 터치 해석(스크린→타일)은 게임플레이가 수행: `DeprojectScreenPositionToWorld` → 타일맵 평면 교차 → `ATileMap::WorldToTileIndex` + `IsValidIndex`(맵 밖이면 취소). UI는 스크린 좌표만 넘긴다.
+> 월드 포인터의 탭/롱프레스/드래그 구분은 `CombatCameraPawn`, 스크린→월드 대상 판정은 GameMode/CommandRouter가 담당한다. HUD와 UIModel은 월드 입력을 처리하지 않는다.
 
 ---
 
@@ -63,6 +62,7 @@
 - `OnUIChanged(ECombatUIDomain)` — 바뀐 도메인만 부분 갱신.
 - `OnQueueNodeResolved(FCombatQueueNode)` — 큐 1노드 재생.
 - `OnActionResolved()` — 선택 강조 해제.
+- `OnUnitDetailReady(FUnitDetailUI)` — GameMode가 판정·생성한 유닛 상세 패널 표시.
 
 ---
 

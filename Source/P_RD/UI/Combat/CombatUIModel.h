@@ -15,16 +15,15 @@
 UENUM(BlueprintType)
 enum class ECombatInputType : uint8
 {
-	SelectSkill,      // payload = SkillIndex
-	ToggleDice,       // payload = DiceIndex
-	RollDice,         // payload 없음(터치로 굴림)
-	LongPressSkill,   // payload = SkillIndex (상세창)
-	LongPressUnit,    // payload = UnitId (적 정보)
-	Move,             // payload 없음(채운 무브포인트 소모)
-	EndTurn,          // payload 없음
-	Cancel,           // payload 없음(딴 데 탭 = 초기화)
-	LongPressEquip,   // payload = SlotIndex (장비 상세)
-	Confirm           // payload 없음(현재 스킬/이동 빌드 확정). 기존 enum 값을 보존하기 위해 끝에 추가
+	SelectSkill = 0,      // payload = SkillIndex
+	ToggleDice = 1,       // payload = DiceIndex
+	RollDice = 2,         // payload 없음(터치로 굴림)
+	LongPressSkill = 3,   // payload = SkillIndex (상세창)
+	Move = 5,             // payload 없음(채운 무브포인트 소모). 4는 제거된 legacy 유닛 입력 값
+	EndTurn = 6,          // payload 없음
+	Cancel = 7,           // payload 없음(딴 데 탭 = 초기화)
+	LongPressEquip = 8,   // payload = SlotIndex (장비 상세)
+	Confirm = 9           // payload 없음(현재 스킬/이동 빌드 확정)
 };
 
 class UTexture2D;
@@ -33,12 +32,12 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatUIChanged, ECombatUIDomain,
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatQueueNodeResolved, FCombatQueueNode, Node);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatActionResolved);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatCommand, ECombatInputType, Type, int32, IntPayload);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatWorldTouch, FVector2D, ScreenPosition, bool, bLongPress);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnApplyDiceResults, const TArray<int32>&, RolledFaceIndices);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatFloatingLog, FCombatFloatingLogRequest, Request);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnCombatFloatingLogMotionFinished, int32, TurnIndex, int32, ActionIndex, int32, MotionIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatFloatingLogsCleared);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatDiceRollRequested);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatUnitDetailReady, FUnitDetailUI, Detail);
 
 /** @brief 전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다. */
 UCLASS(BlueprintType)
@@ -76,16 +75,16 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
 	FOnCombatDiceRollRequested OnDiceRollRequested;
 
+	/** @brief GameMode가 월드 대상을 판정해 유닛 상세 DTO를 완성했음을 알린다. HUD는 이 값으로 상세 패널만 그린다. */
+	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
+	FOnCombatUnitDetailReady OnUnitDetailReady;
+
 	/* ───────── 게임플레이가 구독하는 입력(의도) ───────── */
 	// UI는 Request*()로 의도만 보낸다. 게임플레이가 아래 델리게이트를 구독해 실제 처리해야 한다.
 public:
 	/** @brief UI 명령(스킬선택/주사위토글/굴림/이동/턴종료/취소/롱프레스). [게임플레이 구독] RollDice면 굴려서 SetDiceUIs로 결과 push. */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|Input")
 	FOnCombatCommand OnCombatCommand;
-
-	/** @brief 월드 터치(UI는 스크린좌표만 전달). [게임플레이 구독] 스크린→타일 변환은 게임플레이가 수행. [합의필요] 변환 책임 일원화. */
-	UPROPERTY(BlueprintAssignable, Category = "Combat|Input")
-	FOnCombatWorldTouch OnCombatWorldTouch;
 
 	/** @brief 입장 물리 굴림의 결과면(0-base index)을 전투 풀에 반영하라는 알림. [게임플레이 구독] */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|Input")
@@ -104,8 +103,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestApplyDiceResults(const TArray<int32>& RolledFaceIndices);
 	/** @brief SkillIndex 상세 표시 요청을 보낸다. 상세 데이터는 SetSkillDetail()로 되돌아온다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestLongPressSkill(int32 SkillIndex);
-	/** @brief UnitId 상세 표시 요청을 보낸다. UI는 UnitId를 상태 객체로 해석하지 않는다. */
-	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestLongPressUnit(int32 UnitId);
 	/** @brief MOVE 모드 진입 의도만 보낸다. 실제 타일 판정은 월드 터치 입력 뒤 처리된다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestMove();
 	/** @brief 턴 종료 버튼 의도. 실제 턴 시스템 호출과 실패 처리는 게임플레이가 맡는다. */
@@ -116,9 +113,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestConfirm();
 	/** @brief 장비 슬롯 상세 요청. SlotIndex는 FEquipmentUI.mSlotIndex와 같은 계약이다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestLongPressEquip(int32 SlotIndex);
-	/** @brief 화면 좌표와 롱프레스 여부만 넘긴다. 월드/타일 변환은 UIModel 바깥의 책임이다. */
-	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress);
-
 	/* ───────── gameplay → UI : 표시값을 밀어넣는다 ─────────
 	   각 Set*()은 UI가 그리려면 게임플레이가 반드시 공급해야 하는 값이다(UI는 못 만듦).
 	   [소스]=가져올 곳(정해짐), [합의필요]=진짜 소스 미정(현재 Mock/placeholder). */

@@ -15,7 +15,6 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 
 	// 위젯이 보낸 입력(의도)을 받아 흉내낸다.
 	mUIModel->OnCombatCommand.AddDynamic(this, &UMockCombatDriver::HandleCommand);
-	mUIModel->OnCombatWorldTouch.AddDynamic(this, &UMockCombatDriver::HandleWorldTouch);
 
 	// 가짜 유닛: 플레이어 1 + 적 2
 	TArray<FUnitUI> Units;
@@ -172,31 +171,10 @@ void UMockCombatDriver::HandleCommand(ECombatInputType Type, int32 IntPayload)
 		RebuildDicePush();
 		break;
 
-	case ECombatInputType::LongPressUnit:
-		if (mUIModel != nullptr)
-		{
-			// HP/스탯은 FUnitDetailUI가 더 이상 보관하지 않는다 — UI가 mUnitId로 FUnitUI를 찾아 읽는다.
-			FUnitDetailUI Detail;
-			Detail.mUnitId = IntPayload;
-			Detail.mName = FText::Format(
-				LOCTEXT("Enemy {0}", "Enemy {0}"),
-				FText::AsNumber(IntPayload));
-			Detail.mLevel = 1;
-			Detail.mPassiveDescriptions = { LOCTEXT("(mock passive)", "(mock passive)") };
-			mUIModel->SetUnitDetail(Detail);
-		}
-		break;
-
 	default:
 		UE_LOG(LogRD, Display, TEXT("MockCombatDriver: command %d (payload %d)"), static_cast<int32>(Type), IntPayload);
 		break;
 	}
-}
-
-/** @brief 월드 터치 계약이 도달했음을 로그로 확인한다. mock은 타일 변환을 수행하지 않는다. */
-void UMockCombatDriver::HandleWorldTouch(FVector2D ScreenPosition, bool bLongPress)
-{
-	UE_LOG(LogRD, Display, TEXT("MockCombatDriver: world touch (%.0f,%.0f) long=%d"), ScreenPosition.X, ScreenPosition.Y, bLongPress ? 1 : 0);
 }
 
 /** @brief 데미지/상태이상/힐 큐 노드 fixture를 push해 WBP 큐 재생을 검증한다. */

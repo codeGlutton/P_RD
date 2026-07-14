@@ -194,6 +194,7 @@ void UCombatTileMapHUDWidget::NativeDestruct()
 	if (mCombatUIModel != nullptr)
 	{
 		mCombatUIModel->OnQueueNodeResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
+		mCombatUIModel->OnUnitDetailReady.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatUnitDetailReady);
 	}
 
 	DestroyDiceCaptureActors(mOwnedDicePreviewActors);
@@ -268,9 +269,8 @@ void UCombatTileMapHUDWidget::ApplyOpenUI()
 	RefreshActionControls();
 
 	/*
-	 * HUD 루트가 빈 영역(타일맵) 탭도 받아야 NativeOnTouchStarted에서 RequestWorldTouch로
-	 * 좌표를 게임플레이에 넘길 수 있다. 스킬레일/주사위 같은 자식 버튼은 여전히 우선 처리되고,
-	 * 버튼 밖(월드) 탭만 루트가 받아 좌표를 전달한다. (SelfHitTestInvisible이면 월드 탭이 통과돼버림)
+	 * LV 홀드와 스킬 레일 폴백 입력을 위해 루트는 Visible을 유지한다.
+	 * 빈 월드 영역은 NativeOnMouse/TouchStarted가 Unhandled로 반환해 CombatCameraPawn으로 내려보낸다.
 	 */
 	SetVisibility(ESlateVisibility::Visible);
 }

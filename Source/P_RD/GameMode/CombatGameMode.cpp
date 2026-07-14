@@ -338,7 +338,6 @@ void ACombatGameMode::InitializeRoom()
 
 	mCombatUIModel->OnApplyDiceResults.AddUniqueDynamic(this, &ACombatGameMode::HandleApplyDiceResults);
 	mCombatUIModel->OnCombatCommand.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatCommand);
-	mCombatUIModel->OnCombatWorldTouch.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatWorldTouch);
 
 	const FStage& CurStage = GetRunPersistData()->GetStage();
 	const FRoom& CurRoom = GetRunPersistData()->GetCurrentRoom();
@@ -399,15 +398,21 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 }
 
 /**
- * @brief 월드 탭/롱프레스를 조준 입력으로 처리한다.
+ * @brief CombatCameraPawn에서 올라온 월드 탭/롱프레스를 처리한다.
  *
  * @details
- * 지금 명령에는 ScreenPosition을 싣지 않는다. 전투 로직은 현재 커서 아래 타일을 직접 찾는다.
+ * 롱프레스 상세는 읽기 전용이므로 턴 소유권과 무관하게 처리한다. 일반 탭만 플레이어 턴으로 제한한다.
  */
 void ACombatGameMode::HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLongPress)
 {
+	if (bLongPress == true)
+	{
+		ResolveWorldLongPressEvent(ScreenPosition);
+		return;
+	}
+
 	/*
-	 * 플레이어 턴이 아닐 때는 무시한다.
+	 * 일반 탭은 플레이어 턴이 아닐 때 무시한다.
 	 * 턴이 비어 있거나 적 턴일 때 넘기면 프리뷰 시뮬레이션에서 크래시가 날 수 있다.
 	 */
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
@@ -421,14 +426,7 @@ void ACombatGameMode::HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLon
 		return;
 	}
 
-	if (bLongPress == true)
-	{
-		ResolveWorldLongPressEvent(ScreenPosition);
-	}
-	else
-	{
-		ResolveWorldTouchEvent(ScreenPosition);
-	}
+	ResolveWorldTouchEvent(ScreenPosition);
 }
 
 void ACombatGameMode::HandleApplyDiceResults(const TArray<int32>& RolledFaceIndices)

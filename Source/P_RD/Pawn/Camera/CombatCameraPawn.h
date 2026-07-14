@@ -8,6 +8,7 @@
 #include "InputMappingContext.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "Input/WorldPressGesture.h"
 #include "CombatCameraPawn.generated.h"
 
 class USpringArmComponent;
@@ -69,6 +70,14 @@ public:
 	*/
 	float mImageStabilization = 3.f;
 
+	/** @brief 월드 포인터를 롱프레스로 판정하는 시간(초). */
+	UPROPERTY(Category = Input, EditDefaultsOnly)
+	float mWorldLongPressThreshold = 0.45f;
+
+	/** @brief 탭/롱프레스 중 드래그로 취소할 시작점 기준 이동 허용 거리(px). */
+	UPROPERTY(Category = Input, EditDefaultsOnly)
+	float mWorldPressMoveTolerance = 24.0f;
+
 	/*
 	* @brief 터치 관련 상태 저장
 	*/
@@ -120,6 +129,41 @@ public:
 	void RDRotate(int32 Direction);
 
 private:
+	enum class EWorldPointerSource : uint8
+	{
+		None,
+		Mouse,
+		Touch,
+	};
+
+	/** @brief UI에서 소비되지 않은 첫 번째 터치가 월드에서 시작됐음을 기록한다. */
+	void HandleWorldTouchPressed(ETouchIndex::Type FingerIndex, FVector Location);
+
+	/** @brief 첫 번째 터치 해제 시 탭이면 일반 월드 입력을 전달한다. */
+	void HandleWorldTouchReleased(ETouchIndex::Type FingerIndex, FVector Location);
+
+	/** @brief UI에서 소비되지 않은 좌클릭이 월드에서 시작됐음을 기록한다. */
+	void HandleWorldMousePressed();
+
+	/** @brief 좌클릭 해제 시 탭이면 일반 월드 입력을 전달한다. */
+	void HandleWorldMouseReleased();
+
+	/** @brief 현재 포인터 위치/시간을 갱신하고 롱프레스가 성립하면 한 번만 전달한다. */
+	void UpdateWorldPressInput(APlayerController* PlayerController, float DeltaTime);
+
+	/** @brief 진행 중인 포인터 입력을 끝내고 탭 결과를 전달한다. */
+	void CompleteWorldPress(const FVector2D& ScreenPosition);
+
+	/** @brief 포인터 입력을 취소해 탭/롱프레스가 전투 명령으로 전달되지 않게 한다. */
+	void CancelWorldPress();
+
+	/** @brief 월드 탭/롱프레스 의도를 CombatGameMode::HandleCombatWorldTouch로 직접 전달한다(UIModel 미경유). */
+	void SubmitWorldPress(const FVector2D& ScreenPosition, bool bLongPress) const;
+
+	FWorldPressGestureTracker mWorldPressGesture;
+	EWorldPointerSource mWorldPointerSource = EWorldPointerSource::None;
+	ETouchIndex::Type mWorldTouchFingerIndex = ETouchIndex::Touch1;
+
 	/*
 	* @brief Drag 중인지 나타내는 함수
 	* @return true 시 드래그 중, false 시 드래그 아님

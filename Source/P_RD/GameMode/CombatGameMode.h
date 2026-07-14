@@ -106,10 +106,10 @@ public:
 	bool ClaimCombatReward(ERewardClaimKind ClaimKind, int32 ChoiceIndex);
 
 	/**
-	 * @brief 전장 탭을 조준/시전 입력으로 처리한다.
+	 * @brief CombatCameraPawn의 전장 탭/롱프레스를 처리한다.
 	 *
 	 * @details
-	 * 플레이어 턴이 아닐 때는 입력을 무시한다.
+	 * 일반 탭은 플레이어 턴으로 제한하고, 읽기 전용 롱프레스 상세는 턴과 무관하게 처리한다.
 	 */
 	UFUNCTION()
 	void HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLongPress);

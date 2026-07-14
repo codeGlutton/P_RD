@@ -14,6 +14,11 @@ public:
 	UFUNCTION()
 	void HandleFloatingLog(FCombatFloatingLogRequest Request);
 
+	UFUNCTION()
+	void HandleUnitDetail(FUnitDetailUI Detail);
+
 	int32 mFloatingLogCallCount = 0;
 	FCombatFloatingLogRequest mLastRequest;
+	int32 mUnitDetailCallCount = 0;
+	FUnitDetailUI mLastUnitDetail;
 };

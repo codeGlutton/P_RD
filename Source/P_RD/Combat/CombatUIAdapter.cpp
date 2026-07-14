@@ -150,7 +150,6 @@ void UCombatUIAdapter::BindUIModel(UCombatUIModel* InUIModel)
 	if (mUIModel != nullptr)
 	{
 		mUIModel->OnCombatCommand.RemoveDynamic(this, &UCombatUIAdapter::HandleCombatCommand);
-		mUIModel->OnCombatWorldTouch.RemoveDynamic(this, &UCombatUIAdapter::HandleWorldTouch);
 	}
 
 	mUIModel = InUIModel;
@@ -158,7 +157,6 @@ void UCombatUIAdapter::BindUIModel(UCombatUIModel* InUIModel)
 	if (mUIModel != nullptr)
 	{
 		mUIModel->OnCombatCommand.AddUniqueDynamic(this, &UCombatUIAdapter::HandleCombatCommand);
-		mUIModel->OnCombatWorldTouch.AddUniqueDynamic(this, &UCombatUIAdapter::HandleWorldTouch);
 	}
 
 	PushAll();
@@ -258,9 +256,8 @@ void UCombatUIAdapter::HandleCombatCommand(ECombatInputType Type, int32 IntPaylo
 }
 
 /** @brief 스크린 터치를 타일로 변환한 뒤 현재 대기 중인 액션의 확정/취소로 소비한다. */
-void UCombatUIAdapter::HandleWorldTouch(FVector2D ScreenPosition, bool bLongPress)
+void UCombatUIAdapter::HandleWorldTouch(FVector2D ScreenPosition)
 {
-	// 롱프레스 여부는 후속 상세 패널 계약을 위해 받지만, 이 임시 어댑터는 일반 탭 액션만 처리한다.
 	FTileIndex Tile;
 	if (ResolveTileFromScreen(ScreenPosition, Tile) == false)
 	{
