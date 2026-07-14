@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 /**
  * @file SettingsPanelTypes.h
@@ -80,11 +80,8 @@ namespace RDSettingsPanel
 	/** @brief 품질 enum을 요청용 정수(0/1/2)로 바꾼다. */
 	P_RD_API int32 ToQualityRequestValue(ESettingsQualityLevel QualityLevel);
 
-	/** @brief 품질 단계를 목표 렌더 해상도 짧은변(360/720/1080)으로 바꾼다. */
-	P_RD_API int32 ToRenderResolutionHeight(ESettingsQualityLevel QualityLevel);
-
-	/** @brief 저장된 렌더 해상도 짧은변을 가장 가까운 품질 단계로 되돌린다(패널 표시 동기화용). */
-	P_RD_API ESettingsQualityLevel FromRenderResolutionHeight(int32 ShortSideHeight);
+	/** @brief 저장된 품질 enum을 가장 가까운 품질 단계로 되돌린다(패널 표시 동기화용). */
+	P_RD_API ESettingsQualityLevel FromOverallQuality(int32 OverallQuality);
 
 	/** @brief 값 모델 전체를 안전 범위로 정리한다(모든 볼륨 0~1 클램프). */
 	P_RD_API FSettingsPanelValueModel SanitizeValueModel(const FSettingsPanelValueModel& ValueModel);

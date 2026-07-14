@@ -254,8 +254,7 @@ public:
 public:
 	void SetVolume(EGameVolumeType VolumeType, float Volume);
 	void SetLanguage(ELanguageType LanguageType);
-	void SetResolution(const FIntPoint& Resolution);
-	void SetRenderResolution(int32 ShortSideHeight);
+	void SetOverallQuality(EOverallQualityType QualityType);
 	void SetFpsLimit(int32 FpsLimit);
 
 	void ApplyCurrentOptions();
@@ -263,8 +262,7 @@ public:
 public:
 	float GetVolume(EGameVolumeType VolumeType) const;
 	ELanguageType GetLanguage() const;
-	const FIntPoint& GetResolution() const;
-	int32 GetRenderResolutionHeight() const;
+	EOverallQualityType GetOverallQuality() const;
 	int32 GetFpsLimit() const;
 
 public:
@@ -279,29 +277,23 @@ protected:
 	ELanguageType mLanguageType = ELanguageType::ENGLISH;
 
 protected:
-	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "Resolution"))
-	FIntPoint mResolution = FIntPoint::ZeroValue;
-
-	// 3D 씬 렌더 해상도의 목표 짧은변(360/720/1080). 백버퍼 대비 비율을 r.ScreenPercentage로 적용하므로
-	// UI(Slate)는 네이티브 해상도를 유지한다. 백버퍼 짧은변이 목표보다 작으면 100%로 클램프된다.
-protected:
-	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "RenderResolutionHeight"))
-	int32 mRenderResolutionHeight = 720;
+	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "OverallQuality"))
+	EOverallQualityType mOverallQuality = EOverallQualityType::Medium;
 
 protected:
 	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "FpsLimit"))
 	int32 mFpsLimit = 60;
 
 private:
-	void ApplyRenderResolution() const;
-	void HandleViewportResized(FViewport* Viewport, uint32 Unused);
+	void ApplyScreenPercentage() const;
+	void OnResizeViewport(FViewport* Viewport, uint32 Unused);
 
 	/* 캐싱 */
 private:
 	UPROPERTY()
 	FOptionPersistDataCache mOptionPersistDataCache;
 
-	// 뷰포트 생성/리사이즈(폴더블 접힘 전환 포함) 시 렌더 해상도 비율 재계산용 구독 핸들
 private:
+	// 뷰포트 생성/리사이즈(폴더블 접힘 전환 포함) 시 렌더 해상도 비율 재계산용 구독 핸들
 	FDelegateHandle mViewportResizedHandle;
 };
