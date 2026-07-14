@@ -8,7 +8,7 @@
 #include "SRPGFramework/SRPGTurnEndAction.h"
 
 #include "Actor/TileMap/TileMapModel.h"
-#include "Pawn/UnitModel.h"
+#include "Pawn/Enemy/EnemyUnitModel.h"
 
 #include "Actor/BoardActor/BoardCombatTarget.h"
 
@@ -416,8 +416,9 @@ void USRPGCombatModel::RegisterEnemyUnit(FEnemyUnitPlacementData& EnemyPlacement
 	checkf(EnemyUnitSpawnData != nullptr, TEXT("적 유닛 스폰 데이터 로드 실패"));
 	UClass* EnemyModelClass = EnemyUnitSpawnData->mModelClass.LoadSynchronous();
 	checkf(EnemyModelClass != nullptr, TEXT("적 유닛 ModelClass 로드 실패 — DataAsset의 mModelClass 확인"));
-	UUnitModel* EnemyUnit = GetWorldModelFactory(this)->NewModelDeferred<UUnitModel>(EnemyModelClass);
+	UEnemyUnitModel* EnemyUnit = GetWorldModelFactory(this)->NewModelDeferred<UEnemyUnitModel>(EnemyModelClass);
 	EnemyUnit->SetStaticSpawnData(EnemyUnitSpawnData);
+	EnemyUnit->SetDifficulty(EnemyPlacementData.mDifficulty);
 	EnemyUnit->FinishCreating(mTileMap->TileToWorldTransform(EnemyPlacementData.mTransform));
 
 	RegisterUnit(EnemyUnit, EnemyPlacementData.mTransform);

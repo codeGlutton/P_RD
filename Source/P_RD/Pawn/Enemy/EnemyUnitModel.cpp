@@ -103,6 +103,11 @@ int32 UEnemyUnitModel::GetBoardActorLevel() const
 	return GetDifficulty();
 }
 
+void UEnemyUnitModel::SetDifficulty(int32 Difficulty)
+{
+	mDifficulty = Difficulty;
+}
+
 int32 UEnemyUnitModel::GetDifficulty() const
 {
 	return mDifficulty;

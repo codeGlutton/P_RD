@@ -34,6 +34,13 @@ public:
 	int32 GetBoardActorLevel() const override;
 
 public:
+	/**
+	 * @brief 스폰 전 난이도 대입 함수
+	 * @param Difficulty 난이도
+	 */
+	void SetDifficulty(int32 Difficulty);
+
+public:
 	// @brief 난이도
 	int32 GetDifficulty() const override;
 	// @brief 플레이어유닛 여부
