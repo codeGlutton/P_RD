@@ -1,6 +1,7 @@
 ﻿#include "UI/CombatTileMapHUDWidget.h"
 
 #include "Components/Button.h"
+#include "TimerManager.h"   // NativeDestruct에서 골드 카운트업/결과 딜레이 타이머 명시 정리
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Reward/RewardUIWidgetBase.h"
 #include "UObject/ConstructorHelpers.h"
@@ -179,7 +180,22 @@ void UCombatTileMapHUDWidget::NativeDestruct()
 	}
 	if (mCombatUIModel != nullptr)
 	{
+		// BindCombatUIModel이 구독하는 7종 전부를 대칭 해제한다(다이나믹 델리게이트의 약참조
+		// 시맨틱 덕에 해제 없이도 사고는 안 나지만, 안전성을 시맨틱에 기대지 않게 명시 정리).
 		mCombatUIModel->OnQueueNodeResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
+		mCombatUIModel->OnUIChanged.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatUIChanged);
+		mCombatUIModel->OnActionResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatActionResolved);
+		mCombatUIModel->OnCombatFloatingLog.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLog);
+		mCombatUIModel->OnCombatFloatingLogMotionFinished.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogMotionFinished);
+		mCombatUIModel->OnCombatFloatingLogsCleared.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogsCleared);
+		mCombatUIModel->OnDiceRollRequested.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatDiceRollRequested);
+	}
+
+	// UObject 바인딩 타이머라 파괴 후 발화하진 않지만, 핸들을 명시적으로 거둬 수명을 코드로 드러낸다.
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(mGoldCountUpTimerHandle);
+		World->GetTimerManager().ClearTimer(mCombatResultStartDelayTimerHandle);
 	}
 
 	DestroyDiceCaptureActors(mOwnedDicePreviewActors);
