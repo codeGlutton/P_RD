@@ -597,6 +597,11 @@ void UOptionPersistData::MakeCaches()
 	{
 		mOptionPersistDataCache.mSoundClassObjects[i] = Cast<USoundClass>(GamePlaySettings->mSoundClasses[i].ToSoftObjectPath().TryLoad());
 	}
+
+	if (mViewportResizedHandle.IsValid() == false)
+	{
+		mViewportResizedHandle = FViewport::ViewportResizedEvent.AddUObject(this, &UOptionPersistData::OnResizeViewport);
+	}
 }
 
 /** @brief 옵션 데이터 초기 생성 훅(현재 별도 동작 없음, 향후 확장용). */
@@ -614,8 +619,7 @@ void UOptionPersistData::ClearOption()
 	const UOptionPersistData* CDO = GetDefault<UOptionPersistData>();
 	mVolumes = CDO->mVolumes;
 	mLanguageType = CDO->mLanguageType;
-	mResolution = CDO->mResolution;
-	mRenderResolutionHeight = CDO->mRenderResolutionHeight;
+	mOverallQuality = CDO->mOverallQuality;
 	mFpsLimit = CDO->mFpsLimit;
 
 	ApplyCurrentOptions();
@@ -688,51 +692,27 @@ void UOptionPersistData::SetLanguage(ELanguageType LanguageType)
 	LocalizationManager.WaitForAsyncTasks();
 }
 
-/**
- * @brief 화면 해상도를 설정한다.
- * @param Resolution 적용할 해상도(가로x세로)
- * @note 미구현(TODO). 모바일 렌더 해상도는 SetRenderResolution(짧은변 기준)이 담당한다.
- */
-void UOptionPersistData::SetResolution(const FIntPoint& Resolution)
+void UOptionPersistData::SetOverallQuality(EOverallQualityType QualityType)
 {
 	UGameUserSettings* GameUserSettings = UGameUserSettings::GetGameUserSettings();
-	GameUserSettings->SetScreenResolution(Resolution);
+	checkf(GameUserSettings != nullptr, TEXT("게임 유저 세팅 nullptr"));
+
+	GameUserSettings->SetOverallScalabilityLevel(StaticCast<int32>(QualityType));
 	GameUserSettings->ApplySettings(false);
-}
-
-/**
- * @brief 3D 씬 렌더 해상도를 목표 짧은변 기준으로 설정하고 즉시 반영한다.
- * @param ShortSideHeight 목표 짧은변 픽셀 수(360/720/1080)
- *
- * @details
- * 실제 적용은 백버퍼 짧은변 대비 비율을 r.ScreenPercentage로 환산하는 방식이다.
- * r.MobileContentScaleFactor는 런타임 변경 시 서피스를 재생성하며 앱이 종료되는 것이
- * 실기기(SM-F946N)에서 확인되어 사용하지 않는다.
- * 뷰포트 크기는 기기·접힘 상태에 따라 달라지므로, 뷰포트 리사이즈 이벤트를 구독해
- * 같은 목표 해상도가 유지되도록 비율을 재계산한다.
- */
-void UOptionPersistData::SetRenderResolution(int32 ShortSideHeight)
-{
-	mRenderResolutionHeight = FMath::Clamp(ShortSideHeight, 240, 2160);
-
-	if (mViewportResizedHandle.IsValid() == false)
-	{
-		mViewportResizedHandle = FViewport::ViewportResizedEvent.AddUObject(this, &UOptionPersistData::HandleViewportResized);
-	}
-	ApplyRenderResolution();
+	ApplyScreenPercentage();
 }
 
 /** @brief 뷰포트 생성/리사이즈(폴더블 접힘 전환 포함) 시 렌더 해상도 비율을 재계산한다. */
-void UOptionPersistData::HandleViewportResized(FViewport* Viewport, uint32 Unused)
+void UOptionPersistData::OnResizeViewport(FViewport* Viewport, uint32 Unused)
 {
-	ApplyRenderResolution();
+	ApplyScreenPercentage();
 }
 
 /**
  * @brief 보관 중인 목표 짧은변을 현재 백버퍼 크기 대비 r.ScreenPercentage 비율로 적용한다.
  *        부팅 직후처럼 뷰포트 크기를 아직 알 수 없으면 건너뛴다(뷰포트 리사이즈 이벤트에서 재시도).
  */
-void UOptionPersistData::ApplyRenderResolution() const
+void UOptionPersistData::ApplyScreenPercentage() const
 {
 	FIntPoint BackBufferSize = FIntPoint::ZeroValue;
 	if (GEngine != nullptr && GEngine->GameViewport != nullptr && GEngine->GameViewport->Viewport != nullptr)
@@ -750,7 +730,7 @@ void UOptionPersistData::ApplyRenderResolution() const
 		return;
 	}
 
-	const float Percentage = FMath::Clamp(100.f * StaticCast<float>(mRenderResolutionHeight) / StaticCast<float>(ShortSide), 10.f, 100.f);
+	const float Percentage = FMath::Clamp(100.f * ToRenderResolutionHeight(mOverallQuality) / StaticCast<float>(ShortSide), 10.f, 100.f);
 	if (IConsoleVariable* ScreenPercentageCVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.ScreenPercentage")))
 	{
 		// 디바이스 프로파일보다 낮고 콘솔 입력보다 낮은 게임 설정 우선순위로 기록한다.
@@ -761,11 +741,13 @@ void UOptionPersistData::ApplyRenderResolution() const
 /** @brief FPS 제한을 지원 값(30/60)으로 보정하고 런타임 최대 FPS에 즉시 반영한다. */
 void UOptionPersistData::SetFpsLimit(int32 FpsLimit)
 {
+	UGameUserSettings* GameUserSettings = UGameUserSettings::GetGameUserSettings();
+	checkf(GameUserSettings != nullptr, TEXT("게임 유저 세팅 nullptr"));
+
 	mFpsLimit = FpsLimit <= 30 ? 30 : 60;
-	if (GEngine != nullptr)
-	{
-		GEngine->SetMaxFPS(static_cast<float>(mFpsLimit));
-	}
+
+	GameUserSettings->SetFrameRateLimit(mFpsLimit);
+	GameUserSettings->ApplyNonResolutionSettings();
 }
 
 /**
@@ -780,8 +762,7 @@ void UOptionPersistData::ApplyCurrentOptions()
 		SetVolume(StaticCast<EGameVolumeType>(i), mVolumes[i]);
 	}
 	SetLanguage(mLanguageType);
-	SetResolution(mResolution);
-	SetRenderResolution(mRenderResolutionHeight);
+	SetOverallQuality(mOverallQuality);
 	SetFpsLimit(mFpsLimit);
 }
 
@@ -801,16 +782,10 @@ ELanguageType UOptionPersistData::GetLanguage() const
 	return mLanguageType;
 }
 
-/** @brief 현재 설정된 해상도를 반환한다. @return 해상도(가로x세로) */
-const FIntPoint& UOptionPersistData::GetResolution() const
+/** @brief 현재 설정된 퀄리티를 반환한다. @return 퀄리티 타입 */
+EOverallQualityType UOptionPersistData::GetOverallQuality() const
 {
-	return mResolution;
-}
-
-/** @brief 현재 설정된 3D 렌더 해상도 목표 짧은변을 반환한다. @return 짧은변 픽셀 수(360/720/1080) */
-int32 UOptionPersistData::GetRenderResolutionHeight() const
-{
-	return mRenderResolutionHeight;
+	return mOverallQuality;
 }
 
 /** @brief 현재 FPS 제한 값을 반환한다. @return 30 또는 60 */

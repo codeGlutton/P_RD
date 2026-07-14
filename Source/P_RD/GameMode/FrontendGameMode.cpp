@@ -10,6 +10,7 @@
 
 #include "PCGStage/Stage.h"
 
+#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
@@ -243,6 +244,11 @@ void AFrontendGameMode::BeginRoom()
 
 	FInputModeGameAndUI InputMode;
 	PlayerController->SetInputMode(InputMode);
+
+	/* 유저 및 옵션 저장 */
+
+	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->SaveUserAsync(FAsyncSaveGameToSlotDelegate());
+	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->SaveOptionAsync(FAsyncSaveGameToSlotDelegate());
 }
 
 /** @brief 타이틀 START 입력을 캐릭터 선택 화면 진입 요청으로 처리한다. */

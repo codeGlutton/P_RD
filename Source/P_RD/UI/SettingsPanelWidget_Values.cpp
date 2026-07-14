@@ -61,7 +61,7 @@ void USettingsPanelWidget::RefreshValueModelFromCurrentOptions()
 				CurrentValueModel.mUiVolume = OptionData->GetVolume(EGameVolumeType::UI);
 				CurrentValueModel.mUseKoreanLanguage = OptionData->GetLanguage() == ELanguageType::KOREAN;
 				CurrentValueModel.mFpsLimit = OptionData->GetFpsLimit();
-				CurrentValueModel.mQualityLevel = RDSettingsPanel::FromRenderResolutionHeight(OptionData->GetRenderResolutionHeight());
+				CurrentValueModel.mQualityLevel = RDSettingsPanel::FromOverallQuality(StaticCast<int32>(OptionData->GetOverallQuality()));
 			}
 		}
 	}
@@ -111,7 +111,7 @@ void USettingsPanelWidget::HandleLowQualityButtonClicked()
 		// 전용 수신자가 생기기 전까지의 기본 적용: 품질 단계를 목표 렌더 해상도(360p)로 바꿔 프로필에 반영한다(FPS와 동일 패턴).
 		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
 		{
-			GameModeBase->SetRenderResolution(RDSettingsPanel::ToRenderResolutionHeight(mValueModel.mQualityLevel));
+			GameModeBase->SetOverallQuality(StaticCast<EOverallQualityType>(RDSettingsPanel::ToQualityRequestValue(mValueModel.mQualityLevel)));
 		}
 	}
 }
@@ -133,7 +133,7 @@ void USettingsPanelWidget::HandleMediumQualityButtonClicked()
 		// 전용 수신자가 생기기 전까지의 기본 적용: 품질 단계를 목표 렌더 해상도(720p)로 바꿔 프로필에 반영한다(FPS와 동일 패턴).
 		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
 		{
-			GameModeBase->SetRenderResolution(RDSettingsPanel::ToRenderResolutionHeight(mValueModel.mQualityLevel));
+			GameModeBase->SetOverallQuality(StaticCast<EOverallQualityType>(RDSettingsPanel::ToQualityRequestValue(mValueModel.mQualityLevel)));
 		}
 	}
 }
@@ -155,7 +155,7 @@ void USettingsPanelWidget::HandleHighQualityButtonClicked()
 		// 전용 수신자가 생기기 전까지의 기본 적용: 품질 단계를 목표 렌더 해상도(1080p)로 바꿔 프로필에 반영한다(FPS와 동일 패턴).
 		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
 		{
-			GameModeBase->SetRenderResolution(RDSettingsPanel::ToRenderResolutionHeight(mValueModel.mQualityLevel));
+			GameModeBase->SetOverallQuality(StaticCast<EOverallQualityType>(RDSettingsPanel::ToQualityRequestValue(mValueModel.mQualityLevel)));
 		}
 	}
 }
