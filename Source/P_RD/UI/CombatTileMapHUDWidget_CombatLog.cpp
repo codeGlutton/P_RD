@@ -264,6 +264,8 @@ void UCombatTileMapHUDWidget::SpawnFloatingCombatLogAtWorld(const FCombatFloatin
 		LogSlot->SetAutoSize(true);
 		LogSlot->SetAlignment(FVector2D(0.5f, 1.0f)); // 바닥-중앙 기준으로 머리 위에 선다.
 		LogSlot->SetZOrder(30);                        // HP바보다 위에 그린다.
+		// 슬롯 위치는 (0,0)에 고정 — 매 프레임 이동은 UpdateFloatingCombatLogs의 렌더 변환(translation)으로만 한다.
+		// (슬롯 SetPosition은 캔버스 Layout 무효화를 유발하지만 렌더 변환은 재배치 없이 그리기만 옮긴다.)
 	}
 
 	FFloatingCombatLogEntry Entry;
@@ -380,14 +382,12 @@ void UCombatTileMapHUDWidget::UpdateFloatingCombatLogs(float InDeltaTime)
 			? FloatingLogDismissSlideSpeed * Entry.mDismissElapsed
 			: 0.0f;
 
-		if (UCanvasPanelSlot* LogSlot = Cast<UCanvasPanelSlot>(LogRoot->Slot))
-		{
-			// 미리보기: 고정 위치(겹치면 위로 쌓기) / 실행: 시간에 따라 상승.
-			const float OffsetY = Entry.mIsPreview == true
-				? (FloatingLogBaseOffsetY - Entry.mStackOffsetY)
-				: (FloatingLogBaseOffsetY - FloatingLogRiseSpeed * Entry.mElapsed);
-			LogSlot->SetPosition(ScreenPosition + FVector2D(DismissOffsetX, OffsetY));
-		}
+		// 미리보기: 고정 위치(겹치면 위로 쌓기) / 실행: 시간에 따라 상승.
+		// 슬롯 이동 대신 렌더 변환으로 옮겨 캔버스 Layout 무효화 없이 따라간다(HP바와 동일).
+		const float OffsetY = Entry.mIsPreview == true
+			? (FloatingLogBaseOffsetY - Entry.mStackOffsetY)
+			: (FloatingLogBaseOffsetY - FloatingLogRiseSpeed * Entry.mElapsed);
+		LogRoot->SetRenderTranslation(ScreenPosition + FVector2D(DismissOffsetX, OffsetY));
 
 		// 퇴장 중에는 진행률에 따라 서서히 투명해진다(미리보기/실행 공통).
 		if (Entry.mIsDismissing == true)

@@ -188,13 +188,37 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 			if (UTextBlock* SkillRailText = mSkillRailTexts[RailSlotIndex])
 			{
 				SkillRailText->SetText(bOwned ? Skill->mName : FText::GetEmpty());
-				SkillRailText->SetRenderOpacity(DimOpacity * mSkillDrawerExpansion);
-				SkillRailText->SetVisibility(
-					bOwned && mSkillDrawerExpansion > KINDA_SMALL_NUMBER
-						? ESlateVisibility::HitTestInvisible
-						: ESlateVisibility::Collapsed);
 			}
 		}
+	}
+
+	// 라벨 투명도/표시는 서랍 펼침 정도에 묶여 있어 애니 프레임과 공용 헬퍼로 뺐다.
+	ApplySkillDrawerLabelVisuals();
+}
+
+/** @details 서랍 애니메이션 프레임마다 필요한 건 이것뿐이라 RefreshSkillRailWidgets(브러시/텍스트/선택 강조 전체)에서 분리했다. */
+void UCombatTileMapHUDWidget::ApplySkillDrawerLabelVisuals() const
+{
+	const TArray<FSkillUI>* Skills = mCombatUIModel != nullptr ? &mCombatUIModel->GetSkillUIs() : nullptr;
+	for (int32 RailSlotIndex = 0; RailSlotIndex < mSkillRailTexts.Num(); ++RailSlotIndex)
+	{
+		UTextBlock* SkillRailText = mSkillRailTexts[RailSlotIndex];
+		if (SkillRailText == nullptr)
+		{
+			continue;
+		}
+
+		// GetSkillDataIndexForRailSlot이 보유 여부(FSkillUI 이름)까지 검증한다 — INDEX_NONE이면 미보유.
+		const int32 SkillDataIndex = GetSkillDataIndexForRailSlot(RailSlotIndex);
+		const bool bOwned = SkillDataIndex != INDEX_NONE;
+		const bool bUsable = bOwned && Skills != nullptr && (*Skills)[SkillDataIndex].mIsUsable;
+		const float DimOpacity = bUsable ? 1.0f : 0.45f;
+
+		SkillRailText->SetRenderOpacity(DimOpacity * mSkillDrawerExpansion);
+		SkillRailText->SetVisibility(
+			bOwned && mSkillDrawerExpansion > KINDA_SMALL_NUMBER
+				? ESlateVisibility::HitTestInvisible
+				: ESlateVisibility::Collapsed);
 	}
 }
 
@@ -230,8 +254,11 @@ void UCombatTileMapHUDWidget::UpdateSkillDrawerAnimation(float InDeltaTime)
 	const float UnitsPerSecond = 1.0f / FMath::Max(MobileSkillDrawerAnimationSeconds, KINDA_SMALL_NUMBER);
 	mSkillDrawerExpansion = FMath::FInterpConstantTo(
 		mSkillDrawerExpansion, mSkillDrawerExpansionTarget, InDeltaTime, UnitsPerSecond);
-	ApplyRuntimeWidgetLayout();
-	RefreshSkillRailWidgets();
+	// 애니 프레임에는 서랍 폭에 의존하는 것만 갱신한다 — 전체 ApplyRuntimeWidgetLayout(HUD 위젯 전부 재배치)과
+	// RefreshSkillRailWidgets(브러시/텍스트 재설정)를 매 프레임 돌리면 애니 내내 Layout 무효화가 발생한다.
+	// 목표 도달 시(위 스냅 분기)에는 기존대로 전체 레이아웃/리프레시로 마무리한다.
+	ApplySkillRailSlotLayout();
+	ApplySkillDrawerLabelVisuals();
 }
 
 /** @details 시각 슬롯 규칙은 헤더 주석 참고. 반환 전에 보유 여부(FSkillUI 이름)까지 검증해 미보유면 INDEX_NONE. */

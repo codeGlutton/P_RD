@@ -132,6 +132,9 @@ private:
 	/** @brief 런타임으로 붙인 위젯들의 화면 위치를 모바일 화면 비율 기준으로 맞춘다. */
 	void ApplyRuntimeWidgetLayout() const;
 
+	/** @brief 스킬 레일 슬롯(패널/아이콘/라벨/입력/서랍 손잡이)만 재배치한다. 서랍 폭 애니 프레임에서 전체 레이아웃 대신 호출. */
+	void ApplySkillRailSlotLayout() const;
+
 	/** @brief Concept02 정적 아트를 모바일 HUD 좌표로 확대·재배치하고 제거 대상은 숨긴다. */
 	void ApplyMobileSkinWidgetLayout() const;
 
@@ -201,6 +204,9 @@ private:
 
 	/** @brief 스킬 이름 서랍을 목표 폭까지 슬라이드시키고 레이아웃을 갱신한다. */
 	void UpdateSkillDrawerAnimation(float InDeltaTime);
+
+	/** @brief 스킬 이름 라벨의 투명도/표시를 서랍 펼침 정도(mSkillDrawerExpansion)에 맞춘다. Refresh와 서랍 애니가 공용. */
+	void ApplySkillDrawerLabelVisuals() const;
 
 	/** @brief 보유 스킬의 표시 이름을 뷰모델에서 읽는다(없으면 빈 텍스트 - 시안 라벨 폴백 없음). */
 	FText GetOwnedSkillLabel(int32 SkillIndex) const;
@@ -447,7 +453,10 @@ private:
 	/** @brief 뷰모델의 유닛 수에 맞춰 머리 위 HP바 위젯을 다시 만든다. */
 	void RebuildUnitHpBars();
 
-	/** @brief 각 유닛의 월드 위치를 화면에 투영해 HP바 위치/비율/색을 매 프레임 갱신한다. */
+	/** @brief HP바 내용(채움 색/폭, HP 숫자, 방어도, 상태이상)을 다시 그린다. Unit 도메인 이벤트에서만 호출(매 프레임 X). */
+	void RefreshUnitHpBarContents();
+
+	/** @brief 각 유닛의 월드 위치를 화면에 투영해 HP바 위치/줌 스케일/표시만 매 프레임 따라가게 한다(내용은 RefreshUnitHpBarContents). */
 	void UpdateUnitHpBars();
 
 	/** @brief HpFillImage를 ClipToBounds 캔버스로 감싸, 폭을 % 만큼 줄이면 우측이 잘리는 크롭 채움을 만든다. */
@@ -456,7 +465,7 @@ private:
 	/** @brief WBP의 상태 슬롯(StatusIcon_0N/StatusCountText_0N/Overflow)을 캐시하고 숨김으로 둔다. */
 	void CacheUnitHpBarStatusSlots(FUnitHpBarWidget& Bar) const;
 
-	/** @brief 유닛 HP바 밑 상태이상 칸을 DTO(mStatusEffects)로 채운다(아이콘/스택수/오버플로). UpdateUnitHpBars에서 매 프레임 호출. */
+	/** @brief 유닛 HP바 밑 상태이상 칸을 DTO(mStatusEffects)로 채운다(아이콘/스택수/오버플로). RefreshUnitHpBarContents에서 호출. */
 	void UpdateUnitHpBarStatus(FUnitHpBarWidget& Bar, const FUnitUI& Unit) const;
 
 	/** @brief 상태이상 태그 → 아이콘 텍스처(로그용 mLogIcon* 재사용). 전용 아이콘 없는 태그는 nullptr. */

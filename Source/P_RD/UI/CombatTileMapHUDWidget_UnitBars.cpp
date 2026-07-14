@@ -268,6 +268,8 @@ void UCombatTileMapHUDWidget::RebuildUnitHpBars()
 		}
 
 		// 트리 확정 후 라이브 캔버스에 붙인다.
+		// 슬롯 위치는 (0,0)에 고정하고 매 프레임 이동은 렌더 변환(translation)으로만 한다 —
+		// 슬롯 SetPosition은 캔버스 Layout 무효화를 유발하지만 렌더 변환은 재배치 없이 그리기만 옮긴다.
 		RootCanvas->AddChildToCanvas(NewBar.mRoot);
 		if (UCanvasPanelSlot* RootSlot = Cast<UCanvasPanelSlot>(NewBar.mRoot->Slot))
 		{
@@ -279,46 +281,22 @@ void UCombatTileMapHUDWidget::RebuildUnitHpBars()
 		mUnitHpBars.Add(NewBar);
 	}
 
+	RefreshUnitHpBarContents();
 	UpdateUnitHpBars();
 }
 
-void UCombatTileMapHUDWidget::UpdateUnitHpBars()
+/**
+ * @brief HP바 내용(채움 색/폭, HP 숫자, 방어도, 상태이상)을 뷰모델 스냅샷으로 다시 그린다.
+ * @details Unit 도메인은 이벤트(OnUIChanged)로만 바뀌므로 여기서만 갱신한다 — 매 프레임 돌리면
+ *          유닛 수 × FText 생성(힙 할당)이 프레임마다 반복된다(값이 같아도 만들었다 버림).
+ *          매 프레임 필요한 위치/줌/표시는 UpdateUnitHpBars가 따로 맡는다.
+ */
+void UCombatTileMapHUDWidget::RefreshUnitHpBarContents()
 {
-	// 지도(풀스크린) 열림 중에는 유닛 머리 위 HP바를 숨긴다 — 탑바만 남기는 뷰.
-	// 이 함수가 매 틱 HP바를 강제 표시(라인 283)하므로, SetCombatPlayControlsVisible에서 한 번 숨기는 것으로는
-	// 다음 틱에 되살아난다. 여기서 게이트해야 지도 뷰 동안 계속 숨겨진다.
-	if (mCombatControlsHidden)
-	{
-		for (FUnitHpBarWidget& Bar : mUnitHpBars)
-		{
-			if (Bar.mRoot != nullptr) { Bar.mRoot->SetVisibility(ESlateVisibility::Collapsed); }
-		}
-		return;
-	}
-
 	if (mCombatUIModel == nullptr)
 	{
 		return;
 	}
-
-	APlayerController* PlayerController = GetOwningPlayer();
-	if (PlayerController == nullptr)
-	{
-		return;
-	}
-
-	// 카메라 줌(직교 OrthoWidth)에 비례해 HP바 크기를 키운다 — 줌인하면 유닛과 함께 바도 커진다.
-	// 기준 OrthoWidth(2000) 대비 배율, 과도한 확대/축소는 클램프.
-	float ZoomScale = 1.0f;
-	if (PlayerController->PlayerCameraManager != nullptr)
-	{
-		const float CurrentOrthoWidth = PlayerController->PlayerCameraManager->GetCameraCacheView().OrthoWidth;
-		if (CurrentOrthoWidth > KINDA_SMALL_NUMBER)
-		{
-			ZoomScale = FMath::Clamp(UnitHpBarBaseOrthoWidth / CurrentOrthoWidth, 0.6f, 3.0f);
-		}
-	}
-	const FVector2D BarRenderScale(UnitHpBarRenderScale * ZoomScale, UnitHpBarRenderScale * ZoomScale);
 
 	const TArray<FUnitUI>& Units = mCombatUIModel->GetUnitUIs();
 	for (int32 BarIndex = 0; BarIndex < mUnitHpBars.Num(); ++BarIndex)
@@ -371,7 +349,60 @@ void UCombatTileMapHUDWidget::UpdateUnitHpBars()
 			Bar.mDefenseText->SetVisibility(DefenseVisibility);
 		}
 
-		// 유닛 월드 위치를 화면(위젯) 좌표로 투영. 화면 밖이면 숨긴다.
+		// HP바 밑 상태이상 아이콘/개수.
+		UpdateUnitHpBarStatus(Bar, Unit);
+	}
+}
+
+void UCombatTileMapHUDWidget::UpdateUnitHpBars()
+{
+	// 지도(풀스크린) 열림 중에는 유닛 머리 위 HP바를 숨긴다 — 탑바만 남기는 뷰.
+	// 이 함수가 매 틱 HP바를 강제 표시하므로, SetCombatPlayControlsVisible에서 한 번 숨기는 것으로는
+	// 다음 틱에 되살아난다. 여기서 게이트해야 지도 뷰 동안 계속 숨겨진다.
+	if (mCombatControlsHidden)
+	{
+		for (FUnitHpBarWidget& Bar : mUnitHpBars)
+		{
+			if (Bar.mRoot != nullptr) { Bar.mRoot->SetVisibility(ESlateVisibility::Collapsed); }
+		}
+		return;
+	}
+
+	if (mCombatUIModel == nullptr)
+	{
+		return;
+	}
+
+	APlayerController* PlayerController = GetOwningPlayer();
+	if (PlayerController == nullptr)
+	{
+		return;
+	}
+
+	// 카메라 줌(직교 OrthoWidth)에 비례해 HP바 크기를 키운다 — 줌인하면 유닛과 함께 바도 커진다.
+	// 기준 OrthoWidth(2000) 대비 배율, 과도한 확대/축소는 클램프.
+	float ZoomScale = 1.0f;
+	if (PlayerController->PlayerCameraManager != nullptr)
+	{
+		const float CurrentOrthoWidth = PlayerController->PlayerCameraManager->GetCameraCacheView().OrthoWidth;
+		if (CurrentOrthoWidth > KINDA_SMALL_NUMBER)
+		{
+			ZoomScale = FMath::Clamp(UnitHpBarBaseOrthoWidth / CurrentOrthoWidth, 0.6f, 3.0f);
+		}
+	}
+	const FVector2D BarRenderScale(UnitHpBarRenderScale * ZoomScale, UnitHpBarRenderScale * ZoomScale);
+
+	const TArray<FUnitUI>& Units = mCombatUIModel->GetUnitUIs();
+	for (int32 BarIndex = 0; BarIndex < mUnitHpBars.Num(); ++BarIndex)
+	{
+		FUnitHpBarWidget& Bar = mUnitHpBars[BarIndex];
+		if (Bar.mRoot == nullptr || Units.IsValidIndex(BarIndex) == false)
+		{
+			continue;
+		}
+		const FUnitUI& Unit = Units[BarIndex];
+
+		// 투영을 먼저 해서 화면 밖 유닛은 다른 비용 없이 즉시 숨긴다.
 		// 이동을 매 프레임 따라가도록 뷰 액터의 라이브 위치를 우선 투영(유효 시). 없으면 스냅샷(mWorldLocation) 폴백.
 		const FVector ProjectLocation = Unit.mViewActor.IsValid()
 			? Unit.mViewActor->GetActorLocation()
@@ -385,16 +416,11 @@ void UCombatTileMapHUDWidget::UpdateUnitHpBars()
 			continue;
 		}
 
-		if (UCanvasPanelSlot* RootSlot = Cast<UCanvasPanelSlot>(Bar.mRoot->Slot))
-		{
-			RootSlot->SetPosition(ScreenPosition + FVector2D(0.0f, UnitHpBarHeadOffsetY));   // 유닛 머리 위로 띄운다.
-		}
-
-		// 줌 배율 반영(하단 중앙 피벗이라 커져도 밑변이 머리 위 투영점에 고정).
-		Bar.mRoot->SetRenderScale(BarRenderScale);
-
-		// HP바 밑 상태이상 아이콘/개수 갱신(온스크린 확정된 바에만).
-		UpdateUnitHpBarStatus(Bar, Unit);
+		// 슬롯 이동 대신 렌더 변환(이동+줌 스케일 한 번에)으로 따라간다 — 캔버스 Layout 무효화 없이
+		// 그리기만 옮긴다. 하단 중앙 피벗이라 줌으로 커져도 밑변이 머리 위 투영점에 고정된다.
+		Bar.mRoot->SetRenderTransform(FWidgetTransform(
+			ScreenPosition + FVector2D(0.0f, UnitHpBarHeadOffsetY),
+			BarRenderScale, FVector2D::ZeroVector, 0.0f));
 
 		Bar.mRoot->SetVisibility(ESlateVisibility::HitTestInvisible);
 	}

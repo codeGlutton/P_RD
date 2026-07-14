@@ -204,12 +204,79 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 				40);
 		}
 	}
-	// 스킬 레일: 스킨이면 HUD_SkillRail 마커 슬롯 상속 세로 분배(렌더/입력 동일), 레거시는 기존 정규화 분배.
-	// 상세가 열려 있으면 레일 Z를 승격(현행 동작 유지) — 아이콘 +1, 라벨 +2로 3상태 렌더링 위계도 그대로다.
+	// 스킬 레일 슬롯 배치는 서랍 폭 애니메이션 프레임에서도 단독으로 다시 돌려야 해서 함수로 분리했다.
+	ApplySkillRailSlotLayout();
+
+	if (bSkin)
+	{
+		// 모바일 핵심 입력은 WBP의 작은 마커를 복사하지 않고 현재 프로필 디자인 px로 고정한다.
+		const FAnchors EndTurnAnchors(1.0f, 1.0f);
+		const float EndTurnTopFromBottom = -MobileBottomEdgeInsetPx
+			- MobileDiceDockHeightPx - MobileBottomGroupGapPx - MobileEndTurnHeightPx;
+		RDUILayout::ApplyDesignerSlotData(EndTurnButton,
+			MakePinnedSlot(EndTurnAnchors,
+				-MobileSafeInsetX - MobileEndTurnWidthPx,
+				EndTurnTopFromBottom,
+				MobileEndTurnWidthPx, MobileEndTurnHeightPx), 18);
+		RDUILayout::ApplyDesignerSlotData(mCancelActionButton,
+			MakePinnedSlot(EndTurnAnchors,
+				-MobileSafeInsetX - MobileEndTurnWidthPx - MobileActionButtonGapPx - MobileCancelActionWidthPx,
+				EndTurnTopFromBottom,
+				MobileCancelActionWidthPx, MobileEndTurnHeightPx), 18);
+
+		constexpr float NavWidth = 120.0f;
+		constexpr float NavHeight = 104.0f;
+		constexpr float NavGap = 12.0f;
+		auto ApplyNavButtonSlot = [&](UButton* Button, int32 IndexFromRight)
+		{
+			const int32 ColumnFromRight = mFoldVariantActive ? IndexFromRight % 2 : IndexFromRight;
+			const int32 Row = mFoldVariantActive ? IndexFromRight / 2 : 0;
+			const float RightOffset = MobileSafeInsetX + StaticCast<float>(ColumnFromRight) * (NavWidth + NavGap);
+			RDUILayout::ApplyDesignerSlotData(Button,
+				MakePinnedSlot(FAnchors(1.0f, 0.0f), -RightOffset - NavWidth,
+					MobileSafeInsetTop + StaticCast<float>(Row) * (NavHeight + NavGap), NavWidth, NavHeight), 19);
+		};
+		ApplyNavButtonSlot(mNavSettingsButton, 0);
+		ApplyNavButtonSlot(mNavSkillButton, 1);
+		ApplyNavButtonSlot(mNavDiceButton, 2);
+		ApplyNavButtonSlot(mNavMapButton, 3);
+		// 피드: 화면 중앙 핀(디자인px). 상태바 텍스트: 좌상단 핀(스킨에선 Collapsed지만 좌표계 일관 유지).
+		FAnchorData FeedSlot;
+		FeedSlot.Anchors = FAnchors(0.5f, 0.5f, 0.5f, 0.5f);
+		FeedSlot.Alignment = FVector2D::ZeroVector;
+		FeedSlot.Offsets = FMargin(-288.0f, -75.6f, 576.0f, 75.6f);   // 0.35~0.65 x 0.43~0.50 의 중앙 상대 px
+		RDUILayout::ApplyDesignerSlotData(mCombatFeedText, FeedSlot, 200);
+		RDUILayout::ApplyDesignerSlotData(mCombatStatusBarText, RDUILayout::NormalizedToDesignPointSlot(FAnchors(0.025f, 0.050f, 0.520f, 0.110f), DesignSize), 30);
+	}
+	else
+	{
+		// 우측 명령 버튼과 탑바 내비 투명 버튼: 상수 폴백 좌표(레거시 시안).
+		RDUILayout::ApplyAnchoredSlot(EndTurnButton, FAnchors(0.79f, 0.82f, 0.965f, 0.965f), 18);
+		RDUILayout::ApplyAnchoredSlot(mCancelActionButton, FAnchors(0.62f, 0.82f, 0.77f, 0.965f), 18);
+		RDUILayout::ApplyAnchoredSlot(mNavMapButton, FAnchors(0.7448f, 0.0185f, 0.7969f, 0.0963f), 19);
+		RDUILayout::ApplyAnchoredSlot(mNavDiceButton, FAnchors(0.8031f, 0.0185f, 0.8552f, 0.0963f), 19);
+		RDUILayout::ApplyAnchoredSlot(mNavSkillButton, FAnchors(0.8615f, 0.0185f, 0.9135f, 0.0963f), 19);
+		RDUILayout::ApplyAnchoredSlot(mNavSettingsButton, FAnchors(0.9198f, 0.0185f, 0.9719f, 0.0963f), 19);
+		RDUILayout::ApplyAnchoredSlot(mCombatFeedText, FAnchors(0.350f, 0.430f, 0.650f, 0.500f), 200);
+		RDUILayout::ApplyAnchoredSlot(mCombatStatusBarText, FAnchors(0.025f, 0.050f, 0.520f, 0.110f), 30);
+	}
+
+	// 스킨 value 칸(HUD_M_*)에 Lv/HP/Gold 텍스트를 칸 위치/크기로 그린다.
+	RefreshSkinValueLabels();
+}
+
+/**
+ * @details 스킬 레일: 스킨이면 HUD_SkillRail 마커 슬롯 상속 세로 분배(렌더/입력 동일), 레거시는 기존 정규화 분배.
+ *          상세가 열려 있으면 레일 Z를 승격(현행 동작 유지) — 아이콘 +1, 라벨 +2로 3상태 렌더링 위계도 그대로다.
+ *          서랍 폭(mSkillDrawerExpansion)에 의존하는 유일한 레이아웃이라, 서랍 애니메이션 프레임에서는
+ *          전체 ApplyRuntimeWidgetLayout 대신 이 함수만 다시 돌린다.
+ */
+void UCombatTileMapHUDWidget::ApplySkillRailSlotLayout() const
+{
 	const int32 SkillRailZOrder = IsSkillDetailVisible() ? CombatSkillDetailRailZOrder : 18;
 	const int32 SkillRailPanelCount = mSkillRailPanels.Num();
 	const int32 SkillInputCount = mSkillInputButtons.Num();
-	if (bSkin)
+	if (IsDesignerSkinActive())
 	{
 		const float DrawerWidth = FMath::Lerp(
 			MobileSkillCollapsedWidthPx, MobileSkillExpandedWidthPx, mSkillDrawerExpansion);
@@ -283,63 +350,6 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 			RDUILayout::ApplyAnchoredSlot(mSkillInputButtons[SkillIndex], GetSkillRailItemRect(SkillIndex, SkillInputCount), CombatSkillInputZOrder);
 		}
 	}
-
-	if (bSkin)
-	{
-		// 모바일 핵심 입력은 WBP의 작은 마커를 복사하지 않고 현재 프로필 디자인 px로 고정한다.
-		const FAnchors EndTurnAnchors(1.0f, 1.0f);
-		const float EndTurnTopFromBottom = -MobileBottomEdgeInsetPx
-			- MobileDiceDockHeightPx - MobileBottomGroupGapPx - MobileEndTurnHeightPx;
-		RDUILayout::ApplyDesignerSlotData(EndTurnButton,
-			MakePinnedSlot(EndTurnAnchors,
-				-MobileSafeInsetX - MobileEndTurnWidthPx,
-				EndTurnTopFromBottom,
-				MobileEndTurnWidthPx, MobileEndTurnHeightPx), 18);
-		RDUILayout::ApplyDesignerSlotData(mCancelActionButton,
-			MakePinnedSlot(EndTurnAnchors,
-				-MobileSafeInsetX - MobileEndTurnWidthPx - MobileActionButtonGapPx - MobileCancelActionWidthPx,
-				EndTurnTopFromBottom,
-				MobileCancelActionWidthPx, MobileEndTurnHeightPx), 18);
-
-		constexpr float NavWidth = 120.0f;
-		constexpr float NavHeight = 104.0f;
-		constexpr float NavGap = 12.0f;
-		auto ApplyNavButtonSlot = [&](UButton* Button, int32 IndexFromRight)
-		{
-			const int32 ColumnFromRight = mFoldVariantActive ? IndexFromRight % 2 : IndexFromRight;
-			const int32 Row = mFoldVariantActive ? IndexFromRight / 2 : 0;
-			const float RightOffset = MobileSafeInsetX + StaticCast<float>(ColumnFromRight) * (NavWidth + NavGap);
-			RDUILayout::ApplyDesignerSlotData(Button,
-				MakePinnedSlot(FAnchors(1.0f, 0.0f), -RightOffset - NavWidth,
-					MobileSafeInsetTop + StaticCast<float>(Row) * (NavHeight + NavGap), NavWidth, NavHeight), 19);
-		};
-		ApplyNavButtonSlot(mNavSettingsButton, 0);
-		ApplyNavButtonSlot(mNavSkillButton, 1);
-		ApplyNavButtonSlot(mNavDiceButton, 2);
-		ApplyNavButtonSlot(mNavMapButton, 3);
-		// 피드: 화면 중앙 핀(디자인px). 상태바 텍스트: 좌상단 핀(스킨에선 Collapsed지만 좌표계 일관 유지).
-		FAnchorData FeedSlot;
-		FeedSlot.Anchors = FAnchors(0.5f, 0.5f, 0.5f, 0.5f);
-		FeedSlot.Alignment = FVector2D::ZeroVector;
-		FeedSlot.Offsets = FMargin(-288.0f, -75.6f, 576.0f, 75.6f);   // 0.35~0.65 x 0.43~0.50 의 중앙 상대 px
-		RDUILayout::ApplyDesignerSlotData(mCombatFeedText, FeedSlot, 200);
-		RDUILayout::ApplyDesignerSlotData(mCombatStatusBarText, RDUILayout::NormalizedToDesignPointSlot(FAnchors(0.025f, 0.050f, 0.520f, 0.110f), DesignSize), 30);
-	}
-	else
-	{
-		// 우측 명령 버튼과 탑바 내비 투명 버튼: 상수 폴백 좌표(레거시 시안).
-		RDUILayout::ApplyAnchoredSlot(EndTurnButton, FAnchors(0.79f, 0.82f, 0.965f, 0.965f), 18);
-		RDUILayout::ApplyAnchoredSlot(mCancelActionButton, FAnchors(0.62f, 0.82f, 0.77f, 0.965f), 18);
-		RDUILayout::ApplyAnchoredSlot(mNavMapButton, FAnchors(0.7448f, 0.0185f, 0.7969f, 0.0963f), 19);
-		RDUILayout::ApplyAnchoredSlot(mNavDiceButton, FAnchors(0.8031f, 0.0185f, 0.8552f, 0.0963f), 19);
-		RDUILayout::ApplyAnchoredSlot(mNavSkillButton, FAnchors(0.8615f, 0.0185f, 0.9135f, 0.0963f), 19);
-		RDUILayout::ApplyAnchoredSlot(mNavSettingsButton, FAnchors(0.9198f, 0.0185f, 0.9719f, 0.0963f), 19);
-		RDUILayout::ApplyAnchoredSlot(mCombatFeedText, FAnchors(0.350f, 0.430f, 0.650f, 0.500f), 200);
-		RDUILayout::ApplyAnchoredSlot(mCombatStatusBarText, FAnchors(0.025f, 0.050f, 0.520f, 0.110f), 30);
-	}
-
-	// 스킨 value 칸(HUD_M_*)에 Lv/HP/Gold 텍스트를 칸 위치/크기로 그린다.
-	RefreshSkinValueLabels();
 }
 
 void UCombatTileMapHUDWidget::ApplyMobileSkinWidgetLayout() const
