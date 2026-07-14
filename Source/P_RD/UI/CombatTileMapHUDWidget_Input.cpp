@@ -3,6 +3,34 @@
 #include "InputCoreTypes.h"
 #include "UI/Combat/CombatUIModel.h"
 
+void UCombatTileMapHUDWidget::CancelActivePointerPresses()
+{
+	mSkillPressing = false;
+	mPressedSkillIndex = INDEX_NONE;
+	mSkillPressElapsed = 0.0f;
+	mSkillDetailOpenedFromPress = false;
+
+	mEquipPressing = false;
+	mPressedEquipSlot = INDEX_NONE;
+	mEquipPressElapsed = 0.0f;
+	mEquipDetailOpenedFromPress = false;
+
+	if (mLevelValueTouched)
+	{
+		mLevelValueTouched = false;
+		SetExpHoldPanelVisible(false);
+	}
+}
+
+void UCombatTileMapHUDWidget::NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent)
+{
+	Super::NativeOnMouseCaptureLost(CaptureLostEvent);
+
+	// 정상 해제(Up 핸들러)가 이미 상태를 정리한 뒤라면 아래는 전부 no-op이다.
+	// Up 없이 캡처만 사라진 경우(앱 전환·포커스 이동)에만 실질적으로 동작한다.
+	CancelActivePointerPresses();
+}
+
 FReply UCombatTileMapHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton)

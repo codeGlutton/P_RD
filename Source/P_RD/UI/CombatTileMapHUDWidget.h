@@ -115,6 +115,9 @@ protected:
 	/** @brief 모바일에서 스킬 레일 입력을 짧은 선택 또는 롱프레스 상세로 확정한다. */
 	FReply NativeOnTouchEnded(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent) override;
 
+	/** @brief 포인터 캡처를 잃으면(앱 전환·터치 취소 등) 진행 중이던 누름 상태를 폐기한다. */
+	void NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent) override;
+
 	/** @brief OpenUI()로 표시될 때 주사위 입장 연출을 다시 시작한다. */
 	void ApplyOpenUI() override;
 
@@ -122,6 +125,17 @@ protected:
 	int32 GetViewportZOrder() const override;
 
 private:
+	/**
+	 * @brief 진행 중인 스킬/장비/LV 누름 상태를 액션 발동 없이 전부 폐기한다.
+	 * @details 롱프레스는 릴리즈와 무관하게 Tick이 시간을 누적하는 구조라, 릴리즈가 소실되는 경로
+	 *          (전화 수신·알림·앱 전환의 터치 취소, 캡처 상실)에서 임계까지 세어 상세창이 저절로 열린다.
+	 *          앱 비활성/캡처 상실 훅이 이 함수를 불러 그 오발을 막는다.
+	 */
+	void CancelActivePointerPresses();
+
+	/** @brief 앱 비활성(ApplicationWillDeactivate) 구독 핸들 — NativeDestruct에서 해제. */
+	FDelegateHandle mAppDeactivateHandle;
+
 	/** @brief WBP에 없는 테스트용 전투 HUD 요소를 RootCanvas 위에 런타임으로 붙인다. */
 	void EnsureRuntimeWidgets();
 

@@ -1,6 +1,7 @@
 ﻿#include "UI/CombatTileMapHUDWidget.h"
 
 #include "Components/Button.h"
+#include "Misc/CoreDelegates.h"   // 앱 비활성 시 누름 latch 폐기(터치 취소 오발 방지)
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Reward/RewardUIWidgetBase.h"
 #include "UObject/ConstructorHelpers.h"
@@ -161,10 +162,25 @@ void UCombatTileMapHUDWidget::NativeConstruct()
 	{
 		mSkillDetailDismissButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleSkillDetailDismissButtonClicked);
 	}
+
+	// 전화 수신·알림·앱 전환으로 터치가 취소되면 릴리즈 이벤트가 오지 않는다 — 그 순간 누름 상태를 폐기해
+	// 복귀 후 Tick 누적으로 상세창이 저절로 열리는 오발을 막는다.
+	if (mAppDeactivateHandle.IsValid() == false)
+	{
+		mAppDeactivateHandle = FCoreDelegates::ApplicationWillDeactivateDelegate.AddWeakLambda(this, [this]()
+		{
+			CancelActivePointerPresses();
+		});
+	}
 }
 
 void UCombatTileMapHUDWidget::NativeDestruct()
 {
+	if (mAppDeactivateHandle.IsValid())
+	{
+		FCoreDelegates::ApplicationWillDeactivateDelegate.Remove(mAppDeactivateHandle);
+		mAppDeactivateHandle.Reset();
+	}
 	if (EndTurnButton != nullptr)
 	{
 		EndTurnButton->OnClicked.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleEndTurnButtonClicked);
@@ -223,6 +239,8 @@ void UCombatTileMapHUDWidget::ApplyOpenUI()
 	Super::ApplyOpenUI();
 
 	EnsureRuntimeWidgets();
+	// 이전 표시에서 끼었을 수 있는 누름 latch(스킬/장비/LV)를 안전 리셋한다.
+	CancelActivePointerPresses();
 	mLevelValueTouched = false;
 	SetExpHoldPanelVisible(false);
 	RefreshDiceViewsFromRunData();
