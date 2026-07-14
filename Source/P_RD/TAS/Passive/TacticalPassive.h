@@ -13,7 +13,7 @@
 #include "TacticalPassive.generated.h"
 
 struct FPassiveActivateContext;
-struct FBoardCombatTargetSnapshotData;
+class UBoardCombatTargetSnapshotData;
 class UTacticalEffect;
 class UStaticPassiveData;
 
@@ -172,7 +172,7 @@ protected:
 	 * @param Snapshot 대상 스냅샷 (없으면 nullptr)
 	 * @return 자격을 갖췄으면 true
 	 */
-	virtual bool IsTargetQualified(IN const FBoardCombatTargetSnapshotData* Snapshot) const { return true; }
+	virtual bool IsTargetQualified(IN const UBoardCombatTargetSnapshotData* Snapshot) const { return true; }
 
 	/**
 	 * @brief 이 패시브가 적용할 이펙트

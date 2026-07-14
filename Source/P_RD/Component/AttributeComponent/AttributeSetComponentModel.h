@@ -115,10 +115,10 @@ protected:
     /* 캡처 */
 public:
     /**
-     * @brief 현재 모든 속성/상태를 스냅샷에 캡처한다(세이브/전투 상태 기록 용도).
+     * @brief 현재 모든 속성/상태를 스냅샷에 캡처한다.
      * @param Snapshot 출력 스냅샷 데이터.
      */
-    void CaptureAllStates(FBoardCombatTargetSnapshotData& Snapshot) const;
+    void CaptureAllStates(UBoardCombatTargetSnapshotData* Snapshot) const;
 
     /* 기본값 설정 */
 public:
@@ -185,22 +185,6 @@ public:
 public:
     /**
      * @brief 단일 모디파이어를 속성에 즉시 적용한다.
-     *
-     * [PR #191 마이그레이션] ModifierOp 인자의 타입이 GAS의 TEnumAsByte<EGameplayModOp::Type>에서
-     * 자체 enum TEnumAsByte<ETacticalModOp::Type>(TacticalEffectType.h 정의)으로 치환되었다.
-     * ETacticalModOp의 정수값은 구 EGameplayModOp와 의도적으로 동일하게 유지된다 — (1) 기존 에셋/세이브에
-     * 박힌 op 정수값의 직렬화 호환을 위해, (2) Aggregator가 mMods[ETacticalModOp::Max] 형태로 op 값을 그대로
-     * 배열 인덱스로 사용하기 때문, (3) DefaultEngine.ini의 CoreRedirect가 구 enum 이름을 새 enum으로 매핑하기 때문.
-     *
-     * 연산 의미(op 정수값과 수식):
-     *  - AddBase(0)         : Result = Base + Magnitude            (합산)
-     *  - MultiplyAdditive(1): 배율 가산 — 1 + Σ(Magnitude)를 곱하는 가산형 배율
-     *  - DivideAdditive(2)  : 나눗셈 가산 — 누적 분모에 의한 나눗셈형 배율
-     *  - Override(3)        : Result = Magnitude                  (덮어쓰기)
-     *  - MultiplyCompound(4): 거듭제곱 곱 — 스택마다 Magnitude를 곱셈 복리로 누적
-     *  - AddFinal(5)        : 모든 배율 적용 후 최종 단계에서의 합산
-     * (하위호환 별칭: Additive=0 / Multiplicitive=1 / Division=2 / Override=3 — 구 GAS 이름)
-     *
      * @param Attribute 대상 속성.
      * @param ModifierOp 적용할 연산 종류(ETacticalModOp).
      * @param ModifierMagnitude 모디파이어 크기(연산에 투입되는 피연산자 값).

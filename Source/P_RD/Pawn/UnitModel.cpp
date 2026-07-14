@@ -56,13 +56,13 @@ void UUnitModel::OnBeginRoom()
 	// 전투 시작 패시브 처리
 	TArray<UTacticalPassive*> Passives = mPassiveCompModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartRoom);
 
-	FBoardCombatTargetSnapshotData UnitSnapshot = MakeSnapshotData();
+	UBoardCombatTargetSnapshotData* UnitSnapshot = MakeSnapshotData();
 
 	FPassiveActivateContext PassiveContext;
 	PassiveContext.mOwner = this;
-	PassiveContext.mOwnerSnapshot = &UnitSnapshot;
+	PassiveContext.mOwnerSnapshot = UnitSnapshot;
 	PassiveContext.mTargets.Add(this);
-	PassiveContext.mTargetSnapshots.Add(&UnitSnapshot);
+	PassiveContext.mTargetSnapshots.Add(UnitSnapshot);
 
 	for (UTacticalPassive*& Passive : Passives)
 	{
@@ -79,13 +79,13 @@ void UUnitModel::OnEndRoom()
 	// 전투 종료 패시브 처리
 	TArray<UTacticalPassive*> Passives = mPassiveCompModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndRoom);
 
-	FBoardCombatTargetSnapshotData UnitSnapshot = MakeSnapshotData();
+	UBoardCombatTargetSnapshotData* UnitSnapshot = MakeSnapshotData();
 
 	FPassiveActivateContext PassiveContext;
 	PassiveContext.mOwner = this;
-	PassiveContext.mOwnerSnapshot = &UnitSnapshot;
+	PassiveContext.mOwnerSnapshot = UnitSnapshot;
 	PassiveContext.mTargets.Add(this);
-	PassiveContext.mTargetSnapshots.Add(&UnitSnapshot);
+	PassiveContext.mTargetSnapshots.Add(UnitSnapshot);
 
 	for (UTacticalPassive*& Passive : Passives)
 	{
@@ -108,13 +108,13 @@ void UUnitModel::OnBeginTurn()
 	// 턴 시작 패시브 처리
 	TArray<UTacticalPassive*> Passives = mPassiveCompModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartTurn);
 
-	FBoardCombatTargetSnapshotData OwnerSnapshot = MakeSnapshotData();
+	UBoardCombatTargetSnapshotData* OwnerSnapshot = MakeSnapshotData();
 
 	FPassiveActivateContext PassiveContext;
 	PassiveContext.mOwner = this;
-	PassiveContext.mOwnerSnapshot = &OwnerSnapshot;
+	PassiveContext.mOwnerSnapshot = OwnerSnapshot;
 	PassiveContext.mTargets.Add(this);
-	PassiveContext.mTargetSnapshots.Add(&OwnerSnapshot);
+	PassiveContext.mTargetSnapshots.Add(OwnerSnapshot);
 
 	for (UTacticalPassive*& Passive : Passives)
 	{
@@ -129,13 +129,13 @@ void UUnitModel::OnEndTurn()
 	// 턴 종료 패시브 처리
 	TArray<UTacticalPassive*> Passives = mPassiveCompModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndTurn);
 
-	FBoardCombatTargetSnapshotData OwnerSnapshot = MakeSnapshotData();
+	UBoardCombatTargetSnapshotData* OwnerSnapshot = MakeSnapshotData();
 
 	FPassiveActivateContext PassiveContext;
 	PassiveContext.mOwner = this;
-	PassiveContext.mOwnerSnapshot = &OwnerSnapshot;
+	PassiveContext.mOwnerSnapshot = OwnerSnapshot;
 	PassiveContext.mTargets.Add(this);
-	PassiveContext.mTargetSnapshots.Add(&OwnerSnapshot);
+	PassiveContext.mTargetSnapshots.Add(OwnerSnapshot);
 
 	for (UTacticalPassive*& Passive : Passives)
 	{

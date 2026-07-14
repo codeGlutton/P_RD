@@ -13,6 +13,7 @@
 
 class UTacticalEffect;
 class UTacticalEffectContext;
+class UTacticalEffectExecutionCalculation;
 
 struct FActiveTacticalEffectsContainer;
 
@@ -106,11 +107,37 @@ public:
 	 * @param NewEffectContext 새 컨텍스트
 	 */
 	void SetContext(UTacticalEffectContext* NewEffectContext);
+	/**
+	 * @brief 유발자의 스냅샷 데이터를 대입한다.
+	 * @param SnapshotData 스냅샷 데이터
+	 */
+	void SetInstigatorSnapshotData(UBoardCombatTargetSnapshotData* SnapshotData);
+	/**
+	 * @brief 타겟의 스냅샷 데이터를 대입한다.
+	 * @param SnapshotData 스냅샷 데이터
+	 */
+	void SetTargetSnapshotData(UBoardCombatTargetSnapshotData* SnapshotData);
 
-	/** @brief 현재 적용 스택 수를 반환한다. @return 스택 수 */
+	/*
+	 * @brief 현재 적용 스택 수를 반환한다. 
+	 * @return 스택 수 
+	 */
 	int32 GetStackCount() const;
-	/** @brief 적용 컨텍스트를 반환한다. @return 컨텍스트 객체 */
+	/*
+	 * @brief 적용 컨텍스트를 반환한다. 
+	 * @return 컨텍스트 객체 
+	 */
 	UTacticalEffectContext* GetContext() const;
+	/*
+	 * @brief 유발자의 스냅샷 데이터를 반환한다.
+	 * @return 스냅샷 데이터
+	 */
+	UBoardCombatTargetSnapshotData* GetInstigatorSnapshotData() const;
+	/*
+	 * @brief 타겟의 스냅샷 데이터를 반환한다.
+	 * @return 스냅샷 데이터
+	 */
+	UBoardCombatTargetSnapshotData* GetTargetSnapshotData() const;
 
 public:
 	/**
@@ -145,11 +172,19 @@ public:
 private:
 	// @brief 해당 Effect가 적용되는 스택 수
 	UPROPERTY(Category = "Effect", VisibleAnywhere, meta = (DisplayName = "StackCount"))
-	int32 mStackCount = 0;
+	int32 mStackCount = 1;
 
 	// @brief 기본 메타 데이터
 	UPROPERTY(Category = "Effect", VisibleAnywhere, meta = (DisplayName = "EffectContext"))
 	TObjectPtr<UTacticalEffectContext> mEffectContext;
+
+	// @brief 유발자 스냅샷 데이터
+	UPROPERTY(Category = "Effect", VisibleAnywhere, meta = (DisplayName = "InstigatorSnapshotData"))
+	TObjectPtr<UBoardCombatTargetSnapshotData> mInstigatorSnapshotData;
+
+	// @brief 피격자 스냅샷 데이터
+	UPROPERTY(Category = "Effect", VisibleAnywhere, meta = (DisplayName = "TargetSnapshotData"))
+	TObjectPtr<UBoardCombatTargetSnapshotData> mTargetSnapshotData;
 };
 
 /**
@@ -180,6 +215,16 @@ public:
 	// @brief 연산에 사용할 크기 값(예: Additive면 더할 양, MultiplyAdditive면 더할 배율 등)
 	UPROPERTY(Category = "Attribute", EditDefaultsOnly, meta = (DisplayName = "ModifierMagnitude"))
 	float mModifierMagnitude = 0.f;
+};
+
+USTRUCT(BlueprintType)
+struct P_RD_API FTacticalEffectExecutionDefinition
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(Category = "Execution", EditDefaultsOnly, meta = (DisplayName = "CalculationClass"))
+	TSubclassOf<UTacticalEffectExecutionCalculation> mCalculationClass;
 };
 
 /**
@@ -236,9 +281,13 @@ public:
 	}
 
 public:
-	// @brief 이 Effect가 적용할 속성 수정자 목록(각 항목이 속성/연산/크기를 정의)
+	// @brief 이 Effect가 적용할 속성 수정자 목록
 	UPROPERTY(Category = "Effect", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "Modifiers"))
 	TArray<FTacticalModifierInfo> mModifiers;
+
+	// @brief 이 Effect가 적용할 실행자 목록
+	UPROPERTY(Category = "Effect", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "Executions"))
+	TArray<FTacticalEffectExecutionDefinition> mExecutions;
 
 public:
 	// @brief 즉시 적용(Instant)인지 기간 단위 적용(Infinite)인지 여부

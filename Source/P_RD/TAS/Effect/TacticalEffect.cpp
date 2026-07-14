@@ -1,52 +1,17 @@
 ﻿#include "TAS/Effect/TacticalEffect.h"
 
-/**
- * @file TacticalEffect.cpp
- * @brief 전술 전투(TAS) 이펙트 시스템의 런타임 구현. 이펙트 스펙(FTacticalEffectSpec)의
- *        모디파이어 크기 계산과 이펙트 정의(UTacticalEffect)의 적용 콜백을 담당한다.
- *
- *        [PR #191 마이그레이션 맥락]
- *        본 시스템은 GAS(GameplayAbilitySystem) 폐기 작업의 일부로, 모디파이어 "연산 종류"를
- *        구 EGameplayModOp 에서 자체 ETacticalModOp(TacticalEffectType.h)로 치환한 결과물이다.
- *        ETacticalModOp 의 정수값은 의도적으로 구 EGameplayModOp 와 동일하게 유지된다.
- *        그 이유는 다음 3가지이며, 이 파일의 연산 인덱싱/직렬화 가정도 모두 이 전제에 기댄다:
- *          (1) 직렬화 호환 - 기존 에셋/세이브 파일에 박힌 정수값을 그대로 보존하기 위함.
- *          (2) 배열 인덱싱 - Aggregator 가 mMods[ETacticalModOp::Max] 처럼 op 값을 배열 인덱스로 사용.
- *          (3) CoreRedirect - DefaultEngine.ini 가 구 enum 이름을 새 enum 이름으로 매핑.
- *        연산 종류: AddBase(0)=합산, MultiplyAdditive(1)=배율 가산, DivideAdditive(2)=나눗셈 가산,
- *        Override(3)=덮어쓰기, MultiplyCompound(4)=거듭제곱 곱, AddFinal(5)=최종 합산, Max(6)=무효/개수.
- *        구 GAS 이름(Additive/Multiplicitive/Division/Override)은 동일 정수값의 하위호환 별칭으로 남아 있다.
- */
-
-/**
- * @brief 이펙트 클래스와 컨텍스트로부터 스펙을 생성하는 생성자.
- *        기본 생성자에 위임(delegating)하여 멤버를 초기화한 뒤 Initialize 로 본격 설정한다.
- * @param Class 이 스펙이 표현할 이펙트 정의(UTacticalEffect).
- * @param EffectContext 이펙트 적용 맥락(시전자/타겟 등)을 담은 컨텍스트.
- */
 FTacticalEffectSpec::FTacticalEffectSpec(const UTacticalEffect* Class, UTacticalEffectContext* EffectContext) :
 	FTacticalEffectSpec()
 {
 	Initialize(Class, EffectContext);
 }
 
-/**
- * @brief 기존 스펙을 복제하되 컨텍스트만 새 것으로 교체하는 복사 생성자.
- *        값 복사 후 컨텍스트 포인터를 덮어쓴다(원본의 컨텍스트는 공유하지 않음).
- * @param Other 복사 원본이 되는 스펙.
- * @param EffectContext 복사본에 새로 부여할 컨텍스트.
- */
 FTacticalEffectSpec::FTacticalEffectSpec(const FTacticalEffectSpec& Other, UTacticalEffectContext* EffectContext)
 {
 	*this = Other;
 	mEffectContext = EffectContext;
 }
 
-/**
- * @brief 스펙을 이펙트 정의에 맞게 초기화한다. 지속 정책/컨텍스트/모디파이어 값 버퍼를 세팅.
- * @param Class 이 스펙이 표현할 이펙트 정의(UTacticalEffect). null 이면 안 됨(check).
- * @param EffectContext 이펙트 적용 맥락 컨텍스트.
- */
 void FTacticalEffectSpec::Initialize(const UTacticalEffect* Class, UTacticalEffectContext* EffectContext)
 {
 	mEffectClass = Class;
@@ -60,47 +25,45 @@ void FTacticalEffectSpec::Initialize(const UTacticalEffect* Class, UTacticalEffe
 	mModifierValues.SetNum(mEffectClass->mModifiers.Num());
 }
 
-/**
- * @brief 이 스펙의 현재 스택 수를 설정한다.
- * @param NewStackCount 새로 적용할 스택 수.
- */
 void FTacticalEffectSpec::SetStackCount(int32 NewStackCount)
 {
 	mStackCount = NewStackCount;
 }
 
-/**
- * @brief 이펙트 적용 컨텍스트를 교체한다.
- * @param NewEffectContext 새 컨텍스트.
- */
 void FTacticalEffectSpec::SetContext(UTacticalEffectContext* NewEffectContext)
 {
 	mEffectContext = NewEffectContext;
 }
 
-/**
- * @brief 현재 스택 수를 반환한다.
- * @return 스택 수.
- */
+void FTacticalEffectSpec::SetInstigatorSnapshotData(UBoardCombatTargetSnapshotData* SnapshotData)
+{
+	mInstigatorSnapshotData = SnapshotData;
+}
+
+void FTacticalEffectSpec::SetTargetSnapshotData(UBoardCombatTargetSnapshotData* SnapshotData)
+{
+	mTargetSnapshotData = SnapshotData;
+}
+
 int32 FTacticalEffectSpec::GetStackCount() const
 {
 	return mStackCount;
 }
 
-/**
- * @brief 현재 이펙트 적용 컨텍스트를 반환한다.
- * @return 컨텍스트 포인터.
- */
 UTacticalEffectContext* FTacticalEffectSpec::GetContext() const
 {
 	return mEffectContext;
 }
 
-/**
- * @brief 모든 모디파이어의 단일(스택 미반영) 크기를 미리 계산하여 mModifierValues 에 캐시한다.
- *        이펙트 정의의 정적 크기(mModifierMagnitude)에 런타임 동적 배율(mDynamicMagnitude)을 곱한 값.
- *        스택 반영은 여기서 하지 않고 조회 시점(GetModifierMagnitude)으로 미룬다.
- */
+UBoardCombatTargetSnapshotData* FTacticalEffectSpec::GetInstigatorSnapshotData() const
+{
+	return mInstigatorSnapshotData;
+}
+UBoardCombatTargetSnapshotData* FTacticalEffectSpec::GetTargetSnapshotData() const
+{
+	return mTargetSnapshotData;
+}
+
 void FTacticalEffectSpec::CalculateModifierMagnitudes()
 {
 	for (int32 ModIdx = 0; ModIdx < mModifierValues.Num(); ++ModIdx)

@@ -66,6 +66,13 @@ FScopedTacticalAggregatorOnDirtyBatch::~FScopedTacticalAggregatorOnDirtyBatch()
     TacticalFrameworkModel->EndAggregatorDirtyBatch();
 }
 
+FTacticalAggregator::FTacticalAggregator(UAttributeSetComponentModel* Owner, float InBaseValue) :
+    mOwner(Owner),
+    mDirtyCount(0),
+    mBaseValue(InBaseValue)
+{
+}
+
 /**
  * @brief 소멸 시 자신이 프레임워크 모델의 Dirty 대기열에 남아 있지 않도록 정리한다.
  *

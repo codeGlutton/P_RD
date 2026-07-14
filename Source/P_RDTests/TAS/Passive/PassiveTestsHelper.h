@@ -102,7 +102,7 @@ public:
 	float mQualifyHPBelow = 50.f;
 
 protected:
-	virtual bool IsTargetQualified(const FBoardCombatTargetSnapshotData* Snapshot) const override
+	virtual bool IsTargetQualified(const UBoardCombatTargetSnapshotData* Snapshot) const override
 	{
 		if (Snapshot == nullptr)
 		{

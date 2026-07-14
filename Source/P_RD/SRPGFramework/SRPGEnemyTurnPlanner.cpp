@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   SRPGEnemyTurnPlanner.cpp
  * @brief  적 한 턴의 행동을 계산하는 모델 레이어 플래너 구현
  * @author 이문환
@@ -12,6 +12,8 @@
 #include "SRPGFramework/SRPGTurnEndAction.h"
 
 #include "Pawn/Enemy/EnemyUnitModel.h"
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
 #include "Actor/TileMap/TileMapModel.h"
@@ -82,8 +84,11 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	const FTileIndex Origin = Enemy->GetTileTransform().mIndex;
 	const FTileIndex PlayerTile = Player->GetTileTransform().mIndex;
 
-	// 스폰 데이터(DA)에서 로드된 이동포인트만큼 이동 가능
-	const int32 MoveRange = FMath::Max(Enemy->GetMovePoint(), 0);
+	// 습득한 이동포인트만큼 이동 가능
+	const int32 MoveRange = FMath::Max(
+		Enemy->GetAttributeComponentModel()->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementAttribute()),
+		0
+	);
 
 	// 조준거리
 	// @note 몹은 주사위가 없어 DiceSum=0 → 사거리는 기본값(mAimRangeDefaultValue) 그대로

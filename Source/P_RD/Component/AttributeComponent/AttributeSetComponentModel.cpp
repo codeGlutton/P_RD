@@ -4,6 +4,7 @@
 #include "TAS/Aggregator/TacticalAggregator.h"
 
 #include "Actor/ActorModel.h"
+#include "Actor/BoardActor/BoardActorModel.h"
 #include "Actor/BoardActor/BoardCombatTarget.h"
 
 /**
@@ -210,13 +211,22 @@ const UTacticalAttributeSet* UAttributeSetComponentModel::GetOrCreateAttributeSe
  * @brief 현재 컴포넌트의 모든 속성값과 태그 카운트를 스냅샷에 직렬화한다(세이브/롤백용).
  * @param Snapshot 캡처 결과를 담을 스냅샷 구조체.
  */
-void UAttributeSetComponentModel::CaptureAllStates(FBoardCombatTargetSnapshotData& Snapshot) const
+void UAttributeSetComponentModel::CaptureAllStates(UBoardCombatTargetSnapshotData* Snapshot) const
 {
+    // 각 AttributeSet의 속성값 캡처
     for (const TObjectPtr<UTacticalAttributeSet>& SpawnedAttribute : mSpawnedAttributes)
     {
-        SpawnedAttribute->CaptureAllAttributes(Snapshot); // 각 AttributeSet의 속성값 캡처
+        SpawnedAttribute->CaptureAllAttributes(Snapshot); 
     }
-    mTacticalTagCountContainer.CaptureAllTags(Snapshot);  // 태그 카운트 캡처
+    // 태그 카운트 캡처
+    mTacticalTagCountContainer.CaptureAllTags(Snapshot);
+
+    // 타일 위치 캡처
+    UBoardActorModel* OwnerActorModel = GetOwnerModel<UBoardActorModel>();
+    if (OwnerActorModel != nullptr)
+    {
+        Snapshot->mTileTransform = OwnerActorModel->GetTileTransform();
+    }
 }
 
 /**
@@ -384,12 +394,6 @@ TSharedPtr<FTacticalEffectSpec> UAttributeSetComponentModel::MakeOutgoingSpec(TS
     return nullptr;
 }
 
-/**
- * @brief 이펙트 스펙을 대상 컴포넌트에 적용한다. 실제 적용은 대상의 ApplyToSelf에 위임한다.
- * @param Spec 적용할 이펙트 스펙.
- * @param Target 이펙트를 받을 대상 컴포넌트.
- * @return 적용된 활성 이펙트 핸들. 대상이 null이면 무효 핸들.
- */
 FActiveTacticalEffectHandle UAttributeSetComponentModel::ApplyTacticalEffectSpecToTarget(const FTacticalEffectSpec& Spec, UAttributeSetComponentModel* Target)
 {
     FActiveTacticalEffectHandle ReturnHandle;
@@ -400,13 +404,6 @@ FActiveTacticalEffectHandle UAttributeSetComponentModel::ApplyTacticalEffectSpec
     return ReturnHandle;
 }
 
-/**
- * @brief 이펙트 스펙을 자기 자신에게 적용한다(이펙트 적용의 핵심 경로).
- *        진입 검사 → 모디파이어 속성 유효성 검사 → 지속/순간 정책에 따른 스펙 복사 →
- *        (Instant면) 즉시 실행 → OnApplied 콜백 → 시전자/대상 양측 통지 순으로 진행한다.
- * @param Spec 적용할 이펙트 스펙.
- * @return 지속형 이펙트의 활성 핸들. Instant이거나 적용 실패 시 무효 핸들.
- */
 FActiveTacticalEffectHandle UAttributeSetComponentModel::ApplyTacticalEffectSpecToSelf(const FTacticalEffectSpec& Spec)
 {
 	// 이펙트 적용 중 활성 이펙트 컨테이너 변경을 방지하는 스코프 락

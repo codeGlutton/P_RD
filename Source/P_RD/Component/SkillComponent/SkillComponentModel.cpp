@@ -201,13 +201,13 @@ void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillInd
 
 	TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartUsingSkill);
 
-	FBoardCombatTargetSnapshotData OwnerSnapshot = OwnerUnitModel->MakeSnapshotData();
+	UBoardCombatTargetSnapshotData* OwnerSnapshot = OwnerUnitModel->MakeSnapshotData();
 
 	FPassiveActivateContext PassiveContext;
 	PassiveContext.mOwner = OwnerUnitModel;
-	PassiveContext.mOwnerSnapshot = &OwnerSnapshot;
+	PassiveContext.mOwnerSnapshot = OwnerSnapshot;
 	PassiveContext.mTargets.Add(OwnerUnitModel);
-	PassiveContext.mTargetSnapshots.Add(&OwnerSnapshot);
+	PassiveContext.mTargetSnapshots.Add(OwnerSnapshot);
 
 	for (UTacticalPassive*& Passive : Passives)
 	{
@@ -273,15 +273,15 @@ void USkillComponentModel::PlayMotionLayer()
 	/* 이펙트 가격 전 패시브 적용 */
 
 	{
-		FBoardCombatTargetSnapshotData OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
+		UBoardCombatTargetSnapshotData* OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
 
 		TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartApplyingEffect);
 
 		FPassiveActivateContext PassiveContext;
 		PassiveContext.mOwner = OwnerUnitModel;
-		PassiveContext.mOwnerSnapshot = &OwnerSnapshot;
+		PassiveContext.mOwnerSnapshot = OwnerSnapshot;
 
-		TArray<FBoardCombatTargetSnapshotData> OtherSnapshots;
+		TArray<UBoardCombatTargetSnapshotData*> OtherSnapshots;
 		OtherSnapshots.Reserve(mActiveSkillContext.mOtherCombatTargets.Num());
 		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mOtherCombatTargets)
 		{
@@ -290,7 +290,7 @@ void USkillComponentModel::PlayMotionLayer()
 			OtherSnapshots.Add(OtherCombatTarget->MakeSnapshotData());
 
 			PassiveContext.mTargets.Add(OtherActorModel);
-			PassiveContext.mTargetSnapshots.Add(&OtherSnapshots.Last());
+			PassiveContext.mTargetSnapshots.Add(OtherSnapshots.Last());
 		}
 
 		for (UTacticalPassive* Passive : Passives)
@@ -304,7 +304,7 @@ void USkillComponentModel::PlayMotionLayer()
 
 	/* 이펙트 피격 전 패시브 적용(선택적) */
 	{
-		FBoardCombatTargetSnapshotData OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
+		UBoardCombatTargetSnapshotData* OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
 
 		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mOtherCombatTargets)
 		{
@@ -319,13 +319,13 @@ void USkillComponentModel::PlayMotionLayer()
 
 			TArray<UTacticalPassive*> OtherPassives = OtherPassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartReceivingEffect);
 
-			FBoardCombatTargetSnapshotData OtherSnapshot = OtherCombatTarget->MakeSnapshotData();
+			UBoardCombatTargetSnapshotData* OtherSnapshot = OtherCombatTarget->MakeSnapshotData();
 
 			FPassiveActivateContext PassiveContext;
 			PassiveContext.mOwner = OtherActorModel;
-			PassiveContext.mOwnerSnapshot = &OtherSnapshot;
+			PassiveContext.mOwnerSnapshot = OtherSnapshot;
 			PassiveContext.mTargets.Add(OwnerUnitModel);
-			PassiveContext.mTargetSnapshots.Add(&OwnerSnapshot);
+			PassiveContext.mTargetSnapshots.Add(OwnerSnapshot);
 
 			for (UTacticalPassive* OtherPassive : OtherPassives)
 			{
@@ -420,9 +420,50 @@ void USkillComponentModel::TriggerMotionLayer(const FApplyEventTriggerPayload* P
 
 	/* 실제 Effect 적용 */
 
-	for (const TInstancedStruct<FSkillEffectLayer>& EffectLayer : MotionLayer.mSkillEffectLayers)
 	{
-		EffectLayer.Get().CommitEffect(OwnerCombatTarget, mActiveSkillContext.mTargetTileIndexes, mActiveSkillContext.mOtherCombatTargets, mActiveSkillContext.mDiceSum);
+		TArray<FActiveTacticalEffectHandle> FactorEffectHandles;
+		FactorEffectHandles.Reserve(MotionLayer.mSkillEffectLayers.Num());
+
+		const int32 EffectLayerNum = MotionLayer.mSkillEffectLayers.Num();
+		for (int32 i = 0; i < EffectLayerNum; ++i)
+		{
+			const TInstancedStruct<FSkillEffectLayer>& EffectLayer = MotionLayer.mSkillEffectLayers[i];
+			FactorEffectHandles.Add(EffectLayer.Get().ApplyFactorEffect(OwnerCombatTarget));
+		}
+
+		UBoardCombatTargetSnapshotData* OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
+		TArray<TScriptInterface<IBoardCombatTarget>> OtherCombatTargets;
+		OtherCombatTargets.Reserve(mActiveSkillContext.mOtherCombatTargets.Num());
+		TArray<TObjectPtr<UBoardCombatTargetSnapshotData>> OtherSnapshots;
+		OtherSnapshots.Reserve(mActiveSkillContext.mOtherCombatTargets.Num());
+		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mOtherCombatTargets)
+		{
+			UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
+			checkf(OtherActorModel != nullptr, TEXT("스킬을 받는 타겟이 유효하지 않음"));
+
+			OtherCombatTargets.Add(OtherActorModel);
+			OtherSnapshots.Add(OtherCombatTarget->MakeSnapshotData());
+		}
+
+		FSkillEffectCommitParams Params(
+			OwnerUnitModel,
+			OwnerSnapshot, 
+			OtherCombatTargets, 
+			OtherSnapshots, 
+			mActiveSkillContext.mTargetTileIndexes, 
+			mActiveSkillContext.mDiceSum
+		);
+		for (int32 i = 0; i < EffectLayerNum; ++i)
+		{
+			const TInstancedStruct<FSkillEffectLayer>& EffectLayer = MotionLayer.mSkillEffectLayers[i];
+			EffectLayer.Get().CommitEffect(Params);
+		}
+
+		for (int32 i = 0; i < EffectLayerNum; ++i)
+		{
+			const TInstancedStruct<FSkillEffectLayer>& EffectLayer = MotionLayer.mSkillEffectLayers[i];
+			EffectLayer.Get().ClearFactorEffect(OwnerCombatTarget, FactorEffectHandles[i]);
+		}
 	}
 
 	/* 피격 애니메이션 적용 */
@@ -439,7 +480,7 @@ void USkillComponentModel::TriggerMotionLayer(const FApplyEventTriggerPayload* P
 	/* 이펙트 피격 후 패시브 적용 (선택적) */
 
 	{
-		FBoardCombatTargetSnapshotData OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
+		UBoardCombatTargetSnapshotData* OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
 
 		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mOtherCombatTargets)
 		{
@@ -454,13 +495,13 @@ void USkillComponentModel::TriggerMotionLayer(const FApplyEventTriggerPayload* P
 
 			TArray<UTacticalPassive*> OtherPassives = OtherPassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndReceivingEffect);
 
-			FBoardCombatTargetSnapshotData OtherSnapshot = OtherCombatTarget->MakeSnapshotData();
+			UBoardCombatTargetSnapshotData* OtherSnapshot = OtherCombatTarget->MakeSnapshotData();
 
 			FPassiveActivateContext PassiveContext;
 			PassiveContext.mOwner = OtherActorModel;
-			PassiveContext.mOwnerSnapshot = &OtherSnapshot;
+			PassiveContext.mOwnerSnapshot = OtherSnapshot;
 			PassiveContext.mTargets.Add(OwnerUnitModel);
-			PassiveContext.mTargetSnapshots.Add(&OwnerSnapshot);
+			PassiveContext.mTargetSnapshots.Add(OwnerSnapshot);
 
 			for (UTacticalPassive* OtherPassive : OtherPassives)
 			{
@@ -474,15 +515,15 @@ void USkillComponentModel::TriggerMotionLayer(const FApplyEventTriggerPayload* P
 
 	/* 이펙트 가격 후 패시브 적용 */
 	{
-		FBoardCombatTargetSnapshotData OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
+		UBoardCombatTargetSnapshotData* OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
 
 		TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndApplyingEffect);
 
 		FPassiveActivateContext PassiveContext;
 		PassiveContext.mOwner = OwnerUnitModel;
-		PassiveContext.mOwnerSnapshot = &OwnerSnapshot;
+		PassiveContext.mOwnerSnapshot = OwnerSnapshot;
 
-		TArray<FBoardCombatTargetSnapshotData> OtherSnapshots;
+		TArray<UBoardCombatTargetSnapshotData*> OtherSnapshots;
 		OtherSnapshots.Reserve(mActiveSkillContext.mOtherCombatTargets.Num());
 		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mOtherCombatTargets)
 		{
@@ -491,7 +532,7 @@ void USkillComponentModel::TriggerMotionLayer(const FApplyEventTriggerPayload* P
 			OtherSnapshots.Add(OtherCombatTarget->MakeSnapshotData());
 
 			PassiveContext.mTargets.Add(OtherActorModel);
-			PassiveContext.mTargetSnapshots.Add(&OtherSnapshots.Last());
+			PassiveContext.mTargetSnapshots.Add(OtherSnapshots.Last());
 		}
 
 		for (UTacticalPassive* Passive : Passives)
@@ -564,13 +605,13 @@ void USkillComponentModel::DeactivateSkill()
 
 	TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndUsingSkill);
 
-	FBoardCombatTargetSnapshotData OwnerSnapshot = OwnerUnitModel->MakeSnapshotData();
+	UBoardCombatTargetSnapshotData* OwnerSnapshot = OwnerUnitModel->MakeSnapshotData();
 
 	FPassiveActivateContext PassiveContext;
 	PassiveContext.mOwner = OwnerUnitModel;
-	PassiveContext.mOwnerSnapshot = &OwnerSnapshot;
+	PassiveContext.mOwnerSnapshot = OwnerSnapshot;
 	PassiveContext.mTargets.Add(OwnerUnitModel);
-	PassiveContext.mTargetSnapshots.Add(&OwnerSnapshot);
+	PassiveContext.mTargetSnapshots.Add(OwnerSnapshot);
 
 	for (UTacticalPassive*& Passive : Passives)
 	{

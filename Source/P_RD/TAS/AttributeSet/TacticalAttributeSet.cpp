@@ -391,7 +391,7 @@ UAttributeSetComponentModel* UTacticalAttributeSet::GetOwningAttributeSetCompone
 	return Result;
 }
 
-void UTacticalAttributeSet::CaptureAllAttributes(FBoardCombatTargetSnapshotData& Snapshot) const
+void UTacticalAttributeSet::CaptureAllAttributes(UBoardCombatTargetSnapshotData* Snapshot) const
 {
 	for (TFieldIterator<FProperty> It(GetClass()); It; ++It)
 	{
@@ -406,7 +406,7 @@ void UTacticalAttributeSet::CaptureAllAttributes(FBoardCombatTargetSnapshotData&
 
 			FTacticalAttribute Attribute(Property);
 			// 스냅샷 맵은 빈 상태로 진입하므로 operator[](FindChecked) 대신 Add로 삽입
-			Snapshot.mAttributes.Add(Attribute, DataPtr->GetCurrentValue());
+			Snapshot->mAttributes.Add(Attribute, DataPtr->GetCurrentValue());
 		}
 	}
 }
