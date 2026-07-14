@@ -16,6 +16,14 @@
 
 void UCombatTileMapHUDWidget::HandleCombatUIChanged(ECombatUIDomain Domain)
 {
+	// 월드 롱프레스 트레이스가 상세 DTO를 채운 동기 구간에서만 상세 오버레이를 연다.
+	// 일반 Unit 도메인 갱신(HP/상태 변화)은 팝업을 열지 않는다.
+	if ((Domain == ECombatUIDomain::Unit || Domain == ECombatUIDomain::All)
+		&& mWorldLongPressAwaitingDetail)
+	{
+		ShowCachedUnitDetail();
+	}
+
 	// 상단 상태바에 영향을 주는 도메인(메타/유닛/턴/전체)만 다시 그린다.
 	if (Domain == ECombatUIDomain::Meta
 		|| Domain == ECombatUIDomain::Unit

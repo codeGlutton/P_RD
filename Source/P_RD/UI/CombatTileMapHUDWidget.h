@@ -515,6 +515,15 @@ private:
 	/** @brief 스킬 레일을 누르고 있는 시간을 누적해 롱프레스 상세 표시를 판단한다. */
 	void UpdateSkillPress(float InDeltaTime);
 
+	/** @brief 월드 영역 누름을 시작한다. 짧게 떼면 일반 탭, 오래 누르면 대상 상세 요청으로 처리한다. */
+	void BeginWorldPress(const FVector2D& ScreenPosition);
+
+	/** @brief 월드 영역 누름 시간을 누적해 일반 탭과 롱프레스를 구분한다. */
+	void UpdateWorldPress(float InDeltaTime);
+
+	/** @brief 월드 영역 입력을 종료하고, 롱프레스가 아니었다면 일반 탭을 전달한다. */
+	void EndWorldPress();
+
 	/** @brief 장비 슬롯 투명 버튼이 눌렸을 때 공통 누름 상태로 진입한다(스킬과 동일 방식). */
 	UFUNCTION()
 	void HandleEquipButtonPressed(int32 SlotIndex);
@@ -537,6 +546,9 @@ private:
 
 	/** @brief 유닛 상세(concept_09 오버레이)를 표시한다. */
 	void ShowUnitDetail(int32 UnitId);
+
+	/** @brief 게임플레이가 월드 트레이스로 채운 현재 유닛 상세 DTO를 오버레이에 표시한다. */
+	void ShowCachedUnitDetail();
 
 	/** @brief 장비 상세(concept_09 오버레이)를 표시한다. */
 	void ShowEquipmentDetail(int32 SlotIndex);
@@ -848,6 +860,21 @@ private:
 
 	/** @brief 스킬 상세를 열기 위해 필요한 누름 시간. [합의필요] 모바일 손맛 기준으로 확정되면 설정화 대상. */
 	float mSkillLongPressThreshold = 0.45f;
+
+	/** @brief 현재 월드(타일/유닛) 영역 입력을 추적 중인지. */
+	bool mWorldPressing = false;
+
+	/** @brief 같은 월드 누름에서 일반 탭과 롱프레스가 동시에 발생하지 않게 막는 latch. */
+	bool mWorldLongPressTriggered = false;
+
+	/** @brief 현재 월드 누름 누적 시간. 스킬/장비와 같은 임계시간을 사용한다. */
+	float mWorldPressElapsed = 0.0f;
+
+	/** @brief 월드 트레이스에 넘길 누름 시작 화면 좌표. */
+	FVector2D mWorldPressScreenPosition = FVector2D::ZeroVector;
+
+	/** @brief 동기 월드 롱프레스 처리 중 들어온 Unit 상세 갱신만 팝업으로 열기 위한 guard. */
+	bool mWorldLongPressAwaitingDetail = false;
 
 	/** @brief 풀스크린 지도 뷰가 열려 전투 컨트롤을 숨긴 상태. */
 	bool mCombatControlsHidden = false;
