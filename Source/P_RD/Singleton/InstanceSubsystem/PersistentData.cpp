@@ -598,6 +598,7 @@ void UOptionPersistData::MakeCaches()
 /** @brief 옵션 데이터 초기 생성 훅(현재 별도 동작 없음, 향후 확장용). */
 void UOptionPersistData::MakeOption()
 {
+	ClearOption();
 }
 
 /**
@@ -689,7 +690,9 @@ void UOptionPersistData::SetLanguage(ELanguageType LanguageType)
  */
 void UOptionPersistData::SetResolution(const FIntPoint& Resolution)
 {
-	// TODO
+	UGameUserSettings* GameUserSettings = UGameUserSettings::GetGameUserSettings();
+	GameUserSettings->SetScreenResolution(Resolution);
+	GameUserSettings->ApplySettings(false);
 }
 
 /** @brief FPS 제한을 지원 값(30/60)으로 보정하고 런타임 최대 FPS에 즉시 반영한다. */
