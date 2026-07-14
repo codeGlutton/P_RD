@@ -1,17 +1,13 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-#include "Actor/BoardActor/Obstacle/Obstacle.h"
+﻿#include "Actor/BoardActor/Obstacle/Obstacle.h"
 
 #include "RDCollision.h"
 
 #include "Components/SkeletalMeshComponent.h"
-#include "GameFramework/FloatingPawnMovement.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/ArrowComponent.h"
 
 #include "Actor/BoardActor/Obstacle/ObstacleModel.h"
 
-// Sets default values
 AObstacle::AObstacle()
 {
 	mCapsuleComp = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComp"));
