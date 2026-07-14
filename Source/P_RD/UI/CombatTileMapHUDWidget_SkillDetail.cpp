@@ -76,21 +76,7 @@ void UCombatTileMapHUDWidget::ShowUnitDetail(int32 UnitId)
 	}
 
 	mCombatUIModel->RequestLongPressUnit(UnitId);
-	ShowCachedUnitDetail();
-}
-
-void UCombatTileMapHUDWidget::ShowCachedUnitDetail()
-{
-	if (mCombatUIModel == nullptr)
-	{
-		return;
-	}
-
 	const FUnitDetailUI& Detail = mCombatUIModel->GetUnitDetail();
-	if (Detail.mUnitId == INDEX_NONE)
-	{
-		return;
-	}
 
 	if (mDetailIconImage != nullptr)
 	{

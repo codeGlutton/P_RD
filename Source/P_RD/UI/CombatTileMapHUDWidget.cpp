@@ -214,7 +214,6 @@ void UCombatTileMapHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 	}
 
 	UpdateTopBarBackdrop();
-	UpdateWorldPress(InDeltaTime);
 	UpdateSkillPress(InDeltaTime);
 	UpdateEquipPress(InDeltaTime);
 }
