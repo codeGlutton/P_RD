@@ -235,7 +235,7 @@ void USettingsPanelWidget::HandleScreenShakeChanged(bool bChecked)
 		OnScreenShakeChanged.Broadcast(mValueModel.mScreenShakeEnabled);
 		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
 		{
-			GameModeBase->SetCameraShakeEnabled(mValueModel.mEffectsEnabled);
+			GameModeBase->SetCameraShakeEnabled(mValueModel.mScreenShakeEnabled);
 		}
 	}
 }
