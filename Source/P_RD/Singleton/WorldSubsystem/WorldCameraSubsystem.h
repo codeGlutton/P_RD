@@ -26,6 +26,7 @@ class P_RD_API UWorldCameraSubsystem : public UWorldSubsystem, public IObjectVie
 public:
 	void BindModel(UObjectModel* Model) override;
 	void UnbindModel(UObjectModel* Model) override;
+	void Deinitialize() override;
 
 protected:
 	UObjectModel* GetModel_Internal() const override;

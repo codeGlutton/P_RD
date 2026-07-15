@@ -51,28 +51,52 @@ namespace
 	{
 		switch (Step)
 		{
-		case ECombatTutorialGuideStep::RollDiceBoard: return NSLOCTEXT("CombatTutorial", "RollDiceBoard", "1 / 17   주사위 판을 눌러 주사위를 굴리세요");
+		case ECombatTutorialGuideStep::RollDiceBoard: return NSLOCTEXT("CombatTutorial", "RollDiceBoard", "1 / 35   주사위 판을 눌러 주사위를 굴리세요");
 		case ECombatTutorialGuideStep::WaitDiceResult: return NSLOCTEXT("CombatTutorial", "WaitDiceResult", "주사위가 멈출 때까지 기다리세요");
-		case ECombatTutorialGuideStep::DismissDiceBoard: return NSLOCTEXT("CombatTutorial", "DismissDiceBoard", "2 / 17   결과를 확인하고 주사위 판을 한 번 더 누르세요");
-		case ECombatTutorialGuideStep::SelectStepSkill: return NSLOCTEXT("CombatTutorial", "SelectStepSkill", "3 / 17   아래쪽 STEP 스킬을 누르세요");
-		case ECombatTutorialGuideStep::SelectStepDice: return NSLOCTEXT("CombatTutorial", "SelectStepDice", "4 / 17   금색 박스의 주사위를 STEP에 올리세요");
-		case ECombatTutorialGuideStep::PreviewStep: return NSLOCTEXT("CombatTutorial", "PreviewStep", "5 / 17   내 캐릭터가 서 있는 칸을 누르세요");
-		case ECombatTutorialGuideStep::ConfirmStep: return NSLOCTEXT("CombatTutorial", "ConfirmStep", "6 / 17   같은 칸을 한 번 더 눌러 STEP을 확정하세요");
+		case ECombatTutorialGuideStep::DismissDiceBoard: return NSLOCTEXT("CombatTutorial", "DismissDiceBoard", "2 / 35   결과를 확인하고 주사위 판을 한 번 더 누르세요");
+		case ECombatTutorialGuideStep::SelectStepSkill: return NSLOCTEXT("CombatTutorial", "SelectStepSkill", "3 / 35   아래쪽 STEP 스킬을 누르세요");
+		case ECombatTutorialGuideStep::SelectStepDice: return NSLOCTEXT("CombatTutorial", "SelectStepDice", "4 / 35   금색 박스의 주사위를 STEP에 올리세요");
+		case ECombatTutorialGuideStep::PreviewStep: return NSLOCTEXT("CombatTutorial", "PreviewStep", "5 / 35   내 캐릭터가 서 있는 칸을 누르세요");
+		case ECombatTutorialGuideStep::ConfirmStep: return NSLOCTEXT("CombatTutorial", "ConfirmStep", "6 / 35   같은 칸을 한 번 더 눌러 STEP을 확정하세요");
 		case ECombatTutorialGuideStep::WaitStepResolved: return NSLOCTEXT("CombatTutorial", "WaitStepResolved", "STEP으로 이동력을 얻는 중입니다");
-		case ECombatTutorialGuideStep::PressMove: return NSLOCTEXT("CombatTutorial", "PressMove", "7 / 17   오른쪽 MOVE 버튼을 누르세요");
-		case ECombatTutorialGuideStep::PreviewMove: return NSLOCTEXT("CombatTutorial", "PreviewMove", "8 / 17   금색 박스의 칸을 눌러 이동 경로를 확인하세요");
-		case ECombatTutorialGuideStep::ConfirmMove: return NSLOCTEXT("CombatTutorial", "ConfirmMove", "9 / 17   같은 칸을 한 번 더 눌러 이동하세요");
+		case ECombatTutorialGuideStep::PressMove: return NSLOCTEXT("CombatTutorial", "PressMove", "7 / 35   오른쪽 MOVE 버튼을 누르세요");
+		case ECombatTutorialGuideStep::PreviewMove: return NSLOCTEXT("CombatTutorial", "PreviewMove", "8 / 35   금색 박스의 칸을 눌러 이동 경로를 확인하세요");
+		case ECombatTutorialGuideStep::ConfirmMove: return NSLOCTEXT("CombatTutorial", "ConfirmMove", "9 / 35   같은 칸을 한 번 더 눌러 이동하세요");
 		case ECombatTutorialGuideStep::WaitMoveResolved: return NSLOCTEXT("CombatTutorial", "WaitMoveResolved", "공격할 위치로 이동 중입니다");
-		case ECombatTutorialGuideStep::SelectAttackSkill: return NSLOCTEXT("CombatTutorial", "SelectAttackSkill", "10 / 17   위쪽 기본 공격 스킬을 누르세요");
-		case ECombatTutorialGuideStep::SelectAttackDice: return NSLOCTEXT("CombatTutorial", "SelectAttackDice", "11 / 17   남은 주사위 하나를 공격 스킬에 올리세요");
-		case ECombatTutorialGuideStep::PreviewAttack: return NSLOCTEXT("CombatTutorial", "PreviewAttack", "12 / 17   적을 눌러 예상 피해를 확인하세요");
-		case ECombatTutorialGuideStep::ConfirmAttack: return NSLOCTEXT("CombatTutorial", "ConfirmAttack", "13 / 17   같은 적을 한 번 더 눌러 공격을 확정하세요");
+		case ECombatTutorialGuideStep::SelectAttackSkill: return NSLOCTEXT("CombatTutorial", "SelectAttackSkill", "10 / 35   위쪽 기본 공격 스킬을 누르세요");
+		case ECombatTutorialGuideStep::SelectAttackDice: return NSLOCTEXT("CombatTutorial", "SelectAttackDice", "11 / 35   남은 주사위 하나를 공격 스킬에 올리세요");
+		case ECombatTutorialGuideStep::PreviewAttack: return NSLOCTEXT("CombatTutorial", "PreviewAttack", "12 / 35   적을 눌러 예상 피해를 확인하세요");
+		case ECombatTutorialGuideStep::ConfirmAttack: return NSLOCTEXT("CombatTutorial", "ConfirmAttack", "13 / 35   같은 적을 한 번 더 눌러 공격을 확정하세요");
 		case ECombatTutorialGuideStep::WaitAttackResolved: return NSLOCTEXT("CombatTutorial", "WaitAttackResolved", "공격 결과를 확인하는 중입니다");
-		case ECombatTutorialGuideStep::SelectBuffSkill: return NSLOCTEXT("CombatTutorial", "SelectBuffSkill", "14 / 17   금색 박스의 방어 스킬을 누르세요");
-		case ECombatTutorialGuideStep::SelectBuffDice: return NSLOCTEXT("CombatTutorial", "SelectBuffDice", "15 / 17   남은 주사위 하나를 방어 스킬에 올리세요");
-		case ECombatTutorialGuideStep::PreviewBuff: return NSLOCTEXT("CombatTutorial", "PreviewBuff", "16 / 17   내 캐릭터가 서 있는 칸을 누르세요");
-		case ECombatTutorialGuideStep::ConfirmBuff: return NSLOCTEXT("CombatTutorial", "ConfirmBuff", "17 / 17   같은 칸을 한 번 더 눌러 방어 스킬을 확정하세요");
+		case ECombatTutorialGuideStep::SelectBuffSkill: return NSLOCTEXT("CombatTutorial", "SelectBuffSkill", "14 / 35   금색 박스의 방어 스킬을 누르세요");
+		case ECombatTutorialGuideStep::SelectBuffDice: return NSLOCTEXT("CombatTutorial", "SelectBuffDice", "15 / 35   남은 주사위 하나를 방어 스킬에 올리세요");
+		case ECombatTutorialGuideStep::PreviewBuff: return NSLOCTEXT("CombatTutorial", "PreviewBuff", "16 / 35   내 캐릭터가 서 있는 칸을 누르세요");
+		case ECombatTutorialGuideStep::ConfirmBuff: return NSLOCTEXT("CombatTutorial", "ConfirmBuff", "17 / 35   같은 칸을 한 번 더 눌러 방어 스킬을 확정하세요");
 		case ECombatTutorialGuideStep::WaitBuffResolved: return NSLOCTEXT("CombatTutorial", "WaitBuffResolved", "방어력이 증가하는 것을 확인하세요");
+		case ECombatTutorialGuideStep::EndRoundOne: return NSLOCTEXT("CombatTutorial", "EndRoundOne", "18 / 35   END TURN을 눌러 1라운드를 끝내세요");
+		case ECombatTutorialGuideStep::WaitRoundTwo: return NSLOCTEXT("CombatTutorial", "WaitRoundTwo", "적의 행동이 끝나고 2라운드가 시작될 때까지 기다리세요");
+		case ECombatTutorialGuideStep::RollDiceBoardRoundTwo: return NSLOCTEXT("CombatTutorial", "RollDiceBoardRoundTwo", "19 / 35   2라운드 주사위 판을 눌러 굴리세요");
+		case ECombatTutorialGuideStep::WaitDiceResultRoundTwo: return NSLOCTEXT("CombatTutorial", "WaitDiceResultRoundTwo", "2라운드 주사위가 멈출 때까지 기다리세요");
+		case ECombatTutorialGuideStep::DismissDiceBoardRoundTwo: return NSLOCTEXT("CombatTutorial", "DismissDiceBoardRoundTwo", "20 / 35   결과를 확인하고 주사위 판을 한 번 더 누르세요");
+		case ECombatTutorialGuideStep::SelectHealSkill: return NSLOCTEXT("CombatTutorial", "SelectHealSkill", "21 / 35   명상 회복 스킬을 누르세요");
+		case ECombatTutorialGuideStep::SelectHealDice: return NSLOCTEXT("CombatTutorial", "SelectHealDice", "22 / 35   주사위 3개를 회복 스킬에 올리세요");
+		case ECombatTutorialGuideStep::PreviewHeal: return NSLOCTEXT("CombatTutorial", "PreviewHeal", "23 / 35   내 캐릭터가 서 있는 칸을 누르세요");
+		case ECombatTutorialGuideStep::ConfirmHeal: return NSLOCTEXT("CombatTutorial", "ConfirmHeal", "24 / 35   같은 칸을 한 번 더 눌러 회복을 확정하세요");
+		case ECombatTutorialGuideStep::WaitHealResolved: return NSLOCTEXT("CombatTutorial", "WaitHealResolved", "회복 연출이 끝날 때까지 기다리세요");
+		case ECombatTutorialGuideStep::SelectRetreatStepSkill: return NSLOCTEXT("CombatTutorial", "SelectRetreatStepSkill", "25 / 35   다시 STEP 스킬을 누르세요");
+		case ECombatTutorialGuideStep::SelectRetreatStepDice: return NSLOCTEXT("CombatTutorial", "SelectRetreatStepDice", "26 / 35   남은 주사위 하나를 STEP에 올리세요");
+		case ECombatTutorialGuideStep::PreviewRetreatStep: return NSLOCTEXT("CombatTutorial", "PreviewRetreatStep", "27 / 35   내 캐릭터가 서 있는 칸을 누르세요");
+		case ECombatTutorialGuideStep::ConfirmRetreatStep: return NSLOCTEXT("CombatTutorial", "ConfirmRetreatStep", "28 / 35   같은 칸을 한 번 더 눌러 STEP을 확정하세요");
+		case ECombatTutorialGuideStep::WaitRetreatStepResolved: return NSLOCTEXT("CombatTutorial", "WaitRetreatStepResolved", "후퇴할 이동력을 얻는 중입니다");
+		case ECombatTutorialGuideStep::PressRetreatMove: return NSLOCTEXT("CombatTutorial", "PressRetreatMove", "29 / 35   MOVE 버튼을 누르세요");
+		case ECombatTutorialGuideStep::PreviewRetreatMove: return NSLOCTEXT("CombatTutorial", "PreviewRetreatMove", "30 / 35   적과 두 칸 떨어지는 금색 칸을 누르세요");
+		case ECombatTutorialGuideStep::ConfirmRetreatMove: return NSLOCTEXT("CombatTutorial", "ConfirmRetreatMove", "31 / 35   같은 칸을 한 번 더 눌러 후퇴하세요");
+		case ECombatTutorialGuideStep::WaitRetreatMoveResolved: return NSLOCTEXT("CombatTutorial", "WaitRetreatMoveResolved", "적과 거리를 벌리는 중입니다");
+		case ECombatTutorialGuideStep::SelectRangedAttackSkill: return NSLOCTEXT("CombatTutorial", "SelectRangedAttackSkill", "32 / 35   검기 날리기 스킬을 누르세요");
+		case ECombatTutorialGuideStep::SelectRangedAttackDice: return NSLOCTEXT("CombatTutorial", "SelectRangedAttackDice", "33 / 35   남은 주사위 하나를 검기 날리기에 올리세요");
+		case ECombatTutorialGuideStep::PreviewRangedAttack: return NSLOCTEXT("CombatTutorial", "PreviewRangedAttack", "34 / 35   적 방향으로 한 칸 앞의 금색 칸을 누르세요");
+		case ECombatTutorialGuideStep::ConfirmRangedAttack: return NSLOCTEXT("CombatTutorial", "ConfirmRangedAttack", "35 / 35   같은 칸을 한 번 더 눌러 원거리 공격을 확정하세요");
+		case ECombatTutorialGuideStep::WaitRangedAttackResolved: return NSLOCTEXT("CombatTutorial", "WaitRangedAttackResolved", "검기가 적에게 닿을 때까지 기다리세요");
 		default: return FText::GetEmpty();
 		}
 	}
@@ -161,6 +185,7 @@ void UCombatTutorialGuide::BindCombatUIModel(UCombatUIModel* InCombatUIModel)
 	{
 		mCombatUIModel->OnUIChanged.RemoveDynamic(this, &UCombatTutorialGuide::HandleCombatUIChanged);
 		mCombatUIModel->OnActionResolved.RemoveDynamic(this, &UCombatTutorialGuide::HandleActionResolved);
+		mCombatUIModel->OnPresentationResolved.RemoveDynamic(this, &UCombatTutorialGuide::HandlePresentationResolved);
 		mCombatUIModel->OnCombatCommand.RemoveDynamic(this, &UCombatTutorialGuide::HandleCombatCommand);
 	}
 	mCombatUIModel = InCombatUIModel;
@@ -168,6 +193,7 @@ void UCombatTutorialGuide::BindCombatUIModel(UCombatUIModel* InCombatUIModel)
 	{
 		mCombatUIModel->OnUIChanged.AddUniqueDynamic(this, &UCombatTutorialGuide::HandleCombatUIChanged);
 		mCombatUIModel->OnActionResolved.AddUniqueDynamic(this, &UCombatTutorialGuide::HandleActionResolved);
+		mCombatUIModel->OnPresentationResolved.AddUniqueDynamic(this, &UCombatTutorialGuide::HandlePresentationResolved);
 		mCombatUIModel->OnCombatCommand.AddUniqueDynamic(this, &UCombatTutorialGuide::HandleCombatCommand);
 	}
 }
@@ -187,9 +213,7 @@ bool UCombatTutorialGuide::ShouldShow() const
 	const UWorld* World = mOwner != nullptr ? mOwner->GetWorld() : nullptr;
 	const ARDGameModeBase* GameMode = World != nullptr ? World->GetAuthGameMode<ARDGameModeBase>() : nullptr;
 	const URunPersistData* RunData = GameMode != nullptr ? GameMode->GetRunPersistData() : nullptr;
-	const UUserPersistData* UserData = GameMode != nullptr ? GameMode->GetUserPersistData() : nullptr;
-	if (RunData == nullptr || RunData->IsActive() == false || RunData->ShouldRunTutorial() == false
-		|| (UserData != nullptr && UserData->IsTutorialCompleted()))
+	if (RunData == nullptr || RunData->IsActive() == false || RunData->ShouldRunTutorial() == false)
 	{
 		return false;
 	}
@@ -209,8 +233,13 @@ void UCombatTutorialGuide::BeginTutorial()
 	mAttackSkillId = Settings->mTutorialAttackSkillId;
 	mStepSkillId = Settings->mTutorialStepSkillId;
 	mDefenseSkillId = Settings->mTutorialDefenseSkillId;
+	mHealSkillId = Settings->mTutorialHealSkillId;
+	mRangedAttackSkillId = Settings->mTutorialRangedAttackSkillId;
 	mMoveOriginTile = FTileIndex::Invalid;
 	mMoveTargetTile = FTileIndex::Invalid;
+	mRetreatMoveOriginTile = FTileIndex::Invalid;
+	mRetreatMoveTargetTile = FTileIndex::Invalid;
+	mRangedAimTargetTile = FTileIndex::Invalid;
 	mEnemyUnitId = INDEX_NONE;
 	mMissingTargetElapsed = 0.0f;
 	for (const FUnitUI& Unit : mCombatUIModel->GetUnitUIs())
@@ -222,7 +251,8 @@ void UCombatTutorialGuide::BeginTutorial()
 		}
 	}
 
-	if (mAttackSkillId.IsValid() == false || mStepSkillId.IsValid() == false || mDefenseSkillId.IsValid() == false)
+	if (mAttackSkillId.IsValid() == false || mStepSkillId.IsValid() == false || mDefenseSkillId.IsValid() == false
+		|| mHealSkillId.IsValid() == false || mRangedAttackSkillId.IsValid() == false)
 	{
 		FinishTutorial(true);
 		return;
@@ -243,6 +273,7 @@ void UCombatTutorialGuide::SetStep(ECombatTutorialGuideStep Step)
 	}
 	mStep = Step;
 	mMissingTargetElapsed = 0.0f;
+	mPresentationResolvedForStep = false;
 	SetVisible(IsActive());
 	UpdateLayout();
 }
@@ -288,6 +319,26 @@ void UCombatTutorialGuide::HandleActionResolved()
 	RefreshProgress();
 }
 
+void UCombatTutorialGuide::HandlePresentationResolved()
+{
+	switch (mStep)
+	{
+	case ECombatTutorialGuideStep::WaitStepResolved:
+	case ECombatTutorialGuideStep::WaitMoveResolved:
+	case ECombatTutorialGuideStep::WaitAttackResolved:
+	case ECombatTutorialGuideStep::WaitBuffResolved:
+	case ECombatTutorialGuideStep::WaitHealResolved:
+	case ECombatTutorialGuideStep::WaitRetreatStepResolved:
+	case ECombatTutorialGuideStep::WaitRetreatMoveResolved:
+	case ECombatTutorialGuideStep::WaitRangedAttackResolved:
+		mPresentationResolvedForStep = true;
+		break;
+	default:
+		break;
+	}
+	RefreshProgress();
+}
+
 void UCombatTutorialGuide::HandleCombatCommand(ECombatInputType Type, int32 IntPayload)
 {
 	if (mStep == ECombatTutorialGuideStep::RollDiceBoard && Type == ECombatInputType::RollDice)
@@ -297,6 +348,18 @@ void UCombatTutorialGuide::HandleCombatCommand(ECombatInputType Type, int32 IntP
 	else if (mStep == ECombatTutorialGuideStep::PressMove && Type == ECombatInputType::Move)
 	{
 		SetStep(ECombatTutorialGuideStep::PreviewMove);
+	}
+	else if (mStep == ECombatTutorialGuideStep::EndRoundOne && Type == ECombatInputType::EndTurn)
+	{
+		SetStep(ECombatTutorialGuideStep::WaitRoundTwo);
+	}
+	else if (mStep == ECombatTutorialGuideStep::RollDiceBoardRoundTwo && Type == ECombatInputType::RollDice)
+	{
+		SetStep(ECombatTutorialGuideStep::WaitDiceResultRoundTwo);
+	}
+	else if (mStep == ECombatTutorialGuideStep::PressRetreatMove && Type == ECombatInputType::Move)
+	{
+		SetStep(ECombatTutorialGuideStep::PreviewRetreatMove);
 	}
 	RefreshProgress();
 }
@@ -320,6 +383,19 @@ bool UCombatTutorialGuide::HasSkill(const FPrimaryAssetId& SkillId) const
 	});
 }
 
+int32 UCombatTutorialGuide::GetSkillDiceCost(const FPrimaryAssetId& SkillId) const
+{
+	if (mCombatUIModel == nullptr)
+	{
+		return MAX_int32;
+	}
+	const FSkillUI* Skill = mCombatUIModel->GetSkillUIs().FindByPredicate([&SkillId](const FSkillUI& Candidate)
+	{
+		return Candidate.mSkillId == SkillId;
+	});
+	return Skill != nullptr ? FMath::Max(1, Skill->mDiceCost) : MAX_int32;
+}
+
 void UCombatTutorialGuide::RefreshProgress()
 {
 	if (IsActive() == false || mCombatUIModel == nullptr || mOwner == nullptr)
@@ -329,7 +405,8 @@ void UCombatTutorialGuide::RefreshProgress()
 
 	const FPrimaryAssetId SelectedSkillId = GetSelectedSkillId();
 	const int32 SelectedDiceCount = mCombatUIModel->GetSelectedDiceIndices().Num();
-	const ECombatBuildPhaseUI BuildPhase = mCombatUIModel->GetTurnUI().mPhase;
+	const FTurnUI& TurnUI = mCombatUIModel->GetTurnUI();
+	const ECombatBuildPhaseUI BuildPhase = TurnUI.mPhase;
 	const TArray<FUnitUI>& Units = mCombatUIModel->GetUnitUIs();
 	const FUnitUI* Player = Units.FindByPredicate([](const FUnitUI& Unit) { return Unit.mIsPlayer; });
 	const FUnitUI* Enemy = Units.FindByPredicate([this](const FUnitUI& Unit)
@@ -372,7 +449,7 @@ void UCombatTutorialGuide::RefreshProgress()
 		if (BuildPhase == ECombatBuildPhaseUI::None) SetStep(ECombatTutorialGuideStep::WaitStepResolved);
 		break;
 	case ECombatTutorialGuideStep::WaitStepResolved:
-		if (Player != nullptr && Player->mMovementPoint > 0.0f)
+		if (mPresentationResolvedForStep && Player != nullptr && Player->mMovementPoint > 0.0f)
 		{
 			mMoveOriginTile = Player->mTile;
 			if (ResolveMoveTarget(mMoveTargetTile)) SetStep(ECombatTutorialGuideStep::PressMove);
@@ -385,7 +462,7 @@ void UCombatTutorialGuide::RefreshProgress()
 		if (BuildPhase == ECombatBuildPhaseUI::None) SetStep(ECombatTutorialGuideStep::WaitMoveResolved);
 		break;
 	case ECombatTutorialGuideStep::WaitMoveResolved:
-		if (Player != nullptr && Player->mTile != mMoveOriginTile)
+		if (mPresentationResolvedForStep && Player != nullptr && Player->mTile != mMoveOriginTile)
 		{
 			if (Enemy != nullptr)
 			{
@@ -408,7 +485,8 @@ void UCombatTutorialGuide::RefreshProgress()
 		if (BuildPhase == ECombatBuildPhaseUI::None) SetStep(ECombatTutorialGuideStep::WaitAttackResolved);
 		break;
 	case ECombatTutorialGuideStep::WaitAttackResolved:
-		if (Enemy == nullptr || Enemy->mHP < mEnemyHPBeforeAttack || Enemy->mDefensePoint < mEnemyDefenseBeforeAttack)
+		if (mPresentationResolvedForStep
+			&& (Enemy == nullptr || Enemy->mHP < mEnemyHPBeforeAttack || Enemy->mDefensePoint < mEnemyDefenseBeforeAttack))
 		{
 			if (Player != nullptr) mPlayerDefenseBeforeBuff = Player->mDefensePoint;
 			SetStep(ECombatTutorialGuideStep::SelectBuffSkill);
@@ -427,7 +505,122 @@ void UCombatTutorialGuide::RefreshProgress()
 		if (BuildPhase == ECombatBuildPhaseUI::None) SetStep(ECombatTutorialGuideStep::WaitBuffResolved);
 		break;
 	case ECombatTutorialGuideStep::WaitBuffResolved:
-		if (Player != nullptr && Player->mDefensePoint > mPlayerDefenseBeforeBuff) FinishTutorial(false);
+		if (mPresentationResolvedForStep && Player != nullptr && Player->mDefensePoint > mPlayerDefenseBeforeBuff)
+		{
+			SetStep(ECombatTutorialGuideStep::EndRoundOne);
+		}
+		break;
+	case ECombatTutorialGuideStep::WaitRoundTwo:
+		if (Player != nullptr && TurnUI.mRound >= 2 && TurnUI.mCurrentUnitId == Player->mUnitId
+			&& mOwner->IsTutorialDiceRollReady())
+		{
+			SetStep(ECombatTutorialGuideStep::RollDiceBoardRoundTwo);
+		}
+		break;
+	case ECombatTutorialGuideStep::RollDiceBoardRoundTwo:
+		if (mOwner->IsTutorialDiceRollActive()) SetStep(ECombatTutorialGuideStep::WaitDiceResultRoundTwo);
+		break;
+	case ECombatTutorialGuideStep::WaitDiceResultRoundTwo:
+		if (mOwner->IsTutorialDiceResultWaitingForDismiss()) SetStep(ECombatTutorialGuideStep::DismissDiceBoardRoundTwo);
+		break;
+	case ECombatTutorialGuideStep::DismissDiceBoardRoundTwo:
+		if (mOwner->IsTutorialDiceRollReady() == false && mOwner->IsTutorialDiceRollActive() == false
+			&& mOwner->IsTutorialDiceResultWaitingForDismiss() == false)
+		{
+			if (HasSkill(mHealSkillId) && HasSkill(mStepSkillId) && HasSkill(mRangedAttackSkillId))
+			{
+				SetStep(ECombatTutorialGuideStep::SelectHealSkill);
+			}
+			else
+			{
+				FinishTutorial(true);
+			}
+		}
+		break;
+	case ECombatTutorialGuideStep::SelectHealSkill:
+		if (SelectedSkillId == mHealSkillId) SetStep(ECombatTutorialGuideStep::SelectHealDice);
+		break;
+	case ECombatTutorialGuideStep::SelectHealDice:
+		if (SelectedSkillId == mHealSkillId && SelectedDiceCount >= GetSkillDiceCost(mHealSkillId))
+		{
+			SetStep(ECombatTutorialGuideStep::PreviewHeal);
+		}
+		break;
+	case ECombatTutorialGuideStep::PreviewHeal:
+		if (BuildPhase == ECombatBuildPhaseUI::Preview) SetStep(ECombatTutorialGuideStep::ConfirmHeal);
+		break;
+	case ECombatTutorialGuideStep::ConfirmHeal:
+		if (BuildPhase == ECombatBuildPhaseUI::None) SetStep(ECombatTutorialGuideStep::WaitHealResolved);
+		break;
+	case ECombatTutorialGuideStep::WaitHealResolved:
+		if (mPresentationResolvedForStep) SetStep(ECombatTutorialGuideStep::SelectRetreatStepSkill);
+		break;
+	case ECombatTutorialGuideStep::SelectRetreatStepSkill:
+		if (SelectedSkillId == mStepSkillId) SetStep(ECombatTutorialGuideStep::SelectRetreatStepDice);
+		break;
+	case ECombatTutorialGuideStep::SelectRetreatStepDice:
+		if (SelectedSkillId == mStepSkillId && SelectedDiceCount >= GetSkillDiceCost(mStepSkillId))
+		{
+			SetStep(ECombatTutorialGuideStep::PreviewRetreatStep);
+		}
+		break;
+	case ECombatTutorialGuideStep::PreviewRetreatStep:
+		if (BuildPhase == ECombatBuildPhaseUI::Preview) SetStep(ECombatTutorialGuideStep::ConfirmRetreatStep);
+		break;
+	case ECombatTutorialGuideStep::ConfirmRetreatStep:
+		if (BuildPhase == ECombatBuildPhaseUI::None) SetStep(ECombatTutorialGuideStep::WaitRetreatStepResolved);
+		break;
+	case ECombatTutorialGuideStep::WaitRetreatStepResolved:
+		if (mPresentationResolvedForStep && Player != nullptr && Player->mMovementPoint > 0.0f)
+		{
+			mRetreatMoveOriginTile = Player->mTile;
+			if (ResolveRetreatMoveTarget(mRetreatMoveTargetTile))
+			{
+				SetStep(ECombatTutorialGuideStep::PressRetreatMove);
+			}
+		}
+		break;
+	case ECombatTutorialGuideStep::PreviewRetreatMove:
+		if (BuildPhase == ECombatBuildPhaseUI::Preview) SetStep(ECombatTutorialGuideStep::ConfirmRetreatMove);
+		break;
+	case ECombatTutorialGuideStep::ConfirmRetreatMove:
+		if (BuildPhase == ECombatBuildPhaseUI::None) SetStep(ECombatTutorialGuideStep::WaitRetreatMoveResolved);
+		break;
+	case ECombatTutorialGuideStep::WaitRetreatMoveResolved:
+		if (mPresentationResolvedForStep && Player != nullptr && Player->mTile != mRetreatMoveOriginTile)
+		{
+			if (ResolveRangedAimTarget(mRangedAimTargetTile))
+			{
+				if (Enemy != nullptr)
+				{
+					mEnemyHPBeforeAttack = Enemy->mHP;
+					mEnemyDefenseBeforeAttack = Enemy->mDefensePoint;
+				}
+				SetStep(ECombatTutorialGuideStep::SelectRangedAttackSkill);
+			}
+		}
+		break;
+	case ECombatTutorialGuideStep::SelectRangedAttackSkill:
+		if (SelectedSkillId == mRangedAttackSkillId) SetStep(ECombatTutorialGuideStep::SelectRangedAttackDice);
+		break;
+	case ECombatTutorialGuideStep::SelectRangedAttackDice:
+		if (SelectedSkillId == mRangedAttackSkillId && SelectedDiceCount >= GetSkillDiceCost(mRangedAttackSkillId))
+		{
+			SetStep(ECombatTutorialGuideStep::PreviewRangedAttack);
+		}
+		break;
+	case ECombatTutorialGuideStep::PreviewRangedAttack:
+		if (BuildPhase == ECombatBuildPhaseUI::Preview) SetStep(ECombatTutorialGuideStep::ConfirmRangedAttack);
+		break;
+	case ECombatTutorialGuideStep::ConfirmRangedAttack:
+		if (BuildPhase == ECombatBuildPhaseUI::None) SetStep(ECombatTutorialGuideStep::WaitRangedAttackResolved);
+		break;
+	case ECombatTutorialGuideStep::WaitRangedAttackResolved:
+		if (mPresentationResolvedForStep
+			&& (Enemy == nullptr || Enemy->mHP < mEnemyHPBeforeAttack || Enemy->mDefensePoint < mEnemyDefenseBeforeAttack))
+		{
+			FinishTutorial(false);
+		}
 		break;
 	default:
 		break;
@@ -588,6 +781,81 @@ bool UCombatTutorialGuide::ResolveMoveTarget(FTileIndex& OutTarget) const
 	return OutTarget != FTileIndex::Invalid;
 }
 
+bool UCombatTutorialGuide::ResolveRetreatMoveTarget(FTileIndex& OutTarget) const
+{
+	if (mCombatUIModel == nullptr || mOwner == nullptr)
+	{
+		return false;
+	}
+	const TArray<FUnitUI>& Units = mCombatUIModel->GetUnitUIs();
+	const FUnitUI* Player = Units.FindByPredicate([](const FUnitUI& Unit) { return Unit.mIsPlayer; });
+	const FUnitUI* Enemy = Units.FindByPredicate([this](const FUnitUI& Unit)
+	{
+		return Unit.mIsPlayer == false && (mEnemyUnitId == INDEX_NONE || Unit.mUnitId == mEnemyUnitId);
+	});
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(mOwner);
+	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+	if (Player == nullptr || Enemy == nullptr || TileMap == nullptr)
+	{
+		return false;
+	}
+
+	const int32 CurrentEnemyDistance = FMath::Abs(Player->mTile.mX - Enemy->mTile.mX)
+		+ FMath::Abs(Player->mTile.mY - Enemy->mTile.mY);
+	const TArray<FTileIndex> Reachable = TileMap->GetReachableTiles(Player->mTile, FMath::FloorToInt(Player->mMovementPoint));
+	int32 BestMoveDistance = MAX_int32;
+	OutTarget = FTileIndex::Invalid;
+	for (const FTileIndex& Candidate : Reachable)
+	{
+		const int32 DeltaX = Candidate.mX - Enemy->mTile.mX;
+		const int32 DeltaY = Candidate.mY - Enemy->mTile.mY;
+		const int32 EnemyDistance = FMath::Abs(DeltaX) + FMath::Abs(DeltaY);
+		// 검기 날리기는 직선 빔이다. 최소 주사위 값 1에서도 맞도록 같은 축의 정확히 두 칸 거리를 고른다.
+		if ((DeltaX != 0 && DeltaY != 0) || EnemyDistance != 2 || EnemyDistance <= CurrentEnemyDistance)
+		{
+			continue;
+		}
+		const TArray<FTileIndex> Path = TileMap->FindPath(Player->mTile, Candidate);
+		const int32 MoveDistance = Path.IsEmpty() ? MAX_int32 : Path.Num() - 1;
+		if (MoveDistance < BestMoveDistance)
+		{
+			BestMoveDistance = MoveDistance;
+			OutTarget = Candidate;
+		}
+	}
+	return OutTarget != FTileIndex::Invalid;
+}
+
+bool UCombatTutorialGuide::ResolveRangedAimTarget(FTileIndex& OutTarget) const
+{
+	if (mCombatUIModel == nullptr || mOwner == nullptr)
+	{
+		return false;
+	}
+	const TArray<FUnitUI>& Units = mCombatUIModel->GetUnitUIs();
+	const FUnitUI* Player = Units.FindByPredicate([](const FUnitUI& Unit) { return Unit.mIsPlayer; });
+	const FUnitUI* Enemy = Units.FindByPredicate([this](const FUnitUI& Unit)
+	{
+		return Unit.mIsPlayer == false && (mEnemyUnitId == INDEX_NONE || Unit.mUnitId == mEnemyUnitId);
+	});
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(mOwner);
+	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+	if (Player == nullptr || Enemy == nullptr || TileMap == nullptr)
+	{
+		return false;
+	}
+
+	const int32 DeltaX = Enemy->mTile.mX - Player->mTile.mX;
+	const int32 DeltaY = Enemy->mTile.mY - Player->mTile.mY;
+	const int32 EnemyDistance = FMath::Abs(DeltaX) + FMath::Abs(DeltaY);
+	if ((DeltaX != 0 && DeltaY != 0) || EnemyDistance < 2)
+	{
+		return false;
+	}
+	OutTarget = FTileIndex(Player->mTile.mX + FMath::Sign(DeltaX), Player->mTile.mY + FMath::Sign(DeltaY));
+	return TileMap->IsValidIndex(OutTarget) && OutTarget != Enemy->mTile;
+}
+
 bool UCombatTutorialGuide::GetTargetRect(FVector2D& OutTopLeft, FVector2D& OutBottomRight) const
 {
 	if (mOwner == nullptr)
@@ -599,6 +867,9 @@ bool UCombatTutorialGuide::GetTargetRect(FVector2D& OutTopLeft, FVector2D& OutBo
 	case ECombatTutorialGuideStep::RollDiceBoard:
 	case ECombatTutorialGuideStep::WaitDiceResult:
 	case ECombatTutorialGuideStep::DismissDiceBoard:
+	case ECombatTutorialGuideStep::RollDiceBoardRoundTwo:
+	case ECombatTutorialGuideStep::WaitDiceResultRoundTwo:
+	case ECombatTutorialGuideStep::DismissDiceBoardRoundTwo:
 		return GetWidgetRect(mOwner->GetTutorialDiceRollAnchor(), OutTopLeft, OutBottomRight);
 	case ECombatTutorialGuideStep::SelectStepSkill:
 		return GetWidgetRect(mOwner->GetTutorialSkillAnchor(mStepSkillId), OutTopLeft, OutBottomRight);
@@ -606,20 +877,49 @@ bool UCombatTutorialGuide::GetTargetRect(FVector2D& OutTopLeft, FVector2D& OutBo
 		return GetWidgetRect(mOwner->GetTutorialSkillAnchor(mAttackSkillId), OutTopLeft, OutBottomRight);
 	case ECombatTutorialGuideStep::SelectBuffSkill:
 		return GetWidgetRect(mOwner->GetTutorialSkillAnchor(mDefenseSkillId), OutTopLeft, OutBottomRight);
+	case ECombatTutorialGuideStep::SelectHealSkill:
+		return GetWidgetRect(mOwner->GetTutorialSkillAnchor(mHealSkillId), OutTopLeft, OutBottomRight);
+	case ECombatTutorialGuideStep::SelectRetreatStepSkill:
+		return GetWidgetRect(mOwner->GetTutorialSkillAnchor(mStepSkillId), OutTopLeft, OutBottomRight);
+	case ECombatTutorialGuideStep::SelectRangedAttackSkill:
+		return GetWidgetRect(mOwner->GetTutorialSkillAnchor(mRangedAttackSkillId), OutTopLeft, OutBottomRight);
 	case ECombatTutorialGuideStep::SelectStepDice:
 	case ECombatTutorialGuideStep::SelectAttackDice:
 	case ECombatTutorialGuideStep::SelectBuffDice:
+	case ECombatTutorialGuideStep::SelectHealDice:
+	case ECombatTutorialGuideStep::SelectRetreatStepDice:
+	case ECombatTutorialGuideStep::SelectRangedAttackDice:
 		return GetWidgetRect(mOwner->GetTutorialAvailableDiceAnchor(), OutTopLeft, OutBottomRight);
 	case ECombatTutorialGuideStep::PreviewStep:
 	case ECombatTutorialGuideStep::ConfirmStep:
 	case ECombatTutorialGuideStep::WaitStepResolved:
+	case ECombatTutorialGuideStep::PreviewHeal:
+	case ECombatTutorialGuideStep::ConfirmHeal:
+	case ECombatTutorialGuideStep::WaitHealResolved:
+	case ECombatTutorialGuideStep::PreviewRetreatStep:
+	case ECombatTutorialGuideStep::ConfirmRetreatStep:
+	case ECombatTutorialGuideStep::WaitRetreatStepResolved:
 		return GetUnitRect(true, OutTopLeft, OutBottomRight);
 	case ECombatTutorialGuideStep::PressMove:
+	case ECombatTutorialGuideStep::PressRetreatMove:
 		return GetWidgetRect(mOwner->GetTutorialMoveAnchor(), OutTopLeft, OutBottomRight);
+	case ECombatTutorialGuideStep::EndRoundOne:
+		return GetWidgetRect(mOwner->GetTutorialEndTurnAnchor(), OutTopLeft, OutBottomRight);
+	case ECombatTutorialGuideStep::WaitRoundTwo:
+		return GetUnitRect(false, OutTopLeft, OutBottomRight);
 	case ECombatTutorialGuideStep::PreviewMove:
 	case ECombatTutorialGuideStep::ConfirmMove:
 	case ECombatTutorialGuideStep::WaitMoveResolved:
 		return GetTileRect(mMoveTargetTile, OutTopLeft, OutBottomRight);
+	case ECombatTutorialGuideStep::PreviewRetreatMove:
+	case ECombatTutorialGuideStep::ConfirmRetreatMove:
+	case ECombatTutorialGuideStep::WaitRetreatMoveResolved:
+		return GetTileRect(mRetreatMoveTargetTile, OutTopLeft, OutBottomRight);
+	case ECombatTutorialGuideStep::PreviewRangedAttack:
+	case ECombatTutorialGuideStep::ConfirmRangedAttack:
+		return GetTileRect(mRangedAimTargetTile, OutTopLeft, OutBottomRight);
+	case ECombatTutorialGuideStep::WaitRangedAttackResolved:
+		return GetUnitRect(false, OutTopLeft, OutBottomRight);
 	case ECombatTutorialGuideStep::PreviewAttack:
 	case ECombatTutorialGuideStep::ConfirmAttack:
 	case ECombatTutorialGuideStep::WaitAttackResolved:

@@ -6,12 +6,25 @@
 
 void UWorldCameraSubsystem::BindModel(UObjectModel* Model)
 {
+	// 재바인딩 시 이전 모델에 남아 있던 약한 람다도 제거해 중복 카메라 요청을 막는다.
+	if (UWorldCameraModel* PreviousModel = mWorldCameraModel.Get())
+	{
+		PreviousModel->OnRequestZoomInMainCamera.RemoveAll(this);
+		PreviousModel->OnRequestZoomOutMainCamera.RemoveAll(this);
+	}
+
 	mWorldCameraModel = Cast<UWorldCameraModel>(Model);
 
 	if (mWorldCameraModel != nullptr)
 	{
 		mWorldCameraModel->OnRequestZoomInMainCamera.AddWeakLambda(this, [this](const FVector& Location, float ScreenSize) {
-			ACombatCameraPawn* MainCameraPawn = GetWorld()->GetFirstPlayerController()->GetPawn<ACombatCameraPawn>();
+			UWorld* World = GetWorld();
+			if (World == nullptr || World->bIsTearingDown)
+			{
+				return;
+			}
+			APlayerController* PlayerController = World->GetFirstPlayerController();
+			ACombatCameraPawn* MainCameraPawn = PlayerController != nullptr ? PlayerController->GetPawn<ACombatCameraPawn>() : nullptr;
 			if (MainCameraPawn != nullptr)
 			{
 				UCameraMovementComponent* CameraMovementComponent = MainCameraPawn->GetCameraMovementComponent();
@@ -22,7 +35,13 @@ void UWorldCameraSubsystem::BindModel(UObjectModel* Model)
 			}
 			});
 		mWorldCameraModel->OnRequestZoomOutMainCamera.AddWeakLambda(this, [this]() {
-			ACombatCameraPawn* MainCameraPawn = GetWorld()->GetFirstPlayerController()->GetPawn<ACombatCameraPawn>();
+			UWorld* World = GetWorld();
+			if (World == nullptr || World->bIsTearingDown)
+			{
+				return;
+			}
+			APlayerController* PlayerController = World->GetFirstPlayerController();
+			ACombatCameraPawn* MainCameraPawn = PlayerController != nullptr ? PlayerController->GetPawn<ACombatCameraPawn>() : nullptr;
 			if (MainCameraPawn != nullptr)
 			{
 				UCameraMovementComponent* CameraMovementComponent = MainCameraPawn->GetCameraMovementComponent();
@@ -37,7 +56,18 @@ void UWorldCameraSubsystem::BindModel(UObjectModel* Model)
 
 void UWorldCameraSubsystem::UnbindModel(UObjectModel* Model)
 {
+	if (UWorldCameraModel* BoundModel = mWorldCameraModel.Get())
+	{
+		BoundModel->OnRequestZoomInMainCamera.RemoveAll(this);
+		BoundModel->OnRequestZoomOutMainCamera.RemoveAll(this);
+	}
 	mWorldCameraModel.Reset();
+}
+
+void UWorldCameraSubsystem::Deinitialize()
+{
+	UnbindModel(nullptr);
+	Super::Deinitialize();
 }
 
 UObjectModel* UWorldCameraSubsystem::GetModel_Internal() const

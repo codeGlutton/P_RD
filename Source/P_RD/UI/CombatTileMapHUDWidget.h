@@ -102,6 +102,7 @@ public:
 	UWidgetTree* GetTutorialWidgetTree() const;
 	UWidget* GetTutorialDiceRollAnchor() const;
 	UWidget* GetTutorialMoveAnchor() const;
+	UWidget* GetTutorialEndTurnAnchor() const;
 	UWidget* GetTutorialAvailableDiceAnchor() const;
 	UWidget* GetTutorialSkillAnchor(const FPrimaryAssetId& SkillId) const;
 	bool IsTutorialDiceRollReady() const;

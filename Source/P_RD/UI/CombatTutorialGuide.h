@@ -38,6 +38,30 @@ enum class ECombatTutorialGuideStep : uint8
 	PreviewBuff,
 	ConfirmBuff,
 	WaitBuffResolved,
+	EndRoundOne,
+	WaitRoundTwo,
+	RollDiceBoardRoundTwo,
+	WaitDiceResultRoundTwo,
+	DismissDiceBoardRoundTwo,
+	SelectHealSkill,
+	SelectHealDice,
+	PreviewHeal,
+	ConfirmHeal,
+	WaitHealResolved,
+	SelectRetreatStepSkill,
+	SelectRetreatStepDice,
+	PreviewRetreatStep,
+	ConfirmRetreatStep,
+	WaitRetreatStepResolved,
+	PressRetreatMove,
+	PreviewRetreatMove,
+	ConfirmRetreatMove,
+	WaitRetreatMoveResolved,
+	SelectRangedAttackSkill,
+	SelectRangedAttackDice,
+	PreviewRangedAttack,
+	ConfirmRangedAttack,
+	WaitRangedAttackResolved,
 	Complete,
 };
 
@@ -69,6 +93,9 @@ private:
 	void HandleActionResolved();
 
 	UFUNCTION()
+	void HandlePresentationResolved();
+
+	UFUNCTION()
 	void HandleCombatCommand(ECombatInputType Type, int32 IntPayload);
 
 	bool ShouldShow() const;
@@ -81,12 +108,15 @@ private:
 	void SetVisible(bool bVisible) const;
 
 	bool HasSkill(const FPrimaryAssetId& SkillId) const;
+	int32 GetSkillDiceCost(const FPrimaryAssetId& SkillId) const;
 	FPrimaryAssetId GetSelectedSkillId() const;
 	bool GetWidgetRect(const UWidget* Widget, FVector2D& OutTopLeft, FVector2D& OutBottomRight) const;
 	bool GetUnitRect(bool bPlayer, FVector2D& OutTopLeft, FVector2D& OutBottomRight) const;
 	bool GetTileRect(const FTileIndex& Tile, FVector2D& OutTopLeft, FVector2D& OutBottomRight) const;
 	bool GetTargetRect(FVector2D& OutTopLeft, FVector2D& OutBottomRight) const;
 	bool ResolveMoveTarget(FTileIndex& OutTarget) const;
+	bool ResolveRetreatMoveTarget(FTileIndex& OutTarget) const;
+	bool ResolveRangedAimTarget(FTileIndex& OutTarget) const;
 
 private:
 	UPROPERTY(Transient)
@@ -117,11 +147,17 @@ private:
 	FPrimaryAssetId mAttackSkillId;
 	FPrimaryAssetId mStepSkillId;
 	FPrimaryAssetId mDefenseSkillId;
+	FPrimaryAssetId mHealSkillId;
+	FPrimaryAssetId mRangedAttackSkillId;
 	FTileIndex mMoveOriginTile = FTileIndex::Invalid;
 	FTileIndex mMoveTargetTile = FTileIndex::Invalid;
+	FTileIndex mRetreatMoveOriginTile = FTileIndex::Invalid;
+	FTileIndex mRetreatMoveTargetTile = FTileIndex::Invalid;
+	FTileIndex mRangedAimTargetTile = FTileIndex::Invalid;
 	int32 mEnemyUnitId = INDEX_NONE;
 	float mEnemyHPBeforeAttack = 0.0f;
 	float mEnemyDefenseBeforeAttack = 0.0f;
 	float mPlayerDefenseBeforeBuff = 0.0f;
 	float mMissingTargetElapsed = 0.0f;
+	bool mPresentationResolvedForStep = false;
 };

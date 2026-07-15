@@ -38,7 +38,7 @@ UCombatTileMapHUDWidget::UCombatTileMapHUDWidget(const FObjectInitializer& Objec
 	{
 		mVictoryJingleSound = VictoryJingleFinder.Object;
 	}
-	static ConstructorHelpers::FObjectFinder<USoundBase> DefeatJingleFinder(TEXT("/Game/SVN/OutSideAsset/Music/OpenGameArt/Jingle/BGM_Jingle_Defeat_Spuispuin_CCBY4.BGM_Jingle_Defeat_Spuispuin_CCBY4"));
+	static ConstructorHelpers::FObjectFinder<USoundBase> DefeatJingleFinder(TEXT("/Game/SVN/OutSideAsset/Music/OpenGameArt/Jingle/BGM_Jingle_Defeat_CleytonKauffman_CC0.BGM_Jingle_Defeat_CleytonKauffman_CC0"));
 	if (DefeatJingleFinder.Succeeded())
 	{
 		mDefeatJingleSound = DefeatJingleFinder.Object;
@@ -168,6 +168,11 @@ UWidget* UCombatTileMapHUDWidget::GetTutorialDiceRollAnchor() const
 UWidget* UCombatTileMapHUDWidget::GetTutorialMoveAnchor() const
 {
 	return mMoveButton.Get();
+}
+
+UWidget* UCombatTileMapHUDWidget::GetTutorialEndTurnAnchor() const
+{
+	return EndTurnButton.Get();
 }
 
 UWidget* UCombatTileMapHUDWidget::GetTutorialAvailableDiceAnchor() const

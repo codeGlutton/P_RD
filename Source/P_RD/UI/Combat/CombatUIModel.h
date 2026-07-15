@@ -31,6 +31,7 @@ class UTexture2D;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatUIChanged, ECombatUIDomain, Domain);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatQueueNodeResolved, FCombatQueueNode, Node);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatActionResolved);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatPresentationResolved);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatCommand, ECombatInputType, Type, int32, IntPayload);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatWorldTouch, FVector2D, ScreenPosition, bool, bLongPress);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnApplyDiceResults, const TArray<int32>&, RolledFaceIndices);
@@ -58,6 +59,10 @@ public:
 	/** @brief 스킬/액션이 확정·취소되어 빌드가 끝났음을 알림. 위젯은 스킬/주사위 선택 강조를 푼다. */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
 	FOnCombatActionResolved OnActionResolved;
+
+	/** @brief 실제 이동/스킬 실행과 연결된 모든 연출이 끝났음을 알림. 빌드 확정/취소 완료와 구분한다. */
+	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
+	FOnCombatPresentationResolved OnPresentationResolved;
 
 	/** @brief 전투 이벤트(HP 증감 등)를 지정 월드 위치에 플로팅 텍스트로 띄우라는 알림. HUD가 순차 큐로 재생한다. */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
@@ -156,6 +161,9 @@ public:
 
 	/** @brief 스킬/액션 빌드가 끝났음을 UI에 알린다(OnActionResolved). 게임플레이가 확정/취소 시 호출. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyActionResolved();
+
+	/** @brief 실제 이동/스킬 실행 액션의 연출 배리어가 모두 끝났음을 UI에 알린다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyPresentationResolved();
 
 	/** @brief 월드 위치 기준 플로팅 로그 한 건을 요청한다. HUD가 IconType/ColorType을 실제 표현으로 변환한다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyCombatFloatingLog(const FCombatFloatingLogRequest& Request);

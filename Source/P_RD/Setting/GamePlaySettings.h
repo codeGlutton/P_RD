@@ -78,6 +78,12 @@ public:
     UPROPERTY(Config, Category = Tutorial, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TutorialDefenseSkillId"))
     FPrimaryAssetId mTutorialDefenseSkillId;
 
+    UPROPERTY(Config, Category = Tutorial, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TutorialHealSkillId"))
+    FPrimaryAssetId mTutorialHealSkillId;
+
+    UPROPERTY(Config, Category = Tutorial, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TutorialRangedAttackSkillId"))
+    FPrimaryAssetId mTutorialRangedAttackSkillId;
+
     UPROPERTY(Config, Category = Room, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "DefaultBackgroundMap"))
     TSoftObjectPtr<UWorld> mDefaultBackgroundMap;
 

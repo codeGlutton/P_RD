@@ -35,6 +35,7 @@
 
 ### 빌드 종료 통지
 - `NotifyActionResolved()` — 스킬/액션이 확정·취소돼 빌드가 끝났을 때 호출 → `OnActionResolved` → UI가 스킬/주사위 **선택 강조 해제**.
+- `NotifyPresentationResolved()` — 실제 이동/스킬 실행의 연출 배리어가 모두 끝났을 때 호출 → `OnPresentationResolved`. 빌드 액션 종료와 구분해 튜토리얼 등에서 실제 애니메이션 완료 기준으로 사용한다.
 
 ---
 
@@ -63,6 +64,7 @@
 - `OnUIChanged(ECombatUIDomain)` — 바뀐 도메인만 부분 갱신.
 - `OnQueueNodeResolved(FCombatQueueNode)` — 큐 1노드 재생.
 - `OnActionResolved()` — 선택 강조 해제.
+- `OnPresentationResolved()` — 실제 이동/스킬 실행 연출 완료.
 
 ---
 

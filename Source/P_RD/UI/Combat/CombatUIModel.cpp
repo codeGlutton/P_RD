@@ -193,6 +193,12 @@ void UCombatUIModel::NotifyActionResolved()
 	OnActionResolved.Broadcast();
 }
 
+/** @brief 실제 이동/스킬 실행 연출이 모두 끝났음을 구독 위젯에 알린다. */
+void UCombatUIModel::NotifyPresentationResolved()
+{
+	OnPresentationResolved.Broadcast();
+}
+
 /** @brief 월드 위치 기준 플로팅 로그 한 건을 구독 위젯에 알린다. */
 void UCombatUIModel::NotifyCombatFloatingLog(const FCombatFloatingLogRequest& Request)
 {

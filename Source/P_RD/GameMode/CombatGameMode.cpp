@@ -283,6 +283,14 @@ void ACombatGameMode::InitializeRoom()
 	CombatModel->OnEndAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action, ESRPGActionResult Result) {
 		// 액션이 끝나면 UI의 스킬/주사위 선택 표시를 지운다.
 		mCombatUIModel->NotifyActionResolved();
+		// BuildAction 종료는 선택 확정/취소일 뿐 실제 연출 완료가 아니다.
+		// InPlayAction은 이동/스킬의 PresentationBarrier가 모두 해제된 뒤 종료되므로
+		// 튜토리얼처럼 연출 완료를 기다리는 UI에는 별도 신호로 전달한다.
+		if (Action != nullptr && Action->GetActionType() == ESRPGActionType::InPlayAction
+			&& Result == ESRPGActionResult::Succeeded)
+		{
+			mCombatUIModel->NotifyPresentationResolved();
+		}
 		// [비활성화] 실행 후 잠깐 떴다 사라지는 레거시 실행 로그(mIsPreview=false). 프리뷰(조준)만 쓰기로 함.
 		// 로그는 여전히 소비(Pop)해 쌓이지 않게 비운다.
 		if (UEventLogger* EventLogger = GetWorldEventLogger(this))

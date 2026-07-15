@@ -17,7 +17,8 @@ void UGameProfileSubsystem::StartRun(const FPrimaryAssetId& PlayerUnitId, int32 
 
 	URunPersistData* RunMutableData = GetRunMutableData();
 	RunMutableData->StartRun(PlayerUnitId, Difficulty);
-	RunMutableData->SetTutorialEnabled(GetUserMutableData()->IsTutorialCompleted() == false);
+	// NEW START는 유저 세이브의 과거 완료 여부와 무관하게 매번 새 튜토리얼 런으로 시작한다.
+	RunMutableData->SetTutorialEnabled(true);
 
 	UE_LOG(LogGameProfile, Log, TEXT("새로운 런 데이터 생성"));
 }

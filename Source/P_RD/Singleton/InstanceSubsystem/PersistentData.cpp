@@ -426,7 +426,7 @@ void URunPersistData::MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCrea
 
 		mStage.InitializeAs<FStage>(FStageBuilder::Make(BuildStream, GameBalanceSetting->mGlobalStageBuildSetting, BuilderParams).Build());
 
-		// 튜토리얼 여부는 유저/런 저장값이 결정한다. StageBuilder 자체를 첫 실행 전용 규칙으로
+		// 튜토리얼 여부는 현재 런 저장값이 결정한다. StageBuilder 자체를 튜토리얼 전용 규칙으로
 		// 오염시키지 않고, 완성된 Stage 1의 시작 방만 안전하게 교체한다.
 		if (Type == EStageLevelType::Stage1 && mShouldRunTutorial)
 		{
