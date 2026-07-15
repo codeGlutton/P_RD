@@ -28,24 +28,28 @@
 #include "UnrealClient.h"
 #include "UnrealEngine.h"
 
-/**
- * @file PersistentData.cpp
- * @brief 런(Run)/유저/플레이어 유닛/옵션의 영속 데이터 객체 구현부.
- *        한 판(런) 진행 중에 누적/유지되어야 하는 상태(플레이어 스탯, 스킬/장비/주사위 보유 목록,
- *        스테이지 진행 상황, 사운드 볼륨/언어/해상도 옵션 등)를 보관하고, 유닛 모델과 동기화한다.
- *
- *        [PR #191 마이그레이션 근거]
- *        본 PR은 효과 모디파이어의 "연산 종류" enum을 GAS의 EGameplayModOp 에서
- *        자체 정의 ETacticalModOp(TacticalEffectType.h) 로 치환한다(GAS 폐기 작업의 일부).
- *        이 파일에서는 SyncPlayerPersistData()가 저장된 스탯을 유닛 속성에 되돌릴 때
- *        구 EGameplayModOp::Override 대신 ETacticalModOp::Override 를 사용하도록 바뀌었다.
- *        - ETacticalModOp 의 정수값은 구 EGameplayModOp 와 동일하게 유지된다. 이유:
- *          (1) 직렬화 호환  : 기존 에셋/세이브에 정수로 박힌 op 값을 그대로 보존.
- *          (2) 배열 인덱싱  : Aggregator가 mMods[ETacticalModOp::Max] 형태로 op 값을 인덱스로 사용.
- *          (3) CoreRedirect : DefaultEngine.ini가 구 enum 이름을 새 enum으로 매핑.
- *        - Override(=정수 3)는 "덮어쓰기" 연산. 누적이 아니라 최종값을 그 값으로 강제 설정한다.
- *          영속 스탯 복원은 항상 정확한 절대값을 다시 심어야 하므로 Override가 적합하다.
- */
+#if !UE_BUILD_SHIPPING
+
+namespace
+{
+	int32 GFixedStageBuildSeedForDebugging = INDEX_NONE;
+	int32 GFixedEventSeedForDebugging = INDEX_NONE;
+
+	FAutoConsoleVariableRef CFixedStageBuildSeedForDebugging(
+		TEXT("Seed.FixedStageBuildSeed"),
+		GFixedStageBuildSeedForDebugging,
+		TEXT("디버깅을 위해서 스테이지 빌드 시드를 고정"),
+		ECVF_Default
+	);
+	FAutoConsoleVariableRef CFixedEventSeedForDebugging(
+		TEXT("Seed.FixedEventSeed"),
+		GFixedEventSeedForDebugging,
+		TEXT("디버깅을 위해서 이벤트 시드를 고정"),
+		ECVF_Default
+	);
+}
+
+#endif
 
 /**
  * @brief 한 런(Run) 동안 누적된 로그(처치 적/획득 스킬/장비/주사위)를 모두 비운다.
@@ -258,8 +262,15 @@ void URunPersistData::StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Diffic
 
 	// 시드 초기 세팅
 	{
-		mStageBuildStream.Initialize(FMath::Rand32());
-		mEventStream.Initialize(FMath::Rand32());
+#if !UE_BUILD_SHIPPING
+		const int32 StageBuildStream = GFixedStageBuildSeedForDebugging != INDEX_NONE ? GFixedStageBuildSeedForDebugging : FMath::Rand32();
+		const int32 EventStream = GFixedEventSeedForDebugging != INDEX_NONE ? GFixedEventSeedForDebugging : FMath::Rand32();
+#else
+		const int32 StageBuildStream = FMath::Rand32();
+		const int32 EventStream = FMath::Rand32();
+#endif
+		mStageBuildStream.Initialize(StageBuildStream);
+		mEventStream.Initialize(EventStream);
 	}
 
 	// 플레이어 기본 데이터 세팅
