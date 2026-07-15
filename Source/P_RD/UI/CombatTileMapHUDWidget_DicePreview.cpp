@@ -11,12 +11,6 @@
 
 using namespace RDCombatHUD;
 
-/** @brief 캡처 액터가 가진 투명 RenderTarget을 UMG Image에 연결하는 얇은 경계 함수. */
-void UCombatTileMapHUDWidget::ApplyDiceCaptureBrush(UImage* DiceImage, ACombatDiceCaptureActor* DiceActor, FVector2D BrushSize) const
-{
-	RDDiceCapturePreview::ApplyCaptureBrush(DiceImage, DiceActor, BrushSize);
-}
-
 /** @brief 전투 HUD용 3D 주사위를 실제 전투 월드와 분리된 UI 전용 좌표에 생성한다. */
 ACombatDiceCaptureActor* UCombatTileMapHUDWidget::SpawnDiceCaptureActor(int32 GroupIndex, int32 DiceIndex, int32 RenderTargetSize)
 {
@@ -27,12 +21,6 @@ ACombatDiceCaptureActor* UCombatTileMapHUDWidget::SpawnDiceCaptureActor(int32 Gr
 	}
 
 	return RDDiceCapturePreview::SpawnCaptureActor(World, this, RDDiceCapturePreview::GetCombatPreviewLocation(GroupIndex, DiceIndex), RenderTargetSize);
-}
-
-/** @brief UMG 위젯 수명에 맞춰 SceneCapture 액터를 정리해 이전 RenderTarget 참조가 남지 않게 한다. */
-void UCombatTileMapHUDWidget::DestroyDiceCaptureActors(TArray<TObjectPtr<ACombatDiceCaptureActor>>& DiceActors) const
-{
-	RDDiceCapturePreview::DestroyCaptureActors(DiceActors);
 }
 
 void UCombatTileMapHUDWidget::EnsureDiceRollPhysicsActor()
@@ -61,7 +49,9 @@ void UCombatTileMapHUDWidget::EnsureDiceRollPhysicsActor()
 		return;
 	}
 
-	mDiceRollPhysicsActor->InitializeCapture(this, 1536, 704);
+	// 캡처 해상도는 표시 크기(1536x704)의 절반 — 굴림 내내 반복되는 풀 씬 HDR 캡처의
+	// 픽셀 수(≈4.3MB RT)를 1/4로 줄인다. 표시 크기는 브러시 ImageSize가 그대로 유지한다.
+	mDiceRollPhysicsActor->InitializeCapture(this, 768, 352);
 	if (mDiceRollPhysicsImage != nullptr && mDiceRollPhysicsActor->GetCaptureMaterial() != nullptr)
 	{
 		FSlateBrush DiceBrush = mDiceRollPhysicsImage->GetBrush();

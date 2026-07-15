@@ -20,7 +20,8 @@ void AIntroGameMode::BeginRoom()
 {
 	Super::BeginRoom();
 
-	checkf(PreloadAndTransitionFrontendRoomAsync() == true, TEXT("Intro -> Frontend 과정에서 Preload 실패"));
+	const bool IsPreloadStarted = PreloadAndTransitionFrontendRoomAsync();
+	checkf(IsPreloadStarted == true, TEXT("Intro -> Frontend 과정에서 Preload 실패"));
 
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
 	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr"));
@@ -79,6 +80,7 @@ void AIntroGameMode::TryToMarkExternalReady()
 	mStateFlag = EIntroGameModeStateFlag::None;
 
 	// <시네마틱 && 런 데이터 로드 && 유저 데이터 로드>에 대한 대기 상태 모두 완료 알림
-	checkf(MarkExternalReadyForTransition() == true, TEXT("대기 상태 모두 완료 알림 실패"));
+	const bool IsExternalReadyMarked = MarkExternalReadyForTransition();
+	checkf(IsExternalReadyMarked == true, TEXT("대기 상태 모두 완료 알림 실패"));
 }
 

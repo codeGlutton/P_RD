@@ -3,13 +3,6 @@
 #include "TAS/Effect/TacticalEffectContext.h"
 
 /**
- * @brief 플레이어 전용 어트리뷰트 셋 기본 생성자.
- */
-UPlayerUnitAttributeSet::UPlayerUnitAttributeSet()
-{
-}
-
-/**
  * @brief 플레이어 어트리뷰트 반영 직전 보정. Exp가 음수로 내려가는 것을 막는다.
  * @param Attribute 변경 대상 어트리뷰트.
  * @param NewValue  반영 예정 값(참조).

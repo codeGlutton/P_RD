@@ -27,11 +27,13 @@ class UCombatResultOverlayWidget;
 class UCinematicWidget;
 class UIndexedButtonWidget;
 class UImage;
+class UMaterialInstanceDynamic;
 class UProgressBar;
 class URewardUIModel;
 class URewardUIWidgetBase;
 class USoundBase;
 class UTextBlock;
+class UTextureRenderTarget2D;
 class UViewport;
 class UWidget;
 class UWidgetTree;
@@ -180,14 +182,8 @@ private:
 	/** @brief 입장 굴림용 물리 캡처 액터를 정리한다. */
 	void DestroyDiceRollPhysicsActor();
 
-	/** @brief 지정 Image에 주사위 RenderTarget을 연결한다. */
-	void ApplyDiceCaptureBrush(UImage* DiceImage, ACombatDiceCaptureActor* DiceActor, FVector2D BrushSize) const;
-
 	/** @brief 주사위 캡처 액터를 UI 전용 위치에 생성한다. */
 	ACombatDiceCaptureActor* SpawnDiceCaptureActor(int32 GroupIndex, int32 DiceIndex, int32 RenderTargetSize);
-
-	/** @brief 기존 주사위 캡처 액터들을 정리한다. */
-	void DestroyDiceCaptureActors(TArray<TObjectPtr<ACombatDiceCaptureActor>>& DiceActors) const;
 
 	/** @brief 현재 RunPersistData의 보유 주사위 목록을 전투 HUD 표시용 데이터로 변환한다. */
 	void RefreshDiceViewsFromRunData();
@@ -422,8 +418,6 @@ private:
 	TObjectPtr<URewardUIModel> mCombatRewardUIModel;
 
 	TSharedPtr<FPresentationBarrier> mCombatResultBarrier;
-	// 턴 시작 배너를 재생하는 동안 잡아두는 배리어 — 배너가 끝나면(FinishTurnChangeIntro) 놓아 실제 턴 실행을 진행시킨다.
-	TSharedPtr<FPresentationBarrier> mTurnChangeBarrier;
 
 	/** @brief 승패 판정 → 결과 영상 시작 사이의 텀 타이머. */
 	FTimerHandle mCombatResultStartDelayTimerHandle;
@@ -477,6 +471,9 @@ private:
 
 	/** @brief 턴 전환 알파 텍스처 에셋 프레임들을 준비한다. */
 	bool EnsureTurnChangeFrameTextures();
+
+	/** @brief 턴 전환 프레임 텍스처를 전투 진입 시 비동기 프리로드한다(첫 배너 동기 로드 히치 제거). */
+	void PreloadTurnChangeFrameTextures();
 
 	/** @brief 턴 전환 영상 안내 위젯들을 보이거나 숨긴다. */
 	void SetTurnChangeIntroVisibility(bool bVisible) const;
@@ -783,6 +780,9 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UTexture2D>> mTurnChangeFrameTextures;
 
+	/** @brief 턴 전환 프레임 비동기 프리로드 핸들(로드된 에셋을 배너 사용 전까지 붙잡는 핀). */
+	TSharedPtr<struct FStreamableHandle> mTurnChangeFramePreloadHandle;
+
 	/** @brief mTurnChangeVideoImage에 물릴 현재 텍스처 프레임 브러시 */
 	FSlateBrush mTurnChangeFrameBrush;
 
@@ -794,6 +794,14 @@ private:
 
 	/** @brief 턴 전환 안내가 현재 재생 중인지 여부 */
 	bool mTurnChangeIntroPlaying = false;
+
+	/**
+	 * @brief 턴 전환 배너 강제 종료 보험 타이머.
+	 * @details 정상 종료(FinishTurnChangeIntro)는 NativeTick의 경과시간 판정에만 의존하는데,
+	 *          배너 재생 중 HUD Tick이 멈추면(위젯 숨김 등) 라운드 배리어(mRoundChangeBarrier)가
+	 *          영영 안 풀려 그 라운드가 진행 불능이 된다. 재생시간+여유가 지나면 무조건 종료시킨다.
+	 */
+	FTimerHandle mTurnChangeSafetyTimerHandle;
 
 	/** @brief 턴 전환 안내 종료 직후 주사위 팝업을 열어야 하는지 여부 */
 	bool mPendingDiceRollAfterTurnIntro = false;
@@ -811,9 +819,21 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UImage>> mOwnedDiceImages;
 
-	/** @brief 보유 주사위 RenderTarget을 만드는 3D 주사위 액터 */
+	/**
+	 * @brief 보유 주사위 카드 캡처를 전담하는 공유 캡처 액터(항상 1대).
+	 * @details 다이별로 SceneCapture+라이트 액터를 상주시키면 보유 개수만큼 무한 누적되므로,
+	 *          카메라는 1대만 두고 다이를 순서대로 구성해 다이별 RT(mOwnedDiceRenderTargets)에 찍는다.
+	 */
 	UPROPERTY(Transient)
-	TArray<TObjectPtr<ACombatDiceCaptureActor>> mOwnedDicePreviewActors;
+	TObjectPtr<ACombatDiceCaptureActor> mOwnedDiceSharedCaptureActor;
+
+	/** @brief 다이별 표시용 투명 RenderTarget(256x256). 다이별 상주는 이것과 캡처 머티리얼뿐이다. */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UTextureRenderTarget2D>> mOwnedDiceRenderTargets;
+
+	/** @brief 다이별 캡처 머티리얼(RT 알파→UI 투명도). 카드 Image 브러시가 참조한다. */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UMaterialInstanceDynamic>> mOwnedDiceCaptureMaterials;
 
 	/** @brief 변경되지 않은 보유 주사위는 3D 장면을 다시 캡처하지 않기 위한 시각 상태 해시. */
 	TArray<uint32> mOwnedDiceVisualHashes;

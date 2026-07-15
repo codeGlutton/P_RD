@@ -1,4 +1,4 @@
-#include "UI/SettingsPanelWidget.h"
+﻿#include "UI/SettingsPanelWidget.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
@@ -151,18 +151,12 @@ void USettingsPanelWidget::SyncText() const
 	SetNamedText(TEXT("FpsSixtyButton"), LOCTEXT("60", "60"));
 	SetNamedText(TEXT("Set_row_quality_label"), LOCTEXT("Quality", "Quality"));
 	SetNamedText(TEXT("QualityRow_Label"), LOCTEXT("Quality", "Quality"));
-	// 품질 라벨은 목표 렌더 해상도 표기(360p/720p/1080p)를 그대로 쓴다 — 실제 적용 값과 같은 매핑에서 만들어
-	// 라벨과 동작이 어긋나지 않게 하고, 해상도 표기는 언어와 무관하므로 번역하지 않는다.
-	const auto QualityLabelText = [](ESettingsQualityLevel QualityLevel)
-	{
-		return FText::FromString(FString::Printf(TEXT("%dp"), RDSettingsPanel::ToRenderResolutionHeight(QualityLevel)));
-	};
-	SetNamedText(TEXT("QualityLowButton"), QualityLabelText(ESettingsQualityLevel::Low));
-	SetNamedText(TEXT("QualityMidButton"), QualityLabelText(ESettingsQualityLevel::Medium));
-	SetNamedText(TEXT("QualityHighButton"), QualityLabelText(ESettingsQualityLevel::High));
-	SetNamedText(TEXT("LowQualityButton"), QualityLabelText(ESettingsQualityLevel::Low));
-	SetNamedText(TEXT("MediumQualityButton"), QualityLabelText(ESettingsQualityLevel::Medium));
-	SetNamedText(TEXT("HighQualityButton"), QualityLabelText(ESettingsQualityLevel::High));
+	SetNamedText(TEXT("QualityLowButton"), LOCTEXT("Low", "Low"));
+	SetNamedText(TEXT("QualityMidButton"), LOCTEXT("Mid", "Mid"));
+	SetNamedText(TEXT("QualityHighButton"), LOCTEXT("High", "High"));
+	SetNamedText(TEXT("LowQualityButton"), LOCTEXT("Low", "Low"));
+	SetNamedText(TEXT("MediumQualityButton"), LOCTEXT("Mid", "Mid"));
+	SetNamedText(TEXT("HighQualityButton"), LOCTEXT("High", "High"));
 	SetNamedText(TEXT("Set_row_screen_shake_label"), LOCTEXT("Screen Shake", "Screen Shake"));
 	SetNamedText(TEXT("ScreenShakeRow_Label"), LOCTEXT("Screen Shake", "Screen Shake"));
 	SetNamedText(TEXT("Set_row_effects_label"), LOCTEXT("Effects", "Effects"));
@@ -279,15 +273,15 @@ void USettingsPanelWidget::SyncText() const
 	}
 	if (LowQualityButtonText != nullptr)
 	{
-		LowQualityButtonText->SetText(QualityLabelText(ESettingsQualityLevel::Low));
+		LowQualityButtonText->SetText(LOCTEXT("LOW", "LOW"));
 	}
 	if (MediumQualityButtonText != nullptr)
 	{
-		MediumQualityButtonText->SetText(QualityLabelText(ESettingsQualityLevel::Medium));
+		MediumQualityButtonText->SetText(LOCTEXT("MID", "MID"));
 	}
 	if (HighQualityButtonText != nullptr)
 	{
-		HighQualityButtonText->SetText(QualityLabelText(ESettingsQualityLevel::High));
+		HighQualityButtonText->SetText(LOCTEXT("HIGH", "HIGH"));
 	}
 	if (AbandonConfirmTitleText != nullptr)
 	{

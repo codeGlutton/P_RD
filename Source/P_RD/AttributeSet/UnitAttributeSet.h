@@ -21,6 +21,25 @@ class P_RD_API UUnitAttributeSet : public UCombatTargetAttributeSet
 };
 
 /**
+ * @brief  Enemy Unit에 대한 Attribute Set 정의
+ */
+UCLASS()
+class P_RD_API UEnemyUnitAttributeSet : public UUnitAttributeSet
+{
+	GENERATED_BODY()
+
+public:
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UEnemyUnitAttributeSet, RechargeMovement)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UEnemyUnitAttributeSet, RechargeDiceSum)
+
+protected:
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FTacticalAttributeData RechargeMovement;
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FTacticalAttributeData RechargeDiceSum;
+};
+
+/**
  * @brief  Player가 조작하는 Unit에 대한 Attribute Set 정의
  */
 UCLASS()
@@ -28,9 +47,6 @@ class P_RD_API UPlayerUnitAttributeSet : public UUnitAttributeSet
 {
 	GENERATED_BODY()
 	
-public:
-	UPlayerUnitAttributeSet();
-
 	/* UTacticalAttributeSet 상속 */
 public:
 	void PreAttributeChange(const FTacticalAttribute& Attribute, float& NewValue) override;

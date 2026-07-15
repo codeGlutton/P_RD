@@ -160,6 +160,9 @@ private:
 	bool mRollActive = false;
 	bool mRollComplete = false;
 
+	/** @brief 굴림/정렬 중 SceneCapture 재촬영 30fps 스로틀 누적 시간. */
+	float mCaptureAccumulatedSeconds = 0.0f;
+
 	bool mAligning = false;
 	bool mAlignComplete = false;
 	float mAlignElapsed = 0.0f;
