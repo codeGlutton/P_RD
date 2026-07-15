@@ -20,7 +20,14 @@ void AIntroGameMode::BeginRoom()
 {
 	Super::BeginRoom();
 
-	checkf(PreloadAndTransitionFrontendRoomAsync() == true, TEXT("Intro -> Frontend 과정에서 Preload 실패"));
+	// checkf는 Shipping에서 제거되므로, 부수 효과가 있는 전환 시작 호출을 검증식 안에 넣으면 안 된다.
+	const bool bPreloadStarted = PreloadAndTransitionFrontendRoomAsync();
+	checkf(bPreloadStarted == true, TEXT("Intro -> Frontend 과정에서 Preload 실패"));
+	if (bPreloadStarted == false)
+	{
+		UE_LOG(LogRD, Error, TEXT("Intro -> Frontend 과정에서 Preload 실패"));
+		return;
+	}
 
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
 	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr"));
@@ -78,7 +85,13 @@ void AIntroGameMode::TryToMarkExternalReady()
 	}
 	mStateFlag = EIntroGameModeStateFlag::None;
 
-	// <시네마틱 && 런 데이터 로드 && 유저 데이터 로드>에 대한 대기 상태 모두 완료 알림
-	checkf(MarkExternalReadyForTransition() == true, TEXT("대기 상태 모두 완료 알림 실패"));
+	// <시네마틱 && 런 데이터 로드 && 유저 데이터 로드>에 대한 대기 상태 모두 완료 알림.
+	// Shipping에서도 호출 자체는 반드시 남아야 하므로 checkf 밖에서 먼저 실행한다.
+	const bool bMarkedReady = MarkExternalReadyForTransition();
+	checkf(bMarkedReady == true, TEXT("대기 상태 모두 완료 알림 실패"));
+	if (bMarkedReady == false)
+	{
+		UE_LOG(LogRD, Error, TEXT("대기 상태 모두 완료 알림 실패"));
+	}
 }
 

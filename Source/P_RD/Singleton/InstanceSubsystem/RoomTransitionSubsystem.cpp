@@ -167,7 +167,12 @@ bool URoomTransitionSubsystem::MakeStageAndPreloadRoomAsync(EStageLevelType Stag
 
         // 이후 스테이지의 배정된 첫 방으로 Preload 시작
         const FRoom& StartRoom = NewStage.GetStartRoom();
-        checkf(PreloadRoomAsync(StartRoom.mRow, StartRoom.mColumn, ReadyToTransitionCallback, PreTransitionCallback, RequireExternalReady, IsAutoTransition), TEXT("만들어진 Stage로 Preload 시도 실패"));
+        const bool bPreloadRequested = PreloadRoomAsync(StartRoom.mRow, StartRoom.mColumn, ReadyToTransitionCallback, PreTransitionCallback, RequireExternalReady, IsAutoTransition);
+        checkf(bPreloadRequested == true, TEXT("만들어진 Stage로 Preload 시도 실패"));
+        if (bPreloadRequested == false)
+        {
+            UE_LOG(LogTransition, Error, TEXT("만들어진 Stage로 Preload 시도 실패"));
+        }
         }));
 
     return true;
