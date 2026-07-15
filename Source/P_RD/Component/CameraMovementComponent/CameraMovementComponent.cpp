@@ -84,11 +84,12 @@ void UCameraMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 
 	//==============================
 	// 이동 제한 범위를 보여줍니다.
-	// @note 수학 공식 이상함. 하지만 현재 각도에서는 우선 원하는 제한 범위가 나오므로 후 순위
-	// FVector Center = mMoveClampingBoxCenter + FMath::Sin(FMath::Abs(FMath::DegreesToRadians(GetOwner()->GetActorRotation().Pitch))) * GetOwner()->GetActorLocation().Z;
+	// @note 
+	// 직교 카메라로 보고 있을 때는 제한 범위가 이상해 보일 것입니다.
+	// 에디터 카메라로 보아야지 제한 범위가 납득이 되실 것입니다.
 	FVector Center = mMoveClampingBoxCenter;
 	FVector Extent = FVector(mMoveClampingBox / 2, 0);
-	FQuat Rotation = FQuat();
+	FQuat Rotation = FRotator(0.f, GetOwner()->GetActorRotation().Yaw, 0.f).Quaternion();
 
 	DrawDebugBox(
 		GetWorld(),
