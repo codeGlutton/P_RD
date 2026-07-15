@@ -262,7 +262,7 @@ void URunPersistData::StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Diffic
 	{
 		if (mFixedTestSeed == true)
 		{
-			mStageBuildStream.Initialize(41995727);
+			mStageBuildStream.Initialize(1956788150);
 		}
 		else
 		{
