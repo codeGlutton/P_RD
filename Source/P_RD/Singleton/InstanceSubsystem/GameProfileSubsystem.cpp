@@ -62,6 +62,20 @@ void UGameProfileSubsystem::SetFpsLimit(int32 FpsLimit) const
 	UE_LOG(LogGameProfile, Log, TEXT("[%d] FPS 제한 변경"), FpsLimit);
 }
 
+void UGameProfileSubsystem::SetCameraShakeEnabled(bool IsEnabled) const
+{
+	GetOptionMutableData()->SetCameraShakeEnabled(IsEnabled);
+
+	UE_LOG(LogGameProfile, Log, TEXT("[%s] 카메라 흔들림 설정 변경"), (IsEnabled ? TEXT("True") : TEXT("False")));
+}
+
+void UGameProfileSubsystem::SetEffectVFXEnabled(bool IsEnabled) const
+{
+	GetOptionMutableData()->SetEffectVFXEnabled(IsEnabled);
+
+	UE_LOG(LogGameProfile, Log, TEXT("[%s] 이펙트 VFX 설정 변경"), (IsEnabled ? TEXT("True") : TEXT("False")));
+}
+
 void UGameProfileSubsystem::ResetOptions() const
 {
 	GetOptionMutableData()->ClearOption();

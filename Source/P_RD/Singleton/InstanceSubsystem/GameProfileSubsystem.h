@@ -35,5 +35,7 @@ public:
 	void SetLanguage(ELanguageType LanguageType) const;
 	void SetOverallQuality(EOverallQualityType QualityType) const;
 	void SetFpsLimit(int32 FpsLimit) const;
+	void SetCameraShakeEnabled(bool IsEnabled) const;
+	void SetEffectVFXEnabled(bool IsEnabled) const;
 	void ResetOptions() const;
 };

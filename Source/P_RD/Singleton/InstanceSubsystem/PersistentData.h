@@ -256,6 +256,8 @@ public:
 	void SetLanguage(ELanguageType LanguageType);
 	void SetOverallQuality(EOverallQualityType QualityType);
 	void SetFpsLimit(int32 FpsLimit);
+	void SetCameraShakeEnabled(bool IsEnabled);
+	void SetEffectVFXEnabled(bool IsEnabled);
 
 	void ApplyCurrentOptions();
 
@@ -264,29 +266,39 @@ public:
 	ELanguageType GetLanguage() const;
 	EOverallQualityType GetOverallQuality() const;
 	int32 GetFpsLimit() const;
+	bool IsCameraShakeEnabled() const;
+	bool IsEffectVFXEnabled() const;
 
 public:
 	bool IsActive() const;
 
+private:
+	void ApplyScreenPercentage() const;
+	void OnResizeViewport(FViewport* Viewport, uint32 Unused);
+
+	/* 사운드 옵션 */
 protected:
 	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "Volumes"))
 	TArray<float> mVolumes;
 
+	/* 언어 옵션 */
 protected:
 	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "LanguageType"))
 	ELanguageType mLanguageType = ELanguageType::ENGLISH;
 
+	/* 그래픽 옵션 */
 protected:
 	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "OverallQuality"))
 	EOverallQualityType mOverallQuality = EOverallQualityType::Medium;
 
-protected:
 	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "FpsLimit"))
 	int32 mFpsLimit = 60;
 
-private:
-	void ApplyScreenPercentage() const;
-	void OnResizeViewport(FViewport* Viewport, uint32 Unused);
+	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "CameraShakeEnabled"))
+	bool mCameraShakeEnabled = true;
+
+	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "EffectVFXEnabled"))
+	bool mEffectVFXEnabled = true;
 
 	/* 캐싱 */
 private:

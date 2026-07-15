@@ -2,6 +2,9 @@
 #include "Pawn/UnitModel.h"
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 
+#include "GameMode/RDGameModeBase.h"
+#include "Singleton/InstanceSubsystem/PersistentData.h"
+
 #include "RDCollision.h"
 
 #include "Components/SkeletalMeshComponent.h"
@@ -145,11 +148,20 @@ void AUnit::BindModel(UObjectModel* Model)
 						});
 					BoardActorAnimInst->PlayMontageUsingTag(ReceiveMotionTag, LocalDirection, MoveTemp(OnTriggerEndAnimationEvent));
 				}
+
 				if (Payload != nullptr)
 				{
-					for (const FApplyNiagaraSpawnData& NiagaraSpawnData : Payload->mNiagaraSpawnDatas)
+					const ARDGameModeBase* GameMode = Cast<ARDGameModeBase>(GetWorld()->GetAuthGameMode());
+					if (GameMode != nullptr)
 					{
-						SpawnHitVFX(NiagaraSpawnData, LocalDirection);
+						const UOptionPersistData* OptionData = GameMode->GetOptionPersistData();
+						if (OptionData != nullptr)
+						{
+							for (const FApplyNiagaraSpawnData& NiagaraSpawnData : Payload->mNiagaraSpawnDatas)
+							{
+								SpawnHitVFX(NiagaraSpawnData, LocalDirection);
+							}
+						}
 					}
 				}
 			}

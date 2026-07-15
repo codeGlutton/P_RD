@@ -632,6 +632,8 @@ void UOptionPersistData::ClearOption()
 	mLanguageType = CDO->mLanguageType;
 	mOverallQuality = CDO->mOverallQuality;
 	mFpsLimit = CDO->mFpsLimit;
+	mCameraShakeEnabled = CDO->mCameraShakeEnabled;
+	mEffectVFXEnabled = CDO->mEffectVFXEnabled;
 
 	ApplyCurrentOptions();
 }
@@ -713,10 +715,88 @@ void UOptionPersistData::SetOverallQuality(EOverallQualityType QualityType)
 	ApplyScreenPercentage();
 }
 
-/** @brief 뷰포트 생성/리사이즈(폴더블 접힘 전환 포함) 시 렌더 해상도 비율을 재계산한다. */
-void UOptionPersistData::OnResizeViewport(FViewport* Viewport, uint32 Unused)
+/** @brief FPS 제한을 지원 값(30/60)으로 보정하고 런타임 최대 FPS에 즉시 반영한다. */
+void UOptionPersistData::SetFpsLimit(int32 FpsLimit)
 {
-	ApplyScreenPercentage();
+	UGameUserSettings* GameUserSettings = UGameUserSettings::GetGameUserSettings();
+	checkf(GameUserSettings != nullptr, TEXT("게임 유저 세팅 nullptr"));
+
+	mFpsLimit = FpsLimit <= 30 ? 30 : 60;
+
+	GameUserSettings->SetFrameRateLimit(mFpsLimit);
+	GameUserSettings->ApplyNonResolutionSettings();
+}
+
+void UOptionPersistData::SetCameraShakeEnabled(bool IsEnabled)
+{
+	mCameraShakeEnabled = IsEnabled;
+}
+
+void UOptionPersistData::SetEffectVFXEnabled(bool IsEnabled)
+{
+	mEffectVFXEnabled = IsEnabled;
+}
+
+/**
+ * @brief 현재 보관 중인 모든 옵션(볼륨 전 타입 + 언어 + 해상도)을 실제 시스템에 일괄 적용한다.
+ *        옵션 로드/초기화 직후 상태를 런타임에 동기화하는 진입점.
+ */
+void UOptionPersistData::ApplyCurrentOptions()
+{
+	const int32 MaxGameVolumeType = StaticCast<int32>(EGameVolumeType::Count);
+	for (int32 i = 0; i < MaxGameVolumeType; ++i)
+	{
+		SetVolume(StaticCast<EGameVolumeType>(i), mVolumes[i]);
+	}
+	SetLanguage(mLanguageType);
+	SetOverallQuality(mOverallQuality);
+	SetFpsLimit(mFpsLimit);
+	SetCameraShakeEnabled(mCameraShakeEnabled);
+	SetEffectVFXEnabled(mEffectVFXEnabled);
+}
+
+/**
+ * @brief 특정 볼륨 타입의 현재 볼륨을 반환한다.
+ * @param VolumeType 조회할 볼륨 타입
+ * @return 해당 타입의 볼륨(0.0~1.0)
+ */
+float UOptionPersistData::GetVolume(EGameVolumeType VolumeType) const
+{
+	return mVolumes[StaticCast<int32>(VolumeType)];
+}
+
+/** @brief 현재 설정된 언어 타입을 반환한다. @return 언어 타입 */
+ELanguageType UOptionPersistData::GetLanguage() const
+{
+	return mLanguageType;
+}
+
+/** @brief 현재 설정된 퀄리티를 반환한다. @return 퀄리티 타입 */
+EOverallQualityType UOptionPersistData::GetOverallQuality() const
+{
+	return mOverallQuality;
+}
+
+/** @brief 현재 FPS 제한 값을 반환한다. @return 30 또는 60 */
+int32 UOptionPersistData::GetFpsLimit() const
+{
+	return mFpsLimit;
+}
+
+bool UOptionPersistData::IsCameraShakeEnabled() const
+{
+	return mCameraShakeEnabled;
+}
+
+bool UOptionPersistData::IsEffectVFXEnabled() const
+{
+	return mEffectVFXEnabled;
+}
+
+/** @brief 옵션 데이터 활성 여부. 옵션은 항상 유효하므로 언제나 true. @return 항상 true */
+bool UOptionPersistData::IsActive() const
+{
+	return true;
 }
 
 /**
@@ -749,64 +829,8 @@ void UOptionPersistData::ApplyScreenPercentage() const
 	}
 }
 
-/** @brief FPS 제한을 지원 값(30/60)으로 보정하고 런타임 최대 FPS에 즉시 반영한다. */
-void UOptionPersistData::SetFpsLimit(int32 FpsLimit)
+/** @brief 뷰포트 생성/리사이즈(폴더블 접힘 전환 포함) 시 렌더 해상도 비율을 재계산한다. */
+void UOptionPersistData::OnResizeViewport(FViewport* Viewport, uint32 Unused)
 {
-	UGameUserSettings* GameUserSettings = UGameUserSettings::GetGameUserSettings();
-	checkf(GameUserSettings != nullptr, TEXT("게임 유저 세팅 nullptr"));
-
-	mFpsLimit = FpsLimit <= 30 ? 30 : 60;
-
-	GameUserSettings->SetFrameRateLimit(mFpsLimit);
-	GameUserSettings->ApplyNonResolutionSettings();
-}
-
-/**
- * @brief 현재 보관 중인 모든 옵션(볼륨 전 타입 + 언어 + 해상도)을 실제 시스템에 일괄 적용한다.
- *        옵션 로드/초기화 직후 상태를 런타임에 동기화하는 진입점.
- */
-void UOptionPersistData::ApplyCurrentOptions()
-{
-	const int32 MaxGameVolumeType = StaticCast<int32>(EGameVolumeType::Count);
-	for (int32 i = 0; i < MaxGameVolumeType; ++i)
-	{
-		SetVolume(StaticCast<EGameVolumeType>(i), mVolumes[i]);
-	}
-	SetLanguage(mLanguageType);
-	SetOverallQuality(mOverallQuality);
-	SetFpsLimit(mFpsLimit);
-}
-
-/**
- * @brief 특정 볼륨 타입의 현재 볼륨을 반환한다.
- * @param VolumeType 조회할 볼륨 타입
- * @return 해당 타입의 볼륨(0.0~1.0)
- */
-float UOptionPersistData::GetVolume(EGameVolumeType VolumeType) const
-{
-	return mVolumes[StaticCast<int32>(VolumeType)];
-}
-
-/** @brief 현재 설정된 언어 타입을 반환한다. @return 언어 타입 */
-ELanguageType UOptionPersistData::GetLanguage() const
-{
-	return mLanguageType;
-}
-
-/** @brief 현재 설정된 퀄리티를 반환한다. @return 퀄리티 타입 */
-EOverallQualityType UOptionPersistData::GetOverallQuality() const
-{
-	return mOverallQuality;
-}
-
-/** @brief 현재 FPS 제한 값을 반환한다. @return 30 또는 60 */
-int32 UOptionPersistData::GetFpsLimit() const
-{
-	return mFpsLimit;
-}
-
-/** @brief 옵션 데이터 활성 여부. 옵션은 항상 유효하므로 언제나 true. @return 항상 true */
-bool UOptionPersistData::IsActive() const
-{
-	return true;
+	ApplyScreenPercentage();
 }
