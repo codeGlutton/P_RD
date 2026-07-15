@@ -284,12 +284,7 @@ void ARDGameModeBase::StartFadeOutUIForRoomTransition()
 	{
 		if (mWaitExternalWorkOnTransition == false)
 		{
-			const bool bMarkedReady = MarkExternalReadyForTransition();
-			checkf(bMarkedReady == true, TEXT("외부 준비 상태 전달 오류"));
-			if (bMarkedReady == false)
-			{
-				UE_LOG(LogRDGameMode, Error, TEXT("외부 준비 상태 전달 오류"));
-			}
+			checkf(MarkExternalReadyForTransition() == true, TEXT("외부 준비 상태 전달 오류"));
 		}
 	}));
 }
@@ -362,21 +357,17 @@ bool ARDGameModeBase::PreloadAndTransitionRoomAsync(int32 RoomRowIndex, int32 Ro
 
 	const bool RequireExternalReady = mShowFadeOutUIOnTransition || mWaitExternalWorkOnTransition;
 	const bool AutoTransition = mShowLoadingNotifyUIOnTransition == false;
-	const bool bPreloadRequested = RoomTransitionSubsystem->PreloadRoomAsync(
+	checkf(
+		RoomTransitionSubsystem->PreloadRoomAsync(
 			RoomRowIndex, 
 			RoomColumnIndex,
 			FOnReadyToTransition::CreateUObject(this, &ARDGameModeBase::OnReadyToTransition),
 			FOnPreTransitNextRoom::CreateUObject(this, &ARDGameModeBase::OnPreTransition),
 			RequireExternalReady, 
 			AutoTransition
-		);
-	checkf(bPreloadRequested == true, TEXT("다음 방 Preload 오류"));
-	if (bPreloadRequested == false)
-	{
-		mWasNextRoomPreloadRequested = false;
-		UE_LOG(LogRDGameMode, Error, TEXT("다음 방 Preload 오류"));
-		return false;
-	}
+		) == true,
+		TEXT("다음 방 Preload 오류")
+	);
 
 	if (RequireExternalReady == true)
 	{
@@ -418,20 +409,16 @@ bool ARDGameModeBase::PreloadAndTransitionRoomAsync(EStageLevelType StageLevel)
 
 	const bool RequireExternalReady = mShowFadeOutUIOnTransition || mWaitExternalWorkOnTransition;
 	const bool AutoTransition = mShowLoadingNotifyUIOnTransition == false;
-	const bool bPreloadRequested = RoomTransitionSubsystem->MakeStageAndPreloadRoomAsync(
+	checkf(
+		RoomTransitionSubsystem->MakeStageAndPreloadRoomAsync(
 			StageLevel,
 			FOnReadyToTransition::CreateUObject(this, &ARDGameModeBase::OnReadyToTransition),
 			FOnPreTransitNextRoom::CreateUObject(this, &ARDGameModeBase::OnPreTransition),
 			RequireExternalReady,
 			AutoTransition
-		);
-	checkf(bPreloadRequested == true, TEXT("스테이지 및 첫번쨰 방 Preload 오류"));
-	if (bPreloadRequested == false)
-	{
-		mWasNextRoomPreloadRequested = false;
-		UE_LOG(LogRDGameMode, Error, TEXT("스테이지 및 첫번쨰 방 Preload 오류"));
-		return false;
-	}
+		) == true,
+		TEXT("스테이지 및 첫번쨰 방 Preload 오류")
+	);
 
 	if (RequireExternalReady == true)
 	{
@@ -469,19 +456,15 @@ bool ARDGameModeBase::PreloadAndTransitionFrontendRoomAsync()
 
 	const bool RequireExternalReady = mShowFadeOutUIOnTransition || mWaitExternalWorkOnTransition;
 	const bool AutoTransition = mShowLoadingNotifyUIOnTransition == false;
-	const bool bPreloadRequested = RoomTransitionSubsystem->PreloadFrontendRoomAsync(
+	checkf(
+		RoomTransitionSubsystem->PreloadFrontendRoomAsync(
 			FOnReadyToTransition::CreateUObject(this, &ARDGameModeBase::OnReadyToTransition),
 			FOnPreTransitNextRoom::CreateUObject(this, &ARDGameModeBase::OnPreTransition),
 			RequireExternalReady,
 			AutoTransition
-		);
-	checkf(bPreloadRequested == true, TEXT("타이틀 방 Preload 오류"));
-	if (bPreloadRequested == false)
-	{
-		mWasNextRoomPreloadRequested = false;
-		UE_LOG(LogRDGameMode, Error, TEXT("타이틀 방 Preload 오류"));
-		return false;
-	}
+		) == true,
+		TEXT("타이틀 방 Preload 오류")
+	);
 
 	if (RequireExternalReady == true)
 	{
@@ -525,13 +508,7 @@ bool ARDGameModeBase::MarkExternalReadyForTransition()
 	URoomTransitionSubsystem* RoomTransitionSubsystem = GetGameInstance()->GetSubsystem<URoomTransitionSubsystem>();
 	checkf(RoomTransitionSubsystem != nullptr, TEXT("방 전환 서브시스템 nullptr 오류"));
 	
-	const bool bMarkedReady = RoomTransitionSubsystem->MarkExternalReady();
-	checkf(bMarkedReady == true, TEXT("로드된 방으로 전환 실패"));
-	if (bMarkedReady == false)
-	{
-		UE_LOG(LogRDGameMode, Error, TEXT("로드된 방으로 전환 실패"));
-		return false;
-	}
+	checkf(RoomTransitionSubsystem->MarkExternalReady() == true, TEXT("로드된 방으로 전환 실패"));
 
 	UE_LOG(LogRDGameMode, Log, TEXT("외부 준비 상태 전달 완료"));
 	return true;
@@ -561,12 +538,7 @@ void ARDGameModeBase::OnReadyToTransition(int32 RoomRowIndex, int32 RoomColumnIn
 		URoomTransitionSubsystem* RoomTransitionSubsystem = GetGameInstance()->GetSubsystem<URoomTransitionSubsystem>();
 		checkf(RoomTransitionSubsystem != nullptr, TEXT("방 전환 서브시스템 nullptr 오류"));
 
-		const bool bTransitStarted = RoomTransitionSubsystem->TransitLoadedRoom();
-		checkf(bTransitStarted == true, TEXT("방 전환 시작 오류"));
-		if (bTransitStarted == false)
-		{
-			UE_LOG(LogRDGameMode, Error, TEXT("방 전환 시작 오류"));
-		}
+		checkf(RoomTransitionSubsystem->TransitLoadedRoom(), TEXT("방 전환 시작 오류"));
 	}));
 }
 

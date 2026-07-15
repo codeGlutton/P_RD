@@ -308,9 +308,8 @@ bool ARoomGameModeBase::EnterSelectedRoom()
 		return false;
 	}
 
-	const bool bTransitionStarted = PreloadAndTransitionSelectedRoomAsync();
-	checkf(bTransitionStarted == true, TEXT("다음 방으로 전환 실패"));
-	return bTransitionStarted;
+	checkf(PreloadAndTransitionSelectedRoomAsync() == true, TEXT("다음 방으로 전환 실패"));
+	return true;
 }
 
 /**
@@ -329,9 +328,9 @@ bool ARoomGameModeBase::AbandonRunFromRoom()
 	}
 
 	ClearRunPersistData();
-	const bool bTransitionStarted = PreloadAndTransitionFrontendRoomAsync();
-	checkf(bTransitionStarted == true, TEXT("게임 포기 이후, Frontend로 전환 실패"));
-	return bTransitionStarted;
+	checkf(PreloadAndTransitionFrontendRoomAsync() == true, TEXT("게임 포기 이후, Frontend로 전환 실패"));
+
+	return true;
 }
 
 /**
@@ -505,9 +504,8 @@ bool ARoomGameModeBase::PreloadAndTransitionSelectedRoomAsync()
 		return false;
 	}
 
-	const bool bTransitionStarted = PreloadAndTransitionRoomAsync(mSelectedRoomRow, mSelectedRoomColumn);
-	checkf(bTransitionStarted == true, TEXT("선택된 방에 대한 Preload 및 Auto Transition 실패"));
-	return bTransitionStarted;
+	checkf(PreloadAndTransitionRoomAsync(mSelectedRoomRow, mSelectedRoomColumn) == true, TEXT("선택된 방에 대한 Preload 및 Auto Transition 실패"));
+	return true;
 }
 
 /**
