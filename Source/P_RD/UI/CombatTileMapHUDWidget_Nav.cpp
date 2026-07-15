@@ -8,6 +8,7 @@
 #include "Kismet/GameplayStatics.h"   // 지도 열기 사운드 재생
 #include "UI/IndexedButtonWidget.h"
 #include "GameMode/CombatGameMode.h"   // 라운드 시작 배리어(OnBeginAnyRoundUI) 구독용
+#include "GameMode/RoomGameModeBase.h"
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
@@ -215,11 +216,21 @@ void UCombatTileMapHUDWidget::ToggleSettingsPanel()
 
 	CloseFloatingPanels(EWorldWidgetType::InGameSettings);
 	SettingsPanelWidget->OnBackRequested.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleSettingsBackRequested);
-	SettingsPanelWidget->OpenUI();
+	SettingsPanelWidget->OnSaveAndExitRequested.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleSettingsSaveAndExitRequested);
+	SettingsPanelWidget->OnAbandonRunConfirmed.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleSettingsAbandonRunConfirmed);
+	SettingsPanelWidget->OnResetRequested.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleSettingsResetRequested);
 	SettingsPanelWidget->SetPanelMode(ESettingsPanelMode::InGame);
-	SettingsPanelWidget->RefreshPanelState(false, false);
+	if (const ARoomGameModeBase* RoomGameMode = GetWorld()->GetAuthGameMode<ARoomGameModeBase>())
+	{
+		SettingsPanelWidget->ApplyRunActionView(RoomGameMode->GetSettingsRunActionView());
+	}
+	else
+	{
+		SettingsPanelWidget->ApplyRunActionView(FSettingsRunActionView());
+	}
 	SettingsPanelWidget->HideAbandonConfirm();
 	SettingsPanelWidget->SetStatusText(FText::GetEmpty());
+	SettingsPanelWidget->OpenUI();
 }
 
 /**
@@ -463,6 +474,11 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
  */
 void UCombatTileMapHUDWidget::HandleSettingsBackRequested()
 {
+	if (ARDGameModeBase* GameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ARDGameModeBase>() : nullptr)
+	{
+		GameMode->BackFromOptionPanel();
+	}
+
 	if (mVictoryWorldMapLocked)
 	{
 		CloseSettingsPanelAndRestoreVictoryWorldMap();
@@ -471,6 +487,69 @@ void UCombatTileMapHUDWidget::HandleSettingsBackRequested()
 
 	CloseWorldWidget(EWorldWidgetType::InGameSettings);
 	RestoreCombatControlsIfHidden();   // 설정 Back으로 나가도 전투로 복귀하므로 숨겨진 전투 컨트롤 복원.
+}
+
+void UCombatTileMapHUDWidget::HandleSettingsSaveAndExitRequested()
+{
+	USettingsPanelWidget* SettingsPanelWidget = Cast<USettingsPanelWidget>(GetToggleableWorldWidget(EWorldWidgetType::InGameSettings));
+	ARoomGameModeBase* RoomGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ARoomGameModeBase>() : nullptr;
+	if (SettingsPanelWidget == nullptr || RoomGameMode == nullptr)
+	{
+		return;
+	}
+
+	SettingsPanelWidget->SetRunActionsEnabled(false);
+	SettingsPanelWidget->SetStatusText(NSLOCTEXT("CombatTileMapHUDWidget", "SavingRun", "Saving..."));
+
+	const TWeakObjectPtr<USettingsPanelWidget> WeakSettingsPanel = SettingsPanelWidget;
+	RoomGameMode->SaveAndExitFromRoom(FOnSaveAndExitFromRoomComplete::CreateWeakLambda(this,
+		[this, WeakSettingsPanel](bool bWasSuccessful)
+		{
+			if (bWasSuccessful || WeakSettingsPanel.IsValid() == false)
+			{
+				return;
+			}
+
+			if (const ARoomGameModeBase* CurrentRoomGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ARoomGameModeBase>() : nullptr)
+			{
+				WeakSettingsPanel->ApplyRunActionView(CurrentRoomGameMode->GetSettingsRunActionView());
+			}
+			WeakSettingsPanel->SetStatusText(NSLOCTEXT("CombatTileMapHUDWidget", "SaveRunFailed", "Could not save the run."));
+		}));
+}
+
+void UCombatTileMapHUDWidget::HandleSettingsAbandonRunConfirmed()
+{
+	USettingsPanelWidget* SettingsPanelWidget = Cast<USettingsPanelWidget>(GetToggleableWorldWidget(EWorldWidgetType::InGameSettings));
+	ARoomGameModeBase* RoomGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ARoomGameModeBase>() : nullptr;
+	if (SettingsPanelWidget == nullptr || RoomGameMode == nullptr)
+	{
+		return;
+	}
+
+	SettingsPanelWidget->HideAbandonConfirm();
+	SettingsPanelWidget->SetRunActionsEnabled(false);
+	SettingsPanelWidget->SetStatusText(NSLOCTEXT("CombatTileMapHUDWidget", "AbandoningRun", "Abandoning run..."));
+	if (RoomGameMode->AbandonRunFromRoom())
+	{
+		return;
+	}
+
+	SettingsPanelWidget->ApplyRunActionView(RoomGameMode->GetSettingsRunActionView());
+	SettingsPanelWidget->SetStatusText(NSLOCTEXT("CombatTileMapHUDWidget", "AbandonRunFailed", "Could not abandon the run."));
+}
+
+void UCombatTileMapHUDWidget::HandleSettingsResetRequested()
+{
+	ARDGameModeBase* GameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ARDGameModeBase>() : nullptr;
+	USettingsPanelWidget* SettingsPanelWidget = Cast<USettingsPanelWidget>(GetToggleableWorldWidget(EWorldWidgetType::InGameSettings));
+	if (GameMode == nullptr || SettingsPanelWidget == nullptr)
+	{
+		return;
+	}
+
+	GameMode->ResetFromOptionPanel();
+	SettingsPanelWidget->RefreshValueModelFromCurrentOptions();
 }
 
 /**

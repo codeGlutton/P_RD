@@ -134,9 +134,16 @@ void UTitleMenuWidget::OpenSettingsPanel()
 	}
 
 	TitleSettingsPanel->OnBackRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsPanelBackRequested);
+	TitleSettingsPanel->OnResetRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsResetRequested);
 	TitleSettingsPanel->SetPanelMode(ESettingsPanelMode::Title);
-	// 같은 SettingsPanel 인스턴스를 인게임에서도 쓰므로, 타이틀에서만 런 액션 영역을 숨긴 상태로 갱신한다.
-	TitleSettingsPanel->RefreshPanelState(false, false);
+	if (const AFrontendGameMode* FrontendGameMode = GetWorld()->GetAuthGameMode<AFrontendGameMode>())
+	{
+		TitleSettingsPanel->ApplyRunActionView(FrontendGameMode->GetSettingsRunActionView());
+	}
+	else
+	{
+		TitleSettingsPanel->ApplyRunActionView(FSettingsRunActionView());
+	}
 	TitleSettingsPanel->HideAbandonConfirm();
 	TitleSettingsPanel->SetStatusText(FText::GetEmpty());
 
@@ -306,10 +313,28 @@ void UTitleMenuWidget::HandleSettingsButtonClicked()
 // 타이틀 설정도 공용 InGameSettings 월드 위젯으로 열리므로 CloseUI()까지 호출해 팝업 상태를 정리한다.
 void UTitleMenuWidget::HandleSettingsPanelBackRequested()
 {
+	if (ARDGameModeBase* GameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ARDGameModeBase>() : nullptr)
+	{
+		GameMode->BackFromOptionPanel();
+	}
+
 	if (USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel())
 	{
 		TitleSettingsPanel->CloseUI();
 	}
 
 	SetStatusText(FText::GetEmpty());
+}
+
+void UTitleMenuWidget::HandleSettingsResetRequested()
+{
+	AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr;
+	USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel();
+	if (FrontendGameMode == nullptr || TitleSettingsPanel == nullptr)
+	{
+		return;
+	}
+
+	FrontendGameMode->ResetFromOptionPanel();
+	TitleSettingsPanel->RefreshValueModelFromCurrentOptions();
 }

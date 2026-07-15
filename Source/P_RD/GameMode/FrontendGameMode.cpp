@@ -381,8 +381,7 @@ bool AFrontendGameMode::AbandonRunFromTitle()
 		return false;
 	}
 
-	ClearRunPersistData();
-	return true;
+	return ClearRunPersistData();
 }
 
 /** @brief 캐릭터 선택 카드에 표시할 FFrontendCharacterOption 목록을 만든다. */

@@ -15,6 +15,7 @@
 #include "DataAsset/StageSpawnData/StageLevelType.h"
 #include "UI/FadeInOutWidget.h"
 #include "UI/RDUserWidget.h"
+#include "UI/SettingsPanelTypes.h"
 #include "RDGameModeBase.generated.h"
 
 class UUserPersistData;
@@ -74,6 +75,13 @@ public:
 	 */
 	UFUNCTION(Category = UI, BlueprintPure)
 	bool CanAbandonRun() const;
+
+	/**
+	 * @brief 설정 패널에 표시할 런 전용 버튼 상태를 계산한다.
+	 * @return 타이틀 같은 기본 GameMode에서는 런 액션을 숨긴 상태
+	 */
+	UFUNCTION(Category = UI, BlueprintPure)
+	virtual FSettingsRunActionView GetSettingsRunActionView() const;
 
 public:
 	UFUNCTION(Category = UI, BlueprintPure)
@@ -200,7 +208,8 @@ public:
 	const URunPersistData* GetRunPersistData() const;
 
 protected:
-	void ClearRunPersistData();
+	/** @brief 활성 런을 종료하고 사용자 기록 저장 및 디스크 런 슬롯 삭제까지 완료한다. */
+	bool ClearRunPersistData();
 
 public:
 	USoundBase* GetMainBGM() const;

@@ -322,17 +322,76 @@ bool ARoomGameModeBase::EnterSelectedRoom()
  */
 bool ARoomGameModeBase::AbandonRunFromRoom()
 {
-	if (mWasNextRoomPreloadRequested == true)
+	if (mWasNextRoomPreloadRequested == true || mIsSaveAndExitRequested == true)
 	{
 		UE_LOG(LogRDGameMode, Log, TEXT("방 전환 시 추가 로직 요청 불가"));
 		return false;
 	}
 
-	ClearRunPersistData();
+	if (ClearRunPersistData() == false)
+	{
+		UE_LOG(LogRDGameMode, Error, TEXT("런 저장 파일 정리 실패로 포기 요청 중단"));
+		return false;
+	}
+
 	const bool IsTransitionStarted = PreloadAndTransitionFrontendRoomAsync();
 	checkf(IsTransitionStarted == true, TEXT("게임 포기 이후, Frontend로 전환 실패"));
 
 	return IsTransitionStarted;
+}
+
+FSettingsRunActionView ARoomGameModeBase::GetSettingsRunActionView() const
+{
+	FSettingsRunActionView View;
+	View.mShowRunActions = HasActiveRun();
+
+	const USaveGameSubsystem* SaveGameSubsystem = GetGameInstance() != nullptr
+		? GetGameInstance()->GetSubsystem<USaveGameSubsystem>()
+		: nullptr;
+	const bool bRunSaveInProgress = SaveGameSubsystem != nullptr && SaveGameSubsystem->IsRunSaveInProgress();
+	const bool bCanChangeRun = View.mShowRunActions
+		&& mWasNextRoomPreloadRequested == false
+		&& mIsSaveAndExitRequested == false
+		&& bRunSaveInProgress == false;
+
+	View.mCanSaveAndExit = bCanChangeRun;
+	View.mCanAbandonRun = bCanChangeRun && CanAbandonRun();
+	return View;
+}
+
+bool ARoomGameModeBase::SaveAndExitFromRoom(FOnSaveAndExitFromRoomComplete Completion)
+{
+	const FSettingsRunActionView View = GetSettingsRunActionView();
+	if (View.mCanSaveAndExit == false)
+	{
+		Completion.ExecuteIfBound(false);
+		return false;
+	}
+
+	USaveGameSubsystem* SaveGameSubsystem = GetGameInstance()->GetSubsystem<USaveGameSubsystem>();
+	checkf(SaveGameSubsystem != nullptr, TEXT("세이브 서브시스템 nullptr 오류"));
+
+	mIsSaveAndExitRequested = true;
+	SaveGameSubsystem->SaveRunAsync(FAsyncSaveGameToSlotDelegate::CreateWeakLambda(this,
+		[this, MovedCompletion = MoveTemp(Completion)](const FString& SlotName, int32 UserIndex, bool bWasSaved) mutable
+		{
+			if (bWasSaved == false)
+			{
+				mIsSaveAndExitRequested = false;
+				UE_LOG(LogRDGameMode, Error, TEXT("저장 후 종료: 런 저장 실패"));
+				MovedCompletion.ExecuteIfBound(false);
+				return;
+			}
+
+			const bool bTransitionStarted = PreloadAndTransitionFrontendRoomAsync();
+			if (bTransitionStarted == false)
+			{
+				mIsSaveAndExitRequested = false;
+				UE_LOG(LogRDGameMode, Error, TEXT("저장 후 종료: Frontend 전환 시작 실패"));
+			}
+			MovedCompletion.ExecuteIfBound(bTransitionStarted);
+		}));
+	return true;
 }
 
 /**

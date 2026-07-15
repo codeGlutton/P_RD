@@ -83,15 +83,6 @@ FSettingsPanelValueModel USettingsPanelWidget::GetValueModel() const
 void USettingsPanelWidget::HandleResetButtonClicked()
 {
 	OnResetRequested.Broadcast();
-	// 전용 수신자가 생기기 전까지의 기본 적용: 옵션을 CDO 기본값으로 되돌리고
-	// (ResetOptions -> ClearOption -> ApplyCurrentOptions로 볼륨/언어/해상도 즉시 재적용),
-	// 패널 UI도 기본 값 모델로 갱신한다(ApplyValueModel은 콜백 가드로 이벤트 재발신 없음).
-	// 초기화도 커밋 행위다 — 되돌린 옵션을 즉시 디스크에 저장한다.
-	if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
-	{
-		GameModeBase->ResetFromOptionPanel();
-	}
-	RefreshValueModelFromCurrentOptions();
 }
 
 /**

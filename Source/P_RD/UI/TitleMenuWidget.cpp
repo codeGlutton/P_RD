@@ -120,6 +120,7 @@ void UTitleMenuWidget::NativeConstruct()
 	if (USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel())
 	{
 		TitleSettingsPanel->OnBackRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsPanelBackRequested);
+		TitleSettingsPanel->OnResetRequested.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsResetRequested);
 	}
 
 	SyncMainText();
@@ -154,6 +155,7 @@ void UTitleMenuWidget::NativeDestruct()
 	if (USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel())
 	{
 		TitleSettingsPanel->OnBackRequested.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsPanelBackRequested);
+		TitleSettingsPanel->OnResetRequested.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsResetRequested);
 	}
 
 	Super::NativeDestruct();

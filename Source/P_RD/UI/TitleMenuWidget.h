@@ -202,6 +202,10 @@ private:
 	UFUNCTION()
 	void HandleSettingsPanelBackRequested();
 
+	/** @brief 설정 패널 초기화 요청을 Frontend GameMode에 전달한다. */
+	UFUNCTION()
+	void HandleSettingsResetRequested();
+
 private:
 	/** @brief 캐릭터 선택 화면으로 넘어가는 START 버튼 */
 	UPROPERTY(meta = (BindWidgetOptional))

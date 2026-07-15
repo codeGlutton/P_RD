@@ -97,6 +97,13 @@ public:
 	void RefreshPanelState(bool bCanSaveRun, bool bCanAbandonRun);
 
 	/**
+	 * @brief GameMode가 계산한 런 액션 View를 표시 상태에 반영한다.
+	 * @param RunActionView 런 액션 영역 표시 및 버튼 활성 상태
+	 */
+	UFUNCTION(BlueprintCallable, Category = "UI|Settings")
+	void ApplyRunActionView(const FSettingsRunActionView& RunActionView);
+
+	/**
 	 * @brief 저장/포기 처리 결과처럼 외부 흐름이 결정한 상태 문구만 표시한다.
 	 *
 	 * @details
@@ -657,6 +664,10 @@ private:
 	 */
 	UPROPERTY(Category = "Settings", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	ESettingsPanelMode mPanelMode = ESettingsPanelMode::Title;
+
+	/** @brief GameMode가 마지막으로 내려준 런 액션 표시 상태 */
+	UPROPERTY(Category = "Settings", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	FSettingsRunActionView mRunActionView;
 
 	/**
 	 * @brief 패널 입력이 마지막으로 반영한 설정 값 모델

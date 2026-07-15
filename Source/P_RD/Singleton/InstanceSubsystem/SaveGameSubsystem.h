@@ -39,6 +39,10 @@ public:
 	bool LoadRun() const;
 	void LoadRunAsync(FAsyncLoadGameFromSlotDelegate Callback) const;
 	void ClearRun() const;
+	/** @brief 디스크의 런 저장 슬롯과 메모리 직렬화 버퍼를 함께 제거한다. */
+	bool DeleteRunSave() const;
+	/** @brief 비동기 런 저장이 아직 파일 작업 중인지 여부 */
+	bool IsRunSaveInProgress() const { return mPendingRunSaveCount > 0; }
 
 public:
 	bool SaveOption() const;
@@ -65,6 +69,9 @@ protected:
 
 	UPROPERTY()
 	mutable TObjectPtr<UBinarySaveGame> mOptionSaveGame;
+
+	/** @brief 완료되지 않은 비동기 런 저장 수. 저장 중 포기/삭제 경합을 막는다. */
+	mutable int32 mPendingRunSaveCount = 0;
 
 protected:
 	static constexpr auto USER_SLOT_NAME = TEXT("User");

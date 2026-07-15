@@ -399,6 +399,18 @@ private:
 	UFUNCTION()
 	void HandleSettingsBackRequested();
 
+	/** @brief 설정 패널의 저장 후 종료 요청을 RoomGameMode 명령으로 전달한다. */
+	UFUNCTION()
+	void HandleSettingsSaveAndExitRequested();
+
+	/** @brief 설정 패널의 최종 런 포기 확인을 RoomGameMode 명령으로 전달한다. */
+	UFUNCTION()
+	void HandleSettingsAbandonRunConfirmed();
+
+	/** @brief 설정 초기화 요청을 GameMode에 전달하고 패널 값을 다시 읽는다. */
+	UFUNCTION()
+	void HandleSettingsResetRequested();
+
 	/** @brief 지도 열림 동안 탑바 뒤 월드 비침을 가리는 배경판(시안 빌더가 WBP에 생성, 초기 Collapsed) */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UImage> TopBar_Backdrop;

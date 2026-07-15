@@ -7,6 +7,8 @@
 #include "UI/CombatTutorialGuide.h"
 #include "UI/IndexedButtonWidget.h"
 #include "UI/Reward/RewardUIWidgetBase.h"
+#include "UI/SettingsPanelWidget.h"
+#include "Singleton/WorldSubsystem/WorldWidgetType.h"
 #include "UObject/ConstructorHelpers.h"
 
 #include "GameMode/CombatGameMode.h"
@@ -256,6 +258,14 @@ void UCombatTileMapHUDWidget::NativeConstruct()
 
 void UCombatTileMapHUDWidget::NativeDestruct()
 {
+	if (USettingsPanelWidget* SettingsPanelWidget = Cast<USettingsPanelWidget>(GetToggleableWorldWidget(EWorldWidgetType::InGameSettings)))
+	{
+		SettingsPanelWidget->OnBackRequested.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleSettingsBackRequested);
+		SettingsPanelWidget->OnSaveAndExitRequested.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleSettingsSaveAndExitRequested);
+		SettingsPanelWidget->OnAbandonRunConfirmed.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleSettingsAbandonRunConfirmed);
+		SettingsPanelWidget->OnResetRequested.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleSettingsResetRequested);
+	}
+
 	if (EndTurnButton != nullptr)
 	{
 		EndTurnButton->OnClicked.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleEndTurnButtonClicked);

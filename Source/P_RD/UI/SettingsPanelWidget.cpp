@@ -5,7 +5,6 @@
 #include "Components/Slider.h"
 #include "UI/ViewportZOrderType.h"
 #include "Blueprint/WidgetTree.h"
-#include "GameMode/RDGameModeBase.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/ProgressBar.h"
 #include "Components/ButtonSlot.h"
@@ -348,6 +347,7 @@ void USettingsPanelWidget::LogSettingsMetrics(const FVector2D& ViewportSize)
 		TEXT("Set_row_language_plate"), TEXT("Set_seg_language"), TEXT("LanguageRow_Label"),
 		TEXT("Set_row_master_plate"), TEXT("MasterVolumeSlider"), TEXT("Set_slider_fill_master"),
 		TEXT("Set_sec_graphics_banner"), TEXT("Set_sec_graphics_text"),
+		TEXT("Set_btn_save_frame"), TEXT("Set_btn_abandon_frame"),
 		TEXT("BackButton"), TEXT("SaveAndExitButton"), TEXT("AbandonRunButton"), TEXT("ResetButton"),
 		TEXT("Set_grid_base"), TEXT("Set_grid_fold"),
 	};
@@ -499,11 +499,5 @@ void USettingsPanelWidget::NativeDestruct()
  */
 void USettingsPanelWidget::HandleBackButtonClicked()
 {
-	// 패널이 닫히는 시점이 옵션 커밋 지점이다. SaveOptionAsync는 존재했지만 호출처가 없어
-	// 옵션(볼륨/언어)이 세션 안에서만 유지되던 문제를 보완한다. 구독자가 패널을 닫기 전에 저장을 건다.
-	if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
-	{
-		GameModeBase->BackFromOptionPanel();
-	}
 	OnBackRequested.Broadcast();
 }

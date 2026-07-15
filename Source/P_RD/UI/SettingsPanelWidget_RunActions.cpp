@@ -2,6 +2,7 @@
 
 #include "Components/Button.h"
 #include "Components/Widget.h"
+#include "Blueprint/WidgetTree.h"
 
 /**
  * @brief 타이틀/인게임 모드를 바꾸고 모드별 영역 표시를 다시 적용한다.
@@ -41,8 +42,18 @@ ESettingsPanelMode USettingsPanelWidget::GetPanelMode() const
  */
 void USettingsPanelWidget::RefreshPanelState(bool bCanSaveRun, bool bCanAbandonRun)
 {
-	SetButtonEnabled(SaveAndExitButton, bCanSaveRun);
-	SetButtonEnabled(AbandonRunButton, bCanAbandonRun);
+	FSettingsRunActionView RunActionView = mRunActionView;
+	RunActionView.mShowRunActions = mPanelMode == ESettingsPanelMode::InGame;
+	RunActionView.mCanSaveAndExit = bCanSaveRun;
+	RunActionView.mCanAbandonRun = bCanAbandonRun;
+	ApplyRunActionView(RunActionView);
+}
+
+void USettingsPanelWidget::ApplyRunActionView(const FSettingsRunActionView& RunActionView)
+{
+	mRunActionView = RunActionView;
+	SetButtonEnabled(SaveAndExitButton, mRunActionView.mCanSaveAndExit);
+	SetButtonEnabled(AbandonRunButton, mRunActionView.mCanAbandonRun);
 	ApplyModeVisibility();
 }
 
@@ -71,9 +82,45 @@ void USettingsPanelWidget::SetRunActionsEnabled(bool bEnabled) const
  */
 void USettingsPanelWidget::ApplyModeVisibility() const
 {
+	const bool bShowRunActions = mPanelMode == ESettingsPanelMode::InGame && mRunActionView.mShowRunActions;
+	const ESlateVisibility RunActionsVisibility = bShowRunActions
+		? ESlateVisibility::SelfHitTestInvisible
+		: ESlateVisibility::Collapsed;
+
 	if (RunActionsPanel != nullptr)
 	{
-		RunActionsPanel->SetVisibility(mPanelMode == ESettingsPanelMode::InGame ? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
+		RunActionsPanel->SetVisibility(RunActionsVisibility);
+	}
+
+	// 일부 WBP 버전은 RunActionsPanel 이름/계층이 다르다. 개별 버튼도 함께 접어 타이틀에서 절대 노출되지 않게 한다.
+	if (SaveAndExitButton != nullptr)
+	{
+		SaveAndExitButton->SetVisibility(bShowRunActions ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	}
+	if (AbandonRunButton != nullptr)
+	{
+		AbandonRunButton->SetVisibility(bShowRunActions ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	}
+
+	// 확정 시안 WBP는 금색 버튼 프레임을 Button의 자식이 아닌 Canvas 형제 Image로 둔다.
+	// 따라서 Button만 Collapsed하면 글자/클릭 영역만 사라지고 빈 금색 테두리가 남으므로 장식 프레임도 같은 상태로 맞춘다.
+	if (WidgetTree != nullptr)
+	{
+		constexpr const TCHAR* RunActionFrameNames[] = {
+			TEXT("Set_btn_save_frame"),
+			TEXT("Set_btn_abandon_frame"),
+		};
+		for (const TCHAR* FrameName : RunActionFrameNames)
+		{
+			if (UWidget* FrameWidget = WidgetTree->FindWidget(FName(FrameName)))
+			{
+				FrameWidget->SetVisibility(RunActionsVisibility);
+			}
+		}
+	}
+	if (bShowRunActions == false)
+	{
+		HideAbandonConfirm();
 	}
 }
 

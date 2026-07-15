@@ -71,6 +71,12 @@ bool ARDGameModeBase::CanAbandonRun() const
 	return HasActiveRun() == true;
 }
 
+FSettingsRunActionView ARDGameModeBase::GetSettingsRunActionView() const
+{
+	// 타이틀/캐릭터 선택 같은 기본 GameMode에는 런을 변경하는 버튼을 노출하지 않는다.
+	return FSettingsRunActionView();
+}
+
 bool ARDGameModeBase::ResetFromOptionPanel() const
 {
 	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
@@ -594,12 +600,33 @@ const URunPersistData* ARDGameModeBase::GetRunPersistData() const
 	return PersistentDataSubsystem->GetRunPersistData();
 }
 
-void ARDGameModeBase::ClearRunPersistData()
+bool ARDGameModeBase::ClearRunPersistData()
 {
+	if (HasActiveRun() == false)
+	{
+		UE_LOG(LogRDGameMode, Warning, TEXT("삭제할 활성 런 데이터가 없음"));
+		return false;
+	}
+
+	USaveGameSubsystem* SaveGameSubsystem = GetGameInstance()->GetSubsystem<USaveGameSubsystem>();
+	checkf(SaveGameSubsystem != nullptr, TEXT("세이브 서브시스템 nullptr 오류"));
+	if (SaveGameSubsystem->DeleteRunSave() == false)
+	{
+		// 디스크 슬롯을 남긴 채 메모리 런만 지우면 다음 실행 때 포기한 런이 되살아날 수 있으므로 중단한다.
+		return false;
+	}
+
 	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
 	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
 
 	GameProfileSubsystem->EndRun();
+	if (SaveGameSubsystem->SaveUser() == false)
+	{
+		// 런 슬롯은 이미 제거됐으므로 런 종료 자체는 유지하되, 전적 저장 실패를 명확히 남긴다.
+		UE_LOG(LogRDGameMode, Error, TEXT("런 종료 후 유저 기록 저장 실패"));
+	}
+
+	return true;
 }
 
 USoundBase* ARDGameModeBase::GetMainBGM() const

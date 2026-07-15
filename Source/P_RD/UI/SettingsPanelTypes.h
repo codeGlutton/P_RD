@@ -66,6 +66,31 @@ struct P_RD_API FSettingsPanelValueModel
 	bool mUseKoreanLanguage = false;   // 언어(한국어=true / English=false)
 };
 
+/**
+ * @brief 설정 패널의 런 전용 버튼 표시/활성 상태.
+ *
+ * @details
+ * SettingsPanelWidget이 현재 GameMode나 RunPersistData를 직접 조회하지 않도록 GameMode가 계산해 내려주는 View 데이터다.
+ * 타이틀에서는 mShowRunActions가 false이고, 실제 방에서는 활성 런/전환/저장 상태에 따라 각 버튼 사용 가능 여부가 달라진다.
+ */
+USTRUCT(BlueprintType)
+struct P_RD_API FSettingsRunActionView
+{
+	GENERATED_BODY()
+
+	/** @brief 저장 후 종료/런 포기 영역 자체를 표시할지 여부 */
+	UPROPERTY(Category = "Settings", EditAnywhere, BlueprintReadWrite)
+	bool mShowRunActions = false;
+
+	/** @brief 현재 런을 저장하고 타이틀로 나갈 수 있는지 여부 */
+	UPROPERTY(Category = "Settings", EditAnywhere, BlueprintReadWrite)
+	bool mCanSaveAndExit = false;
+
+	/** @brief 현재 런을 폐기하고 타이틀로 나갈 수 있는지 여부 */
+	UPROPERTY(Category = "Settings", EditAnywhere, BlueprintReadWrite)
+	bool mCanAbandonRun = false;
+};
+
 // 설정 입력이 바뀌면 위젯이 올려보내는 이벤트들. 받는 쪽(타이틀/탑바/게임모드)이 실제 적용.
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSettingsPanelEvent);                              // 버튼류(닫기/저장 등)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSettingsPanelFloatEvent, float, Value);  // 슬라이더(볼륨)

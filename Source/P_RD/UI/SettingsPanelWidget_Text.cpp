@@ -318,6 +318,14 @@ void USettingsPanelWidget::ValidateDesignerBindings() const
 	{
 		UE_LOG(LogRD, Warning, TEXT("SettingsPanelWidget: BackButton is not connected."));
 	}
+	if (RunActionsPanel == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("SettingsPanelWidget: RunActionsPanel is not connected; individual run buttons will be used as the visibility fallback."));
+	}
+	if (SaveAndExitButton == nullptr || AbandonRunButton == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("SettingsPanelWidget: one or more run action buttons are not connected."));
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

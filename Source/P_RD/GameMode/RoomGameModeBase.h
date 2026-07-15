@@ -17,6 +17,9 @@ DECLARE_LOG_CATEGORY_EXTERN(LogRoomGameMode, Log, All)
 
 class UPlayerUnitModel;
 
+/** @brief 저장 후 타이틀 이동 요청의 최종 성공 여부 */
+DECLARE_DELEGATE_OneParam(FOnSaveAndExitFromRoomComplete, bool);
+
 /**
  * @brief  방에 대한 베이스 GameMode
  */
@@ -61,6 +64,15 @@ public:
 	 */
 	UFUNCTION(Category = Room, BlueprintCallable)
 	bool AbandonRunFromRoom();
+
+	/**
+	 * @brief 현재 런을 저장한 뒤 프론트엔드 방으로 이동한다.
+	 * @param Completion 저장 및 전환 요청의 최종 성공 여부 콜백
+	 * @return 비동기 저장 요청을 시작했으면 true
+	 */
+	bool SaveAndExitFromRoom(FOnSaveAndExitFromRoomComplete Completion);
+
+	FSettingsRunActionView GetSettingsRunActionView() const override;
 
 public:
 	/**
@@ -125,4 +137,7 @@ protected:
 
 private:
 	FName mSelectedRoomSpawnSettingName = NAME_None;
+
+	/** @brief 저장 후 종료의 중복 입력을 막는 요청 진행 상태 */
+	bool mIsSaveAndExitRequested = false;
 };

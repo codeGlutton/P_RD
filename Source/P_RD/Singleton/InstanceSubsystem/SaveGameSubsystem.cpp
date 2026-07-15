@@ -15,12 +15,13 @@ bool USaveGameSubsystem::SaveUser() const
 	}
 
 	SerializeObject(GetUserMutableData(), OUT mUserSaveGame->mData);
-	UGameplayStatics::SaveGameToSlot(mUserSaveGame, USER_SLOT_NAME, 0);
+	const bool bWasSaved = UGameplayStatics::SaveGameToSlot(mUserSaveGame, USER_SLOT_NAME, 0);
 	ClearUser();
 
-	UE_LOG(LogSave, Log, TEXT("유저 데이터 세이브 파일 저장"));
+	UE_CLOG(bWasSaved, LogSave, Log, TEXT("유저 데이터 세이브 파일 저장"));
+	UE_CLOG(bWasSaved == false, LogSave, Error, TEXT("유저 데이터 세이브 파일 저장 실패"));
 
-	return true;
+	return bWasSaved;
 }
 
 void USaveGameSubsystem::SaveUserAsync(FAsyncSaveGameToSlotDelegate Callback) const
@@ -98,12 +99,13 @@ bool USaveGameSubsystem::SaveRun() const
 	}
 
 	SerializeObject(GetRunMutableData(), OUT mRunSaveGame->mData);
-	UGameplayStatics::SaveGameToSlot(mRunSaveGame, RUN_SLOT_NAME, 0);
+	const bool bWasSaved = UGameplayStatics::SaveGameToSlot(mRunSaveGame, RUN_SLOT_NAME, 0);
 	ClearRun();
 
-	UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 저장"));
+	UE_CLOG(bWasSaved, LogSave, Log, TEXT("런 데이터 세이브 파일 저장"));
+	UE_CLOG(bWasSaved == false, LogSave, Error, TEXT("런 데이터 세이브 파일 저장 실패"));
 
-	return true;
+	return bWasSaved;
 }
 
 void USaveGameSubsystem::SaveRunAsync(FAsyncSaveGameToSlotDelegate Callback) const
@@ -115,7 +117,9 @@ void USaveGameSubsystem::SaveRunAsync(FAsyncSaveGameToSlotDelegate Callback) con
 
 	SerializeObject(GetRunMutableData(), OUT mRunSaveGame->mData);
 	UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 비동기 저장 시도"));
+	++mPendingRunSaveCount;
 	UGameplayStatics::AsyncSaveGameToSlot(mRunSaveGame, RUN_SLOT_NAME, 0, FAsyncSaveGameToSlotDelegate::CreateWeakLambda(this, [this, MovedCallback = MoveTemp(Callback)](const FString& SlotName, const int32 UserIndex, bool IsSuccess) {
+		mPendingRunSaveCount = FMath::Max(0, mPendingRunSaveCount - 1);
 		ClearRun();
 
 		UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 비동기 저장 완료"));
@@ -170,6 +174,27 @@ void USaveGameSubsystem::ClearRun() const
 
 	mRunSaveGame->mData.Empty();
 	UE_LOG(LogSave, Log, TEXT("런 데이터 초기화"));
+}
+
+bool USaveGameSubsystem::DeleteRunSave() const
+{
+	if (IsRunSaveInProgress())
+	{
+		UE_LOG(LogSave, Warning, TEXT("비동기 런 저장 중에는 런 세이브 파일을 삭제할 수 없음"));
+		return false;
+	}
+
+	ClearRun();
+	if (UGameplayStatics::DoesSaveGameExist(RUN_SLOT_NAME, 0) == false)
+	{
+		UE_LOG(LogSave, Log, TEXT("삭제할 런 데이터 세이브 파일 없음"));
+		return true;
+	}
+
+	const bool bWasDeleted = UGameplayStatics::DeleteGameInSlot(RUN_SLOT_NAME, 0);
+	UE_CLOG(bWasDeleted, LogSave, Log, TEXT("런 데이터 세이브 파일 삭제"));
+	UE_CLOG(bWasDeleted == false, LogSave, Error, TEXT("런 데이터 세이브 파일 삭제 실패"));
+	return bWasDeleted;
 }
 
 bool USaveGameSubsystem::SaveOption() const
