@@ -155,7 +155,7 @@ void AUnit::BindModel(UObjectModel* Model)
 					if (GameMode != nullptr)
 					{
 						const UOptionPersistData* OptionData = GameMode->GetOptionPersistData();
-						if (OptionData != nullptr)
+						if (OptionData != nullptr && OptionData->IsEffectVFXEnabled() == true)
 						{
 							for (const FApplyNiagaraSpawnData& NiagaraSpawnData : Payload->mNiagaraSpawnDatas)
 							{
