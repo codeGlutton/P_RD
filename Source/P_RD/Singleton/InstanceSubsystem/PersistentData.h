@@ -178,12 +178,13 @@ public:
 public:
 	bool IsActive() const;
 
+public:
+	static bool mFixedTestSeed;
+
 protected:
 	/** 이 런의 첫 전투에서 튜토리얼을 보여줄지 여부. 이어하기에도 유지된다. */
 	UPROPERTY(Category = Tutorial, SaveGame, VisibleAnywhere, meta = (DisplayName = "ShouldRunTutorial"))
 	bool mShouldRunTutorial = false;
-
-
 
 protected:
 	UPROPERTY(Category = Stream, SaveGame, VisibleAnywhere, meta = (DisplayName = "StageBuildStream"))

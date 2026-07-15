@@ -240,6 +240,8 @@ void UPlayerUnitPersistData::BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit)
 	 // TODO: 주사위 변경 시 대리자에 바인딩. 이걸로 영구 데이터도 동기화
 }
 
+bool URunPersistData::mFixedTestSeed = false;
+
 /**
  * @brief 새 런을 시작한다. 직전 런 상태를 초기화하고, 난수 스트림을 시드하며,
  *        선택 캐릭터의 고정 주사위를 런 보유 목록으로 펼친다.
@@ -258,7 +260,14 @@ void URunPersistData::StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Diffic
 
 	// 시드 초기 세팅
 	{
-		mStageBuildStream.Initialize(FMath::Rand32());
+		if (mFixedTestSeed == true)
+		{
+			mStageBuildStream.Initialize(0);
+		}
+		else
+		{
+			mStageBuildStream.Initialize(FMath::Rand32());
+		}
 		mEventStream.Initialize(FMath::Rand32());
 	}
 

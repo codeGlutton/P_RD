@@ -348,6 +348,7 @@ void USettingsPanelWidget::HandleEffectsChanged(bool bChecked)
 	mValueModel.mEffectsEnabled = bChecked;
 	if (mIsApplyingValueModel == false)
 	{
+		URunPersistData::mFixedTestSeed = bChecked;
 		OnEffectsChanged.Broadcast(mValueModel.mEffectsEnabled);
 	}
 }
