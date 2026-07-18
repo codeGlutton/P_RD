@@ -3,6 +3,7 @@
 #include "GameFramework/PlayerController.h"
 
 #include "Engine/AssetManager.h"
+#include "Engine/GameInstance.h"
 #include "Blueprint/UserWidget.h"
 #include "DataAsset/PrimaryAssetType.h"
 
