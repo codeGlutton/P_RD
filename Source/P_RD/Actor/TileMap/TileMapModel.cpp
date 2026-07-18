@@ -670,16 +670,31 @@ TArray<FTileIndex> UTileMapModel::FindPath(const FTileIndex& Start, const FTileI
 
 void UTileMapModel::SetMovePath(const FTileIndex& Start, const FTileIndex& Goal)
 {
-	// 경로를 계산해 뷰에 표시 요청 (미바인딩=심 복제본이면 표시 없음)
+	// 뷰에 바인딩됐을때만 처리 (시뮬레이션모드에서는 무시)
 	if (mSetMovePathDelegate.IsBound())
-		mSetMovePathDelegate.Execute(FindPath(Start, Goal));
+	{
+		// FindPath 결과는 경유지 정보가 없으므로 표시용 타일정보로 변환해서 델리깃 호출
+		const TArray<FTileIndex> Path = FindPath(Start, Goal);
+		TArray<FMovePathTile> PathTiles;
+		PathTiles.Reserve(Path.Num());
+		for (const FTileIndex& Tile : Path)
+			PathTiles.Emplace(Tile);
+		mSetMovePathDelegate.Execute(PathTiles);
+	}
+}
+
+void UTileMapModel::SetMovePath(const TArray<FMovePathTile>& PathTiles)
+{
+	// 뷰에 바인딩됐을때만 처리 (시뮬레이션모드에서는 무시)
+	if (mSetMovePathDelegate.IsBound())
+		mSetMovePathDelegate.Execute(PathTiles);
 }
 
 void UTileMapModel::ClearMovePath()
 {
-	// 빈 경로를 넘겨 표시 해제 (뷰의 SetMovePath가 빈 배열을 해제로 처리)
+	// 빈 경로를 뷰에 넘기면 해제 처리
 	if (mSetMovePathDelegate.IsBound())
-		mSetMovePathDelegate.Execute(TArray<FTileIndex>());
+		mSetMovePathDelegate.Execute(TArray<FMovePathTile>());
 }
 
 void UTileMapModel::SetTileHighlight(const TArray<FTileIndex>& Tiles, ETileHighlightFlag Flag)

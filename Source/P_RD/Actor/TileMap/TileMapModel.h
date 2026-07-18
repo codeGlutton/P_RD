@@ -40,6 +40,28 @@ protected:
 };
 
 /**
+ * @brief 이동경로 표시용 타일정보
+ * @details 타일좌표와 경유지 여부로 구성
+ */
+USTRUCT(BlueprintType)
+struct FMovePathTile
+{
+	GENERATED_BODY()
+
+public:
+	FMovePathTile() = default;
+	FMovePathTile(const FTileIndex& InIndex, bool bInWaypoint = false)
+		: mIndex(InIndex), mIsWaypoint(bInWaypoint) {}
+
+	// @brief 타일 인덱스
+	UPROPERTY(Category = "MovePathTile", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Index"))
+	FTileIndex mIndex;
+	// @brief 경유지 여부
+	UPROPERTY(Category = "MovePathTile", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Is Waypoint"))
+	bool mIsWaypoint = false;
+};
+
+/**
  * @brief 모델이 뷰(ATileMap)의 시각/컴포넌트 정보가 필요한 좌표 변환을 질의하기 위한 델리깃들
  * @details single-cast RetVal — 반환값을 받아야 하므로 멀티캐스트 불가.
  *          non-dynamic이라 UPROPERTY가 아니며 직렬화/네트워크 복제 안 됨(런타임 바인딩 전용).
@@ -53,7 +75,7 @@ DECLARE_DELEGATE_RetVal_OneParam(FTileIndex, FWorldToTileIndexDelegate, const FV
  * @details 좌표 델리깃과 동일하게 non-dynamic — 라이브에서 뷰가 SetMovePath로 바인딩하고, 미바인딩(심)이면 표시되지 않는다.
  *          빈 배열을 넘기면 표시 해제(SetMovePath의 빈 배열 처리)와 같다.
  */
-DECLARE_DELEGATE_OneParam(FSetMovePathDelegate, const TArray<FTileIndex>&);
+DECLARE_DELEGATE_OneParam(FSetMovePathDelegate, const TArray<FMovePathTile>&);
 
 /**
  * @brief 모델이 뷰(ATileMap)에 타일 강조(하이라이트) 표시/해제를 요청하는 델리깃
@@ -223,6 +245,13 @@ public:
 	 * @param[in] Goal  : 목표 좌표
 	 */
 	void SetMovePath(const FTileIndex& Start, const FTileIndex& Goal);
+
+	/**
+	 * @brief 경유지 여부가 포함된 표시용 경로를 뷰에 그대로 전달
+	 * @details 호출자가 경로와 경유지 플래그를 직접 구성하는 경우 사용 (경유지 이동 빌드)
+	 * @param[in] PathTiles : 표시용 경로 타일 목록
+	 */
+	void SetMovePath(const TArray<FMovePathTile>& PathTiles);
 
 	/**
 	 * @brief 이동경로 표시 해제 요청 (빈 경로를 뷰에 전달)
