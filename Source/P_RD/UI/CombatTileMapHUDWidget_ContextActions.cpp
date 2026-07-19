@@ -275,6 +275,13 @@ bool UCombatTileMapHUDWidget::TryOpenContextActionsAtScreenPosition(const FVecto
 		CloseContextActions();
 		return false;
 	}
+	// 적을 눌렀을 때 주변에 별도의 "사용 가능 스킬" 팔레트를 띄우지 않는다.
+	// 적 대상 행동은 좌측 스킬 레일 선택 -> 적 드래그 한 가지 입력 흐름으로만 제공한다.
+	if (bIsPlayer == false)
+	{
+		CloseContextActions();
+		return false;
+	}
 
 	mContextTargetUnitId = UnitId;
 	mContextTargetIsPlayer = bIsPlayer;
@@ -804,10 +811,14 @@ bool UCombatTileMapHUDWidget::SelectDirectThrowDestination(
 	{
 		return true;
 	}
+	mCombatUIModel->RequestWorldTouch(BestCandidateScreen, false);
+	if (mCombatUIModel->GetTurnUI().mPhase != ECombatBuildPhaseUI::Preview)
+	{
+		return false;
+	}
 	mDirectThrowCandidateWorld = BestCandidateWorld;
 	mHasDirectThrowCandidate = true;
-	mCombatUIModel->RequestWorldTouch(BestCandidateScreen, false);
-	return mCombatUIModel->GetTurnUI().mPhase == ECombatBuildPhaseUI::Preview;
+	return true;
 }
 
 bool UCombatTileMapHUDWidget::ExecuteDirectSkill(
@@ -820,14 +831,22 @@ bool UCombatTileMapHUDWidget::ExecuteDirectSkill(
 	{
 		return false;
 	}
-	if (SelectSkillWithAutomaticDice(SkillIndex, DesiredPower) == false)
+	// 드래그 중에는 적과 착지 칸이 이미 게임플레이 Preview에 확정되어 있다. 손을 놓을 때
+	// 같은 좌표를 다시 WorldTouch로 보내면 Preview 입력으로 재해석되어 실행이 유실될 수 있으므로,
+	// 현재 보이는 밝은 착지 칸을 그대로 확정한다.
+	const bool bPreparedDisplacement = DestinationScreenPosition != nullptr
+		&& mCombatUIModel->GetSelectedSkillIndex() == SkillIndex
+		&& mCombatUIModel->GetTurnUI().mPhase == ECombatBuildPhaseUI::Preview
+		&& mHasDirectThrowCandidate;
+	if (bPreparedDisplacement == false)
 	{
-		return false;
-	}
-	mCombatUIModel->RequestWorldTouch(TargetScreenPosition, false);
-	if (DestinationScreenPosition != nullptr)
-	{
-		if (SelectDirectThrowDestination(TargetScreenPosition, *DestinationScreenPosition) == false)
+		if (SelectSkillWithAutomaticDice(SkillIndex, DesiredPower) == false)
+		{
+			return false;
+		}
+		mCombatUIModel->RequestWorldTouch(TargetScreenPosition, false);
+		if (DestinationScreenPosition != nullptr
+			&& SelectDirectThrowDestination(TargetScreenPosition, *DestinationScreenPosition) == false)
 		{
 			mCombatUIModel->RequestCancel();
 			return false;
@@ -884,6 +903,13 @@ bool UCombatTileMapHUDWidget::BeginDirectUnitGesture(const FVector2D& ScreenPosi
 			mDirectArmedTargetUnitId = INDEX_NONE;
 			return false;
 		}
+	}
+	else if (bIsPlayer == false)
+	{
+		// 행동을 고르지 않은 적 탭/드래그는 아무 팔레트도 열지 않는다. 좌측 레일에서
+		// 스킬을 먼저 고른 경우에만 아래의 직접 조작 상태로 진입한다.
+		CloseContextActions();
+		return false;
 	}
 	mDirectUnitGestureActive = true;
 	mDirectUnitGestureDragged = false;
@@ -1201,7 +1227,9 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 		TryOpenContextActionsAtScreenPosition(TargetScreen);
 		return true;
 	}
-	const FVector2D* Destination = (Skills[SkillIndex].mIsPullSkill || Skills[SkillIndex].mIsThrowSkill)
+	const bool bIsPullSkill = Skills[SkillIndex].mIsPullSkill;
+	const bool bIsThrowSkill = Skills[SkillIndex].mIsThrowSkill;
+	const FVector2D* Destination = (bIsPullSkill || bIsThrowSkill)
 		? &ScreenPosition
 		: nullptr;
 	const float DragLength = FVector2D::Distance(ScreenPosition, TargetScreen);
@@ -1209,8 +1237,8 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 	const bool bExecuted = ExecuteDirectSkill(SkillIndex, TargetScreen, Destination, DesiredPower);
 	if (bExecuted)
 	{
-		if (Skills[SkillIndex].mIsPullSkill) { mEnemyIntentTutorialInterventionSubmitted = true; }
-		if (Skills[SkillIndex].mIsThrowSkill) { mEnemyIntentTutorialThrowSubmitted = true; }
+		if (bIsPullSkill) { mEnemyIntentTutorialInterventionSubmitted = true; }
+		if (bIsThrowSkill) { mEnemyIntentTutorialThrowSubmitted = true; }
 		mDirectArmedSkillIndex = INDEX_NONE;
 		mDirectArmedTargetUnitId = INDEX_NONE;
 	}
