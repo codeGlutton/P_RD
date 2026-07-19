@@ -418,6 +418,8 @@ void UCombatTileMapHUDWidget::HandleCombatActionResolved()
 {
 	// 스킬/주사위 선택 강조를 푼다(액션 확정·취소 후).
 	mSelectedSkillIndex = INDEX_NONE;
+	mDirectArmedSkillIndex = INDEX_NONE;
+	mDirectArmedTargetUnitId = INDEX_NONE;
 	ClearOwnedDiceSelectionHighlight();
 	CloseContextActions();
 	RefreshSkillRailWidgets();

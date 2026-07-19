@@ -1032,6 +1032,9 @@ private:
 	/** @brief 같은 스킬/주사위 갱신 알림에서 월드 조준을 두 번 보내지 않는 latch. */
 	int32 mContextSelectedSkillIndex = INDEX_NONE;
 	bool mContextTargetSubmitted = false;
+	/** @brief 팔레트에서 먼저 고른 뒤 같은 유닛을 드래그할 때만 실행되는 행동. -2는 이동이다. */
+	int32 mDirectArmedSkillIndex = INDEX_NONE;
+	int32 mDirectArmedTargetUnitId = INDEX_NONE;
 
 	/** @brief 전장 유닛을 누른 채 끌어 행동을 고르는 모바일 직접 조작 상태. */
 	bool mDirectUnitGestureActive = false;
