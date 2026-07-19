@@ -10,6 +10,7 @@
 #include "Actor/ActorView.h"
 #include "Actor/BoardActor/BoardActorModel.h"
 #include "Pawn/UnitModel.h"
+#include "Pawn/Enemy/EnemyUnitModel.h"
 #include "Pawn/Player/PlayerUnitModel.h"
 #include "Actor/TileMap/TileMapModel.h"
 
@@ -471,7 +472,7 @@ void USRPGSkillBuildAction::RefreshEffectTileHighlights()
 	const int32 Distance = FMath::Max(DicePoolModel->GetSelectedDiceSum(), 1);
 	const bool bIsPull = mSelectedSkill->GetFName() == DicePullBuildSkillAssetName;
 	TArray<FTileIndex> Trajectory = bIsPull
-		? TileMap->GetPullPath(InstigatorTile, TargetTile, Distance)
+		? TileMap->GetPullPath(InstigatorTile, TargetTile, 64)
 		: TArray<FTileIndex>({ TargetTile });
 	if (bIsPull == false)
 	{
@@ -484,6 +485,41 @@ void USRPGSkillBuildAction::RefreshEffectTileHighlights()
 		{
 			Current = FTileIndex(Current.mX + Step.mX, Current.mY + Step.mY);
 			Trajectory.Add(Current);
+		}
+	}
+	else if (Trajectory.IsEmpty() == false)
+	{
+		const FTileIndex PullEnd = Trajectory.Last();
+		const FTileIndex ThrowStep(
+			FMath::Sign(InstigatorTile.mX - PullEnd.mX),
+			FMath::Sign(InstigatorTile.mY - PullEnd.mY));
+		const bool bReachedPlayer = FMath::Max(
+			FMath::Abs(PullEnd.mX - InstigatorTile.mX),
+			FMath::Abs(PullEnd.mY - InstigatorTile.mY)) == 1;
+		if (bReachedPlayer)
+		{
+			int32 WeightValue = StaticCast<int32>(ESRPGDisplacementWeight::Medium);
+			if (const UEnemyUnitModel* EnemyTarget = Cast<UEnemyUnitModel>(TargetUnit))
+			{
+				WeightValue = StaticCast<int32>(EnemyTarget->GetDisplacementWeight());
+			}
+			const int32 ThrowDistance = FMath::Clamp(Distance + 1 - WeightValue, 1, 4);
+			for (int32 ThrowIndex = 1; ThrowIndex <= ThrowDistance; ++ThrowIndex)
+			{
+				const FTileIndex Candidate(
+					InstigatorTile.mX + ThrowStep.mX * ThrowIndex,
+					InstigatorTile.mY + ThrowStep.mY * ThrowIndex);
+				if (TileMap->IsValidIndex(Candidate) == false
+					|| TileMap->CanPlace(Candidate, TargetUnit) == false)
+				{
+					break;
+				}
+				if (ThrowIndex == 1)
+				{
+					Trajectory.AddUnique(InstigatorTile);
+				}
+				Trajectory.Add(Candidate);
+			}
 		}
 	}
 	if (Trajectory.IsEmpty())

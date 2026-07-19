@@ -44,7 +44,7 @@ enum class EEnemyIntentTutorialStage : uint8
 {
 	WaitingForIntent,
 	ReviewIntent,
-	SelectSmash,
+	SelectPull,
 	SelectDice,
 	SelectTarget,
 	ConfirmTarget,
@@ -719,7 +719,15 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UVerticalBox> mEnemyIntentTutorialContent;
 	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mEnemyIntentTutorialTitle;
+	UPROPERTY(Transient)
 	TObjectPtr<UTextBlock> mEnemyIntentTutorialText;
+	UPROPERTY(Transient)
+	TObjectPtr<UHorizontalBox> mEnemyIntentTutorialFlow;
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UBorder>> mEnemyIntentTutorialFlowCards;
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UTextBlock>> mEnemyIntentTutorialFlowTexts;
 	UPROPERTY(Transient)
 	TObjectPtr<UButton> mEnemyIntentTutorialContinueButton;
 	UPROPERTY(Transient)
@@ -734,6 +742,10 @@ private:
 	TArray<TObjectPtr<UBorder>> mEnemyIntentTutorialFocusEdges;
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UBorder>> mEnemyIntentTutorialArrowParts;
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UBorder>> mEnemyIntentTutorialDimPanels;
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mEnemyIntentTutorialPointerLabel;
 
 	EEnemyIntentTutorialStage mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::WaitingForIntent;
 	float mEnemyIntentTutorialStageElapsed = 0.0f;

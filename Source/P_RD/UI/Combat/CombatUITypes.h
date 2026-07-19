@@ -58,6 +58,7 @@ struct FEnemyIntentUI
 	UPROPERTY(BlueprintReadOnly) int32 mExecutionOrder = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) int32 mEnemyUnitId = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) FText mEnemyName;
+	UPROPERTY(BlueprintReadOnly) FText mDisplacementWeightLabel;
 	UPROPERTY(BlueprintReadOnly) FText mActionName;
 	UPROPERTY(BlueprintReadOnly) FText mGoalText;
 	UPROPERTY(BlueprintReadOnly) FTileIndex mPlannedOrigin = FTileIndex::Invalid;
@@ -67,11 +68,14 @@ struct FEnemyIntentUI
 	UPROPERTY(BlueprintReadOnly) FTileIndex mCurrentTile = FTileIndex::Invalid;
 	UPROPERTY(BlueprintReadOnly) TArray<FTileIndex> mPathTileIndexes;
 	UPROPERTY(BlueprintReadOnly) TArray<FTileIndex> mEffectTileIndexes;
+	UPROPERTY(BlueprintReadOnly) TArray<FTileIndex> mPreviousPathTileIndexes;
+	UPROPERTY(BlueprintReadOnly) FTileIndex mPreviousDestination = FTileIndex::Invalid;
 	UPROPERTY(BlueprintReadOnly) EEnemyIntentResultUI mResult = EEnemyIntentResultUI::Planned;
 	UPROPERTY(BlueprintReadOnly) FText mResultText;
 	UPROPERTY(BlueprintReadOnly) bool mWasDisplaced = false;
 	/** @brief 플레이어 행동 뒤 최신 계획으로 교체된 횟수. 0은 라운드 시작 계획이다. */
 	UPROPERTY(BlueprintReadOnly) int32 mPlanRevision = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mResponseCostSpent = 0;
 	/** @brief 튜토리얼이 실제로 밀 수 있는 적을 이름과 ★ 표식으로 가리키기 위한 표시값. */
 	UPROPERTY(BlueprintReadOnly) bool mIsRecommendedInterventionTarget = false;
 };

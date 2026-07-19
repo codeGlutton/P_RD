@@ -459,14 +459,18 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 	{
 		mEnemyIntentTutorialPanel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("EnemyIntentTutorialPanel"));
 		mEnemyIntentTutorialContent = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("EnemyIntentTutorialContent"));
+		mEnemyIntentTutorialTitle = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("EnemyIntentTutorialTitle"));
 		mEnemyIntentTutorialText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("EnemyIntentTutorialText"));
+		mEnemyIntentTutorialFlow = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("EnemyIntentTutorialFlow"));
 		mEnemyIntentTutorialContinueButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("EnemyIntentTutorialContinueButton"));
 		mEnemyIntentTutorialContinueText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("EnemyIntentTutorialContinueText"));
 		mEnemyIntentTutorialProgress = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("EnemyIntentTutorialProgress"));
 
 		if (mEnemyIntentTutorialPanel != nullptr
 			&& mEnemyIntentTutorialContent != nullptr
+			&& mEnemyIntentTutorialTitle != nullptr
 			&& mEnemyIntentTutorialText != nullptr
+			&& mEnemyIntentTutorialFlow != nullptr
 			&& mEnemyIntentTutorialContinueButton != nullptr
 			&& mEnemyIntentTutorialContinueText != nullptr
 			&& mEnemyIntentTutorialProgress != nullptr)
@@ -477,13 +481,58 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 			mEnemyIntentTutorialPanel->SetVerticalAlignment(VAlign_Center);
 			mEnemyIntentTutorialPanel->AddChild(mEnemyIntentTutorialContent);
 
+			mEnemyIntentTutorialTitle->SetText(FText::FromString(TEXT("전술 훈련 · 적의 대응력을 끌어내세요")));
+			mEnemyIntentTutorialTitle->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.82f, 0.28f, 1.0f)));
+			FSlateFontInfo TitleFont = mEnemyIntentTutorialTitle->GetFont();
+			TitleFont.Size = 19;
+			TitleFont.OutlineSettings.OutlineSize = 1;
+			TitleFont.OutlineSettings.OutlineColor = FLinearColor::Black;
+			mEnemyIntentTutorialTitle->SetFont(TitleFont);
+			if (UVerticalBoxSlot* TitleSlot = mEnemyIntentTutorialContent->AddChildToVerticalBox(mEnemyIntentTutorialTitle))
+			{
+				TitleSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 5.0f));
+			}
+
+			mEnemyIntentTutorialFlowCards.Reset();
+			mEnemyIntentTutorialFlowTexts.Reset();
+			const TCHAR* FlowLabels[] = { TEXT("① 적 계획"), TEXT("② 끌어 던지기"), TEXT("③ 새 계획 · 이동력↓") };
+			for (int32 FlowIndex = 0; FlowIndex < UE_ARRAY_COUNT(FlowLabels); ++FlowIndex)
+			{
+				UBorder* FlowCard = WidgetTree->ConstructWidget<UBorder>(
+					UBorder::StaticClass(),
+					FName(*FString::Printf(TEXT("EnemyIntentTutorialFlowCard_%d"), FlowIndex)));
+				UTextBlock* FlowText = WidgetTree->ConstructWidget<UTextBlock>(
+					UTextBlock::StaticClass(),
+					FName(*FString::Printf(TEXT("EnemyIntentTutorialFlowText_%d"), FlowIndex)));
+				if (FlowCard == nullptr || FlowText == nullptr) { continue; }
+				FlowCard->SetPadding(FMargin(9.0f, 4.0f));
+				FlowCard->SetBrushColor(FLinearColor(0.07f, 0.11f, 0.12f, 0.96f));
+				FlowText->SetText(FText::FromString(FlowLabels[FlowIndex]));
+				FlowText->SetColorAndOpacity(FSlateColor(FLinearColor(0.62f, 0.70f, 0.70f, 1.0f)));
+				FSlateFontInfo FlowFont = FlowText->GetFont();
+				FlowFont.Size = 13;
+				FlowText->SetFont(FlowFont);
+				FlowCard->AddChild(FlowText);
+				if (UHorizontalBoxSlot* FlowSlot = mEnemyIntentTutorialFlow->AddChildToHorizontalBox(FlowCard))
+				{
+					FlowSlot->SetPadding(FMargin(0.0f, 0.0f, FlowIndex + 1 < UE_ARRAY_COUNT(FlowLabels) ? 6.0f : 0.0f, 0.0f));
+					FlowSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+				}
+				mEnemyIntentTutorialFlowCards.Add(FlowCard);
+				mEnemyIntentTutorialFlowTexts.Add(FlowText);
+			}
+			if (UVerticalBoxSlot* FlowSlot = mEnemyIntentTutorialContent->AddChildToVerticalBox(mEnemyIntentTutorialFlow))
+			{
+				FlowSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 6.0f));
+			}
+
 			mEnemyIntentTutorialText->SetAutoWrapText(true);
 			mEnemyIntentTutorialText->SetLineHeightPercentage(0.94f);
 			mEnemyIntentTutorialText->SetJustification(ETextJustify::Left);
 			mEnemyIntentTutorialText->SetColorAndOpacity(FSlateColor(FLinearColor(0.95f, 1.0f, 0.98f, 1.0f)));
 			mEnemyIntentTutorialText->SetVisibility(ESlateVisibility::HitTestInvisible);
 			FSlateFontInfo TutorialFont = mEnemyIntentTutorialText->GetFont();
-			TutorialFont.Size = 17;
+			TutorialFont.Size = 15;
 			TutorialFont.OutlineSettings.OutlineSize = 1;
 			TutorialFont.OutlineSettings.OutlineColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.90f);
 			mEnemyIntentTutorialText->SetFont(TutorialFont);
@@ -493,10 +542,21 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 				TextSlot->SetVerticalAlignment(VAlign_Center);
 			}
 
-			// 버튼 없이 입력 상태를 관찰해 자동으로 다음 단계로 넘어간다.
 			mEnemyIntentTutorialContinueButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleEnemyIntentTutorialContinue);
 			mEnemyIntentTutorialContinueButton->AddChild(mEnemyIntentTutorialContinueText);
+			mEnemyIntentTutorialContinueButton->SetBackgroundColor(FLinearColor(0.82f, 0.48f, 0.06f, 1.0f));
+			mEnemyIntentTutorialContinueText->SetText(FText::FromString(TEXT("경로를 확인했어요  →  직접 해보기")));
+			mEnemyIntentTutorialContinueText->SetJustification(ETextJustify::Center);
+			mEnemyIntentTutorialContinueText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+			FSlateFontInfo ContinueFont = mEnemyIntentTutorialContinueText->GetFont();
+			ContinueFont.Size = 14;
+			mEnemyIntentTutorialContinueText->SetFont(ContinueFont);
 			mEnemyIntentTutorialContinueButton->SetVisibility(ESlateVisibility::Collapsed);
+			if (UVerticalBoxSlot* ContinueSlot = mEnemyIntentTutorialContent->AddChildToVerticalBox(mEnemyIntentTutorialContinueButton))
+			{
+				ContinueSlot->SetPadding(FMargin(0.0f, 7.0f, 0.0f, 0.0f));
+				ContinueSlot->SetHorizontalAlignment(HAlign_Fill);
+			}
 
 			mEnemyIntentTutorialProgressDots.Reset();
 			for (int32 StepIndex = 0; StepIndex < 6; ++StepIndex)
@@ -583,6 +643,53 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 				PartSlot->SetZOrder(1051);
 			}
 			mEnemyIntentTutorialArrowParts.Add(Part);
+		}
+	}
+
+	if (mEnemyIntentTutorialDimPanels.Num() != 4)
+	{
+		for (UBorder* DimPanel : mEnemyIntentTutorialDimPanels)
+		{
+			if (DimPanel != nullptr) { DimPanel->RemoveFromParent(); }
+		}
+		mEnemyIntentTutorialDimPanels.Reset();
+		for (int32 DimIndex = 0; DimIndex < 4; ++DimIndex)
+		{
+			UBorder* DimPanel = WidgetTree->ConstructWidget<UBorder>(
+				UBorder::StaticClass(),
+				FName(*FString::Printf(TEXT("EnemyIntentTutorialDim_%d"), DimIndex)));
+			if (DimPanel == nullptr) { continue; }
+			DimPanel->SetBrushColor(FLinearColor(0.0f, 0.01f, 0.015f, 0.40f));
+			DimPanel->SetVisibility(ESlateVisibility::Collapsed);
+			if (UCanvasPanelSlot* DimSlot = RootCanvas->AddChildToCanvas(DimPanel))
+			{
+				DimSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+				DimSlot->SetAutoSize(false);
+				DimSlot->SetZOrder(210);
+			}
+			mEnemyIntentTutorialDimPanels.Add(DimPanel);
+		}
+	}
+
+	if (mEnemyIntentTutorialPointerLabel == nullptr)
+	{
+		mEnemyIntentTutorialPointerLabel = WidgetTree->ConstructWidget<UTextBlock>(
+			UTextBlock::StaticClass(), TEXT("EnemyIntentTutorialPointerLabel"));
+		if (mEnemyIntentTutorialPointerLabel != nullptr)
+		{
+			mEnemyIntentTutorialPointerLabel->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.86f, 0.26f, 1.0f)));
+			FSlateFontInfo PointerFont = mEnemyIntentTutorialPointerLabel->GetFont();
+			PointerFont.Size = 16;
+			PointerFont.OutlineSettings.OutlineSize = 2;
+			PointerFont.OutlineSettings.OutlineColor = FLinearColor::Black;
+			mEnemyIntentTutorialPointerLabel->SetFont(PointerFont);
+			mEnemyIntentTutorialPointerLabel->SetVisibility(ESlateVisibility::Collapsed);
+			if (UCanvasPanelSlot* PointerSlot = RootCanvas->AddChildToCanvas(mEnemyIntentTutorialPointerLabel))
+			{
+				PointerSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+				PointerSlot->SetAutoSize(true);
+				PointerSlot->SetZOrder(1052);
+			}
 		}
 	}
 

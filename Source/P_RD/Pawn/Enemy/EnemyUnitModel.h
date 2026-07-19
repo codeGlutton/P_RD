@@ -14,6 +14,16 @@
 
 class UEnemyUnitAttributeSet;
 
+/** @brief 당기기 후 던지기 거리를 줄이고 착지 연출의 무게를 설명하는 3단계 체급. */
+UENUM(BlueprintType)
+enum class ESRPGDisplacementWeight : uint8
+{
+	Invalid = 0,
+	Light = 1,
+	Medium = 2,
+	Heavy = 3,
+};
+
 /**
  * @brief 적 베이스 유닛 모델
  */
@@ -48,6 +58,8 @@ public:
 
 	// @brief 이동 성향
 	EMoveTendency GetMoveTendency() const;
+	/** @brief 첫 전투 적의 체형을 안정적으로 분류한다. 데이터 미지정 적은 중형으로 취급한다. */
+	ESRPGDisplacementWeight GetDisplacementWeight() const;
 
 private:
 	/**

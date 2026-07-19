@@ -118,3 +118,22 @@ EMoveTendency UEnemyUnitModel::GetMoveTendency() const
 	return mMoveTendency;
 }
 
+ESRPGDisplacementWeight UEnemyUnitModel::GetDisplacementWeight() const
+{
+	const FString Identity = FString::Printf(
+		TEXT("%s %s"),
+		*GetBoardActorKeyName().ToString(),
+		*GetBoardActorDisplayName().ToString());
+	if (Identity.Contains(TEXT("Spider"), ESearchCase::IgnoreCase)
+		|| Identity.Contains(TEXT("거미"), ESearchCase::IgnoreCase))
+	{
+		return ESRPGDisplacementWeight::Light;
+	}
+	if (Identity.Contains(TEXT("Mushroom"), ESearchCase::IgnoreCase)
+		|| Identity.Contains(TEXT("버섯"), ESearchCase::IgnoreCase))
+	{
+		return ESRPGDisplacementWeight::Heavy;
+	}
+	return ESRPGDisplacementWeight::Medium;
+}
+

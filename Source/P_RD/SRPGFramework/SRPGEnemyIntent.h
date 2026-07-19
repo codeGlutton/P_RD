@@ -17,6 +17,7 @@ enum class ESRPGPlayerDisplacementType : uint8
 {
 	Push,
 	Pull,
+	Throw,
 };
 
 /** @brief 공개 의도가 실행되며 발생한 가장 최근의 핵심 결과. */
@@ -82,6 +83,13 @@ struct P_RD_API FSRPGEnemyIntent
 	UPROPERTY(BlueprintReadOnly)
 	TArray<FTileIndex> mEffectTileIndexes;
 
+	/** @brief 마지막 재대응 직전 경로. 현재 경로와 함께 회색 잔상으로 한 번 비교 표시한다. */
+	UPROPERTY(BlueprintReadOnly)
+	TArray<FTileIndex> mPreviousPathTileIndexes;
+
+	UPROPERTY(BlueprintReadOnly)
+	FTileIndex mPreviousDestination = FTileIndex::Invalid;
+
 	UPROPERTY(BlueprintReadOnly)
 	ESRPGEnemyIntentResult mResult = ESRPGEnemyIntentResult::Planned;
 
@@ -94,6 +102,10 @@ struct P_RD_API FSRPGEnemyIntent
 	/** @brief 플레이어의 실제 이동/스킬이 끝난 뒤 이 계획을 다시 계산한 횟수. */
 	UPROPERTY(BlueprintReadOnly)
 	int32 mPlanRevision = 0;
+
+	/** @brief 계획을 실제로 바꿀 때 지불한 누적 대응 이동력. 적은 영리하게 대응하지만 무한정 무료로 대응하지 않는다. */
+	UPROPERTY(BlueprintReadOnly)
+	int32 mResponseCostSpent = 0;
 
 	/** @brief 플레이어 개입으로 마지막으로 밀려난 타일. 유닛이 제거된 뒤에도 조정 위치를 표시한다. */
 	UPROPERTY(BlueprintReadOnly)

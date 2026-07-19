@@ -15,6 +15,7 @@
 class UTileMapModel;
 class UStaticSkillData;
 class UBoardActorModel;
+enum class EForcedMovePresentationType : uint8;
 struct FActiveSkillContext;
 
 USTRUCT()
@@ -74,6 +75,8 @@ private:
 	void StartDiceDisplacementStep(int32 StepIndex);
 	void OnDiceDisplacementStepFinished();
 	void ReportDiceDisplacementIfMoved();
+	bool TryStartDiceFollowUpThrow();
+	void BroadcastDiceDisplacementPath(EForcedMovePresentationType PresentationType) const;
 	void FinishSkillAction();
 
 private:
@@ -89,6 +92,7 @@ private:
 	int32 mDiceDisplacementStepIndex = 0;
 	int32 mDiceDisplacementDiceValue = 0;
 	bool mDiceDisplacementIsPull = false;
+	bool mDiceDisplacementIsThrow = false;
 	bool mDiceDisplacementWasReported = false;
 	bool mDiceDisplacementCollisionReported = false;
 	bool mDiceDisplacementStarted = false;

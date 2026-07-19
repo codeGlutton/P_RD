@@ -884,7 +884,7 @@ void ACombatGameMode::PushSkillUIData() const
 			const bool bIsPull = StaticSkillData->GetFName() == PullSkillAssetName;
 			const bool bIsDisplacement = bIsSmash || bIsPull;
 			SkillUIData.mName = bIsPull
-				? NSLOCTEXT("CombatGameMode", "PullSkillName", "끌어오기")
+				? NSLOCTEXT("CombatGameMode", "PullSkillName", "끌어 던지기")
 				: StaticSkillData->mName;
 			SkillUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 			SkillUIData.mDiceCost = StaticSkillData->mRequiredDiceCount;
@@ -946,16 +946,32 @@ void ACombatGameMode::PushEnemyIntentUIData() const
 		}
 		IntentUI.mPathTileIndexes = Intent.mPathTileIndexes;
 		IntentUI.mEffectTileIndexes = Intent.mEffectTileIndexes;
+		IntentUI.mPreviousPathTileIndexes = Intent.mPreviousPathTileIndexes;
+		IntentUI.mPreviousDestination = Intent.mPreviousDestination;
 		IntentUI.mResult = GetEnemyIntentResultUI(Intent.mResult);
 		IntentUI.mResultText = Intent.mResultText.IsEmpty() ? GetEnemyIntentResultFallback(Intent.mResult) : Intent.mResultText;
 		IntentUI.mWasDisplaced = Intent.mWasDisplaced;
 		IntentUI.mPlanRevision = Intent.mPlanRevision;
+		IntentUI.mResponseCostSpent = Intent.mResponseCostSpent;
 		IntentUI.mIsRecommendedInterventionTarget = Intent.mIsRecommendedInterventionTarget;
 
 		if (IsValid(Intent.mEnemy))
 		{
 			IntentUI.mEnemyUnitId = Intent.mEnemy->GetModelId();
 			IntentUI.mEnemyName = Intent.mEnemy->GetBoardActorDisplayName();
+			switch (Intent.mEnemy->GetDisplacementWeight())
+			{
+			case ESRPGDisplacementWeight::Light:
+				IntentUI.mDisplacementWeightLabel = NSLOCTEXT("CombatGameMode", "WeightLight", "경량 · 멀리 날아감");
+				break;
+			case ESRPGDisplacementWeight::Heavy:
+				IntentUI.mDisplacementWeightLabel = NSLOCTEXT("CombatGameMode", "WeightHeavy", "중량 · 투척 -2칸");
+				break;
+			case ESRPGDisplacementWeight::Medium:
+			default:
+				IntentUI.mDisplacementWeightLabel = NSLOCTEXT("CombatGameMode", "WeightMedium", "중형 · 투척 -1칸");
+				break;
+			}
 		}
 		if (IntentUI.mEnemyName.IsEmpty())
 		{
@@ -1034,7 +1050,7 @@ void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 		const bool bIsPull = StaticSkillData->GetFName() == PullSkillAssetName;
 		const bool bIsDisplacement = bIsSmash || bIsPull;
 		SkillDetailUIData.mName = bIsPull
-			? NSLOCTEXT("CombatGameMode", "PullSkillName", "끌어오기")
+			? NSLOCTEXT("CombatGameMode", "PullSkillName", "끌어 던지기")
 			: StaticSkillData->mName;
 		SkillDetailUIData.mDescription = bIsSmash
 			? NSLOCTEXT(
@@ -1045,7 +1061,7 @@ void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 				? NSLOCTEXT(
 					"CombatGameMode",
 					"PullSkillDescription",
-					"[당기기] 선택한 적을 주사위 눈의 합만큼 플레이어 앞으로 즉시 끌어옵니다. 다른 적이나 장애물에 걸리면 충돌하고 멈춥니다. 첫 클릭은 궤적 미리보기, 같은 적 두 번째 클릭은 실행입니다.")
+					"[붙잡아 던지기] 적을 발앞까지 묵직하게 끌어온 뒤 플레이어 뒤로 자동 투척합니다. 주사위 눈이 던지기 거리이며, 경량은 멀리·중형은 1칸 덜·중량은 2칸 덜 날아갑니다. 적이나 장애물에 부딪히면 양쪽에 충돌 피해를 줍니다. 첫 클릭은 전체 궤적, 같은 적 두 번째 클릭은 실행입니다.")
 				: StaticSkillData->mDescription);
 		SkillDetailUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 		SkillDetailUIData.mDiceCost = StaticSkillData->mRequiredDiceCount;

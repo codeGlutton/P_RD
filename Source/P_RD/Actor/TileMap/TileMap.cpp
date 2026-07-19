@@ -871,6 +871,34 @@ void ATileMap::SetEnemyIntentOverlays(const TArray<FEnemyIntentTileOverlay>& Ove
 		const float LaneOffset = LaneOffsets[LaneIndex];
 		const int32 PathSpan = FMath::Max(Overlay.mPathTileIndexes.Num() - 1, 1);
 
+		// 직전 계획은 낮고 가는 회색 잔상으로 남긴다. 현재 색 경로를 나중에 그려 겹치는
+		// 구간은 자연스럽게 현재 계획이 우선하고, 갈라진 구간만 '버린 경로'로 읽힌다.
+		const int32 PreviousPathSpan = FMath::Max(Overlay.mPreviousPathTileIndexes.Num() - 1, 1);
+		for (int32 PathIndex = 0; PathIndex + 1 < Overlay.mPreviousPathTileIndexes.Num(); ++PathIndex)
+		{
+			const FTileIndex& Tile = Overlay.mPreviousPathTileIndexes[PathIndex];
+			const FTileIndex& Next = Overlay.mPreviousPathTileIndexes[PathIndex + 1];
+			if (IsValidIndex(Tile) == false || IsValidIndex(Next) == false || Tile == Next)
+			{
+				continue;
+			}
+			const FTileIndex Step(Next.mX - Tile.mX, Next.mY - Tile.mY);
+			FVector2D Perpendicular(-static_cast<float>(Step.mY), static_cast<float>(Step.mX));
+			Perpendicular.Normalize();
+			const FVector Location(
+				Tile.mX * mTileSize + Perpendicular.X * (LaneOffset + 6.0f),
+				Tile.mY * mTileSize + Perpendicular.Y * (LaneOffset + 6.0f),
+				mPathHeightOffset + 4.0f + LaneIndex);
+			AddPulseInstance(
+				mEnemyIntentPathComponent,
+				mEnemyIntentPathPulseData,
+				FTransform(FRotator(0.0f, StepToYaw(Step), 0.0f), Location, FVector(BaseScale * 0.52f)),
+				FLinearColor(0.26f, 0.29f, 0.30f, 0.52f),
+				PathIndex,
+				PreviousPathSpan,
+				/*bResolved=*/true);
+		}
+
 		for (int32 PathIndex = 0; PathIndex + 1 < Overlay.mPathTileIndexes.Num(); ++PathIndex)
 		{
 			const FTileIndex& Tile = Overlay.mPathTileIndexes[PathIndex];

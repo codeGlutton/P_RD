@@ -837,15 +837,38 @@ void USRPGCombatModel::ReplanEnemyIntentsAfterPlayerAction(
 
 		// 적의 성향과 공개했던 스킬은 유지한다. 플레이어 행동마다 스킬까지 무작위로 바뀌면
 		// 영리해지는 대신 규칙이 자의적으로 보이므로, 경로/대상/효과 타일만 최신화한다.
+		const TArray<FTileIndex> PreviousPath = Intent.mPathTileIndexes;
+		const TArray<FTileIndex> PreviousEffect = Intent.mEffectTileIndexes;
+		const FTileIndex PreviousDestination = Intent.mPlannedDestination;
+		const FTileIndex PreviousTarget = Intent.mTargetTile;
 		if (RebuildEnemyIntentPlan(Intent, /*bPreserveSkill*/true))
 		{
+			const bool bPlanActuallyChanged = PreviousPath != Intent.mPathTileIndexes
+				|| PreviousEffect != Intent.mEffectTileIndexes
+				|| PreviousDestination != Intent.mPlannedDestination
+				|| PreviousTarget != Intent.mTargetTile;
+			if (bPlanActuallyChanged == false)
+			{
+				continue;
+			}
+
+			Intent.mPreviousPathTileIndexes = PreviousPath;
+			Intent.mPreviousDestination = PreviousDestination;
+			if (Intent.mPlannedMoveRange > 0)
+			{
+				--Intent.mPlannedMoveRange;
+				++Intent.mResponseCostSpent;
+				// 비용을 낸 실제 이동 예산으로 명령과 HUD 경로를 다시 만든다.
+				RebuildEnemyIntentPlan(Intent, /*bPreserveSkill*/true);
+			}
 			++Intent.mPlanRevision;
 			Intent.mResultText = FText::Format(
 				NSLOCTEXT(
 					"EnemyIntent",
 					"PlayerActionReplanned",
-					"플레이어 행동 반영 #{0} · 현재 위치에서 이동/공격 계획 재계산"),
-				FText::AsNumber(Intent.mPlanRevision));
+					"대응 #{0} · 경로 재계산 · 대응 이동력 -{1}"),
+				FText::AsNumber(Intent.mPlanRevision),
+				FText::AsNumber(Intent.mResponseCostSpent));
 			bChanged = true;
 		}
 	}
@@ -989,27 +1012,42 @@ void USRPGCombatModel::PrepareEnemyIntents()
 		mEnemyIntents.Add(MoveTemp(Intent));
 	}
 
-	// 첫 안내가 말뿐인 예시가 되지 않도록, 현재 플레이어 위치에서 실제로 한 칸 이상
-	// 밀 수 있고 공격 없이 이동만 예정한 적만 연습 대상으로 고른다. 모든 주사위 눈은
-	// 최소 1칸을 밀기 때문에 이 표식이 붙은 적은 어떤 굴림 조합으로도 위치 개입이 성립한다.
+	// 첫 안내는 당기기→후속 던지기까지 반드시 이어져야 한다. 플레이어 발앞까지 경로가
+	// 실제로 열린 적만 연습 대상으로 고르고, 가능하면 이동 중인 적을 우선한다.
 	const FTileIndex PlayerTile = mPlayerUnit->GetTileTransform().mIndex;
-	auto CanBePushedFromPlayer = [this, PlayerTile](const FSRPGEnemyIntent& Intent)
+	auto CanBePulledToPlayer = [this, PlayerTile](const FSRPGEnemyIntent& Intent)
 	{
 		if (Intent.mEnemy == nullptr || Intent.mEnemy->IsDead())
 		{
 			return false;
 		}
 		const FTileIndex EnemyTile = Intent.mEnemy->GetTileTransform().mIndex;
-		return mTileMap->GetPushDestination(PlayerTile, EnemyTile, 1) != EnemyTile;
+		if (FMath::Max(
+			FMath::Abs(EnemyTile.mX - PlayerTile.mX),
+			FMath::Abs(EnemyTile.mY - PlayerTile.mY)) > 8)
+		{
+			return false;
+		}
+		const TArray<FTileIndex> PullPath = mTileMap->GetPullPath(PlayerTile, EnemyTile, 64);
+		if (PullPath.IsEmpty())
+		{
+			return false;
+		}
+		const FTileIndex& PullEnd = PullPath.Last();
+		return FMath::Max(
+			FMath::Abs(PullEnd.mX - PlayerTile.mX),
+			FMath::Abs(PullEnd.mY - PlayerTile.mY)) == 1;
 	};
 
 	FSRPGEnemyIntent* RecommendedIntent = mEnemyIntents.FindByPredicate(
-		[&CanBePushedFromPlayer](const FSRPGEnemyIntent& Intent)
+		[&CanBePulledToPlayer](const FSRPGEnemyIntent& Intent)
 		{
-			const bool bMoveOnly = Intent.mPlannedDestination != Intent.mPlannedOrigin
-				&& Intent.mEffectTileIndexes.IsEmpty();
-			return bMoveOnly && CanBePushedFromPlayer(Intent);
+			return Intent.mPlannedDestination != Intent.mPlannedOrigin && CanBePulledToPlayer(Intent);
 		});
+	if (RecommendedIntent == nullptr)
+	{
+		RecommendedIntent = mEnemyIntents.FindByPredicate(CanBePulledToPlayer);
+	}
 	if (RecommendedIntent != nullptr)
 	{
 		RecommendedIntent->mIsRecommendedInterventionTarget = true;
@@ -1136,7 +1174,11 @@ void USRPGCombatModel::ReportPlayerDisplacement(
 		return;
 	}
 
-	const bool bWasPulled = DisplacementType == ESRPGPlayerDisplacementType::Pull;
+	const FText DisplacementLabel = DisplacementType == ESRPGPlayerDisplacementType::Throw
+		? NSLOCTEXT("EnemyIntent", "ThrownLabel", "후속 던지기")
+		: (DisplacementType == ESRPGPlayerDisplacementType::Pull
+			? NSLOCTEXT("EnemyIntent", "PulledLabel", "끌어오기")
+			: NSLOCTEXT("EnemyIntent", "PushedLabel", "밀기"));
 	bool bFoundIntent = false;
 	for (FSRPGEnemyIntent& Intent : mEnemyIntents)
 	{
@@ -1153,7 +1195,7 @@ void USRPGCombatModel::ReportPlayerDisplacement(
 				"EnemyIntent",
 				"PlayerDisplacedEnemyPendingReplan",
 				"{0}: 주사위 {1} · ({2},{3}) → ({4},{5}) · 새 위치 반영 중"),
-			bWasPulled ? NSLOCTEXT("EnemyIntent", "PulledLabel", "끌어오기") : NSLOCTEXT("EnemyIntent", "PushedLabel", "밀기"),
+			DisplacementLabel,
 			FText::AsNumber(DiceValue),
 			FText::AsNumber(From.mX),
 			FText::AsNumber(From.mY),
@@ -1185,18 +1227,19 @@ void USRPGCombatModel::ReportPlayerDisplacementCollision(
 	const bool bEnemyBlocker = Cast<UUnitModel>(Blocker) != nullptr && Blocker != mPlayerUnit;
 	if (FSRPGEnemyIntent* Intent = FindEnemyIntent(Target))
 	{
+		const FText ImpactLabel = DisplacementType == ESRPGPlayerDisplacementType::Throw
+			? NSLOCTEXT("EnemyIntent", "ThrowImpact", "후속 던지기")
+			: (DisplacementType == ESRPGPlayerDisplacementType::Pull
+				? NSLOCTEXT("EnemyIntent", "PullImpact", "당기기")
+				: NSLOCTEXT("EnemyIntent", "PushImpact", "밀기"));
 		const FText Message = bEnemyBlocker
 			? FText::Format(
 				NSLOCTEXT("EnemyIntent", "PlayerChainCollision", "{0} 충돌! {1}과 부딪혀 양쪽 1 피해"),
-				DisplacementType == ESRPGPlayerDisplacementType::Pull
-					? NSLOCTEXT("EnemyIntent", "PullImpact", "당기기")
-					: NSLOCTEXT("EnemyIntent", "PushImpact", "밀기"),
+				ImpactLabel,
 				Blocker->GetBoardActorDisplayName())
 			: FText::Format(
 				NSLOCTEXT("EnemyIntent", "PlayerObstacleCollision", "{0} 충돌! {1} 앞에서 정지"),
-				DisplacementType == ESRPGPlayerDisplacementType::Pull
-					? NSLOCTEXT("EnemyIntent", "PullImpact", "당기기")
-					: NSLOCTEXT("EnemyIntent", "PushImpact", "밀기"),
+				ImpactLabel,
 				Blocker->GetBoardActorDisplayName());
 		Intent->mResultText = FText::Format(
 			NSLOCTEXT("EnemyIntent", "ResultJoin", "{0}\n{1}"),
@@ -1323,6 +1366,7 @@ void USRPGCombatModel::RefreshEnemyIntentHighlights()
 		FEnemyIntentTileOverlay& Overlay = EnemyIntentOverlays.AddDefaulted_GetRef();
 		Overlay.mExecutionOrder = Intent.mExecutionOrder;
 		Overlay.mPathTileIndexes = Intent.mPathTileIndexes;
+		Overlay.mPreviousPathTileIndexes = Intent.mPreviousPathTileIndexes;
 		Overlay.mEffectTileIndexes = Intent.mEffectTileIndexes;
 		Overlay.mTargetTile = Intent.mTargetTile;
 		Overlay.mPlannedOrigin = Intent.mPlannedOrigin;

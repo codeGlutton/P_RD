@@ -64,6 +64,7 @@ struct P_RD_API FEnemyIntentTileOverlay
 {
 	int32 mExecutionOrder = INDEX_NONE;
 	TArray<FTileIndex> mPathTileIndexes;
+	TArray<FTileIndex> mPreviousPathTileIndexes;
 	TArray<FTileIndex> mEffectTileIndexes;
 	FTileIndex mTargetTile = FTileIndex::Invalid;
 	FTileIndex mPlannedOrigin = FTileIndex::Invalid;

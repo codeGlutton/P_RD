@@ -17,6 +17,7 @@
 #include "Unit.generated.h"
 
 class UUnitModel;
+enum class EForcedMovePresentationType : uint8;
 struct FTileTransform;
 struct FPresentationBarrier;
 
@@ -73,7 +74,9 @@ protected:
 	 * @brief 밀치기용 전체 경로를 받아 일반 보행과 분리된 빠른 강제 이동 연출을 준비한다.
 	 * @details 논리 이동은 이후 OnStartMoveStep의 기존 PresentationBarrier 흐름을 그대로 따른다.
 	 */
-	virtual void OnStartForcedMovePath(const TArray<FVector>& PathWorldLocations);
+	virtual void OnStartForcedMovePath(
+		const TArray<FVector>& PathWorldLocations,
+		EForcedMovePresentationType PresentationType);
 
 	// @brief 이동 시작 요청을 수신해서 이동 시작
 	virtual void OnStartMoveStep(
@@ -205,6 +208,7 @@ private:
 	float mForcedMoveTravelDuration = 0.0f;
 	float mForcedMoveArcHeight = 0.0f;
 	float mForcedMoveOvershootDistance = 0.0f;
+	EForcedMovePresentationType mForcedMovePresentationType = static_cast<EForcedMovePresentationType>(0);
 	FVector mForcedMoveWorldDirection = FVector::ZeroVector;
 	FRotator mForcedMoveFacingRotation = FRotator::ZeroRotator;
 	FTransform mForcedMoveBaseMeshRelativeTransform = FTransform::Identity;

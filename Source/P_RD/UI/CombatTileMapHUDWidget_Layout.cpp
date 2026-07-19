@@ -221,10 +221,10 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 		RDUILayout::ApplyAnchoredSlot(mCombatStatusBarText, FAnchors(0.025f, 0.050f, 0.520f, 0.110f), 30);
 	}
 
-	// 우상단은 밀린 적이 실제로 도착할 수 있는 영역이므로 계획판을 상단 중앙으로 옮긴다.
-	// 튜토리얼은 그 위의 짧은 2줄 카드로 두어 계획판/몬스터/명령 버튼을 서로 가리지 않는다.
-	ApplyScreenRect(mEnemyIntentPanel, FAnchors(0.340f, 0.150f, 0.650f, 0.320f), 36);
-	ApplyScreenRect(mEnemyIntentTutorialPanel, FAnchors(0.300f, 0.048f, 0.680f, 0.145f), 220);
+	// 튜토리얼은 단계 흐름과 확인 버튼이 읽히는 높이를 확보하고, 계획판은 오른쪽에 분리한다.
+	// 둘 다 전투 입력을 막지 않으며 포커스 스포트라이트가 현재 클릭 대상을 직접 가리킨다.
+	ApplyScreenRect(mEnemyIntentPanel, FAnchors(0.690f, 0.150f, 0.940f, 0.355f), 36);
+	ApplyScreenRect(mEnemyIntentTutorialPanel, FAnchors(0.285f, 0.038f, 0.715f, 0.250f), 220);
 
 	// 스킨 value 칸(HUD_M_*)에 Lv/HP/Gold 텍스트를 칸 위치/크기로 그린다.
 	RefreshSkinValueLabels();

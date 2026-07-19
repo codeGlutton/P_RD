@@ -24,9 +24,20 @@ DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlaceTileTransform, const FTileTransform
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnStartMovePath, const TArray<FVector>& /* PathWorldLocations */);
 
-// 밀치기처럼 일반 보행과 다른 뷰 연출이 필요한 강제 이동 경로 전달.
+/** @brief 강제 이동의 물리적 인상을 뷰에 전달한다. 판정에는 관여하지 않는다. */
+enum class EForcedMovePresentationType : uint8
+{
+	Push,
+	Pull,
+	Throw,
+};
+
+// 밀기/당기기/던지기처럼 일반 보행과 다른 뷰 연출이 필요한 강제 이동 경로 전달.
 // 논리 이동과 스텝 완료 시점은 기존 FOnStartMoveStep/PresentationBarrier 흐름을 그대로 사용한다.
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnStartForcedMovePath, const TArray<FVector>& /* PathWorldLocations */);
+DECLARE_MULTICAST_DELEGATE_TwoParams(
+	FOnStartForcedMovePath,
+	const TArray<FVector>& /* PathWorldLocations */,
+	EForcedMovePresentationType /* PresentationType */);
 
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnStartMoveStep, const FTileTransform& /* NextTileTransform */, const FTransform& /* TargetWorldTransform */, TSharedPtr<FPresentationBarrier> /* Barrier */, float /* RemainingPathDistance */);
 

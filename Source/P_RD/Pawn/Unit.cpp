@@ -225,7 +225,9 @@ void AUnit::OnStartMovePath(const TArray<FVector>& PathWorldLocations)
 	mPolyLineTraveledDistance = 0.0f;
 }
 
-void AUnit::OnStartForcedMovePath(const TArray<FVector>& PathWorldLocations)
+void AUnit::OnStartForcedMovePath(
+	const TArray<FVector>& PathWorldLocations,
+	EForcedMovePresentationType PresentationType)
 {
 	// 경로 베이크와 스텝 마커는 일반 이동과 공유한다. 이후 Tick 경로만 강제 이동 전용으로 분기한다.
 	OnStartMovePath(PathWorldLocations);
@@ -235,16 +237,33 @@ void AUnit::OnStartForcedMovePath(const TArray<FVector>& PathWorldLocations)
 	}
 
 	const int32 MoveTileCount = PathWorldLocations.Num() - 1;
-	const float DurationByDistance = ForcedMoveFirstTileDuration
-		+ ForcedMoveAdditionalTileDuration * StaticCast<float>(FMath::Max(MoveTileCount - 1, 0));
+	const float DurationScale = PresentationType == EForcedMovePresentationType::Pull
+		? 1.32f
+		: (PresentationType == EForcedMovePresentationType::Throw ? 1.12f : 1.0f);
+	const float DurationByDistance = (ForcedMoveFirstTileDuration
+		+ ForcedMoveAdditionalTileDuration * StaticCast<float>(FMath::Max(MoveTileCount - 1, 0))) * DurationScale;
 	const float DistanceAlpha = FMath::Clamp(StaticCast<float>(MoveTileCount - 1) / 4.0f, 0.0f, 1.0f);
 
 	mIsForcedMovePresentation = true;
+	mForcedMovePresentationType = PresentationType;
 	mForcedMoveElapsed = 0.0f;
-	mForcedMoveDuration = FMath::Min(DurationByDistance, ForcedMoveMaxDuration);
-	mForcedMoveTravelDuration = FMath::Max(mForcedMoveDuration - ForcedMoveSettleDuration, KINDA_SMALL_NUMBER);
-	mForcedMoveArcHeight = FMath::Lerp(ForcedMoveMinArcHeight, ForcedMoveMaxArcHeight, DistanceAlpha);
-	mForcedMoveOvershootDistance = FMath::Lerp(ForcedMoveMinOvershoot, ForcedMoveMaxOvershoot, DistanceAlpha);
+	mForcedMoveDuration = FMath::Min(
+		DurationByDistance,
+		PresentationType == EForcedMovePresentationType::Pull ? 0.82f : 0.74f);
+	const float SettleDuration = PresentationType == EForcedMovePresentationType::Pull
+		? 0.16f
+		: (PresentationType == EForcedMovePresentationType::Throw ? 0.14f : ForcedMoveSettleDuration);
+	mForcedMoveTravelDuration = FMath::Max(mForcedMoveDuration - SettleDuration, KINDA_SMALL_NUMBER);
+	mForcedMoveArcHeight = PresentationType == EForcedMovePresentationType::Throw
+		? FMath::Lerp(70.0f, 125.0f, DistanceAlpha)
+		: (PresentationType == EForcedMovePresentationType::Pull
+			? FMath::Lerp(3.0f, 8.0f, DistanceAlpha)
+			: FMath::Lerp(ForcedMoveMinArcHeight, ForcedMoveMaxArcHeight, DistanceAlpha));
+	mForcedMoveOvershootDistance = PresentationType == EForcedMovePresentationType::Throw
+		? FMath::Lerp(34.0f, 48.0f, DistanceAlpha)
+		: (PresentationType == EForcedMovePresentationType::Pull
+			? FMath::Lerp(12.0f, 20.0f, DistanceAlpha)
+			: FMath::Lerp(ForcedMoveMinOvershoot, ForcedMoveMaxOvershoot, DistanceAlpha));
 	mForcedMoveWorldDirection = PathWorldLocations.Last() - PathWorldLocations[0];
 	mForcedMoveWorldDirection.Z = 0.0f;
 	mForcedMoveWorldDirection = mForcedMoveWorldDirection.GetSafeNormal();
@@ -572,10 +591,16 @@ void AUnit::ApplyForcedMoveMeshPresentation(float TravelAlpha, float SettleAlpha
 	FTransform MeshTransform = mForcedMoveBaseMeshRelativeTransform;
 	MeshTransform.SetLocation(MeshTransform.GetLocation() + RelativeOffset);
 	const FVector BaseScale = mForcedMoveBaseMeshRelativeTransform.GetScale3D();
+	const float ImpactScale = mForcedMovePresentationType == EForcedMovePresentationType::Throw
+		? 1.75f
+		: (mForcedMovePresentationType == EForcedMovePresentationType::Pull ? 1.30f : 1.0f);
+	const float PullTension = mForcedMovePresentationType == EForcedMovePresentationType::Pull
+		? FMath::Sin(PI * ClampedTravelAlpha)
+		: 0.0f;
 	const FVector SquashMultiplier(
-		1.0f + 0.04f * ImpactStrength,
-		1.0f + 0.04f * ImpactStrength,
-		1.0f - 0.08f * ImpactStrength);
+		1.0f + 0.04f * ImpactStrength * ImpactScale + 0.03f * PullTension,
+		1.0f + 0.04f * ImpactStrength * ImpactScale + 0.03f * PullTension,
+		1.0f - 0.08f * ImpactStrength * ImpactScale - 0.06f * PullTension);
 	MeshTransform.SetScale3D(BaseScale * SquashMultiplier);
 	mMeshComp->SetRelativeTransform(MeshTransform);
 }
@@ -593,6 +618,7 @@ void AUnit::ResetForcedMovePresentation()
 	mForcedMoveTravelDuration = 0.0f;
 	mForcedMoveArcHeight = 0.0f;
 	mForcedMoveOvershootDistance = 0.0f;
+	mForcedMovePresentationType = EForcedMovePresentationType::Push;
 	mForcedMoveWorldDirection = FVector::ZeroVector;
 	mForcedMoveFacingRotation = FRotator::ZeroRotator;
 	mForcedMoveBaseMeshRelativeTransform = FTransform::Identity;
