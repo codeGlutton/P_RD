@@ -1,5 +1,6 @@
 ﻿#include "UI/CombatTileMapHUDWidget.h"
 
+#include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
@@ -411,6 +412,10 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 	ToggleWidgets(mOwnedDiceImages, DisplayVis);
 	ToggleWidgets(mOwnedDiceCardWidgets, InputVis);
 	ToggleWidgets(mOwnedDiceTypeTexts, DisplayVis);
+	ToggleWidgets(mContextActionPanels, DisplayVis);
+	ToggleWidgets(mContextActionIcons, DisplayVis);
+	ToggleWidgets(mContextActionTexts, DisplayVis);
+	ToggleWidgets(mContextActionButtons, InputVis);
 	ToggleWidgets(mEquipmentChips, DisplayVis);
 	ToggleWidgets(mEquipmentChipTexts, DisplayVis);
 	ToggleWidgets(mEquipSlotButtons, InputVis);
@@ -419,6 +424,7 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 	if (mDiceTrayPanel != nullptr) { mDiceTrayPanel->SetVisibility(DisplayVis); }
 	if (mDiceTrayTitleText != nullptr) { mDiceTrayTitleText->SetVisibility(DisplayVis); }
 	if (mDiceAssignmentText != nullptr) { mDiceAssignmentText->SetVisibility(DisplayVis); }
+	if (mContextActionTitleText != nullptr) { mContextActionTitleText->SetVisibility(DisplayVis); }
 
 	// mCombatStatusBarText는 항상 Collapsed(Lv/HP/Gold는 WBP HUD_M_* 라벨이 표시)이므로 여기서 손대지 않는다.
 	// 복원 시 Visible로 켜면 Lv/Gold/HP 필과 같은 좌상단 위치라 빈 텍스트가 필 위에 겹친다.
@@ -431,6 +437,7 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 		RefreshDiceAssignmentText();
 		RefreshEnemyIntentPanel();
 		RefreshDisplacementPreview();
+		RefreshContextActions();
 		UpdateEnemyIntentTutorial();
 	}
 	else
@@ -438,6 +445,7 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 		if (mEnemyIntentPanel != nullptr) { mEnemyIntentPanel->SetVisibility(ESlateVisibility::Collapsed); }
 		if (mEnemyIntentTutorialPanel != nullptr) { mEnemyIntentTutorialPanel->SetVisibility(ESlateVisibility::Collapsed); }
 		if (mDisplacementConfirmPanel != nullptr) { mDisplacementConfirmPanel->SetVisibility(ESlateVisibility::Collapsed); }
+		CloseContextActions();
 	}
 
 	// mDiceRollInputButton은 "탭해서 굴리기" 입력영역이라 입장 주사위 오버레이가 실제로 떠 있을 때만 존재해야 한다.
@@ -472,6 +480,18 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 					Child->SetVisibility(DisplayVis);
 					break;
 				}
+			}
+		}
+		// 새 조작에서는 두 구 프레임을 쓰지 않는다. 지도 닫기 복원 경로가 다시 켜지 않게 마지막에 고정한다.
+		if (WidgetTree != nullptr)
+		{
+			if (UWidget* LegacySkillRail = WidgetTree->FindWidget(TEXT("HUD_SkillRail")))
+			{
+				LegacySkillRail->SetVisibility(ESlateVisibility::Collapsed);
+			}
+			if (UWidget* LegacyDiceTray = WidgetTree->FindWidget(TEXT("HUD_DiceTray")))
+			{
+				LegacyDiceTray->SetVisibility(ESlateVisibility::Collapsed);
 			}
 		}
 	}

@@ -26,7 +26,13 @@ FReply UCombatTileMapHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeome
 		{
 			return FReply::Handled();
 		}
-		// 스킬 레일 밖 = 월드(타일/유닛) 영역. 뷰모델 연결 시 좌표만 넘기고 타일/유닛 판정은 게임플레이가.
+		// 아무 스킬도 고르지 않은 상태에서 유닛을 누르면 먼저 그 유닛의 컨텍스트 행동만 연다.
+		// 이미 스킬을 고른 뒤의 클릭은 기존 월드 조준으로 그대로 전달한다.
+		if (TryOpenContextActionsAtScreenPosition(ScreenPosition))
+		{
+			return FReply::Handled();
+		}
+		// 유닛 바깥 = 기존 월드(타일) 영역. 좌표 판정은 게임플레이가 담당한다.
 		if (mCombatUIModel != nullptr)
 		{
 			mCombatUIModel->RequestWorldTouch(ScreenPosition, false);
@@ -91,6 +97,10 @@ FReply UCombatTileMapHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry
 			return FReply::Handled();
 		}
 		// 스킬 레일 밖 = 월드(타일/유닛) 영역. 뷰모델 연결 시 좌표만 넘기고 타일/유닛 판정은 게임플레이가.
+		if (TryOpenContextActionsAtScreenPosition(ScreenPosition))
+		{
+			return FReply::Handled();
+		}
 		if (mCombatUIModel != nullptr)
 		{
 			mCombatUIModel->RequestWorldTouch(ScreenPosition, false);

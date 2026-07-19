@@ -287,7 +287,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		{
 			mDiceTrayPanel->SetBrushColor(FLinearColor(0.018f, 0.032f, 0.045f, 0.82f));
 			mDiceTrayPanel->SetVisibility(ESlateVisibility::HitTestInvisible);
-			mDiceTrayTitleText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "DiceTrayTitle", "보유 주사위"));
+			mDiceTrayTitleText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "DiceTrayTitle", "이번 턴 주사위"));
 			mDiceTrayTitleText->SetColorAndOpacity(FSlateColor(FLinearColor(0.80f, 0.96f, 1.0f, 1.0f)));
 			mDiceTrayTitleText->SetJustification(ETextJustify::Left);
 			mDiceTrayTitleText->SetVisibility(ESlateVisibility::HitTestInvisible);
@@ -307,13 +307,13 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		if (mDiceAssignmentText != nullptr)
 		{
 			mDiceAssignmentText->SetJustification(ETextJustify::Left);
-			mDiceAssignmentText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "DiceAssignmentChooseSkill", "스킬을 먼저 선택하세요"));
+			mDiceAssignmentText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "DiceAssignmentChooseTarget", "① 전장의 적을 누르세요"));
 			mDiceAssignmentText->SetVisibility(ESlateVisibility::HitTestInvisible);
 			mDiceAssignmentText->SetColorAndOpacity(FSlateColor(FLinearColor(0.90f, 1.0f, 0.96f, 0.96f)));
-			mDiceAssignmentText->SetAutoWrapText(false);
-			mDiceAssignmentText->SetTextOverflowPolicy(ETextOverflowPolicy::Ellipsis);
+			mDiceAssignmentText->SetAutoWrapText(true);
+			mDiceAssignmentText->SetTextOverflowPolicy(ETextOverflowPolicy::Clip);
 			FSlateFontInfo AssignmentFont = mDiceAssignmentText->GetFont();
-			AssignmentFont.Size = 14;
+			AssignmentFont.Size = 13;
 			mDiceAssignmentText->SetFont(AssignmentFont);
 			TargetRootCanvas->AddChildToCanvas(mDiceAssignmentText);
 		}
@@ -926,6 +926,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 
 	RebuildSkillRailWidgets();
 	EnsureSkillInputButtons();
+	EnsureContextActionWidgets();
 	RebuildEquipmentBar();    // 탑바 좌측 하단 장비 칩(뷰모델 미연결이면 비워 둠)
 	RefreshEnemyIntentPanel();
 	UpdateEnemyIntentTutorial();

@@ -97,38 +97,38 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 	RDUILayout::ApplyAnchoredSlot(mTurnChangeVideoImage, FAnchors(0.140f, 0.155f, 0.860f, 0.845f), TurnChangeVideoZOrder);
 	RDUILayout::ApplyAnchoredSlot(mTurnChangeTurnTextPanel, FAnchors(0.435f, 0.390f, 0.565f, 0.610f), TurnChangeTextZOrder);
 
-	// 보유 주사위는 스킬 옆 세로 숫자열에서 떼어내 하단의 독립 가로 트레이에 둔다.
-	// 스킬 선택 → 주사위 선택이라는 정보 구조가 공간적으로 분리되어 처음 보는 사람도 두 종류를 혼동하지 않는다.
+	// 상시 스킬 6칸은 제거한다. 왼쪽에는 이번 턴의 자원인 주사위만 세로로 두고,
+	// 행동은 전장의 유닛을 눌렀을 때 그 유닛 옆 컨텍스트 팔레트에서 고른다.
 	const int32 OwnedDiceCount = mOwnedDiceImages.Num();
-	ApplyScreenRect(mDiceTrayPanel, FAnchors(0.225f, 0.815f, 0.725f, 0.985f), 16);
-	ApplyScreenRect(mDiceTrayTitleText, FAnchors(0.242f, 0.823f, 0.345f, 0.855f), 18);
-	ApplyScreenRect(mDiceAssignmentText, FAnchors(0.345f, 0.823f, 0.708f, 0.855f), 18);
+	ApplyScreenRect(mDiceTrayPanel, FAnchors(0.012f, 0.128f, 0.137f, 0.842f), 16);
+	ApplyScreenRect(mDiceTrayTitleText, FAnchors(0.022f, 0.139f, 0.127f, 0.171f), 18);
+	ApplyScreenRect(mDiceAssignmentText, FAnchors(0.022f, 0.170f, 0.127f, 0.218f), 18);
 	if (OwnedDiceCount > 0)
 	{
-		const float TrayLeft = 0.242f;
-		const float TrayRight = 0.708f;
-		const float Gap = 0.008f;
-		const float AvailableWidth = TrayRight - TrayLeft - Gap * StaticCast<float>(FMath::Max(OwnedDiceCount - 1, 0));
-		const float CellWidth = FMath::Min(0.070f, AvailableWidth / StaticCast<float>(OwnedDiceCount));
-		const float TotalWidth = CellWidth * StaticCast<float>(OwnedDiceCount)
+		const float TrayTop = 0.224f;
+		const float TrayBottom = 0.830f;
+		const float Gap = 0.007f;
+		const float AvailableHeight = TrayBottom - TrayTop - Gap * StaticCast<float>(FMath::Max(OwnedDiceCount - 1, 0));
+		const float CellHeight = FMath::Min(0.096f, AvailableHeight / StaticCast<float>(OwnedDiceCount));
+		const float TotalHeight = CellHeight * StaticCast<float>(OwnedDiceCount)
 			+ Gap * StaticCast<float>(FMath::Max(OwnedDiceCount - 1, 0));
-		const float StartLeft = TrayLeft + (TrayRight - TrayLeft - TotalWidth) * 0.5f;
+		const float StartTop = TrayTop + (TrayBottom - TrayTop - TotalHeight) * 0.5f;
 		for (int32 DiceIndex = 0; DiceIndex < OwnedDiceCount; ++DiceIndex)
 		{
-			const float CellLeft = StartLeft + StaticCast<float>(DiceIndex) * (CellWidth + Gap);
-			const float CellRight = CellLeft + CellWidth;
-			const float ImageWidth = FMath::Min(CellWidth * 0.82f, 0.050f);
-			const float ImageLeft = CellLeft + (CellWidth - ImageWidth) * 0.5f;
-			ApplyScreenRect(mOwnedDiceImages[DiceIndex], FAnchors(ImageLeft, 0.858f, ImageLeft + ImageWidth, 0.944f), 22);
+			const float CellTop = StartTop + StaticCast<float>(DiceIndex) * (CellHeight + Gap);
+			const float CellBottom = CellTop + CellHeight;
+			const float ImageTop = CellTop + CellHeight * 0.03f;
+			const float ImageBottom = CellTop + CellHeight * 0.72f;
+			ApplyScreenRect(mOwnedDiceImages[DiceIndex], FAnchors(0.051f, ImageTop, 0.098f, ImageBottom), 22);
 			if (mOwnedDiceCardWidgets.IsValidIndex(DiceIndex))
 			{
-				ApplyScreenRect(mOwnedDiceCardWidgets[DiceIndex], FAnchors(CellLeft, 0.852f, CellRight, 0.976f), 23);
+				ApplyScreenRect(mOwnedDiceCardWidgets[DiceIndex], FAnchors(0.022f, CellTop, 0.127f, CellBottom), 23);
 			}
 			if (mOwnedDiceTypeTexts.IsValidIndex(DiceIndex))
 			{
 				if (mOwnedDiceTypeTexts[DiceIndex] != nullptr)
 				{
-					ApplyScreenRect(mOwnedDiceTypeTexts[DiceIndex], FAnchors(CellLeft, 0.944f, CellRight, 0.974f), 24);
+					ApplyScreenRect(mOwnedDiceTypeTexts[DiceIndex], FAnchors(0.027f, CellTop + CellHeight * 0.70f, 0.122f, CellBottom - 0.002f), 24);
 				}
 			}
 		}
@@ -154,8 +154,7 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 				40);
 		}
 	}
-	// 스킬 레일은 기존 좁은 아이콘 열 대신 이름/역할/주사위 비용이 항상 보이는 카드형 도크다.
-	// 상세가 열려 있으면 기존처럼 레일 Z를 승격하고, 렌더/입력은 같은 카드 rect를 공유한다.
+	// 레거시 스킬 레일은 호환용 객체만 남기고 표시/입력하지 않는다. 행동은 컨텍스트 팔레트가 소유한다.
 	const int32 SkillRailZOrder = IsSkillDetailVisible() ? CombatSkillDetailRailZOrder : 18;
 	const int32 SkillRailPanelCount = mSkillRailPanels.Num();
 	const int32 SkillInputCount = mSkillInputButtons.Num();
@@ -189,6 +188,18 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 	for (int32 SkillIndex = 0; SkillIndex < SkillInputCount; ++SkillIndex)
 	{
 		ApplyScreenRect(mSkillInputButtons[SkillIndex], GetSkillRailItemRect(SkillIndex, SkillInputCount), CombatSkillInputZOrder);
+	}
+	// 디자이너 WBP에 구 레일/하단 트레이 프레임이 구워져 있어도 새 런타임 UI 뒤에 잔상으로 남기지 않는다.
+	if (WidgetTree != nullptr)
+	{
+		if (UWidget* LegacySkillRail = WidgetTree->FindWidget(TEXT("HUD_SkillRail")))
+		{
+			LegacySkillRail->SetVisibility(ESlateVisibility::Collapsed);
+		}
+		if (UWidget* LegacyDiceTray = WidgetTree->FindWidget(TEXT("HUD_DiceTray")))
+		{
+			LegacyDiceTray->SetVisibility(ESlateVisibility::Collapsed);
+		}
 	}
 
 	if (bSkin)

@@ -318,6 +318,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 	}
 
 	const TArray<FEnemyIntentUI>& Intents = mCombatUIModel->GetEnemyIntentUIs();
+	const FEnemyIntentUI* RecommendedIntent = FindRecommendedIntent(Intents);
 	const EEnemyIntentTutorialStage PreviousStage = mEnemyIntentTutorialStage;
 	if (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::WaitingForIntent)
 	{
@@ -337,8 +338,8 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 			mEnemyIntentTutorialPanel->SetVisibility(ESlateVisibility::Collapsed);
 			return;
 		}
-		// 설명판부터 읽히지 않는다. 첫 프레임부터 실제로 눌러야 할 스킬 하나를 가리킨다.
-		mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::SelectPull;
+		// 설명판부터 읽히지 않는다. 첫 프레임부터 실제로 눌러야 할 적 모델을 가리킨다.
+		mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::SelectTarget;
 	}
 
 	const TArray<FSkillUI>& Skills = mCombatUIModel->GetSkillUIs();
@@ -419,11 +420,17 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 	}
 	else if (mEnemyIntentTutorialPullCompleted)
 	{
-		if (bThrowSelected == false)
+		const bool bThrowTargetSelected = mContextTargetUnitId != INDEX_NONE
+			&& mContextTargetUnitId == mEnemyIntentTutorialIntervenedEnemyUnitId;
+		if (bThrowTargetSelected == false)
+		{
+			mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::SelectThrowTarget;
+		}
+		else if (bThrowSelected == false)
 		{
 			mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::SelectThrow;
 		}
-		else if (ThrowRequiredDiceCount <= 0 || SelectedDiceCount != ThrowRequiredDiceCount)
+		else if (ThrowRequiredDiceCount > 0 && SelectedDiceCount < ThrowRequiredDiceCount)
 		{
 			mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::SelectThrowDice;
 		}
@@ -437,18 +444,22 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		}
 		else
 		{
-			mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::SelectThrowTarget;
+			mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::SelectThrowDestination;
 		}
 	}
 	else if (mEnemyIntentTutorialInterventionSubmitted)
 	{
 		mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::ApplyingIntervention;
 	}
+	else if (RecommendedIntent == nullptr || mContextTargetUnitId != RecommendedIntent->mEnemyUnitId)
+	{
+		mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::SelectTarget;
+	}
 	else if (bPullSelected == false)
 	{
 		mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::SelectPull;
 	}
-	else if (PullRequiredDiceCount <= 0 || SelectedDiceCount != PullRequiredDiceCount)
+	else if (PullRequiredDiceCount > 0 && SelectedDiceCount < PullRequiredDiceCount)
 	{
 		mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::SelectDice;
 	}
@@ -458,7 +469,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 	}
 	else
 	{
-		mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::SelectTarget;
+		mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::ConfirmDestination;
 	}
 
 	switch (mEnemyIntentTutorialStage)
@@ -489,34 +500,21 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 	// 규칙 설명은 행동 뒤로 미룬다. 초보자는 제목 한 줄과 실제 클릭 대상만 따라가면 된다.
 	FString TutorialTitle;
 	FString TutorialMessage;
-	const FEnemyIntentUI* RecommendedIntent = FindRecommendedIntent(Intents);
-	const FString RecommendedEnemyName = RecommendedIntent != nullptr
-		? RecommendedIntent->mEnemyName.ToString()
-		: TEXT("★ 표시 적");
-	const FString PullSkillName = PullSkill != nullptr && PullSkill->mName.IsEmpty() == false
-		? PullSkill->mName.ToString()
-		: TEXT("끌어당기기");
-	const FString ThrowSkillName = ThrowSkill != nullptr && ThrowSkill->mName.IsEmpty() == false
-		? ThrowSkill->mName.ToString()
-		: TEXT("붙잡아 던지기");
-	const FString ThrowTargetName = IntervenedIntent != nullptr
-		? IntervenedIntent->mEnemyName.ToString()
-		: RecommendedEnemyName;
 	switch (mEnemyIntentTutorialStage)
 	{
 	case EEnemyIntentTutorialStage::SelectPull:
-		TutorialTitle = TEXT("1 / 9   끌어당기기 선택");
-		TutorialMessage = FString::Printf(TEXT("왼쪽 '%s'"), *PullSkillName);
+		TutorialTitle = TEXT("2 / 9   적 옆의 '끌어당기기' 클릭");
+		TutorialMessage = TEXT("");
 		break;
 	case EEnemyIntentTutorialStage::SelectDice:
-		TutorialTitle = TEXT("2 / 9   주사위 선택");
+		TutorialTitle = TEXT("3 / 9   왼쪽의 빛나는 주사위 클릭");
 		TutorialMessage = PullRequiredDiceCount > 1
-			? FString::Printf(TEXT("반짝이는 주사위 %d개"), PullRequiredDiceCount)
-			: TEXT("반짝이는 숫자 하나");
+			? FString::Printf(TEXT("%d개를 고르면 대상이 자동으로 조준됩니다"), PullRequiredDiceCount)
+			: TEXT("하나를 고르면 대상이 자동으로 조준됩니다");
 		break;
 	case EEnemyIntentTutorialStage::SelectTarget:
-		TutorialTitle = TEXT("3 / 9   주황 테두리 적 클릭");
-		TutorialMessage = RecommendedEnemyName;
+		TutorialTitle = TEXT("1 / 9   주황 테두리의 적을 클릭");
+		TutorialMessage = TEXT("누르면 그 적에게 가능한 행동만 옆에 뜹니다");
 		break;
 	case EEnemyIntentTutorialStage::ConfirmDestination:
 		TutorialTitle = TEXT("4 / 9   '당기기 실행' 클릭");
@@ -527,18 +525,18 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		TutorialMessage = TEXT("");
 		break;
 	case EEnemyIntentTutorialStage::SelectThrow:
-		TutorialTitle = TEXT("5 / 9   던지기 선택");
-		TutorialMessage = FString::Printf(TEXT("왼쪽 '%s'"), *ThrowSkillName);
+		TutorialTitle = TEXT("6 / 9   적 옆의 '붙잡아 던지기' 클릭");
+		TutorialMessage = TEXT("");
 		break;
 	case EEnemyIntentTutorialStage::SelectThrowDice:
-		TutorialTitle = TEXT("6 / 9   새 주사위 선택");
+		TutorialTitle = TEXT("7 / 9   왼쪽의 새 주사위 클릭");
 		TutorialMessage = ThrowRequiredDiceCount > 1
-			? FString::Printf(TEXT("반짝이는 주사위 %d개"), ThrowRequiredDiceCount)
-			: TEXT("반짝이는 숫자 하나");
+			? FString::Printf(TEXT("%d개를 고르면 붙잡기가 시작됩니다"), ThrowRequiredDiceCount)
+			: TEXT("하나를 고르면 붙잡기가 시작됩니다");
 		break;
 	case EEnemyIntentTutorialStage::SelectThrowTarget:
-		TutorialTitle = TEXT("7 / 9   바로 옆 적 클릭");
-		TutorialMessage = ThrowTargetName;
+		TutorialTitle = TEXT("5 / 9   방금 당겨온 적을 다시 클릭");
+		TutorialMessage = TEXT("인접한 적에게는 '붙잡아 던지기'가 나타납니다");
 		break;
 	case EEnemyIntentTutorialStage::SelectThrowDestination:
 		TutorialTitle = TEXT("8 / 9   큰 주황 화살표 클릭");
@@ -656,15 +654,12 @@ UWidget* UCombatTileMapHUDWidget::ResolveEnemyIntentTutorialFocusWidget() const
 	{
 		const bool bFindThrow = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectThrow;
 		const TArray<FSkillUI>& Skills = mCombatUIModel->GetSkillUIs();
-		for (int32 RailSlotIndex = 0; RailSlotIndex < mSkillInputButtons.Num(); ++RailSlotIndex)
+		for (int32 SkillIndex = 0; SkillIndex < Skills.Num(); ++SkillIndex)
 		{
-			const int32 SkillDataIndex = GetSkillDataIndexForRailSlot(RailSlotIndex);
-			if (Skills.IsValidIndex(SkillDataIndex)
-				&& Skills[SkillDataIndex].mIsDisplacementSkill
-				&& (bFindThrow ? Skills[SkillDataIndex].mIsThrowSkill : Skills[SkillDataIndex].mIsPullSkill)
-				&& mSkillInputButtons[RailSlotIndex] != nullptr)
+			if (Skills[SkillIndex].mIsDisplacementSkill
+				&& (bFindThrow ? Skills[SkillIndex].mIsThrowSkill : Skills[SkillIndex].mIsPullSkill))
 			{
-				return mSkillInputButtons[RailSlotIndex].Get();
+				return FindContextActionButtonForSkill(SkillIndex);
 			}
 		}
 		return nullptr;
@@ -717,11 +712,19 @@ UWidget* UCombatTileMapHUDWidget::ResolveEnemyIntentTutorialFocusWidget() const
 	case EEnemyIntentTutorialStage::ConfirmDestination:
 	case EEnemyIntentTutorialStage::ConfirmThrow:
 		return mDisplacementExecuteButton.Get();
+	case EEnemyIntentTutorialStage::SelectThrowDestination:
+		for (UTextBlock* DirectionLabel : mDisplacementDirectionLabels)
+		{
+			if (DirectionLabel != nullptr && DirectionLabel->IsVisible())
+			{
+				return DirectionLabel;
+			}
+		}
+		return nullptr;
 
 	case EEnemyIntentTutorialStage::WaitingForIntent:
 	case EEnemyIntentTutorialStage::ApplyingIntervention:
 	case EEnemyIntentTutorialStage::ApplyingThrow:
-	case EEnemyIntentTutorialStage::SelectThrowDestination:
 	case EEnemyIntentTutorialStage::ReviewResult:
 	case EEnemyIntentTutorialStage::Complete:
 	default:
@@ -758,12 +761,17 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentTutorialProgress() const
 	int32 ActiveStep = INDEX_NONE;
 	switch (mEnemyIntentTutorialStage)
 	{
-	case EEnemyIntentTutorialStage::SelectPull:            ActiveStep = 0; break;
-	case EEnemyIntentTutorialStage::SelectDice:            CompletedCount = 1; ActiveStep = 1; break;
-	case EEnemyIntentTutorialStage::SelectTarget:          CompletedCount = 2; ActiveStep = 2; break;
-	case EEnemyIntentTutorialStage::SelectThrowDestination: CompletedCount = 3; ActiveStep = 3; break;
-	case EEnemyIntentTutorialStage::ConfirmDestination:    CompletedCount = 4; ActiveStep = 4; break;
-	case EEnemyIntentTutorialStage::ApplyingIntervention:
+	case EEnemyIntentTutorialStage::SelectTarget:          ActiveStep = 0; break;
+	case EEnemyIntentTutorialStage::SelectPull:            CompletedCount = 1; ActiveStep = 1; break;
+	case EEnemyIntentTutorialStage::SelectDice:            CompletedCount = 2; ActiveStep = 2; break;
+	case EEnemyIntentTutorialStage::ConfirmDestination:    CompletedCount = 3; ActiveStep = 3; break;
+	case EEnemyIntentTutorialStage::SelectThrowTarget:
+	case EEnemyIntentTutorialStage::SelectThrow:
+	case EEnemyIntentTutorialStage::SelectThrowDice:
+	case EEnemyIntentTutorialStage::SelectThrowDestination:
+	case EEnemyIntentTutorialStage::ConfirmThrow:          CompletedCount = 4; ActiveStep = 4; break;
+	case EEnemyIntentTutorialStage::ApplyingIntervention:  CompletedCount = 4; ActiveStep = 4; break;
+	case EEnemyIntentTutorialStage::ApplyingThrow:
 	case EEnemyIntentTutorialStage::ReviewResult:
 	case EEnemyIntentTutorialStage::EndTurnAndObserve:
 	case EEnemyIntentTutorialStage::Complete:              CompletedCount = 5; break;
@@ -836,14 +844,14 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime
 	int32 ActiveStep = INDEX_NONE;
 	switch (mEnemyIntentTutorialStage)
 	{
-	case EEnemyIntentTutorialStage::SelectPull:        ActiveStep = 0; break;
-	case EEnemyIntentTutorialStage::SelectDice:        ActiveStep = 1; break;
-	case EEnemyIntentTutorialStage::SelectTarget:      ActiveStep = 2; break;
-	case EEnemyIntentTutorialStage::SelectThrowDestination: ActiveStep = 3; break;
-	case EEnemyIntentTutorialStage::ConfirmDestination: ActiveStep = 4; break;
+	case EEnemyIntentTutorialStage::SelectTarget:      ActiveStep = 0; break;
+	case EEnemyIntentTutorialStage::SelectPull:        ActiveStep = 1; break;
+	case EEnemyIntentTutorialStage::SelectDice:        ActiveStep = 2; break;
+	case EEnemyIntentTutorialStage::ConfirmDestination: ActiveStep = 3; break;
 	case EEnemyIntentTutorialStage::SelectThrow:
 	case EEnemyIntentTutorialStage::SelectThrowDice:
 	case EEnemyIntentTutorialStage::SelectThrowTarget:
+	case EEnemyIntentTutorialStage::SelectThrowDestination:
 	case EEnemyIntentTutorialStage::ConfirmThrow:       ActiveStep = 4; break;
 	default:                                           break;
 	}
@@ -968,9 +976,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime
 		ArrowDirection = FVector2D(1.0f, 0.0f);
 		ArrowTip = FVector2D(MinPoint.X - 9.0f, (MinPoint.Y + MaxPoint.Y) * 0.5f);
 	}
-	else if (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectPull
-		|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectDice
-		|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectThrow
+	else if (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectDice
 		|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectThrowDice)
 	{
 		ArrowDirection = FVector2D(-1.0f, 0.0f);
@@ -1021,12 +1027,13 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime
 		FString PointerText = TEXT("클릭");
 		switch (mEnemyIntentTutorialStage)
 		{
-		case EEnemyIntentTutorialStage::SelectPull:        PointerText = TEXT("클릭"); break;
+		case EEnemyIntentTutorialStage::SelectPull:        PointerText = TEXT("끌어당기기 클릭"); break;
 		case EEnemyIntentTutorialStage::SelectDice:        PointerText = TEXT("가장 큰 숫자 클릭"); break;
-		case EEnemyIntentTutorialStage::SelectTarget:      PointerText = TEXT("한 번 클릭"); break;
+		case EEnemyIntentTutorialStage::SelectTarget:      PointerText = TEXT("이 적 클릭"); break;
 		case EEnemyIntentTutorialStage::SelectThrow:       PointerText = TEXT("던지기 클릭"); break;
 		case EEnemyIntentTutorialStage::SelectThrowDice:   PointerText = TEXT("새 숫자 클릭"); break;
-		case EEnemyIntentTutorialStage::SelectThrowTarget: PointerText = TEXT("옆 적 클릭"); break;
+		case EEnemyIntentTutorialStage::SelectThrowTarget: PointerText = TEXT("당겨온 적 클릭"); break;
+		case EEnemyIntentTutorialStage::SelectThrowDestination: PointerText = TEXT("던질 방향 클릭"); break;
 		case EEnemyIntentTutorialStage::ConfirmDestination: PointerText = TEXT("당기기 실행"); break;
 		case EEnemyIntentTutorialStage::ConfirmThrow:      PointerText = TEXT("던지기 실행"); break;
 		case EEnemyIntentTutorialStage::EndTurnAndObserve: PointerText = TEXT("턴 종료 클릭"); break;

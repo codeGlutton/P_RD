@@ -259,6 +259,24 @@ private:
 	UFUNCTION()
 	void HandleOwnedDiceCardClicked(int32 DiceIndex);
 
+	/** @brief 전장의 유닛을 먼저 고른 뒤 그 유닛에 가능한 행동만 띄우는 컨텍스트 팔레트를 준비한다. */
+	void EnsureContextActionWidgets();
+	/** @brief 화면 좌표 아래의 유닛을 찾아 컨텍스트 팔레트를 연다. 유닛을 찾았으면 true. */
+	bool TryOpenContextActionsAtScreenPosition(const FVector2D& ScreenPosition);
+	/** @brief 선택된 유닛/현재 주사위/사거리에 맞춰 컨텍스트 행동 목록과 강조를 다시 그린다. */
+	void RefreshContextActions();
+	/** @brief 유닛 이동과 카메라 이동을 따라 컨텍스트 팔레트 위치를 갱신한다. */
+	void UpdateContextActionLayout();
+	/** @brief 컨텍스트 선택을 닫고 저장된 월드 터치 좌표를 폐기한다. */
+	void CloseContextActions();
+	/** @brief 컨텍스트 행동 한 칸을 눌렀을 때 기존 스킬/이동 명령으로 연결한다. */
+	UFUNCTION()
+	void HandleContextActionClicked(int32 ActionSlotIndex);
+	/** @brief 요구 주사위가 모두 선택되면 저장한 적 위치를 기존 조준 입력으로 자동 전달한다. */
+	void TrySubmitContextTargetWhenReady();
+	/** @brief 튜토리얼이 현재 컨텍스트 행동 버튼을 직접 강조할 수 있게 스킬별 버튼을 찾는다. */
+	UWidget* FindContextActionButtonForSkill(int32 SkillIndex) const;
+
 	/** @brief 행동 큐 노드 하나가 해소될 때 호출. 전투 피드에 수치/라벨을 표시한다(머리 위 위치는 게임플레이 follow-up). */
 	UFUNCTION()
 	void HandleCombatQueueNodeResolved(FCombatQueueNode Node);
@@ -981,6 +999,27 @@ private:
 	TObjectPtr<UBorder> mDiceTrayPanel;
 	UPROPERTY(Transient)
 	TObjectPtr<UTextBlock> mDiceTrayTitleText;
+
+	/** @brief 선택한 유닛 옆에 뜨는 작은 행동 팔레트. 버튼 index는 mContextActionSkillIndices의 슬롯이다. */
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mContextActionTitleText;
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UBorder>> mContextActionPanels;
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UImage>> mContextActionIcons;
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UTextBlock>> mContextActionTexts;
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UIndexedButtonWidget>> mContextActionButtons;
+	/** @brief 팔레트 슬롯 -> 실제 FSkillUI index. -2는 MOVE 명령이다. */
+	TArray<int32> mContextActionSkillIndices;
+	/** @brief 현재 팔레트가 가리키는 유닛과 그 유닛을 실제로 눌렀던 Slate 절대좌표. */
+	int32 mContextTargetUnitId = INDEX_NONE;
+	bool mContextTargetIsPlayer = false;
+	FVector2D mContextTargetScreenPosition = FVector2D::ZeroVector;
+	/** @brief 같은 스킬/주사위 갱신 알림에서 월드 조준을 두 번 보내지 않는 latch. */
+	int32 mContextSelectedSkillIndex = INDEX_NONE;
+	bool mContextTargetSubmitted = false;
 
 	/** @brief 카드형 스킬 레일 전체를 묶는 좌측 도크 배경/제목. */
 	UPROPERTY(Transient)

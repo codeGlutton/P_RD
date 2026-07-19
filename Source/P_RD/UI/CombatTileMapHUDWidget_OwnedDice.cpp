@@ -283,6 +283,7 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 		}
 	}
 	const bool bDiceAssignmentComplete = RequiredDiceCost > 0 && SelectedDiceCount >= RequiredDiceCost;
+	const bool bAwaitingDiceSelection = RequiredDiceCost > 0 && SelectedDiceCount < RequiredDiceCost;
 
 	for (int32 DiceIndex = 0; DiceIndex < mDiceUIs.Num(); ++DiceIndex)
 	{
@@ -323,7 +324,9 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 				{
 					StateText = DiceIndex == TutorialRecommendedDiceIndex
 						? FString::Printf(TEXT("추천 · 눈 %d"), DiceView.mResultValue)
-						: FString::Printf(TEXT("눈 %d"), DiceView.mResultValue);
+						: (bAwaitingDiceSelection
+							? FString::Printf(TEXT("선택 가능 · %d"), DiceView.mResultValue)
+							: FString::Printf(TEXT("눈 %d"), DiceView.mResultValue));
 				}
 				else
 				{
@@ -444,6 +447,10 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 				else if (bDiceAssignmentComplete)
 				{
 					CardColor = FLinearColor(0.35f, 0.35f, 0.38f, 0.30f);
+				}
+				else if (bAwaitingDiceSelection && DiceView.mIsRolled)
+				{
+					CardColor = FLinearColor(0.12f, 0.72f, 0.94f, 0.22f);
 				}
 				if (DiceView.mIsUsed)
 				{

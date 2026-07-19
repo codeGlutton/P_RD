@@ -38,7 +38,9 @@ void UCombatTileMapHUDWidget::RefreshDiceAssignmentText() const
 		: mSelectedSkillIndex;
 	if (Skills == nullptr || Skills->IsValidIndex(SelectedSkillIndex) == false)
 	{
-		mDiceAssignmentText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "DiceAssignmentChooseSkill", "① 왼쪽에서 스킬을 먼저 선택하세요"));
+		mDiceAssignmentText->SetText(mContextTargetUnitId == INDEX_NONE
+			? NSLOCTEXT("CombatTileMapHUDWidget", "DiceAssignmentChooseTarget", "① 전장의 적을 누르세요")
+			: NSLOCTEXT("CombatTileMapHUDWidget", "DiceAssignmentChooseContextAction", "② 적 옆의 행동을 고르세요"));
 		mDiceAssignmentText->SetColorAndOpacity(FSlateColor(FLinearColor(0.78f, 0.90f, 0.96f, 1.0f)));
 		mDiceAssignmentText->SetVisibility(ESlateVisibility::HitTestInvisible);
 		return;
@@ -59,12 +61,12 @@ void UCombatTileMapHUDWidget::RefreshDiceAssignmentText() const
 	FString Instruction;
 	if (RequiredDiceCount <= 0)
 	{
-		Instruction = FString::Printf(TEXT("%s · 주사위 필요 없음 → 대상을 선택하세요"), *Skill.mName.ToString());
+		Instruction = FString::Printf(TEXT("%s\n경로를 확인하세요"), *Skill.mName.ToString());
 	}
 	else if (SelectedDiceCount < RequiredDiceCount)
 	{
 		Instruction = FString::Printf(
-			TEXT("② %s · 주사위 %d/%d 선택%s"),
+			TEXT("③ %s\n주사위 %d/%d%s"),
 			*Skill.mName.ToString(),
 			SelectedDiceCount,
 			RequiredDiceCount,
@@ -74,8 +76,8 @@ void UCombatTileMapHUDWidget::RefreshDiceAssignmentText() const
 	}
 	else
 	{
-		Instruction = FString::Printf(TEXT("✓ %s · 주사위 %d/%d 완료 → 전장의 대상을 선택하세요"),
-			*Skill.mName.ToString(), SelectedDiceCount, RequiredDiceCount);
+		Instruction = FString::Printf(TEXT("✓ %s\n경로를 확인하세요"),
+			*Skill.mName.ToString());
 	}
 	mDiceAssignmentText->SetText(FText::FromString(Instruction));
 	mDiceAssignmentText->SetColorAndOpacity(FSlateColor(

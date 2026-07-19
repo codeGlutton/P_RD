@@ -217,6 +217,15 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 			}
 		}
 	}
+
+	// 상시 6칸 레일은 새 컨텍스트 조작에서 사용하지 않는다. 데이터 동기화/상세 호환 객체만 남긴다.
+	if (mSkillDockPanel != nullptr) { mSkillDockPanel->SetVisibility(ESlateVisibility::Collapsed); }
+	if (mSkillDockTitleText != nullptr) { mSkillDockTitleText->SetVisibility(ESlateVisibility::Collapsed); }
+	for (UBorder* Widget : mSkillRailPanels) { if (Widget != nullptr) { Widget->SetVisibility(ESlateVisibility::Collapsed); } }
+	for (UImage* Widget : mSkillRailIcons) { if (Widget != nullptr) { Widget->SetVisibility(ESlateVisibility::Collapsed); } }
+	for (UTextBlock* Widget : mSkillRailTexts) { if (Widget != nullptr) { Widget->SetVisibility(ESlateVisibility::Collapsed); } }
+	for (UIndexedButtonWidget* Widget : mSkillInputButtons) { if (Widget != nullptr) { Widget->SetVisibility(ESlateVisibility::Collapsed); } }
+	RefreshContextActions();
 }
 
 /** @details 시각 슬롯 규칙은 헤더 주석 참고. 반환 전에 보유 여부(FSkillUI 이름)까지 검증해 미보유면 INDEX_NONE. */
@@ -290,7 +299,7 @@ void UCombatTileMapHUDWidget::EnsureSkillInputButtons()
 		}
 
 		SkillInputButton->SetBackgroundColor(GetTransparentInputButtonColor());
-		SkillInputButton->SetVisibility(ESlateVisibility::Visible);
+		SkillInputButton->SetVisibility(ESlateVisibility::Collapsed);
 		SkillInputButton->SetButtonIndex(SkillIndex);
 		SkillInputButton->OnIndexedPressed.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleSkillButtonPressed);
 		SkillInputButton->OnReleased.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleSkillButtonReleased);

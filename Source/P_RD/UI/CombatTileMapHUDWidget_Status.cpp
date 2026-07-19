@@ -44,6 +44,7 @@ void UCombatTileMapHUDWidget::HandleCombatUIChanged(ECombatUIDomain Domain)
 	if (Domain == ECombatUIDomain::Unit || Domain == ECombatUIDomain::All)
 	{
 		RebuildUnitHpBars();
+		RefreshContextActions();
 	}
 
 	// 주사위(굴림/사용) 갱신 시 보유 주사위 표시를 다시 읽어 그린다(쓴 주사위 비활성 반영).
@@ -51,6 +52,8 @@ void UCombatTileMapHUDWidget::HandleCombatUIChanged(ECombatUIDomain Domain)
 	{
 		RefreshDiceViewsFromRunData();
 		RefreshOwnedDiceCards();
+		RefreshContextActions();
+		TrySubmitContextTargetWhenReady();
 	}
 
 	// 스킬: 보유 스킬 스냅샷이 바뀌면 레일 슬롯 상태(아이콘/라벨/빈칸 커버)를 다시 그린다.
@@ -59,6 +62,12 @@ void UCombatTileMapHUDWidget::HandleCombatUIChanged(ECombatUIDomain Domain)
 		RefreshSkillRailWidgets();
 		RefreshDiceAssignmentText();
 		RefreshOwnedDiceCards();
+		TrySubmitContextTargetWhenReady();
+	}
+
+	if (Domain == ECombatUIDomain::Turn || Domain == ECombatUIDomain::All)
+	{
+		RefreshContextActions();
 	}
 
 	// 공개 계획과 실행 결과는 별도 Intent 도메인으로 부분 갱신한다.
@@ -410,6 +419,7 @@ void UCombatTileMapHUDWidget::HandleCombatActionResolved()
 	// 스킬/주사위 선택 강조를 푼다(액션 확정·취소 후).
 	mSelectedSkillIndex = INDEX_NONE;
 	ClearOwnedDiceSelectionHighlight();
+	CloseContextActions();
 	RefreshSkillRailWidgets();
 	RefreshOwnedDiceCards();
 	RefreshDiceAssignmentText();
