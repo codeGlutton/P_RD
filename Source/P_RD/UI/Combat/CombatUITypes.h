@@ -67,6 +67,8 @@ struct FEnemyIntentUI
 	UPROPERTY(BlueprintReadOnly) EEnemyIntentResultUI mResult = EEnemyIntentResultUI::Planned;
 	UPROPERTY(BlueprintReadOnly) FText mResultText;
 	UPROPERTY(BlueprintReadOnly) bool mWasDisplaced = false;
+	/** @brief 튜토리얼이 실제로 밀 수 있는 적을 이름과 ★ 표식으로 가리키기 위한 표시값. */
+	UPROPERTY(BlueprintReadOnly) bool mIsRecommendedInterventionTarget = false;
 };
 
 /** @brief 전투 조작 UI의 단계. UI 버튼/하이라이트 레이어 전환에 쓰는 UI 전용 상태다(게임플레이 enum의 1:1 거울이 아님). */

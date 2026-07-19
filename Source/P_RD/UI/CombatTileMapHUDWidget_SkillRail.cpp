@@ -106,6 +106,10 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 		const bool bOwned = Skill != nullptr && Skill->mName.IsEmpty() == false;
 		const bool bUsable = bOwned && Skill->mIsUsable;
 		const bool bSelected = bOwned && SkillDataIndex == mSelectedSkillIndex;
+		const bool bTutorialFocus = bOwned
+			&& Skill->mIsDisplacementSkill
+			&& mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectSmash
+			&& mEnemyIntentTutorialDismissed == false;
 		const float DimOpacity = bUsable ? 1.0f : 0.45f;
 
 		if (UBorder* SkillRailPanel = mSkillRailPanels[RailSlotIndex])
@@ -120,7 +124,11 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 			else
 			{
 				SkillRailPanel->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-				if (IsDesignerSkinActive())
+				if (bTutorialFocus)
+				{
+					SkillRailPanel->SetBrushColor(FLinearColor(1.0f, 0.68f, 0.08f, 0.62f));
+				}
+				else if (IsDesignerSkinActive())
 				{
 					// 스킨 모드: 비선택은 투명(프레임+아이콘만), 선택은 옅은 금색 틴트로만 강조.
 					SkillRailPanel->SetBrushColor(bSelected ? FLinearColor(1.0f, 0.95f, 0.55f, 0.30f) : FLinearColor(0.0f, 0.0f, 0.0f, 0.0f));
@@ -129,7 +137,9 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 				{
 					SkillRailPanel->SetBrushColor(GetCombatSkillRailBrushColor(bSelected));
 				}
-				SkillRailPanel->SetRenderScale(GetCombatSkillRailScale(bSelected));
+				SkillRailPanel->SetRenderScale(bTutorialFocus
+					? FVector2D(1.14f, 1.14f)
+					: GetCombatSkillRailScale(bSelected));
 			}
 		}
 

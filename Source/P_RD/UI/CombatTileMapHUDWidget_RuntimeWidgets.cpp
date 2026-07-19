@@ -391,7 +391,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		}
 	}
 
-	// 첫 전투 튜토리얼도 하단의 얕은 비모달 패널이다. 첫 '예고 확인' 버튼 외에는 입력을 가로채지 않는다.
+	// 첫 전투 튜토리얼도 하단의 얕은 비모달 패널이다. 시작/완료 버튼 외에는 입력을 가로채지 않는다.
 	if (mEnemyIntentTutorialPanel == nullptr)
 	{
 		mEnemyIntentTutorialPanel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("EnemyIntentTutorialPanel"));
@@ -413,18 +413,18 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 			mEnemyIntentTutorialPanel->AddChild(mEnemyIntentTutorialContent);
 
 			mEnemyIntentTutorialText->SetAutoWrapText(true);
-			mEnemyIntentTutorialText->SetJustification(ETextJustify::Center);
-			mEnemyIntentTutorialText->SetLineHeightPercentage(1.12f);
+			mEnemyIntentTutorialText->SetJustification(ETextJustify::Left);
+			mEnemyIntentTutorialText->SetLineHeightPercentage(1.06f);
 			mEnemyIntentTutorialText->SetColorAndOpacity(FSlateColor(FLinearColor(0.92f, 1.0f, 0.96f, 1.0f)));
 			FSlateFontInfo TutorialFont = mEnemyIntentTutorialText->GetFont();
-			TutorialFont.Size = 23;
+			TutorialFont.Size = 20;
 			mEnemyIntentTutorialText->SetFont(TutorialFont);
 			mEnemyIntentTutorialContent->AddChildToVerticalBox(mEnemyIntentTutorialText);
 
 			mEnemyIntentTutorialContinueButton->SetBackgroundColor(FLinearColor(0.14f, 0.58f, 0.55f, 0.98f));
 			mEnemyIntentTutorialContinueButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleEnemyIntentTutorialContinue);
 			mEnemyIntentTutorialContinueButton->AddChild(mEnemyIntentTutorialContinueText);
-			mEnemyIntentTutorialContinueText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "IntentTutorialContinue", "예고 확인"));
+			mEnemyIntentTutorialContinueText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "IntentTutorialStart", "튜토리얼 시작"));
 			mEnemyIntentTutorialContinueText->SetJustification(ETextJustify::Center);
 			mEnemyIntentTutorialContinueText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
 			FSlateFontInfo ContinueFont = mEnemyIntentTutorialContinueText->GetFont();

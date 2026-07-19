@@ -279,9 +279,9 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 		RDUILayout::ApplyAnchoredSlot(mCombatStatusBarText, FAnchors(0.025f, 0.050f, 0.520f, 0.110f), 30);
 	}
 
-	// 기존 전장 시야를 남기기 위해 예고는 우상단의 얕은 카드, 튜토리얼은 하단 중앙의 한 줄 카드로 제한한다.
+	// 기존 전장 시야를 남기기 위해 예고는 우상단 카드, 튜토리얼은 하단 중앙의 얕은 단계 카드로 제한한다.
 	const FAnchors IntentPanelRect(0.615f, 0.120f, 0.965f, 0.430f);
-	const FAnchors IntentTutorialRect(0.255f, 0.790f, 0.745f, 0.935f);
+	const FAnchors IntentTutorialRect(0.220f, 0.750f, 0.780f, 0.945f);
 	if (bSkin)
 	{
 		RDUILayout::ApplyDesignerSlotData(

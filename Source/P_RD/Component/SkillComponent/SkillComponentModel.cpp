@@ -25,6 +25,16 @@
 
 namespace
 {
+	const FName DicePushSkillAssetName(TEXT("DA_SwordNormalSmash_Common"));
+
+	bool IsPlayerDicePushSkill(const UStaticSkillData* SkillData, const UUnitModel* OwnerUnit)
+	{
+		return SkillData != nullptr
+			&& OwnerUnit != nullptr
+			&& OwnerUnit->IsPlayerUnitModel()
+			&& SkillData->GetFName() == DicePushSkillAssetName;
+	}
+
 	UStaticSkillData* LoadStaticSkillData(const FPrimaryAssetId& SkillId)
 	{
 		if (SkillId.IsValid() == false)
@@ -492,10 +502,16 @@ void USkillComponentModel::TriggerMotionLayer(const FApplyEventTriggerPayload* P
 			mActiveSkillContext.mTargetTileIndexes, 
 			mActiveSkillContext.mDiceSum
 		);
-		for (int32 i = 0; i < EffectLayerNum; ++i)
+		// 이 브랜치에서 플레이어 강타는 피해량 스킬이 아니라 위치를 바꾸는 순수 개입기다.
+		// 대상 수집/애니메이션은 그대로 두고 실제 효과 commit만 생략해, 대상이 먼저 죽어
+		// 후속 밀치기와 고정 계획 붕괴가 누락되는 경우를 막는다.
+		if (IsPlayerDicePushSkill(SkillData, OwnerUnitModel) == false)
 		{
-			const TInstancedStruct<FSkillEffectLayer>& EffectLayer = MotionLayer.mSkillEffectLayers[i];
-			EffectLayer.Get().CommitEffect(Params);
+			for (int32 i = 0; i < EffectLayerNum; ++i)
+			{
+				const TInstancedStruct<FSkillEffectLayer>& EffectLayer = MotionLayer.mSkillEffectLayers[i];
+				EffectLayer.Get().CommitEffect(Params);
+			}
 		}
 
 		for (int32 i = 0; i < EffectLayerNum; ++i)
@@ -688,10 +704,15 @@ TArray<FTileIndex> USkillComponentModel::GetAimableTiles(UTileMapModel* MapModel
 	UStaticSkillData* StaticSkillData = mSkillEntries[SkillIndex].mData;
 	checkf(StaticSkillData != nullptr, TEXT("잘못된 스킬 데이터"));
 
-	const float AimRange = StaticSkillData->mAimRangeDefaultValue + DiceSum * StaticSkillData->mAimRangeRatio;
-	const EAimPattern Pattern = StaticSkillData->mAimPattern;
-	const bool CanAimObstacle = StaticSkillData->mCanAimBoardActor;
-	const bool IsIndirect = StaticSkillData->mIsIndirect;
+	const bool bIsDicePush = StaticSkillData->GetFName() == DicePushSkillAssetName;
+	// 이 브랜치의 강타는 첫 전투에서 적이 세 칸 이상 떨어져 있어도 실제로 사용할 수 있는
+	// 주사위 개입기다. 주사위 합은 사거리가 아니라 밀리는 거리로 쓰고, 조준은 전장 전체로 연다.
+	const float AimRange = bIsDicePush
+		? StaticCast<float>(FMath::Max(MapModel->GetWidth(), MapModel->GetHeight()))
+		: StaticSkillData->mAimRangeDefaultValue + DiceSum * StaticSkillData->mAimRangeRatio;
+	const EAimPattern Pattern = bIsDicePush ? EAimPattern::Square : StaticSkillData->mAimPattern;
+	const bool CanAimObstacle = bIsDicePush || StaticSkillData->mCanAimBoardActor;
+	const bool IsIndirect = bIsDicePush || StaticSkillData->mIsIndirect;
 
 	return MapModel->GetAimableTiles(GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex, AimRange, Pattern, CanAimObstacle, IsIndirect);
 }

@@ -70,4 +70,8 @@ struct P_RD_API FSRPGEnemyIntent
 
 	UPROPERTY(BlueprintReadOnly)
 	bool mWasDisplaced = false;
+
+	/** @brief 첫 전투에서 밀어 고정 이동을 취소하기 가장 쉬운 적으로 선택된 의도. */
+	UPROPERTY(BlueprintReadOnly)
+	bool mIsRecommendedInterventionTarget = false;
 };

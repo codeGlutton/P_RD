@@ -894,6 +894,32 @@ void USRPGCombatModel::PrepareEnemyIntents()
 		mEnemyIntents.Add(MoveTemp(Intent));
 	}
 
+	// 첫 안내가 말뿐인 예시가 되지 않도록, 현재 플레이어 위치에서 실제로 한 칸 이상
+	// 밀 수 있고 공격 없이 이동만 예정한 적만 연습 대상으로 고른다. 모든 주사위 눈은
+	// 최소 1칸을 밀기 때문에 이 표식이 붙은 적은 어떤 굴림 조합으로도 위치 개입이 성립한다.
+	const FTileIndex PlayerTile = mPlayerUnit->GetTileTransform().mIndex;
+	auto CanBePushedFromPlayer = [this, PlayerTile](const FSRPGEnemyIntent& Intent)
+	{
+		if (Intent.mEnemy == nullptr || Intent.mEnemy->IsDead())
+		{
+			return false;
+		}
+		const FTileIndex EnemyTile = Intent.mEnemy->GetTileTransform().mIndex;
+		return mTileMap->GetPushDestination(PlayerTile, EnemyTile, 1) != EnemyTile;
+	};
+
+	FSRPGEnemyIntent* RecommendedIntent = mEnemyIntents.FindByPredicate(
+		[&CanBePushedFromPlayer](const FSRPGEnemyIntent& Intent)
+		{
+			const bool bMoveOnly = Intent.mPlannedDestination != Intent.mPlannedOrigin
+				&& Intent.mEffectTileIndexes.IsEmpty();
+			return bMoveOnly && CanBePushedFromPlayer(Intent);
+		});
+	if (RecommendedIntent != nullptr)
+	{
+		RecommendedIntent->mIsRecommendedInterventionTarget = true;
+	}
+
 	BroadcastEnemyIntentChanged();
 	RefreshEnemyIntentHighlights();
 }
@@ -1168,19 +1194,24 @@ void USRPGCombatModel::RefreshEnemyIntentHighlights()
 		{
 			TargetTiles.AddUnique(Intent.mTargetTile);
 		}
+		if (Intent.mIsRecommendedInterventionTarget && Intent.mEnemy != nullptr)
+		{
+			TargetTiles.AddUnique(Intent.mEnemy->GetTileTransform().mIndex);
+		}
 	}
 
 	if (PathTiles.IsEmpty() == false)
 	{
 		mTileMap->SetTileHighlight(PathTiles, ETileHighlightFlag::Aim);
 	}
-	if (EffectTiles.IsEmpty() == false)
-	{
-		mTileMap->SetTileHighlight(EffectTiles, ETileHighlightFlag::Effect);
-	}
 	if (TargetTiles.IsEmpty() == false)
 	{
 		mTileMap->SetTileHighlight(TargetTiles, ETileHighlightFlag::Select);
+	}
+	// Select를 새로 칠하면 하위 Effect 레이어가 지워지는 타일맵 규칙이므로 Effect를 마지막에 복원한다.
+	if (EffectTiles.IsEmpty() == false)
+	{
+		mTileMap->SetTileHighlight(EffectTiles, ETileHighlightFlag::Effect);
 	}
 }
 

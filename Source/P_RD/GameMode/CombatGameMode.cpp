@@ -50,6 +50,7 @@ DEFINE_LOG_CATEGORY(LogCombatGameMode);
 namespace
 {
 	const FName SmashSkillAssetName(TEXT("DA_SwordNormalSmash_Common"));
+	constexpr float InterventionSmashAimRange = 8.0f;
 
 	EEnemyIntentResultUI GetEnemyIntentResultUI(ESRPGEnemyIntentResult Result)
 	{
@@ -878,18 +879,23 @@ void ACombatGameMode::PushSkillUIData() const
 		UStaticSkillData* StaticSkillData = (SkillEntry.IsValid() == true) ? SkillEntry.mData.Get() : nullptr;
 		if (StaticSkillData != nullptr)
 		{
+			const bool bIsSmash = StaticSkillData->GetFName() == SmashSkillAssetName;
 			SkillUIData.mName = StaticSkillData->mName;
 			SkillUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 			SkillUIData.mDiceCost = StaticSkillData->mRequiredDiceCount;
 			SkillUIData.mIsUsable = true;
-			SkillUIData.mIsDisplacementSkill = StaticSkillData->GetFName() == SmashSkillAssetName;
-			SkillUIData.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
-			SkillUIData.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRangeDefaultValue);
-			SkillUIData.mTargeting.mSelectRangeRatio = StaticSkillData->mAimRangeRatio;
+			SkillUIData.mIsDisplacementSkill = bIsSmash;
+			SkillUIData.mTargeting.mSelectShape = bIsSmash
+				? ECombatSkillSelectShapeUI::Square
+				: GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
+			SkillUIData.mTargeting.mSelectRange = bIsSmash
+				? InterventionSmashAimRange
+				: StaticCast<float>(StaticSkillData->mAimRangeDefaultValue);
+			SkillUIData.mTargeting.mSelectRangeRatio = bIsSmash ? 0.0f : StaticSkillData->mAimRangeRatio;
 			SkillUIData.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
 			SkillUIData.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectAreaDefaultValue);
 			SkillUIData.mTargeting.mHitRangeRatio = StaticSkillData->mEffectAreaRatio;
-			SkillUIData.mTargeting.mIsIndirect = StaticSkillData->mIsIndirect;
+			SkillUIData.mTargeting.mIsIndirect = bIsSmash || StaticSkillData->mIsIndirect;
 			SkillUIData.mTargeting.mIsPenetration = StaticSkillData->mIsPenetration;
 		}
 	}
@@ -925,6 +931,7 @@ void ACombatGameMode::PushEnemyIntentUIData() const
 		IntentUI.mResult = GetEnemyIntentResultUI(Intent.mResult);
 		IntentUI.mResultText = Intent.mResultText.IsEmpty() ? GetEnemyIntentResultFallback(Intent.mResult) : Intent.mResultText;
 		IntentUI.mWasDisplaced = Intent.mWasDisplaced;
+		IntentUI.mIsRecommendedInterventionTarget = Intent.mIsRecommendedInterventionTarget;
 
 		if (IsValid(Intent.mEnemy))
 		{
@@ -1007,19 +1014,24 @@ void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 		SkillDetailUIData.mName = StaticSkillData->mName;
 		const bool bIsSmash = StaticSkillData->GetFName() == SmashSkillAssetName;
 		SkillDetailUIData.mDescription = bIsSmash
-			? FText::Format(
-				NSLOCTEXT("CombatGameMode", "SmashPushDescription", "{0}\n\n[개입] 선택한 주사위 숫자만큼 대상을 밀어, 고정된 적의 경로와 공격선을 망가뜨립니다."),
-				StaticSkillData->mDescription)
+			? NSLOCTEXT(
+				"CombatGameMode",
+				"SmashPushDescription",
+				"[주사위 개입] 이 버전의 강타는 피해 대신 적의 위치를 바꿉니다. 전장 어디서든 적을 지정하고, 선택한 주사위 합만큼 플레이어 반대 방향으로 밀어냅니다. 첫 클릭은 미리보기, 같은 칸 두 번째 클릭은 실행입니다.")
 			: StaticSkillData->mDescription;
 		SkillDetailUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 		SkillDetailUIData.mDiceCost = StaticSkillData->mRequiredDiceCount;
-		SkillDetailUIData.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
-		SkillDetailUIData.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRangeDefaultValue);
-		SkillDetailUIData.mTargeting.mSelectRangeRatio = StaticSkillData->mAimRangeRatio;
+		SkillDetailUIData.mTargeting.mSelectShape = bIsSmash
+			? ECombatSkillSelectShapeUI::Square
+			: GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
+		SkillDetailUIData.mTargeting.mSelectRange = bIsSmash
+			? InterventionSmashAimRange
+			: StaticCast<float>(StaticSkillData->mAimRangeDefaultValue);
+		SkillDetailUIData.mTargeting.mSelectRangeRatio = bIsSmash ? 0.0f : StaticSkillData->mAimRangeRatio;
 		SkillDetailUIData.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
 		SkillDetailUIData.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectAreaDefaultValue);
 		SkillDetailUIData.mTargeting.mHitRangeRatio = StaticSkillData->mEffectAreaRatio;
-		SkillDetailUIData.mTargeting.mIsIndirect = StaticSkillData->mIsIndirect;
+		SkillDetailUIData.mTargeting.mIsIndirect = bIsSmash || StaticSkillData->mIsIndirect;
 		SkillDetailUIData.mTargeting.mIsPenetration = StaticSkillData->mIsPenetration;
 	}
 

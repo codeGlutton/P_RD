@@ -45,8 +45,10 @@ enum class EEnemyIntentTutorialStage : uint8
 	ReviewIntent,
 	SelectSmash,
 	SelectDice,
-	TargetIntervention,
-	ObserveOutcome,
+	SelectTarget,
+	ConfirmTarget,
+	ApplyingIntervention,
+	EndTurnAndObserve,
 	Complete
 };
 
@@ -258,10 +260,10 @@ private:
 	/** @brief 고정된 적 행동을 실행 순서/스킬/대상/경로/결과 행으로 다시 그린다. */
 	void RefreshEnemyIntentPanel();
 
-	/** @brief 현재 선택/주사위/의도 결과에서 튜토리얼 단계를 전진시키고 작은 안내 패널을 갱신한다. */
+	/** @brief 현재 선택/주사위/미리보기/의도 결과에서 튜토리얼 단계를 양방향으로 맞추고 작은 안내 패널을 갱신한다. */
 	void UpdateEnemyIntentTutorial();
 
-	/** @brief 첫 단계의 '예고 확인' 버튼. 확인 이후 실제 스킬/주사위 입력으로 자동 진행한다. */
+	/** @brief 첫 단계 시작 또는 완료 안내 닫기 버튼. */
 	UFUNCTION()
 	void HandleEnemyIntentTutorialContinue();
 
@@ -689,7 +691,7 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UVerticalBox> mEnemyIntentList;
 
-	/** @brief 하단 중앙의 작은 단계별 안내 패널. 첫 확인 버튼만 입력을 받는다. */
+	/** @brief 하단 중앙의 작은 단계별 안내 패널. 시작/완료 버튼 외에는 전투 입력을 막지 않는다. */
 	UPROPERTY(Transient)
 	TObjectPtr<UBorder> mEnemyIntentTutorialPanel;
 	UPROPERTY(Transient)
@@ -702,6 +704,12 @@ private:
 	TObjectPtr<UTextBlock> mEnemyIntentTutorialContinueText;
 
 	EEnemyIntentTutorialStage mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::WaitingForIntent;
+	bool mEnemyIntentTutorialReviewAcknowledged = false;
+	bool mEnemyIntentTutorialDismissed = false;
+	bool mEnemyIntentTutorialInterventionSubmitted = false;
+	int32 mEnemyIntentTutorialIntervenedEnemyUnitId = INDEX_NONE;
+	FString mEnemyIntentTutorialCompletedEnemyName;
+	FString mEnemyIntentTutorialCompletedResult;
 
 	/** @brief 장비 칩(탑바 좌측 하단) 배경/문구 */
 	UPROPERTY(Transient)

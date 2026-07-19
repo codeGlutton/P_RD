@@ -15,6 +15,11 @@
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
+namespace
+{
+	const FName DicePushSkillAssetName(TEXT("DA_SwordNormalSmash_Common"));
+}
+
 FSRPGSkillSelectCommand::FSRPGSkillSelectCommand()
 {
     mCommandType = ESRPGCommandType::SkillSelect;
@@ -399,8 +404,19 @@ void USRPGSkillBuildAction::RefreshAimableTileHighlights()
     USkillComponentModel* SkillCompModel = mInstigator->GetSkillComponentModel();
     checkf(SkillCompModel != nullptr, TEXT("스킬 컴포넌트 모델 nullptr"));
 
-    mReachableTileIndexes = SkillCompModel->GetAimableTiles(TileMap, mSelectedSkillIndex, DicePoolModel->GetSelectedDiceSum());
-    TileMap->SetTileHighlight(mReachableTileIndexes, ETileHighlightFlag::Aim);
+	mReachableTileIndexes = SkillCompModel->GetAimableTiles(TileMap, mSelectedSkillIndex, DicePoolModel->GetSelectedDiceSum());
+	if (mSelectedSkill != nullptr && mSelectedSkill->GetFName() == DicePushSkillAssetName)
+	{
+		if (USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
+		{
+			// 실제 조준 가능 목록은 전장 전체로 유지하되, 회색 Aim으로 전 타일을 덮지 않는다.
+			// 공개된 적 경로/공격선과 ★ 추천 타일을 복원해 어떤 계획을 망가뜨리는지 계속 보이게 한다.
+			CombatModel->RefreshEnemyIntentHighlights();
+			return;
+		}
+	}
+
+	TileMap->SetTileHighlight(mReachableTileIndexes, ETileHighlightFlag::Aim);
 }
 
 void USRPGSkillBuildAction::RefreshEffectTileHighlights()
