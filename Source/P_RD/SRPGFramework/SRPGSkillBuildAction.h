@@ -82,6 +82,8 @@ private:
 	void SetSkill(int32 SkillIndex);
 	void ChangeDices(int32 RequestedDiceIndex);
 	void SetTargetTile(const FTileIndex& TargetIndex);
+	void LockPullTarget(const FTileIndex& TargetIndex);
+	void SetPullDestinationTile(const FTileIndex& DestinationIndex);
 	void BuildSkill();
 
 private:
@@ -92,10 +94,12 @@ private:
 private:
 	void ClearAllTileHighlights();
 	void RefreshAimableTileHighlights();
+	void RefreshPullDestinationHighlights();
 	void RefreshEffectTileHighlights();
 
 private:
 	bool CanSelectTargetTile(const FTileIndex& Index) const;
+	bool CanSelectPullDestinationTile(const FTileIndex& Index) const;
 
 private:
 	void SetBuildPhase(ESRPGSkillBuildPhase BuildPhase);
@@ -127,5 +131,10 @@ protected:
 	TArray<FTileIndex> mEffectTileIndexes;
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TargetIndex"))
 	FTileIndex mTargetIndex = FTileIndex::Invalid;
+	/** @brief 끌어오기 이후 사용자가 고른 착지/충돌 칸. 발앞 칸이면 던지지 않는다. */
+	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DisplacementDestination"))
+	FTileIndex mDisplacementDestination = FTileIndex::Invalid;
+	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PullDestinationIndexes"))
+	TArray<FTileIndex> mPullDestinationIndexes;
 };
 

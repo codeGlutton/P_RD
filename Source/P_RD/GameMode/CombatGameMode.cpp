@@ -712,6 +712,9 @@ void ACombatGameMode::PushSkillBuildUIData(ESRPGSkillBuildPhase Phase) const
 	case ESRPGSkillBuildPhase::AimSelection:
 		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::AimSelection);
 		break;
+	case ESRPGSkillBuildPhase::ThrowDestinationSelection:
+		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::ThrowDestinationSelection);
+		break;
 	case ESRPGSkillBuildPhase::Preview:
 		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::Preview);
 		break;
@@ -884,7 +887,7 @@ void ACombatGameMode::PushSkillUIData() const
 			const bool bIsPull = StaticSkillData->GetFName() == PullSkillAssetName;
 			const bool bIsDisplacement = bIsSmash || bIsPull;
 			SkillUIData.mName = bIsPull
-				? NSLOCTEXT("CombatGameMode", "PullSkillName", "끌어 던지기")
+				? NSLOCTEXT("CombatGameMode", "PullSkillName", "끌어당기기 / 던지기")
 				: StaticSkillData->mName;
 			SkillUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 			SkillUIData.mDiceCost = StaticSkillData->mRequiredDiceCount;
@@ -1050,7 +1053,7 @@ void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 		const bool bIsPull = StaticSkillData->GetFName() == PullSkillAssetName;
 		const bool bIsDisplacement = bIsSmash || bIsPull;
 		SkillDetailUIData.mName = bIsPull
-			? NSLOCTEXT("CombatGameMode", "PullSkillName", "끌어 던지기")
+			? NSLOCTEXT("CombatGameMode", "PullSkillName", "끌어당기기 / 던지기")
 			: StaticSkillData->mName;
 		SkillDetailUIData.mDescription = bIsSmash
 			? NSLOCTEXT(
@@ -1061,7 +1064,7 @@ void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 				? NSLOCTEXT(
 					"CombatGameMode",
 					"PullSkillDescription",
-					"[붙잡아 던지기] 적을 발앞까지 묵직하게 끌어온 뒤 플레이어 뒤로 자동 투척합니다. 주사위 눈이 던지기 거리이며, 경량은 멀리·중형은 1칸 덜·중량은 2칸 덜 날아갑니다. 적이나 장애물에 부딪히면 양쪽에 충돌 피해를 줍니다. 첫 클릭은 전체 궤적, 같은 적 두 번째 클릭은 실행입니다.")
+					"[방향 선택] 먼저 적을 고른 뒤 밝은 착지 칸을 고릅니다. 발앞 칸은 당기기만, 다른 칸은 선택한 방향으로 던집니다. 선택한 칸을 다시 누르면 실행하며 적이나 장애물에 부딪히면 충돌 피해를 줍니다.")
 				: StaticSkillData->mDescription);
 		SkillDetailUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 		SkillDetailUIData.mDiceCost = StaticSkillData->mRequiredDiceCount;

@@ -365,7 +365,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		}
 	}
 	if (mEnemyIntentTutorialInterventionSubmitted == false
-		&& PreviousStage == EEnemyIntentTutorialStage::ConfirmTarget
+		&& PreviousStage == EEnemyIntentTutorialStage::ConfirmDestination
 		&& BuildPhase == ECombatBuildPhaseUI::None
 		&& bPullSelected
 		&& bCommittedSelectedDice)
@@ -425,7 +425,11 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 	}
 	else if (BuildPhase == ECombatBuildPhaseUI::Preview)
 	{
-		mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::ConfirmTarget;
+		mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::ConfirmDestination;
+	}
+	else if (BuildPhase == ECombatBuildPhaseUI::ThrowDestinationSelection)
+	{
+		mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::SelectThrowDestination;
 	}
 	else
 	{
@@ -437,7 +441,8 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 	case EEnemyIntentTutorialStage::SelectPull:
 	case EEnemyIntentTutorialStage::SelectDice:
 	case EEnemyIntentTutorialStage::SelectTarget:
-	case EEnemyIntentTutorialStage::ConfirmTarget:
+	case EEnemyIntentTutorialStage::SelectThrowDestination:
+	case EEnemyIntentTutorialStage::ConfirmDestination:
 	case EEnemyIntentTutorialStage::ApplyingIntervention:
 	case EEnemyIntentTutorialStage::ReviewResult:
 	case EEnemyIntentTutorialStage::EndTurnAndObserve:
@@ -460,29 +465,33 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		: TEXT("★ 표시 적");
 	const FString PullSkillName = PullSkill != nullptr && PullSkill->mName.IsEmpty() == false
 		? PullSkill->mName.ToString()
-		: TEXT("끌어 던지기");
+		: TEXT("끌어당기기 / 던지기");
 	switch (mEnemyIntentTutorialStage)
 	{
 	case EEnemyIntentTutorialStage::SelectPull:
-		TutorialTitle = TEXT("1 / 4   왼쪽 스킬 클릭");
+		TutorialTitle = TEXT("1 / 5   왼쪽 스킬 클릭");
 		TutorialMessage = FString::Printf(TEXT("파란 '%s' 아이콘"), *PullSkillName);
 		break;
 	case EEnemyIntentTutorialStage::SelectDice:
-		TutorialTitle = TEXT("2 / 4   아래 주사위 클릭");
+		TutorialTitle = TEXT("2 / 5   아래 주사위 클릭");
 		TutorialMessage = RequiredDiceCount > 1
 			? FString::Printf(TEXT("반짝이는 주사위 %d개"), RequiredDiceCount)
 			: TEXT("반짝이는 가장 큰 숫자");
 		break;
 	case EEnemyIntentTutorialStage::SelectTarget:
-		TutorialTitle = TEXT("3 / 4   ★ 적을 한 번 클릭");
+		TutorialTitle = TEXT("3 / 5   ★ 적을 한 번 클릭");
 		TutorialMessage = RecommendedEnemyName;
 		break;
-	case EEnemyIntentTutorialStage::ConfirmTarget:
-		TutorialTitle = TEXT("4 / 4   같은 적을 다시 클릭");
-		TutorialMessage = TEXT("두 번째 클릭 = 실행");
+	case EEnemyIntentTutorialStage::SelectThrowDestination:
+		TutorialTitle = TEXT("4 / 5   밝은 착지 칸 클릭");
+		TutorialMessage = TEXT("발앞 칸 = 당기기만     다른 칸 = 그 방향으로 던지기");
+		break;
+	case EEnemyIntentTutorialStage::ConfirmDestination:
+		TutorialTitle = TEXT("5 / 5   선택한 착지 칸 다시 클릭");
+		TutorialMessage = TEXT("표시된 궤적대로 실행");
 		break;
 	case EEnemyIntentTutorialStage::ApplyingIntervention:
-		TutorialTitle = TEXT("좋아요!   당겨서 던지는 중");
+		TutorialTitle = TEXT("좋아요!   선택한 위치로 옮기는 중");
 		TutorialMessage = TEXT("");
 		break;
 	case EEnemyIntentTutorialStage::ReviewResult:
@@ -506,7 +515,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		mEnemyIntentTutorialText->SetColorAndOpacity(FSlateColor(
 			mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::Complete
 				? FLinearColor(0.55f, 1.0f, 0.72f, 1.0f)
-				: (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmTarget
+				: (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmDestination
 					? FLinearColor(1.0f, 0.88f, 0.35f, 1.0f)
 					: FLinearColor(0.94f, 0.98f, 1.0f, 1.0f))));
 		mEnemyIntentTutorialText->SetVisibility(TutorialMessage.IsEmpty()
@@ -531,7 +540,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		(mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ReviewResult
 			|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::Complete)
 			? FLinearColor(0.025f, 0.18f, 0.11f, 0.92f)
-			: (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmTarget
+			: (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmDestination
 				? FLinearColor(0.18f, 0.12f, 0.025f, 0.92f)
 				: FLinearColor(0.018f, 0.035f, 0.040f, 0.90f)));
 	SetEndTurnTutorialHighlight(mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::EndTurnAndObserve);
@@ -611,7 +620,6 @@ UWidget* UCombatTileMapHUDWidget::ResolveEnemyIntentTutorialFocusWidget() const
 	}
 
 	case EEnemyIntentTutorialStage::SelectTarget:
-	case EEnemyIntentTutorialStage::ConfirmTarget:
 	{
 		const TArray<FEnemyIntentUI>& Intents = mCombatUIModel->GetEnemyIntentUIs();
 		const FEnemyIntentUI* TargetIntent = FindRecommendedIntent(Intents);
@@ -642,6 +650,8 @@ UWidget* UCombatTileMapHUDWidget::ResolveEnemyIntentTutorialFocusWidget() const
 
 	case EEnemyIntentTutorialStage::WaitingForIntent:
 	case EEnemyIntentTutorialStage::ApplyingIntervention:
+	case EEnemyIntentTutorialStage::SelectThrowDestination:
+	case EEnemyIntentTutorialStage::ConfirmDestination:
 	case EEnemyIntentTutorialStage::ReviewResult:
 	case EEnemyIntentTutorialStage::Complete:
 	default:
@@ -681,11 +691,12 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentTutorialProgress() const
 	case EEnemyIntentTutorialStage::SelectPull:            ActiveStep = 0; break;
 	case EEnemyIntentTutorialStage::SelectDice:            CompletedCount = 1; ActiveStep = 1; break;
 	case EEnemyIntentTutorialStage::SelectTarget:          CompletedCount = 2; ActiveStep = 2; break;
-	case EEnemyIntentTutorialStage::ConfirmTarget:         CompletedCount = 3; ActiveStep = 3; break;
+	case EEnemyIntentTutorialStage::SelectThrowDestination: CompletedCount = 3; ActiveStep = 3; break;
+	case EEnemyIntentTutorialStage::ConfirmDestination:    CompletedCount = 4; ActiveStep = 4; break;
 	case EEnemyIntentTutorialStage::ApplyingIntervention:
 	case EEnemyIntentTutorialStage::ReviewResult:
 	case EEnemyIntentTutorialStage::EndTurnAndObserve:
-	case EEnemyIntentTutorialStage::Complete:              CompletedCount = 4; break;
+	case EEnemyIntentTutorialStage::Complete:              CompletedCount = 5; break;
 	case EEnemyIntentTutorialStage::WaitingForIntent:
 	default:                                               break;
 	}
@@ -747,7 +758,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime
 		HandleEnemyIntentTutorialContinue();
 		return;
 	}
-	const float PulseSpeed = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmTarget ? 10.0f : 5.5f;
+	const float PulseSpeed = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmDestination ? 10.0f : 5.5f;
 	const float Pulse01 = 0.5f + 0.5f * FMath::Sin(mEnemyIntentTutorialPulseTime * PulseSpeed);
 
 	int32 ActiveStep = INDEX_NONE;
@@ -756,7 +767,8 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime
 	case EEnemyIntentTutorialStage::SelectPull:        ActiveStep = 0; break;
 	case EEnemyIntentTutorialStage::SelectDice:        ActiveStep = 1; break;
 	case EEnemyIntentTutorialStage::SelectTarget:      ActiveStep = 2; break;
-	case EEnemyIntentTutorialStage::ConfirmTarget:     ActiveStep = 3; break;
+	case EEnemyIntentTutorialStage::SelectThrowDestination: ActiveStep = 3; break;
+	case EEnemyIntentTutorialStage::ConfirmDestination: ActiveStep = 4; break;
 	default:                                           break;
 	}
 	if (mEnemyIntentTutorialProgressDots.IsValidIndex(ActiveStep)
@@ -790,9 +802,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime
 	constexpr float FocusPadding = 8.0f;
 	FVector2D MinPoint;
 	FVector2D MaxPoint;
-	const bool bFocusEnemyModel = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectTarget
-		|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmTarget
-		|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::Complete;
+	const bool bFocusEnemyModel = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectTarget;
 	if (bFocusEnemyModel)
 	{
 		// HP바 슬롯은 실제 유닛 투영점보다 60px 위에 놓인다(UnitBars.cpp). HP바만 감싸면
@@ -849,11 +859,11 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime
 
 	const FLinearColor FocusColor = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::Complete
 		? FLinearColor(0.20f, 0.96f, 0.58f, 1.0f)
-		: (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmTarget
+		: (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmDestination
 			? FLinearColor(1.0f, 0.82f, 0.22f, 1.0f)
 			: FLinearColor(1.0f, 0.66f, 0.06f, 1.0f));
 	const float OverlayOpacity = 0.62f + 0.38f * Pulse01;
-	const float EdgeThickness = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmTarget ? 7.0f : 5.0f;
+	const float EdgeThickness = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmDestination ? 7.0f : 5.0f;
 	auto PlaceEdge = [&](int32 EdgeIndex, const FVector2D& Position, const FVector2D& Size)
 	{
 		UBorder* Edge = mEnemyIntentTutorialFocusEdges[EdgeIndex].Get();
@@ -898,7 +908,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime
 	const float ArrowAngle = FMath::RadiansToDegrees(FMath::Atan2(ArrowDirection.Y, ArrowDirection.X));
 	constexpr float ShaftLength = 28.0f;
 	constexpr float HeadLength = 15.0f;
-	const float LineThickness = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmTarget ? 6.5f : 5.0f;
+	const float LineThickness = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmDestination ? 6.5f : 5.0f;
 	auto PlaceArrowLine = [&](int32 PartIndex, const FVector2D& Center, float Length, float Angle)
 	{
 		UBorder* Part = mEnemyIntentTutorialArrowParts[PartIndex].Get();
@@ -935,7 +945,6 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime
 		case EEnemyIntentTutorialStage::SelectPull:        PointerText = TEXT("클릭"); break;
 		case EEnemyIntentTutorialStage::SelectDice:        PointerText = TEXT("가장 큰 숫자 클릭"); break;
 		case EEnemyIntentTutorialStage::SelectTarget:      PointerText = TEXT("한 번 클릭"); break;
-		case EEnemyIntentTutorialStage::ConfirmTarget:     PointerText = TEXT("한 번 더 클릭!"); break;
 		case EEnemyIntentTutorialStage::EndTurnAndObserve: PointerText = TEXT("턴 종료 클릭"); break;
 		default: break;
 		}

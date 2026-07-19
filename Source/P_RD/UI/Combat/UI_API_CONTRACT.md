@@ -24,7 +24,7 @@
 | Dice(선택) | `SetSelectedDice(TArray<int32>, int32 Sum)` | — | 스킬 빌드에 올린 주사위 인덱스들 + 합계 |
 | Skill | `SetSkillUIs(TArray<FSkillUI>)` | `FSkillUI` | `mSkillIndex, mName, mIcon, mDiceCost, mIsUsable, mTargeting`(사거리/형태 조준 가이드 = StaticSkillData Select*/Hit* 미러) |
 | Skill(상세) | `SetSkillDetail(FSkillDetailUI)` | `FSkillDetailUI` | 롱프레스 시 `mDescription, mTargeting`(풀스펙 사거리/타격범위/곡사·관통) 등 |
-| Turn | `SetTurnUI(FTurnUI)` | `FTurnUI` | `mCurrentUnitId, mRound, mPhase`(=`ECombatBuildPhaseUI`, **UI 전용**: AimSelection/Preview만 develop `ESRPGSkillBuildPhase`와 매핑, SkillSelected/DiceSelect는 어댑터 파생), `mTurnOrderUnitIds` |
+| Turn | `SetTurnUI(FTurnUI)` | `FTurnUI` | `mCurrentUnitId, mRound, mPhase`(=`ECombatBuildPhaseUI`, **UI 전용**: AimSelection/ThrowDestinationSelection/Preview는 `ESRPGSkillBuildPhase`와 매핑, SkillSelected/DiceSelect는 어댑터 파생), `mTurnOrderUnitIds` |
 | Equipment | `SetEquipmentUIs(TArray<FEquipmentUI>)` | `FEquipmentUI` | `mSlotIndex, mItemId, mName, mIcon, mIsEquipped, mRarityColor` |
 | Meta | `SetPlayerMeta(FPlayerMetaUI)` | `FPlayerMetaUI` | `mGold, mLevel, mExp/mMaxExp` (상단 상태바·보상) |
 
@@ -71,7 +71,7 @@
 
 - **유닛/메타/턴 값**(A) ← `UUnitData`(GAS 폐기 후 일반 런타임 데이터)·`URunPersistData`. 현재 HP/Gold는 플레이스홀더.
 - **다이스**(A.Dice / B.Roll·Toggle) ← `UDiceData`(굴림/보유/사용/index 소유) = 회의의 **DiceComponent**. 굴림값은 `SRPGSkillBuildAction`(develop, 스킬에 주사위 적용)로 전달.
-- **스킬 빌드 페이즈**(A.Turn.mPhase, `ECombatBuildPhaseUI`=UI 전용) ← AimSelection/Preview만 develop `ESRPGSkillBuildPhase`와 매핑, SkillSelected/DiceSelect는 어댑터가 `SRPGSkillBuildAction` 상태(mSelectedSkillIndex/mSelectedDices)에서 파생. `ACombatGameMode::SelectSkill`/`OnChangeSkillBuildPhase`와 연동.
+- **스킬 빌드 페이즈**(A.Turn.mPhase, `ECombatBuildPhaseUI`=UI 전용) ← AimSelection/ThrowDestinationSelection/Preview는 `ESRPGSkillBuildPhase`와 매핑, SkillSelected/DiceSelect는 어댑터가 `SRPGSkillBuildAction` 상태(mSelectedSkillIndex/mSelectedDices)에서 파생. `ACombatGameMode::SelectSkill`/`OnChangeSkillBuildPhase`와 연동.
 - **데미지/큐**(A.Queue) ← `UCombatCalculatorFunctionLibrary::CalculateSkillResult`의 결과 델타(`FSkillCommitResult`)를 `FCombatQueueNode`로 변환해 `SetActionQueue` → 애니 단위마다 `ResolveFrontQueueNode`.
 - **턴 이벤트** ← develop `USRPGCombatSubsystem` Begin/EndTurn 이벤트에 "쓴 주사위 리셋"·턴 표시 갱신 훅.
 
@@ -81,6 +81,6 @@
 - 큐 노드 묶음 단위(한 노드+태그 vs 효과별 분리) — 회의 미확정.
 - 적 정보 표시 = 작은 팝업 ❌ → **크게 뜨는 정보 패널**(회의 합의) 로 `FUnitDetailUI` 소비.
 - 주사위 최대 개수 제한 여부(보유 다이스 레이아웃에 영향).
-- `mPhase`의 AimSelection/Preview ↔ develop `ESRPGSkillBuildPhase` 매핑값 확정(SkillSelected/DiceSelect는 UI 파생이라 매핑 대상 아님).
+- `mPhase`의 AimSelection/ThrowDestinationSelection/Preview ↔ `ESRPGSkillBuildPhase` 매핑값 확정(SkillSelected/DiceSelect는 UI 파생이라 매핑 대상 아님).
 - 스킬 `mTargeting`(SelectShape/HitShape) ↔ develop 최종 SelectType/HitType enum 매핑 확정.
 - **예측 1급화(후속 PR)**: `FCombatQueueNode`의 예측 vs 실제 구분 플래그, AoE 다중대상 동시표시, 주사위 토글 시 예측 재계산 루프 — 김준형 예측 API(Mock-up 후) 일정에 맞춰 별도 처리.

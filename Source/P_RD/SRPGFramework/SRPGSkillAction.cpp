@@ -130,6 +130,7 @@ void USRPGSkillAction::OnEndAction()
     mDiceDisplacementBlocker = nullptr;
     mDiceDisplacementStepIndex = 0;
     mDiceDisplacementDiceValue = 0;
+	mDiceDisplacementDestination = FTileIndex::Invalid;
     mDiceDisplacementIsPull = false;
 	mDiceDisplacementIsThrow = false;
     mDiceDisplacementWasReported = false;
@@ -169,6 +170,7 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
         }
 
         mIsFixedIntentCast = SkillCastCommand.mUseFixedIntent;
+		mDiceDisplacementDestination = SkillCastCommand.mDisplacementDestination;
 
         FOnEndSkillUI Callback;
         Callback.AddWeakLambda(this, [this](const FActiveSkillContext& Context, const UStaticSkillData* SkillData) {
@@ -525,7 +527,8 @@ bool USRPGSkillAction::TryStartDiceFollowUpThrow()
 	if (mDiceDisplacementIsPull == false
 		|| mDiceDisplacementIsThrow
 		|| mDiceDisplacementTarget == nullptr
-		|| mInstigator.IsValid() == false)
+		|| mInstigator.IsValid() == false
+		|| mDiceDisplacementDestination == FTileIndex::Invalid)
 	{
 		return false;
 	}
@@ -538,34 +541,51 @@ bool USRPGSkillAction::TryStartDiceFollowUpThrow()
 
 	const FTileIndex PlayerTile = mInstigator->GetTileTransform().mIndex;
 	const FTileIndex TargetTile = mDiceDisplacementTarget->GetTileTransform().mIndex;
-	const int32 DeltaX = PlayerTile.mX - TargetTile.mX;
-	const int32 DeltaY = PlayerTile.mY - TargetTile.mY;
-	if (FMath::Max(FMath::Abs(DeltaX), FMath::Abs(DeltaY)) != 1)
+	const int32 PullDeltaX = PlayerTile.mX - TargetTile.mX;
+	const int32 PullDeltaY = PlayerTile.mY - TargetTile.mY;
+	if (FMath::Max(FMath::Abs(PullDeltaX), FMath::Abs(PullDeltaY)) != 1
+		|| mDiceDisplacementDestination == TargetTile)
+	{
+		// 발앞 칸을 고르면 여기서 끝난다. 이것이 순수한 "끌어당기기" 선택이다.
+		return false;
+	}
+
+	const int32 DestinationDeltaX = mDiceDisplacementDestination.mX - PlayerTile.mX;
+	const int32 DestinationDeltaY = mDiceDisplacementDestination.mY - PlayerTile.mY;
+	const FTileIndex ThrowStep(FMath::Sign(DestinationDeltaX), FMath::Sign(DestinationDeltaY));
+	const int32 SelectedDistance = FMath::Max(
+		FMath::Abs(DestinationDeltaX),
+		FMath::Abs(DestinationDeltaY));
+	if ((ThrowStep.mX == 0 && ThrowStep.mY == 0) || SelectedDistance <= 0)
 	{
 		return false;
 	}
 
-	const FTileIndex ThrowStep(FMath::Sign(DeltaX), FMath::Sign(DeltaY));
 	int32 WeightValue = StaticCast<int32>(ESRPGDisplacementWeight::Medium);
 	if (const UEnemyUnitModel* EnemyTarget = Cast<UEnemyUnitModel>(mDiceDisplacementTarget))
 	{
 		WeightValue = StaticCast<int32>(EnemyTarget->GetDisplacementWeight());
 	}
-	const int32 ThrowDistance = FMath::Clamp(
+	const int32 MaxThrowDistance = FMath::Clamp(
 		FMath::Max(mDiceDisplacementDiceValue, 1) + 1 - WeightValue,
 		1,
 		4);
+	const int32 ThrowDistance = FMath::Min(SelectedDistance, MaxThrowDistance);
 
 	mDiceDisplacementPath.Reset();
 	mDiceDisplacementPath.Add(TargetTile);
 	mDiceDisplacementBlocker = nullptr;
 	for (int32 Distance = 1; Distance <= ThrowDistance; ++Distance)
 	{
-		// 플레이어 타일을 건너뛴 반대편부터 착지 후보를 검사한다. 논리 점유는 플레이어 칸을
-		// 사용하지 않고, 뷰의 높은 포물선이 몸 위로 넘어가는 던지기를 표현한다.
+		// 자동 반대편이 아니라 플레이어가 고른 8방향으로만 진행한다. 대상이 당겨져 서 있는
+		// 발앞 칸과 겹치는 첫 후보는 건너뛰고, 이후 빈 칸 또는 첫 충돌 칸까지 검사한다.
 		const FTileIndex Candidate(
 			PlayerTile.mX + ThrowStep.mX * Distance,
 			PlayerTile.mY + ThrowStep.mY * Distance);
+		if (Candidate == TargetTile)
+		{
+			continue;
+		}
 		if (TileMap->IsValidIndex(Candidate) == false
 			|| TileMap->CanPlace(Candidate, mDiceDisplacementTarget) == false)
 		{

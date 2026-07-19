@@ -185,7 +185,7 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 				FString Role = TEXT("공격");
 				if (Skill->mIsDisplacementSkill)
 				{
-					Role = Skill->mIsPullSkill ? TEXT("당김→투척 / 충돌") : TEXT("밀기 / 위치 개입");
+					Role = Skill->mIsPullSkill ? TEXT("적 선택 → 착지 방향 선택") : TEXT("밀기 / 위치 개입");
 				}
 				else if (SkillDataIndex == 1)
 				{

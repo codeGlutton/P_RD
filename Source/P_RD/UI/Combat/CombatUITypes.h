@@ -82,11 +82,10 @@ struct FEnemyIntentUI
 
 /** @brief 전투 조작 UI의 단계. UI 버튼/하이라이트 레이어 전환에 쓰는 UI 전용 상태다(게임플레이 enum의 1:1 거울이 아님). */
 // UI 필요값: 스킬 선택/주사위 선택/조준/미리보기 중 어느 조작 레이어를 열지 결정한다.
-// 구성: 게임플레이 develop의 ESRPGSkillBuildPhase는 None/AimSelection/Preview 3개뿐이다.
-//   - AimSelection/Preview = 그 enum과 직접 대응.
+// 구성: AimSelection/ThrowDestinationSelection/Preview는 게임플레이 빌드 페이즈와 직접 대응한다.
 //   - SkillSelected/DiceSelect = 게임플레이엔 페이즈로 없고 SRPGSkillBuildAction 상태(mSelectedSkillIndex 채워짐 / mSelectedDices 진행 중)에서
 //     어댑터가 파생해 채우는 UI 하위상태다. 따라서 이 enum을 "develop enum의 거울"로 취급하지 말 것.
-// [합의필요] AimSelection/Preview를 ESRPGSkillBuildPhase와 매핑하는 값만 게임플레이와 맞춘다(나머지 2개는 UI 파생).
+// AimSelection/ThrowDestinationSelection/Preview는 ESRPGSkillBuildPhase와 매핑하고 나머지 2개는 UI에서 파생한다.
 UENUM(BlueprintType)
 enum class ECombatBuildPhaseUI : uint8
 {
@@ -94,7 +93,8 @@ enum class ECombatBuildPhaseUI : uint8
 	SkillSelected,   // [UI 파생] 스킬을 골랐음(mSelectedSkillIndex != NONE)
 	DiceSelect,      // [UI 파생] 주사위를 올리는 중(스킬 빌드 진행)
 	AimSelection,    // [거울] ESRPGSkillBuildPhase::AimSelection
-	Preview          // [거울] ESRPGSkillBuildPhase::Preview
+	Preview,         // [거울] ESRPGSkillBuildPhase::Preview
+	ThrowDestinationSelection // [거울] 당길 적을 고른 뒤 착지 방향 선택
 };
 
 /**
@@ -472,7 +472,7 @@ struct FPlayerMetaUI
 // - mRound: 라운드 카운터.
 // - mPhase: 스킬 선택/주사위 선택/조준/미리보기 등 UI 레이어 전환(ECombatBuildPhaseUI — UI 전용 상태).
 // - mTurnOrderUnitIds: 턴 순서 바/다음 행동자 표시.
-// [합의필요] mPhase의 AimSelection/Preview만 develop ESRPGSkillBuildPhase와 매핑(SkillSelected/DiceSelect는 어댑터 파생).
+// mPhase의 AimSelection/ThrowDestinationSelection/Preview는 ESRPGSkillBuildPhase와 매핑한다.
 USTRUCT(BlueprintType)
 struct FTurnUI
 {

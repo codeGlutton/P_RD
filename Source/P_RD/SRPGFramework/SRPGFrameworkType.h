@@ -251,6 +251,7 @@ enum class ESRPGSkillBuildPhase : uint8
     AimSelection        UMETA(ToolTip = "대상 영역 선택"),
     Preview             UMETA(ToolTip = "프리뷰 표기"),
     Build               UMETA(ToolTip = "빌드 성공"),
+    ThrowDestinationSelection UMETA(ToolTip = "당긴 뒤 착지 위치 선택"),
 };
 
 /**

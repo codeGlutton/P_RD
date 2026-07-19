@@ -31,6 +31,9 @@ public:
 	int32 mSkillIndex = 0;
 	UPROPERTY()
 	FTileIndex mTargetIndex = FTileIndex::Invalid;
+	/** @brief 위치 개입 스킬의 플레이어 선택 착지 칸. Invalid면 후속 이동 없음. */
+	UPROPERTY()
+	FTileIndex mDisplacementDestination = FTileIndex::Invalid;
 	UPROPERTY()
 	int32 mDiceSum = 0;
 
@@ -91,6 +94,7 @@ private:
 
 	int32 mDiceDisplacementStepIndex = 0;
 	int32 mDiceDisplacementDiceValue = 0;
+	FTileIndex mDiceDisplacementDestination = FTileIndex::Invalid;
 	bool mDiceDisplacementIsPull = false;
 	bool mDiceDisplacementIsThrow = false;
 	bool mDiceDisplacementWasReported = false;

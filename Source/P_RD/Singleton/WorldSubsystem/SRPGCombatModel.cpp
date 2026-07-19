@@ -1012,7 +1012,7 @@ void USRPGCombatModel::PrepareEnemyIntents()
 		mEnemyIntents.Add(MoveTemp(Intent));
 	}
 
-	// 첫 안내는 당기기→후속 던지기까지 반드시 이어져야 한다. 플레이어 발앞까지 경로가
+	// 첫 안내에서는 발앞에 놓기와 방향 투척을 모두 고를 수 있어야 한다. 플레이어 발앞까지
 	// 실제로 열린 적만 연습 대상으로 고르고, 가능하면 이동 중인 적을 우선한다.
 	const FTileIndex PlayerTile = mPlayerUnit->GetTileTransform().mIndex;
 	auto CanBePulledToPlayer = [this, PlayerTile](const FSRPGEnemyIntent& Intent)

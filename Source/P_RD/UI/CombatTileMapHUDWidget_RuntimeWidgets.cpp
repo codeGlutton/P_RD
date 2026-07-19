@@ -480,7 +480,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 			mEnemyIntentTutorialPanel->SetVerticalAlignment(VAlign_Center);
 			mEnemyIntentTutorialPanel->AddChild(mEnemyIntentTutorialContent);
 
-			mEnemyIntentTutorialTitle->SetText(FText::FromString(TEXT("1 / 4   왼쪽 스킬 클릭")));
+			mEnemyIntentTutorialTitle->SetText(FText::FromString(TEXT("1 / 5   왼쪽 스킬 클릭")));
 			mEnemyIntentTutorialTitle->SetJustification(ETextJustify::Center);
 			mEnemyIntentTutorialTitle->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.82f, 0.28f, 1.0f)));
 			FSlateFontInfo TitleFont = mEnemyIntentTutorialTitle->GetFont();
@@ -495,7 +495,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 
 			mEnemyIntentTutorialFlowCards.Reset();
 			mEnemyIntentTutorialFlowTexts.Reset();
-			const TCHAR* FlowLabels[] = { TEXT("① 적 계획"), TEXT("② 끌어 던지기"), TEXT("③ 새 계획 · 이동력↓") };
+			const TCHAR* FlowLabels[] = { TEXT("① 적 계획"), TEXT("② 방향 선택"), TEXT("③ 새 계획 · 이동력↓") };
 			for (int32 FlowIndex = 0; FlowIndex < UE_ARRAY_COUNT(FlowLabels); ++FlowIndex)
 			{
 				UBorder* FlowCard = WidgetTree->ConstructWidget<UBorder>(
@@ -560,7 +560,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 			}
 
 			mEnemyIntentTutorialProgressDots.Reset();
-			for (int32 StepIndex = 0; StepIndex < 6; ++StepIndex)
+			for (int32 StepIndex = 0; StepIndex < 5; ++StepIndex)
 			{
 				UBorder* Dot = WidgetTree->ConstructWidget<UBorder>(
 					UBorder::StaticClass(),
