@@ -33,8 +33,6 @@ DEFINE_LOG_CATEGORY(LogSRPGCombat)
 
 namespace
 {
-	constexpr int32 MaxEnemyIntentReactionsPerRound = 1;
-
 	FText GetEnemyIntentGoalText(EMoveTendency Tendency)
 	{
 		switch (Tendency)
@@ -688,8 +686,8 @@ void USRPGCombatModel::NotifyRoundStartIfNeeded(TSharedPtr<FPresentationBarrier>
 			Obstacle->OnBeginRound();
 		}
 
-		// 플레이어가 주사위를 고르기 전에 목표와 현재 경로를 공개한다. 강제 이동을 받은 적은
-		// 같은 목표/스킬을 유지한 채 라운드당 한 번만 경로를 갱신할 수 있다.
+		// 플레이어가 주사위를 고르기 전에 목표와 현재 경로를 공개한다. 이후 실제 이동/스킬이
+		// 끝날 때마다 같은 전술 정체성을 유지한 채 현재 전장 기준 경로와 공격 타일을 갱신한다.
 		PrepareEnemyIntents();
 
 		OnBeginAnyRoundUI.Broadcast(RoundPresentationBarrier, mRoundCount);
@@ -810,6 +808,53 @@ int32 USRPGCombatModel::GetRoundCount() const
 const TArray<FSRPGEnemyIntent>& USRPGCombatModel::GetEnemyIntents() const
 {
 	return mEnemyIntents;
+}
+
+void USRPGCombatModel::ReplanEnemyIntentsAfterPlayerAction(
+	const USRPGAction* Action,
+	ESRPGActionResult ActionResult)
+{
+	if (Action == nullptr
+		|| ActionResult != ESRPGActionResult::Succeeded
+		|| Action->GetInstigator() != mPlayerUnit
+		|| (Cast<USRPGMoveAction>(Action) == nullptr && Cast<USRPGSkillAction>(Action) == nullptr)
+		|| mCombatPhase != ESRPGCombatRoomPhase::CombatPlay
+		|| mPlayerUnit == nullptr
+		|| mPlayerUnit->IsDead())
+	{
+		return;
+	}
+
+	bool bChanged = false;
+	for (FSRPGEnemyIntent& Intent : mEnemyIntents)
+	{
+		if (Intent.mEnemy == nullptr
+			|| Intent.mEnemy->IsDead()
+			|| Intent.mResult != ESRPGEnemyIntentResult::Planned)
+		{
+			continue;
+		}
+
+		// 적의 성향과 공개했던 스킬은 유지한다. 플레이어 행동마다 스킬까지 무작위로 바뀌면
+		// 영리해지는 대신 규칙이 자의적으로 보이므로, 경로/대상/효과 타일만 최신화한다.
+		if (RebuildEnemyIntentPlan(Intent, /*bPreserveSkill*/true))
+		{
+			++Intent.mPlanRevision;
+			Intent.mResultText = FText::Format(
+				NSLOCTEXT(
+					"EnemyIntent",
+					"PlayerActionReplanned",
+					"플레이어 행동 반영 #{0} · 현재 위치에서 이동/공격 계획 재계산"),
+				FText::AsNumber(Intent.mPlanRevision));
+			bChanged = true;
+		}
+	}
+
+	if (bChanged)
+	{
+		BroadcastEnemyIntentChanged();
+		RefreshEnemyIntentHighlights();
+	}
 }
 
 bool USRPGCombatModel::RebuildEnemyIntentPlan(FSRPGEnemyIntent& Intent, bool bPreserveSkill)
@@ -939,7 +984,7 @@ void USRPGCombatModel::PrepareEnemyIntents()
 		Intent.mResultText = NSLOCTEXT(
 			"EnemyIntent",
 			"PlanTelegraphed",
-			"목표와 현재 경로 공개 · 강제 이동을 받으면 같은 목표로 한 번 대응");
+			"초기 계획 공개 · 플레이어 행동 뒤 현재 위치에서 즉시 재계산");
 		RebuildEnemyIntentPlan(Intent, /*bPreserveSkill*/false);
 		mEnemyIntents.Add(MoveTemp(Intent));
 	}
@@ -1092,7 +1137,7 @@ void USRPGCombatModel::ReportPlayerDisplacement(
 	}
 
 	const bool bWasPulled = DisplacementType == ESRPGPlayerDisplacementType::Pull;
-	bool bChanged = false;
+	bool bFoundIntent = false;
 	for (FSRPGEnemyIntent& Intent : mEnemyIntents)
 	{
 		if (Intent.mEnemy != Target
@@ -1103,86 +1148,25 @@ void USRPGCombatModel::ReportPlayerDisplacement(
 
 		Intent.mWasDisplaced = true;
 		Intent.mDisplacedToTile = To;
-
-		const bool bCanReact = Intent.mReactionCount < MaxEnemyIntentReactionsPerRound;
-		if (bCanReact)
-		{
-			++Intent.mReactionCount;
-			RebuildEnemyIntentPlan(Intent, /*bPreserveSkill*/true);
-		}
-		else
-		{
-			// 한 차례 대응을 마친 적은 더 이상 완벽히 재계산하지 않는다. 마지막으로 공개한
-			// 방향열만 새 출발점으로 옮겨 플레이어의 두 번째 개입이 확실한 보상이 되게 한다.
-			const FTileIndex Delta(To.mX - From.mX, To.mY - From.mY);
-			if (TObjectPtr<USRPGTurnContext>* TurnContext = mTurnContextMap.Find(Intent.mTurnId);
-				TurnContext != nullptr && IsValid(TurnContext->Get()))
-			{
-				TurnContext->Get()->TranslateFixedEnemyMovementPlan(Delta);
-			}
-			auto TranslateTile = [&Delta](FTileIndex& TileIndex)
-			{
-				if (TileIndex != FTileIndex::Invalid)
-				{
-					TileIndex = FTileIndex(TileIndex.mX + Delta.mX, TileIndex.mY + Delta.mY);
-				}
-			};
-			TranslateTile(Intent.mPlannedOrigin);
-			TranslateTile(Intent.mPlannedDestination);
-			for (FTileIndex& TileIndex : Intent.mPathTileIndexes)
-			{
-				TranslateTile(TileIndex);
-			}
-		}
-
-		const FText Message = FText::Format(
-			bCanReact
-				? NSLOCTEXT("EnemyIntent", "PlayerDisplacedEnemyReacted", "{0}: 주사위 {1} · ({2},{3}) → ({4},{5}) · 목표 유지, 새 경로 계산 (대응 소진)")
-				: NSLOCTEXT("EnemyIntent", "PlayerDisplacedEnemyCommitted", "{0}: 주사위 {1} · ({2},{3}) → ({4},{5}) · 대응 소진, 마지막 계획 유지"),
+		Intent.mResultText = FText::Format(
+			NSLOCTEXT(
+				"EnemyIntent",
+				"PlayerDisplacedEnemyPendingReplan",
+				"{0}: 주사위 {1} · ({2},{3}) → ({4},{5}) · 새 위치 반영 중"),
 			bWasPulled ? NSLOCTEXT("EnemyIntent", "PulledLabel", "끌어오기") : NSLOCTEXT("EnemyIntent", "PushedLabel", "밀기"),
 			FText::AsNumber(DiceValue),
 			FText::AsNumber(From.mX),
 			FText::AsNumber(From.mY),
 			FText::AsNumber(To.mX),
 			FText::AsNumber(To.mY));
-		Intent.mResultText = FText::Format(NSLOCTEXT("EnemyIntent", "ResultJoin", "{0}\n{1}"), Intent.mResultText, Message);
-		bChanged = true;
+		bFoundIntent = true;
 	}
 
-	// 강제로 옮긴 적이 다른 적의 공개 경로를 실제로 막았다면 그 적도 자신의 1회 대응을 사용해
-	// 우회한다. 관계없는 적까지 매번 전부 재계산하지 않아 조작의 결과와 예측 가능성을 보존한다.
-	for (FSRPGEnemyIntent& Intent : mEnemyIntents)
+	if (bFoundIntent && mTileMap != nullptr)
 	{
-		if (Intent.mEnemy == Target
-			|| Intent.mEnemy == nullptr
-			|| Intent.mEnemy->IsDead()
-			|| Intent.mReactionCount >= MaxEnemyIntentReactionsPerRound
-			|| (Intent.mResult != ESRPGEnemyIntentResult::Planned && Intent.mResult != ESRPGEnemyIntentResult::Executing))
-		{
-			continue;
-		}
-		const bool bRouteBlocked = Intent.mPathTileIndexes.Num() > 1
-			&& Intent.mPathTileIndexes.Contains(To)
-			&& Intent.mEnemy->GetTileTransform().mIndex != To;
-		if (bRouteBlocked == false)
-		{
-			continue;
-		}
-
-		++Intent.mReactionCount;
-		if (RebuildEnemyIntentPlan(Intent, /*bPreserveSkill*/true))
-		{
-			Intent.mResultText = FText::Format(
-				NSLOCTEXT("EnemyIntent", "ResultJoin", "{0}\n{1}"),
-				Intent.mResultText,
-				NSLOCTEXT("EnemyIntent", "BlockedRouteReacted", "다른 적이 진로를 막음 · 목표 유지, 우회 경로 계산 (대응 소진)"));
-			bChanged = true;
-		}
-	}
-	if (bChanged)
-	{
-		BroadcastEnemyIntentChanged();
-		RefreshEnemyIntentHighlights();
+		// 물리 이동이 끝난 프레임에 이전 출발점의 화살표를 즉시 지운다. 액션 종료 직후
+		// ReplanEnemyIntentsAfterPlayerAction이 모든 적의 새 경로를 한 번에 다시 그린다.
+		mTileMap->ClearEnemyIntentOverlays();
 	}
 }
 

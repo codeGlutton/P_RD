@@ -106,8 +106,6 @@ public:
 	/** @brief HUD에 마지막으로 공개한 적 명령으로 교체한다. 적 턴은 이 배열을 실행한다. */
 	void SetFixedEnemyPlan(TArray<TInstancedStruct<FSRPGCommand>>&& Commands);
 	const TArray<TInstancedStruct<FSRPGCommand>>& GetFixedEnemyPlan() const;
-	/** @brief 1회 대응을 소진한 적이 다시 옮겨졌을 때 마지막 이동 방향열을 새 출발점으로 평행이동한다. */
-	void TranslateFixedEnemyMovementPlan(const FTileIndex& Delta);
 
 	int32 GetTurnId() const;
 

@@ -88,6 +88,9 @@ void USRPGAction::EndAction()
 	USRPGCombatModel* CombatModel = TurnContext->GetParent();
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 	CombatModel->EvaluateCombatStates();
+	// 월드 상태와 사망 판정이 확정된 직후, 종료 연출을 기다리기 전에 최신 적 계획을 공개한다.
+	// CombatModel이 플레이어의 실제 이동/스킬만 골라 처리하므로 주사위 굴림·턴 종료는 제외된다.
+	CombatModel->ReplanEnemyIntentsAfterPlayerAction(this, mActionResult);
 
 	// 종료 연출 시작
 	TSharedPtr<FPresentationBarrier> PresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {

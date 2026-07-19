@@ -391,31 +391,6 @@ const TArray<TInstancedStruct<FSRPGCommand>>& USRPGTurnContext::GetFixedEnemyPla
 	return mFixedEnemyPlan;
 }
 
-void USRPGTurnContext::TranslateFixedEnemyMovementPlan(const FTileIndex& Delta)
-{
-	if (Delta.mX == 0 && Delta.mY == 0)
-	{
-		return;
-	}
-
-	for (TInstancedStruct<FSRPGCommand>& Command : mFixedEnemyPlan)
-	{
-		if (Command.Get().GetCommandType() != ESRPGCommandType::MoveCast)
-		{
-			continue;
-		}
-
-		FSRPGMoveCommand& MoveCommand = Command.GetMutable<FSRPGMoveCommand>();
-		for (FTileIndex& TileIndex : MoveCommand.mPathTileIndexes)
-		{
-			if (TileIndex != FTileIndex::Invalid)
-			{
-				TileIndex = FTileIndex(TileIndex.mX + Delta.mX, TileIndex.mY + Delta.mY);
-			}
-		}
-	}
-}
-
 int32 USRPGTurnContext::GetTurnId() const
 {
 	return mTurnId;

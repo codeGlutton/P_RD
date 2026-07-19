@@ -137,9 +137,10 @@ FText UCombatTileMapHUDWidget::GetEnemyIntentWorldLabel(const FEnemyIntentUI& In
 	if (Intent.mWasDisplaced)
 	{
 		return FText::FromString(FString::Printf(
-			TEXT("%s[%d] 대응 소진 → %s"),
+			TEXT("%s[%d] 대응 #%d → %s"),
 			RecommendedPrefix,
 			DisplayOrder,
+			Intent.mPlanRevision,
 			*DisplacedAction));
 	}
 
@@ -191,7 +192,7 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
 	};
 
 	if (UTextBlock* Header = MakeText(
-		TEXT("적 전술 예고  ·  목표 유지 / 강제 이동 뒤 1회 대응"),
+		TEXT("적 대응 예고  ·  플레이어 행동 뒤 즉시 재계산"),
 		IntentCurrentColor,
 		16))
 	{
@@ -228,7 +229,7 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
 		FString Status = GetIntentStateLabel(Intent.mResult).ToString();
 		if (Intent.mWasDisplaced && bActive)
 		{
-			Status = Intent.mCanReact ? TEXT("새 경로 계산") : TEXT("경로 갱신 · 대응 소진");
+			Status = FString::Printf(TEXT("재배치 반영 #%d · 최신 계획"), Intent.mPlanRevision);
 		}
 		else if (Intent.mResult == EEnemyIntentResultUI::Executing)
 		{
@@ -236,7 +237,9 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
 		}
 		else if (Intent.mResult == EEnemyIntentResultUI::Planned)
 		{
-			Status = Intent.mCanReact ? TEXT("대응 가능") : TEXT("대응 소진");
+			Status = Intent.mPlanRevision > 0
+				? FString::Printf(TEXT("행동 반영 #%d · 최신 계획"), Intent.mPlanRevision)
+				: TEXT("초기 계획");
 		}
 
 		UBorder* RowBorder = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
@@ -451,7 +454,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 	switch (mEnemyIntentTutorialStage)
 	{
 	case EEnemyIntentTutorialStage::ReviewIntent:
-		TutorialMessage = TEXT("[1/6] 적의 목표와 현재 경로를 확인하세요\n밀면 목표는 유지하지만 경로를 한 번만 다시 계산합니다.");
+		TutorialMessage = TEXT("[1/6] 적의 현재 목표와 경로를 확인하세요\n내가 행동할 때마다 적들이 새 위치에서 다시 계획합니다.");
 		break;
 	case EEnemyIntentTutorialStage::SelectSmash:
 		TutorialMessage = FString::Printf(
@@ -472,14 +475,14 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		TutorialMessage = TEXT("[5/6] 실행을 확정하세요\n밀릴 위치를 확인하고 같은 적을 한 번 더 누르세요.");
 		break;
 	case EEnemyIntentTutorialStage::ApplyingIntervention:
-		TutorialMessage = TEXT("개입 실행 중\n타격과 동시에 밀어내고, 기존 화살표를 지운 뒤 대응 경로를 그립니다.");
+		TutorialMessage = TEXT("개입 실행 중\n타격과 동시에 밀어내고, 이전 화살표를 지운 뒤 모든 적의 대응을 다시 그립니다.");
 		break;
 	case EEnemyIntentTutorialStage::EndTurnAndObserve:
-		TutorialMessage = TEXT("[6/6] 대응 후 경로와 '대응 소진'을 확인하세요\n이제 한 번 더 옮기면 적은 완벽히 대응하지 못합니다. 턴 종료를 누르세요.");
+		TutorialMessage = TEXT("[6/6] 바뀐 화살표와 공격 타일을 확인하세요\n다음 행동에도 적은 다시 대응합니다. 준비되면 턴 종료를 누르세요.");
 		break;
 	case EEnemyIntentTutorialStage::Complete:
 		TutorialMessage = FString::Printf(
-			TEXT("완료 · %s를 이동시키고 대응을 소진시켰습니다\n%s"),
+			TEXT("완료 · %s를 이동시켜 적의 대응 계획을 바꿨습니다\n%s"),
 			*mEnemyIntentTutorialCompletedEnemyName,
 			*mEnemyIntentTutorialCompletedResult);
 		break;

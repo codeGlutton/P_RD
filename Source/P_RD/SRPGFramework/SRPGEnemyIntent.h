@@ -1,6 +1,6 @@
 /*****************************************************************//**
  * @file   SRPGEnemyIntent.h
- * @brief  플레이어 턴 전에 공개되고 제한적으로 대응하는 적 행동 의도 스냅샷
+ * @brief  플레이어 턴 전에 공개되고 플레이어 행동 뒤 갱신되는 적 행동 의도 스냅샷
  *********************************************************************/
 
 #pragma once
@@ -91,15 +91,15 @@ struct P_RD_API FSRPGEnemyIntent
 	UPROPERTY(BlueprintReadOnly)
 	bool mWasDisplaced = false;
 
-	/** @brief 강제 이동 뒤 새 경로를 계산한 횟수. 한 라운드에 한 번만 허용한다. */
+	/** @brief 플레이어의 실제 이동/스킬이 끝난 뒤 이 계획을 다시 계산한 횟수. */
 	UPROPERTY(BlueprintReadOnly)
-	int32 mReactionCount = 0;
+	int32 mPlanRevision = 0;
 
 	/** @brief 플레이어 개입으로 마지막으로 밀려난 타일. 유닛이 제거된 뒤에도 조정 위치를 표시한다. */
 	UPROPERTY(BlueprintReadOnly)
 	FTileIndex mDisplacedToTile = FTileIndex::Invalid;
 
-	/** @brief 첫 전투에서 밀어 AI의 1회 대응을 체험하기 쉬운 적으로 선택된 의도. */
+	/** @brief 첫 전투에서 밀어 AI의 즉시 재계산을 체험하기 쉬운 적으로 선택된 의도. */
 	UPROPERTY(BlueprintReadOnly)
 	bool mIsRecommendedInterventionTarget = false;
 };

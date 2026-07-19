@@ -132,7 +132,7 @@ public:
 	void SetDiceState(const TArray<FDiceSlotUI>& Dice, const TArray<int32>& SelectedIndices, int32 SelectedSum);
 	/** @brief 스킬 레일(이름/아이콘/주사위코스트/사용가능). [합의필요] 소스=USkillComponent(김준형), 현재 Mock. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetSkillUIs(const TArray<FSkillUI>& Skills);
-	/** @brief 라운드 시작에 고정된 적별 행동/대상/경로와 실행 결과 스냅샷을 교체한다. */
+	/** @brief 라운드 시작 및 플레이어 행동 뒤 갱신된 적별 행동/대상/경로 스냅샷을 교체한다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetEnemyIntentUIs(const TArray<FEnemyIntentUI>& Intents);
 
 	/** @brief 선택한 스킬 index. [소스] SRPGSkillBuildAction.mSelectedSkill. */
@@ -204,7 +204,7 @@ private:
 	UPROPERTY(Transient) int32 mSelectedDiceSum = 0;
 	/** @brief 스킬 레일 표시 스냅샷. SkillIndex payload와 같은 index 계약을 가진다. */
 	UPROPERTY(Transient) TArray<FSkillUI> mSkillUIs;
-	/** @brief 현재 라운드에 고정된 적 행동 예고와 누적 결과. */
+	/** @brief 현재 전장 상태로 가장 최근 갱신된 적 행동 예고와 결과. */
 	UPROPERTY(Transient) TArray<FEnemyIntentUI> mEnemyIntentUIs;
 	/** @brief 현재 선택한 스킬 index. index는 mSkillUIs 배열 기준이다. */
 	UPROPERTY(Transient) int32 mSelectedSkillIndex = INDEX_NONE;

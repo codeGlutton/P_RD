@@ -949,7 +949,7 @@ void ACombatGameMode::PushEnemyIntentUIData() const
 		IntentUI.mResult = GetEnemyIntentResultUI(Intent.mResult);
 		IntentUI.mResultText = Intent.mResultText.IsEmpty() ? GetEnemyIntentResultFallback(Intent.mResult) : Intent.mResultText;
 		IntentUI.mWasDisplaced = Intent.mWasDisplaced;
-		IntentUI.mCanReact = Intent.mReactionCount < 1;
+		IntentUI.mPlanRevision = Intent.mPlanRevision;
 		IntentUI.mIsRecommendedInterventionTarget = Intent.mIsRecommendedInterventionTarget;
 
 		if (IsValid(Intent.mEnemy))

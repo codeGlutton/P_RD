@@ -31,7 +31,7 @@ enum class ECombatUIDomain : uint8
 	Intent     // 적 행동 예고/실행 결과
 };
 
-/** @brief 고정된 적 행동 예고의 실행 상태. 게임플레이 enum을 HUD에 직접 노출하지 않는 UI 거울이다. */
+/** @brief 현재 공개된 적 행동 예고의 실행 상태. 게임플레이 enum을 HUD에 직접 노출하지 않는 UI 거울이다. */
 UENUM(BlueprintType)
 enum class EEnemyIntentResultUI : uint8
 {
@@ -70,8 +70,8 @@ struct FEnemyIntentUI
 	UPROPERTY(BlueprintReadOnly) EEnemyIntentResultUI mResult = EEnemyIntentResultUI::Planned;
 	UPROPERTY(BlueprintReadOnly) FText mResultText;
 	UPROPERTY(BlueprintReadOnly) bool mWasDisplaced = false;
-	/** @brief false면 이번 라운드의 1회 경로 대응을 이미 사용했다. */
-	UPROPERTY(BlueprintReadOnly) bool mCanReact = true;
+	/** @brief 플레이어 행동 뒤 최신 계획으로 교체된 횟수. 0은 라운드 시작 계획이다. */
+	UPROPERTY(BlueprintReadOnly) int32 mPlanRevision = 0;
 	/** @brief 튜토리얼이 실제로 밀 수 있는 적을 이름과 ★ 표식으로 가리키기 위한 표시값. */
 	UPROPERTY(BlueprintReadOnly) bool mIsRecommendedInterventionTarget = false;
 };

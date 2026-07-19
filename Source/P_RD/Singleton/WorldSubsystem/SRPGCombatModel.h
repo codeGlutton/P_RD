@@ -191,6 +191,8 @@ public:
 	/* 공개 적 의도 */
 public:
 	const TArray<FSRPGEnemyIntent>& GetEnemyIntents() const;
+	/** @brief 플레이어의 실제 이동/스킬 종료 뒤 모든 생존 적의 최신 경로와 공격을 다시 공개한다. */
+	void ReplanEnemyIntentsAfterPlayerAction(const USRPGAction* Action, ESRPGActionResult ActionResult);
 	void MarkEnemyIntentExecuting(UUnitModel* Enemy, int32 TurnId = INDEX_NONE);
 	void ReportPlayerDisplacement(
 		UUnitModel* Target,
@@ -332,7 +334,7 @@ protected:
 	UPROPERTY(Category = Round, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "RoundCount"))
 	int32 mRoundCount = 0;
 
-	/** @brief 현재 라운드 시작에 공개되고, 강제 이동 시 적마다 한 번만 대응 재계산하는 행동 예고. */
+	/** @brief 라운드 시작에 공개되고 플레이어의 실제 행동이 끝날 때마다 갱신되는 행동 예고. */
 	UPROPERTY(Category = Intent, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "EnemyIntents"))
 	TArray<FSRPGEnemyIntent> mEnemyIntents;
 

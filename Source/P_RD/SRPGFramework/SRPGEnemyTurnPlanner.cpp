@@ -83,8 +83,8 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		return Commands;
 	}
 
-	// 최초 계획은 랜덤으로 스킬을 고른다. 강제 이동 뒤 대응 계획은 공개했던 목적을 유지하기 위해
-	// SkillIndexOverride로 같은 스킬을 다시 사용한다.
+	// 최초 계획은 랜덤으로 스킬을 고른다. 플레이어 행동 뒤 갱신되는 계획은 공개했던 전술 정체성을
+	// 유지하기 위해 SkillIndexOverride로 같은 스킬을 다시 사용한다.
 	// @note 시뮬/라이브 동일 결과 보장을 위해 반드시 룸의 이벤트 스트림에서 뽑아야 함
 	const int32 SkillIndex = EquippedIndexes.Contains(SkillIndexOverride)
 		? SkillIndexOverride

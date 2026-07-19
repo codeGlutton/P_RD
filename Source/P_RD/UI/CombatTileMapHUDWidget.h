@@ -39,7 +39,7 @@ class UViewport;
 class UWidget;
 class UUserWidget;
 
-/** @brief 첫 전투에서 고정 예고를 읽고 주사위 밀치기로 개입하는 순서를 안내하는 HUD 로컬 단계. */
+/** @brief 첫 전투에서 적 대응 예고를 읽고 주사위 밀치기로 계획을 바꾸는 순서를 안내하는 HUD 로컬 단계. */
 enum class EEnemyIntentTutorialStage : uint8
 {
 	WaitingForIntent,
@@ -261,7 +261,7 @@ private:
 	UFUNCTION()
 	void HandleCombatUIChanged(ECombatUIDomain Domain);
 
-	/** @brief 고정된 적 행동을 실행 순서/스킬/대상/경로/결과 행으로 다시 그린다. */
+	/** @brief 최신 적 행동을 실행 순서/스킬/대상/경로/결과 행으로 다시 그린다. */
 	void RefreshEnemyIntentPanel();
 
 	/** @brief 적 intent 실행순서를 전장 경로와 HUD 배지에서 같이 쓸 색으로 변환한다. */
