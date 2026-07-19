@@ -27,7 +27,46 @@ enum class ECombatUIDomain : uint8
 	Turn,
 	Queue,
 	Equipment,
-	Meta       // 돈/경험치 등 플레이어 메타
+	Meta,      // 돈/경험치 등 플레이어 메타
+	Intent     // 적 행동 예고/실행 결과
+};
+
+/** @brief 고정된 적 행동 예고의 실행 상태. 게임플레이 enum을 HUD에 직접 노출하지 않는 UI 거울이다. */
+UENUM(BlueprintType)
+enum class EEnemyIntentResultUI : uint8
+{
+	Planned,
+	Executing,
+	Completed,
+	Missed,
+	Collision,
+	FriendlyFire,
+	HitPlayer,
+	HitObstacle,
+	Cancelled
+};
+
+/**
+ * @brief HUD의 적 행동 예고 패널 한 행에 필요한 고정 계획 스냅샷.
+ * @details 명령 객체나 유닛 포인터를 UI에 넘기지 않고, 이름/타일/결과만 복사한다.
+ */
+USTRUCT(BlueprintType)
+struct FEnemyIntentUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) int32 mExecutionOrder = INDEX_NONE;
+	UPROPERTY(BlueprintReadOnly) int32 mEnemyUnitId = INDEX_NONE;
+	UPROPERTY(BlueprintReadOnly) FText mEnemyName;
+	UPROPERTY(BlueprintReadOnly) FText mActionName;
+	UPROPERTY(BlueprintReadOnly) FTileIndex mPlannedOrigin = FTileIndex::Invalid;
+	UPROPERTY(BlueprintReadOnly) FTileIndex mPlannedDestination = FTileIndex::Invalid;
+	UPROPERTY(BlueprintReadOnly) FTileIndex mTargetTile = FTileIndex::Invalid;
+	UPROPERTY(BlueprintReadOnly) TArray<FTileIndex> mPathTileIndexes;
+	UPROPERTY(BlueprintReadOnly) TArray<FTileIndex> mEffectTileIndexes;
+	UPROPERTY(BlueprintReadOnly) EEnemyIntentResultUI mResult = EEnemyIntentResultUI::Planned;
+	UPROPERTY(BlueprintReadOnly) FText mResultText;
+	UPROPERTY(BlueprintReadOnly) bool mWasDisplaced = false;
 };
 
 /** @brief 전투 조작 UI의 단계. UI 버튼/하이라이트 레이어 전환에 쓰는 UI 전용 상태다(게임플레이 enum의 1:1 거울이 아님). */
@@ -306,6 +345,8 @@ struct FSkillUI
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
 	UPROPERTY(BlueprintReadOnly) int32 mDiceCost = 0;
 	UPROPERTY(BlueprintReadOnly) bool mIsUsable = false;
+	/** @brief 숫자만 키우는 공격이 아니라 대상 위치를 바꾸는 개입 스킬인지 표시한다. */
+	UPROPERTY(BlueprintReadOnly) bool mIsDisplacementSkill = false;
 	UPROPERTY(BlueprintReadOnly) FSkillTargetingUI mTargeting;
 };
 

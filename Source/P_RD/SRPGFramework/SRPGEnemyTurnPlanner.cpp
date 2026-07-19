@@ -22,7 +22,8 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	UEnemyUnitModel* Enemy,
 	UUnitModel* Player,
 	const UTileMapModel* TileMap,
-	const FRandomStream& EventStream)
+	const FRandomStream& EventStream,
+	int32 MoveRangeOverride)
 {
 	TArray<TInstancedStruct<FSRPGCommand>> Commands;
 	{
@@ -92,10 +93,12 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	const FTileIndex PlayerTile = Player->GetTileTransform().mIndex;
 
 	// 습득한 이동포인트만큼 이동 가능
-	const int32 MoveRange = FMath::Max(
-		AttributeSetComp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementAttribute()),
-		0
-	);
+	const int32 MoveRange = MoveRangeOverride != INDEX_NONE
+		? FMath::Max(MoveRangeOverride, 0)
+		: FMath::Max(
+			AttributeSetComp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementAttribute()),
+			0
+		);
 
 	// 주사위 합
 	const float DiceSum = AttributeSetComp->GetAttributeCurrentValue(UEnemyUnitAttributeSet::GetRechargeDiceSumAttribute());
@@ -143,6 +146,13 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		CastRef.mSkillIndex = SkillIndex;
 		CastRef.mTargetIndex = PlayerTile;
 		CastRef.mDiceSum = DiceSum;
+		// 고정 의도 실행에서는 목적지 기준 효과 타일을 이 스냅샷 그대로 사용한다.
+		CastRef.mFixedEffectTileIndexes = TileMap->GetEffectTiles(
+			Dest,
+			PlayerTile,
+			Skill->mEffectPattern,
+			FMath::Max(static_cast<int32>(Skill->mEffectAreaDefaultValue + Skill->mEffectAreaRatio * DiceSum), 0),
+			Skill->mIsPenetration);
 		AddAction(MoveTemp(Cast));
 	}
 

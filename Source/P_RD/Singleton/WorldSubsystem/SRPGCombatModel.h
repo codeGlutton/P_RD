@@ -11,6 +11,7 @@
 #include "ObjectModel.h"
 
 #include "Tool/CircularList.h"
+#include "SRPGFramework/SRPGEnemyIntent.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "SRPGFramework/SRPGTurnContext.h"
 
@@ -27,6 +28,7 @@ class USRPGAction;
 class UBoardActorModel;
 class IBoardCombatTarget;
 class UUnitModel;
+class UEnemyUnitModel;
 class UTileMapModel;
 
 class UStaticCombatRoomSpawnData;
@@ -50,6 +52,7 @@ DECLARE_MULTICAST_DELEGATE_FourParams(FOnEndAnyTurnActionUI, TSharedPtr<FPresent
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnZoomInToActorsUI, const TArray<FTileIndex>& /*ActorTileIndexes*/);
 DECLARE_MULTICAST_DELEGATE(FOnZoomOutFromActorsUI);
+DECLARE_MULTICAST_DELEGATE(FOnEnemyIntentsChangedUI);
 
 USTRUCT(BlueprintType)
 struct FSRPGTurnUnregisterRequest
@@ -185,6 +188,24 @@ public:
 
 	int32 GetRoundCount() const;
 
+	/* 고정 적 의도 */
+public:
+	const TArray<FSRPGEnemyIntent>& GetEnemyIntents() const;
+	void MarkEnemyIntentExecuting(UUnitModel* Enemy, int32 TurnId = INDEX_NONE);
+	void ReportPlayerDisplacement(UUnitModel* Target, const FTileIndex& From, const FTileIndex& To, int32 DiceValue);
+	void ReportFixedIntentPathDisrupted(UUnitModel* Enemy, const FText& Reason);
+	void ResolveFixedIntentCollision(UUnitModel* Enemy, UBoardActorModel* Blocker);
+	void ResolveFixedIntentAttack(UUnitModel* Enemy, const TArray<IBoardCombatTarget*>& ResolvedTargets);
+	void RefreshEnemyIntentHighlights();
+
+protected:
+	void PrepareEnemyIntents();
+	void CompleteEnemyIntent(UUnitModel* Enemy);
+	FSRPGEnemyIntent* FindEnemyIntent(UUnitModel* Enemy);
+	const FSRPGEnemyIntent* FindEnemyIntent(const UUnitModel* Enemy) const;
+	void AppendEnemyIntentResult(FSRPGEnemyIntent& Intent, ESRPGEnemyIntentResult Result, const FText& Message);
+	void BroadcastEnemyIntentChanged();
+
 	/* 시뮬 함수 */
 public:
 	void ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand, bool NeedEndCurrentAction);
@@ -258,6 +279,9 @@ public:
 	 */
 	FOnEndAnyTurnActionUI OnEndAnyTurnActionUI;
 
+	/** @brief 적의 공개 계획 또는 그 실행 결과가 바뀌었을 때 HUD가 스냅샷을 다시 읽는다. */
+	FOnEnemyIntentsChangedUI OnEnemyIntentsChangedUI;
+
 public:
 	/**
 	 * @brief 액터들 줌인 요청 시
@@ -297,6 +321,10 @@ protected:
 protected:
 	UPROPERTY(Category = Round, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "RoundCount"))
 	int32 mRoundCount = 0;
+
+	/** @brief 현재 라운드 시작에 계산되어 더 이상 재계산되지 않는 적 행동 예고. */
+	UPROPERTY(Category = Intent, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "EnemyIntents"))
+	TArray<FSRPGEnemyIntent> mEnemyIntents;
 
 protected:
 	// @brief 배치된 타일맵

@@ -55,6 +55,7 @@ void FActiveSkillContext::Clear()
 	mSelfTileIndex = FTileIndex::Invalid;
 	mTargetTileIndex = FTileIndex::Invalid;
 	mEffectTileIndexes.Reset();
+	mAllowFriendlyFire = false;
 
 	mSkillIndex = INDEX_NONE;
 	mMotionIndex = INDEX_NONE;
@@ -63,6 +64,7 @@ void FActiveSkillContext::Clear()
 
 	mTargetTileIndexes.Reset();
 	mOtherCombatTargets.Reset();
+	mResolvedCombatTargets.Reset();
 
 	mMotionTileMapDir = ETileActorDirection::Forward;
 	mMotionEndBarrier = nullptr;
@@ -135,7 +137,14 @@ void USkillComponentModel::SetSkill(int32 SkillIndex, UStaticSkillData* SkillDat
 	OnChangeSkillUI.Broadcast(SkillIndex, SkillData, PreSkillData);
 }
 
-void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum, FOnEndSkillUI Callback)
+void USkillComponentModel::ActivateSkill(
+	UTileMapModel* MapModel,
+	int32 SkillIndex,
+	const FTileIndex& TargetIndex,
+	int32 DiceSum,
+	FOnEndSkillUI Callback,
+	const TArray<FTileIndex>* FixedEffectTileIndexes,
+	bool bAllowFriendlyFire)
 {
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
 
@@ -157,7 +166,10 @@ void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillInd
 	mActiveSkillContext.mMapModel = MapModel;
 	mActiveSkillContext.mSelfTileIndex = OwnerUnitModel->GetTileTransform().mIndex;
 	mActiveSkillContext.mTargetTileIndex = TargetIndex;
-	mActiveSkillContext.mEffectTileIndexes = GetEffectTiles(MapModel, SkillIndex, TargetIndex, DiceSum);
+	mActiveSkillContext.mEffectTileIndexes = FixedEffectTileIndexes != nullptr
+		? *FixedEffectTileIndexes
+		: GetEffectTiles(MapModel, SkillIndex, TargetIndex, DiceSum);
+	mActiveSkillContext.mAllowFriendlyFire = bAllowFriendlyFire;
 	mActiveSkillContext.mSkillIndex = SkillIndex;
 	mActiveSkillContext.mMotionIndex = 0;
 	mActiveSkillContext.mEndCallback = MoveTemp(Callback);
@@ -256,6 +268,33 @@ void USkillComponentModel::PlayMotionLayer()
 
 	mActiveSkillContext.mTargetTileIndexes = MotionLayer.FilterTileIndexes(mActiveSkillContext.mSelfTileIndex, mActiveSkillContext.mEffectTileIndexes);
 	mActiveSkillContext.mOtherCombatTargets = MotionLayer.FilterCombatTargets(mActiveSkillContext.mMapModel.Get(), OwnerCombatTarget, mActiveSkillContext.mTargetTileIndexes);
+
+	// 적의 고정 의도 중 'Hostile 대상 모션'만 오사 대상을 추가한다.
+	// 기존 필터 결과는 보존해서 자가 버프/아군 보조 모션의 원래 대상을 망가뜨리지 않는다.
+	const bool bHostileMotion = EnumHasAnyFlags(
+		StaticCast<ETeamAttitudeFilter>(MotionLayer.mTeamAttitudeFilter),
+		ETeamAttitudeFilter::Hostile);
+	if (mActiveSkillContext.mAllowFriendlyFire && bHostileMotion)
+	{
+		for (const FTileIndex& TargetTileIndex : mActiveSkillContext.mTargetTileIndexes)
+		{
+			for (UBoardActorModel* BoardActor : mActiveSkillContext.mMapModel->GetActorsOnTile(TargetTileIndex))
+			{
+				IBoardCombatTarget* CombatTarget = Cast<IBoardCombatTarget>(BoardActor);
+				if (CombatTarget != nullptr
+					&& CombatTarget != OwnerCombatTarget
+					&& CombatTarget->IsTargetable())
+				{
+					mActiveSkillContext.mOtherCombatTargets.AddUnique(CombatTarget);
+				}
+			}
+		}
+	}
+
+	for (IBoardCombatTarget* CombatTarget : mActiveSkillContext.mOtherCombatTargets)
+	{
+		mActiveSkillContext.mResolvedCombatTargets.AddUnique(CombatTarget);
+	}
 	mActiveSkillContext.mMotionTileMapDir = mActiveSkillContext.mMapModel->TileDeltaToDirection(
 		mActiveSkillContext.mSelfTileIndex,
 		mActiveSkillContext.mTargetTileIndex,

@@ -107,7 +107,8 @@ namespace
 		FTileIndex PlayerIndex,
 		EAimPattern AimPattern = EAimPattern::Square,
 		int32 SecondSkillAimRange = 0,
-		FTileIndex BlockerIndex = FTileIndex::Invalid)
+		FTileIndex BlockerIndex = FTileIndex::Invalid,
+		int32 MoveRangeOverride = INDEX_NONE)
 	{
 		// 타일맵 생성
 		UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
@@ -147,7 +148,7 @@ namespace
 		const FRandomStream Stream(20260710);
 
 		// AI 돌려서(ㅋㅋ) 적유닛의 예상커맨드 획득
-		return USRPGEnemyTurnPlanner::PlanTurn(Enemy, Player, TileMap, Stream);
+		return USRPGEnemyTurnPlanner::PlanTurn(Enemy, Player, TileMap, Stream, MoveRangeOverride);
 	}
 
 	// @brief 커맨드가 비어있지 않고, 마지막은 항상 턴 종료인 지 검증
@@ -336,6 +337,8 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 		{
 			TestEqual(TEXT("[Case3-1] 스킬 인덱스 0"), Cast->mSkillIndex, 0);
 			TestTrue(TEXT("[Case3-1] 타겟이 플레이어 타일"), Cast->mTargetIndex == FTileIndex(3, 1));
+			TestTrue(TEXT("[Case3-1] 계획 시점 효과 타일이 고정됨"),
+				Cast->mFixedEffectTileIndexes == TArray<FTileIndex>({ FTileIndex(3, 1) }));
 		}
 	}
 
@@ -395,6 +398,36 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 		if (TestTrue(TEXT("[Case4-1] 스킬커맨드 존재"), Cast != nullptr))
 		{
 			TestTrue(TEXT("[Case4-1] 스킬 인덱스는 장착 슬롯(0 또는 1)"), Cast->mSkillIndex == 0 || Cast->mSkillIndex == 1);
+		}
+	}
+
+	/**
+	 * Case5-1: 라운드 시작 사전계획 / 현재 Movement=0, 다음 적 턴 충전값 override=2
+	 *   -> 아직 충전 전이어도 예상 이동력으로 (2,0)까지 이동하고 플레이어를 공격하는 계획을 만든다.
+	 */
+	AddInfo(TEXT("=== Case5-1: 사전계획 이동력 override ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::MoveClose,
+			/*현재 Movement*/0, /*AimRange*/1, /*Map*/5, 1,
+			FTileIndex(0, 0),
+			FTileIndex(3, 0),
+			EAimPattern::Square,
+			/*SecondSkillAimRange*/0,
+			/*BlockerIndex*/FTileIndex::Invalid,
+			/*MoveRangeOverride*/2);
+		CheckTail(*this, Commands, TEXT("Case5-1"));
+		const FSRPGMoveCommand* Move = FindMoveCommand(Commands);
+		if (TestTrue(TEXT("[Case5-1] 충전 예상치로 이동 계획 생성"), Move != nullptr))
+		{
+			TestTrue(TEXT("[Case5-1] 목적지=(2,0)"), Move->mPathTileIndexes.Last() == FTileIndex(2, 0));
+		}
+		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
+		if (TestTrue(TEXT("[Case5-1] 이동 후 고정 공격 계획 생성"), Cast != nullptr))
+		{
+			TestTrue(TEXT("[Case5-1] 공격 타겟=(3,0)"), Cast->mTargetIndex == FTileIndex(3, 0));
+			TestTrue(TEXT("[Case5-1] 효과 타일=(3,0) 스냅샷"),
+				Cast->mFixedEffectTileIndexes == TArray<FTileIndex>({ FTileIndex(3, 0) }));
 		}
 	}
 

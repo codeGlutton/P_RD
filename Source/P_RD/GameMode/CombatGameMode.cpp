@@ -12,6 +12,7 @@
 #include "Setting/RDWorldSettings.h"
 
 #include "Pawn/Player/PlayerUnitModel.h"
+#include "Pawn/Enemy/EnemyUnitModel.h"
 
 #include "UI/RDUserWidget.h"
 #include "UI/Combat/CombatUIModel.h"
@@ -24,6 +25,7 @@
 #include "SRPGFramework/SRPGMoveBuildAction.h"
 #include "SRPGFramework/SRPGDiceRollAction.h"
 #include "SRPGFramework/SRPGTurnEndAction.h"
+#include "SRPGFramework/SRPGEnemyIntent.h"
 
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Component/EquipmentComponent/EquipmentComponentModel.h"
@@ -47,6 +49,42 @@ DEFINE_LOG_CATEGORY(LogCombatGameMode);
 
 namespace
 {
+	const FName SmashSkillAssetName(TEXT("DA_SwordNormalSmash_Common"));
+
+	EEnemyIntentResultUI GetEnemyIntentResultUI(ESRPGEnemyIntentResult Result)
+	{
+		switch (Result)
+		{
+		case ESRPGEnemyIntentResult::Executing:    return EEnemyIntentResultUI::Executing;
+		case ESRPGEnemyIntentResult::Completed:    return EEnemyIntentResultUI::Completed;
+		case ESRPGEnemyIntentResult::Missed:       return EEnemyIntentResultUI::Missed;
+		case ESRPGEnemyIntentResult::Collision:    return EEnemyIntentResultUI::Collision;
+		case ESRPGEnemyIntentResult::FriendlyFire: return EEnemyIntentResultUI::FriendlyFire;
+		case ESRPGEnemyIntentResult::HitPlayer:    return EEnemyIntentResultUI::HitPlayer;
+		case ESRPGEnemyIntentResult::HitObstacle:  return EEnemyIntentResultUI::HitObstacle;
+		case ESRPGEnemyIntentResult::Cancelled:    return EEnemyIntentResultUI::Cancelled;
+		case ESRPGEnemyIntentResult::Planned:
+		default:                                   return EEnemyIntentResultUI::Planned;
+		}
+	}
+
+	FText GetEnemyIntentResultFallback(ESRPGEnemyIntentResult Result)
+	{
+		switch (Result)
+		{
+		case ESRPGEnemyIntentResult::Executing:    return NSLOCTEXT("CombatGameMode", "IntentExecuting", "예정대로 실행 중");
+		case ESRPGEnemyIntentResult::Completed:    return NSLOCTEXT("CombatGameMode", "IntentCompleted", "예정 행동 완료");
+		case ESRPGEnemyIntentResult::Missed:       return NSLOCTEXT("CombatGameMode", "IntentMissed", "공격 빗나감!");
+		case ESRPGEnemyIntentResult::Collision:    return NSLOCTEXT("CombatGameMode", "IntentCollision", "이동 경로 충돌!");
+		case ESRPGEnemyIntentResult::FriendlyFire: return NSLOCTEXT("CombatGameMode", "IntentFriendlyFire", "적끼리 오사!");
+		case ESRPGEnemyIntentResult::HitPlayer:    return NSLOCTEXT("CombatGameMode", "IntentHitPlayer", "플레이어 명중");
+		case ESRPGEnemyIntentResult::HitObstacle:  return NSLOCTEXT("CombatGameMode", "IntentHitObstacle", "장애물에 막힘!");
+		case ESRPGEnemyIntentResult::Cancelled:    return NSLOCTEXT("CombatGameMode", "IntentCancelled", "예정 행동 취소!");
+		case ESRPGEnemyIntentResult::Planned:
+		default:                                   return NSLOCTEXT("CombatGameMode", "IntentPlanned", "계획 고정됨");
+		}
+	}
+
 	FLinearColor GetRarityColor(ERarityType RarityType)
 	{
 		switch (RarityType)
@@ -244,6 +282,13 @@ void ACombatGameMode::InitializeRoom()
 
 	CombatModel->OnRegisterUnitUI.AddUObject(this, &ACombatGameMode::OnRegisterUnit);
 	CombatModel->OnUnregisterUnitUI.AddUObject(this, &ACombatGameMode::OnUnregisterUnit);
+	CombatModel->OnEnemyIntentsChangedUI.AddWeakLambda(this, [this]() {
+		PushEnemyIntentUIData();
+		if (USRPGCombatModel* UpdatedCombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
+		{
+			UpdatedCombatModel->RefreshEnemyIntentHighlights();
+		}
+		});
 
 	CombatModel->OnShowDicePanelAnyTurnUI.AddWeakLambda(this, [this](const USRPGTurnContext* TurnContext) {
 		// 턴 시작 주사위 준비(DicePrepare) 시점 — 굴림 오버레이를 열라고 UI에 통지한다.
@@ -263,7 +308,12 @@ void ACombatGameMode::InitializeRoom()
 		PushUnitUIData();
 		PushDiceUIData();
 		PushSkillUIData();
+		PushEnemyIntentUIData();
 		PushEquipmentUIData();
+		if (USRPGCombatModel* CurrentCombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
+		{
+			CurrentCombatModel->RefreshEnemyIntentHighlights();
+		}
 		// 턴 시작 연출: 배리어를 HUD로 넘겨 턴 배너가 끝날 때까지 실제 턴 실행을 대기시킨다.
 		OnBeginAnyTurnUI.Broadcast(Barrier, TurnContext);
 		});
@@ -283,6 +333,11 @@ void ACombatGameMode::InitializeRoom()
 	CombatModel->OnEndAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action, ESRPGActionResult Result) {
 		// 액션이 끝나면 UI의 스킬/주사위 선택 표시를 지운다.
 		mCombatUIModel->NotifyActionResolved();
+		// 이동/조준이 자기 하이라이트를 정리한 뒤에도 아직 남은 고정 계획 경로와 공격선을 다시 보여준다.
+		if (USRPGCombatModel* CurrentCombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
+		{
+			CurrentCombatModel->RefreshEnemyIntentHighlights();
+		}
 		// [비활성화] 실행 후 잠깐 떴다 사라지는 레거시 실행 로그(mIsPreview=false). 프리뷰(조준)만 쓰기로 함.
 		// 로그는 여전히 소비(Pop)해 쌓이지 않게 비운다.
 		if (UEventLogger* EventLogger = GetWorldEventLogger(this))
@@ -827,6 +882,7 @@ void ACombatGameMode::PushSkillUIData() const
 			SkillUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 			SkillUIData.mDiceCost = StaticSkillData->mRequiredDiceCount;
 			SkillUIData.mIsUsable = true;
+			SkillUIData.mIsDisplacementSkill = StaticSkillData->GetFName() == SmashSkillAssetName;
 			SkillUIData.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
 			SkillUIData.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRangeDefaultValue);
 			SkillUIData.mTargeting.mSelectRangeRatio = StaticSkillData->mAimRangeRatio;
@@ -839,6 +895,54 @@ void ACombatGameMode::PushSkillUIData() const
 	}
 
 	mCombatUIModel->SetSkillUIs(SkillUIDatas);
+}
+
+/** @brief 전투 모델의 고정 계획을 UObject 참조 없는 HUD 스냅샷으로 변환한다. */
+void ACombatGameMode::PushEnemyIntentUIData() const
+{
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
+	const USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	if (CombatModel == nullptr)
+	{
+		return;
+	}
+
+	TArray<FEnemyIntentUI> IntentUIDatas;
+	IntentUIDatas.Reserve(CombatModel->GetEnemyIntents().Num());
+	for (const FSRPGEnemyIntent& Intent : CombatModel->GetEnemyIntents())
+	{
+		FEnemyIntentUI& IntentUI = IntentUIDatas.AddDefaulted_GetRef();
+		IntentUI.mExecutionOrder = Intent.mExecutionOrder;
+		IntentUI.mActionName = Intent.mSkillName.IsEmpty()
+			? NSLOCTEXT("CombatGameMode", "IntentFallbackAction", "이동 후 공격")
+			: Intent.mSkillName;
+		IntentUI.mPlannedOrigin = Intent.mPlannedOrigin;
+		IntentUI.mPlannedDestination = Intent.mPlannedDestination;
+		IntentUI.mTargetTile = Intent.mTargetTile;
+		IntentUI.mPathTileIndexes = Intent.mPathTileIndexes;
+		IntentUI.mEffectTileIndexes = Intent.mEffectTileIndexes;
+		IntentUI.mResult = GetEnemyIntentResultUI(Intent.mResult);
+		IntentUI.mResultText = Intent.mResultText.IsEmpty() ? GetEnemyIntentResultFallback(Intent.mResult) : Intent.mResultText;
+		IntentUI.mWasDisplaced = Intent.mWasDisplaced;
+
+		if (IsValid(Intent.mEnemy))
+		{
+			IntentUI.mEnemyUnitId = Intent.mEnemy->GetModelId();
+			IntentUI.mEnemyName = Intent.mEnemy->GetBoardActorDisplayName();
+		}
+		if (IntentUI.mEnemyName.IsEmpty())
+		{
+			IntentUI.mEnemyName = FText::Format(
+				NSLOCTEXT("CombatGameMode", "IntentEnemyFallback", "적 {0}"),
+				FText::AsNumber(IntentUI.mExecutionOrder > 0 ? IntentUI.mExecutionOrder : IntentUIDatas.Num()));
+		}
+	}
+
+	IntentUIDatas.Sort([](const FEnemyIntentUI& Lhs, const FEnemyIntentUI& Rhs) {
+		return Lhs.mExecutionOrder < Rhs.mExecutionOrder;
+		});
+	mCombatUIModel->SetEnemyIntentUIs(IntentUIDatas);
 }
 
 void ACombatGameMode::PushSelectedSkillUIData(int32 SkillIndex) const
@@ -901,7 +1005,12 @@ void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 	if (StaticSkillData != nullptr)
 	{
 		SkillDetailUIData.mName = StaticSkillData->mName;
-		SkillDetailUIData.mDescription = StaticSkillData->mDescription;
+		const bool bIsSmash = StaticSkillData->GetFName() == SmashSkillAssetName;
+		SkillDetailUIData.mDescription = bIsSmash
+			? FText::Format(
+				NSLOCTEXT("CombatGameMode", "SmashPushDescription", "{0}\n\n[개입] 선택한 주사위 숫자만큼 대상을 밀어, 고정된 적의 경로와 공격선을 망가뜨립니다."),
+				StaticSkillData->mDescription)
+			: StaticSkillData->mDescription;
 		SkillDetailUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 		SkillDetailUIData.mDiceCost = StaticSkillData->mRequiredDiceCount;
 		SkillDetailUIData.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);

@@ -248,6 +248,18 @@ void FStageBuilder::CreateStartRoom(OUT FStage& Stage) const
 	const int32 StartColumn = Stage.mStartColumn = ColumnCount / 2;
 	FRoom& StartRoom = CreateRoom(ERoomType::Monster, 0, StartColumn, Stage.mRoomRows[0].mRooms[StartColumn]);
 
+	if (mParams.mStageLevel == EStageLevelType::Stage1)
+	{
+		const FPrimaryAssetId TutorialRoomId(
+			RoomPrimaryAssetTypes::GetMonsterRoomType(EStageLevelType::Stage1),
+			TEXT("DA_TestMonster2_Stage1"));
+		const TArray<FPrimaryAssetId>& MonsterRoomIds = mRoomAssetIds[static_cast<uint8>(ERoomType::Monster)];
+		if (MonsterRoomIds.Contains(TutorialRoomId))
+		{
+			StartRoom.mStaticRoomSpawnDataId = TutorialRoomId;
+		}
+	}
+
 	Stage.mCurRow = 0;
 	Stage.mCurColumn = StartColumn;
 }

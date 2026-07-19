@@ -33,9 +33,22 @@ class URewardUIWidgetBase;
 class USoundBase;
 class UTextBlock;
 class UTextureRenderTarget2D;
+class UVerticalBox;
 class UViewport;
 class UWidget;
 class UUserWidget;
+
+/** @brief 첫 전투에서 고정 예고를 읽고 주사위 밀치기로 개입하는 순서를 안내하는 HUD 로컬 단계. */
+enum class EEnemyIntentTutorialStage : uint8
+{
+	WaitingForIntent,
+	ReviewIntent,
+	SelectSmash,
+	SelectDice,
+	TargetIntervention,
+	ObserveOutcome,
+	Complete
+};
 
 /** @brief 유닛 머리 위 HP바(WBP_CombatUnitHpBar) 한 개의 런타임 위젯 참조 묶음. */
 USTRUCT()
@@ -241,6 +254,16 @@ private:
 	/** @brief 뷰모델 도메인 갱신 알림. 메타/유닛/턴이 바뀌면 상단 상태바를 다시 그린다. */
 	UFUNCTION()
 	void HandleCombatUIChanged(ECombatUIDomain Domain);
+
+	/** @brief 고정된 적 행동을 실행 순서/스킬/대상/경로/결과 행으로 다시 그린다. */
+	void RefreshEnemyIntentPanel();
+
+	/** @brief 현재 선택/주사위/의도 결과에서 튜토리얼 단계를 전진시키고 작은 안내 패널을 갱신한다. */
+	void UpdateEnemyIntentTutorial();
+
+	/** @brief 첫 단계의 '예고 확인' 버튼. 확인 이후 실제 스킬/주사위 입력으로 자동 진행한다. */
+	UFUNCTION()
+	void HandleEnemyIntentTutorialContinue();
 
 	/** @brief 뷰모델의 플레이어 메타(Lv/HP/Gold)를 상단 상태바 텍스트로 반영한다. */
 	void RefreshCombatStatusBar() const;
@@ -659,6 +682,26 @@ private:
 	/** @brief 상단 상태바(플레이어 Lv/HP/Gold) 런타임 텍스트 */
 	UPROPERTY(Transient)
 	TObjectPtr<UTextBlock> mCombatStatusBarText;
+
+	/** @brief 기존 전투 화면 우상단에 얹는 비모달 적 행동 예고 패널과 행 컨테이너. */
+	UPROPERTY(Transient)
+	TObjectPtr<UBorder> mEnemyIntentPanel;
+	UPROPERTY(Transient)
+	TObjectPtr<UVerticalBox> mEnemyIntentList;
+
+	/** @brief 하단 중앙의 작은 단계별 안내 패널. 첫 확인 버튼만 입력을 받는다. */
+	UPROPERTY(Transient)
+	TObjectPtr<UBorder> mEnemyIntentTutorialPanel;
+	UPROPERTY(Transient)
+	TObjectPtr<UVerticalBox> mEnemyIntentTutorialContent;
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mEnemyIntentTutorialText;
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mEnemyIntentTutorialContinueButton;
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mEnemyIntentTutorialContinueText;
+
+	EEnemyIntentTutorialStage mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::WaitingForIntent;
 
 	/** @brief 장비 칩(탑바 좌측 하단) 배경/문구 */
 	UPROPERTY(Transient)

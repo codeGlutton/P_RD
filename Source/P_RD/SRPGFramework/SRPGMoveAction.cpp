@@ -31,7 +31,9 @@ ESRPGCommandResult USRPGMoveAction::HandleCommand(const TInstancedStruct<FSRPGCo
     /* 생성 시 예약된 이동 명령에서 확정 경로를 수신 (빌드 액션이 실어 보낸 경로) */
     if (Command.Get().GetCommandType() == ESRPGCommandType::MoveCast)
     {
-        mPathTileIndexes = Command.Get<FSRPGMoveCommand>().mPathTileIndexes;
+        const FSRPGMoveCommand& MoveCommand = Command.Get<FSRPGMoveCommand>();
+        mPathTileIndexes = MoveCommand.mPathTileIndexes;
+        mUseFixedIntent = MoveCommand.mUseFixedIntent;
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
 
@@ -89,6 +91,12 @@ void USRPGMoveAction::OnEndAction()
 void USRPGMoveAction::StartStep(int32 StepIndex)
 {
     checkf(mPathTileIndexes.IsValidIndex(StepIndex) == true, TEXT("이동 경로 인덱스 오류"));
+
+    if (mUseFixedIntent && ValidateFixedIntentStep(StepIndex) == false)
+    {
+        return;
+    }
+
     mCurrentStepIndex = StepIndex;
 
     UTileMapModel* TileMap = GetTileMap();
@@ -124,6 +132,60 @@ void USRPGMoveAction::StartStep(int32 StepIndex)
 
     // OnStartMoveStep을 구독하고 있던 뷰가 이동 시작 (뷰의 물리적 위치 변경)
     mInstigator->OnStartMoveStep.Broadcast(NextTransform, TileMap->TileToWorldTransform(NextTransform), Barrier, RemainingPathDistance);
+}
+
+bool USRPGMoveAction::ValidateFixedIntentStep(int32 StepIndex)
+{
+    checkf(mPathTileIndexes.IsValidIndex(StepIndex), TEXT("고정 이동 경로 인덱스 오류"));
+
+    USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+    checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+
+    const FTileIndex CurrentTile = mInstigator->GetTileTransform().mIndex;
+    const FTileIndex PlannedPreviousTile = mPathTileIndexes[StepIndex - 1];
+    if (CurrentTile != PlannedPreviousTile)
+    {
+        CombatModel->ReportFixedIntentPathDisrupted(
+            mInstigator.Get(),
+            FText::Format(
+                NSLOCTEXT("EnemyIntent", "PathOriginChanged", "출발 위치가 ({0},{1})로 바뀌어 예정 경로 취소"),
+                FText::AsNumber(CurrentTile.mX),
+                FText::AsNumber(CurrentTile.mY)));
+        MarkActionCompleted(ESRPGActionResult::Cancelled);
+        return false;
+    }
+
+    UTileMapModel* TileMap = GetTileMap();
+    const FTileIndex NextTile = mPathTileIndexes[StepIndex];
+    UBoardActorModel* Blocker = nullptr;
+    for (UBoardActorModel* Actor : TileMap->GetActorsOnTile(NextTile, ETileLayerFlag::All))
+    {
+        if (Actor != nullptr
+            && Actor != mInstigator.Get()
+            && EnumHasAnyFlags(Actor->GetBlockLayerFlags(), mInstigator->GetTileLayerFlags()))
+        {
+            Blocker = Actor;
+            break;
+        }
+    }
+
+    if (TileMap->CanPlace(NextTile, mInstigator.Get()) == false || Blocker != nullptr)
+    {
+        if (Blocker != nullptr)
+        {
+            CombatModel->ResolveFixedIntentCollision(mInstigator.Get(), Blocker);
+        }
+        else
+        {
+            CombatModel->ReportFixedIntentPathDisrupted(
+                mInstigator.Get(),
+                NSLOCTEXT("EnemyIntent", "InvalidFixedPath", "예정 경로가 막혀 이동 취소"));
+        }
+        MarkActionCompleted(ESRPGActionResult::Cancelled);
+        return false;
+    }
+
+    return true;
 }
 
 void USRPGMoveAction::CompleteStep()

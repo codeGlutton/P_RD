@@ -136,6 +136,7 @@ protected:
 	void PushDiceUIData() const;
 	void PushSelectedDiceUIData() const;
 	void PushSkillUIData() const;
+	void PushEnemyIntentUIData() const;
 	void PushSelectedSkillUIData(int32 SkillIndex) const;
 
 	void PushCombatTargetDetailUIData(IBoardSelectionTarget* Target) const;

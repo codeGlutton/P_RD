@@ -5,12 +5,22 @@
 #include "Simulation/Factory/ObjectModelFactory.h"
 
 #include "SRPGFramework/SRPGCommand.h"
+#include "SRPGFramework/SRPGEnemyTurnPlanner.h"
+#include "SRPGFramework/SRPGMoveAction.h"
+#include "SRPGFramework/SRPGSkillAction.h"
 #include "SRPGFramework/SRPGTurnEndAction.h"
 
 #include "Actor/TileMap/TileMapModel.h"
+#include "Actor/TileMap/TileHighlight.h"
 #include "Pawn/Enemy/EnemyUnitModel.h"
 
 #include "Actor/BoardActor/BoardCombatTarget.h"
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "Component/SkillComponent/SkillComponentModel.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
+#include "AttributeSet/UnitAttributeSet.h"
+#include "DataAsset/SkillData/StaticSkillData.h"
+#include "FunctionLibrary/RandomStreamFunctionLibrary.h"
 
 #include "DataAsset/RoomSpawnData/StaticCombatRoomSpawnData.h"
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
@@ -20,6 +30,26 @@
 #include "TimerManager.h"
 
 DEFINE_LOG_CATEGORY(LogSRPGCombat)
+
+namespace
+{
+	void ApplyIntentCollisionDamage(IBoardCombatTarget* Target)
+	{
+		if (Target == nullptr || Target->IsTargetable() == false)
+		{
+			return;
+		}
+
+		if (UAttributeSetComponentModel* AttributeComponent = Target->GetAttributeComponentModel())
+		{
+			// 충돌은 공격력 계수와 무관한 작은 고정 피해다. 핵심 결과는 경로 중단과 위치 관계다.
+			AttributeComponent->ApplyModToAttribute(
+				UCombatTargetAttributeSet::GetHPAttribute(),
+				ETacticalModOp::Additive,
+				-1.0f);
+		}
+	}
+}
 
 void USRPGCombatModel::Serialize(FArchive& Ar)
 {
@@ -81,6 +111,7 @@ void USRPGCombatModel::InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, UUn
 
 	checkf(mCombatPhase == ESRPGCombatRoomPhase::None, TEXT("중복 초기화"));
 	mCombatPhase = ESRPGCombatRoomPhase::CombatInit;
+	mEnemyIntents.Reset();
 
 	SpawnTileMap(RoomStartTransform);
 	RegisterPlayerUnit(PlayerUnit, RoomSpawnData->mPlayerTransform);
@@ -155,6 +186,11 @@ void USRPGCombatModel::EvaluateCombatStates()
 
 void USRPGCombatModel::OnEndCurrentTurn(USRPGTurnContext* TurnContext, ESRPGTurnResult TurnResult)
 {
+	if (TurnContext != nullptr && TurnContext->GetOwner() != nullptr && TurnContext->GetOwner()->IsPlayerUnitModel() == false)
+	{
+		CompleteEnemyIntent(TurnContext->GetOwner());
+	}
+
 	// 전투 상태 평가
 	EvaluateCombatStates();
 
@@ -460,6 +496,20 @@ void USRPGCombatModel::UnregisterUnit(UUnitModel* Unit)
 {
 	checkf(mTileMap != nullptr, TEXT("타일맵 미존재"));
 
+	if (Unit != nullptr && Unit->IsPlayerUnitModel() == false)
+	{
+		if (FSRPGEnemyIntent* Intent = FindEnemyIntent(Unit))
+		{
+			if (Intent->mResult == ESRPGEnemyIntentResult::Planned || Intent->mResult == ESRPGEnemyIntentResult::Executing)
+			{
+				AppendEnemyIntentResult(*Intent, ESRPGEnemyIntentResult::Cancelled,
+					NSLOCTEXT("EnemyIntent", "DefeatedBeforeIntent", "행동 전에 쓰러져 예정 행동 취소"));
+				BroadcastEnemyIntentChanged();
+				RefreshEnemyIntentHighlights();
+			}
+		}
+	}
+
 	if (mCombatPhase == ESRPGCombatRoomPhase::CombatPlay)
 	{
 		Unit->OnEndRoom();
@@ -622,6 +672,9 @@ void USRPGCombatModel::NotifyRoundStartIfNeeded(TSharedPtr<FPresentationBarrier>
 			Obstacle->OnBeginRound();
 		}
 
+		// 플레이어가 주사위를 고르기 전에 이번 라운드의 모든 적 행동을 한 번만 계산하고 고정한다.
+		PrepareEnemyIntents();
+
 		OnBeginAnyRoundUI.Broadcast(RoundPresentationBarrier, mRoundCount);
 	}
 }
@@ -735,6 +788,400 @@ const TArray<TObjectPtr<UBoardActorModel>>& USRPGCombatModel::GetObstacles() con
 int32 USRPGCombatModel::GetRoundCount() const
 {
 	return mRoundCount;
+}
+
+const TArray<FSRPGEnemyIntent>& USRPGCombatModel::GetEnemyIntents() const
+{
+	return mEnemyIntents;
+}
+
+void USRPGCombatModel::PrepareEnemyIntents()
+{
+	mEnemyIntents.Reset();
+
+	if (mTileMap == nullptr || mPlayerUnit == nullptr || mPlayerUnit->IsDead())
+	{
+		BroadcastEnemyIntentChanged();
+		return;
+	}
+
+	int32 ExecutionOrder = 1;
+	for (USRPGTurnContext* TurnContext : GetOrderedTurnContexts())
+	{
+		if (TurnContext == nullptr)
+		{
+			continue;
+		}
+
+		UEnemyUnitModel* Enemy = Cast<UEnemyUnitModel>(TurnContext->GetOwner());
+		if (Enemy == nullptr || Enemy->IsDead())
+		{
+			continue;
+		}
+
+		UAttributeSetComponentModel* Attributes = Enemy->GetAttributeComponentModel();
+		const int32 PlannedMoveRange = Attributes != nullptr
+			? FMath::Max(FMath::RoundToInt(Attributes->GetAttributeCurrentValue(UEnemyUnitAttributeSet::GetRechargeMovementAttribute())), 0)
+			: 0;
+
+		TArray<TInstancedStruct<FSRPGCommand>> Commands = USRPGEnemyTurnPlanner::PlanTurn(
+			Enemy,
+			mPlayerUnit,
+			mTileMap,
+			URandomStreamFunctionLibrary::GetEventStream(this),
+			PlannedMoveRange);
+
+		FSRPGEnemyIntent Intent;
+		Intent.mTurnId = TurnContext->GetTurnId();
+		Intent.mExecutionOrder = ExecutionOrder++;
+		Intent.mEnemy = Enemy;
+		Intent.mPlannedOrigin = Enemy->GetTileTransform().mIndex;
+		Intent.mPlannedDestination = Intent.mPlannedOrigin;
+		Intent.mResultText = NSLOCTEXT("EnemyIntent", "PlanLocked", "계획 고정됨 — 상황이 바뀌어도 재계산하지 않음");
+
+		for (TInstancedStruct<FSRPGCommand>& Command : Commands)
+		{
+			switch (Command.Get().GetCommandType())
+			{
+			case ESRPGCommandType::MoveCast:
+			{
+				FSRPGMoveCommand& MoveCommand = Command.GetMutable<FSRPGMoveCommand>();
+				MoveCommand.mUseFixedIntent = true;
+				Intent.mPathTileIndexes = MoveCommand.mPathTileIndexes;
+				if (Intent.mPathTileIndexes.IsEmpty() == false)
+				{
+					Intent.mPlannedDestination = Intent.mPathTileIndexes.Last();
+				}
+				break;
+			}
+			case ESRPGCommandType::SkillCast:
+			{
+				FSRPGSkillCastCommand& SkillCommand = Command.GetMutable<FSRPGSkillCastCommand>();
+				SkillCommand.mUseFixedIntent = true;
+				SkillCommand.mAllowFriendlyFire = true;
+				Intent.mTargetTile = SkillCommand.mTargetIndex;
+				Intent.mEffectTileIndexes = SkillCommand.mFixedEffectTileIndexes;
+
+				if (USkillComponentModel* SkillComponent = Enemy->GetSkillComponentModel())
+				{
+					const FSkillEntry* SkillEntry = SkillComponent->GetSkill(SkillCommand.mSkillIndex);
+					if (SkillEntry != nullptr && SkillEntry->mData != nullptr)
+					{
+						Intent.mSkillName = SkillEntry->mData->mName.IsEmpty()
+							? FText::FromName(SkillEntry->mData->GetFName())
+							: SkillEntry->mData->mName;
+					}
+				}
+				break;
+			}
+			default:
+				break;
+			}
+		}
+
+		if (Intent.mPathTileIndexes.IsEmpty())
+		{
+			Intent.mPathTileIndexes.Add(Intent.mPlannedOrigin);
+		}
+		if (Intent.mSkillName.IsEmpty())
+		{
+			Intent.mSkillName = Intent.mPlannedDestination != Intent.mPlannedOrigin
+				? NSLOCTEXT("EnemyIntent", "MoveOnly", "이동")
+				: NSLOCTEXT("EnemyIntent", "Wait", "대기");
+		}
+
+		TurnContext->SetFixedEnemyPlan(MoveTemp(Commands));
+		mEnemyIntents.Add(MoveTemp(Intent));
+	}
+
+	BroadcastEnemyIntentChanged();
+	RefreshEnemyIntentHighlights();
+}
+
+FSRPGEnemyIntent* USRPGCombatModel::FindEnemyIntent(UUnitModel* Enemy)
+{
+	if (const USRPGTurnContext* CurrentTurn = GetCurrentTurnContext();
+		CurrentTurn != nullptr && CurrentTurn->GetOwner() == Enemy)
+	{
+		if (FSRPGEnemyIntent* CurrentIntent = mEnemyIntents.FindByPredicate([Enemy, CurrentTurn](const FSRPGEnemyIntent& Intent)
+			{
+				return Intent.mEnemy == Enemy && Intent.mTurnId == CurrentTurn->GetTurnId();
+			}))
+		{
+			return CurrentIntent;
+		}
+	}
+
+	if (FSRPGEnemyIntent* ExecutingIntent = mEnemyIntents.FindByPredicate([Enemy](const FSRPGEnemyIntent& Intent)
+		{
+			return Intent.mEnemy == Enemy && Intent.mResult == ESRPGEnemyIntentResult::Executing;
+		}))
+	{
+		return ExecutingIntent;
+	}
+
+	if (FSRPGEnemyIntent* PlannedIntent = mEnemyIntents.FindByPredicate([Enemy](const FSRPGEnemyIntent& Intent)
+		{
+			return Intent.mEnemy == Enemy && Intent.mResult == ESRPGEnemyIntentResult::Planned;
+		}))
+	{
+		return PlannedIntent;
+	}
+
+	return mEnemyIntents.FindByPredicate([Enemy](const FSRPGEnemyIntent& Intent)
+	{
+		return Intent.mEnemy == Enemy;
+	});
+}
+
+const FSRPGEnemyIntent* USRPGCombatModel::FindEnemyIntent(const UUnitModel* Enemy) const
+{
+	if (const USRPGTurnContext* CurrentTurn = GetCurrentTurnContext();
+		CurrentTurn != nullptr && CurrentTurn->GetOwner() == Enemy)
+	{
+		if (const FSRPGEnemyIntent* CurrentIntent = mEnemyIntents.FindByPredicate([Enemy, CurrentTurn](const FSRPGEnemyIntent& Intent)
+			{
+				return Intent.mEnemy == Enemy && Intent.mTurnId == CurrentTurn->GetTurnId();
+			}))
+		{
+			return CurrentIntent;
+		}
+	}
+
+	return mEnemyIntents.FindByPredicate([Enemy](const FSRPGEnemyIntent& Intent)
+	{
+		return Intent.mEnemy == Enemy;
+	});
+}
+
+void USRPGCombatModel::AppendEnemyIntentResult(FSRPGEnemyIntent& Intent, ESRPGEnemyIntentResult Result, const FText& Message)
+{
+	Intent.mResult = Result;
+	if (Message.IsEmpty())
+	{
+		return;
+	}
+
+	Intent.mResultText = Intent.mResultText.IsEmpty()
+		? Message
+		: FText::Format(NSLOCTEXT("EnemyIntent", "ResultJoin", "{0}\n{1}"), Intent.mResultText, Message);
+}
+
+void USRPGCombatModel::BroadcastEnemyIntentChanged()
+{
+	OnEnemyIntentsChangedUI.Broadcast();
+}
+
+void USRPGCombatModel::MarkEnemyIntentExecuting(UUnitModel* Enemy, int32 TurnId)
+{
+	FSRPGEnemyIntent* Intent = TurnId != INDEX_NONE
+		? mEnemyIntents.FindByPredicate([Enemy, TurnId](const FSRPGEnemyIntent& Candidate)
+			{
+				return Candidate.mEnemy == Enemy && Candidate.mTurnId == TurnId;
+			})
+		: FindEnemyIntent(Enemy);
+	if (Intent != nullptr)
+	{
+		AppendEnemyIntentResult(*Intent, ESRPGEnemyIntentResult::Executing,
+			NSLOCTEXT("EnemyIntent", "ExecutingLockedPlan", "공개했던 계획을 그대로 실행 중"));
+		BroadcastEnemyIntentChanged();
+		RefreshEnemyIntentHighlights();
+	}
+}
+
+void USRPGCombatModel::CompleteEnemyIntent(UUnitModel* Enemy)
+{
+	if (FSRPGEnemyIntent* Intent = FindEnemyIntent(Enemy))
+	{
+		if (Intent->mResult == ESRPGEnemyIntentResult::Planned || Intent->mResult == ESRPGEnemyIntentResult::Executing)
+		{
+			AppendEnemyIntentResult(*Intent, ESRPGEnemyIntentResult::Completed,
+				NSLOCTEXT("EnemyIntent", "CompletedAsPlanned", "예정 행동 종료"));
+		}
+		BroadcastEnemyIntentChanged();
+		RefreshEnemyIntentHighlights();
+	}
+}
+
+void USRPGCombatModel::ReportPlayerDisplacement(
+	UUnitModel* Target,
+	const FTileIndex& From,
+	const FTileIndex& To,
+	int32 DiceValue)
+{
+	if (Target == nullptr || From == To)
+	{
+		return;
+	}
+
+	bool bChanged = false;
+	for (FSRPGEnemyIntent& Intent : mEnemyIntents)
+	{
+		if (Intent.mEnemy != Target
+			|| (Intent.mResult != ESRPGEnemyIntentResult::Planned && Intent.mResult != ESRPGEnemyIntentResult::Executing))
+		{
+			continue;
+		}
+
+		Intent.mWasDisplaced = true;
+		const FText Message = FText::Format(
+			NSLOCTEXT("EnemyIntent", "PlayerDisplacedEnemy", "플레이어 개입: 주사위 {0}으로 ({1},{2}) → ({3},{4}) 밀림"),
+			FText::AsNumber(DiceValue),
+			FText::AsNumber(From.mX),
+			FText::AsNumber(From.mY),
+			FText::AsNumber(To.mX),
+			FText::AsNumber(To.mY));
+		Intent.mResultText = FText::Format(NSLOCTEXT("EnemyIntent", "ResultJoin", "{0}\n{1}"), Intent.mResultText, Message);
+		bChanged = true;
+	}
+	if (bChanged)
+	{
+		BroadcastEnemyIntentChanged();
+		RefreshEnemyIntentHighlights();
+	}
+}
+
+void USRPGCombatModel::ReportFixedIntentPathDisrupted(UUnitModel* Enemy, const FText& Reason)
+{
+	if (FSRPGEnemyIntent* Intent = FindEnemyIntent(Enemy))
+	{
+		AppendEnemyIntentResult(*Intent, ESRPGEnemyIntentResult::Cancelled, Reason);
+		BroadcastEnemyIntentChanged();
+		RefreshEnemyIntentHighlights();
+	}
+}
+
+void USRPGCombatModel::ResolveFixedIntentCollision(UUnitModel* Enemy, UBoardActorModel* Blocker)
+{
+	if (Enemy == nullptr)
+	{
+		return;
+	}
+
+	ApplyIntentCollisionDamage(Cast<IBoardCombatTarget>(Enemy));
+	ApplyIntentCollisionDamage(Cast<IBoardCombatTarget>(Blocker));
+
+	if (FSRPGEnemyIntent* Intent = FindEnemyIntent(Enemy))
+	{
+		const bool IsEnemyBlocker = Blocker != nullptr
+			&& Cast<UUnitModel>(Blocker) != nullptr
+			&& Blocker != mPlayerUnit;
+		const FText Message = IsEnemyBlocker
+			? FText::Format(NSLOCTEXT("EnemyIntent", "EnemyCollision", "적끼리 충돌: {0}에 막혀 이동 취소 (양쪽 1 피해)"), Blocker->GetBoardActorDisplayName())
+			: FText::Format(NSLOCTEXT("EnemyIntent", "ObstacleCollision", "예정 경로 충돌: {0}에 막혀 이동 취소"),
+				Blocker != nullptr ? Blocker->GetBoardActorDisplayName() : NSLOCTEXT("EnemyIntent", "UnknownBlocker", "장애물"));
+		AppendEnemyIntentResult(*Intent, ESRPGEnemyIntentResult::Collision, Message);
+		BroadcastEnemyIntentChanged();
+		RefreshEnemyIntentHighlights();
+	}
+}
+
+void USRPGCombatModel::ResolveFixedIntentAttack(UUnitModel* Enemy, const TArray<IBoardCombatTarget*>& ResolvedTargets)
+{
+	FSRPGEnemyIntent* Intent = FindEnemyIntent(Enemy);
+	if (Intent == nullptr)
+	{
+		return;
+	}
+
+	bool HitPlayer = false;
+	bool HitFriendly = false;
+	bool HitObstacle = false;
+	for (IBoardCombatTarget* Target : ResolvedTargets)
+	{
+		UBoardActorModel* TargetActor = Cast<UBoardActorModel>(Target);
+		if (TargetActor == nullptr)
+		{
+			continue;
+		}
+
+		if (TargetActor == mPlayerUnit)
+		{
+			HitPlayer = true;
+		}
+		else if (Cast<UUnitModel>(TargetActor) != nullptr)
+		{
+			HitFriendly = true;
+		}
+		else
+		{
+			HitObstacle = true;
+		}
+	}
+
+	if (HitPlayer)
+	{
+		AppendEnemyIntentResult(*Intent, ESRPGEnemyIntentResult::HitPlayer,
+			NSLOCTEXT("EnemyIntent", "HitPlayer", "예정 좌표에 플레이어가 남아 공격 적중"));
+	}
+	if (HitObstacle)
+	{
+		AppendEnemyIntentResult(*Intent, ESRPGEnemyIntentResult::HitObstacle,
+			NSLOCTEXT("EnemyIntent", "HitObstacle", "공격선이 바뀌지 않아 장애물에 적중"));
+	}
+	if (HitFriendly)
+	{
+		// 복합 명중이어도 HUD의 대표 배지는 가장 극적인 오사 결과를 유지한다.
+		AppendEnemyIntentResult(*Intent, ESRPGEnemyIntentResult::FriendlyFire,
+			NSLOCTEXT("EnemyIntent", "FriendlyFire", "아군 오사! 고정 공격선에 다른 적이 맞음"));
+	}
+	if (HitPlayer == false && HitFriendly == false && HitObstacle == false)
+	{
+		AppendEnemyIntentResult(*Intent, ESRPGEnemyIntentResult::Missed,
+			NSLOCTEXT("EnemyIntent", "AttackMissed", "공격 빗나감! 예정 타일이 비어 있음"));
+	}
+
+	BroadcastEnemyIntentChanged();
+	RefreshEnemyIntentHighlights();
+}
+
+void USRPGCombatModel::RefreshEnemyIntentHighlights()
+{
+	if (mTileMap == nullptr)
+	{
+		return;
+	}
+
+	mTileMap->ClearTileHighlight(ETileHighlightFlag::Aim);
+	mTileMap->ClearTileHighlight(ETileHighlightFlag::Effect);
+	mTileMap->ClearTileHighlight(ETileHighlightFlag::Select);
+
+	TArray<FTileIndex> PathTiles;
+	TArray<FTileIndex> EffectTiles;
+	TArray<FTileIndex> TargetTiles;
+	for (const FSRPGEnemyIntent& Intent : mEnemyIntents)
+	{
+		if (Intent.mResult != ESRPGEnemyIntentResult::Planned && Intent.mResult != ESRPGEnemyIntentResult::Executing)
+		{
+			continue;
+		}
+
+		for (const FTileIndex& Tile : Intent.mPathTileIndexes)
+		{
+			PathTiles.AddUnique(Tile);
+		}
+		for (const FTileIndex& Tile : Intent.mEffectTileIndexes)
+		{
+			EffectTiles.AddUnique(Tile);
+		}
+		if (Intent.mTargetTile != FTileIndex::Invalid)
+		{
+			TargetTiles.AddUnique(Intent.mTargetTile);
+		}
+	}
+
+	if (PathTiles.IsEmpty() == false)
+	{
+		mTileMap->SetTileHighlight(PathTiles, ETileHighlightFlag::Aim);
+	}
+	if (EffectTiles.IsEmpty() == false)
+	{
+		mTileMap->SetTileHighlight(EffectTiles, ETileHighlightFlag::Effect);
+	}
+	if (TargetTiles.IsEmpty() == false)
+	{
+		mTileMap->SetTileHighlight(TargetTiles, ETileHighlightFlag::Select);
+	}
 }
 
 void USRPGCombatModel::ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand, bool NeedEndCurrentAction)

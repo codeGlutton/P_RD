@@ -7,15 +7,13 @@
 #include "Simulation/Logger/EventLogger.h"
 
 #include "SRPGFramework/SRPGDiceRollAction.h"
-#include "SRPGFramework/SRPGEnemyTurnPlanner.h"
+#include "SRPGFramework/SRPGTurnEndAction.h"
 
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
 #include "Actor/BoardActor/BoardSelectionTarget.h"
 #include "Pawn/UnitModel.h"
-#include "Pawn/Enemy/EnemyUnitModel.h"
-#include "FunctionLibrary/RandomStreamFunctionLibrary.h"
 
 int8 USRPGActionCreationCommandHandler::GetCommandPriority() const
 {
@@ -177,17 +175,21 @@ void USRPGTurnContext::BeginTurn()
 		}
 		else
 		{
-			/* AI의 경우 움직임 판단 로직 시작 */
+			/* AI는 라운드 시작에 공개·고정된 명령만 실행한다. 계획 누락 시에는 안전하게 대기 후 턴 종료한다. */
 
-			UEnemyUnitModel* Enemy = Cast<UEnemyUnitModel>(mOwner.Get());
-			UUnitModel* Player = CombatModel->GetPlayerUnit();
-			UTileMapModel* TileMap = CombatModel->GetTileMap();
-
-			// PlanTurn에서 Command 리스트를 리턴하면 순서대로 라우터에 전달
-			// @note 스킬 랜덤 선택은 시뮬/라이브 동일 결과를 위해 룸의 이벤트 스트림 사용
-			for (TInstancedStruct<FSRPGCommand>& Command : USRPGEnemyTurnPlanner::PlanTurn(Enemy, Player, TileMap, URandomStreamFunctionLibrary::GetEventStream(this)))
+			CombatModel->MarkEnemyIntentExecuting(mOwner.Get(), mTurnId);
+			if (mFixedEnemyPlan.IsEmpty())
 			{
-				CommandRouterModel->SummitCommand(Command);
+				TInstancedStruct<FSRPGCommand> TurnEndCommand;
+				TurnEndCommand.InitializeAs<FSRPGTurnEndCommand>();
+				CommandRouterModel->SummitCommand(TurnEndCommand);
+			}
+			else
+			{
+				for (const TInstancedStruct<FSRPGCommand>& Command : mFixedEnemyPlan)
+				{
+					CommandRouterModel->SummitCommand(Command);
+				}
 			}
 		}
 		}));
@@ -376,6 +378,16 @@ USRPGCombatModel* USRPGTurnContext::GetParent() const
 UUnitModel* USRPGTurnContext::GetOwner() const
 {
 	return mOwner.Get();
+}
+
+void USRPGTurnContext::SetFixedEnemyPlan(TArray<TInstancedStruct<FSRPGCommand>>&& Commands)
+{
+	mFixedEnemyPlan = MoveTemp(Commands);
+}
+
+const TArray<TInstancedStruct<FSRPGCommand>>& USRPGTurnContext::GetFixedEnemyPlan() const
+{
+	return mFixedEnemyPlan;
 }
 
 int32 USRPGTurnContext::GetTurnId() const

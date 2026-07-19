@@ -114,6 +114,13 @@ void UCombatUIModel::SetSkillUIs(const TArray<FSkillUI>& Skills)
 	OnUIChanged.Broadcast(ECombatUIDomain::Skill);
 }
 
+/** @brief 적 행동 예고 스냅샷을 캐시해 HUD 생성/재오픈 시에도 같은 계획을 다시 그릴 수 있게 한다. */
+void UCombatUIModel::SetEnemyIntentUIs(const TArray<FEnemyIntentUI>& Intents)
+{
+	mEnemyIntentUIs = Intents;
+	OnUIChanged.Broadcast(ECombatUIDomain::Intent);
+}
+
 /** @brief 선택된 스킬 index를 교체한다. */
 void UCombatUIModel::SetSelectedSkill(int32 SelectedIndex)
 {

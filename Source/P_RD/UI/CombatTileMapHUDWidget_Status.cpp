@@ -60,6 +60,22 @@ void UCombatTileMapHUDWidget::HandleCombatUIChanged(ECombatUIDomain Domain)
 		RefreshDiceAssignmentText();
 		RefreshOwnedDiceCards();
 	}
+
+	// 고정 계획과 실행 결과는 별도 Intent 도메인으로 부분 갱신한다.
+	if (Domain == ECombatUIDomain::Intent || Domain == ECombatUIDomain::All)
+	{
+		RefreshEnemyIntentPanel();
+	}
+
+	// 튜토리얼은 예고뿐 아니라 실제 스킬/주사위 선택과 턴 변화를 관찰해 자동으로 다음 단계로 간다.
+	if (Domain == ECombatUIDomain::Intent
+		|| Domain == ECombatUIDomain::Skill
+		|| Domain == ECombatUIDomain::Dice
+		|| Domain == ECombatUIDomain::Turn
+		|| Domain == ECombatUIDomain::All)
+	{
+		UpdateEnemyIntentTutorial();
+	}
 }
 
 void UCombatTileMapHUDWidget::RefreshCombatStatusBar() const

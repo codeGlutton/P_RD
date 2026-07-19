@@ -25,7 +25,12 @@ public:
 
 public:
 	// @brief 시작→목표 순서의 경로 타일 목록(양 끝 포함)
+	UPROPERTY()
 	TArray<FTileIndex> mPathTileIndexes;
+
+	// @brief true면 경로 이탈/점유 변화가 생겨도 재탐색하지 않고 예정 경로를 시도한다.
+	UPROPERTY()
+	bool mUseFixedIntent = false;
 };
 
 /**
@@ -55,6 +60,8 @@ protected:
 private:
 	// @brief StepIndex 칸으로 이동 시작 (모델 점유는 즉시, 도착 처리는 연출 후)
 	void StartStep(int32 StepIndex);
+	// @brief 고정 의도 이동의 출발점/다음 칸이 여전히 유효한지 검사한다.
+	bool ValidateFixedIntentStep(int32 StepIndex);
 	// @brief 현재 칸 도착 처리 (오버랩 통지)
 	void CompleteStep();
 	// @brief 이동연출베리어가 완료됐을 때 호출될 콜백 (그 다음 타일로 이동한다든지)
@@ -68,6 +75,9 @@ protected:
 	// @brief 따라갈 경로 타일 목록 (인덱스 0은 시작 타일)
 	UPROPERTY(Category = Move, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PathTileIndexes"))
 	TArray<FTileIndex> mPathTileIndexes;
+
+	// @brief 적 라운드 시작에 공개된 경로라면 현재 상황에 맞춰 우회하지 않는다.
+	bool mUseFixedIntent = false;
 
 	// @brief 진행 중인 스텝 인덱스 (mPathTileIndexes 기준, 0은 시작 타일이라 1부터 시작)
 	UPROPERTY(Category = Move, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CurrentStepIndex"))

@@ -132,6 +132,8 @@ public:
 	void SetDiceState(const TArray<FDiceSlotUI>& Dice, const TArray<int32>& SelectedIndices, int32 SelectedSum);
 	/** @brief 스킬 레일(이름/아이콘/주사위코스트/사용가능). [합의필요] 소스=USkillComponent(김준형), 현재 Mock. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetSkillUIs(const TArray<FSkillUI>& Skills);
+	/** @brief 라운드 시작에 고정된 적별 행동/대상/경로와 실행 결과 스냅샷을 교체한다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetEnemyIntentUIs(const TArray<FEnemyIntentUI>& Intents);
 
 	/** @brief 선택한 스킬 index. [소스] SRPGSkillBuildAction.mSelectedSkill. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetSelectedSkill(int32 SelectedIndex);
@@ -180,6 +182,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<int32>& GetSelectedDiceIndices() const { return mSelectedDiceIndices; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") int32 GetSelectedDiceSum() const { return mSelectedDiceSum; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FSkillUI>& GetSkillUIs() const { return mSkillUIs; }
+	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FEnemyIntentUI>& GetEnemyIntentUIs() const { return mEnemyIntentUIs; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") int32 GetSelectedSkillIndex() const { return mSelectedSkillIndex; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FSkillDetailUI& GetSkillDetail() const { return mSkillDetail; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FCombatQueueNode>& GetActionQueue() const { return mActionQueue; }
@@ -201,8 +204,10 @@ private:
 	UPROPERTY(Transient) int32 mSelectedDiceSum = 0;
 	/** @brief 스킬 레일 표시 스냅샷. SkillIndex payload와 같은 index 계약을 가진다. */
 	UPROPERTY(Transient) TArray<FSkillUI> mSkillUIs;
+	/** @brief 현재 라운드에 고정된 적 행동 예고와 누적 결과. */
+	UPROPERTY(Transient) TArray<FEnemyIntentUI> mEnemyIntentUIs;
 	/** @brief 현재 선택한 스킬 index. index는 mSkillUIs 배열 기준이다. */
-	UPROPERTY(Transient) int32 mSelectedSkillIndex = 0;
+	UPROPERTY(Transient) int32 mSelectedSkillIndex = INDEX_NONE;
 	/** @brief 마지막 스킬 상세 스냅샷. */
 	UPROPERTY(Transient) FSkillDetailUI mSkillDetail;
 	/** @brief 아직 재생되지 않은 행동 결과 큐. ResolveFrontQueueNode()가 앞에서 하나씩 제거한다. */

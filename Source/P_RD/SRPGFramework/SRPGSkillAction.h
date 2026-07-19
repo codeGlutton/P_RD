@@ -13,7 +13,8 @@
 #include "SRPGSkillAction.generated.h"
 
 class UTileMapModel;
-struct FSRPGSkillAction;
+class UStaticSkillData;
+struct FActiveSkillContext;
 
 USTRUCT()
 struct FSRPGSkillCastCommand : public FSRPGCommand
@@ -24,9 +25,23 @@ public:
 	FSRPGSkillCastCommand();
 
 public:
+	UPROPERTY()
 	int32 mSkillIndex = 0;
+	UPROPERTY()
 	FTileIndex mTargetIndex = FTileIndex::Invalid;
+	UPROPERTY()
 	int32 mDiceSum = 0;
+
+	// @brief 적 의도 계획 시 계산해 둔 효과 타일. 실행 시 재계산하지 않는다.
+	UPROPERTY()
+	TArray<FTileIndex> mFixedEffectTileIndexes;
+
+	UPROPERTY()
+	bool mUseFixedIntent = false;
+
+	// @brief 고정 적 공격만 팀 필터를 풀어 다른 적/장애물도 실제 피격되게 한다.
+	UPROPERTY()
+	bool mAllowFriendlyFire = false;
 };
 
 /**
@@ -52,5 +67,24 @@ protected:
 private:
 	// @brief 턴 컨텍스트 → 전투 모델 → 타일 맵 모델을 꺼내온다
 	UTileMapModel* GetTileMap() const;
+
+	// @brief 기존 Smash 스킬을 선택 주사위 합만큼 실제 보드 유닛을 미는 개입으로 확장한다.
+	bool TryStartDicePush(const FActiveSkillContext& Context, const UStaticSkillData* SkillData);
+	void StartDicePushStep(int32 StepIndex);
+	void OnDicePushStepFinished();
+	void ReportDicePushIfMoved();
+	void FinishSkillAction();
+
+private:
+	UPROPERTY(Transient)
+	TObjectPtr<UUnitModel> mDicePushTarget = nullptr;
+
+	UPROPERTY(Transient)
+	TArray<FTileIndex> mDicePushPath;
+
+	int32 mDicePushStepIndex = 0;
+	int32 mDicePushDiceValue = 0;
+	bool mDicePushWasReported = false;
+	bool mIsFixedIntentCast = false;
 };
 

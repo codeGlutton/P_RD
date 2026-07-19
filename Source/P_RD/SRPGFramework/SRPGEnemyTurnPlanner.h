@@ -44,7 +44,8 @@ public:
 		UEnemyUnitModel* Enemy,
 		UUnitModel* Player,
 		const UTileMapModel* TileMap,
-		const FRandomStream& EventStream);
+		const FRandomStream& EventStream,
+		int32 MoveRangeOverride = INDEX_NONE);
 
 private:
 	/**

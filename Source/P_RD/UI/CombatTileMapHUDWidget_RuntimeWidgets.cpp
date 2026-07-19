@@ -8,6 +8,8 @@
 #include "Components/CanvasPanel.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
 #include "Engine/Texture2D.h"
 #include "Styling/SlateTypes.h"
 
@@ -372,6 +374,73 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		}
 	}
 
+	// 고정된 적 계획은 기존 HUD 위 작은 우상단 패널로만 추가한다. 전장을 덮는 새 화면이나 모달 입력막은 만들지 않는다.
+	if (mEnemyIntentPanel == nullptr)
+	{
+		mEnemyIntentPanel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("EnemyIntentPanel"));
+		mEnemyIntentList = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("EnemyIntentList"));
+		if (mEnemyIntentPanel != nullptr && mEnemyIntentList != nullptr)
+		{
+			mEnemyIntentPanel->SetBrushColor(FLinearColor(0.025f, 0.045f, 0.052f, 0.88f));
+			mEnemyIntentPanel->SetPadding(FMargin(14.0f, 12.0f));
+			mEnemyIntentPanel->SetHorizontalAlignment(HAlign_Fill);
+			mEnemyIntentPanel->SetVerticalAlignment(VAlign_Fill);
+			mEnemyIntentPanel->AddChild(mEnemyIntentList);
+			mEnemyIntentPanel->SetVisibility(ESlateVisibility::Collapsed);
+			TargetRootCanvas->AddChildToCanvas(mEnemyIntentPanel);
+		}
+	}
+
+	// 첫 전투 튜토리얼도 하단의 얕은 비모달 패널이다. 첫 '예고 확인' 버튼 외에는 입력을 가로채지 않는다.
+	if (mEnemyIntentTutorialPanel == nullptr)
+	{
+		mEnemyIntentTutorialPanel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("EnemyIntentTutorialPanel"));
+		mEnemyIntentTutorialContent = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("EnemyIntentTutorialContent"));
+		mEnemyIntentTutorialText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("EnemyIntentTutorialText"));
+		mEnemyIntentTutorialContinueButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("EnemyIntentTutorialContinueButton"));
+		mEnemyIntentTutorialContinueText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("EnemyIntentTutorialContinueText"));
+
+		if (mEnemyIntentTutorialPanel != nullptr
+			&& mEnemyIntentTutorialContent != nullptr
+			&& mEnemyIntentTutorialText != nullptr
+			&& mEnemyIntentTutorialContinueButton != nullptr
+			&& mEnemyIntentTutorialContinueText != nullptr)
+		{
+			mEnemyIntentTutorialPanel->SetBrushColor(FLinearColor(0.030f, 0.060f, 0.065f, 0.92f));
+			mEnemyIntentTutorialPanel->SetPadding(FMargin(18.0f, 10.0f));
+			mEnemyIntentTutorialPanel->SetHorizontalAlignment(HAlign_Fill);
+			mEnemyIntentTutorialPanel->SetVerticalAlignment(VAlign_Center);
+			mEnemyIntentTutorialPanel->AddChild(mEnemyIntentTutorialContent);
+
+			mEnemyIntentTutorialText->SetAutoWrapText(true);
+			mEnemyIntentTutorialText->SetJustification(ETextJustify::Center);
+			mEnemyIntentTutorialText->SetLineHeightPercentage(1.12f);
+			mEnemyIntentTutorialText->SetColorAndOpacity(FSlateColor(FLinearColor(0.92f, 1.0f, 0.96f, 1.0f)));
+			FSlateFontInfo TutorialFont = mEnemyIntentTutorialText->GetFont();
+			TutorialFont.Size = 23;
+			mEnemyIntentTutorialText->SetFont(TutorialFont);
+			mEnemyIntentTutorialContent->AddChildToVerticalBox(mEnemyIntentTutorialText);
+
+			mEnemyIntentTutorialContinueButton->SetBackgroundColor(FLinearColor(0.14f, 0.58f, 0.55f, 0.98f));
+			mEnemyIntentTutorialContinueButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleEnemyIntentTutorialContinue);
+			mEnemyIntentTutorialContinueButton->AddChild(mEnemyIntentTutorialContinueText);
+			mEnemyIntentTutorialContinueText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "IntentTutorialContinue", "예고 확인"));
+			mEnemyIntentTutorialContinueText->SetJustification(ETextJustify::Center);
+			mEnemyIntentTutorialContinueText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+			FSlateFontInfo ContinueFont = mEnemyIntentTutorialContinueText->GetFont();
+			ContinueFont.Size = 20;
+			mEnemyIntentTutorialContinueText->SetFont(ContinueFont);
+			if (UVerticalBoxSlot* ContinueSlot = mEnemyIntentTutorialContent->AddChildToVerticalBox(mEnemyIntentTutorialContinueButton))
+			{
+				ContinueSlot->SetPadding(FMargin(130.0f, 8.0f, 130.0f, 0.0f));
+			}
+
+			mEnemyIntentTutorialContinueButton->SetVisibility(ESlateVisibility::Collapsed);
+			mEnemyIntentTutorialPanel->SetVisibility(ESlateVisibility::Collapsed);
+			TargetRootCanvas->AddChildToCanvas(mEnemyIntentTutorialPanel);
+		}
+	}
+
 	if (mMoveButton == nullptr)
 	{
 		mMoveButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("MoveCommandButton"));
@@ -441,5 +510,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 	RebuildSkillRailWidgets();
 	EnsureSkillInputButtons();
 	RebuildEquipmentBar();    // 탑바 좌측 하단 장비 칩(뷰모델 미연결이면 비워 둠)
+	RefreshEnemyIntentPanel();
+	UpdateEnemyIntentTutorial();
 	ApplyRuntimeWidgetLayout();
 }

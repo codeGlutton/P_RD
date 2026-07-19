@@ -166,6 +166,10 @@ void UCombatTileMapHUDWidget::NativeConstruct()
 	{
 		mSkillDetailDismissButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleSkillDetailDismissButtonClicked);
 	}
+	if (mEnemyIntentTutorialContinueButton != nullptr)
+	{
+		mEnemyIntentTutorialContinueButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleEnemyIntentTutorialContinue);
+	}
 }
 
 void UCombatTileMapHUDWidget::NativeDestruct()
@@ -181,6 +185,10 @@ void UCombatTileMapHUDWidget::NativeDestruct()
 	if (mSkillDetailDismissButton != nullptr)
 	{
 		mSkillDetailDismissButton->OnClicked.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleSkillDetailDismissButtonClicked);
+	}
+	if (mEnemyIntentTutorialContinueButton != nullptr)
+	{
+		mEnemyIntentTutorialContinueButton->OnClicked.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleEnemyIntentTutorialContinue);
 	}
 	if (mCombatUIModel != nullptr)
 	{
@@ -263,6 +271,8 @@ void UCombatTileMapHUDWidget::ApplyOpenUI()
 	HideSkillDetail();
 	RefreshSkillRailWidgets();
 	RefreshDiceAssignmentText();
+	RefreshEnemyIntentPanel();   // 구독 전에 push된 라운드 계획도 HUD 재오픈 시 즉시 복원한다.
+	UpdateEnemyIntentTutorial();
 
 	/*
 	 * HUD 루트가 빈 영역(타일맵) 탭도 받아야 NativeOnTouchStarted에서 RequestWorldTouch로

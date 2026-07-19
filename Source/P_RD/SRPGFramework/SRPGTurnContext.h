@@ -10,6 +10,7 @@
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "SRPGFramework/SRPGCommandHandler.h"
+#include "SRPGFramework/SRPGCommand.h"
 #include "SRPGTurnContext.generated.h"
 
 struct FPresentationBarrier;
@@ -102,6 +103,10 @@ public:
 	USRPGCombatModel* GetParent() const;
 	UUnitModel* GetOwner() const;
 
+	/** @brief 라운드 시작에 계산한 적 명령을 교체한다. 적 턴은 이 배열만 실행한다. */
+	void SetFixedEnemyPlan(TArray<TInstancedStruct<FSRPGCommand>>&& Commands);
+	const TArray<TInstancedStruct<FSRPGCommand>>& GetFixedEnemyPlan() const;
+
 	int32 GetTurnId() const;
 
 	bool IsPermanent() const;
@@ -151,6 +156,10 @@ protected:
 	// @brief 액션 큐 처리용 헤드 인덱스
 	UPROPERTY(Category = Action, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "HeadActionIndex"))
 	int32 mHeadActionIndex = 0;
+
+	// @brief 플레이어 턴 전에 계산해 둔 적 전용 고정 명령. 재계획 없이 다음 적 턴에서 제출된다.
+	UPROPERTY(Category = Intent, VisibleAnywhere, meta = (DisplayName = "FixedEnemyPlan"))
+	TArray<TInstancedStruct<FSRPGCommand>> mFixedEnemyPlan;
 
 protected:
 	// @brief 기본 핸들러들

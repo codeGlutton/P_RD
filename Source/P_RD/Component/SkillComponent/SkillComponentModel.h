@@ -66,6 +66,7 @@ public:
 	FTileIndex mSelfTileIndex = FTileIndex::Invalid;
 	FTileIndex mTargetTileIndex = FTileIndex::Invalid;
 	TArray<FTileIndex> mEffectTileIndexes;
+	bool mAllowFriendlyFire = false;
 
 public:
 	int32 mSkillIndex = INDEX_NONE;
@@ -78,6 +79,8 @@ public:
 public:
 	TArray<FTileIndex> mTargetTileIndexes;
 	TArray<IBoardCombatTarget*> mOtherCombatTargets;
+	/** @brief 여러 모션에서 한 번이라도 실제 대상으로 판정된 객체들의 합집합. */
+	TArray<IBoardCombatTarget*> mResolvedCombatTargets;
 
 public:
 	ETileActorDirection mMotionTileMapDir = ETileActorDirection::Forward;
@@ -117,7 +120,14 @@ public:
 	* @param TargetIndex 타겟팅 타일
 	* @param DiceSum 주사위 눈금 합
 	*/
-	void ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum, FOnEndSkillUI Callback = FOnEndSkillUI());
+	void ActivateSkill(
+		UTileMapModel* MapModel,
+		int32 SkillIndex,
+		const FTileIndex& TargetIndex,
+		int32 DiceSum,
+		FOnEndSkillUI Callback = FOnEndSkillUI(),
+		const TArray<FTileIndex>* FixedEffectTileIndexes = nullptr,
+		bool bAllowFriendlyFire = false);
 
 protected:
 	void PlayMotionLayer();
