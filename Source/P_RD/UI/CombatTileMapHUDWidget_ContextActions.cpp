@@ -1095,18 +1095,18 @@ void UCombatTileMapHUDWidget::SetDirectUnitGestureVisual(bool bVisible, const FV
 
 	FVector TouchFloorWorld = FVector::ZeroVector;
 	const bool bHasTouchFloor = GetDirectGestureFloorWorldLocation(ScreenPosition, TouchFloorWorld);
-	// 드래그하는 동안 3D 적은 손가락을 부드럽게 따라간다. 타일 중심의 최종 결과는 기존
-	// Select 타일과 착지 초상 고스트가 동시에 표시하므로, 조작 위치와 판정 위치를 둘 다 볼 수 있다.
+	// 유효한 착지 후보가 정해진 순간부터 3D 적을 실제 판정 타일 중심에 붙인다.
+	// 아직 후보를 못 고른 짧은 구간에만 손가락을 따라가므로, 놓기 전에 최종 배치를 정확히 볼 수 있다.
 	FVector GhostFloorWorld = FVector::ZeroVector;
 	bool bHasGhostFloor = false;
-	if (mDirectUnitGestureDragged && bHasTouchFloor)
-	{
-		GhostFloorWorld = TouchFloorWorld;
-		bHasGhostFloor = true;
-	}
-	else if (bHasSnappedLanding)
+	if (bHasSnappedLanding)
 	{
 		GhostFloorWorld = SnappedLandingWorld;
+		bHasGhostFloor = true;
+	}
+	else if (mDirectUnitGestureDragged && bHasTouchFloor)
+	{
+		GhostFloorWorld = TouchFloorWorld;
 		bHasGhostFloor = true;
 	}
 	else if (bHasTouchFloor)
@@ -1140,7 +1140,7 @@ void UCombatTileMapHUDWidget::SetDirectUnitGestureVisual(bool bVisible, const FV
 		GhostActorLocation, SourceUnit->GetActorRotation());
 
 	FString Label = bHasSnappedLanding
-		? TEXT("손가락을 따라 이동 · 밝은 타일에 배치")
+		? TEXT("이 타일에 배치 · 놓아서 실행")
 		: TEXT("원하는 칸 쪽으로 드래그");
 	if (mDirectArmedSkillIndex == ContextMoveAction)
 	{

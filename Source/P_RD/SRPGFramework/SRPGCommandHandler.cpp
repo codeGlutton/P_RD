@@ -25,24 +25,28 @@ void ISRPGCommandHandler::GetTileActorUnderCursor(UWorld* World, ECollisionChann
 	if (PlayerController != nullptr)
 	{
 		FHitResult HitResult;
+		bool bHit = false;
 
-		// PC: 마우스 커서 지점을 트레이스한다.
-		bool bHit = PlayerController->GetHitResultUnderCursor(Channel, false, HitResult);
-
-		// 모바일: 마우스 커서가 없어 위 트레이스가 실패한다.
-		if (bHit == false)
+		// UI가 명시적인 화면 좌표를 실어 보냈다면 현재 마우스/손가락 위치보다 항상 우선한다.
+		// 드래그 스냅은 손가락 아래 좌표가 아니라 HUD가 고른 유효 타일 중심을 보내므로,
+		// GetHitResultUnderCursor를 먼저 쓰면 보이는 착지칸과 실제 판정칸이 달라진다.
+		if (ScreenPosition.X >= 0.0 && ScreenPosition.Y >= 0.0)
 		{
-			// 1) 손가락 추적(터치 다운 시점): 엔진이 실제 터치 위치를 직접 추적하므로 DPI/역투영 보정이 필요 없다(정석).
-			bHit = PlayerController->GetHitResultUnderFinger(ETouchIndex::Touch1, Channel, false, HitResult);
-
-			// 2) 폴백: 손가락 추적이 비어있으면, 커맨드가 실어온 화면 좌표로 직접 트레이스한다.
-			//    GetHitResultAtScreenPosition은 뷰포트 픽셀을 기대하므로 Slate 절대좌표를 뷰포트 픽셀로 변환해 넘긴다(고DPI 어긋남 방지).
-			if (bHit == false && ScreenPosition.X >= 0.0 && ScreenPosition.Y >= 0.0)
+			FVector2D ViewportPixel = FVector2D::ZeroVector;
+			FVector2D ViewportDPIScaled = FVector2D::ZeroVector;
+			USlateBlueprintLibrary::AbsoluteToViewport(
+				World, ScreenPosition, OUT ViewportPixel, OUT ViewportDPIScaled);
+			bHit = PlayerController->GetHitResultAtScreenPosition(
+				ViewportPixel, Channel, false, HitResult);
+		}
+		else
+		{
+			// 좌표를 싣지 않는 레거시 호출만 실제 커서/첫 번째 손가락을 사용한다.
+			bHit = PlayerController->GetHitResultUnderCursor(Channel, false, HitResult);
+			if (bHit == false)
 			{
-				FVector2D ViewportPixel = FVector2D::ZeroVector;
-				FVector2D ViewportDPIScaled = FVector2D::ZeroVector;
-				USlateBlueprintLibrary::AbsoluteToViewport(World, ScreenPosition, OUT ViewportPixel, OUT ViewportDPIScaled);
-				bHit = PlayerController->GetHitResultAtScreenPosition(ViewportPixel, Channel, false, HitResult);
+				bHit = PlayerController->GetHitResultUnderFinger(
+					ETouchIndex::Touch1, Channel, false, HitResult);
 			}
 		}
 

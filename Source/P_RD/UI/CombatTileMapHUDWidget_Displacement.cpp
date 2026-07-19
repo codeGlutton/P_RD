@@ -169,7 +169,9 @@ void UCombatTileMapHUDWidget::UpdateDisplacementPreviewVisuals(float InDeltaTime
 			{
 				return Unit.mUnitId == Preview.mTargetUnitId;
 			});
-			if (TargetUI != nullptr && TargetUI->mPortrait != nullptr)
+			// 직접 드래그 중에는 실제 3D 반투명 적이 착지 타일에 스냅된다. 같은 자리에
+			// 초상 고스트까지 겹치지 않고, 드래그 외 조준에서만 이 보조 표시를 사용한다.
+			if (bDraggingThisTarget == false && TargetUI != nullptr && TargetUI->mPortrait != nullptr)
 			{
 				mDisplacementLandingGhost->SetBrushFromTexture(TargetUI->mPortrait, false);
 				mDisplacementLandingGhost->SetColorAndOpacity(Preview.mIsPull
