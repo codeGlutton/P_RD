@@ -62,6 +62,19 @@ enum class EEnemyIntentTutorialStage : uint8
 	Complete
 };
 
+/** @brief 행동군 플라이아웃에서 선택한 실제 조작 방식. 동일 스킬 데이터도 전사 행동의 입력 의도를 구분한다. */
+enum class ECombatSubactionMode : uint8
+{
+	None,
+	BasicAttack,
+	ShortThrow,
+	Stagger,
+	Pull,
+	Throw,
+	Swap,
+	Move
+};
+
 /** @brief 유닛 머리 위 HP바(WBP_CombatUnitHpBar) 한 개의 런타임 위젯 참조 묶음. */
 USTRUCT()
 struct FUnitHpBarWidget
@@ -210,6 +223,12 @@ private:
 
 	/** @brief 보유 스킬 스냅샷(FSkillUI) 기준으로 레일 슬롯 3상태(보유/사용불가/빈칸)를 다시 그린다. */
 	void RefreshSkillRailWidgets();
+	/** @brief 선택한 공격/손아귀/제압/기동 행동군의 세부 행동 플라이아웃을 만든다. */
+	void EnsureActionSubmenuWidgets();
+	void RefreshActionSubmenuWidgets();
+	void OpenActionFamily(int32 RailSlotIndex);
+	UFUNCTION()
+	void HandleActionSubmenuClicked(int32 SubactionSlotIndex);
 
 	/** @brief 보유 스킬의 표시 이름을 뷰모델에서 읽는다(없으면 빈 텍스트 - 시안 라벨 폴백 없음). */
 	FText GetOwnedSkillLabel(int32 SkillIndex) const;
@@ -272,6 +291,8 @@ private:
 	bool FindUnitAtScreenPosition(const FVector2D& ScreenPosition, int32& OutUnitId, bool& OutIsPlayer, FVector2D& OutUnitScreenPosition) const;
 	/** @brief 기본 공격과 방해처럼 방향 선택이 없는 행동을 적 한 번 탭으로 즉시 실행한다. */
 	bool TryExecuteTapSkillAtScreenPosition(const FVector2D& ScreenPosition);
+	/** @brief 기동 행동의 목적 타일을 한 번 탭하면 프리뷰 확인 없이 즉시 실행한다. */
+	bool TryExecuteTapTileActionAtScreenPosition(const FVector2D& ScreenPosition);
 	/** @brief 유닛 직접 드래그의 시작/갱신/종료와 실시간 손잡이 피드백. */
 	bool BeginDirectUnitGesture(const FVector2D& ScreenPosition);
 	void UpdateDirectUnitGesture(const FVector2D& ScreenPosition);
@@ -1101,6 +1122,27 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UIndexedButtonWidget>> mSkillInputButtons;
 
+	/** @brief 행동군을 누르면 레일 오른쪽에 펼쳐지는 실제 전사 행동 카드. */
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mActionSubmenuTitleText;
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UBorder>> mActionSubmenuPanels;
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UImage>> mActionSubmenuIcons;
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UTextBlock>> mActionSubmenuTexts;
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UIndexedButtonWidget>> mActionSubmenuButtons;
+	TArray<int32> mActionSubmenuSkillIndices;
+	TArray<int32> mActionSubmenuDesiredPowers;
+	TArray<ECombatSubactionMode> mActionSubmenuModes;
+	TArray<FText> mActionSubmenuNames;
+	int32 mExpandedActionFamily = INDEX_NONE;
+	int32 mActiveActionFamily = INDEX_NONE;
+	ECombatSubactionMode mSelectedSubactionMode = ECombatSubactionMode::None;
+	FText mSelectedSubactionName;
+	int32 mSelectedSubactionDesiredPower = 6;
+
 	/** @brief 현재 선택된 스킬 index */
 	int32 mSelectedSkillIndex = INDEX_NONE;
 
@@ -1115,6 +1157,8 @@ private:
 
 	/** @brief 지금 누르고 있는 스킬 index */
 	int32 mPressedSkillIndex = INDEX_NONE;
+	/** @brief 지금 누르고 있는 네 행동군 레일 슬롯. */
+	int32 mPressedSkillRailIndex = INDEX_NONE;
 
 	/** @brief 현재 프레임에서 스킬 레일 입력을 추적 중인지 여부 */
 	bool mSkillPressing = false;

@@ -183,6 +183,21 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 	{
 		ApplyScreenRect(mSkillInputButtons[SkillIndex], GetSkillRailItemRect(SkillIndex, SkillInputCount), CombatSkillInputZOrder);
 	}
+	// 선택한 행동군의 세부 행동은 레일 바로 오른쪽에 세로 플라이아웃으로 붙인다.
+	// 전장 중앙과 우측 적 계획판을 침범하지 않는 폭으로 제한하고, 입력/렌더가 같은 rect를 공유한다.
+	ApplyScreenRect(mActionSubmenuTitleText, FAnchors(0.218f, 0.225f, 0.455f, 0.265f), 965);
+	for (int32 SlotIndex = 0; SlotIndex < mActionSubmenuButtons.Num(); ++SlotIndex)
+	{
+		const float Top = 0.270f + StaticCast<float>(SlotIndex) * 0.105f;
+		const FAnchors CardRect(0.218f, Top, 0.455f, Top + 0.095f);
+		ApplyScreenRect(mActionSubmenuPanels.IsValidIndex(SlotIndex) ? mActionSubmenuPanels[SlotIndex].Get() : nullptr,
+			CardRect, 964);
+		ApplyScreenRect(mActionSubmenuIcons.IsValidIndex(SlotIndex) ? mActionSubmenuIcons[SlotIndex].Get() : nullptr,
+			FAnchors(0.224f, Top + 0.010f, 0.263f, Top + 0.085f), 966);
+		ApplyScreenRect(mActionSubmenuTexts.IsValidIndex(SlotIndex) ? mActionSubmenuTexts[SlotIndex].Get() : nullptr,
+			FAnchors(0.270f, Top + 0.012f, 0.447f, Top + 0.085f), 966);
+		ApplyScreenRect(mActionSubmenuButtons[SlotIndex], CardRect, 967);
+	}
 	// 디자이너 WBP에 구 레일/하단 트레이 프레임이 구워져 있어도 새 런타임 UI 뒤에 잔상으로 남기지 않는다.
 	if (WidgetTree != nullptr)
 	{

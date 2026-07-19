@@ -265,7 +265,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		{
 			mSkillDockPanel->SetBrushColor(FLinearColor(0.018f, 0.032f, 0.045f, 0.78f));
 			mSkillDockPanel->SetVisibility(ESlateVisibility::HitTestInvisible);
-			mSkillDockTitleText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "ActionDockTitle", "행동  ·  공격은 탭 / 손아귀는 드래그"));
+			mSkillDockTitleText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "ActionDockTitle", "행동군 선택 → 세부 행동"));
 			mSkillDockTitleText->SetColorAndOpacity(FSlateColor(FLinearColor(0.80f, 0.96f, 1.0f, 1.0f)));
 			mSkillDockTitleText->SetJustification(ETextJustify::Left);
 			mSkillDockTitleText->SetVisibility(ESlateVisibility::HitTestInvisible);
@@ -926,6 +926,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 
 	RebuildSkillRailWidgets();
 	EnsureSkillInputButtons();
+	EnsureActionSubmenuWidgets();
 	EnsureContextActionWidgets();
 	RebuildEquipmentBar();    // 탑바 좌측 하단 장비 칩(뷰모델 미연결이면 비워 둠)
 	RefreshEnemyIntentPanel();

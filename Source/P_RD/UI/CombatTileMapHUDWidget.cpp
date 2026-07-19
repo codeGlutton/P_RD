@@ -283,6 +283,10 @@ void UCombatTileMapHUDWidget::ApplyOpenUI()
 	RebuildUnitHpBars();        // 유닛 수에 맞춰 머리 위 HP바를 만든다.
 	ClearOwnedDiceSelectionHighlight();
 	mSelectedSkillIndex = INDEX_NONE;
+	mExpandedActionFamily = INDEX_NONE;
+	mActiveActionFamily = INDEX_NONE;
+	mSelectedSubactionMode = ECombatSubactionMode::None;
+	mSelectedSubactionName = FText::GetEmpty();
 	CloseContextActions();
 	HideSkillDetail();
 	RefreshSkillRailWidgets();

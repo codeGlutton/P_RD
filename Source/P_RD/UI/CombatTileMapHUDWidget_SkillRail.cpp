@@ -12,6 +12,23 @@
 
 using namespace RDCombatHUD;
 
+namespace
+{
+	constexpr int32 ActionSubmenuSlotCount = 3;
+
+	FString GetActionFamilyName(int32 FamilyIndex)
+	{
+		switch (FamilyIndex)
+		{
+		case 0: return TEXT("공격");
+		case 1: return TEXT("손아귀");
+		case 2: return TEXT("제압");
+		case 3: return TEXT("기동");
+		default: return TEXT("행동");
+		}
+	}
+}
+
 void UCombatTileMapHUDWidget::RebuildSkillRailWidgets()
 {
 	if (RootCanvas == nullptr || WidgetTree == nullptr || mSkillRailPanels.Num() == CombatSkillSlotCount)
@@ -106,9 +123,6 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 	mSelectedSkillIndex = SkillIndex;
 
 	const TArray<FSkillUI>* Skills = mCombatUIModel != nullptr ? &mCombatUIModel->GetSkillUIs() : nullptr;
-	const FSkillUI* SelectedSkill = (Skills != nullptr && Skills->IsValidIndex(mSelectedSkillIndex))
-		? &(*Skills)[mSelectedSkillIndex]
-		: nullptr;
 
 	for (int32 RailSlotIndex = 0; RailSlotIndex < mSkillRailPanels.Num(); ++RailSlotIndex)
 	{
@@ -116,11 +130,10 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 		const FSkillUI* Skill = (Skills != nullptr && Skills->IsValidIndex(SkillDataIndex)) ? &(*Skills)[SkillDataIndex] : nullptr;
 		const bool bOwned = Skill != nullptr && Skill->mName.IsEmpty() == false;
 		const bool bUsable = bOwned && Skill->mIsUsable;
-		// 손아귀 카드가 내부적으로 던지기/교환 기술을 골라도 하나의 행동군이 계속 선택된 것처럼 보인다.
+		// 내부 스킬 index가 여러 행동군에서 재사용되므로 선택 강조는 실제로 연 행동군만 소유한다.
 		const bool bSelected = bOwned
-			&& (SkillDataIndex == mSelectedSkillIndex
-				|| (Skill->mIsPullSkill && SelectedSkill != nullptr
-					&& (SelectedSkill->mIsThrowSkill || SelectedSkill->mIsSwapSkill)));
+			&& (RailSlotIndex == mActiveActionFamily
+				|| RailSlotIndex == mExpandedActionFamily);
 		const bool bTutorialFocus = bOwned
 			&& Skill->mIsDisplacementSkill
 			&& Skill->mIsPullSkill
@@ -190,44 +203,27 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 					continue;
 				}
 
-				FString Role = TEXT("공격");
-				if (Skill->mIsDisplacementSkill)
-				{
-					Role = Skill->mIsPullSkill
-						? TEXT("적 드래그 → 당기기 / 던지기 / 교환")
-						: (Skill->mIsThrowSkill
-							? TEXT("인접 적 → 8방향 투척")
-							: (Skill->mIsStaggerSkill ? TEXT("적 한 번 탭 → 다음 이동 -1") : TEXT("위치 개입")));
-				}
-				else if (SkillDataIndex == 1)
-				{
-					Role = TEXT("이동");
-				}
-				else if (SkillDataIndex == 0)
-				{
-					Role = TEXT("적 한 번 탭 → 즉시 공격");
-				}
-				const FString DiceCost = Skill->mIsPullSkill
-					? TEXT("주사위 1~3개 자동")
-					: (Skill->mDiceCost > 0
-						? FString::Printf(TEXT("주사위 %d개"), Skill->mDiceCost)
-						: TEXT("주사위 없음"));
-				const int32 Range = FMath::RoundToInt(Skill->mTargeting.mSelectRange);
-				const FString RangeText = Range > 0 ? FString::Printf(TEXT(" · 거리 %d"), Range) : TEXT("");
 				const FString StateText = bUsable ? TEXT("") : TEXT(" · 사용 불가");
-				const FString CardText = Skill->mIsPullSkill
-					? FString::Printf(
-						TEXT("%s\n당기기 / 던지기 / 교환\n거리 %d · 주사위 1~3 자동%s"),
-						*Skill->mName.ToString(),
-						Range,
-						*StateText)
-					: FString::Printf(
-						TEXT("%s\n%s · %s%s%s"),
-						*Skill->mName.ToString(),
-						*Role,
-						*DiceCost,
-						*RangeText,
-						*StateText);
+				FString FamilySummary;
+				switch (RailSlotIndex)
+				{
+				case 0: FamilySummary = TEXT("베기 · 밀어베기 · 방패치기"); break;
+				case 1: FamilySummary = TEXT("끌기 · 던지기 · 자리교환"); break;
+				case 2: FamilySummary = TEXT("다리걸기 · 방패 밀치기"); break;
+				case 3: FamilySummary = TEXT("전진 · 돌파"); break;
+				default: break;
+				}
+				const FString ActiveHint = RailSlotIndex == mExpandedActionFamily
+					? TEXT("세부 행동을 고르세요")
+					: (RailSlotIndex == mActiveActionFamily && mSelectedSubactionName.IsEmpty() == false
+						? FString::Printf(TEXT("선택: %s"), *mSelectedSubactionName.ToString())
+						: TEXT("탭해서 펼치기"));
+				const FString CardText = FString::Printf(
+					TEXT("%s\n%s\n%s%s"),
+					*GetActionFamilyName(RailSlotIndex),
+					*FamilySummary,
+					*ActiveHint,
+					*StateText);
 				SkillRailText->SetText(FText::FromString(CardText));
 				SkillRailText->SetColorAndOpacity(FSlateColor(bSelected || bTutorialFocus
 					? FLinearColor(1.0f, 0.88f, 0.34f, 1.0f)
@@ -256,6 +252,242 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 		}
 	}
 	RefreshContextActions();
+	RefreshActionSubmenuWidgets();
+}
+
+void UCombatTileMapHUDWidget::EnsureActionSubmenuWidgets()
+{
+	if (WidgetTree == nullptr || GetSkinTargetCanvas() == nullptr
+		|| mActionSubmenuButtons.Num() == ActionSubmenuSlotCount)
+	{
+		return;
+	}
+
+	mActionSubmenuTitleText = WidgetTree->ConstructWidget<UTextBlock>(
+		UTextBlock::StaticClass(), TEXT("ActionSubmenuTitleText"));
+	if (mActionSubmenuTitleText != nullptr)
+	{
+		FSlateFontInfo Font = mActionSubmenuTitleText->GetFont();
+		Font.Size = 17;
+		Font.OutlineSettings.OutlineSize = 2;
+		Font.OutlineSettings.OutlineColor = FLinearColor::Black;
+		mActionSubmenuTitleText->SetFont(Font);
+		mActionSubmenuTitleText->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.83f, 0.30f, 1.0f)));
+		mActionSubmenuTitleText->SetJustification(ETextJustify::Left);
+		mActionSubmenuTitleText->SetVisibility(ESlateVisibility::Collapsed);
+		GetSkinTargetCanvas()->AddChildToCanvas(mActionSubmenuTitleText);
+	}
+
+	for (int32 SlotIndex = 0; SlotIndex < ActionSubmenuSlotCount; ++SlotIndex)
+	{
+		UBorder* Panel = WidgetTree->ConstructWidget<UBorder>(
+			UBorder::StaticClass(), FName(*FString::Printf(TEXT("ActionSubmenuPanel_%d"), SlotIndex)));
+		UImage* Icon = WidgetTree->ConstructWidget<UImage>(
+			UImage::StaticClass(), FName(*FString::Printf(TEXT("ActionSubmenuIcon_%d"), SlotIndex)));
+		UTextBlock* TextWidget = WidgetTree->ConstructWidget<UTextBlock>(
+			UTextBlock::StaticClass(), FName(*FString::Printf(TEXT("ActionSubmenuText_%d"), SlotIndex)));
+		UIndexedButtonWidget* Button = WidgetTree->ConstructWidget<UIndexedButtonWidget>(
+			UIndexedButtonWidget::StaticClass(), FName(*FString::Printf(TEXT("ActionSubmenuButton_%d"), SlotIndex)));
+		if (Panel == nullptr || Icon == nullptr || TextWidget == nullptr || Button == nullptr)
+		{
+			continue;
+		}
+		Panel->SetPadding(FMargin(5.0f));
+		Panel->SetBrushColor(FLinearColor(0.025f, 0.055f, 0.070f, 0.96f));
+		Panel->SetVisibility(ESlateVisibility::Collapsed);
+		Icon->SetVisibility(ESlateVisibility::Collapsed);
+		TextWidget->SetJustification(ETextJustify::Left);
+		TextWidget->SetAutoWrapText(false);
+		TextWidget->SetLineHeightPercentage(0.90f);
+		FSlateFontInfo Font = TextWidget->GetFont();
+		Font.Size = 14;
+		Font.OutlineSettings.OutlineSize = 1;
+		Font.OutlineSettings.OutlineColor = FLinearColor::Black;
+		TextWidget->SetFont(Font);
+		TextWidget->SetVisibility(ESlateVisibility::Collapsed);
+		Button->SetButtonIndex(SlotIndex);
+		Button->SetBackgroundColor(GetTransparentInputButtonColor());
+		Button->OnIndexedClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleActionSubmenuClicked);
+		Button->SetVisibility(ESlateVisibility::Collapsed);
+		GetSkinTargetCanvas()->AddChildToCanvas(Panel);
+		GetSkinTargetCanvas()->AddChildToCanvas(Icon);
+		GetSkinTargetCanvas()->AddChildToCanvas(TextWidget);
+		GetSkinTargetCanvas()->AddChildToCanvas(Button);
+		mActionSubmenuPanels.Add(Panel);
+		mActionSubmenuIcons.Add(Icon);
+		mActionSubmenuTexts.Add(TextWidget);
+		mActionSubmenuButtons.Add(Button);
+	}
+	RefreshActionSubmenuWidgets();
+}
+
+void UCombatTileMapHUDWidget::RefreshActionSubmenuWidgets()
+{
+	mActionSubmenuSkillIndices.Reset();
+	mActionSubmenuDesiredPowers.Reset();
+	mActionSubmenuModes.Reset();
+	mActionSubmenuNames.Reset();
+	const bool bCanShow = mExpandedActionFamily != INDEX_NONE
+		&& mCombatControlsHidden == false
+		&& mCombatUIModel != nullptr;
+	if (bCanShow)
+	{
+		const TArray<FSkillUI>& Skills = mCombatUIModel->GetSkillUIs();
+		auto AddEntry = [this, &Skills](
+			int32 SkillIndex,
+			const TCHAR* Name,
+			const TCHAR* Hint,
+			int32 DesiredPower,
+			ECombatSubactionMode Mode)
+		{
+			if (Skills.IsValidIndex(SkillIndex) == false || Skills[SkillIndex].mIsUsable == false
+				|| mActionSubmenuSkillIndices.Num() >= ActionSubmenuSlotCount)
+			{
+				return;
+			}
+			mActionSubmenuSkillIndices.Add(SkillIndex);
+			mActionSubmenuDesiredPowers.Add(DesiredPower);
+			mActionSubmenuModes.Add(Mode);
+			mActionSubmenuNames.Add(FText::FromString(Name));
+			const int32 AddedIndex = mActionSubmenuSkillIndices.Num() - 1;
+			if (mActionSubmenuTexts.IsValidIndex(AddedIndex) && mActionSubmenuTexts[AddedIndex] != nullptr)
+			{
+				mActionSubmenuTexts[AddedIndex]->SetText(FText::FromString(FString::Printf(TEXT("%s\n%s"), Name, Hint)));
+			}
+		};
+		const int32 PullIndex = FindDirectSkillIndex(&FSkillUI::mIsPullSkill);
+		const int32 ThrowIndex = FindDirectSkillIndex(&FSkillUI::mIsThrowSkill);
+		const int32 StaggerIndex = FindDirectSkillIndex(&FSkillUI::mIsStaggerSkill);
+		const int32 SwapIndex = FindDirectSkillIndex(&FSkillUI::mIsSwapSkill);
+		switch (mExpandedActionFamily)
+		{
+		case 0:
+			AddEntry(0, TEXT("베기"), TEXT("적 탭 · 즉시 공격"), 3, ECombatSubactionMode::BasicAttack);
+			AddEntry(ThrowIndex, TEXT("밀어베기"), TEXT("인접 적 드래그 · 짧은 밀침"), 1, ECombatSubactionMode::ShortThrow);
+			AddEntry(StaggerIndex, TEXT("방패치기"), TEXT("적 탭 · 이동 방해"), 3, ECombatSubactionMode::Stagger);
+			break;
+		case 1:
+			AddEntry(PullIndex, TEXT("끌어오기"), TEXT("적 드래그 · 기사 주변 배치"), 6, ECombatSubactionMode::Pull);
+			AddEntry(ThrowIndex, TEXT("집어던지기"), TEXT("인접 적 드래그 · 충돌"), 6, ECombatSubactionMode::Throw);
+			AddEntry(SwapIndex, TEXT("자리 바꾸기"), TEXT("인접 적 탭 · 즉시 교환"), 4, ECombatSubactionMode::Swap);
+			break;
+		case 2:
+			AddEntry(StaggerIndex, TEXT("다리 걸기"), TEXT("적 탭 · 다음 이동 감소"), 6, ECombatSubactionMode::Stagger);
+			AddEntry(ThrowIndex, TEXT("방패 밀치기"), TEXT("인접 적 드래그 · 진형 붕괴"), 1, ECombatSubactionMode::ShortThrow);
+			break;
+		case 3:
+			AddEntry(1, TEXT("전진"), TEXT("빈 타일 탭 · 위치 이동"), 2, ECombatSubactionMode::Move);
+			AddEntry(SwapIndex, TEXT("돌파"), TEXT("인접 적 탭 · 서로 자리 교환"), 4, ECombatSubactionMode::Swap);
+			break;
+		default:
+			break;
+		}
+	}
+
+	if (mActionSubmenuTitleText != nullptr)
+	{
+		mActionSubmenuTitleText->SetText(FText::FromString(FString::Printf(
+			TEXT("%s · 세부 행동"), *GetActionFamilyName(mExpandedActionFamily))));
+		mActionSubmenuTitleText->SetVisibility(bCanShow
+			? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	}
+	const TArray<FSkillUI>* Skills = mCombatUIModel != nullptr ? &mCombatUIModel->GetSkillUIs() : nullptr;
+	for (int32 SlotIndex = 0; SlotIndex < mActionSubmenuButtons.Num(); ++SlotIndex)
+	{
+		const bool bVisible = bCanShow && mActionSubmenuSkillIndices.IsValidIndex(SlotIndex);
+		const int32 SkillIndex = bVisible ? mActionSubmenuSkillIndices[SlotIndex] : INDEX_NONE;
+		const FSkillUI* Skill = Skills != nullptr && Skills->IsValidIndex(SkillIndex) ? &(*Skills)[SkillIndex] : nullptr;
+		const bool bSelected = bVisible && mActionSubmenuModes.IsValidIndex(SlotIndex)
+			&& mSelectedSubactionMode == mActionSubmenuModes[SlotIndex]
+			&& mActiveActionFamily == mExpandedActionFamily;
+		if (mActionSubmenuPanels.IsValidIndex(SlotIndex) && mActionSubmenuPanels[SlotIndex] != nullptr)
+		{
+			mActionSubmenuPanels[SlotIndex]->SetBrushColor(bSelected
+				? FLinearColor(0.52f, 0.34f, 0.045f, 0.98f)
+				: FLinearColor(0.025f, 0.055f, 0.070f, 0.96f));
+			mActionSubmenuPanels[SlotIndex]->SetVisibility(bVisible
+				? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+		}
+		if (mActionSubmenuIcons.IsValidIndex(SlotIndex) && mActionSubmenuIcons[SlotIndex] != nullptr)
+		{
+			if (bVisible && Skill != nullptr && Skill->mIcon != nullptr)
+			{
+				mActionSubmenuIcons[SlotIndex]->SetBrushFromTexture(Skill->mIcon, false);
+				mActionSubmenuIcons[SlotIndex]->SetVisibility(ESlateVisibility::HitTestInvisible);
+			}
+			else
+			{
+				mActionSubmenuIcons[SlotIndex]->SetVisibility(ESlateVisibility::Collapsed);
+			}
+		}
+		if (mActionSubmenuTexts.IsValidIndex(SlotIndex) && mActionSubmenuTexts[SlotIndex] != nullptr)
+		{
+			mActionSubmenuTexts[SlotIndex]->SetColorAndOpacity(FSlateColor(bSelected
+				? FLinearColor(1.0f, 0.88f, 0.34f, 1.0f)
+				: FLinearColor(0.88f, 0.96f, 1.0f, 1.0f)));
+			mActionSubmenuTexts[SlotIndex]->SetVisibility(bVisible
+				? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+		}
+		if (mActionSubmenuButtons[SlotIndex] != nullptr)
+		{
+			mActionSubmenuButtons[SlotIndex]->SetVisibility(bVisible
+				? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+		}
+	}
+}
+
+void UCombatTileMapHUDWidget::OpenActionFamily(int32 RailSlotIndex)
+{
+	if (mCombatUIModel == nullptr || RailSlotIndex < 0 || RailSlotIndex >= CombatSkillSlotCount)
+	{
+		return;
+	}
+	if (mCombatUIModel->GetSelectedSkillIndex() != INDEX_NONE)
+	{
+		mCombatUIModel->RequestCancel();
+	}
+	const bool bClose = mExpandedActionFamily == RailSlotIndex;
+	mExpandedActionFamily = bClose ? INDEX_NONE : RailSlotIndex;
+	mActiveActionFamily = RailSlotIndex;
+	mSelectedSubactionMode = ECombatSubactionMode::None;
+	mSelectedSubactionName = FText::GetEmpty();
+	RefreshSkillRailWidgets();
+	UpdateEnemyIntentTutorial();
+}
+
+void UCombatTileMapHUDWidget::HandleActionSubmenuClicked(int32 SubactionSlotIndex)
+{
+	if (mCombatUIModel == nullptr
+		|| mActionSubmenuSkillIndices.IsValidIndex(SubactionSlotIndex) == false
+		|| mActionSubmenuDesiredPowers.IsValidIndex(SubactionSlotIndex) == false
+		|| mActionSubmenuModes.IsValidIndex(SubactionSlotIndex) == false
+		|| mActionSubmenuNames.IsValidIndex(SubactionSlotIndex) == false)
+	{
+		return;
+	}
+	const int32 SkillIndex = mActionSubmenuSkillIndices[SubactionSlotIndex];
+	const int32 DesiredPower = mActionSubmenuDesiredPowers[SubactionSlotIndex];
+	const ECombatSubactionMode Mode = mActionSubmenuModes[SubactionSlotIndex];
+	const FText DisplayName = mActionSubmenuNames[SubactionSlotIndex];
+	if (mCombatUIModel->GetSelectedSkillIndex() != INDEX_NONE)
+	{
+		mCombatUIModel->RequestCancel();
+	}
+	mSelectedSubactionMode = Mode;
+	mSelectedSubactionName = DisplayName;
+	mSelectedSubactionDesiredPower = DesiredPower;
+	if (SelectSkillWithAutomaticDice(SkillIndex, DesiredPower) == false)
+	{
+		mSelectedSubactionMode = ECombatSubactionMode::None;
+		mSelectedSubactionName = FText::GetEmpty();
+		RefreshActionSubmenuWidgets();
+		return;
+	}
+	mExpandedActionFamily = INDEX_NONE;
+	RefreshSkillRailWidgets();
+	RefreshOwnedDiceCards();
+	RefreshDiceAssignmentText();
+	UpdateEnemyIntentTutorial();
 }
 
 /** @details 개별 밀기/교환 데이터는 손아귀의 내부 실행 수단으로만 남기고 레일에는 노출하지 않는다. */

@@ -416,6 +416,10 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 	ToggleWidgets(mContextActionIcons, DisplayVis);
 	ToggleWidgets(mContextActionTexts, DisplayVis);
 	ToggleWidgets(mContextActionButtons, InputVis);
+	ToggleWidgets(mActionSubmenuPanels, DisplayVis);
+	ToggleWidgets(mActionSubmenuIcons, DisplayVis);
+	ToggleWidgets(mActionSubmenuTexts, DisplayVis);
+	ToggleWidgets(mActionSubmenuButtons, InputVis);
 	ToggleWidgets(mEquipmentChips, DisplayVis);
 	ToggleWidgets(mEquipmentChipTexts, DisplayVis);
 	ToggleWidgets(mEquipSlotButtons, InputVis);
@@ -425,6 +429,7 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 	if (mDiceTrayTitleText != nullptr) { mDiceTrayTitleText->SetVisibility(DisplayVis); }
 	if (mDiceAssignmentText != nullptr) { mDiceAssignmentText->SetVisibility(DisplayVis); }
 	if (mContextActionTitleText != nullptr) { mContextActionTitleText->SetVisibility(DisplayVis); }
+	if (mActionSubmenuTitleText != nullptr) { mActionSubmenuTitleText->SetVisibility(DisplayVis); }
 
 	// mCombatStatusBarText는 항상 Collapsed(Lv/HP/Gold는 WBP HUD_M_* 라벨이 표시)이므로 여기서 손대지 않는다.
 	// 복원 시 Visible로 켜면 Lv/Gold/HP 필과 같은 좌상단 위치라 빈 텍스트가 필 위에 겹친다.
@@ -438,6 +443,7 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 		RefreshEnemyIntentPanel();
 		RefreshDisplacementPreview();
 		RefreshContextActions();
+		RefreshActionSubmenuWidgets();
 		UpdateEnemyIntentTutorial();
 	}
 	else

@@ -877,9 +877,13 @@ bool UCombatTileMapHUDWidget::TryExecuteTapSkillAtScreenPosition(const FVector2D
 		return false;
 	}
 	const FSkillUI& Skill = Skills[SelectedSkillIndex];
-	// 현재 네 행동군 중 기본 공격(데이터 0)과 방해만 탭 즉시 실행한다.
-	// 손아귀의 당기기/던지기/교환과 이동은 반드시 목적지를 드래그해서 정한다.
-	if (SelectedSkillIndex != 0 && Skill.mIsStaggerSkill == false)
+	const bool bExplicitTapAction = mSelectedSubactionMode == ECombatSubactionMode::BasicAttack
+		|| mSelectedSubactionMode == ECombatSubactionMode::Stagger
+		|| mSelectedSubactionMode == ECombatSubactionMode::Swap;
+	const bool bLegacyTapAction = mSelectedSubactionMode == ECombatSubactionMode::None
+		&& (SelectedSkillIndex == 0 || Skill.mIsStaggerSkill);
+	// 공격/제압/자리교환은 적 한 번 탭, 손아귀와 밀치기는 방향 드래그, 기동은 빈 타일 탭이다.
+	if (bExplicitTapAction == false && bLegacyTapAction == false)
 	{
 		return false;
 	}
@@ -909,7 +913,29 @@ bool UCombatTileMapHUDWidget::TryExecuteTapSkillAtScreenPosition(const FVector2D
 	}
 	// 유효한 적을 눌렀다면 이 입력은 여기서 소유한다. 실패 좌표를 월드 입력으로 한 번 더 보내
 	// 프리뷰/취소 상태가 이중 전환되는 일을 막는다.
-	ExecuteDirectSkill(SelectedSkillIndex, UnitScreenPosition, nullptr, 3);
+	ExecuteDirectSkill(
+		SelectedSkillIndex,
+		UnitScreenPosition,
+		nullptr,
+		FMath::Max(mSelectedSubactionDesiredPower, 1));
+	return true;
+}
+
+bool UCombatTileMapHUDWidget::TryExecuteTapTileActionAtScreenPosition(const FVector2D& ScreenPosition)
+{
+	if (mCombatUIModel == nullptr || mSelectedSubactionMode != ECombatSubactionMode::Move
+		|| mCombatUIModel->GetSelectedSkillIndex() == INDEX_NONE)
+	{
+		return false;
+	}
+	mCombatUIModel->RequestWorldTouch(ScreenPosition, false);
+	if (mCombatUIModel->GetTurnUI().mPhase == ECombatBuildPhaseUI::Preview)
+	{
+		mCombatUIModel->RequestConfirmSkill();
+		RefreshOwnedDiceCards();
+		RefreshDiceAssignmentText();
+	}
+	// 유효/무효와 관계없이 기동 모드의 월드 탭은 여기서 한 번만 전달한다.
 	return true;
 }
 
@@ -921,8 +947,13 @@ bool UCombatTileMapHUDWidget::BeginDirectUnitGesture(const FVector2D& ScreenPosi
 	}
 	const int32 SelectedSkillIndex = mCombatUIModel->GetSelectedSkillIndex();
 	const TArray<FSkillUI>& Skills = mCombatUIModel->GetSkillUIs();
+	const bool bExplicitDragAction = mSelectedSubactionMode == ECombatSubactionMode::Pull
+		|| mSelectedSubactionMode == ECombatSubactionMode::Throw
+		|| mSelectedSubactionMode == ECombatSubactionMode::ShortThrow;
 	const bool bSelectedDragAction = Skills.IsValidIndex(SelectedSkillIndex)
-		&& (Skills[SelectedSkillIndex].mIsPullSkill || Skills[SelectedSkillIndex].mIsThrowSkill);
+		&& (bExplicitDragAction
+			|| (mSelectedSubactionMode == ECombatSubactionMode::None
+				&& (Skills[SelectedSkillIndex].mIsPullSkill || Skills[SelectedSkillIndex].mIsThrowSkill)));
 	if (SelectedSkillIndex != INDEX_NONE && bSelectedDragAction == false)
 	{
 		// 기본 공격/방해는 TryExecuteTapSkillAtScreenPosition, 이동은 기존 타일 입력이 담당한다.
@@ -945,7 +976,10 @@ bool UCombatTileMapHUDWidget::BeginDirectUnitGesture(const FVector2D& ScreenPosi
 			return false;
 		}
 		int32 ArmedSkillIndex = SelectedSkillIndex;
-		const bool bStartedWithGrip = Skills[SelectedSkillIndex].mIsPullSkill;
+		// 구형 통합 손아귀 선택에만 거리 기반 자동 전환을 남긴다. 행동군 플라이아웃에서
+		// 끌기/던지기를 명시적으로 고른 경우에는 선택한 세부 행동을 절대 바꾸지 않는다.
+		const bool bStartedWithGrip = Skills[SelectedSkillIndex].mIsPullSkill
+			&& mSelectedSubactionMode == ECombatSubactionMode::None;
 		if (bStartedWithGrip)
 		{
 			const FUnitUI* TargetUnit = mCombatUIModel->GetUnitUIs().FindByPredicate([UnitId](const FUnitUI& Unit)
@@ -1320,8 +1354,10 @@ void UCombatTileMapHUDWidget::SetDirectUnitGestureVisual(bool bVisible, const FV
 		}
 		else if (ArmedSkill.mIsPullSkill)
 		{
+			const FString ActionName = mSelectedSubactionName.IsEmpty()
+				? TEXT("당기기") : mSelectedSubactionName.ToString();
 			Label = bHasSnappedLanding
-				? FString::Printf(TEXT("당기기 %d칸 · 놓아서 실행"), FMath::Max(Preview.mMoveDistance, 1))
+				? FString::Printf(TEXT("%s %d칸 · 놓아서 실행"), *ActionName, FMath::Max(Preview.mMoveDistance, 1))
 				: TEXT("기사 주변의 원하는 칸으로 드래그");
 		}
 		else if (ArmedSkill.mIsThrowSkill)
@@ -1340,8 +1376,10 @@ void UCombatTileMapHUDWidget::SetDirectUnitGestureVisual(bool bVisible, const FV
 			}
 			else
 			{
+				const FString ActionName = mSelectedSubactionName.IsEmpty()
+					? TEXT("던지기") : mSelectedSubactionName.ToString();
 				Label = bHasSnappedLanding
-					? FString::Printf(TEXT("던지기 %d칸 · 놓아서 실행"), FMath::Max(Preview.mMoveDistance, 1))
+					? FString::Printf(TEXT("%s %d칸 · 놓아서 실행"), *ActionName, FMath::Max(Preview.mMoveDistance, 1))
 					: TEXT("던질 방향으로 드래그");
 			}
 		}
@@ -1382,6 +1420,10 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 	const FVector2D TargetScreen = mDirectUnitGestureTargetScreen;
 	const bool bGripSwap = mDirectGripSwapPreview;
 	const bool bWasGripGesture = mDirectGripGesture;
+	const bool bWasExplicitDrag = mSelectedSubactionMode == ECombatSubactionMode::Pull
+		|| mSelectedSubactionMode == ECombatSubactionMode::Throw
+		|| mSelectedSubactionMode == ECombatSubactionMode::ShortThrow;
+	const int32 PreviousArmedSkillIndex = mDirectArmedSkillIndex;
 	mDirectUnitGestureActive = false;
 	mDirectUnitGestureTargetId = INDEX_NONE;
 	SetDirectUnitGestureVisual(false);
@@ -1390,6 +1432,16 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 	mDirectGripSwapPreview = false;
 	if (mDirectUnitGestureDragged == false)
 	{
+		if (bWasExplicitDrag && mCombatUIModel != nullptr)
+		{
+			mCombatUIModel->RequestCancel();
+			SelectSkillWithAutomaticDice(
+				PreviousArmedSkillIndex,
+				FMath::Max(mSelectedSubactionDesiredPower, 1));
+			mDirectArmedSkillIndex = INDEX_NONE;
+			mDirectArmedTargetUnitId = INDEX_NONE;
+			return true;
+		}
 		// 손아귀는 드래그 전용이다. 짧은 탭으로 내부 당기기/던지기 프리뷰가 열린 채 남으면
 		// 다음 공격 판정까지 오염되므로 취소한 뒤 대표 손아귀 카드의 사거리 상태만 복구한다.
 		if (bWasGripGesture && mCombatUIModel != nullptr)

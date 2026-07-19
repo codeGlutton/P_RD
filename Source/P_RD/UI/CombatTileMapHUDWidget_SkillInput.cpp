@@ -13,11 +13,12 @@ void UCombatTileMapHUDWidget::HandleSkillButtonReleased()
 
 	if (mSkillDetailOpenedFromPress == false)
 	{
-		SelectSkillForAssignment(mPressedSkillIndex);
+		OpenActionFamily(mPressedSkillRailIndex);
 	}
 
 	mSkillPressing = false;
 	mPressedSkillIndex = INDEX_NONE;
+	mPressedSkillRailIndex = INDEX_NONE;
 	mSkillPressElapsed = 0.0f;
 	mSkillDetailOpenedFromPress = false;
 }
@@ -57,6 +58,7 @@ void UCombatTileMapHUDWidget::BeginSkillPress(int32 SkillIndex)
 	}
 
 	mPressedSkillIndex = SkillDataIndex;
+	mPressedSkillRailIndex = SkillIndex;
 	mSkillPressing = true;
 	mSkillDetailOpenedFromPress = false;
 	mSkillPressElapsed = 0.0f;

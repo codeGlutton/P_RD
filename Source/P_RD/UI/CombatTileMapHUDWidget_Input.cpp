@@ -31,6 +31,10 @@ FReply UCombatTileMapHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeome
 		{
 			return FReply::Handled();
 		}
+		if (TryExecuteTapTileActionAtScreenPosition(ScreenPosition))
+		{
+			return FReply::Handled();
+		}
 		if (BeginDirectUnitGesture(ScreenPosition))
 		{
 			return FReply::Handled().CaptureMouse(TakeWidget());
@@ -85,11 +89,12 @@ FReply UCombatTileMapHUDWidget::NativeOnMouseButtonUp(const FGeometry& InGeometr
 
 	if (mSkillDetailOpenedFromPress == false)
 	{
-		SelectSkillForAssignment(mPressedSkillIndex);
+		OpenActionFamily(mPressedSkillRailIndex);
 	}
 
 	mSkillPressing = false;
 	mPressedSkillIndex = INDEX_NONE;
+	mPressedSkillRailIndex = INDEX_NONE;
 	mSkillPressElapsed = 0.0f;
 	mSkillDetailOpenedFromPress = false;
 	return FReply::Handled().ReleaseMouseCapture();
@@ -117,6 +122,10 @@ FReply UCombatTileMapHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry
 		}
 		// 방향을 고르지 않는 공격/방해는 한 번 탭으로 끝낸다. 손아귀만 포인터를 캡처해 드래그한다.
 		if (TryExecuteTapSkillAtScreenPosition(ScreenPosition))
+		{
+			return FReply::Handled();
+		}
+		if (TryExecuteTapTileActionAtScreenPosition(ScreenPosition))
 		{
 			return FReply::Handled();
 		}
@@ -169,11 +178,12 @@ FReply UCombatTileMapHUDWidget::NativeOnTouchEnded(const FGeometry& InGeometry, 
 
 	if (mSkillDetailOpenedFromPress == false)
 	{
-		SelectSkillForAssignment(mPressedSkillIndex);
+		OpenActionFamily(mPressedSkillRailIndex);
 	}
 
 	mSkillPressing = false;
 	mPressedSkillIndex = INDEX_NONE;
+	mPressedSkillRailIndex = INDEX_NONE;
 	mSkillPressElapsed = 0.0f;
 	mSkillDetailOpenedFromPress = false;
 	return FReply::Handled().ReleaseMouseCapture();
