@@ -4,6 +4,8 @@
 #include "Blueprint/WidgetTree.h"
 #include "Blueprint/SlateBlueprintLibrary.h"
 #include "Actor/TileMap/TileMap.h"
+#include "Actor/TileMap/TileMapModel.h"
+#include "Actor/BoardActor/BoardActorModel.h"
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
@@ -15,7 +17,9 @@
 #include "GameFramework/Actor.h"
 #include "Materials/MaterialInterface.h"
 #include "Pawn/Unit.h"
+#include "Pawn/Enemy/EnemyUnitModel.h"
 #include "RDCollision.h"
+#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/IndexedButtonWidget.h"
 
@@ -923,20 +927,232 @@ bool UCombatTileMapHUDWidget::TryExecuteTapSkillAtScreenPosition(const FVector2D
 
 bool UCombatTileMapHUDWidget::TryExecuteTapTileActionAtScreenPosition(const FVector2D& ScreenPosition)
 {
-	if (mCombatUIModel == nullptr || mSelectedSubactionMode != ECombatSubactionMode::Move
+	const bool bMovementAction = mSelectedSubactionMode == ECombatSubactionMode::Move
+		|| mSelectedSubactionMode == ECombatSubactionMode::Charge;
+	if (mCombatUIModel == nullptr || bMovementAction == false
 		|| mCombatUIModel->GetSelectedSkillIndex() == INDEX_NONE)
 	{
 		return false;
 	}
-	mCombatUIModel->RequestWorldTouch(ScreenPosition, false);
-	if (mCombatUIModel->GetTurnUI().mPhase == ECombatBuildPhaseUI::Preview)
+	int32 UnitId = INDEX_NONE;
+	bool bIsPlayer = false;
+	FVector2D UnitScreenPosition = FVector2D::ZeroVector;
+	if (FindUnitAtScreenPosition(ScreenPosition, UnitId, bIsPlayer, UnitScreenPosition) && bIsPlayer)
 	{
-		mCombatUIModel->RequestConfirmSkill();
-		RefreshOwnedDiceCards();
-		RefreshDiceAssignmentText();
+		// 기사 몸에서 시작한 포인터만 아래 직접 드래그 경로가 캡처한다.
+		return false;
 	}
-	// 유효/무효와 관계없이 기동 모드의 월드 탭은 여기서 한 번만 전달한다.
+	// 빈 타일 탭은 기존 스킬 조준으로 새지 않게 소비하고, 기사를 직접 잡으라는 사거리 상태를 유지한다.
 	return true;
+}
+
+void UCombatTileMapHUDWidget::RefreshDirectMoveRangeHighlight()
+{
+	if (mCombatUIModel == nullptr
+		|| (mSelectedSubactionMode != ECombatSubactionMode::Move
+			&& mSelectedSubactionMode != ECombatSubactionMode::Charge))
+	{
+		return;
+	}
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+	UUnitModel* PlayerUnit = CombatModel != nullptr ? CombatModel->GetPlayerUnit() : nullptr;
+	if (TileMap == nullptr || PlayerUnit == nullptr)
+	{
+		return;
+	}
+	const int32 Range = FMath::Clamp(mCombatUIModel->GetSelectedDiceSum(), 1, 6);
+	const FTileIndex Origin = PlayerUnit->GetTileTransform().mIndex;
+	TArray<FTileIndex> RangeTiles = mSelectedSubactionMode == ECombatSubactionMode::Charge
+		? TileMap->GetAimableTiles(Origin, Range, EAimPattern::Star, true, true, PlayerUnit)
+		: TileMap->GetReachableTiles(Origin, Range);
+	TileMap->ClearTileHighlight(ETileHighlightFlag::Aim | ETileHighlightFlag::Select | ETileHighlightFlag::Effect);
+	TileMap->ClearMovePath();
+	TileMap->SetTileHighlight(RangeTiles, ETileHighlightFlag::Aim);
+}
+
+void UCombatTileMapHUDWidget::ClearDirectMovePreview(bool bClearAim)
+{
+	if (USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
+	{
+		if (UTileMapModel* TileMap = CombatModel->GetTileMap())
+		{
+			TileMap->ClearMovePath();
+			TileMap->ClearTileHighlight(ETileHighlightFlag::Select | ETileHighlightFlag::Effect);
+			if (bClearAim)
+			{
+				TileMap->ClearTileHighlight(ETileHighlightFlag::Aim);
+			}
+		}
+	}
+	mDirectMovePath.Reset();
+	mDirectMoveLandingTile = FTileIndex::Invalid;
+	mDirectMoveImpactTile = FTileIndex::Invalid;
+	mDirectMoveImpactLabel = FText::GetEmpty();
+}
+
+bool UCombatTileMapHUDWidget::UpdateDirectMovePath(const FVector2D& ScreenPosition)
+{
+	if (mCombatUIModel == nullptr || mDirectUnitGestureTargetIsPlayer == false)
+	{
+		return false;
+	}
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+	UUnitModel* PlayerUnit = CombatModel != nullptr ? CombatModel->GetPlayerUnit() : nullptr;
+	FVector TouchWorld = FVector::ZeroVector;
+	FTileIndex TouchTile = FTileIndex::Invalid;
+	if (TileMap == nullptr || PlayerUnit == nullptr
+		|| GetDirectGestureFloorWorldLocation(ScreenPosition, TouchWorld, &TouchTile) == false)
+	{
+		return false;
+	}
+	const FTileIndex Origin = PlayerUnit->GetTileTransform().mIndex;
+	const int32 Range = FMath::Clamp(mCombatUIModel->GetSelectedDiceSum(), 1, 6);
+	TArray<FTileIndex> NewPath;
+	mDirectMoveImpactTile = FTileIndex::Invalid;
+	mDirectMoveImpactLabel = FText::GetEmpty();
+	ESRPGDisplacementWeight ImpactWeight = ESRPGDisplacementWeight::Invalid;
+	bool bImpactStopsBeforeTile = false;
+
+	if (mDirectMoveIsCharge == false)
+	{
+		NewPath = TileMap->FindPath(Origin, TouchTile);
+		if (NewPath.Num() > Range + 1)
+		{
+			NewPath.SetNum(Range + 1);
+		}
+	}
+	else
+	{
+		NewPath.Add(Origin);
+		const int32 RawDeltaX = TouchTile.mX - Origin.mX;
+		const int32 RawDeltaY = TouchTile.mY - Origin.mY;
+		const int32 AbsX = FMath::Abs(RawDeltaX);
+		const int32 AbsY = FMath::Abs(RawDeltaY);
+		int32 StepX = FMath::Sign(RawDeltaX);
+		int32 StepY = FMath::Sign(RawDeltaY);
+		if (AbsX > AbsY * 2) { StepY = 0; }
+		else if (AbsY > AbsX * 2) { StepX = 0; }
+		const int32 DesiredSteps = FMath::Min(FMath::Max(AbsX, AbsY), Range);
+		for (int32 StepIndex = 1; StepIndex <= DesiredSteps; ++StepIndex)
+		{
+			const FTileIndex Candidate(Origin.mX + StepX * StepIndex, Origin.mY + StepY * StepIndex);
+			if (TileMap->IsValidIndex(Candidate) == false)
+			{
+				break;
+			}
+			NewPath.Add(Candidate);
+			UBoardActorModel* Blocker = nullptr;
+			for (UBoardActorModel* Actor : TileMap->GetActorsOnTile(Candidate, ETileLayerFlag::All))
+			{
+				if (Actor != nullptr && Actor != PlayerUnit
+					&& EnumHasAnyFlags(Actor->GetBlockLayerFlags(), PlayerUnit->GetTileLayerFlags()))
+				{
+					Blocker = Actor;
+					break;
+				}
+			}
+			if (UEnemyUnitModel* Enemy = Cast<UEnemyUnitModel>(Blocker))
+			{
+				mDirectMoveImpactTile = Candidate;
+				ImpactWeight = Enemy->GetDisplacementWeight();
+				switch (ImpactWeight)
+				{
+				case ESRPGDisplacementWeight::Light:
+					mDirectMoveImpactLabel = NSLOCTEXT("WarriorMove", "LightChargePreview", "경량 관통 · 밀면서 계속 전진");
+					break;
+				case ESRPGDisplacementWeight::Medium:
+					mDirectMoveImpactLabel = Range >= 4
+						? NSLOCTEXT("WarriorMove", "MediumChargePreview", "중량 충돌 · 1칸 밀고 여기서 정지")
+						: NSLOCTEXT("WarriorMove", "MediumChargeWeakPreview", "힘 부족 · 정면 충돌 후 정지");
+					bImpactStopsBeforeTile = Range < 4;
+					break;
+				case ESRPGDisplacementWeight::Heavy:
+				default:
+					mDirectMoveImpactLabel = NSLOCTEXT("WarriorMove", "HeavyChargePreview", "초중량 충돌 · 반동 피해 후 정지");
+					bImpactStopsBeforeTile = true;
+					break;
+				}
+
+				const int32 PreviewPushDistance = ImpactWeight == ESRPGDisplacementWeight::Light
+					? FMath::Clamp(1 + Range / 4, 1, 2)
+					: (ImpactWeight == ESRPGDisplacementWeight::Medium && Range >= 4 ? 1 : 0);
+				FTileIndex PushCursor = Candidate;
+				int32 PreviewMovedDistance = 0;
+				FTileIndex PreviewCollisionTile = FTileIndex::Invalid;
+				UBoardActorModel* PreviewCollisionActor = nullptr;
+				for (int32 PushIndex = 0; PushIndex < PreviewPushDistance; ++PushIndex)
+				{
+					const FTileIndex PushCandidate(PushCursor.mX + StepX, PushCursor.mY + StepY);
+					if (TileMap->IsValidIndex(PushCandidate) == false
+						|| TileMap->CanPlace(PushCandidate, Enemy) == false)
+					{
+						PreviewCollisionTile = PushCandidate;
+						for (UBoardActorModel* PushActor : TileMap->GetActorsOnTile(PushCandidate, ETileLayerFlag::All))
+						{
+							if (PushActor != nullptr && PushActor != Enemy
+								&& EnumHasAnyFlags(PushActor->GetBlockLayerFlags(), Enemy->GetTileLayerFlags()))
+							{
+								PreviewCollisionActor = PushActor;
+								break;
+							}
+						}
+						break;
+					}
+					++PreviewMovedDistance;
+					PushCursor = PushCandidate;
+				}
+				if (PreviewPushDistance > 0 && PreviewMovedDistance == 0)
+				{
+					mDirectMoveImpactTile = TileMap->IsValidIndex(PreviewCollisionTile)
+						? PreviewCollisionTile : Candidate;
+					mDirectMoveImpactLabel = Cast<UEnemyUnitModel>(PreviewCollisionActor) != nullptr
+						? NSLOCTEXT("WarriorMove", "ChargeChainCollisionPreview", "연쇄 충돌 · 두 적 피해 · 직전 칸 정지")
+						: NSLOCTEXT("WarriorMove", "ChargePinnedPreview", "뒤가 막힘 · 충돌 피해 · 직전 칸 정지");
+					bImpactStopsBeforeTile = true;
+					break;
+				}
+				if (ImpactWeight != ESRPGDisplacementWeight::Light)
+				{
+					break;
+				}
+			}
+			else if (Blocker != nullptr || TileMap->CanPlace(Candidate, PlayerUnit) == false)
+			{
+				mDirectMoveImpactTile = Candidate;
+				mDirectMoveImpactLabel = NSLOCTEXT("WarriorMove", "ObstacleChargePreview", "장애물 충돌 · 피해를 받고 직전 칸 정지");
+				bImpactStopsBeforeTile = true;
+				break;
+			}
+		}
+	}
+
+	if (NewPath.IsEmpty())
+	{
+		return false;
+	}
+	mDirectMovePath = MoveTemp(NewPath);
+	mDirectMoveLandingTile = mDirectMovePath.Last();
+	if (bImpactStopsBeforeTile && mDirectMovePath.Num() >= 2)
+	{
+		mDirectMoveLandingTile = mDirectMovePath[mDirectMovePath.Num() - 2];
+	}
+
+	TileMap->ClearMovePath();
+	TileMap->ClearTileHighlight(ETileHighlightFlag::Select | ETileHighlightFlag::Effect);
+	if (mDirectMovePath.Num() > 1)
+	{
+		TArray<FTileIndex> SelectedPath = mDirectMovePath;
+		SelectedPath.RemoveAt(0);
+		TileMap->SetMovePath(mDirectMovePath);
+		TileMap->SetTileHighlight(SelectedPath, ETileHighlightFlag::Select);
+	}
+	if (mDirectMoveImpactTile != FTileIndex::Invalid)
+	{
+		TileMap->SetTileHighlight({ mDirectMoveImpactTile }, ETileHighlightFlag::Effect);
+	}
+	return mDirectMovePath.Num() > 1;
 }
 
 bool UCombatTileMapHUDWidget::BeginDirectUnitGesture(const FVector2D& ScreenPosition)
@@ -950,13 +1166,19 @@ bool UCombatTileMapHUDWidget::BeginDirectUnitGesture(const FVector2D& ScreenPosi
 	const bool bExplicitDragAction = mSelectedSubactionMode == ECombatSubactionMode::Pull
 		|| mSelectedSubactionMode == ECombatSubactionMode::Throw
 		|| mSelectedSubactionMode == ECombatSubactionMode::ShortThrow;
+	const bool bMovementAction = mSelectedSubactionMode == ECombatSubactionMode::Move
+		|| mSelectedSubactionMode == ECombatSubactionMode::Charge;
+	if (bMovementAction && SelectedSkillIndex == INDEX_NONE)
+	{
+		return false;
+	}
 	const bool bSelectedDragAction = Skills.IsValidIndex(SelectedSkillIndex)
 		&& (bExplicitDragAction
 			|| (mSelectedSubactionMode == ECombatSubactionMode::None
 				&& (Skills[SelectedSkillIndex].mIsPullSkill || Skills[SelectedSkillIndex].mIsThrowSkill)));
-	if (SelectedSkillIndex != INDEX_NONE && bSelectedDragAction == false)
+	if (SelectedSkillIndex != INDEX_NONE && bSelectedDragAction == false && bMovementAction == false)
 	{
-		// 기본 공격/방해는 TryExecuteTapSkillAtScreenPosition, 이동은 기존 타일 입력이 담당한다.
+		// 기본 공격/방해는 한 번 탭, 손아귀와 기동은 아래 직접 드래그 입력이 담당한다.
 		return false;
 	}
 	int32 UnitId = INDEX_NONE;
@@ -969,6 +1191,30 @@ bool UCombatTileMapHUDWidget::BeginDirectUnitGesture(const FVector2D& ScreenPosi
 	mDirectGripGesture = false;
 	mDirectGripCanSwap = false;
 	mDirectGripSwapPreview = false;
+	if (bMovementAction)
+	{
+		if (bIsPlayer == false)
+		{
+			return false;
+		}
+		mDirectArmedSkillIndex = ContextMoveAction;
+		mDirectArmedTargetUnitId = UnitId;
+		mDirectMoveIsCharge = mSelectedSubactionMode == ECombatSubactionMode::Charge;
+		const FUnitUI* DraggedPlayer = mCombatUIModel->GetUnitUIs().FindByPredicate([UnitId](const FUnitUI& Unit)
+		{
+			return Unit.mUnitId == UnitId;
+		});
+		if (DraggedPlayer == nullptr || DraggedPlayer->mTile == FTileIndex::Invalid)
+		{
+			mDirectArmedSkillIndex = INDEX_NONE;
+			mDirectArmedTargetUnitId = INDEX_NONE;
+			return false;
+		}
+		mDirectMovePath = { DraggedPlayer->mTile };
+		mDirectMoveLandingTile = mDirectMovePath[0];
+		mDirectMoveImpactTile = FTileIndex::Invalid;
+		mDirectMoveImpactLabel = FText::GetEmpty();
+	}
 	if (bSelectedDragAction)
 	{
 		if (bIsPlayer)
@@ -1063,6 +1309,11 @@ void UCombatTileMapHUDWidget::UpdateDirectUnitGesture(const FVector2D& ScreenPos
 	FVector SwapFloorWorld = FVector::ZeroVector;
 	mDirectGripSwapPreview = mDirectUnitGestureDragged
 		&& IsDirectGripSwapDestination(ScreenPosition, SwapFloorWorld);
+	if (mDirectUnitGestureDragged && mDirectUnitGestureTargetIsPlayer
+		&& mDirectArmedSkillIndex == ContextMoveAction)
+	{
+		UpdateDirectMovePath(ScreenPosition);
+	}
 	if (mDirectUnitGestureDragged
 		&& mDirectGripSwapPreview == false
 		&& mCombatUIModel != nullptr
@@ -1277,8 +1528,20 @@ void UCombatTileMapHUDWidget::SetDirectUnitGestureVisual(bool bVisible, const FV
 
 	FVector SnappedLandingWorld = FVector::ZeroVector;
 	bool bHasSnappedLanding = false;
+	if (mDirectArmedSkillIndex == ContextMoveAction
+		&& mDirectMoveLandingTile != FTileIndex::Invalid)
+	{
+		if (USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
+		{
+			if (UTileMapModel* TileMapModel = CombatModel->GetTileMap())
+			{
+				SnappedLandingWorld = TileMapModel->TileToWorldLocation(mDirectMoveLandingTile);
+				bHasSnappedLanding = true;
+			}
+		}
+	}
 	const FDisplacementPreviewUI& Preview = mCombatUIModel->GetDisplacementPreview();
-	if (Preview.mIsActive
+	if (bHasSnappedLanding == false && Preview.mIsActive
 		&& Preview.mTargetUnitId == mDirectUnitGestureTargetId
 		&& Preview.mLandingTile != FTileIndex::Invalid)
 	{
@@ -1343,7 +1606,18 @@ void UCombatTileMapHUDWidget::SetDirectUnitGestureVisual(bool bVisible, const FV
 		: TEXT("원하는 칸 쪽으로 드래그");
 	if (mDirectArmedSkillIndex == ContextMoveAction)
 	{
-		Label = TEXT("이동할 위치");
+		if (mDirectMoveIsCharge)
+		{
+			Label = mDirectMoveImpactLabel.IsEmpty()
+				? TEXT("어깨 돌진 · 직선으로 끌고 놓기")
+				: mDirectMoveImpactLabel.ToString();
+		}
+		else
+		{
+			Label = mDirectMovePath.Num() > 1
+				? FString::Printf(TEXT("전진 %d칸 · 놓아서 실행"), mDirectMovePath.Num() - 1)
+				: TEXT("기사를 잡고 밝은 범위 안으로 드래그");
+		}
 	}
 	else if (mCombatUIModel->GetSkillUIs().IsValidIndex(mDirectArmedSkillIndex))
 	{
@@ -1400,7 +1674,9 @@ void UCombatTileMapHUDWidget::SetDirectUnitGestureVisual(bool bVisible, const FV
 		if (UCanvasPanelSlot* GestureLabelSlot = Cast<UCanvasPanelSlot>(mDirectUnitGestureLabel->Slot))
 		{
 			GestureLabelSlot->SetPosition(GhostWidgetPosition + FVector2D(0.0f, -104.0f));
-			GestureLabelSlot->SetSize(FVector2D(240.0f, 34.0f));
+			GestureLabelSlot->SetSize(FVector2D(
+				mDirectArmedSkillIndex == ContextMoveAction ? 340.0f : 240.0f,
+				34.0f));
 			GestureLabelSlot->SetAlignment(FVector2D(0.5f, 0.5f));
 			GestureLabelSlot->SetZOrder(962);
 		}
@@ -1424,6 +1700,11 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 		|| mSelectedSubactionMode == ECombatSubactionMode::Throw
 		|| mSelectedSubactionMode == ECombatSubactionMode::ShortThrow;
 	const int32 PreviousArmedSkillIndex = mDirectArmedSkillIndex;
+	const bool bWasMovementGesture = bTargetIsPlayer && PreviousArmedSkillIndex == ContextMoveAction;
+	const TArray<FTileIndex> WarriorMovePath = mDirectMovePath;
+	const bool bWarriorCharge = mDirectMoveIsCharge;
+	const int32 WarriorMoveDicePower = mCombatUIModel != nullptr
+		? mCombatUIModel->GetSelectedDiceSum() : 0;
 	mDirectUnitGestureActive = false;
 	mDirectUnitGestureTargetId = INDEX_NONE;
 	SetDirectUnitGestureVisual(false);
@@ -1432,6 +1713,14 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 	mDirectGripSwapPreview = false;
 	if (mDirectUnitGestureDragged == false)
 	{
+		if (bWasMovementGesture)
+		{
+			ClearDirectMovePreview(false);
+			RefreshDirectMoveRangeHighlight();
+			mDirectArmedSkillIndex = INDEX_NONE;
+			mDirectArmedTargetUnitId = INDEX_NONE;
+			return true;
+		}
 		if (bWasExplicitDrag && mCombatUIModel != nullptr)
 		{
 			mCombatUIModel->RequestCancel();
@@ -1478,9 +1767,20 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 			TryOpenContextActionsAtScreenPosition(TargetScreen);
 			return true;
 		}
-		mCombatUIModel->RequestMove();
-		mCombatUIModel->RequestWorldTouch(ScreenPosition, false);
-		mCombatUIModel->RequestWorldTouch(ScreenPosition, false);
+		if (WarriorMovePath.Num() >= 2 && WarriorMoveDicePower > 0)
+		{
+			FWarriorMoveRequest Request;
+			Request.mPathTileIndexes = WarriorMovePath;
+			Request.mIsCharge = bWarriorCharge;
+			Request.mDicePower = WarriorMoveDicePower;
+			ClearDirectMovePreview(false);
+			mCombatUIModel->RequestWarriorMove(Request);
+		}
+		else
+		{
+			ClearDirectMovePreview(false);
+			RefreshDirectMoveRangeHighlight();
+		}
 		mDirectArmedSkillIndex = INDEX_NONE;
 		mDirectArmedTargetUnitId = INDEX_NONE;
 		return true;

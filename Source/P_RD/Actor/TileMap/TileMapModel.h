@@ -248,6 +248,9 @@ public:
 	 */
 	void SetMovePath(const FTileIndex& Start, const FTileIndex& Goal);
 
+	/** @brief UI가 직접 그린 경로를 재탐색하지 않고 그대로 뷰의 이동 화살표로 표시한다. */
+	void SetMovePath(const TArray<FTileIndex>& PathTileIndexes);
+
 	/**
 	 * @brief 이동경로 표시 해제 요청 (빈 경로를 뷰에 전달)
 	 */

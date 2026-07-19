@@ -682,6 +682,14 @@ void UTileMapModel::ClearMovePath()
 		mSetMovePathDelegate.Execute(TArray<FTileIndex>());
 }
 
+void UTileMapModel::SetMovePath(const TArray<FTileIndex>& PathTileIndexes)
+{
+	if (mSetMovePathDelegate.IsBound())
+	{
+		mSetMovePathDelegate.Execute(PathTileIndexes);
+	}
+}
+
 void UTileMapModel::SetEnemyIntentOverlays(const TArray<FEnemyIntentTileOverlay>& Overlays)
 {
 	if (mSetEnemyIntentOverlaysDelegate.IsBound())

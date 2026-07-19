@@ -13,6 +13,7 @@
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Simulation/Logger/EventLog.h"
 #include "UI/Reward/RewardUITypes.h"
+#include "UI/Combat/CombatUITypes.h"
 #include "CombatGameMode.generated.h"
 
 class USRPGTurnContext;
@@ -113,6 +114,10 @@ public:
 	 */
 	UFUNCTION()
 	void HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLongPress);
+
+	/** @brief HUD에서 직접 그린 전진/돌진 경로를 검증하고 실제 이동 액션으로 발행한다. */
+	UFUNCTION()
+	void HandleWarriorMoveRequested(FWarriorMoveRequest Request);
 
 public:
 	/**

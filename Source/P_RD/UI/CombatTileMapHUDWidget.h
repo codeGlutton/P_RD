@@ -72,7 +72,8 @@ enum class ECombatSubactionMode : uint8
 	Pull,
 	Throw,
 	Swap,
-	Move
+	Move,
+	Charge
 };
 
 /** @brief 유닛 머리 위 HP바(WBP_CombatUnitHpBar) 한 개의 런타임 위젯 참조 묶음. */
@@ -291,13 +292,19 @@ private:
 	bool FindUnitAtScreenPosition(const FVector2D& ScreenPosition, int32& OutUnitId, bool& OutIsPlayer, FVector2D& OutUnitScreenPosition) const;
 	/** @brief 기본 공격과 방해처럼 방향 선택이 없는 행동을 적 한 번 탭으로 즉시 실행한다. */
 	bool TryExecuteTapSkillAtScreenPosition(const FVector2D& ScreenPosition);
-	/** @brief 기동 행동의 목적 타일을 한 번 탭하면 프리뷰 확인 없이 즉시 실행한다. */
+	/** @brief 기동 행동 중 빈 타일 탭이 레거시 조준으로 새지 않게 하고, 기사 직접 드래그 시작은 통과시킨다. */
 	bool TryExecuteTapTileActionAtScreenPosition(const FVector2D& ScreenPosition);
-	/** @brief 유닛 직접 드래그의 시작/갱신/종료와 실시간 손잡이 피드백. */
+	/** @brief 적의 위치 개입과 기사의 경로 이동을 같은 모바일 직접 드래그 문법으로 처리한다. */
 	bool BeginDirectUnitGesture(const FVector2D& ScreenPosition);
 	void UpdateDirectUnitGesture(const FVector2D& ScreenPosition);
 	bool EndDirectUnitGesture(const FVector2D& ScreenPosition);
 	void SetDirectUnitGestureVisual(bool bVisible, const FVector2D& ScreenPosition = FVector2D::ZeroVector);
+	/** @brief 전진/돌진을 고른 즉시 전체 사거리 외곽선과 내부 그라데이션을 갱신한다. */
+	void RefreshDirectMoveRangeHighlight();
+	/** @brief 손가락 아래 타일까지 실제 전진 경로 또는 8방향 돌진선을 다시 만든다. */
+	bool UpdateDirectMovePath(const FVector2D& ScreenPosition);
+	/** @brief 현재 드래그 경로/충돌 강조만 지우고 전체 사거리 Aim은 필요할 때 유지한다. */
+	void ClearDirectMovePreview(bool bClearAim = false);
 	/** @brief 화면 좌표 아래 타일 평면의 정확한 터치 월드 위치를 구한다(타일 중심으로 스냅하지 않음). */
 	bool GetDirectGestureFloorWorldLocation(
 		const FVector2D& ScreenPosition,
@@ -1092,6 +1099,12 @@ private:
 	bool mDirectGripGesture = false;
 	bool mDirectGripCanSwap = false;
 	bool mDirectGripSwapPreview = false;
+	/** @brief 기사 드래그 이동의 현재 확정 후보. 첫 원소는 기사 출발 칸이다. */
+	TArray<FTileIndex> mDirectMovePath;
+	FTileIndex mDirectMoveLandingTile = FTileIndex::Invalid;
+	FTileIndex mDirectMoveImpactTile = FTileIndex::Invalid;
+	FText mDirectMoveImpactLabel;
+	bool mDirectMoveIsCharge = false;
 	int32 mDirectGestureGhostTargetId = INDEX_NONE;
 	UPROPERTY(Transient) TObjectPtr<UBorder> mDirectUnitGestureLine;
 	UPROPERTY(Transient) TObjectPtr<UBorder> mDirectUnitGestureHandle;

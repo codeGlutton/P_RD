@@ -34,6 +34,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatQueueNodeResolved, FCombatQ
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatActionResolved);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatCommand, ECombatInputType, Type, int32, IntPayload);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatWorldTouch, FVector2D, ScreenPosition, bool, bLongPress);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWarriorMoveRequested, FWarriorMoveRequest, Request);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnApplyDiceResults, const TArray<int32>&, RolledFaceIndices);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatFloatingLog, FCombatFloatingLogRequest, Request);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatFloatingLogMotionFinished, int32, MotionIndex);
@@ -87,6 +88,10 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Combat|Input")
 	FOnCombatWorldTouch OnCombatWorldTouch;
 
+	/** @brief 기사 직접 드래그로 확정한 경로와 전진/돌진 의도를 게임플레이가 실행한다. */
+	UPROPERTY(BlueprintAssignable, Category = "Combat|Input")
+	FOnWarriorMoveRequested OnWarriorMoveRequested;
+
 	/** @brief 입장 물리 굴림의 결과면(0-base index)을 전투 풀에 반영하라는 알림. [게임플레이 구독] */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|Input")
 	FOnApplyDiceResults OnApplyDiceResults;
@@ -118,6 +123,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestLongPressEquip(int32 SlotIndex);
 	/** @brief 화면 좌표와 롱프레스 여부만 넘긴다. 월드/타일 변환은 UIModel 바깥의 책임이다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress);
+	/** @brief 확인 팝업 없이 드래그 경로를 전사 이동 액션으로 확정한다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestWarriorMove(const FWarriorMoveRequest& Request);
 
 	/* ───────── gameplay → UI : 표시값을 밀어넣는다 ─────────
 	   각 Set*()은 UI가 그리려면 게임플레이가 반드시 공급해야 하는 값이다(UI는 못 만듦).

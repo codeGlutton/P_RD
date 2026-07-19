@@ -7,6 +7,9 @@
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "AttributeSet/CombatTargetAttributeSet.h"
 #include "Actor/TileMap/TileMapModel.h"
+#include "Actor/BoardActor/BoardActorModel.h"
+#include "Pawn/Enemy/EnemyUnitModel.h"
+#include "SRPGFramework/SRPGEnemyIntent.h"
 
 FSRPGMoveCommand::FSRPGMoveCommand()
 {
@@ -34,6 +37,9 @@ ESRPGCommandResult USRPGMoveAction::HandleCommand(const TInstancedStruct<FSRPGCo
         const FSRPGMoveCommand& MoveCommand = Command.Get<FSRPGMoveCommand>();
         mPathTileIndexes = MoveCommand.mPathTileIndexes;
         mUseFixedIntent = MoveCommand.mUseFixedIntent;
+		mIsWarriorCharge = MoveCommand.mIsWarriorCharge;
+		mDicePower = MoveCommand.mDicePower;
+		mConsumeMovementPoints = MoveCommand.mConsumeMovementPoints;
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
 
@@ -75,7 +81,7 @@ void USRPGMoveAction::OnEndAction()
 
     /* 이동을 정상 완료한 경우, 사용한 이동 포인트를 이동 유닛에게 차감 통지한다 */
 
-    if (mActionResult == ESRPGActionResult::Succeeded && mPathTileIndexes.Num() >= 2)
+    if (mConsumeMovementPoints && mActionResult == ESRPGActionResult::Succeeded && mPathTileIndexes.Num() >= 2)
     {
         // 소모 이동 포인트 = 밟은 칸 수 (경로 칸 수 - 시작 타일)
         const int32 SpentPoint = mPathTileIndexes.Num() - 1;
@@ -100,6 +106,16 @@ void USRPGMoveAction::StartStep(int32 StepIndex)
     mCurrentStepIndex = StepIndex;
 
     UTileMapModel* TileMap = GetTileMap();
+	if (mIsWarriorCharge && TryStartWarriorChargeImpact(StepIndex))
+	{
+		return;
+	}
+	if (TileMap->CanPlace(mPathTileIndexes[StepIndex], mInstigator.Get()) == false)
+	{
+		MarkActionCompleted(mIsWarriorCharge
+			? ESRPGActionResult::Succeeded : ESRPGActionResult::Cancelled);
+		return;
+	}
 
     // 직전 타일에서 이번 타일을 바라볼때의 방향 계산
     // 직전->현재와 현재->다음 방향을 보간해서 자연스럽게 코너링 할 계획
@@ -205,6 +221,13 @@ void USRPGMoveAction::OnStepPresentationFinished()
     // 현재 타일 도착 처리 -> 함정/장판 등 오버랩 관련된 처리
     CompleteStep();
 
+	if (mWarriorChargeStopAfterPlayerStep)
+	{
+		mWarriorChargeStopAfterPlayerStep = false;
+		MarkActionCompleted(ESRPGActionResult::Succeeded);
+		return;
+	}
+
     // 1) 마지막 타일이면 이동 완료.
     if (mCurrentStepIndex >= mPathTileIndexes.Num() - 1)
     {
@@ -215,6 +238,207 @@ void USRPGMoveAction::OnStepPresentationFinished()
     {
         StartStep(mCurrentStepIndex + 1);
     }
+}
+
+UBoardActorModel* USRPGMoveAction::FindBlockingActor(
+	const FTileIndex& TileIndex,
+	const UBoardActorModel* MovingActor) const
+{
+	if (MovingActor == nullptr)
+	{
+		return nullptr;
+	}
+	for (UBoardActorModel* Actor : GetTileMap()->GetActorsOnTile(TileIndex, ETileLayerFlag::All))
+	{
+		if (Actor != nullptr && Actor != MovingActor
+			&& EnumHasAnyFlags(Actor->GetBlockLayerFlags(), MovingActor->GetTileLayerFlags()))
+		{
+			return Actor;
+		}
+	}
+	return nullptr;
+}
+
+bool USRPGMoveAction::TryStartWarriorChargeImpact(int32 StepIndex)
+{
+	UTileMapModel* TileMap = GetTileMap();
+	const FTileIndex ImpactTile = mPathTileIndexes[StepIndex];
+	UBoardActorModel* ImpactActor = FindBlockingActor(ImpactTile, mInstigator.Get());
+	if (ImpactActor == nullptr)
+	{
+		return false;
+	}
+
+	UEnemyUnitModel* EnemyTarget = Cast<UEnemyUnitModel>(ImpactActor);
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	if (EnemyTarget == nullptr)
+	{
+		// 돌진을 벽/장애물로 끝내면 실제 충돌 피해를 받고 현재 칸에서 정지한다.
+		if (CombatModel != nullptr)
+		{
+			CombatModel->ReportPlayerDisplacementCollision(
+				mInstigator.Get(), ImpactActor, ESRPGPlayerDisplacementType::Push);
+		}
+		MarkActionCompleted(ESRPGActionResult::Succeeded);
+		return true;
+	}
+
+	mWarriorChargeTarget = EnemyTarget;
+	mWarriorChargeBlocker = nullptr;
+	mWarriorChargeFromTile = EnemyTarget->GetTileTransform().mIndex;
+	mWarriorChargeResumePlayerStep = StepIndex;
+	mWarriorChargePushPath = { mWarriorChargeFromTile };
+
+	const ESRPGDisplacementWeight Weight = EnemyTarget->GetDisplacementWeight();
+	const int32 PushDistance = Weight == ESRPGDisplacementWeight::Light
+		? FMath::Clamp(1 + mDicePower / 4, 1, 2)
+		: (Weight == ESRPGDisplacementWeight::Medium && mDicePower >= 4 ? 1 : 0);
+	mWarriorChargeContinueAfterImpact = Weight == ESRPGDisplacementWeight::Light;
+	mWarriorChargeStopAfterPlayerStep = Weight == ESRPGDisplacementWeight::Medium && PushDistance > 0;
+
+	const FTileIndex PreviousTile = mPathTileIndexes[StepIndex - 1];
+	const FTileIndex PushStep(
+		FMath::Sign(ImpactTile.mX - PreviousTile.mX),
+		FMath::Sign(ImpactTile.mY - PreviousTile.mY));
+	FTileIndex Cursor = ImpactTile;
+	for (int32 Distance = 0; Distance < PushDistance; ++Distance)
+	{
+		const FTileIndex Candidate(Cursor.mX + PushStep.mX, Cursor.mY + PushStep.mY);
+		if (TileMap->IsValidIndex(Candidate) == false
+			|| TileMap->CanPlace(Candidate, EnemyTarget) == false)
+		{
+			mWarriorChargeBlocker = FindBlockingActor(Candidate, EnemyTarget);
+			break;
+		}
+		mWarriorChargePushPath.Add(Candidate);
+		Cursor = Candidate;
+	}
+
+	if (mWarriorChargePushPath.Num() < 2)
+	{
+		// 초중량, 위력이 모자란 중량, 뒤가 막힌 적은 기사와 정면 충돌한다.
+		if (CombatModel != nullptr)
+		{
+			CombatModel->ReportPlayerDisplacementCollision(
+				EnemyTarget,
+				mWarriorChargeBlocker != nullptr ? mWarriorChargeBlocker.Get() : mInstigator.Get(),
+				ESRPGPlayerDisplacementType::Push);
+			CombatModel->ReportPlayerStagger(EnemyTarget, mDicePower);
+		}
+		MarkActionCompleted(ESRPGActionResult::Succeeded);
+		return true;
+	}
+
+	TArray<FVector> PushWorldPath;
+	PushWorldPath.Reserve(mWarriorChargePushPath.Num());
+	for (const FTileIndex& TileIndex : mWarriorChargePushPath)
+	{
+		PushWorldPath.Add(TileMap->TileToWorldLocation(TileIndex));
+	}
+	EnemyTarget->OnStartForcedMovePath.Broadcast(PushWorldPath, EForcedMovePresentationType::Push);
+	StartWarriorChargePushStep(1);
+	return true;
+}
+
+void USRPGMoveAction::StartWarriorChargePushStep(int32 StepIndex)
+{
+	if (mWarriorChargeTarget == nullptr || mWarriorChargePushPath.IsValidIndex(StepIndex) == false)
+	{
+		FinishWarriorChargeImpact();
+		return;
+	}
+	UTileMapModel* TileMap = GetTileMap();
+	const FTileIndex NextTile = mWarriorChargePushPath[StepIndex];
+	if (TileMap->CanPlace(NextTile, mWarriorChargeTarget) == false)
+	{
+		mWarriorChargeBlocker = FindBlockingActor(NextTile, mWarriorChargeTarget);
+		FinishWarriorChargeImpact();
+		return;
+	}
+
+	mWarriorChargePushStepIndex = StepIndex;
+	const FTileTransform NextTransform(NextTile, mWarriorChargeTarget->GetTileTransform().mDirection);
+	TileMap->StartActorMovement(NextTransform, mWarriorChargeTarget);
+	TSharedPtr<FPresentationBarrier> Barrier = FPresentationBarrier::Make(
+		FOnFinishPresentation::CreateWeakLambda(this, [this]()
+		{
+			OnWarriorChargePushStepFinished();
+		}));
+	float RemainingPathDistance = 0.0f;
+	for (int32 Index = StepIndex; Index < mWarriorChargePushPath.Num() - 1; ++Index)
+	{
+		RemainingPathDistance += FVector::Dist(
+			TileMap->TileToWorldLocation(mWarriorChargePushPath[Index]),
+			TileMap->TileToWorldLocation(mWarriorChargePushPath[Index + 1]));
+	}
+	mWarriorChargeTarget->OnStartMoveStep.Broadcast(
+		NextTransform,
+		TileMap->TileToWorldTransform(NextTransform),
+		Barrier,
+		RemainingPathDistance);
+}
+
+void USRPGMoveAction::OnWarriorChargePushStepFinished()
+{
+	if (mActionPhase != ESRPGActionPhase::ActionPlay || mWarriorChargeTarget == nullptr)
+	{
+		return;
+	}
+	GetTileMap()->CompleteActorMovement(mWarriorChargeTarget);
+	if (mWarriorChargePushStepIndex >= mWarriorChargePushPath.Num() - 1)
+	{
+		FinishWarriorChargeImpact();
+	}
+	else
+	{
+		StartWarriorChargePushStep(mWarriorChargePushStepIndex + 1);
+	}
+}
+
+void USRPGMoveAction::FinishWarriorChargeImpact()
+{
+	if (mWarriorChargeTarget == nullptr)
+	{
+		MarkActionCompleted(ESRPGActionResult::Succeeded);
+		return;
+	}
+	if (USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
+	{
+		const FTileIndex CurrentTile = mWarriorChargeTarget->GetTileTransform().mIndex;
+		if (CurrentTile != mWarriorChargeFromTile)
+		{
+			CombatModel->ReportPlayerDisplacement(
+				mWarriorChargeTarget,
+				mWarriorChargeFromTile,
+				CurrentTile,
+				mDicePower,
+				ESRPGPlayerDisplacementType::Push);
+		}
+		if (mWarriorChargeBlocker != nullptr)
+		{
+			CombatModel->ReportPlayerDisplacementCollision(
+				mWarriorChargeTarget,
+				mWarriorChargeBlocker,
+				ESRPGPlayerDisplacementType::Push);
+		}
+		if (mWarriorChargeStopAfterPlayerStep)
+		{
+			CombatModel->ReportPlayerStagger(mWarriorChargeTarget, mDicePower);
+		}
+	}
+
+	mWarriorChargeTarget = nullptr;
+	mWarriorChargeBlocker = nullptr;
+	mWarriorChargePushPath.Reset();
+	if (mWarriorChargeContinueAfterImpact || mWarriorChargeStopAfterPlayerStep)
+	{
+		mWarriorChargeContinueAfterImpact = false;
+		StartStep(mWarriorChargeResumePlayerStep);
+	}
+	else
+	{
+		MarkActionCompleted(ESRPGActionResult::Succeeded);
+	}
 }
 
 UTileMapModel* USRPGMoveAction::GetTileMap() const

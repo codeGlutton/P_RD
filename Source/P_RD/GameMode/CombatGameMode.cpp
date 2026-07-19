@@ -23,6 +23,7 @@
 
 #include "SRPGFramework/SRPGSkillBuildAction.h"
 #include "SRPGFramework/SRPGMoveBuildAction.h"
+#include "SRPGFramework/SRPGMoveAction.h"
 #include "SRPGFramework/SRPGDiceRollAction.h"
 #include "SRPGFramework/SRPGTurnEndAction.h"
 #include "SRPGFramework/SRPGEnemyIntent.h"
@@ -399,6 +400,7 @@ void ACombatGameMode::InitializeRoom()
 	mCombatUIModel->OnApplyDiceResults.AddUniqueDynamic(this, &ACombatGameMode::HandleApplyDiceResults);
 	mCombatUIModel->OnCombatCommand.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatCommand);
 	mCombatUIModel->OnCombatWorldTouch.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatWorldTouch);
+	mCombatUIModel->OnWarriorMoveRequested.AddUniqueDynamic(this, &ACombatGameMode::HandleWarriorMoveRequested);
 
 	const FStage& CurStage = GetRunPersistData()->GetStage();
 	const FRoom& CurRoom = GetRunPersistData()->GetCurrentRoom();
@@ -563,6 +565,81 @@ bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 		});
 
 	return CommandRouterModel->SummitCommand(SkillSelectCommand);
+}
+
+void ACombatGameMode::HandleWarriorMoveRequested(FWarriorMoveRequest Request)
+{
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
+	if (CombatModel == nullptr || CommandRouterModel == nullptr || PlayerUnitModel == nullptr)
+	{
+		return;
+	}
+	const USRPGTurnContext* TurnContext = CombatModel->GetCurrentTurnContext();
+	if (TurnContext == nullptr || TurnContext->GetOwner() != PlayerUnitModel
+		|| Request.mPathTileIndexes.Num() < 2 || Request.mDicePower <= 0)
+	{
+		return;
+	}
+
+	UTileMapModel* TileMap = CombatModel->GetTileMap();
+	if (TileMap == nullptr
+		|| Request.mPathTileIndexes[0] != PlayerUnitModel->GetTileTransform().mIndex)
+	{
+		return;
+	}
+	const int32 MaximumSteps = FMath::Clamp(Request.mDicePower, 1, 6);
+	if (Request.mPathTileIndexes.Num() - 1 > MaximumSteps)
+	{
+		Request.mPathTileIndexes.SetNum(MaximumSteps + 1);
+	}
+	for (int32 PathIndex = 1; PathIndex < Request.mPathTileIndexes.Num(); ++PathIndex)
+	{
+		const FTileIndex& Previous = Request.mPathTileIndexes[PathIndex - 1];
+		const FTileIndex& Current = Request.mPathTileIndexes[PathIndex];
+		const int32 DeltaX = FMath::Abs(Current.mX - Previous.mX);
+		const int32 DeltaY = FMath::Abs(Current.mY - Previous.mY);
+		if (TileMap->IsValidIndex(Current) == false
+			|| (DeltaX == 0 && DeltaY == 0) || DeltaX > 1 || DeltaY > 1)
+		{
+			return;
+		}
+		if (Request.mIsCharge == false && TileMap->CanPlace(Current, PlayerUnitModel) == false)
+		{
+			return;
+		}
+	}
+
+	UDicePoolModel* DicePoolModel = PlayerUnitModel->GetDicePoolModel();
+	if (DicePoolModel == nullptr)
+	{
+		return;
+	}
+	const TArray<int32> SelectedDiceIndexes = DicePoolModel->GetSelectedDices();
+	if (SelectedDiceIndexes.IsEmpty() || DicePoolModel->GetSelectedDiceSum() != Request.mDicePower)
+	{
+		return;
+	}
+
+	// 이동 레일은 기존 스킬 빌드를 사거리/주사위 선택기로만 사용한다. 실제 경로가 확정되면
+	// 그 빌드를 닫고 같은 주사위를 잠근 뒤, 경로형 이동 액션 하나만 큐에 넣는다.
+	CancelSkill();
+	for (const int32 DiceIndex : SelectedDiceIndexes)
+	{
+		DicePoolModel->MarkDiceUsed(DiceIndex);
+	}
+	DicePoolModel->ResetSelected();
+
+	TInstancedStruct<FSRPGCommand> MoveCastCommand;
+	MoveCastCommand.InitializeAs<FSRPGMoveCommand>();
+	FSRPGMoveCommand& MoveCommand = MoveCastCommand.GetMutable<FSRPGMoveCommand>();
+	MoveCommand.mPathTileIndexes = MoveTemp(Request.mPathTileIndexes);
+	MoveCommand.mIsWarriorCharge = Request.mIsCharge;
+	MoveCommand.mDicePower = Request.mDicePower;
+	MoveCommand.mConsumeMovementPoints = false;
+	CommandRouterModel->SummitCommand(MoveCastCommand);
+	PushDiceUIData();
 }
 
 bool ACombatGameMode::ConfirmSkill()

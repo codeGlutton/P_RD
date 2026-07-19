@@ -32,6 +32,20 @@ enum class ECombatUIDomain : uint8
 	DisplacementPreview // 당기기/던지기 대상·궤적·착지·충돌 미리보기
 };
 
+/** @brief 전사를 직접 드래그해 만든 이동 경로를 게임플레이에 넘기는 입력 스냅샷. */
+USTRUCT(BlueprintType)
+struct FWarriorMoveRequest
+{
+	GENERATED_BODY()
+
+	/** @brief 시작 타일을 포함한, 손가락으로 확정한 실제 이동 경로. */
+	UPROPERTY(BlueprintReadWrite) TArray<FTileIndex> mPathTileIndexes;
+	/** @brief false=전진(우회 가능), true=돌진(직선 충돌 규칙). */
+	UPROPERTY(BlueprintReadWrite) bool mIsCharge = false;
+	/** @brief 자동 배치된 주사위 합. 이동 거리와 충돌 위력에 함께 사용한다. */
+	UPROPERTY(BlueprintReadWrite) int32 mDicePower = 0;
+};
+
 /** @brief 현재 공개된 적 행동 예고의 실행 상태. 게임플레이 enum을 HUD에 직접 노출하지 않는 UI 거울이다. */
 UENUM(BlueprintType)
 enum class EEnemyIntentResultUI : uint8
