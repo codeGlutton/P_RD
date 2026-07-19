@@ -66,6 +66,8 @@ struct FUnitHpBarWidget
 	UPROPERTY(Transient) TObjectPtr<UCanvasPanelSlot> mFillClipSlot;
 	// HP 숫자 텍스트.
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mValueText;
+	// 적 유닛 머리 위에 현재 고정 계획의 실행순서/흐름/결과를 짧게 표시하는 배지.
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> mIntentText;
 	// HP바 왼쪽 방어도 아이콘/수치(런타임 생성). 방어도 0이면 숨긴다.
 	UPROPERTY(Transient) TObjectPtr<UImage> mDefenseIcon;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDefenseText;
@@ -259,6 +261,12 @@ private:
 
 	/** @brief 고정된 적 행동을 실행 순서/스킬/대상/경로/결과 행으로 다시 그린다. */
 	void RefreshEnemyIntentPanel();
+
+	/** @brief 적 intent 실행순서를 전장 경로와 HUD 배지에서 같이 쓸 색으로 변환한다. */
+	static FLinearColor GetEnemyIntentExecutionColor(int32 ExecutionOrder);
+
+	/** @brief 머리 위 intent 배지에 쓸 짧은 행동 흐름/결과 문구를 만든다. */
+	static FText GetEnemyIntentWorldLabel(const FEnemyIntentUI& Intent);
 
 	/** @brief 현재 선택/주사위/미리보기/의도 결과에서 튜토리얼 단계를 양방향으로 맞추고 작은 안내 패널을 갱신한다. */
 	void UpdateEnemyIntentTutorial();

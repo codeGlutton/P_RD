@@ -682,6 +682,22 @@ void UTileMapModel::ClearMovePath()
 		mSetMovePathDelegate.Execute(TArray<FTileIndex>());
 }
 
+void UTileMapModel::SetEnemyIntentOverlays(const TArray<FEnemyIntentTileOverlay>& Overlays)
+{
+	if (mSetEnemyIntentOverlaysDelegate.IsBound())
+	{
+		mSetEnemyIntentOverlaysDelegate.Execute(Overlays);
+	}
+}
+
+void UTileMapModel::ClearEnemyIntentOverlays()
+{
+	if (mSetEnemyIntentOverlaysDelegate.IsBound())
+	{
+		mSetEnemyIntentOverlaysDelegate.Execute(TArray<FEnemyIntentTileOverlay>());
+	}
+}
+
 void UTileMapModel::SetTileHighlight(const TArray<FTileIndex>& Tiles, ETileHighlightFlag Flag)
 {
 	// 강조 표시를 뷰에 요청 (미바인딩=심 복제본이면 표시 없음)

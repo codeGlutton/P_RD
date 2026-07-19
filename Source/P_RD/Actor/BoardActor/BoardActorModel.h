@@ -24,6 +24,10 @@ DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlaceTileTransform, const FTileTransform
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnStartMovePath, const TArray<FVector>& /* PathWorldLocations */);
 
+// 밀치기처럼 일반 보행과 다른 뷰 연출이 필요한 강제 이동 경로 전달.
+// 논리 이동과 스텝 완료 시점은 기존 FOnStartMoveStep/PresentationBarrier 흐름을 그대로 사용한다.
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnStartForcedMovePath, const TArray<FVector>& /* PathWorldLocations */);
+
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnStartMoveStep, const FTileTransform& /* NextTileTransform */, const FTransform& /* TargetWorldTransform */, TSharedPtr<FPresentationBarrier> /* Barrier */, float /* RemainingPathDistance */);
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnRotate, const FRotator& /* TargetWorldRotation */, TSharedPtr<FPresentationBarrier> /* Barrier */);
@@ -154,6 +158,13 @@ public:
 	 * @details 코너링에 베지어곡선을 사용하려면 진입/진출 타일의 정보가 필요하므로 미리 전체 경로 정보 전달
 	 */
 	FOnStartMovePath OnStartMovePath;
+
+	/**
+	 * @brief 밀치기 등 강제 이동 시작 시 전체 경로 전달
+	 * @details 일반 이동의 속도와 보행 애니메이션을 바꾸지 않고 뷰만 전용 연출 모드로 전환한다.
+	 *          실제 타일 점유 변경과 스텝 완료는 OnStartMoveStep을 공통으로 사용한다.
+	 */
+	FOnStartForcedMovePath OnStartForcedMovePath;
 
 	/**
 	 * @brief 이동 스텝 시작 시 뷰에게 한 칸 이동 연출을 요청하는 대리자

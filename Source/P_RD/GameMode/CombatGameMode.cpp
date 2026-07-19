@@ -926,6 +926,15 @@ void ACombatGameMode::PushEnemyIntentUIData() const
 		IntentUI.mPlannedOrigin = Intent.mPlannedOrigin;
 		IntentUI.mPlannedDestination = Intent.mPlannedDestination;
 		IntentUI.mTargetTile = Intent.mTargetTile;
+		IntentUI.mCurrentTile = IsValid(Intent.mEnemy)
+			? Intent.mEnemy->GetTileTransform().mIndex
+			: FTileIndex::Invalid;
+		if (IntentUI.mCurrentTile == FTileIndex::Invalid)
+		{
+			IntentUI.mCurrentTile = Intent.mDisplacedToTile != FTileIndex::Invalid
+				? Intent.mDisplacedToTile
+				: Intent.mPlannedOrigin;
+		}
 		IntentUI.mPathTileIndexes = Intent.mPathTileIndexes;
 		IntentUI.mEffectTileIndexes = Intent.mEffectTileIndexes;
 		IntentUI.mResult = GetEnemyIntentResultUI(Intent.mResult);

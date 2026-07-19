@@ -279,8 +279,9 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 		RDUILayout::ApplyAnchoredSlot(mCombatStatusBarText, FAnchors(0.025f, 0.050f, 0.520f, 0.110f), 30);
 	}
 
-	// 기존 전장 시야를 남기기 위해 예고는 우상단 카드, 튜토리얼은 하단 중앙의 얕은 단계 카드로 제한한다.
-	const FAnchors IntentPanelRect(0.615f, 0.120f, 0.965f, 0.430f);
+	// 몬스터별 4단계(현재/이동/공격/결과)를 줄임 없이 읽을 수 있게 우상단 예고 카드를 넓히고 세로로 확장한다.
+	// 패널은 HitTestInvisible이라 겹친 전장 클릭을 막지 않고, 튜토리얼은 기존 하단 중앙 카드를 유지한다.
+	const FAnchors IntentPanelRect(0.585f, 0.105f, 0.965f, 0.680f);
 	const FAnchors IntentTutorialRect(0.220f, 0.750f, 0.780f, 0.945f);
 	if (bSkin)
 	{

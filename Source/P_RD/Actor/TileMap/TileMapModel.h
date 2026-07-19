@@ -56,6 +56,26 @@ DECLARE_DELEGATE_RetVal_OneParam(FTileIndex, FWorldToTileIndexDelegate, const FV
 DECLARE_DELEGATE_OneParam(FSetMovePathDelegate, const TArray<FTileIndex>&);
 
 /**
+ * @brief 한 적의 고정 행동을 전장 위에 계속 그리기 위한 시각 전용 스냅샷.
+ * @details 게임 판정에는 참여하지 않는다. 계획 경로/공격 타일은 라운드 시작 스냅샷을,
+ *          CurrentTile은 플레이어 개입 뒤의 실제 위치를 담아 둘의 어긋남을 동시에 보여준다.
+ */
+struct P_RD_API FEnemyIntentTileOverlay
+{
+	int32 mExecutionOrder = INDEX_NONE;
+	TArray<FTileIndex> mPathTileIndexes;
+	TArray<FTileIndex> mEffectTileIndexes;
+	FTileIndex mTargetTile = FTileIndex::Invalid;
+	FTileIndex mPlannedOrigin = FTileIndex::Invalid;
+	FTileIndex mCurrentTile = FTileIndex::Invalid;
+	bool mWasDisplaced = false;
+	bool mIsResolved = false;
+};
+
+/** @brief 적별 다중 경로/공격/현재 위치 오버레이를 타일맵 뷰에 전달한다. */
+DECLARE_DELEGATE_OneParam(FSetEnemyIntentOverlaysDelegate, const TArray<FEnemyIntentTileOverlay>&);
+
+/**
  * @brief 모델이 뷰(ATileMap)에 타일 강조(하이라이트) 표시/해제를 요청하는 델리깃
  * @details 경로 델리깃과 동일하게 non-dynamic — 라이브에서 뷰가 SetTileHighlight/ClearTileHighlight로
  *          바인딩하고, 미바인딩(심 복제본)이면 표시되지 않는다.
@@ -172,6 +192,9 @@ public:
 	 */
 	FSetMovePathDelegate mSetMovePathDelegate;
 
+	/** @brief 일반 이동 조준 경로와 독립적으로 유지되는 적 고정 행동 오버레이 요청. */
+	FSetEnemyIntentOverlaysDelegate mSetEnemyIntentOverlaysDelegate;
+
 	/**
 	 * @brief 타일 강조 표시/해제 요청 델리깃 (라이브에서 ATileMap이 SetTileHighlight/ClearTileHighlight로 바인딩, 미바인딩=심이면 표시 없음)
 	 */
@@ -228,6 +251,12 @@ public:
 	 * @brief 이동경로 표시 해제 요청 (빈 경로를 뷰에 전달)
 	 */
 	void ClearMovePath();
+
+	/** @brief 적별 고정 이동 경로, 공격 타일, 개입 후 현재 위치를 한 번에 교체한다. */
+	void SetEnemyIntentOverlays(const TArray<FEnemyIntentTileOverlay>& Overlays);
+
+	/** @brief 적 고정 행동 오버레이를 모두 지운다. */
+	void ClearEnemyIntentOverlays();
 
 	/* 타일 강조 */
 	/**

@@ -71,6 +71,10 @@ struct P_RD_API FSRPGEnemyIntent
 	UPROPERTY(BlueprintReadOnly)
 	bool mWasDisplaced = false;
 
+	/** @brief 플레이어 개입으로 마지막으로 밀려난 타일. 유닛이 제거된 뒤에도 조정 위치를 표시한다. */
+	UPROPERTY(BlueprintReadOnly)
+	FTileIndex mDisplacedToTile = FTileIndex::Invalid;
+
 	/** @brief 첫 전투에서 밀어 고정 이동을 취소하기 가장 쉬운 적으로 선택된 의도. */
 	UPROPERTY(BlueprintReadOnly)
 	bool mIsRecommendedInterventionTarget = false;

@@ -284,7 +284,7 @@ bool USRPGSkillAction::TryStartDicePush(const FActiveSkillContext& Context, cons
     {
         PathWorldLocations.Add(TileMap->TileToWorldLocation(TileIndex));
     }
-    mDicePushTarget->OnStartMovePath.Broadcast(PathWorldLocations);
+    mDicePushTarget->OnStartForcedMovePath.Broadcast(PathWorldLocations);
 
     StartDicePushStep(1);
     return true;
@@ -325,11 +325,10 @@ void USRPGSkillAction::StartDicePushStep(int32 StepIndex)
     }
 
     mDicePushStepIndex = StepIndex;
-    const ETileActorDirection Direction = UTileMapModel::TileDeltaToDirection(
-        mDicePushPath[StepIndex - 1],
+    // 강제 이동은 보행이 아니므로 이동 방향으로 몸을 돌리지 않고 기존 facing을 유지한다.
+    const FTileTransform NextTransform(
         mDicePushPath[StepIndex],
         mDicePushTarget->GetTileTransform().mDirection);
-    const FTileTransform NextTransform(mDicePushPath[StepIndex], Direction);
     TileMap->StartActorMovement(NextTransform, mDicePushTarget);
 
     TSharedPtr<FPresentationBarrier> Barrier = FPresentationBarrier::Make(

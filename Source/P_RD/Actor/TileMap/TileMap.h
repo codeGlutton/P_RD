@@ -22,6 +22,15 @@ class UStaticMesh;
 class UMaterialInterface;
 class UMaterialInstanceDynamic;
 
+/** @brief 적 의도 ISM 인스턴스 하나의 색과 경로 펄스 위상 정보. */
+struct FEnemyIntentOverlayPulseData
+{
+	FLinearColor mColor = FLinearColor::White;
+	int32 mPathOrder = 0;
+	int32 mPathSpan = 1;
+	bool mIsResolved = false;
+};
+
 /**
  * @brief  타일맵 액터
  */
@@ -132,6 +141,15 @@ public:
 	 * @brief 이동경로 표시 해제 (화살표·도착 마커 인스턴스 모두 제거)
 	 */
 	void ClearMovePath();
+
+	/**
+	 * @brief 모든 적의 고정 이동 경로/공격 타일/개입 후 현재 위치를 동시에 표시한다.
+	 * @details 일반 이동 조준 경로와 별도 ISM을 사용하므로 스킬 선택이나 하이라이트 갱신에도 지워지지 않는다.
+	 */
+	void SetEnemyIntentOverlays(const TArray<FEnemyIntentTileOverlay>& Overlays);
+
+	/** @brief 적 고정 행동 오버레이의 모든 인스턴스를 제거한다. */
+	void ClearEnemyIntentOverlays();
 
 #if WITH_EDITOR
 	/**
@@ -263,6 +281,26 @@ protected:
 	 */
 	UPROPERTY(VisibleAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Path End Component"))
 	TObjectPtr<UInstancedStaticMeshComponent> mPathEndComponent;
+
+	/** @brief 적별 고정 이동 경로 화살표(실행 순서별 색). */
+	UPROPERTY(VisibleAnywhere, Category = "SRPG|Intent", meta = (DisplayName = "Enemy Intent Path Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mEnemyIntentPathComponent;
+
+	/** @brief 적별 고정 이동의 원래 도착점 표식. */
+	UPROPERTY(VisibleAnywhere, Category = "SRPG|Intent", meta = (DisplayName = "Enemy Intent Destination Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mEnemyIntentEndComponent;
+
+	/** @brief 적별 고정 공격 범위/표적의 붉은 표식. */
+	UPROPERTY(VisibleAnywhere, Category = "SRPG|Intent", meta = (DisplayName = "Enemy Intent Attack Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mEnemyIntentAttackComponent;
+
+	/** @brief 예정 도착점에서 고정 표적을 향하는 붉은 공격 방향 화살표. */
+	UPROPERTY(VisibleAnywhere, Category = "SRPG|Intent", meta = (DisplayName = "Enemy Intent Attack Direction Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mEnemyIntentAttackDirectionComponent;
+
+	/** @brief 밀치기 후 실제 위치를 나타내는 민트색 표식. */
+	UPROPERTY(VisibleAnywhere, Category = "SRPG|Intent", meta = (DisplayName = "Enemy Intent Current Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mEnemyIntentCurrentComponent;
 
 	/* 강조 표시 */
 
@@ -446,6 +484,15 @@ private:
 	 * @details 화살표는 인스턴스 순서(=경로 순서)에 위상차를 줘 경로를 따라 흐르게 한다.
 	 */
 	void RefreshPathPulse();
+
+	/** @brief 적별 경로/공격/현재 위치 표식을 실행 순서에 따라 흐르게 갱신한다. */
+	void RefreshEnemyIntentOverlayPulse();
+
+	TArray<FEnemyIntentOverlayPulseData> mEnemyIntentPathPulseData;
+	TArray<FEnemyIntentOverlayPulseData> mEnemyIntentEndPulseData;
+	TArray<FEnemyIntentOverlayPulseData> mEnemyIntentAttackPulseData;
+	TArray<FEnemyIntentOverlayPulseData> mEnemyIntentAttackDirectionPulseData;
+	TArray<FEnemyIntentOverlayPulseData> mEnemyIntentCurrentPulseData;
 
 	/**
 	 * @brief 방향 스텝(dx,dy)을 +X 기준 yaw(도)로 변환 (메시가 +X를 향한다고 가정)

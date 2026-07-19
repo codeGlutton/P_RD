@@ -16,6 +16,24 @@
 
 #include "Algo/BinarySearch.h"
 
+namespace
+{
+	constexpr float ForcedMoveFirstTileDuration = 0.22f;
+	constexpr float ForcedMoveAdditionalTileDuration = 0.09f;
+	constexpr float ForcedMoveMaxDuration = 0.65f;
+	constexpr float ForcedMoveSettleDuration = 0.10f;
+	constexpr float ForcedMoveMinArcHeight = 10.0f;
+	constexpr float ForcedMoveMaxArcHeight = 18.0f;
+	constexpr float ForcedMoveMinOvershoot = 22.0f;
+	constexpr float ForcedMoveMaxOvershoot = 30.0f;
+
+	float EaseOutCubic(float Alpha)
+	{
+		const float OneMinusAlpha = 1.0f - FMath::Clamp(Alpha, 0.0f, 1.0f);
+		return 1.0f - OneMinusAlpha * OneMinusAlpha * OneMinusAlpha;
+	}
+}
+
 AUnit::AUnit()
 {
 	AutoPossessAI = EAutoPossessAI::Disabled;
@@ -94,6 +112,8 @@ void AUnit::BindModel(UObjectModel* Model)
 
 		// 이동 경로 통지 구독 (코너링을 포함한 폴리라인 생성용)
 		mUnitModel->OnStartMovePath.AddUObject(this, &AUnit::OnStartMovePath);
+		// 밀치기 경로 통지 구독 (일반 보행과 분리된 빠른 강제 이동 연출용)
+		mUnitModel->OnStartForcedMovePath.AddUObject(this, &AUnit::OnStartForcedMovePath);
 		// 이동 연출 요청 구독
 		mUnitModel->OnStartMoveStep.AddUObject(this, &AUnit::OnStartMoveStep);
 		// 방향 전환 연출 요청 구독
@@ -164,11 +184,14 @@ void AUnit::UnbindModel(UObjectModel* Model)
 	if (mUnitModel.IsValid())
 	{
 		mUnitModel->OnStartMovePath.RemoveAll(this);
+		mUnitModel->OnStartForcedMovePath.RemoveAll(this);
 		mUnitModel->OnStartMoveStep.RemoveAll(this);
 		mUnitModel->OnRotate.RemoveAll(this);
 	}
 	mUnitModel.Reset();
 
+	// 배리어 해제 콜백보다 먼저 메시를 원래 상대 트랜스폼으로 되돌린다.
+	ResetForcedMovePresentation();
 	// 진행 중이던 이동스텝 연출이 있으면 배리어를 놓아서 완료로 처리
 	mMoveBarrier.Reset();
 	// 이동이 멈추면 틱도 비활성화
@@ -191,12 +214,48 @@ void AUnit::OnPlaceTileTransform(const FTileTransform& TileTransform, const FTra
 
 void AUnit::OnStartMovePath(const TArray<FVector>& PathWorldLocations)
 {
+	// 새 일반 경로가 시작되면 이전 강제 이동의 메시 오프셋이 남지 않게 한다.
+	ResetForcedMovePresentation();
+
 	// 경로 전체를 코너링 곡선을 포함한 폴리라인으로 재구성
 	BakePolyLinePoints(PathWorldLocations, mCornerCutRatio, mCornerTension, mPolyLinePoints, mPolyLineDistances, mStepMarkerDistances);
 
 	// 진행 상태 초기화
 	mCurrentMoveStep = 0;
 	mPolyLineTraveledDistance = 0.0f;
+}
+
+void AUnit::OnStartForcedMovePath(const TArray<FVector>& PathWorldLocations)
+{
+	// 경로 베이크와 스텝 마커는 일반 이동과 공유한다. 이후 Tick 경로만 강제 이동 전용으로 분기한다.
+	OnStartMovePath(PathWorldLocations);
+	if (PathWorldLocations.Num() < 2 || mPolyLinePoints.Num() < 2)
+	{
+		return;
+	}
+
+	const int32 MoveTileCount = PathWorldLocations.Num() - 1;
+	const float DurationByDistance = ForcedMoveFirstTileDuration
+		+ ForcedMoveAdditionalTileDuration * StaticCast<float>(FMath::Max(MoveTileCount - 1, 0));
+	const float DistanceAlpha = FMath::Clamp(StaticCast<float>(MoveTileCount - 1) / 4.0f, 0.0f, 1.0f);
+
+	mIsForcedMovePresentation = true;
+	mForcedMoveElapsed = 0.0f;
+	mForcedMoveDuration = FMath::Min(DurationByDistance, ForcedMoveMaxDuration);
+	mForcedMoveTravelDuration = FMath::Max(mForcedMoveDuration - ForcedMoveSettleDuration, KINDA_SMALL_NUMBER);
+	mForcedMoveArcHeight = FMath::Lerp(ForcedMoveMinArcHeight, ForcedMoveMaxArcHeight, DistanceAlpha);
+	mForcedMoveOvershootDistance = FMath::Lerp(ForcedMoveMinOvershoot, ForcedMoveMaxOvershoot, DistanceAlpha);
+	mForcedMoveWorldDirection = PathWorldLocations.Last() - PathWorldLocations[0];
+	mForcedMoveWorldDirection.Z = 0.0f;
+	mForcedMoveWorldDirection = mForcedMoveWorldDirection.GetSafeNormal();
+	mForcedMoveFacingRotation = GetActorRotation();
+	mCurrentMoveSpeed = 0.0f;
+	mCurrentMoveVelocity = FVector::ZeroVector;
+
+	if (mMeshComp != nullptr)
+	{
+		mForcedMoveBaseMeshRelativeTransform = mMeshComp->GetRelativeTransform();
+	}
 }
 
 void AUnit::OnStartMoveStep(const FTileTransform& NextTileTransform, const FTransform& TargetWorldTransform, TSharedPtr<FPresentationBarrier> Barrier, float RemainingPathDistance)
@@ -311,6 +370,7 @@ void AUnit::Tick(float DeltaSeconds)
 	// 이동스텝 연출 중이 아니면 틱 끔
 	if (mMoveBarrier.IsValid() == false)
 	{
+		ResetForcedMovePresentation();
 		SetActorTickEnabled(false);
 		return;
 	}
@@ -318,7 +378,14 @@ void AUnit::Tick(float DeltaSeconds)
 	// 폴리라인이 있으면 폴리라인이동모드로 처리
 	if (mPolyLinePoints.Num() >= 2)
 	{
-		TickPolyLine(DeltaSeconds);
+		if (mIsForcedMovePresentation)
+		{
+			TickForcedMove(DeltaSeconds);
+		}
+		else
+		{
+			TickPolyLine(DeltaSeconds);
+		}
 		return;
 	}
 
@@ -390,6 +457,145 @@ void AUnit::Tick(float DeltaSeconds)
 		// -> StartStep(NextTile) 해서 타일간 이동 반복
 		mMoveBarrier.Reset();
 	}
+}
+
+void AUnit::TickForcedMove(float DeltaSeconds)
+{
+	if (mPolyLinePoints.Num() < 2
+		|| mPolyLineDistances.Num() != mPolyLinePoints.Num()
+		|| mStepMarkerDistances.Num() < 2
+		|| mForcedMoveDuration <= KINDA_SMALL_NUMBER)
+	{
+		// 비정상 경로에서는 메시를 즉시 원복하고 기존 직선 이동 폴백이 배리어를 마무리하게 한다.
+		ResetPolyLineState();
+		return;
+	}
+
+	const float TotalDistance = mPolyLineDistances.Last();
+	mForcedMoveElapsed = FMath::Min(
+		mForcedMoveElapsed + FMath::Max(DeltaSeconds, 0.0f),
+		mForcedMoveDuration);
+
+	const float TravelAlpha = FMath::Clamp(
+		mForcedMoveElapsed / mForcedMoveTravelDuration,
+		0.0f,
+		1.0f);
+	mPolyLineTraveledDistance = TotalDistance * EaseOutCubic(TravelAlpha);
+
+	FVector SampleLocation = FVector::ZeroVector;
+	FVector SampleTangent = FVector::ZeroVector;
+	if (GetPolyLinePoint(mPolyLineTraveledDistance, SampleLocation, SampleTangent) == false)
+	{
+		ResetPolyLineState();
+		return;
+	}
+
+	// 폴리라인은 타일 바닥 기준이므로 루트는 기존 이동과 똑같이 캡슐 반높이만큼 보정한다.
+	if (mCapsuleComp != nullptr)
+	{
+		SampleLocation.Z += mCapsuleComp->GetScaledCapsuleHalfHeight();
+	}
+
+	// 밀려나는 동안 이동 방향으로 몸을 돌리지 않는다. 보행 속도도 노출하지 않아 Walk Blend를 억제한다.
+	SetActorLocationAndRotation(SampleLocation, mForcedMoveFacingRotation);
+	mCurrentMoveSpeed = 0.0f;
+	mCurrentMoveVelocity = FVector::ZeroVector;
+
+	const bool bSettling = mForcedMoveElapsed >= mForcedMoveTravelDuration;
+	const float SettleAlpha = bSettling
+		? FMath::Clamp(
+			(mForcedMoveElapsed - mForcedMoveTravelDuration)
+			/ FMath::Max(mForcedMoveDuration - mForcedMoveTravelDuration, KINDA_SMALL_NUMBER),
+			0.0f,
+			1.0f)
+		: -1.0f;
+	ApplyForcedMoveMeshPresentation(TravelAlpha, SettleAlpha);
+
+	// 논리 이동은 기존과 동일하게 각 타일 마커에서 배리어를 놓아 다음 StartDicePushStep을 진행한다.
+	// 프레임 드롭으로 여러 마커를 한 번에 지난 경우도 모두 처리한다.
+	while (mMoveBarrier.IsValid()
+		&& mCurrentMoveStep < mStepMarkerDistances.Num() - 1
+		&& mPolyLineTraveledDistance >= mStepMarkerDistances[mCurrentMoveStep])
+	{
+		mMoveBarrier.Reset();
+	}
+
+	// 배리어 콜백 중 경로가 취소/리셋될 수 있다.
+	if (mPolyLinePoints.Num() < 2)
+	{
+		return;
+	}
+
+	// 루트가 목적지에 닿은 뒤 짧은 메시 반동까지 끝나야 마지막 배리어를 놓는다.
+	if (mMoveBarrier.IsValid()
+		&& mCurrentMoveStep >= mStepMarkerDistances.Num() - 1
+		&& mPolyLineTraveledDistance >= TotalDistance - KINDA_SMALL_NUMBER
+		&& mForcedMoveElapsed >= mForcedMoveDuration - KINDA_SMALL_NUMBER)
+	{
+		mCurrentMoveSpeed = 0.0f;
+		mCurrentMoveVelocity = FVector::ZeroVector;
+		ResetPolyLineState();
+		SetActorTickEnabled(false);
+		mMoveBarrier.Reset();
+	}
+}
+
+void AUnit::ApplyForcedMoveMeshPresentation(float TravelAlpha, float SettleAlpha)
+{
+	if (mIsForcedMovePresentation == false || mMeshComp == nullptr)
+	{
+		return;
+	}
+
+	const float ClampedTravelAlpha = FMath::Clamp(TravelAlpha, 0.0f, 1.0f);
+	const float ArcOffset = FMath::Sin(PI * ClampedTravelAlpha) * mForcedMoveArcHeight;
+
+	float OvershootAlpha = 0.0f;
+	float ImpactStrength = 0.0f;
+	if (SettleAlpha < 0.0f)
+	{
+		// 이동 후반부에만 메시가 루트보다 조금 앞서 나가도록 해 도착 충격을 준비한다.
+		OvershootAlpha = FMath::Pow(ClampedTravelAlpha, 4.0f);
+	}
+	else
+	{
+		const float SettleEase = EaseOutCubic(SettleAlpha);
+		OvershootAlpha = 1.0f - SettleEase;
+		ImpactStrength = 1.0f - SettleEase;
+	}
+
+	const FVector WorldOffset = mForcedMoveWorldDirection
+		* (mForcedMoveOvershootDistance * OvershootAlpha)
+		+ FVector::UpVector * ArcOffset;
+	const FVector RelativeOffset = GetActorTransform().InverseTransformVectorNoScale(WorldOffset);
+
+	FTransform MeshTransform = mForcedMoveBaseMeshRelativeTransform;
+	MeshTransform.SetLocation(MeshTransform.GetLocation() + RelativeOffset);
+	const FVector BaseScale = mForcedMoveBaseMeshRelativeTransform.GetScale3D();
+	const FVector SquashMultiplier(
+		1.0f + 0.04f * ImpactStrength,
+		1.0f + 0.04f * ImpactStrength,
+		1.0f - 0.08f * ImpactStrength);
+	MeshTransform.SetScale3D(BaseScale * SquashMultiplier);
+	mMeshComp->SetRelativeTransform(MeshTransform);
+}
+
+void AUnit::ResetForcedMovePresentation()
+{
+	if (mIsForcedMovePresentation && mMeshComp != nullptr)
+	{
+		mMeshComp->SetRelativeTransform(mForcedMoveBaseMeshRelativeTransform);
+	}
+
+	mIsForcedMovePresentation = false;
+	mForcedMoveElapsed = 0.0f;
+	mForcedMoveDuration = 0.0f;
+	mForcedMoveTravelDuration = 0.0f;
+	mForcedMoveArcHeight = 0.0f;
+	mForcedMoveOvershootDistance = 0.0f;
+	mForcedMoveWorldDirection = FVector::ZeroVector;
+	mForcedMoveFacingRotation = FRotator::ZeroRotator;
+	mForcedMoveBaseMeshRelativeTransform = FTransform::Identity;
 }
 
 void AUnit::TickPolyLine(float DeltaSeconds)
@@ -532,6 +738,8 @@ bool AUnit::GetPolyLinePoint(float Distance, FVector& OutLocation, FVector& OutT
 
 void AUnit::ResetPolyLineState()
 {
+	ResetForcedMovePresentation();
+
 	// 폴리라인 관련 상태를 모두 비워서 직선이동모드로 전환
 	mPolyLinePoints.Reset();
 	mPolyLineDistances.Reset();

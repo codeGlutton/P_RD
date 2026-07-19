@@ -69,6 +69,12 @@ protected:
      */
 	virtual void OnStartMovePath(const TArray<FVector>& PathWorldLocations);
 
+	/**
+	 * @brief 밀치기용 전체 경로를 받아 일반 보행과 분리된 빠른 강제 이동 연출을 준비한다.
+	 * @details 논리 이동은 이후 OnStartMoveStep의 기존 PresentationBarrier 흐름을 그대로 따른다.
+	 */
+	virtual void OnStartForcedMovePath(const TArray<FVector>& PathWorldLocations);
+
 	// @brief 이동 시작 요청을 수신해서 이동 시작
 	virtual void OnStartMoveStep(
 		const FTileTransform& NextTileTransform,
@@ -107,6 +113,12 @@ public:
 private:
 	// @brief 폴리라인이 있을 경우 폴리라인의 점들을 따라가는 이동 연출
 	void TickPolyLine(float DeltaSeconds);
+	// @brief 밀치기 전용 빠른 이동 + 메시 포물선/반동 연출
+	void TickForcedMove(float DeltaSeconds);
+	// @brief 강제 이동 중 메시 상대 트랜스폼 적용
+	void ApplyForcedMoveMeshPresentation(float TravelAlpha, float SettleAlpha);
+	// @brief 강제 이동 메시/속도 상태를 원래 값으로 복원
+	void ResetForcedMovePresentation();
 	// @brief 진행거리에 해당하는 폴리라인 점과 접선(바라보는 방향) 반환
 	bool GetPolyLinePoint(float Distance, FVector& OutLocation, FVector& OutTangent) const;
 	// @brief 폴리라인 이동상태 초기화 (직선 이동모드로 전환)
@@ -185,6 +197,17 @@ private:
 	int32 mCurrentMoveStep = 0;
 	// @brief 폴리라인 시작점부터 잰 현재 진행거리 (cm)
 	float mPolyLineTraveledDistance = 0.0f;
+
+	// @brief 일반 보행과 분리된 밀치기 연출 상태
+	bool mIsForcedMovePresentation = false;
+	float mForcedMoveElapsed = 0.0f;
+	float mForcedMoveDuration = 0.0f;
+	float mForcedMoveTravelDuration = 0.0f;
+	float mForcedMoveArcHeight = 0.0f;
+	float mForcedMoveOvershootDistance = 0.0f;
+	FVector mForcedMoveWorldDirection = FVector::ZeroVector;
+	FRotator mForcedMoveFacingRotation = FRotator::ZeroRotator;
+	FTransform mForcedMoveBaseMeshRelativeTransform = FTransform::Identity;
 
 private:
 	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CapsuleComp", AllowPrivateAccess = "true"))

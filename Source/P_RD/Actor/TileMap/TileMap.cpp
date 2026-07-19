@@ -24,6 +24,20 @@ namespace
 		default:							return 0.0f;
 		}
 	}
+
+	FLinearColor GetEnemyIntentRouteColor(int32 ExecutionOrder)
+	{
+		static const FLinearColor Colors[] =
+		{
+			FLinearColor(0.10f, 0.88f, 1.00f, 1.0f), // 1: 청록
+			FLinearColor(1.00f, 0.53f, 0.10f, 1.0f), // 2: 주황
+			FLinearColor(0.78f, 0.35f, 1.00f, 1.0f), // 3: 보라
+			FLinearColor(0.35f, 1.00f, 0.42f, 1.0f), // 4: 초록
+			FLinearColor(1.00f, 0.32f, 0.62f, 1.0f), // 5: 분홍
+		};
+		const int32 ColorIndex = FMath::Abs(ExecutionOrder > 0 ? ExecutionOrder - 1 : 0) % UE_ARRAY_COUNT(Colors);
+		return Colors[ColorIndex];
+	}
 }
 
 ATileMap::ATileMap()
@@ -100,12 +114,46 @@ ATileMap::ATileMap()
 	mPathEndComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	mPathEndComponent->SetNumCustomDataFloats(4);
 
+	// 적 의도는 플레이어 이동 프리뷰와 수명이 다르므로 전용 컴포넌트에 누적한다.
+	// 이렇게 해야 스킬/이동 조준이 SetMovePath 또는 하이라이트를 지워도 공개된 계획은 계속 남는다.
+	mEnemyIntentPathComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("EnemyIntentPath"));
+	mEnemyIntentPathComponent->SetupAttachment(RootComponent);
+	mEnemyIntentPathComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	mEnemyIntentPathComponent->SetNumCustomDataFloats(4);
+	mEnemyIntentPathComponent->SetCastShadow(false);
+
+	mEnemyIntentEndComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("EnemyIntentDestination"));
+	mEnemyIntentEndComponent->SetupAttachment(RootComponent);
+	mEnemyIntentEndComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	mEnemyIntentEndComponent->SetNumCustomDataFloats(4);
+	mEnemyIntentEndComponent->SetCastShadow(false);
+
+	mEnemyIntentAttackComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("EnemyIntentAttack"));
+	mEnemyIntentAttackComponent->SetupAttachment(RootComponent);
+	mEnemyIntentAttackComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	mEnemyIntentAttackComponent->SetNumCustomDataFloats(4);
+	mEnemyIntentAttackComponent->SetCastShadow(false);
+
+	mEnemyIntentAttackDirectionComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("EnemyIntentAttackDirection"));
+	mEnemyIntentAttackDirectionComponent->SetupAttachment(RootComponent);
+	mEnemyIntentAttackDirectionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	mEnemyIntentAttackDirectionComponent->SetNumCustomDataFloats(4);
+	mEnemyIntentAttackDirectionComponent->SetCastShadow(false);
+
+	mEnemyIntentCurrentComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("EnemyIntentCurrent"));
+	mEnemyIntentCurrentComponent->SetupAttachment(RootComponent);
+	mEnemyIntentCurrentComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	mEnemyIntentCurrentComponent->SetNumCustomDataFloats(4);
+	mEnemyIntentCurrentComponent->SetCastShadow(false);
+
 	// 경로 중간 화살표 기본 메시: +X를 가리키는 화살표 (방향 회전이 이 형상 기준이라 +X 향이어야 함)
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ArrowMeshFinder(TEXT("/Game/SVN/OutSideAsset/Kenney/FactoryKit/SM_Kenney_FactoryKit_ArrowStraight.SM_Kenney_FactoryKit_ArrowStraight"));
 	if (ArrowMeshFinder.Succeeded())
 	{
 		mPathArrowMesh = ArrowMeshFinder.Object;
 		mPathArrowComponent->SetStaticMesh(mPathArrowMesh);
+		mEnemyIntentPathComponent->SetStaticMesh(mPathArrowMesh);
+		mEnemyIntentAttackDirectionComponent->SetStaticMesh(mPathArrowMesh);
 	}
 
 	// 경로 좌회전 화살표 기본 메시 (+X로 진입해 -Y로 꺾이는 형상)
@@ -130,6 +178,9 @@ ATileMap::ATileMap()
 	{
 		mPathEndMesh = EndMeshFinder.Object;
 		mPathEndComponent->SetStaticMesh(mPathEndMesh);
+		mEnemyIntentEndComponent->SetStaticMesh(mPathEndMesh);
+		mEnemyIntentAttackComponent->SetStaticMesh(mPathEndMesh);
+		mEnemyIntentCurrentComponent->SetStaticMesh(mPathEndMesh);
 	}
 
 	// 화살표/마커는 전용 발광 머티리얼(custom data RGBA + EmissiveBoost) 사용 — SetMovePath에서 컴포넌트에 적용
@@ -139,6 +190,11 @@ ATileMap::ATileMap()
 	{
 		mPathArrowMaterial = PathIndicatorMatFinder.Object;
 		mPathEndMaterial = PathIndicatorMatFinder.Object;
+		mEnemyIntentPathComponent->SetMaterial(0, mPathArrowMaterial);
+		mEnemyIntentEndComponent->SetMaterial(0, mPathEndMaterial);
+		mEnemyIntentAttackComponent->SetMaterial(0, mPathEndMaterial);
+		mEnemyIntentAttackDirectionComponent->SetMaterial(0, mPathArrowMaterial);
+		mEnemyIntentCurrentComponent->SetMaterial(0, mPathEndMaterial);
 	}
 
 	// 경로 화살표와 도착지 화살표 기본 값
@@ -157,6 +213,7 @@ void ATileMap::BindModelDelegates()
 
 	// 이동경로 표시 요청을 뷰의 SetMovePath로 연결 (싱글캐스트라 재호출 시 덮어씀)
 	mModel->mSetMovePathDelegate.BindUObject(this, &ATileMap::SetMovePath);
+	mModel->mSetEnemyIntentOverlaysDelegate.BindUObject(this, &ATileMap::SetEnemyIntentOverlays);
 
 	// 타일 강조 표시/해제 요청을 뷰의 SetTileHighlight/ClearTileHighlight로 연결
 	mModel->mSetTileHighlightDelegate.BindUObject(this, &ATileMap::SetTileHighlight);
@@ -192,6 +249,7 @@ void ATileMap::UnbindModel(UObjectModel* Model)
 	if (mModel != nullptr)
 	{
 		mModel->mSetMovePathDelegate.Unbind();
+		mModel->mSetEnemyIntentOverlaysDelegate.Unbind();
 		mModel->mSetTileHighlightDelegate.Unbind();
 		mModel->mClearTileHighlightDelegate.Unbind();
 		mModel->mTileToWorldTransformDelegate.Unbind();
@@ -316,6 +374,15 @@ void ATileMap::Tick(float DeltaSeconds)
 	// 경로 화살표/도착 마커 알파도 펄스 — 표시 중일 때만 갱신
 	if (mPathLength > 0)
 		RefreshPathPulse();
+
+	if (mEnemyIntentPathPulseData.IsEmpty() == false
+		|| mEnemyIntentEndPulseData.IsEmpty() == false
+		|| mEnemyIntentAttackPulseData.IsEmpty() == false
+		|| mEnemyIntentAttackDirectionPulseData.IsEmpty() == false
+		|| mEnemyIntentCurrentPulseData.IsEmpty() == false)
+	{
+		RefreshEnemyIntentOverlayPulse();
+	}
 }
 
 void ATileMap::RebuildTileInstances()
@@ -733,6 +800,271 @@ void ATileMap::ClearMovePath()
 
 	// 표시 중 경로 없음
 	mPathLength = 0;
+}
+
+void ATileMap::SetEnemyIntentOverlays(const TArray<FEnemyIntentTileOverlay>& Overlays)
+{
+	ClearEnemyIntentOverlays();
+	if (Overlays.IsEmpty())
+	{
+		return;
+	}
+
+	// 에디터에서 메시/머티리얼을 교체한 경우에도 런타임 오버레이에 즉시 반영한다.
+	if (mEnemyIntentPathComponent != nullptr)
+	{
+		mEnemyIntentPathComponent->SetStaticMesh(mPathArrowMesh);
+		if (mPathArrowMaterial != nullptr)
+		{
+			mEnemyIntentPathComponent->SetMaterial(0, mPathArrowMaterial);
+		}
+	}
+	if (mEnemyIntentAttackDirectionComponent != nullptr)
+	{
+		mEnemyIntentAttackDirectionComponent->SetStaticMesh(mPathArrowMesh);
+		if (mPathArrowMaterial != nullptr)
+		{
+			mEnemyIntentAttackDirectionComponent->SetMaterial(0, mPathArrowMaterial);
+		}
+	}
+	for (UInstancedStaticMeshComponent* MarkerComponent :
+		{ mEnemyIntentEndComponent.Get(), mEnemyIntentAttackComponent.Get(), mEnemyIntentCurrentComponent.Get() })
+	{
+		if (MarkerComponent == nullptr)
+		{
+			continue;
+		}
+		MarkerComponent->SetStaticMesh(mPathEndMesh);
+		if (mPathEndMaterial != nullptr)
+		{
+			MarkerComponent->SetMaterial(0, mPathEndMaterial);
+		}
+	}
+
+	const float BaseScale = (mTileSize / 100.0f) * mPathArrowScale;
+	const float LaneOffsets[] = { 0.0f, 10.0f, -10.0f, 18.0f, -18.0f };
+	auto AddPulseInstance = [](
+		UInstancedStaticMeshComponent* Component,
+		TArray<FEnemyIntentOverlayPulseData>& PulseData,
+		const FTransform& Transform,
+		const FLinearColor& Color,
+		int32 PathOrder,
+		int32 PathSpan,
+		bool bResolved)
+	{
+		if (Component == nullptr)
+		{
+			return;
+		}
+		Component->AddInstance(Transform, /*bWorldSpace=*/false);
+		FEnemyIntentOverlayPulseData& Data = PulseData.AddDefaulted_GetRef();
+		Data.mColor = Color;
+		Data.mPathOrder = PathOrder;
+		Data.mPathSpan = FMath::Max(PathSpan, 1);
+		Data.mIsResolved = bResolved;
+	};
+
+	for (const FEnemyIntentTileOverlay& Overlay : Overlays)
+	{
+		const FLinearColor RouteColor = GetEnemyIntentRouteColor(Overlay.mExecutionOrder);
+		const int32 LaneIndex = FMath::Abs(Overlay.mExecutionOrder > 0 ? Overlay.mExecutionOrder - 1 : 0) % UE_ARRAY_COUNT(LaneOffsets);
+		const float LaneOffset = LaneOffsets[LaneIndex];
+		const int32 PathSpan = FMath::Max(Overlay.mPathTileIndexes.Num() - 1, 1);
+
+		for (int32 PathIndex = 0; PathIndex + 1 < Overlay.mPathTileIndexes.Num(); ++PathIndex)
+		{
+			const FTileIndex& Tile = Overlay.mPathTileIndexes[PathIndex];
+			const FTileIndex& Next = Overlay.mPathTileIndexes[PathIndex + 1];
+			if (IsValidIndex(Tile) == false || IsValidIndex(Next) == false)
+			{
+				continue;
+			}
+
+			const FTileIndex Step(Next.mX - Tile.mX, Next.mY - Tile.mY);
+			FVector2D Perpendicular(-static_cast<float>(Step.mY), static_cast<float>(Step.mX));
+			Perpendicular.Normalize();
+			const FVector Location(
+				Tile.mX * mTileSize + Perpendicular.X * LaneOffset,
+				Tile.mY * mTileSize + Perpendicular.Y * LaneOffset,
+				mPathHeightOffset + 8.0f + LaneIndex * 1.5f);
+			const FTransform Transform(
+				FRotator(0.0f, StepToYaw(Step), 0.0f),
+				Location,
+				FVector(BaseScale * 0.72f));
+			AddPulseInstance(
+				mEnemyIntentPathComponent,
+				mEnemyIntentPathPulseData,
+				Transform,
+				RouteColor,
+				PathIndex,
+				PathSpan,
+				Overlay.mIsResolved);
+		}
+
+		// 실제 이동이 있는 계획만 원래 목적지 마커를 그린다. 제자리 공격을 이동처럼 오해하지 않게 한다.
+		if (Overlay.mPathTileIndexes.Num() >= 2 && mEnemyIntentEndComponent != nullptr)
+		{
+			const FTileIndex& EndTile = Overlay.mPathTileIndexes.Last();
+			if (IsValidIndex(EndTile))
+			{
+				FRotator Rotation = FRotator::ZeroRotator;
+				FVector2D Perpendicular = FVector2D::ZeroVector;
+				const FTileIndex& PrevTile = Overlay.mPathTileIndexes[Overlay.mPathTileIndexes.Num() - 2];
+				const FTileIndex LastStep(EndTile.mX - PrevTile.mX, EndTile.mY - PrevTile.mY);
+				Rotation.Yaw = StepToYaw(LastStep);
+				Perpendicular = FVector2D(-static_cast<float>(LastStep.mY), static_cast<float>(LastStep.mX));
+				Perpendicular.Normalize();
+				const FVector Location(
+					EndTile.mX * mTileSize + Perpendicular.X * LaneOffset,
+					EndTile.mY * mTileSize + Perpendicular.Y * LaneOffset,
+					mPathHeightOffset + 10.0f + LaneIndex * 1.5f);
+				AddPulseInstance(
+					mEnemyIntentEndComponent,
+					mEnemyIntentEndPulseData,
+					FTransform(Rotation, Location, FVector(BaseScale * 0.82f)),
+					RouteColor,
+					PathSpan,
+					PathSpan,
+					Overlay.mIsResolved);
+			}
+		}
+
+		TArray<FTileIndex> AttackTiles = Overlay.mEffectTileIndexes;
+		if (AttackTiles.IsEmpty() && Overlay.mTargetTile != FTileIndex::Invalid)
+		{
+			AttackTiles.Add(Overlay.mTargetTile);
+		}
+		const FLinearColor AttackColor(
+			FMath::Lerp(RouteColor.R, 1.0f, 0.72f),
+			FMath::Lerp(RouteColor.G, 0.04f, 0.72f),
+			FMath::Lerp(RouteColor.B, 0.04f, 0.72f),
+			1.0f);
+		const FTileIndex AttackOrigin = Overlay.mPathTileIndexes.IsEmpty()
+			? Overlay.mPlannedOrigin
+			: Overlay.mPathTileIndexes.Last();
+		const FTileIndex AttackDirectionTarget = Overlay.mTargetTile != FTileIndex::Invalid
+			? Overlay.mTargetTile
+			: (AttackTiles.IsEmpty() ? FTileIndex::Invalid : AttackTiles[0]);
+		if (IsValidIndex(AttackOrigin)
+			&& IsValidIndex(AttackDirectionTarget)
+			&& AttackOrigin != AttackDirectionTarget)
+		{
+			const FTileIndex AttackDelta(
+				AttackDirectionTarget.mX - AttackOrigin.mX,
+				AttackDirectionTarget.mY - AttackOrigin.mY);
+			const FVector Location(
+				AttackOrigin.mX * mTileSize,
+				AttackOrigin.mY * mTileSize,
+				mPathHeightOffset + 26.0f + LaneIndex * 2.0f);
+			AddPulseInstance(
+				mEnemyIntentAttackDirectionComponent,
+				mEnemyIntentAttackDirectionPulseData,
+				FTransform(FRotator(0.0f, StepToYaw(AttackDelta), 0.0f), Location, FVector(BaseScale * 0.74f)),
+				AttackColor,
+				0,
+				1,
+				Overlay.mIsResolved);
+		}
+		for (int32 AttackIndex = 0; AttackIndex < AttackTiles.Num(); ++AttackIndex)
+		{
+			const FTileIndex& AttackTile = AttackTiles[AttackIndex];
+			if (IsValidIndex(AttackTile) == false)
+			{
+				continue;
+			}
+			const FVector Location(
+				AttackTile.mX * mTileSize,
+				AttackTile.mY * mTileSize,
+				mPathHeightOffset + 18.0f + LaneIndex * 2.0f);
+			AddPulseInstance(
+				mEnemyIntentAttackComponent,
+				mEnemyIntentAttackPulseData,
+				FTransform(FRotator(0.0f, 45.0f, 0.0f), Location, FVector(BaseScale * 0.92f)),
+				AttackColor,
+				AttackIndex,
+				FMath::Max(AttackTiles.Num(), 1),
+				Overlay.mIsResolved);
+		}
+
+		// 원래 계획은 손대지 않고, 밀린 실제 위치에만 별도 민트 마커를 더한다.
+		// 따라서 화면에서 '현재 적 모델/민트 마커'와 '원래 출발 경로'가 동시에 보인다.
+		if (Overlay.mWasDisplaced
+			&& Overlay.mCurrentTile != FTileIndex::Invalid
+			&& Overlay.mCurrentTile != Overlay.mPlannedOrigin
+			&& IsValidIndex(Overlay.mCurrentTile))
+		{
+			const FVector Location(
+				Overlay.mCurrentTile.mX * mTileSize,
+				Overlay.mCurrentTile.mY * mTileSize,
+				mPathHeightOffset + 34.0f + LaneIndex * 2.0f);
+			AddPulseInstance(
+				mEnemyIntentCurrentComponent,
+				mEnemyIntentCurrentPulseData,
+				FTransform(FRotator(0.0f, 135.0f, 0.0f), Location, FVector(BaseScale * 1.14f)),
+				FLinearColor(0.20f, 1.00f, 0.62f, 1.0f),
+				Overlay.mExecutionOrder,
+				1,
+				Overlay.mIsResolved);
+		}
+	}
+
+	RefreshEnemyIntentOverlayPulse();
+}
+
+void ATileMap::ClearEnemyIntentOverlays()
+{
+	for (UInstancedStaticMeshComponent* Component :
+		{ mEnemyIntentPathComponent.Get(), mEnemyIntentEndComponent.Get(), mEnemyIntentAttackComponent.Get(),
+			mEnemyIntentAttackDirectionComponent.Get(), mEnemyIntentCurrentComponent.Get() })
+	{
+		if (Component != nullptr)
+		{
+			Component->ClearInstances();
+		}
+	}
+	mEnemyIntentPathPulseData.Reset();
+	mEnemyIntentEndPulseData.Reset();
+	mEnemyIntentAttackPulseData.Reset();
+	mEnemyIntentAttackDirectionPulseData.Reset();
+	mEnemyIntentCurrentPulseData.Reset();
+}
+
+void ATileMap::RefreshEnemyIntentOverlayPulse()
+{
+	const float Time = GetWorld() != nullptr ? GetWorld()->GetTimeSeconds() : 0.0f;
+	auto RefreshGroup = [this, Time](
+		UInstancedStaticMeshComponent* Component,
+		const TArray<FEnemyIntentOverlayPulseData>& PulseData,
+		float PeriodScale,
+		float BrightnessBoost)
+	{
+		if (Component == nullptr)
+		{
+			return;
+		}
+		const int32 Count = FMath::Min(Component->GetInstanceCount(), PulseData.Num());
+		for (int32 InstanceIndex = 0; InstanceIndex < Count; ++InstanceIndex)
+		{
+			const FEnemyIntentOverlayPulseData& Data = PulseData[InstanceIndex];
+			const float Period = FMath::Max(mPathPulsePeriod * PeriodScale, 0.05f);
+			const float PhasePerTile = 2.0f * PI * mPathFlowCycles / FMath::Max(Data.mPathSpan, 1);
+			const float Phase = 2.0f * PI * Time / Period - Data.mPathOrder * PhasePerTile;
+			const float Wave = 0.5f - 0.5f * FMath::Cos(Phase);
+			const float Low = Data.mIsResolved ? 0.16f : 0.42f;
+			const float High = Data.mIsResolved ? 0.34f : FMath::Max(mPathPulseMaxBrightness, 1.0f) * BrightnessBoost;
+			const float Brightness = FMath::Lerp(Low, High, Wave);
+			Component->SetCustomDataValue(InstanceIndex, 0, Data.mColor.R * Brightness);
+			Component->SetCustomDataValue(InstanceIndex, 1, Data.mColor.G * Brightness);
+			Component->SetCustomDataValue(InstanceIndex, 2, Data.mColor.B * Brightness);
+			Component->SetCustomDataValue(InstanceIndex, 3, Data.mIsResolved ? 0.55f : 1.0f, /*bMarkRenderStateDirty=*/true);
+		}
+	};
+
+	RefreshGroup(mEnemyIntentPathComponent, mEnemyIntentPathPulseData, 1.0f, 1.12f);
+	RefreshGroup(mEnemyIntentEndComponent, mEnemyIntentEndPulseData, 0.90f, 1.22f);
+	RefreshGroup(mEnemyIntentAttackComponent, mEnemyIntentAttackPulseData, 0.58f, 1.45f);
+	RefreshGroup(mEnemyIntentAttackDirectionComponent, mEnemyIntentAttackDirectionPulseData, 0.58f, 1.45f);
+	RefreshGroup(mEnemyIntentCurrentComponent, mEnemyIntentCurrentPulseData, 0.42f, 1.65f);
 }
 
 /**

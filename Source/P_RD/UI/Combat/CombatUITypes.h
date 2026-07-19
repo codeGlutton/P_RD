@@ -62,6 +62,8 @@ struct FEnemyIntentUI
 	UPROPERTY(BlueprintReadOnly) FTileIndex mPlannedOrigin = FTileIndex::Invalid;
 	UPROPERTY(BlueprintReadOnly) FTileIndex mPlannedDestination = FTileIndex::Invalid;
 	UPROPERTY(BlueprintReadOnly) FTileIndex mTargetTile = FTileIndex::Invalid;
+	/** @brief 라이브 유닛 위치를 우선하고, 제거 후에는 마지막 밀린 위치/계획 원점으로 보강한 현재 표시 타일. */
+	UPROPERTY(BlueprintReadOnly) FTileIndex mCurrentTile = FTileIndex::Invalid;
 	UPROPERTY(BlueprintReadOnly) TArray<FTileIndex> mPathTileIndexes;
 	UPROPERTY(BlueprintReadOnly) TArray<FTileIndex> mEffectTileIndexes;
 	UPROPERTY(BlueprintReadOnly) EEnemyIntentResultUI mResult = EEnemyIntentResultUI::Planned;

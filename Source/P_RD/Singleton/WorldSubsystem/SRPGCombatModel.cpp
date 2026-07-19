@@ -802,6 +802,7 @@ void USRPGCombatModel::PrepareEnemyIntents()
 	if (mTileMap == nullptr || mPlayerUnit == nullptr || mPlayerUnit->IsDead())
 	{
 		BroadcastEnemyIntentChanged();
+		RefreshEnemyIntentHighlights();
 		return;
 	}
 
@@ -1050,6 +1051,7 @@ void USRPGCombatModel::ReportPlayerDisplacement(
 		}
 
 		Intent.mWasDisplaced = true;
+		Intent.mDisplacedToTile = To;
 		const FText Message = FText::Format(
 			NSLOCTEXT("EnemyIntent", "PlayerDisplacedEnemy", "플레이어 개입: 주사위 {0}으로 ({1},{2}) → ({3},{4}) 밀림"),
 			FText::AsNumber(DiceValue),
@@ -1172,46 +1174,51 @@ void USRPGCombatModel::RefreshEnemyIntentHighlights()
 	mTileMap->ClearTileHighlight(ETileHighlightFlag::Effect);
 	mTileMap->ClearTileHighlight(ETileHighlightFlag::Select);
 
-	TArray<FTileIndex> PathTiles;
-	TArray<FTileIndex> EffectTiles;
 	TArray<FTileIndex> TargetTiles;
+	TArray<FEnemyIntentTileOverlay> EnemyIntentOverlays;
+	EnemyIntentOverlays.Reserve(mEnemyIntents.Num());
 	for (const FSRPGEnemyIntent& Intent : mEnemyIntents)
 	{
-		if (Intent.mResult != ESRPGEnemyIntentResult::Planned && Intent.mResult != ESRPGEnemyIntentResult::Executing)
+		const bool bIsResolved = Intent.mResult != ESRPGEnemyIntentResult::Planned
+			&& Intent.mResult != ESRPGEnemyIntentResult::Executing;
+
+		FEnemyIntentTileOverlay& Overlay = EnemyIntentOverlays.AddDefaulted_GetRef();
+		Overlay.mExecutionOrder = Intent.mExecutionOrder;
+		Overlay.mPathTileIndexes = Intent.mPathTileIndexes;
+		Overlay.mEffectTileIndexes = Intent.mEffectTileIndexes;
+		Overlay.mTargetTile = Intent.mTargetTile;
+		Overlay.mPlannedOrigin = Intent.mPlannedOrigin;
+		Overlay.mCurrentTile = IsValid(Intent.mEnemy)
+			? Intent.mEnemy->GetTileTransform().mIndex
+			: FTileIndex::Invalid;
+		if (Overlay.mCurrentTile == FTileIndex::Invalid)
+		{
+			Overlay.mCurrentTile = Intent.mDisplacedToTile != FTileIndex::Invalid
+				? Intent.mDisplacedToTile
+				: Intent.mPlannedOrigin;
+		}
+		Overlay.mWasDisplaced = Intent.mWasDisplaced;
+		Overlay.mIsResolved = bIsResolved;
+
+		if (bIsResolved)
 		{
 			continue;
 		}
 
-		for (const FTileIndex& Tile : Intent.mPathTileIndexes)
-		{
-			PathTiles.AddUnique(Tile);
-		}
-		for (const FTileIndex& Tile : Intent.mEffectTileIndexes)
-		{
-			EffectTiles.AddUnique(Tile);
-		}
-		if (Intent.mTargetTile != FTileIndex::Invalid)
-		{
-			TargetTiles.AddUnique(Intent.mTargetTile);
-		}
+		// 경로/공격은 적별 색을 보존하는 전용 오버레이가 담당한다. 기존 Aim/Effect 합집합을
+		// 함께 칠하면 모든 적이 같은 흰 타일처럼 보여 경로 소유자와 이동→공격 순서를 읽기 어렵다.
 		if (Intent.mIsRecommendedInterventionTarget && Intent.mEnemy != nullptr)
 		{
 			TargetTiles.AddUnique(Intent.mEnemy->GetTileTransform().mIndex);
 		}
 	}
 
-	if (PathTiles.IsEmpty() == false)
-	{
-		mTileMap->SetTileHighlight(PathTiles, ETileHighlightFlag::Aim);
-	}
+	// 전용 오버레이는 해결 상태도 유지한다. 빈 배열도 전달해 새 계획이 없을 때 이전 표시를 지운다.
+	mTileMap->SetEnemyIntentOverlays(EnemyIntentOverlays);
+
 	if (TargetTiles.IsEmpty() == false)
 	{
 		mTileMap->SetTileHighlight(TargetTiles, ETileHighlightFlag::Select);
-	}
-	// Select를 새로 칠하면 하위 Effect 레이어가 지워지는 타일맵 규칙이므로 Effect를 마지막에 복원한다.
-	if (EffectTiles.IsEmpty() == false)
-	{
-		mTileMap->SetTileHighlight(EffectTiles, ETileHighlightFlag::Effect);
 	}
 }
 

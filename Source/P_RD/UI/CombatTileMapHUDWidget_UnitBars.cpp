@@ -244,6 +244,32 @@ void UCombatTileMapHUDWidget::RebuildUnitHpBars()
 					}
 					NewBar.mDefenseText = DefenseText;
 				}
+
+				// 적 머리 위에 실행순서와 고정 행동 흐름을 붙인다. HP바 위쪽에 작게 두고
+				// 검은 외곽선을 써서 전장 모델과 경로를 가리지 않으면서도 배경에서 읽히게 한다.
+				if (UTextBlock* IntentText = BarTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("EnemyIntentText")))
+				{
+					FSlateFontInfo IntentFont = IntentText->GetFont();
+					IntentFont.Size = 30;
+					IntentFont.OutlineSettings.OutlineSize = 4;
+					IntentFont.OutlineSettings.OutlineColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.96f);
+					IntentText->SetFont(IntentFont);
+					IntentText->SetJustification(ETextJustify::Center);
+					IntentText->SetShadowOffset(FVector2D(1.0f, 2.0f));
+					IntentText->SetShadowColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f, 0.88f));
+					IntentText->SetAutoWrapText(false);
+					IntentText->SetVisibility(ESlateVisibility::Collapsed);
+					if (UCanvasPanelSlot* IntentSlot = BarCanvas->AddChildToCanvas(IntentText))
+					{
+						IntentSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+						IntentSlot->SetAlignment(FVector2D(0.0f, 1.0f));
+						IntentSlot->SetPosition(FVector2D(0.0f, 2.0f));
+						IntentSlot->SetSize(FVector2D(360.0f, 38.0f));
+						IntentSlot->SetAutoSize(false);
+						IntentSlot->SetZOrder(3);
+					}
+					NewBar.mIntentText = IntentText;
+				}
 			}
 		}
 
@@ -321,6 +347,7 @@ void UCombatTileMapHUDWidget::UpdateUnitHpBars()
 	const FVector2D BarRenderScale(UnitHpBarRenderScale * ZoomScale, UnitHpBarRenderScale * ZoomScale);
 
 	const TArray<FUnitUI>& Units = mCombatUIModel->GetUnitUIs();
+	const TArray<FEnemyIntentUI>& EnemyIntents = mCombatUIModel->GetEnemyIntentUIs();
 	for (int32 BarIndex = 0; BarIndex < mUnitHpBars.Num(); ++BarIndex)
 	{
 		FUnitHpBarWidget& Bar = mUnitHpBars[BarIndex];
@@ -329,6 +356,30 @@ void UCombatTileMapHUDWidget::UpdateUnitHpBars()
 			continue;
 		}
 		const FUnitUI& Unit = Units[BarIndex];
+		const FEnemyIntentUI* EnemyIntent = Unit.mIsPlayer
+			? nullptr
+			: EnemyIntents.FindByPredicate([&Unit](const FEnemyIntentUI& Intent)
+				{
+					return Intent.mEnemyUnitId == Unit.mUnitId;
+				});
+		if (Bar.mIntentText != nullptr)
+		{
+			if (EnemyIntent != nullptr)
+			{
+				Bar.mIntentText->SetText(GetEnemyIntentWorldLabel(*EnemyIntent));
+				Bar.mIntentText->SetColorAndOpacity(FSlateColor(GetEnemyIntentExecutionColor(EnemyIntent->mExecutionOrder)));
+				Bar.mIntentText->SetRenderOpacity(
+					EnemyIntent->mResult == EEnemyIntentResultUI::Planned
+					|| EnemyIntent->mResult == EEnemyIntentResultUI::Executing
+						? 1.0f
+						: 0.86f);
+				Bar.mIntentText->SetVisibility(ESlateVisibility::HitTestInvisible);
+			}
+			else
+			{
+				Bar.mIntentText->SetVisibility(ESlateVisibility::Collapsed);
+			}
+		}
 
 		const float Percent = Unit.mMaxHP > 0.0f ? FMath::Clamp(Unit.mHP / Unit.mMaxHP, 0.0f, 1.0f) : 0.0f;
 
