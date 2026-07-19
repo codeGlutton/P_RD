@@ -109,5 +109,38 @@ bool FTileMapModelEffectTilesTests::RunTest(const FString& Parameters)
 		TestTrue(TEXT("[Case3] (5,0) 포함(관통 진행)"), Tiles.Contains(FTileIndex(5, 0)));
 	}
 
+	/**
+	 * Case4: 당기기 / Puller=(0,0), Pulled=(6,0), 최대 4칸
+	 *   -> (2,0)까지 4칸 당겨지며 Puller 칸에는 진입하지 않는다.
+	 */
+	AddInfo(TEXT("=== Case4: 당기기 거리와 Puller 점유 보호 ==="));
+	{
+		UTileMapModel* PullMap = NewObject<UTileMapModel>(World);
+		PullMap->SetDimensions(8, 1);
+		const FTileIndex Destination = PullMap->GetPullDestination(FTileIndex(0, 0), FTileIndex(6, 0), 4);
+		TestTrue(TEXT("[Case4] 목적지=(2,0)"), Destination == FTileIndex(2, 0));
+
+		const FTileIndex StopAdjacent = PullMap->GetPullDestination(FTileIndex(0, 0), FTileIndex(2, 0), 8);
+		TestTrue(TEXT("[Case4] Puller 앞 (1,0)에서 정지"), StopAdjacent == FTileIndex(1, 0));
+	}
+
+	/** Case5: 당기기 경로에 점유 유닛(3,0)이 있으면 그 직전에서 멈춘다. */
+	AddInfo(TEXT("=== Case5: 당기기 경로 충돌 ==="));
+	{
+		const FTileIndex Destination = TileMap->GetPullDestination(FTileIndex(0, 0), FTileIndex(6, 0), 6);
+		TestTrue(TEXT("[Case5] 점유 칸 직전 (4,0)에서 정지"), Destination == FTileIndex(4, 0));
+	}
+
+	/** Case6: 축 길이가 다른 좌표에서도 Puller를 지나치지 않고 인접 칸으로 수렴한다. */
+	AddInfo(TEXT("=== Case6: 비정렬 좌표 당기기 경로 ==="));
+	{
+		UTileMapModel* OpenMap = NewObject<UTileMapModel>(World);
+		OpenMap->SetDimensions(8, 5);
+		const TArray<FTileIndex> PullPath = OpenMap->GetPullPath(FTileIndex(0, 0), FTileIndex(6, 3), 8);
+		TestTrue(TEXT("[Case6] 출발 좌표 보존"), PullPath.Num() > 0 && PullPath[0] == FTileIndex(6, 3));
+		TestTrue(TEXT("[Case6] Puller 대각 인접 (1,1) 도착"), PullPath.Num() > 0 && PullPath.Last() == FTileIndex(1, 1));
+		TestFalse(TEXT("[Case6] Puller 점유 칸 미진입"), PullPath.Contains(FTileIndex(0, 0)));
+	}
+
 	return true;
 }

@@ -108,7 +108,8 @@ namespace
 		EAimPattern AimPattern = EAimPattern::Square,
 		int32 SecondSkillAimRange = 0,
 		FTileIndex BlockerIndex = FTileIndex::Invalid,
-		int32 MoveRangeOverride = INDEX_NONE)
+		int32 MoveRangeOverride = INDEX_NONE,
+		int32 SkillIndexOverride = INDEX_NONE)
 	{
 		// 타일맵 생성
 		UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
@@ -148,7 +149,7 @@ namespace
 		const FRandomStream Stream(20260710);
 
 		// AI 돌려서(ㅋㅋ) 적유닛의 예상커맨드 획득
-		return USRPGEnemyTurnPlanner::PlanTurn(Enemy, Player, TileMap, Stream, MoveRangeOverride);
+		return USRPGEnemyTurnPlanner::PlanTurn(Enemy, Player, TileMap, Stream, MoveRangeOverride, SkillIndexOverride);
 	}
 
 	// @brief 커맨드가 비어있지 않고, 마지막은 항상 턴 종료인 지 검증
@@ -398,6 +399,26 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 		if (TestTrue(TEXT("[Case4-1] 스킬커맨드 존재"), Cast != nullptr))
 		{
 			TestTrue(TEXT("[Case4-1] 스킬 인덱스는 장착 슬롯(0 또는 1)"), Cast->mSkillIndex == 0 || Cast->mSkillIndex == 1);
+		}
+	}
+
+	/** Case4-2: 강제 이동 뒤 대응 계획은 최초 공개 스킬(슬롯1)을 유지한다. */
+	AddInfo(TEXT("=== Case4-2: 대응 계획 스킬 고정 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::HoldRange,
+			3, 1, 6, 3,
+			FTileIndex(2, 1),
+			FTileIndex(3, 1),
+			EAimPattern::Square,
+			/*SecondSkillAimRange*/2,
+			/*BlockerIndex*/FTileIndex::Invalid,
+			/*MoveRangeOverride*/3,
+			/*SkillIndexOverride*/1);
+		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
+		if (TestTrue(TEXT("[Case4-2] 스킬커맨드 존재"), Cast != nullptr))
+		{
+			TestEqual(TEXT("[Case4-2] 공개했던 슬롯1 유지"), Cast->mSkillIndex, 1);
 		}
 	}
 

@@ -188,11 +188,20 @@ public:
 
 	int32 GetRoundCount() const;
 
-	/* 고정 적 의도 */
+	/* 공개 적 의도 */
 public:
 	const TArray<FSRPGEnemyIntent>& GetEnemyIntents() const;
 	void MarkEnemyIntentExecuting(UUnitModel* Enemy, int32 TurnId = INDEX_NONE);
-	void ReportPlayerDisplacement(UUnitModel* Target, const FTileIndex& From, const FTileIndex& To, int32 DiceValue);
+	void ReportPlayerDisplacement(
+		UUnitModel* Target,
+		const FTileIndex& From,
+		const FTileIndex& To,
+		int32 DiceValue,
+		ESRPGPlayerDisplacementType DisplacementType = ESRPGPlayerDisplacementType::Push);
+	void ReportPlayerDisplacementCollision(
+		UUnitModel* Target,
+		UBoardActorModel* Blocker,
+		ESRPGPlayerDisplacementType DisplacementType);
 	void ReportFixedIntentPathDisrupted(UUnitModel* Enemy, const FText& Reason);
 	void ResolveFixedIntentCollision(UUnitModel* Enemy, UBoardActorModel* Blocker);
 	void ResolveFixedIntentAttack(UUnitModel* Enemy, const TArray<IBoardCombatTarget*>& ResolvedTargets);
@@ -200,6 +209,7 @@ public:
 
 protected:
 	void PrepareEnemyIntents();
+	bool RebuildEnemyIntentPlan(FSRPGEnemyIntent& Intent, bool bPreserveSkill);
 	void CompleteEnemyIntent(UUnitModel* Enemy);
 	FSRPGEnemyIntent* FindEnemyIntent(UUnitModel* Enemy);
 	const FSRPGEnemyIntent* FindEnemyIntent(const UUnitModel* Enemy) const;
@@ -322,7 +332,7 @@ protected:
 	UPROPERTY(Category = Round, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "RoundCount"))
 	int32 mRoundCount = 0;
 
-	/** @brief 현재 라운드 시작에 계산되어 더 이상 재계산되지 않는 적 행동 예고. */
+	/** @brief 현재 라운드 시작에 공개되고, 강제 이동 시 적마다 한 번만 대응 재계산하는 행동 예고. */
 	UPROPERTY(Category = Intent, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "EnemyIntents"))
 	TArray<FSRPGEnemyIntent> mEnemyIntents;
 

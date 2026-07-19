@@ -45,7 +45,9 @@ public:
 		UUnitModel* Player,
 		const UTileMapModel* TileMap,
 		const FRandomStream& EventStream,
-		int32 MoveRangeOverride = INDEX_NONE);
+		int32 MoveRangeOverride = INDEX_NONE,
+		int32 SkillIndexOverride = INDEX_NONE,
+		int32* OutPlannedSkillIndex = nullptr);
 
 private:
 	/**

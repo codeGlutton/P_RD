@@ -47,7 +47,7 @@ enum class EEnemyIntentResultUI : uint8
 };
 
 /**
- * @brief HUD의 적 행동 예고 패널 한 행에 필요한 고정 계획 스냅샷.
+ * @brief HUD의 적 행동 예고 패널 한 행에 필요한 공개 계획 스냅샷.
  * @details 명령 객체나 유닛 포인터를 UI에 넘기지 않고, 이름/타일/결과만 복사한다.
  */
 USTRUCT(BlueprintType)
@@ -59,6 +59,7 @@ struct FEnemyIntentUI
 	UPROPERTY(BlueprintReadOnly) int32 mEnemyUnitId = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) FText mEnemyName;
 	UPROPERTY(BlueprintReadOnly) FText mActionName;
+	UPROPERTY(BlueprintReadOnly) FText mGoalText;
 	UPROPERTY(BlueprintReadOnly) FTileIndex mPlannedOrigin = FTileIndex::Invalid;
 	UPROPERTY(BlueprintReadOnly) FTileIndex mPlannedDestination = FTileIndex::Invalid;
 	UPROPERTY(BlueprintReadOnly) FTileIndex mTargetTile = FTileIndex::Invalid;
@@ -69,6 +70,8 @@ struct FEnemyIntentUI
 	UPROPERTY(BlueprintReadOnly) EEnemyIntentResultUI mResult = EEnemyIntentResultUI::Planned;
 	UPROPERTY(BlueprintReadOnly) FText mResultText;
 	UPROPERTY(BlueprintReadOnly) bool mWasDisplaced = false;
+	/** @brief false면 이번 라운드의 1회 경로 대응을 이미 사용했다. */
+	UPROPERTY(BlueprintReadOnly) bool mCanReact = true;
 	/** @brief 튜토리얼이 실제로 밀 수 있는 적을 이름과 ★ 표식으로 가리키기 위한 표시값. */
 	UPROPERTY(BlueprintReadOnly) bool mIsRecommendedInterventionTarget = false;
 };
@@ -351,6 +354,8 @@ struct FSkillUI
 	UPROPERTY(BlueprintReadOnly) bool mIsUsable = false;
 	/** @brief 숫자만 키우는 공격이 아니라 대상 위치를 바꾸는 개입 스킬인지 표시한다. */
 	UPROPERTY(BlueprintReadOnly) bool mIsDisplacementSkill = false;
+	/** @brief 위치 개입 중 플레이어 쪽으로 끌어오는 스킬인지 표시한다. */
+	UPROPERTY(BlueprintReadOnly) bool mIsPullSkill = false;
 	UPROPERTY(BlueprintReadOnly) FSkillTargetingUI mTargeting;
 };
 

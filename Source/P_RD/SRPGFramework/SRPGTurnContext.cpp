@@ -176,7 +176,7 @@ void USRPGTurnContext::BeginTurn()
 		}
 		else
 		{
-			/* AI는 라운드 시작에 공개·고정된 명령만 실행한다. 계획 누락 시에는 안전하게 대기 후 턴 종료한다. */
+			/* AI는 플레이어에게 마지막으로 공개한 명령을 실행한다. 계획 누락 시에는 안전하게 대기 후 턴 종료한다. */
 
 			CombatModel->MarkEnemyIntentExecuting(mOwner.Get(), mTurnId);
 			if (mFixedEnemyPlan.IsEmpty())

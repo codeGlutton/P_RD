@@ -23,8 +23,14 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	UUnitModel* Player,
 	const UTileMapModel* TileMap,
 	const FRandomStream& EventStream,
-	int32 MoveRangeOverride)
+	int32 MoveRangeOverride,
+	int32 SkillIndexOverride,
+	int32* OutPlannedSkillIndex)
 {
+	if (OutPlannedSkillIndex != nullptr)
+	{
+		*OutPlannedSkillIndex = INDEX_NONE;
+	}
 	TArray<TInstancedStruct<FSRPGCommand>> Commands;
 	{
 		// 종료 커맨드는 무조건 필요하므로 일단 추가하고 시작
@@ -77,9 +83,16 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		return Commands;
 	}
 
-	// 사용할 스킬을 랜덤으로 하나 선택. 이후 이동/시전 판단은 이 스킬의 사거리 기준
+	// 최초 계획은 랜덤으로 스킬을 고른다. 강제 이동 뒤 대응 계획은 공개했던 목적을 유지하기 위해
+	// SkillIndexOverride로 같은 스킬을 다시 사용한다.
 	// @note 시뮬/라이브 동일 결과 보장을 위해 반드시 룸의 이벤트 스트림에서 뽑아야 함
-	const int32 SkillIndex = EquippedIndexes[EventStream.RandRange(0, EquippedIndexes.Num() - 1)];
+	const int32 SkillIndex = EquippedIndexes.Contains(SkillIndexOverride)
+		? SkillIndexOverride
+		: EquippedIndexes[EventStream.RandRange(0, EquippedIndexes.Num() - 1)];
+	if (OutPlannedSkillIndex != nullptr)
+	{
+		*OutPlannedSkillIndex = SkillIndex;
+	}
 	const UStaticSkillData* Skill = Skills[SkillIndex].mData;
 
 	// 스킬이 여러 개일 때만 어떤 스킬이 뽑혔는지 확인용 로그

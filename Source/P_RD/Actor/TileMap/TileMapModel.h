@@ -335,6 +335,20 @@ public:
 	FTileIndex GetPushDestination(const FTileIndex& Pusher, const FTileIndex& Pushed, int32 MaxDistance) const;
 
 	/**
+	 * @brief 당기기 시 대상이 Puller 바로 앞까지 이동할 수 있는 최종 좌표를 계산한다.
+	 * @details Pulled에서 Puller 방향으로 8방향 단위 이동하며, Puller가 점유한 칸에는 들어가지 않고
+	 * 그 직전 칸에서 멈춘다. 도중에 다른 유닛/장애물을 만나면 충돌 직전 칸에서 정지한다.
+	 * @param[in] Puller : 당기는 쪽 좌표
+	 * @param[in] Pulled : 끌려오는 대상 좌표
+	 * @param[in] MaxDistance : 최대 당기기 칸 수
+	 * @return FTileIndex : 끌려온 최종 좌표 (이동할 수 없으면 Pulled)
+	 */
+	FTileIndex GetPullDestination(const FTileIndex& Puller, const FTileIndex& Pulled, int32 MaxDistance) const;
+
+	/** @brief GetPullDestination과 같은 규칙으로 출발 칸부터 도착 칸까지의 실제 당기기 경로를 반환한다. */
+	TArray<FTileIndex> GetPullPath(const FTileIndex& Puller, const FTileIndex& Pulled, int32 MaxDistance) const;
+
+	/**
 	 * 진입 액터를 해당 타일에 배치할 수 있는지 검사하는 함수
 	 * @details 막히지 않았거나, 막혔어도 기존 액터를 교체할 수 있으면 배치 가능
 	 * @param TileIndex 검사할 타일 인덱스

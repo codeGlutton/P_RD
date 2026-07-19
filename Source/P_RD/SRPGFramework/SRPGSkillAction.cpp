@@ -10,12 +10,14 @@
 #include "TAS/Passive/DynamicPassiveData.h"
 
 #include "Actor/TileMap/TileMapModel.h"
+#include "Actor/BoardActor/BoardActorModel.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 
 namespace
 {
     const FName DicePushSkillAssetName(TEXT("DA_SwordNormalSmash_Common"));
+    const FName DicePullSkillAssetName(TEXT("DA_SwordBlade_Rare"));
 
     bool HasFixedEffectBlocker(
         const UTileMapModel* TileMap,
@@ -122,13 +124,16 @@ void USRPGSkillAction::OnEndAction()
 {
     Super::OnEndAction();
 
-    mDicePushTarget = nullptr;
-    mDicePushPath.Reset();
-    mDicePushStepIndex = 0;
-    mDicePushDiceValue = 0;
-    mDicePushWasReported = false;
-	mDicePushStarted = false;
-	mDicePushFinished = false;
+    mDiceDisplacementTarget = nullptr;
+    mDiceDisplacementPath.Reset();
+    mDiceDisplacementBlocker = nullptr;
+    mDiceDisplacementStepIndex = 0;
+    mDiceDisplacementDiceValue = 0;
+    mDiceDisplacementIsPull = false;
+    mDiceDisplacementWasReported = false;
+    mDiceDisplacementCollisionReported = false;
+	mDiceDisplacementStarted = false;
+	mDiceDisplacementFinished = false;
 	mSkillPresentationFinished = false;
     mIsFixedIntentCast = false;
 }
@@ -175,9 +180,9 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
 
 			mSkillPresentationFinished = true;
 			// Hit 노티가 없는 비정상 몽타주/무연출 데이터만 종료 시점 폴백으로 처리한다.
-			if (mDicePushStarted == false)
+			if (mDiceDisplacementStarted == false)
 			{
-				TryStartDicePush(Context, SkillData);
+				TryStartDiceDisplacement(Context, SkillData);
 			}
 			FinishSkillAction();
             });
@@ -185,9 +190,9 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
 		FOnTriggerSkillMotionUI TriggerCallback;
 		TriggerCallback.BindWeakLambda(this, [this](const FActiveSkillContext& Context, const UStaticSkillData* SkillData)
 		{
-			if (mDicePushStarted == false)
+			if (mDiceDisplacementStarted == false)
 			{
-				TryStartDicePush(Context, SkillData);
+				TryStartDiceDisplacement(Context, SkillData);
 			}
 		});
 
@@ -236,28 +241,32 @@ UTileMapModel* USRPGSkillAction::GetTileMap() const
     return nullptr;
 }
 
-bool USRPGSkillAction::TryStartDicePush(const FActiveSkillContext& Context, const UStaticSkillData* SkillData)
+bool USRPGSkillAction::TryStartDiceDisplacement(const FActiveSkillContext& Context, const UStaticSkillData* SkillData)
 {
     if (SkillData == nullptr
-        || SkillData->GetFName() != DicePushSkillAssetName
+        || (SkillData->GetFName() != DicePushSkillAssetName
+            && SkillData->GetFName() != DicePullSkillAssetName)
         || mInstigator.IsValid() == false
         || mInstigator->IsPlayerUnitModel() == false)
     {
         return false;
     }
 
-    UUnitModel* PushTarget = nullptr;
+    UUnitModel* DisplacementTarget = nullptr;
     for (IBoardCombatTarget* CombatTarget : Context.mResolvedCombatTargets)
     {
         UUnitModel* Candidate = Cast<UUnitModel>(CombatTarget);
-        if (Candidate != nullptr && Candidate != mInstigator.Get() && Candidate->IsTargetable())
+        if (Candidate != nullptr
+            && Candidate != mInstigator.Get()
+            && Candidate->IsTargetable()
+            && Candidate->GetTileTransform().mIndex == Context.mTargetTileIndex)
         {
-            PushTarget = Candidate;
+            DisplacementTarget = Candidate;
             break;
         }
     }
 
-    if (PushTarget == nullptr)
+    if (DisplacementTarget == nullptr)
     {
         return false;
     }
@@ -268,52 +277,114 @@ bool USRPGSkillAction::TryStartDicePush(const FActiveSkillContext& Context, cons
         return false;
     }
 
-    const FTileIndex PusherTile = mInstigator->GetTileTransform().mIndex;
-    const FTileIndex PushedTile = PushTarget->GetTileTransform().mIndex;
-    const int32 PushDistance = FMath::Max(Context.mDiceSum, 1);
-    const FTileIndex Destination = TileMap->GetPushDestination(PusherTile, PushedTile, PushDistance);
-    if (Destination == PushedTile)
-    {
-        return false;
-    }
+    const bool bIsPull = SkillData->GetFName() == DicePullSkillAssetName;
+    const FTileIndex InstigatorTile = mInstigator->GetTileTransform().mIndex;
+    const FTileIndex TargetTile = DisplacementTarget->GetTileTransform().mIndex;
+    const int32 RequestedDistance = FMath::Max(Context.mDiceSum, 1);
+    const int32 DistanceToInstigator = FMath::Max(
+        FMath::Abs(TargetTile.mX - InstigatorTile.mX),
+        FMath::Abs(TargetTile.mY - InstigatorTile.mY));
+    const int32 DesiredDistance = bIsPull
+        ? FMath::Min(RequestedDistance, FMath::Max(DistanceToInstigator - 1, 0))
+        : RequestedDistance;
 
-    const FTileIndex Step(
-        FMath::Sign(Destination.mX - PushedTile.mX),
-        FMath::Sign(Destination.mY - PushedTile.mY));
+    mDiceDisplacementTarget = DisplacementTarget;
+	mDiceDisplacementBlocker = nullptr;
+    mDiceDisplacementDiceValue = Context.mDiceSum;
+    mDiceDisplacementIsPull = bIsPull;
+    mDiceDisplacementWasReported = false;
+    mDiceDisplacementCollisionReported = false;
+	mDiceDisplacementStarted = true;
+	mDiceDisplacementFinished = false;
+	if (bIsPull)
+	{
+		mDiceDisplacementPath = TileMap->GetPullPath(InstigatorTile, TargetTile, RequestedDistance);
+	}
+	else
+	{
+		mDiceDisplacementPath.Reset();
+		mDiceDisplacementPath.Add(TargetTile);
+		const FTileIndex Destination = TileMap->GetPushDestination(InstigatorTile, TargetTile, RequestedDistance);
+		const FTileIndex PushStep(
+			FMath::Sign(TargetTile.mX - InstigatorTile.mX),
+			FMath::Sign(TargetTile.mY - InstigatorTile.mY));
+		FTileIndex Current = TargetTile;
+		while (Current != Destination)
+		{
+			Current = FTileIndex(Current.mX + PushStep.mX, Current.mY + PushStep.mY);
+			mDiceDisplacementPath.Add(Current);
+		}
+	}
+	if (mDiceDisplacementPath.IsEmpty())
+	{
+		return false;
+	}
+	const FTileIndex Destination = mDiceDisplacementPath.Last();
 
-    mDicePushTarget = PushTarget;
-    mDicePushDiceValue = Context.mDiceSum;
-    mDicePushWasReported = false;
-	mDicePushStarted = true;
-	mDicePushFinished = false;
-    mDicePushPath.Reset();
-    mDicePushPath.Add(PushedTile);
+	// 실제 이동 가능 거리보다 짧게 멈췄다면 다음 칸의 충돌 대상을 기억한다. 당기는 주체의
+	// 바로 앞에서 정상 정지한 경우(DesiredDistance 달성)는 충돌로 취급하지 않는다.
+	const int32 MovedDistance = mDiceDisplacementPath.Num() - 1;
+	if (MovedDistance < DesiredDistance)
+	{
+		FTileIndex CollisionStep;
+		if (bIsPull)
+		{
+			const int32 DeltaX = InstigatorTile.mX - Destination.mX;
+			const int32 DeltaY = InstigatorTile.mY - Destination.mY;
+			const int32 AbsX = FMath::Abs(DeltaX);
+			const int32 AbsY = FMath::Abs(DeltaY);
+			CollisionStep = FTileIndex(
+				AbsX >= AbsY ? FMath::Sign(DeltaX) : 0,
+				AbsY >= AbsX ? FMath::Sign(DeltaY) : 0);
+		}
+		else
+		{
+			CollisionStep = FTileIndex(
+				FMath::Sign(TargetTile.mX - InstigatorTile.mX),
+				FMath::Sign(TargetTile.mY - InstigatorTile.mY));
+		}
+		const FTileIndex BlockedTile(
+			Destination.mX + CollisionStep.mX,
+			Destination.mY + CollisionStep.mY);
+		for (UBoardActorModel* Actor : TileMap->GetActorsOnTile(BlockedTile, ETileLayerFlag::All))
+		{
+			if (Actor != nullptr
+				&& Actor != mDiceDisplacementTarget
+				&& Actor != mInstigator.Get()
+				&& EnumHasAnyFlags(Actor->GetBlockLayerFlags(), mDiceDisplacementTarget->GetTileLayerFlags()))
+			{
+				mDiceDisplacementBlocker = Actor;
+				break;
+			}
+		}
+	}
 
-    FTileIndex Current = PushedTile;
-    while (Current != Destination)
-    {
-        Current = FTileIndex(Current.mX + Step.mX, Current.mY + Step.mY);
-        mDicePushPath.Add(Current);
-    }
+	if (Destination == TargetTile)
+	{
+		ReportDiceDisplacementIfMoved();
+		mDiceDisplacementFinished = true;
+		FinishSkillAction();
+		return true;
+	}
 
     TArray<FVector> PathWorldLocations;
-    PathWorldLocations.Reserve(mDicePushPath.Num());
-    for (const FTileIndex& TileIndex : mDicePushPath)
+    PathWorldLocations.Reserve(mDiceDisplacementPath.Num());
+    for (const FTileIndex& TileIndex : mDiceDisplacementPath)
     {
         PathWorldLocations.Add(TileMap->TileToWorldLocation(TileIndex));
     }
-    mDicePushTarget->OnStartForcedMovePath.Broadcast(PathWorldLocations);
+    mDiceDisplacementTarget->OnStartForcedMovePath.Broadcast(PathWorldLocations);
 
-    StartDicePushStep(1);
+    StartDiceDisplacementStep(1);
     return true;
 }
 
-void USRPGSkillAction::StartDicePushStep(int32 StepIndex)
+void USRPGSkillAction::StartDiceDisplacementStep(int32 StepIndex)
 {
-    if (mDicePushTarget == nullptr || mDicePushPath.IsValidIndex(StepIndex) == false)
+    if (mDiceDisplacementTarget == nullptr || mDiceDisplacementPath.IsValidIndex(StepIndex) == false)
     {
-        ReportDicePushIfMoved();
-		mDicePushFinished = true;
+        ReportDiceDisplacementIfMoved();
+		mDiceDisplacementFinished = true;
         FinishSkillAction();
         return;
     }
@@ -322,11 +393,11 @@ void USRPGSkillAction::StartDicePushStep(int32 StepIndex)
     bool bBlocked = false;
     if (TileMap != nullptr)
     {
-        for (UBoardActorModel* Actor : TileMap->GetActorsOnTile(mDicePushPath[StepIndex], ETileLayerFlag::All))
+        for (UBoardActorModel* Actor : TileMap->GetActorsOnTile(mDiceDisplacementPath[StepIndex], ETileLayerFlag::All))
         {
             if (Actor != nullptr
-                && Actor != mDicePushTarget
-                && EnumHasAnyFlags(Actor->GetBlockLayerFlags(), mDicePushTarget->GetTileLayerFlags()))
+                && Actor != mDiceDisplacementTarget
+                && EnumHasAnyFlags(Actor->GetBlockLayerFlags(), mDiceDisplacementTarget->GetTileLayerFlags()))
             {
                 bBlocked = true;
                 break;
@@ -334,95 +405,105 @@ void USRPGSkillAction::StartDicePushStep(int32 StepIndex)
         }
     }
     if (TileMap == nullptr
-        || mDicePushTarget->GetTileTransform().mIndex != mDicePushPath[StepIndex - 1]
-        || TileMap->CanPlace(mDicePushPath[StepIndex], mDicePushTarget) == false
+        || mDiceDisplacementTarget->GetTileTransform().mIndex != mDiceDisplacementPath[StepIndex - 1]
+        || TileMap->CanPlace(mDiceDisplacementPath[StepIndex], mDiceDisplacementTarget) == false
         || bBlocked)
     {
-        ReportDicePushIfMoved();
-		mDicePushFinished = true;
+        ReportDiceDisplacementIfMoved();
+		mDiceDisplacementFinished = true;
         FinishSkillAction();
         return;
     }
 
-    mDicePushStepIndex = StepIndex;
+    mDiceDisplacementStepIndex = StepIndex;
     // 강제 이동은 보행이 아니므로 이동 방향으로 몸을 돌리지 않고 기존 facing을 유지한다.
     const FTileTransform NextTransform(
-        mDicePushPath[StepIndex],
-        mDicePushTarget->GetTileTransform().mDirection);
-    TileMap->StartActorMovement(NextTransform, mDicePushTarget);
+        mDiceDisplacementPath[StepIndex],
+        mDiceDisplacementTarget->GetTileTransform().mDirection);
+    TileMap->StartActorMovement(NextTransform, mDiceDisplacementTarget);
 
     TSharedPtr<FPresentationBarrier> Barrier = FPresentationBarrier::Make(
         FOnFinishPresentation::CreateWeakLambda(this, [this]() {
-            OnDicePushStepFinished();
+            OnDiceDisplacementStepFinished();
             }));
 
     float RemainingPathDistance = 0.0f;
-    for (int32 Index = StepIndex; Index < mDicePushPath.Num() - 1; ++Index)
+    for (int32 Index = StepIndex; Index < mDiceDisplacementPath.Num() - 1; ++Index)
     {
         RemainingPathDistance += FVector::Dist(
-            TileMap->TileToWorldLocation(mDicePushPath[Index]),
-            TileMap->TileToWorldLocation(mDicePushPath[Index + 1]));
+            TileMap->TileToWorldLocation(mDiceDisplacementPath[Index]),
+            TileMap->TileToWorldLocation(mDiceDisplacementPath[Index + 1]));
     }
 
-    mDicePushTarget->OnStartMoveStep.Broadcast(
+    mDiceDisplacementTarget->OnStartMoveStep.Broadcast(
         NextTransform,
         TileMap->TileToWorldTransform(NextTransform),
         Barrier,
         RemainingPathDistance);
 }
 
-void USRPGSkillAction::OnDicePushStepFinished()
+void USRPGSkillAction::OnDiceDisplacementStepFinished()
 {
-    if (mActionPhase != ESRPGActionPhase::ActionPlay || mDicePushTarget == nullptr)
+    if (mActionPhase != ESRPGActionPhase::ActionPlay || mDiceDisplacementTarget == nullptr)
     {
         return;
     }
 
     if (UTileMapModel* TileMap = GetTileMap())
     {
-        TileMap->CompleteActorMovement(mDicePushTarget);
+        TileMap->CompleteActorMovement(mDiceDisplacementTarget);
     }
 
-    if (mDicePushStepIndex >= mDicePushPath.Num() - 1)
+    if (mDiceDisplacementStepIndex >= mDiceDisplacementPath.Num() - 1)
     {
-        ReportDicePushIfMoved();
-		mDicePushFinished = true;
+        ReportDiceDisplacementIfMoved();
+		mDiceDisplacementFinished = true;
         FinishSkillAction();
     }
     else
     {
-        StartDicePushStep(mDicePushStepIndex + 1);
+        StartDiceDisplacementStep(mDiceDisplacementStepIndex + 1);
     }
 }
 
-void USRPGSkillAction::ReportDicePushIfMoved()
+void USRPGSkillAction::ReportDiceDisplacementIfMoved()
 {
-    if (mDicePushWasReported || mDicePushTarget == nullptr || mDicePushPath.IsEmpty())
-    {
-        return;
-    }
-
-    const FTileIndex CurrentTile = mDicePushTarget->GetTileTransform().mIndex;
-    if (CurrentTile == mDicePushPath[0])
+    if (mDiceDisplacementTarget == nullptr || mDiceDisplacementPath.IsEmpty())
     {
         return;
     }
 
     if (USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
     {
-        CombatModel->ReportPlayerDisplacement(
-            mDicePushTarget,
-            mDicePushPath[0],
-            CurrentTile,
-            mDicePushDiceValue);
-        mDicePushWasReported = true;
+		const ESRPGPlayerDisplacementType DisplacementType = mDiceDisplacementIsPull
+			? ESRPGPlayerDisplacementType::Pull
+			: ESRPGPlayerDisplacementType::Push;
+		const FTileIndex CurrentTile = mDiceDisplacementTarget->GetTileTransform().mIndex;
+		if (mDiceDisplacementWasReported == false && CurrentTile != mDiceDisplacementPath[0])
+		{
+			CombatModel->ReportPlayerDisplacement(
+				mDiceDisplacementTarget,
+				mDiceDisplacementPath[0],
+				CurrentTile,
+				mDiceDisplacementDiceValue,
+				DisplacementType);
+			mDiceDisplacementWasReported = true;
+		}
+		if (mDiceDisplacementCollisionReported == false && mDiceDisplacementBlocker != nullptr)
+		{
+			CombatModel->ReportPlayerDisplacementCollision(
+				mDiceDisplacementTarget,
+				mDiceDisplacementBlocker,
+				DisplacementType);
+			mDiceDisplacementCollisionReported = true;
+		}
     }
 }
 
 void USRPGSkillAction::FinishSkillAction()
 {
 	if (mSkillPresentationFinished == false
-		|| (mDicePushStarted && mDicePushFinished == false))
+		|| (mDiceDisplacementStarted && mDiceDisplacementFinished == false))
 	{
 		return;
 	}

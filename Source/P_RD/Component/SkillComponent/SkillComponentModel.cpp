@@ -26,13 +26,15 @@
 namespace
 {
 	const FName DicePushSkillAssetName(TEXT("DA_SwordNormalSmash_Common"));
+	const FName DicePullSkillAssetName(TEXT("DA_SwordBlade_Rare"));
 
-	bool IsPlayerDicePushSkill(const UStaticSkillData* SkillData, const UUnitModel* OwnerUnit)
+	bool IsPlayerDisplacementSkill(const UStaticSkillData* SkillData, const UUnitModel* OwnerUnit)
 	{
 		return SkillData != nullptr
 			&& OwnerUnit != nullptr
 			&& OwnerUnit->IsPlayerUnitModel()
-			&& SkillData->GetFName() == DicePushSkillAssetName;
+			&& (SkillData->GetFName() == DicePushSkillAssetName
+				|| SkillData->GetFName() == DicePullSkillAssetName);
 	}
 
 	UStaticSkillData* LoadStaticSkillData(const FPrimaryAssetId& SkillId)
@@ -507,8 +509,8 @@ void USkillComponentModel::TriggerMotionLayer(const FApplyEventTriggerPayload* P
 		);
 		// 이 브랜치에서 플레이어 강타는 피해량 스킬이 아니라 위치를 바꾸는 순수 개입기다.
 		// 대상 수집/애니메이션은 그대로 두고 실제 효과 commit만 생략해, 대상이 먼저 죽어
-		// 후속 밀치기와 고정 계획 붕괴가 누락되는 경우를 막는다.
-		if (IsPlayerDicePushSkill(SkillData, OwnerUnitModel) == false)
+		// 후속 강제 이동과 공개 계획 갱신이 누락되는 경우를 막는다.
+		if (IsPlayerDisplacementSkill(SkillData, OwnerUnitModel) == false)
 		{
 			for (int32 i = 0; i < EffectLayerNum; ++i)
 			{
@@ -711,17 +713,41 @@ TArray<FTileIndex> USkillComponentModel::GetAimableTiles(UTileMapModel* MapModel
 	UStaticSkillData* StaticSkillData = mSkillEntries[SkillIndex].mData;
 	checkf(StaticSkillData != nullptr, TEXT("잘못된 스킬 데이터"));
 
-	const bool bIsDicePush = StaticSkillData->GetFName() == DicePushSkillAssetName;
+	const bool bIsDisplacement = IsPlayerDisplacementSkill(
+		StaticSkillData,
+		GetOwnerModel<UUnitModel>());
 	// 이 브랜치의 강타는 첫 전투에서 적이 세 칸 이상 떨어져 있어도 실제로 사용할 수 있는
-	// 주사위 개입기다. 주사위 합은 사거리가 아니라 밀리는 거리로 쓰고, 조준은 전장 전체로 연다.
-	const float AimRange = bIsDicePush
+	// 주사위 개입기다. 주사위 합은 사거리가 아니라 강제 이동 거리로 쓰고, 조준은 전장 전체로 연다.
+	const float AimRange = bIsDisplacement
 		? StaticCast<float>(FMath::Max(MapModel->GetWidth(), MapModel->GetHeight()))
 		: StaticSkillData->mAimRangeDefaultValue + DiceSum * StaticSkillData->mAimRangeRatio;
-	const EAimPattern Pattern = bIsDicePush ? EAimPattern::Square : StaticSkillData->mAimPattern;
-	const bool CanAimObstacle = bIsDicePush || StaticSkillData->mCanAimBoardActor;
-	const bool IsIndirect = bIsDicePush || StaticSkillData->mIsIndirect;
+	const EAimPattern Pattern = bIsDisplacement ? EAimPattern::Square : StaticSkillData->mAimPattern;
+	const bool CanAimObstacle = bIsDisplacement || StaticSkillData->mCanAimBoardActor;
+	const bool IsIndirect = bIsDisplacement || StaticSkillData->mIsIndirect;
 
-	return MapModel->GetAimableTiles(GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex, AimRange, Pattern, CanAimObstacle, IsIndirect);
+	AimableTiles = MapModel->GetAimableTiles(
+		GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex,
+		AimRange,
+		Pattern,
+		CanAimObstacle,
+		IsIndirect);
+	if (bIsDisplacement)
+	{
+		const UUnitModel* OwnerUnit = GetOwnerModel<UUnitModel>();
+		AimableTiles.RemoveAll([MapModel, OwnerUnit](const FTileIndex& TileIndex)
+		{
+			for (UBoardActorModel* Actor : MapModel->GetActorsOnTile(TileIndex, ETileLayerFlag::Unit))
+			{
+				const UUnitModel* Unit = Cast<UUnitModel>(Actor);
+				if (Unit != nullptr && Unit != OwnerUnit && Unit->IsTargetable())
+				{
+					return false;
+				}
+			}
+			return true;
+		});
+	}
+	return AimableTiles;
 }
 
 TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum) const
@@ -730,6 +756,14 @@ TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel,
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
 	UStaticSkillData* StaticSkillData = mSkillEntries[SkillIndex].mData;
 	checkf(StaticSkillData != nullptr, TEXT("잘못된 스킬 데이터"));
+	if (IsPlayerDisplacementSkill(StaticSkillData, GetOwnerModel<UUnitModel>()))
+	{
+		// 밀기/당기기는 클릭한 한 유닛만 조작한다. 원본 강타/검기 범위가 주변 유닛을
+		// 함께 수집하면 화면에서 고른 대상과 실제 이동 대상이 달라질 수 있다.
+		return MapModel->IsValidIndex(TargetIndex)
+			? TArray<FTileIndex>({ TargetIndex })
+			: TArray<FTileIndex>();
+	}
 
 	const EEffectPattern Pattern = StaticSkillData->mEffectPattern;
 	const int32 EffectRange = StaticSkillData->mEffectAreaDefaultValue + DiceSum * StaticSkillData->mEffectAreaRatio;

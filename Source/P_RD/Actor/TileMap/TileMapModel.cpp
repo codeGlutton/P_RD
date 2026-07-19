@@ -894,6 +894,53 @@ FTileIndex UTileMapModel::GetPushDestination(const FTileIndex& Pusher, const FTi
 	return Current;
 }
 
+FTileIndex UTileMapModel::GetPullDestination(const FTileIndex& Puller, const FTileIndex& Pulled, int32 MaxDistance) const
+{
+	const TArray<FTileIndex> Path = GetPullPath(Puller, Pulled, MaxDistance);
+	return Path.IsEmpty() ? Pulled : Path.Last();
+}
+
+TArray<FTileIndex> UTileMapModel::GetPullPath(const FTileIndex& Puller, const FTileIndex& Pulled, int32 MaxDistance) const
+{
+	TArray<FTileIndex> Path;
+	if (!IsValidIndex(Puller) || !IsValidIndex(Pulled) || MaxDistance <= 0)
+	{
+		if (IsValidIndex(Pulled))
+		{
+			Path.Add(Pulled);
+		}
+		return Path;
+	}
+
+	FTileIndex Current = Pulled;
+	Path.Add(Current);
+	for (int32 Distance = 0; Distance < MaxDistance; ++Distance)
+	{
+		const int32 DeltaX = Puller.mX - Current.mX;
+		const int32 DeltaY = Puller.mY - Current.mY;
+		const int32 AbsX = FMath::Abs(DeltaX);
+		const int32 AbsY = FMath::Abs(DeltaY);
+		if (FMath::Max(AbsX, AbsY) <= 1)
+		{
+			break;
+		}
+
+		// 긴 축부터 줄이다가 두 축 거리가 같아지면 대각 이동한다. 축 길이가 다른 좌표에서도
+		// Puller를 지나쳐 맵 밖으로 새지 않고 반드시 인접 칸으로 수렴한다.
+		const FTileIndex Step(
+			AbsX >= AbsY ? FMath::Sign(DeltaX) : 0,
+			AbsY >= AbsX ? FMath::Sign(DeltaY) : 0);
+		const FTileIndex Next(Current.mX + Step.mX, Current.mY + Step.mY);
+		if (!IsValidIndex(Next) || Next == Puller || IsOccupied(Next))
+		{
+			break;
+		}
+		Current = Next;
+		Path.Add(Current);
+	}
+	return Path;
+}
+
 TArray<UBoardActorModel*> UTileMapModel::GetActorsOnTile(const FTileIndex& TileIndex, ETileLayerFlag LayerFilter) const
 {
 	TArray<UBoardActorModel*> Result;

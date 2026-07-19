@@ -436,7 +436,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		}
 	}
 
-	// 고정된 적 계획은 기존 HUD 위 작은 우상단 패널로만 추가한다. 전장을 덮는 새 화면이나 모달 입력막은 만들지 않는다.
+	// 공개된 적 전술은 기존 HUD 위 작은 우상단 패널로만 추가한다. 전장을 덮는 새 화면이나 모달 입력막은 만들지 않는다.
 	if (mEnemyIntentPanel == nullptr)
 	{
 		mEnemyIntentPanel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("EnemyIntentPanel"));

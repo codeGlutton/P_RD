@@ -116,6 +116,7 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 		const bool bSelected = bOwned && SkillDataIndex == mSelectedSkillIndex;
 		const bool bTutorialFocus = bOwned
 			&& Skill->mIsDisplacementSkill
+			&& Skill->mIsPullSkill == false
 			&& mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectSmash
 			&& mEnemyIntentTutorialDismissed == false;
 		const float DimOpacity = bUsable ? 1.0f : 0.45f;
@@ -184,7 +185,7 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 				FString Role = TEXT("공격");
 				if (Skill->mIsDisplacementSkill)
 				{
-					Role = TEXT("밀기 / 위치 개입");
+					Role = Skill->mIsPullSkill ? TEXT("당기기 / 위치 개입") : TEXT("밀기 / 위치 개입");
 				}
 				else if (SkillDataIndex == 1)
 				{

@@ -31,7 +31,7 @@ namespace
 		case EEnemyIntentResultUI::HitObstacle:  return NSLOCTEXT("CombatTileMapHUDWidget", "IntentStateHitObstacle", "장애물 충돌");
 		case EEnemyIntentResultUI::Cancelled:    return NSLOCTEXT("CombatTileMapHUDWidget", "IntentStateCancelled", "취소");
 		case EEnemyIntentResultUI::Planned:
-		default:                                 return NSLOCTEXT("CombatTileMapHUDWidget", "IntentStatePlanned", "고정됨");
+		default:                                 return NSLOCTEXT("CombatTileMapHUDWidget", "IntentStatePlanned", "예고");
 		}
 	}
 
@@ -125,7 +125,7 @@ FText UCombatTileMapHUDWidget::GetEnemyIntentWorldLabel(const FEnemyIntentUI& In
 		? FString::Printf(TEXT("이동 %d → 공격"), MoveTileCount)
 		: (bHasMovement
 			? FString::Printf(TEXT("이동 %d"), MoveTileCount)
-			: (bHasAttack ? TEXT("고정 공격") : TEXT("대기")));
+			: (bHasAttack ? TEXT("공격") : TEXT("대기")));
 	if (HasResolvedIntentOutcome(Intent))
 	{
 		return FText::FromString(FString::Printf(
@@ -137,7 +137,7 @@ FText UCombatTileMapHUDWidget::GetEnemyIntentWorldLabel(const FEnemyIntentUI& In
 	if (Intent.mWasDisplaced)
 	{
 		return FText::FromString(FString::Printf(
-			TEXT("%s[%d] 밀림 → %s"),
+			TEXT("%s[%d] 대응 소진 → %s"),
 			RecommendedPrefix,
 			DisplayOrder,
 			*DisplacedAction));
@@ -191,7 +191,7 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
 	};
 
 	if (UTextBlock* Header = MakeText(
-		TEXT("적 계획 보드  ·  번호색 = 이동 경로"),
+		TEXT("적 전술 예고  ·  목표 유지 / 강제 이동 뒤 1회 대응"),
 		IntentCurrentColor,
 		16))
 	{
@@ -228,7 +228,7 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
 		FString Status = GetIntentStateLabel(Intent.mResult).ToString();
 		if (Intent.mWasDisplaced && bActive)
 		{
-			Status = TEXT("밀린 위치에서 같은 방향 실행");
+			Status = Intent.mCanReact ? TEXT("새 경로 계산") : TEXT("경로 갱신 · 대응 소진");
 		}
 		else if (Intent.mResult == EEnemyIntentResultUI::Executing)
 		{
@@ -236,7 +236,7 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
 		}
 		else if (Intent.mResult == EEnemyIntentResultUI::Planned)
 		{
-			Status = TEXT("고정");
+			Status = Intent.mCanReact ? TEXT("대응 가능") : TEXT("대응 소진");
 		}
 
 		UBorder* RowBorder = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
@@ -253,10 +253,11 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
 		RowBorder->SetPadding(FMargin(7.0f, 5.0f));
 
 		const FString RowText = FString::Printf(
-			TEXT("%s[%d] %s  ·  %s  ·  %s"),
+			TEXT("%s[%d] %s  ·  %s\n    %s  ·  %s"),
 			Intent.mIsRecommendedInterventionTarget ? TEXT("★ ") : TEXT(""),
 			DisplayOrder,
 			*Intent.mEnemyName.ToString(),
+			*Intent.mGoalText.ToString(),
 			*Flow,
 			*Status);
 		if (UTextBlock* RowLine = MakeText(RowText, RowColor, 14))
@@ -328,13 +329,14 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 	const TArray<FSkillUI>& Skills = mCombatUIModel->GetSkillUIs();
 	const int32 SmashSkillIndex = Skills.IndexOfByPredicate([](const FSkillUI& Skill)
 	{
-		return Skill.mIsDisplacementSkill;
+		return Skill.mIsDisplacementSkill && Skill.mIsPullSkill == false;
 	});
 	const FSkillUI* SmashSkill = Skills.IsValidIndex(SmashSkillIndex) ? &Skills[SmashSkillIndex] : nullptr;
 	const int32 RequiredDiceCount = SmashSkill != nullptr ? FMath::Max(SmashSkill->mDiceCost, 0) : 0;
 	const int32 SelectedSkillIndex = mCombatUIModel->GetSelectedSkillIndex();
 	const bool bSmashSelected = Skills.IsValidIndex(SelectedSkillIndex)
-		&& Skills[SelectedSkillIndex].mIsDisplacementSkill;
+		&& Skills[SelectedSkillIndex].mIsDisplacementSkill
+		&& Skills[SelectedSkillIndex].mIsPullSkill == false;
 	const int32 SelectedDiceCount = mCombatUIModel->GetSelectedDiceIndices().Num();
 	const ECombatBuildPhaseUI BuildPhase = mCombatUIModel->GetTurnUI().mPhase;
 	bool bCommittedSelectedDice = RequiredDiceCount > 0 && SelectedDiceCount == RequiredDiceCount;
@@ -449,7 +451,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 	switch (mEnemyIntentTutorialStage)
 	{
 	case EEnemyIntentTutorialStage::ReviewIntent:
-		TutorialMessage = TEXT("[1/6] 적 계획을 먼저 확인하세요\n번호색 화살표는 이동 경로, 붉은 칸은 공격 위치입니다. 적은 다시 계산하지 않습니다.");
+		TutorialMessage = TEXT("[1/6] 적의 목표와 현재 경로를 확인하세요\n밀면 목표는 유지하지만 경로를 한 번만 다시 계산합니다.");
 		break;
 	case EEnemyIntentTutorialStage::SelectSmash:
 		TutorialMessage = FString::Printf(
@@ -470,14 +472,14 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		TutorialMessage = TEXT("[5/6] 실행을 확정하세요\n밀릴 위치를 확인하고 같은 적을 한 번 더 누르세요.");
 		break;
 	case EEnemyIntentTutorialStage::ApplyingIntervention:
-		TutorialMessage = TEXT("개입 실행 중\n타격과 동시에 밀어내고, 기존 화살표를 새 위치의 같은 방향 경로로 바꿉니다.");
+		TutorialMessage = TEXT("개입 실행 중\n타격과 동시에 밀어내고, 기존 화살표를 지운 뒤 대응 경로를 그립니다.");
 		break;
 	case EEnemyIntentTutorialStage::EndTurnAndObserve:
-		TutorialMessage = TEXT("[6/6] 새 위치의 번호색 경로를 실행합니다\n머리 위 '밀림 → 이동'과 바뀐 화살표를 확인하고 턴 종료를 누르세요.");
+		TutorialMessage = TEXT("[6/6] 대응 후 경로와 '대응 소진'을 확인하세요\n이제 한 번 더 옮기면 적은 완벽히 대응하지 못합니다. 턴 종료를 누르세요.");
 		break;
 	case EEnemyIntentTutorialStage::Complete:
 		TutorialMessage = FString::Printf(
-			TEXT("완료 · %s의 고정 계획이 망가졌습니다\n%s"),
+			TEXT("완료 · %s를 이동시키고 대응을 소진시켰습니다\n%s"),
 			*mEnemyIntentTutorialCompletedEnemyName,
 			*mEnemyIntentTutorialCompletedResult);
 		break;
@@ -537,6 +539,7 @@ UWidget* UCombatTileMapHUDWidget::ResolveEnemyIntentTutorialFocusWidget() const
 			const int32 SkillDataIndex = GetSkillDataIndexForRailSlot(RailSlotIndex);
 			if (Skills.IsValidIndex(SkillDataIndex)
 				&& Skills[SkillDataIndex].mIsDisplacementSkill
+				&& Skills[SkillDataIndex].mIsPullSkill == false
 				&& mSkillInputButtons[RailSlotIndex] != nullptr)
 			{
 				return mSkillInputButtons[RailSlotIndex].Get();

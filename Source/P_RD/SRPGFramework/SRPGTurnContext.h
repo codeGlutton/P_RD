@@ -103,10 +103,10 @@ public:
 	USRPGCombatModel* GetParent() const;
 	UUnitModel* GetOwner() const;
 
-	/** @brief 라운드 시작에 계산한 적 명령을 교체한다. 적 턴은 이 배열만 실행한다. */
+	/** @brief HUD에 마지막으로 공개한 적 명령으로 교체한다. 적 턴은 이 배열을 실행한다. */
 	void SetFixedEnemyPlan(TArray<TInstancedStruct<FSRPGCommand>>&& Commands);
 	const TArray<TInstancedStruct<FSRPGCommand>>& GetFixedEnemyPlan() const;
-	/** @brief 밀린 적의 고정 이동 방향열을 새 출발점으로 평행이동한다. 우회/재탐색은 하지 않는다. */
+	/** @brief 1회 대응을 소진한 적이 다시 옮겨졌을 때 마지막 이동 방향열을 새 출발점으로 평행이동한다. */
 	void TranslateFixedEnemyMovementPlan(const FTileIndex& Delta);
 
 	int32 GetTurnId() const;
@@ -159,7 +159,7 @@ protected:
 	UPROPERTY(Category = Action, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "HeadActionIndex"))
 	int32 mHeadActionIndex = 0;
 
-	// @brief 플레이어 턴 전에 계산해 둔 적 전용 고정 명령. 재계획 없이 다음 적 턴에서 제출된다.
+	// @brief 플레이어에게 마지막으로 공개한 적 명령. 제한 대응으로 교체될 수 있다.
 	UPROPERTY(Category = Intent, VisibleAnywhere, meta = (DisplayName = "FixedEnemyPlan"))
 	TArray<TInstancedStruct<FSRPGCommand>> mFixedEnemyPlan;
 

@@ -14,6 +14,7 @@
 
 class UTileMapModel;
 class UStaticSkillData;
+class UBoardActorModel;
 struct FActiveSkillContext;
 
 USTRUCT()
@@ -68,25 +69,30 @@ private:
 	// @brief 턴 컨텍스트 → 전투 모델 → 타일 맵 모델을 꺼내온다
 	UTileMapModel* GetTileMap() const;
 
-	// @brief 기존 Smash 스킬을 선택 주사위 합만큼 실제 보드 유닛을 미는 개입으로 확장한다.
-	bool TryStartDicePush(const FActiveSkillContext& Context, const UStaticSkillData* SkillData);
-	void StartDicePushStep(int32 StepIndex);
-	void OnDicePushStepFinished();
-	void ReportDicePushIfMoved();
+	// @brief 기존 강타/검기 슬롯을 선택 주사위 합만큼 적을 밀거나 당기는 개입으로 확장한다.
+	bool TryStartDiceDisplacement(const FActiveSkillContext& Context, const UStaticSkillData* SkillData);
+	void StartDiceDisplacementStep(int32 StepIndex);
+	void OnDiceDisplacementStepFinished();
+	void ReportDiceDisplacementIfMoved();
 	void FinishSkillAction();
 
 private:
 	UPROPERTY(Transient)
-	TObjectPtr<UUnitModel> mDicePushTarget = nullptr;
+	TObjectPtr<UUnitModel> mDiceDisplacementTarget = nullptr;
 
 	UPROPERTY(Transient)
-	TArray<FTileIndex> mDicePushPath;
+	TArray<FTileIndex> mDiceDisplacementPath;
 
-	int32 mDicePushStepIndex = 0;
-	int32 mDicePushDiceValue = 0;
-	bool mDicePushWasReported = false;
-	bool mDicePushStarted = false;
-	bool mDicePushFinished = false;
+	UPROPERTY(Transient)
+	TObjectPtr<UBoardActorModel> mDiceDisplacementBlocker = nullptr;
+
+	int32 mDiceDisplacementStepIndex = 0;
+	int32 mDiceDisplacementDiceValue = 0;
+	bool mDiceDisplacementIsPull = false;
+	bool mDiceDisplacementWasReported = false;
+	bool mDiceDisplacementCollisionReported = false;
+	bool mDiceDisplacementStarted = false;
+	bool mDiceDisplacementFinished = false;
 	bool mSkillPresentationFinished = false;
 	bool mIsFixedIntentCast = false;
 };

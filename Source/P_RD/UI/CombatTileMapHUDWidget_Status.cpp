@@ -61,7 +61,7 @@ void UCombatTileMapHUDWidget::HandleCombatUIChanged(ECombatUIDomain Domain)
 		RefreshOwnedDiceCards();
 	}
 
-	// 고정 계획과 실행 결과는 별도 Intent 도메인으로 부분 갱신한다.
+	// 공개 계획과 실행 결과는 별도 Intent 도메인으로 부분 갱신한다.
 	if (Domain == ECombatUIDomain::Intent || Domain == ECombatUIDomain::All)
 	{
 		RefreshEnemyIntentPanel();

@@ -50,6 +50,7 @@ DEFINE_LOG_CATEGORY(LogCombatGameMode);
 namespace
 {
 	const FName SmashSkillAssetName(TEXT("DA_SwordNormalSmash_Common"));
+	const FName PullSkillAssetName(TEXT("DA_SwordBlade_Rare"));
 	constexpr float InterventionSmashAimRange = 8.0f;
 
 	EEnemyIntentResultUI GetEnemyIntentResultUI(ESRPGEnemyIntentResult Result)
@@ -82,7 +83,7 @@ namespace
 		case ESRPGEnemyIntentResult::HitObstacle:  return NSLOCTEXT("CombatGameMode", "IntentHitObstacle", "장애물에 막힘!");
 		case ESRPGEnemyIntentResult::Cancelled:    return NSLOCTEXT("CombatGameMode", "IntentCancelled", "예정 행동 취소!");
 		case ESRPGEnemyIntentResult::Planned:
-		default:                                   return NSLOCTEXT("CombatGameMode", "IntentPlanned", "계획 고정됨");
+		default:                                   return NSLOCTEXT("CombatGameMode", "IntentPlanned", "목표·경로 공개");
 		}
 	}
 
@@ -334,7 +335,7 @@ void ACombatGameMode::InitializeRoom()
 	CombatModel->OnEndAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action, ESRPGActionResult Result) {
 		// 액션이 끝나면 UI의 스킬/주사위 선택 표시를 지운다.
 		mCombatUIModel->NotifyActionResolved();
-		// 이동/조준이 자기 하이라이트를 정리한 뒤에도 아직 남은 고정 계획 경로와 공격선을 다시 보여준다.
+		// 이동/조준이 자기 하이라이트를 정리한 뒤에도 아직 남은 공개 경로와 공격선을 다시 보여준다.
 		if (USRPGCombatModel* CurrentCombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
 		{
 			CurrentCombatModel->RefreshEnemyIntentHighlights();
@@ -880,22 +881,29 @@ void ACombatGameMode::PushSkillUIData() const
 		if (StaticSkillData != nullptr)
 		{
 			const bool bIsSmash = StaticSkillData->GetFName() == SmashSkillAssetName;
-			SkillUIData.mName = StaticSkillData->mName;
+			const bool bIsPull = StaticSkillData->GetFName() == PullSkillAssetName;
+			const bool bIsDisplacement = bIsSmash || bIsPull;
+			SkillUIData.mName = bIsPull
+				? NSLOCTEXT("CombatGameMode", "PullSkillName", "끌어오기")
+				: StaticSkillData->mName;
 			SkillUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 			SkillUIData.mDiceCost = StaticSkillData->mRequiredDiceCount;
 			SkillUIData.mIsUsable = true;
-			SkillUIData.mIsDisplacementSkill = bIsSmash;
-			SkillUIData.mTargeting.mSelectShape = bIsSmash
+			SkillUIData.mIsDisplacementSkill = bIsDisplacement;
+			SkillUIData.mIsPullSkill = bIsPull;
+			SkillUIData.mTargeting.mSelectShape = bIsDisplacement
 				? ECombatSkillSelectShapeUI::Square
 				: GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
-			SkillUIData.mTargeting.mSelectRange = bIsSmash
+			SkillUIData.mTargeting.mSelectRange = bIsDisplacement
 				? InterventionSmashAimRange
 				: StaticCast<float>(StaticSkillData->mAimRangeDefaultValue);
-			SkillUIData.mTargeting.mSelectRangeRatio = bIsSmash ? 0.0f : StaticSkillData->mAimRangeRatio;
-			SkillUIData.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
-			SkillUIData.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectAreaDefaultValue);
-			SkillUIData.mTargeting.mHitRangeRatio = StaticSkillData->mEffectAreaRatio;
-			SkillUIData.mTargeting.mIsIndirect = bIsSmash || StaticSkillData->mIsIndirect;
+			SkillUIData.mTargeting.mSelectRangeRatio = bIsDisplacement ? 0.0f : StaticSkillData->mAimRangeRatio;
+			SkillUIData.mTargeting.mHitShape = bIsDisplacement
+				? ECombatSkillHitShapeUI::Single
+				: GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
+			SkillUIData.mTargeting.mHitRange = bIsDisplacement ? 0.0f : StaticCast<float>(StaticSkillData->mEffectAreaDefaultValue);
+			SkillUIData.mTargeting.mHitRangeRatio = bIsDisplacement ? 0.0f : StaticSkillData->mEffectAreaRatio;
+			SkillUIData.mTargeting.mIsIndirect = bIsDisplacement || StaticSkillData->mIsIndirect;
 			SkillUIData.mTargeting.mIsPenetration = StaticSkillData->mIsPenetration;
 		}
 	}
@@ -903,7 +911,7 @@ void ACombatGameMode::PushSkillUIData() const
 	mCombatUIModel->SetSkillUIs(SkillUIDatas);
 }
 
-/** @brief 전투 모델의 고정 계획을 UObject 참조 없는 HUD 스냅샷으로 변환한다. */
+/** @brief 전투 모델의 공개 계획을 UObject 참조 없는 HUD 스냅샷으로 변환한다. */
 void ACombatGameMode::PushEnemyIntentUIData() const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
@@ -923,6 +931,7 @@ void ACombatGameMode::PushEnemyIntentUIData() const
 		IntentUI.mActionName = Intent.mSkillName.IsEmpty()
 			? NSLOCTEXT("CombatGameMode", "IntentFallbackAction", "이동 후 공격")
 			: Intent.mSkillName;
+		IntentUI.mGoalText = Intent.mGoalText;
 		IntentUI.mPlannedOrigin = Intent.mPlannedOrigin;
 		IntentUI.mPlannedDestination = Intent.mPlannedDestination;
 		IntentUI.mTargetTile = Intent.mTargetTile;
@@ -940,6 +949,7 @@ void ACombatGameMode::PushEnemyIntentUIData() const
 		IntentUI.mResult = GetEnemyIntentResultUI(Intent.mResult);
 		IntentUI.mResultText = Intent.mResultText.IsEmpty() ? GetEnemyIntentResultFallback(Intent.mResult) : Intent.mResultText;
 		IntentUI.mWasDisplaced = Intent.mWasDisplaced;
+		IntentUI.mCanReact = Intent.mReactionCount < 1;
 		IntentUI.mIsRecommendedInterventionTarget = Intent.mIsRecommendedInterventionTarget;
 
 		if (IsValid(Intent.mEnemy))
@@ -1020,27 +1030,38 @@ void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 	UStaticSkillData* StaticSkillData = (SkillEntry != nullptr && SkillEntry->IsValid() == true) ? SkillEntry->mData.Get() : nullptr;
 	if (StaticSkillData != nullptr)
 	{
-		SkillDetailUIData.mName = StaticSkillData->mName;
 		const bool bIsSmash = StaticSkillData->GetFName() == SmashSkillAssetName;
+		const bool bIsPull = StaticSkillData->GetFName() == PullSkillAssetName;
+		const bool bIsDisplacement = bIsSmash || bIsPull;
+		SkillDetailUIData.mName = bIsPull
+			? NSLOCTEXT("CombatGameMode", "PullSkillName", "끌어오기")
+			: StaticSkillData->mName;
 		SkillDetailUIData.mDescription = bIsSmash
 			? NSLOCTEXT(
 				"CombatGameMode",
 				"SmashPushDescription",
-				"[주사위 개입] 이 버전의 강타는 피해 대신 적의 위치를 바꿉니다. 전장 어디서든 적을 지정하고, 선택한 주사위 합만큼 플레이어 반대 방향으로 밀어냅니다. 첫 클릭은 미리보기, 같은 칸 두 번째 클릭은 실행입니다.")
-			: StaticSkillData->mDescription;
+				"[밀기] 적을 주사위 눈의 합만큼 바깥쪽으로 즉시 날립니다. 경로의 적·장애물과 충돌하면 양쪽에 충돌 피해가 발생합니다. 첫 클릭은 궤적 미리보기, 같은 적 두 번째 클릭은 실행입니다.")
+			: (bIsPull
+				? NSLOCTEXT(
+					"CombatGameMode",
+					"PullSkillDescription",
+					"[당기기] 선택한 적을 주사위 눈의 합만큼 플레이어 앞으로 즉시 끌어옵니다. 다른 적이나 장애물에 걸리면 충돌하고 멈춥니다. 첫 클릭은 궤적 미리보기, 같은 적 두 번째 클릭은 실행입니다.")
+				: StaticSkillData->mDescription);
 		SkillDetailUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 		SkillDetailUIData.mDiceCost = StaticSkillData->mRequiredDiceCount;
-		SkillDetailUIData.mTargeting.mSelectShape = bIsSmash
+		SkillDetailUIData.mTargeting.mSelectShape = bIsDisplacement
 			? ECombatSkillSelectShapeUI::Square
 			: GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
-		SkillDetailUIData.mTargeting.mSelectRange = bIsSmash
+		SkillDetailUIData.mTargeting.mSelectRange = bIsDisplacement
 			? InterventionSmashAimRange
 			: StaticCast<float>(StaticSkillData->mAimRangeDefaultValue);
-		SkillDetailUIData.mTargeting.mSelectRangeRatio = bIsSmash ? 0.0f : StaticSkillData->mAimRangeRatio;
-		SkillDetailUIData.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
-		SkillDetailUIData.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectAreaDefaultValue);
-		SkillDetailUIData.mTargeting.mHitRangeRatio = StaticSkillData->mEffectAreaRatio;
-		SkillDetailUIData.mTargeting.mIsIndirect = bIsSmash || StaticSkillData->mIsIndirect;
+		SkillDetailUIData.mTargeting.mSelectRangeRatio = bIsDisplacement ? 0.0f : StaticSkillData->mAimRangeRatio;
+		SkillDetailUIData.mTargeting.mHitShape = bIsDisplacement
+			? ECombatSkillHitShapeUI::Single
+			: GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
+		SkillDetailUIData.mTargeting.mHitRange = bIsDisplacement ? 0.0f : StaticCast<float>(StaticSkillData->mEffectAreaDefaultValue);
+		SkillDetailUIData.mTargeting.mHitRangeRatio = bIsDisplacement ? 0.0f : StaticSkillData->mEffectAreaRatio;
+		SkillDetailUIData.mTargeting.mIsIndirect = bIsDisplacement || StaticSkillData->mIsIndirect;
 		SkillDetailUIData.mTargeting.mIsPenetration = StaticSkillData->mIsPenetration;
 	}
 

@@ -67,7 +67,7 @@ struct FUnitHpBarWidget
 	UPROPERTY(Transient) TObjectPtr<UCanvasPanelSlot> mFillClipSlot;
 	// HP 숫자 텍스트.
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mValueText;
-	// 적 유닛 머리 위에 현재 고정 계획의 실행순서/흐름/결과를 짧게 표시하는 배지.
+	// 적 유닛 머리 위에 현재 공개 계획의 실행순서/흐름/결과를 짧게 표시하는 배지.
 	UPROPERTY(Transient) TObjectPtr<UBorder> mIntentBadge;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mIntentText;
 	// HP바 왼쪽 방어도 아이콘/수치(런타임 생성). 방어도 0이면 숨긴다.

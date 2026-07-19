@@ -8,6 +8,8 @@
 #include "DataAsset/SkillData/StaticSkillData.h"
 
 #include "Actor/ActorView.h"
+#include "Actor/BoardActor/BoardActorModel.h"
+#include "Pawn/UnitModel.h"
 #include "Pawn/Player/PlayerUnitModel.h"
 #include "Actor/TileMap/TileMapModel.h"
 
@@ -18,6 +20,14 @@
 namespace
 {
 	const FName DicePushBuildSkillAssetName(TEXT("DA_SwordNormalSmash_Common"));
+	const FName DicePullBuildSkillAssetName(TEXT("DA_SwordBlade_Rare"));
+
+	bool IsDiceDisplacementBuildSkill(const UStaticSkillData* SkillData)
+	{
+		return SkillData != nullptr
+			&& (SkillData->GetFName() == DicePushBuildSkillAssetName
+				|| SkillData->GetFName() == DicePullBuildSkillAssetName);
+	}
 }
 
 FSRPGSkillSelectCommand::FSRPGSkillSelectCommand()
@@ -405,7 +415,7 @@ void USRPGSkillBuildAction::RefreshAimableTileHighlights()
     checkf(SkillCompModel != nullptr, TEXT("스킬 컴포넌트 모델 nullptr"));
 
 	mReachableTileIndexes = SkillCompModel->GetAimableTiles(TileMap, mSelectedSkillIndex, DicePoolModel->GetSelectedDiceSum());
-	if (mSelectedSkill != nullptr && mSelectedSkill->GetFName() == DicePushBuildSkillAssetName)
+	if (IsDiceDisplacementBuildSkill(mSelectedSkill))
 	{
 		if (USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
 		{
@@ -435,6 +445,53 @@ void USRPGSkillBuildAction::RefreshEffectTileHighlights()
 
     mEffectTileIndexes = SkillCompModel->GetEffectTiles(TileMap, mSelectedSkillIndex, mTargetIndex, DicePoolModel->GetSelectedDiceSum());
     TileMap->SetTileHighlight(mEffectTileIndexes, ETileHighlightFlag::Effect);
+
+	if (IsDiceDisplacementBuildSkill(mSelectedSkill) == false)
+	{
+		return;
+	}
+
+	UUnitModel* TargetUnit = nullptr;
+	for (UBoardActorModel* Actor : TileMap->GetActorsOnTile(mTargetIndex, ETileLayerFlag::Unit))
+	{
+		TargetUnit = Cast<UUnitModel>(Actor);
+		if (TargetUnit != nullptr && TargetUnit != mInstigator.Get())
+		{
+			break;
+		}
+		TargetUnit = nullptr;
+	}
+	if (TargetUnit == nullptr)
+	{
+		return;
+	}
+
+	const FTileIndex InstigatorTile = mInstigator->GetTileTransform().mIndex;
+	const FTileIndex TargetTile = TargetUnit->GetTileTransform().mIndex;
+	const int32 Distance = FMath::Max(DicePoolModel->GetSelectedDiceSum(), 1);
+	const bool bIsPull = mSelectedSkill->GetFName() == DicePullBuildSkillAssetName;
+	TArray<FTileIndex> Trajectory = bIsPull
+		? TileMap->GetPullPath(InstigatorTile, TargetTile, Distance)
+		: TArray<FTileIndex>({ TargetTile });
+	if (bIsPull == false)
+	{
+		const FTileIndex Destination = TileMap->GetPushDestination(InstigatorTile, TargetTile, Distance);
+		const FTileIndex Step(
+			FMath::Sign(Destination.mX - TargetTile.mX),
+			FMath::Sign(Destination.mY - TargetTile.mY));
+		FTileIndex Current = TargetTile;
+		while (Current != Destination && (Step.mX != 0 || Step.mY != 0))
+		{
+			Current = FTileIndex(Current.mX + Step.mX, Current.mY + Step.mY);
+			Trajectory.Add(Current);
+		}
+	}
+	if (Trajectory.IsEmpty())
+	{
+		return;
+	}
+	TileMap->SetTileHighlight(Trajectory, ETileHighlightFlag::Effect);
+	TileMap->SetTileHighlight(TArray<FTileIndex>({ Trajectory.Last() }), ETileHighlightFlag::Select);
 }
 
 bool USRPGSkillBuildAction::CanSelectTargetTile(const FTileIndex& Index) const

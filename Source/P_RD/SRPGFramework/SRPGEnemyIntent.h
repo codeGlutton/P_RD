@@ -1,6 +1,6 @@
 /*****************************************************************//**
  * @file   SRPGEnemyIntent.h
- * @brief  플레이어 턴 전에 고정되는 적 행동 의도 스냅샷
+ * @brief  플레이어 턴 전에 공개되고 제한적으로 대응하는 적 행동 의도 스냅샷
  *********************************************************************/
 
 #pragma once
@@ -11,7 +11,15 @@
 
 class UEnemyUnitModel;
 
-/** @brief 고정 의도가 실행되며 발생한 가장 최근의 핵심 결과. */
+/** @brief 플레이어가 적의 위치를 바꾼 물리 개입 종류. */
+UENUM(BlueprintType)
+enum class ESRPGPlayerDisplacementType : uint8
+{
+	Push,
+	Pull,
+};
+
+/** @brief 공개 의도가 실행되며 발생한 가장 최근의 핵심 결과. */
 UENUM(BlueprintType)
 enum class ESRPGEnemyIntentResult : uint8
 {
@@ -47,6 +55,18 @@ struct P_RD_API FSRPGEnemyIntent
 	UPROPERTY(BlueprintReadOnly)
 	FText mSkillName;
 
+	/** @brief 경로가 달라져도 유지하는 전술 목적(추격/거리 유지/사선 확보). */
+	UPROPERTY(BlueprintReadOnly)
+	FText mGoalText;
+
+	/** @brief 최초 공개한 행동 정체성을 대응 계획에서도 유지하기 위한 스킬 슬롯. */
+	UPROPERTY(BlueprintReadOnly)
+	int32 mSkillIndex = INDEX_NONE;
+
+	/** @brief 이번 적 턴에 사용할 수 있는 이동 예산. 대응 재계획에서도 증가하지 않는다. */
+	UPROPERTY(BlueprintReadOnly)
+	int32 mPlannedMoveRange = 0;
+
 	UPROPERTY(BlueprintReadOnly)
 	FTileIndex mPlannedOrigin = FTileIndex::Invalid;
 
@@ -71,11 +91,15 @@ struct P_RD_API FSRPGEnemyIntent
 	UPROPERTY(BlueprintReadOnly)
 	bool mWasDisplaced = false;
 
+	/** @brief 강제 이동 뒤 새 경로를 계산한 횟수. 한 라운드에 한 번만 허용한다. */
+	UPROPERTY(BlueprintReadOnly)
+	int32 mReactionCount = 0;
+
 	/** @brief 플레이어 개입으로 마지막으로 밀려난 타일. 유닛이 제거된 뒤에도 조정 위치를 표시한다. */
 	UPROPERTY(BlueprintReadOnly)
 	FTileIndex mDisplacedToTile = FTileIndex::Invalid;
 
-	/** @brief 첫 전투에서 밀어 고정 이동을 취소하기 가장 쉬운 적으로 선택된 의도. */
+	/** @brief 첫 전투에서 밀어 AI의 1회 대응을 체험하기 쉬운 적으로 선택된 의도. */
 	UPROPERTY(BlueprintReadOnly)
 	bool mIsRecommendedInterventionTarget = false;
 };
