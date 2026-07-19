@@ -188,8 +188,8 @@ private:
 
 	/**
 	 * @brief 레일 시각 슬롯 -> 스킬 데이터 index 매핑. 미보유 슬롯이면 INDEX_NONE.
-	 * @details 레일 고정 배치: 맨 위 칸=기본 공격(평타, 데이터0), 맨 아래 칸=STEP(기본 이동, 데이터1),
-	 *          중간 4칸=추가 스킬(데이터 2..5). 데이터 순서는 SkillComponentModel의 "기본2+추가4" 규약을 따른다.
+	 * @details 레일은 개별 기술 수가 아니라 행동군 네 칸을 고정 배치한다.
+	 *          기본 공격 / 손아귀(당기기·던지기·교환) / 방해 / 이동 순서다.
 	 */
 	int32 GetSkillDataIndexForRailSlot(int32 RailSlotIndex) const;
 
@@ -276,7 +276,12 @@ private:
 	bool EndDirectUnitGesture(const FVector2D& ScreenPosition);
 	void SetDirectUnitGestureVisual(bool bVisible, const FVector2D& ScreenPosition = FVector2D::ZeroVector);
 	/** @brief 화면 좌표 아래 타일 평면의 정확한 터치 월드 위치를 구한다(타일 중심으로 스냅하지 않음). */
-	bool GetDirectGestureFloorWorldLocation(const FVector2D& ScreenPosition, FVector& OutWorldLocation) const;
+	bool GetDirectGestureFloorWorldLocation(
+		const FVector2D& ScreenPosition,
+		FVector& OutWorldLocation,
+		FTileIndex* OutTileIndex = nullptr) const;
+	/** @brief 손아귀로 인접 적을 기사 점유 타일에 놓아 자리 교환하려는 드롭인지 판정한다. */
+	bool IsDirectGripSwapDestination(const FVector2D& ScreenPosition, FVector& OutPlayerFloorWorld) const;
 	/** @brief 대상 유닛 메시를 복제한 충돌 없는 반투명 드래그 고스트를 준비한다. */
 	void EnsureDirectUnitGestureGhost(int32 TargetUnitId);
 	void DestroyDirectUnitGestureGhost();
@@ -1060,6 +1065,10 @@ private:
 	FVector2D mDirectUnitGestureTargetScreen = FVector2D::ZeroVector;
 	bool mHasDirectThrowCandidate = false;
 	FVector mDirectThrowCandidateWorld = FVector::ZeroVector;
+	/** @brief 좌측 손아귀 행동군에서 시작된 제스처와 기사 타일 교환 프리뷰 상태. */
+	bool mDirectGripGesture = false;
+	bool mDirectGripCanSwap = false;
+	bool mDirectGripSwapPreview = false;
 	int32 mDirectGestureGhostTargetId = INDEX_NONE;
 	UPROPERTY(Transient) TObjectPtr<UBorder> mDirectUnitGestureLine;
 	UPROPERTY(Transient) TObjectPtr<UBorder> mDirectUnitGestureHandle;

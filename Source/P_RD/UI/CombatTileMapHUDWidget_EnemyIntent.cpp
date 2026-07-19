@@ -383,9 +383,11 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		else if (mEnemyIntentTutorialPullCompleted)
 		{
 			const int32 SelectedSkillIndex = mCombatUIModel->GetSelectedSkillIndex();
-			const bool bThrowSelected = DirectSkills.IsValidIndex(SelectedSkillIndex)
-				&& DirectSkills[SelectedSkillIndex].mIsThrowSkill;
-			if (bThrowSelected)
+			const bool bGripSelected = DirectSkills.IsValidIndex(SelectedSkillIndex)
+				&& (DirectSkills[SelectedSkillIndex].mIsPullSkill
+					|| DirectSkills[SelectedSkillIndex].mIsThrowSkill
+					|| DirectSkills[SelectedSkillIndex].mIsSwapSkill);
+			if (bGripSelected)
 			{
 				mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::ConfirmThrow;
 			}
@@ -418,8 +420,8 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		switch (mEnemyIntentTutorialStage)
 		{
 		case EEnemyIntentTutorialStage::SelectPull:
-			DirectTitle = TEXT("1 / 4   왼쪽에서 ‘끌어당기기’를 탭하세요");
-			DirectMessage = TEXT("회색으로 밝혀지는 타일이 이 스킬의 실제 사거리입니다");
+			DirectTitle = TEXT("1 / 4   왼쪽의 ‘손아귀’를 탭하세요");
+			DirectMessage = TEXT("테두리 안의 적을 잡을 수 있습니다 · 주사위는 행동 결과에 맞춰 자동 사용");
 			break;
 		case EEnemyIntentTutorialStage::ConfirmDestination:
 			DirectTitle = TEXT("2 / 4   주황색 적을 기사 주변의 원하는 빈칸으로 드래그하세요");
@@ -430,12 +432,12 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 			DirectMessage = TEXT("도착할 때까지 잠깐 보세요");
 			break;
 		case EEnemyIntentTutorialStage::SelectThrow:
-			DirectTitle = TEXT("3 / 4   왼쪽에서 ‘밀기 · 던지기’를 탭하세요");
-			DirectMessage = TEXT("인접한 적만 밝아집니다 · 주사위는 자동으로 선택됩니다");
+			DirectTitle = TEXT("3 / 4   같은 ‘손아귀’를 다시 탭하세요");
+			DirectMessage = TEXT("이번에는 가까워진 적을 잡으면 자동으로 던지기가 됩니다");
 			break;
 		case EEnemyIntentTutorialStage::ConfirmThrow:
 			DirectTitle = TEXT("4 / 4   당겨온 적을 원하는 방향으로 드래그하세요");
-			DirectMessage = TEXT("반투명 적이 멈춘 타일에서 손을 놓으면 던집니다");
+			DirectMessage = TEXT("다른 적/장애물 쪽은 충돌 · 기사 칸은 자리 교환 · 빈 방향은 던지기");
 			break;
 		case EEnemyIntentTutorialStage::ApplyingThrow:
 			DirectTitle = TEXT("좋아요!  던진 위치에 맞춰 적이 새 길을 고르는 중");
@@ -446,8 +448,8 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 			DirectMessage = TEXT("적이 바뀐 위치와 새 경로대로 행동하는지 확인합니다");
 			break;
 		case EEnemyIntentTutorialStage::Complete:
-			DirectTitle = TEXT("완료!  이제 적을 직접 끌고 밀어 전장을 바꿀 수 있습니다");
-			DirectMessage = TEXT("스킬 선택 → 사거리 확인 → 적 드래그");
+			DirectTitle = TEXT("완료!  손아귀 하나로 적을 당기고 던지고 교환할 수 있습니다");
+			DirectMessage = TEXT("행동 선택 → 적을 잡기 → 결과가 보이는 칸에 놓기");
 			break;
 		default:
 			DirectTitle = TEXT("적을 직접 움직여 보세요");
@@ -522,12 +524,11 @@ UWidget* UCombatTileMapHUDWidget::ResolveEnemyIntentTutorialFocusWidget() const
 	case EEnemyIntentTutorialStage::SelectPull:
 	case EEnemyIntentTutorialStage::SelectThrow:
 	{
-		const bool bFindThrow = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectThrow;
 		const TArray<FSkillUI>& Skills = mCombatUIModel->GetSkillUIs();
 		for (int32 SkillIndex = 0; SkillIndex < Skills.Num(); ++SkillIndex)
 		{
 			if (Skills[SkillIndex].mIsDisplacementSkill
-				&& (bFindThrow ? Skills[SkillIndex].mIsThrowSkill : Skills[SkillIndex].mIsPullSkill))
+				&& Skills[SkillIndex].mIsPullSkill)
 			{
 				for (int32 RailSlotIndex = 0; RailSlotIndex < mSkillInputButtons.Num(); ++RailSlotIndex)
 				{
@@ -904,10 +905,10 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime
 		FString PointerText = TEXT("클릭");
 		switch (mEnemyIntentTutorialStage)
 		{
-		case EEnemyIntentTutorialStage::SelectPull:        PointerText = TEXT("끌어당기기 선택 · 사거리 보기"); break;
+		case EEnemyIntentTutorialStage::SelectPull:        PointerText = TEXT("손아귀 선택 · 사거리 보기"); break;
 		case EEnemyIntentTutorialStage::SelectDice:        PointerText = TEXT("가장 큰 숫자 클릭"); break;
 		case EEnemyIntentTutorialStage::SelectTarget:      PointerText = TEXT("이 적을 한 번 탭"); break;
-		case EEnemyIntentTutorialStage::SelectThrow:       PointerText = TEXT("밀기 · 던지기 선택"); break;
+		case EEnemyIntentTutorialStage::SelectThrow:       PointerText = TEXT("손아귀 다시 선택"); break;
 		case EEnemyIntentTutorialStage::SelectThrowDice:   PointerText = TEXT("새 숫자 클릭"); break;
 		case EEnemyIntentTutorialStage::SelectThrowTarget: PointerText = TEXT("당겨온 적을 한 번 탭"); break;
 		case EEnemyIntentTutorialStage::SelectThrowDestination: PointerText = TEXT("던질 방향 클릭"); break;

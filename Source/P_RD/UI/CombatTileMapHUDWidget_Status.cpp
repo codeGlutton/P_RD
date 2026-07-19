@@ -422,6 +422,9 @@ void UCombatTileMapHUDWidget::HandleCombatActionResolved()
 	mSelectedSkillIndex = INDEX_NONE;
 	mDirectArmedSkillIndex = INDEX_NONE;
 	mDirectArmedTargetUnitId = INDEX_NONE;
+	mDirectGripGesture = false;
+	mDirectGripCanSwap = false;
+	mDirectGripSwapPreview = false;
 	ClearOwnedDiceSelectionHighlight();
 	CloseContextActions();
 	RefreshSkillRailWidgets();

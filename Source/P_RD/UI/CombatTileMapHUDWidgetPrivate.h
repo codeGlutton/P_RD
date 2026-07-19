@@ -8,7 +8,9 @@ class ACombatDiceCaptureActor;
 namespace RDCombatHUD
 {
 	static constexpr int32 MaxCombatDiceCardCount = 8;
-	static constexpr int32 CombatSkillSlotCount = 6;
+	// 개별 기술 여섯 칸 대신 전투 중 판단 단위인 행동군만 노출한다.
+	// 기본 공격 / 손아귀 / 방해 / 이동의 네 칸이며, 손아귀가 당기기·던지기·교환을 문맥에 맞게 고른다.
+	static constexpr int32 CombatSkillSlotCount = 4;
 	static constexpr float CombatSkillRailLeft = 0.020f;
 	static constexpr float CombatSkillRailRight = 0.190f;
 	static constexpr float CombatSkillRailTop = 0.144f;

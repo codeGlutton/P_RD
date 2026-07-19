@@ -58,9 +58,13 @@ void UCombatTileMapHUDWidget::ShowSkillDetail(int32 SkillIndex)
 	}
 	if (mDetailSubtitleText != nullptr)
 	{
-		mDetailSubtitleText->SetText(FText::Format(
-			NSLOCTEXT("CombatTileMapHUDWidget", "SkillDetailMeta", "SKILL · 주사위 {0}"),
-			FText::AsNumber(Detail.mDiceCost)));
+		const TArray<FSkillUI>& Skills = mCombatUIModel->GetSkillUIs();
+		const bool bGripFamily = Skills.IsValidIndex(SkillIndex) && Skills[SkillIndex].mIsPullSkill;
+		mDetailSubtitleText->SetText(bGripFamily
+			? NSLOCTEXT("CombatTileMapHUDWidget", "GripDetailMeta", "ACTION FAMILY · 결과별 주사위 1~3개 자동")
+			: FText::Format(
+				NSLOCTEXT("CombatTileMapHUDWidget", "SkillDetailMeta", "SKILL · 주사위 {0}"),
+				FText::AsNumber(Detail.mDiceCost)));
 	}
 	if (mDetailBodyText != nullptr) { mDetailBodyText->SetText(Detail.mDescription); }
 

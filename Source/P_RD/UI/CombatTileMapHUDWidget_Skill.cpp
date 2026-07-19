@@ -57,7 +57,10 @@ void UCombatTileMapHUDWidget::RefreshDiceAssignmentText() const
 			SelectedDiceCount += Dice.mIsSelected ? 1 : 0;
 		}
 	}
-	const FString Instruction = FString::Printf(TEXT("%s · 주사위 자동"), *Skill.mName.ToString());
+	const bool bGripFamily = Skill.mIsPullSkill || Skill.mIsThrowSkill || Skill.mIsSwapSkill;
+	const FString Instruction = bGripFamily
+		? TEXT("손아귀 · 결과에 맞춰 주사위 자동")
+		: FString::Printf(TEXT("%s · 주사위 자동"), *Skill.mName.ToString());
 	mDiceAssignmentText->SetText(FText::FromString(Instruction));
 	mDiceAssignmentText->SetColorAndOpacity(FSlateColor(
 		SelectedDiceCount >= RequiredDiceCount

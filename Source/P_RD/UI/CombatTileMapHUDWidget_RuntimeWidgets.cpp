@@ -265,7 +265,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		{
 			mSkillDockPanel->SetBrushColor(FLinearColor(0.018f, 0.032f, 0.045f, 0.78f));
 			mSkillDockPanel->SetVisibility(ESlateVisibility::HitTestInvisible);
-			mSkillDockTitleText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "SkillDockTitle", "스킬  ·  짧게 선택 / 길게 설명"));
+			mSkillDockTitleText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "ActionDockTitle", "행동  ·  짧게 선택 / 길게 설명"));
 			mSkillDockTitleText->SetColorAndOpacity(FSlateColor(FLinearColor(0.80f, 0.96f, 1.0f, 1.0f)));
 			mSkillDockTitleText->SetJustification(ETextJustify::Left);
 			mSkillDockTitleText->SetVisibility(ESlateVisibility::HitTestInvisible);

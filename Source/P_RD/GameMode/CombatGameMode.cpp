@@ -920,7 +920,7 @@ void ACombatGameMode::PushSkillUIData() const
 			const bool bIsSwap = StaticSkillData->GetFName() == SwapSkillAssetName;
 			const bool bIsDisplacement = bIsSmash || bIsPull || bIsStagger || bIsSwap;
 			SkillUIData.mName = bIsPull
-				? NSLOCTEXT("CombatGameMode", "PullSkillName", "끌어당기기")
+				? NSLOCTEXT("CombatGameMode", "GripSkillName", "손아귀")
 				: (bIsSmash
 					? NSLOCTEXT("CombatGameMode", "ThrowSkillName", "밀기 · 던지기")
 					: (bIsStagger
@@ -1154,7 +1154,7 @@ void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 		const bool bIsPull = StaticSkillData->GetFName() == PullSkillAssetName;
 		const bool bIsDisplacement = bIsSmash || bIsPull;
 		SkillDetailUIData.mName = bIsPull
-			? NSLOCTEXT("CombatGameMode", "PullSkillName", "끌어당기기")
+			? NSLOCTEXT("CombatGameMode", "GripSkillName", "손아귀")
 			: (bIsSmash
 				? NSLOCTEXT("CombatGameMode", "ThrowSkillName", "붙잡아 던지기")
 				: StaticSkillData->mName);
@@ -1166,8 +1166,8 @@ void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 			: (bIsPull
 				? NSLOCTEXT(
 					"CombatGameMode",
-					"PullSkillDescription",
-					"[당기기] 적을 드래그해 플레이어 주변의 유효한 빈칸을 직접 고릅니다. 손가락을 따라오는 적과 밝은 착지 타일을 보고 놓으면 실행됩니다.")
+					"GripSkillDescription",
+					"[손아귀] 먼 적은 기사 주변으로 끌어오고, 인접한 적은 드래그한 방향으로 던집니다. 기사 칸에 놓으면 서로 자리를 바꾸며, 적이나 장애물 쪽으로 던지면 충돌합니다. 결과에 맞는 주사위는 자동으로 사용됩니다.")
 				: StaticSkillData->mDescription);
 		SkillDetailUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 		SkillDetailUIData.mDiceCost = StaticSkillData->mRequiredDiceCount;

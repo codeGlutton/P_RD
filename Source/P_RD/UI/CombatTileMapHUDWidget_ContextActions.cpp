@@ -886,13 +886,57 @@ bool UCombatTileMapHUDWidget::BeginDirectUnitGesture(const FVector2D& ScreenPosi
 	{
 		return false;
 	}
+	mDirectGripGesture = false;
+	mDirectGripCanSwap = false;
+	mDirectGripSwapPreview = false;
 	if (bSelectedDisplacement)
 	{
 		if (bIsPlayer)
 		{
 			return false;
 		}
-		mDirectArmedSkillIndex = SelectedSkillIndex;
+		int32 ArmedSkillIndex = SelectedSkillIndex;
+		const bool bStartedWithGrip = Skills[SelectedSkillIndex].mIsPullSkill;
+		if (bStartedWithGrip)
+		{
+			const FUnitUI* TargetUnit = mCombatUIModel->GetUnitUIs().FindByPredicate([UnitId](const FUnitUI& Unit)
+			{
+				return Unit.mUnitId == UnitId;
+			});
+			const FUnitUI* PlayerUnit = mCombatUIModel->GetUnitUIs().FindByPredicate([](const FUnitUI& Unit)
+			{
+				return Unit.mIsPlayer && Unit.mHP > 0.0f;
+			});
+			const bool bAdjacent = TargetUnit != nullptr && PlayerUnit != nullptr
+				&& TargetUnit->mTile != FTileIndex::Invalid
+				&& PlayerUnit->mTile != FTileIndex::Invalid
+				&& GetTileDistance(TargetUnit->mTile, PlayerUnit->mTile) == 1;
+			if (bAdjacent)
+			{
+				// 같은 손아귀 카드라도 이미 가까운 적을 잡으면 투척 조준으로 자연스럽게 전환한다.
+				const int32 ThrowSkillIndex = FindDirectSkillIndex(&FSkillUI::mIsThrowSkill);
+				if (Skills.IsValidIndex(ThrowSkillIndex)
+					&& GetMaximumAvailableDiceSum(
+						mCombatUIModel->GetDiceUIs(), Skills[ThrowSkillIndex].mDiceCost) != INDEX_NONE)
+				{
+					if (SelectSkillWithAutomaticDice(ThrowSkillIndex, 6))
+					{
+						ArmedSkillIndex = ThrowSkillIndex;
+					}
+					else
+					{
+						SelectSkillWithAutomaticDice(SelectedSkillIndex, 6);
+					}
+				}
+
+				const int32 SwapSkillIndex = FindDirectSkillIndex(&FSkillUI::mIsSwapSkill);
+				mDirectGripCanSwap = Skills.IsValidIndex(SwapSkillIndex)
+					&& GetMaximumAvailableDiceSum(
+						mCombatUIModel->GetDiceUIs(), Skills[SwapSkillIndex].mDiceCost) != INDEX_NONE;
+			}
+			mDirectGripGesture = true;
+		}
+		mDirectArmedSkillIndex = ArmedSkillIndex;
 		mDirectArmedTargetUnitId = UnitId;
 		mCombatUIModel->RequestWorldTouch(UnitScreenPosition, false);
 		const ECombatBuildPhaseUI Phase = mCombatUIModel->GetTurnUI().mPhase;
@@ -933,7 +977,11 @@ void UCombatTileMapHUDWidget::UpdateDirectUnitGesture(const FVector2D& ScreenPos
 	}
 	mDirectUnitGestureCurrent = ScreenPosition;
 	mDirectUnitGestureDragged |= FVector2D::Distance(mDirectUnitGestureStart, ScreenPosition) >= DirectDragThreshold;
+	FVector SwapFloorWorld = FVector::ZeroVector;
+	mDirectGripSwapPreview = mDirectUnitGestureDragged
+		&& IsDirectGripSwapDestination(ScreenPosition, SwapFloorWorld);
 	if (mDirectUnitGestureDragged
+		&& mDirectGripSwapPreview == false
 		&& mCombatUIModel != nullptr
 		&& mCombatUIModel->GetSkillUIs().IsValidIndex(mDirectArmedSkillIndex)
 		&& (mCombatUIModel->GetSkillUIs()[mDirectArmedSkillIndex].mIsPullSkill
@@ -946,9 +994,14 @@ void UCombatTileMapHUDWidget::UpdateDirectUnitGesture(const FVector2D& ScreenPos
 
 bool UCombatTileMapHUDWidget::GetDirectGestureFloorWorldLocation(
 	const FVector2D& ScreenPosition,
-	FVector& OutWorldLocation) const
+	FVector& OutWorldLocation,
+	FTileIndex* OutTileIndex) const
 {
 	OutWorldLocation = FVector::ZeroVector;
+	if (OutTileIndex != nullptr)
+	{
+		*OutTileIndex = FTileIndex::Invalid;
+	}
 	APlayerController* PlayerController = GetOwningPlayer();
 	if (PlayerController == nullptr)
 	{
@@ -969,12 +1022,53 @@ bool UCombatTileMapHUDWidget::GetDirectGestureFloorWorldLocation(
 	{
 		return false;
 	}
-	if (TileMap->IsValidIndex(TileMap->WorldToTileIndex(HitResult.ImpactPoint)) == false)
+	const FTileIndex TileIndex = TileMap->WorldToTileIndex(HitResult.ImpactPoint);
+	if (TileMap->IsValidIndex(TileIndex) == false)
 	{
 		return false;
 	}
 	// 스냅된 착지칸은 게임플레이 프리뷰가 따로 보여준다. 이 고스트는 손가락을 그대로 따라간다.
 	OutWorldLocation = HitResult.ImpactPoint;
+	if (OutTileIndex != nullptr)
+	{
+		*OutTileIndex = TileIndex;
+	}
+	return true;
+}
+
+bool UCombatTileMapHUDWidget::IsDirectGripSwapDestination(
+	const FVector2D& ScreenPosition,
+	FVector& OutPlayerFloorWorld) const
+{
+	OutPlayerFloorWorld = FVector::ZeroVector;
+	if (mDirectGripGesture == false || mDirectGripCanSwap == false || mCombatUIModel == nullptr)
+	{
+		return false;
+	}
+	const FUnitUI* PlayerUnit = mCombatUIModel->GetUnitUIs().FindByPredicate([](const FUnitUI& Unit)
+	{
+		return Unit.mIsPlayer && Unit.mHP > 0.0f;
+	});
+	if (PlayerUnit == nullptr || PlayerUnit->mTile == FTileIndex::Invalid)
+	{
+		return false;
+	}
+	FVector TouchWorld = FVector::ZeroVector;
+	FTileIndex TouchTile = FTileIndex::Invalid;
+	if (GetDirectGestureFloorWorldLocation(ScreenPosition, TouchWorld, &TouchTile) == false
+		|| TouchTile != PlayerUnit->mTile)
+	{
+		return false;
+	}
+	AUnit* PlayerView = PlayerUnit->mViewActor.IsValid()
+		? Cast<AUnit>(PlayerUnit->mViewActor.Get())
+		: nullptr;
+	const float RootHeight = PlayerView != nullptr && PlayerView->GetCapsuleComponent() != nullptr
+		? PlayerView->GetCapsuleComponent()->GetScaledCapsuleHalfHeight()
+		: 0.0f;
+	OutPlayerFloorWorld = PlayerView != nullptr
+		? PlayerView->GetActorLocation() - FVector(0.0f, 0.0f, RootHeight)
+		: TouchWorld;
 	return true;
 }
 
@@ -1092,6 +1186,12 @@ void UCombatTileMapHUDWidget::SetDirectUnitGestureVisual(bool bVisible, const FV
 		SnappedLandingWorld = Preview.mLandingWorldLocation;
 		bHasSnappedLanding = true;
 	}
+	FVector PlayerSwapWorld = FVector::ZeroVector;
+	if (mDirectGripSwapPreview && IsDirectGripSwapDestination(ScreenPosition, PlayerSwapWorld))
+	{
+		SnappedLandingWorld = PlayerSwapWorld;
+		bHasSnappedLanding = true;
+	}
 
 	FVector TouchFloorWorld = FVector::ZeroVector;
 	const bool bHasTouchFloor = GetDirectGestureFloorWorldLocation(ScreenPosition, TouchFloorWorld);
@@ -1149,9 +1249,43 @@ void UCombatTileMapHUDWidget::SetDirectUnitGestureVisual(bool bVisible, const FV
 	else if (mCombatUIModel->GetSkillUIs().IsValidIndex(mDirectArmedSkillIndex))
 	{
 		const FSkillUI& ArmedSkill = mCombatUIModel->GetSkillUIs()[mDirectArmedSkillIndex];
-		Label = bHasSnappedLanding
-			? FString::Printf(TEXT("%s · 밝은 타일에 놓기"), *ArmedSkill.mName.ToString())
-			: FString::Printf(TEXT("%s · 드래그"), *ArmedSkill.mName.ToString());
+		if (mDirectGripSwapPreview)
+		{
+			Label = TEXT("자리 바꾸기 · 기사 칸에 놓기");
+		}
+		else if (ArmedSkill.mIsPullSkill)
+		{
+			Label = bHasSnappedLanding
+				? FString::Printf(TEXT("당기기 %d칸 · 놓아서 실행"), FMath::Max(Preview.mMoveDistance, 1))
+				: TEXT("기사 주변의 원하는 칸으로 드래그");
+		}
+		else if (ArmedSkill.mIsThrowSkill)
+		{
+			if (Preview.mCollisionTile != FTileIndex::Invalid)
+			{
+				const bool bHitsUnit = mCombatUIModel->GetUnitUIs().ContainsByPredicate([this, &Preview](const FUnitUI& Unit)
+				{
+					return Unit.mUnitId != mDirectUnitGestureTargetId
+						&& Unit.mHP > 0.0f
+						&& Unit.mTile == Preview.mCollisionTile;
+				});
+				Label = bHitsUnit
+					? FString::Printf(TEXT("%s와 충돌 · 둘 다 피해"), *Preview.mCollisionName.ToString())
+					: TEXT("장애물 충돌 · 벽 찍기");
+			}
+			else
+			{
+				Label = bHasSnappedLanding
+					? FString::Printf(TEXT("던지기 %d칸 · 놓아서 실행"), FMath::Max(Preview.mMoveDistance, 1))
+					: TEXT("던질 방향으로 드래그");
+			}
+		}
+		else
+		{
+			Label = bHasSnappedLanding
+				? FString::Printf(TEXT("%s · 밝은 타일에 놓기"), *ArmedSkill.mName.ToString())
+				: FString::Printf(TEXT("%s · 드래그"), *ArmedSkill.mName.ToString());
+		}
 	}
 	mDirectUnitGestureLabel->SetText(FText::FromString(Label));
 	FVector2D GhostWidgetPosition;
@@ -1181,9 +1315,13 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 	const int32 TargetId = mDirectUnitGestureTargetId;
 	const bool bTargetIsPlayer = mDirectUnitGestureTargetIsPlayer;
 	const FVector2D TargetScreen = mDirectUnitGestureTargetScreen;
+	const bool bGripSwap = mDirectGripSwapPreview;
 	mDirectUnitGestureActive = false;
 	mDirectUnitGestureTargetId = INDEX_NONE;
 	SetDirectUnitGestureVisual(false);
+	mDirectGripGesture = false;
+	mDirectGripCanSwap = false;
+	mDirectGripSwapPreview = false;
 	if (mDirectUnitGestureDragged == false)
 	{
 		// 스킬 탭에서 이미 행동을 고른 상태라면 짧은 탭은 선택을 유지한다.
@@ -1218,7 +1356,9 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 		return true;
 	}
 
-	const int32 SkillIndex = mDirectArmedSkillIndex;
+	const int32 SkillIndex = bGripSwap
+		? FindDirectSkillIndex(&FSkillUI::mIsSwapSkill)
+		: mDirectArmedSkillIndex;
 	const TArray<FSkillUI>& Skills = mCombatUIModel->GetSkillUIs();
 	if (Skills.IsValidIndex(SkillIndex) == false)
 	{
@@ -1238,7 +1378,7 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 	if (bExecuted)
 	{
 		if (bIsPullSkill) { mEnemyIntentTutorialInterventionSubmitted = true; }
-		if (bIsThrowSkill) { mEnemyIntentTutorialThrowSubmitted = true; }
+		if (bIsThrowSkill || bGripSwap) { mEnemyIntentTutorialThrowSubmitted = true; }
 		mDirectArmedSkillIndex = INDEX_NONE;
 		mDirectArmedTargetUnitId = INDEX_NONE;
 	}

@@ -93,7 +93,7 @@ void UCombatTileMapHUDWidget::RebuildSkillRailWidgets()
 	RefreshSkillRailWidgets();
 }
 
-/** @details 레일 고정 배치 - 맨 위 칸=기본 공격(평타), 맨 아래 칸=STEP, 중간 4칸=추가 스킬(시각 슬롯 매핑).
+/** @details 레일 고정 배치 - 기본 공격 / 손아귀 / 방해 / 이동의 네 행동군만 표시한다.
  * 슬롯 2상태 - [보유] WBP 빈 프레임 안에 아이콘+코스트를 채운다(사용불가면 흐림) / [미보유] 아무것도 안 그린다.
  * WBP에는 빈 프레임(크롬)만 있으므로 "가리기(검은 커버)"가 필요 없다. 데이터 소스는 FSkillUI 단일. */
 void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
@@ -106,6 +106,9 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 	mSelectedSkillIndex = SkillIndex;
 
 	const TArray<FSkillUI>* Skills = mCombatUIModel != nullptr ? &mCombatUIModel->GetSkillUIs() : nullptr;
+	const FSkillUI* SelectedSkill = (Skills != nullptr && Skills->IsValidIndex(mSelectedSkillIndex))
+		? &(*Skills)[mSelectedSkillIndex]
+		: nullptr;
 
 	for (int32 RailSlotIndex = 0; RailSlotIndex < mSkillRailPanels.Num(); ++RailSlotIndex)
 	{
@@ -113,11 +116,16 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 		const FSkillUI* Skill = (Skills != nullptr && Skills->IsValidIndex(SkillDataIndex)) ? &(*Skills)[SkillDataIndex] : nullptr;
 		const bool bOwned = Skill != nullptr && Skill->mName.IsEmpty() == false;
 		const bool bUsable = bOwned && Skill->mIsUsable;
-		const bool bSelected = bOwned && SkillDataIndex == mSelectedSkillIndex;
+		// 손아귀 카드가 내부적으로 던지기/교환 기술을 골라도 하나의 행동군이 계속 선택된 것처럼 보인다.
+		const bool bSelected = bOwned
+			&& (SkillDataIndex == mSelectedSkillIndex
+				|| (Skill->mIsPullSkill && SelectedSkill != nullptr
+					&& (SelectedSkill->mIsThrowSkill || SelectedSkill->mIsSwapSkill)));
 		const bool bTutorialFocus = bOwned
 			&& Skill->mIsDisplacementSkill
-			&& ((Skill->mIsPullSkill && mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectPull)
-				|| (Skill->mIsThrowSkill && mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectThrow))
+			&& Skill->mIsPullSkill
+			&& (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectPull
+				|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectThrow)
 			&& mEnemyIntentTutorialDismissed == false;
 		const float DimOpacity = bUsable ? 1.0f : 0.45f;
 
@@ -186,7 +194,7 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 				if (Skill->mIsDisplacementSkill)
 				{
 					Role = Skill->mIsPullSkill
-						? TEXT("사거리 적 → 기사 주변 선택 칸")
+						? TEXT("적 드래그 → 당기기 / 던지기 / 교환")
 						: (Skill->mIsThrowSkill ? TEXT("인접 적 → 8방향 투척") : TEXT("위치 개입"));
 				}
 				else if (SkillDataIndex == 1)
@@ -197,19 +205,28 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 				{
 					Role = TEXT("기본 공격");
 				}
-				const FString DiceCost = Skill->mDiceCost > 0
-					? FString::Printf(TEXT("주사위 %d개"), Skill->mDiceCost)
-					: TEXT("주사위 없음");
+				const FString DiceCost = Skill->mIsPullSkill
+					? TEXT("주사위 1~3개 자동")
+					: (Skill->mDiceCost > 0
+						? FString::Printf(TEXT("주사위 %d개"), Skill->mDiceCost)
+						: TEXT("주사위 없음"));
 				const int32 Range = FMath::RoundToInt(Skill->mTargeting.mSelectRange);
 				const FString RangeText = Range > 0 ? FString::Printf(TEXT(" · 거리 %d"), Range) : TEXT("");
 				const FString StateText = bUsable ? TEXT("") : TEXT(" · 사용 불가");
-				SkillRailText->SetText(FText::FromString(FString::Printf(
-					TEXT("%s\n%s · %s%s%s"),
-					*Skill->mName.ToString(),
-					*Role,
-					*DiceCost,
-					*RangeText,
-					*StateText)));
+				const FString CardText = Skill->mIsPullSkill
+					? FString::Printf(
+						TEXT("%s\n당기기 / 던지기 / 교환\n거리 %d · 주사위 1~3 자동%s"),
+						*Skill->mName.ToString(),
+						Range,
+						*StateText)
+					: FString::Printf(
+						TEXT("%s\n%s · %s%s%s"),
+						*Skill->mName.ToString(),
+						*Role,
+						*DiceCost,
+						*RangeText,
+						*StateText);
+				SkillRailText->SetText(FText::FromString(CardText));
 				SkillRailText->SetColorAndOpacity(FSlateColor(bSelected || bTutorialFocus
 					? FLinearColor(1.0f, 0.88f, 0.34f, 1.0f)
 					: FLinearColor(0.86f, 0.96f, 1.0f, DimOpacity)));
@@ -239,28 +256,37 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 	RefreshContextActions();
 }
 
-/** @details 시각 슬롯 규칙은 헤더 주석 참고. 반환 전에 보유 여부(FSkillUI 이름)까지 검증해 미보유면 INDEX_NONE. */
+/** @details 개별 밀기/교환 데이터는 손아귀의 내부 실행 수단으로만 남기고 레일에는 노출하지 않는다. */
 int32 UCombatTileMapHUDWidget::GetSkillDataIndexForRailSlot(int32 RailSlotIndex) const
 {
-	int32 SkillDataIndex = INDEX_NONE;
-	if (RailSlotIndex == 0)
-	{
-		SkillDataIndex = 0;                                // 맨 위 고정: 기본 공격(평타)
-	}
-	else if (RailSlotIndex == CombatSkillSlotCount - 1)
-	{
-		SkillDataIndex = 1;                                // 맨 아래 고정: 기본 이동(STEP)
-	}
-	else if (RailSlotIndex >= 1 && RailSlotIndex < CombatSkillSlotCount - 1)
-	{
-		SkillDataIndex = RailSlotIndex + 1;                // 중간 4칸: 추가 스킬(데이터 2..5)을 위에서부터
-	}
-
 	if (mCombatUIModel == nullptr)
 	{
 		return INDEX_NONE;
 	}
 	const TArray<FSkillUI>& Skills = mCombatUIModel->GetSkillUIs();
+	int32 SkillDataIndex = INDEX_NONE;
+	if (RailSlotIndex == 0)
+	{
+		SkillDataIndex = 0; // 기본 공격
+	}
+	else if (RailSlotIndex == CombatSkillSlotCount - 1)
+	{
+		SkillDataIndex = 1; // 이동
+	}
+	else
+	{
+		const bool FSkillUI::* WantedFlag = RailSlotIndex == 1
+			? &FSkillUI::mIsPullSkill
+			: &FSkillUI::mIsStaggerSkill;
+		for (int32 CandidateIndex = 0; CandidateIndex < Skills.Num(); ++CandidateIndex)
+		{
+			if (Skills[CandidateIndex].*WantedFlag)
+			{
+				SkillDataIndex = CandidateIndex;
+				break;
+			}
+		}
+	}
 	if (Skills.IsValidIndex(SkillDataIndex) == false || Skills[SkillDataIndex].mName.IsEmpty() == true)
 	{
 		return INDEX_NONE;
