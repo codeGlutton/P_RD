@@ -125,8 +125,11 @@ void UCombatTileMapHUDWidget::UpdateDisplacementPreviewVisuals(float InDeltaTime
 		HidePreviewWidget(mDisplacementTargetLabel);
 	}
 
-	const bool bChoosingDirection = Preview.mIsThrow
-		&& mCombatUIModel->GetTurnUI().mPhase == ECombatBuildPhaseUI::ThrowDestinationSelection;
+	const bool bDraggingThisTarget = mDirectUnitGestureActive
+		&& mDirectArmedTargetUnitId == Preview.mTargetUnitId;
+	const bool bChoosingDirection = (Preview.mIsPull || Preview.mIsThrow)
+		&& (mCombatUIModel->GetTurnUI().mPhase == ECombatBuildPhaseUI::ThrowDestinationSelection
+			|| bDraggingThisTarget);
 	int32 VisibleDirectionCount = 0;
 	if (bChoosingDirection && bTargetOnScreen)
 	{
@@ -137,7 +140,7 @@ void UCombatTileMapHUDWidget::UpdateDisplacementPreviewVisuals(float InDeltaTime
 			if (Project(CandidateWorld + FVector(0.0f, 0.0f, 42.0f), CandidateScreen) == false) { continue; }
 			UTextBlock* Label = mDisplacementDirectionLabels[VisibleDirectionCount++];
 			if (Label == nullptr) { continue; }
-			Label->SetText(FText::FromString(TEXT("➜")));
+			Label->SetText(FText::FromString(Preview.mIsPull ? TEXT("◆") : TEXT("➜")));
 			const FVector2D Delta = CandidateScreen - TargetScreen;
 			FWidgetTransform Transform;
 			Transform.Angle = FMath::RadiansToDegrees(FMath::Atan2(Delta.Y, Delta.X));
@@ -188,7 +191,7 @@ void UCombatTileMapHUDWidget::UpdateDisplacementPreviewVisuals(float InDeltaTime
 		if (mDisplacementLandingLabel != nullptr)
 		{
 			const FString LandingText = Preview.mIsPull
-				? TEXT("여기로 당김")
+				? TEXT("선택한 칸으로 당김")
 				: (Preview.mIsSwap
 					? TEXT("서로 자리 교환")
 					: (Preview.mIsStagger

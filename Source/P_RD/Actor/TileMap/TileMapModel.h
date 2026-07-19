@@ -350,6 +350,16 @@ public:
 	TArray<FTileIndex> GetPullPath(const FTileIndex& Puller, const FTileIndex& Pulled, int32 MaxDistance) const;
 
 	/**
+	 * @brief 선택한 빈칸까지 대상을 8방향 직선으로 당기는 경로를 반환한다.
+	 * @details Pulled에서 Destination을 향해 긴 축부터 줄이며 이동한다. 플레이어·장애물·다른 유닛을
+	 * 관통하지 않고 막히기 직전까지만 반환하므로, Last()==Destination일 때만 완전한 후보 경로다.
+	 */
+	TArray<FTileIndex> GetPullPathToDestination(
+		const FTileIndex& Pulled,
+		const FTileIndex& Destination,
+		int32 MaxDistance) const;
+
+	/**
 	 * 진입 액터를 해당 타일에 배치할 수 있는지 검사하는 함수
 	 * @details 막히지 않았거나, 막혔어도 기존 액터를 교체할 수 있으면 배치 가능
 	 * @param TileIndex 검사할 타일 인덱스

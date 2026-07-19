@@ -294,9 +294,25 @@ bool USRPGSkillAction::TryStartDiceDisplacement(const FActiveSkillContext& Conte
     const FTileIndex InstigatorTile = mInstigator->GetTileTransform().mIndex;
     const FTileIndex TargetTile = DisplacementTarget->GetTileTransform().mIndex;
     const int32 RequestedDistance = FMath::Max(Context.mDiceSum, 1);
-    const int32 DistanceToInstigator = FMath::Max(
-        FMath::Abs(TargetTile.mX - InstigatorTile.mX),
-        FMath::Abs(TargetTile.mY - InstigatorTile.mY));
+	const int32 DistanceToInstigator = FMath::Max(
+		FMath::Abs(TargetTile.mX - InstigatorTile.mX),
+		FMath::Abs(TargetTile.mY - InstigatorTile.mY));
+	int32 PullDistance = 0;
+	if (bIsPull)
+	{
+		const int32 DestinationToInstigator = mDiceDisplacementDestination == FTileIndex::Invalid
+			? MAX_int32
+			: FMath::Max(
+				FMath::Abs(mDiceDisplacementDestination.mX - InstigatorTile.mX),
+				FMath::Abs(mDiceDisplacementDestination.mY - InstigatorTile.mY));
+		if (DestinationToInstigator != 1)
+		{
+			return false;
+		}
+		PullDistance = FMath::Max(
+			FMath::Abs(mDiceDisplacementDestination.mX - TargetTile.mX),
+			FMath::Abs(mDiceDisplacementDestination.mY - TargetTile.mY));
+	}
 	int32 ThrowDistance = 0;
 	FTileIndex ThrowStep;
 	if (bIsThrow)
@@ -319,8 +335,8 @@ bool USRPGSkillAction::TryStartDiceDisplacement(const FActiveSkillContext& Conte
 			SelectedDistance,
 			FMath::Clamp(RequestedDistance + 1 - WeightValue, 1, 4));
 	}
-    const int32 DesiredDistance = bIsPull
-		? FMath::Max(DistanceToInstigator - 1, 0)
+	const int32 DesiredDistance = bIsPull
+		? PullDistance
 		: ThrowDistance;
 
     mDiceDisplacementTarget = DisplacementTarget;
@@ -384,8 +400,11 @@ bool USRPGSkillAction::TryStartDiceDisplacement(const FActiveSkillContext& Conte
 	}
 	if (bIsPull)
 	{
-		// 갈고리는 사거리 안의 적을 발앞까지 끌어오는 독립 행동이다.
-		mDiceDisplacementPath = TileMap->GetPullPath(InstigatorTile, TargetTile, DesiredDistance);
+		// 갈고리는 플레이어 주변에서 직접 고른 빈칸까지 적을 끌어온다.
+		mDiceDisplacementPath = TileMap->GetPullPathToDestination(
+			TargetTile,
+			mDiceDisplacementDestination,
+			DesiredDistance);
 	}
 	else if (bIsThrow)
 	{
@@ -422,8 +441,8 @@ bool USRPGSkillAction::TryStartDiceDisplacement(const FActiveSkillContext& Conte
 		FTileIndex CollisionStep;
 		if (bIsPull)
 		{
-			const int32 DeltaX = InstigatorTile.mX - Destination.mX;
-			const int32 DeltaY = InstigatorTile.mY - Destination.mY;
+			const int32 DeltaX = mDiceDisplacementDestination.mX - Destination.mX;
+			const int32 DeltaY = mDiceDisplacementDestination.mY - Destination.mY;
 			const int32 AbsX = FMath::Abs(DeltaX);
 			const int32 AbsY = FMath::Abs(DeltaY);
 			CollisionStep = FTileIndex(

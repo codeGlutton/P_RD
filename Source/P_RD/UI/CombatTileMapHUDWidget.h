@@ -275,8 +275,8 @@ private:
 	void UpdateDirectUnitGesture(const FVector2D& ScreenPosition);
 	bool EndDirectUnitGesture(const FVector2D& ScreenPosition);
 	void SetDirectUnitGestureVisual(bool bVisible, const FVector2D& ScreenPosition = FVector2D::ZeroVector);
-	/** @brief 화면 좌표 아래 타일 중심의 월드 위치를 구한다. */
-	bool GetDirectGestureTileWorldLocation(const FVector2D& ScreenPosition, FVector& OutWorldLocation) const;
+	/** @brief 화면 좌표 아래 타일 평면의 정확한 터치 월드 위치를 구한다(타일 중심으로 스냅하지 않음). */
+	bool GetDirectGestureFloorWorldLocation(const FVector2D& ScreenPosition, FVector& OutWorldLocation) const;
 	/** @brief 대상 유닛 메시를 복제한 충돌 없는 반투명 드래그 고스트를 준비한다. */
 	void EnsureDirectUnitGestureGhost(int32 TargetUnitId);
 	void DestroyDirectUnitGestureGhost();
@@ -286,7 +286,7 @@ private:
 	bool SelectSkillWithAutomaticDice(int32 SkillIndex, int32 DesiredPower);
 	/** @brief 컨텍스트 행동을 드래그 전에 실제 조준 상태까지 준비한다. */
 	bool PrepareDirectSkill(int32 SkillIndex, const FVector2D& TargetScreenPosition, int32 DesiredPower);
-	/** @brief 던지기 드래그 방향을 게임플레이가 계산한 유효 방향 후보에 스냅한다. */
+	/** @brief 당기기/던지기 드래그 방향을 게임플레이가 계산한 유효 착지 후보에 스냅한다. */
 	bool SelectDirectThrowDestination(const FVector2D& TargetScreenPosition, const FVector2D& DestinationScreenPosition);
 	int32 FindDirectSkillIndex(bool FSkillUI::* SkillFlag) const;
 	/** @brief 선택된 유닛/현재 주사위/사거리에 맞춰 컨텍스트 행동 목록과 강조를 다시 그린다. */

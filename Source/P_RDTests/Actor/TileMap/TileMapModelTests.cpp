@@ -142,5 +142,30 @@ bool FTileMapModelEffectTilesTests::RunTest(const FString& Parameters)
 		TestFalse(TEXT("[Case6] Puller 점유 칸 미진입"), PullPath.Contains(FTileIndex(0, 0)));
 	}
 
+	/** Case7: 플레이어 주변에서 고른 대각 빈칸까지 정확히 수렴한다. */
+	AddInfo(TEXT("=== Case7: 선택 착지칸 당기기 ==="));
+	{
+		UTileMapModel* OpenMap = NewObject<UTileMapModel>(World);
+		OpenMap->SetDimensions(10, 6);
+		const TArray<FTileIndex> PullPath = OpenMap->GetPullPathToDestination(
+			FTileIndex(8, 2), FTileIndex(5, 1), 8);
+		TestTrue(TEXT("[Case7] 적 출발 좌표 보존"), PullPath.Num() > 0 && PullPath[0] == FTileIndex(8, 2));
+		TestTrue(TEXT("[Case7] 선택한 (5,1)에 도착"), PullPath.Num() > 0 && PullPath.Last() == FTileIndex(5, 1));
+	}
+
+	/** Case8: 반대편 후보로 가는 선이 플레이어 칸을 관통하면 후보 경로를 완주하지 못한다. */
+	AddInfo(TEXT("=== Case8: 선택 착지칸 경로의 플레이어 관통 차단 ==="));
+	{
+		UTileMapModel* PullMap = NewObject<UTileMapModel>(World);
+		PullMap->SetDimensions(10, 6);
+		UMockPlayerUnitModel* Puller = NewObject<UMockPlayerUnitModel>(World);
+		PullMap->PlaceActor(FTileTransform(FTileIndex(4, 2)), Puller);
+		const TArray<FTileIndex> BlockedPath = PullMap->GetPullPathToDestination(
+			FTileIndex(8, 2), FTileIndex(3, 1), 8);
+		TestTrue(TEXT("[Case8] 플레이어 앞에서 정지"), BlockedPath.Num() > 0 && BlockedPath.Last() == FTileIndex(5, 2));
+		TestFalse(TEXT("[Case8] 플레이어 칸 미진입"), BlockedPath.Contains(FTileIndex(4, 2)));
+		TestFalse(TEXT("[Case8] 플레이어 반대편 목적지 도달 금지"), BlockedPath.Contains(FTileIndex(3, 1)));
+	}
+
 	return true;
 }

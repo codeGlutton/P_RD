@@ -85,6 +85,46 @@ namespace
 		return FMath::Clamp(FMath::Max(DiceValue, 1) + 1 - WeightValue, 1, 4);
 	}
 
+	TArray<FTileIndex> BuildPullDestinationIndexes(
+		UTileMapModel* TileMap,
+		const UUnitModel* Instigator,
+		UUnitModel* TargetUnit)
+	{
+		TArray<FTileIndex> Result;
+		if (TileMap == nullptr || Instigator == nullptr || TargetUnit == nullptr)
+		{
+			return Result;
+		}
+
+		const FTileIndex PlayerTile = Instigator->GetTileTransform().mIndex;
+		const FTileIndex TargetTile = TargetUnit->GetTileTransform().mIndex;
+		for (int32 StepX = -1; StepX <= 1; ++StepX)
+		{
+			for (int32 StepY = -1; StepY <= 1; ++StepY)
+			{
+				if (StepX == 0 && StepY == 0)
+				{
+					continue;
+				}
+				const FTileIndex Candidate(PlayerTile.mX + StepX, PlayerTile.mY + StepY);
+				if (Candidate == TargetTile
+					|| TileMap->IsValidIndex(Candidate) == false
+					|| TileMap->CanPlace(Candidate, TargetUnit) == false)
+				{
+					continue;
+				}
+
+				// 플레이어 몸이나 장애물을 뚫지 않고 적에서 후보 칸까지 완주할 수 있는 방향만 노출한다.
+				const TArray<FTileIndex> Path = TileMap->GetPullPathToDestination(TargetTile, Candidate, 64);
+				if (Path.IsEmpty() == false && Path.Last() == Candidate)
+				{
+					Result.Add(Candidate);
+				}
+			}
+		}
+		return Result;
+	}
+
 	UBoardActorModel* FindBlockingOccupantExcept(
 		UTileMapModel* TileMap,
 		const FTileIndex& TileIndex,
@@ -137,7 +177,7 @@ namespace
 		}
 
 		// 던지기는 이미 인접한 적만 집어 들고, 적의 현재 칸을 중심으로 8방향을 고른다.
-		// 당기기와 입력 규칙을 분리해 발앞 칸이 숨은 모드 전환으로 해석되지 않게 한다.
+		// 당기기와 입력 규칙을 분리해 기사 주변 착지 선택이 숨은 모드 전환으로 해석되지 않게 한다.
 		const int32 ThrowDistance = GetPullThrowDistance(DiceValue, TargetUnit);
 		for (int32 StepX = -1; StepX <= 1; ++StepX)
 		{
@@ -435,8 +475,8 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
 					break;
 				}
 
-				// 던지기 방향은 프리뷰 중에도 다른 화살표로 교체할 수 있다.
-				if (IsDiceThrowBuildSkill(mSelectedSkill)
+				// 당기기/던지기 착지칸은 프리뷰 중에도 드래그해서 즉시 교체할 수 있다.
+				if ((IsDicePullBuildSkill(mSelectedSkill) || IsDiceThrowBuildSkill(mSelectedSkill))
 					&& CanSelectThrowDestinationTile(TargetTileIndex))
 				{
 					SetBuildPhase(ESRPGSkillBuildPhase::ThrowDestinationSelection);
@@ -472,8 +512,19 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
                 {
                     ResetTargetTile();
                     SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
-					if (IsDicePullBuildSkill(mSelectedSkill)
-						|| IsDiceStaggerBuildSkill(mSelectedSkill)
+					if (IsDicePullBuildSkill(mSelectedSkill))
+					{
+						LockDisplacementTarget(TargetTileIndex);
+						if (mThrowDestinationIndexes.IsEmpty())
+						{
+							ResetTargetTile();
+							RefreshAimableTileHighlights();
+							break;
+						}
+						RefreshThrowDestinationHighlights();
+						SetBuildPhase(ESRPGSkillBuildPhase::ThrowDestinationSelection);
+					}
+					else if (IsDiceStaggerBuildSkill(mSelectedSkill)
 						|| IsDiceSwapBuildSkill(mSelectedSkill))
 					{
 						LockDisplacementTarget(TargetTileIndex);
@@ -650,7 +701,14 @@ void USRPGSkillBuildAction::LockDisplacementTarget(const FTileIndex& TargetIndex
 	mTargetIndex = TargetIndex;
 	mDisplacementDestination = FTileIndex::Invalid;
 	mThrowDestinationIndexes.Reset();
-	if (IsDiceThrowBuildSkill(mSelectedSkill))
+	if (IsDicePullBuildSkill(mSelectedSkill))
+	{
+		mThrowDestinationIndexes = BuildPullDestinationIndexes(
+			TileMap,
+			mInstigator.Get(),
+			TargetUnit);
+	}
+	else if (IsDiceThrowBuildSkill(mSelectedSkill))
 	{
 		mThrowDestinationIndexes = BuildThrowDestinationIndexes(
 			TileMap,
@@ -785,7 +843,7 @@ void USRPGSkillBuildAction::RefreshThrowDestinationHighlights()
 	}
 
 	ClearAllTileHighlights();
-	// 바닥색은 클릭 가능한 종점만 보조한다. HUD가 이 좌표 위에 큰 8방향 화살표를 따로 그린다.
+	// 바닥색은 클릭 가능한 종점만 보조한다. HUD가 당기기/던지기의 후보를 크게 따로 그린다.
 	TileMap->SetTileHighlight(mThrowDestinationIndexes, ETileHighlightFlag::Aim);
 	TileMap->SetTileHighlight(TArray<FTileIndex>({ mTargetIndex }), ETileHighlightFlag::Select);
 }
@@ -827,7 +885,10 @@ void USRPGSkillBuildAction::RefreshEffectTileHighlights()
 	TArray<FTileIndex> Trajectory;
 	if (bIsPull)
 	{
-		Trajectory = TileMap->GetPullPath(InstigatorTile, TargetTile, 64);
+		if (mDisplacementDestination != FTileIndex::Invalid)
+		{
+			Trajectory = TileMap->GetPullPathToDestination(TargetTile, mDisplacementDestination, 64);
+		}
 	}
 	else if (bIsStagger)
 	{
@@ -871,9 +932,11 @@ void USRPGSkillBuildAction::RefreshEffectTileHighlights()
 	}
 	mEffectTileIndexes = Trajectory;
 	ClearAllTileHighlights();
-	const FTileIndex SelectedTile = bIsPull || bIsSwap
-		? Trajectory.Last()
-		: (mDisplacementDestination != FTileIndex::Invalid ? mDisplacementDestination : Trajectory.Last());
+	const FTileIndex SelectedTile = bIsPull
+		? mDisplacementDestination
+		: (bIsSwap
+			? Trajectory.Last()
+			: (mDisplacementDestination != FTileIndex::Invalid ? mDisplacementDestination : Trajectory.Last()));
 	TileMap->SetTileHighlight(TArray<FTileIndex>({ SelectedTile }), ETileHighlightFlag::Select);
 	TileMap->SetTileHighlight(Trajectory, ETileHighlightFlag::Effect);
 }
@@ -927,7 +990,7 @@ bool USRPGSkillBuildAction::CanSelectTargetTile(const FTileIndex& Index) const
 
 bool USRPGSkillBuildAction::CanSelectThrowDestinationTile(const FTileIndex& Index) const
 {
-	return IsDiceThrowBuildSkill(mSelectedSkill)
+	return (IsDicePullBuildSkill(mSelectedSkill) || IsDiceThrowBuildSkill(mSelectedSkill))
 		&& mTargetIndex != FTileIndex::Invalid
 		&& mThrowDestinationIndexes.Contains(Index);
 }

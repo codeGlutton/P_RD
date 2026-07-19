@@ -289,7 +289,7 @@ void ACombatGameMode::InitializeRoom()
 	CombatModel->OnEnemyIntentsChangedUI.AddWeakLambda(this, [this]() {
 		// 플레이어 행동 뒤 재계획 시점에는 강제 이동도 이미 끝나 있다. 컨텍스트 액션은
 		// FUnitUI의 타일 스냅샷으로 인접 여부를 판단하므로, 계획보다 먼저 현재 좌표를 밀어
-		// 발앞까지 끌려온 적의 '붙잡아 던지기'가 즉시 다시 나타나게 한다.
+		// 기사 주변의 선택 칸까지 끌려온 적의 '붙잡아 던지기'가 즉시 다시 나타나게 한다.
 		PushUnitUIData();
 		PushEnemyIntentUIData();
 		if (USRPGCombatModel* UpdatedCombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
@@ -1167,7 +1167,7 @@ void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 				? NSLOCTEXT(
 					"CombatGameMode",
 					"PullSkillDescription",
-					"[당기기] 사거리 안의 적을 플레이어 앞 빈칸까지 끌어옵니다. 대상 위 사슬과 반투명 도착 표시를 확인한 뒤 실행 버튼으로 확정합니다.")
+					"[당기기] 적을 드래그해 플레이어 주변의 유효한 빈칸을 직접 고릅니다. 손가락을 따라오는 적과 밝은 착지 타일을 보고 놓으면 실행됩니다.")
 				: StaticSkillData->mDescription);
 		SkillDetailUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 		SkillDetailUIData.mDiceCost = StaticSkillData->mRequiredDiceCount;

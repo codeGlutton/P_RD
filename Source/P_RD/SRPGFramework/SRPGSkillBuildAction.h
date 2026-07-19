@@ -164,10 +164,10 @@ protected:
 	TArray<FTileIndex> mEffectTileIndexes;
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TargetIndex"))
 	FTileIndex mTargetIndex = FTileIndex::Invalid;
-	/** @brief 던지기에서 사용자가 고른 방향의 최종 착지/충돌 칸. 당기기에서는 Invalid다. */
+	/** @brief 당기기/던지기에서 사용자가 드래그로 고른 최종 착지/충돌 칸. */
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DisplacementDestination"))
 	FTileIndex mDisplacementDestination = FTileIndex::Invalid;
-	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ThrowDestinationIndexes"))
+	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DisplacementDestinationIndexes"))
 	TArray<FTileIndex> mThrowDestinationIndexes;
 };
 

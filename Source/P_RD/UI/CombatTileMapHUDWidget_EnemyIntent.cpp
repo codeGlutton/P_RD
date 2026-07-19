@@ -422,8 +422,8 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 			DirectMessage = TEXT("회색으로 밝혀지는 타일이 이 스킬의 실제 사거리입니다");
 			break;
 		case EEnemyIntentTutorialStage::ConfirmDestination:
-			DirectTitle = TEXT("2 / 4   사거리 안의 주황색 적을 기사 쪽으로 드래그하세요");
-			DirectMessage = TEXT("선 대신 반투명 적이 실제 도착 타일을 미리 보여줍니다");
+			DirectTitle = TEXT("2 / 4   주황색 적을 기사 주변의 원하는 빈칸으로 드래그하세요");
+			DirectMessage = TEXT("적은 손가락을 따라오고, ◆와 밝은 타일이 실제 도착칸을 보여줍니다");
 			break;
 		case EEnemyIntentTutorialStage::ApplyingIntervention:
 			DirectTitle = TEXT("좋아요!  적을 끌어오는 중");
@@ -911,7 +911,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime
 		case EEnemyIntentTutorialStage::SelectThrowDice:   PointerText = TEXT("새 숫자 클릭"); break;
 		case EEnemyIntentTutorialStage::SelectThrowTarget: PointerText = TEXT("당겨온 적을 한 번 탭"); break;
 		case EEnemyIntentTutorialStage::SelectThrowDestination: PointerText = TEXT("던질 방향 클릭"); break;
-		case EEnemyIntentTutorialStage::ConfirmDestination: PointerText = TEXT("같은 적을 기사 쪽으로 드래그"); break;
+		case EEnemyIntentTutorialStage::ConfirmDestination: PointerText = TEXT("같은 적을 원하는 ◆ 칸으로 드래그"); break;
 		case EEnemyIntentTutorialStage::ConfirmThrow:      PointerText = TEXT("같은 적을 던질 방향으로 드래그"); break;
 		case EEnemyIntentTutorialStage::EndTurnAndObserve: PointerText = TEXT("턴 종료 클릭"); break;
 		default: break;

@@ -449,7 +449,7 @@ void UCombatTileMapHUDWidget::RefreshContextActions()
 			FString Role = TEXT("공격");
 			if (Skill->mIsPullSkill)
 			{
-				Role = TEXT("내 쪽 드래그");
+				Role = TEXT("기사 주변 칸으로 드래그");
 			}
 			else if (Skill->mIsThrowSkill)
 			{
@@ -764,7 +764,7 @@ bool UCombatTileMapHUDWidget::SelectDirectThrowDestination(
 		return false;
 	}
 	APlayerController* PlayerController = GetOwningPlayer();
-	float BestDirectionScore = -2.0f;
+	float BestCandidateScore = -BIG_NUMBER;
 	FVector2D BestCandidateScreen = FVector2D::ZeroVector;
 	FVector BestCandidateWorld = FVector::ZeroVector;
 	bool bFoundCandidate = false;
@@ -782,9 +782,12 @@ bool UCombatTileMapHUDWidget::SelectDirectThrowDestination(
 			const float DirectionScore = FVector2D::DotProduct(
 				(CandidateScreen - TargetScreenPosition).GetSafeNormal(),
 				RequestedDirection);
-			if (DirectionScore > BestDirectionScore)
+			const float TouchDistance = FVector2D::Distance(CandidateScreen, DestinationScreenPosition);
+			const float ProximityScore = 1.0f - FMath::Clamp(TouchDistance / 520.0f, 0.0f, 1.0f);
+			const float CandidateScore = DirectionScore * 0.45f + ProximityScore * 0.55f;
+			if (CandidateScore > BestCandidateScore)
 			{
-				BestDirectionScore = DirectionScore;
+				BestCandidateScore = CandidateScore;
 				BestCandidateScreen = CandidateScreen;
 				BestCandidateWorld = CandidateWorld;
 				bFoundCandidate = true;
@@ -907,14 +910,15 @@ void UCombatTileMapHUDWidget::UpdateDirectUnitGesture(const FVector2D& ScreenPos
 	if (mDirectUnitGestureDragged
 		&& mCombatUIModel != nullptr
 		&& mCombatUIModel->GetSkillUIs().IsValidIndex(mDirectArmedSkillIndex)
-		&& mCombatUIModel->GetSkillUIs()[mDirectArmedSkillIndex].mIsThrowSkill)
+		&& (mCombatUIModel->GetSkillUIs()[mDirectArmedSkillIndex].mIsPullSkill
+			|| mCombatUIModel->GetSkillUIs()[mDirectArmedSkillIndex].mIsThrowSkill))
 	{
 		SelectDirectThrowDestination(mDirectUnitGestureTargetScreen, ScreenPosition);
 	}
 	SetDirectUnitGestureVisual(true, ScreenPosition);
 }
 
-bool UCombatTileMapHUDWidget::GetDirectGestureTileWorldLocation(
+bool UCombatTileMapHUDWidget::GetDirectGestureFloorWorldLocation(
 	const FVector2D& ScreenPosition,
 	FVector& OutWorldLocation) const
 {
@@ -939,12 +943,12 @@ bool UCombatTileMapHUDWidget::GetDirectGestureTileWorldLocation(
 	{
 		return false;
 	}
-	const FTileIndex Tile = TileMap->WorldToTileIndex(HitResult.ImpactPoint);
-	if (TileMap->IsValidIndex(Tile) == false)
+	if (TileMap->IsValidIndex(TileMap->WorldToTileIndex(HitResult.ImpactPoint)) == false)
 	{
 		return false;
 	}
-	OutWorldLocation = TileMap->TileToWorldLocation(Tile);
+	// 스냅된 착지칸은 게임플레이 프리뷰가 따로 보여준다. 이 고스트는 손가락을 그대로 따라간다.
+	OutWorldLocation = HitResult.ImpactPoint;
 	return true;
 }
 
@@ -1052,19 +1056,37 @@ void UCombatTileMapHUDWidget::SetDirectUnitGestureVisual(bool bVisible, const FV
 		return;
 	}
 
-	FVector GhostFloorWorld = FVector::ZeroVector;
-	bool bHasGhostFloor = false;
+	FVector SnappedLandingWorld = FVector::ZeroVector;
+	bool bHasSnappedLanding = false;
 	const FDisplacementPreviewUI& Preview = mCombatUIModel->GetDisplacementPreview();
 	if (Preview.mIsActive
 		&& Preview.mTargetUnitId == mDirectUnitGestureTargetId
 		&& Preview.mLandingTile != FTileIndex::Invalid)
 	{
-		GhostFloorWorld = Preview.mLandingWorldLocation;
+		SnappedLandingWorld = Preview.mLandingWorldLocation;
+		bHasSnappedLanding = true;
+	}
+
+	FVector TouchFloorWorld = FVector::ZeroVector;
+	const bool bHasTouchFloor = GetDirectGestureFloorWorldLocation(ScreenPosition, TouchFloorWorld);
+	// 드래그하는 동안 3D 적은 손가락을 부드럽게 따라간다. 타일 중심의 최종 결과는 기존
+	// Select 타일과 착지 초상 고스트가 동시에 표시하므로, 조작 위치와 판정 위치를 둘 다 볼 수 있다.
+	FVector GhostFloorWorld = FVector::ZeroVector;
+	bool bHasGhostFloor = false;
+	if (mDirectUnitGestureDragged && bHasTouchFloor)
+	{
+		GhostFloorWorld = TouchFloorWorld;
 		bHasGhostFloor = true;
 	}
-	if (bHasGhostFloor == false)
+	else if (bHasSnappedLanding)
 	{
-		bHasGhostFloor = GetDirectGestureTileWorldLocation(ScreenPosition, GhostFloorWorld);
+		GhostFloorWorld = SnappedLandingWorld;
+		bHasGhostFloor = true;
+	}
+	else if (bHasTouchFloor)
+	{
+		GhostFloorWorld = TouchFloorWorld;
+		bHasGhostFloor = true;
 	}
 	if (bHasGhostFloor == false)
 	{
@@ -1091,16 +1113,19 @@ void UCombatTileMapHUDWidget::SetDirectUnitGestureVisual(bool bVisible, const FV
 	mDirectUnitGestureGhostActor->SetActorLocationAndRotation(
 		GhostActorLocation, SourceUnit->GetActorRotation());
 
-	FString Label = TEXT("예상 위치 · 놓아서 실행");
+	FString Label = bHasSnappedLanding
+		? TEXT("손가락을 따라 이동 · 밝은 타일에 배치")
+		: TEXT("원하는 칸 쪽으로 드래그");
 	if (mDirectArmedSkillIndex == ContextMoveAction)
 	{
 		Label = TEXT("이동할 위치");
 	}
 	else if (mCombatUIModel->GetSkillUIs().IsValidIndex(mDirectArmedSkillIndex))
 	{
-		Label = FString::Printf(
-			TEXT("%s · 예상 위치"),
-			*mCombatUIModel->GetSkillUIs()[mDirectArmedSkillIndex].mName.ToString());
+		const FSkillUI& ArmedSkill = mCombatUIModel->GetSkillUIs()[mDirectArmedSkillIndex];
+		Label = bHasSnappedLanding
+			? FString::Printf(TEXT("%s · 밝은 타일에 놓기"), *ArmedSkill.mName.ToString())
+			: FString::Printf(TEXT("%s · 드래그"), *ArmedSkill.mName.ToString());
 	}
 	mDirectUnitGestureLabel->SetText(FText::FromString(Label));
 	FVector2D GhostWidgetPosition;
@@ -1176,7 +1201,9 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 		TryOpenContextActionsAtScreenPosition(TargetScreen);
 		return true;
 	}
-	const FVector2D* Destination = Skills[SkillIndex].mIsThrowSkill ? &ScreenPosition : nullptr;
+	const FVector2D* Destination = (Skills[SkillIndex].mIsPullSkill || Skills[SkillIndex].mIsThrowSkill)
+		? &ScreenPosition
+		: nullptr;
 	const float DragLength = FVector2D::Distance(ScreenPosition, TargetScreen);
 	const int32 DesiredPower = FMath::Clamp(FMath::RoundToInt(DragLength / 72.0f), 1, 6);
 	const bool bExecuted = ExecuteDirectSkill(SkillIndex, TargetScreen, Destination, DesiredPower);

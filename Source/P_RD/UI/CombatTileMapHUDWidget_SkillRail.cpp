@@ -186,7 +186,7 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 				if (Skill->mIsDisplacementSkill)
 				{
 					Role = Skill->mIsPullSkill
-						? TEXT("사거리 적 → 내 앞으로")
+						? TEXT("사거리 적 → 기사 주변 선택 칸")
 						: (Skill->mIsThrowSkill ? TEXT("인접 적 → 8방향 투척") : TEXT("위치 개입"));
 				}
 				else if (SkillDataIndex == 1)

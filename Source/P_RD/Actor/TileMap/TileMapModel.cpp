@@ -941,6 +941,48 @@ TArray<FTileIndex> UTileMapModel::GetPullPath(const FTileIndex& Puller, const FT
 	return Path;
 }
 
+TArray<FTileIndex> UTileMapModel::GetPullPathToDestination(
+	const FTileIndex& Pulled,
+	const FTileIndex& Destination,
+	int32 MaxDistance) const
+{
+	TArray<FTileIndex> Path;
+	if (!IsValidIndex(Pulled) || !IsValidIndex(Destination) || MaxDistance <= 0)
+	{
+		if (IsValidIndex(Pulled))
+		{
+			Path.Add(Pulled);
+		}
+		return Path;
+	}
+
+	FTileIndex Current = Pulled;
+	Path.Add(Current);
+	for (int32 Distance = 0; Distance < MaxDistance && Current != Destination; ++Distance)
+	{
+		const int32 DeltaX = Destination.mX - Current.mX;
+		const int32 DeltaY = Destination.mY - Current.mY;
+		const int32 AbsX = FMath::Abs(DeltaX);
+		const int32 AbsY = FMath::Abs(DeltaY);
+		const FTileIndex Step(
+			AbsX >= AbsY ? FMath::Sign(DeltaX) : 0,
+			AbsY >= AbsX ? FMath::Sign(DeltaY) : 0);
+		if (Step.mX == 0 && Step.mY == 0)
+		{
+			break;
+		}
+
+		const FTileIndex Next(Current.mX + Step.mX, Current.mY + Step.mY);
+		if (!IsValidIndex(Next) || IsOccupied(Next))
+		{
+			break;
+		}
+		Current = Next;
+		Path.Add(Current);
+	}
+	return Path;
+}
+
 TArray<UBoardActorModel*> UTileMapModel::GetActorsOnTile(const FTileIndex& TileIndex, ETileLayerFlag LayerFilter) const
 {
 	TArray<UBoardActorModel*> Result;
