@@ -26,7 +26,11 @@ FReply UCombatTileMapHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeome
 		{
 			return FReply::Handled();
 		}
-		// 유닛은 탭과 드래그를 구분해야 하므로 누르는 순간 캡처하고, 손을 뗄 때 행동을 확정한다.
+		// 방향을 고르지 않는 공격/방해는 한 번 탭으로 끝낸다. 손아귀만 포인터를 캡처해 드래그한다.
+		if (TryExecuteTapSkillAtScreenPosition(ScreenPosition))
+		{
+			return FReply::Handled();
+		}
 		if (BeginDirectUnitGesture(ScreenPosition))
 		{
 			return FReply::Handled().CaptureMouse(TakeWidget());
@@ -111,7 +115,11 @@ FReply UCombatTileMapHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry
 		{
 			return FReply::Handled();
 		}
-		// 스킬 레일 밖 = 월드(타일/유닛) 영역. 뷰모델 연결 시 좌표만 넘기고 타일/유닛 판정은 게임플레이가.
+		// 방향을 고르지 않는 공격/방해는 한 번 탭으로 끝낸다. 손아귀만 포인터를 캡처해 드래그한다.
+		if (TryExecuteTapSkillAtScreenPosition(ScreenPosition))
+		{
+			return FReply::Handled();
+		}
 		if (BeginDirectUnitGesture(ScreenPosition))
 		{
 			return FReply::Handled().CaptureMouse(TakeWidget());

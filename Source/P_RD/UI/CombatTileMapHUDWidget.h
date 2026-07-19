@@ -270,6 +270,8 @@ private:
 	bool TryOpenContextActionsAtScreenPosition(const FVector2D& ScreenPosition);
 	/** @brief 화면 좌표 아래 생존 유닛과 발밑 투영점을 찾는다. */
 	bool FindUnitAtScreenPosition(const FVector2D& ScreenPosition, int32& OutUnitId, bool& OutIsPlayer, FVector2D& OutUnitScreenPosition) const;
+	/** @brief 기본 공격과 방해처럼 방향 선택이 없는 행동을 적 한 번 탭으로 즉시 실행한다. */
+	bool TryExecuteTapSkillAtScreenPosition(const FVector2D& ScreenPosition);
 	/** @brief 유닛 직접 드래그의 시작/갱신/종료와 실시간 손잡이 피드백. */
 	bool BeginDirectUnitGesture(const FVector2D& ScreenPosition);
 	void UpdateDirectUnitGesture(const FVector2D& ScreenPosition);

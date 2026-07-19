@@ -864,6 +864,55 @@ bool UCombatTileMapHUDWidget::ExecuteDirectSkill(
 	return true;
 }
 
+bool UCombatTileMapHUDWidget::TryExecuteTapSkillAtScreenPosition(const FVector2D& ScreenPosition)
+{
+	if (mCombatUIModel == nullptr)
+	{
+		return false;
+	}
+	const int32 SelectedSkillIndex = mCombatUIModel->GetSelectedSkillIndex();
+	const TArray<FSkillUI>& Skills = mCombatUIModel->GetSkillUIs();
+	if (Skills.IsValidIndex(SelectedSkillIndex) == false)
+	{
+		return false;
+	}
+	const FSkillUI& Skill = Skills[SelectedSkillIndex];
+	// 현재 네 행동군 중 기본 공격(데이터 0)과 방해만 탭 즉시 실행한다.
+	// 손아귀의 당기기/던지기/교환과 이동은 반드시 목적지를 드래그해서 정한다.
+	if (SelectedSkillIndex != 0 && Skill.mIsStaggerSkill == false)
+	{
+		return false;
+	}
+
+	int32 UnitId = INDEX_NONE;
+	bool bIsPlayer = false;
+	FVector2D UnitScreenPosition = FVector2D::ZeroVector;
+	if (FindUnitAtScreenPosition(ScreenPosition, UnitId, bIsPlayer, UnitScreenPosition) == false
+		|| bIsPlayer)
+	{
+		return false;
+	}
+	const FUnitUI* TargetUnit = mCombatUIModel->GetUnitUIs().FindByPredicate([UnitId](const FUnitUI& Unit)
+	{
+		return Unit.mUnitId == UnitId;
+	});
+	const FUnitUI* PlayerUnit = mCombatUIModel->GetUnitUIs().FindByPredicate([](const FUnitUI& Unit)
+	{
+		return Unit.mIsPlayer && Unit.mHP > 0.0f;
+	});
+	const int32 SelectRange = FMath::Max(FMath::CeilToInt(Skill.mTargeting.mSelectRange), 1);
+	if (TargetUnit == nullptr || PlayerUnit == nullptr
+		|| GetTileDistance(TargetUnit->mTile, PlayerUnit->mTile) > SelectRange)
+	{
+		// 범위 밖 적 탭은 선택을 취소하지 않고 현재 사거리 표시를 그대로 유지한다.
+		return true;
+	}
+	// 유효한 적을 눌렀다면 이 입력은 여기서 소유한다. 실패 좌표를 월드 입력으로 한 번 더 보내
+	// 프리뷰/취소 상태가 이중 전환되는 일을 막는다.
+	ExecuteDirectSkill(SelectedSkillIndex, UnitScreenPosition, nullptr, 3);
+	return true;
+}
+
 bool UCombatTileMapHUDWidget::BeginDirectUnitGesture(const FVector2D& ScreenPosition)
 {
 	if (mCombatUIModel == nullptr)
@@ -872,11 +921,11 @@ bool UCombatTileMapHUDWidget::BeginDirectUnitGesture(const FVector2D& ScreenPosi
 	}
 	const int32 SelectedSkillIndex = mCombatUIModel->GetSelectedSkillIndex();
 	const TArray<FSkillUI>& Skills = mCombatUIModel->GetSkillUIs();
-	const bool bSelectedDisplacement = Skills.IsValidIndex(SelectedSkillIndex)
-		&& Skills[SelectedSkillIndex].mIsDisplacementSkill;
-	if (SelectedSkillIndex != INDEX_NONE && bSelectedDisplacement == false)
+	const bool bSelectedDragAction = Skills.IsValidIndex(SelectedSkillIndex)
+		&& (Skills[SelectedSkillIndex].mIsPullSkill || Skills[SelectedSkillIndex].mIsThrowSkill);
+	if (SelectedSkillIndex != INDEX_NONE && bSelectedDragAction == false)
 	{
-		// 일반 공격은 기존 스킬 빌드의 한 번 탭 조준을 그대로 사용한다.
+		// 기본 공격/방해는 TryExecuteTapSkillAtScreenPosition, 이동은 기존 타일 입력이 담당한다.
 		return false;
 	}
 	int32 UnitId = INDEX_NONE;
@@ -889,7 +938,7 @@ bool UCombatTileMapHUDWidget::BeginDirectUnitGesture(const FVector2D& ScreenPosi
 	mDirectGripGesture = false;
 	mDirectGripCanSwap = false;
 	mDirectGripSwapPreview = false;
-	if (bSelectedDisplacement)
+	if (bSelectedDragAction)
 	{
 		if (bIsPlayer)
 		{
@@ -1055,14 +1104,30 @@ bool UCombatTileMapHUDWidget::IsDirectGripSwapDestination(
 	}
 	FVector TouchWorld = FVector::ZeroVector;
 	FTileIndex TouchTile = FTileIndex::Invalid;
-	if (GetDirectGestureFloorWorldLocation(ScreenPosition, TouchWorld, &TouchTile) == false
-		|| TouchTile != PlayerUnit->mTile)
-	{
-		return false;
-	}
 	AUnit* PlayerView = PlayerUnit->mViewActor.IsValid()
 		? Cast<AUnit>(PlayerUnit->mViewActor.Get())
 		: nullptr;
+	const bool bOnPlayerTile = GetDirectGestureFloorWorldLocation(ScreenPosition, TouchWorld, &TouchTile)
+		&& TouchTile == PlayerUnit->mTile;
+	bool bOnPlayerBody = false;
+	if (PlayerView != nullptr && RootCanvas != nullptr)
+	{
+		FVector2D PlayerWidgetPosition = FVector2D::ZeroVector;
+		if (APlayerController* PlayerController = GetOwningPlayer();
+			PlayerController != nullptr
+			&& UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(
+				PlayerController, PlayerView->GetActorLocation(), PlayerWidgetPosition, false))
+		{
+			const FVector2D PlayerScreenPosition = RootCanvas->GetCachedGeometry().LocalToAbsolute(PlayerWidgetPosition);
+			const FVector2D Delta = ScreenPosition - PlayerScreenPosition;
+			// 손가락이 기사 모델을 가려도 몸체 전체를 자리 교환 드롭 존으로 인정하고 발밑 칸에 스냅한다.
+			bOnPlayerBody = FMath::Abs(Delta.X) <= 92.0f && Delta.Y >= -165.0f && Delta.Y <= 58.0f;
+		}
+	}
+	if (bOnPlayerTile == false && bOnPlayerBody == false)
+	{
+		return false;
+	}
 	const float RootHeight = PlayerView != nullptr && PlayerView->GetCapsuleComponent() != nullptr
 		? PlayerView->GetCapsuleComponent()->GetScaledCapsuleHalfHeight()
 		: 0.0f;
@@ -1316,6 +1381,7 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 	const bool bTargetIsPlayer = mDirectUnitGestureTargetIsPlayer;
 	const FVector2D TargetScreen = mDirectUnitGestureTargetScreen;
 	const bool bGripSwap = mDirectGripSwapPreview;
+	const bool bWasGripGesture = mDirectGripGesture;
 	mDirectUnitGestureActive = false;
 	mDirectUnitGestureTargetId = INDEX_NONE;
 	SetDirectUnitGestureVisual(false);
@@ -1324,8 +1390,20 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 	mDirectGripSwapPreview = false;
 	if (mDirectUnitGestureDragged == false)
 	{
-		// 스킬 탭에서 이미 행동을 고른 상태라면 짧은 탭은 선택을 유지한다.
-		// 컨텍스트 메뉴를 다시 열어 사거리/대상 미리보기를 가리지 않는다.
+		// 손아귀는 드래그 전용이다. 짧은 탭으로 내부 당기기/던지기 프리뷰가 열린 채 남으면
+		// 다음 공격 판정까지 오염되므로 취소한 뒤 대표 손아귀 카드의 사거리 상태만 복구한다.
+		if (bWasGripGesture && mCombatUIModel != nullptr)
+		{
+			mCombatUIModel->RequestCancel();
+			const int32 GripSkillIndex = FindDirectSkillIndex(&FSkillUI::mIsPullSkill);
+			if (GripSkillIndex != INDEX_NONE)
+			{
+				SelectSkillWithAutomaticDice(GripSkillIndex, 6);
+			}
+			mDirectArmedSkillIndex = INDEX_NONE;
+			mDirectArmedTargetUnitId = INDEX_NONE;
+			return true;
+		}
 		if (mCombatUIModel != nullptr && mCombatUIModel->GetSelectedSkillIndex() != INDEX_NONE)
 		{
 			return true;

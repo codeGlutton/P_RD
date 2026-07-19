@@ -195,7 +195,9 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 				{
 					Role = Skill->mIsPullSkill
 						? TEXT("적 드래그 → 당기기 / 던지기 / 교환")
-						: (Skill->mIsThrowSkill ? TEXT("인접 적 → 8방향 투척") : TEXT("위치 개입"));
+						: (Skill->mIsThrowSkill
+							? TEXT("인접 적 → 8방향 투척")
+							: (Skill->mIsStaggerSkill ? TEXT("적 한 번 탭 → 다음 이동 -1") : TEXT("위치 개입")));
 				}
 				else if (SkillDataIndex == 1)
 				{
@@ -203,7 +205,7 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 				}
 				else if (SkillDataIndex == 0)
 				{
-					Role = TEXT("기본 공격");
+					Role = TEXT("적 한 번 탭 → 즉시 공격");
 				}
 				const FString DiceCost = Skill->mIsPullSkill
 					? TEXT("주사위 1~3개 자동")
