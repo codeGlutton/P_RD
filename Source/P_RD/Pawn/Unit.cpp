@@ -18,19 +18,34 @@
 
 namespace
 {
-	constexpr float ForcedMoveFirstTileDuration = 0.22f;
-	constexpr float ForcedMoveAdditionalTileDuration = 0.09f;
-	constexpr float ForcedMoveMaxDuration = 0.65f;
-	constexpr float ForcedMoveSettleDuration = 0.10f;
-	constexpr float ForcedMoveMinArcHeight = 10.0f;
-	constexpr float ForcedMoveMaxArcHeight = 18.0f;
-	constexpr float ForcedMoveMinOvershoot = 22.0f;
-	constexpr float ForcedMoveMaxOvershoot = 30.0f;
-
 	float EaseOutCubic(float Alpha)
 	{
 		const float OneMinusAlpha = 1.0f - FMath::Clamp(Alpha, 0.0f, 1.0f);
 		return 1.0f - OneMinusAlpha * OneMinusAlpha * OneMinusAlpha;
+	}
+
+	float SmoothStep(float Alpha)
+	{
+		const float T = FMath::Clamp(Alpha, 0.0f, 1.0f);
+		return T * T * (3.0f - 2.0f * T);
+	}
+
+	float GetForcedMoveDistanceAlpha(float Alpha, EForcedMovePresentationType PresentationType)
+	{
+		switch (PresentationType)
+		{
+		case EForcedMovePresentationType::Pull:
+		case EForcedMovePresentationType::Swap:
+			return SmoothStep(Alpha);
+		case EForcedMovePresentationType::Throw:
+			return 1.0f - FMath::Square(1.0f - FMath::Clamp(Alpha, 0.0f, 1.0f));
+		case EForcedMovePresentationType::Charge:
+			// 돌진은 입력 직후 바로 속도가 붙되 접촉 직전에는 읽을 수 있을 만큼 감속한다.
+			return EaseOutCubic(Alpha);
+		case EForcedMovePresentationType::Push:
+		default:
+			return EaseOutCubic(Alpha);
+		}
 	}
 }
 
@@ -114,6 +129,8 @@ void AUnit::BindModel(UObjectModel* Model)
 		mUnitModel->OnStartMovePath.AddUObject(this, &AUnit::OnStartMovePath);
 		// 밀치기 경로 통지 구독 (일반 보행과 분리된 빠른 강제 이동 연출용)
 		mUnitModel->OnStartForcedMovePath.AddUObject(this, &AUnit::OnStartForcedMovePath);
+		// 충돌 순간의 압축/히트스톱/반동 통지 구독
+		mUnitModel->OnPlayImpactPresentation.AddUObject(this, &AUnit::OnPlayImpactPresentation);
 		// 이동 연출 요청 구독
 		mUnitModel->OnStartMoveStep.AddUObject(this, &AUnit::OnStartMoveStep);
 		// 방향 전환 연출 요청 구독
@@ -185,12 +202,14 @@ void AUnit::UnbindModel(UObjectModel* Model)
 	{
 		mUnitModel->OnStartMovePath.RemoveAll(this);
 		mUnitModel->OnStartForcedMovePath.RemoveAll(this);
+		mUnitModel->OnPlayImpactPresentation.RemoveAll(this);
 		mUnitModel->OnStartMoveStep.RemoveAll(this);
 		mUnitModel->OnRotate.RemoveAll(this);
 	}
 	mUnitModel.Reset();
 
 	// 배리어 해제 콜백보다 먼저 메시를 원래 상대 트랜스폼으로 되돌린다.
+	ResetImpactPresentation();
 	ResetForcedMovePresentation();
 	// 진행 중이던 이동스텝 연출이 있으면 배리어를 놓아서 완료로 처리
 	mMoveBarrier.Reset();
@@ -237,33 +256,88 @@ void AUnit::OnStartForcedMovePath(
 	}
 
 	const int32 MoveTileCount = PathWorldLocations.Num() - 1;
-	const float DurationScale = PresentationType == EForcedMovePresentationType::Pull
-		? 1.32f
-		: (PresentationType == EForcedMovePresentationType::Throw ? 1.12f : 1.0f);
-	const float DurationByDistance = (ForcedMoveFirstTileDuration
-		+ ForcedMoveAdditionalTileDuration * StaticCast<float>(FMath::Max(MoveTileCount - 1, 0))) * DurationScale;
 	const float DistanceAlpha = FMath::Clamp(StaticCast<float>(MoveTileCount - 1) / 4.0f, 0.0f, 1.0f);
+	float FirstTileDuration = 0.18f;
+	float AdditionalTileDuration = 0.075f;
+	float MaxTravelDuration = 0.55f;
+	float SettleDuration = 0.10f;
+	switch (PresentationType)
+	{
+	case EForcedMovePresentationType::Pull:
+		FirstTileDuration = 0.28f;
+		AdditionalTileDuration = 0.11f;
+		MaxTravelDuration = 0.72f;
+		SettleDuration = 0.16f;
+		break;
+	case EForcedMovePresentationType::Throw:
+		FirstTileDuration = 0.36f;
+		AdditionalTileDuration = 0.12f;
+		MaxTravelDuration = 0.84f;
+		SettleDuration = 0.18f;
+		break;
+	case EForcedMovePresentationType::Swap:
+		FirstTileDuration = 0.24f;
+		AdditionalTileDuration = 0.08f;
+		MaxTravelDuration = 0.48f;
+		SettleDuration = 0.12f;
+		break;
+	case EForcedMovePresentationType::Charge:
+		FirstTileDuration = 0.18f;
+		AdditionalTileDuration = 0.08f;
+		MaxTravelDuration = 0.58f;
+		SettleDuration = 0.08f;
+		break;
+	case EForcedMovePresentationType::Push:
+	default:
+		break;
+	}
+	const float TravelDuration = FMath::Min(
+		FirstTileDuration
+			+ AdditionalTileDuration * StaticCast<float>(FMath::Max(MoveTileCount - 1, 0)),
+		MaxTravelDuration);
 
 	mIsForcedMovePresentation = true;
 	mForcedMovePresentationType = PresentationType;
 	mForcedMoveElapsed = 0.0f;
-	mForcedMoveDuration = FMath::Min(
-		DurationByDistance,
-		PresentationType == EForcedMovePresentationType::Pull ? 0.82f : 0.74f);
-	const float SettleDuration = PresentationType == EForcedMovePresentationType::Pull
-		? 0.16f
-		: (PresentationType == EForcedMovePresentationType::Throw ? 0.14f : ForcedMoveSettleDuration);
-	mForcedMoveTravelDuration = FMath::Max(mForcedMoveDuration - SettleDuration, KINDA_SMALL_NUMBER);
-	mForcedMoveArcHeight = PresentationType == EForcedMovePresentationType::Throw
-		? FMath::Lerp(70.0f, 125.0f, DistanceAlpha)
-		: (PresentationType == EForcedMovePresentationType::Pull
-			? FMath::Lerp(3.0f, 8.0f, DistanceAlpha)
-			: FMath::Lerp(ForcedMoveMinArcHeight, ForcedMoveMaxArcHeight, DistanceAlpha));
-	mForcedMoveOvershootDistance = PresentationType == EForcedMovePresentationType::Throw
-		? FMath::Lerp(34.0f, 48.0f, DistanceAlpha)
-		: (PresentationType == EForcedMovePresentationType::Pull
-			? FMath::Lerp(12.0f, 20.0f, DistanceAlpha)
-			: FMath::Lerp(ForcedMoveMinOvershoot, ForcedMoveMaxOvershoot, DistanceAlpha));
+	mForcedMoveTravelDuration = FMath::Max(TravelDuration, KINDA_SMALL_NUMBER);
+	mForcedMoveDuration = mForcedMoveTravelDuration + SettleDuration;
+	mForcedMoveArcHeight = 14.0f;
+	mForcedMoveOvershootDistance = 26.0f;
+	mForcedMoveLateralDistance = 0.0f;
+	mForcedMoveTiltDegrees = 17.0f;
+	mForcedMoveSpinDegrees = 0.0f;
+	switch (PresentationType)
+	{
+	case EForcedMovePresentationType::Pull:
+		mForcedMoveArcHeight = FMath::Lerp(3.0f, 7.0f, DistanceAlpha);
+		mForcedMoveOvershootDistance = FMath::Lerp(10.0f, 18.0f, DistanceAlpha);
+		mForcedMoveLateralDistance = FMath::Lerp(4.0f, 8.0f, DistanceAlpha);
+		mForcedMoveTiltDegrees = -18.0f;
+		break;
+	case EForcedMovePresentationType::Throw:
+		mForcedMoveArcHeight = FMath::Lerp(82.0f, 145.0f, DistanceAlpha);
+		mForcedMoveOvershootDistance = FMath::Lerp(30.0f, 48.0f, DistanceAlpha);
+		mForcedMoveTiltDegrees = 9.0f;
+		mForcedMoveSpinDegrees = MoveTileCount >= 3 ? 720.0f : 360.0f;
+		break;
+	case EForcedMovePresentationType::Swap:
+		mForcedMoveArcHeight = 24.0f;
+		mForcedMoveOvershootDistance = 8.0f;
+		mForcedMoveLateralDistance = 34.0f;
+		mForcedMoveTiltDegrees = 16.0f;
+		break;
+	case EForcedMovePresentationType::Charge:
+		mForcedMoveArcHeight = FMath::Lerp(5.0f, 10.0f, DistanceAlpha);
+		mForcedMoveOvershootDistance = 14.0f;
+		mForcedMoveTiltDegrees = 21.0f;
+		break;
+	case EForcedMovePresentationType::Push:
+	default:
+		mForcedMoveArcHeight = FMath::Lerp(12.0f, 22.0f, DistanceAlpha);
+		mForcedMoveOvershootDistance = FMath::Lerp(24.0f, 34.0f, DistanceAlpha);
+		mForcedMoveTiltDegrees = FMath::Lerp(18.0f, 27.0f, DistanceAlpha);
+		break;
+	}
 	mForcedMoveWorldDirection = PathWorldLocations.Last() - PathWorldLocations[0];
 	mForcedMoveWorldDirection.Z = 0.0f;
 	mForcedMoveWorldDirection = mForcedMoveWorldDirection.GetSafeNormal();
@@ -277,8 +351,42 @@ void AUnit::OnStartForcedMovePath(
 	}
 }
 
+void AUnit::OnPlayImpactPresentation(
+	const FVector& WorldDirection,
+	float Strength,
+	EImpactPresentationType PresentationType)
+{
+	if (mMeshComp == nullptr)
+	{
+		return;
+	}
+
+	ResetImpactPresentation();
+	mIsImpactPresentation = true;
+	mImpactPresentationElapsed = 0.0f;
+	mImpactPresentationStrength = FMath::Clamp(Strength, 0.65f, 1.65f);
+	mImpactPresentationType = PresentationType;
+	mImpactWorldDirection = WorldDirection;
+	mImpactWorldDirection.Z = 0.0f;
+	mImpactWorldDirection = mImpactWorldDirection.GetSafeNormal();
+	if (mImpactWorldDirection.IsNearlyZero())
+	{
+		mImpactWorldDirection = GetActorForwardVector();
+	}
+	mImpactPresentationDuration = PresentationType == EImpactPresentationType::ChargeContact
+		? 0.38f
+		: (PresentationType == EImpactPresentationType::Receiver ? 0.26f : 0.24f);
+	mImpactBaseMeshRelativeTransform = mIsForcedMovePresentation
+		? mForcedMoveBaseMeshRelativeTransform
+		: mMeshComp->GetRelativeTransform();
+	mMeshComp->SetRelativeTransform(mImpactBaseMeshRelativeTransform);
+	SetActorTickEnabled(true);
+}
+
 void AUnit::OnStartMoveStep(const FTileTransform& NextTileTransform, const FTransform& TargetWorldTransform, TSharedPtr<FPresentationBarrier> Barrier, float RemainingPathDistance)
 {
+	// 돌진 접촉 반동 도중 다음 이동이 재개되면 잔여 반동을 즉시 정리하고 같은 경로를 이어간다.
+	ResetImpactPresentation();
 	// 목표타일의 월드트랜스폼과 배리어 보관
 	mMoveTargetTransform = TargetWorldTransform;
 	mMoveBarrier = Barrier;
@@ -386,7 +494,14 @@ void AUnit::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	// 이동스텝 연출 중이 아니면 틱 끔
+	// 돌진이 적을 미는 동안 기사는 타일 경로를 잠시 멈추고 접촉 히트스톱만 재생한다.
+	if (mMoveBarrier.IsValid() == false && mIsImpactPresentation)
+	{
+		TickImpactPresentation(DeltaSeconds);
+		return;
+	}
+
+	// 이동스텝/충돌 연출 중이 아니면 틱 끔
 	if (mMoveBarrier.IsValid() == false)
 	{
 		ResetForcedMovePresentation();
@@ -499,7 +614,9 @@ void AUnit::TickForcedMove(float DeltaSeconds)
 		mForcedMoveElapsed / mForcedMoveTravelDuration,
 		0.0f,
 		1.0f);
-	mPolyLineTraveledDistance = TotalDistance * EaseOutCubic(TravelAlpha);
+	mPolyLineTraveledDistance = TotalDistance * GetForcedMoveDistanceAlpha(
+		TravelAlpha,
+		mForcedMovePresentationType);
 
 	FVector SampleLocation = FVector::ZeroVector;
 	FVector SampleTangent = FVector::ZeroVector;
@@ -567,10 +684,18 @@ void AUnit::ApplyForcedMoveMeshPresentation(float TravelAlpha, float SettleAlpha
 	}
 
 	const float ClampedTravelAlpha = FMath::Clamp(TravelAlpha, 0.0f, 1.0f);
-	const float ArcOffset = FMath::Sin(PI * ClampedTravelAlpha) * mForcedMoveArcHeight;
+	const float FlightWave = FMath::Sin(PI * ClampedTravelAlpha);
+	float ArcOffset = FlightWave * mForcedMoveArcHeight;
+	float LateralOffset = mForcedMoveLateralDistance * FlightWave;
+	if (mForcedMovePresentationType == EForcedMovePresentationType::Pull)
+	{
+		// 당기기는 공중제비 대신 지면을 긁으며 좌우로 한 번 흔들린다.
+		LateralOffset *= FMath::Sin(3.0f * PI * ClampedTravelAlpha);
+	}
 
 	float OvershootAlpha = 0.0f;
 	float ImpactStrength = 0.0f;
+	float LandingBounce = 0.0f;
 	if (SettleAlpha < 0.0f)
 	{
 		// 이동 후반부에만 메시가 루트보다 조금 앞서 나가도록 해 도착 충격을 준비한다.
@@ -581,15 +706,56 @@ void AUnit::ApplyForcedMoveMeshPresentation(float TravelAlpha, float SettleAlpha
 		const float SettleEase = EaseOutCubic(SettleAlpha);
 		OvershootAlpha = 1.0f - SettleEase;
 		ImpactStrength = 1.0f - SettleEase;
+		if (mForcedMovePresentationType == EForcedMovePresentationType::Throw)
+		{
+			LandingBounce = FMath::Sin(PI * SettleAlpha)
+				* (1.0f - SettleAlpha) * 16.0f;
+		}
+		else if (mForcedMovePresentationType == EForcedMovePresentationType::Push)
+		{
+			LandingBounce = FMath::Sin(PI * SettleAlpha)
+				* (1.0f - SettleAlpha) * 5.0f;
+		}
 	}
 
+	const FVector WorldLateral = FVector::CrossProduct(
+		FVector::UpVector,
+		mForcedMoveWorldDirection).GetSafeNormal();
 	const FVector WorldOffset = mForcedMoveWorldDirection
 		* (mForcedMoveOvershootDistance * OvershootAlpha)
-		+ FVector::UpVector * ArcOffset;
+		+ WorldLateral * LateralOffset
+		+ FVector::UpVector * (ArcOffset + LandingBounce);
 	const FVector RelativeOffset = GetActorTransform().InverseTransformVectorNoScale(WorldOffset);
 
 	FTransform MeshTransform = mForcedMoveBaseMeshRelativeTransform;
 	MeshTransform.SetLocation(MeshTransform.GetLocation() + RelativeOffset);
+
+	const FVector WorldTumbleAxis = FVector::CrossProduct(
+		mForcedMoveWorldDirection,
+		FVector::UpVector).GetSafeNormal();
+	FVector LocalTumbleAxis = GetActorTransform().InverseTransformVectorNoScale(WorldTumbleAxis).GetSafeNormal();
+	if (LocalTumbleAxis.IsNearlyZero())
+	{
+		LocalTumbleAxis = FVector::RightVector;
+	}
+	float TiltDegrees = FlightWave * mForcedMoveTiltDegrees;
+	float SpinDegrees = 0.0f;
+	if (mForcedMovePresentationType == EForcedMovePresentationType::Throw)
+	{
+		SpinDegrees = mForcedMoveSpinDegrees * ClampedTravelAlpha;
+	}
+	else if (mForcedMovePresentationType == EForcedMovePresentationType::Swap)
+	{
+		// 서로 반대 방향으로 같은 규칙을 적용하면 두 유닛이 서로 다른 측면으로 비켜 지나간다.
+		TiltDegrees = FlightWave * mForcedMoveTiltDegrees;
+	}
+	else if (mForcedMovePresentationType == EForcedMovePresentationType::Charge)
+	{
+		TiltDegrees = -FlightWave * mForcedMoveTiltDegrees;
+	}
+	const FQuat BodyRotation(LocalTumbleAxis, FMath::DegreesToRadians(TiltDegrees + SpinDegrees));
+	MeshTransform.SetRotation(BodyRotation * mForcedMoveBaseMeshRelativeTransform.GetRotation());
+
 	const FVector BaseScale = mForcedMoveBaseMeshRelativeTransform.GetScale3D();
 	const float ImpactScale = mForcedMovePresentationType == EForcedMovePresentationType::Throw
 		? 1.75f
@@ -597,12 +763,104 @@ void AUnit::ApplyForcedMoveMeshPresentation(float TravelAlpha, float SettleAlpha
 	const float PullTension = mForcedMovePresentationType == EForcedMovePresentationType::Pull
 		? FMath::Sin(PI * ClampedTravelAlpha)
 		: 0.0f;
+	const float AirStretch = mForcedMovePresentationType == EForcedMovePresentationType::Throw
+		? FlightWave
+		: 0.0f;
+	const float ChargeCompression = mForcedMovePresentationType == EForcedMovePresentationType::Charge
+		? 0.04f * FlightWave
+		: 0.0f;
 	const FVector SquashMultiplier(
-		1.0f + 0.04f * ImpactStrength * ImpactScale + 0.03f * PullTension,
-		1.0f + 0.04f * ImpactStrength * ImpactScale + 0.03f * PullTension,
-		1.0f - 0.08f * ImpactStrength * ImpactScale - 0.06f * PullTension);
+		1.0f + 0.04f * ImpactStrength * ImpactScale + 0.02f * PullTension - 0.035f * AirStretch + ChargeCompression,
+		1.0f + 0.04f * ImpactStrength * ImpactScale + 0.02f * PullTension - 0.035f * AirStretch + ChargeCompression,
+		1.0f - 0.08f * ImpactStrength * ImpactScale + 0.055f * AirStretch - 0.04f * PullTension - ChargeCompression);
 	MeshTransform.SetScale3D(BaseScale * SquashMultiplier);
 	mMeshComp->SetRelativeTransform(MeshTransform);
+}
+
+void AUnit::TickImpactPresentation(float DeltaSeconds)
+{
+	if (mIsImpactPresentation == false || mMeshComp == nullptr)
+	{
+		return;
+	}
+
+	mImpactPresentationElapsed = FMath::Min(
+		mImpactPresentationElapsed + FMath::Max(DeltaSeconds, 0.0f),
+		mImpactPresentationDuration);
+	const float Alpha = FMath::Clamp(
+		mImpactPresentationElapsed / FMath::Max(mImpactPresentationDuration, KINDA_SMALL_NUMBER),
+		0.0f,
+		1.0f);
+
+	float DirectionalOffset = 0.0f;
+	float TiltDegrees = 0.0f;
+	float Squash = 0.0f;
+	if (mImpactPresentationType == EImpactPresentationType::ChargeContact)
+	{
+		// 10% 진입 -> 짧은 정지 -> 반대 방향 반동. 적이 날아가는 동안 기사 몸은 접촉점에 남는다.
+		if (Alpha < 0.10f)
+		{
+			const float ContactAlpha = SmoothStep(Alpha / 0.10f);
+			DirectionalOffset = FMath::Lerp(0.0f, 11.0f, ContactAlpha);
+			TiltDegrees = FMath::Lerp(0.0f, -16.0f, ContactAlpha);
+			Squash = ContactAlpha;
+		}
+		else if (Alpha < 0.30f)
+		{
+			DirectionalOffset = 11.0f;
+			TiltDegrees = -16.0f;
+			Squash = 1.0f;
+		}
+		else
+		{
+			const float RecoverAlpha = (Alpha - 0.30f) / 0.70f;
+			const float RecoilWave = FMath::Sin(PI * RecoverAlpha) * (1.0f - RecoverAlpha);
+			DirectionalOffset = FMath::Lerp(11.0f, 0.0f, EaseOutCubic(RecoverAlpha)) - 12.0f * RecoilWave;
+			TiltDegrees = FMath::Lerp(-16.0f, 0.0f, EaseOutCubic(RecoverAlpha)) + 10.0f * RecoilWave;
+			Squash = 1.0f - EaseOutCubic(RecoverAlpha);
+		}
+	}
+	else
+	{
+		const float Wave = FMath::Sin(PI * Alpha);
+		const float Fade = 1.0f - Alpha;
+		const bool bReceiver = mImpactPresentationType == EImpactPresentationType::Receiver;
+		DirectionalOffset = (bReceiver ? 18.0f : -13.0f) * Wave * Fade;
+		TiltDegrees = (bReceiver ? -24.0f : 18.0f) * Wave;
+		Squash = FMath::Pow(1.0f - Alpha, 3.0f);
+	}
+	DirectionalOffset *= mImpactPresentationStrength;
+	TiltDegrees *= mImpactPresentationStrength;
+
+	const FVector WorldOffset = mImpactWorldDirection * DirectionalOffset;
+	const FVector RelativeOffset = GetActorTransform().InverseTransformVectorNoScale(WorldOffset);
+	FTransform MeshTransform = mImpactBaseMeshRelativeTransform;
+	MeshTransform.SetLocation(MeshTransform.GetLocation() + RelativeOffset);
+	FVector WorldTiltAxis = FVector::CrossProduct(mImpactWorldDirection, FVector::UpVector).GetSafeNormal();
+	FVector LocalTiltAxis = GetActorTransform().InverseTransformVectorNoScale(WorldTiltAxis).GetSafeNormal();
+	if (LocalTiltAxis.IsNearlyZero())
+	{
+		LocalTiltAxis = FVector::RightVector;
+	}
+	MeshTransform.SetRotation(
+		FQuat(LocalTiltAxis, FMath::DegreesToRadians(TiltDegrees))
+		* mImpactBaseMeshRelativeTransform.GetRotation());
+	const FVector BaseScale = mImpactBaseMeshRelativeTransform.GetScale3D();
+	MeshTransform.SetScale3D(BaseScale * FVector(
+		1.0f + 0.055f * Squash,
+		1.0f + 0.055f * Squash,
+		1.0f - 0.10f * Squash));
+	mMeshComp->SetRelativeTransform(MeshTransform);
+
+	if (Alpha >= 1.0f - KINDA_SMALL_NUMBER)
+	{
+		ResetImpactPresentation();
+		if (mMoveBarrier.IsValid() == false)
+		{
+			ResetPolyLineState();
+			SetActorTickEnabled(false);
+		}
+	}
 }
 
 void AUnit::ResetForcedMovePresentation()
@@ -618,10 +876,28 @@ void AUnit::ResetForcedMovePresentation()
 	mForcedMoveTravelDuration = 0.0f;
 	mForcedMoveArcHeight = 0.0f;
 	mForcedMoveOvershootDistance = 0.0f;
+	mForcedMoveLateralDistance = 0.0f;
+	mForcedMoveTiltDegrees = 0.0f;
+	mForcedMoveSpinDegrees = 0.0f;
 	mForcedMovePresentationType = EForcedMovePresentationType::Push;
 	mForcedMoveWorldDirection = FVector::ZeroVector;
 	mForcedMoveFacingRotation = FRotator::ZeroRotator;
 	mForcedMoveBaseMeshRelativeTransform = FTransform::Identity;
+}
+
+void AUnit::ResetImpactPresentation()
+{
+	if (mIsImpactPresentation && mMeshComp != nullptr)
+	{
+		mMeshComp->SetRelativeTransform(mImpactBaseMeshRelativeTransform);
+	}
+	mIsImpactPresentation = false;
+	mImpactPresentationElapsed = 0.0f;
+	mImpactPresentationDuration = 0.0f;
+	mImpactPresentationStrength = 1.0f;
+	mImpactPresentationType = EImpactPresentationType::Source;
+	mImpactWorldDirection = FVector::ZeroVector;
+	mImpactBaseMeshRelativeTransform = FTransform::Identity;
 }
 
 void AUnit::TickPolyLine(float DeltaSeconds)

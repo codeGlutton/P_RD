@@ -66,7 +66,16 @@ void USRPGMoveAction::OnBeginAction()
         {
             PathWorldLocations.Add(TileMap->TileToWorldLocation(TileIndex));
         }
-        mInstigator->OnStartMovePath.Broadcast(PathWorldLocations);
+		if (mIsWarriorCharge)
+		{
+			mInstigator->OnStartForcedMovePath.Broadcast(
+				PathWorldLocations,
+				EForcedMovePresentationType::Charge);
+		}
+		else
+		{
+			mInstigator->OnStartMovePath.Broadcast(PathWorldLocations);
+		}
     }
 
     // 1번 타일로 이동하는 것부터 시작 (0번은 현재 타일).
@@ -325,6 +334,19 @@ bool USRPGMoveAction::TryStartWarriorChargeImpact(int32 StepIndex)
 				ESRPGPlayerDisplacementType::Push);
 			CombatModel->ReportPlayerStagger(EnemyTarget, mDicePower);
 		}
+		// 무거운 적에게 막혔을 때는 기사 쪽에서 적으로 향하는 충돌 방향을 다시 덮어써
+		// 양쪽 몸체가 실제 접촉 방향으로 튕기게 한다.
+		const FVector ChargeDirection = (
+			TileMap->TileToWorldLocation(ImpactTile)
+			- TileMap->TileToWorldLocation(PreviousTile)).GetSafeNormal();
+		mInstigator->OnPlayImpactPresentation.Broadcast(
+			ChargeDirection,
+			1.15f,
+			EImpactPresentationType::Source);
+		EnemyTarget->OnPlayImpactPresentation.Broadcast(
+			ChargeDirection,
+			1.15f,
+			EImpactPresentationType::Receiver);
 		MarkActionCompleted(ESRPGActionResult::Succeeded);
 		return true;
 	}
@@ -335,6 +357,13 @@ bool USRPGMoveAction::TryStartWarriorChargeImpact(int32 StepIndex)
 	{
 		PushWorldPath.Add(TileMap->TileToWorldLocation(TileIndex));
 	}
+	const FVector ChargeDirection = (
+		TileMap->TileToWorldLocation(ImpactTile)
+		- TileMap->TileToWorldLocation(PreviousTile)).GetSafeNormal();
+	mInstigator->OnPlayImpactPresentation.Broadcast(
+		ChargeDirection,
+		1.0f + 0.05f * FMath::Clamp(mDicePower, 1, 6),
+		EImpactPresentationType::ChargeContact);
 	EnemyTarget->OnStartForcedMovePath.Broadcast(PushWorldPath, EForcedMovePresentationType::Push);
 	StartWarriorChargePushStep(1);
 	return true;

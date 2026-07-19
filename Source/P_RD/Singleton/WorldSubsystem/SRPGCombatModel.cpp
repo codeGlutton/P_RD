@@ -63,6 +63,33 @@ namespace
 				-1.0f);
 		}
 	}
+
+	void BroadcastCollisionPresentation(
+		UTileMapModel* TileMap,
+		UBoardActorModel* Source,
+		UBoardActorModel* Receiver)
+	{
+		if (TileMap == nullptr || Source == nullptr || Receiver == nullptr)
+		{
+			return;
+		}
+		FVector Direction = TileMap->TileToWorldLocation(Receiver->GetTileTransform().mIndex)
+			- TileMap->TileToWorldLocation(Source->GetTileTransform().mIndex);
+		Direction.Z = 0.0f;
+		Direction = Direction.GetSafeNormal();
+		if (Direction.IsNearlyZero())
+		{
+			Direction = FVector::ForwardVector;
+		}
+		Source->OnPlayImpactPresentation.Broadcast(
+			Direction,
+			1.0f,
+			EImpactPresentationType::Source);
+		Receiver->OnPlayImpactPresentation.Broadcast(
+			Direction,
+			1.0f,
+			EImpactPresentationType::Receiver);
+	}
 }
 
 void USRPGCombatModel::Serialize(FArchive& Ar)
@@ -1226,6 +1253,7 @@ void USRPGCombatModel::ReportPlayerDisplacementCollision(
 
 	ApplyIntentCollisionDamage(Cast<IBoardCombatTarget>(Target));
 	ApplyIntentCollisionDamage(Cast<IBoardCombatTarget>(Blocker));
+	BroadcastCollisionPresentation(mTileMap, Target, Blocker);
 	const bool bEnemyBlocker = Cast<UUnitModel>(Blocker) != nullptr && Blocker != mPlayerUnit;
 	if (FSRPGEnemyIntent* Intent = FindEnemyIntent(Target))
 	{
@@ -1296,6 +1324,7 @@ void USRPGCombatModel::ResolveFixedIntentCollision(UUnitModel* Enemy, UBoardActo
 
 	ApplyIntentCollisionDamage(Cast<IBoardCombatTarget>(Enemy));
 	ApplyIntentCollisionDamage(Cast<IBoardCombatTarget>(Blocker));
+	BroadcastCollisionPresentation(mTileMap, Enemy, Blocker);
 
 	if (FSRPGEnemyIntent* Intent = FindEnemyIntent(Enemy))
 	{

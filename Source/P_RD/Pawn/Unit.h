@@ -18,6 +18,7 @@
 
 class UUnitModel;
 enum class EForcedMovePresentationType : uint8;
+enum class EImpactPresentationType : uint8;
 struct FTileTransform;
 struct FPresentationBarrier;
 
@@ -78,6 +79,12 @@ protected:
 		const TArray<FVector>& PathWorldLocations,
 		EForcedMovePresentationType PresentationType);
 
+	// @brief 충돌 순간의 짧은 압축/히트스톱/반동을 재생한다.
+	virtual void OnPlayImpactPresentation(
+		const FVector& WorldDirection,
+		float Strength,
+		EImpactPresentationType PresentationType);
+
 	// @brief 이동 시작 요청을 수신해서 이동 시작
 	virtual void OnStartMoveStep(
 		const FTileTransform& NextTileTransform,
@@ -118,10 +125,14 @@ private:
 	void TickPolyLine(float DeltaSeconds);
 	// @brief 밀치기 전용 빠른 이동 + 메시 포물선/반동 연출
 	void TickForcedMove(float DeltaSeconds);
+	// @brief 루트 위치를 바꾸지 않는 충돌 반동을 처리한다.
+	void TickImpactPresentation(float DeltaSeconds);
 	// @brief 강제 이동 중 메시 상대 트랜스폼 적용
 	void ApplyForcedMoveMeshPresentation(float TravelAlpha, float SettleAlpha);
 	// @brief 강제 이동 메시/속도 상태를 원래 값으로 복원
 	void ResetForcedMovePresentation();
+	// @brief 충돌 반동 메시 상태를 원래 값으로 복원한다.
+	void ResetImpactPresentation();
 	// @brief 진행거리에 해당하는 폴리라인 점과 접선(바라보는 방향) 반환
 	bool GetPolyLinePoint(float Distance, FVector& OutLocation, FVector& OutTangent) const;
 	// @brief 폴리라인 이동상태 초기화 (직선 이동모드로 전환)
@@ -208,10 +219,22 @@ private:
 	float mForcedMoveTravelDuration = 0.0f;
 	float mForcedMoveArcHeight = 0.0f;
 	float mForcedMoveOvershootDistance = 0.0f;
+	float mForcedMoveLateralDistance = 0.0f;
+	float mForcedMoveTiltDegrees = 0.0f;
+	float mForcedMoveSpinDegrees = 0.0f;
 	EForcedMovePresentationType mForcedMovePresentationType = static_cast<EForcedMovePresentationType>(0);
 	FVector mForcedMoveWorldDirection = FVector::ZeroVector;
 	FRotator mForcedMoveFacingRotation = FRotator::ZeroRotator;
 	FTransform mForcedMoveBaseMeshRelativeTransform = FTransform::Identity;
+
+	// @brief 이동 판정과 독립된 짧은 충돌 히트스톱/반동 상태
+	bool mIsImpactPresentation = false;
+	float mImpactPresentationElapsed = 0.0f;
+	float mImpactPresentationDuration = 0.0f;
+	float mImpactPresentationStrength = 1.0f;
+	EImpactPresentationType mImpactPresentationType = static_cast<EImpactPresentationType>(0);
+	FVector mImpactWorldDirection = FVector::ZeroVector;
+	FTransform mImpactBaseMeshRelativeTransform = FTransform::Identity;
 
 private:
 	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CapsuleComp", AllowPrivateAccess = "true"))

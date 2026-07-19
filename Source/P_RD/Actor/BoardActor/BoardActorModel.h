@@ -31,6 +31,15 @@ enum class EForcedMovePresentationType : uint8
 	Pull,
 	Throw,
 	Swap,
+	Charge,
+};
+
+/** @brief 충돌 당사자의 역할에 맞는 짧은 절차형 타격 반동. 판정에는 관여하지 않는다. */
+enum class EImpactPresentationType : uint8
+{
+	Source,
+	Receiver,
+	ChargeContact,
 };
 
 // 밀기/당기기/던지기처럼 일반 보행과 다른 뷰 연출이 필요한 강제 이동 경로 전달.
@@ -39,6 +48,12 @@ DECLARE_MULTICAST_DELEGATE_TwoParams(
 	FOnStartForcedMovePath,
 	const TArray<FVector>& /* PathWorldLocations */,
 	EForcedMovePresentationType /* PresentationType */);
+
+DECLARE_MULTICAST_DELEGATE_ThreeParams(
+	FOnPlayImpactPresentation,
+	const FVector& /* WorldDirection */,
+	float /* Strength */,
+	EImpactPresentationType /* PresentationType */);
 
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnStartMoveStep, const FTileTransform& /* NextTileTransform */, const FTransform& /* TargetWorldTransform */, TSharedPtr<FPresentationBarrier> /* Barrier */, float /* RemainingPathDistance */);
 
@@ -177,6 +192,9 @@ public:
 	 *          실제 타일 점유 변경과 스텝 완료는 OnStartMoveStep을 공통으로 사용한다.
 	 */
 	FOnStartForcedMovePath OnStartForcedMovePath;
+
+	/** @brief 밀기/던지기/돌진 충돌 순간의 히트스톱과 몸체 반동을 뷰에 요청한다. */
+	FOnPlayImpactPresentation OnPlayImpactPresentation;
 
 	/**
 	 * @brief 이동 스텝 시작 시 뷰에게 한 칸 이동 연출을 요청하는 대리자
