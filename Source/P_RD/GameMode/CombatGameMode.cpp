@@ -285,6 +285,10 @@ void ACombatGameMode::InitializeRoom()
 	CombatModel->OnRegisterUnitUI.AddUObject(this, &ACombatGameMode::OnRegisterUnit);
 	CombatModel->OnUnregisterUnitUI.AddUObject(this, &ACombatGameMode::OnUnregisterUnit);
 	CombatModel->OnEnemyIntentsChangedUI.AddWeakLambda(this, [this]() {
+		// 플레이어 행동 뒤 재계획 시점에는 강제 이동도 이미 끝나 있다. 컨텍스트 액션은
+		// FUnitUI의 타일 스냅샷으로 인접 여부를 판단하므로, 계획보다 먼저 현재 좌표를 밀어
+		// 발앞까지 끌려온 적의 '붙잡아 던지기'가 즉시 다시 나타나게 한다.
+		PushUnitUIData();
 		PushEnemyIntentUIData();
 		if (USRPGCombatModel* UpdatedCombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
 		{
