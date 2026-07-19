@@ -218,13 +218,24 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 		}
 	}
 
-	// 상시 6칸 레일은 새 컨텍스트 조작에서 사용하지 않는다. 데이터 동기화/상세 호환 객체만 남긴다.
-	if (mSkillDockPanel != nullptr) { mSkillDockPanel->SetVisibility(ESlateVisibility::Collapsed); }
-	if (mSkillDockTitleText != nullptr) { mSkillDockTitleText->SetVisibility(ESlateVisibility::Collapsed); }
-	for (UBorder* Widget : mSkillRailPanels) { if (Widget != nullptr) { Widget->SetVisibility(ESlateVisibility::Collapsed); } }
-	for (UImage* Widget : mSkillRailIcons) { if (Widget != nullptr) { Widget->SetVisibility(ESlateVisibility::Collapsed); } }
-	for (UTextBlock* Widget : mSkillRailTexts) { if (Widget != nullptr) { Widget->SetVisibility(ESlateVisibility::Collapsed); } }
-	for (UIndexedButtonWidget* Widget : mSkillInputButtons) { if (Widget != nullptr) { Widget->SetVisibility(ESlateVisibility::Collapsed); } }
+	// 타깃 우선 팔레트만으로는 적을 누르기 전에 스킬별 사거리를 비교할 수 없다.
+	// 좌측 레일을 다시 상시 진입점으로 사용하고, 선택 즉시 게임플레이의 Aim 하이라이트를 켠다.
+	const ESlateVisibility DockVisibility = mCombatControlsHidden
+		? ESlateVisibility::Collapsed
+		: ESlateVisibility::HitTestInvisible;
+	if (mSkillDockPanel != nullptr) { mSkillDockPanel->SetVisibility(DockVisibility); }
+	if (mSkillDockTitleText != nullptr) { mSkillDockTitleText->SetVisibility(DockVisibility); }
+	for (int32 RailSlotIndex = 0; RailSlotIndex < mSkillInputButtons.Num(); ++RailSlotIndex)
+	{
+		if (UIndexedButtonWidget* InputButton = mSkillInputButtons[RailSlotIndex])
+		{
+			const bool bOwned = GetSkillDataIndexForRailSlot(RailSlotIndex) != INDEX_NONE;
+			InputButton->SetVisibility(
+				mCombatControlsHidden == false && bOwned
+					? ESlateVisibility::Visible
+					: ESlateVisibility::Collapsed);
+		}
+	}
 	RefreshContextActions();
 }
 

@@ -765,10 +765,9 @@ void USRPGSkillBuildAction::RefreshAimableTileHighlights()
 	{
 		if (USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
 		{
-			// 실제 조준 가능 목록은 전장 전체로 유지하되, 회색 Aim으로 전 타일을 덮지 않는다.
-			// 공개된 적 경로/공격선과 ★ 추천 타일을 복원해 어떤 계획을 망가뜨리는지 계속 보이게 한다.
+			// 적 계획 오버레이는 Aim과 별도 ISM 레이어다. 먼저 계획을 복원한 뒤 아래에서 실제 사거리도
+			// 함께 칠해, 스킬 레일을 고른 순간 "어디까지 닿는가"와 "무엇을 바꾸는가"를 동시에 보인다.
 			CombatModel->RefreshEnemyIntentHighlights();
-			return;
 		}
 	}
 

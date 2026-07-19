@@ -94,6 +94,13 @@ void UCombatTileMapHUDWidget::SelectSkillForAssignment(int32 SkillIndex)
 		{
 			UGameplayStatics::PlaySound2D(this, mSkillSelectSound);
 		}
-		mCombatUIModel->RequestSelectSkill(SkillIndex);
+		if (mCombatUIModel->GetSelectedSkillIndex() == SkillIndex)
+		{
+			// 같은 레일 칸을 다시 누르면 기존 게임플레이 규칙대로 선택을 취소한다.
+			mCombatUIModel->RequestSelectSkill(SkillIndex);
+			return;
+		}
+		// 주사위 배치 UI를 다시 강요하지 않는다. 가용 주사위를 자동으로 붙인 뒤 실제 Aim 타일을 즉시 표시한다.
+		SelectSkillWithAutomaticDice(SkillIndex, 6);
 	}
 }

@@ -318,8 +318,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		return;
 	}
 
-	// 모바일 직접 조작 튜토리얼: 적 선택 -> 행동 선택 -> 같은 적 드래그를 한 화면씩 가리킨다.
-	// 드래그 방향으로 행동을 추측하지 않으므로, 튜토리얼과 실제 조작 규칙이 항상 일치한다.
+	// 스킬 레일 튜토리얼: 스킬을 먼저 골라 실제 사거리를 본 뒤 전장의 적을 직접 드래그한다.
 	{
 		const TArray<FEnemyIntentUI>& DirectIntents = mCombatUIModel->GetEnemyIntentUIs();
 		const TArray<FSkillUI>& DirectSkills = mCombatUIModel->GetSkillUIs();
@@ -340,7 +339,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 				mEnemyIntentTutorialPanel->SetVisibility(ESlateVisibility::Collapsed);
 				return;
 			}
-			mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::SelectTarget;
+			mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::SelectPull;
 		}
 
 		if (mEnemyIntentTutorialIntervenedEnemyUnitId == INDEX_NONE)
@@ -383,22 +382,16 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		}
 		else if (mEnemyIntentTutorialPullCompleted)
 		{
-			const bool bThrowArmed = DirectIntervened != nullptr
-				&& mDirectArmedTargetUnitId == DirectIntervened->mEnemyUnitId
-				&& DirectSkills.IsValidIndex(mDirectArmedSkillIndex)
-				&& DirectSkills[mDirectArmedSkillIndex].mIsThrowSkill;
-			if (bThrowArmed)
+			const int32 SelectedSkillIndex = mCombatUIModel->GetSelectedSkillIndex();
+			const bool bThrowSelected = DirectSkills.IsValidIndex(SelectedSkillIndex)
+				&& DirectSkills[SelectedSkillIndex].mIsThrowSkill;
+			if (bThrowSelected)
 			{
 				mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::ConfirmThrow;
 			}
-			else if (DirectIntervened != nullptr
-				&& mContextTargetUnitId == DirectIntervened->mEnemyUnitId)
-			{
-				mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::SelectThrow;
-			}
 			else
 			{
-				mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::SelectThrowTarget;
+				mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::SelectThrow;
 			}
 		}
 		else if (mEnemyIntentTutorialInterventionSubmitted)
@@ -407,23 +400,16 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		}
 		else
 		{
-			const FEnemyIntentUI* Recommended = FindRecommendedIntent(DirectIntents);
-			const bool bPullArmed = Recommended != nullptr
-				&& mDirectArmedTargetUnitId == Recommended->mEnemyUnitId
-				&& DirectSkills.IsValidIndex(mDirectArmedSkillIndex)
-				&& DirectSkills[mDirectArmedSkillIndex].mIsPullSkill;
-			if (bPullArmed)
+			const int32 SelectedSkillIndex = mCombatUIModel->GetSelectedSkillIndex();
+			const bool bPullSelected = DirectSkills.IsValidIndex(SelectedSkillIndex)
+				&& DirectSkills[SelectedSkillIndex].mIsPullSkill;
+			if (bPullSelected)
 			{
 				mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::ConfirmDestination;
 			}
-			else if (Recommended != nullptr
-				&& mContextTargetUnitId == Recommended->mEnemyUnitId)
-			{
-				mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::SelectPull;
-			}
 			else
 			{
-				mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::SelectTarget;
+				mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::SelectPull;
 			}
 		}
 
@@ -431,33 +417,25 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		FString DirectMessage;
 		switch (mEnemyIntentTutorialStage)
 		{
-		case EEnemyIntentTutorialStage::SelectTarget:
-			DirectTitle = TEXT("1 / 6   주황색 적을 한 번 탭하세요");
-			DirectMessage = TEXT("아직 드래그하지 마세요 · 적 위에 가능한 행동이 뜹니다");
-			break;
 		case EEnemyIntentTutorialStage::SelectPull:
-			DirectTitle = TEXT("2 / 6   적 위의 ‘끌어당기기’를 탭하세요");
-			DirectMessage = TEXT("선택되면 버튼이 금색으로 바뀝니다");
+			DirectTitle = TEXT("1 / 4   왼쪽에서 ‘끌어당기기’를 탭하세요");
+			DirectMessage = TEXT("회색으로 밝혀지는 타일이 이 스킬의 실제 사거리입니다");
 			break;
 		case EEnemyIntentTutorialStage::ConfirmDestination:
-			DirectTitle = TEXT("3 / 6   같은 적을 기사 쪽으로 드래그하세요");
-			DirectMessage = TEXT("손을 놓으면 알맞은 주사위를 자동으로 써서 끌어옵니다");
+			DirectTitle = TEXT("2 / 4   사거리 안의 주황색 적을 기사 쪽으로 드래그하세요");
+			DirectMessage = TEXT("선 대신 반투명 적이 실제 도착 타일을 미리 보여줍니다");
 			break;
 		case EEnemyIntentTutorialStage::ApplyingIntervention:
 			DirectTitle = TEXT("좋아요!  적을 끌어오는 중");
 			DirectMessage = TEXT("도착할 때까지 잠깐 보세요");
 			break;
-		case EEnemyIntentTutorialStage::SelectThrowTarget:
-			DirectTitle = TEXT("4 / 6   방금 당겨온 적을 한 번 탭하세요");
-			DirectMessage = TEXT("다음 행동을 고를 수 있게 적 위에 버튼을 엽니다");
-			break;
 		case EEnemyIntentTutorialStage::SelectThrow:
-			DirectTitle = TEXT("5 / 6   ‘밀기 · 던지기’를 탭하세요");
-			DirectMessage = TEXT("선택되면 버튼이 금색으로 바뀝니다");
+			DirectTitle = TEXT("3 / 4   왼쪽에서 ‘밀기 · 던지기’를 탭하세요");
+			DirectMessage = TEXT("인접한 적만 밝아집니다 · 주사위는 자동으로 선택됩니다");
 			break;
 		case EEnemyIntentTutorialStage::ConfirmThrow:
-			DirectTitle = TEXT("6 / 6   같은 적을 던질 방향으로 드래그하세요");
-			DirectMessage = TEXT("손을 놓으면 그 방향에서 가장 가까운 유효 칸으로 던집니다");
+			DirectTitle = TEXT("4 / 4   당겨온 적을 원하는 방향으로 드래그하세요");
+			DirectMessage = TEXT("반투명 적이 멈춘 타일에서 손을 놓으면 던집니다");
 			break;
 		case EEnemyIntentTutorialStage::ApplyingThrow:
 			DirectTitle = TEXT("좋아요!  던진 위치에 맞춰 적이 새 길을 고르는 중");
@@ -469,7 +447,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 			break;
 		case EEnemyIntentTutorialStage::Complete:
 			DirectTitle = TEXT("완료!  이제 적을 직접 끌고 밀어 전장을 바꿀 수 있습니다");
-			DirectMessage = TEXT("적 탭 → 행동 선택 → 같은 적 드래그");
+			DirectMessage = TEXT("스킬 선택 → 사거리 확인 → 적 드래그");
 			break;
 		default:
 			DirectTitle = TEXT("적을 직접 움직여 보세요");
@@ -551,7 +529,15 @@ UWidget* UCombatTileMapHUDWidget::ResolveEnemyIntentTutorialFocusWidget() const
 			if (Skills[SkillIndex].mIsDisplacementSkill
 				&& (bFindThrow ? Skills[SkillIndex].mIsThrowSkill : Skills[SkillIndex].mIsPullSkill))
 			{
-				return FindContextActionButtonForSkill(SkillIndex);
+				for (int32 RailSlotIndex = 0; RailSlotIndex < mSkillInputButtons.Num(); ++RailSlotIndex)
+				{
+					if (GetSkillDataIndexForRailSlot(RailSlotIndex) == SkillIndex
+						&& mSkillInputButtons[RailSlotIndex] != nullptr)
+					{
+						return mSkillInputButtons[RailSlotIndex].Get();
+					}
+				}
+				return nullptr;
 			}
 		}
 		return nullptr;
@@ -653,16 +639,14 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentTutorialProgress() const
 	int32 ActiveStep = INDEX_NONE;
 	switch (mEnemyIntentTutorialStage)
 	{
-	case EEnemyIntentTutorialStage::SelectTarget:          ActiveStep = 0; break;
-	case EEnemyIntentTutorialStage::SelectPull:            CompletedCount = 1; ActiveStep = 1; break;
+	case EEnemyIntentTutorialStage::SelectPull:            ActiveStep = 0; break;
 	case EEnemyIntentTutorialStage::ConfirmDestination:
-	case EEnemyIntentTutorialStage::ApplyingIntervention:  CompletedCount = 2; ActiveStep = 2; break;
-	case EEnemyIntentTutorialStage::SelectThrowTarget:     CompletedCount = 3; ActiveStep = 3; break;
-	case EEnemyIntentTutorialStage::SelectThrow:           CompletedCount = 4; ActiveStep = 4; break;
+	case EEnemyIntentTutorialStage::ApplyingIntervention:  CompletedCount = 1; ActiveStep = 1; break;
+	case EEnemyIntentTutorialStage::SelectThrow:           CompletedCount = 2; ActiveStep = 2; break;
 	case EEnemyIntentTutorialStage::ConfirmThrow:
-	case EEnemyIntentTutorialStage::ApplyingThrow:         CompletedCount = 5; ActiveStep = 5; break;
+	case EEnemyIntentTutorialStage::ApplyingThrow:         CompletedCount = 3; ActiveStep = 3; break;
 	case EEnemyIntentTutorialStage::EndTurnAndObserve:
-	case EEnemyIntentTutorialStage::Complete:              CompletedCount = 6; break;
+	case EEnemyIntentTutorialStage::Complete:              CompletedCount = 4; break;
 	case EEnemyIntentTutorialStage::WaitingForIntent:
 	default:                                               break;
 	}
@@ -672,6 +656,11 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentTutorialProgress() const
 		UBorder* Dot = mEnemyIntentTutorialProgressDots[StepIndex].Get();
 		if (Dot == nullptr)
 		{
+			continue;
+		}
+		if (StepIndex >= 4)
+		{
+			Dot->SetVisibility(ESlateVisibility::Collapsed);
 			continue;
 		}
 		Dot->SetVisibility(ESlateVisibility::HitTestInvisible);
@@ -733,14 +722,12 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime
 	int32 ActiveStep = INDEX_NONE;
 	switch (mEnemyIntentTutorialStage)
 	{
-	case EEnemyIntentTutorialStage::SelectTarget:         ActiveStep = 0; break;
-	case EEnemyIntentTutorialStage::SelectPull:           ActiveStep = 1; break;
+	case EEnemyIntentTutorialStage::SelectPull:           ActiveStep = 0; break;
 	case EEnemyIntentTutorialStage::ConfirmDestination:
-	case EEnemyIntentTutorialStage::ApplyingIntervention: ActiveStep = 2; break;
-	case EEnemyIntentTutorialStage::SelectThrowTarget:    ActiveStep = 3; break;
-	case EEnemyIntentTutorialStage::SelectThrow:          ActiveStep = 4; break;
+	case EEnemyIntentTutorialStage::ApplyingIntervention: ActiveStep = 1; break;
+	case EEnemyIntentTutorialStage::SelectThrow:          ActiveStep = 2; break;
 	case EEnemyIntentTutorialStage::ConfirmThrow:
-	case EEnemyIntentTutorialStage::ApplyingThrow:        ActiveStep = 5; break;
+	case EEnemyIntentTutorialStage::ApplyingThrow:        ActiveStep = 3; break;
 	default:                                           break;
 	}
 	if (mEnemyIntentTutorialProgressDots.IsValidIndex(ActiveStep)
@@ -917,10 +904,10 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime
 		FString PointerText = TEXT("클릭");
 		switch (mEnemyIntentTutorialStage)
 		{
-		case EEnemyIntentTutorialStage::SelectPull:        PointerText = TEXT("끌어당기기 클릭"); break;
+		case EEnemyIntentTutorialStage::SelectPull:        PointerText = TEXT("끌어당기기 선택 · 사거리 보기"); break;
 		case EEnemyIntentTutorialStage::SelectDice:        PointerText = TEXT("가장 큰 숫자 클릭"); break;
 		case EEnemyIntentTutorialStage::SelectTarget:      PointerText = TEXT("이 적을 한 번 탭"); break;
-		case EEnemyIntentTutorialStage::SelectThrow:       PointerText = TEXT("던지기 클릭"); break;
+		case EEnemyIntentTutorialStage::SelectThrow:       PointerText = TEXT("밀기 · 던지기 선택"); break;
 		case EEnemyIntentTutorialStage::SelectThrowDice:   PointerText = TEXT("새 숫자 클릭"); break;
 		case EEnemyIntentTutorialStage::SelectThrowTarget: PointerText = TEXT("당겨온 적을 한 번 탭"); break;
 		case EEnemyIntentTutorialStage::SelectThrowDestination: PointerText = TEXT("던질 방향 클릭"); break;

@@ -2,12 +2,20 @@
 
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Blueprint/WidgetTree.h"
+#include "Blueprint/SlateBlueprintLibrary.h"
+#include "Actor/TileMap/TileMap.h"
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/Image.h"
+#include "Components/SceneComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Components/TextBlock.h"
 #include "GameFramework/Actor.h"
+#include "Materials/MaterialInterface.h"
+#include "Pawn/Unit.h"
+#include "RDCollision.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/IndexedButtonWidget.h"
 
@@ -627,8 +635,14 @@ void UCombatTileMapHUDWidget::HandleContextActionClicked(int32 ActionSlotIndex)
 	}
 	if (Skills[SkillIndex].mIsDisplacementSkill)
 	{
+		const int32 TargetUnitId = mContextTargetUnitId;
+		const FVector2D TargetScreen = mContextTargetScreenPosition;
+		if (PrepareDirectSkill(SkillIndex, TargetScreen, 6) == false)
+		{
+			return;
+		}
 		mDirectArmedSkillIndex = SkillIndex;
-		mDirectArmedTargetUnitId = mContextTargetUnitId;
+		mDirectArmedTargetUnitId = TargetUnitId;
 		RefreshContextActions();
 		UpdateEnemyIntentTutorial();
 		return;
@@ -678,11 +692,7 @@ int32 UCombatTileMapHUDWidget::FindDirectSkillIndex(bool FSkillUI::* SkillFlag) 
 	return INDEX_NONE;
 }
 
-bool UCombatTileMapHUDWidget::ExecuteDirectSkill(
-	int32 SkillIndex,
-	const FVector2D& TargetScreenPosition,
-	const FVector2D* DestinationScreenPosition,
-	int32 DesiredPower)
+bool UCombatTileMapHUDWidget::SelectSkillWithAutomaticDice(int32 SkillIndex, int32 DesiredPower)
 {
 	if (mCombatUIModel == nullptr || mCombatUIModel->GetSkillUIs().IsValidIndex(SkillIndex) == false)
 	{
@@ -693,62 +703,132 @@ bool UCombatTileMapHUDWidget::ExecuteDirectSkill(
 	{
 		return false;
 	}
-	if (mCombatUIModel->GetSelectedSkillIndex() != INDEX_NONE)
+	if (mCombatUIModel->GetSelectedSkillIndex() != SkillIndex)
 	{
-		mCombatUIModel->RequestCancel();
-	}
-	mCombatUIModel->RequestSelectSkill(SkillIndex);
-	const TArray<int32> DiceIndices = PickAutomaticDice(
-		mCombatUIModel->GetDiceUIs(),
-		FMath::Max(Skill.mDiceCost, 0),
-		FMath::Max(DesiredPower, 1) * FMath::Max(Skill.mDiceCost, 1));
-	if (DiceIndices.Num() < Skill.mDiceCost)
-	{
-		mCombatUIModel->RequestCancel();
-		return false;
-	}
-	for (int32 DiceIndex : DiceIndices)
-	{
-		mCombatUIModel->RequestToggleDice(DiceIndex);
-	}
-	mCombatUIModel->RequestWorldTouch(TargetScreenPosition, false);
-	if (DestinationScreenPosition != nullptr)
-	{
-		// 손을 뗀 픽셀을 다시 레이캐스트하면 모델/장애물에 걸리거나 같은 타일로 판정될 수 있다.
-		// 게임플레이가 이미 계산한 유효 8방향 후보를 화면에 투영해 드래그와 가장 가까운 방향으로 스냅한다.
-		const FVector2D RequestedDirection = (*DestinationScreenPosition - TargetScreenPosition).GetSafeNormal();
-		APlayerController* PlayerController = GetOwningPlayer();
-		float BestDirectionScore = -2.0f;
-		FVector2D BestCandidateScreen = FVector2D::ZeroVector;
-		bool bFoundCandidate = false;
-		if (PlayerController != nullptr && RootCanvas != nullptr)
+		if (mCombatUIModel->GetSelectedSkillIndex() != INDEX_NONE)
 		{
-			for (const FVector& CandidateWorld : mCombatUIModel->GetDisplacementPreview().mDirectionCandidateWorldLocations)
-			{
-				FVector2D CandidateWidget;
-				if (UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(
-					PlayerController, CandidateWorld, CandidateWidget, false) == false)
-				{
-					continue;
-				}
-				const FVector2D CandidateScreen = RootCanvas->GetCachedGeometry().LocalToAbsolute(CandidateWidget);
-				const float DirectionScore = FVector2D::DotProduct(
-					(CandidateScreen - TargetScreenPosition).GetSafeNormal(),
-					RequestedDirection);
-				if (DirectionScore > BestDirectionScore)
-				{
-					BestDirectionScore = DirectionScore;
-					BestCandidateScreen = CandidateScreen;
-					bFoundCandidate = true;
-				}
-			}
+			mCombatUIModel->RequestCancel();
 		}
-		if (bFoundCandidate == false)
+		mCombatUIModel->RequestSelectSkill(SkillIndex);
+	}
+
+	const int32 MissingDiceCount = FMath::Max(
+		Skill.mDiceCost - mCombatUIModel->GetSelectedDiceIndices().Num(),
+		0);
+	if (MissingDiceCount > 0)
+	{
+		const TArray<int32> DiceIndices = PickAutomaticDice(
+			mCombatUIModel->GetDiceUIs(),
+			MissingDiceCount,
+			FMath::Max(DesiredPower, 1) * MissingDiceCount);
+		if (DiceIndices.Num() < MissingDiceCount)
 		{
 			mCombatUIModel->RequestCancel();
 			return false;
 		}
-		mCombatUIModel->RequestWorldTouch(BestCandidateScreen, false);
+		for (int32 DiceIndex : DiceIndices)
+		{
+			mCombatUIModel->RequestToggleDice(DiceIndex);
+		}
+	}
+	return mCombatUIModel->GetSelectedSkillIndex() == SkillIndex
+		&& mCombatUIModel->GetSelectedDiceIndices().Num() >= Skill.mDiceCost;
+}
+
+bool UCombatTileMapHUDWidget::PrepareDirectSkill(
+	int32 SkillIndex,
+	const FVector2D& TargetScreenPosition,
+	int32 DesiredPower)
+{
+	if (SelectSkillWithAutomaticDice(SkillIndex, DesiredPower) == false)
+	{
+		return false;
+	}
+	mCombatUIModel->RequestWorldTouch(TargetScreenPosition, false);
+	const ECombatBuildPhaseUI Phase = mCombatUIModel->GetTurnUI().mPhase;
+	return Phase == ECombatBuildPhaseUI::Preview
+		|| Phase == ECombatBuildPhaseUI::ThrowDestinationSelection;
+}
+
+bool UCombatTileMapHUDWidget::SelectDirectThrowDestination(
+	const FVector2D& TargetScreenPosition,
+	const FVector2D& DestinationScreenPosition)
+{
+	if (mCombatUIModel == nullptr || RootCanvas == nullptr)
+	{
+		return false;
+	}
+	const FVector2D RequestedDirection = (DestinationScreenPosition - TargetScreenPosition).GetSafeNormal();
+	if (RequestedDirection.IsNearlyZero())
+	{
+		return false;
+	}
+	APlayerController* PlayerController = GetOwningPlayer();
+	float BestDirectionScore = -2.0f;
+	FVector2D BestCandidateScreen = FVector2D::ZeroVector;
+	FVector BestCandidateWorld = FVector::ZeroVector;
+	bool bFoundCandidate = false;
+	if (PlayerController != nullptr)
+	{
+		for (const FVector& CandidateWorld : mCombatUIModel->GetDisplacementPreview().mDirectionCandidateWorldLocations)
+		{
+			FVector2D CandidateWidget;
+			if (UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(
+				PlayerController, CandidateWorld, CandidateWidget, false) == false)
+			{
+				continue;
+			}
+			const FVector2D CandidateScreen = RootCanvas->GetCachedGeometry().LocalToAbsolute(CandidateWidget);
+			const float DirectionScore = FVector2D::DotProduct(
+				(CandidateScreen - TargetScreenPosition).GetSafeNormal(),
+				RequestedDirection);
+			if (DirectionScore > BestDirectionScore)
+			{
+				BestDirectionScore = DirectionScore;
+				BestCandidateScreen = CandidateScreen;
+				BestCandidateWorld = CandidateWorld;
+				bFoundCandidate = true;
+			}
+		}
+	}
+	if (bFoundCandidate == false)
+	{
+		return false;
+	}
+	if (mHasDirectThrowCandidate
+		&& mDirectThrowCandidateWorld.Equals(BestCandidateWorld, 1.0f)
+		&& mCombatUIModel->GetTurnUI().mPhase == ECombatBuildPhaseUI::Preview)
+	{
+		return true;
+	}
+	mDirectThrowCandidateWorld = BestCandidateWorld;
+	mHasDirectThrowCandidate = true;
+	mCombatUIModel->RequestWorldTouch(BestCandidateScreen, false);
+	return mCombatUIModel->GetTurnUI().mPhase == ECombatBuildPhaseUI::Preview;
+}
+
+bool UCombatTileMapHUDWidget::ExecuteDirectSkill(
+	int32 SkillIndex,
+	const FVector2D& TargetScreenPosition,
+	const FVector2D* DestinationScreenPosition,
+	int32 DesiredPower)
+{
+	if (mCombatUIModel == nullptr || mCombatUIModel->GetSkillUIs().IsValidIndex(SkillIndex) == false)
+	{
+		return false;
+	}
+	if (SelectSkillWithAutomaticDice(SkillIndex, DesiredPower) == false)
+	{
+		return false;
+	}
+	mCombatUIModel->RequestWorldTouch(TargetScreenPosition, false);
+	if (DestinationScreenPosition != nullptr)
+	{
+		if (SelectDirectThrowDestination(TargetScreenPosition, *DestinationScreenPosition) == false)
+		{
+			mCombatUIModel->RequestCancel();
+			return false;
+		}
 	}
 	if (mCombatUIModel->GetTurnUI().mPhase != ECombatBuildPhaseUI::Preview)
 	{
@@ -764,8 +844,17 @@ bool UCombatTileMapHUDWidget::ExecuteDirectSkill(
 
 bool UCombatTileMapHUDWidget::BeginDirectUnitGesture(const FVector2D& ScreenPosition)
 {
-	if (mCombatUIModel == nullptr || mCombatUIModel->GetSelectedSkillIndex() != INDEX_NONE)
+	if (mCombatUIModel == nullptr)
 	{
+		return false;
+	}
+	const int32 SelectedSkillIndex = mCombatUIModel->GetSelectedSkillIndex();
+	const TArray<FSkillUI>& Skills = mCombatUIModel->GetSkillUIs();
+	const bool bSelectedDisplacement = Skills.IsValidIndex(SelectedSkillIndex)
+		&& Skills[SelectedSkillIndex].mIsDisplacementSkill;
+	if (SelectedSkillIndex != INDEX_NONE && bSelectedDisplacement == false)
+	{
+		// 일반 공격은 기존 스킬 빌드의 한 번 탭 조준을 그대로 사용한다.
 		return false;
 	}
 	int32 UnitId = INDEX_NONE;
@@ -775,6 +864,24 @@ bool UCombatTileMapHUDWidget::BeginDirectUnitGesture(const FVector2D& ScreenPosi
 	{
 		return false;
 	}
+	if (bSelectedDisplacement)
+	{
+		if (bIsPlayer)
+		{
+			return false;
+		}
+		mDirectArmedSkillIndex = SelectedSkillIndex;
+		mDirectArmedTargetUnitId = UnitId;
+		mCombatUIModel->RequestWorldTouch(UnitScreenPosition, false);
+		const ECombatBuildPhaseUI Phase = mCombatUIModel->GetTurnUI().mPhase;
+		if (Phase != ECombatBuildPhaseUI::Preview
+			&& Phase != ECombatBuildPhaseUI::ThrowDestinationSelection)
+		{
+			mDirectArmedSkillIndex = INDEX_NONE;
+			mDirectArmedTargetUnitId = INDEX_NONE;
+			return false;
+		}
+	}
 	mDirectUnitGestureActive = true;
 	mDirectUnitGestureDragged = false;
 	mDirectUnitGestureTargetId = UnitId;
@@ -782,6 +889,8 @@ bool UCombatTileMapHUDWidget::BeginDirectUnitGesture(const FVector2D& ScreenPosi
 	mDirectUnitGestureStart = ScreenPosition;
 	mDirectUnitGestureCurrent = ScreenPosition;
 	mDirectUnitGestureTargetScreen = UnitScreenPosition;
+	mHasDirectThrowCandidate = false;
+	mDirectThrowCandidateWorld = FVector::ZeroVector;
 	CloseContextActions();
 	SetDirectUnitGestureVisual(true, ScreenPosition);
 	return true;
@@ -795,87 +904,220 @@ void UCombatTileMapHUDWidget::UpdateDirectUnitGesture(const FVector2D& ScreenPos
 	}
 	mDirectUnitGestureCurrent = ScreenPosition;
 	mDirectUnitGestureDragged |= FVector2D::Distance(mDirectUnitGestureStart, ScreenPosition) >= DirectDragThreshold;
+	if (mDirectUnitGestureDragged
+		&& mCombatUIModel != nullptr
+		&& mCombatUIModel->GetSkillUIs().IsValidIndex(mDirectArmedSkillIndex)
+		&& mCombatUIModel->GetSkillUIs()[mDirectArmedSkillIndex].mIsThrowSkill)
+	{
+		SelectDirectThrowDestination(mDirectUnitGestureTargetScreen, ScreenPosition);
+	}
 	SetDirectUnitGestureVisual(true, ScreenPosition);
+}
+
+bool UCombatTileMapHUDWidget::GetDirectGestureTileWorldLocation(
+	const FVector2D& ScreenPosition,
+	FVector& OutWorldLocation) const
+{
+	OutWorldLocation = FVector::ZeroVector;
+	APlayerController* PlayerController = GetOwningPlayer();
+	if (PlayerController == nullptr)
+	{
+		return false;
+	}
+	FVector2D ViewportPixel = FVector2D::ZeroVector;
+	FVector2D ViewportPosition = FVector2D::ZeroVector;
+	USlateBlueprintLibrary::AbsoluteToViewport(
+		this, ScreenPosition, ViewportPixel, ViewportPosition);
+	FHitResult HitResult;
+	if (PlayerController->GetHitResultAtScreenPosition(
+		ViewportPixel, RDTraceChannels::TileOnlyTrace, false, HitResult) == false)
+	{
+		return false;
+	}
+	ATileMap* TileMap = Cast<ATileMap>(HitResult.GetActor());
+	if (TileMap == nullptr)
+	{
+		return false;
+	}
+	const FTileIndex Tile = TileMap->WorldToTileIndex(HitResult.ImpactPoint);
+	if (TileMap->IsValidIndex(Tile) == false)
+	{
+		return false;
+	}
+	OutWorldLocation = TileMap->TileToWorldLocation(Tile);
+	return true;
+}
+
+void UCombatTileMapHUDWidget::EnsureDirectUnitGestureGhost(int32 TargetUnitId)
+{
+	if (IsValid(mDirectUnitGestureGhostActor)
+		&& mDirectGestureGhostTargetId == TargetUnitId)
+	{
+		return;
+	}
+	DestroyDirectUnitGestureGhost();
+	if (mCombatUIModel == nullptr || GetWorld() == nullptr)
+	{
+		return;
+	}
+	const FUnitUI* TargetUnit = mCombatUIModel->GetUnitUIs().FindByPredicate([TargetUnitId](const FUnitUI& Unit)
+	{
+		return Unit.mUnitId == TargetUnitId && Unit.mViewActor.IsValid();
+	});
+	AUnit* SourceUnit = TargetUnit != nullptr ? Cast<AUnit>(TargetUnit->mViewActor.Get()) : nullptr;
+	USkeletalMeshComponent* SourceMesh = SourceUnit != nullptr ? SourceUnit->GetMesh() : nullptr;
+	if (SourceUnit == nullptr || SourceMesh == nullptr || SourceMesh->GetSkeletalMeshAsset() == nullptr)
+	{
+		return;
+	}
+
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.ObjectFlags |= RF_Transient;
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	mDirectUnitGestureGhostActor = GetWorld()->SpawnActor<AActor>(
+		AActor::StaticClass(), SourceUnit->GetActorTransform(), SpawnParameters);
+	if (mDirectUnitGestureGhostActor == nullptr)
+	{
+		return;
+	}
+	USceneComponent* GhostRoot = NewObject<USceneComponent>(
+		mDirectUnitGestureGhostActor, TEXT("DirectDragGhostRoot"), RF_Transient);
+	mDirectUnitGestureGhostMesh = NewObject<USkeletalMeshComponent>(
+		mDirectUnitGestureGhostActor, TEXT("DirectDragGhostMesh"), RF_Transient);
+	if (GhostRoot == nullptr || mDirectUnitGestureGhostMesh == nullptr)
+	{
+		DestroyDirectUnitGestureGhost();
+		return;
+	}
+	mDirectUnitGestureGhostActor->SetRootComponent(GhostRoot);
+	mDirectUnitGestureGhostActor->AddInstanceComponent(GhostRoot);
+	GhostRoot->RegisterComponent();
+	mDirectUnitGestureGhostMesh->SetupAttachment(GhostRoot);
+	mDirectUnitGestureGhostActor->AddInstanceComponent(mDirectUnitGestureGhostMesh);
+	mDirectUnitGestureGhostMesh->SetSkeletalMeshAsset(SourceMesh->GetSkeletalMeshAsset());
+	mDirectUnitGestureGhostMesh->SetRelativeTransform(SourceMesh->GetRelativeTransform());
+	mDirectUnitGestureGhostMesh->SetLeaderPoseComponent(SourceMesh);
+	mDirectUnitGestureGhostMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	mDirectUnitGestureGhostMesh->SetGenerateOverlapEvents(false);
+	mDirectUnitGestureGhostMesh->SetCastShadow(false);
+	mDirectUnitGestureGhostMesh->SetReceivesDecals(false);
+	mDirectUnitGestureGhostMesh->SetTranslucentSortPriority(40);
+	if (mDirectUnitGestureGhostMaterial != nullptr)
+	{
+		const int32 MaterialCount = FMath::Max(SourceMesh->GetNumMaterials(), 1);
+		for (int32 MaterialIndex = 0; MaterialIndex < MaterialCount; ++MaterialIndex)
+		{
+			mDirectUnitGestureGhostMesh->SetMaterial(MaterialIndex, mDirectUnitGestureGhostMaterial);
+		}
+	}
+	mDirectUnitGestureGhostMesh->RegisterComponent();
+	mDirectUnitGestureGhostActor->SetActorEnableCollision(false);
+	mDirectUnitGestureGhostActor->SetActorTickEnabled(false);
+	mDirectGestureGhostTargetId = TargetUnitId;
+}
+
+void UCombatTileMapHUDWidget::DestroyDirectUnitGestureGhost()
+{
+	if (IsValid(mDirectUnitGestureGhostActor))
+	{
+		mDirectUnitGestureGhostActor->Destroy();
+	}
+	mDirectUnitGestureGhostActor = nullptr;
+	mDirectUnitGestureGhostMesh = nullptr;
+	mDirectGestureGhostTargetId = INDEX_NONE;
 }
 
 void UCombatTileMapHUDWidget::SetDirectUnitGestureVisual(bool bVisible, const FVector2D& ScreenPosition)
 {
-	if (mDirectUnitGestureLine == nullptr || mDirectUnitGestureHandle == nullptr
-		|| mDirectUnitGestureLabel == nullptr || RootCanvas == nullptr)
-	{
-		return;
-	}
+	// 기존 선/손잡이는 더 이상 사용하지 않는다. 대상의 실제 메시 고스트가 착지 타일을 직접 보여준다.
+	if (mDirectUnitGestureLine != nullptr) { mDirectUnitGestureLine->SetVisibility(ESlateVisibility::Collapsed); }
+	if (mDirectUnitGestureHandle != nullptr) { mDirectUnitGestureHandle->SetVisibility(ESlateVisibility::Collapsed); }
 	if (bVisible == false)
 	{
-		mDirectUnitGestureLine->SetVisibility(ESlateVisibility::Collapsed);
-		mDirectUnitGestureHandle->SetVisibility(ESlateVisibility::Collapsed);
-		mDirectUnitGestureLabel->SetVisibility(ESlateVisibility::Collapsed);
+		if (mDirectUnitGestureLabel != nullptr) { mDirectUnitGestureLabel->SetVisibility(ESlateVisibility::Collapsed); }
+		DestroyDirectUnitGestureGhost();
+		return;
+	}
+	if (mDirectUnitGestureLabel == nullptr || RootCanvas == nullptr || mCombatUIModel == nullptr)
+	{
 		return;
 	}
 	const bool bHasArmedAction = mDirectArmedTargetUnitId == mDirectUnitGestureTargetId
 		&& (mDirectArmedSkillIndex == ContextMoveAction
-			|| (mCombatUIModel != nullptr
-				&& mCombatUIModel->GetSkillUIs().IsValidIndex(mDirectArmedSkillIndex)));
+			|| mCombatUIModel->GetSkillUIs().IsValidIndex(mDirectArmedSkillIndex));
 	if (bHasArmedAction == false)
 	{
-		// 행동을 고르기 전에는 손가락을 움직여도 드래그 선 자체를 보여주지 않는다.
-		// 릴리스 시 팔레트만 열리므로, 방향 제스처가 행동을 몰래 추론한다는 오해가 생기지 않는다.
-		mDirectUnitGestureLine->SetVisibility(ESlateVisibility::Collapsed);
-		mDirectUnitGestureHandle->SetVisibility(ESlateVisibility::Collapsed);
+		mDirectUnitGestureLabel->SetVisibility(ESlateVisibility::Collapsed);
+		DestroyDirectUnitGestureGhost();
+		return;
+	}
+
+	FVector GhostFloorWorld = FVector::ZeroVector;
+	bool bHasGhostFloor = false;
+	const FDisplacementPreviewUI& Preview = mCombatUIModel->GetDisplacementPreview();
+	if (Preview.mIsActive
+		&& Preview.mTargetUnitId == mDirectUnitGestureTargetId
+		&& Preview.mLandingTile != FTileIndex::Invalid)
+	{
+		GhostFloorWorld = Preview.mLandingWorldLocation;
+		bHasGhostFloor = true;
+	}
+	if (bHasGhostFloor == false)
+	{
+		bHasGhostFloor = GetDirectGestureTileWorldLocation(ScreenPosition, GhostFloorWorld);
+	}
+	if (bHasGhostFloor == false)
+	{
+		mDirectUnitGestureLabel->SetVisibility(ESlateVisibility::Collapsed);
+		DestroyDirectUnitGestureGhost();
+		return;
+	}
+
+	EnsureDirectUnitGestureGhost(mDirectUnitGestureTargetId);
+	const FUnitUI* TargetUnit = mCombatUIModel->GetUnitUIs().FindByPredicate([this](const FUnitUI& Unit)
+	{
+		return Unit.mUnitId == mDirectUnitGestureTargetId && Unit.mViewActor.IsValid();
+	});
+	AUnit* SourceUnit = TargetUnit != nullptr ? Cast<AUnit>(TargetUnit->mViewActor.Get()) : nullptr;
+	if (mDirectUnitGestureGhostActor == nullptr || SourceUnit == nullptr)
+	{
 		mDirectUnitGestureLabel->SetVisibility(ESlateVisibility::Collapsed);
 		return;
 	}
-	const FGeometry& RootGeometry = RootCanvas->GetCachedGeometry();
-	const FVector2D Start = RootGeometry.AbsoluteToLocal(mDirectUnitGestureTargetScreen);
-	const FVector2D End = RootGeometry.AbsoluteToLocal(ScreenPosition);
-	const FVector2D Delta = End - Start;
-	const float Length = Delta.Size();
-	if (UCanvasPanelSlot* GestureLineSlot = Cast<UCanvasPanelSlot>(mDirectUnitGestureLine->Slot))
+	const float RootHeight = SourceUnit->GetCapsuleComponent() != nullptr
+		? SourceUnit->GetCapsuleComponent()->GetScaledCapsuleHalfHeight()
+		: 0.0f;
+	const FVector GhostActorLocation = GhostFloorWorld + FVector(0.0f, 0.0f, RootHeight);
+	mDirectUnitGestureGhostActor->SetActorLocationAndRotation(
+		GhostActorLocation, SourceUnit->GetActorRotation());
+
+	FString Label = TEXT("예상 위치 · 놓아서 실행");
+	if (mDirectArmedSkillIndex == ContextMoveAction)
 	{
-		GestureLineSlot->SetPosition((Start + End) * 0.5f);
-		GestureLineSlot->SetSize(FVector2D(FMath::Max(Length, 8.0f), 8.0f));
-		GestureLineSlot->SetAlignment(FVector2D(0.5f, 0.5f));
-		GestureLineSlot->SetZOrder(960);
+		Label = TEXT("이동할 위치");
 	}
-	FWidgetTransform LineTransform;
-	LineTransform.Angle = FMath::RadiansToDegrees(FMath::Atan2(Delta.Y, Delta.X));
-	mDirectUnitGestureLine->SetRenderTransform(LineTransform);
-	if (UCanvasPanelSlot* GestureHandleSlot = Cast<UCanvasPanelSlot>(mDirectUnitGestureHandle->Slot))
+	else if (mCombatUIModel->GetSkillUIs().IsValidIndex(mDirectArmedSkillIndex))
 	{
-		GestureHandleSlot->SetPosition(End);
-		GestureHandleSlot->SetSize(FVector2D(30.0f, 30.0f));
-		GestureHandleSlot->SetAlignment(FVector2D(0.5f, 0.5f));
-		GestureHandleSlot->SetZOrder(961);
-	}
-	FString Label = TEXT("선택한 행동 · 놓아서 실행");
-	if (mDirectArmedTargetUnitId == mDirectUnitGestureTargetId)
-	{
-		if (mDirectArmedSkillIndex == ContextMoveAction)
-		{
-			Label = TEXT("이동 · 빈 칸에서 놓아 실행");
-		}
-		else if (mCombatUIModel != nullptr
-			&& mCombatUIModel->GetSkillUIs().IsValidIndex(mDirectArmedSkillIndex))
-		{
-			const FSkillUI& ArmedSkill = mCombatUIModel->GetSkillUIs()[mDirectArmedSkillIndex];
-			if (ArmedSkill.mIsPullSkill) { Label = TEXT("끌어당기기 · 기사 쪽으로 드래그"); }
-			else if (ArmedSkill.mIsThrowSkill) { Label = TEXT("밀기 · 던지기 · 원하는 방향으로 드래그"); }
-			else if (ArmedSkill.mIsStaggerSkill) { Label = TEXT("다리 걸기 · 옆으로 드래그"); }
-			else if (ArmedSkill.mIsSwapSkill) { Label = TEXT("자리 바꾸기 · 기사 위에 놓기"); }
-			else { Label = ArmedSkill.mName.ToString() + TEXT(" · 놓아서 실행"); }
-		}
+		Label = FString::Printf(
+			TEXT("%s · 예상 위치"),
+			*mCombatUIModel->GetSkillUIs()[mDirectArmedSkillIndex].mName.ToString());
 	}
 	mDirectUnitGestureLabel->SetText(FText::FromString(Label));
-	if (UCanvasPanelSlot* GestureLabelSlot = Cast<UCanvasPanelSlot>(mDirectUnitGestureLabel->Slot))
+	FVector2D GhostWidgetPosition;
+	if (APlayerController* PlayerController = GetOwningPlayer();
+		PlayerController != nullptr
+		&& UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(
+			PlayerController, GhostActorLocation, GhostWidgetPosition, false))
 	{
-		GestureLabelSlot->SetPosition(End + FVector2D(0.0f, -48.0f));
-		GestureLabelSlot->SetSize(FVector2D(220.0f, 34.0f));
-		GestureLabelSlot->SetAlignment(FVector2D(0.5f, 0.5f));
-		GestureLabelSlot->SetZOrder(962);
+		if (UCanvasPanelSlot* GestureLabelSlot = Cast<UCanvasPanelSlot>(mDirectUnitGestureLabel->Slot))
+		{
+			GestureLabelSlot->SetPosition(GhostWidgetPosition + FVector2D(0.0f, -104.0f));
+			GestureLabelSlot->SetSize(FVector2D(240.0f, 34.0f));
+			GestureLabelSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+			GestureLabelSlot->SetZOrder(962);
+		}
+		mDirectUnitGestureLabel->SetVisibility(ESlateVisibility::HitTestInvisible);
 	}
-	mDirectUnitGestureLine->SetVisibility(ESlateVisibility::HitTestInvisible);
-	mDirectUnitGestureHandle->SetVisibility(ESlateVisibility::HitTestInvisible);
-	mDirectUnitGestureLabel->SetVisibility(ESlateVisibility::HitTestInvisible);
 }
 
 bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPosition)
@@ -893,6 +1135,12 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 	SetDirectUnitGestureVisual(false);
 	if (mDirectUnitGestureDragged == false)
 	{
+		// 스킬 탭에서 이미 행동을 고른 상태라면 짧은 탭은 선택을 유지한다.
+		// 컨텍스트 메뉴를 다시 열어 사거리/대상 미리보기를 가리지 않는다.
+		if (mCombatUIModel != nullptr && mCombatUIModel->GetSelectedSkillIndex() != INDEX_NONE)
+		{
+			return true;
+		}
 		return TryOpenContextActionsAtScreenPosition(TargetScreen);
 	}
 	if (mCombatUIModel == nullptr)

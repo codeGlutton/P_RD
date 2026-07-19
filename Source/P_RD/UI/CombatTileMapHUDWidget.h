@@ -14,6 +14,7 @@
 
 class ACombatDiceCaptureActor;
 class ACombatDiceRollCaptureActor;
+class AActor;
 struct FPresentationBarrier;
 enum class EWorldWidgetType : uint8;
 enum class ESRPGCombatResult : uint8;
@@ -28,10 +29,12 @@ class UHorizontalBox;
 class UIndexedButtonWidget;
 class UImage;
 class UMaterialInstanceDynamic;
+class UMaterialInterface;
 class UProgressBar;
 class URewardUIModel;
 class URewardUIWidgetBase;
 class USoundBase;
+class USkeletalMeshComponent;
 class UTextBlock;
 class UTextureRenderTarget2D;
 class UVerticalBox;
@@ -272,8 +275,19 @@ private:
 	void UpdateDirectUnitGesture(const FVector2D& ScreenPosition);
 	bool EndDirectUnitGesture(const FVector2D& ScreenPosition);
 	void SetDirectUnitGestureVisual(bool bVisible, const FVector2D& ScreenPosition = FVector2D::ZeroVector);
+	/** @brief 화면 좌표 아래 타일 중심의 월드 위치를 구한다. */
+	bool GetDirectGestureTileWorldLocation(const FVector2D& ScreenPosition, FVector& OutWorldLocation) const;
+	/** @brief 대상 유닛 메시를 복제한 충돌 없는 반투명 드래그 고스트를 준비한다. */
+	void EnsureDirectUnitGestureGhost(int32 TargetUnitId);
+	void DestroyDirectUnitGestureGhost();
 	/** @brief 필요한 주사위를 자동으로 골라 기존 스킬 빌드 파이프라인을 즉시 실행한다. */
 	bool ExecuteDirectSkill(int32 SkillIndex, const FVector2D& TargetScreenPosition, const FVector2D* DestinationScreenPosition, int32 DesiredPower);
+	/** @brief 스킬과 추천 주사위를 선택해 실제 게임플레이 사거리 하이라이트를 즉시 켠다. */
+	bool SelectSkillWithAutomaticDice(int32 SkillIndex, int32 DesiredPower);
+	/** @brief 컨텍스트 행동을 드래그 전에 실제 조준 상태까지 준비한다. */
+	bool PrepareDirectSkill(int32 SkillIndex, const FVector2D& TargetScreenPosition, int32 DesiredPower);
+	/** @brief 던지기 드래그 방향을 게임플레이가 계산한 유효 방향 후보에 스냅한다. */
+	bool SelectDirectThrowDestination(const FVector2D& TargetScreenPosition, const FVector2D& DestinationScreenPosition);
 	int32 FindDirectSkillIndex(bool FSkillUI::* SkillFlag) const;
 	/** @brief 선택된 유닛/현재 주사위/사거리에 맞춰 컨텍스트 행동 목록과 강조를 다시 그린다. */
 	void RefreshContextActions();
@@ -1044,9 +1058,15 @@ private:
 	FVector2D mDirectUnitGestureStart = FVector2D::ZeroVector;
 	FVector2D mDirectUnitGestureCurrent = FVector2D::ZeroVector;
 	FVector2D mDirectUnitGestureTargetScreen = FVector2D::ZeroVector;
+	bool mHasDirectThrowCandidate = false;
+	FVector mDirectThrowCandidateWorld = FVector::ZeroVector;
+	int32 mDirectGestureGhostTargetId = INDEX_NONE;
 	UPROPERTY(Transient) TObjectPtr<UBorder> mDirectUnitGestureLine;
 	UPROPERTY(Transient) TObjectPtr<UBorder> mDirectUnitGestureHandle;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDirectUnitGestureLabel;
+	UPROPERTY(Transient) TObjectPtr<AActor> mDirectUnitGestureGhostActor;
+	UPROPERTY(Transient) TObjectPtr<USkeletalMeshComponent> mDirectUnitGestureGhostMesh;
+	UPROPERTY(Transient) TObjectPtr<UMaterialInterface> mDirectUnitGestureGhostMaterial;
 
 	/** @brief 카드형 스킬 레일 전체를 묶는 좌측 도크 배경/제목. */
 	UPROPERTY(Transient)

@@ -6,12 +6,22 @@
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Reward/RewardUIWidgetBase.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Materials/MaterialInterface.h"
 
 #include "GameMode/CombatGameMode.h"
 
 UCombatTileMapHUDWidget::UCombatTileMapHUDWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+	// 드래그 중 원본 유닛의 메시/포즈를 복제해 보여주는 시각 전용 반투명 재질.
+	// 엔진 콘텐츠 하드레퍼런스라 별도 프로젝트 플러그인이나 신규 에셋이 필요하지 않다.
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> DragGhostMaterialFinder(
+		TEXT("/Engine/EngineDebugMaterials/M_SimpleUnlitTranslucent.M_SimpleUnlitTranslucent"));
+	if (DragGhostMaterialFinder.Succeeded())
+	{
+		mDirectUnitGestureGhostMaterial = DragGhostMaterialFinder.Object;
+	}
+
 	static ConstructorHelpers::FObjectFinder<UTexture2D> DiceRollBoardFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/DiceRoll/UI_DiceRoll_Board_StyleMatch.UI_DiceRoll_Board_StyleMatch"));
 	if (DiceRollBoardFinder.Succeeded())
 	{
@@ -174,6 +184,8 @@ void UCombatTileMapHUDWidget::NativeConstruct()
 
 void UCombatTileMapHUDWidget::NativeDestruct()
 {
+	DestroyDirectUnitGestureGhost();
+
 	if (EndTurnButton != nullptr)
 	{
 		EndTurnButton->OnClicked.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleEndTurnButtonClicked);
