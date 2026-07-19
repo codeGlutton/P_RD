@@ -18,6 +18,7 @@ enum class ESRPGPlayerDisplacementType : uint8
 	Push,
 	Pull,
 	Throw,
+	Swap,
 };
 
 /** @brief 공개 의도가 실행되며 발생한 가장 최근의 핵심 결과. */

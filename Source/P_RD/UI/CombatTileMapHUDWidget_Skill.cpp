@@ -38,9 +38,8 @@ void UCombatTileMapHUDWidget::RefreshDiceAssignmentText() const
 		: mSelectedSkillIndex;
 	if (Skills == nullptr || Skills->IsValidIndex(SelectedSkillIndex) == false)
 	{
-		mDiceAssignmentText->SetText(mContextTargetUnitId == INDEX_NONE
-			? NSLOCTEXT("CombatTileMapHUDWidget", "DiceAssignmentChooseTarget", "① 전장의 적을 누르세요")
-			: NSLOCTEXT("CombatTileMapHUDWidget", "DiceAssignmentChooseContextAction", "② 적 옆의 행동을 고르세요"));
+		mDiceAssignmentText->SetText(NSLOCTEXT(
+			"CombatTileMapHUDWidget", "DiceAssignmentAutomatic", "드래그 세기에 맞춰 자동 사용"));
 		mDiceAssignmentText->SetColorAndOpacity(FSlateColor(FLinearColor(0.78f, 0.90f, 0.96f, 1.0f)));
 		mDiceAssignmentText->SetVisibility(ESlateVisibility::HitTestInvisible);
 		return;
@@ -58,27 +57,7 @@ void UCombatTileMapHUDWidget::RefreshDiceAssignmentText() const
 			SelectedDiceCount += Dice.mIsSelected ? 1 : 0;
 		}
 	}
-	FString Instruction;
-	if (RequiredDiceCount <= 0)
-	{
-		Instruction = FString::Printf(TEXT("%s\n경로를 확인하세요"), *Skill.mName.ToString());
-	}
-	else if (SelectedDiceCount < RequiredDiceCount)
-	{
-		Instruction = FString::Printf(
-			TEXT("③ %s\n주사위 %d/%d%s"),
-			*Skill.mName.ToString(),
-			SelectedDiceCount,
-			RequiredDiceCount,
-			Skill.mIsDisplacementSkill
-				? (Skill.mIsPullSkill ? TEXT(" · 사슬 당기기") : TEXT(" · 눈 합 = 던지기 거리"))
-				: TEXT(""));
-	}
-	else
-	{
-		Instruction = FString::Printf(TEXT("✓ %s\n경로를 확인하세요"),
-			*Skill.mName.ToString());
-	}
+	const FString Instruction = FString::Printf(TEXT("%s · 주사위 자동"), *Skill.mName.ToString());
 	mDiceAssignmentText->SetText(FText::FromString(Instruction));
 	mDiceAssignmentText->SetColorAndOpacity(FSlateColor(
 		SelectedDiceCount >= RequiredDiceCount

@@ -363,6 +363,10 @@ struct FSkillUI
 	UPROPERTY(BlueprintReadOnly) bool mIsPullSkill = false;
 	/** @brief 인접한 적을 선택 방향으로 던지는 독립 스킬인지 표시한다. */
 	UPROPERTY(BlueprintReadOnly) bool mIsThrowSkill = false;
+	/** @brief 적의 다음 이동력을 깎는 짧은 스와이프 전술인지 표시한다. */
+	UPROPERTY(BlueprintReadOnly) bool mIsStaggerSkill = false;
+	/** @brief 인접한 적과 플레이어의 자리를 바꾸는 드롭 전술인지 표시한다. */
+	UPROPERTY(BlueprintReadOnly) bool mIsSwapSkill = false;
 	UPROPERTY(BlueprintReadOnly) FSkillTargetingUI mTargeting;
 };
 
@@ -375,6 +379,8 @@ struct FDisplacementPreviewUI
 	UPROPERTY(BlueprintReadOnly) bool mIsActive = false;
 	UPROPERTY(BlueprintReadOnly) bool mIsPull = false;
 	UPROPERTY(BlueprintReadOnly) bool mIsThrow = false;
+	UPROPERTY(BlueprintReadOnly) bool mIsStagger = false;
+	UPROPERTY(BlueprintReadOnly) bool mIsSwap = false;
 	UPROPERTY(BlueprintReadOnly) int32 mTargetUnitId = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) FText mTargetName;
 	UPROPERTY(BlueprintReadOnly) FTileIndex mTargetTile = FTileIndex::Invalid;

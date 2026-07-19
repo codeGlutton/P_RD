@@ -30,6 +30,7 @@ enum class EForcedMovePresentationType : uint8
 	Push,
 	Pull,
 	Throw,
+	Swap,
 };
 
 // 밀기/당기기/던지기처럼 일반 보행과 다른 뷰 연출이 필요한 강제 이동 경로 전달.

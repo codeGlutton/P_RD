@@ -1174,11 +1174,13 @@ void USRPGCombatModel::ReportPlayerDisplacement(
 		return;
 	}
 
-	const FText DisplacementLabel = DisplacementType == ESRPGPlayerDisplacementType::Throw
+	const FText DisplacementLabel = DisplacementType == ESRPGPlayerDisplacementType::Swap
+		? NSLOCTEXT("EnemyIntent", "SwappedLabel", "자리 바꾸기")
+		: (DisplacementType == ESRPGPlayerDisplacementType::Throw
 		? NSLOCTEXT("EnemyIntent", "ThrownLabel", "붙잡아 던지기")
 		: (DisplacementType == ESRPGPlayerDisplacementType::Pull
 			? NSLOCTEXT("EnemyIntent", "PulledLabel", "끌어오기")
-			: NSLOCTEXT("EnemyIntent", "PushedLabel", "밀기"));
+			: NSLOCTEXT("EnemyIntent", "PushedLabel", "밀기")));
 	bool bFoundIntent = false;
 	for (FSRPGEnemyIntent& Intent : mEnemyIntents)
 	{
@@ -1227,11 +1229,13 @@ void USRPGCombatModel::ReportPlayerDisplacementCollision(
 	const bool bEnemyBlocker = Cast<UUnitModel>(Blocker) != nullptr && Blocker != mPlayerUnit;
 	if (FSRPGEnemyIntent* Intent = FindEnemyIntent(Target))
 	{
-		const FText ImpactLabel = DisplacementType == ESRPGPlayerDisplacementType::Throw
+		const FText ImpactLabel = DisplacementType == ESRPGPlayerDisplacementType::Swap
+			? NSLOCTEXT("EnemyIntent", "SwapImpact", "자리 바꾸기")
+			: (DisplacementType == ESRPGPlayerDisplacementType::Throw
 			? NSLOCTEXT("EnemyIntent", "ThrowImpact", "던지기")
 			: (DisplacementType == ESRPGPlayerDisplacementType::Pull
 				? NSLOCTEXT("EnemyIntent", "PullImpact", "당기기")
-				: NSLOCTEXT("EnemyIntent", "PushImpact", "밀기"));
+				: NSLOCTEXT("EnemyIntent", "PushImpact", "밀기")));
 		const FText Message = bEnemyBlocker
 			? FText::Format(
 				NSLOCTEXT("EnemyIntent", "PlayerChainCollision", "{0} 충돌! {1}과 부딪혀 양쪽 1 피해"),
@@ -1248,6 +1252,29 @@ void USRPGCombatModel::ReportPlayerDisplacementCollision(
 		BroadcastEnemyIntentChanged();
 		RefreshEnemyIntentHighlights();
 	}
+}
+
+void USRPGCombatModel::ReportPlayerStagger(UUnitModel* Target, int32 DiceValue)
+{
+	FSRPGEnemyIntent* Intent = FindEnemyIntent(Target);
+	if (Intent == nullptr || Intent->mResult != ESRPGEnemyIntentResult::Planned)
+	{
+		return;
+	}
+	const int32 MovePenalty = FMath::Clamp(FMath::CeilToInt(FMath::Max(DiceValue, 1) / 3.0f), 1, 2);
+	const TArray<FTileIndex> PreviousPath = Intent->mPathTileIndexes;
+	const FTileIndex PreviousDestination = Intent->mPlannedDestination;
+	Intent->mPlannedMoveRange = FMath::Max(Intent->mPlannedMoveRange - MovePenalty, 0);
+	Intent->mResponseCostSpent += MovePenalty;
+	Intent->mPreviousPathTileIndexes = PreviousPath;
+	Intent->mPreviousDestination = PreviousDestination;
+	RebuildEnemyIntentPlan(*Intent, /*bPreserveSkill*/true);
+	++Intent->mPlanRevision;
+	Intent->mResultText = FText::Format(
+		NSLOCTEXT("EnemyIntent", "PlayerStaggered", "다리 걸기! 이동력 -{0} · 비틀거리며 새 계획"),
+		FText::AsNumber(MovePenalty));
+	BroadcastEnemyIntentChanged();
+	RefreshEnemyIntentHighlights();
 }
 
 void USRPGCombatModel::ReportFixedIntentPathDisrupted(UUnitModel* Enemy, const FText& Reason)

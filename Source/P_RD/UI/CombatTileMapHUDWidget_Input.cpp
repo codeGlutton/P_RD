@@ -26,11 +26,10 @@ FReply UCombatTileMapHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeome
 		{
 			return FReply::Handled();
 		}
-		// 아무 스킬도 고르지 않은 상태에서 유닛을 누르면 먼저 그 유닛의 컨텍스트 행동만 연다.
-		// 이미 스킬을 고른 뒤의 클릭은 기존 월드 조준으로 그대로 전달한다.
-		if (TryOpenContextActionsAtScreenPosition(ScreenPosition))
+		// 유닛은 탭과 드래그를 구분해야 하므로 누르는 순간 캡처하고, 손을 뗄 때 행동을 확정한다.
+		if (BeginDirectUnitGesture(ScreenPosition))
 		{
-			return FReply::Handled();
+			return FReply::Handled().CaptureMouse(TakeWidget());
 		}
 		// 유닛 바깥 = 기존 월드(타일) 영역. 좌표 판정은 게임플레이가 담당한다.
 		if (mCombatUIModel != nullptr)
@@ -45,6 +44,16 @@ FReply UCombatTileMapHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeome
 	return FReply::Handled().CaptureMouse(TakeWidget());
 }
 
+FReply UCombatTileMapHUDWidget::NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	if (mDirectUnitGestureActive)
+	{
+		UpdateDirectUnitGesture(InMouseEvent.GetScreenSpacePosition());
+		return FReply::Handled();
+	}
+	return Super::NativeOnMouseMove(InGeometry, InMouseEvent);
+}
+
 FReply UCombatTileMapHUDWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton)
@@ -56,6 +65,12 @@ FReply UCombatTileMapHUDWidget::NativeOnMouseButtonUp(const FGeometry& InGeometr
 	{
 		mLevelValueTouched = false;
 		SetExpHoldPanelVisible(false);
+		return FReply::Handled().ReleaseMouseCapture();
+	}
+
+	if (mDirectUnitGestureActive)
+	{
+		EndDirectUnitGesture(InMouseEvent.GetScreenSpacePosition());
 		return FReply::Handled().ReleaseMouseCapture();
 	}
 
@@ -97,9 +112,9 @@ FReply UCombatTileMapHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry
 			return FReply::Handled();
 		}
 		// 스킬 레일 밖 = 월드(타일/유닛) 영역. 뷰모델 연결 시 좌표만 넘기고 타일/유닛 판정은 게임플레이가.
-		if (TryOpenContextActionsAtScreenPosition(ScreenPosition))
+		if (BeginDirectUnitGesture(ScreenPosition))
 		{
-			return FReply::Handled();
+			return FReply::Handled().CaptureMouse(TakeWidget());
 		}
 		if (mCombatUIModel != nullptr)
 		{
@@ -114,12 +129,28 @@ FReply UCombatTileMapHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry
 	return FReply::Handled().CaptureMouse(TakeWidget());
 }
 
+FReply UCombatTileMapHUDWidget::NativeOnTouchMoved(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent)
+{
+	if (mDirectUnitGestureActive)
+	{
+		UpdateDirectUnitGesture(InGestureEvent.GetScreenSpacePosition());
+		return FReply::Handled();
+	}
+	return Super::NativeOnTouchMoved(InGeometry, InGestureEvent);
+}
+
 FReply UCombatTileMapHUDWidget::NativeOnTouchEnded(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent)
 {
 	if (mLevelValueTouched)
 	{
 		mLevelValueTouched = false;
 		SetExpHoldPanelVisible(false);
+		return FReply::Handled().ReleaseMouseCapture();
+	}
+
+	if (mDirectUnitGestureActive)
+	{
+		EndDirectUnitGesture(InGestureEvent.GetScreenSpacePosition());
 		return FReply::Handled().ReleaseMouseCapture();
 	}
 

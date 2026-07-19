@@ -381,6 +381,8 @@ public:
 	 */
 	void StartActorMovement(const FTileTransform& NextTransform, UBoardActorModel* Actor);
 	void CompleteActorMovement(UBoardActorModel* Actor);
+	/** @brief 두 인접 유닛의 점유 칸을 동시에 교환하고 두 뷰의 이동 연출을 같은 배리어로 기다린다. */
+	bool StartActorSwap(UBoardActorModel* First, UBoardActorModel* Second, TSharedPtr<FPresentationBarrier> Barrier);
 
 	/**
 	 * 액터 초기 배치 함수

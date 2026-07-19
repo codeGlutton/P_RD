@@ -96,6 +96,8 @@ private:
 	FTileIndex mDiceDisplacementDestination = FTileIndex::Invalid;
 	bool mDiceDisplacementIsPull = false;
 	bool mDiceDisplacementIsThrow = false;
+	bool mDiceDisplacementIsStagger = false;
+	bool mDiceDisplacementIsSwap = false;
 	bool mDiceDisplacementWasReported = false;
 	bool mDiceDisplacementCollisionReported = false;
 	bool mDiceDisplacementStarted = false;

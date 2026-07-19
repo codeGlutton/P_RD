@@ -13,11 +13,12 @@
 
 namespace
 {
-	constexpr int32 ContextActionSlotCount = 4;
+	constexpr int32 ContextActionSlotCount = 6;
 	constexpr int32 ContextMoveAction = -2;
-	constexpr float ContextActionWidth = 204.0f;
-	constexpr float ContextActionHeight = 58.0f;
-	constexpr float ContextActionGap = 7.0f;
+	constexpr float ContextActionWidth = 104.0f;
+	constexpr float ContextActionHeight = 70.0f;
+	constexpr float ContextActionGap = 8.0f;
+	constexpr float DirectDragThreshold = 42.0f;
 
 	int32 GetTileDistance(const FTileIndex& A, const FTileIndex& B)
 	{
@@ -50,6 +51,48 @@ namespace
 		}
 		return Sum;
 	}
+
+	TArray<int32> PickAutomaticDice(const TArray<FDiceSlotUI>& Dice, int32 DiceCost, int32 DesiredPower)
+	{
+		TArray<int32> Available;
+		for (int32 Index = 0; Index < Dice.Num(); ++Index)
+		{
+			if (Dice[Index].mIsRolled && Dice[Index].mIsUsed == false && Dice[Index].mIsSelected == false)
+			{
+				Available.Add(Index);
+			}
+		}
+		TArray<int32> Best;
+		TArray<int32> Current;
+		int32 BestScore = TNumericLimits<int32>::Max();
+		int32 BestSum = TNumericLimits<int32>::Max();
+		TFunction<void(int32, int32)> Visit = [&](int32 Start, int32 Sum)
+		{
+			if (Current.Num() == DiceCost)
+			{
+				const int32 Score = FMath::Abs(Sum - DesiredPower);
+				if (Score < BestScore || (Score == BestScore && Sum < BestSum))
+				{
+					BestScore = Score;
+					BestSum = Sum;
+					Best = Current;
+				}
+				return;
+			}
+			for (int32 Cursor = Start; Cursor < Available.Num(); ++Cursor)
+			{
+				Current.Add(Available[Cursor]);
+				Visit(Cursor + 1, Sum + Dice[Available[Cursor]].mResultValue);
+				Current.Pop();
+			}
+		};
+		if (DiceCost <= 0)
+		{
+			return Best;
+		}
+		Visit(0, 0);
+		return Best;
+	}
 }
 
 void UCombatTileMapHUDWidget::EnsureContextActionWidgets()
@@ -74,6 +117,29 @@ void UCombatTileMapHUDWidget::EnsureContextActionWidgets()
 		RootCanvas->AddChildToCanvas(mContextActionTitleText);
 	}
 
+	mDirectUnitGestureLine = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("DirectUnitGestureLine"));
+	mDirectUnitGestureHandle = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("DirectUnitGestureHandle"));
+	mDirectUnitGestureLabel = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("DirectUnitGestureLabel"));
+	if (mDirectUnitGestureLine != nullptr && mDirectUnitGestureHandle != nullptr && mDirectUnitGestureLabel != nullptr)
+	{
+		mDirectUnitGestureLine->SetBrushColor(FLinearColor(0.16f, 1.0f, 0.78f, 0.92f));
+		mDirectUnitGestureLine->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+		mDirectUnitGestureHandle->SetBrushColor(FLinearColor(1.0f, 0.78f, 0.16f, 0.96f));
+		mDirectUnitGestureLabel->SetJustification(ETextJustify::Center);
+		mDirectUnitGestureLabel->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+		FSlateFontInfo GestureFont = mDirectUnitGestureLabel->GetFont();
+		GestureFont.Size = 17;
+		GestureFont.OutlineSettings.OutlineSize = 2;
+		GestureFont.OutlineSettings.OutlineColor = FLinearColor::Black;
+		mDirectUnitGestureLabel->SetFont(GestureFont);
+		mDirectUnitGestureLine->SetVisibility(ESlateVisibility::Collapsed);
+		mDirectUnitGestureHandle->SetVisibility(ESlateVisibility::Collapsed);
+		mDirectUnitGestureLabel->SetVisibility(ESlateVisibility::Collapsed);
+		RootCanvas->AddChildToCanvas(mDirectUnitGestureLine);
+		RootCanvas->AddChildToCanvas(mDirectUnitGestureHandle);
+		RootCanvas->AddChildToCanvas(mDirectUnitGestureLabel);
+	}
+
 	for (int32 SlotIndex = 0; SlotIndex < ContextActionSlotCount; ++SlotIndex)
 	{
 		UBorder* Panel = WidgetTree->ConstructWidget<UBorder>(
@@ -93,13 +159,13 @@ void UCombatTileMapHUDWidget::EnsureContextActionWidgets()
 		Panel->SetBrushColor(FLinearColor(0.018f, 0.055f, 0.075f, 0.94f));
 		Panel->SetVisibility(ESlateVisibility::Collapsed);
 		Icon->SetVisibility(ESlateVisibility::Collapsed);
-		Label->SetJustification(ETextJustify::Left);
+		Label->SetJustification(ETextJustify::Center);
 		Label->SetAutoWrapText(false);
 		Label->SetTextOverflowPolicy(ETextOverflowPolicy::Ellipsis);
 		Label->SetLineHeightPercentage(0.86f);
 		Label->SetVisibility(ESlateVisibility::Collapsed);
 		FSlateFontInfo LabelFont = Label->GetFont();
-		LabelFont.Size = 15;
+		LabelFont.Size = 13;
 		LabelFont.OutlineSettings.OutlineSize = 1;
 		LabelFont.OutlineSettings.OutlineColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.90f);
 		Label->SetFont(LabelFont);
@@ -119,10 +185,16 @@ void UCombatTileMapHUDWidget::EnsureContextActionWidgets()
 	}
 }
 
-bool UCombatTileMapHUDWidget::TryOpenContextActionsAtScreenPosition(const FVector2D& ScreenPosition)
+bool UCombatTileMapHUDWidget::FindUnitAtScreenPosition(
+	const FVector2D& ScreenPosition,
+	int32& OutUnitId,
+	bool& OutIsPlayer,
+	FVector2D& OutUnitScreenPosition) const
 {
-	if (mCombatControlsHidden || mCombatUIModel == nullptr || RootCanvas == nullptr
-		|| mCombatUIModel->GetSelectedSkillIndex() != INDEX_NONE)
+	OutUnitId = INDEX_NONE;
+	OutIsPlayer = false;
+	OutUnitScreenPosition = FVector2D::ZeroVector;
+	if (mCombatControlsHidden || mCombatUIModel == nullptr || RootCanvas == nullptr)
 	{
 		return false;
 	}
@@ -171,15 +243,36 @@ bool UCombatTileMapHUDWidget::TryOpenContextActionsAtScreenPosition(const FVecto
 
 	if (BestUnit == nullptr)
 	{
+		return false;
+	}
+	OutUnitId = BestUnit->mUnitId;
+	OutIsPlayer = BestUnit->mIsPlayer;
+	OutUnitScreenPosition = BestUnitAbsolutePosition;
+	return true;
+}
+
+bool UCombatTileMapHUDWidget::TryOpenContextActionsAtScreenPosition(const FVector2D& ScreenPosition)
+{
+	if (mCombatControlsHidden || mCombatUIModel == nullptr || RootCanvas == nullptr
+		|| mCombatUIModel->GetSelectedSkillIndex() != INDEX_NONE)
+	{
+		return false;
+	}
+
+	int32 UnitId = INDEX_NONE;
+	bool bIsPlayer = false;
+	FVector2D UnitScreenPosition;
+	if (FindUnitAtScreenPosition(ScreenPosition, UnitId, bIsPlayer, UnitScreenPosition) == false)
+	{
 		CloseContextActions();
 		return false;
 	}
 
-	mContextTargetUnitId = BestUnit->mUnitId;
-	mContextTargetIsPlayer = BestUnit->mIsPlayer;
+	mContextTargetUnitId = UnitId;
+	mContextTargetIsPlayer = bIsPlayer;
 	// 실제 조준은 모델 몸체를 누른 임의 지점이 아니라 유닛 발밑(점유 타일 중심)의 절대좌표로 보낸다.
 	// 그래야 큰 모델의 머리를 눌러도 뒤 타일로 빗나가지 않는다.
-	mContextTargetScreenPosition = BestUnitAbsolutePosition;
+	mContextTargetScreenPosition = UnitScreenPosition;
 	mContextSelectedSkillIndex = INDEX_NONE;
 	mContextTargetSubmitted = false;
 	RefreshContextActions();
@@ -286,14 +379,14 @@ void UCombatTileMapHUDWidget::RefreshContextActions()
 			{
 				continue;
 			}
-			if (Skill.mIsThrowSkill ? TileDistance <= 1 : CanReachTarget(Skill))
+			if ((Skill.mIsThrowSkill || Skill.mIsSwapSkill) ? TileDistance <= 1 : CanReachTarget(Skill))
 			{
 				AddSkill(SkillIndex);
 			}
 		}
 	}
 
-	FString TargetName = TargetUnit->mIsPlayer ? TEXT("내 행동") : TEXT("이 적에게 할 행동");
+	FString TargetName = TargetUnit->mIsPlayer ? TEXT("나를 드래그해 이동") : TEXT("드래그 또는 빠른 행동");
 	if (TargetUnit->mIsPlayer == false)
 	{
 		const FEnemyIntentUI* Intent = mCombatUIModel->GetEnemyIntentUIs().FindByPredicate([TargetUnit](const FEnemyIntentUI& Item)
@@ -302,7 +395,7 @@ void UCombatTileMapHUDWidget::RefreshContextActions()
 		});
 		if (Intent != nullptr && Intent->mEnemyName.IsEmpty() == false)
 		{
-			TargetName = FString::Printf(TEXT("%s에게 할 행동"), *Intent->mEnemyName.ToString());
+			TargetName = FString::Printf(TEXT("%s · 드래그하거나 탭"), *Intent->mEnemyName.ToString());
 		}
 	}
 	if (mContextActionTitleText != nullptr)
@@ -321,18 +414,26 @@ void UCombatTileMapHUDWidget::RefreshContextActions()
 		FString LabelText;
 		if (SkillIndex == ContextMoveAction)
 		{
-			LabelText = TEXT("이동\n빈 칸을 골라 이동");
+			LabelText = TEXT("이동\n드래그");
 		}
 		else if (Skill != nullptr)
 		{
 			FString Role = TEXT("공격");
 			if (Skill->mIsPullSkill)
 			{
-				Role = TEXT("적을 내 앞까지 당김");
+				Role = TEXT("내 쪽 드래그");
 			}
 			else if (Skill->mIsThrowSkill)
 			{
-				Role = TEXT("방향을 골라 충돌시킴");
+				Role = TEXT("바깥 스와이프");
+			}
+			else if (Skill->mIsStaggerSkill)
+			{
+				Role = TEXT("옆 스와이프");
+			}
+			else if (Skill->mIsSwapSkill)
+			{
+				Role = TEXT("내 칸에 놓기");
 			}
 			else if (TargetUnit->mIsPlayer)
 			{
@@ -343,10 +444,7 @@ void UCombatTileMapHUDWidget::RefreshContextActions()
 			{
 				Role = TEXT("한 번 더 눌러 실행");
 			}
-			const FString DiceCost = Skill->mDiceCost > 0
-				? FString::Printf(TEXT("주사위 %d · "), Skill->mDiceCost)
-				: TEXT("");
-			LabelText = FString::Printf(TEXT("%s\n%s%s"), *Skill->mName.ToString(), *DiceCost, *Role);
+			LabelText = FString::Printf(TEXT("%s\n%s · 자동"), *Skill->mName.ToString(), *Role);
 		}
 
 		if (mContextActionPanels.IsValidIndex(SlotIndex) && mContextActionPanels[SlotIndex] != nullptr)
@@ -378,11 +476,7 @@ void UCombatTileMapHUDWidget::RefreshContextActions()
 		}
 		if (mContextActionButtons.IsValidIndex(SlotIndex) && mContextActionButtons[SlotIndex] != nullptr)
 		{
-			const bool bPreparedPreview = mContextTargetSubmitted && SelectedSkillIndex != INDEX_NONE;
-			const bool bCanExecutePreparedSkill = bSelected && Skill != nullptr
-				&& Skill->mIsDisplacementSkill == false
-				&& BuildPhase == ECombatBuildPhaseUI::Preview;
-			mContextActionButtons[SlotIndex]->SetIsEnabled(bPreparedPreview == false || bCanExecutePreparedSkill);
+			mContextActionButtons[SlotIndex]->SetIsEnabled(true);
 			mContextActionButtons[SlotIndex]->SetVisibility(ESlateVisibility::Visible);
 		}
 	}
@@ -418,12 +512,16 @@ void UCombatTileMapHUDWidget::UpdateContextActionLayout()
 	}
 
 	const FVector2D RootSize = RootCanvas->GetCachedGeometry().GetLocalSize();
-	const float TotalHeight = StaticCast<float>(mContextActionSkillIndices.Num()) * ContextActionHeight
-		+ StaticCast<float>(FMath::Max(mContextActionSkillIndices.Num() - 1, 0)) * ContextActionGap;
-	const bool bPlaceRight = TargetPosition.X + ContextActionWidth + 96.0f < RootSize.X * 0.74f;
-	float Left = bPlaceRight ? TargetPosition.X + 82.0f : TargetPosition.X - ContextActionWidth - 82.0f;
-	float Top = TargetPosition.Y - TotalHeight * 0.62f;
-	Left = FMath::Clamp(Left, 12.0f, FMath::Max(12.0f, RootSize.X - ContextActionWidth - 12.0f));
+	const int32 ColumnCount = FMath::Min(mContextActionSkillIndices.Num(), 3);
+	const int32 RowCount = FMath::DivideAndRoundUp(mContextActionSkillIndices.Num(), 3);
+	const float TotalWidth = StaticCast<float>(ColumnCount) * ContextActionWidth
+		+ StaticCast<float>(FMath::Max(ColumnCount - 1, 0)) * ContextActionGap;
+	const float TotalHeight = StaticCast<float>(RowCount) * ContextActionHeight
+		+ StaticCast<float>(FMath::Max(RowCount - 1, 0)) * ContextActionGap;
+	float Left = TargetPosition.X - TotalWidth * 0.5f;
+	float Top = TargetPosition.Y - TotalHeight - 92.0f;
+	if (Top < 112.0f) { Top = TargetPosition.Y + 68.0f; }
+	Left = FMath::Clamp(Left, 12.0f, FMath::Max(12.0f, RootSize.X - TotalWidth - 12.0f));
 	Top = FMath::Clamp(Top, 112.0f, FMath::Max(112.0f, RootSize.Y - TotalHeight - 118.0f));
 
 	if (mContextActionTitleText != nullptr)
@@ -432,14 +530,18 @@ void UCombatTileMapHUDWidget::UpdateContextActionLayout()
 		{
 			CanvasSlot->SetAlignment(FVector2D::ZeroVector);
 			CanvasSlot->SetPosition(FVector2D(Left, Top - 30.0f));
-			CanvasSlot->SetSize(FVector2D(ContextActionWidth, 26.0f));
+			CanvasSlot->SetSize(FVector2D(TotalWidth, 26.0f));
 			CanvasSlot->SetZOrder(252);
 		}
 	}
 
 	for (int32 SlotIndex = 0; SlotIndex < mContextActionSkillIndices.Num(); ++SlotIndex)
 	{
-		const FVector2D RowPosition(Left, Top + StaticCast<float>(SlotIndex) * (ContextActionHeight + ContextActionGap));
+		const int32 Column = SlotIndex % 3;
+		const int32 Row = SlotIndex / 3;
+		const FVector2D RowPosition(
+			Left + StaticCast<float>(Column) * (ContextActionWidth + ContextActionGap),
+			Top + StaticCast<float>(Row) * (ContextActionHeight + ContextActionGap));
 		auto PlaceWidget = [RowPosition](UWidget* Widget, const FVector2D& Offset, const FVector2D& Size, int32 ZOrder)
 		{
 			if (Widget == nullptr) { return; }
@@ -454,9 +556,9 @@ void UCombatTileMapHUDWidget::UpdateContextActionLayout()
 		PlaceWidget(mContextActionPanels.IsValidIndex(SlotIndex) ? mContextActionPanels[SlotIndex].Get() : nullptr,
 			FVector2D::ZeroVector, FVector2D(ContextActionWidth, ContextActionHeight), 250);
 		PlaceWidget(mContextActionIcons.IsValidIndex(SlotIndex) ? mContextActionIcons[SlotIndex].Get() : nullptr,
-			FVector2D(7.0f, 7.0f), FVector2D(44.0f, 44.0f), 251);
+			FVector2D(35.0f, 5.0f), FVector2D(34.0f, 34.0f), 251);
 		PlaceWidget(mContextActionTexts.IsValidIndex(SlotIndex) ? mContextActionTexts[SlotIndex].Get() : nullptr,
-			FVector2D(58.0f, 6.0f), FVector2D(ContextActionWidth - 64.0f, ContextActionHeight - 10.0f), 251);
+			FVector2D(4.0f, 39.0f), FVector2D(ContextActionWidth - 8.0f, 28.0f), 251);
 		PlaceWidget(mContextActionButtons.IsValidIndex(SlotIndex) ? mContextActionButtons[SlotIndex].Get() : nullptr,
 			FVector2D::ZeroVector, FVector2D(ContextActionWidth, ContextActionHeight), 253);
 	}
@@ -499,24 +601,33 @@ void UCombatTileMapHUDWidget::HandleContextActionClicked(int32 ActionSlotIndex)
 	{
 		return;
 	}
-	const bool bExecutePreparedSkill = mContextSelectedSkillIndex == SkillIndex
-		&& mContextTargetSubmitted
-		&& mCombatUIModel->GetSelectedSkillIndex() == SkillIndex
-		&& mCombatUIModel->GetTurnUI().mPhase == ECombatBuildPhaseUI::Preview
-		&& Skills[SkillIndex].mIsDisplacementSkill == false;
-	if (bExecutePreparedSkill)
+	FVector2D DestinationScreen;
+	const FVector2D* Destination = nullptr;
+	if (Skills[SkillIndex].mIsThrowSkill)
 	{
-		mCombatUIModel->RequestWorldTouch(mContextTargetScreenPosition, false);
-		return;
+		const FUnitUI* PlayerUnit = mCombatUIModel->GetUnitUIs().FindByPredicate([](const FUnitUI& Unit)
+		{
+			return Unit.mIsPlayer && Unit.mHP > 0.0f;
+		});
+		APlayerController* PlayerController = GetOwningPlayer();
+		FVector2D PlayerWidget;
+		if (PlayerUnit != nullptr && PlayerController != nullptr && RootCanvas != nullptr
+			&& UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(
+				PlayerController,
+				PlayerUnit->mViewActor.IsValid() ? PlayerUnit->mViewActor->GetActorLocation() : PlayerUnit->mWorldLocation,
+				PlayerWidget,
+				false))
+		{
+			const FVector2D PlayerAbsolute = RootCanvas->GetCachedGeometry().LocalToAbsolute(PlayerWidget);
+			DestinationScreen = mContextTargetScreenPosition
+				+ (mContextTargetScreenPosition - PlayerAbsolute).GetSafeNormal() * 190.0f;
+			Destination = &DestinationScreen;
+		}
 	}
-
-	mContextSelectedSkillIndex = SkillIndex;
-	mContextTargetSubmitted = false;
-	SelectSkillForAssignment(SkillIndex);
-	RefreshContextActions();
-	RefreshOwnedDiceCards();
-	RefreshDiceAssignmentText();
-	TrySubmitContextTargetWhenReady();
+	const bool bExecuted = ExecuteDirectSkill(SkillIndex, mContextTargetScreenPosition, Destination, 3);
+	if (bExecuted && Skills[SkillIndex].mIsPullSkill) { mEnemyIntentTutorialInterventionSubmitted = true; }
+	if (bExecuted && Skills[SkillIndex].mIsThrowSkill) { mEnemyIntentTutorialThrowSubmitted = true; }
+	UpdateEnemyIntentTutorial();
 }
 
 void UCombatTileMapHUDWidget::TrySubmitContextTargetWhenReady()
@@ -541,6 +652,266 @@ void UCombatTileMapHUDWidget::TrySubmitContextTargetWhenReady()
 	mContextTargetSubmitted = true;
 	mCombatUIModel->RequestWorldTouch(mContextTargetScreenPosition, false);
 	RefreshContextActions();
+}
+
+int32 UCombatTileMapHUDWidget::FindDirectSkillIndex(bool FSkillUI::* SkillFlag) const
+{
+	if (mCombatUIModel == nullptr)
+	{
+		return INDEX_NONE;
+	}
+	const TArray<FSkillUI>& Skills = mCombatUIModel->GetSkillUIs();
+	for (int32 SkillIndex = 0; SkillIndex < Skills.Num(); ++SkillIndex)
+	{
+		if (Skills[SkillIndex].mIsUsable && Skills[SkillIndex].*SkillFlag)
+		{
+			return SkillIndex;
+		}
+	}
+	return INDEX_NONE;
+}
+
+bool UCombatTileMapHUDWidget::ExecuteDirectSkill(
+	int32 SkillIndex,
+	const FVector2D& TargetScreenPosition,
+	const FVector2D* DestinationScreenPosition,
+	int32 DesiredPower)
+{
+	if (mCombatUIModel == nullptr || mCombatUIModel->GetSkillUIs().IsValidIndex(SkillIndex) == false)
+	{
+		return false;
+	}
+	const FSkillUI Skill = mCombatUIModel->GetSkillUIs()[SkillIndex];
+	if (Skill.mIsUsable == false)
+	{
+		return false;
+	}
+	if (mCombatUIModel->GetSelectedSkillIndex() != INDEX_NONE)
+	{
+		mCombatUIModel->RequestCancel();
+	}
+	mCombatUIModel->RequestSelectSkill(SkillIndex);
+	const TArray<int32> DiceIndices = PickAutomaticDice(
+		mCombatUIModel->GetDiceUIs(),
+		FMath::Max(Skill.mDiceCost, 0),
+		FMath::Max(DesiredPower, 1) * FMath::Max(Skill.mDiceCost, 1));
+	if (DiceIndices.Num() < Skill.mDiceCost)
+	{
+		mCombatUIModel->RequestCancel();
+		return false;
+	}
+	for (int32 DiceIndex : DiceIndices)
+	{
+		mCombatUIModel->RequestToggleDice(DiceIndex);
+	}
+	mCombatUIModel->RequestWorldTouch(TargetScreenPosition, false);
+	if (DestinationScreenPosition != nullptr)
+	{
+		mCombatUIModel->RequestWorldTouch(*DestinationScreenPosition, false);
+	}
+	mCombatUIModel->RequestConfirmSkill();
+	CloseContextActions();
+	RefreshOwnedDiceCards();
+	RefreshDiceAssignmentText();
+	return true;
+}
+
+bool UCombatTileMapHUDWidget::BeginDirectUnitGesture(const FVector2D& ScreenPosition)
+{
+	if (mCombatUIModel == nullptr || mCombatUIModel->GetSelectedSkillIndex() != INDEX_NONE)
+	{
+		return false;
+	}
+	int32 UnitId = INDEX_NONE;
+	bool bIsPlayer = false;
+	FVector2D UnitScreenPosition;
+	if (FindUnitAtScreenPosition(ScreenPosition, UnitId, bIsPlayer, UnitScreenPosition) == false)
+	{
+		return false;
+	}
+	mDirectUnitGestureActive = true;
+	mDirectUnitGestureDragged = false;
+	mDirectUnitGestureTargetId = UnitId;
+	mDirectUnitGestureTargetIsPlayer = bIsPlayer;
+	mDirectUnitGestureStart = ScreenPosition;
+	mDirectUnitGestureCurrent = ScreenPosition;
+	mDirectUnitGestureTargetScreen = UnitScreenPosition;
+	CloseContextActions();
+	SetDirectUnitGestureVisual(true, ScreenPosition);
+	return true;
+}
+
+void UCombatTileMapHUDWidget::UpdateDirectUnitGesture(const FVector2D& ScreenPosition)
+{
+	if (mDirectUnitGestureActive == false)
+	{
+		return;
+	}
+	mDirectUnitGestureCurrent = ScreenPosition;
+	mDirectUnitGestureDragged |= FVector2D::Distance(mDirectUnitGestureStart, ScreenPosition) >= DirectDragThreshold;
+	SetDirectUnitGestureVisual(true, ScreenPosition);
+}
+
+void UCombatTileMapHUDWidget::SetDirectUnitGestureVisual(bool bVisible, const FVector2D& ScreenPosition)
+{
+	if (mDirectUnitGestureLine == nullptr || mDirectUnitGestureHandle == nullptr
+		|| mDirectUnitGestureLabel == nullptr || RootCanvas == nullptr)
+	{
+		return;
+	}
+	if (bVisible == false)
+	{
+		mDirectUnitGestureLine->SetVisibility(ESlateVisibility::Collapsed);
+		mDirectUnitGestureHandle->SetVisibility(ESlateVisibility::Collapsed);
+		mDirectUnitGestureLabel->SetVisibility(ESlateVisibility::Collapsed);
+		return;
+	}
+	const FGeometry& RootGeometry = RootCanvas->GetCachedGeometry();
+	const FVector2D Start = RootGeometry.AbsoluteToLocal(mDirectUnitGestureTargetScreen);
+	const FVector2D End = RootGeometry.AbsoluteToLocal(ScreenPosition);
+	const FVector2D Delta = End - Start;
+	const float Length = Delta.Size();
+	if (UCanvasPanelSlot* GestureLineSlot = Cast<UCanvasPanelSlot>(mDirectUnitGestureLine->Slot))
+	{
+		GestureLineSlot->SetPosition((Start + End) * 0.5f);
+		GestureLineSlot->SetSize(FVector2D(FMath::Max(Length, 8.0f), 8.0f));
+		GestureLineSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+		GestureLineSlot->SetZOrder(960);
+	}
+	FWidgetTransform LineTransform;
+	LineTransform.Angle = FMath::RadiansToDegrees(FMath::Atan2(Delta.Y, Delta.X));
+	mDirectUnitGestureLine->SetRenderTransform(LineTransform);
+	if (UCanvasPanelSlot* GestureHandleSlot = Cast<UCanvasPanelSlot>(mDirectUnitGestureHandle->Slot))
+	{
+		GestureHandleSlot->SetPosition(End);
+		GestureHandleSlot->SetSize(FVector2D(30.0f, 30.0f));
+		GestureHandleSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+		GestureHandleSlot->SetZOrder(961);
+	}
+	FString Label = mDirectUnitGestureTargetIsPlayer ? TEXT("이동") : TEXT("옆으로: 다리 걸기");
+	if (mDirectUnitGestureTargetIsPlayer == false && mCombatUIModel != nullptr)
+	{
+		const FUnitUI* Player = mCombatUIModel->GetUnitUIs().FindByPredicate([](const FUnitUI& Unit){ return Unit.mIsPlayer && Unit.mHP > 0.0f; });
+		APlayerController* PlayerController = GetOwningPlayer();
+		FVector2D PlayerScreen;
+		if (Player != nullptr && PlayerController != nullptr
+			&& UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(
+				PlayerController,
+				Player->mViewActor.IsValid() ? Player->mViewActor->GetActorLocation() : Player->mWorldLocation,
+				PlayerScreen,
+				false))
+		{
+			const FVector2D PlayerAbsolute = RootGeometry.LocalToAbsolute(PlayerScreen);
+			const FVector2D ToPlayer = (PlayerAbsolute - mDirectUnitGestureTargetScreen).GetSafeNormal();
+			const float Toward = FVector2D::DotProduct((ScreenPosition - mDirectUnitGestureTargetScreen).GetSafeNormal(), ToPlayer);
+			Label = Toward > 0.38f ? TEXT("당기기") : (Toward < -0.38f ? TEXT("밀기 · 던지기") : TEXT("다리 걸기"));
+			if (FVector2D::Distance(ScreenPosition, PlayerAbsolute) < 100.0f)
+			{
+				Label = TEXT("자리 바꾸기");
+			}
+		}
+	}
+	mDirectUnitGestureLabel->SetText(FText::FromString(Label + TEXT("  ·  놓아서 실행")));
+	if (UCanvasPanelSlot* GestureLabelSlot = Cast<UCanvasPanelSlot>(mDirectUnitGestureLabel->Slot))
+	{
+		GestureLabelSlot->SetPosition(End + FVector2D(0.0f, -48.0f));
+		GestureLabelSlot->SetSize(FVector2D(220.0f, 34.0f));
+		GestureLabelSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+		GestureLabelSlot->SetZOrder(962);
+	}
+	mDirectUnitGestureLine->SetVisibility(ESlateVisibility::HitTestInvisible);
+	mDirectUnitGestureHandle->SetVisibility(ESlateVisibility::HitTestInvisible);
+	mDirectUnitGestureLabel->SetVisibility(ESlateVisibility::HitTestInvisible);
+}
+
+bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPosition)
+{
+	if (mDirectUnitGestureActive == false)
+	{
+		return false;
+	}
+	UpdateDirectUnitGesture(ScreenPosition);
+	const int32 TargetId = mDirectUnitGestureTargetId;
+	const bool bTargetIsPlayer = mDirectUnitGestureTargetIsPlayer;
+	const FVector2D TargetScreen = mDirectUnitGestureTargetScreen;
+	mDirectUnitGestureActive = false;
+	mDirectUnitGestureTargetId = INDEX_NONE;
+	SetDirectUnitGestureVisual(false);
+	if (mDirectUnitGestureDragged == false)
+	{
+		return TryOpenContextActionsAtScreenPosition(TargetScreen);
+	}
+	if (mCombatUIModel == nullptr)
+	{
+		return true;
+	}
+	if (bTargetIsPlayer)
+	{
+		mCombatUIModel->RequestMove();
+		mCombatUIModel->RequestWorldTouch(ScreenPosition, false);
+		mCombatUIModel->RequestWorldTouch(ScreenPosition, false);
+		return true;
+	}
+	const FUnitUI* Target = mCombatUIModel->GetUnitUIs().FindByPredicate([TargetId](const FUnitUI& Unit){ return Unit.mUnitId == TargetId; });
+	const FUnitUI* Player = mCombatUIModel->GetUnitUIs().FindByPredicate([](const FUnitUI& Unit){ return Unit.mIsPlayer && Unit.mHP > 0.0f; });
+	if (Target == nullptr || Player == nullptr)
+	{
+		return true;
+	}
+	const int32 TileDistance = GetTileDistance(Target->mTile, Player->mTile);
+	APlayerController* PlayerController = GetOwningPlayer();
+	FVector2D PlayerWidget;
+	FVector2D PlayerAbsolute;
+	if (PlayerController != nullptr && RootCanvas != nullptr
+		&& UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(
+			PlayerController,
+			Player->mViewActor.IsValid() ? Player->mViewActor->GetActorLocation() : Player->mWorldLocation,
+			PlayerWidget,
+			false))
+	{
+		PlayerAbsolute = RootCanvas->GetCachedGeometry().LocalToAbsolute(PlayerWidget);
+	}
+	const FVector2D Drag = ScreenPosition - TargetScreen;
+	const float DragLength = Drag.Size();
+	const FVector2D ToPlayer = (PlayerAbsolute - TargetScreen).GetSafeNormal();
+	const float TowardPlayer = FVector2D::DotProduct(Drag.GetSafeNormal(), ToPlayer);
+	int32 SkillIndex = INDEX_NONE;
+	const FVector2D* Destination = nullptr;
+	FVector2D DirectDestination;
+	if (TileDistance <= 1 && FVector2D::Distance(ScreenPosition, PlayerAbsolute) < 105.0f)
+	{
+		SkillIndex = FindDirectSkillIndex(&FSkillUI::mIsSwapSkill);
+	}
+	else if (TowardPlayer > 0.38f)
+	{
+		SkillIndex = FindDirectSkillIndex(&FSkillUI::mIsPullSkill);
+	}
+	else if (TileDistance <= 1 && TowardPlayer < -0.38f)
+	{
+		SkillIndex = FindDirectSkillIndex(&FSkillUI::mIsThrowSkill);
+		DirectDestination = TargetScreen + Drag.GetSafeNormal() * FMath::Max(DragLength, 150.0f);
+		Destination = &DirectDestination;
+	}
+	else
+	{
+		SkillIndex = FindDirectSkillIndex(&FSkillUI::mIsStaggerSkill);
+	}
+	const int32 DesiredPower = FMath::Clamp(FMath::RoundToInt(DragLength / 72.0f), 1, 6);
+	const bool bExecuted = ExecuteDirectSkill(SkillIndex, TargetScreen, Destination, DesiredPower);
+	if (bExecuted == false)
+	{
+		TryOpenContextActionsAtScreenPosition(TargetScreen);
+	}
+	else if (SkillIndex == FindDirectSkillIndex(&FSkillUI::mIsPullSkill))
+	{
+		mEnemyIntentTutorialInterventionSubmitted = true;
+	}
+	else if (SkillIndex == FindDirectSkillIndex(&FSkillUI::mIsThrowSkill))
+	{
+		mEnemyIntentTutorialThrowSubmitted = true;
+	}
+	UpdateEnemyIntentTutorial();
+	return true;
 }
 
 UWidget* UCombatTileMapHUDWidget::FindContextActionButtonForSkill(int32 SkillIndex) const

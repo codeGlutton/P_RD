@@ -22,12 +22,16 @@ namespace
 {
 	const FName DicePushBuildSkillAssetName(TEXT("DA_SwordNormalSmash_Common"));
 	const FName DicePullBuildSkillAssetName(TEXT("DA_SwordBlade_Rare"));
+	const FName DiceStaggerBuildSkillAssetName(TEXT("DA_NomalDefense_Common"));
+	const FName DiceSwapBuildSkillAssetName(TEXT("DA_NomalHeal_Common"));
 
 	bool IsDiceDisplacementBuildSkill(const UStaticSkillData* SkillData)
 	{
 		return SkillData != nullptr
 			&& (SkillData->GetFName() == DicePushBuildSkillAssetName
-				|| SkillData->GetFName() == DicePullBuildSkillAssetName);
+				|| SkillData->GetFName() == DicePullBuildSkillAssetName
+				|| SkillData->GetFName() == DiceStaggerBuildSkillAssetName
+				|| SkillData->GetFName() == DiceSwapBuildSkillAssetName);
 	}
 
 	bool IsDicePullBuildSkill(const UStaticSkillData* SkillData)
@@ -38,6 +42,16 @@ namespace
 	bool IsDiceThrowBuildSkill(const UStaticSkillData* SkillData)
 	{
 		return SkillData != nullptr && SkillData->GetFName() == DicePushBuildSkillAssetName;
+	}
+
+	bool IsDiceStaggerBuildSkill(const UStaticSkillData* SkillData)
+	{
+		return SkillData != nullptr && SkillData->GetFName() == DiceStaggerBuildSkillAssetName;
+	}
+
+	bool IsDiceSwapBuildSkill(const UStaticSkillData* SkillData)
+	{
+		return SkillData != nullptr && SkillData->GetFName() == DiceSwapBuildSkillAssetName;
 	}
 
 	UUnitModel* FindDisplacementTarget(
@@ -411,8 +425,7 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
             {
 				// 끌기/던지기만 HUD의 명시적인 실행 버튼으로 확정한다. 다른 기존 스킬은
 				// 종전대로 같은 목표 칸을 다시 눌러 실행할 수 있어야 한다.
-				if (IsDicePullBuildSkill(mSelectedSkill) == false
-					&& IsDiceThrowBuildSkill(mSelectedSkill) == false
+				if (IsDiceDisplacementBuildSkill(mSelectedSkill) == false
 					&& mTargetIndex == TargetTileIndex)
 				{
 					BuildSkill();
@@ -459,7 +472,9 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
                 {
                     ResetTargetTile();
                     SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
-					if (IsDicePullBuildSkill(mSelectedSkill))
+					if (IsDicePullBuildSkill(mSelectedSkill)
+						|| IsDiceStaggerBuildSkill(mSelectedSkill)
+						|| IsDiceSwapBuildSkill(mSelectedSkill))
 					{
 						LockDisplacementTarget(TargetTileIndex);
 						RefreshEffectTileHighlights();
@@ -589,6 +604,16 @@ bool USRPGSkillBuildAction::IsPullDisplacementPreview() const
 bool USRPGSkillBuildAction::IsThrowDisplacementPreview() const
 {
 	return IsDiceThrowBuildSkill(mSelectedSkill);
+}
+
+bool USRPGSkillBuildAction::IsStaggerDisplacementPreview() const
+{
+	return IsDiceStaggerBuildSkill(mSelectedSkill);
+}
+
+bool USRPGSkillBuildAction::IsSwapDisplacementPreview() const
+{
+	return IsDiceSwapBuildSkill(mSelectedSkill);
 }
 
 UUnitModel* USRPGSkillBuildAction::GetDisplacementTarget() const
@@ -798,10 +823,21 @@ void USRPGSkillBuildAction::RefreshEffectTileHighlights()
 	const FTileIndex TargetTile = TargetUnit->GetTileTransform().mIndex;
 	const int32 Distance = FMath::Max(DicePoolModel->GetSelectedDiceSum(), 1);
 	const bool bIsPull = IsDicePullBuildSkill(mSelectedSkill);
+	const bool bIsStagger = IsDiceStaggerBuildSkill(mSelectedSkill);
+	const bool bIsSwap = IsDiceSwapBuildSkill(mSelectedSkill);
 	TArray<FTileIndex> Trajectory;
 	if (bIsPull)
 	{
 		Trajectory = TileMap->GetPullPath(InstigatorTile, TargetTile, 64);
+	}
+	else if (bIsStagger)
+	{
+		Trajectory.Add(TargetTile);
+	}
+	else if (bIsSwap)
+	{
+		Trajectory.Add(TargetTile);
+		Trajectory.Add(InstigatorTile);
 	}
 	else
 	{
@@ -836,7 +872,7 @@ void USRPGSkillBuildAction::RefreshEffectTileHighlights()
 	}
 	mEffectTileIndexes = Trajectory;
 	ClearAllTileHighlights();
-	const FTileIndex SelectedTile = bIsPull
+	const FTileIndex SelectedTile = bIsPull || bIsSwap
 		? Trajectory.Last()
 		: (mDisplacementDestination != FTileIndex::Invalid ? mDisplacementDestination : Trajectory.Last());
 	TileMap->SetTileHighlight(TArray<FTileIndex>({ SelectedTile }), ETileHighlightFlag::Select);
@@ -862,6 +898,21 @@ bool USRPGSkillBuildAction::CanSelectTargetTile(const FTileIndex& Index) const
 		return FindDisplacementTarget(GetTileMap(), Index, mInstigator.Get()) != nullptr;
 	}
 	if (IsDiceThrowBuildSkill(mSelectedSkill))
+	{
+		if (FindDisplacementTarget(GetTileMap(), Index, mInstigator.Get()) == nullptr)
+		{
+			return false;
+		}
+		const FTileIndex PlayerTile = mInstigator->GetTileTransform().mIndex;
+		return FMath::Max(
+			FMath::Abs(PlayerTile.mX - Index.mX),
+			FMath::Abs(PlayerTile.mY - Index.mY)) == 1;
+	}
+	if (IsDiceStaggerBuildSkill(mSelectedSkill))
+	{
+		return FindDisplacementTarget(GetTileMap(), Index, mInstigator.Get()) != nullptr;
+	}
+	if (IsDiceSwapBuildSkill(mSelectedSkill))
 	{
 		if (FindDisplacementTarget(GetTileMap(), Index, mInstigator.Get()) == nullptr)
 		{

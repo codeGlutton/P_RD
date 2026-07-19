@@ -204,6 +204,8 @@ public:
 		UUnitModel* Target,
 		UBoardActorModel* Blocker,
 		ESRPGPlayerDisplacementType DisplacementType);
+	/** @brief 다리 걸기로 대상 적의 이번 대응 이동 예산을 즉시 줄이고 새 계획을 공개한다. */
+	void ReportPlayerStagger(UUnitModel* Target, int32 DiceValue);
 	void ReportFixedIntentPathDisrupted(UUnitModel* Enemy, const FText& Reason);
 	void ResolveFixedIntentCollision(UUnitModel* Enemy, UBoardActorModel* Blocker);
 	void ResolveFixedIntentAttack(UUnitModel* Enemy, const TArray<IBoardCombatTarget*>& ResolvedTargets);

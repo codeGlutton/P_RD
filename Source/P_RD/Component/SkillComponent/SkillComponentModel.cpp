@@ -27,6 +27,8 @@ namespace
 {
 	const FName DicePushSkillAssetName(TEXT("DA_SwordNormalSmash_Common"));
 	const FName DicePullSkillAssetName(TEXT("DA_SwordBlade_Rare"));
+	const FName DiceStaggerSkillAssetName(TEXT("DA_NomalDefense_Common"));
+	const FName DiceSwapSkillAssetName(TEXT("DA_NomalHeal_Common"));
 
 	bool IsPlayerDisplacementSkill(const UStaticSkillData* SkillData, const UUnitModel* OwnerUnit)
 	{
@@ -34,7 +36,9 @@ namespace
 			&& OwnerUnit != nullptr
 			&& OwnerUnit->IsPlayerUnitModel()
 			&& (SkillData->GetFName() == DicePushSkillAssetName
-				|| SkillData->GetFName() == DicePullSkillAssetName);
+				|| SkillData->GetFName() == DicePullSkillAssetName
+				|| SkillData->GetFName() == DiceStaggerSkillAssetName
+				|| SkillData->GetFName() == DiceSwapSkillAssetName);
 	}
 
 	UStaticSkillData* LoadStaticSkillData(const FPrimaryAssetId& SkillId)
@@ -283,6 +287,22 @@ void USkillComponentModel::PlayMotionLayer()
 
 	mActiveSkillContext.mTargetTileIndexes = MotionLayer.FilterTileIndexes(mActiveSkillContext.mSelfTileIndex, mActiveSkillContext.mEffectTileIndexes);
 	mActiveSkillContext.mOtherCombatTargets = MotionLayer.FilterCombatTargets(mActiveSkillContext.mMapModel.Get(), OwnerCombatTarget, mActiveSkillContext.mTargetTileIndexes);
+	// 직접 조작 전술은 원본 스킬 데이터의 아군/자가 버프 필터를 재사용하지 않는다.
+	// 손가락으로 고른 한 적이 애니메이션과 후속 위치/계획 판정의 대상이 되도록 명시적으로 고정한다.
+	if (IsPlayerDisplacementSkill(SkillData, OwnerUnitModel))
+	{
+		mActiveSkillContext.mOtherCombatTargets.Reset();
+		for (UBoardActorModel* BoardActor : mActiveSkillContext.mMapModel->GetActorsOnTile(
+			mActiveSkillContext.mTargetTileIndex,
+			ETileLayerFlag::Unit))
+		{
+			IBoardCombatTarget* CombatTarget = Cast<IBoardCombatTarget>(BoardActor);
+			if (CombatTarget != nullptr && CombatTarget != OwnerCombatTarget && CombatTarget->IsTargetable())
+			{
+				mActiveSkillContext.mOtherCombatTargets.AddUnique(CombatTarget);
+			}
+		}
+	}
 
 	// 적의 고정 의도 중 'Hostile 대상 모션'만 오사 대상을 추가한다.
 	// 기존 필터 결과는 보존해서 자가 버프/아군 보조 모션의 원래 대상을 망가뜨리지 않는다.

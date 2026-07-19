@@ -287,7 +287,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		{
 			mDiceTrayPanel->SetBrushColor(FLinearColor(0.018f, 0.032f, 0.045f, 0.82f));
 			mDiceTrayPanel->SetVisibility(ESlateVisibility::HitTestInvisible);
-			mDiceTrayTitleText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "DiceTrayTitle", "이번 턴 주사위"));
+			mDiceTrayTitleText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "DiceTrayTitle", "AUTO DICE"));
 			mDiceTrayTitleText->SetColorAndOpacity(FSlateColor(FLinearColor(0.80f, 0.96f, 1.0f, 1.0f)));
 			mDiceTrayTitleText->SetJustification(ETextJustify::Left);
 			mDiceTrayTitleText->SetVisibility(ESlateVisibility::HitTestInvisible);

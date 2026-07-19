@@ -51,6 +51,8 @@ namespace
 {
 	const FName SmashSkillAssetName(TEXT("DA_SwordNormalSmash_Common"));
 	const FName PullSkillAssetName(TEXT("DA_SwordBlade_Rare"));
+	const FName StaggerSkillAssetName(TEXT("DA_NomalDefense_Common"));
+	const FName SwapSkillAssetName(TEXT("DA_NomalHeal_Common"));
 	constexpr float InterventionSmashAimRange = 8.0f;
 
 	EEnemyIntentResultUI GetEnemyIntentResultUI(ESRPGEnemyIntentResult Result)
@@ -914,24 +916,32 @@ void ACombatGameMode::PushSkillUIData() const
 		{
 			const bool bIsSmash = StaticSkillData->GetFName() == SmashSkillAssetName;
 			const bool bIsPull = StaticSkillData->GetFName() == PullSkillAssetName;
-			const bool bIsDisplacement = bIsSmash || bIsPull;
+			const bool bIsStagger = StaticSkillData->GetFName() == StaggerSkillAssetName;
+			const bool bIsSwap = StaticSkillData->GetFName() == SwapSkillAssetName;
+			const bool bIsDisplacement = bIsSmash || bIsPull || bIsStagger || bIsSwap;
 			SkillUIData.mName = bIsPull
 				? NSLOCTEXT("CombatGameMode", "PullSkillName", "끌어당기기")
 				: (bIsSmash
-					? NSLOCTEXT("CombatGameMode", "ThrowSkillName", "붙잡아 던지기")
-					: StaticSkillData->mName);
+					? NSLOCTEXT("CombatGameMode", "ThrowSkillName", "밀기 · 던지기")
+					: (bIsStagger
+						? NSLOCTEXT("CombatGameMode", "StaggerSkillName", "다리 걸기")
+						: (bIsSwap
+							? NSLOCTEXT("CombatGameMode", "SwapSkillName", "자리 바꾸기")
+							: StaticSkillData->mName)));
 			SkillUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 			SkillUIData.mDiceCost = StaticSkillData->mRequiredDiceCount;
 			SkillUIData.mIsUsable = true;
 			SkillUIData.mIsDisplacementSkill = bIsDisplacement;
 			SkillUIData.mIsPullSkill = bIsPull;
 			SkillUIData.mIsThrowSkill = bIsSmash;
+			SkillUIData.mIsStaggerSkill = bIsStagger;
+			SkillUIData.mIsSwapSkill = bIsSwap;
 			SkillUIData.mTargeting.mSelectShape = bIsDisplacement
 				? ECombatSkillSelectShapeUI::Square
 				: GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
-			SkillUIData.mTargeting.mSelectRange = bIsPull
+			SkillUIData.mTargeting.mSelectRange = bIsPull || bIsStagger
 				? InterventionSmashAimRange
-				: (bIsSmash ? 1.0f : StaticCast<float>(StaticSkillData->mAimRangeDefaultValue));
+				: (bIsSmash || bIsSwap ? 1.0f : StaticCast<float>(StaticSkillData->mAimRangeDefaultValue));
 			SkillUIData.mTargeting.mSelectRangeRatio = bIsDisplacement ? 0.0f : StaticSkillData->mAimRangeRatio;
 			SkillUIData.mTargeting.mHitShape = bIsDisplacement
 				? ECombatSkillHitShapeUI::Single
@@ -953,7 +963,10 @@ void ACombatGameMode::PushDisplacementPreviewUIData(
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 	FDisplacementPreviewUI Preview;
 	if (Action == nullptr
-		|| (Action->IsPullDisplacementPreview() == false && Action->IsThrowDisplacementPreview() == false)
+		|| (Action->IsPullDisplacementPreview() == false
+			&& Action->IsThrowDisplacementPreview() == false
+			&& Action->IsStaggerDisplacementPreview() == false
+			&& Action->IsSwapDisplacementPreview() == false)
 		|| Phase == ESRPGSkillBuildPhase::None
 		|| Phase == ESRPGSkillBuildPhase::Build)
 	{
@@ -973,6 +986,8 @@ void ACombatGameMode::PushDisplacementPreviewUIData(
 	Preview.mIsActive = true;
 	Preview.mIsPull = Action->IsPullDisplacementPreview();
 	Preview.mIsThrow = Action->IsThrowDisplacementPreview();
+	Preview.mIsStagger = Action->IsStaggerDisplacementPreview();
+	Preview.mIsSwap = Action->IsSwapDisplacementPreview();
 	Preview.mTargetUnitId = Target->GetModelId();
 	Preview.mTargetName = Target->GetBoardActorDisplayName();
 	Preview.mTargetTile = Target->GetTileTransform().mIndex;

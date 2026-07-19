@@ -213,7 +213,7 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 		OwnedDiceImage->SetVisibility(ESlateVisibility::HitTestInvisible);
 		OwnedDiceCard->SetBackgroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.01f));
 		OwnedDiceCard->SetButtonIndex(DiceIndex);
-		OwnedDiceCard->OnIndexedClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleOwnedDiceCardClicked);
+		OwnedDiceCard->SetVisibility(ESlateVisibility::HitTestInvisible);
 
 		UTextBlock* OwnedDiceTypeText = WidgetTree->ConstructWidget<UTextBlock>(
 			UTextBlock::StaticClass(),
@@ -312,28 +312,24 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 				FLinearColor StateColor(0.84f, 0.94f, 1.0f, 1.0f);
 				if (DiceView.mIsUsed)
 				{
-					StateText = TEXT("사용함");
+					StateText = TEXT("사용");
 					StateColor = FLinearColor(0.52f, 0.56f, 0.58f, 1.0f);
 				}
 				else if (DiceView.mIsSelected)
 				{
-					StateText = TEXT("선택됨");
+					StateText = TEXT("준비");
 					StateColor = FLinearColor(1.0f, 0.82f, 0.24f, 1.0f);
 				}
 				else if (DiceView.mIsRolled)
 				{
-					StateText = DiceIndex == TutorialRecommendedDiceIndex
-						? FString::Printf(TEXT("추천 · 눈 %d"), DiceView.mResultValue)
-						: (bAwaitingDiceSelection
-							? FString::Printf(TEXT("선택 가능 · %d"), DiceView.mResultValue)
-							: FString::Printf(TEXT("눈 %d"), DiceView.mResultValue));
+					StateText = FString::FromInt(DiceView.mResultValue);
 				}
 				else
 				{
-					StateText = TEXT("굴림 전");
+					StateText = TEXT("-");
 				}
 				OwnedDiceTypeText->SetText(FText::FromString(FString::Printf(
-					TEXT("D%d · %s"), DiceView.mFaceCount, *StateText)));
+					TEXT("%s"), *StateText)));
 				OwnedDiceTypeText->SetColorAndOpacity(FSlateColor(StateColor));
 				OwnedDiceTypeText->SetVisibility(ESlateVisibility::HitTestInvisible);
 			}

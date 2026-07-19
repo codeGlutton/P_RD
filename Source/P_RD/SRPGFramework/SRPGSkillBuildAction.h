@@ -91,6 +91,8 @@ public:
 	/** @brief HUD가 게임 판정을 복제하지 않고 현재 위치 개입 프리뷰를 그리기 위한 읽기 전용 값. */
 	bool IsPullDisplacementPreview() const;
 	bool IsThrowDisplacementPreview() const;
+	bool IsStaggerDisplacementPreview() const;
+	bool IsSwapDisplacementPreview() const;
 	UUnitModel* GetDisplacementTarget() const;
 	const TArray<FTileIndex>& GetDisplacementTrajectory() const { return mEffectTileIndexes; }
 	const TArray<FTileIndex>& GetDisplacementDestinationCandidates() const { return mThrowDestinationIndexes; }

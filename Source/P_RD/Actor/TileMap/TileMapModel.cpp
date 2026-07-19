@@ -1023,6 +1023,54 @@ void UTileMapModel::CompleteActorMovement(UBoardActorModel* Actor)
 	}
 }
 
+bool UTileMapModel::StartActorSwap(
+	UBoardActorModel* First,
+	UBoardActorModel* Second,
+	TSharedPtr<FPresentationBarrier> Barrier)
+{
+	if (First == nullptr || Second == nullptr || First == Second)
+	{
+		return false;
+	}
+	const FTileTransform FirstTransform = First->GetTileTransform();
+	const FTileTransform SecondTransform = Second->GetTileTransform();
+	if (IsValidIndex(FirstTransform.mIndex) == false || IsValidIndex(SecondTransform.mIndex) == false)
+	{
+		return false;
+	}
+	const int32 Distance = FMath::Max(
+		FMath::Abs(FirstTransform.mIndex.mX - SecondTransform.mIndex.mX),
+		FMath::Abs(FirstTransform.mIndex.mY - SecondTransform.mIndex.mY));
+	if (Distance != 1)
+	{
+		return false;
+	}
+
+	FTile* FirstTile = GetTile(FirstTransform.mIndex);
+	FTile* SecondTile = GetTile(SecondTransform.mIndex);
+	NotifyEndOverlap(FirstTile, First);
+	NotifyEndOverlap(SecondTile, Second);
+	UnregisterActorFromTile(FirstTile, First);
+	UnregisterActorFromTile(SecondTile, Second);
+
+	const FTileTransform FirstNext(SecondTransform.mIndex, FirstTransform.mDirection);
+	const FTileTransform SecondNext(FirstTransform.mIndex, SecondTransform.mDirection);
+	First->SetTileTransform(FirstNext);
+	Second->SetTileTransform(SecondNext);
+	RegisterActorToTile(SecondTile, First);
+	RegisterActorToTile(FirstTile, Second);
+
+	First->OnStartForcedMovePath.Broadcast(
+		{ TileToWorldLocation(FirstTransform.mIndex), TileToWorldLocation(FirstNext.mIndex) },
+		EForcedMovePresentationType::Swap);
+	Second->OnStartForcedMovePath.Broadcast(
+		{ TileToWorldLocation(SecondTransform.mIndex), TileToWorldLocation(SecondNext.mIndex) },
+		EForcedMovePresentationType::Swap);
+	First->OnStartMoveStep.Broadcast(FirstNext, TileToWorldTransform(FirstNext), Barrier, 0.0f);
+	Second->OnStartMoveStep.Broadcast(SecondNext, TileToWorldTransform(SecondNext), Barrier, 0.0f);
+	return true;
+}
+
 void UTileMapModel::PlaceActor(const FTileTransform& NextTransform, UBoardActorModel* Actor)
 {
 	checkf(Actor != nullptr, TEXT("Actor가 nullptr"));

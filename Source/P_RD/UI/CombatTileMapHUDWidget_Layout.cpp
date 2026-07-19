@@ -97,38 +97,32 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 	RDUILayout::ApplyAnchoredSlot(mTurnChangeVideoImage, FAnchors(0.140f, 0.155f, 0.860f, 0.845f), TurnChangeVideoZOrder);
 	RDUILayout::ApplyAnchoredSlot(mTurnChangeTurnTextPanel, FAnchors(0.435f, 0.390f, 0.565f, 0.610f), TurnChangeTextZOrder);
 
-	// 상시 스킬 6칸은 제거한다. 왼쪽에는 이번 턴의 자원인 주사위만 세로로 두고,
-	// 행동은 전장의 유닛을 눌렀을 때 그 유닛 옆 컨텍스트 팔레트에서 고른다.
+	// 주사위는 별도 배치 도구가 아니라 직접 조작의 자동 소모 자원이다. 전장을 가리지 않는 하단 벨트로 압축한다.
 	const int32 OwnedDiceCount = mOwnedDiceImages.Num();
-	ApplyScreenRect(mDiceTrayPanel, FAnchors(0.012f, 0.128f, 0.137f, 0.842f), 16);
-	ApplyScreenRect(mDiceTrayTitleText, FAnchors(0.022f, 0.139f, 0.127f, 0.171f), 18);
-	ApplyScreenRect(mDiceAssignmentText, FAnchors(0.022f, 0.170f, 0.127f, 0.218f), 18);
+	ApplyScreenRect(mDiceTrayPanel, FAnchors(0.225f, 0.882f, 0.705f, 0.988f), 16);
+	ApplyScreenRect(mDiceTrayTitleText, FAnchors(0.238f, 0.892f, 0.335f, 0.918f), 18);
+	ApplyScreenRect(mDiceAssignmentText, FAnchors(0.340f, 0.892f, 0.690f, 0.918f), 18);
 	if (OwnedDiceCount > 0)
 	{
-		const float TrayTop = 0.224f;
-		const float TrayBottom = 0.830f;
-		const float Gap = 0.007f;
-		const float AvailableHeight = TrayBottom - TrayTop - Gap * StaticCast<float>(FMath::Max(OwnedDiceCount - 1, 0));
-		const float CellHeight = FMath::Min(0.096f, AvailableHeight / StaticCast<float>(OwnedDiceCount));
-		const float TotalHeight = CellHeight * StaticCast<float>(OwnedDiceCount)
-			+ Gap * StaticCast<float>(FMath::Max(OwnedDiceCount - 1, 0));
-		const float StartTop = TrayTop + (TrayBottom - TrayTop - TotalHeight) * 0.5f;
+		const float StartLeft = 0.242f;
+		const float EndRight = 0.690f;
+		const float Gap = 0.006f;
+		const float CellWidth = (EndRight - StartLeft - Gap * StaticCast<float>(FMath::Max(OwnedDiceCount - 1, 0)))
+			/ StaticCast<float>(OwnedDiceCount);
 		for (int32 DiceIndex = 0; DiceIndex < OwnedDiceCount; ++DiceIndex)
 		{
-			const float CellTop = StartTop + StaticCast<float>(DiceIndex) * (CellHeight + Gap);
-			const float CellBottom = CellTop + CellHeight;
-			const float ImageTop = CellTop + CellHeight * 0.03f;
-			const float ImageBottom = CellTop + CellHeight * 0.72f;
-			ApplyScreenRect(mOwnedDiceImages[DiceIndex], FAnchors(0.051f, ImageTop, 0.098f, ImageBottom), 22);
+			const float CellLeft = StartLeft + StaticCast<float>(DiceIndex) * (CellWidth + Gap);
+			const float CellRight = CellLeft + CellWidth;
+			ApplyScreenRect(mOwnedDiceImages[DiceIndex], FAnchors(CellLeft + CellWidth * 0.20f, 0.918f, CellRight - CellWidth * 0.20f, 0.967f), 22);
 			if (mOwnedDiceCardWidgets.IsValidIndex(DiceIndex))
 			{
-				ApplyScreenRect(mOwnedDiceCardWidgets[DiceIndex], FAnchors(0.022f, CellTop, 0.127f, CellBottom), 23);
+				ApplyScreenRect(mOwnedDiceCardWidgets[DiceIndex], FAnchors(CellLeft, 0.916f, CellRight, 0.980f), 23);
 			}
 			if (mOwnedDiceTypeTexts.IsValidIndex(DiceIndex))
 			{
 				if (mOwnedDiceTypeTexts[DiceIndex] != nullptr)
 				{
-					ApplyScreenRect(mOwnedDiceTypeTexts[DiceIndex], FAnchors(0.027f, CellTop + CellHeight * 0.70f, 0.122f, CellBottom - 0.002f), 24);
+					ApplyScreenRect(mOwnedDiceTypeTexts[DiceIndex], FAnchors(CellLeft, 0.963f, CellRight, 0.982f), 24);
 				}
 			}
 		}

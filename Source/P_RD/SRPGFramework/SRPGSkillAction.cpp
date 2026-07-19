@@ -17,8 +17,10 @@
 
 namespace
 {
-    const FName DicePushSkillAssetName(TEXT("DA_SwordNormalSmash_Common"));
-    const FName DicePullSkillAssetName(TEXT("DA_SwordBlade_Rare"));
+	const FName DicePushSkillAssetName(TEXT("DA_SwordNormalSmash_Common"));
+	const FName DicePullSkillAssetName(TEXT("DA_SwordBlade_Rare"));
+	const FName DiceStaggerSkillAssetName(TEXT("DA_NomalDefense_Common"));
+	const FName DiceSwapSkillAssetName(TEXT("DA_NomalHeal_Common"));
 
     bool HasFixedEffectBlocker(
         const UTileMapModel* TileMap,
@@ -131,8 +133,10 @@ void USRPGSkillAction::OnEndAction()
     mDiceDisplacementStepIndex = 0;
     mDiceDisplacementDiceValue = 0;
 	mDiceDisplacementDestination = FTileIndex::Invalid;
-    mDiceDisplacementIsPull = false;
+	mDiceDisplacementIsPull = false;
 	mDiceDisplacementIsThrow = false;
+	mDiceDisplacementIsStagger = false;
+	mDiceDisplacementIsSwap = false;
     mDiceDisplacementWasReported = false;
     mDiceDisplacementCollisionReported = false;
 	mDiceDisplacementStarted = false;
@@ -249,7 +253,9 @@ bool USRPGSkillAction::TryStartDiceDisplacement(const FActiveSkillContext& Conte
 {
     if (SkillData == nullptr
         || (SkillData->GetFName() != DicePushSkillAssetName
-            && SkillData->GetFName() != DicePullSkillAssetName)
+            && SkillData->GetFName() != DicePullSkillAssetName
+            && SkillData->GetFName() != DiceStaggerSkillAssetName
+            && SkillData->GetFName() != DiceSwapSkillAssetName)
         || mInstigator.IsValid() == false
         || mInstigator->IsPlayerUnitModel() == false)
     {
@@ -283,6 +289,8 @@ bool USRPGSkillAction::TryStartDiceDisplacement(const FActiveSkillContext& Conte
 
     const bool bIsPull = SkillData->GetFName() == DicePullSkillAssetName;
 	const bool bIsThrow = SkillData->GetFName() == DicePushSkillAssetName;
+	const bool bIsStagger = SkillData->GetFName() == DiceStaggerSkillAssetName;
+	const bool bIsSwap = SkillData->GetFName() == DiceSwapSkillAssetName;
     const FTileIndex InstigatorTile = mInstigator->GetTileTransform().mIndex;
     const FTileIndex TargetTile = DisplacementTarget->GetTileTransform().mIndex;
     const int32 RequestedDistance = FMath::Max(Context.mDiceSum, 1);
@@ -320,10 +328,60 @@ bool USRPGSkillAction::TryStartDiceDisplacement(const FActiveSkillContext& Conte
     mDiceDisplacementDiceValue = Context.mDiceSum;
     mDiceDisplacementIsPull = bIsPull;
 	mDiceDisplacementIsThrow = bIsThrow;
+	mDiceDisplacementIsStagger = bIsStagger;
+	mDiceDisplacementIsSwap = bIsSwap;
     mDiceDisplacementWasReported = false;
     mDiceDisplacementCollisionReported = false;
 	mDiceDisplacementStarted = true;
 	mDiceDisplacementFinished = false;
+	if (bIsStagger)
+	{
+		mDiceDisplacementPath = { TargetTile };
+		if (USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
+		{
+			CombatModel->ReportPlayerStagger(DisplacementTarget, Context.mDiceSum);
+		}
+		mDiceDisplacementFinished = true;
+		FinishSkillAction();
+		return true;
+	}
+	if (bIsSwap)
+	{
+		if (DistanceToInstigator != 1)
+		{
+			mDiceDisplacementFinished = true;
+			FinishSkillAction();
+			return true;
+		}
+		mDiceDisplacementPath = { TargetTile, InstigatorTile };
+		TSharedPtr<FPresentationBarrier> SwapBarrier = FPresentationBarrier::Make(
+			FOnFinishPresentation::CreateWeakLambda(this, [this, TargetTile, InstigatorTile]()
+			{
+				if (UTileMapModel* ActiveTileMap = GetTileMap())
+				{
+					ActiveTileMap->CompleteActorMovement(mInstigator.Get());
+					ActiveTileMap->CompleteActorMovement(mDiceDisplacementTarget);
+				}
+				if (USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
+				{
+					CombatModel->ReportPlayerDisplacement(
+						mDiceDisplacementTarget,
+						TargetTile,
+						InstigatorTile,
+						mDiceDisplacementDiceValue,
+						ESRPGPlayerDisplacementType::Swap);
+				}
+				mDiceDisplacementWasReported = true;
+				mDiceDisplacementFinished = true;
+				FinishSkillAction();
+			}));
+		if (TileMap->StartActorSwap(mInstigator.Get(), DisplacementTarget, SwapBarrier) == false)
+		{
+			mDiceDisplacementFinished = true;
+			FinishSkillAction();
+		}
+		return true;
+	}
 	if (bIsPull)
 	{
 		// 갈고리는 사거리 안의 적을 발앞까지 끌어오는 독립 행동이다.

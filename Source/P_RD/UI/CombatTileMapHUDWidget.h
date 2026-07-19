@@ -132,12 +132,14 @@ protected:
 
 	/** @brief PC/에디터에서 스킬 레일을 누르기 시작한 위치를 기록한다. */
 	FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 
 	/** @brief PC/에디터에서 스킬 레일 입력을 짧은 선택 또는 롱프레스 상세로 확정한다. */
 	FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 
 	/** @brief 모바일에서 스킬 레일을 누르기 시작한 위치를 기록한다. */
 	FReply NativeOnTouchStarted(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent) override;
+	FReply NativeOnTouchMoved(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent) override;
 
 	/** @brief 모바일에서 스킬 레일 입력을 짧은 선택 또는 롱프레스 상세로 확정한다. */
 	FReply NativeOnTouchEnded(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent) override;
@@ -263,6 +265,16 @@ private:
 	void EnsureContextActionWidgets();
 	/** @brief 화면 좌표 아래의 유닛을 찾아 컨텍스트 팔레트를 연다. 유닛을 찾았으면 true. */
 	bool TryOpenContextActionsAtScreenPosition(const FVector2D& ScreenPosition);
+	/** @brief 화면 좌표 아래 생존 유닛과 발밑 투영점을 찾는다. */
+	bool FindUnitAtScreenPosition(const FVector2D& ScreenPosition, int32& OutUnitId, bool& OutIsPlayer, FVector2D& OutUnitScreenPosition) const;
+	/** @brief 유닛 직접 드래그의 시작/갱신/종료와 실시간 손잡이 피드백. */
+	bool BeginDirectUnitGesture(const FVector2D& ScreenPosition);
+	void UpdateDirectUnitGesture(const FVector2D& ScreenPosition);
+	bool EndDirectUnitGesture(const FVector2D& ScreenPosition);
+	void SetDirectUnitGestureVisual(bool bVisible, const FVector2D& ScreenPosition = FVector2D::ZeroVector);
+	/** @brief 필요한 주사위를 자동으로 골라 기존 스킬 빌드 파이프라인을 즉시 실행한다. */
+	bool ExecuteDirectSkill(int32 SkillIndex, const FVector2D& TargetScreenPosition, const FVector2D* DestinationScreenPosition, int32 DesiredPower);
+	int32 FindDirectSkillIndex(bool FSkillUI::* SkillFlag) const;
 	/** @brief 선택된 유닛/현재 주사위/사거리에 맞춰 컨텍스트 행동 목록과 강조를 다시 그린다. */
 	void RefreshContextActions();
 	/** @brief 유닛 이동과 카메라 이동을 따라 컨텍스트 팔레트 위치를 갱신한다. */
@@ -1020,6 +1032,18 @@ private:
 	/** @brief 같은 스킬/주사위 갱신 알림에서 월드 조준을 두 번 보내지 않는 latch. */
 	int32 mContextSelectedSkillIndex = INDEX_NONE;
 	bool mContextTargetSubmitted = false;
+
+	/** @brief 전장 유닛을 누른 채 끌어 행동을 고르는 모바일 직접 조작 상태. */
+	bool mDirectUnitGestureActive = false;
+	bool mDirectUnitGestureDragged = false;
+	int32 mDirectUnitGestureTargetId = INDEX_NONE;
+	bool mDirectUnitGestureTargetIsPlayer = false;
+	FVector2D mDirectUnitGestureStart = FVector2D::ZeroVector;
+	FVector2D mDirectUnitGestureCurrent = FVector2D::ZeroVector;
+	FVector2D mDirectUnitGestureTargetScreen = FVector2D::ZeroVector;
+	UPROPERTY(Transient) TObjectPtr<UBorder> mDirectUnitGestureLine;
+	UPROPERTY(Transient) TObjectPtr<UBorder> mDirectUnitGestureHandle;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDirectUnitGestureLabel;
 
 	/** @brief 카드형 스킬 레일 전체를 묶는 좌측 도크 배경/제목. */
 	UPROPERTY(Transient)
