@@ -330,6 +330,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "SRPG|Highlight", meta = (DisplayName = "Pulse Period", ClampMin = "0.01"))
 	float mPulsePeriod = 1.0f;
 
+	/** @brief 조준 가능 타일들을 하나의 영역으로 읽게 만드는 외곽선/안쪽 페더 전용 ISM. */
+	UPROPERTY(VisibleAnywhere, Category = "SRPG|Highlight", meta = (DisplayName = "Aim Range Outline Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mAimRangeOutlineComponent;
+
 	/* 이동 경로 표시 */
 
 	/**
@@ -433,11 +437,21 @@ private:
 	 */
 	void ApplyBorderParameters();
 
+	/** @brief 현재 Aim 타일 집합의 외곽 경계와 안쪽 그라데이션을 다시 만든다. */
+	void RefreshAimRangePresentation();
+
+	/** @brief 조준 범위 외곽선/페더 인스턴스를 모두 지운다. */
+	void ClearAimRangePresentation();
+
 	/**
 	 * @brief 타일 그리드 전용 다이나믹 머티리얼 (테두리 파라미터 푸시 통로 — 원본 에셋을 쓰는 경로 화살표/마커는 영향 없음)
 	 */
 	UPROPERTY(Transient)
 	TObjectPtr<UMaterialInstanceDynamic> mTileMID;
+
+	/** @brief 타일 머티리얼을 재사용하되 개별 타일 테두리를 끈 사거리 영역 전용 MID. */
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInstanceDynamic> mAimRangeOverlayMID;
 
 	/**
 	 * @brief 한 타일의 강조 상태(mHighlights)를 스타일로 합성해 ISM custom data에 기록
@@ -455,6 +469,9 @@ private:
 	 */
 	UPROPERTY()
 	TArray<ETileHighlightFlag> mHighlights;
+
+	/** @brief Aim 내부 채움의 경계 거리 기반 세기(가장자리 진함 → 안쪽 옅음). */
+	TArray<float> mAimGradientStrengths;
 
 	/**
 	 * @brief 현재 표시 중인 경로 타일 수 (틱 펄스 갱신 대상 판단 + 도착 마커 위상 인덱스용)

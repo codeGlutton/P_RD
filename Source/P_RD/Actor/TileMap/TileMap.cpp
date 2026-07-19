@@ -57,12 +57,23 @@ ATileMap::ATileMap()
 	// 터치 판정(타일 선택/정보 확인 트레이스)을 받기 위해 타일맵 프로파일 적용 (QueryOnly)
 	mTileMeshComponent->SetCollisionProfileName(RDCollisionProfiles::TileMap);
 
+	// 개별 타일 사각형이 아니라 조준 가능 영역 전체의 실루엣을 그리는 전용 평면 인스턴스.
+	mAimRangeOutlineComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("AimRangeOutline"));
+	// 타일 메시가 별도 오프셋/회전을 갖는 맵에서도 경계가 정확히 겹치도록 같은 좌표계를 상속한다.
+	mAimRangeOutlineComponent->SetupAttachment(mTileMeshComponent);
+	mAimRangeOutlineComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	mAimRangeOutlineComponent->SetNumCustomDataFloats(4);
+	mAimRangeOutlineComponent->SetCastShadow(false);
+	mAimRangeOutlineComponent->SetReceivesDecals(false);
+	mAimRangeOutlineComponent->SetTranslucentSortPriority(18);
+
 	// 기본 타일 메시로 엔진 기본 Plane(100x100cm, +Z 향) 지정
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> PlaneMeshFinder(TEXT("/Engine/BasicShapes/Plane.Plane"));
 	if (PlaneMeshFinder.Succeeded())
 	{
 		mTileMesh = PlaneMeshFinder.Object;
 		mTileMeshComponent->SetStaticMesh(mTileMesh);
+		mAimRangeOutlineComponent->SetStaticMesh(mTileMesh);
 	}
 
 	// 하이라이트 표시용 머티리얼: PerInstanceCustomData(RGBA)를 읽어 타일 색에 합성한다.
@@ -73,6 +84,7 @@ ATileMap::ATileMap()
 	{
 		mTileMaterial = TileTransparentMatFinder.Object;
 		mTileMeshComponent->SetMaterial(0, mTileMaterial);
+		mAimRangeOutlineComponent->SetMaterial(0, mTileMaterial);
 	}
 
 	// 강조 스타일 기본값 (모두 타일 위에 자기 알파로 Mix — 알파<1이라 타일이 비침)
@@ -392,6 +404,7 @@ void ATileMap::RebuildTileInstances()
 
 	// 강조 표시 상태도 같은 크기로 초기화 (전부 None)
 	mHighlights.Init(ETileHighlightFlag::None, FMath::Max(0, mModel->GetWidth() * mModel->GetHeight()));
+	mAimGradientStrengths.Init(0.0f, mHighlights.Num());
 
 	// 시각 요소(인스턴스/머티리얼/타일 색) 재생성
 	RefreshTileVisuals();
@@ -413,6 +426,10 @@ void ATileMap::RefreshTileVisuals()
 	{
 		mTileMID = UMaterialInstanceDynamic::Create(mTileMaterial, this);
 		mTileMeshComponent->SetMaterial(0, mTileMID);
+		mAimRangeOverlayMID = UMaterialInstanceDynamic::Create(mTileMaterial, this);
+		mAimRangeOverlayMID->SetScalarParameterValue(TEXT("BorderWidth"), 0.0f);
+		mAimRangeOverlayMID->SetVectorParameterValue(TEXT("BorderColor"), FLinearColor::Transparent);
+		mAimRangeOutlineComponent->SetMaterial(0, mAimRangeOverlayMID);
 	}
 	ApplyBorderParameters();
 
@@ -449,6 +466,7 @@ void ATileMap::RefreshTileVisuals()
 	{
 		RefreshTileCustomData(Index);
 	}
+	RefreshAimRangePresentation();
 }
 
 void ATileMap::ApplyBorderParameters()
@@ -466,6 +484,160 @@ void ATileMap::ApplyBorderParameters()
 
 	mTileMID->SetVectorParameterValue(TEXT("BorderColor"), mTileBorderStyle.mColor);
 	mTileMID->SetScalarParameterValue(TEXT("BorderWidth"), BorderWidthUV);
+}
+
+void ATileMap::ClearAimRangePresentation()
+{
+	if (mAimRangeOutlineComponent != nullptr)
+	{
+		mAimRangeOutlineComponent->ClearInstances();
+	}
+}
+
+void ATileMap::RefreshAimRangePresentation()
+{
+	ClearAimRangePresentation();
+	if (mModel == nullptr || mAimRangeOutlineComponent == nullptr || mTileSize <= 0.0f)
+	{
+		return;
+	}
+
+	const int32 Width = mModel->GetWidth();
+	const int32 Height = mModel->GetHeight();
+	if (Width <= 0 || Height <= 0)
+	{
+		return;
+	}
+
+	mAimGradientStrengths.Init(0.0f, mHighlights.Num());
+	TSet<int32> AimSet;
+	for (int32 LinearIndex = 0; LinearIndex < mHighlights.Num(); ++LinearIndex)
+	{
+		if (EnumHasAnyFlags(mHighlights[LinearIndex], ETileHighlightFlag::Aim))
+		{
+			AimSet.Add(LinearIndex);
+		}
+	}
+	if (AimSet.IsEmpty())
+	{
+		return;
+	}
+
+	mAimRangeOutlineComponent->SetStaticMesh(mTileMesh);
+	if (mAimRangeOverlayMID != nullptr)
+	{
+		mAimRangeOutlineComponent->SetMaterial(0, mAimRangeOverlayMID);
+	}
+
+	const FTileIndex CardinalSteps[] =
+	{
+		FTileIndex(1, 0), FTileIndex(-1, 0), FTileIndex(0, 1), FTileIndex(0, -1)
+	};
+	auto ToLinear = [Width, Height](int32 X, int32 Y)
+	{
+		return X >= 0 && X < Width && Y >= 0 && Y < Height ? Y * Width + X : INDEX_NONE;
+	};
+
+	// 경계 타일부터 안쪽으로 거리장을 퍼뜨려 타일 채움도 하나의 옅은 영역처럼 보이게 한다.
+	TArray<int32> BoundaryDistance;
+	BoundaryDistance.Init(INDEX_NONE, mHighlights.Num());
+	TArray<int32> Queue;
+	for (int32 LinearIndex : AimSet)
+	{
+		const int32 X = LinearIndex % Width;
+		const int32 Y = LinearIndex / Width;
+		bool bBoundary = false;
+		for (const FTileIndex& Step : CardinalSteps)
+		{
+			const int32 Neighbor = ToLinear(X + Step.mX, Y + Step.mY);
+			if (Neighbor == INDEX_NONE || AimSet.Contains(Neighbor) == false)
+			{
+				bBoundary = true;
+				break;
+			}
+		}
+		if (bBoundary)
+		{
+			BoundaryDistance[LinearIndex] = 0;
+			Queue.Add(LinearIndex);
+		}
+	}
+	for (int32 QueueIndex = 0; QueueIndex < Queue.Num(); ++QueueIndex)
+	{
+		const int32 Current = Queue[QueueIndex];
+		const int32 X = Current % Width;
+		const int32 Y = Current / Width;
+		for (const FTileIndex& Step : CardinalSteps)
+		{
+			const int32 Neighbor = ToLinear(X + Step.mX, Y + Step.mY);
+			if (Neighbor != INDEX_NONE && AimSet.Contains(Neighbor) && BoundaryDistance[Neighbor] == INDEX_NONE)
+			{
+				BoundaryDistance[Neighbor] = BoundaryDistance[Current] + 1;
+				Queue.Add(Neighbor);
+			}
+		}
+	}
+	for (int32 LinearIndex : AimSet)
+	{
+		const float Inward = FMath::Clamp(static_cast<float>(FMath::Max(BoundaryDistance[LinearIndex], 0)) / 3.0f, 0.0f, 1.0f);
+		mAimGradientStrengths[LinearIndex] = FMath::Lerp(0.62f, 0.24f, Inward);
+		RefreshTileCustomData(LinearIndex);
+	}
+
+	const float OutlineWidth = FMath::Clamp(mTileSize * 0.045f, 8.0f, 18.0f);
+	const float JoinedLength = mTileSize + OutlineWidth;
+	const FLinearColor RangeColor(0.10f, 0.88f, 1.00f, 1.0f);
+	auto AddRangePlane = [this, &RangeColor](const FVector& Location, const FVector& Scale, float Alpha)
+	{
+		const int32 InstanceIndex = mAimRangeOutlineComponent->AddInstance(
+			FTransform(FRotator::ZeroRotator, Location, Scale), false);
+		if (InstanceIndex == INDEX_NONE)
+		{
+			return;
+		}
+		mAimRangeOutlineComponent->SetCustomDataValue(InstanceIndex, 0, RangeColor.R * Alpha);
+		mAimRangeOutlineComponent->SetCustomDataValue(InstanceIndex, 1, RangeColor.G * Alpha);
+		mAimRangeOutlineComponent->SetCustomDataValue(InstanceIndex, 2, RangeColor.B * Alpha);
+		mAimRangeOutlineComponent->SetCustomDataValue(InstanceIndex, 3, Alpha, true);
+	};
+
+	for (int32 LinearIndex : AimSet)
+	{
+		const int32 X = LinearIndex % Width;
+		const int32 Y = LinearIndex / Width;
+		const FVector TileCenter(X * mTileSize, Y * mTileSize, 0.0f);
+		for (const FTileIndex& Step : CardinalSteps)
+		{
+			const int32 Neighbor = ToLinear(X + Step.mX, Y + Step.mY);
+			if (Neighbor != INDEX_NONE && AimSet.Contains(Neighbor))
+			{
+				continue;
+			}
+
+			const FVector2D Outward(static_cast<float>(Step.mX), static_cast<float>(Step.mY));
+			const FVector EdgeCenter = TileCenter + FVector(Outward.X, Outward.Y, 0.0f) * (mTileSize * 0.5f);
+			const bool bVerticalEdge = Step.mX != 0;
+			const FVector OutlineScale = bVerticalEdge
+				? FVector(OutlineWidth / 100.0f, JoinedLength / 100.0f, 1.0f)
+				: FVector(JoinedLength / 100.0f, OutlineWidth / 100.0f, 1.0f);
+			AddRangePlane(EdgeCenter + FVector(0.0f, 0.0f, 3.2f), OutlineScale, 0.92f);
+
+			// 외곽선 바로 안쪽으로 넓고 약한 세 겹을 깔아 딱딱한 선이 자연스럽게 내부 채움으로 녹게 한다.
+			const float BandDepths[] = { 0.09f, 0.23f, 0.42f };
+			const float BandWidths[] = { 0.16f, 0.20f, 0.20f };
+			const float BandAlphas[] = { 0.17f, 0.09f, 0.035f };
+			for (int32 BandIndex = 0; BandIndex < UE_ARRAY_COUNT(BandDepths); ++BandIndex)
+			{
+				const float BandWidth = mTileSize * BandWidths[BandIndex];
+				const FVector BandCenter = EdgeCenter
+					- FVector(Outward.X, Outward.Y, 0.0f) * (mTileSize * BandDepths[BandIndex]);
+				const FVector BandScale = bVerticalEdge
+					? FVector(BandWidth / 100.0f, mTileSize / 100.0f, 1.0f)
+					: FVector(mTileSize / 100.0f, BandWidth / 100.0f, 1.0f);
+				AddRangePlane(BandCenter + FVector(0.0f, 0.0f, 2.0f + BandIndex * 0.12f), BandScale, BandAlphas[BandIndex]);
+			}
+		}
+	}
 }
 
 float ATileMap::GetTileSize() const
@@ -562,7 +734,11 @@ void ATileMap::RefreshTileCustomData(int32 LinearIndex)
 	{
 		// 펄스: [아래 레이어 표시] ↔ [Effect 자기 색] 크로스페이드 (둘 다 타일 위)
 		// 저점 = Aim 있으면 Aim 색, 없으면 기본 구분색 / 고점 = Effect 색
-		const FLinearColor Low  = bHasAim ? Premultiply(mAimStyle) : Premultiply(mTileBaseStyle);
+		FTileHighlightStyle GradientAimStyle = mAimStyle;
+		GradientAimStyle.mColor.A *= mAimGradientStrengths.IsValidIndex(LinearIndex)
+			? mAimGradientStrengths[LinearIndex]
+			: 1.0f;
+		const FLinearColor Low  = bHasAim ? Premultiply(GradientAimStyle) : Premultiply(mTileBaseStyle);
 		const FLinearColor High = Premultiply(mEffectStyle);
 
 		// 펄스 파동(0~1)으로 저점↔고점 보간
@@ -572,8 +748,12 @@ void ATileMap::RefreshTileCustomData(int32 LinearIndex)
 	}
 	else if (bHasAim)
 	{
-		// Aim만: 자기 색
-		Accum = Premultiply(mAimStyle);
+		// Aim만: 영역 경계에서 안쪽으로 약해지는 채움. 강한 실루엣은 별도 외곽선 ISM이 담당한다.
+		FTileHighlightStyle GradientAimStyle = mAimStyle;
+		GradientAimStyle.mColor.A *= mAimGradientStrengths.IsValidIndex(LinearIndex)
+			? mAimGradientStrengths[LinearIndex]
+			: 1.0f;
+		Accum = Premultiply(GradientAimStyle);
 	}
 
 	// custom data 슬롯에 기록 (마지막 슬롯에서 렌더 상태 갱신)
@@ -627,6 +807,10 @@ void ATileMap::SetTileHighlight(const TArray<FTileIndex>& Tiles, ETileHighlightF
 			RefreshTileCustomData(Index);
 		}
 	}
+	if (EnumHasAnyFlags(Flag, ETileHighlightFlag::Aim))
+	{
+		RefreshAimRangePresentation();
+	}
 }
 
 void ATileMap::ClearTileHighlight(ETileHighlightFlag Flag)
@@ -646,6 +830,10 @@ void ATileMap::ClearTileHighlight(ETileHighlightFlag Flag)
 			mHighlights[Index] = After;
 			RefreshTileCustomData(Index);
 		}
+	}
+	if (EnumHasAnyFlags(Flag, ETileHighlightFlag::Aim))
+	{
+		RefreshAimRangePresentation();
 	}
 }
 
