@@ -137,9 +137,9 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 				{
 					SkillRailPanel->SetBrushColor(GetCombatSkillRailBrushColor(bSelected));
 				}
-				SkillRailPanel->SetRenderScale(bTutorialFocus
-					? FVector2D(1.14f, 1.14f)
-					: GetCombatSkillRailScale(bSelected));
+				// 튜토리얼 포커스는 별도 RootCanvas 테두리가 담당한다. 실제 버튼 기하를 키우면
+				// 렌더와 투명 입력영역이 어긋나므로 선택 상태의 원래 배율만 유지한다.
+				SkillRailPanel->SetRenderScale(GetCombatSkillRailScale(bSelected));
 			}
 		}
 

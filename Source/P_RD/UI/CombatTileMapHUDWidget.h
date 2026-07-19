@@ -24,6 +24,7 @@ class UCanvasPanel;
 class UCombatUIModel;
 class UCombatResultOverlayWidget;
 class UCinematicWidget;
+class UHorizontalBox;
 class UIndexedButtonWidget;
 class UImage;
 class UMaterialInstanceDynamic;
@@ -271,7 +272,19 @@ private:
 	/** @brief 현재 선택/주사위/미리보기/의도 결과에서 튜토리얼 단계를 양방향으로 맞추고 작은 안내 패널을 갱신한다. */
 	void UpdateEnemyIntentTutorial();
 
-	/** @brief 첫 단계 시작 또는 완료 안내 닫기 버튼. */
+	/** @brief 문장 대신 실제 조작 위젯을 감싸는 테두리/화살표와 6단계 진행 표시를 매 프레임 갱신한다. */
+	void UpdateEnemyIntentTutorialVisuals(float InDeltaTime);
+
+	/** @brief 현재 튜토리얼 단계에 대응하는 실제 클릭 대상(스킬/주사위/적/턴 종료)을 찾는다. */
+	UWidget* ResolveEnemyIntentTutorialFocusWidget() const;
+
+	/** @brief 튜토리얼 포커스 테두리와 화살표 조각을 일괄 표시하거나 숨긴다. */
+	void SetEnemyIntentTutorialOverlayVisible(bool bVisible) const;
+
+	/** @brief 텍스트 없는 6단계 진행 표시의 완료/현재/대기 색을 갱신한다. */
+	void RefreshEnemyIntentTutorialProgress() const;
+
+	/** @brief 레거시 버튼 콜백이자 자동 완료 시 공통으로 쓰는 튜토리얼 종료 처리. */
 	UFUNCTION()
 	void HandleEnemyIntentTutorialContinue();
 
@@ -699,7 +712,7 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UVerticalBox> mEnemyIntentList;
 
-	/** @brief 하단 중앙의 작은 단계별 안내 패널. 시작/완료 버튼 외에는 전투 입력을 막지 않는다. */
+	/** @brief 화면 상단의 텍스트 없는 6단계 진행 표시. 전투 입력을 막지 않는다. */
 	UPROPERTY(Transient)
 	TObjectPtr<UBorder> mEnemyIntentTutorialPanel;
 	UPROPERTY(Transient)
@@ -710,8 +723,20 @@ private:
 	TObjectPtr<UButton> mEnemyIntentTutorialContinueButton;
 	UPROPERTY(Transient)
 	TObjectPtr<UTextBlock> mEnemyIntentTutorialContinueText;
+	UPROPERTY(Transient)
+	TObjectPtr<UHorizontalBox> mEnemyIntentTutorialProgress;
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UBorder>> mEnemyIntentTutorialProgressDots;
+
+	/** @brief RootCanvas 위에 놓여 실제 조작 대상을 감싸는 4개 테두리와 3개 화살표 선분. */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UBorder>> mEnemyIntentTutorialFocusEdges;
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UBorder>> mEnemyIntentTutorialArrowParts;
 
 	EEnemyIntentTutorialStage mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::WaitingForIntent;
+	float mEnemyIntentTutorialStageElapsed = 0.0f;
+	float mEnemyIntentTutorialPulseTime = 0.0f;
 	bool mEnemyIntentTutorialReviewAcknowledged = false;
 	bool mEnemyIntentTutorialDismissed = false;
 	bool mEnemyIntentTutorialInterventionSubmitted = false;

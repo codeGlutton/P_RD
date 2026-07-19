@@ -6,6 +6,9 @@
 #include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
+#include "Components/HorizontalBox.h"
+#include "Components/HorizontalBoxSlot.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
@@ -381,8 +384,8 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		mEnemyIntentList = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("EnemyIntentList"));
 		if (mEnemyIntentPanel != nullptr && mEnemyIntentList != nullptr)
 		{
-			mEnemyIntentPanel->SetBrushColor(FLinearColor(0.025f, 0.045f, 0.052f, 0.88f));
-			mEnemyIntentPanel->SetPadding(FMargin(14.0f, 12.0f));
+			mEnemyIntentPanel->SetBrushColor(FLinearColor(0.025f, 0.045f, 0.052f, 0.72f));
+			mEnemyIntentPanel->SetPadding(FMargin(8.0f, 7.0f));
 			mEnemyIntentPanel->SetHorizontalAlignment(HAlign_Fill);
 			mEnemyIntentPanel->SetVerticalAlignment(VAlign_Fill);
 			mEnemyIntentPanel->AddChild(mEnemyIntentList);
@@ -391,7 +394,8 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		}
 	}
 
-	// 첫 전투 튜토리얼도 하단의 얕은 비모달 패널이다. 시작/완료 버튼 외에는 입력을 가로채지 않는다.
+	// 첫 전투 튜토리얼은 설명문을 띄우지 않는다. 상단의 6개 진행 표시와 실제 조작 대상 위
+	// 포커스 테두리/화살표만 사용해 전장을 가리지 않고 다음 입력을 직접 가리킨다.
 	if (mEnemyIntentTutorialPanel == nullptr)
 	{
 		mEnemyIntentTutorialPanel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("EnemyIntentTutorialPanel"));
@@ -399,45 +403,111 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		mEnemyIntentTutorialText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("EnemyIntentTutorialText"));
 		mEnemyIntentTutorialContinueButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("EnemyIntentTutorialContinueButton"));
 		mEnemyIntentTutorialContinueText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("EnemyIntentTutorialContinueText"));
+		mEnemyIntentTutorialProgress = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("EnemyIntentTutorialProgress"));
 
 		if (mEnemyIntentTutorialPanel != nullptr
 			&& mEnemyIntentTutorialContent != nullptr
 			&& mEnemyIntentTutorialText != nullptr
 			&& mEnemyIntentTutorialContinueButton != nullptr
-			&& mEnemyIntentTutorialContinueText != nullptr)
+			&& mEnemyIntentTutorialContinueText != nullptr
+			&& mEnemyIntentTutorialProgress != nullptr)
 		{
-			mEnemyIntentTutorialPanel->SetBrushColor(FLinearColor(0.030f, 0.060f, 0.065f, 0.92f));
-			mEnemyIntentTutorialPanel->SetPadding(FMargin(18.0f, 10.0f));
+			mEnemyIntentTutorialPanel->SetBrushColor(FLinearColor(0.018f, 0.035f, 0.040f, 0.68f));
+			mEnemyIntentTutorialPanel->SetPadding(FMargin(7.0f, 4.0f));
 			mEnemyIntentTutorialPanel->SetHorizontalAlignment(HAlign_Fill);
 			mEnemyIntentTutorialPanel->SetVerticalAlignment(VAlign_Center);
 			mEnemyIntentTutorialPanel->AddChild(mEnemyIntentTutorialContent);
 
-			mEnemyIntentTutorialText->SetAutoWrapText(true);
-			mEnemyIntentTutorialText->SetJustification(ETextJustify::Left);
-			mEnemyIntentTutorialText->SetLineHeightPercentage(1.06f);
-			mEnemyIntentTutorialText->SetColorAndOpacity(FSlateColor(FLinearColor(0.92f, 1.0f, 0.96f, 1.0f)));
-			FSlateFontInfo TutorialFont = mEnemyIntentTutorialText->GetFont();
-			TutorialFont.Size = 20;
-			mEnemyIntentTutorialText->SetFont(TutorialFont);
-			mEnemyIntentTutorialContent->AddChildToVerticalBox(mEnemyIntentTutorialText);
-
-			mEnemyIntentTutorialContinueButton->SetBackgroundColor(FLinearColor(0.14f, 0.58f, 0.55f, 0.98f));
+			// 레거시 포인터는 이벤트 연결 호환성만 유지하고 화면 트리에서는 항상 접는다.
+			mEnemyIntentTutorialText->SetVisibility(ESlateVisibility::Collapsed);
 			mEnemyIntentTutorialContinueButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleEnemyIntentTutorialContinue);
 			mEnemyIntentTutorialContinueButton->AddChild(mEnemyIntentTutorialContinueText);
-			mEnemyIntentTutorialContinueText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "IntentTutorialStart", "튜토리얼 시작"));
-			mEnemyIntentTutorialContinueText->SetJustification(ETextJustify::Center);
-			mEnemyIntentTutorialContinueText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
-			FSlateFontInfo ContinueFont = mEnemyIntentTutorialContinueText->GetFont();
-			ContinueFont.Size = 20;
-			mEnemyIntentTutorialContinueText->SetFont(ContinueFont);
-			if (UVerticalBoxSlot* ContinueSlot = mEnemyIntentTutorialContent->AddChildToVerticalBox(mEnemyIntentTutorialContinueButton))
-			{
-				ContinueSlot->SetPadding(FMargin(130.0f, 8.0f, 130.0f, 0.0f));
-			}
-
 			mEnemyIntentTutorialContinueButton->SetVisibility(ESlateVisibility::Collapsed);
+
+			mEnemyIntentTutorialProgressDots.Reset();
+			for (int32 StepIndex = 0; StepIndex < 6; ++StepIndex)
+			{
+				UBorder* Dot = WidgetTree->ConstructWidget<UBorder>(
+					UBorder::StaticClass(),
+					FName(*FString::Printf(TEXT("EnemyIntentTutorialStep_%d"), StepIndex)));
+				if (Dot == nullptr)
+				{
+					continue;
+				}
+				Dot->SetPadding(FMargin(6.0f));
+				Dot->SetBrushColor(FLinearColor(0.22f, 0.28f, 0.29f, 0.95f));
+				Dot->SetVisibility(ESlateVisibility::HitTestInvisible);
+				if (UHorizontalBoxSlot* DotSlot = mEnemyIntentTutorialProgress->AddChildToHorizontalBox(Dot))
+				{
+					DotSlot->SetPadding(FMargin(4.0f, 0.0f));
+					DotSlot->SetHorizontalAlignment(HAlign_Center);
+					DotSlot->SetVerticalAlignment(VAlign_Center);
+				}
+				mEnemyIntentTutorialProgressDots.Add(Dot);
+			}
+			if (UVerticalBoxSlot* ProgressSlot = mEnemyIntentTutorialContent->AddChildToVerticalBox(mEnemyIntentTutorialProgress))
+			{
+				ProgressSlot->SetHorizontalAlignment(HAlign_Center);
+				ProgressSlot->SetVerticalAlignment(VAlign_Center);
+			}
 			mEnemyIntentTutorialPanel->SetVisibility(ESlateVisibility::Collapsed);
 			TargetRootCanvas->AddChildToCanvas(mEnemyIntentTutorialPanel);
+		}
+	}
+
+	// 포커스는 DesignCanvas와 월드 HP바 어느 쪽도 정확히 감쌀 수 있게 풀뷰포트 RootCanvas에 둔다.
+	// 선분은 모두 HitTestInvisible이라 강조 대상의 실제 버튼/월드 입력을 가로채지 않는다.
+	if (mEnemyIntentTutorialFocusEdges.Num() != 4)
+	{
+		for (UBorder* Edge : mEnemyIntentTutorialFocusEdges)
+		{
+			if (Edge != nullptr) { Edge->RemoveFromParent(); }
+		}
+		mEnemyIntentTutorialFocusEdges.Reset();
+		for (int32 EdgeIndex = 0; EdgeIndex < 4; ++EdgeIndex)
+		{
+			UBorder* Edge = WidgetTree->ConstructWidget<UBorder>(
+				UBorder::StaticClass(),
+				FName(*FString::Printf(TEXT("EnemyIntentTutorialFocusEdge_%d"), EdgeIndex)));
+			if (Edge == nullptr) { continue; }
+			Edge->SetBrushColor(FLinearColor(1.0f, 0.66f, 0.06f, 1.0f));
+			Edge->SetVisibility(ESlateVisibility::Collapsed);
+			Edge->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+			if (UCanvasPanelSlot* EdgeSlot = RootCanvas->AddChildToCanvas(Edge))
+			{
+				EdgeSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+				EdgeSlot->SetAlignment(FVector2D(0.0f, 0.0f));
+				EdgeSlot->SetAutoSize(false);
+				EdgeSlot->SetZOrder(1050);
+			}
+			mEnemyIntentTutorialFocusEdges.Add(Edge);
+		}
+	}
+
+	if (mEnemyIntentTutorialArrowParts.Num() != 3)
+	{
+		for (UBorder* Part : mEnemyIntentTutorialArrowParts)
+		{
+			if (Part != nullptr) { Part->RemoveFromParent(); }
+		}
+		mEnemyIntentTutorialArrowParts.Reset();
+		for (int32 PartIndex = 0; PartIndex < 3; ++PartIndex)
+		{
+			UBorder* Part = WidgetTree->ConstructWidget<UBorder>(
+				UBorder::StaticClass(),
+				FName(*FString::Printf(TEXT("EnemyIntentTutorialArrowPart_%d"), PartIndex)));
+			if (Part == nullptr) { continue; }
+			Part->SetBrushColor(FLinearColor(1.0f, 0.66f, 0.06f, 1.0f));
+			Part->SetVisibility(ESlateVisibility::Collapsed);
+			Part->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+			if (UCanvasPanelSlot* PartSlot = RootCanvas->AddChildToCanvas(Part))
+			{
+				PartSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+				PartSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+				PartSlot->SetAutoSize(false);
+				PartSlot->SetZOrder(1051);
+			}
+			mEnemyIntentTutorialArrowParts.Add(Part);
 		}
 	}
 

@@ -279,10 +279,10 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 		RDUILayout::ApplyAnchoredSlot(mCombatStatusBarText, FAnchors(0.025f, 0.050f, 0.520f, 0.110f), 30);
 	}
 
-	// 몬스터별 4단계(현재/이동/공격/결과)를 줄임 없이 읽을 수 있게 우상단 예고 카드를 넓히고 세로로 확장한다.
-	// 패널은 HitTestInvisible이라 겹친 전장 클릭을 막지 않고, 튜토리얼은 기존 하단 중앙 카드를 유지한다.
-	const FAnchors IntentPanelRect(0.585f, 0.105f, 0.965f, 0.680f);
-	const FAnchors IntentTutorialRect(0.220f, 0.750f, 0.780f, 0.945f);
+	// 전장 가림을 줄이기 위해 예고는 우상단의 짧은 한 줄 카드 목록만 남긴다. 튜토리얼은
+	// 설명문 패널 대신 화면 상단의 6단계 진행 표시만 두고, 실제 조작 대상은 RootCanvas 포인터가 가리킨다.
+	const FAnchors IntentPanelRect(0.720f, 0.115f, 0.965f, 0.315f);
+	const FAnchors IntentTutorialRect(0.430f, 0.032f, 0.570f, 0.073f);
 	if (bSkin)
 	{
 		RDUILayout::ApplyDesignerSlotData(
@@ -292,12 +292,12 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 		RDUILayout::ApplyDesignerSlotData(
 			mEnemyIntentTutorialPanel,
 			RDUILayout::NormalizedToDesignPointSlot(IntentTutorialRect, DesignSize),
-			37);
+			220);
 	}
 	else
 	{
 		RDUILayout::ApplyAnchoredSlot(mEnemyIntentPanel, IntentPanelRect, 36);
-		RDUILayout::ApplyAnchoredSlot(mEnemyIntentTutorialPanel, IntentTutorialRect, 37);
+		RDUILayout::ApplyAnchoredSlot(mEnemyIntentTutorialPanel, IntentTutorialRect, 220);
 	}
 
 	// 스킨 value 칸(HUD_M_*)에 Lv/HP/Gold 텍스트를 칸 위치/크기로 그린다.

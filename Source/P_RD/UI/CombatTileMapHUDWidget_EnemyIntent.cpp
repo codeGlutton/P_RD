@@ -6,66 +6,17 @@
 #include "PCGStage/Stage.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
-#include "Components/HorizontalBox.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "UI/IndexedButtonWidget.h"
 
 namespace
 {
 	const FLinearColor IntentCurrentColor(0.34f, 1.0f, 0.76f, 1.0f);
-	const FLinearColor IntentAttackColor(1.0f, 0.34f, 0.30f, 1.0f);
-	const FLinearColor IntentSecondaryColor(0.76f, 0.84f, 0.84f, 1.0f);
-
-	FString FormatIntentTile(const FTileIndex& Tile)
-	{
-		return Tile == FTileIndex::Invalid
-			? TEXT("-")
-			: FString::Printf(TEXT("(%d,%d)"), Tile.mX, Tile.mY);
-	}
-
-	FString FormatIntentPath(const TArray<FTileIndex>& Path)
-	{
-		if (Path.IsEmpty())
-		{
-			return TEXT("-");
-		}
-
-		TArray<FString> Parts;
-		const int32 VisibleCount = FMath::Min(Path.Num(), 7);
-		Parts.Reserve(VisibleCount + 1);
-		for (int32 Index = 0; Index < VisibleCount; ++Index)
-		{
-			Parts.Add(FormatIntentTile(Path[Index]));
-		}
-		if (Path.Num() > VisibleCount)
-		{
-			Parts.Add(FString::Printf(TEXT("… %s"), *FormatIntentTile(Path.Last())));
-		}
-		return FString::Join(Parts, TEXT(" → "));
-	}
-
-	FString FormatIntentEffectTiles(const TArray<FTileIndex>& Tiles)
-	{
-		if (Tiles.IsEmpty())
-		{
-			return TEXT("-");
-		}
-
-		TArray<FString> Parts;
-		const int32 VisibleCount = FMath::Min(Tiles.Num(), 6);
-		Parts.Reserve(VisibleCount + 1);
-		for (int32 Index = 0; Index < VisibleCount; ++Index)
-		{
-			Parts.Add(FormatIntentTile(Tiles[Index]));
-		}
-		if (Tiles.Num() > VisibleCount)
-		{
-			Parts.Add(FString::Printf(TEXT("… +%d"), Tiles.Num() - VisibleCount));
-		}
-		return FString::Join(Parts, TEXT(", "));
-	}
 
 	FText GetIntentStateLabel(EEnemyIntentResultUI Result)
 	{
@@ -163,16 +114,18 @@ FLinearColor UCombatTileMapHUDWidget::GetEnemyIntentExecutionColor(int32 Executi
 FText UCombatTileMapHUDWidget::GetEnemyIntentWorldLabel(const FEnemyIntentUI& Intent)
 {
 	const int32 DisplayOrder = FMath::Max(Intent.mExecutionOrder, 1);
+	const TCHAR* RecommendedPrefix = Intent.mIsRecommendedInterventionTarget ? TEXT("★ ") : TEXT("");
 	if (HasResolvedIntentOutcome(Intent))
 	{
 		return FText::FromString(FString::Printf(
-			TEXT("[%d] %s"),
+			TEXT("%s[%d] %s"),
+			RecommendedPrefix,
 			DisplayOrder,
 			*GetIntentStateLabel(Intent.mResult).ToString()));
 	}
 	if (Intent.mWasDisplaced)
 	{
-		return FText::FromString(FString::Printf(TEXT("[%d] 밀림 · 계획 유지"), DisplayOrder));
+		return FText::FromString(FString::Printf(TEXT("%s[%d] 밀림 · 계획 유지"), RecommendedPrefix, DisplayOrder));
 	}
 
 	const bool bHasMovement = Intent.mPlannedOrigin != FTileIndex::Invalid
@@ -184,8 +137,8 @@ FText UCombatTileMapHUDWidget::GetEnemyIntentWorldLabel(const FEnemyIntentUI& In
 		? TEXT("이동 → 공격")
 		: (bHasMovement ? TEXT("이동") : (bHasAttack ? TEXT("공격") : TEXT("대기")));
 	return Intent.mResult == EEnemyIntentResultUI::Executing
-		? FText::FromString(FString::Printf(TEXT("[%d] %s · 실행 중"), DisplayOrder, Flow))
-		: FText::FromString(FString::Printf(TEXT("[%d] %s"), DisplayOrder, Flow));
+		? FText::FromString(FString::Printf(TEXT("%s[%d] %s · 실행 중"), RecommendedPrefix, DisplayOrder, Flow))
+		: FText::FromString(FString::Printf(TEXT("%s[%d] %s"), RecommendedPrefix, DisplayOrder, Flow));
 }
 
 void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
@@ -210,7 +163,7 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
 		return;
 	}
 
-	auto MakeText = [this](const FString& Text, const FLinearColor& Color, int32 FontSize, bool bWrap = true)
+	auto MakeText = [this](const FString& Text, const FLinearColor& Color, int32 FontSize)
 	{
 		UTextBlock* TextBlock = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
 		if (TextBlock == nullptr)
@@ -218,8 +171,8 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
 			return TextBlock;
 		}
 		TextBlock->SetText(FText::FromString(Text));
-		TextBlock->SetAutoWrapText(bWrap);
-		TextBlock->SetLineHeightPercentage(1.02f);
+		TextBlock->SetAutoWrapText(false);
+		TextBlock->SetTextOverflowPolicy(ETextOverflowPolicy::Ellipsis);
 		TextBlock->SetColorAndOpacity(FSlateColor(Color));
 		FSlateFontInfo Font = TextBlock->GetFont();
 		Font.Size = FontSize;
@@ -228,58 +181,13 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
 	};
 
 	if (UTextBlock* Header = MakeText(
-		TEXT("적 행동 예고  ·  공개한 이동 → 공격 계획은 재계산하지 않음"),
+		TEXT("적 계획  ·  고정"),
 		IntentCurrentColor,
-		19))
+		16))
 	{
 		if (UVerticalBoxSlot* HeaderSlot = mEnemyIntentList->AddChildToVerticalBox(Header))
 		{
-			HeaderSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 5.0f));
-		}
-	}
-
-	// 실행순서 배지와 전장 화살표가 같은 색임을 헤더에서 직접 보여준다.
-	if (UHorizontalBox* OrderLegend = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass()))
-	{
-		for (int32 Order = 1; Order <= 5; ++Order)
-		{
-			if (UTextBlock* Token = MakeText(
-				FString::Printf(TEXT("[%d]  "), Order),
-				GetEnemyIntentExecutionColor(Order),
-				15,
-				false))
-			{
-				OrderLegend->AddChildToHorizontalBox(Token);
-			}
-		}
-		if (UTextBlock* Meaning = MakeText(TEXT("= 실행순서 / 같은 색 경로"), IntentSecondaryColor, 14, false))
-		{
-			OrderLegend->AddChildToHorizontalBox(Meaning);
-		}
-		if (UVerticalBoxSlot* LegendSlot = mEnemyIntentList->AddChildToVerticalBox(OrderLegend))
-		{
-			LegendSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 2.0f));
-		}
-	}
-
-	if (UHorizontalBox* VisualLegend = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass()))
-	{
-		auto AddLegendPart = [&MakeText, VisualLegend](const TCHAR* Text, const FLinearColor& Color)
-		{
-			if (UTextBlock* Part = MakeText(Text, Color, 14, false))
-			{
-				VisualLegend->AddChildToHorizontalBox(Part);
-			}
-		};
-		AddLegendPart(TEXT("→  "), GetEnemyIntentExecutionColor(1));
-		AddLegendPart(TEXT("고정 이동    "), IntentSecondaryColor);
-		AddLegendPart(TEXT("■  "), IntentAttackColor);
-		AddLegendPart(TEXT("이동 후 공격 타일    "), IntentSecondaryColor);
-		AddLegendPart(TEXT("●  "), IntentCurrentColor);
-		AddLegendPart(TEXT("현재 위치"), IntentSecondaryColor);
-		if (UVerticalBoxSlot* LegendSlot = mEnemyIntentList->AddChildToVerticalBox(VisualLegend))
-		{
-			LegendSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 7.0f));
+			HeaderSlot->SetPadding(FMargin(2.0f, 0.0f, 0.0f, 4.0f));
 		}
 	}
 
@@ -287,127 +195,68 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
 	{
 		const FEnemyIntentUI& Intent = (*Intents)[RowIndex];
 		const int32 DisplayOrder = Intent.mExecutionOrder > 0 ? Intent.mExecutionOrder : RowIndex + 1;
-		const FText StateLabel = GetIntentStateLabel(Intent.mResult);
 		const bool bActive = Intent.mResult == EEnemyIntentResultUI::Planned
 			|| Intent.mResult == EEnemyIntentResultUI::Executing;
 		const FLinearColor ExecutionColor = GetEnemyIntentExecutionColor(DisplayOrder);
-		const FLinearColor HeaderColor = bActive
+		const FLinearColor RowColor = bActive
 			? ExecutionColor
 			: GetIntentStateColor(Intent.mResult, Intent.mWasDisplaced);
 		const bool bHasMovement = Intent.mPlannedOrigin != FTileIndex::Invalid
 			&& Intent.mPlannedDestination != FTileIndex::Invalid
 			&& Intent.mPlannedDestination != Intent.mPlannedOrigin;
 		const int32 MoveTileCount = FMath::Max(Intent.mPathTileIndexes.Num() - 1, 0);
-		const FTileIndex CurrentTile = Intent.mCurrentTile != FTileIndex::Invalid
-			? Intent.mCurrentTile
-			: Intent.mPlannedOrigin;
-		const FString Position = Intent.mWasDisplaced
-			? FString::Printf(
-				TEXT("① 현재 %s  ← 개입 후 위치  ·  원래 출발 %s"),
-				*FormatIntentTile(CurrentTile),
-				*FormatIntentTile(Intent.mPlannedOrigin))
-			: FString::Printf(
-				TEXT("① 현재 / 원래 출발 %s"),
-				*FormatIntentTile(CurrentTile));
-		const FString Movement = bHasMovement
-			? FString::Printf(
-				TEXT("② 고정 이동  ·  경로 %s  ·  도착 %s  ·  거리 %d칸"),
-				*FormatIntentPath(Intent.mPathTileIndexes),
-				*FormatIntentTile(Intent.mPlannedDestination),
-				MoveTileCount)
-			: FString::Printf(
-				TEXT("② 고정 이동 없음  ·  도착 %s  ·  거리 0칸"),
-				*FormatIntentTile(Intent.mPlannedDestination));
 		const bool bHasAttack = Intent.mTargetTile != FTileIndex::Invalid || Intent.mEffectTileIndexes.IsEmpty() == false;
-		const FString Attack = bHasAttack
-			? FString::Printf(
-				TEXT("③ 고정 공격  ·  %s → 타겟 %s  ·  효과 %d칸 [%s]"),
-				*Intent.mActionName.ToString(),
-				*FormatIntentTile(Intent.mTargetTile),
-				Intent.mEffectTileIndexes.Num(),
-				*FormatIntentEffectTiles(Intent.mEffectTileIndexes))
-			: TEXT("③ 고정 공격 없음");
-		FString Outcome;
-		if (Intent.mResult == EEnemyIntentResultUI::Planned)
+		const FString MoveFlow = bHasMovement
+			? FString::Printf(TEXT("이동 %d"), MoveTileCount)
+			: TEXT("제자리");
+		const FString AttackFlow = Intent.mActionName.IsEmpty()
+			? TEXT("공격")
+			: Intent.mActionName.ToString();
+		const FString Flow = bHasAttack
+			? FString::Printf(TEXT("%s → %s"), *MoveFlow, *AttackFlow)
+			: (bHasMovement ? MoveFlow : TEXT("대기"));
+		FString Status = GetIntentStateLabel(Intent.mResult).ToString();
+		if (Intent.mWasDisplaced && bActive)
 		{
-			Outcome = Intent.mWasDisplaced
-				? TEXT("④ 결과 대기  ·  현재 위치가 바뀌어도 위 원래 계획 유지")
-				: TEXT("④ 결과 대기  ·  계획 고정, 상황이 바뀌어도 재계산 안 함");
+			Status = TEXT("밀림 · 원계획 유지");
 		}
 		else if (Intent.mResult == EEnemyIntentResultUI::Executing)
 		{
-			Outcome = TEXT("④ 실행 중  ·  공개한 원래 이동 → 공격 계획 그대로 실행");
+			Status = TEXT("실행");
 		}
-		else
+		else if (Intent.mResult == EEnemyIntentResultUI::Planned)
 		{
-			Outcome = FString::Printf(
-				TEXT("④ 결과  ·  %s  ·  %s"),
-				*StateLabel.ToString(),
-				*GetLatestIntentMessage(Intent));
+			Status = TEXT("고정");
 		}
 
 		UBorder* RowBorder = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
-		UVerticalBox* RowContent = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
-		if (RowBorder == nullptr || RowContent == nullptr)
+		if (RowBorder == nullptr)
 		{
 			continue;
 		}
-		const float TintStrength = bActive ? 0.12f : 0.055f;
+		const float TintStrength = Intent.mIsRecommendedInterventionTarget ? 0.16f : (bActive ? 0.09f : 0.045f);
 		RowBorder->SetBrushColor(FLinearColor(
-			0.018f + HeaderColor.R * TintStrength,
-			0.026f + HeaderColor.G * TintStrength,
-			0.030f + HeaderColor.B * TintStrength,
-			0.94f));
-		RowBorder->SetPadding(FMargin(9.0f, 6.0f));
-		RowBorder->AddChild(RowContent);
+			0.018f + RowColor.R * TintStrength,
+			0.026f + RowColor.G * TintStrength,
+			0.030f + RowColor.B * TintStrength,
+			0.88f));
+		RowBorder->SetPadding(FMargin(7.0f, 5.0f));
 
-		const FString HeaderText = FString::Printf(
-			TEXT("%s[%d] %s  ·  %s%s"),
+		const FString RowText = FString::Printf(
+			TEXT("%s[%d] %s  ·  %s  ·  %s"),
 			Intent.mIsRecommendedInterventionTarget ? TEXT("★ ") : TEXT(""),
 			DisplayOrder,
 			*Intent.mEnemyName.ToString(),
-			*StateLabel.ToString(),
-			Intent.mWasDisplaced ? TEXT("  ·  개입됨") : TEXT(""));
-		if (UTextBlock* HeaderLine = MakeText(HeaderText, HeaderColor, 16))
+			*Flow,
+			*Status);
+		if (UTextBlock* RowLine = MakeText(RowText, RowColor, 14))
 		{
-			if (UVerticalBoxSlot* LineSlot = RowContent->AddChildToVerticalBox(HeaderLine))
-			{
-				LineSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 2.0f));
-			}
-		}
-		if (UTextBlock* PositionLine = MakeText(Position, IntentCurrentColor, 14))
-		{
-			RowContent->AddChildToVerticalBox(PositionLine);
-		}
-		if (UTextBlock* MovementLine = MakeText(Movement, bActive ? ExecutionColor : IntentSecondaryColor, 14))
-		{
-			RowContent->AddChildToVerticalBox(MovementLine);
-		}
-		if (UTextBlock* AttackLine = MakeText(Attack, bHasAttack ? IntentAttackColor : IntentSecondaryColor, 14))
-		{
-			RowContent->AddChildToVerticalBox(AttackLine);
-		}
-		if (UTextBlock* OutcomeLine = MakeText(
-			Outcome,
-			bActive ? ExecutionColor : GetIntentStateColor(Intent.mResult, Intent.mWasDisplaced),
-			14))
-		{
-			RowContent->AddChildToVerticalBox(OutcomeLine);
-		}
-		if (Intent.mIsRecommendedInterventionTarget && Intent.mWasDisplaced == false)
-		{
-			if (UTextBlock* HintLine = MakeText(
-				TEXT("★ 개입 힌트  ·  이 적 모델을 밀면 고정 이동이 원래 출발점에서 취소됩니다."),
-				FLinearColor(1.0f, 0.84f, 0.34f, 1.0f),
-				13))
-			{
-				RowContent->AddChildToVerticalBox(HintLine);
-			}
+			RowBorder->AddChild(RowLine);
 		}
 
 		if (UVerticalBoxSlot* RowSlot = mEnemyIntentList->AddChildToVerticalBox(RowBorder))
 		{
-			RowSlot->SetPadding(FMargin(0.0f, 1.0f, 0.0f, RowIndex + 1 < Intents->Num() ? 6.0f : 0.0f));
+			RowSlot->SetPadding(FMargin(0.0f, 1.0f, 0.0f, RowIndex + 1 < Intents->Num() ? 3.0f : 0.0f));
 		}
 	}
 
@@ -417,8 +266,7 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
 void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 {
 	if (mEnemyIntentTutorialPanel == nullptr
-		|| mEnemyIntentTutorialText == nullptr
-		|| mEnemyIntentTutorialContinueButton == nullptr
+		|| mEnemyIntentTutorialProgress == nullptr
 		|| mCombatUIModel == nullptr)
 	{
 		return;
@@ -439,6 +287,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 	if (mCombatControlsHidden || mEnemyIntentTutorialDismissed)
 	{
 		SetEndTurnTutorialHighlight(false);
+		SetEnemyIntentTutorialOverlayVisible(false);
 		mEnemyIntentTutorialPanel->SetVisibility(ESlateVisibility::Collapsed);
 		return;
 	}
@@ -459,6 +308,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 			|| FindRecommendedIntent(Intents) == nullptr
 			|| mCombatUIModel->GetTurnUI().mRound > 1)
 		{
+			SetEnemyIntentTutorialOverlayVisible(false);
 			mEnemyIntentTutorialPanel->SetVisibility(ESlateVisibility::Collapsed);
 			return;
 		}
@@ -557,146 +407,393 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::SelectTarget;
 	}
 
-	const FEnemyIntentUI* RecommendedIntent = FindRecommendedIntent(Intents);
-	const int32 RecommendedOrder = RecommendedIntent != nullptr && RecommendedIntent->mExecutionOrder > 0
-		? RecommendedIntent->mExecutionOrder
-		: 1;
-	const FString RecommendedName = RecommendedIntent != nullptr
-		? RecommendedIntent->mEnemyName.ToString()
-		: TEXT("★ 연습 대상");
-	const FString SmashName = SmashSkill != nullptr && SmashSkill->mName.IsEmpty() == false
-		? SmashSkill->mName.ToString()
-		: TEXT("강타");
-	int32 SmashRailSlot = INDEX_NONE;
-	for (int32 RailSlotIndex = 0; RailSlotIndex < mSkillRailPanels.Num(); ++RailSlotIndex)
-	{
-		if (GetSkillDataIndexForRailSlot(RailSlotIndex) == SmashSkillIndex)
-		{
-			SmashRailSlot = RailSlotIndex + 1;
-			break;
-		}
-	}
-	const FString RailPosition = SmashRailSlot != INDEX_NONE
-		? FString::Printf(TEXT("위에서 %d번째"), SmashRailSlot)
-		: TEXT("금색으로 강조된");
-	const FString MoveNotice = TEXT("\n\n※ MOVE 0은 정상입니다. 이 연습에서는 MOVE를 사용하지 않습니다.");
-
-	FString Instruction;
 	switch (mEnemyIntentTutorialStage)
 	{
 	case EEnemyIntentTutorialStage::ReviewIntent:
-		Instruction = TEXT("[1 / 6]  적 계획 읽기\n적 머리 위 [번호] 배지와 같은 색 화살표가 그 적의 고정 이동 경로입니다. 우측 ①→②→③→④ 순서로 원래 출발·이동·붉은 공격 타일·결과를 읽으세요. 적은 상황이 바뀌어도 재계산하지 않습니다.");
-		break;
 	case EEnemyIntentTutorialStage::SelectSmash:
-		Instruction = FString::Printf(
-			TEXT("[2 / 6]  %s 선택\n왼쪽 큰 스킬 아이콘 중 %s ‘%s’를 짧게 클릭하세요. 금색 강조가 대상입니다.\n현재 선택  ·  스킬 미선택  →  %s을 한 번 클릭\n큰 아이콘 = 스킬, 독립된 흰 숫자 칸 = 다음 단계의 주사위입니다.%s"),
-			*SmashName,
-			*RailPosition,
-			*SmashName,
-			*SmashName,
-			*MoveNotice);
-		break;
 	case EEnemyIntentTutorialStage::SelectDice:
-		Instruction = FString::Printf(
-			TEXT("[3 / 6]  주사위 %d개 선택\n왼쪽의 독립된 흰 숫자 칸 중 사용 가능한 주사위를 정확히 %d개 클릭하세요. 선택한 눈의 합만큼 적이 밀립니다.\n현재 선택  %d / %d%s"),
-			RequiredDiceCount,
-			RequiredDiceCount,
-			SelectedDiceCount,
-			RequiredDiceCount,
-			*MoveNotice);
-		break;
 	case EEnemyIntentTutorialStage::SelectTarget:
-		Instruction = FString::Printf(
-			TEXT("[4 / 6]  ★ [%d] %s을 첫 번째 클릭\n적 머리 위 [%d] 배지와 우측 ★가 같은 적을 가리킵니다. 민트색 현재 위치 문구가 아닌, 전장의 실제 3D 적 모델을 한 번 클릭하세요.\n현재 선택  ·  %s + 주사위 %d / %d  ·  첫 클릭 = 미리보기%s"),
-			RecommendedOrder,
-			*RecommendedName,
-			RecommendedOrder,
-			*SmashName,
-			SelectedDiceCount,
-			RequiredDiceCount,
-			*MoveNotice);
-		break;
 	case EEnemyIntentTutorialStage::ConfirmTarget:
-		Instruction = FString::Printf(
-			TEXT("[5 / 6]  [%d] %s을 두 번째 클릭\n지금은 미리보기 상태입니다. 방금 누른 같은 실제 3D 적 모델(같은 타일)을 다시 클릭해 확정하세요.\n현재 선택  ·  %s + 주사위 %d / %d  ·  첫 클릭 = 미리보기, 두 번째 = 실행%s"),
-			RecommendedOrder,
-			*RecommendedName,
-			*SmashName,
-			SelectedDiceCount,
-			RequiredDiceCount,
-			*MoveNotice);
-		break;
 	case EEnemyIntentTutorialStage::ApplyingIntervention:
-		Instruction = FString::Printf(
-			TEXT("강타 개입 처리 중\n적을 밀어내는 연출이 끝나면 다음 안내로 자동 전환됩니다. 지금은 다른 스킬이나 주사위를 다시 누르지 마세요.%s"),
-			*MoveNotice);
-		break;
 	case EEnemyIntentTutorialStage::EndTurnAndObserve:
-	{
-		const FString IntervenedName = IntervenedIntent != nullptr
-			? IntervenedIntent->mEnemyName.ToString()
-			: RecommendedName;
-		Instruction = FString::Printf(
-			TEXT("[6 / 6]  END TURN\n%s의 출발점을 바꿔 놓았습니다. 오른쪽 아래 END TURN을 누르고, 이 적이 원래 고정 경로를 재계산하지 못해 행동을 취소하는 결과를 확인하세요.%s"),
-			*IntervenedName,
-			*MoveNotice);
-		break;
-	}
 	case EEnemyIntentTutorialStage::Complete:
-	{
-		const FString CompletedName = mEnemyIntentTutorialCompletedEnemyName.IsEmpty() == false
-			? mEnemyIntentTutorialCompletedEnemyName
-			: (IntervenedIntent != nullptr
-			? IntervenedIntent->mEnemyName.ToString()
-			: RecommendedName);
-		const FString Result = mEnemyIntentTutorialCompletedResult.IsEmpty() == false
-			? mEnemyIntentTutorialCompletedResult
-			: (IntervenedIntent != nullptr
-			? GetLatestIntentMessage(*IntervenedIntent)
-			: TEXT("고정 행동이 망가졌습니다."));
-		Instruction = FString::Printf(
-			TEXT("튜토리얼 완료\n%s 결과: %s\n적은 밀린 뒤에도 예정된 행동을 다시 계산하지 않았습니다."),
-			*CompletedName,
-			*Result);
 		break;
-	}
 	case EEnemyIntentTutorialStage::WaitingForIntent:
 	default:
 		SetEndTurnTutorialHighlight(false);
+		SetEnemyIntentTutorialOverlayVisible(false);
 		mEnemyIntentTutorialPanel->SetVisibility(ESlateVisibility::Collapsed);
 		return;
 	}
 
-	mEnemyIntentTutorialText->SetText(FText::FromString(Instruction));
-	const bool bShowTutorialButton = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ReviewIntent
-		|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::Complete;
-	mEnemyIntentTutorialContinueButton->SetVisibility(
-		bShowTutorialButton
-			? ESlateVisibility::Visible
-			: ESlateVisibility::Collapsed);
-	if (mEnemyIntentTutorialContinueText != nullptr)
-	{
-		mEnemyIntentTutorialContinueText->SetText(
-			mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::Complete
-				? NSLOCTEXT("CombatTileMapHUDWidget", "IntentTutorialClose", "닫기")
-				: NSLOCTEXT("CombatTileMapHUDWidget", "IntentTutorialStart", "튜토리얼 시작"));
-	}
+	// 문장/버튼 기반 안내는 완전히 접고 진행 표시와 실제 대상 포인터만 남긴다.
+	if (mEnemyIntentTutorialText != nullptr) { mEnemyIntentTutorialText->SetVisibility(ESlateVisibility::Collapsed); }
+	if (mEnemyIntentTutorialContinueButton != nullptr) { mEnemyIntentTutorialContinueButton->SetVisibility(ESlateVisibility::Collapsed); }
 	mEnemyIntentTutorialPanel->SetBrushColor(
 		mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::Complete
-			? FLinearColor(0.05f, 0.25f, 0.18f, 0.94f)
-			: (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmTarget
-				|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ApplyingIntervention
-				? FLinearColor(0.30f, 0.20f, 0.035f, 0.95f)
-				: FLinearColor(0.030f, 0.060f, 0.065f, 0.94f)));
+			? FLinearColor(0.025f, 0.18f, 0.11f, 0.72f)
+			: FLinearColor(0.018f, 0.035f, 0.040f, 0.68f));
 	SetEndTurnTutorialHighlight(mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::EndTurnAndObserve);
-	mEnemyIntentTutorialPanel->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	RefreshEnemyIntentTutorialProgress();
+	mEnemyIntentTutorialPanel->SetVisibility(ESlateVisibility::HitTestInvisible);
 
 	// 도메인 알림보다 튜토리얼 단계가 한 박자 늦게 정해지므로, 단계가 바뀐 그 프레임에
 	// 스킬/주사위 강조도 다시 그려 사용자가 다음 입력 위치를 즉시 볼 수 있게 한다.
 	if (PreviousStage != mEnemyIntentTutorialStage)
 	{
+		mEnemyIntentTutorialStageElapsed = 0.0f;
 		RefreshSkillRailWidgets();
 		RefreshOwnedDiceCards();
+	}
+}
+
+UWidget* UCombatTileMapHUDWidget::ResolveEnemyIntentTutorialFocusWidget() const
+{
+	if (mCombatUIModel == nullptr)
+	{
+		return nullptr;
+	}
+
+	switch (mEnemyIntentTutorialStage)
+	{
+	case EEnemyIntentTutorialStage::ReviewIntent:
+		return mEnemyIntentPanel.Get();
+
+	case EEnemyIntentTutorialStage::SelectSmash:
+	{
+		const TArray<FSkillUI>& Skills = mCombatUIModel->GetSkillUIs();
+		for (int32 RailSlotIndex = 0; RailSlotIndex < mSkillInputButtons.Num(); ++RailSlotIndex)
+		{
+			const int32 SkillDataIndex = GetSkillDataIndexForRailSlot(RailSlotIndex);
+			if (Skills.IsValidIndex(SkillDataIndex)
+				&& Skills[SkillDataIndex].mIsDisplacementSkill
+				&& mSkillInputButtons[RailSlotIndex] != nullptr)
+			{
+				return mSkillInputButtons[RailSlotIndex].Get();
+			}
+		}
+		return nullptr;
+	}
+
+	case EEnemyIntentTutorialStage::SelectDice:
+	{
+		const TArray<FDiceSlotUI>& DiceUIs = mCombatUIModel->GetDiceUIs();
+		for (int32 DiceIndex = 0; DiceIndex < DiceUIs.Num(); ++DiceIndex)
+		{
+			const FDiceSlotUI& Dice = DiceUIs[DiceIndex];
+			if (Dice.mIsRolled
+				&& Dice.mIsUsed == false
+				&& Dice.mIsSelected == false
+				&& mOwnedDiceCardWidgets.IsValidIndex(DiceIndex)
+				&& mOwnedDiceCardWidgets[DiceIndex] != nullptr)
+			{
+				return mOwnedDiceCardWidgets[DiceIndex].Get();
+			}
+		}
+		return nullptr;
+	}
+
+	case EEnemyIntentTutorialStage::SelectTarget:
+	case EEnemyIntentTutorialStage::ConfirmTarget:
+	case EEnemyIntentTutorialStage::Complete:
+	{
+		const TArray<FEnemyIntentUI>& Intents = mCombatUIModel->GetEnemyIntentUIs();
+		const FEnemyIntentUI* TargetIntent = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::Complete
+			? FindIntentByEnemyId(Intents, mEnemyIntentTutorialIntervenedEnemyUnitId)
+			: FindRecommendedIntent(Intents);
+		if (TargetIntent == nullptr && mEnemyIntentTutorialIntervenedEnemyUnitId != INDEX_NONE)
+		{
+			TargetIntent = FindIntentByEnemyId(Intents, mEnemyIntentTutorialIntervenedEnemyUnitId);
+		}
+		if (TargetIntent == nullptr)
+		{
+			return nullptr;
+		}
+
+		const TArray<FUnitUI>& Units = mCombatUIModel->GetUnitUIs();
+		for (int32 UnitIndex = 0; UnitIndex < Units.Num(); ++UnitIndex)
+		{
+			if (Units[UnitIndex].mUnitId == TargetIntent->mEnemyUnitId
+				&& mUnitHpBars.IsValidIndex(UnitIndex)
+				&& mUnitHpBars[UnitIndex].mRoot != nullptr)
+			{
+				return mUnitHpBars[UnitIndex].mRoot.Get();
+			}
+		}
+		return nullptr;
+	}
+
+	case EEnemyIntentTutorialStage::EndTurnAndObserve:
+		return EndTurnButton.Get();
+
+	case EEnemyIntentTutorialStage::WaitingForIntent:
+	case EEnemyIntentTutorialStage::ApplyingIntervention:
+	default:
+		return nullptr;
+	}
+}
+
+void UCombatTileMapHUDWidget::SetEnemyIntentTutorialOverlayVisible(bool bVisible) const
+{
+	const ESlateVisibility OverlayVisibility = bVisible
+		? ESlateVisibility::HitTestInvisible
+		: ESlateVisibility::Collapsed;
+	for (UBorder* Edge : mEnemyIntentTutorialFocusEdges)
+	{
+		if (Edge != nullptr) { Edge->SetVisibility(OverlayVisibility); }
+	}
+	for (UBorder* Part : mEnemyIntentTutorialArrowParts)
+	{
+		if (Part != nullptr) { Part->SetVisibility(OverlayVisibility); }
+	}
+}
+
+void UCombatTileMapHUDWidget::RefreshEnemyIntentTutorialProgress() const
+{
+	int32 CompletedCount = 0;
+	int32 ActiveStep = INDEX_NONE;
+	switch (mEnemyIntentTutorialStage)
+	{
+	case EEnemyIntentTutorialStage::ReviewIntent:          ActiveStep = 0; break;
+	case EEnemyIntentTutorialStage::SelectSmash:           CompletedCount = 1; ActiveStep = 1; break;
+	case EEnemyIntentTutorialStage::SelectDice:            CompletedCount = 2; ActiveStep = 2; break;
+	case EEnemyIntentTutorialStage::SelectTarget:          CompletedCount = 3; ActiveStep = 3; break;
+	case EEnemyIntentTutorialStage::ConfirmTarget:         CompletedCount = 4; ActiveStep = 4; break;
+	case EEnemyIntentTutorialStage::ApplyingIntervention:  CompletedCount = 5; break;
+	case EEnemyIntentTutorialStage::EndTurnAndObserve:     CompletedCount = 5; ActiveStep = 5; break;
+	case EEnemyIntentTutorialStage::Complete:              CompletedCount = 6; break;
+	case EEnemyIntentTutorialStage::WaitingForIntent:
+	default:                                               break;
+	}
+
+	for (int32 StepIndex = 0; StepIndex < mEnemyIntentTutorialProgressDots.Num(); ++StepIndex)
+	{
+		UBorder* Dot = mEnemyIntentTutorialProgressDots[StepIndex].Get();
+		if (Dot == nullptr)
+		{
+			continue;
+		}
+		if (StepIndex < CompletedCount)
+		{
+			Dot->SetBrushColor(FLinearColor(0.20f, 0.96f, 0.58f, 1.0f));
+		}
+		else if (StepIndex == ActiveStep)
+		{
+			Dot->SetBrushColor(FLinearColor(1.0f, 0.66f, 0.06f, 1.0f));
+		}
+		else
+		{
+			Dot->SetBrushColor(FLinearColor(0.22f, 0.28f, 0.29f, 0.95f));
+		}
+		Dot->SetRenderOpacity(1.0f);
+	}
+}
+
+void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime)
+{
+	if (mEnemyIntentTutorialPanel == nullptr || RootCanvas == nullptr)
+	{
+		return;
+	}
+
+	const bool bTemporarilyHidden = mCombatControlsHidden
+		|| mEnemyIntentTutorialDismissed
+		|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::WaitingForIntent
+		|| mIntroDiceRollReady
+		|| mIntroDiceRollActive
+		|| mIntroDiceResultWaitingForDismiss
+		|| mTurnChangeIntroPlaying
+		|| IsSkillDetailVisible();
+	if (bTemporarilyHidden)
+	{
+		SetEnemyIntentTutorialOverlayVisible(false);
+		mEnemyIntentTutorialPanel->SetVisibility(ESlateVisibility::Collapsed);
+		return;
+	}
+
+	mEnemyIntentTutorialStageElapsed += FMath::Max(InDeltaTime, 0.0f);
+	mEnemyIntentTutorialPulseTime += FMath::Max(InDeltaTime, 0.0f);
+
+	// 읽기 버튼과 완료 닫기 버튼은 없다. 예고를 한 박자 보여준 뒤 실제 스킬로 자동 이동하고,
+	// 결과 확인도 짧게 초록으로 채운 뒤 자동으로 사라진다.
+	if (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ReviewIntent
+		&& mEnemyIntentTutorialReviewAcknowledged == false
+		&& mEnemyIntentTutorialStageElapsed >= 2.0f)
+	{
+		mEnemyIntentTutorialReviewAcknowledged = true;
+		UpdateEnemyIntentTutorial();
+	}
+	if (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::Complete
+		&& mEnemyIntentTutorialStageElapsed >= 2.8f)
+	{
+		HandleEnemyIntentTutorialContinue();
+		SetEnemyIntentTutorialOverlayVisible(false);
+		return;
+	}
+
+	mEnemyIntentTutorialPanel->SetVisibility(ESlateVisibility::HitTestInvisible);
+	RefreshEnemyIntentTutorialProgress();
+	const float PulseSpeed = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmTarget ? 10.0f : 5.5f;
+	const float Pulse01 = 0.5f + 0.5f * FMath::Sin(mEnemyIntentTutorialPulseTime * PulseSpeed);
+
+	int32 ActiveStep = INDEX_NONE;
+	switch (mEnemyIntentTutorialStage)
+	{
+	case EEnemyIntentTutorialStage::ReviewIntent:      ActiveStep = 0; break;
+	case EEnemyIntentTutorialStage::SelectSmash:       ActiveStep = 1; break;
+	case EEnemyIntentTutorialStage::SelectDice:        ActiveStep = 2; break;
+	case EEnemyIntentTutorialStage::SelectTarget:      ActiveStep = 3; break;
+	case EEnemyIntentTutorialStage::ConfirmTarget:     ActiveStep = 4; break;
+	case EEnemyIntentTutorialStage::EndTurnAndObserve: ActiveStep = 5; break;
+	default:                                           break;
+	}
+	if (mEnemyIntentTutorialProgressDots.IsValidIndex(ActiveStep)
+		&& mEnemyIntentTutorialProgressDots[ActiveStep] != nullptr)
+	{
+		mEnemyIntentTutorialProgressDots[ActiveStep]->SetRenderOpacity(0.58f + 0.42f * Pulse01);
+	}
+
+	UWidget* FocusWidget = ResolveEnemyIntentTutorialFocusWidget();
+	if (FocusWidget == nullptr || FocusWidget->IsVisible() == false)
+	{
+		SetEnemyIntentTutorialOverlayVisible(false);
+		return;
+	}
+
+	const FGeometry& RootGeometry = RootCanvas->GetCachedGeometry();
+	const FGeometry& FocusGeometry = FocusWidget->GetCachedGeometry();
+	const FVector2D FocusLocalSize = FocusGeometry.GetLocalSize();
+	const FVector2D RootLocalSize = RootGeometry.GetLocalSize();
+	if (FocusLocalSize.X <= 1.0f || FocusLocalSize.Y <= 1.0f
+		|| RootLocalSize.X <= 1.0f || RootLocalSize.Y <= 1.0f)
+	{
+		SetEnemyIntentTutorialOverlayVisible(false);
+		return;
+	}
+
+	const FVector2D AbsoluteA = FocusGeometry.LocalToAbsolute(FVector2D::ZeroVector);
+	const FVector2D AbsoluteB = FocusGeometry.LocalToAbsolute(FocusLocalSize);
+	const FVector2D RootA = RootGeometry.AbsoluteToLocal(AbsoluteA);
+	const FVector2D RootB = RootGeometry.AbsoluteToLocal(AbsoluteB);
+	constexpr float FocusPadding = 8.0f;
+	FVector2D MinPoint;
+	FVector2D MaxPoint;
+	const bool bFocusEnemyModel = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectTarget
+		|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmTarget
+		|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::Complete;
+	if (bFocusEnemyModel)
+	{
+		// HP바 슬롯은 실제 유닛 투영점보다 60px 위에 놓인다(UnitBars.cpp). HP바만 감싸면
+		// 클릭할 수 없는 라벨을 가리키는 것처럼 보이므로, 그 아래의 3D 모델 몸체를 직접 감싼다.
+		const FVector2D HpBarBottomAbsolute = FocusGeometry.LocalToAbsolute(
+			FVector2D(FocusLocalSize.X * 0.5f, FocusLocalSize.Y));
+		const FVector2D HpBarBottom = RootGeometry.AbsoluteToLocal(HpBarBottomAbsolute);
+		const FVector2D UnitGroundPoint = HpBarBottom + FVector2D(0.0f, 60.0f);
+		const float ModelHalfWidth = FMath::Max(FMath::Abs(RootB.X - RootA.X) * 0.58f, 62.0f);
+		MinPoint = UnitGroundPoint - FVector2D(ModelHalfWidth + FocusPadding, 138.0f + FocusPadding);
+		MaxPoint = UnitGroundPoint + FVector2D(ModelHalfWidth + FocusPadding, 22.0f + FocusPadding);
+	}
+	else
+	{
+		MinPoint = FVector2D(
+			FMath::Min(RootA.X, RootB.X) - FocusPadding,
+			FMath::Min(RootA.Y, RootB.Y) - FocusPadding);
+		MaxPoint = FVector2D(
+			FMath::Max(RootA.X, RootB.X) + FocusPadding,
+			FMath::Max(RootA.Y, RootB.Y) + FocusPadding);
+	}
+	MinPoint.X = FMath::Clamp(MinPoint.X, 1.0f, RootLocalSize.X - 1.0f);
+	MinPoint.Y = FMath::Clamp(MinPoint.Y, 1.0f, RootLocalSize.Y - 1.0f);
+	MaxPoint.X = FMath::Clamp(MaxPoint.X, 1.0f, RootLocalSize.X - 1.0f);
+	MaxPoint.Y = FMath::Clamp(MaxPoint.Y, 1.0f, RootLocalSize.Y - 1.0f);
+	const FVector2D FocusSize = MaxPoint - MinPoint;
+	if (FocusSize.X <= 2.0f || FocusSize.Y <= 2.0f
+		|| mEnemyIntentTutorialFocusEdges.Num() != 4
+		|| mEnemyIntentTutorialArrowParts.Num() != 3)
+	{
+		SetEnemyIntentTutorialOverlayVisible(false);
+		return;
+	}
+
+	const FLinearColor FocusColor = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::Complete
+		? FLinearColor(0.20f, 0.96f, 0.58f, 1.0f)
+		: (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmTarget
+			? FLinearColor(1.0f, 0.82f, 0.22f, 1.0f)
+			: FLinearColor(1.0f, 0.66f, 0.06f, 1.0f));
+	const float OverlayOpacity = 0.62f + 0.38f * Pulse01;
+	const float EdgeThickness = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmTarget ? 7.0f : 5.0f;
+	auto PlaceEdge = [&](int32 EdgeIndex, const FVector2D& Position, const FVector2D& Size)
+	{
+		UBorder* Edge = mEnemyIntentTutorialFocusEdges[EdgeIndex].Get();
+		if (Edge == nullptr) { return; }
+		if (UCanvasPanelSlot* Slot = Cast<UCanvasPanelSlot>(Edge->Slot))
+		{
+			Slot->SetAlignment(FVector2D::ZeroVector);
+			Slot->SetPosition(Position);
+			Slot->SetSize(Size);
+		}
+		Edge->SetRenderTransformAngle(0.0f);
+		Edge->SetBrushColor(FocusColor);
+		Edge->SetRenderOpacity(OverlayOpacity);
+		Edge->SetVisibility(ESlateVisibility::HitTestInvisible);
+	};
+	PlaceEdge(0, MinPoint, FVector2D(FocusSize.X, EdgeThickness));
+	PlaceEdge(1, FVector2D(MinPoint.X, MaxPoint.Y - EdgeThickness), FVector2D(FocusSize.X, EdgeThickness));
+	PlaceEdge(2, MinPoint, FVector2D(EdgeThickness, FocusSize.Y));
+	PlaceEdge(3, FVector2D(MaxPoint.X - EdgeThickness, MinPoint.Y), FVector2D(EdgeThickness, FocusSize.Y));
+
+	FVector2D ArrowDirection(0.0f, 1.0f);
+	FVector2D ArrowTip((MinPoint.X + MaxPoint.X) * 0.5f, MinPoint.Y - 9.0f);
+	if (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ReviewIntent
+		|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::EndTurnAndObserve)
+	{
+		ArrowDirection = FVector2D(1.0f, 0.0f);
+		ArrowTip = FVector2D(MinPoint.X - 9.0f, (MinPoint.Y + MaxPoint.Y) * 0.5f);
+	}
+	else if (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectSmash
+		|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectDice)
+	{
+		ArrowDirection = FVector2D(-1.0f, 0.0f);
+		ArrowTip = FVector2D(MaxPoint.X + 9.0f, (MinPoint.Y + MaxPoint.Y) * 0.5f);
+	}
+	else if (MinPoint.Y < 55.0f)
+	{
+		ArrowDirection = FVector2D(0.0f, -1.0f);
+		ArrowTip = FVector2D((MinPoint.X + MaxPoint.X) * 0.5f, MaxPoint.Y + 9.0f);
+	}
+
+	// 화살표가 대상 쪽으로 살짝 왕복해 다음 클릭 위치를 설명문 없이 전달한다.
+	ArrowTip -= ArrowDirection * (2.0f + 3.0f * Pulse01);
+	const float ArrowAngle = FMath::RadiansToDegrees(FMath::Atan2(ArrowDirection.Y, ArrowDirection.X));
+	constexpr float ShaftLength = 28.0f;
+	constexpr float HeadLength = 15.0f;
+	const float LineThickness = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmTarget ? 6.5f : 5.0f;
+	auto PlaceArrowLine = [&](int32 PartIndex, const FVector2D& Center, float Length, float Angle)
+	{
+		UBorder* Part = mEnemyIntentTutorialArrowParts[PartIndex].Get();
+		if (Part == nullptr) { return; }
+		if (UCanvasPanelSlot* Slot = Cast<UCanvasPanelSlot>(Part->Slot))
+		{
+			Slot->SetAlignment(FVector2D(0.5f, 0.5f));
+			Slot->SetPosition(Center);
+			Slot->SetSize(FVector2D(Length, LineThickness));
+		}
+		Part->SetRenderTransformAngle(Angle);
+		Part->SetBrushColor(FocusColor);
+		Part->SetRenderOpacity(OverlayOpacity);
+		Part->SetVisibility(ESlateVisibility::HitTestInvisible);
+	};
+	PlaceArrowLine(0, ArrowTip - ArrowDirection * 24.0f, ShaftLength, ArrowAngle);
+	for (int32 HeadIndex = 0; HeadIndex < 2; ++HeadIndex)
+	{
+		const float HeadAngle = ArrowAngle + (HeadIndex == 0 ? -45.0f : 45.0f);
+		const float HeadRadians = FMath::DegreesToRadians(HeadAngle);
+		const FVector2D HeadDirection(FMath::Cos(HeadRadians), FMath::Sin(HeadRadians));
+		PlaceArrowLine(
+			HeadIndex + 1,
+			ArrowTip - HeadDirection * (HeadLength * 0.5f),
+			HeadLength,
+			HeadAngle);
 	}
 }
 
@@ -706,6 +803,7 @@ void UCombatTileMapHUDWidget::HandleEnemyIntentTutorialContinue()
 	{
 		mEnemyIntentTutorialDismissed = true;
 		mEnemyIntentTutorialPanel->SetVisibility(ESlateVisibility::Collapsed);
+		SetEnemyIntentTutorialOverlayVisible(false);
 		if (EndTurnButton != nullptr)
 		{
 			EndTurnButton->SetBackgroundColor(IsDesignerSkinActive()

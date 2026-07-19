@@ -367,13 +367,13 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 		{
 			if (UImage* OwnedDiceImage = mOwnedDiceImages[DiceIndex])
 			{
-				const bool bTutorialCandidate = bTutorialDicePrompt && DiceView.mIsRolled && DiceView.mIsUsed == false;
 				if (mOwnedDiceCaptureMaterials.IsValidIndex(DiceIndex) && mOwnedDiceCaptureMaterials[DiceIndex] != nullptr)
 				{
 					RDDiceCapturePreview::ApplyCaptureMaterialBrush(OwnedDiceImage, mOwnedDiceCaptureMaterials[DiceIndex], FVector2D(OwnedDiceRenderTargetSize));
 				}
 				OwnedDiceImage->SetColorAndOpacity(FLinearColor::White);
-				OwnedDiceImage->SetRenderScale(bTutorialCandidate ? FVector2D(1.08f, 1.08f) : FVector2D::UnitVector);
+				// 다음 주사위는 별도 포커스 테두리로 가리킨다. 이미지 자체 배율은 입력 카드와 계속 일치시킨다.
+				OwnedDiceImage->SetRenderScale(FVector2D::UnitVector);
 				OwnedDiceImage->SetRenderOpacity(DiceView.mIsUsed ? 0.42f : 1.0f);
 				OwnedDiceImage->SetVisibility(ESlateVisibility::HitTestInvisible);
 			}
