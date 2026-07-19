@@ -7,6 +7,7 @@
 #include "Simulation/Logger/EventLogger.h"
 
 #include "SRPGFramework/SRPGDiceRollAction.h"
+#include "SRPGFramework/SRPGMoveAction.h"
 #include "SRPGFramework/SRPGTurnEndAction.h"
 
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
@@ -388,6 +389,31 @@ void USRPGTurnContext::SetFixedEnemyPlan(TArray<TInstancedStruct<FSRPGCommand>>&
 const TArray<TInstancedStruct<FSRPGCommand>>& USRPGTurnContext::GetFixedEnemyPlan() const
 {
 	return mFixedEnemyPlan;
+}
+
+void USRPGTurnContext::TranslateFixedEnemyMovementPlan(const FTileIndex& Delta)
+{
+	if (Delta.mX == 0 && Delta.mY == 0)
+	{
+		return;
+	}
+
+	for (TInstancedStruct<FSRPGCommand>& Command : mFixedEnemyPlan)
+	{
+		if (Command.Get().GetCommandType() != ESRPGCommandType::MoveCast)
+		{
+			continue;
+		}
+
+		FSRPGMoveCommand& MoveCommand = Command.GetMutable<FSRPGMoveCommand>();
+		for (FTileIndex& TileIndex : MoveCommand.mPathTileIndexes)
+		{
+			if (TileIndex != FTileIndex::Invalid)
+			{
+				TileIndex = FTileIndex(TileIndex.mX + Delta.mX, TileIndex.mY + Delta.mY);
+			}
+		}
+	}
 }
 
 int32 USRPGTurnContext::GetTurnId() const

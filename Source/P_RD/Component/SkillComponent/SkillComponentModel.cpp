@@ -71,6 +71,7 @@ void FActiveSkillContext::Clear()
 	mMotionIndex = INDEX_NONE;
 
 	mEndCallback.Clear();
+	mTriggerCallback.Unbind();
 
 	mTargetTileIndexes.Reset();
 	mOtherCombatTargets.Reset();
@@ -154,7 +155,8 @@ void USkillComponentModel::ActivateSkill(
 	int32 DiceSum,
 	FOnEndSkillUI Callback,
 	const TArray<FTileIndex>* FixedEffectTileIndexes,
-	bool bAllowFriendlyFire)
+	bool bAllowFriendlyFire,
+	FOnTriggerSkillMotionUI TriggerCallback)
 {
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
 
@@ -183,6 +185,7 @@ void USkillComponentModel::ActivateSkill(
 	mActiveSkillContext.mSkillIndex = SkillIndex;
 	mActiveSkillContext.mMotionIndex = 0;
 	mActiveSkillContext.mEndCallback = MoveTemp(Callback);
+	mActiveSkillContext.mTriggerCallback = MoveTemp(TriggerCallback);
 
 	/* 스킬 실행 콜백 */
 
@@ -598,6 +601,10 @@ void USkillComponentModel::TriggerMotionLayer(const FApplyEventTriggerPayload* P
 			Passive->CommitPassive(DynamicPassiveData);
 		}
 	}
+
+	// 피해/피격 처리가 발생한 Hit 노티 프레임에 후속 물리 반응을 시작한다.
+	// 전체 몽타주 종료까지 기다리지 않으므로 강타의 밀치기가 타격과 붙어서 재생된다.
+	mActiveSkillContext.mTriggerCallback.ExecuteIfBound(mActiveSkillContext, SkillData);
 }
 
 void USkillComponentModel::EndMotionLayer()

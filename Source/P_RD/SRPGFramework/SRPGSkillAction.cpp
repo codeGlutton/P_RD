@@ -127,6 +127,9 @@ void USRPGSkillAction::OnEndAction()
     mDicePushStepIndex = 0;
     mDicePushDiceValue = 0;
     mDicePushWasReported = false;
+	mDicePushStarted = false;
+	mDicePushFinished = false;
+	mSkillPresentationFinished = false;
     mIsFixedIntentCast = false;
 }
 
@@ -170,11 +173,23 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
                 }
             }
 
-            if (TryStartDicePush(Context, SkillData) == false)
-            {
-                FinishSkillAction();
-            }
+			mSkillPresentationFinished = true;
+			// Hit 노티가 없는 비정상 몽타주/무연출 데이터만 종료 시점 폴백으로 처리한다.
+			if (mDicePushStarted == false)
+			{
+				TryStartDicePush(Context, SkillData);
+			}
+			FinishSkillAction();
             });
+
+		FOnTriggerSkillMotionUI TriggerCallback;
+		TriggerCallback.BindWeakLambda(this, [this](const FActiveSkillContext& Context, const UStaticSkillData* SkillData)
+		{
+			if (mDicePushStarted == false)
+			{
+				TryStartDicePush(Context, SkillData);
+			}
+		});
 
         const FSkillEntry* SkillEntry = SkillCompModel->GetSkill(SkillCastCommand.mSkillIndex);
         const UStaticSkillData* StaticSkillData = SkillEntry != nullptr ? SkillEntry->mData.Get() : nullptr;
@@ -196,7 +211,8 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
             SkillCastCommand.mDiceSum,
             MoveTemp(Callback),
             FixedEffectTiles,
-            SkillCastCommand.mAllowFriendlyFire);
+            SkillCastCommand.mAllowFriendlyFire,
+			MoveTemp(TriggerCallback));
 
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
@@ -268,6 +284,8 @@ bool USRPGSkillAction::TryStartDicePush(const FActiveSkillContext& Context, cons
     mDicePushTarget = PushTarget;
     mDicePushDiceValue = Context.mDiceSum;
     mDicePushWasReported = false;
+	mDicePushStarted = true;
+	mDicePushFinished = false;
     mDicePushPath.Reset();
     mDicePushPath.Add(PushedTile);
 
@@ -295,6 +313,7 @@ void USRPGSkillAction::StartDicePushStep(int32 StepIndex)
     if (mDicePushTarget == nullptr || mDicePushPath.IsValidIndex(StepIndex) == false)
     {
         ReportDicePushIfMoved();
+		mDicePushFinished = true;
         FinishSkillAction();
         return;
     }
@@ -320,6 +339,7 @@ void USRPGSkillAction::StartDicePushStep(int32 StepIndex)
         || bBlocked)
     {
         ReportDicePushIfMoved();
+		mDicePushFinished = true;
         FinishSkillAction();
         return;
     }
@@ -366,6 +386,7 @@ void USRPGSkillAction::OnDicePushStepFinished()
     if (mDicePushStepIndex >= mDicePushPath.Num() - 1)
     {
         ReportDicePushIfMoved();
+		mDicePushFinished = true;
         FinishSkillAction();
     }
     else
@@ -400,6 +421,11 @@ void USRPGSkillAction::ReportDicePushIfMoved()
 
 void USRPGSkillAction::FinishSkillAction()
 {
+	if (mSkillPresentationFinished == false
+		|| (mDicePushStarted && mDicePushFinished == false))
+	{
+		return;
+	}
     MarkActionCompleted(ESRPGActionResult::Succeeded);
 }
 

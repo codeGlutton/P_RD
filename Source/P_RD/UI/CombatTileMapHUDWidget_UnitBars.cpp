@@ -247,7 +247,7 @@ void UCombatTileMapHUDWidget::RebuildUnitHpBars()
 				}
 
 				// 적 머리 위에 실행순서와 고정 행동 흐름을 배지로 붙인다. 밀린 직후에도 같은
-				// 유닛 바가 새 위치로 투영되므로 '원계획 유지' 상태를 놓치지 않고 다시 읽을 수 있다.
+				// 유닛 바가 새 위치로 투영되므로 새 위치에서 실행할 이동/공격을 다시 읽을 수 있다.
 				if (UTextBlock* IntentText = BarTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("EnemyIntentText")))
 				{
 					FSlateFontInfo IntentFont = IntentText->GetFont();

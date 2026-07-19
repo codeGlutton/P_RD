@@ -85,6 +85,9 @@ private:
 	int32 mDicePushStepIndex = 0;
 	int32 mDicePushDiceValue = 0;
 	bool mDicePushWasReported = false;
+	bool mDicePushStarted = false;
+	bool mDicePushFinished = false;
+	bool mSkillPresentationFinished = false;
 	bool mIsFixedIntentCast = false;
 };
 

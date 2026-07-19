@@ -57,8 +57,8 @@ DECLARE_DELEGATE_OneParam(FSetMovePathDelegate, const TArray<FTileIndex>&);
 
 /**
  * @brief 한 적의 고정 행동을 전장 위에 계속 그리기 위한 시각 전용 스냅샷.
- * @details 게임 판정에는 참여하지 않는다. 계획 경로/공격 타일은 라운드 시작 스냅샷을,
- *          CurrentTile은 플레이어 개입 뒤의 실제 위치를 담아 둘의 어긋남을 동시에 보여준다.
+ * @details 게임 판정에는 참여하지 않는다. 이동 경로는 계획된 방향열을 현재 출발점에 투영한 좌표를,
+ *          공격 타일은 라운드 시작에 고정한 절대 좌표를 담아 개입 후 실제 실행을 그대로 보여준다.
  */
 struct P_RD_API FEnemyIntentTileOverlay
 {

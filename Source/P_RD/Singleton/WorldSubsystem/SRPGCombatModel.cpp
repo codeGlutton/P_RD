@@ -1050,10 +1050,33 @@ void USRPGCombatModel::ReportPlayerDisplacement(
 			continue;
 		}
 
+		// 재탐색하지 않고 계획 당시의 스텝 방향열만 새 출발점으로 평행이동한다.
+		// 따라서 밀기 전 절대좌표 화살표는 사라지고, 밀린 위치에서 같은 방향으로 계속 움직이며
+		// 새 장애물/다른 적을 만나면 실행 시점의 고정 경로 충돌 규칙이 그대로 작동한다.
+		const FTileIndex Delta(To.mX - From.mX, To.mY - From.mY);
+		if (TObjectPtr<USRPGTurnContext>* TurnContext = mTurnContextMap.Find(Intent.mTurnId);
+			TurnContext != nullptr && IsValid(TurnContext->Get()))
+		{
+			TurnContext->Get()->TranslateFixedEnemyMovementPlan(Delta);
+		}
+		auto TranslateTile = [&Delta](FTileIndex& TileIndex)
+		{
+			if (TileIndex != FTileIndex::Invalid)
+			{
+				TileIndex = FTileIndex(TileIndex.mX + Delta.mX, TileIndex.mY + Delta.mY);
+			}
+		};
+		TranslateTile(Intent.mPlannedOrigin);
+		TranslateTile(Intent.mPlannedDestination);
+		for (FTileIndex& TileIndex : Intent.mPathTileIndexes)
+		{
+			TranslateTile(TileIndex);
+		}
+
 		Intent.mWasDisplaced = true;
 		Intent.mDisplacedToTile = To;
 		const FText Message = FText::Format(
-			NSLOCTEXT("EnemyIntent", "PlayerDisplacedEnemy", "플레이어 개입: 주사위 {0}으로 ({1},{2}) → ({3},{4}) 밀림"),
+			NSLOCTEXT("EnemyIntent", "PlayerDisplacedEnemy", "플레이어 개입: 주사위 {0}으로 ({1},{2}) → ({3},{4}) 밀림 · 같은 방향 계획을 새 위치에서 실행"),
 			FText::AsNumber(DiceValue),
 			FText::AsNumber(From.mX),
 			FText::AsNumber(From.mY),

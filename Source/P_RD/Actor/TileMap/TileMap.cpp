@@ -986,8 +986,8 @@ void ATileMap::SetEnemyIntentOverlays(const TArray<FEnemyIntentTileOverlay>& Ove
 				Overlay.mIsResolved);
 		}
 
-		// 원래 계획은 손대지 않고, 밀린 실제 위치에만 별도 민트 마커를 더한다.
-		// 따라서 화면에서 '현재 적 모델/민트 마커'와 '원래 출발 경로'가 동시에 보인다.
+		// 경로 스냅샷은 밀린 위치로 평행이동된 고정 방향열이다. 민트 마커를 새 출발점에 더해
+		// '지금 위치에서 어느 번호색 경로를 곧 실행하는지'를 한 덩어리로 읽게 한다.
 		if (Overlay.mWasDisplaced
 			&& Overlay.mCurrentTile != FTileIndex::Invalid
 			&& Overlay.mCurrentTile != Overlay.mPlannedOrigin

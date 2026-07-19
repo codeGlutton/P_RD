@@ -115,6 +115,17 @@ FText UCombatTileMapHUDWidget::GetEnemyIntentWorldLabel(const FEnemyIntentUI& In
 {
 	const int32 DisplayOrder = FMath::Max(Intent.mExecutionOrder, 1);
 	const TCHAR* RecommendedPrefix = Intent.mIsRecommendedInterventionTarget ? TEXT("★ ") : TEXT("");
+	const bool bHasMovement = Intent.mPlannedOrigin != FTileIndex::Invalid
+		&& Intent.mPlannedDestination != FTileIndex::Invalid
+		&& Intent.mPlannedDestination != Intent.mPlannedOrigin;
+	const bool bHasAttack = Intent.mTargetTile != FTileIndex::Invalid
+		|| Intent.mEffectTileIndexes.IsEmpty() == false;
+	const int32 MoveTileCount = FMath::Max(Intent.mPathTileIndexes.Num() - 1, 0);
+	const FString DisplacedAction = bHasMovement && bHasAttack
+		? FString::Printf(TEXT("이동 %d → 공격"), MoveTileCount)
+		: (bHasMovement
+			? FString::Printf(TEXT("이동 %d"), MoveTileCount)
+			: (bHasAttack ? TEXT("고정 공격") : TEXT("대기")));
 	if (HasResolvedIntentOutcome(Intent))
 	{
 		return FText::FromString(FString::Printf(
@@ -125,14 +136,13 @@ FText UCombatTileMapHUDWidget::GetEnemyIntentWorldLabel(const FEnemyIntentUI& In
 	}
 	if (Intent.mWasDisplaced)
 	{
-		return FText::FromString(FString::Printf(TEXT("%s[%d] 밀림! · 원계획 유지"), RecommendedPrefix, DisplayOrder));
+		return FText::FromString(FString::Printf(
+			TEXT("%s[%d] 밀림 → %s"),
+			RecommendedPrefix,
+			DisplayOrder,
+			*DisplacedAction));
 	}
 
-	const bool bHasMovement = Intent.mPlannedOrigin != FTileIndex::Invalid
-		&& Intent.mPlannedDestination != FTileIndex::Invalid
-		&& Intent.mPlannedDestination != Intent.mPlannedOrigin;
-	const bool bHasAttack = Intent.mTargetTile != FTileIndex::Invalid
-		|| Intent.mEffectTileIndexes.IsEmpty() == false;
 	const TCHAR* Flow = bHasMovement && bHasAttack
 		? TEXT("이동 → 공격")
 		: (bHasMovement ? TEXT("이동") : (bHasAttack ? TEXT("공격") : TEXT("대기")));
@@ -218,7 +228,7 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
 		FString Status = GetIntentStateLabel(Intent.mResult).ToString();
 		if (Intent.mWasDisplaced && bActive)
 		{
-			Status = TEXT("밀림! · 원계획 유지");
+			Status = TEXT("밀린 위치에서 같은 방향 실행");
 		}
 		else if (Intent.mResult == EEnemyIntentResultUI::Executing)
 		{
@@ -460,10 +470,10 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		TutorialMessage = TEXT("[5/6] 실행을 확정하세요\n밀릴 위치를 확인하고 같은 적을 한 번 더 누르세요.");
 		break;
 	case EEnemyIntentTutorialStage::ApplyingIntervention:
-		TutorialMessage = TEXT("개입 실행 중\n밀린 적의 새 위치와 남겨진 원래 계획을 다시 표시하고 있습니다.");
+		TutorialMessage = TEXT("개입 실행 중\n타격과 동시에 밀어내고, 기존 화살표를 새 위치의 같은 방향 경로로 바꿉니다.");
 		break;
 	case EEnemyIntentTutorialStage::EndTurnAndObserve:
-		TutorialMessage = TEXT("[6/6] 바뀐 위치에서 원래 계획을 실행합니다\n머리 위 '밀림! · 원계획 유지'를 확인하고 턴 종료를 누르세요.");
+		TutorialMessage = TEXT("[6/6] 새 위치의 번호색 경로를 실행합니다\n머리 위 '밀림 → 이동'과 바뀐 화살표를 확인하고 턴 종료를 누르세요.");
 		break;
 	case EEnemyIntentTutorialStage::Complete:
 		TutorialMessage = FString::Printf(

@@ -106,6 +106,8 @@ public:
 	/** @brief 라운드 시작에 계산한 적 명령을 교체한다. 적 턴은 이 배열만 실행한다. */
 	void SetFixedEnemyPlan(TArray<TInstancedStruct<FSRPGCommand>>&& Commands);
 	const TArray<TInstancedStruct<FSRPGCommand>>& GetFixedEnemyPlan() const;
+	/** @brief 밀린 적의 고정 이동 방향열을 새 출발점으로 평행이동한다. 우회/재탐색은 하지 않는다. */
+	void TranslateFixedEnemyMovementPlan(const FTileIndex& Delta);
 
 	int32 GetTurnId() const;
 

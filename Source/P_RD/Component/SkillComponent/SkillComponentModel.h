@@ -26,6 +26,8 @@ DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlaySkillUI, const FActiveSkillContext& 
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnPlayMotionLayerUI, int32 /*MotionIndex*/, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, FGameplayTag /*ApplyMotionTag*/, ETileActorDirection /*LocalDirection*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnEndMotionLayerUI, int32 /*MotionIndex*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndSkillUI, const FActiveSkillContext& /*Context*/, const UStaticSkillData* /*SkillData*/);
+/** @brief 공격 몽타주의 Hit 노티에서 효과가 적용된 바로 그 프레임을 액션에 전달한다. */
+DECLARE_DELEGATE_TwoParams(FOnTriggerSkillMotionUI, const FActiveSkillContext& /*Context*/, const UStaticSkillData* /*SkillData*/);
 
 /**
  * @brief 한 슬롯에 장착된 스킬과 그로 인해 설치된 런타임 객체 추적
@@ -74,6 +76,7 @@ public:
 
 public:
 	FOnEndSkillUI mEndCallback;
+	FOnTriggerSkillMotionUI mTriggerCallback;
 
 	/* 모션 임시 데이터 */
 public:
@@ -127,7 +130,8 @@ public:
 		int32 DiceSum,
 		FOnEndSkillUI Callback = FOnEndSkillUI(),
 		const TArray<FTileIndex>* FixedEffectTileIndexes = nullptr,
-		bool bAllowFriendlyFire = false);
+		bool bAllowFriendlyFire = false,
+		FOnTriggerSkillMotionUI TriggerCallback = FOnTriggerSkillMotionUI());
 
 protected:
 	void PlayMotionLayer();
