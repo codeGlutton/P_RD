@@ -39,16 +39,16 @@ class UViewport;
 class UWidget;
 class UUserWidget;
 
-/** @brief 첫 전투에서 적 대응 예고를 읽고 주사위 밀치기로 계획을 바꾸는 순서를 안내하는 HUD 로컬 단계. */
+/** @brief 첫 전투에서 설명을 먼저 읽지 않고 실제 UI를 순서대로 클릭하게 하는 HUD 코치 단계. */
 enum class EEnemyIntentTutorialStage : uint8
 {
 	WaitingForIntent,
-	ReviewIntent,
 	SelectPull,
 	SelectDice,
 	SelectTarget,
 	ConfirmTarget,
 	ApplyingIntervention,
+	ReviewResult,
 	EndTurnAndObserve,
 	Complete
 };
@@ -278,6 +278,7 @@ private:
 
 	/** @brief 현재 튜토리얼 단계에 대응하는 실제 클릭 대상(스킬/주사위/적/턴 종료)을 찾는다. */
 	UWidget* ResolveEnemyIntentTutorialFocusWidget() const;
+	int32 GetEnemyIntentTutorialRecommendedDiceIndex() const;
 
 	/** @brief 튜토리얼 포커스 테두리와 화살표 조각을 일괄 표시하거나 숨긴다. */
 	void SetEnemyIntentTutorialOverlayVisible(bool bVisible) const;
@@ -750,7 +751,7 @@ private:
 	EEnemyIntentTutorialStage mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::WaitingForIntent;
 	float mEnemyIntentTutorialStageElapsed = 0.0f;
 	float mEnemyIntentTutorialPulseTime = 0.0f;
-	bool mEnemyIntentTutorialReviewAcknowledged = false;
+	bool mEnemyIntentTutorialResultAcknowledged = false;
 	bool mEnemyIntentTutorialDismissed = false;
 	bool mEnemyIntentTutorialInterventionSubmitted = false;
 	int32 mEnemyIntentTutorialIntervenedEnemyUnitId = INDEX_NONE;

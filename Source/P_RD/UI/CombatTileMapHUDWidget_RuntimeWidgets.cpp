@@ -453,8 +453,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		}
 	}
 
-	// 첫 전투 튜토리얼은 긴 문단 대신 '무엇을/왜 누르는지'를 설명하는 2줄 카드와
-	// 실제 조작 대상 포커스를 함께 쓴다. 카드 자체는 HitTestInvisible이라 전투 입력을 막지 않는다.
+	// 첫 전투 튜토리얼은 설명 페이지가 아니라 현재 누를 곳 하나만 가리키는 코치마크다.
 	if (mEnemyIntentTutorialPanel == nullptr)
 	{
 		mEnemyIntentTutorialPanel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("EnemyIntentTutorialPanel"));
@@ -476,12 +475,13 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 			&& mEnemyIntentTutorialProgress != nullptr)
 		{
 			mEnemyIntentTutorialPanel->SetBrushColor(FLinearColor(0.018f, 0.035f, 0.045f, 0.90f));
-			mEnemyIntentTutorialPanel->SetPadding(FMargin(14.0f, 8.0f));
+			mEnemyIntentTutorialPanel->SetPadding(FMargin(12.0f, 6.0f));
 			mEnemyIntentTutorialPanel->SetHorizontalAlignment(HAlign_Fill);
 			mEnemyIntentTutorialPanel->SetVerticalAlignment(VAlign_Center);
 			mEnemyIntentTutorialPanel->AddChild(mEnemyIntentTutorialContent);
 
-			mEnemyIntentTutorialTitle->SetText(FText::FromString(TEXT("전술 훈련 · 적의 대응력을 끌어내세요")));
+			mEnemyIntentTutorialTitle->SetText(FText::FromString(TEXT("1 / 4   왼쪽 스킬 클릭")));
+			mEnemyIntentTutorialTitle->SetJustification(ETextJustify::Center);
 			mEnemyIntentTutorialTitle->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.82f, 0.28f, 1.0f)));
 			FSlateFontInfo TitleFont = mEnemyIntentTutorialTitle->GetFont();
 			TitleFont.Size = 19;
@@ -490,7 +490,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 			mEnemyIntentTutorialTitle->SetFont(TitleFont);
 			if (UVerticalBoxSlot* TitleSlot = mEnemyIntentTutorialContent->AddChildToVerticalBox(mEnemyIntentTutorialTitle))
 			{
-				TitleSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 5.0f));
+				TitleSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 3.0f));
 			}
 
 			mEnemyIntentTutorialFlowCards.Reset();
@@ -525,10 +525,11 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 			{
 				FlowSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 6.0f));
 			}
+			mEnemyIntentTutorialFlow->SetVisibility(ESlateVisibility::Collapsed);
 
 			mEnemyIntentTutorialText->SetAutoWrapText(true);
 			mEnemyIntentTutorialText->SetLineHeightPercentage(0.94f);
-			mEnemyIntentTutorialText->SetJustification(ETextJustify::Left);
+			mEnemyIntentTutorialText->SetJustification(ETextJustify::Center);
 			mEnemyIntentTutorialText->SetColorAndOpacity(FSlateColor(FLinearColor(0.95f, 1.0f, 0.98f, 1.0f)));
 			mEnemyIntentTutorialText->SetVisibility(ESlateVisibility::HitTestInvisible);
 			FSlateFontInfo TutorialFont = mEnemyIntentTutorialText->GetFont();
@@ -585,6 +586,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 				ProgressSlot->SetHorizontalAlignment(HAlign_Center);
 				ProgressSlot->SetVerticalAlignment(VAlign_Center);
 			}
+			mEnemyIntentTutorialProgress->SetVisibility(ESlateVisibility::Collapsed);
 			mEnemyIntentTutorialPanel->SetVisibility(ESlateVisibility::Collapsed);
 			TargetRootCanvas->AddChildToCanvas(mEnemyIntentTutorialPanel);
 		}
@@ -659,7 +661,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 				UBorder::StaticClass(),
 				FName(*FString::Printf(TEXT("EnemyIntentTutorialDim_%d"), DimIndex)));
 			if (DimPanel == nullptr) { continue; }
-			DimPanel->SetBrushColor(FLinearColor(0.0f, 0.01f, 0.015f, 0.40f));
+			DimPanel->SetBrushColor(FLinearColor(0.0f, 0.01f, 0.015f, 0.24f));
 			DimPanel->SetVisibility(ESlateVisibility::Collapsed);
 			if (UCanvasPanelSlot* DimSlot = RootCanvas->AddChildToCanvas(DimPanel))
 			{
@@ -679,7 +681,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		{
 			mEnemyIntentTutorialPointerLabel->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.86f, 0.26f, 1.0f)));
 			FSlateFontInfo PointerFont = mEnemyIntentTutorialPointerLabel->GetFont();
-			PointerFont.Size = 16;
+			PointerFont.Size = 18;
 			PointerFont.OutlineSettings.OutlineSize = 2;
 			PointerFont.OutlineSettings.OutlineColor = FLinearColor::Black;
 			mEnemyIntentTutorialPointerLabel->SetFont(PointerFont);

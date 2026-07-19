@@ -221,10 +221,9 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 		RDUILayout::ApplyAnchoredSlot(mCombatStatusBarText, FAnchors(0.025f, 0.050f, 0.520f, 0.110f), 30);
 	}
 
-	// 튜토리얼은 단계 흐름과 확인 버튼이 읽히는 높이를 확보하고, 계획판은 오른쪽에 분리한다.
-	// 둘 다 전투 입력을 막지 않으며 포커스 스포트라이트가 현재 클릭 대상을 직접 가리킨다.
+	// 코치마크는 한 문장만 담는 작은 카드로 유지해 전장과 적 계획판을 덮지 않는다.
 	ApplyScreenRect(mEnemyIntentPanel, FAnchors(0.690f, 0.150f, 0.940f, 0.355f), 36);
-	ApplyScreenRect(mEnemyIntentTutorialPanel, FAnchors(0.285f, 0.038f, 0.715f, 0.250f), 220);
+	ApplyScreenRect(mEnemyIntentTutorialPanel, FAnchors(0.340f, 0.040f, 0.660f, 0.175f), 220);
 
 	// 스킨 value 칸(HUD_M_*)에 Lv/HP/Gold 텍스트를 칸 위치/크기로 그린다.
 	RefreshSkinValueLabels();

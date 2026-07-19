@@ -259,6 +259,9 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 {
 	const bool bTutorialDicePrompt = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectDice
 		&& mEnemyIntentTutorialDismissed == false;
+	const int32 TutorialRecommendedDiceIndex = bTutorialDicePrompt
+		? GetEnemyIntentTutorialRecommendedDiceIndex()
+		: INDEX_NONE;
 	// 배치 완료 판정: 선택된 스킬의 요구 주사위 수(mDiceCost)만큼 선택됐는가.
 	// 완료 시 배치된 주사위=초록/나머지=회색, 미완료 시 배치된 주사위=노란색(기존)으로 칠한다.
 	int32 SelectedDiceCount = 0;
@@ -317,7 +320,9 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 				}
 				else if (DiceView.mIsRolled)
 				{
-					StateText = FString::Printf(TEXT("눈 %d"), DiceView.mResultValue);
+					StateText = DiceIndex == TutorialRecommendedDiceIndex
+						? FString::Printf(TEXT("추천 · 눈 %d"), DiceView.mResultValue)
+						: FString::Printf(TEXT("눈 %d"), DiceView.mResultValue);
 				}
 				else
 				{
@@ -431,7 +436,7 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 							? FLinearColor(0.25f, 0.95f, 0.35f, 0.34f)
 							: FLinearColor(1.0f, 0.78f, 0.20f, 0.34f));
 				}
-				else if (bTutorialDicePrompt && DiceView.mIsRolled && DiceView.mIsUsed == false)
+				else if (DiceIndex == TutorialRecommendedDiceIndex)
 				{
 					CardColor = FLinearColor(1.0f, 0.68f, 0.08f, 0.42f);
 				}
