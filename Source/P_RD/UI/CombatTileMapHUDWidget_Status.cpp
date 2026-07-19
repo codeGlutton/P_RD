@@ -65,6 +65,8 @@ void UCombatTileMapHUDWidget::HandleCombatUIChanged(ECombatUIDomain Domain)
 	if (Domain == ECombatUIDomain::Intent || Domain == ECombatUIDomain::All)
 	{
 		RefreshEnemyIntentPanel();
+		// 밀기 보고가 들어온 프레임에 머리 위 계획 배지도 새 위치/상태로 즉시 갱신한다.
+		UpdateUnitHpBars();
 	}
 
 	// 튜토리얼은 예고뿐 아니라 실제 스킬/주사위 선택과 턴 변화를 관찰해 자동으로 다음 단계로 간다.
@@ -160,7 +162,7 @@ void UCombatTileMapHUDWidget::RefreshSkinValueLabels() const
 		{ TEXT("HUD_M_lv_value"), FText::AsNumber(Meta.mLevel) },
 		{ TEXT("HUD_M_hp_value"), FText::Format(NSLOCTEXT("CombatTileMapHUDWidget", "SkinHP", "{0}/{1}"),
 			FText::AsNumber(FMath::RoundToInt(PlayerHP)), FText::AsNumber(FMath::RoundToInt(PlayerMaxHP))) },
-		{ TEXT("HUD_M_btn_end_turn_label"), NSLOCTEXT("CombatTileMapHUDWidget", "EndTurnLabel", "END\nTURN") },
+		{ TEXT("HUD_M_btn_end_turn_label"), NSLOCTEXT("CombatTileMapHUDWidget", "EndTurnLabel", "턴\n종료") },
 	};
 
 	for (const FSkinValueBinding& Binding : Bindings)
@@ -358,7 +360,7 @@ void UCombatTileMapHUDWidget::RefreshMoveButton() const
 
 	// 남은 이동력만 표시한다 - 최대치는 플레이어 판단에 불필요해 노출하지 않는다.
 	MoveLabel->SetText(FText::Format(
-		NSLOCTEXT("CombatTileMapHUDWidget", "MoveCommandCount", "MOVE\n{0}"),
+		NSLOCTEXT("CombatTileMapHUDWidget", "MoveCommandCount", "이동\n{0}"),
 		FText::AsNumber(Move)));
 	MoveLabel->SetJustification(ETextJustify::Center);
 }

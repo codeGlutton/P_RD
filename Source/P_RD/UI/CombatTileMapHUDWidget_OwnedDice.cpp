@@ -46,6 +46,7 @@ namespace
 			return 1.36f;
 		}
 	}
+
 }
 
 /** @brief 전투 뷰모델의 이벤트를 HUD 생명주기에 맞춰 구독하고 현재 스냅샷을 즉시 반영한다. */
@@ -214,8 +215,23 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 		OwnedDiceCard->SetButtonIndex(DiceIndex);
 		OwnedDiceCard->OnIndexedClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleOwnedDiceCardClicked);
 
-		// 주사위 종류 라벨(d6/d20)은 보유 주사위 카드에서는 보여주지 않는다.
-		UTextBlock* OwnedDiceTypeText = nullptr;
+		UTextBlock* OwnedDiceTypeText = WidgetTree->ConstructWidget<UTextBlock>(
+			UTextBlock::StaticClass(),
+			FName(*FString::Printf(TEXT("OwnedDiceStateText_%d"), DiceIndex))
+		);
+		if (OwnedDiceTypeText != nullptr)
+		{
+			OwnedDiceTypeText->SetJustification(ETextJustify::Center);
+			OwnedDiceTypeText->SetAutoWrapText(false);
+			OwnedDiceTypeText->SetTextOverflowPolicy(ETextOverflowPolicy::Ellipsis);
+			OwnedDiceTypeText->SetColorAndOpacity(FSlateColor(FLinearColor(0.84f, 0.94f, 1.0f, 1.0f)));
+			OwnedDiceTypeText->SetVisibility(ESlateVisibility::HitTestInvisible);
+			FSlateFontInfo DiceLabelFont = OwnedDiceTypeText->GetFont();
+			DiceLabelFont.Size = 12;
+			DiceLabelFont.OutlineSettings.OutlineSize = 1;
+			DiceLabelFont.OutlineSettings.OutlineColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.90f);
+			OwnedDiceTypeText->SetFont(DiceLabelFont);
+		}
 
 		// 스킨 활성 시 DesignCanvas에 붙여 레터박스 스킨(주사위 트레이 아트)과 함께 움직이게 한다.
 		// RootCanvas(뷰포트)에 붙이면 16:9가 아닐 때 트레이만 따로 노는 정렬 버그가 생긴다.
@@ -282,13 +298,35 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 			VisualHash = HashCombineFast(VisualHash, GetTypeHash(FaceValue));
 		}
 
-		// 종류 라벨(d6/d20 등)은 보유 주사위 카드에서 항상 숨긴다.
+		// 숫자만 떠 있지 않도록 종류와 현재 선택/사용 상태를 카드 아래에서 항상 설명한다.
 		if (mOwnedDiceTypeTexts.IsValidIndex(DiceIndex))
 		{
 			if (UTextBlock* OwnedDiceTypeText = mOwnedDiceTypeTexts[DiceIndex])
 			{
-				OwnedDiceTypeText->SetText(FText::GetEmpty());
-				OwnedDiceTypeText->SetVisibility(ESlateVisibility::Collapsed);
+				FString StateText;
+				FLinearColor StateColor(0.84f, 0.94f, 1.0f, 1.0f);
+				if (DiceView.mIsUsed)
+				{
+					StateText = TEXT("사용함");
+					StateColor = FLinearColor(0.52f, 0.56f, 0.58f, 1.0f);
+				}
+				else if (DiceView.mIsSelected)
+				{
+					StateText = TEXT("선택됨");
+					StateColor = FLinearColor(1.0f, 0.82f, 0.24f, 1.0f);
+				}
+				else if (DiceView.mIsRolled)
+				{
+					StateText = FString::Printf(TEXT("눈 %d"), DiceView.mResultValue);
+				}
+				else
+				{
+					StateText = TEXT("굴림 전");
+				}
+				OwnedDiceTypeText->SetText(FText::FromString(FString::Printf(
+					TEXT("D%d · %s"), DiceView.mFaceCount, *StateText)));
+				OwnedDiceTypeText->SetColorAndOpacity(FSlateColor(StateColor));
+				OwnedDiceTypeText->SetVisibility(ESlateVisibility::HitTestInvisible);
 			}
 		}
 
@@ -409,6 +447,9 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 			}
 		}
 	}
+
+	// 주사위 도메인만 갱신된 경우에도 트레이 상단의 배치 수/다음 행동 문구를 같은 프레임에 맞춘다.
+	RefreshDiceAssignmentText();
 }
 
 /** @brief 보유 주사위 카드의 선택 강조를 모두 끈다(스킬 변경/액션 확정·취소/무스킬 클릭 시).

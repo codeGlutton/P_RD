@@ -22,13 +22,65 @@ void UCombatTileMapHUDWidget::HandleEndTurnButtonClicked()
 
 void UCombatTileMapHUDWidget::RefreshDiceAssignmentText() const
 {
-	// 주사위 배치 안내 문구("Tap a rolled die" 등) 영역은 표시하지 않기로 함(20260710 요청).
-	// 배치 상태는 주사위 색(진행중=노랑/완료=초록/미배치=회색)이 이미 전달한다.
-	if (mDiceAssignmentText != nullptr)
+	if (mDiceAssignmentText == nullptr)
 	{
-		mDiceAssignmentText->SetText(FText::GetEmpty());
-		mDiceAssignmentText->SetVisibility(ESlateVisibility::Collapsed);
+		return;
 	}
+	if (mCombatControlsHidden)
+	{
+		mDiceAssignmentText->SetVisibility(ESlateVisibility::Collapsed);
+		return;
+	}
+
+	const TArray<FSkillUI>* Skills = mCombatUIModel != nullptr ? &mCombatUIModel->GetSkillUIs() : nullptr;
+	const int32 SelectedSkillIndex = mCombatUIModel != nullptr
+		? mCombatUIModel->GetSelectedSkillIndex()
+		: mSelectedSkillIndex;
+	if (Skills == nullptr || Skills->IsValidIndex(SelectedSkillIndex) == false)
+	{
+		mDiceAssignmentText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "DiceAssignmentChooseSkill", "① 왼쪽에서 스킬을 먼저 선택하세요"));
+		mDiceAssignmentText->SetColorAndOpacity(FSlateColor(FLinearColor(0.78f, 0.90f, 0.96f, 1.0f)));
+		mDiceAssignmentText->SetVisibility(ESlateVisibility::HitTestInvisible);
+		return;
+	}
+
+	const FSkillUI& Skill = (*Skills)[SelectedSkillIndex];
+	const int32 RequiredDiceCount = FMath::Max(Skill.mDiceCost, 0);
+	int32 SelectedDiceCount = mCombatUIModel != nullptr
+		? mCombatUIModel->GetSelectedDiceIndices().Num()
+		: 0;
+	if (mCombatUIModel == nullptr)
+	{
+		for (const FDiceViewData& Dice : mDiceUIs)
+		{
+			SelectedDiceCount += Dice.mIsSelected ? 1 : 0;
+		}
+	}
+	FString Instruction;
+	if (RequiredDiceCount <= 0)
+	{
+		Instruction = FString::Printf(TEXT("%s · 주사위 필요 없음 → 대상을 선택하세요"), *Skill.mName.ToString());
+	}
+	else if (SelectedDiceCount < RequiredDiceCount)
+	{
+		Instruction = FString::Printf(
+			TEXT("② %s · 주사위 %d/%d 선택%s"),
+			*Skill.mName.ToString(),
+			SelectedDiceCount,
+			RequiredDiceCount,
+			Skill.mIsDisplacementSkill ? TEXT(" · 눈 합 = 밀기 거리") : TEXT(""));
+	}
+	else
+	{
+		Instruction = FString::Printf(TEXT("✓ %s · 주사위 %d/%d 완료 → 전장의 대상을 선택하세요"),
+			*Skill.mName.ToString(), SelectedDiceCount, RequiredDiceCount);
+	}
+	mDiceAssignmentText->SetText(FText::FromString(Instruction));
+	mDiceAssignmentText->SetColorAndOpacity(FSlateColor(
+		SelectedDiceCount >= RequiredDiceCount
+			? FLinearColor(0.28f, 1.0f, 0.62f, 1.0f)
+			: FLinearColor(1.0f, 0.84f, 0.34f, 1.0f)));
+	mDiceAssignmentText->SetVisibility(ESlateVisibility::HitTestInvisible);
 }
 
 #undef LOCTEXT_NAMESPACE

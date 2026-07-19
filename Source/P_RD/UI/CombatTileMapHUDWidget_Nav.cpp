@@ -414,6 +414,11 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 	ToggleWidgets(mEquipmentChips, DisplayVis);
 	ToggleWidgets(mEquipmentChipTexts, DisplayVis);
 	ToggleWidgets(mEquipSlotButtons, InputVis);
+	if (mSkillDockPanel != nullptr) { mSkillDockPanel->SetVisibility(DisplayVis); }
+	if (mSkillDockTitleText != nullptr) { mSkillDockTitleText->SetVisibility(DisplayVis); }
+	if (mDiceTrayPanel != nullptr) { mDiceTrayPanel->SetVisibility(DisplayVis); }
+	if (mDiceTrayTitleText != nullptr) { mDiceTrayTitleText->SetVisibility(DisplayVis); }
+	if (mDiceAssignmentText != nullptr) { mDiceAssignmentText->SetVisibility(DisplayVis); }
 
 	// mCombatStatusBarText는 항상 Collapsed(Lv/HP/Gold는 WBP HUD_M_* 라벨이 표시)이므로 여기서 손대지 않는다.
 	// 복원 시 Visible로 켜면 Lv/Gold/HP 필과 같은 좌상단 위치라 빈 텍스트가 필 위에 겹친다.
@@ -421,6 +426,9 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 	if (EndTurnButton != nullptr) { EndTurnButton->SetVisibility(InputVis); }
 	if (bVisible)
 	{
+		RefreshSkillRailWidgets();
+		RefreshOwnedDiceCards();
+		RefreshDiceAssignmentText();
 		RefreshEnemyIntentPanel();
 		UpdateEnemyIntentTutorial();
 	}
@@ -445,7 +453,7 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 	if (DesignCanvas != nullptr)
 	{
 		static const TArray<FString> ControlPrefixes = {
-			TEXT("R_skill_rail"), TEXT("R_btn_move"), TEXT("R_btn_end_turn"),
+			TEXT("R_btn_move"), TEXT("R_btn_end_turn"),
 			TEXT("HUD_SkillRail"), TEXT("HUD_DiceTray"), TEXT("HUD_Move"), TEXT("HUD_EndTurn"),
 			TEXT("HUD_M_dice"), TEXT("HUD_M_equip"), TEXT("HUD_M_btn_move"), TEXT("HUD_M_btn_end")
 		};

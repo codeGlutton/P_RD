@@ -38,17 +38,6 @@ namespace
 	constexpr int32 TurnChangeVideoZOrder = RDCombatHUD::CombatSkillInputZOrder + 200;
 	constexpr int32 TurnChangeTextZOrder = RDCombatHUD::CombatSkillInputZOrder + 210;
 
-	FAnchorData MakeCenteredSquareSlot(const FAnchorData& CellSlot)
-	{
-		FAnchorData SquareSlot = CellSlot;
-		const float SquareSize = FMath::Min(CellSlot.Offsets.Right, CellSlot.Offsets.Bottom);
-		SquareSlot.Offsets.Left += (CellSlot.Offsets.Right - SquareSize) * 0.5f;
-		SquareSlot.Offsets.Top += (CellSlot.Offsets.Bottom - SquareSize) * 0.5f;
-		SquareSlot.Offsets.Right = SquareSize;
-		SquareSlot.Offsets.Bottom = SquareSize;
-		return SquareSlot;
-	}
-
 }
 
 void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
@@ -60,6 +49,17 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 	// 신 WBP(엣지 핀 점앵커) 모두에서 동일하게 동작한다(C++ 선배포 안전). 레거시(스킨 없음)는 기존 정규화 경로.
 	const bool bSkin = IsDesignerSkinActive();
 	const FVector2D DesignSize(1920.0f, 1080.0f);
+	auto ApplyScreenRect = [bSkin, &DesignSize](UWidget* Widget, const FAnchors& Rect, int32 ZOrder)
+	{
+		if (bSkin)
+		{
+			RDUILayout::ApplyDesignerSlotData(Widget, RDUILayout::NormalizedToDesignPointSlot(Rect, DesignSize), ZOrder);
+		}
+		else
+		{
+			RDUILayout::ApplyAnchoredSlot(Widget, Rect, ZOrder);
+		}
+	};
 
 	// 주사위 판(물리 굴림) 오버레이: WBP-네이티브 체인(DiceRollDesignCanvas)이 있으면 WBP ScaleBox가
 	// 종횡비/위치를 소유하므로 슬롯을 건드리지 않는다. 단 WBP에 구운 입력막 z(350)는 스킬 입력
@@ -97,67 +97,41 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 	RDUILayout::ApplyAnchoredSlot(mTurnChangeVideoImage, FAnchors(0.140f, 0.155f, 0.860f, 0.845f), TurnChangeVideoZOrder);
 	RDUILayout::ApplyAnchoredSlot(mTurnChangeTurnTextPanel, FAnchors(0.435f, 0.390f, 0.565f, 0.610f), TurnChangeTextZOrder);
 
-	// 보유 주사위: 스킨이면 HUD_DiceTray 마커 슬롯을 상속해 세로 분배, 아니면 기존 좌하단 3열 그리드.
+	// 보유 주사위는 스킬 옆 세로 숫자열에서 떼어내 하단의 독립 가로 트레이에 둔다.
+	// 스킬 선택 → 주사위 선택이라는 정보 구조가 공간적으로 분리되어 처음 보는 사람도 두 종류를 혼동하지 않는다.
 	const int32 OwnedDiceCount = mOwnedDiceImages.Num();
-	if (bSkin)
+	ApplyScreenRect(mDiceTrayPanel, FAnchors(0.225f, 0.815f, 0.725f, 0.985f), 16);
+	ApplyScreenRect(mDiceTrayTitleText, FAnchors(0.242f, 0.823f, 0.345f, 0.855f), 18);
+	ApplyScreenRect(mDiceAssignmentText, FAnchors(0.345f, 0.823f, 0.708f, 0.855f), 18);
+	if (OwnedDiceCount > 0)
 	{
-		const FAnchorData TraySlot = RDUILayout::GetDesignerSlotDataOr(WidgetTree, TEXT("HUD_DiceTray"), FAnchors(0.028f, 0.790f, 0.226f, 0.998f), DesignSize);
+		const float TrayLeft = 0.242f;
+		const float TrayRight = 0.708f;
+		const float Gap = 0.008f;
+		const float AvailableWidth = TrayRight - TrayLeft - Gap * StaticCast<float>(FMath::Max(OwnedDiceCount - 1, 0));
+		const float CellWidth = FMath::Min(0.070f, AvailableWidth / StaticCast<float>(OwnedDiceCount));
+		const float TotalWidth = CellWidth * StaticCast<float>(OwnedDiceCount)
+			+ Gap * StaticCast<float>(FMath::Max(OwnedDiceCount - 1, 0));
+		const float StartLeft = TrayLeft + (TrayRight - TrayLeft - TotalWidth) * 0.5f;
 		for (int32 DiceIndex = 0; DiceIndex < OwnedDiceCount; ++DiceIndex)
 		{
-			const FAnchorData CellSlot = RDUILayout::MakeVerticalSubSlot(TraySlot, DiceIndex, FMath::Max(OwnedDiceCount, 1), 10.8f);   // 0.010*1080
-			const FAnchorData DiceImageSlot = MakeCenteredSquareSlot(CellSlot);
-			RDUILayout::ApplyDesignerSlotData(mOwnedDiceImages[DiceIndex], DiceImageSlot, 22);
+			const float CellLeft = StartLeft + StaticCast<float>(DiceIndex) * (CellWidth + Gap);
+			const float CellRight = CellLeft + CellWidth;
+			const float ImageWidth = FMath::Min(CellWidth * 0.82f, 0.050f);
+			const float ImageLeft = CellLeft + (CellWidth - ImageWidth) * 0.5f;
+			ApplyScreenRect(mOwnedDiceImages[DiceIndex], FAnchors(ImageLeft, 0.858f, ImageLeft + ImageWidth, 0.944f), 22);
 			if (mOwnedDiceCardWidgets.IsValidIndex(DiceIndex))
 			{
-				RDUILayout::ApplyDesignerSlotData(mOwnedDiceCardWidgets[DiceIndex], CellSlot, 23);
+				ApplyScreenRect(mOwnedDiceCardWidgets[DiceIndex], FAnchors(CellLeft, 0.852f, CellRight, 0.976f), 23);
 			}
 			if (mOwnedDiceTypeTexts.IsValidIndex(DiceIndex))
 			{
 				if (mOwnedDiceTypeTexts[DiceIndex] != nullptr)
 				{
-					mOwnedDiceTypeTexts[DiceIndex]->SetVisibility(ESlateVisibility::Collapsed);
+					ApplyScreenRect(mOwnedDiceTypeTexts[DiceIndex], FAnchors(CellLeft, 0.944f, CellRight, 0.974f), 24);
 				}
 			}
 		}
-	}
-	else
-	{
-		for (int32 DiceIndex = 0; DiceIndex < OwnedDiceCount; ++DiceIndex)
-		{
-			const int32 ColumnIndex = DiceIndex % 3;
-			const int32 RowIndex = DiceIndex / 3;
-			const float Left = 0.028f + StaticCast<float>(ColumnIndex) * 0.066f;
-			const float Top = 0.790f + StaticCast<float>(RowIndex) * 0.122f;
-			const float CellWidth = 0.060f;
-			const float CellHeight = 0.118f;
-			const float DiceSize = FMath::Min(CellWidth, CellHeight);
-			const float DiceLeft = Left + (CellWidth - DiceSize) * 0.5f;
-			const float DiceTop = Top + (CellHeight - DiceSize) * 0.5f;
-			const FAnchors DiceImageAnchors(DiceLeft, DiceTop, DiceLeft + DiceSize, DiceTop + DiceSize);
-			RDUILayout::ApplyAnchoredSlot(mOwnedDiceImages[DiceIndex], DiceImageAnchors, 22);
-			if (mOwnedDiceCardWidgets.IsValidIndex(DiceIndex))
-			{
-				RDUILayout::ApplyAnchoredSlot(mOwnedDiceCardWidgets[DiceIndex], FAnchors(Left, Top, Left + CellWidth, Top + CellHeight), 23);
-			}
-			if (mOwnedDiceTypeTexts.IsValidIndex(DiceIndex))
-			{
-				if (mOwnedDiceTypeTexts[DiceIndex] != nullptr)
-				{
-					mOwnedDiceTypeTexts[DiceIndex]->SetVisibility(ESlateVisibility::Collapsed);
-				}
-			}
-		}
-	}
-
-	// 어사인먼트 힌트: 스킨이면 트레이 열 오른쪽(디자인px 300~720, 하단) - 레일/트레이 열과 겹치지 않는 빈 보드 영역.
-	// 레거시는 기존 좌하단 정규화 좌표 유지.
-	if (bSkin)
-	{
-		RDUILayout::ApplyDesignerSlotData(mDiceAssignmentText, RDUILayout::NormalizedToDesignPointSlot(FAnchors(0.156f, 0.759f, 0.375f, 0.852f), DesignSize), 24);
-	}
-	else
-	{
-		RDUILayout::ApplyAnchoredSlot(mDiceAssignmentText, FAnchors(0.025f, 0.700f, 0.225f, 0.785f), 24);
 	}
 	// concept_09 상세는 HP바(z210)·스킬레일(z170)보다 위에 떠야 뒤 요소가 안 뚫려 보인다. → z245+로 올리고,
 	// 그 아래 풀뷰포트 회색 딤(주사위 배경과 동일)을 깔아 뒤 HUD를 덮는다. WBP는 전체 화면(내부 레이아웃/아트는 WBP 소유).
@@ -180,73 +154,41 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 				40);
 		}
 	}
-	// 스킬 레일: 스킨이면 HUD_SkillRail 마커 슬롯 상속 세로 분배(렌더/입력 동일), 레거시는 기존 정규화 분배.
-	// 상세가 열려 있으면 레일 Z를 승격(현행 동작 유지) — 아이콘 +1, 라벨 +2로 3상태 렌더링 위계도 그대로다.
+	// 스킬 레일은 기존 좁은 아이콘 열 대신 이름/역할/주사위 비용이 항상 보이는 카드형 도크다.
+	// 상세가 열려 있으면 기존처럼 레일 Z를 승격하고, 렌더/입력은 같은 카드 rect를 공유한다.
 	const int32 SkillRailZOrder = IsSkillDetailVisible() ? CombatSkillDetailRailZOrder : 18;
 	const int32 SkillRailPanelCount = mSkillRailPanels.Num();
 	const int32 SkillInputCount = mSkillInputButtons.Num();
-	if (bSkin)
+	ApplyScreenRect(mSkillDockPanel, FAnchors(0.012f, 0.175f, 0.212f, 0.830f), SkillRailZOrder - 2);
+	ApplyScreenRect(mSkillDockTitleText, FAnchors(0.022f, 0.184f, 0.202f, 0.218f), SkillRailZOrder + 3);
+	for (int32 SkillIndex = 0; SkillIndex < SkillRailPanelCount; ++SkillIndex)
 	{
-		const float RailFallbackBottom = CombatSkillRailTop
-			+ StaticCast<float>(CombatSkillSlotCount) * CombatSkillRailHeight
-			+ StaticCast<float>(CombatSkillSlotCount - 1) * CombatSkillRailGap;
-		const FAnchorData RailSlot = RDUILayout::GetDesignerSlotDataOr(WidgetTree, TEXT("HUD_SkillRail"),
-			FAnchors(CombatSkillRailLeft, CombatSkillRailTop, CombatSkillRailRight, RailFallbackBottom), DesignSize);
-		// 스킨 프레임 아트의 실제 슬롯을 기준으로 아이콘과 입력 버튼을 맞춘다.
-		// 프레임을 못 찾으면 기존처럼 레일 영역을 등분한다.
-		const TArray<FAnchorData> RailFrameSlots = RDUILayout::CollectPointSlotsByPrefix(WidgetTree, TEXT("R_skill_rail_slot"));
-		const float RailGapPx = 20.0f;
-		for (int32 SkillIndex = 0; SkillIndex < SkillRailPanelCount; ++SkillIndex)
+		const FAnchors ItemRect = GetSkillRailItemRect(SkillIndex, SkillRailPanelCount);
+		ApplyScreenRect(mSkillRailPanels[SkillIndex], ItemRect, SkillRailZOrder);
+		const float ItemW = ItemRect.Maximum.X - ItemRect.Minimum.X;
+		const float ItemH = ItemRect.Maximum.Y - ItemRect.Minimum.Y;
+		if (mSkillRailIcons.IsValidIndex(SkillIndex))
 		{
-			const FAnchorData CellSlot = RailFrameSlots.IsValidIndex(SkillIndex)
-				? RailFrameSlots[SkillIndex]
-				: RDUILayout::MakeVerticalSubSlot(RailSlot, SkillIndex, SkillRailPanelCount, RailGapPx);
-			RDUILayout::ApplyDesignerSlotData(mSkillRailPanels[SkillIndex], CellSlot, SkillRailZOrder);
-
-			// 보유 스킬 아이콘: 라벨 없이 아이콘만 - 프레임 안 중앙(가로 여백 15%, 세로 여백 8%).
-			const float CellWidthPx = CellSlot.Offsets.Right;    // 점앵커 슬롯: Right/Bottom = 크기(px).
-			const float CellHeightPx = CellSlot.Offsets.Bottom;
-			if (mSkillRailIcons.IsValidIndex(SkillIndex))
-			{
-				FAnchorData IconSlot = CellSlot;
-				IconSlot.Offsets.Left += CellWidthPx * 0.15f;
-				IconSlot.Offsets.Top += CellHeightPx * 0.08f;
-				IconSlot.Offsets.Right = CellWidthPx * 0.70f;
-				IconSlot.Offsets.Bottom = CellHeightPx * 0.84f;
-				RDUILayout::ApplyDesignerSlotData(mSkillRailIcons[SkillIndex], IconSlot, SkillRailZOrder + 1);
-			}
+			const FAnchors IconRect(
+				ItemRect.Minimum.X + ItemW * 0.035f,
+				ItemRect.Minimum.Y + ItemH * 0.10f,
+				ItemRect.Minimum.X + ItemW * 0.285f,
+				ItemRect.Maximum.Y - ItemH * 0.10f);
+			ApplyScreenRect(mSkillRailIcons[SkillIndex], IconRect, SkillRailZOrder + 1);
 		}
-		for (int32 SkillIndex = 0; SkillIndex < SkillInputCount; ++SkillIndex)
+		if (mSkillRailTexts.IsValidIndex(SkillIndex))
 		{
-			// 보이는 칸과 입력 영역이 어긋나지 않게 같은 슬롯을 쓴다.
-			const FAnchorData ButtonSlot = RailFrameSlots.IsValidIndex(SkillIndex)
-				? RailFrameSlots[SkillIndex]
-				: RDUILayout::MakeVerticalSubSlot(RailSlot, SkillIndex, SkillInputCount, RailGapPx);
-			RDUILayout::ApplyDesignerSlotData(mSkillInputButtons[SkillIndex], ButtonSlot, CombatSkillInputZOrder);
+			const FAnchors TextRect(
+				ItemRect.Minimum.X + ItemW * 0.315f,
+				ItemRect.Minimum.Y + ItemH * 0.10f,
+				ItemRect.Maximum.X - ItemW * 0.035f,
+				ItemRect.Maximum.Y - ItemH * 0.08f);
+			ApplyScreenRect(mSkillRailTexts[SkillIndex], TextRect, SkillRailZOrder + 2);
 		}
 	}
-	else
+	for (int32 SkillIndex = 0; SkillIndex < SkillInputCount; ++SkillIndex)
 	{
-		for (int32 SkillIndex = 0; SkillIndex < SkillRailPanelCount; ++SkillIndex)
-		{
-			const FAnchors ItemRect = GetSkillRailItemRect(SkillIndex, SkillRailPanelCount);
-			RDUILayout::ApplyAnchoredSlot(mSkillRailPanels[SkillIndex], ItemRect, SkillRailZOrder);
-
-			// 보유 스킬 아이콘: 라벨 없이 아이콘만 - 슬롯 안 중앙(가로 여백 15%, 세로 여백 8%).
-			const float ItemW = ItemRect.Maximum.X - ItemRect.Minimum.X;
-			const float ItemH = ItemRect.Maximum.Y - ItemRect.Minimum.Y;
-			if (mSkillRailIcons.IsValidIndex(SkillIndex))
-			{
-				const FAnchors IconRect(
-					ItemRect.Minimum.X + ItemW * 0.15f, ItemRect.Minimum.Y + ItemH * 0.08f,
-					ItemRect.Maximum.X - ItemW * 0.15f, ItemRect.Maximum.Y - ItemH * 0.08f);
-				RDUILayout::ApplyAnchoredSlot(mSkillRailIcons[SkillIndex], IconRect, SkillRailZOrder + 1);
-			}
-		}
-		for (int32 SkillIndex = 0; SkillIndex < SkillInputCount; ++SkillIndex)
-		{
-			RDUILayout::ApplyAnchoredSlot(mSkillInputButtons[SkillIndex], GetSkillRailItemRect(SkillIndex, SkillInputCount), CombatSkillInputZOrder);
-		}
+		ApplyScreenRect(mSkillInputButtons[SkillIndex], GetSkillRailItemRect(SkillIndex, SkillInputCount), CombatSkillInputZOrder);
 	}
 
 	if (bSkin)
@@ -279,26 +221,10 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 		RDUILayout::ApplyAnchoredSlot(mCombatStatusBarText, FAnchors(0.025f, 0.050f, 0.520f, 0.110f), 30);
 	}
 
-	// 전장 가림을 줄이기 위해 예고는 우상단의 짧은 한 줄 카드 목록만 남긴다. 튜토리얼은
-	// 설명문 패널 대신 화면 상단의 6단계 진행 표시만 두고, 실제 조작 대상은 RootCanvas 포인터가 가리킨다.
-	const FAnchors IntentPanelRect(0.720f, 0.115f, 0.965f, 0.315f);
-	const FAnchors IntentTutorialRect(0.430f, 0.032f, 0.570f, 0.073f);
-	if (bSkin)
-	{
-		RDUILayout::ApplyDesignerSlotData(
-			mEnemyIntentPanel,
-			RDUILayout::NormalizedToDesignPointSlot(IntentPanelRect, DesignSize),
-			36);
-		RDUILayout::ApplyDesignerSlotData(
-			mEnemyIntentTutorialPanel,
-			RDUILayout::NormalizedToDesignPointSlot(IntentTutorialRect, DesignSize),
-			220);
-	}
-	else
-	{
-		RDUILayout::ApplyAnchoredSlot(mEnemyIntentPanel, IntentPanelRect, 36);
-		RDUILayout::ApplyAnchoredSlot(mEnemyIntentTutorialPanel, IntentTutorialRect, 220);
-	}
+	// 우상단은 밀린 적이 실제로 도착할 수 있는 영역이므로 계획판을 상단 중앙으로 옮긴다.
+	// 튜토리얼은 그 위의 짧은 2줄 카드로 두어 계획판/몬스터/명령 버튼을 서로 가리지 않는다.
+	ApplyScreenRect(mEnemyIntentPanel, FAnchors(0.340f, 0.150f, 0.650f, 0.320f), 36);
+	ApplyScreenRect(mEnemyIntentTutorialPanel, FAnchors(0.300f, 0.048f, 0.680f, 0.145f), 220);
 
 	// 스킨 value 칸(HUD_M_*)에 Lv/HP/Gold 텍스트를 칸 위치/크기로 그린다.
 	RefreshSkinValueLabels();
@@ -318,11 +244,9 @@ FAnchors UCombatTileMapHUDWidget::GroupRect(FName AnchorWidgetName, const FAncho
 
 FAnchors UCombatTileMapHUDWidget::GetSkillRailGroupRect() const
 {
-	using namespace RDCombatHUD;
-	const float FallbackBottom = CombatSkillRailTop
-		+ StaticCast<float>(CombatSkillSlotCount) * CombatSkillRailHeight
-		+ StaticCast<float>(CombatSkillSlotCount - 1) * CombatSkillRailGap;
-	return GroupRect(TEXT("HUD_SkillRail"), FAnchors(CombatSkillRailLeft, CombatSkillRailTop, CombatSkillRailRight, FallbackBottom));
+	// 카드형 도크는 WBP의 좁은 아이콘 마커를 상속하지 않는다. 이름/역할/비용과 입력영역이
+	// 모든 화면비에서 같은 정규화 rect를 공유하도록 HUD가 직접 소유한다.
+	return FAnchors(0.018f, 0.225f, 0.205f, 0.820f);
 }
 
 FAnchors UCombatTileMapHUDWidget::GetSkillRailItemRect(int32 Index, int32 Count) const

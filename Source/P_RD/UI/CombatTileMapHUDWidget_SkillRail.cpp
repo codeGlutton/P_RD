@@ -67,7 +67,15 @@ void UCombatTileMapHUDWidget::RebuildSkillRailWidgets()
 
 		SkillRailPanel->SetPadding(GetCombatSkillRailPadding());
 		SkillRailIcon->SetVisibility(ESlateVisibility::HitTestInvisible);
-		SkillRailText->SetJustification(ETextJustify::Center);
+		SkillRailText->SetJustification(ETextJustify::Left);
+		SkillRailText->SetAutoWrapText(false);
+		SkillRailText->SetTextOverflowPolicy(ETextOverflowPolicy::Ellipsis);
+		SkillRailText->SetLineHeightPercentage(0.88f);
+		FSlateFontInfo SkillFont = SkillRailText->GetFont();
+		SkillFont.Size = 14;
+		SkillFont.OutlineSettings.OutlineSize = 1;
+		SkillFont.OutlineSettings.OutlineColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.88f);
+		SkillRailText->SetFont(SkillFont);
 		SkillRailText->SetVisibility(ESlateVisibility::HitTestInvisible);
 
 		// 스킨 활성 시 DesignCanvas: 렌더/히트테스트가 같은 레터박스 좌표계를 쓴다.
@@ -130,8 +138,10 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 				}
 				else if (IsDesignerSkinActive())
 				{
-					// 스킨 모드: 비선택은 투명(프레임+아이콘만), 선택은 옅은 금색 틴트로만 강조.
-					SkillRailPanel->SetBrushColor(bSelected ? FLinearColor(1.0f, 0.95f, 0.55f, 0.30f) : FLinearColor(0.0f, 0.0f, 0.0f, 0.0f));
+					// 기존 WBP 프레임을 숨겼으므로 카드 배경도 런타임이 직접 그린다.
+					SkillRailPanel->SetBrushColor(bSelected
+						? FLinearColor(0.44f, 0.34f, 0.08f, 0.94f)
+						: FLinearColor(0.025f, 0.055f, 0.075f, 0.88f));
 				}
 				else
 				{
@@ -164,8 +174,43 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 		{
 			if (UTextBlock* SkillRailText = mSkillRailTexts[RailSlotIndex])
 			{
-				// 레일에는 아이콘만 보여준다 - 이름/코스트는 롱프레스 상세 카드가 담당한다.
-				SkillRailText->SetVisibility(ESlateVisibility::Collapsed);
+				if (bOwned == false)
+				{
+					SkillRailText->SetText(FText::GetEmpty());
+					SkillRailText->SetVisibility(ESlateVisibility::Collapsed);
+					continue;
+				}
+
+				FString Role = TEXT("공격");
+				if (Skill->mIsDisplacementSkill)
+				{
+					Role = TEXT("밀기 / 위치 개입");
+				}
+				else if (SkillDataIndex == 1)
+				{
+					Role = TEXT("이동");
+				}
+				else if (SkillDataIndex == 0)
+				{
+					Role = TEXT("기본 공격");
+				}
+				const FString DiceCost = Skill->mDiceCost > 0
+					? FString::Printf(TEXT("주사위 %d개"), Skill->mDiceCost)
+					: TEXT("주사위 없음");
+				const int32 Range = FMath::RoundToInt(Skill->mTargeting.mSelectRange);
+				const FString RangeText = Range > 0 ? FString::Printf(TEXT(" · 거리 %d"), Range) : TEXT("");
+				const FString StateText = bUsable ? TEXT("") : TEXT(" · 사용 불가");
+				SkillRailText->SetText(FText::FromString(FString::Printf(
+					TEXT("%s\n%s · %s%s%s"),
+					*Skill->mName.ToString(),
+					*Role,
+					*DiceCost,
+					*RangeText,
+					*StateText)));
+				SkillRailText->SetColorAndOpacity(FSlateColor(bSelected || bTutorialFocus
+					? FLinearColor(1.0f, 0.88f, 0.34f, 1.0f)
+					: FLinearColor(0.86f, 0.96f, 1.0f, DimOpacity)));
+				SkillRailText->SetVisibility(ESlateVisibility::HitTestInvisible);
 			}
 		}
 	}

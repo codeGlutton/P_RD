@@ -68,6 +68,7 @@ struct FUnitHpBarWidget
 	// HP 숫자 텍스트.
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mValueText;
 	// 적 유닛 머리 위에 현재 고정 계획의 실행순서/흐름/결과를 짧게 표시하는 배지.
+	UPROPERTY(Transient) TObjectPtr<UBorder> mIntentBadge;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mIntentText;
 	// HP바 왼쪽 방어도 아이콘/수치(런타임 생성). 방어도 0이면 숨긴다.
 	UPROPERTY(Transient) TObjectPtr<UImage> mDefenseIcon;
@@ -712,7 +713,7 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UVerticalBox> mEnemyIntentList;
 
-	/** @brief 화면 상단의 텍스트 없는 6단계 진행 표시. 전투 입력을 막지 않는다. */
+	/** @brief 화면 상단의 짧은 2줄 설명과 6단계 진행 표시. 전투 입력을 막지 않는다. */
 	UPROPERTY(Transient)
 	TObjectPtr<UBorder> mEnemyIntentTutorialPanel;
 	UPROPERTY(Transient)
@@ -906,11 +907,23 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UIndexedButtonWidget>> mOwnedDiceCardWidgets;
 
-	/** @brief 레거시 주사위 종류 라벨(d2/d4/d6/d8/d10/d12/d20). 현재 보유 주사위 카드에서는 숨긴다. */
+	/** @brief 각 주사위 아래에 종류와 선택/사용 상태를 표시하는 짧은 라벨. */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UTextBlock>> mOwnedDiceTypeTexts;
 
-	/** @brief 중립 상태로 표시하는 런타임 스킬 레일 배경 */
+	/** @brief 보유 주사위를 스킬과 분리해 보여주는 하단 트레이 배경/제목. */
+	UPROPERTY(Transient)
+	TObjectPtr<UBorder> mDiceTrayPanel;
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mDiceTrayTitleText;
+
+	/** @brief 카드형 스킬 레일 전체를 묶는 좌측 도크 배경/제목. */
+	UPROPERTY(Transient)
+	TObjectPtr<UBorder> mSkillDockPanel;
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mSkillDockTitleText;
+
+	/** @brief 중립 상태로 표시하는 런타임 스킬 카드 배경 */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UBorder>> mSkillRailPanels;
 

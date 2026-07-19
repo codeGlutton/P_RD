@@ -83,6 +83,16 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 			// 덮으면 뷰포트 픽셀이 디자인 픽셀로 오해석돼 HP바가 유닛 머리에서 떨어진다.
 			TargetRootCanvas = DesignerCanvasPanel;
 		}
+
+		// 기존 콘셉트 레일은 아이콘만 담는 좁은 프레임이라 카드형 이름/역할 UI와 겹친다.
+		// 슬롯 위치는 더 이상 상속하지 않고 새 런타임 도크가 렌더/입력을 함께 소유한다.
+		WidgetTree->ForEachWidget([](UWidget* Widget)
+		{
+			if (Widget != nullptr && Widget->GetName().StartsWith(TEXT("R_skill_rail")))
+			{
+				Widget->SetVisibility(ESlateVisibility::Collapsed);
+			}
+		});
 	}
 
 	// (값 텍스트 LV/HP/Gold는 더 이상 C++가 생성/정렬하지 않는다 — 빌드가 WBP의 HUD_M_lv/hp/gold_value를
@@ -247,15 +257,64 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		}
 	}
 
+	if (mSkillDockPanel == nullptr)
+	{
+		mSkillDockPanel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("SkillDockPanel"));
+		mSkillDockTitleText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("SkillDockTitleText"));
+		if (mSkillDockPanel != nullptr && mSkillDockTitleText != nullptr)
+		{
+			mSkillDockPanel->SetBrushColor(FLinearColor(0.018f, 0.032f, 0.045f, 0.78f));
+			mSkillDockPanel->SetVisibility(ESlateVisibility::HitTestInvisible);
+			mSkillDockTitleText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "SkillDockTitle", "스킬  ·  짧게 선택 / 길게 설명"));
+			mSkillDockTitleText->SetColorAndOpacity(FSlateColor(FLinearColor(0.80f, 0.96f, 1.0f, 1.0f)));
+			mSkillDockTitleText->SetJustification(ETextJustify::Left);
+			mSkillDockTitleText->SetVisibility(ESlateVisibility::HitTestInvisible);
+			FSlateFontInfo TitleFont = mSkillDockTitleText->GetFont();
+			TitleFont.Size = 15;
+			TitleFont.OutlineSettings.OutlineSize = 1;
+			TitleFont.OutlineSettings.OutlineColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.85f);
+			mSkillDockTitleText->SetFont(TitleFont);
+			TargetRootCanvas->AddChildToCanvas(mSkillDockPanel);
+			TargetRootCanvas->AddChildToCanvas(mSkillDockTitleText);
+		}
+	}
+
+	if (mDiceTrayPanel == nullptr)
+	{
+		mDiceTrayPanel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("DiceTrayPanel"));
+		mDiceTrayTitleText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("DiceTrayTitleText"));
+		if (mDiceTrayPanel != nullptr && mDiceTrayTitleText != nullptr)
+		{
+			mDiceTrayPanel->SetBrushColor(FLinearColor(0.018f, 0.032f, 0.045f, 0.82f));
+			mDiceTrayPanel->SetVisibility(ESlateVisibility::HitTestInvisible);
+			mDiceTrayTitleText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "DiceTrayTitle", "보유 주사위"));
+			mDiceTrayTitleText->SetColorAndOpacity(FSlateColor(FLinearColor(0.80f, 0.96f, 1.0f, 1.0f)));
+			mDiceTrayTitleText->SetJustification(ETextJustify::Left);
+			mDiceTrayTitleText->SetVisibility(ESlateVisibility::HitTestInvisible);
+			FSlateFontInfo TitleFont = mDiceTrayTitleText->GetFont();
+			TitleFont.Size = 15;
+			TitleFont.OutlineSettings.OutlineSize = 1;
+			TitleFont.OutlineSettings.OutlineColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.85f);
+			mDiceTrayTitleText->SetFont(TitleFont);
+			TargetRootCanvas->AddChildToCanvas(mDiceTrayPanel);
+			TargetRootCanvas->AddChildToCanvas(mDiceTrayTitleText);
+		}
+	}
+
 	if (mDiceAssignmentText == nullptr)
 	{
 		mDiceAssignmentText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("DiceAssignmentText"));
 		if (mDiceAssignmentText != nullptr)
 		{
 			mDiceAssignmentText->SetJustification(ETextJustify::Left);
-			mDiceAssignmentText->SetText(FText::GetEmpty());   // 유휴 안내문구 제거
-			mDiceAssignmentText->SetVisibility(ESlateVisibility::Collapsed);
+			mDiceAssignmentText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "DiceAssignmentChooseSkill", "스킬을 먼저 선택하세요"));
+			mDiceAssignmentText->SetVisibility(ESlateVisibility::HitTestInvisible);
 			mDiceAssignmentText->SetColorAndOpacity(FSlateColor(FLinearColor(0.90f, 1.0f, 0.96f, 0.96f)));
+			mDiceAssignmentText->SetAutoWrapText(false);
+			mDiceAssignmentText->SetTextOverflowPolicy(ETextOverflowPolicy::Ellipsis);
+			FSlateFontInfo AssignmentFont = mDiceAssignmentText->GetFont();
+			AssignmentFont.Size = 14;
+			mDiceAssignmentText->SetFont(AssignmentFont);
 			TargetRootCanvas->AddChildToCanvas(mDiceAssignmentText);
 		}
 	}
@@ -394,8 +453,8 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		}
 	}
 
-	// 첫 전투 튜토리얼은 설명문을 띄우지 않는다. 상단의 6개 진행 표시와 실제 조작 대상 위
-	// 포커스 테두리/화살표만 사용해 전장을 가리지 않고 다음 입력을 직접 가리킨다.
+	// 첫 전투 튜토리얼은 긴 문단 대신 '무엇을/왜 누르는지'를 설명하는 2줄 카드와
+	// 실제 조작 대상 포커스를 함께 쓴다. 카드 자체는 HitTestInvisible이라 전투 입력을 막지 않는다.
 	if (mEnemyIntentTutorialPanel == nullptr)
 	{
 		mEnemyIntentTutorialPanel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("EnemyIntentTutorialPanel"));
@@ -412,14 +471,29 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 			&& mEnemyIntentTutorialContinueText != nullptr
 			&& mEnemyIntentTutorialProgress != nullptr)
 		{
-			mEnemyIntentTutorialPanel->SetBrushColor(FLinearColor(0.018f, 0.035f, 0.040f, 0.68f));
-			mEnemyIntentTutorialPanel->SetPadding(FMargin(7.0f, 4.0f));
+			mEnemyIntentTutorialPanel->SetBrushColor(FLinearColor(0.018f, 0.035f, 0.045f, 0.90f));
+			mEnemyIntentTutorialPanel->SetPadding(FMargin(14.0f, 8.0f));
 			mEnemyIntentTutorialPanel->SetHorizontalAlignment(HAlign_Fill);
 			mEnemyIntentTutorialPanel->SetVerticalAlignment(VAlign_Center);
 			mEnemyIntentTutorialPanel->AddChild(mEnemyIntentTutorialContent);
 
-			// 레거시 포인터는 이벤트 연결 호환성만 유지하고 화면 트리에서는 항상 접는다.
-			mEnemyIntentTutorialText->SetVisibility(ESlateVisibility::Collapsed);
+			mEnemyIntentTutorialText->SetAutoWrapText(true);
+			mEnemyIntentTutorialText->SetLineHeightPercentage(0.94f);
+			mEnemyIntentTutorialText->SetJustification(ETextJustify::Left);
+			mEnemyIntentTutorialText->SetColorAndOpacity(FSlateColor(FLinearColor(0.95f, 1.0f, 0.98f, 1.0f)));
+			mEnemyIntentTutorialText->SetVisibility(ESlateVisibility::HitTestInvisible);
+			FSlateFontInfo TutorialFont = mEnemyIntentTutorialText->GetFont();
+			TutorialFont.Size = 17;
+			TutorialFont.OutlineSettings.OutlineSize = 1;
+			TutorialFont.OutlineSettings.OutlineColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.90f);
+			mEnemyIntentTutorialText->SetFont(TutorialFont);
+			if (UVerticalBoxSlot* TextSlot = mEnemyIntentTutorialContent->AddChildToVerticalBox(mEnemyIntentTutorialText))
+			{
+				TextSlot->SetHorizontalAlignment(HAlign_Fill);
+				TextSlot->SetVerticalAlignment(VAlign_Center);
+			}
+
+			// 버튼 없이 입력 상태를 관찰해 자동으로 다음 단계로 넘어간다.
 			mEnemyIntentTutorialContinueButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleEnemyIntentTutorialContinue);
 			mEnemyIntentTutorialContinueButton->AddChild(mEnemyIntentTutorialContinueText);
 			mEnemyIntentTutorialContinueButton->SetVisibility(ESlateVisibility::Collapsed);
@@ -434,7 +508,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 				{
 					continue;
 				}
-				Dot->SetPadding(FMargin(6.0f));
+				Dot->SetPadding(FMargin(5.0f));
 				Dot->SetBrushColor(FLinearColor(0.22f, 0.28f, 0.29f, 0.95f));
 				Dot->SetVisibility(ESlateVisibility::HitTestInvisible);
 				if (UHorizontalBoxSlot* DotSlot = mEnemyIntentTutorialProgress->AddChildToHorizontalBox(Dot))
@@ -447,6 +521,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 			}
 			if (UVerticalBoxSlot* ProgressSlot = mEnemyIntentTutorialContent->AddChildToVerticalBox(mEnemyIntentTutorialProgress))
 			{
+				ProgressSlot->SetPadding(FMargin(0.0f, 6.0f, 0.0f, 0.0f));
 				ProgressSlot->SetHorizontalAlignment(HAlign_Center);
 				ProgressSlot->SetVerticalAlignment(VAlign_Center);
 			}

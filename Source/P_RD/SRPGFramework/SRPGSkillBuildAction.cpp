@@ -17,7 +17,7 @@
 
 namespace
 {
-	const FName DicePushSkillAssetName(TEXT("DA_SwordNormalSmash_Common"));
+	const FName DicePushBuildSkillAssetName(TEXT("DA_SwordNormalSmash_Common"));
 }
 
 FSRPGSkillSelectCommand::FSRPGSkillSelectCommand()
@@ -405,7 +405,7 @@ void USRPGSkillBuildAction::RefreshAimableTileHighlights()
     checkf(SkillCompModel != nullptr, TEXT("스킬 컴포넌트 모델 nullptr"));
 
 	mReachableTileIndexes = SkillCompModel->GetAimableTiles(TileMap, mSelectedSkillIndex, DicePoolModel->GetSelectedDiceSum());
-	if (mSelectedSkill != nullptr && mSelectedSkill->GetFName() == DicePushSkillAssetName)
+	if (mSelectedSkill != nullptr && mSelectedSkill->GetFName() == DicePushBuildSkillAssetName)
 	{
 		if (USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
 		{

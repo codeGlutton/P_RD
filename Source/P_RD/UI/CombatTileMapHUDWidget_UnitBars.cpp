@@ -5,6 +5,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Blueprint/WidgetTree.h"
+#include "Components/Border.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
@@ -245,8 +246,8 @@ void UCombatTileMapHUDWidget::RebuildUnitHpBars()
 					NewBar.mDefenseText = DefenseText;
 				}
 
-				// 적 머리 위에 실행순서와 고정 행동 흐름을 붙인다. HP바 위쪽에 작게 두고
-				// 검은 외곽선을 써서 전장 모델과 경로를 가리지 않으면서도 배경에서 읽히게 한다.
+				// 적 머리 위에 실행순서와 고정 행동 흐름을 배지로 붙인다. 밀린 직후에도 같은
+				// 유닛 바가 새 위치로 투영되므로 '원계획 유지' 상태를 놓치지 않고 다시 읽을 수 있다.
 				if (UTextBlock* IntentText = BarTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("EnemyIntentText")))
 				{
 					FSlateFontInfo IntentFont = IntentText->GetFont();
@@ -259,14 +260,24 @@ void UCombatTileMapHUDWidget::RebuildUnitHpBars()
 					IntentText->SetShadowColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f, 0.88f));
 					IntentText->SetAutoWrapText(false);
 					IntentText->SetVisibility(ESlateVisibility::Collapsed);
-					if (UCanvasPanelSlot* IntentSlot = BarCanvas->AddChildToCanvas(IntentText))
+					if (UBorder* IntentBadge = BarTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("EnemyIntentBadge")))
 					{
-						IntentSlot->SetAnchors(FAnchors(0.0f, 0.0f));
-						IntentSlot->SetAlignment(FVector2D(0.0f, 1.0f));
-						IntentSlot->SetPosition(FVector2D(0.0f, 2.0f));
-						IntentSlot->SetSize(FVector2D(360.0f, 38.0f));
-						IntentSlot->SetAutoSize(false);
-						IntentSlot->SetZOrder(3);
+						IntentBadge->SetPadding(FMargin(8.0f, 2.0f));
+						IntentBadge->SetHorizontalAlignment(HAlign_Center);
+						IntentBadge->SetVerticalAlignment(VAlign_Center);
+						IntentBadge->SetBrushColor(FLinearColor(0.015f, 0.04f, 0.06f, 0.90f));
+						IntentBadge->SetVisibility(ESlateVisibility::Collapsed);
+						IntentBadge->AddChild(IntentText);
+						if (UCanvasPanelSlot* IntentSlot = BarCanvas->AddChildToCanvas(IntentBadge))
+						{
+							IntentSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+							IntentSlot->SetAlignment(FVector2D(0.0f, 1.0f));
+							IntentSlot->SetPosition(FVector2D(0.0f, 2.0f));
+							IntentSlot->SetSize(FVector2D(360.0f, 48.0f));
+							IntentSlot->SetAutoSize(false);
+							IntentSlot->SetZOrder(3);
+						}
+						NewBar.mIntentBadge = IntentBadge;
 					}
 					NewBar.mIntentText = IntentText;
 				}
@@ -366,18 +377,36 @@ void UCombatTileMapHUDWidget::UpdateUnitHpBars()
 		{
 			if (EnemyIntent != nullptr)
 			{
+				const bool bActiveIntent = EnemyIntent->mResult == EEnemyIntentResultUI::Planned
+					|| EnemyIntent->mResult == EEnemyIntentResultUI::Executing;
+				const FLinearColor ExecutionColor = GetEnemyIntentExecutionColor(EnemyIntent->mExecutionOrder);
+				const FLinearColor LabelColor = EnemyIntent->mWasDisplaced && bActiveIntent
+					? FLinearColor(0.48f, 1.0f, 0.78f, 1.0f)
+					: (EnemyIntent->mResult == EEnemyIntentResultUI::HitPlayer
+						? FLinearColor(1.0f, 0.46f, 0.40f, 1.0f)
+						: ExecutionColor);
 				Bar.mIntentText->SetText(GetEnemyIntentWorldLabel(*EnemyIntent));
-				Bar.mIntentText->SetColorAndOpacity(FSlateColor(GetEnemyIntentExecutionColor(EnemyIntent->mExecutionOrder)));
-				Bar.mIntentText->SetRenderOpacity(
-					EnemyIntent->mResult == EEnemyIntentResultUI::Planned
-					|| EnemyIntent->mResult == EEnemyIntentResultUI::Executing
-						? 1.0f
-						: 0.86f);
+				Bar.mIntentText->SetColorAndOpacity(FSlateColor(LabelColor));
+				Bar.mIntentText->SetRenderOpacity(bActiveIntent ? 1.0f : 0.90f);
 				Bar.mIntentText->SetVisibility(ESlateVisibility::HitTestInvisible);
+				if (Bar.mIntentBadge != nullptr)
+				{
+					const float TintStrength = EnemyIntent->mWasDisplaced ? 0.24f : 0.13f;
+					Bar.mIntentBadge->SetBrushColor(FLinearColor(
+						0.015f + LabelColor.R * TintStrength,
+						0.025f + LabelColor.G * TintStrength,
+						0.035f + LabelColor.B * TintStrength,
+						0.92f));
+					Bar.mIntentBadge->SetVisibility(ESlateVisibility::HitTestInvisible);
+				}
 			}
 			else
 			{
 				Bar.mIntentText->SetVisibility(ESlateVisibility::Collapsed);
+				if (Bar.mIntentBadge != nullptr)
+				{
+					Bar.mIntentBadge->SetVisibility(ESlateVisibility::Collapsed);
+				}
 			}
 		}
 

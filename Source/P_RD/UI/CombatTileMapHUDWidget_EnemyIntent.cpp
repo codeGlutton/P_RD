@@ -125,7 +125,7 @@ FText UCombatTileMapHUDWidget::GetEnemyIntentWorldLabel(const FEnemyIntentUI& In
 	}
 	if (Intent.mWasDisplaced)
 	{
-		return FText::FromString(FString::Printf(TEXT("%s[%d] 밀림 · 계획 유지"), RecommendedPrefix, DisplayOrder));
+		return FText::FromString(FString::Printf(TEXT("%s[%d] 밀림! · 원계획 유지"), RecommendedPrefix, DisplayOrder));
 	}
 
 	const bool bHasMovement = Intent.mPlannedOrigin != FTileIndex::Invalid
@@ -181,7 +181,7 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
 	};
 
 	if (UTextBlock* Header = MakeText(
-		TEXT("적 계획  ·  고정"),
+		TEXT("적 계획 보드  ·  번호색 = 이동 경로"),
 		IntentCurrentColor,
 		16))
 	{
@@ -218,7 +218,7 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
 		FString Status = GetIntentStateLabel(Intent.mResult).ToString();
 		if (Intent.mWasDisplaced && bActive)
 		{
-			Status = TEXT("밀림 · 원계획 유지");
+			Status = TEXT("밀림! · 원계획 유지");
 		}
 		else if (Intent.mResult == EEnemyIntentResultUI::Executing)
 		{
@@ -426,13 +426,72 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		return;
 	}
 
-	// 문장/버튼 기반 안내는 완전히 접고 진행 표시와 실제 대상 포인터만 남긴다.
-	if (mEnemyIntentTutorialText != nullptr) { mEnemyIntentTutorialText->SetVisibility(ESlateVisibility::Collapsed); }
+	// 긴 설명문 대신 현재 해야 할 입력 하나만 2줄로 보여준다. 포커스 테두리/화살표가
+	// 같은 실제 위젯을 가리키므로, 문구를 읽고 곧바로 화면에서 행동할 수 있다.
+	FString TutorialMessage;
+	const FEnemyIntentUI* RecommendedIntent = FindRecommendedIntent(Intents);
+	const FString RecommendedEnemyName = RecommendedIntent != nullptr
+		? RecommendedIntent->mEnemyName.ToString()
+		: TEXT("★ 표시 적");
+	const FString SmashSkillName = SmashSkill != nullptr && SmashSkill->mName.IsEmpty() == false
+		? SmashSkill->mName.ToString()
+		: TEXT("밀기 스킬");
+	switch (mEnemyIntentTutorialStage)
+	{
+	case EEnemyIntentTutorialStage::ReviewIntent:
+		TutorialMessage = TEXT("[1/6] 적 계획을 먼저 확인하세요\n번호색 화살표는 이동 경로, 붉은 칸은 공격 위치입니다. 적은 다시 계산하지 않습니다.");
+		break;
+	case EEnemyIntentTutorialStage::SelectSmash:
+		TutorialMessage = FString::Printf(
+			TEXT("[2/6] 밀기 스킬을 선택하세요\n왼쪽에서 금색 '%s' 카드를 누르세요."),
+			*SmashSkillName);
+		break;
+	case EEnemyIntentTutorialStage::SelectDice:
+		TutorialMessage = FString::Printf(
+			TEXT("[3/6] 주사위 %d개를 선택하세요\n아래 주사위를 누르세요. 선택한 눈의 합만큼 적이 밀립니다."),
+			RequiredDiceCount);
+		break;
+	case EEnemyIntentTutorialStage::SelectTarget:
+		TutorialMessage = FString::Printf(
+			TEXT("[4/6] 밀어낼 적을 선택하세요\n전장의 ★ %s 모델을 한 번 누르세요."),
+			*RecommendedEnemyName);
+		break;
+	case EEnemyIntentTutorialStage::ConfirmTarget:
+		TutorialMessage = TEXT("[5/6] 실행을 확정하세요\n밀릴 위치를 확인하고 같은 적을 한 번 더 누르세요.");
+		break;
+	case EEnemyIntentTutorialStage::ApplyingIntervention:
+		TutorialMessage = TEXT("개입 실행 중\n밀린 적의 새 위치와 남겨진 원래 계획을 다시 표시하고 있습니다.");
+		break;
+	case EEnemyIntentTutorialStage::EndTurnAndObserve:
+		TutorialMessage = TEXT("[6/6] 바뀐 위치에서 원래 계획을 실행합니다\n머리 위 '밀림! · 원계획 유지'를 확인하고 턴 종료를 누르세요.");
+		break;
+	case EEnemyIntentTutorialStage::Complete:
+		TutorialMessage = FString::Printf(
+			TEXT("완료 · %s의 고정 계획이 망가졌습니다\n%s"),
+			*mEnemyIntentTutorialCompletedEnemyName,
+			*mEnemyIntentTutorialCompletedResult);
+		break;
+	default:
+		break;
+	}
+	if (mEnemyIntentTutorialText != nullptr)
+	{
+		mEnemyIntentTutorialText->SetText(FText::FromString(TutorialMessage));
+		mEnemyIntentTutorialText->SetColorAndOpacity(FSlateColor(
+			mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::Complete
+				? FLinearColor(0.55f, 1.0f, 0.72f, 1.0f)
+				: (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmTarget
+					? FLinearColor(1.0f, 0.88f, 0.35f, 1.0f)
+					: FLinearColor(0.94f, 0.98f, 1.0f, 1.0f))));
+		mEnemyIntentTutorialText->SetVisibility(ESlateVisibility::HitTestInvisible);
+	}
 	if (mEnemyIntentTutorialContinueButton != nullptr) { mEnemyIntentTutorialContinueButton->SetVisibility(ESlateVisibility::Collapsed); }
 	mEnemyIntentTutorialPanel->SetBrushColor(
 		mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::Complete
-			? FLinearColor(0.025f, 0.18f, 0.11f, 0.72f)
-			: FLinearColor(0.018f, 0.035f, 0.040f, 0.68f));
+			? FLinearColor(0.025f, 0.18f, 0.11f, 0.92f)
+			: (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmTarget
+				? FLinearColor(0.18f, 0.12f, 0.025f, 0.92f)
+				: FLinearColor(0.018f, 0.035f, 0.040f, 0.90f)));
 	SetEndTurnTutorialHighlight(mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::EndTurnAndObserve);
 	RefreshEnemyIntentTutorialProgress();
 	mEnemyIntentTutorialPanel->SetVisibility(ESlateVisibility::HitTestInvisible);
@@ -444,6 +503,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		mEnemyIntentTutorialStageElapsed = 0.0f;
 		RefreshSkillRailWidgets();
 		RefreshOwnedDiceCards();
+		RefreshDiceAssignmentText();
 	}
 }
 
@@ -614,17 +674,17 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime
 	mEnemyIntentTutorialStageElapsed += FMath::Max(InDeltaTime, 0.0f);
 	mEnemyIntentTutorialPulseTime += FMath::Max(InDeltaTime, 0.0f);
 
-	// 읽기 버튼과 완료 닫기 버튼은 없다. 예고를 한 박자 보여준 뒤 실제 스킬로 자동 이동하고,
-	// 결과 확인도 짧게 초록으로 채운 뒤 자동으로 사라진다.
+	// 별도 확인 버튼은 없다. 짧은 2줄 안내를 읽을 시간을 준 뒤 실제 스킬 단계로 자동 이동하고,
+	// 결과 카드도 충분히 확인한 뒤 자동으로 사라진다.
 	if (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ReviewIntent
 		&& mEnemyIntentTutorialReviewAcknowledged == false
-		&& mEnemyIntentTutorialStageElapsed >= 2.0f)
+		&& mEnemyIntentTutorialStageElapsed >= 3.8f)
 	{
 		mEnemyIntentTutorialReviewAcknowledged = true;
 		UpdateEnemyIntentTutorial();
 	}
 	if (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::Complete
-		&& mEnemyIntentTutorialStageElapsed >= 2.8f)
+		&& mEnemyIntentTutorialStageElapsed >= 4.0f)
 	{
 		HandleEnemyIntentTutorialContinue();
 		SetEnemyIntentTutorialOverlayVisible(false);
