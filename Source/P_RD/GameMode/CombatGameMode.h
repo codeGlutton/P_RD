@@ -16,6 +16,7 @@
 #include "CombatGameMode.generated.h"
 
 class USRPGTurnContext;
+class USRPGSkillBuildAction;
 class UUnitModel;
 class IBoardSelectionTarget;
 
@@ -60,6 +61,12 @@ public:
 public:
 	UFUNCTION(Category = UI, BlueprintCallable)
 	bool SelectSkill(int32 SkillIndex);
+
+	UFUNCTION(Category = UI, BlueprintCallable)
+	bool ConfirmSkill();
+
+	UFUNCTION(Category = UI, BlueprintCallable)
+	bool CancelSkill();
 
 	UFUNCTION(Category = UI, BlueprintCallable)
 	bool SelectDice(int32 DiceIndex);
@@ -131,6 +138,7 @@ protected:
 protected:
 	void PushTurnUIData() const;
 	void PushSkillBuildUIData(ESRPGSkillBuildPhase Phase) const;
+	void PushDisplacementPreviewUIData(const USRPGSkillBuildAction* Action, ESRPGSkillBuildPhase Phase) const;
 	void PushMoveBuildUIData(ESRPGMoveBuildPhase Phase) const;
 	void PushUnitUIData() const;
 	void PushDiceUIData() const;

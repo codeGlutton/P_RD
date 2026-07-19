@@ -16,6 +16,7 @@ UENUM(BlueprintType)
 enum class ECombatInputType : uint8
 {
 	SelectSkill,      // payload = SkillIndex
+	ConfirmSkill,     // payload 없음(현재 프리뷰 실행)
 	ToggleDice,       // payload = DiceIndex
 	RollDice,         // payload 없음(터치로 굴림)
 	LongPressSkill,   // payload = SkillIndex (상세창)
@@ -94,6 +95,8 @@ public:
 public:
 	/** @brief SkillIndex를 그대로 게임플레이에 전달한다. UI는 스킬 객체를 직접 들고 있지 않는다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestSelectSkill(int32 SkillIndex);
+	/** @brief 현재 프리뷰를 HUD 실행 버튼으로 확정한다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestConfirmSkill();
 	/** @brief DiceIndex 선택/해제를 의도로 보낸다. 사용 가능 여부와 값 검증은 게임플레이/어댑터가 수행한다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestToggleDice(int32 DiceIndex);
 	/** @brief 현재 보유 주사위 굴림 요청만 보낸다. RNG와 결과 push는 구독자가 책임진다. */
@@ -134,6 +137,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetSkillUIs(const TArray<FSkillUI>& Skills);
 	/** @brief 라운드 시작 및 플레이어 행동 뒤 갱신된 적별 행동/대상/경로 스냅샷을 교체한다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetEnemyIntentUIs(const TArray<FEnemyIntentUI>& Intents);
+	/** @brief 당기기/던지기 월드 코치마크용 읽기 전용 프리뷰를 교체한다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetDisplacementPreview(const FDisplacementPreviewUI& Preview);
 
 	/** @brief 선택한 스킬 index. [소스] SRPGSkillBuildAction.mSelectedSkill. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetSelectedSkill(int32 SelectedIndex);
@@ -183,6 +188,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") int32 GetSelectedDiceSum() const { return mSelectedDiceSum; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FSkillUI>& GetSkillUIs() const { return mSkillUIs; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FEnemyIntentUI>& GetEnemyIntentUIs() const { return mEnemyIntentUIs; }
+	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FDisplacementPreviewUI& GetDisplacementPreview() const { return mDisplacementPreview; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") int32 GetSelectedSkillIndex() const { return mSelectedSkillIndex; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FSkillDetailUI& GetSkillDetail() const { return mSkillDetail; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FCombatQueueNode>& GetActionQueue() const { return mActionQueue; }
@@ -206,6 +212,7 @@ private:
 	UPROPERTY(Transient) TArray<FSkillUI> mSkillUIs;
 	/** @brief 현재 전장 상태로 가장 최근 갱신된 적 행동 예고와 결과. */
 	UPROPERTY(Transient) TArray<FEnemyIntentUI> mEnemyIntentUIs;
+	UPROPERTY(Transient) FDisplacementPreviewUI mDisplacementPreview;
 	/** @brief 현재 선택한 스킬 index. index는 mSkillUIs 배열 기준이다. */
 	UPROPERTY(Transient) int32 mSelectedSkillIndex = INDEX_NONE;
 	/** @brief 마지막 스킬 상세 스냅샷. */

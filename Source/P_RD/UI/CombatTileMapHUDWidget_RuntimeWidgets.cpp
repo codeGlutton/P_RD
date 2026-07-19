@@ -453,6 +453,169 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		}
 	}
 
+	// 같은 타일 재클릭 대신 행동 이름·결과를 확인하고 명시적으로 실행/취소하는 작은 카드다.
+	if (mDisplacementConfirmPanel == nullptr)
+	{
+		mDisplacementConfirmPanel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("DisplacementConfirmPanel"));
+		mDisplacementConfirmContent = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("DisplacementConfirmContent"));
+		mDisplacementConfirmTitle = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("DisplacementConfirmTitle"));
+		mDisplacementConfirmSummary = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("DisplacementConfirmSummary"));
+		mDisplacementConfirmButtons = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("DisplacementConfirmButtons"));
+		mDisplacementCancelButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("DisplacementCancelButton"));
+		mDisplacementCancelText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("DisplacementCancelText"));
+		mDisplacementExecuteButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("DisplacementExecuteButton"));
+		mDisplacementExecuteText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("DisplacementExecuteText"));
+		if (mDisplacementConfirmPanel != nullptr && mDisplacementConfirmContent != nullptr
+			&& mDisplacementConfirmTitle != nullptr && mDisplacementConfirmSummary != nullptr
+			&& mDisplacementConfirmButtons != nullptr && mDisplacementCancelButton != nullptr
+			&& mDisplacementCancelText != nullptr && mDisplacementExecuteButton != nullptr
+			&& mDisplacementExecuteText != nullptr)
+		{
+			mDisplacementConfirmPanel->SetBrushColor(FLinearColor(0.018f, 0.045f, 0.060f, 0.94f));
+			mDisplacementConfirmPanel->SetPadding(FMargin(12.0f, 8.0f));
+			mDisplacementConfirmPanel->AddChild(mDisplacementConfirmContent);
+			mDisplacementConfirmTitle->SetJustification(ETextJustify::Center);
+			mDisplacementConfirmTitle->SetColorAndOpacity(FSlateColor(FLinearColor(0.58f, 1.0f, 0.92f, 1.0f)));
+			FSlateFontInfo ConfirmTitleFont = mDisplacementConfirmTitle->GetFont();
+			ConfirmTitleFont.Size = 18;
+			ConfirmTitleFont.OutlineSettings.OutlineSize = 1;
+			mDisplacementConfirmTitle->SetFont(ConfirmTitleFont);
+			mDisplacementConfirmContent->AddChildToVerticalBox(mDisplacementConfirmTitle);
+
+			mDisplacementConfirmSummary->SetJustification(ETextJustify::Center);
+			mDisplacementConfirmSummary->SetAutoWrapText(false);
+			mDisplacementConfirmSummary->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+			FSlateFontInfo ConfirmSummaryFont = mDisplacementConfirmSummary->GetFont();
+			ConfirmSummaryFont.Size = 14;
+			mDisplacementConfirmSummary->SetFont(ConfirmSummaryFont);
+			if (UVerticalBoxSlot* SummarySlot = mDisplacementConfirmContent->AddChildToVerticalBox(mDisplacementConfirmSummary))
+			{
+				SummarySlot->SetPadding(FMargin(0.0f, 3.0f, 0.0f, 7.0f));
+			}
+
+			mDisplacementCancelText->SetText(FText::FromString(TEXT("다시 선택")));
+			mDisplacementCancelText->SetJustification(ETextJustify::Center);
+			mDisplacementCancelText->SetColorAndOpacity(FSlateColor(FLinearColor(0.88f, 0.94f, 0.96f, 1.0f)));
+			mDisplacementCancelButton->SetBackgroundColor(FLinearColor(0.16f, 0.21f, 0.24f, 1.0f));
+			mDisplacementCancelButton->AddChild(mDisplacementCancelText);
+			mDisplacementCancelButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleDisplacementCancelClicked);
+			if (UHorizontalBoxSlot* CancelSlot = mDisplacementConfirmButtons->AddChildToHorizontalBox(mDisplacementCancelButton))
+			{
+				CancelSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+				CancelSlot->SetPadding(FMargin(0.0f, 0.0f, 5.0f, 0.0f));
+			}
+
+			mDisplacementExecuteText->SetText(FText::FromString(TEXT("실행")));
+			mDisplacementExecuteText->SetJustification(ETextJustify::Center);
+			mDisplacementExecuteText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+			mDisplacementExecuteButton->SetBackgroundColor(FLinearColor(0.88f, 0.48f, 0.05f, 1.0f));
+			mDisplacementExecuteButton->AddChild(mDisplacementExecuteText);
+			mDisplacementExecuteButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleDisplacementConfirmClicked);
+			if (UHorizontalBoxSlot* ExecuteSlot = mDisplacementConfirmButtons->AddChildToHorizontalBox(mDisplacementExecuteButton))
+			{
+				ExecuteSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+				ExecuteSlot->SetPadding(FMargin(5.0f, 0.0f, 0.0f, 0.0f));
+			}
+			mDisplacementConfirmContent->AddChildToVerticalBox(mDisplacementConfirmButtons);
+			mDisplacementConfirmPanel->SetVisibility(ESlateVisibility::Collapsed);
+			TargetRootCanvas->AddChildToCanvas(mDisplacementConfirmPanel);
+		}
+	}
+
+	// 월드 표식은 화면을 가리는 패널이 아니라 투영된 선/아이콘만 RootCanvas 위에 놓는다.
+	if (mDisplacementPathSegments.IsEmpty())
+	{
+		for (int32 Index = 0; Index < 12; ++Index)
+		{
+			UBorder* Segment = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(),
+				FName(*FString::Printf(TEXT("DisplacementPathSegment_%d"), Index)));
+			if (Segment == nullptr) { continue; }
+			Segment->SetVisibility(ESlateVisibility::Collapsed);
+			Segment->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+			if (UCanvasPanelSlot* CanvasSlot = RootCanvas->AddChildToCanvas(Segment))
+			{
+				CanvasSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+				CanvasSlot->SetAutoSize(false);
+				CanvasSlot->SetZOrder(900);
+			}
+			mDisplacementPathSegments.Add(Segment);
+		}
+	}
+	if (mDisplacementDirectionLabels.IsEmpty())
+	{
+		for (int32 Index = 0; Index < 8; ++Index)
+		{
+			UTextBlock* Label = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(),
+				FName(*FString::Printf(TEXT("DisplacementDirection_%d"), Index)));
+			if (Label == nullptr) { continue; }
+			Label->SetJustification(ETextJustify::Center);
+			Label->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.58f, 0.08f, 1.0f)));
+			FSlateFontInfo ArrowFont = Label->GetFont();
+			ArrowFont.Size = 32;
+			ArrowFont.OutlineSettings.OutlineSize = 2;
+			ArrowFont.OutlineSettings.OutlineColor = FLinearColor::Black;
+			Label->SetFont(ArrowFont);
+			Label->SetVisibility(ESlateVisibility::Collapsed);
+			if (UCanvasPanelSlot* CanvasSlot = RootCanvas->AddChildToCanvas(Label))
+			{
+				CanvasSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+				CanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+				CanvasSlot->SetAutoSize(true);
+				CanvasSlot->SetZOrder(905);
+			}
+			mDisplacementDirectionLabels.Add(Label);
+		}
+	}
+	auto MakeWorldLabel = [this](const TCHAR* Name, const FLinearColor& Color, int32 FontSize) -> UTextBlock*
+	{
+		UTextBlock* Label = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), FName(Name));
+		if (Label == nullptr) { return nullptr; }
+		Label->SetJustification(ETextJustify::Center);
+		Label->SetColorAndOpacity(FSlateColor(Color));
+		FSlateFontInfo Font = Label->GetFont();
+		Font.Size = FontSize;
+		Font.OutlineSettings.OutlineSize = 2;
+		Font.OutlineSettings.OutlineColor = FLinearColor::Black;
+		Label->SetFont(Font);
+		Label->SetVisibility(ESlateVisibility::Collapsed);
+		if (UCanvasPanelSlot* CanvasSlot = RootCanvas->AddChildToCanvas(Label))
+		{
+			CanvasSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+			CanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+			CanvasSlot->SetAutoSize(true);
+			CanvasSlot->SetZOrder(908);
+		}
+		return Label;
+	};
+	if (mDisplacementTargetLabel == nullptr)
+	{
+		mDisplacementTargetLabel = MakeWorldLabel(TEXT("DisplacementTargetLabel"), FLinearColor(0.45f, 1.0f, 0.92f, 1.0f), 18);
+	}
+	if (mDisplacementLandingLabel == nullptr)
+	{
+		mDisplacementLandingLabel = MakeWorldLabel(TEXT("DisplacementLandingLabel"), FLinearColor(0.55f, 1.0f, 0.80f, 1.0f), 17);
+	}
+	if (mDisplacementCollisionLabel == nullptr)
+	{
+		mDisplacementCollisionLabel = MakeWorldLabel(TEXT("DisplacementCollisionLabel"), FLinearColor(1.0f, 0.25f, 0.08f, 1.0f), 22);
+	}
+	if (mDisplacementLandingGhost == nullptr)
+	{
+		mDisplacementLandingGhost = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("DisplacementLandingGhost"));
+		if (mDisplacementLandingGhost != nullptr)
+		{
+			mDisplacementLandingGhost->SetColorAndOpacity(FLinearColor(0.40f, 1.0f, 0.86f, 0.42f));
+			mDisplacementLandingGhost->SetVisibility(ESlateVisibility::Collapsed);
+			if (UCanvasPanelSlot* CanvasSlot = RootCanvas->AddChildToCanvas(mDisplacementLandingGhost))
+			{
+				CanvasSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+				CanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+				CanvasSlot->SetSize(FVector2D(58.0f, 58.0f));
+				CanvasSlot->SetZOrder(904);
+			}
+		}
+	}
+
 	// 첫 전투 튜토리얼은 설명 페이지가 아니라 현재 누를 곳 하나만 가리키는 코치마크다.
 	if (mEnemyIntentTutorialPanel == nullptr)
 	{

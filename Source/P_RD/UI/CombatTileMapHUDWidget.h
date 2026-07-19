@@ -49,6 +49,11 @@ enum class EEnemyIntentTutorialStage : uint8
 	SelectThrowDestination,
 	ConfirmDestination,
 	ApplyingIntervention,
+	SelectThrow,
+	SelectThrowDice,
+	SelectThrowTarget,
+	ConfirmThrow,
+	ApplyingThrow,
 	ReviewResult,
 	EndTurnAndObserve,
 	Complete
@@ -264,6 +269,15 @@ private:
 
 	/** @brief 최신 적 행동을 실행 순서/스킬/대상/경로/결과 행으로 다시 그린다. */
 	void RefreshEnemyIntentPanel();
+
+	/** @brief 당기기/던지기 프리뷰 카드와 실행/다시 선택 버튼을 현재 뷰모델 상태에 맞춘다. */
+	void RefreshDisplacementPreview();
+	/** @brief 타일 색에 의존하지 않는 사슬/투척선·방향 화살표·착지 유령·충돌 표식을 투영한다. */
+	void UpdateDisplacementPreviewVisuals(float InDeltaTime);
+	UFUNCTION()
+	void HandleDisplacementConfirmClicked();
+	UFUNCTION()
+	void HandleDisplacementCancelClicked();
 
 	/** @brief 적 intent 실행순서를 전장 경로와 HUD 배지에서 같이 쓸 색으로 변환한다. */
 	static FLinearColor GetEnemyIntentExecutionColor(int32 ExecutionOrder);
@@ -715,6 +729,40 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UVerticalBox> mEnemyIntentList;
 
+	/** @brief 위치 개입 프리뷰의 명시적 확정 카드. 같은 타일 재클릭을 대체한다. */
+	UPROPERTY(Transient)
+	TObjectPtr<UBorder> mDisplacementConfirmPanel;
+	UPROPERTY(Transient)
+	TObjectPtr<UVerticalBox> mDisplacementConfirmContent;
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mDisplacementConfirmTitle;
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mDisplacementConfirmSummary;
+	UPROPERTY(Transient)
+	TObjectPtr<UHorizontalBox> mDisplacementConfirmButtons;
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mDisplacementCancelButton;
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mDisplacementCancelText;
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mDisplacementExecuteButton;
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mDisplacementExecuteText;
+
+	/** @brief 월드 위에 투영하는 굵은 궤적, 8방향 화살표, 대상/착지/충돌 표식. */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UBorder>> mDisplacementPathSegments;
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UTextBlock>> mDisplacementDirectionLabels;
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mDisplacementTargetLabel;
+	UPROPERTY(Transient)
+	TObjectPtr<UImage> mDisplacementLandingGhost;
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mDisplacementLandingLabel;
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mDisplacementCollisionLabel;
+
 	/** @brief 화면 상단의 짧은 2줄 설명과 6단계 진행 표시. 전투 입력을 막지 않는다. */
 	UPROPERTY(Transient)
 	TObjectPtr<UBorder> mEnemyIntentTutorialPanel;
@@ -755,6 +803,9 @@ private:
 	bool mEnemyIntentTutorialResultAcknowledged = false;
 	bool mEnemyIntentTutorialDismissed = false;
 	bool mEnemyIntentTutorialInterventionSubmitted = false;
+	bool mEnemyIntentTutorialPullCompleted = false;
+	bool mEnemyIntentTutorialThrowSubmitted = false;
+	int32 mEnemyIntentTutorialPullPlanRevision = INDEX_NONE;
 	int32 mEnemyIntentTutorialIntervenedEnemyUnitId = INDEX_NONE;
 	FString mEnemyIntentTutorialCompletedEnemyName;
 	FString mEnemyIntentTutorialCompletedResult;

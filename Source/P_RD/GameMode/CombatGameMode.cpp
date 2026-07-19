@@ -423,6 +423,9 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 	case ECombatInputType::SelectSkill:
 		SelectSkill(IntPayload);
 		break;
+	case ECombatInputType::ConfirmSkill:
+		ConfirmSkill();
+		break;
 	case ECombatInputType::ToggleDice:
 		SelectDice(IntPayload);
 		break;
@@ -434,6 +437,9 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		break;
 	case ECombatInputType::EndTurn:
 		EndTurn();
+		break;
+	case ECombatInputType::Cancel:
+		CancelSkill();
 		break;
 	case ECombatInputType::LongPressSkill:
 		// 길게 누른 스킬의 상세 정보를 UIModel에 채운다.
@@ -541,6 +547,7 @@ bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 		});
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnChangeSkillBuildPhase.AddWeakLambda(this, [this](const USRPGSkillBuildAction* Action, ESRPGSkillBuildPhase Phase) {
 		PushSkillBuildUIData(Phase);
+		PushDisplacementPreviewUIData(Action, Phase);
 		});
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnPostSimulateSkillAction.AddWeakLambda(this, [this](const TArray<FSRPGTurnEventLog>& EventLogs) {
 		PushSimulationFloatingLogs(EventLogs);
@@ -550,6 +557,24 @@ bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 		});
 
 	return CommandRouterModel->SummitCommand(SkillSelectCommand);
+}
+
+bool ACombatGameMode::ConfirmSkill()
+{
+	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
+	TInstancedStruct<FSRPGCommand> Command;
+	Command.InitializeAs<FSRPGSkillConfirmCommand>();
+	return CommandRouterModel->SummitCommand(Command);
+}
+
+bool ACombatGameMode::CancelSkill()
+{
+	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
+	TInstancedStruct<FSRPGCommand> Command;
+	Command.InitializeAs<FSRPGSkillCancelCommand>();
+	return CommandRouterModel->SummitCommand(Command);
 }
 
 bool ACombatGameMode::SelectDice(int32 DiceIndex)
@@ -887,19 +912,22 @@ void ACombatGameMode::PushSkillUIData() const
 			const bool bIsPull = StaticSkillData->GetFName() == PullSkillAssetName;
 			const bool bIsDisplacement = bIsSmash || bIsPull;
 			SkillUIData.mName = bIsPull
-				? NSLOCTEXT("CombatGameMode", "PullSkillName", "끌어당기기 / 던지기")
-				: StaticSkillData->mName;
+				? NSLOCTEXT("CombatGameMode", "PullSkillName", "끌어당기기")
+				: (bIsSmash
+					? NSLOCTEXT("CombatGameMode", "ThrowSkillName", "붙잡아 던지기")
+					: StaticSkillData->mName);
 			SkillUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 			SkillUIData.mDiceCost = StaticSkillData->mRequiredDiceCount;
 			SkillUIData.mIsUsable = true;
 			SkillUIData.mIsDisplacementSkill = bIsDisplacement;
 			SkillUIData.mIsPullSkill = bIsPull;
+			SkillUIData.mIsThrowSkill = bIsSmash;
 			SkillUIData.mTargeting.mSelectShape = bIsDisplacement
 				? ECombatSkillSelectShapeUI::Square
 				: GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
-			SkillUIData.mTargeting.mSelectRange = bIsDisplacement
+			SkillUIData.mTargeting.mSelectRange = bIsPull
 				? InterventionSmashAimRange
-				: StaticCast<float>(StaticSkillData->mAimRangeDefaultValue);
+				: (bIsSmash ? 1.0f : StaticCast<float>(StaticSkillData->mAimRangeDefaultValue));
 			SkillUIData.mTargeting.mSelectRangeRatio = bIsDisplacement ? 0.0f : StaticSkillData->mAimRangeRatio;
 			SkillUIData.mTargeting.mHitShape = bIsDisplacement
 				? ECombatSkillHitShapeUI::Single
@@ -912,6 +940,60 @@ void ACombatGameMode::PushSkillUIData() const
 	}
 
 	mCombatUIModel->SetSkillUIs(SkillUIDatas);
+}
+
+void ACombatGameMode::PushDisplacementPreviewUIData(
+	const USRPGSkillBuildAction* Action,
+	ESRPGSkillBuildPhase Phase) const
+{
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+	FDisplacementPreviewUI Preview;
+	if (Action == nullptr
+		|| (Action->IsPullDisplacementPreview() == false && Action->IsThrowDisplacementPreview() == false)
+		|| Phase == ESRPGSkillBuildPhase::None
+		|| Phase == ESRPGSkillBuildPhase::Build)
+	{
+		mCombatUIModel->SetDisplacementPreview(Preview);
+		return;
+	}
+
+	const USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	const UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+	UUnitModel* Target = Action->GetDisplacementTarget();
+	if (TileMap == nullptr || Target == nullptr)
+	{
+		mCombatUIModel->SetDisplacementPreview(Preview);
+		return;
+	}
+
+	Preview.mIsActive = true;
+	Preview.mIsPull = Action->IsPullDisplacementPreview();
+	Preview.mIsThrow = Action->IsThrowDisplacementPreview();
+	Preview.mTargetUnitId = Target->GetModelId();
+	Preview.mTargetName = Target->GetBoardActorDisplayName();
+	Preview.mTargetTile = Target->GetTileTransform().mIndex;
+	Preview.mTargetWorldLocation = TileMap->TileToWorldLocation(Preview.mTargetTile);
+	for (const FTileIndex& TileIndex : Action->GetDisplacementTrajectory())
+	{
+		Preview.mTrajectoryWorldLocations.Add(TileMap->TileToWorldLocation(TileIndex));
+	}
+	for (const FTileIndex& TileIndex : Action->GetDisplacementDestinationCandidates())
+	{
+		Preview.mDirectionCandidateWorldLocations.Add(TileMap->TileToWorldLocation(TileIndex));
+	}
+	if (Action->GetDisplacementTrajectory().IsEmpty() == false)
+	{
+		Preview.mLandingTile = Action->GetDisplacementTrajectory().Last();
+		Preview.mLandingWorldLocation = TileMap->TileToWorldLocation(Preview.mLandingTile);
+		Preview.mMoveDistance = FMath::Max(Action->GetDisplacementTrajectory().Num() - 1, 0);
+	}
+	if (UBoardActorModel* Blocker = Action->GetDisplacementCollisionBlocker())
+	{
+		Preview.mCollisionTile = Action->GetDisplacementDestination();
+		Preview.mCollisionWorldLocation = TileMap->TileToWorldLocation(Preview.mCollisionTile);
+		Preview.mCollisionName = Blocker->GetBoardActorDisplayName();
+	}
+	mCombatUIModel->SetDisplacementPreview(Preview);
 }
 
 /** @brief 전투 모델의 공개 계획을 UObject 참조 없는 HUD 스냅샷으로 변환한다. */
@@ -1053,27 +1135,29 @@ void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 		const bool bIsPull = StaticSkillData->GetFName() == PullSkillAssetName;
 		const bool bIsDisplacement = bIsSmash || bIsPull;
 		SkillDetailUIData.mName = bIsPull
-			? NSLOCTEXT("CombatGameMode", "PullSkillName", "끌어당기기 / 던지기")
-			: StaticSkillData->mName;
+			? NSLOCTEXT("CombatGameMode", "PullSkillName", "끌어당기기")
+			: (bIsSmash
+				? NSLOCTEXT("CombatGameMode", "ThrowSkillName", "붙잡아 던지기")
+				: StaticSkillData->mName);
 		SkillDetailUIData.mDescription = bIsSmash
 			? NSLOCTEXT(
 				"CombatGameMode",
-				"SmashPushDescription",
-				"[밀기] 적을 주사위 눈의 합만큼 바깥쪽으로 즉시 날립니다. 경로의 적·장애물과 충돌하면 양쪽에 충돌 피해가 발생합니다. 첫 클릭은 궤적 미리보기, 같은 적 두 번째 클릭은 실행입니다.")
+				"ThrowDescription",
+				"[던지기] 인접한 적을 붙잡고 8방향 중 하나를 선택합니다. 큰 화살표를 고르면 실제 착지와 충돌을 미리 보여주며, 실행 버튼을 눌러 확정합니다.")
 			: (bIsPull
 				? NSLOCTEXT(
 					"CombatGameMode",
 					"PullSkillDescription",
-					"[방향 선택] 먼저 적을 고른 뒤 밝은 착지 칸을 고릅니다. 발앞 칸은 당기기만, 다른 칸은 선택한 방향으로 던집니다. 선택한 칸을 다시 누르면 실행하며 적이나 장애물에 부딪히면 충돌 피해를 줍니다.")
+					"[당기기] 사거리 안의 적을 플레이어 앞 빈칸까지 끌어옵니다. 대상 위 사슬과 반투명 도착 표시를 확인한 뒤 실행 버튼으로 확정합니다.")
 				: StaticSkillData->mDescription);
 		SkillDetailUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 		SkillDetailUIData.mDiceCost = StaticSkillData->mRequiredDiceCount;
 		SkillDetailUIData.mTargeting.mSelectShape = bIsDisplacement
 			? ECombatSkillSelectShapeUI::Square
 			: GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
-		SkillDetailUIData.mTargeting.mSelectRange = bIsDisplacement
+		SkillDetailUIData.mTargeting.mSelectRange = bIsPull
 			? InterventionSmashAimRange
-			: StaticCast<float>(StaticSkillData->mAimRangeDefaultValue);
+			: (bIsSmash ? 1.0f : StaticCast<float>(StaticSkillData->mAimRangeDefaultValue));
 		SkillDetailUIData.mTargeting.mSelectRangeRatio = bIsDisplacement ? 0.0f : StaticSkillData->mAimRangeRatio;
 		SkillDetailUIData.mTargeting.mHitShape = bIsDisplacement
 			? ECombatSkillHitShapeUI::Single

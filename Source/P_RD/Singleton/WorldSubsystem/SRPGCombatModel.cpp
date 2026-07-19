@@ -1175,7 +1175,7 @@ void USRPGCombatModel::ReportPlayerDisplacement(
 	}
 
 	const FText DisplacementLabel = DisplacementType == ESRPGPlayerDisplacementType::Throw
-		? NSLOCTEXT("EnemyIntent", "ThrownLabel", "후속 던지기")
+		? NSLOCTEXT("EnemyIntent", "ThrownLabel", "붙잡아 던지기")
 		: (DisplacementType == ESRPGPlayerDisplacementType::Pull
 			? NSLOCTEXT("EnemyIntent", "PulledLabel", "끌어오기")
 			: NSLOCTEXT("EnemyIntent", "PushedLabel", "밀기"));
@@ -1228,7 +1228,7 @@ void USRPGCombatModel::ReportPlayerDisplacementCollision(
 	if (FSRPGEnemyIntent* Intent = FindEnemyIntent(Target))
 	{
 		const FText ImpactLabel = DisplacementType == ESRPGPlayerDisplacementType::Throw
-			? NSLOCTEXT("EnemyIntent", "ThrowImpact", "후속 던지기")
+			? NSLOCTEXT("EnemyIntent", "ThrowImpact", "던지기")
 			: (DisplacementType == ESRPGPlayerDisplacementType::Pull
 				? NSLOCTEXT("EnemyIntent", "PullImpact", "당기기")
 				: NSLOCTEXT("EnemyIntent", "PushImpact", "밀기"));

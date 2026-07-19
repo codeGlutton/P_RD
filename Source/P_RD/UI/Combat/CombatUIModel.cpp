@@ -8,6 +8,11 @@ void UCombatUIModel::RequestSelectSkill(int32 SkillIndex)
 	OnCombatCommand.Broadcast(ECombatInputType::SelectSkill, SkillIndex);
 }
 
+void UCombatUIModel::RequestConfirmSkill()
+{
+	OnCombatCommand.Broadcast(ECombatInputType::ConfirmSkill, INDEX_NONE);
+}
+
 /** @brief 주사위 슬롯 index 토글 의도를 전달한다. */
 void UCombatUIModel::RequestToggleDice(int32 DiceIndex)
 {
@@ -119,6 +124,12 @@ void UCombatUIModel::SetEnemyIntentUIs(const TArray<FEnemyIntentUI>& Intents)
 {
 	mEnemyIntentUIs = Intents;
 	OnUIChanged.Broadcast(ECombatUIDomain::Intent);
+}
+
+void UCombatUIModel::SetDisplacementPreview(const FDisplacementPreviewUI& Preview)
+{
+	mDisplacementPreview = Preview;
+	OnUIChanged.Broadcast(ECombatUIDomain::DisplacementPreview);
 }
 
 /** @brief 선택된 스킬 index를 교체한다. */

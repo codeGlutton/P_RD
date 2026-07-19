@@ -430,12 +430,14 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 		RefreshOwnedDiceCards();
 		RefreshDiceAssignmentText();
 		RefreshEnemyIntentPanel();
+		RefreshDisplacementPreview();
 		UpdateEnemyIntentTutorial();
 	}
 	else
 	{
 		if (mEnemyIntentPanel != nullptr) { mEnemyIntentPanel->SetVisibility(ESlateVisibility::Collapsed); }
 		if (mEnemyIntentTutorialPanel != nullptr) { mEnemyIntentTutorialPanel->SetVisibility(ESlateVisibility::Collapsed); }
+		if (mDisplacementConfirmPanel != nullptr) { mDisplacementConfirmPanel->SetVisibility(ESlateVisibility::Collapsed); }
 	}
 
 	// mDiceRollInputButton은 "탭해서 굴리기" 입력영역이라 입장 주사위 오버레이가 실제로 떠 있을 때만 존재해야 한다.

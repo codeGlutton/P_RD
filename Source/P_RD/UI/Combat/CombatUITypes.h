@@ -28,7 +28,8 @@ enum class ECombatUIDomain : uint8
 	Queue,
 	Equipment,
 	Meta,      // 돈/경험치 등 플레이어 메타
-	Intent     // 적 행동 예고/실행 결과
+	Intent,    // 적 행동 예고/실행 결과
+	DisplacementPreview // 당기기/던지기 대상·궤적·착지·충돌 미리보기
 };
 
 /** @brief 현재 공개된 적 행동 예고의 실행 상태. 게임플레이 enum을 HUD에 직접 노출하지 않는 UI 거울이다. */
@@ -360,7 +361,33 @@ struct FSkillUI
 	UPROPERTY(BlueprintReadOnly) bool mIsDisplacementSkill = false;
 	/** @brief 위치 개입 중 플레이어 쪽으로 끌어오는 스킬인지 표시한다. */
 	UPROPERTY(BlueprintReadOnly) bool mIsPullSkill = false;
+	/** @brief 인접한 적을 선택 방향으로 던지는 독립 스킬인지 표시한다. */
+	UPROPERTY(BlueprintReadOnly) bool mIsThrowSkill = false;
 	UPROPERTY(BlueprintReadOnly) FSkillTargetingUI mTargeting;
+};
+
+/** @brief HUD가 바닥색 대신 대상·방향·착지·충돌을 화면 위에 직접 설명하는 위치 개입 스냅샷. */
+USTRUCT(BlueprintType)
+struct FDisplacementPreviewUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) bool mIsActive = false;
+	UPROPERTY(BlueprintReadOnly) bool mIsPull = false;
+	UPROPERTY(BlueprintReadOnly) bool mIsThrow = false;
+	UPROPERTY(BlueprintReadOnly) int32 mTargetUnitId = INDEX_NONE;
+	UPROPERTY(BlueprintReadOnly) FText mTargetName;
+	UPROPERTY(BlueprintReadOnly) FTileIndex mTargetTile = FTileIndex::Invalid;
+	/** @brief 실제로 유닛이 멈출 빈 칸. 충돌 시 선택한 충돌 칸의 바로 앞이다. */
+	UPROPERTY(BlueprintReadOnly) FTileIndex mLandingTile = FTileIndex::Invalid;
+	UPROPERTY(BlueprintReadOnly) FTileIndex mCollisionTile = FTileIndex::Invalid;
+	UPROPERTY(BlueprintReadOnly) FText mCollisionName;
+	UPROPERTY(BlueprintReadOnly) FVector mTargetWorldLocation = FVector::ZeroVector;
+	UPROPERTY(BlueprintReadOnly) FVector mLandingWorldLocation = FVector::ZeroVector;
+	UPROPERTY(BlueprintReadOnly) FVector mCollisionWorldLocation = FVector::ZeroVector;
+	UPROPERTY(BlueprintReadOnly) TArray<FVector> mTrajectoryWorldLocations;
+	UPROPERTY(BlueprintReadOnly) TArray<FVector> mDirectionCandidateWorldLocations;
+	UPROPERTY(BlueprintReadOnly) int32 mMoveDistance = 0;
 };
 
 /** @brief 스킬을 길게 눌렀을 때의 상세창 내용. */

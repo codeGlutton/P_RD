@@ -69,7 +69,7 @@ void UCombatTileMapHUDWidget::RefreshDiceAssignmentText() const
 			SelectedDiceCount,
 			RequiredDiceCount,
 			Skill.mIsDisplacementSkill
-				? (Skill.mIsPullSkill ? TEXT(" · 눈 합 = 선택 가능 거리") : TEXT(" · 눈 합 = 밀기 거리"))
+				? (Skill.mIsPullSkill ? TEXT(" · 사슬 당기기") : TEXT(" · 눈 합 = 던지기 거리"))
 				: TEXT(""));
 	}
 	else

@@ -29,6 +29,8 @@ struct FEnemyIntentOverlayPulseData
 	int32 mPathOrder = 0;
 	int32 mPathSpan = 1;
 	bool mIsResolved = false;
+	bool mIsTransientGhost = false;
+	float mSpawnTime = 0.0f;
 };
 
 /**

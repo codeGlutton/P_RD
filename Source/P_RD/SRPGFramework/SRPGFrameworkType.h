@@ -281,6 +281,8 @@ enum class ESRPGCommandType : uint8
 
     SkillSelect         UMETA(ToolTip = "사용 스킬 결정"),
     DiceSelect          UMETA(ToolTip = "사용 주사위 결정"),
+    SkillConfirm        UMETA(ToolTip = "미리 본 스킬 실행 확정"),
+    SkillCancel         UMETA(ToolTip = "현재 스킬 선택 취소"),
     SkillCast           UMETA(ToolTip = "스킬 사용"),
 
     MoveSelect          UMETA(ToolTip = "이동 시작"),

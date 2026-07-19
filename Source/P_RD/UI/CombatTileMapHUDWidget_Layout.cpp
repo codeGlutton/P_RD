@@ -224,6 +224,8 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 	// 코치마크는 한 문장만 담는 작은 카드로 유지해 전장과 적 계획판을 덮지 않는다.
 	ApplyScreenRect(mEnemyIntentPanel, FAnchors(0.690f, 0.150f, 0.940f, 0.355f), 36);
 	ApplyScreenRect(mEnemyIntentTutorialPanel, FAnchors(0.340f, 0.040f, 0.660f, 0.175f), 220);
+	// 주사위 패널 바로 위의 작은 확정 카드. 전장 중앙과 우측 명령 버튼을 피한다.
+	ApplyScreenRect(mDisplacementConfirmPanel, FAnchors(0.365f, 0.685f, 0.665f, 0.805f), 920);
 
 	// 스킨 value 칸(HUD_M_*)에 Lv/HP/Gold 텍스트를 칸 위치/크기로 그린다.
 	RefreshSkinValueLabels();

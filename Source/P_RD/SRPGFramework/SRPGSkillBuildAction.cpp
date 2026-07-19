@@ -35,6 +35,11 @@ namespace
 		return SkillData != nullptr && SkillData->GetFName() == DicePullBuildSkillAssetName;
 	}
 
+	bool IsDiceThrowBuildSkill(const UStaticSkillData* SkillData)
+	{
+		return SkillData != nullptr && SkillData->GetFName() == DicePushBuildSkillAssetName;
+	}
+
 	UUnitModel* FindDisplacementTarget(
 		UTileMapModel* TileMap,
 		const FTileIndex& TargetIndex,
@@ -66,28 +71,36 @@ namespace
 		return FMath::Clamp(FMath::Max(DiceValue, 1) + 1 - WeightValue, 1, 4);
 	}
 
-	bool HasBlockingOccupantExcept(
+	UBoardActorModel* FindBlockingOccupantExcept(
 		UTileMapModel* TileMap,
 		const FTileIndex& TileIndex,
 		const UBoardActorModel* IgnoredActor)
 	{
 		if (TileMap == nullptr)
 		{
-			return false;
+			return nullptr;
 		}
-		for (const UBoardActorModel* Actor : TileMap->GetActorsOnTile(
+		for (UBoardActorModel* Actor : TileMap->GetActorsOnTile(
 			TileIndex,
 			ETileLayerFlag::Obstacle | ETileLayerFlag::Unit))
 		{
 			if (Actor != nullptr && Actor != IgnoredActor)
 			{
-				return true;
+				return Actor;
 			}
 		}
-		return false;
+		return nullptr;
 	}
 
-	TArray<FTileIndex> BuildPullDestinationIndexes(
+	bool HasBlockingOccupantExcept(
+		UTileMapModel* TileMap,
+		const FTileIndex& TileIndex,
+		const UBoardActorModel* IgnoredActor)
+	{
+		return FindBlockingOccupantExcept(TileMap, TileIndex, IgnoredActor) != nullptr;
+	}
+
+	TArray<FTileIndex> BuildThrowDestinationIndexes(
 		UTileMapModel* TileMap,
 		const UUnitModel* Instigator,
 		UUnitModel* TargetUnit,
@@ -101,23 +114,16 @@ namespace
 
 		const FTileIndex PlayerTile = Instigator->GetTileTransform().mIndex;
 		const FTileIndex TargetTile = TargetUnit->GetTileTransform().mIndex;
-		const TArray<FTileIndex> PullPath = TileMap->GetPullPath(PlayerTile, TargetTile, 64);
-		if (PullPath.IsEmpty())
+		const bool bIsAdjacent = FMath::Max(
+			FMath::Abs(PlayerTile.mX - TargetTile.mX),
+			FMath::Abs(PlayerTile.mY - TargetTile.mY)) == 1;
+		if (bIsAdjacent == false)
 		{
 			return Result;
 		}
 
-		// 발앞 칸은 "당기기만" 하는 선택지다. 나머지는 플레이어 중심 8방향의 직접 투척 후보다.
-		const FTileIndex PullEnd = PullPath.Last();
-		Result.Add(PullEnd);
-		const bool bReachedPlayer = FMath::Max(
-			FMath::Abs(PullEnd.mX - PlayerTile.mX),
-			FMath::Abs(PullEnd.mY - PlayerTile.mY)) == 1;
-		if (bReachedPlayer == false)
-		{
-			// 장애물에 걸려 발앞까지 오지 못하면 던질 수 없고, 막힌 지점까지 당기는 선택만 남는다.
-			return Result;
-		}
+		// 던지기는 이미 인접한 적만 집어 들고, 적의 현재 칸을 중심으로 8방향을 고른다.
+		// 당기기와 입력 규칙을 분리해 발앞 칸이 숨은 모드 전환으로 해석되지 않게 한다.
 		const int32 ThrowDistance = GetPullThrowDistance(DiceValue, TargetUnit);
 		for (int32 StepX = -1; StepX <= 1; ++StepX)
 		{
@@ -132,21 +138,20 @@ namespace
 				for (int32 Distance = 1; Distance <= ThrowDistance; ++Distance)
 				{
 					const FTileIndex Candidate(
-						PlayerTile.mX + StepX * Distance,
-						PlayerTile.mY + StepY * Distance);
+						TargetTile.mX + StepX * Distance,
+						TargetTile.mY + StepY * Distance);
 					if (TileMap->IsValidIndex(Candidate) == false)
 					{
 						break;
 					}
-					if (Candidate == PullEnd)
+					if (Candidate == PlayerTile)
 					{
-						continue;
+						// 적을 플레이어 몸을 통과시켜 반대편으로 던지는 방향은 후보로 만들지 않는다.
+						DirectionDestination = FTileIndex::Invalid;
+						break;
 					}
-
-					// 선택 당시 대상의 원래 칸은 당기면서 비워지므로 장애물로 보지 않는다.
-					const bool bBlocked = Candidate == TargetTile
-						? HasBlockingOccupantExcept(TileMap, Candidate, TargetUnit)
-						: TileMap->CanPlace(Candidate, TargetUnit) == false;
+					const bool bBlocked = HasBlockingOccupantExcept(TileMap, Candidate, TargetUnit)
+						|| TileMap->CanPlace(Candidate, TargetUnit) == false;
 					DirectionDestination = Candidate;
 					if (bBlocked)
 					{
@@ -174,6 +179,16 @@ FSRPGSkillSelectCommand::FSRPGSkillSelectCommand()
 FSRPGDiceSelectCommand::FSRPGDiceSelectCommand()
 {
     mCommandType = ESRPGCommandType::DiceSelect;
+}
+
+FSRPGSkillConfirmCommand::FSRPGSkillConfirmCommand()
+{
+	mCommandType = ESRPGCommandType::SkillConfirm;
+}
+
+FSRPGSkillCancelCommand::FSRPGSkillCancelCommand()
+{
+	mCommandType = ESRPGCommandType::SkillCancel;
 }
 
 USRPGSkillBuildAction::USRPGSkillBuildAction()
@@ -284,6 +299,27 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
         }
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
+	case ESRPGCommandType::SkillConfirm:
+	{
+		if (mSkillBuildPhase == ESRPGSkillBuildPhase::Preview)
+		{
+			BuildSkill();
+			SetBuildPhase(ESRPGSkillBuildPhase::Build);
+			MarkActionCompleted(ESRPGActionResult::Succeeded);
+			return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
+		}
+		return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
+	}
+	case ESRPGCommandType::SkillCancel:
+	{
+		ClearAllTileHighlights();
+		ResetTargetTile();
+		ResetDice();
+		ResetSkill();
+		MarkActionCompleted(ESRPGActionResult::Cancelled);
+		SetBuildPhase(ESRPGSkillBuildPhase::None);
+		return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
+	}
     case ESRPGCommandType::WorldTrace:
     {
         /* 월드 공간 터치 시 선택 위치에 따라서 결정 */
@@ -327,12 +363,12 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
             {
             case ESRPGSkillBuildPhase::Preview:
             {
-                /* 투척 프리뷰 취소는 적 선택을 유지하고 착지 선택으로 한 단계만 돌아간다. */
-				if (IsDicePullBuildSkill(mSelectedSkill) && mTargetIndex != FTileIndex::Invalid)
+				/* 던지기 프리뷰 취소는 적 선택을 유지하고 방향 선택으로 한 단계만 돌아간다. */
+				if (IsDiceThrowBuildSkill(mSelectedSkill) && mTargetIndex != FTileIndex::Invalid)
 				{
 					mDisplacementDestination = FTileIndex::Invalid;
 					SetBuildPhase(ESRPGSkillBuildPhase::ThrowDestinationSelection);
-					RefreshPullDestinationHighlights();
+					RefreshThrowDestinationHighlights();
 				}
 				else
 				{
@@ -373,39 +409,37 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
             {
             case ESRPGSkillBuildPhase::Preview:
             {
-                /* 프리뷰에서 같은 확정 칸을 다시 클릭하면 스킬 캐스팅 */
+				// 끌기/던지기만 HUD의 명시적인 실행 버튼으로 확정한다. 다른 기존 스킬은
+				// 종전대로 같은 목표 칸을 다시 눌러 실행할 수 있어야 한다.
+				if (IsDicePullBuildSkill(mSelectedSkill) == false
+					&& IsDiceThrowBuildSkill(mSelectedSkill) == false
+					&& mTargetIndex == TargetTileIndex)
+				{
+					BuildSkill();
+					SetBuildPhase(ESRPGSkillBuildPhase::Build);
+					MarkActionCompleted(ESRPGActionResult::Succeeded);
+					Result = ESRPGCommandResult::Handled;
+					break;
+				}
 
-				const FTileIndex ConfirmationIndex = IsDicePullBuildSkill(mSelectedSkill)
-					? mDisplacementDestination
-					: mTargetIndex;
-                if (ConfirmationIndex == TargetTileIndex)
-                {
-                    BuildSkill();
-                    SetBuildPhase(ESRPGSkillBuildPhase::Build);
-                    MarkActionCompleted(ESRPGActionResult::Succeeded);
-
-                    Result = ESRPGCommandResult::Handled;
-                    break;
-                }
-
-				// 끌어당기기는 적을 다시 고르지 않고 다른 착지 후보를 곧바로 바꿀 수 있다.
-				if (IsDicePullBuildSkill(mSelectedSkill)
-					&& CanSelectPullDestinationTile(TargetTileIndex))
+				// 던지기 방향은 프리뷰 중에도 다른 화살표로 교체할 수 있다.
+				if (IsDiceThrowBuildSkill(mSelectedSkill)
+					&& CanSelectThrowDestinationTile(TargetTileIndex))
 				{
 					SetBuildPhase(ESRPGSkillBuildPhase::ThrowDestinationSelection);
-					SetPullDestinationTile(TargetTileIndex);
+					SetThrowDestinationTile(TargetTileIndex);
 					RefreshEffectTileHighlights();
 					SetBuildPhase(ESRPGSkillBuildPhase::Preview);
 					Result = ESRPGCommandResult::Handled;
 					break;
 				}
-				[[fallthrough]];
+				break;
             }
 			case ESRPGSkillBuildPhase::ThrowDestinationSelection:
 			{
-				if (CanSelectPullDestinationTile(TargetTileIndex))
+				if (CanSelectThrowDestinationTile(TargetTileIndex))
 				{
-					SetPullDestinationTile(TargetTileIndex);
+					SetThrowDestinationTile(TargetTileIndex);
 					RefreshEffectTileHighlights();
 					SetBuildPhase(ESRPGSkillBuildPhase::Preview);
 					Result = ESRPGCommandResult::Handled;
@@ -419,7 +453,7 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
 			}
             case ESRPGSkillBuildPhase::AimSelection:
             {
-                /* 끌어당기기는 적을 먼저 고정하고, 다음 입력에서 착지 방향을 고른다. */
+				/* 당기기와 던지기는 서로 다른 다음 단계로 진행한다. */
 
                 if (CanSelectTargetTile(TargetTileIndex) == true)
                 {
@@ -427,14 +461,20 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
                     SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
 					if (IsDicePullBuildSkill(mSelectedSkill))
 					{
-						LockPullTarget(TargetTileIndex);
-						if (mPullDestinationIndexes.IsEmpty())
+						LockDisplacementTarget(TargetTileIndex);
+						RefreshEffectTileHighlights();
+						SetBuildPhase(ESRPGSkillBuildPhase::Preview);
+					}
+					else if (IsDiceThrowBuildSkill(mSelectedSkill))
+					{
+						LockDisplacementTarget(TargetTileIndex);
+						if (mThrowDestinationIndexes.IsEmpty())
 						{
 							ResetTargetTile();
 							RefreshAimableTileHighlights();
 							break;
 						}
-						RefreshPullDestinationHighlights();
+						RefreshThrowDestinationHighlights();
 						SetBuildPhase(ESRPGSkillBuildPhase::ThrowDestinationSelection);
 					}
 					else
@@ -541,7 +581,32 @@ void USRPGSkillBuildAction::SetTargetTile(const FTileIndex& TargetIndex)
     OnPostSimulateSkillAction.Broadcast(TurnEventLogs);
 }
 
-void USRPGSkillBuildAction::LockPullTarget(const FTileIndex& TargetIndex)
+bool USRPGSkillBuildAction::IsPullDisplacementPreview() const
+{
+	return IsDicePullBuildSkill(mSelectedSkill);
+}
+
+bool USRPGSkillBuildAction::IsThrowDisplacementPreview() const
+{
+	return IsDiceThrowBuildSkill(mSelectedSkill);
+}
+
+UUnitModel* USRPGSkillBuildAction::GetDisplacementTarget() const
+{
+	return FindDisplacementTarget(GetTileMap(), mTargetIndex, mInstigator.Get());
+}
+
+UBoardActorModel* USRPGSkillBuildAction::GetDisplacementCollisionBlocker() const
+{
+	if (IsThrowDisplacementPreview() == false
+		|| mDisplacementDestination == FTileIndex::Invalid)
+	{
+		return nullptr;
+	}
+	return FindBlockingOccupantExcept(GetTileMap(), mDisplacementDestination, GetDisplacementTarget());
+}
+
+void USRPGSkillBuildAction::LockDisplacementTarget(const FTileIndex& TargetIndex)
 {
 	checkf(mSkillBuildPhase == ESRPGSkillBuildPhase::AimSelection, TEXT("스킬 빌드 순서 오류"));
 	UTileMapModel* TileMap = GetTileMap();
@@ -559,14 +624,18 @@ void USRPGSkillBuildAction::LockPullTarget(const FTileIndex& TargetIndex)
 
 	mTargetIndex = TargetIndex;
 	mDisplacementDestination = FTileIndex::Invalid;
-	mPullDestinationIndexes = BuildPullDestinationIndexes(
-		TileMap,
-		mInstigator.Get(),
-		TargetUnit,
-		DicePoolModel->GetSelectedDiceSum());
+	mThrowDestinationIndexes.Reset();
+	if (IsDiceThrowBuildSkill(mSelectedSkill))
+	{
+		mThrowDestinationIndexes = BuildThrowDestinationIndexes(
+			TileMap,
+			mInstigator.Get(),
+			TargetUnit,
+			DicePoolModel->GetSelectedDiceSum());
+	}
 }
 
-void USRPGSkillBuildAction::SetPullDestinationTile(const FTileIndex& DestinationIndex)
+void USRPGSkillBuildAction::SetThrowDestinationTile(const FTileIndex& DestinationIndex)
 {
 	checkf(mSkillBuildPhase == ESRPGSkillBuildPhase::ThrowDestinationSelection, TEXT("스킬 빌드 순서 오류"));
 	UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
@@ -637,10 +706,10 @@ void USRPGSkillBuildAction::ResetDice()
 
 void USRPGSkillBuildAction::ResetTargetTile()
 {
-    mEffectTileIndexes.Empty();
-    mTargetIndex = FTileIndex::Invalid;
+	mEffectTileIndexes.Empty();
+	mTargetIndex = FTileIndex::Invalid;
 	mDisplacementDestination = FTileIndex::Invalid;
-	mPullDestinationIndexes.Empty();
+	mThrowDestinationIndexes.Empty();
 }
 
 void USRPGSkillBuildAction::ClearAllTileHighlights()
@@ -681,7 +750,7 @@ void USRPGSkillBuildAction::RefreshAimableTileHighlights()
 	TileMap->SetTileHighlight(mReachableTileIndexes, ETileHighlightFlag::Aim);
 }
 
-void USRPGSkillBuildAction::RefreshPullDestinationHighlights()
+void USRPGSkillBuildAction::RefreshThrowDestinationHighlights()
 {
 	UTileMapModel* TileMap = GetTileMap();
 	checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
@@ -692,16 +761,9 @@ void USRPGSkillBuildAction::RefreshPullDestinationHighlights()
 	}
 
 	ClearAllTileHighlights();
-	const FTileIndex PlayerTile = mInstigator->GetTileTransform().mIndex;
-	const TArray<FTileIndex> PullPath = TileMap->GetPullPath(PlayerTile, mTargetIndex, 64);
-	// 타일맵의 레이어 의존 순서가 Aim → Select → Effect이므로 넓은 후보부터 구체적인 선택/경로 순으로 칠한다.
-	TileMap->SetTileHighlight(mPullDestinationIndexes, ETileHighlightFlag::Aim);
-	if (PullPath.IsEmpty() == false)
-	{
-		// 이 칸은 던지지 않고 발앞에 놓는 "당기기만" 선택지다.
-		TileMap->SetTileHighlight(TArray<FTileIndex>({ PullPath.Last() }), ETileHighlightFlag::Select);
-		TileMap->SetTileHighlight(PullPath, ETileHighlightFlag::Effect);
-	}
+	// 바닥색은 클릭 가능한 종점만 보조한다. HUD가 이 좌표 위에 큰 8방향 화살표를 따로 그린다.
+	TileMap->SetTileHighlight(mThrowDestinationIndexes, ETileHighlightFlag::Aim);
+	TileMap->SetTileHighlight(TArray<FTileIndex>({ mTargetIndex }), ETileHighlightFlag::Select);
 }
 
 void USRPGSkillBuildAction::RefreshEffectTileHighlights()
@@ -735,62 +797,36 @@ void USRPGSkillBuildAction::RefreshEffectTileHighlights()
 	const FTileIndex InstigatorTile = mInstigator->GetTileTransform().mIndex;
 	const FTileIndex TargetTile = TargetUnit->GetTileTransform().mIndex;
 	const int32 Distance = FMath::Max(DicePoolModel->GetSelectedDiceSum(), 1);
-	const bool bIsPull = mSelectedSkill->GetFName() == DicePullBuildSkillAssetName;
-	TArray<FTileIndex> Trajectory = bIsPull
-		? TileMap->GetPullPath(InstigatorTile, TargetTile, 64)
-		: TArray<FTileIndex>({ TargetTile });
-	if (bIsPull == false)
+	const bool bIsPull = IsDicePullBuildSkill(mSelectedSkill);
+	TArray<FTileIndex> Trajectory;
+	if (bIsPull)
 	{
-		const FTileIndex Destination = TileMap->GetPushDestination(InstigatorTile, TargetTile, Distance);
-		const FTileIndex Step(
-			FMath::Sign(Destination.mX - TargetTile.mX),
-			FMath::Sign(Destination.mY - TargetTile.mY));
-		FTileIndex Current = TargetTile;
-		while (Current != Destination && (Step.mX != 0 || Step.mY != 0))
-		{
-			Current = FTileIndex(Current.mX + Step.mX, Current.mY + Step.mY);
-			Trajectory.Add(Current);
-		}
+		Trajectory = TileMap->GetPullPath(InstigatorTile, TargetTile, 64);
 	}
-	else if (Trajectory.IsEmpty() == false)
+	else
 	{
-		const FTileIndex PullEnd = Trajectory.Last();
-		const bool bReachedPlayer = FMath::Max(
-			FMath::Abs(PullEnd.mX - InstigatorTile.mX),
-			FMath::Abs(PullEnd.mY - InstigatorTile.mY)) == 1;
-		if (bReachedPlayer
-			&& mDisplacementDestination != FTileIndex::Invalid
-			&& mDisplacementDestination != PullEnd)
+		Trajectory.Add(TargetTile);
+		if (mDisplacementDestination != FTileIndex::Invalid)
 		{
 			const FTileIndex ThrowStep(
-				FMath::Sign(mDisplacementDestination.mX - InstigatorTile.mX),
-				FMath::Sign(mDisplacementDestination.mY - InstigatorTile.mY));
+				FMath::Sign(mDisplacementDestination.mX - TargetTile.mX),
+				FMath::Sign(mDisplacementDestination.mY - TargetTile.mY));
 			const int32 SelectedDistance = FMath::Max(
-				FMath::Abs(mDisplacementDestination.mX - InstigatorTile.mX),
-				FMath::Abs(mDisplacementDestination.mY - InstigatorTile.mY));
+				FMath::Abs(mDisplacementDestination.mX - TargetTile.mX),
+				FMath::Abs(mDisplacementDestination.mY - TargetTile.mY));
 			const int32 ThrowDistance = FMath::Min(SelectedDistance, GetPullThrowDistance(Distance, TargetUnit));
-			Trajectory.AddUnique(InstigatorTile);
 			for (int32 ThrowIndex = 1; ThrowIndex <= ThrowDistance; ++ThrowIndex)
 			{
 				const FTileIndex Candidate(
-					InstigatorTile.mX + ThrowStep.mX * ThrowIndex,
-					InstigatorTile.mY + ThrowStep.mY * ThrowIndex);
-				if (TileMap->IsValidIndex(Candidate) == false)
+					TargetTile.mX + ThrowStep.mX * ThrowIndex,
+					TargetTile.mY + ThrowStep.mY * ThrowIndex);
+				if (TileMap->IsValidIndex(Candidate) == false
+					|| HasBlockingOccupantExcept(TileMap, Candidate, TargetUnit)
+					|| TileMap->CanPlace(Candidate, TargetUnit) == false)
 				{
 					break;
 				}
-				if (Candidate == PullEnd)
-				{
-					continue;
-				}
-				Trajectory.AddUnique(Candidate);
-				const bool bBlocked = Candidate == TargetTile
-					? HasBlockingOccupantExcept(TileMap, Candidate, TargetUnit)
-					: TileMap->CanPlace(Candidate, TargetUnit) == false;
-				if (bBlocked)
-				{
-					break;
-				}
+				Trajectory.Add(Candidate);
 			}
 		}
 	}
@@ -799,9 +835,10 @@ void USRPGSkillBuildAction::RefreshEffectTileHighlights()
 		return;
 	}
 	mEffectTileIndexes = Trajectory;
-	const FTileIndex SelectedTile = bIsPull && mDisplacementDestination != FTileIndex::Invalid
-		? mDisplacementDestination
-		: Trajectory.Last();
+	ClearAllTileHighlights();
+	const FTileIndex SelectedTile = bIsPull
+		? Trajectory.Last()
+		: (mDisplacementDestination != FTileIndex::Invalid ? mDisplacementDestination : Trajectory.Last());
 	TileMap->SetTileHighlight(TArray<FTileIndex>({ SelectedTile }), ETileHighlightFlag::Select);
 	TileMap->SetTileHighlight(Trajectory, ETileHighlightFlag::Effect);
 }
@@ -824,14 +861,25 @@ bool USRPGSkillBuildAction::CanSelectTargetTile(const FTileIndex& Index) const
 	{
 		return FindDisplacementTarget(GetTileMap(), Index, mInstigator.Get()) != nullptr;
 	}
+	if (IsDiceThrowBuildSkill(mSelectedSkill))
+	{
+		if (FindDisplacementTarget(GetTileMap(), Index, mInstigator.Get()) == nullptr)
+		{
+			return false;
+		}
+		const FTileIndex PlayerTile = mInstigator->GetTileTransform().mIndex;
+		return FMath::Max(
+			FMath::Abs(PlayerTile.mX - Index.mX),
+			FMath::Abs(PlayerTile.mY - Index.mY)) == 1;
+	}
 	return true;
 }
 
-bool USRPGSkillBuildAction::CanSelectPullDestinationTile(const FTileIndex& Index) const
+bool USRPGSkillBuildAction::CanSelectThrowDestinationTile(const FTileIndex& Index) const
 {
-	return IsDicePullBuildSkill(mSelectedSkill)
+	return IsDiceThrowBuildSkill(mSelectedSkill)
 		&& mTargetIndex != FTileIndex::Invalid
-		&& mPullDestinationIndexes.Contains(Index);
+		&& mThrowDestinationIndexes.Contains(Index);
 }
 
 void USRPGSkillBuildAction::SetBuildPhase(ESRPGSkillBuildPhase BuildPhase)

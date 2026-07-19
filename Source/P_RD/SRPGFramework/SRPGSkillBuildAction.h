@@ -17,6 +17,8 @@ class USRPGSkillBuildAction;
 class UStaticSkillData;
 class UTileMapModel;
 class UDiceModel;
+class UUnitModel;
+class UBoardActorModel;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnSelectSkill, int32 /*SkillIndex*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangeSkillBuildPhase, const USRPGSkillBuildAction* /*Action*/, ESRPGSkillBuildPhase /*Phase*/);
@@ -55,6 +57,26 @@ public:
 	int32 mDiceIndex = 0;
 };
 
+/** @brief 타일을 다시 누르지 않고 HUD의 실행 버튼으로 현재 프리뷰를 확정한다. */
+USTRUCT(BlueprintType)
+struct FSRPGSkillConfirmCommand : public FSRPGCommand
+{
+	GENERATED_BODY()
+
+public:
+	FSRPGSkillConfirmCommand();
+};
+
+/** @brief HUD의 다시 선택 버튼으로 현재 스킬 빌드를 안전하게 취소한다. */
+USTRUCT(BlueprintType)
+struct FSRPGSkillCancelCommand : public FSRPGCommand
+{
+	GENERATED_BODY()
+
+public:
+	FSRPGSkillCancelCommand();
+};
+
 /**
  * @brief  스킬 생성 액션 객체
  */
@@ -65,6 +87,15 @@ class USRPGSkillBuildAction : public USRPGAction
 
 public:
 	USRPGSkillBuildAction();
+
+	/** @brief HUD가 게임 판정을 복제하지 않고 현재 위치 개입 프리뷰를 그리기 위한 읽기 전용 값. */
+	bool IsPullDisplacementPreview() const;
+	bool IsThrowDisplacementPreview() const;
+	UUnitModel* GetDisplacementTarget() const;
+	const TArray<FTileIndex>& GetDisplacementTrajectory() const { return mEffectTileIndexes; }
+	const TArray<FTileIndex>& GetDisplacementDestinationCandidates() const { return mThrowDestinationIndexes; }
+	const FTileIndex& GetDisplacementDestination() const { return mDisplacementDestination; }
+	UBoardActorModel* GetDisplacementCollisionBlocker() const;
 
 	/* FSRPGAction 상속 */
 protected:
@@ -82,8 +113,8 @@ private:
 	void SetSkill(int32 SkillIndex);
 	void ChangeDices(int32 RequestedDiceIndex);
 	void SetTargetTile(const FTileIndex& TargetIndex);
-	void LockPullTarget(const FTileIndex& TargetIndex);
-	void SetPullDestinationTile(const FTileIndex& DestinationIndex);
+	void LockDisplacementTarget(const FTileIndex& TargetIndex);
+	void SetThrowDestinationTile(const FTileIndex& DestinationIndex);
 	void BuildSkill();
 
 private:
@@ -94,12 +125,12 @@ private:
 private:
 	void ClearAllTileHighlights();
 	void RefreshAimableTileHighlights();
-	void RefreshPullDestinationHighlights();
+	void RefreshThrowDestinationHighlights();
 	void RefreshEffectTileHighlights();
 
 private:
 	bool CanSelectTargetTile(const FTileIndex& Index) const;
-	bool CanSelectPullDestinationTile(const FTileIndex& Index) const;
+	bool CanSelectThrowDestinationTile(const FTileIndex& Index) const;
 
 private:
 	void SetBuildPhase(ESRPGSkillBuildPhase BuildPhase);
@@ -131,10 +162,10 @@ protected:
 	TArray<FTileIndex> mEffectTileIndexes;
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TargetIndex"))
 	FTileIndex mTargetIndex = FTileIndex::Invalid;
-	/** @brief 끌어오기 이후 사용자가 고른 착지/충돌 칸. 발앞 칸이면 던지지 않는다. */
+	/** @brief 던지기에서 사용자가 고른 방향의 최종 착지/충돌 칸. 당기기에서는 Invalid다. */
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DisplacementDestination"))
 	FTileIndex mDisplacementDestination = FTileIndex::Invalid;
-	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PullDestinationIndexes"))
-	TArray<FTileIndex> mPullDestinationIndexes;
+	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ThrowDestinationIndexes"))
+	TArray<FTileIndex> mThrowDestinationIndexes;
 };
 

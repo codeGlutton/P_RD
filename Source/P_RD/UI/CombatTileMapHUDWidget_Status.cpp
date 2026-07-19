@@ -69,11 +69,19 @@ void UCombatTileMapHUDWidget::HandleCombatUIChanged(ECombatUIDomain Domain)
 		UpdateUnitHpBars();
 	}
 
+	if (Domain == ECombatUIDomain::DisplacementPreview
+		|| Domain == ECombatUIDomain::Turn
+		|| Domain == ECombatUIDomain::All)
+	{
+		RefreshDisplacementPreview();
+	}
+
 	// 튜토리얼은 예고뿐 아니라 실제 스킬/주사위 선택과 턴 변화를 관찰해 자동으로 다음 단계로 간다.
 	if (Domain == ECombatUIDomain::Intent
 		|| Domain == ECombatUIDomain::Skill
 		|| Domain == ECombatUIDomain::Dice
 		|| Domain == ECombatUIDomain::Turn
+		|| Domain == ECombatUIDomain::DisplacementPreview
 		|| Domain == ECombatUIDomain::All)
 	{
 		UpdateEnemyIntentTutorial();

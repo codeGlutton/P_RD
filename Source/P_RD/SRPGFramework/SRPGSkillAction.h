@@ -78,7 +78,6 @@ private:
 	void StartDiceDisplacementStep(int32 StepIndex);
 	void OnDiceDisplacementStepFinished();
 	void ReportDiceDisplacementIfMoved();
-	bool TryStartDiceFollowUpThrow();
 	void BroadcastDiceDisplacementPath(EForcedMovePresentationType PresentationType) const;
 	void FinishSkillAction();
 

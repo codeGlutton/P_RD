@@ -843,14 +843,16 @@ void ATileMap::SetEnemyIntentOverlays(const TArray<FEnemyIntentTileOverlay>& Ove
 
 	const float BaseScale = (mTileSize / 100.0f) * mPathArrowScale;
 	const float LaneOffsets[] = { 0.0f, 10.0f, -10.0f, 18.0f, -18.0f };
-	auto AddPulseInstance = [](
+	const float OverlaySpawnTime = GetWorld() != nullptr ? GetWorld()->GetTimeSeconds() : 0.0f;
+	auto AddPulseInstance = [OverlaySpawnTime](
 		UInstancedStaticMeshComponent* Component,
 		TArray<FEnemyIntentOverlayPulseData>& PulseData,
 		const FTransform& Transform,
 		const FLinearColor& Color,
 		int32 PathOrder,
 		int32 PathSpan,
-		bool bResolved)
+		bool bResolved,
+		bool bTransientGhost)
 	{
 		if (Component == nullptr)
 		{
@@ -862,6 +864,8 @@ void ATileMap::SetEnemyIntentOverlays(const TArray<FEnemyIntentTileOverlay>& Ove
 		Data.mPathOrder = PathOrder;
 		Data.mPathSpan = FMath::Max(PathSpan, 1);
 		Data.mIsResolved = bResolved;
+		Data.mIsTransientGhost = bTransientGhost;
+		Data.mSpawnTime = OverlaySpawnTime;
 	};
 
 	for (const FEnemyIntentTileOverlay& Overlay : Overlays)
@@ -896,7 +900,8 @@ void ATileMap::SetEnemyIntentOverlays(const TArray<FEnemyIntentTileOverlay>& Ove
 				FLinearColor(0.26f, 0.29f, 0.30f, 0.52f),
 				PathIndex,
 				PreviousPathSpan,
-				/*bResolved=*/true);
+				/*bResolved=*/true,
+				/*bTransientGhost=*/true);
 		}
 
 		for (int32 PathIndex = 0; PathIndex + 1 < Overlay.mPathTileIndexes.Num(); ++PathIndex)
@@ -926,7 +931,8 @@ void ATileMap::SetEnemyIntentOverlays(const TArray<FEnemyIntentTileOverlay>& Ove
 				RouteColor,
 				PathIndex,
 				PathSpan,
-				Overlay.mIsResolved);
+				Overlay.mIsResolved,
+				/*bTransientGhost=*/false);
 		}
 
 		// 실제 이동이 있는 계획만 원래 목적지 마커를 그린다. 제자리 공격을 이동처럼 오해하지 않게 한다.
@@ -953,7 +959,8 @@ void ATileMap::SetEnemyIntentOverlays(const TArray<FEnemyIntentTileOverlay>& Ove
 					RouteColor,
 					PathSpan,
 					PathSpan,
-					Overlay.mIsResolved);
+					Overlay.mIsResolved,
+					/*bTransientGhost=*/false);
 			}
 		}
 
@@ -991,7 +998,8 @@ void ATileMap::SetEnemyIntentOverlays(const TArray<FEnemyIntentTileOverlay>& Ove
 				AttackColor,
 				0,
 				1,
-				Overlay.mIsResolved);
+				Overlay.mIsResolved,
+				/*bTransientGhost=*/false);
 		}
 		for (int32 AttackIndex = 0; AttackIndex < AttackTiles.Num(); ++AttackIndex)
 		{
@@ -1011,7 +1019,8 @@ void ATileMap::SetEnemyIntentOverlays(const TArray<FEnemyIntentTileOverlay>& Ove
 				AttackColor,
 				AttackIndex,
 				FMath::Max(AttackTiles.Num(), 1),
-				Overlay.mIsResolved);
+				Overlay.mIsResolved,
+				/*bTransientGhost=*/false);
 		}
 
 		// 경로 스냅샷은 밀린 위치로 평행이동된 고정 방향열이다. 민트 마커를 새 출발점에 더해
@@ -1032,7 +1041,8 @@ void ATileMap::SetEnemyIntentOverlays(const TArray<FEnemyIntentTileOverlay>& Ove
 				FLinearColor(0.20f, 1.00f, 0.62f, 1.0f),
 				Overlay.mExecutionOrder,
 				1,
-				Overlay.mIsResolved);
+				Overlay.mIsResolved,
+				/*bTransientGhost=*/false);
 		}
 	}
 
@@ -1078,13 +1088,20 @@ void ATileMap::RefreshEnemyIntentOverlayPulse()
 			const float PhasePerTile = 2.0f * PI * mPathFlowCycles / FMath::Max(Data.mPathSpan, 1);
 			const float Phase = 2.0f * PI * Time / Period - Data.mPathOrder * PhasePerTile;
 			const float Wave = 0.5f - 0.5f * FMath::Cos(Phase);
+			const float GhostFade = Data.mIsTransientGhost
+				? 1.0f - FMath::Clamp((Time - Data.mSpawnTime) / 1.35f, 0.0f, 1.0f)
+				: 1.0f;
 			const float Low = Data.mIsResolved ? 0.16f : 0.42f;
 			const float High = Data.mIsResolved ? 0.34f : FMath::Max(mPathPulseMaxBrightness, 1.0f) * BrightnessBoost;
-			const float Brightness = FMath::Lerp(Low, High, Wave);
+			const float Brightness = FMath::Lerp(Low, High, Wave) * GhostFade;
 			Component->SetCustomDataValue(InstanceIndex, 0, Data.mColor.R * Brightness);
 			Component->SetCustomDataValue(InstanceIndex, 1, Data.mColor.G * Brightness);
 			Component->SetCustomDataValue(InstanceIndex, 2, Data.mColor.B * Brightness);
-			Component->SetCustomDataValue(InstanceIndex, 3, Data.mIsResolved ? 0.55f : 1.0f, /*bMarkRenderStateDirty=*/true);
+			Component->SetCustomDataValue(
+				InstanceIndex,
+				3,
+				(Data.mIsResolved ? 0.55f : 1.0f) * GhostFade,
+				/*bMarkRenderStateDirty=*/true);
 		}
 	};
 

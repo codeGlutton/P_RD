@@ -282,45 +282,73 @@ bool USRPGSkillAction::TryStartDiceDisplacement(const FActiveSkillContext& Conte
     }
 
     const bool bIsPull = SkillData->GetFName() == DicePullSkillAssetName;
+	const bool bIsThrow = SkillData->GetFName() == DicePushSkillAssetName;
     const FTileIndex InstigatorTile = mInstigator->GetTileTransform().mIndex;
     const FTileIndex TargetTile = DisplacementTarget->GetTileTransform().mIndex;
     const int32 RequestedDistance = FMath::Max(Context.mDiceSum, 1);
     const int32 DistanceToInstigator = FMath::Max(
         FMath::Abs(TargetTile.mX - InstigatorTile.mX),
         FMath::Abs(TargetTile.mY - InstigatorTile.mY));
+	int32 ThrowDistance = 0;
+	FTileIndex ThrowStep;
+	if (bIsThrow)
+	{
+		if (mDiceDisplacementDestination == FTileIndex::Invalid
+			|| DistanceToInstigator != 1)
+		{
+			return false;
+		}
+		const int32 DestinationDeltaX = mDiceDisplacementDestination.mX - TargetTile.mX;
+		const int32 DestinationDeltaY = mDiceDisplacementDestination.mY - TargetTile.mY;
+		ThrowStep = FTileIndex(FMath::Sign(DestinationDeltaX), FMath::Sign(DestinationDeltaY));
+		const int32 SelectedDistance = FMath::Max(FMath::Abs(DestinationDeltaX), FMath::Abs(DestinationDeltaY));
+		int32 WeightValue = StaticCast<int32>(ESRPGDisplacementWeight::Medium);
+		if (const UEnemyUnitModel* EnemyTarget = Cast<UEnemyUnitModel>(DisplacementTarget))
+		{
+			WeightValue = StaticCast<int32>(EnemyTarget->GetDisplacementWeight());
+		}
+		ThrowDistance = FMath::Min(
+			SelectedDistance,
+			FMath::Clamp(RequestedDistance + 1 - WeightValue, 1, 4));
+	}
     const int32 DesiredDistance = bIsPull
 		? FMath::Max(DistanceToInstigator - 1, 0)
-		: RequestedDistance;
+		: ThrowDistance;
 
     mDiceDisplacementTarget = DisplacementTarget;
 	mDiceDisplacementBlocker = nullptr;
     mDiceDisplacementDiceValue = Context.mDiceSum;
     mDiceDisplacementIsPull = bIsPull;
-	mDiceDisplacementIsThrow = false;
+	mDiceDisplacementIsThrow = bIsThrow;
     mDiceDisplacementWasReported = false;
     mDiceDisplacementCollisionReported = false;
 	mDiceDisplacementStarted = true;
 	mDiceDisplacementFinished = false;
 	if (bIsPull)
 	{
-		// 갈고리는 사거리 안의 적을 발앞까지 끌어온다. 주사위 눈은 후속 던지기의 거리로 쓰여
-		// 작은 눈도 위치 개입은 성립하고, 큰 눈은 더 강한 충돌을 만들게 한다.
+		// 갈고리는 사거리 안의 적을 발앞까지 끌어오는 독립 행동이다.
 		mDiceDisplacementPath = TileMap->GetPullPath(InstigatorTile, TargetTile, DesiredDistance);
 	}
-	else
+	else if (bIsThrow)
 	{
 		mDiceDisplacementPath.Reset();
 		mDiceDisplacementPath.Add(TargetTile);
-		const FTileIndex Destination = TileMap->GetPushDestination(InstigatorTile, TargetTile, RequestedDistance);
-		const FTileIndex PushStep(
-			FMath::Sign(TargetTile.mX - InstigatorTile.mX),
-			FMath::Sign(TargetTile.mY - InstigatorTile.mY));
-		FTileIndex Current = TargetTile;
-		while (Current != Destination)
+		for (int32 Distance = 1; Distance <= ThrowDistance; ++Distance)
 		{
-			Current = FTileIndex(Current.mX + PushStep.mX, Current.mY + PushStep.mY);
-			mDiceDisplacementPath.Add(Current);
+			const FTileIndex Candidate(
+				TargetTile.mX + ThrowStep.mX * Distance,
+				TargetTile.mY + ThrowStep.mY * Distance);
+			if (TileMap->IsValidIndex(Candidate) == false
+				|| TileMap->CanPlace(Candidate, DisplacementTarget) == false)
+			{
+				break;
+			}
+			mDiceDisplacementPath.Add(Candidate);
 		}
+	}
+	else
+	{
+		return false;
 	}
 	if (mDiceDisplacementPath.IsEmpty())
 	{
@@ -343,6 +371,10 @@ bool USRPGSkillAction::TryStartDiceDisplacement(const FActiveSkillContext& Conte
 			CollisionStep = FTileIndex(
 				AbsX >= AbsY ? FMath::Sign(DeltaX) : 0,
 				AbsY >= AbsX ? FMath::Sign(DeltaY) : 0);
+		}
+		else if (bIsThrow)
+		{
+			CollisionStep = ThrowStep;
 		}
 		else
 		{
@@ -369,10 +401,6 @@ bool USRPGSkillAction::TryStartDiceDisplacement(const FActiveSkillContext& Conte
 	if (Destination == TargetTile)
 	{
 		ReportDiceDisplacementIfMoved();
-		if (TryStartDiceFollowUpThrow())
-		{
-			return true;
-		}
 		mDiceDisplacementFinished = true;
 		FinishSkillAction();
 		return true;
@@ -380,7 +408,7 @@ bool USRPGSkillAction::TryStartDiceDisplacement(const FActiveSkillContext& Conte
 
 	BroadcastDiceDisplacementPath(bIsPull
 		? EForcedMovePresentationType::Pull
-		: EForcedMovePresentationType::Push);
+		: EForcedMovePresentationType::Throw);
 
     StartDiceDisplacementStep(1);
     return true;
@@ -391,10 +419,6 @@ void USRPGSkillAction::StartDiceDisplacementStep(int32 StepIndex)
     if (mDiceDisplacementTarget == nullptr || mDiceDisplacementPath.IsValidIndex(StepIndex) == false)
     {
         ReportDiceDisplacementIfMoved();
-		if (TryStartDiceFollowUpThrow())
-		{
-			return;
-		}
 		mDiceDisplacementFinished = true;
         FinishSkillAction();
         return;
@@ -422,10 +446,6 @@ void USRPGSkillAction::StartDiceDisplacementStep(int32 StepIndex)
         || bBlocked)
     {
         ReportDiceDisplacementIfMoved();
-		if (TryStartDiceFollowUpThrow())
-		{
-			return;
-		}
 		mDiceDisplacementFinished = true;
         FinishSkillAction();
         return;
@@ -473,10 +493,6 @@ void USRPGSkillAction::OnDiceDisplacementStepFinished()
     if (mDiceDisplacementStepIndex >= mDiceDisplacementPath.Num() - 1)
     {
         ReportDiceDisplacementIfMoved();
-		if (TryStartDiceFollowUpThrow())
-		{
-			return;
-		}
 		mDiceDisplacementFinished = true;
         FinishSkillAction();
     }
@@ -520,104 +536,6 @@ void USRPGSkillAction::ReportDiceDisplacementIfMoved()
 			mDiceDisplacementCollisionReported = true;
 		}
     }
-}
-
-bool USRPGSkillAction::TryStartDiceFollowUpThrow()
-{
-	if (mDiceDisplacementIsPull == false
-		|| mDiceDisplacementIsThrow
-		|| mDiceDisplacementTarget == nullptr
-		|| mInstigator.IsValid() == false
-		|| mDiceDisplacementDestination == FTileIndex::Invalid)
-	{
-		return false;
-	}
-
-	UTileMapModel* TileMap = GetTileMap();
-	if (TileMap == nullptr)
-	{
-		return false;
-	}
-
-	const FTileIndex PlayerTile = mInstigator->GetTileTransform().mIndex;
-	const FTileIndex TargetTile = mDiceDisplacementTarget->GetTileTransform().mIndex;
-	const int32 PullDeltaX = PlayerTile.mX - TargetTile.mX;
-	const int32 PullDeltaY = PlayerTile.mY - TargetTile.mY;
-	if (FMath::Max(FMath::Abs(PullDeltaX), FMath::Abs(PullDeltaY)) != 1
-		|| mDiceDisplacementDestination == TargetTile)
-	{
-		// 발앞 칸을 고르면 여기서 끝난다. 이것이 순수한 "끌어당기기" 선택이다.
-		return false;
-	}
-
-	const int32 DestinationDeltaX = mDiceDisplacementDestination.mX - PlayerTile.mX;
-	const int32 DestinationDeltaY = mDiceDisplacementDestination.mY - PlayerTile.mY;
-	const FTileIndex ThrowStep(FMath::Sign(DestinationDeltaX), FMath::Sign(DestinationDeltaY));
-	const int32 SelectedDistance = FMath::Max(
-		FMath::Abs(DestinationDeltaX),
-		FMath::Abs(DestinationDeltaY));
-	if ((ThrowStep.mX == 0 && ThrowStep.mY == 0) || SelectedDistance <= 0)
-	{
-		return false;
-	}
-
-	int32 WeightValue = StaticCast<int32>(ESRPGDisplacementWeight::Medium);
-	if (const UEnemyUnitModel* EnemyTarget = Cast<UEnemyUnitModel>(mDiceDisplacementTarget))
-	{
-		WeightValue = StaticCast<int32>(EnemyTarget->GetDisplacementWeight());
-	}
-	const int32 MaxThrowDistance = FMath::Clamp(
-		FMath::Max(mDiceDisplacementDiceValue, 1) + 1 - WeightValue,
-		1,
-		4);
-	const int32 ThrowDistance = FMath::Min(SelectedDistance, MaxThrowDistance);
-
-	mDiceDisplacementPath.Reset();
-	mDiceDisplacementPath.Add(TargetTile);
-	mDiceDisplacementBlocker = nullptr;
-	for (int32 Distance = 1; Distance <= ThrowDistance; ++Distance)
-	{
-		// 자동 반대편이 아니라 플레이어가 고른 8방향으로만 진행한다. 대상이 당겨져 서 있는
-		// 발앞 칸과 겹치는 첫 후보는 건너뛰고, 이후 빈 칸 또는 첫 충돌 칸까지 검사한다.
-		const FTileIndex Candidate(
-			PlayerTile.mX + ThrowStep.mX * Distance,
-			PlayerTile.mY + ThrowStep.mY * Distance);
-		if (Candidate == TargetTile)
-		{
-			continue;
-		}
-		if (TileMap->IsValidIndex(Candidate) == false
-			|| TileMap->CanPlace(Candidate, mDiceDisplacementTarget) == false)
-		{
-			for (UBoardActorModel* Actor : TileMap->GetActorsOnTile(Candidate, ETileLayerFlag::All))
-			{
-				if (Actor != nullptr
-					&& Actor != mDiceDisplacementTarget
-					&& Actor != mInstigator.Get()
-					&& EnumHasAnyFlags(Actor->GetBlockLayerFlags(), mDiceDisplacementTarget->GetTileLayerFlags()))
-				{
-					mDiceDisplacementBlocker = Actor;
-					break;
-				}
-			}
-			break;
-		}
-		mDiceDisplacementPath.Add(Candidate);
-	}
-
-	mDiceDisplacementIsThrow = true;
-	mDiceDisplacementWasReported = false;
-	mDiceDisplacementCollisionReported = false;
-	mDiceDisplacementStepIndex = 0;
-	if (mDiceDisplacementPath.Num() < 2)
-	{
-		ReportDiceDisplacementIfMoved();
-		return false;
-	}
-
-	BroadcastDiceDisplacementPath(EForcedMovePresentationType::Throw);
-	StartDiceDisplacementStep(1);
-	return true;
 }
 
 void USRPGSkillAction::BroadcastDiceDisplacementPath(EForcedMovePresentationType PresentationType) const

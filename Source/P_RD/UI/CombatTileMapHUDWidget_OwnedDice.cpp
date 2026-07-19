@@ -257,7 +257,8 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 /** @brief 보유 주사위 카드의 3D 캡처 숫자/색/선택/사용 상태를 현재 전투 스냅샷 기준으로 갱신한다. */
 void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 {
-	const bool bTutorialDicePrompt = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectDice
+	const bool bTutorialDicePrompt = (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectDice
+		|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectThrowDice)
 		&& mEnemyIntentTutorialDismissed == false;
 	const int32 TutorialRecommendedDiceIndex = bTutorialDicePrompt
 		? GetEnemyIntentTutorialRecommendedDiceIndex()
