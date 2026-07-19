@@ -515,7 +515,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 			: TEXT("반짝이는 숫자 하나");
 		break;
 	case EEnemyIntentTutorialStage::SelectTarget:
-		TutorialTitle = TEXT("3 / 9   사슬 표시 적 클릭");
+		TutorialTitle = TEXT("3 / 9   주황 테두리 적 클릭");
 		TutorialMessage = RecommendedEnemyName;
 		break;
 	case EEnemyIntentTutorialStage::ConfirmDestination:
