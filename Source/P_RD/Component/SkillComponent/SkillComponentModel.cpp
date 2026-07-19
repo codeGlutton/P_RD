@@ -29,6 +29,8 @@ namespace
 	const FName DicePullSkillAssetName(TEXT("DA_SwordBlade_Rare"));
 	const FName DiceStaggerSkillAssetName(TEXT("DA_NomalDefense_Common"));
 	const FName DiceSwapSkillAssetName(TEXT("DA_NomalHeal_Common"));
+	constexpr int32 LongDisplacementAimRange = 8;
+	constexpr int32 AdjacentDisplacementAimRange = 1;
 
 	bool IsPlayerDisplacementSkill(const UStaticSkillData* SkillData, const UUnitModel* OwnerUnit)
 	{
@@ -39,6 +41,17 @@ namespace
 				|| SkillData->GetFName() == DicePullSkillAssetName
 				|| SkillData->GetFName() == DiceStaggerSkillAssetName
 				|| SkillData->GetFName() == DiceSwapSkillAssetName);
+	}
+
+	int32 GetPlayerDisplacementAimRange(const UStaticSkillData* SkillData)
+	{
+		if (SkillData != nullptr
+			&& (SkillData->GetFName() == DicePullSkillAssetName
+				|| SkillData->GetFName() == DiceStaggerSkillAssetName))
+		{
+			return LongDisplacementAimRange;
+		}
+		return AdjacentDisplacementAimRange;
 	}
 
 	UStaticSkillData* LoadStaticSkillData(const FPrimaryAssetId& SkillId)
@@ -736,10 +749,10 @@ TArray<FTileIndex> USkillComponentModel::GetAimableTiles(UTileMapModel* MapModel
 	const bool bIsDisplacement = IsPlayerDisplacementSkill(
 		StaticSkillData,
 		GetOwnerModel<UUnitModel>());
-	// 이 브랜치의 강타는 첫 전투에서 적이 세 칸 이상 떨어져 있어도 실제로 사용할 수 있는
-	// 주사위 개입기다. 주사위 합은 사거리가 아니라 강제 이동 거리로 쓰고, 조준은 전장 전체로 연다.
+	// 위치 개입 스킬의 주사위 합은 강제 이동 거리에만 쓰고, 조준 사거리는 역할별 고정값을 쓴다.
+	// 당기기/다리 걸기는 원거리(8), 던지기/자리 바꾸기는 인접(1)이며 UI 표기와 실제 판정이 같다.
 	const float AimRange = bIsDisplacement
-		? StaticCast<float>(FMath::Max(MapModel->GetWidth(), MapModel->GetHeight()))
+		? StaticCast<float>(GetPlayerDisplacementAimRange(StaticSkillData))
 		: StaticSkillData->mAimRangeDefaultValue + DiceSum * StaticSkillData->mAimRangeRatio;
 	const EAimPattern Pattern = bIsDisplacement ? EAimPattern::Square : StaticSkillData->mAimPattern;
 	const bool CanAimObstacle = bIsDisplacement || StaticSkillData->mCanAimBoardActor;
@@ -751,22 +764,8 @@ TArray<FTileIndex> USkillComponentModel::GetAimableTiles(UTileMapModel* MapModel
 		Pattern,
 		CanAimObstacle,
 		IsIndirect);
-	if (bIsDisplacement)
-	{
-		const UUnitModel* OwnerUnit = GetOwnerModel<UUnitModel>();
-		AimableTiles.RemoveAll([MapModel, OwnerUnit](const FTileIndex& TileIndex)
-		{
-			for (UBoardActorModel* Actor : MapModel->GetActorsOnTile(TileIndex, ETileLayerFlag::Unit))
-			{
-				const UUnitModel* Unit = Cast<UUnitModel>(Actor);
-				if (Unit != nullptr && Unit != OwnerUnit && Unit->IsTargetable())
-				{
-					return false;
-				}
-			}
-			return true;
-		});
-	}
+	// 빈 칸도 반환해야 HUD가 사거리 영역 전체를 보여줄 수 있다. 실제 대상 선택 가능 여부는
+	// SRPGSkillBuildAction::CanSelectTargetTile에서 적 유닛 존재/인접 조건을 별도로 검사한다.
 	return AimableTiles;
 }
 
