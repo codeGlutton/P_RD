@@ -47,11 +47,9 @@ void UCombatTileMapHUDWidget::HandleCombatUIChanged(ECombatUIDomain Domain)
 		RefreshContextActions();
 	}
 
-	// 주사위(굴림/사용) 갱신 시 보유 주사위 표시를 다시 읽어 그린다(쓴 주사위 비활성 반영).
+	// 구 저장 데이터에서 주사위 알림이 와도 전투 HUD에는 표시하지 않는다.
 	if (Domain == ECombatUIDomain::Dice || Domain == ECombatUIDomain::All)
 	{
-		RefreshDiceViewsFromRunData();
-		RefreshOwnedDiceCards();
 		RefreshContextActions();
 		TrySubmitContextTargetWhenReady();
 	}
@@ -85,7 +83,7 @@ void UCombatTileMapHUDWidget::HandleCombatUIChanged(ECombatUIDomain Domain)
 		RefreshDisplacementPreview();
 	}
 
-	// 튜토리얼은 예고뿐 아니라 실제 스킬/주사위 선택과 턴 변화를 관찰해 자동으로 다음 단계로 간다.
+	// 튜토리얼은 예고뿐 아니라 실제 스킬 선택과 턴 변화를 관찰해 자동으로 다음 단계로 간다.
 	if (Domain == ECombatUIDomain::Intent
 		|| Domain == ECombatUIDomain::Skill
 		|| Domain == ECombatUIDomain::Dice

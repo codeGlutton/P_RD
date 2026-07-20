@@ -42,6 +42,9 @@ public:
 public:
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillIndex"))
 	int32 mSkillIndex = 0;
+	/** @brief 행동 자체에 정의된 위력/사거리. 주사위 선택과 무관하다. */
+	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ActionPower"))
+	int32 mActionPower = 3;
 };
 
 USTRUCT(BlueprintType)
@@ -159,6 +162,8 @@ protected:
 	TObjectPtr<UStaticSkillData> mSelectedSkill;
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectedSkillIndex"))
 	int32 mSelectedSkillIndex = INDEX_NONE;
+	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ActionPower"))
+	int32 mActionPower = 3;
 
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectTileIndexes"))
 	TArray<FTileIndex> mEffectTileIndexes;

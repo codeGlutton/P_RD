@@ -286,6 +286,7 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
         OnChangeSkillBuildPhase = SkillSelectCommand.OnChangeSkillBuildPhase;
         OnPostSimulateSkillAction = SkillSelectCommand.OnPostSimulateSkillAction;
         OnCancelSimulateSkillAction = SkillSelectCommand.OnCancelSimulateSkillAction;
+		mActionPower = FMath::Clamp(SkillSelectCommand.mActionPower, 1, 6);
         if (SkillSelectCommand.mSkillIndex != mSelectedSkillIndex)
         {
             /* 다르면 변경 */
@@ -615,12 +616,6 @@ void USRPGSkillBuildAction::SetTargetTile(const FTileIndex& TargetIndex)
 {
     checkf(mSkillBuildPhase == ESRPGSkillBuildPhase::AimSelection, TEXT("스킬 빌드 순서 오류"));
 
-    UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
-    checkf(PlayerUnit != nullptr, TEXT("주사위를 굴릴 수 있는 플레이어 유닛이 아님"));
-
-    UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
-    checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
-
     mTargetIndex = TargetIndex;
 
     UTileMapModel* TileMap = GetTileMap();
@@ -641,7 +636,7 @@ void USRPGSkillBuildAction::SetTargetTile(const FTileIndex& TargetIndex)
     SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mSkillIndex = mSelectedSkillIndex;
     SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mTargetIndex = mTargetIndex;
     SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDisplacementDestination = mDisplacementDestination;
-    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDiceSum = DicePoolModel->GetSelectedDiceSum();
+    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDiceSum = mActionPower;
 
     TArray<FSRPGTurnEventLog> TurnEventLogs = SimulationSubsystem->SimulateUntilNextAction(MoveTemp(SkillCastCommand));
     OnPostSimulateSkillAction.Broadcast(TurnEventLogs);
@@ -687,11 +682,6 @@ void USRPGSkillBuildAction::LockDisplacementTarget(const FTileIndex& TargetIndex
 	checkf(mSkillBuildPhase == ESRPGSkillBuildPhase::AimSelection, TEXT("스킬 빌드 순서 오류"));
 	UTileMapModel* TileMap = GetTileMap();
 	checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
-	UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
-	checkf(PlayerUnit != nullptr, TEXT("주사위를 굴릴 수 있는 플레이어 유닛이 아님"));
-	UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
-	checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
-
 	UUnitModel* TargetUnit = FindDisplacementTarget(TileMap, TargetIndex, mInstigator.Get());
 	if (TargetUnit == nullptr)
 	{
@@ -714,17 +704,13 @@ void USRPGSkillBuildAction::LockDisplacementTarget(const FTileIndex& TargetIndex
 			TileMap,
 			mInstigator.Get(),
 			TargetUnit,
-			DicePoolModel->GetSelectedDiceSum());
+			mActionPower);
 	}
 }
 
 void USRPGSkillBuildAction::SetThrowDestinationTile(const FTileIndex& DestinationIndex)
 {
 	checkf(mSkillBuildPhase == ESRPGSkillBuildPhase::ThrowDestinationSelection, TEXT("스킬 빌드 순서 오류"));
-	UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
-	checkf(PlayerUnit != nullptr, TEXT("주사위를 굴릴 수 있는 플레이어 유닛이 아님"));
-	UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
-	checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
 
 	mDisplacementDestination = DestinationIndex;
 
@@ -735,7 +721,7 @@ void USRPGSkillBuildAction::SetThrowDestinationTile(const FTileIndex& Destinatio
 	SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mSkillIndex = mSelectedSkillIndex;
 	SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mTargetIndex = mTargetIndex;
 	SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDisplacementDestination = mDisplacementDestination;
-	SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDiceSum = DicePoolModel->GetSelectedDiceSum();
+	SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDiceSum = mActionPower;
 
 	TArray<FSRPGTurnEventLog> TurnEventLogs = SimulationSubsystem->SimulateUntilNextAction(MoveTemp(SkillCastCommand));
 	OnPostSimulateSkillAction.Broadcast(TurnEventLogs);
@@ -745,15 +731,6 @@ void USRPGSkillBuildAction::BuildSkill()
 {
     checkf(mSkillBuildPhase == ESRPGSkillBuildPhase::Preview, TEXT("스킬 빌드 순서 오류"));
 
-    UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
-    checkf(PlayerUnit != nullptr, TEXT("주사위를 굴릴 수 있는 플레이어 유닛이 아님"));
-
-    UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
-    checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
-
-    // 확정
-    DicePoolModel->MarkSelectedDiceAsUsed();
-
     USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
     checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 서브시스템 모델 nullptr"));
 
@@ -762,7 +739,7 @@ void USRPGSkillBuildAction::BuildSkill()
     SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mSkillIndex = mSelectedSkillIndex;
     SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mTargetIndex = mTargetIndex;
     SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDisplacementDestination = mDisplacementDestination;
-    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDiceSum = DicePoolModel->GetSelectedDiceSum();
+    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mDiceSum = mActionPower;
 
     CommandRouterModel->SummitCommand(SkillCastCommand);
 }
@@ -809,16 +786,10 @@ void USRPGSkillBuildAction::RefreshAimableTileHighlights()
     checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
 	ClearAllTileHighlights();
 
-    UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
-    checkf(PlayerUnit != nullptr, TEXT("주사위를 굴릴 수 있는 플레이어 유닛이 아님"));
-
-    UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
-    checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
-
     USkillComponentModel* SkillCompModel = mInstigator->GetSkillComponentModel();
     checkf(SkillCompModel != nullptr, TEXT("스킬 컴포넌트 모델 nullptr"));
 
-	mReachableTileIndexes = SkillCompModel->GetAimableTiles(TileMap, mSelectedSkillIndex, DicePoolModel->GetSelectedDiceSum());
+	mReachableTileIndexes = SkillCompModel->GetAimableTiles(TileMap, mSelectedSkillIndex, mActionPower);
 	if (IsDiceDisplacementBuildSkill(mSelectedSkill))
 	{
 		if (USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
@@ -853,16 +824,10 @@ void USRPGSkillBuildAction::RefreshEffectTileHighlights()
     UTileMapModel* TileMap = GetTileMap();
     checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
 
-    UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
-    checkf(PlayerUnit != nullptr, TEXT("주사위를 굴릴 수 있는 플레이어 유닛이 아님"));
-
-    UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
-    checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
-
     USkillComponentModel* SkillCompModel = mInstigator->GetSkillComponentModel();
     checkf(SkillCompModel != nullptr, TEXT("스킬 컴포넌트 모델 nullptr"));
 
-    mEffectTileIndexes = SkillCompModel->GetEffectTiles(TileMap, mSelectedSkillIndex, mTargetIndex, DicePoolModel->GetSelectedDiceSum());
+    mEffectTileIndexes = SkillCompModel->GetEffectTiles(TileMap, mSelectedSkillIndex, mTargetIndex, mActionPower);
     TileMap->SetTileHighlight(mEffectTileIndexes, ETileHighlightFlag::Effect);
 
 	if (IsDiceDisplacementBuildSkill(mSelectedSkill) == false)
@@ -878,7 +843,7 @@ void USRPGSkillBuildAction::RefreshEffectTileHighlights()
 
 	const FTileIndex InstigatorTile = mInstigator->GetTileTransform().mIndex;
 	const FTileIndex TargetTile = TargetUnit->GetTileTransform().mIndex;
-	const int32 Distance = FMath::Max(DicePoolModel->GetSelectedDiceSum(), 1);
+	const int32 Distance = FMath::Max(mActionPower, 1);
 	const bool bIsPull = IsDicePullBuildSkill(mSelectedSkill);
 	const bool bIsStagger = IsDiceStaggerBuildSkill(mSelectedSkill);
 	const bool bIsSwap = IsDiceSwapBuildSkill(mSelectedSkill);
@@ -943,14 +908,7 @@ void USRPGSkillBuildAction::RefreshEffectTileHighlights()
 
 bool USRPGSkillBuildAction::CanSelectTargetTile(const FTileIndex& Index) const
 {
-    UPlayerUnitModel* PlayerUnit = Cast<UPlayerUnitModel>(mInstigator.Get());
-    checkf(PlayerUnit != nullptr, TEXT("주사위를 굴릴 수 있는 플레이어 유닛이 아님"));
-
-    UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
-    checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트를 들고 있지 않음"));
-
-    const bool bBaseSelectable = mReachableTileIndexes.Contains(Index)
-		&& DicePoolModel->GetSelectedDiceNum() == mSelectedSkill->mRequiredDiceCount;
+    const bool bBaseSelectable = mReachableTileIndexes.Contains(Index);
 	if (bBaseSelectable == false)
 	{
 		return false;

@@ -317,8 +317,8 @@ private:
 	void DestroyDirectUnitGestureGhost();
 	/** @brief 필요한 주사위를 자동으로 골라 기존 스킬 빌드 파이프라인을 즉시 실행한다. */
 	bool ExecuteDirectSkill(int32 SkillIndex, const FVector2D& TargetScreenPosition, const FVector2D* DestinationScreenPosition, int32 DesiredPower);
-	/** @brief 스킬과 추천 주사위를 선택해 실제 게임플레이 사거리 하이라이트를 즉시 켠다. */
-	bool SelectSkillWithAutomaticDice(int32 SkillIndex, int32 DesiredPower);
+	/** @brief 스킬과 행동 고유 위력을 선택해 실제 게임플레이 사거리 하이라이트를 즉시 켠다. */
+	bool SelectSkillWithActionPower(int32 SkillIndex, int32 DesiredPower);
 	/** @brief 컨텍스트 행동을 드래그 전에 실제 조준 상태까지 준비한다. */
 	bool PrepareDirectSkill(int32 SkillIndex, const FVector2D& TargetScreenPosition, int32 DesiredPower);
 	/** @brief 당기기/던지기 드래그 방향을 게임플레이가 계산한 유효 착지 후보에 스냅한다. */

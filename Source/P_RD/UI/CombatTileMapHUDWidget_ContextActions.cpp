@@ -37,74 +37,6 @@ namespace
 		return FMath::Max(FMath::Abs(A.mX - B.mX), FMath::Abs(A.mY - B.mY));
 	}
 
-	int32 GetMaximumAvailableDiceSum(const TArray<FDiceSlotUI>& Dice, int32 DiceCost)
-	{
-		if (DiceCost <= 0)
-		{
-			return 0;
-		}
-		TArray<int32> Values;
-		for (const FDiceSlotUI& Die : Dice)
-		{
-			if (Die.mIsRolled && Die.mIsUsed == false)
-			{
-				Values.Add(Die.mResultValue);
-			}
-		}
-		Values.Sort(TGreater<int32>());
-		if (Values.Num() < DiceCost)
-		{
-			return INDEX_NONE;
-		}
-		int32 Sum = 0;
-		for (int32 Index = 0; Index < DiceCost; ++Index)
-		{
-			Sum += Values[Index];
-		}
-		return Sum;
-	}
-
-	TArray<int32> PickAutomaticDice(const TArray<FDiceSlotUI>& Dice, int32 DiceCost, int32 DesiredPower)
-	{
-		TArray<int32> Available;
-		for (int32 Index = 0; Index < Dice.Num(); ++Index)
-		{
-			if (Dice[Index].mIsRolled && Dice[Index].mIsUsed == false && Dice[Index].mIsSelected == false)
-			{
-				Available.Add(Index);
-			}
-		}
-		TArray<int32> Best;
-		TArray<int32> Current;
-		int32 BestScore = TNumericLimits<int32>::Max();
-		int32 BestSum = TNumericLimits<int32>::Max();
-		TFunction<void(int32, int32)> Visit = [&](int32 Start, int32 Sum)
-		{
-			if (Current.Num() == DiceCost)
-			{
-				const int32 Score = FMath::Abs(Sum - DesiredPower);
-				if (Score < BestScore || (Score == BestScore && Sum < BestSum))
-				{
-					BestScore = Score;
-					BestSum = Sum;
-					Best = Current;
-				}
-				return;
-			}
-			for (int32 Cursor = Start; Cursor < Available.Num(); ++Cursor)
-			{
-				Current.Add(Available[Cursor]);
-				Visit(Cursor + 1, Sum + Dice[Available[Cursor]].mResultValue);
-				Current.Pop();
-			}
-		};
-		if (DiceCost <= 0)
-		{
-			return Best;
-		}
-		Visit(0, 0);
-		return Best;
-	}
 }
 
 void UCombatTileMapHUDWidget::EnsureContextActionWidgets()
@@ -355,17 +287,12 @@ void UCombatTileMapHUDWidget::RefreshContextActions()
 	}
 
 	const TArray<FSkillUI>& Skills = mCombatUIModel->GetSkillUIs();
-	const TArray<FDiceSlotUI>& Dice = mCombatUIModel->GetDiceUIs();
 	const int32 TileDistance = GetTileDistance(PlayerUnit->mTile, TargetUnit->mTile);
-	auto CanReachTarget = [&Dice, TileDistance](const FSkillUI& Skill)
+	auto CanReachTarget = [TileDistance](const FSkillUI& Skill)
 	{
-		const int32 AvailableDiceSum = GetMaximumAvailableDiceSum(Dice, Skill.mDiceCost);
-		if (AvailableDiceSum == INDEX_NONE)
-		{
-			return false;
-		}
+		const int32 ActionPower = Skill.mIsDisplacementSkill ? 6 : 3;
 		const float MaximumRange = Skill.mTargeting.mSelectRange
-			+ Skill.mTargeting.mSelectRangeRatio * StaticCast<float>(AvailableDiceSum);
+			+ Skill.mTargeting.mSelectRangeRatio * StaticCast<float>(ActionPower);
 		return TileDistance <= FMath::Max(1, FMath::CeilToInt(MaximumRange));
 	};
 	auto AddSkill = [this, &Skills](int32 SkillIndex)
@@ -675,12 +602,6 @@ void UCombatTileMapHUDWidget::TrySubmitContextTargetWhenReady()
 	{
 		return;
 	}
-	const int32 RequiredDiceCount = FMath::Max(Skills[SelectedSkillIndex].mDiceCost, 0);
-	if (mCombatUIModel->GetSelectedDiceIndices().Num() < RequiredDiceCount)
-	{
-		return;
-	}
-
 	mContextTargetSubmitted = true;
 	mCombatUIModel->RequestWorldTouch(mContextTargetScreenPosition, false);
 	RefreshContextActions();
@@ -703,7 +624,7 @@ int32 UCombatTileMapHUDWidget::FindDirectSkillIndex(bool FSkillUI::* SkillFlag) 
 	return INDEX_NONE;
 }
 
-bool UCombatTileMapHUDWidget::SelectSkillWithAutomaticDice(int32 SkillIndex, int32 DesiredPower)
+bool UCombatTileMapHUDWidget::SelectSkillWithActionPower(int32 SkillIndex, int32 DesiredPower)
 {
 	if (mCombatUIModel == nullptr || mCombatUIModel->GetSkillUIs().IsValidIndex(SkillIndex) == false)
 	{
@@ -720,30 +641,9 @@ bool UCombatTileMapHUDWidget::SelectSkillWithAutomaticDice(int32 SkillIndex, int
 		{
 			mCombatUIModel->RequestCancel();
 		}
-		mCombatUIModel->RequestSelectSkill(SkillIndex);
+		mCombatUIModel->RequestSelectSkillWithPower(SkillIndex, DesiredPower);
 	}
-
-	const int32 MissingDiceCount = FMath::Max(
-		Skill.mDiceCost - mCombatUIModel->GetSelectedDiceIndices().Num(),
-		0);
-	if (MissingDiceCount > 0)
-	{
-		const TArray<int32> DiceIndices = PickAutomaticDice(
-			mCombatUIModel->GetDiceUIs(),
-			MissingDiceCount,
-			FMath::Max(DesiredPower, 1) * MissingDiceCount);
-		if (DiceIndices.Num() < MissingDiceCount)
-		{
-			mCombatUIModel->RequestCancel();
-			return false;
-		}
-		for (int32 DiceIndex : DiceIndices)
-		{
-			mCombatUIModel->RequestToggleDice(DiceIndex);
-		}
-	}
-	return mCombatUIModel->GetSelectedSkillIndex() == SkillIndex
-		&& mCombatUIModel->GetSelectedDiceIndices().Num() >= Skill.mDiceCost;
+	return mCombatUIModel->GetSelectedSkillIndex() == SkillIndex;
 }
 
 bool UCombatTileMapHUDWidget::PrepareDirectSkill(
@@ -751,7 +651,7 @@ bool UCombatTileMapHUDWidget::PrepareDirectSkill(
 	const FVector2D& TargetScreenPosition,
 	int32 DesiredPower)
 {
-	if (SelectSkillWithAutomaticDice(SkillIndex, DesiredPower) == false)
+	if (SelectSkillWithActionPower(SkillIndex, DesiredPower) == false)
 	{
 		return false;
 	}
@@ -844,7 +744,7 @@ bool UCombatTileMapHUDWidget::ExecuteDirectSkill(
 		&& mHasDirectThrowCandidate;
 	if (bPreparedDisplacement == false)
 	{
-		if (SelectSkillWithAutomaticDice(SkillIndex, DesiredPower) == false)
+		if (SelectSkillWithActionPower(SkillIndex, DesiredPower) == false)
 		{
 			return false;
 		}
@@ -961,7 +861,7 @@ void UCombatTileMapHUDWidget::RefreshDirectMoveRangeHighlight()
 	{
 		return;
 	}
-	const int32 Range = FMath::Clamp(mCombatUIModel->GetSelectedDiceSum(), 1, 6);
+	const int32 Range = FMath::Clamp(mSelectedSubactionDesiredPower, 1, 6);
 	const FTileIndex Origin = PlayerUnit->GetTileTransform().mIndex;
 	TArray<FTileIndex> RangeTiles = mSelectedSubactionMode == ECombatSubactionMode::Charge
 		? TileMap->GetAimableTiles(Origin, Range, EAimPattern::Star, true, true, PlayerUnit)
@@ -1008,7 +908,7 @@ bool UCombatTileMapHUDWidget::UpdateDirectMovePath(const FVector2D& ScreenPositi
 		return false;
 	}
 	const FTileIndex Origin = PlayerUnit->GetTileTransform().mIndex;
-	const int32 Range = FMath::Clamp(mCombatUIModel->GetSelectedDiceSum(), 1, 6);
+	const int32 Range = FMath::Clamp(mSelectedSubactionDesiredPower, 1, 6);
 	TArray<FTileIndex> NewPath;
 	mDirectMoveImpactTile = FTileIndex::Invalid;
 	mDirectMoveImpactLabel = FText::GetEmpty();
@@ -1244,24 +1144,20 @@ bool UCombatTileMapHUDWidget::BeginDirectUnitGesture(const FVector2D& ScreenPosi
 			{
 				// 같은 손아귀 카드라도 이미 가까운 적을 잡으면 투척 조준으로 자연스럽게 전환한다.
 				const int32 ThrowSkillIndex = FindDirectSkillIndex(&FSkillUI::mIsThrowSkill);
-				if (Skills.IsValidIndex(ThrowSkillIndex)
-					&& GetMaximumAvailableDiceSum(
-						mCombatUIModel->GetDiceUIs(), Skills[ThrowSkillIndex].mDiceCost) != INDEX_NONE)
+				if (Skills.IsValidIndex(ThrowSkillIndex))
 				{
-					if (SelectSkillWithAutomaticDice(ThrowSkillIndex, 6))
+					if (SelectSkillWithActionPower(ThrowSkillIndex, 6))
 					{
 						ArmedSkillIndex = ThrowSkillIndex;
 					}
 					else
 					{
-						SelectSkillWithAutomaticDice(SelectedSkillIndex, 6);
+						SelectSkillWithActionPower(SelectedSkillIndex, 6);
 					}
 				}
 
 				const int32 SwapSkillIndex = FindDirectSkillIndex(&FSkillUI::mIsSwapSkill);
-				mDirectGripCanSwap = Skills.IsValidIndex(SwapSkillIndex)
-					&& GetMaximumAvailableDiceSum(
-						mCombatUIModel->GetDiceUIs(), Skills[SwapSkillIndex].mDiceCost) != INDEX_NONE;
+				mDirectGripCanSwap = Skills.IsValidIndex(SwapSkillIndex);
 			}
 			mDirectGripGesture = true;
 		}
@@ -1703,8 +1599,7 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 	const bool bWasMovementGesture = bTargetIsPlayer && PreviousArmedSkillIndex == ContextMoveAction;
 	const TArray<FTileIndex> WarriorMovePath = mDirectMovePath;
 	const bool bWarriorCharge = mDirectMoveIsCharge;
-	const int32 WarriorMoveDicePower = mCombatUIModel != nullptr
-		? mCombatUIModel->GetSelectedDiceSum() : 0;
+	const int32 WarriorMoveActionPower = FMath::Clamp(mSelectedSubactionDesiredPower, 1, 6);
 	mDirectUnitGestureActive = false;
 	mDirectUnitGestureTargetId = INDEX_NONE;
 	SetDirectUnitGestureVisual(false);
@@ -1724,7 +1619,7 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 		if (bWasExplicitDrag && mCombatUIModel != nullptr)
 		{
 			mCombatUIModel->RequestCancel();
-			SelectSkillWithAutomaticDice(
+			SelectSkillWithActionPower(
 				PreviousArmedSkillIndex,
 				FMath::Max(mSelectedSubactionDesiredPower, 1));
 			mDirectArmedSkillIndex = INDEX_NONE;
@@ -1739,7 +1634,7 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 			const int32 GripSkillIndex = FindDirectSkillIndex(&FSkillUI::mIsPullSkill);
 			if (GripSkillIndex != INDEX_NONE)
 			{
-				SelectSkillWithAutomaticDice(GripSkillIndex, 6);
+				SelectSkillWithActionPower(GripSkillIndex, 6);
 			}
 			mDirectArmedSkillIndex = INDEX_NONE;
 			mDirectArmedTargetUnitId = INDEX_NONE;
@@ -1767,12 +1662,12 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 			TryOpenContextActionsAtScreenPosition(TargetScreen);
 			return true;
 		}
-		if (WarriorMovePath.Num() >= 2 && WarriorMoveDicePower > 0)
+		if (WarriorMovePath.Num() >= 2 && WarriorMoveActionPower > 0)
 		{
 			FWarriorMoveRequest Request;
 			Request.mPathTileIndexes = WarriorMovePath;
 			Request.mIsCharge = bWarriorCharge;
-			Request.mDicePower = WarriorMoveDicePower;
+			Request.mActionPower = WarriorMoveActionPower;
 			ClearDirectMovePreview(false);
 			mCombatUIModel->RequestWarriorMove(Request);
 		}
@@ -1802,8 +1697,7 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 	const FVector2D* Destination = (bIsPullSkill || bIsThrowSkill)
 		? &ScreenPosition
 		: nullptr;
-	const float DragLength = FVector2D::Distance(ScreenPosition, TargetScreen);
-	const int32 DesiredPower = FMath::Clamp(FMath::RoundToInt(DragLength / 72.0f), 1, 6);
+	const int32 DesiredPower = FMath::Clamp(mSelectedSubactionDesiredPower, 1, 6);
 	const bool bExecuted = ExecuteDirectSkill(SkillIndex, TargetScreen, Destination, DesiredPower);
 	if (bExecuted)
 	{

@@ -61,7 +61,7 @@ public:
 	/* UI 진입점 */
 public:
 	UFUNCTION(Category = UI, BlueprintCallable)
-	bool SelectSkill(int32 SkillIndex);
+	bool SelectSkill(int32 SkillIndex, int32 ActionPower = 3);
 
 	UFUNCTION(Category = UI, BlueprintCallable)
 	bool ConfirmSkill();

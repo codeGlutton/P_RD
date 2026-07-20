@@ -423,7 +423,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 			DirectTitle = mExpandedActionFamily == 1
 				? TEXT("1 / 4   펼쳐진 ‘끌어오기’를 탭하세요")
 				: TEXT("1 / 4   왼쪽의 ‘손아귀’를 탭하세요");
-			DirectMessage = TEXT("행동군을 열고 세부 행동을 고르면 사거리와 주사위가 바로 적용됩니다");
+			DirectMessage = TEXT("행동군을 열고 세부 행동을 고르면 전체 사거리가 바로 표시됩니다");
 			break;
 		case EEnemyIntentTutorialStage::ConfirmDestination:
 			DirectTitle = TEXT("2 / 4   주황색 적을 기사 주변의 원하는 빈칸으로 드래그하세요");
@@ -710,7 +710,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime
 	mEnemyIntentTutorialStageElapsed += FMath::Max(InDeltaTime, 0.0f);
 	mEnemyIntentTutorialPulseTime += FMath::Max(InDeltaTime, 0.0f);
 
-	// 조작 단계는 실제 스킬/주사위/타깃 상태를 관찰해 진행한다. 마지막 성공 토스트만
+	// 조작 단계는 실제 스킬/타깃 상태를 관찰해 진행한다. 마지막 성공 토스트만
 	// 잠깐 보여준 뒤 자동으로 닫아 플레이를 다시 가리지 않는다.
 	mEnemyIntentTutorialPanel->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	if (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::Complete

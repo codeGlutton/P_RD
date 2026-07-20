@@ -42,9 +42,9 @@ public:
 	UPROPERTY()
 	bool mIsElasticCharge = false;
 
-	/** @brief 돌진 거리와 밀어내기 판정에 사용한 확정 주사위 합. */
+	/** @brief 돌진 행동에 정의된 거리와 밀어내기 위력. */
 	UPROPERTY()
-	int32 mDicePower = 0;
+	int32 mActionPower = 0;
 
 	/** @brief false면 스킬 주사위를 이미 소비했으므로 기존 이동력은 차감하지 않는다. */
 	UPROPERTY()
@@ -108,7 +108,7 @@ protected:
 	bool mIsWarriorCharge = false;
 	bool mIsElasticCharge = false;
 	bool mConsumeMovementPoints = true;
-	int32 mDicePower = 0;
+	int32 mActionPower = 0;
 
 	// @brief 진행 중인 스텝 인덱스 (mPathTileIndexes 기준, 0은 시작 타일이라 1부터 시작)
 	UPROPERTY(Category = Move, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CurrentStepIndex"))

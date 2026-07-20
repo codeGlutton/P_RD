@@ -5,6 +5,12 @@
 /** @brief 스킬 레일 index 선택 의도를 게임플레이 구독자에게 전달한다. */
 void UCombatUIModel::RequestSelectSkill(int32 SkillIndex)
 {
+	RequestSelectSkillWithPower(SkillIndex, 3);
+}
+
+void UCombatUIModel::RequestSelectSkillWithPower(int32 SkillIndex, int32 ActionPower)
+{
+	mRequestedActionPower = FMath::Clamp(ActionPower, 1, 6);
 	OnCombatCommand.Broadcast(ECombatInputType::SelectSkill, SkillIndex);
 }
 

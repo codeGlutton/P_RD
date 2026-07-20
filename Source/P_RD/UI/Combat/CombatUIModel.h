@@ -98,8 +98,10 @@ public:
 
 	/* ───────── UI → gameplay : 의도만 보낸다 ───────── */
 public:
-	/** @brief SkillIndex를 그대로 게임플레이에 전달한다. UI는 스킬 객체를 직접 들고 있지 않는다. */
+	/** @brief 기본 위력으로 스킬 선택 의도를 전달한다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestSelectSkill(int32 SkillIndex);
+	/** @brief 주사위 대신 행동 자체에 정의된 위력/사거리와 함께 스킬 선택 의도를 전달한다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestSelectSkillWithPower(int32 SkillIndex, int32 ActionPower);
 	/** @brief 현재 프리뷰를 HUD 실행 버튼으로 확정한다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestConfirmSkill();
 	/** @brief DiceIndex 선택/해제를 의도로 보낸다. 사용 가능 여부와 값 검증은 게임플레이/어댑터가 수행한다. */
@@ -193,6 +195,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FDiceSlotUI>& GetDiceUIs() const { return mDiceUIs; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<int32>& GetSelectedDiceIndices() const { return mSelectedDiceIndices; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") int32 GetSelectedDiceSum() const { return mSelectedDiceSum; }
+	UFUNCTION(BlueprintPure, Category = "Combat|Read") int32 GetRequestedActionPower() const { return mRequestedActionPower; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FSkillUI>& GetSkillUIs() const { return mSkillUIs; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FEnemyIntentUI>& GetEnemyIntentUIs() const { return mEnemyIntentUIs; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FDisplacementPreviewUI& GetDisplacementPreview() const { return mDisplacementPreview; }
@@ -215,6 +218,8 @@ private:
 	UPROPERTY(Transient) TArray<int32> mSelectedDiceIndices;
 	/** @brief 선택된 주사위 결과 합계. UI가 다시 합산하지 않게 게임플레이가 확정해 push한다. */
 	UPROPERTY(Transient) int32 mSelectedDiceSum = 0;
+	/** @brief 현재 선택한 세부 행동의 고정 위력/사거리. 주사위와 무관하다. */
+	UPROPERTY(Transient) int32 mRequestedActionPower = 3;
 	/** @brief 스킬 레일 표시 스냅샷. SkillIndex payload와 같은 index 계약을 가진다. */
 	UPROPERTY(Transient) TArray<FSkillUI> mSkillUIs;
 	/** @brief 현재 전장 상태로 가장 최근 갱신된 적 행동 예고와 결과. */

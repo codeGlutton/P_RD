@@ -1,6 +1,7 @@
 #include "UI/CombatTileMapHUDWidget.h"
 
 #include "Blueprint/WidgetTree.h"
+#include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
 #include "Components/Image.h"
@@ -85,9 +86,6 @@ void UCombatTileMapHUDWidget::BindCombatUIModel(UCombatUIModel* InUIModel)
 		mCombatUIModel->OnCombatFloatingLogMotionFinished.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogMotionFinished);
 		// 시뮬레이션 전환/취소 시 현재 떠 있는 플로팅 로그를 한 번에 걷어낸다.
 		mCombatUIModel->OnCombatFloatingLogsCleared.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogsCleared);
-		// 턴 시작 주사위 굴림 요청 시 굴림 오버레이를 자동으로 연다(2턴째부터의 진행 멈춤 해소).
-		mCombatUIModel->OnDiceRollRequested.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatDiceRollRequested);
-
 		// 이 시점(BeginRoom, InitCombat 이후)엔 전투 모델이 준비돼 있다 — 승리 후 월드맵 흐름을 HUD가 구독한다.
 		BindVictoryFlowEvents();
 		RefreshEnemyIntentPanel();
@@ -193,6 +191,10 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 	mOwnedDiceVisualHashes.Reset();
 	mOwnedDiceCardWidgets.Reset();
 	mOwnedDiceTypeTexts.Reset();
+	mDiceUIs.Reset();
+	if (mDiceTrayPanel != nullptr) { mDiceTrayPanel->SetVisibility(ESlateVisibility::Collapsed); }
+	if (mDiceTrayTitleText != nullptr) { mDiceTrayTitleText->SetVisibility(ESlateVisibility::Collapsed); }
+	if (mDiceAssignmentText != nullptr) { mDiceAssignmentText->SetVisibility(ESlateVisibility::Collapsed); }
 
 	const int32 DiceCount = mDiceUIs.Num();
 	for (int32 DiceIndex = 0; DiceIndex < DiceCount; ++DiceIndex)

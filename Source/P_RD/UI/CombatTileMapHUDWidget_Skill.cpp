@@ -26,47 +26,7 @@ void UCombatTileMapHUDWidget::RefreshDiceAssignmentText() const
 	{
 		return;
 	}
-	if (mCombatControlsHidden)
-	{
-		mDiceAssignmentText->SetVisibility(ESlateVisibility::Collapsed);
-		return;
-	}
-
-	const TArray<FSkillUI>* Skills = mCombatUIModel != nullptr ? &mCombatUIModel->GetSkillUIs() : nullptr;
-	const int32 SelectedSkillIndex = mCombatUIModel != nullptr
-		? mCombatUIModel->GetSelectedSkillIndex()
-		: mSelectedSkillIndex;
-	if (Skills == nullptr || Skills->IsValidIndex(SelectedSkillIndex) == false)
-	{
-		mDiceAssignmentText->SetText(NSLOCTEXT(
-			"CombatTileMapHUDWidget", "DiceAssignmentAutomatic", "드래그 세기에 맞춰 자동 사용"));
-		mDiceAssignmentText->SetColorAndOpacity(FSlateColor(FLinearColor(0.78f, 0.90f, 0.96f, 1.0f)));
-		mDiceAssignmentText->SetVisibility(ESlateVisibility::HitTestInvisible);
-		return;
-	}
-
-	const FSkillUI& Skill = (*Skills)[SelectedSkillIndex];
-	const int32 RequiredDiceCount = FMath::Max(Skill.mDiceCost, 0);
-	int32 SelectedDiceCount = mCombatUIModel != nullptr
-		? mCombatUIModel->GetSelectedDiceIndices().Num()
-		: 0;
-	if (mCombatUIModel == nullptr)
-	{
-		for (const FDiceViewData& Dice : mDiceUIs)
-		{
-			SelectedDiceCount += Dice.mIsSelected ? 1 : 0;
-		}
-	}
-	const FString ActionName = mSelectedSubactionName.IsEmpty()
-		? Skill.mName.ToString()
-		: mSelectedSubactionName.ToString();
-	const FString Instruction = FString::Printf(TEXT("%s · 주사위 자동"), *ActionName);
-	mDiceAssignmentText->SetText(FText::FromString(Instruction));
-	mDiceAssignmentText->SetColorAndOpacity(FSlateColor(
-		SelectedDiceCount >= RequiredDiceCount
-			? FLinearColor(0.28f, 1.0f, 0.62f, 1.0f)
-			: FLinearColor(1.0f, 0.84f, 0.34f, 1.0f)));
-	mDiceAssignmentText->SetVisibility(ESlateVisibility::HitTestInvisible);
+	mDiceAssignmentText->SetVisibility(ESlateVisibility::Collapsed);
 }
 
 #undef LOCTEXT_NAMESPACE

@@ -249,6 +249,26 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 
 	// 스킨 value 칸(HUD_M_*)에 Lv/HP/Gold 텍스트를 칸 위치/크기로 그린다.
 	RefreshSkinValueLabels();
+
+	// 주사위는 전투 루프에서 제거됐다. 레거시 WBP/런타임 위젯이 남아 있어도 표시와 입력을 모두 막는다.
+	if (mDiceTrayPanel != nullptr) { mDiceTrayPanel->SetVisibility(ESlateVisibility::Collapsed); }
+	if (mDiceTrayTitleText != nullptr) { mDiceTrayTitleText->SetVisibility(ESlateVisibility::Collapsed); }
+	if (mDiceAssignmentText != nullptr) { mDiceAssignmentText->SetVisibility(ESlateVisibility::Collapsed); }
+	if (mNavDiceButton != nullptr) { mNavDiceButton->SetVisibility(ESlateVisibility::Collapsed); }
+	if (mDiceRollBackdropPanel != nullptr) { mDiceRollBackdropPanel->SetVisibility(ESlateVisibility::Collapsed); }
+	if (mDiceRollBoardImage != nullptr) { mDiceRollBoardImage->SetVisibility(ESlateVisibility::Collapsed); }
+	if (mDiceRollPhysicsImage != nullptr) { mDiceRollPhysicsImage->SetVisibility(ESlateVisibility::Collapsed); }
+	if (DiceRollStatusText != nullptr) { DiceRollStatusText->SetVisibility(ESlateVisibility::Collapsed); }
+	if (mDiceRollInputButton != nullptr) { mDiceRollInputButton->SetVisibility(ESlateVisibility::Collapsed); }
+	for (UImage* Image : mOwnedDiceImages) { if (Image != nullptr) { Image->SetVisibility(ESlateVisibility::Collapsed); } }
+	for (UIndexedButtonWidget* Button : mOwnedDiceCardWidgets) { if (Button != nullptr) { Button->SetVisibility(ESlateVisibility::Collapsed); } }
+	for (UTextBlock* Text : mOwnedDiceTypeTexts) { if (Text != nullptr) { Text->SetVisibility(ESlateVisibility::Collapsed); } }
+	if (WidgetTree != nullptr)
+	{
+		if (UWidget* LegacyDiceTray = WidgetTree->FindWidget(TEXT("HUD_DiceTray"))) { LegacyDiceTray->SetVisibility(ESlateVisibility::Collapsed); }
+		if (UWidget* LegacyDiceNav = WidgetTree->FindWidget(TEXT("HUD_Dice"))) { LegacyDiceNav->SetVisibility(ESlateVisibility::Collapsed); }
+		if (UWidget* LegacyDiceRoll = WidgetTree->FindWidget(TEXT("DiceRollDesignCanvas"))) { LegacyDiceRoll->SetVisibility(ESlateVisibility::Collapsed); }
+	}
 }
 
 void UCombatTileMapHUDWidget::ResolveDesignerSkin()

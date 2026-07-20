@@ -102,7 +102,7 @@ void UCombatTileMapHUDWidget::SelectSkillForAssignment(int32 SkillIndex)
 			mCombatUIModel->RequestSelectSkill(SkillIndex);
 			return;
 		}
-		// 주사위 배치 UI를 다시 강요하지 않는다. 가용 주사위를 자동으로 붙인 뒤 실제 Aim 타일을 즉시 표시한다.
-		SelectSkillWithAutomaticDice(SkillIndex, 6);
+		// 행동 고유 사거리로 실제 Aim 타일을 즉시 표시한다.
+		SelectSkillWithActionPower(SkillIndex, 6);
 	}
 }

@@ -276,7 +276,7 @@ void UCombatTileMapHUDWidget::ApplyOpenUI()
 	EnsureRuntimeWidgets();
 	mLevelValueTouched = false;
 	SetExpHoldPanelVisible(false);
-	RefreshDiceViewsFromRunData();
+	mDiceUIs.Reset();
 	RebuildOwnedDiceCards();
 	RefreshCombatStatusBar();   // 위젯 생성 이후에 뷰모델 값(Lv/HP/Gold)을 상단 상태바에 채운다.
 	RebuildEquipmentBar();      // 탑바 좌측 하단 장비 칩.

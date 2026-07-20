@@ -425,9 +425,10 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 	ToggleWidgets(mEquipSlotButtons, InputVis);
 	if (mSkillDockPanel != nullptr) { mSkillDockPanel->SetVisibility(DisplayVis); }
 	if (mSkillDockTitleText != nullptr) { mSkillDockTitleText->SetVisibility(DisplayVis); }
-	if (mDiceTrayPanel != nullptr) { mDiceTrayPanel->SetVisibility(DisplayVis); }
-	if (mDiceTrayTitleText != nullptr) { mDiceTrayTitleText->SetVisibility(DisplayVis); }
-	if (mDiceAssignmentText != nullptr) { mDiceAssignmentText->SetVisibility(DisplayVis); }
+	if (mDiceTrayPanel != nullptr) { mDiceTrayPanel->SetVisibility(ESlateVisibility::Collapsed); }
+	if (mDiceTrayTitleText != nullptr) { mDiceTrayTitleText->SetVisibility(ESlateVisibility::Collapsed); }
+	if (mDiceAssignmentText != nullptr) { mDiceAssignmentText->SetVisibility(ESlateVisibility::Collapsed); }
+	if (mNavDiceButton != nullptr) { mNavDiceButton->SetVisibility(ESlateVisibility::Collapsed); }
 	if (mContextActionTitleText != nullptr) { mContextActionTitleText->SetVisibility(DisplayVis); }
 	if (mActionSubmenuTitleText != nullptr) { mActionSubmenuTitleText->SetVisibility(DisplayVis); }
 
@@ -454,14 +455,9 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 		CloseContextActions();
 	}
 
-	// mDiceRollInputButton은 "탭해서 굴리기" 입력영역이라 입장 주사위 오버레이가 실제로 떠 있을 때만 존재해야 한다.
-	// 복원(bVisible)에서 무조건 Visible로 켜면 오버레이가 없는데도 유령 버튼이 살아나, 지도 닫은 직후 탭이 이 버튼에
-	// 꽂혀 StartIntroDiceRoll이 불린다(=주사위 재굴림 버그). 오버레이 상태로 게이트해 그 경로를 끊는다.
 	if (mDiceRollInputButton != nullptr)
 	{
-		const bool bDiceOverlayActive = mIntroDiceRollReady || mIntroDiceRollActive || mIntroDiceResultWaitingForDismiss;
-		mDiceRollInputButton->SetVisibility(
-			bVisible && bDiceOverlayActive ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+		mDiceRollInputButton->SetVisibility(ESlateVisibility::Collapsed);
 	}
 
 	// WBP 스킨 마커(프레임 아트) — 지도 위에서는 내비/룸 배너 + 상단 상태바(Lv/Gold/HP)를 남기고 전투 컨트롤만 숨긴다.

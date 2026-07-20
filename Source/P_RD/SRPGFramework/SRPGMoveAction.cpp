@@ -39,7 +39,7 @@ ESRPGCommandResult USRPGMoveAction::HandleCommand(const TInstancedStruct<FSRPGCo
         mUseFixedIntent = MoveCommand.mUseFixedIntent;
 		mIsWarriorCharge = MoveCommand.mIsWarriorCharge;
 		mIsElasticCharge = MoveCommand.mIsElasticCharge;
-		mDicePower = MoveCommand.mDicePower;
+		mActionPower = MoveCommand.mActionPower;
 		mConsumeMovementPoints = MoveCommand.mConsumeMovementPoints;
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
@@ -314,8 +314,8 @@ bool USRPGMoveAction::TryStartWarriorChargeImpact(int32 StepIndex)
 
 	const ESRPGDisplacementWeight Weight = EnemyTarget->GetDisplacementWeight();
 	const int32 PushDistance = Weight == ESRPGDisplacementWeight::Light
-		? FMath::Clamp(1 + mDicePower / 4, 1, 2)
-		: (Weight == ESRPGDisplacementWeight::Medium && mDicePower >= 4 ? 1 : 0);
+		? FMath::Clamp(1 + mActionPower / 4, 1, 2)
+		: (Weight == ESRPGDisplacementWeight::Medium && mActionPower >= 4 ? 1 : 0);
 	mWarriorChargeContinueAfterImpact = Weight == ESRPGDisplacementWeight::Light;
 	mWarriorChargeStopAfterPlayerStep = Weight == ESRPGDisplacementWeight::Medium && PushDistance > 0;
 
@@ -346,7 +346,7 @@ bool USRPGMoveAction::TryStartWarriorChargeImpact(int32 StepIndex)
 				EnemyTarget,
 				mWarriorChargeBlocker != nullptr ? mWarriorChargeBlocker.Get() : mInstigator.Get(),
 				ESRPGPlayerDisplacementType::Push);
-			CombatModel->ReportPlayerStagger(EnemyTarget, mDicePower);
+			CombatModel->ReportPlayerStagger(EnemyTarget, mActionPower);
 		}
 		// 무거운 적에게 막혔을 때는 기사 쪽에서 적으로 향하는 충돌 방향을 다시 덮어써
 		// 양쪽 몸체가 실제 접촉 방향으로 튕기게 한다.
@@ -376,7 +376,7 @@ bool USRPGMoveAction::TryStartWarriorChargeImpact(int32 StepIndex)
 		- TileMap->TileToWorldLocation(PreviousTile)).GetSafeNormal();
 	mInstigator->OnPlayImpactPresentation.Broadcast(
 		ChargeDirection,
-		1.0f + 0.05f * FMath::Clamp(mDicePower, 1, 6),
+		1.0f + 0.05f * FMath::Clamp(mActionPower, 1, 6),
 		EImpactPresentationType::ChargeContact);
 	EnemyTarget->OnStartForcedMovePath.Broadcast(PushWorldPath, EForcedMovePresentationType::Push);
 	StartWarriorChargePushStep(1);
@@ -454,7 +454,7 @@ void USRPGMoveAction::FinishWarriorChargeImpact()
 				mWarriorChargeTarget,
 				mWarriorChargeFromTile,
 				CurrentTile,
-				mDicePower,
+				mActionPower,
 				ESRPGPlayerDisplacementType::Push);
 		}
 		if (mWarriorChargeBlocker != nullptr)
@@ -466,7 +466,7 @@ void USRPGMoveAction::FinishWarriorChargeImpact()
 		}
 		if (mWarriorChargeStopAfterPlayerStep)
 		{
-			CombatModel->ReportPlayerStagger(mWarriorChargeTarget, mDicePower);
+			CombatModel->ReportPlayerStagger(mWarriorChargeTarget, mActionPower);
 		}
 	}
 

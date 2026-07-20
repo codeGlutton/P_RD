@@ -6,7 +6,6 @@
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 #include "Simulation/Logger/EventLogger.h"
 
-#include "SRPGFramework/SRPGDiceRollAction.h"
 #include "SRPGFramework/SRPGMoveAction.h"
 #include "SRPGFramework/SRPGTurnEndAction.h"
 
@@ -162,19 +161,7 @@ void USRPGTurnContext::BeginTurn()
 			return;
 		}
 
-		if (mOwner->IsPlayerUnitModel() == true)
-		{
-			/* 플레이어의 경우 주사위 굴리기 액션 추가 */
-
-			TInstancedStruct<FSRPGCommand> DicePrepareCommand;
-			DicePrepareCommand.InitializeAs<FSRPGDicePrepareCommand>();
-			DicePrepareCommand.GetMutable<FSRPGDicePrepareCommand>().OnShowDicePanelUI.AddWeakLambda(this, [this]() {
-				OnShowDicePanelAtTurnStartUI.Broadcast(this);
-				});
-
-			CommandRouterModel->SummitCommand(DicePrepareCommand);
-		}
-		else
+		if (mOwner->IsPlayerUnitModel() == false)
 		{
 			/* AI는 플레이어에게 마지막으로 공개한 명령을 실행한다. 계획 누락 시에는 안전하게 대기 후 턴 종료한다. */
 

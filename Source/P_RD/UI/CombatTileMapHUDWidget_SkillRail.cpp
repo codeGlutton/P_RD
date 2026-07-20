@@ -476,7 +476,7 @@ void UCombatTileMapHUDWidget::HandleActionSubmenuClicked(int32 SubactionSlotInde
 	mSelectedSubactionMode = Mode;
 	mSelectedSubactionName = DisplayName;
 	mSelectedSubactionDesiredPower = DesiredPower;
-	if (SelectSkillWithAutomaticDice(SkillIndex, DesiredPower) == false)
+	if (SelectSkillWithActionPower(SkillIndex, DesiredPower) == false)
 	{
 		mSelectedSubactionMode = ECombatSubactionMode::None;
 		mSelectedSubactionName = FText::GetEmpty();
