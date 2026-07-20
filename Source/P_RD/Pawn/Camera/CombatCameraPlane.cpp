@@ -34,6 +34,8 @@ ACombatCameraPlane::ACombatCameraPlane()
 
     // 4. CameraMove 채널에 대해서만 Block으로 오버라이드
     mPlaneMesh->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Block);
+
+    mPlaneMesh->SetVisibility(false);
 }
 
 // Called when the game starts or when spawned

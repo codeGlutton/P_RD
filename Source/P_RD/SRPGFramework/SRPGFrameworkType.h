@@ -58,6 +58,16 @@ public:
         return (*this == Other) == false;
     }
 
+    FTileIndex operator+(const FTileIndex& Other) const
+    {
+        return FTileIndex(mX + Other.mX, mY + Other.mY);
+    }
+
+    FTileIndex operator-(const FTileIndex& Other) const
+    {
+        return FTileIndex(mX - Other.mX, mY - Other.mY);
+    }
+
     friend uint32 GetTypeHash(const FTileIndex& Tile)
     {
         return HashCombine(GetTypeHash(Tile.mX), GetTypeHash(Tile.mY));
@@ -72,10 +82,16 @@ public:
 
     // @brief 유효하지 않은(미배치) 타일을 나타내는 초기/해제값
     static const FTileIndex Invalid;
+
+    // @brief 영벡터 (방향 없음)
+    static const FTileIndex Zero;
 };
 
 // @brief 무효 좌표 정의: (-1, -1)
 inline const FTileIndex FTileIndex::Invalid = FTileIndex(-1, -1);
+
+// @brief 영벡터 정의: (0, 0)
+inline const FTileIndex FTileIndex::Zero = FTileIndex(0, 0);
 
 /**
  * @brief 타일 맵 상 위치

@@ -141,6 +141,19 @@ public:
 	 */
 	static ETileActorDirection TileDeltaToDirection(const FTileIndex& From, const FTileIndex& To, ETileActorDirection Fallback);
 
+	/**
+	 * @brief From->To 벡터 방향으로 하나 더 나아갈 때 8방향(직각/대각)에 가까운 방향으로 양자화 해서 전진
+	 * @details
+	 * 벡터가 직각/대각이 아닌 타일에서 한 개 더 나아갈 때 어떤 타일이 되는 지 계산
+	 * 미는 방향이 8방향이 아니므로 가까운 직각/대각 선분 방향으로 미는 걸로 처리
+	 * 예) (0,0)->(3,1) 타일에서 한 단계 더 나가면 (4,1)인가? (4,2)인가?
+	 *   고민하지 말고, 벡터((0,0)->(3.1))은 약 18도니까 직각 선분과 가까움
+	 *   따라서 직각의 진행방향을 따라해서 다음 타일은 (4,1)이 됨
+	 * @return FTileIndex 단위 스텝. 최종 위치가 아님
+	 *   양자화 된 단위니까 이걸 기존 타일인덱스에 더해주면 다음 스텝의 위치가 됨
+	 */
+	static FTileIndex TileDeltaToStep(const FTileIndex& From, const FTileIndex& To);
+
 	/* 좌표 변환 (뷰 질의) */
 	/**
 	 * @brief 타일 트랜스폼(인덱스+방향)을 월드 트랜스폼으로 변환 — 뷰에 질의
@@ -292,18 +305,20 @@ public:
 	) const;
 
 	/**
-	 * @brief 밀치기 시 밀려나는 액터의 최종 도착 좌표 계산 (순수 계산, 뷰 비의존)
+	 * @brief 밀치기 시 밀려나는 경로 계산
 	 * @details
-	 * Pusher→Pushed 방향을 각 축 부호로 8방향 단위 스텝화해(대각 포함) Pushed에서부터 한 칸씩 전진시킨다.
-	 * 다음 칸이 맵 밖이거나 장애물/유닛(IsOccupied)이면 더 밀리지 않고 직전 칸에서 멈춘다.
-	 * 코너 컷(대각 틈새 통과)은 시야 판정과 동일하게 허용한다 — 목적지 칸만 검사한다.
-	 * 첫 칸부터 막히면(또는 Pusher==Pushed로 방향이 없으면) Pushed 그대로 반환한다.
-	 * @param[in] Pusher : 미는 쪽 좌표 (방향 계산용)
-	 * @param[in] Pushed : 밀리는 쪽 좌표 (전진 시작점)
-	 * @param[in] MaxDistance : 최대 밀치기 칸 수 (0 이하이면 Pushed 그대로)
-	 * @return FTileIndex : 밀려난 최종 좌표 (못 밀리면 Pushed)
+	 * - Pusher와 Pushed를 밀었을 때 밀려나는 경로를 가까운곳부터 먼곳 순서로 배열로 저장
+	 * @note
+	 * - Pusher->Pushed 벡터 방향으로 미는 게 원칙
+	 * - 만약, 직각/대각 방향이 아닌 경우 가까운 직각/대각 방향을 사용해서 민다.
+	 * - Pusher->Pushed 사이에 장애물이 시야를 가리면 밀지 못함 (유닛은 관통)
+	 * - Pushed 뒤에 장애물/유닛이 있으면 밀리지 않음
+	 * @param[in] Pusher 미는 쪽 좌표 (방향 계산용)
+	 * @param[in] Pushed 밀리는 쪽 좌표 (전진 시작점)
+	 * @param[in] MaxDistance 최대 밀치기 칸 수
+	 * @return TArray<FTileIndex> 밀리는 위치부터 도착까지의 경로. 밀리지 않으면 Pushed 위치 한 개
 	 */
-	FTileIndex GetPushDestination(const FTileIndex& Pusher, const FTileIndex& Pushed, int32 MaxDistance) const;
+	TArray<FTileIndex> GetPushPath(const FTileIndex& Pusher, const FTileIndex& Pushed, int32 MaxDistance) const;
 
 	/**
 	 * 진입 액터를 해당 타일에 배치할 수 있는지 검사하는 함수
@@ -542,13 +557,15 @@ private:
 	 * @brief From에서 To까지 시야(직선)가 막히지 않는지 판정
 	 * @details
 	 * RasterizeLine으로 경로 칸을 구한 뒤, 양 끝(From, To)을 제외한 중간 칸에
-	 * 시야를 막는 액터(Obstacle 또는 Unit)가 하나라도 있으면 막힌 것으로 본다.
+	 * 시야를 막는 액터(BlockerLayers 레이어)가 하나라도 있으면 막힌 것으로 본다.
 	 * @param[in] From 시작 좌표
 	 * @param[in] To   목표 좌표
 	 * @param[in] IgnoreBlocker 차폐 판정에서 제외할 액터 (자리를 비울 예정인 유닛 등). 없으면 nullptr
+	 * @param[in] BlockerLayers 차폐물로 볼 레이어 (기본: 장애물+유닛. 밀치기는 장애물만 차폐)
 	 * @return 시야가 확보되면 true, 중간이 막히면 false
 	 */
-	bool HasLineOfSight(const FTileIndex& From, const FTileIndex& To, const UBoardActorModel* IgnoreBlocker = nullptr) const;
+	bool HasLineOfSight(const FTileIndex& From, const FTileIndex& To, const UBoardActorModel* IgnoreBlocker = nullptr,
+		ETileLayerFlag BlockerLayers = ETileLayerFlag::Obstacle | ETileLayerFlag::Unit) const;
 
 	/**
 	 * @brief 타일에 액터 등록 (mBoardActors에 추가)

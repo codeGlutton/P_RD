@@ -156,6 +156,42 @@ ETileActorDirection UTileMapModel::TileDeltaToDirection(const FTileIndex& From, 
 	return DeltaY > 0 ? ETileActorDirection::Right : ETileActorDirection::Left;
 }
 
+FTileIndex UTileMapModel::TileDeltaToStep(const FTileIndex& From, const FTileIndex& To)
+{
+	// From→To 벡터
+	const FTileIndex Delta = To - From;
+
+	// 제자리면 방향 없음
+	if (Delta == FTileIndex::Zero)
+	{
+		return FTileIndex::Zero;
+	}
+
+	// 벡터를 각도로 변경. 음수 각도(아래쪽 방향)는 한 바퀴를 더해 0°~360°로 통일
+	float Angle = FMath::Atan2(static_cast<float>(Delta.mY), static_cast<float>(Delta.mX));
+	if (Angle < 0.0f)
+	{
+		Angle += 2.0f * PI;
+	}
+
+	// 45° 단위로 반올림 = 가장 가까운 방향 번호 (360°로 반올림된 경우만 0°와 같은 방향이므로 %8)
+	const int32 Octant = FMath::RoundToInt(Angle / (PI / 4.0f)) % 8;
+
+	// 8방향 단위 스텝 (0번=+X에서 시작해 +Y쪽으로 45°씩)
+	static const FTileIndex Steps[8] =
+	{
+		FTileIndex(1, 0),
+		FTileIndex(1, 1),
+		FTileIndex(0, 1),
+		FTileIndex(-1, 1),
+		FTileIndex(-1, 0),
+		FTileIndex(-1, -1),
+		FTileIndex(0, -1),
+		FTileIndex(1, -1)
+	};
+	return Steps[Octant];
+}
+
 FTransform UTileMapModel::TileToWorldTransform(const FTileTransform& TileTransform) const
 {
 	// 뷰가 바인딩돼 있으면 뷰에 질의, 아니면(심 등) 항등 변환 (Invalid 값이 따로 없으니까)
@@ -388,7 +424,7 @@ void UTileMapModel::RasterizeLine(const FTileIndex& From, const FTileIndex& To, 
 	BresenhamLine(From, To, Out);
 }
 
-bool UTileMapModel::HasLineOfSight(const FTileIndex& From, const FTileIndex& To, const UBoardActorModel* IgnoreBlocker) const
+bool UTileMapModel::HasLineOfSight(const FTileIndex& From, const FTileIndex& To, const UBoardActorModel* IgnoreBlocker, ETileLayerFlag BlockerLayers) const
 {
 	// From→To 직선이 지나는 칸들을 래스터화 (첫 원소=From, 마지막 원소=To 보장)
 	TArray<FTileIndex> LineTiles;
@@ -397,8 +433,8 @@ bool UTileMapModel::HasLineOfSight(const FTileIndex& From, const FTileIndex& To,
 	// 양 끝(From, To)을 제외한 중간 칸만 검사
 	for (int32 Index = 1; Index < LineTiles.Num() - 1; ++Index)
 	{
-		// 중간 칸에 시야를 막는 액터(Obstacle 또는 Unit)가 있으면 시야가 막힘(=LoS:false)
-		for (const UBoardActorModel* Actor : GetActorsOnTile(LineTiles[Index], ETileLayerFlag::Obstacle | ETileLayerFlag::Unit))
+		// 중간 칸에 시야를 막는 액터(BlockerLayers 레이어)가 있으면 시야가 막힘(=LoS:false)
+		for (const UBoardActorModel* Actor : GetActorsOnTile(LineTiles[Index], BlockerLayers))
 		{
 			// 무시 대상(자리를 비울 예정인 유닛 등)은 차폐로 치지 않음
 			if (Actor != IgnoreBlocker)
@@ -841,27 +877,32 @@ TArray<FTileIndex> UTileMapModel::GetEffectTiles(const FTileIndex& Caster, const
 	return Result;
 }
 
-FTileIndex UTileMapModel::GetPushDestination(const FTileIndex& Pusher, const FTileIndex& Pushed, int32 MaxDistance) const
+TArray<FTileIndex> UTileMapModel::GetPushPath(const FTileIndex& Pusher, const FTileIndex& Pushed, int32 MaxDistance) const
 {
+	// 경로는 최소한 밀리는 칸 자신을 포함 (못 밀리면 제자리 한 칸)
+	TArray<FTileIndex> Path;
+	Path.Add(Pushed);
+
 	// 밀리는 칸이 맵 밖이거나 밀칠 거리가 없으면 그대로 둔다
 	if (!IsValidIndex(Pushed) || MaxDistance <= 0)
-		return Pushed;
+		return Path;
 
-	// 미는 쪽→밀리는 쪽 방향을 각 축 부호로 8방향 단위 스텝화 (대각 포함)
-	const FTileIndex Step(
-		FMath::Sign(Pushed.mX - Pusher.mX),
-		FMath::Sign(Pushed.mY - Pusher.mY)
-	);
+	// 미는 쪽과 밀리는 쪽 사이에 장애물이 있으면 밀 수 없음 (유닛은 관통 — 기획 규칙)
+	if (HasLineOfSight(Pusher, Pushed, nullptr, ETileLayerFlag::Obstacle) == false)
+		return Path;
+
+	// 미는 쪽→밀리는 쪽 방향을 가장 가까운 8방향 단위 스텝으로 양자화
+	const FTileIndex Step = TileDeltaToStep(Pusher, Pushed);
 
 	// 같은 칸이라 방향이 없으면 밀 수 없음
-	if (Step.mX == 0 && Step.mY == 0)
-		return Pushed;
+	if (Step == FTileIndex::Zero)
+		return Path;
 
-	// 밀리는 칸에서부터 한 칸씩 전진하며 멈출 지점을 찾음
+	// 밀리는 칸에서부터 한 칸씩 전진하며 지나가는 칸을 기록
 	FTileIndex Current = Pushed;
 	for (int32 Distance = 0; Distance < MaxDistance; ++Distance)
 	{
-		const FTileIndex Next(Current.mX + Step.mX, Current.mY + Step.mY);
+		const FTileIndex Next = Current + Step;
 
 		// 맵 밖으로는 밀리지 않음
 		if (!IsValidIndex(Next))
@@ -873,9 +914,10 @@ FTileIndex UTileMapModel::GetPushDestination(const FTileIndex& Pusher, const FTi
 
 		// 빈 칸이면 거기까지 밀려남
 		Current = Next;
+		Path.Add(Current);
 	}
 
-	return Current;
+	return Path;
 }
 
 TArray<UBoardActorModel*> UTileMapModel::GetActorsOnTile(const FTileIndex& TileIndex, ETileLayerFlag LayerFilter) const
