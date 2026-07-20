@@ -53,6 +53,10 @@ public:
 	/** @brief false면 스킬 주사위를 이미 소비했으므로 기존 이동력은 차감하지 않는다. */
 	UPROPERTY()
 	bool mConsumeMovementPoints = true;
+
+	/** @brief 매 플레이어 차례 한 번, 턴을 넘기지 않고 인접 칸으로 이동하는 전투 스텝. */
+	UPROPERTY()
+	bool mIsCombatStep = false;
 };
 
 /**
@@ -70,6 +74,12 @@ class USRPGMoveAction : public USRPGAction
 
 protected:
 	USRPGMoveAction();
+
+public:
+	/** @brief 전사 이동의 성격을 후속 연계/보상 판정에 노출한다. */
+	bool IsWarriorCharge() const { return mIsWarriorCharge; }
+	bool IsWarriorLeap() const { return mIsWarriorLeap; }
+	bool IsCombatStep() const { return mIsCombatStep; }
 
 protected:
 	void OnBeginAction() override;
@@ -113,6 +123,7 @@ protected:
 	bool mIsWarriorLeap = false;
 	bool mIsElasticCharge = false;
 	bool mConsumeMovementPoints = true;
+	bool mIsCombatStep = false;
 	int32 mActionPower = 0;
 
 	// @brief 진행 중인 스텝 인덱스 (mPathTileIndexes 기준, 0은 시작 타일이라 1부터 시작)

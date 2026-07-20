@@ -46,6 +46,7 @@ class UUserWidget;
 enum class EEnemyIntentTutorialStage : uint8
 {
 	WaitingForIntent,
+	CombatStep,
 	OpenGrip,
 	SelectPull,
 	ConfirmDestination,
@@ -1105,6 +1106,7 @@ private:
 	FText mDirectMoveImpactLabel;
 	bool mDirectMoveIsCharge = false;
 	bool mDirectMoveIsLeap = false;
+	bool mDirectMoveIsCombatStep = false;
 	int32 mDirectGestureGhostTargetId = INDEX_NONE;
 	UPROPERTY(Transient) TObjectPtr<UBorder> mDirectUnitGestureLine;
 	UPROPERTY(Transient) TObjectPtr<UBorder> mDirectUnitGestureHandle;

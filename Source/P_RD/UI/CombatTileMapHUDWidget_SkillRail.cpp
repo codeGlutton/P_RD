@@ -6,6 +6,7 @@
 #include "Components/CanvasPanel.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/CombatTileMapHUDWidgetPrivate.h"
 #include "UI/IndexedButtonWidget.h"
@@ -210,7 +211,7 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 				case 0: FamilySummary = TEXT("베기 · 밀어베기 · 방패치기"); break;
 				case 1: FamilySummary = TEXT("끌기 · 던지기 · 자리교환"); break;
 				case 2: FamilySummary = TEXT("다리걸기 · 방패 밀치기"); break;
-				case 3: FamilySummary = TEXT("전투 스텝 · 어깨 돌진 · 도약"); break;
+				case 3: FamilySummary = TEXT("무료 스텝 · 어깨 돌진 · 도약"); break;
 				default: break;
 				}
 				const FString ActiveHint = RailSlotIndex == mExpandedActionFamily
@@ -376,7 +377,7 @@ void UCombatTileMapHUDWidget::RefreshActionSubmenuWidgets()
 			AddEntry(ThrowIndex, TEXT("방패 밀치기"), TEXT("인접 적 드래그 · 진형 붕괴"), 1, ECombatSubactionMode::ShortThrow);
 			break;
 		case 3:
-			AddEntry(1, TEXT("전투 스텝"), TEXT("기사를 드래그 · 1칸 재배치"), 1, ECombatSubactionMode::Move);
+			AddEntry(1, TEXT("무료 전투 스텝"), TEXT("행동 전 기사 드래그 · 턴 소모 없음"), 1, ECombatSubactionMode::Move);
 			AddEntry(1, TEXT("어깨 돌진"), TEXT("기사를 직선 드래그 · 1칸 충돌"), 6, ECombatSubactionMode::Charge);
 			AddEntry(1, TEXT("도약"), TEXT("기사를 드래그 · 장애물 넘어 3칸 착지"), 3, ECombatSubactionMode::Leap);
 			break;
@@ -398,14 +399,21 @@ void UCombatTileMapHUDWidget::RefreshActionSubmenuWidgets()
 		const bool bVisible = bCanShow && mActionSubmenuSkillIndices.IsValidIndex(SlotIndex);
 		const int32 SkillIndex = bVisible ? mActionSubmenuSkillIndices[SlotIndex] : INDEX_NONE;
 		const FSkillUI* Skill = Skills != nullptr && Skills->IsValidIndex(SkillIndex) ? &(*Skills)[SkillIndex] : nullptr;
+		const USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+		const bool bCombatStepEntry = bVisible && mActionSubmenuModes.IsValidIndex(SlotIndex)
+			&& mActionSubmenuModes[SlotIndex] == ECombatSubactionMode::Move;
+		const bool bEntryEnabled = bCombatStepEntry == false
+			|| (CombatModel != nullptr && CombatModel->CanUseWarriorCombatStep());
 		const bool bSelected = bVisible && mActionSubmenuModes.IsValidIndex(SlotIndex)
 			&& mSelectedSubactionMode == mActionSubmenuModes[SlotIndex]
 			&& mActiveActionFamily == mExpandedActionFamily;
 		if (mActionSubmenuPanels.IsValidIndex(SlotIndex) && mActionSubmenuPanels[SlotIndex] != nullptr)
 		{
-			mActionSubmenuPanels[SlotIndex]->SetBrushColor(bSelected
+			mActionSubmenuPanels[SlotIndex]->SetBrushColor(bEntryEnabled == false
+				? FLinearColor(0.025f, 0.035f, 0.040f, 0.78f)
+				: (bSelected
 				? FLinearColor(0.52f, 0.34f, 0.045f, 0.98f)
-				: FLinearColor(0.025f, 0.055f, 0.070f, 0.96f));
+				: FLinearColor(0.025f, 0.055f, 0.070f, 0.96f)));
 			mActionSubmenuPanels[SlotIndex]->SetVisibility(bVisible
 				? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 		}
@@ -423,14 +431,17 @@ void UCombatTileMapHUDWidget::RefreshActionSubmenuWidgets()
 		}
 		if (mActionSubmenuTexts.IsValidIndex(SlotIndex) && mActionSubmenuTexts[SlotIndex] != nullptr)
 		{
-			mActionSubmenuTexts[SlotIndex]->SetColorAndOpacity(FSlateColor(bSelected
+			mActionSubmenuTexts[SlotIndex]->SetColorAndOpacity(FSlateColor(bEntryEnabled == false
+				? FLinearColor(0.42f, 0.48f, 0.49f, 0.85f)
+				: (bSelected
 				? FLinearColor(1.0f, 0.88f, 0.34f, 1.0f)
-				: FLinearColor(0.88f, 0.96f, 1.0f, 1.0f)));
+				: FLinearColor(0.88f, 0.96f, 1.0f, 1.0f))));
 			mActionSubmenuTexts[SlotIndex]->SetVisibility(bVisible
 				? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 		}
 		if (mActionSubmenuButtons[SlotIndex] != nullptr)
 		{
+			mActionSubmenuButtons[SlotIndex]->SetIsEnabled(bEntryEnabled);
 			mActionSubmenuButtons[SlotIndex]->SetVisibility(bVisible
 				? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 		}

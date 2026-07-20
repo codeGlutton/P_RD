@@ -43,6 +43,8 @@ ESRPGCommandResult USRPGMoveAction::HandleCommand(const TInstancedStruct<FSRPGCo
 		mIsElasticCharge = MoveCommand.mIsElasticCharge;
 		mActionPower = MoveCommand.mActionPower;
 		mConsumeMovementPoints = MoveCommand.mConsumeMovementPoints;
+		mIsCombatStep = MoveCommand.mIsCombatStep;
+		mConsumesTurn = mIsCombatStep == false;
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
 

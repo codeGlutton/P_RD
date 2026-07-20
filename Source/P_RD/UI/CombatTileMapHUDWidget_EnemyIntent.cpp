@@ -208,17 +208,24 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
 	}
 	const FString MomentumPips = FString::ChrN(FMath::Clamp(FlowState.mWarriorMomentum, 0, 3), TEXT('◆'))
 		+ FString::ChrN(FMath::Clamp(3 - FlowState.mWarriorMomentum, 0, 3), TEXT('◇'));
+	const FString FlowPips = FString::ChrN(FMath::Clamp(FlowState.mWarriorFlow, 0, 3), TEXT('◆'))
+		+ FString::ChrN(FMath::Clamp(3 - FlowState.mWarriorFlow, 0, 3), TEXT('◇'));
+	const FString PressurePips = FString::ChrN(FMath::Clamp(FlowState.mStandstillPressure, 0, 3), TEXT('■'))
+		+ FString::ChrN(FMath::Clamp(3 - FlowState.mStandstillPressure, 0, 3), TEXT('□'));
 	const FString HeaderText = FString::Printf(
-		TEXT("ROUND %d/8  ·  적 %d/%d  ·  COMBO %d  ·  기세 %s\n%s%s"),
+		TEXT("ROUND %d/8  ·  적 %d/%d  ·  COMBO %d%s\n기세 %s  ·  FLOW %s  ·  압박 %s\n%s  ·  %s"),
 		FMath::Clamp(Round, 1, 8),
 		LivingEnemyRows,
 		FMath::Max(FlowState.mEnemyCap, LivingEnemyRows),
 		FlowState.mWarriorCombo,
-		*MomentumPips,
-		*FlowState.mWarriorStanceLabel.ToString(),
 		FlowState.mPendingReinforcementCount > 0
 			? *FString::Printf(TEXT("  ·  다음 증원 %d"), FlowState.mPendingReinforcementCount)
-			: TEXT(""));
+			: TEXT(""),
+		*MomentumPips,
+		*FlowPips,
+		*PressurePips,
+		*FlowState.mMovementDangerLabel.ToString(),
+		*FlowState.mWarriorStanceLabel.ToString());
 	if (UTextBlock* Header = MakeText(
 		HeaderText,
 		IntentCurrentColor,
@@ -366,7 +373,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 				mEnemyIntentTutorialPanel->SetVisibility(ESlateVisibility::Collapsed);
 				return;
 			}
-			mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::OpenGrip;
+			mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::CombatStep;
 		}
 
 		if (mEnemyIntentTutorialIntervenedEnemyUnitId == INDEX_NONE)
@@ -393,6 +400,9 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		}
 		const bool bCurrentTurnIsPlayer = PlayerUnitId != INDEX_NONE
 			&& mCombatUIModel->GetTurnUI().mCurrentUnitId == PlayerUnitId;
+		const USRPGCombatModel* DirectCombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+		const bool bCombatStepUsed = DirectCombatModel != nullptr
+			&& DirectCombatModel->HasUsedWarriorCombatStepThisRound();
 		if (mEnemyIntentTutorialPullCompleted == false
 			&& mEnemyIntentTutorialInterventionSubmitted
 			&& DirectIntervened != nullptr
@@ -423,6 +433,10 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		{
 			mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::ApplyingIntervention;
 		}
+		else if (bCombatStepUsed == false)
+		{
+			mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::CombatStep;
+		}
 		else
 		{
 			const int32 SelectedSkillIndex = mCombatUIModel->GetSelectedSkillIndex();
@@ -446,16 +460,20 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		FString DirectMessage;
 		switch (mEnemyIntentTutorialStage)
 		{
+		case EEnemyIntentTutorialStage::CombatStep:
+			DirectTitle = TEXT("1 / 5   기사를 옆의 밝은 칸으로 끌어 놓으세요");
+			DirectMessage = TEXT("FREE STEP은 턴을 쓰지 않습니다 · 이동 뒤에도 행동 하나를 그대로 쓸 수 있습니다");
+			break;
 		case EEnemyIntentTutorialStage::OpenGrip:
-			DirectTitle = TEXT("1 / 4   왼쪽 ‘손아귀’를 누르세요");
+			DirectTitle = TEXT("2 / 5   왼쪽 ‘손아귀’를 누르세요");
 			DirectMessage = TEXT("큰 손 아이콘입니다 · 누르면 세부 행동이 옆에 펼쳐집니다");
 			break;
 		case EEnemyIntentTutorialStage::SelectPull:
-			DirectTitle = TEXT("2 / 4   펼쳐진 ‘끌어오기’를 누르세요");
+			DirectTitle = TEXT("3 / 5   펼쳐진 ‘끌어오기’를 누르세요");
 			DirectMessage = TEXT("먼 적을 기사 주변의 빈칸으로 데려오는 행동입니다");
 			break;
 		case EEnemyIntentTutorialStage::ConfirmDestination:
-			DirectTitle = TEXT("3 / 4   강조된 적을 원하는 밝은 칸으로 끌어 놓으세요");
+			DirectTitle = TEXT("4 / 5   강조된 적을 원하는 밝은 칸으로 끌어 놓으세요");
 			DirectMessage = TEXT("반투명 적=다음 위치 · 붉은 ✕=곧 맞는 칸 · 초록 문구면 안전합니다");
 			break;
 		case EEnemyIntentTutorialStage::ApplyingIntervention:
@@ -463,8 +481,8 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 			DirectMessage = TEXT("손을 놓은 칸에 정확히 도착합니다");
 			break;
 		case EEnemyIntentTutorialStage::EndTurnAndObserve:
-			DirectTitle = TEXT("4 / 4   손을 놓으면 연계가 적 페이즈까지 이어집니다");
-			DirectMessage = TEXT("COMBO와 기세를 보세요 · 붙잡은 적이 움직이면 사슬 반동이 자동 발동합니다");
+			DirectTitle = TEXT("5 / 5   이동 → 끌기 → 후속타 → 적 전원 대응");
+			DirectMessage = TEXT("FLOW와 COMBO를 보세요 · 같은 칸만 반복하면 압박이 차고, 움직이면 연계가 강해집니다");
 			break;
 		case EEnemyIntentTutorialStage::Complete:
 			DirectTitle = TEXT("연계 완료 · 다시 내 차례");
@@ -513,6 +531,20 @@ UWidget* UCombatTileMapHUDWidget::ResolveEnemyIntentTutorialFocusWidget() const
 
 	switch (mEnemyIntentTutorialStage)
 	{
+	case EEnemyIntentTutorialStage::CombatStep:
+	{
+		const TArray<FUnitUI>& Units = mCombatUIModel->GetUnitUIs();
+		for (int32 UnitIndex = 0; UnitIndex < Units.Num(); ++UnitIndex)
+		{
+			if (Units[UnitIndex].mIsPlayer
+				&& mUnitHpBars.IsValidIndex(UnitIndex)
+				&& mUnitHpBars[UnitIndex].mRoot != nullptr)
+			{
+				return mUnitHpBars[UnitIndex].mRoot.Get();
+			}
+		}
+		return nullptr;
+	}
 	case EEnemyIntentTutorialStage::OpenGrip:
 		return mSkillInputButtons.IsValidIndex(1) && mSkillInputButtons[1] != nullptr
 			? mSkillInputButtons[1].Get()
@@ -603,12 +635,13 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentTutorialProgress() const
 	int32 ActiveStep = INDEX_NONE;
 	switch (mEnemyIntentTutorialStage)
 	{
-	case EEnemyIntentTutorialStage::OpenGrip:              ActiveStep = 0; break;
-	case EEnemyIntentTutorialStage::SelectPull:            CompletedCount = 1; ActiveStep = 1; break;
+	case EEnemyIntentTutorialStage::CombatStep:             ActiveStep = 0; break;
+	case EEnemyIntentTutorialStage::OpenGrip:               CompletedCount = 1; ActiveStep = 1; break;
+	case EEnemyIntentTutorialStage::SelectPull:             CompletedCount = 2; ActiveStep = 2; break;
 	case EEnemyIntentTutorialStage::ConfirmDestination:
-	case EEnemyIntentTutorialStage::ApplyingIntervention:  CompletedCount = 2; ActiveStep = 2; break;
-	case EEnemyIntentTutorialStage::EndTurnAndObserve:     CompletedCount = 3; ActiveStep = 3; break;
-	case EEnemyIntentTutorialStage::Complete:              CompletedCount = 4; break;
+	case EEnemyIntentTutorialStage::ApplyingIntervention:   CompletedCount = 3; ActiveStep = 3; break;
+	case EEnemyIntentTutorialStage::EndTurnAndObserve:      CompletedCount = 4; ActiveStep = 4; break;
+	case EEnemyIntentTutorialStage::Complete:               CompletedCount = 5; break;
 	case EEnemyIntentTutorialStage::WaitingForIntent:
 	default:                                               break;
 	}
@@ -678,11 +711,12 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime
 	int32 ActiveStep = INDEX_NONE;
 	switch (mEnemyIntentTutorialStage)
 	{
-	case EEnemyIntentTutorialStage::OpenGrip:             ActiveStep = 0; break;
-	case EEnemyIntentTutorialStage::SelectPull:           ActiveStep = 1; break;
+	case EEnemyIntentTutorialStage::CombatStep:            ActiveStep = 0; break;
+	case EEnemyIntentTutorialStage::OpenGrip:              ActiveStep = 1; break;
+	case EEnemyIntentTutorialStage::SelectPull:            ActiveStep = 2; break;
 	case EEnemyIntentTutorialStage::ConfirmDestination:
-	case EEnemyIntentTutorialStage::ApplyingIntervention: ActiveStep = 2; break;
-	case EEnemyIntentTutorialStage::EndTurnAndObserve:    ActiveStep = 3; break;
+	case EEnemyIntentTutorialStage::ApplyingIntervention:  ActiveStep = 3; break;
+	case EEnemyIntentTutorialStage::EndTurnAndObserve:     ActiveStep = 4; break;
 	default:                                           break;
 	}
 	if (mEnemyIntentTutorialProgressDots.IsValidIndex(ActiveStep)
@@ -716,8 +750,9 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime
 	constexpr float FocusPadding = 8.0f;
 	FVector2D MinPoint;
 	FVector2D MaxPoint;
-	const bool bFocusEnemyModel = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmDestination;
-	if (bFocusEnemyModel)
+	const bool bFocusUnitModel = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::CombatStep
+		|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmDestination;
+	if (bFocusUnitModel)
 	{
 		// HP바 슬롯은 실제 유닛 투영점보다 60px 위에 놓인다(UnitBars.cpp). HP바만 감싸면
 		// 클릭할 수 없는 라벨을 가리키는 것처럼 보이므로, 그 아래의 3D 모델 몸체를 직접 감싼다.
@@ -845,6 +880,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime
 		FString PointerText = TEXT("클릭");
 		switch (mEnemyIntentTutorialStage)
 		{
+		case EEnemyIntentTutorialStage::CombatStep: PointerText = TEXT("기사를 누른 채 옆 칸으로"); break;
 		case EEnemyIntentTutorialStage::OpenGrip: PointerText = TEXT("여기 누르기"); break;
 		case EEnemyIntentTutorialStage::SelectPull:
 			PointerText = TEXT("끌어오기 누르기");

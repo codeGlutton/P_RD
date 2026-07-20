@@ -849,7 +849,8 @@ bool UCombatTileMapHUDWidget::TryExecuteTapTileActionAtScreenPosition(const FVec
 void UCombatTileMapHUDWidget::RefreshDirectMoveRangeHighlight()
 {
 	if (mCombatUIModel == nullptr
-		|| (mSelectedSubactionMode != ECombatSubactionMode::Move
+		|| (mDirectMoveIsCombatStep == false
+			&& mSelectedSubactionMode != ECombatSubactionMode::Move
 			&& mSelectedSubactionMode != ECombatSubactionMode::Charge
 			&& mSelectedSubactionMode != ECombatSubactionMode::Leap))
 	{
@@ -1120,10 +1121,16 @@ bool UCombatTileMapHUDWidget::BeginDirectUnitGesture(const FVector2D& ScreenPosi
 	{
 		return false;
 	}
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	const bool bFreeCombatStep = bIsPlayer
+		&& bMovementAction == false
+		&& SelectedSkillIndex == INDEX_NONE
+		&& CombatModel != nullptr
+		&& CombatModel->CanUseWarriorCombatStep();
 	mDirectGripGesture = false;
 	mDirectGripCanSwap = false;
 	mDirectGripSwapPreview = false;
-	if (bMovementAction)
+	if (bMovementAction || bFreeCombatStep)
 	{
 		if (bIsPlayer == false)
 		{
@@ -1133,6 +1140,7 @@ bool UCombatTileMapHUDWidget::BeginDirectUnitGesture(const FVector2D& ScreenPosi
 		mDirectArmedTargetUnitId = UnitId;
 		mDirectMoveIsCharge = mSelectedSubactionMode == ECombatSubactionMode::Charge;
 		mDirectMoveIsLeap = mSelectedSubactionMode == ECombatSubactionMode::Leap;
+		mDirectMoveIsCombatStep = bFreeCombatStep || mSelectedSubactionMode == ECombatSubactionMode::Move;
 		const FUnitUI* DraggedPlayer = mCombatUIModel->GetUnitUIs().FindByPredicate([UnitId](const FUnitUI& Unit)
 		{
 			return Unit.mUnitId == UnitId;
@@ -1147,6 +1155,7 @@ bool UCombatTileMapHUDWidget::BeginDirectUnitGesture(const FVector2D& ScreenPosi
 		mDirectMoveLandingTile = mDirectMovePath[0];
 		mDirectMoveImpactTile = FTileIndex::Invalid;
 		mDirectMoveImpactLabel = FText::GetEmpty();
+		RefreshDirectMoveRangeHighlight();
 	}
 	if (bSelectedDragAction)
 	{
@@ -1535,7 +1544,13 @@ void UCombatTileMapHUDWidget::SetDirectUnitGestureVisual(bool bVisible, const FV
 		: TEXT("원하는 칸 쪽으로 드래그");
 	if (mDirectArmedSkillIndex == ContextMoveAction)
 	{
-		if (mDirectMoveIsLeap)
+		if (mDirectMoveIsCombatStep)
+		{
+			Label = mDirectMovePath.Num() > 1
+				? TEXT("무료 전투 스텝 · 놓고 이어서 공격")
+				: TEXT("주변 밝은 칸으로 드래그 · 턴 소모 없음");
+		}
+		else if (mDirectMoveIsLeap)
 		{
 			Label = mDirectMovePath.Num() > 1
 				? TEXT("도약 착지 · 놓아서 실행")
@@ -1639,7 +1654,10 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 	const TArray<FTileIndex> WarriorMovePath = mDirectMovePath;
 	const bool bWarriorCharge = mDirectMoveIsCharge;
 	const bool bWarriorLeap = mDirectMoveIsLeap;
-	const int32 WarriorMoveActionPower = FMath::Clamp(mSelectedSubactionDesiredPower, 1, 6);
+	const bool bWarriorCombatStep = mDirectMoveIsCombatStep;
+	const int32 WarriorMoveActionPower = bWarriorCombatStep
+		? 1
+		: FMath::Clamp(mSelectedSubactionDesiredPower, 1, 6);
 	mDirectUnitGestureActive = false;
 	mDirectUnitGestureTargetId = INDEX_NONE;
 	SetDirectUnitGestureVisual(false);
@@ -1709,7 +1727,8 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 			Request.mIsCharge = bWarriorCharge;
 			Request.mIsLeap = bWarriorLeap;
 			Request.mActionPower = WarriorMoveActionPower;
-			ClearDirectMovePreview(false);
+			Request.mIsCombatStep = bWarriorCombatStep;
+			ClearDirectMovePreview(bWarriorCombatStep);
 			mCombatUIModel->RequestWarriorMove(Request);
 		}
 		else

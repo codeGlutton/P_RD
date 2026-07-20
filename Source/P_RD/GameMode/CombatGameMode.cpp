@@ -563,6 +563,10 @@ void ACombatGameMode::HandleWarriorMoveRequested(FWarriorMoveRequest Request)
 	{
 		return;
 	}
+	if (Request.mIsCombatStep && CombatModel->CanUseWarriorCombatStep() == false)
+	{
+		return;
+	}
 	// 보행/돌진은 한 칸이다. 도약만 중간 점유를 건너뛰는 단일 착지로 최대 3칸을 허용한다.
 	constexpr int32 MaximumSteps = 1;
 	if (Request.mPathTileIndexes.Num() - 1 > MaximumSteps)
@@ -599,7 +603,14 @@ void ACombatGameMode::HandleWarriorMoveRequested(FWarriorMoveRequest Request)
 	MoveCommand.mIsWarriorLeap = Request.mIsLeap;
 	MoveCommand.mActionPower = Request.mActionPower;
 	MoveCommand.mConsumeMovementPoints = false;
-	CommandRouterModel->SummitCommand(MoveCastCommand);
+	MoveCommand.mIsCombatStep = Request.mIsCombatStep;
+	const FTileIndex StepFrom = MoveCommand.mPathTileIndexes[0];
+	const FTileIndex StepTo = MoveCommand.mPathTileIndexes.Last();
+	const bool bSubmitted = CommandRouterModel->SummitCommand(MoveCastCommand);
+	if (bSubmitted && Request.mIsCombatStep)
+	{
+		CombatModel->NotifyPlayerCombatStep(StepFrom, StepTo);
+	}
 }
 
 void ACombatGameMode::HandleWarriorAreaActionRequested(ESRPGWarriorAreaActionType ActionType)
@@ -1199,6 +1210,10 @@ void ACombatGameMode::PushEnemyIntentUIData() const
 		IntentUI.mEnemyCap = CombatModel->GetCurrentReinforcementEnemyCap();
 		IntentUI.mWarriorCombo = CombatModel->GetWarriorCombo();
 		IntentUI.mWarriorMomentum = CombatModel->GetWarriorMomentum();
+		IntentUI.mWarriorFlow = CombatModel->GetWarriorFlow();
+		IntentUI.mStandstillPressure = CombatModel->GetStandstillPressure();
+		IntentUI.mCombatStepAvailable = CombatModel->CanUseWarriorCombatStep();
+		IntentUI.mMovementDangerLabel = CombatModel->GetMovementDangerLabel();
 		IntentUI.mWarriorStanceLabel = CombatModel->GetWarriorAftermathStanceLabel();
 
 		if (IsValid(Intent.mEnemy))
@@ -1245,6 +1260,10 @@ void ACombatGameMode::PushEnemyIntentUIData() const
 		Warning.mEnemyCap = CombatModel->GetCurrentReinforcementEnemyCap();
 		Warning.mWarriorCombo = CombatModel->GetWarriorCombo();
 		Warning.mWarriorMomentum = CombatModel->GetWarriorMomentum();
+		Warning.mWarriorFlow = CombatModel->GetWarriorFlow();
+		Warning.mStandstillPressure = CombatModel->GetStandstillPressure();
+		Warning.mCombatStepAvailable = CombatModel->CanUseWarriorCombatStep();
+		Warning.mMovementDangerLabel = CombatModel->GetMovementDangerLabel();
 		Warning.mWarriorStanceLabel = CombatModel->GetWarriorAftermathStanceLabel();
 	}
 

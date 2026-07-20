@@ -721,7 +721,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 			mEnemyIntentTutorialPanel->SetVerticalAlignment(VAlign_Center);
 			mEnemyIntentTutorialPanel->AddChild(mEnemyIntentTutorialContent);
 
-			mEnemyIntentTutorialTitle->SetText(FText::FromString(TEXT("1 / 4   왼쪽 ‘손아귀’를 누르세요")));
+			mEnemyIntentTutorialTitle->SetText(FText::FromString(TEXT("1 / 5   기사를 옆의 밝은 칸으로 끌어 놓으세요")));
 			mEnemyIntentTutorialTitle->SetJustification(ETextJustify::Center);
 			mEnemyIntentTutorialTitle->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.82f, 0.28f, 1.0f)));
 			FSlateFontInfo TitleFont = mEnemyIntentTutorialTitle->GetFont();
@@ -736,7 +736,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 
 			mEnemyIntentTutorialFlowCards.Reset();
 			mEnemyIntentTutorialFlowTexts.Reset();
-			const TCHAR* FlowLabels[] = { TEXT("① 손아귀"), TEXT("② 끌어오기"), TEXT("③ 드래그 배치"), TEXT("④ 적 전원 행동") };
+			const TCHAR* FlowLabels[] = { TEXT("① 기사 스텝"), TEXT("② 손아귀"), TEXT("③ 끌어오기"), TEXT("④ 드래그 배치"), TEXT("⑤ 적 전원 행동") };
 			for (int32 FlowIndex = 0; FlowIndex < UE_ARRAY_COUNT(FlowLabels); ++FlowIndex)
 			{
 				UBorder* FlowCard = WidgetTree->ConstructWidget<UBorder>(
@@ -801,7 +801,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 			}
 
 			mEnemyIntentTutorialProgressDots.Reset();
-			for (int32 StepIndex = 0; StepIndex < 4; ++StepIndex)
+			for (int32 StepIndex = 0; StepIndex < 5; ++StepIndex)
 			{
 				UBorder* Dot = WidgetTree->ConstructWidget<UBorder>(
 					UBorder::StaticClass(),

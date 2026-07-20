@@ -208,8 +208,15 @@ public:
 	int32 GetCurrentReinforcementEnemyCap() const { return GetReinforcementEnemyCapForRound(); }
 	int32 GetWarriorCombo() const { return mWarriorCombo; }
 	int32 GetWarriorMomentum() const { return mWarriorMomentum; }
+	int32 GetWarriorFlow() const { return mWarriorFlow; }
+	int32 GetStandstillPressure() const { return mStandstillPressure; }
+	bool CanUseWarriorCombatStep() const;
+	bool HasUsedWarriorCombatStepThisRound() const { return mCombatStepUsedThisRound; }
+	FText GetMovementDangerLabel() const;
 	ESRPGWarriorAftermathStance GetWarriorAftermathStance() const { return mWarriorAftermathStance; }
 	FText GetWarriorAftermathStanceLabel() const;
+	/** @brief 무료 전투 스텝 요청이 검증된 뒤 흐름·증원 요격·정지 압박 상태를 갱신한다. */
+	void NotifyPlayerCombatStep(const FTileIndex& From, const FTileIndex& To);
 
 	/* 공개 적 의도 */
 public:
@@ -260,6 +267,8 @@ protected:
 	void ActivateWarriorAftermath(const USRPGAction* Action);
 	bool TryResolveWarriorAftermath(FSRPGEnemyIntent& Intent);
 	void AddWarriorCombo(int32 Amount);
+	void ResolveWarriorFlowFollowUp();
+	UBoardActorModel* FindBlockingActorAt(const FTileIndex& Tile, const UBoardActorModel* MovingActor) const;
 
 	/* 시뮬 함수 */
 public:
@@ -407,6 +416,21 @@ protected:
 	UPROPERTY(Category = Intent, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "WarriorMomentum"))
 	int32 mWarriorMomentum = 0;
 	int32 mWarriorComboRound = INDEX_NONE;
+	UPROPERTY(Category = Intent, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "WarriorFlow"))
+	int32 mWarriorFlow = 0;
+	UPROPERTY(Category = Intent, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "StandstillPressure"))
+	int32 mStandstillPressure = 0;
+	bool mCombatStepUsedThisRound = false;
+	bool mPlayerMovedThisRound = false;
+	FTileIndex mPlayerRoundStartTile = FTileIndex::Invalid;
+	/** @brief 버섯 포격/거미줄 등 다음 플레이어 행동에서 이동으로 해제해야 하는 위험. */
+	FTileIndex mPersistentMovementHazardTile = FTileIndex::Invalid;
+	TWeakObjectPtr<UEnemyUnitModel> mTetheringEnemy;
+	/** @brief 주황 투입 칸을 선점해 다음 적 행동을 잃게 만든 증원. */
+	TArray<TWeakObjectPtr<UEnemyUnitModel>> mInterceptedReinforcementUnits;
+	/** @brief 벽꿍/적 충돌 뒤 다음 라운드까지 남는 이동 회수 지점. 가까이 스텝하면 흐름을 즉시 회복한다. */
+	FTileIndex mExecutionOpportunityTile = FTileIndex::Invalid;
+	int32 mExecutionOpportunityExpireRound = INDEX_NONE;
 
 protected:
 	// @brief 배치된 타일맵
