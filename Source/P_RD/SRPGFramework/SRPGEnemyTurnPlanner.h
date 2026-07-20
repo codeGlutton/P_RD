@@ -18,6 +18,7 @@ class UTileMapModel;
 class UStaticSkillData;
 class UBoardActorModel;
 enum class EMoveTendency : uint8; // StaticEnemyUnitSpawnData.h
+enum class ESRPGEnemyMovementRole : uint8;
 
 /**
  * @brief 적 한 턴의 행동을 계산하는 플래너
@@ -47,7 +48,11 @@ public:
 		const FRandomStream& EventStream,
 		int32 MoveRangeOverride = INDEX_NONE,
 		int32 SkillIndexOverride = INDEX_NONE,
-		int32* OutPlannedSkillIndex = nullptr);
+		int32* OutPlannedSkillIndex = nullptr,
+		const TArray<FTileIndex>* ReservedDestinations = nullptr,
+		FTileIndex PreviousDestination = FTileIndex::Invalid,
+		bool bWasDisplaced = false,
+		FTileIndex DisplacedFrom = FTileIndex::Invalid);
 
 private:
 	/**
@@ -66,7 +71,25 @@ private:
 		const UStaticSkillData* Skill,
 		const UTileMapModel* TileMap,
 		EMoveTendency Tendency,
+		ESRPGEnemyMovementRole MovementRole,
 		const UBoardActorModel* Self,
+		const TArray<FTileIndex>* ReservedDestinations,
+		const FTileIndex& PreviousDestination,
+		bool bWasDisplaced,
+		const FTileIndex& DisplacedFrom,
+		OUT bool& OutCanCast);
+
+	/** @brief 역할 적은 단순 근/원거리 대신 차단·측면·직선 압박 점수로 목적지를 고른다. */
+	static FTileIndex ChooseRoleDestination(
+		const TArray<FTileIndex>& Candidates,
+		const TArray<FTileIndex>& Feasible,
+		const FTileIndex& Origin,
+		const FTileIndex& PlayerTile,
+		ESRPGEnemyMovementRole MovementRole,
+		const TArray<FTileIndex>* ReservedDestinations,
+		const FTileIndex& PreviousDestination,
+		bool bWasDisplaced,
+		const FTileIndex& DisplacedFrom,
 		OUT bool& OutCanCast);
 
 	/**

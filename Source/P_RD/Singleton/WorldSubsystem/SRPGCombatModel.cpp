@@ -33,9 +33,25 @@ DEFINE_LOG_CATEGORY(LogSRPGCombat)
 
 namespace
 {
-	FText GetEnemyIntentGoalText(EMoveTendency Tendency)
+	FText GetEnemyIntentGoalText(const UEnemyUnitModel* Enemy)
 	{
-		switch (Tendency)
+		if (Enemy != nullptr)
+		{
+			switch (Enemy->GetMovementRole())
+			{
+			case ESRPGEnemyMovementRole::Anchor:
+				return NSLOCTEXT("EnemyIntent", "GoalAnchor", "차단 · 중앙 길목을 몸으로 봉쇄");
+			case ESRPGEnemyMovementRole::Flanker:
+				return NSLOCTEXT("EnemyIntent", "GoalFlanker", "측면 사냥 · 대각선 빈틈으로 우회");
+			case ESRPGEnemyMovementRole::Slider:
+				return NSLOCTEXT("EnemyIntent", "GoalSlider", "직선 압박 · 같은 행/열의 충돌각 확보");
+			case ESRPGEnemyMovementRole::Standard:
+			default:
+				break;
+			}
+		}
+
+		switch (Enemy != nullptr ? Enemy->GetMoveTendency() : EMoveTendency::HoldRange)
 		{
 		case EMoveTendency::MoveClose:
 			return NSLOCTEXT("EnemyIntent", "GoalChase", "추격 · 플레이어에게 접근");
@@ -868,36 +884,61 @@ void USRPGCombatModel::ReplanEnemyIntentsAfterPlayerAction(
 		const TArray<FTileIndex> PreviousEffect = Intent.mEffectTileIndexes;
 		const FTileIndex PreviousDestination = Intent.mPlannedDestination;
 		const FTileIndex PreviousTarget = Intent.mTargetTile;
-		if (RebuildEnemyIntentPlan(Intent, /*bPreserveSkill*/true))
+		const FTileIndex OlderPreviousDestination = Intent.mPreviousDestination;
+		const bool bRespondingToDisplacement = Intent.mHasPendingDisplacementResponse;
+		// 역할 플래너가 "방금 공개했던 자리로 되감기"를 정확히 평가할 수 있게 현재 계획을 잠시 보존한다.
+		Intent.mPreviousDestination = PreviousDestination;
+		if (RebuildEnemyIntentPlan(Intent, /*bPreserveSkill*/true) == false)
 		{
-			const bool bPlanActuallyChanged = PreviousPath != Intent.mPathTileIndexes
+			Intent.mPreviousDestination = OlderPreviousDestination;
+			continue;
+		}
+		const bool bPlanActuallyChanged = PreviousPath != Intent.mPathTileIndexes
 				|| PreviousEffect != Intent.mEffectTileIndexes
 				|| PreviousDestination != Intent.mPlannedDestination
 				|| PreviousTarget != Intent.mTargetTile;
-			if (bPlanActuallyChanged == false)
+		if (bPlanActuallyChanged == false)
+		{
+			Intent.mPreviousDestination = OlderPreviousDestination;
+			Intent.mHasPendingDisplacementResponse = false;
+			if (bRespondingToDisplacement)
 			{
-				continue;
+				Intent.mResultText = NSLOCTEXT(
+					"EnemyIntent",
+					"DisplacedPositionAlreadyUseful",
+					"착지 적응 · 현재 칸이 이미 역할 자리 · 원위치 복귀 안 함");
+				bChanged = true;
 			}
+			continue;
+		}
 
-			Intent.mPreviousPathTileIndexes = PreviousPath;
-			Intent.mPreviousDestination = PreviousDestination;
-			if (Intent.mPlannedMoveRange > 0)
-			{
-				--Intent.mPlannedMoveRange;
-				++Intent.mResponseCostSpent;
-				// 비용을 낸 실제 이동 예산으로 명령과 HUD 경로를 다시 만든다.
-				RebuildEnemyIntentPlan(Intent, /*bPreserveSkill*/true);
-			}
-			++Intent.mPlanRevision;
-			Intent.mResultText = FText::Format(
+		Intent.mPreviousPathTileIndexes = PreviousPath;
+		Intent.mPreviousDestination = PreviousDestination;
+		if (Intent.mPlannedMoveRange > 0)
+		{
+			--Intent.mPlannedMoveRange;
+			++Intent.mResponseCostSpent;
+			// 비용을 낸 실제 이동 예산으로 명령과 HUD 경로를 다시 만든다.
+			RebuildEnemyIntentPlan(Intent, /*bPreserveSkill*/true);
+		}
+		++Intent.mPlanRevision;
+		Intent.mResultText = bRespondingToDisplacement
+			? FText::Format(
+				NSLOCTEXT(
+					"EnemyIntent",
+					"PlayerDisplacementRoleReplanned",
+					"착지 적응 #{0} · 원위치 복귀 안 함 · 회복 이동력 -{1}"),
+				FText::AsNumber(Intent.mPlanRevision),
+				FText::AsNumber(Intent.mRecoveryMovePenalty))
+			: FText::Format(
 				NSLOCTEXT(
 					"EnemyIntent",
 					"PlayerActionReplanned",
-					"대응 #{0} · 경로 재계산 · 대응 이동력 -{1}"),
+					"대응 #{0} · 새 역할 자리 계산 · 대응 이동력 -{1}"),
 				FText::AsNumber(Intent.mPlanRevision),
 				FText::AsNumber(Intent.mResponseCostSpent));
-			bChanged = true;
-		}
+		Intent.mHasPendingDisplacementResponse = false;
+		bChanged = true;
 	}
 
 	if (bChanged)
@@ -916,14 +957,33 @@ bool USRPGCombatModel::RebuildEnemyIntentPlan(FSRPGEnemyIntent& Intent, bool bPr
 	}
 
 	int32 PlannedSkillIndex = INDEX_NONE;
+	TArray<FTileIndex> ReservedDestinations;
+	ReservedDestinations.Reserve(mEnemyIntents.Num());
+	for (const FSRPGEnemyIntent& OtherIntent : mEnemyIntents)
+	{
+		if (&OtherIntent != &Intent
+			&& OtherIntent.mEnemy != nullptr
+			&& OtherIntent.mEnemy->IsDead() == false
+			&& OtherIntent.mResult == ESRPGEnemyIntentResult::Planned)
+		{
+			ReservedDestinations.Add(OtherIntent.mPlannedDestination);
+		}
+	}
+	const int32 EffectiveMoveRange = FMath::Max(
+		Intent.mPlannedMoveRange - Intent.mRecoveryMovePenalty,
+		0);
 	TArray<TInstancedStruct<FSRPGCommand>> Commands = USRPGEnemyTurnPlanner::PlanTurn(
 		Enemy,
 		mPlayerUnit,
 		mTileMap,
 		URandomStreamFunctionLibrary::GetEventStream(this),
-		Intent.mPlannedMoveRange,
+		EffectiveMoveRange,
 		bPreserveSkill ? Intent.mSkillIndex : INDEX_NONE,
-		&PlannedSkillIndex);
+		&PlannedSkillIndex,
+		&ReservedDestinations,
+		Intent.mPreviousDestination,
+		Intent.mHasPendingDisplacementResponse,
+		Intent.mDisplacedFromTile);
 
 	Intent.mSkillIndex = PlannedSkillIndex;
 	Intent.mSkillName = FText::GetEmpty();
@@ -1029,7 +1089,7 @@ void USRPGCombatModel::PrepareEnemyIntents()
 		Intent.mTurnId = TurnContext->GetTurnId();
 		Intent.mExecutionOrder = ExecutionOrder++;
 		Intent.mEnemy = Enemy;
-		Intent.mGoalText = GetEnemyIntentGoalText(Enemy->GetMoveTendency());
+		Intent.mGoalText = GetEnemyIntentGoalText(Enemy);
 		Intent.mPlannedMoveRange = PlannedMoveRange;
 		Intent.mResultText = NSLOCTEXT(
 			"EnemyIntent",
@@ -1218,7 +1278,14 @@ void USRPGCombatModel::ReportPlayerDisplacement(
 		}
 
 		Intent.mWasDisplaced = true;
+		Intent.mHasPendingDisplacementResponse = true;
+		Intent.mDisplacedFromTile = From;
 		Intent.mDisplacedToTile = To;
+		const int32 LandingPenalty = DisplacementType == ESRPGPlayerDisplacementType::Throw
+			|| DisplacementType == ESRPGPlayerDisplacementType::Push
+			? 1
+			: 0;
+		Intent.mRecoveryMovePenalty = FMath::Max(Intent.mRecoveryMovePenalty, LandingPenalty);
 		Intent.mResultText = FText::Format(
 			NSLOCTEXT(
 				"EnemyIntent",
@@ -1257,6 +1324,8 @@ void USRPGCombatModel::ReportPlayerDisplacementCollision(
 	const bool bEnemyBlocker = Cast<UUnitModel>(Blocker) != nullptr && Blocker != mPlayerUnit;
 	if (FSRPGEnemyIntent* Intent = FindEnemyIntent(Target))
 	{
+		// 벽/유닛과 실제 충돌하면 단순 착지보다 한 단계 더 회복해야 한다.
+		Intent->mRecoveryMovePenalty = FMath::Clamp(Intent->mRecoveryMovePenalty + 1, 0, 2);
 		const FText ImpactLabel = DisplacementType == ESRPGPlayerDisplacementType::Swap
 			? NSLOCTEXT("EnemyIntent", "SwapImpact", "자리 바꾸기")
 			: (DisplacementType == ESRPGPlayerDisplacementType::Throw

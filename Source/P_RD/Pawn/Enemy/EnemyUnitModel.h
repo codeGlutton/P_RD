@@ -24,6 +24,16 @@ enum class ESRPGDisplacementWeight : uint8
 	Heavy = 3,
 };
 
+/** @brief 목적지 선택을 서로 다르게 만드는 적 전장 이동 역할. */
+UENUM(BlueprintType)
+enum class ESRPGEnemyMovementRole : uint8
+{
+	Standard,
+	Anchor,
+	Flanker,
+	Slider,
+};
+
 /**
  * @brief 적 베이스 유닛 모델
  */
@@ -60,6 +70,8 @@ public:
 	EMoveTendency GetMoveTendency() const;
 	/** @brief 첫 전투 적의 체형을 안정적으로 분류한다. 데이터 미지정 적은 중형으로 취급한다. */
 	ESRPGDisplacementWeight GetDisplacementWeight() const;
+	/** @brief Mushroom/Spider/Slime의 전투 실루엣을 목적지 점수에 연결한다. */
+	ESRPGEnemyMovementRole GetMovementRole() const;
 
 private:
 	/**

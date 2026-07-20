@@ -100,6 +100,9 @@ struct P_RD_API FSRPGEnemyIntent
 	UPROPERTY(BlueprintReadOnly)
 	bool mWasDisplaced = false;
 
+	/** @brief 다음 한 번의 재계산에만 강제 이동 관성/원위치 복귀 비용을 적용한다. */
+	bool mHasPendingDisplacementResponse = false;
+
 	/** @brief 플레이어의 실제 이동/스킬이 끝난 뒤 이 계획을 다시 계산한 횟수. */
 	UPROPERTY(BlueprintReadOnly)
 	int32 mPlanRevision = 0;
@@ -111,6 +114,14 @@ struct P_RD_API FSRPGEnemyIntent
 	/** @brief 플레이어 개입으로 마지막으로 밀려난 타일. 유닛이 제거된 뒤에도 조정 위치를 표시한다. */
 	UPROPERTY(BlueprintReadOnly)
 	FTileIndex mDisplacedToTile = FTileIndex::Invalid;
+
+	/** @brief 강제 이동 관성과 원위치 복귀 방지를 계산할 직전 타일. */
+	UPROPERTY(BlueprintReadOnly)
+	FTileIndex mDisplacedFromTile = FTileIndex::Invalid;
+
+	/** @brief 밀치기/던지기 착지 충격 때문에 다음 계획에서 빠지는 이동력. */
+	UPROPERTY(BlueprintReadOnly)
+	int32 mRecoveryMovePenalty = 0;
 
 	/** @brief 첫 전투에서 밀어 AI의 즉시 재계산을 체험하기 쉬운 적으로 선택된 의도. */
 	UPROPERTY(BlueprintReadOnly)

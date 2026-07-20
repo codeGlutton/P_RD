@@ -25,7 +25,11 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	const FRandomStream& EventStream,
 	int32 MoveRangeOverride,
 	int32 SkillIndexOverride,
-	int32* OutPlannedSkillIndex)
+	int32* OutPlannedSkillIndex,
+	const TArray<FTileIndex>* ReservedDestinations,
+	FTileIndex PreviousDestination,
+	bool bWasDisplaced,
+	FTileIndex DisplacedFrom)
 {
 	if (OutPlannedSkillIndex != nullptr)
 	{
@@ -122,7 +126,21 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 
 	// 목적지 결정 (이동 성향 기반)
 	bool CanCast = false;
-	const FTileIndex Dest = ChooseDestination(Origin, PlayerTile, MoveRange, AimRange, Skill, TileMap, Enemy->GetMoveTendency(), Enemy, OUT CanCast);
+	const FTileIndex Dest = ChooseDestination(
+		Origin,
+		PlayerTile,
+		MoveRange,
+		AimRange,
+		Skill,
+		TileMap,
+		Enemy->GetMoveTendency(),
+		Enemy->GetMovementRole(),
+		Enemy,
+		ReservedDestinations,
+		PreviousDestination,
+		bWasDisplaced,
+		DisplacedFrom,
+		OUT CanCast);
 
 	/**
 	 * @brief 이동커맨드 생성 여부 판단 및 생성
@@ -180,7 +198,12 @@ FTileIndex USRPGEnemyTurnPlanner::ChooseDestination(
 	const UStaticSkillData* Skill,
 	const UTileMapModel* TileMap,
 	EMoveTendency Tendency,
+	ESRPGEnemyMovementRole MovementRole,
 	const UBoardActorModel* Self,
+	const TArray<FTileIndex>* ReservedDestinations,
+	const FTileIndex& PreviousDestination,
+	bool bWasDisplaced,
+	const FTileIndex& DisplacedFrom,
 	OUT bool& OutCanCast)
 {
 	// 도달 가능한 모든 타일 집합 (현재 위치한 타일도 포함)
@@ -198,6 +221,21 @@ FTileIndex USRPGEnemyTurnPlanner::ChooseDestination(
 		{
 			Feasible.Add(Candidate);
 		}
+	}
+
+	if (MovementRole != ESRPGEnemyMovementRole::Standard)
+	{
+		return ChooseRoleDestination(
+			Candidates,
+			Feasible,
+			Origin,
+			PlayerTile,
+			MovementRole,
+			ReservedDestinations,
+			PreviousDestination,
+			bWasDisplaced,
+			DisplacedFrom,
+			OUT OutCanCast);
 	}
 
 	// 이동 성향에 따라 타일 탐색
@@ -257,6 +295,124 @@ FTileIndex USRPGEnemyTurnPlanner::ChooseDestination(
 			return PickApproachTile(Candidates, Origin, PlayerTile, TileMap, Self);
 		}
 	}
+}
+
+FTileIndex USRPGEnemyTurnPlanner::ChooseRoleDestination(
+	const TArray<FTileIndex>& Candidates,
+	const TArray<FTileIndex>& Feasible,
+	const FTileIndex& Origin,
+	const FTileIndex& PlayerTile,
+	ESRPGEnemyMovementRole MovementRole,
+	const TArray<FTileIndex>* ReservedDestinations,
+	const FTileIndex& PreviousDestination,
+	bool bWasDisplaced,
+	const FTileIndex& DisplacedFrom,
+	OUT bool& OutCanCast)
+{
+	OutCanCast = Feasible.IsEmpty() == false;
+	const TArray<FTileIndex>& Pool = OutCanCast ? Feasible : Candidates;
+	if (Pool.IsEmpty())
+	{
+		return Origin;
+	}
+
+	const FTileIndex MomentumStep(
+		FMath::Sign(Origin.mX - DisplacedFrom.mX),
+		FMath::Sign(Origin.mY - DisplacedFrom.mY));
+	FTileIndex Best = Origin;
+	int32 BestScore = TNumericLimits<int32>::Lowest();
+	int32 BestMoveCost = TNumericLimits<int32>::Max();
+	for (const FTileIndex& Tile : Pool)
+	{
+		const int32 DeltaX = Tile.mX - PlayerTile.mX;
+		const int32 DeltaY = Tile.mY - PlayerTile.mY;
+		const int32 PlayerManhattan = FMath::Abs(DeltaX) + FMath::Abs(DeltaY);
+		const int32 PlayerChebyshev = FMath::Max(FMath::Abs(DeltaX), FMath::Abs(DeltaY));
+		const int32 MoveDeltaX = Tile.mX - Origin.mX;
+		const int32 MoveDeltaY = Tile.mY - Origin.mY;
+		const int32 MoveCost = FMath::Abs(MoveDeltaX) + FMath::Abs(MoveDeltaY);
+		const bool bDiagonalToPlayer = DeltaX != 0 && DeltaY != 0;
+		const bool bCardinalToPlayer = DeltaX == 0 || DeltaY == 0;
+		const bool bStraightMove = MoveDeltaX == 0 || MoveDeltaY == 0;
+
+		// 공격 가능성이 먼저다. 아직 사거리 밖이면 역할을 유지하면서도 전투에서 이탈하지 않게 접근한다.
+		int32 Score = OutCanCast ? 500 : -PlayerManhattan * 18;
+		if (ReservedDestinations != nullptr)
+		{
+			for (const FTileIndex& Reserved : *ReservedDestinations)
+			{
+				if (Reserved == FTileIndex::Invalid)
+				{
+					continue;
+				}
+				const int32 Separation = FMath::Max(
+					FMath::Abs(Tile.mX - Reserved.mX),
+					FMath::Abs(Tile.mY - Reserved.mY));
+				Score -= Separation == 0 ? 10000 : (Separation == 1 ? 34 : 0);
+			}
+		}
+
+		if (bWasDisplaced)
+		{
+			// 밀려난 뒤 원래 목적지로 즉시 되감는 선택은 크게 손해다. 현재 착지점을 새 전술 원점으로 사용한다.
+			if (Tile == PreviousDestination)
+			{
+				Score -= 120;
+			}
+			if (PreviousDestination != FTileIndex::Invalid)
+			{
+				const int32 PreviousDistanceAtOrigin = TileDistance(Origin, PreviousDestination);
+				const int32 PreviousDistanceAtCandidate = TileDistance(Tile, PreviousDestination);
+				Score -= FMath::Max(PreviousDistanceAtOrigin - PreviousDistanceAtCandidate, 0) * 22;
+			}
+			if (DisplacedFrom != FTileIndex::Invalid && MoveCost > 0)
+			{
+				const int32 MomentumDot = MomentumStep.mX * FMath::Sign(MoveDeltaX)
+					+ MomentumStep.mY * FMath::Sign(MoveDeltaY);
+				Score += MomentumDot > 0 ? 18 : (MomentumDot < 0 ? -30 : 0);
+			}
+		}
+
+		switch (MovementRole)
+		{
+		case ESRPGEnemyMovementRole::Anchor:
+			// 버섯은 2칸 전후에서 길목을 차단하며, 이미 좋은 자리라면 불필요하게 왕복하지 않는다.
+			Score -= FMath::Abs(PlayerChebyshev - 2) * 24;
+			Score += bCardinalToPlayer ? 18 : 0;
+			Score -= MoveCost * 7;
+			Score += Tile == Origin && OutCanCast ? 24 : 0;
+			break;
+		case ESRPGEnemyMovementRole::Flanker:
+			// 거미는 플레이어와 대각 관계인 측면 슬롯을 우선하고 같은 행/열 정면 대치는 피한다.
+			Score -= FMath::Abs(PlayerChebyshev - 2) * 14;
+			Score += bDiagonalToPlayer ? 44 : -14;
+			Score -= MoveCost * 2;
+			Score += Tile != Origin ? 6 : 0;
+			break;
+		case ESRPGEnemyMovementRole::Slider:
+			// 슬라임은 같은 행/열의 돌진 축과 직선 이동을 선호해 다음 충돌각을 만든다.
+			Score -= FMath::Abs(PlayerChebyshev - 2) * 15;
+			Score += bCardinalToPlayer ? 42 : -20;
+			Score += bStraightMove ? 22 : -8;
+			Score += FMath::Min(MoveCost, 3) * 3;
+			break;
+		case ESRPGEnemyMovementRole::Standard:
+		default:
+			break;
+		}
+
+		const bool bBetter = Score > BestScore
+			|| (Score == BestScore && MoveCost < BestMoveCost)
+			|| (Score == BestScore && MoveCost == BestMoveCost
+				&& (Tile.mX < Best.mX || (Tile.mX == Best.mX && Tile.mY < Best.mY)));
+		if (bBetter)
+		{
+			Best = Tile;
+			BestScore = Score;
+			BestMoveCost = MoveCost;
+		}
+	}
+	return Best;
 }
 
 FTileIndex USRPGEnemyTurnPlanner::PickByPlayerDistance(

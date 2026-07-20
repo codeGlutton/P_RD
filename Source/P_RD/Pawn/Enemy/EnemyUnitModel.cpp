@@ -137,3 +137,27 @@ ESRPGDisplacementWeight UEnemyUnitModel::GetDisplacementWeight() const
 	return ESRPGDisplacementWeight::Medium;
 }
 
+ESRPGEnemyMovementRole UEnemyUnitModel::GetMovementRole() const
+{
+	const FString Identity = FString::Printf(
+		TEXT("%s %s"),
+		*GetBoardActorKeyName().ToString(),
+		*GetBoardActorDisplayName().ToString());
+	if (Identity.Contains(TEXT("Mushroom"), ESearchCase::IgnoreCase)
+		|| Identity.Contains(TEXT("버섯"), ESearchCase::IgnoreCase))
+	{
+		return ESRPGEnemyMovementRole::Anchor;
+	}
+	if (Identity.Contains(TEXT("Spider"), ESearchCase::IgnoreCase)
+		|| Identity.Contains(TEXT("거미"), ESearchCase::IgnoreCase))
+	{
+		return ESRPGEnemyMovementRole::Flanker;
+	}
+	if (Identity.Contains(TEXT("Slime"), ESearchCase::IgnoreCase)
+		|| Identity.Contains(TEXT("슬라임"), ESearchCase::IgnoreCase))
+	{
+		return ESRPGEnemyMovementRole::Slider;
+	}
+	return ESRPGEnemyMovementRole::Standard;
+}
+
