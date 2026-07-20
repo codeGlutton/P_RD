@@ -1,4 +1,5 @@
 ﻿#include "GameMode/RoomGameModeBase.h"
+#include "Engine/GameInstance.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"

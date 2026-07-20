@@ -2,6 +2,7 @@
 
 #include "Components/CheckBox.h"
 #include "Components/Slider.h"
+#include "Engine/GameInstance.h"
 #include "GameMode/RDGameModeBase.h"
 
 #include "Singleton/InstanceSubsystem/PersistentData.h"
