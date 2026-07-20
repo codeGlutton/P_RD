@@ -210,7 +210,7 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 				case 0: FamilySummary = TEXT("베기 · 밀어베기 · 방패치기"); break;
 				case 1: FamilySummary = TEXT("끌기 · 던지기 · 자리교환"); break;
 				case 2: FamilySummary = TEXT("다리걸기 · 방패 밀치기"); break;
-				case 3: FamilySummary = TEXT("전진 · 어깨 돌진"); break;
+				case 3: FamilySummary = TEXT("전투 스텝 · 어깨 돌진 · 도약"); break;
 				default: break;
 				}
 				const FString ActiveHint = RailSlotIndex == mExpandedActionFamily
@@ -376,7 +376,7 @@ void UCombatTileMapHUDWidget::RefreshActionSubmenuWidgets()
 			AddEntry(ThrowIndex, TEXT("방패 밀치기"), TEXT("인접 적 드래그 · 진형 붕괴"), 1, ECombatSubactionMode::ShortThrow);
 			break;
 		case 3:
-			AddEntry(1, TEXT("전진"), TEXT("기사를 드래그 · 1칸"), 1, ECombatSubactionMode::Move);
+			AddEntry(1, TEXT("전투 스텝"), TEXT("기사를 드래그 · 1칸 재배치"), 1, ECombatSubactionMode::Move);
 			AddEntry(1, TEXT("어깨 돌진"), TEXT("기사를 직선 드래그 · 1칸 충돌"), 6, ECombatSubactionMode::Charge);
 			AddEntry(1, TEXT("도약"), TEXT("기사를 드래그 · 장애물 넘어 3칸 착지"), 3, ECombatSubactionMode::Leap);
 			break;

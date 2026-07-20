@@ -497,6 +497,7 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 			}
 		}
 	}
+	HideLegacyCommandWidgets();
 
 }
 

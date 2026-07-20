@@ -45,6 +45,45 @@ namespace
 	}
 }
 
+void UCombatTileMapHUDWidget::HideLegacyCommandWidgets() const
+{
+	if (mMoveButton != nullptr)
+	{
+		mMoveButton->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	if (EndTurnButton != nullptr)
+	{
+		EndTurnButton->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	if (WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	static const TArray<FString> LegacyPrefixes = {
+		TEXT("R_btn_move"), TEXT("R_btn_end_turn"),
+		TEXT("HUD_Move"), TEXT("HUD_EndTurn"),
+		TEXT("HUD_M_btn_move"), TEXT("HUD_M_btn_end")
+	};
+	TArray<UWidget*> Widgets;
+	WidgetTree->GetAllWidgets(Widgets);
+	for (UWidget* Widget : Widgets)
+	{
+		if (Widget == nullptr)
+		{
+			continue;
+		}
+		const FString WidgetName = Widget->GetName();
+		if (LegacyPrefixes.ContainsByPredicate([&WidgetName](const FString& Prefix)
+			{
+				return WidgetName.StartsWith(Prefix);
+			}))
+		{
+			Widget->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+}
+
 void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 {
 	if (WidgetTree == nullptr)
@@ -932,4 +971,5 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 	RefreshEnemyIntentPanel();
 	UpdateEnemyIntentTutorial();
 	ApplyRuntimeWidgetLayout();
+	HideLegacyCommandWidgets();
 }

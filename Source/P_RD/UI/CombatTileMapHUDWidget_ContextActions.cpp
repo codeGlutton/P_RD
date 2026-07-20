@@ -1550,7 +1550,7 @@ void UCombatTileMapHUDWidget::SetDirectUnitGestureVisual(bool bVisible, const FV
 		else
 		{
 			Label = mDirectMovePath.Num() > 1
-				? FString::Printf(TEXT("전진 %d칸 · 놓아서 실행"), mDirectMovePath.Num() - 1)
+				? FString::Printf(TEXT("전투 스텝 %d칸 · 놓아서 실행"), mDirectMovePath.Num() - 1)
 				: TEXT("기사를 잡고 밝은 범위 안으로 드래그");
 		}
 	}

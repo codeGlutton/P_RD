@@ -414,10 +414,10 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		RollDices();
 		break;
 	case ECombatInputType::Move:
-		SelectMove();
+		// 일반 이동은 폐기했다. 위치 변경은 기동 행동군의 전투 스텝/돌진/도약만 사용한다.
 		break;
 	case ECombatInputType::EndTurn:
-		EndTurn();
+		// 모든 성공 행동이 자동으로 교대하므로 수동 턴 종료 입력은 받지 않는다.
 		break;
 	case ECombatInputType::Cancel:
 		CancelSkill();

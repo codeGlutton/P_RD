@@ -8,6 +8,7 @@
 #include "SRPGFramework/SRPGEnemyTurnPlanner.h"
 #include "SRPGFramework/SRPGMoveAction.h"
 #include "SRPGFramework/SRPGSkillAction.h"
+#include "SRPGFramework/SRPGWarriorAreaAction.h"
 #include "SRPGFramework/SRPGTurnEndAction.h"
 
 #include "Actor/TileMap/TileMapModel.h"
@@ -1104,7 +1105,9 @@ void USRPGCombatModel::ReplanEnemyIntentsAfterPlayerAction(
 	if (Action == nullptr
 		|| ActionResult != ESRPGActionResult::Succeeded
 		|| Action->GetInstigator() != mPlayerUnit
-		|| (Cast<USRPGMoveAction>(Action) == nullptr && Cast<USRPGSkillAction>(Action) == nullptr)
+		|| (Cast<USRPGMoveAction>(Action) == nullptr
+			&& Cast<USRPGSkillAction>(Action) == nullptr
+			&& Cast<USRPGWarriorAreaAction>(Action) == nullptr)
 		|| mCombatPhase != ESRPGCombatRoomPhase::CombatPlay
 		|| mPlayerUnit == nullptr
 		|| mPlayerUnit->IsDead())

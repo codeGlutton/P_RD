@@ -361,6 +361,17 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		}
 		const FEnemyIntentUI* DirectIntervened = FindIntentByEnemyId(
 			DirectIntents, mEnemyIntentTutorialIntervenedEnemyUnitId);
+		int32 PlayerUnitId = INDEX_NONE;
+		for (const FUnitUI& Unit : mCombatUIModel->GetUnitUIs())
+		{
+			if (Unit.mIsPlayer)
+			{
+				PlayerUnitId = Unit.mUnitId;
+				break;
+			}
+		}
+		const bool bCurrentTurnIsPlayer = PlayerUnitId != INDEX_NONE
+			&& mCombatUIModel->GetTurnUI().mCurrentUnitId == PlayerUnitId;
 		if (mEnemyIntentTutorialPullCompleted == false
 			&& mEnemyIntentTutorialInterventionSubmitted
 			&& DirectIntervened != nullptr
@@ -369,13 +380,17 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 			mEnemyIntentTutorialPullCompleted = true;
 			mEnemyIntentTutorialPullPlanRevision = DirectIntervened->mPlanRevision;
 		}
+		if (mEnemyIntentTutorialPullCompleted && bCurrentTurnIsPlayer == false)
+		{
+			mEnemyIntentTutorialSawEnemyTurn = true;
+		}
 		if (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::Complete)
 		{
 			// 완료 토스트가 자동으로 닫힐 때까지 마지막 상태를 유지한다.
 		}
 		else if (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::EndTurnAndObserve
-			&& DirectIntervened != nullptr
-			&& HasResolvedIntentOutcome(*DirectIntervened))
+			&& ((DirectIntervened != nullptr && HasResolvedIntentOutcome(*DirectIntervened))
+				|| (mEnemyIntentTutorialSawEnemyTurn && bCurrentTurnIsPlayer)))
 		{
 			mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::Complete;
 		}
@@ -427,7 +442,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 			break;
 		case EEnemyIntentTutorialStage::Complete:
 			DirectTitle = TEXT("완료!  나 한 번, 적 한 번");
-			DirectMessage = TEXT("이동과 공격도 모두 한 행동입니다 · 매번 한 칸씩 빠르게 주고받으세요");
+			DirectMessage = TEXT("기동과 공격은 모두 한 행동입니다 · 행동이 끝나면 적 하나가 바로 대응합니다");
 			break;
 		default:
 			DirectTitle = TEXT("적을 직접 움직여 보세요");

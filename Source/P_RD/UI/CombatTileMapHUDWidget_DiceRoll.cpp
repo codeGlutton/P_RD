@@ -268,8 +268,9 @@ void UCombatTileMapHUDWidget::SetDiceRollCombatLayerSuppressed(bool bSuppressed)
 		return;
 	}
 
-	SetWidgetVisibility(EndTurnButton.Get(), ESlateVisibility::Visible);
-	SetWidgetVisibility(mMoveButton.Get(), ESlateVisibility::Visible);
+	SetWidgetVisibility(EndTurnButton.Get(), ESlateVisibility::Collapsed);
+	SetWidgetVisibility(mMoveButton.Get(), ESlateVisibility::Collapsed);
+	HideLegacyCommandWidgets();
 
 	SetWidgetArrayVisibility(mOwnedDiceImages, ESlateVisibility::HitTestInvisible);
 	SetWidgetArrayVisibility(mOwnedDiceCardWidgets, ESlateVisibility::Visible);

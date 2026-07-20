@@ -173,6 +173,8 @@ protected:
 private:
 	/** @brief WBP에 없는 테스트용 전투 HUD 요소를 RootCanvas 위에 런타임으로 붙인다. */
 	void EnsureRuntimeWidgets();
+	/** @brief 자동 행동 교대 이후 폐기된 우측 이동/턴 종료 버튼과 스킨 아트를 항상 숨긴다. */
+	void HideLegacyCommandWidgets() const;
 
 	/** @brief 런타임으로 붙인 위젯들의 화면 위치를 모바일 화면 비율 기준으로 맞춘다. */
 	void ApplyRuntimeWidgetLayout() const;
@@ -886,6 +888,7 @@ private:
 	bool mEnemyIntentTutorialDismissed = false;
 	bool mEnemyIntentTutorialInterventionSubmitted = false;
 	bool mEnemyIntentTutorialPullCompleted = false;
+	bool mEnemyIntentTutorialSawEnemyTurn = false;
 	bool mEnemyIntentTutorialThrowSubmitted = false;
 	int32 mEnemyIntentTutorialPullPlanRevision = INDEX_NONE;
 	int32 mEnemyIntentTutorialIntervenedEnemyUnitId = INDEX_NONE;
