@@ -1,38 +1,12 @@
 ﻿#include "Singleton/WorldSubsystem/WorldCameraSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldCameraModel.h"
 
-#include "Pawn/Camera/CombatCameraPawn.h"
-#include "Component/CameraMovementComponent/CameraMovementComponent.h"
-
 void UWorldCameraSubsystem::BindModel(UObjectModel* Model)
 {
 	mWorldCameraModel = Cast<UWorldCameraModel>(Model);
 
-	if (mWorldCameraModel != nullptr)
-	{
-		mWorldCameraModel->OnRequestZoomInMainCamera.AddWeakLambda(this, [this](const FVector& Location, float ScreenSize) {
-			ACombatCameraPawn* MainCameraPawn = GetWorld()->GetFirstPlayerController()->GetPawn<ACombatCameraPawn>();
-			if (MainCameraPawn != nullptr)
-			{
-				UCameraMovementComponent* CameraMovementComponent = MainCameraPawn->GetCameraMovementComponent();
-				if (CameraMovementComponent != nullptr)
-				{
-					CameraMovementComponent->StartEmphasisToWorldPositionWithZoomDelta(ScreenSize, Location);
-				}
-			}
-			});
-		mWorldCameraModel->OnRequestZoomOutMainCamera.AddWeakLambda(this, [this]() {
-			ACombatCameraPawn* MainCameraPawn = GetWorld()->GetFirstPlayerController()->GetPawn<ACombatCameraPawn>();
-			if (MainCameraPawn != nullptr)
-			{
-				UCameraMovementComponent* CameraMovementComponent = MainCameraPawn->GetCameraMovementComponent();
-				if (CameraMovementComponent != nullptr)
-				{
-					CameraMovementComponent->EndEmphasis();
-				}
-			}
-			});
-	}
+	// 스킬 실행 때마다 발생하던 자동 중앙 이동/확대 요청은 의도적으로 구독하지 않는다.
+	// 전투 카메라는 입장 시점의 위치와 OrthoWidth를 끝까지 유지한다.
 }
 
 void UWorldCameraSubsystem::UnbindModel(UObjectModel* Model)

@@ -19,8 +19,9 @@
 // Sets default values
 ACombatCameraPawn::ACombatCameraPawn()
 {
- 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	// 전투 시야는 고정한다. 터치 드래그/핀치가 유닛 조작과 겹치며 멀미를 유발하므로
+	// 카메라 폰은 입력 제스처를 매 프레임 해석하지 않는다.
+	PrimaryActorTick.bCanEverTick = false;
 
 	mSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("DefaultSceneComponent"));
 	RootComponent = mSceneComponent;
@@ -50,10 +51,6 @@ void ACombatCameraPawn::BeginPlay()
 	Super::BeginPlay();
 
 	mTouchStates.SetNum(2);
-
-	OnDragging.AddUObject(this, &ACombatCameraPawn::Dragging);
-	OnPinching.AddUObject(this, &ACombatCameraPawn::Pinching);
-	
 }
 
 // Called every frame

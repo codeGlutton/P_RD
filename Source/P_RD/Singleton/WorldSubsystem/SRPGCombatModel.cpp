@@ -172,6 +172,7 @@ void USRPGCombatModel::InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, UUn
 	mEnemyIntents.Reset();
 	mEnemyReinforcementTemplates = RoomSpawnData->mEnemyUnitPlacementDatas;
 	mTotalReinforcementsSpawned = 0;
+	mPlayerActionsSinceReinforcement = 0;
 
 	SpawnTileMap(RoomStartTransform);
 	RegisterPlayerUnit(PlayerUnit, RoomSpawnData->mPlayerTransform);
@@ -507,7 +508,7 @@ void USRPGCombatModel::FlushPendingTurnRequests()
 	}
 }
 
-void USRPGCombatModel::RegisterEnemyUnit(FEnemyUnitPlacementData& EnemyPlacementData)
+UEnemyUnitModel* USRPGCombatModel::RegisterEnemyUnit(FEnemyUnitPlacementData& EnemyPlacementData)
 {
 	checkf(mTileMap != nullptr, TEXT("타일맵 미존재"));
 
@@ -523,6 +524,7 @@ void USRPGCombatModel::RegisterEnemyUnit(FEnemyUnitPlacementData& EnemyPlacement
 	ApplyHordeEnemyStats(EnemyUnit);
 
 	RegisterUnit(EnemyUnit, EnemyPlacementData.mTransform);
+	return EnemyUnit;
 }
 
 void USRPGCombatModel::RegisterObstacle(FObstaclePlacementData& ObstaclePlacementData)
@@ -702,6 +704,10 @@ void USRPGCombatModel::AdvanceTurn(bool IsInitialRound, bool bCompletedPlayerTur
 
 		if (bCompletedPlayerTurn)
 		{
+			// 라운드 경계만 기다리면 처치 수와 증원 수가 비슷해져 새 적이 늘어난다는 감각이 없다.
+			// 플레이어 행동 두 번마다 빈자리에 한 명을 투입해 생존전의 압박을 계속 보충한다.
+			SpawnActionReinforcementIfNeeded();
+
 			// 플레이어가 행동한 뒤에는 이번 라운드에 아직 행동하지 않은 적 한 명만 대응한다.
 			const int32 EnemyTurnId = PopNextEnemyResponseTurnId();
 			if (EnemyTurnId != INDEX_NONE)
@@ -770,35 +776,46 @@ bool USRPGCombatModel::FindReinforcementSpawnTile(FTileTransform& OutTransform) 
 		return false;
 	}
 
+	TArray<FTileIndex> VisibleRingTiles;
 	TArray<FTileIndex> EdgeTiles;
 	const int32 Width = mTileMap->GetWidth();
 	const int32 Height = mTileMap->GetHeight();
+	const FTileIndex PlayerTile = mPlayerUnit != nullptr
+		? mPlayerUnit->GetTileTransform().mIndex
+		: FTileIndex(Width / 2, Height / 2);
 	for (int32 Y = 0; Y < Height; ++Y)
 	{
 		for (int32 X = 0; X < Width; ++X)
 		{
-			if (X != 0 && Y != 0 && X != Width - 1 && Y != Height - 1)
+			const FTileIndex Candidate(X, Y);
+			if (mTileMap->GetActorsOnTile(Candidate, ETileLayerFlag::All).IsEmpty() == false)
 			{
 				continue;
 			}
-			const FTileIndex Candidate(X, Y);
-			if (mTileMap->GetActorsOnTile(Candidate, ETileLayerFlag::All).IsEmpty())
+
+			// 고정 카메라에서도 등장 순간이 보이도록 플레이어 기준 4~6칸 고리를 우선한다.
+			const int32 Distance = FMath::Max(
+				FMath::Abs(X - PlayerTile.mX),
+				FMath::Abs(Y - PlayerTile.mY));
+			if (Distance >= 4 && Distance <= 6)
+			{
+				VisibleRingTiles.Add(Candidate);
+			}
+			if (X == 0 || Y == 0 || X == Width - 1 || Y == Height - 1)
 			{
 				EdgeTiles.Add(Candidate);
 			}
 		}
 	}
-	if (EdgeTiles.IsEmpty())
+	const TArray<FTileIndex>& SpawnTiles = VisibleRingTiles.IsEmpty() ? EdgeTiles : VisibleRingTiles;
+	if (SpawnTiles.IsEmpty())
 	{
 		return false;
 	}
 
-	// 라운드마다 시작점을 회전시켜 한쪽 가장자리만 반복해서 쓰지 않는다.
-	const int32 PickIndex = (mRoundCount * 3 + mTotalReinforcementsSpawned * 5) % EdgeTiles.Num();
-	const FTileIndex Picked = EdgeTiles[PickIndex];
-	const FTileIndex PlayerTile = mPlayerUnit != nullptr
-		? mPlayerUnit->GetTileTransform().mIndex
-		: FTileIndex(Picked.mX + 1, Picked.mY);
+	// 투입할 때마다 시작점을 회전시켜 한쪽 방향만 반복하지 않는다.
+	const int32 PickIndex = (mRoundCount * 3 + mTotalReinforcementsSpawned * 5) % SpawnTiles.Num();
+	const FTileIndex Picked = SpawnTiles[PickIndex];
 	OutTransform = FTileTransform(
 		Picked,
 		UTileMapModel::TileDeltaToDirection(Picked, PlayerTile, ETileActorDirection::Forward));
@@ -839,12 +856,11 @@ void USRPGCombatModel::ApplyHordeEnemyStats(UEnemyUnitModel* EnemyUnit) const
 	Attributes->ApplyModToAttribute(UEnemyUnitAttributeSet::GetRechargeMovementAttribute(), ETacticalModOp::Override, 1.0f);
 }
 
-void USRPGCombatModel::SpawnRoundReinforcements()
+UEnemyUnitModel* USRPGCombatModel::SpawnOneReinforcement()
 {
-	if (mRoundCount <= 1 || mRoundCount > ReinforcementFinalRound
-		|| mEnemyReinforcementTemplates.IsEmpty())
+	if (mEnemyReinforcementTemplates.IsEmpty())
 	{
-		return;
+		return nullptr;
 	}
 
 	int32 LivingEnemies = 0;
@@ -855,21 +871,99 @@ void USRPGCombatModel::SpawnRoundReinforcements()
 			++LivingEnemies;
 		}
 	}
-	const int32 DesiredCount = mRoundCount >= 4 ? 2 : 1;
-	const int32 SpawnCount = FMath::Min(DesiredCount, ReinforcementEnemyCap - LivingEnemies);
-	for (int32 SpawnIndex = 0; SpawnIndex < SpawnCount; ++SpawnIndex)
+	if (LivingEnemies >= ReinforcementEnemyCap)
 	{
-		FTileTransform SpawnTransform;
-		if (FindReinforcementSpawnTile(SpawnTransform) == false)
+		return nullptr;
+	}
+
+	FTileTransform SpawnTransform;
+	if (FindReinforcementSpawnTile(SpawnTransform) == false)
+	{
+		UE_LOG(LogSRPGCombat, Warning, TEXT("생존전 증원 실패: 빈 투입 타일 없음"));
+		return nullptr;
+	}
+
+	FEnemyUnitPlacementData Placement = mEnemyReinforcementTemplates[
+		mTotalReinforcementsSpawned % mEnemyReinforcementTemplates.Num()];
+	Placement.mTransform = SpawnTransform;
+	Placement.mTurnPriority = 100 + mTotalReinforcementsSpawned;
+	UEnemyUnitModel* SpawnedEnemy = RegisterEnemyUnit(Placement);
+	++mTotalReinforcementsSpawned;
+	UE_LOG(
+		LogSRPGCombat,
+		Log,
+		TEXT("생존전 증원 #%d: (%d,%d), 생존 적 %d/%d"),
+		mTotalReinforcementsSpawned,
+		SpawnTransform.mIndex.mX,
+		SpawnTransform.mIndex.mY,
+		LivingEnemies + 1,
+		ReinforcementEnemyCap);
+	return SpawnedEnemy;
+}
+
+void USRPGCombatModel::SpawnRoundReinforcements()
+{
+	if (mRoundCount <= 1 || mRoundCount > ReinforcementFinalRound
+		|| mEnemyReinforcementTemplates.IsEmpty())
+	{
+		return;
+	}
+
+	// 한 명만 보충하면 직전에 처치한 적을 대체할 뿐이라 무리가 커지는 느낌이 없다.
+	// 초반부터 두 명, 후반에는 세 명을 시도하되 생존 적 상한은 지킨다.
+	const int32 DesiredCount = mRoundCount >= 4 ? 3 : 2;
+	for (int32 SpawnIndex = 0; SpawnIndex < DesiredCount; ++SpawnIndex)
+	{
+		if (SpawnOneReinforcement() == nullptr)
 		{
 			break;
 		}
-		FEnemyUnitPlacementData Placement = mEnemyReinforcementTemplates[
-			mTotalReinforcementsSpawned % mEnemyReinforcementTemplates.Num()];
-		Placement.mTransform = SpawnTransform;
-		Placement.mTurnPriority = 100 + mTotalReinforcementsSpawned;
-		RegisterEnemyUnit(Placement);
-		++mTotalReinforcementsSpawned;
+	}
+}
+
+void USRPGCombatModel::SpawnActionReinforcementIfNeeded()
+{
+	if (mRoundCount <= 0 || mRoundCount >= ReinforcementFinalRound)
+	{
+		return;
+	}
+
+	mPlayerActionsSinceReinforcement = FMath::Min(
+		mPlayerActionsSinceReinforcement + 1,
+		ReinforcementActionInterval);
+	if (mPlayerActionsSinceReinforcement < ReinforcementActionInterval)
+	{
+		return;
+	}
+
+	UEnemyUnitModel* SpawnedEnemy = SpawnOneReinforcement();
+	if (SpawnedEnemy == nullptr)
+	{
+		// 상한에 막혔다면 카운트를 유지한다. 빈자리가 난 다음 플레이어 행동에서 바로 보충한다.
+		return;
+	}
+	mPlayerActionsSinceReinforcement = 0;
+	SpawnedEnemy->OnBeginRound();
+
+	const TArray<TObjectPtr<USRPGTurnContext>> SpawnedTurns = GetTurnContexts(SpawnedEnemy);
+	USRPGTurnContext* SpawnedTurn = SpawnedTurns.IsEmpty() ? nullptr : SpawnedTurns[0].Get();
+	if (SpawnedTurn == nullptr)
+	{
+		return;
+	}
+
+	int32 NextExecutionOrder = 1;
+	for (const FSRPGEnemyIntent& Intent : mEnemyIntents)
+	{
+		NextExecutionOrder = FMath::Max(NextExecutionOrder, Intent.mExecutionOrder + 1);
+	}
+	FSRPGEnemyIntent NewIntent;
+	if (BuildEnemyIntentForTurn(SpawnedTurn, NextExecutionOrder, NewIntent))
+	{
+		mEnemyIntents.Add(MoveTemp(NewIntent));
+		mPendingEnemyResponseTurnIds.AddUnique(SpawnedTurn->GetTurnId());
+		BroadcastEnemyIntentChanged();
+		RefreshEnemyIntentHighlights();
 	}
 }
 
@@ -1330,6 +1424,40 @@ bool USRPGCombatModel::RebuildEnemyIntentPlan(FSRPGEnemyIntent& Intent, bool bPr
 	return false;
 }
 
+bool USRPGCombatModel::BuildEnemyIntentForTurn(
+	USRPGTurnContext* TurnContext,
+	int32 ExecutionOrder,
+	FSRPGEnemyIntent& OutIntent)
+{
+	if (TurnContext == nullptr)
+	{
+		return false;
+	}
+
+	UEnemyUnitModel* Enemy = Cast<UEnemyUnitModel>(TurnContext->GetOwner());
+	if (Enemy == nullptr || Enemy->IsDead())
+	{
+		return false;
+	}
+
+	UAttributeSetComponentModel* Attributes = Enemy->GetAttributeComponentModel();
+	const int32 PlannedMoveRange = Attributes != nullptr
+		? FMath::Clamp(FMath::RoundToInt(Attributes->GetAttributeCurrentValue(UEnemyUnitAttributeSet::GetRechargeMovementAttribute())), 0, 1)
+		: 0;
+
+	OutIntent = FSRPGEnemyIntent();
+	OutIntent.mTurnId = TurnContext->GetTurnId();
+	OutIntent.mExecutionOrder = ExecutionOrder;
+	OutIntent.mEnemy = Enemy;
+	OutIntent.mGoalText = GetEnemyIntentGoalText(Enemy);
+	OutIntent.mPlannedMoveRange = PlannedMoveRange;
+	OutIntent.mResultText = NSLOCTEXT(
+		"EnemyIntent",
+		"PlanTelegraphed",
+		"초기 계획 공개 · 플레이어 행동 뒤 현재 위치에서 즉시 재계산");
+	return RebuildEnemyIntentPlan(OutIntent, /*bPreserveSkill*/false);
+}
+
 void USRPGCombatModel::PrepareEnemyIntents()
 {
 	mEnemyIntents.Reset();
@@ -1344,34 +1472,12 @@ void USRPGCombatModel::PrepareEnemyIntents()
 	int32 ExecutionOrder = 1;
 	for (USRPGTurnContext* TurnContext : GetOrderedTurnContexts())
 	{
-		if (TurnContext == nullptr)
-		{
-			continue;
-		}
-
-		UEnemyUnitModel* Enemy = Cast<UEnemyUnitModel>(TurnContext->GetOwner());
-		if (Enemy == nullptr || Enemy->IsDead())
-		{
-			continue;
-		}
-
-		UAttributeSetComponentModel* Attributes = Enemy->GetAttributeComponentModel();
-		const int32 PlannedMoveRange = Attributes != nullptr
-			? FMath::Clamp(FMath::RoundToInt(Attributes->GetAttributeCurrentValue(UEnemyUnitAttributeSet::GetRechargeMovementAttribute())), 0, 1)
-			: 0;
-
 		FSRPGEnemyIntent Intent;
-		Intent.mTurnId = TurnContext->GetTurnId();
-		Intent.mExecutionOrder = ExecutionOrder++;
-		Intent.mEnemy = Enemy;
-		Intent.mGoalText = GetEnemyIntentGoalText(Enemy);
-		Intent.mPlannedMoveRange = PlannedMoveRange;
-		Intent.mResultText = NSLOCTEXT(
-			"EnemyIntent",
-			"PlanTelegraphed",
-			"초기 계획 공개 · 플레이어 행동 뒤 현재 위치에서 즉시 재계산");
-		RebuildEnemyIntentPlan(Intent, /*bPreserveSkill*/false);
-		mEnemyIntents.Add(MoveTemp(Intent));
+		if (BuildEnemyIntentForTurn(TurnContext, ExecutionOrder, Intent))
+		{
+			++ExecutionOrder;
+			mEnemyIntents.Add(MoveTemp(Intent));
+		}
 	}
 
 	// 첫 안내 대상은 다음에 실제로 대응할 수 있도록 실행 순서가 가장 빠른 적을 우선한다.

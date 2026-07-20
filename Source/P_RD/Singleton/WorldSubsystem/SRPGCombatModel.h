@@ -142,7 +142,7 @@ public:
 	 * 새로운 적을 등록하는 함수. 해당 적 턴은 항상 최후방에 등록
 	 * @param EnemyPlacementData 적 배치 데이터
 	 */
-	void RegisterEnemyUnit(FEnemyUnitPlacementData& EnemyPlacementData);
+	UEnemyUnitModel* RegisterEnemyUnit(FEnemyUnitPlacementData& EnemyPlacementData);
 	/**
 	 * 새로운 장애물을 등록하는 함수
 	 * @param ObstaclePlacementDatas 장애물 배치 데이터
@@ -160,6 +160,8 @@ protected:
 	void RegisterUnit(UUnitModel* Unit, const FTileTransform& Transform);
 	void RegisterObstacles(TArray<FObstaclePlacementData>& ObstaclePlacementDatas);
 	void SpawnRoundReinforcements();
+	UEnemyUnitModel* SpawnOneReinforcement();
+	void SpawnActionReinforcementIfNeeded();
 	bool FindReinforcementSpawnTile(FTileTransform& OutTransform) const;
 	void ApplyHordeEnemyStats(UEnemyUnitModel* EnemyUnit) const;
 	bool HasFutureReinforcements() const;
@@ -239,6 +241,7 @@ public:
 
 protected:
 	void PrepareEnemyIntents();
+	bool BuildEnemyIntentForTurn(USRPGTurnContext* TurnContext, int32 ExecutionOrder, FSRPGEnemyIntent& OutIntent);
 	bool RebuildEnemyIntentPlan(FSRPGEnemyIntent& Intent, bool bPreserveSkill);
 	void CompleteEnemyIntent(UUnitModel* Enemy);
 	FSRPGEnemyIntent* FindEnemyIntent(UUnitModel* Enemy);
@@ -369,9 +372,12 @@ protected:
 	TArray<FEnemyUnitPlacementData> mEnemyReinforcementTemplates;
 	UPROPERTY(Category = Round, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "TotalReinforcementsSpawned"))
 	int32 mTotalReinforcementsSpawned = 0;
+	UPROPERTY(Category = Round, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PlayerActionsSinceReinforcement"))
+	int32 mPlayerActionsSinceReinforcement = 0;
 
 	static constexpr int32 ReinforcementFinalRound = 8;
-	static constexpr int32 ReinforcementEnemyCap = 6;
+	static constexpr int32 ReinforcementEnemyCap = 8;
+	static constexpr int32 ReinforcementActionInterval = 2;
 
 	/** @brief 라운드 시작에 공개되고 플레이어의 실제 행동이 끝날 때마다 갱신되는 행동 예고. */
 	UPROPERTY(Category = Intent, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "EnemyIntents"))

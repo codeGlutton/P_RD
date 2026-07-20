@@ -54,22 +54,13 @@ void UCombatTileMapHUDWidget::BindVictoryFlowEvents()
 		HandleEndCombatUI(MoveTemp(Barrier), Result);
 	});
 
-	// 라운드 시작 배너: 게임모드가 데이터(mRound) 갱신 후 재방송하는 OnBeginAnyRoundUI를 구독한다.
-	// 배리어를 붙잡고 배너를 재생 → 배너 종료 시(FinishTurnChangeIntro) 배리어를 놓아 그 라운드 첫 턴이 진행된다.
-	// (프레임워크가 아직 OnBeginAnyRoundUI를 방송하지 않으면 이 핸들러는 호출되지 않음 = 기존 동작 유지)
+	// 한 행동씩 빠르게 주고받는 흐름에서는 턴/라운드 전환 영상을 재생하지 않는다.
+	// HUD가 배리어를 붙잡지 않으므로 모델 방송이 끝나는 즉시 다음 턴이 시작된다.
 	if (CombatGameMode != nullptr)
 	{
 		CombatGameMode->OnBeginAnyRoundUI.RemoveAll(this);
-		CombatGameMode->OnBeginAnyRoundUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, int32 /*RoundCount*/)
-		{
-			mRoundChangeBarrier.Reset();
-			mRoundChangeBarrier = MoveTemp(Barrier);
-			// 배너를 못 틀면(프레임 에셋 없음 등) 배리어를 즉시 놓아 라운드/턴이 멈추지 않게 한다.
-			if (PlayTurnChangeIntro(false) == false)
-			{
-				mRoundChangeBarrier.Reset();
-			}
-		});
+		mRoundChangeBarrier.Reset();
+		SetTurnChangeIntroVisibility(false);
 	}
 }
 

@@ -197,7 +197,7 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
 	const USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	const int32 Round = CombatModel != nullptr ? CombatModel->GetRoundCount() : 1;
 	const FString HeaderText = FString::Printf(
-		TEXT("생존전 %d/8  ·  다음 라운드 가장자리 증원  ·  색상=지금 행동"),
+		TEXT("생존전 %d/8  ·  2회 행동마다 증원  ·  색상=행동 순서"),
 		FMath::Clamp(Round, 1, 8));
 	if (UTextBlock* Header = MakeText(
 		HeaderText,
