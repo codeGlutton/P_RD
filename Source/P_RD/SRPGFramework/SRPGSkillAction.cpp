@@ -110,7 +110,8 @@ FSRPGSkillCastCommand::FSRPGSkillCastCommand()
 USRPGSkillAction::USRPGSkillAction()
 {
     mActionType = ESRPGActionType::InPlayAction;
-    mConsumesTurn = false;
+    // 조준/세부 행동 선택은 자유롭게 바꿀 수 있지만, 실제 스킬이 성공하면 행동권 하나를 사용한다.
+    mConsumesTurn = true;
 }
 
 void USRPGSkillAction::OnBeginAction()

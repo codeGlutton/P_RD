@@ -363,38 +363,20 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 			mEnemyIntentTutorialPullCompleted = true;
 			mEnemyIntentTutorialPullPlanRevision = DirectIntervened->mPlanRevision;
 		}
-		const bool bThrowReplanned = mEnemyIntentTutorialThrowSubmitted
-			&& DirectIntervened != nullptr
-			&& DirectIntervened->mPlanRevision > mEnemyIntentTutorialPullPlanRevision;
-		if (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::EndTurnAndObserve
+		if (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::Complete)
+		{
+			// 완료 토스트가 자동으로 닫힐 때까지 마지막 상태를 유지한다.
+		}
+		else if (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::EndTurnAndObserve
 			&& DirectIntervened != nullptr
 			&& HasResolvedIntentOutcome(*DirectIntervened))
 		{
 			mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::Complete;
 		}
-		else if (bThrowReplanned)
-		{
-			mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::EndTurnAndObserve;
-		}
-		else if (mEnemyIntentTutorialThrowSubmitted)
-		{
-			mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::ApplyingThrow;
-		}
 		else if (mEnemyIntentTutorialPullCompleted)
 		{
-			const int32 SelectedSkillIndex = mCombatUIModel->GetSelectedSkillIndex();
-			const bool bGripSelected = DirectSkills.IsValidIndex(SelectedSkillIndex)
-				&& (DirectSkills[SelectedSkillIndex].mIsPullSkill
-					|| DirectSkills[SelectedSkillIndex].mIsThrowSkill
-					|| DirectSkills[SelectedSkillIndex].mIsSwapSkill);
-			if (bGripSelected)
-			{
-				mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::ConfirmThrow;
-			}
-			else
-			{
-				mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::SelectThrow;
-			}
+			// 실제 행동 하나가 끝나면 자동으로 적 하나가 대응한다. 추가 스킬/턴 종료 입력을 요구하지 않는다.
+			mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::EndTurnAndObserve;
 		}
 		else if (mEnemyIntentTutorialInterventionSubmitted)
 		{
@@ -421,39 +403,25 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		{
 		case EEnemyIntentTutorialStage::SelectPull:
 			DirectTitle = mExpandedActionFamily == 1
-				? TEXT("1 / 4   펼쳐진 ‘끌어오기’를 탭하세요")
-				: TEXT("1 / 4   왼쪽의 ‘손아귀’를 탭하세요");
+				? TEXT("1 / 3   펼쳐진 ‘끌어오기’를 탭하세요")
+				: TEXT("1 / 3   왼쪽의 ‘손아귀’를 탭하세요");
 			DirectMessage = TEXT("행동군을 열고 세부 행동을 고르면 전체 사거리가 바로 표시됩니다");
 			break;
 		case EEnemyIntentTutorialStage::ConfirmDestination:
-			DirectTitle = TEXT("2 / 4   주황색 적을 기사 주변의 원하는 빈칸으로 드래그하세요");
+			DirectTitle = TEXT("2 / 3   주황색 적을 기사 주변의 원하는 빈칸으로 드래그하세요");
 			DirectMessage = TEXT("적은 손가락을 따라오고, ◆와 밝은 타일이 실제 도착칸을 보여줍니다");
 			break;
 		case EEnemyIntentTutorialStage::ApplyingIntervention:
 			DirectTitle = TEXT("좋아요!  적을 끌어오는 중");
 			DirectMessage = TEXT("도착할 때까지 잠깐 보세요");
 			break;
-		case EEnemyIntentTutorialStage::SelectThrow:
-			DirectTitle = mExpandedActionFamily == 1
-				? TEXT("3 / 4   펼쳐진 ‘집어던지기’를 탭하세요")
-				: TEXT("3 / 4   같은 ‘손아귀’를 다시 탭하세요");
-			DirectMessage = TEXT("끌기와 던지기가 분리되어 원하는 행동을 확실하게 고를 수 있습니다");
-			break;
-		case EEnemyIntentTutorialStage::ConfirmThrow:
-			DirectTitle = TEXT("4 / 4   당겨온 적을 원하는 방향으로 드래그하세요");
-			DirectMessage = TEXT("다른 적/장애물 쪽은 충돌 · 빈 방향은 집어던지기");
-			break;
-		case EEnemyIntentTutorialStage::ApplyingThrow:
-			DirectTitle = TEXT("좋아요!  던진 위치에 맞춰 적이 새 길을 고르는 중");
-			DirectMessage = TEXT("");
-			break;
 		case EEnemyIntentTutorialStage::EndTurnAndObserve:
-			DirectTitle = TEXT("마지막   오른쪽 아래 ‘턴 종료’를 누르세요");
-			DirectMessage = TEXT("적이 바뀐 위치와 새 경로대로 행동하는지 확인합니다");
+			DirectTitle = TEXT("3 / 3   이제 적 한 명이 바로 대응합니다");
+			DirectMessage = TEXT("버튼을 누르지 않아도 됩니다 · 적 행동 하나 뒤 곧바로 내 차례가 돌아옵니다");
 			break;
 		case EEnemyIntentTutorialStage::Complete:
-			DirectTitle = TEXT("완료!  손아귀 하나로 적을 당기고 던지고 교환할 수 있습니다");
-			DirectMessage = TEXT("행동 선택 → 적을 잡기 → 결과가 보이는 칸에 놓기");
+			DirectTitle = TEXT("완료!  나 한 번, 적 한 번");
+			DirectMessage = TEXT("이동과 공격도 모두 한 행동입니다 · 매번 한 칸씩 빠르게 주고받으세요");
 			break;
 		default:
 			DirectTitle = TEXT("적을 직접 움직여 보세요");
@@ -473,7 +441,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 		{
 			mEnemyIntentTutorialContinueButton->SetVisibility(ESlateVisibility::Collapsed);
 		}
-		SetEndTurnTutorialHighlight(mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::EndTurnAndObserve);
+		SetEndTurnTutorialHighlight(false);
 		RefreshEnemyIntentTutorialProgress();
 		mEnemyIntentTutorialProgress->SetVisibility(ESlateVisibility::HitTestInvisible);
 		mEnemyIntentTutorialPanel->SetBrushColor(mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::Complete
@@ -564,10 +532,12 @@ UWidget* UCombatTileMapHUDWidget::ResolveEnemyIntentTutorialFocusWidget() const
 	case EEnemyIntentTutorialStage::ConfirmDestination:
 	case EEnemyIntentTutorialStage::SelectThrowTarget:
 	case EEnemyIntentTutorialStage::ConfirmThrow:
+	case EEnemyIntentTutorialStage::EndTurnAndObserve:
 	{
 		const TArray<FEnemyIntentUI>& Intents = mCombatUIModel->GetEnemyIntentUIs();
 		const bool bFindIntervened = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectThrowTarget
-			|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmThrow;
+			|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmThrow
+			|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::EndTurnAndObserve;
 		const FEnemyIntentUI* TargetIntent = bFindIntervened
 			? FindIntentByEnemyId(Intents, mEnemyIntentTutorialIntervenedEnemyUnitId)
 			: FindRecommendedIntent(Intents);
@@ -593,8 +563,6 @@ UWidget* UCombatTileMapHUDWidget::ResolveEnemyIntentTutorialFocusWidget() const
 		return nullptr;
 	}
 
-	case EEnemyIntentTutorialStage::EndTurnAndObserve:
-		return EndTurnButton.Get();
 	case EEnemyIntentTutorialStage::SelectThrowDestination:
 		for (UTextBlock* DirectionLabel : mDisplacementDirectionLabels)
 		{
@@ -650,8 +618,8 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentTutorialProgress() const
 	case EEnemyIntentTutorialStage::SelectThrow:           CompletedCount = 2; ActiveStep = 2; break;
 	case EEnemyIntentTutorialStage::ConfirmThrow:
 	case EEnemyIntentTutorialStage::ApplyingThrow:         CompletedCount = 3; ActiveStep = 3; break;
-	case EEnemyIntentTutorialStage::EndTurnAndObserve:
-	case EEnemyIntentTutorialStage::Complete:              CompletedCount = 4; break;
+	case EEnemyIntentTutorialStage::EndTurnAndObserve:     CompletedCount = 2; ActiveStep = 2; break;
+	case EEnemyIntentTutorialStage::Complete:              CompletedCount = 3; break;
 	case EEnemyIntentTutorialStage::WaitingForIntent:
 	default:                                               break;
 	}
@@ -663,7 +631,7 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentTutorialProgress() const
 		{
 			continue;
 		}
-		if (StepIndex >= 4)
+		if (StepIndex >= 3)
 		{
 			Dot->SetVisibility(ESlateVisibility::Collapsed);
 			continue;
@@ -730,9 +698,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime
 	case EEnemyIntentTutorialStage::SelectPull:           ActiveStep = 0; break;
 	case EEnemyIntentTutorialStage::ConfirmDestination:
 	case EEnemyIntentTutorialStage::ApplyingIntervention: ActiveStep = 1; break;
-	case EEnemyIntentTutorialStage::SelectThrow:          ActiveStep = 2; break;
-	case EEnemyIntentTutorialStage::ConfirmThrow:
-	case EEnemyIntentTutorialStage::ApplyingThrow:        ActiveStep = 3; break;
+	case EEnemyIntentTutorialStage::EndTurnAndObserve:    ActiveStep = 2; break;
 	default:                                           break;
 	}
 	if (mEnemyIntentTutorialProgressDots.IsValidIndex(ActiveStep)
@@ -769,7 +735,8 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime
 	const bool bFocusEnemyModel = mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectTarget
 		|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmDestination
 		|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectThrowTarget
-		|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmThrow;
+		|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmThrow
+		|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::EndTurnAndObserve;
 	if (bFocusEnemyModel)
 	{
 		// HP바 슬롯은 실제 유닛 투영점보다 60px 위에 놓인다(UnitBars.cpp). HP바만 감싸면
@@ -853,12 +820,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime
 
 	FVector2D ArrowDirection(0.0f, 1.0f);
 	FVector2D ArrowTip((MinPoint.X + MaxPoint.X) * 0.5f, MinPoint.Y - 9.0f);
-	if (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::EndTurnAndObserve)
-	{
-		ArrowDirection = FVector2D(1.0f, 0.0f);
-		ArrowTip = FVector2D(MinPoint.X - 9.0f, (MinPoint.Y + MaxPoint.Y) * 0.5f);
-	}
-	else if (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectDice
+	if (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectDice
 		|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectThrowDice)
 	{
 		ArrowDirection = FVector2D(-1.0f, 0.0f);
@@ -922,7 +884,7 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorialVisuals(float InDeltaTime
 		case EEnemyIntentTutorialStage::SelectThrowDestination: PointerText = TEXT("던질 방향 클릭"); break;
 		case EEnemyIntentTutorialStage::ConfirmDestination: PointerText = TEXT("같은 적을 원하는 ◆ 칸으로 드래그"); break;
 		case EEnemyIntentTutorialStage::ConfirmThrow:      PointerText = TEXT("같은 적을 던질 방향으로 드래그"); break;
-		case EEnemyIntentTutorialStage::EndTurnAndObserve: PointerText = TEXT("턴 종료 클릭"); break;
+		case EEnemyIntentTutorialStage::EndTurnAndObserve: PointerText = TEXT("적의 한 행동 자동 진행"); break;
 		default: break;
 		}
 		mEnemyIntentTutorialPointerLabel->SetText(FText::FromString(PointerText));

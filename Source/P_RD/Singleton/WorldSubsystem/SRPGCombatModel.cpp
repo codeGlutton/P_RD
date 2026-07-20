@@ -243,6 +243,10 @@ void USRPGCombatModel::EvaluateCombatStates()
 
 void USRPGCombatModel::OnEndCurrentTurn(USRPGTurnContext* TurnContext, ESRPGTurnResult TurnResult)
 {
+	const bool bCompletedPlayerTurn = TurnContext != nullptr
+		&& TurnContext->GetOwner() != nullptr
+		&& TurnContext->GetOwner()->IsPlayerUnitModel();
+
 	if (TurnContext != nullptr && TurnContext->GetOwner() != nullptr && TurnContext->GetOwner()->IsPlayerUnitModel() == false)
 	{
 		CompleteEnemyIntent(TurnContext->GetOwner());
@@ -271,7 +275,7 @@ void USRPGCombatModel::OnEndCurrentTurn(USRPGTurnContext* TurnContext, ESRPGTurn
 		UnregisterTurn(TurnContext);
 	}
 
-	AdvanceTurn();
+	AdvanceTurn(false, bCompletedPlayerTurn);
 }
 
 void USRPGCombatModel::ClearDeadActors()
@@ -684,18 +688,49 @@ void USRPGCombatModel::RegisterObstacles(TArray<FObstaclePlacementData>& Obstacl
 	}
 }
 
-void USRPGCombatModel::AdvanceTurn(bool IsInitialRound)
+void USRPGCombatModel::AdvanceTurn(bool IsInitialRound, bool bCompletedPlayerTurn)
 {
+	bool bStartingNewRound = IsInitialRound;
 	if (IsInitialRound == false)
 	{
 		// 밀려있던 턴 구성 변경 요청안들 처리
 		FlushPendingTurnRequests();
-		
-		// 라운드 종료 시 이벤트 처리
-		NotifyRoundEndIfNeeded();
 
-		// 턴 변경
-		mCurTurnContextOrder = mCurTurnContextOrder->GetNextNode();
+		if (bCompletedPlayerTurn)
+		{
+			// 플레이어가 행동한 뒤에는 이번 라운드에 아직 행동하지 않은 적 한 명만 대응한다.
+			const int32 EnemyTurnId = PopNextEnemyResponseTurnId();
+			if (EnemyTurnId != INDEX_NONE)
+			{
+				mCurTurnContextOrder = mTurnContextOrder.FindNode(EnemyTurnId);
+			}
+			else
+			{
+				// 살아 있는 적이 모두 제거되는 정상 경로는 전투 종료 평가에서 빠져나간다.
+				// 여기까지 온 경우에도 입력이 잠기지 않도록 새 라운드의 플레이어 턴으로 안전하게 복귀한다.
+				NotifyRoundEnd();
+				const int32 PlayerTurnId = FindPlayerTurnId();
+				mCurTurnContextOrder = PlayerTurnId != INDEX_NONE ? mTurnContextOrder.FindNode(PlayerTurnId) : nullptr;
+				bStartingNewRound = true;
+			}
+		}
+		else
+		{
+			// 적 하나의 행동이 끝나면 즉시 플레이어에게 조작권을 돌려준다.
+			// 마지막 적까지 행동했다면 이때만 라운드를 끝내고 다음 대응 순서를 새로 만든다.
+			if (HasPendingEnemyResponse() == false)
+			{
+				NotifyRoundEnd();
+				bStartingNewRound = true;
+			}
+			const int32 PlayerTurnId = FindPlayerTurnId();
+			mCurTurnContextOrder = PlayerTurnId != INDEX_NONE ? mTurnContextOrder.FindNode(PlayerTurnId) : nullptr;
+		}
+	}
+
+	if (mCurTurnContextOrder == nullptr || mTurnContextMap.Contains(mCurTurnContextOrder->GetValue()) == false)
+	{
+		return;
 	}
 
 	// 강제 중단
@@ -710,8 +745,12 @@ void USRPGCombatModel::AdvanceTurn(bool IsInitialRound)
 		mTurnContextMap[mCurTurnContextOrder->GetValue()]->BeginTurn();
 		}));
 
-	// 라운드 시작 시 이벤트 처리
-	NotifyRoundStartIfNeeded(PresentationBarrier);
+	// 플레이어에게 돌아올 때마다 새 라운드로 오인하면 배너와 상태 갱신이 반복된다.
+	// 최초 진입 또는 마지막 적의 대응이 끝난 시점에만 라운드 이벤트를 보낸다.
+	if (bStartingNewRound)
+	{
+		NotifyRoundStartIfNeeded(PresentationBarrier);
+	}
 }
 
 void USRPGCombatModel::NotifyRoundStartIfNeeded(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier)
@@ -729,27 +768,112 @@ void USRPGCombatModel::NotifyRoundStartIfNeeded(TSharedPtr<FPresentationBarrier>
 			Obstacle->OnBeginRound();
 		}
 
-		// 플레이어가 주사위를 고르기 전에 목표와 현재 경로를 공개한다. 이후 실제 이동/스킬이
-		// 끝날 때마다 같은 전술 정체성을 유지한 채 현재 전장 기준 경로와 공격 타일을 갱신한다.
+		// 플레이어 행동 전에 목표와 현재 경로를 공개한다. 이후 실제 이동/스킬이
+		// 끝날 때마다 같은 전술 정체성을 유지한 채 현재 전장 기준 한 칸 행동을 갱신한다.
 		PrepareEnemyIntents();
+		RebuildEnemyResponseOrder();
 
 		OnBeginAnyRoundUI.Broadcast(RoundPresentationBarrier, mRoundCount);
 	}
 }
 
-void USRPGCombatModel::NotifyRoundEndIfNeeded()
+void USRPGCombatModel::NotifyRoundEnd()
 {
-	if (mTurnContextOrder.IsEmpty() == false && mCurTurnContextOrder == mTurnContextOrder.GetTail())
+	for (const TObjectPtr<UUnitModel>& Unit : mUnits)
 	{
-		for (const TObjectPtr<UUnitModel>& Unit : mUnits)
+		Unit->OnEndRound();
+	}
+	for (const TObjectPtr<UBoardActorModel>& Obstacle : mObstacles)
+	{
+		Obstacle->OnEndRound();
+	}
+}
+
+void USRPGCombatModel::RebuildEnemyResponseOrder()
+{
+	mPendingEnemyResponseTurnIds.Reset();
+	if (mTurnContextOrder.IsEmpty())
+	{
+		return;
+	}
+
+	auto* Node = mTurnContextOrder.GetHead();
+	const int32 TurnCount = mTurnContextOrder.Num();
+	for (int32 Index = 0; Index < TurnCount; ++Index)
+	{
+		const int32 TurnId = Node->GetValue();
+		const TObjectPtr<USRPGTurnContext>* TurnContext = mTurnContextMap.Find(TurnId);
+		UUnitModel* Owner = TurnContext != nullptr && IsValid(TurnContext->Get())
+			? TurnContext->Get()->GetOwner()
+			: nullptr;
+		if (Owner != nullptr && Owner->IsPlayerUnitModel() == false && Owner->IsDead() == false)
 		{
-			Unit->OnEndRound();
+			mPendingEnemyResponseTurnIds.Add(TurnId);
 		}
-		for (const TObjectPtr<UBoardActorModel>& Obstacle : mObstacles)
+		Node = Node->GetNextNode();
+	}
+}
+
+int32 USRPGCombatModel::PopNextEnemyResponseTurnId()
+{
+	while (mPendingEnemyResponseTurnIds.IsEmpty() == false)
+	{
+		const int32 TurnId = mPendingEnemyResponseTurnIds[0];
+		mPendingEnemyResponseTurnIds.RemoveAt(0);
+		const TObjectPtr<USRPGTurnContext>* TurnContext = mTurnContextMap.Find(TurnId);
+		UUnitModel* Owner = TurnContext != nullptr && IsValid(TurnContext->Get())
+			? TurnContext->Get()->GetOwner()
+			: nullptr;
+		if (Owner != nullptr
+			&& Owner->IsPlayerUnitModel() == false
+			&& Owner->IsDead() == false
+			&& mTurnContextOrder.FindNode(TurnId) != nullptr)
 		{
-			Obstacle->OnEndRound();
+			return TurnId;
 		}
 	}
+	return INDEX_NONE;
+}
+
+bool USRPGCombatModel::HasPendingEnemyResponse()
+{
+	mPendingEnemyResponseTurnIds.RemoveAll([this](int32 TurnId)
+	{
+		const TObjectPtr<USRPGTurnContext>* TurnContext = mTurnContextMap.Find(TurnId);
+		UUnitModel* Owner = TurnContext != nullptr && IsValid(TurnContext->Get())
+			? TurnContext->Get()->GetOwner()
+			: nullptr;
+		return Owner == nullptr
+			|| Owner->IsPlayerUnitModel()
+			|| Owner->IsDead()
+			|| mTurnContextOrder.FindNode(TurnId) == nullptr;
+	});
+	return mPendingEnemyResponseTurnIds.IsEmpty() == false;
+}
+
+int32 USRPGCombatModel::FindPlayerTurnId() const
+{
+	if (mTurnContextOrder.IsEmpty())
+	{
+		return INDEX_NONE;
+	}
+
+	auto* Node = mTurnContextOrder.GetHead();
+	const int32 TurnCount = mTurnContextOrder.Num();
+	for (int32 Index = 0; Index < TurnCount; ++Index)
+	{
+		const int32 TurnId = Node->GetValue();
+		const TObjectPtr<USRPGTurnContext>* TurnContext = mTurnContextMap.Find(TurnId);
+		if (TurnContext != nullptr
+			&& IsValid(TurnContext->Get())
+			&& TurnContext->Get()->GetOwner() != nullptr
+			&& TurnContext->Get()->GetOwner()->IsPlayerUnitModel())
+		{
+			return TurnId;
+		}
+		Node = Node->GetNextNode();
+	}
+	return INDEX_NONE;
 }
 
 bool USRPGCombatModel::PushAction(USRPGAction* Action)
@@ -914,29 +1038,21 @@ void USRPGCombatModel::ReplanEnemyIntentsAfterPlayerAction(
 
 		Intent.mPreviousPathTileIndexes = PreviousPath;
 		Intent.mPreviousDestination = PreviousDestination;
-		if (Intent.mPlannedMoveRange > 0)
-		{
-			--Intent.mPlannedMoveRange;
-			++Intent.mResponseCostSpent;
-			// 비용을 낸 실제 이동 예산으로 명령과 HUD 경로를 다시 만든다.
-			RebuildEnemyIntentPlan(Intent, /*bPreserveSkill*/true);
-		}
 		++Intent.mPlanRevision;
 		Intent.mResultText = bRespondingToDisplacement
 			? FText::Format(
 				NSLOCTEXT(
 					"EnemyIntent",
 					"PlayerDisplacementRoleReplanned",
-					"착지 적응 #{0} · 원위치 복귀 안 함 · 회복 이동력 -{1}"),
+					"착지 적응 #{0} · 현재 칸에서 한 칸 대응 · 충돌 회복 -{1}"),
 				FText::AsNumber(Intent.mPlanRevision),
 				FText::AsNumber(Intent.mRecoveryMovePenalty))
 			: FText::Format(
 				NSLOCTEXT(
 					"EnemyIntent",
 					"PlayerActionReplanned",
-					"대응 #{0} · 새 역할 자리 계산 · 대응 이동력 -{1}"),
-				FText::AsNumber(Intent.mPlanRevision),
-				FText::AsNumber(Intent.mResponseCostSpent));
+					"대응 #{0} · 현재 전장에서 한 칸 행동 재계산"),
+				FText::AsNumber(Intent.mPlanRevision));
 		Intent.mHasPendingDisplacementResponse = false;
 		bChanged = true;
 	}
@@ -969,9 +1085,10 @@ bool USRPGCombatModel::RebuildEnemyIntentPlan(FSRPGEnemyIntent& Intent, bool bPr
 			ReservedDestinations.Add(OtherIntent.mPlannedDestination);
 		}
 	}
-	const int32 EffectiveMoveRange = FMath::Max(
+	const int32 EffectiveMoveRange = FMath::Clamp(
 		Intent.mPlannedMoveRange - Intent.mRecoveryMovePenalty,
-		0);
+		0,
+		1);
 	TArray<TInstancedStruct<FSRPGCommand>> Commands = USRPGEnemyTurnPlanner::PlanTurn(
 		Enemy,
 		mPlayerUnit,
@@ -1117,7 +1234,7 @@ void USRPGCombatModel::PrepareEnemyIntents()
 
 		UAttributeSetComponentModel* Attributes = Enemy->GetAttributeComponentModel();
 		const int32 PlannedMoveRange = Attributes != nullptr
-			? FMath::Max(FMath::RoundToInt(Attributes->GetAttributeCurrentValue(UEnemyUnitAttributeSet::GetRechargeMovementAttribute())), 0)
+			? FMath::Clamp(FMath::RoundToInt(Attributes->GetAttributeCurrentValue(UEnemyUnitAttributeSet::GetRechargeMovementAttribute())), 0, 1)
 			: 0;
 
 		FSRPGEnemyIntent Intent;
@@ -1134,8 +1251,8 @@ void USRPGCombatModel::PrepareEnemyIntents()
 		mEnemyIntents.Add(MoveTemp(Intent));
 	}
 
-	// 첫 안내에서는 발앞에 놓기와 방향 투척을 모두 고를 수 있어야 한다. 플레이어 발앞까지
-	// 실제로 열린 적만 연습 대상으로 고르고, 가능하면 이동 중인 적을 우선한다.
+	// 첫 안내 대상은 다음에 실제로 대응할 수 있도록 실행 순서가 가장 빠른 적을 우선한다.
+	// 플레이어 발앞까지 실제로 끌 수 있는 적만 추천해 안내와 판정을 일치시킨다.
 	const FTileIndex PlayerTile = mPlayerUnit->GetTileTransform().mIndex;
 	auto CanBePulledToPlayer = [this, PlayerTile](const FSRPGEnemyIntent& Intent)
 	{
@@ -1161,15 +1278,7 @@ void USRPGCombatModel::PrepareEnemyIntents()
 			FMath::Abs(PullEnd.mY - PlayerTile.mY)) == 1;
 	};
 
-	FSRPGEnemyIntent* RecommendedIntent = mEnemyIntents.FindByPredicate(
-		[&CanBePulledToPlayer](const FSRPGEnemyIntent& Intent)
-		{
-			return Intent.mPlannedDestination != Intent.mPlannedOrigin && CanBePulledToPlayer(Intent);
-		});
-	if (RecommendedIntent == nullptr)
-	{
-		RecommendedIntent = mEnemyIntents.FindByPredicate(CanBePulledToPlayer);
-	}
+	FSRPGEnemyIntent* RecommendedIntent = mEnemyIntents.FindByPredicate(CanBePulledToPlayer);
 	if (RecommendedIntent != nullptr)
 	{
 		RecommendedIntent->mIsRecommendedInterventionTarget = true;

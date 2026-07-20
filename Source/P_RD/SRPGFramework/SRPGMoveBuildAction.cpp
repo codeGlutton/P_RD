@@ -63,7 +63,10 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleCommand(const TInstancedStruct<FS
         checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 모델 nullptr"));
         UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnitModel->GetAttributeComponentModel();
         checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 모델 nullptr"));
-        mMovePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMovementAttribute());
+        // 레거시 타일 클릭 이동도 직접 드래그 이동과 동일하게 한 행동당 한 칸만 허용한다.
+        mMovePoint = FMath::Min(
+            FMath::Max(FMath::RoundToInt(AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMovementAttribute())), 0),
+            1);
 
         const FSRPGMoveSelectCommand& MoveSelectCommand = Command.Get<FSRPGMoveSelectCommand>();
         // 커맨드 델리깃을 복사해서 페이즈가 바뀔 때 통지
@@ -231,7 +234,12 @@ void USRPGMoveBuildAction::SetTargetTile(const FTileIndex& TileIndex)
         const FTileIndex Origin = mInstigator->GetTileTransform().mIndex;
         mTargetIndex = TileIndex;
         mPathTileIndexes = TileMap->FindPath(Origin, TileIndex);
-        TileMap->SetMovePath(Origin, TileIndex);
+        if (mPathTileIndexes.Num() > 2)
+        {
+            mPathTileIndexes.SetNum(2);
+            mTargetIndex = mPathTileIndexes.Last();
+        }
+        TileMap->SetMovePath(Origin, mTargetIndex);
     }
 
     /* 예측 시스템 — 이동 시 '받는' 영향(경로/도착 타일의 함정·장판 데미지·상태이상) 예측 */

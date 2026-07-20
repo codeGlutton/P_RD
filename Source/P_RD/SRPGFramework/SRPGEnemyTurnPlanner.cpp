@@ -110,12 +110,14 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	const FTileIndex PlayerTile = Player->GetTileTransform().mIndex;
 
 	// 습득한 이동포인트만큼 이동 가능
-	const int32 MoveRange = MoveRangeOverride != INDEX_NONE
+	const int32 RequestedMoveRange = MoveRangeOverride != INDEX_NONE
 		? FMath::Max(MoveRangeOverride, 0)
 		: FMath::Max(
 			AttributeSetComp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementAttribute()),
 			0
 		);
+	// 적도 한 번의 대응에서는 한 칸만 이동한다. 공격 사거리 안이라면 이동 대신 공격 하나를 실행한다.
+	const int32 MoveRange = FMath::Min(RequestedMoveRange, 1);
 
 	// 주사위 합
 	const float DiceSum = AttributeSetComp->GetAttributeCurrentValue(UEnemyUnitAttributeSet::GetRechargeDiceSumAttribute());
@@ -202,6 +204,8 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 			MoveRef.mPathTileIndexes = MoveTemp(Path);
 			MoveRef.mIsElasticCharge = bElasticCharge;
 			AddAction(MoveTemp(Move));
+			// 한 번의 대응은 이동 또는 공격 하나다. 이동 뒤 같은 턴의 공격을 계획/UI에 남기지 않는다.
+			CanCast = false;
 		}
 	}
 

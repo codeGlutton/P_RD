@@ -861,7 +861,7 @@ void UCombatTileMapHUDWidget::RefreshDirectMoveRangeHighlight()
 	{
 		return;
 	}
-	const int32 Range = FMath::Clamp(mSelectedSubactionDesiredPower, 1, 6);
+	constexpr int32 Range = 1;
 	const FTileIndex Origin = PlayerUnit->GetTileTransform().mIndex;
 	TArray<FTileIndex> RangeTiles = mSelectedSubactionMode == ECombatSubactionMode::Charge
 		? TileMap->GetAimableTiles(Origin, Range, EAimPattern::Star, true, true, PlayerUnit)
@@ -908,7 +908,7 @@ bool UCombatTileMapHUDWidget::UpdateDirectMovePath(const FVector2D& ScreenPositi
 		return false;
 	}
 	const FTileIndex Origin = PlayerUnit->GetTileTransform().mIndex;
-	const int32 Range = FMath::Clamp(mSelectedSubactionDesiredPower, 1, 6);
+	constexpr int32 Range = 1;
 	TArray<FTileIndex> NewPath;
 	mDirectMoveImpactTile = FTileIndex::Invalid;
 	mDirectMoveImpactLabel = FText::GetEmpty();

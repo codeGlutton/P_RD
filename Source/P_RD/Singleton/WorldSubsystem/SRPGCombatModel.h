@@ -162,9 +162,18 @@ protected:
 	void RegisterObstacles(TArray<FObstaclePlacementData>& ObstaclePlacementDatas);
 
 protected:
-	void AdvanceTurn(bool IsInitialRound = false);
+	/**
+	 * 플레이어와 적이 행동 하나씩 번갈아 실행한다.
+	 * bCompletedPlayerTurn은 방금 끝난 쪽을 명시해 원형 리스트의 단순 다음 노드 대신
+	 * 플레이어 -> 다음 대기 적 -> 플레이어 순서로 전환하기 위해 사용한다.
+	 */
+	void AdvanceTurn(bool IsInitialRound = false, bool bCompletedPlayerTurn = false);
 	void NotifyRoundStartIfNeeded(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier);
-	void NotifyRoundEndIfNeeded();
+	void NotifyRoundEnd();
+	void RebuildEnemyResponseOrder();
+	bool HasPendingEnemyResponse();
+	int32 PopNextEnemyResponseTurnId();
+	int32 FindPlayerTurnId() const;
 
 	/* 액션 함수 */
 public:
@@ -345,6 +354,9 @@ protected:
 	// @brief 액션 큐 처리용 헤드 인덱스
 	UPROPERTY(Category = Turn, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "HeadRequestIndex"))
 	int32 mHeadRequestIndex = 0;
+	/** @brief 이번 라운드에 아직 한 번씩 대응하지 않은 적 턴 id. 플레이어 행동 뒤 앞에서 하나만 꺼낸다. */
+	UPROPERTY(Category = Turn, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PendingEnemyResponseTurnIds"))
+	TArray<int32> mPendingEnemyResponseTurnIds;
 
 protected:
 	UPROPERTY(Category = Round, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "RoundCount"))

@@ -561,7 +561,8 @@ void ACombatGameMode::HandleWarriorMoveRequested(FWarriorMoveRequest Request)
 	{
 		return;
 	}
-	const int32 MaximumSteps = FMath::Clamp(Request.mActionPower, 1, 6);
+	// 행동 위력은 돌진 충돌 강도에만 남기고, 실제 이동 거리는 모든 플레이어 이동에서 한 칸으로 고정한다.
+	constexpr int32 MaximumSteps = 1;
 	if (Request.mPathTileIndexes.Num() - 1 > MaximumSteps)
 	{
 		Request.mPathTileIndexes.SetNum(MaximumSteps + 1);

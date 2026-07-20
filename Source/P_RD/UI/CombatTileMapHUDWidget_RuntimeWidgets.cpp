@@ -723,7 +723,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 			}
 
 			mEnemyIntentTutorialProgressDots.Reset();
-			for (int32 StepIndex = 0; StepIndex < 6; ++StepIndex)
+			for (int32 StepIndex = 0; StepIndex < 3; ++StepIndex)
 			{
 				UBorder* Dot = WidgetTree->ConstructWidget<UBorder>(
 					UBorder::StaticClass(),

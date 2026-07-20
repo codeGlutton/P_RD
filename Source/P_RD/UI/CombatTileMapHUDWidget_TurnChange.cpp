@@ -14,9 +14,9 @@ namespace
 {
 	constexpr int32 TurnChangeFrameCount = 33;
 	constexpr float TurnChangeFramesPerSecond = 16.0f;
-	// 원본 33장을 다 쓰지 않고 2장에 1장만 쓴다 — 로드 개수·상주 메모리 절반, 같은 fps라 재생은 2배 빨라진다(≈1.06s).
-	// (배너는 라운드 배리어를 잡아 게임 진행을 막으므로 짧을수록 턴 템포에 유리.)
-	constexpr int32 TurnChangeFrameStep = 2;
+	// 한 행동씩 교대하는 빠른 템포에 맞춰 4장에 1장만 사용한다(약 0.56초).
+	// 라운드 경계는 읽히되 실제 조작을 오래 막지 않는다.
+	constexpr int32 TurnChangeFrameStep = 4;
 	constexpr int32 TurnChangeUsedFrameCount = (TurnChangeFrameCount + TurnChangeFrameStep - 1) / TurnChangeFrameStep;
 	const FVector2D TurnChangeFrameNativeSize(832.0f, 448.0f);
 	const TCHAR* const TurnChangeFrameAssetDirectory = TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/TurnChange/FramesBiRefNet");
@@ -74,7 +74,7 @@ bool UCombatTileMapHUDWidget::PlayTurnChangeIntro(bool bOpenDiceAfterIntro)
 	// (타이머는 위젯 Tick과 무관하게 월드가 돌리고, 정상 종료가 먼저 오면 아래 Finish에서 지운다.)
 	if (UWorld* World = GetWorld())
 	{
-		const float SafetyDelay = StaticCast<float>(TurnChangeFrameCount) / TurnChangeFramesPerSecond + 1.0f;
+		const float SafetyDelay = StaticCast<float>(TurnChangeUsedFrameCount) / TurnChangeFramesPerSecond + 1.0f;
 		World->GetTimerManager().SetTimer(
 			mTurnChangeSafetyTimerHandle,
 			FTimerDelegate::CreateUObject(this, &UCombatTileMapHUDWidget::FinishTurnChangeIntro),
