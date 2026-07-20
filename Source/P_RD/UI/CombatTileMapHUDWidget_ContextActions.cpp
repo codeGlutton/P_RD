@@ -850,7 +850,8 @@ void UCombatTileMapHUDWidget::RefreshDirectMoveRangeHighlight()
 {
 	if (mCombatUIModel == nullptr
 		|| (mSelectedSubactionMode != ECombatSubactionMode::Move
-			&& mSelectedSubactionMode != ECombatSubactionMode::Charge))
+			&& mSelectedSubactionMode != ECombatSubactionMode::Charge
+			&& mSelectedSubactionMode != ECombatSubactionMode::Leap))
 	{
 		return;
 	}
@@ -861,11 +862,30 @@ void UCombatTileMapHUDWidget::RefreshDirectMoveRangeHighlight()
 	{
 		return;
 	}
-	constexpr int32 Range = 1;
+	const int32 Range = mSelectedSubactionMode == ECombatSubactionMode::Leap ? 3 : 1;
 	const FTileIndex Origin = PlayerUnit->GetTileTransform().mIndex;
-	TArray<FTileIndex> RangeTiles = mSelectedSubactionMode == ECombatSubactionMode::Charge
-		? TileMap->GetAimableTiles(Origin, Range, EAimPattern::Star, true, true, PlayerUnit)
-		: TileMap->GetReachableTiles(Origin, Range);
+	TArray<FTileIndex> RangeTiles;
+	if (mSelectedSubactionMode == ECombatSubactionMode::Leap)
+	{
+		for (int32 Y = Origin.mY - Range; Y <= Origin.mY + Range; ++Y)
+		{
+			for (int32 X = Origin.mX - Range; X <= Origin.mX + Range; ++X)
+			{
+				const FTileIndex Candidate(X, Y);
+				if (Candidate != Origin && TileMap->IsValidIndex(Candidate)
+					&& TileMap->CanPlace(Candidate, PlayerUnit))
+				{
+					RangeTiles.Add(Candidate);
+				}
+			}
+		}
+	}
+	else
+	{
+		RangeTiles = mSelectedSubactionMode == ECombatSubactionMode::Charge
+			? TileMap->GetAimableTiles(Origin, Range, EAimPattern::Star, true, true, PlayerUnit)
+			: TileMap->GetReachableTiles(Origin, Range);
+	}
 	TileMap->ClearTileHighlight(ETileHighlightFlag::Aim | ETileHighlightFlag::Select | ETileHighlightFlag::Effect);
 	TileMap->ClearMovePath();
 	TileMap->SetTileHighlight(RangeTiles, ETileHighlightFlag::Aim);
@@ -908,14 +928,25 @@ bool UCombatTileMapHUDWidget::UpdateDirectMovePath(const FVector2D& ScreenPositi
 		return false;
 	}
 	const FTileIndex Origin = PlayerUnit->GetTileTransform().mIndex;
-	constexpr int32 Range = 1;
+	const int32 Range = mDirectMoveIsLeap ? 3 : 1;
 	TArray<FTileIndex> NewPath;
 	mDirectMoveImpactTile = FTileIndex::Invalid;
 	mDirectMoveImpactLabel = FText::GetEmpty();
 	ESRPGDisplacementWeight ImpactWeight = ESRPGDisplacementWeight::Invalid;
 	bool bImpactStopsBeforeTile = false;
 
-	if (mDirectMoveIsCharge == false)
+	if (mDirectMoveIsLeap)
+	{
+		const int32 DeltaX = FMath::Abs(TouchTile.mX - Origin.mX);
+		const int32 DeltaY = FMath::Abs(TouchTile.mY - Origin.mY);
+		if ((DeltaX > 0 || DeltaY > 0) && DeltaX <= Range && DeltaY <= Range
+			&& TileMap->CanPlace(TouchTile, PlayerUnit))
+		{
+			NewPath = { Origin, TouchTile };
+			mDirectMoveImpactLabel = NSLOCTEXT("WarriorMove", "LeapLandingPreview", "도약 착지 · 놓아서 실행");
+		}
+	}
+	else if (mDirectMoveIsCharge == false)
 	{
 		NewPath = TileMap->FindPath(Origin, TouchTile);
 		if (NewPath.Num() > Range + 1)
@@ -1067,7 +1098,8 @@ bool UCombatTileMapHUDWidget::BeginDirectUnitGesture(const FVector2D& ScreenPosi
 		|| mSelectedSubactionMode == ECombatSubactionMode::Throw
 		|| mSelectedSubactionMode == ECombatSubactionMode::ShortThrow;
 	const bool bMovementAction = mSelectedSubactionMode == ECombatSubactionMode::Move
-		|| mSelectedSubactionMode == ECombatSubactionMode::Charge;
+		|| mSelectedSubactionMode == ECombatSubactionMode::Charge
+		|| mSelectedSubactionMode == ECombatSubactionMode::Leap;
 	if (bMovementAction && SelectedSkillIndex == INDEX_NONE)
 	{
 		return false;
@@ -1100,6 +1132,7 @@ bool UCombatTileMapHUDWidget::BeginDirectUnitGesture(const FVector2D& ScreenPosi
 		mDirectArmedSkillIndex = ContextMoveAction;
 		mDirectArmedTargetUnitId = UnitId;
 		mDirectMoveIsCharge = mSelectedSubactionMode == ECombatSubactionMode::Charge;
+		mDirectMoveIsLeap = mSelectedSubactionMode == ECombatSubactionMode::Leap;
 		const FUnitUI* DraggedPlayer = mCombatUIModel->GetUnitUIs().FindByPredicate([UnitId](const FUnitUI& Unit)
 		{
 			return Unit.mUnitId == UnitId;
@@ -1502,7 +1535,13 @@ void UCombatTileMapHUDWidget::SetDirectUnitGestureVisual(bool bVisible, const FV
 		: TEXT("원하는 칸 쪽으로 드래그");
 	if (mDirectArmedSkillIndex == ContextMoveAction)
 	{
-		if (mDirectMoveIsCharge)
+		if (mDirectMoveIsLeap)
+		{
+			Label = mDirectMovePath.Num() > 1
+				? TEXT("도약 착지 · 놓아서 실행")
+				: TEXT("밝은 타일로 드래그 · 사이 장애물은 무시");
+		}
+		else if (mDirectMoveIsCharge)
 		{
 			Label = mDirectMoveImpactLabel.IsEmpty()
 				? TEXT("어깨 돌진 · 직선으로 끌고 놓기")
@@ -1599,6 +1638,7 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 	const bool bWasMovementGesture = bTargetIsPlayer && PreviousArmedSkillIndex == ContextMoveAction;
 	const TArray<FTileIndex> WarriorMovePath = mDirectMovePath;
 	const bool bWarriorCharge = mDirectMoveIsCharge;
+	const bool bWarriorLeap = mDirectMoveIsLeap;
 	const int32 WarriorMoveActionPower = FMath::Clamp(mSelectedSubactionDesiredPower, 1, 6);
 	mDirectUnitGestureActive = false;
 	mDirectUnitGestureTargetId = INDEX_NONE;
@@ -1667,6 +1707,7 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 			FWarriorMoveRequest Request;
 			Request.mPathTileIndexes = WarriorMovePath;
 			Request.mIsCharge = bWarriorCharge;
+			Request.mIsLeap = bWarriorLeap;
 			Request.mActionPower = WarriorMoveActionPower;
 			ClearDirectMovePreview(false);
 			mCombatUIModel->RequestWarriorMove(Request);

@@ -84,6 +84,11 @@ void UCombatUIModel::RequestWarriorMove(const FWarriorMoveRequest& Request)
 	OnWarriorMoveRequested.Broadcast(Request);
 }
 
+void UCombatUIModel::RequestWarriorAreaAction(ESRPGWarriorAreaActionType ActionType)
+{
+	OnWarriorAreaActionRequested.Broadcast(ActionType);
+}
+
 // ───────── gameplay → UI : 표시값을 캐시에 넣고 도메인 갱신을 알린다 ─────────
 
 /** @brief 유닛 표시 스냅샷을 교체하고 Unit 도메인 갱신만 알린다. */

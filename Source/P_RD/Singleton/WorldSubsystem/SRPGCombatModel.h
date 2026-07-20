@@ -14,6 +14,7 @@
 #include "SRPGFramework/SRPGEnemyIntent.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "SRPGFramework/SRPGTurnContext.h"
+#include "DataAsset/RoomSpawnData/StaticCombatRoomSpawnData.h"
 
 #include "SRPGCombatModel.generated.h"
 
@@ -32,8 +33,6 @@ class UEnemyUnitModel;
 class UTileMapModel;
 
 class UStaticCombatRoomSpawnData;
-struct FEnemyUnitPlacementData;
-struct FObstaclePlacementData;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnRegisterUnitUI, UUnitModel* /*Unit*/)
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnregisterUnitUI, UUnitModel* /*Unit*/)
@@ -160,6 +159,10 @@ protected:
 	void RegisterEnemyUnits(TArray<FEnemyUnitPlacementData>& EnemyPlacementDatas);
 	void RegisterUnit(UUnitModel* Unit, const FTileTransform& Transform);
 	void RegisterObstacles(TArray<FObstaclePlacementData>& ObstaclePlacementDatas);
+	void SpawnRoundReinforcements();
+	bool FindReinforcementSpawnTile(FTileTransform& OutTransform) const;
+	void ApplyHordeEnemyStats(UEnemyUnitModel* EnemyUnit) const;
+	bool HasFutureReinforcements() const;
 
 protected:
 	/**
@@ -361,6 +364,14 @@ protected:
 protected:
 	UPROPERTY(Category = Round, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "RoundCount"))
 	int32 mRoundCount = 0;
+	/** @brief 첫 전투 적 구성을 증원 풀로 재사용한다. 에셋 원본은 수정하지 않는다. */
+	UPROPERTY(Category = Round, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "EnemyReinforcementTemplates"))
+	TArray<FEnemyUnitPlacementData> mEnemyReinforcementTemplates;
+	UPROPERTY(Category = Round, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "TotalReinforcementsSpawned"))
+	int32 mTotalReinforcementsSpawned = 0;
+
+	static constexpr int32 ReinforcementFinalRound = 8;
+	static constexpr int32 ReinforcementEnemyCap = 6;
 
 	/** @brief 라운드 시작에 공개되고 플레이어의 실제 행동이 끝날 때마다 갱신되는 행동 예고. */
 	UPROPERTY(Category = Intent, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "EnemyIntents"))

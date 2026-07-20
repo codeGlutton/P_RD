@@ -254,6 +254,14 @@ enum class ESRPGSkillBuildPhase : uint8
     ThrowDestinationSelection UMETA(ToolTip = "당긴 뒤 착지 위치 선택"),
 };
 
+/** @brief 전사의 즉시 광역 행동. UI와 실행 액션이 같은 의미를 공유한다. */
+UENUM(BlueprintType)
+enum class ESRPGWarriorAreaActionType : uint8
+{
+    Whirlwind           UMETA(ToolTip = "인접한 모든 적을 베기"),
+    Shockwave           UMETA(ToolTip = "인접한 모든 적을 바깥으로 밀기"),
+};
+
 /**
  * @brief 이동 빌드 액션 내 진행 단계 열거형
  */
@@ -287,6 +295,7 @@ enum class ESRPGCommandType : uint8
 
     MoveSelect          UMETA(ToolTip = "이동 시작"),
     MoveCast            UMETA(ToolTip = "이동 사용"),
+	WarriorAreaCast     UMETA(ToolTip = "전사 광역 행동"),
 
     TurnEnd             UMETA(ToolTip = "턴 종료"),
 };

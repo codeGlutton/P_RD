@@ -73,7 +73,10 @@ enum class ECombatSubactionMode : uint8
 	Throw,
 	Swap,
 	Move,
-	Charge
+	Charge,
+	Leap,
+	Whirlwind,
+	Shockwave
 };
 
 /** @brief 유닛 머리 위 HP바(WBP_CombatUnitHpBar) 한 개의 런타임 위젯 참조 묶음. */
@@ -1105,6 +1108,7 @@ private:
 	FTileIndex mDirectMoveImpactTile = FTileIndex::Invalid;
 	FText mDirectMoveImpactLabel;
 	bool mDirectMoveIsCharge = false;
+	bool mDirectMoveIsLeap = false;
 	int32 mDirectGestureGhostTargetId = INDEX_NONE;
 	UPROPERTY(Transient) TObjectPtr<UBorder> mDirectUnitGestureLine;
 	UPROPERTY(Transient) TObjectPtr<UBorder> mDirectUnitGestureHandle;

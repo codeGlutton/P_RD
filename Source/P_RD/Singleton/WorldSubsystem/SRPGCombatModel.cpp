@@ -169,6 +169,8 @@ void USRPGCombatModel::InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, UUn
 	checkf(mCombatPhase == ESRPGCombatRoomPhase::None, TEXT("중복 초기화"));
 	mCombatPhase = ESRPGCombatRoomPhase::CombatInit;
 	mEnemyIntents.Reset();
+	mEnemyReinforcementTemplates = RoomSpawnData->mEnemyUnitPlacementDatas;
+	mTotalReinforcementsSpawned = 0;
 
 	SpawnTileMap(RoomStartTransform);
 	RegisterPlayerUnit(PlayerUnit, RoomSpawnData->mPlayerTransform);
@@ -344,7 +346,7 @@ void USRPGCombatModel::EvaluateCombatEndState()
 		}
 	}
 
-	if (AnyEnemyAlive == false)
+	if (AnyEnemyAlive == false && HasFutureReinforcements() == false)
 	{
 		mCombatResult = ESRPGCombatResult::PlayerWin;
 		mCombatPhase = ESRPGCombatRoomPhase::CombatAbort;
@@ -517,6 +519,7 @@ void USRPGCombatModel::RegisterEnemyUnit(FEnemyUnitPlacementData& EnemyPlacement
 	EnemyUnit->SetStaticSpawnData(EnemyUnitSpawnData);
 	EnemyUnit->SetDifficulty(EnemyPlacementData.mDifficulty);
 	EnemyUnit->FinishCreating(mTileMap->TileToWorldTransform(EnemyPlacementData.mTransform));
+	ApplyHordeEnemyStats(EnemyUnit);
 
 	RegisterUnit(EnemyUnit, EnemyPlacementData.mTransform);
 }
@@ -753,11 +756,128 @@ void USRPGCombatModel::AdvanceTurn(bool IsInitialRound, bool bCompletedPlayerTur
 	}
 }
 
+bool USRPGCombatModel::HasFutureReinforcements() const
+{
+	return mEnemyReinforcementTemplates.IsEmpty() == false
+		&& mRoundCount < ReinforcementFinalRound;
+}
+
+bool USRPGCombatModel::FindReinforcementSpawnTile(FTileTransform& OutTransform) const
+{
+	if (mTileMap == nullptr)
+	{
+		return false;
+	}
+
+	TArray<FTileIndex> EdgeTiles;
+	const int32 Width = mTileMap->GetWidth();
+	const int32 Height = mTileMap->GetHeight();
+	for (int32 Y = 0; Y < Height; ++Y)
+	{
+		for (int32 X = 0; X < Width; ++X)
+		{
+			if (X != 0 && Y != 0 && X != Width - 1 && Y != Height - 1)
+			{
+				continue;
+			}
+			const FTileIndex Candidate(X, Y);
+			if (mTileMap->GetActorsOnTile(Candidate, ETileLayerFlag::All).IsEmpty())
+			{
+				EdgeTiles.Add(Candidate);
+			}
+		}
+	}
+	if (EdgeTiles.IsEmpty())
+	{
+		return false;
+	}
+
+	// 라운드마다 시작점을 회전시켜 한쪽 가장자리만 반복해서 쓰지 않는다.
+	const int32 PickIndex = (mRoundCount * 3 + mTotalReinforcementsSpawned * 5) % EdgeTiles.Num();
+	const FTileIndex Picked = EdgeTiles[PickIndex];
+	const FTileIndex PlayerTile = mPlayerUnit != nullptr
+		? mPlayerUnit->GetTileTransform().mIndex
+		: FTileIndex(Picked.mX + 1, Picked.mY);
+	OutTransform = FTileTransform(
+		Picked,
+		UTileMapModel::TileDeltaToDirection(Picked, PlayerTile, ETileActorDirection::Forward));
+	return true;
+}
+
+void USRPGCombatModel::ApplyHordeEnemyStats(UEnemyUnitModel* EnemyUnit) const
+{
+	if (EnemyUnit == nullptr)
+	{
+		return;
+	}
+	UAttributeSetComponentModel* Attributes = EnemyUnit->GetAttributeComponentModel();
+	if (Attributes == nullptr)
+	{
+		return;
+	}
+
+	float HordeHP = 12.0f;
+	switch (EnemyUnit->GetDisplacementWeight())
+	{
+	case ESRPGDisplacementWeight::Light:
+		HordeHP = 8.0f;
+		break;
+	case ESRPGDisplacementWeight::Heavy:
+		HordeHP = 16.0f;
+		break;
+	case ESRPGDisplacementWeight::Medium:
+	case ESRPGDisplacementWeight::Invalid:
+	default:
+		break;
+	}
+	// 뒤 라운드도 체력 벽 대신 숫자와 배치로 압박한다. 상승 폭은 최대 +4로 제한한다.
+	HordeHP += StaticCast<float>(FMath::Clamp((mRoundCount - 1) / 2, 0, 2) * 2);
+	Attributes->ApplyModToAttribute(UCombatTargetAttributeSet::GetMaxHPAttribute(), ETacticalModOp::Override, HordeHP);
+	Attributes->ApplyModToAttribute(UCombatTargetAttributeSet::GetHPAttribute(), ETacticalModOp::Override, HordeHP);
+	Attributes->ApplyModToAttribute(UCombatTargetAttributeSet::GetDefenseAttribute(), ETacticalModOp::Override, 0.0f);
+	Attributes->ApplyModToAttribute(UEnemyUnitAttributeSet::GetRechargeMovementAttribute(), ETacticalModOp::Override, 1.0f);
+}
+
+void USRPGCombatModel::SpawnRoundReinforcements()
+{
+	if (mRoundCount <= 1 || mRoundCount > ReinforcementFinalRound
+		|| mEnemyReinforcementTemplates.IsEmpty())
+	{
+		return;
+	}
+
+	int32 LivingEnemies = 0;
+	for (const TObjectPtr<UUnitModel>& Unit : mUnits)
+	{
+		if (Unit != nullptr && Unit->IsPlayerUnitModel() == false && Unit->IsDead() == false)
+		{
+			++LivingEnemies;
+		}
+	}
+	const int32 DesiredCount = mRoundCount >= 4 ? 2 : 1;
+	const int32 SpawnCount = FMath::Min(DesiredCount, ReinforcementEnemyCap - LivingEnemies);
+	for (int32 SpawnIndex = 0; SpawnIndex < SpawnCount; ++SpawnIndex)
+	{
+		FTileTransform SpawnTransform;
+		if (FindReinforcementSpawnTile(SpawnTransform) == false)
+		{
+			break;
+		}
+		FEnemyUnitPlacementData Placement = mEnemyReinforcementTemplates[
+			mTotalReinforcementsSpawned % mEnemyReinforcementTemplates.Num()];
+		Placement.mTransform = SpawnTransform;
+		Placement.mTurnPriority = 100 + mTotalReinforcementsSpawned;
+		RegisterEnemyUnit(Placement);
+		++mTotalReinforcementsSpawned;
+	}
+}
+
 void USRPGCombatModel::NotifyRoundStartIfNeeded(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier)
 {
 	if (mTurnContextOrder.IsEmpty() == false && mCurTurnContextOrder == mTurnContextOrder.GetHead())
 	{
 		++mRoundCount;
+		SpawnRoundReinforcements();
 
 		for (const TObjectPtr<UUnitModel>& Unit : mUnits)
 		{

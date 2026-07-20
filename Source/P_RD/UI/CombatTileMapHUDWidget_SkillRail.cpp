@@ -363,8 +363,8 @@ void UCombatTileMapHUDWidget::RefreshActionSubmenuWidgets()
 		{
 		case 0:
 			AddEntry(0, TEXT("베기"), TEXT("적 탭 · 즉시 공격"), 3, ECombatSubactionMode::BasicAttack);
-			AddEntry(ThrowIndex, TEXT("밀어베기"), TEXT("인접 적 드래그 · 짧은 밀침"), 1, ECombatSubactionMode::ShortThrow);
-			AddEntry(StaggerIndex, TEXT("방패치기"), TEXT("적 탭 · 이동 방해"), 3, ECombatSubactionMode::Stagger);
+			AddEntry(0, TEXT("회전베기"), TEXT("주변 8칸 · 모든 적 8 피해"), 3, ECombatSubactionMode::Whirlwind);
+			AddEntry(0, TEXT("충격파"), TEXT("주변 8칸 · 4 피해 + 바깥으로 밀침"), 4, ECombatSubactionMode::Shockwave);
 			break;
 		case 1:
 			AddEntry(PullIndex, TEXT("끌어오기"), TEXT("적 드래그 · 기사 주변 배치"), 6, ECombatSubactionMode::Pull);
@@ -376,8 +376,9 @@ void UCombatTileMapHUDWidget::RefreshActionSubmenuWidgets()
 			AddEntry(ThrowIndex, TEXT("방패 밀치기"), TEXT("인접 적 드래그 · 진형 붕괴"), 1, ECombatSubactionMode::ShortThrow);
 			break;
 		case 3:
-			AddEntry(1, TEXT("전진"), TEXT("기사를 드래그 · 굽은 경로"), 2, ECombatSubactionMode::Move);
-			AddEntry(1, TEXT("어깨 돌진"), TEXT("기사를 직선 드래그 · 체급 충돌"), 6, ECombatSubactionMode::Charge);
+			AddEntry(1, TEXT("전진"), TEXT("기사를 드래그 · 1칸"), 1, ECombatSubactionMode::Move);
+			AddEntry(1, TEXT("어깨 돌진"), TEXT("기사를 직선 드래그 · 1칸 충돌"), 6, ECombatSubactionMode::Charge);
+			AddEntry(1, TEXT("도약"), TEXT("기사를 드래그 · 장애물 넘어 3칸 착지"), 3, ECombatSubactionMode::Leap);
 			break;
 		default:
 			break;
@@ -476,6 +477,16 @@ void UCombatTileMapHUDWidget::HandleActionSubmenuClicked(int32 SubactionSlotInde
 	mSelectedSubactionMode = Mode;
 	mSelectedSubactionName = DisplayName;
 	mSelectedSubactionDesiredPower = DesiredPower;
+	if (Mode == ECombatSubactionMode::Whirlwind || Mode == ECombatSubactionMode::Shockwave)
+	{
+		mExpandedActionFamily = INDEX_NONE;
+		RefreshSkillRailWidgets();
+		mCombatUIModel->RequestWarriorAreaAction(
+			Mode == ECombatSubactionMode::Whirlwind
+				? ESRPGWarriorAreaActionType::Whirlwind
+				: ESRPGWarriorAreaActionType::Shockwave);
+		return;
+	}
 	if (SelectSkillWithActionPower(SkillIndex, DesiredPower) == false)
 	{
 		mSelectedSubactionMode = ECombatSubactionMode::None;
@@ -487,7 +498,8 @@ void UCombatTileMapHUDWidget::HandleActionSubmenuClicked(int32 SubactionSlotInde
 	RefreshSkillRailWidgets();
 	RefreshOwnedDiceCards();
 	RefreshDiceAssignmentText();
-	if (Mode == ECombatSubactionMode::Move || Mode == ECombatSubactionMode::Charge)
+	if (Mode == ECombatSubactionMode::Move || Mode == ECombatSubactionMode::Charge
+		|| Mode == ECombatSubactionMode::Leap)
 	{
 		RefreshDirectMoveRangeHighlight();
 	}

@@ -119,6 +119,10 @@ public:
 	UFUNCTION()
 	void HandleWarriorMoveRequested(FWarriorMoveRequest Request);
 
+	/** @brief 기사 중심 광역 행동을 실제 턴 소모 액션으로 발행한다. */
+	UFUNCTION()
+	void HandleWarriorAreaActionRequested(ESRPGWarriorAreaActionType ActionType);
+
 public:
 	/**
 	 * @brief 터치/클릭 지점의 월드 액터를 검사하여 이벤트를 실행한다.

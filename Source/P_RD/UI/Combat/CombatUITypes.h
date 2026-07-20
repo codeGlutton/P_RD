@@ -42,6 +42,8 @@ struct FWarriorMoveRequest
 	UPROPERTY(BlueprintReadWrite) TArray<FTileIndex> mPathTileIndexes;
 	/** @brief false=전진(우회 가능), true=돌진(직선 충돌 규칙). */
 	UPROPERTY(BlueprintReadWrite) bool mIsCharge = false;
+	/** @brief 중간 칸 점유를 무시하고 목적지에 착지하는 도약인지 여부. */
+	UPROPERTY(BlueprintReadWrite) bool mIsLeap = false;
 	/** @brief 선택한 이동 행동에 정의된 거리와 충돌 위력. */
 	UPROPERTY(BlueprintReadWrite) int32 mActionPower = 0;
 };

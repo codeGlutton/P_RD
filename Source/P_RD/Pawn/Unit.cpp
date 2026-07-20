@@ -42,6 +42,8 @@ namespace
 		case EForcedMovePresentationType::Charge:
 			// 돌진은 입력 직후 바로 속도가 붙되 접촉 직전에는 읽을 수 있을 만큼 감속한다.
 			return EaseOutCubic(Alpha);
+		case EForcedMovePresentationType::Leap:
+			return SmoothStep(Alpha);
 		case EForcedMovePresentationType::Push:
 		default:
 			return EaseOutCubic(Alpha);
@@ -287,6 +289,12 @@ void AUnit::OnStartForcedMovePath(
 		MaxTravelDuration = 0.58f;
 		SettleDuration = 0.08f;
 		break;
+	case EForcedMovePresentationType::Leap:
+		FirstTileDuration = 0.42f;
+		AdditionalTileDuration = 0.0f;
+		MaxTravelDuration = 0.42f;
+		SettleDuration = 0.12f;
+		break;
 	case EForcedMovePresentationType::Push:
 	default:
 		break;
@@ -330,6 +338,11 @@ void AUnit::OnStartForcedMovePath(
 		mForcedMoveArcHeight = FMath::Lerp(5.0f, 10.0f, DistanceAlpha);
 		mForcedMoveOvershootDistance = 14.0f;
 		mForcedMoveTiltDegrees = 21.0f;
+		break;
+	case EForcedMovePresentationType::Leap:
+		mForcedMoveArcHeight = FMath::Lerp(105.0f, 155.0f, DistanceAlpha);
+		mForcedMoveOvershootDistance = 7.0f;
+		mForcedMoveTiltDegrees = -11.0f;
 		break;
 	case EForcedMovePresentationType::Push:
 	default:
@@ -706,10 +719,12 @@ void AUnit::ApplyForcedMoveMeshPresentation(float TravelAlpha, float SettleAlpha
 		const float SettleEase = EaseOutCubic(SettleAlpha);
 		OvershootAlpha = 1.0f - SettleEase;
 		ImpactStrength = 1.0f - SettleEase;
-		if (mForcedMovePresentationType == EForcedMovePresentationType::Throw)
+		if (mForcedMovePresentationType == EForcedMovePresentationType::Throw
+			|| mForcedMovePresentationType == EForcedMovePresentationType::Leap)
 		{
 			LandingBounce = FMath::Sin(PI * SettleAlpha)
-				* (1.0f - SettleAlpha) * 16.0f;
+				* (1.0f - SettleAlpha)
+				* (mForcedMovePresentationType == EForcedMovePresentationType::Leap ? 9.0f : 16.0f);
 		}
 		else if (mForcedMovePresentationType == EForcedMovePresentationType::Push)
 		{
@@ -752,6 +767,10 @@ void AUnit::ApplyForcedMoveMeshPresentation(float TravelAlpha, float SettleAlpha
 	else if (mForcedMovePresentationType == EForcedMovePresentationType::Charge)
 	{
 		TiltDegrees = -FlightWave * mForcedMoveTiltDegrees;
+	}
+	else if (mForcedMovePresentationType == EForcedMovePresentationType::Leap)
+	{
+		TiltDegrees = FlightWave * mForcedMoveTiltDegrees;
 	}
 	const FQuat BodyRotation(LocalTumbleAxis, FMath::DegreesToRadians(TiltDegrees + SpinDegrees));
 	MeshTransform.SetRotation(BodyRotation * mForcedMoveBaseMeshRelativeTransform.GetRotation());

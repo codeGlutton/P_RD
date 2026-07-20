@@ -39,6 +39,7 @@ ESRPGCommandResult USRPGMoveAction::HandleCommand(const TInstancedStruct<FSRPGCo
         mPathTileIndexes = MoveCommand.mPathTileIndexes;
         mUseFixedIntent = MoveCommand.mUseFixedIntent;
 		mIsWarriorCharge = MoveCommand.mIsWarriorCharge;
+		mIsWarriorLeap = MoveCommand.mIsWarriorLeap;
 		mIsElasticCharge = MoveCommand.mIsElasticCharge;
 		mActionPower = MoveCommand.mActionPower;
 		mConsumeMovementPoints = MoveCommand.mConsumeMovementPoints;
@@ -68,7 +69,13 @@ void USRPGMoveAction::OnBeginAction()
         {
             PathWorldLocations.Add(TileMap->TileToWorldLocation(TileIndex));
         }
-		if (mIsWarriorCharge || mIsElasticCharge)
+		if (mIsWarriorLeap)
+		{
+			mInstigator->OnStartForcedMovePath.Broadcast(
+				PathWorldLocations,
+				EForcedMovePresentationType::Leap);
+		}
+		else if (mIsWarriorCharge || mIsElasticCharge)
 		{
 			mInstigator->OnStartForcedMovePath.Broadcast(
 				PathWorldLocations,

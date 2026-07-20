@@ -32,6 +32,7 @@ enum class EForcedMovePresentationType : uint8
 	Throw,
 	Swap,
 	Charge,
+	Leap,
 };
 
 /** @brief 충돌 당사자의 역할에 맞는 짧은 절차형 타격 반동. 판정에는 관여하지 않는다. */

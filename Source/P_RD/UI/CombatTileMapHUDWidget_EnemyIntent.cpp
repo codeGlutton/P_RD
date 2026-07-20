@@ -3,6 +3,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "GameMode/RDGameModeBase.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
+#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "PCGStage/Stage.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
@@ -193,8 +194,13 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
 		return TextBlock;
 	};
 
+	const USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	const int32 Round = CombatModel != nullptr ? CombatModel->GetRoundCount() : 1;
+	const FString HeaderText = FString::Printf(
+		TEXT("생존전 %d/8  ·  다음 라운드 가장자리 증원  ·  색상=지금 행동"),
+		FMath::Clamp(Round, 1, 8));
 	if (UTextBlock* Header = MakeText(
-		TEXT("적 대응 예고  ·  회색=바꾸기 전(잠시) / 색상=지금 행동"),
+		HeaderText,
 		IntentCurrentColor,
 		16))
 	{

@@ -38,6 +38,10 @@ public:
 	UPROPERTY()
 	bool mIsWarriorCharge = false;
 
+	/** @brief 중간 타일을 검사하지 않고 도착 타일로 뛰어드는 기사 도약. */
+	UPROPERTY()
+	bool mIsWarriorLeap = false;
+
 	/** @brief Slime의 이동 자체를 탄성 돌진으로 실행한다. 경로의 유닛을 한 칸 밀고 충돌 지점까지 진입한다. */
 	UPROPERTY()
 	bool mIsElasticCharge = false;
@@ -106,6 +110,7 @@ protected:
 	// @brief 적 라운드 시작에 공개된 경로라면 현재 상황에 맞춰 우회하지 않는다.
 	bool mUseFixedIntent = false;
 	bool mIsWarriorCharge = false;
+	bool mIsWarriorLeap = false;
 	bool mIsElasticCharge = false;
 	bool mConsumeMovementPoints = true;
 	int32 mActionPower = 0;

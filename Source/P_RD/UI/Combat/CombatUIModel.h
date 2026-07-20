@@ -35,6 +35,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatActionResolved);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatCommand, ECombatInputType, Type, int32, IntPayload);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatWorldTouch, FVector2D, ScreenPosition, bool, bLongPress);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWarriorMoveRequested, FWarriorMoveRequest, Request);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWarriorAreaActionRequested, ESRPGWarriorAreaActionType, ActionType);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnApplyDiceResults, const TArray<int32>&, RolledFaceIndices);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatFloatingLog, FCombatFloatingLogRequest, Request);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatFloatingLogMotionFinished, int32, MotionIndex);
@@ -91,6 +92,9 @@ public:
 	/** @brief 기사 직접 드래그로 확정한 경로와 전진/돌진 의도를 게임플레이가 실행한다. */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|Input")
 	FOnWarriorMoveRequested OnWarriorMoveRequested;
+	/** @brief 회전베기/충격파처럼 기사 중심에서 즉시 발동하는 행동. */
+	UPROPERTY(BlueprintAssignable, Category = "Combat|Input")
+	FOnWarriorAreaActionRequested OnWarriorAreaActionRequested;
 
 	/** @brief 입장 물리 굴림의 결과면(0-base index)을 전투 풀에 반영하라는 알림. [게임플레이 구독] */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|Input")
@@ -127,6 +131,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress);
 	/** @brief 확인 팝업 없이 드래그 경로를 전사 이동 액션으로 확정한다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestWarriorMove(const FWarriorMoveRequest& Request);
+	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestWarriorAreaAction(ESRPGWarriorAreaActionType ActionType);
 
 	/* ───────── gameplay → UI : 표시값을 밀어넣는다 ─────────
 	   각 Set*()은 UI가 그리려면 게임플레이가 반드시 공급해야 하는 값이다(UI는 못 만듦).

@@ -24,6 +24,7 @@
 #include "SRPGFramework/SRPGSkillBuildAction.h"
 #include "SRPGFramework/SRPGMoveBuildAction.h"
 #include "SRPGFramework/SRPGMoveAction.h"
+#include "SRPGFramework/SRPGWarriorAreaAction.h"
 #include "SRPGFramework/SRPGDiceRollAction.h"
 #include "SRPGFramework/SRPGTurnEndAction.h"
 #include "SRPGFramework/SRPGEnemyIntent.h"
@@ -372,6 +373,7 @@ void ACombatGameMode::InitializeRoom()
 	mCombatUIModel->OnCombatCommand.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatCommand);
 	mCombatUIModel->OnCombatWorldTouch.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatWorldTouch);
 	mCombatUIModel->OnWarriorMoveRequested.AddUniqueDynamic(this, &ACombatGameMode::HandleWarriorMoveRequested);
+	mCombatUIModel->OnWarriorAreaActionRequested.AddUniqueDynamic(this, &ACombatGameMode::HandleWarriorAreaActionRequested);
 
 	const FStage& CurStage = GetRunPersistData()->GetStage();
 	const FRoom& CurRoom = GetRunPersistData()->GetCurrentRoom();
@@ -561,7 +563,7 @@ void ACombatGameMode::HandleWarriorMoveRequested(FWarriorMoveRequest Request)
 	{
 		return;
 	}
-	// 행동 위력은 돌진 충돌 강도에만 남기고, 실제 이동 거리는 모든 플레이어 이동에서 한 칸으로 고정한다.
+	// 보행/돌진은 한 칸이다. 도약만 중간 점유를 건너뛰는 단일 착지로 최대 3칸을 허용한다.
 	constexpr int32 MaximumSteps = 1;
 	if (Request.mPathTileIndexes.Num() - 1 > MaximumSteps)
 	{
@@ -573,8 +575,9 @@ void ACombatGameMode::HandleWarriorMoveRequested(FWarriorMoveRequest Request)
 		const FTileIndex& Current = Request.mPathTileIndexes[PathIndex];
 		const int32 DeltaX = FMath::Abs(Current.mX - Previous.mX);
 		const int32 DeltaY = FMath::Abs(Current.mY - Previous.mY);
+		const int32 MaxTileDelta = Request.mIsLeap ? 3 : 1;
 		if (TileMap->IsValidIndex(Current) == false
-			|| (DeltaX == 0 && DeltaY == 0) || DeltaX > 1 || DeltaY > 1)
+			|| (DeltaX == 0 && DeltaY == 0) || DeltaX > MaxTileDelta || DeltaY > MaxTileDelta)
 		{
 			return;
 		}
@@ -593,9 +596,32 @@ void ACombatGameMode::HandleWarriorMoveRequested(FWarriorMoveRequest Request)
 	FSRPGMoveCommand& MoveCommand = MoveCastCommand.GetMutable<FSRPGMoveCommand>();
 	MoveCommand.mPathTileIndexes = MoveTemp(Request.mPathTileIndexes);
 	MoveCommand.mIsWarriorCharge = Request.mIsCharge;
+	MoveCommand.mIsWarriorLeap = Request.mIsLeap;
 	MoveCommand.mActionPower = Request.mActionPower;
 	MoveCommand.mConsumeMovementPoints = false;
 	CommandRouterModel->SummitCommand(MoveCastCommand);
+}
+
+void ACombatGameMode::HandleWarriorAreaActionRequested(ESRPGWarriorAreaActionType ActionType)
+{
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
+	const USRPGTurnContext* TurnContext = CombatModel != nullptr ? CombatModel->GetCurrentTurnContext() : nullptr;
+	if (CommandRouterModel == nullptr || PlayerUnitModel == nullptr || TurnContext == nullptr
+		|| TurnContext->GetOwner() != PlayerUnitModel)
+	{
+		return;
+	}
+
+	CancelSkill();
+	TInstancedStruct<FSRPGCommand> AreaCommandStruct;
+	AreaCommandStruct.InitializeAs<FSRPGWarriorAreaCommand>();
+	FSRPGWarriorAreaCommand& AreaCommand = AreaCommandStruct.GetMutable<FSRPGWarriorAreaCommand>();
+	AreaCommand.mAreaActionType = ActionType;
+	AreaCommand.mRadius = 1;
+	AreaCommand.mDamage = ActionType == ESRPGWarriorAreaActionType::Whirlwind ? 8 : 4;
+	CommandRouterModel->SummitCommand(AreaCommandStruct);
 }
 
 bool ACombatGameMode::ConfirmSkill()
