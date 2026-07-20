@@ -143,6 +143,8 @@ void USRPGSkillAction::OnEndAction()
 	mDiceDisplacementFinished = false;
 	mSkillPresentationFinished = false;
     mIsFixedIntentCast = false;
+	mIsEnemySignatureDisplacement = false;
+	mEnemySignatureSkillName = FText::GetEmpty();
 }
 
 ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGCommand>& Command)
@@ -190,7 +192,7 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
 			// Hit 노티가 없는 비정상 몽타주/무연출 데이터만 종료 시점 폴백으로 처리한다.
 			if (mDiceDisplacementStarted == false)
 			{
-				TryStartDiceDisplacement(Context, SkillData);
+				TryStartSkillDisplacement(Context, SkillData);
 			}
 			FinishSkillAction();
             });
@@ -200,7 +202,7 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
 		{
 			if (mDiceDisplacementStarted == false)
 			{
-				TryStartDiceDisplacement(Context, SkillData);
+				TryStartSkillDisplacement(Context, SkillData);
 			}
 		});
 
@@ -247,6 +249,139 @@ UTileMapModel* USRPGSkillAction::GetTileMap() const
         }
     }
     return nullptr;
+}
+
+bool USRPGSkillAction::TryStartSkillDisplacement(
+	const FActiveSkillContext& Context,
+	const UStaticSkillData* SkillData)
+{
+	return TryStartDiceDisplacement(Context, SkillData)
+		|| TryStartEnemySignatureDisplacement(Context);
+}
+
+bool USRPGSkillAction::TryStartEnemySignatureDisplacement(const FActiveSkillContext& Context)
+{
+	UEnemyUnitModel* Enemy = Cast<UEnemyUnitModel>(mInstigator.Get());
+	if (mIsFixedIntentCast == false || Enemy == nullptr)
+	{
+		return false;
+	}
+
+	const ESRPGEnemyMovementRole Role = Enemy->GetMovementRole();
+	if (Role != ESRPGEnemyMovementRole::Anchor
+		&& Role != ESRPGEnemyMovementRole::Flanker)
+	{
+		return false;
+	}
+
+	// 실제로 맞은 유닛만 움직인다. 플레이어를 우선해 광역 오사 상황에서도 주 공격의
+	// 물리 결과가 안정적으로 읽히고, 플레이어가 없으면 첫 번째 아군 오사 대상을 사용한다.
+	UUnitModel* DisplacementTarget = nullptr;
+	for (IBoardCombatTarget* CombatTarget : Context.mResolvedCombatTargets)
+	{
+		UUnitModel* Candidate = Cast<UUnitModel>(CombatTarget);
+		if (Candidate == nullptr || Candidate == Enemy || Candidate->IsTargetable() == false)
+		{
+			continue;
+		}
+		if (DisplacementTarget == nullptr || Candidate->IsPlayerUnitModel())
+		{
+			DisplacementTarget = Candidate;
+		}
+		if (Candidate->IsPlayerUnitModel())
+		{
+			break;
+		}
+	}
+	if (DisplacementTarget == nullptr)
+	{
+		return false;
+	}
+
+	UTileMapModel* TileMap = GetTileMap();
+	if (TileMap == nullptr)
+	{
+		return false;
+	}
+
+	const FTileIndex EnemyTile = Enemy->GetTileTransform().mIndex;
+	const FTileIndex TargetTile = DisplacementTarget->GetTileTransform().mIndex;
+	mDiceDisplacementTarget = DisplacementTarget;
+	mDiceDisplacementPath = { TargetTile };
+	mDiceDisplacementBlocker = nullptr;
+	mDiceDisplacementDiceValue = 0;
+	mDiceDisplacementIsPull = Role == ESRPGEnemyMovementRole::Flanker;
+	mDiceDisplacementIsThrow = false;
+	mDiceDisplacementIsStagger = false;
+	mDiceDisplacementIsSwap = false;
+	mDiceDisplacementWasReported = false;
+	mDiceDisplacementCollisionReported = false;
+	mDiceDisplacementStarted = true;
+	mDiceDisplacementFinished = false;
+	mIsEnemySignatureDisplacement = true;
+	mEnemySignatureSkillName = Role == ESRPGEnemyMovementRole::Flanker
+		? NSLOCTEXT("EnemySkill", "SpiderWebPull", "거미줄 견인")
+		: NSLOCTEXT("EnemySkill", "MushroomSporePush", "포자 밀치기");
+
+	FTileIndex Step;
+	if (Role == ESRPGEnemyMovementRole::Flanker)
+	{
+		const int32 DeltaX = EnemyTile.mX - TargetTile.mX;
+		const int32 DeltaY = EnemyTile.mY - TargetTile.mY;
+		const int32 AbsX = FMath::Abs(DeltaX);
+		const int32 AbsY = FMath::Abs(DeltaY);
+		Step = FTileIndex(
+			AbsX >= AbsY ? FMath::Sign(DeltaX) : 0,
+			AbsY >= AbsX ? FMath::Sign(DeltaY) : 0);
+		// 거미 몸 안으로 겹치지 않고 인접 칸에서 멈춘다.
+		if (FMath::Max(AbsX, AbsY) <= 1)
+		{
+			mDiceDisplacementFinished = true;
+			FinishSkillAction();
+			return true;
+		}
+	}
+	else
+	{
+		Step = FTileIndex(
+			FMath::Sign(TargetTile.mX - EnemyTile.mX),
+			FMath::Sign(TargetTile.mY - EnemyTile.mY));
+	}
+
+	const FTileIndex Destination(TargetTile.mX + Step.mX, TargetTile.mY + Step.mY);
+	if (TileMap->IsValidIndex(Destination)
+		&& TileMap->CanPlace(Destination, DisplacementTarget))
+	{
+		mDiceDisplacementPath.Add(Destination);
+	}
+	else
+	{
+		for (UBoardActorModel* Actor : TileMap->GetActorsOnTile(Destination, ETileLayerFlag::All))
+		{
+			if (Actor != nullptr
+				&& Actor != DisplacementTarget
+				&& Actor != Enemy
+				&& EnumHasAnyFlags(Actor->GetBlockLayerFlags(), DisplacementTarget->GetTileLayerFlags()))
+			{
+				mDiceDisplacementBlocker = Actor;
+				break;
+			}
+		}
+	}
+
+	if (mDiceDisplacementPath.Num() < 2)
+	{
+		ReportDiceDisplacementIfMoved();
+		mDiceDisplacementFinished = true;
+		FinishSkillAction();
+		return true;
+	}
+
+	BroadcastDiceDisplacementPath(Role == ESRPGEnemyMovementRole::Flanker
+		? EForcedMovePresentationType::Pull
+		: EForcedMovePresentationType::Push);
+	StartDiceDisplacementStep(1);
+	return true;
 }
 
 bool USRPGSkillAction::TryStartDiceDisplacement(const FActiveSkillContext& Context, const UStaticSkillData* SkillData)
@@ -586,8 +721,39 @@ void USRPGSkillAction::ReportDiceDisplacementIfMoved()
         return;
     }
 
-    if (USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
+	if (USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
     {
+		if (mIsEnemySignatureDisplacement)
+		{
+			UEnemyUnitModel* Enemy = Cast<UEnemyUnitModel>(mInstigator.Get());
+			const FTileIndex CurrentTile = mDiceDisplacementTarget->GetTileTransform().mIndex;
+			if (Enemy != nullptr
+				&& mDiceDisplacementWasReported == false
+				&& CurrentTile != mDiceDisplacementPath[0])
+			{
+				CombatModel->ReportEnemySkillDisplacement(
+					Enemy,
+					mDiceDisplacementTarget,
+					mDiceDisplacementPath[0],
+					CurrentTile,
+					mEnemySignatureSkillName,
+					false);
+				mDiceDisplacementWasReported = true;
+			}
+			if (Enemy != nullptr
+				&& mDiceDisplacementCollisionReported == false
+				&& mDiceDisplacementBlocker != nullptr)
+			{
+				CombatModel->ReportEnemySkillCollision(
+					Enemy,
+					mDiceDisplacementTarget,
+					mDiceDisplacementBlocker,
+					mEnemySignatureSkillName);
+				mDiceDisplacementCollisionReported = true;
+			}
+			return;
+		}
+
 		const ESRPGPlayerDisplacementType DisplacementType = mDiceDisplacementIsThrow
 			? ESRPGPlayerDisplacementType::Throw
 			: (mDiceDisplacementIsPull

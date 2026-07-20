@@ -75,6 +75,9 @@ private:
 
 	// @brief 기존 강타/검기 슬롯을 선택 주사위 합만큼 적을 밀거나 당기는 개입으로 확장한다.
 	bool TryStartDiceDisplacement(const FActiveSkillContext& Context, const UStaticSkillData* SkillData);
+	/** @brief 적 역할별 공격에 명중 순간의 강제 이동을 붙인다. Spider=견인, Mushroom=밀치기. */
+	bool TryStartEnemySignatureDisplacement(const FActiveSkillContext& Context);
+	bool TryStartSkillDisplacement(const FActiveSkillContext& Context, const UStaticSkillData* SkillData);
 	void StartDiceDisplacementStep(int32 StepIndex);
 	void OnDiceDisplacementStepFinished();
 	void ReportDiceDisplacementIfMoved();
@@ -104,5 +107,7 @@ private:
 	bool mDiceDisplacementFinished = false;
 	bool mSkillPresentationFinished = false;
 	bool mIsFixedIntentCast = false;
+	bool mIsEnemySignatureDisplacement = false;
+	FText mEnemySignatureSkillName;
 };
 

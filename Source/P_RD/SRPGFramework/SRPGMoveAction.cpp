@@ -38,6 +38,7 @@ ESRPGCommandResult USRPGMoveAction::HandleCommand(const TInstancedStruct<FSRPGCo
         mPathTileIndexes = MoveCommand.mPathTileIndexes;
         mUseFixedIntent = MoveCommand.mUseFixedIntent;
 		mIsWarriorCharge = MoveCommand.mIsWarriorCharge;
+		mIsElasticCharge = MoveCommand.mIsElasticCharge;
 		mDicePower = MoveCommand.mDicePower;
 		mConsumeMovementPoints = MoveCommand.mConsumeMovementPoints;
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
@@ -66,7 +67,7 @@ void USRPGMoveAction::OnBeginAction()
         {
             PathWorldLocations.Add(TileMap->TileToWorldLocation(TileIndex));
         }
-		if (mIsWarriorCharge)
+		if (mIsWarriorCharge || mIsElasticCharge)
 		{
 			mInstigator->OnStartForcedMovePath.Broadcast(
 				PathWorldLocations,
@@ -106,6 +107,13 @@ void USRPGMoveAction::OnEndAction()
 void USRPGMoveAction::StartStep(int32 StepIndex)
 {
     checkf(mPathTileIndexes.IsValidIndex(StepIndex) == true, TEXT("이동 경로 인덱스 오류"));
+
+	// 탄성 돌진은 점유 변화가 곧 기술의 발동 조건이다. 고정 경로 검사가 먼저 취소하지
+	// 않도록 충돌을 가로채고, 유닛을 밀 수 없을 때만 실제 연쇄 충돌로 끝낸다.
+	if (mIsElasticCharge && TryStartElasticChargeImpact(StepIndex))
+	{
+		return;
+	}
 
     if (mUseFixedIntent && ValidateFixedIntentStep(StepIndex) == false)
     {
@@ -233,6 +241,12 @@ void USRPGMoveAction::OnStepPresentationFinished()
 	if (mWarriorChargeStopAfterPlayerStep)
 	{
 		mWarriorChargeStopAfterPlayerStep = false;
+		MarkActionCompleted(ESRPGActionResult::Succeeded);
+		return;
+	}
+	if (mElasticChargeStopAfterStep)
+	{
+		mElasticChargeStopAfterStep = false;
 		MarkActionCompleted(ESRPGActionResult::Succeeded);
 		return;
 	}
@@ -468,6 +482,139 @@ void USRPGMoveAction::FinishWarriorChargeImpact()
 	{
 		MarkActionCompleted(ESRPGActionResult::Succeeded);
 	}
+}
+
+bool USRPGMoveAction::TryStartElasticChargeImpact(int32 StepIndex)
+{
+	UTileMapModel* TileMap = GetTileMap();
+	const FTileIndex ImpactTile = mPathTileIndexes[StepIndex];
+	UBoardActorModel* ImpactActor = FindBlockingActor(ImpactTile, mInstigator.Get());
+	if (ImpactActor == nullptr)
+	{
+		return false;
+	}
+
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	UEnemyUnitModel* Slime = Cast<UEnemyUnitModel>(mInstigator.Get());
+	UUnitModel* Target = Cast<UUnitModel>(ImpactActor);
+	if (Slime == nullptr || Target == nullptr || Target->IsTargetable() == false)
+	{
+		if (CombatModel != nullptr)
+		{
+			CombatModel->ResolveFixedIntentCollision(mInstigator.Get(), ImpactActor);
+		}
+		MarkActionCompleted(ESRPGActionResult::Succeeded);
+		return true;
+	}
+
+	const FTileIndex PreviousTile = mPathTileIndexes[StepIndex - 1];
+	const FTileIndex PushStep(
+		FMath::Sign(ImpactTile.mX - PreviousTile.mX),
+		FMath::Sign(ImpactTile.mY - PreviousTile.mY));
+	const FTileIndex PushDestination(
+		ImpactTile.mX + PushStep.mX,
+		ImpactTile.mY + PushStep.mY);
+	mElasticChargeBlocker = FindBlockingActor(PushDestination, Target);
+	if (TileMap->IsValidIndex(PushDestination) == false
+		|| TileMap->CanPlace(PushDestination, Target) == false
+		|| mElasticChargeBlocker != nullptr)
+	{
+		if (CombatModel != nullptr)
+		{
+			CombatModel->ReportEnemySkillCollision(
+				Slime,
+				Target,
+				mElasticChargeBlocker != nullptr ? mElasticChargeBlocker.Get() : mInstigator.Get(),
+				NSLOCTEXT("EnemySkill", "ElasticCharge", "탄성 돌진"));
+		}
+		MarkActionCompleted(ESRPGActionResult::Succeeded);
+		return true;
+	}
+
+	mElasticChargeTarget = Target;
+	mElasticChargeFromTile = ImpactTile;
+	mElasticChargeDestination = PushDestination;
+	mElasticChargeResumeStep = StepIndex;
+
+	const FVector ChargeDirection = (
+		TileMap->TileToWorldLocation(ImpactTile)
+		- TileMap->TileToWorldLocation(PreviousTile)).GetSafeNormal();
+	mInstigator->OnPlayImpactPresentation.Broadcast(
+		ChargeDirection,
+		1.25f,
+		EImpactPresentationType::ChargeContact);
+	TArray<FVector> PushWorldPath = {
+		TileMap->TileToWorldLocation(ImpactTile),
+		TileMap->TileToWorldLocation(PushDestination)
+	};
+	Target->OnStartForcedMovePath.Broadcast(PushWorldPath, EForcedMovePresentationType::Push);
+	StartElasticChargePush();
+	return true;
+}
+
+void USRPGMoveAction::StartElasticChargePush()
+{
+	if (mElasticChargeTarget == nullptr || mElasticChargeDestination == FTileIndex::Invalid)
+	{
+		MarkActionCompleted(ESRPGActionResult::Succeeded);
+		return;
+	}
+
+	UTileMapModel* TileMap = GetTileMap();
+	if (TileMap->CanPlace(mElasticChargeDestination, mElasticChargeTarget) == false)
+	{
+		mElasticChargeBlocker = FindBlockingActor(mElasticChargeDestination, mElasticChargeTarget);
+		if (USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
+		{
+			CombatModel->ReportEnemySkillCollision(
+				mInstigator.Get(),
+				mElasticChargeTarget,
+				mElasticChargeBlocker != nullptr ? mElasticChargeBlocker.Get() : mInstigator.Get(),
+				NSLOCTEXT("EnemySkill", "ElasticCharge", "탄성 돌진"));
+		}
+		MarkActionCompleted(ESRPGActionResult::Succeeded);
+		return;
+	}
+
+	const FTileTransform NextTransform(
+		mElasticChargeDestination,
+		mElasticChargeTarget->GetTileTransform().mDirection);
+	TileMap->StartActorMovement(NextTransform, mElasticChargeTarget);
+	TSharedPtr<FPresentationBarrier> Barrier = FPresentationBarrier::Make(
+		FOnFinishPresentation::CreateWeakLambda(this, [this]()
+		{
+			OnElasticChargePushFinished();
+		}));
+	mElasticChargeTarget->OnStartMoveStep.Broadcast(
+		NextTransform,
+		TileMap->TileToWorldTransform(NextTransform),
+		Barrier,
+		0.0f);
+}
+
+void USRPGMoveAction::OnElasticChargePushFinished()
+{
+	if (mActionPhase != ESRPGActionPhase::ActionPlay || mElasticChargeTarget == nullptr)
+	{
+		return;
+	}
+
+	GetTileMap()->CompleteActorMovement(mElasticChargeTarget);
+	if (USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
+	{
+		CombatModel->ReportEnemySkillDisplacement(
+			mInstigator.Get(),
+			mElasticChargeTarget,
+			mElasticChargeFromTile,
+			mElasticChargeDestination,
+			NSLOCTEXT("EnemySkill", "ElasticCharge", "탄성 돌진"),
+			true);
+	}
+
+	mElasticChargeTarget = nullptr;
+	mElasticChargeBlocker = nullptr;
+	mElasticChargeStopAfterStep = true;
+	StartStep(mElasticChargeResumeStep);
 }
 
 UTileMapModel* USRPGMoveAction::GetTileMap() const

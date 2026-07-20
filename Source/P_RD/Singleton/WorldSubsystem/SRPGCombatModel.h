@@ -209,6 +209,20 @@ public:
 	void ReportFixedIntentPathDisrupted(UUnitModel* Enemy, const FText& Reason);
 	void ResolveFixedIntentCollision(UUnitModel* Enemy, UBoardActorModel* Blocker);
 	void ResolveFixedIntentAttack(UUnitModel* Enemy, const TArray<IBoardCombatTarget*>& ResolvedTargets);
+	/** @brief 적 고유 기술이 명중 대상을 강제 이동시킨 결과를 공격자의 공개 의도에 기록한다. */
+	void ReportEnemySkillDisplacement(
+		UUnitModel* Enemy,
+		UUnitModel* Target,
+		const FTileIndex& From,
+		const FTileIndex& To,
+		const FText& SkillName,
+		bool bApplyImpactDamage);
+	/** @brief 적 고유 기술로 밀리던 대상이 다른 유닛/장애물에 부딪힌 실제 충돌을 해결한다. */
+	void ReportEnemySkillCollision(
+		UUnitModel* Enemy,
+		UUnitModel* Target,
+		UBoardActorModel* Blocker,
+		const FText& SkillName);
 	void RefreshEnemyIntentHighlights();
 
 protected:

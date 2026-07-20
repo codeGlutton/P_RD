@@ -147,16 +147,60 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	 * @details
 	 * 현재위치와 목적지가 다를때만 이동커맨드 생성
 	 */
-	if (Dest != Origin)
+	const bool bPlanElasticCharge = Enemy->GetMovementRole() == ESRPGEnemyMovementRole::Slider
+		&& Origin != PlayerTile
+		&& MoveRange > 0;
+	if (Dest != Origin || bPlanElasticCharge)
 	{
-		TArray<FTileIndex> Path = TileMap->FindPath(Origin, Dest);
+		const bool bElasticCharge = bPlanElasticCharge;
+		TArray<FTileIndex> Path;
+		if (bElasticCharge && MoveRange > 0)
+		{
+			// 슬라임은 안전한 우회 경로를 찾지 않는다. 플레이어 방향으로 몸을 튕기며,
+			// 첫 점유 칸까지도 공개 경로에 포함해 실행 시 밀침/충돌 판정이 실제로 발생한다.
+			FTileIndex Cursor = Origin;
+			Path.Add(Cursor);
+			for (int32 Distance = 0; Distance < MoveRange && Cursor != PlayerTile; ++Distance)
+			{
+				const int32 DeltaX = PlayerTile.mX - Cursor.mX;
+				const int32 DeltaY = PlayerTile.mY - Cursor.mY;
+				const int32 AbsX = FMath::Abs(DeltaX);
+				const int32 AbsY = FMath::Abs(DeltaY);
+				const FTileIndex Step(
+					AbsX >= AbsY ? FMath::Sign(DeltaX) : 0,
+					AbsY >= AbsX ? FMath::Sign(DeltaY) : 0);
+				const FTileIndex Next(Cursor.mX + Step.mX, Cursor.mY + Step.mY);
+				if (TileMap->IsValidIndex(Next) == false)
+				{
+					break;
+				}
+				Path.Add(Next);
+				if (Next == PlayerTile || TileMap->CanPlace(Next, Enemy) == false)
+				{
+					break;
+				}
+				Cursor = Next;
+			}
+			if (Path.Num() >= 2)
+			{
+				// 탄성 돌진 턴은 이동 그 자체가 공격이다. 다른 위치를 전제로 계산한 원본
+				// 스킬을 뒤이어 시전하지 않아 예고와 실제 판정을 일치시킨다.
+				CanCast = false;
+			}
+		}
+		else
+		{
+			Path = TileMap->FindPath(Origin, Dest);
+		}
 		// 경로는 출발지와 목적지가 포함되므로 2 이상이어야 실제 이동 가능.
 		if (Path.Num() >= 2)
 		{
 			// 이동커맨드 생성
 			TInstancedStruct<FSRPGCommand> Move;
 			Move.InitializeAs<FSRPGMoveCommand>();
-			Move.GetMutable<FSRPGMoveCommand>().mPathTileIndexes = MoveTemp(Path);
+			FSRPGMoveCommand& MoveRef = Move.GetMutable<FSRPGMoveCommand>();
+			MoveRef.mPathTileIndexes = MoveTemp(Path);
+			MoveRef.mIsElasticCharge = bElasticCharge;
 			AddAction(MoveTemp(Move));
 		}
 	}

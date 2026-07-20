@@ -40,11 +40,11 @@ namespace
 			switch (Enemy->GetMovementRole())
 			{
 			case ESRPGEnemyMovementRole::Anchor:
-				return NSLOCTEXT("EnemyIntent", "GoalAnchor", "차단 · 중앙 길목을 몸으로 봉쇄");
+				return NSLOCTEXT("EnemyIntent", "GoalAnchor", "포자 밀치기 · 맞은 대상을 공격 반대편으로 1칸 밀기");
 			case ESRPGEnemyMovementRole::Flanker:
-				return NSLOCTEXT("EnemyIntent", "GoalFlanker", "측면 사냥 · 대각선 빈틈으로 우회");
+				return NSLOCTEXT("EnemyIntent", "GoalFlanker", "거미줄 견인 · 맞은 대상을 자기 쪽으로 1칸 당기기");
 			case ESRPGEnemyMovementRole::Slider:
-				return NSLOCTEXT("EnemyIntent", "GoalSlider", "직선 압박 · 같은 행/열의 충돌각 확보");
+				return NSLOCTEXT("EnemyIntent", "GoalSlider", "탄성 돌진 · 경로의 유닛을 밀고 그 칸까지 파고들기");
 			case ESRPGEnemyMovementRole::Standard:
 			default:
 				break;
@@ -1046,6 +1046,41 @@ bool USRPGCombatModel::RebuildEnemyIntentPlan(FSRPGEnemyIntent& Intent, bool bPr
 			: NSLOCTEXT("EnemyIntent", "Wait", "대기");
 	}
 
+	// 데이터 에셋의 모호한 원래 스킬명 앞에 이번 적이 실제로 만드는 전장 변화를 붙인다.
+	// HUD 한 줄만 봐도 "어떻게 때리고, 맞으면 어디로 움직이는지"를 알 수 있다.
+	switch (Enemy->GetMovementRole())
+	{
+	case ESRPGEnemyMovementRole::Anchor:
+		if (Intent.mTargetTile != FTileIndex::Invalid)
+		{
+			Intent.mSkillName = FText::Format(
+				NSLOCTEXT("EnemyIntent", "MushroomSignatureName", "포자 밀치기 → {0}"),
+				Intent.mSkillName);
+		}
+		break;
+	case ESRPGEnemyMovementRole::Flanker:
+		if (Intent.mTargetTile != FTileIndex::Invalid)
+		{
+			Intent.mSkillName = FText::Format(
+				NSLOCTEXT("EnemyIntent", "SpiderSignatureName", "거미줄 견인 → {0}"),
+				Intent.mSkillName);
+		}
+		break;
+	case ESRPGEnemyMovementRole::Slider:
+		if (Intent.mPlannedDestination != Intent.mPlannedOrigin)
+		{
+			Intent.mSkillName = Intent.mTargetTile != FTileIndex::Invalid
+				? FText::Format(
+					NSLOCTEXT("EnemyIntent", "SlimeSignatureAttackName", "탄성 돌진 → {0}"),
+					Intent.mSkillName)
+				: NSLOCTEXT("EnemyIntent", "SlimeSignatureMoveName", "탄성 돌진");
+		}
+		break;
+	case ESRPGEnemyMovementRole::Standard:
+	default:
+		break;
+	}
+
 	if (TObjectPtr<USRPGTurnContext>* TurnContext = mTurnContextMap.Find(Intent.mTurnId);
 		TurnContext != nullptr && IsValid(TurnContext->Get()))
 	{
@@ -1467,6 +1502,69 @@ void USRPGCombatModel::ResolveFixedIntentAttack(UUnitModel* Enemy, const TArray<
 
 	BroadcastEnemyIntentChanged();
 	RefreshEnemyIntentHighlights();
+}
+
+void USRPGCombatModel::ReportEnemySkillDisplacement(
+	UUnitModel* Enemy,
+	UUnitModel* Target,
+	const FTileIndex& From,
+	const FTileIndex& To,
+	const FText& SkillName,
+	bool bApplyImpactDamage)
+{
+	if (Enemy == nullptr || Target == nullptr || From == To)
+	{
+		return;
+	}
+
+	if (bApplyImpactDamage)
+	{
+		ApplyIntentCollisionDamage(Cast<IBoardCombatTarget>(Target));
+		BroadcastCollisionPresentation(mTileMap, Enemy, Target);
+	}
+
+	if (FSRPGEnemyIntent* Intent = FindEnemyIntent(Enemy))
+	{
+		const FText Message = FText::Format(
+			bApplyImpactDamage
+				? NSLOCTEXT("EnemyIntent", "EnemySkillImpactPush", "{0}! {1}을 ({2},{3})로 들이받아 밀침 (1 피해)")
+				: NSLOCTEXT("EnemyIntent", "EnemySkillDisplacement", "{0}! {1}을 ({2},{3})로 강제 이동"),
+			SkillName,
+			Target->GetBoardActorDisplayName(),
+			FText::AsNumber(To.mX),
+			FText::AsNumber(To.mY));
+		AppendEnemyIntentResult(*Intent, Intent->mResult, Message);
+		BroadcastEnemyIntentChanged();
+		RefreshEnemyIntentHighlights();
+	}
+}
+
+void USRPGCombatModel::ReportEnemySkillCollision(
+	UUnitModel* Enemy,
+	UUnitModel* Target,
+	UBoardActorModel* Blocker,
+	const FText& SkillName)
+{
+	if (Enemy == nullptr || Target == nullptr || Blocker == nullptr)
+	{
+		return;
+	}
+
+	ApplyIntentCollisionDamage(Cast<IBoardCombatTarget>(Target));
+	ApplyIntentCollisionDamage(Cast<IBoardCombatTarget>(Blocker));
+	BroadcastCollisionPresentation(mTileMap, Target, Blocker);
+
+	if (FSRPGEnemyIntent* Intent = FindEnemyIntent(Enemy))
+	{
+		const FText Message = FText::Format(
+			NSLOCTEXT("EnemyIntent", "EnemySkillChainCollision", "{0} 충돌! {1}이 {2}에 부딪힘 (양쪽 1 피해)"),
+			SkillName,
+			Target->GetBoardActorDisplayName(),
+			Blocker->GetBoardActorDisplayName());
+		AppendEnemyIntentResult(*Intent, Intent->mResult, Message);
+		BroadcastEnemyIntentChanged();
+		RefreshEnemyIntentHighlights();
+	}
 }
 
 void USRPGCombatModel::RefreshEnemyIntentHighlights()

@@ -38,6 +38,10 @@ public:
 	UPROPERTY()
 	bool mIsWarriorCharge = false;
 
+	/** @brief Slime의 이동 자체를 탄성 돌진으로 실행한다. 경로의 유닛을 한 칸 밀고 충돌 지점까지 진입한다. */
+	UPROPERTY()
+	bool mIsElasticCharge = false;
+
 	/** @brief 돌진 거리와 밀어내기 판정에 사용한 확정 주사위 합. */
 	UPROPERTY()
 	int32 mDicePower = 0;
@@ -85,6 +89,9 @@ private:
 	void StartWarriorChargePushStep(int32 StepIndex);
 	void OnWarriorChargePushStepFinished();
 	void FinishWarriorChargeImpact();
+	bool TryStartElasticChargeImpact(int32 StepIndex);
+	void StartElasticChargePush();
+	void OnElasticChargePushFinished();
 	UBoardActorModel* FindBlockingActor(const FTileIndex& TileIndex, const UBoardActorModel* MovingActor) const;
 
 	/* 헬퍼 */
@@ -99,6 +106,7 @@ protected:
 	// @brief 적 라운드 시작에 공개된 경로라면 현재 상황에 맞춰 우회하지 않는다.
 	bool mUseFixedIntent = false;
 	bool mIsWarriorCharge = false;
+	bool mIsElasticCharge = false;
 	bool mConsumeMovementPoints = true;
 	int32 mDicePower = 0;
 
@@ -116,4 +124,13 @@ protected:
 	int32 mWarriorChargeResumePlayerStep = INDEX_NONE;
 	bool mWarriorChargeContinueAfterImpact = false;
 	bool mWarriorChargeStopAfterPlayerStep = false;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UUnitModel> mElasticChargeTarget = nullptr;
+	UPROPERTY(Transient)
+	TObjectPtr<UBoardActorModel> mElasticChargeBlocker = nullptr;
+	FTileIndex mElasticChargeFromTile = FTileIndex::Invalid;
+	FTileIndex mElasticChargeDestination = FTileIndex::Invalid;
+	int32 mElasticChargeResumeStep = INDEX_NONE;
+	bool mElasticChargeStopAfterStep = false;
 };
