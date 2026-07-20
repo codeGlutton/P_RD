@@ -25,10 +25,10 @@ public:
 
 	/* UAnimNotify 상속 */
 public:
-	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
+	void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 
 #if WITH_EDITOR
-	virtual void ValidateAssociatedAssets() override;
+	void ValidateAssociatedAssets() override;
 #endif
 
 protected:

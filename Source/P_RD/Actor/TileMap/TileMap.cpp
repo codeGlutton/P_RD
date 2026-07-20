@@ -77,109 +77,85 @@ ATileMap::ATileMap()
 	// 테두리 기본값: 짙은 회색 (머티리얼에 BorderColor/BorderWidth 파라미터가 있어야 표시됨)
 	mTileBorderStyle.mColor = FLinearColor(0.2f, 0.2f, 0.2f, 0.8f);
 
-	// 경로 화살표/도착 마커 컴포넌트 생성 (타일 클릭 트레이스를 방해하지 않도록 콜리전 비활성화)
-	mPathArrowComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("PathArrow"));
-	mPathArrowComponent->SetupAttachment(RootComponent);
-	mPathArrowComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	mPathArrowComponent->SetNumCustomDataFloats(4);
-
-	// 경로 좌회전 화살표 컴포넌트 생성
-	mPathTurnLeftComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("PathTurnLeft"));
-	mPathTurnLeftComponent->SetupAttachment(RootComponent);
-	mPathTurnLeftComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	mPathTurnLeftComponent->SetNumCustomDataFloats(4);
-
-	// 경로 우회전 화살표 컴포넌트 생성
-	mPathTurnRightComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("PathTurnRight"));
-	mPathTurnRightComponent->SetupAttachment(RootComponent);
-	mPathTurnRightComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	mPathTurnRightComponent->SetNumCustomDataFloats(4);
-
-	mPathEndComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("PathEnd"));
-	mPathEndComponent->SetupAttachment(RootComponent);
-	mPathEndComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	mPathEndComponent->SetNumCustomDataFloats(4);
-
-	// 경유지 마커, 도착지 원뿔 컴포넌트 생성 (타일 클릭 트레이스를 방해하지 않도록 콜리전 비활성화)
-	mWaypointComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("Waypoint"));
-	mWaypointComponent->SetupAttachment(RootComponent);
-	mWaypointComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	mWaypointComponent->SetNumCustomDataFloats(4);
-
-	mDestConeComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("DestCone"));
-	mDestConeComponent->SetupAttachment(RootComponent);
-	mDestConeComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	mDestConeComponent->SetNumCustomDataFloats(4);
-
-	// 경로 표시 컴포넌트들은 RF_Transient 플래그 설정
-	// 런타임에 생성/설정되는 컴포넌트들이므로 굳이 파일로 저장할 필요가 없음
-	mPathArrowComponent->SetFlags(RF_Transient);
-	mPathTurnLeftComponent->SetFlags(RF_Transient);
-	mPathTurnRightComponent->SetFlags(RF_Transient);
-	mPathEndComponent->SetFlags(RF_Transient);
-	mWaypointComponent->SetFlags(RF_Transient);
-	mDestConeComponent->SetFlags(RF_Transient);
-
-	// 경로 중간 화살표 기본 메시: +X를 가리키는 화살표 (방향 회전이 이 형상 기준이라 +X 향이어야 함)
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> ArrowMeshFinder(TEXT("/Game/SVN/OutSideAsset/Kenney/FactoryKit/SM_Kenney_FactoryKit_ArrowStraight.SM_Kenney_FactoryKit_ArrowStraight"));
-	if (ArrowMeshFinder.Succeeded())
+	// 경로 화살표/도착 마커 컴포넌트 생성 헬퍼 (장식용 — 타일 트레이스 방해 않도록 충돌 없음)
+	auto CreatePathComponent = [this](const TCHAR* Name) -> UInstancedStaticMeshComponent*
 	{
-		mPathArrowMesh = ArrowMeshFinder.Object;
-		mPathArrowComponent->SetStaticMesh(mPathArrowMesh);
-	}
+		UInstancedStaticMeshComponent* Component = CreateDefaultSubobject<UInstancedStaticMeshComponent>(Name);
+		Component->SetupAttachment(RootComponent);
+		Component->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		Component->SetNumCustomDataFloats(4);
 
-	// 경로 좌회전 화살표 기본 메시 (+X로 진입해 -Y로 꺾이는 형상)
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> TurnLeftMeshFinder(TEXT("/Game/SVN/OutSideAsset/Kenney/FactoryKit/SM_Kenney_FactoryKit_ArrowTurnLeft.SM_Kenney_FactoryKit_ArrowTurnLeft"));
-	if (TurnLeftMeshFinder.Succeeded())
-	{
-		mPathTurnLeftMesh = TurnLeftMeshFinder.Object;
-		mPathTurnLeftComponent->SetStaticMesh(mPathTurnLeftMesh);
-	}
+		// 경로 표시 컴포넌트들은 런타임에 생성/설정되므로 굳이 파일로 저장할 필요가 없어 RF_Transient 플래그 설정
+		Component->SetFlags(RF_Transient);
+		return Component;
+	};
 
-	// 경로 우회전 화살표 기본 메시 (+X로 진입해 +Y로 꺾이는 형상)
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> TurnRightMeshFinder(TEXT("/Game/SVN/OutSideAsset/Kenney/FactoryKit/SM_Kenney_FactoryKit_ArrowTurnRight.SM_Kenney_FactoryKit_ArrowTurnRight"));
-	if (TurnRightMeshFinder.Succeeded())
-	{
-		mPathTurnRightMesh = TurnRightMeshFinder.Object;
-		mPathTurnRightComponent->SetStaticMesh(mPathTurnRightMesh);
-	}
+	// 이동/밀치기 경로 표시 세트의 컴포넌트 생성
+	mMovePathSet.mStraightComponent = CreatePathComponent(TEXT("MovePathStraight"));
+	mMovePathSet.mTurnLeftComponent = CreatePathComponent(TEXT("MovePathTurnLeft"));
+	mMovePathSet.mTurnRightComponent = CreatePathComponent(TEXT("MovePathTurnRight"));
+	mMovePathSet.mEndComponent = CreatePathComponent(TEXT("MovePathEnd"));
+	mPushPathSet.mStraightComponent = CreatePathComponent(TEXT("PushPathStraight"));
+	mPushPathSet.mTurnLeftComponent = CreatePathComponent(TEXT("PushPathTurnLeft"));
+	mPushPathSet.mTurnRightComponent = CreatePathComponent(TEXT("PushPathTurnRight"));
+	mPushPathSet.mEndComponent = CreatePathComponent(TEXT("PushPathEnd"));
 
-	// 도착(끝) 타일 마커 기본 메시: Kenney 특수 인디케이터 화살표 에셋
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> EndMeshFinder(TEXT("/Game/SVN/OutSideAsset/Kenney/FactoryKit/SM_Kenney_FactoryKit_IndicatorSpecialArrow.SM_Kenney_FactoryKit_IndicatorSpecialArrow"));
-	if (EndMeshFinder.Succeeded())
+	// 경유지 마커, 도착지 원뿔 컴포넌트 생성 (이동 경로 전용)
+	mWaypointComponent = CreatePathComponent(TEXT("Waypoint"));
+	mDestConeComponent = CreatePathComponent(TEXT("DestCone"));
+
+	// 메시 로드 헬퍼 (경로가 잘못됐거나 SVN 미갱신이면 null 유지 — 회전 화살표는 직진으로 폴백됨)
+	auto FindMesh = [](const TCHAR* Path) -> UStaticMesh*
 	{
-		mPathEndMesh = EndMeshFinder.Object;
-		mPathEndComponent->SetStaticMesh(mPathEndMesh);
-	}
+		ConstructorHelpers::FObjectFinder<UStaticMesh> Finder(Path);
+		return Finder.Succeeded() ? Finder.Object : nullptr;
+	};
+
+	// 이동 경로 기본 메시: 각진 화살표 (+X 진행 기준 형상, 회전은 +X 진입 기준)
+	mMovePathSet.mStraightMesh = FindMesh(TEXT("/Game/SVN/OutSideAsset/Kenney/FactoryKit/SM_Kenney_FactoryKit_ArrowStraight.SM_Kenney_FactoryKit_ArrowStraight"));
+	mMovePathSet.mTurnLeftMesh = FindMesh(TEXT("/Game/SVN/OutSideAsset/Kenney/FactoryKit/SM_Kenney_FactoryKit_ArrowTurnLeft.SM_Kenney_FactoryKit_ArrowTurnLeft"));
+	mMovePathSet.mTurnRightMesh = FindMesh(TEXT("/Game/SVN/OutSideAsset/Kenney/FactoryKit/SM_Kenney_FactoryKit_ArrowTurnRight.SM_Kenney_FactoryKit_ArrowTurnRight"));
+	mMovePathSet.mEndMesh = FindMesh(TEXT("/Game/SVN/OutSideAsset/Kenney/FactoryKit/SM_Kenney_FactoryKit_IndicatorSpecialArrow.SM_Kenney_FactoryKit_IndicatorSpecialArrow"));
+
+	// 밀치기 경로 기본 메시: rounded 화살표 (도착 마커는 이동 경로와 공유)
+	mPushPathSet.mStraightMesh = FindMesh(TEXT("/Game/SVN/OutSideAsset/Kenney/FactoryKit/SM_Kenney_FactoryKit_ArrowRoundedStraight.SM_Kenney_FactoryKit_ArrowRoundedStraight"));
+	mPushPathSet.mTurnLeftMesh = FindMesh(TEXT("/Game/SVN/OutSideAsset/Kenney/FactoryKit/SM_Kenney_FactoryKit_ArrowRoundedTurnLeft.SM_Kenney_FactoryKit_ArrowRoundedTurnLeft"));
+	mPushPathSet.mTurnRightMesh = FindMesh(TEXT("/Game/SVN/OutSideAsset/Kenney/FactoryKit/SM_Kenney_FactoryKit_ArrowRoundedTurnRight.SM_Kenney_FactoryKit_ArrowRoundedTurnRight"));
+	mPushPathSet.mEndMesh = mMovePathSet.mEndMesh;
+
+	// 컴포넌트에 기본 메시 반영 (에디터 프리뷰용 — 런타임 교체는 AppendPath에서)
+	auto ApplySetMeshes = [](FPathArrowSet& Set)
+	{
+		Set.mStraightComponent->SetStaticMesh(Set.mStraightMesh);
+		Set.mTurnLeftComponent->SetStaticMesh(Set.mTurnLeftMesh);
+		Set.mTurnRightComponent->SetStaticMesh(Set.mTurnRightMesh);
+		Set.mEndComponent->SetStaticMesh(Set.mEndMesh);
+	};
+	ApplySetMeshes(mMovePathSet);
+	ApplySetMeshes(mPushPathSet);
 
 	// 경유지 마커 기본 메시: 엔진 기본 Cube 활용 (디지털 시계 숫자처럼 막대로 숫자 조립)
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMeshFinder(TEXT("/Engine/BasicShapes/Cube.Cube"));
-	if (CubeMeshFinder.Succeeded())
-	{
-		mWaypointBarMesh = CubeMeshFinder.Object;
-		mWaypointComponent->SetStaticMesh(mWaypointBarMesh);
-	}
+	mWaypointBarMesh = FindMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
+	mWaypointComponent->SetStaticMesh(mWaypointBarMesh);
 
 	// 도착지 원뿔 기본 메시: 엔진 기본 Cone 활용 (뒤집어서 역원뿔 모양이 위아래로 진동)
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> ConeMeshFinder(TEXT("/Engine/BasicShapes/Cone.Cone"));
-	if (ConeMeshFinder.Succeeded())
-	{
-		mDestConeMesh = ConeMeshFinder.Object;
-		mDestConeComponent->SetStaticMesh(mDestConeMesh);
-	}
+	mDestConeMesh = FindMesh(TEXT("/Engine/BasicShapes/Cone.Cone"));
+	mDestConeComponent->SetStaticMesh(mDestConeMesh);
 
-	// 화살표/마커는 전용 발광 머티리얼(custom data RGBA + EmissiveBoost) 사용 — SetMovePath에서 컴포넌트에 적용
+	// 화살표/마커는 전용 발광 머티리얼(custom data RGBA + EmissiveBoost) 사용 — AppendPath에서 컴포넌트에 적용
 	// 타일 머티리얼(M_TileTransparent)과 분리해 타일 쪽 테두리 파라미터의 영향 없이 블룸으로 도드라지게 함
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> PathIndicatorMatFinder(TEXT("/Game/SVN/InSideAsset/Material/M_PathIndicator.M_PathIndicator"));
 	if (PathIndicatorMatFinder.Succeeded())
 	{
-		mPathArrowMaterial = PathIndicatorMatFinder.Object;
-		mPathEndMaterial = PathIndicatorMatFinder.Object;
+		mMovePathSet.mMaterial = PathIndicatorMatFinder.Object;
+		mPushPathSet.mMaterial = PathIndicatorMatFinder.Object;
 	}
 
-	// 경로 화살표와 도착지 화살표 기본 값
-	mPathArrowStyle.mColor = FLinearColor(0.9f, 0.45f, 0.0f, 0.95f);
-	mPathEndStyle.mColor = FLinearColor(0.9f, 0.45f, 0.0f, 0.95f);
+	// 경로 화살표와 도착지 마커 색 기본 값 — 이동: 주황 발광, 밀치기: 어두운 적색
+	mMovePathSet.mArrowStyle.mColor = FLinearColor(0.9f, 0.45f, 0.0f, 0.95f);
+	mMovePathSet.mEndStyle.mColor = FLinearColor(0.9f, 0.45f, 0.0f, 0.95f);
+	mPushPathSet.mArrowStyle.mColor = FLinearColor(0.55f, 0.08f, 0.06f, 0.95f);
+	mPushPathSet.mEndStyle.mColor = FLinearColor(0.55f, 0.08f, 0.06f, 0.95f);
 
 	// 경유지 마커 기본 색: 경로(주황)와 구분되는 파랑
 	mWaypointStyle.mColor = FLinearColor(0.15f, 0.5f, 1.0f, 1.0f);
@@ -355,9 +331,15 @@ void ATileMap::Tick(float DeltaSeconds)
 			RefreshTileCustomData(Index);
 	}
 
-	// 경로 화살표/도착 마커 알파도 펄스 — 표시 중일 때만 갱신
-	if (mPathLength > 0)
-		RefreshPathPulse();
+	// 경로 화살표/도착 마커 알파도 펄스 — 표시 중인 세트만 갱신
+	if (mMovePathSet.mPathCount > 0)
+		RefreshPathPulse(mMovePathSet);
+	if (mPushPathSet.mPathCount > 0)
+		RefreshPathPulse(mPushPathSet);
+
+	// 도착지 원뿔은 색 고정에 높이만 진동 — 표시 중일 때만 갱신
+	if (mDestConeComponent != nullptr && mDestConeComponent->GetInstanceCount() > 0)
+		RefreshDestConeBob();
 }
 
 void ATileMap::RebuildTileInstances()
@@ -640,54 +622,95 @@ float ATileMap::StepToYaw(const FTileIndex& Step)
 
 void ATileMap::SetMovePath(const TArray<FMovePathTile>& PathTiles)
 {
-	// 기존 표시 제거 후 다시 그림
+	// 이동 경로는 한 번에 하나 — 기존 표시(경유지 마커·원뿔 포함) 제거 후 이동 세트로 그리기 (공통 구현 위임)
 	ClearMovePath();
 
-	// 경로가 비었으면 표시할 것 없음 (해제와 동일)
+	// 경유지 마커: 에디터에서 교체된 메시 반영, 화살표와 같은 발광 머티리얼 공유
+	if (mWaypointComponent != nullptr)
+	{
+		mWaypointComponent->SetStaticMesh(mWaypointBarMesh);
+		if (mMovePathSet.mMaterial != nullptr)
+			mWaypointComponent->SetMaterial(0, mMovePathSet.mMaterial);
+	}
+
+	// 도착지 원뿔: 에디터에서 교체된 메시 반영, 도착 마커와 같은 발광 머티리얼 공유
+	if (mDestConeComponent != nullptr)
+	{
+		mDestConeComponent->SetStaticMesh(mDestConeMesh);
+		if (mMovePathSet.mMaterial != nullptr)
+			mDestConeComponent->SetMaterial(0, mMovePathSet.mMaterial);
+	}
+
+	AppendPath(mMovePathSet, PathTiles);
+
+	// 도착지 원뿔 배치 (이동 경로 전용 — 뒤집어서 꼭짓점이 도착 타일을 가리킴, 위아래 진동은 틱에서 처리)
+	if (mDestConeComponent != nullptr && PathTiles.Num() > 0)
+	{
+		const FTileIndex& EndTile = PathTiles.Last().mIndex;
+		const float ConeScale = (mTileSize / 100.0f) * mDestConeScale;
+		const FRotator ConeRotation(180.0f, 0.0f, 0.0f);
+		const FVector ConeLocation(EndTile.mX * mTileSize, EndTile.mY * mTileSize, GetDestConeBaseZ());
+		mDestConeComponent->AddInstance(FTransform(ConeRotation, ConeLocation, FVector(ConeScale)), /*bWorldSpace=*/false);
+
+		// 원뿔 색 설정
+		mDestConeComponent->SetCustomDataValue(0, 0, mDestConeStyle.mColor.R);
+		mDestConeComponent->SetCustomDataValue(0, 1, mDestConeStyle.mColor.G);
+		mDestConeComponent->SetCustomDataValue(0, 2, mDestConeStyle.mColor.B);
+		mDestConeComponent->SetCustomDataValue(0, 3, 1.0f, /*bMarkRenderStateDirty=*/true);
+	}
+}
+
+void ATileMap::ClearMovePath()
+{
+	ClearPath(mMovePathSet);
+
+	// 이동 경로 전용 경유지 마커·도착지 원뿔 인스턴스도 제거
+	if (mWaypointComponent != nullptr)
+		mWaypointComponent->ClearInstances();
+	if (mDestConeComponent != nullptr)
+		mDestConeComponent->ClearInstances();
+}
+
+void ATileMap::AddPushPath(const TArray<FTileIndex>& PathTiles)
+{
+	// 밀리지 못하는 경로(제자리 한 칸 이하)는 표시하지 않음 — 밀리는 몹만 화살표가 생김
+	if (PathTiles.Num() < 2)
+		return;
+
+	// 밀치기 경로는 경유지가 없어 타일 인덱스를 표시용 타일로 변환
+	TArray<FMovePathTile> MovePathTiles;
+	MovePathTiles.Reserve(PathTiles.Num());
+	for (const FTileIndex& Tile : PathTiles)
+		MovePathTiles.Emplace(Tile);
+
+	// 기존 표시를 유지한 채 밀치기 세트에 추가 (공통 구현 위임)
+	AppendPath(mPushPathSet, MovePathTiles);
+}
+
+void ATileMap::ClearPushPath()
+{
+	ClearPath(mPushPathSet);
+}
+
+void ATileMap::AppendPath(FPathArrowSet& Set, const TArray<FMovePathTile>& PathTiles)
+{
+	// 경로가 비었으면 추가할 것 없음
 	if (PathTiles.Num() == 0)
 		return;
 
 	// 에디터에서 교체된 메시/머티리얼 반영
-	if (mPathArrowComponent != nullptr)
+	auto ApplyMeshAndMaterial = [&Set](UInstancedStaticMeshComponent* Component, UStaticMesh* Mesh)
 	{
-		mPathArrowComponent->SetStaticMesh(mPathArrowMesh);
-		if (mPathArrowMaterial != nullptr)
-			mPathArrowComponent->SetMaterial(0, mPathArrowMaterial);
-	}
-	if (mPathTurnLeftComponent != nullptr)
-	{
-		mPathTurnLeftComponent->SetStaticMesh(mPathTurnLeftMesh);
-		if (mPathArrowMaterial != nullptr)
-			mPathTurnLeftComponent->SetMaterial(0, mPathArrowMaterial);
-	}
-	if (mPathTurnRightComponent != nullptr)
-	{
-		mPathTurnRightComponent->SetStaticMesh(mPathTurnRightMesh);
-		if (mPathArrowMaterial != nullptr)
-			mPathTurnRightComponent->SetMaterial(0, mPathArrowMaterial);
-	}
-	if (mPathEndComponent != nullptr)
-	{
-		mPathEndComponent->SetStaticMesh(mPathEndMesh);
-		if (mPathEndMaterial != nullptr)
-			mPathEndComponent->SetMaterial(0, mPathEndMaterial);
-	}
-
-	// 경유지 마커: 화살표와 같은 발광 머티리얼 공유
-	if (mWaypointComponent != nullptr)
-	{
-		mWaypointComponent->SetStaticMesh(mWaypointBarMesh);
-		if (mPathArrowMaterial != nullptr)
-			mWaypointComponent->SetMaterial(0, mPathArrowMaterial);
-	}
-
-	// 도착지 원뿔: 도착 마커와 같은 발광 머티리얼 공유
-	if (mDestConeComponent != nullptr)
-	{
-		mDestConeComponent->SetStaticMesh(mDestConeMesh);
-		if (mPathEndMaterial != nullptr)
-			mDestConeComponent->SetMaterial(0, mPathEndMaterial);
-	}
+		if (Component == nullptr)
+			return;
+		Component->SetStaticMesh(Mesh);
+		if (Set.mMaterial != nullptr)
+			Component->SetMaterial(0, Set.mMaterial);
+	};
+	ApplyMeshAndMaterial(Set.mStraightComponent, Set.mStraightMesh);
+	ApplyMeshAndMaterial(Set.mTurnLeftComponent, Set.mTurnLeftMesh);
+	ApplyMeshAndMaterial(Set.mTurnRightComponent, Set.mTurnRightMesh);
+	ApplyMeshAndMaterial(Set.mEndComponent, Set.mEndMesh);
 
 	// 경유지 타일 집합
 	// 경유지가 일반화살표와 겹치지 않게 미리 집합을 만들어서 비교할 때 활용
@@ -698,13 +721,19 @@ void ATileMap::SetMovePath(const TArray<FMovePathTile>& PathTiles)
 			WaypointTiles.Add(PathTile.mIndex);
 	}
 
-	// 화살표/마커 균일 스케일 (타일 크기에 맞춤)
+	// 화살표와 도착지마커를 타일사이즈에 맞게 스케일 조정
 	const float ArrowScale = (mTileSize / 100.0f) * mPathArrowScale;
+
+	// 타일의 위상차 계산:
+	// 한 주기 2*PI를 간격의 개수(타일 수 - 1)로 나누면 한 주기에 각 타일들이 가져야할 위상차가 됨
+	// 여기에 한 주기에 돌아야 할 사이클 수(기본은 1)를 곱하면 최종 위상차가 됨
+	const int32 Span = FMath::Max(1, PathTiles.Num() - 1);
+	const float PhasePerTile = 2.0f * PI * Set.mFlowCycles / Span;
 
 	// 경유지 순번 (등장 순서대로 1부터 부여)
 	int32 WaypointNumber = 0;
 
-	// 마지막을 제외한 각 타일에 화살표 배치
+	// 도착지 마커인 마지막 타일을 제외하고 화살표 배치
 	const int32 LastIndex = PathTiles.Num() - 1;
 	for (int32 Index = 0; Index < LastIndex; ++Index)
 	{
@@ -723,53 +752,43 @@ void ATileMap::SetMovePath(const TArray<FMovePathTile>& PathTiles)
 			continue;
 
 		// 진출 방향 스텝
-		const FTileIndex OutStep(Next.mX - Tile.mX, Next.mY - Tile.mY);
+		const FTileIndex OutStep = Next - Tile;
 
 		// 기본은 직진 화살표
-		UInstancedStaticMeshComponent* Component = mPathArrowComponent;
-		TArray<int32>* Orders = &mPathArrowOrders;
+		EPathArrowKind Kind = EPathArrowKind::Straight;
 		float Yaw = StepToYaw(OutStep);
 
 		if (Index > 0)
 		{
 			// 진입/진출 방향의 벡터 외적 부호로 회전 판별
-            // 0: 직진
-		    // 양수: 우회전
-		    // 음수: 좌회전
+			// 0: 직진
+			// 양수: 우회전
+			// 음수: 좌회전
 			const FTileIndex& Prev = PathTiles[Index - 1].mIndex;
-			const FTileIndex InStep(Tile.mX - Prev.mX, Tile.mY - Prev.mY);
+			const FTileIndex InStep = Tile - Prev;
 			const int32 Cross = InStep.mX * OutStep.mY - InStep.mY * OutStep.mX;
 
 			// 회전 타일이면 회전 화살표로 교체
-		    // @note 회전 화살표 메시가 없으면 직진 화살표 사용 (회전 화살표 메시만 없는 경우는 없겠지만...)
-			if (Cross > 0 && mPathTurnRightMesh != nullptr)
+			// @note 회전 화살표 메시가 없으면 직진 화살표 사용 (회전 화살표 메시만 없는 경우는 없겠지만...)
+			if (Cross > 0 && Set.mTurnRightMesh != nullptr)
 			{
-				Component = mPathTurnRightComponent;
-				Orders = &mPathTurnRightOrders;
+				Kind = EPathArrowKind::TurnRight;
 				Yaw = StepToYaw(InStep);
 			}
-			else if (Cross < 0 && mPathTurnLeftMesh != nullptr)
+			else if (Cross < 0 && Set.mTurnLeftMesh != nullptr)
 			{
-				Component = mPathTurnLeftComponent;
-				Orders = &mPathTurnLeftOrders;
+				Kind = EPathArrowKind::TurnLeft;
 				Yaw = StepToYaw(InStep);
 			}
 		}
 
-		if (Component == nullptr)
-			continue;
-
 		// 타일 중심 로컬 위치 + Z 오프셋에 배치 (바닥에서 아주 살짝 뜬 위치, Z축은 별도 스케일로 납작하게)
 		const FVector Location(Tile.mX * mTileSize, Tile.mY * mTileSize, mPathHeightOffset);
 		const FTransform InstanceTransform(FRotator(0.0f, Yaw, 0.0f), Location, FVector(ArrowScale, ArrowScale, ArrowScale * mPathArrowZScale));
-		Component->AddInstance(InstanceTransform, /*bWorldSpace=*/false);
-
-		// 펄스 위상용 경로 순번 기록 (이 순번과 시간 정보로 파도타기 응원 가능)
-		Orders->Add(Index);
+		AddTileInstance(Set, Kind, Tile, InstanceTransform, Index * PhasePerTile);
 	}
 
-	// 마지막(도착) 타일엔 도착 마커 배치 (인디케이터 메시가 방향성이 있어 진입 방향으로 회전)
-	if (mPathEndComponent != nullptr)
+	// 마지막 타일엔 도착지 마커 배치 (진입 방향과 같은 방향)
 	{
 		const FTileIndex& EndTile = PathTiles[LastIndex].mIndex;
 
@@ -779,61 +798,120 @@ void ATileMap::SetMovePath(const TArray<FMovePathTile>& PathTiles)
 		if (LastIndex >= 1)
 		{
 			const FTileIndex& PrevTile = PathTiles[LastIndex - 1].mIndex;
-			const FTileIndex Step(EndTile.mX - PrevTile.mX, EndTile.mY - PrevTile.mY);
+			const FTileIndex Step = EndTile - PrevTile;
 			Rotation = FRotator(0.0f, StepToYaw(Step), 0.0f);
 		}
 
+		// 도착지 마커의 위상 오프셋 설정
 		const FVector Location(EndTile.mX * mTileSize, EndTile.mY * mTileSize, mPathHeightOffset);
 		const FTransform InstanceTransform(Rotation, Location, FVector(ArrowScale));
-		mPathEndComponent->AddInstance(InstanceTransform, /*bWorldSpace=*/false);
+		AddTileInstance(Set, EPathArrowKind::End, EndTile, InstanceTransform, LastIndex * PhasePerTile);
 	}
 
-	// 도착지 원뿔 배치 (뒤집어서 꼭짓점이 도착 타일을 가리킴, 위아래 진동은 틱에서 처리)
-	if (mDestConeComponent != nullptr)
-	{
-		const FTileIndex& EndTile = PathTiles[LastIndex].mIndex;
-		const float ConeScale = (mTileSize / 100.0f) * mDestConeScale;
-		const FRotator ConeRotation(180.0f, 0.0f, 0.0f);
-		const FVector ConeLocation(EndTile.mX * mTileSize, EndTile.mY * mTileSize, GetDestConeBaseZ());
-		mDestConeComponent->AddInstance(FTransform(ConeRotation, ConeLocation, FVector(ConeScale)), /*bWorldSpace=*/false);
-
-		// 원뿔 색 설정
-		mDestConeComponent->SetCustomDataValue(0, 0, mDestConeStyle.mColor.R);
-		mDestConeComponent->SetCustomDataValue(0, 1, mDestConeStyle.mColor.G);
-		mDestConeComponent->SetCustomDataValue(0, 2, mDestConeStyle.mColor.B);
-		mDestConeComponent->SetCustomDataValue(0, 3, 1.0f, /*bMarkRenderStateDirty=*/true);
-	}
-
-	// 표시 중인 경로 길이 기록 (틱 펄스 대상 판단 + 도착 마커 위상 인덱스)
-	mPathLength = PathTiles.Num();
+	// 경로 개수 증가
+	++Set.mPathCount;
 
 	// 최초 1회 펄스 색 기록 (이후 틱마다 자동 갱신)
-	RefreshPathPulse();
+	RefreshPathPulse(Set);
 }
 
-void ATileMap::ClearMovePath()
+void ATileMap::ClearPath(FPathArrowSet& Set)
 {
-	// 화살표, 마커, 원뿔 인스턴스 모두 제거
-	if (mPathArrowComponent != nullptr)
-		mPathArrowComponent->ClearInstances();
-	if (mPathTurnLeftComponent != nullptr)
-		mPathTurnLeftComponent->ClearInstances();
-	if (mPathTurnRightComponent != nullptr)
-		mPathTurnRightComponent->ClearInstances();
-	if (mPathEndComponent != nullptr)
-		mPathEndComponent->ClearInstances();
-	if (mWaypointComponent != nullptr)
-		mWaypointComponent->ClearInstances();
-	if (mDestConeComponent != nullptr)
-		mDestConeComponent->ClearInstances();
+	// 화살표·도착 마커 인스턴스 모두 제거
+	if (Set.mStraightComponent != nullptr)
+		Set.mStraightComponent->ClearInstances();
+	if (Set.mTurnLeftComponent != nullptr)
+		Set.mTurnLeftComponent->ClearInstances();
+	if (Set.mTurnRightComponent != nullptr)
+		Set.mTurnRightComponent->ClearInstances();
+	if (Set.mEndComponent != nullptr)
+		Set.mEndComponent->ClearInstances();
 
-	// 경로 순번 기록 제거
-	mPathArrowOrders.Reset();
-	mPathTurnLeftOrders.Reset();
-	mPathTurnRightOrders.Reset();
+	// 위상 오프셋 기록 제거
+	Set.mStraightPhaseOffsets.Reset();
+	Set.mTurnLeftPhaseOffsets.Reset();
+	Set.mTurnRightPhaseOffsets.Reset();
+	Set.mEndPhaseOffsets.Reset();
+
+	// 타일→인스턴스 기록 제거
+	Set.mTileInstances.Reset();
 
 	// 표시 중 경로 없음
-	mPathLength = 0;
+	Set.mPathCount = 0;
+}
+
+UInstancedStaticMeshComponent* ATileMap::GetComponent(FPathArrowSet& Set, EPathArrowKind Kind)
+{
+	switch (Kind)
+	{
+	case EPathArrowKind::TurnLeft:	return Set.mTurnLeftComponent;
+	case EPathArrowKind::TurnRight:	return Set.mTurnRightComponent;
+	case EPathArrowKind::End:		return Set.mEndComponent;
+	default:						return Set.mStraightComponent;
+	}
+}
+
+TArray<float>& ATileMap::GetPhaseOffsets(FPathArrowSet& Set, EPathArrowKind Kind)
+{
+	switch (Kind)
+	{
+	case EPathArrowKind::TurnLeft:	return Set.mTurnLeftPhaseOffsets;
+	case EPathArrowKind::TurnRight:	return Set.mTurnRightPhaseOffsets;
+	case EPathArrowKind::End:		return Set.mEndPhaseOffsets;
+	default:						return Set.mStraightPhaseOffsets;
+	}
+}
+
+void ATileMap::AddTileInstance(FPathArrowSet& Set, EPathArrowKind Kind,
+	const FTileIndex& Tile, const FTransform& InstanceTransform, float PhaseOffset)
+{
+	UInstancedStaticMeshComponent* Component = GetComponent(Set, Kind);
+	if (Component == nullptr)
+		return;
+
+	// 타일의 기존 표시는 제거 (나중 표시가 덮어쓰니까)
+	RemoveTileInstance(Set, Tile);
+
+	// 컴포넌트에 인스턴스와 오프셋 추가
+	const int32 InstanceIndex = Component->AddInstance(InstanceTransform, /*bWorldSpace=*/false);
+	GetPhaseOffsets(Set, Kind).Add(PhaseOffset);
+
+	// 타일에 있는 인스턴스와 표시를 매핑해놓은 테이블 갱신 (타일만 주면 어떤 화살표가 있는 지 바로 확인 가능)
+	Set.mTileInstances.Add(Tile, TPair<EPathArrowKind, int32>(Kind, InstanceIndex));
+}
+
+void ATileMap::RemoveTileInstance(FPathArrowSet& Set, const FTileIndex& Tile)
+{
+	// 해당 타일에 표시가 있는 지 확인해서 없으면 그냥 리턴
+	const TPair<EPathArrowKind, int32>* Found = Set.mTileInstances.Find(Tile);
+	if (Found == nullptr)
+		return;
+
+	// 삭제할 인스턴스의 종류와 인덱스 저장 (인덱스는 뒤에서 오프셋 삭제할 때 사용)
+	const EPathArrowKind Kind = Found->Key;
+	const int32 RemovedIndex = Found->Value;
+
+	UInstancedStaticMeshComponent* Component = GetComponent(Set, Kind);
+	if (Component == nullptr)
+		return;
+
+	// 인스턴스 삭제
+	Component->RemoveInstance(RemovedIndex);
+
+	// 오프셋 삭제
+	TArray<float>& Offsets = GetPhaseOffsets(Set, Kind);
+	if (Offsets.IsValidIndex(RemovedIndex))
+		Offsets.RemoveAt(RemovedIndex);
+
+	// 맵에서 해당 타일표시 삭제
+	Set.mTileInstances.Remove(Tile);
+
+	// 인스턴스 삭제로 뒤 번호들이 한 칸씩 당겨졌으니, 맵에 남은 같은 종류의 더 큰 번호들도 1씩 당김
+	for (TPair<FTileIndex, TPair<EPathArrowKind, int32>>& TileInstancePair : Set.mTileInstances)
+	{
+		if (TileInstancePair.Value.Key == Kind && TileInstancePair.Value.Value > RemovedIndex)
+			--TileInstancePair.Value.Value;
+	}
 }
 
 /**
@@ -841,72 +919,65 @@ void ATileMap::ClearMovePath()
  * - 색에 밝기를 곱해서 최종 색을 계산
  * - 밝기만 하한<->상한 사이를 오가고, 화살표는 순서대로 위상차를 줘서 흐르는 느낌이 들게 처리
  */
-void ATileMap::RefreshPathPulse()
+void ATileMap::RefreshPathPulse(FPathArrowSet& Set)
 {
+	// 게임 시작부터의 누적 시간 (일시정지 시 멈추는 게임 시간)
 	const float Time = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
 
-	// 칸당 위상 밀림(라디안) — 경로 전체에 고점 mPathFlowCycles개가 흐르도록 길이로 정규화 (길이 무관 일정한 흐름)
-	// Span은 시작~도착 타일 간격(mPathLength-1) 기준이라 화살표와 도착 마커가 같은 파동을 공유함
-	const int32 Span = FMath::Max(1, mPathLength - 1);
-	const float PhasePerTile = 2.0f * PI * mPathFlowCycles / Span;
+	// 누적시간을 라디안으로 변환.
+    // 뒤에서 cos() 함수에 넣어서 0~1 사이의 값으로 만들고,
+	// 이 값에서 인스턴스별 오프셋을 빼면 인스턴스의 현재 위상이 나옴.
+    // 인스턴스는 '현재 위상'만큼의 밝기로 표현됨.
+	const float TimePhase = 2.0f * PI * Time / Set.mPulsePeriod;
 
 	// 한 인스턴스에 펄스 색을 기록하는 헬퍼
-	auto WriteInstance = [this](UInstancedStaticMeshComponent* Component, int32 InstanceIndex, const FLinearColor& Color, float Wave)
+	auto WriteInstance = [&Set](UInstancedStaticMeshComponent* Component, int32 InstanceIndex, const FLinearColor& Color, float Wave)
 	{
 		// 펄스를 상한/하한 값으로 변환해서 색에 곱하면 최종 색이 나옴
-		const float Brightness = FMath::Lerp(mPathPulseMinBrightness, mPathPulseMaxBrightness, Wave);
+		const float Brightness = FMath::Lerp(Set.mPulseMinBrightness, Set.mPulseMaxBrightness, Wave);
 		Component->SetCustomDataValue(InstanceIndex, 0, Color.R * Brightness);
 		Component->SetCustomDataValue(InstanceIndex, 1, Color.G * Brightness);
 		Component->SetCustomDataValue(InstanceIndex, 2, Color.B * Brightness);
 		Component->SetCustomDataValue(InstanceIndex, 3, 1.0f, /*bMarkRenderStateDirty=*/true);
 	};
 
-	// 화살표: 경로 순번마다 위상차를 줘 흐르게 (직진/좌회전/우회전 컴포넌트 공통 처리)
-	const TPair<UInstancedStaticMeshComponent*, const TArray<int32>*> ArrowGroups[] =
+	// 종류별로 인스턴스를 돌며 저장된 오프셋으로 위상 평가 (화살표는 화살표 색, 마커는 마커 색)
+	const EPathArrowKind Kinds[] = { EPathArrowKind::Straight, EPathArrowKind::TurnLeft, EPathArrowKind::TurnRight, EPathArrowKind::End };
+	for (const EPathArrowKind Kind : Kinds)
 	{
-		{ mPathArrowComponent, &mPathArrowOrders },
-		{ mPathTurnLeftComponent, &mPathTurnLeftOrders },
-		{ mPathTurnRightComponent, &mPathTurnRightOrders },
-	};
-	for (const auto& Group : ArrowGroups)
-	{
-		UInstancedStaticMeshComponent* Component = Group.Key;
-		const TArray<int32>& Orders = *Group.Value;
+		UInstancedStaticMeshComponent* Component = GetComponent(Set, Kind);
 		if (Component == nullptr)
 			continue;
+
+		const TArray<float>& Offsets = GetPhaseOffsets(Set, Kind);
+		const FLinearColor& Color = (Kind == EPathArrowKind::End) ? Set.mEndStyle.mColor : Set.mArrowStyle.mColor;
 
 		const int32 Count = Component->GetInstanceCount();
 		for (int32 Index = 0; Index < Count; ++Index)
 		{
-			// 순번 기록이 없으면(경로 재구성 전 등) 인스턴스 인덱스로 폴백
-			const int32 Order = Orders.IsValidIndex(Index) ? Orders[Index] : Index;
-			const float Phase = 2.0f * PI * Time / mPathPulsePeriod - Order * PhasePerTile;
-			const float Wave = 0.5f - 0.5f * FMath::Cos(Phase);
-			WriteInstance(Component, Index, mPathArrowStyle.mColor, Wave);
+			// 오프셋 기록이 없으면 0으로 폴백 (크래시 대신 동시 펄스로 보이는 안전망)
+			const float Offset = Offsets.IsValidIndex(Index) ? Offsets[Index] : 0.0f;
+
+			// 이 인스턴스의 현재 위상(시간항 - 자기 오프셋)을 cos에 넣어서 [-1, +1] 사이 값으로 변환 후,
+			// [0, 1] 사이 값으로 최종 변환 -> 이 값이 밝기의 최종 값이 됨
+			const float Wave = 0.5f - 0.5f * FMath::Cos(TimePhase - Offset);
+			WriteInstance(Component, Index, Color, Wave);
 		}
 	}
+}
 
-	// 도착지 마커와 원뿔은 같은 위상을 공유하니까 미리 계산해서 사용
-	const int32 EndPhaseIndex = FMath::Max(0, mPathLength - 1);
-	const float EndPhase = 2.0f * PI * Time / mPathPulsePeriod - EndPhaseIndex * PhasePerTile;
-	const float EndWave = 0.5f - 0.5f * FMath::Cos(EndPhase);
-
-	// 도착 마커: 경로 끝 위상의 펄스 색
-	if (mPathEndComponent != nullptr && mPathEndComponent->GetInstanceCount() > 0)
-	{
-		WriteInstance(mPathEndComponent, 0, mPathEndStyle.mColor, EndWave);
-	}
+void ATileMap::RefreshDestConeBob()
+{
+	// 게임 시작부터의 누적 시간 (일시정지 시 멈추는 게임 시간)
+	const float Time = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
 
 	// 도착지 원뿔: 색은 고정(SetMovePath에서 기록), 높이만 위아래 진동
-	if (mDestConeComponent != nullptr && mDestConeComponent->GetInstanceCount() > 0)
-	{
-		// 기준 높이 위로 0~진동 폭 사이를 부드럽게 오감
-		const float Bob = mDestConeBobAmplitude * (0.5f - 0.5f * FMath::Cos(2.0f * PI * Time / mDestConeBobPeriod));
-		FTransform ConeTransform;
-		mDestConeComponent->GetInstanceTransform(0, ConeTransform, /*bWorldSpace=*/false);
-		ConeTransform.SetTranslation(FVector(ConeTransform.GetTranslation().X, ConeTransform.GetTranslation().Y, GetDestConeBaseZ() + Bob));
-		mDestConeComponent->UpdateInstanceTransform(0, ConeTransform, /*bWorldSpace=*/false, /*bMarkRenderStateDirty=*/true, /*bTeleport=*/true);
-	}
+	// 기준 높이 위로 0~진동 폭 사이를 부드럽게 오감
+	const float Bob = mDestConeBobAmplitude * (0.5f - 0.5f * FMath::Cos(2.0f * PI * Time / mDestConeBobPeriod));
+	FTransform ConeTransform;
+	mDestConeComponent->GetInstanceTransform(0, ConeTransform, /*bWorldSpace=*/false);
+	ConeTransform.SetTranslation(FVector(ConeTransform.GetTranslation().X, ConeTransform.GetTranslation().Y, GetDestConeBaseZ() + Bob));
+	mDestConeComponent->UpdateInstanceTransform(0, ConeTransform, /*bWorldSpace=*/false, /*bMarkRenderStateDirty=*/true, /*bTeleport=*/true);
 }
 
 float ATileMap::GetDestConeBaseZ() const
@@ -1036,6 +1107,23 @@ void ATileMap::DebugWaypointTest()
 	PathTiles.Emplace(FTileIndex(7, 5));
 	PathTiles.Emplace(FTileIndex(8, 5));
 	SetMovePath(PathTiles);
+}
+
+void ATileMap::DebugPushTest()
+{
+	// 기존 밀치기 표시 초기화
+	ClearPushPath();
+
+	// 일렬 연쇄: 먼 몹 (3,1)→(5,1) 먼저, 가까운 몹 (1,1)→(3,1) 나중
+	// 겹치는 타일 (3,1)은 나중 경로의 도착지 마커가 먼저 경로의 출발 화살표를 덮어씀
+	AddPushPath({ FTileIndex(3, 1), FTileIndex(4, 1), FTileIndex(5, 1) });
+	AddPushPath({ FTileIndex(1, 1), FTileIndex(2, 1), FTileIndex(3, 1) });
+
+	// 길이가 다른 경로 — 경로별 파동 독립(각자 줄기 하나) 확인용
+	AddPushPath({ FTileIndex(1, 3), FTileIndex(2, 3), FTileIndex(3, 3), FTileIndex(4, 3) });
+
+	// 밀리지 못하는 몹(제자리 한 칸) — 아무것도 표시되지 않아야 함
+	AddPushPath({ FTileIndex(1, 5) });
 }
 #endif
 

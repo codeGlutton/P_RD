@@ -2,10 +2,10 @@
 
 #include "Components/CheckBox.h"
 #include "Components/Slider.h"
+#include "Engine/GameInstance.h"
 #include "GameMode/RDGameModeBase.h"
 
 #include "Singleton/InstanceSubsystem/PersistentData.h"
-#include "Singleton/InstanceSubsystem/PersistentDataSubsystem.h"
 #include "Singleton/InstanceSubsystem/PersistentDataType.h"
 
 void USettingsPanelWidget::ApplyValueModel(const FSettingsPanelValueModel& ValueModel)
@@ -49,20 +49,19 @@ void USettingsPanelWidget::ApplyValueModel(const FSettingsPanelValueModel& Value
 void USettingsPanelWidget::RefreshValueModelFromCurrentOptions()
 {
 	FSettingsPanelValueModel CurrentValueModel = mValueModel;
-	if (const UGameInstance* GameInstance = GetGameInstance())
+	if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
 	{
-		if (const UPersistentDataSubsystem* PersistentDataSubsystem = GameInstance->GetSubsystem<UPersistentDataSubsystem>())
+		if (const UOptionPersistData* OptionData = GameModeBase->GetOptionPersistData())
 		{
-			if (const UOptionPersistData* OptionData = PersistentDataSubsystem->GetOptionPersistData())
-			{
-				CurrentValueModel.mMasterVolume = OptionData->GetVolume(EGameVolumeType::Master);
-				CurrentValueModel.mBgmVolume = OptionData->GetVolume(EGameVolumeType::BGM);
-				CurrentValueModel.mSfxVolume = OptionData->GetVolume(EGameVolumeType::SFX);
-				CurrentValueModel.mUiVolume = OptionData->GetVolume(EGameVolumeType::UI);
-				CurrentValueModel.mUseKoreanLanguage = OptionData->GetLanguage() == ELanguageType::KOREAN;
-				CurrentValueModel.mFpsLimit = OptionData->GetFpsLimit();
-				CurrentValueModel.mQualityLevel = RDSettingsPanel::FromOverallQuality(StaticCast<int32>(OptionData->GetOverallQuality()));
-			}
+			CurrentValueModel.mMasterVolume = OptionData->GetVolume(EGameVolumeType::Master);
+			CurrentValueModel.mBgmVolume = OptionData->GetVolume(EGameVolumeType::BGM);
+			CurrentValueModel.mSfxVolume = OptionData->GetVolume(EGameVolumeType::SFX);
+			CurrentValueModel.mUiVolume = OptionData->GetVolume(EGameVolumeType::UI);
+			CurrentValueModel.mUseKoreanLanguage = OptionData->GetLanguage() == ELanguageType::KOREAN;
+			CurrentValueModel.mFpsLimit = OptionData->GetFpsLimit();
+			CurrentValueModel.mQualityLevel = RDSettingsPanel::FromOverallQuality(StaticCast<int32>(OptionData->GetOverallQuality()));
+			CurrentValueModel.mScreenShakeEnabled = OptionData->IsCameraShakeEnabled();
+			CurrentValueModel.mEffectsEnabled = OptionData->IsEffectVFXEnabled();
 		}
 	}
 	ApplyValueModel(CurrentValueModel);
@@ -235,6 +234,10 @@ void USettingsPanelWidget::HandleScreenShakeChanged(bool bChecked)
 	if (mIsApplyingValueModel == false)
 	{
 		OnScreenShakeChanged.Broadcast(mValueModel.mScreenShakeEnabled);
+		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+		{
+			GameModeBase->SetCameraShakeEnabled(mValueModel.mScreenShakeEnabled);
+		}
 	}
 }
 
@@ -349,5 +352,9 @@ void USettingsPanelWidget::HandleEffectsChanged(bool bChecked)
 	if (mIsApplyingValueModel == false)
 	{
 		OnEffectsChanged.Broadcast(mValueModel.mEffectsEnabled);
+		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+		{
+			GameModeBase->SetEffectVFXEnabled(mValueModel.mEffectsEnabled);
+		}
 	}
 }

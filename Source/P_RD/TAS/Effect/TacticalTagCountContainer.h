@@ -53,7 +53,7 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FTacticalTagCountContainer
+struct P_RD_API FTacticalTagCountContainer
 {
 	GENERATED_BODY()
 

@@ -1,4 +1,5 @@
 ﻿#include "GameMode/IntroGameMode.h"
+#include "Engine/GameInstance.h"
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Singleton/InstanceSubsystem/RoomTransitionSubsystem.h"
 
