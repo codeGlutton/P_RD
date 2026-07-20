@@ -18,6 +18,14 @@
 
 namespace
 {
+	constexpr float FastMoveSpeedMultiplier = 2.25f;
+	constexpr float FastMoveAccelerationMultiplier = 5.0f;
+	constexpr float FastMoveRotationMultiplier = 2.5f;
+	constexpr float FastMoveMinimumSpeed = 1200.0f;
+	constexpr float FastMoveMinimumAcceleration = 5000.0f;
+	constexpr float FastMoveMinimumDeceleration = 3000.0f;
+	constexpr float FastMoveMinimumRotationSpeed = 1080.0f;
+
 	float EaseOutCubic(float Alpha)
 	{
 		const float OneMinusAlpha = 1.0f - FMath::Clamp(Alpha, 0.0f, 1.0f);
@@ -259,41 +267,41 @@ void AUnit::OnStartForcedMovePath(
 
 	const int32 MoveTileCount = PathWorldLocations.Num() - 1;
 	const float DistanceAlpha = FMath::Clamp(StaticCast<float>(MoveTileCount - 1) / 4.0f, 0.0f, 1.0f);
-	float FirstTileDuration = 0.18f;
-	float AdditionalTileDuration = 0.075f;
-	float MaxTravelDuration = 0.55f;
-	float SettleDuration = 0.10f;
+	float FirstTileDuration = 0.13f;
+	float AdditionalTileDuration = 0.05f;
+	float MaxTravelDuration = 0.38f;
+	float SettleDuration = 0.06f;
 	switch (PresentationType)
 	{
 	case EForcedMovePresentationType::Pull:
-		FirstTileDuration = 0.28f;
-		AdditionalTileDuration = 0.11f;
-		MaxTravelDuration = 0.72f;
-		SettleDuration = 0.16f;
+		FirstTileDuration = 0.18f;
+		AdditionalTileDuration = 0.07f;
+		MaxTravelDuration = 0.48f;
+		SettleDuration = 0.09f;
 		break;
 	case EForcedMovePresentationType::Throw:
-		FirstTileDuration = 0.36f;
-		AdditionalTileDuration = 0.12f;
-		MaxTravelDuration = 0.84f;
-		SettleDuration = 0.18f;
-		break;
-	case EForcedMovePresentationType::Swap:
-		FirstTileDuration = 0.24f;
-		AdditionalTileDuration = 0.08f;
-		MaxTravelDuration = 0.48f;
-		SettleDuration = 0.12f;
-		break;
-	case EForcedMovePresentationType::Charge:
-		FirstTileDuration = 0.18f;
+		FirstTileDuration = 0.25f;
 		AdditionalTileDuration = 0.08f;
 		MaxTravelDuration = 0.58f;
-		SettleDuration = 0.08f;
+		SettleDuration = 0.10f;
+		break;
+	case EForcedMovePresentationType::Swap:
+		FirstTileDuration = 0.16f;
+		AdditionalTileDuration = 0.05f;
+		MaxTravelDuration = 0.32f;
+		SettleDuration = 0.07f;
+		break;
+	case EForcedMovePresentationType::Charge:
+		FirstTileDuration = 0.12f;
+		AdditionalTileDuration = 0.04f;
+		MaxTravelDuration = 0.34f;
+		SettleDuration = 0.05f;
 		break;
 	case EForcedMovePresentationType::Leap:
-		FirstTileDuration = 0.42f;
+		FirstTileDuration = 0.28f;
 		AdditionalTileDuration = 0.0f;
-		MaxTravelDuration = 0.42f;
-		SettleDuration = 0.12f;
+		MaxTravelDuration = 0.28f;
+		SettleDuration = 0.07f;
 		break;
 	case EForcedMovePresentationType::Push:
 	default:
@@ -543,8 +551,18 @@ void AUnit::Tick(float DeltaSeconds)
 	const float RemainingDistance = FVector::Dist(CurrentLocation, mMoveTargetTransform.GetLocation());
 
 	// 남은 거리에서 멈출 수 있는 속도 계산
-	float TargetSpeed = mMaxMoveSpeed;
-	if (mDeceleration > 0.0f)
+	const float EffectiveMaxSpeed = FMath::Max(mMaxMoveSpeed * FastMoveSpeedMultiplier, FastMoveMinimumSpeed);
+	const float EffectiveAcceleration = FMath::Max(
+		mAcceleration * FastMoveAccelerationMultiplier,
+		FastMoveMinimumAcceleration);
+	const float EffectiveDeceleration = FMath::Max(
+		mDeceleration * FastMoveAccelerationMultiplier,
+		FastMoveMinimumDeceleration);
+	const float EffectiveRotationSpeed = FMath::Max(
+		mRotationSpeed * FastMoveRotationMultiplier,
+		FastMoveMinimumRotationSpeed);
+	float TargetSpeed = EffectiveMaxSpeed;
+	if (EffectiveDeceleration > 0.0f)
 	{
 		// 제동 기준 거리 = 이번 스텝 남은 거리 + 이후 경로 거리 (최종 목적지 기준으로 감속)
 		// 목표가 많이 남으면 아래 BrakeSpeed가 최고속도보다 커지므로 최고속도로 순항하고
@@ -555,15 +573,15 @@ void AUnit::Tick(float DeltaSeconds)
 		// 최종속도 v=0 이 되면서 멈추는 거니까 이 공식은 `0 = v0^2 + 2as`
 		// 이때 감속하니까 가속도는 -가 되고 2as를 좌변으로 넘기면 `2as = v0^2`
 		// 따라서 `v0 = sqrt(2as)`
-		const float BrakeSpeed = FMath::Sqrt(2.0f * mDeceleration * BrakeDistance);
+		const float BrakeSpeed = FMath::Sqrt(2.0f * EffectiveDeceleration * BrakeDistance);
 		TargetSpeed = FMath::Min(TargetSpeed, BrakeSpeed);
 	}
 
 	// 현재 속도를 목표 속도로 가감속 (올릴 땐 가속도, 내릴 땐 감속도 사용)
 	// 해당 가감속도가 0이면 즉시 목표 속도 도달
 	const float InterpRate = (TargetSpeed < mCurrentMoveSpeed)
-		? mDeceleration
-		: mAcceleration;
+		? EffectiveDeceleration
+		: EffectiveAcceleration;
 	mCurrentMoveSpeed = (InterpRate > 0.0f)
 		? FMath::FInterpConstantTo(mCurrentMoveSpeed, TargetSpeed, DeltaSeconds, InterpRate)
 		: TargetSpeed;
@@ -577,7 +595,7 @@ void AUnit::Tick(float DeltaSeconds)
 	const FRotator NewRotation = FMath::RInterpConstantTo(
 		GetActorRotation(),
 		mMoveTargetTransform.Rotator(),
-		DeltaSeconds, mRotationSpeed);
+		DeltaSeconds, EffectiveRotationSpeed);
 	SetActorLocationAndRotation(NewLocation, NewRotation);
 
 	// 현재 속도 저장
@@ -926,18 +944,28 @@ void AUnit::TickPolyLine(float DeltaSeconds)
 	const float RemainingDistance = TotalDistance - mPolyLineTraveledDistance;
 
 	// 남은 거리에서 멈출 수 있는 속도 계산 (직선이동모드와 동일한 등가속도 공식)
-	float TargetSpeed = mMaxMoveSpeed;
-	if (mDeceleration > 0.0f)
+	const float EffectiveMaxSpeed = FMath::Max(mMaxMoveSpeed * FastMoveSpeedMultiplier, FastMoveMinimumSpeed);
+	const float EffectiveAcceleration = FMath::Max(
+		mAcceleration * FastMoveAccelerationMultiplier,
+		FastMoveMinimumAcceleration);
+	const float EffectiveDeceleration = FMath::Max(
+		mDeceleration * FastMoveAccelerationMultiplier,
+		FastMoveMinimumDeceleration);
+	const float EffectiveRotationSpeed = FMath::Max(
+		mRotationSpeed * FastMoveRotationMultiplier,
+		FastMoveMinimumRotationSpeed);
+	float TargetSpeed = EffectiveMaxSpeed;
+	if (EffectiveDeceleration > 0.0f)
 	{
-		const float BrakeSpeed = FMath::Sqrt(2.0f * mDeceleration * RemainingDistance);
+		const float BrakeSpeed = FMath::Sqrt(2.0f * EffectiveDeceleration * RemainingDistance);
 		TargetSpeed = FMath::Min(TargetSpeed, BrakeSpeed);
 	}
 
 	// 현재 속도를 목표 속도로 가감속 (올릴 땐 가속도, 내릴 땐 감속도 사용)
 	// 해당 가감속도가 0이면 즉시 목표 속도 도달
 	const float InterpRate = (TargetSpeed < mCurrentMoveSpeed)
-		? mDeceleration
-		: mAcceleration;
+		? EffectiveDeceleration
+		: EffectiveAcceleration;
 	mCurrentMoveSpeed = (InterpRate > 0.0f)
 		? FMath::FInterpConstantTo(mCurrentMoveSpeed, TargetSpeed, DeltaSeconds, InterpRate)
 		: TargetSpeed;
@@ -983,7 +1011,11 @@ void AUnit::TickPolyLine(float DeltaSeconds)
 
 	// 위치와 회전 적용
 	const FVector PreviousLocation = GetActorLocation();
-	const FRotator NewRotation = FMath::RInterpConstantTo(GetActorRotation(), TargetRotation, DeltaSeconds, mRotationSpeed);
+	const FRotator NewRotation = FMath::RInterpConstantTo(
+		GetActorRotation(),
+		TargetRotation,
+		DeltaSeconds,
+		EffectiveRotationSpeed);
 	SetActorLocationAndRotation(SampleLocation, NewRotation);
 
 	// 현재 속도 저장

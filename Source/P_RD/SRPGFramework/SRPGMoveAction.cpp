@@ -20,7 +20,7 @@ FSRPGMoveCommand::FSRPGMoveCommand()
 USRPGMoveAction::USRPGMoveAction()
 {
     mActionType = ESRPGActionType::InPlayAction;
-    // 이동도 공격과 같은 한 번의 행동이다. 성공 연출이 끝나는 즉시 상대편으로 턴이 넘어간다.
+    // 이동도 공격과 같은 한 번의 행동이다. 성공 연출이 끝나면 적 무리의 연속 행동이 시작된다.
     mConsumesTurn = true;
 }
 

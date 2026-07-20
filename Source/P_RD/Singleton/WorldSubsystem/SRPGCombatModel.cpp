@@ -708,7 +708,7 @@ void USRPGCombatModel::AdvanceTurn(bool IsInitialRound, bool bCompletedPlayerTur
 			// 플레이어 행동 두 번마다 빈자리에 한 명을 투입해 생존전의 압박을 계속 보충한다.
 			SpawnActionReinforcementIfNeeded();
 
-			// 플레이어가 행동한 뒤에는 이번 라운드에 아직 행동하지 않은 적 한 명만 대응한다.
+			// 플레이어 행동이 끝나면 이번 라운드에 대기 중인 적 무리의 첫 행동을 시작한다.
 			const int32 EnemyTurnId = PopNextEnemyResponseTurnId();
 			if (EnemyTurnId != INDEX_NONE)
 			{
@@ -726,15 +726,20 @@ void USRPGCombatModel::AdvanceTurn(bool IsInitialRound, bool bCompletedPlayerTur
 		}
 		else
 		{
-			// 적 하나의 행동이 끝나면 즉시 플레이어에게 조작권을 돌려준다.
-			// 마지막 적까지 행동했다면 이때만 라운드를 끝내고 다음 대응 순서를 새로 만든다.
-			if (HasPendingEnemyResponse() == false)
+			// 적 행동이 끝날 때마다 아직 대기 중인 다음 적을 바로 이어서 실행한다.
+			// 살아 있는 적 전원이 한 번씩 행동한 뒤에만 플레이어에게 조작권을 돌려준다.
+			const int32 NextEnemyTurnId = PopNextEnemyResponseTurnId();
+			if (NextEnemyTurnId != INDEX_NONE)
+			{
+				mCurTurnContextOrder = mTurnContextOrder.FindNode(NextEnemyTurnId);
+			}
+			else
 			{
 				NotifyRoundEnd();
+				const int32 PlayerTurnId = FindPlayerTurnId();
+				mCurTurnContextOrder = PlayerTurnId != INDEX_NONE ? mTurnContextOrder.FindNode(PlayerTurnId) : nullptr;
 				bStartingNewRound = true;
 			}
-			const int32 PlayerTurnId = FindPlayerTurnId();
-			mCurTurnContextOrder = PlayerTurnId != INDEX_NONE ? mTurnContextOrder.FindNode(PlayerTurnId) : nullptr;
 		}
 	}
 
@@ -755,8 +760,7 @@ void USRPGCombatModel::AdvanceTurn(bool IsInitialRound, bool bCompletedPlayerTur
 		mTurnContextMap[mCurTurnContextOrder->GetValue()]->BeginTurn();
 		}));
 
-	// 플레이어에게 돌아올 때마다 새 라운드로 오인하면 배너와 상태 갱신이 반복된다.
-	// 최초 진입 또는 마지막 적의 대응이 끝난 시점에만 라운드 이벤트를 보낸다.
+	// 최초 진입 또는 적 전원의 행동이 모두 끝난 시점에만 라운드 이벤트를 보낸다.
 	if (bStartingNewRound)
 	{
 		NotifyRoundStartIfNeeded(PresentationBarrier);
@@ -1048,22 +1052,6 @@ int32 USRPGCombatModel::PopNextEnemyResponseTurnId()
 		}
 	}
 	return INDEX_NONE;
-}
-
-bool USRPGCombatModel::HasPendingEnemyResponse()
-{
-	mPendingEnemyResponseTurnIds.RemoveAll([this](int32 TurnId)
-	{
-		const TObjectPtr<USRPGTurnContext>* TurnContext = mTurnContextMap.Find(TurnId);
-		UUnitModel* Owner = TurnContext != nullptr && IsValid(TurnContext->Get())
-			? TurnContext->Get()->GetOwner()
-			: nullptr;
-		return Owner == nullptr
-			|| Owner->IsPlayerUnitModel()
-			|| Owner->IsDead()
-			|| mTurnContextOrder.FindNode(TurnId) == nullptr;
-	});
-	return mPendingEnemyResponseTurnIds.IsEmpty() == false;
 }
 
 int32 USRPGCombatModel::FindPlayerTurnId() const

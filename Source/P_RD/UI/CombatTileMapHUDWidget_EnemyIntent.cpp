@@ -389,14 +389,14 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 			// 완료 토스트가 자동으로 닫힐 때까지 마지막 상태를 유지한다.
 		}
 		else if (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::EndTurnAndObserve
-			&& ((DirectIntervened != nullptr && HasResolvedIntentOutcome(*DirectIntervened))
-				|| (mEnemyIntentTutorialSawEnemyTurn && bCurrentTurnIsPlayer)))
+			&& mEnemyIntentTutorialSawEnemyTurn
+			&& bCurrentTurnIsPlayer)
 		{
 			mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::Complete;
 		}
 		else if (mEnemyIntentTutorialPullCompleted)
 		{
-			// 실제 행동 하나가 끝나면 자동으로 적 하나가 대응한다. 추가 스킬/턴 종료 입력을 요구하지 않는다.
+			// 플레이어 행동이 끝나면 살아 있는 적 전원이 자동으로 대응한다.
 			mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::EndTurnAndObserve;
 		}
 		else if (mEnemyIntentTutorialInterventionSubmitted)
@@ -437,12 +437,12 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 			DirectMessage = TEXT("도착할 때까지 잠깐 보세요");
 			break;
 		case EEnemyIntentTutorialStage::EndTurnAndObserve:
-			DirectTitle = TEXT("3 / 3   이제 적 한 명이 바로 대응합니다");
-			DirectMessage = TEXT("버튼을 누르지 않아도 됩니다 · 적 행동 하나 뒤 곧바로 내 차례가 돌아옵니다");
+			DirectTitle = TEXT("3 / 3   이제 모든 적이 차례로 대응합니다");
+			DirectMessage = TEXT("버튼을 누르지 않아도 됩니다 · 살아 있는 적이 전부 행동하면 내 차례입니다");
 			break;
 		case EEnemyIntentTutorialStage::Complete:
-			DirectTitle = TEXT("완료!  나 한 번, 적 한 번");
-			DirectMessage = TEXT("기동과 공격은 모두 한 행동입니다 · 행동이 끝나면 적 하나가 바로 대응합니다");
+			DirectTitle = TEXT("완료!  나 한 번, 적 무리 한 번");
+			DirectMessage = TEXT("내 행동이 끝나면 모든 적이 순서대로 한 번씩 행동합니다");
 			break;
 		default:
 			DirectTitle = TEXT("적을 직접 움직여 보세요");

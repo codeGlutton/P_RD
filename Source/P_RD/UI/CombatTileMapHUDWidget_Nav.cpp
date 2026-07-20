@@ -54,7 +54,7 @@ void UCombatTileMapHUDWidget::BindVictoryFlowEvents()
 		HandleEndCombatUI(MoveTemp(Barrier), Result);
 	});
 
-	// 한 행동씩 빠르게 주고받는 흐름에서는 턴/라운드 전환 영상을 재생하지 않는다.
+	// 플레이어와 적 무리가 빠르게 주고받는 흐름에서는 턴/라운드 전환 영상을 재생하지 않는다.
 	// HUD가 배리어를 붙잡지 않으므로 모델 방송이 끝나는 즉시 다음 턴이 시작된다.
 	if (CombatGameMode != nullptr)
 	{
