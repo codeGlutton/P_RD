@@ -46,18 +46,10 @@ class UUserWidget;
 enum class EEnemyIntentTutorialStage : uint8
 {
 	WaitingForIntent,
+	OpenGrip,
 	SelectPull,
-	SelectDice,
-	SelectTarget,
-	SelectThrowDestination,
 	ConfirmDestination,
 	ApplyingIntervention,
-	SelectThrow,
-	SelectThrowDice,
-	SelectThrowTarget,
-	ConfirmThrow,
-	ApplyingThrow,
-	ReviewResult,
 	EndTurnAndObserve,
 	Complete
 };
@@ -369,23 +361,22 @@ private:
 	/** @brief 머리 위 intent 배지에 쓸 짧은 행동 흐름/결과 문구를 만든다. */
 	static FText GetEnemyIntentWorldLabel(const FEnemyIntentUI& Intent);
 
-	/** @brief 현재 선택/주사위/미리보기/의도 결과에서 튜토리얼 단계를 양방향으로 맞추고 작은 안내 패널을 갱신한다. */
+	/** @brief 실제 행동군/세부 행동/드래그/적 전체 행동 상태에서 튜토리얼 단계를 맞추고 안내 패널을 갱신한다. */
 	void UpdateEnemyIntentTutorial();
 
-	/** @brief 문장 대신 실제 조작 위젯을 감싸는 테두리/화살표와 6단계 진행 표시를 매 프레임 갱신한다. */
+	/** @brief 실제 조작 위젯을 감싸는 테두리/화살표와 4단계 진행 표시를 매 프레임 갱신한다. */
 	void UpdateEnemyIntentTutorialVisuals(float InDeltaTime);
 
-	/** @brief 현재 튜토리얼 단계에 대응하는 실제 클릭 대상(스킬/주사위/적/턴 종료)을 찾는다. */
+	/** @brief 현재 튜토리얼 단계에 대응하는 실제 조작 대상(행동군/세부 행동/적/행동 순서판)을 찾는다. */
 	UWidget* ResolveEnemyIntentTutorialFocusWidget() const;
-	int32 GetEnemyIntentTutorialRecommendedDiceIndex() const;
 
 	/** @brief 튜토리얼 포커스 테두리와 화살표 조각을 일괄 표시하거나 숨긴다. */
 	void SetEnemyIntentTutorialOverlayVisible(bool bVisible) const;
 
-	/** @brief 텍스트 없는 6단계 진행 표시의 완료/현재/대기 색을 갱신한다. */
+	/** @brief 텍스트 없는 4단계 진행 표시의 완료/현재/대기 색을 갱신한다. */
 	void RefreshEnemyIntentTutorialProgress() const;
 
-	/** @brief 레거시 버튼 콜백이자 자동 완료 시 공통으로 쓰는 튜토리얼 종료 처리. */
+	/** @brief 완료 안내가 끝나면 코치마크를 닫고 전투 입력 표시를 원상 복구한다. */
 	UFUNCTION()
 	void HandleEnemyIntentTutorialContinue();
 
@@ -847,7 +838,7 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UTextBlock> mDisplacementCollisionLabel;
 
-	/** @brief 화면 상단의 짧은 2줄 설명과 6단계 진행 표시. 전투 입력을 막지 않는다. */
+	/** @brief 화면 상단의 짧은 2줄 설명과 4단계 진행 표시. 전투 입력을 막지 않는다. */
 	UPROPERTY(Transient)
 	TObjectPtr<UBorder> mEnemyIntentTutorialPanel;
 	UPROPERTY(Transient)
@@ -884,16 +875,11 @@ private:
 	EEnemyIntentTutorialStage mEnemyIntentTutorialStage = EEnemyIntentTutorialStage::WaitingForIntent;
 	float mEnemyIntentTutorialStageElapsed = 0.0f;
 	float mEnemyIntentTutorialPulseTime = 0.0f;
-	bool mEnemyIntentTutorialResultAcknowledged = false;
 	bool mEnemyIntentTutorialDismissed = false;
 	bool mEnemyIntentTutorialInterventionSubmitted = false;
 	bool mEnemyIntentTutorialPullCompleted = false;
 	bool mEnemyIntentTutorialSawEnemyTurn = false;
-	bool mEnemyIntentTutorialThrowSubmitted = false;
-	int32 mEnemyIntentTutorialPullPlanRevision = INDEX_NONE;
 	int32 mEnemyIntentTutorialIntervenedEnemyUnitId = INDEX_NONE;
-	FString mEnemyIntentTutorialCompletedEnemyName;
-	FString mEnemyIntentTutorialCompletedResult;
 
 	/** @brief 장비 칩(탑바 좌측 하단) 배경/문구 */
 	UPROPERTY(Transient)

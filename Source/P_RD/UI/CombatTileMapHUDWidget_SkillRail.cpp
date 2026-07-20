@@ -137,8 +137,8 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 		const bool bTutorialFocus = bOwned
 			&& Skill->mIsDisplacementSkill
 			&& Skill->mIsPullSkill
-			&& (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectPull
-				|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectThrow)
+			&& (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::OpenGrip
+				|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectPull)
 			&& mEnemyIntentTutorialDismissed == false;
 		const float DimOpacity = bUsable ? 1.0f : 0.45f;
 

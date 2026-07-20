@@ -242,10 +242,6 @@ void UCombatTileMapHUDWidget::HandleDisplacementConfirmClicked()
 		{
 			mEnemyIntentTutorialInterventionSubmitted = true;
 		}
-		else if (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::ConfirmThrow)
-		{
-			mEnemyIntentTutorialThrowSubmitted = true;
-		}
 		mCombatUIModel->RequestConfirmSkill();
 	}
 }

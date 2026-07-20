@@ -247,7 +247,7 @@ void UCombatTileMapHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 	UpdateUnitHpBars();   // 유닛 머리 위 HP바를 월드→스크린 투영으로 매 프레임 따라가게 한다.
 	UpdateContextActionLayout(); // 선택한 유닛 옆 행동 팔레트도 모델/카메라 이동을 따라간다.
 	UpdateDisplacementPreviewVisuals(InDeltaTime); // 대상·방향·착지·충돌을 바닥 셀 대신 월드 위에 직접 표시한다.
-	UpdateEnemyIntentTutorialVisuals(InDeltaTime); // HP바 위치가 정해진 뒤 실제 스킬/주사위/적/턴 종료에 포커스를 붙인다.
+	UpdateEnemyIntentTutorialVisuals(InDeltaTime); // HP바 위치가 정해진 뒤 실제 행동군/세부 행동/적/행동 순서판에 포커스를 붙인다.
 	UpdateFloatingCombatLogQueue(InDeltaTime); // 대기 중인 전투 로그를 순서대로 하나씩 스폰한다.
 	UpdateFloatingCombatLogs(InDeltaTime); // 머리 위 전투 로그(HP 증감 텍스트) 상승+페이드.
 	UpdateTurnRoundBanner(InDeltaTime);    // "N번째 턴" 배너 페이드.

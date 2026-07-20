@@ -259,12 +259,6 @@ void UCombatTileMapHUDWidget::RebuildOwnedDiceCards()
 /** @brief 보유 주사위 카드의 3D 캡처 숫자/색/선택/사용 상태를 현재 전투 스냅샷 기준으로 갱신한다. */
 void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 {
-	const bool bTutorialDicePrompt = (mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectDice
-		|| mEnemyIntentTutorialStage == EEnemyIntentTutorialStage::SelectThrowDice)
-		&& mEnemyIntentTutorialDismissed == false;
-	const int32 TutorialRecommendedDiceIndex = bTutorialDicePrompt
-		? GetEnemyIntentTutorialRecommendedDiceIndex()
-		: INDEX_NONE;
 	// 배치 완료 판정: 선택된 스킬의 요구 주사위 수(mDiceCost)만큼 선택됐는가.
 	// 완료 시 배치된 주사위=초록/나머지=회색, 미완료 시 배치된 주사위=노란색(기존)으로 칠한다.
 	int32 SelectedDiceCount = 0;
@@ -432,15 +426,9 @@ void UCombatTileMapHUDWidget::RefreshOwnedDiceCards()
 				FLinearColor CardColor = FLinearColor(1.0f, 1.0f, 1.0f, 0.01f);
 				if (DiceView.mIsSelected)
 				{
-					CardColor = bTutorialDicePrompt
-						? FLinearColor(1.0f, 0.68f, 0.08f, 0.66f)
-						: (bDiceAssignmentComplete
-							? FLinearColor(0.25f, 0.95f, 0.35f, 0.34f)
-							: FLinearColor(1.0f, 0.78f, 0.20f, 0.34f));
-				}
-				else if (DiceIndex == TutorialRecommendedDiceIndex)
-				{
-					CardColor = FLinearColor(1.0f, 0.68f, 0.08f, 0.42f);
+					CardColor = bDiceAssignmentComplete
+						? FLinearColor(0.25f, 0.95f, 0.35f, 0.34f)
+						: FLinearColor(1.0f, 0.78f, 0.20f, 0.34f);
 				}
 				else if (bDiceAssignmentComplete)
 				{

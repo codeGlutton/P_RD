@@ -1743,7 +1743,6 @@ bool UCombatTileMapHUDWidget::EndDirectUnitGesture(const FVector2D& ScreenPositi
 	if (bExecuted)
 	{
 		if (bIsPullSkill) { mEnemyIntentTutorialInterventionSubmitted = true; }
-		if (bIsThrowSkill || bGripSwap) { mEnemyIntentTutorialThrowSubmitted = true; }
 		mDirectArmedSkillIndex = INDEX_NONE;
 		mDirectArmedTargetUnitId = INDEX_NONE;
 	}
