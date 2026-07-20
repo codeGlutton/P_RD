@@ -49,6 +49,110 @@ void USRPGWarriorAreaAction::OnBeginAction()
 		MarkActionCompleted(ESRPGActionResult::Cancelled);
 		return;
 	}
+	if (TryStartAreaApproach() == false)
+	{
+		BeginAreaImpact();
+	}
+}
+
+bool USRPGWarriorAreaAction::TryStartAreaApproach()
+{
+	USRPGTurnContext* TurnContext = GetParent().Get();
+	USRPGCombatModel* CombatModel = TurnContext != nullptr ? TurnContext->GetParent() : nullptr;
+	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+	if (CombatModel == nullptr || TileMap == nullptr || mInstigator == nullptr)
+	{
+		return false;
+	}
+
+	const FTileIndex Origin = mInstigator->GetTileTransform().mIndex;
+	const int32 ApproachRange = mAreaActionType == ESRPGWarriorAreaActionType::Shockwave ? 3 : 2;
+	FTileIndex BestTile = FTileIndex::Invalid;
+	int32 BestScore = 0;
+	for (int32 DeltaY = -ApproachRange; DeltaY <= ApproachRange; ++DeltaY)
+	{
+		for (int32 DeltaX = -ApproachRange; DeltaX <= ApproachRange; ++DeltaX)
+		{
+			const FTileIndex Candidate(Origin.mX + DeltaX, Origin.mY + DeltaY);
+			if (Candidate == Origin || TileMap->IsValidIndex(Candidate) == false
+				|| TileMap->CanPlace(Candidate, mInstigator.Get()) == false)
+			{
+				continue;
+			}
+			int32 Score = 0;
+			for (const TObjectPtr<UUnitModel>& Unit : CombatModel->GetUnits())
+			{
+				const UEnemyUnitModel* Enemy = Cast<UEnemyUnitModel>(Unit);
+				if (Enemy == nullptr || Enemy->IsDead()
+					|| Enemy->GetTeamAttitudeTowards(*mInstigator) != ETeamAttitude::Hostile)
+				{
+					continue;
+				}
+				const FTileIndex EnemyTile = Enemy->GetTileTransform().mIndex;
+				if (FMath::Max(FMath::Abs(EnemyTile.mX - Candidate.mX), FMath::Abs(EnemyTile.mY - Candidate.mY)) <= mRadius)
+				{
+					++Score;
+				}
+			}
+			if (Score > BestScore)
+			{
+				BestScore = Score;
+				BestTile = Candidate;
+			}
+		}
+	}
+	if (BestTile == FTileIndex::Invalid)
+	{
+		return false;
+	}
+
+	mApproachFrom = Origin;
+	mApproachTo = BestTile;
+	const FTileTransform DestinationTransform(
+		BestTile,
+		UTileMapModel::TileDeltaToDirection(Origin, BestTile, mInstigator->GetTileTransform().mDirection));
+	TileMap->StartActorMovement(DestinationTransform, mInstigator.Get());
+	mInstigator->OnStartForcedMovePath.Broadcast(
+		{TileMap->TileToWorldLocation(Origin), TileMap->TileToWorldLocation(BestTile)},
+		mAreaActionType == ESRPGWarriorAreaActionType::Shockwave
+			? EForcedMovePresentationType::Leap
+			: EForcedMovePresentationType::BlinkStrike);
+	TSharedPtr<FPresentationBarrier> Barrier = FPresentationBarrier::Make(
+		FOnFinishPresentation::CreateWeakLambda(this, [this]() { OnAreaApproachFinished(); }));
+	mInstigator->OnStartMoveStep.Broadcast(
+		DestinationTransform,
+		TileMap->TileToWorldTransform(DestinationTransform),
+		Barrier,
+		0.0f);
+	return true;
+}
+
+void USRPGWarriorAreaAction::OnAreaApproachFinished()
+{
+	USRPGTurnContext* TurnContext = GetParent().Get();
+	USRPGCombatModel* CombatModel = TurnContext != nullptr ? TurnContext->GetParent() : nullptr;
+	if (CombatModel != nullptr && CombatModel->GetTileMap() != nullptr && mInstigator != nullptr)
+	{
+		CombatModel->GetTileMap()->CompleteActorMovement(mInstigator.Get());
+		CombatModel->NotifyWarriorSkillMovement(
+			mApproachFrom,
+			mApproachTo,
+			mAreaActionType == ESRPGWarriorAreaActionType::Shockwave
+				? NSLOCTEXT("WarriorArea", "ShockLanding", "충격 착지")
+				: NSLOCTEXT("WarriorArea", "WhirlwindEntry", "회전 돌입"));
+	}
+	BeginAreaImpact();
+}
+
+void USRPGWarriorAreaAction::BeginAreaImpact()
+{
+	USRPGTurnContext* TurnContext = GetParent().Get();
+	USRPGCombatModel* CombatModel = TurnContext != nullptr ? TurnContext->GetParent() : nullptr;
+	if (CombatModel == nullptr || mInstigator == nullptr || CombatModel->GetTileMap() == nullptr)
+	{
+		MarkActionCompleted(ESRPGActionResult::Cancelled);
+		return;
+	}
 
 	const FTileIndex Origin = mInstigator->GetTileTransform().mIndex;
 	TArray<TObjectPtr<UEnemyUnitModel>> Targets;

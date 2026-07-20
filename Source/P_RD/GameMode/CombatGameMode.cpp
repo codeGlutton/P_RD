@@ -56,6 +56,7 @@ namespace
 	const FName StaggerSkillAssetName(TEXT("DA_NomalDefense_Common"));
 	const FName SwapSkillAssetName(TEXT("DA_NomalHeal_Common"));
 	constexpr float InterventionSmashAimRange = 8.0f;
+	constexpr float IntegratedStrikeAimRange = 4.0f;
 
 	EEnemyIntentResultUI GetEnemyIntentResultUI(ESRPGEnemyIntentResult Result)
 	{
@@ -414,7 +415,7 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		RollDices();
 		break;
 	case ECombatInputType::Move:
-		// 일반 이동은 폐기했다. 위치 변경은 기동 행동군의 전투 스텝/돌진/도약만 사용한다.
+		// 일반 이동 버튼은 폐기했다. 위치 변경은 기동 행동군의 질풍 베기/돌진/도약만 사용한다.
 		break;
 	case ECombatInputType::EndTurn:
 		// 모든 성공 행동이 자동으로 교대하므로 수동 턴 종료 입력은 받지 않는다.
@@ -563,10 +564,6 @@ void ACombatGameMode::HandleWarriorMoveRequested(FWarriorMoveRequest Request)
 	{
 		return;
 	}
-	if (Request.mIsCombatStep && CombatModel->CanUseWarriorCombatStep() == false)
-	{
-		return;
-	}
 	// 보행/돌진은 한 칸이다. 도약만 중간 점유를 건너뛰는 단일 착지로 최대 3칸을 허용한다.
 	constexpr int32 MaximumSteps = 1;
 	if (Request.mPathTileIndexes.Num() - 1 > MaximumSteps)
@@ -603,14 +600,7 @@ void ACombatGameMode::HandleWarriorMoveRequested(FWarriorMoveRequest Request)
 	MoveCommand.mIsWarriorLeap = Request.mIsLeap;
 	MoveCommand.mActionPower = Request.mActionPower;
 	MoveCommand.mConsumeMovementPoints = false;
-	MoveCommand.mIsCombatStep = Request.mIsCombatStep;
-	const FTileIndex StepFrom = MoveCommand.mPathTileIndexes[0];
-	const FTileIndex StepTo = MoveCommand.mPathTileIndexes.Last();
-	const bool bSubmitted = CommandRouterModel->SummitCommand(MoveCastCommand);
-	if (bSubmitted && Request.mIsCombatStep)
-	{
-		CombatModel->NotifyPlayerCombatStep(StepFrom, StepTo);
-	}
+	CommandRouterModel->SummitCommand(MoveCastCommand);
 }
 
 void ACombatGameMode::HandleWarriorAreaActionRequested(ESRPGWarriorAreaActionType ActionType)
@@ -1008,17 +998,17 @@ void ACombatGameMode::PushSkillUIData() const
 			SkillUIData.mIsSwapSkill = bIsSwap;
 			SkillUIData.mTargeting.mSelectShape = bIsDisplacement
 				? ECombatSkillSelectShapeUI::Square
-				: GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
+				: ECombatSkillSelectShapeUI::Square;
 			SkillUIData.mTargeting.mSelectRange = bIsPull || bIsStagger
 				? InterventionSmashAimRange
-				: (bIsSmash || bIsSwap ? 1.0f : StaticCast<float>(StaticSkillData->mAimRangeDefaultValue));
-			SkillUIData.mTargeting.mSelectRangeRatio = bIsDisplacement ? 0.0f : StaticSkillData->mAimRangeRatio;
+				: (bIsSmash || bIsSwap ? 1.0f : IntegratedStrikeAimRange);
+			SkillUIData.mTargeting.mSelectRangeRatio = 0.0f;
 			SkillUIData.mTargeting.mHitShape = bIsDisplacement
 				? ECombatSkillHitShapeUI::Single
 				: GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
 			SkillUIData.mTargeting.mHitRange = bIsDisplacement ? 0.0f : StaticCast<float>(StaticSkillData->mEffectAreaDefaultValue);
 			SkillUIData.mTargeting.mHitRangeRatio = bIsDisplacement ? 0.0f : StaticSkillData->mEffectAreaRatio;
-			SkillUIData.mTargeting.mIsIndirect = bIsDisplacement || StaticSkillData->mIsIndirect;
+			SkillUIData.mTargeting.mIsIndirect = true;
 			SkillUIData.mTargeting.mIsPenetration = StaticSkillData->mIsPenetration;
 		}
 	}
@@ -1212,14 +1202,13 @@ void ACombatGameMode::PushEnemyIntentUIData() const
 		IntentUI.mWarriorMomentum = CombatModel->GetWarriorMomentum();
 		IntentUI.mWarriorFlow = CombatModel->GetWarriorFlow();
 		IntentUI.mStandstillPressure = CombatModel->GetStandstillPressure();
-		IntentUI.mCombatStepAvailable = CombatModel->CanUseWarriorCombatStep();
 		IntentUI.mMovementDangerLabel = CombatModel->GetMovementDangerLabel();
 		IntentUI.mWarriorStanceLabel = CombatModel->GetWarriorAftermathStanceLabel();
 
 		if (IsValid(Intent.mEnemy))
 		{
 			IntentUI.mEnemyUnitId = Intent.mEnemy->GetModelId();
-			IntentUI.mEnemyName = Intent.mEnemy->GetBoardActorDisplayName();
+			IntentUI.mEnemyName = Intent.mEnemy->GetCombatRoleDisplayName();
 			switch (Intent.mEnemy->GetDisplacementWeight())
 			{
 			case ESRPGDisplacementWeight::Light:
@@ -1249,7 +1238,7 @@ void ACombatGameMode::PushEnemyIntentUIData() const
 		Warning.mEnemyName = NSLOCTEXT("CombatGameMode", "IncomingReinforcement", "증원 예고");
 		Warning.mActionName = NSLOCTEXT("CombatGameMode", "ArrivesNextRound", "다음 내 차례에 등장");
 		Warning.mGoalText = FText::Format(
-			NSLOCTEXT("CombatGameMode", "ReinforcementTileWarning", "주황 타일 ({0},{1}) · 등장 즉시 행동하지 않음"),
+			NSLOCTEXT("CombatGameMode", "ReinforcementTileWarning", "주황 타일 ({0},{1}) · 기술 착지로 선점하면 등장 행동 상실 + FLOW"),
 			FText::AsNumber(SpawnTransform.mIndex.mX),
 			FText::AsNumber(SpawnTransform.mIndex.mY));
 		Warning.mPlannedOrigin = SpawnTransform.mIndex;
@@ -1262,7 +1251,6 @@ void ACombatGameMode::PushEnemyIntentUIData() const
 		Warning.mWarriorMomentum = CombatModel->GetWarriorMomentum();
 		Warning.mWarriorFlow = CombatModel->GetWarriorFlow();
 		Warning.mStandstillPressure = CombatModel->GetStandstillPressure();
-		Warning.mCombatStepAvailable = CombatModel->CanUseWarriorCombatStep();
 		Warning.mMovementDangerLabel = CombatModel->GetMovementDangerLabel();
 		Warning.mWarriorStanceLabel = CombatModel->GetWarriorAftermathStanceLabel();
 	}
@@ -1334,12 +1322,18 @@ void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 	{
 		const bool bIsSmash = StaticSkillData->GetFName() == SmashSkillAssetName;
 		const bool bIsPull = StaticSkillData->GetFName() == PullSkillAssetName;
-		const bool bIsDisplacement = bIsSmash || bIsPull;
+		const bool bIsStagger = StaticSkillData->GetFName() == StaggerSkillAssetName;
+		const bool bIsSwap = StaticSkillData->GetFName() == SwapSkillAssetName;
+		const bool bIsDisplacement = bIsSmash || bIsPull || bIsStagger || bIsSwap;
 		SkillDetailUIData.mName = bIsPull
 			? NSLOCTEXT("CombatGameMode", "GripSkillName", "손아귀")
 			: (bIsSmash
 				? NSLOCTEXT("CombatGameMode", "ThrowSkillName", "붙잡아 던지기")
-				: StaticSkillData->mName);
+				: (bIsStagger
+					? NSLOCTEXT("CombatGameMode", "StaggerSkillName", "측면 다리 걸기")
+					: (bIsSwap
+						? NSLOCTEXT("CombatGameMode", "SwapSkillName", "자리 바꾸기")
+						: NSLOCTEXT("CombatGameMode", "IntegratedSlashName", "관통 베기"))));
 		SkillDetailUIData.mDescription = bIsSmash
 			? NSLOCTEXT(
 				"CombatGameMode",
@@ -1350,22 +1344,26 @@ void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 					"CombatGameMode",
 					"GripSkillDescription",
 					"[손아귀] 먼 적은 기사 주변으로 끌어오고, 인접한 적은 드래그한 방향으로 던집니다. 기사 칸에 놓으면 서로 자리를 바꾸며, 적이나 장애물 쪽으로 던지면 충돌합니다.")
-				: StaticSkillData->mDescription);
+				: (bIsStagger
+					? NSLOCTEXT("CombatGameMode", "StaggerDescription", "[측면 다리 걸기] 선택한 적 옆으로 즉시 파고든 뒤 넘어뜨려 다음 이동을 줄입니다.")
+					: (bIsSwap
+						? NSLOCTEXT("CombatGameMode", "SwapDescription", "[자리 바꾸기] 적을 베며 서로의 칸을 즉시 교환합니다.")
+						: NSLOCTEXT("CombatGameMode", "IntegratedSlashDescription", "[관통 베기] 사거리 안의 적을 탭하면 적 뒤의 빈 칸으로 순간 이동하며 한 번에 벱니다."))));
 		SkillDetailUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 		SkillDetailUIData.mDiceCost = 0;
 		SkillDetailUIData.mTargeting.mSelectShape = bIsDisplacement
 			? ECombatSkillSelectShapeUI::Square
-			: GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
-		SkillDetailUIData.mTargeting.mSelectRange = bIsPull
+			: ECombatSkillSelectShapeUI::Square;
+		SkillDetailUIData.mTargeting.mSelectRange = bIsPull || bIsStagger
 			? InterventionSmashAimRange
-			: (bIsSmash ? 1.0f : StaticCast<float>(StaticSkillData->mAimRangeDefaultValue));
-		SkillDetailUIData.mTargeting.mSelectRangeRatio = bIsDisplacement ? 0.0f : StaticSkillData->mAimRangeRatio;
+			: (bIsSmash || bIsSwap ? 1.0f : IntegratedStrikeAimRange);
+		SkillDetailUIData.mTargeting.mSelectRangeRatio = 0.0f;
 		SkillDetailUIData.mTargeting.mHitShape = bIsDisplacement
 			? ECombatSkillHitShapeUI::Single
 			: GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
 		SkillDetailUIData.mTargeting.mHitRange = bIsDisplacement ? 0.0f : StaticCast<float>(StaticSkillData->mEffectAreaDefaultValue);
 		SkillDetailUIData.mTargeting.mHitRangeRatio = bIsDisplacement ? 0.0f : StaticSkillData->mEffectAreaRatio;
-		SkillDetailUIData.mTargeting.mIsIndirect = bIsDisplacement || StaticSkillData->mIsIndirect;
+		SkillDetailUIData.mTargeting.mIsIndirect = true;
 		SkillDetailUIData.mTargeting.mIsPenetration = StaticSkillData->mIsPenetration;
 	}
 

@@ -31,6 +31,7 @@ namespace
 	const FName DiceSwapSkillAssetName(TEXT("DA_NomalHeal_Common"));
 	constexpr int32 LongDisplacementAimRange = 8;
 	constexpr int32 AdjacentDisplacementAimRange = 1;
+	constexpr int32 IntegratedStrikeAimRange = 4;
 
 	bool IsPlayerDisplacementSkill(const UStaticSkillData* SkillData, const UUnitModel* OwnerUnit)
 	{
@@ -749,14 +750,20 @@ TArray<FTileIndex> USkillComponentModel::GetAimableTiles(UTileMapModel* MapModel
 	const bool bIsDisplacement = IsPlayerDisplacementSkill(
 		StaticSkillData,
 		GetOwnerModel<UUnitModel>());
+	const bool bIsPlayerIntegratedStrike = bIsDisplacement == false
+		&& GetOwnerModel<UUnitModel>() != nullptr
+		&& GetOwnerModel<UUnitModel>()->IsPlayerUnitModel();
 	// 위치 개입 스킬의 주사위 합은 강제 이동 거리에만 쓰고, 조준 사거리는 역할별 고정값을 쓴다.
 	// 당기기/다리 걸기는 원거리(8), 던지기/자리 바꾸기는 인접(1)이며 UI 표기와 실제 판정이 같다.
 	const float AimRange = bIsDisplacement
 		? StaticCast<float>(GetPlayerDisplacementAimRange(StaticSkillData))
-		: StaticSkillData->mAimRangeDefaultValue + DiceSum * StaticSkillData->mAimRangeRatio;
-	const EAimPattern Pattern = bIsDisplacement ? EAimPattern::Square : StaticSkillData->mAimPattern;
-	const bool CanAimObstacle = bIsDisplacement || StaticSkillData->mCanAimBoardActor;
-	const bool IsIndirect = bIsDisplacement || StaticSkillData->mIsIndirect;
+		: (bIsPlayerIntegratedStrike
+			? StaticCast<float>(IntegratedStrikeAimRange)
+			: StaticSkillData->mAimRangeDefaultValue + DiceSum * StaticSkillData->mAimRangeRatio);
+	const EAimPattern Pattern = bIsDisplacement || bIsPlayerIntegratedStrike
+		? EAimPattern::Square : StaticSkillData->mAimPattern;
+	const bool CanAimObstacle = bIsDisplacement || bIsPlayerIntegratedStrike || StaticSkillData->mCanAimBoardActor;
+	const bool IsIndirect = bIsDisplacement || bIsPlayerIntegratedStrike || StaticSkillData->mIsIndirect;
 
 	AimableTiles = MapModel->GetAimableTiles(
 		GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex,

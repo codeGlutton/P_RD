@@ -43,9 +43,15 @@ namespace
 			case ESRPGEnemyMovementRole::Anchor:
 				return NSLOCTEXT("EnemyIntent", "GoalAnchor", "포자 포격 · 밀치고 위험 지대 생성 · 다음 행동 전 이탈 필요");
 			case ESRPGEnemyMovementRole::Flanker:
-				return NSLOCTEXT("EnemyIntent", "GoalFlanker", "거미줄 사냥 · 당기고 속박 · 전투 스텝으로 끊기");
+				return NSLOCTEXT("EnemyIntent", "GoalFlanker", "거미줄 사냥 · 당기고 속박 · 이동이 붙은 기술로 끊기");
 			case ESRPGEnemyMovementRole::Slider:
 				return NSLOCTEXT("EnemyIntent", "GoalSlider", "탄성 돌진 · 경로를 밀며 압박 누적 · 같은 칸 반복 금지");
+			case ESRPGEnemyMovementRole::Bulwark:
+				return NSLOCTEXT("EnemyIntent", "GoalBulwark", "방패 압박 · 명중하면 한 칸 밀쳐내고 길목 점유");
+			case ESRPGEnemyMovementRole::Lancer:
+				return NSLOCTEXT("EnemyIntent", "GoalLancer", "직선 돌진 · 경로에 낀 유닛과 충돌");
+			case ESRPGEnemyMovementRole::Bomber:
+				return NSLOCTEXT("EnemyIntent", "GoalBomber", "화약 폭발 · 목표 칸 주변까지 함께 피해");
 			case ESRPGEnemyMovementRole::Standard:
 			default:
 				break;
@@ -917,6 +923,16 @@ UEnemyUnitModel* USRPGCombatModel::SpawnOneReinforcementAt(const FTileTransform&
 	Placement.mTransform = SpawnTransform;
 	Placement.mTurnPriority = 100 + mTotalReinforcementsSpawned;
 	UEnemyUnitModel* SpawnedEnemy = RegisterEnemyUnit(Placement);
+	if (SpawnedEnemy != nullptr)
+	{
+		static constexpr ESRPGEnemyMovementRole ReinforcementRoles[] = {
+			ESRPGEnemyMovementRole::Lancer,
+			ESRPGEnemyMovementRole::Bomber,
+			ESRPGEnemyMovementRole::Bulwark,
+		};
+		SpawnedEnemy->SetMovementRoleOverride(
+			ReinforcementRoles[mTotalReinforcementsSpawned % UE_ARRAY_COUNT(ReinforcementRoles)]);
+	}
 	++mTotalReinforcementsSpawned;
 	UE_LOG(
 		LogSRPGCombat,
@@ -1049,7 +1065,6 @@ void USRPGCombatModel::NotifyRoundStartIfNeeded(TSharedPtr<FPresentationBarrier>
 	if (mTurnContextOrder.IsEmpty() == false && mCurTurnContextOrder == mTurnContextOrder.GetHead())
 	{
 		++mRoundCount;
-		mCombatStepUsedThisRound = false;
 		mPlayerMovedThisRound = false;
 		if (mExecutionOpportunityExpireRound != INDEX_NONE
 			&& mRoundCount > mExecutionOpportunityExpireRound)
@@ -1263,26 +1278,15 @@ int32 USRPGCombatModel::GetRoundCount() const
 	return mRoundCount;
 }
 
-bool USRPGCombatModel::CanUseWarriorCombatStep() const
-{
-	const USRPGTurnContext* CurrentTurn = GetCurrentTurnContext();
-	return mCombatPhase == ESRPGCombatRoomPhase::CombatPlay
-		&& mCombatStepUsedThisRound == false
-		&& mPlayerUnit != nullptr
-		&& mPlayerUnit->IsDead() == false
-		&& CurrentTurn != nullptr
-		&& CurrentTurn->GetOwner() == mPlayerUnit;
-}
-
 FText USRPGCombatModel::GetMovementDangerLabel() const
 {
 	if (mExecutionOpportunityTile != FTileIndex::Invalid)
 	{
-		return NSLOCTEXT("WarriorFlow", "ExecutionOpportunity", "충돌 균열! 표시된 적 곁으로 스텝하면 FLOW 최대");
+		return NSLOCTEXT("WarriorFlow", "ExecutionOpportunity", "충돌 균열! 다음 기술의 착지를 표시된 적 곁에 두면 FLOW 최대");
 	}
 	if (mTetheringEnemy.IsValid())
 	{
-		return NSLOCTEXT("WarriorFlow", "TetherDanger", "거미줄에 묶임 · 전투 스텝으로 끊기");
+		return NSLOCTEXT("WarriorFlow", "TetherDanger", "거미줄에 묶임 · 이동이 붙은 기술로 끊기");
 	}
 	if (mPersistentMovementHazardTile != FTileIndex::Invalid && mPlayerUnit != nullptr
 		&& mPlayerUnit->GetTileTransform().mIndex == mPersistentMovementHazardTile)
@@ -1297,18 +1301,18 @@ FText USRPGCombatModel::GetMovementDangerLabel() const
 	{
 		return NSLOCTEXT("WarriorFlow", "AnchorWindow", "닻 자세 발동 · 한 번 더 머물면 포위 압박");
 	}
-	return CanUseWarriorCombatStep()
-		? NSLOCTEXT("WarriorFlow", "StepReady", "FREE STEP · 기사를 인접 칸으로 드래그")
-		: NSLOCTEXT("WarriorFlow", "StepSpent", "전투 스텝 사용함");
+	return NSLOCTEXT("WarriorFlow", "SkillMovementReady", "모든 기술이 이동+타격 · 착지 칸이 곧 다음 전술 위치");
 }
 
-void USRPGCombatModel::NotifyPlayerCombatStep(const FTileIndex& From, const FTileIndex& To)
+void USRPGCombatModel::NotifyWarriorSkillMovement(
+	const FTileIndex& From,
+	const FTileIndex& To,
+	const FText& SkillName)
 {
-	if (CanUseWarriorCombatStep() == false || From == To)
+	if (mPlayerUnit == nullptr || mPlayerUnit->IsDead() || From == To)
 	{
 		return;
 	}
-	mCombatStepUsedThisRound = true;
 	mPlayerMovedThisRound = true;
 	mWarriorFlow = FMath::Clamp(mWarriorFlow + 1, 0, 3);
 	mStandstillPressure = FMath::Max(mStandstillPressure - 1, 0);
@@ -1328,26 +1332,15 @@ void USRPGCombatModel::NotifyPlayerCombatStep(const FTileIndex& From, const FTil
 	}
 	mTetheringEnemy.Reset();
 	AddWarriorCombo(1);
+	UE_LOG(LogSRPGCombat, Verbose, TEXT("전사 스킬 이동: %s (%d,%d)->(%d,%d)"),
+		*SkillName.ToString(), From.mX, From.mY, To.mX, To.mY);
 	BroadcastEnemyIntentChanged();
 	RefreshEnemyIntentHighlights();
 }
 
 FText USRPGCombatModel::GetWarriorAftermathStanceLabel() const
 {
-	switch (mWarriorAftermathStance)
-	{
-	case ESRPGWarriorAftermathStance::Guard:
-		return NSLOCTEXT("WarriorFlow", "GuardStance", "검 반격 · 첫 위협 패링");
-	case ESRPGWarriorAftermathStance::Tether:
-		return NSLOCTEXT("WarriorFlow", "TetherStance", "사슬 반동 · 붙잡은 적의 이동 저지");
-	case ESRPGWarriorAftermathStance::Trip:
-		return NSLOCTEXT("WarriorFlow", "TripStance", "넘어뜨림 · 대상의 첫 이동 차단");
-	case ESRPGWarriorAftermathStance::Mobility:
-		return NSLOCTEXT("WarriorFlow", "MobilityStance", "기동 반격 · 접근하는 적 어깨치기");
-	case ESRPGWarriorAftermathStance::None:
-	default:
-		return NSLOCTEXT("WarriorFlow", "NoStance", "반응 태세 없음");
-	}
+	return NSLOCTEXT("WarriorFlow", "SelfContainedSkills", "후속 행동 없음 · 이동과 타격을 기술 안에서 즉시 해결");
 }
 
 const TArray<FSRPGEnemyIntent>& USRPGCombatModel::GetEnemyIntents() const
@@ -1584,6 +1577,18 @@ bool USRPGCombatModel::RebuildEnemyIntentPlan(FSRPGEnemyIntent& Intent, bool bPr
 				: NSLOCTEXT("EnemyIntent", "SlimeSignatureMoveName", "탄성 돌진");
 		}
 		break;
+	case ESRPGEnemyMovementRole::Bulwark:
+		Intent.mSkillName = FText::Format(
+			NSLOCTEXT("EnemyIntent", "BulwarkSignatureName", "방패 압박 → {0}"), Intent.mSkillName);
+		break;
+	case ESRPGEnemyMovementRole::Lancer:
+		Intent.mSkillName = FText::Format(
+			NSLOCTEXT("EnemyIntent", "LancerSignatureName", "직선 돌진 → {0}"), Intent.mSkillName);
+		break;
+	case ESRPGEnemyMovementRole::Bomber:
+		Intent.mSkillName = FText::Format(
+			NSLOCTEXT("EnemyIntent", "BomberSignatureName", "화약 폭발 → {0}"), Intent.mSkillName);
+		break;
 	case ESRPGEnemyMovementRole::Standard:
 	default:
 		break;
@@ -1811,14 +1816,14 @@ void USRPGCombatModel::ActivateWarriorAftermath(const USRPGAction* Action)
 		? mPlayerUnit->GetTileTransform().mIndex
 		: FTileIndex::Invalid;
 	const USRPGMoveAction* MoveAction = Cast<USRPGMoveAction>(Action);
-	if (MoveAction != nullptr
-		&& CurrentPlayerTile != FTileIndex::Invalid
+	if (CurrentPlayerTile != FTileIndex::Invalid
 		&& CurrentPlayerTile != mPlayerRoundStartTile
 		&& mPlayerMovedThisRound == false)
 	{
-		mPlayerMovedThisRound = true;
-		mWarriorFlow = FMath::Clamp(mWarriorFlow + 1, 0, 3);
-		mStandstillPressure = FMath::Max(mStandstillPressure - 1, 0);
+		NotifyWarriorSkillMovement(
+			mPlayerRoundStartTile,
+			CurrentPlayerTile,
+			NSLOCTEXT("WarriorFlow", "FallbackSkillMovement", "전사 기술"));
 	}
 	if (MoveAction != nullptr && MoveAction->IsWarriorLeap())
 	{
@@ -1858,33 +1863,13 @@ void USRPGCombatModel::ActivateWarriorAftermath(const USRPGAction* Action)
 		}
 	}
 
-	ESRPGWarriorAftermathStance NextStance = mPendingWarriorAftermathStance;
-	if (MoveAction != nullptr)
-	{
-		NextStance = ESRPGWarriorAftermathStance::Mobility;
-	}
-	else if (Cast<USRPGWarriorAreaAction>(Action) != nullptr)
-	{
-		NextStance = ESRPGWarriorAftermathStance::Guard;
-	}
-	else if (NextStance == ESRPGWarriorAftermathStance::None)
-	{
-		NextStance = ESRPGWarriorAftermathStance::Guard;
-	}
-	mWarriorAftermathStance = NextStance;
-	// 첫 제자리 행동은 닻 자세로 반격을 하나 더 얻는다. 같은 칸을 반복하면 다음부터는
-	// 포위 압박이 이 이득을 추월하므로 "절대 움직이지 않기"가 정답이 되지 않는다.
-	const int32 AnchorReaction = mPlayerMovedThisRound == false && mStandstillPressure == 1 ? 1 : 0;
-	mWarriorAftermathReactions = 1 + (mWarriorMomentum >= 2 ? 1 : 0) + AnchorReaction;
+	// 자동 발차기/패링/사슬 반동 같은 후속 행동은 두지 않는다. 각 기술이 자신의 이동과
+	// 충돌을 끝낸 뒤 적 페이즈로 한 번만 넘어가야 입력·재계산 순서가 흔들리지 않는다.
+	mWarriorAftermathStance = ESRPGWarriorAftermathStance::None;
+	mWarriorAftermathReactions = 0;
 	mPendingWarriorAftermathStance = ESRPGWarriorAftermathStance::None;
+	mWarriorAftermathTarget.Reset();
 	AddWarriorCombo(1);
-	const TWeakObjectPtr<UUnitModel> StanceTarget = mWarriorAftermathTarget;
-	ResolveWarriorFlowFollowUp();
-	if (NextStance == ESRPGWarriorAftermathStance::Tether
-		|| NextStance == ESRPGWarriorAftermathStance::Trip)
-	{
-		mWarriorAftermathTarget = StanceTarget;
-	}
 	BroadcastEnemyIntentChanged();
 }
 
@@ -1907,67 +1892,49 @@ UBoardActorModel* USRPGCombatModel::FindBlockingActorAt(
 	return nullptr;
 }
 
-void USRPGCombatModel::ResolveWarriorFlowFollowUp()
+void USRPGCombatModel::ResolveWarriorMobilityImpact(UUnitModel* Warrior, bool bLeapImpact)
 {
-	if (mPlayerMovedThisRound == false || mWarriorFlow <= 0
-		|| mPlayerUnit == nullptr || mPlayerUnit->IsDead() || mTileMap == nullptr)
+	if (Warrior == nullptr || Warrior != mPlayerUnit || Warrior->IsDead() || mTileMap == nullptr)
 	{
 		return;
 	}
-	const FTileIndex PlayerTile = mPlayerUnit->GetTileTransform().mIndex;
-	UUnitModel* KickTarget = nullptr;
+	const FTileIndex PlayerTile = Warrior->GetTileTransform().mIndex;
+	TArray<UEnemyUnitModel*> Targets;
 	for (const TObjectPtr<UUnitModel>& Unit : mUnits)
 	{
-		if (Unit == nullptr || Unit == mPlayerUnit || Unit->IsDead())
+		UEnemyUnitModel* Enemy = Cast<UEnemyUnitModel>(Unit);
+		if (Enemy == nullptr || Enemy->IsDead()
+			|| Enemy->GetTeamAttitudeTowards(*Warrior) != ETeamAttitude::Hostile)
 		{
 			continue;
 		}
-		const FTileIndex UnitTile = Unit->GetTileTransform().mIndex;
+		const FTileIndex UnitTile = Enemy->GetTileTransform().mIndex;
 		if (FMath::Max(FMath::Abs(UnitTile.mX - PlayerTile.mX), FMath::Abs(UnitTile.mY - PlayerTile.mY)) == 1)
 		{
-			KickTarget = Unit;
-			break;
+			Targets.Add(Enemy);
 		}
 	}
-	if (KickTarget == nullptr)
+	for (UEnemyUnitModel* Target : Targets)
 	{
-		return;
+		const int32 HitCount = bLeapImpact ? 5 : 3;
+		for (int32 Hit = 0; Hit < HitCount; ++Hit)
+		{
+			ApplyIntentCollisionDamage(Cast<IBoardCombatTarget>(Target));
+		}
+		BroadcastCollisionPresentation(mTileMap, Warrior, Target);
+		AddWarriorCombo(1);
+		if (FSRPGEnemyIntent* Intent = FindEnemyIntent(Target))
+		{
+			Intent->mResultText = FText::Format(
+				NSLOCTEXT("WarriorFlow", "MobilityImpactResult", "{0}\n{1} 착지 타격 · 이동 액션 안에서 즉시 해결"),
+				Intent->mResultText,
+				bLeapImpact
+					? NSLOCTEXT("WarriorFlow", "LeapAssault", "도약 강습")
+					: NSLOCTEXT("WarriorFlow", "StepSlash", "질풍 베기"));
+		}
 	}
-
-	ApplyIntentCollisionDamage(Cast<IBoardCombatTarget>(KickTarget));
-	BroadcastCollisionPresentation(mTileMap, mPlayerUnit, KickTarget);
-	AddWarriorCombo(1);
-	const FTileIndex From = KickTarget->GetTileTransform().mIndex;
-	const FTileIndex Step(
-		FMath::Sign(From.mX - PlayerTile.mX),
-		FMath::Sign(From.mY - PlayerTile.mY));
-	const FTileIndex To(From.mX + Step.mX, From.mY + Step.mY);
-	UBoardActorModel* Blocker = FindBlockingActorAt(To, KickTarget);
-	if (mTileMap->IsValidIndex(To) && Blocker == nullptr && mTileMap->CanPlace(To, KickTarget))
-	{
-		const TArray<FVector> KickPath = {
-			mTileMap->TileToWorldLocation(From),
-			mTileMap->TileToWorldLocation(To)
-		};
-		KickTarget->OnStartForcedMovePath.Broadcast(KickPath, EForcedMovePresentationType::Push);
-		const FTileTransform Destination(
-			To,
-			UTileMapModel::TileDeltaToDirection(From, To, KickTarget->GetTileTransform().mDirection));
-		mTileMap->StartActorMovement(Destination, KickTarget);
-		mTileMap->CompleteActorMovement(KickTarget);
-		ReportPlayerDisplacement(KickTarget, From, To, mWarriorFlow, ESRPGPlayerDisplacementType::Push);
-		mPendingWarriorAftermathStance = ESRPGWarriorAftermathStance::None;
-	}
-	else if (Blocker != nullptr)
-	{
-		ReportPlayerDisplacementCollision(KickTarget, Blocker, ESRPGPlayerDisplacementType::Push);
-	}
-	if (FSRPGEnemyIntent* Intent = FindEnemyIntent(KickTarget))
-	{
-		Intent->mResultText = FText::Format(
-			NSLOCTEXT("WarriorFlow", "FlowKickResult", "{0}\n흐름 후속타! 이동 직후 자동 발차기"),
-			Intent->mResultText);
-	}
+	BroadcastEnemyIntentChanged();
+	RefreshEnemyIntentHighlights();
 }
 
 bool USRPGCombatModel::TryResolveWarriorAftermath(FSRPGEnemyIntent& Intent)
@@ -2212,7 +2179,7 @@ void USRPGCombatModel::ReportPlayerDisplacementCollision(
 	}
 	BroadcastCollisionPresentation(mTileMap, Target, Blocker);
 	AddWarriorCombo(2);
-	// 충돌 지점을 다음 플레이어 차례까지 남긴다. 해당 적 곁으로 전투 스텝을 밟으면
+	// 충돌 지점을 다음 플레이어 차례까지 남긴다. 해당 적 곁으로 기술 착지를 잡으면
 	// 무기를 다시 휘두를 공간을 회수했다는 의미로 FLOW가 즉시 최대가 된다.
 	mExecutionOpportunityTile = Target->GetTileTransform().mIndex;
 	mExecutionOpportunityExpireRound = mRoundCount + 1;
@@ -2369,12 +2336,27 @@ void USRPGCombatModel::ResolveFixedIntentAttack(UUnitModel* Enemy, const TArray<
 			case ESRPGEnemyMovementRole::Flanker:
 				mTetheringEnemy = Cast<UEnemyUnitModel>(Enemy);
 				AppendEnemyIntentResult(*Intent, ESRPGEnemyIntentResult::HitPlayer,
-					NSLOCTEXT("EnemyIntent", "FlankerTether", "거미줄 속박 · 다음 전투 스텝으로 끊지 않으면 1 피해"));
+					NSLOCTEXT("EnemyIntent", "FlankerTether", "거미줄 속박 · 다음 이동 기술로 끊지 않으면 1 피해"));
 				break;
 			case ESRPGEnemyMovementRole::Slider:
 				mStandstillPressure = FMath::Clamp(mStandstillPressure + 1, 0, 3);
 				AppendEnemyIntentResult(*Intent, ESRPGEnemyIntentResult::HitPlayer,
 					NSLOCTEXT("EnemyIntent", "SliderPressure", "탄성 압박 · 제자리에 버틸 공간이 줄어듦"));
+				break;
+			case ESRPGEnemyMovementRole::Bulwark:
+				mStandstillPressure = FMath::Clamp(mStandstillPressure + 1, 0, 3);
+				AppendEnemyIntentResult(*Intent, ESRPGEnemyIntentResult::HitPlayer,
+					NSLOCTEXT("EnemyIntent", "BulwarkPressure", "방패 압박 · 다음 기술의 착지 칸을 바꿔 포위를 벗어나야 함"));
+				break;
+			case ESRPGEnemyMovementRole::Lancer:
+				mStandstillPressure = FMath::Clamp(mStandstillPressure + 1, 0, 3);
+				AppendEnemyIntentResult(*Intent, ESRPGEnemyIntentResult::HitPlayer,
+					NSLOCTEXT("EnemyIntent", "LancerPressure", "창 돌진 적중 · 제자리 압박 증가"));
+				break;
+			case ESRPGEnemyMovementRole::Bomber:
+				mPersistentMovementHazardTile = Intent->mTargetTile;
+				AppendEnemyIntentResult(*Intent, ESRPGEnemyIntentResult::HitPlayer,
+					NSLOCTEXT("EnemyIntent", "BomberHazard", "화약 잔불 · 다음 기술로 이 칸을 떠나야 함"));
 				break;
 			case ESRPGEnemyMovementRole::Standard:
 			default:
@@ -2398,6 +2380,31 @@ void USRPGCombatModel::ResolveFixedIntentAttack(UUnitModel* Enemy, const TArray<
 	{
 		AppendEnemyIntentResult(*Intent, ESRPGEnemyIntentResult::Missed,
 			NSLOCTEXT("EnemyIntent", "AttackMissed", "공격 빗나감! 예정 타일이 비어 있음"));
+	}
+	if (const UEnemyUnitModel* ActingEnemy = Cast<UEnemyUnitModel>(Enemy);
+		ActingEnemy != nullptr && ActingEnemy->GetMovementRole() == ESRPGEnemyMovementRole::Bomber
+		&& Intent->mTargetTile != FTileIndex::Invalid)
+	{
+		int32 BlastVictims = 0;
+		for (const TObjectPtr<UUnitModel>& Unit : mUnits)
+		{
+			if (Unit == nullptr || Unit == Enemy || Unit->IsDead())
+			{
+				continue;
+			}
+			const FTileIndex Tile = Unit->GetTileTransform().mIndex;
+			if (FMath::Max(FMath::Abs(Tile.mX - Intent->mTargetTile.mX), FMath::Abs(Tile.mY - Intent->mTargetTile.mY)) <= 1)
+			{
+				ApplyIntentCollisionDamage(Cast<IBoardCombatTarget>(Unit));
+				BroadcastCollisionPresentation(mTileMap, Enemy, Unit);
+				++BlastVictims;
+			}
+		}
+		AppendEnemyIntentResult(*Intent,
+			BlastVictims > 0 ? ESRPGEnemyIntentResult::Collision : ESRPGEnemyIntentResult::Missed,
+			FText::Format(
+				NSLOCTEXT("EnemyIntent", "BomberBlastResult", "화약 폭발! 목표 주변 {0}명 충격 피해"),
+				FText::AsNumber(BlastVictims)));
 	}
 
 	BroadcastEnemyIntentChanged();

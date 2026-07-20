@@ -6,7 +6,6 @@
 #include "Components/CanvasPanel.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
-#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/CombatTileMapHUDWidgetPrivate.h"
 #include "UI/IndexedButtonWidget.h"
@@ -208,10 +207,10 @@ void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 				FString FamilySummary;
 				switch (RailSlotIndex)
 				{
-				case 0: FamilySummary = TEXT("베기 · 밀어베기 · 방패치기"); break;
-				case 1: FamilySummary = TEXT("끌기 · 던지기 · 자리교환"); break;
-				case 2: FamilySummary = TEXT("다리걸기 · 방패 밀치기"); break;
-				case 3: FamilySummary = TEXT("무료 스텝 · 어깨 돌진 · 도약"); break;
+				case 0: FamilySummary = TEXT("관통 베기 · 회전 돌입 · 충격 착지"); break;
+				case 1: FamilySummary = TEXT("후퇴 견인 · 관통 투척 · 자리교환"); break;
+				case 2: FamilySummary = TEXT("측면 제압 · 방패 돌입"); break;
+				case 3: FamilySummary = TEXT("질풍 베기 · 어깨 돌진 · 도약 강습"); break;
 				default: break;
 				}
 				const FString ActiveHint = RailSlotIndex == mExpandedActionFamily
@@ -363,23 +362,23 @@ void UCombatTileMapHUDWidget::RefreshActionSubmenuWidgets()
 		switch (mExpandedActionFamily)
 		{
 		case 0:
-			AddEntry(0, TEXT("베기"), TEXT("적 탭 · 즉시 공격"), 3, ECombatSubactionMode::BasicAttack);
-			AddEntry(0, TEXT("회전베기"), TEXT("주변 8칸 · 모든 적 8 피해"), 3, ECombatSubactionMode::Whirlwind);
-			AddEntry(0, TEXT("충격파"), TEXT("주변 8칸 · 4 피해 + 바깥으로 밀침"), 4, ECombatSubactionMode::Shockwave);
+			AddEntry(0, TEXT("관통 베기"), TEXT("적 뒤로 순간 이동하며 절단"), 3, ECombatSubactionMode::BasicAttack);
+			AddEntry(0, TEXT("회전 돌입"), TEXT("적 무리 한복판 착지 · 주변 전부 공격"), 3, ECombatSubactionMode::Whirlwind);
+			AddEntry(0, TEXT("충격 착지"), TEXT("적 무리로 도약 · 피해 + 바깥으로 밀침"), 4, ECombatSubactionMode::Shockwave);
 			break;
 		case 1:
-			AddEntry(PullIndex, TEXT("끌어오기"), TEXT("적 드래그 · 기사 주변 배치"), 6, ECombatSubactionMode::Pull);
-			AddEntry(ThrowIndex, TEXT("집어던지기"), TEXT("인접 적 드래그 · 충돌"), 6, ECombatSubactionMode::Throw);
-			AddEntry(SwapIndex, TEXT("자리 바꾸기"), TEXT("인접 적 탭 · 즉시 교환"), 4, ECombatSubactionMode::Swap);
+			AddEntry(PullIndex, TEXT("후퇴 견인"), TEXT("뒤로 빠지며 적을 고른 칸에 끌기"), 6, ECombatSubactionMode::Pull);
+			AddEntry(ThrowIndex, TEXT("관통 투척"), TEXT("적 뒤로 파고들어 집어던지기"), 6, ECombatSubactionMode::Throw);
+			AddEntry(SwapIndex, TEXT("자리 바꾸기"), TEXT("적을 베며 서로 위치 교환"), 4, ECombatSubactionMode::Swap);
 			break;
 		case 2:
-			AddEntry(StaggerIndex, TEXT("다리 걸기"), TEXT("적 탭 · 다음 이동 감소"), 6, ECombatSubactionMode::Stagger);
-			AddEntry(ThrowIndex, TEXT("방패 밀치기"), TEXT("인접 적 드래그 · 진형 붕괴"), 1, ECombatSubactionMode::ShortThrow);
+			AddEntry(StaggerIndex, TEXT("측면 다리 걸기"), TEXT("측면으로 돌입 · 다음 이동 감소"), 6, ECombatSubactionMode::Stagger);
+			AddEntry(ThrowIndex, TEXT("방패 돌입"), TEXT("적 뒤로 파고들며 짧게 밀치기"), 1, ECombatSubactionMode::ShortThrow);
 			break;
 		case 3:
-			AddEntry(1, TEXT("무료 전투 스텝"), TEXT("행동 전 기사 드래그 · 턴 소모 없음"), 1, ECombatSubactionMode::Move);
-			AddEntry(1, TEXT("어깨 돌진"), TEXT("기사를 직선 드래그 · 1칸 충돌"), 6, ECombatSubactionMode::Charge);
-			AddEntry(1, TEXT("도약"), TEXT("기사를 드래그 · 장애물 넘어 3칸 착지"), 3, ECombatSubactionMode::Leap);
+			AddEntry(1, TEXT("질풍 베기"), TEXT("인접 칸 착지 · 주변 적 즉시 타격"), 1, ECombatSubactionMode::Move);
+			AddEntry(1, TEXT("어깨 돌진"), TEXT("직선 돌파 · 접촉한 적 밀치기"), 6, ECombatSubactionMode::Charge);
+			AddEntry(1, TEXT("도약 강습"), TEXT("장애물 넘어 착지 · 주변 강타"), 3, ECombatSubactionMode::Leap);
 			break;
 		default:
 			break;
@@ -399,11 +398,7 @@ void UCombatTileMapHUDWidget::RefreshActionSubmenuWidgets()
 		const bool bVisible = bCanShow && mActionSubmenuSkillIndices.IsValidIndex(SlotIndex);
 		const int32 SkillIndex = bVisible ? mActionSubmenuSkillIndices[SlotIndex] : INDEX_NONE;
 		const FSkillUI* Skill = Skills != nullptr && Skills->IsValidIndex(SkillIndex) ? &(*Skills)[SkillIndex] : nullptr;
-		const USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
-		const bool bCombatStepEntry = bVisible && mActionSubmenuModes.IsValidIndex(SlotIndex)
-			&& mActionSubmenuModes[SlotIndex] == ECombatSubactionMode::Move;
-		const bool bEntryEnabled = bCombatStepEntry == false
-			|| (CombatModel != nullptr && CombatModel->CanUseWarriorCombatStep());
+		const bool bEntryEnabled = bVisible;
 		const bool bSelected = bVisible && mActionSubmenuModes.IsValidIndex(SlotIndex)
 			&& mSelectedSubactionMode == mActionSubmenuModes[SlotIndex]
 			&& mActiveActionFamily == mExpandedActionFamily;

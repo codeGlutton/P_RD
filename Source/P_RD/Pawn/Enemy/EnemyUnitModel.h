@@ -32,6 +32,9 @@ enum class ESRPGEnemyMovementRole : uint8
 	Anchor,
 	Flanker,
 	Slider,
+	Bulwark,
+	Lancer,
+	Bomber,
 };
 
 /**
@@ -72,6 +75,9 @@ public:
 	ESRPGDisplacementWeight GetDisplacementWeight() const;
 	/** @brief Mushroom/Spider/Slime의 전투 실루엣을 목적지 점수에 연결한다. */
 	ESRPGEnemyMovementRole GetMovementRole() const;
+	/** @brief 생존전 증원에 기존 메시와 별개의 전투 역할을 부여한다. */
+	void SetMovementRoleOverride(ESRPGEnemyMovementRole Role);
+	FText GetCombatRoleDisplayName() const;
 
 private:
 	/**
@@ -93,4 +99,7 @@ protected:
 	// @brief 이동 성향
 	UPROPERTY(Category = AI, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MoveTendency"))
 	EMoveTendency mMoveTendency = EMoveTendency::HoldRange;
+
+	bool mHasMovementRoleOverride = false;
+	ESRPGEnemyMovementRole mMovementRoleOverride = ESRPGEnemyMovementRole::Standard;
 };

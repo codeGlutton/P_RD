@@ -48,6 +48,7 @@ namespace
 		case EForcedMovePresentationType::Throw:
 			return 1.0f - FMath::Square(1.0f - FMath::Clamp(Alpha, 0.0f, 1.0f));
 		case EForcedMovePresentationType::Charge:
+		case EForcedMovePresentationType::BlinkStrike:
 			// 돌진은 입력 직후 바로 속도가 붙되 접촉 직전에는 읽을 수 있을 만큼 감속한다.
 			return EaseOutCubic(Alpha);
 		case EForcedMovePresentationType::Leap:
@@ -303,6 +304,12 @@ void AUnit::OnStartForcedMovePath(
 		MaxTravelDuration = 0.28f;
 		SettleDuration = 0.07f;
 		break;
+	case EForcedMovePresentationType::BlinkStrike:
+		FirstTileDuration = 0.075f;
+		AdditionalTileDuration = 0.0f;
+		MaxTravelDuration = 0.075f;
+		SettleDuration = 0.025f;
+		break;
 	case EForcedMovePresentationType::Push:
 	default:
 		break;
@@ -351,6 +358,12 @@ void AUnit::OnStartForcedMovePath(
 		mForcedMoveArcHeight = FMath::Lerp(105.0f, 155.0f, DistanceAlpha);
 		mForcedMoveOvershootDistance = 7.0f;
 		mForcedMoveTiltDegrees = -11.0f;
+		break;
+	case EForcedMovePresentationType::BlinkStrike:
+		mForcedMoveArcHeight = 2.0f;
+		mForcedMoveOvershootDistance = 38.0f;
+		mForcedMoveLateralDistance = 7.0f;
+		mForcedMoveTiltDegrees = 25.0f;
 		break;
 	case EForcedMovePresentationType::Push:
 	default:
@@ -782,7 +795,8 @@ void AUnit::ApplyForcedMoveMeshPresentation(float TravelAlpha, float SettleAlpha
 		// 서로 반대 방향으로 같은 규칙을 적용하면 두 유닛이 서로 다른 측면으로 비켜 지나간다.
 		TiltDegrees = FlightWave * mForcedMoveTiltDegrees;
 	}
-	else if (mForcedMovePresentationType == EForcedMovePresentationType::Charge)
+	else if (mForcedMovePresentationType == EForcedMovePresentationType::Charge
+		|| mForcedMovePresentationType == EForcedMovePresentationType::BlinkStrike)
 	{
 		TiltDegrees = -FlightWave * mForcedMoveTiltDegrees;
 	}
@@ -803,7 +817,8 @@ void AUnit::ApplyForcedMoveMeshPresentation(float TravelAlpha, float SettleAlpha
 	const float AirStretch = mForcedMovePresentationType == EForcedMovePresentationType::Throw
 		? FlightWave
 		: 0.0f;
-	const float ChargeCompression = mForcedMovePresentationType == EForcedMovePresentationType::Charge
+	const float ChargeCompression = (mForcedMovePresentationType == EForcedMovePresentationType::Charge
+		|| mForcedMovePresentationType == EForcedMovePresentationType::BlinkStrike)
 		? 0.04f * FlightWave
 		: 0.0f;
 	const FVector SquashMultiplier(

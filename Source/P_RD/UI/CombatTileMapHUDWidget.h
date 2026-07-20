@@ -46,12 +46,15 @@ class UUserWidget;
 enum class EEnemyIntentTutorialStage : uint8
 {
 	WaitingForIntent,
-	CombatStep,
+	OpenAttack,
+	SelectSlash,
+	StrikeTarget,
+	ObserveStrike,
 	OpenGrip,
 	SelectPull,
 	ConfirmDestination,
 	ApplyingIntervention,
-	EndTurnAndObserve,
+	ObserveResponse,
 	Complete
 };
 
@@ -884,6 +887,9 @@ private:
 	float mEnemyIntentTutorialStageElapsed = 0.0f;
 	float mEnemyIntentTutorialPulseTime = 0.0f;
 	bool mEnemyIntentTutorialDismissed = false;
+	bool mEnemyIntentTutorialStrikeSubmitted = false;
+	bool mEnemyIntentTutorialSawStrikeEnemyTurn = false;
+	bool mEnemyIntentTutorialStrikeCycleComplete = false;
 	bool mEnemyIntentTutorialInterventionSubmitted = false;
 	bool mEnemyIntentTutorialPullCompleted = false;
 	bool mEnemyIntentTutorialSawEnemyTurn = false;
@@ -1106,7 +1112,6 @@ private:
 	FText mDirectMoveImpactLabel;
 	bool mDirectMoveIsCharge = false;
 	bool mDirectMoveIsLeap = false;
-	bool mDirectMoveIsCombatStep = false;
 	int32 mDirectGestureGhostTargetId = INDEX_NONE;
 	UPROPERTY(Transient) TObjectPtr<UBorder> mDirectUnitGestureLine;
 	UPROPERTY(Transient) TObjectPtr<UBorder> mDirectUnitGestureHandle;

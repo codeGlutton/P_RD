@@ -149,7 +149,8 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	 * @details
 	 * 현재위치와 목적지가 다를때만 이동커맨드 생성
 	 */
-	const bool bPlanElasticCharge = Enemy->GetMovementRole() == ESRPGEnemyMovementRole::Slider
+	const bool bPlanElasticCharge = (Enemy->GetMovementRole() == ESRPGEnemyMovementRole::Slider
+		|| Enemy->GetMovementRole() == ESRPGEnemyMovementRole::Lancer)
 		&& Origin != PlayerTile
 		&& MoveRange > 0;
 	if (Dest != Origin || bPlanElasticCharge)
@@ -443,6 +444,21 @@ FTileIndex USRPGEnemyTurnPlanner::ChooseRoleDestination(
 			Score += bCardinalToPlayer ? 42 : -20;
 			Score += bStraightMove ? 22 : -8;
 			Score += FMath::Min(MoveCost, 3) * 3;
+			break;
+		case ESRPGEnemyMovementRole::Bulwark:
+			Score -= FMath::Abs(PlayerChebyshev - 1) * 22;
+			Score += bCardinalToPlayer ? 28 : 0;
+			Score -= MoveCost * 5;
+			break;
+		case ESRPGEnemyMovementRole::Lancer:
+			Score -= FMath::Abs(PlayerChebyshev - 2) * 12;
+			Score += bCardinalToPlayer ? 52 : -22;
+			Score += bStraightMove ? 34 : -12;
+			break;
+		case ESRPGEnemyMovementRole::Bomber:
+			Score -= FMath::Abs(PlayerChebyshev - 3) * 18;
+			Score += bDiagonalToPlayer ? 18 : 0;
+			Score -= MoveCost * 3;
 			break;
 		case ESRPGEnemyMovementRole::Standard:
 		default:

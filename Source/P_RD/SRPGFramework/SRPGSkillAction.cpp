@@ -146,6 +146,17 @@ void USRPGSkillAction::OnEndAction()
     mIsFixedIntentCast = false;
 	mIsEnemySignatureDisplacement = false;
 	mEnemySignatureSkillName = FText::GetEmpty();
+	mStoredSkillIndex = INDEX_NONE;
+	mStoredTargetIndex = FTileIndex::Invalid;
+	mStoredDiceSum = 0;
+	mStoredFixedEffectTileIndexes.Reset();
+	mStoredAllowFriendlyFire = false;
+	mStoredUseFixedIntent = false;
+	mStoredSkillActivationStarted = false;
+	mWarriorSkillApproachStarted = false;
+	mWarriorSkillApproachFrom = FTileIndex::Invalid;
+	mWarriorSkillApproachTo = FTileIndex::Invalid;
+	mStoredSkillName = FText::GetEmpty();
 }
 
 ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGCommand>& Command)
@@ -176,65 +187,220 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
             return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
         }
 
-        mIsFixedIntentCast = SkillCastCommand.mUseFixedIntent;
+		mIsFixedIntentCast = SkillCastCommand.mUseFixedIntent;
+		mStoredUseFixedIntent = SkillCastCommand.mUseFixedIntent;
+		mStoredSkillIndex = SkillCastCommand.mSkillIndex;
+		mStoredTargetIndex = SkillCastCommand.mTargetIndex;
+		mStoredDiceSum = SkillCastCommand.mDiceSum;
+		mStoredFixedEffectTileIndexes = SkillCastCommand.mFixedEffectTileIndexes;
+		mStoredAllowFriendlyFire = SkillCastCommand.mAllowFriendlyFire;
 		mDiceDisplacementDestination = SkillCastCommand.mDisplacementDestination;
-
-        FOnEndSkillUI Callback;
-        Callback.AddWeakLambda(this, [this](const FActiveSkillContext& Context, const UStaticSkillData* SkillData) {
-            if (mIsFixedIntentCast)
-            {
-                if (USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
-                {
-                    CombatModel->ResolveFixedIntentAttack(mInstigator.Get(), Context.mResolvedCombatTargets);
-                }
-            }
-
-			mSkillPresentationFinished = true;
-			// Hit 노티가 없는 비정상 몽타주/무연출 데이터만 종료 시점 폴백으로 처리한다.
-			if (mDiceDisplacementStarted == false)
-			{
-				TryStartSkillDisplacement(Context, SkillData);
-			}
-			FinishSkillAction();
-            });
-
-		FOnTriggerSkillMotionUI TriggerCallback;
-		TriggerCallback.BindWeakLambda(this, [this](const FActiveSkillContext& Context, const UStaticSkillData* SkillData)
-		{
-			if (mDiceDisplacementStarted == false)
-			{
-				TryStartSkillDisplacement(Context, SkillData);
-			}
-		});
-
         const FSkillEntry* SkillEntry = SkillCompModel->GetSkill(SkillCastCommand.mSkillIndex);
         const UStaticSkillData* StaticSkillData = SkillEntry != nullptr ? SkillEntry->mData.Get() : nullptr;
-        TArray<FTileIndex> FixedExecutionEffectTiles;
-        const TArray<FTileIndex>* FixedEffectTiles = nullptr;
-        if (SkillCastCommand.mUseFixedIntent)
-        {
-            FixedExecutionEffectTiles = BuildFixedExecutionEffectTiles(
-                TileMap,
-                SkillCastCommand,
-                StaticSkillData,
-                mInstigator.Get());
-            FixedEffectTiles = &FixedExecutionEffectTiles;
-        }
-        SkillCompModel->ActivateSkill(
-            TileMap,
-            SkillCastCommand.mSkillIndex,
-            SkillCastCommand.mTargetIndex,
-            SkillCastCommand.mDiceSum,
-            MoveTemp(Callback),
-            FixedEffectTiles,
-            SkillCastCommand.mAllowFriendlyFire,
-			MoveTemp(TriggerCallback));
+		mStoredSkillName = StaticSkillData != nullptr ? StaticSkillData->mName : FText::GetEmpty();
+		if (TryStartWarriorSkillApproach(StaticSkillData) == false)
+		{
+			ActivateStoredSkillCast();
+		}
 
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
     }
 
     return ESRPGCommandResult::Ignored;
+}
+
+bool USRPGSkillAction::TryStartWarriorSkillApproach(const UStaticSkillData* SkillData)
+{
+	if (SkillData == nullptr || mInstigator == nullptr || mInstigator->IsPlayerUnitModel() == false
+		|| mStoredUseFixedIntent || mStoredTargetIndex == FTileIndex::Invalid
+		|| SkillData->GetFName() == DiceSwapSkillAssetName)
+	{
+		return false;
+	}
+	UTileMapModel* TileMap = GetTileMap();
+	if (TileMap == nullptr)
+	{
+		return false;
+	}
+	UUnitModel* TargetUnit = nullptr;
+	for (UBoardActorModel* Actor : TileMap->GetActorsOnTile(mStoredTargetIndex, ETileLayerFlag::Unit))
+	{
+		UUnitModel* Candidate = Cast<UUnitModel>(Actor);
+		if (Candidate != nullptr && Candidate != mInstigator.Get() && Candidate->IsTargetable())
+		{
+			TargetUnit = Candidate;
+			break;
+		}
+	}
+	if (TargetUnit == nullptr)
+	{
+		return false;
+	}
+
+	const FTileIndex Origin = mInstigator->GetTileTransform().mIndex;
+	const FTileIndex TargetTile = TargetUnit->GetTileTransform().mIndex;
+	const FTileIndex TowardTarget(
+		FMath::Sign(TargetTile.mX - Origin.mX),
+		FMath::Sign(TargetTile.mY - Origin.mY));
+	TArray<FTileIndex> Candidates;
+	if (SkillData->GetFName() == DicePullSkillAssetName)
+	{
+		// 손아귀는 몸을 뒤로 빼는 동작과 적 견인을 한 기술로 묶는다.
+		Candidates.Add(FTileIndex(Origin.mX - TowardTarget.mX, Origin.mY - TowardTarget.mY));
+		Candidates.Add(FTileIndex(Origin.mX - TowardTarget.mY, Origin.mY + TowardTarget.mX));
+		Candidates.Add(FTileIndex(Origin.mX + TowardTarget.mY, Origin.mY - TowardTarget.mX));
+	}
+	else
+	{
+		// 베기/던지기/제압은 적을 관통해 반대편에서 타격 모션이 이어지게 한다.
+		Candidates.Add(FTileIndex(TargetTile.mX + TowardTarget.mX, TargetTile.mY + TowardTarget.mY));
+		const FTileIndex SideA(-TowardTarget.mY, TowardTarget.mX);
+		const FTileIndex SideB(TowardTarget.mY, -TowardTarget.mX);
+		Candidates.Add(FTileIndex(TargetTile.mX + SideA.mX, TargetTile.mY + SideA.mY));
+		Candidates.Add(FTileIndex(TargetTile.mX + SideB.mX, TargetTile.mY + SideB.mY));
+		for (int32 DeltaY = -1; DeltaY <= 1; ++DeltaY)
+		{
+			for (int32 DeltaX = -1; DeltaX <= 1; ++DeltaX)
+			{
+				if (DeltaX != 0 || DeltaY != 0)
+				{
+					Candidates.AddUnique(FTileIndex(TargetTile.mX + DeltaX, TargetTile.mY + DeltaY));
+				}
+			}
+		}
+	}
+
+	FTileIndex Destination = FTileIndex::Invalid;
+	for (const FTileIndex& Candidate : Candidates)
+	{
+		if (Candidate != Origin && TileMap->IsValidIndex(Candidate)
+			&& TileMap->CanPlace(Candidate, mInstigator.Get()))
+		{
+			Destination = Candidate;
+			break;
+		}
+	}
+	if (Destination == FTileIndex::Invalid)
+	{
+		return false;
+	}
+
+	mWarriorSkillApproachStarted = true;
+	mWarriorSkillApproachFrom = Origin;
+	mWarriorSkillApproachTo = Destination;
+	const FTileTransform DestinationTransform(
+		Destination,
+		UTileMapModel::TileDeltaToDirection(Destination, TargetTile, mInstigator->GetTileTransform().mDirection));
+	TileMap->StartActorMovement(DestinationTransform, mInstigator.Get());
+	mInstigator->OnStartForcedMovePath.Broadcast(
+		{TileMap->TileToWorldLocation(Origin), TileMap->TileToWorldLocation(Destination)},
+		EForcedMovePresentationType::BlinkStrike);
+	TSharedPtr<FPresentationBarrier> Barrier = FPresentationBarrier::Make(
+		FOnFinishPresentation::CreateWeakLambda(this, [this]()
+		{
+			OnWarriorSkillApproachFinished();
+		}));
+	mInstigator->OnStartMoveStep.Broadcast(
+		DestinationTransform,
+		TileMap->TileToWorldTransform(DestinationTransform),
+		Barrier,
+		0.0f);
+	return true;
+}
+
+void USRPGSkillAction::OnWarriorSkillApproachFinished()
+{
+	if (mActionPhase != ESRPGActionPhase::ActionPlay || mInstigator == nullptr)
+	{
+		return;
+	}
+	if (UTileMapModel* TileMap = GetTileMap())
+	{
+		TileMap->CompleteActorMovement(mInstigator.Get());
+	}
+	if (USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
+	{
+		CombatModel->NotifyWarriorSkillMovement(
+			mWarriorSkillApproachFrom,
+			mWarriorSkillApproachTo,
+			mStoredSkillName.IsEmpty()
+				? NSLOCTEXT("WarriorSkill", "IntegratedWarriorSkill", "이동 공격")
+				: mStoredSkillName);
+	}
+	ActivateStoredSkillCast();
+}
+
+void USRPGSkillAction::ActivateStoredSkillCast()
+{
+	if (mStoredSkillActivationStarted || mInstigator == nullptr)
+	{
+		return;
+	}
+	mStoredSkillActivationStarted = true;
+	USkillComponentModel* SkillCompModel = mInstigator->GetSkillComponentModel();
+	UTileMapModel* TileMap = GetTileMap();
+	const FSkillEntry* SkillEntry = SkillCompModel != nullptr ? SkillCompModel->GetSkill(mStoredSkillIndex) : nullptr;
+	const UStaticSkillData* StaticSkillData = SkillEntry != nullptr ? SkillEntry->mData.Get() : nullptr;
+	if (SkillCompModel == nullptr || TileMap == nullptr || StaticSkillData == nullptr)
+	{
+		MarkActionCompleted(ESRPGActionResult::Cancelled);
+		return;
+	}
+
+	FOnEndSkillUI Callback;
+	Callback.AddWeakLambda(this, [this](const FActiveSkillContext& Context, const UStaticSkillData* SkillData)
+	{
+		if (mIsFixedIntentCast)
+		{
+			if (USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
+			{
+				CombatModel->ResolveFixedIntentAttack(mInstigator.Get(), Context.mResolvedCombatTargets);
+			}
+		}
+		mSkillPresentationFinished = true;
+		if (mDiceDisplacementStarted == false)
+		{
+			TryStartSkillDisplacement(Context, SkillData);
+		}
+		FinishSkillAction();
+	});
+
+	FOnTriggerSkillMotionUI TriggerCallback;
+	TriggerCallback.BindWeakLambda(this, [this](const FActiveSkillContext& Context, const UStaticSkillData* SkillData)
+	{
+		if (mDiceDisplacementStarted == false)
+		{
+			TryStartSkillDisplacement(Context, SkillData);
+		}
+	});
+
+	TArray<FTileIndex> FixedExecutionEffectTiles;
+	const TArray<FTileIndex>* FixedEffectTiles = nullptr;
+	if (mStoredUseFixedIntent)
+	{
+		FSRPGSkillCastCommand StoredCommand;
+		StoredCommand.mSkillIndex = mStoredSkillIndex;
+		StoredCommand.mTargetIndex = mStoredTargetIndex;
+		StoredCommand.mDiceSum = mStoredDiceSum;
+		StoredCommand.mFixedEffectTileIndexes = mStoredFixedEffectTileIndexes;
+		StoredCommand.mUseFixedIntent = true;
+		FixedExecutionEffectTiles = BuildFixedExecutionEffectTiles(
+			TileMap,
+			StoredCommand,
+			StaticSkillData,
+			mInstigator.Get());
+		FixedEffectTiles = &FixedExecutionEffectTiles;
+	}
+	SkillCompModel->ActivateSkill(
+		TileMap,
+		mStoredSkillIndex,
+		mStoredTargetIndex,
+		mStoredDiceSum,
+		MoveTemp(Callback),
+		FixedEffectTiles,
+		mStoredAllowFriendlyFire,
+		MoveTemp(TriggerCallback));
 }
 
 UTileMapModel* USRPGSkillAction::GetTileMap() const
@@ -270,6 +436,7 @@ bool USRPGSkillAction::TryStartEnemySignatureDisplacement(const FActiveSkillCont
 
 	const ESRPGEnemyMovementRole Role = Enemy->GetMovementRole();
 	if (Role != ESRPGEnemyMovementRole::Anchor
+		&& Role != ESRPGEnemyMovementRole::Bulwark
 		&& Role != ESRPGEnemyMovementRole::Flanker)
 	{
 		return false;
@@ -322,7 +489,9 @@ bool USRPGSkillAction::TryStartEnemySignatureDisplacement(const FActiveSkillCont
 	mIsEnemySignatureDisplacement = true;
 	mEnemySignatureSkillName = Role == ESRPGEnemyMovementRole::Flanker
 		? NSLOCTEXT("EnemySkill", "SpiderWebPull", "거미줄 견인")
-		: NSLOCTEXT("EnemySkill", "MushroomSporePush", "포자 밀치기");
+		: (Role == ESRPGEnemyMovementRole::Bulwark
+			? NSLOCTEXT("EnemySkill", "BulwarkShieldPush", "방패 밀치기")
+			: NSLOCTEXT("EnemySkill", "MushroomSporePush", "포자 밀치기"));
 
 	FTileIndex Step;
 	if (Role == ESRPGEnemyMovementRole::Flanker)
@@ -441,7 +610,9 @@ bool USRPGSkillAction::TryStartDiceDisplacement(const FActiveSkillContext& Conte
 			: FMath::Max(
 				FMath::Abs(mDiceDisplacementDestination.mX - InstigatorTile.mX),
 				FMath::Abs(mDiceDisplacementDestination.mY - InstigatorTile.mY));
-		if (DestinationToInstigator != 1)
+		// 후퇴 견인은 적을 고를 때 표시된 '원래 기사 주변 칸'을 유지한다. 기술 시작 때
+		// 기사가 한 칸 물러나므로 실행 시점에는 그 착지 칸이 기사에게서 최대 2칸일 수 있다.
+		if (DestinationToInstigator < 1 || DestinationToInstigator > 2)
 		{
 			return false;
 		}
@@ -516,6 +687,10 @@ bool USRPGSkillAction::TryStartDiceDisplacement(const FActiveSkillContext& Conte
 				}
 				if (USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this))
 				{
+					CombatModel->NotifyWarriorSkillMovement(
+						InstigatorTile,
+						TargetTile,
+						NSLOCTEXT("WarriorSkill", "SwapStrikeName", "자리 바꾸기"));
 					CombatModel->ReportPlayerDisplacement(
 						mDiceDisplacementTarget,
 						TargetTile,

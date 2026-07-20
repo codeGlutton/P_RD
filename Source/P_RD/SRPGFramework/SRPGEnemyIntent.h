@@ -21,7 +21,7 @@ enum class ESRPGPlayerDisplacementType : uint8
 	Swap,
 };
 
-/** @brief 플레이어 행동이 끝난 뒤 적 페이즈까지 이어지는 전사 반응 태세. */
+/** @brief 구버전 저장 호환용 전사 반응 태세. 현재 플레이에서는 자동 후속 행동을 만들지 않는다. */
 UENUM(BlueprintType)
 enum class ESRPGWarriorAftermathStance : uint8
 {

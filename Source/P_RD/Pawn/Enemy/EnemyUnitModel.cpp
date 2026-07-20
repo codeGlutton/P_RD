@@ -120,6 +120,16 @@ EMoveTendency UEnemyUnitModel::GetMoveTendency() const
 
 ESRPGDisplacementWeight UEnemyUnitModel::GetDisplacementWeight() const
 {
+	if (mHasMovementRoleOverride)
+	{
+		switch (mMovementRoleOverride)
+		{
+		case ESRPGEnemyMovementRole::Bomber: return ESRPGDisplacementWeight::Light;
+		case ESRPGEnemyMovementRole::Bulwark: return ESRPGDisplacementWeight::Heavy;
+		case ESRPGEnemyMovementRole::Lancer: return ESRPGDisplacementWeight::Medium;
+		default: break;
+		}
+	}
 	const FString Identity = FString::Printf(
 		TEXT("%s %s"),
 		*GetBoardActorKeyName().ToString(),
@@ -139,6 +149,10 @@ ESRPGDisplacementWeight UEnemyUnitModel::GetDisplacementWeight() const
 
 ESRPGEnemyMovementRole UEnemyUnitModel::GetMovementRole() const
 {
+	if (mHasMovementRoleOverride)
+	{
+		return mMovementRoleOverride;
+	}
 	const FString Identity = FString::Printf(
 		TEXT("%s %s"),
 		*GetBoardActorKeyName().ToString(),
@@ -159,5 +173,33 @@ ESRPGEnemyMovementRole UEnemyUnitModel::GetMovementRole() const
 		return ESRPGEnemyMovementRole::Slider;
 	}
 	return ESRPGEnemyMovementRole::Standard;
+}
+
+void UEnemyUnitModel::SetMovementRoleOverride(ESRPGEnemyMovementRole Role)
+{
+	mHasMovementRoleOverride = true;
+	mMovementRoleOverride = Role;
+}
+
+FText UEnemyUnitModel::GetCombatRoleDisplayName() const
+{
+	switch (GetMovementRole())
+	{
+	case ESRPGEnemyMovementRole::Bulwark:
+		return NSLOCTEXT("EnemyRole", "Bulwark", "방벽병");
+	case ESRPGEnemyMovementRole::Lancer:
+		return NSLOCTEXT("EnemyRole", "Lancer", "돌진 창기병");
+	case ESRPGEnemyMovementRole::Bomber:
+		return NSLOCTEXT("EnemyRole", "Bomber", "화약 운반병");
+	case ESRPGEnemyMovementRole::Anchor:
+		return NSLOCTEXT("EnemyRole", "Anchor", "포자 버섯");
+	case ESRPGEnemyMovementRole::Flanker:
+		return NSLOCTEXT("EnemyRole", "Flanker", "갈고리 거미");
+	case ESRPGEnemyMovementRole::Slider:
+		return NSLOCTEXT("EnemyRole", "Slider", "돌진 슬라임");
+	case ESRPGEnemyMovementRole::Standard:
+	default:
+		return GetBoardActorDisplayName();
+	}
 }
 

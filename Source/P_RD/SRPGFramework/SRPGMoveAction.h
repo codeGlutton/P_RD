@@ -54,9 +54,6 @@ public:
 	UPROPERTY()
 	bool mConsumeMovementPoints = true;
 
-	/** @brief 매 플레이어 차례 한 번, 턴을 넘기지 않고 인접 칸으로 이동하는 전투 스텝. */
-	UPROPERTY()
-	bool mIsCombatStep = false;
 };
 
 /**
@@ -79,7 +76,6 @@ public:
 	/** @brief 전사 이동의 성격을 후속 연계/보상 판정에 노출한다. */
 	bool IsWarriorCharge() const { return mIsWarriorCharge; }
 	bool IsWarriorLeap() const { return mIsWarriorLeap; }
-	bool IsCombatStep() const { return mIsCombatStep; }
 
 protected:
 	void OnBeginAction() override;
@@ -103,6 +99,8 @@ private:
 	void StartWarriorChargePushStep(int32 StepIndex);
 	void OnWarriorChargePushStepFinished();
 	void FinishWarriorChargeImpact();
+	/** @brief 기동 행동의 마지막 착지에서 이동 보상과 타격을 같은 액션 안에서 한 번만 해결한다. */
+	void ResolveWarriorLandingImpact();
 	bool TryStartElasticChargeImpact(int32 StepIndex);
 	void StartElasticChargePush();
 	void OnElasticChargePushFinished();
@@ -123,7 +121,6 @@ protected:
 	bool mIsWarriorLeap = false;
 	bool mIsElasticCharge = false;
 	bool mConsumeMovementPoints = true;
-	bool mIsCombatStep = false;
 	int32 mActionPower = 0;
 
 	// @brief 진행 중인 스텝 인덱스 (mPathTileIndexes 기준, 0은 시작 타일이라 1부터 시작)
@@ -140,6 +137,7 @@ protected:
 	int32 mWarriorChargeResumePlayerStep = INDEX_NONE;
 	bool mWarriorChargeContinueAfterImpact = false;
 	bool mWarriorChargeStopAfterPlayerStep = false;
+	bool mWarriorLandingResolved = false;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UUnitModel> mElasticChargeTarget = nullptr;

@@ -210,13 +210,14 @@ public:
 	int32 GetWarriorMomentum() const { return mWarriorMomentum; }
 	int32 GetWarriorFlow() const { return mWarriorFlow; }
 	int32 GetStandstillPressure() const { return mStandstillPressure; }
-	bool CanUseWarriorCombatStep() const;
-	bool HasUsedWarriorCombatStepThisRound() const { return mCombatStepUsedThisRound; }
+	bool HasWarriorMovedThisRound() const { return mPlayerMovedThisRound; }
 	FText GetMovementDangerLabel() const;
 	ESRPGWarriorAftermathStance GetWarriorAftermathStance() const { return mWarriorAftermathStance; }
 	FText GetWarriorAftermathStanceLabel() const;
-	/** @brief 무료 전투 스텝 요청이 검증된 뒤 흐름·증원 요격·정지 압박 상태를 갱신한다. */
-	void NotifyPlayerCombatStep(const FTileIndex& From, const FTileIndex& To);
+	/** @brief 스킬 자체에 포함된 착지가 끝났을 때 이동 보상과 위험 해제를 한 번만 처리한다. */
+	void NotifyWarriorSkillMovement(const FTileIndex& From, const FTileIndex& To, const FText& SkillName);
+	/** @brief 질풍 베기/도약 강습의 착지 타격을 같은 이동 액션 안에서 해결한다. */
+	void ResolveWarriorMobilityImpact(UUnitModel* Warrior, bool bLeapImpact);
 
 	/* 공개 적 의도 */
 public:
@@ -267,7 +268,6 @@ protected:
 	void ActivateWarriorAftermath(const USRPGAction* Action);
 	bool TryResolveWarriorAftermath(FSRPGEnemyIntent& Intent);
 	void AddWarriorCombo(int32 Amount);
-	void ResolveWarriorFlowFollowUp();
 	UBoardActorModel* FindBlockingActorAt(const FTileIndex& Tile, const UBoardActorModel* MovingActor) const;
 
 	/* 시뮬 함수 */
@@ -420,7 +420,6 @@ protected:
 	int32 mWarriorFlow = 0;
 	UPROPERTY(Category = Intent, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "StandstillPressure"))
 	int32 mStandstillPressure = 0;
-	bool mCombatStepUsedThisRound = false;
 	bool mPlayerMovedThisRound = false;
 	FTileIndex mPlayerRoundStartTile = FTileIndex::Invalid;
 	/** @brief 버섯 포격/거미줄 등 다음 플레이어 행동에서 이동으로 해제해야 하는 위험. */

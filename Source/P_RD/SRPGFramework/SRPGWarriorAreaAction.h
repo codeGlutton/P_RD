@@ -36,6 +36,9 @@ protected:
 	ESRPGCommandResult HandleCommand(const TInstancedStruct<FSRPGCommand>& Command) override;
 
 private:
+	bool TryStartAreaApproach();
+	void OnAreaApproachFinished();
+	void BeginAreaImpact();
 	void ApplyHit(UEnemyUnitModel* Target);
 	void TryPushTarget(UEnemyUnitModel* Target);
 	void OnPushPresentationFinished(UEnemyUnitModel* Target);
@@ -48,4 +51,6 @@ private:
 	int32 mPendingPushPresentations = 0;
 	bool mResolvedAnyTarget = false;
 	bool mSchedulingPushes = false;
+	FTileIndex mApproachFrom = FTileIndex::Invalid;
+	FTileIndex mApproachTo = FTileIndex::Invalid;
 };

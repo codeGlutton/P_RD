@@ -46,8 +46,6 @@ struct FWarriorMoveRequest
 	UPROPERTY(BlueprintReadWrite) bool mIsLeap = false;
 	/** @brief 선택한 이동 행동에 정의된 거리와 충돌 위력. */
 	UPROPERTY(BlueprintReadWrite) int32 mActionPower = 0;
-	/** @brief 스킬이 아니라 매 플레이어 차례 한 번 무료로 쓰는 인접 전투 스텝. */
-	UPROPERTY(BlueprintReadWrite) bool mIsCombatStep = false;
 };
 
 /** @brief 현재 공개된 적 행동 예고의 실행 상태. 게임플레이 enum을 HUD에 직접 노출하지 않는 UI 거울이다. */
@@ -106,7 +104,6 @@ struct FEnemyIntentUI
 	UPROPERTY(BlueprintReadOnly) FText mWarriorStanceLabel;
 	UPROPERTY(BlueprintReadOnly) int32 mWarriorFlow = 0;
 	UPROPERTY(BlueprintReadOnly) int32 mStandstillPressure = 0;
-	UPROPERTY(BlueprintReadOnly) bool mCombatStepAvailable = false;
 	UPROPERTY(BlueprintReadOnly) FText mMovementDangerLabel;
 };
 

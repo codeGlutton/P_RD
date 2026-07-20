@@ -78,6 +78,10 @@ private:
 	/** @brief 적 역할별 공격에 명중 순간의 강제 이동을 붙인다. Spider=견인, Mushroom=밀치기. */
 	bool TryStartEnemySignatureDisplacement(const FActiveSkillContext& Context);
 	bool TryStartSkillDisplacement(const FActiveSkillContext& Context, const UStaticSkillData* SkillData);
+	/** @brief 플레이어 스킬의 공격 판정 전에 기술 성격에 맞는 착지를 같은 액션 안에서 실행한다. */
+	bool TryStartWarriorSkillApproach(const UStaticSkillData* SkillData);
+	void OnWarriorSkillApproachFinished();
+	void ActivateStoredSkillCast();
 	void StartDiceDisplacementStep(int32 StepIndex);
 	void OnDiceDisplacementStepFinished();
 	void ReportDiceDisplacementIfMoved();
@@ -109,5 +113,17 @@ private:
 	bool mIsFixedIntentCast = false;
 	bool mIsEnemySignatureDisplacement = false;
 	FText mEnemySignatureSkillName;
+
+	int32 mStoredSkillIndex = INDEX_NONE;
+	FTileIndex mStoredTargetIndex = FTileIndex::Invalid;
+	int32 mStoredDiceSum = 0;
+	TArray<FTileIndex> mStoredFixedEffectTileIndexes;
+	bool mStoredAllowFriendlyFire = false;
+	bool mStoredUseFixedIntent = false;
+	bool mStoredSkillActivationStarted = false;
+	bool mWarriorSkillApproachStarted = false;
+	FTileIndex mWarriorSkillApproachFrom = FTileIndex::Invalid;
+	FTileIndex mWarriorSkillApproachTo = FTileIndex::Invalid;
+	FText mStoredSkillName;
 };
 

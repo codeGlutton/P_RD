@@ -736,7 +736,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 
 			mEnemyIntentTutorialFlowCards.Reset();
 			mEnemyIntentTutorialFlowTexts.Reset();
-			const TCHAR* FlowLabels[] = { TEXT("① 기사 스텝"), TEXT("② 손아귀"), TEXT("③ 끌어오기"), TEXT("④ 드래그 배치"), TEXT("⑤ 적 전원 행동") };
+			const TCHAR* FlowLabels[] = { TEXT("① 행동군"), TEXT("② 기술"), TEXT("③ 대상/착지"), TEXT("④ 적 전원 대응") };
 			for (int32 FlowIndex = 0; FlowIndex < UE_ARRAY_COUNT(FlowLabels); ++FlowIndex)
 			{
 				UBorder* FlowCard = WidgetTree->ConstructWidget<UBorder>(
@@ -801,7 +801,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 			}
 
 			mEnemyIntentTutorialProgressDots.Reset();
-			for (int32 StepIndex = 0; StepIndex < 5; ++StepIndex)
+			for (int32 StepIndex = 0; StepIndex < 8; ++StepIndex)
 			{
 				UBorder* Dot = WidgetTree->ConstructWidget<UBorder>(
 					UBorder::StaticClass(),

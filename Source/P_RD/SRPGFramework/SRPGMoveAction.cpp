@@ -43,8 +43,6 @@ ESRPGCommandResult USRPGMoveAction::HandleCommand(const TInstancedStruct<FSRPGCo
 		mIsElasticCharge = MoveCommand.mIsElasticCharge;
 		mActionPower = MoveCommand.mActionPower;
 		mConsumeMovementPoints = MoveCommand.mConsumeMovementPoints;
-		mIsCombatStep = MoveCommand.mIsCombatStep;
-		mConsumesTurn = mIsCombatStep == false;
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
 
@@ -251,6 +249,7 @@ void USRPGMoveAction::OnStepPresentationFinished()
 	if (mWarriorChargeStopAfterPlayerStep)
 	{
 		mWarriorChargeStopAfterPlayerStep = false;
+		ResolveWarriorLandingImpact();
 		MarkActionCompleted(ESRPGActionResult::Succeeded);
 		return;
 	}
@@ -264,6 +263,7 @@ void USRPGMoveAction::OnStepPresentationFinished()
     // 1) 마지막 타일이면 이동 완료.
     if (mCurrentStepIndex >= mPathTileIndexes.Num() - 1)
     {
+		ResolveWarriorLandingImpact();
         MarkActionCompleted(ESRPGActionResult::Succeeded);
     }
     // 2) 마지막 타일이 아니면 다음 타일로 이동
@@ -271,6 +271,34 @@ void USRPGMoveAction::OnStepPresentationFinished()
     {
         StartStep(mCurrentStepIndex + 1);
     }
+}
+
+void USRPGMoveAction::ResolveWarriorLandingImpact()
+{
+	if (mWarriorLandingResolved || mInstigator == nullptr || mInstigator->IsPlayerUnitModel() == false
+		|| mPathTileIndexes.IsEmpty())
+	{
+		return;
+	}
+	mWarriorLandingResolved = true;
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	if (CombatModel == nullptr)
+	{
+		return;
+	}
+	const FTileIndex From = mPathTileIndexes[0];
+	const FTileIndex To = mInstigator->GetTileTransform().mIndex;
+	if (From == To)
+	{
+		return;
+	}
+	const FText SkillName = mIsWarriorLeap
+		? NSLOCTEXT("WarriorMovement", "LeapAssaultName", "도약 강습")
+		: (mIsWarriorCharge
+			? NSLOCTEXT("WarriorMovement", "ShoulderChargeName", "어깨 돌진")
+			: NSLOCTEXT("WarriorMovement", "GaleSlashName", "질풍 베기"));
+	CombatModel->NotifyWarriorSkillMovement(From, To, SkillName);
+	CombatModel->ResolveWarriorMobilityImpact(mInstigator.Get(), mIsWarriorLeap);
 }
 
 UBoardActorModel* USRPGMoveAction::FindBlockingActor(
