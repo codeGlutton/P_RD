@@ -10,6 +10,7 @@
 #include "RDMinimal.h"
 #include "PCGStage/Room.h"
 #include "DataAsset/StageSpawnData/StageLevelType.h"
+#include "SRPGFramework/SRPGFrameworkType.h"
 #include "Stage.generated.h"
 
 /**
@@ -35,6 +36,7 @@ struct FStage
 
 public:
 	void SetCurrentRoom(int32 RowIndex, int32 ColumnIndex);
+	void ClearCurrentCombatRoom(const FTileTransform& Transform);
 
 public:
 	FRoom& GetRoom(int32 RowIndex, int32 ColumnIndex);
@@ -62,6 +64,9 @@ public:
 	int32 mCurColumn = -1;
 	UPROPERTY(Category = Play, SaveGame, VisibleAnywhere, meta = (DisplayName = "CurRow"))
 	int32 mCurRow = -1;
+
+	UPROPERTY(Category = Play, SaveGame, VisibleAnywhere, meta = (DisplayName = "RoomClearTileTransform"))
+	FTileTransform mRoomClearTileTransform = FTileTransform::Invalid;
 
 public:
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "StaticStageSpawnDataId"))

@@ -1,9 +1,9 @@
-#include "UI/CombatTileMapHUDWidget.h"
+﻿#include "UI/CombatTileMapHUDWidget.h"
 
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Widget.h"
-#include "GameMode/CombatGameMode.h"
+#include "UI/Combat/CombatUIModel.h"
 #include "Kismet/GameplayStatics.h"   // 승리/패배 결과 징글 재생
 #include "TimerManager.h"             // 결과 영상 시작 텀 타이머
 #include "Setting/GamePlaySettings.h"
@@ -24,9 +24,9 @@ namespace
 	constexpr float CombatResultStartDelaySeconds = 1.2f;
 }
 
-void UCombatTileMapHUDWidget::BeginCombatResultPresentation(TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result)
+void UCombatTileMapHUDWidget::BeginCombatResultPresentation(TSharedPtr<FPresentationBarrier> Barrier, bool IsPlayerWin)
 {
-	mCombatResult = Result;
+	mIsPlayerWin = IsPlayerWin;
 	mCombatResultBarrier = MoveTemp(Barrier);
 	mVictoryWorldMapLocked = false;
 
@@ -47,7 +47,7 @@ void UCombatTileMapHUDWidget::BeginCombatResultPresentation(TSharedPtr<FPresenta
 void UCombatTileMapHUDWidget::StartCombatResultCinematic()
 {
 	// 결과 징글: 승리/패배에 맞는 짧은 음악을 결과 연출 시작과 동시에 1회 재생한다.
-	USoundBase* ResultJingle = mCombatResult == ESRPGCombatResult::PlayerWin ? mVictoryJingleSound.Get() : mDefeatJingleSound.Get();
+	USoundBase* ResultJingle = mIsPlayerWin == true ? mVictoryJingleSound.Get() : mDefeatJingleSound.Get();
 	if (ResultJingle != nullptr)
 	{
 		UGameplayStatics::PlaySound2D(this, ResultJingle);
@@ -64,7 +64,7 @@ void UCombatTileMapHUDWidget::StartCombatResultCinematic()
 
 	mCombatResultCinematicWidget->SetCinematicViewportZOrder(CombatResultVideoZOrder);
 	mCombatResultCinematicWidget->SetHoldLastFrameOnFinish(true);
-	mCombatResultCinematicWidget->SetCinematicVideoPath(GetCombatResultVideoPath(mCombatResult));
+	mCombatResultCinematicWidget->SetCinematicVideoPath(GetCombatResultVideoPath(mIsPlayerWin));
 	mCombatResultCinematicWidget->OpenUI(FOnEndUIOpenAnimation::CreateWeakLambda(this, [this](UUserWidget* OpenedWidget)
 	{
 		if (UCinematicWidget* OpenedCinematicWidget = Cast<UCinematicWidget>(OpenedWidget))
@@ -84,16 +84,6 @@ void UCombatTileMapHUDWidget::EnsureCombatResultWidgets()
 	if (mCombatResultOverlayWidget == nullptr)
 	{
 		mCombatResultOverlayWidget = CreateWidget<UCombatResultOverlayWidget>(GetOwningPlayer(), UCombatResultOverlayWidget::StaticClass());
-	}
-
-	if (mCombatRewardUIModel == nullptr)
-	{
-		mCombatRewardUIModel = NewObject<URewardUIModel>(this);
-	}
-	if (mCombatRewardUIModel != nullptr)
-	{
-		mCombatRewardUIModel->OnRewardClaimRequested.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatRewardClaimRequested);
-		mCombatRewardUIModel->OnRewardClaimRequested.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatRewardClaimRequested);
 	}
 
 	if (mCombatRewardWidget == nullptr && mRewardWidgetClass != nullptr)
@@ -120,33 +110,18 @@ void UCombatTileMapHUDWidget::HandleCombatResultVideoFinished(UCinematicWidget* 
 	if (mCombatResultOverlayWidget == nullptr)
 	{
 		SetCombatResultViewActive(false, true);
-		mCombatResultBarrier.Reset();
-		return;
 	}
+	mCombatResultBarrier.Reset();
+}
 
-	if (mCombatResult == ESRPGCombatResult::PlayerWin)
+void UCombatTileMapHUDWidget::HandleCombatResultOpenRequested()
+{
+	if (mIsPlayerWin == true)
 	{
-		FRewardUI RewardUI;
-		TArray<FRewardChoiceUI> RewardChoices;
-		if (ACombatGameMode* CombatGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ACombatGameMode>() : nullptr)
-		{
-			RewardUI = CombatGameMode->MakeCombatRewardUI();
-			RewardChoices = CombatGameMode->MakeCombatRewardChoicesUI();
-		}
-
 		if (mCombatRewardWidget != nullptr && mCombatRewardUIModel != nullptr)
 		{
-			mCombatRewardWidget->BindUIModel(mCombatRewardUIModel);
-			mCombatRewardUIModel->SetReward(RewardUI);
-			mCombatRewardUIModel->SetRewardChoices(RewardChoices);
 			mCombatRewardWidget->OpenUI();
-			return;
 		}
-
-		mCombatResultOverlayWidget->ShowVictoryReward(
-			RewardUI,
-			FSimpleDelegate::CreateUObject(this, &UCombatTileMapHUDWidget::HandleCombatResultRewardConfirmed));
-		mCombatResultOverlayWidget->OpenUI();
 		return;
 	}
 
@@ -162,33 +137,18 @@ void UCombatTileMapHUDWidget::HandleCombatResultRewardConfirmed()
 		mCombatResultOverlayWidget->CloseUI();
 	}
 
-	if (ACombatGameMode* CombatGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ACombatGameMode>() : nullptr)
-	{
-		CombatGameMode->ClaimCombatReward();
-	}
-
-	TSharedPtr<FPresentationBarrier> Barrier = mCombatResultBarrier;
-	mCombatResultBarrier.Reset();
 	mVictoryWorldMapLocked = true;
 
-	CloseCombatResultCinematic(FSimpleDelegate::CreateWeakLambda(this, [this, Barrier]() mutable
+	CloseCombatResultCinematic(FSimpleDelegate::CreateWeakLambda(this, [this]() mutable
 	{
 		SetCombatResultViewActive(false, false);
-		OpenWorldMapAfterPlayerWin(MoveTemp(Barrier));
+		OpenWorldMapAfterPlayerWin();
 	}));
 }
 
 void UCombatTileMapHUDWidget::HandleCombatRewardClaimRequested(ERewardClaimKind ClaimKind, int32 ChoiceIndex)
 {
-	ACombatGameMode* CombatGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ACombatGameMode>() : nullptr;
-	if (CombatGameMode == nullptr)
-	{
-		return;
-	}
-
-	// 지급 성공 판정은 게임플레이가 소유한다. 실제로 지급된 경우에만 UI가 그 행을 제거하도록 통지한다.
-	const bool bGranted = CombatGameMode->ClaimCombatReward(ClaimKind, ChoiceIndex);
-	if (bGranted && mCombatRewardWidget != nullptr)
+	if (mCombatRewardWidget != nullptr)
 	{
 		// 경험치 수령은 전용 상승음(골드는 카운트업 코인 사운드가 담당).
 		if (ClaimKind == ERewardClaimKind::Exp && mExpGainSound != nullptr)
@@ -206,17 +166,13 @@ void UCombatTileMapHUDWidget::HandleCombatResultContinueConfirmed()
 		mCombatResultOverlayWidget->CloseUI();
 	}
 
-	TSharedPtr<FPresentationBarrier> Barrier = mCombatResultBarrier;
-	mCombatResultBarrier.Reset();
-
-	CloseCombatResultCinematic(FSimpleDelegate::CreateWeakLambda(this, [this, Barrier]() mutable
+	CloseCombatResultCinematic(FSimpleDelegate::CreateWeakLambda(this, [this]() mutable
 	{
 		SetCombatResultViewActive(false, true);
-		Barrier.Reset();
-
-		if (ACombatGameMode* CombatGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ACombatGameMode>() : nullptr)
+		
+		if (mCombatUIModel != nullptr)
 		{
-			CombatGameMode->AbandonRunFromRoom();
+			mCombatUIModel->RequestAbandonRun();
 		}
 	}));
 }
@@ -252,10 +208,10 @@ void UCombatTileMapHUDWidget::SetCombatResultViewActive(bool bActive, bool bRest
 	mCombatResultFlowActive = false;
 }
 
-FString UCombatTileMapHUDWidget::GetCombatResultVideoPath(ESRPGCombatResult Result) const
+FString UCombatTileMapHUDWidget::GetCombatResultVideoPath(bool IsPlayerWin) const
 {
 	const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
-	if (Result == ESRPGCombatResult::PlayerWin)
+	if (IsPlayerWin == true)
 	{
 		return GamePlaySettings != nullptr && GamePlaySettings->mCombatVictoryVideoPath.IsEmpty() == false
 			? GamePlaySettings->mCombatVictoryVideoPath

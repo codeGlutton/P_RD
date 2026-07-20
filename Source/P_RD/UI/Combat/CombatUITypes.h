@@ -88,6 +88,16 @@ enum class EFloatingLogColorType : uint8
 	Move     // 이동
 };
 
+USTRUCT(BlueprintType)
+struct FCombatResultUI
+{
+	GENERATED_BODY()
+
+public:
+	/** @brief 승리 여부 */
+	UPROPERTY(BlueprintReadWrite) bool mIsWin = false;
+};
+
 /**
  * @brief 플로팅 로그 한 건을 "어디에 / 무엇을 / 어떻게 다룰지" 담아 게임플레이가 UI로 넘기는 요청.
  * @details 게임플레이가 채워 CombatUIModel::NotifyCombatFloatingLog(s)로 보내면 HUD가 그린다.

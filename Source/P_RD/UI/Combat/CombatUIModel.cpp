@@ -68,7 +68,17 @@ void UCombatUIModel::RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress
 	OnCombatWorldTouch.Broadcast(ScreenPosition, bLongPress);
 }
 
+void UCombatUIModel::RequestAbandonRun()
+{
+	OnAbandonRun.Broadcast();
+}
+
 // ───────── gameplay → UI : 표시값을 캐시에 넣고 도메인 갱신을 알린다 ─────────
+
+void UCombatUIModel::SetCombatResultUI(const FCombatResultUI& Result)
+{
+	mCombatResultUI = Result;
+}
 
 /** @brief 유닛 표시 스냅샷을 교체하고 Unit 도메인 갱신만 알린다. */
 void UCombatUIModel::SetUnitUIs(const TArray<FUnitUI>& Units)
@@ -252,4 +262,9 @@ void UCombatUIModel::NotifyCombatFloatingLogsCleared()
 void UCombatUIModel::NotifyDiceRollRequested()
 {
 	OnDiceRollRequested.Broadcast();
+}
+
+void UCombatUIModel::NotifyCombatResultOpenRequested()
+{
+	OnCombatResultOpenRequested.Broadcast();
 }

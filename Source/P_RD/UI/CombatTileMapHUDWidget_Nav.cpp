@@ -7,9 +7,8 @@
 #include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"   // 지도 열기 사운드 재생
 #include "UI/IndexedButtonWidget.h"
-#include "GameMode/CombatGameMode.h"   // 라운드 시작 배리어(OnBeginAnyRoundUI) 구독용
+#include "UI/Combat/CombatUIModel.h"
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
-#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
 #include "UI/FrontendMapWidget.h"
@@ -41,25 +40,22 @@ void UCombatTileMapHUDWidget::BindVictoryFlowEvents()
 	mVictoryWorldMapLocked = false;
 	mCombatResultFlowActive = false;
 
-	ACombatGameMode* CombatGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ACombatGameMode>() : nullptr;
-	if (CombatGameMode == nullptr)
+	if (mCombatUIModel == nullptr)
 	{
 		return;
 	}
 
-	CombatGameMode->OnEndCombatUI.RemoveAll(this);
-	CombatGameMode->OnEndCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result)
-	{
-		HandleEndCombatUI(MoveTemp(Barrier), Result);
-	});
+	mCombatUIModel->OnEndCombat.RemoveAll(this);
+	mCombatUIModel->OnEndCombat.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier)
+		{
+			HandleEndCombatUI(MoveTemp(Barrier));
+		});
 
 	// 라운드 시작 배너: 게임모드가 데이터(mRound) 갱신 후 재방송하는 OnBeginAnyRoundUI를 구독한다.
 	// 배리어를 붙잡고 배너를 재생 → 배너 종료 시(FinishTurnChangeIntro) 배리어를 놓아 그 라운드 첫 턴이 진행된다.
 	// (프레임워크가 아직 OnBeginAnyRoundUI를 방송하지 않으면 이 핸들러는 호출되지 않음 = 기존 동작 유지)
-	if (CombatGameMode != nullptr)
-	{
-		CombatGameMode->OnBeginAnyRoundUI.RemoveAll(this);
-		CombatGameMode->OnBeginAnyRoundUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, int32 /*RoundCount*/)
+	mCombatUIModel->OnBeginAnyRound.RemoveAll(this);
+	mCombatUIModel->OnBeginAnyRound.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier)
 		{
 			mRoundChangeBarrier.Reset();
 			mRoundChangeBarrier = MoveTemp(Barrier);
@@ -69,7 +65,6 @@ void UCombatTileMapHUDWidget::BindVictoryFlowEvents()
 				mRoundChangeBarrier.Reset();
 			}
 		});
-	}
 }
 
 /**
@@ -257,14 +252,14 @@ void UCombatTileMapHUDWidget::ToggleFloatingPanel(EWorldWidgetType WorldWidgetTy
 /**
  * @brief 전투 결과를 승패 영상 연출로 연결한다.
  */
-void UCombatTileMapHUDWidget::HandleEndCombatUI(TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result)
+void UCombatTileMapHUDWidget::HandleEndCombatUI(TSharedPtr<FPresentationBarrier> Barrier)
 {
-	if (Result != ESRPGCombatResult::PlayerWin && Result != ESRPGCombatResult::PlayerLose)
+	if (mCombatUIModel == nullptr)
 	{
 		return;
 	}
 
-	BeginCombatResultPresentation(MoveTemp(Barrier), Result);
+	BeginCombatResultPresentation(MoveTemp(Barrier), mCombatUIModel->GetCombatResultUI().mIsWin);
 }
 
 /**
@@ -276,12 +271,11 @@ void UCombatTileMapHUDWidget::HandleEndCombatUI(TSharedPtr<FPresentationBarrier>
  * RefreshMap()을 부르고, 완료 콜백에서 한 번 더 갱신한다. 완료 콜백이 실제로 접근하는
  * UObject는 월드맵 위젯이므로 약한 참조 검사 대상도 월드맵 위젯으로 둔다.
  */
-void UCombatTileMapHUDWidget::OpenWorldMapAfterPlayerWin(TSharedPtr<FPresentationBarrier> Barrier)
+void UCombatTileMapHUDWidget::OpenWorldMapAfterPlayerWin()
 {
 	UFrontendMapWidget* WorldMapWidget = Cast<UFrontendMapWidget>(GetToggleableWorldWidget(EWorldWidgetType::WorldMap));
 	if (WorldMapWidget == nullptr)
 	{
-		Barrier.Reset();
 		return;
 	}
 
@@ -291,13 +285,12 @@ void UCombatTileMapHUDWidget::OpenWorldMapAfterPlayerWin(TSharedPtr<FPresentatio
 	WorldMapWidget->OnCloseRequested.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleWorldMapCloseRequested);
 	WorldMapWidget->SetRoomSelectionEnabled(true);
 	WorldMapWidget->ClearMapStatusOverride();
-	WorldMapWidget->OpenUI(FOnEndUIOpenAnimation::CreateWeakLambda(WorldMapWidget, [Barrier](UUserWidget* OpenedWidget) mutable
+	WorldMapWidget->OpenUI(FOnEndUIOpenAnimation::CreateWeakLambda(WorldMapWidget, [](UUserWidget* OpenedWidget) mutable
 	{
 		if (UFrontendMapWidget* OpenedWorldMapWidget = Cast<UFrontendMapWidget>(OpenedWidget))
 		{
 			OpenedWorldMapWidget->RefreshMap();
 		}
-		Barrier.Reset();
 	}));
 	WorldMapWidget->RefreshMap();
 	SetCombatPlayControlsVisible(false);   // 승리 후 자동 지도도 MAP 버튼 지도와 동일하게 내비/룸 배너만 남긴다.
@@ -317,7 +310,7 @@ void UCombatTileMapHUDWidget::RestoreVictoryWorldMap()
 		return;
 	}
 
-	OpenWorldMapAfterPlayerWin(TSharedPtr<FPresentationBarrier>());
+	OpenWorldMapAfterPlayerWin();
 }
 
 /**

@@ -34,6 +34,14 @@ void UGameProfileSubsystem::EndRun() const
 	UE_LOG(LogGameProfile, Log, TEXT("런 데이터 기록 후 삭제"));
 }
 
+void UGameProfileSubsystem::ClearCombatRoom(const FTileTransform& Transform) const
+{
+	URunPersistData* RunMutableData = GetRunMutableData();
+	checkf(RunMutableData->IsActive() == true, TEXT("런 미존재 상태에서 전투 방 클리어 저장 불가"));
+
+	RunMutableData->ClearCurrentCombatRoom(Transform);
+}
+
 void UGameProfileSubsystem::SetVolume(EGameVolumeType VolumeType, float Volume) const
 {
 	GetOptionMutableData()->SetVolume(VolumeType, Volume);

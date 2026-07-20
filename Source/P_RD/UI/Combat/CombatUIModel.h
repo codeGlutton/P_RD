@@ -8,6 +8,7 @@
 
 #include "RDMinimal.h"
 #include "UI/Combat/CombatUITypes.h"
+#include "UI/Reward/RewardUITypes.h"
 
 #include "CombatUIModel.generated.h"
 
@@ -27,6 +28,7 @@ enum class ECombatInputType : uint8
 };
 
 class UTexture2D;
+struct FPresentationBarrier;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatUIChanged, ECombatUIDomain, Domain);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatQueueNodeResolved, FCombatQueueNode, Node);
@@ -38,6 +40,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatFloatingLog, FCombatFloatin
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatFloatingLogMotionFinished, int32, MotionIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatFloatingLogsCleared);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatDiceRollRequested);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatResultOpenRequested);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAbandonRun);
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnBeginCombatPresentation, TSharedPtr<FPresentationBarrier> /*Barrier*/)
 
 /** @brief 전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다. */
 UCLASS(BlueprintType)
@@ -75,6 +81,19 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
 	FOnCombatDiceRollRequested OnDiceRollRequested;
 
+	/** @brief 전투 보상 오버레이를 열라는 알림 */
+	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
+	FOnCombatResultOpenRequested OnCombatResultOpenRequested;
+
+public:
+	FOnBeginCombatPresentation OnBeginCombat;
+	FOnBeginCombatPresentation OnEndCombat;
+	FOnBeginCombatPresentation OnBeginAnyTurn;
+	FOnBeginCombatPresentation OnBeginAnyRound;
+	FOnBeginCombatPresentation OnEndAnyTurn;
+	FOnBeginCombatPresentation OnBeginAnyTurnAction;
+	FOnBeginCombatPresentation OnEndAnyTurnAction;
+
 	/* ───────── 게임플레이가 구독하는 입력(의도) ───────── */
 	// UI는 Request*()로 의도만 보낸다. 게임플레이가 아래 델리게이트를 구독해 실제 처리해야 한다.
 public:
@@ -89,6 +108,9 @@ public:
 	/** @brief 입장 물리 굴림의 결과면(0-base index)을 전투 풀에 반영하라는 알림. [게임플레이 구독] */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|Input")
 	FOnApplyDiceResults OnApplyDiceResults;
+
+	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
+	FOnAbandonRun OnAbandonRun;
 
 	/* ───────── UI → gameplay : 의도만 보낸다 ───────── */
 public:
@@ -115,12 +137,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestLongPressEquip(int32 SlotIndex);
 	/** @brief 화면 좌표와 롱프레스 여부만 넘긴다. 월드/타일 변환은 UIModel 바깥의 책임이다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress);
+	
+	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestAbandonRun();
 
 	/* ───────── gameplay → UI : 표시값을 밀어넣는다 ─────────
 	   각 Set*()은 UI가 그리려면 게임플레이가 반드시 공급해야 하는 값이다(UI는 못 만듦).
 	   [소스]=가져올 곳(정해짐), [합의필요]=진짜 소스 미정(현재 Mock/placeholder). */
 public:
-	/** @brief 전체 유닛 HP/이동력/타일/HP바위치/상태태그. [합의필요] HP/MaxHP 진짜소스=UUnitData(GAS 폐기후), 현재 placeholder. */
+	/** @brief 전투 결과 */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetCombatResultUI(const FCombatResultUI& Result);
+	/** @brief 전체 유닛 HP/이동력/타일/HP바위치/상태태그. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetUnitUIs(const TArray<FUnitUI>& Units);
 	/** @brief 유닛 롱프레스 상세(이름/레벨/초상화/패시브). [합의필요] UUnitData 연결. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetUnitDetail(const FUnitDetailUI& Detail);
@@ -172,8 +198,12 @@ public:
 	/** @brief 턴 시작 주사위 굴림 오버레이 열기를 요청한다(OnDiceRollRequested). 게임플레이가 DicePrepare 시점에 호출. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyDiceRollRequested();
 
+	/** @brief 전투 보상 오버레이 열기를 요청한다(OnDiceRollRequested) */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyCombatResultOpenRequested();
+
 	/* ───────── 위젯이 읽는다 ───────── */
 public:
+	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FCombatResultUI& GetCombatResultUI() const { return mCombatResultUI; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FUnitUI>& GetUnitUIs() const { return mUnitUIs; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FUnitDetailUI& GetUnitDetail() const { return mUnitDetail; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FDiceSlotUI>& GetDiceUIs() const { return mDiceUIs; }
@@ -189,6 +219,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FPlayerMetaUI& GetPlayerMeta() const { return mPlayerMeta; }
 
 private:
+	/** @brief 마지막으로 push된 전투 결과 */
+	UPROPERTY(Transient) FCombatResultUI mCombatResultUI;
 	/** @brief 마지막으로 push된 유닛 표시 스냅샷. 위젯은 참조로 읽고 수정하지 않는다. */
 	UPROPERTY(Transient) TArray<FUnitUI> mUnitUIs;
 	/** @brief 마지막 유닛 상세 스냅샷. 롱프레스 상세 패널의 단일 소스다. */

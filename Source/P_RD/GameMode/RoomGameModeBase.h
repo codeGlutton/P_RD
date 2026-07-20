@@ -96,9 +96,9 @@ public:
 
 protected:
 	bool PreloadAndTransitionSelectedRoomAsync();
+	void SaveRunWithUIAsync() const;
 
 private:
-	void SaveRunWithUIAsync() const;
 	void RestorePlayerUnit();
 
 private:

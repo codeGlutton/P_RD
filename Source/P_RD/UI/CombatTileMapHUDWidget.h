@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "RDMinimal.h"
 #include "UI/DiceViewData.h"
@@ -94,6 +94,7 @@ public:
 	// 미연결 상태에서는 기존 단독 동작(시안용 임시 굴림)을 그대로 유지해 회귀가 없다.
 	// 게임플레이 어댑터가 준비되면 여기에 같은 뷰모델을 넘기면 된다(UI 무수정).
 	void BindCombatUIModel(UCombatUIModel* InUIModel);
+	void BindRewardUIModel(URewardUIModel* InUIModel);
 
 protected:
 	/** @brief WBP 바인딩과 버튼 이벤트를 연결한다. */
@@ -327,11 +328,11 @@ private:
 	void ToggleFloatingPanel(EWorldWidgetType WorldWidgetType, const TCHAR* DebugName);
 
 	/** @brief 플레이어 승리 결과를 다음 방 선택 월드맵 표시로 연결한다. */
-	void HandleEndCombatUI(TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result);
+	void HandleEndCombatUI(TSharedPtr<FPresentationBarrier> Barrier);
 
 	/** @brief 승패 결과 영상을 열고, 영상 종료 뒤 보상/계속 버튼 흐름으로 이어간다. */
 	// 판정 직후 바로가 아니라 짧은 텀(딜레이) 후 StartCombatResultCinematic으로 실제 연출을 시작한다.
-	void BeginCombatResultPresentation(TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result);
+	void BeginCombatResultPresentation(TSharedPtr<FPresentationBarrier> Barrier, bool IsPlayerWin);
 
 	/** @brief 텀(딜레이) 후 실제 결과 연출 시작 — 징글 재생 + 결과 영상 오픈. */
 	void StartCombatResultCinematic();
@@ -360,10 +361,10 @@ private:
 	void SetCombatResultViewActive(bool bActive, bool bRestoreCombatControls = true);
 
 	/** @brief 결과 타입에 맞는 mp4 설정 경로를 반환한다. */
-	FString GetCombatResultVideoPath(ESRPGCombatResult Result) const;
+	FString GetCombatResultVideoPath(bool IsPlayerWin) const;
 
 	/** @brief 승리 후 다음 방 선택이 가능한 상태로 월드맵을 연다(OpenUI 완료 시 barrier 해제). */
-	void OpenWorldMapAfterPlayerWin(TSharedPtr<FPresentationBarrier> Barrier);
+	void OpenWorldMapAfterPlayerWin();
 
 	/** @brief 승리 후 지도 잠금이 유지되는 동안 월드맵을 다시 연다. */
 	void RestoreVictoryWorldMap();
@@ -408,7 +409,7 @@ private:
 
 	/** @brief 승패 판정 → 결과 영상 시작 사이의 텀 타이머. */
 	FTimerHandle mCombatResultStartDelayTimerHandle;
-	ESRPGCombatResult mCombatResult = ESRPGCombatResult::PlayerLose;
+	bool mIsPlayerWin = false;
 	bool mCombatResultFlowActive = false;
 
 	/** @brief 뷰모델의 유닛 수에 맞춰 머리 위 HP바 위젯을 다시 만든다. */
@@ -446,6 +447,9 @@ private:
 	/** @brief 턴 시작 주사위 굴림 요청(OnDiceRollRequested 구독) — 굴림 오버레이를 연다. 구현: _DiceRoll.cpp */
 	UFUNCTION()
 	void HandleCombatDiceRollRequested();
+
+	UFUNCTION()
+	void HandleCombatResultOpenRequested();
 
 	/** @brief 턴 전환 영상 안내를 재생하고, 필요하면 종료 뒤 주사위 팝업을 연다. */
 	bool PlayTurnChangeIntro(bool bOpenDiceAfterIntro);
