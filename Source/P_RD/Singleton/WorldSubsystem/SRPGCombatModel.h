@@ -161,8 +161,12 @@ protected:
 	void RegisterObstacles(TArray<FObstaclePlacementData>& ObstaclePlacementDatas);
 	void SpawnRoundReinforcements();
 	UEnemyUnitModel* SpawnOneReinforcement();
+	UEnemyUnitModel* SpawnOneReinforcementAt(const FTileTransform& SpawnTransform);
 	void SpawnActionReinforcementIfNeeded();
+	void QueueReinforcements(int32 DesiredCount);
+	void CommitPendingReinforcements();
 	bool FindReinforcementSpawnTile(FTileTransform& OutTransform) const;
+	int32 GetReinforcementEnemyCapForRound() const;
 	void ApplyHordeEnemyStats(UEnemyUnitModel* EnemyUnit) const;
 	bool HasFutureReinforcements() const;
 
@@ -200,6 +204,12 @@ public:
 	const TArray<TObjectPtr<UBoardActorModel>>& GetObstacles() const;
 
 	int32 GetRoundCount() const;
+	const TArray<FTileTransform>& GetPendingReinforcementTransforms() const { return mPendingReinforcementTransforms; }
+	int32 GetCurrentReinforcementEnemyCap() const { return GetReinforcementEnemyCapForRound(); }
+	int32 GetWarriorCombo() const { return mWarriorCombo; }
+	int32 GetWarriorMomentum() const { return mWarriorMomentum; }
+	ESRPGWarriorAftermathStance GetWarriorAftermathStance() const { return mWarriorAftermathStance; }
+	FText GetWarriorAftermathStanceLabel() const;
 
 	/* 공개 적 의도 */
 public:
@@ -247,6 +257,9 @@ protected:
 	const FSRPGEnemyIntent* FindEnemyIntent(const UUnitModel* Enemy) const;
 	void AppendEnemyIntentResult(FSRPGEnemyIntent& Intent, ESRPGEnemyIntentResult Result, const FText& Message);
 	void BroadcastEnemyIntentChanged();
+	void ActivateWarriorAftermath(const USRPGAction* Action);
+	bool TryResolveWarriorAftermath(FSRPGEnemyIntent& Intent);
+	void AddWarriorCombo(int32 Amount);
 
 	/* 시뮬 함수 */
 public:
@@ -373,14 +386,27 @@ protected:
 	int32 mTotalReinforcementsSpawned = 0;
 	UPROPERTY(Category = Round, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PlayerActionsSinceReinforcement"))
 	int32 mPlayerActionsSinceReinforcement = 0;
+	/** @brief 한 행동 전부터 바닥에 공개하고 다음 라운드 시작에 실제 투입하는 위치. */
+	UPROPERTY(Category = Round, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PendingReinforcementTransforms"))
+	TArray<FTileTransform> mPendingReinforcementTransforms;
 
 	static constexpr int32 ReinforcementFinalRound = 8;
-	static constexpr int32 ReinforcementEnemyCap = 8;
-	static constexpr int32 ReinforcementActionInterval = 2;
+	static constexpr int32 ReinforcementActionInterval = 3;
 
 	/** @brief 라운드 시작에 공개되고 플레이어의 실제 행동이 끝날 때마다 갱신되는 행동 예고. */
 	UPROPERTY(Category = Intent, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "EnemyIntents"))
 	TArray<FSRPGEnemyIntent> mEnemyIntents;
+	UPROPERTY(Category = Intent, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "WarriorAftermathStance"))
+	ESRPGWarriorAftermathStance mWarriorAftermathStance = ESRPGWarriorAftermathStance::None;
+	ESRPGWarriorAftermathStance mPendingWarriorAftermathStance = ESRPGWarriorAftermathStance::None;
+	UPROPERTY(Category = Intent, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "WarriorAftermathTarget"))
+	TWeakObjectPtr<UUnitModel> mWarriorAftermathTarget;
+	int32 mWarriorAftermathReactions = 0;
+	UPROPERTY(Category = Intent, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "WarriorCombo"))
+	int32 mWarriorCombo = 0;
+	UPROPERTY(Category = Intent, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "WarriorMomentum"))
+	int32 mWarriorMomentum = 0;
+	int32 mWarriorComboRound = INDEX_NONE;
 
 protected:
 	// @brief 배치된 타일맵

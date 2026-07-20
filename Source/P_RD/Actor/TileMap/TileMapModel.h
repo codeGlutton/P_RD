@@ -71,6 +71,8 @@ struct P_RD_API FEnemyIntentTileOverlay
 	FTileIndex mCurrentTile = FTileIndex::Invalid;
 	bool mWasDisplaced = false;
 	bool mIsResolved = false;
+	/** @brief 다음 라운드에 등장할 타일. 경로 대신 주황색 맥동 마커 하나만 그린다. */
+	bool mIsReinforcementWarning = false;
 };
 
 /** @brief 적별 다중 경로/공격/현재 위치 오버레이를 타일맵 뷰에 전달한다. */

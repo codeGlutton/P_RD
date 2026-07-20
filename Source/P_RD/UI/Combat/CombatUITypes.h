@@ -95,6 +95,13 @@ struct FEnemyIntentUI
 	UPROPERTY(BlueprintReadOnly) int32 mResponseCostSpent = 0;
 	/** @brief 튜토리얼이 실제로 밀 수 있는 적을 이름과 ★ 표식으로 가리키기 위한 표시값. */
 	UPROPERTY(BlueprintReadOnly) bool mIsRecommendedInterventionTarget = false;
+	/** @brief 실제 적이 아니라 다음 플레이어 행동 뒤 등장할 증원 타일을 알리는 행. */
+	UPROPERTY(BlueprintReadOnly) bool mIsReinforcementWarning = false;
+	UPROPERTY(BlueprintReadOnly) int32 mPendingReinforcementCount = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mEnemyCap = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mWarriorCombo = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mWarriorMomentum = 0;
+	UPROPERTY(BlueprintReadOnly) FText mWarriorStanceLabel;
 };
 
 /** @brief 전투 조작 UI의 단계. UI 버튼/하이라이트 레이어 전환에 쓰는 UI 전용 상태다(게임플레이 enum의 1:1 거울이 아님). */
@@ -410,6 +417,15 @@ struct FDisplacementPreviewUI
 	UPROPERTY(BlueprintReadOnly) TArray<FVector> mTrajectoryWorldLocations;
 	UPROPERTY(BlueprintReadOnly) TArray<FVector> mDirectionCandidateWorldLocations;
 	UPROPERTY(BlueprintReadOnly) int32 mMoveDistance = 0;
+	/** @brief 드롭하면 적 전원이 다시 판단한 뒤 설 것으로 예상되는 위치. */
+	UPROPERTY(BlueprintReadOnly) TArray<int32> mResponseGhostUnitIds;
+	UPROPERTY(BlueprintReadOnly) TArray<FVector> mResponseGhostWorldLocations;
+	/** @brief 재계산된 공격이 닿을 것으로 예상되는 위험 타일. */
+	UPROPERTY(BlueprintReadOnly) TArray<FVector> mResponseThreatWorldLocations;
+	UPROPERTY(BlueprintReadOnly) int32 mPredictedPlayerHits = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mPredictedCollisions = 0;
+	UPROPERTY(BlueprintReadOnly) FText mContextualFinisherText;
+	UPROPERTY(BlueprintReadOnly) FText mResponseSummaryText;
 };
 
 /** @brief 스킬을 길게 눌렀을 때의 상세창 내용. */

@@ -18,12 +18,12 @@
 
 namespace
 {
-	constexpr float FastMoveSpeedMultiplier = 2.25f;
-	constexpr float FastMoveAccelerationMultiplier = 5.0f;
-	constexpr float FastMoveRotationMultiplier = 2.5f;
-	constexpr float FastMoveMinimumSpeed = 1200.0f;
-	constexpr float FastMoveMinimumAcceleration = 5000.0f;
-	constexpr float FastMoveMinimumDeceleration = 3000.0f;
+	constexpr float FastMoveSpeedMultiplier = 2.85f;
+	constexpr float FastMoveAccelerationMultiplier = 7.0f;
+	constexpr float FastMoveRotationMultiplier = 3.0f;
+	constexpr float FastMoveMinimumSpeed = 1500.0f;
+	constexpr float FastMoveMinimumAcceleration = 7000.0f;
+	constexpr float FastMoveMinimumDeceleration = 4600.0f;
 	constexpr float FastMoveMinimumRotationSpeed = 1080.0f;
 
 	float EaseOutCubic(float Alpha)

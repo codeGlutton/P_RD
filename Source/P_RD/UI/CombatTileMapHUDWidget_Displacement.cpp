@@ -39,6 +39,9 @@ void UCombatTileMapHUDWidget::UpdateDisplacementPreviewVisuals(float InDeltaTime
 		HidePreviewWidget(mDisplacementLandingGhost);
 		HidePreviewWidget(mDisplacementLandingLabel);
 		HidePreviewWidget(mDisplacementCollisionLabel);
+		for (UImage* Ghost : mResponseGhostImages) { HidePreviewWidget(Ghost); }
+		for (UTextBlock* Threat : mResponseThreatLabels) { HidePreviewWidget(Threat); }
+		HidePreviewWidget(mResponseSummaryLabel);
 		return;
 	}
 
@@ -52,6 +55,9 @@ void UCombatTileMapHUDWidget::UpdateDisplacementPreviewVisuals(float InDeltaTime
 		HidePreviewWidget(mDisplacementLandingGhost);
 		HidePreviewWidget(mDisplacementLandingLabel);
 		HidePreviewWidget(mDisplacementCollisionLabel);
+		for (UImage* Ghost : mResponseGhostImages) { HidePreviewWidget(Ghost); }
+		for (UTextBlock* Threat : mResponseThreatLabels) { HidePreviewWidget(Threat); }
+		HidePreviewWidget(mResponseSummaryLabel);
 		return;
 	}
 
@@ -231,6 +237,89 @@ void UCombatTileMapHUDWidget::UpdateDisplacementPreviewVisuals(float InDeltaTime
 	else
 	{
 		HidePreviewWidget(mDisplacementCollisionLabel);
+	}
+
+	// 드롭 뒤 적 전원의 한 칸 대응을 초상 잔상과 붉은 위험 타일로 동시에 보여준다.
+	int32 VisibleGhosts = 0;
+	if (bHasLanding)
+	{
+		const int32 GhostCount = FMath::Min(
+			Preview.mResponseGhostWorldLocations.Num(),
+			Preview.mResponseGhostUnitIds.Num());
+		for (int32 Index = 0; Index < GhostCount && VisibleGhosts < mResponseGhostImages.Num(); ++Index)
+		{
+			FVector2D Screen;
+			if (Project(Preview.mResponseGhostWorldLocations[Index] + FVector(0.0f, 0.0f, 32.0f), Screen) == false)
+			{
+				continue;
+			}
+			UImage* Ghost = mResponseGhostImages[VisibleGhosts++];
+			const FUnitUI* UnitUI = mCombatUIModel->GetUnitUIs().FindByPredicate([&Preview, Index](const FUnitUI& Unit)
+			{
+				return Unit.mUnitId == Preview.mResponseGhostUnitIds[Index];
+			});
+			if (Ghost == nullptr || UnitUI == nullptr || UnitUI->mPortrait == nullptr)
+			{
+				--VisibleGhosts;
+				continue;
+			}
+			Ghost->SetBrushFromTexture(UnitUI->mPortrait, false);
+			Ghost->SetColorAndOpacity(FLinearColor(0.35f, 0.95f, 1.0f, 0.30f + 0.08f * Pulse));
+			if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Ghost->Slot))
+			{
+				CanvasSlot->SetPosition(Screen);
+			}
+			Ghost->SetVisibility(ESlateVisibility::HitTestInvisible);
+		}
+	}
+	for (int32 Index = VisibleGhosts; Index < mResponseGhostImages.Num(); ++Index)
+	{
+		HidePreviewWidget(mResponseGhostImages[Index]);
+	}
+
+	int32 VisibleThreats = 0;
+	if (bHasLanding)
+	{
+		for (const FVector& ThreatWorld : Preview.mResponseThreatWorldLocations)
+		{
+			if (VisibleThreats >= mResponseThreatLabels.Num()) { break; }
+			FVector2D Screen;
+			if (Project(ThreatWorld + FVector(0.0f, 0.0f, 28.0f), Screen) == false) { continue; }
+			UTextBlock* Threat = mResponseThreatLabels[VisibleThreats++];
+			if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Threat->Slot))
+			{
+				CanvasSlot->SetPosition(Screen);
+			}
+			Threat->SetRenderOpacity(Pulse);
+			Threat->SetVisibility(ESlateVisibility::HitTestInvisible);
+		}
+	}
+	for (int32 Index = VisibleThreats; Index < mResponseThreatLabels.Num(); ++Index)
+	{
+		HidePreviewWidget(mResponseThreatLabels[Index]);
+	}
+
+	if (mResponseSummaryLabel != nullptr && bHasLanding)
+	{
+		const FString Finisher = Preview.mContextualFinisherText.IsEmpty()
+			? FString()
+			: FString::Printf(TEXT("  ·  %s"), *Preview.mContextualFinisherText.ToString());
+		mResponseSummaryLabel->SetText(FText::FromString(FString::Printf(
+			TEXT("적 대응 예상  ·  %s%s"),
+			*Preview.mResponseSummaryText.ToString(),
+			*Finisher)));
+		mResponseSummaryLabel->SetColorAndOpacity(FSlateColor(Preview.mPredictedPlayerHits > 0
+			? FLinearColor(1.0f, 0.28f, 0.10f, 1.0f)
+			: FLinearColor(0.45f, 1.0f, 0.72f, 1.0f)));
+		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(mResponseSummaryLabel->Slot))
+		{
+			CanvasSlot->SetPosition(LandingScreen + FVector2D(0.0f, 70.0f));
+		}
+		mResponseSummaryLabel->SetVisibility(ESlateVisibility::HitTestInvisible);
+	}
+	else
+	{
+		HidePreviewWidget(mResponseSummaryLabel);
 	}
 }
 

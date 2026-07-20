@@ -196,9 +196,29 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
 
 	const USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	const int32 Round = CombatModel != nullptr ? CombatModel->GetRoundCount() : 1;
+	const FEnemyIntentUI& FlowState = (*Intents)[0];
+	int32 LivingEnemyRows = 0;
+	for (const FEnemyIntentUI& Intent : *Intents)
+	{
+		if (Intent.mIsReinforcementWarning == false
+			&& (Intent.mResult == EEnemyIntentResultUI::Planned || Intent.mResult == EEnemyIntentResultUI::Executing))
+		{
+			++LivingEnemyRows;
+		}
+	}
+	const FString MomentumPips = FString::ChrN(FMath::Clamp(FlowState.mWarriorMomentum, 0, 3), TEXT('◆'))
+		+ FString::ChrN(FMath::Clamp(3 - FlowState.mWarriorMomentum, 0, 3), TEXT('◇'));
 	const FString HeaderText = FString::Printf(
-		TEXT("생존전 %d/8  ·  2회 행동마다 증원  ·  색상=행동 순서"),
-		FMath::Clamp(Round, 1, 8));
+		TEXT("ROUND %d/8  ·  적 %d/%d  ·  COMBO %d  ·  기세 %s\n%s%s"),
+		FMath::Clamp(Round, 1, 8),
+		LivingEnemyRows,
+		FMath::Max(FlowState.mEnemyCap, LivingEnemyRows),
+		FlowState.mWarriorCombo,
+		*MomentumPips,
+		*FlowState.mWarriorStanceLabel.ToString(),
+		FlowState.mPendingReinforcementCount > 0
+			? *FString::Printf(TEXT("  ·  다음 증원 %d"), FlowState.mPendingReinforcementCount)
+			: TEXT(""));
 	if (UTextBlock* Header = MakeText(
 		HeaderText,
 		IntentCurrentColor,
@@ -213,6 +233,26 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
 	for (int32 RowIndex = 0; RowIndex < Intents->Num(); ++RowIndex)
 	{
 		const FEnemyIntentUI& Intent = (*Intents)[RowIndex];
+		if (Intent.mIsReinforcementWarning)
+		{
+			UBorder* WarningBorder = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
+			if (WarningBorder == nullptr) { continue; }
+			WarningBorder->SetBrushColor(FLinearColor(0.24f, 0.07f, 0.01f, 0.90f));
+			WarningBorder->SetPadding(FMargin(7.0f, 5.0f));
+			const FString WarningText = FString::Printf(
+				TEXT("⚠ 다음 증원  ·  주황 타일 (%d,%d)\n    다음 내 행동 전 등장 · 등장한 턴에는 선공 없음"),
+				Intent.mCurrentTile.mX,
+				Intent.mCurrentTile.mY);
+			if (UTextBlock* WarningLine = MakeText(WarningText, FLinearColor(1.0f, 0.52f, 0.12f, 1.0f), 14))
+			{
+				WarningBorder->AddChild(WarningLine);
+			}
+			if (UVerticalBoxSlot* WarningSlot = mEnemyIntentList->AddChildToVerticalBox(WarningBorder))
+			{
+				WarningSlot->SetPadding(FMargin(0.0f, 1.0f, 0.0f, 3.0f));
+			}
+			continue;
+		}
 		const int32 DisplayOrder = Intent.mExecutionOrder > 0 ? Intent.mExecutionOrder : RowIndex + 1;
 		const bool bActive = Intent.mResult == EEnemyIntentResultUI::Planned
 			|| Intent.mResult == EEnemyIntentResultUI::Executing;
@@ -249,14 +289,9 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
 				? FString::Printf(TEXT("대응 #%d · 이동력 -%d"), Intent.mPlanRevision, Intent.mResponseCostSpent)
 				: TEXT("초기 계획");
 		}
-		const FString RouteChange = Intent.mPreviousDestination != FTileIndex::Invalid
-			? FString::Printf(
-				TEXT("  ·  목적지 (%d,%d)→(%d,%d)"),
-				Intent.mPreviousDestination.mX,
-				Intent.mPreviousDestination.mY,
-				Intent.mPlannedDestination.mX,
-				Intent.mPlannedDestination.mY)
-			: FString();
+		const FString Destination = Intent.mPlannedDestination != FTileIndex::Invalid
+			? FString::Printf(TEXT("(%d,%d)"), Intent.mPlannedDestination.mX, Intent.mPlannedDestination.mY)
+			: TEXT("현재 칸");
 
 		UBorder* RowBorder = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
 		if (RowBorder == nullptr)
@@ -272,15 +307,14 @@ void UCombatTileMapHUDWidget::RefreshEnemyIntentPanel()
 		RowBorder->SetPadding(FMargin(7.0f, 5.0f));
 
 		const FString RowText = FString::Printf(
-			TEXT("%s[%d] %s  ·  %s\n    %s  ·  %s  ·  %s%s"),
+			TEXT("%s[%d] %s  ·  %s\n    목적지 %s  ·  위험 %d칸  ·  %s"),
 			Intent.mIsRecommendedInterventionTarget ? TEXT("★ ") : TEXT(""),
 			DisplayOrder,
 			*Intent.mEnemyName.ToString(),
-			*Intent.mDisplacementWeightLabel.ToString(),
-			*Intent.mGoalText.ToString(),
 			*Flow,
-			*Status,
-			*RouteChange);
+			*Destination,
+			Intent.mEffectTileIndexes.Num(),
+			*Status);
 		if (UTextBlock* RowLine = MakeText(RowText, RowColor, 14))
 		{
 			RowBorder->AddChild(RowLine);
@@ -422,19 +456,19 @@ void UCombatTileMapHUDWidget::UpdateEnemyIntentTutorial()
 			break;
 		case EEnemyIntentTutorialStage::ConfirmDestination:
 			DirectTitle = TEXT("3 / 4   강조된 적을 원하는 밝은 칸으로 끌어 놓으세요");
-			DirectMessage = TEXT("적을 누른 채 움직이고, ◆가 생긴 칸 위에서 손을 떼세요");
+			DirectMessage = TEXT("반투명 적=다음 위치 · 붉은 ✕=곧 맞는 칸 · 초록 문구면 안전합니다");
 			break;
 		case EEnemyIntentTutorialStage::ApplyingIntervention:
 			DirectTitle = TEXT("좋아요!  적을 옮기는 중");
 			DirectMessage = TEXT("손을 놓은 칸에 정확히 도착합니다");
 			break;
 		case EEnemyIntentTutorialStage::EndTurnAndObserve:
-			DirectTitle = TEXT("4 / 4   이제 적 전원이 차례로 행동합니다");
-			DirectMessage = TEXT("오른쪽 번호 순서대로 모두 행동한 뒤 자동으로 내 차례가 됩니다");
+			DirectTitle = TEXT("4 / 4   손을 놓으면 연계가 적 페이즈까지 이어집니다");
+			DirectMessage = TEXT("COMBO와 기세를 보세요 · 붙잡은 적이 움직이면 사슬 반동이 자동 발동합니다");
 			break;
 		case EEnemyIntentTutorialStage::Complete:
-			DirectTitle = TEXT("내 차례가 돌아왔습니다");
-			DirectMessage = TEXT("한 번 행동하면 적 전원이 한 번씩 행동합니다");
+			DirectTitle = TEXT("연계 완료 · 다시 내 차례");
+			DirectMessage = TEXT("공격/손아귀/제압/기동마다 다른 반응 태세가 남습니다");
 			break;
 		default:
 			DirectTitle = TEXT("적을 직접 움직여 보세요");

@@ -21,6 +21,17 @@ enum class ESRPGPlayerDisplacementType : uint8
 	Swap,
 };
 
+/** @brief 플레이어 행동이 끝난 뒤 적 페이즈까지 이어지는 전사 반응 태세. */
+UENUM(BlueprintType)
+enum class ESRPGWarriorAftermathStance : uint8
+{
+	None,
+	Guard,
+	Tether,
+	Trip,
+	Mobility,
+};
+
 /** @brief 공개 의도가 실행되며 발생한 가장 최근의 핵심 결과. */
 UENUM(BlueprintType)
 enum class ESRPGEnemyIntentResult : uint8

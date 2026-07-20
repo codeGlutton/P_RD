@@ -837,6 +837,13 @@ private:
 	TObjectPtr<UTextBlock> mDisplacementLandingLabel;
 	UPROPERTY(Transient)
 	TObjectPtr<UTextBlock> mDisplacementCollisionLabel;
+	/** @brief 드롭 이후 적 전원의 예상 위치(반투명 초상)와 공격 위험 타일. */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UImage>> mResponseGhostImages;
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UTextBlock>> mResponseThreatLabels;
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mResponseSummaryLabel;
 
 	/** @brief 화면 상단의 짧은 2줄 설명과 4단계 진행 표시. 전투 입력을 막지 않는다. */
 	UPROPERTY(Transient)

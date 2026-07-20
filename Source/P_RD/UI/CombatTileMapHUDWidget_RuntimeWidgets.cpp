@@ -654,6 +654,45 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 			}
 		}
 	}
+	if (mResponseGhostImages.IsEmpty())
+	{
+		for (int32 Index = 0; Index < 8; ++Index)
+		{
+			UImage* Ghost = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(),
+				FName(*FString::Printf(TEXT("EnemyResponseGhost_%d"), Index)));
+			if (Ghost == nullptr) { continue; }
+			Ghost->SetColorAndOpacity(FLinearColor(0.35f, 0.95f, 1.0f, 0.34f));
+			Ghost->SetVisibility(ESlateVisibility::Collapsed);
+			if (UCanvasPanelSlot* CanvasSlot = RootCanvas->AddChildToCanvas(Ghost))
+			{
+				CanvasSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+				CanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+				CanvasSlot->SetSize(FVector2D(54.0f, 54.0f));
+				CanvasSlot->SetZOrder(902);
+			}
+			mResponseGhostImages.Add(Ghost);
+		}
+	}
+	if (mResponseThreatLabels.IsEmpty())
+	{
+		for (int32 Index = 0; Index < 12; ++Index)
+		{
+			UTextBlock* Threat = MakeWorldLabel(
+				*FString::Printf(TEXT("EnemyResponseThreat_%d"), Index),
+				FLinearColor(1.0f, 0.12f, 0.04f, 0.78f),
+				28);
+			if (Threat == nullptr) { continue; }
+			Threat->SetText(FText::FromString(TEXT("✕")));
+			mResponseThreatLabels.Add(Threat);
+		}
+	}
+	if (mResponseSummaryLabel == nullptr)
+	{
+		mResponseSummaryLabel = MakeWorldLabel(
+			TEXT("EnemyResponseSummary"),
+			FLinearColor(1.0f, 0.88f, 0.35f, 1.0f),
+			17);
+	}
 
 	// 첫 전투 튜토리얼은 설명 페이지가 아니라 현재 누를 곳 하나만 가리키는 코치마크다.
 	if (mEnemyIntentTutorialPanel == nullptr)

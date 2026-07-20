@@ -1062,6 +1062,26 @@ void ATileMap::SetEnemyIntentOverlays(const TArray<FEnemyIntentTileOverlay>& Ove
 		const int32 LaneIndex = FMath::Abs(Overlay.mExecutionOrder > 0 ? Overlay.mExecutionOrder - 1 : 0) % UE_ARRAY_COUNT(LaneOffsets);
 		const float LaneOffset = LaneOffsets[LaneIndex];
 		const int32 PathSpan = FMath::Max(Overlay.mPathTileIndexes.Num() - 1, 1);
+		if (Overlay.mIsReinforcementWarning)
+		{
+			if (IsValidIndex(Overlay.mCurrentTile))
+			{
+				const FVector Location(
+					Overlay.mCurrentTile.mX * mTileSize,
+					Overlay.mCurrentTile.mY * mTileSize,
+					mPathHeightOffset + 24.0f);
+				AddPulseInstance(
+					mEnemyIntentCurrentComponent,
+					mEnemyIntentCurrentPulseData,
+					FTransform(FRotator(0.0f, 45.0f, 0.0f), Location, FVector(BaseScale * 1.45f)),
+					FLinearColor(1.0f, 0.38f, 0.04f, 1.0f),
+					0,
+					1,
+					false,
+					false);
+			}
+			continue;
+		}
 
 		// 직전 계획은 낮고 가는 회색 잔상으로 남긴다. 현재 색 경로를 나중에 그려 겹치는
 		// 구간은 자연스럽게 현재 계획이 우선하고, 갈라진 구간만 '버린 경로'로 읽힌다.

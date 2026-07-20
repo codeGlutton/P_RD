@@ -1071,6 +1071,84 @@ void ACombatGameMode::PushDisplacementPreviewUIData(
 		Preview.mCollisionWorldLocation = TileMap->TileToWorldLocation(Preview.mCollisionTile);
 		Preview.mCollisionName = Blocker->GetBoardActorDisplayName();
 	}
+
+	// 드롭하기 전에 '그 뒤 적 전원이 어디서 무엇을 할지'를 한 프레임짜리 유령으로 요약한다.
+	// 실제 판정은 행동 종료 뒤 플래너가 다시 계산하며, 여기서는 공개된 역할/방향을 가상 착지점에 평행 이동한다.
+	const FTileIndex PlayerTile = CombatModel->GetPlayerUnit() != nullptr
+		? CombatModel->GetPlayerUnit()->GetTileTransform().mIndex
+		: FTileIndex::Invalid;
+	TArray<FTileIndex> ProjectedDestinations;
+	TArray<FTileIndex> ProjectedThreats;
+	for (const FSRPGEnemyIntent& Intent : CombatModel->GetEnemyIntents())
+	{
+		if (Intent.mEnemy == nullptr || Intent.mEnemy->IsDead()
+			|| (Intent.mResult != ESRPGEnemyIntentResult::Planned
+				&& Intent.mResult != ESRPGEnemyIntentResult::Executing))
+		{
+			continue;
+		}
+		FTileIndex ProjectedOrigin = Intent.mEnemy == Target && Preview.mLandingTile != FTileIndex::Invalid
+			? Preview.mLandingTile
+			: Intent.mEnemy->GetTileTransform().mIndex;
+		FTileIndex ProjectedDestination = ProjectedOrigin;
+		if (Intent.mPlannedDestination != Intent.mPlannedOrigin)
+		{
+			ProjectedDestination.mX = FMath::Clamp(
+				ProjectedOrigin.mX + FMath::Sign(Intent.mPlannedDestination.mX - Intent.mPlannedOrigin.mX),
+				0,
+				TileMap->GetWidth() - 1);
+			ProjectedDestination.mY = FMath::Clamp(
+				ProjectedOrigin.mY + FMath::Sign(Intent.mPlannedDestination.mY - Intent.mPlannedOrigin.mY),
+				0,
+				TileMap->GetHeight() - 1);
+		}
+		Preview.mResponseGhostUnitIds.Add(Intent.mEnemy->GetModelId());
+		Preview.mResponseGhostWorldLocations.Add(TileMap->TileToWorldLocation(ProjectedDestination));
+		ProjectedDestinations.Add(ProjectedDestination);
+
+		const FTileIndex Shift(
+			ProjectedDestination.mX - Intent.mPlannedDestination.mX,
+			ProjectedDestination.mY - Intent.mPlannedDestination.mY);
+		for (const FTileIndex& EffectTile : Intent.mEffectTileIndexes)
+		{
+			const FTileIndex ThreatTile(
+				FMath::Clamp(EffectTile.mX + Shift.mX, 0, TileMap->GetWidth() - 1),
+				FMath::Clamp(EffectTile.mY + Shift.mY, 0, TileMap->GetHeight() - 1));
+			ProjectedThreats.AddUnique(ThreatTile);
+		}
+	}
+	for (const FTileIndex& ThreatTile : ProjectedThreats)
+	{
+		Preview.mResponseThreatWorldLocations.Add(TileMap->TileToWorldLocation(ThreatTile));
+		if (ThreatTile == PlayerTile)
+		{
+			++Preview.mPredictedPlayerHits;
+		}
+	}
+	for (int32 Index = 0; Index < ProjectedDestinations.Num(); ++Index)
+	{
+		for (int32 Other = Index + 1; Other < ProjectedDestinations.Num(); ++Other)
+		{
+			Preview.mPredictedCollisions += ProjectedDestinations[Index] == ProjectedDestinations[Other] ? 1 : 0;
+		}
+	}
+	if (Preview.mCollisionTile != FTileIndex::Invalid)
+	{
+		Preview.mContextualFinisherText = Cast<UUnitModel>(Action->GetDisplacementCollisionBlocker()) != nullptr
+			? NSLOCTEXT("CombatGameMode", "PreviewEnemyCollisionFinisher", "연계: 적끼리 충돌 · 양쪽 피해")
+			: NSLOCTEXT("CombatGameMode", "PreviewWallFinisher", "연계: 벽꿍 · 추가 피해");
+	}
+	else if (Preview.mIsPull && Preview.mLandingTile != FTileIndex::Invalid)
+	{
+		Preview.mContextualFinisherText = NSLOCTEXT("CombatGameMode", "PreviewKneeFinisher", "연계: 발앞 착지 시 무릎차기");
+	}
+	else if (Preview.mIsThrow && Preview.mMoveDistance >= 2)
+	{
+		Preview.mContextualFinisherText = NSLOCTEXT("CombatGameMode", "PreviewSlamFinisher", "연계: 멀리 던지면 착지 충격");
+	}
+	Preview.mResponseSummaryText = FText::FromString(Preview.mPredictedPlayerHits <= 0
+		? FString::Printf(TEXT("안전 예상  ·  충돌 %d"), Preview.mPredictedCollisions)
+		: FString::Printf(TEXT("피격 %d회 예상  ·  충돌 %d"), Preview.mPredictedPlayerHits, Preview.mPredictedCollisions));
 	mCombatUIModel->SetDisplacementPreview(Preview);
 }
 
@@ -1117,6 +1195,11 @@ void ACombatGameMode::PushEnemyIntentUIData() const
 		IntentUI.mPlanRevision = Intent.mPlanRevision;
 		IntentUI.mResponseCostSpent = Intent.mResponseCostSpent;
 		IntentUI.mIsRecommendedInterventionTarget = Intent.mIsRecommendedInterventionTarget;
+		IntentUI.mPendingReinforcementCount = CombatModel->GetPendingReinforcementTransforms().Num();
+		IntentUI.mEnemyCap = CombatModel->GetCurrentReinforcementEnemyCap();
+		IntentUI.mWarriorCombo = CombatModel->GetWarriorCombo();
+		IntentUI.mWarriorMomentum = CombatModel->GetWarriorMomentum();
+		IntentUI.mWarriorStanceLabel = CombatModel->GetWarriorAftermathStanceLabel();
 
 		if (IsValid(Intent.mEnemy))
 		{
@@ -1142,6 +1225,27 @@ void ACombatGameMode::PushEnemyIntentUIData() const
 				NSLOCTEXT("CombatGameMode", "IntentEnemyFallback", "적 {0}"),
 				FText::AsNumber(IntentUI.mExecutionOrder > 0 ? IntentUI.mExecutionOrder : IntentUIDatas.Num()));
 		}
+	}
+	for (int32 Index = 0; Index < CombatModel->GetPendingReinforcementTransforms().Num(); ++Index)
+	{
+		const FTileTransform& SpawnTransform = CombatModel->GetPendingReinforcementTransforms()[Index];
+		FEnemyIntentUI& Warning = IntentUIDatas.AddDefaulted_GetRef();
+		Warning.mExecutionOrder = 100 + Index;
+		Warning.mEnemyName = NSLOCTEXT("CombatGameMode", "IncomingReinforcement", "증원 예고");
+		Warning.mActionName = NSLOCTEXT("CombatGameMode", "ArrivesNextRound", "다음 내 차례에 등장");
+		Warning.mGoalText = FText::Format(
+			NSLOCTEXT("CombatGameMode", "ReinforcementTileWarning", "주황 타일 ({0},{1}) · 등장 즉시 행동하지 않음"),
+			FText::AsNumber(SpawnTransform.mIndex.mX),
+			FText::AsNumber(SpawnTransform.mIndex.mY));
+		Warning.mPlannedOrigin = SpawnTransform.mIndex;
+		Warning.mPlannedDestination = SpawnTransform.mIndex;
+		Warning.mCurrentTile = SpawnTransform.mIndex;
+		Warning.mIsReinforcementWarning = true;
+		Warning.mPendingReinforcementCount = CombatModel->GetPendingReinforcementTransforms().Num();
+		Warning.mEnemyCap = CombatModel->GetCurrentReinforcementEnemyCap();
+		Warning.mWarriorCombo = CombatModel->GetWarriorCombo();
+		Warning.mWarriorMomentum = CombatModel->GetWarriorMomentum();
+		Warning.mWarriorStanceLabel = CombatModel->GetWarriorAftermathStanceLabel();
 	}
 
 	IntentUIDatas.Sort([](const FEnemyIntentUI& Lhs, const FEnemyIntentUI& Rhs) {
