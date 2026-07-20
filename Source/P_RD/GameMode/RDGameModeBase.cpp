@@ -165,6 +165,24 @@ bool ARDGameModeBase::SetLanguage(ELanguageType Language) const
 	return true;
 }
 
+bool ARDGameModeBase::SetCameraShakeEnabled(bool IsEnabled) const
+{
+	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
+	GameProfileSubsystem->SetCameraShakeEnabled(IsEnabled);
+
+	return true;
+}
+
+bool ARDGameModeBase::SetEffectVFXEnabled(bool IsEnabled) const
+{
+	UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+	checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
+	GameProfileSubsystem->SetEffectVFXEnabled(IsEnabled);
+
+	return true;
+}
+
 /**
  * @brief 페이드 레이어를 열고 검은 화면에서 게임 화면으로 드러내는 페이드인을 시작한다.
  *
@@ -562,14 +580,6 @@ void ARDGameModeBase::OnPreTransition(int32 RoomRowIndex, int32 RoomColumnIndex)
 {
 }
 
-const UUserPersistData* ARDGameModeBase::GetUserPersistData() const
-{
-	UPersistentDataSubsystem* PersistentDataSubsystem = GetGameInstance()->GetSubsystem<UPersistentDataSubsystem>();
-	checkf(PersistentDataSubsystem != nullptr, TEXT("영구 데이터 서브시스템 nullptr"));
-
-	return PersistentDataSubsystem->GetUserPersistData();
-}
-
 UUserPersistData* ARDGameModeBase::GetUserPersistData()
 {
 	UPersistentDataSubsystem* PersistentDataSubsystem = GetGameInstance()->GetSubsystem<UPersistentDataSubsystem>();
@@ -586,12 +596,36 @@ URunPersistData* ARDGameModeBase::GetRunPersistData()
 	return PersistentDataSubsystem->GetRunPersistData();
 }
 
+UOptionPersistData* ARDGameModeBase::GetOptionPersistData()
+{
+	UPersistentDataSubsystem* PersistentDataSubsystem = GetGameInstance()->GetSubsystem<UPersistentDataSubsystem>();
+	checkf(PersistentDataSubsystem != nullptr, TEXT("영구 데이터 서브시스템 nullptr"));
+
+	return PersistentDataSubsystem->GetOptionPersistData();
+}
+
+const UUserPersistData* ARDGameModeBase::GetUserPersistData() const
+{
+	UPersistentDataSubsystem* PersistentDataSubsystem = GetGameInstance()->GetSubsystem<UPersistentDataSubsystem>();
+	checkf(PersistentDataSubsystem != nullptr, TEXT("영구 데이터 서브시스템 nullptr"));
+
+	return PersistentDataSubsystem->GetUserPersistData();
+}
+
 const URunPersistData* ARDGameModeBase::GetRunPersistData() const
 {
 	UPersistentDataSubsystem* PersistentDataSubsystem = GetGameInstance()->GetSubsystem<UPersistentDataSubsystem>();
 	checkf(PersistentDataSubsystem != nullptr, TEXT("영구 데이터 서브시스템 nullptr"));
 
 	return PersistentDataSubsystem->GetRunPersistData();
+}
+
+const UOptionPersistData* ARDGameModeBase::GetOptionPersistData() const
+{
+	UPersistentDataSubsystem* PersistentDataSubsystem = GetGameInstance()->GetSubsystem<UPersistentDataSubsystem>();
+	checkf(PersistentDataSubsystem != nullptr, TEXT("영구 데이터 서브시스템 nullptr"));
+
+	return PersistentDataSubsystem->GetOptionPersistData();
 }
 
 void ARDGameModeBase::ClearRunPersistData()

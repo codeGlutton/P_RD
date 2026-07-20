@@ -19,6 +19,7 @@
 
 class UUserPersistData;
 class URunPersistData;
+class UOptionPersistData;
 
 struct FRoomTransitionExecuteParams;
 
@@ -105,6 +106,12 @@ public:
 
 	UFUNCTION(Category = UI, BlueprintPure)
 	bool SetLanguage(ELanguageType Language) const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetCameraShakeEnabled(bool IsEnabled) const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetEffectVFXEnabled(bool IsEnabled) const;
 
 protected:
 	/**
@@ -196,8 +203,10 @@ private:
 public:
 	UUserPersistData* GetUserPersistData();
 	URunPersistData* GetRunPersistData();
+	UOptionPersistData* GetOptionPersistData();
 	const UUserPersistData* GetUserPersistData() const;
 	const URunPersistData* GetRunPersistData() const;
+	const UOptionPersistData* GetOptionPersistData() const;
 
 protected:
 	void ClearRunPersistData();
