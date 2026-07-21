@@ -84,6 +84,9 @@ ATileMap::ATileMap()
 		Component->SetupAttachment(RootComponent);
 		Component->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		Component->SetNumCustomDataFloats(4);
+
+		// 경로 표시 컴포넌트들은 런타임에 생성/설정되므로 굳이 파일로 저장할 필요가 없어 RF_Transient 플래그 설정
+		Component->SetFlags(RF_Transient);
 		return Component;
 	};
 
@@ -96,6 +99,10 @@ ATileMap::ATileMap()
 	mPushPathSet.mTurnLeftComponent = CreatePathComponent(TEXT("PushPathTurnLeft"));
 	mPushPathSet.mTurnRightComponent = CreatePathComponent(TEXT("PushPathTurnRight"));
 	mPushPathSet.mEndComponent = CreatePathComponent(TEXT("PushPathEnd"));
+
+	// 경유지 마커, 도착지 원뿔 컴포넌트 생성 (이동 경로 전용)
+	mWaypointComponent = CreatePathComponent(TEXT("Waypoint"));
+	mDestConeComponent = CreatePathComponent(TEXT("DestCone"));
 
 	// 메시 로드 헬퍼 (경로가 잘못됐거나 SVN 미갱신이면 null 유지 — 회전 화살표는 직진으로 폴백됨)
 	auto FindMesh = [](const TCHAR* Path) -> UStaticMesh*
@@ -127,6 +134,14 @@ ATileMap::ATileMap()
 	ApplySetMeshes(mMovePathSet);
 	ApplySetMeshes(mPushPathSet);
 
+	// 경유지 마커 기본 메시: 엔진 기본 Cube 활용 (디지털 시계 숫자처럼 막대로 숫자 조립)
+	mWaypointBarMesh = FindMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
+	mWaypointComponent->SetStaticMesh(mWaypointBarMesh);
+
+	// 도착지 원뿔 기본 메시: 엔진 기본 Cone 활용 (뒤집어서 역원뿔 모양이 위아래로 진동)
+	mDestConeMesh = FindMesh(TEXT("/Engine/BasicShapes/Cone.Cone"));
+	mDestConeComponent->SetStaticMesh(mDestConeMesh);
+
 	// 화살표/마커는 전용 발광 머티리얼(custom data RGBA + EmissiveBoost) 사용 — AppendPath에서 컴포넌트에 적용
 	// 타일 머티리얼(M_TileTransparent)과 분리해 타일 쪽 테두리 파라미터의 영향 없이 블룸으로 도드라지게 함
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> PathIndicatorMatFinder(TEXT("/Game/SVN/InSideAsset/Material/M_PathIndicator.M_PathIndicator"));
@@ -141,6 +156,12 @@ ATileMap::ATileMap()
 	mMovePathSet.mEndStyle.mColor = FLinearColor(0.9f, 0.45f, 0.0f, 0.95f);
 	mPushPathSet.mArrowStyle.mColor = FLinearColor(0.55f, 0.08f, 0.06f, 0.95f);
 	mPushPathSet.mEndStyle.mColor = FLinearColor(0.55f, 0.08f, 0.06f, 0.95f);
+
+	// 경유지 마커 기본 색: 경로(주황)와 구분되는 파랑
+	mWaypointStyle.mColor = FLinearColor(0.15f, 0.5f, 1.0f, 1.0f);
+
+	// 도착지 원뿔 기본 색: 지도 핀을 연상시키는 빨강
+	mDestConeStyle.mColor = FLinearColor(0.5f, 0.0f, 0.0f, 1.0f);
 
 	// 생성자에서 만든 기본 모델에 표시 델리깃을 임시 바인딩 (런타임 모델 매핑 시 재호출)
 	BindModelDelegates();
@@ -220,11 +241,11 @@ void ATileMap::OnConstruction(const FTransform& Transform)
 	}
 
 #if WITH_EDITOR
-	// [에디터 전용] 에디터 뷰포트에서 디버그 경로 미리보기 — 좌표 변경 즉시 반영 (펄스 애니메이션은 틱이 도는 PIE에서만)
+	// [에디터 전용] 에디터 뷰포트에서 경유지 디버그 경로 미리보기 (진동, 펄스 애니메이션은 틱이 도는 PIE에서만)
 	if (GetWorld() != nullptr && !GetWorld()->IsGameWorld())
 	{
-		if (mDebugDrawPathOnBeginPlay && mModel != nullptr)
-			mModel->SetMovePath(mDebugPathStart, mDebugPathGoal);
+		if (mDebugDrawWaypointPath)
+			DebugWaypointTest();
 		else
 			ClearMovePath();
 	}
@@ -242,9 +263,9 @@ void ATileMap::BeginPlay()
 	}
 
 #if WITH_EDITOR
-	// [에디터 전용] 토글이 켜진 인스턴스에서만 PIE 시작 시 디버그 경로를 그려 펄스 검증 (패키징 빌드에선 제거됨)
-	if (mDebugDrawPathOnBeginPlay && mModel != nullptr)
-		mModel->SetMovePath(mDebugPathStart, mDebugPathGoal);
+	// [에디터 전용] 토글이 켜진 인스턴스에서만 PIE 시작 시 경유지 디버그 경로를 그려 진동, 펄스 검증 (패키징 빌드에선 제거됨)
+	if (mDebugDrawWaypointPath)
+		DebugWaypointTest();
 #endif
 }
 
@@ -315,6 +336,10 @@ void ATileMap::Tick(float DeltaSeconds)
 		RefreshPathPulse(mMovePathSet);
 	if (mPushPathSet.mPathCount > 0)
 		RefreshPathPulse(mPushPathSet);
+
+	// 도착지 원뿔은 색 고정에 높이만 진동 — 표시 중일 때만 갱신
+	if (mDestConeComponent != nullptr && mDestConeComponent->GetInstanceCount() > 0)
+		RefreshDestConeBob();
 }
 
 void ATileMap::RebuildTileInstances()
@@ -595,16 +620,55 @@ float ATileMap::StepToYaw(const FTileIndex& Step)
 	return FMath::RadiansToDegrees(FMath::Atan2(static_cast<float>(Step.mY), static_cast<float>(Step.mX)));
 }
 
-void ATileMap::SetMovePath(const TArray<FTileIndex>& PathTiles)
+void ATileMap::SetMovePath(const TArray<FMovePathTile>& PathTiles)
 {
-	// 이동 경로는 한 번에 하나 — 기존 표시 제거 후 이동 세트로 그리기 (공통 구현 위임)
-	ClearPath(mMovePathSet);
+	// 이동 경로는 한 번에 하나 — 기존 표시(경유지 마커·원뿔 포함) 제거 후 이동 세트로 그리기 (공통 구현 위임)
+	ClearMovePath();
+
+	// 경유지 마커: 에디터에서 교체된 메시 반영, 화살표와 같은 발광 머티리얼 공유
+	if (mWaypointComponent != nullptr)
+	{
+		mWaypointComponent->SetStaticMesh(mWaypointBarMesh);
+		if (mMovePathSet.mMaterial != nullptr)
+			mWaypointComponent->SetMaterial(0, mMovePathSet.mMaterial);
+	}
+
+	// 도착지 원뿔: 에디터에서 교체된 메시 반영, 도착 마커와 같은 발광 머티리얼 공유
+	if (mDestConeComponent != nullptr)
+	{
+		mDestConeComponent->SetStaticMesh(mDestConeMesh);
+		if (mMovePathSet.mMaterial != nullptr)
+			mDestConeComponent->SetMaterial(0, mMovePathSet.mMaterial);
+	}
+
 	AppendPath(mMovePathSet, PathTiles);
+
+	// 도착지 원뿔 배치 (이동 경로 전용 — 뒤집어서 꼭짓점이 도착 타일을 가리킴, 위아래 진동은 틱에서 처리)
+	if (mDestConeComponent != nullptr && PathTiles.Num() > 0)
+	{
+		const FTileIndex& EndTile = PathTiles.Last().mIndex;
+		const float ConeScale = (mTileSize / 100.0f) * mDestConeScale;
+		const FRotator ConeRotation(180.0f, 0.0f, 0.0f);
+		const FVector ConeLocation(EndTile.mX * mTileSize, EndTile.mY * mTileSize, GetDestConeBaseZ());
+		mDestConeComponent->AddInstance(FTransform(ConeRotation, ConeLocation, FVector(ConeScale)), /*bWorldSpace=*/false);
+
+		// 원뿔 색 설정
+		mDestConeComponent->SetCustomDataValue(0, 0, mDestConeStyle.mColor.R);
+		mDestConeComponent->SetCustomDataValue(0, 1, mDestConeStyle.mColor.G);
+		mDestConeComponent->SetCustomDataValue(0, 2, mDestConeStyle.mColor.B);
+		mDestConeComponent->SetCustomDataValue(0, 3, 1.0f, /*bMarkRenderStateDirty=*/true);
+	}
 }
 
 void ATileMap::ClearMovePath()
 {
 	ClearPath(mMovePathSet);
+
+	// 이동 경로 전용 경유지 마커·도착지 원뿔 인스턴스도 제거
+	if (mWaypointComponent != nullptr)
+		mWaypointComponent->ClearInstances();
+	if (mDestConeComponent != nullptr)
+		mDestConeComponent->ClearInstances();
 }
 
 void ATileMap::AddPushPath(const TArray<FTileIndex>& PathTiles)
@@ -613,8 +677,14 @@ void ATileMap::AddPushPath(const TArray<FTileIndex>& PathTiles)
 	if (PathTiles.Num() < 2)
 		return;
 
+	// 밀치기 경로는 경유지가 없어 타일 인덱스를 표시용 타일로 변환
+	TArray<FMovePathTile> MovePathTiles;
+	MovePathTiles.Reserve(PathTiles.Num());
+	for (const FTileIndex& Tile : PathTiles)
+		MovePathTiles.Emplace(Tile);
+
 	// 기존 표시를 유지한 채 밀치기 세트에 추가 (공통 구현 위임)
-	AppendPath(mPushPathSet, PathTiles);
+	AppendPath(mPushPathSet, MovePathTiles);
 }
 
 void ATileMap::ClearPushPath()
@@ -622,7 +692,7 @@ void ATileMap::ClearPushPath()
 	ClearPath(mPushPathSet);
 }
 
-void ATileMap::AppendPath(FPathArrowSet& Set, const TArray<FTileIndex>& PathTiles)
+void ATileMap::AppendPath(FPathArrowSet& Set, const TArray<FMovePathTile>& PathTiles)
 {
 	// 경로가 비었으면 추가할 것 없음
 	if (PathTiles.Num() == 0)
@@ -642,6 +712,15 @@ void ATileMap::AppendPath(FPathArrowSet& Set, const TArray<FTileIndex>& PathTile
 	ApplyMeshAndMaterial(Set.mTurnRightComponent, Set.mTurnRightMesh);
 	ApplyMeshAndMaterial(Set.mEndComponent, Set.mEndMesh);
 
+	// 경유지 타일 집합
+	// 경유지가 일반화살표와 겹치지 않게 미리 집합을 만들어서 비교할 때 활용
+	TSet<FTileIndex> WaypointTiles;
+	for (const FMovePathTile& PathTile : PathTiles)
+	{
+		if (PathTile.mIsWaypoint)
+			WaypointTiles.Add(PathTile.mIndex);
+	}
+
 	// 화살표와 도착지마커를 타일사이즈에 맞게 스케일 조정
 	const float ArrowScale = (mTileSize / 100.0f) * mPathArrowScale;
 
@@ -651,12 +730,26 @@ void ATileMap::AppendPath(FPathArrowSet& Set, const TArray<FTileIndex>& PathTile
 	const int32 Span = FMath::Max(1, PathTiles.Num() - 1);
 	const float PhasePerTile = 2.0f * PI * Set.mFlowCycles / Span;
 
+	// 경유지 순번 (등장 순서대로 1부터 부여)
+	int32 WaypointNumber = 0;
+
 	// 도착지 마커인 마지막 타일을 제외하고 화살표 배치
 	const int32 LastIndex = PathTiles.Num() - 1;
 	for (int32 Index = 0; Index < LastIndex; ++Index)
 	{
-		const FTileIndex& Tile = PathTiles[Index];
-		const FTileIndex& Next = PathTiles[Index + 1];
+		const FTileIndex& Tile = PathTiles[Index].mIndex;
+		const FTileIndex& Next = PathTiles[Index + 1].mIndex;
+
+		// 경유지 타일이면 화살표 대신 순번 마커 조립
+		if (PathTiles[Index].mIsWaypoint)
+		{
+			AppendWaypointMarker(Tile, ++WaypointNumber);
+			continue;
+		}
+
+		// 경유지 타일을 다시 지나가는 경우도 화살표 생략 (마커 우선)
+		if (WaypointTiles.Contains(Tile))
+			continue;
 
 		// 진출 방향 스텝
 		const FTileIndex OutStep = Next - Tile;
@@ -671,7 +764,7 @@ void ATileMap::AppendPath(FPathArrowSet& Set, const TArray<FTileIndex>& PathTile
 			// 0: 직진
 			// 양수: 우회전
 			// 음수: 좌회전
-			const FTileIndex& Prev = PathTiles[Index - 1];
+			const FTileIndex& Prev = PathTiles[Index - 1].mIndex;
 			const FTileIndex InStep = Tile - Prev;
 			const int32 Cross = InStep.mX * OutStep.mY - InStep.mY * OutStep.mX;
 
@@ -689,22 +782,22 @@ void ATileMap::AppendPath(FPathArrowSet& Set, const TArray<FTileIndex>& PathTile
 			}
 		}
 
-		// 타일 중심 로컬 위치 + Z 오프셋에 배치 (바닥에서 아주 살짝 뜬 위치)
+		// 타일 중심 로컬 위치 + Z 오프셋에 배치 (바닥에서 아주 살짝 뜬 위치, Z축은 별도 스케일로 납작하게)
 		const FVector Location(Tile.mX * mTileSize, Tile.mY * mTileSize, mPathHeightOffset);
-		const FTransform InstanceTransform(FRotator(0.0f, Yaw, 0.0f), Location, FVector(ArrowScale));
+		const FTransform InstanceTransform(FRotator(0.0f, Yaw, 0.0f), Location, FVector(ArrowScale, ArrowScale, ArrowScale * mPathArrowZScale));
 		AddTileInstance(Set, Kind, Tile, InstanceTransform, Index * PhasePerTile);
 	}
 
 	// 마지막 타일엔 도착지 마커 배치 (진입 방향과 같은 방향)
 	{
-		const FTileIndex& EndTile = PathTiles[LastIndex];
+		const FTileIndex& EndTile = PathTiles[LastIndex].mIndex;
 
 		// 진입 방향 = 마지막 스텝(직전 타일 → 도착 타일), 마지막 화살표와 같은 방향을 가리킴
 		// 단일 타일 경로(직전 타일 없음)면 진입 방향이 없어 회전 없음(+X)
 		FRotator Rotation = FRotator::ZeroRotator;
 		if (LastIndex >= 1)
 		{
-			const FTileIndex& PrevTile = PathTiles[LastIndex - 1];
+			const FTileIndex& PrevTile = PathTiles[LastIndex - 1].mIndex;
 			const FTileIndex Step = EndTile - PrevTile;
 			Rotation = FRotator(0.0f, StepToYaw(Step), 0.0f);
 		}
@@ -873,6 +966,114 @@ void ATileMap::RefreshPathPulse(FPathArrowSet& Set)
 	}
 }
 
+void ATileMap::RefreshDestConeBob()
+{
+	// 게임 시작부터의 누적 시간 (일시정지 시 멈추는 게임 시간)
+	const float Time = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
+
+	// 도착지 원뿔: 색은 고정(SetMovePath에서 기록), 높이만 위아래 진동
+	// 기준 높이 위로 0~진동 폭 사이를 부드럽게 오감
+	const float Bob = mDestConeBobAmplitude * (0.5f - 0.5f * FMath::Cos(2.0f * PI * Time / mDestConeBobPeriod));
+	FTransform ConeTransform;
+	mDestConeComponent->GetInstanceTransform(0, ConeTransform, /*bWorldSpace=*/false);
+	ConeTransform.SetTranslation(FVector(ConeTransform.GetTranslation().X, ConeTransform.GetTranslation().Y, GetDestConeBaseZ() + Bob));
+	mDestConeComponent->UpdateInstanceTransform(0, ConeTransform, /*bWorldSpace=*/false, /*bMarkRenderStateDirty=*/true, /*bTeleport=*/true);
+}
+
+float ATileMap::GetDestConeBaseZ() const
+{
+	// 원뿔 메시(100cm)는 피벗이 중심이라, 절반 높이를 더해야 뒤집힌 꼭짓점이 기준 높이에 온다
+	const float ConeScale = (mTileSize / 100.0f) * mDestConeScale;
+	return mPathHeightOffset + mDestConeBaseHeight + ConeScale * 50.0f;
+}
+
+void ATileMap::AppendWaypointMarker(const FTileIndex& Tile, int32 Number)
+{
+	// 숫자별로 디지털 숫자의 어떤 세그먼트들로 구성되는 지 미리 테이블로 만들어 둠
+	static const TArray<EMarkerBar> DigitSegments[10] =
+	{
+		/* 0 */ { EMarkerBar::DigitTop, EMarkerBar::DigitTopLeft, EMarkerBar::DigitTopRight, EMarkerBar::DigitBottomLeft, EMarkerBar::DigitBottomRight, EMarkerBar::DigitBottom },
+		/* 1 */ { EMarkerBar::DigitTopRight, EMarkerBar::DigitBottomRight },
+		/* 2 */ { EMarkerBar::DigitTop, EMarkerBar::DigitTopRight, EMarkerBar::DigitMiddle, EMarkerBar::DigitBottomLeft, EMarkerBar::DigitBottom },
+		/* 3 */ { EMarkerBar::DigitTop, EMarkerBar::DigitTopRight, EMarkerBar::DigitMiddle, EMarkerBar::DigitBottomRight, EMarkerBar::DigitBottom },
+		/* 4 */ { EMarkerBar::DigitTopLeft, EMarkerBar::DigitTopRight, EMarkerBar::DigitMiddle, EMarkerBar::DigitBottomRight },
+		/* 5 */ { EMarkerBar::DigitTop, EMarkerBar::DigitTopLeft, EMarkerBar::DigitMiddle, EMarkerBar::DigitBottomRight, EMarkerBar::DigitBottom },
+		/* 6 */ { EMarkerBar::DigitTop, EMarkerBar::DigitTopLeft, EMarkerBar::DigitMiddle, EMarkerBar::DigitBottomLeft, EMarkerBar::DigitBottomRight, EMarkerBar::DigitBottom },
+		/* 7 */ { EMarkerBar::DigitTop, EMarkerBar::DigitTopRight, EMarkerBar::DigitBottomRight },
+		/* 8 */ { EMarkerBar::DigitTop, EMarkerBar::DigitTopLeft, EMarkerBar::DigitTopRight, EMarkerBar::DigitMiddle, EMarkerBar::DigitBottomLeft, EMarkerBar::DigitBottomRight, EMarkerBar::DigitBottom },
+		/* 9 */ { EMarkerBar::DigitTop, EMarkerBar::DigitTopLeft, EMarkerBar::DigitTopRight, EMarkerBar::DigitMiddle, EMarkerBar::DigitBottomRight, EMarkerBar::DigitBottom },
+	};
+
+	const FVector TileCenter(Tile.mX * mTileSize, Tile.mY * mTileSize, 0.0f);
+
+	// 사각형 테두리 4변
+	AppendMarkerBar(TileCenter, EMarkerBar::FrameTop);
+	AppendMarkerBar(TileCenter, EMarkerBar::FrameBottom);
+	AppendMarkerBar(TileCenter, EMarkerBar::FrameLeft);
+	AppendMarkerBar(TileCenter, EMarkerBar::FrameRight);
+
+	// 순번 숫자 (1~9), 초과하면 '-' 표시
+	if (Number >= 1 && Number <= 9)
+	{
+		for (EMarkerBar Segment : DigitSegments[Number])
+			AppendMarkerBar(TileCenter, Segment);
+	}
+	else
+	{
+		AppendMarkerBar(TileCenter, EMarkerBar::DigitMiddle);
+	}
+}
+
+void ATileMap::AppendMarkerBar(const FVector& TileCenter, EMarkerBar Bar)
+{
+	if (mWaypointComponent == nullptr)
+		return;
+
+	// 마커 치수: 테두리 바깥 크기와 막대 굵기는 프로퍼티, 숫자 크기는 테두리 안쪽에 맞춤
+	const float FrameSize = mTileSize * mWaypointFrameScale;
+	const float Thickness = mWaypointBarThickness;
+	const float DigitHeight = (FrameSize - 2.0f * Thickness) * 0.55f;
+	const float DigitWidth = DigitHeight * 0.55f;
+
+	// 세그먼트 길이: 이음새마다 살짝 띄워 실제 디지털 숫자처럼 보이게 함
+	const float SegmentLengthH = DigitWidth - Thickness * 1.2f;
+	const float SegmentLengthV = DigitHeight * 0.5f - Thickness * 1.2f;
+
+	// 막대 종류별 중심 위치(u=가로, v=세로)와 크기 결정
+	const float FrameHalf = (FrameSize - Thickness) * 0.5f;
+	float CenterU = 0.0f, CenterV = 0.0f, SizeU = 0.0f, SizeV = 0.0f;
+	switch (Bar)
+	{
+	case EMarkerBar::FrameTop:			CenterV = +FrameHalf;				SizeU = FrameSize;			SizeV = Thickness;								break;
+	case EMarkerBar::FrameBottom:		CenterV = -FrameHalf;				SizeU = FrameSize;			SizeV = Thickness;								break;
+	case EMarkerBar::FrameLeft:			CenterU = -FrameHalf;				SizeU = Thickness;			SizeV = FrameSize - 2.0f * Thickness;			break;
+	case EMarkerBar::FrameRight:		CenterU = +FrameHalf;				SizeU = Thickness;			SizeV = FrameSize - 2.0f * Thickness;			break;
+	case EMarkerBar::DigitTop:			CenterV = +DigitHeight * 0.5f;		SizeU = SegmentLengthH;		SizeV = Thickness;								break;
+	case EMarkerBar::DigitMiddle:															SizeU = SegmentLengthH;		SizeV = Thickness;								break;
+	case EMarkerBar::DigitBottom:		CenterV = -DigitHeight * 0.5f;		SizeU = SegmentLengthH;		SizeV = Thickness;								break;
+	case EMarkerBar::DigitTopLeft:		CenterU = -DigitWidth * 0.5f;		CenterV = +DigitHeight * 0.25f;		SizeU = Thickness;		SizeV = SegmentLengthV;	break;
+	case EMarkerBar::DigitTopRight:		CenterU = +DigitWidth * 0.5f;		CenterV = +DigitHeight * 0.25f;		SizeU = Thickness;		SizeV = SegmentLengthV;	break;
+	case EMarkerBar::DigitBottomLeft:	CenterU = -DigitWidth * 0.5f;		CenterV = -DigitHeight * 0.25f;		SizeU = Thickness;		SizeV = SegmentLengthV;	break;
+	case EMarkerBar::DigitBottomRight:	CenterU = +DigitWidth * 0.5f;		CenterV = -DigitHeight * 0.25f;		SizeU = Thickness;		SizeV = SegmentLengthV;	break;
+	default:							return;
+	}
+
+	// 마커 좌표(u,v)를 타일 로컬로 변환: v는 +X(숫자 위쪽), u는 +Y(숫자 오른쪽), yaw로 카메라 방향 보정
+	const FRotator Rotation(0.0f, mWaypointYaw, 0.0f);
+	const FVector Offset = Rotation.RotateVector(FVector(CenterV, CenterU, 0.0f));
+	const FVector Location = TileCenter + Offset + FVector(0.0f, 0.0f, mPathHeightOffset + mWaypointBarHeight * 0.5f);
+
+	// 막대 메시(100cm)를 막대 크기로 스케일 (X=세로, Y=가로, Z=높이)
+	const FVector Scale(SizeV / 100.0f, SizeU / 100.0f, mWaypointBarHeight / 100.0f);
+	const int32 InstanceIndex = mWaypointComponent->AddInstance(FTransform(Rotation, Location, Scale), /*bWorldSpace=*/false);
+
+	// 경유지 마커 색 기록 (펄스 없는 고정 색)
+	mWaypointComponent->SetCustomDataValue(InstanceIndex, 0, mWaypointStyle.mColor.R);
+	mWaypointComponent->SetCustomDataValue(InstanceIndex, 1, mWaypointStyle.mColor.G);
+	mWaypointComponent->SetCustomDataValue(InstanceIndex, 2, mWaypointStyle.mColor.B);
+	mWaypointComponent->SetCustomDataValue(InstanceIndex, 3, 1.0f, /*bMarkRenderStateDirty=*/true);
+}
+
 #if WITH_EDITOR
 void ATileMap::DebugPaintTest()
 {
@@ -889,12 +1090,23 @@ void ATileMap::DebugPaintTest()
 	SetTileHighlight({ FTileIndex(3, 1), FTileIndex(3, 2), FTileIndex(4, 1) }, ETileHighlightFlag::Effect);
 }
 
-void ATileMap::DebugPathTest()
+void ATileMap::DebugWaypointTest()
 {
-	// 모델 경유로 전체 파이프라인 확인: FindPath → 표시 델리깃 → 뷰 SetMovePath
-	// (빈 에디터 맵이면 장애물이 없어 시작→목표 계단식 경로가 나온다)
-	if (mModel != nullptr)
-		mModel->SetMovePath(FTileIndex(1, 3), FTileIndex(4, 5));
+	// 경유지 2개를 지나는 ㄹ자 경로를 직접 구성 (경유지 마커, 화살표 생략, 좌/우회전, 도착 마커, 원뿔 확인)
+	// 다른 디버그 표시와 겹치지 않게 x=6~8 영역 사용
+	TArray<FMovePathTile> PathTiles;
+	PathTiles.Emplace(FTileIndex(6, 1));
+	PathTiles.Emplace(FTileIndex(7, 1));
+	PathTiles.Emplace(FTileIndex(8, 1), /*bInWaypoint=*/true);
+	PathTiles.Emplace(FTileIndex(8, 2));
+	PathTiles.Emplace(FTileIndex(8, 3));
+	PathTiles.Emplace(FTileIndex(7, 3));
+	PathTiles.Emplace(FTileIndex(6, 3), /*bInWaypoint=*/true);
+	PathTiles.Emplace(FTileIndex(6, 4));
+	PathTiles.Emplace(FTileIndex(6, 5));
+	PathTiles.Emplace(FTileIndex(7, 5));
+	PathTiles.Emplace(FTileIndex(8, 5));
+	SetMovePath(PathTiles);
 }
 
 void ATileMap::DebugPushTest()

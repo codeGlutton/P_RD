@@ -273,17 +273,17 @@ public:
 
 	/* 이동 경로 */
 	/**
-	 * @brief 이동경로를 화살표로 표시 (경로 타일 배열을 방향 화살표 + 도착 마커로 시각화)
+	 * @brief 이동경로를 화살표와 경유지마커로 표시
 	 * @details
-	 * UTileMapModel::FindPath가 돌려준 타일 배열(시작→목표 순서)을 받는다.
-	 * 마지막을 제외한 각 타일에 '다음 타일을 향하는' 화살표를, 마지막 타일엔 도착 마커를 배치한다.
+	 * 경로를 구성하는 타일배열을 받아 각 타일에 '다음 타일로 향하는' 화살표 배치
+	 * 경유지 타일에는 화살표 대신 경유지 표시(사각형 테두리 안에 경유지 순번), 도착지에는 도착지 마커와 원역뿔을 배치
 	 * 기존 경로 표시는 먼저 지운다. 빈 배열이면 표시를 모두 해제하는 것과 같다.
-	 * @param[in] PathTiles : 경로 타일 목록 (FindPath 결과, 양 끝 포함)
+	 * @param[in] PathTiles : 경로 타일 목록 (양 끝 포함)
 	 */
-	void SetMovePath(const TArray<FTileIndex>& PathTiles);
+	void SetMovePath(const TArray<FMovePathTile>& PathTiles);
 
 	/**
-	 * @brief 이동경로 표시 해제 (화살표·도착 마커 인스턴스 모두 제거)
+	 * @brief 이동경로 표시 해제 (화살표, 마커, 원뿔 모두 제거)
 	 */
 	void ClearMovePath();
 
@@ -312,11 +312,11 @@ public:
 	void DebugPaintTest();
 
 	/**
-	 * @brief [에디터 전용] 이동경로를 칠해 화살표/도착 마커 시각 확인
-	 * @details 디테일 패널 버튼으로 호출. 모델 경유(FindPath→델리깃→SetMovePath). 펄스는 틱이 도는 PIE에서 보인다.
+	 * @brief [에디터 전용] 이동경로 표시 시각 확인 (화살표, 경유지 마커, 도착 마커, 원뿔)
+	 * @details 디테일 패널 버튼으로 호출. 경유지 2개를 지나는 경로를 그린다. 진동과 펄스는 틱이 도는 PIE에서 보인다.
 	 */
 	UFUNCTION(CallInEditor, Category = "SRPG")
-	void DebugPathTest();
+	void DebugWaypointTest();
 
 	/**
 	 * @brief [에디터 전용] 밀치기 다중 경로를 칠해 rounded 화살표/도착 마커/덮어쓰기 시각 확인
@@ -328,22 +328,10 @@ public:
 
 #if WITH_EDITORONLY_DATA
 	/**
-	 * @brief [에디터 전용] PIE 시작 시 디버그 경로를 그릴지 여부 (펄스 검증용, 인스턴스별 토글)
+	 * @brief [에디터 전용] 에디터 뷰포트와 PIE 시작 시 경유지 디버그 경로를 그릴지 여부 (인스턴스별 토글)
 	 */
-	UPROPERTY(EditAnywhere, Category = "SRPG|Debug", meta = (DisplayName = "Debug Draw Path On Begin Play"))
-	bool mDebugDrawPathOnBeginPlay = false;
-
-	/**
-	 * @brief [에디터 전용] 디버그 경로 시작 타일
-	 */
-	UPROPERTY(EditAnywhere, Category = "SRPG|Debug", meta = (DisplayName = "Debug Path Start", EditCondition = "mDebugDrawPathOnBeginPlay"))
-	FTileIndex mDebugPathStart = FTileIndex(1, 3);
-
-	/**
-	 * @brief [에디터 전용] 디버그 경로 목표 타일
-	 */
-	UPROPERTY(EditAnywhere, Category = "SRPG|Debug", meta = (DisplayName = "Debug Path Goal", EditCondition = "mDebugDrawPathOnBeginPlay"))
-	FTileIndex mDebugPathGoal = FTileIndex(4, 5);
+	UPROPERTY(EditAnywhere, Category = "SRPG|Debug", meta = (DisplayName = "Debug Draw Waypoint Path"))
+	bool mDebugDrawWaypointPath = false;
 #endif
 
 	/* 타일맵 정보 */
@@ -416,6 +404,18 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Tile Border Width", ClampMin = "0.0"))
 	float mTileBorderWidth = 3.0f;
 
+	/**
+	 * @brief 경유지 마커 메시 컴포넌트
+	 */
+	UPROPERTY(VisibleAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Waypoint Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mWaypointComponent;
+
+	/**
+	 * @brief 도착지 원뿔 메시 컴포넌트 (기존 바닥 메시와 별개로 머리 위에서 위아래로 진동)
+	 */
+	UPROPERTY(VisibleAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Dest Cone Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mDestConeComponent;
+
 	/* 강조 표시 */
 
 	/**
@@ -463,10 +463,90 @@ protected:
 	float mPathArrowScale = 0.5f;
 
 	/**
+	 * @brief 화살표 Z축(두께) 스케일 비율 (1이면 원본 두께, 도착 마커에는 적용 안 함)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path Arrow Z Scale", ClampMin = "0.05", ClampMax = "1.0"))
+	float mPathArrowZScale = 0.5f;
+
+	/**
 	 * @brief 화살표/마커를 타일 위로 띄우는 Z 오프셋 (cm, z-fighting 방지)
 	 */
 	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path Height Offset"))
 	float mPathHeightOffset = 1.0f;
+
+	/* 경유지/도착지 원뿔 표시 */
+
+	/**
+	 * @brief 경유지 마커 막대 메시 (기본: 엔진 Cube)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Waypoint Bar Mesh"))
+	TObjectPtr<UStaticMesh> mWaypointBarMesh;
+
+	/**
+	 * @brief 경유지 마커 색
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Waypoint Style"))
+	FTileHighlightStyle mWaypointStyle;
+
+	/**
+	 * @brief 경유지 테두리 크기 비율 (타일 크기 기준)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Waypoint Frame Scale", ClampMin = "0.1", ClampMax = "1.0"))
+	float mWaypointFrameScale = 0.6f;
+
+	/**
+	 * @brief 마커 막대 굵기 (cm)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Waypoint Bar Thickness", ClampMin = "0.5"))
+	float mWaypointBarThickness = 8.0f;
+
+	/**
+	 * @brief 마커 막대 높이 (cm)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Waypoint Bar Height", ClampMin = "0.5"))
+	float mWaypointBarHeight = 8.0f;
+
+	/**
+	 * @brief 숫자 방향 (도, 0이면 숫자 위쪽이 +X — 카메라에 맞춰 조정)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Waypoint Yaw"))
+	float mWaypointYaw = 0.0f;
+
+	/**
+	 * @brief 도착지 원뿔 메시 (기본: 엔진 Cone, 뒤집어서 배치)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Dest Cone Mesh"))
+	TObjectPtr<UStaticMesh> mDestConeMesh;
+
+	/**
+	 * @brief 도착지 원뿔 색
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Dest Cone Style"))
+	FTileHighlightStyle mDestConeStyle;
+
+	/**
+	 * @brief 원뿔 크기 비율 (타일 크기 기준)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Dest Cone Scale", ClampMin = "0.01"))
+	float mDestConeScale = 0.25f;
+
+	/**
+	 * @brief 원뿔 기준 높이 (cm, 타일 바닥에서 원뿔 꼭짓점까지)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Dest Cone Base Height", ClampMin = "0.0"))
+	float mDestConeBaseHeight = 80.0f;
+
+	/**
+	 * @brief 원뿔 진동 폭 (cm)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Dest Cone Bob Amplitude", ClampMin = "0.0"))
+	float mDestConeBobAmplitude = 30.0f;
+
+	/**
+	 * @brief 원뿔 진동 주기 (초)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Dest Cone Bob Period", ClampMin = "0.01"))
+	float mDestConeBobPeriod = 1.0f;
 
 private:
 	/**
@@ -514,11 +594,12 @@ private:
 	 *   기존 표시는 유지 (전체 제거는 ClearPath 별도 호출)
 	 *   인스턴스별 위상 오프셋을 이 경로의 간격 수로 확정해 저장
 	 *   같은 타일에 기존 인스턴스가 있으면 제거 후 배치 (나중 경로가 이김)
+	 *   경유지 타일에는 화살표 대신 순번 마커 배치 (밀치기 경로는 경유지 없음)
 	 *   SetMovePath/AddPushPath 공통 구현
 	 * @param[in] Set : 사용할 표시 세트
-	 * @param[in] PathTiles : 경로 타일 목록 (양 끝 포함)
+	 * @param[in] PathTiles : 경로 타일 목록 (양 끝 포함, 경유지 여부 포함)
 	 */
-	void AppendPath(FPathArrowSet& Set, const TArray<FTileIndex>& PathTiles);
+	void AppendPath(FPathArrowSet& Set, const TArray<FMovePathTile>& PathTiles);
 
 	/**
 	 * @brief 세트의 경로 표시 관련된 데이터 모두 초기화
@@ -552,6 +633,48 @@ private:
 	 * @details 화살표들이 위상차를 갖게 해서 흐르는 느낌을 줌
 	 */
 	void RefreshPathPulse(FPathArrowSet& Set);
+
+	/**
+	 * @brief 도착지 원뿔의 기준 높이 계산
+	 */
+	float GetDestConeBaseZ() const;
+
+	/**
+	 * @brief 도착지 원뿔을 기준 높이 위로 위아래 진동 (틱에서 호출, 색은 고정)
+	 */
+	void RefreshDestConeBob();
+
+	/**
+	 * @brief 마커를 구성하는 막대 종류 (테두리 4변 + 숫자 7세그먼트)
+	 */
+	enum class EMarkerBar : uint8
+	{
+		FrameTop,			// 테두리 상단
+		FrameBottom,		// 테두리 하단
+		FrameLeft,			// 테두리 왼쪽
+		FrameRight,			// 테두리 오른쪽
+		DigitTop,			// 숫자 상단 가로
+		DigitMiddle,		// 숫자 중앙 가로
+		DigitBottom,		// 숫자 하단 가로
+		DigitTopLeft,		// 숫자 좌상 세로
+		DigitTopRight,		// 숫자 우상 세로
+		DigitBottomLeft,	// 숫자 좌하 세로
+		DigitBottomRight,	// 숫자 우하 세로
+	};
+
+	/**
+	 * @brief 경유지 마커를 디지털 숫자 형식으로 조립
+	 * @param[in] Tile   : 경유지 타일
+	 * @param[in] Number : 경유지 순번 (1~9, 초과 시 '-' 표시)
+	 */
+	void AppendWaypointMarker(const FTileIndex& Tile, int32 Number);
+
+	/**
+	 * @brief 마커 막대 1개 추가 (종류별 위치와 크기는 함수 내부에서 결정)
+	 * @param[in] TileCenter : 타일 중심 로컬 위치
+	 * @param[in] Bar        : 막대 종류
+	 */
+	void AppendMarkerBar(const FVector& TileCenter, EMarkerBar Bar);
 
 	/**
 	 * @brief 방향 스텝(dx,dy)을 +X 기준 yaw(도)로 변환 (메시가 +X를 향한다고 가정)
