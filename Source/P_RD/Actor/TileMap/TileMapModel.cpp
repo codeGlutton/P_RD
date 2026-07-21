@@ -496,7 +496,7 @@ void UTileMapModel::NotifyEndOverlap(FTile* Tile, UBoardActorModel* Actor)
  * - 이미 선택된 타일의 인덱스를 Distance[] 배열에서 관리해서 중복 선택 방지
  * - 최대이동거리만큼 반복
  */
-TArray<FTileIndex> UTileMapModel::GetReachableTiles(const FTileIndex& Origin, int32 MoveDistance) const
+TArray<FTileIndex> UTileMapModel::GetReachableTiles(const FTileIndex& Origin, int32 MoveDistance, const UBoardActorModel* IgnoreBlocker) const
 {
 	TArray<FTileIndex> Result;
 
@@ -536,9 +536,9 @@ TArray<FTileIndex> UTileMapModel::GetReachableTiles(const FTileIndex& Origin, in
 			if (Distance[LinearIndex] != -1)
 				continue;
 
-			// 장애물·유닛이 점유한 칸은 통과·도착 불가
+			// 장애물이나 유닛이 있는 타일은 통과나 도착 불가 (무시 대상인 경우는 가능)
 			// (확장 지점: 투명화 등 통과 규칙이 생기면 이 한 줄만 교체)
-			if (IsOccupied(Next))
+			if (IsOccupied(Next, IgnoreBlocker))
 				continue;
 
 			// 거리 확정 후 결과·큐에 추가
@@ -604,11 +604,11 @@ TArray<int32> UTileMapModel::GetDistanceField(const FTileIndex& Target, const UB
 
 /**
  * @details
- * - GetReachableTiles와 같은 4방향 BFS지만, 칸별 직전 칸(부모)을 기록해 목표 도달 후 경로를 거슬러 복원한다.
+ * - 도달 범위 계산과 같은 4방향 BFS지만, 칸별 직전 칸(부모)을 기록해 목표 도달 후 경로를 거슬러 복원한다.
  * - BFS라 처음 닿은 경로가 곧 최단경로이므로, 목표를 만나면 즉시 탐색을 끝낸다.
  * - 이웃 탐색은 BuildGoalOrderedSteps로 목표 방향(먼 축 먼저)을 우선해, 빈 지형에선 직선에 붙는 계단식 경로가 나온다.
  */
-TArray<FTileIndex> UTileMapModel::FindPath(const FTileIndex& Start, const FTileIndex& Goal) const
+TArray<FTileIndex> UTileMapModel::FindPath(const FTileIndex& Start, const FTileIndex& Goal, const UBoardActorModel* IgnoreBlocker) const
 {
 	TArray<FTileIndex> Result;
 
@@ -623,8 +623,8 @@ TArray<FTileIndex> UTileMapModel::FindPath(const FTileIndex& Start, const FTileI
 		return Result;
 	}
 
-	// 목표 칸이 점유돼 있으면 도착 불가 (GetReachableTiles와 동일 규칙)
-	if (IsOccupied(Goal))
+	// 이미 점유하는 게 있으면 통과나 도착 불가 (무시 대상인 경우는 가능)
+	if (IsOccupied(Goal, IgnoreBlocker))
 		return Result;
 
 	// 칸별 직전 칸(부모)을 1차원 인덱스로 기록 — 방문표시(INDEX_NONE=미방문) + 경로 복원을 겸함
@@ -665,8 +665,8 @@ TArray<FTileIndex> UTileMapModel::FindPath(const FTileIndex& Start, const FTileI
 			if (Parent[NextLinear] != INDEX_NONE)
 				continue;
 
-			// 장애물·유닛이 점유한 칸은 통과·도착 불가
-			if (IsOccupied(Next))
+			// 이미 점유하는 게 있으면 통과나 도착 불가 (무시 대상인 경우는 가능)
+			if (IsOccupied(Next, IgnoreBlocker))
 				continue;
 
 			// 직전 칸을 부모로 기록

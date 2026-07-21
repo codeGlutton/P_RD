@@ -222,28 +222,30 @@ public:
 	 *
 	 * @param[in] Origin : 기준 좌표
 	 * @param[in] MoveDistance : 이동 거리 (1=인접 칸)
+	 * @param[in] IgnoreBlocker : 점유 판정에서 제외할 액터 (이동 빌드 중 자기 출발 타일 복귀 허용 등). 없으면 nullptr
 	 * @return TArray<FTileIndex> : 도달 가능한 타일 좌표 목록 (Origin 제외, 맵 밖 제외)
 	 */
-	TArray<FTileIndex> GetReachableTiles(const FTileIndex& Origin, int32 MoveDistance) const;
+	TArray<FTileIndex> GetReachableTiles(const FTileIndex& Origin, int32 MoveDistance, const UBoardActorModel* IgnoreBlocker = nullptr) const;
 
 	/**
 	 * @brief 시작→목표 최단 이동경로 계산 (장애물/유닛 회피)
 	 * @details
-	 * GetReachableTiles와 동일한 4방향(직교) BFS 규칙을 쓴다 — 도달 가능성과 경로 존재가 일치하도록.
-	 * 장애물·유닛(IsOccupied) 칸은 통과·도착 불가. 여러 최단경로 중 이웃 탐색 순서(직교 4방향)로 하나를 고른다.
+	 * 도달 범위 계산과 동일한 4방향(직교) BFS 규칙을 쓴다 — 도달 가능성과 경로 존재가 일치하도록.
+	 * 이미 점유하는 게 있으면 통과나 도착 불가 (무시 대상인 경우는 가능). 여러 최단경로 중 이웃 탐색 순서(직교 4방향)로 하나를 고른다.
 	 * 시작 칸은 점유돼 있어도(자기 유닛이 선 칸) 출발점으로 허용한다.
 	 *
 	 * @param[in] Start : 시작 좌표
 	 * @param[in] Goal  : 목표 좌표
+	 * @param[in] IgnoreBlocker : 점유 판정에서 제외할 액터 (이동 빌드 중 자기 출발 타일 복귀 허용 등). 없으면 nullptr
 	 * @return TArray<FTileIndex> : Start부터 Goal까지 순서대로의 타일 목록(양 끝 포함). 경로가 없으면 빈 배열
 	 */
-	TArray<FTileIndex> FindPath(const FTileIndex& Start, const FTileIndex& Goal) const;
+	TArray<FTileIndex> FindPath(const FTileIndex& Start, const FTileIndex& Goal, const UBoardActorModel* IgnoreBlocker = nullptr) const;
 
 	/**
 	 * @brief 목표지점을 기준으로 모든 타일의 경로거리를 계산
 	 * @details
 	 * 장애물이나 유닛 등으로 인해 스킬 사용이 안될 시 플레이어에게 접근해야 하는데,
-	 * GetReachableTiles()로는 잡히지 않는 우회하는 비용도 계산해서 표를 작성한 후,
+	 * 단순 도달 범위로는 잡히지 않는 우회하는 비용도 계산해서 표를 작성한 후,
 	 * 가장 비용이 적은 타일로 이동
 	 * @param[in] Target : 거리 기준이 되는 목표 좌표
 	 * @param[in] IgnoreBlocker : 통과 판정에서 제외할 액터 (자리를 비울 예정인 유닛 등). 없으면 nullptr

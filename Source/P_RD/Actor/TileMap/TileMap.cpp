@@ -714,11 +714,16 @@ void ATileMap::AppendPath(FPathArrowSet& Set, const TArray<FMovePathTile>& PathT
 
 	// 경유지 타일 집합
 	// 경유지가 일반화살표와 겹치지 않게 미리 집합을 만들어서 비교할 때 활용
+	// 왔다갔다 경로로 같은 타일이 여러 번 경유지면 마지막 등장 위치를 기록 (마커 덮어쓰기 판정용)
 	TSet<FTileIndex> WaypointTiles;
-	for (const FMovePathTile& PathTile : PathTiles)
+	TMap<FTileIndex, int32> LastWaypointIndexes;
+	for (int32 Index = 0; Index < PathTiles.Num(); ++Index)
 	{
-		if (PathTile.mIsWaypoint)
-			WaypointTiles.Add(PathTile.mIndex);
+		if (PathTiles[Index].mIsWaypoint)
+		{
+			WaypointTiles.Add(PathTiles[Index].mIndex);
+			LastWaypointIndexes.Add(PathTiles[Index].mIndex, Index);
+		}
 	}
 
 	// 화살표와 도착지마커를 타일사이즈에 맞게 스케일 조정
@@ -743,7 +748,12 @@ void ATileMap::AppendPath(FPathArrowSet& Set, const TArray<FMovePathTile>& PathT
 		// 경유지 타일이면 화살표 대신 순번 마커 조립
 		if (PathTiles[Index].mIsWaypoint)
 		{
-			AppendWaypointMarker(Tile, ++WaypointNumber);
+			++WaypointNumber;
+
+			// 같은 타일의 앞선 경유지는 마커 생략 (마지막 순번이 덮어씀)
+			// 도착 타일과 겹치면 마커 생략 (도착 마커가 덮어씀)
+			if (LastWaypointIndexes[Tile] == Index && Tile != PathTiles[LastIndex].mIndex)
+				AppendWaypointMarker(Tile, WaypointNumber);
 			continue;
 		}
 
