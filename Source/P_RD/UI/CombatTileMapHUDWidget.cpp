@@ -4,6 +4,7 @@
 #include "Components/Button.h"
 #include "TimerManager.h"   // NativeDestruct에서 골드 카운트업/결과 딜레이 타이머 명시 정리
 #include "UI/Combat/CombatUIModel.h"
+#include "UI/Reward/RewardUIModel.h"
 #include "UI/Reward/RewardUIWidgetBase.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -120,6 +121,7 @@ void UCombatTileMapHUDWidget::NativeOnInitialized()
 		if (GameMode != nullptr)
 		{
 			BindCombatUIModel(GameMode->GetCombatUIModel());
+			BindRewardUIModel(GameMode->GetRewardUIModel());
 		}
 	}
 }
@@ -193,6 +195,7 @@ void UCombatTileMapHUDWidget::NativeDestruct()
 		mCombatUIModel->OnCombatFloatingLogMotionFinished.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogMotionFinished);
 		mCombatUIModel->OnCombatFloatingLogsCleared.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogsCleared);
 		mCombatUIModel->OnDiceRollRequested.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatDiceRollRequested);
+		mCombatUIModel->OnCombatResultOpenRequested.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatResultOpenRequested);
 	}
 
 	// UObject 바인딩 타이머라 파괴 후 발화하진 않지만, 핸들을 명시적으로 거둬 수명을 코드로 드러낸다.
@@ -244,6 +247,73 @@ void UCombatTileMapHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 	UpdateTopBarBackdrop();
 	UpdateSkillPress(InDeltaTime);
 	UpdateEquipPress(InDeltaTime);
+}
+
+/** @brief 전투 뷰모델의 이벤트를 HUD 생명주기에 맞춰 구독하고 현재 스냅샷을 즉시 반영한다. */
+void UCombatTileMapHUDWidget::BindCombatUIModel(UCombatUIModel* InUIModel)
+{
+	if (mCombatUIModel == InUIModel || InUIModel == nullptr)
+	{
+		return;
+	}
+
+	// 이전 뷰모델 구독 해제 후 교체.
+	if (mCombatUIModel != nullptr)
+	{
+		mCombatUIModel->OnQueueNodeResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
+		mCombatUIModel->OnUIChanged.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatUIChanged);
+		mCombatUIModel->OnActionResolved.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatActionResolved);
+		mCombatUIModel->OnCombatFloatingLog.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLog);
+		mCombatUIModel->OnCombatFloatingLogMotionFinished.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogMotionFinished);
+		mCombatUIModel->OnCombatFloatingLogsCleared.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogsCleared);
+		mCombatUIModel->OnDiceRollRequested.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatDiceRollRequested);
+		mCombatUIModel->OnCombatResultOpenRequested.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatResultOpenRequested);
+	}
+
+	mCombatUIModel = InUIModel;
+
+	if (mCombatUIModel != nullptr)
+	{
+		// 행동 큐 노드가 한 단위 해소될 때마다 전투 피드를 갱신한다.
+		mCombatUIModel->OnQueueNodeResolved.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
+		// 메타/유닛/턴 갱신 시 상단 상태바를 다시 그린다.
+		mCombatUIModel->OnUIChanged.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatUIChanged);
+		// 액션 확정/취소 시 스킬·주사위 선택 강조를 푼다.
+		mCombatUIModel->OnActionResolved.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatActionResolved);
+		// HP 증감 등 전투 이벤트를 유닛 머리 위 플로팅 텍스트로 띄운다.
+		mCombatUIModel->OnCombatFloatingLog.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLog);
+		// 모션 연출 종료 시 해당 모션에 묶인 플로팅 로그를 정리한다.
+		mCombatUIModel->OnCombatFloatingLogMotionFinished.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogMotionFinished);
+		// 시뮬레이션 전환/취소 시 현재 떠 있는 플로팅 로그를 한 번에 걷어낸다.
+		mCombatUIModel->OnCombatFloatingLogsCleared.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogsCleared);
+		// 턴 시작 주사위 굴림 요청 시 굴림 오버레이를 자동으로 연다(2턴째부터의 진행 멈춤 해소).
+		mCombatUIModel->OnDiceRollRequested.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatDiceRollRequested);
+		mCombatUIModel->OnCombatResultOpenRequested.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatResultOpenRequested);
+
+		// 이 시점(BeginRoom, InitCombat 이후)엔 전투 모델이 준비돼 있다 — 승리 후 월드맵 흐름을 HUD가 구독한다.
+		BindVictoryFlowEvents();
+	}
+}
+
+void UCombatTileMapHUDWidget::BindRewardUIModel(URewardUIModel* InUIModel)
+{
+	if (mCombatRewardUIModel == InUIModel || InUIModel == nullptr)
+	{
+		return;
+	}
+
+	// 이전 뷰모델 구독 해제 후 교체.
+	if (mCombatRewardUIModel != nullptr)
+	{
+		mCombatRewardUIModel->OnRewardClaimRequested.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatRewardClaimRequested);
+	}
+
+	mCombatRewardUIModel = InUIModel;
+
+	if (mCombatRewardUIModel != nullptr)
+	{
+		mCombatRewardUIModel->OnRewardClaimRequested.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatRewardClaimRequested);
+	}
 }
 
 void UCombatTileMapHUDWidget::ApplyOpenUI()

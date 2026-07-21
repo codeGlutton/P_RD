@@ -228,20 +228,38 @@ void UPlayerUnitPersistData::BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit)
 	 // 플레이어 스킬 추적
 	 USkillComponentModel* SkillComponentModel = PlayerUnit->GetSkillComponentModel();
 	 checkf(SkillComponentModel != nullptr, TEXT("플레이어 스킬 컴포넌트 nullptr"));
-	 SkillComponentModel->OnChangeSkillUI.AddLambda([this](int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData) {
-		 if (mSkillIds.Num() < SkillIndex)
-		 {
-			 FPrimaryAssetId NextSkillId;
-			 if (NewSkillData != nullptr)
-			 {
-				 NextSkillId = NewSkillData->GetPrimaryAssetId();
-			 }
-			 mSkillIds[SkillIndex] = NextSkillId;
-		 }
-		 });
+	 SkillComponentModel->OnChangeSkillUI.AddUObject(this, &UPlayerUnitPersistData::OnChangePlayerSkill);
 
 	 // TODO: 장비 변경 시 대리자에 바인딩. 이걸로 영구 데이터도 동기화
 	 // TODO: 주사위 변경 시 대리자에 바인딩. 이걸로 영구 데이터도 동기화
+}
+
+void UPlayerUnitPersistData::OnChangePlayerSkill(int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData)
+{
+	if (mSkillIds.Num() < SkillIndex)
+	{
+		FPrimaryAssetId NextSkillId;
+		if (NewSkillData != nullptr)
+		{
+			NextSkillId = NewSkillData->GetPrimaryAssetId();
+		}
+		mSkillIds[SkillIndex] = NextSkillId;
+	}
+}
+
+void URunPersistData::OnChangePlayerSkill(int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData)
+{
+	Super::OnChangePlayerSkill(SkillIndex, PreSkillData, NewSkillData);
+
+	if (mSkillIds.Num() < SkillIndex && NewSkillData != nullptr)
+	{
+		FPrimaryAssetId NextSkillId;
+		if (NewSkillData != nullptr)
+		{
+			NextSkillId = NewSkillData->GetPrimaryAssetId();
+			++mRunLog.mAcquiredSkills.FindOrAdd(NextSkillId);
+		}
+	}
 }
 
 /**
@@ -347,51 +365,6 @@ void URunPersistData::ClearRun()
 	mRunLog.Clear();
 }
 
-bool URunPersistData::AddRewardSkill(const FPrimaryAssetId& SkillId)
-{
-	if (SkillId.IsValid() == false)
-	{
-		return false;
-	}
-
-	const int32 EmptySkillSlotIndex = mSkillIds.IndexOfByPredicate([](const FPrimaryAssetId& CurrentSkillId)
-	{
-		return CurrentSkillId.IsValid() == false;
-	});
-	if (EmptySkillSlotIndex == INDEX_NONE)
-	{
-		return false;
-	}
-
-	mSkillIds[EmptySkillSlotIndex] = SkillId;
-	++mRunLog.mAcquiredSkills.FindOrAdd(SkillId);
-	return true;
-}
-
-bool URunPersistData::AddRewardEquipment(const FPrimaryAssetId& EquipmentId)
-{
-	if (EquipmentId.IsValid() == false)
-	{
-		return false;
-	}
-
-	mEquipmentIds.Add(EquipmentId);
-	++mRunLog.mAcquiredEquipment.FindOrAdd(EquipmentId);
-	return true;
-}
-
-bool URunPersistData::AddRewardDice(const FPrimaryAssetId& DiceId)
-{
-	if (DiceId.IsValid() == false)
-	{
-		return false;
-	}
-
-	mDiceIds.Add(DiceId);
-	++mRunLog.mAcquiredDices.FindOrAdd(DiceId);
-	return true;
-}
-
 /**
  * @brief 지정한 스테이지 레벨 타입에 맞는 스테이지를 비동기로 생성한다.
  *        밸런스 세팅 데이터테이블을 비동기 로드한 뒤, 행에서 빌더 파라미터를 찾아
@@ -429,6 +402,11 @@ void URunPersistData::MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCrea
 void URunPersistData::SetCurrentRoomIndex(int32 RowIndex, int32 ColumnIndex)
 {
 	mStage.GetMutable().SetCurrentRoom(RowIndex, ColumnIndex);
+}
+
+void URunPersistData::ClearCurrentCombatRoom(const FTileTransform& Transform)
+{
+	mStage.GetMutable().ClearCurrentCombatRoom(Transform);
 }
 
 /**

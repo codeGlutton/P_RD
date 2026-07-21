@@ -74,7 +74,7 @@ TStatId USRPGCombatModel::GetStatId() const
 	RETURN_QUICK_DECLARE_CYCLE_STAT(USRPGCombatModel, STATGROUP_Tickables);
 }
 
-void USRPGCombatModel::InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, UUnitModel* PlayerUnit, const FTransform& RoomStartTransform)
+void USRPGCombatModel::InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, UUnitModel* PlayerUnit, const FTransform& RoomStartTransform, const FTileTransform& RoomClearTileTransform)
 {
 	checkf(RoomSpawnData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
 	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
@@ -83,19 +83,35 @@ void USRPGCombatModel::InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, UUn
 	mCombatPhase = ESRPGCombatRoomPhase::CombatInit;
 
 	SpawnTileMap(RoomStartTransform);
-	RegisterPlayerUnit(PlayerUnit, RoomSpawnData->mPlayerTransform);
-	RegisterEnemyUnits(RoomSpawnData->mEnemyUnitPlacementDatas);
-	RegisterObstacles(RoomSpawnData->mObstaclePlacementDatas);
 
-	UE_LOG(LogSRPGCombat, Log, TEXT("SRPG 전투 초기화 완료"))
+	if (RoomClearTileTransform == FTileTransform::Invalid)
+	{
+		RegisterPlayerUnit(PlayerUnit, RoomSpawnData->mPlayerTransform);
+		RegisterEnemyUnits(RoomSpawnData->mEnemyUnitPlacementDatas);
+		RegisterObstacles(RoomSpawnData->mObstaclePlacementDatas);
+	}
+	else
+	{
+		RegisterPlayerUnit(PlayerUnit, RoomClearTileTransform);
+		mCombatPhase = ESRPGCombatRoomPhase::CombatAbort;
+		mCombatResult = ESRPGCombatResult::PlayerWin;
+	}
+
+	UE_LOG(LogSRPGCombat, Log, TEXT("SRPG 전투 초기화 완료"));
 }
 
 void USRPGCombatModel::BeginCombat()
 {
+	if (mCombatPhase == ESRPGCombatRoomPhase::CombatAbort && mCombatResult == ESRPGCombatResult::PlayerWin)
+	{
+		EndCombat();
+		return;
+	}
+
 	checkf(mCombatPhase == ESRPGCombatRoomPhase::CombatInit, TEXT("전투 시작 전 초기화 우선 필요"));
 	mCombatPhase = ESRPGCombatRoomPhase::CombatStart;
 
-	UE_LOG(LogSRPGCombat, Log, TEXT("SRPG 전투 시작"))
+	UE_LOG(LogSRPGCombat, Log, TEXT("SRPG 전투 시작"));
 
 	// 전투 시작 시, 보여지는 UI의 애니메이션의 특정 시점 종료 이후 전투 로직이 시작됨
 	auto PresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
@@ -132,11 +148,11 @@ void USRPGCombatModel::EndCombat()
 		Obstacle->OnEndRoom();
 	}
 
+	OnSaveCombatPlay.Broadcast();
+
 	// 전투 종료 시, 보여지는 UI의 애니메이션의 특정 시점 종료 이후 맵 보상 로직이 시작됨
 	auto PresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
-		
-		// TODO : 보상 로직
-
+		OnShowCombatResultUI.Broadcast(mCombatResult);
 		UE_LOG(LogSRPGCombat, Log, TEXT("SRPG 전투 종료"))
 		}));
 	OnEndCombatUI.Broadcast(PresentationBarrier, mCombatResult);

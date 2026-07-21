@@ -16,6 +16,7 @@
 
 class UPlayerUnitModel;
 class FViewport;
+class UStaticSkillData;
 
 DECLARE_DELEGATE_OneParam(FOnCreateStage, const FStage& /*NewStage*/)
 
@@ -97,6 +98,9 @@ protected:
 	void BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit);
 
 protected:
+	virtual void OnChangePlayerSkill(int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData);
+
+protected:
 	UPROPERTY(SaveGame)
 	bool mIsNewData = true;
 
@@ -143,6 +147,9 @@ class P_RD_API URunPersistData : public UPlayerUnitPersistData
 {
 	GENERATED_BODY()
 
+protected:
+	void OnChangePlayerSkill(int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData) override;
+
 public:
 	void StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty);
 	void ClearRun();
@@ -150,6 +157,7 @@ public:
 public:
 	void MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCreateStage);
 	void SetCurrentRoomIndex(int32 RowIndex, int32 ColumnIndex);
+	void ClearCurrentCombatRoom(const FTileTransform& Transform);
 
 public:
 	void CollectAssetIds(int32 RowIndex, int32 ColumnIndex, OUT TArray<FPrimaryAssetId>& PlayerIds, OUT FPrimaryAssetId& StageId, OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const;
@@ -164,11 +172,6 @@ public:
 	const FRoom& GetStartRoom() const;
 	const FRoom& GetCurrentRoom() const;
 	void GetCurrentRoomIndex(OUT int32& RowIndex, OUT int32& ColumnIndex) const;
-
-public:
-	bool AddRewardSkill(const FPrimaryAssetId& SkillId);
-	bool AddRewardEquipment(const FPrimaryAssetId& EquipmentId);
-	bool AddRewardDice(const FPrimaryAssetId& DiceId);
 
 public:
 	const FRunLog& GetRunLog() const;

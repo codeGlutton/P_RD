@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   SRPGFrameworkType.h
  * @brief  SRPG 프레임워크에서 사용되는 타입 정의 헤더
  * @author 모호재
@@ -74,10 +74,10 @@ public:
     }
 
     // @brief 가로(X) 방향 인덱스
-    UPROPERTY(Category = "TileIndex", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "X"))
+    UPROPERTY(Category = "TileIndex", SaveGame, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "X"))
     int32 mX = 0;
     // @brief 세로(Y) 방향 인덱스
-    UPROPERTY(Category = "TileIndex", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Y"))
+    UPROPERTY(Category = "TileIndex", SaveGame, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Y"))
     int32 mY = 0;
 
     // @brief 유효하지 않은(미배치) 타일을 나타내는 초기/해제값
@@ -106,11 +106,23 @@ public:
     FTileTransform(const FTileIndex& InIndex, ETileActorDirection InDirection = ETileActorDirection::Forward)
         : mIndex(InIndex), mDirection(InDirection) {}
 
+public:
+    bool operator==(const FTileTransform& Other) const
+    {
+        return mDirection == Other.mDirection && mIndex == Other.mIndex;
+    }
+
+    bool operator!=(const FTileIndex& Other) const
+    {
+        return (*this == Other) == false;
+    }
+
+public:
     // @brief 타일 인덱스 좌표
-    UPROPERTY(Category = "TileTransform", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Index"))
+    UPROPERTY(Category = "TileTransform", SaveGame, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Index"))
     FTileIndex mIndex;
     // @brief 액터가 바라보는 방향
-    UPROPERTY(Category = "TileTransform", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Direction"))
+    UPROPERTY(Category = "TileTransform", SaveGame, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Direction"))
     ETileActorDirection mDirection = ETileActorDirection::Forward;
 
     // @brief 유효하지 않은(미배치) 트랜스폼을 나타내는 초기/해제값

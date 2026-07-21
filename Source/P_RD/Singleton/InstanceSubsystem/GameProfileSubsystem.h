@@ -14,6 +14,8 @@
 
 #include "GameProfileSubsystem.generated.h"
 
+struct FTileTransform;
+
  // Profile 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogGameProfile, Log, All)
 
@@ -29,6 +31,9 @@ public:
 	void MakeUser(const FText& Name) const;
 	void StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty) const;
 	void EndRun() const;
+
+public:
+	void ClearCombatRoom(const FTileTransform& Transform) const;
 
 public:
 	void SetVolume(EGameVolumeType VolumeType, float Volume) const;

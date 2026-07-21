@@ -48,6 +48,9 @@ DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnEndAnyTurnUI, TSharedPtr<FPresentation
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnBeginAnyTurnActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, const USRPGAction* /*Action*/)
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnEndAnyTurnActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, const USRPGAction* /*Action*/, ESRPGActionResult /*Result*/)
 
+DECLARE_MULTICAST_DELEGATE(FOnSaveCombatPlay);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowCombatResultUI, ESRPGCombatResult /*Result*/);
+
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnZoomInToActorsUI, const TArray<FTileIndex>& /*ActorTileIndexes*/);
 DECLARE_MULTICAST_DELEGATE(FOnZoomOutFromActorsUI);
 
@@ -83,7 +86,7 @@ public:
 
 	/* 생명 주기 함수 */
 public:
-	void InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, UUnitModel* PlayerUnit, const FTransform& RoomStartTransform);
+	void InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, UUnitModel* PlayerUnit, const FTransform& RoomStartTransform, const FTileTransform& RoomClearTileTransform);
 	void BeginCombat();
 	void EndCombat();
 
@@ -213,6 +216,14 @@ public:
 	 * @brief 주사위 굴리기 패널 실행 타이밍 대리자
 	 */
 	FOnShowDicePanelAnyTurnUI OnShowDicePanelAnyTurnUI;
+	/**
+	 * @brief 전투 저장 대리자
+	 */
+	FOnSaveCombatPlay OnSaveCombatPlay;
+	/**
+	 * @brief 전투 결과 확인 타이밍 대리자
+	 */
+	FOnShowCombatResultUI OnShowCombatResultUI;
 
 public:
 	/**
