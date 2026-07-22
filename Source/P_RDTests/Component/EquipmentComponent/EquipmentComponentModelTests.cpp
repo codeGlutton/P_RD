@@ -14,7 +14,7 @@
 
 #include "Component/EquipmentComponent/EquipmentComponentModel.h"
 #include "Component/PassiveComponent/PassiveComponentModel.h"
-#include "DataAsset/EquipmentData/StaticWeaponEquipmentData.h"
+#include "DataAsset/EquipmentData/StaticEquipmentData.h"
 #include "DataAsset/PassiveData/StaticPassiveData.h"
 #include "TAS/Passive/TacticalPassive.h"
 #include "TAS/Passive/TacticalPassive_AddStat.h"
@@ -56,7 +56,7 @@ bool FEquipmentComponentModelTests::RunTest(const FString& Parameters)
 	PassiveData->mActivateTimingTag = StartTiming;
 
 	// 무기 DA (코드 구성): 위 패시브를 참조
-	UStaticWeaponEquipmentData* Weapon = NewObject<UStaticWeaponEquipmentData>();
+	UStaticEquipmentData* Weapon = NewObject<UStaticEquipmentData>();
 	Weapon->mStaticPassiveData.Add(TSoftObjectPtr<UStaticPassiveData>(PassiveData));
 
 	// 장착: 패시브가 설치돼야 함

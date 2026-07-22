@@ -1379,7 +1379,6 @@ void ACombatGameMode::PushCombatRewardChoicesUIData() const
 		AddEquipmentReward(static_cast<const FEliteMonsterRoom&>(CurrentRoom).mRewardEquipmentDataId);
 		break;
 	case ERoomType::BossMonster:
-		AddDiceReward(static_cast<const FBossMonsterRoom&>(CurrentRoom).mRewardDiceDataId);
 		break;
 	default:
 		break;

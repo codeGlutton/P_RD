@@ -39,7 +39,7 @@ class P_RD_API UStaticDiceData : public UPrimaryDataAsset
 public:
     FPrimaryAssetId GetPrimaryAssetId() const override
     {
-        return FPrimaryAssetId(DicePrimaryAssetTypes::GetDiceType(mRarityType), GetFName());
+        return FPrimaryAssetId(DicePrimaryAssetTypes::GetDiceType(), GetFName());
     }
 
 public:
@@ -48,7 +48,7 @@ public:
      * @details
      * Primary Asset을 주사위 희귀도로 분류해두었기 때문에, 해당 값은 Primary Asset Type에 영향을 줌
      */
-    UPROPERTY(Category = "Dice", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RarityType"))
+    UPROPERTY(Category = "Dice", EditAnywhere, BlueprintReadWrite, AssetRegistrySearchable, meta = (DisplayName = "RarityType"))
     ERarityType mRarityType;
 
 	/** @brief 주사위 면 수입니다. 지원 비주얼은 d2/d4/d6/d8/d12/d20입니다. */

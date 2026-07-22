@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 #include "DataAsset/PrimaryAssetType.h"
+#include "DataAsset/UnitSpawnData/PlayerJobType.h"
 #include "DataAsset/SkillData/SkillType.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer.h"
@@ -71,13 +72,16 @@ public:
 /**
  * @brief  스킬 생성 시 사용되는 정적 Primary Data Asset
  */
-UCLASS(abstract)
+UCLASS()
 class P_RD_API UStaticSkillData : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 
 public:
-    virtual ESkillType GetSkillType() const PURE_VIRTUAL(UStaticSkillData::GetSkillType, return ESkillType::Count;);
+    FPrimaryAssetId GetPrimaryAssetId() const override
+    {
+        return FPrimaryAssetId(SkillPrimaryAssetTypes::GetActiveType(), GetFName());
+    }
 
     /* UI 정보 */
 public:
@@ -92,8 +96,16 @@ public:
 
     /* 스킬 자체 정보 */
 public:
+    // @brief 사용 타입 ()
+    UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, AssetRegistrySearchable, meta = (DisplayName = "JobType"))
+    EPlayerJobType mJobType = EPlayerJobType::None;
+
+    // @brief 스킬 타입
+    UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, AssetRegistrySearchable, meta = (DisplayName = "SkillType"))
+    ESkillType mSkillType;
+
     // @brief 스킬 희귀도
-    UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RarityType"))
+    UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, AssetRegistrySearchable, meta = (DisplayName = "RarityType"))
     ERarityType mRarityType;
 
     // @brief 구매 시 가격
@@ -164,3 +176,4 @@ public:
     UPROPERTY(Category = "EffectLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsPenetration"))
     bool mIsPenetration;
 };
+

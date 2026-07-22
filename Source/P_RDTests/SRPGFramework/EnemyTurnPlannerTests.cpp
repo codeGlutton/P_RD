@@ -24,7 +24,7 @@
 
 #include "Actor/TileMap/TileMapModel.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
-#include "DataAsset/SkillData/StaticAttackSkillData.h"
+#include "DataAsset/SkillData/StaticSkillData.h"
 
 #include "Engine/World.h"
 #include "Engine/Engine.h"
@@ -75,9 +75,9 @@ namespace
 	}
 
 	// @brief 테스트용 일반공격 스킬 생성 (KeepAlive에 등록해 GC 방지)
-	UStaticAttackSkillData* MakeSkill(UWorld* World, TArray<UObject*>& KeepAlive, EAimPattern AimPattern, int32 AimRange)
+	UStaticSkillData* MakeSkill(UWorld* World, TArray<UObject*>& KeepAlive, EAimPattern AimPattern, int32 AimRange)
 	{
-		UStaticAttackSkillData* Skill = NewObject<UStaticAttackSkillData>(World);
+		UStaticSkillData* Skill = NewObject<UStaticSkillData>(World);
 		Skill->mAimPattern = AimPattern;
 		Skill->mAimRangeDefaultValue = AimRange;
 		Skill->mCanAimBoardActor = true;
