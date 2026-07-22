@@ -41,34 +41,6 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 	}
 	mUIModel->SetUnitUIs(Units);
 
-	// 가짜 주사위 6개. 면 수 배열은 지원 폴리헤드런(d2/d4/d6/d8/d12/d20) UI 슬롯 검증용 fixture다.
-	mDice.Reset();
-	const FLinearColor RarityColors[] = { FLinearColor(0.86f, 0.98f, 0.94f, 1.f), FLinearColor(0.55f, 0.72f, 1.f, 1.f), FLinearColor(0.82f, 0.58f, 1.f, 1.f) };
-	const FText RarityTexts[] = {
-		LOCTEXT("Common", "Common"),
-		LOCTEXT("Rare", "Rare"),
-		LOCTEXT("Epic", "Epic"),
-	};
-	const int32 FaceCounts[] = { 2, 4, 6, 8, 12, 20 };
-	for (int32 i = 0; i < 6; ++i)
-	{
-		FDiceSlotUI Die;
-		Die.mResultValue = 0;
-		Die.mRolledFaceIndex = INDEX_NONE;
-		Die.mIsRolled = false;
-		Die.mFaceCount = FaceCounts[i];
-		for (int32 FaceIndex = 0; FaceIndex < Die.mFaceCount; ++FaceIndex)
-		{
-			Die.mFaceValues.Add(FaceIndex + 1);
-			Die.mFaceTextures.Add(nullptr);
-		}
-		const int32 Tier = i % 3;
-		Die.mRarityColor = RarityColors[Tier];
-		Die.mRarityText = RarityTexts[Tier];
-		mDice.Add(Die);
-	}
-	RebuildDicePush();
-
 	// 가짜 스킬 6개
 	TArray<FSkillUI> Skills;
 	for (int32 i = 0; i < 6; ++i)
@@ -78,7 +50,6 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 		Skill.mName = FText::Format(
 			LOCTEXT("Skill {0}", "Skill {0}"),
 			FText::AsNumber(i + 1));
-		Skill.mDiceCost = 1 + (i % 3);
 		Skill.mIsUsable = true;
 		Skills.Add(Skill);
 	}
@@ -114,62 +85,12 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 	mUIModel->SetPlayerMeta(Meta);
 }
 
-/** @brief mock 주사위 선택 상태와 합계를 다시 계산해 UIModel Dice 도메인으로 push한다. */
-void UMockCombatDriver::RebuildDicePush()
-{
-	for (int32 i = 0; i < mDice.Num(); ++i)
-	{
-		mDice[i].mIsSelected = mSelectedDice.Contains(i);
-	}
-	if (mUIModel != nullptr)
-	{
-		mUIModel->SetDiceUIs(mDice);
-
-		int32 Sum = 0;
-		for (int32 Index : mSelectedDice)
-		{
-			if (mDice.IsValidIndex(Index))
-			{
-				Sum += mDice[Index].mResultValue;
-			}
-		}
-		mUIModel->SetSelectedDice(mSelectedDice, Sum);
-	}
-}
-
 /** @brief UIModel 입력 의도를 mock 상태 변경/상세 push로 흉내낸다. */
 void UMockCombatDriver::HandleCommand(ECombatInputType Type, int32 IntPayload)
 {
 	switch (Type)
 	{
-	case ECombatInputType::RollDice:
-		for (FDiceSlotUI& Die : mDice)
-		{
-			const int32 FaceCount = FMath::Max(1, Die.mFaceValues.Num());
-			Die.mRolledFaceIndex = FMath::RandRange(0, FaceCount - 1);
-			Die.mResultValue = Die.mFaceValues.IsValidIndex(Die.mRolledFaceIndex)
-				? Die.mFaceValues[Die.mRolledFaceIndex]
-				: Die.mRolledFaceIndex + 1;
-			Die.mIsRolled = true;
-		}
-		RebuildDicePush();
-		break;
-
-	case ECombatInputType::ToggleDice:
-		if (mSelectedDice.Contains(IntPayload))
-		{
-			mSelectedDice.Remove(IntPayload);
-		}
-		else if (mDice.IsValidIndex(IntPayload))
-		{
-			mSelectedDice.Add(IntPayload);
-		}
-		RebuildDicePush();
-		break;
-
 	case ECombatInputType::Cancel:
-		mSelectedDice.Reset();
-		RebuildDicePush();
 		break;
 
 	case ECombatInputType::LongPressUnit:

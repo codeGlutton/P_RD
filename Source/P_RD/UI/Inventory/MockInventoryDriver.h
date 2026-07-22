@@ -10,7 +10,7 @@
 class UInventoryUIModel;
 
 /** @brief UIModel에 mock 런 상태 스냅샷을 채워 WBP 표시를 검증한다. */
-// 실제 어댑터(URunPersistData/UDiceModel/UUnitData 연결)가 생기기 전, UI를 먼저 만들기 위한 임시 드라이버.
+// 실제 어댑터(URunPersistData/UUnitData 연결)가 생기기 전, UI를 먼저 만들기 위한 임시 드라이버.
 UCLASS()
 class P_RD_API UMockInventoryDriver : public UObject
 {

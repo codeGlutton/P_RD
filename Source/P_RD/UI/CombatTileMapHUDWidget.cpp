@@ -1,6 +1,5 @@
 ﻿#include "UI/CombatTileMapHUDWidget.h"
 
-#include "Actor/Dice/CombatDiceCaptureActor.h"   // NativeDestruct에서 공유 캡처 액터 파괴
 #include "Components/Button.h"
 #include "TimerManager.h"   // NativeDestruct에서 골드 카운트업/결과 딜레이 타이머 명시 정리
 #include "UI/Combat/CombatUIModel.h"
@@ -13,12 +12,6 @@
 UCombatTileMapHUDWidget::UCombatTileMapHUDWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	static ConstructorHelpers::FObjectFinder<UTexture2D> DiceRollBoardFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/DiceRoll/UI_DiceRoll_Board_StyleMatch.UI_DiceRoll_Board_StyleMatch"));
-	if (DiceRollBoardFinder.Succeeded())
-	{
-		mDiceRollBoardTexture = DiceRollBoardFinder.Object;
-	}
-
 	// 유닛 HP바 왼쪽 방어도 아이콘(SVN uasset) 하드레퍼런스 프리로드 → 쿡 보장(#300 컨벤션).
 	static ConstructorHelpers::FObjectFinder<UTexture2D> UnitDefenseIconFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_UnitHpBar_Defense_Icon.T_UnitHpBar_Defense_Icon"));
 	if (UnitDefenseIconFinder.Succeeded())
@@ -46,11 +39,6 @@ UCombatTileMapHUDWidget::UCombatTileMapHUDWidget(const FObjectInitializer& Objec
 	if (MapOpenSoundFinder.Succeeded())
 	{
 		mMapOpenSound = MapOpenSoundFinder.Object;
-	}
-	static ConstructorHelpers::FObjectFinder<USoundBase> DiceChooseSoundFinder(TEXT("/Game/SVN/OutSideAsset/SFX/OpenGameArt_CC0/UI/SFX_DiceChoose_OGA_CC0_WoodDice2.SFX_DiceChoose_OGA_CC0_WoodDice2"));
-	if (DiceChooseSoundFinder.Succeeded())
-	{
-		mDiceChooseSound = DiceChooseSoundFinder.Object;
 	}
 	static ConstructorHelpers::FObjectFinder<USoundBase> SkillSelectSoundFinder(TEXT("/Game/SVN/OutSideAsset/SFX/OpenGameArt_CC0/UI/SFX_SkillSelect_OGA_CC0_QuickslotClear.SFX_SkillSelect_OGA_CC0_QuickslotClear"));
 	if (SkillSelectSoundFinder.Succeeded())
@@ -134,22 +122,6 @@ void UCombatTileMapHUDWidget::OpenUI(FOnEndUIOpenAnimation Callback)
 	RefreshCombatStatusBar();
 }
 
-int32 UCombatTileMapHUDWidget::GetCombatDiceViewCount() const
-{
-	return mDiceUIs.Num();
-}
-
-bool UCombatTileMapHUDWidget::GetCombatDiceView(int32 DiceIndex, FDiceViewData& OutDiceView) const
-{
-	if (mDiceUIs.IsValidIndex(DiceIndex) == false)
-	{
-		return false;
-	}
-
-	OutDiceView = mDiceUIs[DiceIndex];
-	return true;
-}
-
 void UCombatTileMapHUDWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -159,10 +131,6 @@ void UCombatTileMapHUDWidget::NativeConstruct()
 	if (EndTurnButton != nullptr)
 	{
 		EndTurnButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleEndTurnButtonClicked);
-	}
-	if (mDiceRollInputButton != nullptr)
-	{
-		mDiceRollInputButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleDiceRollInputButtonClicked);
 	}
 	if (mSkillDetailDismissButton != nullptr)
 	{
@@ -175,10 +143,6 @@ void UCombatTileMapHUDWidget::NativeDestruct()
 	if (EndTurnButton != nullptr)
 	{
 		EndTurnButton->OnClicked.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleEndTurnButtonClicked);
-	}
-	if (mDiceRollInputButton != nullptr)
-	{
-		mDiceRollInputButton->OnClicked.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleDiceRollInputButtonClicked);
 	}
 	if (mSkillDetailDismissButton != nullptr)
 	{
@@ -194,7 +158,6 @@ void UCombatTileMapHUDWidget::NativeDestruct()
 		mCombatUIModel->OnCombatFloatingLog.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLog);
 		mCombatUIModel->OnCombatFloatingLogMotionFinished.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogMotionFinished);
 		mCombatUIModel->OnCombatFloatingLogsCleared.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogsCleared);
-		mCombatUIModel->OnDiceRollRequested.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatDiceRollRequested);
 		mCombatUIModel->OnCombatResultOpenRequested.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatResultOpenRequested);
 	}
 
@@ -204,16 +167,6 @@ void UCombatTileMapHUDWidget::NativeDestruct()
 		World->GetTimerManager().ClearTimer(mGoldCountUpTimerHandle);
 		World->GetTimerManager().ClearTimer(mCombatResultStartDelayTimerHandle);
 	}
-
-	if (IsValid(mOwnedDiceSharedCaptureActor))
-	{
-		mOwnedDiceSharedCaptureActor->Destroy();
-	}
-	mOwnedDiceSharedCaptureActor = nullptr;
-
-	// 보유 주사위 캡처 액터와 달리 물리 굴림 캡처 액터는 정리가 빠져 있었다 — 위젯 재생성 시
-	// 은닉 위치(Y≈30000)에 SceneCapture+RenderTarget 액터가 누적되는 누수의 원인.
-	DestroyDiceRollPhysicsActor();
 
 	Super::NativeDestruct();
 }
@@ -235,10 +188,6 @@ void UCombatTileMapHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 	UpdateFloatingCombatLogs(InDeltaTime); // 머리 위 전투 로그(HP 증감 텍스트) 상승+페이드.
 	UpdateTurnRoundBanner(InDeltaTime);    // "N번째 턴" 배너 페이드.
 
-	if (mIntroDiceRollActive)
-	{
-		UpdateIntroDiceRoll(InDeltaTime);
-	}
 	if (mTurnChangeIntroPlaying)
 	{
 		UpdateTurnChangeIntro(InDeltaTime);
@@ -266,7 +215,6 @@ void UCombatTileMapHUDWidget::BindCombatUIModel(UCombatUIModel* InUIModel)
 		mCombatUIModel->OnCombatFloatingLog.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLog);
 		mCombatUIModel->OnCombatFloatingLogMotionFinished.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogMotionFinished);
 		mCombatUIModel->OnCombatFloatingLogsCleared.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogsCleared);
-		mCombatUIModel->OnDiceRollRequested.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatDiceRollRequested);
 		mCombatUIModel->OnCombatResultOpenRequested.RemoveDynamic(this, &UCombatTileMapHUDWidget::HandleCombatResultOpenRequested);
 	}
 
@@ -278,7 +226,7 @@ void UCombatTileMapHUDWidget::BindCombatUIModel(UCombatUIModel* InUIModel)
 		mCombatUIModel->OnQueueNodeResolved.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatQueueNodeResolved);
 		// 메타/유닛/턴 갱신 시 상단 상태바를 다시 그린다.
 		mCombatUIModel->OnUIChanged.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatUIChanged);
-		// 액션 확정/취소 시 스킬·주사위 선택 강조를 푼다.
+		// 액션 확정/취소 시 스킬 선택 강조를 푼다.
 		mCombatUIModel->OnActionResolved.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatActionResolved);
 		// HP 증감 등 전투 이벤트를 유닛 머리 위 플로팅 텍스트로 띄운다.
 		mCombatUIModel->OnCombatFloatingLog.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLog);
@@ -286,8 +234,6 @@ void UCombatTileMapHUDWidget::BindCombatUIModel(UCombatUIModel* InUIModel)
 		mCombatUIModel->OnCombatFloatingLogMotionFinished.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogMotionFinished);
 		// 시뮬레이션 전환/취소 시 현재 떠 있는 플로팅 로그를 한 번에 걷어낸다.
 		mCombatUIModel->OnCombatFloatingLogsCleared.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatFloatingLogsCleared);
-		// 턴 시작 주사위 굴림 요청 시 굴림 오버레이를 자동으로 연다(2턴째부터의 진행 멈춤 해소).
-		mCombatUIModel->OnDiceRollRequested.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatDiceRollRequested);
 		mCombatUIModel->OnCombatResultOpenRequested.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleCombatResultOpenRequested);
 
 		// 이 시점(BeginRoom, InitCombat 이후)엔 전투 모델이 준비돼 있다 — 승리 후 월드맵 흐름을 HUD가 구독한다.
@@ -323,20 +269,16 @@ void UCombatTileMapHUDWidget::ApplyOpenUI()
 	EnsureRuntimeWidgets();
 	mLevelValueTouched = false;
 	SetExpHoldPanelVisible(false);
-	RefreshDiceViewsFromRunData();
-	RebuildOwnedDiceCards();
 	RefreshCombatStatusBar();   // 위젯 생성 이후에 뷰모델 값(Lv/HP/Gold)을 상단 상태바에 채운다.
 	RebuildEquipmentBar();      // 탑바 좌측 하단 장비 칩.
 	RebuildUnitHpBars();        // 유닛 수에 맞춰 머리 위 HP바를 만든다.
-	ClearOwnedDiceSelectionHighlight();
 	mSelectedSkillIndex = INDEX_NONE;
 	HideSkillDetail();
 	RefreshSkillRailWidgets();
-	RefreshDiceAssignmentText();
 
 	/*
 	 * HUD 루트가 빈 영역(타일맵) 탭도 받아야 NativeOnTouchStarted에서 RequestWorldTouch로
-	 * 좌표를 게임플레이에 넘길 수 있다. 스킬레일/주사위 같은 자식 버튼은 여전히 우선 처리되고,
+	 * 좌표를 게임플레이에 넘길 수 있다. 스킬레일 같은 자식 버튼은 여전히 우선 처리되고,
 	 * 버튼 밖(월드) 탭만 루트가 받아 좌표를 전달한다. (SelfHitTestInvisible이면 월드 탭이 통과돼버림)
 	 */
 	SetVisibility(ESlateVisibility::Visible);

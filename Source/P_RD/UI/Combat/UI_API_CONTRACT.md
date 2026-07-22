@@ -1,7 +1,7 @@
 # 전투 UI ↔ 게임플레이 API 계약
 
-> 작성: 박용수(UI/Dice) · 기준 코드: `UCombatUIModel` / `CombatUITypes.h`
-> 회의(2026-06-15) 합의 = **데이터/비주얼 분리 + MVVM**. UI는 게임플레이 객체(`UUnitData`/`UDiceData`/`ATileMap`…)를 **직접 알지 않고**, 이 문서의 뷰 타입과 `UCombatUIModel` 계약만으로 동작한다.
+> 작성: 박용수(UI) · 기준 코드: `UCombatUIModel` / `CombatUITypes.h`
+> 회의(2026-06-15) 합의 = **데이터/비주얼 분리 + MVVM**. UI는 게임플레이 객체(`UUnitData`/`ATileMap`…)를 **직접 알지 않고**, 이 문서의 뷰 타입과 `UCombatUIModel` 계약만으로 동작한다.
 
 전투 UI와 게임플레이는 **`UCombatUIModel` 한 곳**에서만 만난다. 권장 소유 위치는 `USRPGCombatSubsystem`(전투 수명)이며, 실제 HUD 배선은 후속 PR에서 붙인다.
 
@@ -20,11 +20,9 @@
 |---|---|---|---|
 | Unit | `SetUnitUIs(TArray<FUnitUI>)` | `FUnitUI` | `mUnitId, mIsPlayer, mHP/mMaxHP, mMovementPoint/mMaxMovementPoint, mTile`(ATileMap 점유 거울값 — 권위는 타일맵 파트.mOccupantUnitId), `mWorldLocation`(머리위 HP바 투영용), `mStatusTags`(버프/디버프, enum 아닌 태그) |
 | Unit(상세) | `SetUnitDetail(FUnitDetailUI)` | `FUnitDetailUI` | 롱프레스 시 `mName, mLevel, mPortrait, mPassiveDescriptions`만(HP/스탯은 중복 보관 X — UI가 `mUnitId`로 FUnitUI에서 읽음) |
-| Dice | `SetDiceUIs(TArray<FDiceSlotUI>)` | `FDiceSlotUI` | `mDiceId, mResultValue`(0=미굴림), `mIsRolled, mIsSelected, mIsUsed`(이번 턴 잠금), `mRarityColor/mRarityText`(어댑터가 미리 색/문구로 변환), `mPreviewTexture`(3D 프리뷰용 슬롯, 캡처 계층은 후속) |
-| Dice(선택) | `SetSelectedDice(TArray<int32>, int32 Sum)` | — | 스킬 빌드에 올린 주사위 인덱스들 + 합계 |
-| Skill | `SetSkillUIs(TArray<FSkillUI>)` | `FSkillUI` | `mSkillIndex, mName, mIcon, mDiceCost, mIsUsable, mTargeting`(사거리/형태 조준 가이드 = StaticSkillData Select*/Hit* 미러) |
+| Skill | `SetSkillUIs(TArray<FSkillUI>)` | `FSkillUI` | `mSkillIndex, mName, mIcon, mIsUsable, mTargeting`(사거리/형태 조준 가이드 = StaticSkillData Select*/Hit* 미러) |
 | Skill(상세) | `SetSkillDetail(FSkillDetailUI)` | `FSkillDetailUI` | 롱프레스 시 `mDescription, mTargeting`(풀스펙 사거리/타격범위/곡사·관통) 등 |
-| Turn | `SetTurnUI(FTurnUI)` | `FTurnUI` | `mCurrentUnitId, mRound, mPhase`(=`ECombatBuildPhaseUI`, **UI 전용**: AimSelection/Preview만 develop `ESRPGSkillBuildPhase`와 매핑, SkillSelected/DiceSelect는 어댑터 파생), `mTurnOrderUnitIds` |
+| Turn | `SetTurnUI(FTurnUI)` | `FTurnUI` | `mCurrentUnitId, mRound, mPhase`(=`ECombatBuildPhaseUI`, **UI 전용**: AimSelection/Preview는 develop `ESRPGSkillBuildPhase`와 매핑), `mTurnOrderUnitIds` |
 | Equipment | `SetEquipmentUIs(TArray<FEquipmentUI>)` | `FEquipmentUI` | `mSlotIndex, mItemId, mName, mIcon, mIsEquipped, mRarityColor` |
 | Meta | `SetPlayerMeta(FPlayerMetaUI)` | `FPlayerMetaUI` | `mGold, mLevel, mExp/mMaxExp` (상단 상태바·보상) |
 
@@ -34,7 +32,7 @@
 - `FCombatQueueNode` = `mTags`(Combat.Damage/Status/Heal/Push…), `mSourceUnitId, mTargetUnitId, mAmount, mLabel`. **여러 효과를 타입 폭발 없이 태그로 묶어** 한 노드 = 애니 한 단위.
 
 ### 빌드 종료 통지
-- `NotifyActionResolved()` — 스킬/액션이 확정·취소돼 빌드가 끝났을 때 호출 → `OnActionResolved` → UI가 스킬/주사위 **선택 강조 해제**.
+- `NotifyActionResolved()` — 스킬/액션이 확정·취소돼 빌드가 끝났을 때 호출 → `OnActionResolved` → UI가 스킬 **선택 강조 해제**.
 
 ---
 
@@ -45,8 +43,6 @@
 | UI 동작 | Request 함수 | 게임플레이가 받는 신호 | payload |
 |---|---|---|---|
 | 스킬 선택 | `RequestSelectSkill(SkillIndex)` | `OnCombatCommand(SelectSkill, idx)` | SkillIndex |
-| 주사위 올림/내림 | `RequestToggleDice(DiceIndex)` | `OnCombatCommand(ToggleDice, idx)` | DiceIndex |
-| 주사위 굴림 | `RequestRollDice()` | `OnCombatCommand(RollDice, INDEX_NONE)` | 없음 |
 | 이동 모드 | `RequestMove()` | `OnCombatCommand(Move, INDEX_NONE)` | 없음 |
 | 턴 종료 | `RequestEndTurn()` | `OnCombatCommand(EndTurn, INDEX_NONE)` | 없음 |
 | 취소(딴 데 탭) | `RequestCancel()` | `OnCombatCommand(Cancel, INDEX_NONE)` | 없음 |
@@ -67,20 +63,18 @@
 ---
 
 ## D. 게임플레이(모호재/김준형) 측 연결 지점 — 무엇을 어디에 물릴지
-현재는 비GAS **임시 어댑터**(`UCombatUIAdapter`)가 A의 `Set*`를 채우고 B의 입력을 처리한다(플레이스홀더·가상 적 포함). 다이스 데이터는 `APlayerUnit`의 `UDiceComponent`/`UDiceData`가 소유하고, 어댑터가 이를 `FDiceSlotUI`로 변환한다. 실제 게임플레이 연결 시 어댑터 자리를 다음으로 대체:
+현재는 비GAS **임시 어댑터**(`UCombatUIAdapter`)가 A의 `Set*`를 채우고 B의 입력을 처리한다(플레이스홀더·가상 적 포함). 실제 게임플레이 연결 시 어댑터 자리를 다음으로 대체:
 
 - **유닛/메타/턴 값**(A) ← `UUnitData`(GAS 폐기 후 일반 런타임 데이터)·`URunPersistData`. 현재 HP/Gold는 플레이스홀더.
-- **다이스**(A.Dice / B.Roll·Toggle) ← `UDiceData`(굴림/보유/사용/index 소유) = 회의의 **DiceComponent**. 굴림값은 `SRPGSkillBuildAction`(develop, 스킬에 주사위 적용)로 전달.
-- **스킬 빌드 페이즈**(A.Turn.mPhase, `ECombatBuildPhaseUI`=UI 전용) ← AimSelection/Preview만 develop `ESRPGSkillBuildPhase`와 매핑, SkillSelected/DiceSelect는 어댑터가 `SRPGSkillBuildAction` 상태(mSelectedSkillIndex/mSelectedDices)에서 파생. `ACombatGameMode::SelectSkill`/`OnChangeSkillBuildPhase`와 연동.
+- **스킬 빌드 페이즈**(A.Turn.mPhase, `ECombatBuildPhaseUI`=UI 전용) ← AimSelection/Preview를 develop `ESRPGSkillBuildPhase`와 매핑. `ACombatGameMode::SelectSkill`/`OnChangeSkillBuildPhase`와 연동.
 - **데미지/큐**(A.Queue) ← `UCombatCalculatorFunctionLibrary::CalculateSkillResult`의 결과 델타(`FSkillCommitResult`)를 `FCombatQueueNode`로 변환해 `SetActionQueue` → 애니 단위마다 `ResolveFrontQueueNode`.
-- **턴 이벤트** ← develop `USRPGCombatSubsystem` Begin/EndTurn 이벤트에 "쓴 주사위 리셋"·턴 표시 갱신 훅.
+- **턴 이벤트** ← develop `USRPGCombatSubsystem` Begin/EndTurn 이벤트에 턴 표시 갱신 훅.
 
 ---
 
 ## E. 아직 안 정해진 것 (게임플레이와 합의 필요)
 - 큐 노드 묶음 단위(한 노드+태그 vs 효과별 분리) — 회의 미확정.
 - 적 정보 표시 = 작은 팝업 ❌ → **크게 뜨는 정보 패널**(회의 합의) 로 `FUnitDetailUI` 소비.
-- 주사위 최대 개수 제한 여부(보유 다이스 레이아웃에 영향).
-- `mPhase`의 AimSelection/Preview ↔ develop `ESRPGSkillBuildPhase` 매핑값 확정(SkillSelected/DiceSelect는 UI 파생이라 매핑 대상 아님).
+- `mPhase`의 AimSelection/Preview ↔ develop `ESRPGSkillBuildPhase` 매핑값 확정.
 - 스킬 `mTargeting`(SelectShape/HitShape) ↔ develop 최종 SelectType/HitType enum 매핑 확정.
-- **예측 1급화(후속 PR)**: `FCombatQueueNode`의 예측 vs 실제 구분 플래그, AoE 다중대상 동시표시, 주사위 토글 시 예측 재계산 루프 — 김준형 예측 API(Mock-up 후) 일정에 맞춰 별도 처리.
+- **예측 1급화(후속 PR)**: `FCombatQueueNode`의 예측 vs 실제 구분 플래그와 AoE 다중대상 동시표시 — 김준형 예측 API(Mock-up 후) 일정에 맞춰 별도 처리.

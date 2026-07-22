@@ -30,7 +30,7 @@ namespace
 
 /**
  * @details 게임플레이 어댑터가 붙기 전, 표시 검증용 가짜 런 상태를 채워 push한다.
- * 보유 다이스 6 / 스킬 4 / 장비 3 + 메타(골드/레벨/체력)로 그리드·상단바 레이아웃을 확인한다.
+ * 보유 스킬 4 / 장비 3 + 메타(골드/레벨/체력)로 그리드·상단바 레이아웃을 확인한다.
  */
 void UMockInventoryDriver::Start(UInventoryUIModel* UIModel)
 {
@@ -46,14 +46,9 @@ void UMockInventoryDriver::Start(UInventoryUIModel* UIModel)
 	Inv.mHP = 24.f;
 	Inv.mMaxHP = 30.f;
 
-	const int32 FaceCounts[] = { 2, 4, 6, 8, 12, 20 };
-	for (int32 i = 0; i < 6; ++i)
-	{
-		Inv.mDice.Add(MakeItem(EInventoryItemKind::Dice, i, FString::Printf(TEXT("Dice %d"), i + 1), FString::Printf(TEXT("d%d"), FaceCounts[i])));
-	}
 	for (int32 i = 0; i < 4; ++i)
 	{
-		Inv.mSkills.Add(MakeItem(EInventoryItemKind::Skill, i, FString::Printf(TEXT("Skill %d"), i + 1), TEXT("주사위 1")));
+		Inv.mSkills.Add(MakeItem(EInventoryItemKind::Skill, i, FString::Printf(TEXT("Skill %d"), i + 1), TEXT("보유")));
 	}
 	for (int32 i = 0; i < 3; ++i)
 	{

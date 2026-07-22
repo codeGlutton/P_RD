@@ -56,10 +56,6 @@ struct P_RD_API FFrontendCharacterOption
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	int32 mMaxHP = 0;
 
-	// 시작 주사위 수. UI는 표시만 하고 계산하지 않는다.
-	UPROPERTY(Category = Frontend, BlueprintReadOnly)
-	int32 mDice = 0;
-
 	// 시작 골드. UI는 표시만 하고 계산하지 않는다.
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	int32 mGold = 0;

@@ -46,19 +46,10 @@ void UCombatTileMapHUDWidget::HandleCombatUIChanged(ECombatUIDomain Domain)
 		RebuildUnitHpBars();
 	}
 
-	// 주사위(굴림/사용) 갱신 시 보유 주사위 표시를 다시 읽어 그린다(쓴 주사위 비활성 반영).
-	if (Domain == ECombatUIDomain::Dice || Domain == ECombatUIDomain::All)
-	{
-		RefreshDiceViewsFromRunData();
-		RefreshOwnedDiceCards();
-	}
-
 	// 스킬: 보유 스킬 스냅샷이 바뀌면 레일 슬롯 상태(아이콘/라벨/빈칸 커버)를 다시 그린다.
 	if (Domain == ECombatUIDomain::Skill || Domain == ECombatUIDomain::All)
 	{
 		RefreshSkillRailWidgets();
-		RefreshDiceAssignmentText();
-		RefreshOwnedDiceCards();
 	}
 }
 
@@ -356,17 +347,12 @@ void UCombatTileMapHUDWidget::HandleMoveButtonClicked()
 	}
 }
 
-// [아키텍처 의도] 콘셉트 HUD의 상단 내비 버튼(MAP/DICE/SKILL/SET)은 HUD가 소유한 패널 토글
+// [아키텍처 의도] 콘셉트 HUD의 상단 내비 버튼(MAP/SKILL/SET)은 HUD가 소유한 패널 토글
 // (CombatTileMapHUDWidget_Nav.cpp — 레거시 탑바에서 이관)을 직접 호출한다.
 // 패널 생명주기/상호배타/승리 후 월드맵 흐름의 단일 책임자가 HUD가 되고, 탑바 경유 위임은 제거됐다.
 void UCombatTileMapHUDWidget::HandleNavMapButtonClicked()
 {
 	ToggleWorldMap();
-}
-
-void UCombatTileMapHUDWidget::HandleNavDiceButtonClicked()
-{
-	ToggleFloatingPanel(EWorldWidgetType::DicePanel, TEXT("DicePanel"));
 }
 
 void UCombatTileMapHUDWidget::HandleNavSkillButtonClicked()
@@ -381,12 +367,9 @@ void UCombatTileMapHUDWidget::HandleNavSettingsButtonClicked()
 
 void UCombatTileMapHUDWidget::HandleCombatActionResolved()
 {
-	// 스킬/주사위 선택 강조를 푼다(액션 확정·취소 후).
+	// 스킬 선택 강조를 푼다(액션 확정·취소 후).
 	mSelectedSkillIndex = INDEX_NONE;
-	ClearOwnedDiceSelectionHighlight();
 	RefreshSkillRailWidgets();
-	RefreshOwnedDiceCards();
-	RefreshDiceAssignmentText();
 }
 
 namespace

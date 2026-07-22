@@ -11,7 +11,7 @@ namespace
 	UWidget* FindWidgetByName(const UWidgetTree* WidgetTree, const FString& WidgetName)
 	{
 		/*
-		 * DicePanel/SkillPanel은 WBP 디자인에서 CarouselItem_0 같은 이름으로 카드 슬롯을 만든다.
+		 * 카드형 패널은 WBP 디자인에서 CarouselItem_0 같은 이름으로 카드 슬롯을 만든다.
 		 * C++이 특정 WBP 클래스를 직접 알지 않고도 같은 이름 규칙으로 슬롯을 찾아 공통 배치/입력을 적용하기 위한 helper다.
 		 */
 		return WidgetTree != nullptr ? WidgetTree->FindWidget(FName(*WidgetName)) : nullptr;
