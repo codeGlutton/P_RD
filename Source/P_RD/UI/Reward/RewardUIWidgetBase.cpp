@@ -28,9 +28,8 @@ namespace
 			return LOCTEXT("RewardChoiceSkill", "스킬");
 		case ERewardChoiceKind::Gold:
 			return LOCTEXT("RewardChoiceGold", "골드");
-		case ERewardChoiceKind::Dice:
 		default:
-			return LOCTEXT("RewardChoiceDice", "주사위");
+			return FText::GetEmpty();
 		}
 	}
 }
@@ -44,7 +43,6 @@ URewardUIWidgetBase::URewardUIWidgetBase(const FObjectInitializer& ObjectInitial
 	mEquipmentIcon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/InSideAsset/UI/Tex/Items/T_Equip_SwordCommon.T_Equip_SwordCommon"));
 	mSkillIcon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Magic.T_Reward_Magic"));
 	mGoldIcon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Stat_Gold.T_Stat_Gold"));
-	mDiceIcon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Dice_Common.T_Dice_Common"));
 	mRewardGoldIconTexture = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_gold_icon.T_reward_v4_gold_icon"));
 	mRewardExpIconTexture = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_exp_icon.T_reward_v4_exp_icon"));
 	mRewardRowWidgetClass = LoadClass<URewardRowWidgetBase>(nullptr, TEXT("/Game/BP/UI/WBP_RewardRow.WBP_RewardRow_C"));
@@ -185,9 +183,8 @@ UTexture2D* URewardUIWidgetBase::GetRewardIcon(ERewardChoiceKind Kind) const
 		return mSkillIcon != nullptr ? mSkillIcon.Get() : mRewardGoldIconTexture.Get();
 	case ERewardChoiceKind::Gold:
 		return mGoldIcon != nullptr ? mGoldIcon.Get() : mRewardGoldIconTexture.Get();
-	case ERewardChoiceKind::Dice:
 	default:
-		return mDiceIcon != nullptr ? mDiceIcon.Get() : mRewardGoldIconTexture.Get();
+		return mRewardGoldIconTexture.Get();
 	}
 }
 

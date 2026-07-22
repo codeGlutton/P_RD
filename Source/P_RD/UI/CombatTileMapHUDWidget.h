@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "RDMinimal.h"
-#include "UI/DiceViewData.h"
 #include "UI/Combat/CombatUITypes.h"
 #include "UI/RDUserWidget.h"
 #include "UI/Reward/RewardUITypes.h"
@@ -12,8 +11,6 @@
 
 #include "CombatTileMapHUDWidget.generated.h"
 
-class ACombatDiceCaptureActor;
-class ACombatDiceRollCaptureActor;
 struct FPresentationBarrier;
 enum class EWorldWidgetType : uint8;
 enum class ESRPGCombatResult : uint8;
@@ -26,14 +23,11 @@ class UCombatResultOverlayWidget;
 class UCinematicWidget;
 class UIndexedButtonWidget;
 class UImage;
-class UMaterialInstanceDynamic;
 class UProgressBar;
 class URewardUIModel;
 class URewardUIWidgetBase;
 class USoundBase;
 class UTextBlock;
-class UTextureRenderTarget2D;
-class UViewport;
 class UWidget;
 class UUserWidget;
 
@@ -64,10 +58,6 @@ struct FUnitHpBarWidget
 };
 
 /** @brief 전투 타일맵 HUD 와이어프레임 위젯 */
-// 현재는 실제 전투 API가 붙기 전의 UI 시안 단계다.
-// 스킬 레일, 보유 주사위, 명령 버튼 배치와 함께 전투 진입 시 주사위가 굴러가는 3D 연출을 확인한다.
-// 주사위 연출은 타일맵 월드에 액터를 직접 올리지 않고, UMG Viewport의 별도 미리보기 월드에서만 재생한다.
-// 이렇게 해야 카메라/타일/유닛 배치와 독립적으로 "화면 정면에서 주사위가 굴러 멈추는" UI 연출을 만들 수 있다.
 UCLASS(BlueprintType, Blueprintable)
 class P_RD_API UCombatTileMapHUDWidget : public URDUserWidget
 {
@@ -80,19 +70,8 @@ public:
 	void NativeOnInitialized() override;
 	void OpenUI(FOnEndUIOpenAnimation Callback) override;
 
-public:
-	/** @brief 전투 HUD가 현재 표시 중인 보유 주사위 개수를 반환한다. */
-	int32 GetCombatDiceViewCount() const;
 
-	/** @brief 지정 index의 보유 주사위 표시 상태를 반환한다. */
-	// DicePanel은 실제 주사위 굴림을 다시 만들지 않고, 전투 HUD가 이미 굴린 결과를 읽어 같은 값을 보여준다.
-	// 반환값이 false면 해당 index에 표시할 주사위가 없다는 뜻이다.
-	bool GetCombatDiceView(int32 DiceIndex, FDiceViewData& OutDiceView) const;
-
-	/** @brief 전투 뷰모델을 연결한다(데이터/비주얼 분리 경계). */
-	// 연결되면 주사위 굴림 결과는 더 이상 HUD가 정하지 않고 뷰모델(게임플레이/Mock)에서 읽는다.
-	// 미연결 상태에서는 기존 단독 동작(시안용 임시 굴림)을 그대로 유지해 회귀가 없다.
-	// 게임플레이 어댑터가 준비되면 여기에 같은 뷰모델을 넘기면 된다(UI 무수정).
+	/** @brief 전투/보상 뷰모델을 연결한다. */
 	void BindCombatUIModel(UCombatUIModel* InUIModel);
 	void BindRewardUIModel(URewardUIModel* InUIModel);
 
@@ -103,7 +82,7 @@ protected:
 	/** @brief 위젯 제거 시 버튼 이벤트를 해제한다. */
 	void NativeDestruct() override;
 
-	/** @brief 입장 주사위 연출을 시간에 따라 갱신한다. */
+	/** @brief HUD 연출을 시간에 따라 갱신한다. */
 	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 	/** @brief PC/에디터에서 스킬 레일을 누르기 시작한 위치를 기록한다. */
@@ -118,7 +97,7 @@ protected:
 	/** @brief 모바일에서 스킬 레일 입력을 짧은 선택 또는 롱프레스 상세로 확정한다. */
 	FReply NativeOnTouchEnded(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent) override;
 
-	/** @brief OpenUI()로 표시될 때 주사위 입장 연출을 다시 시작한다. */
+	/** @brief OpenUI()로 표시될 때 HUD 상태를 갱신한다. */
 	void ApplyOpenUI() override;
 
 	/** @brief 전투 HUD가 공용 팝업(월드맵/설정/패널)보다 뒤에 깔리도록 낮은 ZOrder를 사용한다. */
@@ -164,18 +143,6 @@ private:
 	 */
 	int32 GetSkillDataIndexForRailSlot(int32 RailSlotIndex) const;
 
-	/** @brief 입장 굴림용 실제 물리 테이블 캡처 액터를 준비한다. */
-	void EnsureDiceRollPhysicsActor();
-
-	/** @brief 입장 굴림용 물리 캡처 액터를 정리한다. */
-	void DestroyDiceRollPhysicsActor();
-
-	/** @brief 주사위 캡처 액터를 UI 전용 위치에 생성한다. */
-	ACombatDiceCaptureActor* SpawnDiceCaptureActor(int32 GroupIndex, int32 DiceIndex, int32 RenderTargetSize);
-
-	/** @brief 현재 RunPersistData의 보유 주사위 목록을 전투 HUD 표시용 데이터로 변환한다. */
-	void RefreshDiceViewsFromRunData();
-
 	/** @brief 선택 강조가 들어가지 않은 중립 스킬 레일을 런타임으로 다시 만든다. */
 	void RebuildSkillRailWidgets();
 
@@ -185,43 +152,8 @@ private:
 	/** @brief 보유 스킬의 표시 이름을 뷰모델에서 읽는다(없으면 빈 텍스트 - 시안 라벨 폴백 없음). */
 	FText GetOwnedSkillLabel(int32 SkillIndex) const;
 
-	/** @brief 보유 주사위 3D 캡처 위젯을 현재 주사위 개수에 맞춰 다시 만든다. */
-	void RebuildOwnedDiceCards();
-
 	/** @brief WBP 스킬 레일 위에 투명 입력 버튼을 얹어 짧은 탭과 롱프레스를 받는다. */
 	void EnsureSkillInputButtons();
-
-	/** @brief 보유 주사위 3D 캡처의 숫자/색/선택 상태를 현재 굴림 상태에 맞게 갱신한다. */
-	void RefreshOwnedDiceCards();
-
-	/** @brief 전투 진입 주사위 굴림을 바로 시작하지 않고 터치 대기 상태로 준비한다. */
-	void PrepareIntroDiceRoll();
-
-	/** @brief 전투 진입 주사위 굴림 연출을 시작한다. */
-	void StartIntroDiceRoll();
-
-	/** @brief 물리 굴림에서 읽은 결과면을 시안/단독 표시 데이터에 반영한다. */
-	void ApplyIntroDicePhysicsResults();
-
-	/** @brief 굴림 연출의 현재 프레임을 계산한다. */
-	void UpdateIntroDiceRoll(float InDeltaTime);
-
-	/** @brief 주사위 팝업이 떠 있는 동안 전투 HUD 조작층을 숨기거나 되돌린다. */
-	void SetDiceRollCombatLayerSuppressed(bool bSuppressed);
-
-	/** @brief 모든 주사위 결과를 보유 주사위 카드에 한 번에 반영한다. */
-	void MarkAllDiceRolled();
-
-	/** @brief 주사위 연출 UI를 보이거나 숨긴다. */
-	// @param NewVisibility 적용할 표시 상태
-	void SetDiceRollVisibility(ESlateVisibility NewVisibility);
-
-	/** @brief 주사위 연출 영역을 눌렀을 때 대기/결과 상태에 맞춰 굴림 시작 또는 닫기를 처리한다. */
-	UFUNCTION()
-	void HandleDiceRollInputButtonClicked();
-
-	/** @brief 결과 확인이 끝난 주사위 연출 UI를 닫는다. */
-	void DismissIntroDiceRoll();
 
 	/** @brief 스킬 상세 카드 바깥을 눌렀을 때 상세 카드를 닫는다. */
 	UFUNCTION()
@@ -230,10 +162,6 @@ private:
 	/** @brief 턴 종료 버튼 클릭을 받는다. 실제 전투 API가 붙기 전까지는 로그만 남긴다. */
 	UFUNCTION()
 	void HandleEndTurnButtonClicked();
-
-	/** @brief 보유 주사위 카드를 누르면 배치 후보 주사위로 선택한다. */
-	UFUNCTION()
-	void HandleOwnedDiceCardClicked(int32 DiceIndex);
 
 	/** @brief 행동 큐 노드 하나가 해소될 때 호출. 전투 피드에 수치/라벨을 표시한다(머리 위 위치는 게임플레이 follow-up). */
 	UFUNCTION()
@@ -274,7 +202,7 @@ private:
 	/** @brief 스킨 모드: 탑바 레벨 아래에 장착 장비 아이콘(최대 3)을 그린다. 위치·아이콘은 임시(디자이너 조정 예정). */
 	void RebuildEquipmentIcons();
 
-	/** @brief 스킬/액션이 확정·취소되면 스킬·주사위 선택 강조를 푼다. */
+	/** @brief 스킬/액션이 확정·취소되면 스킬 선택 강조를 푼다. */
 	UFUNCTION()
 	void HandleCombatActionResolved();
 
@@ -285,11 +213,9 @@ private:
 	/** @brief 우측 MOVE 버튼의 이동 가능 수치(현재/최대)를 갱신한다. */
 	void RefreshMoveButton() const;
 
-	/** @brief 내비 버튼 클릭(MAP/DICE/SKILL/SET)을 HUD 소유의 패널 토글로 연결한다. */
+	/** @brief 내비 버튼 클릭(MAP/SKILL/SET)을 HUD 소유의 패널 토글로 연결한다. */
 	UFUNCTION()
 	void HandleNavMapButtonClicked();
-	UFUNCTION()
-	void HandleNavDiceButtonClicked();
 	UFUNCTION()
 	void HandleNavSkillButtonClicked();
 	UFUNCTION()
@@ -315,7 +241,7 @@ private:
 	/** @brief 지정한 월드 위젯을 공통 CloseUI() 경로로 닫는다. */
 	void CloseWorldWidget(EWorldWidgetType WorldWidgetType) const;
 
-	/** @brief 플로팅 패널(MAP/SET/DICE/SKILL)을 하나만 남기고 닫는다(상호배타). */
+	/** @brief 플로팅 패널(MAP/SET/SKILL)을 하나만 남기고 닫는다(상호배타). */
 	void CloseFloatingPanels(EWorldWidgetType ExceptWorldWidgetType) const;
 
 	/** @brief 월드맵 토글. 조회용은 방 선택 비활성, 승리 잠금 중엔 복원 흐름으로 보낸다. */
@@ -324,7 +250,7 @@ private:
 	/** @brief 인게임 설정 패널 토글(+InGame 모드/상태 문구 초기화). */
 	void ToggleSettingsPanel();
 
-	/** @brief DICE/SKILL처럼 단순히 열고 닫는 플로팅 패널을 토글한다. */
+	/** @brief SKILL처럼 단순히 열고 닫는 플로팅 패널을 토글한다. */
 	void ToggleFloatingPanel(EWorldWidgetType WorldWidgetType, const TCHAR* DebugName);
 
 	/** @brief 플레이어 승리 결과를 다음 방 선택 월드맵 표시로 연결한다. */
@@ -376,7 +302,7 @@ private:
 	UFUNCTION()
 	void HandleWorldMapCloseRequested();
 
-	/** @brief 풀스크린 지도 뷰 동안 탑바를 제외한 전투 컨트롤(스킬레일/주사위/턴순서/이동·턴종료)을 숨김/복원한다. */
+	/** @brief 풀스크린 지도 뷰 동안 탑바를 제외한 전투 컨트롤을 숨김/복원한다. */
 	void SetCombatPlayControlsVisible(bool bVisible);
 
 	/** @brief 지도/설정/패널을 닫고 전투로 복귀할 때 숨겨졌던 전투 컨트롤을 복원한다(모든 닫기 경로 공통). */
@@ -444,17 +370,13 @@ private:
 	UFUNCTION()
 	void HandleCombatFloatingLogsCleared();
 
-	/** @brief 턴 시작 주사위 굴림 요청(OnDiceRollRequested 구독) — 굴림 오버레이를 연다. 구현: _DiceRoll.cpp */
-	UFUNCTION()
-	void HandleCombatDiceRollRequested();
-
 	UFUNCTION()
 	void HandleCombatResultOpenRequested();
 
-	/** @brief 턴 전환 영상 안내를 재생하고, 필요하면 종료 뒤 주사위 팝업을 연다. */
-	bool PlayTurnChangeIntro(bool bOpenDiceAfterIntro);
+	/** @brief 턴 전환 영상 안내를 재생한다. */
+	bool PlayTurnChangeIntro();
 
-	/** @brief 턴 전환 영상 안내를 닫고 대기 중인 후속 UI(주사위)를 이어간다. */
+	/** @brief 턴 전환 영상 안내를 닫는다. */
 	void FinishTurnChangeIntro();
 
 	/** @brief 턴 전환 알파 텍스처 에셋 프레임들을 준비한다. */
@@ -530,7 +452,7 @@ private:
 	/** @brief 장비 슬롯 누름 시간을 누적해 롱프레스 상세 표시를 판단한다. */
 	void UpdateEquipPress(float InDeltaTime);
 
-	/** @brief 스킬을 선택한다. 다른 스킬로 바뀌면 주사위 배치 후보를 초기화한다. */
+	/** @brief 스킬을 선택한다. */
 	void SelectSkillForAssignment(int32 SkillIndex);
 
 	/** @brief 스킬 상세(concept_09 오버레이)를 표시한다. */
@@ -557,14 +479,8 @@ private:
 	/** @brief 상세 카드 바깥 입력이면 상세 카드를 닫는다. */
 	bool HideSkillDetailIfClickedOutside(const FVector2D& ScreenPosition);
 
-	/** @brief 선택된 주사위와 스킬의 임시 배치 상태를 안내 문구에 반영한다. */
-	void RefreshDiceAssignmentText() const;
-
-	/** @brief 보유 주사위 카드의 선택 강조를 모두 끈다(선택의 진실원본은 DicePoolModel의 mIsSelected). */
-	void ClearOwnedDiceSelectionHighlight();
-
 private:
-	/** @brief 런타임으로 주사위/턴 종료 UI를 붙일 WBP 루트 Canvas */
+	/** @brief 런타임 전투 UI를 붙일 WBP 루트 Canvas */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UCanvasPanel> RootCanvas;
 
@@ -572,29 +488,9 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UCanvasPanel> DesignCanvas;
 
-	/** @brief 주사위 연출 안내 문구 */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> DiceRollStatusText;
-
 	/** @brief 턴 종료 버튼 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UButton> EndTurnButton;
-
-	/** @brief 전투 진입 주사위 팝업 뒤에서 전투 HUD를 가리는 반투명 배경 */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UBorder> mDiceRollBackdropPanel;
-
-	/** @brief 실제 물리 테이블을 한 번에 캡처한 RenderTarget Image */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UImage> mDiceRollPhysicsImage;
-
-	/** @brief 전투 진입 주사위가 놓이는 팝업 보드 배경 */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UImage> mDiceRollBoardImage;
-
-	/** @brief 팝업 보드 Texture2D */
-	UPROPERTY(Transient)
-	TObjectPtr<UTexture2D> mDiceRollBoardTexture;
 
 	/** @brief 유닛 HP바 왼쪽 방어도 아이콘 텍스처(생성자 프리로드). */
 	UPROPERTY(Transient)
@@ -613,10 +509,6 @@ private:
 	/** @brief 지도 열기 사운드(책장 넘김). 월드맵이 실제로 열릴 때 1회. */
 	UPROPERTY(Transient)
 	TObjectPtr<USoundBase> mMapOpenSound;
-
-	/** @brief 스킬-주사위 배치에서 주사위를 고를 때 나는 나무 주사위 사운드. */
-	UPROPERTY(Transient)
-	TObjectPtr<USoundBase> mDiceChooseSound;
 
 	/** @brief 스킬 레일에서 유효한 스킬을 선택할 때 재생하는 사운드. */
 	UPROPERTY(Transient)
@@ -645,14 +537,7 @@ private:
 	/** @brief 골드 카운트업 반복 타이머. */
 	mutable FTimerHandle mGoldCountUpTimerHandle;
 
-	/** @brief 여러 주사위를 하나의 숨겨진 물리 테이블에서 굴리는 캡처 액터 */
-	UPROPERTY(Transient)
-	TObjectPtr<ACombatDiceRollCaptureActor> mDiceRollPhysicsActor;
-
-	/** @brief 현재 런에서 읽은 보유 주사위 표시 데이터 */
-	TArray<FDiceViewData> mDiceUIs;
-
-	/** @brief 연결되면 주사위 굴림 결과의 출처가 되는 전투 뷰모델(미연결 시 기존 단독 동작) */
+	/** @brief 연결된 전투 뷰모델 */
 	UPROPERTY(Transient)
 	TObjectPtr<UCombatUIModel> mCombatUIModel;
 
@@ -678,8 +563,6 @@ private:
 	/** @brief 내비 투명 버튼(concept 아트 위 클릭영역). 런타임 생성, HUD 소유 패널 토글 호출. */
 	UPROPERTY(Transient)
 	TObjectPtr<UButton> mNavMapButton;
-	UPROPERTY(Transient)
-	TObjectPtr<UButton> mNavDiceButton;
 	UPROPERTY(Transient)
 	TObjectPtr<UButton> mNavSkillButton;
 	UPROPERTY(Transient)
@@ -787,9 +670,6 @@ private:
 	 */
 	FTimerHandle mTurnChangeSafetyTimerHandle;
 
-	/** @brief 턴 전환 안내 종료 직후 주사위 팝업을 열어야 하는지 여부 */
-	bool mPendingDiceRollAfterTurnIntro = false;
-
 	/** @brief 라운드 시작 배너를 재생하는 동안 잡아두는 배리어 — 배너가 끝나면(FinishTurnChangeIntro) 놓아 그 라운드 첫 턴을 진행시킨다. */
 	TSharedPtr<FPresentationBarrier> mRoundChangeBarrier;
 
@@ -798,37 +678,6 @@ private:
 
 	/** @brief 마지막으로 배너를 띄운 라운드(같은 라운드 내 턴 전환 반복 방지) */
 	int32 mLastShownTurnRound = 0;
-
-	/** @brief 보유 주사위 3D 캡처 RenderTarget Image 위젯 */
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<UImage>> mOwnedDiceImages;
-
-	/**
-	 * @brief 보유 주사위 카드 캡처를 전담하는 공유 캡처 액터(항상 1대).
-	 * @details 다이별로 SceneCapture+라이트 액터를 상주시키면 보유 개수만큼 무한 누적되므로,
-	 *          카메라는 1대만 두고 다이를 순서대로 구성해 다이별 RT(mOwnedDiceRenderTargets)에 찍는다.
-	 */
-	UPROPERTY(Transient)
-	TObjectPtr<ACombatDiceCaptureActor> mOwnedDiceSharedCaptureActor;
-
-	/** @brief 다이별 표시용 투명 RenderTarget(256x256). 다이별 상주는 이것과 캡처 머티리얼뿐이다. */
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<UTextureRenderTarget2D>> mOwnedDiceRenderTargets;
-
-	/** @brief 다이별 캡처 머티리얼(RT 알파→UI 투명도). 카드 Image 브러시가 참조한다. */
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<UMaterialInstanceDynamic>> mOwnedDiceCaptureMaterials;
-
-	/** @brief 변경되지 않은 보유 주사위는 3D 장면을 다시 캡처하지 않기 위한 시각 상태 해시. */
-	TArray<uint32> mOwnedDiceVisualHashes;
-
-	/** @brief 보유 주사위 선택 입력을 받는 투명 버튼 */
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<UIndexedButtonWidget>> mOwnedDiceCardWidgets;
-
-	/** @brief 레거시 주사위 종류 라벨(d2/d4/d6/d8/d10/d12/d20). 현재 보유 주사위 카드에서는 숨긴다. */
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<UTextBlock>> mOwnedDiceTypeTexts;
 
 	/** @brief 중립 상태로 표시하는 런타임 스킬 레일 배경 */
 	UPROPERTY(Transient)
@@ -892,40 +741,6 @@ private:
 	/** @brief 현재 장비 누름 누적 시간(NativeTick에서 증가). */
 	float mEquipPressElapsed = 0.0f;
 
-	/** @brief 입장 주사위가 실제 회전/정착 애니메이션을 재생 중인지 여부 */
-	bool mIntroDiceRollActive = false;
-
-	/** @brief 입장 주사위가 화면에 준비되어 첫 터치를 기다리는 상태 */
-	bool mIntroDiceRollReady = false;
-
-	/** @brief 결과 표시가 끝나 닫기 터치만 기다리는 상태 */
-	bool mIntroDiceResultWaitingForDismiss = false;
-
-	/** @brief 보유 주사위 카드에 결과를 이미 반영했는지 여부. 반복 Tick으로 중복 갱신하지 않기 위한 latch */
-	bool mIntroDiceResultsApplied = false;
-
-	/** @brief 입장 굴림의 실제 결과를 전투/시안 데이터에서 이미 받아왔는지 여부 */
-	bool mIntroDiceRollResultsResolved = false;
-
-	/** @brief 현재 주사위 연출 누적 시간 */
-	float mIntroDiceRollElapsed = 0.0f;
-
-	/** @brief 굴림 완료 후 정렬을 시작하기까지의 대기 간격(결과를 잠깐 보여주는 시간). */
-	float mIntroDiceAlignDelay = 0.12f;
-
-	/** @brief 정렬 시작 전 대기 누적 시간. */
-	float mIntroDiceAlignTimer = 0.0f;
-
-	/** @brief 주사위가 한 줄로 정렬되는 애니메이션 진행 중인지. */
-	bool mIntroDiceAligning = false;
-
-	/** @brief 정렬이 끝나 탭으로 닫기를 기다리는 상태인지. */
-	bool mIntroDiceAligned = false;
-
-	/** @brief 선택된 주사위/스킬 배치 상태를 보여주는 안내 문구 */
-	UPROPERTY(Transient)
-	TObjectPtr<UTextBlock> mDiceAssignmentText;
-
 	/** @brief 롱프레스 때만 보이는 스킬 상세 카드 배경 */
 	UPROPERTY(Transient)
 	TObjectPtr<UBorder> mSkillDetailPanel;
@@ -937,10 +752,6 @@ private:
 	/** @brief 스킬칸을 제외한 왼쪽 빈 영역을 어둡게 덮는 상세 오버레이 조각 */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UBorder>> mSkillDetailBackdropPanels;
-
-	/** @brief 주사위 연출을 시작/닫기 위한 투명 입력 버튼 */
-	UPROPERTY(Transient)
-	TObjectPtr<UButton> mDiceRollInputButton;
 
 	/** @brief 스킬 상세가 열린 동안 바깥 터치를 받는 투명 버튼(= concept_09 닫기 히트영역) */
 	UPROPERTY(Transient)
@@ -961,7 +772,7 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UTextBlock> mDetailTitleText;
 
-	/** @brief 상세 부제(타입/메타: 주사위·레벨·희귀도 등) — WBP의 DetailSubtitleText. */
+	/** @brief 상세 부제(타입/레벨/희귀도 등) — WBP의 DetailSubtitleText. */
 	UPROPERTY(Transient)
 	TObjectPtr<UTextBlock> mDetailSubtitleText;
 

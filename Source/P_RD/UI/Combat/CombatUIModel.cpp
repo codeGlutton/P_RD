@@ -8,24 +8,6 @@ void UCombatUIModel::RequestSelectSkill(int32 SkillIndex)
 	OnCombatCommand.Broadcast(ECombatInputType::SelectSkill, SkillIndex);
 }
 
-/** @brief 주사위 슬롯 index 토글 의도를 전달한다. */
-void UCombatUIModel::RequestToggleDice(int32 DiceIndex)
-{
-	OnCombatCommand.Broadcast(ECombatInputType::ToggleDice, DiceIndex);
-}
-
-/** @brief 보유 주사위 전체 굴림 의도를 전달한다. */
-void UCombatUIModel::RequestRollDice()
-{
-	OnCombatCommand.Broadcast(ECombatInputType::RollDice, INDEX_NONE);
-}
-
-/** @brief 입장 물리 굴림 결과면(0-base)을 게임플레이에 반영하라고 알린다. */
-void UCombatUIModel::RequestApplyDiceResults(const TArray<int32>& RolledFaceIndices)
-{
-	OnApplyDiceResults.Broadcast(RolledFaceIndices);
-}
-
 /** @brief 스킬 상세 요청을 SkillIndex payload로 전달한다. */
 void UCombatUIModel::RequestLongPressSkill(int32 SkillIndex)
 {
@@ -92,29 +74,6 @@ void UCombatUIModel::SetUnitDetail(const FUnitDetailUI& Detail)
 {
 	mUnitDetail = Detail;
 	OnUIChanged.Broadcast(ECombatUIDomain::Unit);
-}
-
-/** @brief 주사위 표시 스냅샷을 교체하고 Dice 도메인 갱신을 알린다. */
-void UCombatUIModel::SetDiceUIs(const TArray<FDiceSlotUI>& Dice)
-{
-	mDiceUIs = Dice;
-	OnUIChanged.Broadcast(ECombatUIDomain::Dice);
-}
-
-/** @brief 스킬 빌드에 올린 주사위 index 목록과 합계를 교체한다. */
-void UCombatUIModel::SetSelectedDice(const TArray<int32>& SelectedIndices, int32 SelectedSum)
-{
-	mSelectedDiceIndices = SelectedIndices;
-	mSelectedDiceSum = SelectedSum;
-	OnUIChanged.Broadcast(ECombatUIDomain::Dice);
-}
-
-void UCombatUIModel::SetDiceState(const TArray<FDiceSlotUI>& Dice, const TArray<int32>& SelectedIndices, int32 SelectedSum)
-{
-	mDiceUIs = Dice;
-	mSelectedDiceIndices = SelectedIndices;
-	mSelectedDiceSum = SelectedSum;
-	OnUIChanged.Broadcast(ECombatUIDomain::Dice);
 }
 
 /** @brief 스킬 레일 표시 스냅샷을 교체하고 Skill 도메인을 갱신한다. */
@@ -256,12 +215,6 @@ void UCombatUIModel::NotifyCombatFloatingLogMotionFinished(int32 MotionIndex)
 void UCombatUIModel::NotifyCombatFloatingLogsCleared()
 {
 	OnCombatFloatingLogsCleared.Broadcast();
-}
-
-/** @brief 턴 시작 주사위 굴림 오버레이 열기를 구독 위젯에 알린다. */
-void UCombatUIModel::NotifyDiceRollRequested()
-{
-	OnDiceRollRequested.Broadcast();
 }
 
 void UCombatUIModel::NotifyCombatResultOpenRequested()

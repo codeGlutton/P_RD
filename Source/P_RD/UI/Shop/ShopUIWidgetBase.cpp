@@ -22,10 +22,8 @@ namespace
 	{
 		switch (Kind)
 		{
-		case EShopItemKind::Dice:      return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Dice_Common.T_Dice_Common");
 		case EShopItemKind::Skill:     return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Magic.T_Reward_Magic");
 		case EShopItemKind::Equipment: return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Equipment.T_Reward_Equipment");
-		case EShopItemKind::Upgrade:   return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Shop_UpgradeDice.T_Shop_UpgradeDice");
 		case EShopItemKind::Heal:
 		default:                       return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Gold.T_Reward_Gold");
 		}
