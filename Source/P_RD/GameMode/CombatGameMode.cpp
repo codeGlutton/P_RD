@@ -5,6 +5,7 @@
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
 #include "Engine/AssetManager.h"
+#include "TimerManager.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "DataAsset/StageSpawnData/StaticStageSpawnData.h"
 #include "DataAsset/RoomSpawnData/StaticCombatRoomSpawnData.h"
@@ -241,10 +242,12 @@ void ACombatGameMode::InitializeRoom()
 	CombatModel->OnRegisterUnitUI.AddUObject(this, &ACombatGameMode::OnRegisterUnit);
 	CombatModel->OnUnregisterUnitUI.AddUObject(this, &ACombatGameMode::OnUnregisterUnit);
 
-	CombatModel->OnShowDicePanelAnyTurnUI.AddWeakLambda(this, [this](const USRPGTurnContext* TurnContext) {
+	CombatModel->OnShowDicePanelAnyTurnUI.AddWeakLambda(this, [this](const USRPGTurnContext*) {
 		// 주사위 UI는 제거됐지만 후속 시스템 정리 전까지 DicePrepare는 남아 있다.
-		// 화면 입력을 기다리지 않고 즉시 굴림 커맨드를 보내 턴 진행이 멈추지 않게 한다.
-		RollDices();
+		// DicePrepare 처리 중 라우터에 다시 진입하면 현재 액션의 head index가 바뀌므로 다음 틱에 진행한다.
+		GetWorldTimerManager().SetTimerForNextTick(FTimerDelegate::CreateWeakLambda(this, [this]() {
+			RollDices();
+			}));
 		});
 	CombatModel->OnSaveCombatPlay.AddWeakLambda(this, [this]() {
 		UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
