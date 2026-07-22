@@ -12,8 +12,6 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "RDCollision.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
-#include "Dice/DicePoolModel.h"
-#include "Dice/DiceModel.h"
 #include "GameFramework/PlayerController.h"
 #include "Pawn/Unit.h"
 #include "ObjectView.h"
@@ -23,10 +21,8 @@
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/WorldSubsystem/SRPGCombatSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
-#include "SRPGFramework/SRPGTurnContext.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Combat/CombatUITypes.h"
-#include "UI/DiceViewData.h"
 
 namespace
 {
@@ -37,7 +33,6 @@ namespace
 
 	// [합의필요] HP/Gold/이동력 진짜 소스 = UUnitData(GAS 폐기 후). 아래는 임시 placeholder —
 	//           게임플레이가 UUnitData를 주면 이 상수 대신 거기서 읽어 SetUnitUIs/SetPlayerMeta를 채운다.
-	//           (다이스는 이미 진짜 — APlayerUnit::UDicePoolModel에서 읽음. HP/Gold만 미연결.)
 	constexpr float PlayerStartHP = 100.0f;
 	constexpr float EnemyStartHP = 30.0f;
 
@@ -57,17 +52,6 @@ namespace
 /** @brief 전투 서브시스템과 런 데이터를 기준으로 임시 유닛 상태를 재구성하고 첫 View push를 수행한다. */
 void UCombatUIAdapter::Build(USRPGCombatSubsystem* InCombat, const URunPersistData* InRun)
 {
-	// 재빌드 대비: 이전 subsystem 턴 종료 구독을 먼저 해제한다.
-	// 전환/teardown 시 모델이 이미 파괴돼 GetModel()이 null일 수 있으므로 모델까지 null 가드한다.
-	if (mCombat != nullptr && mEndTurnHandle.IsValid())
-	{
-		if (USRPGCombatModel* PrevModel = mCombat->GetModel<USRPGCombatModel>())
-		{
-			PrevModel->OnEndAnyTurnUI.Remove(mEndTurnHandle);
-		}
-		mEndTurnHandle.Reset();
-	}
-
 	mCombat = InCombat;
 	mPlayerLevel = InRun != nullptr ? InRun->GetPlayerLevel() : 1;
 	mUnitStates.Reset();
@@ -77,9 +61,6 @@ void UCombatUIAdapter::Build(USRPGCombatSubsystem* InCombat, const URunPersistDa
 	USRPGCombatModel* CombatModel = (mCombat != nullptr) ? mCombat->GetModel<USRPGCombatModel>() : nullptr;
 	if (CombatModel != nullptr)
 	{
-		// 턴이 끝날 때마다 이번 턴에 쓴 주사위 잠금을 해제하도록 훅을 건다(계약 D: Begin/EndTurn 리셋).
-		mEndTurnHandle = CombatModel->OnEndAnyTurnUI.AddUObject(this, &UCombatUIAdapter::HandleEndAnyTurn);
-
 		for (const TObjectPtr<UUnitModel>& Unit : CombatModel->GetUnits())
 		{
 			if (Unit == nullptr || Unit->IsPlayerUnitModel() == false)
@@ -162,7 +143,6 @@ void UCombatUIAdapter::BindUIModel(UCombatUIModel* InUIModel)
 	}
 
 	PushAll();
-	PushDiceUIs();   // HUD가 열릴 때 주사위 뷰가 이미 있도록 초기 상태도 push.
 }
 
 /** @brief UI에서 올라온 index 기반 의도를 임시 BASIC/STEP/MOVE 상태 머신으로 해석한다. */
@@ -174,62 +154,6 @@ void UCombatUIAdapter::HandleCombatCommand(ECombatInputType Type, int32 IntPaylo
 		mSelectedSkillIndex = IntPayload;
 		mPendingAttackDamage = -1;
 		mMovePending = false;
-		break;
-
-	case ECombatInputType::ToggleDice:
-	{
-		// 이미 쓴 주사위는 무시(턴 종료/다음 턴 시작까지 잠금).
-		if (mUIModel != nullptr)
-		{
-			const TArray<FDiceSlotUI>& Dice = mUIModel->GetDiceUIs();
-			if (Dice.IsValidIndex(IntPayload) && Dice[IntPayload].mIsUsed)
-			{
-				break;
-			}
-		}
-
-		const int32 DiceValue = GetRolledDiceValue(IntPayload);
-		if (DiceValue <= 0)
-		{
-			break;
-		}
-		mPendingDiceIndex = IntPayload;   // 확정 시 '사용됨' 처리할 주사위.
-		if (mSelectedSkillIndex == SkillIndexStep)
-		{
-			// STEP: 주사위 배치 → 본인 타일을 회색(Aim)으로. 탭마다 노랑→빨강(확정).
-			mPendingStepValue = DiceValue;
-			mStepStage = 0;
-			mStepTile = GetPlayerTile();
-			SetSingleTileHighlight(mStepTile, ETileHighlightFlag::Aim);
-		}
-		else if (mSelectedSkillIndex == SkillIndexBasic)
-		{
-			// BASIC: 주사위 배치 → 사거리(회색 Aim)를 깐다. 그 안에서 타깃 탭=노랑, 재탭=빨강+실행.
-			mPendingAttackDamage = DiceValue;
-			mAttackTargetTile = FTileIndex::Invalid;
-			if (UTileMapModel* TileMap = mCombat != nullptr ? mCombat->GetModel<USRPGCombatModel>()->GetTileMap() : nullptr)
-			{
-				// 사거리 기준점 = 플레이어 타일. 타일 트랜스폼이 신뢰 안 될 수 있어((0,0) 등) 액터 실제 위치로 잡는다.
-				FTileIndex Origin = GetPlayerTile();
-				if (const FCombatUnitState* PlayerState = FindPlayerState())
-				{
-					if (PlayerState->mActor.IsValid())
-					{
-						Origin = TileMap->WorldToTileIndex(PlayerState->mActor->GetActorLocation());
-					}
-				}
-				// 사거리 = Square 범위(타일맵 GetAimableTiles, pyramidmine 구현). 점유 타일 포함(적 조준).
-				mAimTiles = TileMap->GetAimableTiles(Origin, BasicAttackRange, EAimPattern::Square, true, false);
-				ClearAllHighlight();
-				TileMap->GetView<ATileMap>()->SetTileHighlight(mAimTiles, ETileHighlightFlag::Aim);   // 회색 사거리
-			}
-		}
-		break;
-	}
-
-	case ECombatInputType::RollDice:
-		// 굴림 요청: 컴포넌트(데이터)에서 굴리고 결과 뷰를 push한다.
-		RollDice();
 		break;
 
 	case ECombatInputType::Move:
@@ -282,12 +206,7 @@ void UCombatUIAdapter::HandleWorldTouch(FVector2D ScreenPosition, bool bLongPres
 			else if (mStepStage >= 2)
 			{
 				SetSingleTileHighlight(mStepTile, ETileHighlightFlag::Effect);   // 빨강 = 확정
-				ApplyStep(mPendingStepValue);                                    // 이동력 += 주사위값
-				if (mDicePool != nullptr && mPendingDiceIndex != INDEX_NONE)
-				{
-					mDicePool->MarkDiceUsed(mPendingDiceIndex);             // 쓴 주사위 잠금
-					PushDiceUIs();                                             // 잠금 상태를 UI에 반영
-				}
+				ApplyStep(mPendingStepValue);
 				ClearPendingAction();
 			}
 		}
@@ -345,11 +264,6 @@ void UCombatUIAdapter::HandleWorldTouch(FVector2D ScreenPosition, bool bLongPres
 		if (Target != nullptr && Target->mIsPlayer == false)
 		{
 			ApplyBasicAttack(TargetId, mPendingAttackDamage);
-			if (mDicePool != nullptr && mPendingDiceIndex != INDEX_NONE)
-			{
-				mDicePool->MarkDiceUsed(mPendingDiceIndex);   // 적을 친 경우에만 주사위 소모.
-				PushDiceUIs();                                   // 잠금 상태를 UI에 반영
-			}
 		}
 		ClearPendingAction();
 		return;
@@ -420,34 +334,6 @@ void UCombatUIAdapter::HandleWorldTouch(FVector2D ScreenPosition, bool bLongPres
 	}
 }
 
-/** @brief 턴 종료 UI 이벤트에서 이번 턴 사용한 주사위 잠금을 해제하고 Dice 도메인을 다시 push한다. */
-void UCombatUIAdapter::HandleEndAnyTurn(TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, ESRPGTurnResult /*Result*/)
-{
-	// 턴이 끝나면 이번 턴에 쓴 주사위 잠금을 해제한다(다음 턴 다시 사용 가능).
-	// Barrier는 즉시 처리(애니 대기 없음)라 붙잡지 않는다 → 스코프 종료 시 카운트가 줄어 로직이 이어진다.
-	if (mDicePool != nullptr)
-	{
-		mDicePool->ResetUsed();
-		PushDiceUIs();
-	}
-}
-
-/** @brief UObject 파괴 시 전투 서브시스템에 남은 턴 종료 구독을 해제한다. */
-void UCombatUIAdapter::BeginDestroy()
-{
-	// 전환/teardown 시 모델이 이미 파괴돼 GetModel()이 null일 수 있으므로 모델까지 null 가드한다.
-	if (mCombat != nullptr && mEndTurnHandle.IsValid())
-	{
-		if (USRPGCombatModel* CombatModel = mCombat->GetModel<USRPGCombatModel>())
-		{
-			CombatModel->OnEndAnyTurnUI.Remove(mEndTurnHandle);
-		}
-		mEndTurnHandle.Reset();
-	}
-
-	Super::BeginDestroy();
-}
-
 /** @brief 타일맵의 하이라이트 레이어를 단일 타일/단일 플래그 상태로 맞춘다. */
 void UCombatUIAdapter::SetSingleTileHighlight(const FTileIndex& Tile, ETileHighlightFlag Flag) const
 {
@@ -478,77 +364,7 @@ void UCombatUIAdapter::ClearAllHighlight() const
 	TileMap->ClearTileHighlight(ETileHighlightFlag::Effect);
 }
 
-/** @brief UIModel에 push된 주사위 결과를 액션 계산 값으로 읽어 UI 표시와 계산 입력을 일치시킨다. */
-int32 UCombatUIAdapter::GetRolledDiceValue(int32 DiceIndex) const
-{
-	if (mUIModel == nullptr)
-	{
-		return 0;
-	}
-	const TArray<FDiceSlotUI>& Dice = mUIModel->GetDiceUIs();
-	if (Dice.IsValidIndex(DiceIndex) == false)
-	{
-		return 0;
-	}
-	return Dice[DiceIndex].mIsRolled ? Dice[DiceIndex].mResultValue : 0;
-}
-
-/** @brief 현재 플레이어 DiceComponent를 굴리고 결과를 FDiceSlotUI로 다시 push한다. */
-void UCombatUIAdapter::RollDice()
-{
-	if (mDicePool == nullptr)
-	{
-		return;
-	}
-
-	/*
-	 * 어댑터 단독 단계라 임시 난수 스트림을 쓴다.
-	 * 게임플레이/런 통합 시 run의 RandomStream(URandomStreamFunctionLibrary)을 주입해 결정론을 맞춘다.
-	 */
-	FRandomStream Stream;
-	Stream.GenerateNewSeed();
-	mDicePool->RollAll(Stream);
-	PushDiceUIs();
-}
-
-/** @brief UDicePoolModel의 런타임 주사위 상태를 UI 전용 FDiceSlotUI 배열로 변환한다. */
-void UCombatUIAdapter::PushDiceUIs() const
-{
-	if (mUIModel == nullptr || mDicePool == nullptr)
-	{
-		return;
-	}
-
-	const TArray<TObjectPtr<UDiceModel>>& Dice = mDicePool->GetDices();
-
-	TArray<FDiceSlotUI> Views;
-	Views.Reserve(Dice.Num());
-
-	for (const TObjectPtr<UDiceModel>& DicePtr : Dice)
-	{
-		if (DicePtr == nullptr)
-		{
-			continue;
-		}
-
-		FDiceSlotUI View;
-		View.mDiceId = DicePtr->GetSourceDiceId();
-		View.mResultValue = DicePtr->GetCurrentValue();
-		View.mRolledFaceIndex = DicePtr->GetRolledFaceIndex();
-		View.mIsRolled = DicePtr->IsRolled();
-		View.mIsUsed = DicePtr->IsUsed();
-		View.mRarityColor = RDUIDice::GetDiceRarityColor(DicePtr->GetRarity());
-		View.mRarityText = RDUIDice::GetDiceRarityText(DicePtr->GetRarity());
-		View.mFaceCount = DicePtr->GetFaceCount();   // 종류 표시(d6/d20 등)용 면 수
-		View.mFaceValues = DicePtr->GetFaceValues();
-		View.mFaceTextures = DicePtr->GetFaceTextures();
-		Views.Add(MoveTemp(View));
-	}
-
-	mUIModel->SetDiceUIs(Views);
-}
-
-/** @brief 스킬/주사위/이동 pending 상태와 하이라이트를 모두 초기화하고 UI 선택 강조 해제를 알린다. */
+/** @brief 스킬/이동 pending 상태와 하이라이트를 모두 초기화하고 UI 선택 강조 해제를 알린다. */
 void UCombatUIAdapter::ClearPendingAction()
 {
 	mSelectedSkillIndex = INDEX_NONE;
@@ -556,12 +372,11 @@ void UCombatUIAdapter::ClearPendingAction()
 	mMovePending = false;
 	mPendingStepValue = -1;
 	mStepStage = 0;
-	mPendingDiceIndex = INDEX_NONE;
 	mAimTiles.Reset();
 	mAttackTargetTile = FTileIndex::Invalid;
 	ClearAllHighlight();
 
-	// UI에 스킬/주사위 선택 강조를 풀라고 알린다(확정/취소 공통).
+	// UI에 스킬 선택 강조를 풀라고 알린다(확정/취소 공통).
 	if (mUIModel != nullptr)
 	{
 		mUIModel->NotifyActionResolved();

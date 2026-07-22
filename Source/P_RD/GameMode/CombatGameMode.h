@@ -54,12 +54,6 @@ public:
 	bool SelectSkill(int32 SkillIndex);
 
 	UFUNCTION(Category = UI, BlueprintCallable)
-	bool SelectDice(int32 DiceIndex);
-
-	UFUNCTION(Category = UI, BlueprintCallable)
-	bool RollDices();
-
-	UFUNCTION(Category = UI, BlueprintCallable)
 	bool SelectMove();
 
 	UFUNCTION(Category = UI, BlueprintCallable)
@@ -70,12 +64,6 @@ public:
 	 */
 	UFUNCTION()
 	void HandleCombatCommand(ECombatInputType Type, int32 IntPayload);
-
-	/*
-	 * @brief UIModel의 물리 굴림 결과 주입 의도(OnApplyDiceResults)를 굴림 커맨드로 연결한다. 
-	 */
-	UFUNCTION()
-	void HandleApplyDiceResults(const TArray<int32>& RolledFaceIndices);
 
 	/**
 	 * @brief 전장 탭을 조준/시전 입력으로 처리한다.
@@ -92,6 +80,9 @@ public:
 	void HandleAbandonRun();
 
 protected:
+	/** @brief UI 없이 남아 있는 DicePrepare 액션을 즉시 진행시킨다. Dice 시스템 후속 정리 때 함께 제거한다. */
+	bool RollDices();
+
 	/**
 	 * @brief 터치/클릭 지점의 월드 액터를 검사하여 이벤트를 실행한다.
 	 * @param ScreenPosition 입력 지점의 화면 좌표(픽셀). 모바일 터치는 커서가 없으므로 이 좌표로 트레이스한다.
@@ -116,8 +107,6 @@ protected:
 	void PushSkillBuildUIData(ESRPGSkillBuildPhase Phase) const;
 	void PushMoveBuildUIData(ESRPGMoveBuildPhase Phase) const;
 	void PushUnitUIData() const;
-	void PushDiceUIData() const;
-	void PushSelectedDiceUIData() const;
 	void PushSkillUIData() const;
 	void PushSelectedSkillUIData(int32 SkillIndex) const;
 

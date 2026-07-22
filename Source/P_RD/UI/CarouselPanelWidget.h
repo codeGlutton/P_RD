@@ -19,12 +19,12 @@ class UWidget;
  * @brief 여러 카드형 항목을 가로 목록 또는 원형 캐러셀로 보여주는 공통 팝업 베이스
  *
  * @details
- * DicePanel과 SkillPanel은 실제 데이터 연결 전에도 같은 배치/닫기/선택 동작을 공유한다.
+ * 카드형 패널은 실제 데이터 연결 전에도 같은 배치/닫기/선택 동작을 공유한다.
  * WBP에는 CarouselItem_0, CarouselItem_1 같은 이름으로 항목을 둔다.
  * 항목 안에 CarouselButton_0 같은 버튼을 따로 넣어두면 클릭 이벤트도 연결하지만, 버튼이 없어도 패널 자체가 터치 위치로 항목을 선택한다.
  *
  * 왜 공통 베이스로 두는가:
- * 주사위와 스킬은 내용은 다르지만 “탑바 버튼으로 열림, 닫기 버튼으로 닫힘, 여러 카드 중 하나를 선택함”이라는 화면 동작이 같다.
+ * 카드 내용과 무관하게 “탑바 버튼으로 열림, 닫기 버튼으로 닫힘, 여러 카드 중 하나를 선택함”이라는 화면 동작을 공유한다.
  * 이 동작을 각 패널에 따로 넣으면 이후 카드 배치나 터치 반응을 고칠 때 두 파일을 같이 수정해야 한다.
  */
 UCLASS(Abstract, BlueprintType, Blueprintable)
@@ -83,7 +83,7 @@ protected:
 	 *
 	 * @details
 	 * SkillPanel처럼 WBP에 있는 모든 카드를 그대로 쓰는 패널은 기본값을 사용한다.
-	 * DicePanel처럼 런 데이터의 보유 주사위 수에 따라 카드 수가 달라지는 패널은 이 값을 override해
+	 * 런 데이터에 따라 카드 수가 달라지는 패널은 이 값을 override해
 	 * 남는 WBP 목업 카드를 숨긴다.
 	 */
 	virtual int32 GetCarouselItemDisplayCount() const;
@@ -92,7 +92,7 @@ protected:
 	 * @brief 카드별 추가 회전 각도를 반환한다.
 	 *
 	 * @details
-	 * 기본값은 0도다. DicePanel처럼 선택된 카드에 임시 회전을 주는 파생 위젯만 override한다.
+	 * 기본값은 0도다. 선택된 카드에 임시 회전을 주는 파생 위젯만 override한다.
 	 */
 	virtual float GetCarouselItemAngle(int32 ItemIndex) const;
 
@@ -100,7 +100,7 @@ protected:
 	 * @brief 선택 카드가 바뀌었거나 첫 선택으로 활성화되었을 때 호출되는 확장 지점이다.
 	 *
 	 * @details
-	 * DicePanel은 여기서 이전 카드의 회전 상태를 초기화한다.
+	 * 파생 패널은 여기서 이전 카드의 임시 표시 상태를 초기화할 수 있다.
 	 */
 	virtual void HandleCarouselSelectionChanged(int32 PreviousIndex, int32 NewIndex);
 

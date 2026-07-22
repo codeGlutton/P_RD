@@ -15,7 +15,7 @@ class UTextBlock;
 class UInventoryUIModel;
 
 /** @brief 인벤토리 화면 WBP 베이스. WBP(create_inventory_wbp.py 생성) 위젯 이름은 아래 BindWidget 멤버명과 일치해야 한다. */
-// BindUIModel()로 UInventoryUIModel에 연결하면 C++가 BindWidget 위젯에 값을 채운다(메타 + 주사위/스킬/장비 종류별 아이콘 카드).
+// BindUIModel()로 UInventoryUIModel에 연결하면 C++가 BindWidget 위젯에 값을 채운다(메타 + 스킬/장비 아이콘 카드).
 // 항목 롱프레스는 LongPressItem()으로 의도만 보낸다. 위젯은 런 상태를 계산/변경하지 않는다.
 UCLASS(Abstract)
 class P_RD_API UInventoryUIWidgetBase : public URDUserWidget
@@ -72,12 +72,6 @@ protected:
 
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> mMetaText;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> mDiceLabel;
-
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UHorizontalBox> mDiceBox;
 
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> mSkillLabel;

@@ -7,7 +7,7 @@
  * @brief 탑바 팝업보다 살짝 위에 뜨는 캐러셀 패널 기본 ZOrder를 설정한다.
  *
  * @details
- * DicePanel/SkillPanel은 전투 HUD 내비 버튼으로 열리는 플로팅 패널이다.
+ * 카드형 패널은 전투 HUD 내비 버튼으로 열리는 플로팅 패널이다.
  * 탑바는 계속 조작 가능해야 하므로 탑바보다 아래가 아니라 일반 팝업보다 조금 높은 계층에 둔다.
  */
 UCarouselPanelWidget::UCarouselPanelWidget(const FObjectInitializer& ObjectInitializer)
@@ -52,7 +52,7 @@ void UCarouselPanelWidget::NativeDestruct()
  *
  * @details
  * 이전에 열었을 때 선택했던 카드나 누른 위치가 남아 있으면 새로 연 패널이 이미 선택된 상태처럼 보인다.
- * 패널을 열 때마다 "아직 카드 선택 전" 상태로 돌려, DICE/SKILL 모두 같은 시작 화면을 갖게 한다.
+ * 패널을 열 때마다 "아직 카드 선택 전" 상태로 돌려 같은 시작 화면을 갖게 한다.
  */
 void UCarouselPanelWidget::ApplyOpenUI()
 {
@@ -89,7 +89,7 @@ UWidget* UCarouselPanelWidget::GetSelectedCarouselItem() const
  * @brief 포인터 위치가 현재 선택된 카드 위에 있는지 확인한다.
  *
  * @details
- * DicePanel은 선택된 카드 위에서만 회전 드래그를 시작해야 한다.
+ * 회전 입력을 쓰는 파생 패널은 선택된 카드 위에서만 드래그를 시작해야 한다.
  * 캐러셀 공통 베이스가 Geometry 판정을 제공해 파생 패널이 카드 배열 구조를 직접 만지지 않게 한다.
  */
 bool UCarouselPanelWidget::IsPointerOverSelectedCarouselItem(const FVector2D& ScreenPosition) const
@@ -111,7 +111,7 @@ int32 UCarouselPanelWidget::GetCarouselItemDisplayCount() const
  *
  * @details
  * 기본 캐러셀은 회전을 주지 않는다.
- * DicePanel은 선택된 카드만 드래그 각도로 회전시키기 위해 이 함수를 override한다.
+ * 파생 패널은 선택된 카드만 드래그 각도로 회전시키기 위해 이 함수를 override할 수 있다.
  */
 float UCarouselPanelWidget::GetCarouselItemAngle(int32 ItemIndex) const
 {

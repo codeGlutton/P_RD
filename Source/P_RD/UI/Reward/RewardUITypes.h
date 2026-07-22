@@ -40,11 +40,10 @@ struct FRewardUI
 };
 
 /** @brief 보상 항목 한 칸의 종류. UI가 게임플레이 데이터 타입을 직접 모르게 어댑터가 변환해 넣는다. */
-// 기획(방 별 보상 체계): 보상은 방 타입이 결정한다 — 엘리트=장비, 보스=주사위, 보물=장비. (고정 개수 아님)
+// 보상은 방 타입이 결정하며 고정 개수가 아니다.
 UENUM(BlueprintType)
 enum class ERewardChoiceKind : uint8
 {
-	Dice,
 	Skill,
 	Equipment,
 	Gold
@@ -60,13 +59,13 @@ enum class ERewardClaimKind : uint8
 };
 
 /** @brief 그 방이 지급하는 보상 항목 하나를 그리기 위한 표시값입니다(획득 = Claim, 선택 아님). */
-// 골드/경험치(FRewardUI)와 함께, 방 타입이 주는 항목(엘리트=장비/보스=주사위 등)을 카드로 보여준다.
+// 골드/경험치(FRewardUI)와 함께 방이 주는 항목을 카드로 보여준다.
 // UI 필요값:
 // - mChoiceIndex: 항목 index(상세 요청 등 payload).
-// - mKind: 다이스/스킬/장비/골드 구분(기본 아이콘 결정).
+// - mKind: 스킬/장비/골드 구분(기본 아이콘 결정).
 // - mName: 항목 이름(예: "철 검").
 // - mIcon: 프레임+희귀도 내장 아이템 아이콘(어댑터가 실제 아이템 아이콘을 넣음).
-// - mDescription: 보조 한 줄 — 장비=장착 부위/효과, 주사위=종류·면, 스킬=설명.
+// - mDescription: 보조 한 줄 — 장비=장착 부위/효과, 스킬=설명.
 // - mRarityColor: 희귀도(아이콘에 틴트가 필요할 때만 사용; 보통 아이콘 프레임에 내장).
 // 최종 소스 = 방 보상 롤 결과(게임플레이).
 USTRUCT(BlueprintType)
@@ -75,7 +74,7 @@ struct FRewardChoiceUI
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadOnly) int32 mChoiceIndex = INDEX_NONE;
-	UPROPERTY(BlueprintReadOnly) ERewardChoiceKind mKind = ERewardChoiceKind::Dice;
+	UPROPERTY(BlueprintReadOnly) ERewardChoiceKind mKind = ERewardChoiceKind::Equipment;
 	UPROPERTY(BlueprintReadOnly) FPrimaryAssetId mSourceAssetId;
 	UPROPERTY(BlueprintReadOnly) FText mName;
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;

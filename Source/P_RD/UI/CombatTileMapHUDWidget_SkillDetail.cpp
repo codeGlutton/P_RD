@@ -28,7 +28,7 @@ void UCombatTileMapHUDWidget::SetDetailOverlayVisible(bool bVisible) const
 		mSkillDetailDismissButton->SetVisibility(bVisible ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 	}
 
-	// 뒤 풀뷰포트 회색 딤(주사위 배경과 동일) — HP바/스킬레일 등 뒤 HUD를 덮는다.
+	// 뒤 풀뷰포트 회색 딤 — HP바/스킬레일 등 뒤 HUD를 덮는다.
 	if (mSkillDetailBackdropPanels.IsValidIndex(0) && mSkillDetailBackdropPanels[0] != nullptr)
 	{
 		mSkillDetailBackdropPanels[0]->SetVisibility(bVisible ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
@@ -58,9 +58,7 @@ void UCombatTileMapHUDWidget::ShowSkillDetail(int32 SkillIndex)
 	}
 	if (mDetailSubtitleText != nullptr)
 	{
-		mDetailSubtitleText->SetText(FText::Format(
-			NSLOCTEXT("CombatTileMapHUDWidget", "SkillDetailMeta", "SKILL · 주사위 {0}"),
-			FText::AsNumber(Detail.mDiceCost)));
+		mDetailSubtitleText->SetText(NSLOCTEXT("CombatTileMapHUDWidget", "SkillDetailMeta", "SKILL"));
 	}
 	if (mDetailBodyText != nullptr) { mDetailBodyText->SetText(Detail.mDescription); }
 

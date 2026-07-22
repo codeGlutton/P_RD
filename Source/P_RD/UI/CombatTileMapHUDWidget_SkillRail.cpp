@@ -91,10 +91,6 @@ void UCombatTileMapHUDWidget::RebuildSkillRailWidgets()
 void UCombatTileMapHUDWidget::RefreshSkillRailWidgets()
 {
 	int32 SkillIndex = mCombatUIModel != nullptr ? mCombatUIModel->GetSelectedSkillIndex() : INDEX_NONE;
-	if (mSelectedSkillIndex != SkillIndex)
-	{
-		ClearOwnedDiceSelectionHighlight();
-	}
 	mSelectedSkillIndex = SkillIndex;
 
 	const TArray<FSkillUI>* Skills = mCombatUIModel != nullptr ? &mCombatUIModel->GetSkillUIs() : nullptr;

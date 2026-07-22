@@ -62,6 +62,14 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 	// WBP에 디자이너 스킨(concept 아트 + HUD_* 앵커)이 있는지 먼저 판별한다.
 	// 활성이면 아래 플레이스홀더 배경을 투명화해 WBP 아트가 보이게 하고, 좌표는 WBP 앵커에서 읽는다.
 	ResolveDesignerSkin();
+	// 기존 WBP에 남은 주사위 아트/앵커도 런타임에서 항상 숨긴다.
+	for (const FName WidgetName : { FName(TEXT("HUD_Dice")), FName(TEXT("HUD_DiceTray")), FName(TEXT("HUD_M_dice")) })
+	{
+		if (UWidget* LegacyDiceWidget = WidgetTree->FindWidget(WidgetName))
+		{
+			LegacyDiceWidget->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
 	if (IsDesignerSkinActive())
 	{
 		UCanvasPanel* DesignerCanvasPanel = DesignCanvas.Get();
@@ -72,7 +80,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		}
 		if (DesignerCanvasPanel != nullptr)
 		{
-			// 스킨 런타임 위젯(주사위/스킬/MOVE/값텍스트 등)은 DesignCanvas(1920x1080 디자인 좌표계)에 붙인다.
+			// 스킨 런타임 위젯(스킬/MOVE/값텍스트 등)은 DesignCanvas(1920x1080 디자인 좌표계)에 붙인다.
 			// 단 RootCanvas 멤버는 '풀뷰포트 루트'로 유지한다 — 월드투영 HP바(UnitBars.cpp)가 RootCanvas에
 			// ProjectWorldLocationToWidgetPosition의 뷰포트 픽셀을 그대로 넣기 때문. RootCanvas를 DesignCanvas로
 			// 덮으면 뷰포트 픽셀이 디자인 픽셀로 오해석돼 HP바가 유닛 머리에서 떨어진다.
@@ -83,96 +91,6 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 	// (값 텍스트 LV/HP/Gold는 더 이상 C++가 생성/정렬하지 않는다 — 빌드가 WBP의 HUD_M_lv/hp/gold_value를
 	//  실제 TextBlock으로 심고 위치/폰트/정렬을 소유한다. C++는 RefreshSkinValueLabels에서 내용만 채운다.)
 
-
-	// --- 주사위 판(물리 굴림) 보드/배경/캡처 위젯 (20260622 이식). 위치는 ApplyRuntimeWidgetLayout에서 잡는다. ---
-	if (mDiceRollBackdropPanel == nullptr)
-	{
-		mDiceRollBackdropPanel = FindNamedWidget<UBorder>(WidgetTree, TEXT("DiceRollBackdropPanel"));
-	}
-	if (mDiceRollBackdropPanel == nullptr)
-	{
-		mDiceRollBackdropPanel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("DiceRollBackdropPanel"));
-		if (mDiceRollBackdropPanel != nullptr)
-		{
-			RootCanvas->AddChildToCanvas(mDiceRollBackdropPanel);   // 풀뷰포트 회색 배경(전체 덮기)
-		}
-	}
-	if (mDiceRollBackdropPanel != nullptr)
-	{
-		mDiceRollBackdropPanel->SetBrushColor(FLinearColor(0.010f, 0.014f, 0.020f, 0.80f));
-		mDiceRollBackdropPanel->SetVisibility(ESlateVisibility::Collapsed);
-	}
-
-	if (mDiceRollBoardImage == nullptr)
-	{
-		mDiceRollBoardImage = FindNamedWidget<UImage>(WidgetTree, TEXT("DiceRollBoardImage"));
-	}
-	if (mDiceRollBoardImage == nullptr)
-	{
-		mDiceRollBoardImage = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("DiceRollBoardImage"));
-		if (mDiceRollBoardImage != nullptr)
-		{
-			RootCanvas->AddChildToCanvas(mDiceRollBoardImage);   // 오버레이는 풀뷰포트 RootCanvas 기준
-		}
-	}
-	if (mDiceRollBoardImage != nullptr)
-	{
-		if (mDiceRollBoardTexture != nullptr)
-		{
-			mDiceRollBoardImage->SetBrushFromTexture(mDiceRollBoardTexture, true);
-		}
-		mDiceRollBoardImage->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.98f));
-		mDiceRollBoardImage->SetVisibility(ESlateVisibility::Collapsed);
-	}
-
-	if (mDiceRollPhysicsImage == nullptr)
-	{
-		mDiceRollPhysicsImage = FindNamedWidget<UImage>(WidgetTree, TEXT("DiceRollPhysicsImage"));
-	}
-	if (mDiceRollPhysicsImage == nullptr)
-	{
-		mDiceRollPhysicsImage = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("DiceRollPhysicsImage"));
-		if (mDiceRollPhysicsImage != nullptr)
-		{
-			RootCanvas->AddChildToCanvas(mDiceRollPhysicsImage);   // 오버레이는 풀뷰포트 RootCanvas 기준
-		}
-	}
-	if (mDiceRollPhysicsImage != nullptr)
-	{
-		mDiceRollPhysicsImage->SetColorAndOpacity(FLinearColor::White);
-		mDiceRollPhysicsImage->SetVisibility(ESlateVisibility::Collapsed);
-	}
-
-	if (DiceRollStatusText == nullptr)
-	{
-		DiceRollStatusText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("DiceRollStatusText"));
-		if (DiceRollStatusText != nullptr)
-		{
-			DiceRollStatusText->SetJustification(ETextJustify::Center);
-			DiceRollStatusText->SetText(FText::GetEmpty());
-			DiceRollStatusText->SetVisibility(ESlateVisibility::Collapsed);
-			DiceRollStatusText->SetColorAndOpacity(FSlateColor(FLinearColor(0.82f, 1.0f, 0.96f, 1.0f)));
-			RootCanvas->AddChildToCanvas(DiceRollStatusText);   // 오버레이는 풀뷰포트 RootCanvas 기준
-		}
-	}
-
-	if (mDiceRollInputButton == nullptr)
-	{
-		mDiceRollInputButton = FindNamedWidget<UButton>(WidgetTree, TEXT("DiceRollInputButton"));   // WBP-네이티브 버튼 우선 바인딩
-	}
-	if (mDiceRollInputButton == nullptr)
-	{
-		mDiceRollInputButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("DiceRollInputButton"));
-		if (mDiceRollInputButton != nullptr)
-		{
-			RootCanvas->AddChildToCanvas(mDiceRollInputButton);   // 풀뷰포트 입력 차단막(WBP에 없을 때만)
-		}
-	}
-	if (mDiceRollInputButton != nullptr)
-	{
-		mDiceRollInputButton->SetBackgroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.01f));
-		mDiceRollInputButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleDiceRollInputButtonClicked);
-	}
 
 	if (mTurnChangeBackdropPanel == nullptr)
 	{
@@ -242,19 +160,6 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		}
 	}
 
-	if (mDiceAssignmentText == nullptr)
-	{
-		mDiceAssignmentText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("DiceAssignmentText"));
-		if (mDiceAssignmentText != nullptr)
-		{
-			mDiceAssignmentText->SetJustification(ETextJustify::Left);
-			mDiceAssignmentText->SetText(FText::GetEmpty());   // 유휴 안내문구 제거
-			mDiceAssignmentText->SetVisibility(ESlateVisibility::Collapsed);
-			mDiceAssignmentText->SetColorAndOpacity(FSlateColor(FLinearColor(0.90f, 1.0f, 0.96f, 0.96f)));
-			TargetRootCanvas->AddChildToCanvas(mDiceAssignmentText);
-		}
-	}
-
 	if (mSkillDetailDismissButton == nullptr)
 	{
 		mSkillDetailDismissButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("SkillDetailDismissButton"));
@@ -299,8 +204,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 				continue;
 			}
 
-			// 상세 오버레이 뒤 풀뷰포트 딤 — 주사위 굴림 배경(mDiceRollBackdropPanel)과 "완전 동일한" 색/알파.
-			// 주사위 딤과 동일하게 RootCanvas(풀뷰포트)에 붙인다. DesignCanvas(스킨)에 붙이면 RootCanvas의 HP바를 못 덮는다.
+			// 상세 오버레이 뒤 풀뷰포트 딤. DesignCanvas에 붙이면 RootCanvas의 HP바를 못 덮는다.
 			BackdropPanel->SetBrushColor(FLinearColor(0.010f, 0.014f, 0.020f, 0.80f));
 			BackdropPanel->SetVisibility(ESlateVisibility::Collapsed);
 			RootCanvas->AddChildToCanvas(BackdropPanel);
@@ -401,7 +305,7 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 		}
 	}
 
-	// 내비 투명 버튼(MAP/DICE/SKILL/SET): concept 내비 아트 위에 얹어 클릭만 받고 HUD 소유 패널 토글을 호출한다.
+	// 내비 투명 버튼(MAP/SKILL/SET): concept 내비 아트 위에 얹어 클릭만 받고 HUD 소유 패널 토글을 호출한다.
 	if (IsDesignerSkinActive())
 	{
 		auto MakeNavButton = [&](TObjectPtr<UButton>& OutButton, const TCHAR* Name)
@@ -417,16 +321,11 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 			}
 		};
 		MakeNavButton(mNavMapButton, TEXT("NavMapButton"));
-		MakeNavButton(mNavDiceButton, TEXT("NavDiceButton"));
 		MakeNavButton(mNavSkillButton, TEXT("NavSkillButton"));
 		MakeNavButton(mNavSettingsButton, TEXT("NavSettingsButton"));
 		if (mNavMapButton != nullptr)
 		{
 			mNavMapButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleNavMapButtonClicked);
-		}
-		if (mNavDiceButton != nullptr)
-		{
-			mNavDiceButton->OnClicked.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleNavDiceButtonClicked);
 		}
 		if (mNavSkillButton != nullptr)
 		{

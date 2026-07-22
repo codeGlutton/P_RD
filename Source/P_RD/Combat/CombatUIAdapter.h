@@ -13,13 +13,10 @@
 class UCombatUIModel;
 class USRPGCombatSubsystem;
 class URunPersistData;
-class UDicePoolModel;
 class AUnit;
 class ATileMap;
 struct FPresentationBarrier;
-class USRPGTurnContext;
 enum class ECombatInputType : uint8;
-enum class ESRPGTurnResult : uint8;
 
 /** @brief 전투 유닛 한 기의 비GAS 런타임 상태입니다. 플레이어는 실제 액터, 적은 가상 상태로 둡니다. */
 // GAS 폐기 + UUnitData 미존재 단계의 임시 데이터 계층(proto-UUnitData)이다.
@@ -55,10 +52,6 @@ public:
 	/** @brief 뷰모델에 연결하고 현재 표시값을 push한다. */
 	void BindUIModel(UCombatUIModel* InUIModel);
 
-	/** @brief 플레이어 다이스 컴포넌트를 연결한다(굴림 구동 + 쓴 주사위 잠금 + 뷰 push). */
-	// CombatGameMode/HUD 배선이 채운다. 어댑터는 소유하지 않고 런타임 상태를 읽어 FDiceSlotUI로 변환한다.
-	void SetDicePool(UDicePoolModel* InDiceComponent) { mDicePool = InDiceComponent; }
-
 	/** @brief 현재 상태로 유닛/메타/턴 표시값을 다시 만들어 뷰모델에 push한다. */
 	void PushAll();
 
@@ -84,11 +77,8 @@ public:
 	/** @brief 플레이어의 현재 이동력을 반환. */
 	int32 GetPlayerMovePoint() const;
 
-protected:
-	virtual void BeginDestroy() override;
-
 private:
-	/** @brief UI 의도(스킬 선택/주사위 배치/이동/취소)를 받아 액션으로 처리한다. */
+	/** @brief UI 의도(스킬 선택/이동/취소)를 받아 액션으로 처리한다. */
 	UFUNCTION()
 	void HandleCombatCommand(ECombatInputType Type, int32 IntPayload);
 
@@ -96,20 +86,7 @@ private:
 	UFUNCTION()
 	void HandleWorldTouch(FVector2D ScreenPosition, bool bLongPress);
 
-	/** @brief 턴 종료 시 '쓴 주사위' 잠금을 해제한다(다음 턴 재사용 가능). Barrier는 붙잡지 않아 즉시 해제. */
-	void HandleEndAnyTurn(TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, ESRPGTurnResult Result);
-
-	/** @brief 뷰모델의 주사위 뷰에서 해당 index 굴림값을 읽는다(안 굴렸으면 0). */
-	// ToggleDice는 UIModel에 push된 결과를 기준으로 판단해 UI가 보는 값과 액션 값이 갈라지지 않게 한다.
-	int32 GetRolledDiceValue(int32 DiceIndex) const;
-
-	/** @brief 다이스 컴포넌트를 굴리고(임시 난수 스트림) 그 결과를 뷰모델에 push한다. */
-	void RollDice();
-
-	/** @brief 컴포넌트의 현재 주사위 상태를 FDiceSlotUI[]로 변환해 UIModel->SetDiceUIs()로 push한다. */
-	void PushDiceUIs() const;
-
-	/** @brief 진행 중이던 스킬/주사위 선택을 초기화한다(바깥 탭 취소 등). */
+	/** @brief 진행 중이던 스킬/이동 선택을 초기화한다(바깥 탭 취소 등). */
 	void ClearPendingAction();
 
 	/** @brief 화면 좌표를 타일맵 평면에 투영해 타일 인덱스를 구한다. 타일맵 밖이면 false. */
@@ -142,16 +119,6 @@ private:
 	/** @brief 전투 월드 상태 접근점; 타일맵/유닛/턴 종료 이벤트만 읽는다. */
 	UPROPERTY(Transient)
 	TObjectPtr<USRPGCombatSubsystem> mCombat;
-
-	/** @brief 플레이어가 가진 실제 런타임 주사위 묶음. 굴림/사용 잠금의 진짜 소스다. */
-	UPROPERTY(Transient)
-	TObjectPtr<UDicePoolModel> mDicePool;
-
-	/** @brief OnEndAnyTurnUI(턴 종료) 구독 핸들. 해제/재빌드 때 Remove에 사용. */
-	FDelegateHandle mEndTurnHandle;
-
-	/** @brief 현재 스킬에 배치된 주사위 index(확정 시 '사용됨' 처리). -1이면 없음. */
-	int32 mPendingDiceIndex = INDEX_NONE;
 
 	/** @brief 메타 HUD 검증용 임시 레벨. 최종 소스는 RunPersistData/UUnitData 쪽으로 정리해야 한다. */
 	int32 mPlayerLevel = 1;

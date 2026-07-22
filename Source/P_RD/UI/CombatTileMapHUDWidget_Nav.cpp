@@ -18,7 +18,7 @@
  * 패널 내비게이션 + 승리 후 월드맵 흐름 (레거시 탑바에서 이관).
  *
  * 원래 UTopMenuBarWidget이 소유하던 두 책임을 전투 HUD로 옮긴 파일이다:
- * 1) 플로팅 패널(MAP/SET/DICE/SKILL) 토글 — 네 패널은 같은 "현재 조작 중인 팝업" 자리를
+ * 1) 플로팅 패널(MAP/SET/SKILL) 토글 — 세 패널은 같은 "현재 조작 중인 팝업" 자리를
  *    공유하므로 새 패널을 열기 전에 나머지를 닫는다(상호배타).
  * 2) 승리 후 다음 방 선택 월드맵 강제 흐름 — 전투 승리 시 월드맵을 방 선택 가능 상태로 열고,
  *    사용자가 지도를 닫거나 설정을 열었다 닫아도 다음 방을 고를 때까지 지도를 복원한다.
@@ -60,7 +60,7 @@ void UCombatTileMapHUDWidget::BindVictoryFlowEvents()
 			mRoundChangeBarrier.Reset();
 			mRoundChangeBarrier = MoveTemp(Barrier);
 			// 배너를 못 틀면(프레임 에셋 없음 등) 배리어를 즉시 놓아 라운드/턴이 멈추지 않게 한다.
-			if (PlayTurnChangeIntro(false) == false)
+			if (PlayTurnChangeIntro() == false)
 			{
 				mRoundChangeBarrier.Reset();
 			}
@@ -102,7 +102,7 @@ void UCombatTileMapHUDWidget::CloseWorldWidget(EWorldWidgetType WorldWidgetType)
  * @brief 플로팅 패널을 하나만 남기고 닫는다.
  *
  * @details
- * 월드맵, 설정, 주사위, 스킬 패널은 서로 겹쳐 열리는 화면이 아니다.
+ * 월드맵, 설정, 스킬 패널은 서로 겹쳐 열리는 화면이 아니다.
  * 새 패널을 열기 전에 나머지를 닫아야 Back/Close 입력과 터치 대상이 명확하다.
  */
 void UCombatTileMapHUDWidget::CloseFloatingPanels(EWorldWidgetType ExceptWorldWidgetType) const
@@ -110,7 +110,6 @@ void UCombatTileMapHUDWidget::CloseFloatingPanels(EWorldWidgetType ExceptWorldWi
 	constexpr EWorldWidgetType FloatingPanels[] = {
 		EWorldWidgetType::WorldMap,
 		EWorldWidgetType::InGameSettings,
-		EWorldWidgetType::DicePanel,
 		EWorldWidgetType::SkillPanel
 	};
 
@@ -218,10 +217,10 @@ void UCombatTileMapHUDWidget::ToggleSettingsPanel()
 }
 
 /**
- * @brief DICE/SKILL처럼 단순히 열고 닫는 플로팅 패널을 토글한다.
+ * @brief SKILL처럼 단순히 열고 닫는 플로팅 패널을 토글한다.
  *
  * @details
- * 해당 패널의 게임 로직(주사위 사용/스킬 발동)은 각 패널이 담당하고,
+ * 해당 패널의 게임 로직은 각 패널이 담당하고,
  * 이 함수는 월드 위젯 등록 누락 검사와 상호배타 OpenUI/CloseUI 생명주기만 책임진다.
  */
 void UCombatTileMapHUDWidget::ToggleFloatingPanel(EWorldWidgetType WorldWidgetType, const TCHAR* DebugName)
@@ -241,7 +240,7 @@ void UCombatTileMapHUDWidget::ToggleFloatingPanel(EWorldWidgetType WorldWidgetTy
 	if (FloatingPanel->IsOpened())
 	{
 		FloatingPanel->CloseUI();
-		RestoreCombatControlsIfHidden();   // 지도에서 연 주사위/스킬 패널을 닫아도 전투 컨트롤이 복원되게.
+		RestoreCombatControlsIfHidden();
 		return;
 	}
 
@@ -280,7 +279,6 @@ void UCombatTileMapHUDWidget::OpenWorldMapAfterPlayerWin()
 	}
 
 	CloseWorldWidget(EWorldWidgetType::InGameSettings);
-	CloseWorldWidget(EWorldWidgetType::DicePanel);
 	CloseWorldWidget(EWorldWidgetType::SkillPanel);
 	WorldMapWidget->OnCloseRequested.AddUniqueDynamic(this, &UCombatTileMapHUDWidget::HandleWorldMapCloseRequested);
 	WorldMapWidget->SetRoomSelectionEnabled(true);
@@ -372,7 +370,7 @@ void UCombatTileMapHUDWidget::HandleWorldMapCloseRequested()
 
 /**
  * @brief 월드맵(풀스크린 지도 뷰)이 열려 있는 동안 탑바를 제외한 전투 컨트롤을 숨긴다.
- * @details 지도는 탑바 아래 레이어(z=-20)라, 안 숨기면 스킬레일/주사위/이동·턴종료가 지도 위에 뜬다.
+ * @details 지도는 탑바 아래 레이어(z=-20)라, 안 숨기면 스킬레일/이동·턴종료가 지도 위에 뜬다.
  *          숨김/복원 대상: 런타임 컨트롤 위젯 배열 + 전투 컨트롤/상태 알약 스킨 마커(이름 접두사).
  *          내비만 유지하고, Lv/Gold/HP 알약은 지도 위에서 숨긴다.
  */
@@ -396,14 +394,11 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 		}
 	};
 
-	// 런타임 컨트롤: 스킬 레일 / 보유 주사위 / 장비 칩.
+	// 런타임 컨트롤: 스킬 레일 / 장비 칩.
 	ToggleWidgets(mSkillRailPanels, DisplayVis);
 	ToggleWidgets(mSkillRailTexts, DisplayVis);
 	ToggleWidgets(mSkillRailIcons, DisplayVis);
 	ToggleWidgets(mSkillInputButtons, InputVis);
-	ToggleWidgets(mOwnedDiceImages, DisplayVis);
-	ToggleWidgets(mOwnedDiceCardWidgets, InputVis);
-	ToggleWidgets(mOwnedDiceTypeTexts, DisplayVis);
 	ToggleWidgets(mEquipmentChips, DisplayVis);
 	ToggleWidgets(mEquipmentChipTexts, DisplayVis);
 	ToggleWidgets(mEquipSlotButtons, InputVis);
@@ -413,24 +408,14 @@ void UCombatTileMapHUDWidget::SetCombatPlayControlsVisible(bool bVisible)
 	if (mMoveButton != nullptr) { mMoveButton->SetVisibility(InputVis); }
 	if (EndTurnButton != nullptr) { EndTurnButton->SetVisibility(InputVis); }
 
-	// mDiceRollInputButton은 "탭해서 굴리기" 입력영역이라 입장 주사위 오버레이가 실제로 떠 있을 때만 존재해야 한다.
-	// 복원(bVisible)에서 무조건 Visible로 켜면 오버레이가 없는데도 유령 버튼이 살아나, 지도 닫은 직후 탭이 이 버튼에
-	// 꽂혀 StartIntroDiceRoll이 불린다(=주사위 재굴림 버그). 오버레이 상태로 게이트해 그 경로를 끊는다.
-	if (mDiceRollInputButton != nullptr)
-	{
-		const bool bDiceOverlayActive = mIntroDiceRollReady || mIntroDiceRollActive || mIntroDiceResultWaitingForDismiss;
-		mDiceRollInputButton->SetVisibility(
-			bVisible && bDiceOverlayActive ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-	}
-
 	// WBP 스킨 마커(프레임 아트) — 지도 위에서는 내비/룸 배너 + 상단 상태바(Lv/Gold/HP)를 남기고 전투 컨트롤만 숨긴다.
 	// (상태바 프리픽스 R_top_status_bar/HUD_M_lv_value/HUD_M_hp_value/HUD_M_gold_value는 제외 → 지도에서도 표시)
 	if (DesignCanvas != nullptr)
 	{
 		static const TArray<FString> ControlPrefixes = {
 			TEXT("R_skill_rail"), TEXT("R_btn_move"), TEXT("R_btn_end_turn"),
-			TEXT("HUD_SkillRail"), TEXT("HUD_DiceTray"), TEXT("HUD_Move"), TEXT("HUD_EndTurn"),
-			TEXT("HUD_M_dice"), TEXT("HUD_M_equip"), TEXT("HUD_M_btn_move"), TEXT("HUD_M_btn_end")
+			TEXT("HUD_SkillRail"), TEXT("HUD_Move"), TEXT("HUD_EndTurn"),
+			TEXT("HUD_M_equip"), TEXT("HUD_M_btn_move"), TEXT("HUD_M_btn_end")
 		};
 		const int32 ChildCount = DesignCanvas->GetChildrenCount();
 		for (int32 ChildIndex = 0; ChildIndex < ChildCount; ++ChildIndex)
@@ -467,7 +452,7 @@ void UCombatTileMapHUDWidget::HandleSettingsBackRequested()
 }
 
 /**
- * @brief 지도/설정/주사위/스킬을 닫고 전투로 돌아올 때, 지도 뷰에서 숨겨졌던 전투 컨트롤을 복원한다.
+ * @brief 지도/설정/스킬을 닫고 전투로 돌아올 때, 지도 뷰에서 숨겨졌던 전투 컨트롤을 복원한다.
  * @details 복원이 지도탭 토글에만 묶여 있으면 지도→설정→설정닫기처럼 지도를 거치지 않고 닫는 경로에서
  *          mCombatControlsHidden이 true로 남아 전투 UI가 되살아나지 않는다. 이 헬퍼로 모든 닫기 경로를 통일한다.
  */

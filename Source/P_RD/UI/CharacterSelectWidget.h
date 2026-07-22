@@ -192,9 +192,6 @@ private:
 	TObjectPtr<UTextBlock> mMaxHPStatValueText;
 
 	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> mDiceStatValueText;
-
-	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> mGoldStatValueText;
 
 	UPROPERTY(meta = (BindWidget))
