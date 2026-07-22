@@ -176,6 +176,11 @@ protected:
 	*/
 	FCameraEmphasisState mPreDefaultState;
 
+protected:
+	/* 카메라 흔들기 */
+	UPROPERTY(Category = Shake, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "카메라 흔들림", AllowPrivateAccess = "true"))
+	TMap<FGameplayTag, TSubclassOf<class UCameraShakeBase>> mCameraShakeClass;
+
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -334,9 +339,6 @@ public:
 
 public:
 	/* 카메라 셰이크*/
-
-	UPROPERTY(Category = Shake, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "카메라 흔들림", AllowPrivateAccess = "true"))
-	TMap<FGameplayTag, TSubclassOf<class UCameraShakeBase>> mCameraShakeClass;
 
 	UFUNCTION(BlueprintCallable)
 	void StartCameraShake(FGameplayTag Tag);
