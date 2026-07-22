@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "RDMinimal.h"
 #include "Components/ActorComponent.h"
 #include "CameraMovementComponent.generated.h"
 
@@ -18,7 +18,6 @@ class ACombatCameraPlane;
 UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
 enum class ECameraControlState : uint8
 {
-
 	Normal,
 	Emphasis
 };
@@ -223,33 +222,33 @@ public:
 	* @param ViewPortPos를 WorldPos로 변환하고 즉시 이동합니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void ZoomCamera_InstantAndMoveToViewportPosition_Instant(float ZoomDelta, FVector2D ViewPortPos);
+	void ZoomCamera_InstantAndMoveToViewportPosition_Instant(float TargetZoom, FVector2D ViewPortPos);
 
 	/*
-	* @brief 줌 값을 받아서 일정 시간동안 카메라를 Zoom합니다
+	* @brief 줌 값을 받아서 천천히 카메라를 Zoom합니다
 	*
-	* @param ZoomDelta 만큼 일정 시간동안  Zoom 합니다
+	* @param Zoom을 천천히 TargetZoom으로 변경합니다.
 	*/
 	UFUNCTION(BlueprintCallable)
 	void ZoomCamera_Smooth(float TargetZoom);
 
 	/*
-	* @brief 줌 값을 받아서 카메라를 Zoom합니다.
+	* @brief 줌 값을 받아서 천천히 카메라를 Zoom합니다
 	*
-	* @param ZoomDelta 만큼 Zoom 합니다
+	* @param Zoom을 천천히 TargetZoom으로 변경합니다.
 	* @param ViewPortPos위치로 카메라를 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void ZoomCamera_SmoothAndMoveToViewportPosition_Smooth(float ZoomDelta, FVector2D ViewPortPos);
+	void ZoomCamera_SmoothAndMoveToViewportPosition_Smooth(float TargetZoom, FVector2D ViewPortPos);
 
 	/*
-	* @brief 줌 값을 받아서 카메라를 Zoom합니다.
+	* @brief 줌 값을 받아서 천천히 카메라를 Zoom합니다
 	*
-	* @param ZoomDelta 만큼 Zoom 합니다
+	* @param Zoom을 천천히 TargetZoom으로 변경합니다.
 	* @param ViewPortPos위치로 카메라를 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void ZoomCamera_SmoothAndMoveToWorldPosition_Smooth(float ZoomDelta, FVector WorldPosition);
+	void ZoomCamera_SmoothAndMoveToWorldPosition_Smooth(float TargetZoom, FVector WorldPosition);
 
 	/*
 	* @brief MoveToViewportPosition로 카메라의 시선을 옮긴다.
@@ -294,22 +293,22 @@ private:
 public:
 	/* 강조 기능*/
 	/*
-	* @brief WorldPosition로 카메라의 시선을 옮기고 ZoomDelta만큼 Zoom 합니다.
+	* @brief WorldPosition로 카메라의 시선을 옮기고 TargetZoom만큼 Zoom 합니다.
 	* @details Emphasis 상태로 변경하여 카메라를 옮길 수 없습니다.
 	* @param WorldPosition 위치로 카메라의 시선 옮깁니다.
-	* @param ZoomDelta 만큼 Zoom 합니다.
+	* @param TargetZoom 만큼 Zoom 합니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void StartEmphasisToWorldPositionWithZoomDelta(float TargetZoom, FVector WorldPosition);
+	void StartEmphasisToWorldPositionWithZoom(float TargetZoom, FVector WorldPosition);
 
 	/*
-	* @brief ViewPortPosition로 카메라의 시선을 옮기고 ZoomDelta만큼 Zoom 합니다.
+	* @brief ViewPortPosition로 카메라의 시선을 옮기고 TargetZoom만큼 Zoom 합니다.
 	* @details Emphasis 상태로 변경하여 카메라를 옮길 수 없습니다.
 	* @param ViewPortPosition 위치로 카메라의 시선 옮깁니다.
-	* @param ZoomDelta 만큼 Zoom 합니다.
+	* @param TargetZoom 만큼 Zoom 합니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void StartEmphasisToViewPortPositionWithZoomDelta(float TargetZoom, FVector2D ViewPortPos);
+	void StartEmphasisToViewPortPositionWithZoom(float TargetZoom, FVector2D ViewPortPos);
 
 	/*
 	* @brief WorldPosition로 카메라의 시선을 옮기고 Zoom값을 mEmphasisZoom로 변경합니다.
@@ -332,6 +331,15 @@ public:
 	*/
 	UFUNCTION(BlueprintCallable)
 	void EndEmphasis();
+
+public:
+	/* 카메라 셰이크*/
+
+	UPROPERTY(Category = Shake, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "카메라 흔들림", AllowPrivateAccess = "true"))
+	TMap<FGameplayTag, TSubclassOf<class UCameraShakeBase>> mCameraShakeClass;
+
+	UFUNCTION(BlueprintCallable)
+	void StartCameraShake(FGameplayTag Tag);
 
 
 private:

@@ -36,6 +36,7 @@ void UCameraMovementComponent::BeginPlay()
 	SpawnParams.Owner = GetOwner();
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
+	// 카메라보다 아래에 카메라판을 생성합니다.
 	FVector SpawnPos = GetOwner()->GetActorLocation();
 	SpawnPos.Z = -500;
 
@@ -102,8 +103,6 @@ void UCameraMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 		0,
 		5.0f
 	);
-
-
 }
 
 void UCameraMovementComponent::SetCameraComponent(UCameraComponent* CameraComponent)
@@ -252,25 +251,25 @@ void UCameraMovementComponent::ZoomCamera_Smooth(float TargetZoom)
 	GetWorld()->GetTimerManager().SetTimer(mTimerHandle_Zoom, this, &UCameraMovementComponent::ZoomSmooth, 0.01f, true);
 }
 
-void UCameraMovementComponent::ZoomCamera_SmoothAndMoveToViewportPosition_Smooth(float ZoomDelta, FVector2D ViewPortPos)
+void UCameraMovementComponent::ZoomCamera_SmoothAndMoveToViewportPosition_Smooth(float TargetZoom, FVector2D ViewPortPos)
 {
 	if (mCamerControlState != ECameraControlState::Normal)
 		return;
 
 	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
 
-	ZoomCamera_Smooth(ZoomDelta);
+	ZoomCamera_Smooth(TargetZoom);
 	MoveToViewportPosition_Smooth(ViewPortPos);
 }
 
-void UCameraMovementComponent::ZoomCamera_SmoothAndMoveToWorldPosition_Smooth(float ZoomDelta, FVector WorldPosition)
+void UCameraMovementComponent::ZoomCamera_SmoothAndMoveToWorldPosition_Smooth(float TargetZoom, FVector WorldPosition)
 {
 	if (mCamerControlState != ECameraControlState::Normal)
 		return;
 
 	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
 
-	ZoomCamera_Smooth(ZoomDelta);
+	ZoomCamera_Smooth(TargetZoom);
 	MoveToWorldPosition_Smooth(WorldPosition);
 }
 
@@ -444,7 +443,7 @@ void UCameraMovementComponent::MoveToWorldPosition_Smooth(FVector LocationPos)
 
 }
 
-void UCameraMovementComponent::StartEmphasisToWorldPositionWithZoomDelta(float TargetZoom, FVector WorldPosition)
+void UCameraMovementComponent::StartEmphasisToWorldPositionWithZoom(float TargetZoom, FVector WorldPosition)
 {
 	if (mCamerControlState != ECameraControlState::Normal)
 		return;
@@ -466,10 +465,9 @@ void UCameraMovementComponent::StartEmphasisToWorldPositionWithZoomDelta(float T
 	ZoomCamera_SmoothAndMoveToWorldPosition_Smooth(TargetZoom, WorldPosition);
 
 	mCamerControlState = ECameraControlState::Emphasis;
-
 }
 
-void UCameraMovementComponent::StartEmphasisToViewPortPositionWithZoomDelta(float TargetZoom, FVector2D ViewPortPos)
+void UCameraMovementComponent::StartEmphasisToViewPortPositionWithZoom(float TargetZoom, FVector2D ViewPortPos)
 {
 	if (mCamerControlState != ECameraControlState::Normal)
 		return;
@@ -548,6 +546,23 @@ void UCameraMovementComponent::EndEmphasis()
 	mCamerControlState = ECameraControlState::Normal;
 
 	ZoomCamera_SmoothAndMoveToWorldPosition_Smooth(mPreDefaultState.Zoom, mPreDefaultState.Position);
+}
+
+void UCameraMovementComponent::StartCameraShake(FGameplayTag Tag)
+{
+	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
+
+	APlayerController* FirstPlayerController = GetWorld()->GetFirstPlayerController();
+	checkf(FirstPlayerController != nullptr, TEXT("PlayerController가 없습니다"));
+
+	TSubclassOf<class UCameraShakeBase>* CameraShakeClass = mCameraShakeClass.Find(Tag);
+
+	if (!ensureMsgf(CameraShakeClass != nullptr, TEXT("Camera Shake Class가 존재하지 않습니다.")))
+	{
+		return;
+	}
+
+	FirstPlayerController->PlayerCameraManager->StartCameraShake(*CameraShakeClass);
 }
 
 bool UCameraMovementComponent::GetCameraRayHitPoint(OUT FHitResult& HitResult)

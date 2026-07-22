@@ -17,7 +17,7 @@ void UWorldCameraSubsystem::BindModel(UObjectModel* Model)
 				UCameraMovementComponent* CameraMovementComponent = MainCameraPawn->GetCameraMovementComponent();
 				if (CameraMovementComponent != nullptr)
 				{
-					CameraMovementComponent->StartEmphasisToWorldPositionWithZoomDelta(ScreenSize, Location);
+					CameraMovementComponent->StartEmphasisToWorldPositionWithZoom(ScreenSize, Location);
 				}
 			}
 			});
