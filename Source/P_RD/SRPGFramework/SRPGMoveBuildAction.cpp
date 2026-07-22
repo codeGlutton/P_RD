@@ -150,7 +150,7 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleWorldTraceCommand(const TInstance
         }
         else
         {
-            /* 클릭 타일에 따라 확정 / 잘라내기 / 경유지 추가 / 취소 분기 */
+            /* 클릭 타일에 따라 확정 / 경유지 추가 / 취소 분기 */
 
             switch (mMoveBuildPhase)
             {
@@ -167,20 +167,12 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleWorldTraceCommand(const TInstance
                     break;
                 }
 
-                /* 중간 경유지 클릭 시, 그 뒤 경유지 모두 잘라내기 */
-
-                const int32 WaypointNumber = FindWaypointNumber(TargetTileIndex);
-                if (WaypointNumber != INDEX_NONE)
-                {
-                    RemoveWaypointsAfter(WaypointNumber);
-                    Result = ESRPGCommandResult::Handled;
-                    break;
-                }
+                // 중간 경유지 재클릭도 잘라내지 않고 아래에서 새 경유지로 추가 (왔다갔다 이동 허용)
                 [[fallthrough]];
             }
             case ESRPGMoveBuildPhase::DestSelection:
             {
-                /* 도달 가능한 칸 클릭 시, 경유지 추가 (마지막 경유지 위치 재클릭은 위에서 처리, 유닛 현재 위치는 무시) */
+                /* 도달 가능한 칸 클릭 시, 경유지 추가 (마지막 경유지 위치 재클릭은 위에서 처리, 출발 타일 복귀 허용) */
 
                 if (TargetTileIndex != GetLastWaypoint() && mReachableTileIndexes.Contains(TargetTileIndex) == true)
                 {
@@ -244,7 +236,8 @@ void USRPGMoveBuildAction::AddWaypoint(const FTileIndex& TileIndex)
     /* 부분경로 계산 및 프리뷰 표시 — 빌드 시점에 확정한 경로를 실행까지 그대로 사용(심=라이브 보장) */
 
     {
-        mPathSegments.Add(TileMap->FindPath(GetLastWaypoint(), TileIndex));
+        // 자기 자신은 점유 판정에서 무시해 출발 타일로 되돌아오는 경로도 허용
+        mPathSegments.Add(TileMap->FindPath(GetLastWaypoint(), TileIndex, mInstigator.Get()));
         RefreshPathPreview();
         RefreshReachableTiles();
     }
@@ -276,20 +269,6 @@ void USRPGMoveBuildAction::RemoveLastWaypoint()
 
     // 남은 경유지가 없으면 목적지 선택 단계로 복귀 (도달 범위 강조는 유지)
     SetBuildPhase(mPathSegments.IsEmpty() ? ESRPGMoveBuildPhase::DestSelection : ESRPGMoveBuildPhase::Preview);
-}
-
-void USRPGMoveBuildAction::RemoveWaypointsAfter(int32 WaypointNumber)
-{
-    checkf(mMoveBuildPhase == ESRPGMoveBuildPhase::Preview, TEXT("이동 빌드 순서 오류"));
-    checkf(WaypointNumber >= 1 && WaypointNumber < mPathSegments.Num(), TEXT("경유지 순번 범위 오류"));
-
-    /* 순번 N 경유지까지의 부분경로 N개만 유지 (해당 경유지가 도착 후보가 됨) */
-
-    mPathSegments.SetNum(WaypointNumber);
-    RefreshPathPreview();
-    RefreshReachableTiles();
-
-    SetBuildPhase(ESRPGMoveBuildPhase::Preview);
 }
 
 void USRPGMoveBuildAction::BuildMove()
@@ -342,8 +321,9 @@ void USRPGMoveBuildAction::RefreshReachableTiles()
     UTileMapModel* TileMap = GetTileMap();
 
     // 이동 거리 = 남은 이동 포인트 (경유지를 추가할수록 줄어듦), 기준 = 마지막 경유지
+    // 자기 자신은 점유 판정에서 무시해 출발 타일 복귀 허용
     const int32 MoveRange = GetRemainMovePoint();
-    mReachableTileIndexes = TileMap->GetReachableTiles(GetLastWaypoint(), MoveRange);
+    mReachableTileIndexes = TileMap->GetReachableTiles(GetLastWaypoint(), MoveRange, mInstigator.Get());
 
     // 도달 범위를 조준 강조로 표시 (이동 범위 = 조준 범위로 표현)
     TileMap->SetTileHighlight(mReachableTileIndexes, ETileHighlightFlag::Aim);
@@ -368,20 +348,6 @@ int32 USRPGMoveBuildAction::GetRemainMovePoint() const
         UsedMovePoint += Segment.Num() - 1;
     }
     return mMovePoint - UsedMovePoint;
-}
-
-int32 USRPGMoveBuildAction::FindWaypointNumber(const FTileIndex& TileIndex) const
-{
-    // 중간 경유지만 검색 (마지막 부분경로의 끝 = 도착 후보는 제외)
-    for (int32 SegmentIndex = 0; SegmentIndex < mPathSegments.Num() - 1; ++SegmentIndex)
-    {
-        if (mPathSegments[SegmentIndex].Last() == TileIndex)
-        {
-            // 순번은 1부터 (마커 숫자와 동일)
-            return SegmentIndex + 1;
-        }
-    }
-    return INDEX_NONE;
 }
 
 void USRPGMoveBuildAction::RefreshPathPreview()

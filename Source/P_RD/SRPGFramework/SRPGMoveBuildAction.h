@@ -39,7 +39,9 @@ public:
  * 외부에서 미리 계산돼 넘어온 이동 포인트로 도달 범위를 정하고, 도달 가능 타일을
  * 누를 때마다 경유지까지의 부분경로가 추가된다. 마지막 경유지를 한 번 더 누르면
  * 부분경로들을 이어붙인 경로로 이동 액션 생성 명령을 발행한다. 이전 경유지를
- * 누르면 그 뒤 부분경로를 모두 잘라내고, 범위 밖을 누르면 마지막 경유지를 취소한다.
+ * 다시 눌러도 새 경유지로 추가돼 왔다갔다 하는 경로를 만들 수 있고(마커 순번은
+ * 마지막 방문이 덮어씀), 출발 타일로 되돌아오는 경로도 허용한다. 범위 밖을
+ * 누르면 마지막 경유지를 취소한다.
  * 이동 포인트는 한 번에 다 쓰지 않아도 되며, 이동 후 남은 포인트로 이동 빌드를 다시
  * 호출해 총 이동 거리를 여러 번에 나눠 사용할 수 있다.
  * 스킬과 달리 사용할 스킬은 이동 스킬 하나로 고정이라 스킬 인덱스를 두지 않는다.
@@ -71,8 +73,6 @@ private:
 	void AddWaypoint(const FTileIndex& TileIndex);
 	// @brief 마지막 경유지 취소 (부분경로 하나 제거, 남은 부분경로가 없으면 목적지 선택 단계로 복귀)
 	void RemoveLastWaypoint();
-	// @brief 지정 순번 경유지 뒤의 부분경로를 모두 제거 (해당 경유지가 마지막 경유지 = 도착 후보가 됨)
-	void RemoveWaypointsAfter(int32 WaypointNumber);
 	void BuildMove();
 
 private:
@@ -88,8 +88,6 @@ private:
 	FTileIndex GetLastWaypoint() const;
 	// @brief 남은 이동 포인트 (보유 포인트 - 부분경로들이 사용할 포인트 합)
 	int32 GetRemainMovePoint() const;
-	// @brief 클릭 타일이 중간 경유지면 그 순번 반환 (1부터, 마커 숫자와 동일), 아니면 INDEX_NONE
-	int32 FindWaypointNumber(const FTileIndex& TileIndex) const;
 	// @brief 경로들의 집합을 하나의 경로로 이어붙여서 전체 경로를 표시
 	void RefreshPathPreview();
 
