@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   SRPGFrameworkType.h
  * @brief  SRPG 프레임워크에서 사용되는 타입 정의 헤더
  * @author 모호재
@@ -303,11 +303,7 @@ enum class ESRPGCommandType : uint8
 
     WorldTrace          UMETA(ToolTip = "월드 공간 선택"),
 
-    DicePrepare         UMETA(ToolTip = "굴릴 주사위 준비"),
-    DiceRoll            UMETA(ToolTip = "주사위 굴리기"),
-
     SkillSelect         UMETA(ToolTip = "사용 스킬 결정"),
-    DiceSelect          UMETA(ToolTip = "사용 주사위 결정"),
     SkillCast           UMETA(ToolTip = "스킬 사용"),
 
     MoveSelect          UMETA(ToolTip = "이동 시작"),

@@ -49,10 +49,6 @@ public:
 	bool IsPlayerUnitModel() const override;
 
 public:
-	/** @brief 플레이어 보유 주사위 컴포넌트입니다. 적은 주사위가 없어 AUnit이 아닌 APlayerUnit에 둡니다. */
-	UDicePoolModel* GetDicePoolModel() const;
-
-public:
 	FOnChangePlayerLevel OnChangePlayerLevel;
 
 private:
@@ -63,10 +59,6 @@ private:
 	/** @brief 레벨 스케일 AttributeSet */
 	UPROPERTY(Category = AttributeSet, VisibleAnywhere, meta = (DisplayName = "LevelAttributeSet"))
 	TObjectPtr<ULevelAttributeSet> mLevelAttributeSet;
-
-	/** @brief 런타임 보유 주사위 묶음. 전투 HUD는 이 객체를 직접 소유하지 않고 어댑터를 통해 읽는다. */
-	UPROPERTY(Category = Dice, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "DiceComp"))
-	TObjectPtr<UDicePoolModel> mDicePool;
 
 protected:
 	UPROPERTY(Category = Attribute, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PlayerLevel"))

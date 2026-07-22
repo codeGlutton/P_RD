@@ -26,7 +26,6 @@ public:
 public:
 	int32 mSkillIndex = 0;
 	FTileIndex mTargetIndex = FTileIndex::Invalid;
-	int32 mDiceSum = 0;
 };
 
 /**
