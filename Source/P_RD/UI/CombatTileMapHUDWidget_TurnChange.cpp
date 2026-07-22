@@ -28,29 +28,20 @@ namespace
 	}
 }
 
-bool UCombatTileMapHUDWidget::PlayTurnChangeIntro(bool bOpenDiceAfterIntro)
+bool UCombatTileMapHUDWidget::PlayTurnChangeIntro()
 {
 	EnsureRuntimeWidgets();
 
 	if (EnsureTurnChangeFrameTextures() == false)
 	{
-		if (bOpenDiceAfterIntro == true
-			&& mIntroDiceRollActive == false
-			&& mIntroDiceRollReady == false
-			&& mIntroDiceResultWaitingForDismiss == false)
-		{
-			PrepareIntroDiceRoll();
-		}
 		return false;
 	}
 
 	if (mTurnChangeIntroPlaying == true)
 	{
-		mPendingDiceRollAfterTurnIntro = mPendingDiceRollAfterTurnIntro || bOpenDiceAfterIntro;
 		return true;
 	}
 
-	mPendingDiceRollAfterTurnIntro = bOpenDiceAfterIntro;
 	mTurnChangeIntroPlaying = true;
 	mTurnChangeIntroElapsed = 0.0f;
 	mTurnChangeCurrentFrameIndex = INDEX_NONE;
@@ -100,16 +91,6 @@ void UCombatTileMapHUDWidget::FinishTurnChangeIntro()
 	mTurnChangeIntroElapsed = 0.0f;
 	mTurnChangeCurrentFrameIndex = INDEX_NONE;
 	SetTurnChangeIntroVisibility(false);
-
-	const bool bOpenDiceAfterIntro = mPendingDiceRollAfterTurnIntro;
-	mPendingDiceRollAfterTurnIntro = false;
-	if (bOpenDiceAfterIntro == true
-		&& mIntroDiceRollActive == false
-		&& mIntroDiceRollReady == false
-		&& mIntroDiceResultWaitingForDismiss == false)
-	{
-		PrepareIntroDiceRoll();
-	}
 
 	// 라운드 시작 배너로 잡아둔 배리어가 있으면 여기서 놓는다 → 마지막 참조 소멸 시 프레임워크가 그 라운드의 첫 턴을 진행한다.
 	// (라운드가 아닌 경로로 배너가 떴다면 mRoundChangeBarrier는 비어 있어 Reset()은 무해한 no-op.)

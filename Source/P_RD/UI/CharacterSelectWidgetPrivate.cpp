@@ -51,7 +51,7 @@ namespace RDCharacterSelect
 		}
 		if (FCString::Strcmp(Key, TEXT("CharacterStatFormat")) == 0)
 		{
-			return LOCTEXT("HP {0} / Dice {1} / Gold {2}", "HP {0} / Dice {1} / Gold {2}");
+			return LOCTEXT("HP {0} / Gold {1}", "HP {0} / Gold {1}");
 		}
 		return FText::FromString(Key);
 	}

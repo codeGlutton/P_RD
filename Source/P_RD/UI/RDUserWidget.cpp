@@ -188,7 +188,7 @@ bool URDUserWidget::ShouldRemoveFromParentOnClose() const
 
 bool URDUserWidget::ShouldApplyButtonFeedback() const
 {
-	// 기본은 미적용. 타이틀/클래스 선택 등 프론트엔드 화면만 override로 켠다(전투/주사위엔 걸지 않는다).
+	// 기본은 미적용. 타이틀/클래스 선택 등 프론트엔드 화면만 override로 켠다(전투 HUD에는 걸지 않는다).
 	return false;
 }
 
@@ -230,7 +230,7 @@ void URDUserWidget::SetupCommonButtonFeedback()
 				Button->SetStyle(Style);
 			}
 
-			// 누름 시각 피드백은 opt-in 화면(타이틀/클래스 선택 등)만 — 전투/주사위엔 걸지 않는다.
+			// 누름 시각 피드백은 opt-in 화면(타이틀/클래스 선택 등)만 — 전투 HUD에는 걸지 않는다.
 			if (bApplyPressVisual == false)
 			{
 				return;

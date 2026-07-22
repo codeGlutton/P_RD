@@ -117,9 +117,6 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Reward|UI")
 	TObjectPtr<UTexture2D> mGoldIcon;
 	UPROPERTY(BlueprintReadOnly, Category = "Reward|UI")
-	TObjectPtr<UTexture2D> mDiceIcon;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Reward|UI")
 	TObjectPtr<UTexture2D> mRewardGoldIconTexture;
 
 	/** @brief 경험치 행 전용 아이콘. 골드 아이콘과 구분되는 별도 텍스처(RewardV4_11). */

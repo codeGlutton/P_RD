@@ -149,7 +149,7 @@ namespace
 ARoomGameModeBase::ARoomGameModeBase()
 {
 	/*
-	 * 월드맵/설정/주사위/스킬 패널은 방 공통 팝업이다. 각 방 HUD에 팝업을 직접 넣지 않고
+	 * 월드맵/설정/스킬 패널은 방 공통 팝업이다. 각 방 HUD에 팝업을 직접 넣지 않고
 	 * WorldWidgetSubsystem에 등록해두면 전투/상점/보물 방이 모두 같은 OpenUI/CloseUI 규칙을 공유한다.
 	 * (패널을 여는 진입점은 전투 HUD의 내비 버튼 — CombatTileMapHUDWidget_Nav.cpp)
 	 */
@@ -160,11 +160,10 @@ ARoomGameModeBase::ARoomGameModeBase()
 		EWorldWidgetType::LoadingNotify,  
 		EWorldWidgetType::WorldMap,
 		EWorldWidgetType::InGameSettings,
-		EWorldWidgetType::DicePanel,
 		EWorldWidgetType::SkillPanel,
 	};
 
-	/* 월드맵/설정/주사위/스킬 패널은 모든 방에서 같은 팝업으로 쓰이므로 HUD 자식이 아니라 WorldWidgetSubsystem이 준비한다. */
+	/* 월드맵/설정/스킬 패널은 모든 방에서 같은 팝업으로 쓰이므로 HUD 자식이 아니라 WorldWidgetSubsystem이 준비한다. */
 	mShowFadeInUIOnTransition = true;
 	mShowFadeOutUIOnTransition = true;
 	mShowLoadingNotifyUIOnTransition = true;
@@ -237,7 +236,7 @@ void ARoomGameModeBase::InitializeCommonRoom()
  * @brief 실제 방에 들어오면 현재 Run 저장을 시작한다.
  *
  * @details
- * 방 공통 팝업(WorldMap/Settings/Dice/Skill)은 WorldWidgetSubsystem이 준비하고, 여는 것은 HUD 내비 버튼이 담당한다.
+ * 방 공통 팝업(WorldMap/Settings/Skill)은 WorldWidgetSubsystem이 준비하고, 여는 것은 HUD 내비 버튼이 담당한다.
  */
 void ARoomGameModeBase::BeginRoom()
 {

@@ -23,8 +23,7 @@ namespace
 		{
 		case EInventoryItemKind::Skill:     return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Magic.T_Reward_Magic");
 		case EInventoryItemKind::Equipment: return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Equipment.T_Reward_Equipment");
-		case EInventoryItemKind::Dice:
-		default:                            return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Dice_Common.T_Dice_Common");
+		default:                            return TEXT("");
 		}
 	}
 
@@ -61,9 +60,12 @@ void UInventoryUIWidgetBase::NativeConstruct()
 	{
 		mTitleText->SetText(LOCTEXT("Inventory", "Inventory"));
 	}
-	if (mDiceLabel != nullptr)
+	for (const FName LegacyDiceWidgetName : { FName(TEXT("mDiceLabel")), FName(TEXT("mDiceBox")) })
 	{
-		mDiceLabel->SetText(LOCTEXT("Dice", "Dice"));
+		if (UWidget* LegacyDiceWidget = GetWidgetFromName(LegacyDiceWidgetName))
+		{
+			LegacyDiceWidget->SetVisibility(ESlateVisibility::Collapsed);
+		}
 	}
 	if (mSkillLabel != nullptr)
 	{
@@ -194,7 +196,6 @@ void UInventoryUIWidgetBase::RefreshView()
 			FText::AsNumber(FMath::RoundToInt(Inv.mMaxHP))));
 	}
 
-	FillSection(mDiceBox, Inv.mDice);
 	FillSection(mSkillBox, Inv.mSkills);
 	FillSection(mEquipBox, Inv.mEquipment);
 }

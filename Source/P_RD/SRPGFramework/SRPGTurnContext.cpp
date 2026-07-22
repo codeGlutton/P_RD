@@ -363,8 +363,17 @@ void USRPGTurnContext::OnHandleCommand(ESRPGCommandResult Result)
 {
 	if (mTurnPhase == ESRPGTurnPhase::TurnPlay && mReservedActions.Num() > mHeadActionIndex)
 	{
-		mReservedActions[mHeadActionIndex]->TryBeginAction();
-		mReservedActions[mHeadActionIndex]->TryEndAction();
+		USRPGAction* const CurrentAction = mReservedActions[mHeadActionIndex];
+		CurrentAction->TryBeginAction();
+
+		// TryBeginAction의 델리게이트가 새 커맨드를 동기 제출하면 현재 액션이 끝나 head가 이동할 수 있다.
+		// 그 경우 새 head를 같은 액션으로 간주해 다시 접근하거나 종료하지 않는다.
+		if (mTurnPhase == ESRPGTurnPhase::TurnPlay
+			&& mReservedActions.IsValidIndex(mHeadActionIndex)
+			&& mReservedActions[mHeadActionIndex] == CurrentAction)
+		{
+			CurrentAction->TryEndAction();
+		}
 	}
 }
 

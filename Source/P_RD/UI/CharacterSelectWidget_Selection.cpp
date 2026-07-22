@@ -91,6 +91,13 @@ void UCharacterSelectWidget::RefreshResponsiveClassLayout(const FVector2D& Logic
 
 	// 설명 패널은 640x360 원본 비율을 유지하되 화면 절반/높이 40%를 넘지 않는다.
 	UWidget* DescriptionFrame = GetWidgetFromName(TEXT("desc_frame"));
+	for (const FName LegacyDiceWidgetName : { FName(TEXT("icon_dice")), FName(TEXT("mDiceStatValueText")) })
+	{
+		if (UWidget* LegacyDiceWidget = GetWidgetFromName(LegacyDiceWidgetName))
+		{
+			LegacyDiceWidget->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
 	if (const FAnchorData* FrameBase = GetBaseCanvasLayout(DescriptionFrame))
 	{
 		const double DescriptionScale = FMath::Min3(
@@ -103,8 +110,8 @@ void UCharacterSelectWidget::RefreshResponsiveClassLayout(const FVector2D& Logic
 			TEXT("desc_frame"),
 			TEXT("mSelectedCharacterNameText"), TEXT("mSelectedCharacterRoleText"),
 			TEXT("mSelectedCharacterDescriptionText"), TEXT("mSelectedCharacterStatText"),
-			TEXT("icon_hp"), TEXT("icon_dice"), TEXT("icon_gold"),
-			TEXT("mMaxHPStatValueText"), TEXT("mDiceStatValueText"), TEXT("mGoldStatValueText"),
+			TEXT("icon_hp"), TEXT("icon_gold"),
+			TEXT("mMaxHPStatValueText"), TEXT("mGoldStatValueText"),
 		};
 		for (const TCHAR* WidgetName : DescriptionWidgetNames)
 		{
@@ -240,9 +247,7 @@ void UCharacterSelectWidget::SyncSelectedCharacter()
 	}
 	if (mSelectedCharacterStatText != nullptr)
 	{
-		const bool bHasWBPStatValues = mMaxHPStatValueText != nullptr
-			&& mDiceStatValueText != nullptr
-			&& mGoldStatValueText != nullptr;
+		const bool bHasWBPStatValues = mMaxHPStatValueText != nullptr && mGoldStatValueText != nullptr;
 		mSelectedCharacterStatText->SetText(BuildCharacterStatText(*SelectedOption));
 		mSelectedCharacterStatText->SetVisibility(bHasWBPStatValues
 			? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
@@ -250,10 +255,6 @@ void UCharacterSelectWidget::SyncSelectedCharacter()
 	if (mMaxHPStatValueText != nullptr)
 	{
 		mMaxHPStatValueText->SetText(FText::AsNumber(SelectedOption->mMaxHP));
-	}
-	if (mDiceStatValueText != nullptr)
-	{
-		mDiceStatValueText->SetText(FText::AsNumber(SelectedOption->mDice));
 	}
 	if (mGoldStatValueText != nullptr)
 	{
@@ -307,10 +308,6 @@ void UCharacterSelectWidget::ClearSelectedCharacter()
 	if (mMaxHPStatValueText != nullptr)
 	{
 		mMaxHPStatValueText->SetText(FText::GetEmpty());
-	}
-	if (mDiceStatValueText != nullptr)
-	{
-		mDiceStatValueText->SetText(FText::GetEmpty());
 	}
 	if (mGoldStatValueText != nullptr)
 	{
@@ -457,6 +454,5 @@ FText UCharacterSelectWidget::BuildCharacterStatText(const FFrontendCharacterOpt
 	return FText::Format(
 		RDCharacterSelect::Text(TEXT("CharacterStatFormat")),
 		FText::AsNumber(Option.mMaxHP),
-		FText::AsNumber(Option.mDice),
 		FText::AsNumber(Option.mGold));
 }

@@ -1,13 +1,8 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "UI/DiceViewData.h"
-
-class ACombatDiceCaptureActor;
-
 namespace RDCombatHUD
 {
-	static constexpr int32 MaxCombatDiceCardCount = 8;
 	static constexpr int32 CombatSkillSlotCount = 6;
 	static constexpr float CombatSkillRailLeft = 0.020f;
 	static constexpr float CombatSkillRailRight = 0.190f;
@@ -48,34 +43,5 @@ namespace RDCombatHUD
 	inline FVector2D GetCombatSkillRailScale(bool bSelected)
 	{
 		return bSelected ? FVector2D(1.035f, 1.035f) : FVector2D::UnitVector;
-	}
-
-	inline int32 GetDiceSettledFaceOrdinal(const FDiceViewData& DiceView)
-	{
-		if (DiceView.mRolledFaceIndex != INDEX_NONE)
-		{
-			return DiceView.mRolledFaceIndex + 1;
-		}
-
-		const int32 MatchingFaceIndex = DiceView.mFaceValues.Find(DiceView.mResultValue);
-		if (MatchingFaceIndex != INDEX_NONE)
-		{
-			return MatchingFaceIndex + 1;
-		}
-
-		return FMath::Clamp(DiceView.mResultValue, 1, FMath::Max(1, DiceView.mFaceCount));
-	}
-
-	inline FRotator GetReadableDiceIdleRotation(int32 DiceIndex)
-	{
-		static const FRotator IdleRotations[] =
-		{
-			FRotator(24.0f, -38.0f, 16.0f),
-			FRotator(18.0f, -20.0f, -10.0f),
-			FRotator(28.0f, -52.0f, 8.0f),
-			FRotator(16.0f, -30.0f, 18.0f),
-		};
-
-		return IdleRotations[DiceIndex % UE_ARRAY_COUNT(IdleRotations)];
 	}
 }

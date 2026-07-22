@@ -15,39 +15,10 @@ using namespace RDCombatHUD;
 
 namespace
 {
-	// 주사위 판(물리 굴림) 보드/배경/캡처 위치 상수 (20260622 이식). 화면 정규화(0~1).
-	constexpr float DiceRollOverlayTop = 0.045f;
-	// 판을 상/하로 꽉 채운다(세로 13~96%, 탑바 아래부터 바닥 근처까지). 눈으로 튜닝하는 값.
-	constexpr float DiceRollBoardLeft = 0.04f;
-	constexpr float DiceRollBoardTop = 0.13f;
-	constexpr float DiceRollBoardRight = 0.96f;
-	constexpr float DiceRollBoardBottom = 0.96f;
-	constexpr float DiceRollPhysicsTop = 0.19f;
-	constexpr float DiceRollPhysicsBottom = 0.89f;
-	constexpr float DiceRollStatusTop = 0.710f;
-	constexpr float DiceRollStatusBottom = 0.770f;
-	constexpr int32 DiceRollBackdropZOrder = 300;
-	constexpr int32 DiceRollBoardZOrder = 310;
-	constexpr int32 DiceRollPhysicsZOrder = 330;
-	constexpr int32 DiceRollStatusZOrder = 340;
-	// 입장 굴림 오버레이는 모달이다 — 입력 레이어가 스킬 입력(CombatSkillInputZOrder=1000)보다 위에 있어야
-	// 오버레이 위 아무 곳이나 탭해 닫을 수 있고, 닫기 전엔 스킬/주사위 클릭이 새어 들어가지 않는다.
-	constexpr int32 DiceRollInputZOrder = RDCombatHUD::CombatSkillInputZOrder + 100;
 	constexpr int32 TurnChangeBackdropZOrder = RDCombatHUD::CombatSkillInputZOrder + 180;
 	constexpr int32 TurnChangeInputZOrder = RDCombatHUD::CombatSkillInputZOrder + 190;
 	constexpr int32 TurnChangeVideoZOrder = RDCombatHUD::CombatSkillInputZOrder + 200;
 	constexpr int32 TurnChangeTextZOrder = RDCombatHUD::CombatSkillInputZOrder + 210;
-
-	FAnchorData MakeCenteredSquareSlot(const FAnchorData& CellSlot)
-	{
-		FAnchorData SquareSlot = CellSlot;
-		const float SquareSize = FMath::Min(CellSlot.Offsets.Right, CellSlot.Offsets.Bottom);
-		SquareSlot.Offsets.Left += (CellSlot.Offsets.Right - SquareSize) * 0.5f;
-		SquareSlot.Offsets.Top += (CellSlot.Offsets.Bottom - SquareSize) * 0.5f;
-		SquareSlot.Offsets.Right = SquareSize;
-		SquareSlot.Offsets.Bottom = SquareSize;
-		return SquareSlot;
-	}
 
 }
 
@@ -61,106 +32,13 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 	const bool bSkin = IsDesignerSkinActive();
 	const FVector2D DesignSize(1920.0f, 1080.0f);
 
-	// 주사위 판(물리 굴림) 오버레이: WBP-네이티브 체인(DiceRollDesignCanvas)이 있으면 WBP ScaleBox가
-	// 종횡비/위치를 소유하므로 슬롯을 건드리지 않는다. 단 WBP에 구운 입력막 z(350)는 스킬 입력
-	// (CombatSkillInputZOrder=1000)을 못 가리므로 모달 보장을 위해 ZOrder만 승격한다.
-	const bool bDiceOverlayWbpNative = (WidgetTree != nullptr) && (WidgetTree->FindWidget(TEXT("DiceRollDesignCanvas")) != nullptr);
-	if (bDiceOverlayWbpNative)
-	{
-		if (UCanvasPanelSlot* DiceRollInputSlot = RDUILayout::GetCanvasSlot(mDiceRollInputButton))
-		{
-			DiceRollInputSlot->SetZOrder(DiceRollInputZOrder);
-		}
-	}
-	else
-	{
-		// 레거시(런타임 생성) 오버레이: 화면 중앙 위에 보드 배경 + 물리 캡처를 정규화 상수로 배치한다.
-		if (mDiceRollBackdropPanel != nullptr)
-		{
-			RDUILayout::ApplyAnchoredSlot(mDiceRollBackdropPanel, FAnchors(0.0f, DiceRollOverlayTop, 1.0f, 1.0f), DiceRollBackdropZOrder);
-		}
-		if (mDiceRollBoardImage != nullptr)
-		{
-			RDUILayout::ApplyAnchoredSlot(mDiceRollBoardImage, FAnchors(DiceRollBoardLeft, DiceRollBoardTop, DiceRollBoardRight, DiceRollBoardBottom), DiceRollBoardZOrder);
-		}
-		if (mDiceRollPhysicsImage != nullptr)
-		{
-			RDUILayout::ApplyAnchoredSlot(mDiceRollPhysicsImage, FAnchors(0.10f, DiceRollPhysicsTop, 0.90f, DiceRollPhysicsBottom), DiceRollPhysicsZOrder);
-		}
-		// 상태 문구는 보드 하단, 입력 버튼은 오버레이 전체(탭/흔들기 어디서나 받기).
-		RDUILayout::ApplyAnchoredSlot(DiceRollStatusText, FAnchors(0.365f, DiceRollStatusTop, 0.635f, DiceRollStatusBottom), DiceRollStatusZOrder);
-		RDUILayout::ApplyAnchoredSlot(mDiceRollInputButton, FAnchors(0.0f, DiceRollOverlayTop, 1.0f, 1.0f), DiceRollInputZOrder);
-	}
-
 	RDUILayout::ApplyAnchoredSlot(mTurnChangeBackdropPanel, FAnchors(0.0f, 0.0f, 1.0f, 1.0f), TurnChangeBackdropZOrder);
 	RDUILayout::ApplyAnchoredSlot(mTurnChangeInputBlocker, FAnchors(0.0f, 0.0f, 1.0f, 1.0f), TurnChangeInputZOrder);
 	RDUILayout::ApplyAnchoredSlot(mTurnChangeVideoImage, FAnchors(0.140f, 0.155f, 0.860f, 0.845f), TurnChangeVideoZOrder);
 	RDUILayout::ApplyAnchoredSlot(mTurnChangeTurnTextPanel, FAnchors(0.435f, 0.390f, 0.565f, 0.610f), TurnChangeTextZOrder);
 
-	// 보유 주사위: 스킨이면 HUD_DiceTray 마커 슬롯을 상속해 세로 분배, 아니면 기존 좌하단 3열 그리드.
-	const int32 OwnedDiceCount = mOwnedDiceImages.Num();
-	if (bSkin)
-	{
-		const FAnchorData TraySlot = RDUILayout::GetDesignerSlotDataOr(WidgetTree, TEXT("HUD_DiceTray"), FAnchors(0.028f, 0.790f, 0.226f, 0.998f), DesignSize);
-		for (int32 DiceIndex = 0; DiceIndex < OwnedDiceCount; ++DiceIndex)
-		{
-			const FAnchorData CellSlot = RDUILayout::MakeVerticalSubSlot(TraySlot, DiceIndex, FMath::Max(OwnedDiceCount, 1), 10.8f);   // 0.010*1080
-			const FAnchorData DiceImageSlot = MakeCenteredSquareSlot(CellSlot);
-			RDUILayout::ApplyDesignerSlotData(mOwnedDiceImages[DiceIndex], DiceImageSlot, 22);
-			if (mOwnedDiceCardWidgets.IsValidIndex(DiceIndex))
-			{
-				RDUILayout::ApplyDesignerSlotData(mOwnedDiceCardWidgets[DiceIndex], CellSlot, 23);
-			}
-			if (mOwnedDiceTypeTexts.IsValidIndex(DiceIndex))
-			{
-				if (mOwnedDiceTypeTexts[DiceIndex] != nullptr)
-				{
-					mOwnedDiceTypeTexts[DiceIndex]->SetVisibility(ESlateVisibility::Collapsed);
-				}
-			}
-		}
-	}
-	else
-	{
-		for (int32 DiceIndex = 0; DiceIndex < OwnedDiceCount; ++DiceIndex)
-		{
-			const int32 ColumnIndex = DiceIndex % 3;
-			const int32 RowIndex = DiceIndex / 3;
-			const float Left = 0.028f + StaticCast<float>(ColumnIndex) * 0.066f;
-			const float Top = 0.790f + StaticCast<float>(RowIndex) * 0.122f;
-			const float CellWidth = 0.060f;
-			const float CellHeight = 0.118f;
-			const float DiceSize = FMath::Min(CellWidth, CellHeight);
-			const float DiceLeft = Left + (CellWidth - DiceSize) * 0.5f;
-			const float DiceTop = Top + (CellHeight - DiceSize) * 0.5f;
-			const FAnchors DiceImageAnchors(DiceLeft, DiceTop, DiceLeft + DiceSize, DiceTop + DiceSize);
-			RDUILayout::ApplyAnchoredSlot(mOwnedDiceImages[DiceIndex], DiceImageAnchors, 22);
-			if (mOwnedDiceCardWidgets.IsValidIndex(DiceIndex))
-			{
-				RDUILayout::ApplyAnchoredSlot(mOwnedDiceCardWidgets[DiceIndex], FAnchors(Left, Top, Left + CellWidth, Top + CellHeight), 23);
-			}
-			if (mOwnedDiceTypeTexts.IsValidIndex(DiceIndex))
-			{
-				if (mOwnedDiceTypeTexts[DiceIndex] != nullptr)
-				{
-					mOwnedDiceTypeTexts[DiceIndex]->SetVisibility(ESlateVisibility::Collapsed);
-				}
-			}
-		}
-	}
-
-	// 어사인먼트 힌트: 스킨이면 트레이 열 오른쪽(디자인px 300~720, 하단) - 레일/트레이 열과 겹치지 않는 빈 보드 영역.
-	// 레거시는 기존 좌하단 정규화 좌표 유지.
-	if (bSkin)
-	{
-		RDUILayout::ApplyDesignerSlotData(mDiceAssignmentText, RDUILayout::NormalizedToDesignPointSlot(FAnchors(0.156f, 0.759f, 0.375f, 0.852f), DesignSize), 24);
-	}
-	else
-	{
-		RDUILayout::ApplyAnchoredSlot(mDiceAssignmentText, FAnchors(0.025f, 0.700f, 0.225f, 0.785f), 24);
-	}
 	// concept_09 상세는 HP바(z210)·스킬레일(z170)보다 위에 떠야 뒤 요소가 안 뚫려 보인다. → z245+로 올리고,
-	// 그 아래 풀뷰포트 회색 딤(주사위 배경과 동일)을 깔아 뒤 HUD를 덮는다. WBP는 전체 화면(내부 레이아웃/아트는 WBP 소유).
+	// 그 아래 풀뷰포트 회색 딤을 깔아 뒤 HUD를 덮는다. WBP는 전체 화면(내부 레이아웃/아트는 WBP 소유).
 	if (mSkillDetailBackdropPanels.IsValidIndex(0) && mSkillDetailBackdropPanels[0] != nullptr)
 	{
 		RDUILayout::ApplyAnchoredSlot(mSkillDetailBackdropPanels[0], FAnchors(0.0f, 0.0f, 1.0f, 1.0f), 245);   // 풀뷰포트 회색 딤
@@ -255,7 +133,6 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 		RDUILayout::ApplyDesignerSlotData(EndTurnButton, RDUILayout::GetDesignerSlotDataOr(WidgetTree, TEXT("HUD_EndTurn"), FAnchors(0.795f, 0.845f, 0.925f, 0.940f), DesignSize), 18);
 		RDUILayout::ApplyDesignerSlotData(mMoveButton, RDUILayout::GetDesignerSlotDataOr(WidgetTree, TEXT("HUD_Move"), FAnchors(0.795f, 0.625f, 0.925f, 0.720f), DesignSize), 18);
 		RDUILayout::ApplyDesignerSlotData(mNavMapButton, RDUILayout::GetDesignerSlotDataOr(WidgetTree, TEXT("HUD_Map"), FAnchors(0.7448f, 0.0185f, 0.7969f, 0.0963f), DesignSize), 19);
-		RDUILayout::ApplyDesignerSlotData(mNavDiceButton, RDUILayout::GetDesignerSlotDataOr(WidgetTree, TEXT("HUD_Dice"), FAnchors(0.8031f, 0.0185f, 0.8552f, 0.0963f), DesignSize), 19);
 		RDUILayout::ApplyDesignerSlotData(mNavSkillButton, RDUILayout::GetDesignerSlotDataOr(WidgetTree, TEXT("HUD_Skill"), FAnchors(0.8615f, 0.0185f, 0.9135f, 0.0963f), DesignSize), 19);
 		RDUILayout::ApplyDesignerSlotData(mNavSettingsButton, RDUILayout::GetDesignerSlotDataOr(WidgetTree, TEXT("HUD_Settings"), FAnchors(0.9198f, 0.0185f, 0.9719f, 0.0963f), DesignSize), 19);
 		// 피드: 화면 중앙 핀(디자인px). 상태바 텍스트: 좌상단 핀(스킨에선 Collapsed지만 좌표계 일관 유지).
@@ -272,7 +149,6 @@ void UCombatTileMapHUDWidget::ApplyRuntimeWidgetLayout() const
 		RDUILayout::ApplyAnchoredSlot(EndTurnButton, FAnchors(0.795f, 0.845f, 0.925f, 0.940f), 18);
 		RDUILayout::ApplyAnchoredSlot(mMoveButton, FAnchors(0.795f, 0.625f, 0.925f, 0.720f), 18);
 		RDUILayout::ApplyAnchoredSlot(mNavMapButton, FAnchors(0.7448f, 0.0185f, 0.7969f, 0.0963f), 19);
-		RDUILayout::ApplyAnchoredSlot(mNavDiceButton, FAnchors(0.8031f, 0.0185f, 0.8552f, 0.0963f), 19);
 		RDUILayout::ApplyAnchoredSlot(mNavSkillButton, FAnchors(0.8615f, 0.0185f, 0.9135f, 0.0963f), 19);
 		RDUILayout::ApplyAnchoredSlot(mNavSettingsButton, FAnchors(0.9198f, 0.0185f, 0.9719f, 0.0963f), 19);
 		RDUILayout::ApplyAnchoredSlot(mCombatFeedText, FAnchors(0.350f, 0.430f, 0.650f, 0.500f), 200);
@@ -358,12 +234,10 @@ void UCombatTileMapHUDWidget::LogCombatLayoutMetrics(const FVector2D& ViewportSi
 		SkillRail.Minimum.X, SkillRail.Minimum.Y, SkillRail.Maximum.X, SkillRail.Maximum.Y);
 
 	UE_LOG(LogRD, Display,
-		TEXT("CombatHUD LayoutMetrics Groups: %s %s %s %s %s %s %s %s"),
-		*DescribeGroup(TEXT("HUD_DiceTray"), FAnchors(0.028f, 0.790f, 0.226f, 0.998f)),
+		TEXT("CombatHUD LayoutMetrics Groups: %s %s %s %s %s %s"),
 		*DescribeGroup(TEXT("HUD_Move"), FAnchors(0.795f, 0.625f, 0.925f, 0.720f)),
 		*DescribeGroup(TEXT("HUD_EndTurn"), FAnchors(0.795f, 0.845f, 0.925f, 0.940f)),
 		*DescribeGroup(TEXT("HUD_Map"), FAnchors(0.7448f, 0.0185f, 0.7969f, 0.0963f)),
-		*DescribeGroup(TEXT("HUD_Dice"), FAnchors(0.8031f, 0.0185f, 0.8552f, 0.0963f)),
 		*DescribeGroup(TEXT("HUD_Skill"), FAnchors(0.8615f, 0.0185f, 0.9135f, 0.0963f)),
 		*DescribeGroup(TEXT("HUD_Settings"), FAnchors(0.9198f, 0.0185f, 0.9719f, 0.0963f)),
 		*DescribeGroup(TEXT("HUD_SkillDetail"), FAnchors(0.315f, 0.215f, 0.685f, 0.585f)));
