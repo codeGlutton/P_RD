@@ -146,11 +146,7 @@ protected:
 	UPROPERTY(Category = CameraMove, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SmoothMoveExp", AllowPrivateAccess = "true"))
 	float mMoveExp = 2.f;
 
-	FTimerHandle mTimerHandle_Move;		// 이동 로직에 쓸 타이머 핸들
-	FVector mStartLocation;				// 이동 시작 위치
-	FVector mCurLocation;				// 현재 위치
-	FVector mEndLocation;				// 종료 위치
-	float mCurrentMoveAlpha = 0.0f;		// 이동 진행도
+	FVector2D mEndLocation;				// 종료 위치
 	
 
 protected:
@@ -310,7 +306,7 @@ private:
 	/* 
 	* @brief 이동 시 매 틱마다 호출하는 함수
 	*/
-	void MoveSmooth();
+	void MoveSmooth(float DeltaTime);
 
 	/*
 	* @brief 줌 시 매 틱마다 호출하는 함수
