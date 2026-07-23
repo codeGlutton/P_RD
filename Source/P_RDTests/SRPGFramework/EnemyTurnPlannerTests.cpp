@@ -24,7 +24,7 @@
 
 #include "Actor/TileMap/TileMapModel.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
-#include "DataAsset/SkillData/StaticAttackSkillData.h"
+#include "DataAsset/SkillData/StaticSkillData.h"
 
 #include "Engine/World.h"
 #include "Engine/Engine.h"
@@ -75,15 +75,15 @@ namespace
 	}
 
 	// @brief 테스트용 일반공격 스킬 생성 (KeepAlive에 등록해 GC 방지)
-	UStaticAttackSkillData* MakeSkill(UWorld* World, TArray<UObject*>& KeepAlive, EAimPattern AimPattern, int32 AimRange)
+	UStaticSkillData* MakeSkill(UWorld* World, TArray<UObject*>& KeepAlive, EAimPattern AimPattern, int32 AimRange)
 	{
-		UStaticAttackSkillData* Skill = NewObject<UStaticAttackSkillData>(World);
+		UStaticSkillData* Skill = NewObject<UStaticSkillData>(World);
 		Skill->mAimPattern = AimPattern;
-		Skill->mAimRangeDefaultValue = AimRange;
+		Skill->mAimRange = AimRange;
 		Skill->mCanAimBoardActor = true;
 		Skill->mIsIndirect = false;
 		Skill->mEffectPattern = EEffectPattern::Single;
-		Skill->mEffectAreaDefaultValue = 0;
+		Skill->mEffectArea = 0;
 		Skill->mIsPenetration = false;
 		Skill->AddToRoot();
 		KeepAlive.Add(Skill);
@@ -122,7 +122,6 @@ namespace
 		Enemy->BeginPlay();
 		Enemy->SetMoveTendency(Tendency);
 		Enemy->GetAttributeComponentModel()->ApplyModToAttribute(UEnemyUnitAttributeSet::GetMovementAttribute(), ETacticalModOp::Override, MoveRange);
-		Enemy->GetAttributeComponentModel()->ApplyModToAttribute(UEnemyUnitAttributeSet::GetRechargeDiceSumAttribute(), ETacticalModOp::Override, 0);
 
 		// 스킬 추가: 일반공격 계열
 		Enemy->GetSkillComponentModel()->SetSkill(0, MakeSkill(World, KeepAlive, AimPattern, AimRange));

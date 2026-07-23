@@ -67,7 +67,7 @@ public:
 	 * @details
 	 * Primary Asset을 방 타입과 레벨 별로 분류해두었기 때문에, 해당 값은 Primary Asset Type에 영향을 줌
 	 */
-	UPROPERTY(Category = "Stage", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StageLevel"))
+	UPROPERTY(Category = "Stage", EditAnywhere, BlueprintReadWrite, AssetRegistrySearchable, meta = (DisplayName = "StageLevel"))
 	EStageLevelType mStageLevel;
 
 public:
@@ -90,7 +90,7 @@ class P_RD_API UStaticMonsterRoomSpawnData : public UStaticCombatRoomSpawnData
 public:
 	FPrimaryAssetId GetPrimaryAssetId() const override
 	{
-		return FPrimaryAssetId(RoomPrimaryAssetTypes::GetMonsterRoomType(mStageLevel), GetFName());
+		return FPrimaryAssetId(RoomPrimaryAssetTypes::GetMonsterRoomType(), GetFName());
 	}
 };
 
@@ -102,7 +102,7 @@ class P_RD_API UStaticEliteMonsterRoomSpawnData : public UStaticCombatRoomSpawnD
 public:
 	FPrimaryAssetId GetPrimaryAssetId() const override
 	{
-		return FPrimaryAssetId(RoomPrimaryAssetTypes::GetEliteMonsterRoomType(mStageLevel), GetFName());
+		return FPrimaryAssetId(RoomPrimaryAssetTypes::GetEliteMonsterRoomType(), GetFName());
 	}
 };
 
@@ -114,7 +114,7 @@ class P_RD_API UStaticBossMonsterRoomSpawnData : public UStaticCombatRoomSpawnDa
 public:
 	FPrimaryAssetId GetPrimaryAssetId() const override
 	{
-		return FPrimaryAssetId(RoomPrimaryAssetTypes::GetBossMonsterRoomType(mStageLevel), GetFName());
+		return FPrimaryAssetId(RoomPrimaryAssetTypes::GetBossMonsterRoomType(), GetFName());
 	}
 };
 

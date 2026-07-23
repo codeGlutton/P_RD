@@ -23,8 +23,7 @@ public:
 		TObjectPtr<UBoardCombatTargetSnapshotData> InstigatorSnapshot,
 		TArray<TScriptInterface<IBoardCombatTarget>>& Targets,
 		TArray<TObjectPtr<UBoardCombatTargetSnapshotData>>& TargetSnapshots,
-		TArray<FTileIndex>& TargetTileIndexes,
-		float DiceSum
+		TArray<FTileIndex>& TargetTileIndexes
 	);
 
 public:
@@ -36,7 +35,6 @@ public:
 
 public:
 	const TArray<FTileIndex>& mTargetTileIndexes;
-	float mDiceSum = 0.f;
 };
 
 USTRUCT(BlueprintType)
@@ -48,7 +46,7 @@ public:
 	virtual ~FSkillEffectLayer() = default;
 
 public:
-	virtual void ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const {}
+	virtual void ApplyPointEffect(IBoardCombatTarget* ActorModel) const {}
 	virtual void ClearPointEffect(IBoardCombatTarget* ActorModel) const {}
 
 public:
@@ -60,4 +58,18 @@ public:
 
 public:
 	virtual void CommitEffect(const FSkillEffectCommitParams& Params) const PURE_VIRTUAL(FSkillEffectLayer::CommitEffect, return; );
+};
+
+USTRUCT(BlueprintType)
+struct P_RD_API FSkillEffectLayer_TagBase : public FSkillEffectLayer
+{
+	GENERATED_BODY()
+
+public:
+	virtual TSubclassOf<UTacticalEffect> GetTagEffectClass() const;
+	void CommitEffect(const FSkillEffectCommitParams& Params) const override;
+
+public:
+	UPROPERTY(Category = "Tag", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TagGain"))
+	int32 mTagGain = 0;
 };

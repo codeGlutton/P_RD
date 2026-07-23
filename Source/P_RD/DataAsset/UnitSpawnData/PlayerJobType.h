@@ -26,5 +26,11 @@ enum class EPlayerJobType : uint8
 	Mage,
 
 	Count			UMETA(Hidden),
+	
+	/* 스킬 클래스 타입 구분을 위한 추가 열거형 */
+
+	Common,
+	Monster,
+
 	None = 0xFF		UMETA(Hidden),
 };

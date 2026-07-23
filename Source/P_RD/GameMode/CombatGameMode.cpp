@@ -25,7 +25,6 @@
 
 #include "SRPGFramework/SRPGSkillBuildAction.h"
 #include "SRPGFramework/SRPGMoveBuildAction.h"
-#include "SRPGFramework/SRPGDiceRollAction.h"
 #include "SRPGFramework/SRPGTurnEndAction.h"
 
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
@@ -242,13 +241,6 @@ void ACombatGameMode::InitializeRoom()
 	CombatModel->OnRegisterUnitUI.AddUObject(this, &ACombatGameMode::OnRegisterUnit);
 	CombatModel->OnUnregisterUnitUI.AddUObject(this, &ACombatGameMode::OnUnregisterUnit);
 
-	CombatModel->OnShowDicePanelAnyTurnUI.AddWeakLambda(this, [this](const USRPGTurnContext*) {
-		// 주사위 UI는 제거됐지만 후속 시스템 정리 전까지 DicePrepare는 남아 있다.
-		// DicePrepare 처리 중 라우터에 다시 진입하면 현재 액션의 head index가 바뀌므로 다음 틱에 진행한다.
-		GetWorldTimerManager().SetTimerForNextTick(FTimerDelegate::CreateWeakLambda(this, [this]() {
-			RollDices();
-			}));
-		});
 	CombatModel->OnSaveCombatPlay.AddWeakLambda(this, [this]() {
 		UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
 		checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
@@ -393,17 +385,6 @@ bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 		});
 
 	return CommandRouterModel->SummitCommand(SkillSelectCommand);
-}
-
-bool ACombatGameMode::RollDices()
-{
-	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
-	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
-
-	TInstancedStruct<FSRPGCommand> DiceSelectCommand;
-	DiceSelectCommand.InitializeAs<FSRPGDiceRollCommand>();
-
-	return CommandRouterModel->SummitCommand(DiceSelectCommand);
 }
 
 bool ACombatGameMode::SelectMove()
@@ -790,9 +771,9 @@ void ACombatGameMode::PushSkillUIData() const
 			SkillUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 			SkillUIData.mIsUsable = true;
 			SkillUIData.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
-			SkillUIData.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRangeDefaultValue);
+			SkillUIData.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRange);
 			SkillUIData.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
-			SkillUIData.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectAreaDefaultValue);
+			SkillUIData.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectArea);
 			SkillUIData.mTargeting.mIsIndirect = StaticSkillData->mIsIndirect;
 			SkillUIData.mTargeting.mIsPenetration = StaticSkillData->mIsPenetration;
 		}
@@ -858,9 +839,9 @@ void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 		SkillDetailUIData.mDescription = StaticSkillData->mDescription;
 		SkillDetailUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 		SkillDetailUIData.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
-		SkillDetailUIData.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRangeDefaultValue);
+		SkillDetailUIData.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRange);
 		SkillDetailUIData.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
-		SkillDetailUIData.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectAreaDefaultValue);
+		SkillDetailUIData.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectArea);
 		SkillDetailUIData.mTargeting.mIsIndirect = StaticSkillData->mIsIndirect;
 		SkillDetailUIData.mTargeting.mIsPenetration = StaticSkillData->mIsPenetration;
 	}
@@ -1227,6 +1208,8 @@ void ACombatGameMode::PushCombatRewardChoicesUIData() const
 	{
 	case ERoomType::EliteMonster:
 		AddEquipmentReward(static_cast<const FEliteMonsterRoom&>(CurrentRoom).mRewardEquipmentDataId);
+		break;
+	case ERoomType::BossMonster:
 		break;
 	default:
 		break;

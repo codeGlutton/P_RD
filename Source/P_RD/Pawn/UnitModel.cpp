@@ -16,6 +16,9 @@
 #include "TAS/Passive/DynamicPassiveData.h"
 
 #include "AttributeSet/UnitAttributeSet.h"
+#include "TAS/Effect/Stat/TacticalEffect_Movement.h"
+#include "TAS/Effect/Stat/TacticalEffect_MovementFactor_AddBase.h"
+#include "TAS/Effect/TacticalEffectContext.h"
 
 UUnitModel::UUnitModel() : mTeamId(EGameTeamType::AllNeutral)
 {
@@ -41,19 +44,14 @@ void UUnitModel::PostInitializeComponentModels()
 	checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
 
 	TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), GetBoardActorKeyName(), GetDifficulty(), true);
-
-	// 스폰 데이터에 지정된 장비를 일괄 장착
-	if (UStaticUnitSpawnData* UnitSpawn = Cast<UStaticUnitSpawnData>(mStaticSpawnData))
-	{
-		GetEquipmentComponentModel()->EquipFrom(UnitSpawn->mEquipmentDatas);
-	}
 }
 
 void UUnitModel::OnBeginRoom()
 {
 	Super::OnBeginRoom();
 
-	// 전투 시작 패시브 처리
+	/* 전투 시작 패시브 처리 */
+
 	TArray<UTacticalPassive*> Passives = mPassiveCompModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartRoom);
 
 	UBoardCombatTargetSnapshotData* UnitSnapshot = MakeSnapshotData();
@@ -76,7 +74,8 @@ void UUnitModel::OnEndRoom()
 {
 	Super::OnEndRoom();
 
-	// 전투 종료 패시브 처리
+	/* 전투 종료 패시브 처리 */
+
 	TArray<UTacticalPassive*> Passives = mPassiveCompModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndRoom);
 
 	UBoardCombatTargetSnapshotData* UnitSnapshot = MakeSnapshotData();
@@ -94,7 +93,8 @@ void UUnitModel::OnEndRoom()
 		Passive->CommitPassive(DynamicPassiveData);
 	}
 
-	// 모두 제거
+	/* 모두 제거 */
+
 	mAttributeCompModel->ApplyModToAttribute(UCombatTargetAttributeSet::GetDefenseAttribute(), ETacticalModOp::Override, 0.f);
 	mAttributeCompModel->ApplyModToAttribute(UCombatTargetAttributeSet::GetMovementAttribute(), ETacticalModOp::Override, 0.f);
 	mAttributeCompModel->RemoveLooseGameplayTagsMatchingTag(EffectTags::GameplayEffect_StatusEffect, INT_MAX);
@@ -102,10 +102,12 @@ void UUnitModel::OnEndRoom()
 
 void UUnitModel::OnBeginTurn()
 {
-	// 방어도 제거
+	/* 방어도 제거 */
+
 	mAttributeCompModel->ApplyModToAttribute(UCombatTargetAttributeSet::GetDefenseAttribute(), ETacticalModOp::Override, 0.f);
 
-	// 턴 시작 패시브 처리
+	/* 턴 시작 패시브 처리 */
+
 	TArray<UTacticalPassive*> Passives = mPassiveCompModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartTurn);
 
 	UBoardCombatTargetSnapshotData* OwnerSnapshot = MakeSnapshotData();
@@ -122,11 +124,48 @@ void UUnitModel::OnBeginTurn()
 		Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnStartTurn, PassiveContext, OUT DynamicPassiveData);
 		Passive->CommitPassive(DynamicPassiveData);
 	}
+
+	/* 자기 자신에게 MovePoint 부여 */
+
+	const int32 DefaultMovePoint = FMath::Max(
+		mAttributeCompModel->GetAttributeCurrentValue(UEnemyUnitAttributeSet::GetRechargeMovementAttribute()),
+		0
+	);
+
+	UTacticalEffectContext* EffectContext = mAttributeCompModel->MakeEffectContext();
+	EffectContext->SetInstigator(this);
+	EffectContext->SetAttributeSetComponentModel(mAttributeCompModel);
+
+	FActiveTacticalEffectHandle FactorHandle;
+	{
+		/* 기본 Move 만큼 Factor 부여 */
+
+		TSharedPtr<FTacticalEffectSpec> EffectSpec = mAttributeCompModel->MakeOutgoingSpec(UTacticalEffect_MovementFactor_AddBase::StaticClass(), EffectContext);
+		EffectSpec->mDynamicMagnitude = DefaultMovePoint;
+		FactorHandle = mAttributeCompModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
+	}
+
+	{
+		/* MovePoint 습득 */
+
+		UBoardCombatTargetSnapshotData* OwingSnapshot = MakeSnapshotData();
+		TSharedPtr<FTacticalEffectSpec> EffectSpec = mAttributeCompModel->MakeOutgoingSpec(UTacticalEffect_GetMovement::StaticClass(), EffectContext);
+		EffectSpec->SetInstigatorSnapshotData(OwingSnapshot);
+		EffectSpec->SetTargetSnapshotData(OwingSnapshot);
+		mAttributeCompModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
+	}
+
+	{
+		/* 기본 Move 만큼 Factor 제거 */
+
+		mAttributeCompModel->RemoveActiveTacticalEffect(FactorHandle);
+	}
 }
 
 void UUnitModel::OnEndTurn()
 {
-	// 턴 종료 패시브 처리
+	/* 턴 종료 패시브 처리 */
+
 	TArray<UTacticalPassive*> Passives = mPassiveCompModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndTurn);
 
 	UBoardCombatTargetSnapshotData* OwnerSnapshot = MakeSnapshotData();
@@ -144,9 +183,12 @@ void UUnitModel::OnEndTurn()
 		Passive->CommitPassive(DynamicPassiveData);
 	}
 
-	// 이동력 제거
+	/* 행동력 제거 */
+
 	mAttributeCompModel->ApplyModToAttribute(UCombatTargetAttributeSet::GetMovementAttribute(), ETacticalModOp::Override, 0.f);
-	// 턴제 상태이상 한 스택 감소
+	
+	/* 턴제 상태이상 한 스택 감소 */
+
 	mAttributeCompModel->RemoveLooseGameplayTagsMatchingTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration, 1);
 }
 

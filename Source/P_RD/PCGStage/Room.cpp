@@ -41,8 +41,13 @@ void FShopRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimary
 {
 	Super::CollectAssetIds(RoomId, AdditionalAssetIds);
 
-	AdditionalAssetIds.Append(mSaleSkillDataIds);
-	AdditionalAssetIds.Append(mSaleEquipmentDataIds);
+	const int32 MaxJobCount = StaticCast<int32>(EPlayerJobType::Count);
+	for (int32 i = 0; i < MaxJobCount; ++i)
+	{
+		AdditionalAssetIds.Append(mSaleJobSkillDataItems[i].mSaleItemIds);
+	}
+	AdditionalAssetIds.Append(mSaleCommonSkillDataItems.mSaleItemIds);
+	AdditionalAssetIds.Append(mSaleEquipmentDataItems.mSaleItemIds);
 }
 
 FMonsterRoom::FMonsterRoom()
@@ -65,13 +70,6 @@ void FEliteMonsterRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<
 FBossMonsterRoom::FBossMonsterRoom()
 {
 	mType = ERoomType::BossMonster;
-}
-
-void FBossMonsterRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const
-{
-	Super::CollectAssetIds(RoomId, AdditionalAssetIds);
-
-	AdditionalAssetIds.Add(mRewardDiceDataId);
 }
 
 #undef LOCTEXT_NAMESPACE

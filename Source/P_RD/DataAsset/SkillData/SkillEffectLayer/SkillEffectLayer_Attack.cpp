@@ -11,7 +11,7 @@
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "AttributeSet/CombatTargetAttributeSet.h"
 
-void FSkillEffectLayer_Attack::ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const
+void FSkillEffectLayer_Attack::ApplyPointEffect(IBoardCombatTarget* ActorModel) const
 {
     UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
@@ -21,7 +21,7 @@ void FSkillEffectLayer_Attack::ApplyPointEffect(IBoardCombatTarget* ActorModel, 
     EffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
 
     TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_AttackPoint::StaticClass(), EffectContext);
-    EffectSpec->mDynamicMagnitude = mDefaultDamage + DiceSum * mDiceRatio;
+    EffectSpec->mDynamicMagnitude = mDamage;
     AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
 }
 

@@ -12,16 +12,12 @@
 #include "AttributeSet/LevelAttributeSet.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
-#include "Dice/DicePoolModel.h"
-
 UPlayerUnitModel::UPlayerUnitModel()
 {
     SetGenericTeamId(EGameTeamType::Adventurer);
     
     mUnitAttributeSet = CreateDefaultSubobject<UPlayerUnitAttributeSet>(TEXT("PlayerUnitAttributeSet"));
     mLevelAttributeSet = CreateDefaultSubobject<ULevelAttributeSet>(TEXT("LevelAttributeSet"));
-
-    mDicePool = CreateDefaultSubobject<UDicePoolModel>(TEXT("DiceComp"));
 }
 
 void UPlayerUnitModel::PostInitializeComponentModels()
@@ -71,9 +67,4 @@ int32 UPlayerUnitModel::GetDifficulty() const
 bool UPlayerUnitModel::IsPlayerUnitModel() const
 {
     return true;
-}
-
-UDicePoolModel* UPlayerUnitModel::GetDicePoolModel() const
-{
-    return mDicePool;
 }
