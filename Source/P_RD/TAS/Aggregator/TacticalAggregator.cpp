@@ -4,37 +4,6 @@
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
 /**
- * @file TacticalAggregator.cpp
- * @brief 한 속성(Attribute)에 걸린 모든 이펙트 모디파이어를 연산 종류별로 모아 최종 값을 산출하는 Aggregator 구현.
- *
- *        [PR #191 마이그레이션 근거 — GAS 폐기]
- *        이 PR은 효과 모디파이어의 "연산 종류" enum을 GAS의 EGameplayModOp에서
- *        자체 정의 ETacticalModOp(TacticalEffectType.h)로 치환한다. 이 파일은 그 enum을
- *        실제 수식에 적용하는 핵심 지점이므로 변경 폭이 크다.
- *
- *        ETacticalModOp의 정수값은 구 EGameplayModOp와 "동일하게" 유지된다. 그 이유 3가지:
- *          (1) 직렬화 호환 — 기존 에셋/세이브 데이터에 정수로 박혀버린 op 값을 그대로 보존해야
- *              로드 시 의미가 어긋나지 않는다.
- *          (2) 배열 인덱싱 — Aggregator는 mMods[ETacticalModOp::Max] 크기의 배열을 op 값으로
- *              직접 인덱싱(mMods[ModifierOp])한다. 따라서 enum 값은 0..Max-1의 연속 정수여야 한다.
- *          (3) CoreRedirect — DefaultEngine.ini의 CoreRedirect가 구 enum 이름(EGameplayModOp::*)을
- *              새 enum 이름(ETacticalModOp::*)으로 매핑한다. 값이 같아야 리다이렉트가 무결하다.
- *
- *        ETacticalModOp 값 ↔ 의미 ↔ 구 GAS 대응:
- *          AddBase(0)          = 합산              (구 EGameplayModOp::Additive)        / 별칭 Additive
- *          MultiplyAdditive(1) = 배율 가산          (구 EGameplayModOp::Multiplicitive)  / 별칭 Multiplicitive
- *          DivideAdditive(2)   = 나눗셈 가산         (구 EGameplayModOp::Division)        / 별칭 Division
- *          Override(3)         = 덮어쓰기            (구 EGameplayModOp::Override)
- *          MultiplyCompound(4) = 거듭제곱 곱(복리)   (GAS 외 확장)
- *          AddFinal(5)         = 최종 합산           (GAS 외 확장)
- *          Max(6)              = 무효/개수(배열 크기)
- *
- *        최종 산출 수식(EvaluateWithBase 참조):
- *          result = ((Base + Additive) * Multiplicitive / Division * CompoundMultiply) + FinalAdd
- *          단, Override 모디파이어가 하나라도 있으면 그 값으로 즉시 단락(short-circuit).
- */
-
-/**
  * @brief RAII 스코프 가드: 생성~소멸 구간 동안 Aggregator의 Dirty 전파를 배치(batch)로 묶는다.
  * @param World 배치 카운터를 보유한 TacticalFrameworkModel을 찾을 월드.
  *
@@ -234,7 +203,7 @@ void FTacticalAggregator::UpdateAggregatorMod(FActiveTacticalEffectHandle Active
 {
     RemoveAggregatorMod(ActiveHandle);
 
-    for (int32 ModIdx = 0; ModIdx < Spec.mModifierValues.Num(); ++ModIdx)
+    for (int32 ModIdx = 0; ModIdx < Spec.mModifiers.Num(); ++ModIdx)
     {
         const FTacticalModifierInfo& ModDef = Spec.mEffectClass->mModifiers[ModIdx];
         // 이 Aggregator가 담당하는 속성을 대상으로 한 모디파이어만 반영한다.
@@ -261,22 +230,6 @@ float FTacticalAggregator::Evaluate() const
  * @brief 주어진 베이스 값에 연산 종류별 모디파이어를 합성해 최종 값을 계산한다(핵심 수식).
  * @param BaseValue 모디파이어 적용 전 입력 베이스 값.
  * @return 모든 모디파이어가 합성된 최종 값.
- *
- * [PR #191] 모든 mMods 버킷 인덱스가 ETacticalModOp::*(구 EGameplayModOp 치환)로 바뀐 지점이다.
- *
- * 합성 절차:
- *   1) Override가 하나라도 있으면 즉시 그 값으로 단락한다(덮어쓰기는 다른 모든 연산을 무시).
- *   2) 그 외에는 연산 종류별로 모디파이어를 한 값으로 접는다.
- *      - Additive/Multiplicitive/Division/AddFinal: SumMods로 "가산" 누적.
- *        이때 각 연산의 항등값(Bias)을 GetModifierBiasByModifierOp로 받아 사용한다
- *        (곱셈/나눗셈 계열의 항등값=1, 합산 계열=0). SumMods가 (magnitude - Bias)를 더하므로
- *        모디파이어가 없으면 정확히 항등값(0 또는 1)이 남는다.
- *      - MultiplyCompound: MultiplyMods로 모든 크기를 "곱"으로 누적(복리). 가산 누적과 다르다.
- *   3) 나눗셈 분모가 0에 가까우면 0 나눗셈 방지를 위해 1로 치환한다.
- *
- * 최종 수식: ((Base + Additive) * Multiplicitive / Division * CompoundMultiply) + FinalAdd
- *   - Additive(=AddBase)는 곱/나눗셈 적용 "전"에 더해지고, FinalAdd(=AddFinal)는 모든 배율 적용 "후"에 더해진다.
- *   - Additive/Multiplicitive/Division은 구 GAS 이름 별칭(각각 AddBase/MultiplyAdditive/DivideAdditive와 동일 값).
  */
 float FTacticalAggregator::EvaluateWithBase(float BaseValue) const
 {
@@ -287,9 +240,9 @@ float FTacticalAggregator::EvaluateWithBase(float BaseValue) const
     }
 
     // 2) 연산 종류별 누적. Bias는 각 연산의 항등값(합산=0, 곱/나눗셈=1)으로, 모디파이어 부재 시 무효원소가 됨.
-    float Additive = SumMods(mMods[ETacticalModOp::Additive], TacticalEffectUtilities::GetModifierBiasByModifierOp(ETacticalModOp::Additive));
-    float Multiplicitive = SumMods(mMods[ETacticalModOp::Multiplicitive], TacticalEffectUtilities::GetModifierBiasByModifierOp(ETacticalModOp::Multiplicitive));
-    float Division = SumMods(mMods[ETacticalModOp::Division], TacticalEffectUtilities::GetModifierBiasByModifierOp(ETacticalModOp::Division));
+    float Additive = SumMods(mMods[ETacticalModOp::AddBase], TacticalEffectUtilities::GetModifierBiasByModifierOp(ETacticalModOp::AddBase));
+    float Multiplicative = SumMods(mMods[ETacticalModOp::MultiplyAdditive], TacticalEffectUtilities::GetModifierBiasByModifierOp(ETacticalModOp::MultiplyAdditive));
+    float Division = SumMods(mMods[ETacticalModOp::DivideAdditive], TacticalEffectUtilities::GetModifierBiasByModifierOp(ETacticalModOp::DivideAdditive));
     float FinalAdd = SumMods(mMods[ETacticalModOp::AddFinal], TacticalEffectUtilities::GetModifierBiasByModifierOp(ETacticalModOp::AddFinal));
     // MultiplyCompound는 가산이 아니라 곱(복리)으로 누적 → 별도 MultiplyMods 사용.
     float CompoundMultiply = MultiplyMods(mMods[ETacticalModOp::MultiplyCompound]);
@@ -301,7 +254,7 @@ float FTacticalAggregator::EvaluateWithBase(float BaseValue) const
         Division = 1.f;
     }
     // 최종 합성 수식: 베이스 합산 → 배율/나눗셈/복리곱 → 최종 합산 순.
-    return ((BaseValue + Additive) * Multiplicitive / Division * CompoundMultiply) + FinalAdd;
+    return ((BaseValue + Additive) * Multiplicative / Division * CompoundMultiply) + FinalAdd;
 }
 
 /**

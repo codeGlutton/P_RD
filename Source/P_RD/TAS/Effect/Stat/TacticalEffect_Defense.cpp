@@ -34,7 +34,7 @@ void UTacticalEffect_Defense::OnExecuted(FActiveTacticalEffectsContainer& Active
 
 	FSRPGAttributeEffectEventLog Log;
 	Log.mEffectAttribute = UCombatTargetAttributeSet::GetDefenseAttribute();
-	Log.mMagnitude = TESpec.mModifierValues[0];
+	Log.mMagnitude = TESpec.GetModifiedAttribute(UCombatTargetAttributeSet::GetDefenseAttribute())->mTotalMagnitude;
 
 	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
 	const UActorModel* Target = AttributeSetCompModelInstance->GetOwnerModel();

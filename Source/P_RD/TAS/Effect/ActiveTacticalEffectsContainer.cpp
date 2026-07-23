@@ -282,15 +282,15 @@ void FActiveTacticalEffectsContainer::OnStackCountChange(FActiveTacticalEffect& 
     ActiveEffect.mEventSet.OnStackChanged.Broadcast(ActiveEffect.mHandle, ActiveEffect.mSpec.GetStackCount(), OldStackCount);
 }
 
+void FActiveTacticalEffectsContainer::OnDurationChange(FActiveTacticalEffect& ActiveEffect)
+{
+    ActiveEffect.mEventSet.OnTimeChanged.Broadcast(ActiveEffect.mHandle, ActiveEffect.mStartTime, ActiveEffect.GetDuration());
+    mOwner->OnTacticalEffectDurationChange(ActiveEffect);
+}
+
 /**
  * @brief 모디파이어를 속성의 base 값에 직접 실행(Instant/Execute 계열)한다.
  *        현재 base 값에 연산 종류(ModifierOp)와 크기(ModifierMagnitude)를 적용해 새 base를 구하고 반영한다.
- *
- * @note [PR #191 enum 치환] ModifierOp 타입이 GAS의 EGameplayModOp -> 자체 ETacticalModOp로 바뀐 지점이다.
- *       ETacticalModOp의 정수값은 구 EGameplayModOp와 동일하게 유지된다(직렬화 호환 / Aggregator의 op-인덱싱 /
- *       DefaultEngine.ini CoreRedirect 매핑을 위해). 실제 연산식은 StaticExecModOnBaseValue가 op에 따라 분기한다:
- *         AddBase(0)=합산, MultiplyAdditive(1)=배율 가산, DivideAdditive(2)=나눗셈 가산,
- *         Override(3)=덮어쓰기, MultiplyCompound(4)=거듭제곱 곱, AddFinal(5)=최종 합산.
  * @param Attribute 대상 속성.
  * @param ModifierOp 연산 종류(ETacticalModOp).
  * @param ModifierMagnitude 적용할 모디파이어 크기.
@@ -324,7 +324,10 @@ FActiveTacticalEffect* FActiveTacticalEffectsContainer::ApplyTacticalEffectSpec(
 	FActiveTacticalEffect* AppliedActiveEffect = nullptr;
 	FActiveTacticalEffect* ExistingStackableEffect = FindStackableActiveTacticalEffect(Spec);
 
-	int32 PreStackCount = 0;
+    bool IsSetDurationTimer = true;
+    int32 CarryOverDuration = 0;
+
+    int32 PreStackCount = 0;
 	int32 NewStackCount = 0;
 
 	if (ExistingStackableEffect != nullptr)
@@ -339,10 +342,26 @@ FActiveTacticalEffect* FActiveTacticalEffectsContainer::ApplyTacticalEffectSpec(
 
         checkf(ExistingSpec.mDynamicMagnitude == Spec.mDynamicMagnitude, TEXT("스태킹되는 이펙트는 수치가 다를 수 없음"));
 
+        if (ExistingSpec.mEffectClass->mStackDurationRefreshPolicy == ETacticalEffectStackingDurationPolicy::ExtendDuration)
+        {
+            int32 WorldTime = GetWorldTime(ExistingStackableEffect->GetDurationUnit());
+            CarryOverDuration = ExistingStackableEffect->GetTimeRemaining(WorldTime);
+        }
+
 		ExistingStackableEffect->mSpec = Spec;
 		ExistingStackableEffect->mSpec.SetStackCount(NewStackCount);
 
 		AppliedActiveEffect = ExistingStackableEffect;
+
+        const UTacticalEffect* EffectDef = ExistingSpec.mEffectClass;
+        if (EffectDef->mStackDurationRefreshPolicy == ETacticalEffectStackingDurationPolicy::NeverRefresh)
+        {
+            IsSetDurationTimer = false;
+        }
+        else
+        {
+            RestartActiveTacticalEffectDuration(*ExistingStackableEffect);
+        }
 	}
 	else
 	{
@@ -390,6 +409,55 @@ FActiveTacticalEffect* FActiveTacticalEffectsContainer::ApplyTacticalEffectSpec(
 	// 적용된 Spec의 각 모디파이어 최종 크기를 미리 계산해 둔다.
 	AppliedEffectSpec.CalculateModifierMagnitudes();
 
+    // Duration의 경우, 속성 변경 로그 채우기
+    {
+        const bool HasModifiedAttributes = AppliedEffectSpec.mModifiedAttributes.Num() > 0;
+        const bool HasDuration = AppliedEffectSpec.mEffectClass->mDurationPolicy == ETacticalEffectDurationType::Duration;
+        const bool ShouldBuildModifiedAttributeList = HasModifiedAttributes == false && HasDuration == true;
+        if (ShouldBuildModifiedAttributeList == true)
+        {
+            int32 ModifierIndex = -1;
+            for (const FTacticalModifierInfo& Mod : AppliedEffectSpec.mEffectClass->mModifiers)
+            {
+                ++ModifierIndex;
+
+                float Magnitude = 0.f;
+                if (AppliedEffectSpec.mModifiedAttributes.IsValidIndex(ModifierIndex) == true)
+                {
+                    Magnitude = AppliedEffectSpec.mModifiers[ModifierIndex];
+                }
+
+                FTacticalEffectModifiedAttribute* ModifiedAttribute = AppliedEffectSpec.GetModifiedAttribute(Mod.mAttribute);
+                if (ModifiedAttribute == nullptr)
+                {
+                    ModifiedAttribute = AppliedEffectSpec.AddModifiedAttribute(Mod.mAttribute);
+                }
+                ModifiedAttribute->mTotalMagnitude += Magnitude;
+            }
+        }
+    }
+
+    // Duration 계산
+    int32 CalcDuration = 0;
+    if (AppliedEffectSpec.AttemptCalculateDurationFromDef(OUT CalcDuration) == true)
+    {
+        AppliedEffectSpec.SetDuration(CalcDuration);
+    }
+
+    const int32 DurationBaseValue = AppliedEffectSpec.GetDuration();
+    if (DurationBaseValue > 0)
+    {
+        float FinalDuration = DurationBaseValue;
+        if (CarryOverDuration > 0)
+        {
+            FinalDuration += CarryOverDuration;
+            AppliedEffectSpec.SetDuration(FinalDuration);
+        }
+
+        // 대리자 호출
+        OnDurationChange(*AppliedActiveEffect);
+    }
+
 	if (ExistingStackableEffect != nullptr)
 	{
 		// 기존 이펙트에 스택이 합쳐진 경우: 스택 변경 후처리만 수행.
@@ -424,8 +492,8 @@ void FActiveTacticalEffectsContainer::ExecuteActiveEffectsFrom(FTacticalEffectSp
 
     bool ModifierSuccessfullyExecuted = false;
 
-    check(SpecToUse.mModifierValues.Num() == SpecToUse.mEffectClass->mModifiers.Num());
-    for (int32 ModIdx = 0; ModIdx < SpecToUse.mModifierValues.Num(); ++ModIdx)
+    check(SpecToUse.mModifiers.Num() == SpecToUse.mEffectClass->mModifiers.Num());
+    for (int32 ModIdx = 0; ModIdx < SpecToUse.mModifiers.Num(); ++ModIdx)
     {
         const FTacticalModifierInfo& ModDef = SpecToUse.mEffectClass->mModifiers[ModIdx];
 
@@ -504,6 +572,72 @@ FOnChangeAttributeValue& FActiveTacticalEffectsContainer::GetTacticalAttributeVa
     return mAttributeValueChangeDelegates.FindOrAdd(Attribute);
 }
 
+void FActiveTacticalEffectsContainer::CheckDurationExpired(const int32 Time, const ETacticalEffectDurationUnitType UnitType)
+{
+    TACTICAL_EFFECT_SCOPE_LOCK();
+
+    for (int32 ActiveGEIdx = 0; ActiveGEIdx < mTacticalEffects.Num(); ++ActiveGEIdx)
+    {
+        FActiveTacticalEffect& Effect = mTacticalEffects[ActiveGEIdx];
+        
+        if (Effect.mIsPendingRemove == true)
+        {
+            continue;
+        }
+        const int32 Duration = Effect.GetDuration();
+        if (Duration <= 0)
+        {
+            continue;
+        }
+        if (Effect.GetDurationUnit() != UnitType)
+        {
+            continue;
+        }
+
+        int32 StacksToRemove = -2;
+        bool NeedToRefreshStartTime = false;
+        bool IsReducedRemainingTime = false;
+
+        /* Effect 만기 */
+
+        if ((Effect.mStartTime + Duration) <= Time)
+        {
+            IsReducedRemainingTime = true;
+
+            switch (Effect.mSpec.mEffectClass->mStackExpirationPolicy)
+            {
+            case ETacticalEffectStackingExpirationPolicy::ClearEntireStack:
+                StacksToRemove = -1; // 모두 제거
+                break;
+
+            case ETacticalEffectStackingExpirationPolicy::RemoveSingleStackAndRefreshDuration:
+                StacksToRemove = 1;
+                NeedToRefreshStartTime = true;
+                break;
+            case ETacticalEffectStackingExpirationPolicy::RefreshDuration:
+                NeedToRefreshStartTime = true;
+                break;
+            };
+        }
+
+        if (StacksToRemove >= -1)
+        {
+            InternalRemoveActiveTacticalEffect(ActiveGEIdx, StacksToRemove, false);
+        }
+
+        if (NeedToRefreshStartTime == true)
+        {
+            RestartActiveTacticalEffectDuration(Effect);
+            OnDurationChange(Effect);
+        }
+
+        if (IsReducedRemainingTime == true)
+        {
+            Effect.mSpec.mEffectClass->OnReduceTimeRemaining(*this, Effect.mSpec);
+        }
+    }
+}
+
 /**
  * @brief 활성 이펙트가 새로 추가됐을 때의 내부 후처리.
  *        이펙트 클래스의 OnAddedToActiveContainer 훅을 호출하고, 소유자에 활성 핸들을 등록한다.
@@ -575,6 +709,14 @@ bool FActiveTacticalEffectsContainer::InternalExecuteMod(FTacticalEffectSpec& Sp
         // op 종류에 따른 연산을 base 값에 직접 실행.
         ApplyModToAttribute(ModEvalData.mAttribute, ModEvalData.mModifierOp, ModEvalData.mMagnitude);
 
+        FTacticalEffectModifiedAttribute* ModifiedAttribute = Spec.GetModifiedAttribute(ModEvalData.mAttribute);
+        if (ModifiedAttribute == nullptr)
+        {
+            // If we haven't already created a modified attribute holder, create it
+            ModifiedAttribute = Spec.AddModifiedAttribute(ModEvalData.mAttribute);
+        }
+        ModifiedAttribute->mTotalMagnitude += ModEvalData.mMagnitude;
+
         Executed = true;
     }
 
@@ -599,7 +741,7 @@ bool FActiveTacticalEffectsContainer::InternalRemoveActiveTacticalEffect(int32 I
     if (Idx < GetNumTacticalEffects())
     {
         FActiveTacticalEffect& Effect = *GetActiveTacticalEffect(Idx);
-        if (!ensure(!Effect.mIsPendingRemove))
+        if (!ensure(Effect.mIsPendingRemove == false))
         {
             return true;
         }
@@ -657,7 +799,7 @@ void FActiveTacticalEffectsContainer::AddActiveTacticalEffectGrantedTagsAndModif
 
     TACTICAL_EFFECT_SCOPE_LOCK();
 
-    for (int32 ModIdx = 0; ModIdx < Effect.mSpec.mModifierValues.Num(); ++ModIdx)
+    for (int32 ModIdx = 0; ModIdx < Effect.mSpec.mModifiers.Num(); ++ModIdx)
     {
         if (Effect.mSpec.mEffectClass->mModifiers.IsValidIndex(ModIdx) == false)
         {
@@ -826,7 +968,7 @@ void FActiveTacticalEffectsContainer::UpdateAllAggregatorModMagnitudes(FActiveTa
 
     // 이 이펙트의 모든 모디파이어가 영향을 주는 속성 집합을 중복 없이 수집.
     TSet<FTacticalAttribute> AttributesToUpdate;
-    for (int32 ModIdx = 0; ModIdx < Spec.mModifierValues.Num(); ++ModIdx)
+    for (int32 ModIdx = 0; ModIdx < Spec.mModifiers.Num(); ++ModIdx)
     {
         const FTacticalModifierInfo& ModDef = Spec.mEffectClass->mModifiers[ModIdx];
         AttributesToUpdate.Add(ModDef.mAttribute);
@@ -858,6 +1000,11 @@ void FActiveTacticalEffectsContainer::UpdateAggregatorModMagnitudes(const TSet<F
         // 핸들로 식별되는 기존 모디파이어를 현재 Spec 기준 크기로 갱신(op 종류는 유지).
         Aggregator->UpdateAggregatorMod(ActiveEffect.mHandle, Attribute, Spec, ActiveEffect.mHandle);
     }
+}
+
+void FActiveTacticalEffectsContainer::RestartActiveTacticalEffectDuration(FActiveTacticalEffect& ActiveTacticalEffect)
+{
+    ActiveTacticalEffect.mStartTime = GetWorldTime(ActiveTacticalEffect.GetDurationUnit());
 }
 
 /**
@@ -946,6 +1093,16 @@ int32 FActiveTacticalEffectsContainer::GetNumTacticalEffects() const
     }
 
     return mTacticalEffects.Num() + NumPending;
+}
+
+int32 FActiveTacticalEffectsContainer::GetWorldTime(ETacticalEffectDurationUnitType UnitType) const
+{
+    UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(mOwner.Get());
+    if (TacticalFrameworkModel == nullptr)
+    {
+        return INDEX_NONE;
+    }
+    return TacticalFrameworkModel->GetWorldTime(UnitType);
 }
 
 /**

@@ -495,7 +495,7 @@ FActiveTacticalEffectHandle UAttributeSetComponentModel::ApplyTacticalEffectSpec
  */
 void UAttributeSetComponentModel::ExecuteTacticalEffect(FTacticalEffectSpec& Spec)
 {
-    check(Spec.mIsInfinite == false); // 무한 이펙트는 즉시 실행 불가
+    checkf(Spec.GetDuration() == FTacticalEffectConstants::NO_DURATION, TEXT("즉발 이펙트만 가능"));
     mActiveAttributeEffects.ExecuteActiveEffectsFrom(Spec);
 }
 
@@ -545,6 +545,20 @@ const UTacticalEffect* UAttributeSetComponentModel::GetTacticalEffectDefForHandl
         return ActiveEffect->mSpec.mEffectClass;
     }
     return nullptr;
+}
+
+const FActiveTacticalEffect* UAttributeSetComponentModel::GetActiveTacticalEffect(const FActiveTacticalEffectHandle Handle) const
+{
+    return mActiveAttributeEffects.GetActiveTacticalEffect(Handle);
+}
+
+void UAttributeSetComponentModel::CheckDurationExpired(const int32 Time, ETacticalEffectDurationUnitType UnitType)
+{
+    mActiveAttributeEffects.CheckDurationExpired(Time, UnitType);
+}
+
+void UAttributeSetComponentModel::OnTacticalEffectDurationChange(FActiveTacticalEffect& ActiveEffect)
+{
 }
 
 /**

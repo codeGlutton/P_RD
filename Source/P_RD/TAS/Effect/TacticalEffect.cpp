@@ -17,12 +17,44 @@ void FTacticalEffectSpec::Initialize(const UTacticalEffect* Class, UTacticalEffe
 	mEffectClass = Class;
 	check(mEffectClass != nullptr);
 
-	// 지속 정책이 Infinite 이면 영구 이펙트로 표시(스택/주기 처리 분기에서 사용).
-	mIsInfinite = mEffectClass->mDurationPolicy == ETacticalEffectDurationType::Infinite;
-
 	SetContext(EffectContext);
 	// 모디파이어 개수만큼 평가 결과 값 버퍼를 미리 확보(인덱스가 mModifiers 와 1:1 대응).
-	mModifierValues.SetNum(mEffectClass->mModifiers.Num());
+	mModifiers.SetNum(mEffectClass->mModifiers.Num());
+}
+
+bool FTacticalEffectSpec::AttemptCalculateDurationFromDef(OUT int32& ResultDuration) const
+{
+	check(mEffectClass != nullptr);
+
+	bool IsCalculatedDuration = true;
+
+	const ETacticalEffectDurationType DurType = mEffectClass->mDurationPolicy;
+	if (DurType == ETacticalEffectDurationType::Infinite)
+	{
+		ResultDuration = FTacticalEffectConstants::INFINITE_DURATION;
+	}
+	else if (DurType == ETacticalEffectDurationType::Instant)
+	{
+		ResultDuration = FTacticalEffectConstants::NO_DURATION;
+	}
+	else
+	{
+		if (mEffectClass->mDurationMagnitude > 0)
+		{
+			ResultDuration = mEffectClass->mDurationMagnitude;
+		}
+		else
+		{
+			IsCalculatedDuration = false;
+		}
+	}
+
+	return IsCalculatedDuration;
+}
+
+void FTacticalEffectSpec::SetDuration(int32 NewDuration)
+{
+	mDuration = NewDuration;
 }
 
 void FTacticalEffectSpec::SetStackCount(int32 NewStackCount)
@@ -43,6 +75,11 @@ void FTacticalEffectSpec::SetInstigatorSnapshotData(UBoardCombatTargetSnapshotDa
 void FTacticalEffectSpec::SetTargetSnapshotData(UBoardCombatTargetSnapshotData* SnapshotData)
 {
 	mTargetSnapshotData = SnapshotData;
+}
+
+int32 FTacticalEffectSpec::GetDuration() const
+{
+	return mDuration;
 }
 
 int32 FTacticalEffectSpec::GetStackCount() const
@@ -66,13 +103,13 @@ UBoardCombatTargetSnapshotData* FTacticalEffectSpec::GetTargetSnapshotData() con
 
 void FTacticalEffectSpec::CalculateModifierMagnitudes()
 {
-	for (int32 ModIdx = 0; ModIdx < mModifierValues.Num(); ++ModIdx)
+	for (int32 ModIdx = 0; ModIdx < mModifiers.Num(); ++ModIdx)
 	{
 		const FTacticalModifierInfo& ModDef = mEffectClass->mModifiers[ModIdx];
-		float& ModifierValue = mModifierValues[ModIdx];
+		float& EvaluatedMagnitude = mModifiers[ModIdx];
 
 		// 정적 크기 x 동적 배율 = 스택 1개 기준 단일 모디파이어 크기.
-		ModifierValue = ModDef.mModifierMagnitude * mDynamicMagnitude;
+		EvaluatedMagnitude = ModDef.mModifierMagnitude * mDynamicMagnitude;
 	}
 }
 
@@ -83,10 +120,10 @@ void FTacticalEffectSpec::CalculateModifierMagnitudes()
  */
 float FTacticalEffectSpec::GetModifierMagnitude(int32 ModifierIdx) const
 {
-	check(mModifierValues.IsValidIndex(ModifierIdx) && mEffectClass != nullptr && mEffectClass->mModifiers.IsValidIndex(ModifierIdx));
+	check(mModifiers.IsValidIndex(ModifierIdx) && mEffectClass != nullptr && mEffectClass->mModifiers.IsValidIndex(ModifierIdx));
 
 	// CalculateModifierMagnitudes 가 캐시한 스택 1개 기준 단일 크기.
-	const float SingleEvaluatedMagnitude = mModifierValues[ModifierIdx];
+	const float SingleEvaluatedMagnitude = mModifiers[ModifierIdx];
 	float ModMagnitude = SingleEvaluatedMagnitude;
 	if (mEffectClass->mFactorInStackCount == true)
 	{
@@ -98,6 +135,37 @@ float FTacticalEffectSpec::GetModifierMagnitude(int32 ModifierIdx) const
 		ModMagnitude = TacticalEffectUtilities::ComputeStackedModifierMagnitude(SingleEvaluatedMagnitude, GetStackCount(), mEffectClass->mModifiers[ModifierIdx].mModifierOp);
 	}
 	return ModMagnitude;
+}
+
+const FTacticalEffectModifiedAttribute* FTacticalEffectSpec::GetModifiedAttribute(const FTacticalAttribute& Attribute) const
+{
+	for (const FTacticalEffectModifiedAttribute& ModifiedAttribute : mModifiedAttributes)
+	{
+		if (ModifiedAttribute.mAttribute == Attribute)
+		{
+			return &ModifiedAttribute;
+		}
+	}
+	return nullptr;
+}
+
+FTacticalEffectModifiedAttribute* FTacticalEffectSpec::GetModifiedAttribute(const FTacticalAttribute& Attribute)
+{
+	for (FTacticalEffectModifiedAttribute& ModifiedAttribute : mModifiedAttributes)
+	{
+		if (ModifiedAttribute.mAttribute == Attribute)
+		{
+			return &ModifiedAttribute;
+		}
+	}
+	return nullptr;
+}
+
+FTacticalEffectModifiedAttribute* FTacticalEffectSpec::AddModifiedAttribute(const FTacticalAttribute& Attribute)
+{
+	FTacticalEffectModifiedAttribute NewAttribute;
+	NewAttribute.mAttribute = Attribute;
+	return &mModifiedAttributes[mModifiedAttributes.Add(NewAttribute)];
 }
 
 /**
@@ -211,6 +279,19 @@ void UTacticalEffect::OnApplied(FActiveTacticalEffectsContainer& ActiveTEContain
 		if (GEComponent)
 		{
 			GEComponent->OnGameplayEffectApplied(ActiveTEContainer, TESpec);
+		}
+	}*/
+}
+
+void UTacticalEffect::OnReduceTimeRemaining(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const
+{
+	// GameplayEffectComponent 적용 콜백
+	// - GEComponent도 구현해둘까 고민중 by Mohojae
+	/*for (const UGameplayEffectComponent* GEComponent : GEComponents)
+	{
+		if (GEComponent)
+		{
+			GEComponent->OnGameplayEffectReduceTimeRemaining(ActiveTEContainer, TESpec);
 		}
 	}*/
 }

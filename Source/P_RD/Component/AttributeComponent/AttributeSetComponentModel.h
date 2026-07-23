@@ -247,6 +247,25 @@ public:
      */
     const UTacticalEffect* GetTacticalEffectDefForHandle(FActiveTacticalEffectHandle Handle);
 
+    /**
+     * @brief 활성 Effect 핸들에 대응하는 Active Effect 객체를 반환한다.
+     * @param Handle 조회할 활성 Effect 핸들.
+     * @return Active Effect 객체(없으면 nullptr).
+     */
+    const FActiveTacticalEffect* GetActiveTacticalEffect(const FActiveTacticalEffectHandle Handle) const;
+
+public:
+    /**
+     * @brief Duration 만기 체크
+     */
+    void CheckDurationExpired(const int32 Time, ETacticalEffectDurationUnitType UnitType);
+
+    /**
+     * @brief 활성 Effect이 Duration이 변경되었을 때 호출된다.
+     * @param ActiveEffect Duration이 변경된 Effect
+     */
+    virtual void OnTacticalEffectDurationChange(FActiveTacticalEffect& ActiveEffect);
+
     /* Tag 연관 */
 public:
     /**

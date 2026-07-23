@@ -269,9 +269,12 @@ private:
 
     /**
      * @brief 스택 수가 변할 때 호출되어 스택 의존 모디파이어 크기를 갱신한다.
-     * @details MultiplyCompound 등 스택에 따라 크기가 달라지는 연산의 재계산 트리거.
      */
     void OnStackCountChange(FActiveTacticalEffect& ActiveEffect, int32 OldStackCount, int32 NewStackCount);
+    /**
+     * @brief 기간이 변할 때 호출되어 대리자를 호출한다.
+     */
+    void OnDurationChange(FActiveTacticalEffect& ActiveEffect);
 
     /* 속성 값 변화 */
 public:
@@ -319,6 +322,12 @@ public:
      */
     FOnChangeAttributeValue& GetTacticalAttributeValueChangeDelegate(FTacticalAttribute Attribute);
 
+public:
+    /**
+     * @brief 라운드 만기 체크
+     */
+    void CheckDurationExpired(const int32 Time, const ETacticalEffectDurationUnitType UnitType);
+
 private:
     // @brief 활성 이펙트가 추가 확정된 직후의 내부 후속 처리(태그/모디파이어 등록 등)
     void InternalOnActiveTacticalEffectAdded(FActiveTacticalEffect& Effect);
@@ -360,6 +369,9 @@ private:
      */
     void UpdateAggregatorModMagnitudes(const TSet<FTacticalAttribute>& AttributesToUpdate, FActiveTacticalEffect& ActiveEffect);
 
+private:
+    void RestartActiveTacticalEffectDuration(FActiveTacticalEffect& ActiveTacticalEffect);
+
 public:
     // @brief 핸들로 활성 이펙트를 조회(없으면 nullptr) — 가변 버전
     FActiveTacticalEffect* GetActiveTacticalEffect(const FActiveTacticalEffectHandle Handle);
@@ -372,6 +384,9 @@ public:
 
     // @brief 현재 활성 이펙트 개수 반환
     int32 GetNumTacticalEffects() const;
+
+    // @brief 현재 타임 반환
+    int32 GetWorldTime(ETacticalEffectDurationUnitType UnitType) const;
 
 private:
     // @brief 스펙과 스택 조건이 일치하는 기존 활성 이펙트를 찾는다(스택 합치기용).

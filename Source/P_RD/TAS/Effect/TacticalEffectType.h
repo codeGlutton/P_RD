@@ -9,98 +9,92 @@
 #include "AttributeSet/AttributeSetMinimal.h"
 #include "TacticalEffectType.generated.h"
 
-// 전방 선언: 헤더 의존을 줄이기 위해 포인터/참조로만 사용되는 타입들을 미리 선언한다.
-class UTacticalEffectContext;  // 이펙트 적용 컨텍스트(가해자/대상 등 메타데이터)
-struct FActiveTacticalEffect;  // 현재 활성화된 이펙트 인스턴스(지속/스택 추적용)
+class UTacticalEffectContext;
+struct FActiveTacticalEffect;
 
 /**
  * @brief 이펙트 스택(중첩) 집계 방식.
- * @details 동일 이펙트가 여러 번 적용될 때 무엇을 키로 삼아 스택을 합칠지 결정한다.
- *          - None: 스택하지 않음(매번 독립 인스턴스).
- *          - AggregateBySource: 가해자(Source)별로 스택을 합산.
- *          - AggregateByTarget: 대상(Target)별로 스택을 합산.
  */
 UENUM()
 enum class ETacticalEffectStackingType : uint8
 {
-	None UMETA(DisplayName = "No Stacking"),
+	None								UMETA(DisplayName = "No Stacking", ToolTip = "스택이 누적되지 않음"),
 
-	AggregateBySource UMETA(DisplayName = "Stack Per Source"),
-	AggregateByTarget UMETA(DisplayName = "Stack Per Target"),
+	AggregateBySource					UMETA(DisplayName = "Stack Per Source", ToolTip = "소스 ASC마다 스택 누적"),
+	AggregateByTarget					UMETA(DisplayName = "Stack Per Target", ToolTip = "타겟 ASC마다 스택 누적"),
 };
 
 /**
- * @brief 이펙트 지속 종류.
- * @details - Instant: 즉발(BaseValue를 즉시 영구 변경, 적용 후 사라짐).
- *          - Infinite: 무한 지속(명시적으로 제거되기 전까지 모디파이어로 유지).
+ * @brief 이펙트 지속 종류
  */
 UENUM()
 enum class ETacticalEffectDurationType : uint8
 {
-	Instant,
-	Infinite,
+	Instant								UMETA(ToolTip = "즉발이후 소멸"),
+	Duration							UMETA(ToolTip = "일단 단위 기간 지속 후 소멸"),
+	Infinite							UMETA(ToolTip = "인위적으로 해제 명령 전까지 무한 지속"),
 };
 
 /**
- * @brief 속성 수정자(Modifier) 연산 종류 — 구 GAS의 EGameplayModOp를 대체하는 자체 enum.
- *
+ * @brief 이펙트 지속이 Duration으로 설정될 경우, 기간 단위
+ */
+UENUM()
+enum class ETacticalEffectDurationUnitType : uint8
+{
+	EveryTurn							UMETA(ToolTip = "매 턴 단위"),
+	EveryRound							UMETA(ToolTip = "매 라운드 단위"),
+};
+
+/**
+ * @brief 스택킹될 경우, Effect의 Duration 변화 정책
+ */
+UENUM()
+enum class ETacticalEffectStackingDurationPolicy : uint8
+{
+	RefreshOnSuccessfulApplication		UMETA(ToolTip = "새로운 Duration으로 덮어쓰기"),
+	NeverRefresh						UMETA(ToolTip = "초기 Duration으로만 작동하고, 변화없음"),
+	ExtendDuration						UMETA(ToolTip = "누적될때마다 Duration 더하기"),
+};
+
+/**
+ * @brief 스택킹될 경우, Effect의 Duration 만기 정책
+ */
+UENUM()
+enum class ETacticalEffectStackingExpirationPolicy : uint8
+{
+	ClearEntireStack					UMETA(ToolTip = "모든 스택 지우기"),
+	RemoveSingleStackAndRefreshDuration	UMETA(ToolTip = "단일 스택 지우고 Duration 초기화"),
+	RefreshDuration						UMETA(ToolTip = "스택 변경 없이 Duration만 초기화"),
+};
+
+/**
+ * @brief 속성 수정자(Modifier) 연산 종류
  * @details
- * [마이그레이션 배경]
- * 본 PR(#191)은 GAS 폐기 작업의 일부로, 이펙트 모디파이어의 "연산 종류"를 가리키던
- * 엔진 제공 enum EGameplayModOp를 프로젝트 자체 enum ETacticalModOp로 치환한다.
- * 이펙트 시스템 전반(이펙트 데이터/Aggregator/적용 로직)이 이 enum 값을 참조하므로,
- * 단순 이름 교체가 아니라 "값 호환성"을 반드시 유지해야 한다.
- *
- * [정수 값을 구 EGameplayModOp와 동일하게 유지하는 이유 — 3가지]
- *  (1) 직렬화 호환: 기존 .uasset 에셋과 세이브 파일에는 모디파이어 연산이 "정수 값"으로
- *      박혀 있다. 새 enum의 정수 값이 달라지면 기존 데이터의 의미가 어긋나므로 값을 보존한다.
- *  (2) Aggregator 배열 인덱싱: Aggregator는 mMods[ETacticalModOp::Max] 형태로 op 값을 그대로
- *      배열 인덱스로 사용한다. 따라서 값은 0..(Max-1) 범위의 연속/안정 인덱스여야 한다.
- *  (3) CoreRedirect 매핑: DefaultEngine.ini의 CoreRedirect가 구 enum "이름"을 새 enum 이름으로
- *      매핑한다. 값까지 같아야 리다이렉트 후에도 기존 데이터가 동일 연산으로 해석된다.
- *
- * [모디파이어 적용 수식 — op 순서대로 누적]
- *   FinalValue = ((BaseValue + AddBase) * MultiplyAdditive / DivideAdditive * MultiplyCompound) + AddFinal
- *   - AddBase(0)          : BaseValue에 직접 합산되는 기저 보정(합산계열, 항등값 0).
- *   - MultiplyAdditive(1) : 배율을 "가산"으로 누적(예: +0.1 두 개면 *1.2). 곱셈계열, 항등값 1.
- *   - DivideAdditive(2)   : 나눗셈 배율을 가산으로 누적. 곱셈계열, 항등값 1.
- *   - Override(3)         : 위 계산을 무시하고 값을 통째로 덮어쓴다(최우선 단일값).
- *   - MultiplyCompound(4) : 배율을 "곱셈(거듭제곱)"으로 누적(스택 시 base^StackCount). 곱셈계열, 항등값 1.
- *   - AddFinal(5)         : 모든 곱/나눗셈 이후 최종 단계에서 합산되는 보정. 합산계열, 항등값 0.
- *   - Max(6)              : 유효 연산 개수 = 무효(Invalid) 센티넬. 배열 크기/경계 검사용.
- *
- * @note 값 6(=Max)은 실제 연산이 아니라 "연산 개수/무효" 표식이다. mMods 배열 크기로 쓰이며,
- *       이 값으로 인덱싱하면 안 된다(out-of-range).
+ * 
+ * FinalValue = Override || (((BaseValue + AddBase) * MultiplyAdditive / DivideAdditive * MultiplyCompound) + AddFinal)
+ * 같은 op의 Effect는 누적되고, 각 누적된 op는 위 공식으로 Attribute 값을 최종 계산해낸다.
+ * 
+ * AddBase(0)          : BaseValue에 직접 합산되는 기저 보정(합산계열, 항등값 0).
+ * MultiplyAdditive(1) : 배율을 "가산"으로 누적(예: +0.1 두 개면 *1.2). 곱셈계열, 항등값 1.
+ * DivideAdditive(2)   : 나눗셈 배율을 가산으로 누적. 곱셈계열, 항등값 1.
+ * Override(3)         : 위 계산을 무시하고 값을 통째로 덮어쓴다(최우선 단일값).
+ * MultiplyCompound(4) : 배율을 "곱셈(거듭제곱)"으로 누적(스택 시 base^StackCount). 곱셈계열, 항등값 1.
+ * AddFinal(5)         : 모든 곱/나눗셈 이후 최종 단계에서 합산되는 보정. 합산계열, 항등값 0.
+ * Max(6)              : 단순 열거형 최대 값 표기용. 사용하지 말 것.
  */
 UENUM(BlueprintType)
 namespace ETacticalModOp
 {
 	enum Type : int
 	{
-		// 값 0: BaseValue에 직접 더하는 기저 합산. (구 EGameplayModOp::Additive 자리)
 		AddBase				UMETA(DisplayName = "Add (Base)"),
-		// 값 1: 배율을 가산식으로 누적하는 곱셈. (구 EGameplayModOp::Multiplicitive 자리)
 		MultiplyAdditive	UMETA(DisplayName = "Multiply (Additive)"),
-		// 값 2: 나눗셈 배율을 가산식으로 누적. (구 EGameplayModOp::Division 자리)
 		DivideAdditive		UMETA(DisplayName = "Divide (Additive)"),
-
-		// 값 3은 Override가 차지하므로(아래 별칭 참조) 여기서는 건너뛰고 값 4를 명시 고정한다.
-		// 값 4: 배율을 곱셈(거듭제곱)으로 누적 — 스택 시 base^StackCount.
-		MultiplyCompound = 4 UMETA(DisplayName = "Multiply (Compound)"),
-
-		// 값 5: 모든 곱/나눗셈 이후 최종 단계의 합산 보정.
+		Override			UMETA(DisplayName = "Override"),
+		MultiplyCompound	UMETA(DisplayName = "Multiply (Compound)"),
 		AddFinal			UMETA(DisplayName = "Add (Final)"),
-		// 값 6: 유효 연산 개수이자 무효 센티넬. mMods[ETacticalModOp::Max]의 배열 크기로 사용.
-		Max					UMETA(Hidden, DisplayName = "Invalid"),
 
-		// ── 하위호환 별칭(구 EGameplayModOp와 "동일 정수 값") ────────────────────────
-		// 구 GAS 시절의 enum 이름을 그대로 컴파일/리다이렉트되게 하기 위한 별칭이다.
-		// 같은 값을 가리키므로 신규 이름과 완전히 상호 교환 가능하다.
-		Additive = 0		UMETA(Hidden),  // == AddBase
-		Multiplicitive = 1	UMETA(Hidden),  // == MultiplyAdditive (구 GAS 철자 오타까지 보존)
-		Division = 2		UMETA(Hidden),  // == DivideAdditive
-		// 값 3: 덮어쓰기. 별칭이지만 신규 enum에 대응 항목이 없어 이 이름이 정식으로 노출된다.
-		Override = 3		UMETA(DisplayName = "Override"),
+		Max					UMETA(Hidden, DisplayName = "Invalid"),
 	};
 }
 

@@ -118,6 +118,10 @@ public:
     UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RequiredMovement"))
     int32 mRequiredMovement;
 
+    // @brief 쿨다운까지 필요한 턴 수
+    UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "CooldownTurn"))
+    int32 mCooldownTurn;
+
     // @brief 하나의 스킬 내에서 적용하는 단일 처리 단위의 TArray 묶음 (1개 : 단타, N개 : 연타)
     UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillMotionLayers"))
     TArray<FSkillMotionLayer> mSkillMotionLayers;

@@ -116,11 +116,11 @@ void UBoardActorModel::OnEndRoom()
 {
 }
 
-void UBoardActorModel::OnBeginRound()
+void UBoardActorModel::OnBeginRound(int32 RoundCount)
 {
 }
 
-void UBoardActorModel::OnEndRound()
+void UBoardActorModel::OnEndRound(int32 RoundCount)
 {
 }
 

@@ -150,7 +150,7 @@ void USRPGTurnContext::BeginTurn()
 		GetWorldEventLogger(this)->BeginTurnLog(mOwner->GetModelId(), mOwner->GetClass());
 
 		// 유닛 턴 시작 단계
-		mOwner->OnBeginTurn();
+		mOwner->OnBeginTurn(CombatModel->GetTurnCount());
 
 		// 전투 상태 평가
 		CombatModel->EvaluateCombatStates();
@@ -198,11 +198,13 @@ void USRPGTurnContext::EndTurn()
 
 	UPassiveComponentModel* PassiveComponentModel = mOwner->GetPassiveComponentModel();
 	checkf(PassiveComponentModel != nullptr, TEXT("패시브 컴포넌트 nullptr"));
+	USRPGCombatModel* CombatModel = mParent.Get();
+	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 
 	UE_LOG(LogSRPGCombat, Log, TEXT("턴 종료"));
 
 	// 유닛 턴 종료 단계
-	mOwner->OnEndTurn();
+	mOwner->OnEndTurn(CombatModel->GetTurnCount());
 
 	// 로그 작성
 	GetWorldEventLogger(this)->EndTurnLog();
