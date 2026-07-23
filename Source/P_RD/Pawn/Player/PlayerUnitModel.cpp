@@ -14,6 +14,8 @@
 
 #include "Dice/DicePoolModel.h"
 
+#include "Component/ArtifactComponent/ArtifactComponentModel.h"
+
 UPlayerUnitModel::UPlayerUnitModel()
 {
     SetGenericTeamId(EGameTeamType::Adventurer);
@@ -22,6 +24,9 @@ UPlayerUnitModel::UPlayerUnitModel()
     mLevelAttributeSet = CreateDefaultSubobject<ULevelAttributeSet>(TEXT("LevelAttributeSet"));
 
     mDicePool = CreateDefaultSubobject<UDicePoolModel>(TEXT("DiceComp"));
+
+    // 아티펙트 컴포넌트 모델 등록
+    mArtifactCompModel = CreateDefaultSubobject<UArtifactComponentModel>(TEXT("ArtifactComponentModel"));
 }
 
 void UPlayerUnitModel::PostInitializeComponentModels()
@@ -76,4 +81,9 @@ bool UPlayerUnitModel::IsPlayerUnitModel() const
 UDicePoolModel* UPlayerUnitModel::GetDicePoolModel() const
 {
     return mDicePool;
+}
+
+UArtifactComponentModel* UPlayerUnitModel::GetArtifactComponentModel() const
+{
+    return mArtifactCompModel;
 }

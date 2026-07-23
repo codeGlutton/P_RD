@@ -16,6 +16,7 @@
 
 class UPlayerUnitModel;
 class UDicePoolModel;
+class UArtifactComponentModel;
 
 class UPlayerUnitAttributeSet;
 class ULevelAttributeSet;
@@ -52,6 +53,9 @@ public:
 	/** @brief 플레이어 보유 주사위 컴포넌트입니다. 적은 주사위가 없어 AUnit이 아닌 APlayerUnit에 둡니다. */
 	UDicePoolModel* GetDicePoolModel() const;
 
+	/** @brief 아티펙트 컴포넌트입니다. 아티펙트는 용병 전용이라 적 유닛 공통 베이스가 아닌 플레이어 유닛에 둡니다. */
+	UArtifactComponentModel* GetArtifactComponentModel() const;
+
 public:
 	FOnChangePlayerLevel OnChangePlayerLevel;
 
@@ -67,6 +71,10 @@ private:
 	/** @brief 런타임 보유 주사위 묶음. 전투 HUD는 이 객체를 직접 소유하지 않고 어댑터를 통해 읽는다. */
 	UPROPERTY(Category = Dice, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "DiceComp"))
 	TObjectPtr<UDicePoolModel> mDicePool;
+
+	/** @brief 아티펙트 컴포넌트 모델 */
+	UPROPERTY(Category = Artifact, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "ArtifactCompModel"))
+	TObjectPtr<UArtifactComponentModel> mArtifactCompModel;
 
 protected:
 	UPROPERTY(Category = Attribute, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PlayerLevel"))
