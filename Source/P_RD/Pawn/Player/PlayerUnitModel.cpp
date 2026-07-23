@@ -12,12 +12,17 @@
 #include "AttributeSet/LevelAttributeSet.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
+#include "Component/ArtifactComponent/ArtifactComponentModel.h"
+
 UPlayerUnitModel::UPlayerUnitModel()
 {
     SetGenericTeamId(EGameTeamType::Adventurer);
     
     mUnitAttributeSet = CreateDefaultSubobject<UPlayerUnitAttributeSet>(TEXT("PlayerUnitAttributeSet"));
     mLevelAttributeSet = CreateDefaultSubobject<ULevelAttributeSet>(TEXT("LevelAttributeSet"));
+
+    // 아티펙트 컴포넌트 모델 등록
+    mArtifactCompModel = CreateDefaultSubobject<UArtifactComponentModel>(TEXT("ArtifactComponentModel"));
 }
 
 void UPlayerUnitModel::PostInitializeComponentModels()
@@ -67,4 +72,9 @@ int32 UPlayerUnitModel::GetDifficulty() const
 bool UPlayerUnitModel::IsPlayerUnitModel() const
 {
     return true;
+}
+
+UArtifactComponentModel* UPlayerUnitModel::GetArtifactComponentModel() const
+{
+    return mArtifactCompModel;
 }
