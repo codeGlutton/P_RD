@@ -14,14 +14,25 @@
 class ACombatCameraPlane;
 
 
-// @brief 카메라 강조 Handle
+/*
+* @brief 카메라 강조 상태 
+* @details
+* 기본 상태 -> 강조 중 -> 강조 해제 중 -> 기본 상태 
+* 기본 상태 -> 강조 중 -> 강조 해제 중 -> 강조 중 도 가능
+*/
 UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
 enum class ECameraControlState : uint8
 {
-	Normal,
-	Emphasis
+	Normal,					// 기본 상태
+	Emphasis,				// 강조 중
+	Emphasis_Returning,		// 강조 해제 중
 };
 
+/*
+* @brief 카메라 강조 중 정보 저장용
+* @details
+* 카메라 강조 중 이전 카메라 위치, zoom 상태를 저장하기 위해 만든 구조체
+*/
 struct FCameraEmphasisState
 {
 	FVector		Position;
@@ -30,9 +41,6 @@ struct FCameraEmphasisState
 
 class UCameraComponent;
 class USpringArmComponent;
-
-//@note Raycast 시 충돌 판정에 관하여 아직 정해진 것이 없습니다.
-// 추후 입력을 넣어서 작동하게 될 때 문제가 생기면 고쳐나가도록 하겠습니다.
 
 //@note Raycast 시 끝 거리는 우선 하드 코딩해놨습니다.
 // 전투 시 카메라의 위치 해당 거리를 벗어나지는 않을 것이라고 판단되어 그냥 큰 값을 넣었습니다.
@@ -56,7 +64,6 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 protected:
-
 	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "CameraComponent", AllowPrivateAccess = "true"))
 	TWeakObjectPtr<UCameraComponent> mCameraComponent;
 
@@ -133,20 +140,25 @@ protected:
 	FVector2D mMoveClampingBox = FVector2D(10000, 10000);
 
 	/*
-	* @brief 이동 시 걸리는 시간
+	* @brief 이동 속도
 	* @details
-	* 터치로 이동 시 걸리는 시간
+	* Smoooth 이동 시 속도
+	* 1 / MoveSmoothSpeed -> 0.5초
 	*/
 	UPROPERTY(Category = CameraMove, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SmoothMoveDuration", AllowPrivateAccess = "true"))
-	float mMoveDuration = 0.75f; // 이동에 걸릴 시간
+	float mMoveSpeed = 2.f; // 이동 속도 
 
-	/*
-	* @brief 가속도 강도
-	*/
-	UPROPERTY(Category = CameraMove, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SmoothMoveExp", AllowPrivateAccess = "true"))
-	float mMoveExp = 2.f;
+	///*
+	//* @brief 가속도 강도
+	//*/
+	//UPROPERTY(Category = CameraMove, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SmoothMoveExp", AllowPrivateAccess = "true"))
+	//float mMoveExp = 2.f;
 
-	FVector2D mEndLocation;				// 종료 위치
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "카메라 현재 위치", AllowPrivateAccess = "true"))
+	FVector2D mCurCameraLocation;				// 천천히 움직였을 때 목표 위치
+
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "카메라 최종 위치", AllowPrivateAccess = "true"))
+	FVector2D mTargetLocation;				// 천천히 움직였을 때 목표 위치
 	
 
 protected:
@@ -178,12 +190,27 @@ protected:
 	* @details
 	*/
 	FCameraEmphasisState mPreDefaultState;
+private:
+	bool mInitCameraLocation = false;
 
-protected:
-	/* 카메라 흔들기 */
-	UPROPERTY(Category = Shake, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "카메라 흔들림", AllowPrivateAccess = "true"))
-	TMap<FGameplayTag, TSubclassOf<class UCameraShakeBase>> mCameraShakeClass;
+private:
+	/*
+	* @brief mTargetLocation을 초기화합니다.
+	* @details Plane 생성 후 현재 위치에서 Ray를 쏘아 mTargetLocation을 초기화합니다.
+	*/
+	void InitializeCameraTargetLocation();
 
+	/*
+	* @brief 카메라가 있는 위치를 기준으로 Ray를 쏘고 결과를 받습니다.
+	* @param HitResult 결과를 반환합니다.
+	* @return 성공 여부를 반환합니다.
+	*/
+	bool GetCameraRayHitPoint(OUT FHitResult& HitResult);
+
+	/*
+	* @brief 카메라의 위치와 OrthoWidth의 크기를 범위에서 벗어나지 못하게 합니다.
+	*/
+	void ClampingCamera();
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -225,7 +252,8 @@ public:
 
 	/*
 	* @brief ZoomDelta과 ViewPort 위치 값을 받으면 해당 위치로 Zoom하며 ViewPortPos에 맞는 위치로 이동합니다
-	*
+	* @details 
+	* Pinch 조작 시 확대 및 이동에 사용합니다.
 	* @param ZoomDelta 만큼 즉시 Zoom 합니다
 	* @param ViewPortPos를 WorldPos로 변환하고 즉시 이동합니다.
 	*/
@@ -260,7 +288,7 @@ public:
 
 	/*
 	* @brief ViewPortPos로 카메라의 시선을 즉시 옮긴다.
-	* @defatils
+	* @details
 	* ViewPortPos에서 Ray를 쏜다음 충돌한 위치로 카메라의 시선을 천천히 옮깁니다.
 	* @param ViewPortPos에서 Ray를 쏜 다음 충돌한 위치로 카메라의 시선 천천히 옮깁니다.
 	*/
@@ -296,6 +324,7 @@ public:
 	* @brief CurViewPortPos로 카메라의 시선을 즉시 옮긴다.
 	* @defatils
 	* PreViewPortPos, CurViewPortPos에서 Ray를 쏜 다음 위치 차이를 구하여 카메라의 시선을 즉시 옮깁니다.
+	* Drag로 화면을 이동시킬 때 사용합니다.
 	* @param CurViewPortPos 카메라의 시선을 즉시 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
@@ -305,11 +334,17 @@ public:
 private:
 	/* 
 	* @brief 이동 시 매 틱마다 호출하는 함수
+	* @details 
+	* 카메라의 위치를 TargetLocation으로 부드럽게 이동시킵니다.
+	* 틱에서 호출됩니다.
 	*/
 	void MoveSmooth(float DeltaTime);
 
 	/*
 	* @brief 줌 시 매 틱마다 호출하는 함수
+	* @details 
+	* 카메라의 zoom을 mEndZoom으로 부드럽게 변경시킵니다.
+	* 타이머로 호출합니다.
 	*/
 	void ZoomSmooth();
 
@@ -366,24 +401,18 @@ public:
 
 private:
 	/* 강조 기능 : private */
+
+	/*
+	* @brief 강조 상태에서 EmphasisActor가 존재한다면 TargetLocation을 조정합니다.
+	* @details
+	* 틱에서 호출되며 유닛의 위치를 매 틱마다 따라갈 수 있도록 TargetLocation을 조정하는 함수입니다.
+	*/
 	void FollowActor();
 
 public:
 	/* 카메라 셰이크*/
 
 	UFUNCTION(BlueprintCallable)
-	void StartCameraShake(FGameplayTag Tag);
-
-
-private:
-	 
-	/*
-	* @brief 카메라가 있는 위치를 기준으로 Ray를 쏘고 결과를 받습니다.
-	* @param HitResult 결과를 반환합니다.
-	* @return 성공 여부를 반환합니다.
-	*/
-	bool GetCameraRayHitPoint(OUT FHitResult& HitResult);
-
-	void ClampingCamera();
+	void StartCameraShake(TSubclassOf<class UCameraShakeBase> CameraShakeClass);
 
 };
