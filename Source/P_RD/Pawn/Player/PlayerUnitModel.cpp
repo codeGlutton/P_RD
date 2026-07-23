@@ -12,8 +12,6 @@
 #include "AttributeSet/LevelAttributeSet.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
-#include "Dice/DicePoolModel.h"
-
 #include "Component/ArtifactComponent/ArtifactComponentModel.h"
 
 UPlayerUnitModel::UPlayerUnitModel()
@@ -22,8 +20,6 @@ UPlayerUnitModel::UPlayerUnitModel()
     
     mUnitAttributeSet = CreateDefaultSubobject<UPlayerUnitAttributeSet>(TEXT("PlayerUnitAttributeSet"));
     mLevelAttributeSet = CreateDefaultSubobject<ULevelAttributeSet>(TEXT("LevelAttributeSet"));
-
-    mDicePool = CreateDefaultSubobject<UDicePoolModel>(TEXT("DiceComp"));
 
     // 아티펙트 컴포넌트 모델 등록
     mArtifactCompModel = CreateDefaultSubobject<UArtifactComponentModel>(TEXT("ArtifactComponentModel"));
@@ -76,11 +72,6 @@ int32 UPlayerUnitModel::GetDifficulty() const
 bool UPlayerUnitModel::IsPlayerUnitModel() const
 {
     return true;
-}
-
-UDicePoolModel* UPlayerUnitModel::GetDicePoolModel() const
-{
-    return mDicePool;
 }
 
 UArtifactComponentModel* UPlayerUnitModel::GetArtifactComponentModel() const

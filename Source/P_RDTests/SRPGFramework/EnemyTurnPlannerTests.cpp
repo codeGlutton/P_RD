@@ -79,11 +79,11 @@ namespace
 	{
 		UStaticSkillData* Skill = NewObject<UStaticSkillData>(World);
 		Skill->mAimPattern = AimPattern;
-		Skill->mAimRangeDefaultValue = AimRange;
+		Skill->mAimRange = AimRange;
 		Skill->mCanAimBoardActor = true;
 		Skill->mIsIndirect = false;
 		Skill->mEffectPattern = EEffectPattern::Single;
-		Skill->mEffectAreaDefaultValue = 0;
+		Skill->mEffectArea = 0;
 		Skill->mIsPenetration = false;
 		Skill->AddToRoot();
 		KeepAlive.Add(Skill);
@@ -122,7 +122,6 @@ namespace
 		Enemy->BeginPlay();
 		Enemy->SetMoveTendency(Tendency);
 		Enemy->GetAttributeComponentModel()->ApplyModToAttribute(UEnemyUnitAttributeSet::GetMovementAttribute(), ETacticalModOp::Override, MoveRange);
-		Enemy->GetAttributeComponentModel()->ApplyModToAttribute(UEnemyUnitAttributeSet::GetRechargeDiceSumAttribute(), ETacticalModOp::Override, 0);
 
 		// 스킬 추가: 일반공격 계열
 		Enemy->GetSkillComponentModel()->SetSkill(0, MakeSkill(World, KeepAlive, AimPattern, AimRange));

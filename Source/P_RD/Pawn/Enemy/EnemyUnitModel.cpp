@@ -14,9 +14,6 @@
 #include "DataAsset/SkillData/StaticSkillData.h"
 
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
-#include "TAS/Effect/Stat/TacticalEffect_Movement.h"
-#include "TAS/Effect/Stat/TacticalEffect_MovementFactor_AddBase.h"
-#include "TAS/Effect/TacticalEffectContext.h"
 
 UEnemyUnitModel::UEnemyUnitModel()
 {
@@ -51,50 +48,6 @@ void UEnemyUnitModel::PostInitializeComponentModels()
 				SkillComp->SetSkill(SkillIndex++, Loaded);
 			}
 		}
-	}
-}
-
-void UEnemyUnitModel::OnBeginTurn()
-{
-	Super::OnBeginTurn();
-
-	/* 자기 자신에게 MovePoint 부여 */
-
-	UAttributeSetComponentModel* OwingAttributeSetComponentModel = GetAttributeComponentModel();
-	checkf(OwingAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
-
-	const int32 DefaultMovePoint = FMath::Max(
-		OwingAttributeSetComponentModel->GetAttributeCurrentValue(UEnemyUnitAttributeSet::GetRechargeMovementAttribute()), 
-		0
-	);
-
-	UTacticalEffectContext* EffectContext = OwingAttributeSetComponentModel->MakeEffectContext();
-	EffectContext->SetInstigator(this);
-	EffectContext->SetAttributeSetComponentModel(OwingAttributeSetComponentModel);
-
-	FActiveTacticalEffectHandle FactorHandle;
-	{
-		/* 기본 Move 만큼 Factor 부여 */
-
-		TSharedPtr<FTacticalEffectSpec> EffectSpec = OwingAttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_MovementFactor_AddBase::StaticClass(), EffectContext);
-		EffectSpec->mDynamicMagnitude = DefaultMovePoint;
-		FactorHandle = OwingAttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
-	}
-
-	{
-		/* MovePoint 습득 */
-
-		UBoardCombatTargetSnapshotData* OwingSnapshot = MakeSnapshotData();
-		TSharedPtr<FTacticalEffectSpec> EffectSpec = OwingAttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_GetMovement::StaticClass(), EffectContext);
-		EffectSpec->SetInstigatorSnapshotData(OwingSnapshot);
-		EffectSpec->SetTargetSnapshotData(OwingSnapshot);
-		OwingAttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
-	}
-
-	{
-		/* 기본 Move 만큼 Factor 제거 */
-
-		OwingAttributeSetComponentModel->RemoveActiveTacticalEffect(FactorHandle);
 	}
 }
 

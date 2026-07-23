@@ -91,22 +91,28 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	const FTileIndex Origin = Enemy->GetTileTransform().mIndex;
 	const FTileIndex PlayerTile = Player->GetTileTransform().mIndex;
 
-	// 습득한 이동포인트만큼 이동 가능
-	const int32 MoveRange = FMath::Max(
+	// 습득한 이동포인트만큼 최대 이동 가능
+	const int32 MaxMoveRange = FMath::Max(
 		AttributeSetComp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementAttribute()),
 		0
 	);
-
-	// 주사위 합
-	const float DiceSum = AttributeSetComp->GetAttributeCurrentValue(UEnemyUnitAttributeSet::GetRechargeDiceSumAttribute());
+	// 스킬 사용비용을 제외한 이동포인트만큼 최소 이동 가능
+	const int32 MinMoveRange = FMath::Max(
+		MaxMoveRange - Skill->mRequiredMovement,
+		0
+	);
 
 	// 조준거리
-	// @note 몹은 주사위가 없어 DiceSum=0 → 사거리는 기본값(mAimRangeDefaultValue) 그대로
-	const int32 AimRange = Skill->mAimRangeDefaultValue + Skill->mAimRangeRatio * DiceSum;
+	const int32 AimRange = Skill->mAimRange;
 
 	// 목적지 결정 (이동 성향 기반)
 	bool CanCast = false;
-	const FTileIndex Dest = ChooseDestination(Origin, PlayerTile, MoveRange, AimRange, Skill, TileMap, Enemy->GetMoveTendency(), Enemy, OUT CanCast);
+	FTileIndex Dest = ChooseDestination(Origin, PlayerTile, MinMoveRange, AimRange, Skill, TileMap, Enemy->GetMoveTendency(), Enemy, OUT CanCast);
+	if (CanCast == false)
+	{
+		bool CanCastDummy = false;
+		Dest = ChooseDestination(Origin, PlayerTile, MaxMoveRange, AimRange, Skill, TileMap, Enemy->GetMoveTendency(), Enemy, OUT CanCastDummy);
+	}
 
 	/**
 	 * @brief 이동커맨드 생성 여부 판단 및 생성
@@ -142,7 +148,6 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		FSRPGSkillCastCommand& CastRef = Cast.GetMutable<FSRPGSkillCastCommand>();
 		CastRef.mSkillIndex = SkillIndex;
 		CastRef.mTargetIndex = PlayerTile;
-		CastRef.mDiceSum = DiceSum;
 		AddAction(MoveTemp(Cast));
 	}
 

@@ -35,8 +35,4 @@ public:
 public:
 	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "JobType"))
 	EPlayerJobType mJobType = EPlayerJobType::None;
-
-public:
-	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceDatas", AssetBundles = "PAD"))
-	TArray<TSoftObjectPtr<UStaticDiceData>> mDiceDatas;
 };

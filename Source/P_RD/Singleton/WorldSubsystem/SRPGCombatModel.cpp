@@ -275,9 +275,6 @@ USRPGTurnContext* USRPGCombatModel::RegisterTurn(UUnitModel* Owner, int32 LifeCo
 {
 	USRPGTurnContext* TurnContext = NewObject<USRPGTurnContext>(this);
 	TurnContext->InitTurn(this, Owner, mTurnContextMaxIndex++, LifeCount);
-	TurnContext->OnShowDicePanelAtTurnStartUI.AddWeakLambda(this, [this](const USRPGTurnContext* TurnContext) {
-		OnShowDicePanelAnyTurnUI.Broadcast(TurnContext);
-		});
 	TurnContext->OnBeginTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext) {
 		OnBeginAnyTurnUI.Broadcast(Barrier, TurnContext);
 		});

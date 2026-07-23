@@ -3,7 +3,6 @@
 
 #include "Pawn/Player/PlayerUnitModel.h"
 
-#include "Dice/DicePoolModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Component/EquipmentComponent/EquipmentComponentModel.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
@@ -15,7 +14,6 @@
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
 #include "DataAsset/EquipmentData/StaticEquipmentData.h"
-#include "DataAsset/DiceData/StaticDiceData.h"
 
 #include "FunctionLibrary/RandomStreamFunctionLibrary.h"
 
@@ -182,13 +180,6 @@ void UPlayerUnitPersistData::SyncPlayerPersistData(UPlayerUnitModel* PlayerUnit)
 	{
 		EquipmentComponentModel->EquipFrom(GetEquipmentIds());
 	}
-
-	// 플레이어 주사위 동기화
-	UDicePoolModel* DicePoolModel = PlayerUnit->GetDicePoolModel();
-	if (DicePoolModel != nullptr)
-	{
-		DicePoolModel->BuildFromDiceIds(GetDiceIds());
-	}
 }
 
 /**
@@ -231,7 +222,6 @@ void UPlayerUnitPersistData::BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit)
 	 SkillComponentModel->OnChangeSkillUI.AddUObject(this, &UPlayerUnitPersistData::OnChangePlayerSkill);
 
 	 // TODO: 장비 변경 시 대리자에 바인딩. 이걸로 영구 데이터도 동기화
-	 // TODO: 주사위 변경 시 대리자에 바인딩. 이걸로 영구 데이터도 동기화
 }
 
 void UPlayerUnitPersistData::OnChangePlayerSkill(int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData)
@@ -329,17 +319,6 @@ void URunPersistData::StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Diffic
 			if (const UStaticEquipmentData* EquipmentData = EquipmentSoft.LoadSynchronous())
 			{
 				mEquipmentIds.Add(EquipmentData->GetPrimaryAssetId());
-			}
-		}
-	}
-
-	// 주사위 기본 값 세팅
-	{
-		for (const TSoftObjectPtr<UStaticDiceData>& DiceSoft : PlayerData->mDiceDatas)
-		{
-			if (const UStaticDiceData* DiceData = DiceSoft.LoadSynchronous())
-			{
-				mDiceIds.Add(DiceData->GetPrimaryAssetId());
 			}
 		}
 	}

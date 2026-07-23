@@ -19,7 +19,7 @@ struct P_RD_API FSkillEffectLayer_Attack : public FSkillEffectLayer
 	GENERATED_BODY()
 
 public:
-	void ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const override;
+	void ApplyPointEffect(IBoardCombatTarget* ActorModel) const override;
 	void ClearPointEffect(IBoardCombatTarget* ActorModel) const override;
 
 public:
@@ -30,8 +30,6 @@ public:
 	void CommitEffect(const FSkillEffectCommitParams& Params) const override;
 
 public:
-	UPROPERTY(Category = "Attack", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DefaultDamage"))
-	float mDefaultDamage = 0.f;
-	UPROPERTY(Category = "Attack", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceRatio"))
-	float mDiceRatio = 0.f;
+	UPROPERTY(Category = "Attack", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Damage"))
+	int32 mDamage = 0;
 };
