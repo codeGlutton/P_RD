@@ -14,16 +14,10 @@
  * @brief  하나의 스킬 모션 내에서 적용하는 약화 디버프 효과 단위
  */
 USTRUCT(BlueprintType)
-struct P_RD_API FSkillEffectLayer_Weakness : public FSkillEffectLayer
+struct P_RD_API FSkillEffectLayer_Weakness : public FSkillEffectLayer_TagBase
 {
 	GENERATED_BODY()
 
 public:
-	void CommitEffect(const FSkillEffectCommitParams& Params) const override;
-
-public:
-	UPROPERTY(Category = "Weakness", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DefaultTagGain"))
-	float mDefaultTagGain = 0.f;
-	UPROPERTY(Category = "Weakness", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceRatio"))
-	float mDiceRatio = 0.f;
+	TSubclassOf<UTacticalEffect> GetTagEffectClass() const override;
 };

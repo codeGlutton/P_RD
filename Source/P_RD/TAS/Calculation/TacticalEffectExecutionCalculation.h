@@ -64,9 +64,9 @@ private:
 	TArray<FTacticalModifierEvaluatedData> mOutputModifiers;
 	
 	UPROPERTY()
-	uint32 mHandledStackCountManually : 1;
+	uint32 mHandledStackCountManually : 1 = false;
 	UPROPERTY()
-	uint32 mHandledDynamicMagnitudeManually : 1;
+	uint32 mHandledDynamicMagnitudeManually : 1 = false;
 };
 
 UCLASS(BlueprintType, Blueprintable, Abstract)

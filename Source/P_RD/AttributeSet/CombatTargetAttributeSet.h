@@ -55,7 +55,7 @@ protected:
 	// @brief 이번 턴 동안 유지되는 방어 스택
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData Defense;
-	// @brief 이번 턴 동안 유지되는 움직임 스택 
+	// @brief 이번 턴 동안 유지되는 행동력 스택 
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData Movement;
 
@@ -70,7 +70,7 @@ protected:
 	// @brief 스킬 모션 동안만 유지되는 기본 방어 획득 포인트 (스킬 기본 방어 획득량과 주사위 계수 합산 값)
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData DefensePoint;
-	// @brief 스킬 모션 동안만 유지되는 기본 움직임 획득 포인트 (스킬 기본 움직임 획득량과 주사위 계수 합산 값)
+	// @brief 스킬 모션 동안만 유지되는 기본 행동력 획득 포인트 (스킬 기본 움직임 획득량과 주사위 계수 합산 값)
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData MovementPoint;
 
@@ -85,7 +85,7 @@ protected:
 	// @brief 추가 방어휙득력 값 (ex 버프, 장비, 특정 기간 동안의 패시브 반영)
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData DefenseFactor;
-	// @brief 추가 이동휙득력 값 (ex 버프, 장비, 특정 기간 동안의 패시브 반영)
+	// @brief 추가 행동력 휙득력 값 (ex 버프, 장비, 특정 기간 동안의 패시브 반영)
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData MovementFactor;
 };

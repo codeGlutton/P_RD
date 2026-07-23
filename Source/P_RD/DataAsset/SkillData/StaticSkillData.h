@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 #include "DataAsset/PrimaryAssetType.h"
+#include "DataAsset/UnitSpawnData/PlayerJobType.h"
 #include "DataAsset/SkillData/SkillType.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer.h"
@@ -71,13 +72,16 @@ public:
 /**
  * @brief  스킬 생성 시 사용되는 정적 Primary Data Asset
  */
-UCLASS(abstract)
+UCLASS()
 class P_RD_API UStaticSkillData : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 
 public:
-    virtual ESkillType GetSkillType() const PURE_VIRTUAL(UStaticSkillData::GetSkillType, return ESkillType::Count;);
+    FPrimaryAssetId GetPrimaryAssetId() const override
+    {
+        return FPrimaryAssetId(SkillPrimaryAssetTypes::GetActiveType(), GetFName());
+    }
 
     /* UI 정보 */
 public:
@@ -92,8 +96,16 @@ public:
 
     /* 스킬 자체 정보 */
 public:
+    // @brief 사용 타입 ()
+    UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, AssetRegistrySearchable, meta = (DisplayName = "JobType"))
+    EPlayerJobType mJobType = EPlayerJobType::None;
+
+    // @brief 스킬 타입
+    UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, AssetRegistrySearchable, meta = (DisplayName = "SkillType"))
+    ESkillType mSkillType;
+
     // @brief 스킬 희귀도
-    UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RarityType"))
+    UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, AssetRegistrySearchable, meta = (DisplayName = "RarityType"))
     ERarityType mRarityType;
 
     // @brief 구매 시 가격
@@ -102,9 +114,9 @@ public:
     
     /* 논리적 설정값들 */
 public:
-    // @brief 필요 주사위
-    UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RequiredDiceCount"))
-    int32 mRequiredDiceCount;
+    // @brief 필요 행동력
+    UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RequiredMovement"))
+    int32 mRequiredMovement;
 
     // @brief 하나의 스킬 내에서 적용하는 단일 처리 단위의 TArray 묶음 (1개 : 단타, N개 : 연타)
     UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillMotionLayers"))
@@ -115,21 +127,9 @@ public:
     UPROPERTY(Category = "AimLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "AimPattern"))
     EAimPattern mAimPattern;
 
-    /**
-     * @brief 조준 가능 거리 계산 시 사용되는 기본 값
-     * @details
-     * mAimRangeDefaultValue + [주사위 합산 값] * mAimRangeRatio
-     */
-    UPROPERTY(Category = "AimLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "AimRangeDefaultValue"))
-    int32 mAimRangeDefaultValue;
-
-    /**
-     * @brief 조준 가능 거리 계산 시 사용되는 비율
-     * @details
-     * mAimRangeDefaultValue + [주사위 합산 값] * mAimRangeRatio
-     */
-    UPROPERTY(Category = "AimLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "AimRangeRatio"))
-    float mAimRangeRatio;
+    // @brief 조준 가능 거리 계산 시 사용되는 기본 값
+    UPROPERTY(Category = "AimLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "AimRange"))
+    int32 mAimRange;
 
     // @brief 곡사 여부
     UPROPERTY(Category = "AimLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsIndirect"))
@@ -144,23 +144,12 @@ public:
     UPROPERTY(Category = "EffectLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectPattern"))
     EEffectPattern mEffectPattern;
     
-    /**
-     * @brief 영향 범위 계산 시 사용되는 기본 값
-     * @details
-     * mEffectAreaDefaultValue + [주사위 합산 값] * mEffectAreaRatio
-     */
-    UPROPERTY(Category = "EffectLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectAreaDefaultValue"))
-    int32 mEffectAreaDefaultValue;
-
-    /**
-     * @brief 영향 범위 계산 시 사용되는 비율
-     * @details
-     * mEffectAreaDefaultValue + [주사위 합산 값] * mEffectAreaRatio
-     */
-    UPROPERTY(Category = "EffectLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectAreaRatio"))
-    float mEffectAreaRatio;
+    // @brief 영향 범위 계산 시 사용되는 기본 값
+    UPROPERTY(Category = "EffectLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectArea"))
+    int32 mEffectArea;
 
     // @brief 관통 여부
     UPROPERTY(Category = "EffectLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsPenetration"))
     bool mIsPenetration;
 };
+

@@ -96,21 +96,48 @@ void FStageBuilder::LoadAllAssetIds()
 	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
 	checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
 
-	AssetManager->GetPrimaryAssetIdList(RoomPrimaryAssetTypes::GetTreasureRoomType(mParams.mStageLevel), mRoomAssetIds[static_cast<uint8>(ERoomType::Treasure)]);
-	AssetManager->GetPrimaryAssetIdList(RoomPrimaryAssetTypes::GetShopRoomType(mParams.mStageLevel), mRoomAssetIds[static_cast<uint8>(ERoomType::Shop)]);
-	AssetManager->GetPrimaryAssetIdList(RoomPrimaryAssetTypes::GetMonsterRoomType(mParams.mStageLevel), mRoomAssetIds[static_cast<uint8>(ERoomType::Monster)]);
-	AssetManager->GetPrimaryAssetIdList(RoomPrimaryAssetTypes::GetEliteMonsterRoomType(mParams.mStageLevel), mRoomAssetIds[static_cast<uint8>(ERoomType::EliteMonster)]);
-	AssetManager->GetPrimaryAssetIdList(RoomPrimaryAssetTypes::GetBossMonsterRoomType(mParams.mStageLevel), mRoomAssetIds[static_cast<uint8>(ERoomType::BossMonster)]);
+	auto StageFilter = [FilterStr = EnumToString(mParams.mStageLevel)](const FAssetData& AssetData) -> bool {
+		FString FoundStr;
+		bool IsFound = AssetData.GetTagValue(TEXT("mStageLevel"), OUT FoundStr) == true;
+		return IsFound == true && FoundStr == FilterStr;
+		};
+
+	mRoomAssetIds[static_cast<uint8>(ERoomType::Treasure)] = GetFilteredPrimaryAssets(RoomPrimaryAssetTypes::GetTreasureRoomType(), StageFilter);
+	mRoomAssetIds[static_cast<uint8>(ERoomType::Shop)] = GetFilteredPrimaryAssets(RoomPrimaryAssetTypes::GetShopRoomType(), StageFilter);
+	mRoomAssetIds[static_cast<uint8>(ERoomType::Monster)] = GetFilteredPrimaryAssets(RoomPrimaryAssetTypes::GetMonsterRoomType(), StageFilter);
+	mRoomAssetIds[static_cast<uint8>(ERoomType::EliteMonster)] = GetFilteredPrimaryAssets(RoomPrimaryAssetTypes::GetEliteMonsterRoomType(), StageFilter);
+	mRoomAssetIds[static_cast<uint8>(ERoomType::BossMonster)] = GetFilteredPrimaryAssets(RoomPrimaryAssetTypes::GetBossMonsterRoomType(), StageFilter);
 
 	const uint8 RarityTypeCount = StaticCast<uint8>(ERarityType::Count);
-	for (uint8 i = 0; i < RarityTypeCount; ++i)
+	for (uint8 RarityTypeIndex = 0; RarityTypeIndex < RarityTypeCount; ++RarityTypeIndex)
 	{
-		AssetManager->GetPrimaryAssetIdList(EquipmentPrimaryAssetTypes::GetWeaponType(StaticCast<ERarityType>(i)), mEquipmentAssetIds[StaticCast<uint8>(EEquipmentType::Weapon)][i]);
-		AssetManager->GetPrimaryAssetIdList(EquipmentPrimaryAssetTypes::GetGlovesType(StaticCast<ERarityType>(i)), mEquipmentAssetIds[StaticCast<uint8>(EEquipmentType::Gloves)][i]);
-		AssetManager->GetPrimaryAssetIdList(EquipmentPrimaryAssetTypes::GetBootsType(StaticCast<ERarityType>(i)), mEquipmentAssetIds[StaticCast<uint8>(EEquipmentType::Boots)][i]);
-		AssetManager->GetPrimaryAssetIdList(SkillPrimaryAssetTypes::GetAttackType(StaticCast<ERarityType>(i)), mSkillAssetIds[StaticCast<uint8>(ESkillType::Attack)][i]);
-		AssetManager->GetPrimaryAssetIdList(SkillPrimaryAssetTypes::GetSpellType(StaticCast<ERarityType>(i)), mSkillAssetIds[StaticCast<uint8>(ESkillType::Spell)][i]);
-		AssetManager->GetPrimaryAssetIdList(DicePrimaryAssetTypes::GetDiceType(StaticCast<ERarityType>(i)), mDiceAssetIds[i]);
+		auto RarityFilter = [FilterStr = EnumToString(StaticCast<ERarityType>(RarityTypeIndex))](const FAssetData& AssetData) -> bool {
+			FString FoundStr;
+			bool IsFound = AssetData.GetTagValue(TEXT("mRarityType"), OUT FoundStr) == true;
+			return IsFound == true && FoundStr == FilterStr;
+			};
+		mEquipmentAssetIds[RarityTypeIndex] = GetFilteredPrimaryAssets(EquipmentPrimaryAssetTypes::GetEquipmentType(), RarityFilter);
+		const TArray<FAssetData> SkillAssetDatas = GetFilteredPrimaryAssetDatas(SkillPrimaryAssetTypes::GetActiveType(), RarityFilter);
+		
+		const uint8 JobTypeCount = StaticCast<uint8>(EPlayerJobType::Count);
+		for (uint8 JobTypeIndex = 0; JobTypeIndex < JobTypeCount; ++JobTypeIndex)
+		{
+			auto JobFilter = [FilterStr = EnumToString(StaticCast<EPlayerJobType>(JobTypeIndex))](const FAssetData& AssetData) -> bool {
+				FString FoundStr;
+				bool IsFound = AssetData.GetTagValue(TEXT("mJobType"), OUT FoundStr) == true;
+				return IsFound == true && FoundStr == FilterStr;
+				};
+
+			mJobSkillAssetIds[JobTypeIndex][RarityTypeIndex] = GetFilteredPrimaryAssets(SkillAssetDatas, JobFilter);
+		}
+
+		auto JobFilter = [FilterStr = EnumToString(EPlayerJobType::Common)](const FAssetData& AssetData) -> bool {
+			FString FoundStr;
+			bool IsFound = AssetData.GetTagValue(TEXT("mJobType"), OUT FoundStr) == true;
+			return IsFound == true && FoundStr == FilterStr;
+			};
+		mCommonSkillAssetIds[RarityTypeIndex] = GetFilteredPrimaryAssets(SkillAssetDatas, JobFilter);
+
 	}
 
 	mIsLoadedIds = true;
@@ -353,9 +380,8 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 		Room.InitializeAs<FTreasureRoom>();
 		auto& NewRoom = Room.GetMutable<FTreasureRoom>();
 
-		const uint8 EquipmentTypeIndex = GetRandomEquipmentIndex();
 		const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mEquipmentRarityRate);
-		const TArray<FPrimaryAssetId>& EquipmentIdArray = mEquipmentAssetIds[EquipmentTypeIndex][RarityTypeIndex];
+		const TArray<FPrimaryAssetId>& EquipmentIdArray = mEquipmentAssetIds[RarityTypeIndex];
 		NewRoom.mRewardEquipmentDataId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, EquipmentIdArray);
 		
 		NewRoomPtr = &NewRoom;
@@ -366,20 +392,28 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 		Room.InitializeAs<FShopRoom>();
 		auto& NewRoom = Room.GetMutable<FShopRoom>();
 
+		const uint8 JobTypeCount = StaticCast<uint8>(EPlayerJobType::Count);
+		for (uint8 JobTypeIndex = 0; JobTypeIndex < JobTypeCount; ++JobTypeIndex)
+		{
+			for (int32 i = 0; i < 2; ++i)
+			{
+				const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mSkillRarityRate);
+				const TArray<FPrimaryAssetId>& SkillIdArray = mJobSkillAssetIds[JobTypeIndex][RarityTypeIndex];
+				NewRoom.mSaleJobSkillDataItems[JobTypeIndex].mSaleItemIds.Push(URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, SkillIdArray));
+			}
+		}
 		for (int32 i = 0; i < 3; ++i)
 		{
-			const uint8 SkillTypeIndex = GetRandomSkillIndex();
 			const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mSkillRarityRate);
-			const TArray<FPrimaryAssetId>& SkillIdArray = mSkillAssetIds[SkillTypeIndex][RarityTypeIndex];
-			NewRoom.mSaleSkillDataIds.Push(URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, SkillIdArray));
+			const TArray<FPrimaryAssetId>& SkillIdArray = mCommonSkillAssetIds[RarityTypeIndex];
+			NewRoom.mSaleCommonSkillDataItems.mSaleItemIds.Push(URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, SkillIdArray));
 		}
 
 		for (int32 i = 0; i < 3; ++i)
 		{
-			const uint8 EquipmentTypeIndex = GetRandomEquipmentIndex();
 			const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mEquipmentRarityRate);
-			const TArray<FPrimaryAssetId>& EquipmentIdArray = mEquipmentAssetIds[EquipmentTypeIndex][RarityTypeIndex];
-			NewRoom.mSaleEquipmentDataIds.Push(URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, EquipmentIdArray));
+			const TArray<FPrimaryAssetId>& EquipmentIdArray = mEquipmentAssetIds[RarityTypeIndex];
+			NewRoom.mSaleEquipmentDataItems.mSaleItemIds.Push(URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, EquipmentIdArray));
 		}
 
 		NewRoomPtr = &NewRoom;
@@ -404,9 +438,8 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 		NewRoom.mRewardMoney = URandomStreamFunctionLibrary::GetRandomFromInterval(mBuildStream, mGlobalSetting.mEliteRewardMoney);
 		NewRoom.mRewardExp = mGlobalSetting.mEliteRewardExp;
 
-		const uint8 EquipmentTypeIndex = GetRandomEquipmentIndex();
 		const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mEquipmentRarityRate);
-		const TArray<FPrimaryAssetId>& EquipmentIdArray = mEquipmentAssetIds[EquipmentTypeIndex][RarityTypeIndex];
+		const TArray<FPrimaryAssetId>& EquipmentIdArray = mEquipmentAssetIds[RarityTypeIndex];
 		NewRoom.mRewardEquipmentDataId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, EquipmentIdArray);
 
 		NewRoomPtr = &NewRoom;
@@ -419,10 +452,6 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 
 		NewRoom.mRewardMoney = URandomStreamFunctionLibrary::GetRandomFromInterval(mBuildStream, mGlobalSetting.mBossRewardMoney);
 		NewRoom.mRewardExp = mGlobalSetting.mBossRewardExp;
-
-		const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mEquipmentRarityRate);
-		const TArray<FPrimaryAssetId>& DiceIdArray = mDiceAssetIds[RarityTypeIndex];
-		NewRoom.mRewardDiceDataId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, DiceIdArray);
 
 		NewRoomPtr = &NewRoom;
 		break;
@@ -439,24 +468,61 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 	return *NewRoomPtr;
 }
 
-uint8 FStageBuilder::GetRandomEquipmentIndex() const
+TArray<FPrimaryAssetId> FStageBuilder::GetFilteredPrimaryAssets(const FPrimaryAssetType& AssetType, TFunctionRef<bool(const FAssetData&)> Filter) const
 {
-	return mBuildStream.RandRange(0, StaticCast<uint8>(EEquipmentType::Count) - 1);
+	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
+	checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
+
+	TArray<FPrimaryAssetId> ResultIds;
+
+	TArray<FAssetData> AllMetaDatas;
+	AssetManager->GetPrimaryAssetDataList(AssetType, AllMetaDatas);
+
+	for (const FAssetData& MetaData : AllMetaDatas)
+	{
+		if (Filter(MetaData) == true)
+		{
+			ResultIds.Add(MetaData.GetPrimaryAssetId());
+		}
+	}
+
+	return ResultIds;
 }
 
-EEquipmentType FStageBuilder::GetRandomEquipment() const
+TArray<FPrimaryAssetId> FStageBuilder::GetFilteredPrimaryAssets(const TArray<FAssetData>& AssetDataList, TFunctionRef<bool(const FAssetData&)> Filter) const
 {
-	return StaticCast<EEquipmentType>(GetRandomEquipmentIndex());
+	TArray<FPrimaryAssetId> ResultIds;
+
+	for (const FAssetData& MetaData : AssetDataList)
+	{
+		if (Filter(MetaData) == true)
+		{
+			ResultIds.Add(MetaData.GetPrimaryAssetId());
+		}
+	}
+
+	return ResultIds;
 }
 
-uint8 FStageBuilder::GetRandomSkillIndex() const
+TArray<FAssetData> FStageBuilder::GetFilteredPrimaryAssetDatas(const FPrimaryAssetType& AssetType, TFunctionRef<bool(const FAssetData&)> Filter) const
 {
-	return mBuildStream.RandRange(0, StaticCast<uint8>(ESkillType::Count) - 1);
-}
+	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
+	checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
 
-ESkillType FStageBuilder::GetRandomSkill() const
-{
-	return StaticCast<ESkillType>(GetRandomSkillIndex());
+	TArray<FAssetData> ResultDatas;
+
+	TArray<FAssetData> AllMetaDatas;
+	AssetManager->GetPrimaryAssetDataList(AssetType, AllMetaDatas);
+
+	for (const FAssetData& MetaData : AllMetaDatas)
+	{
+		if (Filter(MetaData) == true)
+		{
+			ResultDatas.Add(MetaData);
+		}
+	}
+
+	return ResultDatas;
 }
 
 uint8 FStageBuilder::GetRandomRarityIndex(const FRarityRate& RarityRate) const

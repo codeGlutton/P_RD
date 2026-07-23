@@ -11,6 +11,10 @@
 
 #include "Actor/TileMap/TileMapModel.h"
 
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "TAS/Effect/TacticalEffectContext.h"
+#include "TAS/Effect/Stat/TacticalEffect_Movement.h"
+
 #include "Component/PassiveComponent/PassiveComponentModel.h"
 #include "TAS/Passive/TacticalPassive.h"
 #include "TAS/Passive/PassiveActivateContext.h"
@@ -51,7 +55,6 @@ namespace
 void FActiveSkillContext::Clear()
 {
 	mMapModel = nullptr;
-	mDiceSum = 0;
 	mSelfTileIndex = FTileIndex::Invalid;
 	mTargetTileIndex = FTileIndex::Invalid;
 	mEffectTileIndexes.Reset();
@@ -135,7 +138,7 @@ void USkillComponentModel::SetSkill(int32 SkillIndex, UStaticSkillData* SkillDat
 	OnChangeSkillUI.Broadcast(SkillIndex, SkillData, PreSkillData);
 }
 
-void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum, FOnEndSkillUI Callback)
+void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, FOnEndSkillUI Callback)
 {
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
 
@@ -144,20 +147,32 @@ void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillInd
 
 	const UStaticSkillData* SkillData = SkillEntry.mData;
 	checkf(SkillData != nullptr, TEXT("빈 스킬 시전 오류"));
+	checkf(SkillData->mSkillMotionLayers.IsEmpty() == false, TEXT("스킬의 모션 레이어가 비어있음"));
 
 	UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
 	checkf(OwnerUnitModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
 
+	UAttributeSetComponentModel* AttributeSetCompModel = OwnerUnitModel->GetAttributeComponentModel();
+	checkf(AttributeSetCompModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
 	UPassiveComponentModel* PassiveComponentModel = OwnerUnitModel->GetPassiveComponentModel();
 	checkf(PassiveComponentModel != nullptr, TEXT("패시브 컴포넌트 nullptr"));
 
+	/* 행동력 소모 */
+
+	UTacticalEffectContext* EffectContext = AttributeSetCompModel->MakeEffectContext();
+	EffectContext->SetInstigator(OwnerUnitModel);
+	EffectContext->SetAttributeSetComponentModel(AttributeSetCompModel);
+	TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetCompModel->MakeOutgoingSpec(UTacticalEffect_Movement::StaticClass(), EffectContext);
+	EffectSpec->mDynamicMagnitude = -SkillData->mRequiredMovement;
+	AttributeSetCompModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
+
 	/* 활성화 스킬 데이터 채우기 */
 
-	mActiveSkillContext.mDiceSum = DiceSum;
 	mActiveSkillContext.mMapModel = MapModel;
 	mActiveSkillContext.mSelfTileIndex = OwnerUnitModel->GetTileTransform().mIndex;
 	mActiveSkillContext.mTargetTileIndex = TargetIndex;
-	mActiveSkillContext.mEffectTileIndexes = GetEffectTiles(MapModel, SkillIndex, TargetIndex, DiceSum);
+	mActiveSkillContext.mEffectTileIndexes = GetEffectTiles(MapModel, SkillIndex, TargetIndex);
 	mActiveSkillContext.mSkillIndex = SkillIndex;
 	mActiveSkillContext.mMotionIndex = 0;
 	mActiveSkillContext.mEndCallback = MoveTemp(Callback);
@@ -216,15 +231,6 @@ void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillInd
 		Passive->CommitPassive(DynamicPassiveData);
 	}
 
-	
-	// 모션 레이어가 하나도 없는(미저작) 스킬은 시전을 무동작으로 즉시 종료
-	if (SkillData->mSkillMotionLayers.Num() == 0)
-	{
-		UE_LOG(LogRD, Warning, TEXT("스킬(index %d)에 모션 레이어가 없어 시전을 건너뜁니다 — DA에 mSkillMotionLayers 미설정"), SkillIndex);
-		DeactivateSkill();
-		return;
-	}
-
 	PlayMotionLayer();
 }
 
@@ -267,7 +273,7 @@ void USkillComponentModel::PlayMotionLayer()
 
 	for (const TInstancedStruct<FSkillEffectLayer>& EffectLayer : MotionLayer.mSkillEffectLayers)
 	{
-		EffectLayer.Get().ApplyPointEffect(OwnerCombatTarget, mActiveSkillContext.mDiceSum);
+		EffectLayer.Get().ApplyPointEffect(OwnerCombatTarget);
 	}
 
 	/* 이펙트 가격 전 패시브 적용 */
@@ -450,8 +456,7 @@ void USkillComponentModel::TriggerMotionLayer(const FApplyEventTriggerPayload* P
 			OwnerSnapshot, 
 			OtherCombatTargets, 
 			OtherSnapshots, 
-			mActiveSkillContext.mTargetTileIndexes, 
-			mActiveSkillContext.mDiceSum
+			mActiveSkillContext.mTargetTileIndexes
 		);
 		for (int32 i = 0; i < EffectLayerNum; ++i)
 		{
@@ -642,14 +647,14 @@ bool USkillComponentModel::IsAnySkillActivated() const
 	return mActiveSkillContext.IsValid() == true;
 }
 
-TArray<FTileIndex> USkillComponentModel::GetAimableTiles(UTileMapModel* MapModel, int32 SkillIndex, int32 DiceSum) const
+TArray<FTileIndex> USkillComponentModel::GetAimableTiles(UTileMapModel* MapModel, int32 SkillIndex) const
 {
 	TArray<FTileIndex> AimableTiles;
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
 	UStaticSkillData* StaticSkillData = mSkillEntries[SkillIndex].mData;
 	checkf(StaticSkillData != nullptr, TEXT("잘못된 스킬 데이터"));
 
-	const float AimRange = StaticSkillData->mAimRangeDefaultValue + DiceSum * StaticSkillData->mAimRangeRatio;
+	const float AimRange = StaticSkillData->mAimRange;
 	const EAimPattern Pattern = StaticSkillData->mAimPattern;
 	const bool CanAimObstacle = StaticSkillData->mCanAimBoardActor;
 	const bool IsIndirect = StaticSkillData->mIsIndirect;
@@ -657,7 +662,7 @@ TArray<FTileIndex> USkillComponentModel::GetAimableTiles(UTileMapModel* MapModel
 	return MapModel->GetAimableTiles(GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex, AimRange, Pattern, CanAimObstacle, IsIndirect);
 }
 
-TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum) const
+TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex) const
 {
 	TArray<FTileIndex> AimableTiles;
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
@@ -665,7 +670,7 @@ TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel,
 	checkf(StaticSkillData != nullptr, TEXT("잘못된 스킬 데이터"));
 
 	const EEffectPattern Pattern = StaticSkillData->mEffectPattern;
-	const int32 EffectRange = StaticSkillData->mEffectAreaDefaultValue + DiceSum * StaticSkillData->mEffectAreaRatio;
+	const int32 EffectRange = StaticSkillData->mEffectArea;
 	const bool IsPenetration = StaticSkillData->mIsPenetration;
 
 	return MapModel->GetEffectTiles(GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex, TargetIndex, Pattern, EffectRange, IsPenetration);

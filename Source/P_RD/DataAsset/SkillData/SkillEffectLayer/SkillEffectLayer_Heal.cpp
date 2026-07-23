@@ -10,7 +10,7 @@
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "AttributeSet/CombatTargetAttributeSet.h"
 
-void FSkillEffectLayer_Heal::ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const
+void FSkillEffectLayer_Heal::ApplyPointEffect(IBoardCombatTarget* ActorModel) const
 {
     UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
@@ -20,7 +20,7 @@ void FSkillEffectLayer_Heal::ApplyPointEffect(IBoardCombatTarget* ActorModel, fl
     EffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
 
     TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_HealPoint::StaticClass(), EffectContext);
-    EffectSpec->mDynamicMagnitude = mDefaultHealGain + DiceSum * mDiceRatio;
+    EffectSpec->mDynamicMagnitude = mHealGain;
     AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
 }
 

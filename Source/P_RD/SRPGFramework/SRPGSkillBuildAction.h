@@ -42,19 +42,6 @@ public:
 	int32 mSkillIndex = 0;
 };
 
-USTRUCT(BlueprintType)
-struct FSRPGDiceSelectCommand : public FSRPGCommand
-{
-	GENERATED_BODY()
-
-public:
-	FSRPGDiceSelectCommand();
-
-public:
-	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceIndex"))
-	int32 mDiceIndex = 0;
-};
-
 /**
  * @brief  스킬 생성 액션 객체
  */
@@ -80,13 +67,11 @@ protected:
 	/* 빌드 로직 처리 */
 private:
 	void SetSkill(int32 SkillIndex);
-	void ChangeDices(int32 RequestedDiceIndex);
 	void SetTargetTile(const FTileIndex& TargetIndex);
 	void BuildSkill();
 
 private:
 	void ResetSkill();
-	void ResetDice();
 	void ResetTargetTile();
 
 private:
@@ -96,6 +81,7 @@ private:
 
 private:
 	bool CanSelectTargetTile(const FTileIndex& Index) const;
+	bool CanConfirmTargetTile(const FTileIndex& Index) const;
 
 private:
 	void SetBuildPhase(ESRPGSkillBuildPhase BuildPhase);
