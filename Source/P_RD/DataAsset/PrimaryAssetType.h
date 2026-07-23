@@ -65,6 +65,14 @@ namespace EquipmentPrimaryAssetTypes
 }
 
 /**
+ * @brief 아티펙트 Primary Asset Type들을 정의한 namespace 영역
+ */
+namespace ArtifactPrimaryAssetTypes
+{
+	DECLARE_PRIMARY_ASSET_TYPE(Artifact);
+}
+
+/**
  * @brief 스킬 Primary Asset Type들을 정의한 namespace 영역
  * @details
  * 스킬 타입과 희귀도 별로 등장하는 방을 나누어 설계
