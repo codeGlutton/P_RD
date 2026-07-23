@@ -157,6 +157,13 @@ protected:
 	/* 강조 */
 
 	/*
+	* @brief 현재 강조되고 있는 액터
+	* @details 액터가 존재하며, ECameraControlState가 Emphasis 상태라면 액터 위치에 시선을 고정시킵니다.
+	*/
+	UPROPERTY(Category = Emphasis, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "강조된 액터", AllowPrivateAccess = "true"))
+	TWeakObjectPtr<AActor> mEmphasisActor;
+
+	/*
 	* @brief 강조 시 변경되는 설정되는 줌값
 	* @details
 	*/
@@ -256,28 +263,44 @@ public:
 	void ZoomCamera_SmoothAndMoveToWorldPosition_Smooth(float TargetZoom, FVector WorldPosition);
 
 	/*
-	* @brief MoveToViewportPosition로 카메라의 시선을 옮긴다.
+	* @brief ViewPortPos로 카메라의 시선을 즉시 옮긴다.
 	* @defatils
-	* MoveToViewportPosition에서 Ray를 쏜다음 충돌한 위치로 카메라의 시선을 옮깁니다.
-	* @param MoveToViewportPosition에서 Ray를 쏜 다음 충돌한 위치로 카메라의 시선 옮깁니다.
+	* ViewPortPos에서 Ray를 쏜다음 충돌한 위치로 카메라의 시선을 천천히 옮깁니다.
+	* @param ViewPortPos에서 Ray를 쏜 다음 충돌한 위치로 카메라의 시선 천천히 옮깁니다.
+	*/
+	UFUNCTION(BlueprintCallable)
+	void MoveToViewportPosition_Instant(FVector2D ViewPortPos);
+
+	/*
+	* @brief WorldPosition로 카메라의 시선을 즉시 옮긴다.
+	* @defatils
+	* WorldPosition로 카메라의 시선을 즉시 옮깁니다.
+	* @param WorldPosition 위치로 카메라의 시선 즉시 옮깁니다.
+	*/
+	UFUNCTION(BlueprintCallable)
+	void MoveToWorldPosition_Instant(FVector WorldPosition);
+
+	/*
+	* @brief MoveToViewportPosition로 카메라의 시선을 천천히 옮긴다.
+	* @defatils
+	* ViewPortPos에서 Ray를 쏜다음 충돌한 위치로 카메라의 시선을 천천히 옮깁니다.
+	* @param MoveToViewportPosition에서 Ray를 쏜 다음 충돌한 위치로 카메라의 시선 천천히 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
 	void MoveToViewportPosition_Smooth(FVector2D ViewPortPos);
 
 	/*
-	* @brief WorldPosition로 카메라의 시선을 옮긴다.
-	* @defatils
-	* WorldPosition로 카메라의 시선을 옮깁니다.
-	* @param WorldPosition 위치로 카메라의 시선 옮깁니다.
+	* @brief WorldPosition로 카메라의 시선을 천천히 옮긴다.
+	* @param WorldPosition 위치로 카메라의 시선을 천천히 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
 	void MoveToWorldPosition_Smooth(FVector WorldPosition);
 
 	/*
-	* @brief MoveToViewportPosition로 카메라의 시선을 옮긴다.
+	* @brief CurViewPortPos로 카메라의 시선을 즉시 옮긴다.
 	* @defatils
-	* MoveToViewportPosition에서 Ray를 쏜다음 충돌한 위치로 카메라의 시선을 옮깁니다.
-	* @param MoveToViewportPosition에서 Ray를 쏜 다음 충돌한 위치로 카메라의 시선 옮깁니다.
+	* PreViewPortPos, CurViewPortPos에서 Ray를 쏜 다음 위치 차이를 구하여 카메라의 시선을 즉시 옮깁니다.
+	* @param CurViewPortPos 카메라의 시선을 즉시 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
 	void DragMoveToViewportPosition_Instant(FVector2D PreViewPortPos, FVector2D CurViewPortPos);
@@ -299,7 +322,7 @@ public:
 	/* 강조 기능*/
 	/*
 	* @brief WorldPosition로 카메라의 시선을 옮기고 TargetZoom만큼 Zoom 합니다.
-	* @details Emphasis 상태로 변경하여 카메라를 옮길 수 없습니다.
+	* @details Emphasis 상태일 때는 다른 카메라 조작(이동, 줌)을 무시합니다.
 	* @param WorldPosition 위치로 카메라의 시선 옮깁니다.
 	* @param TargetZoom 만큼 Zoom 합니다.
 	*/
@@ -308,7 +331,7 @@ public:
 
 	/*
 	* @brief ViewPortPosition로 카메라의 시선을 옮기고 TargetZoom만큼 Zoom 합니다.
-	* @details Emphasis 상태로 변경하여 카메라를 옮길 수 없습니다.
+	* @details Emphasis 상태일 때는 다른 카메라 조작(이동, 줌)을 무시합니다.
 	* @param ViewPortPosition 위치로 카메라의 시선 옮깁니다.
 	* @param TargetZoom 만큼 Zoom 합니다.
 	*/
@@ -317,7 +340,7 @@ public:
 
 	/*
 	* @brief WorldPosition로 카메라의 시선을 옮기고 Zoom값을 mEmphasisZoom로 변경합니다.
-	* @details Emphasis 상태로 변경하여 카메라를 옮길 수 없습니다.
+	* @details Emphasis 상태일 때는 다른 카메라 조작(이동, 줌)을 무시합니다.
 	* @param WorldPosition 위치로 카메라의 시선 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
@@ -325,17 +348,29 @@ public:
 
 	/*
 	* @brief ViewPortPosition로 카메라의 시선을 옮기고 Zoom값을 mEmphasisZoom로 변경합니다.
-	* @details Emphasis 상태로 변경하여 카메라를 옮길 수 없습니다.
+	* @details Emphasis 상태일 때는 다른 카메라 조작(이동, 줌)을 무시합니다.
 	* @param ViewPortPosition 위치로 카메라의 시선 옮깁니다.
 	*/
 	UFUNCTION(BlueprintCallable)
 	void StartEmphasisToViewPortPosition(FVector2D ViewPortPos);
 
 	/*
+	* @brief Actor로 카메라의 시선을 옮기고 Zoom값을 mEmphasisZoom로 변경합니다.
+	* @details Emphasis 상태일 때는 다른 카메라 조작(이동, 줌)을 무시합니다.
+	* @param WorldPosition 위치로 카메라의 시선 옮깁니다.
+	*/
+	UFUNCTION(BlueprintCallable)
+	void StartEmphasisToActor(AActor* EmphasisActor);
+
+	/*
 	* @brief Emphasis 상태를 종료하고 원래 카메라 위치, Zoom 값으로 변경합니다.
 	*/
 	UFUNCTION(BlueprintCallable)
 	void EndEmphasis();
+
+private:
+	/* 강조 기능 : private */
+	void FollowActor();
 
 public:
 	/* 카메라 셰이크*/
@@ -353,5 +388,6 @@ private:
 	*/
 	bool GetCameraRayHitPoint(OUT FHitResult& HitResult);
 
+	void ClampingCamera();
 
 };
