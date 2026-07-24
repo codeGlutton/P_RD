@@ -51,6 +51,17 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	{
 		return Commands;
 	}
+	
+	// 스킬 슬롯에 유효한 스킬이 있는 지 확인: 스킬이 없으면 딱히 할 게 없으므로 턴 종료
+	TArray<int32> ValidSkillIndexes;
+	const TArray<FSkillEntry>& Skills = SkillComp->GetSkills();
+	for (int32 Index = 0; Index < Skills.Num(); ++Index)
+	{
+		if (Skills[Index].IsValid())
+			ValidSkillIndexes.Add(Index);
+	}
+	if (ValidSkillIndexes.IsEmpty())
+		return Commands;
 
 	// 속성 컴포넌트 확인: 없으면 할 게 없으므로 턴 종료
 	UAttributeSetComponentModel* AttributeSetComp = Enemy->GetAttributeComponentModel();
@@ -59,59 +70,121 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		return Commands;
 	}
 
-	// 장착된 스킬 슬롯 인덱스 수집
-	// @note 스킬 슬롯은 고정 크기로 미리 확보되므로, 개수가 아니라 슬롯의 데이터 유무로 판단
-	const TArray<FSkillEntry>& Skills = SkillComp->GetSkills();
-	TArray<int32> EquippedIndexes;
-	for (int32 Index = 0; Index < Skills.Num(); ++Index)
-	{
-		if (Skills[Index].mData != nullptr)
-		{
-			EquippedIndexes.Add(Index);
-		}
-	}
-	// 모든 슬롯이 비어있으면(스킬 미장착) 할 게 없으므로 턴 종료
-	if (EquippedIndexes.Num() == 0)
-	{
-		return Commands;
-	}
-
-	// 사용할 스킬을 랜덤으로 하나 선택. 이후 이동/시전 판단은 이 스킬의 사거리 기준
-	// @note 시뮬/라이브 동일 결과 보장을 위해 반드시 룸의 이벤트 스트림에서 뽑아야 함
-	const int32 SkillIndex = EquippedIndexes[EventStream.RandRange(0, EquippedIndexes.Num() - 1)];
-	const UStaticSkillData* Skill = Skills[SkillIndex].mData;
-
-	// 스킬이 여러 개일 때만 어떤 스킬이 뽑혔는지 확인용 로그
-	if (EquippedIndexes.Num() >= 2)
-	{
-		UE_LOG(LogRD, Log, TEXT("적 AI 스킬 랜덤 선택: %s(ID=%d), 후보 %d개 중 슬롯 %d (%s)"),
-			*GetNameSafe(Enemy), Enemy->GetModelId(), EquippedIndexes.Num(), SkillIndex, *GetNameSafe(Skill));
-	}
-
-	const FTileIndex Origin = Enemy->GetTileTransform().mIndex;
-	const FTileIndex PlayerTile = Player->GetTileTransform().mIndex;
-
-	// 습득한 이동포인트만큼 최대 이동 가능
-	const int32 MaxMoveRange = FMath::Max(
+	// 사용 가능한 액션포인트
+	const int32 ActionPoint = FMath::Max(
 		AttributeSetComp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementAttribute()),
 		0
 	);
-	// 스킬 사용비용을 제외한 이동포인트만큼 최소 이동 가능
-	const int32 MinMoveRange = FMath::Max(
-		MaxMoveRange - Skill->mRequiredMovement,
-		0
-	);
-
-	// 조준거리
-	const int32 AimRange = Skill->mAimRange;
-
-	// 목적지 결정 (이동 성향 기반)
-	bool CanCast = false;
-	FTileIndex Dest = ChooseDestination(Origin, PlayerTile, MinMoveRange, AimRange, Skill, TileMap, Enemy->GetMoveTendency(), Enemy, OUT CanCast);
-	if (CanCast == false)
+	
+	const FTileIndex EnemyTile = Enemy->GetTileTransform().mIndex;
+	const FTileIndex PlayerTile = Player->GetTileTransform().mIndex;
+	
+	// 적이 이동할 수 있는 모든 타일들 수집
+	TArray<FTileIndex> ReachableTiles = TileMap->GetReachableTiles(EnemyTile, ActionPoint);
+	ReachableTiles.Add(EnemyTile);
+	
+	// 적이 이동할 수 있는 모든 타일들에 대해서 이동거리를 미리 계산
+	// 그래야 어느 타일로 갈 때 얼마나 드는 지 금방 비교할 수 있음
+	const TArray<int32> DistanceField = TileMap->GetDistanceField(EnemyTile, Enemy);
+	
+	// 스킬별 조준가능/시전가능 타일들
+	TArray<TArray<FTileIndex>> AimableTiles;
+	TArray<TArray<FTileIndex>> CastableTiles;
+	AimableTiles.SetNum(Skills.Num());
+	CastableTiles.SetNum(Skills.Num());
+	
+	/**
+	 * @brief 스킬별 조준가능/시전가능 타일들 수집
+	 */
+	for (const int32 SkillIndex : ValidSkillIndexes)
 	{
-		bool CanCastDummy = false;
-		Dest = ChooseDestination(Origin, PlayerTile, MaxMoveRange, AimRange, Skill, TileMap, Enemy->GetMoveTendency(), Enemy, OUT CanCastDummy);
+		const UStaticSkillData* Skill = Skills[SkillIndex].mData;
+		
+		// 도달 가능한 모든 타일에 대해서 탐색
+		for (const FTileIndex Tile : ReachableTiles)
+		{
+			// 해당타일에서 조준가능한 타일들 수집
+			// @note 아직 플레이어를 조준할 수 있는지는 모름
+			TArray<FTileIndex> Aimables = TileMap->GetAimableTiles(
+				Tile,
+				Skill->mAimRange,
+				Skill->mAimPattern,
+				Skill->mCanAimBoardActor,
+				Skill->mIsIndirect,
+				nullptr,
+				Enemy);
+			
+			if (Aimables.Contains(PlayerTile) == false)
+				continue;
+			
+			// 조준가능한 타일들중에 플레이어 타일이 있으면 최종조준가능한 타일
+			// @note 아직 플레이어에게 시전할 수 있는지는 모름
+			AimableTiles[SkillIndex].Add(Tile);
+			
+			const int32 LinearIndex = TileMap->TileIndexToLinearIndex(Tile);
+			// 조준가능한 타일까지 이동하는 비용
+			const int32 MoveDistance = DistanceField[LinearIndex];
+			if (MoveDistance + Skill->mRequiredMovement <= ActionPoint)
+			{
+				// 현재 액션포인트로 이동포인트와 스킬사용포인트까지 감당할 수 있으면 시전가능한 타일
+				CastableTiles[SkillIndex].Add(Tile);
+			}
+		}
+	}
+	
+	// 이번 턴에 시전가능한 스킬들 수집
+	TArray<int32> CastableSkillIndexes;
+	for (const int32 SkillIndex : ValidSkillIndexes)
+	{
+		if (CastableTiles[SkillIndex].IsEmpty() == false)
+			CastableSkillIndexes.Add(SkillIndex);
+	}
+	
+	bool CanCast = false;
+	int32 ChosenSkillIndex = INDEX_NONE;
+	FTileIndex Dest = EnemyTile;
+	
+	//
+	// 1단계: 이동+시전으로 플레이어를 때릴 수 있으면 시전을 계획
+	//
+	if (CastableSkillIndexes.IsEmpty() == false)
+	{
+		// 시전 가능한 스킬 중에서 랜덤 선택
+		const int32 Pick = EventStream.RandRange(0, CastableSkillIndexes.Num() - 1);
+		
+		// 시전할 스킬 인덱스, 시전 계획, 목표 타일 등을 설정
+		ChosenSkillIndex = CastableSkillIndexes[Pick];
+		CanCast = true;
+		Dest = PickByTendency(CastableTiles[ChosenSkillIndex], EnemyTile, PlayerTile, Enemy->GetMoveTendency());
+	}
+	else
+	{
+		//
+		// 2단계: 이번 턴에는 못 때리므로 다음 턴에 때릴 수 있는 타일로 이동
+		//
+		// 조준타일들의 합집합이 대상
+		TArray<FTileIndex> PositioningTiles;
+		for (const int32 SkillIndex : ValidSkillIndexes)
+		{
+			for (const FTileIndex Tile : AimableTiles[SkillIndex])
+			{
+				// 중복할 필요가 없으므로 유니크한 인덱스만 수집
+				PositioningTiles.AddUnique(Tile);
+			}
+		}
+		
+		if (PositioningTiles.IsEmpty() == false)
+		{
+			// 조준가능한 타일이 있으면, 일단 그 타일에 가 있으면 다음 턴에서 플레이어를 때릴 수 있음
+			Dest = PickByTendency(PositioningTiles, EnemyTile, PlayerTile, Enemy->GetMoveTendency());
+		}
+		else
+		{
+			//
+			// 3단계: 어디로 가든, 다음 턴에서 플레이어를 때릴 수 없다면, 플레이어에게 최대한 접근
+			//
+			Dest = PickApproachTile(ReachableTiles, EnemyTile, PlayerTile, TileMap, Enemy);
+		}
 	}
 
 	/**
@@ -119,9 +192,9 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	 * @details
 	 * 현재위치와 목적지가 다를때만 이동커맨드 생성
 	 */
-	if (Dest != Origin)
+	if (Dest != EnemyTile)
 	{
-		TArray<FTileIndex> Path = TileMap->FindPath(Origin, Dest);
+		TArray<FTileIndex> Path = TileMap->FindPath(EnemyTile, Dest);
 		// 경로는 출발지와 목적지가 포함되므로 2 이상이어야 실제 이동 가능.
 		if (Path.Num() >= 2)
 		{
@@ -146,7 +219,7 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		TInstancedStruct<FSRPGCommand> Cast;
 		Cast.InitializeAs<FSRPGSkillCastCommand>();
 		FSRPGSkillCastCommand& CastRef = Cast.GetMutable<FSRPGSkillCastCommand>();
-		CastRef.mSkillIndex = SkillIndex;
+		CastRef.mSkillIndex = ChosenSkillIndex;
 		CastRef.mTargetIndex = PlayerTile;
 		AddAction(MoveTemp(Cast));
 	}
@@ -154,90 +227,25 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	return Commands;
 }
 
-FTileIndex USRPGEnemyTurnPlanner::ChooseDestination(
-	const FTileIndex& Origin,
+FTileIndex USRPGEnemyTurnPlanner::PickByTendency(
+	const TArray<FTileIndex>& Tiles,
+	const FTileIndex& EnemyTile,
 	const FTileIndex& PlayerTile,
-	int32 MoveRange,
-	int32 AimRange,
-	const UStaticSkillData* Skill,
-	const UTileMapModel* TileMap,
-	EMoveTendency Tendency,
-	const UBoardActorModel* Self,
-	OUT bool& OutCanCast)
+	EMoveTendency Tendency)
 {
-	// 도달 가능한 모든 타일 집합 (현재 위치한 타일도 포함)
-	TArray<FTileIndex> Candidates = TileMap->GetReachableTiles(Origin, MoveRange);
-	Candidates.Add(Origin);
-
-	// 이동 후 플레이어를 조준 가능한 타일만 추림
-	// @note 자기 자신(Self)은 이동으로 자리를 비울 예정이므로 시야 차폐에서 제외.
-	//       제외하지 않으면 직선 후퇴 타일이 전부 자기 몸에 막혀 제자리 사격이 됨.
-	TArray<FTileIndex> Feasible;
-	for (const FTileIndex& Candidate : Candidates)
-	{
-		TArray<FTileIndex> Aimable = TileMap->GetAimableTiles(Candidate, AimRange, Skill->mAimPattern, Skill->mCanAimBoardActor, Skill->mIsIndirect, /*Incoming*/nullptr, /*IgnoreBlocker*/Self);
-		if (Aimable.Contains(PlayerTile) == true)
-		{
-			Feasible.Add(Candidate);
-		}
-	}
-
-	// 이동 성향에 따라 타일 탐색
+	// 이동성향에 따라 타일 목록에서 최선 타일 선택
 	switch (Tendency)
 	{
 	case EMoveTendency::MoveClose:
-		// 1) 조준 가능한 타일이 있다면
-		if (Feasible.Num() > 0)
-		{
-			// 조준 가능한 타일이 있으니까 스킬 시전도 가능하게 설정
-			OutCanCast = true;
-			// 조준 가능한 타일들 중에서 플레이어와 가장 가까운 타일 선택
-			return PickByPlayerDistance(Feasible, Origin, PlayerTile, /*Closest*/true);
-		}
-		// 2) 조준 가능한 타일이 없다면
-		else
-		{
-			// 조준 가능한 타일이 없음 -> 어느 타일에서도 플레이어를 조준할 수 없음 -> 스킬 시전 불가능 설정
-			OutCanCast = false;
-			// '도달' 가능한 타일들 중에서 경로 거리 기준으로 플레이어와 가장 가까워지는 타일 선택
-			return PickApproachTile(Candidates, Origin, PlayerTile, TileMap, Self);
-		}
+		// 근접 성향: 플레이어와 가장 가까운 타일
+		return PickByPlayerDistance(Tiles, EnemyTile, PlayerTile, /*Closest*/true);
 	case EMoveTendency::MoveAway:
-		// 1) 조준 가능한 타일이 있다면
-		if (Feasible.Num() > 0)
-		{
-			// 조준 가능한 타일이 있으니까 스킬 시전도 가능하게 설정
-			OutCanCast = true;
-			// 조준 가능한 타일들 중에서 플레이어와 가장 먼 타일 선택
-			return PickByPlayerDistance(Feasible, Origin, PlayerTile, /*Closest*/false);
-		}
-		else
-		{
-			// 조준 가능한 타일이 없음 -> 어느 타일에서도 플레이어를 조준할 수 없음 -> 스킬 시전 불가능 설정
-			OutCanCast = false;
-			// '도달' 가능한 타일들 중에서 경로 거리 기준으로 플레이어와 가장 가까워지는 타일 선택 -> 다음번에 조준 가능성을 높임
-			return PickApproachTile(Candidates, Origin, PlayerTile, TileMap, Self);
-		}
+		// 원거리 성향: 플레이어와 가장 먼 타일
+		return PickByPlayerDistance(Tiles, EnemyTile, PlayerTile, /*Closest*/false);
 	case EMoveTendency::HoldRange:
 	default:
-		// 1) 이미 조준할 수 있다면 제자리 유지
-		if (Feasible.Contains(Origin) == true)
-		{
-			OutCanCast = true;
-			return Origin;
-		}
-		// 2) 제자리에서 조준할 수 없다면 -> 이동거리가 가장 작은 조준 가능한 타일이 최선
-		if (Feasible.Num() > 0)
-		{
-			OutCanCast = true;
-			return PickByMoveCost(Feasible, Origin);
-		}
-		// 3) 조준할 수 있는 타일이 없다면 -> 도달 가능한 타일들 중에서 경로 거리 기준으로 가장 가까워지는 타일이 최선
-		else
-		{
-			OutCanCast = false;
-			return PickApproachTile(Candidates, Origin, PlayerTile, TileMap, Self);
-		}
+		// 거리유지 성향: 제자리에서 가능하면 제자리, 아니면 이동거리가 가장 작은 타일
+		return (Tiles.Contains(EnemyTile) == true) ? EnemyTile : PickByMoveCost(Tiles, EnemyTile);
 	}
 }
 
