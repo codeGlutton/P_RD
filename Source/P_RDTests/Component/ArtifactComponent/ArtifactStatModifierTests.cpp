@@ -102,7 +102,7 @@ bool FArtifactStatModifierTests::RunTest(const FString& Parameters)
 	UStaticArtifactData* Artifact = NewObject<UStaticArtifactData>();
 	FTacticalModifierInfo Mod;
 	Mod.mAttribute = AttackPoint;
-	Mod.mModifierOp = ETacticalModOp::Additive;
+	Mod.mModifierOp = ETacticalModOp::AddBase;
 	Mod.mModifierMagnitude = 5.f;
 	Artifact->mStatModifiers.Add(Mod);
 
