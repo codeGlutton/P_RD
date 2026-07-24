@@ -58,6 +58,11 @@ public:
 
 public:
 	virtual void CommitEffect(const FSkillEffectCommitParams& Params) const PURE_VIRTUAL(FSkillEffectLayer::CommitEffect, return; );
+
+#if WITH_EDITOR
+public:
+	virtual FText MakeDescription() const PURE_VIRTUAL(FSkillEffectLayer::MakeDescription, return FText::GetEmpty(); );
+#endif
 };
 
 USTRUCT(BlueprintType)
@@ -68,6 +73,12 @@ struct P_RD_API FSkillEffectLayer_TagBase : public FSkillEffectLayer
 public:
 	virtual TSubclassOf<UTacticalEffect> GetTagEffectClass() const;
 	void CommitEffect(const FSkillEffectCommitParams& Params) const override;
+
+#if WITH_EDITOR
+public:
+	virtual FText GetTagDisplayName() const { return FText::GetEmpty(); }
+	FText MakeDescription() const override;
+#endif
 
 public:
 	UPROPERTY(Category = "Tag", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TagGain"))

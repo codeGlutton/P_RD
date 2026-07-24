@@ -17,6 +17,7 @@
 
 class IBoardCombatTarget;
 class UTileMapModel;
+class UTacticalEffect_Cooldown;
 
 /**
 * @brief 하나의 스킬 내에서 같은 타이밍에 처리하는 단위
@@ -83,6 +84,12 @@ public:
         return FPrimaryAssetId(SkillPrimaryAssetTypes::GetActiveType(), GetFName());
     }
 
+#if WITH_EDITOR
+public:
+    FText MakeDescription() const;
+    EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
+#endif
+
     /* UI 정보 */
 public:
     UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Name"))
@@ -118,9 +125,13 @@ public:
     UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RequiredMovement"))
     int32 mRequiredMovement;
 
+    // @brief 쿨다운시 적용될 Effect Class
+    UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "CooldownEffectClass", AssetBundles = "Actor"))
+    TSoftClassPtr<UTacticalEffect_Cooldown> mCooldownEffectClass;
+
     // @brief 쿨다운까지 필요한 턴 수
-    UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "CooldownTurn"))
-    int32 mCooldownTurn;
+    UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "CooldownDuration"))
+    int32 mCooldownDuration;
 
     // @brief 하나의 스킬 내에서 적용하는 단일 처리 단위의 TArray 묶음 (1개 : 단타, N개 : 연타)
     UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillMotionLayers"))

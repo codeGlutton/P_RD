@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   SkillEffectLayer_Agility.h
  * @brief  하나의 스킬 모션 내에서 적용하는 신속 버프 효과 단위 구현 헤더
  * @author 모호재
@@ -20,4 +20,9 @@ struct P_RD_API FSkillEffectLayer_Agility : public FSkillEffectLayer_TagBase
 
 public:
 	TSubclassOf<UTacticalEffect> GetTagEffectClass() const override;
+
+#if WITH_EDITOR
+public:
+	FText GetTagDisplayName() const override;
+#endif
 };

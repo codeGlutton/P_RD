@@ -3,9 +3,6 @@
 
 #include "RDCollision.h"
 
-#include "Component/AttributeComponent/AttributeSetComponentModel.h"
-#include "AttributeSet/UnitAttributeSet.h"
-
 #include "Component/SkillComponent/SkillComponentModel.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
 
@@ -136,14 +133,16 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
         case ESRPGSkillBuildPhase::Preview:
         {
             /* 확정 칸 클릭 시, 스킬 캐스팅 */
-
             if (CanConfirmTargetTile(TargetTileIndex) == true)
             {
-                BuildSkill();
-                SetBuildPhase(ESRPGSkillBuildPhase::Build);
-                MarkActionCompleted(ESRPGActionResult::Succeeded);
+                if (CanBuildSkill() == true)
+                {
+                    BuildSkill();
+                    SetBuildPhase(ESRPGSkillBuildPhase::Build);
+                    MarkActionCompleted(ESRPGActionResult::Succeeded);
 
-                Result = ESRPGCommandResult::Handled;
+                    Result = ESRPGCommandResult::Handled;
+                }
                 break;
             }
             [[fallthrough]];
@@ -221,7 +220,6 @@ void USRPGSkillBuildAction::SetSkill(int32 SkillIndex)
         }
 
         mSelectedSkillIndex = SkillIndex;
-        mSelectedSkill = StaticSkillDataSoftObj.Get();
     }
 
     OnSelectSkill.Broadcast(mSelectedSkillIndex);
@@ -273,7 +271,6 @@ void USRPGSkillBuildAction::BuildSkill()
 void USRPGSkillBuildAction::ResetSkill()
 {
     mReachableTileIndexes.Empty();
-    mSelectedSkill = nullptr;
     mSelectedSkillIndex = INDEX_NONE;
 
     OnSelectSkill.Broadcast(mSelectedSkillIndex);
@@ -324,10 +321,15 @@ bool USRPGSkillBuildAction::CanSelectTargetTile(const FTileIndex& Index) const
 
 bool USRPGSkillBuildAction::CanConfirmTargetTile(const FTileIndex& Index) const
 {
-    UAttributeSetComponentModel* AttributeSetCompModel = mInstigator->GetAttributeComponentModel();
-    checkf(AttributeSetCompModel != nullptr, TEXT("속성 컴포넌트 모델 nullptr"));
+    return mTargetIndex != FTileIndex::Invalid && mTargetIndex == Index;
+}
 
-    return mSelectedSkill->mRequiredMovement <= AttributeSetCompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMovementAttribute());
+bool USRPGSkillBuildAction::CanBuildSkill() const
+{
+    USkillComponentModel* SkillCompModel = mInstigator->GetSkillComponentModel();
+    checkf(SkillCompModel != nullptr, TEXT("스킬 컴포넌트 모델 nullptr"));
+
+    return SkillCompModel->CanActiveSkill(mSelectedSkillIndex);
 }
 
 void USRPGSkillBuildAction::SetBuildPhase(ESRPGSkillBuildPhase BuildPhase)

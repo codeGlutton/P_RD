@@ -10,7 +10,21 @@
 #include "TacticalEffectType.generated.h"
 
 class UTacticalEffectContext;
+class UObjectModel;
 struct FActiveTacticalEffect;
+
+/**
+ * @brief 태그 이벤트 호출 타입
+ */
+UENUM(BlueprintType)
+namespace ETacticalTagEventType
+{
+	enum Type : int
+	{
+		NewOrRemoved,
+		AnyCountChange
+	};
+}
 
 /**
  * @brief 이펙트 스택(중첩) 집계 방식.
@@ -99,33 +113,27 @@ namespace ETacticalModOp
 }
 
 /**
- * @brief 구 GAS의 GameplayEffectUtilities를 대체하는 모디파이어 연산 보조 함수 모음.
- * @details GAS 폐기에 따라 엔진 유틸리티에 있던 "연산별 항등값/스택 크기 계산" 로직을
- *          ETacticalModOp 기준으로 재구현한다(구현은 TacticalEffectType.cpp).
- *          연산을 "합산계열(항등값 0)"과 "곱셈계열(항등값 1)"로 나눠 다루는 것이 핵심이다.
+ * @brief Effect 연관 헬퍼 함수를 묶는 namespace
  */
 namespace TacticalEffectUtilities
 {
 	/**
-	 * @brief 주어진 연산의 항등값(identity/bias)을 반환한다.
-	 * @details 항등값이란 "그 연산에 적용해도 결과를 바꾸지 않는 값"이다.
-	 *          - 합산계열(AddBase/AddFinal): 0  (x + 0 = x)
-	 *          - 곱셈계열(MultiplyAdditive/DivideAdditive/MultiplyCompound): 1  (x * 1 = x)
-	 *          모디파이어가 없을 때의 기준값/스택 보정의 베이스로 사용된다.
-	 * @param ModOp 항등값을 구할 연산 종류.
-	 * @return 해당 연산의 항등값(합산계열 0, 곱셈계열 1).
+	 * @brief 각 연산자에 대한 초기 누적 값을 반환한다.
+	 * @param ModOp 연산자 종류
+	 * @return 초기 누적값
 	 */
 	P_RD_API float GetModifierBiasByModifierOp(ETacticalModOp::Type ModOp);
 
 	/**
-	 * @brief 스택(중첩) 수를 반영한 모디파이어 최종 크기를 계산한다.
-	 * @details 항등값을 기준으로 (계산값 - 항등값)을 StackCount만큼 반영한다.
-	 *          - 합산/일반 배율계열: 항등값 + (BaseComputedMagnitude - 항등값) * StackCount 형태의 선형 누적.
-	 *          - MultiplyCompound: 선형이 아니라 거듭제곱 — base^StackCount 로 복리처럼 누적된다.
+	 * @brief 스택(중첩) 수를 반영한 연산자에 대한 Effect 최종 크기를 계산한다.
 	 * @param BaseComputedMagnitude 스택 1개 기준으로 계산된 모디파이어 크기.
 	 * @param StackCount 현재 스택(중첩) 개수.
-	 * @param ModOp 연산 종류(항등값/누적 방식 결정).
-	 * @return 스택이 반영된 최종 모디파이어 크기.
+	 * @param ModOp 연산 종류.
+	 * @return 해당 연산자에 대한 Effect 결과 합
+	 *
+	 * @details
+	 * 합산계열(AddBase/AddFinal)은 0 + a + b + ...으로 연산
+	 * 곱셈계열(MultiplyAdditive/DivideAdditive/MultiplyCompound)은 1 * a * b * ...로 연산
 	 */
 	P_RD_API float ComputeStackedModifierMagnitude(float BaseComputedMagnitude, int32 StackCount, ETacticalModOp::Type ModOp);
 
@@ -139,8 +147,8 @@ namespace TacticalEffectUtilities
 
 /**
  * @brief 이펙트 제거 시 콜백/통지에 전달되는 제거 정보 묶음.
- * @details 어떤 이펙트가 몇 스택으로 제거되었는지, 그리고 어떤 컨텍스트/활성 인스턴스에서
- *          제거되었는지를 한데 모아 전달한다(구 GAS의 제거 콜백 페이로드 대체).
+ * @details 
+ * 어떤 이펙트가 몇 스택으로 제거되었는지, 그리고 어떤 컨텍스트/활성 인스턴스에서 제거되었는지를 한데 모아 전달
  */
 USTRUCT(BlueprintType)
 struct P_RD_API FTacticalEffectRemovalInfo
@@ -157,4 +165,23 @@ struct P_RD_API FTacticalEffectRemovalInfo
 
 	/** @brief 제거된 활성 이펙트 인스턴스에 대한 비소유(non-owning) 포인터. */
 	const FActiveTacticalEffect* mActiveEffect = nullptr;
+};
+
+/**
+ * @brief 이벤트 호출 시 참조용 정보
+ */
+USTRUCT(BlueprintType)
+struct FTacticalEventData
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(Category = "Payload", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EventTag"))
+	FGameplayTag mEventTag;
+
+	UPROPERTY(Category = "Payload", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Instigator"))
+	TObjectPtr<const UObjectModel> mInstigator;
+
+	UPROPERTY(Category = "Payload", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EventMagnitude"))
+	float mEventMagnitude = 0.f;
 };

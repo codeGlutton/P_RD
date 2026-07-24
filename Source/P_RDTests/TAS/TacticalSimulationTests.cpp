@@ -103,8 +103,6 @@ bool FTacticalSimulationTests::RunTest(const FString& Parameters)
 
     // 3. 무한 이펙트 적용 (방어력 +30)
     UTacticalEffectContext* EffectContext = CompModel->MakeEffectContext();
-    EffectContext->SetInstigator(MockActorModel);
-    EffectContext->SetAttributeSetComponentModel(CompModel);
 
     TSharedPtr<FTacticalEffectSpec> InfiniteEffect = CompModel->MakeOutgoingSpec(UTestInfiniteTacticalEffect::StaticClass(), EffectContext);
     InfiniteEffect->mDynamicMagnitude = 30.f;

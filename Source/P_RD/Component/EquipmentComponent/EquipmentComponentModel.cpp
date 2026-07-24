@@ -154,7 +154,6 @@ bool UEquipmentComponentModel::EquipInternal(UStaticEquipmentData* Data, UPassiv
 
 		// 소유자를 시전자로 컨텍스트 구성 후 self 적용, 인스턴스·핸들 보관
 		UTacticalEffectContext* EffectContext = AttrComp->MakeEffectContext();
-		EffectContext->SetAttributeSetComponentModel(AttrComp);
 
 		FTacticalEffectSpec Spec(StatEffect, EffectContext);
 		Entry.mStatEffect = StatEffect;

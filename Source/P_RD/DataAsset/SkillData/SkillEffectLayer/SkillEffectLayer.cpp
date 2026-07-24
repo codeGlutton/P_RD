@@ -1,4 +1,4 @@
-﻿#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer.h"
+#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer.h"
 
 #include "Actor/ActorModel.h"
 #include "Actor/BoardActor/BoardCombatTarget.h"
@@ -33,8 +33,6 @@ void FSkillEffectLayer_TagBase::CommitEffect(const FSkillEffectCommitParams& Par
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
     UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
-    EffectContext->SetInstigator(Cast<UActorModel>(Params.mInstigator.GetObject()));
-    EffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
 
     const float TagDiff = mTagGain;
 
@@ -52,3 +50,18 @@ void FSkillEffectLayer_TagBase::CommitEffect(const FSkillEffectCommitParams& Par
         }
     }
 }
+
+#if WITH_EDITOR
+#define LOCTEXT_NAMESPACE "SkillEffectLayer_TagBase"
+
+FText FSkillEffectLayer_TagBase::MakeDescription() const
+{
+    return FText::Format(
+        LOCTEXT("TagGainFormat", "{0} 태그를 {1} 중첩 부여합니다."),
+        GetTagDisplayName(),
+        FText::AsNumber(mTagGain)
+    );
+}
+
+#undef LOCTEXT_NAMESPACE
+#endif

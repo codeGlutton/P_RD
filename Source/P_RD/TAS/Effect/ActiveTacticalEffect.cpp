@@ -33,8 +33,16 @@ void FActiveTacticalEffectHandle::ResetGlobalHandleMap(UWorld* World)
 
 UAttributeSetComponentModel* FActiveTacticalEffectHandle::GetOwningAttributeSetComponentModel() const
 {
+    if (mWorld == nullptr)
+    {
+        return nullptr;
+    }
+
     UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(mWorld.Get());
-    checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
+    if (TacticalFrameworkModel == nullptr)
+    {
+        return nullptr;
+    }
 
     TWeakObjectPtr<UAttributeSetComponentModel>* Ptr = TacticalFrameworkModel->mEffectOwningModelMap.Find(*this);
     if (Ptr != nullptr)

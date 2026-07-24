@@ -1,4 +1,4 @@
-﻿#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Attack.h"
+#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Attack.h"
 #include "TAS/Effect/Stat/TacticalEffect_AttackPoint.h"
 #include "TAS/Effect/Stat/TacticalEffect_AttackFactor_AddBase.h"
 #include "TAS/Effect/Stat/TacticalEffect_HP.h"
@@ -17,8 +17,6 @@ void FSkillEffectLayer_Attack::ApplyPointEffect(IBoardCombatTarget* ActorModel) 
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
     UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
-    EffectContext->SetInstigator(Cast<UActorModel>(ActorModel));
-    EffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
 
     TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_AttackPoint::StaticClass(), EffectContext);
     EffectSpec->mDynamicMagnitude = mDamage;
@@ -39,8 +37,6 @@ FActiveTacticalEffectHandle FSkillEffectLayer_Attack::ApplyFactorEffect(IBoardCo
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
     UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
-    EffectContext->SetInstigator(Cast<UActorModel>(ActorModel));
-    EffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
 
     FActiveTacticalEffectHandle EffectHandle;
 
@@ -71,8 +67,6 @@ void FSkillEffectLayer_Attack::CommitEffect(const FSkillEffectCommitParams& Para
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
     UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
-    EffectContext->SetInstigator(Cast<UActorModel>(Params.mInstigator.GetObject()));
-    EffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
 
     /* 데미지 적용 */
     const int32 TargetNum = Params.mTargets.Num();
@@ -88,3 +82,17 @@ void FSkillEffectLayer_Attack::CommitEffect(const FSkillEffectCommitParams& Para
         AttributeSetComponentModel->ApplyTacticalEffectSpecToTarget(*EffectSpec, OtherAttributeSetComponentModel);
     }
 }
+
+#if WITH_EDITOR
+#define LOCTEXT_NAMESPACE "SkillEffectLayer_Attack"
+
+FText FSkillEffectLayer_Attack::MakeDescription() const
+{
+	return FText::Format(
+		LOCTEXT("AttackDesc", "대상에게 {0}의 데미지를 입힙니다."),
+		FText::AsNumber(mDamage)
+	);
+}
+
+#undef LOCTEXT_NAMESPACE
+#endif

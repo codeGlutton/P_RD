@@ -24,7 +24,7 @@ public class P_RD : ModuleRules
             "EnhancedInput",
 
             /* Media Modules */
-            "MediaAssets",              // 인트로 시네마틱 MP4 재생(MediaPlayer/MediaSource)에 필요
+            "MediaAssets",
 
             /* Native SWidget Modules */
             "UMG",
@@ -36,14 +36,10 @@ public class P_RD : ModuleRules
             "NiagaraAnimNotifies",
 
             /* Gameplay Tag Modules */
-            "GameplayTags",				// 게임플레이 태그 시스템
-
-            /* GAS Plugin Modules */
-			"GameplayTasks",			// GAS에서 비동기적인 작업을 생성하고 관리하는 모듈
-			"GameplayAbilities",		// GAS 프레임워크
+            "GameplayTags",
 
             /* AI Plugin Modules */
-            "AIModule",                 // 기본 AI 연관 도구 사용
+            "AIModule",
         });
 
         PrivateIncludePaths.AddRange(new string[] {

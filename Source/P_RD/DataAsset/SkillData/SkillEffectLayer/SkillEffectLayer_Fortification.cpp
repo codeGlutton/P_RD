@@ -1,7 +1,18 @@
-﻿#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Fortification.h"
+#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Fortification.h"
 #include "TAS/Effect/Tag/TacticalEffect_Fortification.h"
 
 TSubclassOf<UTacticalEffect> FSkillEffectLayer_Fortification::GetTagEffectClass() const
 {
     return UTacticalEffect_Fortification::StaticClass();
 }
+
+#if WITH_EDITOR
+#define LOCTEXT_NAMESPACE "SkillEffectLayer_Fortification"
+
+FText FSkillEffectLayer_Fortification::GetTagDisplayName() const
+{
+	return LOCTEXT("FortificationName", "요새화");
+}
+
+#undef LOCTEXT_NAMESPACE
+#endif

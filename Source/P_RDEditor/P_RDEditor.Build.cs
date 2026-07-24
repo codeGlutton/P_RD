@@ -20,6 +20,9 @@ public class P_RDEditor : ModuleRules
             "UnrealEd",
             "EditorFramework", 
             "AssetRegistry",
+            "PropertyEditor",
+            "Slate",
+            "SlateCore",
 
             /* Asset Validator Modules */
             "DataValidation",

@@ -25,8 +25,9 @@ struct FTacticalEffectConstants
 
 /**
  * @brief 속성값 수정 정보
- * @details 한 Effect가 적용된 결과로 특정 Attribute가 실제로 얼마나 바뀌었는지를 집계한 런타임 기록.
- *          (모디파이어 연산을 모두 반영한 최종 누계값을 보관한다.)
+ * @details 
+ * 한 Effect가 적용된 결과로 특정 Attribute가 실제로 얼마나 바뀌었는지를 집계한 런타임 기록.
+ * (모디파이어 연산을 모두 반영한 최종 누계값을 보관한다.)
  */
 USTRUCT(BlueprintType)
 struct P_RD_API FTacticalEffectModifiedAttribute
@@ -64,9 +65,9 @@ public:
 
 /**
  * @brief  어떤 Effect를 어떤 방식으로 누가 적용시키는지에 대한 런타임 정보 객체
- * @details 정적 정의(UTacticalEffect)와 적용 맥락(UTacticalEffectContext)을 묶은 "적용 인스턴스".
- *          정적 클래스의 모디파이어 정의를 바탕으로 실제 적용될 변경값(mModifierValues)을 계산해 보관한다.
- *          (구 GAS의 FGameplayEffectSpec에 대응되는 자체 구현)
+ * @details 
+ * 정적 정의(UTacticalEffect)와 적용 맥락(UTacticalEffectContext)을 묶은 "적용 인스턴스".
+ * 정적 클래스의 모디파이어 정의를 바탕으로 실제 적용될 변경값(mModifierValues)을 계산해 보관한다.
  */
 USTRUCT(BlueprintType)
 struct P_RD_API FTacticalEffectSpec
@@ -97,7 +98,7 @@ public:
 
 public:
 	/**
-	 * @brief Spec을 정적 Effect/컨텍스트로 초기화한다(모디파이어 값 사전 계산 포함).
+	 * @brief Spec을 정적 Effect/컨텍스트로 초기화한다.
 	 * @param Class 원본 정적 Effect 정의
 	 * @param EffectContext 적용 메타 데이터
 	 */
@@ -161,6 +162,7 @@ public:
 	UBoardCombatTargetSnapshotData* GetTargetSnapshotData() const;
 
 public:
+	bool IsValidDuration() const;
 	/**
 	 * @brief 정적 모디파이어 정의로부터 각 모디파이어의 변경값(mModifierValues)을 산출한다.
 	 * @details 스택/연산 적용 전, 모디파이어별 기본 크기를 미리 계산해 캐싱하는 단계.
@@ -171,7 +173,7 @@ public:
 	 * @param ModifierIdx 모디파이어 배열 인덱스
 	 * @return 해당 모디파이어의 변경값(스택 미반영)
 	 */
-	float GetModifierMagnitude(int32 ModifierIdx) const;
+	float GetStackedModifierMagnitude(int32 ModifierIdx) const;
 
 public:
 	const FTacticalEffectModifiedAttribute* GetModifiedAttribute(const FTacticalAttribute& Attribute) const;
@@ -190,6 +192,10 @@ public:
 	// @brief 계산된 수정자 값 (스택 미반영)
 	UPROPERTY()
 	TArray<float> mModifiers;
+
+	// @brief 적용 기간 배율
+	UPROPERTY()
+	int32 mDynamicDurationMagnitude = 1.f;
 
 	// @brief 적용 배율
 	UPROPERTY()
@@ -218,8 +224,8 @@ private:
 
 /**
  * @brief 단일 속성 수정자(모디파이어)의 정적 정의.
- * @details "어떤 속성을(mAttribute) 어떤 연산으로(mModifierOp) 얼마만큼(mModifierMagnitude)" 바꿀지를 기술한다.
- *          본 PR에서 연산 종류 타입이 GAS의 EGameplayModOp → 자체 ETacticalModOp로 치환되었다(GAS 폐기 작업의 일부).
+ * @details 
+ * "어떤 속성을(mAttribute) 어떤 연산으로(mModifierOp) 얼마만큼(mModifierMagnitude)" 바꿀지를 기술한다.
  */
 USTRUCT(BlueprintType)
 struct P_RD_API FTacticalModifierInfo
@@ -227,9 +233,7 @@ struct P_RD_API FTacticalModifierInfo
 	GENERATED_BODY()
 
 public:
-	/** @brief 모든 필드가 동일한지 비교한다. @param Other 비교 대상 @return 동일하면 true */
 	bool operator==(const FTacticalModifierInfo& Other) const;
-	/** @brief 동등하지 않은지 비교한다. @param Other 비교 대상 @return 다르면 true */
 	bool operator!=(const FTacticalModifierInfo& Other) const;
 
 public:
@@ -237,15 +241,18 @@ public:
 	UPROPERTY(Category = "Attribute", EditDefaultsOnly, meta = (DisplayName = "Attribute"))
 	FTacticalAttribute mAttribute;
 
-	// @brief 적용 연산 종류(구 EGameplayModOp 대체)
+	// @brief 적용 연산 종류
 	UPROPERTY(Category = "Attribute", EditDefaultsOnly, meta = (DisplayName = "ModifierOp"))
 	TEnumAsByte<ETacticalModOp::Type> mModifierOp = ETacticalModOp::AddBase;
 
-	// @brief 연산에 사용할 크기 값(예: Additive면 더할 양, MultiplyAdditive면 더할 배율 등)
+	// @brief 연산에 사용할 크기 값
 	UPROPERTY(Category = "Attribute", EditDefaultsOnly, meta = (DisplayName = "ModifierMagnitude"))
 	float mModifierMagnitude = 0.f;
 };
 
+/**
+ * @brief 커스텀 계산기 사용 방식 정의
+ */
 USTRUCT(BlueprintType)
 struct P_RD_API FTacticalEffectExecutionDefinition
 {
@@ -259,8 +266,8 @@ public:
 /**
  * @brief  속성값 및 태그를 변경하는 객체
  * @details 
- * GAS의 UGameplayEffect를 대체하는 자체 Effect 정의(정적 데이터 자산).
- * 모디파이어 목록/지속 정책/스태킹 규칙/부여 태그를 기술하며, 적용 시 FTacticalEffectSpec으로 인스턴스화된다.
+ * CDO에 모디파이어 목록/지속 정책/스태킹 규칙/부여 태그를 기술하며,
+ * 실제 사용 시에는 FTacticalEffectSpec와 FActiveTacticalEffect로 인스턴스화된다.
  */
 UCLASS(Blueprintable, BlueprintType)
 class P_RD_API UTacticalEffect : public UObject
@@ -269,7 +276,7 @@ class P_RD_API UTacticalEffect : public UObject
 
 public:
 	/**
-	 * @brief 현재 활성 Effect 상태에서 이 Spec을 적용할 수 있는지 판정한다(스태킹/조건 검사).
+	 * @brief 현재 활성 Effect 상태에서 이 Spec을 적용할 수 있는지 판정한다.
 	 * @param ActiveTEContainer 대상의 활성 Effect 컨테이너
 	 * @param TESpec 적용하려는 Effect Spec
 	 * @return 적용 가능하면 true
@@ -277,20 +284,20 @@ public:
 	virtual bool CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const;
 
 	/**
-	 * @brief Effect가 활성 컨테이너에 추가될 때 호출되는 훅(Infinite/지속형 진입 처리).
+	 * @brief Effect가 활성 컨테이너에 추가될 때 호출되는 훅(Infinite/Duration 진입 처리).
 	 * @param ActiveTEContainer 활성 Effect 컨테이너
 	 * @param ActiveTE 새로 추가된 활성 Effect
 	 * @return 추가가 유효하게 처리되면 true
 	 */
 	virtual bool OnAddedToActiveContainer(FActiveTacticalEffectsContainer& ActiveTEContainer, FActiveTacticalEffect& ActiveTE) const;
 	/**
-	 * @brief Effect의 모디파이어 연산을 대상 속성에 실제로 실행(적용)한다.
+	 * @brief Effect의 모디파이어 연산을 대상 속성에 실제로 실행(적용)한다. (Instant 진입 처리)
 	 * @param ActiveTEContainer 활성 Effect 컨테이너
 	 * @param TESpec 실행할 Effect Spec
 	 */
 	virtual void OnExecuted(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const;
 	/**
-	 * @brief Effect 적용 진입점(지속 정책에 따라 즉시 실행 또는 활성 컨테이너 등록으로 분기).
+	 * @brief 모든 Effect 적용 진입점 (지속 정책에 따라 즉시 실행 또는 활성 컨테이너 등록으로 분기).
 	 * @param ActiveTEContainer 활성 Effect 컨테이너
 	 * @param TESpec 적용할 Effect Spec
 	 */
@@ -303,13 +310,10 @@ public:
 	virtual void OnReduceTimeRemaining(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const;
 
 public:
-	/** @brief 이 Effect를 식별하기 위한 에셋 태그 캐시를 반환한다. @return 에셋 태그 컨테이너 */
 	const FGameplayTagContainer& GetAssetTags() const
 	{
 		return mCachedAssetTags;
 	}
-
-	/** @brief 이 Effect가 대상에게 부여하는 태그 캐시를 반환한다. @return 부여 태그 컨테이너 */
 	const FGameplayTagContainer& GetGrantedTags() const
 	{
 		return mCachedGrantedTags;
@@ -350,13 +354,13 @@ public:
 	UPROPERTY(Category = "Stacking", EditDefaultsOnly, BlueprintReadOnly, Category = Stacking, meta = (DisplayName = "StackExpirationPolicy", EditConditionHides, EditCondition = "mStackingType != ETacticalEffectStackingType::None"))
 	ETacticalEffectStackingExpirationPolicy mStackExpirationPolicy = ETacticalEffectStackingExpirationPolicy::ClearEntireStack;
 
-	// @brief 스택 수를 모디파이어 크기에 배수로 반영할지 여부(true면 ComputeStackedModifierMagnitude로 스택 보정)
+	// @brief 스택 수를 모디파이어 크기에 배수로 반영할지 여부
 	UPROPERTY(Category = "Stacking", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "FactorInStackCount", EditConditionHides, EditCondition = "mStackingType != ETacticalEffectStackingType::None"))
 	bool mFactorInStackCount = false;
 
 public:
-	// @brief 해당 Effect를 식별하기 위한 에셋 태그 캐시(GetAssetTags 반환원)
+	// @brief 해당 Effect를 식별하기 위한 에셋 태그
 	FGameplayTagContainer mCachedAssetTags;
-	// @brief 해당 Owner에게 부여하기 위한 태그 캐시(GetGrantedTags 반환원)
+	// @brief 해당 Owner에게 부여하기 위한 태그
 	FGameplayTagContainer mCachedGrantedTags;
 };

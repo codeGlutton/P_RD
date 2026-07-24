@@ -38,16 +38,7 @@ void UEnemyUnitModel::PostInitializeComponentModels()
 
 	if (USkillComponentModel* SkillComp = GetSkillComponentModel())
 	{
-		// 스폰 데이터의 스킬을 로드해서 슬롯 0부터 순서대로 장착
-		int32 SkillIndex = 0;
-		for (const TSoftObjectPtr<UStaticSkillData>& SkillSoft : EnemySpawn->mSkillDatas)
-		{
-			// 로드 성공한 스킬만 슬롯에 세팅
-			if (UStaticSkillData* Loaded = SkillSoft.LoadSynchronous())
-			{
-				SkillComp->SetSkill(SkillIndex++, Loaded);
-			}
-		}
+		SkillComp->SetSkillFrom(EnemySpawn->mSkillDatas);
 	}
 }
 

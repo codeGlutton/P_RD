@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   RDMinimal.h
  * @brief  RD 프로젝트 전 영역에서 사용되는 최소한의 포함 헤더
  * @details
@@ -49,6 +49,20 @@ FString EnumToFullString(T Value)
 {
     static_assert(TIsEnum<T>::Value);
     return UEnum::GetValueAsString(Value);
+}
+
+template<typename T>
+FText EnumToText(T Value)
+{
+    static_assert(TIsEnum<T>::Value);
+    return UEnum::GetDisplayValueAsText(Value);
+}
+
+template<typename T>
+FText EnumToFullText(T Value)
+{
+    static_assert(TIsEnum<T>::Value);
+    return StaticEnum<T>()->GetDisplayNameTextByValue((int64)Value);
 }
 
 /* 모델 연관 */

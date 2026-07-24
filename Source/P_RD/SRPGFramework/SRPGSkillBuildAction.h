@@ -82,6 +82,7 @@ private:
 private:
 	bool CanSelectTargetTile(const FTileIndex& Index) const;
 	bool CanConfirmTargetTile(const FTileIndex& Index) const;
+	bool CanBuildSkill() const;
 
 private:
 	void SetBuildPhase(ESRPGSkillBuildPhase BuildPhase);
@@ -104,8 +105,6 @@ protected:
 protected:
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ReachableTileIndexes"))
 	TArray<FTileIndex> mReachableTileIndexes;
-	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectedSkill"))
-	TObjectPtr<UStaticSkillData> mSelectedSkill;
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectedSkillIndex"))
 	int32 mSelectedSkillIndex = INDEX_NONE;
 

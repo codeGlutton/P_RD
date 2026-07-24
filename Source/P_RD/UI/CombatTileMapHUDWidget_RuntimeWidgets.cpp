@@ -225,6 +225,14 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 			mDetailBodyText = Cast<UTextBlock>(mDetailOverlay->GetWidgetFromName(TEXT("DetailBodyText")));
 			mDetailOverlay->SetVisibility(ESlateVisibility::Collapsed);
 			RootCanvas->AddChildToCanvas(mDetailOverlay);   // 풀뷰포트 RootCanvas — 스킨/HP바 위로 뜨게.
+
+			if (mDetailBodyText != nullptr)
+			{
+				mDetailBodyText->SetJustification(ETextJustify::Left);
+				FSlateFontInfo Font = mDetailBodyText->GetFont();
+				Font.Size = 20;
+				mDetailBodyText->SetFont(Font);
+			}
 		}
 	}
 

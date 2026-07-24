@@ -1,4 +1,4 @@
-﻿#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_GetDefense.h"
+#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_GetDefense.h"
 #include "TAS/Effect/Stat/TacticalEffect_DefensePoint.h"
 #include "TAS/Effect/Stat/TacticalEffect_DefenseFactor_AddBase.h"
 #include "TAS/Effect/Stat/TacticalEffect_Defense.h"
@@ -16,8 +16,6 @@ void FSkillEffectLayer_GetDefense::ApplyPointEffect(IBoardCombatTarget* ActorMod
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
     UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
-    EffectContext->SetInstigator(Cast<UActorModel>(ActorModel));
-    EffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
 
     TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_DefensePoint::StaticClass(), EffectContext);
     EffectSpec->mDynamicMagnitude = mDefenseGain;
@@ -38,8 +36,6 @@ FActiveTacticalEffectHandle FSkillEffectLayer_GetDefense::ApplyFactorEffect(IBoa
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
     UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
-    EffectContext->SetInstigator(Cast<UActorModel>(ActorModel));
-    EffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
 
     FActiveTacticalEffectHandle EffectHandle;
 
@@ -70,8 +66,6 @@ void FSkillEffectLayer_GetDefense::CommitEffect(const FSkillEffectCommitParams& 
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
     UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
-    EffectContext->SetInstigator(Cast<UActorModel>(Params.mInstigator.GetObject()));
-    EffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
 
     /* 방어력 증가 적용 */
     const int32 TargetNum = Params.mTargets.Num();
@@ -87,3 +81,17 @@ void FSkillEffectLayer_GetDefense::CommitEffect(const FSkillEffectCommitParams& 
         AttributeSetComponentModel->ApplyTacticalEffectSpecToTarget(*EffectSpec, OtherAttributeSetComponentModel);
     }
 }
+
+#if WITH_EDITOR
+#define LOCTEXT_NAMESPACE "SkillEffectLayer_GetDefense"
+
+FText FSkillEffectLayer_GetDefense::MakeDescription() const
+{
+	return FText::Format(
+		LOCTEXT("GetDefenseDesc", "방어도를 {0} 획득합니다."),
+		FText::AsNumber(mDefenseGain)
+	);
+}
+
+#undef LOCTEXT_NAMESPACE
+#endif

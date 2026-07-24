@@ -37,6 +37,9 @@ struct FTacticalEffectModCallbackData
 	UAttributeSetComponentModel& mModel;
 };
 
+/**
+ * @brief 속성의 실제 값을 담고 있는 객체
+ */
 USTRUCT(BlueprintType)
 struct P_RD_API FTacticalAttributeData
 {
@@ -70,6 +73,9 @@ protected:
 	float mCurrentValue;
 };
 
+/**
+ * @brief 속성 자체의 타입 정보를 알려주는 객체
+ */
 USTRUCT(BlueprintType)
 struct P_RD_API FTacticalAttribute
 {
@@ -141,14 +147,12 @@ public:
 		return PointerHash(InAttribute.mAttribute.Get());
 	}
 
-	/** Returns name of attribute, usually the same as the property */
 	FString GetName() const
 	{
 		return mAttributeName.IsEmpty() ? *GetNameSafe(mAttribute.Get()) : mAttributeName;
 	}
 
 #if WITH_EDITORONLY_DATA
-	/** Custom serialization */
 	void PostSerialize(const FArchive& Ar);
 #endif
 
@@ -177,6 +181,9 @@ struct TStructOpsTypeTraits< FTacticalAttribute > : public TStructOpsTypeTraitsB
 };
 #endif
 
+/**
+ * @brief 속성들의 묶음
+ */
 UCLASS(DefaultToInstanced, Blueprintable)
 class P_RD_API UTacticalAttributeSet : public UObject
 {
@@ -209,6 +216,33 @@ public:
 	void CaptureAllAttributes(UBoardCombatTargetSnapshotData* Snapshot) const;
 };
 
+USTRUCT(BlueprintType)
+struct FTacticalAttributeMetaData : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	FTacticalAttributeMetaData();
+
+	UPROPERTY(Category = "GameplayAttribute", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "BaseValue"))
+	float mBaseValue;
+
+	UPROPERTY(Category = "GameplayAttribute", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "MinValue"))
+	float mMinValue;
+
+	UPROPERTY(Category = "GameplayAttribute", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "MaxValue"))
+	float mMaxValue;
+
+	UPROPERTY()
+	FString	mDerivedAttributeInfo;
+
+	UPROPERTY(Category = "GameplayAttribute", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CanStack"))
+	bool mCanStack;
+};
+
+/**
+ * @brief 속성 초기화 로직 구현체
+ */
 struct FTacticalAttributeSetInitter
 {
 	virtual ~FTacticalAttributeSetInitter() {}
@@ -261,6 +295,8 @@ private:
 
 	TMap<FName, FAttributeSetDefaultsCollection> mDefaults;
 };
+
+/* AttributeSet 내부의 Attribute를 정의하기 위한 헬퍼 매크로 */
 
 #define TACTICAL_ATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \
 	static FTacticalAttribute Get##PropertyName##Attribute() \

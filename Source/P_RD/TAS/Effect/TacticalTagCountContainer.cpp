@@ -172,10 +172,10 @@ void FTacticalTagCountContainer::Notify_StackCountChange(const FGameplayTag& Tag
 	}
 }
 
-FOnTacticalEffectTagCountChanged& FTacticalTagCountContainer::RegisterGameplayTagEvent(const FGameplayTag& Tag, EGameplayTagEventType::Type EventType)
+FOnTacticalEffectTagCountChanged& FTacticalTagCountContainer::RegisterGameplayTagEvent(const FGameplayTag& Tag, ETacticalTagEventType::Type EventType)
 {
 	FDelegateInfo& Info = mTagEventMap.FindOrAdd(Tag);
-	if (EventType == EGameplayTagEventType::NewOrRemoved)
+	if (EventType == ETacticalTagEventType::NewOrRemoved)
 	{
 		return Info.OnNewOrRemove;
 	}

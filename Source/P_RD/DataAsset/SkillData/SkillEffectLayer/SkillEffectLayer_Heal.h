@@ -29,6 +29,11 @@ public:
 public:
 	void CommitEffect(const FSkillEffectCommitParams& Params) const override;
 
+#if WITH_EDITOR
+public:
+	FText MakeDescription() const override;
+#endif
+
 public:
 	UPROPERTY(Category = "Heal", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "HealGain"))
 	int32 mHealGain = 0;

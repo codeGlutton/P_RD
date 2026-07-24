@@ -15,6 +15,9 @@
 
 class UAttributeSetComponentModel;
 
+/**
+ * @brief 커스텀 계산기 로직을 구현할 때, Execution 내에서 참고할 수 있는 정보 파라미터 묶음
+ */
 USTRUCT(BlueprintType)
 struct FTacticalEffectCustomExecutionParameters
 {
@@ -36,6 +39,9 @@ private:
 	TWeakObjectPtr<UAttributeSetComponentModel> mTargetAttributeSetComponentModel = nullptr;
 };
 
+/**
+ * @brief 커스텀 계산기 로직을 구현할 때, Execution 내에서 처리한 결과를 보관하는 객체
+ */
 USTRUCT(BlueprintType)
 struct FTacticalEffectCustomExecutionOutput
 {
@@ -69,6 +75,9 @@ private:
 	uint32 mHandledDynamicMagnitudeManually : 1 = false;
 };
 
+/**
+ * @brief 커스텀 계산기 객체. Instant Effect로만 사용됨
+ */
 UCLASS(BlueprintType, Blueprintable, Abstract)
 class UTacticalEffectExecutionCalculation : public UObject
 {
