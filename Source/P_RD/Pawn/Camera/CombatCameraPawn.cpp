@@ -4,6 +4,7 @@
 #include "Pawn/Camera/CombatCameraPawn.h"
 #include "Camera/CameraComponent.h"
 #include "Component/CameraMovementComponent/CameraMovementComponent.h"
+#include "Component/TimeScaleComponent/TimeScaleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/SceneComponent.h"
 #include "Input/InputData.h"
@@ -37,6 +38,8 @@ ACombatCameraPawn::ACombatCameraPawn()
 	mCameraMovementComponent = CreateDefaultSubobject<UCameraMovementComponent>("CameraMovementComponent");
 	mCameraMovementComponent->SetCameraComponent(mCameraComponent);
 	//mCameraMovementComponent->SetSpringArmComponent(mSpringArmComponent);
+
+	mTimeScaleComponent = CreateDefaultSubobject<UTimeScaleComponent>("TimeScaleComponent");
 
 	// 카메라 회전은 컨트롤러 회전을 그대로 따라감
 	bUseControllerRotationPitch = true;
@@ -128,6 +131,11 @@ UCameraComponent* ACombatCameraPawn::GetCameraComponent()
 UCameraMovementComponent* ACombatCameraPawn::GetCameraMovementComponent()
 {
 	return mCameraMovementComponent.Get();
+}
+
+UTimeScaleComponent* ACombatCameraPawn::GetTimeScaleComponent()
+{
+	return mTimeScaleComponent.Get();
 }
 
 bool ACombatCameraPawn::IsDrag()
