@@ -128,8 +128,8 @@ public:
 	/**
 	 * @brief 라운드 시작마다 실행될 함수 (라운드 : 고정된 턴 기준으로 한바퀴)
 	 */
-	virtual void OnBeginRound();
-	virtual void OnEndRound();
+	virtual void OnBeginRound(int32 RoundCount);
+	virtual void OnEndRound(int32 RoundCount);
 
 private:
 	/**

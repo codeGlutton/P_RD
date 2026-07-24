@@ -17,6 +17,12 @@ class UTacticalEffectExecutionCalculation;
 
 struct FActiveTacticalEffectsContainer;
 
+struct FTacticalEffectConstants
+{
+	static constexpr int32 INFINITE_DURATION = -1;
+	static constexpr int32 NO_DURATION = 0;
+};
+
 /**
  * @brief 속성값 수정 정보
  * @details 한 Effect가 적용된 결과로 특정 Attribute가 실제로 얼마나 바뀌었는지를 집계한 런타임 기록.
@@ -98,6 +104,16 @@ public:
 	void Initialize(const UTacticalEffect* Class, UTacticalEffectContext* EffectContext);
 
 	/**
+	 * @brief 적용 Duration 값을 계산한다.
+	 * @param OutDefDuration 계산된 Duration
+	 */
+	bool AttemptCalculateDurationFromDef(OUT int32& ResultDuration) const;
+	/**
+	 * @brief 적용 Duration을 설정한다.
+	 * @param NewDuration 새 Duration
+	 */
+	void SetDuration(int32 NewDuration);
+	/**
 	 * @brief 적용 스택 수를 설정한다.
 	 * @param NewStackCount 새 스택 수
 	 */
@@ -118,6 +134,11 @@ public:
 	 */
 	void SetTargetSnapshotData(UBoardCombatTargetSnapshotData* SnapshotData);
 
+	/*
+	 * @brief 현재 적용 Duration 값을 반환한다.
+	 * @return Duration 값
+	 */
+	int32 GetDuration() const;
 	/*
 	 * @brief 현재 적용 스택 수를 반환한다. 
 	 * @return 스택 수 
@@ -153,23 +174,31 @@ public:
 	float GetModifierMagnitude(int32 ModifierIdx) const;
 
 public:
+	const FTacticalEffectModifiedAttribute* GetModifiedAttribute(const FTacticalAttribute& Attribute) const;
+	FTacticalEffectModifiedAttribute* GetModifiedAttribute(const FTacticalAttribute& Attribute);
+	FTacticalEffectModifiedAttribute* AddModifiedAttribute(const FTacticalAttribute& Attribute);
+
+public:
 	// @brief 원본 정적 Effect 정보
 	UPROPERTY(Category = "Effect", VisibleAnywhere, meta = (DisplayName = "EffectClass"))
 	TObjectPtr<const UTacticalEffect> mEffectClass;
 
-	// @brief 원본 Effect가 지정한 Attribute에 대한 변경 값 (스택은 미반영)
+	// @brief Attribute에 대한 변경 로그 (스택 반영)
 	UPROPERTY()
-	TArray<float> mModifierValues;
+	TArray<FTacticalEffectModifiedAttribute> mModifiedAttributes;
+
+	// @brief 계산된 수정자 값 (스택 미반영)
+	UPROPERTY()
+	TArray<float> mModifiers;
 
 	// @brief 적용 배율
 	UPROPERTY()
 	float mDynamicMagnitude = 1.f;
 
-	// @brief 영구 Effect 여부
-	UPROPERTY()
-	bool mIsInfinite = false;
-
 private:
+	UPROPERTY(Category = "Effect", VisibleAnywhere, meta = (DisplayName = "Duration"))
+	int32 mDuration = 0;
+
 	// @brief 해당 Effect가 적용되는 스택 수
 	UPROPERTY(Category = "Effect", VisibleAnywhere, meta = (DisplayName = "StackCount"))
 	int32 mStackCount = 1;
@@ -210,7 +239,7 @@ public:
 
 	// @brief 적용 연산 종류(구 EGameplayModOp 대체)
 	UPROPERTY(Category = "Attribute", EditDefaultsOnly, meta = (DisplayName = "ModifierOp"))
-	TEnumAsByte<ETacticalModOp::Type> mModifierOp = ETacticalModOp::Additive;
+	TEnumAsByte<ETacticalModOp::Type> mModifierOp = ETacticalModOp::AddBase;
 
 	// @brief 연산에 사용할 크기 값(예: Additive면 더할 양, MultiplyAdditive면 더할 배율 등)
 	UPROPERTY(Category = "Attribute", EditDefaultsOnly, meta = (DisplayName = "ModifierMagnitude"))
@@ -266,6 +295,12 @@ public:
 	 * @param TESpec 적용할 Effect Spec
 	 */
 	virtual void OnApplied(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const;
+	/**
+	 * @brief Effect Duration이 감소할 때마다의 진입점
+	 * @param ActiveTEContainer 활성 Effect 컨테이너
+	 * @param TESpec 실행중인 Effect Spec
+	 */
+	virtual void OnReduceTimeRemaining(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const;
 
 public:
 	/** @brief 이 Effect를 식별하기 위한 에셋 태그 캐시를 반환한다. @return 에셋 태그 컨테이너 */
@@ -290,19 +325,34 @@ public:
 	TArray<FTacticalEffectExecutionDefinition> mExecutions;
 
 public:
-	// @brief 즉시 적용(Instant)인지 기간 단위 적용(Infinite)인지 여부
+	// @brief 즉시 적용(Instant)인지 기간 단위 적용(Duration, Infinite)인지 여부
 	UPROPERTY(Category = "Duration", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "DurationPolicy"))
-	ETacticalEffectDurationType mDurationPolicy;
+	ETacticalEffectDurationType mDurationPolicy = ETacticalEffectDurationType::Instant;
 
-	// @brief 스태킹 정책(없음/소스별/타겟별)
+	// @brief Duration 적용 시, 측정 시간 단위 정책
+	UPROPERTY(Category = "Duration", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "DurationUnitPolicy", EditCondition = "mDurationPolicy == ETacticalEffectDurationType::Duration", EditConditionHides))
+	ETacticalEffectDurationUnitType mDurationUnitPolicy = ETacticalEffectDurationUnitType::EveryTurn;
+
+	// @brief Duration 크기 값
+	UPROPERTY(Category = "Duration", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "DurationMagnitude", EditCondition = "mDurationPolicy == ETacticalEffectDurationType::Duration", EditConditionHides))
+	int32 mDurationMagnitude = 0;
+
+public:
+	// @brief 스태킹을 위한 동일 Effect 판단 정책(스택킹없음/소스별/타겟별)
 	UPROPERTY(Category = "Stacking", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "StackingType"))
-	ETacticalEffectStackingType mStackingType;
+	ETacticalEffectStackingType mStackingType = ETacticalEffectStackingType::None;
+
+	// @brief 스태킹 시, Duration Effect 갱신 정책
+	UPROPERTY(Category = "Stacking", EditDefaultsOnly, BlueprintReadOnly, Category = Stacking, meta = (DisplayName = "StackDurationRefreshPolicy", EditConditionHides, EditCondition = "mStackingType != ETacticalEffectStackingType::None"))
+	ETacticalEffectStackingDurationPolicy mStackDurationRefreshPolicy = ETacticalEffectStackingDurationPolicy::RefreshOnSuccessfulApplication;
+
+	// @brief 스태킹 시, Duration Effect 만기 정책
+	UPROPERTY(Category = "Stacking", EditDefaultsOnly, BlueprintReadOnly, Category = Stacking, meta = (DisplayName = "StackExpirationPolicy", EditConditionHides, EditCondition = "mStackingType != ETacticalEffectStackingType::None"))
+	ETacticalEffectStackingExpirationPolicy mStackExpirationPolicy = ETacticalEffectStackingExpirationPolicy::ClearEntireStack;
 
 	// @brief 스택 수를 모디파이어 크기에 배수로 반영할지 여부(true면 ComputeStackedModifierMagnitude로 스택 보정)
-	// NOTE: EditCondition 문자열의 "EGameplayEffectStackingType"은 구 GAS enum 이름의 잔재이나,
-	//       DefaultEngine.ini의 CoreRedirect로 ETacticalEffectStackingType에 매핑되어 동작한다(에디터 전용 메타라 코드 동작 무관).
-	UPROPERTY(Category = "Stacking", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "FactorInStackCount", EditConditionHides, EditCondition = "mStackingType != EGameplayEffectStackingType::None"))
-	bool mFactorInStackCount;
+	UPROPERTY(Category = "Stacking", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "FactorInStackCount", EditConditionHides, EditCondition = "mStackingType != ETacticalEffectStackingType::None"))
+	bool mFactorInStackCount = false;
 
 public:
 	// @brief 해당 Effect를 식별하기 위한 에셋 태그 캐시(GetAssetTags 반환원)

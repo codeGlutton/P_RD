@@ -1,5 +1,6 @@
 ﻿#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
+#include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
 
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 #include "Simulation/Factory/ObjectModelFactory.h"
@@ -618,6 +619,11 @@ void USRPGCombatModel::AdvanceTurn(bool IsInitialRound)
 
 	// 라운드 시작 시 이벤트 처리
 	NotifyRoundStartIfNeeded(PresentationBarrier);
+
+	++mTurnCount;
+	UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
+	checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
+	TacticalFrameworkModel->AdvanceTurnDuration(mTurnCount);
 }
 
 void USRPGCombatModel::NotifyRoundStartIfNeeded(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier)
@@ -625,14 +631,17 @@ void USRPGCombatModel::NotifyRoundStartIfNeeded(TSharedPtr<FPresentationBarrier>
 	if (mTurnContextOrder.IsEmpty() == false && mCurTurnContextOrder == mTurnContextOrder.GetHead())
 	{
 		++mRoundCount;
+		UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
+		checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
+		TacticalFrameworkModel->AdvanceRoundDuration(mRoundCount);
 
 		for (const TObjectPtr<UUnitModel>& Unit : mUnits)
 		{
-			Unit->OnBeginRound();
+			Unit->OnBeginRound(mRoundCount);
 		}
 		for (const TObjectPtr<UBoardActorModel>& Obstacle : mObstacles)
 		{
-			Obstacle->OnBeginRound();
+			Obstacle->OnBeginRound(mRoundCount);
 		}
 
 		OnBeginAnyRoundUI.Broadcast(RoundPresentationBarrier, mRoundCount);
@@ -645,11 +654,11 @@ void USRPGCombatModel::NotifyRoundEndIfNeeded()
 	{
 		for (const TObjectPtr<UUnitModel>& Unit : mUnits)
 		{
-			Unit->OnEndRound();
+			Unit->OnEndRound(mRoundCount);
 		}
 		for (const TObjectPtr<UBoardActorModel>& Obstacle : mObstacles)
 		{
-			Obstacle->OnEndRound();
+			Obstacle->OnEndRound(mRoundCount);
 		}
 	}
 }
@@ -748,6 +757,11 @@ const TArray<TObjectPtr<UBoardActorModel>>& USRPGCombatModel::GetObstacles() con
 int32 USRPGCombatModel::GetRoundCount() const
 {
 	return mRoundCount;
+}
+
+int32 USRPGCombatModel::GetTurnCount() const
+{
+	return mTurnCount;
 }
 
 void USRPGCombatModel::ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand, bool NeedEndCurrentAction)

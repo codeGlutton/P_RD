@@ -45,8 +45,8 @@ public:
 	/**
 	 * @brief 자신의 턴 시작마다 실행될 함수
 	 */
-	virtual void OnBeginTurn();
-	virtual void OnEndTurn();
+	virtual void OnBeginTurn(int32 TurnCount);
+	virtual void OnEndTurn(int32 TurnCount);
 
 	/* IGenericTeamAgentInterface 상속 */
 public:

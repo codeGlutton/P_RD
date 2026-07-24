@@ -100,7 +100,7 @@ void UUnitModel::OnEndRoom()
 	mAttributeCompModel->RemoveLooseGameplayTagsMatchingTag(EffectTags::GameplayEffect_StatusEffect, INT_MAX);
 }
 
-void UUnitModel::OnBeginTurn()
+void UUnitModel::OnBeginTurn(int32 TurnCount)
 {
 	/* 방어도 제거 */
 
@@ -162,7 +162,7 @@ void UUnitModel::OnBeginTurn()
 	}
 }
 
-void UUnitModel::OnEndTurn()
+void UUnitModel::OnEndTurn(int32 TurnCount)
 {
 	/* 턴 종료 패시브 처리 */
 

@@ -123,43 +123,16 @@ private:
 };
 
 /**
- * @brief 평가가 끝난(=실제 적용 직전 상태의) 단일 모디파이어 데이터.
- *
- * @details
- *  하나의 이펙트는 여러 모디파이어를 가질 수 있고, 각 모디파이어는 평가 단계를 거쳐
- *  "어떤 Attribute(mAttribute) 에 / 어떤 연산(mModifierOp) 으로 / 얼마(mMagnitude) 를 적용할지"가
- *  확정된다. 이 struct 가 바로 그 확정된 한 건을 나타낸다(GAS 의 FGameplayModifierEvaluatedData 대응).
- *
- *  [★PR #191 핵심 — enum 치환 지점]
- *   mModifierOp 의 타입이 구 EGameplayModOp 에서 ETacticalModOp(TacticalEffectType.h) 로 바뀌었다.
- *   GAS 의 TEnumAsByte<EGameplayModOp::Type> -> 자체 TEnumAsByte<ETacticalModOp::Type> 로 치환.
- *   ETacticalModOp 의 정수값은 구 EGameplayModOp 와 동일하게 유지되므로(직렬화 호환 / 배열 인덱싱 /
- *   CoreRedirect), 기존 에셋에 저장된 op 값이 그대로 의미를 유지한다.
- *
- *  [연산 종류(ETacticalModOp)와 적용 수식 — Aggregator 가 Attribute 최종값을 계산할 때 사용]
- *   적용 순서는 대략 BaseValue 에서 출발해 아래 묶음 순서로 합성된다.
- *     - AddBase(0)         : 합산.        BaseValue 에 더한다.            (구 GAS Additive 와 동일 / 별칭 Additive=0)
- *     - MultiplyAdditive(1): 배율 가산.   여러 배율을 (1 + Σmag) 형태로 모아 곱한다. (별칭 Multiplicitive=1)
- *     - DivideAdditive(2)  : 나눗셈 가산. 분모를 (1 + Σmag) 형태로 모아 나눈다.      (별칭 Division=2)
- *     - Override(3)        : 덮어쓰기.    이전 결과를 무시하고 mMagnitude 로 대체.   (별칭 Override=3)
- *     - MultiplyCompound(4): 거듭제곱 곱. 각 배율을 (1+mag) 로 보고 누적 "곱"한다(스택 시 거듭제곱). GAS 신규 op.
- *     - AddFinal(5)        : 최종 합산.   위 곱셈/나눗셈을 모두 거친 뒤 마지막에 더한다.
- *     - Max(6)             : 무효/개수.   실제 연산이 아니라 enum 개수(=배열 길이)로 쓰인다. mMods[Max] 인덱싱용.
- *   ※ 항등값(연산별 기준값)은 TacticalEffectUtilities::GetModifierBiasByModifierOp 가 제공한다:
- *     곱셈/나눗셈 계열(MultiplyAdditive/DivideAdditive/MultiplyCompound)=1, 합산 계열(AddBase/AddFinal)=0.
- *   ※ 스택 수에 따른 크기 보정은 TacticalEffectUtilities::ComputeStackedModifierMagnitude 가 처리하며,
- *     MultiplyCompound 는 (base^stack) 처럼 거듭제곱으로 누적된다.
+ * @brief 평가가 끝난(=실제 적용 직전 상태의) 단일 모디파이어 데이터
  */
 USTRUCT(BlueprintType)
 struct FTacticalModifierEvaluatedData
 {
     GENERATED_USTRUCT_BODY()
 
-    /** @brief 기본 생성자: 무효(mIsValid=false) 상태로 초기화. mModifierOp 는 합산(Additive=AddBase, 값 0)으로 기본 설정. */
     FTacticalModifierEvaluatedData() :
         mAttribute(),
-        // Additive 는 AddBase(값 0)의 구 GAS 별칭. 기본 op 를 "합산"으로 둔다.
-        mModifierOp(ETacticalModOp::Additive),
+        mModifierOp(ETacticalModOp::AddBase),
         mMagnitude(0.f),
         mIsValid(false)
     {
@@ -214,11 +187,9 @@ struct FTacticalModifierEvaluatedData
     bool mIsValid;
 };
 
-// @brief 활성 이펙트가 제거될 때 알리는 멀티캐스트 대리자. 인자는 제거 사유/정보(FTacticalEffectRemovalInfo).
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnActiveTacticalEffectRemoved_Info, const FTacticalEffectRemovalInfo&);
-// @brief 활성 이펙트의 스택 수가 바뀔 때 알리는 멀티캐스트 대리자.
-//        인자: (대상 핸들, 새 스택 수, 이전 스택 수). 스택 변화량은 ComputeStackedModifierMagnitude 계산의 입력이 된다.
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnActiveTacticalEffectStackChange, FActiveTacticalEffectHandle, int32 /*NewStackCount*/, int32 /*PreviousStackCount*/);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnActiveTacticalEffectTimeChange, FActiveTacticalEffectHandle, int32 /*NewStartTime*/, int32 /*NewDuration*/);
 
 /**
  * @brief 활성 이펙트 하나가 발생시키는 이벤트(대리자) 묶음.
@@ -230,6 +201,8 @@ struct FActiveTacticalEffectEvents
     FOnActiveTacticalEffectRemoved_Info OnEffectRemoved;
     // @brief 이펙트 스택 수 변경 시 브로드캐스트.
     FOnActiveTacticalEffectStackChange OnStackChanged;
+    // @brief Duration 종료 Time 변경 시 브로드캐스트.
+    FOnActiveTacticalEffectTimeChange OnTimeChanged;
 };
 
 /**
@@ -267,6 +240,12 @@ public:
     }
 
 public:
+    int32 GetTimeRemaining(int32 WorldTime) const;
+    int32 GetDuration() const;
+    ETacticalEffectDurationUnitType GetDurationUnit() const;
+    int32 GetEndTime() const;
+
+public:
     // @brief 이펙트 ID
     UPROPERTY(Category = "Effect", VisibleAnywhere, meta = (DisplayName = "Handle"))
     FActiveTacticalEffectHandle mHandle;
@@ -274,6 +253,10 @@ public:
     // @brief 이펙트 런타임 구성 데이터
     UPROPERTY(Category = "Effect", VisibleAnywhere, meta = (DisplayName = "Spec"))
     FTacticalEffectSpec mSpec;
+
+    // @brief 이펙트 시작 타이밍
+    UPROPERTY(Category = "Effect", VisibleAnywhere, meta = (DisplayName = "StartTime"))
+    int32 mStartTime = 0;
 
 public:
     // @brief 추가 예약된 다음 이펙트 포인터

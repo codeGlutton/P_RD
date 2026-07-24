@@ -185,6 +185,7 @@ public:
 	const TArray<TObjectPtr<UBoardActorModel>>& GetObstacles() const;
 
 	int32 GetRoundCount() const;
+	int32 GetTurnCount() const;
 
 	/* 시뮬 함수 */
 public:
@@ -302,6 +303,8 @@ protected:
 protected:
 	UPROPERTY(Category = Round, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "RoundCount"))
 	int32 mRoundCount = 0;
+	UPROPERTY(Category = Turn, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "TurnCount"))
+	int32 mTurnCount = 0;
 
 protected:
 	// @brief 배치된 타일맵

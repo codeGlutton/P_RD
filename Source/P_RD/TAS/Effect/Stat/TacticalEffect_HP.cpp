@@ -41,7 +41,7 @@ void UTacticalEffect_HP::OnExecuted(FActiveTacticalEffectsContainer& ActiveTECon
 
 	FSRPGAttributeEffectEventLog Log;
 	Log.mEffectAttribute = UCombatTargetAttributeSet::GetHPAttribute();
-	Log.mMagnitude = TESpec.mModifierValues[0];
+	Log.mMagnitude = TESpec.GetModifiedAttribute(UCombatTargetAttributeSet::GetHPAttribute())->mTotalMagnitude;
 
 	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
 	const UActorModel* Instigator = AttributeSetCompModelInstance->GetOwnerModel();
