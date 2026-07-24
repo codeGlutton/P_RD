@@ -370,6 +370,14 @@ public:
 	void StartEmphasisToViewPortPositionWithZoom(float TargetZoom, FVector2D ViewPortPos);
 
 	/*
+	* @brief Actor로 카메라의 시선을 옮기고 Zoom값을 mEmphasisZoom로 변경합니다.
+	* @details Emphasis 상태일 때는 다른 카메라 조작(이동, 줌)을 무시합니다.
+	* @param EmphasisActor를 등록하여 카메라가 해당 액터를 따라갑니다.
+	*/
+	UFUNCTION(BlueprintCallable)
+	void StartEmphasisToActorWithZoom(float TargetZoom, AActor* EmphasisActor);
+
+	/*
 	* @brief WorldPosition로 카메라의 시선을 옮기고 Zoom값을 mEmphasisZoom로 변경합니다.
 	* @details Emphasis 상태일 때는 다른 카메라 조작(이동, 줌)을 무시합니다.
 	* @param WorldPosition 위치로 카메라의 시선 옮깁니다.
@@ -388,7 +396,7 @@ public:
 	/*
 	* @brief Actor로 카메라의 시선을 옮기고 Zoom값을 mEmphasisZoom로 변경합니다.
 	* @details Emphasis 상태일 때는 다른 카메라 조작(이동, 줌)을 무시합니다.
-	* @param WorldPosition 위치로 카메라의 시선 옮깁니다.
+	* @param EmphasisActor를 등록하여 카메라가 해당 액터를 따라갑니다.
 	*/
 	UFUNCTION(BlueprintCallable)
 	void StartEmphasisToActor(AActor* EmphasisActor);

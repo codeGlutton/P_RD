@@ -564,6 +564,35 @@ void UCameraMovementComponent::StartEmphasisToViewPortPositionWithZoom(float Tar
 
 }
 
+void UCameraMovementComponent::StartEmphasisToActorWithZoom(float TargetZoom, AActor* EmphasisActor)
+{
+	if (mCamerControlState == ECameraControlState::Emphasis)
+		return;
+
+	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
+
+	FHitResult CameraRayHitResult;
+	// 카메라의 현재 상태를 저장합니다.
+	if (GetCameraRayHitPoint(CameraRayHitResult))
+	{
+		// 아직 타이머가 작동 중이라면 이전값을 유지합니다.
+		mPreDefaultState.Position = mCamerControlState == ECameraControlState::Emphasis_Returning ?
+			mPreDefaultState.Position : CameraRayHitResult.ImpactPoint;
+		mPreDefaultState.Zoom = mCamerControlState == ECameraControlState::Emphasis_Returning ?
+			mPreDefaultState.Zoom : mCameraComponent->OrthoWidth;
+	}
+
+	// 액터의 현재 위치를 구합니다.
+	FVector WorldPosition = EmphasisActor->GetActorLocation();
+
+	// 해당 위치로 Zoom과 이동을 수행합니다.
+	ZoomCamera_SmoothAndMoveToWorldPosition_Smooth(TargetZoom, WorldPosition);
+
+	mEmphasisActor = EmphasisActor;
+
+	mCamerControlState = ECameraControlState::Emphasis;
+}
+
 void UCameraMovementComponent::StartEmphasisToWorldPosition(FVector WorldPosition)
 {
 	if (mCamerControlState == ECameraControlState::Emphasis)
