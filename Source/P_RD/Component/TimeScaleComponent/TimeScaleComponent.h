@@ -95,10 +95,7 @@ public:
 
 public:
 	/*
-	* @brief 
-	* 
-	* @details 
-	* 
+	* @brief 시간 배율 조정을 요청하는 함수입니다.
 	* 
 	* @params Requester 요청자
 	* 무기한 시간 배율 요청자가 존재할 시 요청자가 제거되면 시간 배율 요청도 제거하기 위한 파라미터입니다.
@@ -120,6 +117,8 @@ public:
 	* Duration = -1이라면 무기한 유지됩니다.
 	* Duration = 1이라면 요청이 들어오고 1초 후 해제합니다.
 	* 
+	* @return FTileScaleHandle
+	* 요청을 해제할 때 사용하는 구조체입니다.
 	*/
 	UFUNCTION(BlueprintCallable)
 	FTimeScaleHandle RequestTimeScale(UObject* Requester, float TargetTimeScale, int32 Priority = 0, float BlendSpeed = 3.402823466e+38f, float Duration = -1.f);
@@ -127,6 +126,9 @@ public:
 
 	/*
 	* @brief 시간 배율 요청을 해제합니다.
+	* 
+	* @params Handle
+	* RequestTimeScale에서 반환된 Handle을 매개변수로 넣어서 시간 배율 조정을 해제합니다.
 	*/
 	UFUNCTION(BlueprintCallable)
 	void ReleaseTimeScale(FTimeScaleHandle Handle);
