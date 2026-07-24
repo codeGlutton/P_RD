@@ -1,4 +1,4 @@
-#include "UI/SkillPanelWidget.h"
+﻿#include "UI/SkillPanelWidget.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
@@ -97,7 +97,6 @@ void USkillPanelWidget::EnsureSkillDetailWidgets()
 		mSkillDetailBodyText = FindOrCreateRootWidget<UTextBlock>(WidgetTree, mRootCanvas, TEXT("SkillDetailBodyText"));
 		if (mSkillDetailBodyText != nullptr)
 		{
-			mSkillDetailBodyText->SetJustification(ETextJustify::Center);
 			mSkillDetailBodyText->SetColorAndOpacity(FSlateColor(RDPanelNavigationStyle::GetPanelTextColor()));
 		}
 	}
