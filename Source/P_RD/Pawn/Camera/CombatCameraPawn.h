@@ -13,6 +13,7 @@
 class USpringArmComponent;
 class UCameraComponent;
 class UCameraMovementComponent;
+class UTimeScaleComponent;
 class USceneComponent;
 
 struct FTouchState
@@ -60,6 +61,9 @@ public:
 	UPROPERTY(Category = CameraMovement, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CameraMovementComponent", AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraMovementComponent> mCameraMovementComponent;
 
+	UPROPERTY(Category = TimeScale, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "TimeScaleComponent", AllowPrivateAccess = "true"))
+	TObjectPtr<UTimeScaleComponent> mTimeScaleComponent;
+
 	// ========================================
 	// Touch 상태 관련 변수
 
@@ -91,6 +95,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	UCameraMovementComponent* GetCameraMovementComponent();
+
+	UFUNCTION(BlueprintCallable)
+	UTimeScaleComponent* GetTimeScaleComponent();
 
 	/* 콘솔 치트 (개발 전용) */
 public:
