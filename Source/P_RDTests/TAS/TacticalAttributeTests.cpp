@@ -117,8 +117,6 @@ bool FTacticalAttributeTests::RunTest(const FString& Parameters)
     AddInfo(TEXT("=== 테스트 케이스 2: Instant 이펙트 적용 검증 ==="));
 
     UTacticalEffectContext* EffectContext1 = CompModel->MakeEffectContext();
-    EffectContext1->SetInstigator(MockActorModel);
-    EffectContext1->SetAttributeSetComponentModel(CompModel);
 
     TSharedPtr<FTacticalEffectSpec> InstantSpec = CompModel->MakeOutgoingSpec(UTestInstantTacticalEffect::StaticClass(), EffectContext1);
     InstantSpec->mDynamicMagnitude = -20.f;
@@ -136,8 +134,6 @@ bool FTacticalAttributeTests::RunTest(const FString& Parameters)
     TestEqual(TEXT("기본 방어력은 10.f이어야 합니다."), CompModel->GetAttributeBaseValue(UCombatTargetAttributeSet::GetDefensePointAttribute()), 10.f);
 
     UTacticalEffectContext* EffectContext2 = CompModel->MakeEffectContext();
-    EffectContext2->SetInstigator(MockActorModel);
-    EffectContext2->SetAttributeSetComponentModel(CompModel);
 
     TSharedPtr<FTacticalEffectSpec> InfiniteEffect = CompModel->MakeOutgoingSpec(UTestInfiniteTacticalEffect::StaticClass(), EffectContext2);
     InfiniteEffect->mDynamicMagnitude = 30.f;
@@ -175,8 +171,6 @@ bool FTacticalAttributeTests::RunTest(const FString& Parameters)
     FGameplayTag GrantedTag = AbilityTags::GameplayAbility_Passive_OnEndApplyingEffect;
 
     UTacticalEffectContext* EffectContext3 = CompModel->MakeEffectContext();
-    EffectContext3->SetInstigator(MockActorModel);
-    EffectContext3->SetAttributeSetComponentModel(CompModel);
 
     TSharedPtr<FTacticalEffectSpec> TagSpec = CompModel->MakeOutgoingSpec(UTestInfiniteTagEffect::StaticClass(), EffectContext3);
     FActiveTacticalEffectHandle TagActiveHandle = CompModel->ApplyTacticalEffectSpecToSelf(*TagSpec);

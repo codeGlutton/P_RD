@@ -27,11 +27,7 @@ public class P_RDTests : ModuleRules
             "P_RD",
 
             /* Gameplay Tag Modules */
-            "GameplayTags",				// 게임플레이 태그 시스템
-
-            /* GAS Plugin Modules */
-            "GameplayTasks",			// GAS에서 비동기적인 작업을 생성하고 관리하는 모듈
-            "GameplayAbilities",		// GAS 프레임워크
+            "GameplayTags",
 
             /* AI Module (BoardCombatTarget가 참조하는 GenericTeamAgentInterface 등) */
             "AIModule",

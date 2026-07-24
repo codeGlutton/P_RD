@@ -8,11 +8,6 @@
 #pragma once
 
 #include "RDMinimal.h"
-
-#include "GameplayAbilitiesModule.h"
-#include "AbilitySystemGlobals.h"
-#include "AbilitySystemBlueprintLibrary.h"
-
 #include "TAS/AttributeSet/TacticalAttributeSet.h"
 
 // Attribute Set Comp 신규 로그 카테고리 등록

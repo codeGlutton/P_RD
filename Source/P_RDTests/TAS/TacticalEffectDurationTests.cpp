@@ -87,8 +87,6 @@ bool FTacticalEffectDurationTests::RunTest(const FString& Parameters)
 	}
 
 	UTacticalEffectContext* EffectContext = CompModel->MakeEffectContext();
-	EffectContext->SetInstigator(MockActorModel);
-	EffectContext->SetAttributeSetComponentModel(CompModel);
 
 	/* 테스트 1: 턴/라운드 지속시간 단위 격리 검증 (EveryTurn vs EveryRound) */
 	{

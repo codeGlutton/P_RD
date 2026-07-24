@@ -1,4 +1,4 @@
-﻿#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_GetMove.h"
+#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_GetMove.h"
 #include "TAS/Effect/Stat/TacticalEffect_MovementPoint.h"
 #include "TAS/Effect/Stat/TacticalEffect_MovementFactor_AddBase.h"
 #include "TAS/Effect/Stat/TacticalEffect_Movement.h"
@@ -16,8 +16,6 @@ void FSkillEffectLayer_GetMove::ApplyPointEffect(IBoardCombatTarget* ActorModel)
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
     UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
-    EffectContext->SetInstigator(Cast<UActorModel>(ActorModel));
-    EffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
 
     TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_MovementPoint::StaticClass(), EffectContext);
     EffectSpec->mDynamicMagnitude = mMoveGain;
@@ -38,8 +36,6 @@ FActiveTacticalEffectHandle FSkillEffectLayer_GetMove::ApplyFactorEffect(IBoardC
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
     UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
-    EffectContext->SetInstigator(Cast<UActorModel>(ActorModel));
-    EffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
 
     FActiveTacticalEffectHandle EffectHandle;
 
@@ -70,8 +66,6 @@ void FSkillEffectLayer_GetMove::CommitEffect(const FSkillEffectCommitParams& Par
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
     UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
-    EffectContext->SetInstigator(Cast<UActorModel>(Params.mInstigator.GetObject()));
-    EffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
 
     /* 이동 증가 적용 */
     const int32 TargetNum = Params.mTargets.Num();
@@ -87,3 +81,17 @@ void FSkillEffectLayer_GetMove::CommitEffect(const FSkillEffectCommitParams& Par
         AttributeSetComponentModel->ApplyTacticalEffectSpecToTarget(*EffectSpec, OtherAttributeSetComponentModel);
     }
 }
+
+#if WITH_EDITOR
+#define LOCTEXT_NAMESPACE "SkillEffectLayer_GetMove"
+
+FText FSkillEffectLayer_GetMove::MakeDescription() const
+{
+	return FText::Format(
+		LOCTEXT("GetMoveDesc", "이동력을 {0} 획득합니다."),
+		FText::AsNumber(mMoveGain)
+	);
+}
+
+#undef LOCTEXT_NAMESPACE
+#endif

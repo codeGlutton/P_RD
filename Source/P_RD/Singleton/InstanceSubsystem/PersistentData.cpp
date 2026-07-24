@@ -208,7 +208,7 @@ void UPlayerUnitPersistData::BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit)
 	 	});
 
 	 // 패시브 스택 비용 태그의 개수 변화를 추적: 현재 개수를 맵에 저장하되, 0이 되면 항목을 제거해 저장본을 깔끔히 유지한다.
-	 ASCModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_Cost_PassiveStack, EGameplayTagEventType::AnyCountChange).AddLambda([this](const FGameplayTag Tag, int32 Count) {
+	 ASCModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_Cost_PassiveStack, ETacticalTagEventType::AnyCountChange).AddLambda([this](const FGameplayTag Tag, int32 Count) {
 	 	mTagCountMap[Tag] = Count;
 	 	if (Count == 0)
 	 	{

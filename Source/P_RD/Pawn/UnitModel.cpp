@@ -133,8 +133,6 @@ void UUnitModel::OnBeginTurn(int32 TurnCount)
 	);
 
 	UTacticalEffectContext* EffectContext = mAttributeCompModel->MakeEffectContext();
-	EffectContext->SetInstigator(this);
-	EffectContext->SetAttributeSetComponentModel(mAttributeCompModel);
 
 	FActiveTacticalEffectHandle FactorHandle;
 	{

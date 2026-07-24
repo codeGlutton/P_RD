@@ -29,6 +29,11 @@ public:
 public:
 	void CommitEffect(const FSkillEffectCommitParams& Params) const override;
 
+#if WITH_EDITOR
+public:
+	FText MakeDescription() const override;
+#endif
+
 public:
 	UPROPERTY(Category = "Move", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveGain"))
 	int32 mMoveGain = 0;

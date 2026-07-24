@@ -8,6 +8,7 @@
 
 #include "RDMinimal.h"
 #include "Component/ComponentModel.h"
+#include "TAS/Effect/ActiveTacticalEffect.h"
 #include "Actor/TileMap/TileLayer.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "SkillComponentModel.generated.h"
@@ -46,6 +47,11 @@ public:
 	// @brief 장착된 고정 스킬 데이터
 	UPROPERTY(Category = "Static", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Data"))
 	TObjectPtr<UStaticSkillData> mData = nullptr;
+
+public:
+	// @brief 쿨다운 이펙트 핸들
+	UPROPERTY(Category = "Runtime", EditAnywhere, meta = (DisplayName = "CooldownHandle"))
+	FActiveTacticalEffectHandle mCooldownHandle;
 };
 
 USTRUCT(BlueprintType)
@@ -109,6 +115,8 @@ public:
 	void SetSkill(int32 SkillIndex, UStaticSkillData* SkillData);
 
 public:
+	bool CanActiveSkill(int32 SkillIndex) const;
+
 	/**
 	* @brief 액티브 스킬을 활성화하는 함수
 	* @param MapModel 참고할 맵 모델
@@ -119,7 +127,6 @@ public:
 
 protected:
 	void PlayMotionLayer();
-	// @brief 모션 레이어의 애니메이션 재생 (자동 회전이 필요한 경우, 회전 연출 완료 후 호출됨)
 	void PlayMotionLayerAnimation(ETileActorDirection LocalDirectionToTarget);
 	void TriggerMotionLayer(const FApplyEventTriggerPayload* Payload);
 	void EndMotionLayer();
@@ -131,6 +138,16 @@ public:
 public:
 	TArray<FTileIndex> GetAimableTiles(UTileMapModel* MapModel, int32 SkillIndex) const;
 	TArray<FTileIndex> GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex) const;
+
+public:
+	bool HasRequiredMovement(int32 SkillIndex) const;
+	int32 GetRequiredMovement(int32 SkillIndex) const;
+
+	bool IsCooldown(int32 SkillIndex) const;
+	ETacticalEffectDurationUnitType GetCooldownUnit(int32 SkillIndex) const;
+	int32 GetStaticCooldownDuration(int32 SkillIndex) const;
+	int32 GetCooldownDuration(int32 SkillIndex) const;
+	int32 GetRemainingCooldownTime(int32 SkillIndex) const;
 
 public:
 	/**
