@@ -26,6 +26,7 @@ TSharedRef<IDetailCustomization> FStaticSkillDataPropertyCustomization::MakeInst
 void FStaticSkillDataPropertyCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 {
 	/* 대상 에셋 포인터 구하기 */
+
 	TArray<TWeakObjectPtr<UObject>> ObjectsBeingCustomized;
 	DetailBuilder.GetObjectsBeingCustomized(ObjectsBeingCustomized);
 
@@ -47,16 +48,15 @@ void FStaticSkillDataPropertyCustomization::CustomizeDetails(IDetailLayoutBuilde
 	}
 
 	/* mDescription 프로퍼티 행 우측에 버튼 배치 커스터마이징 */
+
 	IDetailCategoryBuilder& Category = DetailBuilder.EditCategory("UI");
 	TSharedRef<IPropertyHandle> DescriptionHandle = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UStaticSkillData, mDescription));
 
 	if (DescriptionHandle->IsValidHandle() == true)
 	{
-		/* 기본 자동 생성 행 중복 표시 방지 */
-		DetailBuilder.HideProperty(DescriptionHandle);
-
-		FDetailWidgetRow& DescriptionRow = Category.AddCustomRow(LOCTEXT("DescriptionFilter", "Description"));
-		DescriptionRow.NameContent()
+		IDetailPropertyRow& DescriptionPropertyRow = Category.AddProperty(DescriptionHandle);
+		DescriptionPropertyRow.CustomWidget()
+			.NameContent()
 			[
 				DescriptionHandle->CreatePropertyNameWidget()
 			]
