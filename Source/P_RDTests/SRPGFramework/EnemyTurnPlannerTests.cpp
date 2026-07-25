@@ -87,6 +87,8 @@ namespace
 		Skill->mEffectPattern = EEffectPattern::Single;
 		Skill->mEffectArea = 0;
 		Skill->mIsPenetration = false;
+		// 모션 레이어 없으면 FSkillEntry::IsValid()가 미장착으로 판정하므로 더미 1개 추가
+		Skill->mSkillMotionLayers.AddDefaulted();
 		Skill->AddToRoot();
 		KeepAlive.Add(Skill);
 		return Skill;
@@ -129,6 +131,8 @@ namespace
 		Enemy->SetMoveTendency(Tendency);
 		Enemy->GetAttributeComponentModel()->ApplyModToAttribute(UEnemyUnitAttributeSet::GetMovementAttribute(), ETacticalModOp::Override, MoveRange);
 
+		// 스킬 슬롯 풀 할당: Mock은 스폰 데이터 초기화를 건너뛰므로 빈 목록으로 슬롯만 확보
+		Enemy->GetSkillComponentModel()->SetSkillFrom(TArray<TSoftObjectPtr<UStaticSkillData>>());
 		// 스킬 추가: 일반공격 계열
 		Enemy->GetSkillComponentModel()->SetSkill(0, MakeSkill(World, KeepAlive, AimPattern, AimRange));
 		// 두 번째 스킬(옵션): 스킬 랜덤 선택 검증용
