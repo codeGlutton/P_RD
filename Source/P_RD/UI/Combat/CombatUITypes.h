@@ -170,8 +170,17 @@ struct FUnitUI
 	UPROPERTY(BlueprintReadOnly) bool mIsPlayer = false;
 	/** @brief 유닛 초상화(DA mPortrait). 턴 순서 칩 등 상시 UI 표시용 — 없으면 텍스트 폴백. */
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mPortrait;
+	// 파티 카드가 3명의 이름을 동시에 보여줘야 해서 유닛 목록 쪽에도 필요하다.
+	// mName은 FUnitDetailUI에도 있지만 그쪽은 한 번에 한 유닛(롱프레스 상세)이다.
+	// @TODO 게임플레이: PushUnitUIData에서 채워주세요. 지금은 MockCombatDriver만 채운다.
+	UPROPERTY(BlueprintReadOnly) FText mName;
 	UPROPERTY(BlueprintReadOnly) float mHP = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mMaxHP = 0.f;
+	// 행동력. 이동과 스킬이 함께 쓰는 단일 자원이라 유닛 단위로 표시해야 한다.
+	// 원본은 SkillComponentModel의 mActionPoints / mMaxActionPoints.
+	// @TODO 게임플레이: PushUnitUIData에서 채워주세요. 지금은 MockCombatDriver만 채운다.
+	UPROPERTY(BlueprintReadOnly) int32 mActionPoints = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mMaxActionPoints = 0;
 	UPROPERTY(BlueprintReadOnly) float mDamagePoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mDefensePoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mMovementPoint = 0.f;
@@ -274,6 +283,17 @@ struct FSkillUI
 	UPROPERTY(BlueprintReadOnly) int32 mSkillIndex = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) FText mName;
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
+	// 새 전투 규칙: 이동과 스킬이 행동력 하나를 나눠 쓰고, 스킬은 턴 쿨타임을
+	// 가지며, 피해는 min~max에 크리티컬이 max의 1.5배다. 스킬 카드가 이 넷을
+	// 모두 보여줘야 플레이어가 무엇을 고를지 판단할 수 있다.
+	// @TODO 게임플레이: PushSkillUIData에서 채워주세요. 지금은 MockCombatDriver만 채운다.
+	UPROPERTY(BlueprintReadOnly) int32 mActionPointCost = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mActionPointGain = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mCooldownTurns = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mRemainingCooldown = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mDamageMin = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mDamageMax = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mCriticalDamage = 0;
 	UPROPERTY(BlueprintReadOnly) bool mIsUsable = false;
 	UPROPERTY(BlueprintReadOnly) FSkillTargetingUI mTargeting;
 };
