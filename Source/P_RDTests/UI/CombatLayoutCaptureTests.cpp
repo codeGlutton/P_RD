@@ -13,6 +13,10 @@
  *********************************************************************/
 
 #include "Blueprint/UserWidget.h"
+#include "Blueprint/WidgetTree.h"
+#include "Components/Border.h"
+#include "Components/Image.h"
+#include "Engine/Texture2D.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "ImageUtils.h"
 #include "Misc/AutomationTest.h"
@@ -45,6 +49,51 @@ namespace CombatLayoutCapture
 		return FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("UI"), TEXT("CombatLayouts"));
 	}
 
+	/**
+	 * @brief 브러시가 쓰는 텍스처를 전부 상주시킨다.
+	 *
+	 * @details
+	 * 오프스크린 렌더는 한 번에 끝나서 스트리밍을 기다려 주지 않는다. 큰
+	 * 텍스처는 아직 안 올라온 채로 그려지고, 그 결과가 "프레임 조각(작은
+	 * 텍스처)만 보이고 초상화·링·아이콘은 안 보이는" 화면이다. 인게임에서는
+	 * 정상적으로 스트리밍되므로 이건 캡처 쪽 문제지 WBP 문제가 아니다.
+	 *
+	 * @return 상주시킨 텍스처 수. 0이면 브러시가 비어 있다는 뜻이다.
+	 */
+	int32 ResidentBrushTextures(UUserWidget& Widget)
+	{
+		if (Widget.WidgetTree == nullptr)
+		{
+			return 0;
+		}
+
+		TArray<UWidget*> Widgets;
+		Widget.WidgetTree->GetAllWidgets(Widgets);
+		int32 Count = 0;
+		for (UWidget* Candidate : Widgets)
+		{
+			UTexture2D* Texture = nullptr;
+			if (const UImage* Image = Cast<UImage>(Candidate))
+			{
+				Texture = Cast<UTexture2D>(Image->GetBrush().GetResourceObject());
+			}
+			else if (const UBorder* Border = Cast<UBorder>(Candidate))
+			{
+				Texture = Cast<UTexture2D>(Border->Background.GetResourceObject());
+			}
+			if (Texture == nullptr)
+			{
+				continue;
+			}
+			Texture->SetForceMipLevelsToBeResident(30.0f);
+			Texture->WaitForStreaming();
+			Texture->UpdateResource();
+			++Count;
+		}
+		FlushRenderingCommands();
+		return Count;
+	}
+
 	/** @brief 배치안 하나를 렌더해서 PNG로 저장한다. 실패 사유는 OutError로. */
 	bool CaptureLayout(UWorld& World, const TCHAR* ClassPath, FString& OutError)
 	{
@@ -69,6 +118,15 @@ namespace CombatLayoutCapture
 
 		const TSharedRef<SWidget> LayoutSlate = Layout->TakeWidget();
 		Layout->ForceLayoutPrepass();
+
+		const int32 TextureCount = ResidentBrushTextures(*Layout);
+		if (TextureCount == 0)
+		{
+			OutError = TEXT("브러시에 텍스처가 하나도 없다. 아트가 안 붙었다");
+			return false;
+		}
+		UE_LOG(LogTemp, Display, TEXT("[CombatLayout] %d textures resident"),
+			TextureCount);
 
 		// 전장이 뒤에 깔린다고 가정한 어두운 바탕. 완전한 검정에 대고 보면
 		// 패널이 실제보다 잘 읽혀서 배치 판단이 후해진다.
