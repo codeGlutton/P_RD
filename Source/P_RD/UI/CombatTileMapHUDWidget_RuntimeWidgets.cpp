@@ -62,14 +62,6 @@ void UCombatTileMapHUDWidget::EnsureRuntimeWidgets()
 	// WBP에 디자이너 스킨(concept 아트 + HUD_* 앵커)이 있는지 먼저 판별한다.
 	// 활성이면 아래 플레이스홀더 배경을 투명화해 WBP 아트가 보이게 하고, 좌표는 WBP 앵커에서 읽는다.
 	ResolveDesignerSkin();
-	// 기존 WBP에 남은 주사위 아트/앵커도 런타임에서 항상 숨긴다.
-	for (const FName WidgetName : { FName(TEXT("HUD_Dice")), FName(TEXT("HUD_DiceTray")), FName(TEXT("HUD_M_dice")) })
-	{
-		if (UWidget* LegacyDiceWidget = WidgetTree->FindWidget(WidgetName))
-		{
-			LegacyDiceWidget->SetVisibility(ESlateVisibility::Collapsed);
-		}
-	}
 	if (IsDesignerSkinActive())
 	{
 		UCanvasPanel* DesignerCanvasPanel = DesignCanvas.Get();

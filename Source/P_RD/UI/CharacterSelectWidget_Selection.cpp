@@ -91,13 +91,6 @@ void UCharacterSelectWidget::RefreshResponsiveClassLayout(const FVector2D& Logic
 
 	// 설명 패널은 640x360 원본 비율을 유지하되 화면 절반/높이 40%를 넘지 않는다.
 	UWidget* DescriptionFrame = GetWidgetFromName(TEXT("desc_frame"));
-	for (const FName LegacyDiceWidgetName : { FName(TEXT("icon_dice")), FName(TEXT("mDiceStatValueText")) })
-	{
-		if (UWidget* LegacyDiceWidget = GetWidgetFromName(LegacyDiceWidgetName))
-		{
-			LegacyDiceWidget->SetVisibility(ESlateVisibility::Collapsed);
-		}
-	}
 	if (const FAnchorData* FrameBase = GetBaseCanvasLayout(DescriptionFrame))
 	{
 		const double DescriptionScale = FMath::Min3(
