@@ -60,8 +60,13 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 	}
 	mUIModel->SetUnitUIs(Units);
 
-	// 가짜 스킬 4개. 돌파 베기는 쿨타임 중이라 사용 불가 상태를 만든다 --
+	// 가짜 스킬 5개. 돌파 베기는 쿨타임 중이라 사용 불가 상태를 만든다 --
 	// 비활성 표현이 배치안 평가의 핵심 항목이다.
+	//
+	// 다섯 개인 이유: 배치안들은 이동 + 스킬 5개로 여섯 칸을 잡는다. 네 개만
+	// 채우면 마지막 칸이 비어서, 가운데 정렬한 레일이 한쪽으로 쏠린 것처럼
+	// 보이고 방사형 배치는 원이 이가 빠진 것처럼 보인다. 배치를 비교하려는데
+	// 데이터가 모자라 생긴 구멍을 배치 결함으로 읽게 된다.
 	TArray<FSkillUI> Skills;
 	{
 		struct FMockSkill
@@ -70,6 +75,7 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 			int32 DamageMin; int32 DamageMax; bool bUsable;
 		};
 		const FMockSkill Table[] = {
+			{ TEXT("평타"),      1, 0, 0,  4,  7, true  },
 			{ TEXT("방패 강타"), 2, 2, 0,  8, 14, true  },
 			{ TEXT("고정 참격"), 1, 0, 0,  5,  9, true  },
 			{ TEXT("돌파 베기"), 2, 3, 3, 12, 18, false },
@@ -91,6 +97,9 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 		}
 	}
 	mUIModel->SetSkillUIs(Skills);
+	// 방패 강타를 고른 상태로 둔다. 선택 강조가 어떻게 읽히는지가 평가
+	// 항목이고, 10안은 아예 "조준 중"을 그리는 배치다.
+	mUIModel->SetSelectedSkill(1);
 
 	// 가짜 턴
 	FTurnUI Turn;

@@ -38,6 +38,15 @@ namespace CombatLayoutCapture
 	/** @brief 잡아 볼 배치안 목록. WBP가 생기는 대로 여기에 줄을 늘린다. */
 	const TCHAR* LayoutClassPaths[] = {
 		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_01_ClassicCRPG.WBP_CombatLayout_01_ClassicCRPG_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_02_LeftParty.WBP_CombatLayout_02_LeftParty_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_03_ActiveUnit.WBP_CombatLayout_03_ActiveUnit_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_04_Radial.WBP_CombatLayout_04_Radial_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_05_BottomBar.WBP_CombatLayout_05_BottomBar_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_06_Mirrored.WBP_CombatLayout_06_Mirrored_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_07_CardHand.WBP_CombatLayout_07_CardHand_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_08_Minimal.WBP_CombatLayout_08_Minimal_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_09_SplitBands.WBP_CombatLayout_09_SplitBands_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_10_Targeting.WBP_CombatLayout_10_Targeting_C"),
 	};
 
 	/** @brief 폰 가로 화면 실물 크기. 배치안 평가는 이 한 장이면 충분하다. */
