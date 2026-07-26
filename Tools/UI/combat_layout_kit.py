@@ -800,9 +800,11 @@ def party_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
         gem = max(22.0, min(30.0, h * 0.24))
         # 젬 사이를 더 벌린다. 붙여 놓으면 넷이 한 덩어리로 뭉쳐 개수가
         # 안 읽힌다 -- 시안은 젬 하나 폭의 3분의 1을 띄운다.
-        gems(left, h * 0.70, gem, gem * 1.35)
+        # 시안은 보석 줄 윗변이 행 높이의 61%에 온다. 0.70 이면 8%p 낮게
+        # 앉아 이름·바와의 간격이 벌어지고 카드 아래가 비어 보인다.
+        gems(left, h * 0.61, gem, gem * 1.35)
         label(blueprint, "PartyAPText_{}".format(index), body,
-              left + gem * 1.35 * 4 + 10, h * 0.70, 64, line, "0/0", info_size,
+              left + gem * 1.35 * 4 + 10, h * 0.61, 64, line, "0/0", info_size,
               AP_TEXT, "left", size)
 
     elif style == "hero":

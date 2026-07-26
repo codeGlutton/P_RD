@@ -26,6 +26,19 @@
   내용      면색에서 벗어난 픽셀 비율 (패널이 얼마나 차 있는가)
   글자      밝은 글자 행의 기준선 위치 (패널 높이 대비)
 
+## --elements 는 신호일 뿐, 숫자를 그대로 믿지 말 것
+
+요소 비교는 시안 덩어리와 캡처 덩어리를 "가장 가까운 것끼리" 짝짓는다.
+덩어리가 합쳐지거나 쪼개지면 엉뚱한 짝이 생기고, 그러면 위치 차이가
+그럴듯한 숫자로 나온다. 실제로 이 도구가 "아이콘이 8%p 위로 18%p 크다,
+보석이 20%p 위다" 라고 했는데, 상자를 제대로 잡고 색으로 특정해 다시 재니
+아이콘은 51.8% 대 56.2% 로 거의 같았고 보석은 위가 아니라 8%p 아래였다.
+그대로 고쳤으면 멀쩡한 아이콘을 줄이고 보석을 반대로 내릴 뻔했다.
+
+**"여기가 다른 것 같다"는 신호로만 쓰고, 고치기 전에 그 요소만 색으로
+특정해서 다시 재라.** 특히 "빠짐/남음" 은 데이터 차이(아군 수, AP 0)로도
+생기므로 같은 미리보기 데이터끼리 비교할 때만 의미가 있다.
+
 ## 자기 검증
 
 좌표를 손으로 적으면 엉뚱한 데를 재고도 숫자가 나온다 -- 실제로 그랬다.
@@ -42,6 +55,7 @@ import sys
 
 import numpy as np
 from PIL import Image, ImageDraw
+from scipy import ndimage
 
 MOCKUP = (r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitHUDMockups"
           r"/KK_HUD_Polish_01.png")
@@ -204,12 +218,65 @@ def measure(img, box):
     }
 
 
+def elements(img, box, min_area=140):
+    """패널 안의 낱개 요소들. 아이콘·글자덩이·바·보석이 각각 하나로 잡힌다.
+
+    패널 중앙값 색에서 벗어난 픽셀을 이어 붙여 덩어리를 만든다. 프레임은
+    패널 테두리를 따라 길게 눕는 한 덩어리가 되므로, 가장자리에 닿은
+    덩어리는 프레임으로 보고 뺀다 -- 안에 있는 것만 요소다.
+    """
+    x0, y0, x1, y1 = box
+    reg = img[y0:y1, x0:x1]
+    h, w = reg.shape[:2]
+    base = np.median(reg.reshape(-1, 3), axis=0)
+    fg = np.abs(reg - base).mean(axis=2) > 26
+    # 한두 픽셀 구멍은 메워서 글자 획이 낱자로 흩어지지 않게 한다.
+    fg = ndimage.binary_closing(fg, structure=np.ones((3, 5)))
+    lab, count = ndimage.label(fg)
+    out = []
+    for i in range(1, count + 1):
+        ys, xs = np.where(lab == i)
+        if len(ys) < min_area:
+            continue
+        bx0, bx1, by0, by1 = xs.min(), xs.max(), ys.min(), ys.max()
+        if bx0 <= 2 or by0 <= 2 or bx1 >= w - 3 or by1 >= h - 3:
+            continue  # 테두리에 닿았다 -- 프레임이다
+        out.append({
+            "x": 100.0 * bx0 / w, "y": 100.0 * by0 / h,
+            "w": 100.0 * (bx1 - bx0 + 1) / w,
+            "h": 100.0 * (by1 - by0 + 1) / h,
+            "픽셀": int(len(ys)),
+        })
+    out.sort(key=lambda e: (e["y"], e["x"]))
+    return out
+
+
+def match_elements(a, b, tol=14.0):
+    """시안 요소와 캡처 요소를 위치로 짝짓는다. 짝이 없으면 빠지거나 남는 것."""
+    left = list(b)
+    pairs, missing = [], []
+    for e in a:
+        best, dist = None, 1e9
+        for f in left:
+            d = abs(e["x"] - f["x"]) + abs(e["y"] - f["y"])
+            if d < dist:
+                best, dist = f, d
+        if best is not None and dist <= tol * 2:
+            pairs.append((e, best))
+            left.remove(best)
+        else:
+            missing.append(e)
+    return pairs, missing, left
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--mockup", default=MOCKUP)
     ap.add_argument("--capture", default=CAPTURE)
     ap.add_argument("--boxes", help="잰 영역을 그려 저장할 경로")
     ap.add_argument("--json", help="수치를 JSON으로 저장할 경로")
+    ap.add_argument("--elements", action="store_true",
+                    help="패널 안 요소 하나하나까지 비교")
     args = ap.parse_args()
 
     M, C = load(args.mockup), load(args.capture)
@@ -244,6 +311,32 @@ def main():
             print("%-12s %-11s %8.1f %8.1f %7.2f배%s"
                   % (label, k, a, b, ratio, flag))
         print()
+
+    if args.elements:
+        print()
+        print("=== 요소 단위 (패널 안에서의 위치·크기, 패널 대비 %) ===")
+        for label, box in PANELS.items():
+            if label not in used:
+                continue
+            ma = elements(M, box)
+            ca = elements(C, used[label])
+            pairs, missing, extra = match_elements(ma, ca)
+            print()
+            print("[%s] 시안 %d개 / 캡처 %d개" % (label, len(ma), len(ca)))
+            for e, f in pairs:
+                dx, dy = f["x"] - e["x"], f["y"] - e["y"]
+                dw, dh = f["w"] - e["w"], f["h"] - e["h"]
+                bad = max(abs(dx), abs(dy)) > 6 or max(abs(dw), abs(dh)) > 8
+                print("   %s 위치(%5.1f,%5.1f)->(%5.1f,%5.1f) 어긋남(%+5.1f,%+5.1f)"
+                      "  크기(%5.1f x%5.1f) 차(%+5.1f,%+5.1f)"
+                      % ("!!" if bad else "  ", e["x"], e["y"], f["x"], f["y"],
+                         dx, dy, e["w"], e["h"], dw, dh))
+            for e in missing:
+                print("   빠짐  시안에 있는데 캡처에 없음 (%5.1f,%5.1f) %5.1fx%5.1f"
+                      % (e["x"], e["y"], e["w"], e["h"]))
+            for f in extra:
+                print("   남음  캡처에만 있음 (%5.1f,%5.1f) %5.1fx%5.1f"
+                      % (f["x"], f["y"], f["w"], f["h"]))
 
     if args.json:
         with io.open(args.json, "w", encoding="utf-8") as handle:
