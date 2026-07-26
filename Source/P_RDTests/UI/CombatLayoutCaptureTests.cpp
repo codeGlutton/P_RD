@@ -27,6 +27,8 @@
 #include "Slate/WidgetRenderer.h"
 #include "UI/Combat/CombatLayoutHUDWidget.h"
 #include "Widgets/Colors/SColorBlock.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/SBoxPanel.h"
 #include "Widgets/SOverlay.h"
 
 #if WITH_EDITOR
@@ -162,27 +164,51 @@ namespace CombatLayoutCapture
 
 		// 전장이 뒤에 깔린다고 가정한 어두운 바탕. 완전한 검정에 대고 보면
 		// 패널이 실제보다 잘 읽혀서 배치 판단이 후해진다.
+		// 기지값 색 띠. 리니어 {0, 0.05, 0.2158, 1.0}은 감마 인코딩을 정확히
+		// 한 번 거치면 sRGB {0, 65, 128, 255}가 된다. 다르게 읽히면 파이프라인
+		// 어딘가에서 변환이 빠졌거나 두 번 들어간 것이다.
 		const TSharedRef<SWidget> CaptureRoot =
 			SNew(SOverlay)
 			+ SOverlay::Slot()
 			[
-				SNew(SColorBlock).Color(FLinearColor(0.014f, 0.016f, 0.021f, 1.0f))
+				SNew(SColorBlock).Color(FLinearColor(0.008f, 0.009f, 0.011f, 1.0f))
+			]
+			+ SOverlay::Slot()
+			.HAlign(HAlign_Left).VAlign(VAlign_Top)
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot().AutoWidth()
+				[ SNew(SBox).WidthOverride(40).HeightOverride(10)
+					[ SNew(SColorBlock).Color(FLinearColor(0.f, 0.f, 0.f)) ] ]
+				+ SHorizontalBox::Slot().AutoWidth()
+				[ SNew(SBox).WidthOverride(40).HeightOverride(10)
+					[ SNew(SColorBlock).Color(FLinearColor(0.05f, 0.05f, 0.05f)) ] ]
+				+ SHorizontalBox::Slot().AutoWidth()
+				[ SNew(SBox).WidthOverride(40).HeightOverride(10)
+					[ SNew(SColorBlock).Color(FLinearColor(0.2158f, 0.2158f, 0.2158f)) ] ]
+				+ SHorizontalBox::Slot().AutoWidth()
+				[ SNew(SBox).WidthOverride(40).HeightOverride(10)
+					[ SNew(SColorBlock).Color(FLinearColor(1.f, 1.f, 1.f)) ] ]
 			]
 			+ SOverlay::Slot()
 			[
 				LayoutSlate
 			];
 
-		// 리니어로 렌더하고, 파일로 쓸 때 딱 한 번 sRGB로 인코딩한다.
+		// 렌더러가 감마 공간에 직접 그린다.
 		//
-		// 두 번 다 틀려 봤고 값이 그걸 말한다.
-		//   렌더러 보정 끔 + 읽기 변환 끔 : 면 밝기 125가 48로 찍혔다.
-		//     0.49^2.2 = 0.20 -> 51. 인코딩이 아예 없었다.
-		//   렌더러 보정 켬 + 읽기 변환 끔 : 배경 리니어 0.012가 110으로 찍혔다.
-		//     0.012를 두 번 인코딩하면 0.39 -> 100. 렌더 타깃이 이미 sRGB라
-		//     셰이더 보정이 얹혀 두 번 먹었다.
-		// 그래서 렌더는 리니어로 두고 읽기에서 한 번만 변환한다.
-		FWidgetRenderer Renderer(false, true);
+		// 세 번 틀리고 내린 결론: RGBA8 타깃에서는 ReadPixels의 LinearToGamma
+		// 플래그가 적용되지 않는다. 변환을 읽기 단계에 미루면 리니어 값이
+		// 바이트로 그대로 나가 절반쯤 어두운 그림이 남는다 -- 면 텍스처 111이
+		// 48로 찍힌 원인. 그래서 변환은 렌더러가 하고, 읽기는 그대로 옮긴다.
+		//
+		// 예전에 이 조합을 "씻긴다"며 버렸는데, 그때 씻겨 보인 건 배경 색을
+		// sRGB 감각으로 적어 놓고 리니어로 해석시킨 탓이었다. 파이프라인이
+		// 아니라 배경 값이 문제였다.
+		//
+		// 그리고 이번부터 캡처가 스스로 증명한다: 아래에서 기지값 색 띠를
+		// 같이 그려 읽은 값이 기대값과 다르면 캡처 자체를 실패로 처리한다.
+		FWidgetRenderer Renderer(true, true);
 		Renderer.SetIsPrepassNeeded(true);
 		UTextureRenderTarget2D* RenderTarget = Renderer.DrawWidget(
 			CaptureRoot, FVector2D(CaptureWidth, CaptureHeight));
@@ -195,12 +221,55 @@ namespace CombatLayoutCapture
 		FlushRenderingCommands();
 		TArray<FColor> Pixels;
 		FReadSurfaceDataFlags ReadFlags(RCM_UNorm);
-		ReadFlags.SetLinearToGamma(true);
+		ReadFlags.SetLinearToGamma(false);
 		if (!RenderTarget->GameThread_GetRenderTargetResource()->ReadPixels(Pixels, ReadFlags)
 			|| Pixels.Num() != CaptureWidth * CaptureHeight)
 		{
 			OutError = TEXT("렌더 결과를 읽지 못함");
 			return false;
+		}
+
+		// 이 경로는 인코딩이 두 번 걸린다. 색 띠 실측: 리니어 0.05가 136으로
+		// 읽혔는데 0.05를 두 번 인코딩하면 정확히 137이다. 그래서 저장 전에
+		// 한 번 되돌린다 -- 결과는 정확히 한 번 인코딩된 sRGB가 되고, 아래
+		// 검증이 그걸 확인한다. 엔진 플래그 조합을 더 뒤지는 것보다 측정값에
+		// 맞춘 보정 한 줄이 낫고, 틀리면 검증이 잡는다.
+		for (FColor& Pixel : Pixels)
+		{
+			Pixel.R = uint8(FMath::RoundToInt(
+				255.f * FMath::Pow(Pixel.R / 255.f, 2.2f)));
+			Pixel.G = uint8(FMath::RoundToInt(
+				255.f * FMath::Pow(Pixel.G / 255.f, 2.2f)));
+			Pixel.B = uint8(FMath::RoundToInt(
+				255.f * FMath::Pow(Pixel.B / 255.f, 2.2f)));
+		}
+
+		// 색 띠 검증: 위 보정까지 거친 결과가 정확히 한 번 인코딩이라면
+		// 이 값이 나와야 한다.
+		{
+			const int32 Expected[4] = { 0, 65, 128, 255 };
+			const int32 SampleX[4] = { 20, 60, 100, 140 };
+			for (int32 Step = 0; Step < 4; ++Step)
+			{
+				const FColor& Pixel = Pixels[5 * CaptureWidth + SampleX[Step]];
+				if (FMath::Abs(int32(Pixel.R) - Expected[Step]) > 6)
+				{
+					OutError = FString::Printf(
+						TEXT("감마 검증 실패: 띠 %d칸이 %d로 읽힘 (기대 %d). ")
+						TEXT("이 캡처의 색은 믿을 수 없다"),
+						Step, Pixel.R, Expected[Step]);
+					return false;
+				}
+			}
+			// 통과했으면 띠를 배경색으로 지워 그림을 깨끗하게 남긴다.
+			const FColor Background = Pixels[30 * CaptureWidth + 400];
+			for (int32 Y = 0; Y < 12; ++Y)
+			{
+				for (int32 X = 0; X < 170; ++X)
+				{
+					Pixels[Y * CaptureWidth + X] = Background;
+				}
+			}
 		}
 
 		// 단색이면 위젯이 안 그려진 것이다. 그대로 저장하면 "배경만 나온 캡처"가

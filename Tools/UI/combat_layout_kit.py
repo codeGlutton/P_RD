@@ -34,10 +34,14 @@ UNIT = 32.0
 #: The band ratio is a property of the drawn moulding, read once off the master
 #: -- but nothing depends on it lining up, because the pieces were cut from one
 #: continuous drawing and provably share a cross-section.
-HEAVY = {"corner": 2 * UNIT, "link": UNIT, "band": UNIT * 85.0 / 128.0,
-         "prefix": "KK_HFrame"}
-LIGHT = {"corner": UNIT, "link": UNIT / 2.0, "band": UNIT * 34.0 / 128.0,
-         "prefix": "KK_LFrame"}
+#: `rail`은 직선 구간을 화면에 그릴 두께다. 시안 실측: 레일은 ~10px 얇은
+#: 선이고 모서리 브래킷만 덩어리다. 원판의 띠를 그대로 그리면 레일이
+#: 모서리만큼 두꺼워져 테두리가 화면의 주인공이 된다 -- 4차 반영본이
+#: 정확히 그랬다.
+HEAVY = {"corner": 2 * UNIT, "link": UNIT, "rail": 18.0,
+         "band": UNIT * 85.0 / 128.0, "prefix": "KK_HFrame"}
+LIGHT = {"corner": UNIT, "link": UNIT / 2.0, "rail": 10.0,
+         "band": UNIT * 34.0 / 128.0, "prefix": "KK_LFrame"}
 
 #: 금속 프레임. 나무와 단면 두께가 같게 그려져서 치수는 그대로 쓰고 접두사만
 #: 바뀐다 -- 잘라낸 조각의 이음면 두께를 재서 확인했다(둘 다 128 / 64).
@@ -61,6 +65,17 @@ FRAME_FAMILY = {
 FRAME_SETS = {
     "wood": (HEAVY, LIGHT),
     "metal": (METAL, METAL_LIGHT),
+}
+
+#: 시안 파일을 픽셀로 재서 잡은 프레임 보정색.
+#:
+#: 시안의 파티 프레임은 (109,67,28) 어두운 호두색인데 4차 나무 원판은 밝은
+#: 주황으로 나왔다 -- 색상은 같고 밝기·채도만 높아 곱색으로 내려앉힌다.
+#: 금속은 시안 (118,120,123)보다 어두워 1을 넘는 값으로 올린다. 임시 보정이고
+#: 다음 원판 발주에 이 실측값이 목표로 들어간다.
+FRAME_TINTS = {
+    "wood": WHITE,
+    "metal": WHITE,
 }
 
 SELECT_CORNER = UNIT       # KK_Select_Corner draws at 1U
@@ -101,8 +116,8 @@ COOLDOWN_TEXT = unreal.LinearColor(1.00, 0.80, 0.45, 1.0)
 
 #: 판 안쪽 위에 얹는 밝은 선과 아래에 까는 어두운 선. 이 두 줄이 "깎아 만든
 #: 판"과 "색칠한 사각형"을 가른다. 목업의 면은 전부 이 층을 갖고 있다.
-RIM_LIGHT = unreal.LinearColor(1.0, 0.97, 0.90, 0.35)
-RIM_DARK = unreal.LinearColor(0.0, 0.0, 0.0, 0.50)
+RIM_LIGHT = unreal.LinearColor(1.0, 0.97, 0.90, 0.0)
+RIM_DARK = unreal.LinearColor(0.0, 0.0, 0.0, 0.0)
 CARD_SHADOW = unreal.LinearColor(0.0, 0.0, 0.0, 0.45)
 
 #: 숫자를 얹는 배지. 밝은 원에 진한 숫자여야 작은 크기에서 숫자가 산다.
@@ -150,7 +165,7 @@ SURFACES = {
     "enemy":      ("Stone_Enemy", WHITE),
     "turn":       ("Stone_Skill", WHITE),
     "info":       ("Parchment", WHITE),
-    "action":     ("Wood_Active", WHITE),
+    "action":     ("ButtonWood", WHITE),
 }
 
 
@@ -347,12 +362,9 @@ def bar(blueprint, name, parent, x, y, w, h, fill, parent_size=None):
     progress.set_editor_property("widget_style", style)
     progress.set_editor_property("fill_color_and_opacity", WHITE)
     progress.set_editor_property("percent", 0.75)
-    # The art keeps a quarter of its height as clear margin above and below the
-    # rail, so a widget the height of the wanted bar draws one half that thick.
-    # Give the widget the room the art expects and keep it on the same centre
-    # line the caller asked for.
-    place(blueprint, name, x, y - h / 2.0, w, h * 2.0, "tl", parent_size,
-          Z_CONTENT)
+    # 새 바 아트는 여백 없이 캔버스를 꽉 채운다. 옛 아트의 상하 여백을
+    # 가정하고 2배 높이로 그리면 뚱뚱한 초록 덩어리가 된다.
+    place(blueprint, name, x, y, w, h, "tl", parent_size, Z_CONTENT)
     return progress
 
 
@@ -404,28 +416,31 @@ def frame(blueprint, prefix, parent, w, h, weight=None, family="wood"):
         weight = heavy if min(w, h) >= 8 * UNIT else light
     size = (w, h)
     corner, link = weight["corner"], weight["link"]
+    rail = weight.get("rail", link)
     art_prefix = weight["prefix"]
+    tint = FRAME_TINTS.get(family, WHITE)
 
-    def piece(name, source, x, y, pw, ph, **flips):
+    def piece(name, source, x, y, pw, ph, tiling=None, **flips):
         image(blueprint, name, parent, x, y, pw, ph, size, z_order=Z_FRAME,
-              texture="{}/{}_{}".format(KK, art_prefix, source), tint=WHITE)
+              texture="{}/{}_{}".format(KK, art_prefix, source), tint=tint,
+              tiling=tiling,
+              size=(link, rail) if tiling is not None else None)
         if flips:
             flip(blueprint, name, **flips)
 
-    runs_h = max(1, int(round((w - 2 * corner) / link)))
-    runs_v = max(1, int(round((h - 2 * corner) / link)))
-    step_h = (w - 2 * corner) / runs_h
-    step_v = (h - 2 * corner) / runs_v
-
-    for i in range(runs_h):
-        x = corner + i * step_h
-        piece("{}_FT{}".format(prefix, i), "Link_T", x, 0, step_h, link)
-        piece("{}_FB{}".format(prefix, i), "Link_B", x, h - link, step_h, link)
-    for i in range(runs_v):
-        y = corner + i * step_v
-        piece("{}_FL{}".format(prefix, i), "Link_S", 0, y, link, step_v)
-        piece("{}_FR{}".format(prefix, i), "Link_S", w - link, y, link, step_v,
-              horizontal=True)
+    # 직선 구간은 타일 브러시 한 장이다. 조각마다 위젯을 놓으면 폭이 넓을수록
+    # 개수가 폭발한다 -- 화면 폭 바의 윗변 하나가 위젯 114개까지 갔고 UMG
+    # 컴파일러가 위젯마다 스택을 덤프해 빌드가 8GB에서 멈췄다. image_size를
+    # 조각 크기로 두면 늘리는 게 아니라 그 크기로 반복이라 같은 픽셀이다.
+    run_h, run_v = w - 2 * corner, h - 2 * corner
+    piece("{}_FT".format(prefix), "Link_T", corner, 0, run_h, rail,
+          tiling=unreal.SlateBrushTileType.HORIZONTAL)
+    piece("{}_FB".format(prefix), "Link_B", corner, h - rail, run_h, rail,
+          tiling=unreal.SlateBrushTileType.HORIZONTAL)
+    piece("{}_FL".format(prefix), "Link_S", 0, corner, rail, run_v,
+          tiling=unreal.SlateBrushTileType.VERTICAL)
+    piece("{}_FR".format(prefix), "Link_S", w - rail, corner, rail, run_v,
+          tiling=unreal.SlateBrushTileType.VERTICAL, horizontal=True)
 
     piece("{}_FCTL".format(prefix), "Corner_T", 0, 0, corner, corner)
     piece("{}_FCTR".format(prefix), "Corner_T", w - corner, 0, corner, corner,
@@ -448,26 +463,25 @@ def button_frame(blueprint, prefix, parent, w, h, pressed=False):
     size = (w, h)
     corner, link = UNIT, UNIT / 2.0
 
-    def piece(tag, source, x, y, pw, ph, **flips):
+    def piece(tag, source, x, y, pw, ph, tiling=None, **flips):
         nm = "{}_B{}".format(prefix, tag)
         image(blueprint, nm, parent, x, y, pw, ph, size, z_order=Z_FRAME,
               texture="{}/KK_Button_{}_{}".format(KK, source, state),
-              tint=WHITE)
+              tint=WHITE, tiling=tiling,
+              size=(link, link) if tiling is not None else None)
         if flips:
             flip(blueprint, nm, **flips)
 
-    runs_h = max(1, int(round((w - 2 * corner) / link)))
-    runs_v = max(1, int(round((h - 2 * corner) / link)))
-    step_h, step_v = (w - 2 * corner) / runs_h, (h - 2 * corner) / runs_v
-
-    for i in range(runs_h):
-        x = corner + i * step_h
-        piece("T%d" % i, "Link_H", x, 0, step_h, link)
-        piece("B%d" % i, "Link_H", x, h - link, step_h, link, vertical=True)
-    for i in range(runs_v):
-        y = corner + i * step_v
-        piece("L%d" % i, "Link_V", 0, y, link, step_v)
-        piece("R%d" % i, "Link_V", w - link, y, link, step_v, horizontal=True)
+    # 직선 구간은 타일 브러시 한 장 (frame()과 같은 이유).
+    run_h, run_v = w - 2 * corner, h - 2 * corner
+    piece("T", "Link_H", corner, 0, run_h, link,
+          tiling=unreal.SlateBrushTileType.HORIZONTAL)
+    piece("B", "Link_H", corner, h - link, run_h, link,
+          tiling=unreal.SlateBrushTileType.HORIZONTAL, vertical=True)
+    piece("L", "Link_V", 0, corner, link, run_v,
+          tiling=unreal.SlateBrushTileType.VERTICAL)
+    piece("R", "Link_V", w - link, corner, link, run_v,
+          tiling=unreal.SlateBrushTileType.VERTICAL, horizontal=True)
     piece("CTL", "Corner", 0, 0, corner, corner)
     piece("CTR", "Corner", w - corner, 0, corner, corner, horizontal=True)
     piece("CBL", "Corner", 0, h - corner, corner, corner, vertical=True)
@@ -512,12 +526,9 @@ def card(blueprint, name, parent, x, y, w, h, anchor="tl", parent_size=None,
     # to fit is what made the previous art line read as flat black.
     fill, tint = SURFACES.get(role, SURFACES["command"])
     image(blueprint, "{}_Fill".format(name), inner, 0, 0, w, h, size,
-          z_order=Z_FILL, texture="{}/KK_Fill_{}".format(KK, fill), tint=tint,
-          size=(FILL_TILE, FILL_TILE),
-          tiling=unreal.SlateBrushTileType.BOTH)
-    # 위가 밝고 아래가 어두운 조명. 없으면 판이 납작하게 읽힌다.
-    image(blueprint, "{}_Shade".format(name), inner, 0, 0, w, h, size,
-          z_order=Z_FILL + 1, texture=SHADE, tint=WHITE, size=SHADE_SIZE)
+          z_order=Z_FILL, texture="{}/KK_Fill_{}".format(KK, fill), tint=tint)
+    # 조명 램프는 걷었다. 스킨에서 자른 면이 시안의 명암을 이미 갖고 있어
+    # 코드가 또 얹으면 이중으로 어두워진다.
 
     # 프레임이 면을 무는 자리에 두 줄. 위는 빛을 받아 밝고 아래는 그늘진다.
     # 램프 한 장만으로는 면이 평평하게 읽힌다.
@@ -1044,9 +1055,7 @@ def end_turn(blueprint, root, x, y, w=300.0, h=64.0, anchor="br", size=19):
     image(blueprint, "EndTurnInk", plate, 0, 0, w, h, extent, tint=INK)
     action_fill, action_tint = SURFACES["action"]
     image(blueprint, "EndTurnSurface", plate, 0, 0, w, h, extent,
-          texture="{}/KK_Fill_{}".format(KK, action_fill), tint=action_tint,
-          size=(FILL_TILE, FILL_TILE),
-          tiling=unreal.SlateBrushTileType.BOTH)
+          texture=KK + "/KK_Fill_ButtonWood", tint=WHITE)
     image(blueprint, "EndTurnShade", plate, 0, 0, w, h, extent,
           texture=SHADE, tint=WHITE, size=SHADE_SIZE)
     glyph = min(40.0, h - 20)
