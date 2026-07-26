@@ -35,17 +35,22 @@ def centred(count, item, gap, left=0.0, right=W):
     return left + (right - left - row) / 2.0
 
 
-def top_band(bp, root, turn_token=88.0, names=False):
+def top_band(bp, root, turn_token=127.0, names=False):
     """Round counter left, turn order centred, objective right.
 
     Nine of the ten mock-ups share this band unchanged, so it lives in one
     place -- otherwise a tweak to the round panel has to be made nine times and
     the layouts stop being comparable the moment one of them is missed.
     """
-    kit.round_panel(bp, root, 24, 20, 240, 68, "tl", 22)
-    kit.turn_row(bp, root, centred(6, turn_token, 8), 18, turn_token, 8, "tc",
+    # 시안 실측(1672)을 1920 으로 환산해 넣는다. 이전 값은 내가 고른 것이라
+    # 양피지 판이 시안의 절반 높이(42 대 87)로 나왔다.
+    #   라운드 판  양피지 206x87  -> 판 268x100
+    #   목표 현판  양피지 323x88  -> 판 396x100, 시안보다 41px 왼쪽에서 시작
+    #   턴 칸      시안 다섯 칸이 554 를 채운다 -> 칸 127
+    kit.round_panel(bp, root, 24, 12, 264, 121, "tl", 26)
+    kit.turn_row(bp, root, centred(6, turn_token, 8), 10, turn_token, 8, "tc",
                  names=names)
-    kit.objective_panel(bp, root, W - 384, 20, 360, 68, "tr", 17)
+    kit.objective_panel(bp, root, 1496, 14, 398, 123, "tr", 20)
 
 
 # ─── 1안 클래식 CRPG ───────────────────────────────────────────────────────────
@@ -57,30 +62,40 @@ def layout_01(bp, root):
     sitting side by side -- stacked they eat less width and the command rail
     gets the room, which is what the mock-up is really trading for.
     """
-    top_band(bp, root, 104.0)
+    top_band(bp, root, 127.0)
 
-    bottom = H - 24
-    # 시안 실측: 행 534x140, 행 사이는 거의 붙어 있다(2px). 500x116 에 12px
-    # 간격이면 같은 정보가 더 좁은 자리에 눌려 카드가 비어 보인다.
-    row_w, row_h, row_gap = 534.0, 140.0, 4.0
-    party_top = bottom - 3 * row_h - 2 * row_gap
+    # 아래 수치는 전부 시안(KK_HUD_Polish_01)을 1920x1080 에서 실측한 값이다.
+    # 이전 값들은 여백 상수와 centred() 로 스스로 계산한 것이라 시안과 맞을
+    # 이유가 없었다 -- 실제로 아군 판이 44px 위, 스킬 줄이 50px 오른쪽,
+    # 적 패널이 72px 아래에 있었다.
+    #
+    #   아군 판  x  24  y  668   497 x 384 (3행)
+    #   스킬 줄  x 520  y  709   960 x 349 (6장)
+    #   적 패널  x1560  y  709   349 x 223
+    #   턴 종료  x1564  y  948   332 x 100
+    row_w, row_h, row_gap = 487.0, 124.0, 4.0
+    party_top = 672.0
     for i in range(3):
         kit.party_card(bp, root, i, M, party_top + i * (row_h + row_gap),
                        row_w, row_h, "bl", "strip")
 
-    enemy_w, enemy_h = 330.0, 200.0
-    enemy_x = W - M - enemy_w
-    end_h = 80.0
+    # 판 상자가 아니라 '보이는 면'이 시안과 같아야 한다. 프레임이 안쪽으로
+    # 17px 을 먹으므로 상자를 그만큼 키워 면이 1560,709 에서 349x223 으로
+    # 나오게 한다.
+    enemy_x, enemy_y = 1534.0, 683.0
+    enemy_w, enemy_h = 392.0, 267.0
+    end_x, end_y = 1544.0, 948.0
+    end_w, end_h = 348.0, 136.0
 
-    cmd_w, cmd_h, cmd_gap = 156.0, 330.0, 10.0
-    start = centred(6, cmd_w, cmd_gap, M + row_w + 24, enemy_x - 24)
+    # 같은 이유로 12px 씩 키운다. 시안의 석재 면은 520~1500 을 채운다.
+    cmd_w, cmd_h, cmd_gap = 163.0, 351.0, 6.0
+    start, cmd_top = 512.0, 707.0
     for i in range(6):
         kit.command_card(bp, root, i, start + i * (cmd_w + cmd_gap),
-                         bottom - cmd_h, cmd_w, cmd_h, "bc")
+                         cmd_top, cmd_w, cmd_h, "bc")
 
-    kit.enemy_panel(bp, root, enemy_x, bottom - end_h - 12 - enemy_h,
-                    enemy_w, enemy_h, "br")
-    kit.end_turn(bp, root, enemy_x, bottom - end_h, enemy_w, end_h, "br", 24)
+    kit.enemy_panel(bp, root, enemy_x, enemy_y, enemy_w, enemy_h, "br")
+    kit.end_turn(bp, root, end_x, end_y, end_w, end_h, "br", 24)
 
 
 # ─── 2안 좌측 세로 파티 ────────────────────────────────────────────────────────
