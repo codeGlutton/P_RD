@@ -28,6 +28,7 @@
 #include "UI/Combat/CombatLayoutHUDWidget.h"
 #include "Widgets/Colors/SColorBlock.h"
 #include "Widgets/Layout/SBox.h"
+#include "Widgets/Layout/SScaleBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/SOverlay.h"
 
@@ -54,8 +55,33 @@ namespace CombatLayoutCapture
 	};
 
 	/** @brief 폰 가로 화면 실물 크기. 배치안 평가는 이 한 장이면 충분하다. */
-	constexpr int32 CaptureWidth = 1920;
-	constexpr int32 CaptureHeight = 1080;
+	//: 시안 원본과 같은 크기로 찍는다.
+	//:
+	//: 배치는 1920x1080 캔버스에 짜여 있고, 인게임에서는 UI 스케일 규칙이
+	//: 짧은변 941 을 만나 0.871 로 줄여 그린다. 캡처도 그 배율을 그대로 걸어야
+	//: 시안(1672x941)과 픽셀이 1:1 로 맞는다. 1920 으로 찍고 시안을 확대해
+	//: 비교하면 비율만 맞고 크기는 안 맞아, 요소 단위로 보면 어긋난다.
+	constexpr int32 DesignWidth = 1920;
+	constexpr int32 DesignHeight = 1080;
+	constexpr int32 CaptureWidth = 1672;
+	constexpr int32 CaptureHeight = 941;
+	constexpr float CaptureScale = float(CaptureHeight) / float(DesignHeight);
+
+	/** @brief 1920 캔버스를 1672 로 줄여 그리도록 감싼다. 인게임과 같은 배율. */
+	TSharedRef<SWidget> ScaleToCapture(const TSharedRef<SWidget>& Inner)
+	{
+		return SNew(SScaleBox)
+			.Stretch(EStretch::UserSpecified)
+			.UserSpecifiedScale(CaptureScale)
+			[
+				SNew(SBox)
+				.WidthOverride(float(DesignWidth))
+				.HeightOverride(float(DesignHeight))
+				[
+					Inner
+				]
+			];
+	}
 
 	FString OutputDirectory()
 	{
@@ -192,7 +218,7 @@ namespace CombatLayoutCapture
 			]
 			+ SOverlay::Slot()
 			[
-				LayoutSlate
+				ScaleToCapture(LayoutSlate)
 			];
 
 		// 렌더러가 감마 공간에 직접 그린다.
@@ -354,7 +380,8 @@ namespace CombatLayoutCapture
 		// 한 번 그려서 기하를 채운다. 그리기 전에는 캐시가 비어 있다.
 		FWidgetRenderer Probe(true, true);
 		Probe.SetIsPrepassNeeded(true);
-		Probe.DrawWidget(LayoutSlate, FVector2D(CaptureWidth, CaptureHeight));
+		const TSharedRef<SWidget> Scaled = ScaleToCapture(LayoutSlate);
+		Probe.DrawWidget(Scaled, FVector2D(CaptureWidth, CaptureHeight));
 		FlushRenderingCommands();
 
 		TMap<UWidget*, ESlateVisibility> Original;
@@ -370,9 +397,12 @@ namespace CombatLayoutCapture
 			{
 				continue;
 			}
+			// 크기는 반드시 화면 크기로 읽는다. GetLocalSize 는 설계 좌표
+			// (1920 캔버스) 값이라, 0.871 로 줄여 그린 화면 위치와 섞이면
+			// 자를 상자가 실제보다 15% 커진다 -- 처음에 그렇게 나왔다.
 			const FGeometry Geometry = Target->GetCachedGeometry();
-			const FVector2D Size = Geometry.GetLocalSize();
-			const FVector2D Pos = Geometry.GetAbsolutePosition();
+			const FVector2D Size = FVector2D(Geometry.GetAbsoluteSize());
+			const FVector2D Pos = FVector2D(Geometry.GetAbsolutePosition());
 			if (Size.X < 8.0 || Size.Y < 8.0)
 			{
 				continue;
@@ -395,7 +425,7 @@ namespace CombatLayoutCapture
 			FWidgetRenderer Renderer(true, true);
 			Renderer.SetIsPrepassNeeded(true);
 			UTextureRenderTarget2D* RT = Renderer.DrawWidget(
-				LayoutSlate, FVector2D(CaptureWidth, CaptureHeight));
+				Scaled, FVector2D(CaptureWidth, CaptureHeight));
 			if (RT == nullptr)
 			{
 				continue;
@@ -416,25 +446,14 @@ namespace CombatLayoutCapture
 				Pixel.B = uint8(FMath::RoundToInt(255.f * FMath::Pow(Pixel.B / 255.f, 2.2f)));
 			}
 
-			const int32 Pad = 4;
-			const int32 X0 = FMath::Clamp(int32(Pos.X) - Pad, 0, CaptureWidth - 1);
-			const int32 Y0 = FMath::Clamp(int32(Pos.Y) - Pad, 0, CaptureHeight - 1);
-			const int32 X1 = FMath::Clamp(int32(Pos.X + Size.X) + Pad, X0 + 1, CaptureWidth);
-			const int32 Y1 = FMath::Clamp(int32(Pos.Y + Size.Y) + Pad, Y0 + 1, CaptureHeight);
-			const int32 W = X1 - X0;
-			const int32 H = Y1 - Y0;
-			TArray<FColor> Crop;
-			Crop.Reserve(W * H);
-			for (int32 Y = Y0; Y < Y1; ++Y)
-			{
-				for (int32 X = X0; X < X1; ++X)
-				{
-					Crop.Add(Pixels[Y * CaptureWidth + X]);
-				}
-			}
-
+			// 잘라내지 않는다.
+			//
+			// 부품만 오려 내면 그게 화면 어디에 앉는지가 사라진다 -- 정작
+			// 알고 싶은 게 그것이다. 전체 화면을 그대로 두고 그 부품만 켠
+			// 그림을 남긴다. 시안 위에 그대로 겹칠 수 있고, 여러 장을 넘겨
+			// 보면 부품들이 제자리에 있는지 한눈에 읽힌다.
 			TArray64<uint8> Png;
-			FImageUtils::PNGCompressImageArray(W, H, Crop, Png);
+			FImageUtils::PNGCompressImageArray(CaptureWidth, CaptureHeight, Pixels, Png);
 			const FString File = FPaths::Combine(Dir, FString::Printf(
 				TEXT("%s_%s_%dx%d_at%d_%d.png"),
 				*Target->GetClass()->GetName(), *Target->GetName(),
