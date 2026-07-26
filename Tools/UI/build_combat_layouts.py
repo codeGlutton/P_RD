@@ -356,8 +356,8 @@ def layout_09(bp, root):
     # 짜부라져 수치가 바 밖으로 나간 적이 있다.
     # 파티 250px 에 숫자까지 넣으려니 "90/" 에서 잘렸고, 목표 현판 220px
     # 에서도 문장이 잘렸다. 라운드 판과 턴 칸을 줄여 그 폭을 넘긴다.
-    round_w, strip_w, token = 140.0, 286.0, 54.0
-    objective_w, gap = 250.0, 10.0
+    round_w, strip_w, token = 140.0, 268.0, 54.0
+    objective_w, gap = 244.0, 10.0
 
     x = 18.0
     kit.round_panel(bp, body, x, middle(72), round_w, 72, "tl", 22)
@@ -367,7 +367,9 @@ def layout_09(bp, root):
                        strip_w, 150, "tl", "strip")
     x += 3 * strip_w + 2 * 8 + gap
     kit.turn_row(bp, body, x, middle(token), token, 5.0, "tl", names=False)
-    x += 6 * token + 5 * 5 + gap
+    # 여섯 칸 자리를 잡아 두었는데 실제로 보이는 건 다섯 칸이다. 남는 한 칸이
+    # 적 패널 자리를 먹어 191px 까지 내려가 안전장치가 걸렸다.
+    x += 5 * token + 4 * 5 + gap
 
     objective_x = bar_w - 18 - objective_w
     enemy_w = objective_x - gap - x

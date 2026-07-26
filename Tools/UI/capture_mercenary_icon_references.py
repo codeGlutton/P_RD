@@ -181,6 +181,7 @@ def capture_character(world, capture_actor, capture, target, name, mesh_path):
     output_dir = OUTPUT_ROOT / name
     output_dir.mkdir(parents=True, exist_ok=True)
     files = []
+    base_color_files = []
     distance = diameter * 3.0
     elevation = math.radians(7.0)
     for angle in VIEW_ANGLES:
@@ -201,6 +202,20 @@ def capture_character(world, capture_actor, capture, target, name, mesh_path):
         )
         files.append(str(output_dir / filename))
 
+        if angle in (45, 90):
+            capture.set_editor_property(
+                "capture_source", unreal.SceneCaptureSource.SCS_BASE_COLOR
+            )
+            capture.capture_scene()
+            base_color_filename = f"{name}_{angle:03d}_basecolor.png"
+            unreal.RenderingLibrary.export_render_target(
+                world, target, str(output_dir), base_color_filename
+            )
+            base_color_files.append(str(output_dir / base_color_filename))
+            capture.set_editor_property(
+                "capture_source", unreal.SceneCaptureSource.SCS_FINAL_COLOR_LDR
+            )
+
     actor_subsystem().destroy_actor(actor)
     return {
         "name": name,
@@ -209,6 +224,7 @@ def capture_character(world, capture_actor, capture, target, name, mesh_path):
         "bounds_origin": [origin.x, origin.y, origin.z],
         "bounds_extent": [extent.x, extent.y, extent.z],
         "files": files,
+        "base_color_files": base_color_files,
     }
 
 

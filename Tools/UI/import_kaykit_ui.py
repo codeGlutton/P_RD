@@ -11,13 +11,27 @@ import os
 import unreal
 
 SOURCE = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitUIKit/Processed"
+SLICE_SOURCE = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitUIKit/Slices"
 PACKAGE = "/Game/SVN/OutSideAsset/UI/KayKit"
+SLICE_PACKAGE = PACKAGE + "/Slices"
 
 files = sorted(f for f in os.listdir(SOURCE) if f.lower().endswith(".png"))
 if not files:
     raise RuntimeError("no PNGs under {}".format(SOURCE))
 
+#: 시안에서 통째로 뜬 9슬라이스 판. 조각 조립을 대신한다.
+slice_files = sorted(f for f in os.listdir(SLICE_SOURCE)
+                     if f.lower().endswith(".png"))     if os.path.isdir(SLICE_SOURCE) else []
+
 tasks = []
+for name in slice_files:
+    task = unreal.AssetImportTask()
+    task.set_editor_property("filename", os.path.join(SLICE_SOURCE, name))
+    task.set_editor_property("destination_path", SLICE_PACKAGE)
+    task.set_editor_property("automated", True)
+    task.set_editor_property("replace_existing", True)
+    task.set_editor_property("save", True)
+    tasks.append(task)
 for name in files:
     task = unreal.AssetImportTask()
     task.set_editor_property("filename", os.path.join(SOURCE, name))
@@ -64,6 +78,13 @@ def png_size(path):
     return (int.from_bytes(head[16:20], "big"),
             int.from_bytes(head[20:24], "big"))
 
+
+for name in slice_files:
+    stem = os.path.splitext(name)[0]
+    if unreal.EditorAssetLibrary.load_asset(
+            "{}/{}".format(SLICE_PACKAGE, stem)) is None:
+        raise RuntimeError("슬라이스 임포트 실패: {}".format(stem))
+unreal.log("[KayKit] 슬라이스 {}장".format(len(slice_files)))
 
 checked = 0
 for stem in imported:

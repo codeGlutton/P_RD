@@ -14,6 +14,25 @@ PACKAGE_PATH = "/Game/UI/CombatLayouts"
 ART = "/Game/SVN/OutSideAsset/UI/CombatHUD"
 C04 = ART + "/Concept04"
 KK = "/Game/SVN/OutSideAsset/UI/KayKit"
+SLICE = KK + "/Slices"
+
+#: 시안에서 통째로 뜬 9슬라이스 판.
+#:
+#: 조각을 만들어 이어 붙이는 방식으로는 손그림 품질에 못 닿았다 -- 직선 구간의
+#: 진행 방향 요동이 0.02~0.25 인데 시안은 9.67~12.50 이다. 몰딩이 없어 길게 뽑은
+#: 플라스틱 막대로 읽힌다. 시안은 이미 완성 품질이므로 그걸 부품으로 만든다.
+#:
+#: 값은 (텍스처, 이미지 크기, BOX 여백 x, BOX 여백 y). 여백은 프레임 두께를
+#: 이미지 크기로 나눈 것이고, 그만큼이 모서리로 남고 나머지가 늘어난다.
+SLICES = {
+    "party":      ("Slice_Card_Wood", (248, 109), 0.0806, 0.1835),
+    "party_lead": ("Slice_Card_Wood", (248, 109), 0.0806, 0.1835),
+    "command":    ("Slice_Card_Stone", (162, 308), 0.1358, 0.0714),
+    "turn":       ("Slice_Card_Wood", (248, 109), 0.0806, 0.1835),
+    "enemy":      ("Slice_Panel_Red", (307, 198), 0.0717, 0.1111),
+    "info":       ("Slice_Plate_Parch", (248, 109), 0.0806, 0.1835),
+    "action":     ("Slice_Button", (319, 100), 0.0564, 0.1800),
+}
 
 CANVAS_W, CANVAS_H = 1920.0, 1080.0
 MARGIN = 20.0
@@ -146,14 +165,22 @@ BADGE_TEXT = unreal.LinearColor(1.0, 0.98, 0.94, 1.0)
 #: Portraits we actually have art for. A slot with none keeps an empty socket
 #: rather than borrowing another unit's face -- the runtime overwrites it as
 #: soon as the model supplies one.
-PARTY_PORTRAITS = (KK + "/KK_Face_Knight", KK + "/KK_Face_Archer",
-                   KK + "/KK_Face_Mage")
+PARTY_PORTRAITS = (
+    KK + "/KK_Face_Knight_ActualV1",
+    KK + "/KK_Face_Ranger_ActualV1",
+    KK + "/KK_Face_Mage_ActualV1",
+)
 
 #: 턴 순서 칸의 기본 얼굴. 게임플레이가 유닛 초상화를 주면 덮어쓴다.
 #: 지금은 미리보기 장면(기사 - 독수리 - 궁수 - 독수리 - 마법사)에 맞춘다.
-TURN_PORTRAITS = (KK + "/KK_Face_Knight", KK + "/KK_Face_Eagle",
-                  KK + "/KK_Face_Archer", KK + "/KK_Face_Eagle",
-                  KK + "/KK_Face_Mage", None)
+TURN_PORTRAITS = (
+    KK + "/KK_Face_Knight_ActualV1",
+    KK + "/KK_Face_Eagle",
+    KK + "/KK_Face_Ranger_ActualV1",
+    KK + "/KK_Face_Eagle",
+    KK + "/KK_Face_Mage_ActualV1",
+    None,
+)
 
 #: Which painted glyph each command slot shows. Slot 0 is 이동; the rest follow
 #: the mock skill order.
@@ -377,8 +404,11 @@ def paint(widget, texture=None, tint=None, size=None, tiling=None, margin=None):
         extent.set_editor_property("y", float(size[1]))
         brush.set_editor_property("image_size", extent)
     if margin is not None:
+        # 여백은 이미지 크기에 대한 비율이고 축마다 다르다. 가로로 긴 판에서
+        # 한 값을 네 변에 쓰면 세로 모서리가 뭉개진다.
+        mx, my = margin if isinstance(margin, (tuple, list)) else (margin, margin)
         brush.set_editor_property("draw_as", unreal.SlateBrushDrawType.BOX)
-        brush.set_editor_property("margin", unreal.Margin(*[margin] * 4))
+        brush.set_editor_property("margin", unreal.Margin(mx, my, mx, my))
     elif tiling is not None:
         brush.set_editor_property("draw_as", unreal.SlateBrushDrawType.IMAGE)
         brush.set_editor_property("tiling", tiling)
@@ -486,54 +516,18 @@ def flip(blueprint, name, horizontal=False, vertical=False):
 
 
 def frame(blueprint, prefix, parent, w, h, weight=None, family="wood"):
-    """Lay a frame around a w x h panel by butting pieces together.
+    """아무 것도 하지 않는다. 프레임은 이제 판 그림에 이미 들어 있다.
 
-    Two corners and three links per weight, mirrored into all four sides. The
-    pieces were cut from one drawn panel, so the corner's arm and the link's
-    cross-section are the same pixels -- joins cannot show a step, which is
-    what the previous set could not manage across separate generations.
+    예전에는 모서리 넷과 직선 조각들을 이어 붙여 테두리를 만들었다. 그렇게
+    만든 프레임은 직선 구간의 진행 방향 요동이 0.02~0.25 였고 시안은
+    9.67~12.50 이었다 -- 몰딩이 없어 길게 뽑은 막대로 읽혔다. 이음을 0으로
+    만드는 데는 성공했지만 완성품으로 보이지는 않았다.
 
-    Nothing is stretched. The run between corners is filled with whole links;
-    `card()` snaps panel sizes so the division comes out even.
+    지금은 시안에서 통째로 뜬 9슬라이스 판을 쓰므로 프레임이 그 한 장에 이미
+    그려져 있다. 배치안 열 개가 이 함수를 여기저기서 부르고 있어, 지우는 대신
+    비워 둔다 -- 호출을 다 걷어내면 diff 가 커지고 되돌리기 어려워진다.
     """
-    if weight is None:
-        heavy, light = FRAME_SETS.get(family, FRAME_SETS["wood"])
-        weight = heavy if min(w, h) >= 8 * UNIT else light
-    size = (w, h)
-    corner, link = weight["corner"], weight["link"]
-    rail = weight.get("rail", link)
-    art_prefix = weight["prefix"]
-    tint = FRAME_TINTS.get(family, WHITE)
-
-    def piece(name, source, x, y, pw, ph, tiling=None, **flips):
-        image(blueprint, name, parent, x, y, pw, ph, size, z_order=Z_FRAME,
-              texture="{}/{}_{}".format(KK, art_prefix, source), tint=tint,
-              tiling=tiling,
-              size=(link, rail) if tiling is not None else None)
-        if flips:
-            flip(blueprint, name, **flips)
-
-    # 직선 구간은 타일 브러시 한 장이다. 조각마다 위젯을 놓으면 폭이 넓을수록
-    # 개수가 폭발한다 -- 화면 폭 바의 윗변 하나가 위젯 114개까지 갔고 UMG
-    # 컴파일러가 위젯마다 스택을 덤프해 빌드가 8GB에서 멈췄다. image_size를
-    # 조각 크기로 두면 늘리는 게 아니라 그 크기로 반복이라 같은 픽셀이다.
-    run_h, run_v = w - 2 * corner, h - 2 * corner
-    piece("{}_FT".format(prefix), "Link_T", corner, 0, run_h, rail,
-          tiling=unreal.SlateBrushTileType.HORIZONTAL)
-    piece("{}_FB".format(prefix), "Link_B", corner, h - rail, run_h, rail,
-          tiling=unreal.SlateBrushTileType.HORIZONTAL)
-    piece("{}_FL".format(prefix), "Link_S", 0, corner, rail, run_v,
-          tiling=unreal.SlateBrushTileType.VERTICAL)
-    piece("{}_FR".format(prefix), "Link_S", w - rail, corner, rail, run_v,
-          tiling=unreal.SlateBrushTileType.VERTICAL, horizontal=True)
-
-    piece("{}_FCTL".format(prefix), "Corner_T", 0, 0, corner, corner)
-    piece("{}_FCTR".format(prefix), "Corner_T", w - corner, 0, corner, corner,
-          horizontal=True)
-    piece("{}_FCBL".format(prefix), "Corner_B", 0, h - corner, corner, corner)
-    piece("{}_FCBR".format(prefix), "Corner_B", w - corner, h - corner,
-          corner, corner, horizontal=True)
-    return weight["band"]
+    return None
 
 
 def button_frame(blueprint, prefix, parent, w, h, pressed=False):
@@ -607,28 +601,25 @@ def card(blueprint, name, parent, x, y, w, h, anchor="tl", parent_size=None,
 
     inner = "{}_Canvas".format(name)
     add(blueprint, "CanvasPanel", inner, plate)
-    # Tiled at its own size rather than scaled to the card: shrinking a surface
-    # to fit is what made the previous art line read as flat black.
-    fill, tint = SURFACES.get(role, SURFACES["command"])
-    image(blueprint, "{}_Fill".format(name), inner, 0, 0, w, h, size,
-          z_order=Z_FILL, texture="{}/KK_Fill_{}".format(KK, fill), tint=tint,
-          size=(FILL_TILE, FILL_TILE),
-          tiling=unreal.SlateBrushTileType.BOTH)
-    # 타일 원단은 그 자체로는 평평하다. 판 전체에 걸리는 조명은 코드가 얹는다.
-    # 다만 밝은 판에서는 같은 램프가 훨씬 세게 먹는다 -- 양피지가 시안 157
-    # 대비 111까지 눌렸다. 밝은 역할에는 램프를 절반만 건다.
-    shade_tint = (unreal.LinearColor(1.0, 1.0, 1.0, 0.35)
-                  if role == "info" else WHITE)
-    image(blueprint, "{}_Shade".format(name), inner, 0, 0, w, h, size,
-          z_order=Z_FILL + 1, texture=SHADE, tint=shade_tint, size=SHADE_SIZE)
 
-    # 프레임이 면을 무는 자리에 두 줄. 위는 빛을 받아 밝고 아래는 그늘진다.
-    # 램프 한 장만으로는 면이 평평하게 읽힌다.
-    band = weight["band"]
-    image(blueprint, "{}_Rim".format(name), inner, band, band,
-          w - 2 * band, 2.0, size, z_order=Z_FILL + 2, tint=RIM_LIGHT)
-    image(blueprint, "{}_Seat".format(name), inner, band, h - band - 2.0,
-          w - 2 * band, 2.0, size, z_order=Z_FILL + 2, tint=RIM_DARK)
+    # 판 하나를 이미지 한 장으로 그린다.
+    #
+    # 예전에는 면을 타일로 깔고 그 위에 조명 램프와 테두리 두 줄을 얹고,
+    # 마지막에 프레임 조각 스무 개를 이어 붙였다. 그렇게 만든 프레임은 직선
+    # 구간의 진행 방향 요동이 0.02~0.25 였다 -- 시안은 9.67~12.50 이다. 몰딩이
+    # 없으니 길게 뽑은 플라스틱 막대로 읽히고, 조각을 다듬어도 이음과 반복이
+    # 남았다.
+    #
+    # 시안에서 완성된 판을 통째로 떠서 BOX 브러시로 쓴다. 네 모서리는 그린
+    # 그대로 남고 가운데만 늘어난다. 조명·테두리·프레임이 전부 그 한 장에
+    # 이미 들어 있으므로 코드가 더 얹을 것이 없다.
+    #
+    # 곁가지 효과: 카드 하나가 위젯 스무 개에서 한 개로 줄어 1안이 540개에서
+    # 150개 근처가 된다. 나중에 UMG 에서 손으로 만질 수 있는 규모다.
+    texture, extent, margin_x, margin_y = SLICES.get(role, SLICES["command"])
+    image(blueprint, "{}_Fill".format(name), inner, 0, 0, w, h, size,
+          z_order=Z_FILL, texture="{}/{}".format(SLICE, texture),
+          tint=WHITE, size=extent, margin=(margin_x, margin_y))
     return inner, size
 
 
