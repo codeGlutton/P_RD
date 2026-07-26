@@ -575,36 +575,46 @@ def party_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
             gems(w - gem_run - 8, 6, 20, 22)
 
     elif style == "strip":
-        # 시안의 아군 행: 왼쪽에 둥근 초상화, 오른쪽 위에 이름, 그 아래
-        # HP 바와 숫자, 맨 아래 AP 보석 줄. 상태이상은 오른쪽 위 뱃지.
-        portrait = h - 24
+        # 아군 행: 왼쪽에 둥근 초상화, 오른쪽 위에 이름, 그 아래 HP 바와
+        # 숫자, 맨 아래 AP 보석 줄. 상태이상은 이름 줄 오른쪽 끝.
+        #
+        # 자리를 높이의 비율로 잡는다. 고정 오프셋으로 짰더니 통합 바(72px)와
+        # 상단 정보 바(150px)에서 줄이 서로 올라타 글자가 겹쳤다. 같은 부품이
+        # 배치안마다 다른 높이로 들어가는 게 이 키트의 전제다.
+        pad = max(8.0, h * 0.09)
+        portrait = h - 2 * pad
         px, py, pe = ring(blueprint, "PartyPortrait_{}".format(index), body,
-                          12, 12, portrait, WHITE, size)
+                          pad, pad, portrait, WHITE, size)
         image(blueprint, "PartyPortrait_{}".format(index), body,
               px, py, pe, pe, size, texture=portrait_art, tint=portrait_tint)
 
-        left = portrait + 26
-        run = w - left - 16
-        status_w = 132.0
+        left = portrait + pad * 2.2
+        run = w - left - pad * 1.6
+        line = h * 0.26
+        name_size = int(max(12, min(22, h * 0.17)))
+        info_size = int(max(10, min(16, h * 0.12)))
+
+        status_w = min(run * 0.42, 150.0)
         label(blueprint, "PartyName_{}".format(index), body,
-              left, 12, run - status_w, 28, "이름", 20, TEXT_COLOR, "left",
-              size, bold=True)
-        # 상태이상은 이름 줄 오른쪽 끝에. 시안이 뱃지를 거기 둔다.
+              left, h * 0.08, run - status_w, line, "이름", name_size,
+              TEXT_COLOR, "left", size, bold=True)
         label(blueprint, "PartyStatus_{}".format(index), body,
-              left + run - status_w, 14, status_w, 24, "", 14, GOLD, "right",
-              size)
+              left + run - status_w, h * 0.09, status_w, line, "",
+              info_size, GOLD, "right", size)
 
-        hp_text = 88.0
+        hp_text = min(run * 0.30, 96.0)
         bar(blueprint, "PartyHPBar_{}".format(index), body,
-            left, 52, run - hp_text - 10, 16, HP_GREEN, size)
+            left, h * 0.47, run - hp_text - 8, max(10.0, h * 0.11), HP_GREEN,
+            size)
         label(blueprint, "PartyHPText_{}".format(index), body,
-              left + run - hp_text, 48, hp_text, 22, "0/0", 15, TEXT_COLOR,
-              "right", size)
+              left + run - hp_text, h * 0.40, hp_text, line, "0/0", info_size,
+              TEXT_COLOR, "right", size)
 
-        gems(left, h - 34, 22, 26)
+        gem = max(14.0, min(24.0, h * 0.16))
+        gems(left, h * 0.72, gem, gem * 1.18)
         label(blueprint, "PartyAPText_{}".format(index), body,
-              left + run - 70, h - 34, 70, 22, "0/0", 14, TEXT_DIM, "right",
-              size)
+              left + run - 64, h * 0.71, 64, line, "0/0", info_size, TEXT_DIM,
+              "right", size)
 
     elif style == "hero":
         portrait = h * 0.56
@@ -671,7 +681,40 @@ def command_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
         pivot = unreal.Vector2D(0.5, 1.4)
         widget.set_editor_property("render_transform_pivot", pivot)
 
-    if style == "icon":
+    if style == "compact":
+        # 고리 배치용 납작한 카드. 세로로 긴 카드를 원 둘레에 놓으면 위아래
+        # 카드가 상단·하단 띠에 닿는다.
+        #
+        # 아이콘을 카드 높이만큼 키웠더니 글자 자리가 26px만 남아 이름이 카드
+        # 밖으로 흘렀다. 아이콘은 위쪽 절반만 쓰고 글자는 아래에 쌓는다.
+        glyph = min(w * 0.34, h * 0.42)
+        image(blueprint, "CommandIcon_{}".format(index), body,
+              10, 10, glyph, glyph, size,
+              texture=COMMAND_ICONS[index], tint=WHITE)
+
+        left = glyph + 18
+        label(blueprint, "CommandName_{}".format(index), body,
+              left, 12, w - left - 10, 26, "이름", 16, TEXT_COLOR, "left",
+              size, bold=True)
+        label(blueprint, "CommandCostLine_{}".format(index), body,
+              left, 38, w - left - 10, 22, "", 14, TEXT_COLOR, "left", size,
+              bold=True)
+
+        label(blueprint, "CommandDamage_{}".format(index), body,
+              10, h - 52, w - 20, 22, "0~0", 14, TEXT_DIM, "center", size)
+        label(blueprint, "CommandCooldown_{}".format(index), body,
+              10, h - 30, w - 20, 22, "", 13, GOLD, "center", size)
+
+        gem = 30.0
+        image(blueprint, "CommandCostGem_{}".format(index), body,
+              w - gem - 10, 10, gem, gem, size,
+              texture=KK + "/KK_Badge_Round", tint=WHITE)
+        label(blueprint, "CommandCost_{}".format(index), body,
+              w - gem - 10, 15, gem, 22, "0", 15,
+              unreal.LinearColor(1.0, 0.97, 0.90, 1.0), "center", size,
+              bold=True)
+
+    elif style == "icon":
         glyph = min(w, h) * 0.78
         image(blueprint, "CommandIcon_{}".format(index), body,
               (w - glyph) / 2.0, (h - glyph) / 2.0, glyph, glyph, size,
