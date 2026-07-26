@@ -400,7 +400,7 @@ def image(blueprint, name, parent, x, y, w, h, parent_size=None,
 
 def hud_font(size, bold=False):
     info = unreal.SlateFontInfo()
-    info.set_editor_property("font_object", art(KK + "/Fonts/F_HUD_NotoSansKR"))
+    info.set_editor_property("font_object", art(KK + "/Fonts/F_HUD_LINESeedKR"))
     info.set_editor_property("typeface_font_name",
                              unreal.Name("Bold" if bold else "Regular"))
     info.set_editor_property("size", int(size))
@@ -1175,8 +1175,12 @@ def enemy_panel(blueprint, root, x, y, w, h, anchor="br", style="wide"):
               name_size, TEXT_COLOR, "left", size, bold=True)
 
         hp_text = min(run * 0.30, 92.0)
+        # 바에 남는 폭을 다 주면 안 된다. 10안처럼 가로로 긴 띠에서는 바가
+        # 1100px 로 늘어나 초상·숫자와 한 덩어리로 안 읽힌다. 시안은 어느
+        # 배치안에서든 바를 200px 남짓으로 둔다.
+        bar_w = min(run - hp_text - 10, max(180.0, run * 0.34))
         bar(blueprint, "EnemyHPBar", body, left, h * 0.32,
-            run - hp_text - 10, max(12.0, h * 0.09), HP_RED, size)
+            bar_w, max(12.0, h * 0.09), HP_RED, size)
         label(blueprint, "EnemyHPText", body, left + run - hp_text,
               h * 0.26, hp_text, line, "0/0", info_size, TEXT_COLOR, "right",
               size)

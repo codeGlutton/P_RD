@@ -145,30 +145,35 @@ def layout_03(bp, root):
     """The unit on turn gets a hero panel; the other two shrink to strips."""
     top_band(bp, root)
 
-    bottom = H - 24
-    hero_w, hero_h = 440.0, 300.0
-    kit.party_card(bp, root, 0, M, bottom - hero_h, hero_w, hero_h, "bl",
-                   "hero")
+    # 아래 수치는 시안(KK_HUD_Polish_03)을 1672 화면에서 재고 1920 설계로
+    # 환산한 것이다. 바닥에서 역산하던 이전 값은 왼쪽 열을 180px 아래로
+    # 밀어 놓았고 활성 카드를 120px 크게 만들었다.
+    #
+    #   칩 두 장   x  21  y 313   365 x 230 (둘 합쳐)
+    #   활성 카드  x  11  y 556   451 x 499
+    #   스킬 줄    x 467  y 737  1109 x 315
+    #   적 패널    x1543  y 660   369 x 243
+    #   턴 종료    x1550  y 918   335 x 124
+    hero_w, hero_h = 451.0, 499.0
+    kit.party_card(bp, root, 0, 22, 556, hero_w, hero_h, "bl", "hero")
 
-    strip_w, strip_h, gap = 360.0, 96.0, 12.0
-    strips_bottom = bottom - hero_h - 24
+    strip_w, strip_h, gap = 365.0, 108.0, 14.0
     for i in (1, 2):
-        kit.party_card(bp, root, i, M,
-                       strips_bottom - (3 - i) * (strip_h + gap) + gap,
+        kit.party_card(bp, root, i, 22, 313 + (i - 1) * (strip_h + gap),
                        strip_w, strip_h, "bl", "strip")
 
-    enemy_w, enemy_h = 340.0, 240.0
-    enemy_x = W - M - enemy_w
-    end_h = 88.0
-    cmd_w, cmd_h, cmd_gap = 152.0, 300.0, 10.0
-    start = centred(6, cmd_w, cmd_gap, M + hero_w + 24, enemy_x - 24)
+    enemy_x, enemy_y, enemy_w, enemy_h = 1543.0, 660.0, 369.0, 243.0
+    end_x, end_y, end_w, end_h = 1550.0, 918.0, 335.0, 124.0
+
+    cmd_gap = 10.0
+    cmd_w = (1109.0 - 5 * cmd_gap) / 6.0
+    cmd_h, cmd_top, start = 315.0, 737.0, 467.0
     for i in range(6):
         kit.command_card(bp, root, i, start + i * (cmd_w + cmd_gap),
-                         bottom - cmd_h, cmd_w, cmd_h, "bc")
+                         cmd_top, cmd_w, cmd_h, "bc")
 
-    kit.enemy_panel(bp, root, enemy_x, bottom - end_h - 12 - enemy_h,
-                    enemy_w, enemy_h, "br")
-    kit.end_turn(bp, root, enemy_x, bottom - end_h, enemy_w, end_h, "br", 26)
+    kit.enemy_panel(bp, root, enemy_x, enemy_y, enemy_w, enemy_h, "br")
+    kit.end_turn(bp, root, end_x, end_y, end_w, end_h, "br", 26)
 
 
 # ─── 4안 방사형 컨텍스트 메뉴 ──────────────────────────────────────────────────
@@ -183,9 +188,16 @@ def layout_04(bp, root):
     """
     top_band(bp, root)
 
-    cx, cy = W * 0.5, H * 0.48
-    cmd_w, cmd_h = 168.0, 152.0
-    radius_x, radius_y = 290.0, 215.0
+    # 시안 실측(1672): 카드 152x172, 고리 중심 (831,469), 반경 가로 186 세로 248.
+    # 1920 으로 환산하면 카드 174x197, 반경 214/285 다.
+    #
+    # 우리 것은 카드가 34px 납작했고 고리가 가로로 퍼지고 세로로 눌려 있었다.
+    # 타원을 화면 비율에 맞춘다고 가로를 늘렸는데, 시안은 오히려 세로로 긴
+    # 타원이다 -- 위아래 띠를 피하는 것보다 카드가 전장을 덜 가리는 쪽을
+    # 택한 것으로 보인다.
+    cx, cy = W * 0.5, H * 0.498
+    cmd_w, cmd_h = 174.0, 197.0
+    radius_x, radius_y = 214.0, 285.0
     for i in range(6):
         angle = math.radians(-90 + i * 60)
         kit.command_card(bp, root, i,
@@ -203,7 +215,7 @@ def layout_04(bp, root):
         kit.party_card(bp, root, i, M + i * (chip_w + 10), bottom - chip_h,
                        chip_w, chip_h, "bl", "chip")
 
-    kit.enemy_panel(bp, root, W - M - 340, 120, 340, 210, "tr")
+    kit.enemy_panel(bp, root, W - M - 340, 148, 340, 210, "tr")
     kit.end_turn(bp, root, W - M - 260, bottom - 88, 260, 88, "br", 26)
 
 
@@ -213,28 +225,35 @@ def layout_05(bp, root):
     """Everything you press lives in one thick bar across the bottom."""
     top_band(bp, root)
 
-    bar_w, bar_h = W - 2 * M, 268.0
-    body, size = kit.card(bp, "CommandBar", root, M, H - 24 - bar_h,
+    # 시안(KK_HUD_Polish_05)을 1672 화면에서 재고 1920 설계로 환산했다.
+    # 바닥에서 역산하던 값은 바를 85px 낮게, 적 패널을 절반 크기로 만들었다.
+    #
+    #   하단 바   x  57  y 691  1807 x 356
+    #   스킬 줄   x 454  y 727  1141 x 297   (바 안쪽 좌표로는 397, 36)
+    #   턴 종료   x1615  y 730   247 x 269   (바 안쪽 1558, 39)
+    #   적 패널   x1424  y 332   472 x 321
+    bar_x, bar_y = 57.0, 691.0
+    bar_w, bar_h = 1807.0, 356.0
+    body, size = kit.card(bp, "CommandBar", root, bar_x, bar_y,
                           bar_w, bar_h, "bc", role="party")
 
-    strip_w, strip_h, gap = 352.0, 72.0, 8.0
+    strip_w, strip_h, gap = 372.0, 96.0, 10.0
     for i in range(3):
-        kit.party_card(bp, body, i, 24, 24 + i * (strip_h + gap),
+        kit.party_card(bp, body, i, 26, 30 + i * (strip_h + gap),
                        strip_w, strip_h, "tl", "strip")
 
-    end_w = 200.0
-    cmd_w, cmd_h, cmd_gap = 168.0, 214.0, 10.0
-    start = centred(6, cmd_w, cmd_gap, 24 + strip_w + 24, bar_w - end_w - 44)
+    cmd_gap = 10.0
+    cmd_w = (1141.0 - 5 * cmd_gap) / 6.0
+    cmd_h = 297.0
     for i in range(6):
-        kit.command_card(bp, body, i, start + i * (cmd_w + cmd_gap),
-                         (bar_h - cmd_h) / 2.0, cmd_w, cmd_h, "tl", "card")
+        kit.command_card(bp, body, i, 397 + i * (cmd_w + cmd_gap), 36,
+                         cmd_w, cmd_h, "tl", "card")
 
-    kit.end_turn(bp, body, bar_w - end_w - 24, (bar_h - 120) / 2.0,
-                 end_w, 120, "tl", 26)
+    kit.end_turn(bp, body, 1558, 39, 247, 269, "tl", 30)
     # 바 하나가 통째로 한 덩어리라 프레임도 바깥에 한 번만 두른다.
     kit.frame(bp, "CommandBar", body, bar_w, bar_h)
 
-    kit.enemy_panel(bp, root, W - M - 340, 300, 340, 210, "mr")
+    kit.enemy_panel(bp, root, 1424, 332, 472, 321, "mr")
 
 
 # ─── 6안 좌우 대칭 ─────────────────────────────────────────────────────────────
@@ -267,29 +286,28 @@ def layout_07(bp, root):
     """Skills as a hand of cards, fanned and overlapping."""
     top_band(bp, root)
 
-    bottom = H - 24
-    cmd_w, cmd_h = 176.0, 288.0
-    spread, lift = 132.0, 20.0
-    # 부채는 아래쪽 여백만 화면 밖으로 나가야 한다. 첫 시도는 바깥쪽 카드의
-    # 이름과 피해량까지 데리고 나갔다.
-    base_y = bottom - cmd_h - 8
+    # 기울이지 않는다.
+    #
+    # "손패"라는 이름 때문에 부채꼴로 펼쳤는데 시안은 카드를 똑바로 세워
+    # 나란히 둔다. 기울이면 바깥쪽 카드의 이름과 AP 가 화면 아래로 나가고,
+    # 실제로 그렇게 잘려 있었다. 손패다움은 카드 자체의 모양이 맡는다.
+    #
+    # 시안 실측(1672): 카드 줄 x 250~965 y 400~620, 파티 x 18~235 y 340~600,
+    # 적 패널 x 975~1130 y 365~575, 턴 종료 x 975~1130 y 585~630.
+    cmd_gap = 10.0
+    cmd_w = (821.0 - 5 * cmd_gap) / 6.0
+    cmd_h, cmd_top, start = 253.0, 459.0, 287.0
     for i in range(6):
-        offset = i - 2.5
-        kit.command_card(bp, root, i,
-                         W * 0.5 - cmd_w / 2.0 + offset * spread,
-                         base_y + abs(offset) * lift,
-                         cmd_w, cmd_h, "bc", "card", angle=offset * 4.0)
+        kit.command_card(bp, root, i, start + i * (cmd_w + cmd_gap),
+                         cmd_top, cmd_w, cmd_h, "bc", "card")
 
-    row_w, row_h, gap = 440.0, 112.0, 12.0
+    row_w, row_h, gap = 249.0, 99.0, 6.0
     for i in range(3):
-        kit.party_card(bp, root, i, M,
-                       bottom - (3 - i) * (row_h + gap) + gap,
+        kit.party_card(bp, root, i, 21, 390 + i * (row_h + gap),
                        row_w, row_h, "bl", "strip")
 
-    enemy_w, enemy_h = 340.0, 210.0
-    kit.enemy_panel(bp, root, W - M - enemy_w, bottom - 96 - 12 - enemy_h,
-                    enemy_w, enemy_h, "br")
-    kit.end_turn(bp, root, W - M - enemy_w, bottom - 96, enemy_w, 96, "br", 26)
+    kit.enemy_panel(bp, root, 1120, 419, 178, 241, "br")
+    kit.end_turn(bp, root, 1120, 672, 178, 52, "br", 22)
 
 
 # ─── 8안 미니멀 ────────────────────────────────────────────────────────────────
@@ -300,22 +318,27 @@ def layout_08(bp, root):
     Slots 1 and 2 and the enemy panel are dropped on purpose. The runtime
     tolerates the gap, so the omission is the design point rather than a hole.
     """
-    kit.round_panel(bp, root, 24, 20, 240, 60, "tl", 20)
-    kit.objective_panel(bp, root, 24, 88, 340, 52, "tl", 16, icon=False)
-    kit.turn_row(bp, root, centred(6, 76, 8), 18, 76, 8, "tc", names=False)
+    # 시안(KK_HUD_Polish_08)을 1672 화면에서 재고 1920 설계로 환산했다.
+    #
+    #   라운드+목표  x  25  y  17   313 x 111
+    #   턴 띠        x 563  y   4   517 x 155  -> 칸 112 (다섯 칸)
+    #   파티 카드    x  11  y 714   389 x 196
+    #   스킬 줄      x 444  y 704   914 x 213
+    #   턴 종료      x1420  y 775   236 x 128
+    kit.round_panel(bp, root, 26, 16, 290, 78, "tl", 22)
+    kit.objective_panel(bp, root, 26, 104, 350, 62, "tl", 17, icon=False)
+    kit.turn_row(bp, root, centred(5, 112, 8), 8, 112, 8, "tc", names=False)
 
-    bottom = H - 24
-    hero_w, hero_h = 400.0, 240.0
-    kit.party_card(bp, root, 0, M, bottom - hero_h, hero_w, hero_h, "bl",
-                   "hero")
+    hero_w, hero_h = 447.0, 225.0
+    kit.party_card(bp, root, 0, 13, 820, hero_w, hero_h, "bl", "hero")
 
-    end_w = 240.0
-    cmd_w, cmd_h, cmd_gap = 168.0, 208.0, 10.0
-    start = centred(6, cmd_w, cmd_gap, M + hero_w + 24, W - M - end_w - 20)
+    cmd_gap = 10.0
+    cmd_w = (1050.0 - 5 * cmd_gap) / 6.0
+    cmd_h, cmd_top, start = 245.0, 808.0, 510.0
     for i in range(6):
         kit.command_card(bp, root, i, start + i * (cmd_w + cmd_gap),
-                         bottom - cmd_h, cmd_w, cmd_h, "bc")
-    kit.end_turn(bp, root, W - M - end_w, bottom - 104, end_w, 104, "br", 26)
+                         cmd_top, cmd_w, cmd_h, "bc")
+    kit.end_turn(bp, root, 1630, 890, 271, 147, "br", 28)
 
 
 # ─── 9안 상단 정보 / 하단 조작 ─────────────────────────────────────────────────
@@ -331,8 +354,10 @@ def layout_09(bp, root):
 
     # 폭을 순서대로 배분한다. 고정 오프셋으로 쌓았더니 적 패널이 62px로
     # 짜부라져 수치가 바 밖으로 나간 적이 있다.
-    round_w, strip_w, token = 170.0, 250.0, 60.0
-    objective_w, gap = 220.0, 12.0
+    # 파티 250px 에 숫자까지 넣으려니 "90/" 에서 잘렸고, 목표 현판 220px
+    # 에서도 문장이 잘렸다. 라운드 판과 턴 칸을 줄여 그 폭을 넘긴다.
+    round_w, strip_w, token = 140.0, 286.0, 54.0
+    objective_w, gap = 250.0, 10.0
 
     x = 18.0
     kit.round_panel(bp, body, x, middle(72), round_w, 72, "tl", 22)
@@ -381,28 +406,29 @@ def layout_10(bp, root):
     """
     top_band(bp, root, names=True)
 
-    bottom = H - 24
-    end_w = 220.0
-    row_w = 440.0
-    cmd_w, cmd_h, cmd_gap = 176.0, 196.0, 12.0
-    start = centred(6, cmd_w, cmd_gap, M + row_w + 24, W - M - end_w - 20)
+    # 시안(KK_HUD_Polish_10)을 1672 화면에서 재고 1920 설계로 환산했다.
+    #
+    #   조준 정보 띠  x 401  y 593  1223 x 134  -> 460, 681, 1404 x 154
+    #   스킬 줄       x 394  y 738  1050 x 183  -> 452, 847, 1206 x 210
+    #   턴 종료       x1471  y 747   174 x 154  -> 1689, 858, 200 x 177
+    #   파티 세 줄    좌측, 카드 높이는 1안과 같은 계열
+    cmd_gap = 12.0
+    cmd_w = (1206.0 - 5 * cmd_gap) / 6.0
+    cmd_h, cmd_top, start = 210.0, 847.0, 452.0
     for i in range(6):
         kit.command_card(bp, root, i, start + i * (cmd_w + cmd_gap),
-                         bottom - cmd_h, cmd_w, cmd_h, "bc")
+                         cmd_top, cmd_w, cmd_h, "bc")
 
     # 조준 정보는 레일 바로 위에 레일과 같은 폭으로. 눈이 카드에서 대상까지
     # 화면을 가로지르지 않는다.
-    rail_w = 6 * cmd_w + 5 * cmd_gap
-    kit.enemy_panel(bp, root, start, bottom - cmd_h - 14 - 130, rail_w, 130,
-                    "bc")
+    kit.enemy_panel(bp, root, 460, 681, 1404, 154, "bc")
 
-    row_h, gap = 106.0, 12.0
+    row_w, row_h, gap = 440.0, 124.0, 0.0
     for i in range(3):
-        kit.party_card(bp, root, i, M,
-                       bottom - (3 - i) * (row_h + gap) + gap,
+        kit.party_card(bp, root, i, 22, 672 + i * (row_h + gap),
                        row_w, row_h, "bl", "strip")
 
-    kit.end_turn(bp, root, W - M - end_w, bottom - 104, end_w, 104, "br", 26)
+    kit.end_turn(bp, root, 1689, 858, 200, 177, "br", 26)
 
 
 # ─── run ──────────────────────────────────────────────────────────────────────
