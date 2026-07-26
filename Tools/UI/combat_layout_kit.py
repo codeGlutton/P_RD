@@ -116,8 +116,8 @@ COOLDOWN_TEXT = unreal.LinearColor(1.00, 0.80, 0.45, 1.0)
 
 #: 판 안쪽 위에 얹는 밝은 선과 아래에 까는 어두운 선. 이 두 줄이 "깎아 만든
 #: 판"과 "색칠한 사각형"을 가른다. 목업의 면은 전부 이 층을 갖고 있다.
-RIM_LIGHT = unreal.LinearColor(1.0, 0.97, 0.90, 0.0)
-RIM_DARK = unreal.LinearColor(0.0, 0.0, 0.0, 0.0)
+RIM_LIGHT = unreal.LinearColor(1.0, 0.97, 0.90, 0.35)
+RIM_DARK = unreal.LinearColor(0.0, 0.0, 0.0, 0.50)
 CARD_SHADOW = unreal.LinearColor(0.0, 0.0, 0.0, 0.45)
 
 #: 숫자를 얹는 배지. 밝은 원에 진한 숫자여야 작은 크기에서 숫자가 산다.
@@ -165,7 +165,7 @@ SURFACES = {
     "enemy":      ("Stone_Enemy", WHITE),
     "turn":       ("Stone_Skill", WHITE),
     "info":       ("Parchment", WHITE),
-    "action":     ("ButtonWood", WHITE),
+    "action":     ("Wood_Active", WHITE),
 }
 
 
@@ -526,9 +526,12 @@ def card(blueprint, name, parent, x, y, w, h, anchor="tl", parent_size=None,
     # to fit is what made the previous art line read as flat black.
     fill, tint = SURFACES.get(role, SURFACES["command"])
     image(blueprint, "{}_Fill".format(name), inner, 0, 0, w, h, size,
-          z_order=Z_FILL, texture="{}/KK_Fill_{}".format(KK, fill), tint=tint)
-    # 조명 램프는 걷었다. 스킨에서 자른 면이 시안의 명암을 이미 갖고 있어
-    # 코드가 또 얹으면 이중으로 어두워진다.
+          z_order=Z_FILL, texture="{}/KK_Fill_{}".format(KK, fill), tint=tint,
+          size=(FILL_TILE, FILL_TILE),
+          tiling=unreal.SlateBrushTileType.BOTH)
+    # 타일 원단은 그 자체로는 평평하다. 판 전체에 걸리는 조명은 코드가 얹는다.
+    image(blueprint, "{}_Shade".format(name), inner, 0, 0, w, h, size,
+          z_order=Z_FILL + 1, texture=SHADE, tint=WHITE, size=SHADE_SIZE)
 
     # 프레임이 면을 무는 자리에 두 줄. 위는 빛을 받아 밝고 아래는 그늘진다.
     # 램프 한 장만으로는 면이 평평하게 읽힌다.
@@ -1055,7 +1058,9 @@ def end_turn(blueprint, root, x, y, w=300.0, h=64.0, anchor="br", size=19):
     image(blueprint, "EndTurnInk", plate, 0, 0, w, h, extent, tint=INK)
     action_fill, action_tint = SURFACES["action"]
     image(blueprint, "EndTurnSurface", plate, 0, 0, w, h, extent,
-          texture=KK + "/KK_Fill_ButtonWood", tint=WHITE)
+          texture="{}/KK_Fill_{}".format(KK, action_fill), tint=action_tint,
+          size=(FILL_TILE, FILL_TILE),
+          tiling=unreal.SlateBrushTileType.BOTH)
     image(blueprint, "EndTurnShade", plate, 0, 0, w, h, extent,
           texture=SHADE, tint=WHITE, size=SHADE_SIZE)
     glyph = min(40.0, h - 20)
