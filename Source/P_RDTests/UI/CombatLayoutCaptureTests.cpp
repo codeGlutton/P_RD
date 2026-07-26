@@ -16,6 +16,8 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/Image.h"
+#include "Components/Button.h"
+#include "Components/ProgressBar.h"
 #include "Engine/Texture2D.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "ImageUtils.h"
@@ -79,25 +81,46 @@ namespace CombatLayoutCapture
 		TArray<UWidget*> Widgets;
 		Widget.WidgetTree->GetAllWidgets(Widgets);
 		int32 Count = 0;
-		for (UWidget* Candidate : Widgets)
+
+		auto MakeResident = [&Count](const FSlateBrush& Brush)
 		{
-			UTexture2D* Texture = nullptr;
-			if (const UImage* Image = Cast<UImage>(Candidate))
-			{
-				Texture = Cast<UTexture2D>(Image->GetBrush().GetResourceObject());
-			}
-			else if (const UBorder* Border = Cast<UBorder>(Candidate))
-			{
-				Texture = Cast<UTexture2D>(Border->Background.GetResourceObject());
-			}
+			UTexture2D* Texture = Cast<UTexture2D>(Brush.GetResourceObject());
 			if (Texture == nullptr)
 			{
-				continue;
+				return;
 			}
 			Texture->SetForceMipLevelsToBeResident(30.0f);
 			Texture->WaitForStreaming();
 			Texture->UpdateResource();
 			++Count;
+		};
+
+		for (UWidget* Candidate : Widgets)
+		{
+			// Every widget type that can carry a texture, not just the two that
+			// happened to matter first. The HP bar drew nothing for a whole
+			// pass because its brushes live inside a style struct and this walk
+			// only looked at Image and Border.
+			if (const UImage* Image = Cast<UImage>(Candidate))
+			{
+				MakeResident(Image->GetBrush());
+			}
+			else if (const UBorder* Border = Cast<UBorder>(Candidate))
+			{
+				MakeResident(Border->Background);
+			}
+			else if (const UProgressBar* Bar = Cast<UProgressBar>(Candidate))
+			{
+				MakeResident(Bar->WidgetStyle.BackgroundImage);
+				MakeResident(Bar->WidgetStyle.FillImage);
+			}
+			else if (const UButton* Button = Cast<UButton>(Candidate))
+			{
+				MakeResident(Button->WidgetStyle.Normal);
+				MakeResident(Button->WidgetStyle.Hovered);
+				MakeResident(Button->WidgetStyle.Pressed);
+				MakeResident(Button->WidgetStyle.Disabled);
+			}
 		}
 		FlushRenderingCommands();
 		return Count;

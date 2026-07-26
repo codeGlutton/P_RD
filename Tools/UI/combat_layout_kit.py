@@ -13,57 +13,58 @@ import unreal
 PACKAGE_PATH = "/Game/UI/CombatLayouts"
 ART = "/Game/SVN/OutSideAsset/UI/CombatHUD"
 C04 = ART + "/Concept04"
+KK = "/Game/SVN/OutSideAsset/UI/KayKit"
 
 CANVAS_W, CANVAS_H = 1920.0, 1080.0
 MARGIN = 20.0
 
-# ─── tokens ───────────────────────────────────────────────────────────────────
+# ─── grid and tokens ──────────────────────────────────────────────────────────
 #
-# Lifted from Config/DefaultCombatHUD.ini so the layouts match the art line the
-# frames were painted for.
+# One number runs the whole kit: UNIT. Every part's canvas is a multiple of it
+# and every joint lands on a multiple of it, so assembling a panel is addition
+# rather than measurement. The old art line needed CORNER_RATIO, BAND_MIN and a
+# nine-slice margin of 0.312253, all of them read off the drawing after the
+# fact -- and a mistake in the last one made the selection frame swallow a card.
 
-FRAME_GOLD = (0.730, 0.490, 0.239, 1.0)
-SURFACE_TINT = unreal.LinearColor(0.180, 0.188, 0.194, 1.0)
-CARD_INK = unreal.LinearColor(0.0012, 0.0018, 0.0016, 0.99)
+#: Design pixels per grid unit. Parts are drawn at 4x this and drawn down.
+UNIT = 32.0
 
-#: The frame is lit from overhead. All four edges are the same texture at the
-#: same strength, so without this the bottom moulding renders as brightly as
-#: the top and the card reads flat.
-SHADE_TOP, SHADE_SIDE, SHADE_BOTTOM = 1.00, 0.58, 0.18
+#: Frame weights. `corner` and `link` are the sizes the pieces draw at; `band`
+#: is how much of the link is moulding, which is what content has to clear.
+#: The band ratio is a property of the drawn moulding, read once off the master
+#: -- but nothing depends on it lining up, because the pieces were cut from one
+#: continuous drawing and provably share a cross-section.
+HEAVY = {"corner": 2 * UNIT, "link": UNIT, "band": UNIT * 85.0 / 128.0,
+         "prefix": "KK_HFrame"}
+LIGHT = {"corner": UNIT, "link": UNIT / 2.0, "band": UNIT * 34.0 / 128.0,
+         "prefix": "KK_LFrame"}
 
-#: Corner art draws at a fraction of the frame's own short side, floored so it
-#: cannot vanish on a chip. A fixed size made the same ornament 14% of a hero
-#: card and 42% of a companion.
-CORNER_RATIO, CORNER_MIN, CORNER_MAX = 0.16, 16.0, 52.0
+SELECT_CORNER = UNIT       # KK_Select_Corner draws at 1U
+SELECT_LINK = UNIT / 2.0   # KK_Select_Link_* draw at 0.5U
+SELECT_BLEED = 4.0         # how far the marker sits outside its panel
 
-#: Rails cannot go below this. Coupled all the way down to the corner's arm, a
-#: small card gave a 2.6px rail: a 132px painted moulding drawn 51x smaller.
-#: Its bead-dark-bead profile cannot exist in three pixels.
-BAND_MIN = 7.0
+FILL_TILE = 4 * UNIT       # KK_Fill_* are 4U squares
+RING_HOLE_RATIO = 11.0 / 16.0
+GEM = UNIT                 # KK_Gem_* draw at 1U
+ICON = 2 * UNIT            # KK_Icon_* are 2U, glyph inside the middle 3/4
+BAR_TILE = UNIT / 2.0      # KK_Bar_* are 0.5U wide, 1U tall
+VEIL_TILE = UNIT
 
-# Measured off the Concept04 art (SourceArt/.../Concept04Metrics.json).
-CORNER_TOP = (460.0, 451.0)
-CORNER_BOTTOM = (461.0, 438.0)
-CORNER_BAND_H, CORNER_BAND_V = 132.0, 113.0
-RAIL_H_TILE = (64.0, 132.0)      # T/B rails, tile horizontally
-RAIL_V_TILE = (113.0, 64.0)      # L/R rails, tile vertically
-SURFACE_TILE = 1254.0
-SHADE_SIZE = (8.0, 256.0)
-RING_HOLE_RATIO = 0.7705         # how much of the ring the portrait may fill
-SELECT_MARGIN = 0.312253         # nine-slice margin on T_C04_Select_Frame
-SELECT_CORNER = 16.0             # how large that corner draws, in design px
-SELECT_SIZE = SELECT_CORNER / SELECT_MARGIN
-SELECT_BLEED = 6.0               # how far the marker sits outside its card
-
-TEXT_COLOR = unreal.LinearColor(0.90, 0.88, 0.82, 1.0)
-TEXT_DIM = unreal.LinearColor(0.62, 0.60, 0.56, 1.0)
-GOLD = unreal.LinearColor(*FRAME_GOLD)
-TEAL = unreal.LinearColor(0.32, 0.76, 0.72, 0.85)
-HP_GREEN = unreal.LinearColor(0.32, 0.60, 0.28, 1.0)
-HP_RED = unreal.LinearColor(0.68, 0.22, 0.20, 1.0)
-AP_ON = unreal.LinearColor(1.0, 1.0, 1.0, 1.0)
-AP_OFF = unreal.LinearColor(0.22, 0.22, 0.24, 0.85)
-EMPTY_SOCKET = unreal.LinearColor(0.07, 0.07, 0.08, 1.0)
+# KayKit palette. Bright matte, no oxidised bronze -- the characters are light
+# low-poly chibi and the old dark-fantasy HUD read as a different game.
+WHITE = unreal.LinearColor(1.0, 1.0, 1.0, 1.0)
+TEXT_COLOR = unreal.LinearColor(0.97, 0.95, 0.90, 1.0)
+TEXT_DIM = unreal.LinearColor(0.74, 0.72, 0.68, 1.0)
+GOLD = unreal.LinearColor(0.91, 0.72, 0.29, 1.0)          # #E8B84B
+INK = unreal.LinearColor(0.13, 0.14, 0.17, 0.92)
+HP_GREEN = unreal.LinearColor(0.24, 0.56, 0.35, 1.0)      # #3E8E5A
+HP_RED = unreal.LinearColor(0.82, 0.27, 0.25, 1.0)        # #D2453F
+STONE = unreal.LinearColor(0.76, 0.78, 0.81, 1.0)         # #C3C7CE
+STONE_DIM = unreal.LinearColor(0.43, 0.45, 0.49, 1.0)     # #6E747E
+AP_ON = WHITE
+AP_OFF = unreal.LinearColor(0.45, 0.47, 0.51, 0.9)
+EMPTY_SOCKET = unreal.LinearColor(0.30, 0.32, 0.36, 1.0)
+SELECT_TINT = WHITE        # the marker is already gold in the art
 
 #: Portraits we actually have art for. A slot with none keeps an empty socket
 #: rather than borrowing another unit's face -- the runtime overwrites it as
@@ -73,13 +74,20 @@ PARTY_PORTRAITS = (ART + "/Portraits/T_Portrait_Knight_Cutout_v2", None, None)
 #: Which painted glyph each command slot shows. Slot 0 is 이동; the rest follow
 #: the mock skill order.
 COMMAND_ICONS = (
-    C04 + "/T_C04_Icon_Move",
-    C04 + "/T_C04_Icon_BasicAttack",
-    ART + "/Icons/Skills/T_Skill_ShieldBash_UI",
-    ART + "/Icons/Skills/T_Skill_BindingSlash_UI",
-    ART + "/Icons/Skills/T_Skill_BreakthroughSlash_UI",
-    ART + "/Icons/Skills/T_Skill_ReflectStance_UI",
+    KK + "/KK_Icon_Move",
+    KK + "/KK_Icon_BasicAttack",
+    KK + "/KK_Icon_ShieldBash",
+    KK + "/KK_Icon_PinSlash",
+    KK + "/KK_Icon_Breakthrough",
+    KK + "/KK_Icon_Riposte",
 )
+
+
+def snap(value, step):
+    """Round a length up to the grid so a frame lands on whole pieces."""
+    import math
+    return max(step, math.ceil(value / step) * step)
+
 
 helper = unreal.MCPythonHelper
 _LOADED = {}
@@ -229,27 +237,35 @@ def label(blueprint, name, parent, x, y, w, h, text, size=14,
 
 
 def bar(blueprint, name, parent, x, y, w, h, fill, parent_size=None):
-    """A progress bar drawn as a recessed slot with a flat fill.
+    """A progress bar dressed with the KayKit rail pieces.
 
-    The default Slate bar carries its own rounded style, which reads as a
-    different art line next to the painted frames, so both halves are replaced.
+    Slate draws the bar itself, so this is the one place a brush still gets
+    stretched -- but the pieces tile along the bar's axis at their own size,
+    so the rounded ends keep their shape instead of smearing.
     """
     progress = add(blueprint, "ProgressBar", name, parent)
     style = progress.get_editor_property("widget_style")
-    background = style.get_editor_property("background_image")
-    background.set_editor_property("resource_object", None)
-    background.set_editor_property("tint_color", unreal.SlateColor(
-        unreal.LinearColor(0.03, 0.03, 0.035, 0.95)))
-    style.set_editor_property("background_image", background)
-    filled = style.get_editor_property("fill_image")
-    filled.set_editor_property("resource_object", None)
-    filled.set_editor_property("tint_color", unreal.SlateColor(fill))
-    style.set_editor_property("fill_image", filled)
+    for slot, texture, tint in (
+            ("background_image", KK + "/KK_Bar_Track_Link", WHITE),
+            ("fill_image", KK + "/KK_Bar_Link", fill)):
+        brush = style.get_editor_property(slot)
+        brush.set_editor_property("resource_object", art(texture))
+        brush.set_editor_property("draw_as", unreal.SlateBrushDrawType.IMAGE)
+        brush.set_editor_property("tiling", unreal.SlateBrushTileType.HORIZONTAL)
+        extent = unreal.DeprecateSlateVector2D()
+        extent.set_editor_property("x", BAR_TILE)
+        extent.set_editor_property("y", float(h))
+        brush.set_editor_property("image_size", extent)
+        brush.set_editor_property("tint_color", unreal.SlateColor(tint))
+        style.set_editor_property(slot, brush)
     progress.set_editor_property("widget_style", style)
-    progress.set_editor_property("fill_color_and_opacity",
-                                 unreal.LinearColor(1, 1, 1, 1))
+    progress.set_editor_property("fill_color_and_opacity", WHITE)
     progress.set_editor_property("percent", 0.75)
-    place(blueprint, name, x, y, w, h, "tl", parent_size)
+    # The art keeps a quarter of its height as clear margin above and below the
+    # rail, so a widget the height of the wanted bar draws one half that thick.
+    # Give the widget the room the art expects and keep it on the same centre
+    # line the caller asked for.
+    place(blueprint, name, x, y - h / 2.0, w, h * 2.0, "tl", parent_size)
     return progress
 
 
@@ -269,117 +285,148 @@ def ghost_button(blueprint, name, parent, x, y, w, h, parent_size=None):
     return button
 
 
-# ─── Concept04 frame ──────────────────────────────────────────────────────────
+# ─── KayKit frame ─────────────────────────────────────────────────────────────
 
-def corner_extent(w, h):
-    return max(CORNER_MIN, min(CORNER_MAX, min(w, h) * CORNER_RATIO))
+def flip(blueprint, name, horizontal=False, vertical=False):
+    """Mirror a placed piece. Four corners come from one drawing."""
+    widget = helper.umg_find_widget(blueprint, name)
+    scale = unreal.Vector2D(-1.0 if horizontal else 1.0,
+                            -1.0 if vertical else 1.0)
+    transform = widget.get_editor_property("render_transform")
+    transform.set_editor_property("scale", scale)
+    widget.set_editor_property("render_transform", transform)
+    widget.set_editor_property("render_transform_pivot",
+                               unreal.Vector2D(0.5, 0.5))
 
 
-def frame(blueprint, prefix, parent, w, h):
-    """Lay the Concept04 frame around a w x h panel.
+def frame(blueprint, prefix, parent, w, h, weight=None):
+    """Lay a frame around a w x h panel by butting pieces together.
 
-    Four corners plus four rails, all derived from one painted corner and one
-    painted rail mirrored into place. Generating separate art per corner would
-    not be symmetric, because each generation draws its own ornament.
+    Two corners and three links per weight, mirrored into all four sides. The
+    pieces were cut from one drawn panel, so the corner's arm and the link's
+    cross-section are the same pixels -- joins cannot show a step, which is
+    what the previous set could not manage across separate generations.
 
-    The corner draws at a fixed size and never scales within the frame; the
-    rails repeat to reach it. Repeating rather than stretching keeps the bead
-    at the thickness the corner hands it.
+    Nothing is stretched. The run between corners is filled with whole links;
+    `card()` snaps panel sizes so the division comes out even.
     """
+    weight = weight or (HEAVY if min(w, h) >= 8 * UNIT else LIGHT)
     size = (w, h)
-    extent = corner_extent(w, h)
-    scale = extent / max(CORNER_TOP)
-    top_w, top_h = CORNER_TOP[0] * scale, CORNER_TOP[1] * scale
-    bot_w, bot_h = CORNER_BOTTOM[0] * scale, CORNER_BOTTOM[1] * scale
-    band_h = max(BAND_MIN, CORNER_BAND_H * scale)
-    band_v = max(BAND_MIN, CORNER_BAND_V * scale)
+    corner, link = weight["corner"], weight["link"]
+    art_prefix = weight["prefix"]
 
-    def shade(factor):
-        return unreal.LinearColor(FRAME_GOLD[0] * factor,
-                                  FRAME_GOLD[1] * factor,
-                                  FRAME_GOLD[2] * factor, 1.0)
+    def piece(name, source, x, y, pw, ph, **flips):
+        image(blueprint, name, parent, x, y, pw, ph, size,
+              texture="{}/{}_{}".format(KK, art_prefix, source), tint=WHITE)
+        if flips:
+            flip(blueprint, name, **flips)
 
-    top, side, bottom = shade(SHADE_TOP), shade(SHADE_SIDE), shade(SHADE_BOTTOM)
+    runs_h = max(1, int(round((w - 2 * corner) / link)))
+    runs_v = max(1, int(round((h - 2 * corner) / link)))
+    step_h = (w - 2 * corner) / runs_h
+    step_v = (h - 2 * corner) / runs_v
 
-    for piece, x, y, pw, ph, tint in (
-            ("Corner_TL", 0.0, 0.0, top_w, top_h, top),
-            ("Corner_TR", w - top_w, 0.0, top_w, top_h, top),
-            ("Corner_BL", 0.0, h - bot_h, bot_w, bot_h, bottom),
-            ("Corner_BR", w - bot_w, h - bot_h, bot_w, bot_h, bottom)):
-        image(blueprint, "{}_Frame_{}".format(prefix, piece), parent,
-              x, y, pw, ph, size,
-              texture="{}/T_C04_Frame_{}".format(C04, piece), tint=tint)
+    for i in range(runs_h):
+        x = corner + i * step_h
+        piece("{}_FT{}".format(prefix, i), "Link_T", x, 0, step_h, link)
+        piece("{}_FB{}".format(prefix, i), "Link_B", x, h - link, step_h, link)
+    for i in range(runs_v):
+        y = corner + i * step_v
+        piece("{}_FL{}".format(prefix, i), "Link_S", 0, y, link, step_v)
+        piece("{}_FR{}".format(prefix, i), "Link_S", w - link, y, link, step_v,
+              horizontal=True)
 
-    for piece, y, tint in (("T", 0.0, top), ("B", h - band_h, bottom)):
-        image(blueprint, "{}_Frame_Rail_{}".format(prefix, piece), parent,
-              top_w, y, w - 2 * top_w, band_h, size,
-              texture="{}/T_C04_Frame_Rail_{}".format(C04, piece), tint=tint,
-              size=(RAIL_H_TILE[0] * scale, band_h),
-              tiling=unreal.SlateBrushTileType.HORIZONTAL)
-
-    for piece, x in (("L", 0.0), ("R", w - band_v)):
-        image(blueprint, "{}_Frame_Rail_{}".format(prefix, piece), parent,
-              x, top_h, band_v, h - top_h - bot_h, size,
-              texture="{}/T_C04_Frame_Rail_{}".format(C04, piece), tint=side,
-              size=(band_v, RAIL_V_TILE[1] * scale),
-              tiling=unreal.SlateBrushTileType.VERTICAL)
+    piece("{}_FCTL".format(prefix), "Corner_T", 0, 0, corner, corner)
+    piece("{}_FCTR".format(prefix), "Corner_T", w - corner, 0, corner, corner,
+          horizontal=True)
+    piece("{}_FCBL".format(prefix), "Corner_B", 0, h - corner, corner, corner)
+    piece("{}_FCBR".format(prefix), "Corner_B", w - corner, h - corner,
+          corner, corner, horizontal=True)
+    return weight["band"]
 
 
-def card(blueprint, name, parent, x, y, w, h, anchor="tl", parent_size=None):
-    """A panel: ink, painted surface, overhead shade, then an inner canvas.
+def card(blueprint, name, parent, x, y, w, h, anchor="tl", parent_size=None,
+         fill="Stone"):
+    """A panel: ink, tiled fill, then an inner canvas. The frame goes on last.
 
-    The inner canvas matters: hiding the card has to hide its contents, and a
-    widget only hides its own subtree. Laying the contents on the root canvas
-    instead would leave orphaned text floating over an empty slot whenever a
-    party member is missing.
-
-    The frame goes on last, by the caller, so it sits above the content.
+    Sizes snap to the grid so the frame divides into whole pieces. The inner
+    canvas matters: hiding the card has to hide its contents, and a widget only
+    hides its own subtree.
     """
+    weight = HEAVY if min(w, h) >= 8 * UNIT else LIGHT
+    w = snap(w, weight["link"])
+    h = snap(h, weight["link"])
+
     border = add(blueprint, "Border", name, parent)
     border.set_editor_property("padding", unreal.Margin(0.0, 0.0, 0.0, 0.0))
-    paint(border, tint=CARD_INK)
+    paint(border, tint=INK)
     place(blueprint, name, x, y, w, h, anchor, parent_size)
 
     inner = "{}_Canvas".format(name)
     add(blueprint, "CanvasPanel", inner, name)
     size = (w, h)
-
-    # Tiled at its own 1254px size rather than scaled to the card: shrinking it
-    # to fit is what made the grain disappear and the panel read as flat black.
-    image(blueprint, "{}_Surface".format(name), inner, 0, 0, w, h, size,
-          texture=C04 + "/T_C04_Surface", tint=SURFACE_TINT,
-          size=(SURFACE_TILE, SURFACE_TILE),
+    # Tiled at its own size rather than scaled to the card: shrinking a surface
+    # to fit is what made the previous art line read as flat black.
+    image(blueprint, "{}_Fill".format(name), inner, 0, 0, w, h, size,
+          texture="{}/KK_Fill_{}".format(KK, fill), tint=WHITE,
+          size=(FILL_TILE, FILL_TILE),
           tiling=unreal.SlateBrushTileType.BOTH)
-    # A vertical ramp, 8px wide -- it stretches sideways losslessly.
-    image(blueprint, "{}_Shade".format(name), inner, 0, 0, w, h, size,
-          texture=C04 + "/T_C04_Shade",
-          tint=unreal.LinearColor(1, 1, 1, 1), size=SHADE_SIZE)
     return inner, size
 
 
-def ring(blueprint, name, parent, x, y, extent, tint, parent_size):
-    """A portrait bezel, returning where the portrait goes inside it.
-
-    The hole ratio is how much of the ring the portrait may fill before the
-    bezel starts covering it, so the portrait is inset rather than matched.
-    """
+def ring(blueprint, name, parent, x, y, extent, tint, parent_size,
+         enemy=False):
+    """A portrait bezel, returning where the portrait goes inside it."""
     inner = extent * RING_HOLE_RATIO
     offset = (extent - inner) / 2.0
     image(blueprint, name + "_Ring", parent, x, y, extent, extent, parent_size,
-          texture=C04 + "/T_C04_Ring", tint=tint)
+          texture="{}/KK_Ring_{}".format(KK, "Enemy" if enemy else "Portrait"),
+          tint=tint)
     return x + offset, y + offset, inner
 
 
-def marker(blueprint, name, parent, w, h, parent_size, tint=TEAL):
-    """The selection bracket, riding just outside the panel it highlights.
+def marker(blueprint, name, parent, w, h, parent_size, tint=None):
+    """The selection bracket, assembled from a corner and two links.
 
-    Inset, it covered the content -- on the command card it cut the cooldown
-    line off.
+    A single stretched ring is what swallowed a card last time: its corner was
+    a fraction of the source, and the fraction was read off the drawing.
     """
-    image(blueprint, name, parent, -SELECT_BLEED, -SELECT_BLEED,
-          w + 2 * SELECT_BLEED, h + 2 * SELECT_BLEED, parent_size,
-          texture=C04 + "/T_C04_Select_Frame", tint=tint,
-          size=(SELECT_SIZE, SELECT_SIZE), margin=SELECT_MARGIN)
+    del tint
+    # The runtime shows and hides this by name, so the group carries the
+    # contract name and the pieces ride inside it.
+    root = name
+    add(blueprint, "CanvasPanel", root, parent)
+    place(blueprint, root, -SELECT_BLEED, -SELECT_BLEED,
+          w + 2 * SELECT_BLEED, h + 2 * SELECT_BLEED, "tl", parent_size)
+    gw, gh = w + 2 * SELECT_BLEED, h + 2 * SELECT_BLEED
+    size = (gw, gh)
+    c, l = SELECT_CORNER, SELECT_LINK
+
+    runs_h = max(1, int(round((gw - 2 * c) / l)))
+    runs_v = max(1, int(round((gh - 2 * c) / l)))
+    step_h, step_v = (gw - 2 * c) / runs_h, (gh - 2 * c) / runs_v
+
+    def piece(tag, source, x, y, pw, ph, **flips):
+        nm = "{}_{}".format(name, tag)
+        image(blueprint, nm, root, x, y, pw, ph, size,
+              texture="{}/KK_Select_{}".format(KK, source), tint=WHITE)
+        if flips:
+            flip(blueprint, nm, **flips)
+
+    for i in range(runs_h):
+        x = c + i * step_h
+        piece("T%d" % i, "Link_H", x, 0, step_h, l)
+        piece("B%d" % i, "Link_H", x, gh - l, step_h, l, vertical=True)
+    for i in range(runs_v):
+        y = c + i * step_v
+        piece("L%d" % i, "Link_V", 0, y, l, step_v)
+        piece("R%d" % i, "Link_V", gw - l, y, l, step_v, horizontal=True)
+    piece("CTL", "Corner", 0, 0, c, c)
+    piece("CTR", "Corner", gw - c, 0, c, c, horizontal=True)
+    piece("CBL", "Corner", 0, gh - c, c, c, vertical=True)
+    piece("CBR", "Corner", gw - c, gh - c, c, c, horizontal=True, vertical=True)
+
+    helper.umg_set_widget_is_variable(blueprint, root, True)
 
 
 # ─── components ───────────────────────────────────────────────────────────────
@@ -399,7 +446,7 @@ def objective_panel(blueprint, root, x, y, w=340.0, h=60.0, anchor="tr",
         glyph = min(32.0, h - 20.0)
         image(blueprint, "ObjectiveIcon", body, 14, (h - glyph) / 2.0,
               glyph, glyph, extent,
-              texture=C04 + "/T_C04_Icon_Objective", tint=GOLD)
+              texture=KK + "/KK_Icon_Objective", tint=WHITE)
         text_x = 14 + glyph + 8
     label(blueprint, "ObjectiveText", body, text_x, (h - size - 10) / 2.0,
           w - text_x - 12, size + 10, "목표", size, TEXT_COLOR, "center", extent)
@@ -416,7 +463,7 @@ def turn_row(blueprint, root, x, y, token=96.0, gap=12.0, anchor="tc",
         portrait = token * (0.72 if names else 0.82)
         px, py, pe = ring(blueprint, "TurnPortrait_{}".format(index), body,
                           (token - portrait) / 2.0, token * 0.06, portrait,
-                          GOLD, size)
+                          WHITE, size)
         image(blueprint, "TurnPortrait_{}".format(index), body,
               px, py, pe, pe, size, tint=EMPTY_SOCKET)
         if names:
@@ -454,15 +501,15 @@ def party_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
         for pip in range(4):
             image(blueprint, "PartyAPPipBg_{}_{}".format(index, pip), body,
                   gx + pip * pitch, gy, extent, extent, size,
-                  texture=ART + "/Elements/T_Badge_Gem_AP", tint=AP_OFF)
+                  texture=KK + "/KK_Gem_Off", tint=WHITE)
         for pip in range(4):
             image(blueprint, "PartyAPPip_{}_{}".format(index, pip), body,
                   gx + pip * pitch, gy, extent, extent, size,
-                  texture=ART + "/Elements/T_Badge_Gem_AP", tint=AP_ON)
+                  texture=KK + "/KK_Gem_On", tint=WHITE)
 
     if style == "chip":
         px, py, pe = ring(blueprint, "PartyPortrait_{}".format(index), body,
-                          6, (h - (h - 12)) / 2.0 + 6, h - 12, GOLD, size)
+                          6, (h - (h - 12)) / 2.0 + 6, h - 12, WHITE, size)
         image(blueprint, "PartyPortrait_{}".format(index), body,
               px, py, pe, pe, size, texture=portrait_art, tint=portrait_tint)
         left = h + 4
@@ -478,7 +525,7 @@ def party_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
     elif style == "strip":
         portrait = h - 20
         px, py, pe = ring(blueprint, "PartyPortrait_{}".format(index), body,
-                          10, 10, portrait, GOLD, size)
+                          10, 10, portrait, WHITE, size)
         image(blueprint, "PartyPortrait_{}".format(index), body,
               px, py, pe, pe, size, texture=portrait_art, tint=portrait_tint)
         left = portrait + 22
@@ -498,7 +545,7 @@ def party_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
     elif style == "hero":
         portrait = h * 0.56
         px, py, pe = ring(blueprint, "PartyPortrait_{}".format(index), body,
-                          18, 18, portrait, GOLD, size)
+                          18, 18, portrait, WHITE, size)
         image(blueprint, "PartyPortrait_{}".format(index), body,
               px, py, pe, pe, size, texture=portrait_art, tint=portrait_tint)
         left = portrait + 34
@@ -518,7 +565,7 @@ def party_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
     else:  # card
         portrait = min(84.0, h * 0.5)
         px, py, pe = ring(blueprint, "PartyPortrait_{}".format(index), body,
-                          14, 14, portrait, GOLD, size)
+                          14, 14, portrait, WHITE, size)
         image(blueprint, "PartyPortrait_{}".format(index), body,
               px, py, pe, pe, size, texture=portrait_art, tint=portrait_tint)
         left = portrait + 22
@@ -568,8 +615,7 @@ def command_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
         gem = 26.0
         image(blueprint, "CommandCostGem_{}".format(index), body,
               w - gem - 10, 10, gem, gem, size,
-              texture=ART + "/Elements/T_Badge_Gem_AP",
-              tint=unreal.LinearColor(1, 1, 1, 1))
+              texture=KK + "/KK_Badge_Round", tint=WHITE)
         label(blueprint, "CommandCost_{}".format(index), body,
               w - gem - 10, 14, gem, 20, "0", 13,
               unreal.LinearColor(1.0, 0.97, 0.90, 1.0), "center", size,
@@ -591,8 +637,7 @@ def command_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
         gem = 32.0
         image(blueprint, "CommandCostGem_{}".format(index), body,
               w - gem - 16, 14, gem, gem, size,
-              texture=ART + "/Elements/T_Badge_Gem_AP",
-              tint=unreal.LinearColor(1, 1, 1, 1))
+              texture=KK + "/KK_Badge_Round", tint=WHITE)
         label(blueprint, "CommandCost_{}".format(index), body,
               w - gem - 16, 19, gem, 22, "0", 15,
               unreal.LinearColor(1.0, 0.97, 0.90, 1.0), "center", size,
@@ -625,8 +670,9 @@ def command_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
     image(blueprint, "CommandDisabledInk_{}".format(index), stack, 0, 0, w, h,
           size, tint=unreal.LinearColor(0.0, 0.0, 0.0, 0.66))
     image(blueprint, "CommandDisabledMat_{}".format(index), stack, 0, 0, w, h,
-          size, texture=ART + "/Materials/M_UI_CRPG_DisabledOverlay",
-          tint=unreal.LinearColor(1, 1, 1, 1))
+          size, texture=KK + "/KK_Veil_Disabled", tint=WHITE,
+          size=(VEIL_TILE, VEIL_TILE),
+          tiling=unreal.SlateBrushTileType.BOTH)
 
     marker(blueprint, "CommandSelected_{}".format(index), body, w, h, size)
 
@@ -634,12 +680,13 @@ def command_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
 def enemy_panel(blueprint, root, x, y, w, h, anchor="br", style="wide"):
     """The selected enemy read-out."""
     body, size = card(blueprint, "EnemyPanel", root, x, y, w, h, anchor)
-    enemy_ring = unreal.LinearColor(0.62, 0.24, 0.20, 1.0)
+    enemy_ring = WHITE
 
     if style == "tall":
         portrait = min(w - 40, 110.0)
         px, py, pe = ring(blueprint, "EnemyPortrait", body,
-                          (w - portrait) / 2.0, 18, portrait, enemy_ring, size)
+                          (w - portrait) / 2.0, 18, portrait, enemy_ring, size,
+                          enemy=True)
         image(blueprint, "EnemyPortrait", body, px, py, pe, pe, size,
               texture=ART + "/Portraits/T_Portrait_Spider",
               tint=unreal.LinearColor(1, 1, 1, 1))
@@ -658,7 +705,7 @@ def enemy_panel(blueprint, root, x, y, w, h, anchor="br", style="wide"):
     else:
         portrait = min(h - 44, 76.0)
         px, py, pe = ring(blueprint, "EnemyPortrait", body, 14, 14, portrait,
-                          enemy_ring, size)
+                          enemy_ring, size, enemy=True)
         image(blueprint, "EnemyPortrait", body, px, py, pe, pe, size,
               texture=ART + "/Portraits/T_Portrait_Spider",
               tint=unreal.LinearColor(1, 1, 1, 1))
@@ -686,16 +733,16 @@ def end_turn(blueprint, root, x, y, w=300.0, h=64.0, anchor="br", size=19):
 
     add(blueprint, "CanvasPanel", "EndTurnCanvas", "EndTurnButton")
     plate, extent = "EndTurnCanvas", (w, h)
-    image(blueprint, "EndTurnInk", plate, 0, 0, w, h, extent, tint=CARD_INK)
+    image(blueprint, "EndTurnInk", plate, 0, 0, w, h, extent, tint=INK)
     image(blueprint, "EndTurnSurface", plate, 0, 0, w, h, extent,
-          texture=C04 + "/T_C04_Surface", tint=SURFACE_TINT,
-          size=(SURFACE_TILE, SURFACE_TILE),
+          texture=KK + "/KK_Fill_Wood", tint=WHITE,
+          size=(FILL_TILE, FILL_TILE),
           tiling=unreal.SlateBrushTileType.BOTH)
     glyph = min(40.0, h - 20)
     text_w = size * 4.0
     block = glyph + 10 + text_w
     image(blueprint, "EndTurnIcon", plate, (w - block) / 2.0, (h - glyph) / 2.0,
-          glyph, glyph, extent, texture=C04 + "/T_C04_Icon_EndTurn", tint=GOLD)
+          glyph, glyph, extent, texture=KK + "/KK_Icon_EndTurn", tint=WHITE)
     label(blueprint, "EndTurnLabel", plate, (w - block) / 2.0 + glyph + 10,
           (h - size - 10) / 2.0, text_w, size + 10, "턴 종료", size, GOLD,
           "left", extent, bold=True)
