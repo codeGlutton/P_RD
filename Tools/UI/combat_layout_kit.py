@@ -101,8 +101,8 @@ COOLDOWN_TEXT = unreal.LinearColor(1.00, 0.80, 0.45, 1.0)
 
 #: 판 안쪽 위에 얹는 밝은 선과 아래에 까는 어두운 선. 이 두 줄이 "깎아 만든
 #: 판"과 "색칠한 사각형"을 가른다. 목업의 면은 전부 이 층을 갖고 있다.
-RIM_LIGHT = unreal.LinearColor(1.0, 0.97, 0.90, 0.22)
-RIM_DARK = unreal.LinearColor(0.0, 0.0, 0.0, 0.30)
+RIM_LIGHT = unreal.LinearColor(1.0, 0.97, 0.90, 0.35)
+RIM_DARK = unreal.LinearColor(0.0, 0.0, 0.0, 0.50)
 CARD_SHADOW = unreal.LinearColor(0.0, 0.0, 0.0, 0.45)
 
 #: 숫자를 얹는 배지. 밝은 원에 진한 숫자여야 작은 크기에서 숫자가 산다.
@@ -144,13 +144,13 @@ SHADE_SIZE = (8.0, 256.0)
 #: 132~148뿐이라 사실상 단색이었다. 화면 전체가 같은 회색 판으로 보였다.
 #: 면을 나누고 색조를 주면 어느 판이 무엇인지 형태 전에 색으로 읽힌다.
 SURFACES = {
-    "party":      ("Wood", unreal.LinearColor(0.86, 0.68, 0.52, 1.0)),
+    "party":      ("Wood", WHITE),
     "party_lead": ("Wood_Active", WHITE),
     "command":    ("Stone_Skill", WHITE),
     "enemy":      ("Stone_Enemy", WHITE),
-    "turn":       ("Stone_Skill", unreal.LinearColor(0.88, 0.90, 0.94, 1.0)),
-    "info":       ("Parchment", unreal.LinearColor(0.98, 0.92, 0.76, 1.0)),
-    "action":     ("Wood_Active", unreal.LinearColor(1.00, 0.86, 0.62, 1.0)),
+    "turn":       ("Stone_Skill", WHITE),
+    "info":       ("Parchment", WHITE),
+    "action":     ("Wood_Active", WHITE),
 }
 
 
