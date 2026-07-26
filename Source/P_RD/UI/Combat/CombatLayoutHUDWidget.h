@@ -96,6 +96,15 @@ private:
 	struct FPartySlotWidgets
 	{
 		TObjectPtr<UWidget> Root;
+		/**
+		 * @brief 판과 프레임을 뺀 내용 전체.
+		 *
+		 * @details
+		 * 빈 칸을 그릴 때 내용만 통째로 감춘다. 위젯을 하나씩 감추면 계약에
+		 * 없는 장식 -- 초상화 테, 꺼진 보석 바탕 -- 이 남아서 빈 칸에 유령
+		 * 고리와 유령 보석이 뜬다. 실제로 그렇게 보였다.
+		 */
+		TObjectPtr<UWidget> Content;
 		TObjectPtr<UWidget> Selected;
 		TObjectPtr<UImage> Portrait;
 		TObjectPtr<UTextBlock> Name;
@@ -104,6 +113,8 @@ private:
 		TObjectPtr<UTextBlock> APText;
 		TArray<TObjectPtr<UWidget>> APPips;
 		TObjectPtr<UTextBlock> StatusText;
+		/** @brief 상태이상 글자 옆 아이콘. 글자와 같이 켜지고 꺼진다. */
+		TObjectPtr<UWidget> StatusIcon;
 	};
 
 	/** @brief 커맨드 칸 한 개가 쓰는 위젯 묶음. */
@@ -116,6 +127,8 @@ private:
 		TObjectPtr<UTextBlock> Cost;
 		TObjectPtr<UTextBlock> CostLine;
 		TObjectPtr<UTextBlock> Cooldown;
+		/** @brief 쿨타임 글자 옆 아이콘. 글자와 같이 켜지고 꺼진다. */
+		TObjectPtr<UWidget> CooldownIcon;
 		TObjectPtr<UTextBlock> Damage;
 		TObjectPtr<UWidget> Disabled;
 		TObjectPtr<UWidget> Selected;

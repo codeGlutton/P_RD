@@ -39,6 +39,30 @@ HEAVY = {"corner": 2 * UNIT, "link": UNIT, "band": UNIT * 85.0 / 128.0,
 LIGHT = {"corner": UNIT, "link": UNIT / 2.0, "band": UNIT * 34.0 / 128.0,
          "prefix": "KK_LFrame"}
 
+#: 금속 프레임. 나무와 단면 두께가 같게 그려져서 치수는 그대로 쓰고 접두사만
+#: 바뀐다 -- 잘라낸 조각의 이음면 두께를 재서 확인했다(둘 다 128 / 64).
+METAL = dict(HEAVY, prefix="KK_MFrame")
+METAL_LIGHT = dict(LIGHT, prefix="KK_MLFrame")
+
+#: 어느 역할이 어느 프레임을 쓰는가.
+#:
+#: 지금까지는 전 패널이 같은 나무 테두리였고, 역할 구분이 면 색에만 있었다.
+#: 목업은 스킬 카드를 금속으로, 아군 카드를 나무로 그린다 -- 테두리가 먼저
+#: 읽히므로 여기서 갈라야 형태만 봐도 무엇인지 안다.
+FRAME_FAMILY = {
+    "party": ("wood", "wood"),
+    "party_lead": ("wood", "wood"),
+    "info": ("wood", "wood"),
+    "command": ("metal", "metal"),
+    "enemy": ("metal", "metal"),
+    "turn": ("metal", "metal"),
+    "action": ("button", "button"),
+}
+FRAME_SETS = {
+    "wood": (HEAVY, LIGHT),
+    "metal": (METAL, METAL_LIGHT),
+}
+
 SELECT_CORNER = UNIT       # KK_Select_Corner draws at 1U
 SELECT_LINK = UNIT / 2.0   # KK_Select_Link_* draw at 0.5U
 SELECT_BLEED = 4.0         # how far the marker sits outside its panel
@@ -68,10 +92,34 @@ AP_OFF = unreal.LinearColor(0.45, 0.47, 0.51, 0.9)
 EMPTY_SOCKET = unreal.LinearColor(0.30, 0.32, 0.36, 1.0)
 SELECT_TINT = WHITE        # the marker is already gold in the art
 
+#: 수치마다 색을 준다. 전부 흰 계열이면 위계가 글자 크기로만 갈리고, 훑을 때
+#: 무엇이 HP이고 무엇이 행동력인지 형태를 읽어야 알 수 있다.
+HP_TEXT = unreal.LinearColor(1.00, 0.86, 0.84, 1.0)
+AP_TEXT = unreal.LinearColor(1.00, 0.88, 0.52, 1.0)
+DAMAGE_TEXT = unreal.LinearColor(0.98, 0.95, 0.88, 1.0)
+COOLDOWN_TEXT = unreal.LinearColor(1.00, 0.80, 0.45, 1.0)
+
+#: 판 안쪽 위에 얹는 밝은 선과 아래에 까는 어두운 선. 이 두 줄이 "깎아 만든
+#: 판"과 "색칠한 사각형"을 가른다. 목업의 면은 전부 이 층을 갖고 있다.
+RIM_LIGHT = unreal.LinearColor(1.0, 0.97, 0.90, 0.22)
+RIM_DARK = unreal.LinearColor(0.0, 0.0, 0.0, 0.30)
+CARD_SHADOW = unreal.LinearColor(0.0, 0.0, 0.0, 0.45)
+
+#: 숫자를 얹는 배지. 밝은 원에 진한 숫자여야 작은 크기에서 숫자가 산다.
+BADGE_FACE = unreal.LinearColor(1.00, 0.90, 0.62, 1.0)
+BADGE_TEXT = unreal.LinearColor(0.16, 0.10, 0.04, 1.0)
+
 #: Portraits we actually have art for. A slot with none keeps an empty socket
 #: rather than borrowing another unit's face -- the runtime overwrites it as
 #: soon as the model supplies one.
-PARTY_PORTRAITS = (ART + "/Portraits/T_Portrait_Knight_Cutout_v2", None, None)
+PARTY_PORTRAITS = (KK + "/KK_Face_Knight", KK + "/KK_Face_Archer",
+                   KK + "/KK_Face_Mage")
+
+#: 턴 순서 칸의 기본 얼굴. 게임플레이가 유닛 초상화를 주면 덮어쓴다.
+#: 지금은 미리보기 장면(기사 - 독수리 - 궁수 - 독수리 - 마법사)에 맞춘다.
+TURN_PORTRAITS = (KK + "/KK_Face_Knight", KK + "/KK_Face_Eagle",
+                  KK + "/KK_Face_Archer", KK + "/KK_Face_Eagle",
+                  KK + "/KK_Face_Mage", None)
 
 #: Which painted glyph each command slot shows. Slot 0 is 이동; the rest follow
 #: the mock skill order.
@@ -96,19 +144,20 @@ SHADE_SIZE = (8.0, 256.0)
 #: 132~148뿐이라 사실상 단색이었다. 화면 전체가 같은 회색 판으로 보였다.
 #: 면을 나누고 색조를 주면 어느 판이 무엇인지 형태 전에 색으로 읽힌다.
 SURFACES = {
-    "party":      ("Wood", unreal.LinearColor(0.78, 0.60, 0.46, 1.0)),
-    "party_lead": ("Wood", unreal.LinearColor(0.95, 0.74, 0.55, 1.0)),
-    "command":    ("Stone", unreal.LinearColor(0.80, 0.85, 0.94, 1.0)),
-    "enemy":      ("Stone", unreal.LinearColor(0.92, 0.58, 0.54, 1.0)),
-    "turn":       ("Stone", unreal.LinearColor(0.74, 0.79, 0.88, 1.0)),
-    "info":       ("Parchment", unreal.LinearColor(0.96, 0.88, 0.70, 1.0)),
-    "action":     ("Wood", unreal.LinearColor(1.00, 0.72, 0.36, 1.0)),
+    "party":      ("Wood", unreal.LinearColor(0.86, 0.68, 0.52, 1.0)),
+    "party_lead": ("Wood_Active", WHITE),
+    "command":    ("Stone_Skill", WHITE),
+    "enemy":      ("Stone_Enemy", WHITE),
+    "turn":       ("Stone_Skill", unreal.LinearColor(0.88, 0.90, 0.94, 1.0)),
+    "info":       ("Parchment", unreal.LinearColor(0.98, 0.92, 0.76, 1.0)),
+    "action":     ("Wood_Active", unreal.LinearColor(1.00, 0.86, 0.62, 1.0)),
 }
 
 
 #: 그리기 층. 캔버스 자식 순서에만 기대면 부품이 많은 카드에서 프레임이
 #: 사라진다 -- 아군 카드와 커맨드 카드가 정확히 그렇게 됐다.
-Z_FILL, Z_CONTENT, Z_FRAME, Z_OVERLAY, Z_MARKER = 0, 10, 20, 30, 40
+Z_SHADOW, Z_FILL, Z_CONTENT, Z_FRAME, Z_OVERLAY, Z_MARKER = (
+    -10, 0, 10, 20, 30, 40)
 
 
 def snap(value, step):
@@ -251,7 +300,7 @@ def image(blueprint, name, parent, x, y, w, h, parent_size=None,
 
 def hud_font(size, bold=False):
     info = unreal.SlateFontInfo()
-    info.set_editor_property("font_object", art(ART + "/Fonts/F_HUD_NotoSerifKR"))
+    info.set_editor_property("font_object", art(KK + "/Fonts/F_HUD_NotoSansKR"))
     info.set_editor_property("typeface_font_name",
                              unreal.Name("Bold" if bold else "Regular"))
     info.set_editor_property("size", int(size))
@@ -339,7 +388,7 @@ def flip(blueprint, name, horizontal=False, vertical=False):
                                unreal.Vector2D(0.5, 0.5))
 
 
-def frame(blueprint, prefix, parent, w, h, weight=None):
+def frame(blueprint, prefix, parent, w, h, weight=None, family="wood"):
     """Lay a frame around a w x h panel by butting pieces together.
 
     Two corners and three links per weight, mirrored into all four sides. The
@@ -350,7 +399,9 @@ def frame(blueprint, prefix, parent, w, h, weight=None):
     Nothing is stretched. The run between corners is filled with whole links;
     `card()` snaps panel sizes so the division comes out even.
     """
-    weight = weight or (HEAVY if min(w, h) >= 8 * UNIT else LIGHT)
+    if weight is None:
+        heavy, light = FRAME_SETS.get(family, FRAME_SETS["wood"])
+        weight = heavy if min(w, h) >= 8 * UNIT else light
     size = (w, h)
     corner, link = weight["corner"], weight["link"]
     art_prefix = weight["prefix"]
@@ -385,6 +436,45 @@ def frame(blueprint, prefix, parent, w, h, weight=None):
     return weight["band"]
 
 
+def button_frame(blueprint, prefix, parent, w, h, pressed=False):
+    """The raised button plate, assembled from one corner and two links.
+
+    A button needs a different silhouette from an information panel -- the
+    end-turn control used the panel frame and so nothing about its shape said
+    it could be pressed. This set has a lit top edge and a darker skirt, and a
+    pressed variant whose outline matches to the pixel.
+    """
+    state = "Down" if pressed else "Up"
+    size = (w, h)
+    corner, link = UNIT, UNIT / 2.0
+
+    def piece(tag, source, x, y, pw, ph, **flips):
+        nm = "{}_B{}".format(prefix, tag)
+        image(blueprint, nm, parent, x, y, pw, ph, size, z_order=Z_FRAME,
+              texture="{}/KK_Button_{}_{}".format(KK, source, state),
+              tint=WHITE)
+        if flips:
+            flip(blueprint, nm, **flips)
+
+    runs_h = max(1, int(round((w - 2 * corner) / link)))
+    runs_v = max(1, int(round((h - 2 * corner) / link)))
+    step_h, step_v = (w - 2 * corner) / runs_h, (h - 2 * corner) / runs_v
+
+    for i in range(runs_h):
+        x = corner + i * step_h
+        piece("T%d" % i, "Link_H", x, 0, step_h, link)
+        piece("B%d" % i, "Link_H", x, h - link, step_h, link, vertical=True)
+    for i in range(runs_v):
+        y = corner + i * step_v
+        piece("L%d" % i, "Link_V", 0, y, link, step_v)
+        piece("R%d" % i, "Link_V", w - link, y, link, step_v, horizontal=True)
+    piece("CTL", "Corner", 0, 0, corner, corner)
+    piece("CTR", "Corner", w - corner, 0, corner, corner, horizontal=True)
+    piece("CBL", "Corner", 0, h - corner, corner, corner, vertical=True)
+    piece("CBR", "Corner", w - corner, h - corner, corner, corner,
+          horizontal=True, vertical=True)
+
+
 def card(blueprint, name, parent, x, y, w, h, anchor="tl", parent_size=None,
          role="command"):
     """A panel: ink, tiled fill, then an inner canvas. The frame goes on last.
@@ -397,14 +487,27 @@ def card(blueprint, name, parent, x, y, w, h, anchor="tl", parent_size=None,
     w = snap(w, weight["link"])
     h = snap(h, weight["link"])
 
-    border = add(blueprint, "Border", name, parent)
+    # 계약 이름은 래퍼가 갖는다.
+    #
+    # 그림자를 판의 형제로 깔았더니, 런타임이 판을 감출 때 그림자만 남아
+    # 화면에 회색 유령 사각형이 떴다. 턴 순서 빈 칸 자리에서 정확히 그랬다.
+    # 감춰야 할 것들을 한 껍데기에 넣어야 그런 잔재가 안 생긴다.
+    add(blueprint, "CanvasPanel", name, parent)
+    place(blueprint, name, x, y, w, h, anchor, parent_size)
+    size = (w, h)
+
+    shadow = "{}_Shadow".format(name)
+    paint(add(blueprint, "Image", shadow, name), tint=CARD_SHADOW)
+    place(blueprint, shadow, -3, 5, w + 6, h + 4, "tl", size, Z_SHADOW)
+
+    plate = "{}_Plate".format(name)
+    border = add(blueprint, "Border", plate, name)
     border.set_editor_property("padding", unreal.Margin(0.0, 0.0, 0.0, 0.0))
     paint(border, tint=INK)
-    place(blueprint, name, x, y, w, h, anchor, parent_size)
+    place(blueprint, plate, 0, 0, w, h, "tl", size, Z_FILL)
 
     inner = "{}_Canvas".format(name)
-    add(blueprint, "CanvasPanel", inner, name)
-    size = (w, h)
+    add(blueprint, "CanvasPanel", inner, plate)
     # Tiled at its own size rather than scaled to the card: shrinking a surface
     # to fit is what made the previous art line read as flat black.
     fill, tint = SURFACES.get(role, SURFACES["command"])
@@ -415,18 +518,42 @@ def card(blueprint, name, parent, x, y, w, h, anchor="tl", parent_size=None,
     # 위가 밝고 아래가 어두운 조명. 없으면 판이 납작하게 읽힌다.
     image(blueprint, "{}_Shade".format(name), inner, 0, 0, w, h, size,
           z_order=Z_FILL + 1, texture=SHADE, tint=WHITE, size=SHADE_SIZE)
+
+    # 프레임이 면을 무는 자리에 두 줄. 위는 빛을 받아 밝고 아래는 그늘진다.
+    # 램프 한 장만으로는 면이 평평하게 읽힌다.
+    band = weight["band"]
+    image(blueprint, "{}_Rim".format(name), inner, band, band,
+          w - 2 * band, 2.0, size, z_order=Z_FILL + 2, tint=RIM_LIGHT)
+    image(blueprint, "{}_Seat".format(name), inner, band, h - band - 2.0,
+          w - 2 * band, 2.0, size, z_order=Z_FILL + 2, tint=RIM_DARK)
     return inner, size
 
 
 def ring(blueprint, name, parent, x, y, extent, tint, parent_size,
          enemy=False):
     """A portrait bezel, returning where the portrait goes inside it."""
+    # 베젤을 초상화 위에 올린다.
+    #
+    # 게임플레이가 주는 초상화는 사각 스프라이트라 원형 구멍에 그대로 넣으면
+    # 네 귀퉁이가 삐져나온다. 구멍에 내접한 사각형의 귀퉁이는 중심에서 124px,
+    # 베젤은 88px부터 128px까지 불투명하니 위에 얹기만 하면 가려진다.
     inner = extent * RING_HOLE_RATIO
     offset = (extent - inner) / 2.0
     image(blueprint, name + "_Ring", parent, x, y, extent, extent, parent_size,
+          z_order=Z_CONTENT + 2,
           texture="{}/KK_Ring_{}".format(KK, "Enemy" if enemy else "Portrait"),
           tint=tint)
     return x + offset, y + offset, inner
+
+
+def tag(blueprint, name, parent, x, y, extent, glyph, parent_size):
+    """A small pictogram that sits beside a number.
+
+    Drawn at 2U in the art and used at 16~24px here, so the shapes were kept to
+    one solid silhouette -- anything finer turns to mush at this size.
+    """
+    return image(blueprint, name, parent, x, y, extent, extent, parent_size,
+                 texture="{}/KK_Tag_{}".format(KK, glyph), tint=WHITE)
 
 
 def marker(blueprint, name, parent, w, h, parent_size, tint=None):
@@ -447,25 +574,24 @@ def marker(blueprint, name, parent, w, h, parent_size, tint=None):
     size = (gw, gh)
     c, l = SELECT_CORNER, SELECT_LINK
 
-    runs_h = max(1, int(round((gw - 2 * c) / l)))
-    runs_v = max(1, int(round((gh - 2 * c) / l)))
-    step_h, step_v = (gw - 2 * c) / runs_h, (gh - 2 * c) / runs_v
-
-    def piece(tag, source, x, y, pw, ph, **flips):
+    def piece(tag, source, x, y, pw, ph, tiling=None, **flips):
         nm = "{}_{}".format(name, tag)
         image(blueprint, nm, root, x, y, pw, ph, size,
-              texture="{}/KK_Select_{}".format(KK, source), tint=WHITE)
+              texture="{}/KK_Select_{}".format(KK, source), tint=WHITE,
+              tiling=tiling, size=(l, l) if tiling is not None else None)
         if flips:
             flip(blueprint, nm, **flips)
 
-    for i in range(runs_h):
-        x = c + i * step_h
-        piece("T%d" % i, "Link_H", x, 0, step_h, l)
-        piece("B%d" % i, "Link_H", x, gh - l, step_h, l, vertical=True)
-    for i in range(runs_v):
-        y = c + i * step_v
-        piece("L%d" % i, "Link_V", 0, y, l, step_v)
-        piece("R%d" % i, "Link_V", gw - l, y, l, step_v, horizontal=True)
+    # 직선 구간은 타일 브러시 한 장. 조각마다 위젯을 놓으면 폭이 넓을수록
+    # 개수가 폭발한다 -- 화면 폭 바 하나가 위젯 114개까지 갔다.
+    piece("T", "Link_H", c, 0, gw - 2 * c, l,
+          tiling=unreal.SlateBrushTileType.HORIZONTAL)
+    piece("B", "Link_H", c, gh - l, gw - 2 * c, l,
+          tiling=unreal.SlateBrushTileType.HORIZONTAL, vertical=True)
+    piece("L", "Link_V", 0, c, l, gh - 2 * c,
+          tiling=unreal.SlateBrushTileType.VERTICAL)
+    piece("R", "Link_V", gw - l, c, l, gh - 2 * c,
+          tiling=unreal.SlateBrushTileType.VERTICAL, horizontal=True)
     piece("CTL", "Corner", 0, 0, c, c)
     piece("CTR", "Corner", gw - c, 0, c, c, horizontal=True)
     piece("CBL", "Corner", 0, gh - c, c, c, vertical=True)
@@ -481,7 +607,7 @@ def round_panel(blueprint, root, x, y, w=200.0, h=60.0, anchor="tl", size=18):
                         role="info")
     label(blueprint, "RoundText", body, 0, (h - size - 10) / 2.0, w, size + 10,
           "ROUND 1", size, TEXT_ON_LIGHT, "center", extent, bold=True)
-    frame(blueprint, "RoundPanel", body, w, h)
+    frame(blueprint, "RoundPanel", body, *extent, family="wood")
 
 
 def objective_panel(blueprint, root, x, y, w=340.0, h=60.0, anchor="tr",
@@ -498,7 +624,7 @@ def objective_panel(blueprint, root, x, y, w=340.0, h=60.0, anchor="tr",
     label(blueprint, "ObjectiveText", body, text_x, (h - size - 10) / 2.0,
           w - text_x - 12, size + 10, "목표", size, TEXT_ON_LIGHT, "center",
           extent)
-    frame(blueprint, "ObjectivePanel", body, w, h)
+    frame(blueprint, "ObjectivePanel", body, *extent, family="wood")
 
 
 def turn_row(blueprint, root, x, y, token=96.0, gap=12.0, anchor="tc",
@@ -514,16 +640,31 @@ def turn_row(blueprint, root, x, y, token=96.0, gap=12.0, anchor="tc",
         px, py, pe = ring(blueprint, "TurnPortrait_{}".format(index), body,
                           (token - portrait) / 2.0, token * 0.05, portrait,
                           WHITE, size)
+        face = TURN_PORTRAITS[index] if index < len(TURN_PORTRAITS) else None
         image(blueprint, "TurnPortrait_{}".format(index), body,
-              px, py, pe, pe, size, tint=EMPTY_SOCKET)
+              px, py, pe, pe, size, texture=face,
+              tint=WHITE if face else EMPTY_SOCKET)
         if names:
             label(blueprint, "TurnName_{}".format(index), body,
                   4, token * 0.05 + portrait + 2, token - 8, 16, "이름", 11,
                   TEXT_DIM, "center", size)
         if framed:
-            frame(blueprint, name, body, token, token)
-        marker(blueprint, "TurnCurrent_{}".format(index), body, token, token,
-               size)
+            frame(blueprint, name, body, *size, family="metal")
+        marker(blueprint, "TurnCurrent_{}".format(index), body,
+               size[0], size[1], size)
+
+        # 칸 사이에 진행 방향 화살표. 줄이 늘어서 있다는 것만으로는 왼쪽에서
+        # 오른쪽인지 반대인지 읽히지 않는다. 토큰과 같은 앵커로 놓아야 4:3에서
+        # 줄과 화살표가 따로 놀지 않는다.
+        if index + 1 < count:
+            arrow = min(gap * 1.7, token * 0.30)
+            arrow_name = "TurnArrow_{}".format(index)
+            paint(add(blueprint, "Image", arrow_name, root),
+                  texture=KK + "/KK_Turn_Arrow", tint=GOLD)
+            place(blueprint, arrow_name,
+                  x + index * (token + gap) + token + (gap - arrow) / 2.0,
+                  y + (token - arrow) / 2.0, arrow, arrow, anchor, None,
+                  Z_CONTENT)
 
 
 def party_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
@@ -540,8 +681,15 @@ def party_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
     """
     name = "PartyCard_{}".format(index)
     # 차례인 유닛의 카드만 밝게 -- 선택 테두리와 함께 두 겹으로 읽힌다.
-    body, size = card(blueprint, name, root, x, y, w, h, anchor,
-                      role="party_lead" if index == 0 else "party")
+    plate, size = card(blueprint, name, root, x, y, w, h, anchor,
+                       role="party_lead" if index == 0 else "party")
+
+    # 내용은 전부 이 캔버스 안에 넣는다. 빈 칸일 때 런타임이 이 하나만
+    # 감추면 장식까지 같이 사라진다 -- 위젯을 하나씩 감추면 계약에 없는
+    # 초상화 테와 꺼진 보석 바탕이 남아 빈 칸에 유령 고리와 유령 보석이 뜬다.
+    body = "PartyContent_{}".format(index)
+    add(blueprint, "CanvasPanel", body, plate)
+    place(blueprint, body, 0, 0, size[0], size[1], "tl", size, Z_CONTENT)
     portrait_art = PARTY_PORTRAITS[index]
     portrait_tint = (unreal.LinearColor(1, 1, 1, 1) if portrait_art
                      else EMPTY_SOCKET)
@@ -553,11 +701,11 @@ def party_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
         for pip in range(4):
             image(blueprint, "PartyAPPipBg_{}_{}".format(index, pip), body,
                   gx + pip * pitch, gy, extent, extent, size,
-                  texture=KK + "/KK_Gem_Off", tint=WHITE)
+                  texture=KK + "/KK_Gem_Blue_Off", tint=WHITE)
         for pip in range(4):
             image(blueprint, "PartyAPPip_{}_{}".format(index, pip), body,
                   gx + pip * pitch, gy, extent, extent, size,
-                  texture=KK + "/KK_Gem_On", tint=WHITE)
+                  texture=KK + "/KK_Gem_Blue_On", tint=WHITE)
 
     if style == "chip":
         px, py, pe = ring(blueprint, "PartyPortrait_{}".format(index), body,
@@ -598,23 +746,35 @@ def party_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
         label(blueprint, "PartyName_{}".format(index), body,
               left, h * 0.08, run - status_w, line, "이름", name_size,
               TEXT_COLOR, "left", size, bold=True)
+        # 상태이상 아이콘은 글자와 짝이라 런타임이 같이 켜고 끈다. 늘 켜 두면
+        # 아무 상태도 없는 카드에 해골이 상시로 붙는다.
+        tag(blueprint, "PartyStatusIcon_{}".format(index), body,
+            left + run - status_w, h * 0.10, max(14.0, min(22.0, h * 0.15)),
+            "Poison", size)
         label(blueprint, "PartyStatus_{}".format(index), body,
-              left + run - status_w, h * 0.09, status_w, line, "",
-              info_size, GOLD, "right", size)
+              left + run - status_w + max(14.0, min(22.0, h * 0.15)) + 4,
+              h * 0.09, status_w - 20, line, "", info_size, GOLD, "left", size)
 
-        hp_text = min(run * 0.30, 96.0)
+        # 하트 - 바 - 숫자를 붙여서 한 덩어리로 읽히게 한다. 숫자를 카드
+        # 오른쪽 끝에 붙여 두면 바와 사이가 텅 비어 둘이 딴 정보로 보인다.
+        tag_extent = max(14.0, min(22.0, h * 0.15))
+        hp_text = min(run * 0.26, 88.0)
+        bar_w = run - tag_extent - hp_text - 14
+        tag(blueprint, "PartyHPIcon_{}".format(index), body,
+            left, h * 0.44, tag_extent, "HP", size)
         bar(blueprint, "PartyHPBar_{}".format(index), body,
-            left, h * 0.47, run - hp_text - 8, max(10.0, h * 0.11), HP_GREEN,
-            size)
+            left + tag_extent + 6, h * 0.47, bar_w, max(10.0, h * 0.11),
+            HP_GREEN, size)
         label(blueprint, "PartyHPText_{}".format(index), body,
-              left + run - hp_text, h * 0.40, hp_text, line, "0/0", info_size,
-              TEXT_COLOR, "right", size)
+              left + tag_extent + bar_w + 12, h * 0.40, hp_text, line,
+              "0/0", info_size, HP_TEXT, "left", size)
 
+        # 보석 줄도 같은 이유로 숫자를 바로 옆에 붙인다.
         gem = max(14.0, min(24.0, h * 0.16))
         gems(left, h * 0.72, gem, gem * 1.18)
         label(blueprint, "PartyAPText_{}".format(index), body,
-              left + run - 64, h * 0.71, 64, line, "0/0", info_size, TEXT_DIM,
-              "right", size)
+              left + gem * 1.18 * 4 + 8, h * 0.71, 64, line, "0/0", info_size,
+              AP_TEXT, "left", size)
 
     elif style == "hero":
         portrait = h * 0.56
@@ -657,8 +817,11 @@ def party_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
         label(blueprint, "PartyStatus_{}".format(index), body,
               14, h - 40, w - 28, 20, "", 12, GOLD, "left", size)
 
-    frame(blueprint, name, body, w, h)
-    marker(blueprint, "PartySelected_{}".format(index), body, w, h, size)
+    # 프레임과 선택 표시는 판에 직접 얹는다. 내용 캔버스에 넣으면 빈 칸에서
+    # 테두리까지 같이 사라져 카드가 통째로 없어진 것처럼 보인다.
+    frame(blueprint, name, plate, *size, family="wood")
+    marker(blueprint, "PartySelected_{}".format(index), plate,
+           size[0], size[1], size)
 
 
 def command_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
@@ -730,32 +893,43 @@ def command_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
         label(blueprint, "CommandCooldown_{}".format(index), body,
               0, h - 30, w, 20, "", 12, GOLD, "center", size)
     else:
-        glyph = min(w - 40, h * 0.46)
+        # 아이콘이 카드의 중심이다. 위에 붙여 두고 글자를 아래에 흩으면
+        # 가운데가 비어 카드가 세 토막으로 읽힌다.
+        #
+        # 글자 블록 높이를 먼저 재고, 남는 세로를 아이콘이 갖는다.
+        text_block = 24 + 20 + 20 + 26
+        glyph = min(w - 28, h - text_block - 28)
         image(blueprint, "CommandIcon_{}".format(index), body,
-              (w - glyph) / 2.0, 16, glyph, glyph, size,
-              texture=COMMAND_ICONS[index], tint=unreal.LinearColor(1, 1, 1, 1))
-        text_top = 16 + glyph + 8
+              (w - glyph) / 2.0, (h - text_block - glyph) / 2.0 + 4,
+              glyph, glyph, size,
+              texture=COMMAND_ICONS[index], tint=WHITE)
+        text_top = h - text_block - 8
         label(blueprint, "CommandName_{}".format(index), body,
               8, text_top, w - 16, 24, "이름", 15, TEXT_COLOR, "center", size)
         label(blueprint, "CommandDamage_{}".format(index), body,
-              8, text_top + 26, w - 16, 20, "0~0", 13, TEXT_DIM, "center", size)
+              8, text_top + 26, w - 16, 20, "0~0", 13, DAMAGE_TEXT, "center",
+              size)
+        tag(blueprint, "CommandCooldownIcon_{}".format(index), body,
+            (w - 96) / 2.0, text_top + 46, 18, "Cooldown", size)
         label(blueprint, "CommandCooldown_{}".format(index), body,
-              8, text_top + 46, w - 16, 20, "", 12, GOLD, "center", size)
-        gem = 32.0
+              (w - 96) / 2.0 + 22, text_top + 46, 78, 20, "", 12,
+              COOLDOWN_TEXT, "left", size)
+        # 배지는 밝은 원에 진한 숫자다. 반대로 하면 밝은 카드 위에서 숫자가
+        # 배지에 먹힌다 -- 대비 방향이 뒤집혀 있었다.
+        gem = 40.0
         image(blueprint, "CommandCostGem_{}".format(index), body,
-              w - gem - 16, 14, gem, gem, size,
-              texture=KK + "/KK_Badge_Round", tint=WHITE)
+              w - gem - 12, 12, gem, gem, size,
+              texture=KK + "/KK_Badge_Round", tint=BADGE_FACE)
         label(blueprint, "CommandCost_{}".format(index), body,
-              w - gem - 16, 19, gem, 22, "0", 15,
-              unreal.LinearColor(1.0, 0.97, 0.90, 1.0), "center", size,
-              bold=True)
-        # 배지 숫자는 작고 아이콘에 붙어 있어 훑을 때 안 걸린다. 시안은 카드
-        # 맨 아래에 "AP n"을 한 번 더 적는다. 고를 때 보는 건 이쪽이다.
+              w - gem - 12, 12 + (gem - 26) / 2.0, gem, 26, "0", 19,
+              BADGE_TEXT, "center", size, bold=True)
+        # 배지 숫자는 아이콘에 붙어 있어 훑을 때 안 걸린다. 카드 아래에
+        # "AP n"을 한 번 더 적는다. 고를 때 보는 건 이쪽이다.
         label(blueprint, "CommandCostLine_{}".format(index), body,
-              8, h - 40, w - 16, 24, "", 15, TEXT_COLOR, "center", size,
+              8, text_top + 68, w - 16, 24, "", 15, AP_TEXT, "center", size,
               bold=True)
 
-    frame(blueprint, name, body, w, h)
+    frame(blueprint, name, body, *size, family="metal")
 
     # The button covers the card and is added after the plate but before the
     # overlays, so the overlays draw on top. Text and images are hit-test
@@ -801,7 +975,7 @@ def enemy_panel(blueprint, root, x, y, w, h, anchor="br", style="wide"):
                           (w - portrait) / 2.0, 18, portrait, enemy_ring, size,
                           enemy=True)
         image(blueprint, "EnemyPortrait", body, px, py, pe, pe, size,
-              texture=ART + "/Portraits/T_Portrait_Spider",
+              texture=KK + "/KK_Face_Eagle",
               tint=unreal.LinearColor(1, 1, 1, 1))
         top = 18 + portrait + 10
         label(blueprint, "EnemyName", body, 12, top, w - 24, 26, "적", 17,
@@ -816,27 +990,48 @@ def enemy_panel(blueprint, root, x, y, w, h, anchor="br", style="wide"):
         label(blueprint, "EnemyForecast", body, 12, top + 140, w - 24, 20, "",
               12, TEXT_DIM, "center", size)
     else:
-        portrait = min(h - 44, 76.0)
-        px, py, pe = ring(blueprint, "EnemyPortrait", body, 14, 14, portrait,
-                          enemy_ring, size, enemy=True)
+        # 자리를 높이의 비율로 잡는다. 고정 오프셋으로 박아 두고 패널만
+        # 키웠더니 위쪽 1/3만 쓰고 아래는 빈 벌판이 됐다. 아군 띠에서 이미
+        # 겪은 것과 같은 실수다.
+        pad = max(12.0, h * 0.09)
+        portrait = min(h * 0.46, w * 0.28)
+        px, py, pe = ring(blueprint, "EnemyPortrait", body, pad, pad,
+                          portrait, enemy_ring, size, enemy=True)
         image(blueprint, "EnemyPortrait", body, px, py, pe, pe, size,
-              texture=ART + "/Portraits/T_Portrait_Spider",
+              texture=KK + "/KK_Face_Eagle",
               tint=unreal.LinearColor(1, 1, 1, 1))
-        left = portrait + 24
-        label(blueprint, "EnemyName", body, left, 14, w - left - 14, 26, "적",
-              16, TEXT_COLOR, "left", size, bold=True)
-        bar(blueprint, "EnemyHPBar", body, left, 46, w - left - 14, 14, HP_RED,
-            size)
-        label(blueprint, "EnemyHPText", body, left, 62, 96, 18, "0/0", 12,
-              TEXT_DIM, "left", size)
-        label(blueprint, "EnemyDefense", body, left + 100, 62,
-              w - left - 114, 18, "", 12, TEXT_DIM, "right", size)
-        label(blueprint, "EnemyStatus", body, 14, h - 30, (w - 28) * 0.5, 18,
-              "", 12, GOLD, "left", size)
-        label(blueprint, "EnemyForecast", body, 14 + (w - 28) * 0.5, h - 30,
-              (w - 28) * 0.5, 18, "", 12, TEXT_DIM, "right", size)
 
-    frame(blueprint, "EnemyPanel", body, w, h)
+        left = pad + portrait + pad * 0.8
+        run = w - left - pad
+        name_size = int(max(13, min(20, h * 0.13)))
+        info_size = int(max(11, min(16, h * 0.10)))
+        line = h * 0.16
+
+        label(blueprint, "EnemyName", body, left, h * 0.09, run, line, "적",
+              name_size, TEXT_COLOR, "left", size, bold=True)
+
+        hp_text = min(run * 0.30, 92.0)
+        bar(blueprint, "EnemyHPBar", body, left, h * 0.32,
+            run - hp_text - 10, max(12.0, h * 0.09), HP_RED, size)
+        label(blueprint, "EnemyHPText", body, left + run - hp_text,
+              h * 0.26, hp_text, line, "0/0", info_size, TEXT_COLOR, "right",
+              size)
+
+        icon = max(16.0, min(22.0, h * 0.11))
+        tag(blueprint, "EnemyDefenseIcon", body, left, h * 0.50, icon,
+            "Defense", size)
+        label(blueprint, "EnemyDefense", body, left + icon + 6, h * 0.49,
+              run - icon - 6, line, "", info_size, TEXT_DIM, "left", size)
+
+        tag(blueprint, "EnemyForecastIcon", body, left, h * 0.68, icon,
+            "Damage", size)
+        label(blueprint, "EnemyForecast", body, left + icon + 6, h * 0.67,
+              run - icon - 6, line, "", info_size, DAMAGE_TEXT, "left", size)
+
+        label(blueprint, "EnemyStatus", body, pad, h - line - pad * 0.6,
+              w - 2 * pad, line, "", info_size, GOLD, "left", size)
+
+    frame(blueprint, "EnemyPanel", body, *size, family="metal")
 
 
 def end_turn(blueprint, root, x, y, w=300.0, h=64.0, anchor="br", size=19):
@@ -862,7 +1057,9 @@ def end_turn(blueprint, root, x, y, w=300.0, h=64.0, anchor="br", size=19):
     label(blueprint, "EndTurnLabel", plate, (w - block) / 2.0 + glyph + 10,
           (h - size - 10) / 2.0, text_w, size + 10, "턴 종료", size,
           TEXT_COLOR, "left", extent, bold=True)
-    frame(blueprint, "EndTurn", plate, w, h)
+    # 정보 판이 아니라 누르는 것이다. 볼록한 판을 둘러야 형태만 보고
+    # 눌러도 되는 것인지 알 수 있다.
+    button_frame(blueprint, "EndTurn", plate, *extent)
 
 
 # ─── verification ─────────────────────────────────────────────────────────────

@@ -101,6 +101,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		FPartySlotWidgets& Widgets = mPartySlots[Index];
 		const FString Suffix = FString::Printf(TEXT("_%d"), Index);
 		Widgets.Root = Find<UWidget>(WidgetTree, TEXT("PartyCard") + Suffix);
+		Widgets.Content = Find<UWidget>(WidgetTree, TEXT("PartyContent") + Suffix);
 		Widgets.Selected = Find<UWidget>(WidgetTree, TEXT("PartySelected") + Suffix);
 		Widgets.Portrait = Find<UImage>(WidgetTree, TEXT("PartyPortrait") + Suffix);
 		Widgets.Name = Find<UTextBlock>(WidgetTree, TEXT("PartyName") + Suffix);
@@ -108,6 +109,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		Widgets.HPText = Find<UTextBlock>(WidgetTree, TEXT("PartyHPText") + Suffix);
 		Widgets.APText = Find<UTextBlock>(WidgetTree, TEXT("PartyAPText") + Suffix);
 		Widgets.StatusText = Find<UTextBlock>(WidgetTree, TEXT("PartyStatus") + Suffix);
+		Widgets.StatusIcon = Find<UWidget>(WidgetTree, TEXT("PartyStatusIcon") + Suffix);
 		Widgets.APPips.Reset();
 		for (int32 Pip = 0; Pip < 8; ++Pip)
 		{
@@ -133,6 +135,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		Widgets.Cost = Find<UTextBlock>(WidgetTree, TEXT("CommandCost") + Suffix);
 		Widgets.CostLine = Find<UTextBlock>(WidgetTree, TEXT("CommandCostLine") + Suffix);
 		Widgets.Cooldown = Find<UTextBlock>(WidgetTree, TEXT("CommandCooldown") + Suffix);
+		Widgets.CooldownIcon = Find<UWidget>(WidgetTree, TEXT("CommandCooldownIcon") + Suffix);
 		Widgets.Damage = Find<UTextBlock>(WidgetTree, TEXT("CommandDamage") + Suffix);
 		Widgets.Disabled = Find<UWidget>(WidgetTree, TEXT("CommandDisabled") + Suffix);
 		Widgets.Selected = Find<UWidget>(WidgetTree, TEXT("CommandSelected") + Suffix);
@@ -280,6 +283,7 @@ void UCombatLayoutHUDWidget::RefreshParty()
 		}
 		const FPartySlotWidgets& Widgets = mPartySlots[SlotIndex];
 		SetShown(Widgets.Root, true);
+		SetShown(Widgets.Content, true);
 		SetShown(Widgets.Selected, Unit.mUnitId == CurrentUnitId);
 
 		// 빈 칸 처리가 접어 둔 것들을 다시 켠다.
@@ -315,6 +319,7 @@ void UCombatLayoutHUDWidget::RefreshParty()
 		{
 			const bool bHasStatus = Unit.mStatusEffects.Num() > 0;
 			SetShown(Widgets.StatusText, bHasStatus);
+			SetShown(Widgets.StatusIcon, bHasStatus);
 			if (bHasStatus)
 			{
 				const FStatusEffectUI& First = Unit.mStatusEffects[0];
@@ -347,6 +352,7 @@ void UCombatLayoutHUDWidget::RefreshParty()
 void UCombatLayoutHUDWidget::ClearPartySlot(const FPartySlotWidgets& Widgets)
 {
 	SetShown(Widgets.Root, true);
+	SetShown(Widgets.Content, false);
 	SetShown(Widgets.Selected, false);
 
 	SetTextIfPresent(Widgets.Name, FText::GetEmpty());
@@ -423,6 +429,7 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 			SetTextIfPresent(Widgets.Cost, FText::FromString(TEXT("1")));
 			SetTextIfPresent(Widgets.CostLine, LOCTEXT("MoveCost", "AP 1"));
 			SetShown(Widgets.Cooldown, false);
+			SetShown(Widgets.CooldownIcon, false);
 			SetShown(Widgets.Damage, false);
 			SetShown(Widgets.Disabled, false);
 			SetShown(Widgets.Selected, false);
@@ -451,7 +458,9 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 		if (Widgets.Cooldown != nullptr)
 		{
 			const bool bOnCooldown = Skill.mRemainingCooldown > 0;
-			SetShown(Widgets.Cooldown, bOnCooldown || Skill.mCooldownTurns > 0);
+			const bool bShowCooldown = bOnCooldown || Skill.mCooldownTurns > 0;
+			SetShown(Widgets.Cooldown, bShowCooldown);
+			SetShown(Widgets.CooldownIcon, bShowCooldown);
 			Widgets.Cooldown->SetText(bOnCooldown
 				? FText::FromString(FString::Printf(TEXT("%d턴"), Skill.mRemainingCooldown))
 				: FText::FromString(FString::Printf(TEXT("쿨 %d턴"), Skill.mCooldownTurns)));

@@ -166,15 +166,22 @@ namespace CombatLayoutCapture
 			SNew(SOverlay)
 			+ SOverlay::Slot()
 			[
-				SNew(SColorBlock).Color(FLinearColor(0.09f, 0.10f, 0.12f, 1.0f))
+				SNew(SColorBlock).Color(FLinearColor(0.014f, 0.016f, 0.021f, 1.0f))
 			]
 			+ SOverlay::Slot()
 			[
 				LayoutSlate
 			];
 
-		// 감마 보정을 켜면 결과가 한 단계 밝게 나온다. 첫 캡처가 통째로 회색
-		// 톤이었던 이유이고, 그 상태로는 패널 대비를 판단할 수 없다.
+		// 리니어로 렌더하고, 파일로 쓸 때 딱 한 번 sRGB로 인코딩한다.
+		//
+		// 두 번 다 틀려 봤고 값이 그걸 말한다.
+		//   렌더러 보정 끔 + 읽기 변환 끔 : 면 밝기 125가 48로 찍혔다.
+		//     0.49^2.2 = 0.20 -> 51. 인코딩이 아예 없었다.
+		//   렌더러 보정 켬 + 읽기 변환 끔 : 배경 리니어 0.012가 110으로 찍혔다.
+		//     0.012를 두 번 인코딩하면 0.39 -> 100. 렌더 타깃이 이미 sRGB라
+		//     셰이더 보정이 얹혀 두 번 먹었다.
+		// 그래서 렌더는 리니어로 두고 읽기에서 한 번만 변환한다.
 		FWidgetRenderer Renderer(false, true);
 		Renderer.SetIsPrepassNeeded(true);
 		UTextureRenderTarget2D* RenderTarget = Renderer.DrawWidget(
@@ -188,7 +195,7 @@ namespace CombatLayoutCapture
 		FlushRenderingCommands();
 		TArray<FColor> Pixels;
 		FReadSurfaceDataFlags ReadFlags(RCM_UNorm);
-		ReadFlags.SetLinearToGamma(false);
+		ReadFlags.SetLinearToGamma(true);
 		if (!RenderTarget->GameThread_GetRenderTargetResource()->ReadPixels(Pixels, ReadFlags)
 			|| Pixels.Num() != CaptureWidth * CaptureHeight)
 		{

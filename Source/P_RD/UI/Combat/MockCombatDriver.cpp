@@ -42,8 +42,8 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 
 		struct FMockFoe { const TCHAR* Name; float HP; float MaxHP; };
 		const FMockFoe Foes[] = {
-			{ TEXT("거미"),   50.f, 50.f },
-			{ TEXT("슬라임"), 38.f, 50.f },
+			{ TEXT("독수리"),   50.f, 50.f },
+			{ TEXT("독수리"),   38.f, 50.f },
 		};
 		for (int32 i = 0; i < UE_ARRAY_COUNT(Foes); ++i)
 		{
@@ -106,7 +106,8 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 	Turn.mCurrentUnitId = 0;
 	Turn.mRound = 1;
 	Turn.mPhase = ECombatBuildPhaseUI::None;
-	// 기사 -> 거미 -> 궁수 -> 슬라임 -> 마법사
+	// 기사 -> 독수리 -> 궁수 -> 독수리 -> 마법사. 목업 열 장이 그리는
+	// 상황과 같아야 나란히 놓고 비교가 된다.
 	Turn.mTurnOrderUnitIds = { 0, 100, 1, 101, 2 };
 	mUIModel->SetTurnUI(Turn);
 
