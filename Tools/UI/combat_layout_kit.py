@@ -171,7 +171,7 @@ SURFACES = {
     "party_lead": ("Wood_Active", WHITE),
     "command":    ("Stone_Skill", WHITE),
     "enemy":      ("Stone_Enemy", WHITE),
-    "turn":       ("Stone_Skill", WHITE),
+    "turn":       ("Wood", WHITE),
     "info":       ("Parchment", WHITE),
     "action":     ("Wood_Active", WHITE),
 }
@@ -538,8 +538,12 @@ def card(blueprint, name, parent, x, y, w, h, anchor="tl", parent_size=None,
           size=(FILL_TILE, FILL_TILE),
           tiling=unreal.SlateBrushTileType.BOTH)
     # 타일 원단은 그 자체로는 평평하다. 판 전체에 걸리는 조명은 코드가 얹는다.
+    # 다만 밝은 판에서는 같은 램프가 훨씬 세게 먹는다 -- 양피지가 시안 157
+    # 대비 111까지 눌렸다. 밝은 역할에는 램프를 절반만 건다.
+    shade_tint = (unreal.LinearColor(1.0, 1.0, 1.0, 0.35)
+                  if role == "info" else WHITE)
     image(blueprint, "{}_Shade".format(name), inner, 0, 0, w, h, size,
-          z_order=Z_FILL + 1, texture=SHADE, tint=WHITE, size=SHADE_SIZE)
+          z_order=Z_FILL + 1, texture=SHADE, tint=shade_tint, size=SHADE_SIZE)
 
     # 프레임이 면을 무는 자리에 두 줄. 위는 빛을 받아 밝고 아래는 그늘진다.
     # 램프 한 장만으로는 면이 평평하게 읽힌다.
@@ -638,7 +642,9 @@ def objective_panel(blueprint, root, x, y, w=340.0, h=60.0, anchor="tr",
                         role="info")
     text_x = 8.0
     if icon:
-        glyph = min(32.0, h - 20.0)
+        # 깃발 원화는 캔버스의 절반만 그림이다. 시안의 46px 깃발을 맞추려면
+        # 위젯을 그만큼 키워야 한다.
+        glyph = min(64.0, h - 6.0)
         image(blueprint, "ObjectiveIcon", body, 14, (h - glyph) / 2.0,
               glyph, glyph, extent,
               texture=KK + "/KK_Icon_Objective", tint=WHITE)
@@ -658,7 +664,7 @@ def turn_row(blueprint, root, x, y, token=96.0, gap=12.0, anchor="tc",
                           token, token, anchor, role="turn")
         # 이름표가 있으면 링을 줄여 프레임 안쪽에 이름 자리를 만든다. 프레임은
         # 내용보다 위 층이라, 자리를 안 비우면 이름 아래쪽이 잘린다.
-        portrait = token * (0.60 if names else 0.82)
+        portrait = token * (0.62 if names else 0.90)
         px, py, pe = ring(blueprint, "TurnPortrait_{}".format(index), body,
                           (token - portrait) / 2.0, token * 0.05, portrait,
                           WHITE, size)
