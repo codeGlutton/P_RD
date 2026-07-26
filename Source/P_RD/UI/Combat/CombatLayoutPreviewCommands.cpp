@@ -15,6 +15,7 @@
  *********************************************************************/
 
 #include "Blueprint/UserWidget.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Engine/GameViewportClient.h"
 #include "Engine/World.h"
 #include "HAL/IConsoleManager.h"
@@ -55,6 +56,52 @@ namespace CombatLayoutPreview
 
 	/** @brief 마지막으로 띄운 번호. Next가 이어서 넘긴다. */
 	int32 ShownIndex = INDEX_NONE;
+
+	/** @brief 미리보기 때문에 감춘 위젯과, 감추기 전의 표시 상태. */
+	struct FHiddenWidget
+	{
+		TWeakObjectPtr<UUserWidget> Widget;
+		ESlateVisibility Restore = ESlateVisibility::Visible;
+	};
+	TArray<FHiddenWidget> Hidden;
+
+	/**
+	 * @brief 뷰포트에 올라와 있는 기존 UI를 전부 감춘다.
+	 *
+	 * @details
+	 * 비주얼을 보려는 것이므로 예전 HUD가 뒤에 겹쳐 보이면 판단이 안 된다.
+	 * 지우지 않고 표시만 끈다 -- 게임모드가 만든 HUD를 지우면 다시 만들 수
+	 * 없어서 미리보기를 꺼도 원래 화면으로 못 돌아온다.
+	 */
+	void HideExistingUI(UWorld* World, UUserWidget* Keep)
+	{
+		TArray<UUserWidget*> Found;
+		UWidgetBlueprintLibrary::GetAllWidgetsOfClass(
+			World, Found, UUserWidget::StaticClass(), false);
+		for (UUserWidget* Candidate : Found)
+		{
+			if (Candidate == nullptr || Candidate == Keep
+				|| !Candidate->IsInViewport())
+			{
+				continue;
+			}
+			Hidden.Add({ Candidate, Candidate->GetVisibility() });
+			Candidate->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+
+	/** @brief 감췄던 것을 원래 표시 상태로 되돌린다. */
+	void RestoreExistingUI()
+	{
+		for (const FHiddenWidget& Entry : Hidden)
+		{
+			if (Entry.Widget.IsValid())
+			{
+				Entry.Widget->SetVisibility(Entry.Restore);
+			}
+		}
+		Hidden.Reset();
+	}
 
 	/**
 	 * @brief 배치안 하나를 화면에 올린다.
@@ -103,8 +150,11 @@ namespace CombatLayoutPreview
 			return;
 		}
 
-		// 게임모드가 띄운 HUD 위에 얹는다. URDUserWidget은 OpenUI()가
-		// AddToViewport와 표시 상태를 함께 처리한다.
+		// 기존 UI를 먼저 감춘다. 위에 얹기만 하면 예전 HUD가 비쳐서 비주얼
+		// 판단이 안 된다. 감춘 목록은 RD.Layout 0으로 되돌린다.
+		HideExistingUI(World, Layout);
+
+		// URDUserWidget은 OpenUI()가 AddToViewport와 표시 상태를 함께 처리한다.
 		Layout->OpenUI(FOnEndUIOpenAnimation());
 		Shown = Layout;
 		ShownIndex = Index;
@@ -118,6 +168,7 @@ namespace CombatLayoutPreview
 			Shown->RemoveFromParent();
 			Shown.Reset();
 		}
+		RestoreExistingUI();
 		ShownIndex = INDEX_NONE;
 	}
 }

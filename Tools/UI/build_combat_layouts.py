@@ -34,28 +34,37 @@ def centred(count, item, gap, left=0.0, right=W):
 # ─── 1안 클래식 CRPG ───────────────────────────────────────────────────────────
 
 def layout_01(bp, root):
-    """Three layers: top band, battlefield, bottom band. The safe, dense one."""
-    kit.round_panel(bp, root, 24, 20, 200, 60, "tl", 20)
-    kit.turn_row(bp, root, centred(6, 96, 12), 16, 96, 12, "tc")
-    kit.objective_panel(bp, root, W - 364, 20, 340, 60, "tr")
+    """Three layers: top band, battlefield, bottom band. The safe, dense one.
 
-    party_w, party_h, gap = 210.0, 168.0, 8.0
+    Proportioned off the KayKit mock-up. The allies stack as three wide rows
+    down the bottom-left rather than sitting side by side -- stacked, they eat
+    less width and the command rail gets the room, which is what the mock-up
+    is really trading for.
+    """
+    kit.round_panel(bp, root, 24, 20, 260, 72, "tl", 24)
+    kit.turn_row(bp, root, centred(6, 104, 10), 16, 104, 10, "tc", names=False)
+    kit.objective_panel(bp, root, W - 404, 20, 380, 72, "tr", 18)
+
+    bottom = H - 24
+    row_w, row_h, row_gap = 500.0, 116.0, 12.0
+    party_top = bottom - 3 * row_h - 2 * row_gap
     for i in range(3):
-        kit.party_card(bp, root, i, M + i * (party_w + gap),
-                       H - 24 - party_h, party_w, party_h, "bl", "card")
+        kit.party_card(bp, root, i, M, party_top + i * (row_h + row_gap),
+                       row_w, row_h, "bl", "strip")
 
-    enemy_w = 300.0
+    enemy_w, enemy_h = 330.0, 200.0
     enemy_x = W - M - enemy_w
-    cmd_w, cmd_h, cmd_gap = 140.0, 188.0, 8.0
-    start = centred(6, cmd_w, cmd_gap,
-                    M + 3 * party_w + 2 * gap + 24, enemy_x - 24)
+    end_h = 80.0
+
+    cmd_w, cmd_h, cmd_gap = 156.0, 330.0, 10.0
+    start = centred(6, cmd_w, cmd_gap, M + row_w + 24, enemy_x - 24)
     for i in range(6):
         kit.command_card(bp, root, i, start + i * (cmd_w + cmd_gap),
-                         H - 24 - cmd_h, cmd_w, cmd_h, "bc")
+                         bottom - cmd_h, cmd_w, cmd_h, "bc")
 
-    kit.enemy_panel(bp, root, enemy_x, H - 24 - 64 - 12 - 120, enemy_w, 120,
-                    "br")
-    kit.end_turn(bp, root, enemy_x, H - 24 - 64, enemy_w, 64, "br")
+    kit.enemy_panel(bp, root, enemy_x, bottom - end_h - 12 - enemy_h,
+                    enemy_w, enemy_h, "br")
+    kit.end_turn(bp, root, enemy_x, bottom - end_h, enemy_w, end_h, "br", 24)
 
 
 # ─── 2안 좌측 세로 파티 ────────────────────────────────────────────────────────

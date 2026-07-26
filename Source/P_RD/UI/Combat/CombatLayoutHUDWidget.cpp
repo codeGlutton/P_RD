@@ -131,6 +131,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		Widgets.Icon = Find<UImage>(WidgetTree, TEXT("CommandIcon") + Suffix);
 		Widgets.Name = Find<UTextBlock>(WidgetTree, TEXT("CommandName") + Suffix);
 		Widgets.Cost = Find<UTextBlock>(WidgetTree, TEXT("CommandCost") + Suffix);
+		Widgets.CostLine = Find<UTextBlock>(WidgetTree, TEXT("CommandCostLine") + Suffix);
 		Widgets.Cooldown = Find<UTextBlock>(WidgetTree, TEXT("CommandCooldown") + Suffix);
 		Widgets.Damage = Find<UTextBlock>(WidgetTree, TEXT("CommandDamage") + Suffix);
 		Widgets.Disabled = Find<UWidget>(WidgetTree, TEXT("CommandDisabled") + Suffix);
@@ -281,6 +282,15 @@ void UCombatLayoutHUDWidget::RefreshParty()
 		SetShown(Widgets.Root, true);
 		SetShown(Widgets.Selected, Unit.mUnitId == CurrentUnitId);
 
+		// 빈 칸 처리가 접어 둔 것들을 다시 켠다.
+		//
+		// 위젯이 붙는 순간의 UIModel은 비어 있다. 그 첫 갱신에서 세 칸 모두
+		// 빈 칸으로 그려지며 HP 바와 초상화가 접히고, 곧이어 데이터가 들어와도
+		// 여기서 켜 주지 않으면 영영 접힌 채로 남는다. 실제로 그렇게 됐다 --
+		// 이름과 숫자는 나오는데 바와 얼굴만 사라진 화면이었다.
+		SetShown(Widgets.HPBar, true);
+		SetShown(Widgets.Portrait, true);
+
 		SetTextIfPresent(Widgets.Name, Unit.mName);
 		if (Widgets.Portrait != nullptr && Unit.mPortrait != nullptr)
 		{
@@ -411,6 +421,7 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 			SetShown(Widgets.Root, true);
 			SetTextIfPresent(Widgets.Name, LOCTEXT("Move", "이동"));
 			SetTextIfPresent(Widgets.Cost, FText::FromString(TEXT("1")));
+			SetTextIfPresent(Widgets.CostLine, LOCTEXT("MoveCost", "AP 1"));
 			SetShown(Widgets.Cooldown, false);
 			SetShown(Widgets.Damage, false);
 			SetShown(Widgets.Disabled, false);
@@ -428,6 +439,8 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 		SetShown(Widgets.Root, true);
 		SetTextIfPresent(Widgets.Name, Skill.mName);
 		SetTextIfPresent(Widgets.Cost, FText::AsNumber(Skill.mActionPointCost));
+		SetTextIfPresent(Widgets.CostLine, FText::Format(
+			LOCTEXT("SkillCost", "AP {0}"), Skill.mActionPointCost));
 
 		if (Widgets.Icon != nullptr && Skill.mIcon != nullptr)
 		{

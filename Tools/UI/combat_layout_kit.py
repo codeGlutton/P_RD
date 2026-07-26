@@ -53,9 +53,11 @@ VEIL_TILE = UNIT
 # KayKit palette. Bright matte, no oxidised bronze -- the characters are light
 # low-poly chibi and the old dark-fantasy HUD read as a different game.
 WHITE = unreal.LinearColor(1.0, 1.0, 1.0, 1.0)
-TEXT_COLOR = unreal.LinearColor(0.97, 0.95, 0.90, 1.0)
-TEXT_DIM = unreal.LinearColor(0.74, 0.72, 0.68, 1.0)
+TEXT_COLOR = unreal.LinearColor(0.99, 0.97, 0.93, 1.0)
+TEXT_DIM = unreal.LinearColor(0.86, 0.84, 0.80, 1.0)
 GOLD = unreal.LinearColor(0.91, 0.72, 0.29, 1.0)          # #E8B84B
+#: 양피지·주황처럼 밝은 판 위에 얹는 글씨. 흰색은 씻겨서 안 읽힌다.
+TEXT_ON_LIGHT = unreal.LinearColor(0.22, 0.13, 0.07, 1.0)
 INK = unreal.LinearColor(0.13, 0.14, 0.17, 0.92)
 HP_GREEN = unreal.LinearColor(0.24, 0.56, 0.35, 1.0)      # #3E8E5A
 HP_RED = unreal.LinearColor(0.82, 0.27, 0.25, 1.0)        # #D2453F
@@ -94,13 +96,13 @@ SHADE_SIZE = (8.0, 256.0)
 #: 132~148뿐이라 사실상 단색이었다. 화면 전체가 같은 회색 판으로 보였다.
 #: 면을 나누고 색조를 주면 어느 판이 무엇인지 형태 전에 색으로 읽힌다.
 SURFACES = {
-    "party":     ("Wood", unreal.LinearColor(0.62, 0.50, 0.42, 1.0)),
-    "party_lead": ("Wood", unreal.LinearColor(0.78, 0.62, 0.46, 1.0)),
-    "command":   ("Stone", unreal.LinearColor(0.62, 0.65, 0.72, 1.0)),
-    "enemy":     ("Stone", unreal.LinearColor(0.70, 0.46, 0.44, 1.0)),
-    "turn":      ("Stone", unreal.LinearColor(0.56, 0.59, 0.66, 1.0)),
-    "info":      ("Parchment", unreal.LinearColor(0.72, 0.66, 0.52, 1.0)),
-    "action":    ("Wood", unreal.LinearColor(0.86, 0.60, 0.30, 1.0)),
+    "party":      ("Wood", unreal.LinearColor(0.78, 0.60, 0.46, 1.0)),
+    "party_lead": ("Wood", unreal.LinearColor(0.95, 0.74, 0.55, 1.0)),
+    "command":    ("Stone", unreal.LinearColor(0.80, 0.85, 0.94, 1.0)),
+    "enemy":      ("Stone", unreal.LinearColor(0.92, 0.58, 0.54, 1.0)),
+    "turn":       ("Stone", unreal.LinearColor(0.74, 0.79, 0.88, 1.0)),
+    "info":       ("Parchment", unreal.LinearColor(0.96, 0.88, 0.70, 1.0)),
+    "action":     ("Wood", unreal.LinearColor(1.00, 0.72, 0.36, 1.0)),
 }
 
 
@@ -478,7 +480,7 @@ def round_panel(blueprint, root, x, y, w=200.0, h=60.0, anchor="tl", size=18):
     body, extent = card(blueprint, "RoundPanel", root, x, y, w, h, anchor,
                         role="info")
     label(blueprint, "RoundText", body, 0, (h - size - 10) / 2.0, w, size + 10,
-          "ROUND 1", size, GOLD, "center", extent, bold=True)
+          "ROUND 1", size, TEXT_ON_LIGHT, "center", extent, bold=True)
     frame(blueprint, "RoundPanel", body, w, h)
 
 
@@ -494,7 +496,8 @@ def objective_panel(blueprint, root, x, y, w=340.0, h=60.0, anchor="tr",
               texture=KK + "/KK_Icon_Objective", tint=WHITE)
         text_x = 14 + glyph + 8
     label(blueprint, "ObjectiveText", body, text_x, (h - size - 10) / 2.0,
-          w - text_x - 12, size + 10, "목표", size, TEXT_COLOR, "center", extent)
+          w - text_x - 12, size + 10, "목표", size, TEXT_ON_LIGHT, "center",
+          extent)
     frame(blueprint, "ObjectivePanel", body, w, h)
 
 
@@ -572,24 +575,36 @@ def party_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
             gems(w - gem_run - 8, 6, 20, 22)
 
     elif style == "strip":
-        portrait = h - 20
+        # 시안의 아군 행: 왼쪽에 둥근 초상화, 오른쪽 위에 이름, 그 아래
+        # HP 바와 숫자, 맨 아래 AP 보석 줄. 상태이상은 오른쪽 위 뱃지.
+        portrait = h - 24
         px, py, pe = ring(blueprint, "PartyPortrait_{}".format(index), body,
-                          10, 10, portrait, WHITE, size)
+                          12, 12, portrait, WHITE, size)
         image(blueprint, "PartyPortrait_{}".format(index), body,
               px, py, pe, pe, size, texture=portrait_art, tint=portrait_tint)
-        left = portrait + 22
-        run = w - left - 12
-        hp_text = 68.0
+
+        left = portrait + 26
+        run = w - left - 16
+        status_w = 132.0
         label(blueprint, "PartyName_{}".format(index), body,
-              left, 8, run, 24, "이름", 16, TEXT_COLOR, "left", size, bold=True)
-        bar(blueprint, "PartyHPBar_{}".format(index), body,
-            left, 36, run - hp_text - 6, 14, HP_GREEN, size)
-        label(blueprint, "PartyHPText_{}".format(index), body,
-              left + run - hp_text, 34, hp_text, 18, "0/0", 12, TEXT_DIM,
-              "right", size)
-        gems(left, 56, 18, 21)
+              left, 12, run - status_w, 28, "이름", 20, TEXT_COLOR, "left",
+              size, bold=True)
+        # 상태이상은 이름 줄 오른쪽 끝에. 시안이 뱃지를 거기 둔다.
         label(blueprint, "PartyStatus_{}".format(index), body,
-              left + 96, 56, run - 96, 18, "", 12, GOLD, "right", size)
+              left + run - status_w, 14, status_w, 24, "", 14, GOLD, "right",
+              size)
+
+        hp_text = 88.0
+        bar(blueprint, "PartyHPBar_{}".format(index), body,
+            left, 52, run - hp_text - 10, 16, HP_GREEN, size)
+        label(blueprint, "PartyHPText_{}".format(index), body,
+              left + run - hp_text, 48, hp_text, 22, "0/0", 15, TEXT_COLOR,
+              "right", size)
+
+        gems(left, h - 34, 22, 26)
+        label(blueprint, "PartyAPText_{}".format(index), body,
+              left + run - 70, h - 34, 70, 22, "0/0", 14, TEXT_DIM, "right",
+              size)
 
     elif style == "hero":
         portrait = h * 0.56
@@ -690,6 +705,11 @@ def command_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
         label(blueprint, "CommandCost_{}".format(index), body,
               w - gem - 16, 19, gem, 22, "0", 15,
               unreal.LinearColor(1.0, 0.97, 0.90, 1.0), "center", size,
+              bold=True)
+        # 배지 숫자는 작고 아이콘에 붙어 있어 훑을 때 안 걸린다. 시안은 카드
+        # 맨 아래에 "AP n"을 한 번 더 적는다. 고를 때 보는 건 이쪽이다.
+        label(blueprint, "CommandCostLine_{}".format(index), body,
+              8, h - 40, w - 16, 24, "", 15, TEXT_COLOR, "center", size,
               bold=True)
 
     frame(blueprint, name, body, w, h)
@@ -797,8 +817,8 @@ def end_turn(blueprint, root, x, y, w=300.0, h=64.0, anchor="br", size=19):
     image(blueprint, "EndTurnIcon", plate, (w - block) / 2.0, (h - glyph) / 2.0,
           glyph, glyph, extent, texture=KK + "/KK_Icon_EndTurn", tint=WHITE)
     label(blueprint, "EndTurnLabel", plate, (w - block) / 2.0 + glyph + 10,
-          (h - size - 10) / 2.0, text_w, size + 10, "턴 종료", size, GOLD,
-          "left", extent, bold=True)
+          (h - size - 10) / 2.0, text_w, size + 10, "턴 종료", size,
+          TEXT_COLOR, "left", extent, bold=True)
     frame(blueprint, "EndTurn", plate, w, h)
 
 

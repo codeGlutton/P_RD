@@ -114,6 +114,7 @@ private:
 		TObjectPtr<UImage> Icon;
 		TObjectPtr<UTextBlock> Name;
 		TObjectPtr<UTextBlock> Cost;
+		TObjectPtr<UTextBlock> CostLine;
 		TObjectPtr<UTextBlock> Cooldown;
 		TObjectPtr<UTextBlock> Damage;
 		TObjectPtr<UWidget> Disabled;
