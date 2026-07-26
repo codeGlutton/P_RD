@@ -52,17 +52,27 @@ unreal.log("[KayKit] imported {}/{}".format(len(imported), len(files)))
 if missing:
     raise RuntimeError("import failed:\n  " + "\n  ".join(missing))
 
-# Confirm the sizes survived: a resize on import would break the grid.
-EXPECT = {
-    "KK_HFrame_Corner_T": (256, 256), "KK_HFrame_Link_T": (128, 128),
-    "KK_LFrame_Corner_T": (128, 128), "KK_LFrame_Link_T": (64, 64),
-    "KK_Select_Corner": (128, 128), "KK_Select_Link_H": (64, 64),
-    "KK_Fill_Stone": (512, 512), "KK_Bar_Link": (64, 128),
-    "KK_Ring_Portrait": (512, 512), "KK_Icon_Move": (256, 256),
-}
-for stem, want in EXPECT.items():
+# 임포트가 크기를 바꿨는지 확인한다. 이 검사의 목적은 "임포트 중 리사이즈"를
+# 잡는 것이지 아트 치수를 못 박는 게 아니다. 기대값을 손으로 적어 두었더니
+# 아트를 의도적으로 자를 때마다 임포터가 막았다 -- 원본 PNG에서 읽는다.
+def png_size(path):
+    """PNG 머리 24바이트에서 폭·높이. 실패하면 None."""
+    with open(path, "rb") as handle:
+        head = handle.read(24)
+    if len(head) < 24 or head[1:4] != b"PNG":
+        return None
+    return (int.from_bytes(head[16:20], "big"),
+            int.from_bytes(head[20:24], "big"))
+
+
+checked = 0
+for stem in imported:
+    want = png_size(os.path.join(SOURCE, stem + ".png"))
+    if want is None:
+        continue
     texture = unreal.EditorAssetLibrary.load_asset("{}/{}".format(PACKAGE, stem))
     got = (texture.blueprint_get_size_x(), texture.blueprint_get_size_y())
     if got != want:
-        raise RuntimeError("{}: {} (기대 {})".format(stem, got, want))
-unreal.log("[KayKit] 격자 크기 확인 완료")
+        raise RuntimeError("{}: {} (원본 {})".format(stem, got, want))
+    checked += 1
+unreal.log("[KayKit] 크기 대조 {}장 통과".format(checked))

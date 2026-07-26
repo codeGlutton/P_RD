@@ -38,9 +38,13 @@ UNIT = 32.0
 #: 선이고 모서리 브래킷만 덩어리다. 원판의 띠를 그대로 그리면 레일이
 #: 모서리만큼 두꺼워져 테두리가 화면의 주인공이 된다 -- 4차 반영본이
 #: 정확히 그랬다.
-HEAVY = {"corner": 2 * UNIT, "link": UNIT, "rail": 18.0,
+#: 레일 두께는 시안 실측에서 나온다. 예전 값(18/10)은 내 격자에서 고른
+#: 것이라 화면에 7px로 그려졌고, 시안은 12px였다 -- 테두리가 얇아 카드가
+#: 큼직하게 안 읽히는 주된 원인이었다. 아트가 위젯 폭의 약 70%를 그리므로
+#: 12 / 0.7 = 17 로 역산한다.
+HEAVY = {"corner": 2 * UNIT, "link": UNIT, "rail": 26.0,
          "band": UNIT * 85.0 / 128.0, "prefix": "KK_HFrame"}
-LIGHT = {"corner": UNIT, "link": UNIT / 2.0, "rail": 10.0,
+LIGHT = {"corner": UNIT, "link": UNIT / 2.0, "rail": 17.0,
          "band": UNIT * 34.0 / 128.0, "prefix": "KK_LFrame"}
 
 #: 금속 프레임. 나무와 단면 두께가 같게 그려져서 치수는 그대로 쓰고 접두사만
@@ -73,9 +77,11 @@ FRAME_SETS = {
 #: 주황으로 나왔다 -- 색상은 같고 밝기·채도만 높아 곱색으로 내려앉힌다.
 #: 금속은 시안 (118,120,123)보다 어두워 1을 넘는 값으로 올린다. 임시 보정이고
 #: 다음 원판 발주에 이 실측값이 목표로 들어간다.
+#: 흰색은 아래 팔레트에서 정의된다. 여기서 이름으로 부르면 정의 전 참조라
+#: 모듈이 통째로 안 읽힌다 -- 실제로 그렇게 죽었다.
 FRAME_TINTS = {
-    "wood": WHITE,
-    "metal": WHITE,
+    "wood": unreal.LinearColor(1.0, 1.0, 1.0, 1.0),
+    "metal": unreal.LinearColor(1.0, 1.0, 1.0, 1.0),
 }
 
 SELECT_CORNER = UNIT       # KK_Select_Corner draws at 1U
@@ -121,8 +127,10 @@ RIM_DARK = unreal.LinearColor(0.0, 0.0, 0.0, 0.50)
 CARD_SHADOW = unreal.LinearColor(0.0, 0.0, 0.0, 0.45)
 
 #: 숫자를 얹는 배지. 밝은 원에 진한 숫자여야 작은 크기에서 숫자가 산다.
-BADGE_FACE = unreal.LinearColor(1.00, 0.90, 0.62, 1.0)
-BADGE_TEXT = unreal.LinearColor(0.16, 0.10, 0.04, 1.0)
+BADGE_FACE = unreal.LinearColor(1.00, 0.96, 0.90, 1.0)
+#: 시안 배지는 어두운 갈색 원에 흰 숫자다. 진한 글씨로 칠했더니 원판도
+#: 어두워 숫자가 통째로 묻혔다 -- 실측에서 아주밝은 픽셀 0개였다.
+BADGE_TEXT = unreal.LinearColor(1.0, 0.98, 0.94, 1.0)
 
 #: Portraits we actually have art for. A slot with none keeps an empty socket
 #: rather than borrowing another unit's face -- the runtime overwrites it as
@@ -777,14 +785,14 @@ def party_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
         tag(blueprint, "PartyHPIcon_{}".format(index), body,
             left, h * 0.44, tag_extent, "HP", size)
         bar(blueprint, "PartyHPBar_{}".format(index), body,
-            left + tag_extent + 6, h * 0.47, bar_w, max(10.0, h * 0.11),
+            left + tag_extent + 6, h * 0.45, bar_w, max(14.0, h * 0.13),
             HP_GREEN, size)
         label(blueprint, "PartyHPText_{}".format(index), body,
               left + tag_extent + bar_w + 12, h * 0.40, hp_text, line,
               "0/0", info_size, HP_TEXT, "left", size)
 
         # 보석 줄도 같은 이유로 숫자를 바로 옆에 붙인다.
-        gem = max(14.0, min(24.0, h * 0.16))
+        gem = max(22.0, min(30.0, h * 0.24))
         gems(left, h * 0.72, gem, gem * 1.18)
         label(blueprint, "PartyAPText_{}".format(index), body,
               left + gem * 1.18 * 4 + 8, h * 0.71, 64, line, "0/0", info_size,
@@ -912,10 +920,12 @@ def command_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
         #
         # 글자 블록 높이를 먼저 재고, 남는 세로를 아이콘이 갖는다.
         text_block = 24 + 20 + 20 + 26
-        glyph = min(w - 28, h - text_block - 28)
+        glyph = min(w - 14, h - text_block - 28)
+        # 아이콘 원화는 캔버스의 위아래 12.5%가 여백이다. 시안의 "카드 위에서
+        # 28px" 을 맞추려면 위젯을 그만큼 더 올려 놓아야 한다.
+        icon_top = max(6.0, 28.0 - glyph * 0.125)
         image(blueprint, "CommandIcon_{}".format(index), body,
-              (w - glyph) / 2.0, (h - text_block - glyph) / 2.0 + 4,
-              glyph, glyph, size,
+              (w - glyph) / 2.0, icon_top, glyph, glyph, size,
               texture=COMMAND_ICONS[index], tint=WHITE)
         text_top = h - text_block - 8
         label(blueprint, "CommandName_{}".format(index), body,
@@ -968,9 +978,10 @@ def command_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
     stack = "CommandDisabledStack_{}".format(index)
     add(blueprint, "CanvasPanel", stack, disabled_name)
     image(blueprint, "CommandDisabledInk_{}".format(index), stack, 0, 0, w, h,
-          size, tint=unreal.LinearColor(0.0, 0.0, 0.0, 0.66))
+          size, tint=unreal.LinearColor(0.0, 0.0, 0.0, 0.22))
     image(blueprint, "CommandDisabledMat_{}".format(index), stack, 0, 0, w, h,
-          size, texture=KK + "/KK_Veil_Disabled", tint=WHITE,
+          size, texture=KK + "/KK_Veil_Disabled",
+          tint=unreal.LinearColor(1.0, 1.0, 1.0, 0.35),
           size=(VEIL_TILE, VEIL_TILE),
           tiling=unreal.SlateBrushTileType.BOTH)
 
