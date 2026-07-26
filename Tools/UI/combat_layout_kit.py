@@ -83,6 +83,32 @@ COMMAND_ICONS = (
 )
 
 
+#: 8x256 세로 그라데이션. 알파 램프라 아트라인과 무관하게 쓰인다.
+#: 위가 밝고 아래가 어두운 조명은 KayKit도 같으므로 그대로 가져다 쓴다.
+SHADE = C04 + "/T_C04_Shade"
+SHADE_SIZE = (8.0, 256.0)
+
+#: 역할마다 다른 면과 색조.
+#:
+#: 처음엔 모든 패널이 KK_Fill_Stone 하나를 썼고, 그 Stone은 값 범위가
+#: 132~148뿐이라 사실상 단색이었다. 화면 전체가 같은 회색 판으로 보였다.
+#: 면을 나누고 색조를 주면 어느 판이 무엇인지 형태 전에 색으로 읽힌다.
+SURFACES = {
+    "party":     ("Wood", unreal.LinearColor(0.62, 0.50, 0.42, 1.0)),
+    "party_lead": ("Wood", unreal.LinearColor(0.78, 0.62, 0.46, 1.0)),
+    "command":   ("Stone", unreal.LinearColor(0.62, 0.65, 0.72, 1.0)),
+    "enemy":     ("Stone", unreal.LinearColor(0.70, 0.46, 0.44, 1.0)),
+    "turn":      ("Stone", unreal.LinearColor(0.56, 0.59, 0.66, 1.0)),
+    "info":      ("Parchment", unreal.LinearColor(0.72, 0.66, 0.52, 1.0)),
+    "action":    ("Wood", unreal.LinearColor(0.86, 0.60, 0.30, 1.0)),
+}
+
+
+#: 그리기 층. 캔버스 자식 순서에만 기대면 부품이 많은 카드에서 프레임이
+#: 사라진다 -- 아군 카드와 커맨드 카드가 정확히 그렇게 됐다.
+Z_FILL, Z_CONTENT, Z_FRAME, Z_OVERLAY, Z_MARKER = 0, 10, 20, 30, 40
+
+
 def snap(value, step):
     """Round a length up to the grid so a frame lands on whole pieces."""
     import math
@@ -148,7 +174,8 @@ ANCHORS = {
 }
 
 
-def place(blueprint, name, x, y, w, h, anchor="tl", parent_size=None):
+def place(blueprint, name, x, y, w, h, anchor="tl", parent_size=None,
+          z_order=None):
     """Position a canvas child given absolute coordinates in its parent.
 
     `anchor` decides which parent edge the widget stays glued to when the
@@ -161,6 +188,12 @@ def place(blueprint, name, x, y, w, h, anchor="tl", parent_size=None):
         blueprint, name, ax, ay, ax, ay, x - ax * pw, y - ay * ph, w, h)
     if '"success":true' not in result.replace(" ", ""):
         raise RuntimeError("place {} -> {}".format(name, result))
+    if z_order is not None:
+        # 캔버스는 자식 순서대로 그리지만, 순서만 믿으면 부품이 많은 카드에서
+        # 뒤로 밀려 사라진다. 프레임과 표시물은 층을 못 박는다.
+        widget = helper.umg_find_widget(blueprint, name)
+        widget.get_editor_property("slot").set_editor_property("z_order",
+                                                              int(z_order))
 
 
 def brush_of(widget):
@@ -204,11 +237,13 @@ def paint(widget, texture=None, tint=None, size=None, tiling=None, margin=None):
     return widget
 
 
-def image(blueprint, name, parent, x, y, w, h, parent_size=None, **paint_args):
+def image(blueprint, name, parent, x, y, w, h, parent_size=None,
+          z_order=None, **paint_args):
+    z_order = Z_CONTENT if z_order is None else z_order
     widget = add(blueprint, "Image", name, parent)
     if paint_args:
         paint(widget, **paint_args)
-    place(blueprint, name, x, y, w, h, "tl", parent_size)
+    place(blueprint, name, x, y, w, h, "tl", parent_size, z_order)
     return widget
 
 
@@ -232,7 +267,7 @@ def label(blueprint, name, parent, x, y, w, h, text, size=14,
         "center": unreal.TextJustify.CENTER,
         "right": unreal.TextJustify.RIGHT,
     }[align])
-    place(blueprint, name, x, y, w, h, "tl", parent_size)
+    place(blueprint, name, x, y, w, h, "tl", parent_size, Z_CONTENT)
     return block
 
 
@@ -265,11 +300,13 @@ def bar(blueprint, name, parent, x, y, w, h, fill, parent_size=None):
     # rail, so a widget the height of the wanted bar draws one half that thick.
     # Give the widget the room the art expects and keep it on the same centre
     # line the caller asked for.
-    place(blueprint, name, x, y - h / 2.0, w, h * 2.0, "tl", parent_size)
+    place(blueprint, name, x, y - h / 2.0, w, h * 2.0, "tl", parent_size,
+          Z_CONTENT)
     return progress
 
 
-def ghost_button(blueprint, name, parent, x, y, w, h, parent_size=None):
+def ghost_button(blueprint, name, parent, x, y, w, h, parent_size=None,
+                 z_order=None):
     """A hit area with no chrome of its own, so the plate under it shows."""
     button = add(blueprint, "Button", name, parent)
     style = button.get_editor_property("widget_style")
@@ -281,7 +318,8 @@ def ghost_button(blueprint, name, parent, x, y, w, h, parent_size=None):
                                0.10 if state == "hovered" else 0.0)))
         style.set_editor_property(state, brush)
     button.set_editor_property("widget_style", style)
-    place(blueprint, name, x, y, w, h, "tl", parent_size)
+    place(blueprint, name, x, y, w, h, "tl", parent_size,
+          Z_OVERLAY - 1 if z_order is None else z_order)
     return button
 
 
@@ -316,7 +354,7 @@ def frame(blueprint, prefix, parent, w, h, weight=None):
     art_prefix = weight["prefix"]
 
     def piece(name, source, x, y, pw, ph, **flips):
-        image(blueprint, name, parent, x, y, pw, ph, size,
+        image(blueprint, name, parent, x, y, pw, ph, size, z_order=Z_FRAME,
               texture="{}/{}_{}".format(KK, art_prefix, source), tint=WHITE)
         if flips:
             flip(blueprint, name, **flips)
@@ -346,7 +384,7 @@ def frame(blueprint, prefix, parent, w, h, weight=None):
 
 
 def card(blueprint, name, parent, x, y, w, h, anchor="tl", parent_size=None,
-         fill="Stone"):
+         role="command"):
     """A panel: ink, tiled fill, then an inner canvas. The frame goes on last.
 
     Sizes snap to the grid so the frame divides into whole pieces. The inner
@@ -367,10 +405,14 @@ def card(blueprint, name, parent, x, y, w, h, anchor="tl", parent_size=None,
     size = (w, h)
     # Tiled at its own size rather than scaled to the card: shrinking a surface
     # to fit is what made the previous art line read as flat black.
+    fill, tint = SURFACES.get(role, SURFACES["command"])
     image(blueprint, "{}_Fill".format(name), inner, 0, 0, w, h, size,
-          texture="{}/KK_Fill_{}".format(KK, fill), tint=WHITE,
+          z_order=Z_FILL, texture="{}/KK_Fill_{}".format(KK, fill), tint=tint,
           size=(FILL_TILE, FILL_TILE),
           tiling=unreal.SlateBrushTileType.BOTH)
+    # 위가 밝고 아래가 어두운 조명. 없으면 판이 납작하게 읽힌다.
+    image(blueprint, "{}_Shade".format(name), inner, 0, 0, w, h, size,
+          z_order=Z_FILL + 1, texture=SHADE, tint=WHITE, size=SHADE_SIZE)
     return inner, size
 
 
@@ -397,7 +439,8 @@ def marker(blueprint, name, parent, w, h, parent_size, tint=None):
     root = name
     add(blueprint, "CanvasPanel", root, parent)
     place(blueprint, root, -SELECT_BLEED, -SELECT_BLEED,
-          w + 2 * SELECT_BLEED, h + 2 * SELECT_BLEED, "tl", parent_size)
+          w + 2 * SELECT_BLEED, h + 2 * SELECT_BLEED, "tl", parent_size,
+          Z_MARKER)
     gw, gh = w + 2 * SELECT_BLEED, h + 2 * SELECT_BLEED
     size = (gw, gh)
     c, l = SELECT_CORNER, SELECT_LINK
@@ -432,7 +475,8 @@ def marker(blueprint, name, parent, w, h, parent_size, tint=None):
 # ─── components ───────────────────────────────────────────────────────────────
 
 def round_panel(blueprint, root, x, y, w=200.0, h=60.0, anchor="tl", size=18):
-    body, extent = card(blueprint, "RoundPanel", root, x, y, w, h, anchor)
+    body, extent = card(blueprint, "RoundPanel", root, x, y, w, h, anchor,
+                        role="info")
     label(blueprint, "RoundText", body, 0, (h - size - 10) / 2.0, w, size + 10,
           "ROUND 1", size, GOLD, "center", extent, bold=True)
     frame(blueprint, "RoundPanel", body, w, h)
@@ -440,7 +484,8 @@ def round_panel(blueprint, root, x, y, w=200.0, h=60.0, anchor="tl", size=18):
 
 def objective_panel(blueprint, root, x, y, w=340.0, h=60.0, anchor="tr",
                     size=16, icon=True):
-    body, extent = card(blueprint, "ObjectivePanel", root, x, y, w, h, anchor)
+    body, extent = card(blueprint, "ObjectivePanel", root, x, y, w, h, anchor,
+                        role="info")
     text_x = 8.0
     if icon:
         glyph = min(32.0, h - 20.0)
@@ -459,17 +504,19 @@ def turn_row(blueprint, root, x, y, token=96.0, gap=12.0, anchor="tc",
     for index in range(count):
         name = "TurnToken_{}".format(index)
         body, size = card(blueprint, name, root, x + index * (token + gap), y,
-                          token, token, anchor)
-        portrait = token * (0.72 if names else 0.82)
+                          token, token, anchor, role="turn")
+        # 이름표가 있으면 링을 줄여 프레임 안쪽에 이름 자리를 만든다. 프레임은
+        # 내용보다 위 층이라, 자리를 안 비우면 이름 아래쪽이 잘린다.
+        portrait = token * (0.60 if names else 0.82)
         px, py, pe = ring(blueprint, "TurnPortrait_{}".format(index), body,
-                          (token - portrait) / 2.0, token * 0.06, portrait,
+                          (token - portrait) / 2.0, token * 0.05, portrait,
                           WHITE, size)
         image(blueprint, "TurnPortrait_{}".format(index), body,
               px, py, pe, pe, size, tint=EMPTY_SOCKET)
         if names:
             label(blueprint, "TurnName_{}".format(index), body,
-                  4, token - 22, token - 8, 18, "이름", 12, TEXT_DIM,
-                  "center", size)
+                  4, token * 0.05 + portrait + 2, token - 8, 16, "이름", 11,
+                  TEXT_DIM, "center", size)
         if framed:
             frame(blueprint, name, body, token, token)
         marker(blueprint, "TurnCurrent_{}".format(index), body, token, token,
@@ -489,7 +536,9 @@ def party_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
       hero  -- a large panel for the one unit whose turn it is
     """
     name = "PartyCard_{}".format(index)
-    body, size = card(blueprint, name, root, x, y, w, h, anchor)
+    # 차례인 유닛의 카드만 밝게 -- 선택 테두리와 함께 두 겹으로 읽힌다.
+    body, size = card(blueprint, name, root, x, y, w, h, anchor,
+                      role="party_lead" if index == 0 else "party")
     portrait_art = PARTY_PORTRAITS[index]
     portrait_tint = (unreal.LinearColor(1, 1, 1, 1) if portrait_art
                      else EMPTY_SOCKET)
@@ -596,7 +645,7 @@ def command_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
       icon -- the glyph and the cost only, for minimal layouts
     """
     name = "CommandCard_{}".format(index)
-    body, size = card(blueprint, name, root, x, y, w, h, anchor)
+    body, size = card(blueprint, name, root, x, y, w, h, anchor, role="command")
 
     if angle is not None:
         # A hand of cards needs the fan; canvas slots cannot rotate, so the
@@ -663,7 +712,7 @@ def command_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
     disabled = add(blueprint, "Border", disabled_name, body)
     disabled.set_editor_property("padding", unreal.Margin(0.0, 0.0, 0.0, 0.0))
     paint(disabled, tint=unreal.LinearColor(1.0, 1.0, 1.0, 0.0))
-    place(blueprint, disabled_name, 0, 0, w, h, "tl", size)
+    place(blueprint, disabled_name, 0, 0, w, h, "tl", size, Z_OVERLAY)
 
     stack = "CommandDisabledStack_{}".format(index)
     add(blueprint, "CanvasPanel", stack, disabled_name)
@@ -679,7 +728,8 @@ def command_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
 
 def enemy_panel(blueprint, root, x, y, w, h, anchor="br", style="wide"):
     """The selected enemy read-out."""
-    body, size = card(blueprint, "EnemyPanel", root, x, y, w, h, anchor)
+    body, size = card(blueprint, "EnemyPanel", root, x, y, w, h, anchor,
+                      role="enemy")
     enemy_ring = WHITE
 
     if style == "tall":
@@ -734,10 +784,13 @@ def end_turn(blueprint, root, x, y, w=300.0, h=64.0, anchor="br", size=19):
     add(blueprint, "CanvasPanel", "EndTurnCanvas", "EndTurnButton")
     plate, extent = "EndTurnCanvas", (w, h)
     image(blueprint, "EndTurnInk", plate, 0, 0, w, h, extent, tint=INK)
+    action_fill, action_tint = SURFACES["action"]
     image(blueprint, "EndTurnSurface", plate, 0, 0, w, h, extent,
-          texture=KK + "/KK_Fill_Wood", tint=WHITE,
+          texture="{}/KK_Fill_{}".format(KK, action_fill), tint=action_tint,
           size=(FILL_TILE, FILL_TILE),
           tiling=unreal.SlateBrushTileType.BOTH)
+    image(blueprint, "EndTurnShade", plate, 0, 0, w, h, extent,
+          texture=SHADE, tint=WHITE, size=SHADE_SIZE)
     glyph = min(40.0, h - 20)
     text_w = size * 4.0
     block = glyph + 10 + text_w
