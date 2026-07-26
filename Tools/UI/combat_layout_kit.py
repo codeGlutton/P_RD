@@ -112,6 +112,11 @@ INK = unreal.LinearColor(0.13, 0.14, 0.17, 0.92)
 #: 아군 (149,197,46), 적 (153,50,34).
 HP_GREEN = unreal.LinearColor(0.884, 1.616, 0.066, 1.0)
 HP_RED = unreal.LinearColor(0.929, 0.079, 0.035, 1.0)
+#: 빈 자리(트랙). 시안은 어두운 갈색 홈이다 -- 실측 (107,75,42).
+#:
+#: 트랙 원화도 중립으로 바꾸면서 흰색 곱색을 그대로 뒀더니 밝기 213 이 그대로
+#: 나가 빈 자리가 흰 막대가 됐다. 채움만 보고 트랙을 안 본 것이다.
+HP_TRACK = unreal.LinearColor(0.213, 0.101, 0.031, 1.0)
 STONE = unreal.LinearColor(0.76, 0.78, 0.81, 1.0)         # #C3C7CE
 STONE_DIM = unreal.LinearColor(0.43, 0.45, 0.49, 1.0)     # #6E747E
 AP_ON = WHITE
@@ -179,7 +184,7 @@ SURFACES = {
     "enemy":      ("Stone_Enemy", WHITE),
     "turn":       ("Wood", WHITE),
     "info":       ("Parchment", WHITE),
-    "action":     ("Wood_Active", WHITE),
+    "action":     ("ButtonWood", WHITE),
 }
 
 
@@ -427,7 +432,7 @@ def bar(blueprint, name, parent, x, y, w, h, fill, parent_size=None):
     progress = add(blueprint, "ProgressBar", name, parent)
     style = progress.get_editor_property("widget_style")
     for slot, texture, tint in (
-            ("background_image", KK + "/KK_Bar_Track_Link", WHITE),
+            ("background_image", KK + "/KK_Bar_Track_Link", HP_TRACK),
             ("fill_image", KK + "/KK_Bar_Link", fill)):
         brush = style.get_editor_property(slot)
         brush.set_editor_property("resource_object", art(texture))
@@ -716,11 +721,13 @@ def objective_panel(blueprint, root, x, y, w=340.0, h=60.0, anchor="tr",
     if icon:
         # 깃발 원화는 캔버스의 절반만 그림이다. 시안의 46px 깃발을 맞추려면
         # 위젯을 그만큼 키워야 한다.
-        glyph = min(64.0, h - 6.0)
+        glyph = min(108.0, h - 6.0)
         image(blueprint, "ObjectiveIcon", body, 14, (h - glyph) / 2.0,
               glyph, glyph, extent,
               texture=KK + "/KK_Icon_Objective", tint=WHITE)
-        text_x = 14 + glyph + 8
+        # 깃발 원화는 캔버스 전체를 채우지 않는다. 투명 여백까지 전부 글자
+        # 자리에서 빼면 긴 목표 문장이 오른쪽에서 잘린다.
+        text_x = 14 + glyph * 0.62 + 8
     label(blueprint, "ObjectiveText", body, text_x, (h - size - 10) / 2.0,
           w - text_x - 12, size + 10, "목표", size, TEXT_ON_LIGHT, "center",
           extent)
@@ -728,17 +735,22 @@ def objective_panel(blueprint, root, x, y, w=340.0, h=60.0, anchor="tr",
 
 
 def turn_row(blueprint, root, x, y, token=96.0, gap=12.0, anchor="tc",
-             count=6, names=True, framed=True, arrows=False):
+             count=6, names=True, framed=True, arrows=False, token_h=None):
     """The turn order, as a row of framed portrait tokens."""
+    token_h = token if token_h is None else token_h
     for index in range(count):
         name = "TurnToken_{}".format(index)
         body, size = card(blueprint, name, root, x + index * (token + gap), y,
-                          token, token, anchor, role="turn")
+                          token, token_h, anchor, role="turn")
         # 이름표가 있으면 링을 줄여 프레임 안쪽에 이름 자리를 만든다. 프레임은
         # 내용보다 위 층이라, 자리를 안 비우면 이름 아래쪽이 잘린다.
-        portrait = token * (0.62 if names else 0.90)
+        # 시안의 이름 없는 턴 토큰은 링이 카드 높이의 거의 전부를 쓴다.
+        # 원화 자체의 투명 여백까지 감안하면 위젯을 카드보다 조금 크게
+        # 잡아야 실제 보이는 링 지름이 시안과 같아진다.
+        portrait = min(token, token_h) * (0.62 if names else 1.12)
+        portrait_y = token_h * 0.05 if names else (token_h - portrait) / 2.0
         px, py, pe = ring(blueprint, "TurnPortrait_{}".format(index), body,
-                          (token - portrait) / 2.0, token * 0.05, portrait,
+                          (token - portrait) / 2.0, portrait_y, portrait,
                           WHITE, size)
         face = TURN_PORTRAITS[index] if index < len(TURN_PORTRAITS) else None
         image(blueprint, "TurnPortrait_{}".format(index), body,
@@ -746,10 +758,11 @@ def turn_row(blueprint, root, x, y, token=96.0, gap=12.0, anchor="tc",
               tint=WHITE if face else EMPTY_SOCKET)
         if names:
             label(blueprint, "TurnName_{}".format(index), body,
-                  4, token * 0.05 + portrait + 2, token - 8, 16, "이름", 11,
+                  4, token_h * 0.05 + portrait + 2, token - 8, 16, "이름", 11,
                   TEXT_DIM, "center", size)
         if framed:
-            frame(blueprint, name, body, *size, family="metal")
+            # 시안은 직선 레일이 나무이고 모서리만 금속 브래킷이다.
+            frame(blueprint, name, body, *size, family="wood")
         marker(blueprint, "TurnCurrent_{}".format(index), body,
                size[0], size[1], size)
 
@@ -760,13 +773,13 @@ def turn_row(blueprint, root, x, y, token=96.0, gap=12.0, anchor="tc",
         # 옆 칸의 초상이 있다. 방향 표시가 필요하다고 판단되면 arrows=True 로
         # 되살리면 된다.
         if arrows and index + 1 < count:
-            arrow = min(gap * 1.7, token * 0.30)
+            arrow = min(gap * 1.7, min(token, token_h) * 0.30)
             arrow_name = "TurnArrow_{}".format(index)
             paint(add(blueprint, "Image", arrow_name, root),
                   texture=KK + "/KK_Turn_Arrow", tint=GOLD)
             place(blueprint, arrow_name,
                   x + index * (token + gap) + token + (gap - arrow) / 2.0,
-                  y + (token - arrow) / 2.0, arrow, arrow, anchor, None,
+                  y + (token_h - arrow) / 2.0, arrow, arrow, anchor, None,
                   Z_CONTENT)
 
 
@@ -832,14 +845,16 @@ def party_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
         # 자리를 높이의 비율로 잡는다. 고정 오프셋으로 짰더니 통합 바(72px)와
         # 상단 정보 바(150px)에서 줄이 서로 올라타 글자가 겹쳤다. 같은 부품이
         # 배치안마다 다른 높이로 들어가는 게 이 키트의 전제다.
-        pad = max(8.0, h * 0.09)
+        pad = max(5.0, h * 0.045)
         portrait = h - 2 * pad
         px, py, pe = ring(blueprint, "PartyPortrait_{}".format(index), body,
                           pad, pad, portrait, WHITE, size)
         image(blueprint, "PartyPortrait_{}".format(index), body,
               px, py, pe, pe, size, texture=portrait_art, tint=portrait_tint)
 
-        left = portrait + pad * 2.2
+        # 원화의 링 투명 여백 때문에 portrait 위젯 폭을 그대로 더하면
+        # 이름·HP·AP가 시안보다 약 12px 오른쪽으로 밀린다.
+        left = h * 0.90
         run = w - left - pad * 1.6
         line = h * 0.26
         name_size = int(max(12, min(22, h * 0.17)))
@@ -866,7 +881,7 @@ def party_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
         hp_text = min(run * 0.26, 88.0)
         # 시안 바는 행 폭의 20% 남짓이고 숫자가 바로 옆에 붙는다. 남는 폭을
         # 전부 바에 주면 얇고 긴 선이 되어 이름·숫자와 한 덩어리로 안 읽힌다.
-        bar_w = min(run * 0.42, run - hp_text - 14)
+        bar_w = min(run * 0.58, run - hp_text - 14)
         bar(blueprint, "PartyHPBar_{}".format(index), body,
             left, h * 0.45, bar_w, max(14.0, h * 0.13), HP_GREEN, size)
         label(blueprint, "PartyHPText_{}".format(index), body,
@@ -1006,25 +1021,19 @@ def command_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
         #
         # 글자 블록 높이를 먼저 재고, 남는 세로를 아이콘이 갖는다.
         text_block = 24 + 20 + 20 + 26
-        # 스킬 아이콘은 전부 같은 원형 베젤 안에 넣는다.
-        #
-        # 게임플레이가 주는 아이콘은 출처가 제각각이라 캔버스를 채우는 비율도
-        # 테두리도 다르다. 그대로 놓으면 카드마다 아이콘 크기가 들쭉날쭉해
-        # 시안과 나란히 놓아도 무엇이 어긋난 것인지 구분이 안 된다. 같은 원에
-        # 담으면 바깥 지름이 항상 같아 비교가 된다.
-        bezel = min(w - 14, h - text_block - 28)
-        bezel_top = max(6.0, 28.0 - bezel * 0.125)
-        bx, by, glyph = ring(blueprint, "CommandIcon_{}".format(index), body,
-                             (w - bezel) / 2.0, bezel_top, bezel, WHITE, size)
+        # 시안은 아이콘을 카드 면 위에 직접 올린다. 원형 베젤을 한 겹 더
+        # 두르면 카드 프레임과 위계가 겹치고 실제 아이콘이 작아진다.
+        glyph = min(w * 0.68, h * 0.34)
+        icon_top = 28.0
         image(blueprint, "CommandIcon_{}".format(index), body,
-              bx, by, glyph, glyph, size,
+              (w - glyph) / 2.0, icon_top, glyph, glyph, size,
               texture=COMMAND_ICONS[index], tint=WHITE)
         # 줄 자리는 시안 실측 비율로 잡는다. 카드 아래에서 역산했더니 네 줄이
         # 12%p 아래로 몰려 AP 가 프레임에 닿았다. 순서도 시안이 옳다 --
         # 이름 다음이 쿨이고 피해가 그 아래다.
-        name_y = h * 0.61
-        cool_y = h * 0.69
-        dmg_y = h * 0.81
+        name_y = h * 0.49
+        cool_y = h * 0.58
+        dmg_y = h * 0.70
         text_top = name_y
         label(blueprint, "CommandName_{}".format(index), body,
               8, name_y, w - 16, 26, "이름", 15, TEXT_COLOR, "center", size)
@@ -1092,31 +1101,64 @@ def enemy_panel(blueprint, root, x, y, w, h, anchor="br", style="wide"):
     enemy_ring = WHITE
 
     if style == "tall":
-        portrait = min(w - 40, 110.0)
+        portrait = min(w - 2 * max(12.0, w * 0.07), h * 0.34)
+        # 자리를 높이의 비율로 잡는다.
+        #
+        # 여기도 고정 오프셋으로 박혀 있었다 -- 넓은 분기에서 이미 같은 이유로
+        # 고쳤는데 이쪽이 남아 있었다. 470px 짜리 세로 패널에서 내용이 위쪽
+        # 300px 안에만 들어가 아래가 빈 벌판이 됐다.
+        #
+        # 시안(2안·6안)은 초상이 크고, 숫자마다 아이콘이 짝을 이루며, 예상
+        # 피해가 맨 아래에 제목과 함께 온다.
+        pad = max(12.0, w * 0.07)
+        icon = max(16.0, min(26.0, w * 0.11))
         px, py, pe = ring(blueprint, "EnemyPortrait", body,
-                          (w - portrait) / 2.0, 18, portrait, enemy_ring, size,
-                          enemy=True)
+                          (w - portrait) / 2.0, h * 0.05, portrait,
+                          enemy_ring, size, enemy=True)
         image(blueprint, "EnemyPortrait", body, px, py, pe, pe, size,
               texture=KK + "/KK_Face_Eagle",
               tint=unreal.LinearColor(1, 1, 1, 1))
-        top = 18 + portrait + 10
-        label(blueprint, "EnemyName", body, 12, top, w - 24, 26, "적", 17,
-              TEXT_COLOR, "center", size, bold=True)
-        bar(blueprint, "EnemyHPBar", body, 16, top + 32, w - 32, 14, HP_RED, size)
-        label(blueprint, "EnemyHPText", body, 16, top + 48, w - 32, 18, "0/0",
-              12, TEXT_DIM, "center", size)
-        label(blueprint, "EnemyDefense", body, 16, top + 70, w - 32, 18, "",
-              12, TEXT_DIM, "center", size)
-        label(blueprint, "EnemyStatus", body, 12, top + 96, w - 24, 40, "", 12,
-              GOLD, "center", size)
-        label(blueprint, "EnemyForecast", body, 12, top + 140, w - 24, 20, "",
-              12, TEXT_DIM, "center", size)
+        name_size = int(max(14, min(22, w * 0.09)))
+        info_size = int(max(12, min(17, w * 0.075)))
+        line = max(22.0, h * 0.055)
+
+        label(blueprint, "EnemyName", body, pad, h * 0.34, w - pad * 2, line,
+              "적", name_size, TEXT_COLOR, "center", size, bold=True)
+
+        # 하트-바-숫자를 한 줄로 묶는다. 바만 폭 전체로 늘리면 숫자와 따로 논다.
+        run = w - pad * 2
+        hp_text = min(run * 0.34, 86.0)
+        bar_w = run - icon - hp_text - 12
+        tag(blueprint, "EnemyHPIcon", body, pad, h * 0.44, icon, "HP", size)
+        bar(blueprint, "EnemyHPBar", body, pad + icon + 6, h * 0.45,
+            bar_w, max(12.0, h * 0.035), HP_RED, size)
+        label(blueprint, "EnemyHPText", body, pad + icon + bar_w + 12,
+              h * 0.435, hp_text, line, "0/0", info_size, TEXT_COLOR,
+              "left", size, bold=True)
+
+        tag(blueprint, "EnemyDefenseIcon", body, pad, h * 0.54, icon,
+            "Defense", size)
+        label(blueprint, "EnemyDefense", body, pad + icon + 8, h * 0.535,
+              run - icon - 8, line, "", info_size, TEXT_DIM, "left", size)
+
+        label(blueprint, "EnemyStatus", body, pad, h * 0.64, run, line, "",
+              info_size, GOLD, "center", size)
+
+        # 예상 피해는 맨 아래. 제목을 따로 두려다 "예상 피해 / 예상 피해 8~14"
+        # 로 두 번 나왔다 -- C++ 이 이미 "예상 피해 8~14" 전체를 넣는다.
+        tag(blueprint, "EnemyForecastIcon", body, pad, h * 0.80, icon,
+            "Damage", size)
+        label(blueprint, "EnemyForecast", body, pad + icon + 8, h * 0.79,
+              run - icon - 8, line, "", info_size, DAMAGE_TEXT, "left", size)
     else:
         # 자리를 높이의 비율로 잡는다. 고정 오프셋으로 박아 두고 패널만
         # 키웠더니 위쪽 1/3만 쓰고 아래는 빈 벌판이 됐다. 아군 띠에서 이미
         # 겪은 것과 같은 실수다.
         pad = max(12.0, h * 0.09)
-        portrait = min(h * 0.46, w * 0.28)
+        # 초상을 키웠더니 패널 폭의 44%를 먹어 오른쪽 글자칸이 85px 로
+        # 줄었고 "예상 피해 8~14" 가 잘렸다. 시안 초상은 76px(패널 폭의 25%)
+        # 이다. 글자가 잘리는 건 초상이 큰 것보다 나쁘다.
+        portrait = min(h * 0.50, w * 0.30)
         px, py, pe = ring(blueprint, "EnemyPortrait", body, pad, pad,
                           portrait, enemy_ring, size, enemy=True)
         image(blueprint, "EnemyPortrait", body, px, py, pe, pe, size,
@@ -1171,14 +1213,10 @@ def end_turn(blueprint, root, x, y, w=300.0, h=64.0, anchor="br", size=19):
           tiling=unreal.SlateBrushTileType.BOTH)
     image(blueprint, "EndTurnShade", plate, 0, 0, w, h, extent,
           texture=SHADE, tint=WHITE, size=SHADE_SIZE)
-    glyph = min(40.0, h - 20)
     text_w = size * 4.0
-    block = glyph + 10 + text_w
-    image(blueprint, "EndTurnIcon", plate, (w - block) / 2.0, (h - glyph) / 2.0,
-          glyph, glyph, extent, texture=KK + "/KK_Icon_EndTurn", tint=WHITE)
-    label(blueprint, "EndTurnLabel", plate, (w - block) / 2.0 + glyph + 10,
+    label(blueprint, "EndTurnLabel", plate, (w - text_w) / 2.0,
           (h - size - 10) / 2.0, text_w, size + 10, "턴 종료", size,
-          TEXT_COLOR, "left", extent, bold=True)
+          TEXT_COLOR, "center", extent, bold=True)
     # 정보 판이 아니라 누르는 것이다. 볼록한 판을 둘러야 형태만 보고
     # 눌러도 되는 것인지 알 수 있다.
     button_frame(blueprint, "EndTurn", plate, *extent)

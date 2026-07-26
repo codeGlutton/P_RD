@@ -200,6 +200,15 @@ namespace CombatLayoutCapture
 				SNew(SColorBlock).Color(FLinearColor(0.008f, 0.009f, 0.011f, 1.0f))
 			]
 			+ SOverlay::Slot()
+			[
+				ScaleToCapture(LayoutSlate)
+			]
+			// 색 띠는 배치 위에 그린다.
+			//
+			// 아래에 깔았더니 라운드 판을 화면 맨 위까지 올린 순간 띠가 가려져
+			// 열 장이 통째로 저장을 거부당했다. 검증용 표식이 검증 대상에
+			// 가려지면 안 된다. 읽고 나서 지우므로 결과 그림에는 안 남는다.
+			+ SOverlay::Slot()
 			.HAlign(HAlign_Left).VAlign(VAlign_Top)
 			[
 				SNew(SHorizontalBox)
@@ -215,10 +224,6 @@ namespace CombatLayoutCapture
 				+ SHorizontalBox::Slot().AutoWidth()
 				[ SNew(SBox).WidthOverride(40).HeightOverride(10)
 					[ SNew(SColorBlock).Color(FLinearColor(1.f, 1.f, 1.f)) ] ]
-			]
-			+ SOverlay::Slot()
-			[
-				ScaleToCapture(LayoutSlate)
 			];
 
 		// 렌더러가 감마 공간에 직접 그린다.
