@@ -129,6 +129,9 @@ private:
 		TObjectPtr<UWidget> Current;
 	};
 
+	/** @brief 빈 아군 칸을 접지 않고 "비어 있음"으로 그린다. */
+	void ClearPartySlot(const FPartySlotWidgets& Widgets);
+
 	TArray<FPartySlotWidgets> mPartySlots;
 	TArray<FCommandSlotWidgets> mCommandSlots;
 	TArray<FTurnSlotWidgets> mTurnSlots;

@@ -316,10 +316,43 @@ void UCombatLayoutHUDWidget::RefreshParty()
 		++SlotIndex;
 	}
 
-	// 파티가 3명보다 적을 때 남는 칸은 접는다.
+	// 파티가 3명보다 적어도 칸은 세 개 다 세워 둔다.
+	//
+	// 접어 버리면 아군이 한 명일 때 화면 왼쪽이 통째로 비어서, 자리가 원래
+	// 그런 건지 뭔가 안 뜬 건지 구분이 안 된다. 빈 칸을 남겨 두면 "여기 한
+	// 명 더 들어온다"가 읽히고, 유닛이 죽거나 합류해도 배치가 안 흔들린다.
 	for (; SlotIndex < mPartySlots.Num(); ++SlotIndex)
 	{
-		SetShown(mPartySlots[SlotIndex].Root, false);
+		ClearPartySlot(mPartySlots[SlotIndex]);
+	}
+}
+
+/**
+ * @brief 빈 아군 칸을 "비어 있음"으로 그린다.
+ *
+ * @details
+ * 칸 자체와 테두리는 남기고 안쪽 내용만 지운다. 카드가 통째로 사라지는 것과
+ * 빈 카드가 놓여 있는 것은 읽히는 뜻이 다르다.
+ */
+void UCombatLayoutHUDWidget::ClearPartySlot(const FPartySlotWidgets& Widgets)
+{
+	SetShown(Widgets.Root, true);
+	SetShown(Widgets.Selected, false);
+
+	SetTextIfPresent(Widgets.Name, FText::GetEmpty());
+	SetTextIfPresent(Widgets.HPText, FText::GetEmpty());
+	SetTextIfPresent(Widgets.APText, FText::GetEmpty());
+	SetShown(Widgets.StatusText, false);
+	SetShown(Widgets.Portrait, false);
+
+	if (Widgets.HPBar != nullptr)
+	{
+		Widgets.HPBar->SetPercent(0.f);
+		SetShown(Widgets.HPBar, false);
+	}
+	for (UWidget* Pip : Widgets.APPips)
+	{
+		SetShown(Pip, false);
 	}
 }
 
