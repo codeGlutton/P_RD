@@ -99,12 +99,16 @@ def capture_boxes(img, floor=26.0):
     return boxes
 
 
-def pick(boxes, want, img, margin=48, floor=26.0):
+def pick(boxes, want, img, margin=12, floor=26.0):
     """시안 상자에 대응하는 캡처 패널의 상자.
 
     덩어리를 그대로 쓰면 안 된다 -- 턴 칸 다섯이 맞붙어 하나로 잡히고 파티
     카드 셋도 한 덩어리가 된다(실측 4.4배, 2.8배). 시안 상자 근방으로 한 번
     자른 뒤, 그 안에서 다시 내용에 맞춰 조인다.
+
+    여유(margin)는 좁게 잡는다. 파티 행처럼 4px 간격으로 붙은 패널은 여유가
+    조금만 커도 이웃을 삼켜 높이가 1.7배로 나오고, 그러면 내용 비율이 이웃의
+    빈 공간으로 희석돼 "덜 찼다"는 잘못된 결론이 나온다.
     """
     wx0, wy0, wx1, wy1 = want
     best, score = None, 0.0

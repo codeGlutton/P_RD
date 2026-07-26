@@ -785,23 +785,24 @@ def party_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
 
         # 하트 - 바 - 숫자를 붙여서 한 덩어리로 읽히게 한다. 숫자를 카드
         # 오른쪽 끝에 붙여 두면 바와 사이가 텅 비어 둘이 딴 정보로 보인다.
-        tag_extent = max(14.0, min(22.0, h * 0.15))
+        # 하트 표는 뺐다. 시안 아군 카드에는 없다(붉은 픽셀 22개 = 사실상
+        # 0). 초록 바 자체가 이미 HP로 읽히는데 앞에 붉은 점을 붙이면
+        # 색이 하나 늘고 바가 그만큼 짧아진다.
         hp_text = min(run * 0.26, 88.0)
-        bar_w = run - tag_extent - hp_text - 14
-        tag(blueprint, "PartyHPIcon_{}".format(index), body,
-            left, h * 0.44, tag_extent, "HP", size)
+        bar_w = run - hp_text - 14
         bar(blueprint, "PartyHPBar_{}".format(index), body,
-            left + tag_extent + 6, h * 0.45, bar_w, max(14.0, h * 0.13),
-            HP_GREEN, size)
+            left, h * 0.45, bar_w, max(14.0, h * 0.13), HP_GREEN, size)
         label(blueprint, "PartyHPText_{}".format(index), body,
-              left + tag_extent + bar_w + 12, h * 0.40, hp_text, line,
+              left + bar_w + 12, h * 0.40, hp_text, line,
               "0/0", info_size, HP_TEXT, "left", size)
 
         # 보석 줄도 같은 이유로 숫자를 바로 옆에 붙인다.
         gem = max(22.0, min(30.0, h * 0.24))
-        gems(left, h * 0.72, gem, gem * 1.18)
+        # 젬 사이를 더 벌린다. 붙여 놓으면 넷이 한 덩어리로 뭉쳐 개수가
+        # 안 읽힌다 -- 시안은 젬 하나 폭의 3분의 1을 띄운다.
+        gems(left, h * 0.70, gem, gem * 1.35)
         label(blueprint, "PartyAPText_{}".format(index), body,
-              left + gem * 1.18 * 4 + 8, h * 0.71, 64, line, "0/0", info_size,
+              left + gem * 1.35 * 4 + 10, h * 0.70, 64, line, "0/0", info_size,
               AP_TEXT, "left", size)
 
     elif style == "hero":

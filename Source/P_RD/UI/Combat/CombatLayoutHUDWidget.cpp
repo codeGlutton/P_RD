@@ -63,6 +63,43 @@ namespace
 			Text->SetText(Value);
 		}
 	}
+
+	/**
+	 * @brief 상태이상 태그를 카드에 적을 짧은 이름으로.
+	 *
+	 * 태그 이름을 그대로 찍으면 "GameplayEffect.StatusEffect.TurnDuration.
+	 * Debuff.Weakness" 가 아군 카드 한 줄에 들어간다. 잎 이름만 떼고, 아는
+	 * 것은 우리말로 바꾼다. 모르는 태그는 잎 이름 그대로 -- 게임플레이가
+	 * 새 상태를 추가해도 빈칸이 되지는 않는다.
+	 */
+	FString StatusDisplayName(const FGameplayTag& Tag)
+	{
+		FString Full = Tag.GetTagName().ToString();
+		if (Full.IsEmpty())
+		{
+			return TEXT("이상");
+		}
+
+		FString Leaf = Full;
+		int32 Dot = INDEX_NONE;
+		if (Full.FindLastChar(TEXT('.'), Dot))
+		{
+			Leaf = Full.Mid(Dot + 1);
+		}
+
+		static const TMap<FString, FString> Korean = {
+			{ TEXT("Weakness"),      TEXT("약화") },
+			{ TEXT("Vulnerability"), TEXT("취약") },
+			{ TEXT("Agility"),       TEXT("민첩") },
+			{ TEXT("Fortification"), TEXT("강화") },
+			{ TEXT("Dead"),          TEXT("전투불능") },
+		};
+		if (const FString* Found = Korean.Find(Leaf))
+		{
+			return *Found;
+		}
+		return Leaf;
+	}
 }
 
 void UCombatLayoutHUDWidget::NativeConstruct()
@@ -325,7 +362,7 @@ void UCombatLayoutHUDWidget::RefreshParty()
 				const FStatusEffectUI& First = Unit.mStatusEffects[0];
 				Widgets.StatusText->SetText(FText::FromString(FString::Printf(
 					TEXT("%s %d턴"),
-					*First.mTag.GetTagName().ToString(), First.mStackCount)));
+					*StatusDisplayName(First.mTag), First.mStackCount)));
 			}
 		}
 		++SlotIndex;

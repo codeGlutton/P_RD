@@ -60,7 +60,9 @@ def layout_01(bp, root):
     top_band(bp, root, 104.0)
 
     bottom = H - 24
-    row_w, row_h, row_gap = 500.0, 116.0, 12.0
+    # 시안 실측: 행 534x140, 행 사이는 거의 붙어 있다(2px). 500x116 에 12px
+    # 간격이면 같은 정보가 더 좁은 자리에 눌려 카드가 비어 보인다.
+    row_w, row_h, row_gap = 534.0, 140.0, 4.0
     party_top = bottom - 3 * row_h - 2 * row_gap
     for i in range(3):
         kit.party_card(bp, root, i, M, party_top + i * (row_h + row_gap),

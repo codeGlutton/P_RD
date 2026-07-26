@@ -37,6 +37,16 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 			Ally.mActionPoints = Allies[i].AP; Ally.mMaxActionPoints = 4;
 			Ally.mDamagePoint = 5.f; Ally.mDefensePoint = 2.f;
 			Ally.mTile = FTileIndex(4 + i, 8);
+			// 목업의 기사에는 상태이상 표가 붙어 있다. 미리보기에도 하나는
+			// 있어야 그 자리가 비었는지 아닌지를 배치안마다 볼 수 있다.
+			if (i == 0)
+			{
+				FStatusEffectUI Debuff;
+				Debuff.mTag = FGameplayTag::RequestGameplayTag(TEXT(
+					"GameplayEffect.StatusEffect.TurnDuration.Debuff.Weakness"));
+				Debuff.mStackCount = 2;
+				Ally.mStatusEffects.Add(Debuff);
+			}
 			Units.Add(Ally);
 		}
 
