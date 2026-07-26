@@ -306,6 +306,179 @@ namespace CombatLayoutCapture
 	}
 }
 
+namespace CombatLayoutCapture
+{
+	/**
+	 * @brief 요소 하나만 남기고 전부 접은 뒤 그 자리를 잘라 저장한다.
+	 *
+	 * @details
+	 * 전체 화면을 찍어 잘라내는 것과 다르다. 잘라내면 이웃 부품과 뒤판이 같이
+	 * 들어와 그 요소가 실제로 어떻게 생겼는지 안 보인다. 여기서는 대상과 그
+	 * 조상만 남기고 나머지를 접은 뒤 그린다 -- 요소만 홀로 남는다.
+	 *
+	 * 조상을 남기는 이유는 부모를 접으면 자식도 같이 사라지기 때문이다.
+	 * 자리는 캐시된 기하에서 읽는다. 이 키트는 거의 전부 캔버스 패널이라
+	 * 형제를 접어도 절대 좌표가 흔들리지 않는다.
+	 */
+	bool CaptureElements(UWorld& World, const TCHAR* ClassPath, FString& OutError)
+	{
+		UClass* LayoutClass = LoadClass<UCombatLayoutHUDWidget>(nullptr, ClassPath);
+		if (LayoutClass == nullptr)
+		{
+			OutError = FString::Printf(TEXT("클래스를 못 찾음: %s"), ClassPath);
+			return false;
+		}
+		UCombatLayoutHUDWidget* Layout =
+			CreateWidget<UCombatLayoutHUDWidget>(&World, LayoutClass);
+		if (Layout == nullptr || Layout->WidgetTree == nullptr)
+		{
+			OutError = TEXT("위젯 생성 실패");
+			return false;
+		}
+		Layout->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		const TSharedRef<SWidget> LayoutSlate = Layout->TakeWidget();
+		Layout->ForceLayoutPrepass();
+		ResidentBrushTextures(*Layout);
+
+		TArray<UWidget*> All;
+		Layout->WidgetTree->GetAllWidgets(All);
+
+		FString Stem = FString(ClassPath);
+		Stem.Split(TEXT("."), nullptr, &Stem, ESearchCase::CaseSensitive,
+			ESearchDir::FromEnd);
+		Stem.RemoveFromEnd(TEXT("_C"));
+		const FString Dir = FPaths::Combine(OutputDirectory(), TEXT("Elements"), Stem);
+		IFileManager::Get().DeleteDirectory(*Dir, false, true);
+		IFileManager::Get().MakeDirectory(*Dir, true);
+
+		// 한 번 그려서 기하를 채운다. 그리기 전에는 캐시가 비어 있다.
+		FWidgetRenderer Probe(true, true);
+		Probe.SetIsPrepassNeeded(true);
+		Probe.DrawWidget(LayoutSlate, FVector2D(CaptureWidth, CaptureHeight));
+		FlushRenderingCommands();
+
+		TMap<UWidget*, ESlateVisibility> Original;
+		for (UWidget* Widget : All)
+		{
+			Original.Add(Widget, Widget->GetVisibility());
+		}
+
+		int32 Saved = 0;
+		for (UWidget* Target : All)
+		{
+			if (Target == nullptr || Target->GetName().StartsWith(TEXT("__")))
+			{
+				continue;
+			}
+			const FGeometry Geometry = Target->GetCachedGeometry();
+			const FVector2D Size = Geometry.GetLocalSize();
+			const FVector2D Pos = Geometry.GetAbsolutePosition();
+			if (Size.X < 8.0 || Size.Y < 8.0)
+			{
+				continue;
+			}
+
+			// 대상의 조상 사슬을 모은다. 부모를 접으면 대상도 사라진다.
+			TSet<UWidget*> Keep;
+			for (UWidget* Walk = Target; Walk != nullptr; Walk = Walk->GetParent())
+			{
+				Keep.Add(Walk);
+			}
+			for (UWidget* Widget : All)
+			{
+				const bool bUnder = Widget->IsChildOf(Target) || Keep.Contains(Widget);
+				Widget->SetVisibility(bUnder
+					? Original[Widget]
+					: ESlateVisibility::Hidden);
+			}
+
+			FWidgetRenderer Renderer(true, true);
+			Renderer.SetIsPrepassNeeded(true);
+			UTextureRenderTarget2D* RT = Renderer.DrawWidget(
+				LayoutSlate, FVector2D(CaptureWidth, CaptureHeight));
+			if (RT == nullptr)
+			{
+				continue;
+			}
+			FlushRenderingCommands();
+			TArray<FColor> Pixels;
+			FReadSurfaceDataFlags ReadFlags(RCM_UNorm);
+			ReadFlags.SetLinearToGamma(false);
+			if (!RT->GameThread_GetRenderTargetResource()->ReadPixels(Pixels, ReadFlags))
+			{
+				continue;
+			}
+			// 전체 캡처와 같은 역보정. 렌더러가 두 번 인코딩하므로 한 번 되돌린다.
+			for (FColor& Pixel : Pixels)
+			{
+				Pixel.R = uint8(FMath::RoundToInt(255.f * FMath::Pow(Pixel.R / 255.f, 2.2f)));
+				Pixel.G = uint8(FMath::RoundToInt(255.f * FMath::Pow(Pixel.G / 255.f, 2.2f)));
+				Pixel.B = uint8(FMath::RoundToInt(255.f * FMath::Pow(Pixel.B / 255.f, 2.2f)));
+			}
+
+			const int32 Pad = 4;
+			const int32 X0 = FMath::Clamp(int32(Pos.X) - Pad, 0, CaptureWidth - 1);
+			const int32 Y0 = FMath::Clamp(int32(Pos.Y) - Pad, 0, CaptureHeight - 1);
+			const int32 X1 = FMath::Clamp(int32(Pos.X + Size.X) + Pad, X0 + 1, CaptureWidth);
+			const int32 Y1 = FMath::Clamp(int32(Pos.Y + Size.Y) + Pad, Y0 + 1, CaptureHeight);
+			const int32 W = X1 - X0;
+			const int32 H = Y1 - Y0;
+			TArray<FColor> Crop;
+			Crop.Reserve(W * H);
+			for (int32 Y = Y0; Y < Y1; ++Y)
+			{
+				for (int32 X = X0; X < X1; ++X)
+				{
+					Crop.Add(Pixels[Y * CaptureWidth + X]);
+				}
+			}
+
+			TArray64<uint8> Png;
+			FImageUtils::PNGCompressImageArray(W, H, Crop, Png);
+			const FString File = FPaths::Combine(Dir, FString::Printf(
+				TEXT("%s_%s_%dx%d_at%d_%d.png"),
+				*Target->GetClass()->GetName(), *Target->GetName(),
+				int32(Size.X), int32(Size.Y), int32(Pos.X), int32(Pos.Y)));
+			if (FFileHelper::SaveArrayToFile(Png, *File))
+			{
+				++Saved;
+			}
+		}
+
+		for (const TPair<UWidget*, ESlateVisibility>& Pair : Original)
+		{
+			Pair.Key->SetVisibility(Pair.Value);
+		}
+		UE_LOG(LogTemp, Display, TEXT("[CombatLayout] %s 요소 %d장 -> %s"),
+			*Stem, Saved, *Dir);
+		return Saved > 0;
+	}
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FCombatLayoutElementCaptureTest,
+	"P_RD.UI.CombatLayout.CaptureElements",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FCombatLayoutElementCaptureTest::RunTest(const FString& Parameters)
+{
+	using namespace CombatLayoutCapture;
+
+	UWorld* World = GEditor != nullptr ? GEditor->GetEditorWorldContext().World() : nullptr;
+	if (!TestNotNull(TEXT("에디터 월드가 있어야 위젯을 만들 수 있다"), World))
+	{
+		return false;
+	}
+	// 배치안 하나에 오백 장이 넘게 나온다. 기본은 1안만 찍고, 나머지는 필요할
+	// 때 이 배열을 늘려서 돌린다.
+	FString Error;
+	if (!CaptureElements(*World, LayoutClassPaths[0], Error))
+	{
+		AddError(Error);
+	}
+	return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FCombatLayoutCaptureTest,
 	"P_RD.UI.CombatLayout.Capture",

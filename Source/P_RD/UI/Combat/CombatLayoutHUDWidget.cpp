@@ -509,8 +509,10 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 			SetShown(Widgets.Damage, bHasDamage);
 			if (bHasDamage)
 			{
+				// 시안은 "피해 8~14" 처럼 무엇의 숫자인지 적는다. 숫자만
+				// 있으면 쿨 턴 수와 구분이 안 된다.
 				Widgets.Damage->SetText(FText::FromString(FString::Printf(
-					TEXT("%d~%d"), Skill.mDamageMin, Skill.mDamageMax)));
+					TEXT("피해 %d~%d"), Skill.mDamageMin, Skill.mDamageMax)));
 			}
 		}
 

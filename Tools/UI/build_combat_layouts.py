@@ -48,7 +48,9 @@ def top_band(bp, root, turn_token=127.0, names=False):
     #   목표 현판  양피지 323x88  -> 판 396x100, 시안보다 41px 왼쪽에서 시작
     #   턴 칸      시안 다섯 칸이 554 를 채운다 -> 칸 127
     kit.round_panel(bp, root, 24, 12, 264, 121, "tl", 26)
-    kit.turn_row(bp, root, centred(6, turn_token, 8), 10, turn_token, 8, "tc",
+    # 여섯 칸 기준으로 가운데를 잡았는데 실제로 보이는 건 다섯 칸이라, 띠가
+    # 반 칸만큼 왼쪽으로 밀려 있었다(시안 690, 우리 624). 다섯 칸 기준으로 잡는다.
+    kit.turn_row(bp, root, centred(5, turn_token, 8), 10, turn_token, 8, "tc",
                  names=names)
     kit.objective_panel(bp, root, 1496, 14, 398, 123, "tr", 20)
 
@@ -408,11 +410,18 @@ LAYOUTS = (
 )
 
 
+RECTS = {}
+
+
 def build_one(asset_name, title, compose):
+    kit.reset_ledger()
     blueprint = kit.create_asset(asset_name)
     kit.add(blueprint, "CanvasPanel", "RootCanvas", "")
     compose(blueprint, "RootCanvas")
     unreal.EditorAssetLibrary.save_loaded_asset(blueprint, False)
+    # 다 짓고 저장한 뒤에야 제자리로 옮긴다. 여기 전에 터지면 기존 안이 남는다.
+    kit.commit_asset(asset_name)
+    RECTS[asset_name] = kit.absolute_rects()
     shown, total = kit.verify(asset_name)
     unreal.log("[Layouts] {:38s} {}  bound {}/{}".format(
         asset_name, title, shown, total))
@@ -428,6 +437,24 @@ for asset_name, title, compose in LAYOUTS:
     except Exception as error:
         failures.append("{}: {}".format(asset_name, error))
         unreal.log_error("[Layouts] {} FAILED: {}".format(asset_name, error))
+
+# 위젯별 정밀 비교가 쓸 좌표 장부.
+import json as _json
+_out = r"D:/UnrealProjects/P_RD_develop_20260726/Saved/UI/CombatLayouts/rects.json"
+try:
+    os.makedirs(os.path.dirname(_out), exist_ok=True)
+except NameError:
+    import os
+    os.makedirs(os.path.dirname(_out), exist_ok=True)
+with open(_out, "w", encoding="utf-8") as _h:
+    _json.dump(RECTS, _h, ensure_ascii=False, indent=1)
+unreal.log("[Layouts] 좌표 장부 {} ({}개 배치안)".format(_out, len(RECTS)))
+
+# 임시 이름이 남으면 다음 실행에서 헷갈리고 콘텐츠 브라우저도 지저분해진다.
+for stray in unreal.EditorAssetLibrary.list_assets(kit.PACKAGE_PATH, False):
+    if kit.BUILDING_SUFFIX in stray:
+        unreal.EditorAssetLibrary.delete_asset(stray.split(".")[0])
+        unreal.log("[Layouts] 임시 정리 {}".format(stray))
 
 unreal.log("[Layouts] built {}/{}".format(
     len(LAYOUTS) - len(failures), len(LAYOUTS)))

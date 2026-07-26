@@ -104,8 +104,14 @@ GOLD = unreal.LinearColor(0.91, 0.72, 0.29, 1.0)          # #E8B84B
 #: 양피지·주황처럼 밝은 판 위에 얹는 글씨. 흰색은 씻겨서 안 읽힌다.
 TEXT_ON_LIGHT = unreal.LinearColor(0.22, 0.13, 0.07, 1.0)
 INK = unreal.LinearColor(0.13, 0.14, 0.17, 0.92)
-HP_GREEN = unreal.LinearColor(0.24, 0.56, 0.35, 1.0)      # #3E8E5A
-HP_RED = unreal.LinearColor(0.82, 0.27, 0.25, 1.0)        # #D2453F
+#: 바 곱색. 바 원화는 중립 회색(158)이라 이 값이 곧 화면 색을 정한다.
+#:
+#: 원화가 초록이던 시절에는 이 곱색이 그 초록에 맞춰져 있었다. 원화를 중립으로
+#: 바꾸자(적 바가 빨강 곱색과 곱해져 올리브로 나오던 문제) 같은 곱색이 아군 바를
+#: 청록으로, 적 바를 분홍으로 만들었다. 시안 색을 재서 역산했다 --
+#: 아군 (149,197,46), 적 (153,50,34).
+HP_GREEN = unreal.LinearColor(0.884, 1.616, 0.066, 1.0)
+HP_RED = unreal.LinearColor(0.929, 0.079, 0.035, 1.0)
 STONE = unreal.LinearColor(0.76, 0.78, 0.81, 1.0)         # #C3C7CE
 STONE_DIM = unreal.LinearColor(0.43, 0.45, 0.49, 1.0)     # #6E747E
 AP_ON = WHITE
@@ -209,11 +215,26 @@ def art(path):
 
 # ─── asset ────────────────────────────────────────────────────────────────────
 
+#: 짓는 동안 쓰는 임시 꼬리표. commit_asset 이 제자리로 옮긴다.
+BUILDING_SUFFIX = "__building"
+
+
 def create_asset(asset_name):
-    """Make (or remake) a widget blueprint parented to UCombatLayoutHUDWidget."""
-    full = "{}/{}".format(PACKAGE_PATH, asset_name)
-    if unreal.EditorAssetLibrary.does_asset_exist(full):
-        unreal.EditorAssetLibrary.delete_asset(full)
+    """Make a widget blueprint parented to UCombatLayoutHUDWidget.
+
+    임시 이름으로 만든다. 예전에는 기존 에셋을 지우고 새로 만들었는데, 그러면
+    짓는 동안 그 배치안이 디스크에 아예 없다 -- 그 사이에 게임을 켜면
+    RD.Layout 이 "못 찾음"으로 죽고, 생성이 한 번 실패하면 지워진 채로 남는다.
+    실제로 그렇게 05번과 09번이 사라졌고 RD.Layout 1 이 됐다 안 됐다 했다.
+
+    다 짓고 저장한 뒤에 commit_asset 이 자리를 바꾼다. 중간에 무엇이 터져도
+    기존 배치안은 그대로 남는다.
+    """
+    temp = asset_name + BUILDING_SUFFIX
+    temp_full = "{}/{}".format(PACKAGE_PATH, temp)
+    if unreal.EditorAssetLibrary.does_asset_exist(temp_full):
+        unreal.EditorAssetLibrary.delete_asset(temp_full)
+    asset_name = temp
 
     factory = unreal.WidgetBlueprintFactory()
     factory.set_editor_property("parent_class", unreal.CombatLayoutHUDWidget)
@@ -227,13 +248,63 @@ def create_asset(asset_name):
     if generated is None or not unreal.MathLibrary.class_is_child_of(
             generated, unreal.CombatLayoutHUDWidget):
         raise RuntimeError("{} is not parented to CombatLayoutHUDWidget".format(
-            full))
+            temp_full))
     return asset
+
+
+def commit_asset(asset_name):
+    """다 지은 임시 에셋을 제자리로 옮긴다. 여기까지 와야 교체가 일어난다."""
+    temp_full = "{}/{}{}".format(PACKAGE_PATH, asset_name, BUILDING_SUFFIX)
+    full = "{}/{}".format(PACKAGE_PATH, asset_name)
+    if not unreal.EditorAssetLibrary.does_asset_exist(temp_full):
+        raise RuntimeError("nothing to commit at {}".format(temp_full))
+    if unreal.EditorAssetLibrary.does_asset_exist(full):
+        if not unreal.EditorAssetLibrary.delete_asset(full):
+            raise RuntimeError("could not replace {}".format(full))
+    if not unreal.EditorAssetLibrary.rename_asset(temp_full, full):
+        raise RuntimeError("could not move {} into place".format(temp_full))
 
 
 # ─── tree building ────────────────────────────────────────────────────────────
 
+#: 짓는 동안 남기는 좌표 장부.
+#:
+#: WBP 에서 되읽으려 했지만 표준 파이썬은 widget_tree 에 못 닿고, 헬퍼는
+#: 이름 조회만 준다. 어차피 이 키트가 모든 좌표를 정하므로 정할 때 적어 둔다.
+#: 이 장부가 위젯별 정밀 비교(cut_widget_pairs.py)의 근거가 된다.
+LEDGER = {"parent": {}, "rect": {}, "type": {}}
+
+
+def reset_ledger():
+    LEDGER["parent"].clear()
+    LEDGER["rect"].clear()
+    LEDGER["type"].clear()
+
+
+def absolute_rects():
+    """장부를 화면 좌표로 편다. 부모를 타고 올라가며 더한다."""
+    out = []
+    for name, (x, y, w, h) in LEDGER["rect"].items():
+        ax, ay = x, y
+        cursor = LEDGER["parent"].get(name)
+        guard = 0
+        while cursor and guard < 32:
+            parent_rect = LEDGER["rect"].get(cursor)
+            if parent_rect:
+                ax += parent_rect[0]
+                ay += parent_rect[1]
+            cursor = LEDGER["parent"].get(cursor)
+            guard += 1
+        out.append({"name": name, "type": LEDGER["type"].get(name, "?"),
+                    "x": round(ax, 1), "y": round(ay, 1),
+                    "w": round(w, 1), "h": round(h, 1)})
+    out.sort(key=lambda e: (e["y"], e["x"]))
+    return out
+
+
 def add(blueprint, widget_type, name, parent):
+    LEDGER["parent"][name] = parent or None
+    LEDGER["type"][name] = widget_type
     result = helper.umg_add_widget(blueprint, widget_type, name, parent)
     if '"success":true' not in result.replace(" ", ""):
         raise RuntimeError("add {} {} under {} -> {}".format(
@@ -258,6 +329,7 @@ def place(blueprint, name, x, y, w, h, anchor="tl", parent_size=None,
     """
     ax, ay = ANCHORS[anchor]
     pw, ph = parent_size if parent_size else (CANVAS_W, CANVAS_H)
+    LEDGER["rect"][name] = (float(x), float(y), float(w), float(h))
     result = helper.umg_set_slot_layout(
         blueprint, name, ax, ay, ax, ay, x - ax * pw, y - ay * ph, w, h)
     if '"success":true' not in result.replace(" ", ""):
@@ -656,7 +728,7 @@ def objective_panel(blueprint, root, x, y, w=340.0, h=60.0, anchor="tr",
 
 
 def turn_row(blueprint, root, x, y, token=96.0, gap=12.0, anchor="tc",
-             count=6, names=True, framed=True):
+             count=6, names=True, framed=True, arrows=False):
     """The turn order, as a row of framed portrait tokens."""
     for index in range(count):
         name = "TurnToken_{}".format(index)
@@ -681,10 +753,13 @@ def turn_row(blueprint, root, x, y, token=96.0, gap=12.0, anchor="tc",
         marker(blueprint, "TurnCurrent_{}".format(index), body,
                size[0], size[1], size)
 
-        # 칸 사이에 진행 방향 화살표. 줄이 늘어서 있다는 것만으로는 왼쪽에서
-        # 오른쪽인지 반대인지 읽히지 않는다. 토큰과 같은 앵커로 놓아야 4:3에서
-        # 줄과 화살표가 따로 놀지 않는다.
-        if index + 1 < count:
+        # 칸 사이 화살표는 기본으로 끈다.
+        #
+        # 진행 방향을 알려 주려고 넣었는데 시안에는 없다. 위젯별 대조에서
+        # 차이 1~4위를 전부 이 화살표가 차지했다 -- 시안의 같은 자리에는
+        # 옆 칸의 초상이 있다. 방향 표시가 필요하다고 판단되면 arrows=True 로
+        # 되살리면 된다.
+        if arrows and index + 1 < count:
             arrow = min(gap * 1.7, token * 0.30)
             arrow_name = "TurnArrow_{}".format(index)
             paint(add(blueprint, "Image", arrow_name, root),
@@ -789,7 +864,9 @@ def party_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
         # 0). 초록 바 자체가 이미 HP로 읽히는데 앞에 붉은 점을 붙이면
         # 색이 하나 늘고 바가 그만큼 짧아진다.
         hp_text = min(run * 0.26, 88.0)
-        bar_w = run - hp_text - 14
+        # 시안 바는 행 폭의 20% 남짓이고 숫자가 바로 옆에 붙는다. 남는 폭을
+        # 전부 바에 주면 얇고 긴 선이 되어 이름·숫자와 한 덩어리로 안 읽힌다.
+        bar_w = min(run * 0.42, run - hp_text - 14)
         bar(blueprint, "PartyHPBar_{}".format(index), body,
             left, h * 0.45, bar_w, max(14.0, h * 0.13), HP_GREEN, size)
         label(blueprint, "PartyHPText_{}".format(index), body,
@@ -929,24 +1006,35 @@ def command_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
         #
         # 글자 블록 높이를 먼저 재고, 남는 세로를 아이콘이 갖는다.
         text_block = 24 + 20 + 20 + 26
-        glyph = min(w - 14, h - text_block - 28)
-        # 아이콘 원화는 캔버스의 위아래 12.5%가 여백이다. 시안의 "카드 위에서
-        # 28px" 을 맞추려면 위젯을 그만큼 더 올려 놓아야 한다.
-        icon_top = max(6.0, 28.0 - glyph * 0.125)
+        # 스킬 아이콘은 전부 같은 원형 베젤 안에 넣는다.
+        #
+        # 게임플레이가 주는 아이콘은 출처가 제각각이라 캔버스를 채우는 비율도
+        # 테두리도 다르다. 그대로 놓으면 카드마다 아이콘 크기가 들쭉날쭉해
+        # 시안과 나란히 놓아도 무엇이 어긋난 것인지 구분이 안 된다. 같은 원에
+        # 담으면 바깥 지름이 항상 같아 비교가 된다.
+        bezel = min(w - 14, h - text_block - 28)
+        bezel_top = max(6.0, 28.0 - bezel * 0.125)
+        bx, by, glyph = ring(blueprint, "CommandIcon_{}".format(index), body,
+                             (w - bezel) / 2.0, bezel_top, bezel, WHITE, size)
         image(blueprint, "CommandIcon_{}".format(index), body,
-              (w - glyph) / 2.0, icon_top, glyph, glyph, size,
+              bx, by, glyph, glyph, size,
               texture=COMMAND_ICONS[index], tint=WHITE)
-        text_top = h - text_block - 8
+        # 줄 자리는 시안 실측 비율로 잡는다. 카드 아래에서 역산했더니 네 줄이
+        # 12%p 아래로 몰려 AP 가 프레임에 닿았다. 순서도 시안이 옳다 --
+        # 이름 다음이 쿨이고 피해가 그 아래다.
+        name_y = h * 0.61
+        cool_y = h * 0.69
+        dmg_y = h * 0.81
+        text_top = name_y
         label(blueprint, "CommandName_{}".format(index), body,
-              8, text_top, w - 16, 24, "이름", 15, TEXT_COLOR, "center", size)
-        label(blueprint, "CommandDamage_{}".format(index), body,
-              8, text_top + 26, w - 16, 20, "0~0", 13, DAMAGE_TEXT, "center",
-              size)
+              8, name_y, w - 16, 26, "이름", 15, TEXT_COLOR, "center", size)
         tag(blueprint, "CommandCooldownIcon_{}".format(index), body,
-            (w - 96) / 2.0, text_top + 46, 18, "Cooldown", size)
+            (w - 96) / 2.0, cool_y, 18, "Cooldown", size)
         label(blueprint, "CommandCooldown_{}".format(index), body,
-              (w - 96) / 2.0 + 22, text_top + 46, 78, 20, "", 12,
+              (w - 96) / 2.0 + 22, cool_y, 78, 20, "", 12,
               COOLDOWN_TEXT, "left", size)
+        label(blueprint, "CommandDamage_{}".format(index), body,
+              8, dmg_y, w - 16, 20, "0~0", 13, DAMAGE_TEXT, "center", size)
         # 배지는 밝은 원에 진한 숫자다. 반대로 하면 밝은 카드 위에서 숫자가
         # 배지에 먹힌다 -- 대비 방향이 뒤집혀 있었다.
         gem = 40.0
@@ -959,7 +1047,7 @@ def command_card(blueprint, root, index, x, y, w, h, anchor="tl", style="card",
         # 배지 숫자는 아이콘에 붙어 있어 훑을 때 안 걸린다. 카드 아래에
         # "AP n"을 한 번 더 적는다. 고를 때 보는 건 이쪽이다.
         label(blueprint, "CommandCostLine_{}".format(index), body,
-              8, text_top + 68, w - 16, 24, "", 15, AP_TEXT, "center", size,
+              8, h * 0.89, w - 16, 24, "", 15, AP_TEXT, "center", size,
               bold=True)
 
     frame(blueprint, name, body, *size, family="metal")
