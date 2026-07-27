@@ -32,6 +32,7 @@ import json
 import os
 
 import combat_layout_kit as kit
+from slot_table import slots
 
 CHROME = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitUIKit/Chrome"
 CUTOUT_PACKAGE = "/Game/SVN/OutSideAsset/UI/KayKit/Cutouts"
@@ -165,11 +166,62 @@ def _text_plate(bp, root, row, holder_name, widget, text, size, align):
     return holder
 
 
-def party(bp, root, row, index):
+def party(bp, root, row, index, table=None):
     """아군 한 줄을 제 자리에 놓고 채운다."""
     holder, size = _plate(bp, root, row, "PartyPlate_%d" % index)
+    if table:
+        _party_by_table(bp, holder, size, index, table)
+        return
     fill_party(bp, holder, size, (0, 0) + size, row["holes"], index, K,
                row.get("boxes"))
+
+
+def _at(spot):
+    """시안 픽셀로 적힌 자리를 설계 캔버스로 옮긴다."""
+    return [v * K for v in spot]
+
+
+def _party_by_table(bp, holder, size, index, table):
+    """자리표대로 아군 줄을 채운다. 짐작할 것이 없다."""
+    w, h = size
+    card = "PartyCard_%d" % index
+    kit.add(bp, "CanvasPanel", card, holder)
+    kit.place(bp, card, 0, 0, w, h, "tl", size, kit.Z_CONTENT)
+    body = "PartyContent_%d" % index
+    kit.add(bp, "CanvasPanel", body, card)
+    kit.place(bp, body, 0, 0, w, h, "tl", (w, h), kit.Z_CONTENT)
+
+    px, py, pw, ph = _at(table["portrait"])
+    kit.image(bp, "PartyPortrait_%d" % index, body, px, py, pw, ph, (w, h),
+              texture=kit.PARTY_PORTRAITS[index % 3], tint=kit.WHITE)
+    nx, ny, nw, nh = _at(table["name"])
+    kit.label(bp, "PartyName_%d" % index, body, nx, ny, nw, nh, "이름", 19,
+              kit.TEXT_COLOR, "left", (w, h), bold=True)
+    ix, iy, iw, _ih = _at(table["status_icon"])
+    kit.tag(bp, "PartyStatusIcon_%d" % index, body, ix, iy, iw, "Poison",
+            (w, h))
+    sx, sy, sw, sh = _at(table["status"])
+    kit.label(bp, "PartyStatus_%d" % index, body, sx, sy, sw, sh, "", 14,
+              kit.GOLD, "left", (w, h))
+    bx, by, bw, bh = _at(table["hp_bar"])
+    kit.bar(bp, "PartyHPBar_%d" % index, body, bx, by, bw, bh, kit.HP_GREEN,
+            (w, h))
+    tx, ty, tw, th = _at(table["hp_text"])
+    kit.label(bp, "PartyHPText_%d" % index, body, tx, ty, tw, th, "0/0", 15,
+              kit.HP_TEXT, "left", (w, h), bold=True)
+
+    gx, gy, side, step, count = table["pips"]
+    gx, gy, side, step = gx * K, gy * K, side * K, step * K
+    for slot in range(count):
+        for state, texture in (("Bg", "KK_Gem_Blue_Off"),
+                               ("", "KK_Gem_Blue_On")):
+            kit.image(bp, "PartyAPPip%s_%d_%d" % (state, index, slot), body,
+                      gx + slot * step, gy, side, side, (w, h),
+                      texture=kit.KK + "/" + texture, tint=kit.WHITE)
+    ax, ay, aw, ah = _at(table["ap_text"])
+    kit.label(bp, "PartyAPText_%d" % index, body, ax, ay, aw, ah, "0/0", 14,
+              kit.AP_TEXT, "left", (w, h))
+    select_mark(bp, "PartySelected_%d" % index, body, "party", w, h)
 
 
 def fill_party(bp, holder, size, box, holes, index, scale, boxes=None):
@@ -254,10 +306,49 @@ def fill_party(bp, holder, size, box, holes, index, scale, boxes=None):
     select_mark(bp, "PartySelected_%d" % index, body, "party", w, h)
 
 
-def skill(bp, root, row, index):
+def skill(bp, root, row, index, table=None):
     """스킬 카드 한 장을 제 자리에 놓고 채운다."""
     holder, size = _plate(bp, root, row, "CommandPlate_%d" % index)
+    if table:
+        _skill_by_table(bp, holder, size, index, table)
+        return
     fill_skill(bp, holder, size, (0, 0) + size, index, row.get("boxes"))
+
+
+def _skill_by_table(bp, holder, size, index, table):
+    """자리표대로 스킬 카드를 채운다."""
+    w, h = size
+    card = "CommandCard_%d" % index
+    kit.add(bp, "CanvasPanel", card, holder)
+    kit.place(bp, card, 0, 0, w, h, "tl", size, kit.Z_CONTENT)
+    body = "CommandBody_%d" % index
+    kit.add(bp, "CanvasPanel", body, card)
+    kit.place(bp, body, 0, 0, w, h, "tl", (w, h), kit.Z_CONTENT)
+
+    ix, iy, iw, ih = _at(table["icon"])
+    kit.image(bp, "CommandIcon_%d" % index, body, ix, iy, iw, ih, (w, h),
+              texture=kit.COMMAND_ICONS[index % 6], tint=kit.WHITE)
+    # 값 배지는 시안에 둥근 판이 깔려 있다. 글자만 얹으면 허공에 뜬다.
+    cx, cy, cw, ch = _at(table["cost"])
+    kit.image(bp, "CommandCostPlate_%d" % index, body, cx, cy, cw, ch, (w, h),
+              texture=kit.KK + "/KK_Badge_Round", tint=kit.WHITE)
+    kit.label(bp, "CommandCost_%d" % index, body, cx, cy + ch * 0.16, cw,
+              ch * 0.7, "0", 17, kit.BADGE_TEXT, "center", (w, h), bold=True)
+    for key, widget, text, tint, size_pt in (
+            ("name", "CommandName", "이름", kit.TEXT_COLOR, 16),
+            ("damage", "CommandDamage", "0~0", kit.DAMAGE_TEXT, 13),
+            ("cooldown", "CommandCooldown", "", kit.COOLDOWN_TEXT, 13),
+            ("cost_line", "CommandCostLine", "", kit.AP_TEXT, 15)):
+        x, y, bw, bh = _at(table[key])
+        kit.label(bp, "%s_%d" % (widget, index), body, x, y, bw, bh, text,
+                  size_pt, tint, "center", (w, h), bold=(key == "name"))
+    # 쿨타임 아이콘은 두지 않는다. 시안은 "쿨 2턴" 글자만 있고, 아이콘을
+    # 붙였더니 카드 왼쪽 가장자리에 모래시계가 하나 떠 있었다.
+
+    kit.ghost_button(bp, "CommandButton_%d" % index, body, 0, 0, w, h, (w, h))
+    kit.image(bp, "CommandDisabled_%d" % index, body, 0, 0, w, h, (w, h),
+              z_order=kit.Z_OVERLAY, tint=kit.DISABLED_VEIL)
+    select_mark(bp, "CommandSelected_%d" % index, body, "skill", w, h)
 
 
 def fill_skill(bp, holder, size, box, index, boxes=None):
@@ -331,6 +422,50 @@ def fill_skill(bp, holder, size, box, index, boxes=None):
     kit.image(bp, "CommandDisabled_%d" % index, body, 0, 0, w, h, (w, h),
               z_order=kit.Z_OVERLAY, tint=kit.DISABLED_VEIL)
     select_mark(bp, "CommandSelected_%d" % index, body, "skill", w, h)
+
+
+def _turn_by_table(bp, holder, size, index, table):
+    """자리표대로 턴 칸 하나를 채운다. 칸 하나가 곧 한 사람이다."""
+    w, h = size
+    slot = "TurnToken_%d" % index
+    kit.add(bp, "CanvasPanel", slot, holder)
+    px, py, pw, ph = _at(table["portrait"])
+    kit.place(bp, slot, px, py, pw, ph, "tl", size, kit.Z_CONTENT)
+    face = (kit.TURN_PORTRAITS[index]
+            if index < len(kit.TURN_PORTRAITS) else None)
+    kit.image(bp, "TurnPortrait_%d" % index, slot, 0, 0, pw, ph, (pw, ph),
+              texture=face, tint=kit.WHITE)
+    select_mark(bp, "TurnCurrent_%d" % index, slot, "turn", pw, ph)
+
+
+def _enemy_by_table(bp, holder, size, table):
+    """자리표대로 적 정보를 채운다."""
+    w, h = size
+    px, py, pw, ph = _at(table["portrait"])
+    kit.image(bp, "EnemyPortrait", holder, px, py, pw, ph, (w, h),
+              texture=kit.HEADS + "/KK_Face_Enemy_Eagle_HeadV2",
+              tint=kit.WHITE)
+    nx, ny, nw, nh = _at(table["name"])
+    kit.label(bp, "EnemyName", holder, nx, ny, nw, nh, "적", 19,
+              kit.TEXT_COLOR, "left", (w, h), bold=True)
+    bx, by, bw, bh = _at(table["hp_bar"])
+    kit.bar(bp, "EnemyHPBar", holder, bx, by, bw, bh, kit.HP_RED, (w, h))
+    tx, ty, tw, th = _at(table["hp_text"])
+    kit.label(bp, "EnemyHPText", holder, tx, ty, tw, th, "0/0", 15,
+              kit.TEXT_COLOR, "left", (w, h), bold=True)
+    for icon_key, text_key, widget, tag, tint in (
+            ("defense_icon", "defense", "EnemyDefense", "Defense",
+             kit.TEXT_DIM),
+            ("forecast_icon", "forecast", "EnemyForecast", "Damage",
+             kit.DAMAGE_TEXT)):
+        ix, iy, iw, _ih = _at(table[icon_key])
+        kit.tag(bp, widget + "Icon", holder, ix, iy, iw, tag, (w, h))
+        x, y, bw2, bh2 = _at(table[text_key])
+        kit.label(bp, widget, holder, x, y, bw2, bh2, "", 14, tint, "left",
+                  (w, h))
+    sx, sy, sw, sh = _at(table["status"])
+    kit.label(bp, "EnemyStatus", holder, sx, sy, sw, sh, "", 13, kit.GOLD,
+              "center", (w, h))
 
 
 def turn(bp, root, row, first):
@@ -623,6 +758,19 @@ def _band_part(bp, holder, size, box, role, row, counters, slots=()):
 
 # ─── 배치안 한 벌 ──────────────────────────────────────────────────────────────
 
+def _one_text(bp, holder, size, widget, text, points, colour, table, key,
+              align):
+    """글자 한 줄. 자리표가 있으면 그 자리, 없으면 판 가운데."""
+    w, h = size
+    if table and key in table:
+        x, y, bw, bh = _at(table[key])
+    else:
+        pad = w * 0.06
+        x, y, bw, bh = pad, h * 0.28, w - pad * 2, h * 0.46
+    kit.label(bp, widget, holder, x, y, bw, bh, text, points, colour, align,
+              (w, h), bold=True)
+
+
 def build(bp, root, number):
     """시안 하나를 배치안으로 짓는다.
 
@@ -634,24 +782,48 @@ def build(bp, root, number):
     counters = {"party": 0, "skill": 0, "turn": 0, "enemy": 0, "band": 0}
     for row in rows:
         role = row["role"]
+        # 자리표가 있으면 그대로 쓴다. 없으면 잰 상자로 짐작한다.
+        table = slots(number, role)
         if role == "round":
-            _text_plate(bp, root, row, "Chrome_Round", "RoundText",
-                        "ROUND 1", 26, "center")
+            holder, size = _plate(bp, root, row, "Chrome_Round")
+            _one_text(bp, holder, size, "RoundText", "ROUND 1", 26,
+                      kit.TEXT_ON_LIGHT, table, "text", "center")
         elif role == "objective":
-            _text_plate(bp, root, row, "Chrome_Objective", "ObjectiveText",
-                        "목표", 19, "center")
+            holder, size = _plate(bp, root, row, "Chrome_Objective")
+            if table:
+                ix, iy, iw, ih = _at(table["icon"])
+                kit.image(bp, "ObjectiveIcon", holder, ix, iy, iw, ih, size,
+                          texture=kit.KK + "/KK_Icon_Objective",
+                          tint=kit.WHITE)
+            _one_text(bp, holder, size, "ObjectiveText", "목표", 19,
+                      kit.TEXT_ON_LIGHT, table, "text",
+                      (table or {}).get("align", "center"))
         elif role == "endturn":
-            end_turn(bp, root, row)
+            holder, size = _plate(bp, root, row, "Chrome_EndTurn")
+            kit.ghost_button(bp, "EndTurnButton", holder, 0, 0,
+                             size[0], size[1], size)
+            _one_text(bp, holder, size, "EndTurnLabel", "턴 종료", 26,
+                      kit.TEXT_COLOR, table, "text", "center")
         elif role == "party":
-            party(bp, root, row, counters["party"])
+            party(bp, root, row, counters["party"], table)
             counters["party"] += 1
         elif role == "skill":
-            skill(bp, root, row, counters["skill"])
+            skill(bp, root, row, counters["skill"], table)
             counters["skill"] += 1
         elif role == "turn":
-            counters["turn"] = turn(bp, root, row, counters["turn"])
+            if table:
+                holder, size = _plate(
+                    bp, root, row, "Chrome_Turn_%d" % counters["turn"])
+                _turn_by_table(bp, holder, size, counters["turn"], table)
+                counters["turn"] += 1
+            else:
+                counters["turn"] = turn(bp, root, row, counters["turn"])
         elif role == "enemy":
-            enemy(bp, root, row, counters["enemy"])
+            if table and counters["enemy"] == 0:
+                holder, size = _plate(bp, root, row, "EnemyPanel")
+                _enemy_by_table(bp, holder, size, table)
+            else:
+                enemy(bp, root, row, counters["enemy"])
             counters["enemy"] += 1
         elif role == "band":
             band(bp, root, row, counters["band"], counters)

@@ -63,7 +63,14 @@ def crop(path):
     head_band = ys < top + body_h / 3.0
     cx = float(xs[head_band].mean()) if head_band.any() else (left + right) / 2.0
 
-    side = min(body_w * SPAN, art.size[0], art.size[1])
+    # 날개를 편 자세는 몸 너비가 머리의 몇 배라, 몸 너비로 자르면 얼굴이
+    # 콩알만 해진다 -- 독수리가 그랬다. 몸이 키보다 넓으면 위쪽 띠의 너비를
+    # 기준으로 삼는다.
+    if body_w > body_h * 1.1 and head_band.any():
+        head_w = float(xs[head_band].max() - xs[head_band].min() + 1)
+        side = min(head_w * 1.7, art.size[0], art.size[1])
+    else:
+        side = min(body_w * SPAN, art.size[0], art.size[1])
     x0 = cx - side / 2.0
     y0 = top - side * HEAD_ROOM
     x0 = min(max(x0, 0), art.size[0] - side)
