@@ -22,6 +22,20 @@ for actor_path, meshes in mapping.items():
         unique.setdefault(entry["mesh"], []).append(actor_name)
 
 options = unreal.GLTFExportOptions()
+options.set_editor_property("use_importer_material_mapping", False)
+options.set_editor_property(
+    "bake_material_inputs", unreal.GLTFMaterialBakeMode.USE_MESH_DATA
+)
+options.set_editor_property(
+    "default_material_bake_size",
+    unreal.GLTFMaterialBakeSize(x=1024, y=1024, auto_detect=False),
+)
+options.set_editor_property("export_vertex_colors", True)
+options.set_editor_property(
+    "texture_image_format", unreal.GLTFTextureImageFormat.PNG
+)
+options.set_editor_property("texture_image_quality", 100)
+options.set_editor_property("adjust_normalmaps", True)
 selected_actors = set()
 manifest = {}
 for mesh_path, actors in sorted(unique.items()):

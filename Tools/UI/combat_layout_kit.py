@@ -15,6 +15,104 @@ ART = "/Game/SVN/OutSideAsset/UI/CombatHUD"
 C04 = ART + "/Concept04"
 KK = "/Game/SVN/OutSideAsset/UI/KayKit"
 SLICE = KK + "/Slices"
+CHROME = KK + "/Chrome"
+
+#: 시안에서 통째로 오려 낸 HUD 껍데기.
+#:
+#: 조각을 만들어 이어 붙이거나 9슬라이스로 늘리는 대신, 시안의 판 묶음을
+#: 그대로 한 장씩 놓는다. 스킬 카드 여섯 장이 한 장, 아군 세 줄이 한 장이다.
+#: 늘리지 않으므로 몰딩도 비례도 시안 그 자체다 -- 우리가 맞출 것은 위치뿐이다.
+#:
+#: 값은 (텍스처, 시안 1672 화면에서의 x, y, 폭, 높이). 설계 1920 좌표는
+#: chrome() 이 환산한다.
+#: 마지막 값은 앵커 -- 이 껍데기가 어느 모서리에 붙어 사는가.
+#:
+#: 모바일은 해상도가 제각각이라 한 캔버스에 절대 좌표로 박으면 반드시 잘린다.
+#: 실제로 창을 끌어 보니 세로가 짧으면 아래 판이 화면 밖으로 나가고, 세로가
+#: 길면 UI 배율이 커져 스킬 줄 오른쪽이 잘렸다.
+#:
+#: 각 껍데기에 제 구역을 준다. 왼쪽 것은 왼쪽 가장자리에, 오른쪽 것은 오른쪽
+#: 가장자리에 붙어 화면이 넓어지면 같이 벌어지고 좁아지면 같이 모인다.
+CHROME_PARTS = {
+    "round":     ("KK_Chrome_Round",     13,  10, 248, 126, "tl"),
+    "turn":      ("KK_Chrome_TurnRow",   492, 11, 689, 124, "tc"),
+    "objective": ("KK_Chrome_Objective", 1297, 11, 362, 124, "tr"),
+    "party":     ("KK_Chrome_Party",     14,  589, 443, 330, "bl"),
+    "skills":    ("KK_Chrome_Skills",    466, 616, 884, 307, "bc"),
+    "enemy":     ("KK_Chrome_Enemy",     1357, 617, 308, 199, "br"),
+    "endturn":   ("KK_Chrome_EndTurn",   1357, 824, 308, 100, "br"),
+}
+
+#: 껍데기에 뚫린 구멍의 자리. 조각 안 좌표이고, 내용은 여기에 앉는다.
+#:
+#: 손으로 적은 값이 아니라 조각에서 어두운 구멍을 찾아 읽은 것이다 -- 초상
+#: 자리도 카드 칸도 배지 자리도 그림이 이미 알고 있다.
+CHROME_HOLES = {
+    "turn_portrait": [(26, 18), (162, 19), (301, 18), (442, 19), (581, 19)],
+    "turn_portrait_size": (81, 84),
+    "party_portrait": [(31, 16), (27, 123), (27, 231)],
+    "party_portrait_size": (68, 72),
+    "party_row_y": [5, 115, 223],
+    "party_row_h": 107,
+    "skill_card_x": [4, 148, 305, 453, 593, 740],
+    "skill_card_y": 20,
+    "skill_card_size": (127, 269),
+    "skill_badge_y": 16,
+    "skill_badge_size": (29, 31),
+    "enemy_portrait": (33, 30),
+    "enemy_portrait_size": (79, 83),
+}
+
+#: 시안은 1672 화면, 배치는 1920 캔버스에서 짠다.
+CHROME_SCALE = 1920.0 / 1672.0
+
+
+#: 시안에서 뽑은 선택 테두리. 대상보다 크게 그려져 바깥을 감싼다.
+#:
+#: 처음엔 내가 금색 사각형을 그려 넣었는데, 시안의 테두리는 모서리에 금속
+#: 물림쇠가 있고 두께도 변에 따라 다르다. 그린 사각형으로는 그 맛이 안 난다.
+#: 시안의 선택 상태 조각에서 금색만 뽑아 부품으로 만들었다.
+#:
+#: 값은 (텍스처, 조각 폭, 조각 높이).
+CHROME_SELECT = {
+    "party": ("KK_Chrome_SelectParty", 445, 120),
+    "skill": ("KK_Chrome_SelectSkill", 152, 306),
+    "turn":  ("KK_Chrome_SelectTurn", 136, 128),
+}
+
+
+def chrome_select(blueprint, name, parent, kind, w, h, parent_size):
+    """선택 테두리를 대상 한가운데에 겹쳐 놓는다.
+
+    테두리 조각이 대상보다 크므로 가운데를 맞추고 바깥으로 넘치게 둔다 --
+    시안이 그렇게 그려져 있다. 런타임이 이 위젯 하나만 켜고 끄면 된다.
+    """
+    texture, sw, sh = CHROME_SELECT[kind]
+    k = CHROME_SCALE
+    aw, ah = sw * k, sh * k
+    return image(blueprint, name, parent, (w - aw) / 2.0, (h - ah) / 2.0,
+                 aw, ah, parent_size, z_order=Z_MARKER,
+                 texture="{}/{}".format(CHROME, texture), tint=WHITE)
+
+
+def chrome(blueprint, root, key, name=None):
+    """시안에서 오려 낸 껍데기 한 장을 제자리에 놓는다.
+
+    돌려주는 값은 (그 껍데기를 덮는 캔버스 이름, 캔버스 크기, 배율).
+    내용은 그 캔버스 안에 조각 좌표 * 배율 로 놓으면 시안과 같은 자리에 온다.
+    """
+    texture, sx, sy, sw, sh, anchor = CHROME_PARTS[key]
+    k = CHROME_SCALE
+    x, y = sx * k, sy * k
+    w, h = sw * k, sh * k
+    holder = name or ("Chrome_" + key.capitalize())
+    add(blueprint, "CanvasPanel", holder, root)
+    # 자기 구역 모서리에 붙인다. 전부 좌상단으로 놓았더니 화면이 넓어져도
+    # 오른쪽 판들이 왼쪽에 남아 가운데가 텅 비었다.
+    place(blueprint, holder, x, y, w, h, anchor, None, Z_FILL)
+    image(blueprint, holder + "_Art", holder, 0, 0, w, h, (w, h),
+          z_order=Z_FILL, texture="{}/{}".format(CHROME, texture), tint=WHITE)
+    return holder, (w, h), k
 
 #: 시안에서 통째로 뜬 9슬라이스 판.
 #:
@@ -136,6 +234,9 @@ HP_RED = unreal.LinearColor(0.929, 0.079, 0.035, 1.0)
 #: 트랙 원화도 중립으로 바꾸면서 흰색 곱색을 그대로 뒀더니 밝기 213 이 그대로
 #: 나가 빈 자리가 흰 막대가 됐다. 채움만 보고 트랙을 안 본 것이다.
 HP_TRACK = unreal.LinearColor(0.213, 0.101, 0.031, 1.0)
+#: 못 쓰는 카드를 덮는 막. 시안은 회색으로 죽이지 검게 지우지 않는다 --
+#: 아이콘이 읽혀야 왜 못 쓰는지 알 수 있다.
+DISABLED_VEIL = unreal.LinearColor(0.06, 0.06, 0.07, 0.50)
 STONE = unreal.LinearColor(0.76, 0.78, 0.81, 1.0)         # #C3C7CE
 STONE_DIM = unreal.LinearColor(0.43, 0.45, 0.49, 1.0)     # #6E747E
 AP_ON = WHITE
@@ -166,19 +267,19 @@ BADGE_TEXT = unreal.LinearColor(1.0, 0.98, 0.94, 1.0)
 #: rather than borrowing another unit's face -- the runtime overwrites it as
 #: soon as the model supplies one.
 PARTY_PORTRAITS = (
-    KK + "/KK_Face_Knight_ActualV1",
-    KK + "/KK_Face_Ranger_ActualV1",
-    KK + "/KK_Face_Mage_ActualV1",
+    KK + "/KK_Face_Knight_DynamicV2",
+    KK + "/KK_Face_Ranger_DynamicV2",
+    KK + "/KK_Face_Mage_DynamicV2",
 )
 
 #: 턴 순서 칸의 기본 얼굴. 게임플레이가 유닛 초상화를 주면 덮어쓴다.
 #: 지금은 미리보기 장면(기사 - 독수리 - 궁수 - 독수리 - 마법사)에 맞춘다.
 TURN_PORTRAITS = (
-    KK + "/KK_Face_Knight_ActualV1",
-    KK + "/KK_Face_Eagle",
-    KK + "/KK_Face_Ranger_ActualV1",
-    KK + "/KK_Face_Eagle",
-    KK + "/KK_Face_Mage_ActualV1",
+    KK + "/KK_Face_Knight_DynamicV2",
+    KK + "/KK_Face_Enemy_Eagle_ActionV3",
+    KK + "/KK_Face_Ranger_DynamicV2",
+    KK + "/KK_Face_Enemy_Eagle_ActionV3",
+    KK + "/KK_Face_Mage_DynamicV2",
     None,
 )
 
@@ -1107,7 +1208,7 @@ def enemy_panel(blueprint, root, x, y, w, h, anchor="br", style="wide"):
                           (w - portrait) / 2.0, h * 0.05, portrait,
                           enemy_ring, size, enemy=True)
         image(blueprint, "EnemyPortrait", body, px, py, pe, pe, size,
-              texture=KK + "/KK_Face_Eagle",
+              texture=KK + "/KK_Face_Enemy_Eagle_ActionV3",
               tint=unreal.LinearColor(1, 1, 1, 1))
         name_size = int(max(14, min(22, w * 0.09)))
         info_size = int(max(12, min(17, w * 0.075)))
@@ -1153,7 +1254,7 @@ def enemy_panel(blueprint, root, x, y, w, h, anchor="br", style="wide"):
         px, py, pe = ring(blueprint, "EnemyPortrait", body, pad, pad,
                           portrait, enemy_ring, size, enemy=True)
         image(blueprint, "EnemyPortrait", body, px, py, pe, pe, size,
-              texture=KK + "/KK_Face_Eagle",
+              texture=KK + "/KK_Face_Enemy_Eagle_ActionV3",
               tint=unreal.LinearColor(1, 1, 1, 1))
 
         left = pad + portrait + pad * 0.8

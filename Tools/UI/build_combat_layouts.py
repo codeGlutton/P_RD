@@ -62,53 +62,164 @@ def top_band(bp, root, turn_token=145.0, names=False):
 # ─── 1안 클래식 CRPG ───────────────────────────────────────────────────────────
 
 def layout_01(bp, root):
-    """Three layers: top band, battlefield, bottom band. The safe, dense one.
+    """시안에서 오려 낸 껍데기를 놓고 그 구멍에 내용을 채운다.
 
-    The allies stack as three wide rows down the bottom-left rather than
-    sitting side by side -- stacked they eat less width and the command rail
-    gets the room, which is what the mock-up is really trading for.
+    조각을 만들어 이어 붙이거나 9슬라이스로 늘리는 방식으로는 손그림 품질에
+    닿지 못했다. 시안 판을 통째로 오려 원래 크기 그대로 놓으면 몰딩도 비례도
+    시안 그 자체이고, 우리가 맞출 것은 위치뿐이다.
+
+    아래 좌표는 전부 조각 기준이다. 조각에 초상 자리와 카드 칸이 구멍으로
+    뚫려 있어 그걸 읽었고, 글자와 바 자리는 시안에서 재어 조각 원점을 뺐다.
+    내가 눈대중으로 고른 숫자가 없다 -- 이 작업에서 틀린 것의 대부분이
+    그렇게 고른 값이었다.
     """
-    top_band(bp, root, 148.0)
+    K = kit.CHROME_SCALE
+    holes = kit.CHROME_HOLES
 
-    # 아래 수치는 전부 시안(KK_HUD_Polish_01)을 1920x1080 에서 실측한 값이다.
-    # 이전 값들은 여백 상수와 centred() 로 스스로 계산한 것이라 시안과 맞을
-    # 이유가 없었다 -- 실제로 아군 판이 44px 위, 스킬 줄이 50px 오른쪽,
-    # 적 패널이 72px 아래에 있었다.
-    #
-    #   아군 판  x  24  y  668   497 x 384 (3행)
-    #   스킬 줄  x 520  y  709   960 x 349 (6장)
-    #   적 패널  x1560  y  709   349 x 223
-    #   턴 종료  x1564  y  948   332 x 100
-    # 1672 실측: 시안 행의 나무 면이 107px 이고 행 사이 틈이 5px 인데,
-    # 우리는 95px 에 틈 17px 이었다. 전체 높이는 비슷한데 행이 얇고 틈이 넓어
-    # 안이 비어 보인다. 프레임이 위아래로 6px 씩 먹으므로 카드는 그만큼 크게
-    # 잡고 틈은 없앤다.
-    # 시안 실측(1672): 세 줄이 591~917 을 채우고 아래 24px 이 비어 있다.
-    # 1920 으로 환산하면 678 에서 시작해 줄 하나가 125 다.
-    row_w, row_h, row_gap = 487.0, 124.0, 0.0
-    party_top = 672.0
+    # ── 상단: 라운드 판 / 목표 현판 / 턴 순서 ─────────────────────────────
+    holder, size, _ = kit.chrome(bp, root, "round")
+    kit.label(bp, "RoundText", holder, 30 * K, 34 * K, 190 * K, 46 * K,
+              "ROUND 1", 26, kit.TEXT_ON_LIGHT, "center", size, bold=True)
+
+    holder, size, _ = kit.chrome(bp, root, "objective")
+    kit.image(bp, "ObjectiveIcon", holder, 20 * K, 34 * K, 46 * K, 52 * K,
+              size, texture=kit.KK + "/KK_Icon_Objective", tint=kit.WHITE)
+    kit.label(bp, "ObjectiveText", holder, 78 * K, 40 * K, 262 * K, 44 * K,
+              "목표", 19, kit.TEXT_ON_LIGHT, "left", size)
+
+    holder, size, _ = kit.chrome(bp, root, "turn")
+    pw, ph = holes["turn_portrait_size"]
+    for i, (hx, hy) in enumerate(holes["turn_portrait"]):
+        slot = "TurnToken_{}".format(i)
+        kit.add(bp, "CanvasPanel", slot, holder)
+        kit.place(bp, slot, hx * K, hy * K, pw * K, ph * K, "tl", size,
+                  kit.Z_CONTENT)
+        cell = (pw * K, ph * K)
+        face = (kit.TURN_PORTRAITS[i]
+                if i < len(kit.TURN_PORTRAITS) else None)
+        kit.image(bp, "TurnPortrait_{}".format(i), slot, 0, 0,
+                  cell[0], cell[1], cell, texture=face, tint=kit.WHITE)
+        kit.chrome_select(bp, "TurnCurrent_{}".format(i), slot, "turn",
+                          cell[0], cell[1], cell)
+
+    # ── 아군 세 줄 ────────────────────────────────────────────────────────
+    holder, size, _ = kit.chrome(bp, root, "party")
+    pw, ph = holes["party_portrait_size"]
     for i in range(3):
-        kit.party_card(bp, root, i, M, party_top + i * (row_h + row_gap),
-                       row_w, row_h, "bl", "strip")
+        hx, hy = holes["party_portrait"][i]
+        row_y = holes["party_row_y"][i]
+        card = "PartyCard_{}".format(i)
+        kit.add(bp, "CanvasPanel", card, holder)
+        row = (435 * K, holes["party_row_h"] * K)
+        kit.place(bp, card, 4 * K, row_y * K, row[0], row[1], "tl", size,
+                  kit.Z_CONTENT)
+        body = "PartyContent_{}".format(i)
+        kit.add(bp, "CanvasPanel", body, card)
+        kit.place(bp, body, 0, 0, row[0], row[1], "tl", row, kit.Z_CONTENT)
 
-    # 판 상자가 아니라 '보이는 면'이 시안과 같아야 한다. 프레임이 안쪽으로
-    # 17px 을 먹으므로 상자를 그만큼 키워 면이 1560,709 에서 349x223 으로
-    # 나오게 한다.
-    # 스킬 줄 마지막 카드가 1564 에서 끝나므로 1560 에서 시작하면 4px 겹친다.
-    enemy_x, enemy_y = 1572.0, 709.0
-    enemy_w, enemy_h = 316.0, 219.0
-    end_x, end_y = 1543.0, 956.5
-    end_w, end_h = 350.0, 100.0
+        # 초상은 구멍 자리에. 구멍은 조각 좌표라 행 원점을 뺀다.
+        kit.image(bp, "PartyPortrait_{}".format(i), body,
+                  (hx - 4) * K, (hy - row_y) * K, pw * K, ph * K, row,
+                  texture=kit.PARTY_PORTRAITS[i], tint=kit.WHITE)
+        kit.label(bp, "PartyName_{}".format(i), body, 104 * K, 6 * K,
+                  180 * K, 34 * K, "이름", 19, kit.TEXT_COLOR, "left", row,
+                  bold=True)
+        kit.tag(bp, "PartyStatusIcon_{}".format(i), body, 317 * K, 9 * K,
+                22 * K, "Poison", row)
+        kit.label(bp, "PartyStatus_{}".format(i), body, 343 * K, 9 * K,
+                  90 * K, 26 * K, "", 14, kit.GOLD, "left", row)
+        kit.bar(bp, "PartyHPBar_{}".format(i), body, 124 * K, 45 * K,
+                92 * K, 14 * K, kit.HP_GREEN, row)
+        kit.label(bp, "PartyHPText_{}".format(i), body, 224 * K, 38 * K,
+                  92 * K, 28 * K, "0/0", 15, kit.HP_TEXT, "left", row,
+                  bold=True)
+        for pip in range(4):
+            kit.image(bp, "PartyAPPipBg_{}_{}".format(i, pip), body,
+                      (124 + pip * 34) * K, 68 * K, 26 * K, 26 * K, row,
+                      texture=kit.KK + "/KK_Gem_Blue_Off", tint=kit.WHITE)
+        for pip in range(4):
+            kit.image(bp, "PartyAPPip_{}_{}".format(i, pip), body,
+                      (124 + pip * 34) * K, 68 * K, 26 * K, 26 * K, row,
+                      texture=kit.KK + "/KK_Gem_Blue_On", tint=kit.WHITE)
+        kit.label(bp, "PartyAPText_{}".format(i), body, 268 * K, 66 * K,
+                  70 * K, 28 * K, "0/0", 14, kit.AP_TEXT, "left", row)
+        kit.chrome_select(bp, "PartySelected_{}".format(i), card, "party",
+                          row[0], row[1], row)
 
-    # 같은 이유로 12px 씩 키운다. 시안의 석재 면은 520~1500 을 채운다.
-    cmd_w, cmd_h, cmd_gap = 161.5, 351.0, 6.0
-    start, cmd_top = 550.0, 707.0
-    for i in range(6):
-        kit.command_card(bp, root, i, start + i * (cmd_w + cmd_gap),
-                         cmd_top, cmd_w, cmd_h, "bc")
+    # ── 스킬 카드 여섯 칸 ─────────────────────────────────────────────────
+    holder, size, _ = kit.chrome(bp, root, "skills")
+    cw, ch = holes["skill_card_size"]
+    cy = holes["skill_card_y"]
+    bw, bh = holes["skill_badge_size"]
+    for i, cx in enumerate(holes["skill_card_x"]):
+        card = "CommandCard_{}".format(i)
+        kit.add(bp, "CanvasPanel", card, holder)
+        cell = (cw * K, ch * K)
+        kit.place(bp, card, cx * K, cy * K, cell[0], cell[1], "tl", size,
+                  kit.Z_CONTENT)
+        body = "CommandBody_{}".format(i)
+        kit.add(bp, "CanvasPanel", body, card)
+        kit.place(bp, body, 0, 0, cell[0], cell[1], "tl", cell, kit.Z_CONTENT)
 
-    kit.enemy_panel(bp, root, enemy_x, enemy_y, enemy_w, enemy_h, "br")
-    kit.end_turn(bp, root, end_x, end_y, end_w, end_h, "br", 26)
+        kit.image(bp, "CommandIcon_{}".format(i), body, 22 * K, 6 * K,
+                  85 * K, 92 * K, cell, texture=kit.COMMAND_ICONS[i],
+                  tint=kit.WHITE)
+        # 배지 구멍은 조각 좌표라 카드 원점을 뺀다.
+        kit.label(bp, "CommandCost_{}".format(i), body,
+                  (cw - bw - 6) * K, (holes["skill_badge_y"] - cy) * K,
+                  bw * K, bh * K, "0", 16, kit.BADGE_TEXT, "center", cell,
+                  bold=True)
+        kit.label(bp, "CommandName_{}".format(i), body, 6 * K, 128 * K,
+                  (cw - 12) * K, 30 * K, "이름", 16, kit.TEXT_COLOR,
+                  "center", cell, bold=True)
+        kit.tag(bp, "CommandCooldownIcon_{}".format(i), body,
+                (cw / 2.0 - 44) * K, 164 * K, 18 * K, "Cooldown", cell)
+        kit.label(bp, "CommandCooldown_{}".format(i), body,
+                  (cw / 2.0 - 20) * K, 162 * K, 80 * K, 24 * K, "", 13,
+                  kit.COOLDOWN_TEXT, "left", cell)
+        kit.label(bp, "CommandDamage_{}".format(i), body, 6 * K, 192 * K,
+                  (cw - 12) * K, 24 * K, "0~0", 13, kit.DAMAGE_TEXT,
+                  "center", cell)
+        kit.label(bp, "CommandCostLine_{}".format(i), body, 6 * K, 232 * K,
+                  (cw - 12) * K, 28 * K, "", 15, kit.AP_TEXT, "center", cell,
+                  bold=True)
+
+        kit.ghost_button(bp, "CommandButton_{}".format(i), card,
+                         0, 0, cell[0], cell[1], cell)
+        kit.image(bp, "CommandDisabled_{}".format(i), card, 0, 0,
+                  cell[0], cell[1], cell, z_order=kit.Z_OVERLAY,
+                  tint=kit.DISABLED_VEIL)
+        kit.chrome_select(bp, "CommandSelected_{}".format(i), card, "skill",
+                          cell[0], cell[1], cell)
+
+    # ── 적 패널 ───────────────────────────────────────────────────────────
+    holder, size, _ = kit.chrome(bp, root, "enemy", "EnemyPanel")
+    ex, ey = holes["enemy_portrait"]
+    ew, eh = holes["enemy_portrait_size"]
+    kit.image(bp, "EnemyPortrait", holder, ex * K, ey * K, ew * K, eh * K,
+              size, texture=kit.KK + "/KK_Face_Eagle", tint=kit.WHITE)
+    kit.label(bp, "EnemyName", holder, 126 * K, 22 * K, 150 * K, 34 * K,
+              "적", 19, kit.TEXT_COLOR, "left", size, bold=True)
+    kit.bar(bp, "EnemyHPBar", holder, 126 * K, 62 * K, 108 * K, 16 * K,
+            kit.HP_RED, size)
+    kit.label(bp, "EnemyHPText", holder, 240 * K, 55 * K, 66 * K, 28 * K,
+              "0/0", 15, kit.TEXT_COLOR, "left", size, bold=True)
+    kit.tag(bp, "EnemyDefenseIcon", holder, 126 * K, 104 * K, 20 * K,
+            "Defense", size)
+    kit.label(bp, "EnemyDefense", holder, 150 * K, 102 * K, 140 * K, 26 * K,
+              "", 14, kit.TEXT_DIM, "left", size)
+    kit.tag(bp, "EnemyForecastIcon", holder, 126 * K, 146 * K, 20 * K,
+            "Damage", size)
+    kit.label(bp, "EnemyForecast", holder, 150 * K, 144 * K, 150 * K, 26 * K,
+              "", 14, kit.DAMAGE_TEXT, "left", size)
+    kit.label(bp, "EnemyStatus", holder, 20 * K, 172 * K, 268 * K, 24 * K,
+              "", 13, kit.GOLD, "center", size)
+
+    # ── 턴 종료 ───────────────────────────────────────────────────────────
+    holder, size, _ = kit.chrome(bp, root, "endturn")
+    kit.ghost_button(bp, "EndTurnButton", holder, 0, 0, size[0], size[1], size)
+    kit.label(bp, "EndTurnLabel", holder, 20 * K, 28 * K, 268 * K, 44 * K,
+              "턴 종료", 26, kit.TEXT_COLOR, "center", size, bold=True)
 
 
 # ─── 2안 좌측 세로 파티 ────────────────────────────────────────────────────────

@@ -12,8 +12,10 @@ import unreal
 
 SOURCE = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitUIKit/Processed"
 SLICE_SOURCE = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitUIKit/Slices"
+CHROME_SOURCE = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitUIKit/Chrome"
 PACKAGE = "/Game/SVN/OutSideAsset/UI/KayKit"
 SLICE_PACKAGE = PACKAGE + "/Slices"
+CHROME_PACKAGE = PACKAGE + "/Chrome"
 
 files = sorted(f for f in os.listdir(SOURCE) if f.lower().endswith(".png"))
 if not files:
@@ -23,7 +25,19 @@ if not files:
 slice_files = sorted(f for f in os.listdir(SLICE_SOURCE)
                      if f.lower().endswith(".png"))     if os.path.isdir(SLICE_SOURCE) else []
 
+#: 시안에서 통째로 오려 낸 HUD 껍데기. 늘리지 않고 원래 크기로 놓는다.
+chrome_files = sorted(f for f in os.listdir(CHROME_SOURCE)
+                      if f.lower().endswith(".png"))     if os.path.isdir(CHROME_SOURCE) else []
+
 tasks = []
+for name in chrome_files:
+    task = unreal.AssetImportTask()
+    task.set_editor_property("filename", os.path.join(CHROME_SOURCE, name))
+    task.set_editor_property("destination_path", CHROME_PACKAGE)
+    task.set_editor_property("automated", True)
+    task.set_editor_property("replace_existing", True)
+    task.set_editor_property("save", True)
+    tasks.append(task)
 for name in slice_files:
     task = unreal.AssetImportTask()
     task.set_editor_property("filename", os.path.join(SLICE_SOURCE, name))
@@ -85,6 +99,13 @@ for name in slice_files:
             "{}/{}".format(SLICE_PACKAGE, stem)) is None:
         raise RuntimeError("슬라이스 임포트 실패: {}".format(stem))
 unreal.log("[KayKit] 슬라이스 {}장".format(len(slice_files)))
+
+for name in chrome_files:
+    stem = os.path.splitext(name)[0]
+    if unreal.EditorAssetLibrary.load_asset(
+            "{}/{}".format(CHROME_PACKAGE, stem)) is None:
+        raise RuntimeError("껍데기 임포트 실패: {}".format(stem))
+unreal.log("[KayKit] 껍데기 {}장".format(len(chrome_files)))
 
 checked = 0
 for stem in imported:
