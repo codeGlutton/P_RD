@@ -17,10 +17,11 @@
 #include "Component/SkillComponent/SkillComponentModel.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
 #include "Actor/TileMap/TileMapModel.h"
+#include "Actor/TileMap/TacticalTileTable.h"
 
 TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	UEnemyUnitModel* Enemy,
-	UUnitModel* Player,
+	const TArray<UUnitModel*>& Players,
 	const UTileMapModel* TileMap,
 	const FRandomStream& EventStream)
 {
@@ -40,7 +41,22 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	};
 
 	// 가드: 필수 입력이 없으면 행동 없이 턴만 종료
-	if (Enemy == nullptr || Player == nullptr || TileMap == nullptr)
+	if (Enemy == nullptr || TileMap == nullptr)
+	{
+		return Commands;
+	}
+
+	// 타겟 타일 수집: null 원소는 제외 (이후 타겟 인덱스는 이 목록 기준)
+	TArray<FTileIndex> TargetTiles;
+	for (const UUnitModel* Player : Players)
+	{
+		if (Player != nullptr)
+		{
+			TargetTiles.Add(Player->GetTileTransform().mIndex);
+		}
+	}
+	// 타겟이 하나도 없으면 할 게 없으므로 턴 종료
+	if (TargetTiles.IsEmpty())
 	{
 		return Commands;
 	}
@@ -51,17 +67,25 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	{
 		return Commands;
 	}
-	
-	// 스킬 슬롯에 유효한 스킬이 있는 지 확인: 스킬이 없으면 딱히 할 게 없으므로 턴 종료
-	TArray<int32> ValidSkillIndexes;
+
+	// 사용 가능한 스킬 수집: 장착돼 있고 쿨다운이 아닌 슬롯만 데이터 채움 (사용불가 슬롯은 nullptr 유지)
 	const TArray<FSkillEntry>& Skills = SkillComp->GetSkills();
+	TArray<const UStaticSkillData*> SkillDatas;
+	SkillDatas.Init(nullptr, Skills.Num());
+	bool HasUsableSkill = false;
 	for (int32 Index = 0; Index < Skills.Num(); ++Index)
 	{
-		if (Skills[Index].IsValid())
-			ValidSkillIndexes.Add(Index);
+		if (Skills[Index].IsValid() && SkillComp->IsCooldown(Index) == false)
+		{
+			SkillDatas[Index] = Skills[Index].mData;
+			HasUsableSkill = true;
+		}
 	}
-	if (ValidSkillIndexes.IsEmpty())
+	// 사용 가능한 스킬이 없으면 할 게 없으므로 턴 종료
+	if (HasUsableSkill == false)
+	{
 		return Commands;
+	}
 
 	// 속성 컴포넌트 확인: 없으면 할 게 없으므로 턴 종료
 	UAttributeSetComponentModel* AttributeSetComp = Enemy->GetAttributeComponentModel();
@@ -75,115 +99,73 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		AttributeSetComp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementAttribute()),
 		0
 	);
-	
+
 	const FTileIndex EnemyTile = Enemy->GetTileTransform().mIndex;
-	const FTileIndex PlayerTile = Player->GetTileTransform().mIndex;
-	
-	// 적이 이동할 수 있는 모든 타일들 수집
-	TArray<FTileIndex> ReachableTiles = TileMap->GetReachableTiles(EnemyTile, ActionPoint);
-	ReachableTiles.Add(EnemyTile);
-	
-	// 적이 이동할 수 있는 모든 타일들에 대해서 이동거리를 미리 계산
-	// 그래야 어느 타일로 갈 때 얼마나 드는 지 금방 비교할 수 있음
-	const TArray<int32> DistanceField = TileMap->GetDistanceField(EnemyTile, Enemy);
-	
-	// 스킬별 조준가능/시전가능 타일들
-	TArray<TArray<FTileIndex>> AimableTiles;
-	TArray<TArray<FTileIndex>> CastableTiles;
-	AimableTiles.SetNum(Skills.Num());
-	CastableTiles.SetNum(Skills.Num());
-	
-	/**
-	 * @brief 스킬별 조준가능/시전가능 타일들 수집
-	 */
-	for (const int32 SkillIndex : ValidSkillIndexes)
+
+	// 전술 타일 테이블 구성: 이후 판단은 전부 테이블 조회로 처리
+	FTacticalTileTable Table;
+	Table.Build(TileMap, Enemy, EnemyTile, TargetTiles, SkillDatas, ActionPoint);
+
+	bool CanCast = false;
+	int32 ChosenSkillSlot = INDEX_NONE;
+	int32 ChosenTarget = INDEX_NONE;
+	FTileIndex Dest = EnemyTile;
+
+	// 시전 가능한 타겟 후보 수집
+	TArray<int32> CastableTargets;
+	for (int32 TargetIndex = 0; TargetIndex < TargetTiles.Num(); ++TargetIndex)
 	{
-		const UStaticSkillData* Skill = Skills[SkillIndex].mData;
-		
-		// 도달 가능한 모든 타일에 대해서 탐색
-		for (const FTileIndex Tile : ReachableTiles)
+		if (Table.CanCastToTarget(TargetIndex))
 		{
-			// 해당타일에서 조준가능한 타일들 수집
-			// @note 아직 플레이어를 조준할 수 있는지는 모름
-			TArray<FTileIndex> Aimables = TileMap->GetAimableTiles(
-				Tile,
-				Skill->mAimRange,
-				Skill->mAimPattern,
-				Skill->mCanAimBoardActor,
-				Skill->mIsIndirect,
-				nullptr,
-				Enemy);
-			
-			if (Aimables.Contains(PlayerTile) == false)
-				continue;
-			
-			// 조준가능한 타일들중에 플레이어 타일이 있으면 최종조준가능한 타일
-			// @note 아직 플레이어에게 시전할 수 있는지는 모름
-			AimableTiles[SkillIndex].Add(Tile);
-			
-			const int32 LinearIndex = TileMap->TileIndexToLinearIndex(Tile);
-			// 조준가능한 타일까지 이동하는 비용
-			const int32 MoveDistance = DistanceField[LinearIndex];
-			if (MoveDistance + Skill->mRequiredMovement <= ActionPoint)
-			{
-				// 현재 액션포인트로 이동포인트와 스킬사용포인트까지 감당할 수 있으면 시전가능한 타일
-				CastableTiles[SkillIndex].Add(Tile);
-			}
+			CastableTargets.Add(TargetIndex);
 		}
 	}
-	
-	// 이번 턴에 시전가능한 스킬들 수집
-	TArray<int32> CastableSkillIndexes;
-	for (const int32 SkillIndex : ValidSkillIndexes)
+
+	if (CastableTargets.IsEmpty() == false)
 	{
-		if (CastableTiles[SkillIndex].IsEmpty() == false)
-			CastableSkillIndexes.Add(SkillIndex);
-	}
-	
-	bool CanCast = false;
-	int32 ChosenSkillIndex = INDEX_NONE;
-	FTileIndex Dest = EnemyTile;
-	
-	//
-	// 1단계: 이동+시전으로 플레이어를 때릴 수 있으면 시전을 계획
-	//
-	if (CastableSkillIndexes.IsEmpty() == false)
-	{
-		// 시전 가능한 스킬 중에서 랜덤 선택
-		const int32 Pick = EventStream.RandRange(0, CastableSkillIndexes.Num() - 1);
-		
-		// 시전할 스킬 인덱스, 시전 계획, 목표 타일 등을 설정
-		ChosenSkillIndex = CastableSkillIndexes[Pick];
+		//
+		// 1단계: 시전 가능한 타겟이 있으면 [타겟 -> 스킬 -> 목적지] 순서로 확정
+		//
+		// 타겟: 시전 가능한 타겟 중 최근접
+		ChosenTarget = ChooseNearestTarget(Table, CastableTargets, EventStream);
+		// 스킬: 그 타겟에게 시전 가능한 슬롯 중 랜덤
+		const TArray<int32> CastableSlots = Table.GetCastableSkillSlots(ChosenTarget);
+		ChosenSkillSlot = CastableSlots[EventStream.RandRange(0, CastableSlots.Num() - 1)];
+		// 목적지: 확정된 스킬·타겟을 시전 가능한 타일 중 이동성향대로
+		Dest = ChooseDestinationByTendency(Table, Enemy->GetMoveTendency(), ChosenTarget, EnemyTile,
+			[&Table, ChosenSkillSlot, ChosenTarget](const FTacticalTileInfo& Tile)
+			{
+				return Table.IsCastable(Tile, ChosenSkillSlot, ChosenTarget);
+			});
 		CanCast = true;
-		Dest = PickByTendency(CastableTiles[ChosenSkillIndex], EnemyTile, PlayerTile, Enemy->GetMoveTendency());
 	}
 	else
 	{
-		//
-		// 2단계: 이번 턴에는 못 때리므로 다음 턴에 때릴 수 있는 타일로 이동
-		//
-		// 조준타일들의 합집합이 대상
-		TArray<FTileIndex> PositioningTiles;
-		for (const int32 SkillIndex : ValidSkillIndexes)
+		// 폴백의 기준 타겟: 전체 타겟 중 최근접
+		TArray<int32> AllTargets;
+		for (int32 TargetIndex = 0; TargetIndex < TargetTiles.Num(); ++TargetIndex)
 		{
-			for (const FTileIndex Tile : AimableTiles[SkillIndex])
-			{
-				// 중복할 필요가 없으므로 유니크한 인덱스만 수집
-				PositioningTiles.AddUnique(Tile);
-			}
+			AllTargets.Add(TargetIndex);
 		}
-		
-		if (PositioningTiles.IsEmpty() == false)
+		const int32 NearestTarget = ChooseNearestTarget(Table, AllTargets, EventStream);
+
+		if (Table.HasAnyAimable())
 		{
-			// 조준가능한 타일이 있으면, 일단 그 타일에 가 있으면 다음 턴에서 플레이어를 때릴 수 있음
-			Dest = PickByTendency(PositioningTiles, EnemyTile, PlayerTile, Enemy->GetMoveTendency());
+			//
+			// 2단계: 이번 턴에는 못 때리므로, 다음 턴 시전을 노리고 조준 가능한 타일로 이동
+			//
+			Dest = ChooseDestinationByTendency(Table, Enemy->GetMoveTendency(), NearestTarget, EnemyTile,
+				[](const FTacticalTileInfo& Tile)
+				{
+					return Tile.mAimableFlags.Contains(true);
+				});
 		}
 		else
 		{
 			//
-			// 3단계: 어디로 가든, 다음 턴에서 플레이어를 때릴 수 없다면, 플레이어에게 최대한 접근
+			// 3단계: 어디로 가든 조준이 안 되면, 최근접 타겟에게 최대한 접근
 			//
-			Dest = PickApproachTile(ReachableTiles, EnemyTile, PlayerTile, TileMap, Enemy);
+			Dest = ChooseApproachDestination(Table, NearestTarget, EnemyTile);
 		}
 	}
 
@@ -219,171 +201,120 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		TInstancedStruct<FSRPGCommand> Cast;
 		Cast.InitializeAs<FSRPGSkillCastCommand>();
 		FSRPGSkillCastCommand& CastRef = Cast.GetMutable<FSRPGSkillCastCommand>();
-		CastRef.mSkillIndex = ChosenSkillIndex;
-		CastRef.mTargetIndex = PlayerTile;
+		CastRef.mSkillIndex = ChosenSkillSlot;
+		CastRef.mTargetIndex = TargetTiles[ChosenTarget];
 		AddAction(MoveTemp(Cast));
 	}
 
 	return Commands;
 }
 
-FTileIndex USRPGEnemyTurnPlanner::PickByTendency(
-	const TArray<FTileIndex>& Tiles,
-	const FTileIndex& EnemyTile,
-	const FTileIndex& PlayerTile,
-	EMoveTendency Tendency)
+int32 USRPGEnemyTurnPlanner::ChooseNearestTarget(
+	const FTacticalTileTable& Table,
+	const TArray<int32>& CandidateTargets,
+	const FRandomStream& EventStream)
 {
-	// 이동성향에 따라 타일 목록에서 최선 타일 선택
+	// 후보가 없으면 선택할 것도 없음
+	if (CandidateTargets.IsEmpty())
+	{
+		return INDEX_NONE;
+	}
+
+	// 후보 중 가장 짧은 경로 거리 탐색
+	int32 BestDistance = MAX_int32;
+	for (const int32 TargetIndex : CandidateTargets)
+	{
+		BestDistance = FMath::Min(BestDistance, Table.GetDistanceToTarget(TargetIndex));
+	}
+
+	// 최근접 동률 후보 수집
+	TArray<int32> NearestTargets;
+	for (const int32 TargetIndex : CandidateTargets)
+	{
+		if (Table.GetDistanceToTarget(TargetIndex) == BestDistance)
+		{
+			NearestTargets.Add(TargetIndex);
+		}
+	}
+
+	// 동률이 있을때만 랜덤 돌린다.
+	return (NearestTargets.Num() == 1)
+		? NearestTargets[0]
+		: NearestTargets[EventStream.RandRange(0, NearestTargets.Num() - 1)];
+}
+
+FTileIndex USRPGEnemyTurnPlanner::ChooseDestinationByTendency(
+	const FTacticalTileTable& Table,
+	EMoveTendency Tendency,
+	int32 ReferenceTarget,
+	const FTileIndex& Origin,
+	TFunctionRef<bool(const FTacticalTileInfo&)> Filter)
+{
 	switch (Tendency)
 	{
 	case EMoveTendency::MoveClose:
-		// 근접 성향: 플레이어와 가장 가까운 타일
-		return PickByPlayerDistance(Tiles, EnemyTile, PlayerTile, /*Closest*/true);
+		// 근접 성향: 기준 타겟과의 거리 최소 -> 이동비용 최소
+		return Table.PickTile(
+			Filter,
+			[ReferenceTarget](const FTacticalTileInfo& Tile)
+			{
+				return static_cast<int64>(Tile.mTargetDistances[ReferenceTarget]);
+			},
+			[](const FTacticalTileInfo& Tile)
+			{
+				return static_cast<int64>(Tile.mMoveCost);
+			},
+			Origin);
+
 	case EMoveTendency::MoveAway:
-		// 원거리 성향: 플레이어와 가장 먼 타일
-		return PickByPlayerDistance(Tiles, EnemyTile, PlayerTile, /*Closest*/false);
+		// 원거리 성향: 무조건 먼 게 좋은 게 아니라, '최근접' 타겟이 '최대한' 멀어야 함
+		return Table.PickTile(
+			Filter,
+			[&Table](const FTacticalTileInfo& Tile)
+			{
+				return -static_cast<int64>(Table.GetNearestTargetDistance(Tile));
+			},
+			[](const FTacticalTileInfo& Tile)
+			{
+				return static_cast<int64>(Tile.mMoveCost);
+			},
+			Origin);
+
 	case EMoveTendency::HoldRange:
 	default:
-		// 거리유지 성향: 제자리에서 가능하면 제자리, 아니면 이동거리가 가장 작은 타일
-		return (Tiles.Contains(EnemyTile) == true) ? EnemyTile : PickByMoveCost(Tiles, EnemyTile);
+		// 등거리 성향: 최대한 제자리를 유지하려고 하지만, 조준이 안된다면 최근접 타겟과의 거리를 최대로 하는 지점으로 이동
+		return Table.PickTile(
+			Filter,
+			[](const FTacticalTileInfo& Tile)
+			{
+				return static_cast<int64>(Tile.mMoveCost);
+			},
+			[&Table](const FTacticalTileInfo& Tile)
+			{
+				return -static_cast<int64>(Table.GetNearestTargetDistance(Tile));
+			},
+			Origin);
 	}
 }
 
-FTileIndex USRPGEnemyTurnPlanner::PickByPlayerDistance(
-	const TArray<FTileIndex>& Tiles,
-	const FTileIndex& Origin,
-	const FTileIndex& PlayerTile,
-	bool Closest)
-{
-	FTileIndex Best = Origin;
-	bool HasBest = false;
-	int32 BestPlayerDist = 0;
-	int32 BestMoveCost = 0;
-	for (const FTileIndex& Tile : Tiles)
-	{
-		// 해당 타일과 플레이어 사이의 거리
-		const int32 PlayerDist = TileDistance(Tile, PlayerTile);
-		// 해당 타일과 적 사이의 거리
-		const int32 MoveCost = TileDistance(Tile, Origin);
-
-		bool Better = false;
-
-		/**
-		 * 최선 타일 선택
-		 */
-		// 1) 아직 최선 타일이 없으면 이 타일이 바로 최선!
-		if (HasBest == false)
-		{
-			Better = true;
-		}
-		// 2) 최선 타일이 있다면, 1순위 비교
-		else if (PlayerDist != BestPlayerDist)
-		{
-			Better = Closest
-				// 근거리를 좋아하면, 플레이어와의 거리가 가까우면 최선
-				? (PlayerDist < BestPlayerDist)
-				// 원거리를 좋아하면, 플레이어와의 거리가 멀어지면 최선
-				: (PlayerDist > BestPlayerDist);
-		}
-		// 3) 1순위가 같다면, 2순위 비교
-		else
-		{
-			// 2순위는 이동거리가 작으면 최선
-			Better = (MoveCost < BestMoveCost);
-		}
-
-		// 신규 최선 타일이 있다면 그걸 최선으로 설정해서 리턴할 때 사용
-		if (Better == true)
-		{
-			Best = Tile;
-			BestPlayerDist = PlayerDist;
-			BestMoveCost = MoveCost;
-			HasBest = true;
-		}
-	}
-	return Best;
-}
-
-FTileIndex USRPGEnemyTurnPlanner::PickByMoveCost(
-	const TArray<FTileIndex>& Tiles,
+FTileIndex USRPGEnemyTurnPlanner::ChooseApproachDestination(
+	const FTacticalTileTable& Table,
+	int32 ReferenceTarget,
 	const FTileIndex& Origin)
 {
-	FTileIndex Best = Origin;
-	bool HasBest = false;
-	int32 BestMoveCost = 0;
-	for (const FTileIndex& Tile : Tiles)
-	{
-		const int32 MoveCost = TileDistance(Tile, Origin);
-		// 최선 타일이 없으면 이게 최선!
-		// 최선 타일이 있으면 -> 이동비용이 작으면 최선
-		if (HasBest == false || MoveCost < BestMoveCost)
+	// 기준 타겟과의 거리 최소 -> 이동비용 최소 (도달 가능한 모든 타일이 후보라 필터 없음)
+	return Table.PickTile(
+		[](const FTacticalTileInfo&)
 		{
-			Best = Tile;
-			BestMoveCost = MoveCost;
-			HasBest = true;
-		}
-	}
-	return Best;
-}
-
-FTileIndex USRPGEnemyTurnPlanner::PickApproachTile(
-	const TArray<FTileIndex>& Tiles,
-	const FTileIndex& Origin,
-	const FTileIndex& PlayerTile,
-	const UTileMapModel* TileMap,
-	const UBoardActorModel* Self)
-{
-	// 플레이어 기준 경로 거리 표 (자기 자신은 자리를 비울 예정이므로 통과 판정에서 제외)
-	const TArray<int32> DistanceField = TileMap->GetDistanceField(PlayerTile, Self);
-
-	FTileIndex Best = Origin;
-	bool HasBest = false;
-	int32 BestPathDist = 0;
-	int32 BestMoveCost = 0;
-	for (const FTileIndex& Tile : Tiles)
-	{
-		// 해당 타일과 플레이어 사이의 경로 거리
-		const int32 Linear = TileMap->TileIndexToLinearIndex(Tile);
-		const int32 RawDist = (Linear != INDEX_NONE) ? DistanceField[Linear] : INDEX_NONE;
-		const int32 PathDist = (RawDist >= 0) ? RawDist : TNumericLimits<int32>::Max();
-		// 해당 타일과 적 사이의 거리
-		const int32 MoveCost = TileDistance(Tile, Origin);
-
-		bool Better = false;
-
-		/**
-		 * 최선 타일 선택
-		 */
-		// 1) 아직 최선 타일이 없으면 이 타일이 바로 최선!
-		if (HasBest == false)
+			return true;
+		},
+		[ReferenceTarget](const FTacticalTileInfo& Tile)
 		{
-			Better = true;
-		}
-		// 2) 최선 타일이 있다면, 1순위 비교: 경로 거리가 가까우면 최선
-		else if (PathDist != BestPathDist)
+			return static_cast<int64>(Tile.mTargetDistances[ReferenceTarget]);
+		},
+		[](const FTacticalTileInfo& Tile)
 		{
-			Better = (PathDist < BestPathDist);
-		}
-		// 3) 1순위가 같다면, 2순위 비교
-		else
-		{
-			// 2순위는 이동거리가 작으면 최선 (동률이면 제자리 우선 -> 의미 없는 이동 방지)
-			Better = (MoveCost < BestMoveCost);
-		}
-
-		// 신규 최선 타일이 있다면 그걸 최선으로 설정해서 리턴할 때 사용
-		if (Better == true)
-		{
-			Best = Tile;
-			BestPathDist = PathDist;
-			BestMoveCost = MoveCost;
-			HasBest = true;
-		}
-	}
-	return Best;
-}
-
-int32 USRPGEnemyTurnPlanner::TileDistance(const FTileIndex& A, const FTileIndex& B)
-{
-	return FMath::Abs(A.mX - B.mX) + FMath::Abs(A.mY - B.mY);
+			return static_cast<int64>(Tile.mMoveCost);
+		},
+		Origin);
 }

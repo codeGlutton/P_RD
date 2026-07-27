@@ -16,6 +16,8 @@ class UEnemyUnitModel;
 class UUnitModel;
 class UTileMapModel;
 class UBoardActorModel;
+class FTacticalTileTable;
+struct FTacticalTileInfo;
 enum class EMoveTendency : uint8; // StaticEnemyUnitSpawnData.h
 
 /**
@@ -34,78 +36,59 @@ public:
 	 * @brief 적 한 턴의 행동 커맨드 목록을 계산
 	 * @details 반환 목록은 FSRPGTurnEndCommand로 끝나서 턴이 끝나도록 보장
 	 * @param Enemy 행동할 적 유닛
-	 * @param Player 표적이 될 플레이어 유닛
+	 * @param Players 표적 후보가 될 플레이어 유닛들 (배열 순서가 곧 타겟 인덱스, null 원소는 제외됨)
 	 * @param TileMap 타일맵 모델 (도달/조준/효과 범위 계산)
-	 * @param EventStream 스킬 랜덤 선택용 스트림 (시뮬/라이브 동일 결과 보장을 위해 룸의 이벤트 스트림 사용)
+	 * @param EventStream 타겟 동률/스킬 랜덤 선택용 스트림 (시뮬/라이브 동일 결과 보장을 위해 룸의 이벤트 스트림 사용)
 	 * @return 커맨드 목록
 	 */
 	static TArray<TInstancedStruct<FSRPGCommand>> PlanTurn(
 		UEnemyUnitModel* Enemy,
-		UUnitModel* Player,
+		const TArray<UUnitModel*>& Players,
 		const UTileMapModel* TileMap,
 		const FRandomStream& EventStream);
 
 private:
 	/**
-	 * @brief 타일 목록에서 이동성향에 맞는 최선 타일 선택
+	 * @brief 후보 타겟 중 최근접 타겟 선택
+	 * @details 경로 거리가 가장 짧은 타겟, 동률이면 EventStream 랜덤 (시뮬/라이브 동일 결과 보장)
+	 * @param Table 전술 타일 테이블
+	 * @param CandidateTargets 후보 타겟 인덱스 목록
+	 * @param EventStream 동률 추첨용 스트림
+	 * @return 선택된 타겟 인덱스 (후보가 비어있으면 INDEX_NONE)
+	 */
+	static int32 ChooseNearestTarget(
+		const FTacticalTileTable& Table,
+		const TArray<int32>& CandidateTargets,
+		const FRandomStream& EventStream);
+
+	/**
+	 * @brief 필터를 통과한 타일 중 이동성향에 맞는 목적지 선택
 	 * @details
-	 * MoveClose: 플레이어와 가장 가까운 타일
-	 * MoveAway: 플레이어와 가장 먼 타일
-	 * HoldRange: 제자리가 목록에 있으면 제자리, 없으면 이동거리 최소 타일
-	 * @param Tiles 후보 타일 목록 (시전가능 또는 조준가능 타일들)
-	 * @param EnemyTile 적 타일
-	 * @param PlayerTile 플레이어 타일
+	 * MoveClose: 기준 타겟과의 거리 최소 -> 이동비용 최소
+	 * MoveAway: 최근접 타겟과의 거리 최대 -> 이동비용 최소
+	 * HoldRange: 이동비용 최소 -> 최근접 타겟과의 거리 최대
+	 * @param Table 전술 타일 테이블
 	 * @param Tendency 이동 성향
+	 * @param ReferenceTarget 기준 타겟 인덱스 (MoveClose의 거리 기준)
+	 * @param Origin 적 타일 (후보가 없을 때 제자리 유지)
+	 * @param Filter 후보 타일 자격 판정 (시전가능/조준가능 등 호출부가 결정)
 	 */
-	static FTileIndex PickByTendency(
-		const TArray<FTileIndex>& Tiles,
-		const FTileIndex& EnemyTile,
-		const FTileIndex& PlayerTile,
-		EMoveTendency Tendency);
+	static FTileIndex ChooseDestinationByTendency(
+		const FTacticalTileTable& Table,
+		EMoveTendency Tendency,
+		int32 ReferenceTarget,
+		const FTileIndex& Origin,
+		TFunctionRef<bool(const FTacticalTileInfo&)> Filter);
 
 	/**
-	 * @brief 타일 목록 중 플레이어와의 거리가 이동성향에 맞는 타일 선택
-	 * @details
-	 * 1순위: 플레이어와의 거리(Closest면 최소, 아니면 최대)
-	 * 2순위: 이동거리 최소
-	 * @param Tiles 도달 가능한 타일 목록
-	 * @param Origin 적 타일
-	 * @param PlayerTile 플레이어 타일
-	 * @param Closest true면 플레이어에 가까운 쪽, false면 먼 쪽을 선호
+	 * @brief 기준 타겟에게 접근하는 목적지 선택 (조준 가능한 타일이 하나도 없을 때의 폴백)
+	 * @details 1순위: 기준 타겟과의 거리 최소, 2순위: 이동비용 최소 (동률이면 제자리 우선 -> 의미 없는 이동 방지)
+	 * @param Table 전술 타일 테이블
+	 * @param ReferenceTarget 기준 타겟 인덱스
+	 * @param Origin 적 타일 (후보가 없을 때 제자리 유지)
 	 */
-	static FTileIndex PickByPlayerDistance(
-		const TArray<FTileIndex>& Tiles,
-		const FTileIndex& Origin,
-		const FTileIndex& PlayerTile,
-		bool Closest);
-
-	// @brief 타일 목록 중 Origin에서 이동거리(맨해튼)가 가장 작은 타일 선택
-	static FTileIndex PickByMoveCost(
-		const TArray<FTileIndex>& Tiles,
+	static FTileIndex ChooseApproachDestination(
+		const FTacticalTileTable& Table,
+		int32 ReferenceTarget,
 		const FTileIndex& Origin);
-
-	/**
-	 * @brief 조준 가능한 타일이 없을 때 플레이어에게 실제로 가까워지는 타일 선택
-	 * @details
-	 * 기존 거리 계산 방식은 다른 유닛을 우회하는 비용이 안 잡혀서,
-	 * 앞이 막히면 제자리가 비용이 가장 작으니까 이동을 안 하는 문제가 있음.
-	 * 
-	 * 플레이어 기준으로 거리표(GetDistanceField)를 작성해서 다음과 같이 판단.
-	 * 1순위: 경로 거리 최소
-	 * 2순위: 이동 거리 최소
-	 * @param Tiles 도달 가능한 타일 목록 (Origin 포함)
-	 * @param Origin 적 타일
-	 * @param PlayerTile 플레이어 타일
-	 * @param TileMap 타일맵 모델
-	 * @param Self 거리장 통과 판정에서 제외할 자기 자신 (자리를 비울 예정이므로)
-	 */
-	static FTileIndex PickApproachTile(
-		const TArray<FTileIndex>& Tiles,
-		const FTileIndex& Origin,
-		const FTileIndex& PlayerTile,
-		const UTileMapModel* TileMap,
-		const UBoardActorModel* Self);
-
-	// @brief 타일 사이의 거리를 맨해튼 방식으로 계산 (이동은 맨해튼식으로 하니까)
-	static int32 TileDistance(const FTileIndex& A, const FTileIndex& B);
 };

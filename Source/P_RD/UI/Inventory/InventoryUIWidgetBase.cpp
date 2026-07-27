@@ -60,13 +60,6 @@ void UInventoryUIWidgetBase::NativeConstruct()
 	{
 		mTitleText->SetText(LOCTEXT("Inventory", "Inventory"));
 	}
-	for (const FName LegacyDiceWidgetName : { FName(TEXT("mDiceLabel")), FName(TEXT("mDiceBox")) })
-	{
-		if (UWidget* LegacyDiceWidget = GetWidgetFromName(LegacyDiceWidgetName))
-		{
-			LegacyDiceWidget->SetVisibility(ESlateVisibility::Collapsed);
-		}
-	}
 	if (mSkillLabel != nullptr)
 	{
 		mSkillLabel->SetText(LOCTEXT("Skills", "Skills"));

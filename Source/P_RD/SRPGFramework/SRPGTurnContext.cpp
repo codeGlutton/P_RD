@@ -167,12 +167,15 @@ void USRPGTurnContext::BeginTurn()
 			/* AI의 경우 움직임 판단 로직 시작 */
 
 			UEnemyUnitModel* Enemy = Cast<UEnemyUnitModel>(mOwner.Get());
-			UUnitModel* Player = CombatModel->GetPlayerUnit();
 			UTileMapModel* TileMap = CombatModel->GetTileMap();
+
+			// TODO: 파티시스템 도입 후 파티 정보를 Players에 입력 요망
+			TArray<UUnitModel*> Players;
+			Players.Add(CombatModel->GetPlayerUnit());
 
 			// PlanTurn에서 Command 리스트를 리턴하면 순서대로 라우터에 전달
 			// @note 스킬 랜덤 선택은 시뮬/라이브 동일 결과를 위해 룸의 이벤트 스트림 사용
-			for (TInstancedStruct<FSRPGCommand>& Command : USRPGEnemyTurnPlanner::PlanTurn(Enemy, Player, TileMap, URandomStreamFunctionLibrary::GetEventStream(this)))
+			for (TInstancedStruct<FSRPGCommand>& Command : USRPGEnemyTurnPlanner::PlanTurn(Enemy, Players, TileMap, URandomStreamFunctionLibrary::GetEventStream(this)))
 			{
 				CommandRouterModel->SummitCommand(Command);
 			}

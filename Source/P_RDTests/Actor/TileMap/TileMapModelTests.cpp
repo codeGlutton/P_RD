@@ -1,9 +1,10 @@
 ﻿/*****************************************************************//**
  * @file   TileMapModelTests.cpp
- * @brief  UTileMapModel 효과범위(GetEffectTiles) 유닛테스트
+ * @brief  UTileMapModel 효과범위(GetEffectTiles)/조준가능 질의(CanAim) 유닛테스트
  * @details
  * 빔(Beam) 패턴의 점유 칸 처리 검증 3케이스.
  * 비관통 빔이 점유 칸을 직접 조준하면 그 칸에서 멈추는 회귀 케이스 포함.
+ * CanAim은 GetAimableTiles와 판정이 일치해야 하므로 패턴/사거리/점유/곡사 조합 전수 교차검증.
  * @author 이문환
  * @date   2026-07-10
  *********************************************************************/
@@ -107,6 +108,83 @@ bool FTileMapModelEffectTilesTests::RunTest(const FString& Parameters)
 		TestTrue(TEXT("[Case3] (3,0) 포함"), Tiles.Contains(FTileIndex(3, 0)));
 		TestTrue(TEXT("[Case3] (4,0) 포함(관통 진행)"), Tiles.Contains(FTileIndex(4, 0)));
 		TestTrue(TEXT("[Case3] (5,0) 포함(관통 진행)"), Tiles.Contains(FTileIndex(5, 0)));
+	}
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FTileMapModelCanAimTests,
+	"P_RD.TileMap.CanAim",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
+)
+
+bool FTileMapModelCanAimTests::RunTest(const FString& Parameters)
+{
+	UWorld* World = GetAnyGameWorldForTileMapTests();
+	if (World == nullptr)
+	{
+		World = GWorld;
+	}
+	if (TestNotNull(TEXT("유효한 UWorld"), World) == false)
+	{
+		return false;
+	}
+
+	/**
+	 * CanAim은 GetAimableTiles의 목록 생성과 별개 구현(패턴 기하 산술)이므로
+	 * 두 구현이 어긋나면 AI 계획과 실제 조준 판정이 달라진다.
+	 * 패턴/사거리/점유/곡사 전 조합에 대해, 맵의 모든 타일에서
+	 * CanAim(원점, 타일) == GetAimableTiles(원점).Contains(타일)을 전수 확인한다.
+	 */
+	// 맵 (7x5): 원점 O=(1,2), 시야/점유 변화를 만들 유닛 U1=(3,2), U2=(2,1)
+	UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
+	TileMap->SetDimensions(7, 5);
+
+	UMockPlayerUnitModel* Unit1 = NewObject<UMockPlayerUnitModel>(World);
+	TileMap->PlaceActor(FTileTransform(FTileIndex(3, 2)), Unit1);
+	UMockPlayerUnitModel* Unit2 = NewObject<UMockPlayerUnitModel>(World);
+	TileMap->PlaceActor(FTileTransform(FTileIndex(2, 1)), Unit2);
+
+	const FTileIndex Origin(1, 2);
+
+	// 조합 축: 패턴 4종 × 사거리 {0,1,3} × 점유허용 {true,false} × 곡사 {false,true}
+	const EAimPattern Patterns[] = { EAimPattern::Single, EAimPattern::Cross, EAimPattern::Star, EAimPattern::Square };
+	const int32 Ranges[] = { 0, 1, 3 };
+	const bool Bools[] = { false, true };
+
+	for (const EAimPattern Pattern : Patterns)
+	{
+		for (const int32 Range : Ranges)
+		{
+			for (const bool bIncludeOccupied : Bools)
+			{
+				for (const bool bIndirect : Bools)
+				{
+					// 기준: 목록 버전이 계산한 조준 가능 타일 집합
+					const TArray<FTileIndex> Aimables = TileMap->GetAimableTiles(Origin, Range, Pattern, bIncludeOccupied, bIndirect);
+
+					// 맵의 모든 타일에 대해 판정 일치 확인
+					int32 MismatchCount = 0;
+					for (int32 Y = 0; Y < TileMap->GetHeight(); ++Y)
+					{
+						for (int32 X = 0; X < TileMap->GetWidth(); ++X)
+						{
+							const FTileIndex Target(X, Y);
+							const bool bCanAim = TileMap->CanAim(Origin, Target, Range, Pattern, bIncludeOccupied, bIndirect);
+							if (bCanAim != Aimables.Contains(Target))
+							{
+								++MismatchCount;
+								AddError(FString::Printf(TEXT("판정 불일치: 타일(%d,%d) 패턴=%d 사거리=%d 점유허용=%d 곡사=%d CanAim=%d"),
+									X, Y, static_cast<int32>(Pattern), Range, bIncludeOccupied, bIndirect, bCanAim));
+							}
+						}
+					}
+					TestEqual(FString::Printf(TEXT("패턴=%d 사거리=%d 점유허용=%d 곡사=%d 전 타일 판정 일치"),
+						static_cast<int32>(Pattern), Range, bIncludeOccupied, bIndirect), MismatchCount, 0);
+				}
+			}
+		}
 	}
 
 	return true;
