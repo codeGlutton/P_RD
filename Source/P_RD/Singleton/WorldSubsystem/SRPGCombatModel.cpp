@@ -262,7 +262,7 @@ void USRPGCombatModel::EvaluateCombatEndState()
 	bool AnyPlayerAlive = false;
 	for (const TObjectPtr<UUnitModel>& PlayerUnit : mPlayerUnits)
 	{
-		if (PlayerUnit->IsDead() == false)
+		if (PlayerUnit != nullptr && PlayerUnit->IsDead() == false)
 		{
 			AnyPlayerAlive = true;
 			break;

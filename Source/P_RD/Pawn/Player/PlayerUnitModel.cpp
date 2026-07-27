@@ -34,7 +34,7 @@ void UPlayerUnitModel::SetOwnerParty(UPartyModel* PartyModel)
     UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
     checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
 
-    TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), ULevelAttributeSet::KeyName, GetPlayerLevel(), true);
+    TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), GetBoardActorKeyName(), GetDifficulty(), true);
 }
 
 void UPlayerUnitModel::SetPlayerLevel(int32 PlayerLevel)

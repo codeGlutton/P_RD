@@ -67,5 +67,5 @@ private:
 
 protected:
 	UPROPERTY(Category = Equipment, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "Difficulty"))
-	int32 mDifficulty = 0;
+	int32 mDifficulty = 1;
 };

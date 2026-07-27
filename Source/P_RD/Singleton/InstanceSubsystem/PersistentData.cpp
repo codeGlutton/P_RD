@@ -254,6 +254,11 @@ void UPlayerUnitPersistData::BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit)
 		 });
 }
 
+void UPlayerUnitPersistData::Serialize(FArchive& Ar)
+{
+	Super::Serialize(Ar);
+}
+
 UPartyPersistData::UPartyPersistData()
 {
 	mPartyPlayers.Init(nullptr, 3);
@@ -261,6 +266,21 @@ UPartyPersistData::UPartyPersistData()
 	mPartyPlayers[0] = CreateDefaultSubobject<UPlayerUnitPersistData>(TEXT("PartyPlayer00"));
 	mPartyPlayers[1] = CreateDefaultSubobject<UPlayerUnitPersistData>(TEXT("PartyPlayer01"));
 	mPartyPlayers[2] = CreateDefaultSubobject<UPlayerUnitPersistData>(TEXT("PartyPlayer02"));
+}
+
+void UPartyPersistData::Serialize(FArchive& Ar)
+{
+	Super::Serialize(Ar);
+
+	if (Ar.IsSaveGame() == true)
+	{
+		/* 파티 멤버 유닛 내부 데이터 직렬화 */
+		const int32 PlayerMaxNum = mPartyPlayers.Num();
+		for (int32 PlayerIndex = 0; PlayerIndex < PlayerMaxNum; ++PlayerIndex)
+		{
+			mPartyPlayers[PlayerIndex]->Serialize(Ar);
+		}
+	}
 }
 
 void UPartyPersistData::RegisterParty(UPartyModel* Party, TArray<TObjectPtr<UPlayerUnitModel>>& Players)
@@ -378,6 +398,10 @@ void URunPersistData::StartRun(const TArray<FPrimaryAssetId>& PlayerUnitIds, int
 	const int32 PlayerMaxNum = mPartyPlayers.Num();
 	for (int32 PlayerIndex = 0; PlayerIndex < PlayerMaxNum; ++PlayerIndex)
 	{
+		if (PlayerUnitIds[PlayerIndex].IsValid() == false)
+		{
+			continue;
+		}
 		mPartyPlayers[PlayerIndex]->MakeUnit(PlayerUnitIds[PlayerIndex]);
 	}
 

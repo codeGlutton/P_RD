@@ -100,12 +100,12 @@ public:
 public:
 	const TArray<FPrimaryAssetId>& GetSkillIds() const;
 
+public:
+	virtual void Serialize(FArchive& Ar) override;
+
 protected:
 	void SyncPlayerPersistData( UPlayerUnitModel* PlayerUnit);
 	void BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit);
-
-protected:
-	void OnChangePlayerSkill(int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData);
 
 protected:
 	UPROPERTY(Category = Player, SaveGame, VisibleAnywhere, meta = (DisplayName = "PlayerUnitId"))
@@ -141,6 +141,10 @@ class P_RD_API UPartyPersistData : public UObject
 public:
 	UPartyPersistData();
 
+	/* UObject 상속 */
+public:
+	void Serialize(FArchive& Ar) override;
+
 public:
 	void RegisterParty(UPartyModel* Party, TArray<TObjectPtr<UPlayerUnitModel>>& Players);
 
@@ -154,7 +158,7 @@ protected:
 	void BindPartyEvent(UPartyModel* Party, TArray<TObjectPtr<UPlayerUnitModel>>& Players);
 
 protected:
-	UPROPERTY(Category = Party, SaveGame, VisibleAnywhere, meta = (DisplayName = "PartyPlayers"))
+	UPROPERTY(Category = Party, VisibleAnywhere, meta = (DisplayName = "PartyPlayers"))
 	TArray<TObjectPtr<UPlayerUnitPersistData>> mPartyPlayers;
 
 	UPROPERTY(Category = Artifact, SaveGame, VisibleAnywhere, meta = (DisplayName = "ArtifactIds"))

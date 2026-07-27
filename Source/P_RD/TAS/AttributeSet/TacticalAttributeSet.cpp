@@ -654,7 +654,7 @@ TArray<float> FTacticalAttributeSetInitterDiscreteLevels::GetAttributeSetValues(
 {
 	TArray<float> AttributeSetValues;
 	const FAttributeSetDefaultsCollection* Collection = mDefaults.Find(GroupName);
-	if (Collection != nullptr)
+	if (Collection == nullptr)
 	{
 		return AttributeSetValues;
 	}
@@ -680,7 +680,7 @@ TArray<float> FTacticalAttributeSetInitterDiscreteLevels::GetAttributeSetValues(
 float FTacticalAttributeSetInitterDiscreteLevels::GetAttributeSetValue(UClass* AttributeSetClass, FProperty* AttributeProperty, FName GroupName, int32 Level) const
 {
 	const FAttributeSetDefaultsCollection* Collection = mDefaults.Find(GroupName);
-	if (Collection != nullptr)
+	if (Collection == nullptr)
 	{
 		return 0.f;
 	}
