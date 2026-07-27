@@ -72,14 +72,21 @@ def _plate(bp, root, row, name):
     kit.add(bp, "CanvasPanel", name, root)
     kit.place(bp, name, x, y, w, h, row["anchor"], None, kit.Z_FILL)
 
-    # 그림은 원래 크기로, 칸 한가운데에. 글자 지운 판은 자리와 몇 px 다른데
-    # (13안 턴 바는 화살표가 없어 14px 짧다), 칸에 맞춰 늘리면 몰딩이
-    # 뭉갠다 -- 조각을 통째로 쓰는 이유가 바로 그것이다.
-    aw, ah = [v * K for v in row.get("art", row["rect"][2:])]
-    kit.image(bp, name + "_Art", name, (w - aw) / 2.0, (h - ah) / 2.0,
-              aw, ah, (w, h), z_order=kit.Z_FILL,
-              texture="{}/{}".format(CUTOUT_PACKAGE, row["asset"]),
-              tint=kit.WHITE)
+    # 그림은 원래 크기로 놓는다. 글자 지운 판은 자리와 몇 px 다른데(13안 턴
+    # 바는 화살표가 없어 14px 짧다), 칸에 맞춰 늘리면 몰딩이 뭉갠다 --
+    # 조각을 통째로 쓰는 이유가 바로 그것이다.
+    #
+    # 한 자리에 여러 장인 경우가 있다. 붙어 있던 조각을 빈 판 여러 장으로
+    # 덮은 것이라, 각자 제 자리에 놓는다.
+    arts = row.get("arts") or [[row["asset"], 0, 0] + list(row["rect"][2:])]
+    for slot, (asset, ax, ay, aw, ah) in enumerate(arts):
+        ax, ay, aw, ah = [v * K for v in (ax, ay, aw, ah)]
+        if len(arts) == 1:
+            ax, ay = (w - aw) / 2.0, (h - ah) / 2.0
+        kit.image(bp, "%s_Art%d" % (name, slot), name, ax, ay, aw, ah,
+                  (w, h), z_order=kit.Z_FILL,
+                  texture="{}/{}".format(CUTOUT_PACKAGE, asset),
+                  tint=kit.WHITE)
     return name, (w, h)
 
 

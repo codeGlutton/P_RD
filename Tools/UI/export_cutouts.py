@@ -106,25 +106,39 @@ def main():
                 else "_%d" % ordinal)
             # 글자 없는 판이 있으면 그것을 내보낸다. 자리는 글자 있는
             # 조각으로 찾았고 그림만 바꾼다.
-            blank = row.get("blank")
-            src = (os.path.join(CUTOUTS, "시안%d" % int(number),
-                                "텍스트_아이콘_제거", blank) if blank
-                   else os.path.join(CUTOUTS, "시안%d" % int(number),
-                                     row["file"]))
-            shutil.copyfile(src, os.path.join(DEST, asset + ".png"))
+            here = os.path.join(CUTOUTS, "시안%d" % int(number))
+            blanks = os.path.join(here, "텍스트_아이콘_제거")
+
+            # 붙어 있던 조각은 빈 판 여러 장으로 덮는다. 3안 카드 두 장과
+            # 7안 카드 세 장이 한 덩어리로 오려져 있어 짝이 없었다.
+            arts = []
+            if row.get("pieces"):
+                for slot, piece in enumerate(row["pieces"]):
+                    name = "%s_p%d" % (asset, slot)
+                    shutil.copyfile(os.path.join(blanks, piece["blank"]),
+                                    os.path.join(DEST, name + ".png"))
+                    arts.append([name, piece["x"], piece["y"],
+                                 piece["w"], piece["h"]])
+            else:
+                blank = row.get("blank")
+                shutil.copyfile(
+                    os.path.join(blanks, blank) if blank
+                    else os.path.join(here, row["file"]),
+                    os.path.join(DEST, asset + ".png"))
+                arts.append([asset, 0, 0,
+                             row.get("blank_w", row["w"]),
+                             row.get("blank_h", row["h"])])
 
             across, down = anchor_of(row["x"], row["y"], row["w"], row["h"])
             rows.append({
                 "asset": asset, "role": role, "index": row["index"],
+                "arts": arts,
                 "rect": [row["x"], row["y"], row["w"], row["h"]],
-                # 빈 판은 자리와 몇 px 다르다. 늘리지 않고 원래 크기로
-                # 놓아야 몰딩이 안 뭉갠다 -- 조각을 쓰는 이유가 그것이다.
-                "art": [row.get("blank_w", row["w"]),
-                        row.get("blank_h", row["h"])],
+
                 "anchor": down + across, "holes": row["holes"],
                 "contents": row.get("contents", []),
             })
-            total += 1
+            total += len(arts)
         manifest[number] = rows
         print("시안%s: %2d장" % (number, len(rows)))
 

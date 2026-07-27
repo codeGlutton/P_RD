@@ -142,7 +142,7 @@ def run(number):
         # 같은 판에서 여러 번 오려 낸 것들이 한 자리를 다툰다. 위에서 겹침으로
         # 걸러지므로 여기서는 통과한 것만 남는다.
     kept.sort(key=lambda e: (e["y"], e["x"]))
-    swap_blanks(folder, kept)
+    swap_blanks(folder, kept, mock_path)
 
     print("=== 시안%s: 조각 %d개 (후보 %d개에서 추림) ===" % (
         number, len(kept), len(found)))
@@ -217,7 +217,46 @@ def _assign(kept, files):
     return pairs, hits
 
 
-def swap_blanks(folder, kept):
+def _tile(mock_path, folder, item, files):
+    """붙어 있는 조각을 빈 판 여러 장으로 덮는다.
+
+    3안 카드 두 장과 7안 카드 세 장은 한 덩어리로 오려져 있는데, 글자 지운
+    회차는 카드를 한 장씩 잘랐다. 크기가 안 맞으니 짝이 없다.
+
+    덩어리가 놓인 자리만 잘라 놓고 그 안에서 빈 판을 다시 맞춘다. 겹치지
+    않는 것만 남기고, 덩어리의 절반도 못 덮으면 포기한다 -- 어설프게 덮으면
+    글자 있는 판이 반쯤 비쳐 더 나쁘다.
+    """
+    crop = Image.open(mock_path).convert("RGB").crop(
+        (item["x"], item["y"], item["x"] + item["w"], item["y"] + item["h"]))
+    work = np.asarray(crop, dtype=float).mean(axis=2)
+
+    # 한 장 놓을 때마다 그 자리를 가린다. 빈 카드는 서로 똑같아서, 안 가리면
+    # 여섯 장이 전부 같은 칸을 짚는다 -- 3안 덩어리에서 카드 하나만 놓이고
+    # 나머지가 겹침으로 걸러졌다.
+    arts = [(path, Image.open(path)) for path in files]
+    pieces, covered = [], 0
+    for _ in range(6):
+        best = None
+        for path, part in arts:
+            got = match(work, part)
+            if got and (best is None or got[4] < best[0][4]):
+                best = (got, path)
+        if best is None or best[0][4] > BLANK_SCORE:
+            break
+        x, y, w, h, _score = best[0]
+        pieces.append({"blank": os.path.basename(best[1]),
+                       "x": x, "y": y, "w": w, "h": h})
+        covered += w * h
+        work[y:y + h, x:x + w] = 1e6
+
+    if covered < item["w"] * item["h"] * 0.5:
+        return None
+    pieces.sort(key=lambda p: (p["y"], p["x"]))
+    return pieces
+
+
+def swap_blanks(folder, kept, mock_path=None):
     """자리는 그대로 두고 그림만 글자 지운 판으로 바꾼다.
 
     조각에 글자가 그려져 있으면 런타임 글자와 겹쳐 두 번 찍힌다 -- 2안을
@@ -227,19 +266,43 @@ def swap_blanks(folder, kept):
     그림으로 못 가리기 때문이다 -- 빈 판으로 자리를 찾았더니 3안 카드 여섯
     칸 중 세 칸이 비었다. 찾아 둔 자리에 그림만 갈아 끼운다.
 
-    회차는 제일 많이 맞는 하나만 쓴다. 섞으면 카드마다 결이 달라진다.
+    세 번에 걸쳐 짝을 짓는다.
+
+      1. 제일 많이 맞는 회차 하나로. 섞으면 카드마다 결이 달라 보인다
+      2. 남은 것은 회차를 가리지 않고. 결이 조금 다른 편이 글자가 두 번
+         찍히는 것보다 낫다
+      3. 그래도 남은 붙은 조각은 빈 판 여러 장으로 덮는다
     """
-    best = ({}, 0)
-    for files in _rounds(folder):
-        pairs, hits = _assign(kept, files)
-        if hits > best[1]:
-            best = (pairs, hits)
-    for index, (name, w, h) in best[0].items():
+    rounds = _rounds(folder)
+    if not rounds:
+        return
+
+    best, hits, picked = {}, 0, []
+    for files in rounds:
+        pairs, got = _assign(kept, files)
+        if got > hits:
+            best, hits, picked = pairs, got, files
+    for index, (name, w, h) in best.items():
         kept[index]["blank"] = name
         # 빈 판은 원래 크기로 놓는다. 자리 크기에 맞춰 늘리면 몰딩이 뭉갠다
         # -- 조각을 쓰는 이유가 그것이다.
-        kept[index]["blank_w"] = w
-        kept[index]["blank_h"] = h
+        kept[index]["blank_w"], kept[index]["blank_h"] = w, h
+
+    left = [i for i in range(len(kept)) if not kept[i].get("blank")]
+    if left:
+        pool = [f for files in rounds for f in files]
+        pairs, _ = _assign([kept[i] for i in left], pool)
+        for slot, (name, w, h) in pairs.items():
+            item = kept[left[slot]]
+            item["blank"], item["blank_w"], item["blank_h"] = name, w, h
+
+    if mock_path:
+        for item in kept:
+            if item.get("blank"):
+                continue
+            pieces = _tile(mock_path, folder, item, picked or rounds[0])
+            if pieces:
+                item["pieces"] = pieces
 
 
 def main():
