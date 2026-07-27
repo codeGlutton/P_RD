@@ -170,15 +170,16 @@ namespace CombatLayoutCapture
 	/** @brief 배치안 하나를 렌더해서 PNG로 저장한다. 실패 사유는 OutError로. */
 	bool CaptureLayout(UWorld& World, const TCHAR* ClassPath, FString& OutError)
 	{
-		UClass* LayoutClass = LoadClass<UCombatLayoutHUDWidget>(nullptr, ClassPath);
+		UClass* LayoutClass = LoadClass<UUserWidget>(nullptr, ClassPath);
 		if (LayoutClass == nullptr)
 		{
 			OutError = FString::Printf(TEXT("배치안 클래스를 못 찾음: %s"), ClassPath);
 			return false;
 		}
 
-		UCombatLayoutHUDWidget* Layout =
-			CreateWidget<UCombatLayoutHUDWidget>(&World, LayoutClass);
+		// 공통 부모로 만든다. 캡처는 그려서 찍는 일이라 화면이 전투 배치안인지
+		// 고용 게시판인지 알 필요가 없다.
+		UUserWidget* Layout = CreateWidget<UUserWidget>(&World, LayoutClass);
 		if (Layout == nullptr)
 		{
 			OutError = FString::Printf(TEXT("위젯 생성 실패: %s"), ClassPath);
@@ -366,14 +367,15 @@ namespace CombatLayoutCapture
 	 */
 	bool CaptureElements(UWorld& World, const TCHAR* ClassPath, FString& OutError)
 	{
-		UClass* LayoutClass = LoadClass<UCombatLayoutHUDWidget>(nullptr, ClassPath);
+		UClass* LayoutClass = LoadClass<UUserWidget>(nullptr, ClassPath);
 		if (LayoutClass == nullptr)
 		{
 			OutError = FString::Printf(TEXT("클래스를 못 찾음: %s"), ClassPath);
 			return false;
 		}
-		UCombatLayoutHUDWidget* Layout =
-			CreateWidget<UCombatLayoutHUDWidget>(&World, LayoutClass);
+		// 공통 부모로 만든다. 캡처는 그려서 찍는 일이라 화면이 전투 배치안인지
+		// 고용 게시판인지 알 필요가 없다.
+		UUserWidget* Layout = CreateWidget<UUserWidget>(&World, LayoutClass);
 		if (Layout == nullptr || Layout->WidgetTree == nullptr)
 		{
 			OutError = TEXT("위젯 생성 실패");

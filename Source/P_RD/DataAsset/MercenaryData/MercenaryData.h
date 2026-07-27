@@ -67,11 +67,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "용병")
 	TArray<FText> mSkillNames;
 
-	/** @brief 고용비. 예산에서 이만큼 빠진다. */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "용병",
-		meta = (ClampMin = "0"))
-	int32 mCost = 40;
-
 	/** @brief 이력서에 붙는 얼굴. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "용병")
 	TSoftObjectPtr<UTexture2D> mPortrait;
@@ -88,7 +83,11 @@ public:
 };
 
 /**
- * @brief 한 판에 게시판에 걸릴 용병들과 예산.
+ * @brief 한 판에 게시판에 걸릴 용병들.
+ *
+ * @details
+ * 값을 치르고 부르는 개념은 여기 없다. 처음 시작할 때는 그냥 셋을 고른다.
+ * 돈으로 사는 것은 나중에 상점에서 들어온다.
  */
 UCLASS(BlueprintType)
 class P_RD_API UMercenaryBoardData : public UPrimaryDataAsset
@@ -99,11 +98,6 @@ public:
 	/** @brief 게시판에 걸 이력서. 화면이 여섯 칸이라 여섯 장을 본다. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "게시판")
 	TArray<TSoftObjectPtr<UMercenaryData>> mMercenaries;
-
-	/** @brief 쓸 수 있는 돈. */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "게시판",
-		meta = (ClampMin = "0"))
-	int32 mBudget = 120;
 
 	/** @brief 데려갈 수 있는 인원. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "게시판",

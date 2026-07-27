@@ -71,7 +71,7 @@ void UMercenaryHireWidget::NativeConstruct()
 void UMercenaryHireWidget::SetBoardData(UMercenaryBoardData* BoardData)
 {
 	mBoardData = BoardData;
-	mHired.Reset();
+	mChosen.Reset();
 	mReviewing = INDEX_NONE;
 	LoadBoard();
 	Refresh();
@@ -93,9 +93,9 @@ void UMercenaryHireWidget::CacheWidgets()
 		Card.mName = Find<UTextBlock>(WidgetTree, TEXT("HireName") + Tail);
 		Card.mRole = Find<UTextBlock>(WidgetTree, TEXT("HireRole") + Tail);
 		Card.mHP = Find<UTextBlock>(WidgetTree, TEXT("HireHP") + Tail);
-		Card.mCost = Find<UTextBlock>(WidgetTree, TEXT("HireCost") + Tail);
 		Card.mBadge = Find<UTextBlock>(WidgetTree, TEXT("HireBadge") + Tail);
 		Card.mSeal = Find<UWidget>(WidgetTree, TEXT("HireSeal") + Tail);
+		Card.mCost = Find<UTextBlock>(WidgetTree, TEXT("HireCost") + Tail);
 
 		Card.mSkills.Reset();
 		for (int32 Line = 0; Line < 2; ++Line)
@@ -118,8 +118,12 @@ void UMercenaryHireWidget::CacheWidgets()
 	}
 
 	mPartyCountText = Find<UTextBlock>(WidgetTree, TEXT("PartyCountText"));
-	mGoldText = Find<UTextBlock>(WidgetTree, TEXT("GoldText"));
-	mSpentText = Find<UTextBlock>(WidgetTree, TEXT("SpentText"));
+
+	// 값을 치르는 개념이 없으므로 돈 칸은 접는다. 시안에 그려져 있어 WBP 에는
+	// 있지만 처음 시작할 때는 쓰지 않는다 -- 상점이 생기면 그때 켠다.
+	SetShown(Find<UTextBlock>(WidgetTree, TEXT("GoldText")), false);
+	SetShown(Find<UTextBlock>(WidgetTree, TEXT("SpentText")), false);
+
 	mNoticeText = Find<UTextBlock>(WidgetTree, TEXT("NoticeText"));
 	mDepartButton = Find<UButton>(WidgetTree, TEXT("DepartButton"));
 	mDepartLabel = Find<UTextBlock>(WidgetTree, TEXT("DepartLabel"));
@@ -161,12 +165,10 @@ void UMercenaryHireWidget::LoadBoard()
 	{
 		// 데이터 없이도 화면은 봐야 한다. 에디터에서 WBP 를 열거나 콘솔로
 		// 띄우는 경우가 그렇다. 이때는 WBP 에 구워 둔 글자가 그대로 남는다.
-		mBudget = 120;
 		mPartySize = 3;
 		return;
 	}
 
-	mBudget = mBoardData->mBudget;
 	mPartySize = FMath::Max(1, mBoardData->mPartySize);
 	for (const TSoftObjectPtr<UMercenaryData>& Soft : mBoardData->mMercenaries)
 	{
@@ -177,49 +179,24 @@ void UMercenaryHireWidget::LoadBoard()
 	}
 }
 
-int32 UMercenaryHireWidget::SpentGold() const
-{
-	int32 Sum = 0;
-	for (const int32 Index : mHired)
-	{
-		if (mCrew.IsValidIndex(Index))
-		{
-			Sum += mCrew[Index]->mCost;
-		}
-	}
-	return Sum;
-}
-
-bool UMercenaryHireWidget::CanAfford(const int32 CardIndex) const
-{
-	if (!mCrew.IsValidIndex(CardIndex))
-	{
-		return true;
-	}
-	return SpentGold() + mCrew[CardIndex]->mCost <= mBudget;
-}
-
 EMercenaryCardState UMercenaryHireWidget::StateOf(const int32 CardIndex) const
 {
-	if (mHired.Contains(CardIndex))
+	if (mChosen.Contains(CardIndex))
 	{
-		return EMercenaryCardState::Hired;
+		return EMercenaryCardState::Chosen;
 	}
 	if (mReviewing == CardIndex)
 	{
 		return EMercenaryCardState::Reviewing;
 	}
-	// 자리가 찼거나 돈이 모자라면 못 부른다. 둘 다 "지금은 안 된다"이므로
-	// 같은 표시를 쓴다 -- 이유를 나누면 배지가 네 가지에서 다섯이 된다.
-	const bool bFull = mHired.Num() >= mPartySize;
-	return (bFull || !CanAfford(CardIndex))
-		? EMercenaryCardState::TooExpensive
+	return mChosen.Num() >= mPartySize
+		? EMercenaryCardState::Full
 		: EMercenaryCardState::Open;
 }
 
 bool UMercenaryHireWidget::IsReadyToDepart() const
 {
-	return mHired.Num() == mPartySize && SpentGold() <= mBudget;
+	return mChosen.Num() == mPartySize;
 }
 
 void UMercenaryHireWidget::HandleCardClicked(const int32 CardIndex)
@@ -229,10 +206,10 @@ void UMercenaryHireWidget::HandleCardClicked(const int32 CardIndex)
 		return;
 	}
 
-	// 두 단계로 나눈다. 한 번에 고용되면 예산을 넘기는 실수를 되돌릴 수 없다.
-	if (mReviewing == CardIndex || mHired.Contains(CardIndex))
+	// 두 단계로 나눈다. 한 번에 정해지면 잘못 누른 것을 되돌리기 번거롭다.
+	if (mReviewing == CardIndex || mChosen.Contains(CardIndex))
 	{
-		ToggleHire(CardIndex);
+		ToggleChoice(CardIndex);
 	}
 	else
 	{
@@ -241,18 +218,18 @@ void UMercenaryHireWidget::HandleCardClicked(const int32 CardIndex)
 	Refresh();
 }
 
-void UMercenaryHireWidget::ToggleHire(const int32 CardIndex)
+void UMercenaryHireWidget::ToggleChoice(const int32 CardIndex)
 {
-	if (mHired.Remove(CardIndex) > 0)
+	if (mChosen.Remove(CardIndex) > 0)
 	{
 		mReviewing = CardIndex;
 		return;
 	}
-	if (mHired.Num() >= mPartySize || !CanAfford(CardIndex))
+	if (mChosen.Num() >= mPartySize)
 	{
 		return;
 	}
-	mHired.Add(CardIndex);
+	mChosen.Add(CardIndex);
 	mReviewing = INDEX_NONE;
 }
 
@@ -282,8 +259,8 @@ void UMercenaryHireWidget::RefreshCard(const int32 CardIndex)
 	SetTextIfPresent(Card.mRole, RoleName(Data->mRole));
 	SetTextIfPresent(Card.mHP, FText::FromString(
 		FString::Printf(TEXT("HP %d"), Data->mMaxHP)));
-	SetTextIfPresent(Card.mCost, FText::FromString(
-		FString::Printf(TEXT("%d 골드"), Data->mCost)));
+	// 고용비 칸은 접는다. 시안에 파여 있지만 처음 시작할 때는 값이 없다.
+	SetShown(Card.mCost, false);
 
 	for (int32 Line = 0; Line < Card.mSkills.Num(); ++Line)
 	{
@@ -304,17 +281,17 @@ void UMercenaryHireWidget::RefreshCard(const int32 CardIndex)
 	}
 
 	const EMercenaryCardState State = StateOf(CardIndex);
-	SetShown(Card.mSeal, State == EMercenaryCardState::Hired);
-	SetShown(Card.mBadge, State != EMercenaryCardState::Hired);
-	SetDimmed(Card.mRoot, State == EMercenaryCardState::TooExpensive);
+	SetShown(Card.mSeal, State == EMercenaryCardState::Chosen);
+	SetShown(Card.mBadge, State != EMercenaryCardState::Chosen);
+	SetDimmed(Card.mRoot, State == EMercenaryCardState::Full);
 
 	switch (State)
 	{
 	case EMercenaryCardState::Reviewing:
 		SetTextIfPresent(Card.mBadge, LOCTEXT("StateReviewing", "검토 중"));
 		break;
-	case EMercenaryCardState::TooExpensive:
-		SetTextIfPresent(Card.mBadge, LOCTEXT("StateNoGold", "예산 부족"));
+	case EMercenaryCardState::Full:
+		SetTextIfPresent(Card.mBadge, LOCTEXT("StateFull", "자리 참"));
 		break;
 	default:
 		SetTextIfPresent(Card.mBadge, LOCTEXT("StateOpen", "모집 중"));
@@ -324,19 +301,13 @@ void UMercenaryHireWidget::RefreshCard(const int32 CardIndex)
 
 void UMercenaryHireWidget::RefreshBottomBar()
 {
-	const int32 Spent = SpentGold();
-
 	SetTextIfPresent(mPartyCountText, FText::FromString(FString::Printf(
-		TEXT("파티\n%d/%d"), mHired.Num(), mPartySize)));
-	SetTextIfPresent(mGoldText, FText::FromString(FString::Printf(
-		TEXT("소지금 %d골드"), mBudget)));
-	SetTextIfPresent(mSpentText, FText::FromString(FString::Printf(
-		TEXT("고용비 %d / %d"), Spent, mBudget)));
+		TEXT("파티\n%d/%d"), mChosen.Num(), mPartySize)));
 
 	for (int32 SlotIndex = 0; SlotIndex < mSlots.Num(); ++SlotIndex)
 	{
-		const bool bFilled = mHired.IsValidIndex(SlotIndex)
-			&& mCrew.IsValidIndex(mHired[SlotIndex]);
+		const bool bFilled = mChosen.IsValidIndex(SlotIndex)
+			&& mCrew.IsValidIndex(mChosen[SlotIndex]);
 		const FMercenarySlotWidgets& Widgets = mSlots[SlotIndex];
 		SetShown(Widgets.mFace, bFilled);
 		if (!bFilled)
@@ -344,7 +315,7 @@ void UMercenaryHireWidget::RefreshBottomBar()
 			SetTextIfPresent(Widgets.mName, LOCTEXT("SlotEmpty", "빈 자리"));
 			continue;
 		}
-		const UMercenaryData* Data = mCrew[mHired[SlotIndex]];
+		const UMercenaryData* Data = mCrew[mChosen[SlotIndex]];
 		SetTextIfPresent(Widgets.mName, Data->mName);
 		if (Widgets.mFace != nullptr)
 		{
@@ -369,13 +340,13 @@ void UMercenaryHireWidget::RefreshBottomBar()
 	else if (mReviewing != INDEX_NONE)
 	{
 		SetTextIfPresent(mNoticeText,
-			LOCTEXT("NoticeConfirm", "한 번 더 누르면 고용됩니다."));
+			LOCTEXT("NoticeConfirm", "한 번 더 누르면 정해집니다."));
 	}
 	else
 	{
 		SetTextIfPresent(mNoticeText, FText::FromString(FString::Printf(
 			TEXT("용병 %d명을 더 고르세요."),
-			FMath::Max(0, mPartySize - mHired.Num()))));
+			FMath::Max(0, mPartySize - mChosen.Num()))));
 	}
 }
 
@@ -386,7 +357,7 @@ void UMercenaryHireWidget::HandleDepartClicked()
 		return;
 	}
 	TArray<TObjectPtr<UMercenaryData>> Party;
-	for (const int32 Index : mHired)
+	for (const int32 Index : mChosen)
 	{
 		if (mCrew.IsValidIndex(Index))
 		{

@@ -20,7 +20,7 @@ C++ 이 이름으로 위젯을 찾는다. 지금은 붙일 C++ 이 없지만, �
     HireRole_0 ~ 5        역할
     HireHP_0 ~ 5          체력
     HireSkill_0_0 ~ 5_1   스킬 두 줄
-    HireCost_0 ~ 5        고용비
+    HireCost_0 ~ 5        고용비 (지금은 접어 둔다)
     HireSeal_0 ~ 5        고용 도장
     HireBadge_0 ~ 5       상태 배지
     PartySlot_0 ~ 2       파티 슬롯
@@ -45,18 +45,22 @@ HEADS = "/Game/SVN/OutSideAsset/UI/KayKit/Heads"
 K = kit.CHROME_SCALE
 
 #: 시안에 그려진 여섯 명. 실제 값은 나중에 데이터에서 온다.
+#:
+#: 고용비는 없다. 처음 시작할 때는 값을 치르지 않고 그냥 셋을 고른다 --
+#: 돈으로 사는 것은 나중에 상점에서 들어온다. 시안에 그려진 고용비 칸과
+#: 소지금 칸은 접어 둔다.
 CREW = (
-    ("기사", "근접", "HP 100", "방패 강타", "반격 태세", "40 골드",
+    ("기사", "근접", "HP 100", "방패 강타", "반격 태세",
      "KK_Face_Knight_HeadV2"),
-    ("궁수", "원거리", "HP 80", "관통 사격", "조준", "35 골드",
+    ("궁수", "원거리", "HP 80", "관통 사격", "조준",
      "KK_Face_Ranger_HeadV2"),
-    ("마법사", "마법", "HP 70", "화염구", "빙결", "45 골드",
+    ("마법사", "마법", "HP 70", "화염구", "빙결",
      "KK_Face_Mage_HeadV2"),
-    ("도적", "근접", "HP 75", "기습", "은신", "30 골드",
+    ("도적", "근접", "HP 75", "기습", "은신",
      "KK_Face_RogueHooded_HeadV2"),
-    ("성직자", "지원", "HP 85", "치유", "축복", "40 골드",
+    ("성직자", "지원", "HP 85", "치유", "축복",
      "KK_Face_Druid_HeadV2"),
-    ("야만전사", "근접", "HP 120", "대검 휘두르기", "분노", "50 골드",
+    ("야만전사", "근접", "HP 120", "대검 휘두르기", "분노",
      "KK_Face_BarbarianLarge_HeadV2"),
 )
 
@@ -82,7 +86,7 @@ def plate(blueprint, root, name, texture, rect, z=kit.Z_FILL):
 
 def card(blueprint, root, index):
     """이력서 한 장. 여섯 장이 판도 자리도 같아 한 갈래로 짓는다."""
-    name, role, hp, skill_a, skill_b, cost, face = CREW[index]
+    name, role, hp, skill_a, skill_b, face = CREW[index]
     holder, size = plate(blueprint, root, "HireCard_%d" % index,
                          "KK_Hire_card_%d" % index,
                          PLACE["card_%d" % index], kit.Z_CONTENT)
@@ -99,12 +103,18 @@ def card(blueprint, root, index):
             ("skill_1", "HireSkill_%d_0" % index, skill_a, 15, TEXT_DARK,
              "center"),
             ("skill_2", "HireSkill_%d_1" % index, skill_b, 15, TEXT_DARK,
-             "center"),
-            ("cost", "HireCost", cost, 18, TEXT_DARK, "center")):
+             "center")):
         x, y, bw, bh = at(CARD[key])
         full = widget if "_%d_" % index in widget else "%s_%d" % (widget, index)
         kit.label(blueprint, full, holder, x, y, bw, bh, text, points,
-                  colour, align, size, bold=(key in ("name", "hp", "cost")))
+                  colour, align, size, bold=(key in ("name", "hp")))
+
+    # 고용비 칸은 만들되 접어 둔다. 상점이 생기면 그때 켜면 되고, 위젯이
+    # 아예 없으면 그때 굽기부터 다시 해야 한다.
+    cx, cy, cw, ch = at(CARD["cost"])
+    kit.label(blueprint, "HireCost_%d" % index, holder, cx, cy, cw, ch,
+              "", 18, TEXT_DARK, "center", size, bold=True)
+    kit.fold(blueprint, "HireCost_%d" % index)
 
     # 도장과 배지는 상태에 따라 하나만 켜진다. 접어 두고 런타임이 켠다 --
     # 펼친 채로 두면 에디터에서 그 밑을 못 찍고 화면에도 둘 다 뜬다.
@@ -145,9 +155,9 @@ def bottom_bar(blueprint, root):
                   "빈 자리", 13, TEXT_PALE, "center", cell)
 
     for key, widget, text, points in (
-            ("gold", "GoldText", "소지금 0골드", 18),
-            ("spent", "SpentText", "고용비 0 / 0", 17),
-            ("notice", "NoticeText", "용병을 고르세요.", 17)):
+            ("gold", "GoldText", "", 18),
+            ("spent", "SpentText", "", 17),
+            ("notice", "NoticeText", "용병 3명을 고르세요.", 17)):
         x, y, w, h = at(BAR[key])
         # 안내 칸은 두 줄이 들어갈 만큼 높다. 글자를 위에 붙이면 칸 안에서
         # 떠 보이므로 가운데에 앉힌다.
@@ -155,6 +165,8 @@ def bottom_bar(blueprint, root):
             y, h = y + h * 0.28, h * 0.44
         kit.label(blueprint, widget, holder, x, y, w, h, text, points,
                   TEXT_PALE if key != "notice" else TEXT_DARK, "center", size)
+        if key in ("gold", "spent"):
+            kit.fold(blueprint, widget)
 
     x, y, w, h = at(BAR["depart"])
     kit.add(blueprint, "CanvasPanel", "DepartHolder", holder)
