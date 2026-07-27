@@ -175,7 +175,9 @@ def compose(blueprint, root):
 
 
 kit.reset_ledger()
-bp = kit.create_asset(ASSET)
+# 부모를 C++ 클래스로 둔다. 굽고 나서 에디터에서 손으로 바꾸면 다시 구울
+# 때마다 도로 풀린다 -- 굽기가 에셋을 새로 만들기 때문이다.
+bp = kit.create_asset(ASSET, parent="/Script/P_RD.MercenaryHireWidget")
 kit.add(bp, "CanvasPanel", "RootCanvas", "")
 compose(bp, "RootCanvas")
 unreal.EditorAssetLibrary.save_loaded_asset(bp, False)

@@ -361,8 +361,14 @@ def art(path):
 BUILDING_SUFFIX = "__building"
 
 
-def create_asset(asset_name):
-    """Make a widget blueprint parented to UCombatLayoutHUDWidget.
+def create_asset(asset_name, parent=None):
+    """Make a widget blueprint parented to a C++ widget class.
+
+    parent 를 주면 그 클래스를 부모로 삼는다. 안 주면 전투 배치안의 부모를
+    쓴다 -- 화면이 늘어나면서 배치안마다 부모가 달라졌다.
+
+    부모는 구울 때 정한다. 굽고 나서 에디터에서 손으로 바꾸면 다시 구울
+    때마다 도로 풀린다 -- 굽기가 에셋을 새로 만들기 때문이다.
 
     임시 이름으로 만든다. 예전에는 기존 에셋을 지우고 새로 만들었는데, 그러면
     짓는 동안 그 배치안이 디스크에 아예 없다 -- 그 사이에 게임을 켜면
@@ -379,7 +385,13 @@ def create_asset(asset_name):
     asset_name = temp
 
     factory = unreal.WidgetBlueprintFactory()
-    factory.set_editor_property("parent_class", unreal.CombatLayoutHUDWidget)
+    parent_class = unreal.CombatLayoutHUDWidget
+    if parent:
+        found = unreal.load_object(None, parent)
+        if found is None:
+            raise RuntimeError("부모 클래스를 못 읽음: {}".format(parent))
+        parent_class = found
+    factory.set_editor_property("parent_class", parent_class)
     asset = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
         asset_name, PACKAGE_PATH, unreal.WidgetBlueprint, factory)
     if asset is None:
@@ -388,9 +400,9 @@ def create_asset(asset_name):
     # parenting through the generated class instead of trusting the factory.
     generated = asset.generated_class()
     if generated is None or not unreal.MathLibrary.class_is_child_of(
-            generated, unreal.CombatLayoutHUDWidget):
-        raise RuntimeError("{} is not parented to CombatLayoutHUDWidget".format(
-            temp_full))
+            generated, parent_class):
+        raise RuntimeError("{} 의 부모가 {} 가 아니다".format(
+            temp_full, parent_class.get_name()))
     return asset
 
 
