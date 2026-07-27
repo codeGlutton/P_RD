@@ -6,20 +6,30 @@ namespace InputTags
 
 namespace AnimationTags
 {
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_GetBuff,										"Animation.Montage.GetBuff");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_GetDebuff,										"Animation.Montage.GetDebuff");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_GetDefense,									"Animation.Montage.GetDefense");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_GetMovement,									"Animation.Montage.GetMovement");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Heal,											"Animation.Montage.Heal");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Slash,										"Animation.Montage.Hit.Slash");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Stab,										"Animation.Montage.Hit.Stab");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Smash,										"Animation.Montage.Hit.Smash");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_DeBuff,									"Animation.Montage.Hit.DeBuff");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Kick,									"Animation.Montage.Skill.Melee.Kick");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Punch,									"Animation.Montage.Skill.Melee.Punch");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Slash,									"Animation.Montage.Skill.Melee.Slash");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Stab,									"Animation.Montage.Skill.Melee.Stab");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Smash,									"Animation.Montage.Skill.Melee.Smash");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Ranged_Direct,							"Animation.Montage.Skill.Ranged.Direct");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Ranged_Indirect,							"Animation.Montage.Skill.Ranged.InDirect");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_ETC_GetBuff,								"Animation.Montage.Skill.ETC.GetBuff");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_ETC_GetDeBuff,							"Animation.Montage.Skill.ETC.GetDeBuff");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_ETC_Spawn,								"Animation.Montage.Skill.ETC.Spawn");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Special_0,								"Animation.Montage.Skill.Special.0");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Special_1,								"Animation.Montage.Skill.Special.1");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Special_2,								"Animation.Montage.Skill.Special.2");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Special_3,								"Animation.Montage.Skill.Special.3");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Special_4,								"Animation.Montage.Skill.Special.4");
+
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Damage,									"Animation.Montage.Hit.Damage");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Buff,										"Animation.Montage.Hit.Buff");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Spell,										"Animation.Montage.Hit.Spell");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Attack_Slash,									"Animation.Montage.Attack.Slash");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Attack_Stab,									"Animation.Montage.Attack.Stab");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Attack_Smash,									"Animation.Montage.Attack.Smash");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_DeBuff,									"Animation.Montage.Hit.DeBuff");
+
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Event_Hit,												"Animation.Event.Hit");
 }
