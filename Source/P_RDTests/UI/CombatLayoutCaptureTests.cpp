@@ -52,6 +52,16 @@ namespace CombatLayoutCapture
 		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_08_Minimal.WBP_CombatLayout_08_Minimal_C"),
 		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_09_SplitBands.WBP_CombatLayout_09_SplitBands_C"),
 		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_10_Targeting.WBP_CombatLayout_10_Targeting_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_11_RightGrid.WBP_CombatLayout_11_RightGrid_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_12_TurnQueue.WBP_CombatLayout_12_TurnQueue_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_13_RightList.WBP_CombatLayout_13_RightList_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_14_FloatingBar.WBP_CombatLayout_14_FloatingBar_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_15_UnifiedDock.WBP_CombatLayout_15_UnifiedDock_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_16_FullFrame.WBP_CombatLayout_16_FullFrame_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_17_RightDock.WBP_CombatLayout_17_RightDock_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_18_RightFan.WBP_CombatLayout_18_RightFan_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_19_TopRail.WBP_CombatLayout_19_TopRail_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_20_CommandMode.WBP_CombatLayout_20_CommandMode_C"),
 	};
 
 	/** @brief 폰 가로 화면 실물 크기. 배치안 평가는 이 한 장이면 충분하다. */

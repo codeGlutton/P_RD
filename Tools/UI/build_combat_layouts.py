@@ -24,6 +24,7 @@ import unreal
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import combat_layout_kit as kit  # noqa: E402
+import cutout_layout  # noqa: E402
 
 W, H = kit.CANVAS_W, kit.CANVAS_H
 M = kit.MARGIN
@@ -546,24 +547,53 @@ def layout_10(bp, root):
 
 # ─── run ──────────────────────────────────────────────────────────────────────
 
+#: 2안부터는 시안에서 오려 낸 조각을 그 자리에 놓아 짓는다.
+#:
+#: 손으로 적던 배치안 열 개를 지웠다. 좌표를 눈으로 옮기는 동안 4안 타원을
+#: 가로로 만들고 7안 카드를 부채처럼 펼쳤는데, 둘 다 시안을 보지 않고 이름에서
+#: 짐작한 결과였다. 조각을 통째로 놓으면 짐작할 것이 없다 -- 자리는 매칭이
+#: 찾고 역할은 표에 있고 내용 자리는 조각에 뚫린 구멍이 알려 준다.
+#:
+#: 1안만 손으로 남긴다. 인게임에서 확인을 마친 유일한 안이고, 글자 자리를
+#: 시안에서 재어 넣어 두었다 -- 생성기의 비율 계산보다 정확하다.
+def _from_cutouts(number):
+    def compose(blueprint, root):
+        cutout_layout.build(blueprint, root, number)
+    compose.required = lambda: cutout_layout.expected(number)
+    return compose
+
+
 LAYOUTS = (
     ("WBP_CombatLayout_01_ClassicCRPG", "1안 클래식 CRPG", layout_01),
-    ("WBP_CombatLayout_02_LeftParty", "2안 좌측 세로 파티", layout_02),
-    ("WBP_CombatLayout_03_ActiveUnit", "3안 활성 유닛 집중", layout_03),
-    ("WBP_CombatLayout_04_Radial", "4안 방사형", layout_04),
-    ("WBP_CombatLayout_05_BottomBar", "5안 하단 통합 바", layout_05),
-    ("WBP_CombatLayout_06_Mirrored", "6안 좌우 대칭", layout_06),
-    ("WBP_CombatLayout_07_CardHand", "7안 카드 핸드", layout_07),
-    ("WBP_CombatLayout_08_Minimal", "8안 미니멀", layout_08),
-    ("WBP_CombatLayout_09_SplitBands", "9안 정보·조작 분리", layout_09),
-    ("WBP_CombatLayout_10_Targeting", "10안 상황 전환형", layout_10),
+    ("WBP_CombatLayout_02_LeftParty", "2안 좌측 세로 파티", _from_cutouts("02")),
+    ("WBP_CombatLayout_03_ActiveUnit", "3안 활성 유닛 집중", _from_cutouts("03")),
+    ("WBP_CombatLayout_04_Radial", "4안 방사형", _from_cutouts("04")),
+    ("WBP_CombatLayout_05_BottomBar", "5안 하단 통합 바", _from_cutouts("05")),
+    ("WBP_CombatLayout_06_Mirrored", "6안 좌우 대칭", _from_cutouts("06")),
+    ("WBP_CombatLayout_07_CardHand", "7안 카드 핸드", _from_cutouts("07")),
+    ("WBP_CombatLayout_08_Minimal", "8안 미니멀", _from_cutouts("08")),
+    ("WBP_CombatLayout_09_SplitBands", "9안 정보·조작 분리", _from_cutouts("09")),
+    ("WBP_CombatLayout_10_Targeting", "10안 상황 전환형", _from_cutouts("10")),
+    ("WBP_CombatLayout_11_RightGrid", "11안 우측 스킬 격자", _from_cutouts("11")),
+    ("WBP_CombatLayout_12_TurnQueue", "12안 좌측 턴 큐", _from_cutouts("12")),
+    ("WBP_CombatLayout_13_RightList", "13안 우측 세로 목록", _from_cutouts("13")),
+    ("WBP_CombatLayout_14_FloatingBar", "14안 유닛 위 스킬 바",
+     _from_cutouts("14")),
+    ("WBP_CombatLayout_15_UnifiedDock", "15안 하단 통합 독",
+     _from_cutouts("15")),
+    ("WBP_CombatLayout_16_FullFrame", "16안 전체 액자", _from_cutouts("16")),
+    ("WBP_CombatLayout_17_RightDock", "17안 우측 통합 독", _from_cutouts("17")),
+    ("WBP_CombatLayout_18_RightFan", "18안 우측 부채", _from_cutouts("18")),
+    ("WBP_CombatLayout_19_TopRail", "19안 상단 스킬 레일", _from_cutouts("19")),
+    ("WBP_CombatLayout_20_CommandMode", "20안 지휘 모드",
+     _from_cutouts("20")),
 )
 
 
 RECTS = {}
 
 
-def build_one(asset_name, title, compose):
+def build_one(asset_name, title, compose, required=None):
     kit.reset_ledger()
     blueprint = kit.create_asset(asset_name)
     kit.add(blueprint, "CanvasPanel", "RootCanvas", "")
@@ -572,7 +602,7 @@ def build_one(asset_name, title, compose):
     # 다 짓고 저장한 뒤에야 제자리로 옮긴다. 여기 전에 터지면 기존 안이 남는다.
     kit.commit_asset(asset_name)
     RECTS[asset_name] = kit.absolute_rects()
-    shown, total = kit.verify(asset_name)
+    shown, total = kit.verify(asset_name, required)
     unreal.log("[Layouts] {:38s} {}  bound {}/{}".format(
         asset_name, title, shown, total))
 
@@ -583,7 +613,8 @@ for asset_name, title, compose in LAYOUTS:
     if only and asset_name not in only:
         continue
     try:
-        build_one(asset_name, title, compose)
+        need = compose.required() if hasattr(compose, "required") else None
+        build_one(asset_name, title, compose, need)
     except Exception as error:
         failures.append("{}: {}".format(asset_name, error))
         unreal.log_error("[Layouts] {} FAILED: {}".format(asset_name, error))

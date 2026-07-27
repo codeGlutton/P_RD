@@ -13,9 +13,11 @@ import unreal
 SOURCE = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitUIKit/Processed"
 SLICE_SOURCE = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitUIKit/Slices"
 CHROME_SOURCE = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitUIKit/Chrome"
+CUTOUT_SOURCE = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitUIKit/Cutouts"
 PACKAGE = "/Game/SVN/OutSideAsset/UI/KayKit"
 SLICE_PACKAGE = PACKAGE + "/Slices"
 CHROME_PACKAGE = PACKAGE + "/Chrome"
+CUTOUT_PACKAGE = PACKAGE + "/Cutouts"
 
 files = sorted(f for f in os.listdir(SOURCE) if f.lower().endswith(".png"))
 if not files:
@@ -29,7 +31,19 @@ slice_files = sorted(f for f in os.listdir(SLICE_SOURCE)
 chrome_files = sorted(f for f in os.listdir(CHROME_SOURCE)
                       if f.lower().endswith(".png"))     if os.path.isdir(CHROME_SOURCE) else []
 
+#: 스무 시안에서 오려 낸 조각. 배치안이 이 이름으로 그림을 찾는다.
+cutout_files = sorted(f for f in os.listdir(CUTOUT_SOURCE)
+                      if f.lower().endswith(".png"))     if os.path.isdir(CUTOUT_SOURCE) else []
+
 tasks = []
+for name in cutout_files:
+    task = unreal.AssetImportTask()
+    task.set_editor_property("filename", os.path.join(CUTOUT_SOURCE, name))
+    task.set_editor_property("destination_path", CUTOUT_PACKAGE)
+    task.set_editor_property("automated", True)
+    task.set_editor_property("replace_existing", True)
+    task.set_editor_property("save", True)
+    tasks.append(task)
 for name in chrome_files:
     task = unreal.AssetImportTask()
     task.set_editor_property("filename", os.path.join(CHROME_SOURCE, name))
@@ -106,6 +120,13 @@ for name in chrome_files:
             "{}/{}".format(CHROME_PACKAGE, stem)) is None:
         raise RuntimeError("껍데기 임포트 실패: {}".format(stem))
 unreal.log("[KayKit] 껍데기 {}장".format(len(chrome_files)))
+
+for name in cutout_files:
+    stem = os.path.splitext(name)[0]
+    if unreal.EditorAssetLibrary.load_asset(
+            "{}/{}".format(CUTOUT_PACKAGE, stem)) is None:
+        raise RuntimeError("조각 임포트 실패: {}".format(stem))
+unreal.log("[KayKit] 조각 {}장".format(len(cutout_files)))
 
 checked = 0
 for stem in imported:

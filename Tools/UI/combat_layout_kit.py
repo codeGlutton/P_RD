@@ -236,6 +236,8 @@ HP_RED = unreal.LinearColor(0.929, 0.079, 0.035, 1.0)
 HP_TRACK = unreal.LinearColor(0.213, 0.101, 0.031, 1.0)
 #: 못 쓰는 카드를 덮는 막. 시안은 회색으로 죽이지 검게 지우지 않는다 --
 #: 아이콘이 읽혀야 왜 못 쓰는지 알 수 있다.
+#: 선택 표시용 금빛 덮개. 오려 낸 테두리가 그 판 크기에 안 맞을 때 쓴다.
+SELECT_VEIL = unreal.LinearColor(1.0, 0.78, 0.22, 0.30)
 DISABLED_VEIL = unreal.LinearColor(0.06, 0.06, 0.07, 0.50)
 STONE = unreal.LinearColor(0.76, 0.78, 0.81, 1.0)         # #C3C7CE
 STONE_DIM = unreal.LinearColor(0.43, 0.45, 0.49, 1.0)     # #6E747E
@@ -1358,7 +1360,7 @@ OPTIONAL = (
 )
 
 
-def verify(asset_name):
+def verify(asset_name, required=None):
     """Re-load from disk and confirm the contract names survived the save.
 
     Missing names are tolerated at runtime, which is exactly why they have to
@@ -1368,7 +1370,7 @@ def verify(asset_name):
     blueprint = unreal.EditorAssetLibrary.load_asset(full)
     if blueprint is None:
         raise RuntimeError("{} did not save".format(full))
-    missing = [n for n in REQUIRED
+    missing = [n for n in (REQUIRED if required is None else required)
                if helper.umg_find_widget(blueprint, n) is None]
     if missing:
         raise RuntimeError("{}: missing required widgets:\n  {}".format(

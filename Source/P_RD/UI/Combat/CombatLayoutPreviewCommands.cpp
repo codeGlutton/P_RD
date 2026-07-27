@@ -37,6 +37,16 @@ namespace CombatLayoutPreview
 		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_08_Minimal.WBP_CombatLayout_08_Minimal_C"),
 		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_09_SplitBands.WBP_CombatLayout_09_SplitBands_C"),
 		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_10_Targeting.WBP_CombatLayout_10_Targeting_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_11_RightGrid.WBP_CombatLayout_11_RightGrid_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_12_TurnQueue.WBP_CombatLayout_12_TurnQueue_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_13_RightList.WBP_CombatLayout_13_RightList_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_14_FloatingBar.WBP_CombatLayout_14_FloatingBar_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_15_UnifiedDock.WBP_CombatLayout_15_UnifiedDock_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_16_FullFrame.WBP_CombatLayout_16_FullFrame_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_17_RightDock.WBP_CombatLayout_17_RightDock_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_18_RightFan.WBP_CombatLayout_18_RightFan_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_19_TopRail.WBP_CombatLayout_19_TopRail_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_20_CommandMode.WBP_CombatLayout_20_CommandMode_C"),
 	};
 
 	/** @brief 이름표. 화면 어느 안인지 헷갈리지 않게 로그로 남긴다. */
@@ -46,6 +56,11 @@ namespace CombatLayoutPreview
 		TEXT("5안 하단 통합 바"), TEXT("6안 좌우 대칭"),
 		TEXT("7안 카드 핸드"), TEXT("8안 미니멀"),
 		TEXT("9안 정보·조작 분리"), TEXT("10안 상황 전환형"),
+		TEXT("11안 우측 스킬 격자"), TEXT("12안 좌측 턴 큐"),
+		TEXT("13안 우측 세로 목록"), TEXT("14안 유닛 위 스킬 바"),
+		TEXT("15안 하단 통합 독"), TEXT("16안 전체 액자"),
+		TEXT("17안 우측 통합 독"), TEXT("18안 우측 부채"),
+		TEXT("19안 상단 스킬 레일"), TEXT("20안 지휘 모드"),
 	};
 
 	static_assert(UE_ARRAY_COUNT(LayoutPaths) == UE_ARRAY_COUNT(LayoutNames),
