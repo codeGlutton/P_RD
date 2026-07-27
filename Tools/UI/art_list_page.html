@@ -191,9 +191,20 @@ const $ = (id) => document.getElementById(id);
 
 // 고친 값은 브라우저에 남긴다. 새로고침이나 창을 닫아도 되돌아가지 않게 --
 // 픽셀 단위로 맞춘 것을 실수로 날리면 처음부터 다시다.
+//
+// 남은 것을 통째로 쓰지는 않는다. 자리표 모양이 바뀌면(역할 하나에서 판
+// 열여덟로 갈랐다) 옛 열쇠만 남아 구역이 하나도 안 뜬다 -- 실제로 그랬다.
+// 지금 표를 바탕에 두고, 이름이 살아 있는 칸만 남은 값으로 덮는다.
 try {
-  const kept = localStorage.getItem(KEEP);
-  if (kept) TABLE = JSON.parse(kept);
+  const kept = JSON.parse(localStorage.getItem(KEEP) || "null");
+  if (kept) {
+    for (const [role, keys] of Object.entries(TABLE)) {
+      if (!kept[role]) continue;
+      for (const key of Object.keys(keys)) {
+        if (kept[role][key] !== undefined) keys[key] = kept[role][key];
+      }
+    }
+  }
 } catch (err) { /* 저장이 막힌 환경이면 그냥 원래 값으로 간다 */ }
 
 // 되돌리기 더미. 고치기 직전 값을 쌓아 두고 Ctrl+Z 로 꺼낸다. 픽셀 단위로
