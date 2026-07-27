@@ -160,6 +160,60 @@ def run(number, manifest, pool):
     return ok, len(veiled), len(off), len(lost)
 
 
+MOCKUPS = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitHUDMockups/Raw"
+
+#: 구역 차이가 이보다 크면 시안과 다르게 보인다는 뜻이다.
+#:
+#: 잘 맞은 구역은 12 안쪽이고, 글자가 통째로 빠지거나 엉뚱한 데 있으면
+#: 25를 넘는다. 6안에서 고치기 전후를 재어 잡았다.
+ZONE_GAP = 20.0
+
+
+def _zone(job):
+    """구역 하나를 캡처와 시안에서 잘라 견준다.
+
+    자기가 놓은 그림을 자기가 찾는 검사는 항상 통과한다 -- 6안이 18/18을
+    받고도 카드가 검고 이름이 엉뚱한 데 있었다. 물어야 할 것은 "화면이
+    시안처럼 보이느냐"이고, 그러려면 시안과 견줘야 한다.
+
+    밝기는 맞춘 뒤 견준다. 선택 덮개와 색조 차이로 구역이 통째로 틀렸다고
+    나오면 진짜 어긋난 곳이 묻힌다.
+    """
+    shot_path, mock_path, rect, role = job
+    x, y, w, h = rect
+    box = (x, y, x + w, y + h)
+    shot = np.asarray(Image.open(shot_path).convert("RGB").crop(box),
+                      dtype=float).mean(axis=2)
+    mock = np.asarray(Image.open(mock_path).convert("RGB").crop(box),
+                      dtype=float).mean(axis=2)
+    if shot.size == 0 or mock.size == 0:
+        return None
+    gap = float(np.abs((shot - shot.mean()) - (mock - mock.mean())).mean())
+    return {"role": role, "rect": rect, "gap": round(gap, 1)}
+
+
+def zones(number, manifest, pool):
+    """배치안 하나의 구역들을 시안과 견준다."""
+    shot_path = os.path.join(SHOTS, ASSETS[int(number) - 1] + ".png")
+    mock_path = os.path.join(MOCKUPS, "KK_HUD_Polish_%s.png" % number)
+    if not (os.path.exists(shot_path) and os.path.exists(mock_path)):
+        return None
+
+    jobs = [(shot_path, mock_path, row["rect"], row["role"])
+            for row in manifest[number]]
+    found = [r for r in pool.map(_zone, jobs, chunksize=1) if r]
+    bad = sorted([r for r in found if r["gap"] > ZONE_GAP],
+                 key=lambda r: -r["gap"])
+    print("시안%s  %-24s  닮음 %2d / %2d" % (
+        number, ASSETS[int(number) - 1][17:], len(found) - len(bad),
+        len(found)))
+    for r in bad[:4]:
+        print("    %-10s 차 %5.1f  (x=%d y=%d %dx%d)" % (
+            r["role"], r["gap"], r["rect"][0], r["rect"][1],
+            r["rect"][2], r["rect"][3]))
+    return len(found) - len(bad), len(found)
+
+
 def main():
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     ap = argparse.ArgumentParser()
@@ -181,7 +235,18 @@ def main():
                 total = [a + b for a, b in zip(total, got)]
 
     print()
-    print("=== 합계 ===")
+    print("=== 구역이 시안과 닮았나 ===")
+    close, zone_total = 0, 0
+    with ProcessPoolExecutor(max_workers=workers) as pool:
+        for number in numbers:
+            got = zones(number, manifest, pool)
+            if got:
+                close += got[0]
+                zone_total += got[1]
+    print("  닮음 %d / %d  (차 %.0f 이하)" % (close, zone_total, ZONE_GAP))
+
+    print()
+    print("=== 조각이 제자리에 놓였나 ===")
     print("  맞음 %d  덮임 %d  어긋남 %d  못찾음 %d  (허용 %dpx)"
           % (total[0], total[1], total[2], total[3], TOLERANCE))
     print("  덮임 = 제자리에 있으나 우리 글자·얼굴이 판을 가려 결이 다른 것")

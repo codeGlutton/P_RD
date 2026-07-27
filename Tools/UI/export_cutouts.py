@@ -136,6 +136,8 @@ def main():
                 "rect": [row["x"], row["y"], row["w"], row["h"]],
 
                 "anchor": down + across, "holes": row["holes"],
+                # 글자와 아이콘이 있던 자리. 두 판을 빼서 구했다.
+                "boxes": row.get("boxes", []),
                 "contents": row.get("contents", []),
             })
             total += len(arts)

@@ -92,6 +92,68 @@ def _plate(bp, root, row, name):
     return name, (w, h)
 
 
+def _rows_of(boxes, slack=0.6):
+    """상자를 줄로 묶는다. 세로로 겹치면 같은 줄이다."""
+    rows, pool = [], sorted(boxes, key=lambda b: (b[1], b[0]))
+    while pool:
+        head = pool.pop(0)
+        line = [head]
+        for other in list(pool):
+            top = max(head[1], other[1])
+            bottom = min(head[1] + head[3], other[1] + other[3])
+            if bottom - top > min(head[3], other[3]) * slack:
+                line.append(other)
+                pool.remove(other)
+        rows.append(sorted(line, key=lambda b: b[0]))
+    return rows
+
+
+def _face_box(boxes, w, h):
+    """얼굴이 들어갈 상자. 네모지고 크고 왼쪽에 있다."""
+    picks = [b for b in boxes
+             if 0.55 < b[2] / float(b[3]) < 1.8
+             and b[2] > w * 0.10 and b[3] > h * 0.35]
+    if not picks:
+        return None
+    return min(picks, key=lambda b: (b[0], -b[2] * b[3]))
+
+
+def _inside(box, w, h, pad=0.02):
+    """판 밖으로 나가지 않게 가둔다.
+
+    잰 자리를 그대로 쓰면 대체로 맞지만, 옆에 붙이는 값 글자(체력 "90/100")
+    까지 자리를 재 준 것은 아니라 판을 넘어가는 일이 있다 -- 6안 적 이름과
+    체력 숫자가 판 오른쪽 밖으로 나갔다. 넘치면 안으로 민다.
+    """
+    x, y, bw, bh = box
+    margin = min(w, h) * pad
+    bw = min(bw, w - margin * 2)
+    bh = min(bh, h - margin * 2)
+    x = min(max(x, margin), w - bw - margin)
+    y = min(max(y, margin), h - bh - margin)
+    return x, y, bw, bh
+
+
+def _bar_box(boxes):
+    """막대 상자. 가로로 길고 납작한 것 중 제일 긴 것.
+
+    줄 번호로 고르다 실패했다 -- 얼굴 옆에 이름과 막대가 같은 줄에 오는
+    시안이 있어 줄이 한 칸씩 밀렸고, 체력 막대가 이름 상자를 쓰는 바람에
+    빈 캡슐이 떴다. 막대는 생김새로 알아본다.
+    """
+    # 너무 납작한 것은 막대가 아니라 판에 그어진 선이다 -- 6안 기사 칸에서
+    # 아래 가장자리 선을 체력 막대로 골라 바닥에 붙었다.
+    picks = [b for b in boxes if 3.0 < b[2] / float(b[3]) < 22.0 and b[3] > 8]
+    return max(picks, key=lambda b: b[2]) if picks else None
+
+
+def _pip_box(boxes, bar, h):
+    """AP 보석이 놓이던 상자. 막대보다 아래에 있고 가로로 넓다."""
+    floor = (bar[1] + bar[3]) if bar else h * 0.5
+    picks = [b for b in boxes if b[1] >= floor - 4 and b[2] > b[3] * 1.2]
+    return max(picks, key=lambda b: b[2]) if picks else None
+
+
 # ─── 역할별 내용 ───────────────────────────────────────────────────────────────
 
 def _text_plate(bp, root, row, holder_name, widget, text, size, align):
@@ -106,11 +168,16 @@ def _text_plate(bp, root, row, holder_name, widget, text, size, align):
 def party(bp, root, row, index):
     """아군 한 줄을 제 자리에 놓고 채운다."""
     holder, size = _plate(bp, root, row, "PartyPlate_%d" % index)
-    fill_party(bp, holder, size, (0, 0) + size, row["holes"], index, K)
+    fill_party(bp, holder, size, (0, 0) + size, row["holes"], index, K,
+               row.get("boxes"))
 
 
-def fill_party(bp, holder, size, box, holes, index, scale):
-    """아군 한 줄의 내용. 초상은 구멍 자리에, 나머지는 그 오른쪽에 세 줄로.
+def fill_party(bp, holder, size, box, holes, index, scale, boxes=None):
+    """아군 한 줄의 내용. 시안에서 잰 자리에 놓는다.
+
+    boxes 는 글자 있는 판에서 빈 판을 빼서 구한 자리다 -- 얼굴 하나, 이름
+    줄 하나, 체력 줄 하나, AP 줄 하나가 대체로 나온다. 그게 없으면(붙은
+    조각이라 짝이 없는 경우) 비율로 잡는다.
 
     box 는 holder 안에서의 자리다. 조각을 통째로 놓을 때는 holder 전체이고,
     밴드 안에서는 밴드를 나눈 한 칸이다.
@@ -123,59 +190,83 @@ def fill_party(bp, holder, size, box, holes, index, scale):
     kit.add(bp, "CanvasPanel", body, card)
     kit.place(bp, body, 0, 0, w, h, "tl", (w, h), kit.Z_CONTENT)
     K = scale
-    faces = _round_holes(holes, w / K, h / K)
-    if faces:
-        fx, fy, fw, fh = [v * K for v in faces[0]]
-        kit.image(bp, "PartyPortrait_%d" % index, body, fx, fy, fw, fh, (w, h),
-                  texture=kit.PARTY_PORTRAITS[index % 3], tint=kit.WHITE)
-        left = fx + fw + w * 0.03
-    else:
-        # 구멍이 안 잡히는 판이 있다. 빈 판은 결이 고르고, 20안 이름표는
-        # 애초에 초상이 없다. 판 왼쪽에 비율로 자리를 잡는다 -- 얼굴을
-        # 통째로 빼면 어느 아군인지 화면에서 알 수 없다.
-        size_face = min(h * 0.74, w * 0.26)
-        kit.image(bp, "PartyPortrait_%d" % index, body, w * 0.035,
-                  (h - size_face) / 2.0, size_face, size_face, (w, h),
-                  texture=kit.PARTY_PORTRAITS[index % 3], tint=kit.WHITE)
-        left = w * 0.035 + size_face + w * 0.03
 
-    span = w - left - w * 0.04
-    line = h * 0.26
-    kit.label(bp, "PartyName_%d" % index, body, left, h * 0.06,
-              span * 0.55, line, "이름", 19, kit.TEXT_COLOR, "left", (w, h),
-              bold=True)
-    kit.tag(bp, "PartyStatusIcon_%d" % index, body, left + span * 0.60,
-            h * 0.09, min(h * 0.20, 24), "Poison", (w, h))
-    kit.label(bp, "PartyStatus_%d" % index, body, left + span * 0.60 + 26,
-              h * 0.08, span * 0.36, line * 0.8, "", 14, kit.GOLD, "left",
+    slots = [[v * K for v in b] for b in (boxes or [])]
+    face = _face_box(slots, w, h)
+    if face:
+        kit.image(bp, "PartyPortrait_%d" % index, body, face[0], face[1],
+                  face[2], face[3], (w, h),
+                  texture=kit.PARTY_PORTRAITS[index % 3], tint=kit.WHITE)
+        slots = [b for b in slots if b is not face]
+    else:
+        # 잰 자리가 없으면 판 왼쪽에 비율로 잡는다. 얼굴을 통째로 빼면 어느
+        # 아군인지 화면에서 알 수 없다.
+        side = min(h * 0.74, w * 0.26)
+        kit.image(bp, "PartyPortrait_%d" % index, body, w * 0.035,
+                  (h - side) / 2.0, side, side, (w, h),
+                  texture=kit.PARTY_PORTRAITS[index % 3], tint=kit.WHITE)
+
+    left = (face[0] + face[2] + w * 0.03) if face else w * 0.30
+    span = max(w - left - w * 0.04, w * 0.2)
+    line = h * 0.24
+
+    bar = _bar_box(slots)
+    pips = _pip_box([e for e in slots if e is not bar], bar, h)
+    rest = [e for e in slots if e is not bar and e is not pips]
+    rest.sort(key=lambda e: (e[1], e[0]))
+
+    # 이름은 남은 것 중 제일 위. 같은 줄에 하나 더 있으면 그게 상태 표시다.
+    nx, ny, nw, nh = _inside(
+        rest[0] if rest else (left, h * 0.06, span * 0.55, line), w, h)
+    kit.label(bp, "PartyName_%d" % index, body, nx, ny, max(nw, span * 0.3),
+              nh, "이름", 19, kit.TEXT_COLOR, "left", (w, h), bold=True)
+    same = [e for e in rest[1:]
+            if e[1] < ny + nh and e[1] + e[3] > ny and e[0] > nx]
+    sx, sy, sw, sh = (same[0] if same
+                      else (left + span * 0.62, ny, span * 0.36, nh))
+    kit.tag(bp, "PartyStatusIcon_%d" % index, body, sx, sy, min(sh, 24),
+            "Poison", (w, h))
+    kit.label(bp, "PartyStatus_%d" % index, body, sx + min(sh, 24) + 4, sy,
+              max(sw - sh - 4, span * 0.25), sh, "", 14, kit.GOLD, "left",
               (w, h))
 
-    kit.bar(bp, "PartyHPBar_%d" % index, body, left, h * 0.42,
-            span * 0.52, min(h * 0.14, 18), kit.HP_GREEN, (w, h))
-    kit.label(bp, "PartyHPText_%d" % index, body, left + span * 0.56,
-              h * 0.36, span * 0.42, line, "0/0", 15, kit.HP_TEXT, "left",
-              (w, h), bold=True)
+    hx, hy, hw, hh = (bar if bar else (left, h * 0.42, span * 0.52,
+                                       min(h * 0.14, 18)))
+    kit.bar(bp, "PartyHPBar_%d" % index, body, hx, hy, hw, hh,
+            kit.HP_GREEN, (w, h))
+    tx, ty, tw, th = _inside((hx + hw + w * 0.02, hy - hh * 0.5,
+                              span * 0.34, hh * 2.0), w, h)
+    kit.label(bp, "PartyHPText_%d" % index, body, tx, ty, tw, th, "0/0", 15,
+              kit.HP_TEXT, "left", (w, h), bold=True)
 
-    pip = min(h * 0.20, span * 0.11)
+    ax, ay, aw, ah = (pips if pips
+                      else (left, h * 0.70, span * 0.5, min(h * 0.20, 26)))
+    pip = min(ah, aw / 4.4)
     for slot in range(4):
         for state, texture in (("Bg", "KK_Gem_Blue_Off"),
                                ("", "KK_Gem_Blue_On")):
             kit.image(bp, "PartyAPPip%s_%d_%d" % (state, index, slot), body,
-                      left + slot * pip * 1.28, h * 0.68, pip, pip, (w, h),
+                      ax + slot * pip * 1.1, ay, pip, pip, (w, h),
                       texture=kit.KK + "/" + texture, tint=kit.WHITE)
-    kit.label(bp, "PartyAPText_%d" % index, body, left + pip * 5.4, h * 0.66,
-              span * 0.30, line, "0/0", 14, kit.AP_TEXT, "left", (w, h))
+    kit.label(bp, "PartyAPText_%d" % index, body, ax + pip * 4.6, ay,
+              span * 0.28, max(ah, 20), "0/0", 14, kit.AP_TEXT, "left",
+              (w, h))
     select_mark(bp, "PartySelected_%d" % index, body, "party", w, h)
 
 
 def skill(bp, root, row, index):
     """스킬 카드 한 장을 제 자리에 놓고 채운다."""
     holder, size = _plate(bp, root, row, "CommandPlate_%d" % index)
-    fill_skill(bp, holder, size, (0, 0) + size, index)
+    fill_skill(bp, holder, size, (0, 0) + size, index, row.get("boxes"))
 
 
-def fill_skill(bp, holder, size, box, index):
-    """스킬 카드 내용. 누운 카드와 선 카드를 가로세로 비율로 나눠 다룬다."""
+def fill_skill(bp, holder, size, box, index, boxes=None):
+    """스킬 카드 내용. 시안에서 잰 자리에 놓는다.
+
+    카드는 시안마다 생김새가 크게 다르다 -- 세로로 선 것, 가로로 누운 것,
+    아이콘이 왼쪽인 것, 가운데인 것. 비율로 찍었더니 6안에서 이름이 가운데로
+    가고 아이콘이 구석에 붙었다. 잰 자리가 있으면 그대로 쓴다.
+    """
     bx, by, w, h = box
     card = "CommandCard_%d" % index
     kit.add(bp, "CanvasPanel", card, holder)
@@ -184,56 +275,57 @@ def fill_skill(bp, holder, size, box, index):
     kit.add(bp, "CanvasPanel", body, card)
     kit.place(bp, body, 0, 0, w, h, "tl", (w, h), kit.Z_CONTENT)
 
-    wide = w > h * 1.35
-    if wide:
-        # 13안 18안처럼 누운 카드: 왼쪽에 아이콘, 오른쪽에 글자.
-        icon = min(h * 0.66, w * 0.20)
-        kit.image(bp, "CommandIcon_%d" % index, body, w * 0.04,
-                  (h - icon) / 2.0, icon, icon, (w, h),
+    slots = [[v * K for v in e] for e in (boxes or [])]
+    icon = _face_box(slots, w, h)
+    if icon:
+        kit.image(bp, "CommandIcon_%d" % index, body, icon[0], icon[1],
+                  icon[2], icon[3], (w, h),
                   texture=kit.COMMAND_ICONS[index % 6], tint=kit.WHITE)
-        left = w * 0.04 + icon + w * 0.04
-        kit.label(bp, "CommandName_%d" % index, body, left, h * 0.12,
-                  w - left - w * 0.18, h * 0.34, "이름", 17, kit.TEXT_COLOR,
-                  "left", (w, h), bold=True)
-        kit.label(bp, "CommandCostLine_%d" % index, body, left, h * 0.52,
-                  (w - left) * 0.42, h * 0.30, "", 14, kit.AP_TEXT, "left",
-                  (w, h))
-        kit.label(bp, "CommandDamage_%d" % index, body,
-                  left + (w - left) * 0.44, h * 0.52, (w - left) * 0.40,
-                  h * 0.30, "0~0", 13, kit.DAMAGE_TEXT, "left", (w, h))
-        kit.tag(bp, "CommandCooldownIcon_%d" % index, body, left,
-                h * 0.84, min(h * 0.14, 18), "Cooldown", (w, h))
-        kit.label(bp, "CommandCooldown_%d" % index, body, left + 22,
-                  h * 0.82, (w - left) * 0.50, h * 0.18, "", 12,
-                  kit.COOLDOWN_TEXT, "left", (w, h))
-        badge = min(h * 0.34, w * 0.11)
-        kit.label(bp, "CommandCost_%d" % index, body, w - badge - w * 0.04,
-                  (h - badge) / 2.0, badge, badge, "0", 16, kit.BADGE_TEXT,
-                  "center", (w, h), bold=True)
+        slots = [e for e in slots if e is not icon]
     else:
-        # 1안 2안처럼 선 카드: 이름 - 아이콘 - 수치 순으로 쌓인다.
-        kit.label(bp, "CommandName_%d" % index, body, w * 0.05, h * 0.05,
-                  w * 0.90, h * 0.13, "이름", 16, kit.TEXT_COLOR, "center",
-                  (w, h), bold=True)
-        icon = min(w * 0.52, h * 0.34)
-        kit.image(bp, "CommandIcon_%d" % index, body, (w - icon) / 2.0,
-                  h * 0.22, icon, icon, (w, h),
+        side = min(w * 0.52, h * 0.34)
+        kit.image(bp, "CommandIcon_%d" % index, body, (w - side) / 2.0,
+                  h * 0.22, side, side, (w, h),
                   texture=kit.COMMAND_ICONS[index % 6], tint=kit.WHITE)
-        kit.label(bp, "CommandDamage_%d" % index, body, w * 0.05, h * 0.62,
-                  w * 0.90, h * 0.12, "0~0", 13, kit.DAMAGE_TEXT, "center",
-                  (w, h))
-        kit.tag(bp, "CommandCooldownIcon_%d" % index, body, w * 0.24,
-                h * 0.77, min(w * 0.11, 18), "Cooldown", (w, h))
-        kit.label(bp, "CommandCooldown_%d" % index, body, w * 0.36, h * 0.75,
-                  w * 0.56, h * 0.12, "", 12, kit.COOLDOWN_TEXT, "left",
-                  (w, h))
-        kit.label(bp, "CommandCostLine_%d" % index, body, w * 0.05, h * 0.87,
-                  w * 0.90, h * 0.12, "", 15, kit.AP_TEXT, "center", (w, h),
-                  bold=True)
-        badge = min(w * 0.22, h * 0.13)
-        kit.label(bp, "CommandCost_%d" % index, body, w - badge - w * 0.05,
-                  h * 0.05, badge, badge, "0", 16, kit.BADGE_TEXT, "center",
-                  (w, h), bold=True)
+
+    # 값 배지는 작고 구석에 있다. 이름 줄과 헷갈리지 않게 먼저 뺀다.
+    corner = [e for e in slots
+              if e[2] < w * 0.24 and e[3] < h * 0.24
+              and (e[0] > w * 0.6 or e[0] + e[2] < w * 0.4)]
+    badge = min(corner, key=lambda e: e[1]) if corner else None
+    if badge:
+        slots = [e for e in slots if e is not badge]
+    cx, cy, cw, ch = (badge if badge
+                      else (w * 0.76, h * 0.05, w * 0.20, h * 0.13))
+    kit.label(bp, "CommandCost_%d" % index, body, cx, cy, cw, ch, "0", 16,
+              kit.BADGE_TEXT, "center", (w, h), bold=True)
+
+    rows = _rows_of(slots)
+    lines = [row[0] if len(row) == 1 else
+             [min(e[0] for e in row), min(e[1] for e in row),
+              max(e[0] + e[2] for e in row) - min(e[0] for e in row),
+              max(e[3] for e in row)] for row in rows]
+
+    def line(slot, fallback):
+        return lines[slot] if slot < len(lines) else fallback
+
+    nx, ny, nw, nh = line(0, (w * 0.05, h * 0.05, w * 0.90, h * 0.13))
+    kit.label(bp, "CommandName_%d" % index, body, nx, ny, nw, nh, "이름", 16,
+              kit.TEXT_COLOR, "center" if nw > w * 0.7 else "left", (w, h),
+              bold=True)
+    dx, dy, dw, dh = line(1, (w * 0.05, h * 0.62, w * 0.90, h * 0.12))
+    kit.label(bp, "CommandDamage_%d" % index, body, dx, dy, dw, dh, "0~0", 13,
+              kit.DAMAGE_TEXT, "center" if dw > w * 0.7 else "left", (w, h))
+    ox, oy, ow, oh = line(2, (w * 0.05, h * 0.76, w * 0.90, h * 0.12))
+    kit.tag(bp, "CommandCooldownIcon_%d" % index, body, ox, oy,
+            min(oh, 18), "Cooldown", (w, h))
+    kit.label(bp, "CommandCooldown_%d" % index, body, ox + min(oh, 18) + 4,
+              oy, max(ow - oh - 4, w * 0.4), oh, "", 12, kit.COOLDOWN_TEXT,
+              "left", (w, h))
+    px, py, pw, ph = line(3, (w * 0.05, h * 0.87, w * 0.90, h * 0.12))
+    kit.label(bp, "CommandCostLine_%d" % index, body, px, py, pw, ph, "", 15,
+              kit.AP_TEXT, "center" if pw > w * 0.7 else "left", (w, h),
+              bold=True)
 
     kit.ghost_button(bp, "CommandButton_%d" % index, body, 0, 0, w, h, (w, h))
     kit.image(bp, "CommandDisabled_%d" % index, body, 0, 0, w, h, (w, h),
@@ -290,46 +382,64 @@ def enemy(bp, root, row, ordinal):
         return
 
     holder, size = _plate(bp, root, row, "EnemyPanel")
-    _enemy_body(bp, holder, size, row["holes"], row["rect"][2])
+    _enemy_body(bp, holder, size, row.get("boxes"))
 
 
-def _enemy_body(bp, holder, size, holes, source_w):
-    """적 정보 내용. 초상이 있으면 그 오른쪽에, 없으면 판 전체에 쌓는다.
+def _enemy_body(bp, holder, size, boxes=None):
+    """적 정보 내용. 시안에서 잰 자리에 놓는다.
 
     적 판은 시안마다 가장 많이 달라진다 -- 2안은 세로로 길고 14안 20안은
-    이름표만 하다. 초상 유무와 가로세로 비율로 갈린다.
+    이름표만 하다. 잰 자리를 쓰면 그 차이를 코드가 알 필요가 없다.
     """
     w, h = size
-    faces = _round_holes(holes, w / K, h / K) if holes else []
-    tall = h > w * 1.15
-    if faces:
-        fx, fy, fw, fh = [v * K for v in faces[0]]
-        kit.image(bp, "EnemyPortrait", holder, fx, fy, fw, fh, (w, h),
-                  texture=kit.KK + "/KK_Face_Eagle", tint=kit.WHITE)
-        left = w * 0.06 if tall else fx + fw + w * 0.05
-        top = fy + fh + h * 0.04 if tall else h * 0.10
-    else:
-        left, top = w * 0.06, h * 0.10
+    slots = [[v * K for v in e] for e in (boxes or [])]
+    face = _face_box(slots, w, h)
+    if face:
+        kit.image(bp, "EnemyPortrait", holder, face[0], face[1], face[2],
+                  face[3], (w, h), texture=kit.KK + "/KK_Face_Eagle",
+                  tint=kit.WHITE)
+        slots = [e for e in slots if e is not face]
 
-    span = w - left - w * 0.05
-    line = (h - top) * (0.20 if tall else 0.24)
-    kit.label(bp, "EnemyName", holder, left, top, span, line, "적", 19,
+    left = w * 0.06
+    if face and face[3] < h * 0.55:
+        left = face[0] + face[2] + w * 0.04
+    span = max(w - left - w * 0.05, w * 0.3)
+    step = h * 0.13
+
+    bar = _bar_box(slots)
+    rest = sorted([e for e in slots if e is not bar],
+                  key=lambda e: (e[1], e[0]))
+
+    nx, ny, nw, nh = _inside(
+        rest[0] if rest else (left, h * 0.10, span, step), w, h)
+    kit.label(bp, "EnemyName", holder, nx, ny, max(nw, span * 0.4), nh, "적",
+              19, kit.TEXT_COLOR, "left", (w, h), bold=True)
+    hx, hy, hw, hh = (bar if bar
+                      else (left, ny + step * 1.2, span * 0.6,
+                            min(step * 0.6, 18)))
+    kit.bar(bp, "EnemyHPBar", holder, hx, hy, hw, hh, kit.HP_RED, (w, h))
+    tx, ty, tw, th = _inside((hx + hw + w * 0.02, hy - hh * 0.5,
+                              span * 0.3, hh * 2.0), w, h)
+    kit.label(bp, "EnemyHPText", holder, tx, ty, tw, th, "0/0", 15,
               kit.TEXT_COLOR, "left", (w, h), bold=True)
-    kit.bar(bp, "EnemyHPBar", holder, left, top + line * 1.15,
-            span * 0.62, min(line * 0.55, 18), kit.HP_RED, (w, h))
-    kit.label(bp, "EnemyHPText", holder, left + span * 0.66,
-              top + line * 1.05, span * 0.34, line, "0/0", 15,
-              kit.TEXT_COLOR, "left", (w, h), bold=True)
-    kit.tag(bp, "EnemyDefenseIcon", holder, left, top + line * 2.15,
-            min(line * 0.6, 20), "Defense", (w, h))
-    kit.label(bp, "EnemyDefense", holder, left + 24, top + line * 2.10,
-              span - 24, line, "", 14, kit.TEXT_DIM, "left", (w, h))
-    kit.tag(bp, "EnemyForecastIcon", holder, left, top + line * 3.15,
-            min(line * 0.6, 20), "Damage", (w, h))
-    kit.label(bp, "EnemyForecast", holder, left + 24, top + line * 3.10,
-              span - 24, line, "", 14, kit.DAMAGE_TEXT, "left", (w, h))
-    kit.label(bp, "EnemyStatus", holder, left, top + line * 4.10, span,
-              line, "", 13, kit.GOLD, "center", (w, h))
+
+    # 이름 아래에 남은 줄들이 방어 / 예상 피해 / 상태 순으로 온다.
+    below = [e for e in rest[1:] if e[1] > hy]
+    fallback = [(left, hy + step * (i + 1), span, step * 0.8)
+                for i in range(3)]
+    for slot, (name, icon, colour) in enumerate((
+            ("EnemyDefense", "Defense", kit.TEXT_DIM),
+            ("EnemyForecast", "Damage", kit.DAMAGE_TEXT),
+            ("EnemyStatus", None, kit.GOLD))):
+        ex, ey, ew, eh = _inside(below[slot] if slot < len(below)
+                                 else fallback[slot], w, h)
+        ew = max(ew, span * 0.4)
+        if icon:
+            kit.tag(bp, name + "Icon", holder, ex, ey, min(eh, 20), icon,
+                    (w, h))
+            ex, ew = ex + min(eh, 20) + 4, ew - min(eh, 20) - 4
+        kit.label(bp, name, holder, ex, ey, ew, eh, "", 14, colour, "left",
+                  (w, h))
 
 
 def end_turn(bp, root, row):
@@ -439,14 +549,14 @@ def _band_part(bp, holder, size, box, role, row, counters):
             cell = (bx + (slot % cols) * cw, by + (slot // cols) * ch,
                     cw * 0.97, ch * 0.97)
             if role == "party":
-                fill(bp, holder, size, cell, [], index, K)
+                fill(bp, holder, size, cell, [], index, K, None)
             else:
                 fill(bp, holder, size, cell, index)
     elif role == "enemy":
         sub = "EnemyPanel"
         kit.add(bp, "CanvasPanel", sub, holder)
         kit.place(bp, sub, bx, by, bw, bh, "tl", size, kit.Z_CONTENT)
-        _enemy_body(bp, sub, (bw, bh), [], 0)
+        _enemy_body(bp, sub, (bw, bh))
     elif role == "turn":
         faces = _round_holes(row["holes"], row["rect"][2], row["rect"][3])
         inside = [f for f in faces

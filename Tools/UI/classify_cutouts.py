@@ -59,6 +59,73 @@ def holes_of(path):
     return mean, found
 
 
+def content_boxes(shown_path, blank_path):
+    """글자 있는 판에서 빈 판을 빼면 내용이 있던 자리가 남는다.
+
+    ## 왜 빼서 구하나
+
+    판 안에 이름과 막대와 얼굴을 어디에 놓을지, 지금까지는 내가 비율로
+    골랐다 -- `h * 0.42`, `w * 0.05` 같은 숫자다. 그 숫자는 어떤 검사도
+    통과한 적이 없다. 판이 놓인 자리는 재면서 판 안은 한 번도 안 쟀고,
+    그래서 6안 카드에서 이름이 가운데로 가고 아이콘이 구석에 작게 붙었다.
+
+    두 판은 글자와 아이콘만 빼고 같다. 그러니 다른 곳이 곧 그것들이 있던
+    자리다. 내가 고를 숫자가 없어진다.
+
+    ## 무엇이 걸러지나
+
+    판 가장자리에 닿은 덩어리는 버린다. 두 판을 오릴 때 몇 px 어긋나면
+    테두리를 따라 얇은 띠가 남는데, 그건 내용이 아니다.
+    """
+    shown = np.asarray(Image.open(shown_path).convert("RGBA"), dtype=float)
+    blank = np.asarray(Image.open(blank_path).convert("RGBA"), dtype=float)
+    h = min(shown.shape[0], blank.shape[0])
+    w = min(shown.shape[1], blank.shape[1])
+    if h < 24 or w < 24:
+        return []
+
+    gap = np.abs(shown[:h, :w, :3] - blank[:h, :w, :3]).mean(axis=2)
+    solid = (shown[:h, :w, 3] > 200) & (blank[:h, :w, 3] > 200)
+
+    # 가장자리를 안쪽으로 깎는다. 두 판을 따로 오려서 테두리가 몇 px 어긋나
+    # 있고, 그 얇은 띠가 판을 빙 둘러 하나의 큰 고리로 잡힌다 -- 그게 판
+    # 전체를 감싸는 상자가 되어 초상이 화면을 삼켰다.
+    solid = ndimage.binary_erosion(solid, np.ones((9, 9)))
+    mask = ndimage.binary_closing(solid & (gap > 34), np.ones((3, 5)))
+
+    labels, count = ndimage.label(mask)
+    boxes = []
+    if count:
+        sizes = ndimage.sum(mask, labels, range(1, count + 1))
+        for i in np.argsort(sizes)[::-1][:10]:
+            if sizes[i] < 200:
+                break
+            ys, xs = np.where(labels == i + 1)
+            x0, y0 = int(xs.min()), int(ys.min())
+            bw, bh = int(xs.max()) - x0 + 1, int(ys.max()) - y0 + 1
+            # 판 전체를 덮는 상자는 내용이 아니라 남은 테두리다.
+            if bw > w * 0.92 and bh > h * 0.92:
+                continue
+            # 실오라기는 글자가 아니다. 깎고 남은 테두리 조각인데, 이걸
+            # 이름 자리로 골라 6안 적 이름이 판 오른쪽 끝에 붙었다.
+            if bw < 9 or bh < 9:
+                continue
+            boxes.append([x0, y0, bw, bh])
+    # 다른 상자 둘 이상을 품은 상자는 그것들이 뭉친 것이다. 얼굴과 이름과
+    # 막대가 붙어 있으면 하나로 이어져 판 절반을 덮는 상자가 나오는데,
+    # 그걸 얼굴로 잡으면 초상이 글자를 가린다 -- 6안 적 패널이 그랬다.
+    def holds(big, small):
+        return (big[0] <= small[0] + 2 and big[1] <= small[1] + 2
+                and big[0] + big[2] >= small[0] + small[2] - 2
+                and big[1] + big[3] >= small[1] + small[3] - 2
+                and big is not small)
+
+    boxes = [b for b in boxes
+             if sum(1 for other in boxes if holds(b, other)) < 2]
+    boxes.sort(key=lambda e: (e[1], e[0]))
+    return boxes
+
+
 def main():
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     with io.open(os.path.join(CHROME, "cutout_places.json"),
@@ -89,6 +156,12 @@ def main():
                 continue
             row = dict(item, index=index, role=role, colour=mean,
                        holes=found)
+            if item.get("blank"):
+                row["boxes"] = content_boxes(
+                    os.path.join(CUTOUTS, "시안%d" % int(number),
+                                 item["file"]),
+                    os.path.join(CUTOUTS, "시안%d" % int(number),
+                                 "텍스트_아이콘_제거", item["blank"]))
             if role == "band":
                 row["contents"] = BAND_CONTENTS.get((number, index), [])
             rows.append(row)

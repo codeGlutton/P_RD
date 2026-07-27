@@ -184,34 +184,77 @@ def _rounds(folder):
     return list(groups.values())
 
 
-def _assign(kept, files):
-    """자리와 빈 판을 크기로 짝짓는다. 한 판은 한 자리에만 간다.
+def _fit(mock_grey, item, part, reach=40):
+    """빈 판을 그 자리 둘레에 대 보고 가장 잘 맞는 점수.
 
-    가까운 것부터 집어 가면 앞에서 집은 판 때문에 뒤가 밀린다. 전체 어긋남이
-    가장 작아지는 짝을 한 번에 고른다.
+    밝기는 맞추지 않고 그대로 견준다. 사용불가 카드는 판이 통째로 어두운
+    것이 유일한 표시라(6안 돌파베기는 밝기 49, 나머지는 94), 밝기를 맞추면
+    바로 그 단서가 지워진다. 실제로 맞춰 봤더니 어두운 판이 방패강타 칸으로
+    갔다.
+
+    글자 유무 때문에 어느 판을 대도 얼마간 차이는 남는다. 그 차이는 판마다
+    비슷하고, 상태가 다른 판은 그보다 훨씬 크게 벌어진다.
     """
-    import numpy as np
+    arr = np.asarray(part.convert("RGBA"), dtype=float)
+    grey = arr[:, :, :3].mean(axis=2)
+    alpha = arr[:, :, 3] > 200
+    th, tw = grey.shape
+    mh, mw = mock_grey.shape
+    if th > mh or tw > mw or alpha.sum() < 400:
+        return None
+    tpl = grey[alpha]
+
+    best = None
+    for y in range(max(0, min(item["y"] - reach, mh - th)),
+                   min(mh - th, item["y"] + reach) + 1, 2):
+        for x in range(max(0, min(item["x"] - reach, mw - tw)),
+                       min(mw - tw, item["x"] + reach) + 1, 2):
+            win = mock_grey[y:y + th, x:x + tw][alpha]
+            score = float(np.abs(win - tpl).mean())
+            if best is None or score < best:
+                best = score
+    return best
+
+
+def _assign(mock_grey, kept, files):
+    """자리마다 어느 빈 판이 맞는지, 그림을 대 보고 정한다.
+
+    크기로 짝지었더니 상태가 뒤섞였다. 카드는 보통/선택됨/사용불가가 그림만
+    다르고 크기는 같아서, 크기로는 갈릴 수가 없다 -- 6안에서 평타 칸에
+    사용불가 검은 판이 갔고 방패강타 칸에 올리브색 판이 갔다.
+
+    그래서 실제로 그 자리에 대 보고 얼마나 맞는지로 고른다. 똑같이 생긴
+    보통 카드끼리는 점수가 같아 아무거나 가지만, 그건 어차피 같은 그림이라
+    상관없다. 다른 것은 제 자리에서만 점수가 낮다.
+
+    가까운 것부터 집으면 앞에서 집은 판 때문에 뒤가 밀리므로, 전체 점수가
+    가장 낮아지는 짝을 한 번에 고른다.
+    """
     from scipy.optimize import linear_sum_assignment
 
-    sizes = []
+    arts = []
     for path in files:
-        with Image.open(path) as art:
-            sizes.append((art.size[0], art.size[1], path))
-    if not sizes:
+        art = Image.open(path)
+        arts.append((art, art.size[0], art.size[1], path))
+    if not arts:
         return {}, 0
 
-    cost = np.zeros((len(kept), len(sizes)))
+    cost = np.full((len(kept), len(arts)), 9999.0)
     for i, item in enumerate(kept):
-        for j, (w, h, _) in enumerate(sizes):
-            gap = abs(w - item["w"]) + abs(h - item["h"])
-            cost[i, j] = gap if gap <= BLANK_GAP else 10000 + gap
+        for j, (art, w, h, _path) in enumerate(arts):
+            # 크기가 아주 다르면 볼 것도 없다. 대 보는 값이 비싸서 먼저 친다.
+            if abs(w - item["w"]) + abs(h - item["h"]) > BLANK_GAP:
+                continue
+            got = _fit(mock_grey, item, art)
+            if got is not None:
+                cost[i, j] = got
     rows, cols = linear_sum_assignment(cost)
 
     pairs, hits = {}, 0
     for i, j in zip(rows, cols):
-        if cost[i, j] >= 10000:
+        if cost[i, j] > BLANK_SCORE:
             continue
-        w, h, path = sizes[j]
+        _art, w, h, path = arts[j]
         pairs[i] = (os.path.basename(path), w, h)
         hits += 1
     return pairs, hits
@@ -277,9 +320,11 @@ def swap_blanks(folder, kept, mock_path=None):
     if not rounds:
         return
 
+    mock_grey = np.asarray(Image.open(mock_path).convert("RGB"),
+                           dtype=float).mean(axis=2) if mock_path else None
     best, hits, picked = {}, 0, []
     for files in rounds:
-        pairs, got = _assign(kept, files)
+        pairs, got = _assign(mock_grey, kept, files)
         if got > hits:
             best, hits, picked = pairs, got, files
     for index, (name, w, h) in best.items():
@@ -291,7 +336,7 @@ def swap_blanks(folder, kept, mock_path=None):
     left = [i for i in range(len(kept)) if not kept[i].get("blank")]
     if left:
         pool = [f for files in rounds for f in files]
-        pairs, _ = _assign([kept[i] for i in left], pool)
+        pairs, _ = _assign(mock_grey, [kept[i] for i in left], pool)
         for slot, (name, w, h) in pairs.items():
             item = kept[left[slot]]
             item["blank"], item["blank_w"], item["blank_h"] = name, w, h
