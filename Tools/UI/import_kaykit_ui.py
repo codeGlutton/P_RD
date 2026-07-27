@@ -106,6 +106,40 @@ for name in files:
     imported.append(stem)
 
 unreal.log("[KayKit] imported {}/{}".format(len(imported), len(files)))
+
+
+def dress(package, names, label):
+    """UI 텍스처 설정을 입힌다.
+
+    Processed 폴더에만 걸어 두었더니 얼굴과 조각이 기본 압축으로 들어와
+    알파가 날아갔다 -- 인게임에서 초상이 검은 네모로 나오고 금속 테를
+    덮었다. 알파가 있는 그림은 전부 같은 설정을 받아야 한다.
+    """
+    done = 0
+    for name in names:
+        stem = os.path.splitext(name)[0]
+        texture = unreal.EditorAssetLibrary.load_asset(
+            "{}/{}".format(package, stem))
+        if texture is None:
+            continue
+        texture.set_editor_property(
+            "lod_group", unreal.TextureGroup.TEXTUREGROUP_UI)
+        texture.set_editor_property(
+            "compression_settings",
+            unreal.TextureCompressionSettings.TC_EDITOR_ICON)
+        texture.set_editor_property(
+            "mip_gen_settings",
+            unreal.TextureMipGenSettings.TMGS_SIMPLE_AVERAGE)
+        texture.set_editor_property("srgb", True)
+        unreal.EditorAssetLibrary.save_loaded_asset(texture, False)
+        done += 1
+    unreal.log("[KayKit] {} 설정 {}장".format(label, done))
+
+
+dress(HEAD_PACKAGE, head_files, "얼굴")
+dress(CUTOUT_PACKAGE, cutout_files, "조각")
+dress(CHROME_PACKAGE, chrome_files, "껍데기")
+dress(SLICE_PACKAGE, slice_files, "슬라이스")
 if missing:
     raise RuntimeError("import failed:\n  " + "\n  ".join(missing))
 
