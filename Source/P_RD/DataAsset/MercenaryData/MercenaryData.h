@@ -67,6 +67,16 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "용병")
 	TArray<FText> mSkillNames;
 
+	/**
+	 * @brief 왜 이 사람을 데려가는가. 한 줄.
+	 *
+	 * @details
+	 * 여섯 중 셋을 고르는 것이 핵심이므로 판단할 거리가 있어야 한다.
+	 * 수치만으로는 "체력 100 과 체력 75 중 무엇"이 되어 고를 수가 없다.
+	 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "용병")
+	FText mTrait;
+
 	/** @brief 이력서에 붙는 얼굴. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "용병")
 	TSoftObjectPtr<UTexture2D> mPortrait;

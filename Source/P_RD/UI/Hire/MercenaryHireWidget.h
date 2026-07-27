@@ -63,8 +63,10 @@ struct FMercenaryCardWidgets
 	UPROPERTY() TArray<TObjectPtr<UTextBlock>> mSkills;
 	UPROPERTY() TObjectPtr<UTextBlock> mBadge = nullptr;
 	UPROPERTY() TObjectPtr<UWidget> mSeal = nullptr;
-	/** @brief 고용비 칸. 값은 안 쓰지만 접어 두려고 들고 있다. */
-	UPROPERTY() TObjectPtr<UTextBlock> mCost = nullptr;
+	/** @brief 특성 한 줄. 왜 이 사람을 데려가는지. */
+	UPROPERTY() TObjectPtr<UTextBlock> mTrait = nullptr;
+	/** @brief 검토 중 금색 테두리. 판에 없어 낱장으로 얹는다. */
+	UPROPERTY() TObjectPtr<UWidget> mSelected = nullptr;
 };
 
 /**

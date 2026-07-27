@@ -30,8 +30,13 @@ from PIL import Image
 from scipy import ndimage
 
 HERE = r"D:/UnrealProjects/P_RD_develop/시안2/용병고용화면"
-COMPLETE = os.path.join(HERE, "mercenary_hire_complete.png")
-BLANK = os.path.join(HERE, "mercenary_hire_blank_magenta.png")
+COMPLETE = os.path.join(HERE, "mercenary_select_complete.png")
+BLANK = os.path.join(HERE, "mercenary_select_blank_magenta.png")
+
+#: 상태 표시는 판에 안 그려져 있다. 게임이 돌면서 켜고 끄는 것이라, 판에
+#: 박히면 그 카드만 영영 그 상태로 남는다 -- 앞 판이 그래서 6번 이력서가
+#: 늘 흐렸고 3번은 늘 금테두리였다.
+STATE_ART = ("state_selected_frame.png", "state_seal.png")
 OUT = os.path.join(HERE, "_조각")
 
 KEY = np.array([255.0, 0.0, 255.0])
@@ -193,6 +198,13 @@ def main():
 
     # 배경은 빈 판에 없다(마젠타로 덮여 있다). 완성본에서 통째로 뜬다.
     Image.open(COMPLETE).convert("RGB").save(os.path.join(OUT, "backdrop.png"))
+
+    # 상태 낱장은 그대로 옮긴다. 카드 위에 얹을 것이라 자를 것이 없다.
+    for name in STATE_ART:
+        src = os.path.join(HERE, name)
+        if os.path.exists(src):
+            Image.open(src).convert("RGBA").save(os.path.join(OUT, name))
+            print("  %-10s 상태 그림" % os.path.splitext(name)[0])
 
     path = os.path.join(OUT, "pieces.json")
     with io.open(path, "w", encoding="utf-8") as handle:

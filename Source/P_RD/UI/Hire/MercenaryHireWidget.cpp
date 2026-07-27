@@ -95,7 +95,8 @@ void UMercenaryHireWidget::CacheWidgets()
 		Card.mHP = Find<UTextBlock>(WidgetTree, TEXT("HireHP") + Tail);
 		Card.mBadge = Find<UTextBlock>(WidgetTree, TEXT("HireBadge") + Tail);
 		Card.mSeal = Find<UWidget>(WidgetTree, TEXT("HireSeal") + Tail);
-		Card.mCost = Find<UTextBlock>(WidgetTree, TEXT("HireCost") + Tail);
+		Card.mTrait = Find<UTextBlock>(WidgetTree, TEXT("HireTrait") + Tail);
+		Card.mSelected = Find<UWidget>(WidgetTree, TEXT("HireSelected") + Tail);
 
 		Card.mSkills.Reset();
 		for (int32 Line = 0; Line < 2; ++Line)
@@ -118,11 +119,6 @@ void UMercenaryHireWidget::CacheWidgets()
 	}
 
 	mPartyCountText = Find<UTextBlock>(WidgetTree, TEXT("PartyCountText"));
-
-	// 값을 치르는 개념이 없으므로 돈 칸은 접는다. 시안에 그려져 있어 WBP 에는
-	// 있지만 처음 시작할 때는 쓰지 않는다 -- 상점이 생기면 그때 켠다.
-	SetShown(Find<UTextBlock>(WidgetTree, TEXT("GoldText")), false);
-	SetShown(Find<UTextBlock>(WidgetTree, TEXT("SpentText")), false);
 
 	mNoticeText = Find<UTextBlock>(WidgetTree, TEXT("NoticeText"));
 	mDepartButton = Find<UButton>(WidgetTree, TEXT("DepartButton"));
@@ -259,8 +255,7 @@ void UMercenaryHireWidget::RefreshCard(const int32 CardIndex)
 	SetTextIfPresent(Card.mRole, RoleName(Data->mRole));
 	SetTextIfPresent(Card.mHP, FText::FromString(
 		FString::Printf(TEXT("HP %d"), Data->mMaxHP)));
-	// 고용비 칸은 접는다. 시안에 파여 있지만 처음 시작할 때는 값이 없다.
-	SetShown(Card.mCost, false);
+	SetTextIfPresent(Card.mTrait, Data->mTrait);
 
 	for (int32 Line = 0; Line < Card.mSkills.Num(); ++Line)
 	{
@@ -281,6 +276,7 @@ void UMercenaryHireWidget::RefreshCard(const int32 CardIndex)
 	}
 
 	const EMercenaryCardState State = StateOf(CardIndex);
+	SetShown(Card.mSelected, State == EMercenaryCardState::Reviewing);
 	SetShown(Card.mSeal, State == EMercenaryCardState::Chosen);
 	SetShown(Card.mBadge, State != EMercenaryCardState::Chosen);
 	SetDimmed(Card.mRoot, State == EMercenaryCardState::Full);
