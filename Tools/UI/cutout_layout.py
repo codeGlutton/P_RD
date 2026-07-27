@@ -457,6 +457,44 @@ BAND_WEIGHT = {"round": 1.0, "objective": 1.6, "turn": 2.2, "party": 3.2,
                "skill": 5.4, "enemy": 2.0, "endturn": 1.2}
 
 
+def _merge(spans):
+    """겹치거나 붙은 구간을 잇는다."""
+    out = []
+    for lo, hi in sorted(spans):
+        if out and lo <= out[-1][1] + 1:
+            out[-1][1] = max(out[-1][1], hi)
+        else:
+            out.append([lo, hi])
+    return out
+
+
+def _cuts(boxes, along_x, count, lo, hi):
+    """잰 자리 사이의 빈틈에서 칸을 가른다.
+
+    밴드를 내가 정한 몫으로 쪼개고 있었다 -- 아군 3.2, 스킬 5.4 같은 숫자다.
+    시안에서 재어 적은 값이라 시안마다 몇 십 px 씩 어긋났고, 15안에서는
+    글자가 카드 사이 이음매에 얹혔다.
+
+    판에 무엇이 놓여 있었는지는 이미 재어 두었다. 그것들 사이의 빈틈이 곧
+    칸 경계다. 큰 빈틈부터 필요한 수만큼 고른다.
+
+    가를 수 없으면(잰 자리가 모자라면) 고르게 나눈다.
+    """
+    axis = 0 if along_x else 1
+    size = 2 if along_x else 3
+    spans = _merge([[b[axis], b[axis] + b[size]] for b in boxes
+                    if lo - 1 <= b[axis] <= hi])
+    holes = [(spans[i + 1][0] - spans[i][1], (spans[i][1] + spans[i + 1][0]) / 2.0)
+             for i in range(len(spans) - 1)]
+    holes.sort(reverse=True)
+    picked = sorted(mid for _gap, mid in holes[:count - 1])
+    if len(picked) < count - 1:
+        step = (hi - lo) / float(count)
+        picked = [lo + step * (i + 1) for i in range(count - 1)]
+    edges = [lo] + picked + [hi]
+    return [(edges[i], edges[i + 1]) for i in range(count)]
+
+
 def band(bp, root, row, ordinal, counters):
     """여러 역할이 한 장에 든 조각. 판을 놓고 안을 몫대로 나눠 채운다.
 
@@ -473,7 +511,8 @@ def band(bp, root, row, ordinal, counters):
     if not contents:
         return
 
-    _split(bp, holder, size, (0.0, 0.0, w, h), contents, row, counters)
+    slots = [[v * K for v in b] for b in (row.get("boxes") or [])]
+    _split(bp, holder, size, (0.0, 0.0, w, h), contents, row, counters, slots)
 
 
 def _weight(entry):
@@ -482,7 +521,7 @@ def _weight(entry):
     return BAND_WEIGHT.get(entry, 1.0)
 
 
-def _split(bp, holder, size, box, contents, row, counters):
+def _split(bp, holder, size, box, contents, row, counters, slots):
     """칸을 긴 쪽으로 나눠 내용을 앉힌다. 묶음은 다시 반대 방향으로 나뉜다.
 
     한 방향으로만 나누면 표현 못 하는 배치가 있다 -- 15안은 적 패널과 턴종료
@@ -492,18 +531,17 @@ def _split(bp, holder, size, box, contents, row, counters):
     """
     bx, by, bw, bh = box
     along_x = bw >= bh
-    weights = [_weight(entry) for entry in contents]
-    total = sum(weights)
-    cursor, pad = 0.0, (bw if along_x else bh) * 0.008
-    for entry, weight in zip(contents, weights):
-        length = (bw if along_x else bh) * weight / total
-        cell = ((bx + cursor + pad, by, length - pad * 2, bh) if along_x
-                else (bx, by + cursor + pad, bw, length - pad * 2))
-        cursor += length
+    lo = bx if along_x else by
+    hi = lo + (bw if along_x else bh)
+    parts = _cuts(slots, along_x, len(contents), lo, hi)
+
+    for entry, (start, stop) in zip(contents, parts):
+        cell = ((start, by, stop - start, bh) if along_x
+                else (bx, start, bw, stop - start))
         if isinstance(entry, list):
-            _split(bp, holder, size, cell, entry, row, counters)
+            _split(bp, holder, size, cell, entry, row, counters, slots)
         else:
-            _band_part(bp, holder, size, cell, entry, row, counters)
+            _band_part(bp, holder, size, cell, entry, row, counters, slots)
 
 
 def _grid(w, h, count, want):
@@ -520,7 +558,7 @@ def _grid(w, h, count, want):
     return best[1], best[2]
 
 
-def _band_part(bp, holder, size, box, role, row, counters):
+def _band_part(bp, holder, size, box, role, row, counters, slots=()):
     """밴드에서 나눈 한 칸을 그 역할로 채운다."""
     bx, by, bw, bh = box
     if role == "round":
@@ -541,17 +579,22 @@ def _band_part(bp, holder, size, box, role, row, counters):
         count = 3 if role == "party" else 6
         want = 2.4 if role == "party" else 0.85
         cols, rows = _grid(bw, bh, count, want)
-        cw, ch = bw / cols, bh / rows
+        # 열과 행 경계도 잰 자리의 빈틈에서 가른다.
+        xs = _cuts(slots, True, cols, bx, bx + bw)
+        ys = _cuts(slots, False, rows, by, by + bh)
         for slot in range(count):
             index = counters[role]
             counters[role] = index + 1
-            fill = fill_party if role == "party" else fill_skill
-            cell = (bx + (slot % cols) * cw, by + (slot // cols) * ch,
-                    cw * 0.97, ch * 0.97)
+            x0, x1 = xs[slot % cols]
+            y0, y1 = ys[slot // cols]
+            cell = (x0, y0, x1 - x0, y1 - y0)
+            inside = [b for b in slots
+                      if x0 <= b[0] <= x1 and y0 <= b[1] <= y1]
+            local = [[b[0] - x0, b[1] - y0, b[2], b[3]] for b in inside]
             if role == "party":
-                fill(bp, holder, size, cell, [], index, K, None)
+                fill_party(bp, holder, size, cell, [], index, 1.0, local)
             else:
-                fill(bp, holder, size, cell, index)
+                fill_skill(bp, holder, size, cell, index, local)
     elif role == "enemy":
         sub = "EnemyPanel"
         kit.add(bp, "CanvasPanel", sub, holder)

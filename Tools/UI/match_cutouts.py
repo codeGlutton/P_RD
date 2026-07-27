@@ -175,6 +175,8 @@ def _rounds(folder):
     groups = defaultdict(list)
     for path in sorted(glob.glob(os.path.join(folder, BLANK_DIR, "*.png"))):
         name = os.path.basename(path)
+        if name.startswith("keyed_"):
+            continue
         # 생성기가 뱉은 것은 회차 아이디로 묶고, 사람이 이름 붙인 것
         # (`01_top_left_parchment.png`)은 그것대로 한 벌이다. 파일명으로
         # 묶었더니 이름 붙은 열넉 장이 열넉 회차로 쪼개져 2안이 한 장만
@@ -316,18 +318,36 @@ def swap_blanks(folder, kept, mock_path=None):
          찍히는 것보다 낫다
       3. 그래도 남은 붙은 조각은 빈 판 여러 장으로 덮는다
     """
+    # 마젠타 원본에서 자른 판이 있으면 그것부터 쓴다. 자리표의 번호를 달고
+    # 그 자리에서 그대로 잘린 것이라 짝을 지을 필요가 없다.
+    #
+    # 짝짓기에 맡겨 두면 안 되는 이유가 있다. 9안은 빈 판 폴더에 있는 파일이
+    # 실은 안 비어 있었고(글자 있는 판에서 빼도 남는 것이 없었다), 그림으로
+    # 견주니 그 안 빈 판이 제일 잘 맞아 뽑혔다. 원본에서 직접 자른 것이
+    # 확실하다.
+    for index, item in enumerate(kept, 1):
+        keyed = os.path.join(folder, BLANK_DIR, "keyed_%02d.png" % index)
+        if os.path.exists(keyed):
+            with Image.open(keyed) as art:
+                item["blank"] = os.path.basename(keyed)
+                item["blank_w"], item["blank_h"] = art.size
+
     rounds = _rounds(folder)
     if not rounds:
         return
 
     mock_grey = np.asarray(Image.open(mock_path).convert("RGB"),
                            dtype=float).mean(axis=2) if mock_path else None
+    todo = [i for i in range(len(kept)) if not kept[i].get("blank")]
+    if not todo:
+        return
     best, hits, picked = {}, 0, []
     for files in rounds:
-        pairs, got = _assign(mock_grey, kept, files)
+        pairs, got = _assign(mock_grey, [kept[i] for i in todo], files)
         if got > hits:
             best, hits, picked = pairs, got, files
-    for index, (name, w, h) in best.items():
+    for slot, (name, w, h) in best.items():
+        index = todo[slot]
         kept[index]["blank"] = name
         # 빈 판은 원래 크기로 놓는다. 자리 크기에 맞춰 늘리면 몰딩이 뭉갠다
         # -- 조각을 쓰는 이유가 그것이다.

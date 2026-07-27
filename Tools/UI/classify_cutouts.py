@@ -96,9 +96,14 @@ def content_boxes(shown_path, blank_path):
     labels, count = ndimage.label(mask)
     boxes = []
     if count:
+        # 몇 개까지 가져올지는 판 크기에 맞춘다. 열 개로 못 박아 두었더니
+        # 밴드가 텅 비었다 -- 9안 아래 띠는 1655px 인데 상자가 0개였다.
+        # 작은 카드는 여전히 서너 개면 되고, 큰 띠는 수십 개가 필요하다.
+        keep = int(min(80, max(10, (w * h) / 4000.0)))
+        floor = max(120, int(w * h / 900.0))
         sizes = ndimage.sum(mask, labels, range(1, count + 1))
-        for i in np.argsort(sizes)[::-1][:10]:
-            if sizes[i] < 200:
+        for i in np.argsort(sizes)[::-1][:keep]:
+            if sizes[i] < floor:
                 break
             ys, xs = np.where(labels == i + 1)
             x0, y0 = int(xs.min()), int(ys.min())
