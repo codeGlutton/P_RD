@@ -59,7 +59,7 @@ def holes_of(path):
     return mean, found
 
 
-def content_boxes(shown_path, blank_path):
+def content_boxes(shown_path, blank_path, crop=None):
     """글자 있는 판에서 빈 판을 빼면 내용이 있던 자리가 남는다.
 
     ## 왜 빼서 구하나
@@ -77,8 +77,20 @@ def content_boxes(shown_path, blank_path):
     판 가장자리에 닿은 덩어리는 버린다. 두 판을 오릴 때 몇 px 어긋나면
     테두리를 따라 얇은 띠가 남는데, 그건 내용이 아니다.
     """
-    shown = np.asarray(Image.open(shown_path).convert("RGBA"), dtype=float)
+    # crop 을 주면 채워진 시안 전체에서 그 칸만 잘라 쓴다. 명세에 자리가
+    # 적혀 있는 경우라, 조각을 따로 오려 둘 필요가 없다.
+    art = Image.open(shown_path).convert("RGBA")
+    if crop:
+        art = art.crop(crop)
+    shown = np.asarray(art, dtype=float)
     blank = np.asarray(Image.open(blank_path).convert("RGBA"), dtype=float)
+    if crop:
+        # 잘라 낸 칸에는 알파가 없다(시안은 배경까지 그려져 있다). 빈 판의
+        # 알파를 그대로 쓴다 -- 판 모양이 같으니 그것이 맞다.
+        shown = shown.copy()
+        edge = min(shown.shape[0], blank.shape[0])
+        side = min(shown.shape[1], blank.shape[1])
+        shown[:edge, :side, 3] = blank[:edge, :side, 3]
     h = min(shown.shape[0], blank.shape[0])
     w = min(shown.shape[1], blank.shape[1])
     if h < 24 or w < 24:

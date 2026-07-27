@@ -564,7 +564,9 @@ def _from_cutouts(number):
 
 
 LAYOUTS = (
-    ("WBP_CombatLayout_01_ClassicCRPG", "1안 클래식 CRPG", layout_01),
+    # 1안도 명세에서 짓는다. 손으로 적어 둔 layout_01 을 오래 남겨 두었는데,
+    # 이름과 자리가 적힌 명세가 오면서 손으로 적을 이유가 없어졌다.
+    ("WBP_CombatLayout_01_ClassicCRPG", "1안 클래식 CRPG", _from_cutouts("01")),
     ("WBP_CombatLayout_02_LeftParty", "2안 좌측 세로 파티", _from_cutouts("02")),
     ("WBP_CombatLayout_03_ActiveUnit", "3안 활성 유닛 집중", _from_cutouts("03")),
     ("WBP_CombatLayout_04_Radial", "4안 방사형", _from_cutouts("04")),
