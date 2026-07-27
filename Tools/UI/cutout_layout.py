@@ -785,7 +785,8 @@ def build(bp, root, number):
     for row in rows:
         role = row["role"]
         # 자리표가 있으면 그대로 쓴다. 없으면 잰 상자로 짐작한다.
-        table = slots(number, role)
+        # 판마다 따로 찾는다 -- 아군 세 줄이 각자 다른 값을 가진다.
+        table = slots(number, role, counters.get(role))
         if role == "round":
             holder, size = _plate(bp, root, row, "Chrome_Round")
             _one_text(bp, holder, size, "RoundText", "ROUND 1", 26,

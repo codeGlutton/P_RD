@@ -153,6 +153,7 @@
       <button id="zones" class="on">구역 표시</button>
       <button id="copy">코드 복사</button>
       <button id="save" class="warm">파일로 저장</button>
+      <button id="spread">같은 판 전체에 적용</button>
       <button id="one">이 구역만 원래대로</button>
       <button id="undo">전부 원래 값으로</button>
       <span id="said"></span><span id="dirty"></span>
@@ -400,6 +401,11 @@ function zonesOf(shell, table, role, ox, oy) {
 function grab(e, role, key, side) {
   e.preventDefault();
   e.stopPropagation();
+  // 숫자칸에 초점이 남아 있으면 방향키가 그 칸의 숫자를 오르내린다.
+  // 구역을 집는 순간 초점을 뗀다.
+  if (document.activeElement && document.activeElement.blur) {
+    document.activeElement.blur();
+  }
   sel = key;
   selRole = role;
   mark();
@@ -614,6 +620,23 @@ $("save").onclick = () => {
   a.click();
   URL.revokeObjectURL(a.href);
   flash("slots_01.json 을 내려받았습니다 — apply_slots.py 로 넣으세요");
+};
+
+// 같은 종류 판 전체에 이 판의 값을 퍼뜨린다. 판마다 따로 맞추는 것이
+// 원칙이지만, 처음 잡을 때는 하나 맞춰 놓고 퍼뜨린 뒤 다듬는 편이 빠르다.
+$("spread").onclick = () => {
+  if (!selRole) return;
+  const kind = selRole.replace(/_\d+$/, "");
+  const mates = Object.keys(TABLE)
+    .filter((k) => k === kind || k.startsWith(kind + "_"));
+  if (mates.length < 2) { flash("같은 종류 판이 하나뿐입니다"); return; }
+  mark();
+  for (const mate of mates) {
+    if (mate !== selRole) TABLE[mate] = structuredClone(TABLE[selRole]);
+  }
+  paint();
+  keep();
+  flash(kind + " 판 " + mates.length + "장에 퍼뜨렸습니다");
 };
 
 // 고른 구역 하나만 처음 값으로.

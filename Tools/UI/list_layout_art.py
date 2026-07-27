@@ -110,15 +110,23 @@ def main():
     table = SLOTS.get(number, {})
     groups = []
     plates = []
+    seen_role = {}
     for row in manifest[number]:
+        seen_role[row["role"]] = seen_role.get(row["role"], -1) + 1
         for asset, _ax, _ay, _aw, _ah in row["arts"]:
             plates.append({
                 "path": "%s/%s" % (
                     "/Game/SVN/OutSideAsset/UI/KayKit/Cutouts", asset),
                 "note": ROLE_LABEL.get(row["role"], row["role"]),
-                # 구역은 역할별로 하나다. 아군 세 줄이 같은 표를 보므로
-                # 한 줄에서 고치면 세 줄이 같이 바뀐다 -- 그게 맞다.
-                "role": row["role"],
+                # 판마다 구역이 따로다. 판을 하나씩 생성해 안쪽이 몇 px 씩
+                # 다르므로, 묶어 두면 각자 맞출 수가 없다.
+                #
+                # 표에 판별 키가 있으면 그것을, 없으면 역할 키를 가리킨다.
+                # 한 장뿐인 판(적 정보)은 번호를 안 붙여 두었다.
+                "role": ("%s_%d" % (row["role"], seen_role[row["role"]])
+                         if ("%s_%d" % (row["role"],
+                                        seen_role[row["role"]])) in table
+                         else row["role"]),
             })
     groups.append(("오려 낸 판", "Chrome_* / *Plate_* 의 _Art0", plates))
     for title, users, paths in FIXED:
