@@ -42,6 +42,9 @@ namespace CombatLayoutCapture
 {
 	/** @brief 잡아 볼 배치안 목록. WBP가 생기는 대로 여기에 줄을 늘린다. */
 	const TCHAR* LayoutClassPaths[] = {
+		// 용병 고용 화면. 전투 배치안은 아니지만 같은 방식으로 구워서
+		// 같은 방식으로 대조한다 -- 캡처 틀을 화면마다 새로 만들 이유가 없다.
+		TEXT("/Game/UI/CombatLayouts/WBP_MercenaryHire.WBP_MercenaryHire_C"),
 		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_01_ClassicCRPG.WBP_CombatLayout_01_ClassicCRPG_C"),
 		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_02_LeftParty.WBP_CombatLayout_02_LeftParty_C"),
 		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_03_ActiveUnit.WBP_CombatLayout_03_ActiveUnit_C"),

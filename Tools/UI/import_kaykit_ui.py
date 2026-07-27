@@ -15,11 +15,13 @@ SLICE_SOURCE = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitUIKit/Slices"
 CHROME_SOURCE = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitUIKit/Chrome"
 CUTOUT_SOURCE = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitUIKit/Cutouts"
 HEAD_SOURCE = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitUIKit/Heads"
+HIRE_SOURCE = r"D:/UnrealProjects/P_RD_develop_20260726/Tools/UI/KayKitUIKit/Hire"
 PACKAGE = "/Game/SVN/OutSideAsset/UI/KayKit"
 SLICE_PACKAGE = PACKAGE + "/Slices"
 CHROME_PACKAGE = PACKAGE + "/Chrome"
 CUTOUT_PACKAGE = PACKAGE + "/Cutouts"
 HEAD_PACKAGE = PACKAGE + "/Heads"
+HIRE_PACKAGE = PACKAGE + "/Hire"
 
 files = sorted(f for f in os.listdir(SOURCE) if f.lower().endswith(".png"))
 if not files:
@@ -42,7 +44,19 @@ head_files = sorted(f for f in os.listdir(HEAD_SOURCE)
                     if f.lower().endswith(".png")
                     and not f.startswith("contact"))     if os.path.isdir(HEAD_SOURCE) else []
 
+#: 용병 고용 화면에서 뜯은 판.
+hire_files = sorted(f for f in os.listdir(HIRE_SOURCE)
+                    if f.lower().endswith(".png"))     if os.path.isdir(HIRE_SOURCE) else []
+
 tasks = []
+for name in hire_files:
+    task = unreal.AssetImportTask()
+    task.set_editor_property("filename", os.path.join(HIRE_SOURCE, name))
+    task.set_editor_property("destination_path", HIRE_PACKAGE)
+    task.set_editor_property("automated", True)
+    task.set_editor_property("replace_existing", True)
+    task.set_editor_property("save", True)
+    tasks.append(task)
 for name in head_files:
     task = unreal.AssetImportTask()
     task.set_editor_property("filename", os.path.join(HEAD_SOURCE, name))
@@ -136,6 +150,7 @@ def dress(package, names, label):
     unreal.log("[KayKit] {} 설정 {}장".format(label, done))
 
 
+dress(HIRE_PACKAGE, hire_files, "고용 화면")
 dress(HEAD_PACKAGE, head_files, "얼굴")
 dress(CUTOUT_PACKAGE, cutout_files, "조각")
 dress(CHROME_PACKAGE, chrome_files, "껍데기")
