@@ -1,0 +1,440 @@
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 14px 20px 30px; background: #14161a; color: #dfe3ea;
+    font: 14px/1.5 "Malgun Gothic", system-ui, sans-serif;
+  }
+  h1 { font-size: 16px; margin: 0 0 3px; }
+  h2 { font-size: 13px; margin: 0 0 6px; color: #8b93a1; font-weight: normal; }
+  .hint { color: #8b93a1; font-size: 12.5px; margin: 0 0 12px; }
+  kbd {
+    background: #262c37; border: 1px solid #39404e; border-bottom-width: 2px;
+    border-radius: 4px; padding: 0 5px; font: inherit; font-size: 12px;
+  }
+  .cols { display: flex; gap: 18px; align-items: flex-start; }
+  #side {
+    flex: 0 0 300px; max-height: 84vh; overflow: auto;
+    border: 1px solid #2a303b; border-radius: 8px; background: #0d0f12;
+    padding: 8px;
+  }
+  .grp { margin-bottom: 10px; }
+  .grp > h3 {
+    font-size: 12.5px; margin: 0 0 2px; padding: 4px 7px; color: #ffd24a;
+    background: #1c212b; border-radius: 5px; font-weight: normal;
+  }
+  .grp .who { font-size: 11.5px; color: #79818f; padding: 0 8px 4px; }
+  .it {
+    display: flex; gap: 8px; align-items: center; padding: 4px 7px;
+    border-radius: 5px; cursor: pointer; font-size: 12.5px;
+  }
+  .it:hover { background: #1e232d; }
+  .it.on { background: #2f4670; color: #fff; }
+  .chip {
+    flex: 0 0 28px; height: 28px; border-radius: 4px; padding: 1px;
+    background-color: #1b202a;
+    background-image:
+      linear-gradient(45deg, #262c38 25%, transparent 25%),
+      linear-gradient(-45deg, #262c38 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #262c38 75%),
+      linear-gradient(-45deg, transparent 75%, #262c38 75%);
+    background-size: 8px 8px;
+    background-position: 0 0, 0 4px, 4px -4px, -4px 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .chip img { max-width: 100%; max-height: 100%; }
+  .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .it.gone .nm { color: #d97a7a; }
+
+  #main { flex: 1 1 auto; min-width: 0; }
+  #canvas {
+    border: 1px solid #2a303b; border-radius: 8px; padding: 26px 18px 18px;
+    min-height: 40vh; max-height: 60vh; overflow: auto;
+    background-color: #0d0f12;
+    background-image:
+      linear-gradient(45deg, #171b22 25%, transparent 25%),
+      linear-gradient(-45deg, #171b22 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #171b22 75%),
+      linear-gradient(-45deg, transparent 75%, #171b22 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+  }
+  #shell { position: relative; }
+  #shell img { display: block; image-rendering: pixelated; }
+  .zone {
+    position: absolute; border: 1.5px solid rgba(102, 224, 255, .95);
+    background: rgba(102, 224, 255, .12);
+  }
+  .zone.live { cursor: move; }
+  .zone.sel {
+    border-color: #ffd24a; background: rgba(255, 210, 74, .22);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .5);
+  }
+  .zone > .tag {
+    position: absolute; bottom: 100%; left: -1px; white-space: nowrap;
+    background: #66e0ff; color: #06202a; font-size: 11px; line-height: 1.35;
+    padding: 0 4px; border-radius: 3px; transform-origin: 0 100%;
+  }
+  .zone.sel > .tag { background: #ffd24a; color: #2a2000; }
+  .zone > .grip {
+    position: absolute; right: 0; bottom: 0; width: 10px; height: 10px;
+    background: #ffd24a; border: 1px solid #6b5200; cursor: nwse-resize;
+    transform-origin: 100% 100%;
+  }
+
+  .under { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+  .under > * { min-width: 0; }
+  dl {
+    display: grid; grid-template-columns: max-content 1fr; gap: 3px 12px;
+    margin: 12px 0 0; font-size: 13px;
+  }
+  dt { color: #8b93a1; }
+  dd { margin: 0; }
+  code { color: #a8e6a3; font-size: 12.5px; word-break: break-all; user-select: all; }
+  table { border-collapse: collapse; font-size: 13px; margin-top: 12px; }
+  th, td { padding: 2px 12px 2px 0; text-align: left; white-space: nowrap; }
+  th { color: #8b93a1; font-weight: normal; border-bottom: 1px solid #2a303b; }
+  td.num { font-variant-numeric: tabular-nums; text-align: right; }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover td { color: #fff; }
+  tbody tr.sel td { color: #ffd24a; }
+  pre {
+    background: #0d0f12; border: 1px solid #2a303b; border-radius: 8px;
+    margin: 0; padding: 11px 13px; overflow: auto; font-size: 12.5px;
+    line-height: 1.45; max-height: 260px;
+  }
+  .bar { display: flex; gap: 7px; margin-top: 11px; flex-wrap: wrap; }
+  button {
+    background: #232833; color: #dfe3ea; border: 1px solid #39404e;
+    border-radius: 6px; padding: 5px 12px; font: inherit; cursor: pointer;
+  }
+  button:hover { background: #2c323f; }
+  button.on { background: #3d5a8a; border-color: #6a8fd0; color: #fff; }
+  button.warm { border-color: #6b5200; color: #ffd24a; }
+  #said { color: #8ce99a; font-size: 12.5px; align-self: center; }
+  #dirty { color: #ffd24a; font-size: 12.5px; align-self: center; }
+</style>
+
+<h1>시안1 배치안이 쓰는 그림 · 구역 조정</h1>
+<p class="hint">
+  왼쪽에서 판을 고르면 그 위에 구역이 뜹니다. 끌어 옮기고 손잡이로 크기를
+  바꿉니다 — <kbd>←↑↓→</kbd> 1px · <kbd>Shift</kbd> 10px ·
+  <kbd>Alt</kbd> 크기.
+  구역은 <b>역할별로 하나</b>라 아군 한 줄을 고치면 세 줄이 같이 바뀝니다.
+  고친 값은 자동으로 남습니다.
+</p>
+
+<div class="cols">
+  <div id="side"></div>
+  <div id="main">
+    <div id="canvas"><span style="color:#5a6270">왼쪽에서 고르세요</span></div>
+    <div class="bar">
+      <button id="zoom1">원래 크기</button>
+      <button id="zoom2" class="on">×2</button>
+      <button id="zoom4">×4</button>
+      <button id="zones" class="on">구역 표시</button>
+      <button id="copy">코드 복사</button>
+      <button id="save" class="warm">파일로 저장</button>
+      <button id="undo">원래 값으로</button>
+      <span id="said"></span><span id="dirty"></span>
+    </div>
+
+    <div class="under">
+      <div>
+        <dl id="facts"></dl>
+        <table><thead><tr>
+          <th>구역</th><th>x</th><th>y</th><th>w</th><th>h</th>
+        </tr></thead><tbody id="list"></tbody></table>
+      </div>
+      <div style="flex:1 1 400px">
+        <h2 style="margin-top:12px">slot_table.py 에 붙일 코드</h2>
+        <pre id="out"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// 자료는 list_layout_art.py 가 여기에 박아 넣는다. 따로 두고 fetch 로 읽게
+// 했더니 브라우저가 막았다 -- file:// 에서는 같은 폴더 파일도 fetch 가 안
+// 된다(그림 태그는 된다).
+const GROUPS = /*DATA*/null;
+const BASE = /*TABLE*/null;
+
+const KEEP = "rd.slots.01";
+let TABLE = structuredClone(BASE || {});
+let picked = null, mode = 2, showZones = true, sel = null;
+
+const $ = (id) => document.getElementById(id);
+
+// 고친 값은 브라우저에 남긴다. 새로고침이나 창을 닫아도 되돌아가지 않게 --
+// 픽셀 단위로 맞춘 것을 실수로 날리면 처음부터 다시다.
+try {
+  const kept = localStorage.getItem(KEEP);
+  if (kept) TABLE = JSON.parse(kept);
+} catch (err) { /* 저장이 막힌 환경이면 그냥 원래 값으로 간다 */ }
+
+function keep() {
+  try { localStorage.setItem(KEEP, JSON.stringify(TABLE)); } catch (err) {}
+  const same = JSON.stringify(TABLE) === JSON.stringify(BASE);
+  $("dirty").textContent = same ? "" : "· 고친 값 있음(자동 저장됨)";
+}
+
+// pips 는 (x, y, 한 변, 간격, 개수)다. 상자로는 칸마다 보여 주되 끄는 것은
+// 첫 칸뿐이다 -- 나머지는 간격 값대로 저절로 늘어선다.
+const isPips = (key) => key === "pips";
+
+function boxesOf(slots) {
+  const out = [];
+  for (const [key, v] of Object.entries(slots)) {
+    if (!Array.isArray(v)) continue;          // align 같은 것은 건너뛴다
+    if (isPips(key)) {
+      const [x, y, side, step, count] = v;
+      for (let i = 0; i < count; i += 1) {
+        out.push({ key, label: key + "_" + i, live: i === 0,
+                   box: [x + i * step, y, side, side] });
+      }
+    } else {
+      out.push({ key, label: key, live: true, box: v.slice(0, 4) });
+    }
+  }
+  return out;
+}
+
+function draw() {
+  if (!GROUPS) {
+    $("side").innerHTML = '<div style="padding:10px;color:#d97a7a">' +
+      '자료가 안 박혔습니다. list_layout_art.py 를 다시 돌려 주세요.</div>';
+    return;
+  }
+  $("side").innerHTML = "";
+  for (const group of GROUPS) {
+    const box = document.createElement("div");
+    box.className = "grp";
+    box.innerHTML = `<h3>${group.title} · ${group.items.length}</h3>` +
+                    `<div class="who">${group.users}</div>`;
+    for (const item of group.items) {
+      const el = document.createElement("div");
+      el.className = "it" + (item.png ? "" : " gone");
+      el.innerHTML =
+        `<span class="chip">${item.png ? `<img src="${item.png}">` : "?"}</span>` +
+        `<span class="nm">${item.name}</span>`;
+      el.onclick = () => { picked = item; sel = null; show(); };
+      item.el = el;
+      box.appendChild(el);
+    }
+    $("side").appendChild(box);
+  }
+  code();
+  keep();
+}
+
+function show() {
+  for (const group of GROUPS) {
+    for (const item of group.items) {
+      item.el.classList.toggle("on", item === picked);
+    }
+  }
+  const canvas = $("canvas");
+  canvas.innerHTML = "";
+  if (!picked) return;
+
+  if (!picked.png) {
+    canvas.innerHTML =
+      '<span style="color:#d97a7a">원본 PNG를 못 찾았습니다</span>';
+    return;
+  }
+  const shell = document.createElement("div");
+  shell.id = "shell";
+  const img = new Image();
+  img.onload = () => { fit(img); paint(); facts(img); };
+  img.src = picked.png;
+  shell.appendChild(img);
+  canvas.appendChild(shell);
+}
+
+function fit(img) {
+  img.style.width = img.naturalWidth * mode + "px";
+  img.style.height = img.naturalHeight * mode + "px";
+  const shell = $("shell");
+  shell.style.width = img.style.width;
+  shell.style.height = img.style.height;
+}
+
+function slots() {
+  return (picked && picked.role) ? TABLE[picked.role] : null;
+}
+
+function paint() {
+  const shell = $("shell");
+  if (!shell) return;
+  for (const old of shell.querySelectorAll(".zone")) old.remove();
+  const table = slots();
+  if (!showZones || !table) { list(); code(); return; }
+
+  for (const item of boxesOf(table)) {
+    const [x, y, w, h] = item.box;
+    const el = document.createElement("div");
+    el.className = "zone" + (item.live ? " live" : "") +
+                   (item.key === sel ? " sel" : "");
+    el.style.cssText = `left:${x * mode}px;top:${y * mode}px;` +
+      `width:${w * mode}px;height:${h * mode}px`;
+    el.innerHTML =
+      `<span class="tag" style="transform:scale(${1 / mode})">` +
+      `${item.label}</span>` +
+      (item.live ? `<div class="grip" style="transform:scale(${1 / mode})">` +
+                   `</div>` : "");
+    if (item.live) {
+      el.onmousedown = (e) => grab(e, item.key,
+                                   e.target.className === "grip");
+    }
+    shell.appendChild(el);
+  }
+  list();
+  code();
+}
+
+function grab(e, key, resizing) {
+  e.preventDefault();
+  sel = key;
+  const v = slots()[key];
+  const start = v.slice();
+  const ox = e.clientX, oy = e.clientY;
+  const move = (m) => {
+    const dx = Math.round((m.clientX - ox) / mode);
+    const dy = Math.round((m.clientY - oy) / mode);
+    if (resizing) {
+      v[2] = Math.max(4, start[2] + dx);
+      if (!isPips(key)) v[3] = Math.max(4, start[3] + dy);
+    } else {
+      v[0] = start[0] + dx;
+      v[1] = start[1] + dy;
+    }
+    paint();
+  };
+  const up = () => {
+    window.removeEventListener("mousemove", move);
+    window.removeEventListener("mouseup", up);
+    keep();
+  };
+  window.addEventListener("mousemove", move);
+  window.addEventListener("mouseup", up);
+  paint();
+}
+
+window.addEventListener("keydown", (e) => {
+  const table = slots();
+  if (!sel || !table) return;
+  const at = { ArrowLeft: [-1, 0], ArrowRight: [1, 0],
+               ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+  if (!at) return;
+  e.preventDefault();
+  const step = e.shiftKey ? 10 : 1;
+  const v = table[sel];
+  if (e.altKey) {
+    v[2] = Math.max(4, v[2] + at[0] * step);
+    if (!isPips(sel)) v[3] = Math.max(4, v[3] + at[1] * step);
+  } else {
+    v[0] += at[0] * step;
+    v[1] += at[1] * step;
+  }
+  paint();
+  keep();
+});
+
+function facts(img) {
+  $("facts").innerHTML =
+    `<dt>이름</dt><dd>${picked.name}</dd>` +
+    (picked.note ? `<dt>쓰이는 곳</dt><dd>${picked.note}</dd>` : "") +
+    `<dt>크기</dt><dd>${img.naturalWidth} × ${img.naturalHeight}</dd>` +
+    `<dt>엔진 경로</dt><dd><code>${picked.path}</code></dd>`;
+}
+
+function list() {
+  const table = slots();
+  const body = $("list");
+  if (!table) { body.innerHTML = ""; return; }
+  const rows = [];
+  for (const [key, v] of Object.entries(table)) {
+    if (!Array.isArray(v)) continue;
+    const w = isPips(key) ? v[2] : v[2];
+    const h = isPips(key) ? v[2] : v[3];
+    rows.push(`<tr class="${key === sel ? "sel" : ""}" data-k="${key}">` +
+      `<td>${key}</td><td class="num">${v[0]}</td><td class="num">${v[1]}</td>` +
+      `<td class="num">${w}</td><td class="num">${h}</td></tr>`);
+  }
+  body.innerHTML = rows.join("");
+  for (const tr of body.children) {
+    tr.onclick = () => { sel = tr.dataset.k; paint(); };
+  }
+}
+
+function pyText() {
+  const lines = ['    "01": {'];
+  for (const [role, keys] of Object.entries(TABLE)) {
+    lines.push(`        "${role}": {`);
+    for (const [key, v] of Object.entries(keys)) {
+      lines.push(Array.isArray(v)
+        ? `            "${key}": (${v.join(", ")}),`
+        : `            "${key}": ${JSON.stringify(v)},`);
+    }
+    lines.push("        },");
+  }
+  lines.push("    },");
+  return lines.join("\n");
+}
+
+function code() { $("out").textContent = pyText(); }
+
+function flash(text) {
+  $("said").textContent = text;
+  setTimeout(() => { $("said").textContent = ""; }, 1800);
+}
+
+for (const [id, value] of [["zoom1", 1], ["zoom2", 2], ["zoom4", 4]]) {
+  $(id).onclick = () => {
+    mode = value;
+    for (const other of ["zoom1", "zoom2", "zoom4"]) {
+      $(other).classList.toggle("on", other === id);
+    }
+    const img = $("shell") && $("shell").querySelector("img");
+    if (img) { fit(img); paint(); }
+  };
+}
+
+$("zones").onclick = () => {
+  showZones = !showZones;
+  $("zones").classList.toggle("on", showZones);
+  paint();
+};
+
+$("copy").onclick = async () => {
+  await navigator.clipboard.writeText(pyText());
+  flash("코드를 복사했습니다");
+};
+
+// 브라우저는 파일을 제자리에 못 쓴다. 내려받은 뒤 apply_slots.py 가 그걸
+// 읽어 slot_table.py 에 넣는다.
+$("save").onclick = () => {
+  const blob = new Blob([JSON.stringify(TABLE, null, 1)],
+                        { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "slots_01.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  flash("slots_01.json 을 내려받았습니다 — apply_slots.py 로 넣으세요");
+};
+
+$("undo").onclick = () => {
+  if (!confirm("고친 값을 버리고 원래 값으로 되돌립니다.")) return;
+  TABLE = structuredClone(BASE || {});
+  try { localStorage.removeItem(KEEP); } catch (err) {}
+  sel = null;
+  paint();
+  keep();
+  flash("되돌렸습니다");
+};
+
+draw();
+</script>
