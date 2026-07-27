@@ -52,6 +52,11 @@ struct P_RD_API FFrontendCharacterOption
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	FText mStatSummary;
 
+	// 이 캐릭터가 들고 시작하는 스킬 이름. 용병 선택 화면이 카드에 두 줄로 건다.
+	// 이름만 있으면 되고 쿨타임/피해 같은 수치는 UI가 판단하지 않는다.
+	UPROPERTY(Category = Frontend, BlueprintReadOnly)
+	TArray<FText> mSkillNames;
+
 	// 시작 최대 체력. UI는 표시만 하고 계산하지 않는다.
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	int32 mMaxHP = 0;

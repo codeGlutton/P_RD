@@ -21,6 +21,7 @@
 #include "Setting/GamePlaySettings.h"
 #include "DataAsset/RoomSpawnData/StaticFrontendRoomSpawnData.h"
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
+#include "DataAsset/SkillData/StaticSkillData.h"
 
 #include "UI/RDUserWidget.h"
 
@@ -426,6 +427,17 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 			NSLOCTEXT("FrontendGameMode", "CharacterStatSummary", "HP {0} / Gold {1}"),
 			FText::AsNumber(NewOption.mMaxHP),
 			FText::AsNumber(NewOption.mGold));
+		// 스킬 이름. 용병 선택 화면이 카드에 두 줄로 건다.
+		// 동기 로드를 쓴다. 프론트엔드에서 여섯 명 남짓을 한 번 훑는 자리이고,
+		// 비동기로 받으면 카드가 이름 없이 먼저 그려졌다가 뒤늦게 채워진다.
+		for (const TSoftObjectPtr<UStaticSkillData>& SkillSoft
+			: LoadedPlayerUnitData->mSkillDatas)
+		{
+			if (const UStaticSkillData* Skill = SkillSoft.LoadSynchronous())
+			{
+				NewOption.mSkillNames.Add(Skill->mName);
+			}
+		}
 		NewOption.mPortrait = LoadedPlayerUnitData->mPortrait;
 		NewOption.mIcon = LoadedPlayerUnitData->mIcon;
 		NewOption.mPlayerUnitId = LoadedPlayerUnitData->GetPrimaryAssetId();

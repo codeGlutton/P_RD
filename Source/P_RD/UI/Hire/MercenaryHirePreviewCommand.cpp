@@ -5,8 +5,9 @@
  * 전투 밖에서도 열려야 한다. 화면을 고칠 때마다 게임을 처음부터 돌려
  * 고용 단계까지 가야 한다면 아무도 안 고친다.
  *
- * 데이터를 넘기지 않으므로 WBP 에 구워 둔 글자가 그대로 보인다. 고르고
- * 예산이 깎이는 규칙은 그대로 돈다 -- 값이 시안 그대로일 뿐이다.
+ * 프론트엔드에서 부르면 실제 후보를 걸어 준다. 다른 데서 부르면 넘길 것이
+ * 없어 WBP 에 구워 둔 시안 글자가 그대로 보인다 -- 고르는 규칙은 어느 쪽이든
+ * 똑같이 돈다.
  * @author 박용수
  * @date   2026-07-27
  *********************************************************************/
@@ -17,6 +18,7 @@
 #include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "HAL/IConsoleManager.h"
+#include "GameMode/FrontendGameMode.h"
 #include "UI/Hire/MercenaryHireWidget.h"
 
 #if !UE_BUILD_SHIPPING
@@ -84,6 +86,19 @@ namespace MercenaryHirePreview
 		{
 			UE_LOG(LogTemp, Warning, TEXT("[고용] 위젯 생성 실패"));
 			return;
+		}
+
+		// 프론트엔드에 있으면 실제 후보를 건다. 없으면 시안 글자가 남는다.
+		if (const AFrontendGameMode* Frontend =
+			Cast<AFrontendGameMode>(World->GetAuthGameMode()))
+		{
+			TArray<FFrontendCharacterOption> Options;
+			if (Frontend->GetCharacterOptions(Options))
+			{
+				Widget->SetCharacterOptions(Options);
+				UE_LOG(LogTemp, Display, TEXT("[고용] 후보 %d명 걸음"),
+					Options.Num());
+			}
 		}
 
 		Widget->AddToViewport(5000);

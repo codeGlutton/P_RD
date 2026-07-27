@@ -4,7 +4,6 @@
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Blueprint/WidgetTree.h"
-#include "DataAsset/MercenaryData/MercenaryData.h"
 #include "Engine/Texture2D.h"
 
 #define LOCTEXT_NAMESPACE "MercenaryHire"
@@ -48,32 +47,22 @@ namespace
 		}
 	}
 
-	FText RoleName(const EMercenaryRole Role)
-	{
-		switch (Role)
-		{
-		case EMercenaryRole::Ranged:  return LOCTEXT("RoleRanged", "원거리");
-		case EMercenaryRole::Magic:   return LOCTEXT("RoleMagic", "마법");
-		case EMercenaryRole::Support: return LOCTEXT("RoleSupport", "지원");
-		default:                      return LOCTEXT("RoleMelee", "근접");
-		}
-	}
 }
 
 void UMercenaryHireWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 	CacheWidgets();
-	LoadBoard();
 	Refresh();
 }
 
-void UMercenaryHireWidget::SetBoardData(UMercenaryBoardData* BoardData)
+void UMercenaryHireWidget::SetCharacterOptions(
+	const TArray<FFrontendCharacterOption>& Options, const int32 PartySize)
 {
-	mBoardData = BoardData;
+	mCrew = Options;
+	mPartySize = FMath::Max(1, PartySize);
 	mChosen.Reset();
 	mReviewing = INDEX_NONE;
-	LoadBoard();
 	Refresh();
 }
 
@@ -154,27 +143,6 @@ void UMercenaryHireWidget::CacheWidgets()
 	}
 }
 
-void UMercenaryHireWidget::LoadBoard()
-{
-	mCrew.Reset();
-	if (mBoardData == nullptr)
-	{
-		// 데이터 없이도 화면은 봐야 한다. 에디터에서 WBP 를 열거나 콘솔로
-		// 띄우는 경우가 그렇다. 이때는 WBP 에 구워 둔 글자가 그대로 남는다.
-		mPartySize = 3;
-		return;
-	}
-
-	mPartySize = FMath::Max(1, mBoardData->mPartySize);
-	for (const TSoftObjectPtr<UMercenaryData>& Soft : mBoardData->mMercenaries)
-	{
-		if (UMercenaryData* Data = Soft.LoadSynchronous())
-		{
-			mCrew.Add(Data);
-		}
-	}
-}
-
 EMercenaryCardState UMercenaryHireWidget::StateOf(const int32 CardIndex) const
 {
 	if (mChosen.Contains(CardIndex))
@@ -195,9 +163,17 @@ bool UMercenaryHireWidget::IsReadyToDepart() const
 	return mChosen.Num() == mPartySize;
 }
 
-void UMercenaryHireWidget::HandleCardClicked(const int32 CardIndex)
+void UMercenaryHireWidget::ClickCard(const int32 CardIndex)
 {
-	if (!mCards.IsValidIndex(CardIndex))
+	// 칸 수로 막는다. 위젯을 못 찾았다고 규칙까지 멈추면 안 된다 -- WBP 없이
+	// 규칙만 시험할 때 아무 일도 안 일어나서 시험이 통과해 버린다.
+	if (CardIndex < 0 || CardIndex >= CardCount)
+	{
+		return;
+	}
+	// 잠긴 후보는 눌러도 아무 일이 없다. 잠금 판정은 게임 모드가 끝내 놓았고
+	// 화면은 그 bool 만 믿는다 -- 여기서 다시 따지면 두 곳이 어긋난다.
+	if (mCrew.IsValidIndex(CardIndex) && !mCrew[CardIndex].mSelectable)
 	{
 		return;
 	}
@@ -250,26 +226,28 @@ void UMercenaryHireWidget::RefreshCard(const int32 CardIndex)
 		return;
 	}
 
-	const UMercenaryData* Data = mCrew[CardIndex];
-	SetTextIfPresent(Card.mName, Data->mName);
-	SetTextIfPresent(Card.mRole, RoleName(Data->mRole));
+	const FFrontendCharacterOption& Option = mCrew[CardIndex];
+	SetTextIfPresent(Card.mName, Option.mDisplayName);
+	SetTextIfPresent(Card.mRole, Option.mRoleText);
 	SetTextIfPresent(Card.mHP, FText::FromString(
-		FString::Printf(TEXT("HP %d"), Data->mMaxHP)));
-	SetTextIfPresent(Card.mTrait, Data->mTrait);
+		FString::Printf(TEXT("HP %d"), Option.mMaxHP)));
+	// 특성 자리에는 설명 문구가 들어간다. 왜 데려가는지 한 줄로 말해 주는
+	// 값이 이미 있는데 같은 뜻의 칸을 하나 더 두면 둘이 어긋난다.
+	SetTextIfPresent(Card.mTrait, Option.mDescription);
 
 	for (int32 Line = 0; Line < Card.mSkills.Num(); ++Line)
 	{
-		const bool bHas = Data->mSkillNames.IsValidIndex(Line);
+		const bool bHas = Option.mSkillNames.IsValidIndex(Line);
 		SetShown(Card.mSkills[Line], bHas);
 		if (bHas)
 		{
-			SetTextIfPresent(Card.mSkills[Line], Data->mSkillNames[Line]);
+			SetTextIfPresent(Card.mSkills[Line], Option.mSkillNames[Line]);
 		}
 	}
 
 	if (Card.mPortrait != nullptr)
 	{
-		if (UTexture2D* Face = Data->mPortrait.LoadSynchronous())
+		if (UTexture2D* Face = Option.mPortrait.LoadSynchronous())
 		{
 			Card.mPortrait->SetBrushFromTexture(Face, false);
 		}
@@ -279,7 +257,16 @@ void UMercenaryHireWidget::RefreshCard(const int32 CardIndex)
 	SetShown(Card.mSelected, State == EMercenaryCardState::Reviewing);
 	SetShown(Card.mSeal, State == EMercenaryCardState::Chosen);
 	SetShown(Card.mBadge, State != EMercenaryCardState::Chosen);
-	SetDimmed(Card.mRoot, State == EMercenaryCardState::Full);
+	SetDimmed(Card.mRoot,
+		State == EMercenaryCardState::Full || !Option.mSelectable);
+
+	if (!Option.mSelectable)
+	{
+		// 잠긴 사유는 게임 모드가 문구까지 만들어 준다. 없으면 그냥 잠김.
+		SetTextIfPresent(Card.mBadge, Option.mDisabledReason.IsEmpty()
+			? LOCTEXT("StateLocked", "잠김") : Option.mDisabledReason);
+		return;
+	}
 
 	switch (State)
 	{
@@ -311,11 +298,11 @@ void UMercenaryHireWidget::RefreshBottomBar()
 			SetTextIfPresent(Widgets.mName, LOCTEXT("SlotEmpty", "빈 자리"));
 			continue;
 		}
-		const UMercenaryData* Data = mCrew[mChosen[SlotIndex]];
-		SetTextIfPresent(Widgets.mName, Data->mName);
+		const FFrontendCharacterOption& Option = mCrew[mChosen[SlotIndex]];
+		SetTextIfPresent(Widgets.mName, Option.mDisplayName);
 		if (Widgets.mFace != nullptr)
 		{
-			if (UTexture2D* Face = Data->mPortrait.LoadSynchronous())
+			if (UTexture2D* Face = Option.mPortrait.LoadSynchronous())
 			{
 				Widgets.mFace->SetBrushFromTexture(Face, false);
 			}
@@ -348,16 +335,21 @@ void UMercenaryHireWidget::RefreshBottomBar()
 
 void UMercenaryHireWidget::HandleDepartClicked()
 {
+	ConfirmParty();
+}
+
+void UMercenaryHireWidget::ConfirmParty()
+{
 	if (!IsReadyToDepart())
 	{
 		return;
 	}
-	TArray<TObjectPtr<UMercenaryData>> Party;
+	TArray<FPrimaryAssetId> Party;
 	for (const int32 Index : mChosen)
 	{
 		if (mCrew.IsValidIndex(Index))
 		{
-			Party.Add(mCrew[Index]);
+			Party.Add(mCrew[Index].mPlayerUnitId);
 		}
 	}
 	// 파티 저장과 화면 전환은 여기서 하지 않는다. 화면이 흐름까지 쥐면
@@ -365,11 +357,11 @@ void UMercenaryHireWidget::HandleDepartClicked()
 	mOnPartyConfirmed.Broadcast(Party);
 }
 
-void UMercenaryHireWidget::HandleCardClicked_0() { HandleCardClicked(0); }
-void UMercenaryHireWidget::HandleCardClicked_1() { HandleCardClicked(1); }
-void UMercenaryHireWidget::HandleCardClicked_2() { HandleCardClicked(2); }
-void UMercenaryHireWidget::HandleCardClicked_3() { HandleCardClicked(3); }
-void UMercenaryHireWidget::HandleCardClicked_4() { HandleCardClicked(4); }
-void UMercenaryHireWidget::HandleCardClicked_5() { HandleCardClicked(5); }
+void UMercenaryHireWidget::HandleCardClicked_0() { ClickCard(0); }
+void UMercenaryHireWidget::HandleCardClicked_1() { ClickCard(1); }
+void UMercenaryHireWidget::HandleCardClicked_2() { ClickCard(2); }
+void UMercenaryHireWidget::HandleCardClicked_3() { ClickCard(3); }
+void UMercenaryHireWidget::HandleCardClicked_4() { ClickCard(4); }
+void UMercenaryHireWidget::HandleCardClicked_5() { ClickCard(5); }
 
 #undef LOCTEXT_NAMESPACE
