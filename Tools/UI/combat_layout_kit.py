@@ -538,6 +538,25 @@ def image(blueprint, name, parent, x, y, w, h, parent_size=None,
     return widget
 
 
+def fold(blueprint, name):
+    """위젯을 접어 둔다. 런타임이 필요할 때 펼친다.
+
+    선택 테두리와 사용불가 덮개는 카드를 통째로 덮는 판이라, 펼친 채로
+    구워 두면 두 가지가 깨진다. 에디터에서 그 밑에 있는 이름과 막대를 찍을
+    수가 없고(위젯 이름을 계층에서만 고를 수 있었다), 화면에서는 아군 세 줄과
+    카드 여섯 장이 전부 선택된 것처럼 보인다.
+
+    런타임은 켤 때 SelfHitTestInvisible, 끌 때 Collapsed 로 둔다
+    (CombatLayoutHUDWidget 의 SetShown). 접힌 상태로 구우면 그 규칙과 맞물려
+    저절로 바른 값이 된다.
+    """
+    widget = helper.umg_find_widget(blueprint, name)
+    if widget is not None:
+        widget.set_editor_property("visibility",
+                                   unreal.SlateVisibility.COLLAPSED)
+    return widget
+
+
 def hud_font(size, bold=False):
     info = unreal.SlateFontInfo()
     info.set_editor_property("font_object", art(KK + "/Fonts/F_HUD_LINESeedKR"))

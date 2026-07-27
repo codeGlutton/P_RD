@@ -348,6 +348,7 @@ def _skill_by_table(bp, holder, size, index, table):
     kit.ghost_button(bp, "CommandButton_%d" % index, body, 0, 0, w, h, (w, h))
     kit.image(bp, "CommandDisabled_%d" % index, body, 0, 0, w, h, (w, h),
               z_order=kit.Z_OVERLAY, tint=kit.DISABLED_VEIL)
+    kit.fold(bp, "CommandDisabled_%d" % index)
     select_mark(bp, "CommandSelected_%d" % index, body, "skill", w, h)
 
 
@@ -421,6 +422,7 @@ def fill_skill(bp, holder, size, box, index, boxes=None):
     kit.ghost_button(bp, "CommandButton_%d" % index, body, 0, 0, w, h, (w, h))
     kit.image(bp, "CommandDisabled_%d" % index, body, 0, 0, w, h, (w, h),
               z_order=kit.Z_OVERLAY, tint=kit.DISABLED_VEIL)
+    kit.fold(bp, "CommandDisabled_%d" % index)
     select_mark(bp, "CommandSelected_%d" % index, body, "skill", w, h)
 
 
@@ -884,6 +886,9 @@ def select_mark(bp, name, parent, kind, w, h):
     _, sw, sh = kit.CHROME_SELECT[kind]
     aw, ah = sw * K, sh * K
     if abs(aw - w) < w * 0.25 and abs(ah - h) < h * 0.25:
-        return kit.chrome_select(bp, name, parent, kind, w, h, (w, h))
-    return kit.image(bp, name, parent, 0, 0, w, h, (w, h),
-                     z_order=kit.Z_MARKER, tint=kit.SELECT_VEIL)
+        kit.chrome_select(bp, name, parent, kind, w, h, (w, h))
+    else:
+        kit.image(bp, name, parent, 0, 0, w, h, (w, h),
+                  z_order=kit.Z_MARKER, tint=kit.SELECT_VEIL)
+    # 접어 둔다. 펼친 채로 두면 에디터에서 이 판이 카드를 덮어 밑을 못 찍는다.
+    return kit.fold(bp, name)
