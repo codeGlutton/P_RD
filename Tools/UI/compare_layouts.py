@@ -1,27 +1,26 @@
 # -*- coding: utf-8 -*-
-"""구운 화면에서 조각이 실제로 어디 놓였는지 재어 시안과 견준다.
+"""구운 화면을 시안과 견준다. 두 가지를 따로 묻는다.
 
-## 왜 캡처를 다시 재나
+## 조각이 제자리에 놓였나
 
-명세에 적힌 자리와 배치안에 넣은 자리는 같을 수밖에 없다 -- 같은 숫자를
-읽어 넣었으니까. 그걸 견주는 것은 검사가 아니다.
+명세에 적힌 자리와 배치안에 넣은 자리를 견주는 것은 검사가 아니다 -- 같은
+숫자를 읽어 넣었으니 항상 같다. 캡처 그림에서 조각을 다시 찾아 시안 자리와
+견준다. 그 사이에 배율 규칙과 앵커와 부모 캔버스가 끼어 있고, 이 작업에서
+틀린 것의 대부분이 거기서 생겼다.
 
-물어야 할 것은 "화면에 나온 자리가 시안의 그 자리냐"다. 그 사이에 배율
-규칙과 앵커와 부모 캔버스가 끼어 있고, 이 작업에서 틀린 것의 대부분이
-거기서 생겼다 -- 앵커를 안 줘서 구역이 겹쳤고, 캡처를 1920 으로 떠서
-15% 어긋난 적도 있다.
+다만 이 검사는 내가 놓은 그림을 내가 놓은 자리에서 찾는 것이라, 판이 밀린
+경우만 잡는다. 6안이 18/18을 받고도 카드가 검고 이름이 엉뚱한 데 있었다.
 
-그래서 캡처 그림에서 조각을 다시 찾는다. 캡처도 시안과 같은 1672x941 이라
-찾은 자리를 시안 자리에서 빼면 그게 어긋난 양이다.
+## 내용이 시안과 같은 자리에 있나
 
-## 어떻게 찾나
+그래서 하나 더 본다. 캡처에서 빈 판을 빼면 우리가 얹은 것들의 자리가 나오고,
+시안에서 빼면 시안이 얹은 것들의 자리가 나온다. 두 자리를 견준다.
 
-조각 그림을 캡처 위에서 밀어 보며 가장 잘 맞는 곳을 고른다. 자리표를 만들
-때 시안을 상대로 했던 것과 같은 방법이고, 상대만 캡처로 바뀐다.
-
-가장 잘 맞는 점수가 낮으면(=잘 맞으면) 그 자리를 믿고, 높으면 "못 찾음"
-으로 적는다. 안 그리는 것과 엉뚱한 데 그리는 것은 다른 문제인데, 억지로
-자리를 붙이면 둘이 섞여 보인다.
+픽셀로 통째로 견주던 것은 그만뒀다. 초상을 얼굴로 바꿔 화면이 분명히
+좋아졌는데 점수는 떨어졌기 때문이다 -- 얼굴이 커져 화면을 더 많이 차지하는데,
+우리 초상은 KayKit 렌더이고 시안 초상은 생성 그림이라 애초에 같아질 수가
+없다. 그림이 같아지는 것은 목표가 아니다. 물어야 할 것은 이름과 막대와
+얼굴이 시안과 같은 자리에 있느냐다.
 
     python compare_layouts.py            전부
     python compare_layouts.py --mockup 13
@@ -36,9 +35,11 @@ from concurrent.futures import ProcessPoolExecutor
 
 import numpy as np
 from PIL import Image
+from scipy import ndimage
 
 CHROME = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitUIKit/Chrome"
 CUTOUTS = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitUIKit/Cutouts"
+MOCKUPS = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitHUDMockups/Raw"
 SHOTS = (r"D:/UnrealProjects/P_RD_develop_20260726"
          r"/Saved/UI/CombatLayouts")
 
@@ -56,24 +57,25 @@ ASSETS = [
     "WBP_CombatLayout_19_TopRail", "WBP_CombatLayout_20_CommandMode",
 ]
 
-#: 이 점수를 넘으면 못 찾은 것으로 본다. 잘 맞은 것은 10 안쪽이다.
-#:
-#: 밝기를 맞춘 뒤 재므로 덮개나 색조는 걸러진다. 남는 것은 결이 다른 것,
-#: 곧 다른 판이 놓였거나 아무것도 안 놓인 경우다.
+#: 이 점수를 넘으면 조각을 못 찾은 것으로 본다. 잘 맞은 것은 10 안쪽이다.
 FOUND = 22.0
 
 #: 이 픽셀 수를 넘게 어긋나면 눈에 띈다. 시안 1672 폭에서 잰 값이다.
 TOLERANCE = 6
 
-
 #: 기대 자리에서 이만큼까지만 찾는다.
 #:
 #: 화면 전체를 훑으면 빈 카드끼리 서로의 칸에 붙는다 -- 똑같이 생겼으니
 #: 당연하다. 13안에서 카드가 220px 어긋난 것으로 나왔는데, 실은 옆 칸에
-#: 붙은 것이었다. 검사가 묻는 것은 "제자리에 있느냐"이지 "어디든 있느냐"가
-#: 아니므로, 제자리 둘레만 본다. 여기서 못 찾으면 그게 답이다.
+#: 붙은 것이었다. 검사가 묻는 것은 제자리에 있느냐이지 어디든 있느냐가
+#: 아니므로, 제자리 둘레만 본다.
 WINDOW = 48
 
+#: 두 상자가 이만큼 겹치면 같은 자리로 본다.
+OVERLAP = 0.35
+
+
+# ─── 조각이 제자리에 놓였나 ────────────────────────────────────────────────────
 
 def find(shot_grey, part_path, want_x, want_y):
     """기대 자리 둘레에서 조각이 가장 잘 맞는 곳과 그때의 평균차."""
@@ -82,10 +84,11 @@ def find(shot_grey, part_path, want_x, want_y):
     alpha = arr[:, :, 3] > 200
     th, tw = grey.shape
     mh, mw = shot_grey.shape
-    # 화면 폭을 꽉 채우는 판이 있다(20안 상단 띠는 1672px). 같은 크기를
-    # 막아 두었더니 그 판만 통째로 검사에서 빠졌다.
+    # 화면 폭을 꽉 채우는 판이 있다(20안 상단 띠는 1672px).
     if th > mh or tw > mw or alpha.sum() < 400:
         return None
+    tpl = grey[alpha]
+    tpl = tpl - tpl.mean()
 
     best, pos = None, None
     for y in range(max(0, min(want_y - WINDOW, mh - th)),
@@ -93,13 +96,9 @@ def find(shot_grey, part_path, want_x, want_y):
         for x in range(max(0, min(want_x - WINDOW, mw - tw)),
                        min(mw - tw, want_x + WINDOW) + 1):
             win = shot_grey[y:y + th, x:x + tw][alpha]
-            # 밝기 차를 뺀 뒤 견준다. 선택된 판에는 금빛 덮개가 얹혀 밝기가
-            # 통째로 올라가는데, 그대로 견주면 제자리에 있어도 점수가 튄다
-            # -- 시안마다 아군 한 장과 스킬 한 장이 꼭 "못찾음"으로 나왔고,
-            # 그게 바로 선택된 칸이었다. 자리를 보는 검사가 색에 걸리면
-            # 안 된다.
-            score = float(np.abs((win - win.mean())
-                                 - (grey[alpha] - grey[alpha].mean())).mean())
+            # 밝기를 맞춘 뒤 견준다. 선택된 판에는 금빛 덮개가 얹혀 밝기가
+            # 통째로 올라가는데, 그대로 견주면 제자리에 있어도 점수가 튄다.
+            score = float(np.abs((win - win.mean()) - tpl).mean())
             if best is None or score < best:
                 best, pos = score, (y, x)
     if pos is None:
@@ -118,21 +117,17 @@ def _one(job):
     x, y, score = got
     dx, dy = x - want_x, y - want_y
     if score <= FOUND:
-        return {"role": role, "state": "찾음", "dx": dx, "dy": dy,
-                "score": round(score, 1)}
+        return {"role": role, "state": "찾음", "dx": dx, "dy": dy}
     # 점수가 높아도 제자리를 짚었으면 "없다"가 아니라 "덮였다"다. 작은 판은
-    # 얼굴과 막대와 글자가 판 대부분을 가려서 결이 통째로 달라진다 -- 20안
-    # 이름표가 그렇다. 둘을 한 칸에 넣으면 진짜로 빠진 것이 묻힌다.
+    # 얼굴과 막대와 글자가 판 대부분을 가려서 결이 통째로 달라진다.
     if max(abs(dx), abs(dy)) <= TOLERANCE:
-        return {"role": role, "state": "덮임", "dx": dx, "dy": dy,
-                "score": round(score, 1)}
+        return {"role": role, "state": "덮임", "dx": dx, "dy": dy}
     return {"role": role, "state": "못찾음", "score": round(score, 1)}
 
 
-def run(number, manifest, pool):
+def plates(number, manifest, pool):
     shot_path = os.path.join(SHOTS, ASSETS[int(number) - 1] + ".png")
     if not os.path.exists(shot_path):
-        print("시안%s: 캡처 없음" % number)
         return None
 
     jobs = []
@@ -149,69 +144,103 @@ def run(number, manifest, pool):
     veiled = [r for r in results if r["state"] == "덮임"]
     lost = [r for r in results if r["state"] not in ("찾음", "덮임")]
     ok = len(results) - len(off) - len(lost) - len(veiled)
-    print("시안%s  %-28s  맞음 %2d  덮임 %2d  어긋남 %2d  못찾음 %2d" % (
-        number, ASSETS[int(number) - 1][17:], ok, len(veiled), len(off),
-        len(lost)))
-    for r in sorted(off, key=lambda e: -max(abs(e["dx"]), abs(e["dy"]))):
-        print("    %-10s dx=%+4d dy=%+4d" % (r["role"], r["dx"], r["dy"]))
-    for r in lost:
-        print("    %-10s %s  차 %s" % (r["role"], r["state"],
-                                       r.get("score", "")))
+    for item in off:
+        print("    %-10s dx=%+4d dy=%+4d" % (item["role"], item["dx"],
+                                             item["dy"]))
+    for item in lost:
+        print("    %-10s %s" % (item["role"], item["state"]))
     return ok, len(veiled), len(off), len(lost)
 
 
-MOCKUPS = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitHUDMockups/Raw"
+# ─── 내용이 시안과 같은 자리에 있나 ────────────────────────────────────────────
 
-#: 구역 차이가 이보다 크면 시안과 다르게 보인다는 뜻이다.
-#:
-#: 잘 맞은 구역은 12 안쪽이고, 글자가 통째로 빠지거나 엉뚱한 데 있으면
-#: 25를 넘는다. 6안에서 고치기 전후를 재어 잡았다.
-ZONE_GAP = 20.0
+def _content(area, blank):
+    """빈 판과 다른 곳. 곧 글자와 얼굴이 놓인 자리다."""
+    h = min(area.shape[0], blank.shape[0])
+    w = min(area.shape[1], blank.shape[1])
+    if h < 24 or w < 24:
+        return []
+    gap = np.abs(area[:h, :w] - blank[:h, :w])
+    inner = ndimage.binary_erosion(np.ones((h, w), bool), np.ones((9, 9)))
+    mask = ndimage.binary_closing(inner & (gap > 34), np.ones((3, 5)))
+    labels, count = ndimage.label(mask)
+    boxes = []
+    if count:
+        sizes = ndimage.sum(mask, labels, range(1, count + 1))
+        for i in np.argsort(sizes)[::-1][:10]:
+            if sizes[i] < 200:
+                break
+            ys, xs = np.where(labels == i + 1)
+            bw = int(xs.max() - xs.min() + 1)
+            bh = int(ys.max() - ys.min() + 1)
+            if bw < 9 or bh < 9:
+                continue
+            if bw > w * 0.92 and bh > h * 0.92:
+                continue
+            boxes.append((int(xs.min()), int(ys.min()), bw, bh))
+    return boxes
+
+
+def _iou(a, b):
+    ix = max(0, min(a[0] + a[2], b[0] + b[2]) - max(a[0], b[0]))
+    iy = max(0, min(a[1] + a[3], b[1] + b[3]) - max(a[1], b[1]))
+    hit = ix * iy
+    return hit / float(max(a[2] * a[3] + b[2] * b[3] - hit, 1))
 
 
 def _zone(job):
-    """구역 하나를 캡처와 시안에서 잘라 견준다.
-
-    자기가 놓은 그림을 자기가 찾는 검사는 항상 통과한다 -- 6안이 18/18을
-    받고도 카드가 검고 이름이 엉뚱한 데 있었다. 물어야 할 것은 "화면이
-    시안처럼 보이느냐"이고, 그러려면 시안과 견줘야 한다.
-
-    밝기는 맞춘 뒤 견준다. 선택 덮개와 색조 차이로 구역이 통째로 틀렸다고
-    나오면 진짜 어긋난 곳이 묻힌다.
-    """
-    shot_path, mock_path, rect, role = job
+    """구역 하나에서 우리 내용이 시안 내용과 같은 자리에 있는지."""
+    shot_path, mock_path, blank_path, rect, role = job
     x, y, w, h = rect
-    box = (x, y, x + w, y + h)
-    shot = np.asarray(Image.open(shot_path).convert("RGB").crop(box),
-                      dtype=float).mean(axis=2)
-    mock = np.asarray(Image.open(mock_path).convert("RGB").crop(box),
-                      dtype=float).mean(axis=2)
-    if shot.size == 0 or mock.size == 0:
+    crop = (x, y, x + w, y + h)
+
+    def grey(path):
+        art = Image.open(path).convert("RGB").crop(crop)
+        return np.asarray(art, dtype=float).mean(axis=2)
+
+    blank = np.asarray(Image.open(blank_path).convert("RGB"),
+                       dtype=float).mean(axis=2)
+    want = _content(grey(mock_path), blank)
+    if not want:
         return None
-    gap = float(np.abs((shot - shot.mean()) - (mock - mock.mean())).mean())
-    return {"role": role, "rect": rect, "gap": round(gap, 1)}
+    ours = _content(grey(shot_path), blank)
+
+    hit = sum(1 for target in want
+              if max([_iou(target, got) for got in ours] or [0.0]) > OVERLAP)
+    return {"role": role, "rect": rect, "hit": hit, "want": len(want)}
 
 
 def zones(number, manifest, pool):
-    """배치안 하나의 구역들을 시안과 견준다."""
     shot_path = os.path.join(SHOTS, ASSETS[int(number) - 1] + ".png")
     mock_path = os.path.join(MOCKUPS, "KK_HUD_Polish_%s.png" % number)
     if not (os.path.exists(shot_path) and os.path.exists(mock_path)):
         return None
 
-    jobs = [(shot_path, mock_path, row["rect"], row["role"])
-            for row in manifest[number]]
+    jobs = []
+    for row in manifest[number]:
+        arts = row.get("arts") or []
+        # 여러 장으로 덮은 자리는 빈 판 한 장으로 뺄 수 없다.
+        if len(arts) != 1:
+            continue
+        blank = os.path.join(CUTOUTS, arts[0][0] + ".png")
+        if os.path.exists(blank):
+            jobs.append((shot_path, mock_path, blank, row["rect"],
+                         row["role"]))
     found = [r for r in pool.map(_zone, jobs, chunksize=1) if r]
-    bad = sorted([r for r in found if r["gap"] > ZONE_GAP],
-                 key=lambda r: -r["gap"])
-    print("시안%s  %-24s  닮음 %2d / %2d" % (
-        number, ASSETS[int(number) - 1][17:], len(found) - len(bad),
-        len(found)))
-    for r in bad[:4]:
-        print("    %-10s 차 %5.1f  (x=%d y=%d %dx%d)" % (
-            r["role"], r["gap"], r["rect"][0], r["rect"][1],
-            r["rect"][2], r["rect"][3]))
-    return len(found) - len(bad), len(found)
+    if not found:
+        return None
+
+    hit = sum(r["hit"] for r in found)
+    want = sum(r["want"] for r in found)
+    bad = sorted([r for r in found if r["hit"] < r["want"]],
+                 key=lambda r: r["hit"] - r["want"])
+    print("시안%s  %-24s  자리 맞음 %3d / %3d" % (
+        number, ASSETS[int(number) - 1][17:], hit, want))
+    for item in bad[:3]:
+        print("    %-10s %d/%d  (x=%d y=%d %dx%d)" % (
+            item["role"], item["hit"], item["want"], item["rect"][0],
+            item["rect"][1], item["rect"][2], item["rect"][3]))
+    return hit, want
 
 
 def main():
@@ -227,29 +256,27 @@ def main():
     numbers = ([("%02d" % int(args.mockup))] if args.mockup
                else sorted(manifest, key=int))
     workers = max(1, min(16, (os.cpu_count() or 4) - 2))
-    total = [0, 0, 0, 0]
-    with ProcessPoolExecutor(max_workers=workers) as pool:
-        for number in numbers:
-            got = run(number, manifest, pool)
-            if got:
-                total = [a + b for a, b in zip(total, got)]
 
-    print()
-    print("=== 구역이 시안과 닮았나 ===")
-    close, zone_total = 0, 0
+    print("=== 내용이 시안과 같은 자리에 있나 ===")
+    hit, want = 0, 0
     with ProcessPoolExecutor(max_workers=workers) as pool:
         for number in numbers:
             got = zones(number, manifest, pool)
             if got:
-                close += got[0]
-                zone_total += got[1]
-    print("  닮음 %d / %d  (차 %.0f 이하)" % (close, zone_total, ZONE_GAP))
+                hit += got[0]
+                want += got[1]
+    print("  시안이 얹은 것 %d개 중 %d개가 같은 자리에 있다" % (want, hit))
 
     print()
     print("=== 조각이 제자리에 놓였나 ===")
+    total = [0, 0, 0, 0]
+    with ProcessPoolExecutor(max_workers=workers) as pool:
+        for number in numbers:
+            got = plates(number, manifest, pool)
+            if got:
+                total = [a + b for a, b in zip(total, got)]
     print("  맞음 %d  덮임 %d  어긋남 %d  못찾음 %d  (허용 %dpx)"
           % (total[0], total[1], total[2], total[3], TOLERANCE))
-    print("  덮임 = 제자리에 있으나 우리 글자·얼굴이 판을 가려 결이 다른 것")
 
 
 if __name__ == "__main__":

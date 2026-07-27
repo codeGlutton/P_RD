@@ -396,7 +396,7 @@ def _enemy_body(bp, holder, size, boxes=None):
     face = _face_box(slots, w, h)
     if face:
         kit.image(bp, "EnemyPortrait", holder, face[0], face[1], face[2],
-                  face[3], (w, h), texture=kit.KK + "/KK_Face_Eagle",
+                  face[3], (w, h), texture=kit.HEADS + "/KK_Face_Enemy_Eagle_HeadV2",
                   tint=kit.WHITE)
         slots = [e for e in slots if e is not face]
 

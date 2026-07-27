@@ -268,20 +268,27 @@ BADGE_TEXT = unreal.LinearColor(1.0, 0.98, 0.94, 1.0)
 #: Portraits we actually have art for. A slot with none keeps an empty socket
 #: rather than borrowing another unit's face -- the runtime overwrites it as
 #: soon as the model supplies one.
+#: 초상은 얼굴만 잘라 낸 판을 쓴다.
+#:
+#: 전신 렌더를 그대로 넣었더니 큰 원 안에 사람이 콩알만 하게 들어갔다 --
+#: 캡처를 시안과 견주는 검사에서 턴 칸이 가장 나쁘게 나온 이유가 그것이다.
+#: 시안 초상은 얼굴과 어깨가 원을 꽉 채운다.
+HEADS = "/Game/SVN/OutSideAsset/UI/KayKit/Heads"
+
 PARTY_PORTRAITS = (
-    KK + "/KK_Face_Knight_DynamicV2",
-    KK + "/KK_Face_Ranger_DynamicV2",
-    KK + "/KK_Face_Mage_DynamicV2",
+    HEADS + "/KK_Face_Knight_HeadV2",
+    HEADS + "/KK_Face_Ranger_HeadV2",
+    HEADS + "/KK_Face_Mage_HeadV2",
 )
 
 #: 턴 순서 칸의 기본 얼굴. 게임플레이가 유닛 초상화를 주면 덮어쓴다.
 #: 지금은 미리보기 장면(기사 - 독수리 - 궁수 - 독수리 - 마법사)에 맞춘다.
 TURN_PORTRAITS = (
-    KK + "/KK_Face_Knight_DynamicV2",
-    KK + "/KK_Face_Enemy_Eagle_ActionV3",
-    KK + "/KK_Face_Ranger_DynamicV2",
-    KK + "/KK_Face_Enemy_Eagle_ActionV3",
-    KK + "/KK_Face_Mage_DynamicV2",
+    HEADS + "/KK_Face_Knight_HeadV2",
+    HEADS + "/KK_Face_Enemy_Eagle_HeadV2",
+    HEADS + "/KK_Face_Ranger_HeadV2",
+    HEADS + "/KK_Face_Enemy_Eagle_HeadV2",
+    HEADS + "/KK_Face_Mage_HeadV2",
     None,
 )
 

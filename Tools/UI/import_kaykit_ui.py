@@ -14,10 +14,12 @@ SOURCE = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitUIKit/Processed"
 SLICE_SOURCE = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitUIKit/Slices"
 CHROME_SOURCE = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitUIKit/Chrome"
 CUTOUT_SOURCE = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitUIKit/Cutouts"
+HEAD_SOURCE = r"D:/UnrealProjects/P_RD_develop/Tools/UI/KayKitUIKit/Heads"
 PACKAGE = "/Game/SVN/OutSideAsset/UI/KayKit"
 SLICE_PACKAGE = PACKAGE + "/Slices"
 CHROME_PACKAGE = PACKAGE + "/Chrome"
 CUTOUT_PACKAGE = PACKAGE + "/Cutouts"
+HEAD_PACKAGE = PACKAGE + "/Heads"
 
 files = sorted(f for f in os.listdir(SOURCE) if f.lower().endswith(".png"))
 if not files:
@@ -35,7 +37,20 @@ chrome_files = sorted(f for f in os.listdir(CHROME_SOURCE)
 cutout_files = sorted(f for f in os.listdir(CUTOUT_SOURCE)
                       if f.lower().endswith(".png"))     if os.path.isdir(CUTOUT_SOURCE) else []
 
+#: 전신 렌더에서 얼굴만 잘라 낸 초상. 구멍에 넣었을 때 사람이 보인다.
+head_files = sorted(f for f in os.listdir(HEAD_SOURCE)
+                    if f.lower().endswith(".png")
+                    and not f.startswith("contact"))     if os.path.isdir(HEAD_SOURCE) else []
+
 tasks = []
+for name in head_files:
+    task = unreal.AssetImportTask()
+    task.set_editor_property("filename", os.path.join(HEAD_SOURCE, name))
+    task.set_editor_property("destination_path", HEAD_PACKAGE)
+    task.set_editor_property("automated", True)
+    task.set_editor_property("replace_existing", True)
+    task.set_editor_property("save", True)
+    tasks.append(task)
 for name in cutout_files:
     task = unreal.AssetImportTask()
     task.set_editor_property("filename", os.path.join(CUTOUT_SOURCE, name))
@@ -127,6 +142,13 @@ for name in cutout_files:
             "{}/{}".format(CUTOUT_PACKAGE, stem)) is None:
         raise RuntimeError("조각 임포트 실패: {}".format(stem))
 unreal.log("[KayKit] 조각 {}장".format(len(cutout_files)))
+
+for name in head_files:
+    stem = os.path.splitext(name)[0]
+    if unreal.EditorAssetLibrary.load_asset(
+            "{}/{}".format(HEAD_PACKAGE, stem)) is None:
+        raise RuntimeError("얼굴 임포트 실패: {}".format(stem))
+unreal.log("[KayKit] 얼굴 {}장".format(len(head_files)))
 
 checked = 0
 for stem in imported:
