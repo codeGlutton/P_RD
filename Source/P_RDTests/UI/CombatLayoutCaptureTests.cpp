@@ -42,9 +42,6 @@ namespace CombatLayoutCapture
 {
 	/** @brief 잡아 볼 배치안 목록. WBP가 생기는 대로 여기에 줄을 늘린다. */
 	const TCHAR* LayoutClassPaths[] = {
-		// 용병 고용 화면. 전투 배치안은 아니지만 같은 방식으로 구워서
-		// 같은 방식으로 대조한다 -- 캡처 틀을 화면마다 새로 만들 이유가 없다.
-		TEXT("/Game/UI/CombatLayouts/WBP_MercenaryHire.WBP_MercenaryHire_C"),
 		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_01_ClassicCRPG.WBP_CombatLayout_01_ClassicCRPG_C"),
 		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_02_LeftParty.WBP_CombatLayout_02_LeftParty_C"),
 		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_03_ActiveUnit.WBP_CombatLayout_03_ActiveUnit_C"),
@@ -65,6 +62,9 @@ namespace CombatLayoutCapture
 		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_18_RightFan.WBP_CombatLayout_18_RightFan_C"),
 		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_19_TopRail.WBP_CombatLayout_19_TopRail_C"),
 		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_20_CommandMode.WBP_CombatLayout_20_CommandMode_C"),
+		// 용병 선택 화면. 전투 배치안은 아니지만 같은 방식으로 구워서 같은
+		// 방식으로 대조한다 -- 캡처 틀을 화면마다 새로 만들 이유가 없다.
+		TEXT("/Game/UI/CombatLayouts/WBP_MercenaryHire.WBP_MercenaryHire_C"),
 	};
 
 	/** @brief 폰 가로 화면 실물 크기. 배치안 평가는 이 한 장이면 충분하다. */
@@ -130,9 +130,16 @@ namespace CombatLayoutCapture
 			{
 				return;
 			}
+			// 순서가 중요하다. UpdateResource() 가 그릴 자원을 만드는
+			// 호출이고, 기다리기는 그 다음이다. 자원이 없는 텍스처는 아무리
+			// 기다려도 안 올라온다 -- 한 번도 안 그려 본 텍스처가 그렇다.
+			//
+			// 이 줄을 지웠다가 열아홉 장이 통째로 비었다. 지우기 전에는
+			// 기다린 뒤에 불러서, 방금 기다린 것이 무효가 되는 반대 문제가
+			// 있었다. 빼는 것이 아니라 앞으로 옮기는 것이 답이다.
+			Texture->UpdateResource();
 			Texture->SetForceMipLevelsToBeResident(30.0f);
 			Texture->WaitForStreaming();
-			Texture->UpdateResource();
 			++Count;
 		};
 
