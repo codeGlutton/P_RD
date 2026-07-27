@@ -8,7 +8,10 @@
 
 #define LOCTEXT_NAMESPACE "MercenaryHire"
 
-namespace
+// 이름을 붙인 이름공간에 둔다. 익명으로 두면 유니티 빌드가 여러 파일을 한
+// 덩어리로 묶을 때 전투 위젯의 같은 이름과 부딪힌다 -- 파일이 하나 늘어
+// 묶이는 조합이 바뀌는 날 갑자기 깨진다.
+namespace MercenaryHireDetail
 {
 	/** @brief 화면에 걸리는 이력서 칸 수. WBP 가 여섯 칸으로 구워져 있다. */
 	constexpr int32 CardCount = 6;
@@ -48,6 +51,7 @@ namespace
 	}
 
 }
+using namespace MercenaryHireDetail;
 
 void UMercenaryHireWidget::NativeConstruct()
 {
