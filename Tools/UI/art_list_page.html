@@ -71,16 +71,25 @@
     box-shadow: 0 0 0 1px rgba(0, 0, 0, .5);
   }
   .zone > .tag {
-    position: absolute; bottom: 100%; left: -1px; white-space: nowrap;
-    background: #66e0ff; color: #06202a; font-size: 11px; line-height: 1.35;
-    padding: 0 4px; border-radius: 3px; transform-origin: 0 100%;
+    position: absolute; bottom: 100%; left: -2px; white-space: nowrap;
+    background: #66e0ff; color: #06202a; font-size: 13px; font-weight: 700;
+    line-height: 1.5; padding: 1px 7px; border-radius: 4px 4px 0 0;
   }
   .zone.sel > .tag { background: #ffd24a; color: #2a2000; }
-  .zone > .grip {
-    position: absolute; right: 0; bottom: 0; width: 10px; height: 10px;
-    background: #ffd24a; border: 1px solid #6b5200; cursor: nwse-resize;
-    transform-origin: 100% 100%;
+  /* 손잡이는 화면 크기로 고정한다. 확대에 따라 줄어들게 해 놓았더니
+     ×4 에서 2.5px 이 되어 집을 수가 없었다. */
+  .zone > .h {
+    position: absolute; width: 14px; height: 14px; background: #ffd24a;
+    border: 1px solid #6b5200; border-radius: 3px;
   }
+  .zone > .h.nw { left: -7px; top: -7px; cursor: nwse-resize; }
+  .zone > .h.ne { right: -7px; top: -7px; cursor: nesw-resize; }
+  .zone > .h.sw { left: -7px; bottom: -7px; cursor: nesw-resize; }
+  .zone > .h.se { right: -7px; bottom: -7px; cursor: nwse-resize; }
+  .zone > .h.n { left: 50%; top: -7px; margin-left: -7px; cursor: ns-resize; }
+  .zone > .h.s { left: 50%; bottom: -7px; margin-left: -7px; cursor: ns-resize; }
+  .zone > .h.w { top: 50%; left: -7px; margin-top: -7px; cursor: ew-resize; }
+  .zone > .h.e { top: 50%; right: -7px; margin-top: -7px; cursor: ew-resize; }
 
   .under { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
   .under > * { min-width: 0; }
@@ -94,7 +103,14 @@
   table { border-collapse: collapse; font-size: 13px; margin-top: 12px; }
   th, td { padding: 2px 12px 2px 0; text-align: left; white-space: nowrap; }
   th { color: #8b93a1; font-weight: normal; border-bottom: 1px solid #2a303b; }
-  td.num { font-variant-numeric: tabular-nums; text-align: right; }
+  td .key { cursor: pointer; }
+  tbody td:first-child { cursor: pointer; }
+  tbody input {
+    width: 62px; background: #171b22; color: #dfe3ea; text-align: right;
+    border: 1px solid #2a303b; border-radius: 4px; padding: 1px 5px;
+    font: inherit; font-size: 12.5px; font-variant-numeric: tabular-nums;
+  }
+  tbody input:focus { outline: none; border-color: #6a8fd0; color: #fff; }
   tbody tr { cursor: pointer; }
   tbody tr:hover td { color: #fff; }
   tbody tr.sel td { color: #ffd24a; }
@@ -119,9 +135,10 @@
 <p class="hint">
   왼쪽에서 판을 고르면 그 위에 구역이 뜹니다. 끌어 옮기고 손잡이로 크기를
   바꿉니다 — <kbd>←↑↓→</kbd> 1px · <kbd>Shift</kbd> 10px ·
-  <kbd>Alt</kbd> 크기.
+  <kbd>Alt</kbd> 크기 · <kbd>Tab</kbd> 다음 구역 · <kbd>Esc</kbd> 선택 해제 ·
+  <kbd>Ctrl</kbd>+<kbd>Z</kbd> 되돌리기 · 휠 확대 · 가운데 단추로 밀기.
+  표의 숫자는 직접 쳐도 됩니다.
   구역은 <b>역할별로 하나</b>라 아군 한 줄을 고치면 세 줄이 같이 바뀝니다.
-  고친 값은 자동으로 남습니다.
 </p>
 
 <div class="cols">
@@ -132,10 +149,12 @@
       <button id="zoom1">원래 크기</button>
       <button id="zoom2" class="on">×2</button>
       <button id="zoom4">×4</button>
+      <span id="zoomLabel" style="color:#8b93a1;align-self:center">×2</span>
       <button id="zones" class="on">구역 표시</button>
       <button id="copy">코드 복사</button>
       <button id="save" class="warm">파일로 저장</button>
-      <button id="undo">원래 값으로</button>
+      <button id="one">이 구역만 원래대로</button>
+      <button id="undo">전부 원래 값으로</button>
       <span id="said"></span><span id="dirty"></span>
     </div>
 
@@ -143,7 +162,7 @@
       <div>
         <dl id="facts"></dl>
         <table><thead><tr>
-          <th>구역</th><th>x</th><th>y</th><th>w</th><th>h</th>
+          <th>구역</th><th>x</th><th>y</th><th>w</th><th>h</th><th></th>
         </tr></thead><tbody id="list"></tbody></table>
       </div>
       <div style="flex:1 1 400px">
@@ -164,6 +183,8 @@ const BASE = /*TABLE*/null;
 const KEEP = "rd.slots.01";
 let TABLE = structuredClone(BASE || {});
 let picked = null, mode = 2, showZones = true, sel = null;
+let whole = true, selRole = null;
+let nudgeKey = null, nudgeTimer = 0;
 
 const $ = (id) => document.getElementById(id);
 
@@ -173,6 +194,26 @@ try {
   const kept = localStorage.getItem(KEEP);
   if (kept) TABLE = JSON.parse(kept);
 } catch (err) { /* 저장이 막힌 환경이면 그냥 원래 값으로 간다 */ }
+
+// 되돌리기 더미. 고치기 직전 값을 쌓아 두고 Ctrl+Z 로 꺼낸다. 픽셀 단위로
+// 맞추다 보면 한 번 잘못 끌었을 때 되돌릴 길이 있어야 한다.
+const past = [], future = [];
+const SNAP = 120;   // 이만큼만 쌓는다. 더 쌓아 봐야 안 쓴다
+
+function mark() {
+  past.push(JSON.stringify(TABLE));
+  if (past.length > SNAP) past.shift();
+  future.length = 0;
+}
+
+function step(from, to) {
+  if (!from.length) return false;
+  to.push(JSON.stringify(TABLE));
+  TABLE = JSON.parse(from.pop());
+  paint();
+  keep();
+  return true;
+}
 
 function keep() {
   try { localStorage.setItem(KEEP, JSON.stringify(TABLE)); } catch (err) {}
@@ -208,6 +249,15 @@ function draw() {
     return;
   }
   $("side").innerHTML = "";
+  // 전체 보기. 판을 하나씩만 보면 서로 어떻게 놓이는지 알 수 없다.
+  const all = document.createElement("div");
+  all.className = "it" + (whole ? " on" : "");
+  all.style.cssText = "margin-bottom:8px;font-weight:700";
+  all.innerHTML = '<span class="chip">\u25a6</span>' +
+                  '<span class="nm">\uc804\uccb4 \ud654\uba74</span>';
+  all.onclick = () => { whole = true; picked = null; sel = null; show(); };
+  $("side").appendChild(all);
+
   for (const group of GROUPS) {
     const box = document.createElement("div");
     box.className = "grp";
@@ -219,7 +269,9 @@ function draw() {
       el.innerHTML =
         `<span class="chip">${item.png ? `<img src="${item.png}">` : "?"}</span>` +
         `<span class="nm">${item.name}</span>`;
-      el.onclick = () => { picked = item; sel = null; show(); };
+      el.onclick = () => {
+        whole = false; picked = item; sel = null; show();
+      };
       item.el = el;
       box.appendChild(el);
     }
@@ -230,13 +282,36 @@ function draw() {
 }
 
 function show() {
-  for (const group of GROUPS) {
-    for (const item of group.items) {
-      item.el.classList.toggle("on", item === picked);
-    }
-  }
+  draw();
   const canvas = $("canvas");
   canvas.innerHTML = "";
+
+  if (whole) {
+    const shell = document.createElement("div");
+    shell.id = "shell";
+    const spread = plates();
+    const wide = Math.max.apply(null, spread.map((it) => it.rect[0] + it.rect[2]));
+    const tall = Math.max.apply(null, spread.map((it) => it.rect[1] + it.rect[3]));
+    shell.style.width = wide * mode + "px";
+    shell.style.height = tall * mode + "px";
+    shell.style.background = "#0a0c10";
+    for (const item of spread) {
+      const img = new Image();
+      img.src = item.png;
+      img.style.cssText = "position:absolute;left:" + (item.rect[0] * mode) +
+        "px;top:" + (item.rect[1] * mode) + "px;width:" +
+        (item.rect[2] * mode) + "px;height:" + (item.rect[3] * mode) + "px";
+      shell.appendChild(img);
+    }
+    canvas.appendChild(shell);
+    paint();
+    $("facts").innerHTML =
+      "<dt>\ubcf4\uae30</dt><dd>\uc804\uccb4 \ud654\uba74</dd>" +
+      "<dt>\ud310</dt><dd>" + spread.length + "\uc7a5</dd>" +
+      "<dt>\ud06c\uae30</dt><dd>" + wide + " × " + tall + "</dd>";
+    return;
+  }
+
   if (!picked) return;
 
   if (!picked.png) {
@@ -253,6 +328,12 @@ function show() {
   canvas.appendChild(shell);
 }
 
+function rezoom() {
+  if (whole) { show(); return; }
+  const img = $("shell") && $("shell").querySelector("img");
+  if (img) { fit(img); paint(); }
+}
+
 function fit(img) {
   img.style.width = img.naturalWidth * mode + "px";
   img.style.height = img.naturalHeight * mode + "px";
@@ -262,54 +343,89 @@ function fit(img) {
 }
 
 function slots() {
-  return (picked && picked.role) ? TABLE[picked.role] : null;
+  if (whole) return selRole ? TABLE[selRole] : null;
+  if (picked && picked.role) { selRole = picked.role; return TABLE[selRole]; }
+  return null;
+}
+
+function plates() {
+  return GROUPS[0].items.filter((it) => it.rect && it.png);
+}
+
+function spots() {
+  // (판 원점, 역할). 하나만 볼 때는 원점이 0,0 이고 전체에서는 판 자리다.
+  if (!whole) {
+    return (picked && picked.role) ? [[0, 0, picked.role]] : [];
+  }
+  return plates().map((it) => [it.rect[0], it.rect[1], it.role]);
 }
 
 function paint() {
   const shell = $("shell");
   if (!shell) return;
   for (const old of shell.querySelectorAll(".zone")) old.remove();
-  const table = slots();
-  if (!showZones || !table) { list(); code(); return; }
-
-  for (const item of boxesOf(table)) {
-    const [x, y, w, h] = item.box;
-    const el = document.createElement("div");
-    el.className = "zone" + (item.live ? " live" : "") +
-                   (item.key === sel ? " sel" : "");
-    el.style.cssText = `left:${x * mode}px;top:${y * mode}px;` +
-      `width:${w * mode}px;height:${h * mode}px`;
-    el.innerHTML =
-      `<span class="tag" style="transform:scale(${1 / mode})">` +
-      `${item.label}</span>` +
-      (item.live ? `<div class="grip" style="transform:scale(${1 / mode})">` +
-                   `</div>` : "");
-    if (item.live) {
-      el.onmousedown = (e) => grab(e, item.key,
-                                   e.target.className === "grip");
-    }
-    shell.appendChild(el);
+  if (!showZones) { list(); code(); return; }
+  for (const spot of spots()) {
+    if (TABLE[spot[2]]) zonesOf(shell, TABLE[spot[2]], spot[2], spot[0], spot[1]);
   }
   list();
   code();
 }
 
-function grab(e, key, resizing) {
+function zonesOf(shell, table, role, ox, oy) {
+  for (const item of boxesOf(table)) {
+    const x = item.box[0] + ox, y = item.box[1] + oy;
+    const w = item.box[2], h = item.box[3];
+    const el = document.createElement("div");
+    el.className = "zone" + (item.live ? " live" : "") +
+                   (item.key === sel && role === selRole ? " sel" : "");
+    el.style.cssText = `left:${x * mode}px;top:${y * mode}px;` +
+      `width:${w * mode}px;height:${h * mode}px`;
+    // 여덟 방향 손잡이. 모서리와 꼭짓점을 다 잡을 수 있어야 한쪽만 밀어
+    // 맞추는 일이 된다 -- 오른쪽 아래 하나로는 왼쪽 끝을 못 옮긴다.
+    const grips = item.live
+      ? ["nw", "n", "ne", "w", "e", "sw", "s", "se"]
+          .map((side) => `<div class="h ${side}" data-side="${side}"></div>`)
+          .join("")
+      : "";
+    el.innerHTML = `<span class="tag">${item.label}</span>` + grips;
+    if (item.live) {
+      el.onmousedown = (e) =>
+        grab(e, role, item.key, e.target.dataset.side || "");
+    }
+    shell.appendChild(el);
+  }
+}
+
+function grab(e, role, key, side) {
   e.preventDefault();
+  e.stopPropagation();
   sel = key;
-  const v = slots()[key];
+  selRole = role;
+  mark();
+  const v = TABLE[role][key];
   const start = v.slice();
   const ox = e.clientX, oy = e.clientY;
+  const square = isPips(key);   // 보석은 정사각형이라 한 변만 다룬다
   const move = (m) => {
     const dx = Math.round((m.clientX - ox) / mode);
     const dy = Math.round((m.clientY - oy) / mode);
-    if (resizing) {
-      v[2] = Math.max(4, start[2] + dx);
-      if (!isPips(key)) v[3] = Math.max(4, start[3] + dy);
-    } else {
+    if (!side) {
       v[0] = start[0] + dx;
       v[1] = start[1] + dy;
+      paint();
+      return;
     }
+    let [x, y, w, h] = [start[0], start[1], start[2], square ? start[2] : start[3]];
+    if (side.includes("w")) { x = start[0] + dx; w = start[2] - dx; }
+    if (side.includes("e")) { w = start[2] + dx; }
+    if (side.includes("n")) { y = start[1] + dy; h = (square ? start[2] : start[3]) - dy; }
+    if (side.includes("s")) { h = (square ? start[2] : start[3]) + dy; }
+    // 뒤집히지 않게 막는다. 손잡이를 반대편으로 끌면 폭이 음수가 된다.
+    if (w < 4) { x = start[0] + start[2] - 4; w = 4; }
+    if (h < 4) { y = start[1] + (square ? start[2] : start[3]) - 4; h = 4; }
+    v[0] = x; v[1] = y; v[2] = w;
+    if (!square) v[3] = h;
     paint();
   };
   const up = () => {
@@ -323,12 +439,41 @@ function grab(e, key, resizing) {
 }
 
 window.addEventListener("keydown", (e) => {
+  const inField = e.target.tagName === "INPUT";
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !inField) {
+    e.preventDefault();
+    flash(step(e.shiftKey ? future : past, e.shiftKey ? past : future)
+      ? (e.shiftKey ? "다시 했습니다" : "되돌렸습니다") : "더 없습니다");
+    return;
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y" && !inField) {
+    e.preventDefault();
+    flash(step(future, past) ? "다시 했습니다" : "더 없습니다");
+    return;
+  }
+  if (inField) return;
+
   const table = slots();
+  if (e.key === "Escape") { sel = null; paint(); return; }
+  if (e.key === "Tab" && table) {
+    // 구역을 차례로 짚는다. 작은 상자는 마우스로 찾기가 번거롭다.
+    e.preventDefault();
+    const keys = Object.keys(table).filter((k) => Array.isArray(table[k]));
+    const at = keys.indexOf(sel);
+    sel = keys[(at + (e.shiftKey ? -1 : 1) + keys.length) % keys.length];
+    paint();
+    return;
+  }
   if (!sel || !table) return;
   const at = { ArrowLeft: [-1, 0], ArrowRight: [1, 0],
                ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
   if (!at) return;
   e.preventDefault();
+  // 같은 방향으로 이어 누르는 것은 한 번으로 묶는다. 한 칸씩 스무 번 민 것을
+  // 스무 번 되돌리게 하면 쓸 수가 없다.
+  if (nudgeKey !== e.key) { mark(); nudgeKey = e.key; }
+  clearTimeout(nudgeTimer);
+  nudgeTimer = setTimeout(() => { nudgeKey = null; }, 700);
   const step = e.shiftKey ? 10 : 1;
   const v = table[sel];
   if (e.altKey) {
@@ -357,15 +502,27 @@ function list() {
   const rows = [];
   for (const [key, v] of Object.entries(table)) {
     if (!Array.isArray(v)) continue;
-    const w = isPips(key) ? v[2] : v[2];
-    const h = isPips(key) ? v[2] : v[3];
+    // 숫자를 바로 칠 수 있게 한다. 끌어서 못 맞추는 값(간격 같은 것)도
+    // 여기서 넣는다.
+    const cells = v.map((n, i) =>
+      `<td><input data-k="${key}" data-i="${i}" value="${n}"></td>`).join("");
     rows.push(`<tr class="${key === sel ? "sel" : ""}" data-k="${key}">` +
-      `<td>${key}</td><td class="num">${v[0]}</td><td class="num">${v[1]}</td>` +
-      `<td class="num">${w}</td><td class="num">${h}</td></tr>`);
+      `<td class="key">${key}</td>${cells}</tr>`);
   }
   body.innerHTML = rows.join("");
   for (const tr of body.children) {
-    tr.onclick = () => { sel = tr.dataset.k; paint(); };
+    tr.querySelector(".key").onclick = () => { sel = tr.dataset.k; paint(); };
+  }
+  for (const input of body.querySelectorAll("input")) {
+    input.onfocus = () => { sel = input.dataset.k; paint(); };
+    input.onchange = () => {
+      const got = parseFloat(input.value);
+      if (Number.isNaN(got)) { list(); return; }
+      mark();
+      slots()[input.dataset.k][Number(input.dataset.i)] = got;
+      paint();
+      keep();
+    };
   }
 }
 
@@ -397,10 +554,43 @@ for (const [id, value] of [["zoom1", 1], ["zoom2", 2], ["zoom4", 4]]) {
     for (const other of ["zoom1", "zoom2", "zoom4"]) {
       $(other).classList.toggle("on", other === id);
     }
-    const img = $("shell") && $("shell").querySelector("img");
-    if (img) { fit(img); paint(); }
+    $("zoomLabel").textContent = "×" + mode;
+    rezoom();
   };
 }
+
+// 가운데 단추로 화면을 민다. 크게 키우면 판이 칸 밖으로 나가는데 스크롤
+// 막대를 잡는 것보다 이쪽이 빠르다.
+$("canvas").addEventListener("mousedown", (e) => {
+  if (e.button !== 1) return;
+  e.preventDefault();
+  const box = $("canvas");
+  const ox = e.clientX, oy = e.clientY;
+  const left = box.scrollLeft, top = box.scrollTop;
+  const move = (m) => {
+    box.scrollLeft = left - (m.clientX - ox);
+    box.scrollTop = top - (m.clientY - oy);
+  };
+  const up = () => {
+    window.removeEventListener("mousemove", move);
+    window.removeEventListener("mouseup", up);
+  };
+  window.addEventListener("mousemove", move);
+  window.addEventListener("mouseup", up);
+});
+
+// 휠로 확대·축소. 버튼만으로는 1·2·4 세 단계뿐이라 세밀하게 못 본다.
+$("canvas").addEventListener("wheel", (e) => {
+  if (!whole && (!picked || !picked.png)) return;
+  e.preventDefault();
+  const next = mode * (e.deltaY < 0 ? 1.25 : 0.8);
+  mode = Math.min(16, Math.max(0.5, Math.round(next * 100) / 100));
+  for (const other of ["zoom1", "zoom2", "zoom4"]) {
+    $(other).classList.remove("on");
+  }
+  $("zoomLabel").textContent = "×" + (Math.round(mode * 100) / 100);
+  rezoom();
+}, { passive: false });
 
 $("zones").onclick = () => {
   showZones = !showZones;
@@ -426,6 +616,17 @@ $("save").onclick = () => {
   flash("slots_01.json 을 내려받았습니다 — apply_slots.py 로 넣으세요");
 };
 
+// 고른 구역 하나만 처음 값으로.
+$("one").onclick = () => {
+  const table = slots();
+  if (!sel || !table || !selRole || !BASE[selRole]) return;
+  mark();
+  table[sel] = structuredClone(BASE[selRole][sel]);
+  paint();
+  keep();
+  flash(sel + " 를 원래 값으로");
+};
+
 $("undo").onclick = () => {
   if (!confirm("고친 값을 버리고 원래 값으로 되돌립니다.")) return;
   TABLE = structuredClone(BASE || {});
@@ -436,5 +637,5 @@ $("undo").onclick = () => {
   flash("되돌렸습니다");
 };
 
-draw();
+show();
 </script>
