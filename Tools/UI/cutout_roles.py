@@ -95,8 +95,10 @@ BAND_CONTENTS = {
     ("05", 5): ["party", "skill", "endturn"],
     ("09", 1): ["round", "party", "turn", "enemy", "objective"],
     ("09", 2): ["skill", "endturn"],
-    ("15", 4): ["party", "skill", "enemy", "endturn"],
-    ("17", 4): ["enemy", "skill", "endturn"],
+    # 15안 오른쪽은 적 패널 아래 턴종료가 포개져 있다. 묶으면 그 안에서
+    # 다시 세로로 나뉜다.
+    ("15", 4): ["party", "skill", ["enemy", "endturn"]],
+    ("17", 4): ["enemy", "skill", "endturn"],   # 세로로 긴 판이라 위에서부터
     ("19", 1): ["round", "skill", "endturn"],
     ("20", 1): ["round", "objective"],
 }

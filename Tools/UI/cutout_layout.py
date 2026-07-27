@@ -71,8 +71,13 @@ def _plate(bp, root, row, name):
     x, y, w, h = [v * K for v in row["rect"]]
     kit.add(bp, "CanvasPanel", name, root)
     kit.place(bp, name, x, y, w, h, row["anchor"], None, kit.Z_FILL)
-    kit.image(bp, name + "_Art", name, 0, 0, w, h, (w, h),
-              z_order=kit.Z_FILL,
+
+    # 그림은 원래 크기로, 칸 한가운데에. 글자 지운 판은 자리와 몇 px 다른데
+    # (13안 턴 바는 화살표가 없어 14px 짧다), 칸에 맞춰 늘리면 몰딩이
+    # 뭉갠다 -- 조각을 통째로 쓰는 이유가 바로 그것이다.
+    aw, ah = [v * K for v in row.get("art", row["rect"][2:])]
+    kit.image(bp, name + "_Art", name, (w - aw) / 2.0, (h - ah) / 2.0,
+              aw, ah, (w, h), z_order=kit.Z_FILL,
               texture="{}/{}".format(CUTOUT_PACKAGE, row["asset"]),
               tint=kit.WHITE)
     return name, (w, h)
@@ -349,16 +354,51 @@ def band(bp, root, row, ordinal, counters):
     if not contents:
         return
 
-    along_x = w >= h
-    weights = [BAND_WEIGHT.get(name, 1.0) for name in contents]
+    _split(bp, holder, size, (0.0, 0.0, w, h), contents, row, counters)
+
+
+def _weight(entry):
+    if isinstance(entry, list):
+        return max(BAND_WEIGHT.get(name, 1.0) for name in entry)
+    return BAND_WEIGHT.get(entry, 1.0)
+
+
+def _split(bp, holder, size, box, contents, row, counters):
+    """칸을 긴 쪽으로 나눠 내용을 앉힌다. 묶음은 다시 반대 방향으로 나뉜다.
+
+    한 방향으로만 나누면 표현 못 하는 배치가 있다 -- 15안은 적 패널과 턴종료
+    버튼이 오른쪽에 위아래로 포개져 있는데, 가로로만 나누면 둘이 나란히
+    서서 턴종료 글자가 적 패널 위에 얹혔다. 표에 묶음으로 적어 두면 그
+    묶음만 세로로 다시 나눈다.
+    """
+    bx, by, bw, bh = box
+    along_x = bw >= bh
+    weights = [_weight(entry) for entry in contents]
     total = sum(weights)
-    cursor, pad = 0.0, (w if along_x else h) * 0.008
-    for name, weight in zip(contents, weights):
-        length = (w if along_x else h) * weight / total
-        box = ((cursor + pad, 0.0, length - pad * 2, h) if along_x
-               else (0.0, cursor + pad, w, length - pad * 2))
+    cursor, pad = 0.0, (bw if along_x else bh) * 0.008
+    for entry, weight in zip(contents, weights):
+        length = (bw if along_x else bh) * weight / total
+        cell = ((bx + cursor + pad, by, length - pad * 2, bh) if along_x
+                else (bx, by + cursor + pad, bw, length - pad * 2))
         cursor += length
-        _band_part(bp, holder, size, box, name, row, counters)
+        if isinstance(entry, list):
+            _split(bp, holder, size, cell, entry, row, counters)
+        else:
+            _band_part(bp, holder, size, cell, entry, row, counters)
+
+
+def _grid(w, h, count, want):
+    """칸 모양이 want(가로/세로)에 가장 가까운 열·행 수."""
+    best = None
+    for cols in range(1, count + 1):
+        rows = (count + cols - 1) // cols
+        if cols * rows > count + 1:
+            continue
+        got = (w / cols) / max(h / rows, 1.0)
+        miss = abs(got - want)
+        if best is None or miss < best[0]:
+            best = (miss, cols, rows)
+    return best[1], best[2]
 
 
 def _band_part(bp, holder, size, box, role, row, counters):
@@ -376,19 +416,23 @@ def _band_part(bp, holder, size, box, role, row, counters):
                   bh * 0.34, "턴 종료", 24, kit.TEXT_COLOR, "center", size,
                   bold=True)
     elif role in ("party", "skill"):
-        # 아군은 세 줄, 스킬은 여섯 장. 칸의 긴 쪽으로 늘어놓는다.
+        # 아군은 세 줄, 스킬은 여섯 장. 칸 모양이 카드에 가깝도록 격자를
+        # 고른다 -- 한 줄로만 폈더니 15안 카드가 세로로 홀쭉해져, 판에
+        # 그려진 3x2 자리와 글자가 어긋났다.
         count = 3 if role == "party" else 6
-        stack_x = bw >= bh
-        step = (bw if stack_x else bh) / float(count)
+        want = 2.4 if role == "party" else 0.85
+        cols, rows = _grid(bw, bh, count, want)
+        cw, ch = bw / cols, bh / rows
         for slot in range(count):
             index = counters[role]
             counters[role] = index + 1
-            cell = ((bx + slot * step, by, step * 0.97, bh) if stack_x
-                    else (bx, by + slot * step, bw, step * 0.97))
+            fill = fill_party if role == "party" else fill_skill
+            cell = (bx + (slot % cols) * cw, by + (slot // cols) * ch,
+                    cw * 0.97, ch * 0.97)
             if role == "party":
-                fill_party(bp, holder, size, cell, [], index, K)
+                fill(bp, holder, size, cell, [], index, K)
             else:
-                fill_skill(bp, holder, size, cell, index)
+                fill(bp, holder, size, cell, index)
     elif role == "enemy":
         sub = "EnemyPanel"
         kit.add(bp, "CanvasPanel", sub, holder)
@@ -467,7 +511,11 @@ def expected(number):
     for row in rows:
         role = row["role"]
         if role == "band":
-            for name in row.get("contents", []):
+            # 겹칸은 묶음으로 적혀 있다. 셀 때는 펴서 센다.
+            flat = []
+            for entry in row.get("contents", []):
+                flat.extend(entry if isinstance(entry, list) else [entry])
+            for name in flat:
                 if name in counts:
                     counts[name] += 3 if name == "party" else 6
                 else:

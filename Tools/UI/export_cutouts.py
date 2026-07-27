@@ -106,14 +106,21 @@ def main():
                 else "_%d" % ordinal)
             # 글자 없는 판이 있으면 그것을 내보낸다. 자리는 글자 있는
             # 조각으로 찾았고 그림만 바꾼다.
-            src = os.path.join(CUTOUTS, "시안%d" % int(number),
-                               row.get("blank") or row["file"])
+            blank = row.get("blank")
+            src = (os.path.join(CUTOUTS, "시안%d" % int(number),
+                                "텍스트_아이콘_제거", blank) if blank
+                   else os.path.join(CUTOUTS, "시안%d" % int(number),
+                                     row["file"]))
             shutil.copyfile(src, os.path.join(DEST, asset + ".png"))
 
             across, down = anchor_of(row["x"], row["y"], row["w"], row["h"])
             rows.append({
                 "asset": asset, "role": role, "index": row["index"],
                 "rect": [row["x"], row["y"], row["w"], row["h"]],
+                # 빈 판은 자리와 몇 px 다르다. 늘리지 않고 원래 크기로
+                # 놓아야 몰딩이 안 뭉갠다 -- 조각을 쓰는 이유가 그것이다.
+                "art": [row.get("blank_w", row["w"]),
+                        row.get("blank_h", row["h"])],
                 "anchor": down + across, "holes": row["holes"],
                 "contents": row.get("contents", []),
             })

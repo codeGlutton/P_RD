@@ -154,38 +154,92 @@ def run(number):
     return kept
 
 
+BLANK_DIR = "텍스트_아이콘_제거"
+
+#: 빈 판과 자리의 크기 차가 이보다 크면 다른 부품으로 본다.
+#:
+#: 같은 부품이어도 몇 px 어긋난다 -- 13안 턴 바는 글자 있는 쪽에 아래로
+#: 뻗은 화살표가 붙어 세로가 14px 더 길다. 넉넉히 주되, 40을 넘기면 이웃한
+#: 다른 판이 짝으로 잡히기 시작한다.
+BLANK_GAP = 34
+
+
+def _rounds(folder):
+    """글자 지운 판을 생성 회차별로 묶는다.
+
+    한 시안에 회차가 서너 개씩 들어 있고 회차마다 그림결이 조금씩 다르다.
+    섞어 쓰면 카드마다 결이 달라 보이므로 한 회차 안에서만 짝을 짓는다.
+    """
+    import re
+    from collections import defaultdict
+    groups = defaultdict(list)
+    for path in sorted(glob.glob(os.path.join(folder, BLANK_DIR, "*.png"))):
+        name = os.path.basename(path)
+        # 생성기가 뱉은 것은 회차 아이디로 묶고, 사람이 이름 붙인 것
+        # (`01_top_left_parchment.png`)은 그것대로 한 벌이다. 파일명으로
+        # 묶었더니 이름 붙은 열넉 장이 열넉 회차로 쪼개져 2안이 한 장만
+        # 교체됐다.
+        match = re.match(r"(call_[A-Za-z0-9]+)", name)
+        groups[match.group(1) if match else "이름붙음"].append(path)
+    return list(groups.values())
+
+
+def _assign(kept, files):
+    """자리와 빈 판을 크기로 짝짓는다. 한 판은 한 자리에만 간다.
+
+    가까운 것부터 집어 가면 앞에서 집은 판 때문에 뒤가 밀린다. 전체 어긋남이
+    가장 작아지는 짝을 한 번에 고른다.
+    """
+    import numpy as np
+    from scipy.optimize import linear_sum_assignment
+
+    sizes = []
+    for path in files:
+        with Image.open(path) as art:
+            sizes.append((art.size[0], art.size[1], path))
+    if not sizes:
+        return {}, 0
+
+    cost = np.zeros((len(kept), len(sizes)))
+    for i, item in enumerate(kept):
+        for j, (w, h, _) in enumerate(sizes):
+            gap = abs(w - item["w"]) + abs(h - item["h"])
+            cost[i, j] = gap if gap <= BLANK_GAP else 10000 + gap
+    rows, cols = linear_sum_assignment(cost)
+
+    pairs, hits = {}, 0
+    for i, j in zip(rows, cols):
+        if cost[i, j] >= 10000:
+            continue
+        w, h, path = sizes[j]
+        pairs[i] = (os.path.basename(path), w, h)
+        hits += 1
+    return pairs, hits
+
+
 def swap_blanks(folder, kept):
-    """자리는 그대로 두고 그림만 글자 없는 판으로 바꾼다.
+    """자리는 그대로 두고 그림만 글자 지운 판으로 바꾼다.
 
     조각에 글자가 그려져 있으면 런타임 글자와 겹쳐 두 번 찍힌다 -- 2안을
     구워 보고 알았다. "기사"도 "90/100"도 판에 있고 위젯에도 있었다.
 
-    사람이 `01_top_left_parchment.png` 꼴로 이름 붙여 둔 것이 글자를 지운
-    판이다. 같은 자리의 조각과 크기가 같으므로 크기로 짝을 짓는다. 짝이
-    없으면 원래 조각을 그대로 둔다 -- 억지로 비슷한 것을 붙이면 엉뚱한 판이
-    엉뚱한 자리에 온다.
-    """
-    named = sorted(glob.glob(os.path.join(folder, "[0-9][0-9]_*.png")))
-    if not named:
-        return
-    sizes = []
-    for path in named:
-        with Image.open(path) as art:
-            sizes.append((art.size[0], art.size[1], os.path.basename(path)))
+    자리는 글자 있는 조각으로 찾는다. 빈 판끼리는 서로 똑같아서 어느 칸인지
+    그림으로 못 가리기 때문이다 -- 빈 판으로 자리를 찾았더니 3안 카드 여섯
+    칸 중 세 칸이 비었다. 찾아 둔 자리에 그림만 갈아 끼운다.
 
-    used = set()
-    for item in kept:
-        best, gap = None, None
-        for w, h, name in sizes:
-            if name in used:
-                continue
-            miss = abs(w - item["w"]) + abs(h - item["h"])
-            if miss <= 6 and (gap is None or miss < gap):
-                best, gap = name, miss
-        if best is None:
-            continue
-        used.add(best)
-        item["blank"] = best
+    회차는 제일 많이 맞는 하나만 쓴다. 섞으면 카드마다 결이 달라진다.
+    """
+    best = ({}, 0)
+    for files in _rounds(folder):
+        pairs, hits = _assign(kept, files)
+        if hits > best[1]:
+            best = (pairs, hits)
+    for index, (name, w, h) in best[0].items():
+        kept[index]["blank"] = name
+        # 빈 판은 원래 크기로 놓는다. 자리 크기에 맞춰 늘리면 몰딩이 뭉갠다
+        # -- 조각을 쓰는 이유가 그것이다.
+        kept[index]["blank_w"] = w
+        kept[index]["blank_h"] = h
 
 
 def main():
