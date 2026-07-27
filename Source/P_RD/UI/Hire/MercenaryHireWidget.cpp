@@ -228,7 +228,8 @@ void UMercenaryHireWidget::RefreshCard(const int32 CardIndex)
 
 	const FFrontendCharacterOption& Option = mCrew[CardIndex];
 	SetTextIfPresent(Card.mName, Option.mDisplayName);
-	SetTextIfPresent(Card.mRole, Option.mRoleText);
+	// 역할 알약은 좁다. 긴 문구를 넣으면 넘친다.
+	SetTextIfPresent(Card.mRole, Option.mRoleShort);
 	SetTextIfPresent(Card.mHP, FText::FromString(
 		FString::Printf(TEXT("HP %d"), Option.mMaxHP)));
 	// 특성 자리에는 설명 문구가 들어간다. 왜 데려가는지 한 줄로 말해 주는

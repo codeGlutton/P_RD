@@ -81,6 +81,27 @@ namespace
 		}
 	}
 
+	/**
+	 * @brief 역할 한 낱말. 용병 선택 화면의 역할 알약처럼 좁은 자리에 건다.
+	 *
+	 * GetPlayerJobRole() 의 긴 문구를 화면에서 줄여 쓰면 화면마다 다르게
+	 * 줄여서 결국 다 달라진다. 짧은 것도 여기서 확정한다.
+	 */
+	FText GetPlayerJobShortRole(EPlayerJobType JobType)
+	{
+		switch (JobType)
+		{
+		case EPlayerJobType::Knight:
+			return NSLOCTEXT("FrontendGameMode", "KnightRoleShort", "근접");
+		case EPlayerJobType::Archer:
+			return NSLOCTEXT("FrontendGameMode", "ArcherRoleShort", "원거리");
+		case EPlayerJobType::Mage:
+			return NSLOCTEXT("FrontendGameMode", "MageRoleShort", "마법");
+		default:
+			return FText::GetEmpty();
+		}
+	}
+
 	/** @brief 직업별 설명 문구(DataAsset 설명이 비어 있을 때 폴백). 설명 스크림에 표시된다. */
 	FText GetPlayerJobDescription(EPlayerJobType JobType)
 	{
@@ -123,6 +144,7 @@ namespace
 		NewOption.mIndex = Options.Num();
 		NewOption.mDisplayName = GetPlayerJobName(JobType);
 		NewOption.mRoleText = GetPlayerJobRole(JobType);
+		NewOption.mRoleShort = GetPlayerJobShortRole(JobType);
 		// 잠긴 카드도 직업별 일러스트는 보여줄 수 있게 화면 아트 키를 채운다.
 		NewOption.mJobType = JobType;
 		// "데이터 없음" 문구 대신 직업 설명을 표시(기획: not ready 삭제). 잠금 사유는 내부적으로만 유지.
@@ -413,8 +435,13 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 		// mIndex는 클릭 이벤트의 안정 키다. WBP 카드 배열 위치와 같게 시작하지만 UI는 이 값을 기준으로 다시 찾는다.
 		NewOption.mIndex = OutOptions.Num();
 		// 표시 이름은 한글 직업명으로 통일(기획: 한글화). 역할은 이름과 구분되는 한 줄 문구.
-		NewOption.mDisplayName = GetPlayerJobName(LoadedPlayerUnitData->mJobType);
+		// 이름은 에셋에 적힌 것이 먼저다. 같은 직업이 둘 이상 걸리면 -- 용병
+		// 선택 화면이 그렇다 -- 직업명으로만 지으면 둘 다 같은 이름이 된다.
+		NewOption.mDisplayName = LoadedPlayerUnitData->mDisplayName.IsEmpty()
+			? GetPlayerJobName(LoadedPlayerUnitData->mJobType)
+			: LoadedPlayerUnitData->mDisplayName;
 		NewOption.mRoleText = GetPlayerJobRole(LoadedPlayerUnitData->mJobType);
+		NewOption.mRoleShort = GetPlayerJobShortRole(LoadedPlayerUnitData->mJobType);
 		// 설명: DataAsset 설명이 있으면 그것, 없으면 직업별 폴백(설명 스크림에 표시).
 		const FText JobDesc = GetPlayerJobDescription(LoadedPlayerUnitData->mJobType);
 		// 화면 아트(직업별 일러스트) 선택용 키. 이 값이 빠지면 UI가 직업을 None으로 보고 일러스트를 못 고른다.
