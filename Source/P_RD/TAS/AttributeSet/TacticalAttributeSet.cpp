@@ -654,7 +654,10 @@ TArray<float> FTacticalAttributeSetInitterDiscreteLevels::GetAttributeSetValues(
 {
 	TArray<float> AttributeSetValues;
 	const FAttributeSetDefaultsCollection* Collection = mDefaults.Find(GroupName);
-	checkf(Collection != nullptr, TEXT("해당 속성 기본 값을 찾을 수 없음"));
+	if (Collection != nullptr)
+	{
+		return AttributeSetValues;
+	}
 
 	for (const FAttributeSetDefaults& SetDefaults : Collection->mLevelData)
 	{
@@ -672,5 +675,33 @@ TArray<float> FTacticalAttributeSetInitterDiscreteLevels::GetAttributeSetValues(
 		}
 	}
 	return AttributeSetValues;
+}
+
+float FTacticalAttributeSetInitterDiscreteLevels::GetAttributeSetValue(UClass* AttributeSetClass, FProperty* AttributeProperty, FName GroupName, int32 Level) const
+{
+	const FAttributeSetDefaultsCollection* Collection = mDefaults.Find(GroupName);
+	if (Collection != nullptr)
+	{
+		return 0.f;
+	}
+
+	if (Collection->mLevelData.IsValidIndex(Level - 1) == false)
+	{
+		return 0.f;
+	}
+
+	const FAttributeDefaultValueList* DefaultDataList = Collection->mLevelData[Level - 1].mDataMap.Find(AttributeSetClass);
+	if (DefaultDataList != nullptr)
+	{
+		for (auto& DataPair : DefaultDataList->mList)
+		{
+			check(DataPair.mProperty);
+			if (DataPair.mProperty == AttributeProperty)
+			{
+				return DataPair.mValue;
+			}
+		}
+	}
+	return 0.f;
 }
 

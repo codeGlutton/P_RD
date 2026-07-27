@@ -14,6 +14,7 @@
 
 #include "PersistentData.generated.h"
 
+class UPartyModel;
 class UPlayerUnitModel;
 class FViewport;
 class UStaticSkillData;
@@ -30,6 +31,10 @@ struct FRunLog
 
 public:
 	void Clear();
+
+public:
+	UPROPERTY(Category = Record, SaveGame, VisibleAnywhere, meta = (DisplayName = "UseCountPerUnit"))
+	TMap<FPrimaryAssetId, int32> mUseCountPerUnit;
 
 public:
 	UPROPERTY(Category = Discovery, SaveGame, VisibleAnywhere, meta = (DisplayName = "KilledEnemyUnits"))
@@ -58,8 +63,8 @@ public:
 	int32 mRunCount = 0;
 
 public:
-	UPROPERTY(Category = Record, SaveGame, VisibleAnywhere, meta = (DisplayName = "RunCountPerUnit"))
-	TMap<FPrimaryAssetId, int32> mRunCountPerUnit;
+	UPROPERTY(Category = Record, SaveGame, VisibleAnywhere, meta = (DisplayName = "UseCountPerUnit"))
+	TMap<FPrimaryAssetId, int32> mUseCountPerUnit;
 
 public:
 	UPROPERTY(Category = Discovery, SaveGame, VisibleAnywhere, meta = (DisplayName = "KnownEnemyUnitIds"))
@@ -81,36 +86,32 @@ class P_RD_API UPlayerUnitPersistData : public UObject
 	GENERATED_BODY()
 
 public:
+	void MakeUnit(const FPrimaryAssetId& PlayerUnitId);
+	void MakeUnit(UPlayerUnitModel* PlayerUnit);
+	void ClearUnit();
+
+public:
 	void RegisterPlayerUnit(UPlayerUnitModel* PlayerUnit);
 
 public:
 	const FPrimaryAssetId& GetPlayerUnitId() const;
 	int32 GetPlayerLevel() const;
-	int32 GetDifficulty() const;
 
 public:
 	const TArray<FPrimaryAssetId>& GetSkillIds() const;
-	const TArray<FPrimaryAssetId>& GetEquipmentIds() const;
-	const TArray<FPrimaryAssetId>& GetDiceIds() const;
 
 protected:
-	void SyncPlayerPersistData(UPlayerUnitModel* PlayerUnit);
+	void SyncPlayerPersistData( UPlayerUnitModel* PlayerUnit);
 	void BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit);
 
 protected:
-	virtual void OnChangePlayerSkill(int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData);
-
-protected:
-	UPROPERTY(SaveGame)
-	bool mIsNewData = true;
+	void OnChangePlayerSkill(int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData);
 
 protected:
 	UPROPERTY(Category = Player, SaveGame, VisibleAnywhere, meta = (DisplayName = "PlayerUnitId"))
 	FPrimaryAssetId mPlayerUnitId;
 	UPROPERTY(Category = Player, SaveGame, VisibleAnywhere, meta = (DisplayName = "PlayerLevel"))
 	int32 mPlayerLevel = 1;
-	UPROPERTY(Category = Player, SaveGame, VisibleAnywhere, meta = (DisplayName = "Difficulty"))
-	int32 mDifficulty = 1;
 
 protected:
 	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "MaxHP"))
@@ -121,43 +122,68 @@ protected:
 	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "Exp"))
 	float mExp = 0.f;
 
-	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "Money"))
-	float mMoney = 0.f;
-
 protected:
 	UPROPERTY(Category = Tag, SaveGame, VisibleAnywhere, meta = (DisplayName = "TagCountMap"))
 	TMap<FGameplayTag, int32> mTagCountMap;
 
-protected:
 	UPROPERTY(Category = Skill, SaveGame, VisibleAnywhere, meta = (DisplayName = "SkillIds"))
 	TArray<FPrimaryAssetId> mSkillIds;
+};
 
-	UPROPERTY(Category = Equipment, SaveGame, VisibleAnywhere, meta = (DisplayName = "EquipmentIds"))
-	TArray<FPrimaryAssetId> mEquipmentIds;
+/**
+ * @brief 파티의 영구적 데이터
+ */
+UCLASS()
+class P_RD_API UPartyPersistData : public UObject
+{
+	GENERATED_BODY()
 
-	UPROPERTY(Category = Dice, SaveGame, VisibleAnywhere, meta = (DisplayName = "DiceIds"))
-	TArray<FPrimaryAssetId> mDiceIds;
+public:
+	UPartyPersistData();
+
+public:
+	void RegisterParty(UPartyModel* Party, TArray<TObjectPtr<UPlayerUnitModel>>& Players);
+
+public:
+	TArray<FPrimaryAssetId> GetPlayerUnitIds() const;
+	int32 GetDifficulty() const;
+	const TArray<FPrimaryAssetId>& GetArtifactIds() const;
+
+protected:
+	void SyncPartyPersistData(UPartyModel* Party, TArray<TObjectPtr<UPlayerUnitModel>>& Players);
+	void BindPartyEvent(UPartyModel* Party, TArray<TObjectPtr<UPlayerUnitModel>>& Players);
+
+protected:
+	UPROPERTY(Category = Party, SaveGame, VisibleAnywhere, meta = (DisplayName = "PartyPlayers"))
+	TArray<TObjectPtr<UPlayerUnitPersistData>> mPartyPlayers;
+
+	UPROPERTY(Category = Artifact, SaveGame, VisibleAnywhere, meta = (DisplayName = "ArtifactIds"))
+	TArray<FPrimaryAssetId> mArtifactIds;
+
+protected:
+	UPROPERTY(Category = Party, SaveGame, VisibleAnywhere, meta = (DisplayName = "Difficulty"))
+	int32 mDifficulty = 1;
+
+	UPROPERTY(Category = Party, SaveGame, VisibleAnywhere, meta = (DisplayName = "Money"))
+	float mMoney = 0.f;
 };
 
 /**
  * @brief 이번 런의 영구적 데이터
  */
 UCLASS()
-class P_RD_API URunPersistData : public UPlayerUnitPersistData
+class P_RD_API URunPersistData : public UPartyPersistData
 {
 	GENERATED_BODY()
 
-protected:
-	void OnChangePlayerSkill(int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData) override;
-
 public:
-	void StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty);
+	void StartRun(const TArray<FPrimaryAssetId>& PlayerUnitIds, int32 Difficulty);
 	void ClearRun();
 
 public:
 	void MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCreateStage);
 	void SetCurrentRoomIndex(int32 RowIndex, int32 ColumnIndex);
-	void ClearCurrentCombatRoom(const FTileTransform& Transform);
+	void ClearCurrentCombatRoom(const TArray<FTileTransform>& Transforms);
 
 public:
 	void CollectAssetIds(int32 RowIndex, int32 ColumnIndex, OUT TArray<FPrimaryAssetId>& PlayerIds, OUT FPrimaryAssetId& StageId, OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const;
@@ -205,7 +231,7 @@ class P_RD_API UUserPersistData : public UObject
 public:
 	void MakeUser(const FText& Name);
 	void ClearUser();
-	void UpdateLog(const FPrimaryAssetId& PlayerUnitId, const FRunLog& RunLog);
+	void UpdateLog(const FRunLog& RunLog);
 
 public:
 	const FText& GetUserName() const;

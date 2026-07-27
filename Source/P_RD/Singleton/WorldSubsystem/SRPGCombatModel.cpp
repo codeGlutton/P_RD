@@ -9,6 +9,7 @@
 #include "SRPGFramework/SRPGTurnEndAction.h"
 
 #include "Actor/TileMap/TileMapModel.h"
+#include "Pawn/Player/PlayerUnitModel.h"
 #include "Pawn/Enemy/EnemyUnitModel.h"
 
 #include "Actor/BoardActor/BoardCombatTarget.h"
@@ -19,6 +20,7 @@
 #include "DataAsset/ObstacleSpawnData/StaticObstacleSpawnData.h"
 
 #include "TimerManager.h"
+#include "Setting/GameTeamType.h"
 
 DEFINE_LOG_CATEGORY(LogSRPGCombat)
 
@@ -75,27 +77,45 @@ TStatId USRPGCombatModel::GetStatId() const
 	RETURN_QUICK_DECLARE_CYCLE_STAT(USRPGCombatModel, STATGROUP_Tickables);
 }
 
-void USRPGCombatModel::InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, UUnitModel* PlayerUnit, const FTransform& RoomStartTransform, const FTileTransform& RoomClearTileTransform)
+void USRPGCombatModel::InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnits, const FTransform& RoomStartTransform, const TArray<FTileTransform>& RoomClearTileTransforms)
 {
 	checkf(RoomSpawnData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
-	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
-
 	checkf(mCombatPhase == ESRPGCombatRoomPhase::None, TEXT("중복 초기화"));
 	mCombatPhase = ESRPGCombatRoomPhase::CombatInit;
 
 	SpawnTileMap(RoomStartTransform);
 
-	if (RoomClearTileTransform == FTileTransform::Invalid)
+	const bool WasClearedRoom = RoomClearTileTransforms.IsEmpty() == false;
+
+	const int32 PlayerMaxNum = PlayerUnits.Num();
+	mPlayerUnits.Init(nullptr, PlayerMaxNum);
+	for (int32 PlayerIndex = 0; PlayerIndex < PlayerMaxNum; ++PlayerIndex)
 	{
-		RegisterPlayerUnit(PlayerUnit, RoomSpawnData->mPlayerTransform);
-		RegisterEnemyUnits(RoomSpawnData->mEnemyUnitPlacementDatas);
-		RegisterObstacles(RoomSpawnData->mObstaclePlacementDatas);
+		const TObjectPtr<UPlayerUnitModel>& PlayerUnit = PlayerUnits[PlayerIndex];
+		if (PlayerUnit == nullptr)
+		{
+			continue;
+		}
+
+		if (WasClearedRoom == true)
+		{
+			RegisterPlayerUnit(PlayerIndex, PlayerUnit, RoomClearTileTransforms[PlayerIndex]);
+		}
+		else
+		{
+			RegisterPlayerUnit(PlayerIndex, PlayerUnit, RoomSpawnData->mPlayerTransforms[PlayerIndex]);
+		}
+	}
+
+	if (WasClearedRoom == true)
+	{
+		mCombatPhase = ESRPGCombatRoomPhase::CombatAbort;
+		mCombatResult = ESRPGCombatResult::PlayerWin;
 	}
 	else
 	{
-		RegisterPlayerUnit(PlayerUnit, RoomClearTileTransform);
-		mCombatPhase = ESRPGCombatRoomPhase::CombatAbort;
-		mCombatResult = ESRPGCombatResult::PlayerWin;
+		RegisterEnemyUnits(RoomSpawnData->mEnemyUnitPlacementDatas);
+		RegisterObstacles(RoomSpawnData->mObstaclePlacementDatas);
 	}
 
 	UE_LOG(LogSRPGCombat, Log, TEXT("SRPG 전투 초기화 완료"));
@@ -200,8 +220,6 @@ void USRPGCombatModel::OnEndCurrentTurn(USRPGTurnContext* TurnContext, ESRPGTurn
 
 void USRPGCombatModel::ClearDeadActors()
 {
-	checkf(mPlayerUnit != nullptr, TEXT("플레이어 미동록 오류"));
-
 	TArray<TObjectPtr<UUnitModel>> DeadUnits;
 	TArray<TScriptInterface<IBoardCombatTarget>> DeadObstacles;
 
@@ -232,8 +250,6 @@ void USRPGCombatModel::ClearDeadActors()
 
 void USRPGCombatModel::EvaluateCombatEndState()
 {
-	checkf(mPlayerUnit != nullptr, TEXT("플레이어 미동록 오류"));
-
 	/* 이미 중단 */
 
 	if (mCombatPhase == ESRPGCombatRoomPhase::CombatAbort)
@@ -243,11 +259,20 @@ void USRPGCombatModel::EvaluateCombatEndState()
 
 	/* 플레이어가 죽어서 전투가 종료되는가? */
 
-	if (mPlayerUnit->IsDead() == true)
+	bool AnyPlayerAlive = false;
+	for (const TObjectPtr<UUnitModel>& PlayerUnit : mPlayerUnits)
+	{
+		if (PlayerUnit->IsDead() == false)
+		{
+			AnyPlayerAlive = true;
+			break;
+		}
+	}
+
+	if (AnyPlayerAlive == false)
 	{
 		mCombatResult = ESRPGCombatResult::PlayerLose;
 		mCombatPhase = ESRPGCombatRoomPhase::CombatAbort;
-		return;
 	}
 
 	/* 적군이 모두 죽어 전투가 종료되는가? */
@@ -255,7 +280,7 @@ void USRPGCombatModel::EvaluateCombatEndState()
 	bool AnyEnemyAlive = false;
 	for (const TObjectPtr<UUnitModel>& Unit : mUnits)
 	{
-		if (Unit->GetTeamAttitudeTowards(*mPlayerUnit) == ETeamAttitude::Hostile)
+		if (FGenericTeamId::GetAttitude(EGameTeamType::Adventurer, Unit->GetGenericTeamId()) == ETeamAttitude::Hostile)
 		{
 			if (Unit->IsDead() == false)
 			{
@@ -432,8 +457,8 @@ void USRPGCombatModel::RegisterEnemyUnit(FEnemyUnitPlacementData& EnemyPlacement
 	checkf(EnemyModelClass != nullptr, TEXT("적 유닛 ModelClass 로드 실패 — DataAsset의 mModelClass 확인"));
 	UEnemyUnitModel* EnemyUnit = GetWorldModelFactory(this)->NewModelDeferred<UEnemyUnitModel>(EnemyModelClass);
 	EnemyUnit->SetStaticSpawnData(EnemyUnitSpawnData);
-	EnemyUnit->SetDifficulty(EnemyPlacementData.mDifficulty);
 	EnemyUnit->FinishCreating(mTileMap->TileToWorldTransform(EnemyPlacementData.mTransform));
+	EnemyUnit->SetDifficulty(EnemyPlacementData.mDifficulty);
 
 	RegisterUnit(EnemyUnit, EnemyPlacementData.mTransform);
 }
@@ -530,12 +555,12 @@ void USRPGCombatModel::SpawnTileMap(const FTransform& RoomStartTransform)
 	mTileMap->RebuildTiles();
 }
 
-void USRPGCombatModel::RegisterPlayerUnit(UUnitModel* PlayerUnit, const FTileTransform& Transform)
+void USRPGCombatModel::RegisterPlayerUnit(int32 PlayerIndex, UUnitModel* PlayerUnit, const FTileTransform& Transform)
 {
 	checkf(mTileMap != nullptr, TEXT("타일맵 미존재"));
 	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
 
-	mPlayerUnit = PlayerUnit;
+	mPlayerUnits[PlayerIndex] = PlayerUnit;
 	RegisterUnit(PlayerUnit, Transform);
 }
 
@@ -739,9 +764,18 @@ UTileMapModel* USRPGCombatModel::GetTileMap() const
 	return mTileMap;
 }
 
-UUnitModel* USRPGCombatModel::GetPlayerUnit() const
+UUnitModel* USRPGCombatModel::GetPlayerUnit(int32 PlayerIndex) const
 {
-	return mPlayerUnit;
+	if (mPlayerUnits.IsValidIndex(PlayerIndex) == false)
+	{
+		return nullptr;
+	}
+	return mPlayerUnits[PlayerIndex];
+}
+
+const TArray<TObjectPtr<UUnitModel>>& USRPGCombatModel::GetPlayerUnits() const
+{
+	return mPlayerUnits;
 }
 
 const TArray<TObjectPtr<UUnitModel>>& USRPGCombatModel::GetUnits() const

@@ -54,6 +54,8 @@ public:
 	 */
 	void SetStaticSpawnData(UStaticObstacleSpawnData* StaticSpawnData);
 
+public:
+	FPrimaryAssetId GetStaticSpawnDataId() const;
 	FName GetBoardActorKeyName() const;
 	const FText& GetBoardActorDisplayName() const;
 	virtual int32 GetBoardActorLevel() const;

@@ -8,9 +8,6 @@
 
 #include "DataAsset/UnitSpawnData/StaticUnitSpawnData.h"
 
-#include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
-#include "Singleton/WorldSubsystem/TacticalFrameworkSubsystem.h"
-
 #include "TAS/Passive/TacticalPassive.h"
 #include "TAS/Passive/PassiveActivateContext.h"
 #include "TAS/Passive/DynamicPassiveData.h"
@@ -31,19 +28,6 @@ UUnitModel::UUnitModel() : mTeamId(EGameTeamType::AllNeutral)
 	mBlockLayerFlags = StaticCast<int32>(ETileLayerFlag::Unit | ETileLayerFlag::Obstacle);
 	mReplaceLayerFlags = StaticCast<int32>(ETileLayerFlag::None);
 	mOverlayLayerPriority = 0;
-}
-
-void UUnitModel::PostInitializeComponentModels()
-{
-	Super::PostInitializeComponentModels();
-
-	UTacticalFrameworkSubsystem* TacticalFrameworkSubsystem = GetWorld()->GetSubsystem<UTacticalFrameworkSubsystem>();
-	checkf(TacticalFrameworkSubsystem != nullptr, TEXT("전략 프레임워크 서브시스템 nullptr"));
-
-	UTacticalFrameworkModel* TacticalFrameworkModel = TacticalFrameworkSubsystem->GetModel<UTacticalFrameworkModel>();
-	checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
-
-	TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), GetBoardActorKeyName(), GetDifficulty(), true);
 }
 
 void UUnitModel::OnBeginRoom()
