@@ -230,16 +230,16 @@ public:
 	/**
 	 * @brief 시작→목표 최단 이동경로 계산 (장애물/유닛 회피)
 	 * @details
-	 * 도달 범위 계산과 동일한 4방향(직교) BFS 규칙을 쓴다 — 도달 가능성과 경로 존재가 일치하도록.
-	 * 이미 점유하는 게 있으면 통과나 도착 불가 (무시 대상인 경우는 가능). 여러 최단경로 중 이웃 탐색 순서(직교 4방향)로 하나를 고른다.
-	 * 시작 칸은 점유돼 있어도(자기 유닛이 선 칸) 출발점으로 허용한다.
-	 *
+	 * 도달 범위 계산과 동일한 4방향(직교) BFS 규칙 사용
+	 * 도착지에 점유하는 게 있으면 도착 불가하지만 파라미터로 무시할 수 있음
+	 * 시작 칸은 유닛 존재 허용
 	 * @param[in] Start : 시작 좌표
 	 * @param[in] Goal  : 목표 좌표
 	 * @param[in] IgnoreBlocker : 점유 판정에서 제외할 액터 (이동 빌드 중 자기 출발 타일 복귀 허용 등). 없으면 nullptr
+	 * @param[in] bAllowOccupiedGoal : 도착지에 점유하는 게 있어도 도착 허용할지 여부
 	 * @return TArray<FTileIndex> : Start부터 Goal까지 순서대로의 타일 목록(양 끝 포함). 경로가 없으면 빈 배열
 	 */
-	TArray<FTileIndex> FindPath(const FTileIndex& Start, const FTileIndex& Goal, const UBoardActorModel* IgnoreBlocker = nullptr) const;
+	TArray<FTileIndex> FindPath(const FTileIndex& Start, const FTileIndex& Goal, const UBoardActorModel* IgnoreBlocker = nullptr, bool bAllowOccupiedGoal = false) const;
 
 	/**
 	 * @brief 목표지점을 기준으로 모든 타일의 경로거리를 계산
@@ -305,6 +305,29 @@ public:
 	 */
 	TArray<FTileIndex> GetAimableTiles(
 		const FTileIndex& Origin,
+		int32 Range,
+		EAimPattern Pattern,
+		bool bIncludeOccupied,
+		bool bIndirect,
+		const UBoardActorModel* Incoming = nullptr,
+		const UBoardActorModel* IgnoreBlocker = nullptr
+	) const;
+
+	/**
+	 * @brief Origin 타일에서 Target 타일을 조준 가능한 지 판정
+	 * @param[in] Origin : 기준 좌표
+	 * @param[in] Target : 조준 대상 좌표
+	 * @param[in] Range : 사거리 (1=인접 칸, Single은 무시)
+	 * @param[in] Pattern : 조준 패턴
+	 * @param[in] bIncludeOccupied : 점유된 타일(장애물/유닛)을 조준 가능으로 포함할지
+	 * @param[in] bIndirect : 곡사 여부 (장애물/유닛 너머 조준 가능한지)
+	 * @param[in] Incoming : 교체할 액터. 교체가 없을 경우는 nullptr
+	 * @param[in] IgnoreBlocker : 시야 차폐에서 제외할 액터 (이동 후 위치 평가처럼 자리를 비울 예정인 유닛). 없으면 nullptr
+	 * @return bool : 조준 가능하면 true
+	 */
+	bool CanAim(
+		const FTileIndex& Origin,
+		const FTileIndex& Target,
 		int32 Range,
 		EAimPattern Pattern,
 		bool bIncludeOccupied,
@@ -514,6 +537,37 @@ private:
 	}
 
 	/* 범위 계산 헬퍼 */
+	/**
+	 * @brief Target 타일이 조준 패턴의 기하 범위 안에 있는 지 판정
+	 * @param[in] Origin : 기준 좌표
+	 * @param[in] Target : 검사할 좌표
+	 * @param[in] Range : 사거리 (1=인접 칸, Single은 무시)
+	 * @param[in] Pattern : 조준 패턴
+	 * @return bool : 패턴 범위 안이면 true
+	 */
+	bool IsInAimPattern(const FTileIndex& Origin, const FTileIndex& Target, int32 Range, EAimPattern Pattern) const;
+
+	/**
+	 * @brief 시야 차폐 또는 도착 타일 점유로 조준이 막혔는 지 판정
+	 * @param[in] Origin : 기준 좌표
+	 * @param[in] Target : 조준 대상 좌표
+	 * @param[in] Pattern : 조준 패턴 (직선 패턴이면서 직사일 때만 시야 검사)
+	 * @param[in] bIncludeOccupied : 점유된 타일(장애물/유닛)을 조준 가능으로 포함할지
+	 * @param[in] bIndirect : 곡사 여부 (장애물/유닛 너머 조준 가능한지)
+	 * @param[in] Incoming : 교체할 액터. 교체가 없을 경우는 nullptr
+	 * @param[in] IgnoreBlocker : 시야 차폐에서 제외할 액터. 없으면 nullptr
+	 * @return bool : 막혔으면 true
+	 */
+	bool IsAimBlocked(
+		const FTileIndex& Origin,
+		const FTileIndex& Target,
+		EAimPattern Pattern,
+		bool bIncludeOccupied,
+		bool bIndirect,
+		const UBoardActorModel* Incoming,
+		const UBoardActorModel* IgnoreBlocker
+	) const;
+
 	/**
 	 * @brief 원점에서 특정 방향으로 Range만큼 뻗는 직선에 포함되는 타일을 수집
 	 * @details
