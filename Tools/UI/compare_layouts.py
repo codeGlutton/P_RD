@@ -57,7 +57,10 @@ ASSETS = [
 ]
 
 #: 이 점수를 넘으면 못 찾은 것으로 본다. 잘 맞은 것은 10 안쪽이다.
-FOUND = 26.0
+#:
+#: 밝기를 맞춘 뒤 재므로 덮개나 색조는 걸러진다. 남는 것은 결이 다른 것,
+#: 곧 다른 판이 놓였거나 아무것도 안 놓인 경우다.
+FOUND = 22.0
 
 #: 이 픽셀 수를 넘게 어긋나면 눈에 띈다. 시안 1672 폭에서 잰 값이다.
 TOLERANCE = 6
@@ -79,16 +82,24 @@ def find(shot_grey, part_path, want_x, want_y):
     alpha = arr[:, :, 3] > 200
     th, tw = grey.shape
     mh, mw = shot_grey.shape
-    if th >= mh or tw >= mw or alpha.sum() < 400:
+    # 화면 폭을 꽉 채우는 판이 있다(20안 상단 띠는 1672px). 같은 크기를
+    # 막아 두었더니 그 판만 통째로 검사에서 빠졌다.
+    if th > mh or tw > mw or alpha.sum() < 400:
         return None
 
     best, pos = None, None
-    for y in range(max(0, want_y - WINDOW),
+    for y in range(max(0, min(want_y - WINDOW, mh - th)),
                    min(mh - th, want_y + WINDOW) + 1):
-        for x in range(max(0, want_x - WINDOW),
+        for x in range(max(0, min(want_x - WINDOW, mw - tw)),
                        min(mw - tw, want_x + WINDOW) + 1):
-            win = shot_grey[y:y + th, x:x + tw]
-            score = float(np.abs(win[alpha] - grey[alpha]).mean())
+            win = shot_grey[y:y + th, x:x + tw][alpha]
+            # 밝기 차를 뺀 뒤 견준다. 선택된 판에는 금빛 덮개가 얹혀 밝기가
+            # 통째로 올라가는데, 그대로 견주면 제자리에 있어도 점수가 튄다
+            # -- 시안마다 아군 한 장과 스킬 한 장이 꼭 "못찾음"으로 나왔고,
+            # 그게 바로 선택된 칸이었다. 자리를 보는 검사가 색에 걸리면
+            # 안 된다.
+            score = float(np.abs((win - win.mean())
+                                 - (grey[alpha] - grey[alpha].mean())).mean())
             if best is None or score < best:
                 best, pos = score, (y, x)
     if pos is None:
@@ -105,10 +116,17 @@ def _one(job):
     if got is None:
         return {"role": role, "state": "못읽음"}
     x, y, score = got
-    if score > FOUND:
-        return {"role": role, "state": "못찾음", "score": round(score, 1)}
-    return {"role": role, "state": "찾음", "dx": x - want_x, "dy": y - want_y,
-            "score": round(score, 1)}
+    dx, dy = x - want_x, y - want_y
+    if score <= FOUND:
+        return {"role": role, "state": "찾음", "dx": dx, "dy": dy,
+                "score": round(score, 1)}
+    # 점수가 높아도 제자리를 짚었으면 "없다"가 아니라 "덮였다"다. 작은 판은
+    # 얼굴과 막대와 글자가 판 대부분을 가려서 결이 통째로 달라진다 -- 20안
+    # 이름표가 그렇다. 둘을 한 칸에 넣으면 진짜로 빠진 것이 묻힌다.
+    if max(abs(dx), abs(dy)) <= TOLERANCE:
+        return {"role": role, "state": "덮임", "dx": dx, "dy": dy,
+                "score": round(score, 1)}
+    return {"role": role, "state": "못찾음", "score": round(score, 1)}
 
 
 def run(number, manifest, pool):
@@ -128,16 +146,18 @@ def run(number, manifest, pool):
 
     off = [r for r in results if r["state"] == "찾음"
            and max(abs(r["dx"]), abs(r["dy"])) > TOLERANCE]
-    lost = [r for r in results if r["state"] != "찾음"]
-    ok = len(results) - len(off) - len(lost)
-    print("시안%s  %-28s  맞음 %2d  어긋남 %2d  못찾음 %2d" % (
-        number, ASSETS[int(number) - 1][17:], ok, len(off), len(lost)))
+    veiled = [r for r in results if r["state"] == "덮임"]
+    lost = [r for r in results if r["state"] not in ("찾음", "덮임")]
+    ok = len(results) - len(off) - len(lost) - len(veiled)
+    print("시안%s  %-28s  맞음 %2d  덮임 %2d  어긋남 %2d  못찾음 %2d" % (
+        number, ASSETS[int(number) - 1][17:], ok, len(veiled), len(off),
+        len(lost)))
     for r in sorted(off, key=lambda e: -max(abs(e["dx"]), abs(e["dy"]))):
         print("    %-10s dx=%+4d dy=%+4d" % (r["role"], r["dx"], r["dy"]))
     for r in lost:
-        print("    %-10s %s%s" % (r["role"], r["state"],
-                                  "  차 %s" % r.get("score", "")))
-    return ok, len(off), len(lost)
+        print("    %-10s %s  차 %s" % (r["role"], r["state"],
+                                       r.get("score", "")))
+    return ok, len(veiled), len(off), len(lost)
 
 
 def main():
@@ -153,7 +173,7 @@ def main():
     numbers = ([("%02d" % int(args.mockup))] if args.mockup
                else sorted(manifest, key=int))
     workers = max(1, min(16, (os.cpu_count() or 4) - 2))
-    total = [0, 0, 0]
+    total = [0, 0, 0, 0]
     with ProcessPoolExecutor(max_workers=workers) as pool:
         for number in numbers:
             got = run(number, manifest, pool)
@@ -162,8 +182,9 @@ def main():
 
     print()
     print("=== 합계 ===")
-    print("  맞음 %d  어긋남 %d  못찾음 %d  (허용 %dpx)"
-          % (total[0], total[1], total[2], TOLERANCE))
+    print("  맞음 %d  덮임 %d  어긋남 %d  못찾음 %d  (허용 %dpx)"
+          % (total[0], total[1], total[2], total[3], TOLERANCE))
+    print("  덮임 = 제자리에 있으나 우리 글자·얼굴이 판을 가려 결이 다른 것")
 
 
 if __name__ == "__main__":

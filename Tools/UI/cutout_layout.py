@@ -78,11 +78,13 @@ def _plate(bp, root, row, name):
     #
     # 한 자리에 여러 장인 경우가 있다. 붙어 있던 조각을 빈 판 여러 장으로
     # 덮은 것이라, 각자 제 자리에 놓는다.
+    # 크기가 다를 때는 왼쪽 위에 붙인다. 가운데에 두었더니 캡처에서 잰
+    # 자리가 시안보다 7~8px 아래로 나왔다 -- 빈 판은 글자 있는 쪽에 달린
+    # 꼬리(13안 턴 바의 아래 화살표)가 없어 그만큼 짧고, 판 몸통은 위에서
+    # 시작하기 때문이다.
     arts = row.get("arts") or [[row["asset"], 0, 0] + list(row["rect"][2:])]
     for slot, (asset, ax, ay, aw, ah) in enumerate(arts):
         ax, ay, aw, ah = [v * K for v in (ax, ay, aw, ah)]
-        if len(arts) == 1:
-            ax, ay = (w - aw) / 2.0, (h - ah) / 2.0
         kit.image(bp, "%s_Art%d" % (name, slot), name, ax, ay, aw, ah,
                   (w, h), z_order=kit.Z_FILL,
                   texture="{}/{}".format(CUTOUT_PACKAGE, asset),
