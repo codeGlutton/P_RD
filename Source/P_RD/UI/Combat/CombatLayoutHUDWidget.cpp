@@ -145,11 +145,14 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		Widgets.HPBar = Find<UProgressBar>(WidgetTree, TEXT("PartyHPBar") + Suffix);
 		Widgets.HPText = Find<UTextBlock>(WidgetTree, TEXT("PartyHPText") + Suffix);
 		Widgets.APText = Find<UTextBlock>(WidgetTree, TEXT("PartyAPText") + Suffix);
-		Widgets.APIcon = Find<UWidget>(WidgetTree, TEXT("PartyAPIcon") + Suffix);
+		Widgets.APPlate = Find<UWidget>(WidgetTree, TEXT("PartyAPPlate") + Suffix);
 		Widgets.StatusText = Find<UTextBlock>(WidgetTree, TEXT("PartyStatus") + Suffix);
 		Widgets.StatusIcon = Find<UWidget>(WidgetTree, TEXT("PartyStatusIcon") + Suffix);
+		// 낱개는 굽는 쪽이 몇 개를 놓았는지 모른 채 센다. 개수를 여기 적어
+		// 두면 굽는 쪽에서 늘렸을 때 조용히 못 찾는다.
 		Widgets.APPips.Reset();
-		for (int32 Pip = 0; Pip < 8; ++Pip)
+		Widgets.APPipsUsed.Reset();
+		for (int32 Pip = 0; ; ++Pip)
 		{
 			UWidget* Found = Find<UWidget>(WidgetTree,
 				FString::Printf(TEXT("PartyAPPip_%d_%d"), Index, Pip));
@@ -158,6 +161,8 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 				break;
 			}
 			Widgets.APPips.Add(Found);
+			Widgets.APPipsUsed.Add(Find<UWidget>(WidgetTree,
+				FString::Printf(TEXT("PartyAPPipUsed_%d_%d"), Index, Pip)));
 		}
 	}
 
@@ -268,6 +273,7 @@ void UCombatLayoutHUDWidget::WireCommands()
 		{
 			Button->OnClicked.__Internal_AddUniqueDynamic(
 				this, Handlers[Index].Function, Handlers[Index].Name);
+			BindPressFeedback(Button, mCommandSlots[Index].Root);
 		}
 	}
 	struct FPartyHandler
@@ -287,6 +293,7 @@ void UCombatLayoutHUDWidget::WireCommands()
 		{
 			Button->OnClicked.__Internal_AddUniqueDynamic(
 				this, PartyHandlers[Index].Function, PartyHandlers[Index].Name);
+			BindPressFeedback(Button, mPartySlots[Index].Root);
 		}
 	}
 
@@ -294,6 +301,76 @@ void UCombatLayoutHUDWidget::WireCommands()
 	{
 		mEndTurnButton->OnClicked.AddUniqueDynamic(
 			this, &UCombatLayoutHUDWidget::HandleEndTurnClicked);
+		BindPressFeedback(mEndTurnButton, mEndTurnButton);
+	}
+
+	// 상단 메뉴 넷. 무엇을 열지는 아직 안 정해서 누르는 느낌만 걸어 둔다 --
+	// 전투 중에 지도와 가방을 여는 것이 맞는지가 기획 결정이라 UI 혼자
+	// 정하지 않는다.
+	mMenuButtons.Reset();
+	for (int32 Index = 0; ; ++Index)
+	{
+		UButton* Button = Find<UButton>(WidgetTree,
+			FString::Printf(TEXT("MenuButton_%d"), Index));
+		if (Button == nullptr)
+		{
+			break;
+		}
+		BindPressFeedback(Button, Button);
+		mMenuButtons.Add(Button);
+	}
+}
+
+/**
+ * @brief 누르는 동안 살짝 줄어들게 한다.
+ * @param Button 누를 자리
+ * @param Target 줄일 묶음. 버튼 자신이어도 된다
+ */
+void UCombatLayoutHUDWidget::BindPressFeedback(UButton* Button, UWidget* Target)
+{
+	if (Button == nullptr || Target == nullptr)
+	{
+		return;
+	}
+	// 가운데를 기준으로 줄어야 제자리에서 눌린 것처럼 보인다. 기본 기준점은
+	// 왼쪽 위라, 그대로 두면 오른쪽 아래로 밀리면서 작아진다.
+	Target->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+	mPressTargets.Add(Button, Target);
+	Button->OnPressed.AddUniqueDynamic(this, &UCombatLayoutHUDWidget::HandleAnyPressed);
+	Button->OnReleased.AddUniqueDynamic(this, &UCombatLayoutHUDWidget::HandleAnyReleased);
+}
+
+/**
+ * @brief 눌렸다. 눌린 버튼을 찾아 그 묶음을 줄인다.
+ *
+ * @details
+ * 어느 버튼이 눌렸는지는 알림이 안 알려 준다. 눌린 상태인 것을 찾는다 --
+ * 한 번에 하나만 눌리므로 이걸로 충분하다. 버튼마다 핸들러를 따로 만들면
+ * 카드 여섯 · 아군 셋 · 메뉴 넷에 턴 종료까지 열넷이 된다.
+ */
+void UCombatLayoutHUDWidget::HandleAnyPressed()
+{
+	for (const TPair<TObjectPtr<UButton>, TObjectPtr<UWidget>>& Pair : mPressTargets)
+	{
+		if (Pair.Key == nullptr || Pair.Key->IsPressed() == false)
+		{
+			continue;
+		}
+		mPressedTarget = Pair.Value;
+		FWidgetTransform Transform;
+		Transform.Scale = FVector2D(PressedScale, PressedScale);
+		Pair.Value->SetRenderTransform(Transform);
+		return;
+	}
+}
+
+/** @brief 놓았다. 줄여 둔 것을 되돌린다. */
+void UCombatLayoutHUDWidget::HandleAnyReleased()
+{
+	if (mPressedTarget != nullptr)
+	{
+		mPressedTarget->SetRenderTransform(FWidgetTransform());
+		mPressedTarget = nullptr;
 	}
 }
 
@@ -390,29 +467,7 @@ void UCombatLayoutHUDWidget::RefreshParty()
 		}
 		SetTextIfPresent(Widgets.HPText, FText::FromString(FString::Printf(
 			TEXT("%d/%d"), FMath::RoundToInt(Unit.mHP), FMath::RoundToInt(Unit.mMaxHP))));
-		// 이 프로젝트에서 행동력은 Movement 다. 이동도 스킬도 같은 통에서
-		// 꺼내 쓰고(`mRequiredMovement`), 적 계획도 그 값으로 돈다.
-		// `mActionPoints` 는 계약에 칸만 있고 **아무도 안 채운다** -- 그걸
-		// 읽다가 0 이 나와서 임시로 3 을 꽂아 놨었다. 칸이 아니라 값을 본다.
-		//
-		// AP 에는 상한이 없다. 그래서 "3/4" 처럼 못 적는다 -- 분모가 없다.
-		const int32 ShownAP = FMath::RoundToInt(Unit.mMovementPoint);
-
-		// 남은 만큼 낱개로 켠다. 자리보다 많으면 낱개로는 못 보여주므로
-		// 아이콘 하나에 "x N" 을 붙인다. 자리를 무한히 잡아 둘 수는 없다.
-		const int32 PipRoom = Widgets.APPips.Num();
-		const bool bOverflow = PipRoom > 0 && ShownAP > PipRoom;
-		for (int32 Pip = 0; Pip < PipRoom; ++Pip)
-		{
-			SetShown(Widgets.APPips[Pip], !bOverflow && Pip < ShownAP);
-		}
-		SetShown(Widgets.APIcon, bOverflow);
-		SetShown(Widgets.APText, bOverflow);
-		if (bOverflow)
-		{
-			SetTextIfPresent(Widgets.APText, FText::FromString(
-				FString::Printf(TEXT("x %d"), ShownAP)));
-		}
+		RefreshPartyActionPoints(Widgets, Unit);
 
 		if (Widgets.StatusText != nullptr)
 		{
@@ -457,7 +512,7 @@ void UCombatLayoutHUDWidget::ClearPartySlot(const FPartySlotWidgets& Widgets)
 	SetTextIfPresent(Widgets.HPText, FText::GetEmpty());
 	SetTextIfPresent(Widgets.APText, FText::GetEmpty());
 	SetShown(Widgets.APText, false);
-	SetShown(Widgets.APIcon, false);
+	SetShown(Widgets.APPlate, false);
 	SetShown(Widgets.StatusText, false);
 	SetShown(Widgets.Portrait, false);
 
@@ -469,6 +524,49 @@ void UCombatLayoutHUDWidget::ClearPartySlot(const FPartySlotWidgets& Widgets)
 	for (UWidget* Pip : Widgets.APPips)
 	{
 		SetShown(Pip, false);
+	}
+	for (UWidget* Pip : Widgets.APPipsUsed)
+	{
+		SetShown(Pip, false);
+	}
+}
+
+/**
+ * @brief 아군 칸 하나에 AP 를 그린다.
+ *
+ * @details
+ * 이 프로젝트에서 행동력은 Movement 다. 이동도 스킬도 같은 통에서 꺼내 쓰고
+ * (`mRequiredMovement`), 적 계획도 그 값으로 돈다. `mActionPoints` 는 계약에
+ * 칸만 있고 아무도 안 채운다.
+ *
+ * 왼쪽 숫자판에 `남은/전체`, 그 옆에 낱개를 편다. 낱개는 열까지만 -- 그
+ * 위로는 자리가 없다. 넘으면 낱개를 다 끄고 숫자만 남긴다. 숫자판은 늘 켜
+ * 두므로 낱개가 없어도 몇인지 읽힌다.
+ *
+ * 쓴 칸은 흐린 그림이 같은 자리에 겹쳐 있다. 둘 중 하나만 켠다.
+ */
+void UCombatLayoutHUDWidget::RefreshPartyActionPoints(
+	const FPartySlotWidgets& Widgets, const FUnitUI& Unit) const
+{
+	const int32 Left = FMath::Max(FMath::RoundToInt(Unit.mMovementPoint), 0);
+	const int32 Total = FMath::Max(
+		FMath::RoundToInt(Unit.mMaxMovementPoint), Left);
+
+	SetShown(Widgets.APPlate, true);
+	SetShown(Widgets.APText, true);
+	SetTextIfPresent(Widgets.APText, FText::FromString(
+		FString::Printf(TEXT("%d/%d"), Left, Total)));
+
+	const int32 PipRoom = Widgets.APPips.Num();
+	const bool bTooMany = Total > PipRoom;
+	for (int32 Pip = 0; Pip < PipRoom; ++Pip)
+	{
+		const bool bHasPip = !bTooMany && Pip < Total;
+		SetShown(Widgets.APPips[Pip], bHasPip && Pip < Left);
+		if (Widgets.APPipsUsed.IsValidIndex(Pip))
+		{
+			SetShown(Widgets.APPipsUsed[Pip], bHasPip && Pip >= Left);
+		}
 	}
 }
 

@@ -29,6 +29,11 @@ import sys
 
 from hud04_slots import DETAIL, PLACE, TEXTURE
 
+try:
+    from hud04_plate_art import PLATE_ART
+except ImportError:
+    PLATE_ART = {}
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ART = os.path.join(HERE, "KayKitUIKit", "HUD04")
 # 폴더와 파일 이름은 영문으로 둔다.
@@ -118,7 +123,11 @@ def main():
         items = []
         for plate in plates:
             # 묶인 판은 본의 그림을 띄운다. 굽는 결과와 같은 것을 봐야 한다.
-            name = TEXTURE.get(TEMPLATE_OF.get(plate, plate))
+            #
+            # 갈아 끼운 그림이 가장 앞선다. 안 그러면 쪽에서는 옛 판이 보이고
+            # 게임에서는 새 그림이 나온다 -- 그 위에서 구역을 맞출 수가 없다.
+            name = (PLATE_ART.get(plate)
+                    or TEXTURE.get(TEMPLATE_OF.get(plate, plate)))
             src = os.path.join(ART, "%s.png" % name) if name else None
             x, y, w, h = PLACE[plate]
             note = "%s  %dx%d @ %d,%d" % (plate, w, h, x, y)

@@ -22,7 +22,8 @@ UCombatLayoutHUDWidget 이 이름으로 위젯을 찾는다. 그 이름을 여�
     CommandSelected_i / CommandDisabled_i
     PartyCard_i / PartyPortrait_i / PartyName_i / PartyHPBar_i
     PartyHPText_i / PartyStatus_i / PartyStatusIcon_i
-    PartyAPPip_i_j / PartyAPIcon_i / PartyAPText_i
+    PartyAPPip_i_j / PartyAPPipUsed_i_j / PartyAPPlate_i / PartyAPText_i
+    MenuButton_i
     EnemyPanel / EnemyPortrait / EnemyName / EnemyHPBar / EnemyHPText
     EnemyDefense / EnemyForecast
     EndTurnButton / EndTurnLabel
@@ -173,7 +174,17 @@ PARTY = (
 #: AP 에는 상한이 없다. 그런데 낱개 아이콘은 칸 너비가 정해져 있어 무한히 늘 수
 #: 없으므로, 여기까지는 낱개로 그리고 넘으면 런타임이 "아이콘 x N" 으로 바꾼다.
 #: 여덟은 런타임(UCombatLayoutHUDWidget)이 찾는 개수와 맞춘 값이다.
-AP_PIPS = 8
+#: AP 낱개를 몇 개까지 그리나. 넘으면 낱개는 안 그리고 숫자만 남는다.
+AP_PIPS = 10
+
+#: 메뉴 넷의 누를 자리. 왼쪽부터 지도 · 스킬 · 가방 · 설정.
+MENU_ZONES = ("menu_map", "menu_skill", "menu_bag", "menu_settings")
+
+#: AP 숫자판의 가로/세로 비. 그림이 1689 x 584 라 그 비를 지킨다.
+AP_NUMBER_RATIO = 1689.0 / 584.0
+
+#: AP 낱개 그림의 원래 크기. 비율을 지켜 앉히는 데 쓴다.
+AP_PIP_SIZE = (778, 938)
 
 
 def at(rect):
@@ -265,12 +276,16 @@ def group(blueprint, root, name, plate_name, z=Z_PLATE):
 
 
 def plate(blueprint, parent, origin, plate_name, widget_name,
-          texture_name=None):
+          texture_name=None, art_size=None):
     # 갈아 끼운 것이 가장 앞선다. 그다음이 부르는 쪽이 짚어 준 것, 마지막이
     # 시안에서 오려 낸 그 판의 것이다.
     texture_name = PLATE_ART.get(plate_name) or texture_name
     """판 껍데기 한 장. 늘리지 않고 오려 낸 크기 그대로 놓는다."""
     x, y, w, h = local(at(PLACE[plate_name]), origin)
+    # 그림 크기를 알려 주면 비율을 지켜 안에 앉힌다. 갈아 끼운 그림이 판과
+    # 비율이 다를 때 늘리면 몰딩이 뭉갠다.
+    if art_size:
+        x, y, w, h = fit_rect((x, y, w, h), art_size, "contain")
     kit.image(blueprint, widget_name, parent, x, y, w, h, None, z_order=Z_PLATE,
               texture="{}/{}".format(ART, texture_name or TEXTURE[plate_name]),
               tint=kit.WHITE)
@@ -378,12 +393,19 @@ def top_row(blueprint, root):
                 DETAIL["top_center_turn_order"].get("selected_outline")
                 or DETAIL["top_center_turn_order"][element])
 
+    # 목표 글자가 있던 자리다. 그 칸을 메뉴 넷으로 쓰기로 했다.
+    #
+    # 아이콘은 막대 그림 안에 이미 그려져 있으므로 여기서는 누를 자리만 그
+    # 위에 얹는다 -- 아이콘을 따로 오려 놓으면 두 벌을 맞춰야 한다.
     obj, obj_origin, _ = group(blueprint, root, "ObjectivePanel",
                                "top_right_parchment")
     plate(blueprint, obj, obj_origin, "top_right_parchment", "ObjectivePlate")
-    text(blueprint, "ObjectiveText", obj, obj_origin,
-         spot("top_right_parchment", "objective_text"),
-         "모든 적 처치 — 남은 적 2", 20, TEXT_DARK)
+    for index, element in enumerate(MENU_ZONES):
+        rect = local(spot("top_right_parchment", element), obj_origin)
+        if rect is None:
+            continue
+        kit.ghost_button(blueprint, "MenuButton_%d" % index, obj,
+                         rect[0], rect[1], rect[2], rect[3])
 
 
 def enemy_panel(blueprint, root):
@@ -523,33 +545,45 @@ def party(blueprint, root):
             kit.bar(blueprint, "PartyHPBar_%d" % index, card, bx, by, bw, bh,
                     unreal.LinearColor(0.44, 0.74, 0.24, 1.0))
 
-        # AP 는 낱개로 놓는다. 런타임이 개수를 세어 하나씩 켠다 -- 묶음 그림
-        # 한 장이면 3/4 를 못 그린다.
+        # AP 줄은 왼쪽 숫자판 + 낱개 열이다.
+        #
+        # 숫자판은 늘 켜 둔다 -- 낱개만 있으면 여덟인지 아홉인지 세어야 한다.
+        # 낱개는 열까지만 그린다. 그 위로는 자리가 없어서, 넘으면 낱개를 다
+        # 끄고 숫자만 남긴다.
+        #
+        # 쓴 칸과 남은 칸은 그림이 다르다. 런타임이 브러시를 갈아 끼우는 대신
+        # 두 장을 겹쳐 놓고 하나만 켠다 -- 그래야 텍스처 경로가 굽는 쪽에만
+        # 있고 C++ 은 이름만 알면 된다.
         gems = local(spot(plate_name, "ap_gems"), origin)
         if gems:
             gx, gy, gw, gh = gems
-            step = gw / float(AP_PIPS)
-            for pip in range(AP_PIPS):
-                kit.image(blueprint, "PartyAPPip_%d_%d" % (index, pip), card,
-                          gx + step * pip, gy, step * 0.86, gh, None,
-                          z_order=Z_CONTENT,
-                          texture="{}/KK_HUD04_ap_pip_lit".format(ART),
-                          tint=kit.WHITE)
-                if pip >= lit:
-                    kit.fold(blueprint, "PartyAPPip_%d_%d" % (index, pip))
-
-            # 여덟을 넘으면 낱개로는 못 보여준다. 그때만 이 글자가 켜진다.
-            kit.image(blueprint, "PartyAPIcon_%d" % index, card, gx, gy,
-                      step * 0.86, gh, None, z_order=Z_CONTENT,
-                      texture="{}/KK_HUD04_ap_pip_lit".format(ART),
+            plate_w = min(gh * AP_NUMBER_RATIO, gw * 0.42)
+            kit.image(blueprint, "PartyAPPlate_%d" % index, card,
+                      gx, gy, plate_w, gh, None, z_order=Z_CONTENT,
+                      texture="{}/KK_HUD04_ap_number_plate".format(ART),
                       tint=kit.WHITE)
-            kit.fold(blueprint, "PartyAPIcon_%d" % index)
             kit.label(blueprint, "PartyAPText_%d" % index, card,
-                      gx + step, gy, gw - step, gh, "", 15, TEXT_PALE, "left",
+                      gx, gy, plate_w, gh, "4/4", 13, TEXT_PALE, "center",
                       None, bold=True)
-            kit.place(blueprint, "PartyAPText_%d" % index, gx + step, gy,
-                      gw - step, gh, "tl", None, Z_TEXT)
-            kit.fold(blueprint, "PartyAPText_%d" % index)
+            kit.place(blueprint, "PartyAPText_%d" % index, gx, gy,
+                      plate_w, gh, "tl", None, Z_TEXT)
+
+            rail = gx + plate_w + gh * 0.15
+            step = (gx + gw - rail) / float(AP_PIPS)
+            for pip in range(AP_PIPS):
+                for suffix, art in (("", "KK_HUD04_ap_pip"),
+                                    ("Used", "KK_HUD04_ap_pip_spent")):
+                    pip_name = "PartyAPPip%s_%d_%d" % (suffix, index, pip)
+                    # 칸에 늘려 넣지 않는다. 보석이 납작해진다 -- 자리가
+                    # 좁으면 작아질 뿐, 비율은 지킨다.
+                    px, py, pw, ph = fit_rect(
+                        (rail + step * pip, gy, step * 0.88, gh),
+                        AP_PIP_SIZE, "contain")
+                    kit.image(blueprint, pip_name, card, px, py, pw, ph, None,
+                              z_order=Z_CONTENT,
+                              texture="{}/{}".format(ART, art), tint=kit.WHITE)
+                    if suffix or pip >= lit:
+                        kit.fold(blueprint, pip_name)
 
         # 차례 표시 테두리는 안 그린다. 지금 차례인 유닛은 위쪽 턴 순서 줄이
         # 이미 보여 주므로, 아군 칸까지 노란 테를 두르면 같은 말이 두 번이다.

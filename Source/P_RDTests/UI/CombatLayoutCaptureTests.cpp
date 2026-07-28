@@ -42,6 +42,39 @@
 namespace CombatLayoutCapture
 {
 	/**
+	 * @brief 이 위젯이 쓰는 텍스처를 다 올려 놓고 기다린다.
+	 *
+	 * @details
+	 * 오프스크린으로 한 번 그리고 끝내므로, 스트리밍이 다음 프레임에 올릴
+	 * 셈이면 영영 안 올라온다. 밉을 붙잡아 두고 스트리밍을 한 번 돌린다.
+	 * @param Root 훑을 위젯
+	 */
+	void ForceTexturesResident(UWidget* Root)
+	{
+		UUserWidget* User = Cast<UUserWidget>(Root);
+		if (User == nullptr || User->WidgetTree == nullptr)
+		{
+			return;
+		}
+		User->WidgetTree->ForEachWidget([](UWidget* Widget)
+		{
+			UImage* Image = Cast<UImage>(Widget);
+			UTexture2D* Texture = Image != nullptr
+				? Cast<UTexture2D>(Image->GetBrush().GetResourceObject()) : nullptr;
+			if (Texture != nullptr)
+			{
+				// 밉을 붙잡아 두고 **그 자리에서 기다린다.** 스트리밍 관리자를
+				// 통째로 돌리면 오히려 지금 올라와 있던 것까지 내려간다 --
+				// 그렇게 해 봤더니 판이 하나도 안 남았다.
+				Texture->bForceMiplevelsToBeResident = true;
+				Texture->SetForceMipLevelsToBeResident(30.f);
+				Texture->WaitForStreaming();
+			}
+		});
+		FlushRenderingCommands();
+	}
+
+	/**
 	 * @brief 찍을 배치. 시안4로 정해져서 하나뿐이다.
 	 *
 	 * @details
@@ -247,6 +280,14 @@ namespace CombatLayoutCapture
 		//
 		// 그리고 이번부터 캡처가 스스로 증명한다: 아래에서 기지값 색 띠를
 		// 같이 그려 읽은 값이 기대값과 다르면 캡처 자체를 실패로 처리한다.
+		// 판 그림을 먼저 다 올려 놓는다.
+		//
+		// 스트리밍이 아직 안 올린 텍스처는 그리는 순간 빈 자리로 나온다. 매번
+		// **다른 판**이 빠져서, 굽는 쪽이 깨진 것처럼 보였다 -- 한 번은 위쪽
+		// 세 장이, 다음 번에는 두루마리 한 장이 없었다. 찍는 눈이 흔들리면
+		// 없는 문제를 쫓게 된다.
+		ForceTexturesResident(Layout);
+
 		FWidgetRenderer Renderer(true, true);
 		Renderer.SetIsPrepassNeeded(true);
 		UTextureRenderTarget2D* RenderTarget = Renderer.DrawWidget(

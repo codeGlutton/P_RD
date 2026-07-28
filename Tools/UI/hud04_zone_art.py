@@ -11,9 +11,9 @@ ZONE_ART = {
         "cost_badge": {"texture": "KK_HUD04_zone_cost_badge", "fit": "contain", "size": [778, 938]},
     },
     "bottom_status_left": {
-        "hp_icon": {"texture": "KK_HUD04_zone_hp_icon", "fit": "contain", "size": [48, 48]},
+        "hp_icon": {"texture": "KK_HUD04_hp_icon", "fit": "contain", "size": [776, 705]},
     },
     "bottom_status_right": {
-        "hp_icon": {"texture": "KK_HUD04_zone_hp_icon", "fit": "contain", "size": [48, 48]},
+        "hp_icon": {"texture": "KK_HUD04_hp_icon", "fit": "contain", "size": [776, 705]},
     },
 }

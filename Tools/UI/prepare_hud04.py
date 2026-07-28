@@ -258,6 +258,15 @@ def apply_tuning(place, detail):
     except ImportError:
         return 0
 
+    # 판 크기부터 갈아 끼운다. 구역은 판 안 자리라 판이 먼저 정해져야 한다.
+    try:
+        from hud04_tuning import PLATE_SIZE
+    except ImportError:
+        PLATE_SIZE = {}
+    for plate, size in PLATE_SIZE.items():
+        if plate in place:
+            place[plate] = [place[plate][0], place[plate][1], size[0], size[1]]
+
     moved = 0
     for plate, rows in TUNING.items():
         if plate not in place:

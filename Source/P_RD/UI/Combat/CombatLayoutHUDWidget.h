@@ -64,6 +64,9 @@ public:
 	/** @brief 커맨드 레일 칸 수. 이동 + 기본공격 + 스킬 4개. */
 	static constexpr int32 CommandSlotCount = 6;
 
+	/** @brief 누른 동안 줄어드는 정도. 더 줄이면 눌린 게 아니라 튄 것으로 보인다. */
+	static constexpr float PressedScale = 0.95f;
+
 public:
 	/**
 	 * @brief 게임플레이가 안 붙었을 때 가짜 전투 상태로 그린다.
@@ -207,6 +210,36 @@ private:
 	/** @brief 커맨드 칸 하나를 눌렀을 때. 0번은 이동, 나머지는 스킬. */
 	void RequestCommand(int32 SlotIndex);
 
+	// 묶음은 아래 private 에 있다. 쓰는 자리가 먼저라 이름만 미리 알린다.
+	struct FPartySlotWidgets;
+
+	/** @brief 아군 칸 하나에 AP 를 그린다. 숫자판 + 낱개 열. */
+	void RefreshPartyActionPoints(const FPartySlotWidgets& Widgets,
+		const FUnitUI& Unit) const;
+
+	/**
+	 * @brief 누르는 동안 살짝 줄어들게 한다.
+	 *
+	 * @details
+	 * 어두워지는 것은 버튼 브러시가 맡는다(굽는 쪽 ghost_button). 여기서는
+	 * 줄어드는 것만 한다 -- 크기는 브러시로 못 바꾼다.
+	 *
+	 * 버튼이 아니라 **누른 것이 무엇인지 보여 줄 묶음**을 줄인다. 버튼만
+	 * 줄이면 투명한 판이 줄어들 뿐 화면에서는 아무 일도 안 일어난다.
+	 */
+	void BindPressFeedback(UButton* Button, UWidget* Target);
+	UFUNCTION() void HandleAnyPressed();
+	UFUNCTION() void HandleAnyReleased();
+
+	/** @brief 눌린 버튼 -> 줄일 묶음. 누른 것을 놓을 때 되돌리려고 든다. */
+	UPROPERTY() TMap<TObjectPtr<UButton>, TObjectPtr<UWidget>> mPressTargets;
+
+	/** @brief 지금 줄여 둔 묶음. 놓으면 되돌린다. */
+	UPROPERTY() TObjectPtr<UWidget> mPressedTarget = nullptr;
+
+	/** @brief 메뉴 넷. 왼쪽부터 지도 · 스킬 · 가방 · 설정. */
+	UPROPERTY() TArray<TObjectPtr<UButton>> mMenuButtons;
+
 private:
 	/** @brief 파티 카드 한 장이 쓰는 위젯 묶음. 없는 것은 null. */
 	struct FPartySlotWidgets
@@ -227,8 +260,11 @@ private:
 		TObjectPtr<UTextBlock> HPText;
 		TObjectPtr<UTextBlock> APText;
 		/** @brief AP 가 낱개 자리보다 많을 때만 켜는 아이콘. 옆에 "x N" 이 붙는다. */
-		TObjectPtr<UWidget> APIcon = nullptr;
+		TObjectPtr<UWidget> APPlate = nullptr;
+		/** @brief 아직 남은 칸. 밝은 그림. */
 		TArray<TObjectPtr<UWidget>> APPips;
+		/** @brief 이미 쓴 칸. 흐린 그림. 같은 자리에 겹쳐 있다. */
+		TArray<TObjectPtr<UWidget>> APPipsUsed;
 		TObjectPtr<UTextBlock> StatusText;
 		/** @brief 상태이상 글자 옆 아이콘. 글자와 같이 켜지고 꺼진다. */
 		TObjectPtr<UWidget> StatusIcon;

@@ -7,6 +7,15 @@
 화면 자리로 옮기는 것은 prepare_hud04.py 가 한다.
 """
 
+#: 판 이름 -> (w, h). 갈아 끼운 그림이 시안 판과 비율이 다를 때 쓴다.
+#:
+#: 판을 그대로 두고 그림만 비율을 지켜 앉히면, 굽는 쪽은 맞는데 구역 쪽은
+#: 판 전체에 늘여 보여 준다 -- 눈으로 맞춘 자리와 나온 자리가 갈린다.
+#: 판을 그림에 맞추면 그럴 일이 없다.
+PLATE_SIZE = {
+    "top_right_parchment": (392, 121),   # 메뉴 막대 1670 x 516
+}
+
 #: 판 이름 -> 요소 -> (x, y, w, h). 시안을 잰 값을 이것으로 덮는다.
 TUNING = {
     "action_bottom": {
@@ -72,7 +81,7 @@ TUNING = {
         "button_label": (41, 41, 264, 74),
     },
     "bottom_status_center": {
-        "ap_gems": (33, 116, 160, 27),
+        "ap_gems": (14, 120, 197, 26),
         "character_name": (103, 32, 92, 21),
         "hp_bar": (103, 85, 91, 14),
         "hp_icon": (103, 57, 24, 24),
@@ -87,7 +96,7 @@ TUNING = {
         "status_text": (118, 86, 72, 24),
     },
     "bottom_status_left": {
-        "ap_gems": (33, 116, 160, 27),
+        "ap_gems": (14, 120, 197, 26),
         "character_name": (103, 32, 92, 21),
         "hp_bar": (103, 85, 91, 14),
         "hp_icon": (103, 57, 24, 24),
@@ -100,7 +109,7 @@ TUNING = {
         "status_icon_4": (122, -21, 25, 27),
     },
     "bottom_status_right": {
-        "ap_gems": (33, 116, 160, 27),
+        "ap_gems": (14, 120, 197, 26),
         "character_name": (103, 32, 92, 21),
         "hp_bar": (103, 85, 91, 14),
         "hp_icon": (103, 57, 24, 24),
@@ -126,7 +135,10 @@ TUNING = {
         "round_label": (38, 37, 233, 76),
     },
     "top_right_parchment": {
-        "objective_text": (38, 37, 317, 76),
+        "menu_bag": (203, 22, 73, 76),
+        "menu_map": (29, 22, 74, 76),
+        "menu_settings": (290, 22, 73, 76),
+        "menu_skill": (116, 22, 73, 76),
     },
     "upper_right_enemy_panel": {
         "damage_icon": (157, 191, 43, 42),

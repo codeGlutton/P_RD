@@ -703,12 +703,23 @@ def ghost_button(blueprint, name, parent, x, y, w, h, parent_size=None,
     """A hit area with no chrome of its own, so the plate under it shows."""
     button = add(blueprint, "Button", name, parent)
     style = button.get_editor_property("widget_style")
+    # 누른 동안만 어둡게 덮는다. 버튼이 그림 위에 얹혀 있어서 브러시에 색을
+    # 주면 그대로 덮개가 된다 -- 따로 덮개 위젯을 굽지 않아도 된다.
+    #
+    #   보통   아무것도 안 그린다
+    #   올림   아주 옅게 밝힌다
+    #   누름   어둡게 덮는다. 줄어드는 것은 C++ 이 맡는다
+    tints = {
+        "normal": (1.0, 0.95, 0.85, 0.0),
+        "hovered": (1.0, 0.95, 0.85, 0.10),
+        "pressed": (0.0, 0.0, 0.0, 0.30),
+        "disabled": (1.0, 0.95, 0.85, 0.0),
+    }
     for state in ("normal", "hovered", "pressed", "disabled"):
         brush = style.get_editor_property(state)
         brush.set_editor_property("resource_object", None)
         brush.set_editor_property("tint_color", unreal.SlateColor(
-            unreal.LinearColor(1.0, 0.95, 0.85,
-                               0.10 if state == "hovered" else 0.0)))
+            unreal.LinearColor(*tints[state])))
         style.set_editor_property(state, brush)
     button.set_editor_property("widget_style", style)
     place(blueprint, name, x, y, w, h, "tl", parent_size,

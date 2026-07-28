@@ -44,7 +44,7 @@ PLACE = {
     "bottom_status_right": (454, 760, 225, 174),
     "top_center_turn_order": (483, 12, 713, 158),
     "top_left_parchment": (15, 12, 309, 151),
-    "top_right_parchment": (1271, 12, 392, 151),
+    "top_right_parchment": (1271, 12, 392, 121),
     "upper_right_enemy_panel": (1273, 180, 390, 286),
 }
 
@@ -113,7 +113,7 @@ DETAIL = {
         "button_label": (1359, 811, 264, 74),
     },
     "bottom_status_center": {
-        "ap_gems": (265, 877, 160, 27),
+        "ap_gems": (246, 881, 197, 26),
         "character_name": (335, 793, 92, 21),
         "hp_bar": (335, 846, 91, 14),
         "hp_icon": (335, 818, 24, 24),
@@ -128,7 +128,7 @@ DETAIL = {
         "status_text": (350, 847, 72, 24),
     },
     "bottom_status_left": {
-        "ap_gems": (43, 877, 160, 27),
+        "ap_gems": (24, 881, 197, 26),
         "character_name": (113, 793, 92, 21),
         "hp_bar": (113, 846, 91, 14),
         "hp_icon": (113, 818, 24, 24),
@@ -141,7 +141,7 @@ DETAIL = {
         "status_icon_4": (132, 740, 25, 27),
     },
     "bottom_status_right": {
-        "ap_gems": (487, 876, 160, 27),
+        "ap_gems": (468, 880, 197, 26),
         "character_name": (557, 792, 92, 21),
         "hp_bar": (557, 845, 91, 14),
         "hp_icon": (557, 817, 24, 24),
@@ -167,7 +167,10 @@ DETAIL = {
         "round_label": (53, 49, 233, 76),
     },
     "top_right_parchment": {
-        "objective_text": (1309, 49, 317, 76),
+        "menu_bag": (1474, 34, 73, 76),
+        "menu_map": (1300, 34, 74, 76),
+        "menu_settings": (1561, 34, 73, 76),
+        "menu_skill": (1387, 34, 73, 76),
     },
     "upper_right_enemy_panel": {
         "damage_icon": (1430, 371, 43, 42),
