@@ -9,6 +9,8 @@
 #include "Setting/GameTeamType.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
+#include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
+
 #include "Component/SkillComponent/SkillComponentModel.h"
 #include "DataAsset/UnitSpawnData/StaticEnemyUnitSpawnData.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
@@ -50,6 +52,11 @@ int32 UEnemyUnitModel::GetBoardActorLevel() const
 void UEnemyUnitModel::SetDifficulty(int32 Difficulty)
 {
 	mDifficulty = Difficulty;
+
+	UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
+	checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
+
+	TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), GetBoardActorKeyName(), GetDifficulty(), true);
 }
 
 int32 UEnemyUnitModel::GetDifficulty() const

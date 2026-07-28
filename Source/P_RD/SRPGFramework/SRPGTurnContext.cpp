@@ -170,8 +170,7 @@ void USRPGTurnContext::BeginTurn()
 			UTileMapModel* TileMap = CombatModel->GetTileMap();
 
 			// TODO: 파티시스템 도입 후 파티 정보를 Players에 입력 요망
-			TArray<UUnitModel*> Players;
-			Players.Add(CombatModel->GetPlayerUnit());
+			TArray<UUnitModel*> Players = CombatModel->GetPlayerUnits();
 
 			// 판단근거 로그 식별용 라운드/턴 태그
 			const FString PlanLogTag = FString::Printf(TEXT("R%d/T%d"), CombatModel->GetRoundCount(), CombatModel->GetTurnCount());

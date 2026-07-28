@@ -41,11 +41,6 @@ public:
 	const URunPersistData* GetRunPersistData() const;
 	const UOptionPersistData* GetOptionPersistData() const;
 
-public:
-	// TODO : 삭제
-	UFUNCTION(BlueprintCallable, CallInEditor)
-	void DoStageBuildTest(bool UpdateBuildStream);
-
 protected:
 	UPROPERTY(Category = User, VisibleAnywhere, meta = (DisplayName = "UserPersistData"))
 	TObjectPtr<UUserPersistData> mUserPersistData;

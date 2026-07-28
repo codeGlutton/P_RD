@@ -1,5 +1,5 @@
-﻿/*****************************************************************//**
- * @file   PartyArtifactTestsHelper.h
+/*****************************************************************//**
+ * @file   PartyArtifactComponentModelTestsHelper.h
  * @brief  파티 아티펙트 테스트용 Mock 정의 헤더
  * @author 이문환
  * @date   2026-07-23
@@ -9,7 +9,7 @@
 
 #include "RDMinimal.h"
 #include "Pawn/Player/PlayerUnitModel.h"
-#include "PartyArtifactTestsHelper.generated.h"
+#include "PartyArtifactComponentModelTestsHelper.generated.h"
 
 /**
  * @brief 파티 구성원 Mock

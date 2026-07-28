@@ -13,6 +13,7 @@
 #include "PCGStage/Room.h"
 #include "Setting/RDWorldSettings.h"
 
+#include "Actor/Party/PartyModel.h"
 #include "Pawn/Player/PlayerUnitModel.h"
 
 #include "UI/RDUserWidget.h"
@@ -33,6 +34,7 @@
 #include "Component/SkillComponent/SkillComponentModel.h"
 
 #include "TAS/Passive/TacticalPassive.h"
+#include "AttributeSet/PartyAttributeSet.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
 #include "DataAsset/EquipmentData/StaticEquipmentData.h"
@@ -245,9 +247,23 @@ void ACombatGameMode::InitializeRoom()
 		UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
 		checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
 
-		GameProfileSubsystem->ClearCombatRoom(GetPlayerUnitModel()->GetTileTransform());
+		const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnitModels = GetPlayerUnitModels();
+		TArray<FTileTransform> PlayerTransforms;
+		for (const UPlayerUnitModel* PlayerUnitModel : PlayerUnitModels)
+		{
+			if (PlayerUnitModel != nullptr)
+			{
+				PlayerTransforms.Add(PlayerUnitModel->GetTileTransform());
+			}
+			else
+			{
+				PlayerTransforms.Add(FTileTransform::Invalid);
+			}
+		}
+
+		GameProfileSubsystem->ClearCurrentCombatRoom(PlayerTransforms);
 		SaveRunWithUIAsync();
-		GameProfileSubsystem->ClearCombatRoom(FTileTransform::Invalid);
+		GameProfileSubsystem->ClearCurrentCombatRoom(TArray<FTileTransform>());
 		});
 	CombatModel->OnShowCombatResultUI.AddWeakLambda(this, [this](ESRPGCombatResult Result) {
 		if (Result == ESRPGCombatResult::PlayerWin)
@@ -293,7 +309,8 @@ void ACombatGameMode::InitializeRoom()
 		mCombatUIModel->OnEndAnyTurnAction.Broadcast(Barrier);
 		});
 
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
+	// TODO : 여러 플레이어 등록해야함
+	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel(0);
 	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
 
 	/* 스킬 대리자 연결 */
@@ -332,7 +349,7 @@ void ACombatGameMode::InitializeRoom()
 	{
 		SpawnPointTransform = SettingPointActor->GetActorTransform();
 	}
-	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModel(), SpawnPointTransform, CurStage.mRoomClearTileTransform);
+	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModels(), SpawnPointTransform, CurStage.mRoomClearTileTransforms);
 }
 
 void ACombatGameMode::BeginRoom()
@@ -465,11 +482,6 @@ void ACombatGameMode::HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLon
 
 void ACombatGameMode::HandleRewardClaimed(ERewardClaimKind ClaimKind, int32 ChoiceIndex)
 {
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
-	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
-	UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnitModel != nullptr ? PlayerUnitModel->GetAttributeComponentModel() : nullptr;
-	checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
-
 	const FRoom& CurrentRoomData = GetRunPersistData()->GetCurrentRoom();
 	const FMonsterRoom* CurrentRoom = GetMonsterRewardRoom(CurrentRoomData);
 
@@ -485,7 +497,13 @@ void ACombatGameMode::HandleRewardClaimed(ERewardClaimKind ClaimKind, int32 Choi
 			return;
 		}
 
-		AttributeSetComponentModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetMoneyAttribute(), ETacticalModOp::AddBase, StaticCast<float>(CurrentRoom->mRewardMoney));
+		UPartyModel* PartyModel = GetPartyModel();
+		checkf(PartyModel != nullptr, TEXT("파티 모델 nullptr"));
+
+		UAttributeSetComponentModel* AttributeSetComponentModel = PartyModel->GetAttributeComponentModel();
+		checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+		AttributeSetComponentModel->ApplyModToAttribute(UPartyAttributeSet::GetMoneyAttribute(), ETacticalModOp::AddBase, StaticCast<float>(CurrentRoom->mRewardMoney));
 		PushPlayerMetaUIData();
 		return;
 	}
@@ -497,7 +515,22 @@ void ACombatGameMode::HandleRewardClaimed(ERewardClaimKind ClaimKind, int32 Choi
 			return;
 		}
 
-		AttributeSetComponentModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetExpAttribute(), ETacticalModOp::AddBase, StaticCast<float>(CurrentRoom->mRewardExp));
+		const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnitModels = GetPlayerUnitModels();
+		checkf(PlayerUnitModels.IsEmpty() == true, TEXT("플레이어 유닛 스폰 오류"));
+
+		const int32 PlayerMaxNum = PlayerUnitModels.Num();
+		for (int32 PlayerIndex = 0; PlayerIndex < PlayerMaxNum; ++PlayerIndex)
+		{
+			if (PlayerUnitModels[PlayerIndex] == nullptr)
+			{
+				continue;
+			}
+
+			UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnitModels[PlayerIndex]->GetAttributeComponentModel();
+			checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+			AttributeSetComponentModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetExpAttribute(), ETacticalModOp::AddBase, StaticCast<float>(CurrentRoom->mRewardExp));
+		}
 		PushPlayerMetaUIData();
 		return;
 	}
@@ -744,7 +777,8 @@ void ACombatGameMode::PushSkillUIData() const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
+	// TODO : 여러 플레이어 등록해야함
+	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel(0);
 	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
 
 	USkillComponentModel* SkillComponentModel = PlayerUnitModel->GetSkillComponentModel();
@@ -822,7 +856,8 @@ void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
+	// TODO : 여러 플레이어 등록해야함
+	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel(0);
 	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
 
 	USkillComponentModel* SkillComponentModel = PlayerUnitModel->GetSkillComponentModel();
@@ -853,7 +888,8 @@ void ACombatGameMode::PushEquipmentUIData() const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
+	// TODO : 여러 플레이어 등록해야함
+	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel(0);
 	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
 
 	UEquipmentComponentModel* EquipmentComponentModel = PlayerUnitModel->GetEquipmentComponentModel();
@@ -893,7 +929,8 @@ void ACombatGameMode::PushEquipmentDetailUIData(int32 EquipmentIndex) const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
+	// TODO : 여러 플레이어 등록해야함
+	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel(0);
 	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
 
 	UEquipmentComponentModel* EquipmentComponentModel = PlayerUnitModel->GetEquipmentComponentModel();
@@ -929,17 +966,24 @@ void ACombatGameMode::PushPlayerMetaUIData() const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
+	// TODO : 여러 플레이어 등록해야함
+	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel(0);
 	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
 
-	UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnitModel->GetAttributeComponentModel();
-	checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+	UAttributeSetComponentModel* PlayerAttributeSetComponentModel = PlayerUnitModel->GetAttributeComponentModel();
+	checkf(PlayerAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+	UPartyModel* PartyModel = GetPartyModel();
+	checkf(PartyModel != nullptr, TEXT("파티 모델 nullptr"));
+
+	UAttributeSetComponentModel* PartyAttributeSetComponentModel = PartyModel->GetAttributeComponentModel();
+	checkf(PartyAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
 	FPlayerMetaUI PlayerMetaUIData;
 	PlayerMetaUIData.mLevel = PlayerUnitModel->GetPlayerLevel();
-	PlayerMetaUIData.mGold = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMoneyAttribute());
-	PlayerMetaUIData.mExp = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute());
-	PlayerMetaUIData.mMaxExp = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMaxExpAttribute());
+	PlayerMetaUIData.mGold = PartyAttributeSetComponentModel->GetAttributeCurrentValue(UPartyAttributeSet::GetMoneyAttribute());
+	PlayerMetaUIData.mExp = PlayerAttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute());
+	PlayerMetaUIData.mMaxExp = PlayerAttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMaxExpAttribute());
 
 	mCombatUIModel->SetPlayerMeta(PlayerMetaUIData);
 }
@@ -1129,6 +1173,19 @@ void ACombatGameMode::PushCombatRewardUIData() const
 {
 	checkf(mRewardUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
+	// TODO : 여러 플레이어 등록해야함
+	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel(0);
+	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
+
+	UAttributeSetComponentModel* PlayerAttributeSetComponentModel = PlayerUnitModel->GetAttributeComponentModel();
+	checkf(PlayerAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+	UPartyModel* PartyModel = GetPartyModel();
+	checkf(PartyModel != nullptr, TEXT("파티 모델 nullptr"));
+
+	UAttributeSetComponentModel* PartyAttributeSetComponentModel = PartyModel->GetAttributeComponentModel();
+	checkf(PartyAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
 	FRewardUI RewardUIData;
 	RewardUIData.mTitle = NSLOCTEXT("CombatGameMode", "VictoryRewardTitle", "VICTORY REWARD");
 
@@ -1142,13 +1199,10 @@ void ACombatGameMode::PushCombatRewardUIData() const
 		}
 	}
 
-	const UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
-	const UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnitModel != nullptr ? PlayerUnitModel->GetAttributeComponentModel() : nullptr;
-	if (AttributeSetComponentModel != nullptr)
 	{
-		const float CurrentGold = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMoneyAttribute());
-		const float CurrentExp = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute());
-		const float MaxExp = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMaxExpAttribute());
+		const float CurrentGold = PartyAttributeSetComponentModel->GetAttributeCurrentValue(UPartyAttributeSet::GetMoneyAttribute());
+		const float CurrentExp = PlayerAttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute());
+		const float MaxExp = PlayerAttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMaxExpAttribute());
 
 		RewardUIData.mGoldBalance = FMath::RoundToInt(CurrentGold) + RewardUIData.mGoldGained;
 		RewardUIData.mExpBefore = CurrentExp;
@@ -1156,7 +1210,6 @@ void ACombatGameMode::PushCombatRewardUIData() const
 		RewardUIData.mMaxExp = MaxExp;
 	}
 
-	if (PlayerUnitModel != nullptr)
 	{
 		const int32 PlayerLevel = PlayerUnitModel->GetPlayerLevel();
 		RewardUIData.mLevelBefore = PlayerLevel;

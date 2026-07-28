@@ -58,6 +58,9 @@ class P_RD_API UStaticCombatRoomSpawnData : public UStaticRoomSpawnData
 	GENERATED_BODY()
 
 public:
+	UStaticCombatRoomSpawnData();
+
+public:
 	void PostInitProperties() override;
 	void PostLoad() override;
 
@@ -71,8 +74,8 @@ public:
 	EStageLevelType mStageLevel;
 
 public:
-	UPROPERTY(Category = "Transform", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PlayerTransform"))
-	FTileTransform mPlayerTransform;
+	UPROPERTY(Category = "Transform", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PlayerTransform", EditFixedSize))
+	TArray<FTileTransform> mPlayerTransforms;
 	
 public:
 	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EnemyUnitPlacementDatas"))
