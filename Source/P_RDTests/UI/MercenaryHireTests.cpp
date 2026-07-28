@@ -302,11 +302,18 @@ bool FCombatHUDCardToggleTest::RunTest(const FString& Parameters)
 		return false;
 	}
 
-	const ESlateVisibility Before = Card->GetVisibility();
+	// 아군 칸은 뒤집기가 아니다.
+	//
+	// 전에는 누를 때마다 카드를 접었다 폈다 했다. 지금은 "누구의 스킬을 볼지"
+	// 고르는 자리이고, 접고 펴는 것은 판 탭이 맡는다. 그래서 몇 번을 눌러도
+	// 카드는 펴져 있어야 한다 -- 스킬을 보러 눌렀는데 접히면 아무 일도 안
+	// 일어난 것처럼 보인다.
 	PartyButton->OnClicked.Broadcast();
-	TestNotEqual(TEXT("한 번 누르면 상태가 바뀐다"), Card->GetVisibility(), Before);
+	TestEqual(TEXT("누르면 카드가 펴진다"), Card->GetVisibility(),
+		ESlateVisibility::SelfHitTestInvisible);
 	PartyButton->OnClicked.Broadcast();
-	TestEqual(TEXT("두 번 누르면 되돌아온다"), Card->GetVisibility(), Before);
+	TestEqual(TEXT("다시 눌러도 접히지 않는다"), Card->GetVisibility(),
+		ESlateVisibility::SelfHitTestInvisible);
 	return true;
 }
 

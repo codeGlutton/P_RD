@@ -9,6 +9,7 @@
 #include "SRPGFramework/SRPGTurnEndAction.h"
 
 #include "Actor/TileMap/TileMapModel.h"
+#include "Pawn/Player/PlayerUnitModel.h"
 #include "Pawn/Enemy/EnemyUnitModel.h"
 
 #include "Actor/BoardActor/BoardCombatTarget.h"
@@ -19,6 +20,7 @@
 #include "DataAsset/ObstacleSpawnData/StaticObstacleSpawnData.h"
 
 #include "TimerManager.h"
+#include "Setting/GameTeamType.h"
 
 DEFINE_LOG_CATEGORY(LogSRPGCombat)
 
@@ -75,28 +77,45 @@ TStatId USRPGCombatModel::GetStatId() const
 	RETURN_QUICK_DECLARE_CYCLE_STAT(USRPGCombatModel, STATGROUP_Tickables);
 }
 
-void USRPGCombatModel::InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, const TArray<UUnitModel*>& PartyUnits, const FTransform& RoomStartTransform, const FTileTransform& RoomClearTileTransform)
+void USRPGCombatModel::InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnits, const FTransform& RoomStartTransform, const TArray<FTileTransform>& RoomClearTileTransforms)
 {
 	checkf(RoomSpawnData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
-	checkf(PartyUnits.IsEmpty() == false, TEXT("파티가 비어 있음"));
-
 	checkf(mCombatPhase == ESRPGCombatRoomPhase::None, TEXT("중복 초기화"));
 	mCombatPhase = ESRPGCombatRoomPhase::CombatInit;
 
 	SpawnTileMap(RoomStartTransform);
 
-	if (RoomClearTileTransform == FTileTransform::Invalid)
+	const bool WasClearedRoom = RoomClearTileTransforms.IsEmpty() == false;
+
+	const int32 PlayerMaxNum = PlayerUnits.Num();
+	mPlayerUnits.Init(nullptr, PlayerMaxNum);
+	for (int32 PlayerIndex = 0; PlayerIndex < PlayerMaxNum; ++PlayerIndex)
 	{
-		RegisterPlayerUnits(PartyUnits, RoomSpawnData->mPlayerTransform, RoomSpawnData->mPartyTransforms);
-		RegisterEnemyUnits(RoomSpawnData->mEnemyUnitPlacementDatas);
-		RegisterObstacles(RoomSpawnData->mObstaclePlacementDatas);
+		const TObjectPtr<UPlayerUnitModel>& PlayerUnit = PlayerUnits[PlayerIndex];
+		if (PlayerUnit == nullptr)
+		{
+			continue;
+		}
+
+		if (WasClearedRoom == true)
+		{
+			RegisterPlayerUnit(PlayerIndex, PlayerUnit, RoomClearTileTransforms[PlayerIndex]);
+		}
+		else
+		{
+			RegisterPlayerUnit(PlayerIndex, PlayerUnit, RoomSpawnData->mPlayerTransforms[PlayerIndex]);
+		}
+	}
+
+	if (WasClearedRoom == true)
+	{
+		mCombatPhase = ESRPGCombatRoomPhase::CombatAbort;
+		mCombatResult = ESRPGCombatResult::PlayerWin;
 	}
 	else
 	{
-		// 이미 깬 방으로 되돌아온 것이라 적이 없다. 파티는 나가는 자리에 선다.
-		RegisterPlayerUnits(PartyUnits, RoomClearTileTransform, TArray<FTileTransform>());
-		mCombatPhase = ESRPGCombatRoomPhase::CombatAbort;
-		mCombatResult = ESRPGCombatResult::PlayerWin;
+		RegisterEnemyUnits(RoomSpawnData->mEnemyUnitPlacementDatas);
+		RegisterObstacles(RoomSpawnData->mObstaclePlacementDatas);
 	}
 
 	UE_LOG(LogSRPGCombat, Log, TEXT("SRPG 전투 초기화 완료"));
@@ -201,8 +220,6 @@ void USRPGCombatModel::OnEndCurrentTurn(USRPGTurnContext* TurnContext, ESRPGTurn
 
 void USRPGCombatModel::ClearDeadActors()
 {
-	checkf(mPlayerUnit != nullptr, TEXT("플레이어 미동록 오류"));
-
 	TArray<TObjectPtr<UUnitModel>> DeadUnits;
 	TArray<TScriptInterface<IBoardCombatTarget>> DeadObstacles;
 
@@ -233,8 +250,6 @@ void USRPGCombatModel::ClearDeadActors()
 
 void USRPGCombatModel::EvaluateCombatEndState()
 {
-	checkf(mPlayerUnit != nullptr, TEXT("플레이어 미동록 오류"));
-
 	/* 이미 중단 */
 
 	if (mCombatPhase == ESRPGCombatRoomPhase::CombatAbort)
@@ -242,16 +257,22 @@ void USRPGCombatModel::EvaluateCombatEndState()
 		return;
 	}
 
-	/* 아군이 전멸해서 전투가 종료되는가? */
+	/* 플레이어가 죽어서 전투가 종료되는가? */
 
-	// 한 명이라도 살아 있으면 계속한다. 앞장선 한 명만 보면 그가 쓰러지는
-	// 순간 나머지 둘이 멀쩡한데도 진 것이 된다.
-	UUnitModel* LivingPlayer = FindLivingPlayerUnit();
-	if (LivingPlayer == nullptr)
+	bool AnyPlayerAlive = false;
+	for (const TObjectPtr<UUnitModel>& PlayerUnit : mPlayerUnits)
+	{
+		if (PlayerUnit != nullptr && PlayerUnit->IsDead() == false)
+		{
+			AnyPlayerAlive = true;
+			break;
+		}
+	}
+
+	if (AnyPlayerAlive == false)
 	{
 		mCombatResult = ESRPGCombatResult::PlayerLose;
 		mCombatPhase = ESRPGCombatRoomPhase::CombatAbort;
-		return;
 	}
 
 	/* 적군이 모두 죽어 전투가 종료되는가? */
@@ -259,9 +280,7 @@ void USRPGCombatModel::EvaluateCombatEndState()
 	bool AnyEnemyAlive = false;
 	for (const TObjectPtr<UUnitModel>& Unit : mUnits)
 	{
-		// 적대 판정의 기준은 살아 있는 아군이다. 죽은 유닛을 기준으로 물으면
-		// 팀 정보가 이미 정리됐을 수 있다.
-		if (Unit->GetTeamAttitudeTowards(*LivingPlayer) == ETeamAttitude::Hostile)
+		if (FGenericTeamId::GetAttitude(EGameTeamType::Adventurer, Unit->GetGenericTeamId()) == ETeamAttitude::Hostile)
 		{
 			if (Unit->IsDead() == false)
 			{
@@ -438,8 +457,8 @@ void USRPGCombatModel::RegisterEnemyUnit(FEnemyUnitPlacementData& EnemyPlacement
 	checkf(EnemyModelClass != nullptr, TEXT("적 유닛 ModelClass 로드 실패 — DataAsset의 mModelClass 확인"));
 	UEnemyUnitModel* EnemyUnit = GetWorldModelFactory(this)->NewModelDeferred<UEnemyUnitModel>(EnemyModelClass);
 	EnemyUnit->SetStaticSpawnData(EnemyUnitSpawnData);
-	EnemyUnit->SetDifficulty(EnemyPlacementData.mDifficulty);
 	EnemyUnit->FinishCreating(mTileMap->TileToWorldTransform(EnemyPlacementData.mTransform));
+	EnemyUnit->SetDifficulty(EnemyPlacementData.mDifficulty);
 
 	RegisterUnit(EnemyUnit, EnemyPlacementData.mTransform);
 }
@@ -536,121 +555,13 @@ void USRPGCombatModel::SpawnTileMap(const FTransform& RoomStartTransform)
 	mTileMap->RebuildTiles();
 }
 
-/**
- * @brief 파티 전원을 타일에 세운다.
- *
- * @details
- * 방 자산이 정해 준 자리(PartyTransforms)가 있으면 그것을 쓰고, 없으면
- * 대표 자리를 첫 칸으로 삼아 둘레의 빈 타일을 찾아 나간다. 방이 수십 개라
- * 전부 손으로 세 칸씩 찍게 하면 그 사이 게임이 안 돈다.
- *
- * 자리를 못 찾은 사람은 이번 방에 못 들어온다. 좁은 방에서 셋이 다 못 서는
- * 일이 있을 수 있는데, 그 때문에 전투가 통째로 멈추면 안 된다.
- * @param PartyUnits      세울 아군들. 첫 칸이 앞장선 한 명이다
- * @param BaseTransform   대표 자리
- * @param PlacedTransforms 방이 정해 둔 자리들. 비어 있으면 둘레에서 찾는다
- */
-void USRPGCombatModel::RegisterPlayerUnits(const TArray<UUnitModel*>& PartyUnits, const FTileTransform& BaseTransform, const TArray<FTileTransform>& PlacedTransforms)
+void USRPGCombatModel::RegisterPlayerUnit(int32 PlayerIndex, UUnitModel* PlayerUnit, const FTileTransform& Transform)
 {
 	checkf(mTileMap != nullptr, TEXT("타일맵 미존재"));
+	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
 
-	mPlayerUnits.Reset();
-	TSet<FTileIndex> Taken;
-
-	for (int32 Index = 0; Index < PartyUnits.Num(); ++Index)
-	{
-		UUnitModel* PartyUnit = PartyUnits[Index];
-		if (PartyUnit == nullptr)
-		{
-			continue;
-		}
-
-		FTileTransform Transform = BaseTransform;
-		if (PlacedTransforms.IsValidIndex(Index) == true)
-		{
-			Transform = PlacedTransforms[Index];
-		}
-		else if (Index > 0)
-		{
-			if (FindFreeTileNear(BaseTransform.mIndex, PartyUnit, Taken, OUT Transform.mIndex) == false)
-			{
-				UE_LOG(LogSRPGCombat, Warning, TEXT("파티원이 설 자리를 못 찾음"));
-				continue;
-			}
-		}
-
-		Taken.Add(Transform.mIndex);
-		mPlayerUnits.Add(PartyUnit);
-		RegisterUnit(PartyUnit, Transform);
-	}
-
-	checkf(mPlayerUnits.IsEmpty() == false, TEXT("아군을 한 명도 못 세움"));
-	mPlayerUnit = mPlayerUnits[0];
-}
-
-/**
- * @brief 기준 칸에서 바깥으로 돌며 설 수 있는 빈 타일을 찾는다.
- *
- * @details
- * 가까운 칸부터 본다. 한 칸 거리를 다 훑고 두 칸으로 넓힌다 -- 파티가
- * 흩어져 시작하면 첫 턴부터 각자 딴 데서 맞는다.
- * @param BaseIndex 기준 칸
- * @param Unit      세울 유닛(배치 가능 판정에 쓴다)
- * @param Taken     이미 이번에 찍어 둔 칸들. 타일맵은 아직 모른다
- * @param OutIndex  [out] 찾은 칸
- * @return 찾았으면 true
- */
-bool USRPGCombatModel::FindFreeTileNear(const FTileIndex& BaseIndex, const UBoardActorModel* Unit, const TSet<FTileIndex>& Taken, OUT FTileIndex& OutIndex) const
-{
-	constexpr int32 MaxRing = 4;
-	for (int32 Ring = 1; Ring <= MaxRing; ++Ring)
-	{
-		for (int32 OffsetY = -Ring; OffsetY <= Ring; ++OffsetY)
-		{
-			for (int32 OffsetX = -Ring; OffsetX <= Ring; ++OffsetX)
-			{
-				// 고리의 테두리만 본다. 안쪽은 앞 바퀴에서 이미 봤다.
-				if (FMath::Max(FMath::Abs(OffsetX), FMath::Abs(OffsetY)) != Ring)
-				{
-					continue;
-				}
-
-				const FTileIndex Candidate(BaseIndex.mX + OffsetX, BaseIndex.mY + OffsetY);
-				if (Taken.Contains(Candidate) == true)
-				{
-					continue;
-				}
-				if (mTileMap->CanPlace(Candidate, Unit) == false)
-				{
-					continue;
-				}
-
-				OutIndex = Candidate;
-				return true;
-			}
-		}
-	}
-
-	return false;
-}
-
-/** @brief 전투에 들어온 아군 전원. @return 등록된 차례대로 */
-const TArray<TObjectPtr<UUnitModel>>& USRPGCombatModel::GetPlayerUnits() const
-{
-	return mPlayerUnits;
-}
-
-/** @brief 아직 살아 있는 아군 하나. @return 살아 있는 유닛, 전원 사망이면 nullptr */
-UUnitModel* USRPGCombatModel::FindLivingPlayerUnit() const
-{
-	for (const TObjectPtr<UUnitModel>& PlayerUnit : mPlayerUnits)
-	{
-		if (PlayerUnit != nullptr && PlayerUnit->IsDead() == false)
-		{
-			return PlayerUnit;
-		}
-	}
-	return nullptr;
+	mPlayerUnits[PlayerIndex] = PlayerUnit;
+	RegisterUnit(PlayerUnit, Transform);
 }
 
 void USRPGCombatModel::RegisterEnemyUnits(TArray<FEnemyUnitPlacementData>& EnemyPlacementDatas)
@@ -853,9 +764,18 @@ UTileMapModel* USRPGCombatModel::GetTileMap() const
 	return mTileMap;
 }
 
-UUnitModel* USRPGCombatModel::GetPlayerUnit() const
+UUnitModel* USRPGCombatModel::GetPlayerUnit(int32 PlayerIndex) const
 {
-	return mPlayerUnit;
+	if (mPlayerUnits.IsValidIndex(PlayerIndex) == false)
+	{
+		return nullptr;
+	}
+	return mPlayerUnits[PlayerIndex];
+}
+
+const TArray<TObjectPtr<UUnitModel>>& USRPGCombatModel::GetPlayerUnits() const
+{
+	return mPlayerUnits;
 }
 
 const TArray<TObjectPtr<UUnitModel>>& USRPGCombatModel::GetUnits() const

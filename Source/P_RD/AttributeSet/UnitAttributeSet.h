@@ -52,14 +52,10 @@ public:
 public:
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UPlayerUnitAttributeSet, MaxExp)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UPlayerUnitAttributeSet, Exp)
-	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UPlayerUnitAttributeSet, Money)
 
 protected:
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData MaxExp;
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData Exp;
-	
-	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FTacticalAttributeData Money;
 };

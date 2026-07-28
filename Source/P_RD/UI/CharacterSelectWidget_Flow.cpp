@@ -1,4 +1,4 @@
-#include "UI/CharacterSelectWidget.h"
+﻿#include "UI/CharacterSelectWidget.h"
 
 #include "Components/Button.h"
 #include "GameMode/FrontendGameMode.h"
@@ -14,9 +14,10 @@ bool UCharacterSelectWidget::BeginFirstRoomEntryWithSelectedCharacter()
 	}
 
 	// [합의필요] 난이도 선택 UI는 아직 없으므로 프론트엔드 기본 난이도 1로 새 Run 생성을 요청한다.
-	// 이 화면은 한 명만 고른다. 파티로 넘기는 자리라 한 명짜리 파티로 싼다 --
-	// 런을 만드는 쪽이 한 명인지 셋인지 알 필요는 없다.
-	if (!FrontendGameMode->StartNewRun({ mSelectedPlayerUnitId }, 1))
+	TArray<FPrimaryAssetId> PlayerUnitIds;
+	PlayerUnitIds.Init(FPrimaryAssetId(), 3);
+	PlayerUnitIds[0] = mSelectedPlayerUnitId;
+	if (!FrontendGameMode->StartNewRun(PlayerUnitIds, 1))
 	{
 		return false;
 	}

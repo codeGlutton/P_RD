@@ -26,22 +26,30 @@ namespace AnimationTags
 {
 	/* 몽타쥬 애니메이션 타입 태그들 */
 
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_GetBuff);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_GetDebuff);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_GetDefense);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_GetMovement);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Heal);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Melee_Kick);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Melee_Punch);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Melee_Slash);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Melee_Stab);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Melee_Smash);
 
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Hit_Slash);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Hit_Stab);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Hit_Smash);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Hit_DeBuff);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Ranged_Direct);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Ranged_Indirect);
+
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_ETC_GetBuff);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_ETC_GetDeBuff);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_ETC_Spawn);
+
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Special_0);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Special_1);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Special_2);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Special_3);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Special_4);
+
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Hit_Damage);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Hit_Buff);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Hit_Spell);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Hit_DeBuff);
 
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Attack_Slash);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Attack_Stab);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Attack_Smash);
+
 
 
 	/* 애니메이션 이벤트 타입 태그들 */

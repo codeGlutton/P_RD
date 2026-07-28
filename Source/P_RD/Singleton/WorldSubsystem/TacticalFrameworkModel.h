@@ -96,7 +96,7 @@ protected:
 	UPROPERTY(Category = "Attribute", DuplicateTransient, VisibleAnywhere, meta = (DisplayName = "GlobalInitCurveTable"))
 	TObjectPtr<UCurveTable> mGlobalInitCurveTable;
 
-	TSharedPtr<FTacticalAttributeSetInitter> mGlobalAttributeSetInitter;
+	static TSharedPtr<FTacticalAttributeSetInitter> GlobalAttributeSetInitter;
 
 	/* Effect 매핑 데이터 */
 protected:

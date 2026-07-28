@@ -54,6 +54,8 @@ public:
 	 */
 	void SetStaticSpawnData(UStaticObstacleSpawnData* StaticSpawnData);
 
+public:
+	FPrimaryAssetId GetStaticSpawnDataId() const;
 	FName GetBoardActorKeyName() const;
 	/**
 	 * @brief 이 액터가 어느 스폰 데이터에서 나왔는지.

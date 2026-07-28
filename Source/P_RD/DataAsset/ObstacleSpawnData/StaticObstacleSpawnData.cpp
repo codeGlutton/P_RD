@@ -5,7 +5,6 @@
 #include "AttributeSet/AttributeSetMinimal.h"
 
 #include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
-#include "Singleton/WorldSubsystem/TacticalFrameworkSubsystem.h"
 
 #if WITH_EDITOR
 #include "Misc/DataValidation.h"
@@ -76,23 +75,15 @@ FName UStaticObstacleSpawnData::GetKeyName() const
 	return *Key;
 }
 
-float UStaticObstacleSpawnData::GetDefaultAttributeValue(UWorld* World, TSubclassOf<UTacticalAttributeSet> AttributeSetClass, const FTacticalAttribute& Attrubute, int32 Level) const
+float UStaticObstacleSpawnData::GetDefaultAttributeValue(UWorld* World, TSubclassOf<UTacticalAttributeSet> AttributeSetClass, const FTacticalAttribute& Attribute, int32 Level) const
 {
-	UTacticalFrameworkSubsystem* TacticalFrameworkSubsystem = World->GetSubsystem<UTacticalFrameworkSubsystem>();
-	checkf(TacticalFrameworkSubsystem != nullptr, TEXT("전략 프레임워크 서브시스템 nullptr"));
-
-	UTacticalFrameworkModel* TacticalFrameworkModel = TacticalFrameworkSubsystem->GetModel<UTacticalFrameworkModel>();
+	UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(World);
 	checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
 
-	auto MaxHPArray = TacticalFrameworkModel->GetAttributeSetInitter()->GetAttributeSetValues(
+	return TacticalFrameworkModel->GetAttributeSetInitter()->GetAttributeSetValue(
 		AttributeSetClass,
-		Attrubute.GetUProperty(),
-		GetKeyName()
+		Attribute.GetUProperty(),
+		GetKeyName(),
+		Level
 	);
-
-	if (MaxHPArray.IsValidIndex(Level) == false)
-	{
-		return 0.f;
-	}
-	return MaxHPArray[Level];
 }

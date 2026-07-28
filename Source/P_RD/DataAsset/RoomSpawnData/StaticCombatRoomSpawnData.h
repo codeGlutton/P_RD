@@ -58,6 +58,9 @@ class P_RD_API UStaticCombatRoomSpawnData : public UStaticRoomSpawnData
 	GENERATED_BODY()
 
 public:
+	UStaticCombatRoomSpawnData();
+
+public:
 	void PostInitProperties() override;
 	void PostLoad() override;
 
@@ -71,19 +74,8 @@ public:
 	EStageLevelType mStageLevel;
 
 public:
-	UPROPERTY(Category = "Transform", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PlayerTransform"))
-	FTileTransform mPlayerTransform;
-
-	/**
-	 * @brief 파티가 설 자리들
-	 *
-	 * @details
-	 * 비워 두면 mPlayerTransform 을 첫 칸으로 삼고 나머지는 그 둘레의 빈
-	 * 타일에서 찾는다. 방 자산이 수십 개라 전부 손으로 세 칸씩 찍게 하면
-	 * 그 사이 게임이 안 돈다 -- 자리를 정하고 싶은 방만 채우면 된다.
-	 */
-	UPROPERTY(Category = "Transform", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PartyTransforms"))
-	TArray<FTileTransform> mPartyTransforms;
+	UPROPERTY(Category = "Transform", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PlayerTransform", EditFixedSize))
+	TArray<FTileTransform> mPlayerTransforms;
 	
 public:
 	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EnemyUnitPlacementDatas"))

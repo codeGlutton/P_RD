@@ -1,11 +1,15 @@
 ﻿#include "Singleton/InstanceSubsystem/PersistentData.h"
+#include "AttributeSet/PartyAttributeSet.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
+#include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
+
+#include "Actor/Party/PartyModel.h"
 #include "Pawn/Player/PlayerUnitModel.h"
 
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
-#include "Component/EquipmentComponent/EquipmentComponentModel.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
+#include "Component/ArtifactComponent/PartyArtifactComponentModel.h"
 
 #include "Setting/GameBalanceSettings.h"
 #include "Engine/AssetManager.h"
@@ -13,18 +17,14 @@
 
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
-#include "DataAsset/EquipmentData/StaticEquipmentData.h"
+#include "DataAsset/ArtifactData/StaticArtifactData.h"
 
 #include "FunctionLibrary/RandomStreamFunctionLibrary.h"
 
 #include "Setting/GamePlaySettings.h"
-#include "Engine/Engine.h"
-#include "Engine/GameViewportClient.h"
 #include "HAL/IConsoleManager.h"
 #include "Internationalization/TextLocalizationManager.h"
 #include "Sound/SoundClass.h"
-#include "UnrealClient.h"
-#include "UnrealEngine.h"
 
 #if !UE_BUILD_SHIPPING
 
@@ -49,121 +49,26 @@ namespace
 
 #endif
 
-/**
- * @brief 한 런(Run) 동안 누적된 로그(처치 적/획득 스킬/장비/주사위)를 모두 비운다.
- *        새 런 시작 시 직전 런의 기록이 섞이지 않도록 초기화하는 용도.
- */
 void FRunLog::Clear()
 {
+	mUseCountPerUnit.Empty();
 	mKilledEnemyUnits.Empty();
 	mAcquiredSkills.Empty();
 	mAcquiredEquipment.Empty();
 	mAcquiredDices.Empty();
 }
 
-/**
- * @brief 유저 단위 누적 로그(총 플레이 횟수, 유닛별 플레이 횟수, 도감 격 "이미 본" 식별자 집합)를 비운다.
- *        유저 데이터 자체를 초기화(새 유저 생성 등)할 때 호출된다.
- */
 void FUserLog::Clear()
 {
 	mRunCount = 0;
-	mRunCountPerUnit.Empty();
+	mUseCountPerUnit.Empty();
 	mKnownEnemyUnitIds.Empty();
 	mKnownSkillIds.Empty();
 	mKnownEquipmentIds.Empty();
 	mKnownDiceIds.Empty();
 }
 
-/**
- * @brief 스폰된 플레이어 유닛을 제 자리 파티 칸에 잇는다.
- *
- * @details
- * 예전에는 런이 곧 플레이어 한 명이라 유닛도 하나였다. 이제 셋이므로 어느
- * 칸의 사람인지부터 찾는다. 유닛의 스폰 데이터 식별자가 곧 그 칸의 것이다.
- *
- * 못 찾으면 아무 일도 하지 않고 경고만 남긴다. 파티에 없는 유닛이 방에
- * 들어온 것은 데이터가 어긋났다는 뜻이지, 여기서 새 칸을 만들 일이 아니다.
- * @param PlayerUnit 등록 대상 플레이어 유닛 모델(어트리뷰트 컴포넌트 보유 필수)
- */
-void URunPersistData::RegisterPlayerUnit(UPlayerUnitModel* PlayerUnit)
-{
-	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
-	UAttributeSetComponentModel* ASCModel = PlayerUnit->GetAttributeComponentModel();
-	checkf(ASCModel != nullptr, TEXT("어빌리티 시스템 컴포넌트 nullptr"));
-
-	const int32 MemberIndex = FindMemberIndex(PlayerUnit->GetBoardActorAssetId());
-	if (MemberIndex == INDEX_NONE)
-	{
-		UE_LOG(LogRD, Warning, TEXT("파티에 없는 플레이어 유닛 등록 시도"));
-		return;
-	}
-
-	SyncMember(MemberIndex, PlayerUnit);
-	BindMemberEvent(MemberIndex, PlayerUnit);
-}
-
-/** @brief 파티 칸 번호를 찾는다. @return 칸 번호, 없으면 INDEX_NONE */
-int32 URunPersistData::FindMemberIndex(const FPrimaryAssetId& PlayerUnitId) const
-{
-	return mParty.IndexOfByPredicate([&PlayerUnitId](const FPartyMemberPersistData& Member) {
-		return Member.mPlayerUnitId == PlayerUnitId;
-		});
-}
-
-/** @brief 파티 전원. @return 파티 칸 배열(읽기 전용) */
-const TArray<FPartyMemberPersistData>& URunPersistData::GetParty() const
-{
-	return mParty;
-}
-
-/** @brief 파티 전원의 유닛 식별자. @return 고른 차례대로의 식별자 배열 */
-TArray<FPrimaryAssetId> URunPersistData::GetPartyUnitIds() const
-{
-	TArray<FPrimaryAssetId> Ids;
-	Ids.Reserve(mParty.Num());
-	for (const FPartyMemberPersistData& Member : mParty)
-	{
-		Ids.Add(Member.mPlayerUnitId);
-	}
-	return Ids;
-}
-
-/**
- * @brief 앞장선 한 명의 식별자.
- *
- * 기록처럼 대표 하나만 필요한 자리에서 쓴다. 파티가 비어 있으면 빈 값이다 --
- * 런이 시작되기 전에 부르면 그렇다.
- * @return 첫 칸의 플레이어 유닛 식별자
- */
-const FPrimaryAssetId& URunPersistData::GetPlayerUnitId() const
-{
-	static const FPrimaryAssetId Empty;
-	return mParty.IsEmpty() ? Empty : mParty[0].mPlayerUnitId;
-}
-
-/** @brief 현재 플레이어 레벨을 반환한다. @return 레벨 값 */
-int32 URunPersistData::GetPlayerLevel() const
-{
-	return mPlayerLevel;
-}
-
-/** @brief 현재 런의 난이도를 반환한다. @return 난이도 값 */
-int32 URunPersistData::GetDifficulty() const
-{
-	return mDifficulty;
-}
-
-/**
- * @brief 파티 칸 하나를 유닛 데이터의 기본값으로 채운다.
- *
- * @details
- * 예전 StartRun 안에 한 명분으로 늘어져 있던 것을 떼어 냈다. 셋을 채우려면
- * 같은 것을 세 번 적게 되고, 세 번 적으면 세 번 다르게 틀린다.
- * @param Member       채울 파티 칸
- * @param PlayerUnitId 이 칸에 앉힐 유닛의 식별자
- */
-void URunPersistData::SetupMember(OUT FPartyMemberPersistData& Member, const FPrimaryAssetId& PlayerUnitId)
+void UPlayerUnitPersistData::MakeUnit(const FPrimaryAssetId& PlayerUnitId)
 {
 	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
 	checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
@@ -171,192 +76,334 @@ void URunPersistData::SetupMember(OUT FPartyMemberPersistData& Member, const FPr
 	const UStaticPlayerUnitSpawnData* PlayerData = AssetManager->GetPrimaryAssetObject<UStaticPlayerUnitSpawnData>(PlayerUnitId);
 	checkf(PlayerData != nullptr, TEXT("플레이어 데이터 nullptr"));
 
-	Member.mIsNewData = true;
-	Member.mPlayerUnitId = PlayerUnitId;
+	ClearUnit();
 
-	// 기본 속성
+	// 플레이어 기본 데이터 세팅
 	{
-		Member.mMaxHP = PlayerData->GetDefaultAttributeValue(GetWorld(), UPlayerUnitAttributeSet::StaticClass(), UPlayerUnitAttributeSet::GetMaxHPAttribute(), mPlayerLevel);
-		const float DefaultHP = PlayerData->GetDefaultAttributeValue(GetWorld(), UPlayerUnitAttributeSet::StaticClass(), UPlayerUnitAttributeSet::GetHPAttribute(), mPlayerLevel);
-		Member.mHP = DefaultHP > 0.0f ? FMath::Min(DefaultHP, Member.mMaxHP) : Member.mMaxHP;
-		Member.mExp = 0.f;
-		Member.mMoney = PlayerData->GetDefaultAttributeValue(GetWorld(), UPlayerUnitAttributeSet::StaticClass(), UPlayerUnitAttributeSet::GetMoneyAttribute(), mPlayerLevel);
+		mPlayerUnitId = PlayerUnitId;
+		mPlayerLevel = 1;
 	}
 
-	// 스킬 기본 값
+	// 플레이어 기본 속성 세팅
+	{
+		mMaxHP = PlayerData->GetDefaultAttributeValue(GetWorld(), UPlayerUnitAttributeSet::StaticClass(), UPlayerUnitAttributeSet::GetMaxHPAttribute(), mPlayerLevel);
+		mHP = PlayerData->GetDefaultAttributeValue(GetWorld(), UPlayerUnitAttributeSet::StaticClass(), UPlayerUnitAttributeSet::GetHPAttribute(), mPlayerLevel);
+		mHP = mHP > 0.f ? FMath::Min(mHP, mMaxHP) : mMaxHP;
+		mExp = 0.f;
+	}
+
+	// 스킬 기본 값 세팅
 	{
 		constexpr int32 PlayerSkillSlot = 6;
-		Member.mSkillIds.Init(FPrimaryAssetId(), PlayerSkillSlot);
+		mSkillIds.Init(FPrimaryAssetId(), PlayerSkillSlot);
 
-		const int32 StaticSkillCount = FMath::Min(PlayerData->mSkillDatas.Num(), PlayerSkillSlot);
+		const int32 StaticSkillCount = PlayerData->mSkillDatas.Num();
 		for (int32 i = 0; i < StaticSkillCount; ++i)
 		{
 			const TSoftObjectPtr<UStaticSkillData>& SkillSoft = PlayerData->mSkillDatas[i];
 			if (const UStaticSkillData* SkillData = SkillSoft.LoadSynchronous())
 			{
-				Member.mSkillIds[i] = SkillData->GetPrimaryAssetId();
-			}
-		}
-	}
-
-	// 장비 기본 값
-	{
-		for (const TSoftObjectPtr<UStaticEquipmentData>& EquipmentSoft : PlayerData->mEquipmentDatas)
-		{
-			if (const UStaticEquipmentData* EquipmentData = EquipmentSoft.LoadSynchronous())
-			{
-				Member.mEquipmentIds.Add(EquipmentData->GetPrimaryAssetId());
+				mSkillIds[i] = SkillData->GetPrimaryAssetId();
 			}
 		}
 	}
 }
 
-/**
- * @brief 영속 스탯(최대 체력/체력/경험치/돈)을 유닛 어트리뷰트와 동기화한다.
- *        - 최초(mIsNewData==true) : 유닛의 현재 속성값을 저장본으로 "캡처"하고 곧바로 반환한다.
- *          (이때는 유닛 -> 저장본 방향이므로 모디파이어를 적용하지 않는다.)
- *        - 이후(mIsNewData==false): 저장된 값을 유닛 속성에 Override 연산으로 "복원"하고,
- *          누적된 Loose 게임플레이 태그(태그별 개수)까지 다시 심는다.
- *
- *        [PR #191] 복원 시 사용하는 ApplyModToAttribute 의 연산 종류 인자가
- *        구 EGameplayModOp::Override 에서 ETacticalModOp::Override(정수값 3, 동일하게 유지)로 치환되었다.
- *        Override 는 기존값에 더하거나 곱하지 않고 최종값을 인자 그대로 강제 설정하는 "덮어쓰기"이며,
- *        저장된 절대값을 손실 없이 그대로 되돌려야 하는 영속 복원에 정확히 부합한다.
- * @param MemberIndex 파티 칸 번호
- * @param PlayerUnit  동기화 대상 플레이어 유닛 모델
- */
-void URunPersistData::SyncMember(int32 MemberIndex, UPlayerUnitModel* PlayerUnit)
+void UPlayerUnitPersistData::MakeUnit(UPlayerUnitModel* PlayerUnit)
 {
-	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
-	UAttributeSetComponentModel* ASCModel = PlayerUnit->GetAttributeComponentModel();
-	checkf(ASCModel != nullptr, TEXT("어빌리티 시스템 컴포넌트 nullptr"));
+	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 모델 nullptr"));
+	UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnit->GetAttributeComponentModel();
+	checkf(AttributeSetComponentModel != nullptr, TEXT("어빌리티 시스템 컴포넌트 nullptr"));
+	USkillComponentModel* SkillComponentModel = PlayerUnit->GetSkillComponentModel();
+	checkf(SkillComponentModel != nullptr, TEXT("플레이어 스킬 컴포넌트 nullptr"));
 
-	FPartyMemberPersistData& Member = mParty[MemberIndex];
+	ClearUnit();
 
-	// 최초 등록: 유닛의 현재 속성값을 저장본으로 캡처한 뒤 더 진행하지 않는다(복원 단계 건너뜀).
-	if (Member.mIsNewData == true)
+	// 플레이어 데이터 세팅
 	{
-		Member.mIsNewData = false;
+		mPlayerUnitId = PlayerUnit->GetStaticSpawnDataId();
+		mPlayerLevel = PlayerUnit->GetPlayerLevel();
 	}
 
-	// 저장본 -> 유닛 복원. ETacticalModOp::Override(정수 3, 구 EGameplayModOp::Override 대체)는
-	// 누적이 아닌 "덮어쓰기"라 저장된 절대값을 그대로 다시 세팅한다.
-	// ※ ETacticalModOp 의 정수값을 구 enum과 동일하게 유지하는 이유: 직렬화 호환 / Aggregator의 op-값 배열 인덱싱 / CoreRedirect 매핑.
-	ASCModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetMaxHPAttribute(), ETacticalModOp::Override, Member.mMaxHP);
-	ASCModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetHPAttribute(), ETacticalModOp::Override, Member.mHP);
-	ASCModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetExpAttribute(), ETacticalModOp::Override, Member.mExp);
-	ASCModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetMoneyAttribute(), ETacticalModOp::Override, Member.mMoney);
-
-	// (여러 방 내에서 유지되는 특수한 패시브 스택) Loose 게임플레이 태그를 개수(Pair.Value)만큼 다시 부여한다.
-	for (auto& Pair : Member.mTagCountMap)
+	// 플레이어 속성 세팅
 	{
-		ASCModel->AddLooseGameplayTag(Pair.Key, Pair.Value);
+		mMaxHP = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMaxHPAttribute());
+		mHP = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetHPAttribute());
+		mExp = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute());
+	}
+
+	// 스킬 값 세팅
+	{
+		constexpr int32 PlayerSkillSlot = 6;
+		mSkillIds.Init(FPrimaryAssetId(), PlayerSkillSlot);
+
+		const TArray<FSkillEntry>& SkillEntries = SkillComponentModel->GetSkills();
+		const int32 SkillEntryCount = SkillEntries.Num();
+		for (int32 i = 0; i < SkillEntryCount; ++i)
+		{
+			const FSkillEntry& SkillEntry = SkillEntries[i];
+			if (SkillEntry.IsValid() == true)
+			{
+				mSkillIds[i] = SkillEntry.mData->GetPrimaryAssetId();
+			}
+		}
+	}
+}
+
+void UPlayerUnitPersistData::ClearUnit()
+{
+	mPlayerUnitId = FPrimaryAssetId();
+	mPlayerLevel = 1;
+
+	mTagCountMap.Empty();
+	mSkillIds.Empty();
+}
+
+void UPlayerUnitPersistData::RegisterPlayerUnit(UPlayerUnitModel* PlayerUnit)
+{
+	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
+	
+	SyncPlayerPersistData(PlayerUnit);
+	BindPlayerUnitEvent(PlayerUnit);
+}
+
+const FPrimaryAssetId& UPlayerUnitPersistData::GetPlayerUnitId() const
+{
+	return mPlayerUnitId;
+}
+
+int32 UPlayerUnitPersistData::GetPlayerLevel() const
+{
+	return mPlayerLevel;
+}
+
+const TArray<FPrimaryAssetId>& UPlayerUnitPersistData::GetSkillIds() const
+{
+	return mSkillIds;
+}
+
+void UPlayerUnitPersistData::SyncPlayerPersistData(UPlayerUnitModel* PlayerUnit)
+{
+	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
+	UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnit->GetAttributeComponentModel();
+	checkf(AttributeSetComponentModel != nullptr, TEXT("어빌리티 시스템 컴포넌트 nullptr"));
+	USkillComponentModel* SkillComponentModel = PlayerUnit->GetSkillComponentModel();
+	checkf(SkillComponentModel != nullptr, TEXT("플레이어 스킬 컴포넌트 nullptr"));
+
+	// 플레이어 기본 데이터 동기화
+	PlayerUnit->SetPlayerLevel(mPlayerLevel);
+	AttributeSetComponentModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetMaxHPAttribute(), ETacticalModOp::Override, mMaxHP);
+	AttributeSetComponentModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetHPAttribute(), ETacticalModOp::Override, mHP);
+	AttributeSetComponentModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetExpAttribute(), ETacticalModOp::Override, mExp);
+
+	// 플레이어 태그 동기화
+	for (auto& Pair : mTagCountMap)
+	{
+		AttributeSetComponentModel->AddLooseGameplayTag(Pair.Key, Pair.Value);
 	}
 
 	// 플레이어 스킬 동기화
-	USkillComponentModel* SkillComponentModel = PlayerUnit->GetSkillComponentModel();
-	if (SkillComponentModel != nullptr)
-	{
-		SkillComponentModel->SetSkillFrom(Member.mSkillIds);
-	}
+	SkillComponentModel->SetSkillFrom(GetSkillIds());
+}
 
-	// 플레이어 장비 동기화
-	UEquipmentComponentModel* EquipmentComponentModel = PlayerUnit->GetEquipmentComponentModel();
-	if (EquipmentComponentModel != nullptr)
+void UPlayerUnitPersistData::BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit)
+{
+	 checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
+	 UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnit->GetAttributeComponentModel();
+	 checkf(AttributeSetComponentModel != nullptr, TEXT("어빌리티 시스템 컴포넌트 nullptr"));
+	 USkillComponentModel* SkillComponentModel = PlayerUnit->GetSkillComponentModel();
+	 checkf(SkillComponentModel != nullptr, TEXT("플레이어 스킬 컴포넌트 nullptr"));
+
+	 // 레벨 추적
+	 PlayerUnit->OnChangePlayerLevel.AddLambda([this](UPlayerUnitModel* Model, int32 PlayerLevel) {
+		 mPlayerLevel = PlayerLevel;
+		 });
+
+	 // 스텟 추적
+	 AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).AddLambda([this](const FTacticalAttributeChangeData& Data) {
+	 	mMaxHP = Data.mNewValue;
+	 	});
+	 AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).AddLambda([this](const FTacticalAttributeChangeData& Data) {
+	 	mHP = Data.mNewValue;
+	 	});
+	 AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetExpAttribute()).AddLambda([this](const FTacticalAttributeChangeData& Data) {
+	 	mExp = Data.mNewValue;
+	 	});
+
+	 // 패시브 스택 비용 태그의 개수 변화를 추적
+	 AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_Cost_PassiveStack, ETacticalTagEventType::AnyCountChange).AddLambda([this](const FGameplayTag Tag, int32 Count) {
+	 	mTagCountMap[Tag] = Count;
+	 	if (Count == 0)
+	 	{
+	 		mTagCountMap.Remove(Tag);
+	 	}
+	 	});
+
+	 // 플레이어 스킬 추적
+	 SkillComponentModel->OnChangeSkillUI.AddLambda([this](int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData)
+		 {
+			 if (mSkillIds.Num() < SkillIndex)
+			 {
+				 FPrimaryAssetId NextSkillId;
+				 if (NewSkillData != nullptr)
+				 {
+					 NextSkillId = NewSkillData->GetPrimaryAssetId();
+				 }
+				 mSkillIds[SkillIndex] = NextSkillId;
+			 }
+		 });
+}
+
+void UPlayerUnitPersistData::Serialize(FArchive& Ar)
+{
+	Super::Serialize(Ar);
+}
+
+UPartyPersistData::UPartyPersistData()
+{
+	mPartyPlayers.Init(nullptr, 3);
+
+	mPartyPlayers[0] = CreateDefaultSubobject<UPlayerUnitPersistData>(TEXT("PartyPlayer00"));
+	mPartyPlayers[1] = CreateDefaultSubobject<UPlayerUnitPersistData>(TEXT("PartyPlayer01"));
+	mPartyPlayers[2] = CreateDefaultSubobject<UPlayerUnitPersistData>(TEXT("PartyPlayer02"));
+}
+
+void UPartyPersistData::Serialize(FArchive& Ar)
+{
+	Super::Serialize(Ar);
+
+	if (Ar.IsSaveGame() == true)
 	{
-		EquipmentComponentModel->EquipFrom(Member.mEquipmentIds);
+		/* 파티 멤버 유닛 내부 데이터 직렬화 */
+		const int32 PlayerMaxNum = mPartyPlayers.Num();
+		for (int32 PlayerIndex = 0; PlayerIndex < PlayerMaxNum; ++PlayerIndex)
+		{
+			mPartyPlayers[PlayerIndex]->Serialize(Ar);
+		}
 	}
 }
 
-/**
- * @brief 유닛 속성/태그의 변경 이벤트를 파티 칸에 반영하도록 델리게이트를 바인딩한다.
- *        이로써 전투/이동 중 유닛에서 발생한 스탯·태그 변화가 자동으로 저장본에 누적되어,
- *        이후 SyncMember 의 복원 단계에서 동일한 값을 그대로 되돌릴 수 있다.
- *
- * @details
- * 람다가 파티 칸의 주소가 아니라 칸 번호를 들고 있는 것이 중요하다. 파티는
- * 배열이라 늘어나면 주소가 통째로 옮겨간다 -- 주소를 붙들면 그날 조용히
- * 엉뚱한 곳에 쓴다.
- * @param MemberIndex 파티 칸 번호
- * @param PlayerUnit  이벤트를 구독할 대상 플레이어 유닛 모델
- */
-void URunPersistData::BindMemberEvent(int32 MemberIndex, UPlayerUnitModel* PlayerUnit)
+void UPartyPersistData::RegisterParty(UPartyModel* Party, TArray<TObjectPtr<UPlayerUnitModel>>& Players)
 {
-	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
-	UAttributeSetComponentModel* ASCModel = PlayerUnit->GetAttributeComponentModel();
-	checkf(ASCModel != nullptr, TEXT("어빌리티 시스템 컴포넌트 nullptr"));
+	checkf(Party != nullptr, TEXT("파티 nullptr"));
+	checkf(Players.Num() == mPartyPlayers.Num(), TEXT("파티 멤버 부족"));
 
-	ASCModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).AddWeakLambda(this, [this, MemberIndex](const FTacticalAttributeChangeData& Data) {
-		mParty[MemberIndex].mMaxHP = Data.mNewValue;
-		});
-	ASCModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).AddWeakLambda(this, [this, MemberIndex](const FTacticalAttributeChangeData& Data) {
-		mParty[MemberIndex].mHP = Data.mNewValue;
-		});
-	ASCModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetExpAttribute()).AddWeakLambda(this, [this, MemberIndex](const FTacticalAttributeChangeData& Data) {
-		mParty[MemberIndex].mExp = Data.mNewValue;
-		});
-	ASCModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMoneyAttribute()).AddWeakLambda(this, [this, MemberIndex](const FTacticalAttributeChangeData& Data) {
-		mParty[MemberIndex].mMoney = Data.mNewValue;
-		});
+	SyncPartyPersistData(Party, Players);
+	BindPartyEvent(Party, Players);
 
-	// 패시브 스택 비용 태그의 개수 변화를 추적: 현재 개수를 맵에 저장하되, 0이 되면 항목을 제거해 저장본을 깔끔히 유지한다.
-	ASCModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_Cost_PassiveStack, ETacticalTagEventType::AnyCountChange).AddWeakLambda(this, [this, MemberIndex](const FGameplayTag Tag, int32 Count) {
-		TMap<FGameplayTag, int32>& TagCountMap = mParty[MemberIndex].mTagCountMap;
-		TagCountMap.FindOrAdd(Tag) = Count;
-		if (Count == 0)
+	const int32 PlayerMaxNum = mPartyPlayers.Num();
+	for (int32 PlayerIndex = 0; PlayerIndex < PlayerMaxNum; ++PlayerIndex)
+	{
+		if (Players[PlayerIndex] == nullptr)
 		{
-			TagCountMap.Remove(Tag);
+			continue;
+		}
+
+		mPartyPlayers[PlayerIndex]->RegisterPlayerUnit(Players[PlayerIndex]);
+	}
+}
+
+TArray<FPrimaryAssetId> UPartyPersistData::GetPlayerUnitIds() const
+{
+	TArray<FPrimaryAssetId> PlayerUnitIds;
+	for (const TObjectPtr<UPlayerUnitPersistData>& PartyPlayer : mPartyPlayers)
+	{
+		PlayerUnitIds.Add(PartyPlayer->GetPlayerUnitId());
+	}
+	return PlayerUnitIds;
+}
+
+int32 UPartyPersistData::GetDifficulty() const
+{
+	return mDifficulty;
+}
+
+const TArray<FPrimaryAssetId>& UPartyPersistData::GetArtifactIds() const
+{
+	return mArtifactIds;
+}
+
+void UPartyPersistData::SyncPartyPersistData(UPartyModel* Party, TArray<TObjectPtr<UPlayerUnitModel>>& Players)
+{
+	checkf(Party != nullptr, TEXT("플레이어 유닛 nullptr"));
+	UAttributeSetComponentModel* AttributeSetComponentModel = Party->GetAttributeComponentModel();
+	checkf(AttributeSetComponentModel != nullptr, TEXT("어빌리티 시스템 컴포넌트 nullptr"));
+	UPartyArtifactComponentModel* PartyArtifactComponentModel = Party->GetPartyArtifactComponentModel();
+	checkf(PartyArtifactComponentModel != nullptr, TEXT("파티 아티팩트 컴포넌트 nullptr"));
+
+	// 플레이어 등록
+	const int32 PlayerMaxNum = mPartyPlayers.Num();
+	for (int32 PlayerIndex = 0; PlayerIndex < PlayerMaxNum; ++PlayerIndex)
+	{
+		if (Players[PlayerIndex] == nullptr)
+		{
+			continue;
+		}
+
+		Party->SetPlayerUnitModel(PlayerIndex, Players[PlayerIndex]);
+	}
+
+	// 플레이어 기본 데이터 동기화
+	Party->SetDifficulty(mDifficulty);
+	AttributeSetComponentModel->ApplyModToAttribute(UPartyAttributeSet::GetMoneyAttribute(), ETacticalModOp::Override, mMoney);
+
+	// 아티팩트 동기화
+	PartyArtifactComponentModel->RestoreFrom(GetArtifactIds());
+}
+
+void UPartyPersistData::BindPartyEvent(UPartyModel* Party, TArray<TObjectPtr<UPlayerUnitModel>>& Players)
+{
+	checkf(Party != nullptr, TEXT("파티 nullptr"));
+	UAttributeSetComponentModel* AttributeSetComponentModel = Party->GetAttributeComponentModel();
+	checkf(AttributeSetComponentModel != nullptr, TEXT("어빌리티 시스템 컴포넌트 nullptr"));
+	UPartyArtifactComponentModel* PartyArtifactComponentModel = Party->GetPartyArtifactComponentModel();
+	checkf(PartyArtifactComponentModel != nullptr, TEXT("파티 아티팩트 컴포넌트 nullptr"));
+
+	// 플레이어 추적
+	Party->OnChangePartyPlayer.AddLambda([this](int32 PlayerIndex, UPlayerUnitModel* PreModel, UPlayerUnitModel* NextModel) {
+		if (PreModel != nullptr)
+		{
+			mPartyPlayers[PlayerIndex]->ClearUnit();
+		}
+		if (NextModel != nullptr)
+		{
+			mPartyPlayers[PlayerIndex]->MakeUnit(NextModel);
+			mPartyPlayers[PlayerIndex]->RegisterPlayerUnit(NextModel);
 		}
 		});
 
-	// 플레이어 스킬 추적
-	USkillComponentModel* SkillComponentModel = PlayerUnit->GetSkillComponentModel();
-	checkf(SkillComponentModel != nullptr, TEXT("플레이어 스킬 컴포넌트 nullptr"));
-	SkillComponentModel->OnChangeSkillUI.AddUObject(this, &URunPersistData::OnChangePlayerSkill, MemberIndex);
+	// 스텟 추적
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPartyAttributeSet::GetMoneyAttribute()).AddLambda([this](const FTacticalAttributeChangeData& Data) {
+		mMoney = Data.mNewValue;
+		});
 
-	// TODO: 장비 변경 시 대리자에 바인딩. 이걸로 영구 데이터도 동기화
+	// 아티팩트 추적
+	PartyArtifactComponentModel->OnChangePartyArtifactUI.AddLambda([this](const TArray<TObjectPtr<UStaticArtifactData>>& PartyArtifacts)
+		{
+			mArtifactIds.Empty(PartyArtifacts.Num());
+			for (const TObjectPtr<UStaticArtifactData>& PartyArtifact : PartyArtifacts)
+			{
+				mArtifactIds.Add(PartyArtifact->GetPrimaryAssetId());
+			}
+		});
 }
 
-/**
- * @brief 스킬 칸이 바뀌면 저장본과 런 기록에 함께 남긴다.
- * @param SkillIndex   바뀐 스킬 칸
- * @param PreSkillData 바뀌기 전 스킬
- * @param NewSkillData 새로 들어온 스킬
- * @param MemberIndex  어느 파티 칸의 일인가
- */
-void URunPersistData::OnChangePlayerSkill(int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData, int32 MemberIndex)
+void URunPersistData::StartRun(const TArray<FPrimaryAssetId>& PlayerUnitIds, int32 Difficulty)
 {
-	if (mParty.IsValidIndex(MemberIndex) == false)
-	{
-		return;
-	}
-
-	TArray<FPrimaryAssetId>& SkillIds = mParty[MemberIndex].mSkillIds;
-	if (SkillIds.IsValidIndex(SkillIndex) == false)
-	{
-		return;
-	}
-
-	FPrimaryAssetId NextSkillId;
-	if (NewSkillData != nullptr)
-	{
-		NextSkillId = NewSkillData->GetPrimaryAssetId();
-		++mRunLog.mAcquiredSkills.FindOrAdd(NextSkillId);
-	}
-	SkillIds[SkillIndex] = NextSkillId;
-}
-
-/**
- * @brief 새 런을 시작한다. 직전 런 상태를 초기화하고, 난수 스트림을 시드하며,
- *        고른 사람들을 파티 칸에 앉힌다.
- * @param PartyUnitIds 데리고 갈 유닛들. 고른 차례가 파티 칸 순서다.
- * @param Difficulty   이번 런의 난이도
- */
-void URunPersistData::StartRun(const TArray<FPrimaryAssetId>& PartyUnitIds, int32 Difficulty)
-{
-	checkf(PartyUnitIds.IsEmpty() == false, TEXT("빈 파티로 런 시작 불가"));
+	checkf(PlayerUnitIds.Num() == mPartyPlayers.Num(), TEXT("파티 멤버 부족"));
 
 	ClearRun();
+
+	// 파티 멤버들 생성
+	const int32 PlayerMaxNum = mPartyPlayers.Num();
+	for (int32 PlayerIndex = 0; PlayerIndex < PlayerMaxNum; ++PlayerIndex)
+	{
+		if (PlayerUnitIds[PlayerIndex].IsValid() == false)
+		{
+			continue;
+		}
+		mPartyPlayers[PlayerIndex]->MakeUnit(PlayerUnitIds[PlayerIndex]);
+	}
 
 	// 시드 초기 세팅
 	{
@@ -371,45 +418,41 @@ void URunPersistData::StartRun(const TArray<FPrimaryAssetId>& PartyUnitIds, int3
 		mEventStream.Initialize(EventStream);
 	}
 
-	mDifficulty = Difficulty;
-
-	// 같은 사람을 두 번 데려갈 수는 없다. 화면이 막고 있지만 여기서도 막는다 --
-	// 파티 칸을 유닛 식별자로 찾으므로 같은 것이 둘이면 뒤엣것이 영영 안 잡힌다.
-	mParty.Reserve(PartyUnitIds.Num());
-	for (const FPrimaryAssetId& PlayerUnitId : PartyUnitIds)
+	// 파티 기본 데이터 세팅
 	{
-		if (FindMemberIndex(PlayerUnitId) != INDEX_NONE)
-		{
-			UE_LOG(LogRD, Warning, TEXT("파티에 같은 유닛이 두 번 들어옴"));
-			continue;
-		}
-		SetupMember(OUT mParty.AddDefaulted_GetRef(), PlayerUnitId);
+		mDifficulty = Difficulty;
+	}
+
+	// 파티 기본 속성 세팅
+	{
+		UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(GetWorld());
+		checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
+
+		mMoney = TacticalFrameworkModel->GetAttributeSetInitter()->GetAttributeSetValue(
+			UPartyAttributeSet::StaticClass(),
+			UPartyAttributeSet::GetMoneyAttribute().GetUProperty(),
+			UPartyAttributeSet::KeyName,
+			mDifficulty
+		);
 	}
 }
 
-/**
- * @brief 런 영속 데이터를 초기 상태로 되돌린다(파티/레벨/난이도 리셋, 스테이지·로그 비우기).
- *        새 런 시작 직전에 직전 런 잔여 상태를 제거하기 위한 용도.
- */
 void URunPersistData::ClearRun()
 {
-	mParty.Empty();
-
-	mPlayerLevel = 1;
 	mDifficulty = 1;
+	mMoney = 0;
 
+	mArtifactIds.Empty();
 	mStage.Reset();
 
 	mRunLog.Clear();
+
+	for (const TObjectPtr<UPlayerUnitPersistData>& PartyPlayer : mPartyPlayers)
+	{
+		PartyPlayer->ClearUnit();
+	}
 }
 
-/**
- * @brief 지정한 스테이지 레벨 타입에 맞는 스테이지를 비동기로 생성한다.
- *        밸런스 세팅 데이터테이블을 비동기 로드한 뒤, 행에서 빌더 파라미터를 찾아
- *        결정론적 빌드 스트림으로 FStage 를 생성하고 콜백으로 결과를 넘긴다.
- * @param Type          생성할 스테이지의 레벨 타입(밸런스 테이블 행 키)
- * @param OnCreateStage 생성 완료 시 호출될 델리게이트(생성된 FStage 전달)
- */
 void URunPersistData::MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCreateStage)
 {
 	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
@@ -432,118 +475,75 @@ void URunPersistData::MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCrea
 		}));
 }
 
-/**
- * @brief 현재 진행 중인 방을 스테이지 격자 좌표로 지정한다.
- * @param RowIndex    행 인덱스
- * @param ColumnIndex 열 인덱스
- */
 void URunPersistData::SetCurrentRoomIndex(int32 RowIndex, int32 ColumnIndex)
 {
 	mStage.GetMutable().SetCurrentRoom(RowIndex, ColumnIndex);
 }
 
-void URunPersistData::ClearCurrentCombatRoom(const FTileTransform& Transform)
+void URunPersistData::ClearCurrentCombatRoom(const TArray<FTileTransform>& Transforms)
 {
-	mStage.GetMutable().ClearCurrentCombatRoom(Transform);
+	mStage.GetMutable().ClearCurrentCombatRoom(Transforms);
 }
 
-/**
- * @brief 지정한 방을 로드하기 위해 필요한 모든 에셋 식별자를 수집한다.
- *        플레이어/스킬/장비/주사위 식별자와 스테이지/방 및 방 부가 에셋 식별자를 OUT 인자로 채운다.
- * @param RowIndex           대상 방의 행 인덱스
- * @param ColumnIndex        대상 방의 열 인덱스
- * @param PlayerIds          [out] 플레이어 유닛 + 보유 스킬/장비/주사위 식별자 누적 배열
- * @param StageId            [out] 스테이지 스폰 데이터 식별자
- * @param RoomId             [out] 방 스폰 데이터 식별자
- * @param AdditionalAssetIds [out] 방이 추가로 요구하는 부가 에셋 식별자 배열
- */
 void URunPersistData::CollectAssetIds(int32 RowIndex, int32 ColumnIndex, OUT TArray<FPrimaryAssetId>& PlayerIds, OUT FPrimaryAssetId& StageId, OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const
 {
-	// 파티 전원과 그들이 든 것을 전부 예약한다. 한 명분만 예약하면 나머지
-	// 둘은 방에 들어가는 순간 없는 자산을 찾는다.
-	for (const FPartyMemberPersistData& Member : mParty)
+	for (const TObjectPtr<UPlayerUnitPersistData>& PartyPlayer : mPartyPlayers)
 	{
-		PlayerIds.Add(Member.mPlayerUnitId);
-		PlayerIds.Append(Member.mSkillIds);
-		PlayerIds.Append(Member.mEquipmentIds);
-		PlayerIds.Append(Member.mDiceIds);
+		PlayerIds.Add(PartyPlayer->GetPlayerUnitId());
+		PlayerIds.Append(PartyPlayer->GetSkillIds());
 	}
+	PlayerIds.Append(GetArtifactIds());
 
 	StageId = GetStage().mStaticStageSpawnDataId;
 	GetRoom(RowIndex, ColumnIndex).CollectAssetIds(RoomId, AdditionalAssetIds);
 }
 
-/** @brief 스테이지 생성에 쓰이는 결정론적 난수 스트림을 반환한다. @return 스테이지 빌드 스트림 */
 const FRandomStream& URunPersistData::GetStageBuildStream() const
 {
 	return mStageBuildStream;
 }
 
-/** @brief 이벤트 발생에 쓰이는 결정론적 난수 스트림을 반환한다. @return 이벤트 스트림 */
 const FRandomStream& URunPersistData::GetEventStream() const
 {
 	return mEventStream;
 }
 
-/** @brief 현재 런의 스테이지를 반환한다. @return 스테이지(읽기 전용) */
 const FStage& URunPersistData::GetStage() const
 {
 	return mStage.Get();
 }
 
-/**
- * @brief 스테이지 격자 좌표로 특정 방을 반환한다.
- * @param RowIndex    행 인덱스
- * @param ColumnIndex 열 인덱스
- * @return 해당 좌표의 방(읽기 전용)
- */
 const FRoom& URunPersistData::GetRoom(int32 RowIndex, int32 ColumnIndex) const
 {
 	return mStage.Get().GetRoom(RowIndex, ColumnIndex);
 }
 
-/** @brief 스테이지의 시작 방을 반환한다. @return 시작 방(읽기 전용) */
 const FRoom& URunPersistData::GetStartRoom() const
 {
 	return mStage.Get().GetStartRoom();
 }
 
-/** @brief 현재 진행 중인 방을 반환한다. @return 현재 방(읽기 전용) */
 const FRoom& URunPersistData::GetCurrentRoom() const
 {
 	return mStage.Get().GetCurrentRoom();
 }
 
-/**
- * @brief 현재 진행 중인 방의 격자 좌표를 OUT 인자로 반환한다.
- * @param RowIndex    [out] 현재 방 행 인덱스
- * @param ColumnIndex [out] 현재 방 열 인덱스
- */
 void URunPersistData::GetCurrentRoomIndex(OUT int32& RowIndex, OUT int32& ColumnIndex) const
 {
 	RowIndex = mStage.Get().mCurRow;
 	ColumnIndex = mStage.Get().mCurColumn;
 }
 
-/** @brief 이번 런의 누적 로그를 반환한다. @return 런 로그(읽기 전용) */
 const FRunLog& URunPersistData::GetRunLog() const
 {
 	return mRunLog;
 }
 
-/** @brief 런이 활성 상태인지(유효한 스테이지가 존재하는지) 여부를 반환한다. @return 스테이지 유효 시 true */
 bool URunPersistData::IsActive() const
 {
-	// 파티가 비어 있으면 이어갈 수 없다. 저장 구조가 한 명에서 셋으로 바뀌기
-	// 전에 만든 세이브가 그렇다 -- 스테이지는 멀쩡히 읽히는데 데리고 갈
-	// 사람이 없어서, 방에 들어가는 순간 세울 유닛이 없다.
-	return mStage.IsValid() && mParty.IsEmpty() == false;
+	return mStage.IsValid();
 }
 
-/**
- * @brief 새 유저를 생성한다. 기존 유저 데이터를 비운 뒤 표시 이름을 설정한다.
- * @param Name 새 유저의 표시 이름
- */
 void UUserPersistData::MakeUser(const FText& Name)
 {
 	ClearUser();
@@ -551,24 +551,20 @@ void UUserPersistData::MakeUser(const FText& Name)
 	mUserName = Name;
 }
 
-/** @brief 유저 데이터를 초기화한다(이름 비우기 + 유저 로그 Clear). */
 void UUserPersistData::ClearUser()
 {
 	mUserName = FText();
 	mUserLog.Clear();
 }
 
-/**
- * @brief 한 런이 끝난 뒤 그 런 로그를 유저 누적 통계/도감에 반영한다.
- *        총 플레이 횟수와 유닛별 플레이 횟수를 증가시키고,
- *        런에서 처치/획득한 적·스킬·장비·주사위를 "이미 본" 식별자 집합에 추가한다.
- * @param PlayerUnitId 이번 런에서 사용한 플레이어 유닛 식별자(유닛별 카운트 키)
- * @param RunLog       반영할 런 단위 로그
- */
-void UUserPersistData::UpdateLog(const FPrimaryAssetId& PlayerUnitId, const FRunLog& RunLog)
+void UUserPersistData::UpdateLog(const FRunLog& RunLog)
 {
 	++mUserLog.mRunCount;
-	++mUserLog.mRunCountPerUnit.FindOrAdd(PlayerUnitId);
+
+	for (auto& Pair : RunLog.mUseCountPerUnit)
+	{
+		mUserLog.mUseCountPerUnit.FindOrAdd(Pair.Key) += Pair.Value;
+	}
 
 	for (auto& UnitPair : RunLog.mKilledEnemyUnits)
 	{
@@ -858,3 +854,4 @@ void UOptionPersistData::OnResizeViewport(FViewport* Viewport, uint32 Unused)
 {
 	ApplyScreenPercentage();
 }
+

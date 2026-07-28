@@ -34,9 +34,6 @@ public:
 	UUnitModel();
 
 	/* UBoardActorModel 상속 */
-public:	
-	void PostInitializeComponentModels() override;
-
 public:
 	void OnBeginRoom() override;
 	void OnEndRoom() override;

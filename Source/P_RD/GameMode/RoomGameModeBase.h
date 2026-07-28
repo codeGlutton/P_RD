@@ -15,6 +15,7 @@
  // Room Game Mode 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogRoomGameMode, Log, All)
 
+class UPartyModel;
 class UPlayerUnitModel;
 
 /**
@@ -107,11 +108,9 @@ private:
 	bool IsRoomSelectable(int32 RoomRow, int32 RoomColumn) const;
 
 public:
-	/** @brief 앞장선 한 명. 전투가 아직 한 명을 전제로 도는 자리에서 쓴다. */
-	UPlayerUnitModel* GetPlayerUnitModel() const;
-
-	/** @brief 방에 들어온 파티 전원. @return 저장본 차례대로의 유닛들 */
-	TArray<UPlayerUnitModel*> GetPartyUnitModels() const;
+	UPartyModel* GetPartyModel() const;
+	UPlayerUnitModel* GetPlayerUnitModel(int32 PlayerIndex) const;
+	TArray<TObjectPtr<UPlayerUnitModel>>& GetPlayerUnitModels() const;
 
 public:
 	const FName& GetRoomSpawnSettingName() const;
@@ -121,11 +120,7 @@ protected:
 
 protected:
 	UPROPERTY()
-	TWeakObjectPtr<UPlayerUnitModel> mPlayerUnit;
-
-	/** @brief 방에 들어온 파티 전원. 첫 칸이 곧 mPlayerUnit 이다. */
-	UPROPERTY()
-	TArray<TWeakObjectPtr<UPlayerUnitModel>> mPartyUnits;
+	TWeakObjectPtr<UPartyModel> mPartyModel;
 
 protected:
 	int32 mSelectedRoomRow = INDEX_NONE;

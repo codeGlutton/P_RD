@@ -14,6 +14,7 @@
 
 #include "PersistentData.generated.h"
 
+class UPartyModel;
 class UPlayerUnitModel;
 class FViewport;
 class UStaticSkillData;
@@ -30,6 +31,10 @@ struct FRunLog
 
 public:
 	void Clear();
+
+public:
+	UPROPERTY(Category = Record, SaveGame, VisibleAnywhere, meta = (DisplayName = "UseCountPerUnit"))
+	TMap<FPrimaryAssetId, int32> mUseCountPerUnit;
 
 public:
 	UPROPERTY(Category = Discovery, SaveGame, VisibleAnywhere, meta = (DisplayName = "KilledEnemyUnits"))
@@ -58,8 +63,8 @@ public:
 	int32 mRunCount = 0;
 
 public:
-	UPROPERTY(Category = Record, SaveGame, VisibleAnywhere, meta = (DisplayName = "RunCountPerUnit"))
-	TMap<FPrimaryAssetId, int32> mRunCountPerUnit;
+	UPROPERTY(Category = Record, SaveGame, VisibleAnywhere, meta = (DisplayName = "UseCountPerUnit"))
+	TMap<FPrimaryAssetId, int32> mUseCountPerUnit;
 
 public:
 	UPROPERTY(Category = Discovery, SaveGame, VisibleAnywhere, meta = (DisplayName = "KnownEnemyUnitIds"))
@@ -73,30 +78,42 @@ public:
 };
 
 /**
- * @brief 파티 한 명의 영구적 데이터
- *
- * @details
- * UObject 가 아니라 USTRUCT 다. 세이브가 FObjectAndNameAsStringProxyArchive 를
- * 쓰는데, 이건 UObject 참조를 경로 문자열로 적는다. 런타임에 만든 하위
- * 오브젝트는 경로가 없어 다음에 열 때 통째로 사라진다. 런 로그와 스테이지가
- * 이미 구조체인 것도 같은 이유다.
- *
- * 값만 들고 있고 행동은 URunPersistData 가 한다. 구조체를 배열에 담으면
- * 배열이 늘어날 때 주소가 바뀌므로, 유닛 이벤트에 이 안의 값을 바로 걸 수
- * 없기 때문이다 -- 런이 자리 번호로 찾아 넣는다.
+ * @brief 플레이어 유닛의 영구적 데이터
  */
-USTRUCT()
-struct P_RD_API FPartyMemberPersistData
+UCLASS()
+class P_RD_API UPlayerUnitPersistData : public UObject
 {
 	GENERATED_BODY()
 
-	/** @brief 아직 유닛에서 값을 한 번도 안 떠 왔다. */
-	UPROPERTY(SaveGame)
-	bool mIsNewData = true;
+public:
+	void MakeUnit(const FPrimaryAssetId& PlayerUnitId);
+	void MakeUnit(UPlayerUnitModel* PlayerUnit);
+	void ClearUnit();
 
+public:
+	void RegisterPlayerUnit(UPlayerUnitModel* PlayerUnit);
+
+public:
+	const FPrimaryAssetId& GetPlayerUnitId() const;
+	int32 GetPlayerLevel() const;
+
+public:
+	const TArray<FPrimaryAssetId>& GetSkillIds() const;
+
+public:
+	virtual void Serialize(FArchive& Ar) override;
+
+protected:
+	void SyncPlayerPersistData( UPlayerUnitModel* PlayerUnit);
+	void BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit);
+
+protected:
 	UPROPERTY(Category = Player, SaveGame, VisibleAnywhere, meta = (DisplayName = "PlayerUnitId"))
 	FPrimaryAssetId mPlayerUnitId;
+	UPROPERTY(Category = Player, SaveGame, VisibleAnywhere, meta = (DisplayName = "PlayerLevel"))
+	int32 mPlayerLevel = 1;
 
+protected:
 	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "MaxHP"))
 	float mMaxHP = 0.f;
 	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "HP"))
@@ -105,65 +122,72 @@ struct P_RD_API FPartyMemberPersistData
 	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "Exp"))
 	float mExp = 0.f;
 
-	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "Money"))
-	float mMoney = 0.f;
-
+protected:
 	UPROPERTY(Category = Tag, SaveGame, VisibleAnywhere, meta = (DisplayName = "TagCountMap"))
 	TMap<FGameplayTag, int32> mTagCountMap;
 
 	UPROPERTY(Category = Skill, SaveGame, VisibleAnywhere, meta = (DisplayName = "SkillIds"))
 	TArray<FPrimaryAssetId> mSkillIds;
-
-	UPROPERTY(Category = Equipment, SaveGame, VisibleAnywhere, meta = (DisplayName = "EquipmentIds"))
-	TArray<FPrimaryAssetId> mEquipmentIds;
-
-	UPROPERTY(Category = Dice, SaveGame, VisibleAnywhere, meta = (DisplayName = "DiceIds"))
-	TArray<FPrimaryAssetId> mDiceIds;
 };
 
 /**
- * @brief 이번 런의 영구적 데이터
- *
- * @details
- * 예전에는 이 클래스가 UPlayerUnitPersistData 를 상속했다. 런이 곧 플레이어
- * 한 명이었다는 뜻이다. 처음에 셋을 고르게 되면서 그 전제가 깨졌다.
- *
- * 이제 런은 파티를 가진다. 런 전체에 하나뿐인 것(레벨, 난이도, 스테이지,
- * 로그, 난수 씨앗)만 런이 직접 들고, 사람마다 다른 것은 파티 칸에 들어간다.
+ * @brief 파티의 영구적 데이터
  */
 UCLASS()
-class P_RD_API URunPersistData : public UObject
+class P_RD_API UPartyPersistData : public UObject
 {
 	GENERATED_BODY()
 
 public:
-	/**
-	 * @brief 새 런을 시작한다.
-	 * @param PartyUnitIds 데리고 갈 유닛들. 고른 차례가 파티 칸 순서다.
-	 * @param Difficulty   이번 런의 난이도
-	 */
-	void StartRun(const TArray<FPrimaryAssetId>& PartyUnitIds, int32 Difficulty);
-	void ClearRun();
+	UPartyPersistData();
+
+	/* UObject 상속 */
+public:
+	void Serialize(FArchive& Ar) override;
 
 public:
-	/** @brief 스폰된 유닛을 제 자리 파티 칸에 잇는다. 못 찾으면 아무 일도 없다. */
-	void RegisterPlayerUnit(UPlayerUnitModel* PlayerUnit);
+	void RegisterParty(UPartyModel* Party, TArray<TObjectPtr<UPlayerUnitModel>>& Players);
 
 public:
-	const TArray<FPartyMemberPersistData>& GetParty() const;
-	/** @brief 파티 전원의 유닛 식별자. 스폰과 자산 예약이 이걸 쓴다. */
-	TArray<FPrimaryAssetId> GetPartyUnitIds() const;
-	/** @brief 앞장선 한 명. 기록처럼 대표 하나만 필요한 자리에서 쓴다. */
-	const FPrimaryAssetId& GetPlayerUnitId() const;
-
-public:
-	int32 GetPlayerLevel() const;
+	TArray<FPrimaryAssetId> GetPlayerUnitIds() const;
 	int32 GetDifficulty() const;
+	const TArray<FPrimaryAssetId>& GetArtifactIds() const;
+
+protected:
+	void SyncPartyPersistData(UPartyModel* Party, TArray<TObjectPtr<UPlayerUnitModel>>& Players);
+	void BindPartyEvent(UPartyModel* Party, TArray<TObjectPtr<UPlayerUnitModel>>& Players);
+
+protected:
+	UPROPERTY(Category = Party, VisibleAnywhere, meta = (DisplayName = "PartyPlayers"))
+	TArray<TObjectPtr<UPlayerUnitPersistData>> mPartyPlayers;
+
+	UPROPERTY(Category = Artifact, SaveGame, VisibleAnywhere, meta = (DisplayName = "ArtifactIds"))
+	TArray<FPrimaryAssetId> mArtifactIds;
+
+protected:
+	UPROPERTY(Category = Party, SaveGame, VisibleAnywhere, meta = (DisplayName = "Difficulty"))
+	int32 mDifficulty = 1;
+
+	UPROPERTY(Category = Party, SaveGame, VisibleAnywhere, meta = (DisplayName = "Money"))
+	float mMoney = 0.f;
+};
+
+/**
+ * @brief 이번 런의 영구적 데이터
+ */
+UCLASS()
+class P_RD_API URunPersistData : public UPartyPersistData
+{
+	GENERATED_BODY()
+
+public:
+	void StartRun(const TArray<FPrimaryAssetId>& PlayerUnitIds, int32 Difficulty);
+	void ClearRun();
 
 public:
 	void MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCreateStage);
 	void SetCurrentRoomIndex(int32 RowIndex, int32 ColumnIndex);
-	void ClearCurrentCombatRoom(const FTileTransform& Transform);
+	void ClearCurrentCombatRoom(const TArray<FTileTransform>& Transforms);
 
 public:
 	void CollectAssetIds(int32 RowIndex, int32 ColumnIndex, OUT TArray<FPrimaryAssetId>& PlayerIds, OUT FPrimaryAssetId& StageId, OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const;
@@ -184,26 +208,6 @@ public:
 
 public:
 	bool IsActive() const;
-
-protected:
-	/** @brief 파티 칸 번호를 찾는다. 없으면 INDEX_NONE. */
-	int32 FindMemberIndex(const FPrimaryAssetId& PlayerUnitId) const;
-
-	void SetupMember(OUT FPartyMemberPersistData& Member, const FPrimaryAssetId& PlayerUnitId);
-	void SyncMember(int32 MemberIndex, UPlayerUnitModel* PlayerUnit);
-	void BindMemberEvent(int32 MemberIndex, UPlayerUnitModel* PlayerUnit);
-
-	void OnChangePlayerSkill(int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData, int32 MemberIndex);
-
-protected:
-	UPROPERTY(Category = Party, SaveGame, VisibleAnywhere, meta = (DisplayName = "Party"))
-	TArray<FPartyMemberPersistData> mParty;
-
-protected:
-	UPROPERTY(Category = Player, SaveGame, VisibleAnywhere, meta = (DisplayName = "PlayerLevel"))
-	int32 mPlayerLevel = 1;
-	UPROPERTY(Category = Player, SaveGame, VisibleAnywhere, meta = (DisplayName = "Difficulty"))
-	int32 mDifficulty = 1;
 
 protected:
 	UPROPERTY(Category = Stream, SaveGame, VisibleAnywhere, meta = (DisplayName = "StageBuildStream"))
@@ -231,7 +235,7 @@ class P_RD_API UUserPersistData : public UObject
 public:
 	void MakeUser(const FText& Name);
 	void ClearUser();
-	void UpdateLog(const FPrimaryAssetId& PlayerUnitId, const FRunLog& RunLog);
+	void UpdateLog(const FRunLog& RunLog);
 
 public:
 	const FText& GetUserName() const;
