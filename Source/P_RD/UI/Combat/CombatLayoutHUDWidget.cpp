@@ -330,17 +330,15 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 	}
 	if (bAll || Domain == ECombatUIDomain::Unit)
 	{
-		// 판 위의 무언가를 눌러 찜이 바뀌었다는 뜻이다. "얘한테 뭘 할지 보여줘"
-		// 라는 신호라 카드를 편다.
-		const int32 TargetId = mUIModel != nullptr
-			? mUIModel->GetSelectedTargetUnitId() : INDEX_NONE;
+		// 겨냥한 자리가 바뀌었다는 뜻이다. "여기에 뭘 할지 보여줘" 라는 신호라
+		// 카드를 편다. 빈 칸도 겨냥한 자리다 -- 이동 목적지가 그렇다.
+		const int32 TargetId = (mUIModel != nullptr
+			&& mUIModel->GetTarget().mIsValid)
+			? mUIModel->GetTarget().mUnitId : INDEX_NONE;
 		if (TargetId != mLastTargetUnitId)
 		{
 			mLastTargetUnitId = TargetId;
-			if (TargetId != INDEX_NONE)
-			{
-				SetCommandsShown(true);
-			}
+			SetCommandsShown(true);
 		}
 	}
 	if (bAll || Domain == ECombatUIDomain::Skill)
@@ -634,45 +632,46 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 
 void UCombatLayoutHUDWidget::RefreshEnemy()
 {
-	// 찜해 둔 적을 먼저 본다. 없으면 살아 있는 첫 적으로 떨어진다 -- 전투가
-	// 막 시작돼 아무도 안 눌렀을 때가 그렇다.
+	// 겨냥한 유닛을 먼저 본다. 없으면 살아 있는 첫 적으로 떨어진다 -- 전투가
+	// 막 시작돼 아무 데도 안 눌렀을 때가 그렇다.
 	const TArray<FUnitUI>& Units = mUIModel->GetUnitUIs();
-	const int32 TargetId = mUIModel->GetSelectedTargetUnitId();
-	const FUnitUI* Target = TargetId != INDEX_NONE
+	const FCombatTargetUI& Target = mUIModel->GetTarget();
+	const int32 TargetId = Target.mIsValid ? Target.mUnitId : INDEX_NONE;
+	const FUnitUI* Shown = TargetId != INDEX_NONE
 		? Units.FindByPredicate([TargetId](const FUnitUI& Unit)
 			{ return Unit.mUnitId == TargetId && Unit.mHP > 0.f; })
 		: nullptr;
-	if (Target == nullptr)
+	if (Shown == nullptr)
 	{
-		Target = Units.FindByPredicate(
+		Shown = Units.FindByPredicate(
 			[](const FUnitUI& Unit) { return !Unit.mIsPlayer && Unit.mHP > 0.f; });
 	}
 
-	SetShown(mEnemyPanel, Target != nullptr);
-	if (Target == nullptr)
+	SetShown(mEnemyPanel, Shown != nullptr);
+	if (Shown == nullptr)
 	{
 		return;
 	}
 
-	SetTextIfPresent(mEnemyName, Target->mName);
-	if (mEnemyPortrait != nullptr && Target->mPortrait != nullptr)
+	SetTextIfPresent(mEnemyName, Shown->mName);
+	if (mEnemyPortrait != nullptr && Shown->mPortrait != nullptr)
 	{
-		mEnemyPortrait->SetBrushFromTexture(Target->mPortrait, false);
+		mEnemyPortrait->SetBrushFromTexture(Shown->mPortrait, false);
 	}
 	if (mEnemyHPBar != nullptr)
 	{
 		mEnemyHPBar->SetPercent(
-			Target->mMaxHP > 0.f ? Target->mHP / Target->mMaxHP : 0.f);
+			Shown->mMaxHP > 0.f ? Shown->mHP / Shown->mMaxHP : 0.f);
 	}
 	SetTextIfPresent(mEnemyHPText, FText::FromString(FString::Printf(
-		TEXT("%d/%d"), FMath::RoundToInt(Target->mHP), FMath::RoundToInt(Target->mMaxHP))));
+		TEXT("%d/%d"), FMath::RoundToInt(Shown->mHP), FMath::RoundToInt(Shown->mMaxHP))));
 	SetTextIfPresent(mEnemyDefenseText, FText::FromString(FString::Printf(
-		TEXT("방어 %d"), FMath::RoundToInt(Target->mDefensePoint))));
+		TEXT("방어 %d"), FMath::RoundToInt(Shown->mDefensePoint))));
 
 	if (mEnemyStatusText != nullptr)
 	{
 		TArray<FString> Parts;
-		for (const FStatusEffectUI& Status : Target->mStatusEffects)
+		for (const FStatusEffectUI& Status : Shown->mStatusEffects)
 		{
 			Parts.Add(Status.mTag.GetTagName().ToString());
 		}
@@ -809,16 +808,18 @@ void UCombatLayoutHUDWidget::HandleBoardPressed(const FVector2D& ScreenPosition)
 	// 타일/유닛 판정은 게임플레이가 한다. 화면은 좌표만 넘긴다.
 	mUIModel->RequestWorldTouch(ScreenPosition, false);
 
-	// 조준 중이면 취소가 먼저다. 조준을 놔둔 채 카드만 접으면 다음 탭이 엉뚱한
-	// 곳에 스킬을 쏜다.
+	// 카드를 접지 않는다. 톡 친 칸이 곧 겨냥한 자리이고, 게임플레이가 그 자리를
+	// 내려 주면 카드가 그에 맞춰 켜지고 꺼진다. 빈 칸도 겨냥한 자리다 --
+	// 이동 목적지가 그렇다.
+	//
+	// 한때 여기서 접었다. "카드가 판을 가린다" 를 접기로 풀려 했는데, 겨냥이
+	// 먼저인 흐름에서는 판을 볼 때가 톡 치기 전이라 접을 이유가 없다.
 	if (mUIModel->GetTurnUI().mPhase != ECombatBuildPhaseUI::None)
 	{
+		// 조준 중이었다면 그만둔다. 조준을 놔둔 채 다른 칸을 겨냥하면 다음
+		// 탭이 엉뚱한 곳에 스킬을 쏜다.
 		mUIModel->RequestCancel();
-		SetCommandsShown(true);
-		return;
 	}
-
-	SetCommandsShown(false);
 }
 
 /**

@@ -20,17 +20,6 @@ void UCombatUIModel::RequestLongPressUnit(int32 UnitId)
 	OnCombatCommand.Broadcast(ECombatInputType::LongPressUnit, UnitId);
 }
 
-/**
- * @brief 이 유닛을 대상으로 찜해 달라는 의도를 전달한다.
- *
- * 사거리 밖인지, 애초에 찜할 수 있는 유닛인지는 게임플레이가 판정한다. UI 는
- * 누가 눌렸는지만 말한다.
- */
-void UCombatUIModel::RequestSelectTarget(int32 UnitId)
-{
-	OnCombatCommand.Broadcast(ECombatInputType::SelectTarget, UnitId);
-}
-
 /** @brief MOVE 모드 진입 의도를 전달한다. */
 void UCombatUIModel::RequestMove()
 {
@@ -57,16 +46,18 @@ void UCombatUIModel::RequestLongPressEquip(int32 SlotIndex)
 
 /** @brief 월드 터치 스크린 좌표를 변환하지 않고 그대로 게임플레이 경계로 넘긴다. */
 /**
- * @brief 찜해 둔 대상을 갈아 끼운다.
- * @param UnitId 찜할 유닛. INDEX_NONE 이면 찜을 푼다
+ * @brief 겨냥한 자리를 갈아 끼운다.
+ * @param Target 새로 겨냥한 자리. mIsValid 가 false 면 겨냥을 푼다
  */
-void UCombatUIModel::SetSelectedTargetUnitId(int32 UnitId)
+void UCombatUIModel::SetTarget(const FCombatTargetUI& Target)
 {
-	if (mSelectedTargetUnitId == UnitId)
+	if (mTarget.mIsValid == Target.mIsValid
+		&& mTarget.mTile == Target.mTile
+		&& mTarget.mUnitId == Target.mUnitId)
 	{
 		return;
 	}
-	mSelectedTargetUnitId = UnitId;
+	mTarget = Target;
 	OnUIChanged.Broadcast(ECombatUIDomain::Unit);
 }
 

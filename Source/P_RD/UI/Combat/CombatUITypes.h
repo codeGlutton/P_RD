@@ -267,6 +267,39 @@ struct FSkillTargetingUI
 	UPROPERTY(BlueprintReadOnly) bool mIsPenetration = false;     // 관통(막히지 않고 투사체가 뚫음)
 };
 
+/**
+ * @brief 지금 겨냥한 자리.
+ *
+ * @details
+ * 판을 톡 치면 그 칸이 겨냥한 자리가 된다. **타일 하나**이고, 그 위에 유닛이
+ * 있으면 유닛 id 도 같이 온다. 빈 칸도 겨냥할 수 있다 -- 이동 목적지가 그렇다.
+ *
+ * 왜 유닛 id 만으로 안 되나: "여기로 이동" 은 유닛이 없는 칸을 가리킨다.
+ * 유닛만 겨냥할 수 있게 하면 이동이 이 흐름 밖으로 밀려난다.
+ *
+ * UI 는 이 값을 만들지 않는다. 화면 좌표를 RequestWorldTouch 로 넘기면
+ * 게임플레이가 어느 타일인지 풀어서 SetTarget 으로 내린다 -- 화면은 타일맵
+ * 좌표계를 모른다.
+ *
+ * 이 값이 바뀌면 게임플레이가 FSkillUI.mIsUsable 을 다시 계산해 내려준다.
+ * 그래서 "사거리에 따라 카드가 켜지고 꺼진다" 는 UI 가 판정하는 것이 아니라
+ * 받아 그리는 것이다.
+ */
+USTRUCT(BlueprintType)
+struct FCombatTargetUI
+{
+	GENERATED_BODY()
+
+	/** @brief 겨냥한 것이 있나. 없으면 아래 값은 뜻이 없다. */
+	UPROPERTY(BlueprintReadOnly) bool mIsValid = false;
+
+	/** @brief 겨냥한 타일. */
+	UPROPERTY(BlueprintReadOnly) FTileIndex mTile;
+
+	/** @brief 그 타일에 선 유닛. 빈 칸이면 INDEX_NONE. */
+	UPROPERTY(BlueprintReadOnly) int32 mUnitId = INDEX_NONE;
+};
+
 /** @brief 스킬 레일에 그릴 스킬 한 칸. */
 // UI 필요값:
 // - mSkillIndex: 클릭/롱프레스 시 RequestSelectSkill/RequestLongPressSkill payload.

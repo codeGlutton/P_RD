@@ -22,8 +22,7 @@ enum class ECombatInputType : uint8
 	Move,             // payload 없음(채운 무브포인트 소모)
 	EndTurn,          // payload 없음
 	Cancel,           // payload 없음(딴 데 탭 = 초기화)
-	LongPressEquip,   // payload = SlotIndex (장비 상세)
-	SelectTarget      // payload = UnitId (찜해 둘 대상)
+	LongPressEquip    // payload = SlotIndex (장비 상세)
 };
 
 class UTexture2D;
@@ -120,9 +119,6 @@ public:
 	/** @brief 화면 좌표와 롱프레스 여부만 넘긴다. 월드/타일 변환은 UIModel 바깥의 책임이다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress);
 
-	/** @brief 이 유닛을 대상으로 찜해 달라. 실제 판정은 게임플레이가 한다. */
-	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestSelectTarget(int32 UnitId);
-	
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestAbandonRun();
 
 	/* ───────── gameplay → UI : 표시값을 밀어넣는다 ─────────
@@ -137,18 +133,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetUnitDetail(const FUnitDetailUI& Detail);
 
 	/**
-	 * @brief 지금 찜해 둔 대상. 적 패널과 예상 피해가 이 유닛을 본다.
+	 * @brief 지금 겨냥한 자리를 내린다.
 	 *
 	 * @details
-	 * 판 위의 적을 누르면 그 적이 찜된다. 그 뒤에 스킬을 고르면 조준 없이 바로
-	 * 그 적에게 나간다 -- 단일 대상은 탭 두 번이면 끝난다.
+	 * 판을 톡 친 좌표(RequestWorldTouch)를 받아 게임플레이가 어느 타일인지 풀고
+	 * 이 함수로 내려준다. 화면은 타일맵 좌표계를 모르므로 스스로 못 만든다.
 	 *
-	 * 게임플레이가 채운다. UI 는 RequestSelectTarget() 으로 의도만 보내고,
-	 * 사거리 밖인지 같은 판정은 게임플레이가 해서 FSkillUI.mIsUsable 로 내린다.
-	 * INDEX_NONE 이면 찜한 것이 없다는 뜻이고, 그때 적 패널은 살아 있는 첫 적을
-	 * 보여준다.
+	 * 이 값이 바뀌면 그 자리에 쓸 수 있는 스킬이 달라진다. 같이 SetSkillUIs()
+	 * 로 mIsUsable 을 다시 내려 주어야 카드가 맞게 켜지고 꺼진다.
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetSelectedTargetUnitId(int32 UnitId);
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetTarget(const FCombatTargetUI& Target);
 	/** @brief 스킬 레일(이름/아이콘/사용가능). [합의필요] 소스=USkillComponent(김준형), 현재 Mock. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetSkillUIs(const TArray<FSkillUI>& Skills);
 
@@ -200,7 +194,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") int32 GetSelectedSkillIndex() const { return mSelectedSkillIndex; }
 
 	/** @brief 찜해 둔 대상. 없으면 INDEX_NONE. */
-	UFUNCTION(BlueprintPure, Category = "Combat|Read") int32 GetSelectedTargetUnitId() const { return mSelectedTargetUnitId; }
+	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FCombatTargetUI& GetTarget() const { return mTarget; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FSkillDetailUI& GetSkillDetail() const { return mSkillDetail; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FCombatQueueNode>& GetActionQueue() const { return mActionQueue; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FTurnUI& GetTurnUI() const { return mTurnUI; }
@@ -221,7 +215,7 @@ private:
 	UPROPERTY(Transient) int32 mSelectedSkillIndex = 0;
 
 	/** @brief 찜해 둔 대상 유닛. 없으면 INDEX_NONE. */
-	UPROPERTY(Transient) int32 mSelectedTargetUnitId = INDEX_NONE;
+	UPROPERTY(Transient) FCombatTargetUI mTarget;
 	/** @brief 마지막 스킬 상세 스냅샷. */
 	UPROPERTY(Transient) FSkillDetailUI mSkillDetail;
 	/** @brief 아직 재생되지 않은 행동 결과 큐. ResolveFrontQueueNode()가 앞에서 하나씩 제거한다. */
