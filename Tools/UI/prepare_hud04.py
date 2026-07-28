@@ -207,8 +207,21 @@ def fill_missing(place, detail, plates, template, fallbacks):
     if "damage_text" in base and "stance_text" not in base:
         base["stance_text"] = list(base["damage_text"])
 
+    # 사람이 손댄 판은 건드리지 않는다.
+    #
+    # 빈 자리를 메우는 것은 **시안을 처음 잴 때** 쓰는 장치다. 시안이 카드마다
+    # 다른 내용을 그려서 어떤 카드에는 피해가, 어떤 카드에는 쿨타임이 없기
+    # 때문이다.
+    #
+    # 그런데 구역 조정 쪽에서 지운 것까지 도로 넣고 있었다. 지운 구역이 다음에
+    # 열면 되살아나니, 지우는 기능이 있으나 마나였다. 손댄 판은 그 사람 말이
+    # 맞다 -- 위젯이 사라지는 것도 그 사람이 정한 것이다.
+    touched = set(TUNED_PLATES)
+
     added = []
     for plate in plates:
+        if plate in touched:
+            continue
         # 안 그리기로 한 것은 지운다. 메우기만 하고 지우지 않으면, 시안이 한
         # 장에만 그려 준 것이 그 판에만 남아 쪽에서 죽은 구역으로 보인다 --
         # 맞춰 놓아도 아무 데도 안 쓰인다.
@@ -222,6 +235,10 @@ def fill_missing(place, detail, plates, template, fallbacks):
                 rect[0] + left, rect[1] + top, rect[2], rect[3]]
             added.append("%s.%s" % (plate, element))
     return added
+
+#: 사람이 손댄 판. apply_tuning 이 채운다.
+TUNED_PLATES = set()
+
 
 def apply_tuning(place, detail):
     """손으로 맞춘 자리를 덮어씌운다.
@@ -245,6 +262,9 @@ def apply_tuning(place, detail):
     for plate, rows in TUNING.items():
         if plate not in place:
             continue
+        TUNED_PLATES.add(plate)
+        # 손댄 판은 적힌 것이 전부다. 안 적힌 요소는 지운 것이다.
+        detail[plate] = {}
         left, top = place[plate][0], place[plate][1]
         for element, rect in rows.items():
             detail.setdefault(plate, {})[element] = [
