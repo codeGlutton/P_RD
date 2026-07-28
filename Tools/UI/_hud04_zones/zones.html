@@ -303,6 +303,22 @@ const $ = (id) => document.getElementById(id);
 //
 // 판 이름이 살아 있는지만 보고, 살아 있으면 그 판은 통째로 남은 것을 쓴다.
 // 판 이름이 바뀌는 일은 시안을 갈 때뿐이고 그때는 "전부 원래 값으로" 가 있다.
+// 파일 쪽 구역이 바뀌었는지 알아보는 표시. 판마다 어떤 이름이 있는지만 적는다
+// -- 값이 바뀐 것은 사람이 맞춘 것일 수 있지만, 이름이 생기고 없어진 것은
+// 파일 쪽에서 구조가 바뀐 것이다.
+function baseSign(table) {
+  return JSON.stringify(Object.keys(table).sort().map(
+    (role) => [role, Object.keys(table[role]).sort()]));
+}
+
+const SIGN = KEEP + ".sign";
+const nowSign = baseSign(BASE || {});
+let staleSign = false;
+try {
+  staleSign = localStorage.getItem(SIGN) !== null
+    && localStorage.getItem(SIGN) !== nowSign;
+} catch (err) { staleSign = false; }
+
 try {
   const kept = JSON.parse(localStorage.getItem(KEEP) || "null");
   if (kept) {
@@ -314,6 +330,34 @@ try {
     }
   }
 } catch (err) { /* 저장이 막힌 환경이면 그냥 원래 값으로 간다 */ }
+
+// 파일이 바뀌었으면 알린다.
+//
+// 브라우저에 남은 사본이 이기게 해 두어서(그래야 만들고 지운 것이 남는다),
+// 내가 파일에서 고친 것은 쪽에 안 보인다. 그것을 모르면 "지웠는데 다시
+// 나온다" 로 보인다 -- 실제로 그렇게 한참을 돌았다.
+window.addEventListener("DOMContentLoaded", () => {
+  try { localStorage.setItem(SIGN, nowSign); } catch (err) { /* 조용히 */ }
+  if (!staleSign) return;
+  const bar = document.querySelector(".bar");
+  if (!bar) return;
+  const note = document.createElement("span");
+  note.style.cssText =
+    "color:#ffd24a;font-size:12.5px;align-self:center;margin-left:6px";
+  note.innerHTML = "· 파일 쪽 구역이 바뀌었습니다 " +
+    '<button id="takeFile">파일 값으로</button>';
+  bar.appendChild(note);
+  $("takeFile").onclick = () => {
+    if (!confirm("브라우저에 남은 값을 버리고 파일 값을 씁니다.")) return;
+    TABLE = structuredClone(BASE || {});
+    try { localStorage.removeItem(KEEP); } catch (err) { /* 조용히 */ }
+    sel = null;
+    note.remove();
+    paint();
+    keep();
+    flash("파일 값으로 맞췄습니다");
+  };
+});
 
 // 되돌리기 더미. 고치기 직전 값을 쌓아 두고 Ctrl+Z 로 꺼낸다. 픽셀 단위로
 // 맞추다 보면 한 번 잘못 끌었을 때 되돌릴 길이 있어야 한다.
