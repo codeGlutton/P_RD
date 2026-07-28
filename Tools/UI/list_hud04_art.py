@@ -96,8 +96,9 @@ GROUPS = (
         "action_left_lower", "action_right_lower", "action_bottom")),
     ("아군 3", "PartyCard_0~2", (
         "bottom_status_left", "bottom_status_center", "bottom_status_right")),
-    ("그 밖", "적 정보 · 턴 종료", (
-        "upper_right_enemy_panel", "bottom_right_button")),
+    ("그 밖", "적 정보 · 턴 종료 · AP 막대", (
+        "upper_right_enemy_panel", "bottom_right_button",
+        "bottom_center_ap_bar")),
 )
 
 
@@ -159,8 +160,19 @@ def main():
 
     table = {plate: local(plate) for plate in PLACE}
 
+    # 목록에 안 적힌 판이 있으면 뒤에 붙인다.
+    #
+    # 판을 새로 세워 놓고 여기 줄을 안 늘리면, 자리는 만들어졌는데 쪽에서는
+    # 그 판이 아예 안 보인다 -- AP 막대가 그랬다. 조용히 빠지느니 이름만
+    # 붙어서라도 뜨는 편이 낫다.
+    listed = {plate for _, _, plates in GROUPS for plate in plates}
+    groups = list(GROUPS)
+    rest = tuple(sorted(set(PLACE) - listed))
+    if rest:
+        groups.append(("목록에 없던 판", "새로 세운 것", rest))
+
     rows, missing = [], []
-    for title, users, plates in GROUPS:
+    for title, users, plates in groups:
         items = []
         for plate in plates:
             # 묶인 판은 본의 그림을 띄운다. 굽는 결과와 같은 것을 봐야 한다.
