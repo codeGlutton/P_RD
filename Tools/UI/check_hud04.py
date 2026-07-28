@@ -60,7 +60,7 @@ if bp is None:
     raise RuntimeError("못 열었다: " + ASSET)
 
 for group, plate_prefix, extra in (
-        (CARDS, "CommandPlate", ("CommandIcon", "CommandName", "CommandCost")),
+        (CARDS, "CommandPlate", ("CommandIcon", "CommandCostBadge", "CommandCooldownBadge")),
         (PARTY, "PartyPlate", ("PartyPortrait", "PartyHPIcon", "PartyName"))):
     say("")
     say("=== %s ===" % plate_prefix)

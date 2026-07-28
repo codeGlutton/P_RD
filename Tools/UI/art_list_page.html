@@ -425,8 +425,15 @@ function keepArt() {
 function artOf(role, key) {
   // 기본은 없음이다. 넣은 것만 뜬다 -- 자동으로 얹어 두면 무엇이 진짜 들어갈
   // 그림인지 알 수 없고, 지우는 손이 한 번 더 든다.
+  //
+  // 이 판에 없으면 묶음의 본에서 물려받는다. 한 판에만 얹어도 묶음 전체가
+  // 같아야 한다 -- 굽는 쪽이 그렇게 한다.
   const mine = artPick[role + "|" + key];
-  return mine && mine.png ? mine : null;
+  if (mine && mine.png) return mine;
+  const head = familyOf(role)[0];
+  if (!head || head === role) return null;
+  const theirs = artPick[head + "|" + key];
+  return theirs && theirs.png ? theirs : null;
 }
 
 function keep() {

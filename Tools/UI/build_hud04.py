@@ -153,14 +153,29 @@ def sprite(plate, element):
     return (name, at(SPRITE[name])) if name in SPRITE else (None, None)
 
 
+#: 묶인 판 -> 그 묶음의 본. 그림을 본에서 물려받는다.
+#:
+#: 한 판에만 그림을 얹어도 묶음 전체가 같아야 한다 -- 여섯 장이 한 카드이므로
+#: 카드 0번에만 보석이 뜨고 나머지 다섯에 안 뜨면 통일한 뜻이 없다.
+TEMPLATE_OF = {}
+for _group, _template in ((COMMANDS, CARD_TEMPLATE), (PARTY, PARTY_TEMPLATE)):
+    for _row in _group:
+        TEMPLATE_OF[_row[0]] = _template
+
+
 def zone_art(plate, element):
     """구역 조정 쪽에서 얹은 그림 이름. 없으면 None.
 
     쪽에서 고른 것이 시안에서 뗀 조각보다 앞선다 -- 시안 것은 처음 자리를 잡을
     때 쓴 밑그림이고, 쪽에서 고른 것은 실제로 넣기로 정한 그림이다.
+
+    이 판에 없으면 묶음의 본에서 물려받는다.
     """
-    got = ZONE_ART.get(plate, {}).get(element)
-    return got["texture"] if got else None
+    for where in (plate, TEMPLATE_OF.get(plate)):
+        got = ZONE_ART.get(where, {}).get(element) if where else None
+        if got:
+            return got["texture"]
+    return None
 
 
 def local(rect, origin):
