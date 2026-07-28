@@ -85,6 +85,10 @@ public:
 	UPROPERTY(Category = "Touch", EditAnywhere, meta = (DisplayName = "TapSlack"))
 	float mTapSlack = 12.f;
 
+	/** @brief 휠 한 칸이 바꾸는 줌 양. 부호를 뒤집으면 방향이 바뀐다. */
+	UPROPERTY(Category = "Touch", EditAnywhere, meta = (DisplayName = "WheelZoomStep"))
+	float mWheelZoomStep = 120.f;
+
 	/*
 	* @brief Draggin 제스쳐 사용 시 호출할 카메라 행동 대리자
 	*/
@@ -149,6 +153,12 @@ private:
 	 * 알 수 있고, 그걸 아는 곳이 여기다.
 	 */
 	void NotifyTapIfNotDragged(int32 TouchIndex, bool bWasPressed);
+
+	/** @brief 마우스 휠로 확대/축소. 손가락 둘을 못 쓰는 PC 를 위한 것이다. */
+	void ApplyWheelZoom(APlayerController* PlayerController);
+
+	/** @brief 사람이 직접 움직이기 시작하면 자동 추적을 그만둔다. */
+	void ReleaseEmphasis();
 
 	/*
 	* @brief Pinch 중인지 나타내는 함수

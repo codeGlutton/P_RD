@@ -106,6 +106,10 @@ void UCombatLayoutHUDWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	// 루트가 눌림을 받아야 카드 밖 탭을 안다. SelfHitTestInvisible 이면 그냥
+	// 통과한다. 자식 버튼은 여전히 먼저 가져가므로 아군 칸은 안 가린다.
+	SetVisibility(ESlateVisibility::Visible);
+
 	CacheAuthoredWidgets();
 	WireCommands();
 	StartPreviewIfUnbound();
@@ -755,44 +759,35 @@ void UCombatLayoutHUDWidget::SetCommandsShown(const bool bShown)
 }
 
 /**
- * @brief 모델을 붙이면서 판 탭 알림도 같이 구독한다.
- * @param InUIModel 붙일 모델
- */
-void UCombatLayoutHUDWidget::BindUIModel(UCombatUIModel* InUIModel)
-{
-	Super::BindUIModel(InUIModel);
-	if (mUIModel != nullptr)
-	{
-		mUIModel->OnCombatWorldTouch.AddUniqueDynamic(
-			this, &UCombatLayoutHUDWidget::HandleWorldTouched);
-	}
-}
-
-void UCombatLayoutHUDWidget::UnbindUIModel()
-{
-	if (mUIModel != nullptr)
-	{
-		mUIModel->OnCombatWorldTouch.RemoveDynamic(
-			this, &UCombatLayoutHUDWidget::HandleWorldTouched);
-	}
-	Super::UnbindUIModel();
-}
-
-/**
- * @brief 판을 톡 쳤다는 알림. 화면을 한 단계 뒤로 되돌린다.
+ * @brief 카드 밖을 눌렀다. 화면을 한 단계 뒤로 되돌린다.
  *
  * @details
- * 월드 입력은 카메라가 갖는다. 카메라가 끌었는지 톡 쳤는지 가려서 이 신호를
- * 쏘고, 게임플레이와 화면이 나란히 듣는다.
+ * 눌린 자리가 버튼이면 버튼이 먼저 가져가므로 여기는 안 불린다. 그래서 아군
+ * 칸을 눌러 카드를 다시 펼 때 이 함수가 같은 탭에서 도로 접지 않는다.
  *
- * 처음에는 HUD 가 눌린 순간 직접 받아 처리했다. 그러면 두 가지가 깨진다.
- * 입력이 플레이어 컨트롤러까지 안 내려가 지도가 안 움직이고, 지도를 밀려고
- * 손을 댄 것까지 선택으로 처리된다.
- * @param ScreenPosition 톡 친 자리
- * @param bLongPress     길게 눌렀나
+ * 한때 카메라가 쏘는 월드 탭 알림을 듣게 해 봤는데, 그 알림은 버튼을 눌러도
+ * 똑같이 온다. 아군 칸을 눌러 편 카드가 그 자리에서 도로 접혔다.
  */
-void UCombatLayoutHUDWidget::HandleWorldTouched(FVector2D ScreenPosition,
-	bool bLongPress)
+FReply UCombatLayoutHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry,
+	const FPointerEvent& InMouseEvent)
+{
+	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
+	{
+		HandleBoardPressed();
+	}
+	// 안 먹었다고 돌려준다. 먹으면 입력이 플레이어 컨트롤러까지 안 내려가고,
+	// 카메라가 손가락을 직접 읽으므로 지도가 통째로 안 움직인다.
+	return FReply::Unhandled();
+}
+
+FReply UCombatLayoutHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry,
+	const FPointerEvent& InTouchEvent)
+{
+	HandleBoardPressed();
+	return FReply::Unhandled();
+}
+
+void UCombatLayoutHUDWidget::HandleBoardPressed()
 {
 	if (mUIModel == nullptr)
 	{

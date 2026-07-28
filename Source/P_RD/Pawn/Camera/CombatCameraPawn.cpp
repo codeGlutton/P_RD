@@ -3,6 +3,7 @@
 
 #include "Pawn/Camera/CombatCameraPawn.h"
 
+#include "Component/CameraMovementComponent/CameraMovementComponent.h"
 #include "GameMode/CombatGameMode.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "Camera/CameraComponent.h"
@@ -112,9 +113,12 @@ void ACombatCameraPawn::Tick(float DeltaTime)
 	}
 
 
+	ApplyWheelZoom(PlayerController);
+
 	// Pinch 중
 	if (IsPinch())
 	{
+		ReleaseEmphasis();
 		if (OnPinching.IsBound())
 		{
 			OnPinching.Broadcast(mTouchStates);
@@ -123,11 +127,53 @@ void ACombatCameraPawn::Tick(float DeltaTime)
 	// 드래그 중
 	else if (IsDrag())
 	{
+		ReleaseEmphasis();
 		if (OnDragging.IsBound())
 		{
 			OnDragging.Broadcast(mTouchStates);
 		}
 	}
+}
+
+/**
+ * @brief 손으로 카메라를 움직이면 강조를 푼다.
+ *
+ * @details
+ * 강조 중에는 FollowActor() 가 매 틱 강조 대상 쪽으로 카메라를 되돌린다.
+ * 그래서 끌어도 손을 떼면 도로 튕겨 온다 -- 실제로 그렇게 보였다. 사람이
+ * 직접 움직이기 시작하면 자동 추적은 그만두는 것이 맞다.
+ */
+void ACombatCameraPawn::ReleaseEmphasis()
+{
+	if (IsValid(mCameraMovementComponent) == false)
+	{
+		return;
+	}
+	mCameraMovementComponent->EndEmphasis();
+}
+
+/**
+ * @brief 마우스 휠로 확대/축소한다.
+ *
+ * PC 에는 손가락이 둘 없다. 핀치와 같은 길로 보내되 화면 가운데를 기준으로
+ * 삼는다 -- 휠은 커서 자리를 안 알려 준다.
+ * @param PlayerController 휠 값을 읽을 컨트롤러
+ */
+void ACombatCameraPawn::ApplyWheelZoom(APlayerController* PlayerController)
+{
+	if (PlayerController == nullptr || IsValid(mCameraMovementComponent) == false)
+	{
+		return;
+	}
+
+	const float Wheel = PlayerController->GetInputAnalogKeyState(EKeys::MouseWheelAxis);
+	if (FMath::IsNearlyZero(Wheel))
+	{
+		return;
+	}
+
+	ReleaseEmphasis();
+	mCameraMovementComponent->ZoomCamera_Instant(-Wheel * mWheelZoomStep);
 }
 
 // Called to bind functionality to input
