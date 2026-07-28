@@ -62,7 +62,13 @@
     background-size: 20px 20px;
     background-position: 0 0, 0 10px, 10px -10px, -10px 0;
   }
-  #shell { position: relative; }
+  #shell {
+    position: relative;
+    /* 판 둘레에 자리를 둔다. 구역을 판 밖으로 내보낼 수 있어야 하기 때문이다
+       -- 상태 아이콘처럼 위로 삐져나오게 두는 것이 있다. 자리가 없으면
+       음수 좌표가 캔버스 가장자리에서 잘려 안 보인다. */
+    margin: 140px 150px;
+  }
   #shell img { display: block; image-rendering: pixelated; }
   .zone {
     position: absolute; border: 1.5px solid rgba(102, 224, 255, .95);
@@ -983,14 +989,21 @@ $("copy").onclick = async () => {
 // 브라우저는 파일을 제자리에 못 쓴다. 내려받은 뒤 apply_slots.py 가 그걸
 // 읽어 slot_table.py 에 넣는다.
 $("save").onclick = () => {
-  const blob = new Blob([JSON.stringify(TABLE, null, 1)],
+  // 자리만 내보내다 그림을 빠뜨렸다. 쪽에서 골라 얹은 그림이 게임에 안 가서,
+  // 맞춰 놓고도 왜 안 바뀌는지 한참 봤다. 셋을 한 파일에 같이 싣는다.
+  //
+  // 그림은 이름만이 아니라 내용째로 싣는다. file:// 에서 고른 파일은 경로로
+  // 다시 못 읽고(브라우저가 막는다), 이름만 보내면 받는 쪽이 그 파일을 어디서
+  // 찾을지 알 수 없다.
+  const bundle = { zones: TABLE, art: artPick, align: alignPick };
+  const blob = new Blob([JSON.stringify(bundle, null, 1)],
                         { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "slots_01.json";
+  a.download = "zones.json";
   a.click();
   URL.revokeObjectURL(a.href);
-  flash("slots_01.json 을 내려받았습니다 — apply_slots.py 로 넣으세요");
+  flash("zones.json 을 내려받았습니다 (자리 + 그림 + 글자 붙임)");
 };
 
 // 같은 종류 판 전체에 이 판의 값을 퍼뜨린다. 판마다 따로 맞추는 것이
