@@ -330,16 +330,13 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 	}
 	if (bAll || Domain == ECombatUIDomain::Unit)
 	{
-		// 겨냥한 자리가 바뀌었다는 뜻이다. "여기에 뭘 할지 보여줘" 라는 신호라
-		// 카드를 편다. 빈 칸도 겨냥한 자리다 -- 이동 목적지가 그렇다.
+		// 겨냥한 자리가 바뀌어도 카드를 억지로 펴지 않는다. 펴고 접는 것은
+		// 판을 누른 그 손이 정한다 -- 여기서 같이 펴면, 닫으려고 누른 탭이
+		// 자리도 바꾸는 바람에 닫자마자 도로 열린다.
 		const int32 TargetId = (mUIModel != nullptr
 			&& mUIModel->GetTarget().mIsValid)
 			? mUIModel->GetTarget().mUnitId : INDEX_NONE;
-		if (TargetId != mLastTargetUnitId)
-		{
-			mLastTargetUnitId = TargetId;
-			SetCommandsShown(true);
-		}
+		mLastTargetUnitId = TargetId;
 	}
 	if (bAll || Domain == ECombatUIDomain::Skill)
 	{
@@ -808,18 +805,16 @@ void UCombatLayoutHUDWidget::HandleBoardPressed(const FVector2D& ScreenPosition)
 	// 타일/유닛 판정은 게임플레이가 한다. 화면은 좌표만 넘긴다.
 	mUIModel->RequestWorldTouch(ScreenPosition, false);
 
-	// 카드를 접지 않는다. 톡 친 칸이 곧 겨냥한 자리이고, 게임플레이가 그 자리를
-	// 내려 주면 카드가 그에 맞춰 켜지고 꺼진다. 빈 칸도 겨냥한 자리다 --
-	// 이동 목적지가 그렇다.
-	//
-	// 한때 여기서 접었다. "카드가 판을 가린다" 를 접기로 풀려 했는데, 겨냥이
-	// 먼저인 흐름에서는 판을 볼 때가 톡 치기 전이라 접을 이유가 없다.
 	if (mUIModel->GetTurnUI().mPhase != ECombatBuildPhaseUI::None)
 	{
 		// 조준 중이었다면 그만둔다. 조준을 놔둔 채 다른 칸을 겨냥하면 다음
 		// 탭이 엉뚱한 곳에 스킬을 쏜다.
 		mUIModel->RequestCancel();
 	}
+
+	// 펴져 있으면 접고, 접혀 있으면 편다. 여기까지 온 눌림은 카드 밖이다 --
+	// 카드와 아군 칸은 버튼이라 자기가 먼저 가져간다.
+	SetCommandsShown(!mCommandsShown);
 }
 
 /**
