@@ -129,7 +129,14 @@ def write_plate(plate):
     카드가 통째로 바뀐다 -- 여섯 장이 한 판을 나눠 쓰므로 한 번 갈면 여섯이
     같이 바뀐다.
     """
-    rows = {}
+    # 쪽에서 올린 것만 들어온다. 코드에서 걸어 둔 것(메뉴 막대·턴 순서 판)은
+    # 쪽이 모르므로, 새로 쓰면 그대로 지워진다 -- 한 번 지워 봤다.
+    # 있던 것 위에 얹는다.
+    try:
+        from hud04_plate_art import PLATE_ART as KEPT
+    except ImportError:
+        KEPT = {}
+    rows = dict(KEPT)
     for name, value in sorted(plate.items()):
         png = (value or {}).get("png") or ""
         if not png.startswith("data:"):

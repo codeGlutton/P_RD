@@ -6,4 +6,28 @@
 """
 
 Z_ORDER = {
+    "action_bottom": {
+        "cooldown_badge": 50,
+        "cost_badge": 50,
+    },
+    "action_left_lower": {
+        "cooldown_badge": 50,
+        "cost_badge": 50,
+    },
+    "action_left_upper": {
+        "cooldown_badge": 50,
+        "cost_badge": 50,
+    },
+    "action_right_lower": {
+        "cooldown_badge": 50,
+        "cost_badge": 50,
+    },
+    "action_right_upper": {
+        "cooldown_badge": 50,
+        "cost_badge": 50,
+    },
+    "action_top": {
+        "cooldown_badge": 50,
+        "cost_badge": 50,
+    },
 }

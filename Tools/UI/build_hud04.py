@@ -187,8 +187,8 @@ TURN_SLOTS = 6
 #: 양끝 넘김칸. 그쪽에 가려진 수를 적는다. (구역, 위젯 이름)
 TURN_PAGES = (("end_left", "TurnPageLeft"), ("end_right", "TurnPageRight"))
 
-#: AP 숫자판의 가로/세로 비. 그림이 1689 x 584 라 그 비를 지킨다.
-AP_NUMBER_RATIO = 1689.0 / 584.0
+#: AP 숫자판 그림의 원래 크기. 비율을 지켜 앉히는 데 쓴다.
+AP_NUMBER_SIZE = (1689, 584)
 
 #: AP 낱개 그림의 원래 크기. 비율을 지켜 앉히는 데 쓴다.
 AP_PIP_SIZE = (778, 938)
@@ -584,45 +584,45 @@ def party(blueprint, root):
             kit.bar(blueprint, "PartyHPBar_%d" % index, card, bx, by, bw, bh,
                     unreal.LinearColor(0.44, 0.74, 0.24, 1.0))
 
-        # AP 줄은 왼쪽 숫자판 + 낱개 열이다.
+        # AP 줄은 숫자판 하나와 낱개 열이다.
         #
-        # 숫자판은 늘 켜 둔다 -- 낱개만 있으면 여덟인지 아홉인지 세어야 한다.
-        # 낱개는 열까지만 그린다. 그 위로는 자리가 없어서, 넘으면 낱개를 다
-        # 끄고 숫자만 남긴다.
+        # 자리를 여기서 계산하지 않고 **구역에서 읽는다.** 전에는 ap_gems 한
+        # 칸을 받아 열로 나눴는데, 그러면 구역 쪽에서 낱개 하나를 못 옮긴다 --
+        # 열 개를 따로 놓고 싶어도 손댈 자리가 없었다.
+        #
+        # 숫자판은 늘 켜 둔다. 낱개만 있으면 여덟인지 아홉인지 세어야 한다.
         #
         # 쓴 칸과 남은 칸은 그림이 다르다. 런타임이 브러시를 갈아 끼우는 대신
         # 두 장을 겹쳐 놓고 하나만 켠다 -- 그래야 텍스처 경로가 굽는 쪽에만
         # 있고 C++ 은 이름만 알면 된다.
-        gems = local(spot(plate_name, "ap_gems"), origin)
-        if gems:
-            gx, gy, gw, gh = gems
-            plate_w = min(gh * AP_NUMBER_RATIO, gw * 0.42)
+        number = local(spot(plate_name, "ap_number"), origin)
+        if number:
+            nx, ny, nw, nh = fit_rect(number, AP_NUMBER_SIZE, "contain")
             kit.image(blueprint, "PartyAPPlate_%d" % index, card,
-                      gx, gy, plate_w, gh, None, z_order=Z_CONTENT,
+                      nx, ny, nw, nh, None, z_order=Z_CONTENT,
                       texture="{}/KK_HUD04_ap_number_plate".format(ART),
                       tint=kit.WHITE)
             kit.label(blueprint, "PartyAPText_%d" % index, card,
-                      gx, gy, plate_w, gh, "4/4", 13, TEXT_PALE, "center",
+                      nx, ny, nw, nh, "4/4", 13, TEXT_PALE, "center",
                       None, bold=True)
-            kit.place(blueprint, "PartyAPText_%d" % index, gx, gy,
-                      plate_w, gh, "tl", None, Z_TEXT)
+            kit.place(blueprint, "PartyAPText_%d" % index, nx, ny, nw, nh,
+                      "tl", None, Z_TEXT)
 
-            rail = gx + plate_w + gh * 0.15
-            step = (gx + gw - rail) / float(AP_PIPS)
-            for pip in range(AP_PIPS):
-                for suffix, art in (("", "KK_HUD04_ap_pip"),
-                                    ("Used", "KK_HUD04_ap_pip_spent")):
-                    pip_name = "PartyAPPip%s_%d_%d" % (suffix, index, pip)
-                    # 칸에 늘려 넣지 않는다. 보석이 납작해진다 -- 자리가
-                    # 좁으면 작아질 뿐, 비율은 지킨다.
-                    px, py, pw, ph = fit_rect(
-                        (rail + step * pip, gy, step * 0.88, gh),
-                        AP_PIP_SIZE, "contain")
-                    kit.image(blueprint, pip_name, card, px, py, pw, ph, None,
-                              z_order=Z_CONTENT,
-                              texture="{}/{}".format(ART, art), tint=kit.WHITE)
-                    if suffix or pip >= lit:
-                        kit.fold(blueprint, pip_name)
+        for pip in range(AP_PIPS):
+            cell = local(spot(plate_name, "ap_pip_%02d" % (pip + 1)), origin)
+            if cell is None:
+                continue
+            for suffix, art in (("", "KK_HUD04_ap_pip"),
+                                ("Used", "KK_HUD04_ap_pip_spent")):
+                pip_name = "PartyAPPip%s_%d_%d" % (suffix, index, pip)
+                # 칸에 늘려 넣지 않는다. 보석이 납작해진다 -- 자리가 좁으면
+                # 작아질 뿐, 비율은 지킨다.
+                px, py, pw, ph = fit_rect(cell, AP_PIP_SIZE, "contain")
+                kit.image(blueprint, pip_name, card, px, py, pw, ph, None,
+                          z_order=Z_CONTENT,
+                          texture="{}/{}".format(ART, art), tint=kit.WHITE)
+                if suffix or pip >= lit:
+                    kit.fold(blueprint, pip_name)
 
         # 차례 표시 테두리는 안 그린다. 지금 차례인 유닛은 위쪽 턴 순서 줄이
         # 이미 보여 주므로, 아군 칸까지 노란 테를 두르면 같은 말이 두 번이다.
@@ -648,6 +648,13 @@ enemy_panel(bp, "RootCanvas")
 commands(bp, "RootCanvas")
 party(bp, "RootCanvas")
 end_turn(bp, "RootCanvas")
+# 저장 전에 컴파일한다.
+#
+# 위젯을 트리에 붙이는 것만으로는 **생성 클래스**가 안 바뀐다. CreateWidget 은
+# 그 클래스를 쓰므로, 컴파일을 빠뜨리면 새로 붙인 위젯이 트리에는 있는데
+# 화면에는 없다 -- AP 낱개 스무 장이 그래서 안 보였다. 자리도 그림도 표시
+# 상태도 다 맞는데 안 그려져서 한참 헤맸다.
+unreal.BlueprintEditorLibrary.compile_blueprint(bp)
 unreal.EditorAssetLibrary.save_loaded_asset(bp, False)
 kit.commit_asset(ASSET)
 unreal.log("[HUD04] {} 구움".format(ASSET))
