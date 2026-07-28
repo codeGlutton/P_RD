@@ -20,7 +20,7 @@ import os
 import unreal
 
 SOURCE = r"D:/UnrealProjects/P_RD_develop_20260726/Tools/UI/KayKitUIKit/HUD04"
-PACKAGE = "/Game/SVN/OutSideAsset/UI/KayKit/HUD04"
+PACKAGE = "/Game/SVN/OutSideAsset/AICreation/UI/HUD04"
 
 names = sorted(f for f in os.listdir(SOURCE) if f.lower().endswith(".png"))
 if not names:

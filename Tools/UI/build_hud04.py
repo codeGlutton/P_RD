@@ -80,7 +80,7 @@ except ImportError:
     Z_ORDER = {}
 
 ASSET = "WBP_CombatHUD04"
-ART = "/Game/SVN/OutSideAsset/UI/KayKit/HUD04"
+ART = "/Game/SVN/OutSideAsset/AICreation/UI/HUD04"
 
 def z_of(plate, element, fallback):
     """이 구역이 몇 층인가. 쪽에서 정한 것이 있으면 그것.
@@ -135,7 +135,7 @@ PARTY_TEMPLATE = "bottom_status_left"
 CARD_PLATE = "KK_HUD04_action_top"
 
 #: 비용 배지. 시안1 부터 쓰던 둥근 배지를 그대로 쓴다.
-COST_BADGE = "/Game/SVN/OutSideAsset/UI/KayKit/KK_Badge_Round"
+COST_BADGE = "/Game/SVN/OutSideAsset/AICreation/UI/Common/KK_Badge_Round"
 
 #: 시안 좌표 -> 설계 캔버스.
 K = kit.CHROME_SCALE

@@ -1,0 +1,6 @@
+초상 17개 중 옛 자리를 보는 것: 0개
+지움 /Game/SVN/OutSideAsset/UI/KayKit/Hire     11개
+지움 /Game/SVN/OutSideAsset/UI/KayKit/Heads     6개
+지움 /Game/SVN/OutSideAsset/UI/KayKit/Fonts     3개
+
+모두 20개 지웠다

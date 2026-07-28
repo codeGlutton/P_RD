@@ -13,7 +13,11 @@ import unreal
 PACKAGE_PATH = "/Game/UI/CombatLayouts"
 ART = "/Game/SVN/OutSideAsset/UI/CombatHUD"
 C04 = ART + "/Concept04"
-KK = "/Game/SVN/OutSideAsset/UI/KayKit"
+# 지금 쓰는 것은 AICreation 아래로 옮겼다. 시안1 시절 이름은 그대로 두되,
+# 실제로 부르는 자리는 아래 두 상수가 가리킨다.
+KK = "/Game/SVN/OutSideAsset/AICreation/UI"
+#: 막대와 배지 같은 공용 조각.
+KK_COMMON = KK + "/Common"
 SLICE = KK + "/Slices"
 CHROME = KK + "/Chrome"
 
@@ -571,7 +575,7 @@ def fold(blueprint, name):
 
 #: HUD 글자 폰트. Oswald 를 기본으로 두고 한글은 그 안에서 LINE Seed 로
 #: 떨어진다 -- build_oswald_font.py 가 만든 합성 폰트다.
-HUD_FONT = "/Fonts/F_HUD_Oswald"
+HUD_FONT = "/Game/SVN/OutSideAsset/Fonts/F_HUD_Oswald"
 
 #: 글자 테두리. 글자 크기의 이 비율만큼 두른다.
 #:
@@ -587,7 +591,7 @@ SHADOW_COLOR = unreal.LinearColor(0.0, 0.0, 0.0, 0.55)
 
 def hud_font(size, bold=False):
     info = unreal.SlateFontInfo()
-    info.set_editor_property("font_object", art(KK + HUD_FONT))
+    info.set_editor_property("font_object", art(HUD_FONT))
     info.set_editor_property("typeface_font_name",
                              unreal.Name("Bold" if bold else "Regular"))
     info.set_editor_property("size", int(size))
@@ -673,8 +677,8 @@ def bar(blueprint, name, parent, x, y, w, h, fill, parent_size=None):
     progress = add(blueprint, "ProgressBar", name, parent)
     style = progress.get_editor_property("widget_style")
     for slot, texture, tint in (
-            ("background_image", KK + "/KK_Bar_Track_Link", HP_TRACK),
-            ("fill_image", KK + "/KK_Bar_Link", fill)):
+            ("background_image", KK_COMMON + "/KK_Bar_Track_Link", HP_TRACK),
+            ("fill_image", KK_COMMON + "/KK_Bar_Link", fill)):
         brush = style.get_editor_property(slot)
         brush.set_editor_property("resource_object", art(texture))
         brush.set_editor_property("draw_as", unreal.SlateBrushDrawType.IMAGE)

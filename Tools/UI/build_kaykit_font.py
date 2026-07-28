@@ -28,8 +28,8 @@ import unreal
 
 SOURCE_DIR = os.path.join(
     unreal.Paths.project_dir(), "SourceArt", "UI", "Fonts", "NotoSansKR")
-FACE_DIR = "/Game/SVN/OutSideAsset/UI/KayKit/Fonts/NotoSansKR"
-FONT_DIR = "/Game/SVN/OutSideAsset/UI/KayKit/Fonts"
+FACE_DIR = "/Game/SVN/OutSideAsset/Fonts/NotoSansKR"
+FONT_DIR = "/Game/SVN/OutSideAsset/Fonts"
 FONT_NAME = "F_HUD_NotoSansKR"
 
 FACES = (("Regular", "NotoSansKR-Regular.ttf"),

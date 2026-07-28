@@ -38,8 +38,8 @@ import combat_layout_kit as kit  # noqa: E402
 from hire_slots import BAR, CARD, PLACE  # noqa: E402
 
 ASSET = "WBP_MercenaryHire"
-HIRE = "/Game/SVN/OutSideAsset/UI/KayKit/Hire"
-HEADS = "/Game/SVN/OutSideAsset/UI/KayKit/Heads"
+HIRE = "/Game/SVN/OutSideAsset/AICreation/UI/Hire"
+HEADS = "/Game/SVN/OutSideAsset/AICreation/UI/Portraits"
 
 #: 시안 좌표 -> 설계 캔버스. 전투 HUD 와 같은 배율을 쓴다.
 K = kit.CHROME_SCALE

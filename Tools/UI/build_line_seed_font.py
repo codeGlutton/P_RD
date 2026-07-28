@@ -11,8 +11,8 @@ import unreal
 
 SOURCE_DIR = os.path.join(
     unreal.Paths.project_dir(), "SourceArt", "UI", "Fonts", "LINESeedKR")
-FACE_DIR = "/Game/SVN/OutSideAsset/UI/KayKit/Fonts/LINESeedKR"
-FONT_DIR = "/Game/SVN/OutSideAsset/UI/KayKit/Fonts"
+FACE_DIR = "/Game/SVN/OutSideAsset/Fonts/LINESeedKR"
+FONT_DIR = "/Game/SVN/OutSideAsset/Fonts"
 FONT_NAME = "F_HUD_LINESeedKR"
 FACES = (("Regular", "LINESeedKR-Regular.ttf"),
          ("Bold", "LINESeedKR-Bold.ttf"))

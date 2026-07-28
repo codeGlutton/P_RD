@@ -28,9 +28,9 @@ SOURCE_DIR = os.path.join(
 SEED_DIR = os.path.join(
     unreal.Paths.project_dir(), "SourceArt", "UI", "Fonts", "LINESeedKR")
 
-FACE_DIR = "/Game/SVN/OutSideAsset/UI/KayKit/Fonts/Oswald"
-SEED_FACE_DIR = "/Game/SVN/OutSideAsset/UI/KayKit/Fonts/LINESeedKR"
-FONT_DIR = "/Game/SVN/OutSideAsset/UI/KayKit/Fonts"
+FACE_DIR = "/Game/SVN/OutSideAsset/Fonts/Oswald"
+SEED_FACE_DIR = "/Game/SVN/OutSideAsset/Fonts/LINESeedKR"
+FONT_DIR = "/Game/SVN/OutSideAsset/Fonts"
 FONT_NAME = "F_HUD_Oswald"
 
 FACES = (("Regular", "Oswald-Regular.ttf"),
