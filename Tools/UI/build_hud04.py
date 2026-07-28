@@ -69,6 +69,11 @@ try:
 except ImportError:
     ZONE_ART = {}
 
+try:
+    from hud04_plate_art import PLATE_ART  # noqa: E402
+except ImportError:
+    PLATE_ART = {}
+
 ASSET = "WBP_CombatHUD04"
 ART = "/Game/SVN/OutSideAsset/UI/KayKit/HUD04"
 
@@ -178,6 +183,9 @@ def group(blueprint, root, name, plate_name, z=Z_PLATE):
 
 def plate(blueprint, parent, origin, plate_name, widget_name,
           texture_name=None):
+    # 갈아 끼운 것이 가장 앞선다. 그다음이 부르는 쪽이 짚어 준 것, 마지막이
+    # 시안에서 오려 낸 그 판의 것이다.
+    texture_name = PLATE_ART.get(plate_name) or texture_name
     """판 껍데기 한 장. 늘리지 않고 오려 낸 크기 그대로 놓는다."""
     x, y, w, h = local(at(PLACE[plate_name]), origin)
     kit.image(blueprint, widget_name, parent, x, y, w, h, None, z_order=Z_PLATE,
@@ -317,8 +325,9 @@ def commands(blueprint, root):
         # 여섯 장이 같은 판 그림을 쓴다. 시안은 카드마다 따로 그려 줬지만
         # 자리만 다른 같은 카드라, 그림도 한 장이면 된다 -- 여섯 벌을 두면
         # 몰딩이 조금씩 달라서 한 줄에 놓았을 때 눈에 걸린다.
+        # 여섯이 한 판을 나눠 쓴다. 갈아 끼운 것이 있으면 그것으로.
         plate(blueprint, card, origin, plate_name, "CommandPlate_%d" % index,
-              CARD_PLATE)
+              PLATE_ART.get(CARD_TEMPLATE) or CARD_PLATE)
 
         # 아이콘도 한 벌만 쓴다. 런타임이 스킬마다 다른 그림으로 갈아 끼우니
         # 여기 있는 것은 자리를 잡아 두는 밑그림일 뿐이다. 카드마다 따로 두면
@@ -370,7 +379,8 @@ def commands(blueprint, root):
         # 판 밖까지 사각형으로 덮여 시안과 모양이 달라진다.
         kit.image(blueprint, "CommandDisabled_%d" % index, card, 0, 0,
                   size[0], size[1], None, z_order=Z_MARK,
-                  texture="{}/{}".format(ART, CARD_PLATE),
+                  texture="{}/{}".format(
+                      ART, PLATE_ART.get(CARD_TEMPLATE) or CARD_PLATE),
                   tint=unreal.LinearColor(0.0, 0.0, 0.0, 0.62))
         kit.fold(blueprint, "CommandDisabled_%d" % index)
 
@@ -385,7 +395,7 @@ def party(blueprint, root):
                                    plate_name)
         # 셋이 같은 판 그림을 쓴다. 자리만 다른 같은 칸이다.
         plate(blueprint, card, origin, plate_name, "PartyPlate_%d" % index,
-              TEXTURE[PARTY_TEMPLATE])
+              PLATE_ART.get(PARTY_TEMPLATE) or TEXTURE[PARTY_TEMPLATE])
 
         for widget_name, element in (
                 ("PartyPortrait_%d" % index, "party_portrait"),

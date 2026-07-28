@@ -36,6 +36,7 @@ OUT = os.path.join(HERE, "hud04_tuning.py")
 ART_OUT = os.path.join(HERE, "KayKitUIKit", "HUD04")
 ART_MAP = os.path.join(HERE, "hud04_zone_art.py")
 ALIGN_MAP = os.path.join(HERE, "hud04_align.py")
+PLATE_MAP = os.path.join(HERE, "hud04_plate_art.py")
 
 NL = "\n"
 
@@ -105,6 +106,38 @@ def write_art(art):
     return sum(len(v) for v in rows.values())
 
 
+def write_plate(plate):
+    """갈아 끼운 판 그림을 풀고 어느 판이 쓰는지 적는다.
+
+    구역에 얹는 그림과 따로 둔다. 이쪽은 카드 껍데기 자체라, 갈면 그 판을 쓰는
+    카드가 통째로 바뀐다 -- 여섯 장이 한 판을 나눠 쓰므로 한 번 갈면 여섯이
+    같이 바뀐다.
+    """
+    rows = {}
+    for name, value in sorted(plate.items()):
+        png = (value or {}).get("png") or ""
+        if not png.startswith("data:"):
+            continue
+        raw = base64.b64decode(png.split(",", 1)[1])
+        texture = "KK_HUD04_plate_%s" % name
+        io.open(os.path.join(ART_OUT, texture + ".png"), "wb").write(raw)
+        rows[name] = texture
+
+    lines = ['# -*- coding: utf-8 -*-',
+             '"""갈아 끼운 판 그림. apply_zones.py 가 만든다.',
+             '',
+             '판 이름 -> HUD04 폴더의 PNG 이름. 여기 없는 판은 시안에서',
+             '오려 낸 것을 그대로 쓴다.',
+             '"""',
+             '',
+             'PLATE_ART = {']
+    for name in sorted(rows):
+        lines.append('    "%s": "%s",' % (name, rows[name]))
+    lines.append("}")
+    write_lines(PLATE_MAP, lines)
+    return len(rows)
+
+
 def write_align(align):
     """가운데가 아닌 것만 적는다. 전부 적으면 무엇이 예외인지 안 보인다."""
     odd = {at: v for at, v in align.items()
@@ -163,6 +196,8 @@ def main():
 
     print("자리 %d개 -> %s" % (write_tuning(table), OUT))
     print("구역 그림 %d장 -> %s" % (write_art(art), ART_MAP))
+    print("갈아 끼운 판 %d장 -> %s"
+          % (write_plate(loaded.get("plate") or {}), PLATE_MAP))
     print("가운데가 아닌 글자 %d개 -> %s" % (write_align(align), ALIGN_MAP))
     print("이제 import_hud04.py · prepare_hud04.py · build_hud04.py 를 돌려라.")
 
