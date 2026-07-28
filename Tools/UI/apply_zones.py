@@ -37,6 +37,7 @@ ART_OUT = os.path.join(HERE, "KayKitUIKit", "HUD04")
 ART_MAP = os.path.join(HERE, "hud04_zone_art.py")
 ALIGN_MAP = os.path.join(HERE, "hud04_align.py")
 PLATE_MAP = os.path.join(HERE, "hud04_plate_art.py")
+Z_MAP = os.path.join(HERE, "hud04_zorder.py")
 
 NL = "\n"
 
@@ -138,6 +139,32 @@ def write_plate(plate):
     return len(rows)
 
 
+def write_zorder(z):
+    """구역이 몇 층에 놓이나. 굽는 쪽이 정해 둔 값을 이것이 이긴다."""
+    lines = ['# -*- coding: utf-8 -*-',
+             '"""구역의 층. apply_zones.py 가 만든다.',
+             '',
+             '판 이름 -> 요소 -> 층. 여기 없는 것은 굽는 쪽이 정한 대로 간다',
+             '(판 0, 내용 10, 글자 15, 표시 40).',
+             '"""',
+             '',
+             'Z_ORDER = {']
+    rows = {}
+    for at, value in z.items():
+        if not isinstance(value, int):
+            continue
+        plate, _, element = at.partition("|")
+        rows.setdefault(plate, {})[element] = value
+    for plate in sorted(rows):
+        lines.append('    "%s": {' % plate)
+        for element in sorted(rows[plate]):
+            lines.append('        "%s": %d,' % (element, rows[plate][element]))
+        lines.append("    },")
+    lines.append("}")
+    write_lines(Z_MAP, lines)
+    return sum(len(v) for v in rows.values())
+
+
 def write_align(align):
     """가운데가 아닌 것만 적는다. 전부 적으면 무엇이 예외인지 안 보인다."""
     odd = {at: v for at, v in align.items()
@@ -198,6 +225,8 @@ def main():
     print("구역 그림 %d장 -> %s" % (write_art(art), ART_MAP))
     print("갈아 끼운 판 %d장 -> %s"
           % (write_plate(loaded.get("plate") or {}), PLATE_MAP))
+    print("층을 정한 구역 %d개 -> %s"
+          % (write_zorder(loaded.get("z") or {}), Z_MAP))
     print("가운데가 아닌 글자 %d개 -> %s" % (write_align(align), ALIGN_MAP))
     print("이제 import_hud04.py · prepare_hud04.py · build_hud04.py 를 돌려라.")
 

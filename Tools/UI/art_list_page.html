@@ -82,6 +82,7 @@
     text-overflow: ellipsis; white-space: nowrap;
   }
   .pngOff { margin-left: 4px; padding: 1px 5px; color: #d97a7a; }
+  .zPick { width: 44px; }
   select {
     background: #171b22; color: #dfe3ea; border: 1px solid #2a303b;
     border-radius: 4px; padding: 1px 3px; font: inherit; font-size: 12px;
@@ -211,7 +212,7 @@
       <div>
         <dl id="facts"></dl>
         <table><thead><tr>
-          <th>구역</th><th>x</th><th>y</th><th>w</th><th>h</th><th>그림</th><th>맞춤</th><th>글자 가로</th><th>글자 세로</th>
+          <th>구역</th><th>x</th><th>y</th><th>w</th><th>h</th><th>층</th><th>그림</th><th>맞춤</th><th>글자 가로</th><th>글자 세로</th>
         </tr></thead><tbody id="list"></tbody></table>
       </div>
       <div style="flex:1 1 400px">
@@ -275,6 +276,11 @@ let platePick = {};
 // 기본은 가운데다. 칸은 시안에서 잰 상자이고 글자는 런타임이 넣는 것이라
 // 길이를 모른다 -- 가운데가 어느 길이에서도 덜 어긋난다.
 let alignPick = {};
+// 구역이 몇 층에 놓이나. "판|요소" -> 숫자.
+//
+// 굽는 쪽이 정해 둔 층이 있다 -- 판 0, 내용 10, 글자 15, 표시 40. 그 값이
+// 기본이고, 여기서 정하면 그것이 이긴다.
+let zPick = {};
 try {
   artPick = JSON.parse(localStorage.getItem(KEEP + ".art") || "{}") || {};
 } catch (err) { artPick = {}; }
@@ -284,6 +290,9 @@ try {
 try {
   platePick = JSON.parse(localStorage.getItem(KEEP + ".plate") || "{}") || {};
 } catch (err) { platePick = {}; }
+try {
+  zPick = JSON.parse(localStorage.getItem(KEEP + ".z") || "{}") || {};
+} catch (err) { zPick = {}; }
 let nudgeKey = null, nudgeTimer = 0;
 
 const $ = (id) => document.getElementById(id);
@@ -403,6 +412,22 @@ function keepPlate() {
   } catch (err) {
     flash("판 그림이 커서 저장은 못 했습니다. 창을 닫으면 사라집니다");
   }
+}
+
+//: 굽는 쪽이 정해 둔 층. 요소 이름으로 짐작한다.
+const Z_GUESS = (key) =>
+  /_overlay$|_outline$/.test(key) ? 40
+  : /_text$|_value$|_name$|_label$/.test(key) ? 15
+  : 10;
+
+function zOf(role, key) {
+  const mine = zPick[role + "|" + key];
+  return typeof mine === "number" ? mine : Z_GUESS(key);
+}
+
+function keepZ() {
+  try { localStorage.setItem(KEEP + ".z", JSON.stringify(zPick)); }
+  catch (err) { /* 조용히 */ }
 }
 
 function keepAlign() {
@@ -651,6 +676,10 @@ function zonesOf(shell, table, role, ox, oy) {
     const el = document.createElement("div");
     el.className = "zone" + (item.live ? " live" : "") +
                    (item.key === sel && role === selRole ? " sel" : "");
+    // 판 위에서도 정한 층대로 겹친다. 고른 것은 늘 맨 위다 -- 아니면 밑에
+    // 깔린 구역의 손잡이를 못 잡는다.
+    el.style.zIndex = (item.key === sel && role === selRole)
+      ? 1000 : 1 + Math.max(0, Math.min(99, zOf(role, item.key)));
     el.style.cssText = `left:${x * mode}px;top:${y * mode}px;` +
       `width:${w * mode}px;height:${h * mode}px`;
     // 여덟 방향 손잡이. 모서리와 꼭짓점을 다 잡을 수 있어야 한쪽만 밀어
@@ -884,6 +913,7 @@ function list() {
       .join("");
     rows.push(`<tr class="${key === sel ? "sel" : ""}" data-k="${key}">` +
       `<td class="key">${key}</td>${cells}` +
+      `<td><input class="zPick" data-k="${key}" value="${zOf(selRole, key)}"></td>` +
       `<td><button class="pngBtn" data-k="${key}">${label}</button>${clear}` +
       `<input type="file" class="pngFile" accept="image/*" hidden ` +
       `data-k="${key}"></td>` +
@@ -919,6 +949,15 @@ function list() {
       sel = tr.dataset.k;
       paint();
       copyName(tr.dataset.k);
+    };
+  }
+  for (const box of body.querySelectorAll(".zPick")) {
+    box.onchange = () => {
+      const got = parseInt(box.value, 10);
+      if (Number.isNaN(got)) { list(); return; }
+      zPick[selRole + "|" + box.dataset.k] = got;
+      keepZ();
+      paint();
     };
   }
   for (const button of body.querySelectorAll(".pngBtn")) {
@@ -1120,7 +1159,7 @@ $("save").onclick = () => {
   // 다시 못 읽고(브라우저가 막는다), 이름만 보내면 받는 쪽이 그 파일을 어디서
   // 찾을지 알 수 없다.
   const bundle = { zones: TABLE, art: artPick, align: alignPick,
-                   plate: platePick };
+                   plate: platePick, z: zPick };
   const blob = new Blob([JSON.stringify(bundle, null, 1)],
                         { type: "application/json" });
   const a = document.createElement("a");
@@ -1266,6 +1305,7 @@ $("loadFile").onchange = () => {
     if (got.art) { artPick = got.art; keepArt(); }
     if (got.align) { alignPick = got.align; keepAlign(); }
     if (got.plate) { platePick = got.plate; keepPlate(); }
+    if (got.z) { zPick = got.z; keepZ(); }
     sel = null;
     paint();
     keep();

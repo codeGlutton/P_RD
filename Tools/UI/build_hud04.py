@@ -74,8 +74,23 @@ try:
 except ImportError:
     PLATE_ART = {}
 
+try:
+    from hud04_zorder import Z_ORDER  # noqa: E402
+except ImportError:
+    Z_ORDER = {}
+
 ASSET = "WBP_CombatHUD04"
 ART = "/Game/SVN/OutSideAsset/UI/KayKit/HUD04"
+
+def z_of(plate, element, fallback):
+    """이 구역이 몇 층인가. 쪽에서 정한 것이 있으면 그것.
+
+    층을 코드에 못 박아 두면 겹치는 차례를 바꿀 때마다 사람을 불러야 한다.
+    쪽에서 눈으로 보며 정하는 편이 빠르다.
+    """
+    got = Z_ORDER.get(plate, {}).get(element)
+    return got if isinstance(got, int) else fallback
+
 
 def art_path(name):
     """HUD04 폴더의 그림 이름을 엔진 경로로. 없으면 None."""
@@ -225,7 +240,8 @@ def piece(blueprint, parent, origin, widget_name, plate_name, element,
         return False
     rect = spot(plate_name, element) or sprite_rect
     x, y, w, h = local(rect, origin)
-    kit.image(blueprint, widget_name, parent, x, y, w, h, None, z_order=z,
+    kit.image(blueprint, widget_name, parent, x, y, w, h, None,
+              z_order=z_of(plate_name, element, z),
               texture="{}/{}".format(ART, name), tint=kit.WHITE)
     return True
 
@@ -242,7 +258,8 @@ TEXT_ALIGN = {
 
 
 def text(blueprint, name, parent, origin, rect, value, points, colour,
-         align=None, bold=False):
+         align=None, bold=False, zone=None):
+    """글자 한 줄. zone 은 (판, 요소) -- 층을 쪽에서 정할 수 있게 짚어 준다."""
     placed = local(rect, origin)
     if placed is None:
         return
@@ -253,7 +270,8 @@ def text(blueprint, name, parent, origin, rect, value, points, colour,
               align or halign, None, bold=bold)
     # 글자를 아이콘 위층으로 올린다. kit.label 은 내용 층에 놓는데, 같은 층이면
     # 만든 차례가 위아래를 정해서 아이콘이 큰 칸에서는 글자가 묻힌다.
-    kit.place(blueprint, name, x, y, w, h, "tl", None, Z_TEXT)
+    kit.place(blueprint, name, x, y, w, h, "tl", None,
+              z_of(zone[0], zone[1], Z_TEXT) if zone else Z_TEXT)
     # 층을 정한 **뒤에** 붙인다. kit.place 가 칸 크기를 다시 정하므로 먼저
     # 붙이면 그 값이 덮인다.
     kit.align_in(blueprint, name, x, y, w, h, align or halign, valign)
@@ -357,10 +375,11 @@ def commands(blueprint, root):
                       ix, iy, iw, ih, None, z_order=Z_CONTENT,
                       texture="{}/{}".format(ART, icon_name), tint=kit.WHITE)
         text(blueprint, "CommandName_%d" % index, card, origin,
-             spot(plate_name, "action_name"), name, 18, TEXT_PALE, bold=True)
+             spot(plate_name, "action_name"), name, 18, TEXT_PALE, bold=True,
+             zone=(plate_name, "action_name"))
         text(blueprint, "CommandDamage_%d" % index, card, origin,
              spot(plate_name, "damage_text") or spot(plate_name, "stance_text"),
-             damage, 15, TEXT_PALE)
+             damage, 15, TEXT_PALE, zone=(plate_name, "damage_text"))
         # 쿨타임도 배지 위에 숫자를 얹는다. 비용 배지 아래에 같은 모양으로
         # 놓아, 둘이 한 쌍으로 읽히게 한다.
         cool_badge = spot(plate_name, "cooldown_badge")
@@ -372,7 +391,8 @@ def commands(blueprint, root):
                       or COST_BADGE, tint=kit.WHITE)
         text(blueprint, "CommandCooldown_%d" % index, card, origin,
              cool_badge or spot(plate_name, "cooldown_text"),
-             cooldown, 19, TEXT_PALE, bold=True)
+             cooldown, 19, TEXT_PALE, bold=True,
+             zone=(plate_name, "cooldown_badge"))
         # 비용은 배지 그림 위에 숫자를 얹는다. 시안은 판에 배지를 그려
         # 넣었는데, 판을 한 장으로 줄이면서 그 배지도 한 벌만 남았다.
         # 숫자만 얹으면 판마다 배지가 있는 자리와 없는 자리가 갈린다.
@@ -384,7 +404,8 @@ def commands(blueprint, root):
                       texture=art_path(zone_art(plate_name, "cost_badge"))
                       or COST_BADGE, tint=kit.WHITE)
         text(blueprint, "CommandCost_%d" % index, card, origin,
-             badge, cost, 19, TEXT_PALE, bold=True)
+             badge, cost, 19, TEXT_PALE, bold=True,
+             zone=(plate_name, "cost_badge"))
 
         # 골라진 표시는 안 만든다. 스킬을 고르는 순간 조준에 들고, 조준 중에는
         # 카드가 통째로 비킨다 -- 금테가 켜지자마자 카드와 같이 사라져서
