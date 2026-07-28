@@ -92,6 +92,25 @@ def z_of(plate, element, fallback):
     return got if isinstance(got, int) else fallback
 
 
+def draw_badge(blueprint, parent, origin, widget_name, plate_name, element,
+               rect):
+    """배지 한 장. 얹은 그림이 있으면 그것을, 없으면 둥근 배지를.
+
+    맞춤을 여기서도 지킨다 -- 배지 그림이 세로로 긴 것들이라(778x938 같은)
+    구역에 늘여 넣으면 눌린 보석이 된다.
+    """
+    entry = zone_art_entry(plate_name, element)
+    placed = local(rect, origin)
+    if entry:
+        placed = fit_rect(placed, entry.get("size"),
+                          entry.get("fit") or "contain")
+    x, y, w, h = placed
+    kit.image(blueprint, widget_name, parent, x, y, w, h, None,
+              z_order=z_of(plate_name, element, Z_CONTENT),
+              texture=art_path(entry["texture"]) if entry else COST_BADGE,
+              tint=kit.WHITE)
+
+
 def art_path(name):
     """HUD04 폴더의 그림 이름을 엔진 경로로. 없으면 None."""
     return "{}/{}".format(ART, name) if name else None
@@ -178,6 +197,38 @@ for _group, _template in ((COMMANDS, CARD_TEMPLATE), (PARTY, PARTY_TEMPLATE)):
         TEMPLATE_OF[_row[0]] = _template
 
 
+def fit_rect(rect, size, fit):
+    """그림을 구역 안에 어떻게 앉힐지 계산한다.
+
+    쪽에서 고른 맞춤이 게임에서는 아무 일도 안 하고 있었다 -- 쪽은 CSS 로
+    비율을 지켜 그리는데 굽는 쪽은 구역에 늘여 넣었다. 눈으로 맞춘 것과 나온
+    것이 달라지는 자리다.
+
+        채우기  구역에 꽉 늘린다. 비율이 깨진다
+        맞추기  비율을 지켜 안에 들어간다. 남는 쪽에 여백
+        덮기    비율을 지켜 꽉 채운다. 넘치는 쪽은 삐져나온다
+        가운데  원래 크기 그대로 가운데
+    """
+    x, y, w, h = rect
+    if not size or fit == "fill":
+        return rect
+    art_w, art_h = size
+    if fit == "none":
+        return (x + (w - art_w) / 2.0, y + (h - art_h) / 2.0, art_w, art_h)
+    ratio = min(w / art_w, h / art_h) if fit == "contain"         else max(w / art_w, h / art_h)
+    got_w, got_h = art_w * ratio, art_h * ratio
+    return (x + (w - got_w) / 2.0, y + (h - got_h) / 2.0, got_w, got_h)
+
+
+def zone_art_entry(plate, element):
+    """얹은 그림 한 줄. 이 판에 없으면 묶음의 본에서 물려받는다."""
+    for where in (plate, TEMPLATE_OF.get(plate)):
+        got = ZONE_ART.get(where, {}).get(element) if where else None
+        if got:
+            return got
+    return None
+
+
 def zone_art(plate, element):
     """구역 조정 쪽에서 얹은 그림 이름. 없으면 None.
 
@@ -186,11 +237,8 @@ def zone_art(plate, element):
 
     이 판에 없으면 묶음의 본에서 물려받는다.
     """
-    for where in (plate, TEMPLATE_OF.get(plate)):
-        got = ZONE_ART.get(where, {}).get(element) if where else None
-        if got:
-            return got["texture"]
-    return None
+    got = zone_art_entry(plate, element)
+    return got["texture"] if got else None
 
 
 def local(rect, origin):
@@ -232,14 +280,22 @@ def piece(blueprint, parent, origin, widget_name, plate_name, element,
     모른다 -- 구역을 옮겨도 그림은 안 따라와서, 쪽에서는 맞았는데 게임에서는
     그대로인 일이 생긴다. 실제로 턴 초상이 그랬다.
     """
-    chosen = zone_art(plate_name, element)
+    entry = zone_art_entry(plate_name, element)
     name, sprite_rect = sprite(plate_name, element)
-    if chosen:
-        name = chosen
+    if name is None:
+        # 이 판에서 안 뗐으면 묶음의 본 것을 쓴다. 여섯이 한 카드이므로
+        # 밑그림도 한 벌이어야 한다.
+        name, sprite_rect = sprite(TEMPLATE_OF.get(plate_name) or "", element)
+    if entry:
+        name = entry["texture"]
     if name is None:
         return False
     rect = spot(plate_name, element) or sprite_rect
     x, y, w, h = local(rect, origin)
+    if entry:
+        # 쪽에서 고른 맞춤을 지킨다. 안 지키면 눈으로 맞춘 것과 나온 것이 다르다.
+        x, y, w, h = fit_rect((x, y, w, h), entry.get("size"),
+                              entry.get("fit") or "contain")
     kit.image(blueprint, widget_name, parent, x, y, w, h, None,
               z_order=z_of(plate_name, element, z),
               texture="{}/{}".format(ART, name), tint=kit.WHITE)
@@ -384,11 +440,9 @@ def commands(blueprint, root):
         # 놓아, 둘이 한 쌍으로 읽히게 한다.
         cool_badge = spot(plate_name, "cooldown_badge")
         if cool_badge:
-            cx, cy, cw, ch = local(cool_badge, origin)
-            kit.image(blueprint, "CommandCooldownBadge_%d" % index, card,
-                      cx, cy, cw, ch, None, z_order=Z_CONTENT,
-                      texture=art_path(zone_art(plate_name, "cooldown_badge"))
-                      or COST_BADGE, tint=kit.WHITE)
+            draw_badge(blueprint, card, origin,
+                       "CommandCooldownBadge_%d" % index, plate_name,
+                       "cooldown_badge", cool_badge)
         text(blueprint, "CommandCooldown_%d" % index, card, origin,
              cool_badge or spot(plate_name, "cooldown_text"),
              cooldown, 19, TEXT_PALE, bold=True,
@@ -398,11 +452,8 @@ def commands(blueprint, root):
         # 숫자만 얹으면 판마다 배지가 있는 자리와 없는 자리가 갈린다.
         badge = spot(plate_name, "cost_badge")
         if badge:
-            bx, by, bw, bh = local(badge, origin)
-            kit.image(blueprint, "CommandCostBadge_%d" % index, card,
-                      bx, by, bw, bh, None, z_order=Z_CONTENT,
-                      texture=art_path(zone_art(plate_name, "cost_badge"))
-                      or COST_BADGE, tint=kit.WHITE)
+            draw_badge(blueprint, card, origin, "CommandCostBadge_%d" % index,
+                       plate_name, "cost_badge", badge)
         text(blueprint, "CommandCost_%d" % index, card, origin,
              badge, cost, 19, TEXT_PALE, bold=True,
              zone=(plate_name, "cost_badge"))
@@ -433,19 +484,12 @@ def party(blueprint, root):
         plate(blueprint, card, origin, plate_name, "PartyPlate_%d" % index,
               PLATE_ART.get(PARTY_TEMPLATE) or TEXTURE[PARTY_TEMPLATE])
 
-        for widget_name, element in (
-                ("PartyPortrait_%d" % index, "party_portrait"),
-                ("PartyHPIcon_%d" % index, "hp_icon")):
-            # 자리는 이 칸의 것을, 그림은 본 칸의 것을 쓴다. 초상은 런타임이
-            # 용병마다 갈아 끼우니 여기 있는 것은 밑그림이다.
-            art_name, _ = sprite(PARTY_TEMPLATE, element)
-            here = spot(plate_name, element)
-            if art_name and here:
-                ax, ay, aw, ah = local(here, origin)
-                kit.image(blueprint, widget_name, card, ax, ay, aw, ah, None,
-                          z_order=Z_CONTENT,
-                          texture="{}/{}".format(ART, art_name),
-                          tint=kit.WHITE)
+        # 초상과 하트도 piece() 로 간다. 그래야 쪽에서 얹은 그림과 맞춤을
+        # 탄다 -- 따로 그리고 있었더니 넣어 준 하트가 게임에 안 들어갔다.
+        piece(blueprint, card, origin, "PartyPortrait_%d" % index, plate_name,
+              "party_portrait")
+        piece(blueprint, card, origin, "PartyHPIcon_%d" % index, plate_name,
+              "hp_icon")
         if not piece(blueprint, card, origin, "PartyStatusIcon_%d" % index,
                      plate_name, "status_icon"):
             # 상태 아이콘은 시안이 기사 줄에만 그려 뒀다. 셋 다 있어야 런타임이

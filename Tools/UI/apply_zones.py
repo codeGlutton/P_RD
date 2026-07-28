@@ -78,6 +78,20 @@ def write_lines(path, lines):
     io.open(path, "w", encoding="utf-8", newline=NL).write(NL.join(lines) + NL)
 
 
+def png_size(raw):
+    """PNG 머리에서 가로세로를 꺼낸다.
+
+    맞춤(비율 지켜 넣기)을 굽는 쪽에서 계산하려면 그림의 원래 크기를 알아야
+    한다. 굽는 것은 언리얼 안 파이썬이라 PIL 이 없을 수 있어, 머리 스물다섯
+    바이트만 직접 읽는다 -- IHDR 은 늘 맨 앞이고 자리가 정해져 있다.
+    """
+    if raw[:8] != bytes([137, 80, 78, 71, 13, 10, 26, 10]):
+        return None
+    width = int.from_bytes(raw[16:20], "big")
+    height = int.from_bytes(raw[20:24], "big")
+    return (width, height) if width and height else None
+
+
 def write_art(art):
     """얹은 그림을 PNG 로 풀고 어느 구역이 쓰는지 적는다."""
     rows = {}
@@ -92,15 +106,16 @@ def write_art(art):
         name = "KK_HUD04_zone_%s" % element
         io.open(os.path.join(ART_OUT, name + ".png"), "wb").write(raw)
         rows.setdefault(plate, {})[element] = (
-            name, (value or {}).get("fit") or "contain")
+            name, (value or {}).get("fit") or "contain", png_size(raw))
 
     lines = [ART_HEAD.rstrip(NL)]
     for plate in sorted(rows):
         lines.append('    "%s": {' % plate)
         for element in sorted(rows[plate]):
-            name, fit = rows[plate][element]
-            lines.append('        "%s": {"texture": "%s", "fit": "%s"},'
-                         % (element, name, fit))
+            name, fit, size = rows[plate][element]
+            lines.append(
+                '        "%s": {"texture": "%s", "fit": "%s", "size": %s},'
+                % (element, name, fit, list(size) if size else None))
         lines.append("    },")
     lines.append("}")
     write_lines(ART_MAP, lines)

@@ -7,13 +7,13 @@ import_hud04.py 가 그 폴더를 통째로 넣는다.
 
 ZONE_ART = {
     "action_top": {
-        "cooldown_badge": {"texture": "KK_HUD04_zone_cooldown_badge", "fit": "contain"},
-        "cost_badge": {"texture": "KK_HUD04_zone_cost_badge", "fit": "contain"},
+        "cooldown_badge": {"texture": "KK_HUD04_zone_cooldown_badge", "fit": "contain", "size": [904, 933]},
+        "cost_badge": {"texture": "KK_HUD04_zone_cost_badge", "fit": "contain", "size": [778, 938]},
     },
     "bottom_status_left": {
-        "hp_icon": {"texture": "KK_HUD04_zone_hp_icon", "fit": "contain"},
+        "hp_icon": {"texture": "KK_HUD04_zone_hp_icon", "fit": "contain", "size": [48, 48]},
     },
     "bottom_status_right": {
-        "hp_icon": {"texture": "KK_HUD04_zone_hp_icon", "fit": "contain"},
+        "hp_icon": {"texture": "KK_HUD04_zone_hp_icon", "fit": "contain", "size": [48, 48]},
     },
 }
