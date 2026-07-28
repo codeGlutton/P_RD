@@ -128,7 +128,12 @@ TUNING = {
     "top_center_turn_order": {
         "end_left": (24, 52, 50, 55),
         "end_right": (745, 52, 50, 55),
-        "selected_outline": (92, 32, 95, 95),
+        "selected_outline_01": (92, 32, 95, 95),
+        "selected_outline_02": (200, 32, 95, 95),
+        "selected_outline_03": (308, 32, 95, 95),
+        "selected_outline_04": (416, 32, 95, 95),
+        "selected_outline_05": (524, 32, 95, 95),
+        "selected_outline_06": (632, 32, 95, 95),
         "turn_portrait_01": (97, 37, 85, 85),
         "turn_portrait_02": (205, 37, 85, 85),
         "turn_portrait_03": (313, 37, 85, 85),

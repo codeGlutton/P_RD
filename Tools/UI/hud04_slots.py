@@ -158,7 +158,12 @@ DETAIL = {
     "top_center_turn_order": {
         "end_left": (450, 64, 50, 55),
         "end_right": (1171, 64, 50, 55),
-        "selected_outline": (518, 44, 95, 95),
+        "selected_outline_01": (518, 44, 95, 95),
+        "selected_outline_02": (626, 44, 95, 95),
+        "selected_outline_03": (734, 44, 95, 95),
+        "selected_outline_04": (842, 44, 95, 95),
+        "selected_outline_05": (950, 44, 95, 95),
+        "selected_outline_06": (1058, 44, 95, 95),
         "turn_portrait_01": (523, 49, 85, 85),
         "turn_portrait_02": (631, 49, 85, 85),
         "turn_portrait_03": (739, 49, 85, 85),

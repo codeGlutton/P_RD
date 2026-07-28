@@ -406,9 +406,15 @@ def top_row(blueprint, root):
         # 접어 둔다. 브러시가 없는 이미지는 **흰 네모**로 그려져서, 펴 둔 채로
         # 구우면 액자마다 흰 판이 박힌다. 런타임이 얼굴을 넣을 때 편다.
         kit.fold(blueprint, "TurnPortrait_%d" % index)
-        # 두르는 자리는 따로 잰 것이 있으면 그것을, 없으면 초상 자리를 쓴다.
+        # 두르는 자리는 **칸마다 따로** 잰다.
+        #
+        # 전에는 한 벌을 여섯이 같이 썼다. 칸 간격이 고르면 그래도 되는데,
+        # 구역 쪽에서 칸 하나를 옮기면 그 칸만 테가 어긋난다 -- 옮길 수 있게
+        # 만들어 놓고 테는 못 옮기게 둔 셈이었다.
+        #
+        # 못 찾으면 초상 자리를 그대로 두른다.
         outline(blueprint, token, token_origin, "TurnCurrent_%d" % index,
-                DETAIL["top_center_turn_order"].get("selected_outline")
+                DETAIL["top_center_turn_order"].get("selected_outline_%02d" % (index + 1))
                 or DETAIL["top_center_turn_order"][element])
 
     # 양끝 넘김칸. 여섯 칸에 안 들어가는 수를 적고, 누르면 창이 그쪽으로
