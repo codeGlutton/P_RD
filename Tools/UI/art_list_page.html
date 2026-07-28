@@ -403,7 +403,7 @@ function tieUp(role) {
 // 손으로 고른 그림은 자리표와 따로 둔다. 코드로 내보낼 것은 자리뿐이고,
 // 그림 고른 것은 눈으로 맞추려고 쓰는 것이라 섞으면 내보낸 값이 더러워진다.
 function alignOf(role, key) {
-  return alignPick[role + "|" + key] || ["center", "middle"];
+  return inherited(alignPick, role, key) || ["center", "middle"];
 }
 
 function keepPlate() {
@@ -420,9 +420,21 @@ const Z_GUESS = (key) =>
   : /_text$|_value$|_name$|_label$/.test(key) ? 15
   : 10;
 
+// 이 판에 없으면 묶음의 본에서 물려받는다. 그림이 그렇게 하듯이.
+//
+// 여섯 장이 한 카드다. 층만 판마다 따로 놀면 어느 카드에서는 글자가 배지
+// 밑으로 들어가는 식이 된다.
+function inherited(store, role, key) {
+  const mine = store[role + "|" + key];
+  if (mine !== undefined) return mine;
+  const head = familyOf(role)[0];
+  if (!head || head === role) return undefined;
+  return store[head + "|" + key];
+}
+
 function zOf(role, key) {
-  const mine = zPick[role + "|" + key];
-  return typeof mine === "number" ? mine : Z_GUESS(key);
+  const got = inherited(zPick, role, key);
+  return typeof got === "number" ? got : Z_GUESS(key);
 }
 
 function keepZ() {
@@ -453,12 +465,8 @@ function artOf(role, key) {
   //
   // 이 판에 없으면 묶음의 본에서 물려받는다. 한 판에만 얹어도 묶음 전체가
   // 같아야 한다 -- 굽는 쪽이 그렇게 한다.
-  const mine = artPick[role + "|" + key];
-  if (mine && mine.png) return mine;
-  const head = familyOf(role)[0];
-  if (!head || head === role) return null;
-  const theirs = artPick[head + "|" + key];
-  return theirs && theirs.png ? theirs : null;
+  const got = inherited(artPick, role, key);
+  return got && got.png ? got : null;
 }
 
 function keep() {
@@ -1178,13 +1186,27 @@ $("spread").onclick = () => {
   if (mates.length < 2) { flash("같은 종류 판이 하나뿐입니다"); return; }
   mark();
   for (const mate of mates) {
-    if (mate !== selRole && TABLE[mate]) {
-      TABLE[mate] = structuredClone(TABLE[selRole]);
+    if (mate === selRole || !TABLE[mate]) continue;
+    TABLE[mate] = structuredClone(TABLE[selRole]);
+    // 자리만 퍼뜨리면 모자란다. 층·그림·글자 붙임도 그 판의 것이라
+    // 같이 옮겨야 여섯 장이 정말 같아진다.
+    for (const store of [zPick, artPick, alignPick]) {
+      for (const at of Object.keys(store)) {
+        if (at.startsWith(mate + "|")) delete store[at];
+      }
+      for (const [at, value] of Object.entries(store)) {
+        if (!at.startsWith(selRole + "|")) continue;
+        store[mate + "|" + at.slice(selRole.length + 1)] =
+          structuredClone(value);
+      }
     }
   }
+  keepZ();
+  keepArt();
+  keepAlign();
   paint();
   keep();
-  flash("판 " + mates.length + "장에 퍼뜨렸습니다");
+  flash("판 " + mates.length + "장에 퍼뜨렸습니다 (자리·층·그림·붙임)");
 };
 
 // 단추로도 되돌린다. 자판이 한글이면 Ctrl+Z 가 안 잡히는 판이 있어,

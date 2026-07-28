@@ -87,9 +87,15 @@ def z_of(plate, element, fallback):
 
     층을 코드에 못 박아 두면 겹치는 차례를 바꿀 때마다 사람을 불러야 한다.
     쪽에서 눈으로 보며 정하는 편이 빠르다.
+
+    이 판에 없으면 묶음의 본에서 물려받는다. 여섯 장이 한 카드이므로 층만
+    판마다 따로 놀면 어느 카드에서는 글자가 배지 밑으로 들어간다.
     """
-    got = Z_ORDER.get(plate, {}).get(element)
-    return got if isinstance(got, int) else fallback
+    for where in (plate, TEMPLATE_OF.get(plate)):
+        got = Z_ORDER.get(where, {}).get(element) if where else None
+        if isinstance(got, int):
+            return got
+    return fallback
 
 
 def draw_badge(blueprint, parent, origin, widget_name, plate_name, element,

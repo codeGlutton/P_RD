@@ -228,7 +228,7 @@
 // 했더니 브라우저가 막았다 -- file:// 에서는 같은 폴더 파일도 fetch 가 안
 // 된다(그림 태그는 된다).
 const GROUPS = [{"title": "상단", "users": "라운드 · 턴 순서 · 목표", "items": [{"name": "라운드", "path": "KK_HUD04_top_left_parchment", "note": "top_left_parchment  309x151 @ 15,12", "png": "png/KK_HUD04_top_left_parchment.png", "role": "top_left_parchment"}, {"name": "턴 순서", "path": "KK_HUD04_top_center_turn_order", "note": "top_center_turn_order  713x158 @ 483,12", "png": "png/KK_HUD04_top_center_turn_order.png", "role": "top_center_turn_order"}, {"name": "목표 (→ 메뉴 아이콘)", "path": "KK_HUD04_top_right_parchment", "note": "top_right_parchment  392x151 @ 1271,12", "png": "png/KK_HUD04_top_right_parchment.png", "role": "top_right_parchment"}]}, {"title": "명령 카드 6", "users": "CommandCard_0~5", "items": [{"name": "디폴트_1", "path": "KK_HUD04_action_top", "note": "action_top  197x212 @ 741,178", "png": "png/KK_HUD04_action_top.png", "role": "action_top"}, {"name": "디폴트_2", "path": "KK_HUD04_action_top", "note": "action_left_upper  197x212 @ 497,303", "png": "png/KK_HUD04_action_top.png", "role": "action_left_upper"}, {"name": "디폴트_3", "path": "KK_HUD04_action_top", "note": "action_right_upper  197x212 @ 971,303", "png": "png/KK_HUD04_action_top.png", "role": "action_right_upper"}, {"name": "디폴트_4", "path": "KK_HUD04_action_top", "note": "action_left_lower  197x212 @ 497,542", "png": "png/KK_HUD04_action_top.png", "role": "action_left_lower"}, {"name": "디폴트_5", "path": "KK_HUD04_action_top", "note": "action_right_lower  197x212 @ 971,542", "png": "png/KK_HUD04_action_top.png", "role": "action_right_lower"}, {"name": "디폴트_6", "path": "KK_HUD04_action_top", "note": "action_bottom  197x212 @ 741,666", "png": "png/KK_HUD04_action_top.png", "role": "action_bottom"}]}, {"title": "아군 3", "users": "PartyCard_0~2", "items": [{"name": "아군 1", "path": "KK_HUD04_bottom_status_left", "note": "bottom_status_left  225x174 @ 10,761", "png": "png/KK_HUD04_bottom_status_left.png", "role": "bottom_status_left"}, {"name": "아군 2", "path": "KK_HUD04_bottom_status_left", "note": "bottom_status_center  225x174 @ 232,761", "png": "png/KK_HUD04_bottom_status_left.png", "role": "bottom_status_center"}, {"name": "아군 3", "path": "KK_HUD04_bottom_status_left", "note": "bottom_status_right  225x174 @ 454,760", "png": "png/KK_HUD04_bottom_status_left.png", "role": "bottom_status_right"}]}, {"title": "그 밖", "users": "적 정보 · 턴 종료", "items": [{"name": "적 정보", "path": "KK_HUD04_upper_right_enemy_panel", "note": "upper_right_enemy_panel  390x286 @ 1273,180", "png": "png/KK_HUD04_upper_right_enemy_panel.png", "role": "upper_right_enemy_panel"}, {"name": "턴 종료", "path": "KK_HUD04_bottom_right_button", "note": "bottom_right_button  345x158 @ 1318,770", "png": "png/KK_HUD04_bottom_right_button.png", "role": "bottom_right_button"}]}];
-const BASE = {"action_bottom": {"action_icon": [56, 63, 85, 85], "action_name": [28, 35, 142, 27], "cooldown_badge": [156, 110, 49, 51], "cooldown_overlay": [9, 7, 180, 196], "cost_badge": [156, 57, 49, 51], "damage_text": [27, 150, 142, 27]}, "action_left_lower": {"action_icon": [56, 63, 85, 85], "action_name": [28, 35, 142, 27], "cooldown_badge": [156, 110, 49, 51], "cooldown_overlay": [9, 7, 180, 196], "cost_badge": [156, 57, 49, 51], "damage_text": [27, 150, 142, 27]}, "action_left_upper": {"action_icon": [56, 63, 85, 85], "action_name": [28, 35, 142, 27], "cooldown_badge": [156, 110, 49, 51], "cooldown_overlay": [9, 7, 180, 196], "cost_badge": [156, 57, 49, 51], "damage_text": [27, 150, 142, 27]}, "action_right_lower": {"action_icon": [56, 63, 85, 85], "action_name": [28, 35, 142, 27], "cooldown_badge": [156, 110, 49, 51], "cooldown_overlay": [9, 7, 180, 196], "cost_badge": [156, 57, 49, 51], "damage_text": [27, 150, 142, 27]}, "action_right_upper": {"action_icon": [56, 63, 85, 85], "action_name": [28, 35, 142, 27], "cooldown_badge": [156, 110, 49, 51], "cooldown_overlay": [9, 7, 180, 196], "cost_badge": [156, 57, 49, 51], "damage_text": [27, 150, 142, 27]}, "action_top": {"action_icon": [56, 63, 85, 85], "action_name": [28, 35, 142, 27], "cooldown_badge": [156, 110, 49, 51], "cooldown_overlay": [9, 7, 180, 196], "cost_badge": [156, 57, 49, 51], "damage_text": [27, 150, 142, 27]}, "bottom_right_button": {"button_label": [41, 41, 264, 74]}, "bottom_status_center": {"ap_gems": [33, 116, 160, 27], "character_name": [103, 32, 92, 21], "hp_bar": [103, 85, 91, 14], "hp_icon": [103, 57, 24, 24], "hp_value": [130, 57, 64, 24], "party_portrait": [33, 32, 65, 80], "status_icon": [10, -21, 25, 27], "status_icon_1": [38, -21, 25, 27], "status_icon_2": [66, -21, 25, 27], "status_icon_3": [94, -21, 25, 27], "status_icon_4": [122, -21, 25, 27]}, "bottom_status_left": {"ap_gems": [33, 116, 160, 27], "character_name": [103, 32, 92, 21], "hp_bar": [103, 85, 91, 14], "hp_icon": [103, 57, 24, 24], "hp_value": [130, 57, 64, 24], "party_portrait": [33, 32, 65, 80], "status_icon": [10, -21, 25, 27], "status_icon_1": [38, -21, 25, 27], "status_icon_2": [66, -21, 25, 27], "status_icon_3": [94, -21, 25, 27], "status_icon_4": [122, -21, 25, 27]}, "bottom_status_right": {"ap_gems": [33, 116, 160, 27], "character_name": [103, 32, 92, 21], "hp_bar": [103, 85, 91, 14], "hp_icon": [103, 57, 24, 24], "hp_value": [130, 57, 64, 24], "party_portrait": [33, 32, 65, 80], "status_icon": [10, -21, 25, 27], "status_icon_1": [38, -21, 25, 27], "status_icon_2": [66, -21, 25, 27], "status_icon_3": [94, -21, 25, 27], "status_icon_4": [122, -21, 25, 27]}, "top_center_turn_order": {"selected_outline": [65, 32, 96, 96], "turn_portrait_01": [70, 37, 85, 85], "turn_portrait_02": [193, 37, 85, 85], "turn_portrait_03": [315, 37, 85, 85], "turn_portrait_04": [438, 37, 85, 85], "turn_portrait_05": [560, 37, 85, 85]}, "top_left_parchment": {"round_label": [38, 37, 233, 76]}, "top_right_parchment": {"objective_text": [38, 37, 317, 76]}, "upper_right_enemy_panel": {"damage_icon": [157, 191, 43, 42], "damage_text": [203, 191, 140, 31], "defense_icon": [157, 138, 40, 42], "defense_text": [201, 138, 75, 31], "enemy_name": [157, 40, 193, 35], "enemy_portrait": [40, 40, 113, 160], "hp_bar": [201, 116, 138, 17], "hp_icon": [157, 80, 39, 38], "hp_value": [201, 81, 67, 30]}};
+const BASE = {"action_bottom": {"action_icon": [50, 63, 97, 100], "action_name": [28, 35, 142, 27], "cooldown_badge": [156, 110, 49, 51], "cooldown_overlay": [9, 7, 180, 196], "cooldown_text": [28, 27, 142, 157], "cost_badge": [156, 57, 49, 51], "damage_text": [28, 163, 142, 19], "stance_text": [45, 133, 92, 29]}, "action_left_lower": {"action_icon": [50, 63, 97, 100], "action_name": [28, 35, 142, 27], "cooldown_badge": [156, 110, 49, 51], "cooldown_overlay": [9, 7, 180, 196], "cooldown_text": [28, 27, 142, 157], "cost_badge": [156, 57, 49, 51], "damage_text": [28, 163, 142, 19], "stance_text": [45, 133, 92, 29]}, "action_left_upper": {"action_icon": [50, 63, 97, 100], "action_name": [28, 35, 142, 27], "cooldown_badge": [156, 110, 49, 51], "cooldown_overlay": [9, 7, 180, 196], "cooldown_text": [28, 27, 142, 157], "cost_badge": [156, 57, 49, 51], "damage_text": [28, 163, 142, 19], "stance_text": [45, 133, 92, 29]}, "action_right_lower": {"action_icon": [50, 63, 97, 100], "action_name": [28, 35, 142, 27], "cooldown_badge": [156, 110, 49, 51], "cooldown_overlay": [9, 7, 180, 196], "cooldown_text": [28, 27, 142, 157], "cost_badge": [156, 57, 49, 51], "damage_text": [28, 163, 142, 19], "stance_text": [45, 133, 92, 29]}, "action_right_upper": {"action_icon": [50, 63, 97, 100], "action_name": [28, 35, 142, 27], "cooldown_badge": [156, 110, 49, 51], "cooldown_overlay": [9, 7, 180, 196], "cooldown_text": [28, 27, 142, 157], "cost_badge": [156, 57, 49, 51], "damage_text": [28, 163, 142, 19], "selected_outline": [0, 0, 188, 210], "stance_text": [45, 133, 92, 29]}, "action_top": {"action_icon": [56, 63, 85, 85], "action_name": [28, 35, 142, 27], "cooldown_badge": [156, 110, 49, 51], "cooldown_overlay": [9, 7, 180, 196], "cost_badge": [156, 57, 49, 51], "damage_text": [27, 150, 142, 27]}, "bottom_right_button": {"button_label": [41, 41, 264, 74]}, "bottom_status_center": {"ap_gems": [33, 116, 160, 27], "character_name": [103, 32, 92, 21], "hp_bar": [103, 85, 91, 14], "hp_icon": [103, 57, 24, 24], "hp_value": [130, 57, 64, 24], "party_portrait": [33, 32, 65, 80], "selected_outline": [0, 0, 217, 166], "status_icon": [10, -21, 25, 27], "status_icon_1": [38, -21, 25, 27], "status_icon_2": [66, -21, 25, 27], "status_icon_3": [94, -21, 25, 27], "status_icon_4": [122, -21, 25, 27], "status_text": [118, 86, 72, 24]}, "bottom_status_left": {"ap_gems": [33, 116, 160, 27], "character_name": [103, 32, 92, 21], "hp_bar": [103, 85, 91, 14], "hp_icon": [103, 57, 24, 24], "hp_value": [130, 57, 64, 24], "party_portrait": [33, 32, 65, 80], "status_icon": [10, -21, 25, 27], "status_icon_1": [38, -21, 25, 27], "status_icon_2": [66, -21, 25, 27], "status_icon_3": [94, -21, 25, 27], "status_icon_4": [122, -21, 25, 27]}, "bottom_status_right": {"ap_gems": [33, 116, 160, 27], "character_name": [103, 32, 92, 21], "hp_bar": [103, 85, 91, 14], "hp_icon": [103, 57, 24, 24], "hp_value": [130, 57, 64, 24], "party_portrait": [33, 32, 65, 80], "selected_outline": [0, 0, 217, 166], "status_icon": [10, -21, 25, 27], "status_icon_1": [38, -21, 25, 27], "status_icon_2": [66, -21, 25, 27], "status_icon_3": [94, -21, 25, 27], "status_icon_4": [122, -21, 25, 27], "status_text": [118, 86, 72, 24]}, "top_center_turn_order": {"selected_outline": [65, 32, 96, 96], "turn_portrait_01": [70, 37, 85, 85], "turn_portrait_02": [193, 37, 85, 85], "turn_portrait_03": [315, 37, 85, 85], "turn_portrait_04": [438, 37, 85, 85], "turn_portrait_05": [560, 37, 85, 85]}, "top_left_parchment": {"round_label": [38, 37, 233, 76]}, "top_right_parchment": {"objective_text": [38, 37, 317, 76]}, "upper_right_enemy_panel": {"damage_icon": [157, 191, 43, 42], "damage_text": [203, 191, 140, 31], "defense_icon": [157, 138, 40, 42], "defense_text": [201, 138, 75, 31], "enemy_name": [157, 40, 193, 35], "enemy_portrait": [40, 40, 113, 160], "hp_bar": [201, 116, 138, 17], "hp_icon": [157, 80, 39, 38], "hp_value": [201, 81, 67, 30]}};
 // 한 벌로 맞춰 둔 판 묶음. 이름 뒤 숫자로는 짝을 못 찾는 것들이다 --
 // action_top 과 action_left_upper 는 같은 카드인데 이름이 안 닮았다.
 const FAMILY = [["action_top", "action_left_upper", "action_right_upper", "action_left_lower", "action_right_lower", "action_bottom"], ["bottom_status_left", "bottom_status_center", "bottom_status_right"]];
@@ -403,7 +403,7 @@ function tieUp(role) {
 // 손으로 고른 그림은 자리표와 따로 둔다. 코드로 내보낼 것은 자리뿐이고,
 // 그림 고른 것은 눈으로 맞추려고 쓰는 것이라 섞으면 내보낸 값이 더러워진다.
 function alignOf(role, key) {
-  return alignPick[role + "|" + key] || ["center", "middle"];
+  return inherited(alignPick, role, key) || ["center", "middle"];
 }
 
 function keepPlate() {
@@ -420,9 +420,21 @@ const Z_GUESS = (key) =>
   : /_text$|_value$|_name$|_label$/.test(key) ? 15
   : 10;
 
+// 이 판에 없으면 묶음의 본에서 물려받는다. 그림이 그렇게 하듯이.
+//
+// 여섯 장이 한 카드다. 층만 판마다 따로 놀면 어느 카드에서는 글자가 배지
+// 밑으로 들어가는 식이 된다.
+function inherited(store, role, key) {
+  const mine = store[role + "|" + key];
+  if (mine !== undefined) return mine;
+  const head = familyOf(role)[0];
+  if (!head || head === role) return undefined;
+  return store[head + "|" + key];
+}
+
 function zOf(role, key) {
-  const mine = zPick[role + "|" + key];
-  return typeof mine === "number" ? mine : Z_GUESS(key);
+  const got = inherited(zPick, role, key);
+  return typeof got === "number" ? got : Z_GUESS(key);
 }
 
 function keepZ() {
@@ -453,12 +465,8 @@ function artOf(role, key) {
   //
   // 이 판에 없으면 묶음의 본에서 물려받는다. 한 판에만 얹어도 묶음 전체가
   // 같아야 한다 -- 굽는 쪽이 그렇게 한다.
-  const mine = artPick[role + "|" + key];
-  if (mine && mine.png) return mine;
-  const head = familyOf(role)[0];
-  if (!head || head === role) return null;
-  const theirs = artPick[head + "|" + key];
-  return theirs && theirs.png ? theirs : null;
+  const got = inherited(artPick, role, key);
+  return got && got.png ? got : null;
 }
 
 function keep() {
@@ -1178,13 +1186,27 @@ $("spread").onclick = () => {
   if (mates.length < 2) { flash("같은 종류 판이 하나뿐입니다"); return; }
   mark();
   for (const mate of mates) {
-    if (mate !== selRole && TABLE[mate]) {
-      TABLE[mate] = structuredClone(TABLE[selRole]);
+    if (mate === selRole || !TABLE[mate]) continue;
+    TABLE[mate] = structuredClone(TABLE[selRole]);
+    // 자리만 퍼뜨리면 모자란다. 층·그림·글자 붙임도 그 판의 것이라
+    // 같이 옮겨야 여섯 장이 정말 같아진다.
+    for (const store of [zPick, artPick, alignPick]) {
+      for (const at of Object.keys(store)) {
+        if (at.startsWith(mate + "|")) delete store[at];
+      }
+      for (const [at, value] of Object.entries(store)) {
+        if (!at.startsWith(selRole + "|")) continue;
+        store[mate + "|" + at.slice(selRole.length + 1)] =
+          structuredClone(value);
+      }
     }
   }
+  keepZ();
+  keepArt();
+  keepAlign();
   paint();
   keep();
-  flash("판 " + mates.length + "장에 퍼뜨렸습니다");
+  flash("판 " + mates.length + "장에 퍼뜨렸습니다 (자리·층·그림·붙임)");
 };
 
 // 단추로도 되돌린다. 자판이 한글이면 Ctrl+Z 가 안 잡히는 판이 있어,
