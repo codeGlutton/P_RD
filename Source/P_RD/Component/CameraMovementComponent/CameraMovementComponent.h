@@ -101,7 +101,7 @@ protected:
 	* 작을수록 화면이 더 많이 확대할 수 있다.
 	*/
 	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MinZoom", AllowPrivateAccess = "true"))
-	float mMinOrthoWidth = 100.f;
+	float mMinOrthoWidth = 500.f;
 
 	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SmoothZoomExp", AllowPrivateAccess = "true"))
 	float mZoomSpeed = 5.f;
@@ -323,6 +323,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void DragMoveToViewportPosition_Instant(FVector2D PreViewPortPos, FVector2D CurViewPortPos);
 
+	UFUNCTION(BlueprintCallable)
+	void MoveToDeltaPosition_Instant(FVector DeltaPosition);
 
 private:
 	/* 
