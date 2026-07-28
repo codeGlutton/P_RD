@@ -351,42 +351,6 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 	}
 }
 
-namespace CombatLayoutDummy
-{
-	/**
-	 * @brief 전투 모델이 아직 안 채우는 칸을 임시 값으로 메운다.
-	 *
-	 * @details
-	 * 인게임에서 이름이 빈칸으로 나오고 AP가 0/0으로 찍혔다. ACombatGameMode가
-	 * FUnitUI를 채울 때 HP만 넣고 이름과 AP를 안 넣기 때문인데, 그 파일은
-	 * 전투 쪽 소유라 여기서 손대지 않는다.
-	 *
-	 * 지금 봐야 하는 것은 배치가 맞느냐다. 빈칸이면 화면에서 자리를 볼 수가
-	 * 없으므로, **비어 있을 때만** 임시 값을 넣는다. 모델이 값을 채우기
-	 * 시작하면 이 코드는 아무것도 하지 않고 저절로 비켜난다 -- 실제 값을
-	 * 덮어쓰지 않는다.
-	 *
-	 * 끄려면 콘솔에서 RD.UI.DummyFill 0.
-	 */
-	static TAutoConsoleVariable<int32> CVarDummyFill(
-		TEXT("RD.UI.DummyFill"), 1,
-		TEXT("전투 모델이 안 채운 UI 칸을 임시 값으로 메운다(1=켬)."),
-		ECVF_Default);
-
-	static bool Enabled()
-	{
-		return CVarDummyFill.GetValueOnGameThread() != 0;
-	}
-
-	/** @brief 이름이 없을 때 쓰는 임시 이름. 자리를 보기 위한 것이다. */
-	static FText UnitName(const int32 SlotIndex)
-	{
-		static const TCHAR* Names[] = { TEXT("기사"), TEXT("궁수"), TEXT("마법사") };
-		const int32 Index = FMath::Clamp(SlotIndex, 0, UE_ARRAY_COUNT(Names) - 1);
-		return FText::FromString(Names[Index]);
-	}
-}
-
 void UCombatLayoutHUDWidget::RefreshParty()
 {
 	const TArray<FUnitUI>& Units = mUIModel->GetUnitUIs();
@@ -413,15 +377,12 @@ void UCombatLayoutHUDWidget::RefreshParty()
 		SetShown(Widgets.HPBar, true);
 		SetShown(Widgets.Portrait, true);
 
-		const bool bDummy = CombatLayoutDummy::Enabled();
-		SetTextIfPresent(Widgets.Name,
-			(bDummy && Unit.mName.IsEmpty())
-				? CombatLayoutDummy::UnitName(SlotIndex) : Unit.mName);
+		SetTextIfPresent(Widgets.Name, Unit.mName);
 
-		// 유닛 초상은 배치안이 깔아 둔 얼굴을 덮는다. 임시 채움 중에는
-		// 덮지 않는다 -- 유닛 데이터에셋 초상이 배경이 뚫리지 않은 사각형
-		// 이라 금속 테를 가려서, 배치를 볼 수가 없다.
-		if (Widgets.Portrait != nullptr && Unit.mPortrait != nullptr && !bDummy)
+		// 유닛 초상은 배치안이 깔아 둔 얼굴을 덮는다. 데이터에셋 초상이
+		// 배경이 안 뚫린 사각형이라 금속 테를 가리는데, 그건 자산 문제라
+		// 여기서 안 피한다 -- 피하면 게임에서 영영 안 보인다.
+		if (Widgets.Portrait != nullptr && Unit.mPortrait != nullptr)
 		{
 			Widgets.Portrait->SetBrushFromTexture(Unit.mPortrait, false);
 		}
@@ -431,9 +392,13 @@ void UCombatLayoutHUDWidget::RefreshParty()
 		}
 		SetTextIfPresent(Widgets.HPText, FText::FromString(FString::Printf(
 			TEXT("%d/%d"), FMath::RoundToInt(Unit.mHP), FMath::RoundToInt(Unit.mMaxHP))));
+		// 이 프로젝트에서 행동력은 Movement 다. 이동도 스킬도 같은 통에서
+		// 꺼내 쓰고(`mRequiredMovement`), 적 계획도 그 값으로 돈다.
+		// `mActionPoints` 는 계약에 칸만 있고 **아무도 안 채운다** -- 그걸
+		// 읽다가 0 이 나와서 임시로 3 을 꽂아 놨었다. 칸이 아니라 값을 본다.
+		//
 		// AP 에는 상한이 없다. 그래서 "3/4" 처럼 못 적는다 -- 분모가 없다.
-		const bool bDummyAP = bDummy && Unit.mActionPoints <= 0;
-		const int32 ShownAP = bDummyAP ? 3 : Unit.mActionPoints;
+		const int32 ShownAP = FMath::RoundToInt(Unit.mMovementPoint);
 
 		// 남은 만큼 낱개로 켠다. 자리보다 많으면 낱개로는 못 보여주므로
 		// 아이콘 하나에 "x N" 을 붙인다. 자리를 무한히 잡아 둘 수는 없다.
@@ -582,9 +547,7 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 		SetShown(Widgets.Root, true);
 		SetTextIfPresent(Widgets.Name, Skill.mName);
 
-		// 값이 안 오면 배지와 AP 줄이 0으로 찍혀 자리를 볼 수 없다.
-		const int32 ShownCost = (CombatLayoutDummy::Enabled()
-			&& Skill.mActionPointCost <= 0) ? 1 : Skill.mActionPointCost;
+		const int32 ShownCost = Skill.mActionPointCost;
 		SetTextIfPresent(Widgets.Cost, FText::AsNumber(ShownCost));
 		SetTextIfPresent(Widgets.CostLine, FText::Format(
 			LOCTEXT("SkillCost", "AP {0}"), ShownCost));

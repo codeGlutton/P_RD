@@ -761,6 +761,7 @@ void ACombatGameMode::PushUnitUIData() const
 
 		UnitUIData.mIsPlayer = UnitModel->IsPlayerUnitModel();
 		UnitUIData.mUnitId = UnitModel->GetModelId();
+		UnitUIData.mName = UnitModel->GetBoardActorDisplayName();      // 아군 칸·턴 순서 칩이 읽는다. 안 채우면 빈칸으로 나온다.
 		UnitUIData.mPortrait = UnitModel->GetBoardActorPortrait();   // 턴 순서 칩 등 상시 UI용(없으면 nullptr → 텍스트 폴백).
 		UnitUIData.mTile = UnitModel->GetTileTransform().mIndex;
 		UnitUIData.mHP = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetHPAttribute());
