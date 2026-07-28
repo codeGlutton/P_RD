@@ -63,6 +63,9 @@ void UCameraMovementComponent::InitializeCameraTargetLocation()
 
 	mTargetLocation = CurLocation;
 	mInitCameraLocation = true;
+
+	mCurZoom = mCameraComponent->OrthoWidth;
+	mTargetZoom = mCurZoom;
 }
 
 void UCameraMovementComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -88,7 +91,7 @@ void UCameraMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	{
 		// 도착 판정: 여기서만 임계값을 쓰되, 목적은 "재진입 허용 시점" 판단이지
 		// "저장할 위치가 정확한지" 판단이 아니므로 훨씬 안전함
-		if (FVector2D::Distance(mCurCameraLocation, mTargetLocation) < 1.f)
+		if (FVector2D::Distance(mCurCameraLocation, mTargetLocation) < 1.f && abs(mCurZoom - mTargetZoom) < 1.f)
 		{
 			mCamerControlState = ECameraControlState::Normal;
 		}
@@ -102,6 +105,7 @@ void UCameraMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	}
 
 	MoveSmooth(DeltaTime);		// 카메라를 이동시키는 함수입니다.
+	ZoomSmooth(DeltaTime);
 	FollowActor();				// 강조 시 액터가 있다면 액터를 따라가는 함수입니다.
 	ClampingCamera();			// 카메라의 Location, OrthoWidth를 제한하는 함수입니다.
 }
@@ -160,6 +164,8 @@ void UCameraMovementComponent::ZoomCamera_Instant(float ZoomDelta)
 
 	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
 	mCameraComponent->OrthoWidth = FMath::Clamp(mCameraComponent->OrthoWidth + ZoomDelta, mMinOrthoWidth, mMaxOrthoWidth);
+	mCurZoom = mCameraComponent->OrthoWidth;
+	mTargetZoom = mCurZoom;
 }
 
 void UCameraMovementComponent::ZoomCamera_InstantAndMoveToViewportPosition_Instant(float ZoomDelta, FVector2D ViewPortPos)
@@ -250,16 +256,7 @@ void UCameraMovementComponent::ZoomCamera_Smooth(float TargetZoom)
 
 	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
 
-	// 0.01초 간격으로 호출할 예정이므로 (Duration / 0.01)번 반복
-	mStartZoom = mCameraComponent->OrthoWidth;
-	mCurZoom = mStartZoom;
-	mEndZoom = TargetZoom;
-
-	// 0.01초 간격으로 호출할 예정이므로 (Duration / 0.01)번 반복
-	mCurrentZoomAlpha = 0.0f;
-
-	// Timer로 Zoom을 수행합니다.
-	GetWorld()->GetTimerManager().SetTimer(mTimerHandle_Zoom, this, &UCameraMovementComponent::ZoomSmooth, 0.01f, true);
+	mTargetZoom = TargetZoom;
 }
 
 void UCameraMovementComponent::ZoomCamera_SmoothAndMoveToViewportPosition_Smooth(float TargetZoom, FVector2D ViewPortPos)
@@ -803,22 +800,14 @@ void UCameraMovementComponent::MoveSmooth(float DeltaTime)
 	GetOwner()->AddActorWorldOffset(DeltaLocation);
 }
 
-void UCameraMovementComponent::ZoomSmooth()
+void UCameraMovementComponent::ZoomSmooth(float DeltaTime)
 {
 	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
 
-	// mZoomDuration 시간동안 줌을 합니다.
-	mCurrentZoomAlpha += 0.01f / mZoomDuration; // 시간에 따른 진행도 증가
-
-	if (mCurrentZoomAlpha >= 1.0f)
-	{
-		mCurrentZoomAlpha = 1.0f;
-		GetWorld()->GetTimerManager().ClearTimer(mTimerHandle_Zoom); // 타이머 종료
-	}
-
 	// 선형 보간 적용
-	float NewZoom = FMath::InterpEaseInOut(mStartZoom, mEndZoom, mCurrentZoomAlpha, mZoomExp);
+	float NewZoom = FMath::FInterpTo(mCurZoom, mTargetZoom, DeltaTime, mZoomSpeed);
 
 	mCameraComponent->OrthoWidth = FMath::Clamp(NewZoom, mMinOrthoWidth, mMaxOrthoWidth);
+	mCurZoom = mCameraComponent->OrthoWidth;
 
 }

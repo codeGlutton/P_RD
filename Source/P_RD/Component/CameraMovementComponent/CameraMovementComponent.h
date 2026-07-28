@@ -103,22 +103,15 @@ protected:
 	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MinZoom", AllowPrivateAccess = "true"))
 	float mMinOrthoWidth = 100.f;
 
-	/*
-	* @brief Zoom 시 걸리는 시간
-	* @details
-	* 터치로 이동 시 걸리는 시간
-	*/
-	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SmoothZoomDuration", AllowPrivateAccess = "true"))
-	float mZoomDuration = 0.75f; // 이동에 걸릴 시간
-
 	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SmoothZoomExp", AllowPrivateAccess = "true"))
-	float mZoomExp = 2.f;
+	float mZoomSpeed = 5.f;
 
-	FTimerHandle mTimerHandle_Zoom;		// Zoom 로직에 쓸 타이머 핸들
-	float mStartZoom;					// 시작 Zoom
+	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "현재 줌", AllowPrivateAccess = "true"))
 	float mCurZoom;						// 현재 Zoom
-	float mEndZoom;						// 끝 Zoom
-	float mCurrentZoomAlpha = 0.0f;		// Zoom 로직 진행도
+
+	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "목표 줌", AllowPrivateAccess = "true"))
+	float mTargetZoom;						// 끝 Zoom
+
 
 protected:
 	/* 클램핑 박스 제한*/
@@ -346,7 +339,7 @@ private:
 	* 카메라의 zoom을 mEndZoom으로 부드럽게 변경시킵니다.
 	* 타이머로 호출합니다.
 	*/
-	void ZoomSmooth();
+	void ZoomSmooth(float DeltaTime);
 
 
 public:
