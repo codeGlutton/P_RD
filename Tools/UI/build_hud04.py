@@ -22,7 +22,7 @@ UCombatLayoutHUDWidget 이 이름으로 위젯을 찾는다. 그 이름을 여�
     CommandCost_i / CommandDamage_i / CommandCooldown_i
     CommandSelected_i / CommandDisabled_i
     PartyCard_i / PartyPortrait_i / PartyName_i / PartyHPBar_i
-    PartyHPText_i / PartyStatus_i / PartyStatusIcon_i
+    PartyHPText_i / PartyStatus_i / PartyStatusIcon_i / PartyStatusFrame_i_j
     PartyAPPip_i_j / PartyAPPipUsed_i_j / PartyAPPlate_i / PartyAPText_i
     MenuButton_i
     EnemyPanel / EnemyPortrait / EnemyName / EnemyHPBar / EnemyHPText
@@ -192,6 +192,9 @@ AP_NUMBER_SIZE = (1689, 584)
 
 #: AP 낱개 그림의 원래 크기. 비율을 지켜 앉히는 데 쓴다.
 AP_PIP_SIZE = (778, 938)
+
+#: 아군 칸 위에 서는 상태 홈 수. 구역이 있는 만큼만 그린다.
+STATUS_SLOTS = 5
 
 
 def at(rect):
@@ -556,18 +559,30 @@ def party(blueprint, root):
               "party_portrait")
         piece(blueprint, card, origin, "PartyHPIcon_%d" % index, plate_name,
               "hp_icon")
-        if not piece(blueprint, card, origin, "PartyStatusIcon_%d" % index,
-                     plate_name, "status_icon"):
-            # 상태 아이콘은 시안이 기사 줄에만 그려 뒀다. 셋 다 있어야 런타임이
-            # 누가 걸리든 켤 수 있으므로 기사 것을 빌려 자리만 잡아 둔다.
-            borrowed, _ = sprite("bottom_status_left", "status_icon")
-            hp_icon = local(spot(plate_name, "hp_icon"), origin)
-            if borrowed and hp_icon:
-                ix, iy, iw, ih = hp_icon
-                kit.image(blueprint, "PartyStatusIcon_%d" % index, card,
-                          ix, iy + ih * 1.25, iw, ih, None, z_order=Z_CONTENT,
-                          texture="{}/{}".format(ART, borrowed), tint=kit.WHITE)
-                kit.fold(blueprint, "PartyStatusIcon_%d" % index)
+        # 상태 칸은 **홈과 아이콘이 따로**다.
+        #
+        # 홈(status_icon…)은 늘 켜 두는 빈 액자고, 아이콘(status_icon_img…)은
+        # 런타임이 무엇에 걸렸는지에 따라 갈아 끼우는 그림이다. 한 칸으로
+        # 묶어 두면 상태가 없을 때 액자까지 사라져 위쪽이 뻥 뚫린다.
+        #
+        # 런타임은 아직 카드마다 아이콘 **하나**만 안다. 나머지 홈은 빈 액자로
+        # 서 있다 -- 여럿을 켜려면 C++ 이 이름을 두 겹으로 찾아야 한다.
+        for slot in range(STATUS_SLOTS):
+            suffix = "" if slot == 0 else "_%d" % slot
+            # 구역이 있는 만큼만 그린다. 그림은 묶음의 본에서 물려받으므로
+            # 구역을 지워도 그림은 남아 있다 -- 그것만 보고 그리면 자리가
+            # 없는 홈을 그리려다 죽는다.
+            if spot(plate_name, "status_icon" + suffix) is None:
+                continue
+            piece(blueprint, card, origin,
+                  "PartyStatusFrame_%d_%d" % (index, slot),
+                  plate_name, "status_icon" + suffix)
+        icon_zone = spot(plate_name, "status_icon_img")
+        if icon_zone:
+            ix, iy, iw, ih = local(icon_zone, origin)
+            kit.image(blueprint, "PartyStatusIcon_%d" % index, card,
+                      ix, iy, iw, ih, None, z_order=Z_CONTENT)
+            kit.fold(blueprint, "PartyStatusIcon_%d" % index)
 
         text(blueprint, "PartyName_%d" % index, card, origin,
              spot(plate_name, "character_name"), name, 17, TEXT_PALE,
@@ -602,10 +617,16 @@ def party(blueprint, root):
                       nx, ny, nw, nh, None, z_order=Z_CONTENT,
                       texture="{}/KK_HUD04_ap_number_plate".format(ART),
                       tint=kit.WHITE)
+            # 글자는 제 칸이 있으면 그 칸에 넣는다. 숫자판 그림은 비율을
+            # 지키느라 칸보다 작아지는데, 글자까지 따라 줄면 판 밖으로 삐져
+            # 나가거나 가운데가 안 맞는다.
+            words = local(spot(plate_name, "ap_number_txt"), origin) \
+                or (nx, ny, nw, nh)
             kit.label(blueprint, "PartyAPText_%d" % index, card,
-                      nx, ny, nw, nh, "4/4", 13, TEXT_PALE, "center",
-                      None, bold=True)
-            kit.place(blueprint, "PartyAPText_%d" % index, nx, ny, nw, nh,
+                      words[0], words[1], words[2], words[3], "4/4", 13,
+                      TEXT_PALE, "center", None, bold=True)
+            kit.place(blueprint, "PartyAPText_%d" % index,
+                      words[0], words[1], words[2], words[3],
                       "tl", None, Z_TEXT)
 
         for pip in range(AP_PIPS):
