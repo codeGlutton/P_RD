@@ -327,6 +327,10 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 			mLastTurnUnitId = TurnUnitId;
 			SetCommandsShown(true);
 		}
+
+		// 조준에 들었거나 조준이 끝났을 수 있다. 카드가 비켜 있을지 여기서
+		// 다시 정한다 -- 조준 단계는 Turn 으로 실려 온다.
+		RefreshCommandVisibility();
 	}
 	if (bAll || Domain == ECombatUIDomain::Unit)
 	{
@@ -744,9 +748,21 @@ void UCombatLayoutHUDWidget::HandleCommandClicked_5() { RequestCommand(5); }
 void UCombatLayoutHUDWidget::SetCommandsShown(const bool bShown)
 {
 	mCommandsShown = bShown;
+	RefreshCommandVisibility();
+}
+
+bool UCombatLayoutHUDWidget::IsAiming() const
+{
+	return mUIModel != nullptr
+		&& mUIModel->GetTurnUI().mPhase != ECombatBuildPhaseUI::None;
+}
+
+void UCombatLayoutHUDWidget::RefreshCommandVisibility()
+{
+	const bool bVisible = mCommandsShown == true && IsAiming() == false;
 	for (const FCommandSlotWidgets& Widgets : mCommandSlots)
 	{
-		SetShown(Widgets.Root, bShown);
+		SetShown(Widgets.Root, bVisible);
 	}
 }
 
@@ -802,20 +818,19 @@ void UCombatLayoutHUDWidget::HandleBoardPressed(const FVector2D& ScreenPosition)
 		return;
 	}
 
-	// 펴져 있으면 무르는 것이 먼저다. 좌표를 안 넘긴다 -- 넘기면 그 칸을
-	// 겨냥하면서 카메라가 그리로 옮겨가고, 무르려던 손짓이 도리어 화면을
-	// 움직인다.
-	if (mCommandsShown == true)
+	// 조준 중이면 이 탭은 게임플레이 것이다. 사거리 안이면 그리로 쏘고
+	// 밖이면 무른다 -- 어느 쪽인지는 스킬 조준만 안다. 무르고 나면 카드는
+	// 저절로 돌아오므로 여기서 펴 줄 필요가 없다.
+	if (IsAiming() == true)
 	{
-		mUIModel->RequestCancel();
-		SetCommandsShown(false);
+		mUIModel->RequestWorldTouch(ScreenPosition, false);
 		return;
 	}
 
-	// 접혀 있을 때 판을 누르면 그 칸을 겨냥한다. 타일/유닛 판정은
-	// 게임플레이가 한다 -- 화면은 좌표만 넘긴다.
-	mUIModel->RequestWorldTouch(ScreenPosition, false);
-	SetCommandsShown(true);
+	// 조준 중이 아니면 판 탭은 카드를 뒤집는 것뿐이다. 어느 칸을 눌렀는지는
+	// 안 본다 -- 타일을 눌러 카드를 여는 규칙은 없앴다. 판 아무 데나 누르면
+	// 펴지고, 다시 누르면 접힌다.
+	SetCommandsShown(!mCommandsShown);
 }
 
 /**
@@ -827,6 +842,16 @@ void UCombatLayoutHUDWidget::HandleBoardPressed(const FVector2D& ScreenPosition)
  */
 void UCombatLayoutHUDWidget::HandlePartyClicked(const int32 SlotIndex)
 {
+	// 조준 중이면 무르고 카드를 되돌린다. 여기서 그냥 뒤집으면 조준이 끝난
+	// 뒤에 카드가 접힌 채로 남는다 -- 조준 중에는 뒤집어도 화면이 안 바뀌어서
+	// 무엇이 뒤집혔는지 안 보인다.
+	if (IsAiming() == true)
+	{
+		mUIModel->RequestCancel();
+		SetCommandsShown(true);
+		return;
+	}
+
 	SetCommandsShown(!mCommandsShown);
 }
 

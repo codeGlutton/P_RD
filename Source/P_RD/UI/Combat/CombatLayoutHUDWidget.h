@@ -105,6 +105,20 @@ private:
 	void SetCommandsShown(bool bShown);
 
 	/**
+	 * @brief 카드를 실제로 켜고 끈다.
+	 *
+	 * 보이는 조건이 둘이다. 사용자가 펴 두었고(mCommandsShown), **조준 중이
+	 * 아닐 것.** 조준에 들어가면 카드는 저절로 비켜야 한다 -- 사거리가 칠해진
+	 * 판을 봐야 하는데 카드가 그 판 한가운데를 덮고 있다.
+	 *
+	 * 조준이 끝나면 저절로 돌아온다. 돌아오라고 따로 시키는 곳이 없다.
+	 */
+	void RefreshCommandVisibility();
+
+	/** @brief 지금 조준 중인가. 조준 중에는 카드가 비켜 있다. */
+	bool IsAiming() const;
+
+	/**
 	 * @brief 판을 톡 쳤다는 알림. 화면을 한 단계 뒤로 되돌린다.
 	 *
 	 * 월드 입력은 카메라가 갖는다. 카메라가 끌었는지 톡 쳤는지 가려서 이
@@ -135,7 +149,12 @@ private:
 	UFUNCTION() void HandlePartyClicked_2();
 	void HandlePartyClicked(int32 SlotIndex);
 
-	/** @brief 명령 카드가 지금 펴져 있나. 턴이 시작되면 펴진다. */
+	/**
+	 * @brief 사용자가 카드를 펴 두었나. 턴이 시작되면 펴진다.
+	 *
+	 * 이것이 곧 보이는 여부는 아니다. 조준 중에는 펴 둔 채로도 안 보인다 --
+	 * RefreshCommandVisibility() 를 보라.
+	 */
 	bool mCommandsShown = true;
 
 	/** @brief 직전에 찜해 둔 대상. 바뀌면 카드를 편다. */

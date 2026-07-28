@@ -77,14 +77,7 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
         {
             /* 같으면 취소 */
 
-            // 고른 것을 무를 때도 칠해 둔 사거리를 지운다. 스킬을 바꿀 때만
-            // 지우고 무를 때는 안 지워서, 취소한 뒤에도 사거리가 판에 남았다.
-            ClearAllTileHighlights();
-            ResetTargetTile();
-            ResetSkill();
-
-            MarkActionCompleted(ESRPGActionResult::Cancelled);
-            SetBuildPhase(ESRPGSkillBuildPhase::None);
+            CancelBuild();
         }
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
@@ -168,6 +161,15 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
                 Result = ESRPGCommandResult::Handled;
                 break;
             }
+
+            /* 사거리 밖 칸 클릭 시, 판 밖을 누른 것과 같게 취소 */
+
+            // 조준 중에 못 닿는 칸을 누르는 손짓은 "저기로 바꿔줘" 가 아니라
+            // "그만" 이다. 아무 일도 안 일어나게 두면 사거리만 칠해진 채로
+            // 갇힌다 -- 판이 화면을 거의 다 덮고 있어서 판 밖을 누를 자리가
+            // 거의 없다.
+            CancelBuild();
+            Result = ESRPGCommandResult::Handled;
             break;
         }
         }
@@ -193,15 +195,23 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
         {
             /* 조준 대상 설정 단계에서 한단계 취소 시, 빌드 자체 종료 */
 
-            MarkActionCompleted(ESRPGActionResult::Cancelled);
-            SetBuildPhase(ESRPGSkillBuildPhase::None);
-
+            CancelBuild();
             Result = ESRPGCommandResult::Handled;
             break;
         }
         }
     }
     return Result;
+}
+
+void USRPGSkillBuildAction::CancelBuild()
+{
+    ClearAllTileHighlights();
+    ResetTargetTile();
+    ResetSkill();
+
+    MarkActionCompleted(ESRPGActionResult::Cancelled);
+    SetBuildPhase(ESRPGSkillBuildPhase::None);
 }
 
 void USRPGSkillBuildAction::SetSkill(int32 SkillIndex)

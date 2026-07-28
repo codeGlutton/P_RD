@@ -64,6 +64,16 @@ protected:
 protected:
 	ESRPGCommandResult HandleWorldTraceCommand(const TInstancedStruct<FSRPGCommand>& Command);
 
+	/**
+	 * @brief 짓던 스킬을 무른다. 판에 칠해 둔 사거리까지 지운다.
+	 *
+	 * @details
+	 * 무르는 자리가 셋이라 한 곳에 모았다 -- 같은 스킬 다시 고르기, 판 밖 탭,
+	 * 사거리 밖 탭. 흩어 두었을 때 두 곳에서 하이라이트 지우기가 빠져서,
+	 * 취소한 뒤에도 사거리가 판에 남아 있었다.
+	 */
+	void CancelBuild();
+
 	/* 빌드 로직 처리 */
 private:
 	void SetSkill(int32 SkillIndex);
