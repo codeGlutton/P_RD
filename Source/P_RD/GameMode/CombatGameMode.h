@@ -21,6 +21,9 @@ class IBoardSelectionTarget;
 
 class UCombatUIModel;
 class URewardUIModel;
+class UPlayerUnitModel;
+class UStaticSkillData;
+struct FTileIndex;
 enum class ECombatInputType : uint8;
 
 // Combat Game Mode 신규 로그 카테고리 등록
@@ -108,6 +111,13 @@ protected:
 	void PushSelectedSkillUIData(int32 SkillIndex) const;
 
 	void PushCombatTargetDetailUIData(IBoardSelectionTarget* Target) const;
+
+	/** @brief 톡 쳐서 고른 칸을 UI 에 내린다. 스킬 표시값도 같이 다시 내린다. */
+	void PushCombatTargetUIData(const FTileIndex& Tile, AActor* HitActor);
+
+	/** @brief 지금 겨냥한 자리에 이 스킬을 쓸 수 있나. 행동력과 사거리를 본다. */
+	bool IsSkillUsableOnTarget(const UPlayerUnitModel* PlayerUnitModel,
+		const UStaticSkillData& StaticSkillData) const;
 
 	void PushSkillDetailUIData(int32 SkillIndex) const;
 	void PushEquipmentUIData() const;

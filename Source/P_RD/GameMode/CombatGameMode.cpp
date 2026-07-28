@@ -553,6 +553,11 @@ bool ACombatGameMode::ResolveWorldTouchEvent(FVector2D ScreenPosition)
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mIsLongPress = false;
 	// 모바일 터치는 커서가 없으므로, 탭 화면 좌표를 커맨드에 실어 월드 트레이스에 사용한다.
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mScreenPosition = ScreenPosition;
+	// 톡 친 칸을 UI 에 알린다. 어느 타일인지는 트레이스한 쪽만 안다.
+	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().OnSelectTargetTile.AddWeakLambda(this,
+		[this](const FTileIndex& Tile, AActor* HitActor) {
+			PushCombatTargetUIData(Tile, HitActor);
+		});
 
 	return CommandRouterModel->SummitCommand(WorldTraceActionCommand);
 }
@@ -747,6 +752,44 @@ void ACombatGameMode::PushUnitUIData() const
 	mCombatUIModel->SetUnitUIs(UnitUIDatas);
 }
 
+/**
+ * @brief 지금 겨냥한 자리에 이 스킬을 쓸 수 있나.
+ *
+ * @details
+ * 두 가지만 본다. 행동력이 남았는지, 겨냥한 칸이 사거리 안인지.
+ *
+ * 칸 사이 거리는 가로세로 중 먼 쪽으로 잰다. 대각선을 한 칸으로 치는 판이라
+ * 그렇다. 조준 모양(십자/사각)까지 따지는 것은 조준 단계가 할 일이고 여기서는
+ * 카드를 켤지 끌지만 정한다 -- 여기서 정밀하게 세면 조준 단계와 두 벌이 되고
+ * 그 둘은 언젠가 어긋난다.
+ *
+ * 겨냥한 자리가 없으면 사거리는 안 본다. 아직 아무 데도 안 찍은 상태다.
+ * @param PlayerUnitModel 지금 차례인 유닛
+ * @param StaticSkillData 검사할 스킬
+ * @return 카드를 켜도 되면 true
+ */
+bool ACombatGameMode::IsSkillUsableOnTarget(const UPlayerUnitModel* PlayerUnitModel,
+	const UStaticSkillData& StaticSkillData) const
+{
+	if (PlayerUnitModel == nullptr)
+	{
+		return false;
+	}
+
+	const FCombatTargetUI& Target = mCombatUIModel != nullptr
+		? mCombatUIModel->GetTarget() : FCombatTargetUI();
+	if (Target.mIsValid == false)
+	{
+		return true;
+	}
+
+	const FTileIndex& Here = PlayerUnitModel->GetTileTransform().mIndex;
+	const int32 Distance = FMath::Max(
+		FMath::Abs(Target.mTile.mX - Here.mX),
+		FMath::Abs(Target.mTile.mY - Here.mY));
+	return Distance <= StaticSkillData.mAimRange;
+}
+
 void ACombatGameMode::PushSkillUIData() const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
@@ -776,7 +819,11 @@ void ACombatGameMode::PushSkillUIData() const
 		{
 			SkillUIData.mName = StaticSkillData->mName;
 			SkillUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
-			SkillUIData.mIsUsable = true;
+			SkillUIData.mActionPointCost = StaticSkillData->mRequiredMovement;
+			// 겨냥한 자리와 남은 행동력으로 쓸 수 있는지 가린다. 화면은 이
+			// 판정을 안 한다 -- 사거리를 두 곳에서 세면 어긋나는 날이 온다.
+			SkillUIData.mIsUsable =
+				IsSkillUsableOnTarget(PlayerUnitModel, *StaticSkillData);
 			SkillUIData.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
 			SkillUIData.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRange);
 			SkillUIData.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
@@ -794,6 +841,42 @@ void ACombatGameMode::PushSelectedSkillUIData(int32 SkillIndex) const
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
 	mCombatUIModel->SetSelectedSkill(SkillIndex);
+}
+
+/**
+ * @brief 톡 쳐서 고른 칸을 UI 에 내린다.
+ *
+ * @details
+ * 겨냥한 자리가 바뀌면 그 자리에 쓸 수 있는 스킬이 달라진다. 그래서 스킬
+ * 표시값도 같이 다시 내린다 -- 둘을 따로 내리면 한 프레임 동안 카드가 옛
+ * 자리 기준으로 켜져 있다.
+ * @param Tile     겨냥한 타일
+ * @param HitActor 그 칸에 선 액터. 빈 칸이면 nullptr
+ */
+void ACombatGameMode::PushCombatTargetUIData(const FTileIndex& Tile, AActor* HitActor)
+{
+	if (mCombatUIModel == nullptr)
+	{
+		return;
+	}
+
+	FCombatTargetUI TargetUIData;
+	TargetUIData.mIsValid = true;
+	TargetUIData.mTile = Tile;
+
+	// 액터가 아니라 모델의 id 를 싣는다. UI 는 FUnitUI.mUnitId 와 같은 id
+	// 공간만 알고 액터는 모른다.
+	if (const IActorView* ActorView = Cast<IActorView>(HitActor))
+	{
+		if (const UBoardActorModel* BoardActorModel =
+			Cast<UBoardActorModel>(ActorView->GetModel()))
+		{
+			TargetUIData.mUnitId = BoardActorModel->GetModelId();
+		}
+	}
+
+	mCombatUIModel->SetTarget(TargetUIData);
+	PushSkillUIData();
 }
 
 void ACombatGameMode::PushCombatTargetDetailUIData(IBoardSelectionTarget* Target) const
