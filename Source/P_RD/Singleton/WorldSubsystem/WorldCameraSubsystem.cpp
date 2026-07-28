@@ -39,7 +39,7 @@ void UWorldCameraSubsystem::BindModel(UObjectModel* Model)
 				UCameraMovementComponent* CameraMovementComponent = MainCameraPawn->GetCameraMovementComponent();
 				if (CameraMovementComponent != nullptr)
 				{
-					CameraMovementComponent->EndEmphasis();
+					CameraMovementComponent->RestoreFocus();
 				}
 			}
 			});

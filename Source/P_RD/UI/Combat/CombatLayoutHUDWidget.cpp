@@ -802,19 +802,20 @@ void UCombatLayoutHUDWidget::HandleBoardPressed(const FVector2D& ScreenPosition)
 		return;
 	}
 
-	// 타일/유닛 판정은 게임플레이가 한다. 화면은 좌표만 넘긴다.
-	mUIModel->RequestWorldTouch(ScreenPosition, false);
-
-	if (mUIModel->GetTurnUI().mPhase != ECombatBuildPhaseUI::None)
+	// 펴져 있으면 무르는 것이 먼저다. 좌표를 안 넘긴다 -- 넘기면 그 칸을
+	// 겨냥하면서 카메라가 그리로 옮겨가고, 무르려던 손짓이 도리어 화면을
+	// 움직인다.
+	if (mCommandsShown == true)
 	{
-		// 조준 중이었다면 그만둔다. 조준을 놔둔 채 다른 칸을 겨냥하면 다음
-		// 탭이 엉뚱한 곳에 스킬을 쏜다.
 		mUIModel->RequestCancel();
+		SetCommandsShown(false);
+		return;
 	}
 
-	// 펴져 있으면 접고, 접혀 있으면 편다. 여기까지 온 눌림은 카드 밖이다 --
-	// 카드와 아군 칸은 버튼이라 자기가 먼저 가져간다.
-	SetCommandsShown(!mCommandsShown);
+	// 접혀 있을 때 판을 누르면 그 칸을 겨냥한다. 타일/유닛 판정은
+	// 게임플레이가 한다 -- 화면은 좌표만 넘긴다.
+	mUIModel->RequestWorldTouch(ScreenPosition, false);
+	SetCommandsShown(true);
 }
 
 /**

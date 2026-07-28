@@ -424,6 +424,14 @@ public:
 	 */
 	void FocusToWorldPosition(const FVector& WorldPosition);
 
+	/**
+	 * @brief 겨냥 전 화면으로 즉시 되돌린다.
+	 *
+	 * EndEmphasis() 는 부드럽게 돌아간다. 겨냥을 옮길 때마다 화면이 미끄러지면
+	 * 눈이 못 따라간다 -- 한 턴에 여러 번 일어나는 일이라 더 그렇다.
+	 */
+	void RestoreFocus();
+
 private:
 	/* 강조 기능 : private */
 

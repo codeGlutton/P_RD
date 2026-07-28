@@ -695,7 +695,22 @@ void UCameraMovementComponent::FocusToWorldPosition(const FVector& WorldPosition
 	mEmphasisActor.Reset();
 
 	// 확대는 안 건드린다. 가운데로 놓는 것만 한다.
-	MoveToWorldPosition_Smooth(WorldPosition);
+	//
+	// 부드럽게 옮기지 않는다. 겨냥은 한 턴에 여러 번 일어나고, 그때마다 화면이
+	// 미끄러지면 눈이 못 따라간다.
+	MoveToWorldPosition_Instant(WorldPosition);
+}
+
+void UCameraMovementComponent::RestoreFocus()
+{
+	if (mCamerControlState == ECameraControlState::Normal)
+	{
+		return;
+	}
+
+	mCamerControlState = ECameraControlState::Normal;
+	mEmphasisActor = nullptr;
+	MoveToWorldPosition_Instant(mPreDefaultState.Position);
 }
 
 void UCameraMovementComponent::EndEmphasis()

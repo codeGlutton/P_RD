@@ -77,6 +77,12 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
         {
             /* 같으면 취소 */
 
+            // 고른 것을 무를 때도 칠해 둔 사거리를 지운다. 스킬을 바꿀 때만
+            // 지우고 무를 때는 안 지워서, 취소한 뒤에도 사거리가 판에 남았다.
+            ClearAllTileHighlights();
+            ResetTargetTile();
+            ResetSkill();
+
             MarkActionCompleted(ESRPGActionResult::Cancelled);
             SetBuildPhase(ESRPGSkillBuildPhase::None);
         }

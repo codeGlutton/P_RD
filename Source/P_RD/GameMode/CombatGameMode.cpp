@@ -442,7 +442,14 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		PushEquipmentDetailUIData(IntPayload);
 		break;
 	case ECombatInputType::Cancel:
-		// 무르면 겨냥을 풀고 화면도 겨냥하기 전으로 되돌린다.
+		// 고른 스킬이 있으면 그것부터 무른다. 같은 스킬을 다시 고르는 것이
+		// 곧 취소이고, 그래야 판에 칠해 둔 사거리도 같이 지워진다.
+		if (mCombatUIModel != nullptr
+			&& mCombatUIModel->GetTurnUI().mPhase != ECombatBuildPhaseUI::None)
+		{
+			SelectSkill(mCombatUIModel->GetSelectedSkillIndex());
+		}
+		// 겨냥을 풀고 화면도 겨냥하기 전으로 되돌린다.
 		ClearCombatTargetUIData();
 		break;
 	}
