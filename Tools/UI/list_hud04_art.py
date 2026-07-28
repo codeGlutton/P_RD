@@ -71,6 +71,13 @@ FAMILY = [
     ["bottom_status_left", "bottom_status_center", "bottom_status_right"],
 ]
 
+#: 묶음 안에서는 **첫 판의 그림**을 다 같이 쓴다.
+#:
+#: 굽는 쪽이 그렇게 한다 -- 카드 여섯이 action_top 한 장을, 아군 셋이
+#: bottom_status_left 한 장을 나눠 쓴다. 그런데 쪽은 판마다 제 그림을 띄우고
+#: 있어서, 자리를 다 맞춰 놓아도 배경이 달라 "안 맞았다" 로 보였다.
+TEMPLATE_OF = {plate: group[0] for group in FAMILY for plate in group}
+
 #: 목록에서 묶어 보여 줄 차례. 쓰임이 같은 것끼리 붙여야 견주기 쉽다.
 GROUPS = (
     ("상단", "라운드 · 턴 순서 · 목표", (
@@ -110,7 +117,8 @@ def main():
     for title, users, plates in GROUPS:
         items = []
         for plate in plates:
-            name = TEXTURE.get(plate)
+            # 묶인 판은 본의 그림을 띄운다. 굽는 결과와 같은 것을 봐야 한다.
+            name = TEXTURE.get(TEMPLATE_OF.get(plate, plate))
             src = os.path.join(ART, "%s.png" % name) if name else None
             x, y, w, h = PLACE[plate]
             note = "%s  %dx%d @ %d,%d" % (plate, w, h, x, y)
