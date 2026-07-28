@@ -93,7 +93,6 @@ TUNING = {
         "status_icon_2": (70, -24, 27, 29),
         "status_icon_3": (100, -24, 27, 29),
         "status_icon_4": (130, -24, 27, 29),
-        "status_text": (123, 104, 150, 20),
     },
     "bottom_status_left": {
         "ap_number": (14, 130, 46, 31),
@@ -117,7 +116,6 @@ TUNING = {
         "status_icon_2": (70, -24, 27, 29),
         "status_icon_3": (100, -24, 27, 29),
         "status_icon_4": (130, -24, 27, 29),
-        "status_text": (123, 104, 150, 20),
     },
     "bottom_status_right": {
         "ap_number": (14, 130, 46, 31),
@@ -141,7 +139,6 @@ TUNING = {
         "status_icon_2": (70, -24, 27, 29),
         "status_icon_3": (100, -24, 27, 29),
         "status_icon_4": (130, -24, 27, 29),
-        "status_text": (123, 104, 150, 20),
     },
     "top_center_turn_order": {
         "end_left": (24, 52, 50, 55),
@@ -163,10 +160,10 @@ TUNING = {
         "round_label": (38, 37, 233, 76),
     },
     "top_right_parchment": {
-        "menu_bag": (849, 83, 346, 351),
-        "menu_map": (107, 85, 348, 349),
-        "menu_settings": (1219, 85, 347, 351),
-        "menu_skill": (480, 86, 344, 348),
+        "menu_bag": (199, 19, 81, 83),
+        "menu_map": (25, 20, 81, 81),
+        "menu_settings": (286, 20, 81, 82),
+        "menu_skill": (113, 19, 80, 82),
     },
     "upper_right_enemy_panel": {
         "damage_icon": (157, 191, 43, 42),

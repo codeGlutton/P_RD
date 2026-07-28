@@ -6,6 +6,10 @@ import_hud04.py 가 그 폴더를 통째로 넣는다.
 """
 
 ZONE_ART = {
+    "action_top": {
+        "cooldown_badge": {"texture": "KK_HUD04_zone_cooldown_badge", "fit": "contain", "size": [904, 933]},
+        "cost_badge": {"texture": "KK_HUD04_zone_cost_badge", "fit": "contain", "size": [778, 938]},
+    },
     "bottom_status_center": {
         "ap_number": {"texture": "KK_HUD04_ap_number_plate", "fit": "contain", "size": [1689, 584]},
         "ap_pip_01": {"texture": "KK_HUD04_ap_pip", "fit": "contain", "size": [778, 938]},
@@ -18,15 +22,12 @@ ZONE_ART = {
         "ap_pip_08": {"texture": "KK_HUD04_ap_pip", "fit": "contain", "size": [778, 938]},
         "ap_pip_09": {"texture": "KK_HUD04_ap_pip", "fit": "contain", "size": [778, 938]},
         "ap_pip_10": {"texture": "KK_HUD04_ap_pip", "fit": "contain", "size": [778, 938]},
+        "hp_icon": {"texture": "KK_HUD04_zone_hp_icon", "fit": "contain", "size": [776, 705]},
         "status_icon": {"texture": "KK_HUD04_status_slot_frame", "fit": "contain", "size": [851, 1024]},
         "status_icon_1": {"texture": "KK_HUD04_status_slot_frame", "fit": "contain", "size": [851, 1024]},
         "status_icon_2": {"texture": "KK_HUD04_status_slot_frame", "fit": "contain", "size": [851, 1024]},
         "status_icon_3": {"texture": "KK_HUD04_status_slot_frame", "fit": "contain", "size": [851, 1024]},
         "status_icon_4": {"texture": "KK_HUD04_status_slot_frame", "fit": "contain", "size": [851, 1024]},
-    },
-    "action_top": {
-        "cooldown_badge": {"texture": "KK_HUD04_zone_cooldown_badge", "fit": "contain", "size": [904, 933]},
-        "cost_badge": {"texture": "KK_HUD04_zone_cost_badge", "fit": "contain", "size": [778, 938]},
     },
     "bottom_status_left": {
         "ap_number": {"texture": "KK_HUD04_ap_number_plate", "fit": "contain", "size": [1689, 584]},
@@ -40,12 +41,12 @@ ZONE_ART = {
         "ap_pip_08": {"texture": "KK_HUD04_ap_pip", "fit": "contain", "size": [778, 938]},
         "ap_pip_09": {"texture": "KK_HUD04_ap_pip", "fit": "contain", "size": [778, 938]},
         "ap_pip_10": {"texture": "KK_HUD04_ap_pip", "fit": "contain", "size": [778, 938]},
+        "hp_icon": {"texture": "KK_HUD04_zone_hp_icon", "fit": "contain", "size": [776, 705]},
         "status_icon": {"texture": "KK_HUD04_status_slot_frame", "fit": "contain", "size": [851, 1024]},
         "status_icon_1": {"texture": "KK_HUD04_status_slot_frame", "fit": "contain", "size": [851, 1024]},
         "status_icon_2": {"texture": "KK_HUD04_status_slot_frame", "fit": "contain", "size": [851, 1024]},
         "status_icon_3": {"texture": "KK_HUD04_status_slot_frame", "fit": "contain", "size": [851, 1024]},
         "status_icon_4": {"texture": "KK_HUD04_status_slot_frame", "fit": "contain", "size": [851, 1024]},
-        "hp_icon": {"texture": "KK_HUD04_zone_hp_icon", "fit": "contain", "size": [776, 705]},
     },
     "bottom_status_right": {
         "ap_number": {"texture": "KK_HUD04_ap_number_plate", "fit": "contain", "size": [1689, 584]},
@@ -59,11 +60,11 @@ ZONE_ART = {
         "ap_pip_08": {"texture": "KK_HUD04_ap_pip", "fit": "contain", "size": [778, 938]},
         "ap_pip_09": {"texture": "KK_HUD04_ap_pip", "fit": "contain", "size": [778, 938]},
         "ap_pip_10": {"texture": "KK_HUD04_ap_pip", "fit": "contain", "size": [778, 938]},
+        "hp_icon": {"texture": "KK_HUD04_zone_hp_icon", "fit": "contain", "size": [776, 705]},
         "status_icon": {"texture": "KK_HUD04_status_slot_frame", "fit": "contain", "size": [851, 1024]},
         "status_icon_1": {"texture": "KK_HUD04_status_slot_frame", "fit": "contain", "size": [851, 1024]},
         "status_icon_2": {"texture": "KK_HUD04_status_slot_frame", "fit": "contain", "size": [851, 1024]},
         "status_icon_3": {"texture": "KK_HUD04_status_slot_frame", "fit": "contain", "size": [851, 1024]},
         "status_icon_4": {"texture": "KK_HUD04_status_slot_frame", "fit": "contain", "size": [851, 1024]},
-        "hp_icon": {"texture": "KK_HUD04_zone_hp_icon", "fit": "contain", "size": [776, 705]},
     },
 }

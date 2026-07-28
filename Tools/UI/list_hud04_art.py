@@ -131,6 +131,9 @@ def zone_art_data():
                 "png": "data:image/png;base64,"
                        + base64.b64encode(buffer.getvalue()).decode(),
                 "fit": entry.get("fit") or "contain",
+                # 파일이 실어 준 것이라는 표. 다시 올라오면 apply_zones 가
+                # 건너뛴다 -- 안 그러면 줄여 실은 미리보기가 원본을 덮는다.
+                "seed": True,
             }
     return out
 

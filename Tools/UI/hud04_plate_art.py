@@ -6,10 +6,9 @@
 """
 
 PLATE_ART = {
-    "top_center_turn_order": "KK_HUD04_turn_order_v2",
-    # 아군 칸 셋이 한 판을 나눠 쓴다. 하나 갈면 셋이 같이 바뀐다.
-    "bottom_status_left": "KK_HUD04_hero_status_frame",
     "bottom_status_center": "KK_HUD04_hero_status_frame",
+    "bottom_status_left": "KK_HUD04_hero_status_frame",
     "bottom_status_right": "KK_HUD04_hero_status_frame",
+    "top_center_turn_order": "KK_HUD04_turn_order_v2",
     "top_right_parchment": "KK_HUD04_menu_bar",
 }

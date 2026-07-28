@@ -94,9 +94,21 @@ def png_size(raw):
 
 def write_art(art):
     """얹은 그림을 PNG 로 풀고 어느 구역이 쓰는지 적는다."""
-    rows = {}
+    # 코드에서 걸어 둔 것 위에 얹는다. 쪽이 돌려주는 것만 새로 쓰면 갈아
+    # 끼운 것이 지워진다 -- 판 그림에서 한 번 겪었다.
+    try:
+        from hud04_zone_art import ZONE_ART as KEPT
+    except ImportError:
+        KEPT = {}
+    rows = {plate: {e: (v["texture"], v.get("fit") or "contain", v.get("size"))
+                    for e, v in items.items()}
+            for plate, items in KEPT.items()}
     for at, value in sorted(art.items()):
         png = (value or {}).get("png") or ""
+        # 파일이 실어 준 미리보기는 되돌려 쓰지 않는다. 192픽셀로 줄인 것이라
+        # 그대로 쓰면 원본이 흐려진다.
+        if (value or {}).get("seed") is True:
+            continue
         if not png.startswith("data:"):
             continue
         plate, _, element = at.partition("|")

@@ -134,7 +134,6 @@ DETAIL = {
         "status_icon_2": (379, 737, 27, 29),
         "status_icon_3": (409, 737, 27, 29),
         "status_icon_4": (439, 737, 27, 29),
-        "status_text": (432, 865, 150, 20),
     },
     "bottom_status_left": {
         "ap_number": (24, 891, 46, 31),
@@ -158,7 +157,6 @@ DETAIL = {
         "status_icon_2": (80, 737, 27, 29),
         "status_icon_3": (110, 737, 27, 29),
         "status_icon_4": (140, 737, 27, 29),
-        "status_text": (133, 865, 150, 20),
     },
     "bottom_status_right": {
         "ap_number": (622, 891, 46, 31),
@@ -182,7 +180,6 @@ DETAIL = {
         "status_icon_2": (678, 737, 27, 29),
         "status_icon_3": (708, 737, 27, 29),
         "status_icon_4": (738, 737, 27, 29),
-        "status_text": (731, 865, 150, 20),
     },
     "top_center_turn_order": {
         "end_left": (450, 64, 50, 55),
@@ -204,10 +201,10 @@ DETAIL = {
         "round_label": (53, 49, 233, 76),
     },
     "top_right_parchment": {
-        "menu_bag": (2120, 95, 346, 351),
-        "menu_map": (1378, 97, 348, 349),
-        "menu_settings": (2490, 97, 347, 351),
-        "menu_skill": (1751, 98, 344, 348),
+        "menu_bag": (1470, 31, 81, 83),
+        "menu_map": (1296, 32, 81, 81),
+        "menu_settings": (1557, 32, 81, 82),
+        "menu_skill": (1384, 31, 80, 82),
     },
     "upper_right_enemy_panel": {
         "damage_icon": (1430, 371, 43, 42),
